@@ -1,22 +1,8 @@
-/*	$Csoft: view.h,v 1.47 2002/11/09 02:46:33 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.48 2002/11/09 06:01:41 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
-	/*
-	 * Optimized for a GUI interface. Used by the map editor.
-	 * - Real-time event/motion interpolation.
-	 * - Allow animations inside windows.
-	 * - No root map.
-	 * - XXX Inefficient video updates.
-	 */
 	GFX_ENGINE_GUI,
-	/*
-	 * 2D tile-based map rendering. Used by the games.
-	 * - Real-time event/motion interpolation.
-	 * - Allow animations inside windows.
-	 * - Root map allowing overlapping windows.
-	 * - Efficient video updates.
-	 */
 	GFX_ENGINE_TILEBASED
 } gfx_engine_t;
 
@@ -28,7 +14,6 @@ struct viewmap {
 	struct	map *map;		/* Currently visible map */
 	int	x, y;			/* Offset in map */
 
-	int		**mask;		/* Mask covering the map view */
 	SDL_Rect	**maprects;	/* Rectangles (optimization) */
 	SDL_Rect	*rects;		/* List big enough to hold all
 					   possible rectangles in the view. */

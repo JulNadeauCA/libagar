@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.7 2002/09/19 20:55:26 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.8 2002/10/30 17:16:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,23 +46,8 @@
 		}							\
 	}								\
 }
-#define CHECK_MASK(x, y) {						\
-	int _i;								\
-									\
-	_i = view->rootmap->mask[(y)][(x)];				\
-	if (_i < 0 || _i > 128) {					\
-		fatal("funny mask: %d at %d,%d\n", _i, (x), (y));	\
-	}								\
-	if (_i > 0) {							\
-		continue;						\
-	}								\
-}
 #else
 #define CHECK_RECTS(view, ri)
-#define CHECK_MASK(x, y)						\
-	if (view->rootmap->mask[(y)][(x)] > 0) {			\
-		continue;						\
-	}
 #endif
 
 /*
@@ -175,9 +160,6 @@ rootmap_animate(void)
 		     x++, vx++) {
 			struct node *node;
 
-			/* Skip this node if it is masked. */
-			CHECK_MASK(vx, vy);
-
 			node = &m->map[y][x];
 #ifdef DEBUG
 			if (node->x != x || node->y != y) {
@@ -270,10 +252,6 @@ rootmap_draw(void)
 		for (x = rm->x, vx = 0;			/* Forward */
 		     x < m->mapw && vx <= rm->w;
 		     x++, vx++) {
-
-			/* Skip this node if it is masked. */
-			CHECK_MASK(vx, vy);
-
 			rx = vx << m->shtilex;
 
 			node = &m->map[y][x];
@@ -397,26 +375,6 @@ rootmap_scroll(struct map *m, int dir)
 	m->redraw++;
 }
 
-/* Allocate a map mask of the given size. */
-int **
-rootmap_alloc_mask(int w, int h)
-{
-	int **mask, y, x = 0;
-
-	dprintf("alloc mask %dx%d\n", w, h);
-
-	mask = emalloc((w * h) * sizeof(int *));
-	for (y = 0; y < h; y++) {
-		*(mask + y) = emalloc(w * sizeof(int));
-	}
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			mask[y][x] = 0;
-		}
-	}
-	return (mask);
-}
-
 /* Precalculate rectangles. This helps saving a few cycles */
 SDL_Rect **
 rootmap_alloc_maprects(int w, int h)
@@ -451,44 +409,6 @@ rootmap_alloc_rects(int w, int h)
 	rects = emalloc(len);
 	memset(rects, NULL, len);
 	return (rects);
-}
-
-/*
- * Increment map mask nodes matching rd.
- * View must be locked.
- */
-void
-rootmap_maskfill(SDL_Rect *rd, int n)
-{
-	int x, y;
-
-#ifdef DEBUG
-	if (view->rootmap == NULL) {
-		fatal("NULL rootmap\n");
-	}
-#endif
-
-	for (y = rd->y; y < rd->y+rd->h; y++) {
-		for (x = rd->x; x < rd->x+rd->w; x++) {
-			view->rootmap->mask[y][x] += n;
-		}
-	}
-}
-
-/*
- * Free map mask nodes.
- * View must be locked.
- */
-void
-rootmap_free_mask(struct viewport *v)
-{
-	int y;
-
-	for (y = 0; y < v->rootmap->h; y++) {
-		free(*(v->rootmap->mask + y));
-	}
-	free(v->rootmap->mask);
-	v->rootmap->mask = NULL;
 }
 
 /*

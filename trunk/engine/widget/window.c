@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.95 2002/11/12 02:25:47 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.96 2002/11/12 03:44:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -75,10 +75,8 @@ static Uint32 bg_color = 0;
 /* XXX struct */
 #include "borders/green1.h"
 
-static void	window_update_mask(struct window *);
 static void	window_clamp(struct window *);
 static void	window_round(struct window *, int, int, int, int);
-static void	window_update_titlebar(struct window *);
 static void	window_focus(struct window *);
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
@@ -187,46 +185,23 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	window_titlebar_printf(win, "%s", caption);
 
 	/* Set the initial window position/geometry. */
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		if (win->flags & WINDOW_SCALE) {
-			window_round(win,
-			     rx * view->w / 100,
-			     ry * view->h / 100,
-			     rw * view->w / 100,
-			     rh * view->h / 100);
-		} else {
-			window_round(win, rx, ry, rw, rh);
-		}
-		if (win->flags & WINDOW_CENTER) {
-			window_round(win,
-			    view->w/2 - win->w/2,
-			    view->h/2 - win->h/2,
-			    win->w, win->h);
-		}
-		/* Clamp to view area and leave a margin. */
-		window_clamp(win);
-		break;
-	case GFX_ENGINE_GUI:
-		if (win->flags & WINDOW_SCALE) {
-			win->x = rx * view->w / 100;
-			win->y = ry * view->h / 100;
-			win->w = rw * view->w / 100;
-			win->h = rh * view->h / 100;
-		} else {
-			win->x = rx;
-			win->y = ry;
-			win->w = rw;
-			win->h = rh;
-		}
-		if (win->flags & WINDOW_CENTER) {
-			win->x = view->w/2 - win->w/2;
-			win->y = view->h/2 - win->h/2;
-		}
-		break;
+	if (win->flags & WINDOW_SCALE) {
+		win->x = rx * view->w / 100;
+		win->y = ry * view->h / 100;
+		win->w = rw * view->w / 100;
+		win->h = rh * view->h / 100;
+	} else {
+		win->x = rx;
+		win->y = ry;
+		win->w = rw;
+		win->h = rh;
+	}
+	if (win->flags & WINDOW_CENTER) {
+		win->x = view->w/2 - win->w/2;
+		win->y = view->h/2 - win->h/2;
 	}
 	
-	/* Clamp to view area and leave a margin. */
+	/* Clamp down to view area and leave a margin. */
 	window_clamp(win);
 
 	/* Primitive operations will need this. */
@@ -339,15 +314,6 @@ window_draw(struct window *win)
 		}
 #endif
 	}
-
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		SDL_UpdateRect(v, win->x, win->y, win->w, win->h);
-		break;
-	case GFX_ENGINE_GUI:
-		/* The screen will be redrawn entirely. */
-		break;
-	}
 }
 
 /*
@@ -429,10 +395,6 @@ window_show(struct window *win)
 		object_load(win);
 	}
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-		window_update_mask(win);
-	}
-
 	view->focus_win = win;		/* Focus */
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
@@ -475,27 +437,21 @@ window_hide(struct window *win)
 	
 	win->flags &= ~(WINDOW_SHOWN);
 
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		rootmap_maskfill(&win->vmask, -1);
-		break;
-	case GFX_ENGINE_GUI:
-		{
-			SDL_Rect rd;
+	/* Redraw the background in GUI mode. */
+	if (view->gfx_engine == GFX_ENGINE_GUI) {
+		SDL_Rect rd;
 
-			rd.x = win->x;
-			rd.y = win->y;
-			rd.w = win->w;
-			rd.h = win->h;
+		rd.x = win->x;
+		rd.y = win->y;
+		rd.w = win->w;
+		rd.h = win->h;
 
-			SDL_FillRect(view->v, &rd, 0);
-			SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
-		}
-		break;
+		SDL_FillRect(view->v, &rd, 0);
+		SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
 	}
 
 	if (win->flags & WINDOW_SAVE_POSITION) {
-		/* Save the window state. */
+		/* Save the window position and geometry. */
 		object_save(win);
 	}
 
@@ -583,127 +539,64 @@ cycle_widgets(struct window *win, int reverse)
 	}
 }
 
-/*
- * Update the map view mask in tile-based mode.
- * Window must be locked.
- */
-static void
-window_update_mask(struct window *win)
-{
-	win->vmask.x = (win->x / TILEW);
-	win->vmask.y = (win->y / TILEH);
-	win->vmask.w = (win->w / TILEW);
-	win->vmask.h = (win->h / TILEW);
-	rootmap_maskfill(&win->vmask, 1);
-}
-
 /* View and window must be locked. */
 static void
 winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos;
-	int moved = 0;
 
-	oldpos.x = win->x;
-	oldpos.y = win->y;
-	oldpos.w = win->w;
-	oldpos.h = win->h;
-
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		if (motion->xrel != 0 || motion->yrel != 0) {
-			win->x += motion->xrel;
-			win->y += motion->yrel;
-			moved++;
-		}
-		break;
-	case GFX_ENGINE_TILEBASED:
-		{
-			static Sint16 oldx = 0, oldy = 0;
-			Sint16 nx, ny;
-
-			nx = motion->x / TILEW;
-			ny = motion->y / TILEH;
-
-			if (oldx != 0 || oldy != 0) {
-				if (nx > oldx) {
-					win->x += TILEW;
-					moved++;
-				}
-				if (ny > oldy) {
-					win->y += TILEH;
-					moved++;
-				}
-				if (nx < oldx) {
-					win->x -= TILEW;
-					moved++;
-				}
-				if (ny < oldy) {
-					win->y -= TILEW;
-					moved++;
-				}
-			}
-			oldx = nx;
-			oldy = ny;
-		}
-		break;
+	/* Save the old window position in GUI mode. */
+	if (view->gfx_engine == GFX_ENGINE_GUI) {
+		oldpos.x = win->x;
+		oldpos.y = win->y;
+		oldpos.w = win->w;
+		oldpos.h = win->h;
 	}
 
-	/* Clamp to view area, leave a margin. */
+	/* Update the window coordinates, adjust to view area. */
+	win->x += motion->xrel;
+	win->y += motion->yrel;
 	window_clamp(win);
 
-	if (moved) {
-		switch (view->gfx_engine) {
-		case GFX_ENGINE_TILEBASED:
-			/* Move the tile mask over to the new position. */
-			rootmap_maskfill(&win->vmask, -1);
-			window_update_mask(win);
+	/* Update around the window in GUI mode. */
+	if (view->gfx_engine == GFX_ENGINE_GUI) {
+		SDL_Rect nrd;
 
-			/* Redraw the map. View is already locked. */
-			view->rootmap->map->redraw++;
-			break;
-		case GFX_ENGINE_GUI:
-			{
-				SDL_Rect nrd;
-
-				if (win->x > oldpos.x) {	/* Right */
-					nrd.x = oldpos.x;
-					nrd.y = oldpos.y;
-					nrd.w = win->x - oldpos.x;
-					nrd.h = win->h;
-					SDL_FillRect(view->v, &nrd, bg_color);
-					SDL_UpdateRect(view->v, nrd.x,
-					    nrd.y, nrd.w, nrd.h);
-				}
-				if (win->y > oldpos.y) {	/* Down */
-					nrd.x = oldpos.x;
-					nrd.y = oldpos.y;
-					nrd.w = win->w;
-					nrd.h = win->y - oldpos.y;
-					SDL_FillRect(view->v, &nrd, bg_color);
-					SDL_UpdateRect(view->v, nrd.x,
-					    nrd.y, nrd.w, nrd.h);
-				}
-				if (win->x < oldpos.x) {	/* Left */
-					nrd.x = win->x + win->w;
-					nrd.y = win->y;
-					nrd.w = oldpos.x - win->x;
-					nrd.h = oldpos.h;
-					SDL_FillRect(view->v, &nrd, bg_color);
-					SDL_UpdateRect(view->v, nrd.x,
-					    nrd.y, nrd.w, nrd.h);
-				}
-				if (win->y < oldpos.y) {	/* Up */
-					nrd.x = oldpos.x;
-					nrd.y = win->y + win->h;
-					nrd.w = oldpos.w;
-					nrd.h = oldpos.y - win->y;
-					SDL_FillRect(view->v, &nrd, bg_color);
-					SDL_UpdateRect(view->v, nrd.x,
-					    nrd.y, nrd.w, nrd.h);
-				}
-			}
-			break;
+		if (win->x > oldpos.x) {	/* Right */
+			nrd.x = oldpos.x;
+			nrd.y = oldpos.y;
+			nrd.w = win->x - oldpos.x;
+			nrd.h = win->h;
+			SDL_FillRect(view->v, &nrd, bg_color);
+			SDL_UpdateRect(view->v, nrd.x,
+			    nrd.y, nrd.w, nrd.h);
+		}
+		if (win->y > oldpos.y) {	/* Down */
+			nrd.x = oldpos.x;
+			nrd.y = oldpos.y;
+			nrd.w = win->w;
+			nrd.h = win->y - oldpos.y;
+			SDL_FillRect(view->v, &nrd, bg_color);
+			SDL_UpdateRect(view->v, nrd.x,
+			    nrd.y, nrd.w, nrd.h);
+		}
+		if (win->x < oldpos.x) {	/* Left */
+			nrd.x = win->x + win->w;
+			nrd.y = win->y;
+			nrd.w = oldpos.x - win->x;
+			nrd.h = oldpos.h;
+			SDL_FillRect(view->v, &nrd, bg_color);
+			SDL_UpdateRect(view->v, nrd.x,
+			    nrd.y, nrd.w, nrd.h);
+		}
+		if (win->y < oldpos.y) {	/* Up */
+			nrd.x = oldpos.x;
+			nrd.y = win->y + win->h;
+			nrd.w = oldpos.w;
+			nrd.h = oldpos.y - win->y;
+			SDL_FillRect(view->v, &nrd, bg_color);
+			SDL_UpdateRect(view->v, nrd.x,
+			    nrd.y, nrd.w, nrd.h);
 		}
 	}
 }
@@ -982,14 +875,14 @@ posted:
 static void
 window_clamp(struct window *win)
 {
-	if (win->x < view->margin.w)
-		win->x = view->margin.w;
-	if (win->y < view->margin.h)
-		win->y = view->margin.h;
-	if (win->x+win->w > view->w - view->margin.w)
-		win->x = view->w - win->w - view->margin.w;
-	if (win->y+win->h > view->h - view->margin.h)
-		win->y = view->h - win->h - view->margin.h;
+	if (win->x < 0)
+		win->x = 0;
+	if (win->y < 0)
+		win->y = 0;
+	if (win->x+win->w > view->w)
+		win->x = view->w - win->w;
+	if (win->y+win->h > view->h)
+		win->y = view->h - win->h;
 }
 
 /*
@@ -1001,7 +894,6 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect ro, rn;
 	int nx, ny;
-	int tw = 16, th = 16;
 
 	ro.x = win->x;
 	ro.y = win->y;
@@ -1057,23 +949,17 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		win->y = ny;
 	}
 	
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-		tw = TILEW;
-		th = TILEH;
-	}
-	if (win->x < tw) {
-		win->x = tw;
-	}
-	if (win->y < th) {
-		win->y = th;
-	}
+	if (win->x < 0)
+		win->x = 0;
+	if (win->y < 0)
+		win->y = 0;
 
 	/* Clamp to view boundaries. */
-	if (win->x+win->w > view->w - tw) {
+	if (win->x + win->w > view->w) {
 		win->x = ro.x;
 		win->w = ro.w;
 	}
-	if (win->y+win->h > view->h - th) {
+	if (win->y + win->h > view->h) {
 		win->y = ro.y;
 		win->h = ro.h;
 	}
@@ -1106,19 +992,6 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
-	int minw, minh;
-
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		minw = TILEW;
-		minh = TILEH;
-		rootmap_maskfill(&win->vmask, -1);
-		break;
-	default:
-		minw = 16;
-		minh = 16;
-		break;
-	}
 
 	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
@@ -1136,6 +1009,7 @@ window_resize(struct window *win)
 		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
 		int nwidgets = 0;
 
+		/* XXX */
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
 			nwidgets++;
 
@@ -1235,20 +1109,12 @@ window_resize(struct window *win)
 			}
 		}
 	}
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-		window_update_mask(win);
-	}
 
 #ifdef DEBUG
 	if (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE) {
 		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->w, win->h);
 	}
 #endif
-}
-
-static void
-window_update_titlebar(struct window *win)
-{
 }
 
 /* Window must be locked. */
@@ -1265,8 +1131,6 @@ window_titlebar_printf(struct window *win, const char *fmt, ...)
 	va_start(args, fmt);
 	vasprintf(&win->caption, fmt, args);
 	va_end(args);
-
-	window_update_titlebar(win);
 }
 
 int
