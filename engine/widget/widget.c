@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.23 2002/09/06 01:28:48 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.24 2002/09/07 04:36:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -66,6 +66,10 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	wid->h = 0;
 	wid->ncolors = 0;
 	SLIST_INIT(&wid->colors);
+
+	wid->surface.redraw = 0;
+	wid->surface.source = NULL;
+	pthread_mutex_init(&wid->surface.lock, NULL);
 }
 
 void
@@ -89,3 +93,37 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 	SLIST_INSERT_HEAD(&wid->colors, col, colors);
 }
 
+void
+widget_destroy(void *p)
+{
+	struct widget *wid = p;
+
+	if (wid->surface.source != NULL) {
+		SDL_FreeSurface(wid->surface.source);
+	}
+	pthread_mutex_destroy(&wid->surface.lock);
+}
+
+void
+widget_attach(void *parent, void *child)
+{
+	struct widget *p = parent;
+	struct widget *c = child;
+
+	OBJECT_ASSERT(parent, "widget");
+	OBJECT_ASSERT(child, "widget");
+
+	dprintf("attach %p to %p\n", OBJECT(c)->name, OBJECT(p)->name);
+}
+
+void
+widget_detach(void *parent, void *child)
+{
+	struct widget *p = parent;
+	struct widget *c = child;
+
+	OBJECT_ASSERT(p, "widget");
+	OBJECT_ASSERT(child, "widget");
+
+	dprintf("detach %p from %p\n", OBJECT(c)->name, OBJECT(p)->name);
+}

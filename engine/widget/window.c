@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.75 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.76 2002/09/07 06:04:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -270,8 +270,6 @@ window_draw(struct window *win)
 
 	/* Render the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
-		SDL_Rect rd;
-
 		/* Caption */
 		rd.x = win->x + (win->w - win->caption_s->w - win->borderw);
 		rd.y = win->y + win->borderw;
@@ -293,13 +291,37 @@ window_draw(struct window *win)
 		    win->border[1]);
 	}
 
-	/* Render the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		/* Draw the widgets. */
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			WIDGET_OPS(wid)->widget_draw(wid);
+#if 0
+			if (WIDGET_OPS(wid)->widget_update != NULL) {
+				/* Indirect rendering method */
+				pthread_mutex_lock(&wid->surface.lock);
+
+				if (wid->surface.redraw != 0) {
+					wid->surface.redraw = 0;
+					WIDGET_OPS(wid)->widget_update(wid);
+				}
+
+				/* XXX move rect to widget structure */
+				rd.x = WIDGET_ABSX(wid);
+				rd.y = WIDGET_ABSY(wid);
+				rd.w = wid->w;
+				rd.h = wid->h;
+
+				SDL_BlitSurface(wid->surface.source, NULL,
+				    view->v, &rd);
+				pthread_mutex_unlock(&wid->surface.lock);
+			} else if (WIDGET_OPS(wid)->widget_draw != NULL) {
+#endif
+				/* Direct rendering method */
+				WIDGET_OPS(wid)->widget_draw(wid);
+#if 0
+			}
+#endif
 		}
-		
+
+#ifdef DEBUG
 		if (prop_uint32(config, "widgets.flags") &
 		    CONFIG_REGION_BORDERS) {
 			primitives.square(win,
@@ -307,6 +329,7 @@ window_draw(struct window *win)
 			    reg->w, reg->h,
 			    SDL_MapRGB(view->v->format, 255, 255, 255));
 		}
+#endif
 	}
 
 	switch (view->gfx_engine) {
@@ -317,26 +340,12 @@ window_draw(struct window *win)
 		/* The screen will be redrawn entirely. */
 		break;
 	}
-
 #if 0
-	/* Always redraw if this is an animated window. */
-	/* XXX use real time */
-	if (win->flags & WINDOW_ANIMATE) {
-		if (delta++ > 256) {
-			delta = 0;
-		}
-		if (delta2-- < 1) {
-			delta2 = 256;
-		}
-		win->redraw++;
-	} else {
-		win->redraw = 0;
-	}
-#else
 	win->redraw = 0;
 #endif
 }
 
+#if 0
 /*
  * Update animations.
  * Window must be locked.
@@ -360,6 +369,7 @@ window_animate(struct window *win)
 		SDL_UpdateRect(view->v, win->x, win->y, win->w, win->h);
 	}
 }
+#endif
 
 /*
  * Attach a region to this window.
@@ -380,7 +390,7 @@ window_attach(void *parent, void *child)
 }
 
 /*
- * Detach a segment from this window.
+ * Detach a region from this window.
  * Window must be locked.
  */
 void
@@ -395,11 +405,6 @@ window_detach(void *parent, void *child)
 	TAILQ_REMOVE(&win->regionsh, reg, regions);
 }
 
-/*
- * This cannot be used when the events are being processed. Events
- * referencing windows which no longer exist cannot be dealt with
- * in a sane, portable manner.
- */
 void
 window_destroy(void *p)
 {
@@ -413,12 +418,13 @@ window_destroy(void *p)
 		window_detach(win, reg);
 		object_destroy(reg);
 	}
+
 	free(win->caption);
 	free(win->border);
 	pthread_mutex_destroy(&win->lock);
 }
 
-/* View and window must not be locked. */
+/* View and window must not be locked. XXX bad locking */
 int
 window_show(struct window *win)
 {
@@ -437,7 +443,8 @@ window_show(struct window *win)
 	return (rv);
 }
 
-/* View, window and world must not be locked by the caller thread. */
+/* View, window and world must not be locked by the caller thread.
+   XXX bad locking */
 int
 window_hide(struct window *win)
 {
@@ -991,7 +998,7 @@ window_clamp(struct window *win)
 
 /*
  * Resize a window with the mouse.
- * Window must be locked, config must not be locked by the caller thread.
+ * Window must be locked.
  */
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
@@ -1189,10 +1196,10 @@ window_resize(struct window *win)
 				wid->w = reg->w;
 			if (wid->h > reg->h)
 				wid->h = reg->h;
-
+			
 			event_post(wid, "widget-scaled", "%i, %i",
 			    reg->w, reg->h);
-			
+
 			/* Space widgets */
 			if (reg->flags & REGION_VALIGN) {
 				if (rw > 0) {

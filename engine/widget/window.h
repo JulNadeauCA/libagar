@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.35 2002/08/22 04:50:29 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.36 2002/09/05 03:52:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -134,7 +134,6 @@ int	 window_hide(struct window *);
 int	 window_show_locked(struct window *);
 int	 window_hide_locked(struct window *);
 void	 window_draw(struct window *);
-void	 window_animate(struct window *);
 int	 window_event_all(SDL_Event *);
 void	 window_resize(struct window *);
 void	 window_titlebar_printf(struct window *, const char *, ...);
