@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.10 2002/11/04 08:33:14 vedge Exp $
+.\"	$Csoft: agar.3,v 1.11 2002/11/26 01:27:39 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -34,34 +34,66 @@
 .Nd game engine
 .Sh DESCRIPTION
 .Nm
-is an object-oriented graphical game engine.
-.Sh LOCKING CONSTRAINTS
-The engine defines macros around pthread locking calls, to catch errors,
-or to nullify them if thread safety has been disabled at compile-time.
-.Pp
-Locking constraints must be clearly commented at the beginning of each
-function, whether it is assumed that a non-recursive lock is held, or
-whether the calling thread must not hold a non-recursive lock.
-.Pp
-Every subsystem must hide locking constraints from the other subsystems
-by providing a well-defined interface.
-.Pp
+is a thread-safe, object-oriented graphical game engine.
+Many of the structures it defines are derived from the
+.Xr object 3
+structure, which provides pointers to generic data, such as audio, graphics,
+properties and an
+.Xr event 3
+handler list.
 The
-.Va world->lock
-mutex protects the existence of objects.
-To avoid a race inside the async event handler, between entry and acquisition
-of
-.Va world->lock
-(where another thread may be able to detach the object before the lock is
-acquired), async event handlers must ensure that the object still exists
-in the
-.Va world->objs
-list once the
-.Va world->lock
-mutex is acquired.
+.Xr event 3
+framework implements the passing of events between objects.
+.Pp
+.Bl -tag -width "version(3)" -compact
+.It Xr map 3
+Game levels.
+.It Xr perso 3
+Game characters.
+.It Xr physics 3
+Simple movement.
+.It Xr version 3
+Signatures and versioning of data in network format.
+.It Xr view 3
+Graphic engine.
+.It Xr rootmap 3
+Map display used in
+.Sq game
+mode.
+.It Xr world 3
+Generic container for objects used in the game.
+.El
+.Pp
+.Nm
+implements its own
+.Xr window 3
+system and
+.Xr widget 3
+framework.
+.Sh THREAD SAFETY
+The
+.Nm
+engine can work with the pthread calls removed at compile time.
+.Nm
+uses the following locking primitives:
+.Bl -enum -compact
+.It
+Simple mutexes.
+.It
+Recursive mutexes.
+.It
+Read-write locks.
+.El
+.Pp
+Public
+.Nm
+interfaces must hide locking from the calling code, as long as there is
+no relative impact on performance.
 .Sh SEE ALSO
+.Xr event 3 ,
 .Xr fobj 3 ,
 .Xr object 3 ,
 .Xr map 3 ,
+.Xr perso 3 ,
 .Xr widget 3 ,
 .Xr window 3
