@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.103 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.104 2003/01/03 23:29:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -472,3 +472,55 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 
 #endif /* HAVE_OPENGL */
 
+/* Alpha-blend two pixels in software. */
+__inline__ void
+view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
+    Uint8 b, Uint8 a)
+{
+	Uint32 color, dstcolor;
+	Uint8 dr, dg, db;
+	Uint8 *dst;
+
+	if (!VIEW_INSIDE_CLIP_RECT(s, x, y)) {
+		return;
+	}
+
+	dst = (Uint8 *)s->pixels + y*s->pitch + x*s->format->BytesPerPixel;
+	switch (s->format->BytesPerPixel) {
+	case 1:
+		dstcolor = *dst;
+		break;
+	case 2:
+		dstcolor = *(Uint16 *)dst;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		dstcolor = (dst[0] << 16) +
+		           (dst[1] << 8) +
+			    dst[2];
+#else
+		dstcolor =  dst[0] +
+		           (dst[1] << 8) +
+			   (dst[2] << 16);
+#endif
+		break;
+	case 4:
+		dstcolor = *(Uint32 *)dst;
+		break;
+	default:
+		fatal("bad bpp\n");
+	}
+	SDL_GetRGB(dstcolor, s->format, &dr, &dg, &db);
+
+	dr = (((r - dr) * a) >> 8) + dr;
+	dg = (((g - dg) * a) >> 8) + dg;
+	db = (((b - db) * a) >> 8) + db;
+	color = SDL_MapRGB((s)->format, dr, dg, db);
+
+	switch (s->format->BytesPerPixel) {
+		_VIEW_PUTPIXEL_8(dst,  color)
+		_VIEW_PUTPIXEL_16(dst, color)
+		_VIEW_PUTPIXEL_24(dst, color)
+		_VIEW_PUTPIXEL_32(dst, color)
+	}
+}
