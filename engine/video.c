@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.2 2002/01/26 06:36:17 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.3 2002/01/26 14:30:10 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -91,11 +91,11 @@ videodone:
 struct video *
 video_create(char *path, SDL_Surface *s)
 {
-	SMPEG_Info info;
 	SDL_SysWMinfo wm;
+	SMPEG_Info info;
 	struct stat sta;
 	char *errmsg, **exts;
-	struct video *v;
+	struct video *v = NULL;
 	int i, xvideo = 0, nexts = 0;
 
 	/*
@@ -112,9 +112,9 @@ video_create(char *path, SDL_Surface *s)
 	for (i = 0; i < nexts; i++) {
 		if (strcmp("XVideo", exts[i]) == 0) {
 			xvideo++;
-			break;
 		}
 	}
+	free(exts);
 	wm.info.x11.unlock_func();
 	if (!xvideo) {
 		warning("XVideo extension missing, skipping video.\n");
@@ -137,13 +137,11 @@ video_create(char *path, SDL_Surface *s)
 
 	errmsg = SMPEG_error(v->mpeg);
 	if (errmsg != NULL) {
-		fatal("%s: %s\n", path, errmsg);
-		SMPEG_delete(v->mpeg);
-		return (NULL);
+		warning("%s: %s\n", path, errmsg);
+		goto videoerr;
 	}
 
 	SMPEG_scaleXY(v->mpeg, s->w, s->h);
-
 	SDL_mutexP(v->lock);
 
 	SMPEG_setdisplay(v->mpeg, s, NULL, NULL);
@@ -165,9 +163,18 @@ video_create(char *path, SDL_Surface *s)
 	putenv("SDL_VIDEO_CENTERED=0");
 	if (pthread_create(&v->thread, NULL, video_tick, v) != 0) {
 		perror("playback");
-		return (NULL);
+		goto videoerr;
 	}
 	return (v);
+
+videoerr:
+	if (v != NULL) {
+		if (v->mpeg != NULL) {
+			SMPEG_delete(v->mpeg);
+		}
+		free(v);
+	}
+	return (NULL);
 }
 
 void
