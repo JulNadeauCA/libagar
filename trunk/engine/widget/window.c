@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.79 2002/09/13 11:08:32 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.80 2002/09/17 21:19:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -129,8 +129,8 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		asprintf(&wname, "win-generic%d", curwindow++);
 	}
 
-	object_init(&win->wid.obj, "window", wname, "window", OBJECT_ART,
-	    &window_ops);
+	object_init(&win->wid.obj, "window", wname, "window",
+	    OBJECT_ART|OBJECT_KEEP_MEDIA, &window_ops);
 
 	free(wname);
 	
@@ -724,7 +724,7 @@ window_mousefocus(Uint16 x, Uint16 y)
  * View must be locked, window list must not be empty.
  */
 int
-window_event_all(SDL_Event *ev)
+window_event(SDL_Event *ev)
 {
 	struct region *reg;
 	struct window *win;
@@ -813,6 +813,8 @@ window_event_all(SDL_Event *ev)
 				if (ev->button.y - win->y <= win->titleh) {
 				    	if (ev->button.x - win->x < 20) {
 						window_hide(win);
+						event_post(win,
+						    "window-close", NULL);
 					}
 					view->winop = VIEW_WINOP_MOVE;
 					view->wop_win = win;
@@ -1224,4 +1226,16 @@ window_save(void *p, int fd)
 	write_uint32(fd, win->h);
 	
 	return (0);
+}
+
+void
+window_detach_generic(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(win, "window");
+
+	dprintf("detaching %s\n", OBJECT(win)->name);
+
+	view_detach(win);
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.9 2002/09/17 21:20:06 vedge Exp $
+.\"	$Csoft: window.3,v 1.10 2002/09/17 21:42:25 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -195,11 +195,11 @@ is called.
 .Sh EVENT DISPATCHING
 .nr nS 1
 .Ft int
-.Fn window_event_all "SDL_Event *ev"
+.Fn window_event "SDL_Event *ev"
 .nr nS 0
 .Pp
 The
-.Fn window_event_all
+.Fn window_event
 function translates the
 .Xr SDL_Event 3
 pointed to by the
@@ -207,8 +207,18 @@ pointed to by the
 argument and dispatches appropriate events to relevant widgets.
 The view structure must be locked, and the window list must not be
 empty when
-.Fn window_event_all
+.Fn window_event
 is called.
+.Sh GENERIC EVENT HANDLERS
+.nr nS 1
+.Ft void
+.Fn window_detach_generic "int argc" "union evarg *argv"
+.nr nS 0
+.Pp
+The
+.Fn window_detach_generic
+event handler detaches the window given as the first argument, freeing all
+associated resources.
 .Sh EVENTS
 The
 .Nm
@@ -267,6 +277,8 @@ was released, and the widget holds the focus.
 The key identified by
 .Fa keysym
 was pressed, and the widget holds the focus.
+.It Fn window-close "void"
+The window's titlebar close button was pressed.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

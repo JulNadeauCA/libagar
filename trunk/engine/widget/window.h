@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.38 2002/09/12 09:15:53 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.39 2002/09/13 11:08:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -61,6 +61,7 @@ struct window {
 
 	struct	 regionsq regionsh;
 	TAILQ_ENTRY(window) windows;	/* Windows in view */
+	TAILQ_ENTRY(window) detach;	/* Windows to free */
 
 	pthread_mutex_t		lock;
 	pthread_mutexattr_t	lockattr;
@@ -126,7 +127,8 @@ void		 window_detach(void *, void *);
 int	 window_show(struct window *);
 int	 window_hide(struct window *);
 void	 window_draw(struct window *);
-int	 window_event_all(SDL_Event *);
+int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
 void	 window_titlebar_printf(struct window *, const char *, ...);
+void	 window_detach_generic(int, union evarg *);
 
