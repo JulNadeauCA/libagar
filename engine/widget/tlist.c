@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.16 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.17 2002/11/14 07:52:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -171,6 +171,9 @@ tlist_draw(void *p)
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
 
 	pthread_mutex_lock(&tl->items_lock);
+	if (tl->flags & TLIST_POLL) {			/* Update the list */
+		event_post(tl, "tlist-poll", NULL);
+	}
 
 	y = sb->range.soft_start;
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -180,11 +183,9 @@ tlist_draw(void *p)
 		if (i++ < sb->range.start) {
 			continue;
 		}
-
 		if (y > WIDGET(tl)->h - it->icon_h) {
 			goto out;
 		}
-
 		if (it->selected) {
 			WIDGET_FILL(tl, x, y,
 			    WIDGET(tl)->w - WIDGET(sb)->w, tl->item_h,
@@ -353,6 +354,10 @@ tlist_mousemotion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	Uint8 ms;
+	
+	if (tl->flags & TLIST_POLL) {			/* Update the list */
+		event_post(tl, "tlist-poll", NULL);
+	}
 
 	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar motion? */
 		event_forward(sb, "window-mousemotion", argc, argv);
@@ -386,6 +391,10 @@ tlist_mousebuttonup(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	
+	if (tl->flags & TLIST_POLL) {			/* Update the list */
+		event_post(tl, "tlist-poll", NULL);
+	}
+	
 	event_forward(tl->vbar, "window-mousebuttonup", argc, argv);
 }
 
@@ -399,6 +408,10 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int y = argv[3].i;
 	struct tlist_item *ti;
 	int index;
+	
+	if (tl->flags & TLIST_POLL) {			/* Update the list */
+		event_post(tl, "tlist-poll", NULL);
+	}
 	
 	WIDGET_FOCUS(tl);
 
@@ -444,6 +457,10 @@ tlist_keydown(int argc, union evarg *argv)
 	struct tlist_item *it, *pit;
 	int keysym = argv[1].i;
 	int sel;
+	
+	if (tl->flags & TLIST_POLL) {			/* Update the list */
+		event_post(tl, "tlist-poll", NULL);
+	}
 
 	pthread_mutex_lock(&tl->items_lock);
 	switch (keysym) {
