@@ -1,4 +1,4 @@
-/*	$Csoft: sprite_browser.c,v 1.2 2002/11/14 05:59:02 vedge Exp $	*/
+/*	$Csoft: sprite_browser.c,v 1.3 2002/11/15 04:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,52 +46,22 @@
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
-#include "sprite_browser.h"
-
-static const struct monitor_tool_ops sprite_browser_ops = {
-	{
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL		/* save */
-	},
-	sprite_browser_window
-};
 
 static void	lookup_object(int, union evarg *);
 
-struct sprite_browser *
-sprite_browser_new(struct monitor *mon, int flags)
-{
-	struct sprite_browser *sprite_browser;
-
-	sprite_browser = emalloc(sizeof(struct sprite_browser));
-	sprite_browser_init(sprite_browser, mon, flags);
-
-	return (sprite_browser);
-}
-
-void
-sprite_browser_init(struct sprite_browser *sprite_browser, struct monitor *mon,
-    int flags)
-{
-	monitor_tool_init(&sprite_browser->tool, "sprite_browser", mon,
-	    &sprite_browser_ops);
-
-	sprite_browser->flags = flags;
-}
-
 struct window *
-sprite_browser_window(void *p)
+sprite_browser_window(void)
 {
-	struct sprite_browser *obr = p;
 	struct window *win;
 	struct region *reg;
 	struct textbox *obj_tbox, *offs_tbox;
 	struct button *button;
 	struct bitmap *bmp;
 
-	win = window_new("monitor-sprite-browser", WINDOW_CENTER, -1, -1,
-	    184, 228, 184, 228);
+	if ((win = window_generic_new(184, 228, "monitor-sprite-browser"))
+	    == NULL) {
+		return (NULL);	/* Exists */
+	}
 	window_set_caption(win, "Sprite browser");
 
 	/* Input */
@@ -125,8 +95,6 @@ lookup_object(int argc, union evarg *argv)
 	name = textbox_string(obj_tbox);
 	offs = (Uint32)textbox_int(offs_tbox);
 
-	dprintf("object %s\n", name);
-
 	pthread_mutex_lock(&world->lock);
 
 	ob = world_find(name);
@@ -150,7 +118,6 @@ lookup_object(int argc, union evarg *argv)
 	free(name);
 	return;
 err:
-	dprintf("%s\n", cause);
 	bmp->surface = text_render(NULL, -1,
 	    SDL_MapRGB(view->v->format, 255, 255, 255), cause);
 	window_resize(WIDGET(bmp)->win);

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.13 2002/11/15 00:56:25 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.14 2002/11/15 04:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -40,16 +40,11 @@
 #include <engine/physics.h>
 
 #include <engine/widget/widget.h>
-#include <engine/widget/text.h>
 #include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
+#include <engine/widget/tlist.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
-#include "sprite_browser.h"
-#include "object_browser.h"
-#include "map_view.h"
 
 const struct object_ops monitor_ops = {
 	monitor_destroy,
@@ -59,73 +54,46 @@ const struct object_ops monitor_ops = {
 
 struct monitor monitor;		/* Debug monitor */
 
-static void		 show_tool(int, union evarg *);
-static struct window	*toolbar_window(struct monitor *);
-
 static void
-show_tool(int argc, union evarg *argv)
+toolbar_selected_tool(int argc, union evarg *argv)
 {
-	struct widget *wid = argv[0].p;
-	struct window *win = argv[1].p;
-
-	OBJECT_ASSERT(wid, "widget");
-	OBJECT_ASSERT(win, "window");
-
-	window_show(win);
-}
-
-static struct window *
-toolbar_window(struct monitor *mon)
-{
-	const int xdiv = 25, ydiv = 100;
+	struct tlist *tl = argv[0].p;
+	struct tlist_item *it = argv[1].p;
+	struct window *(*win_func)() = it->p1;
 	struct window *win;
-	struct region *reg;
-	struct button *button;
 
-	win = window_new("monitor-toolbar", 0, view->w - 86, 16,
-	    130, 104, 130, 104);
-	window_set_caption(win, "Debug monitor");
-
-	reg = region_new(win, REGION_HALIGN, 0,  0, 100, 50);
-	reg->spacing = 1;
-	
-	/* Object browser */
-	button = button_new(reg, NULL, SPRITE(mon, MONITOR_OBJECT_BROWSER), 0,
-	    xdiv, ydiv);
-	win->focus = WIDGET(button);
-	event_new(button, "button-pushed",
-	    show_tool, "%p", mon->wins.object_browser);
-
-	/* Sprite browser */
-	button = button_new(reg, NULL, SPRITE(mon, MONITOR_SPRITE_BROWSER), 0,
-	    xdiv, ydiv);
-	event_new(button, "button-pushed",
-	    show_tool, "%p", mon->wins.sprite_browser);
-	
-	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
-	reg->spacing = 1;
-	
-	/* Map view */
-	button = button_new(reg, NULL, SPRITE(mon, MONITOR_MAP_VIEW), 0,
-	    xdiv, ydiv);
-	event_new(button, "button-pushed", map_view_show, "%p", mon);
-
-	return (win);
+	if ((win = (win_func)()) != NULL) {
+		window_show(win);
+	}
 }
 
 void
 monitor_init(struct monitor *mon, char *name)
 {
+	struct region *reg;
+	struct tlist *tl_tools;
+
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
-	event_new(mon, "world-attached-object",
-	    object_browser_attached_object, NULL);
-	event_new(mon, "world-detached-object",
-	    object_browser_detached_object, NULL);
 
-	mon->wins.object_browser = object_browser_window(mon);
-	mon->wins.sprite_browser = sprite_browser_window(mon);
-	mon->wins.toolbar = toolbar_window(mon);
+	mon->toolbar = window_new("monitor-toolbar", 0, view->w - 86, 16,
+	    222, 152, 222, 152);
+	window_set_caption(mon->toolbar, "Debug monitor");
+
+	reg = region_new(mon->toolbar, REGION_HALIGN, 0,  0, 100, 100);
+	reg->spacing = 1;
+
+	tl_tools = tlist_new(reg, 100, 100, 0);
+	tlist_insert_item(tl_tools,
+	    SPRITE(mon, MONITOR_OBJECT_BROWSER), "Object browser",
+	    object_browser_window);
+	tlist_insert_item(tl_tools,
+	    SPRITE(mon, MONITOR_SPRITE_BROWSER), "Sprite browser",
+	    sprite_browser_window);
+	tlist_insert_item(tl_tools,
+	    SPRITE(mon, MONITOR_LEVEL_BROWSER), "Level browser",
+	    level_browser_window);
+	event_new(tl_tools, "tlist-changed", toolbar_selected_tool, NULL);
 }
 
 void
@@ -133,30 +101,7 @@ monitor_destroy(void *ob)
 {
 	struct monitor *mon = ob;
 
-	object_destroy(mon->wins.toolbar);
-	object_destroy(mon->wins.object_browser);
-	object_destroy(mon->wins.sprite_browser);
-}
-
-void
-monitor_tool_init(struct monitor_tool *tool, char *name, struct monitor *mon,
-    const void *toolops)
-{
-	static pthread_mutex_t toolid_lock = PTHREAD_MUTEX_INITIALIZER;
-	static int toolid = 0;
-	char *toolname;
-
-	pthread_mutex_lock(&toolid_lock);
-	toolname = object_name(name, toolid++);
-	pthread_mutex_unlock(&toolid_lock);
-	object_init(&tool->obj, "monitor-tool", toolname, NULL, 0, toolops);
-	free(toolname);
-
-	tool->flags = 0;
-	tool->mon = mon;
-	tool->win = (MONITOR_TOOL_OPS(tool)->tool_window != NULL) ? 
-	    MONITOR_TOOL_OPS(tool)->tool_window(tool) : NULL;
-	tool->type = strdup(name);
+	view_detach(mon->toolbar);
 }
 
 #endif	/* DEBUG */
