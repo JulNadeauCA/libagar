@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.12 2002/12/21 10:21:16 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.13 2002/12/26 07:04:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,12 +65,13 @@ static void	scrollbar_scaled(int, union evarg *);
 static void	scrollbar_triangle(struct scrollbar *, int, int, int, Uint32);
 
 struct scrollbar *
-scrollbar_new(struct region *reg, int w, int h, int flags)
+scrollbar_new(struct region *reg, int w, int h,
+    enum scrollbar_orientation orient)
 {
 	struct scrollbar *sb;
 
 	sb = emalloc(sizeof(struct scrollbar));
-	scrollbar_init(sb, w, h, flags);
+	scrollbar_init(sb, w, h, orient);
 
 	region_attach(reg, sb);
 
@@ -78,7 +79,8 @@ scrollbar_new(struct region *reg, int w, int h, int flags)
 }
 
 void
-scrollbar_init(struct scrollbar *sb, int w, int h, int flags)
+scrollbar_init(struct scrollbar *sb, int w, int h,
+    enum scrollbar_orientation orient)
 {
 	widget_init(&sb->wid, "scrollbar", &scrollbar_ops, w, h);
 	widget_map_color(sb, BACKGROUND_COLOR, "background", 120, 120, 120);
@@ -90,11 +92,11 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int flags)
 	widget_bind(sb, "min", WIDGET_INT, &sb->def.lock, &sb->def.min);
 	widget_bind(sb, "max", WIDGET_INT, &sb->def.lock, &sb->def.max);
 
-	sb->flags = flags;
+	sb->orientation = orient;
 	sb->curbutton = BUTTON_NONE;
 	sb->bar_size = 30;
 	sb->button_size = 25;
-	
+
 	sb->def.value = 0;
 	sb->def.min = 0;
 	sb->def.max = 0;
@@ -121,33 +123,32 @@ scrollbar_mouse_buttonup(int argc, union evarg *argv)
 }
 
 static void
-scrollbar_mouse_select(struct scrollbar *sb, int y)
+scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 {
-	int ny = y - sb->bar_size/2;
+	int ncoord = coord - sb->bar_size/2;
 	int max;
 
-	if (sb->curbutton != BUTTON_SCROLL) {		/* Not scrolling? */
+	if (sb->curbutton != BUTTON_SCROLL)
 		return;
-	}
-	if (sb->bar_size == -1) {			/* Full range? */
+	if (sb->bar_size == -1)
 		return;
-	}
-	if (ny < sb->button_size) {			/* Up button? */
+
+	if (ncoord < sb->button_size) {
 		widget_set_int(sb, "value", 0);
-		return;
+		goto changed;
 	}
 
 	max = widget_get_int(sb, "max");
 
-	if (ny > WIDGET(sb)->h - sb->bar_size - sb->button_size) { /* Down */
+	if (ncoord > maxcoord - sb->bar_size - sb->button_size) { /* Down */
 		widget_set_int(sb, "value", max);
-		return;
+		goto changed;
 	}
 
-	ny -= sb->button_size;
-	widget_set_int(sb, "value", ny * max / WIDGET(sb)->h);
-	
-	event_post(sb, "changed", "%i", widget_get_int(sb, "value"));
+	ncoord -= sb->button_size;
+	widget_set_int(sb, "value", ncoord * max / maxcoord);
+changed:
+	event_post(sb, "scrollbar-changed", "%i", widget_get_int(sb, "value"));
 }
 
 static void
@@ -157,14 +158,18 @@ scrollbar_mouse_buttondown(int argc, union evarg *argv)
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
+	int coord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	    argv[2].i : argv[3].i;
+	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	    WIDGET(sb)->w : WIDGET(sb)->h;
 
-	if (y < sb->button_size) {
+	if (coord < sb->button_size) {
 		sb->curbutton = BUTTON_UP;
-	} else if (y > WIDGET(sb)->h - sb->button_size) {
+	} else if (coord > maxcoord - sb->button_size) {
 		sb->curbutton = BUTTON_DOWN;
 	} else {
 		sb->curbutton = BUTTON_SCROLL;
-		scrollbar_mouse_select(sb, y);
+		scrollbar_mouse_select(sb, coord, maxcoord);
 	}
 }
 
@@ -172,11 +177,13 @@ static void
 scrollbar_mouse_motion(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
-
+	int coord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	    argv[1].i : argv[2].i;
+	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	    WIDGET(sb)->w : WIDGET(sb)->h;
+	
 	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
-		scrollbar_mouse_select(sb, y);
+		scrollbar_mouse_select(sb, coord, maxcoord);
 	}
 }
 
@@ -185,7 +192,14 @@ scrollbar_scaled(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
 
-	sb->button_size = WIDGET(sb)->w;		/* XXX square */
+	switch (sb->orientation) {
+	case SCROLLBAR_HORIZ:
+		sb->button_size = WIDGET(sb)->h;	/* Square */
+		break;
+	case SCROLLBAR_VERT:
+		sb->button_size = WIDGET(sb)->w;	/* Square */
+		break;
+	}
 }
 
 enum {
@@ -230,6 +244,9 @@ scrollbar_triangle(struct scrollbar *sb, int xoffs, int yoffs, int orientation,
 		    xoffs + bh - 2, yoffs + 2,
 		    color);
 		break;
+	case TRIANGLE_LEFT:
+	case TRIANGLE_RIGHT:
+		break;
 	}
 }
 
@@ -238,9 +255,12 @@ scrollbar_draw(void *p)
 {
 	struct scrollbar *sb = p;
 	int value, min, max;
-	int h, y;
-
-	if (WIDGET(sb)->h < sb->button_size*2) {
+	int w, h, x, y;
+	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	    WIDGET(sb)->w : WIDGET(sb)->h;
+	int coord;
+	
+	if (maxcoord < sb->button_size*2 + sb->bar_size) {
 		return;
 	}
 
@@ -251,7 +271,8 @@ scrollbar_draw(void *p)
 	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
 	    WIDGET_COLOR(sb, BACKGROUND_COLOR));
 
-	if (sb->flags & SCROLLBAR_VERTICAL) {
+	switch (sb->orientation) {
+	case SCROLLBAR_VERT:
 		/* Scrolling buttons */
 		primitives.box(sb, 0, 0, WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
@@ -264,13 +285,10 @@ scrollbar_draw(void *p)
 		    WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
-
-		/* XXX centering */
 		scrollbar_triangle(sb, -1, WIDGET(sb)->h - 17, TRIANGLE_DOWN,
 		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
 		scrollbar_triangle(sb, 0, WIDGET(sb)->h - 16, TRIANGLE_DOWN,
 		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
-
 		/* Scrolling bar */
 		if (max > 0) {
 			if (sb->bar_size < 0) {
@@ -284,20 +302,61 @@ scrollbar_draw(void *p)
 			h = WIDGET(sb)->h - sb->button_size*2;
 			y = 0;
 		}
-		
 		if (h < sb->button_size) {
 			h = sb->button_size;
 		}
-
 		if (sb->button_size + h + y > WIDGET(sb)->h - sb->button_size) {
 			y = WIDGET(sb)->h - sb->button_size*2 - h;
 		}
-
 		primitives.box(sb,
 		    0, sb->button_size+y,
 		    WIDGET(sb)->w, h,
 		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		break;
+	case SCROLLBAR_HORIZ:
+		/* Scrolling buttons */
+		primitives.box(sb, 0, 0,
+		    sb->button_size, WIDGET(sb)->h,
+		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
+		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		scrollbar_triangle(sb, -1, 2, TRIANGLE_LEFT,
+		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
+		scrollbar_triangle(sb, 0, 3, TRIANGLE_LEFT,
+		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
+		primitives.box(sb,
+		    WIDGET(sb)->w - sb->button_size, 0,
+		    WIDGET(sb)->h, sb->button_size,
+		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
+		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		scrollbar_triangle(sb, -1, WIDGET(sb)->w - 17, TRIANGLE_RIGHT,
+		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
+		scrollbar_triangle(sb, 0, WIDGET(sb)->w - 16, TRIANGLE_RIGHT,
+		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
+		/* Scrolling bar */
+		if (max > 0) {
+			if (sb->bar_size < 0) {
+				w = WIDGET(sb)->w - sb->button_size*2;
+			} else {
+				w = sb->bar_size;
+			}
+			x = value * (WIDGET(sb)->w - sb->button_size) / max;
+		} else {
+			w = WIDGET(sb)->w - sb->button_size*2;
+			x = 0;
+		}
+		if (w < sb->button_size) {
+			w = sb->button_size;
+		}
+		if (sb->button_size + w + x > WIDGET(sb)->w - sb->button_size) {
+			x = WIDGET(sb)->w - sb->button_size*2 - w;
+		}
+		primitives.box(sb,
+		    sb->button_size+x, 0,
+		    w, WIDGET(sb)->h,
+		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
+		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		break;
 	}
 }
 
