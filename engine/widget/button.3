@@ -1,0 +1,109 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt BUTTON 3
+.Os
+.Sh NAME
+.Nm button
+.Nd agar button widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/button.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget implements a simple push-button containing a string of text or
+an image.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft struct button *
+.Fn button_new "struct region *reg" "char *caption" "SDL_Surface *image" "int flags" "int rw" "int rh"
+.Pp
+.Ft void
+.Fn button_init "struct button *button" "char *caption" "SDL_Surface *image" "int flags" "int rw" "int rh"
+.nr nS 0
+.Pp
+The
+.Fn button_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn button_init
+function initializes a
+.Nm
+widget of size
+.Fa rw
+x
+.Fa rh
+displaying either a string of text if
+.Fa caption
+is non-null, or an image if
+.Fa image
+is non-null.
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define BUTTON_PRESSED	0x01		/* Button is pressed */
+#define BUTTON_STICKY	0x02		/* Button state is static */
+.Ed
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It window-mousebuttonup
+Release the button.
+.It window-mousebuttondown
+Press the button.
+.It window-keyup
+Release the button.
+.It window-keydown
+Press the button.
+.It window-mouseout
+Abort a button press
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It button-pushed
+Button press.
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
