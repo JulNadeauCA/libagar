@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.42 2003/03/12 07:59:03 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.43 2003/03/13 03:28:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -142,10 +142,6 @@ tlist_scaled(int argc, union evarg *argv)
 	struct scrollbar *sb = tl->vbar;
 	int w = argv[1].i;
 	int h = argv[2].i;
-
-	dprintf("tl: %ux%u at %d,%d\n",
-	    WIDGET(tl)->x, WIDGET(tl)->y,
-	    WIDGET(tl)->w, WIDGET(tl)->h);
 
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
