@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.171 2004/12/28 01:47:16 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.172 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -370,8 +370,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 void
 mapview_ncoords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
 {
-	*x -= mv->ssx - mv->tilesz*TILEOUT;
-	*y -= mv->ssy - mv->tilesz*TILEOUT;
+	*x -= mv->ssx;
+	*y -= mv->ssy;
 
 	*xoff = *x % mv->tilesz;
 	*yoff = *y % mv->tilesz;
@@ -466,8 +466,8 @@ draw_cursor(struct mapview *mv)
 		return;
 	}
 	
-	rd.x = mv->mouse.x*mv->tilesz - mv->tilesz*TILEOUT + mv->ssx;
-	rd.y = mv->mouse.y*mv->tilesz - mv->tilesz*TILEOUT + mv->ssy;
+	rd.x = mv->mouse.x*mv->tilesz - mv->ssx;
+	rd.y = mv->mouse.y*mv->tilesz - mv->ssy;
 
 	if (mv->curtool == NULL)
 		return;
