@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.17 2002/09/17 21:55:34 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.18 2002/11/12 01:58:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -15,7 +15,7 @@ extern int engine_debug;
 #  define deprintf(fmt, args...)					\
 	do {								\
 		if (engine_debug)					\
-			fprintf(stderr, ##args);			\
+			fprintf(stderr, fmt , ##args);			\
 	} while (/*CONSTCOND*/0)
 # else	/* !__GNUC__ */
 #  define dprintf	printf
