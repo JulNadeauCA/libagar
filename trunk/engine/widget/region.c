@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.3 2002/05/21 03:22:05 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.4 2002/05/22 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -104,9 +104,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 void
 region_destroy(void *p)
 {
-	struct region *reg = p;
-
-	dprintf("free %s\n", OBJECT(reg)->name);
+	dprintf("free %s\n", OBJECT(p)->name);
 }
 
 /*
