@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.1 2004/04/11 03:28:43 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.2 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#include <engine/widget/toolbar.h>
+#include <engine/widget/button.h>
 
 #include "vg.h"
 #include "vg_math.h"
@@ -116,4 +119,50 @@ vg_draw_grid(struct vg *vg)
 			vg_put_pixel(vg, x, y, vg->grid_color);
 		}
 	}
+}
+
+static void
+snap_to(int argc, union evarg *argv)
+{
+	struct button *bu = argv[0].p;
+	struct toolbar *tbar = argv[1].p;
+	struct vg *vg = argv[2].p;
+	int snap_mode = argv[3].i;
+
+	toolbar_select_unique(tbar, bu);
+	vg_snap_mode(vg, snap_mode);
+}
+
+struct toolbar *
+vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
+{
+	struct toolbar *snbar;
+	struct button *bu;
+
+	snbar = toolbar_new(parent, ttype, 1);
+	toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
+	toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
+	bu = toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
+	widget_set_int(bu, "state", 1);
+	toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
+	toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_D_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
+
+	toolbar_add_button(snbar, 0, ICON(SNAP_CLOSEST_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
+	toolbar_add_button(snbar, 0, ICON(SNAP_CENTERPT_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
+	toolbar_add_button(snbar, 0, ICON(SNAP_MIDDLEPT_ICON), 1, 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
+	toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_AUTO_ICON),
+	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
+	    VG_INTERSECTIONS_AUTO);
+	toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_MANUAL_ICON),
+	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
+	    VG_INTERSECTIONS_MANUAL);
+	return (snbar);
 }
