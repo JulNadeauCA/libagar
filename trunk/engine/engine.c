@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.80 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.81 2002/12/01 14:28:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -139,8 +139,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	}
 
 	/* Initialize SDL. */
-	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|
-	    SDL_INIT_NOPARACHUTE) != 0) {
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
 	}
 
