@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.13 2004/03/24 06:23:25 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.14 2004/03/25 04:35:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include <compat/math.h>
 #include <limits.h>
 
 static struct widget_ops fspinbutton_ops = {
@@ -83,7 +82,7 @@ fspinbutton_bound(int argc, union evarg *argv)
 
 	if (strcmp(binding->name, "value") == 0) {
 		pthread_mutex_lock(&fsu->lock);
-		switch (binding->type) {
+		switch (binding->vtype) {
 		case WIDGET_DOUBLE:
 			fsu->min = -DBL_MAX+1;
 			fsu->max = DBL_MAX-1;
@@ -93,8 +92,6 @@ fspinbutton_bound(int argc, union evarg *argv)
 			fsu->max = FLT_MAX-1;
 			break;
 		}
-		textbox_printf(fsu->input, fsu->format,
-		    *(double *)binding->p1/fsu->unit->divider);
 		pthread_mutex_unlock(&fsu->lock);
 	}
 }
@@ -290,7 +287,7 @@ fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 	void *value;
 
 	valueb = widget_get_binding(fsu, "value", &value);
-	switch (valueb->type) {
+	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
 		if (*(double *)value + inc >= fsu->min &&
 		    *(double *)value + inc <= fsu->max)
@@ -317,7 +314,7 @@ fspinbutton_set_value(struct fspinbutton *fsu, double nvalue)
 	void *value;
 
 	valueb = widget_get_binding(fsu, "value", &value);
-	switch (valueb->type) {
+	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
 		*(double *)value = nvalue;
 		break;
