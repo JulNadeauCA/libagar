@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.22 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.23 2002/06/25 17:32:47 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -14,6 +14,7 @@ struct widget {
 
 	int	 flags;
 #define WIDGET_HIDE		0x01	/* Don't draw widget */
+#define WIDGET_MOUSEOUT		0x02	/* Receive window-mouseout events */
 
 	struct	window *win;		/* Parent window */
 	int	rw, rh;			/* Requested geometry (%) */
