@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.24 2004/02/20 04:18:09 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.25 2004/02/29 17:34:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -270,7 +270,7 @@ objedit_window(void)
 		}
 
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
+		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 6);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
 
