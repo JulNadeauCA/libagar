@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.57 2002/03/14 03:33:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.58 2002/03/15 07:33:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -676,8 +676,7 @@ map_load(void *ob, int fd)
 
 					refs++;
 				} else {
-					dprintf("at %dx%d:[%d]\n", x, y, i,
-					    nnrefs);
+					dprintf("at %dx%d:[%d]\n", x, y, i);
 					fatal("no match for \"%s\"\n",
 					    pobjstr);
 				}
