@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.11 2003/12/11 00:08:32 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.12 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -60,9 +60,9 @@ const struct unit length_units[] = {
 	{ "nmi",	N_("Nautical miles"),	1852,			NULL },
 	{ "lg",		N_("Leagues"),		4828.031551,		NULL },
 	{ "nlg",	N_("Nautical leagues"),	5556,			NULL },
-	{ "A.U.",	N_("Astronomical units"), 159598073000,		NULL },
-	{ "L.Y.",	N_("Light years"),	946075309081900,	NULL },
-	{ "P.S.",	N_("Parsecs"),		30856780000000000,	NULL },
+	{ "A.U.",	N_("Astronomical units"), 159598073000.0,	NULL },
+	{ "L.Y.",	N_("Light years"),	946075309081900.0,	NULL },
+	{ "P.S.",	N_("Parsecs"),		30856780000000000.0,	NULL },
 	{ NULL,		NULL,			0,			NULL }
 };
 
