@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.56 2002/08/21 02:21:39 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.57 2002/09/04 04:41:26 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -13,11 +13,12 @@ struct editref {
 	SIMPLEQ_ENTRY(editref) erefs;	/* Reference list */
 };
 
-SIMPLEQ_HEAD(erefs_head, editref);
+SIMPLEQ_HEAD(erefq, editref);
 
 struct editobj {
-	struct	object *pobj;		/* Original object structure */
-	struct	erefs_head erefsh;	/* Reference list */
+	struct object	*pobj;		/* Original object structure */
+	struct erefq	 erefs;		/* Reference list */
+
 	int	nrefs;
 	int	nsprites;
 	int	nanims;
@@ -25,42 +26,38 @@ struct editobj {
 	TAILQ_ENTRY(editobj) eobjs;	/* Editable object list */
 };
 
-TAILQ_HEAD(eobjs_head, editobj);
+TAILQ_HEAD(eobjq, editobj);
 
 struct mapdir;
 struct gendir;
 struct tool;
 
 struct mapedit {
-	struct	 object obj;
-
-	Uint32	 flags;
-
-	struct	 window *toolbar_win;
-	struct	 window *objlist_win;
-	struct	 window *new_map_win;
-	struct	 window *load_map_win;
-
-	struct	 tool *curtool;
+	struct object	obj;
+	
+	struct window	*toolbar_win;
+	struct window	*objlist_win;
+	struct window	*new_map_win;
+	struct window	*load_map_win;
+	struct tool	*curtool;
 	struct {
-		struct	tool *stamp;
-		struct	tool *eraser;
-		struct	tool *magnifier;
-		struct	tool *resize;
-		struct	tool *propedit;
+		struct tool	*stamp;
+		struct tool	*eraser;
+		struct tool	*magnifier;
+		struct tool	*resize;
+		struct tool	*propedit;
 	} tools;
 
-	struct	 eobjs_head eobjsh;	/* Shadow object tree */
-	int	 neobjs;
-
-	struct	 editobj *curobj;
+	struct eobjq	 eobjsh;	/* Shadow object tree */
+	int		 neobjs;
+	struct editobj	*curobj;
 	struct {
-		struct	 object *obj;
-		Uint32	 offs;
-		Uint32	 flags;
+		struct object	*obj;
+		Uint32		 offs;
+		Uint32		 flags;
 	} ref;
 	struct {
-		Uint32	 flags;
+		Uint32	flags;
 	} node;
 };
 
@@ -117,8 +114,6 @@ enum {
 };
 
 void	 mapedit_init(struct mapedit *, char *);
-int	 mapedit_load(void *, int);
-int	 mapedit_save(void *, int);
 void	 mapedit_attached(int, union evarg *);
 void	 mapedit_detached(int, union evarg *);
 
