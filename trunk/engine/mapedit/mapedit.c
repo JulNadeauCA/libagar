@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.111 2002/07/08 08:39:41 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.112 2002/07/18 11:48:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -80,7 +80,7 @@ mapedit_init(struct mapedit *med, char *name)
 	med->neobjs = 0;
 	med->curobj = NULL;
 	med->curoffs = 0;
-	med->curflags = 0;
+	med->curflags = NODE_WALK;
 
 	/* XXX messy */
 	mapedit_init_toolbar(med);
@@ -129,8 +129,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 
 		if (med->curobj == NULL && eob->nsprites > 0) {
 			med->curobj = eob;
-			med->curoffs = 0;
-			med->curflags = 0;
 		}
 
 		/* Create shadow references for sprites. */
