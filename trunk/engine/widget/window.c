@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.139 2003/01/03 02:30:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.140 2003/01/03 23:01:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -730,8 +730,15 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Update the background. */
 	switch (view->gfx_engine) {
+	case GFX_ENGINE_TILEBASED:
+		view->rootmap->map->redraw++;
+		break;
 	case GFX_ENGINE_GUI:
 		newpos = win->rd;
+		if (win->flags & WINDOW_HIDDEN_BODY) {
+			oldpos.h = win->titleh + win->borderw*2;
+			newpos.h = oldpos.h;
+		}
 		rfill1.w = 0;
 		rfill2.w = 0;
 		if (newpos.x > oldpos.x) {		/* Right */
@@ -784,9 +791,6 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 				SDL_UpdateRects(view->v, 1, &rfill2);
 			}
 		}
-		break;
-	case GFX_ENGINE_TILEBASED:
-		view->rootmap->map->redraw++;
 		break;
 	}
 }
