@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.38 2002/11/07 07:54:46 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.39 2002/11/08 06:02:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -247,14 +247,10 @@ button_mousebuttonup(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 
-	dprintf("buttonup\n");
-
 	if (!WIDGET_INSIDE_RELATIVE(b, x, y)) {
-		dprintf("outisde: b %d coords %d,%d\n", button, x, y);
 		return;
 	}
 
-	dprintf("inside\n");
 	if (button == 1 && (b->flags & BUTTON_STICKY) == 0) {
 		b->flags &= ~(BUTTON_PRESSED);
 		event_post(b, "button-pushed", NULL);

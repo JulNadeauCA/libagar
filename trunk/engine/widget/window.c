@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.88 2002/11/08 07:35:46 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.89 2002/11/08 21:38:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -62,16 +62,26 @@ static const struct object_ops window_ops = {
 	window_save
 };
 
-Uint32 bg_color = 0;
+enum {
+	BACKGROUND_COLOR,
+	TITLEBAR_FOCUSED_COLOR,
+	TITLEBAR_UNFOCUSED_COLOR,
+	TITLEBAR_TEXT_UNFOCUSED_COLOR,
+	TITLEBAR_TEXT_FOCUSED_COLOR
+};
+
+static Uint32 bg_color = 0;
 
 /* XXX struct */
-#include "borders/grey8.h"
+#include "borders/green1.h"
 
 static void	window_move(struct window *, SDL_MouseMotionEvent *);
 static void	window_update_mask(struct window *);
 static void	window_clamp(struct window *);
 static void	window_round(struct window *, int, int, int, int);
+static void	window_update_titlebar(struct window *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
+static void	window_focus(struct window *);
 
 struct window *
 window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
@@ -133,9 +143,26 @@ window_init(struct window *win, char *name, char *caption, int flags,
 
 	object_init(&win->wid.obj, "window", wname, "window",
 	    OBJECT_ART|OBJECT_KEEP_MEDIA, &window_ops);
-
 	free(wname);
 	
+	widget_map_color(&win->wid, BACKGROUND_COLOR,
+	    "window-background",
+	    0, 40, 20);
+
+	widget_map_color(&win->wid, TITLEBAR_UNFOCUSED_COLOR,
+	    "window-title-bar-background-unfocused",
+	    0, 60, 40);
+	widget_map_color(&win->wid, TITLEBAR_TEXT_UNFOCUSED_COLOR,
+	    "window-title-bar-text-unfocused",
+	    20, 100, 100);
+
+	widget_map_color(&win->wid, TITLEBAR_FOCUSED_COLOR,
+	    "window-title-bar-background-focused",
+	    0, 90, 90);
+	widget_map_color(&win->wid, TITLEBAR_TEXT_FOCUSED_COLOR,
+	    "window-title-bar-text-focused",
+	    80, 200, 200);
+
 	/* XXX pref */
 	win->borderw = default_nborder;
 	win->border = emalloc(win->borderw * sizeof(Uint32));
@@ -155,8 +182,6 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->redraw = 0;
 	win->focus = NULL;
 	win->caption = NULL;
-	win->caption_s = NULL;
-	win->caption_color = SDL_MapRGB(view->v->format, 255, 255, 255);
 	win->minw = minw;
 	win->minh = minh;
 
@@ -212,10 +237,6 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->wid.w = 0;
 	win->wid.h = 0;
 
-	/* XXX pref */
-	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
-	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
-
 	TAILQ_INIT(&win->regionsh);
 	pthread_mutexattr_init(&win->lockattr);
 	pthread_mutexattr_settype(&win->lockattr, PTHREAD_MUTEX_RECURSIVE);
@@ -240,7 +261,7 @@ window_draw(struct window *win)
 	rd.w = win->w;
 	rd.h = win->h;
 
-	SDL_FillRect(v, &rd, win->bgcolor);
+	SDL_FillRect(v, &rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
 
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
@@ -264,20 +285,29 @@ window_draw(struct window *win)
 	/* Render the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
 		SDL_Rect bgrd;
+		SDL_Surface *caption;
 
+		/* XXX yuck */
 		bgrd.x = win->x + win->borderw;
 		bgrd.y = win->y + win->borderw;
-		bgrd.w = win->w - win->borderw*2;
-		bgrd.h = win->titleh - win->borderw;
+		bgrd.w = win->w - win->borderw*2+1;
+		bgrd.h = win->titleh - win->borderw/2;
 
 		/* Titlebar background */
 		SDL_FillRect(view->v, &bgrd,
-		    SDL_MapRGB(view->v->format, 200, 100, 100));
+		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+		    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
 	
 		/* Caption */
-		rd.x = win->x + (win->w - win->caption_s->w - win->borderw);
+		caption = text_render(NULL, -1,
+		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+		    TITLEBAR_TEXT_FOCUSED_COLOR :
+		    TITLEBAR_TEXT_UNFOCUSED_COLOR),
+		    win->caption);
+		rd.x = win->x + (win->w - caption->w - win->borderw);
 		rd.y = win->y + win->borderw;
-		SDL_BlitSurface(win->caption_s, NULL, v, &rd);
+		SDL_BlitSurface(caption, NULL, v, &rd);
+		SDL_FreeSurface(caption);
 
 		/* Close button */
 		rd.x = win->x + win->borderw;
@@ -437,6 +467,7 @@ window_show(struct window *win)
 		}
 	}
 
+	window_focus(win);
 	window_resize(win);		/* In case the window is new. */
 
 	pthread_mutex_unlock(&win->lock);
@@ -674,7 +705,7 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 static void
 window_focus(struct window *win)
 {
-	struct window *lastwin;
+	struct window *lastwin, *ow;
 	struct region *reg;
 	struct widget *wid;
 
@@ -702,7 +733,7 @@ window_focus(struct window *win)
 		 */
 		TAILQ_REMOVE(&view->windows, win, windows);
 		TAILQ_INSERT_TAIL(&view->windows, win, windows);
-
+		
 		/* Notify the new window of the focus change. */
 		event_post(win, "window-gainfocus", NULL);
 	}
@@ -781,7 +812,7 @@ window_event(SDL_Event *ev)
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if ((WINDOW_FOCUSED(win) &&
+					if ((VIEW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
 					     WIDGET_UNFOCUSED_MOTION)) {
@@ -807,7 +838,7 @@ window_event(SDL_Event *ev)
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if ((WINDOW_FOCUSED(win) &&
+					if ((VIEW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
 					     WIDGET_UNFOCUSED_BUTTONUP)) {
@@ -898,7 +929,7 @@ window_event(SDL_Event *ev)
 				goto posted;
 			}
 			/* Widget event */
-			if (WINDOW_FOCUSED(win) && win->focus != NULL) {
+			if (VIEW_FOCUSED(win) && win->focus != NULL) {
 				dprintf("post %s to %s\n",
 				    (ev->type == SDL_KEYUP) ?
 				    "keyup" : "keydown",
@@ -1034,8 +1065,25 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Effect the change. */
 	window_resize(win);
-	window_draw(win);
-	SDL_UpdateRect(view->v, ro.x, ro.y, ro.w, ro.h);
+
+	/* Rectangle at the left (lresize operation). */
+	if (win->x > ro.x) {
+		SDL_UpdateRect(view->v,
+		    ro.x, ro.y,
+		    win->x-ro.x, win->h);
+	}
+	/* Rectangle at the right (rresize and hresize ops). */
+	if (win->w < ro.w) {
+		SDL_UpdateRect(view->v,
+		    win->x + win->w, win->y,
+		    ro.w - win->w, ro.h);
+	}
+	/* Rectangle at the bottom (rresize and hresize ops). */
+	if (win->h < ro.h) {
+		SDL_UpdateRect(view->v,
+		    win->x, win->y + win->h,
+		    ro.w, ro.h - win->h);
+	}
 }
 
 /* Window must be locked. */
@@ -1183,6 +1231,11 @@ window_resize(struct window *win)
 #endif
 }
 
+static void
+window_update_titlebar(struct window *win)
+{
+}
+
 /* Window must be locked. */
 void
 window_titlebar_printf(struct window *win, const char *fmt, ...)
@@ -1198,11 +1251,7 @@ window_titlebar_printf(struct window *win, const char *fmt, ...)
 	vasprintf(&win->caption, fmt, args);
 	va_end(args);
 
-	if (win->caption_s != NULL) {
-		SDL_FreeSurface(win->caption_s);
-	}
-	win->caption_s = text_render(NULL, -1, win->caption_color,
-	    win->caption);
+	window_update_titlebar(win);
 }
 
 int

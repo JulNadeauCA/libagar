@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.24 2002/09/07 04:36:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.25 2002/09/11 23:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,8 +77,11 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 {
 	struct widget *wid = p;
 	struct widget_color *col;
-	
-	OBJECT_ASSERT(wid, "widget");
+
+	if (strcmp(OBJECT(wid)->name, "widget") == 0 ||
+	    strcmp(OBJECT(wid)->name, "window") == 0) {
+		fatal("%s is not a widget/window\n", OBJECT(wid)->name);
+	}
 	
 	if (ind > WIDGET_MAXCOLORS)
 		fatal("%d colors > %d\n", ind, WIDGET_MAXCOLORS);
