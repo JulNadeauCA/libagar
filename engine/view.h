@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.88 2004/04/26 03:21:17 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.89 2004/05/10 02:43:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -134,6 +134,8 @@ extern const SDL_VideoInfo *vinfo;
 
 __BEGIN_DECLS
 int		 view_init(enum gfx_engine);
+int		 view_resize(int, int);
+void		 view_videoexpose(void);
 void		 view_attach(void *);
 void		 view_detach(struct window *);
 __inline__ void	 view_detach_queued(void);
