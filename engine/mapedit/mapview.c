@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.24 2002/09/12 09:48:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.25 2002/09/17 21:20:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -95,7 +95,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
 	widget_init(&mv->wid, "mapview", "widget", &mapview_ops, rw, rh);
-	WIDGET(mv)->flags |= WIDGET_MOUSEOUT;
 
 	mv->flags = flags;
 	mv->med = med;
@@ -136,8 +135,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	    mapview_event, "%i", WINDOW_KEYDOWN);
 	event_new(mv, "window-mousemotion", 0,
 	    mapview_event, "%i", WINDOW_MOUSEMOTION);
-	event_new(mv, "window-mouseout", 0,
-	    mapview_event, "%i", WINDOW_MOUSEOUT);
 }
 
 static __inline__ void
@@ -492,16 +489,18 @@ mapview_event(int argc, union evarg *argv)
 	int button, x, y;
 
 	switch (type) {
-	case WINDOW_MOUSEOUT:
-		mv->mouse.move = 0;
-		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
-			SDL_ShowCursor(SDL_ENABLE);
-		}
-		break;
 	case WINDOW_MOUSEMOTION:
 		x = argv[2].i / mv->tilew;
 		y = argv[3].i / mv->tileh;
-		
+
+		if (!WIDGET_INSIDE_RELATIVE(mv, x, y)) {
+			mv->mouse.move = 0;
+			if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
+				SDL_ShowCursor(SDL_ENABLE);
+			}
+			return;
+		}
+
 		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
 			SDL_ShowCursor(SDL_DISABLE);
 		}
