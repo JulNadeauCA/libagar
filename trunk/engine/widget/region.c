@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.15 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.16 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -97,7 +97,7 @@ region_destroy(void *p)
 	     wid != TAILQ_END(&reg->widgetsh);
 	     wid = nextwid) {
 		nextwid = TAILQ_NEXT(wid, widgets);
-		region_detach(reg, wid);
+		event_post(wid, "detached", p);
 		object_destroy(wid);
 	}
 }
@@ -139,5 +139,7 @@ region_detach(void *parent, void *child)
 	event_post(child, "detached", parent);
 
 	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);
+
+	object_destroy(wid);
 }
 
