@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.119 2003/04/18 04:03:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.120 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -146,8 +146,6 @@ object_free_childs(struct object *ob)
 	     cob != SLIST_END(&ob->childs);
 	     cob = ncob) {
 		ncob = SLIST_NEXT(ob, wobjs);
-		if (cob->flags & OBJECT_STATIC)
-			continue;
 		debug(DEBUG_GC, "%s: freeing %s\n", ob->name, cob->name);
 		object_destroy(cob);
 		free(cob);

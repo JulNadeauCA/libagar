@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.73 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.74 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -48,8 +48,9 @@ struct object {
 	char			*name;	/* Identification string */
 	const struct object_ops	*ops;	/* Generic operations */
 	int			 flags;
-#define OBJECT_STATIC		0x01	/* Don't destroy (if attached) */
-#define OBJECT_RELOAD_PROPS	0x02	/* Don't clear props list before load */
+#define OBJECT_RELOAD_PROPS	0x01	/* Don't clear props list before load */
+#define OBJECT_RELOAD_CHILDS	0x02	/* Reload existing childs, instead
+					   of removing them before load */
 	enum {
 		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
