@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.16 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.17 2003/07/08 04:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -157,10 +157,15 @@ invoke_op(int argc, union evarg *argv)
 static struct tlist_item *
 find_objs(struct tlist *tl, struct object *pob, int depth)
 {
+	char label[TLIST_LABEL_MAX];
 	struct object *cob;
 	struct tlist_item *it;
 
-	it = tlist_insert_item(tl, OBJECT_ICON(pob), pob->name, pob);
+	strlcpy(label, pob->name, sizeof(label));
+	if (pob->flags & OBJECT_DATA_RESIDENT) {
+		strlcat(label, " (resident)", sizeof(label));
+	}
+	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
 	it->depth = depth;
 
 	if (!TAILQ_EMPTY(&pob->childs)) {
