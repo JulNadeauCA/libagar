@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.48 2002/12/26 07:04:43 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.49 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -126,9 +126,6 @@ text_engine_destroy(void)
 {
 	struct text_font *fon, *nextfon;
 	
-	/* Free glyph cache. */
-	keycodes_freeglyphs();
-
 	/* Close the opened fonts. */
 	for (fon = SLIST_FIRST(&fonts);
 	     fon != SLIST_END(&fonts);

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.38 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.39 2003/01/03 02:30:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -207,27 +207,17 @@ textbox_draw(void *p)
 
 			c = tbox->text.s[i];
 
-			if (c >= (char)KEYCODES_CACHE_START &&
-			    c <= (char)KEYCODES_CACHE_END &&
-			    keycodes_cache[(int)c-(int)KEYCODES_CACHE_START]
-			    != NULL) {
-				text_s = keycodes_cache[(int)c -
-				    (int)KEYCODES_CACHE_START];
+			if (c == '\n') {
+				y += label_s->h + 2;
+			} else {
+				str[0] = (char)c;
+				str[1] = '\0';
+				text_s = text_render(NULL, -1,
+				    WIDGET_COLOR(tbox, TEXT_COLOR),
+				    str);
 				widget_blit(tbox, text_s, x, y);
 				x += text_s->w;
-			} else {
-				if (c == '\n') {
-					y += label_s->h + 2;
-				} else {
-					str[0] = (char)c;
-					str[1] = '\0';
-					text_s = text_render(NULL, -1,
-					    WIDGET_COLOR(tbox, TEXT_COLOR),
-					    str);
-					widget_blit(tbox, text_s, x, y);
-					x += text_s->w;
-					SDL_FreeSurface(text_s);
-				}
+				SDL_FreeSurface(text_s);
 			}
 		}
 	
