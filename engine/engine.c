@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.67 2002/09/08 03:45:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.68 2002/10/30 17:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -97,6 +97,8 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
 	printf("%s\n", gameinfo->copyright);
 	
+	setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+
 	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
 		switch (c) {
 		case 'v':
