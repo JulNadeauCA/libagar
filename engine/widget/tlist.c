@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.68 2003/06/09 18:37:11 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.69 2003/06/10 06:57:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -477,8 +477,6 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, const char *text,
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
 	widget_set_int(tl->sbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->lock);
-
-	event_post(tl, "tlist-inserted-item", "%p", it);
 	return (it);
 }
 
@@ -494,8 +492,6 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
 	TAILQ_INSERT_HEAD(&tl->items, it, items);
 	widget_set_int(tl->sbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->lock);
-
-	event_post(tl, "tlist-inserted-item", "%p", it);
 	return (it);
 }
 
