@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2002/01/26 03:37:54 vedge Exp $
 
 TOP=	..
 SUBDIR=	mapedit
@@ -13,4 +13,5 @@ OBJS=	event.o object.o char.o world.o map.o xcf.o view.o audio.o video.o \
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/inc.smpeg.mk
+include ${TOP}/mk/inc.x11.mk
 include ${TOP}/Makefile.inc
