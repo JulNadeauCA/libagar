@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.10 2002/09/07 04:30:24 vedge Exp $
+.\"	$Csoft: widget.3,v 1.11 2002/09/07 04:55:17 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -43,15 +43,32 @@ structure.
 Widgets are attached to window
 .Xr region 3
 structures, and their coordinates and geometry are variable.
+.Pp
+Two rendering methods are available to widgets:
+.Bl -tag -width "widget_update" -indent
+.It widget_draw
+The widget draws directly to video memory at every tick, using macros that
+hide window/region coordinate and boundary checking from the widget.
+This method allows the widget to handle surface caching.
+.It widget_update
+The widget draws to memory asynchronously after
+.Fn WIDGET_REDRAW
+is invoked.
+This method hides surface caching from the widget implementation, but requires
+enough memory to hold the surfaces of visible widgets (the cache entry is
+invalidated when the widget is hidden).
+.El
 .Sh LOCKING POLICIES
 Widget initialization and free routines do not need to be concerned about
 locking.
 Locking is only relevant once a widget is attached to a region, and the
 region's parent window is attached to a view.
 .Pp
-In widget event context, the widget can assume its parent window is locked.
-The visibility of any window may be altered, and
-new windows may be attached, but windows may not be detached.
+In widget event context, the widget can assume its parent window is locked,
+so widgets can manipulate the internal properties of other widgets inside
+the same window.
+The visibility of any window may be altered, and new windows may be attached,
+but windows may not be detached.
 .Pp
 Widget structure members that can be manipulated from code outside of
 the event loop (such as the
@@ -60,6 +77,14 @@ range or the
 .Xr textbox 3
 text) must provide a thread-safe interface, and move the read-write
 structure members as well as their mutex to a substructure, for clarity.
+.Sh POSITIONMENT
+The position of widgets inside video memory is managed by the widget
+container (ie.
+.Xr region 3
+or another widget), and is hidden from the widget layer by macros.
+In
+.Dv DEBUG
+mode, rendering macros perform boundary checks.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -83,7 +108,7 @@ struct widget_ops {
 	const struct object_ops	obops;		/* Object ops */
 
 	void	 (*widget_draw)(void *);	/* Rendering routine */
-	void	 (*widget_animate)(void *);	/* Animation routine */
+	void	 (*widget_update)(void *);	/* Update routine */
 };
 .Ed
 .Pp
@@ -237,7 +262,9 @@ The
 macro returns a widget surface.
 The
 .Fn WIDGET_FOCUS
-macro gives focus to a widget.
+macro gives focus to a widget and posts a
+.Fn widget-gainfocus
+event.
 .Sh EVENTS
 The
 .Nm
@@ -257,7 +284,7 @@ Widget no longer holds focus inside its parent window.
 .It Fn widget-scaled "int w" "int h"
 Widget's parent region was resized to
 .Fa w
-x
+by
 .Fa h
 pixels.
 Widgets can assume that a
@@ -265,7 +292,23 @@ Widgets can assume that a
 event is always generated before
 .Fn widget_draw
 is first called.
-.El
+Widgets can adopt any geometry when handling
+.Fn widget-scaled
+events, as long as they fit inside 
+.Fa w
+by
+.Fa h
+pixels (boundaries are checked by widget macros if
+.Dv DEBUG
+is defined).
+The order of input events and draw operation is undefined if widgets
+overlap.
+Widgets with the
+.Dv WIDGET_STATIC_SCALABLE
+flag set can assume that a
+.Fn widget-scaled
+event will be posted before the surface cache is updated.
+.El.
 .Pp
 .Sh SEE ALSO
 .Xr agar 3 ,
