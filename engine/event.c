@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.191 2004/10/13 14:36:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.192 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,6 +41,10 @@
 #ifdef DEBUG
 #include <engine/widget/label.h>
 #include <engine/widget/graph.h>
+#endif
+
+#ifdef EDITION
+#include <engine/objmgr.h>
 #endif
 
 #include <string.h>
@@ -112,19 +116,18 @@ event_hotkey(SDL_Event *ev)
 		view_capture(view->v);
 		break;
 	case SDLK_ESCAPE:
-		if ((ev->key.keysym.mod & KMOD_SHIFT) == 0) {
+		{
 			SDL_Event nev;
-
+#ifdef DEBUG
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				nev.type = SDL_USEREVENT;
+				SDL_PushEvent(&nev);
+				break;
+			}
+#endif
 			nev.type = SDL_QUIT;
 			SDL_PushEvent(&nev);
 		}
-#ifdef DEBUG
-		else {
-			dprintf("brutal!\n");
-			SDL_Quit();
-			exit(0);
-		}
-#endif
 		break;
 	default:
 		break;
@@ -364,17 +367,25 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_QUIT:
-		switch (view->gfx_engine) {
-		case GFX_ENGINE_TILEBASED:
-			/* Stop the event loop synchronously. */
-			view->rootmap->map = NULL;
-			break;
-		default:
-			/* Shut down immediately. */
-			pthread_mutex_unlock(&view->lock);
-			engine_destroy();
-			/* NOTREACHED */
+#ifdef EDITION
+		{
+			extern int world_changed;
+
+			if (world_changed) {
+				objmgr_changed_dlg(world, 1);
+				break;
+			}
 		}
+#endif
+		/* FALLTHROUGH */
+	case SDL_USEREVENT:
+		if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+			view->rootmap->map = NULL;	/* Stop synchronously */
+			break;
+		}
+		pthread_mutex_unlock(&view->lock);
+		engine_destroy();
+		/* NOTREACHED */
 		break;
 	}
 out:
