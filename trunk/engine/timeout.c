@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.6 2004/07/21 11:06:37 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.7 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -105,21 +105,24 @@ timeout_scheduled(void *p, struct timeout *to)
 	return (0);
 }
 
-/* Cancel the given timeout, assuming that it exists. */
+/* Cancel the given timeout if it is scheduled for execution. */
 void
 timeout_del(void *p, struct timeout *to)
 {
 	struct object *ob = p;
+	struct timeout *oto;
 	
 	if (ob == NULL)
 		ob = world;
 	
 	object_lock(ob);
-	CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-	if (CIRCLEQ_EMPTY(&ob->timeouts)) {
-		pthread_mutex_lock(&timeout_lock);
-		TAILQ_REMOVE(&timeout_objq, ob, tobjs);
-		pthread_mutex_unlock(&timeout_lock);
+	if (timeout_scheduled(ob, to)) {
+		CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+		if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+			pthread_mutex_lock(&timeout_lock);
+			TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+			pthread_mutex_unlock(&timeout_lock);
+		}
 	}
 	object_unlock(ob);
 }
