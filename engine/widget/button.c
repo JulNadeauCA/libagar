@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.11 2002/05/02 06:28:30 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.12 2002/05/06 02:22:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,35 +45,35 @@
 
 extern TTF_Font *font;		/* text */
 
-static struct widget_ops button_ops = {
+static const struct widget_ops button_ops = {
 	{
 		button_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,
-		NULL
+		NULL,		/* onattach */
+		NULL,		/* ondetach */
+		NULL,		/* attach */
+		NULL		/* detach */
 	},
 	button_draw,
-	button_event,
-	NULL,		/* widget link */
-	NULL		/* widget unlink */
+	button_event
 };
 
 struct button *
 button_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 {
-	struct button *bu;
+	struct button *button;
 
-	bu = emalloc(sizeof(struct button));
-	button_init(bu, caption, flags, x, y);
-	widget_link(bu, win);
-	return (bu);
+	button = emalloc(sizeof(struct button));
+	button_init(button, caption, flags, x, y);
+	window_attach(win, button);
+	return (button);
 }
 
 void
 button_init(struct button *b, char *caption, int flags, Sint16 x, Sint16 y)
 {
-	widget_init(&b->wid, "button", &button_ops, x, y, 0, 0);
+	widget_init(&b->wid, "button", "widget", &button_ops, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;
@@ -85,7 +85,7 @@ button_init(struct button *b, char *caption, int flags, Sint16 x, Sint16 y)
 void
 button_destroy(void *ob)
 {
-	struct button *b = (struct button*)ob;
+	struct button *b = ob;
 
 	free(b->caption);
 }
@@ -94,7 +94,7 @@ void
 button_draw(void *p)
 {
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-	struct button *b = (struct button *)p;
+	struct button *b = p;
 	SDL_Surface *s, *bg;
 	Sint16 x = 0, y = 0;
 
@@ -138,7 +138,7 @@ button_draw(void *p)
 void
 button_event(void *p, SDL_Event *ev, int flags)
 {
-	struct button *b = (struct button *)p;
+	struct button *b = p;
 	
 	if (ev->button.button != 1) {
 		return;

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.9 2002/05/13 07:59:00 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.10 2002/05/13 08:01:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,6 +28,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* XXX obsolete interface, move to widgets. */
+
 #ifdef __linux__
 #define _GNU_SOURCE	/* for vasprintf() */
 #endif
@@ -42,12 +44,14 @@
 
 #include "text.h"
 
-static const struct obvec text_ops = {
+static const struct object_ops text_ops = {
 	text_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
-	text_link,
-	text_unlink
+	text_onattach,
+	text_ondetach,
+	NULL,		/* attach */
+	NULL		/* detach */
 };
 
 static TAILQ_HEAD(, text) textsh = TAILQ_HEAD_INITIALIZER(textsh);
@@ -186,10 +190,10 @@ text_destroyall(void)
 	text_tick(0, te);
 }
 
-int
-text_link(void *p)
+void
+text_onattach(void *parent, void *child)
 {
-	struct text *te = (struct text *)p;
+	struct text *te = child;
 
 	pthread_mutex_lock(&textslock);
 	TAILQ_INSERT_TAIL(&textsh, te, texts);
@@ -198,14 +202,12 @@ text_link(void *p)
 	ntexts++;
 
 	view_maskfill(te->view, &te->mvmask, 1);
-
-	return (0);
 }
 
-int
-text_unlink(void *p)
+void
+text_ondetach(void *parent, void *child)
 {
-	struct text *te = (struct text *)p;
+	struct text *te = child;
 	
 	ntexts--;
 
@@ -217,8 +219,6 @@ text_unlink(void *p)
 	if (te->view->map != NULL) {
 		te->view->map->redraw++;
 	}
-
-	return (0);
 }
 
 static void
@@ -335,7 +335,7 @@ text_tick(Uint32 ival, void *p)
 
 	for (i = 0; i < ntextgc; i++) {
 		te = textgc[i];
-		text_unlink(te);
+		text_ondetach(NULL, te);
 	}
 
 	return (ival);
@@ -458,7 +458,7 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 	te = emalloc(sizeof(struct text));
 	text_init(te, gx, gy, w, h, flags, delay);
 	if (te != NULL) {
-		text_link(te);
+		text_onattach(NULL, te);
 
 		text_clear(te);
 		text_render(te, buf);

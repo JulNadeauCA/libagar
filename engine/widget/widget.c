@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.11 2002/05/02 06:27:42 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.12 2002/05/06 02:22:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,15 +47,15 @@ extern TAILQ_HEAD(, widget) uwidgetsh;	/* window.c */
 extern pthread_mutex_t uwidgets_lock;	/* window.c */
 
 void
-widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
-    Uint16 w, Uint16 h)
+widget_init(struct widget *wid, char *name, char *style, const void *wops,
+    Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
 	static Uint32 widid = 0;
 	char *widname;
 
-	/* Prepend parent window's name */
+	/* Prepend parent window's name. */
 	widname = object_name(name, widid++);
-	object_init(&wid->obj, widname, "widget", OBJ_ART, vecp);
+	object_init(&wid->obj, widname, style, OBJ_ART, wops);
 	free(widname);
 
 	wid->flags = 0;
@@ -66,57 +66,5 @@ widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
 	/* Geometry may be undefined at this point. */
 	wid->w = w;
 	wid->h = h;
-}
-
-void
-widget_link(void *ob, struct window *win)
-{
-	struct widget *w = (struct widget *)ob;
-
-	w->win = win;
-
-	if (WIDGET_VEC(w)->widget_link != NULL) {
-		WIDGET_VEC(w)->widget_link(ob, win);
-	}
-
-	pthread_mutex_lock(&win->lock);
-	TAILQ_INSERT_HEAD(&w->win->widgetsh, w, widgets);
-	pthread_mutex_unlock(&win->lock);
-	
-	dprintf("%s widget linked to %s\n", OBJECT(ob)->name,
-	    OBJECT(win)->name);
-
-	w->win->redraw++;
-}
-
-/* The window's lock must be held. */
-void
-widget_unlink(void *ob)
-{
-	struct widget *w = (struct widget *)ob;
-
-	if (WIDGET_VEC(w)->widget_unlink != NULL) {
-		WIDGET_VEC(w)->widget_unlink(w);
-	}
-
-	/*
-	 * Queue the unlink operation, the event loop cannot modify
-	 * a list it might be traversing.
-	 */
-	pthread_mutex_lock(&uwidgets_lock);
-	//TAILQ_INSERT_HEAD(&uwidgetsh, w, uwidgets);
-	pthread_mutex_unlock(&uwidgets_lock);
-}
-
-void
-widget_draw(void *p)
-{
-	struct widget *w = (struct widget *)p;
-
-	pthread_mutex_assert(&w->win->lock);
-
-	if (WIDGET_VEC(w)->widget_draw != NULL && !(w->flags & WIDGET_HIDE)) {
-		WIDGET_VEC(w)->widget_draw(w);
-	}
 }
 

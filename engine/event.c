@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.35 2002/05/11 05:54:48 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.36 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@
 #include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
-extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
 
 static void	event_hotkey(SDL_Event *);
 
@@ -58,7 +57,7 @@ event_hotkey(SDL_Event *ev)
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_m:
-		view_dumpmask(world->curview);
+		view_dumpmask(mainview);
 		break;
 	case SDLK_w:
 		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
@@ -140,9 +139,12 @@ event_loop(void *arg)
 			pthread_mutex_unlock(&m->lock);
 			pthread_mutex_unlock(&world->lock);
 
-			if (!TAILQ_EMPTY(&windowsh)) {
+			/* XXX inefficient, should share locks */
+			pthread_mutex_lock(&mainview->lock);
+			if (!TAILQ_EMPTY(&mainview->windowsh)) {
 				window_draw_all();
 			}
+			pthread_mutex_unlock(&mainview->lock);
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			if (ev.type == SDL_KEYDOWN) {
@@ -150,26 +152,29 @@ event_loop(void *arg)
 			}
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
-				pthread_mutex_lock(&world->lock);
-				view_redraw(world->curview);
-				pthread_mutex_unlock(&world->lock);
+				view_redraw(mainview);
 				break;
 			case SDL_MOUSEMOTION:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				if (!TAILQ_EMPTY(&windowsh)) {
-					window_mouse_motion(&ev);
+				/* XXX inefficient, should share locks */
+				pthread_mutex_lock(&mainview->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					window_mouse_motion(mainview, &ev);
 				}
+				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				if (!TAILQ_EMPTY(&windowsh)) {
-					window_mouse_button(&ev);
+				pthread_mutex_lock(&mainview->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					window_mouse_button(mainview, &ev);
 				}
+				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
@@ -189,9 +194,11 @@ event_loop(void *arg)
 				} else {
 					input_event(keyboard, &ev);
 				}
-				if (!TAILQ_EMPTY(&windowsh)) {
-					window_key(&ev);
+				pthread_mutex_lock(&mainview->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					window_key(mainview, &ev);
 				}
+				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_QUIT:
 				return (NULL);

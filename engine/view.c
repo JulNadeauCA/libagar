@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.35 2002/05/13 07:43:04 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.36 2002/05/13 08:26:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,15 +41,24 @@
 
 #include <engine/widget/window.h>
 
+static const struct object_ops viewport_ops = {
+	view_destroy,
+	NULL,		/* load */
+	NULL,		/* save */
+	NULL,		/* onattach */
+	NULL,		/* ondetach */
+	view_attach,
+	view_detach
+};
+
 static int	**view_allocmask(int, int);
 static SDL_Rect	**view_allocmaprects(struct map *, int, int);
 static SDL_Rect	 *view_allocrects(struct map *, int, int);
 static void	  view_freemask(struct viewport *);
 static void	  view_freemaprects(struct viewport *);
 
-struct viewport *mainview;	/* XXX thread unsafe */
-extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
-extern pthread_mutex_t windows_lock;
+/* Read-only as long as the engine is running. */
+struct viewport *mainview;
 
 /*
  * Start displaying the given map inside the given view.
@@ -89,7 +98,12 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		v->vmapw = v->mapw - v->mapxoffs - 1;	/* Tile list */
 		v->vmaph = v->maph - v->mapyoffs;
 		break;
+	default:
+		fatal("bad mode\n");
 	}
+	
+	dprintf("view %dx%d, map view %dx%d at %d,%d\n", v->width, v->height,
+	    v->mapxoffs, v->mapyoffs, v->mapw, v->maph);
 
 	switch (v->depth) {
 	case 8:
@@ -244,6 +258,7 @@ view_new(int w, int h, int depth, int flags)
 	struct viewport *v;
 
 	v = emalloc(sizeof(struct viewport));
+	object_init(&v->obj, "view", NULL, 0, &viewport_ops);
 	v->fps = -1;
 	v->width = w;
 	v->height = h;
@@ -261,14 +276,17 @@ view_new(int w, int h, int depth, int flags)
 	v->mapmask = NULL;
 	v->maprects = NULL;
 	v->rects = NULL;
+	TAILQ_INIT(&v->windowsh);
+	pthread_mutex_init(&v->lock, NULL);
 
 	return (v);
 }
 
-/* Must be called on the view is not attached to any map. */
 void
-view_destroy(struct viewport *v)
+view_destroy(void *p)
 {
+	struct viewport *v = p;
+
 	if (v->mapmask != NULL) {
 		view_freemask(v);
 	}
@@ -279,7 +297,6 @@ view_destroy(struct viewport *v)
 		free(v->rects);
 		v->rects = NULL;
 	}
-	free(v);
 }
 
 /*
@@ -363,17 +380,17 @@ scroll(struct map *m, int dir)
 void
 view_redraw(struct viewport *view)
 {
-	if (view->map != NULL) {	/* Async */
+	if (view->map != NULL) {		/* Async */
 		view->map->redraw++;
 	}
-	if (curmapedit != NULL) {	/* Async */
+	if (curmapedit != NULL) {		/* Async */
 		curmapedit->redraw++;
 	}
-	pthread_mutex_lock(&windows_lock);
-	if (!TAILQ_EMPTY(&windowsh)) {	/* Sync */
+	pthread_mutex_lock(&view->lock);
+	if (!TAILQ_EMPTY(&view->windowsh)) {	/* Sync */
 		window_draw_all();
 	}
-	pthread_mutex_unlock(&windows_lock);
+	pthread_mutex_unlock(&view->lock);
 }
 
 #ifdef DEBUG
@@ -390,4 +407,46 @@ view_dumpmask(struct viewport *v)
 	}
 }
 #endif
+
+/*
+ * Attach a window to a view.
+ * Will lock view.
+ */
+void
+view_attach(void *parent, void *child)
+{
+	struct viewport *view = parent;
+	struct window *win = child;
+
+	/* Notify the child being attached. */
+	if (OBJECT_OPS(win)->onattach != NULL) {
+		OBJECT_OPS(win)->onattach(view, win);
+	}
+
+	pthread_mutex_lock(&view->lock);
+	TAILQ_INSERT_HEAD(&view->windowsh, win, windows);
+	pthread_mutex_unlock(&view->lock);
+}
+
+/*
+ * Detach a window from a view, free its resouces immediately.
+ * Will lock view.
+ */
+void
+view_detach(void *parent, void *child)
+{
+	struct viewport *view = parent;
+	struct window *win = child;
+	
+	/* Notify the child being detached. */
+	if (OBJECT_OPS(win)->ondetach != NULL) {
+		OBJECT_OPS(win)->ondetach(view, win);
+	}
+
+	pthread_mutex_lock(&view->lock);
+	TAILQ_REMOVE(&view->windowsh, win, windows);
+	pthread_mutex_unlock(&view->lock);
+
+	object_destroy(win);
+}
 

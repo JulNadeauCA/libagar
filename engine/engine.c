@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.42 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.43 2002/05/13 08:01:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -258,7 +258,9 @@ engine_editmap(void)
 	medit->margs.tileh = tileh;
 
 	/* Start map edition. */
-	object_link(medit);
+	pthread_mutex_lock(&world->lock);
+	world_attach(world, medit);
+	pthread_mutex_unlock(&world->lock);
 
 	return (1);
 }
@@ -284,6 +286,7 @@ engine_destroy(void)
 
 	/* Destroy the views. XXX */
 	view_destroy(mainview);
+	free(mainview);
 
 	SDL_Quit();
 	exit(0);
