@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.35 2002/12/30 00:08:30 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.36 2002/12/30 03:51:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,9 +25,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_ieee754.h>
-
 #include <engine/engine.h>
+
+#include <stdarg.h>
+
 #include <engine/view.h>
 
 #include "widget.h"
