@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.8 2002/11/29 23:58:48 vedge Exp $
+.\"	$Csoft: view.3,v 1.9 2002/12/04 04:22:44 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -35,46 +35,38 @@
 #include <engine/view.h>
 .Ed
 .Sh DESCRIPTION
-The agar
+The Agar
 .Nm
-layer currently implement two graphic engines:
-.Bl -tag -width "GFX_ENGINE_TILEBASED "
-.It GFX_ENGINE_GUI
-Solid background.
-.It GFX_ENGINE_TILEBASED
-A map is displayed on the background.
-.El
+layer manages the video display and maintains a list of windows.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "void"
+.Ft "int"
 .Fn view_init "gfx_engine_t engine"
 .Pp
 .Ft "void"
 .Fn view_destroy "struct viewport *view"
+.Pp
+.Ft "int"
+.Fn view_set_refresh "int min_delay" "int max_delay"
 .nr nS 0
 .Pp
 The
 .Fn view_init
-function initializes the graphic engine, and accepts the following argument:
+function initializes the graphic engine, return 0 on success and -1 on failure.
+.Fa engine
+is one of:
 .Bd -literal
 typedef enum {
-	GFX_ENGINE_GUI,
-	GFX_ENGINE_TILEBASED
+	GFX_ENGINE_GUI,			/* Direct GUI */
+	GFX_ENGINE_TILEBASED,		/* Direct 2D tile-based */
+	GFX_ENGINE_GL			/* OpenGL (if available) */
 } gfx_engine_t;
 .Ed
 .Pp
 The
-.Fn view_init
-function calls
-.Xr SDL_SetVideoMode 3 ,
-.Xr SDL_WM_SetCaption 3
-and
-.Xr SDL_ShowCursor 3 ,
-and allocates a
-.Xr rootmap 3
-structure if
-.Dv GFX_ENGINE_TILEBASED
-is used.
+.Fn view_set_refresh
+functions sets the minimum and maximum display refresh rate, returning 0 on
+success and -1 on failure.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
@@ -117,12 +109,6 @@ currently holds focus.
 .Fn view_scale_surface "SDL_Surface *source" "Uint16 w" "Uint16 h"
 .Pp
 .Ft void
-.Fn view_unused_surface "SDL_Surface *scaled"
-.Pp
-.Ft void
-.Fn view_invalidate_surface "SDL_Surface *scaled"
-.Pp
-.Ft void
 .Fn VIEW_UPDATE "SDL_Rect rd"
 .nr nS 0
 .Pp
@@ -130,7 +116,7 @@ The
 .Fn view_surface
 function returns a newly allocated
 .Xr SDL_Surface 3
-structure of the given size, with masks in host byte order.
+adapted to the current display mode.
 .Pp
 The
 .Fn view_scale_surface
@@ -143,24 +129,14 @@ bitmap-scaled to
 by
 .Fa h
 pixels.
-If surface caching is enabled,
-.Fn view_scale_surface
-may return a precalculated surface, so the surface must be marked as unused
-with
-.Fn view_unused_surface ,
-instead of freed directly with
-.Xr SDL_FreeSurface 3 .
-.Pp
-The
-.Fn view_invalidate_surface
-function removes cache entries pointing to the given scaled surface.
 .Pp
 The
 .Fn VIEW_UPDATE
-macro places
+macro copies
 .Fa rd
-into the array that will be passed to
-.Xr SDL_UpdateRects 3 .
+to the dirty rectangle array the event loop will pass to
+.Xr SDL_UpdateRects 3
+when the display is refreshed.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr rootmap 3 ,
