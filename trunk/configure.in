@@ -1,13 +1,13 @@
-# $Csoft: configure.in,v 1.19 2002/05/22 01:22:02 vedge Exp $
+# $Csoft: configure.in,v 1.20 2002/05/24 04:42:51 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
 
-register("--without-smpeg",	"Never play videos");
-register("--without-x11",	"Omit X11-specific code");
-register("--enable-debug",	"Engine debugging");
-register("--enable-xdebug",	"Synchronous X11 events");
-register("--enable-wdebug",	"Widget set debugging");
+register("--with-smpeg",	"Play videos through smpeg [default: check]");
+register("--with-x11",		"X11-specific code [default: check]");
+register("--enable-debug",	"Engine debugging [default: no]");
+register("--enable-xdebug",	"Synchronous X11 events [default: no]");
+register("--enable-wdebug",	"Widget set debugging [default: no]");
 register("--help",		"Show this message");
 
 if [ "${help}" = "yes" ]; then
@@ -45,3 +45,4 @@ fi
 if [ "${enable_wdebug}" = "yes" ]; then
 	hdefine(WIDGET_DEBUG, 1);
 fi
+
