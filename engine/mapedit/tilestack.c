@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.2 2002/07/07 06:28:41 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.3 2002/07/07 06:32:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -140,8 +140,12 @@ tilestack_draw(void *p)
 			    0, y);
 		}
 		/* XXX inefficient */
-		WIDGET_DRAW(ts, SPRITE(curmapedit, MAPEDIT_GRID), 0, y);
+		WIDGET_DRAW(ts, SPRITE(mv->med, MAPEDIT_GRID), 0, y);
 		y += TILEH;
+		if (y + TILEH > WIDGET(ts)->h) {
+			dprintf("y %d > %d\n", y, WIDGET(ts)->h);
+			break;
+		}
 	}
 }
 
