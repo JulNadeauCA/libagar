@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.43 2003/06/08 00:21:04 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.1 2003/06/08 23:49:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 
 static struct widget_ops spinbutton_ops = {
 	{
@@ -87,10 +88,10 @@ spinbutton_keydown(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	switch (keysym) {
 	case SDLK_UP:
-		spinbutton_increment(sbu, sbu->incr);
+		spinbutton_add(sbu, sbu->incr);
 		break;
 	case SDLK_DOWN:
-		spinbutton_decrement(sbu, sbu->incr);
+		spinbutton_add(sbu, -sbu->incr);
 		break;
 	}
 	pthread_mutex_unlock(&sbu->lock);
@@ -116,7 +117,7 @@ spinbutton_up(int argc, union evarg *argv)
 	struct spinbutton *sbu = argv[1].p;
 
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_increment(sbu, sbu->incr);
+	spinbutton_add(sbu, sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 }
 
@@ -126,7 +127,7 @@ spinbutton_down(int argc, union evarg *argv)
 	struct spinbutton *sbu = argv[1].p;
 	
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_decrement(sbu, sbu->incr);
+	spinbutton_add(sbu, -sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 }
 
@@ -134,7 +135,7 @@ void
 spinbutton_init(struct spinbutton *sbu, const char *label)
 {
 	widget_init(sbu, "spinbutton", &spinbutton_ops,
-	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL);
+	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	
 	sbu->value = 0;
 	sbu->min = -1;
@@ -222,35 +223,63 @@ spinbutton_draw(void *p)
 	widget_binding_unlock(valueb);
 }
 
-/* Increment the bound value by inc. */
+/* Add to the bound value. */
 void
-spinbutton_increment(struct spinbutton *sbu, int inc)
+spinbutton_add(struct spinbutton *sbu, int inc)
 {
 	struct widget_binding *valueb;
-	int *value;
+	void *value;
 
 	valueb = widget_binding_get_locked(sbu, "value", &value);
-	*value += inc;
-	event_post(sbu, "spinbutton-changed", "%i", *value);
+	switch (valueb->type) {
+	case WIDGET_INT:
+		if (*(int *)value + inc >= INT_MIN+1 &&
+		    *(int *)value + inc <= INT_MAX-1)
+			*(int *)value += inc;
+		break;
+	case WIDGET_UINT:
+		if (*(unsigned int *)value + inc >= 0 &&
+		    *(unsigned int *)value + inc <= UINT_MAX-1)
+			*(unsigned int *)value += inc;
+		break;
+	case WIDGET_UINT8:
+		if (*(Uint8 *)value + inc >= 0 &&
+		    *(Uint8 *)value + inc <= 0xffU)
+			*(Uint8 *)value += inc;
+		break;
+	case WIDGET_SINT8:
+		if (*(Sint8 *)value + inc >= -0x7f+1 &&
+		    *(Sint8 *)value + inc <=  0x7f-1)
+			*(Sint8 *)value += inc;
+		break;
+	case WIDGET_UINT16:
+		if (*(Uint16 *)value + inc >= 0 &&
+		    *(Uint16 *)value + inc <= 0xffffU)
+			*(Uint16 *)value += inc;
+		break;
+	case WIDGET_SINT16:
+		if (*(Sint16 *)value + inc >= -0x7fff+1 &&
+		    *(Sint16 *)value + inc <=  0x7fff-1)
+			*(Sint16 *)value += inc;
+		break;
+	case WIDGET_UINT32:
+		if (*(Uint32 *)value + inc >= 0 &&
+		    *(Uint32 *)value + inc <= 0xffffffffU)
+			*(Uint32 *)value += inc;
+		break;
+	case WIDGET_SINT32:
+		if (*(Sint32 *)value + inc >= -0x7fffffff+1 &&
+		    *(Sint32 *)value + inc <=  0x7fffffff-1)
+			*(Sint32 *)value += inc;
+		break;
+	default:
+		fatal("unknown binding type");
+	}
+	event_post(sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(valueb);
 }
 
-/* Decrement the bound value by dec. */
-void
-spinbutton_decrement(struct spinbutton *sbu, int dec)
-{
-	struct widget_binding *valueb;
-	int *value;
-
-	valueb = widget_binding_get_locked(sbu, "value", &value);
-	(*value) -= dec;
-	event_post(sbu, "spinbutton-changed", "%i", *value);
-	widget_binding_modified(valueb);
-	widget_binding_unlock(valueb);
-}
-
-/* Alter the spinbutton's current value. */
 void
 spinbutton_set_value(struct spinbutton *sbu, int nvalue)
 {
@@ -259,12 +288,11 @@ spinbutton_set_value(struct spinbutton *sbu, int nvalue)
 
 	valueb = widget_binding_get_locked(sbu, "value", &value);
 	*value = nvalue;
-	event_post(sbu, "spinbutton-changed", "%i", *value);
+	event_post(sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(valueb);
 }
 
-/* Alter the spinbutton's minimum value. */
 void
 spinbutton_set_min(struct spinbutton *sbu, int nmin)
 {
@@ -273,12 +301,10 @@ spinbutton_set_min(struct spinbutton *sbu, int nmin)
 
 	minb = widget_binding_get_locked(sbu, "min", &min);
 	*min = nmin;
-	event_post(sbu, "spinbutton-changed", "%i", *min);
 	widget_binding_modified(minb);
 	widget_binding_unlock(minb);
 }
 
-/* Alter the spinbutton's maximum value. */
 void
 spinbutton_set_max(struct spinbutton *sbu, int nmax)
 {
@@ -287,12 +313,10 @@ spinbutton_set_max(struct spinbutton *sbu, int nmax)
 
 	maxb = widget_binding_get_locked(sbu, "max", &max);
 	*max = nmax;
-	event_post(sbu, "spinbutton-changed", "%i", *max);
 	widget_binding_modified(maxb);
 	widget_binding_unlock(maxb);
 }
 
-/* Set the increment. */
 void
 spinbutton_set_increment(struct spinbutton *sbu, int incr)
 {
