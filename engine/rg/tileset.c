@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.21 2005/03/11 10:45:54 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.22 2005/03/24 04:02:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -103,6 +103,8 @@ tileset_init(void *obj, const char *name)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	ts->fmt = ts->icon->format;
+	ts->flags = 0;
+	ts->max_sprites = 0;
 }
 
 void
@@ -114,9 +116,10 @@ tileset_reinit(void *obj)
 	struct pixmap *px, *npx;
 	struct feature *ft, *nft;
 	struct animation *ani, *nani;
+	Uint32 i;
 
 	pthread_mutex_lock(&ts->lock);
-
+	
 	for (t = TAILQ_FIRST(&ts->tiles);
 	     t != TAILQ_END(&ts->tiles);
 	     t = nt) {
@@ -124,6 +127,9 @@ tileset_reinit(void *obj)
 		tile_destroy(t);
 		Free(t, M_RG);
 	}
+
+	ts->max_sprites = 0;
+	OBJECT(ts)->gfx->nsprites = 0;
 
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
@@ -182,6 +188,7 @@ int
 tileset_load(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
+	struct gfx *gfx = OBJECT(ts)->gfx;
 	struct version ver;
 	struct pixmap *px;
 	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations;
@@ -191,6 +198,17 @@ tileset_load(void *obj, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&ts->lock);
+
+	ts->flags = read_uint32(buf);
+	ts->max_sprites = read_uint32(buf);
+
+	gfx->nsprites = ts->max_sprites;
+	gfx->sprites = Realloc(gfx->sprites, gfx->nsprites *
+			                     sizeof(SDL_Surface *));
+	for (i = 0; i < gfx->nsprites; i++)
+		gfx->sprites[i] = NULL;
+
+	dprintf("%u sprites\n", ts->max_sprites);
 
 	/* Load the vectorial sketches. */
 	nsketches = read_uint32(buf);
@@ -339,6 +357,9 @@ tileset_save(void *obj, struct netbuf *buf)
 	version_write(buf, &tileset_ver);
 
 	pthread_mutex_lock(&ts->lock);
+
+	write_uint32(buf, ts->flags);
+	write_uint32(buf, ts->max_sprites);
 
 	/* Save the vectorial sketches. */
 	nsketches_offs = netbuf_tell(buf);
@@ -612,6 +633,7 @@ insert_tile(int argc, union evarg *argv)
 {
 	struct window *pwin = argv[1].p;
 	struct tileset *ts = argv[2].p;
+	struct gfx *gfx = OBJECT(ts)->gfx;
 	struct tile *t;
 	int flags = 0;
 
@@ -663,6 +685,10 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ts, ins_tile_name);
+	t->sprite = gfx_insert_sprite(gfx, t->su);
+	if (gfx->nsprites > ts->max_sprites) {
+		ts->max_sprites = gfx->nsprites;
+	}
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 

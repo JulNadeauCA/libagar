@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.6 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.7 2005/03/24 04:02:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -26,6 +26,8 @@ struct tileset {
 	pthread_mutex_t	lock;
 	SDL_PixelFormat *fmt;
 	SDL_Surface *icon;
+	int flags;
+	Uint32 max_sprites;
 	TAILQ_HEAD(, tile) tiles;
 	TAILQ_HEAD(, sketch) sketches;
 	TAILQ_HEAD(, pixmap) pixmaps;

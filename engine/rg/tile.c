@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.30 2005/03/11 08:59:34 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.31 2005/03/24 04:00:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -55,6 +55,7 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->su = NULL;
 	t->ts = ts;
 	t->nrefs = 0;
+	t->sprite = 0;
 	TAILQ_INIT(&t->elements);
 }
 
@@ -71,13 +72,11 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 	}
 	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
-	    ts->fmt->Rmask,
-	    ts->fmt->Gmask,
-	    ts->fmt->Bmask,
-	    ts->fmt->Amask);
-
+	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
 	if (t->su == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+
+	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
 }
 
 void
@@ -268,6 +267,7 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_surface(buf, t->su);
+	write_uint32(buf, t->sprite);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -325,6 +325,9 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
+	t->sprite = read_uint32(buf);
+	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
+	dprintf("map sprite %u\n", t->sprite);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -426,7 +429,8 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 void
 tile_destroy(struct tile *t)
 {
-	
+	if (t->su != NULL)
+		SDL_FreeSurface(t->su);
 }
 
 #ifdef EDITION
@@ -495,7 +499,7 @@ close_element(struct tileview *tv)
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 
-	tv->tv_tile.ctrl = tileview_insert_ctrl(tv, TILEVIEW_RECTANGLE,
+	tv->tv_tile.ctrl = tileview_insert_ctrl(tv, TILEVIEW_RDIMENSIONS,
 	    "%i,%i,%u,%u", 0, 0,
 	    (u_int)tv->tile->su->w,
 	    (u_int)tv->tile->su->h);
@@ -1360,6 +1364,17 @@ tile_redo(int argc, union evarg *argv)
 	}
 }
 
+static void
+regenerate_tile(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tile *t = tv->tile;
+
+	tile_generate(t);
+	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
+	t->flags &= ~(TILE_DIRTY);
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1484,6 +1499,22 @@ tile_edit(struct tileset *ts, struct tile *t)
 	}
 
 	me = menu_new(win);
+	mi = menu_add_item(me, _("Tile"));
+	{
+		menu_action(mi, _("Regenerate"), RG_PIXMAP_ICON,
+		    regenerate_tile, "%p", tv);
+		menu_action(mi, _("Resize..."), RG_PIXMAP_RESIZE_ICON,
+		    resize_tile_dlg, "%p,%p", tv, win);
+	}
+	
+	mi = menu_add_item(me, _("Edit"));
+	{
+		menu_action_kb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
+		    tile_undo, "%p", tv);
+		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
+		    tile_redo, "%p", tv);
+	}
+
 	mi = menu_add_item(me, _("Features"));
 	{
 		menu_action_kb(mi, _("Fill"), RG_FILL_ICON,
@@ -1525,19 +1556,6 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 
-	mi = menu_add_item(me, _("Edit"));
-	{
-		menu_action_kb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
-		    tile_undo, "%p", tv);
-		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
-		    tile_redo, "%p", tv);
-
-		menu_separator(mi);
-
-		menu_action(mi, _("Resize tile..."), RG_PIXMAP_RESIZE_ICON,
-		    resize_tile_dlg, "%p,%p", tv, win);
-	}
-
 	box = tv->tel_box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
 	box_set_padding(box, 0);
 	box_set_spacing(box, 0);
@@ -1574,7 +1592,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 	window_set_geometry(win,
 	    view->w/4, view->h/4,
 	    view->w/2, view->h/2);
-	
+
+	/* Center the tile. */
+	tv->xoffs = (WIDGET(tv)->w - t->su->w)/2;
+	tv->yoffs = (WIDGET(tv)->h - t->su->h)/2;
+
 	return (win);
 }
 
