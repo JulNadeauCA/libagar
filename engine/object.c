@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.98 2002/12/24 10:26:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.99 2002/12/29 02:13:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -146,7 +146,7 @@ object_destroy(void *p)
 	     prop != TAILQ_END(&ob->props);
 	     prop = nextprop) {
 		nextprop = TAILQ_NEXT(prop, props);
-		free(prop);
+		prop_destroy(prop);
 	}
 	
 	pthread_mutex_destroy(&ob->pos_lock);
@@ -349,7 +349,7 @@ object_vanish(void *p)
 	debug(DEBUG_POSITION, "%s vanishing from %s:%d,%d\n", ob->name,
 	    OBJECT(m)->name, ob->pos->x, ob->pos->y);
 
-	node_del_ref(&m->map[ob->pos->y][ob->pos->x], ob->pos->nref);
+	node_remove_ref(&m->map[ob->pos->y][ob->pos->x], ob->pos->nref);
 
 	free(ob->pos);
 	ob->pos = NULL;
@@ -391,7 +391,8 @@ object_set_position(void *p, struct noderef *nref, struct map *m,
 
 		/* Remove the old noderef. */
 		debug(DEBUG_POSITION, "%s: removing old noderef\n", ob->name);
-		node_del_ref(&ob->pos->map->map[ob->pos->y][ob->pos->x], nref);
+		node_remove_ref(&ob->pos->map->map[ob->pos->y][ob->pos->x],
+		    nref);
 	}
 	ob->pos->map = m;				/* Update position */
 	ob->pos->x = x;
