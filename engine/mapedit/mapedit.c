@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.29 2002/02/15 03:50:46 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.30 2002/02/15 04:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -674,16 +674,16 @@ mapedit_move(struct mapedit *med, int x, int y)
 	
 	node = &med->map->map[med->x][med->y];
 	node->flags &= ~(NODE_ANIM);
-
-	MAP_DELREF(med->map, med->x, med->y,
-	    (struct object *)med, MAPEDIT_SELECT);
-	MAP_ADDANIM(med->map, x, y,
-	    (struct object *)med, MAPEDIT_SELECT);
-	med->x = x;
-	med->y = y;
+	node_delref(node, node_arefobj(node,
+	    (struct object *)med, MAPEDIT_SELECT));
 	
 	node = &med->map->map[x][y];
+	node_addref(node,
+	    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
 	node->flags |= NODE_ANIM;
+
+	med->x = x;
+	med->y = y;
 }
 
 static Uint32
