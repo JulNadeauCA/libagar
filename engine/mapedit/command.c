@@ -183,20 +183,27 @@ void
 mapedit_loadmap(struct mapedit *med)
 {
 	struct map *map = med->map;
+	char *path;
 	int x, y;
 
 	mapedit_setpointer(med, 0);
 
 	map_freenodes(map);
+	
+	/* Users must copy maps to udatadir in order to edit them. */
+	/* XXX redundant */
+	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
 
-	if (object_load(med->map) == 0) {
+	if (object_loadfrom(med->map, path) == 0) {
 		x = map->defx;
 		y = map->defy;
 		map->map[x][y].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
 		view_center(map->view, x, y);
+		mapedit_setcaption(med, path);
 	} else {
+		/* Reallocate nodes we just freed. */
 		map_allocnodes(map, map->mapw, map->maph,
 		    map->tilew, map->tileh);
 	}
