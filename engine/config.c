@@ -63,7 +63,8 @@ static const enum {
 	SAVE_BUTTON,
 	FULLSCRN_CBOX,
 	FONTCACHE_CBOX,
-	DEBUG_CBOX
+	DEBUG_CBOX,
+	DEBUG_BUTTON
 } widgets;
 
 static struct window	*config_settings_win(struct config *);
@@ -139,8 +140,8 @@ static struct window *
 config_settings_win(struct config *con)
 {
 	struct window *win;
-	struct region *body_reg, *buttons_reg;
-	struct button *close_button, *save_button;
+	struct region *lbody_reg, *rbody_reg, *text_reg, *buttons_reg;
+	struct button *close_button, *save_button, *debug_button;
 	struct checkbox *fullscr_cbox;
 	struct checkbox *fontcache_cbox;
 #ifdef DEBUG
@@ -151,34 +152,39 @@ config_settings_win(struct config *con)
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    20, 20,  60, 60);
-	body_reg = region_new(win, REGION_VALIGN|REGION_RIGHT,
-	    0,  0,  100, 80);
-	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
-	    0,  80, 100, 20);
+	lbody_reg = region_new(win, REGION_VALIGN,   0,   0,  50, 30);
+	rbody_reg = region_new(win, REGION_VALIGN,  50,   0,  50, 30);
+	text_reg = region_new(win, REGION_VALIGN,    0,  30, 100, 30);
+	buttons_reg = region_new(win, REGION_HALIGN, 0,  80, 100, 20);
 
-	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
+	fullscr_cbox = checkbox_new(lbody_reg, "Full-screen mode", 33, 0);
 	event_new(fullscr_cbox, "checkbox-changed", 0, apply,
 	    "%i", FULLSCRN_CBOX);
 	
-	fontcache_cbox = checkbox_new(body_reg, "Font cache",
+	fontcache_cbox = checkbox_new(lbody_reg, "Font cache", 33,
 	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
 	    "%i", FONTCACHE_CBOX);
 
 #ifdef DEBUG
-	debug_cbox = checkbox_new(body_reg, "Debugging enabled",
+	debug_cbox = checkbox_new(lbody_reg, "Debugging enabled", 33,
 	    engine_debug ? CHECKBOX_PRESSED : 0);
 	event_new(debug_cbox, "checkbox-changed", 0, apply,
 	    "%i", DEBUG_CBOX);
 #endif
 
-	udatadir_tbox = textbox_new(body_reg,   "  User datadir: ", 0, 100);
-	sysdatadir_tbox = textbox_new(body_reg, "System datadir: ", 0, 100);
+	udatadir_tbox = textbox_new(text_reg,   "  User datadir: ", 0, 100, 50);
+	sysdatadir_tbox = textbox_new(text_reg, "System datadir: ", 0, 100, 50);
 
 	pthread_mutex_lock(&win->lock);
 	textbox_printf(udatadir_tbox, "%s", world->udatadir);
 	textbox_printf(sysdatadir_tbox, "%s", world->sysdatadir);
 	pthread_mutex_unlock(&win->lock);
+	
+	debug_button = button_new(rbody_reg, "Debug settings", 0, 100, 50);
+	debug_button->justify = BUTTON_LEFT;
+	event_new(debug_button, "button-pushed", 0, apply,
+	    "%i", DEBUG_BUTTON);
 
 	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
 	event_new(close_button, "button-pushed", 0, apply,
@@ -201,7 +207,6 @@ apply(int argc, union evarg *argv)
 		break;
 	case SAVE_BUTTON:
 		object_save(config);
-		text_msg(5, TEXT_SLEEP, "Saved engine settings.\n");
 		break;
 	case FULLSCRN_CBOX:
 		view_fullscreen(argv[2].i);
