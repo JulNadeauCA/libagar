@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.37 2003/05/08 12:11:16 vedge Exp $
+.\"	$Csoft: map.3,v 1.38 2003/05/18 00:16:57 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -89,10 +89,10 @@ and a layer number defining the order of rendering.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn map_init "void *obj" "char *name"
+.Fn map_init "void *obj" "const char *name"
 .Pp
 .Ft "struct map *"
-.Fn map_new "void *parent" "char *name"
+.Fn map_new "void *parent" "const char *name"
 .Pp
 .Ft void
 .Fn map_destroy "void *map"
@@ -291,7 +291,7 @@ encoding object references using
                   "Uint32 flags"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_warp "struct node *dst_node" "char *new_map" \
+.Fn node_add_warp "struct node *dst_node" "const char *new_map" \
                   "int x" "int y" "Uint8 dir"
 .Pp
 .nr nS 0
@@ -331,6 +331,16 @@ and
 .Fn node_add_warp
 functions respectively insert sprite references, animation references and
 warp points.
+The
+.Fn new_map
+argument of
+.Fn node_add_warp
+is the absolute pathname of the destination map and
+.Fa x ,
+.Fa y
+and
+.Fa dir
+describe the initial position and direction.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr mapedit 3 ,

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.177 2003/05/22 05:45:45 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.178 2003/05/24 15:53:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/version.h>
@@ -37,8 +36,6 @@
 #include <engine/widget/window.h>
 
 #include <engine/mapedit/mapedit.h>
-
-#include <libfobj/fobj.h>
 
 const struct version map_ver = {
 	"agar map",
@@ -68,7 +65,7 @@ static void	*map_check(void *);
 # endif
 #endif /* DEBUG */
 
-static void	 map_layer_init(struct map_layer *lay, char *);
+static void	 map_layer_init(struct map_layer *lay, const char *);
 static void	 map_layer_destroy(struct map_layer *);
 
 void
@@ -323,7 +320,7 @@ map_set_zoom(struct map *m, Uint16 zoom)
 }
 
 struct map *
-map_new(void *parent, char *name)
+map_new(void *parent, const char *name)
 {
 	struct map *m;
 
@@ -337,7 +334,7 @@ map_new(void *parent, char *name)
 }
 
 void
-map_init(void *obj, char *name)
+map_init(void *obj, const char *name)
 {
 	struct map *m = obj;
 
@@ -369,7 +366,7 @@ map_init(void *obj, char *name)
 }
 
 static void
-map_layer_init(struct map_layer *lay, char *name)
+map_layer_init(struct map_layer *lay, const char *name)
 {
 	lay->name = Strdup(name);
 	lay->visible = 1;
@@ -386,15 +383,12 @@ map_layer_destroy(struct map_layer *lay)
 
 /* Create a new layer. */
 int
-map_push_layer(struct map *m, char *name)
+map_push_layer(struct map *m, const char *name)
 {
 	char layname[MAP_LAYER_NAME_MAX];
 
 	if (name != NULL) {
-		if (snprintf(layname, sizeof(layname), "%s", name) >=
-		    sizeof(layname)) {
-			error_set("layer name too big");
-		}
+		strlcpy(layname, name, sizeof(layname));
 	} else {
 		snprintf(layname, sizeof(layname), "Layer %u", m->nlayers);
 	}
@@ -461,7 +455,7 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
  * The map containing the node must be locked.
  */
 struct noderef *
-node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
+node_add_warp(struct node *node, const char *mapname, int x, int y, Uint8 dir)
 {
 	struct noderef *nref;
 
@@ -674,7 +668,6 @@ map_edit(void *p)
 	struct window *win;
 
 	win = mapedit_window(m);
-	view_attach(win);
 	window_show(win);
 }
 
