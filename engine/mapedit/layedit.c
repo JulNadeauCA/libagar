@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.17 2003/12/05 01:21:23 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.18 2004/01/03 04:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ layedit_close_win(int argc, union evarg *argv)
 }
 
 /* Update the list of layers. */
-static void
+void
 layedit_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
