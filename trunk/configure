@@ -890,97 +890,97 @@ echo "checking for the X window system..." >> config.log
 x11_found_includes=no
 x11_found_libs=no
 if [ -d /usr/X11R6/include/X11 ]; then
-X11_CFLAGS=-I/usr/X11R6/include
+X11_CFLAGS="-I/usr/X11R6/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/X11/include/X11 ]; then
-X11_CFLAGS=-I/usr/X11/include
+X11_CFLAGS="-I/usr/X11/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/include/X11R6/X11 ]; then
-X11_CFLAGS=-I/usr/include/X11R6
+X11_CFLAGS="-I/usr/include/X11R6"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/include/X11/X11 ]; then
-X11_CFLAGS=-I/usr/include/X11
+X11_CFLAGS="-I/usr/include/X11"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11R6/include/X11 ]; then
-X11_CFLAGS=-I/usr/local/X11R6/include
+X11_CFLAGS="-I/usr/local/X11R6/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11/include/X11 ]; then
-X11_CFLAGS=-I/usr/local/X11/include
+X11_CFLAGS="-I/usr/local/X11/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11R6/X11 ]; then
-X11_CFLAGS=-I/usr/local/include/X11R6
+X11_CFLAGS="-I/usr/local/include/X11R6"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11/X11 ]; then
-X11_CFLAGS=-I/usr/local/include/X11
+X11_CFLAGS="-I/usr/local/include/X11"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11 ]; then
-X11_CFLAGS=-I/usr/local/include
+X11_CFLAGS="-I/usr/local/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/include/X11 ]; then
-X11_CFLAGS=-I/usr/include
+X11_CFLAGS="-I/usr/include"
 x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/X11R6/lib ]; then
-X11_LIBS=-L/usr/X11R6/lib -lX11
+X11_LIBS="-L/usr/X11R6/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
 fi
 if [ -d /usr/X11/lib ]; then
-X11_LIBS=-L/usr/X11/lib -lX11
+X11_LIBS="-L/usr/X11/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11R6/lib ]; then
-X11_LIBS=-L/usr/local/X11R6/lib -lX11
+X11_LIBS="-L/usr/local/X11R6/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11/lib ]; then
-X11_LIBS=-L/usr/local/X11/lib -lX11
+X11_LIBS="-L/usr/local/X11/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/lib ]; then
-X11_LIBS=-L/usr/local/lib -lX11
+X11_LIBS="-L/usr/local/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
 fi
 if [ -d /usr/lib ]; then
-X11_LIBS=-L/usr/lib -lX11
+X11_LIBS="-L/usr/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
