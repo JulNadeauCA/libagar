@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: queue.h,v 1.1 2002/01/30 08:14:39 vedge Exp $	*/
 /*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
 /*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
 
@@ -110,6 +110,23 @@ struct {								\
 #define	SLIST_END(head)		NULL
 #define	SLIST_EMPTY(head)	(SLIST_FIRST(head) == SLIST_END(head))
 #define	SLIST_NEXT(elm, field)	((elm)->field.sle_next)
+
+#define	SLIST_COUNT(var, head, field, ip) do {				\
+	(ip) = 0;							\
+	SLIST_FOREACH(var, head, field)					\
+		(ip)++;							\
+} while (0)
+
+#define SLIST_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	SLIST_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
+} while (0)
 
 #define	SLIST_FOREACH(var, head, field)					\
 	for((var) = SLIST_FIRST(head);					\
