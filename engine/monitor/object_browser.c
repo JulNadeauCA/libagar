@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.21 2003/01/23 03:33:47 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.22 2003/02/13 11:22:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -226,7 +226,7 @@ tl_props_selected(int argc, union evarg *argv)
 		case PROP_DOUBLE:
 			textbox_printf(tb_set, "%f", prop->data.d);
 			break;
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 		case PROP_LONG_DOUBLE:
 			textbox_printf(tb_set, "%Lf", prop->data.ld);
 			tb_set->flags |= TEXTBOX_READONLY;	/* XXX */
