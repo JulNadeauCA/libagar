@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.3 2004/05/10 03:30:59 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.4 2004/05/12 05:34:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -65,7 +65,8 @@ static const char *mement_names[] = {
 	"input",
 	"cad",
 	"eda",
-	"game"
+	"game",
+	"math"
 };
 
 static void
