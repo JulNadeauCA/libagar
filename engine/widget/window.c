@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.144 2003/01/04 23:57:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.145 2003/01/08 21:23:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -463,7 +463,9 @@ window_draw(struct window *win)
 					SDL_SetClipRect(view->v, &rclip);
 				}
 
-				WIDGET_OPS(wid)->widget_draw(wid);
+				if (wid->w > 0 && wid->h > 0) {
+					WIDGET_OPS(wid)->widget_draw(wid);
+				}
 
 				if (wid->flags & WIDGET_CLIPPING) {
 					SDL_SetClipRect(view->v, &rclip_save);
