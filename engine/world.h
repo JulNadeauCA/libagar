@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.5 2002/02/17 07:58:40 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.6 2002/02/18 07:50:32 vedge Exp $	*/
 
 SLIST_HEAD(objs_head, object);
 SLIST_HEAD(chars_head, character);
@@ -6,6 +6,7 @@ SLIST_HEAD(chars_head, character);
 struct world {
 	struct	object obj;
 
+	char	*datapath;		/* Search path for states */
 	char	*udatadir;		/* User data directory path */
 	char	*sysdatadir;		/* System-wide data directory path */
 	struct	map *curmap;		/* Map being displayed */

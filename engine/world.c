@@ -28,6 +28,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/config.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -37,7 +39,7 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/config.h>
+#include <engine/mapedit/mapedit.h>
 
 static struct obvec world_vec = {
 	world_destroy,
@@ -53,17 +55,27 @@ savepath(char *obname, const char *suffix)
 {
 	static char path[FILENAME_MAX];
 	static struct stat sta;
+	char **ap, *pathv[32];	/* XXX */
+	char *datapath, *datapathp;
+	
+	datapath = strdup(world->datapath);
+	datapathp = datapath;
 
-	sprintf(path, "%s/%s.%s", world->udatadir, obname, suffix);
-	if (stat(path, &sta) == 0) {
-		return (path);
+	for (ap = pathv;
+	    (*ap = strsep(&datapath, ":;")) != NULL;) {
+		sprintf(path, "%s/%s.%s", *ap, obname, suffix);
+		if (stat(path, &sta) == 0) {
+			dprintf("loading %s\n", path);
+			free(datapathp);
+			return (path);
+		}
+		if (**ap != '\0' && ++ap >= &pathv[10]) {
+			break;
+		}
 	}
-	sprintf(path, "%s/%s.%s", world->sysdatadir, obname, suffix);
-	if (stat(path, &sta) == 0) {
-		return (path);
-	}
-	fatal("cannot find %s.%s in %s:%s\n", obname, suffix,
-	    world->udatadir, world->sysdatadir);
+
+	warning("%s.%s not in %s\n", obname, suffix, world->datapath);
+	free(datapathp);
 	return (NULL);
 }
 
@@ -97,7 +109,6 @@ world_create(char *name)
 		sprintf(world->datapath, "%s:%s", world->udatadir,
 		    world->sysdatadir);
 	}
-	dprintf("path: %s\n", world->datapath);
 
 	if (stat(world->sysdatadir, &sta) != 0) {
 		warning("%s: %s\n", world->sysdatadir, strerror(errno));
@@ -126,6 +137,10 @@ world_load(void *p, int fd)
 
 	dprintf("loading state\n");
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
+			/* XXX map editor hack */
+			continue;
+		}
 		object_load(ob);
 	}
 	return (0);
@@ -145,6 +160,10 @@ world_save(void *p, int fd)
 	soffs = lseek(fd, 0, SEEK_SET);
 	fobj_write_uint32(fd, 0);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
+			/* XXX map editor hack */
+			continue;
+		}
 		fobj_write_uint32(fd, ob->id);
 		fobj_write_string(fd, ob->name);
 		fobj_write_string(fd, (ob->desc != NULL) ? ob->desc : "");
