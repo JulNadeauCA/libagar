@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.28 2002/12/26 07:03:22 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.29 2002/12/29 03:24:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -501,7 +501,7 @@ done:
 }
 
 static void
-square_composite(void *p, int x, int y, int w, int h, Uint32 color)
+square_lines(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
@@ -534,7 +534,7 @@ struct primitive_ops primitives = {
 	frame_rect,		/* frame (SDL_Rect) */
 	circle_bresenham,	/* circle */
 	line_bresenham,		/* line */
-	square_composite	/* square */
+	square_lines		/* square */
 };
 
 struct window *
@@ -612,9 +612,6 @@ apply(int argc, union evarg *argv)
 		break;
 	case LINE:
 		primitives.line = sel->p1;
-		break;
-	case SQUARE:
-		primitives.square = sel->p1;
 		break;
 	}
 }
