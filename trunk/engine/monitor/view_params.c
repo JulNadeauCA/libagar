@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.6 2003/01/01 01:46:11 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.7 2003/01/01 05:18:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@ view_params_window(void)
 	struct window *win;
 	struct region *reg;
 
-	if ((win = window_generic_new(289, 339, "monitor-view-params"))
+	if ((win = window_generic_new(259, 173, "monitor-view-params"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
@@ -69,8 +69,6 @@ view_params_window(void)
 	
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		struct textbox *mindelay_tbox, *maxdelay_tbox;
-		struct button *button;
 		char *engine = "???";
 
 		switch (view->gfx_engine) {
@@ -107,18 +105,6 @@ view_params_window(void)
 			    "Root map offset: %d,%d (soft %d,%d)",
 			    &rm->x, &rm->y, &rm->sx, &rm->sy);
 		}
-		
-		mindelay_tbox = textbox_new(reg, "Minimum refresh delay (ms): ",
-		    0, 100, 10);
-		maxdelay_tbox = textbox_new(reg, "Maximum refresh delay (ms): ",
-		    0, 100, 10);
-		
-		textbox_printf(mindelay_tbox, "%d", view->refresh.min_delay);
-		textbox_printf(maxdelay_tbox, "%d", view->refresh.max_delay);
-
-		button = button_new(reg, "Apply", NULL, 0, 100, 10);
-		event_new(button, "button-pushed", apply, "%p, %p",
-		    mindelay_tbox, maxdelay_tbox);
 	}
 	
 	return (win);
