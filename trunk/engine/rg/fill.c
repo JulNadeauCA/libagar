@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.4 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.6 2005/02/12 10:32:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -198,7 +198,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				    (((a1 - a2) * a) >> 8) + a2);
 
 				for (x = 0; x < su->w; x++) {
-					prim_blend_rgb(t, x, y,
+					prim_blend_rgb(t->su, x, y,
 					    PRIM_BLEND_SRCALPHA,
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,
@@ -218,7 +218,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				for (x = 0; x < su->w; x++) {
 					Uint8 a = (su->h-x)*255/su->h;
 				
-					prim_blend_rgb(t, x, y,
+					prim_blend_rgb(t->su, x, y,
 					    PRIM_BLEND_SRCALPHA,
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,

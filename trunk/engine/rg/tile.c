@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.12 2005/02/12 09:54:44 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.13 2005/02/14 07:26:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -129,7 +129,9 @@ tile_generate(struct tile *t)
 
 				rd.x = tel->tel_pixmap.x;
 				rd.y = tel->tel_pixmap.y;
-
+				rd.w = px->su->w;
+				rd.h = px->su->h;
+				SDL_BlitSurface(t->su, &rd, px->bg, &rd);
 				SDL_BlitSurface(px->su, NULL, t->su, &rd);
 			}
 			break;
@@ -386,11 +388,16 @@ pixmap_resized(int argc, union evarg *argv)
 	struct pixmap *px = argv[2].p;
 	int xoffs = argv[3].i;
 	int yoffs = argv[4].i;
+	struct tile *t = tv->tile;
 	int w = tileview_int(ctrl, 2);
 	int h = tileview_int(ctrl, 3);
 
-	pixmap_scale(px, w, h, xoffs, yoffs);
-	tv->tile->flags |= TILE_DIRTY;
+	if (w != px->su->w || h != px->su->h) 
+		pixmap_scale(px, w, h, xoffs, yoffs);
+
+	tile_generate(t);
+	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
+	t->flags &= ~(TILE_DIRTY);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.1 2005/02/11 04:51:04 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.2 2005/02/14 07:26:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -10,9 +10,11 @@
 struct pixmap {
 	char name[PIXMAP_NAME_MAX];
 	int flags;
-	struct tileset *ts;
-	SDL_Surface *su;
-	u_int nrefs;
+	struct tileset *ts;		/* Back pointer to tileset */
+	SDL_Surface *su;		/* Pixmap surface */
+	SDL_Surface *bg;		/* Saved background (optimization) */
+	u_int nrefs;			/* Number of tile references */
+	float h, s, v, a;		/* Current pixel value */
 	TAILQ_ENTRY(pixmap) pixmaps;
 };
 
@@ -20,11 +22,14 @@ __BEGIN_DECLS
 void		 pixmap_init(struct pixmap *, struct tileset *, int);
 void		 pixmap_destroy(struct pixmap *);
 struct window	*pixmap_edit(struct tileview *, struct tile_element *);
+void		 pixmap_update(struct tileview *, struct tile_element *);
 void		 pixmap_scale(struct pixmap *, int, int, int, int);
 
-void pixmap_mousebuttondown(struct tileview *, struct pixmap *, int, int, int);
-void pixmap_mousebuttonup(struct tileview *, struct pixmap *, int, int, int);
-void pixmap_mousemotion(struct tileview *, struct pixmap *, int, int, int,
+void pixmap_mousebuttondown(struct tileview *, struct tile_element *, int, int,
+			    int);
+void pixmap_mousebuttonup(struct tileview *, struct tile_element *, int, int,
+			  int);
+void pixmap_mousemotion(struct tileview *, struct tile_element *, int, int, int,
 			int, int);
 __END_DECLS
 
