@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.69 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.70 2003/06/08 00:21:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,7 +72,8 @@ button_new(void *parent, const char *caption)
 void
 button_init(struct button *b, const char *caption)
 {
-	widget_init(b, "button", &button_ops, WIDGET_UNFOCUSED_MOTION);
+	widget_init(b, "button", &button_ops,
+	    WIDGET_FOCUSABLE|WIDGET_UNFOCUSED_MOTION);
 	widget_bind(b, "state", WIDGET_BOOL, NULL, &b->state);
 
 	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100, 255);
@@ -119,19 +120,22 @@ button_scale(void *p, int w, int h)
 		WIDGET(b)->h = b->label_s->h + b->padding*2;
 	}
 
-	/* Scale the label to a reasonable size. */
-	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
-	if (nw > WIDGET(b)->w - 1) {
-		nw = WIDGET(b)->w - 1;
+	if (b->padding == 0) {
+		nw = WIDGET(b)->w;
+		nh = WIDGET(b)->h;
+	} else {
+		/* Scale the label to a reasonable size. */
+		nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
+		if (nw > WIDGET(b)->w - 1)
+			nw = WIDGET(b)->w - 1;
+		nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
+		if (nh > WIDGET(b)->h - 1)
+			nh = WIDGET(b)->h - 1;
+		if (nw > b->label_s->w*2)
+			nw = b->label_s->w*2;
+		if (nh > b->label_s->h*2)
+			nh = b->label_s->h*2;
 	}
-	nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
-	if (nh > WIDGET(b)->h - 1) {
-		nh = WIDGET(b)->h - 1;
-	}
-	if (nw > b->label_s->w*2)
-		nw = b->label_s->w*2;
-	if (nh > b->label_s->h*2)
-		nh = b->label_s->h*2;
 
 	if (b->slabel_s != NULL) {
 		SDL_FreeSurface(b->slabel_s);
@@ -314,11 +318,11 @@ void
 button_set_focusable(struct button *bu, int focusable)
 {
 	if (focusable) {
-		WIDGET(bu)->flags &=
-		    ~(WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP);
+		WIDGET(bu)->flags |= WIDGET_FOCUSABLE;
+		WIDGET(bu)->flags &= ~(WIDGET_UNFOCUSED_BUTTONUP);
 	} else {
-		WIDGET(bu)->flags |=
-		    (WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP);
+		WIDGET(bu)->flags &= ~(WIDGET_FOCUSABLE);
+		WIDGET(bu)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 	}
 }
 

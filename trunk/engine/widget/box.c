@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.1 2003/06/06 02:57:44 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.2 2003/06/08 00:21:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -210,13 +210,13 @@ box_scale(void *p, int w, int h)
 
 			switch (bo->type) {
 			case BOX_HORIZ:
-				widget_set_geometry(wid,
+				widget_scale(wid,
 				    max,
 				    h - bo->padding*2);
 				x += wid->w + bo->spacing;
 				break;
 			case BOX_VERT:
-				widget_set_geometry(wid,
+				widget_scale(wid,
 				    w - bo->padding*2,
 				    max);
 				y += wid->h + bo->spacing;

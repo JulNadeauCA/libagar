@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.32 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.33 2003/06/08 00:21:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,8 @@ void
 graph_init(struct graph *graph, const char *caption, enum graph_type type,
     int flags, Sint32 yrange)
 {
-	widget_init(graph, "graph", &graph_ops, WIDGET_WFILL|WIDGET_HFILL);
+	widget_init(graph, "graph", &graph_ops,
+	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_HFILL);
 
 	widget_map_color(graph, FRAME_COLOR, "frame", 50, 50, 50, 255);
 	widget_map_color(graph, ORIGIN_COLOR1, "origin1", 50, 50, 50, 255);
