@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.15 2002/09/16 16:06:42 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.16 2002/09/19 22:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -93,7 +93,7 @@ version_write(int fd, const struct version *ver)
 	struct passwd *pw;
 	char host[64];
 
-	ewrite(fd, ver->name, strlen(ver->name));
+	Write(fd, ver->name, strlen(ver->name));
 	write_uint32(fd, ver->vermin);
 	write_uint32(fd, ver->vermaj);
 	

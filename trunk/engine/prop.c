@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.3 2002/09/07 04:17:58 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.4 2002/09/19 22:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -403,15 +403,15 @@ prop_load(void *p, int fd)
 	
 		switch (t) {
 		case PROP_BOOL:
-			eread(fd, &c, 1);
+			Read(fd, &c, 1);
 			prop_set_bool(ob, key, (int)c);
 			break;
 		case PROP_UINT8:
-			eread(fd, &c, 1);
+			Read(fd, &c, 1);
 			prop_set_uint8(ob, key, c);
 			break;
 		case PROP_SINT8:
-			eread(fd, &sc, 1);
+			Read(fd, &sc, 1);
 			prop_set_sint8(ob, key, sc);
 			break;
 		case PROP_UINT16:
