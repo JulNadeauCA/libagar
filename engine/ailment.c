@@ -1,7 +1,7 @@
-/*	$Csoft$	*/
+/*	$Csoft: ailment.c,v 1.1 2002/06/09 09:06:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

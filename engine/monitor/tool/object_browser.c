@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.2 2002/09/02 04:55:41 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.3 2002/09/04 03:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -97,7 +97,8 @@ object_browser_window(void *p)
 	struct button *button;
 	struct bitmap *bmp;
 
-	win = window_new("Object browser", WINDOW_SOLID|WINDOW_CENTER,
+	win = window_new("monitor-object-browser", "Object browser",
+	    WINDOW_SOLID|WINDOW_CENTER,
 	    0, 0, 184, 228, 184, 228);
 
 	/* Input */
