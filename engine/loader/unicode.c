@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.3 2003/06/22 06:34:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,13 +26,21 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/loader/unicode.h>
+#include <engine/error/error.h>
+
+#include <sys/types.h>
+#include <SDL_types.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+
+#include <engine/unicode/unicode.h>
+
+#include <engine/loader/netbuf.h>
+#include <engine/loader/integral.h>
+#include <engine/loader/unicode.h>
 
 enum {
 	UNICODE_UTF16BE			/* Length-encoded, UTF-16BE */
@@ -51,9 +59,11 @@ read_unicode(struct netbuf *buf)
 	case UNICODE_UTF16BE:
 		len = (size_t)read_uint32(buf);
 		if (len > UNICODE_STRING_MAX) {
-			fatal("too big");
+			error_set("unicode string is too big");
+			return (NULL);
 		} else if (len == 0) {
-			fatal("null");
+			error_set("NULL unicode string");
+			return (NULL);
 		}
 		ucs = Malloc(len * sizeof(Uint16));	     /* Includes NUL */
 		for (i = 0; i < len; i++) {
@@ -61,11 +71,13 @@ read_unicode(struct netbuf *buf)
 		}
 		if (ucs[len-1] != '\0') {
 			free(ucs);
-			fatal("no terminating NUL");
+			error_set("no NUL termination");
+			return (NULL);
 		}
 		break;
 	default:
-		fatal("bad encoding");
+		error_set("bad encoding");
+		return (NULL);
 	}
 	return (ucs);
 }
@@ -75,12 +87,16 @@ write_unicode(struct netbuf *buf, const Uint16 *ucs)
 {
 	size_t len;
 	int i;
-	
-	len = ucslen(ucs)+1;				 /* Include the NUL */
-	write_uint32(buf, UNICODE_UTF16BE);
-	write_uint32(buf, (Uint32)len);
-	for (i = 0; i < len; i++) {
-		write_uint16(buf, ucs[i]);
+
+	if (ucs == NULL) {
+		write_uint32(buf, 0);
+	} else {
+		len = ucslen(ucs)+1;			 /* Include the NUL */
+		write_uint32(buf, UNICODE_UTF16BE);
+		write_uint32(buf, (Uint32)len);
+		for (i = 0; i < len; i++) {
+			write_uint16(buf, ucs[i]);
+		}
 	}
 }
 
