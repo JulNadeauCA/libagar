@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.5 2002/01/30 12:46:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -59,7 +59,6 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 		perror("object");
 		return (-1);
 	}
-	ob->time_hook = NULL;
 	ob->event_hook = NULL;
 	ob->destroy_hook = NULL;
 
