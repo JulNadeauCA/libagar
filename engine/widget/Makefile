@@ -1,9 +1,11 @@
-#	$Csoft: Makefile,v 1.23 2002/07/05 01:05:14 vedge Exp $
+#	$Csoft: Makefile,v 1.24 2002/07/20 18:53:50 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 SUBDIR=	fonts
+
+SHARE=	README.graph
 
 LIB=	widget
 SRCS=	widget.c window.c region.c text.c label.c button.c checkbox.c \
