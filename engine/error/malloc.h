@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.6 2004/06/18 03:11:26 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.7 2004/07/24 02:01:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -21,6 +21,7 @@ enum {
 	M_NODEMASK,	/* map node mask */
 	M_WIDGET,	/* widget */
 	M_VG,		/* vector graphics */
+	M_RG,		/* raster graphics */
 	M_VIEW,		/* view interface */
 	M_NETBUF,	/* network i/o */
 	M_TTF,		/* font loader */
