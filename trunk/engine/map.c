@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.66 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.67 2002/04/09 03:38:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -684,6 +684,9 @@ map_load(void *ob, int fd)
 	pthread_mutex_unlock(&m->lock);
 
 	free(pobjs);
+	
+	m->redraw++;
+
 	return (0);
 }
 
