@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.36 2002/11/07 17:50:55 vedge Exp $
+# $Csoft: configure.in,v 1.37 2002/11/10 00:31:30 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -25,7 +25,7 @@ hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
 
 # System-wide data file directories.
 mdefine(MAPDIR, "$PREFIX/share/cave/map");
-mdefine(TTFDIR, "$PREFIX/share/cave/map");
+mdefine(TTFDIR, "$PREFIX/share/cave/ttf");
 
 # Man page directory.
 mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
