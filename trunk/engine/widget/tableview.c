@@ -1,5 +1,6 @@
+/*	$Csoft$	*/
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -63,7 +64,7 @@ enum {
 };
 
 /* INTERNAL UTILITY FNs */
-static Uint32 foreach_visible_column(struct tableview *, visible_do, void *, void *);
+static void   foreach_visible_column(struct tableview *, visible_do, void *, void *);
 static void   view_changed(struct tableview *);
 static int    view_changed_check(struct tableview *, struct tableview_rowq *,
                                  int, int, int *);
@@ -84,7 +85,6 @@ static int    draw_column(struct tableview *tv, int visible_start, int visible_e
 /* ***********************
  * EXTERNAL API
  ************************/
-#pragma mark API
 
 struct tableview *
 tableview_new(void *parent, int flags, datafunc data_callback, 
@@ -103,17 +103,16 @@ void
 tableview_init(struct tableview *tv, int flags, datafunc data_callback,
     compfunc sort_callback)
 {
-    /* EVENT HANDLERS */
-    static void mousebuttonup(int, union evarg *);
-    static void mousebuttondown(int, union evarg *);
-    static void scrolled(int, union evarg *);
-    static void dblclick_expire(int, union evarg *);
-    static void lost_focus(int, union evarg *);
-    static void columnresize(int, union evarg *);
-    static void columnmove(int argc, union evarg *);
+	static void mousebuttonup(int, union evarg *);
+	static void mousebuttondown(int, union evarg *);
+	static void scrolled(int, union evarg *);
+	static void dblclick_expire(int, union evarg *);
+	static void lost_focus(int, union evarg *);
+	static void columnresize(int, union evarg *);
+	static void columnmove(int argc, union evarg *);
 
 	widget_init(tv, "tableview", &tableview_ops,
-				WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
+	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 	pthread_mutex_init(&tv->lock, &recursive_mutexattr);
 	
 	widget_map_color(tv, BG_COLOR, "background", 120, 120, 120, 255);
@@ -127,24 +126,27 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	tv->sort_callback = sort_callback;
 	
 	/* initialize flags */
-	tv->selmulti = tv->selsingle = tv->selnoclear = tv->reordercols =
-	tv->header = tv->locked = tv->sort = 0;
+	tv->selmulti = 0;
+	tv->selsingle = 0;
+	tv->selnoclear = 0;
+	tv->reordercols = 0;
+	tv->header = 0;
+	tv->locked = 0;
+	tv->sort = 0;
 	
 	/* set requested flags */
 	if (flags & TABLEVIEW_REORDERCOLS)
-	    tv->reordercols = 1;
+		tv->reordercols = 1;
 	if (!(flags & TABLEVIEW_NOHEADER))
-	    tv->header = 1;
+		tv->header = 1;
 	if (!(flags & TABLEVIEW_NOSORT))
-	    tv->sort = 1;
+		tv->sort = 1;
 	if (flags & TABLEVIEW_REORDERCOLS)
-	    tv->reordercols = 1;
+		tv->reordercols = 1;
 	if (flags & TABLEVIEW_SELMULTI)
-	    tv->selmulti = 1;
+		tv->selmulti = 1;
 
-	if(tv->header)  tv->head_height = text_font_height(NULL);
-	else            tv->head_height = 0;
-    
+	tv->head_height = tv->header ? text_font_height(NULL) : 0;
 	tv->row_height = text_font_height(NULL) + 2;
 	tv->dblclicked = 0;
 	tv->sbar_v = scrollbar_new(tv, SCROLLBAR_VERT);
@@ -156,8 +158,7 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	widget_set_int(tv->sbar_v, "max", 0);
 	widget_set_int(tv->sbar_v, "value", 0);
 	
-	if (tv->sbar_h)
-	{
+	if (tv->sbar_h) {
 		widget_set_int(tv->sbar_h, "min", 0);
 		widget_set_int(tv->sbar_h, "max", 0);
 		widget_set_int(tv->sbar_h, "value", 0);
@@ -210,70 +211,77 @@ void
 tableview_col_add(struct tableview *tv, int flags, colID cid, 
     const char *label, char *width)
 {
-    struct tableview_column *col;
+	struct tableview_column *col;
 	unsigned int i;
 	int data_w, label_w;
 	
-	if (!tv) return;
-    if (tv->locked) return;
-    if (cid == ID_INVALID) return;
+	if (!tv || tv->locked || cid == ID_INVALID)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
 	
 	/* column identifier must be unique */
 	for ( i = 0; i < tv->columncount; i++)
 	{
-	    if(tv->column[i].cid == cid) 
-	        goto out;
+		if (tv->column[i].cid == cid) 
+			goto out;
 	}
 	
-	++tv->columncount;
 	tv->column = Realloc(tv->column,
-	                     tv->columncount * sizeof(struct tableview_column));
-	col = &tv->column[tv->columncount-1];
-	
+	    (tv->columncount+1) * sizeof(struct tableview_column));
+	col = &tv->column[tv->columncount];
 	col->cid = cid;
-	col->idx = tv->columncount-1;
+	col->idx = tv->columncount;
 	col->mousedown = 0;
+	tv->columncount++;
 	
 	if (1 == tv->columncount)
-	    tv->expanderColumn = cid;
+		tv->expanderColumn = cid;
 	
 	/* initialize flags */
-	col->mousedown = col->moving = col->editable =
-	col->resizable = col->update = col->fill = col->dynamic = 0;
+	col->mousedown = 0;
+	col->moving = 0;
+	col->editable = 0;
+	col->resizable = 0;
+	col->update = 0;
+	col->fill = 0;
+	col->dynamic = 0;
 	
 	/* set requested flags */
 	if (flags & TABLEVIEW_COL_EDITABLE)
-	    col->editable = 1;
+		col->editable = 1;
 	if (flags & TABLEVIEW_COL_ENTEREDIT)
-	    tv->enterEdit = cid;
+		tv->enterEdit = cid;
 	if (flags & TABLEVIEW_COL_RESIZABLE)
-	    col->resizable = 1;
-	if (flags & TABLEVIEW_COL_UPDATE &&
-	    flags & TABLEVIEW_COL_DYNAMIC)
-	    col->update = 1;
+		col->resizable = 1;
+	if ((flags & TABLEVIEW_COL_UPDATE) &&
+	    (flags & TABLEVIEW_COL_DYNAMIC))
+		col->update = 1;
 	if (flags & TABLEVIEW_COL_FILL)
-	    col->fill = 1;
+		col->fill = 1;
 	if (flags & TABLEVIEW_COL_DYNAMIC)
-	    col->dynamic = 1;
+		col->dynamic = 1;
 	if (flags & TABLEVIEW_COL_EXPANDER)
-	    tv->expanderColumn = cid;
+		tv->expanderColumn = cid;
 	
 	/* column label */
-	if (NULL == label) label = "";
+	if (NULL == label) {
+		label = "";
+	}
 	strncpy(col->label, label, LBL_LEN);
-    col->label_img = text_render(NULL, -1, WIDGET_COLOR(tv, HEADTEXT_COLOR),
-                                label);
-    label_w = col->label_img->w;
+	col->label_img = text_render(NULL, -1, WIDGET_COLOR(tv, HEADTEXT_COLOR),
+                                     label);
+	label_w = col->label_img->w;
     
-    /* column's width is the wider of user width string and label string */
-    if (NULL == width) width = "";
+	/* column's width is the wider of user width string and label string */
+	if (NULL == width) {
+		width = "";
+	}
 	text_prescale(width, &data_w, NULL);
 	col->w = (label_w > data_w ? label_w : data_w) + 6;
-	
+
 	tv->visible.dirty = 1;
-	
+
 out:
 	pthread_mutex_unlock(&tv->lock);
 }
@@ -296,15 +304,15 @@ tableview_row_addfn(struct tableview *tv, int flags,
 	colID cid;
 	void *data;
 	
-	if (!tv) return NULL;
+	if (!tv)
+		return NULL;
 	
 	pthread_mutex_lock(&tv->lock);
     
-    tv->locked = 1;
+	tv->locked = 1;
 	
 	/* verify the row identifier is not in use */
-	if (row_get(&tv->children, rid)) 
-	{
+	if (row_get(&tv->children, rid))  {
 		pthread_mutex_unlock(&tv->lock);
 		return NULL;
 	}
@@ -313,48 +321,53 @@ tableview_row_addfn(struct tableview *tv, int flags,
 	row->cell = Malloc(sizeof(struct cell) * tv->columncount, M_WIDGET);
 	
 	/* initialize cells */
-	for (i = 0; i < tv->columncount; i++)
-	{
+	for (i = 0; i < tv->columncount; i++) {
 	    row->cell[i].text = NULL;
 	    row->cell[i].image = NULL;
 	}
 	
 	/* import static data */
 	va_start(ap, rid);
-    while ( -1 != (cid = va_arg(ap, colID)) )
-    {
-        data = va_arg(ap, void *);
+	while ( -1 != (cid = va_arg(ap, colID)) ) {
+		data = va_arg(ap, void *);
         
-        for (i = 0; i < tv->columncount; i++)
-	    {
-	        if (cid == tv->column[i].cid)
-	        {
-	            /* if the user already passed for this col, don't leak */
-	            if (row->cell[i].text) free(row->cell[i].text);
-	            if (row->cell[i].image) SDL_FreeSurface(row->cell[i].image);
-	            row->cell[i].text = strdup((char *)data);
-	            row->cell[i].image = text_render(NULL, -1, 
-	                                             WIDGET_COLOR(tv, TEXT_COLOR),
-	                                             row->cell[i].text);
-	            break;
-	        }
-	    }
-    }
-    va_end(ap);
+		for (i = 0; i < tv->columncount; i++) {
+			if (cid == tv->column[i].cid) {
+				/*
+				 * If the user already passed for this col,
+				 * don't leak.
+				 */
+				if (row->cell[i].text != NULL) {
+					free(row->cell[i].text);
+				}
+				if (row->cell[i].image != NULL) {
+					SDL_FreeSurface(row->cell[i].image);
+				}
+				row->cell[i].text = Strdup((char *)data);
+				row->cell[i].image = text_render(NULL, -1,
+				    WIDGET_COLOR(tv, TEXT_COLOR),
+				    row->cell[i].text);
+				break;
+			}
+		}
+	}
+	va_end(ap);
 	
 	TAILQ_INIT(&row->children);
 	
 	/* initialize flags */
-	row->selected = row->expanded = 0;
+	row->selected = 0;
+	row->expanded = 0;
 	
 	/* set requested flags */
-	
-	
 	row->rid = rid;
 	row->parent = parent;
 	
-	if (parent) TAILQ_INSERT_TAIL(&parent->children, row, siblings);
-	else		TAILQ_INSERT_TAIL(&tv->children, row, siblings);
+	if (parent) {
+		TAILQ_INSERT_TAIL(&parent->children, row, siblings);
+	} else {
+		TAILQ_INSERT_TAIL(&tv->children, row, siblings);
+	}
 	
 	/* increment scroll only if visible: */
 	if (visible(row))
@@ -363,43 +376,42 @@ tableview_row_addfn(struct tableview *tv, int flags,
 	tv->visible.dirty = 1;
 	
 	pthread_mutex_unlock(&tv->lock);
-	
 	return (row);
 }
 
 void
 tableview_row_del(struct tableview *tv, struct tableview_row *row)
 {
-    unsigned int i;
-    struct tableview_row *row1, *row2;
+	unsigned int i;
+	struct tableview_row *row1, *row2;
     
-	if (NULL == tv) return;
-	if (NULL == row) return;
+	if (NULL == tv || NULL == row)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
 	
 	/* first remove children */
 	
-    row1 = TAILQ_FIRST(&row->children);
-    while (row1)
-    {
-        row2 = TAILQ_NEXT(row1, siblings);
-        tableview_row_del(tv, row1);
-        row1 = row2;
-    }
+	row1 = TAILQ_FIRST(&row->children);
+	while (row1) {
+		row2 = TAILQ_NEXT(row1, siblings);
+		tableview_row_del(tv, row1);
+		row1 = row2;
+	}
 	
 	/* now that children are gone, remove this row */
-	
-	if(visible(row))
+	if (visible(row))
 		--tv->expandedrows;
 	
-	if (row->parent) TAILQ_REMOVE(&row->parent->children, row, siblings);
-	else			 TAILQ_REMOVE(&tv->children, row, siblings);
+	if (row->parent) {
+		TAILQ_REMOVE(&row->parent->children, row, siblings);
+	} else {
+		TAILQ_REMOVE(&tv->children, row, siblings);
+	}
 	
-	for (i = 0; i < tv->columncount; i++)
-	{
-	    if (row->cell[i].image) Free(row->cell[i].image, M_WIDGET);
-	    if (row->cell[i].text)  Free(row->cell[i].text, M_WIDGET);
+	for (i = 0; i < tv->columncount; i++) {
+	    Free(row->cell[i].image, M_WIDGET);
+	    Free(row->cell[i].text, M_WIDGET);
 	}
 	
 	Free(row->cell, M_WIDGET);
@@ -413,37 +425,35 @@ tableview_row_del(struct tableview *tv, struct tableview_row *row)
 void
 tableview_row_del_all(struct tableview *tv)
 {
-    struct tableview_row *row1, *row2;
+	struct tableview_row *row1, *row2;
 	
-    pthread_mutex_lock(&tv->lock);
+	pthread_mutex_lock(&tv->lock);
     
-    row1 = TAILQ_FIRST(&tv->children);
-    while (row1)
-    {
-        row2 = TAILQ_NEXT(row1, siblings);
-        tableview_row_del(tv, row1);
-        row1 = row2;
-    }
+	row1 = TAILQ_FIRST(&tv->children);
+	while (row1) {
+		row2 = TAILQ_NEXT(row1, siblings);
+		tableview_row_del(tv, row1);
+		row1 = row2;
+	}
     
 	TAILQ_INIT(&tv->children);
+	tv->expandedrows = 0;
+	tv->visible.dirty = 1;
     
-    tv->expandedrows = 0;
-    tv->visible.dirty = 1;
-    
-    pthread_mutex_unlock(&tv->lock);
+	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_select(struct tableview *tv, struct tableview_row *row)
 {
-	if(NULL == tv || NULL == row) return;
+	if (NULL == tv || NULL == row)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
-	
-	if(!tv->selmulti)
+	if (!tv->selmulti) {
 		tableview_row_deselect_all(tv, NULL);
-    row->selected = 1;
-	
+	}
+	row->selected = 1;
 	pthread_mutex_unlock(&tv->lock);
 }
 
@@ -452,8 +462,10 @@ tableview_row_get(struct tableview *tv, rowID rid)
 {
 	struct tableview_row *row;
 	
-	if (NULL == tv) return NULL;
-	
+	if (NULL == tv)
+		return NULL;
+
+	/* XXX pointless lock */
 	pthread_mutex_lock(&tv->lock);
 	row = row_get(&tv->children, rid);
 	pthread_mutex_unlock(&tv->lock);
@@ -464,63 +476,64 @@ tableview_row_get(struct tableview *tv, rowID rid)
 void
 tableview_row_select_all(struct tableview *tv, struct tableview_row *root)
 {
-	if (NULL == tv) return;
-	if (!tv->selmulti) return;
+	if (NULL == tv || !tv->selmulti)
+		return;
 
 	pthread_mutex_lock(&tv->lock);
-	
-	if (NULL == root)	select_all(&tv->children);
-	else				select_all(&root->children);
-	
+	if (NULL == root) {
+		select_all(&tv->children);
+	} else {
+		select_all(&root->children);
+	}
 	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_deselect_all(struct tableview *tv, struct tableview_row *root)
 {
-	if (NULL == tv) return;
+	if (NULL == tv)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
-	
-	if (NULL == root)	deselect_all(&tv->children);
-	else				deselect_all(&root->children);
-	
+	if (NULL == root) {
+		deselect_all(&tv->children);
+	} else {
+		deselect_all(&root->children);
+	}
 	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_expand(struct tableview *tv, struct tableview_row *in)
 {
-	if (NULL == tv || NULL == in) return;
+	if (NULL == tv || NULL == in)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
-	
-	if (!in->expanded)
-	{
-        in->expanded = 1;
-		if (visible(in))
-		{
-			tv->expandedrows += count_visible_descendants(&in->children, 0);
+	if (!in->expanded) {
+		in->expanded = 1;
+		if (visible(in)) {
+			tv->expandedrows +=
+			    count_visible_descendants(&in->children, 0);
 			tv->visible.dirty = 1;
 		}
 	}
-	
 	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_collapse(struct tableview *tv, struct tableview_row *in)
 {
-	if (NULL == tv || NULL == in) return;
+	if (NULL == tv || NULL == in)
+		return;
 	
 	pthread_mutex_lock(&tv->lock);
 	
-	if (in->expanded)
-	{
+	if (in->expanded) {
 		in->expanded = 0;
-		if (visible(in))
-		{
-			tv->expandedrows -= count_visible_descendants(&in->children, 0);
+		if (visible(in)) {
+			tv->expandedrows -=
+			    count_visible_descendants(&in->children, 0);
 			tv->visible.dirty = 1;
 		}
 	}
@@ -541,11 +554,11 @@ tableview_destroy(void *p)
 	
 	tableview_row_del_all(tv);
 	
-	for (i = 0; i < tv->columncount; i++)
+	for (i = 0; i < tv->columncount; i++) {
 		SDL_FreeSurface(tv->column[i].label_img);
+	}
 	Free(tv->column, M_WIDGET);
-
-    Free(tv->visible.items, M_WIDGET);
+	Free(tv->visible.items, M_WIDGET);
     
 	pthread_mutex_unlock(&tv->lock);
 	pthread_mutex_destroy(&tv->lock);
@@ -559,12 +572,13 @@ tableview_scale(void *p, int w, int h)
 	struct tableview *tv = p;
 	unsigned int rows_per_view, i;
     
-    pthread_mutex_lock(&tv->lock);
+	pthread_mutex_lock(&tv->lock);
 	
-    /* estimate but don't change anything */
+	/* estimate but don't change anything */
 	if (w == -1 && h == -1) {
 		WIDGET(tv)->w = tv->prew + tv->sbar_v->button_size;
-		WIDGET(tv)->h = tv->preh + (NULL == tv->sbar_h ? 0 : tv->sbar_h->button_size);
+		WIDGET(tv)->h = tv->preh + (NULL == tv->sbar_h ? 0 :
+		    tv->sbar_h->button_size);
 		pthread_mutex_unlock(&tv->lock);
 		return;
 	}
@@ -572,92 +586,93 @@ tableview_scale(void *p, int w, int h)
 	/* vertical scroll bar */
 	WIDGET(tv->sbar_v)->x = w - tv->sbar_v->button_size;
 	WIDGET(tv->sbar_v)->y = 0;
-	widget_scale(tv->sbar_v, -1, h - (tv->sbar_h ? tv->sbar_v->button_size : 0));
+	widget_scale(tv->sbar_v, -1, h -
+	    (tv->sbar_h ? tv->sbar_v->button_size : 0));
 	
 	/* horizontal scroll bar, if enabled */
-	if (NULL != tv->sbar_h)
-	{
-	    int col_w = 0;
+	if (NULL != tv->sbar_h) {
+		int col_w = 0;
 	    
-	    WIDGET(tv->sbar_h)->x = 0;
-	    WIDGET(tv->sbar_h)->y = h - tv->sbar_v->button_size;
+		WIDGET(tv->sbar_h)->x = 0;
+		WIDGET(tv->sbar_h)->y = h - tv->sbar_v->button_size;
 		widget_scale(tv->sbar_h, w - tv->sbar_v->button_size, -1);
     
-        for(i = 0; i < tv->columncount; i++)
-            col_w += tv->column[i].w;
+		for (i = 0; i < tv->columncount; i++)
+   			col_w += tv->column[i].w;
         
-        if (col_w > WIDGET(tv->sbar_h)->w)
-        {
-            int scroll = col_w - WIDGET(tv->sbar_h)->w;
+		if (col_w > WIDGET(tv->sbar_h)->w) {
+			int scroll = col_w - WIDGET(tv->sbar_h)->w;
             
-            widget_set_int(tv->sbar_h, "max", scroll);
-            if (widget_get_int(tv->sbar_h, "value") > scroll)
-                widget_set_int(tv->sbar_h, "value", scroll);
-            scrollbar_set_bar_size(tv->sbar_h, 
-                WIDGET(tv->sbar_h)->w * (w - tv->sbar_h->button_size * 3) 
-                / col_w );
-        }
-        else
-        {
-            widget_set_int(tv->sbar_h, "value", 0);
-            scrollbar_set_bar_size(tv->sbar_h, -1);
-        }
+			widget_set_int(tv->sbar_h, "max", scroll);
+			if (widget_get_int(tv->sbar_h, "value") > scroll) {
+				widget_set_int(tv->sbar_h, "value", scroll);
+			}
+			scrollbar_set_bar_size(tv->sbar_h, 
+			    WIDGET(tv->sbar_h)->w *
+			    (w - tv->sbar_h->button_size * 3) / col_w );
+		} else {
+			widget_set_int(tv->sbar_h, "value", 0);
+  			scrollbar_set_bar_size(tv->sbar_h, -1);
+		}
 	}
 	
 	/* calculate widths for TABLEVIEW_COL_FILL cols */
 	{
-	    unsigned int fill_cols, nonfill_width, fill_width;
+		unsigned int fill_cols, nonfill_width, fill_width;
 		
-		fill_cols = nonfill_width = 0;
-		for (i = 0; i < tv->columncount; i++)
-	    {
-	        if (tv->column[i].fill)
-	            ++fill_cols;
-	        else
-	            nonfill_width += tv->column[i].w;
+		fill_cols = 0;
+		nonfill_width = 0;
+		for (i = 0; i < tv->columncount; i++) {
+			if (tv->column[i].fill) {
+				++fill_cols;
+			} else {
+				nonfill_width += tv->column[i].w;
+			}
 	    }
 	    
 	    fill_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w - nonfill_width)
 	        / fill_cols;
 	    
-	    for (i = 0; i < tv->columncount; i++)
-	    {
-	        if (tv->column[i].fill)
-	            tv->column[i].w = fill_width;
-	    }
+		for (i = 0; i < tv->columncount; i++) {
+			if (tv->column[i].fill)
+				tv->column[i].w = fill_width;
+		}
 	}
 	
 	/* Calculate how many rows the view holds */
 	{
-	    int view_height = h - (NULL == tv->sbar_h ? 0 : WIDGET(tv->sbar_h)->h);
-        if (view_height < tv->head_height) view_height = tv->head_height;
-    	rows_per_view = (view_height - tv->head_height) / tv->row_height;
-    	if ((view_height - tv->head_height) % tv->row_height)
-    		++rows_per_view;
+		int view_height = h - (NULL == tv->sbar_h ? 0 :
+		    WIDGET(tv->sbar_h)->h);
+
+		if (view_height < tv->head_height) {
+			view_height = tv->head_height;
+		}
+		rows_per_view = (view_height - tv->head_height)/tv->row_height;
+
+		if ((view_height - tv->head_height) % tv->row_height)
+			++rows_per_view;
 	}
 	
-	/* visible area increased */
-	if(tv->visible.count < rows_per_view)
+	if (tv->visible.count < rows_per_view)
 	{
+		/* visible area increased */
 		tv->visible.items = Realloc(tv->visible.items,
-                                    sizeof(struct rowdocket_item) * rows_per_view);
+		    sizeof(struct rowdocket_item)*rows_per_view);
 		
-		for(i = tv->visible.count; i < rows_per_view; i++)
-		    tv->visible.items[i].row = NULL;
+		for (i = tv->visible.count; i < rows_per_view; i++)
+			tv->visible.items[i].row = NULL;
 		
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
-	}
-	/* visible area decreased */
-	else if(tv->visible.count > rows_per_view)
-	{
+	} else if (tv->visible.count > rows_per_view) {
+		/* visible area decreased */
 		tv->visible.items = Realloc(tv->visible.items, 
-									sizeof(struct rowdocket_item) * rows_per_view);
+		    sizeof(struct rowdocket_item) * rows_per_view);
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
     
-    pthread_mutex_unlock(&tv->lock);
+	pthread_mutex_unlock(&tv->lock);
 }
 
 void
@@ -674,26 +689,26 @@ tableview_draw(void *p)
 	pthread_mutex_lock(&tv->lock);
 	
 	/* before we draw, update if needed */
-	if(tv->visible.dirty)
+	if (tv->visible.dirty)
 		view_changed(tv);
 	
-	if(tv->visible.redraw_rate &&
+	if (tv->visible.redraw_rate &&
 	   SDL_GetTicks() > tv->visible.redraw_last + tv->visible.redraw_rate)
-	{
 		update = 1;
-	}
 	
 	/* Draw the background box */
 	primitives.box(tv, 0, 0, view_width, WIDGET(tv)->h, -1, BG_COLOR);
 
 	/* draw row selection hilites */
 	y = tv->head_height;
-	for (i = 0; i < tv->visible.count; i++)
-	{
-		if (NULL == tv->visible.items[i].row) break;
-		if (tv->visible.items[i].row->selected)
-			primitives.box(tv, 1, y, view_width - 2, tv->row_height, 1,
-			               SELECTION_COLOR);
+	for (i = 0; i < tv->visible.count; i++) {
+		if (NULL == tv->visible.items[i].row) {
+			break;
+		}
+		if (tv->visible.items[i].row->selected) {
+			primitives.box(tv, 1, y, view_width - 2,
+			    tv->row_height, 1, SELECTION_COLOR);
+		}
 		y += tv->row_height;
 	}
 	
@@ -711,19 +726,18 @@ tableview_draw(void *p)
  ************************
  * we assume appropriate mutexes are locked.
  */
-#pragma mark internal
 
 /* loops through each column currently onscreen.
  * calls visible_fn for each one, passing along args
  * returns the index of the first dothis() call to return zero,
  * or tv->columncount, whichever comes first.
  */
-static Uint32
+static void
 foreach_visible_column(struct tableview *tv, visible_do dothis,
     void *arg1, void *arg2)
 {
-    int x, first_col, col_width;
-    unsigned int i;
+	int x, first_col, col_width;
+	unsigned int i;
 	int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	int view_edge = (tv->sbar_h ? widget_get_int(tv->sbar_h, "value") : 0);
 	
@@ -753,7 +767,7 @@ foreach_visible_column(struct tableview *tv, visible_do dothis,
 		
 		/* do what we should */
 		if(0 == dothis(tv, x, x + col_width, i, arg1, arg2))
-		    return i;
+		    return;
 		
 		x += tv->column[i].w;
 	}
@@ -1017,10 +1031,10 @@ static int
 clicked_row(struct tableview *tv, int visible_start, int visible_end,
     Uint32 idx, void *arg1, void *arg2)
 {
-    const int x = *(int *)arg1;
-    const int y = *(int *)arg2;
+	const int x = *(int *)arg1;
+	const int y = *(int *)arg2;
  	struct tableview_row *row = NULL;
-    int depth;
+    	int depth = 0;
 	int ts = tv->row_height/2+1;
 	SDLMod modifiers = SDL_GetModState();
 	
@@ -1056,7 +1070,7 @@ clicked_row(struct tableview *tv, int visible_start, int visible_end,
 	{
 		deselect_all(&tv->children);
 		//event_post(NULL, tv, "tableview-selectclear", "");
-		return;
+		return 1;	/* XXX? */
 	}
 	
 	/* check for a click on the +/- button, if applicable */
@@ -1079,7 +1093,7 @@ clicked_row(struct tableview *tv, int visible_start, int visible_end,
 			tv->expandedrows += count_visible_descendants(&row->children, 0);
 		}
 		tv->visible.dirty = 1;
-		return;
+		return 1;	/* XXX? */
 	}
 	
 	/* handle a command/control click... */
@@ -1203,7 +1217,6 @@ draw_column(struct tableview *tv, int visible_start, int visible_end,
 /* ***********************
  * EVENT HANDLERS
  ************************/
-#pragma mark events
 
 static void
 mousebuttonup(int argc, union evarg *argv)
