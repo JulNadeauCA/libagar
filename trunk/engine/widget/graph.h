@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.4 2002/07/27 09:02:43 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.5 2002/09/08 03:45:01 vedge Exp $	*/
 /*	Public domain	*/
 
 struct graph;
@@ -30,7 +30,7 @@ struct graph {
 
 	Sint32	 yrange;	/* Max. value */
 
-	Uint32	 xoffs;		/* Display offset */
+	Sint32	 xoffs;		/* Display offset */
 	Uint8	 xinc;		/* X increment */
 	Uint8	 origin_y;	/* Current origin position (%) */
 
@@ -49,4 +49,5 @@ void		 graph_draw(void *);
 void		 graph_plot(struct graph_item *, Sint32);
 int		 graph_load(void *, int);
 int		 graph_save(void *, int);
+void		 graph_scroll(struct graph *, int);
 
