@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.98 2003/10/10 02:12:16 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.99 2003/10/11 04:31:34 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -105,8 +105,8 @@ config_set_full_screen(int argc, union evarg *argv)
 	if (view == NULL)
 		return;
 
-	if ((enable && ((view->v->flags & SDL_FULLSCREEN)) == 0) ||
-	   (!enable && ((view->v->flags & SDL_FULLSCREEN)) == 1)) {
+	if ((enable && (view->v->flags & SDL_FULLSCREEN) == 0) ||
+	   (!enable && (view->v->flags & SDL_FULLSCREEN))) {
 		SDL_WM_ToggleFullScreen(view->v);
 		vexp.type = SDL_VIDEOEXPOSE;
 		SDL_PushEvent(&vexp);
