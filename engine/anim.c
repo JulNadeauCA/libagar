@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.10 2002/06/09 10:00:37 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.11 2002/06/09 15:04:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #include "map.h"
 
 enum {
-	NFINIT = 2,	/* Pointers allocated at initialization. */
+	NFINIT = 16,	/* Pointers allocated at initialization. */
 	NFGROW = 2	/* Pointers allocated at growth. */
 };
 
