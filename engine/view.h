@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.68 2003/02/10 04:45:40 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.69 2003/03/02 05:13:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -157,6 +157,7 @@ struct window	*view_window_exists(char *);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
+SDL_Surface	*view_copy_surface(SDL_Surface *);
 #ifdef HAVE_OPENGL
 GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
