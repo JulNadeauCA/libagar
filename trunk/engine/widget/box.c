@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.2 2003/06/08 00:21:04 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.3 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@ static struct widget_ops box_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	box_draw,
+	NULL,		/* draw */
 	box_scale
 };
 
@@ -86,15 +86,15 @@ box_destroy(void *p)
 	pthread_mutex_destroy(&((struct box *)p)->lock);
 }
 
+#if 0
 void
 box_draw(void *p)
 {
-#if 0
 	struct box *bo = p;
 
 	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, -1, FRAME_COLOR);
-#endif
 }
+#endif
 
 void
 box_scale(void *p, int w, int h)
@@ -111,7 +111,6 @@ box_scale(void *p, int w, int h)
 	/* Count the child widgets. */
 	OBJECT_FOREACH_CHILD(wid, bo, widget) {
 		WIDGET_OPS(wid)->scale(wid, -1, -1);
-
 		switch (bo->type) {
 		case BOX_HORIZ:
 			if (wid->flags & WIDGET_WFILL) {
@@ -139,11 +138,9 @@ box_scale(void *p, int w, int h)
 		WIDGET(bo)->w = bo->padding*2;
 		WIDGET(bo)->h = bo->padding*2;
 
+		/* Reserve enough space to hold widgets and spacing/padding. */
 		OBJECT_FOREACH_CHILD(wid, bo, widget) {
-			wid->x = x;
-			wid->y = y;
-
-			WIDGET_OPS(wid)->scale(wid, -1, -1);	/* Hint */
+			WIDGET_OPS(wid)->scale(wid, -1, -1);
 
 			if (wid->w > maxw)
 				maxw = wid->w;
@@ -156,14 +153,12 @@ box_scale(void *p, int w, int h)
 					WIDGET(bo)->h = maxh + bo->padding*2;
 				}
 				WIDGET(bo)->w += wid->w + bo->spacing;
-				x += wid->w+bo->spacing;
 				break;
 			case BOX_VERT:
 				if ((maxw + bo->padding*2) > WIDGET(bo)->w) {
 					WIDGET(bo)->w = maxw + bo->padding*2;
 				}
 				WIDGET(bo)->h += wid->h + bo->spacing;
-				y += wid->h+bo->spacing;
 				break;
 			}
 		}
@@ -180,14 +175,15 @@ box_scale(void *p, int w, int h)
 		goto out;
 	}
 
-	if (bo->homogenous) {					/* Divide */
-		int max = 0;
+	if (bo->homogenous) {
+		int max = 0, excedent = 0, nexcedent = 0;
 
+		/* Divide the space among widgets. */
 		switch (bo->type) {
 		case BOX_HORIZ:
 			if (nwidgets > 0) {
 				max = (w - bo->padding*2 -
-				    bo->spacing*(nwidgets-1));
+				       bo->spacing*(nwidgets-1));
 				max /= nwidgets;
 			} else {
 				max = w - bo->padding*2;
@@ -196,29 +192,64 @@ box_scale(void *p, int w, int h)
 		case BOX_VERT:
 			if (nwidgets > 0) {
 				max = (h - bo->padding*2 -
-				    bo->spacing*(nwidgets-1));
+				       bo->spacing*(nwidgets-1));
 				max /= nwidgets;
 			} else {
 				max = h - bo->padding*2;
 			}
 			break;
 		}
-
 		OBJECT_FOREACH_CHILD(wid, bo, widget) {
 			wid->x = x;
 			wid->y = y;
-
+			
 			switch (bo->type) {
 			case BOX_HORIZ:
-				widget_scale(wid,
-				    max,
-				    h - bo->padding*2);
+				WIDGET_OPS(wid)->scale(wid, -1, -1);
+				if (wid->w > max) {
+					wid->flags |= WIDGET_EXCEDENT;
+					excedent += wid->w - max;
+					nexcedent++;
+				} else {
+					wid->w = max;
+				}
+				wid->h = h - bo->padding*2;
+				WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 				x += wid->w + bo->spacing;
 				break;
 			case BOX_VERT:
-				widget_scale(wid,
-				    w - bo->padding*2,
-				    max);
+				if (wid->h > max) {
+					wid->flags |= WIDGET_EXCEDENT;
+					excedent += wid->h - max;
+					nexcedent++;
+				} else {
+					wid->h = max;
+				}
+				wid->w = w - bo->padding*2;
+				y += wid->h + bo->spacing;
+				break;
+			}
+		}
+
+		/* Adjust for widgets that are too big. */
+		x = bo->padding;
+		y = bo->padding;
+		OBJECT_FOREACH_CHILD(wid, bo, widget) {
+			wid->x = x;
+			wid->y = y;
+			switch (bo->type) {
+			case BOX_HORIZ:
+				if ((wid->flags & WIDGET_EXCEDENT) == 0 &&
+				    nexcedent < nwidgets) {
+					wid->w -= excedent/(nwidgets-nexcedent);
+				}
+				x += wid->w + bo->spacing;
+				break;
+			case BOX_VERT:
+				if ((wid->flags & WIDGET_EXCEDENT) == 0 &&
+				    nexcedent < nwidgets) {
+					wid->h -= excedent/(nwidgets-nexcedent);
+				}
 				y += wid->h + bo->spacing;
 				break;
 			}
@@ -230,6 +261,10 @@ box_scale(void *p, int w, int h)
 		wid->x = x;
 		wid->y = y;
 
+		/*
+		 * Position fixed-size widgets and allocate the remaining
+		 * space to [wh]fill widgets.
+		 */
 		switch (bo->type) {
 		case BOX_HORIZ:
 			if (wid->flags & WIDGET_WFILL) {
