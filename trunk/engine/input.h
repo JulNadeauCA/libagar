@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.2 2002/03/03 06:23:14 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.3 2002/03/17 09:15:00 vedge Exp $	*/
 
 struct object;
 struct mappos;
@@ -20,10 +20,10 @@ struct input {
 
 extern struct input *keyboard, *joy, *mouse;
 
-struct input	*input_create(int, int);
-int		 input_destroy(void *);
-void		 input_event(void *, SDL_Event *);
-int		 input_load(void *, int);
-int		 input_save(void *, int);
-void	 	 input_dump(void *);
+void	 input_init(struct input *, int, int);
+void	 input_destroy(void *);
+void	 input_event(void *, SDL_Event *);
+int	 input_load(void *, int);
+int	 input_save(void *, int);
+void	 input_dump(void *);
 

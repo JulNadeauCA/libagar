@@ -1,4 +1,4 @@
-/*	$Csoft: anim.h,v 1.3 2002/02/08 00:37:40 vedge Exp $	*/
+/*	$Csoft: anim.h,v 1.4 2002/03/12 13:58:11 vedge Exp $	*/
 
 struct anim {
 	SDL_Surface **frames;
@@ -7,8 +7,7 @@ struct anim {
 	Uint32	delta, delay;	/* For MAPREF_ANIM_DELTA */
 };
 
-struct anim	*anim_create(int);
-void		 anim_destroy(struct anim *);
-
-int	anim_addframe(struct anim *, SDL_Surface *);
+void	 anim_init(struct anim *, int);
+void	 anim_destroy(struct anim *);
+int	 anim_addframe(struct anim *, SDL_Surface *);
 

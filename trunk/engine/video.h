@@ -1,4 +1,4 @@
-/*	$Csoft: video.h,v 1.3 2002/01/28 05:09:01 vedge Exp $	*/
+/*	$Csoft: video.h,v 1.4 2002/01/28 05:23:15 vedge Exp $	*/
 
 #ifdef CONF_SMPEG
 #include <smpeg.h>
@@ -15,6 +15,6 @@ struct video {
 #endif
 };
 
-struct video	*video_create(char *, SDL_Surface *);
-void		 video_destroy(struct video *);
+void	video_init(struct video *, char *, SDL_Surface *);
+void	video_destroy(void *);
 

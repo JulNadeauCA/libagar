@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.35 2002/04/18 04:03:50 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.36 2002/04/24 05:17:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -132,11 +132,9 @@ char_load(void *p, int fd)
 			input = joy;
 		} else if (strcmp(minput, "mouse0") == 0) {
 			input = mouse;
-		} else {
-			fatal("no such input: \"%s\"\n", minput);
 		}
 		
-		text_msg(2, TEXT_SLEEP|TEXT_DEBUG,
+		text_msg(20, TEXT_SLEEP|TEXT_DEBUG,
 		    "%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
 		    ob->name, mname, x, y, offs, flags, speed);
 
@@ -201,16 +199,16 @@ char_save(void *p, int fd)
 
 	if (pos != NULL) {
 		fobj_bwrite_uint32(buf, 1);
-		fobj_bwrite_string(buf, pos->map->obj.name);
+		fobj_bwrite_string(buf, OBJECT(pos->map)->name);
 		fobj_bwrite_uint32(buf, pos->x);
 		fobj_bwrite_uint32(buf, pos->y);
 		fobj_bwrite_uint32(buf, pos->nref->offs);
 		fobj_bwrite_uint32(buf, pos->nref->flags);
 		fobj_bwrite_uint32(buf, pos->speed);
 		fobj_bwrite_string(buf,
-		    (pos->input != NULL) ? pos->input->obj.name : "");
+		    (pos->input != NULL) ? OBJECT(pos->input)->name : "");
 		dprintf("%s: reference %s:%d,%d offs=%d flags=0x%x\n",
-		    ch->obj.name, pos->map->obj.name, pos->x, pos->y,
+		    OBJECT(ch)->name, OBJECT(pos->map)->name, pos->x, pos->y,
 		    pos->nref->offs, pos->nref->flags);
 	} else {
 		fobj_bwrite_uint32(buf, 0);
