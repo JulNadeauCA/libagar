@@ -1,16 +1,16 @@
-/*	$Csoft: mapview.h,v 1.18 2003/01/27 02:19:09 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.19 2003/01/27 08:00:00 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
 	struct widget	wid;
 
 	int	flags;
-#define MAPVIEW_CENTER		0x01	/* Center on cursor */
-#define MAPVIEW_EDIT		0x02	/* Mouse/keyboard edition */
-#define MAPVIEW_ZOOM		0x04	/* Allow zooming */
-#define MAPVIEW_TILEMAP		0x08	/* Tile map */
-#define MAPVIEW_GRID		0x10	/* Display a grid */
-#define MAPVIEW_PROPS		0x20	/* Display node properties */
+#define MAPVIEW_EDIT		 0x01	/* Mouse/keyboard edition */
+#define MAPVIEW_ZOOM		 0x02	/* Allow zooming */
+#define MAPVIEW_INDEPENDENT_ZOOM 0x04	/* Zoom independent from map's */
+#define MAPVIEW_TILEMAP		 0x08	/* Map of `source' nodes */
+#define MAPVIEW_GRID		 0x10	/* Display a grid */
+#define MAPVIEW_PROPS		 0x20	/* Display node properties */
 
 	int	 prop_bg;	/* Background of node attributes */
 	int	 prop_style;	/* Style of node attributes */
@@ -32,11 +32,17 @@ struct mapview {
 
 	struct map	*map;
 	struct node	*cur_node;
-	int		mx, my;		/* Display offset */
-	int		mw, mh;		/* Display size in nodes */
+	int		mx, my;		/* Display offset (nodes) */
+	int		mw, mh;		/* Display size (nodes) */
 	Sint16		ssx, ssy;	/* Soft scrolling offsets */
-	Uint16		zoom;		/* Zoom (%) */
-	int		tilew, tileh;
+	Uint16		*zoom;		/* Zoom (%) */
+	int		*tilew, *tileh;
+	int		cx, cy;		/* Cursor position (nodes) */
+
+	struct {		/* For MAPVIEW_INDEPENDENT_ZOOM */
+		Uint16	zoom;
+		int	tilew, tileh;
+	} izoom;
 
 	struct window	*tmap_win;	/* Tile map window */
 	struct button	*tmap_button;
