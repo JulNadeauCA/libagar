@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.16 2002/05/02 06:28:59 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.17 2002/05/03 20:18:46 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -10,12 +10,12 @@ struct viewport {
 	int	mode;			/* Display mode */
 	int	fps;			/* Refresh rate in FPS */
 	Uint32	flags;
-	Uint32	width, height, depth;	/* Viewport geometry */
+	int	width, height, depth;	/* Viewport geometry */
 	struct	map *map;		/* Currently visible map */
 	Uint32	mapw, maph;		/* Map view geometry */
 	Uint32	mapx, mapy;		/* Map view coordinates */
-	Uint32	mapxoffs, mapyoffs;	/* Map view offsets */
-	Uint32	vmapw, vmaph;
+	int	mapxoffs, mapyoffs;	/* Map view offsets */
+	int	vmapw, vmaph;
 
 	int	 **mapmask;		/* Mask covering the map view */
 	SDL_Rect **maprects;		/* Rectangles (optimization) */
@@ -31,13 +31,17 @@ struct viewport {
 
 extern struct viewport *mainview;	/* view.c */
 
-struct viewport *view_create(Uint32, Uint32, Uint32, Uint32);
+struct viewport *view_create(int, int, int, int);
 int		 view_setmode(struct viewport *, struct map *, int, char *);
 void		 view_destroy(struct viewport *);
 int		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
-void		 view_maskfill(struct viewport *, SDL_Rect *, Uint32);
+void		 view_maskfill(struct viewport *, SDL_Rect *, int);
 void		 view_redraw(struct viewport *);
+
+#ifdef DEBUG
+void		 view_dumpmask(struct viewport *);
+#endif
 
 void		 scroll(struct map *, int);
 
