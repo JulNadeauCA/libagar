@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.70 2003/09/01 10:34:03 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.71 2003/09/02 02:04:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -299,8 +299,9 @@ textbox_key(int argc, union evarg *argv)
 		  	if (kcode->clr_compo) {
 				tbox->compose = 0;
 			}
+			event_post(tbox, "textbox-prechg", NULL);
 			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
-			event_post(tbox, "textbox-changed", NULL);
+			event_post(tbox, "textbox-postchg", NULL);
 			break;
 		}
 	}
