@@ -42,9 +42,9 @@ struct prop {
 #ifdef FLOATING_POINT
 		float	 	f;
 		double	 	d;
-#endif
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 		long double	ld;
+# endif
 #endif
 		char	*s;
 		void	*p;
@@ -68,9 +68,9 @@ struct prop	*prop_set_sint32(void *, char *, Sint32);
 #ifdef FLOATING_POINT
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
-#endif
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 struct prop	*prop_set_long_double(void *, char *, long double);
+# endif
 #endif
 struct prop	*prop_set_string(void *, char *, char *, ...);
 struct prop	*prop_set_pointer(void *, char *, void *);
@@ -87,9 +87,9 @@ Sint32	 	 prop_get_sint32(void *, char *);
 #ifdef FLOATING_POINT
 float		 prop_get_float(void *, char *);
 double		 prop_get_double(void *, char *);
-#endif
 #ifdef USE_LONG_DOUBLE
 long double	 prop_get_long_double(void *, char *);
+# endif
 #endif
 char		*prop_get_string(void *, char *);
 size_t		 prop_copy_string(void *, char *, char *, size_t);

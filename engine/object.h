@@ -46,14 +46,15 @@ struct object {
 	char			*name;	/* Identification string */
 	const struct object_ops	*ops;	/* Generic operations */
 	int			 flags;
-#define OBJECT_ART		0x01	/* Load graphics */
-#define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
-#define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
-#define OBJECT_AUDIO		0x08	/* Load audio */
-#define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
-#define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
-#define OBJECT_CANNOT_MAP	0x40	/* Don't insert in object tables */
-#define OBJECT_STATIC		0x80	/* Don't destroy (if attached) */
+#define OBJECT_ART		0x001	/* Load graphics */
+#define OBJECT_ART_CACHE	0x002	/* Keep graphics cached */
+#define OBJECT_ART_CAN_FAIL	0x004	/* Graphic load can fail */
+#define OBJECT_AUDIO		0x008	/* Load audio */
+#define OBJECT_AUDIO_CACHE	0x010	/* Keep audio cached */
+#define OBJECT_AUDIO_CAN_FAIL	0x020	/* Audio load can fail */
+#define OBJECT_CANNOT_MAP	0x040	/* Don't insert in object tables */
+#define OBJECT_STATIC		0x080	/* Don't destroy (if attached) */
+#define OBJECT_RELOAD_PROPS	0x100	/* Don't clear props list before load */
 	enum {
 		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
