@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.20 2002/03/27 03:24:07 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.21 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -128,20 +128,35 @@ int
 world_load(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob;
+	struct object *ob, **lobjs;
+	Uint32 i = 0, nobjs = 0;
 
 	/* XXX load the state map */
 
-	dprintf("loading state\n");
 	pthread_mutex_lock(&wo->lock);
+	SLIST_COUNT(ob, &wo->wobjsh, wobjs, nobjs);
+	lobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		lobjs[i++] = ob;
+	}
+	pthread_mutex_unlock(&wo->lock);
+	
+	dprintf("loading state\n");
+
+	for (i = 0; i < nobjs; i++) {
+		ob = lobjs[i];
+	
+		dprintf("loading %s\n", ob->name);
+	
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
 			continue;
 		}
 		object_load(ob);
 	}
-	pthread_mutex_unlock(&wo->lock);
+
+	free(lobjs);
+	
 	return (0);
 }
 
@@ -149,18 +164,23 @@ int
 world_save(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob;
-	size_t soffs;
-	Uint32 nobjs = 0;
+	struct object *ob, **sobjs;
+	Uint32 i = 0, nobjs = 0;
 
-	dprintf("saving state\n");
-
-	/* Write the state map. */
-	soffs = lseek(fd, 0, SEEK_SET);
-	fobj_write_uint32(fd, 0);
-	
 	pthread_mutex_lock(&wo->lock);
+	SLIST_COUNT(ob, &wo->wobjsh, wobjs, nobjs);
+	fobj_write_uint32(fd, nobjs);
+	sobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		sobjs[i++] = ob;
+	}
+	pthread_mutex_unlock(&wo->lock);
+
+	dprintf("%s: %d objects\n", wo->obj.name, nobjs);
+
+	for (i = 0; i < nobjs; i++) {
+		ob = sobjs[i];
+
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
 			continue;
@@ -169,11 +189,10 @@ world_save(void *p, int fd)
 		fobj_write_string(fd, ob->name);
 		fobj_write_string(fd, (ob->desc != NULL) ? ob->desc : "");
 		object_save(ob);
-		nobjs++;
 	}
-	pthread_mutex_unlock(&wo->lock);
-	fobj_pwrite_uint32(fd, nobjs, soffs);
-	dprintf("%s: %d objects\n", wo->obj.name, nobjs);
+
+	free(sobjs);
+	
 	return (0);
 }
 
