@@ -28,7 +28,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <engine/engine.h>
+#include <engine/text/text.h>
 
 #include "mapedit.h"
 #include "command.h"
@@ -55,7 +59,10 @@ mapedit_setpointer(struct mapedit *med, int enable)
 		nref->xoffs = oxoffs;
 		nref->yoffs = oyoffs;
 	} else {
-		nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_SPRITE);
+		nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
+		if (nref == NULL) {
+			dprintf("nothing at %dx%d\n", med->x, med->y);
+		}
 		node->flags &= ~(NODE_ANIM);
 	
 		/* Save direction state. */
@@ -96,6 +103,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 		    MAPREF_ANIM|MAPREF_SAVE);
 		break;
 	}
+
 	node->flags = nflags &= ~(NODE_ORIGIN|NODE_ANIM);
 	mapedit_setpointer(med, 1);
 	med->map->redraw++;
@@ -130,6 +138,9 @@ mapedit_clearmap(struct mapedit *med)
 	med->map->redraw++;
 	mapedit_objlist(med);
 	mapedit_tilelist(med);
+
+	text_msg(5000, TEXT_SLEEP,
+	    "New %dx%d map.\n", med->map->mapw, med->map->maph);
 }
 
 /* Fill the map with the current reference. */
@@ -161,6 +172,9 @@ mapedit_fillmap(struct mapedit *med)
 	med->map->redraw++;
 	mapedit_objlist(med);
 	mapedit_tilelist(med);
+	
+	text_msg(5000, TEXT_SLEEP,
+	    "Initialized %dx%d map.\n", med->map->mapw, med->map->maph);
 }
 
 void
@@ -177,6 +191,8 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 	*x = map->defx;
 	*y = map->defy;
 	map->redraw++;
+	
+	text_msg(5000, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
 }
 
 void
@@ -223,53 +239,64 @@ mapedit_savemap(struct mapedit *med)
 void
 mapedit_examine(struct map *em, int x, int y)
 {
-	int i;
+	static char ss[1024], *s = ss;
 	struct noderef *nref;
 	struct node *node;
+	int i;
 
 	node = &em->map[x][y];
 
-	printf("%dx%d < ", x, y);
+	sprintf(s, "<%dx%d>", x, y);
 
 	/* Keep in sync with map.h */
 	if (node->flags == NODE_BLOCK) {
-		printf("block ");
+		s = strcat(s, " block");
 	} else {
 		if (node->flags & NODE_ORIGIN)
-			printf("origin ");
+			s = strcat(s, " origin");
 		if (node->flags & NODE_WALK)
-			printf("walk ");
+			s = strcat(s, " walk");
 		if (node->flags & NODE_CLIMB)
-			printf("climb ");
+			s = strcat(s, " climb");
 		if (node->flags & NODE_SLIP)
-			printf("slippery ");
+			s = strcat(s, " slippery");
 		if (node->flags & NODE_BIO)
-			printf("bio ");
+			s = strcat(s, " bio");
 		if (node->flags & NODE_REGEN)
-			printf("regen ");
+			s = strcat(s, " regen");
 		if (node->flags & NODE_SLOW)
-			printf("slow ");
+			s = strcat(s, " slow");
 		if (node->flags & NODE_HASTE)
-			printf("haste ");
-		if (node->v1 > 0)
-			printf("(v1=%d) ", node->v1);
+			s = strcat(s, " haste");
+		if (node->v1 > 0) {
+			char sv[64];
+
+			sprintf(sv, " (v1=%d)", node->v1);
+			s = strcat(s, sv);
+		}
 	}
-	printf(">\n");
+	s = strcat(s, "\n");
 
 	i = 0;
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		printf("\t[%2d] ", i++);
-		printf("%s:%d ", nref->pobj->name, nref->offs);
+		char *obs;
+
+		obs = emalloc(128);
+		sprintf(obs, "[%2d] %s:%d ", i++, nref->pobj->name, nref->offs);
 		if (nref->flags & MAPREF_SAVE)
-			printf("saveable ");
+			obs = strcat(obs, "saveable ");
 		if (nref->flags & MAPREF_SPRITE)
-			printf("sprite ");
+			obs = strcat(obs, "sprite ");
 		if (nref->flags & MAPREF_ANIM)
-			printf("anim ");
+			obs = strcat(obs, "animation ");
 		if (nref->flags & MAPREF_WARP)
-			printf("warp ");
-		printf("\n");
+			obs = strcat(obs, "warp ");
+		obs = strcat(obs, "\n");
+		s = strcat(s, obs);
+		free(obs);
 	}
+
+	text_msg(10000, TEXT_SLEEP, "%s", s);
 }
 
 void
