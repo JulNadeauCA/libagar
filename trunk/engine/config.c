@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.88 2003/06/21 06:50:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.89 2003/06/22 22:17:47 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -167,6 +167,7 @@ config_init(struct config *con)
 	Asprintf(&udatadir, "%s/.%s", pwd->pw_dir, proginfo->progname);
 
 	prop_set_string(con, "save-path", "%s", udatadir);
+	prop_set_string(con, "den-path", "%s", SHAREDIR);
 	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 
@@ -250,6 +251,12 @@ config_window(struct config *con)
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_change_path, "%s",
 		    "font-path");
+		
+		tbox = textbox_new(vb, _("Den path: "));
+		prop_copy_string(config, "den-path", path, sizeof(path));
+		textbox_printf(tbox, "%s", path);
+		event_new(tbox, "textbox-return", config_change_path, "%s",
+		    "den-path");
 	}
 
 	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
