@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.41 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.42 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ stamp_window(void *p)
 	    197, 167);
 	window_set_caption(win, "Stamp");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	reg = region_new(win, REGION_VALIGN, 0, 0, -1, -1);
 	{
 		static const char *mode_items[] = {
 			"Replace",
@@ -85,7 +85,7 @@ stamp_window(void *p)
 		widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
 		win->focus = WIDGET(rad);
 		
-		cb = checkbox_new(reg, -1, "Inherit flags");
+		cb = checkbox_new(reg, "Inherit flags");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
 	}
 	return (win);
@@ -136,9 +136,8 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct noderef *nref;
 
-	if (mapedit.src_node == NULL) {
+	if (mapedit.src_node == NULL)
 		return (-1);
-	}
 
 	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
 		noderef_draw(mv->map, nref,

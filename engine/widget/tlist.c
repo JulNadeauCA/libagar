@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.61 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.62 2003/05/25 08:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -212,11 +212,11 @@ tlist_draw(void *p)
 			int ty = y + ts/2;
 			int j;
 
-			primitives.wline(tl, 2,
+			primitives.line2(tl,
 			    tx-ts,	ty + ts/2,
 			    tx-ts,	ty - tl->item_h,
 			    WIDGET_COLOR(tl, LINE_COLOR));
-			primitives.wline(tl, 2,
+			primitives.line2(tl,
 			    tx-ts,	ty + ts/2,
 			    tx,		ty + ts/2,
 			    WIDGET_COLOR(tl, LINE_COLOR));
@@ -224,14 +224,14 @@ tlist_draw(void *p)
 			for (j = 0; j < it->depth; j++) {
 				int lx = j*ts + 7;
 
-				primitives.wline(tl, 2,
+				primitives.line2(tl,
 				    lx,	ty + ts/2,
 				    lx,	ty - tl->item_h,
 				    WIDGET_COLOR(tl, LINE_COLOR));
 			}
 
 			if (it->haschilds) {
-				primitives.rect_outlined(tl,
+				primitives.frame(tl,
 				    tx, ty,
 				    ts, ts,
 				    WIDGET_COLOR(tl, LINE_COLOR));
@@ -246,12 +246,13 @@ tlist_draw(void *p)
 					    ts-2, ts-2,
 					    WIDGET_COLOR(tl, LINE_COLOR));
 				}
+				goto drawtext;
 			}
 		}
 
 		if (it->icon != NULL)
 			widget_blit(tl, it->icon, x, y);
-
+drawtext:
 		x += tl->item_h + 5;
 		if (textsu != NULL) {
 			widget_blit(tl, textsu,
@@ -842,7 +843,6 @@ tlist_set_item_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *icon)
 	if (icon != NULL) {
 		it->icon = view_scale_surface(icon,
 		    tl->item_h, tl->item_h);			/* Square */
-		view_set_trans(it->icon, 128);
 	} else {
 		it->icon = NULL;
 	}

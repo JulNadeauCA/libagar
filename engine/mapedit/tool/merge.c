@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.35 2003/05/22 08:30:32 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.36 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -248,10 +248,10 @@ merge_window(void *p)
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
 
-		cb = checkbox_new(reg, -1, "Inherit node flags");
+		cb = checkbox_new(reg, "Inherit node flags");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->inherit_flags);
 		
-		cb = checkbox_new(reg, -1, "Random shift");
+		cb = checkbox_new(reg, "Random shift");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
 	

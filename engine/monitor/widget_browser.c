@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.17 2003/04/24 05:42:07 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.18 2003/05/18 00:17:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -390,36 +390,35 @@ widget_browser_window(void)
 	struct region *reg;
 	struct tlist *tl;
 
-
 	if ((win = window_generic_new(542, 156, "monitor-widget-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
 	window_set_caption(win, "Window stack");
 
-	reg = region_new(win, 0, 0, 0, 80, 100);
-	{
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", poll_windows, NULL);
-	}
-	
-	reg = region_new(win, REGION_VALIGN, 81, 0, 19, 100);
+	tl = Malloc(sizeof(struct tlist));
+	tlist_init(tl, 100, 100, TLIST_POLL);
+	event_new(tl, "tlist-poll", poll_windows, NULL);
+
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
 		struct button *bu;
 		
-		bu = button_new(reg, "Examine", NULL, 0, 100, 25);
+		bu = button_new(reg, "Examine", NULL, 0, 100, -1);
 		event_new(bu, "button-pushed", examine_window, "%p", tl);
 
-		bu = button_new(reg, "Show", NULL, 0, 100, 25);
+		bu = button_new(reg, "Show", NULL, 0, 100, -1);
 		event_new(bu, "button-pushed", show_window, "%p", tl);
 
-		bu = button_new(reg, "Hide", NULL, 0, 100, 25);
+		bu = button_new(reg, "Hide", NULL, 0, 100, -1);
 		event_new(bu, "button-pushed", hide_window, "%p", tl);
 
-		bu = button_new(reg, "Detach", NULL, 0, 100, 25);
+		bu = button_new(reg, "Detach", NULL, 0, 100, -1);
 		event_new(bu, "button-pushed", detach_window, "%p", tl);
 	}
 
+	reg = region_new(win, REGION_HALIGN, 100, -1, 0, 0);
+	region_attach(reg, tl);
 	return (win);
 }
 

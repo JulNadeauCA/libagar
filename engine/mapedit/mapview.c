@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.112 2003/05/18 00:16:59 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.113 2003/05/24 15:53:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -427,7 +427,7 @@ draw_layer:
 			}
 			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
 				/* XXX overdraw */
-				primitives.frame(mv,
+				primitives.rect_outlined(mv,
 				    rx, ry,
 				    mv->map->tilew+1, mv->map->tileh+1,
 				    WIDGET_COLOR(mv, GRID_COLOR));
