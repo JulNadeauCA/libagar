@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.67 2002/07/29 06:33:37 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.68 2002/08/18 00:39:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -75,8 +75,8 @@ static const struct event_proto {
 	{ "checkbox-changed", "%i" },    		/* state */
 	/* Text s was entered in textbox */
 	{ "textbox-return", "%s" },			/* text */
-	/* Character c was inserted in string s */
-	{ "textbox-changed", "%s, %c" },		/* string, char */
+	/* String s was altered */
+	{ "textbox-changed", "%s" },			/* string, char */
 	/* Radio selection changed */
 	{ "radio-changed", "%c, %i" },			/* char, index */
 

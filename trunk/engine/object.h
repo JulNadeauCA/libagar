@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.44 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.45 2002/08/18 00:40:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -99,11 +99,12 @@ struct object {
 	const	 struct object_ops *ops; /* Generic functions. */
 
 	int	 flags;
-#define OBJ_ART		0x01		/* Load graphics */
-#define OBJ_AUDIO	0x02		/* Load audio */
-#define OBJ_KEEPMEDIA	0x04		/* Keep graphics/audio cached */
-#define OBJ_BLOCK	0x10		/* Map: cannot walk through. XXX */
-#define OBJ_OPTMEDIA	0x20		/* Media load can fail */
+#define OBJECT_ART		0x01	/* Load graphics */
+#define OBJECT_AUDIO		0x02	/* Load audio */
+#define OBJECT_KEEP_MEDIA	0x04	/* Keep graphics/audio cached */
+#define OBJECT_BLOCK		0x10	/* Map: cannot walk through. XXX */
+#define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
+#define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */

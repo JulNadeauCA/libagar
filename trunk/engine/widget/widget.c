@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.20 2002/07/24 09:30:44 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.21 2002/07/27 07:01:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	/* Prepend parent window's name. */
 	widname = object_name(name, widid++);
 	object_init(&wid->obj, "widget", widname, style,
-	    OBJ_ART|OBJ_KEEPMEDIA, wops);
+	    OBJECT_ART|OBJECT_KEEP_MEDIA, wops);
 	free(widname);
 
 	wid->type = strdup(name);

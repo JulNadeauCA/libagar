@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.16 2002/08/13 02:32:11 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.17 2002/08/18 00:35:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -110,6 +110,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->tilew = TILEW;
 	mv->tileh = TILEH;
 	mv->zoom = 100;
+	mv->prop_style = -1; 
 
 	widget_map_color(mv, BORDER_COLOR, "mapview-border",
 	    200, 200, 200);
@@ -166,7 +167,9 @@ draw_node_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 static __inline__ void
 draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 {
-	WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_FRAME_2), rx, ry);
+	if (mv->prop_style > 0) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, mv->prop_style), rx, ry);
+	}
 
 	if (node->flags & NODE_BLOCK) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);

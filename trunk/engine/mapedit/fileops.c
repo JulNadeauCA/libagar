@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.4 2002/07/08 03:15:40 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.5 2002/08/18 00:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -155,6 +155,5 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct editref *eref;
 	
 	map_clean(m, med->ref.obj, med->ref.offs,
-	    med->node.flags & ~(NODE_ORIGIN|NODE_ANIM),
-	    med->ref.flags);
+	    med->node.flags & ~(NODE_ORIGIN|NODE_ANIM), med->ref.flags);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft$	    */
+/*	$Csoft: physics.c,v 1.37 2002/06/25 17:43:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -250,7 +250,7 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 		return (0);
 	}
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (nref->pobj->flags & OBJ_BLOCK) {
+		if (nref->pobj->flags & OBJECT_BLOCK) {
 			return (0);
 		}
 	}
