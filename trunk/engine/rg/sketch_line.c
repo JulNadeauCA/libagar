@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.1 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: sketch_line.c,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -76,10 +76,6 @@ edit(void *p)
 	win = window_new(0, NULL);
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &lt->mode);
-#ifdef DEBUG
-	label_new(win, LABEL_POLLED, "Line: %p\nVertex: %p\n", &lt->cur_line,
-	    &lt->cur_vtx);
-#endif
 	return (win);
 }
 
@@ -94,11 +90,14 @@ mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
 	switch (lt->seq) {
 	case BEGIN_LINE:
 		if (button == SDL_BUTTON_LEFT) {
-			dprintf("begin line %.2f,%.2f\n", x, y);
-			lt->cur_line = vg_begin_element(vg, VG_LINE_STRIP);
+			lt->cur_line = vg_begin_element(vg,
+			    lt->mode == 1 ? VG_LINE_STRIP :
+			    lt->mode == 2 ? VG_LINE_LOOP :
+			    VG_LINES);
 			vg_vertex2(vg, x, y);
 			lt->cur_vtx = vg_vertex2(vg, x, y);
 			lt->seq = CONTINUE_LINE;
+			tv->flags |= TILEVIEW_NO_SCROLLING;
 	
 			prim_hsv2rgb(sk->h/360.0, sk->s, sk->v, &r, &g, &b);
 			vg_color4(vg, r, g, b, (int)(sk->a*255.0));
@@ -106,21 +105,20 @@ mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
 		break;
 	case CONTINUE_LINE:
 		if (button == SDL_BUTTON_LEFT) {
-			dprintf("cont line\n");
 			lt->cur_vtx = vg_vertex2(vg, x, y);
-			lt->cur_line->redraw = 1;
 		} else {
-			dprintf("abort line\n");
+			if (lt->cur_line->nvtx <= 2) {
+				vg_destroy_element(vg, lt->cur_line);
+			} else {
+				vg_pop_vertex(vg);
+			}
+			lt->cur_vtx = NULL;
+			lt->cur_line = NULL;
 			lt->seq = BEGIN_LINE;
+			tv->flags &= ~TILEVIEW_NO_SCROLLING;
 		}
-		lt->seq = BEGIN_LINE;
-		lt->cur_vtx = NULL;
-		lt->cur_line = NULL;
 		break;
 	}
-	vg_redraw_elements(vg);
-	vg_rasterize(vg);
-	tv->tile->flags |= TILE_DIRTY;
 }
 
 static void
@@ -131,13 +129,10 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 	struct tileview *tv = TILEVIEW_TOOL(lt)->tv;
 
 	if (lt->cur_line != NULL) {
-		dprintf("move vtx %.2f,%.2f\n", x, y);
 		lt->cur_vtx->x = x;
 		lt->cur_vtx->y = y;
-		lt->cur_line->redraw = 1;
+		sk->vg->redraw++;
 	}
-	vg_rasterize(sk->vg);
-	tv->tile->flags |= TILE_DIRTY;
 }
 
 struct tileview_sketch_tool_ops sketch_line_ops = {

@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.1 2005/03/03 10:51:18 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -67,9 +67,7 @@ sketch_scale(struct sketch *sk, int w, int h, float scale)
 	    (float)w/(float)TILESZ/scale,
 	    (float)h/(float)TILESZ/scale,
 	    scale);
-	
-	vg_redraw_elements(vg);
-	vg_rasterize(vg);
+	vg->redraw++;
 }
 
 void
@@ -100,8 +98,7 @@ sketch_load(struct sketch *sk, struct netbuf *buf)
 		Free(sk->vg, M_VG);
 		return (-1);
 	}
-	vg_redraw_elements(sk->vg);
-	vg_rasterize(sk->vg);
+	sk->vg->redraw++;
 	return (0);
 }
 
@@ -228,6 +225,20 @@ void
 sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     double x, double y, int button)
 {
+	if (button == SDL_BUTTON_MIDDLE) {
+		int x, y;
+
+		SDL_GetMouseState(&x, &y);
+		sketch_open_menu(tv, x, y);
+		return;
+	} else if (button == SDL_BUTTON_RIGHT) {
+		if (tv->cur_tool == NULL ||
+		   (tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) == 0) {
+			tv->scrolling++;
+			return;
+		}
+	}
+
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
 		const struct tileview_sketch_tool_ops *ops =
@@ -277,10 +288,9 @@ sketch_mousewheel(struct tileview *tv, struct tile_element *tel, int which)
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->mousewheel != NULL) {
-			ops->mousewheel(tv->cur_tool, tel->tel_sketch.sk,
-			    which);
-		}
+		if (ops->mousewheel != NULL)
+			return (ops->mousewheel(tv->cur_tool,
+			    tel->tel_sketch.sk, which));
 	}
 	return (0);
 }
@@ -309,10 +319,9 @@ sketch_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->keyup != NULL) {
+		if (ops->keyup != NULL)
 			ops->keyup(tv->cur_tool, tel->tel_sketch.sk,
 			    keysym, keymod);
-		}
 	}
 }
 
@@ -323,6 +332,22 @@ select_tool(int argc, union evarg *argv)
 	struct tileview_tool *tvt = argv[2].p;
 
 	tileview_select_tool(tv, tvt);
+}
+
+static void
+select_tool_tbar(int argc, union evarg *argv)
+{
+	struct button *btn = argv[0].p;
+	struct toolbar *tbar = argv[1].p;
+	struct tileview *tv = argv[2].p;
+	struct tileview_tool *tvt = argv[3].p;
+
+	toolbar_select_unique(tbar, btn);
+	if (tv->cur_tool == tvt) {
+		tileview_unselect_tool(tv);
+	} else {
+		tileview_select_tool(tv, tvt);
+	}
 }
 
 void
@@ -368,3 +393,23 @@ sketch_close_menu(struct tileview *tv)
 	tv->tv_sketch.menu_item = NULL;
 	tv->tv_sketch.menu_win = NULL;
 }
+
+struct toolbar *
+sketch_toolbar(struct tileview *tv, struct tile_element *tel)
+{
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct toolbar *tbar;
+	struct tileview_tool *tvt;
+
+	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
+	TAILQ_FOREACH(tvt, &tv->tools, tools) {
+		if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
+			continue;
+		}
+		toolbar_add_button(tbar, 0, tvt->ops->icon >= 0 ?
+		    ICON(tvt->ops->icon) : NULL, 1, 0,
+		    select_tool_tbar, "%p,%p,%p", tbar, tv, tvt);
+	}
+	return (tbar);
+}
+

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.17 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.18 2005/03/04 13:34:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -523,6 +523,19 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	return (win);
 }
 
+struct toolbar *
+pixmap_toolbar(struct tileview *tv, struct tile_element *tel)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	struct toolbar *tbar;
+
+	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
+	toolbar_add_button(tbar, 0, ICON(STAMP_TOOL_ICON), 0, 0,
+	    insert_brush_dlg, "%p,%p,%p", tv, px, widget_parent_window(tv));
+	
+	return (tbar);
+}
+
 /* Create a new undo block at the current level, destroying higher blocks. */
 void
 pixmap_begin_undoblk(struct pixmap *px)
@@ -914,8 +927,16 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 *keystate;
 
-	if (button != SDL_BUTTON_LEFT)
+	if (button == SDL_BUTTON_MIDDLE) {
+		int x, y;
+
+		SDL_GetMouseState(&x, &y);
+		pixmap_open_menu(tv, x, y);
 		return;
+	} else if (button == SDL_BUTTON_RIGHT) {
+		tv->scrolling++;
+		return;
+	}
 
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_f]) {

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.9 2005/02/18 09:59:36 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.10 2005/03/03 10:51:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -84,10 +84,6 @@ struct tile_element *tile_add_feature(struct tile *, void *, int, int);
 void		     tile_remove_feature(struct tile *, void *, int);
 void		     tile_remove_pixmap(struct tile *, struct pixmap *, int);
 void		     tile_remove_sketch(struct tile *, struct sketch *, int);
-
-void	tile_open_element(struct tileview *, struct tile_element *,
-	                  struct window *);
-void	tile_close_element(struct tileview *);
 __END_DECLS
 
 #include "close_code.h"
