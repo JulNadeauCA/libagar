@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.225 2004/05/06 06:22:31 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.226 2004/05/13 02:48:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -349,6 +349,14 @@ map_init(void *obj, const char *name)
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
+
+#ifdef EDITION
+	if (mapedition) {
+		map_alloc_nodes(m,
+		    prop_get_uint32(&mapedit, "default-map-width"),
+		    prop_get_uint32(&mapedit, "default-map-height"));
+	}
+#endif
 }
 
 /* Create a new layer. */
