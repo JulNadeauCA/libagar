@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.12 2002/05/19 14:27:42 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.13 2002/05/24 09:15:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,6 +43,10 @@
 #include <engine/map.h>
 
 #include "text.h"
+#include "window.h"
+#include "widget.h"
+#include "textbox.h"
+#include "keycodes.h"
 
 static const struct object_ops text_ops = {
 	text_destroy,
