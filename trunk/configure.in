@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.45 2002/12/29 02:44:53 vedge Exp $
+# $Csoft: configure.in,v 1.46 2002/12/31 03:47:00 vedge Exp $
 
 makeout(Makefile.config);
 inclout(config);
@@ -54,7 +54,7 @@ require(freetype, 7.0.1);
 
 # Enable x11-specific code (only useful for debugging).
 if [ "${with_x11}" != "no" ]; then
-	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
+	check(x11);
 	if [ "${x11_found}" = "yes" ]; then
 		hdefine(USE_X11, 1);
 	else
