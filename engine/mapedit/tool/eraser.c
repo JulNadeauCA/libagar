@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.18 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.19 2003/01/25 06:29:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,19 +51,11 @@ static const struct tool_ops eraser_ops = {
 	NULL			/* cursor */
 };
 
-struct eraser *
-eraser_new(void)
-{
-	struct eraser *eraser;
-
-	eraser = emalloc(sizeof(struct eraser));
-	eraser_init(eraser);
-	return (eraser);
-}
-
 void
-eraser_init(struct eraser *eraser)
+eraser_init(void *p)
 {
+	struct eraser *eraser = p;
+
 	tool_init(&eraser->tool, "eraser", &eraser_ops);
 
 	eraser->mode = ERASER_ALL;

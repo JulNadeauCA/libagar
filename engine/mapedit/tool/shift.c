@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.1 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.2 2003/01/26 04:43:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,19 +53,11 @@ static const struct tool_ops shift_ops = {
 	NULL			/* cursor */
 };
 
-struct shift *
-shift_new(void)
-{
-	struct shift *sh;
-
-	sh = emalloc(sizeof(struct shift));
-	shift_init(sh);
-	return (sh);
-}
-
 void
-shift_init(struct shift *sh)
+shift_init(void *p)
 {
+	struct shift *sh = p;
+
 	tool_init(&sh->tool, "shift", &shift_ops);
 }
 

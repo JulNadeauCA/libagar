@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.133 2003/01/24 08:27:02 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.134 2003/01/25 06:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/map.h>
+#include <engine/world.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -48,18 +49,23 @@
 #include "tool/select.h"
 #include "tool/shift.h"
 
-static const struct version mapedit_ver = {
-	"agar map editor",
-	1, 0
-};
+struct mapedit	mapedit;
+int		mapedition = 0;
 
-static const struct object_ops mapedit_ops = {
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL	/* save */
+static const struct tools_ent {
+	struct tool	**p;
+	size_t		  size;
+	void		(*init)(void *);
+} tools[] = {
+	{ &mapedit.tools.stamp, sizeof(struct stamp), stamp_init },
+	{ &mapedit.tools.eraser, sizeof(struct eraser), eraser_init },
+	{ &mapedit.tools.magnifier, sizeof(struct magnifier), magnifier_init },
+	{ &mapedit.tools.resize, sizeof(struct resize), resize_init },
+	{ &mapedit.tools.propedit, sizeof(struct propedit), propedit_init },
+	{ &mapedit.tools.select, sizeof(struct select), select_init },
+	{ &mapedit.tools.shift, sizeof(struct shift), shift_init },
 };
-
-struct mapedit *mapedit = NULL;		/* Map editor */
+static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
 static void
 mapedit_select_tool(int argc, union evarg *argv)
@@ -67,23 +73,23 @@ mapedit_select_tool(int argc, union evarg *argv)
 	struct widget *wid = argv[0].p;
 	struct tool *newtool = argv[1].p;
 
-	if (mapedit->curtool == newtool) {
+	if (mapedit.curtool == newtool) {
 		if (newtool->win != NULL) {
 			window_hide(newtool->win);
 		}
-		mapedit->curtool = NULL;
+		mapedit.curtool = NULL;
 		return;
 	}
 
-	if (mapedit->curtool != NULL) {
-		widget_set_bool(mapedit->curtool->button, "state", 0);
-		if (mapedit->curtool->win != NULL &&
-		   (mapedit->curtool->win->flags & WINDOW_SHOWN)) {
-			window_hide(mapedit->curtool->win);
+	if (mapedit.curtool != NULL) {
+		widget_set_bool(mapedit.curtool->button, "state", 0);
+		if (mapedit.curtool->win != NULL &&
+		   (mapedit.curtool->win->flags & WINDOW_SHOWN)) {
+			window_hide(mapedit.curtool->win);
 		}
 	}
 
-	mapedit->curtool = newtool;
+	mapedit.curtool = newtool;
 
 	if (newtool->win != NULL) {
 		window_show(newtool->win);
@@ -91,18 +97,20 @@ mapedit_select_tool(int argc, union evarg *argv)
 }
 
 void
-mapedit_init(struct mapedit *med, char *name)
+mapedit_init(void)
 {
 	const int xdiv = 100, ydiv = 20;
 	struct window *win;
 	struct region *reg;
 	struct button *button;
+	struct mapedit *med = &mapedit;
+	int i;
 
-	object_init(&med->obj, "map-editor", name, "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP, &mapedit_ops);
+	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
+	    OBJECT_ART|OBJECT_CANNOT_MAP, NULL);
 	med->curtool = NULL;
 	med->src_node = NULL;
-	
+
 	prop_set_int(med, "zoom-minimum", 4);
 	prop_set_int(med, "zoom-maximum", 400);
 	prop_set_int(med, "zoom-increment", 2);
@@ -113,16 +121,16 @@ mapedit_init(struct mapedit *med, char *name)
 	prop_set_bool(med, "tilemap-bg-moving", 1);
 	prop_set_int(med, "tilemap-bg-square-size", 16);
 	
-	event_new(med, "attached", mapedit_attached, NULL);
-	event_new(med, "detached", mapedit_detached, NULL);
+	/* Initialize the map edition tools. */
+	for (i = 0; i < ntools; i++) {
+		const struct tools_ent *toolent = &tools[i];
 
-	med->tools.stamp = TOOL(stamp_new());
-	med->tools.eraser = TOOL(eraser_new());
-	med->tools.magnifier = TOOL(magnifier_new());
-	med->tools.resize = TOOL(resize_new());
-	med->tools.propedit = TOOL(propedit_new());
-	med->tools.select = TOOL(select_new());
-	med->tools.shift = TOOL(shift_new());
+		toolent = &tools[i];
+		*toolent->p = emalloc(toolent->size);
+
+		toolent->init(*toolent->p);
+		world_attach(*toolent->p);
+	}
 
 	/* Create the dialogs. */
 	med->win.objlist = objq_window(med);
@@ -209,27 +217,12 @@ mapedit_init(struct mapedit *med, char *name)
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p", med->tools.shift);
 	}
-}
-
-void
-mapedit_attached(int argc, union evarg *argv)
-{
-	struct mapedit *med = argv[0].p;
-
+	
 	window_show(med->win.toolbar);
 	window_show(med->win.objlist);
+	
+	mapedition = 1;
 
-	mapedit = med;
-}
-
-void
-mapedit_detached(int argc, union evarg *argv)
-{
-	struct mapedit *med = argv[0].p;
-
-	window_hide(med->win.toolbar);
-	window_hide(med->win.objlist);
-
-	mapedit = NULL;
+	world_attach(med);
 }
 

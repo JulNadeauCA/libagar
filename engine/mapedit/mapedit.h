@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.63 2003/01/24 08:27:02 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.64 2003/01/25 06:29:29 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -85,9 +85,8 @@ enum {
 	MAPEDIT_TOOL_SHIFT
 };
 
-void	 mapedit_init(struct mapedit *, char *);
-void	 mapedit_attached(int, union evarg *);
-void	 mapedit_detached(int, union evarg *);
+void	 mapedit_init(void);
 
-extern struct mapedit *mapedit;
+extern struct mapedit	mapedit;
+extern int		mapedition;
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: mapedit.3,v 1.3 2002/12/08 01:14:40 vedge Exp $
+.\"	$Csoft: mapedit.3,v 1.4 2003/01/01 05:18:37 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,55 +38,23 @@
 .Sh DESCRIPTION
 The
 .Nm
-library implements map edition.
+library implements level edition.
 .Pp
 When the map editor is running, widgets of type
 .Xr mapview 3
 can be used to display/edit maps.
-The
-.Xr tilestack 3
-widget displays a list of references present on a node.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn mapedit_init "struct mapedit *med" "char *name"
-.Pp
-.Ft int
-.Fn mapedit_load "struct mapedit *med" "int fd"
-.Pp
-.Ft int
-.Fn mapedit_save "struct mapedit *med" "int fd"
-.Pp
-.Ft void
-.Fn mapedit_attached "int argc" "union evarg *argv"
-.Pp
-.Ft void
-.Fn mapedit_detached "int argc" "union evarg *argv"
+.Fn mapedit_init "void"
 .nr nS 0
 .Pp
 The
 .Fn mapedit_init
-function initializes a map editor structure.
-The
-.Fn mapedit_load
-function loads map editor state from file descriptor
-.Fa fd .
-The
-.Fn mapedit_save
-function saves map editor state to file descriptor
-.Fa fd .
-.Pp
-The
-.Fn mapedit_attached
-function takes a snapshot of the attached objects, initializes the
-edition structures, and starts up the user interface.
-The
-.Fn mapedit_detached
-function deallocates the edition structures.
+function initializes the map editor.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr mapview 3 ,
-.Xr tilestack 3
+.Xr mapview 3
 .Sh HISTORY
 The
 .Nm

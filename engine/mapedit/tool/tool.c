@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.13 2003/01/23 02:13:21 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.14 2003/01/25 06:29:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@ tool_window_close(int argc, union evarg *argv)
 
 	widget_set_int(tool->button, "state", 0);
 
-	mapedit->curtool = NULL;
+	mapedit.curtool = NULL;
 }
 
 void

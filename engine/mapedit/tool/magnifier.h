@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.h,v 1.3 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: magnifier.h,v 1.4 2003/01/25 06:29:30 vedge Exp $	*/
 /*	Public domain	*/
 
 enum magnifier_mode {
@@ -12,8 +12,7 @@ struct magnifier {
 	int		mode;
 };
 
-struct magnifier	*magnifier_new(void);
-void			 magnifier_init(struct magnifier *);
+void			 magnifier_init(void *);
 struct window		*magnifier_window(void *);
 void			 magnifier_effect(void *, struct mapview *,
 			     Uint32, Uint32);
