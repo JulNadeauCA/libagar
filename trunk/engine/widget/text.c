@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.38 2002/11/15 00:49:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.39 2002/11/17 23:13:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -243,14 +243,18 @@ text_msg(char *title, char *fmt, ...)
 	va_list args;
 	char *msg;
 
+	win = window_generic_new(253, 140, NULL);
+	if (win == NULL) {
+		return;
+	}
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	
 	va_start(args, fmt);
 	if (vasprintf(&msg, fmt, args) == -1) {
 		fatal("vasprintf: %s\n", strerror(errno));
 	}
 	va_end(args);
 
-	win = window_generic_new(253, 140, "%s", title);
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	lab = label_new(reg, 100, 60, msg);
 	button = button_new(reg, "Ok", NULL, 0, 99, 40);
 	WIDGET_FOCUS(button);
