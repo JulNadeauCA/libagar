@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.42 2002/02/28 12:52:03 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.43 2002/03/01 02:54:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -415,8 +415,7 @@ map_animate(struct map *m)
 
 					anim = nref->pobj->anims[nref->offs];
 					src = anim->frames[nref->frame];
-					
-
+				
 					if ((anim->delay < 1) ||
 					    (++nref->fwait > anim->delay)) {
 						nref->fwait = 0;
@@ -428,9 +427,11 @@ map_animate(struct map *m)
 					}
 				}
 
-				/* XXX ... use a specific flag. */
-				if (node->flags & NODE_ANIM &&
-				    nref->flags & MAPREF_ANIM) {
+				/*
+				 * Blit only once other sprites/frames are
+				 * drawn (ie. soft-scrolling).
+				 */
+				if (nref->xoffs != 0 || nref->yoffs != 0) {
 					struct draw *ndraw;
 
 					ndraw = (struct draw *)
@@ -445,7 +446,7 @@ map_animate(struct map *m)
 				} else {
 					map_plot_sprite(m, src, rx, ry);
 				}
-#ifdef DEBUG
+#if 0
 				if (nref->yoffs < 0)
 					map_plot_sprite(m,
 					    curmapedit->obj.sprites[
@@ -477,23 +478,13 @@ map_animate(struct map *m)
 		struct draw *draw;
 	
 		TAILQ_FOREACH(draw, &deferdraws, pdraws) {
-			if (curmapedit != NULL) {
-				mapedit_predraw(m, draw->flags,
-				    draw->x, draw->y);
-			}
 			map_plot_sprite(m, draw->s, draw->x, draw->y);
-			if (curmapedit != NULL) {
-				mapedit_postdraw(m, draw->flags,
-				    draw->x, draw->y);
-			}
-			free(draw);
-			
 			SDL_UpdateRect(m->view->v,
 			    draw->x, draw->y, m->tilew, m->tileh);
+			free(draw);
 		}
+		TAILQ_INIT(&deferdraws);
 	}
-
-	/* XXX UpdateRect everything */
 
 	pthread_mutex_unlock(&m->lock);
 }
@@ -733,12 +724,10 @@ map_save(void *ob, int fd)
 	return (0);
 }
 
-#ifdef DEBUG
 void
 map_dump(struct map *m)
 {
 	printf("%3d. %10s geo %dx%d flags 0x%x\n", m->obj.id, m->obj.name,
 	    m->mapw, m->maph, m->flags);
 }
-#endif /* DEBUG */
 
