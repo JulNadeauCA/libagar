@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.15 2002/11/14 02:28:41 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.16 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -355,7 +355,7 @@ tlist_mousemotion(int argc, union evarg *argv)
 	Uint8 ms;
 
 	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar motion? */
-		event_forward(sb, "window-mousebuttondown", argc, argv);
+		event_forward(sb, "window-mousemotion", argc, argv);
 		return;
 	}
 
