@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tileq.c,v 1.1 2002/06/24 18:41:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -31,7 +31,6 @@
 #include <sys/types.h>
 
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -58,6 +57,12 @@ static const struct widget_ops tileq_ops = {
 
 static void	 tileq_scaled(int, union evarg *);
 static void	 tileq_event(int, union evarg *);
+
+#define TILEQ_ADJUST(tq, med) do {			\
+	if ((tq)->offs > (med)->curobj->nrefs) {	\
+		(tq)->offs = 0;				\
+	}						\
+} while (/*CONSTCOND*/0)
 
 struct tileq *
 tileq_new(struct region *reg, struct mapedit *med, int flags, int rw, int rh)
@@ -113,6 +118,9 @@ tileq_event(int argc, union evarg *argv)
 		ms = SDL_GetMouseState(NULL, NULL);
 		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
 			pthread_mutex_lock(&med->lock);
+			pthread_mutex_lock(&med->curobj->lock);
+			TILEQ_ADJUST(tq, med);
+
 			if (tq->mouse.y > oy &&		/* Down */
 			    --tq->offs < 0) {
 				tq->offs = med->curobj->nrefs - 1;
@@ -121,6 +129,7 @@ tileq_event(int argc, union evarg *argv)
 			    ++tq->offs > med->curobj->nrefs-1) {
 				tq->offs = 0;
 			}
+			pthread_mutex_unlock(&med->curobj->lock);
 			pthread_mutex_unlock(&med->lock);
 		}
 		break;
@@ -132,8 +141,10 @@ tileq_event(int argc, union evarg *argv)
 		if (button == 1) {
 			break;
 		}
-	
 		pthread_mutex_lock(&med->lock);
+		pthread_mutex_lock(&med->curobj->lock);
+		TILEQ_ADJUST(tq, med);
+
 		med->curoffs = tq->offs + y/TILEH;
 		if (med->curoffs < 0) {
 			/* Wrap */
@@ -144,9 +155,14 @@ tileq_event(int argc, union evarg *argv)
 		while (med->curoffs > med->curobj->nrefs - 1) {
 			med->curoffs -= med->curobj->nrefs;
 		}
+		pthread_mutex_unlock(&med->curobj->lock);
 		pthread_mutex_unlock(&med->lock);
 		break;
 	case WINDOW_KEYDOWN:
+		pthread_mutex_lock(&med->lock);
+		pthread_mutex_lock(&med->curobj->lock);
+		TILEQ_ADJUST(tq, med);
+
 		/* XXX gendir */
 		switch ((SDLKey)argv[2].i) {
 		case SDLK_PAGEUP:
@@ -161,6 +177,8 @@ tileq_event(int argc, union evarg *argv)
 			break;
 		default:
 		}
+		pthread_mutex_unlock(&med->curobj->lock);
+		pthread_mutex_unlock(&med->lock);
 		break;
 	}
 }
@@ -186,7 +204,10 @@ tileq_draw(void *p)
 	struct mapedit *med = tq->med;
 	int y = 0, i, sn;
 	
+	pthread_mutex_lock(&med->lock);
 	pthread_mutex_lock(&med->curobj->lock);
+
+	TILEQ_ADJUST(tq, med);
 
 	for (i = 0, sn = tq->offs;
 	     i < (WIDGET(tq)->h / TILEH) - 1;
@@ -233,5 +254,6 @@ nextref:
 	}
 	
 	pthread_mutex_unlock(&med->curobj->lock);
+	pthread_mutex_unlock(&med->lock);
 }
 
