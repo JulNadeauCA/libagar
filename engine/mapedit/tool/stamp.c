@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.25 2003/02/04 02:35:19 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.26 2003/02/12 01:09:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -143,7 +143,9 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	}
 
 	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
-		noderef_draw(mv->map, nref, rd->x, rd->y);
+		noderef_draw(mv->map, nref,
+		    rd->x + WIDGET_ABSX(mv),
+		    rd->y + WIDGET_ABSY(mv));
 	}
 	return (0);
 }
