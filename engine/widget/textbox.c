@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.12 2002/06/06 10:18:02 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.13 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,18 +57,19 @@ static const struct widget_ops textbox_ops = {
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	textbox_draw
+	textbox_draw,
+	NULL		/* animate */
 };
 
 static void	textbox_event(int, union evarg *);
 
 struct textbox *
-textbox_new(struct region *reg, const char *label, int flags, int rw)
+textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 {
 	struct textbox *textbox;
 
 	textbox = emalloc(sizeof(struct textbox));
-	textbox_init(textbox, label, flags, rw);
+	textbox_init(textbox, label, flags, rw, rh);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, textbox);
@@ -78,7 +79,7 @@ textbox_new(struct region *reg, const char *label, int flags, int rw)
 }
 
 void
-textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
+textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 {
 	SDL_Surface *s;
 
@@ -89,8 +90,8 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 	tbox->xmargin = 4;
 	tbox->ymargin = 3;
 
-	widget_init(&tbox->wid, "textbox", "widget", &textbox_ops, rw, -1);
-	WIDGET(tbox)->h = (s->h * 2) + tbox->ymargin;
+	widget_init(&tbox->wid, "textbox", "widget", &textbox_ops, rw, rh);
+	WIDGET(tbox)->h = (s->h * 2) + (tbox->ymargin * 2);
 
 	SDL_FreeSurface(s);
 
@@ -147,7 +148,7 @@ void
 textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
-	int i, cursdrawn, j, x, y, tw;
+	int i, j, x, y, tw;
 	Uint32 curscol;
 	SDL_Surface *box_s;
 	SDL_Surface *label_s = tbox->label_s;
@@ -158,9 +159,10 @@ textbox_draw(void *p)
 	y = tbox->ymargin;
 
 	WIDGET_DRAW(tbox, label_s, 0, y/2);
-	
+
 	box_s = primitive_box(tbox,
-	    WIDGET(tbox)->w - (tbox->xmargin*2) - label_s->w, WIDGET(tbox)->h,
+	    WIDGET(tbox)->w - (tbox->xmargin * 2) - label_s->w,
+	    label_s->h + (tbox->ymargin * 2),
 	    WIDGET_FOCUSED(tbox) ? -1 : 1);
 	WIDGET_DRAW(tbox, box_s, x, 0);
 	x += tbox->xmargin;
@@ -170,26 +172,22 @@ textbox_draw(void *p)
 		tbox->textpos = tw;
 	}
 
-	cursdrawn = 0;
-
 	for (i = tbox->textoffs; i < (tw + 1); i++) {
 		if (x >= WIDGET(tbox)->w) {
 			if (tbox->textpos >= tw-4) {
 				tbox->textoffs++;	/* Scroll */
-				cursdrawn++;
 			}
-			goto after;
+			goto done;
 		}
 		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR &&
 		    WIDGET_FOCUSED(tbox) &&
 		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
-			for (j = 2; j < WIDGET(tbox)->h - 4; j++) {
+			for (j = 1; j < label_s->h; j++) {
 				WIDGET_PUT_PIXEL(tbox, x, y+j, curscol);
 				WIDGET_PUT_PIXEL(tbox, x+1, y+j, curscol);
 			}
 			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
-			cursdrawn++;
 		}
 		if (i < tw && tbox->text[i] != '\0' &&
 		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
@@ -221,12 +219,8 @@ textbox_draw(void *p)
 			}
 		}
 	}
-after:
-#if 0
-	if (!cursdrawn) {
-		tbox->textoffs = tbox->textpos / 2;
-	}
-#endif
+done:
+	SDL_FreeSurface(box_s);
 }
 
 static void
