@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.20 2005/03/06 04:57:15 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.21 2005/03/06 06:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -497,7 +497,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 		rad = radio_new(bo, blend_modes);
 		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
 
-		cb = checkbox_new(bo, _("Use pixmap as source"));
+		cb = checkbox_new(bo, _("Source pixmap only"));
 		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
 	}
 
@@ -943,15 +943,18 @@ pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
 		pSrc = (Uint8 *)px->su->pixels +
 		     y*px->su->pitch +
 		     x*px->su->format->BytesPerPixel;
+		cSrc = *(Uint32 *)pSrc;
+		SDL_GetRGBA(cSrc, px->su->format, &r, &g, &b, &a);
 	} else {
 		pSrc = (Uint8 *)tv->tile->su->pixels +
-		     y*tv->tile->su->pitch +
-		     x*tv->tile->su->format->BytesPerPixel;
+		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
+		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
+		cSrc = *(Uint32 *)pSrc;
+		SDL_GetRGB(cSrc, tv->tile->su->format, &r, &g, &b);
+		a = 255;
 	}
-	cSrc = *(Uint32 *)pSrc;
 	SDL_UnlockSurface(px->su);
 
-	SDL_GetRGBA(cSrc, px->su->format, &r, &g, &b, &a);
 	prim_rgb2hsv(r, g, b, &px->h, &px->s, &px->v);
 	px->a = (float)(a/255);
 }
