@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.148 2004/04/11 03:29:19 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.149 2004/04/22 01:52:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -187,6 +187,18 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 }
 
 void
+mapview_reg_draw_cb(struct mapview *mv,
+    void (*draw_func)(struct mapview *, void *), void *p)
+{
+	struct mapview_draw_cb *dcb;
+
+	dcb = Malloc(sizeof(struct mapview_draw_cb), M_WIDGET);
+	dcb->func = draw_func;
+	dcb->p = p;
+	SLIST_INSERT_HEAD(&mv->draw_cbs, dcb, draw_cbs);
+}
+
+void
 mapview_toggle_rw(int argc, union evarg *argv)
 {
 	struct button *bu = argv[0].p;
@@ -281,6 +293,7 @@ mapview_destroy(void *p)
 {
 	struct mapview *mv = p;
 	struct tool *tool, *ntool;
+	struct mapview_draw_cb *dcb, *ndcb;
 
 	for (tool = TAILQ_FIRST(&mv->tools);
 	     tool != TAILQ_END(&mv->tools);
@@ -288,7 +301,12 @@ mapview_destroy(void *p)
 		ntool = TAILQ_NEXT(tool, tools);
 		Free(tool, M_MAPEDIT);
 	}
-
+	for (dcb = SLIST_FIRST(&mv->draw_cbs);
+	     dcb != SLIST_END(&mv->draw_cbs);
+	     dcb = ndcb) {
+		ndcb = SLIST_NEXT(dcb, draw_cbs);
+		Free(dcb, M_WIDGET);
+	}
 #ifdef EDITION
 	if (mapedition) {
 		nodeedit_destroy(mv);
@@ -341,14 +359,11 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->map = m;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
-	if (statbar != NULL) {
-		mv->status = statusbar_add_label(statbar, LABEL_STATIC, "...");
-	} else {
-		mv->status = NULL;
-	}
-
+	mv->status = (statbar != NULL) ?
+	             statusbar_add_label(statbar, LABEL_STATIC, "...") : NULL;
 	mv->curtool = NULL;
 	TAILQ_INIT(&mv->tools);
+	SLIST_INIT(&mv->draw_cbs);
 
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->origin.x;
@@ -606,6 +621,7 @@ void
 mapview_draw(void *p)
 {
 	struct mapview *mv = p;
+	struct mapview_draw_cb *dcb;
 	struct map *m = mv->map;
 	struct node *node;
 	struct noderef *nref;
@@ -615,10 +631,13 @@ mapview_draw(void *p)
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
+	
+	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
+		dcb->func(mv, dcb->p);
 
 	if (mapview_bg)
 		draw_background(mv);
-
+	
 	pthread_mutex_lock(&m->lock);
 
 	/* Deal with 0x0 maps. */

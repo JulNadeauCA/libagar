@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.32 2004/04/10 02:43:43 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.33 2004/04/10 04:55:15 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -78,10 +78,10 @@ The
 .Fa flags
 may include:
 .Bd -literal
-#define MAPVIEW_EDIT		 0x01	/* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT	 0x02	/* Zoom/ss independent from map's */
-#define MAPVIEW_GRID		 0x04	/* Display a grid */
-#define MAPVIEW_PROPS		 0x08	/* Display node properties */
+#define MAPVIEW_EDIT        0x01  /* Mouse/keyboard edition */
+#define MAPVIEW_INDEPENDENT 0x02  /* Zoom/scroll independent from map's */
+#define MAPVIEW_GRID        0x04  /* Display a grid */
+#define MAPVIEW_PROPS       0x08  /* Display node properties */
 .Ed
 .Pp
 If
@@ -157,18 +157,98 @@ If there is no selection, no value is written to
 .Fa w
 and
 .Fa h .
-.Sh TOOL INTERFACE
+.Sh EXTENSIONS
 .nr nS 1
 .Ft void
 .Fn mapview_reg_tool "struct mapview *mv" "const struct tool *toolspec"
+.Pp
+.Ft void
+.Fn mapview_reg_draw_cb "struct mapview *mv" "void (*f)(struct mapview *mv, void *p)"
 .nr nS 0
 .Pp
 The
 .Nm
-widget provides a generic interface for tools that must accomplish diverse
-map operations.
+widget provides a generic interface for tools that must accomplish
+diverse map operations.
 .Fn mapview_reg_tool
-registers a new tool.
+registers a tool for use from a
+.Nm .
+.Fa toolspec
+is assumed to point to a
+.Ft tool
+structure with the following fields properly initialized:
+.Bd -literal
+struct tool {
+	const char *name;		/* Name of the tool */
+	const char *desc;		/* Short description */
+	int icon;			/* Icon (-1 = none) */
+	int cursor_index;		/* Static cursor (-1 = none) */
+
+	void (*init)(struct tool *t);
+	void (*destroy)(struct tool *t);
+	int  (*load)(struct tool *t, struct netbuf *b);
+	int  (*save)(struct tool *t, struct netbuf *b);
+	int  (*cursor)(struct tool *t, SDL_Rect *r);
+	void (*effect)(struct tool *t, struct node *n);
+	void (*mousemotion)(struct tool *t, int x, int y, int xrel,
+	                    int yrel, int xo, int yo, int xorel,
+			    int yorel, int button_state);
+	void (*mousebuttondown)(struct tool *t, int x, int y, int xoff,
+	                        int yoff, int button);
+	void (*mousebuttonup)(struct tool *t, int x, int y, int xoff,
+	                      int yoff, int button);
+	void (*keydown)(struct tool *t, int ksym, int kmod);
+	void (*keyup)(struct tool *t, int ksym, int kmod);
+};
+.Ed
+.Pp
+The
+.Fn init ,
+.Fn destroy ,
+.Fn load
+and
+.Fn save
+operations are used to initialize, free, save and restore any private data
+structures needed by the tool.
+.Pp
+The
+.Fn cursor
+operation is expected to draw the current cursor at the screen coordinates
+given by the
+.Xr SDL_Rect
+argument.
+.Pp
+The
+.Fn effect
+operation is executed on mouse click events, and on mouse motion events where
+the relative map (node) coordinates are >|1|.
+Typically, simple tools that perform node-specific operations such as the
+.Sq stamp
+and
+.Sq eraser
+tools will use this operation.
+.Pp
+Tools that perform more complex operations (such as vector drawing) will
+generally use the lower-level
+.Fn mousemotion ,
+.Fn mousebuttondown ,
+.Fn mousebuttonup ,
+.Fn keydown
+and
+.Fn keyup
+operations.
+.Pp
+The
+.Fn mapview_reg_draw_cb
+function registers a function to invoke every time the
+.Nm
+widget is redrawn.
+For instance, the
+.Xr vg 3
+subsystem uses this interface to register a function which performs
+rasterization if the vector drawing's
+.Va redraw
+flag is set.
 .Sh EVENTS
 The
 .Nm
@@ -191,7 +271,7 @@ the selection origin.
 In edition mode, call current tool if the left mouse button is held,
 or adjust the centering if the middle mouse button is held.
 .It window-keydown
-The default keys bindings are:
+The default key bindings are:
 .Bl -tag -width "SDLK_EQUALS " -compact
 .It Dv SDLK_EQUALS
 Increment the zoom.
@@ -211,8 +291,8 @@ Stop any zooming in progress
 The
 .Nm
 widget does not generate any event.
-.Sh BUGS
-The zoom uses unsafe SDL timers.
+.Sh TROUBLETONS
+The zoom feature uses unsafe SDL timers.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr map 3 ,

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.53 2004/04/10 02:43:43 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.54 2004/04/10 04:55:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -20,6 +20,12 @@
 #include <engine/mapedit/mediasel.h>
 
 #include "begin_code.h"
+
+struct mapview_draw_cb {
+	void (*func)(struct mapview *, void *);
+	void *p;
+	SLIST_ENTRY(mapview_draw_cb) draw_cbs;
+};
 
 struct mapview {
 	struct widget wid;
@@ -84,8 +90,9 @@ struct mapview {
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */
 	struct label *status;		/* Optional status label */
-	struct tool *curtool;		/* Selected tool */
-	TAILQ_HEAD(, tool) tools;	/* Map edition tools */
+	struct tool *curtool;
+	TAILQ_HEAD(, tool) tools;
+	SLIST_HEAD(, mapview_draw_cb) draw_cbs;
 };
 
 enum mapview_prop_labels {
@@ -140,6 +147,8 @@ int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 __inline__ void	 mapview_map_coords(struct mapview *, int *, int *, int *,
 		                    int *);
 
+void	 mapview_reg_draw_cb(struct mapview *,
+                             void (*)(struct mapview *, void *), void *);
 #ifdef EDITION
 void	 mapview_reg_tool(struct mapview *, const struct tool *, void *);
 void	 mapview_select_tool(int, union evarg *);
