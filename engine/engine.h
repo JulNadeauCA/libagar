@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.68 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.69 2003/06/21 06:50:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -8,6 +8,8 @@
 
 #include <config/have_opengl.h>
 #include <config/threads.h>
+#include <config/edition.h>
+
 #include <sys/types.h>
 
 #ifdef THREADS
