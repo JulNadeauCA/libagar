@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.55 2002/08/19 05:33:00 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.56 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -36,14 +36,13 @@
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/char.h>
-#include <engine/physics.h>
-#include <engine/input.h>
-#include <engine/version.h>
-
-#include <engine/widget/text.h>
+#include "engine.h"
+#include "map.h"
+#include "rootmap.h"
+#include "char.h"
+#include "physics.h"
+#include "input.h"
+#include "version.h"
 
 enum {
 	DEFAULT_HP	= 10,
@@ -193,8 +192,9 @@ char_load(void *p, int fd)
 			pthread_mutex_lock(&m->lock);
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
-			if (ch->flags & CHAR_FOCUS) {
-				view_center(m, x, y);
+			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
+			    ch->flags & CHAR_FOCUS) {
+				rootmap_center(m, x, y);
 			}
 			pthread_mutex_unlock(&m->lock);
 
