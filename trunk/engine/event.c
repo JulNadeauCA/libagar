@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.91 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.92 2002/11/13 01:33:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -115,11 +115,13 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_ESCAPE:
 		dprintf("shutting down (escape)\n");
-#if 0
-		pthread_mutex_unlock(&view->lock);
-		pthread_mutex_unlock(&world->lock);
-#endif
-		engine_stop();
+		{
+			SDL_Event nev;
+
+			nev.type = SDL_QUIT;
+			SDL_PushEvent(&nev);
+		}
+		break;
 	default:
 		break;
 	}
@@ -345,9 +347,9 @@ event_dispatch(SDL_Event *ev)
 	case SDL_QUIT:
 		EVENT_DEBUG("SDL_QUIT\n");
 		dprintf("shutting down (SDL_QUIT)\n");
-#if 0
-		pthread_mutex_unlock(&view->lock);
-#endif
+		if (view->rootmap == NULL) {			/* XXX */
+			pthread_mutex_unlock(&view->lock);
+		}
 		engine_stop();
 	}
 	
@@ -413,7 +415,7 @@ event_dispatch(SDL_Event *ev)
  * The first element is always a pointer to the object.
  */
 void
-event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
+event_new(void *p, char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
 	struct object *ob = p;
@@ -421,12 +423,12 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 
 	eev = emalloc(sizeof(struct event));
 	eev->name = name;
-	eev->flags = flags;
+	eev->flags = 0;
 	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAXARGS);
 	eev->argv[0].p = ob;
 	eev->argc = 1;
 	eev->handler = handler;
-	
+
 	if (fmt != NULL) {
 		va_list ap;
 
