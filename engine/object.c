@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.133 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.134 2003/06/21 06:39:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,8 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
-
 #include <engine/engine.h>
 #include <engine/config.h>
 #include <engine/map.h>
@@ -36,17 +34,20 @@
 #include <engine/rootmap.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
-
+#ifdef EDITION
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+#endif
+#include <engine/loader/den.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
@@ -54,7 +55,7 @@
 
 const struct version object_ver = {
 	"agar object",
-	1, 0
+	2, 0
 };
 
 const struct object_ops object_ops = {
@@ -99,11 +100,18 @@ void
 object_init(void *p, const char *type, const char *name, const void *opsp)
 {
 	struct object *ob = p;
+	char *c;
 
 	if (strlcpy(ob->type, type, sizeof(ob->type)) >= sizeof(ob->type))
 		fatal("type too big");
-	if (strlcpy(ob->name, name, sizeof(ob->name)) >= sizeof(ob->name))
+
+	if (strlcpy(ob->name, name, sizeof(ob->name)) >= sizeof(ob->name)) {
 		fatal("name too big");
+	}
+	for (c = ob->name; *c != '\0'; c++) {
+		if (*c == '/')				/* Pathname separator */
+			*c = '_';
+	}
 
 	ob->ops = (opsp != NULL) ? opsp : &object_ops;
 	ob->parent = NULL;
@@ -139,7 +147,6 @@ object_name_search(void *obj, char **s, size_t *sl)
 }
 
 /* Return the absolute name of an object. */
-/* XXX cache the absolute names? */
 char *
 object_name(void *obj)
 {
@@ -373,6 +380,7 @@ object_load(void *p)
 	char *path;
 	struct netbuf *buf;
 	Uint32 i, nchilds;
+	char *gfx, *audio;
 
 	if ((path = object_file(ob)) == NULL) {
 		dprintf("%s: %s\n", ob->name, error_get());
@@ -395,19 +403,37 @@ object_load(void *p)
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
-	if (prop_load(ob, buf) == -1) {
+
+	/* Load the generic properties. */
+	if (prop_load(ob, buf) == -1)
 		goto fail;
-	}
+
+	/* Load the position. */
 	if (read_uint32(buf) > 0 &&
 	    object_load_position(ob, buf) == -1) {
 		goto fail;
 	}
+
+	/* Load the media references. */
+	if ((gfx = read_string(buf)) != NULL) {
+		if (gfx_fetch(ob, gfx) == -1) {
+			goto fail;
+		}
+		free(gfx);
+	}
+	if ((audio = read_string(buf)) != NULL) {
+		if (audio_fetch(ob, audio) == -1) {
+			goto fail;
+		}
+		free(audio);
+	}
+
+	/* Load the child objects. */
 	if (ob->flags & OBJECT_RELOAD_CHILDS) {
 		fatal("not yet");
 	} else {
 		object_free_childs(ob);
 
-		/* Load the descendants. */
 		nchilds = read_uint32(buf);
 		for (i = 0; i < nchilds; i++) {
 			char cname[OBJECT_NAME_MAX];
@@ -444,8 +470,9 @@ object_load(void *p)
 				goto fail;
 			}
 
-			dprintf("%s: %s (%lu bytes)\n", type->type,
-			    type->desc, (unsigned long)type->size);
+			dprintf("%s: %s (%lu bytes)\n", type->type, type->desc,
+			    (unsigned long)type->size);
+
 			child = Malloc(type->size);
 			if (type->ops->init != NULL) {
 				type->ops->init(child, cname);
@@ -455,6 +482,7 @@ object_load(void *p)
 			child->flags |= cflags;
 
 			object_attach(ob, child);
+
 			if (object_load(child) == -1)
 				goto fail;
 		}
@@ -515,9 +543,12 @@ object_save(void *p)
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
-	if (prop_save(ob, buf) == -1) {
+
+	/* Save the generic properties. */
+	if (prop_save(ob, buf) == -1)
 		goto fail;
-	}
+
+	/* Save the position. */
 	if (ob->pos != NULL) {
 		write_uint32(buf, 1);
 		object_save_position(ob, buf);
@@ -525,6 +556,11 @@ object_save(void *p)
 		write_uint32(buf, 0);
 	}
 
+	/* Save the media references. */
+	write_string(buf, ob->gfx != NULL ? ob->gfx->name : NULL);
+	write_string(buf, ob->audio != NULL ? ob->audio->name : NULL);
+
+	/* Save the child objects. */
 	nchilds_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);				/* Skip count */
 	TAILQ_FOREACH(child, &ob->childs, cobjs) {	/* Save descendents */
@@ -837,7 +873,6 @@ void
 object_table_init(struct object_table *obt)
 {
 	obt->objs = NULL;
-	obt->used = NULL;
 	obt->nobjs = 0;
 }
 
@@ -846,7 +881,6 @@ void
 object_table_destroy(struct object_table *obt)
 {
 	Free(obt->objs);
-	Free(obt->used);
 }
 
 /* Insert an object into a dependency table. */
@@ -863,14 +897,10 @@ object_table_insert(struct object_table *obt, struct object *obj)
 	if (obt->objs != NULL) {
 		obt->objs = Realloc(obt->objs, (obt->nobjs + 1) *
 		    sizeof(struct object *));
-		obt->used = Realloc(obt->used, (obt->nobjs + 1) *
-		    sizeof(int));
 	} else {
 		obt->objs = Malloc(sizeof(struct object *));
-		obt->used = Malloc(sizeof(int));
 	}
 	obt->objs[obt->nobjs] = obj;
-	obt->used[obt->nobjs] = 0;
 	obt->nobjs++;
 }
 
@@ -903,35 +933,39 @@ int
 object_table_load(struct object_table *obt, struct netbuf *buf,
     const char *objname)
 {
-	char name[OBJECT_NAME_MAX];
-	char type[OBJECT_TYPE_MAX];
-	struct object *pob;
 	Uint32 i, nobjs;
 
 	nobjs = read_uint32(buf);
 
 	lock_linkage();
 	for (i = 0; i < nobjs; i++) {
-		if (copy_string(name, buf, sizeof(name)) >= sizeof(name)) {
-			error_set("object name too big");
+		char type[OBJECT_TYPE_MAX];
+		struct object *pob;
+		char *name;
+
+		if ((name = read_string(buf)) == NULL) {
 			goto fail;
 		}
 		if (copy_string(type, buf, sizeof(type)) >= sizeof(type)) {
 			error_set("object type too big");
 			goto fail;
 		}
+
 		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
 		if ((pob = object_find(world, name)) != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
 				error_set("%s: expected %s to be of type %s",
 				    objname, name, type);
+				free(name);
 				goto fail;
 			}
 		} else {
 			debug_n(DEBUG_DEPS, "missing\n");
 		}
 		object_table_insert(obt, pob);
+
+		free(name);
 	}
 	unlock_linkage();
 	return (0);
@@ -940,18 +974,21 @@ fail:
 	return (-1);
 }
 
+/* Override an object's default ops (thread unsafe). */
 void
 object_set_ops(void *p, const void *ops)
 {
 	OBJECT(p)->ops = ops;
 }
 
+#ifdef EDITION
 enum {
 	LOAD_OP,
 	SAVE_OP,
 	EDIT_OP
 };
 
+/* Invoke an object's load/save/edit operation. */
 static void
 object_invoke_op(int argc, union evarg *argv)
 {
@@ -977,6 +1014,7 @@ object_invoke_op(int argc, union evarg *argv)
 	}
 }
 
+/* Update the properties display. */
 static void
 poll_props(int argc, union evarg *argv)
 {
@@ -996,6 +1034,83 @@ poll_props(int argc, union evarg *argv)
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	tlist_restore_selections(tl);
+}
+
+/* Search subdirectories for .den files containing the given hint. */
+static void
+object_scan_dens(struct object *ob, const char *hint, struct combo *com,
+    const char *spath)
+{
+	DIR *di;
+	struct dirent *dent;
+
+	if ((di = opendir(".")) == NULL) {
+		dprintf("opendir .: %s\n", strerror(errno));
+		return;
+	}
+	while ((dent = readdir(di)) != NULL) {
+		struct stat sta;
+		char *ext, *path;
+
+		if (dent->d_name[0] == '.') {
+			continue;
+		}
+		if (stat(dent->d_name, &sta) == -1) {
+			dprintf("%s: %s\n", dent->d_name, strerror(errno));
+			continue;
+		}
+
+		Asprintf(&path, "%s/%s", spath, dent->d_name);
+		if ((sta.st_mode & S_IFREG) &&
+		    (ext = strrchr(dent->d_name, '.')) != NULL &&
+		    strcasecmp(ext, ".den") == 0) {
+			struct den *den;
+
+			if ((den = den_open(dent->d_name, DEN_READ)) != NULL) {
+				if (strcmp(den->hint, hint) == 0 &&
+				    (ext = strrchr(path, '.')) != NULL) {
+					*ext = '\0';
+					tlist_insert_item(com->list, NULL, path,
+					    NULL);
+				}
+				den_close(den);
+			}
+		} else if (sta.st_mode & S_IFDIR) {
+			if (chdir(dent->d_name) == 0) {
+				object_scan_dens(ob, hint, com, path);
+				if (chdir("..") == -1) {
+					free(path);
+					return;
+				}
+			}
+		}
+		free(path);
+	}
+	closedir(di);
+}
+
+static void
+object_select_gfx(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+
+	if (gfx_fetch(ob, it->text) == -1) {
+		text_msg(MSG_ERROR, _("Fetching %s gfx: %s"), it->text,
+		    error_get());
+	}
+}
+
+static void
+object_select_audio(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+
+	if (audio_fetch(ob, it->text) == -1) {
+		text_msg(MSG_ERROR, _("Fetching %s audio: %s"), it->text,
+		    error_get());
+	}
 }
 
 void
@@ -1020,14 +1135,34 @@ object_edit(void *p)
 	label_new(win, _("Flags : 0x%02x"), ob->flags);
 
 	label_polled_new(win, NULL, _("Parent: %p"), &ob->parent);
-	label_polled_new(win, &ob->lock, _("Pos: %p"), &ob->pos);
+	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		struct combo *gfx_com, *aud_com;
+		char *denpath, *dir, *last;
 
 		gfx_com = combo_new(bo, _("Gfx: "));
 		aud_com = combo_new(bo, _("Audio: "));
+		
+		event_new(gfx_com, "combo-selected", object_select_gfx, "%p",
+		    ob);
+		event_new(aud_com, "combo-selected", object_select_audio, "%p",
+		    ob);
+
+		denpath = prop_get_string(config, "den-path");
+		for (dir = strtok_r(denpath, ":", &last);
+		     dir != NULL;
+		     dir = strtok_r(NULL, ":", &last)) {
+			if (chdir(dir) == -1) {
+				dprintf("skipping %s: %s\n", dir,
+				    strerror(errno));
+				continue;
+			}
+			object_scan_dens(ob, "gfx", gfx_com, "");
+			object_scan_dens(ob, "audio", aud_com, "");
+		}
+		free(denpath);
 	}
 
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
@@ -1063,3 +1198,5 @@ out:
 	free(obname);
 	return;
 }
+
+#endif /* EDITION */
