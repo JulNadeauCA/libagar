@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.63 2003/02/24 06:42:05 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.64 2003/02/26 02:04:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -83,6 +83,13 @@ enum map_type {
 	MAP_3D
 };
 
+struct map_layer {
+	char	*name;		/* Identifier */
+	int	 visible;	/* Layer is visible? */
+	int	 xinc, yinc;	/* X/Y increments for rendering */
+	Uint8	 alpha;		/* Transparency */
+};
+
 struct map {
 	struct object	  obj;
 	enum map_type	  type;
@@ -97,6 +104,10 @@ struct map {
 	Uint32		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
+
+	struct map_layer *layers;	/* Layer descriptions */
+	int		 nlayers;
+
 #if defined(DEBUG) && defined(THREADS)
 	pthread_t	  check_th;	/* Verify map integrity */
 #endif
@@ -112,6 +123,8 @@ void		 map_shrink(struct map *, Uint32, Uint32);
 void		 map_grow(struct map *, Uint32, Uint32);
 void		 map_adjust(struct map *, Uint32, Uint32);
 void		 map_set_zoom(struct map *, Uint16);
+int		 map_add_layer(struct map *, char *);
+void		 map_remove_layer(struct map *, int);
 
 void		 noderef_init(struct noderef *);
 void		 noderef_destroy(struct noderef *);
