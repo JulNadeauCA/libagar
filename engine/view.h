@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.58 2002/12/20 08:55:15 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.59 2002/12/26 05:07:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -7,8 +7,11 @@
 #include <config/view_32bpp.h>
 
 typedef enum {
-	GFX_ENGINE_GUI,		/* Solid background */
-	GFX_ENGINE_TILEBASED	/* Map background */
+	GFX_ENGINE_GUI,		/* Direct rendering, solid background */
+	GFX_ENGINE_TILEBASED,	/* Direct rendering, map background */
+#ifdef HAVE_OPENGL
+	GFX_ENGINE_GL,		/* OpenGL rendering */
+#endif
 } gfx_engine_t;
 
 /* Map display */
@@ -36,10 +39,13 @@ struct viewport {
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	
 	int	w, h, bpp;		/* Viewport geometry */
-	int	min_ticks;		/* Minimum delay */
-	int	max_fps_ticks;		/* Maximum frames/second */
-	int	cur_fps_ticks;		/* Current frames/second */
-	int	ticks_ceil;
+	
+	struct {
+		int	 current;	/* Estimated refresh rate in ms */
+		int	 delay;		/* Current refresh delay in ms */
+		int	 min_delay;	/* Minimum delay in ms */
+		int	 max_delay;	/* Maximum delay in ms */
+	} refresh;
 
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	int		 ndirty;	/* Number of rectangles to update */
@@ -54,11 +60,11 @@ struct viewport {
 	struct window	*wop_win;	/* Window being moved/resized/etc. */
 	enum {
 		VIEW_WINOP_NONE,
-		VIEW_WINOP_MOVE,
-		VIEW_WINOP_LRESIZE,		/* Left resize */
-		VIEW_WINOP_RRESIZE,		/* Right resize */
-		VIEW_WINOP_HRESIZE,		/* Height resize */
-		VIEW_WINOP_REGRESIZE_LEFT,
+		VIEW_WINOP_MOVE,		/* Window movement */
+		VIEW_WINOP_LRESIZE,		/* Window resize */
+		VIEW_WINOP_RRESIZE,
+		VIEW_WINOP_HRESIZE,
+		VIEW_WINOP_REGRESIZE_LEFT,	/* Region resize */
 		VIEW_WINOP_REGRESIZE_RIGHT,
 		VIEW_WINOP_REGRESIZE_UP,
 		VIEW_WINOP_REGRESIZE_DOWN
@@ -192,9 +198,10 @@ case 4:					\
 #define VIEW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
 #define VIEW_UPDATE(rect) do {						\
-	if (view->ndirty + 1 > view->maxdirty) {			\
+	if (view->ndirty+2 > view->maxdirty) {				\
+		view->maxdirty += 2;					\
 		view->dirty = erealloc(view->dirty,			\
-		    ++view->maxdirty * sizeof(SDL_Rect *));		\
+		    view->maxdirty * sizeof(SDL_Rect *));		\
 	}								\
 	view->dirty[view->ndirty++] = (rect);				\
 } while (/*CONSTCOND*/0)
@@ -206,7 +213,7 @@ void	 view_attach(void *);
 void	 view_detach(void *);
 void	 view_detach_queued(void);
 void	 view_destroy(void *);
-void	 view_set_speed(int, int);
+int	 view_set_refresh(int, int);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);

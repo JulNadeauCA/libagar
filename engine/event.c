@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.117 2002/12/23 03:04:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.118 2002/12/24 10:29:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -75,7 +75,8 @@ int	event_count, event_overhead;
 static struct window *fps_win;
 static struct label *fps_label;
 static struct graph *fps_graph;
-static struct graph_item *fps_cur_fps, *fps_event_count, *fps_event_overhead;
+static struct graph_item *fps_refresh_current, *fps_event_count,
+    *fps_event_overhead;
 #endif
 
 static void	 event_hotkey(SDL_Event *);
@@ -147,8 +148,8 @@ event_update_fps_counter(void)
 	static int einc = 0;
 
 	label_printf(fps_label, "delay: %dms, gfx: %dms",
-	    view->max_fps_ticks, view->cur_fps_ticks);
-	graph_plot(fps_cur_fps, view->cur_fps_ticks);
+	    view->refresh.delay, view->refresh.current);
+	graph_plot(fps_refresh_current, view->refresh.current);
 	graph_plot(fps_event_count, event_count * 30 / 10);
 	graph_plot(fps_event_overhead, event_overhead * 2 / 15);
 	graph_scroll(fps_graph, 1);
@@ -167,13 +168,13 @@ event_init_fps_counter(void)
 
 	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
 	    133, 104, 125, 91);
-	window_set_caption(fps_win, "Frames/second");
+	window_set_caption(fps_win, "Refresh rate");
 	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
 	fps_label = label_new(reg, 100, 15, "...");
-	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
+	fps_graph = graph_new(reg, "Refresh rate", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
 	    100, 85);
-	fps_cur_fps = graph_add_item(fps_graph, "cur-fps",
+	fps_refresh_current = graph_add_item(fps_graph, "refresh-current",
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
 	fps_event_count = graph_add_item(fps_graph, "event-rate",
 	    SDL_MapRGB(view->v->format, 0, 0, 180));
@@ -186,23 +187,35 @@ event_init_fps_counter(void)
 }
 #endif
 
+/*
+ * Adjust the refresh rate.
+ * Called once rendering is done. ntick is the SDL_GetTicks() value, before
+ * the video update is performed.
+ */
 static __inline__ void
-event_adjust_fps(Uint32 ntick)
+event_adjust_refresh(Uint32 ntick)
 {
-	view->cur_fps_ticks = view->max_fps_ticks - (SDL_GetTicks() - ntick);
+	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
 #ifdef DEBUG
 	event_update_fps_counter();
 #endif
-	if (view->cur_fps_ticks < 1) {
-		view->cur_fps_ticks = 30;
-		if (--view->max_fps_ticks < view->min_ticks) {
+	/*
+	 * Try to lower the refresh delay if the minimum frame rate is not
+	 * reached.
+	 *
+	 * This adjustment could be made without a visible change in speed
+	 * if we could predict the overhead of the future drawing operation.
+	 */
+	if (view->refresh.current < 1) {
+		view->refresh.current = 30;
+		if (--view->refresh.delay < view->refresh.min_delay) {
 			debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
-			    view->cur_fps_ticks, view->max_fps_ticks);
-			view->max_fps_ticks = view->min_ticks;
+			    view->refresh.current, view->refresh.delay);
+			view->refresh.delay = view->refresh.min_delay;
 		}
 	} else {
-		if (++view->max_fps_ticks > view->ticks_ceil) {
-			view->max_fps_ticks = view->ticks_ceil;
+		if (++view->refresh.delay > view->refresh.max_delay) {
+			view->refresh.delay = view->refresh.max_delay;
 		}
 	}
 }
@@ -218,13 +231,15 @@ event_loop(void)
 
 	event_init_fps_counter();
 #endif
-	view_set_speed(25, 15);
+ 	if (view_set_refresh(10, 40) == -1) {
+		fatal("setting refresh rate: %s\n", error_get());
+	}
 
 	ltick = SDL_GetTicks();
 	for (;;) {
 		ntick = SDL_GetTicks();			/* Rendering starts */
 
-		if ((ntick - ltick) > view->max_fps_ticks) {
+		if ((ntick - ltick) > view->refresh.delay) {
 			pthread_mutex_lock(&view->lock);
 
 			view->ndirty = 0;
@@ -243,17 +258,12 @@ event_loop(void)
 				pthread_mutex_lock(&m->lock);
 
 				/* Draw animated nodes. */
-				debug(DEBUG_VIDEO_UPDATES,
-				    "updating animated nodes\n");
 				rootmap_animate();
 
 				/* Draw static nodes. */
 				if (m->redraw != 0) {
-					debug(DEBUG_VIDEO_UPDATES,
-					    "updating static nodes\n");
-					rootmap_draw();
-					event_adjust_fps(ntick);
 					m->redraw = 0;
+					rootmap_draw();
 				}
 				pthread_mutex_unlock(&m->lock);
 				pthread_mutex_unlock(&world->lock);
@@ -278,23 +288,22 @@ event_loop(void)
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
-				SDL_UpdateRects(view->v, view->ndirty,
-				    view->dirty);
+				switch (view->gfx_engine) {
+				case GFX_ENGINE_GUI:
+				case GFX_ENGINE_TILEBASED:
+					SDL_UpdateRects(view->v, view->ndirty,
+					    view->dirty);
+					break;
 #ifdef HAVE_OPENGL
-				if (prop_get_bool(config, "view.opengl")) {
+				case GFX_ENGINE_GL:
 					SDL_GL_SwapBuffers();
-				}
+					break;
 #endif
+				}
 				view->ndirty = 0;
 
-				if (view->gfx_engine == GFX_ENGINE_GUI) {
-					/* Event/motion interpolation. */
-					event_adjust_fps(ntick);
-				}
-#ifdef DEBUG
-				/* Update the fps counter. */
-				event_adjust_fps(ntick);
-#endif
+				/* Update and adjust the refresh rate. */
+				event_adjust_refresh(ntick);
 			}
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
@@ -306,7 +315,11 @@ event_loop(void)
 			event_count++;
 			event_overhead = SDL_GetTicks() - eltick;
 #endif
-		} else if (SDL_GetTicks() - ltick < view->max_fps_ticks - 15) {
+		} else if (SDL_GetTicks()-ltick < view->refresh.delay-15) {
+			/*
+			 * Sleep if the display is not likely to be redrawn
+			 * within the next few milliseconds.
+			 */
 			SDL_Delay(1);
 		}
 	}
@@ -365,12 +378,12 @@ event_dispatch(SDL_Event *ev)
 			SDL_FillRect(view->v, NULL,
 			    SDL_MapRGB(view->v->format, 0, 0, 0));
 			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
-#ifdef HAVE_OPENGL
-			if (prop_get_bool(config, "view.opengl")) {
-				SDL_GL_SwapBuffers();
-			}
-#endif
 			break;
+#ifdef HAVE_OPENGL
+		case GFX_ENGINE_GL:
+			SDL_GL_SwapBuffers();
+			break;
+#endif
 		}
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
@@ -487,13 +500,11 @@ event_dispatch(SDL_Event *ev)
 		fatal("unknown argument type\n");		\
 	}
 
-
 /*
  * Register an event handler.
  *
- * Arbitrary arguments are pushed onto an argument stack that the event
- * handler reads. event_post() may push more args onto this stack.
- * The first element is always a pointer to the object.
+ * Arbitrary arguments are pushed onto an argument stack, whose first
+ * element is always a pointer to the parent object.
  */
 void
 event_new(void *p, char *name, void (*handler)(int, union evarg *),
@@ -509,7 +520,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, name) == 0) {
 			debug(DEBUG_EVENT_NEW,
-			    "replacing %s's existing %s handler\n",
+			    "replacing %s's existing `%s' handler\n",
 			    ob->name, ev->name);
 			eev = ev;
 			break;
@@ -558,15 +569,17 @@ event_post_async(void *p)
 
 	free(eev);
 #else
-	fatal("thread safety not compiled in\n");
+	fatal("no thread support compiled in\n");
 #endif
 	return (NULL);
 }
 
 /*
- * Call an object's event handler, synchronously or asynchronously.
- * This may be called recursively, as long as the object's event
- * handler list is not modified.
+ * Invoke an event handler. The lock on the object's event list is recursive
+ * so the event handler can safely invoke other event handlers.
+ *
+ * XXX event handlers cannot modify the parent object's event list, such an
+ *     operation should be queued like it is done in the window system.
  */
 void
 event_post(void *obp, char *name, const char *fmt, ...)
@@ -594,10 +607,14 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		}
 
 		if (neev->flags & EVENT_ASYNC) {
+#ifdef SERIALIZATION
 			pthread_t async_event_th;
 
 			Pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
+#else
+			fatal("no thread support compiled in\n");
+#endif
 		} else {
 			neev->handler(neev->argc, neev->argv);
 			free(neev);

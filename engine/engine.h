@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.49 2002/12/24 10:27:05 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.50 2002/12/24 14:23:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -63,7 +63,7 @@
 # define PTHREAD_MUTEX_INITIALIZER 0
 #endif
 
-struct gameinfo {
+struct engine_proginfo {
 	char	*prog;		/* Name of the executable */
 	char	*name;		/* Name of the game */
 	char	*copyright;	/* Copyright notice */
@@ -75,18 +75,11 @@ enum {
 	ICON_MAPEDITION
 };
 
-/* engine_start() return value. XXX */
-enum {
-	ENGINE_START_GAME,
-	ENGINE_START_MAP_EDITION
-};
+#define ENGINE_INIT_GFX		0x01		/* Graphic engine */
+#define ENGINE_INIT_TEXT	0x02		/* Font engine */
+#define ENGINE_INIT_INPUT	0x04		/* Input devices */
 
-/* engine_init() flags. XXX */
-#define ENGINE_INIT_GUI		0x01	/* Use only GUI engine */
-#define ENGINE_INIT_MAPEDIT	0x02	/* Add map editor switch (-e) */
-
-int	 engine_init(int, char **, const struct gameinfo *, char *, int);
-int	 engine_start(void);
+int	 engine_init(int, char **, const struct engine_proginfo *, int);
 void	 engine_stop(void);
 void	 engine_destroy(void);
 

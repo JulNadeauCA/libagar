@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.83 2002/12/23 02:57:18 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.84 2002/12/24 10:27:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -44,8 +44,6 @@
 #include "view.h"
 #include "world.h"
 
-#include "mapedit/mapedit.h"
-
 #ifdef DEBUG
 #include "monitor/monitor.h"
 #endif
@@ -64,32 +62,27 @@ pthread_key_t engine_errorkey;		/* Multi-threaded error code */
 char *engine_errorkey;			/* Single-threaded error code */
 #endif
 
-const struct gameinfo *gameinfo;	/* Game name, copyright, version */
+const struct engine_proginfo *proginfo;	/* Game name, copyright, version */
 struct world *world;			/* Describes game elements */
 struct config *config;			/* Global configuration settings */
-int mapediting;				/* Map edition mode */
 
-static void	printusage(char *, int);
 #ifdef XDEBUG
 static int	engine_xerror(Display *, XErrorEvent *);
 static int	engine_xioerror(Display *);
 static void	engine_xdebug(void);
 #endif
 
-static void
-printusage(char *progname, int flags)
-{
-	fprintf(stderr, "Usage: %s [-efv] [-w width] [-h height]\n",
-	    progname);
-}
-
 int
-engine_init(int argc, char *argv[], const struct gameinfo *gi,
-    char *path, int flags)
+engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
+    int flags)
 {
-	int c, fullscreen = 0;
-	int w = -1, h = -1;
+	static int inited = 0;
 	const SDL_VideoInfo *vinfo;
+
+	if (inited) {
+		error_set("engine already initialized");
+		return (-1);
+	}
 
 #ifdef SERIALIZATION
 	/* Create a thread-specific key for errno style error messages. */
@@ -99,96 +92,72 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	engine_errorkey = NULL;
 #endif
 
-	mapediting = 0;			/* Map edition mode? */
-	gameinfo = gi;
-	
-	printf("%s %s\n", gameinfo->name, gameinfo->version);
-	printf("%s\n\n", gameinfo->copyright);
+	/* Obtain the application information. */
 	printf("Agar engine v%s\n", ENGINE_VERSION);
+	printf("%s %s\n", prog->name, prog->version);
+	printf("%s\n\n", prog->copyright);
+	proginfo = prog;
 
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		error_set("SDL_Init: %s", SDL_GetError());
+		return (-1);
+	}
+
+	if (flags & ENGINE_INIT_GFX) {
 #ifdef USE_X11
-	/* Try to set the window manager class name. */
-	setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+		setenv("SDL_VIDEO_X11_WMCLASS", prog->name, 1);
 #endif
-	
-	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
-		switch (c) {
-		case 'v':
-			exit (0);
-		case 'f':
-			fullscreen++;
-			break;
-		case 'e':
-			mapediting++;
-			break;
-		case 'w':
-			w = atoi(optarg);
-			if (w < 1 || w > 65535) {
-				fprintf(stderr, "invalid width argument\n");
-				exit(1);
-			}
-			break;
-		case 'h':
-			h = atoi(optarg);
-			if (w < 1 || w > 65535) {
-				fprintf(stderr, "invalid height argument\n");
-				exit(1);
-			}
-			break;
-		default:
-			printusage(argv[0], flags);
-			exit(255);
+		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+			error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
+			return (-1);
+		}
+		SDL_WM_SetCaption(prog->name, prog->prog);
+
+		/* Print video device information. */
+		vinfo = SDL_GetVideoInfo();
+		if (vinfo != NULL) {
+			char accel[4096];
+			char unaccel[4096];
+
+			printf(
+			    "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n",
+			    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
+			    vinfo->vfmt->alpha);
+			printf("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n",
+			    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
+			    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
+			printf("Window manager is %savailable.\n",
+			    vinfo->wm_available ? "" : "un");
+			printf("Hardware surfaces are %savailable.\n",
+			    vinfo->hw_available ? "" : "un");
+		
+			accel[0] = '\0';
+			unaccel[0] = '\0';
+
+			strlcat(vinfo->blit_hw ? accel : unaccel,
+			    "\tHardware blits\n", 4096);
+			strlcat(vinfo->blit_hw_CC ? accel : unaccel,
+			    "\tHardware->hardware colorkey blits\n", 4096);
+			strlcat(vinfo->blit_hw_A ? accel : unaccel,
+			    "\tHardware->hardware alpha blits\n", 4096);
+		
+			strlcat(vinfo->blit_sw ? accel : unaccel,
+			    "\tSoftware->hardware blits\n", 4096);
+			strlcat(vinfo->blit_sw_CC ? accel : unaccel,
+			    "\tSoftware->hardware colorkey blits\n", 4096);
+			strlcat(vinfo->blit_sw_A ? accel : unaccel,
+			    "\tSoftware->hardware alpha blits\n", 4096);
+			strlcat(vinfo->blit_fill ? accel : unaccel,
+			    "\tColor fills\n", 4096);
+
+			if (accel[0] != '\0')
+				printf("Accelerated operations:\n%s", accel);
+			if (unaccel[0] != '\0')
+				printf("Unaccelerated operations:\n%s",
+				    unaccel);
+			printf("\n");
 		}
 	}
-
-	/* Initialize SDL. */
-	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) != 0) {
-		fatal("SDL_Init: %s\n", SDL_GetError());
-	}
-
-	/* Print video device information. */
-	vinfo = SDL_GetVideoInfo();
-	if (vinfo != NULL) {
-		char accel[4096];
-		char unaccel[4096];
-
-		printf("Video device is %dbpp (colorkey=0x%x, alpha=0x%04x)\n",
-		    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
-		    vinfo->vfmt->alpha);
-		printf("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n",
-		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
-		    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
-		printf("Window manager is %savailable.\n",
-		    vinfo->wm_available ? "" : "un");
-		printf("Hardware surfaces are %savailable.\n",
-		    vinfo->hw_available ? "" : "un");
-		
-		accel[0] = '\0';
-		unaccel[0] = '\0';
-
-		strlcat(vinfo->blit_hw ? accel : unaccel,
-		    "\tHardware blits\n", 4096);
-		strlcat(vinfo->blit_hw_CC ? accel : unaccel,
-		    "\tHardware->hardware colorkey blits\n", 4096);
-		strlcat(vinfo->blit_hw_A ? accel : unaccel,
-		    "\tHardware->hardware alpha blits\n", 4096);
-		
-		strlcat(vinfo->blit_sw ? accel : unaccel,
-		    "\tSoftware->hardware blits\n", 4096);
-		strlcat(vinfo->blit_sw_CC ? accel : unaccel,
-		    "\tSoftware->hardware colorkey blits\n", 4096);
-		strlcat(vinfo->blit_sw_A ? accel : unaccel,
-		    "\tSoftware->hardware alpha blits\n", 4096);
-		strlcat(vinfo->blit_fill ? accel : unaccel,
-		    "\tColor fills\n", 4096);
-
-		if (accel[0] != '\0')
-			printf("Accelerated operations:\n%s", accel);
-		if (unaccel[0] != '\0')
-			printf("Unaccelerated operations:\n%s", unaccel);
-
-	}
-	printf("\n");
 	
 	/* Initialize/load engine settings. */
 	config = config_new();
@@ -196,52 +165,38 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
-	world_init(world, gameinfo->prog);
-	
+	world_init(world, prog->prog);
 	world_attach(world, config);
 
 	/* Initialize the font engine. */
-	if (text_engine_init() != 0) {
+	if (flags & ENGINE_INIT_TEXT &&
+	    text_engine_init() != 0) {
 		fatal("cannot initialize font engine\n");
 	}
 
-	/* Overrides */
-	if (fullscreen)
-		prop_set_bool(config, "view.full-screen", 1);
-	if (w > 0)
-		prop_set_uint32(config, "view.w", w);
-	if (h > 0)
-		prop_set_uint32(config, "view.h", h);
+	/* Initialize the input devices. */
+	if (flags & ENGINE_INIT_INPUT) {
+		input_new(INPUT_KEYBOARD, 0);
+		input_new(INPUT_MOUSE, 0);
+		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+			int i, njoys;
 
-	/* Initialize the default input devices. */
-	input_new(INPUT_KEYBOARD, 0);
-	input_new(INPUT_MOUSE, 0);
-	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
-		int i, njoys;
-
-		njoys = SDL_NumJoysticks();
-		for (i = 0; i < njoys; i++) {
-			input_new(INPUT_JOY, i);
-		}
-	}
-
-	/* Initialize the graphic engine. */
-	if (mapediting || (flags & ENGINE_INIT_GUI)) {
-		if (view_init(GFX_ENGINE_GUI) != 0) {
-			fatal("setting gui mode: %s\n", error_get());
-		}
-	} else {
-		if (view_init(GFX_ENGINE_TILEBASED) != 0) {
-			fatal("setting tile-based mode: %s\n", error_get());
+			njoys = SDL_NumJoysticks();
+			for (i = 0; i < njoys; i++) {
+				input_new(INPUT_JOY, i);
+			}
 		}
 	}
 
 #ifdef XDEBUG
-	if (engine_debug > 0) {
+	if (flags & ENGINE_INIT_GFX &&
+	    prop_get_bool(config, "view.xsync")) {
 		/* Request synchronous X events, and set error handlers. */
 		engine_xdebug();
 	}
 #endif
+
+	inited++;
 	return (0);
 }
 
@@ -271,11 +226,10 @@ static void
 engine_xdebug(void)
 {
 	SDL_SysWMinfo wm;
-	SDL_VideoInfo *vinfo;
+	const SDL_VideoInfo *vinfo;
 
 	vinfo = SDL_GetVideoInfo();
 	if (!vinfo->wm_available) {
-		warning("no window manager available\n");
 		return;
 	}
 
@@ -298,60 +252,18 @@ engine_xdebug(void)
 
 #endif	/* XDEBUG */
 
-/*
- * Create static windows, drop into map edition if requested.
- * This is done after static objects are created, and before the event
- * loop is started.
- */
-int
-engine_start(void)
-{
-	struct mapedit *medit;
-	struct map *m;
-
-	/* Create the configuration settings window. */
-	config_window(config);
-
-#ifdef DEBUG
-	if (engine_debug > 0) {
-		monitor_init(&monitor, "debug-monitor");
-		world_attach(world, &monitor);
-	}
-#endif
-
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		/* Start with a null map. */
-		m = emalloc(sizeof(struct map));
-		map_init(m, "base", NULL, 0);
-		world_attach(world, m);
-		if (object_load(m) != 0) {
-			fatal("cannot load base.m\n");
-		}
-		rootmap_focus(m);
-		return (ENGINE_START_GAME);
-	case GFX_ENGINE_GUI:
-		break;
-	}
-
-	if (mapediting) {
-		medit = emalloc(sizeof(struct mapedit));
-		mapedit_init(medit, "mapedit0");
-		world_attach(world, medit);
-	}
-	return (ENGINE_START_MAP_EDITION);
-}
-
-/* Caller must not hold world->lock. */
 void
 engine_stop(void)
 {
-	if (view->rootmap != NULL) {
-		dprintf("setting NULL root map\n");
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_TILEBASED:
+		/* Stop the event loop synchronously. */
 		pthread_mutex_lock(&view->lock);
 		view->rootmap->map = NULL;
 		pthread_mutex_unlock(&view->lock);
-	} else {
+		break;
+	default:
+		/* Shut down immediately. */
 		engine_destroy();
 	}
 }
@@ -363,27 +275,16 @@ engine_stop(void)
 void
 engine_destroy(void)
 {
-	/* Destroy game objects. */
 	world_destroy(world);
-
-	/* Destroy the font engine. */
 	text_engine_destroy();
-
-	/* Shut down the input devices. */
 	input_destroy_all();
-
-	/* Destroy the views. */
 	object_destroy(view);
-
-	/* Free the config structure. */
 	object_destroy(config);
-
 #ifdef SERIALIZATION
 	pthread_key_delete(engine_errorkey);
 #else
 	Free(engine_errorkey);
 #endif
-
 	SDL_Quit();
 	exit(0);
 }

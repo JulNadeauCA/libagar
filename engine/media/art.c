@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.8 2002/12/24 10:31:53 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.9 2002/12/24 14:21:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -29,6 +29,7 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
+#include <engine/config.h>
 
 #include "xcf.h"
 
@@ -52,8 +53,6 @@ enum {
 /* XXX use a hash table or a tree. */
 static TAILQ_HEAD(, art) artq = TAILQ_HEAD_INITIALIZER(artq);
 static pthread_mutex_t	 artq_lock = PTHREAD_MUTEX_INITIALIZER;
-
-extern int mapediting;
 
 #ifdef DEBUG
 #define DEBUG_GC	0x01
@@ -83,7 +82,7 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 	art->sprites[art->nsprites++] = sprite;
 
 	/* Insert into the tile map for level edition. */
-	if (mapediting && map) {
+	if (art->map != NULL && map) {
 		struct node *node;
 		struct noderef *nref;
 		int mw = TILEW, mh = TILEH;
@@ -155,7 +154,7 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 			 * Insert the fragment into the tile map for level
 			 * edition.
 			 */
-			if (mapediting) {
+			if (art->map != NULL) {
 				struct node *n;
 
 				if (art->mx > m->mapw) {	/* XXX pref */
@@ -238,7 +237,7 @@ art_fetch(char *media, struct object *ob)
 	pthread_mutex_init(&art->used_lock, NULL);
 
 	/* Create a tile map for level edition purposes. */
-	if (mapediting) {
+	if (prop_get_bool(config, "object.art.map-tiles")) {
 		char *mapname;
 
 		art->map = emalloc(sizeof(struct map));
@@ -344,7 +343,7 @@ art_insert_anim(struct art *art, int delay)
 	art->anims[art->nanims++] = anim;
 
 	/* Insert into the tile map for level edition. */
-	if (mapediting) {
+	if (art->map != NULL) {
 		struct node *n;
 		struct noderef *nref;
 
