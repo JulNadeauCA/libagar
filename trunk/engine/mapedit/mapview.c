@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.38 2002/12/17 06:48:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.39 2002/12/24 10:30:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -103,7 +103,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->prop_style = -1; 
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
-		fatal("NULL med\n");
+		fatal("no map editor\n");
 	}
 
 	widget_map_color(mv, BORDER_COLOR, "mapview-border",
@@ -278,20 +278,29 @@ mapview_draw(void *p)
 static void
 mapview_scroll(struct mapview *mv, int dir)
 {
+	if (mv->flags & MAPVIEW_TILEMAP) {
+		switch (dir) {
+		case DIR_LEFT:
+		case DIR_RIGHT:
+			if (!prop_get_bool(mv->med, "tilemap-scroll-x"))
+				return;
+			break;
+		case DIR_UP:
+		case DIR_DOWN:
+			if (!prop_get_bool(mv->med, "tilemap-scroll-y"))
+				return;
+			break;
+		}
+	}
+
 	/* XXX soft scroll */
 	switch (dir) {
 	case DIR_LEFT:
-		if (mv->flags & MAPVIEW_TILEMAP) {	/* XXX hack */
-			return;
-		}
 		if (--mv->mx <= 0) {
 			mv->mx = 0;
 		}
 		break;
 	case DIR_RIGHT:
-		if (mv->flags & MAPVIEW_TILEMAP) {	/* XXX hack */
-			return;
-		}
 		if (mv->mx + 1 < mv->map->mapw - 1) {
 			mv->mx++;
 		}
@@ -330,6 +339,11 @@ mapview_caption(struct mapview *mv)
 void
 mapview_zoom(struct mapview *mv, int zoom)
 {
+	if (zoom < prop_get_int(mv->med, "zoom-minimum") ||
+	    zoom > prop_get_int(mv->med, "zoom-maximum")) {
+		return;
+	}
+
 	map_set_zoom(mv->map, zoom);
 
 	mv->mw = WIDGET(mv)->w/mv->map->tilew + 1;
@@ -343,8 +357,8 @@ mapview_zoomin(Uint32 ival, void *p)
 {
 	struct mapview *mv = p;
 	
-	/* XXX pref */
-	mapview_zoom(mv, mv->map->zoom + 2);
+	mapview_zoom(mv, mv->map->zoom +
+	    prop_get_int(mv->med, "zoom-increment"));
 	return (ival);
 }
 
@@ -353,8 +367,8 @@ mapview_zoomout(Uint32 ival, void *p)
 {
 	struct mapview *mv = p;
 
-	/* XXX pref */
-	mapview_zoom(mv, mv->map->zoom - 2);
+	mapview_zoom(mv, mv->map->zoom -
+	    prop_get_int(mv->med, "zoom-increment"));
 	return (ival);
 }
 
@@ -366,18 +380,8 @@ mapview_mousemotion(int argc, union evarg *argv)
 	int x = argv[1].i;
 	int y = argv[2].i;
 
-	if (!WIDGET_INSIDE_RELATIVE(mv, x, y)) {
-		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
-			SDL_ShowCursor(SDL_ENABLE);
-		}
-	}
-
 	x /= mv->map->tilew;
 	y /= mv->map->tileh;
-
-	if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
-		SDL_ShowCursor(SDL_DISABLE);
-	}
 
 	/* Scroll */
 	if (mv->mouse.move) {
@@ -531,8 +535,9 @@ mapview_keydown(int argc, union evarg *argv)
 	if (mv->flags & MAPVIEW_ZOOM) {
 		switch (keysym) {
 		case SDLK_EQUALS:
-			/* XXX logarithmic curve */
-			zoomin_timer = SDL_AddTimer(60, mapview_zoomin, mv);
+			zoomin_timer = SDL_AddTimer(
+			    prop_get_int(mv->med, "zoom-speed"),
+			    mapview_zoomin, mv);
 			if (zoomin_timer == NULL) {
 				warning("SDL_AddTimer: %s\n", SDL_GetError());
 			}

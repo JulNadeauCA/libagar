@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.32 2002/12/17 06:48:40 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.33 2002/12/31 00:56:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,13 +88,6 @@ tilemap_option(int argc, union evarg *argv)
 			mv->flags |= MAPVIEW_PROPS;
 		}
 		break;
-	case MAPEDIT_TOOL_SHOW_CURSOR:
-		if (mv->flags & MAPVIEW_SHOW_CURSOR) {
-			mv->flags &= ~(MAPVIEW_SHOW_CURSOR);
-		} else {
-			mv->flags |= MAPVIEW_SHOW_CURSOR;
-		}
-		break;
 	case MAPEDIT_TOOL_EDIT:
 		if (mv->flags & MAPVIEW_EDIT) {
 			mv->flags &= ~(MAPVIEW_EDIT);
@@ -135,7 +128,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, ob->art->tiles.map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
-	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
+	    MAPVIEW_PROPS,
 	    100, 100);
 
 	/* Tools */
