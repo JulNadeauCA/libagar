@@ -31,7 +31,7 @@ else
  false
 fi
 
-if [ "$SDL_FOUND" == "yes" ]; then
+if [ "$SDL_FOUND" = "yes" ]; then
  echo "ok";
 else
  echo "missing";
