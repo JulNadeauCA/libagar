@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.13 2002/02/21 02:20:14 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.14 2002/02/25 11:12:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -83,12 +83,16 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "agar");
 	}
-	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
+	v->v = SDL_SetVideoMode(v->width + 64, v->height + 64, v->depth, v->flags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->width, v->height, v->depth,
 		    SDL_GetError());
 		return (-1);
 	}
+	dprintf("fps %d flags %x geo %dx%dx%d on %s at %dx%d\n",
+	    v->fps, v->flags, v->width, v->height, v->depth,
+	    v->map->obj.name, v->mapx, v->mapy);
+	dprintf("mapoffs %dx%d\n", v->mapxoffs, v->mapyoffs);
 
 	if (curmapedit != NULL) {
 		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
@@ -97,7 +101,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 }
 
 struct viewport *
-view_create(int w, int h, int depth, int flags)
+view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 {
 	struct viewport *v;
 
