@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.20 2004/08/21 10:54:41 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.21 2004/08/22 11:33:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ unit_best(const struct unit ugroup[], double n)
 	}
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		quotient = n/unit->divider;
-		if (quotient >= 1.0 && quotient < 1e6) {
+		if (quotient >= 1.0 && quotient <= 1e3) {
 			nearest = quotient;
 			bestunit = unit;
 		}
