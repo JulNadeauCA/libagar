@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.3 2004/05/06 08:47:55 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.4 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -59,10 +59,18 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	return (vgb);
 }
 
+void
+vg_select_block(struct vg *vg, struct vg_block *vgb)
+{
+	dprintf("block = %s\n", vgb != NULL ? vgb->name : "null");
+	vg->cur_block = vgb;
+}
+
 /* Finish the current block. */
 void
 vg_end_block(struct vg *vg)
 {
+	dprintf("block -> null\n");
 	vg->cur_block = NULL;
 }
 
@@ -92,12 +100,70 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 			vge->vtx[i].x -= vgb->pos.x - x;
 			vge->vtx[i].y -= vgb->pos.y - y;
 		}
-		if (layer != -1)
+		if (layer != -1) {
 			vge->layer = layer;
+		}
+		vge->redraw++;
 	}
 	
 	vgb->pos.x = x;
 	vgb->pos.y = y;
+	vg->redraw++;
+}
+
+/* Rotate a block around its vertex. */
+void
+vg_rotate_block(struct vg *vg, struct vg_block *vgb, double delta)
+{
+	struct vg_block *block_save;
+	struct vg_element *vge;
+	Uint32 i;
+
+	block_save = vg->cur_block;
+	vg_select_block(vg, vgb);
+
+	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+		for (i = 0; i < vge->nvtx; i++) {
+			double r, theta;
+			double x, y;
+
+			vg_abs2rel(vg, &vge->vtx[i], &x, &y);
+			vg_car2pol(vg, x, y, &r, &theta);
+			theta += delta;
+			vg_pol2car(vg, r, theta, &x, &y);
+			vg_rel2abs(vg, x, y, &vge->vtx[i]);
+		}
+		vge->redraw++;
+	}
+
+	vg_select_block(vg, block_save);
+	vg->redraw++;
+}
+
+/* Convert absolute coordinates to block relative coordinates. */
+void
+vg_abs2rel(struct vg *vg, const struct vg_vertex *vtx, double *x, double *y)
+{
+	*x = vtx->x;
+	*y = vtx->y;
+
+	if (vg->cur_block != NULL) {
+		*x -= vg->cur_block->pos.x;
+		*y -= vg->cur_block->pos.y;
+	}
+}
+
+/* Convert block relative coordinates to absolute coordinates. */
+void
+vg_rel2abs(struct vg *vg, double x, double y, struct vg_vertex *vtx)
+{
+	vtx->x = x;
+	vtx->y = y;
+
+	if (vg->cur_block != NULL) {
+		vtx->x += vg->cur_block->pos.x;
+		vtx->y += vg->cur_block->pos.y;
+	}
 }
 
 /* Destroy a block as well as the elements associated with it. */
@@ -160,8 +226,11 @@ poll_blocks(int argc, union evarg *argv)
 	pthread_mutex_lock(&vg->lock);
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON),
-		    _(vgb->name), vgb);
+		char name[VG_BLOCK_NAME_MAX];
+
+		snprintf(name, sizeof(name), "%s (%.2f,%.2f)", vgb->name,
+		    vgb->pos.x, vgb->pos.y);
+		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
 			it = tlist_insert_item(tl, ICON(VGOBJ_ICON),

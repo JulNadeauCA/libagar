@@ -1,4 +1,4 @@
-/*	$Csoft: vg_math.h,v 1.2 2004/04/19 02:14:24 vedge Exp $	*/
+/*	$Csoft: vg_math.h,v 1.3 2004/04/30 05:21:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_MATH_H_
@@ -10,8 +10,8 @@
 __BEGIN_DECLS
 __inline__ double vg_rad2deg(double);
 __inline__ double vg_deg2rad(double);
-__inline__ void vg_car2pol(double, double, double *, double *);
-__inline__ void vg_pol2car(double, double, double *, double *);
+__inline__ void vg_car2pol(struct vg *, double, double, double *, double *);
+__inline__ void vg_pol2car(struct vg *, double, double, double *, double *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.16 2004/05/13 02:50:17 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.17 2004/05/18 02:47:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -10,6 +10,11 @@
 
 #define VG_NAME_MAX		128
 #define VG_LAYER_NAME_MAX	128
+#define VG_STYLE_NAME_MAX	16
+#define VG_FONT_FACE_MAX	32
+#define VG_FONT_STYLE_MAX	16
+#define VG_FONT_SIZE_MIN	4
+#define VG_FONT_SIZE_MAX	48
 
 /*
  * T = top	L = left
@@ -51,6 +56,7 @@ struct vg_element;
 #include <engine/vg/vg_ellipse.h>
 #include <engine/vg/vg_text.h>
 #include <engine/vg/vg_mask.h>
+#include <engine/vg/vg_math.h>
 
 #include "begin_code.h"
 
@@ -83,10 +89,17 @@ struct vg_element_ops {
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
 };
 
+struct vg_layer {
+	char name[VG_LAYER_NAME_MAX];	/* Layer name */
+	int visible;			/* Flag of visibility */
+	Uint32 color;			/* Per-layer default color */
+	Uint8 alpha;			/* Per-layer alpha value */
+};
+
 struct vg_line_style {
 	enum {
 		VG_CONTINUOUS,
-		VG_STIPPLED
+		VG_STIPPLE,
 	} style;
 	enum {
 		VG_SQUARE,		/* Square endpoint */
@@ -105,34 +118,56 @@ struct vg_fill_style {
 		VG_SOLID,		/* Solid filling */
 		VG_TEXTURED		/* Textured */
 	} style;
-	struct {
-		struct object *gfx_obj;	/* Pixmap object */
-		Uint32 gfx_index;	/* Pixmap index */
-	} tex;
-	Uint32 color;			/* Color for VG_SOLID */
 };
 
-struct vg_layer {
-	char name[VG_LAYER_NAME_MAX];	/* Layer name */
-	int visible;			/* Flag of visibility */
-	Uint32 color;			/* Per-layer default color */
-	Uint8 alpha;			/* Per-layer alpha value */
+struct vg_text_style {
+	char face[VG_FONT_FACE_MAX];
+	int size;
+	int flags;
+#define VG_FONT_BOLD		0x01		/* Bold style */
+#define VG_FONT_ITALIC		0x02		/* Italic style */
+#define VG_FONT_UNDERLINE	0x04		/* Underlined */
+#define VG_FONT_SCALED		0x08		/* Try to scale the text */
+};
+
+enum vg_style_type {
+	VG_LINE_STYLE,
+	VG_FILL_STYLE,
+	VG_TEXT_STYLE
+};
+
+struct vg_style {
+	char name[VG_STYLE_NAME_MAX];
+	enum vg_style_type type;
+	Uint32 color;
+	union {
+		struct vg_line_style vg_line_style;
+		struct vg_text_style vg_text_style;
+		struct vg_fill_style vg_fill_style;
+	} vg_style_args;
+#define vg_line_st	vg_style_args.vg_line_style
+#define vg_text_st	vg_style_args.vg_text_style
+#define vg_fill_st	vg_style_args.vg_fill_style
+	TAILQ_ENTRY(vg_style) styles;
 };
 
 struct vg_element {
-	enum vg_element_type type;		/* Class of element */
-	const struct vg_element_ops *ops;	/* Generic element operations */
-	struct vg_block *block;			/* Back pointer to block */
+	enum vg_element_type type;
+	const struct vg_element_ops *ops;
 	int flags;
 #define VG_ELEMENT_NOSAVE 0x01		/* Don't save with drawing */
+
+	struct vg_block *block;		/* Back pointer to block */
+	struct vg_style *style;		/* Default element style */
+	struct vg_line_style line_st;	/* Effective line style */
+	struct vg_fill_style fill_st;	/* Effective filling style */
+	struct vg_text_style text_st;	/* Effective text style */
+	Uint32 color;			/* Effective foreground color */
 	int layer;			/* Associated layer */
-	int redraw;			/* Element redraw */
-	int drawn;			/* Avoid overdraw */
-	Uint32 color;			/* Element specific color */
-	struct vg_line_style line;	/* Line style */
-	struct vg_fill_style fill;	/* Polygon filling style */
+	int redraw, drawn;		/* Element needs to be redrawn */
 	struct vg_vertex *vtx;		/* Vertices */
 	Uint32		 nvtx;
+
 	union {
 		struct vg_circle_args vg_circle;
 		struct vg_ellipse_args vg_arc;
@@ -143,6 +178,7 @@ struct vg_element {
 #define vg_arc	    vg_args.vg_arc
 #define vg_text	    vg_args.vg_text
 #define vg_mask	    vg_args.vg_mask
+
 	TAILQ_ENTRY(vg_element) vgbmbs;	/* Entry in block element list */
 	TAILQ_ENTRY(vg_element) vges;	/* Entry in global element list */
 };
@@ -157,39 +193,34 @@ struct vg {
 #define VG_VISBBOXES	0x10		/* Display bounding boxes (debug) */
 
 	pthread_mutex_t lock;
-	int redraw;			/* Global redraw */
-	int **mask;			/* Fragment mask */
-	double w, h;			/* Bounding box */
-	double scale;			/* Scaling factor */
-	Uint32 fill_color;		/* Background color */
-	Uint32 grid_color;		/* Grid color */
-	double grid_gap;		/* Grid interval */
+	int redraw;				/* Global redraw */
+	int **mask;				/* Fragment mask */
+	double w, h;				/* Calculated bounding box */
+	double scale;				/* Scaling factor */
+	Uint32 fill_color, grid_color;
+	double grid_gap;
 
 	struct vg_vertex *origin;		/* Origin point vertices */
 	float		 *origin_radius;	/* Origin point radii */
 	Uint32		 *origin_color;		/* Origin point colors */
 	Uint32		 norigin;
-	
-	struct vg_layer *layers;		/* Layers */
+	struct vg_layer *layers;
 	Uint32		nlayers;
+	int		 cur_layer;	/* Layer selected for edition */
+	struct vg_block	*cur_block;	/* Block selected for edition */
 
-	int		 cur_layer;		/* Layer selected for edition */
-	struct vg_block	*cur_block;		/* Block being edited */
-	enum vg_snap_mode snap_mode;		/* Positional restriction */
+	enum vg_snap_mode  snap_mode;		/* Positional restriction */
 	enum vg_ortho_mode ortho_mode;		/* Orthogonal restriction */
 
-	struct object *pobj;
+	struct object *pobj;		/* Object managing the vg */
 	SDL_Surface *su;		/* Raster surface */
 	struct map *submap;		/* Fragment map */
 	struct map *map;		/* Raster map */
 
 	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;		/* Blocks in drawing */
-	TAILQ_HEAD(,vg_text_style) txtstyles;	/* Text styles */
+	TAILQ_HEAD(,vg_style) styles;		/* Global default styles */
 };
-
-extern int vg_cos_tbl[];
-extern int vg_sin_tbl[];
 
 __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
@@ -220,9 +251,13 @@ struct vg_layer *vg_push_layer(struct vg *, const char *);
 __inline__ void	 vg_pop_layer(struct vg *);
 
 struct vg_element *vg_begin_element(struct vg *, enum vg_element_type);
+__inline__ void	   vg_select_element(struct vg *, struct vg_element *);
 void		   vg_destroy_element(struct vg *, struct vg_element *);
-__inline__ int	   vg_rcollision(struct vg *, struct vg_rect *,
+int	   	   vg_rcollision(struct vg *, struct vg_rect *,
 		                 struct vg_rect *, struct vg_rect *);
+
+struct vg_style	*vg_create_style(struct vg *, enum vg_style_type, const char *);
+int		 vg_style(struct vg *, const char *);
  
 __inline__ void	   vg_layer(struct vg *, int);
 __inline__ void	   vg_color(struct vg *, Uint32);

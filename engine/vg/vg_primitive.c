@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.3 2004/04/19 02:09:44 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.4 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -110,6 +110,8 @@ void
 vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
     Uint32 color)
 {
+	extern int vg_cos_tbl[];
+	extern int vg_sin_tbl[];
 	SDL_Surface *su = vg->su;
 	int px = 0, py = 0;
 	int w2 = w/2, h2 = h/2;
