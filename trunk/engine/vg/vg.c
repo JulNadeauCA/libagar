@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.13 2004/04/30 05:24:02 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.14 2004/04/30 06:27:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -39,6 +39,13 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
+#include <engine/loader/vertex.h>
+
+const struct version vg_ver = {
+	"agar vg",
+	0, 0
+};
+
 static const struct vg_element_ops vge_types[] = {
 	{
 		VG_LINES,
@@ -64,7 +71,7 @@ static const struct vg_element_ops vge_types[] = {
 	{
 		VG_POINTS,
 		N_("Points"),
-		vg_point_init,
+		NULL,
 		vg_draw_points,
 		vg_points_bbox
 	},
@@ -106,6 +113,7 @@ vg_init(struct vg *vg, int flags)
 {
 	int i, x, y;
 
+	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
 	vg->redraw = 1;
 	vg->w = 0;
@@ -156,11 +164,37 @@ vg_free_element(struct vg_element *vge)
 	Free(vge, M_VG);
 }
 
+static void
+vg_destroy_elements(struct vg *vg)
+{
+	struct vg_element *vge, *nvge;
+	
+	for (vge = TAILQ_FIRST(&vg->vges);
+	     vge != TAILQ_END(&vg->vges);
+	     vge = nvge) {
+		nvge = TAILQ_NEXT(vge, vges);
+		vg_free_element(vge);
+	}
+	TAILQ_INIT(&vg->vges);
+}
+
+static void
+vg_destroy_blocks(struct vg *vg)
+{
+	struct vg_block *vgb, *nvgb;
+
+	for (vgb = TAILQ_FIRST(&vg->blocks);
+	     vgb != TAILQ_END(&vg->blocks);
+	     vgb = nvgb) {
+		nvgb = TAILQ_NEXT(vgb, vgbs);
+		Free(vgb, M_VG);
+	}
+	TAILQ_INIT(&vg->blocks);
+}
+
 void
 vg_destroy(struct vg *vg)
 {
-	struct vg_element *vge, *nvge;
-	struct vg_block *vgb, *nvgb;
 	struct object *ob = vg->pobj;
 	int y;
 
@@ -182,18 +216,8 @@ vg_destroy(struct vg *vg)
 		Free(vg->mask, M_VG);
 	}
 #endif
-	for (vge = TAILQ_FIRST(&vg->vges);
-	     vge != TAILQ_END(&vg->vges);
-	     vge = nvge) {
-		nvge = TAILQ_NEXT(vge, vges);
-		vg_free_element(vge);
-	}
-	for (vgb = TAILQ_FIRST(&vg->blocks);
-	     vgb != TAILQ_END(&vg->blocks);
-	     vgb = nvgb) {
-		nvgb = TAILQ_NEXT(vgb, vgbs);
-		Free(vgb, M_VG);
-	}
+	vg_destroy_elements(vg);
+	vg_destroy_blocks(vg);
 	pthread_mutex_destroy(&vg->lock);
 }
 
@@ -709,7 +733,228 @@ vg_pop_layer(struct vg *vg)
 		vg->nlayers = 1;
 }
 
+void
+vg_save(struct vg *vg, struct netbuf *buf)
+{
+	off_t nblocks_offs, nvges_offs;
+	Uint32 nblocks = 0, nvges = 0;
+	struct vg_block *vgb;
+	struct vg_element *vge;
+	int i;
+
+	version_write(buf, &vg_ver);
+
+	pthread_mutex_lock(&vg->lock);
+
+	write_string(buf, vg->name);
+	write_uint32(buf, (Uint32)vg->flags);
+	write_double(buf, vg->w);
+	write_double(buf, vg->h);
+	write_double(buf, vg->scale);
+	write_color(buf, vfmt, vg->fill_color);
+	write_color(buf, vfmt, vg->grid_color);
+	write_double(buf, vg->grid_gap);
+	write_uint32(buf, (Uint32)vg->cur_layer);
+
+	/* Save the origin points. */
+	write_uint32(buf, vg->norigin);
+	for (i = 0; i < vg->norigin; i++) {
+		write_vertex(buf, &vg->origin[i]);
+		write_float(buf, vg->origin_radius[i]);
+		write_color(buf, vfmt, vg->origin_color[i]);
+	}
+
+	/* Save the layer information. */
+	write_uint32(buf, vg->nlayers);
+	for (i = 0; i < vg->nlayers; i++) {
+		struct vg_layer *layer = &vg->layers[i];
+
+		write_string(buf, layer->name);
+		write_uint8(buf, (Uint8)layer->visible);
+		write_color(buf, vfmt, layer->color);
+		write_uint8(buf, layer->alpha);
+	}
+
+	/* Save the block information. */
+	nblocks_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+		write_string(buf, vgb->name);
+		write_vertex(buf, &vgb->pos);
+		write_vertex(buf, &vgb->origin);
+		nblocks++;
+	}
+	pwrite_uint32(buf, nblocks, nblocks_offs);
+
+	/* Save the vg elements. */
+	nvges_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		int i;
+
+		write_uint32(buf, (Uint32)vge->type);
+		write_string(buf, vge->block != NULL ? vge->block->name : NULL);
+		write_uint32(buf, (Uint32)vge->layer);
+		write_color(buf, vfmt, vge->color);
+
+		write_uint32(buf, vge->nvtx);
+		for (i = 0; i < vge->nvtx; i++) {
+			write_vertex(buf, &vge->vtx[i]);
+		}
+		switch (vge->type) {
+		case VG_CIRCLE:
+			write_double(buf, vge->vg_circle.radius);
+			break;
+		case VG_ARC:
+			write_double(buf, vge->vg_arc.w);
+			write_double(buf, vge->vg_arc.h);
+			write_double(buf, vge->vg_arc.s);
+			write_double(buf, vge->vg_arc.e);
+			break;
+		case VG_TEXT:
+			write_string(buf, vge->vg_text.text);
+			write_double(buf, vge->vg_text.angle);
+			write_uint32(buf, (Uint32)vge->vg_text.align);
+			break;
+		default:
+			break;
+		}
+		nvges++;
+	}
+	pwrite_uint32(buf, nvges, nvges_offs);
+
+	pthread_mutex_unlock(&vg->lock);
+}
+
+int
+vg_load(struct vg *vg, struct netbuf *buf)
+{
+	Uint32 norigin, nlayers, nelements, nblocks;
+	Uint32 i;
+
+	if (version_read(buf, &vg_ver, NULL) != 0)
+		return (-1);
+
+	pthread_mutex_lock(&vg->lock);
+	copy_string(vg->name, buf, sizeof(vg->name));
+	vg->flags = read_uint32(buf);
+	vg->w = read_double(buf);
+	vg->h = read_double(buf);
+	vg->scale = read_double(buf);
+	vg->fill_color = read_color(buf, vfmt);
+	vg->grid_color = read_color(buf, vfmt);
+	vg->grid_gap = read_double(buf);
+	vg->cur_layer = (int)read_uint32(buf);
+	vg->cur_block = NULL;
+	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
+	    vg->scale);
+
+	/* Read the origin points. */
+	if ((norigin = read_uint32(buf)) < 1) {
+		error_set("norigin < 1");
+		goto fail;
+	}
+	vg->origin = Realloc(vg->origin, norigin*sizeof(struct vg_vertex),
+	    M_VG);
+	vg->origin_radius = Realloc(vg->origin_radius, norigin*sizeof(float),
+	    M_VG);
+	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32),
+	    M_VG);
+	vg->norigin = norigin;
+	for (i = 0; i < vg->norigin; i++) {
+		read_vertex(buf, &vg->origin[i]);
+		vg->origin_radius[i] = read_float(buf);
+		vg->origin_color[i] = read_color(buf, vfmt);
+	}
+	dprintf("%d origin vertices\n", vg->norigin);
+
+	/* Read the layer information. */
+	if ((nlayers = read_uint32(buf)) < 1) {
+		error_set("nlayers < 1");
+		goto fail;
+	}
+	vg->layers = Realloc(vg->layers, nlayers*sizeof(struct vg_layer),
+	    M_VG);
+	for (i = 0; i < nlayers; i++) {
+		struct vg_layer *layer = &vg->layers[i];
+
+		dprintf("layer %d: name `%s' vis %d\n", i, layer->name,
+		    layer->visible);
+		copy_string(layer->name, buf, sizeof(layer->name));
+		layer->visible = (int)read_uint8(buf);
+		layer->color = read_color(buf, vfmt);
+		layer->alpha = read_uint8(buf);
+	}
+	vg->nlayers = nlayers;
+
+	/* Read the block information. */
+	vg_destroy_blocks(vg);
+	nblocks = read_uint32(buf);
+	dprintf("%u blocks\n", nblocks);
+	for (i = 0; i < nblocks; i++) {
+		struct vg_block *vgb;
+
+		vgb = Malloc(sizeof(struct vg_block), M_VG);
+		copy_string(vgb->name, buf, sizeof(vgb->name));
+		read_vertex(buf, &vgb->pos);
+		read_vertex(buf, &vgb->origin);
+		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
+	}
+
+	/* Read the vg elements */
+	vg_destroy_elements(vg);
+	nelements = read_uint32(buf);
+	dprintf("%u elements\n", nelements);
+	for (i = 0; i < nelements; i++) {
+		char block[VG_BLOCK_NAME_MAX];
+		enum vg_element_type type;
+		struct vg_element *vge;
+		Uint32 nlayer, color;
+		int j;
+		
+		type = (enum vg_element_type)read_uint32(buf);
+		copy_string(block, buf, sizeof(block));
+		nlayer = (int)read_uint32(buf);
+		color = read_color(buf, vfmt);
+
+		vge = vg_begin_element(vg, type);
+		vge->nvtx = read_uint32(buf);
+		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
+		for (j = 0; j < vge->nvtx; j++)
+			read_vertex(buf, &vge->vtx[j]);
+
+		switch (vge->type) {
+		case VG_CIRCLE:
+			vge->vg_circle.radius = read_double(buf);
+			break;
+		case VG_ARC:
+			vge->vg_arc.w = read_double(buf);
+			vge->vg_arc.h = read_double(buf);
+			vge->vg_arc.s = read_double(buf);
+			vge->vg_arc.e = read_double(buf);
+			break;
+		case VG_TEXT:
+			copy_string(vge->vg_text.text, buf,
+			    sizeof(vge->vg_text.text));
+			vge->vg_text.angle = read_double(buf);
+			vge->vg_text.align = (enum vg_alignment)
+			    read_uint32(buf);
+			break;
+		default:
+			break;
+		}
+	}
+
+	vg->redraw++;
+	pthread_mutex_unlock(&vg->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&vg->lock);
+	return (-1);
+}
+
 #ifdef EDITION
+
 void
 vg_geo_changed(int argc, union evarg *argv)
 {

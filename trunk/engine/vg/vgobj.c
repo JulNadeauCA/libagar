@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.6 2004/04/23 03:38:40 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.7 2004/04/26 07:03:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ vgobj_load(void *p, struct netbuf *buf)
 	if (version_read(buf, &vgobj_ver, NULL) != 0)
 		return (-1);
 
-	return (0);
+	return (vg_load(vgo->vg, buf));
 }
 
 int
@@ -98,6 +98,7 @@ vgobj_save(void *p, struct netbuf *buf)
 	struct vgobj *vgo = p;
 
 	version_write(buf, &vgobj_ver);
+	vg_save(vgo->vg, buf);
 	return (0);
 }
 

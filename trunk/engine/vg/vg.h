@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.11 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.12 2004/04/30 05:24:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -8,7 +8,8 @@
 
 #include "begin_code.h"
 
-#define VG_LAYER_NAME_MAX 128
+#define VG_NAME_MAX		128
+#define VG_LAYER_NAME_MAX	128
 
 enum vg_alignment {
 	VG_ALIGN_TL,
@@ -107,8 +108,8 @@ struct vg_fill_style {
 struct vg_layer {
 	char name[VG_LAYER_NAME_MAX];	/* Layer name */
 	int visible;			/* Flag of visibility */
-	int alpha;			/* Per-layer alpha value */
 	Uint32 color;			/* Per-layer default color */
+	Uint8 alpha;			/* Per-layer alpha value */
 };
 
 struct vg_element {
@@ -120,17 +121,13 @@ struct vg_element {
 	int redraw;			/* Element redraw */
 	int drawn;			/* Avoid overdraw */
 	Uint32 color;			/* Element specific color */
-
-	struct vg_vertex *vtx;		/* Vertices */
-	unsigned int     nvtx;
-
 	struct vg_line_style line;	/* Line style */
 	struct vg_fill_style fill;	/* Polygon filling style */
 
+	struct vg_vertex *vtx;		/* Vertices */
+	Uint32		 nvtx;
+
 	union {
-		struct {
-			double radius;		/* Display radius */
-		} vg_point;
 		struct {
 			double radius;		/* Circle radius */
 		} vg_circle;
@@ -144,7 +141,6 @@ struct vg_element {
 			enum vg_alignment align;	/* Alignment of text */
 		} vg_text;
 	} vg_args;
-#define vg_point   vg_args.vg_point
 #define vg_circle  vg_args.vg_circle
 #define vg_arc	   vg_args.vg_arc
 #define vg_text	   vg_args.vg_text
@@ -153,6 +149,7 @@ struct vg_element {
 };
 
 struct vg {
+	char name[VG_NAME_MAX];		/* Name of drawing */
 	int flags;
 #define VG_ANTIALIAS	0x01		/* Anti-alias where possible */
 #define VG_HWSURFACE	0x02		/* Prefer video memory for fragments */
@@ -175,16 +172,17 @@ struct vg {
 	Uint32		 norigin;
 	
 	struct vg_layer *layers;		/* Layers */
-	unsigned int	nlayers;
+	Uint32		nlayers;
+
 	int		 cur_layer;		/* Layer selected for edition */
 	struct vg_block	*cur_block;		/* Block being edited */
+	enum vg_snap_mode snap_mode;		/* Positional restriction */
+	enum vg_ortho_mode ortho_mode;		/* Orthogonal restriction */
 
 	struct object *pobj;
 	SDL_Surface *su;		/* Raster surface */
 	struct map *submap;		/* Fragment map */
 	struct map *map;		/* Raster map */
-	enum vg_snap_mode snap_mode;	/* Positional restriction */
-	enum vg_ortho_mode ortho_mode;	/* Orthogonal restriction */
 
 	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;		/* Blocks in drawing */
@@ -197,6 +195,9 @@ __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
 void		 vg_init(struct vg *, int);
 void		 vg_destroy(struct vg *);
+void		 vg_save(struct vg *, struct netbuf *);
+int		 vg_load(struct vg *, struct netbuf *);
+
 void		 vg_scale(struct vg *, double, double, double);
 void		 vg_clear(struct vg *);
 void		 vg_rasterize(struct vg *);
