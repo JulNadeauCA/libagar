@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.68 2002/08/28 04:42:37 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.69 2002/08/28 04:50:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -701,15 +701,14 @@ window_focus(struct window *win)
 	}
 
 	if (lastwin != NULL) {
+		if (lastwin->focus != NULL) {
+			/* Take the focus off the widget. */
+			event_post(lastwin->focus, "widget-lostfocus", NULL);
+			lastwin->focus = NULL;
+		}
+		
 		/* Notify the previous window of the focus change. */
 		event_post(lastwin, "window-lostfocus", NULL);
-
-		/* Notify the previous window's widgets of the focus change. */
-		TAILQ_FOREACH(reg, &lastwin->regionsh, regions) {
-			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-				event_post(wid, "widget-lostfocus", NULL);
-			}
-		}
 	}
 
 	if (win != NULL) {
