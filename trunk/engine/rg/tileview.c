@@ -295,9 +295,9 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	event_new(tv, "window-mousemotion", tileview_mousemotion, NULL);
 }
 
-#define INSERT_VALUE(type,memb,arg) do {			\
-	ctrl->valtypes[ctrl->nvals] = (type);			\
-	ctrl->vals[ctrl->nvals].memb = va_arg(ap, arg);		\
+#define INSERT_VALUE(vt,memb, type,arg) do {			\
+	ctrl->valtypes[ctrl->nvals] = (vt);			\
+	ctrl->vals[ctrl->nvals].memb = (type)va_arg(ap, arg);	\
 	ctrl->nvals++;						\
 } while (/*CONSTCOND*/0)
 
@@ -331,16 +331,20 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 		case '*':
 			switch (fmt[1]) {
 			case 'i':
-				INSERT_VALUE(TILEVIEW_INT_PTR, p, void *);
+				INSERT_VALUE(TILEVIEW_INT_PTR, p, int *,
+				    void *);
 				break;
 			case 'u':
-				INSERT_VALUE(TILEVIEW_UINT_PTR, p, void *);
+				INSERT_VALUE(TILEVIEW_UINT_PTR, p, u_int *,
+				    void *);
 				break;
 			case 'f':
-				INSERT_VALUE(TILEVIEW_FLOAT_PTR, p, void *);
+				INSERT_VALUE(TILEVIEW_FLOAT_PTR, p, float *,
+				    void *);
 				break;
 			case 'd':
-				INSERT_VALUE(TILEVIEW_DOUBLE_PTR, p, void *);
+				INSERT_VALUE(TILEVIEW_DOUBLE_PTR, p, double *,
+				    void *);
 				break;
 			default:
 				fatal("bad format");
@@ -348,16 +352,16 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 			fmt++;
 			break;
 		case 'i':
-			INSERT_VALUE(TILEVIEW_INT_VAL, i, int);
+			INSERT_VALUE(TILEVIEW_INT_VAL, i, int, int);
 			break;
 		case 'u':
-			INSERT_VALUE(TILEVIEW_UINT_VAL, ui, u_int);
+			INSERT_VALUE(TILEVIEW_UINT_VAL, ui, u_int, int);
 			break;
 		case 'f':
-			INSERT_VALUE(TILEVIEW_FLOAT_VAL, f, float);
+			INSERT_VALUE(TILEVIEW_FLOAT_VAL, f, float, double);
 			break;
 		case 'd':
-			INSERT_VALUE(TILEVIEW_DOUBLE_VAL, d, double);
+			INSERT_VALUE(TILEVIEW_DOUBLE_VAL, d, double, double);
 			break;
 		default:
 			break;
@@ -723,7 +727,7 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 			u_int w = tileview_uint(ctrl, 2);
 			u_int h = tileview_uint(ctrl, 3);
 
-			tileview_rect2o(tv, x-1, y-1, w+2, h+2);
+			tileview_rect2o(tv, x-1, y-1, w+1, h+1);
 			tileview_handle(tv, x-1, y-1, 0, 0);
 		}
 		break;
