@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.79 2002/09/05 12:16:04 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.80 2002/09/06 01:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -79,6 +79,8 @@ void
 object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
+	pthread_mutexattr_t attr;
+
 	ob->type = strdup(type);
 	ob->name = strdup(name);
 	ob->desc = NULL;
@@ -89,8 +91,12 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->pos_lock, NULL);
-	pthread_mutex_init(&ob->events_lock, NULL);
 	pthread_mutex_init(&ob->props_lock, NULL);
+
+	pthread_mutexattr_init(&ob->events_lockattr);
+	pthread_mutexattr_settype(&ob->events_lockattr,
+	    PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&ob->events_lock, &ob->events_lockattr);
 
 	ob->art = (ob->flags & OBJECT_ART) ?
 	    media_get_art(media, ob) : NULL;
@@ -135,6 +141,7 @@ object_destroy(void *p)
 	pthread_mutex_destroy(&ob->pos_lock);
 	pthread_mutex_destroy(&ob->events_lock);
 	pthread_mutex_destroy(&ob->props_lock);
+	pthread_mutexattr_destroy(&ob->events_lockattr);
 
 	if (ob->name != NULL)
 		free(ob->name);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.77 2002/09/11 23:53:44 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.78 2002/09/12 09:15:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -71,10 +71,9 @@ static void	window_clamp(struct window *);
 static void	window_round(struct window *, int, int, int, int);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
-/* View must not be locked. */
 struct window *
-window_new(char *name, char *caption, int flags, int x, int y, int w, int h, int minw,
-    int minh)
+window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
+    int minw, int minh)
 {
 	struct window *win;
 
@@ -89,7 +88,10 @@ window_new(char *name, char *caption, int flags, int x, int y, int w, int h, int
 	return (win);
 }
 
-/* Adjust window to tile granularity. */
+/*
+ * Adjust window to tile granularity.
+ * Window must be locked.
+ */
 static void
 window_round(struct window *win, int x, int y, int w, int h)
 {
@@ -212,12 +214,14 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
 
 	TAILQ_INIT(&win->regionsh);
-	pthread_mutex_init(&win->lock, NULL);
+	pthread_mutexattr_init(&win->lockattr);
+	pthread_mutexattr_settype(&win->lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&win->lock, &win->lockattr);
 }
 
 /*
  * Render a window.
- * Window must be locked, config must not be locked by the caller thread.
+ * Window must be locked.
  */
 void
 window_draw(struct window *win)
@@ -381,22 +385,24 @@ window_destroy(void *p)
 
 	free(win->caption);
 	free(win->border);
+
 	pthread_mutex_destroy(&win->lock);
+	pthread_mutexattr_destroy(&win->lockattr);
 }
 
 int
-window_show(struct window *win, int lock_view, int lock_win)
+window_show(struct window *win)
 {
 	struct region *reg;
 	struct widget *wid;
 
-	if (lock_view)	pthread_mutex_lock(&view->lock);
-	if (lock_win)	pthread_mutex_lock(&win->lock);
+	pthread_mutex_lock(&view->lock);
+	pthread_mutex_lock(&win->lock);
 
 	/* See if it's already visible. */
 	if (win->flags & WINDOW_SHOWN) {
-		if (lock_view)	pthread_mutex_unlock(&view->lock);
-		if (lock_win)	pthread_mutex_unlock(&win->lock);
+		pthread_mutex_unlock(&win->lock);
+		pthread_mutex_unlock(&view->lock);
 		return (1);
 	}
 	win->flags |= WINDOW_SHOWN;
@@ -422,24 +428,24 @@ window_show(struct window *win, int lock_view, int lock_win)
 	/* Size the window, in case it's new. */
 	window_resize(win);
 
-	if (lock_win)	pthread_mutex_unlock(&win->lock);
-	if (lock_view)	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_unlock(&win->lock);
+	pthread_mutex_unlock(&view->lock);
 	return (0);
 }
 
 int
-window_hide(struct window *win, int lock_view, int lock_win)
+window_hide(struct window *win)
 {
 	struct region *reg;
 	struct widget *wid;
 
-	if (lock_view)	pthread_mutex_lock(&view->lock);
-	if (lock_win)	pthread_mutex_lock(&win->lock);
+	pthread_mutex_lock(&view->lock);
+	pthread_mutex_lock(&win->lock);
 
 	/* See if it's already hidden. */
 	if ((win->flags & WINDOW_SHOWN) == 0) {
-		if (lock_view)	pthread_mutex_unlock(&view->lock);
-		if (lock_win)	pthread_mutex_unlock(&win->lock);
+		pthread_mutex_unlock(&win->lock);
+		pthread_mutex_unlock(&view->lock);
 		return (0);
 	}
 
@@ -478,9 +484,8 @@ window_hide(struct window *win, int lock_view, int lock_win)
 		object_save(win);
 	}
 
-	if (lock_win)	pthread_mutex_unlock(&win->lock);
-	if (lock_view)	pthread_mutex_unlock(&view->lock);
-
+	pthread_mutex_unlock(&win->lock);
+	pthread_mutex_unlock(&view->lock);
 	return (1);
 }
 
@@ -563,7 +568,10 @@ cycle_widgets(struct window *win, int reverse)
 	}
 }
 
-/* Update the map view mask in tile-based mode. */
+/*
+ * Update the map view mask in tile-based mode.
+ * Window must be locked.
+ */
 static void
 window_update_mask(struct window *win)
 {
@@ -803,7 +811,7 @@ window_event_all(SDL_Event *ev)
 			if (ev->type == SDL_MOUSEBUTTONDOWN) {
 				if (ev->button.y - win->y <= win->titleh) {
 				    	if (ev->button.x - win->x < 20) {
-						window_hide(win, 0, 0);
+						window_hide(win);
 					}
 					view->winop = VIEW_WINOP_MOVE;
 					view->wop_win = win;
@@ -910,6 +918,7 @@ posted:
 	return (1);
 }
 
+/* Window must be locked. */
 static void
 window_clamp(struct window *win)
 {

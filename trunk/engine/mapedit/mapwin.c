@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.15 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.16 2002/09/12 09:35:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -73,7 +73,7 @@ mapwin_new_view(int argc, union evarg *argv)
 	win->focus = WIDGET(mv);
 
 	view_attach(win);
-	window_show(win, 0, 0);
+	window_show(win);
 }
 
 static void

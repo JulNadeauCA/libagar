@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.6 2002/09/07 04:30:24 vedge Exp $
+.\"	$Csoft: window.3,v 1.7 2002/09/12 09:32:26 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -149,10 +149,10 @@ is called.
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
-.Fn window_show "struct window *win" "int lock_view" "int lock_win"
+.Fn window_show "struct window *win"
 .Pp
 .Ft int
-.Fn window_hide "struct window *win" "int lock_view" "int lock_win"
+.Fn window_hide "struct window *win"
 .Pp
 .Ft void
 .Fn window_resize "struct window *win"
@@ -162,21 +162,8 @@ The
 .Fn window_show
 and
 .Fn window_hide
-functions control the visibility of a window, trying to lock the view if
-.Fa lock_view
-is non-zero and the window if
-.Fa lock_win
-is non-zero.
-In widget event context,
-.Fa lock_view
-and
-.Fa lock_win
-must be zero, since the event loop acquires a lock on the view and window
-before invoking the event handler.
-.Fn window_show
-and
-.Fn window_hide
-return 1 if the window was previously visible, otherwise 0.
+functions control the visibility of a window, returning 1 if the window was
+previously visible, otherwise 0.
 .Pp
 The
 .Fn window_resize
