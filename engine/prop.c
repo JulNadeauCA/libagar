@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.21 2003/02/25 01:20:57 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.22 2003/02/25 03:58:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <config/have_ieee754.h>
-#include <config/have_long_double.h>
 
 #include "compat/vasprintf.h"
 #include "engine.h"

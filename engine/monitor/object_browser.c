@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.22 2003/02/13 11:22:07 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.23 2003/02/26 02:04:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <string.h>
 
 #include <config/have_ieee754.h>
-#include <config/have_long_double.h>
 
 #include <engine/engine.h>
 
@@ -226,12 +225,6 @@ tl_props_selected(int argc, union evarg *argv)
 		case PROP_DOUBLE:
 			textbox_printf(tb_set, "%f", prop->data.d);
 			break;
-#ifdef USE_LONG_DOUBLE
-		case PROP_LONG_DOUBLE:
-			textbox_printf(tb_set, "%Lf", prop->data.ld);
-			tb_set->flags |= TEXTBOX_READONLY;	/* XXX */
-			break;
-#endif
 		case PROP_STRING:
 			textbox_printf(tb_set, "%s", prop->data.s);
 			break;
