@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.154 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.155 2004/01/22 09:58:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1210,6 +1210,10 @@ object_project_submap(struct object_position *pos)
 
 	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z, sm->mapw,
 	    sm->maph);
+	
+	object_add_dep(dm, sm);
+	object_page_in(sm, OBJECT_DATA);
+	object_page_in(dm, OBJECT_DATA);
 
 	for (sy = 0, dy = pos->y;
 	     sy < sm->maph && dy < pos->y+dm->maph;
@@ -1220,6 +1224,10 @@ object_project_submap(struct object_position *pos)
 			node_copy(sm, &sm->map[sy][sx], -1, dm,
 			    &dm->map[dy][dx], pos->z);
 	}
+	
+	object_del_dep(dm, sm);
+	object_page_out(sm, OBJECT_DATA);
+	object_page_out(dm, OBJECT_DATA);
 }
 
 /* Disappear from the level map. */
@@ -1230,11 +1238,13 @@ object_unproject_submap(struct object_position *pos)
 	
 	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z,
 	    pos->submap->mapw, pos->submap->maph);
-
+	
+	object_page_in(pos->map, OBJECT_DATA);
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++)
 			node_clear(pos->map, &pos->map->map[y][x], pos->z);
 	}
+	object_page_out(pos->map, OBJECT_DATA);
 }
 
 /* Set the submap of an object and update its on-map copy. */
@@ -1299,7 +1309,9 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int z,
 	if (ob->pos != NULL) {
 		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
 		object_unproject_submap(ob->pos);
+#if 0
 		object_detach(ob->pos->map, ob);
+#endif
 	} else {
 		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
 		ob->pos = Malloc(sizeof(struct object_position));
@@ -1320,8 +1332,14 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int z,
 		ob->pos->x = x;
 		ob->pos->y = y;
 		ob->pos->z = z;
+#if 0
+		object_attach(ob->pos->map, ob);
+#endif
 		object_project_submap(ob->pos);
 	} else {
+#if 0
+		object_attach(world, ob);
+#endif
 		error_set(_("Illegal coordinates: %s[%d,%d,%d]"),
 		    OBJECT(dstmap)->name, x, y, z);
 		goto fail;
@@ -1346,7 +1364,9 @@ object_unset_position(void *p)
 	pthread_mutex_lock(&ob->lock);
 	debug(DEBUG_POSITION, "%s: unset %p\n", ob->name, ob->pos);
 	if (ob->pos != NULL) {
+#if 0
 		object_detach(ob->pos->map, ob);
+#endif
 		object_unproject_submap(ob->pos);
 		free(ob->pos);
 		ob->pos = NULL;
