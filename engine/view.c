@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.50 2002/06/13 09:07:28 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.51 2002/06/27 00:17:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -263,17 +263,12 @@ view_center(struct map *m, int mapx, int mapy)
 	struct viewmap *rm = v->rootmap;
 	int nx, ny;
 
-	if (v->gfx_engine != GFX_ENGINE_TILEBASED) {
-		dprintf("only relevant to tile mode\n");
-		return;
-	}
-
 	nx = mapx - (rm->w / 2);
 	ny = mapy - (rm->h / 2);
 
-	if (nx <= 0)
+	if (nx < 0)
 		nx = 0;
-	if (ny <= 0)
+	if (ny < 0)
 		ny = 0;
 	if (nx >= (m->mapw - rm->w))
 		nx = (m->mapw - rm->w);
