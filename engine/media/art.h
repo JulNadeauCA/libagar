@@ -1,4 +1,4 @@
-/*	$Csoft: art.h,v 1.6 2003/03/17 04:29:05 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.7 2003/03/17 23:43:23 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -50,7 +50,7 @@ Uint32		 art_insert_sprite(struct art *, SDL_Surface *, int);
 struct map	*art_insert_fragments(struct art *, SDL_Surface *);
 Uint32		 art_insert_submap(struct art *, struct map *);
 
-struct art_anim	*art_insert_anim(struct art *, Uint32);
+struct art_anim	*art_insert_anim(struct art *, int);
 Uint32		 art_insert_anim_frame(struct art_anim *, SDL_Surface *);
 void		 art_anim_tick(struct art_anim *, struct noderef *);
 
