@@ -136,7 +136,7 @@ echo "    --with-smpeg                   MPEG playback using smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
-echo "    --enable-threads               Thread safety [default: yes]"
+echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
 echo "    --enable-static                Produce a static binary [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
@@ -1080,7 +1080,7 @@ else
 echo "#undef DEBUG" > config/debug.h
 echo "#undef LOCKDEBUG" > config/lockdebug.h
 fi
-if [ "${enable_threads}" != "no" ]
+if [ "${enable_threads}" = "yes" ]
  then
 THREADS=1
 echo "#ifndef THREADS" > config/threads.h
