@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.168 2003/03/30 03:37:09 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.170 2003/04/18 04:02:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -111,6 +111,44 @@ noderef_init(struct noderef *nref)
 	nref->ymotion = 0;
 	nref->layer = 0;
 	SLIST_INIT(&nref->transforms);
+}
+
+/*
+ * Adjust noderef centering offsets.
+ * The parent map, if any, must be locked.
+ */
+int
+noderef_set_center(struct noderef *nref, int xcenter, int ycenter)
+{
+	if (xcenter > -NODEREF_MAX_CENTER &&
+	    xcenter < NODEREF_MAX_CENTER &&
+	    ycenter > -NODEREF_MAX_CENTER &&
+	    ycenter < NODEREF_MAX_CENTER) {
+		nref->xcenter = (Sint16)xcenter;
+		nref->ycenter = (Sint16)ycenter;
+		return (0);
+	} else {
+		return (-1);
+	}
+}
+
+/*
+ * Adjust noderef motion offsets.
+ * The parent map, if any, must be locked.
+ */
+int
+noderef_set_motion(struct noderef *nref, int xmotion, int ymotion)
+{
+	if (xmotion > -NODEREF_MAX_CENTER &&
+	    xmotion < NODEREF_MAX_CENTER &&
+	    ymotion > -NODEREF_MAX_CENTER &&
+	    ymotion < NODEREF_MAX_CENTER) {
+		nref->xmotion = (Sint16)xmotion;
+		nref->ymotion = (Sint16)ymotion;
+		return (0);
+	} else {
+		return (-1);
+	}
 }
 
 void

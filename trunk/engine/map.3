@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.31 2003/03/18 04:20:46 vedge Exp $
+.\"	$Csoft: map.3,v 1.33 2003/04/18 04:02:49 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -182,6 +182,12 @@ saves a node to
 .Ft void
 .Fn noderef_init "struct noderef *nref"
 .Pp
+.Ft int
+.Fn noderef_set_center "struct noderef *nref" "int xcenter" "int ycenter"
+.Pp
+.Ft int
+.Fn noderef_set_motion "struct noderef *nref" "int xmotion" "int ymotion"
+.Pp
 .Ft void
 .Fn noderef_destroy "struct noderef *nref"
 .Pp
@@ -197,8 +203,30 @@ saves a node to
 The
 .Fn noderef_init
 function initializes a node reference structure.
+.Pp
+The
+.Fn noderef_set_center
+function sets the centering offsets of
+.Fa nref
+to
+.Fa xcenter
+and
+.Fa ycenter ,
+returning 0 on success or -1 if the offsets exceed
+.Dv NODEREF_MAX_CENTER .
+.Fn noderef_set_motion
+function sets the motion offsets of
+.Fa nref
+to
+.Fa xmotion
+and
+.Fa ymotion
+returning 0 on success or -1 if the offsets exceed
+.Dv NODEREF_MAX_MOTION .
+.Pp
+The
 .Fn noderef_destroy
-frees the resources reserved by a noderef (such as the transforms).
+function frees the resources reserved by a noderef (such as the transforms).
 .Pp
 The
 .Fn noderef_load
