@@ -8,7 +8,7 @@ SUBDIR=	compat mapedit widget
 SHARE=	README.engine \
 	README.xcf
 
-CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
+CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${FREETYPE_CFLAGS} ${X11_CFLAGS}
 
 MAN3=	char.3 agar.3 map.3 physics.3 object.3
 CATMAN3=char.cat3 agar.cat3 map.cat3 physics.cat3 object.cat3
