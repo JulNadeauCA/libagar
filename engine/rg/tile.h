@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -11,6 +11,7 @@ struct tile_feature {
 	struct feature *ft;
 	int x, y;
 	int visible;
+	TAILQ_ENTRY(tile_feature) features;
 };
 
 struct tile {
@@ -20,8 +21,7 @@ struct tile {
 #define TILE_SRCCOLORKEY 0x01
 #define TILE_SRCALPHA	 0x02
 	Uint8 used;
-	struct tile_feature *features;
-	u_int		    nfeatures;
+	TAILQ_HEAD(,tile_feature) features;
 	TAILQ_ENTRY(tile) tiles;
 };
 
