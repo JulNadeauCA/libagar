@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.3 2005/02/05 02:55:29 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.4 2005/02/05 03:23:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -20,7 +20,8 @@ struct tileview {
 	int zoom;			/* Display zoom (%) */
 	int pxsz;			/* Scaled pixel size (pixels) */
 	int xoffs, yoffs;		/* Display offset */
-	int xms, yms;			/* Cursor position */
+	int xms, yms;			/* Cursor coords in surface (pixels) */
+	int xsub, ysub;			/* Cursor subpixel coords (v.pixels) */
 	SDL_Surface *scaled;		/* Scaled surface */
 	int scrolling;
 	int flags;
