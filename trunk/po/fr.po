@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.4 2003/08/01 04:06:00 vedge Exp $
+# $Csoft: fr.po,v 1.5 2003/08/01 04:07:55 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-07-28 12:05-0300\n"
+"POT-Creation-Date: 2003-08-01 01:29-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
@@ -35,13 +35,9 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cave/di/di.c:42
-msgid "Mental raide!\n"
-msgstr "Mental raide!\n"
-
 #: cave/main.c:56 cave/main.c:97
 msgid "Trek to the Cave"
-msgstr ""
+msgstr "Trek to the Cave"
 
 #: cave/main.c:57
 msgid "Copyright (c) 2002, 2003 CubeSoft Communications, Inc.\n"
@@ -59,12 +55,12 @@ msgstr "Continuer une partie"
 msgid "Quit Game"
 msgstr "Quitter le jeu"
 
-#: cave/main.c:128
+#: cave/main.c:128 sumo/sumo.c:321
 #, c-format
 msgid "%s %s\n"
 msgstr ""
 
-#: cave/main.c:129
+#: cave/main.c:129 sumo/sumo.c:322
 #, c-format
 msgid ""
 "%s\n"
@@ -111,1036 +107,9 @@ msgstr "chemin-sauvegarde"
 msgid "font-path"
 msgstr "chemin-polices"
 
-#: sumo/session.c:74
-#, c-format
-msgid "%lu MB"
-msgstr "%lu MO"
-
-#: sumo/session.c:77
-#, c-format
-msgid "%lu KB"
-msgstr "%lu KO"
-
-#: sumo/session.c:80
-#, c-format
-msgid "%lu B"
-msgstr "%lu O"
-
-#: sumo/session.c:235
-msgid "No directory is selected"
-msgstr "Aucun répertoire n'est sélectionné"
-
-#: sumo/session.c:435
-msgid "new"
-msgstr "nouveau"
-
-#: sumo/session.c:467
-msgid "Queue"
-msgstr "Attente"
-
-#: sumo/session.c:471
-msgid "Start download"
-msgstr "Télécharger"
-
-#: sumo/session.c:520 sumo/session.c:550
-#, c-format
-msgid "I/O error: %s"
-msgstr "Erreur entrée/sortie: %s"
-
-#: sumo/session.c:523 sumo/session.c:553
-msgid "EOF from server"
-msgstr "EOF en provenance du serveur"
-
-#: sumo/session.c:645
-msgid "idle"
-msgstr "inactif"
-
-#: sumo/session.c:655
-msgid "busy"
-msgstr "occupé"
-
-#: sumo/session.c:684
-msgid "exiting"
-msgstr "fermeture"
-
-#: sumo/sumo.c:60
-msgid "SUMO Client"
-msgstr "Client SUMO"
-
-#: screenshotd/screenshotd.c:56 sumo/sumo.c:61
-msgid "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
-msgstr "Copyright (c) 2003 Communications CubeSoft, Inc.\n"
-
-#: sumo/sumo.c:129
-#, c-format
-msgid "%2d. (locked session)"
-msgstr "%2d. (session verouillée)"
-
-#: sumo/sumo.c:157
-msgid "Missing SUMO host/port."
-msgstr "Nom d'hôte ou port du serveur SUMO non spécifiés"
-
-#: sumo/sumo.c:161
-msgid "Missing FTP host/port."
-msgstr "Nom d'hôte ou port du serveur FTP non spécifiés"
-
-#: sumo/sumo.c:165
-msgid "Missing FTP user/pass."
-msgstr "Nom d'utilisateur ou mot de passe FTP manquant"
-
-#: sumo/sumo.c:213
-#, c-format
-msgid "%s failed"
-msgstr "%s a échoué"
-
-#: sumo/sumo.c:261
-msgid "SUMO sessions"
-msgstr "Sessions SUMO"
-
-#: sumo/sumo.c:265
-msgid "SUMO host: "
-msgstr "Hôte SUMO: "
-
-#: sumo/sumo.c:266
-msgid "SUMO port: "
-msgstr "Port SUMO: "
-
-#: sumo/sumo.c:280
-msgid "FTP host: "
-msgstr "Hôte FTP: "
-
-#: sumo/sumo.c:281
-msgid "FTP port: "
-msgstr "Port FTP: "
-
-#: sumo/sumo.c:282
-msgid "FTP user: "
-msgstr "Compte FTP: "
-
-#: sumo/sumo.c:283
-msgid "FTP pass: "
-msgstr "Mot de passe FTP: "
-
-#: sumo/sumo.c:284
-msgid "Passive mode"
-msgstr "Mode passif"
-
-#: engine/monitor/screenshot.c:273 sumo/sumo.c:294
-msgid "Connect"
-msgstr "Connexion"
-
-#: sumo/sumo.c:380
-#, c-format
-msgid "Usage: %s [-vfFe] [-w width] [-h height]"
-msgstr "Usage: %s [-vfFe] [-w largeur] [-h hauteur]"
-
-#: screenshotd/screenshotd.c:157 sumo/sumo.c:382
-msgid " [-r fps] [-t font,size,style]"
-msgstr " [-r fps] [-t police,taille,style]"
-
-#: screenshotd/screenshotd.c:55
-msgid "Agar screenshot daemon"
-msgstr "Démon de capture d'écran Agar"
-
-#: screenshotd/screenshotd.c:154
-#, c-format
-msgid " %s [-vfF] [-w width] [-h height]"
-msgstr " %s [-vfF] [-w largeur] [-h hauteur]"
-
-#: screenshotd/screenshotd.c:156
-msgid " [-H host] [-P port]"
-msgstr " [-H hôte] [-P port]"
-
-#: screenshotd/screenshotd.c:159
-msgid " [-d level] [-T]"
-msgstr " [-d niveau] [-T]"
-
-#: screenshotd/session.c:106
-msgid "Bad JPEG magic."
-msgstr "Mauvaise signature JPEG."
-
-#: screenshotd/server.c:99
-msgid "Too many clients."
-msgstr "Trop de clients."
-
-#: screenshotd/server.c:167
-#, c-format
-msgid "%s: %s failed"
-msgstr "%s: %s a échoué"
-
-#: engine/loader/ttf.c:108
-msgid "Font engine initialization failed."
-msgstr "L'initialisation du moteur de polices à échoué."
-
-#: engine/loader/ttf.c:135
-#, c-format
-msgid "Cannot font face: `%s'."
-msgstr "Mauvaise face de police: `%s'."
-
-#: engine/loader/ttf.c:143
-msgid "Error getting TTF font face."
-msgstr "Impossible d'obtenir la face de police TTF."
-
-#: engine/loader/ttf.c:147
-msgid "Bad TTF font face."
-msgstr "Face de police TTF invalide."
-
-#: engine/loader/ttf.c:157
-msgid "Failed to set font size."
-msgstr "Impossible de setter la taille de la police."
-
-#: engine/loader/ttf.c:284
-msgid "Failed to load the TTF glyph."
-msgstr "Impossible de charger le glyphe TTF."
-
-#: engine/loader/ttf.c:352
-msgid "Cannot render mono glyph."
-msgstr "Impossible d'effectuer le rendu du glyph mono."
-
-#: engine/loader/ttf.c:358
-msgid "Cannot render normal glyph."
-msgstr "Impossible d'effectuer le rendu du glyph normal."
-
-#: engine/loader/ttf.c:740
-msgid "The text has zero width."
-msgstr "Le texte a une longueur nulle."
-
-#: engine/loader/xcf.c:268
-#, c-format
-msgid "Unknown XCF compression: %d."
-msgstr "Mode de compression XCF inconnu: %d"
-
-#: engine/loader/xcf.c:549
-msgid "Cannot read XCF magic."
-msgstr "Impossible de lire la signature XCF."
-
-#: engine/loader/xcf.c:553
-msgid "Bad XCF magic."
-msgstr "Mauvaise signature XCF."
-
-#: engine/loader/xcf.c:562
-#, c-format
-msgid "Nonsense XCF geometry: %ux%u."
-msgstr "Mauvaise géométrie XCF: %ux%u."
-
-#: engine/loader/xcf.c:574
-#, c-format
-msgid "Unknown base image type: %u."
-msgstr "Mauvais type d'image de base: %u."
-
-#: engine/mapedit/tool/eraser.c:70
-msgid "Eraser"
-msgstr "Gomme a effacer"
-
-#: engine/mapedit/tool/eraser.c:75 engine/mapedit/tool/flip.c:71
-#: engine/mapedit/tool/shift.c:78
-msgid "All"
-msgstr "Tout"
-
-#: engine/mapedit/tool/eraser.c:76 engine/mapedit/tool/flip.c:72
-#: engine/mapedit/tool/shift.c:77
-msgid "Highest"
-msgstr "Plus haut"
-
-#: engine/mapedit/tool/fill.c:66 engine/mapedit/tool/fill.c:76
-msgid "Fill"
-msgstr "Remplir"
-
-#: engine/mapedit/tool/fill.c:67
-msgid "Clear"
-msgstr "Vider"
-
-#: engine/mapedit/tool/fill.c:94
-msgid "No source node."
-msgstr "Aucun noeud source."
-
-#: engine/mapedit/tool/flip.c:66
-msgid "Horizontal"
-msgstr "Horizontal"
-
-#: engine/mapedit/tool/flip.c:67
-msgid "Vertical"
-msgstr "Vertical"
-
-#: engine/mapedit/tool/flip.c:81
-msgid "Flip"
-msgstr "Retourner"
-
-#: engine/mapedit/tool/magnifier.c:61
-msgid "No map is visible."
-msgstr "Aucune carte n'est visible."
-
-#: engine/mapedit/tool/magnifier.c:99
-msgid "Magnifier"
-msgstr "Loupe"
-
-#: engine/mapedit/tool/magnifier.c:106
-msgid "1:1 zoom"
-msgstr "Zoom 1:1"
-
-#: engine/mapedit/tool/magnifier.c:115
-msgid "Zoom %: "
-msgstr "Zoom %: "
-
-#: engine/mapedit/tool/merge.c:135
-msgid "No brush name was given."
-msgstr "Aucun nom de pinceau n'a été donné."
-
-#: engine/mapedit/tool/merge.c:141
-#, c-format
-msgid "A `%s' brush exists."
-msgstr "Un pinceau nommé `%s' existe."
-
-#: engine/mapedit/tool/merge.c:245
-msgid "Merge tool"
-msgstr "Fusion"
-
-#: engine/map.c:1503 engine/mapedit/tool/merge.c:251
-#: engine/mapedit/tool/stamp.c:66
-msgid "Replace"
-msgstr "Remplacer"
-
-#: engine/mapedit/tool/merge.c:259
-msgid "Random shift"
-msgstr "Déplacement au hazard"
-
-#: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:267
-#: engine/perso.c:176
-msgid "Name: "
-msgstr "Nom: "
-
-#: engine/mapedit/objedit.c:230 engine/mapedit/tool/merge.c:271
-msgid "Create"
-msgstr "Créer"
-
-#: engine/mapedit/tool/merge.c:282
-msgid "Load set"
-msgstr "Charger"
-
-#: engine/mapedit/tool/merge.c:284
-msgid "Save set"
-msgstr "Sauvegarder"
-
-#: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:231
-#: engine/mapedit/tool/merge.c:286
-msgid "Edit"
-msgstr "Éditer"
-
-#: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:288
-msgid "Remove"
-msgstr "Enlever"
-
-#: engine/mapedit/tool/propedit.c:244
-msgid "Node props"
-msgstr "Propriétés de noeud"
-
-#: engine/mapedit/tool/propedit.c:250
-msgid "Block"
-msgstr "Bloquer"
-
-#: engine/mapedit/tool/propedit.c:251
-msgid "Walk"
-msgstr "Marcher"
-
-#: engine/mapedit/tool/propedit.c:252
-msgid "Climb"
-msgstr "Grimper"
-
-#: engine/mapedit/tool/propedit.c:259
-msgid "Bio"
-msgstr "Bio"
-
-#: engine/mapedit/tool/propedit.c:260
-msgid "Regen"
-msgstr "Régénérer"
-
-#: engine/mapedit/tool/propedit.c:261
-msgid "Slow"
-msgstr "Lent"
-
-#: engine/mapedit/tool/propedit.c:262
-msgid "Haste"
-msgstr "Rapide"
-
-#: engine/mapedit/tool/propedit.c:271
-msgid "Origin"
-msgstr "Origine"
-
-#: engine/mapedit/tool/select.c:57
-msgid "There is no selection to copy."
-msgstr "Il n'y a aucune sélection a copier."
-
-#: engine/mapedit/tool/select.c:91
-msgid "The copy buffer is empty!"
-msgstr "Le tampon de copie est vide!"
-
-#: engine/mapedit/tool/select.c:129
-msgid "There is no selection to kill."
-msgstr "Il n'y a aucune sélection a tuer."
-
-#: engine/mapedit/tool/select.c:147
-msgid "There is no selection to cut."
-msgstr "Il n'y a aucune sélection a couper."
-
-#: engine/mapedit/tool/shift.c:71
-msgid "Shift"
-msgstr "Déplacement"
-
-#: engine/mapedit/tool/shift.c:87
-msgid "Multi"
-msgstr "Multiple"
-
-#: engine/mapedit/tool/stamp.c:67
-msgid "Insert"
-msgstr "Insérer"
-
-#: engine/mapedit/tool/stamp.c:75
-msgid "Stamp"
-msgstr "Étampe"
-
-#: engine/mapedit/tool/stamp.c:91
-msgid "No source node is selected."
-msgstr "Aucun noeud source n'est sélectionné."
-
-#: engine/mapedit/mapedit.c:167
-msgid "Tools"
-msgstr "Outils"
-
-#: engine/mapedit/mapview.c:542
-msgid "The zoom is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
-
-#: engine/mapedit/nodeedit.c:121
-msgid "No node is selected."
-msgstr "Aucun noeud n'est sélectionné."
-
-#: engine/mapedit/nodeedit.c:179
-#, c-format
-msgid "%s node"
-msgstr "noeud %s"
-
-#: engine/mapedit/nodeedit.c:189
-msgid "Dup"
-msgstr "Reproduire"
-
-#: engine/mapedit/nodeedit.c:192
-msgid "Up"
-msgstr "Haut"
-
-#: engine/mapedit/nodeedit.c:195
-msgid "Down"
-msgstr "Bas"
-
-#: engine/mapedit/objedit.c:60
-msgid "No object type was specified."
-msgstr "Aucun type d'objet spécifié."
-
-#: engine/mapedit/objedit.c:68
-msgid "No such object type."
-msgstr "Type d'objet inconnu."
-
-#: engine/mapedit/objedit.c:74
-msgid "No object name was specified."
-msgstr "Aucun nom d'objet spécifié."
-
-#: engine/mapedit/objedit.c:141
-#, c-format
-msgid "The `%s' object is indestructible."
-msgstr "L'objet `%s' est indestructible."
-
-#: engine/mapedit/objedit.c:209
-msgid "Object editor"
-msgstr "Éditeur d'objet"
-
-#: engine/mapedit/objedit.c:219
-msgid "Type: "
-msgstr "Type: "
-
-#: engine/mapedit/objedit.c:232
-msgid "Edit obj"
-msgstr "Éditer obj"
-
-#: engine/mapedit/objedit.c:233
-msgid "Load"
-msgstr "Charger"
-
-#: engine/config.c:286 engine/mapedit/objedit.c:234
-msgid "Save"
-msgstr "Sauvegarder"
-
-#: engine/mapedit/objedit.c:235
-msgid "Destroy"
-msgstr "Détruire"
-
-#: engine/mapedit/layedit.c:70
-#, c-format
-msgid "%s (visible %s)\n"
-msgstr "%s (visible %s)\n"
-
-#: engine/mapedit/layedit.c:72 engine/mapedit/layedit.c:76
-msgid ", editing"
-msgstr ", édition"
-
-#: engine/mapedit/layedit.c:74
-#, c-format
-msgid "%s (invisible %s)\n"
-msgstr "%s (invisible %s)\n"
-
-#: engine/mapedit/layedit.c:173 engine/mapedit/layedit.c:194
-msgid "No layer is selected."
-msgstr "Aucune couche sélectionnée."
-
-#: engine/mapedit/layedit.c:207
-#, c-format
-msgid "%s layers"
-msgstr "Couches de %s"
-
-#: engine/mapedit/layedit.c:217
-msgid "New layer: "
-msgstr "Nouvelle couche: "
-
-#: engine/mapedit/layedit.c:220
-msgid "Push"
-msgstr "Pousser"
-
-#: engine/mapedit/layedit.c:234
-msgid "Rename"
-msgstr "Renommer"
-
-#: engine/mapedit/layedit.c:245
-msgid "Pop"
-msgstr "Popper"
-
-#: engine/mapedit/layedit.c:249
-msgid "Show/hide"
-msgstr "Montrer/cacher"
-
-#: engine/mapedit/layedit.c:254
-msgid "Layer NN (visible, editing)    "
-msgstr "Couche NN (visible, édition)    "
-
-#: engine/input.c:55
-#, c-format
-msgid "keyboard%d"
-msgstr "clavier%d"
-
-#: engine/input.c:58
-#, c-format
-msgid "joy%d"
-msgstr "joy%d"
-
-#: engine/input.c:61
-#, c-format
-msgid "mouse%d"
-msgstr "souris%d"
-
-#: engine/event.c:160 engine/monitor/monitor.c:65
-msgid "Refresh rate"
-msgstr "Fréquence de rafraîchissement"
-
-#: engine/monitor/monitor.c:68 engine/monitor/screenshot.c:257
-msgid "Screenshot"
-msgstr "Capture d'écran"
-
-#: engine/monitor/monitor.c:71
-msgid "Widgets"
-msgstr "Widgets"
-
-#: engine/monitor/monitor.c:73 engine/monitor/view_params.c:55
-msgid "Viewport"
-msgstr "Vue"
-
-#: engine/monitor/monitor.c:85
-msgid "Debug monitor"
-msgstr "Moniteur de déboguage"
-
-#: engine/monitor/screenshot.c:72
-msgid "A JPEG error has occured."
-msgstr "Une erreur JPEG s'est produite."
-
-#: engine/monitor/screenshot.c:114
-#, c-format
-msgid "Status: xmit frame %d."
-msgstr "État: transmission image %d."
-
-#: engine/monitor/screenshot.c:171
-msgid "Already connected to a server."
-msgstr "Déjà connecté au serveur."
-
-#: engine/monitor/screenshot.c:180
-msgid "Missing server hostname/port."
-msgstr "Nom d'hôte ou port du serveur non spécifiés."
-
-#: engine/monitor/screenshot.c:184
-#, c-format
-msgid "Status: connecting to %s:%s..."
-msgstr "État: connexion à %s:%s..."
-
-#: engine/monitor/screenshot.c:192
-#, c-format
-msgid "Status: %s."
-msgstr "État: %s."
-
-#: engine/monitor/screenshot.c:200
-msgid "failed to create socket"
-msgstr "impossible de créer le socket"
-
-#: engine/monitor/screenshot.c:204
-msgid "connection refused"
-msgstr "connexion refusée"
-
-#: engine/monitor/screenshot.c:213
-#, c-format
-msgid "Status: %s: %s."
-msgstr "État: %s: %s."
-
-#: engine/monitor/screenshot.c:217
-#, c-format
-msgid "Status: connected to %s."
-msgstr "État: connecté à %s."
-
-#: engine/monitor/screenshot.c:238
-msgid "Status: disconnected."
-msgstr "État: aucune connexion."
-
-#: engine/monitor/screenshot.c:240
-msgid "Not connected."
-msgstr "Pas connecté au serveur."
-
-#: engine/monitor/screenshot.c:263
-msgid "Status: Not connected."
-msgstr "État: aucune connexion."
-
-#: engine/monitor/screenshot.c:264
-msgid "Host: "
-msgstr "Hôte: "
-
-#: engine/monitor/screenshot.c:265
-msgid "Port: "
-msgstr "Port: "
-
-#: engine/monitor/screenshot.c:278
-msgid "Disconnect"
-msgstr "Déconnexion"
-
-#: engine/monitor/view_params.c:64
-msgid "GUI"
-msgstr "GUI"
-
-#: engine/monitor/view_params.c:67
-msgid "Tile-based"
-msgstr "Basé-tiles"
-
-#: engine/monitor/view_params.c:70
-#, c-format
-msgid "Graphic engine: %s %s"
-msgstr "Moteur graphique: %s %s"
-
-#: engine/monitor/view_params.c:76
-#, c-format
-msgid "Window op: %d (%p)"
-msgstr "Opération fenêtre: %d (%p)"
-
-#: engine/monitor/view_params.c:79
-msgid "Window op: 000 (0x00000000)"
-msgstr "Opération fenêtre: 000 (0x00000000)"
-
-#: engine/monitor/view_params.c:85
-msgid "Map: %[obj]"
-msgstr "Carte: %[obj]"
-
-#: engine/monitor/view_params.c:87
-#, c-format
-msgid "Map geometry: %dx%d"
-msgstr "Géométrie de carte: %dx%d"
-
-#: engine/monitor/view_params.c:89
-#, c-format
-msgid "Map offset: %d,%d (soft %d,%d)"
-msgstr "Position carte: %d,%d (soft %d,%d)"
-
-#: engine/monitor/widget_browser.c:76 engine/monitor/widget_browser.c:94
-#: engine/monitor/widget_browser.c:112 engine/monitor/widget_browser.c:249
-msgid "No window is selected."
-msgstr "Aucune fenêtre n'est sélectionnée."
-
-#: engine/monitor/widget_browser.c:159
-msgid "No widget is selected."
-msgstr "Aucun widget n'est sélectionné."
-
-#: engine/monitor/widget_browser.c:165
-#, c-format
-msgid "%s widget"
-msgstr "Widget %s"
-
-#: engine/monitor/widget_browser.c:171 engine/monitor/widget_browser.c:260
-#, c-format
-msgid "Name: \"%s\""
-msgstr "Nom: \"%s\""
-
-#: engine/monitor/widget_browser.c:172 engine/object.c:1585
-#, c-format
-msgid "Type: %s"
-msgstr "Type: %s"
-
-#: engine/monitor/widget_browser.c:173 engine/monitor/widget_browser.c:261
-#, c-format
-msgid "Flags: 0x%x"
-msgstr "Flags: 0x%x"
-
-#: engine/monitor/widget_browser.c:177
-#, c-format
-msgid "Geo: %dx%d at %d,%d (view %d,%d)"
-msgstr "Géo: %dx%d sur %d,%d (vue %d,%d)"
-
-#: engine/monitor/widget_browser.c:181
-msgid "Geo: 0000x0000 at 0000x0000 (view 0000,0000)"
-msgstr "Géo: 0000x0000 sur 0000x0000 (vue 0000,0000)"
-
-#: engine/monitor/widget_browser.c:257
-#, c-format
-msgid "%s window"
-msgstr "Fenêtre %s"
-
-#: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
-msgid "Examine"
-msgstr "Examiner"
-
-#: engine/monitor/widget_browser.c:288
-msgid "Window stack"
-msgstr "Pile de fenêtres"
-
-#: engine/monitor/widget_browser.c:300
-msgid "Show"
-msgstr "Montrer"
-
-#: engine/monitor/widget_browser.c:302
-msgid "Hide"
-msgstr "Cacher"
-
-#: engine/monitor/widget_browser.c:304
-msgid "Detach"
-msgstr "Détacher"
-
-#: engine/widget/text.c:46
-msgid "Error"
-msgstr "Erreur"
-
-#: engine/widget/text.c:47
-msgid "Warning"
-msgstr "Avertissement"
-
-#: engine/widget/text.c:48
-msgid "Information"
-msgstr "Information"
-
-#: engine/prop.c:66 engine/prop.c:74
-msgid "Out of memory for string."
-msgstr "Pas assez de mémoire pour la chaîne."
-
-#: engine/prop.c:347
-#, c-format
-msgid "Unsupported property type: %d."
-msgstr "Type de propriété non supporté: %d."
-
-#: engine/prop.c:356
-#, c-format
-msgid "%s has no `%s' property (type %d)."
-msgstr "%s n'a aucune propriété `%s' (type %d)."
-
-#: engine/prop.c:570
-msgid "The prop key too big."
-msgstr "Le chemin d'accès est trop grand."
-
-#: engine/prop.c:619
-msgid "String too big."
-msgstr "La chaîne de caractères est trop grande."
-
-#: engine/prop.c:633
-msgid "Unicode string too big."
-msgstr "La chaîne de caractères Unicode est trop grande."
-
-#: engine/prop.c:642
-#, c-format
-msgid "Cannot load prop of type 0x%x."
-msgstr "Impossible de charger une propriété du type 0x%x."
-
-#: engine/prop.c:722
-#, c-format
-msgid "Cannot save prop of type 0x%x."
-msgstr "Impossible de sauvegarder une propriété de type 0x%x."
-
-#: engine/map.c:153 engine/map.c:209
-#, c-format
-msgid "%ux%u nodes exceed %ux%u."
-msgstr "%ux%u noeuds dépassent la limite de %ux%u."
-
-#: engine/map.c:198 engine/map.c:325
-msgid "Layer 0"
-msgstr "Couche 0"
-
-#: engine/map.c:338
-#, c-format
-msgid "Layer %u"
-msgstr "Couche %u"
-
-#: engine/map.c:342
-msgid "Too many layers."
-msgstr "Trop de couches."
-
-#: engine/map.c:679
-#, c-format
-msgid "Cannot resolve sprite: %u."
-msgstr "Impossible de résoudre le sprite: %u."
-
-#: engine/map.c:702
-#, c-format
-msgid "Cannot resolve anim: %u."
-msgstr "Impossible de résoudre l'animation: %u."
-
-#: engine/map.c:720
-msgid "Warp map name is too big."
-msgstr "Le nom de carte de téléportation est trop grand."
-
-#: engine/map.c:727
-msgid "Invalid warp coordinates."
-msgstr "Coordonnées de téléportation invalides."
-
-#: engine/map.c:738
-msgid "Unknown type of noderef."
-msgstr "Type de référence de noeud inconnu."
-
-#: engine/map.c:744
-msgid "Too many transforms."
-msgstr "Trop de transformations."
-
-#: engine/map.c:775
-msgid "Too many noderefs."
-msgstr "Trop de références de noeud."
-
-#: engine/map.c:821
-msgid "Invalid map geometry."
-msgstr "Géométrie de carte invalide."
-
-#: engine/map.c:836
-msgid "Too many map layers."
-msgstr "Trop de couches de carte."
-
-#: engine/map.c:1197
-#, c-format
-msgid "%s map view"
-msgstr "Vue sur %s"
-
-#: engine/map.c:1284
-msgid "There is no active selection."
-msgstr "Il n'y a aucune sélection sur la carte."
-
-#: engine/map.c:1446
-#, c-format
-msgid ""
-"m%u\n"
-"%ux%u nodes\n"
-msgstr ""
-"m%u\n"
-"%ux%u noeuds\n"
-
-#: engine/map.c:1461
-#, c-format
-msgid ""
-"a%u\n"
-"%u frames\n"
-msgstr ""
-"a%u\n"
-"%u images\n"
-
-#: engine/map.c:1478
-#, c-format
-msgid "%s graphics"
-msgstr "Graphiques de %s"
-
-#: engine/map.c:1522
-#, c-format
-msgid "%s map edition"
-msgstr "Édition de %s"
-
-#: engine/map.c:1585
-#, c-format
-msgid "  Layer #%d"
-msgstr "  Couche #%d"
-
-#: engine/object.c:182
-#, c-format
-msgid "The path exceeds >= %lu bytes."
-msgstr "Le chemin d'accès dépasse >= %lu octets."
-
-#: engine/object.c:273
-#, c-format
-msgid "The `%s' object is in use."
-msgstr "L'objet `%s' est en cours d'utilisation."
-
-#: engine/object.c:374
-#, c-format
-msgid "The object `%s' does not exist."
-msgstr "L'objet `%s' n'existe pas."
-
-#: engine/object.c:514
-#, c-format
-msgid "The %s/%s.%s file is not in load-path."
-msgstr "Le fichier %s/%s.%s est introuvable dans le chemin de chargement."
-
-#: engine/object.c:533
-#, c-format
-msgid "The `%s' object contains no graphics."
-msgstr "L'objet `%s' ne contient aucun graphique."
-
-#: engine/object.c:549
-#, c-format
-msgid "The `%s' object contains no audio."
-msgstr "L'objet `%s' ne contient aucun son."
-
-#: engine/object.c:662 engine/object.c:912
-#, c-format
-msgid "The `%s' object is non-persistent."
-msgstr "L'objet `%s' n'est pas persistant."
-
-#: engine/object.c:687
-#, c-format
-msgid "The `%s' save has inconsistent flags."
-msgstr "La sauvegarde de `%s' a des flags inconsistents."
-
-#: engine/object.c:784
-#, c-format
-msgid "Unknown object type: `%s'"
-msgstr "Type d'objet inconnu: `%s'"
-
-#: engine/object.c:850
-#, c-format
-msgid "The data of `%s' is already resident."
-msgstr "Les données de `%s' sont déjà en mémoire."
-
-#: engine/object.c:1045
-#, c-format
-msgid "There is no input device named `%s'."
-msgstr "Il n'y a aucun pilote d'entrée nommé `%s'."
-
-#: engine/object.c:1051
-msgid "There is no position to control."
-msgstr "Il n'y a aucune position a controller."
-
-#: engine/object.c:1155
-#, c-format
-msgid "There is no submap named `%s'."
-msgstr "Il n'y a aucune sous-carte nommée `%s'."
-
-#: engine/object.c:1284
-#, c-format
-msgid "Bad coordinates: %d,%d,%d"
-msgstr "Mauvaises coordonnées: %d,%d,%d"
-
-#: engine/object.c:1578
-#, c-format
-msgid "%s object"
-msgstr "Objet %s"
-
-#: engine/object.c:1584
-#, c-format
-msgid "Name: %s (%s)"
-msgstr "Nom: %s (%s)"
-
-#: engine/object.c:1586
-#, c-format
-msgid "Flags : 0x%x"
-msgstr "Flags : 0x%x"
-
-#: engine/object.c:1588
-msgid "Parent: %[obj]"
-msgstr "Parent: %[obj]"
-
-#: engine/object.c:1600
-msgid "Graphics: "
-msgstr "Graphiques: "
-
-#: engine/object.c:1601
-msgid "Audio: "
-msgstr "Son: "
-
-#: engine/object.c:1644
-msgid "Dependencies:"
-msgstr "Dépendances:"
-
-#: engine/perso.c:167
-#, c-format
-msgid "%s character"
-msgstr "Caractère %s"
-
-#: engine/perso.c:180
-msgid "Level: "
-msgstr "Niveau: "
-
-#: engine/perso.c:184
-msgid "Experience: "
-msgstr "Expérience: "
-
-#: engine/perso.c:188
-msgid "Age: "
-msgstr "Age: "
-
-#: engine/perso.c:191
-msgid "Zuars: "
-msgstr "Zuars: "
-
-#: engine/perso.c:197
-msgid "HP: "
-msgstr "HP: "
-
-#: engine/perso.c:208
-msgid "MP: "
-msgstr "MP: "
-
-#: engine/transform.c:72 engine/transform.c:127
-msgid "Too many transform args."
-msgstr "Trop d'arguments de transformation."
-
-#: engine/transform.c:97 engine/transform.c:144
-msgid "Unknown transform algorithm."
-msgstr "Algorithme de transformation inconnu."
-
-#: engine/typesw.c:42
-msgid "Object"
-msgstr "Objet"
-
-#: engine/typesw.c:43
-msgid "Map"
-msgstr "Carte"
-
-#: engine/typesw.c:44
-msgid "Character"
-msgstr "Caractère"
-
-#: engine/view.c:74
-msgid "The viewport is already initialized."
-msgstr "La vue est déjà initialisée."
-
-#: engine/view.c:122
-msgid "Unsupported graphic mode."
-msgstr "Mode graphique non supporté."
-
-#: engine/view.c:141
-msgid "The resolution is too small."
-msgstr "La résolution est trop petite."
-
-#: engine/view.c:148
-#, c-format
-msgid "Setting %dx%dx%d mode: %s"
-msgstr "Sélection du mode %dx%dx%d: %s"
-
-#: engine/view.c:465
-msgid "The refresh rate is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
-
-#: engine/view.c:700
-msgid "Screenshot feature requires libjpeg"
-msgstr "La capture d'écran requiert libjpeg"
+#: cave/di/di.c:42
+msgid "Mental raide!\n"
+msgstr "Mental raide!\n"
 
 #: engine/config.c:121
 #, c-format
@@ -1212,6 +181,10 @@ msgstr "Hauteur: "
 #: engine/config.c:281
 msgid "Close"
 msgstr "Fermer"
+
+#: engine/config.c:286 engine/mapedit/objedit.c:234
+msgid "Save"
+msgstr "Sauvegarder"
 
 #: engine/config.c:317
 msgid "The search path is too big."
@@ -1299,3 +272,1025 @@ msgstr ""
 "Opérations non-accélérées:\n"
 "%s"
 
+#: engine/object.c:182
+#, c-format
+msgid "The path exceeds >= %lu bytes."
+msgstr "Le chemin d'accès dépasse >= %lu octets."
+
+#: engine/object.c:273
+#, c-format
+msgid "The `%s' object is in use."
+msgstr "L'objet `%s' est en cours d'utilisation."
+
+#: engine/object.c:374
+#, c-format
+msgid "The object `%s' does not exist."
+msgstr "L'objet `%s' n'existe pas."
+
+#: engine/object.c:514
+#, c-format
+msgid "The %s/%s.%s file is not in load-path."
+msgstr "Le fichier %s/%s.%s est introuvable dans le chemin de chargement."
+
+#: engine/object.c:533
+#, c-format
+msgid "The `%s' object contains no graphics."
+msgstr "L'objet `%s' ne contient aucun graphique."
+
+#: engine/object.c:549
+#, c-format
+msgid "The `%s' object contains no audio."
+msgstr "L'objet `%s' ne contient aucun son."
+
+#: engine/object.c:662 engine/object.c:912
+#, c-format
+msgid "The `%s' object is non-persistent."
+msgstr "L'objet `%s' n'est pas persistant."
+
+#: engine/object.c:687
+#, c-format
+msgid "The `%s' save has inconsistent flags."
+msgstr "La sauvegarde de `%s' a des flags inconsistents."
+
+#: engine/object.c:784
+#, c-format
+msgid "Unknown object type: `%s'"
+msgstr "Type d'objet inconnu: `%s'"
+
+#: engine/object.c:850
+#, c-format
+msgid "The data of `%s' is already resident."
+msgstr "Les données de `%s' sont déjà en mémoire."
+
+#: engine/object.c:1045
+#, c-format
+msgid "There is no input device named `%s'."
+msgstr "Il n'y a aucun pilote d'entrée nommé `%s'."
+
+#: engine/object.c:1051
+msgid "There is no position to control."
+msgstr "Il n'y a aucune position a controller."
+
+#: engine/object.c:1155
+#, c-format
+msgid "There is no submap named `%s'."
+msgstr "Il n'y a aucune sous-carte nommée `%s'."
+
+#: engine/object.c:1284
+#, c-format
+msgid "Bad coordinates: %d,%d,%d"
+msgstr "Mauvaises coordonnées: %d,%d,%d"
+
+#: engine/object.c:1578
+#, c-format
+msgid "%s object"
+msgstr "Objet %s"
+
+#: engine/object.c:1584
+#, c-format
+msgid "Name: %s (%s)"
+msgstr "Nom: %s (%s)"
+
+#: engine/monitor/widget_browser.c:172 engine/object.c:1585
+#, c-format
+msgid "Type: %s"
+msgstr "Type: %s"
+
+#: engine/object.c:1586
+#, c-format
+msgid "Flags : 0x%x"
+msgstr "Flags : 0x%x"
+
+#: engine/object.c:1588
+msgid "Parent: %[obj]"
+msgstr "Parent: %[obj]"
+
+#: engine/object.c:1600
+msgid "Graphics: "
+msgstr "Graphiques: "
+
+#: engine/object.c:1601
+msgid "Audio: "
+msgstr "Son: "
+
+#: engine/object.c:1644
+msgid "Dependencies:"
+msgstr "Dépendances:"
+
+#: engine/event.c:160 engine/monitor/monitor.c:65
+msgid "Refresh rate"
+msgstr "Fréquence de rafraîchissement"
+
+#: engine/input.c:55
+#, c-format
+msgid "keyboard%d"
+msgstr "clavier%d"
+
+#: engine/input.c:58
+#, c-format
+msgid "joy%d"
+msgstr "joy%d"
+
+#: engine/input.c:61
+#, c-format
+msgid "mouse%d"
+msgstr "souris%d"
+
+#: engine/map.c:153 engine/map.c:209
+#, c-format
+msgid "%ux%u nodes exceed %ux%u."
+msgstr "%ux%u noeuds dépassent la limite de %ux%u."
+
+#: engine/map.c:198 engine/map.c:325
+msgid "Layer 0"
+msgstr "Couche 0"
+
+#: engine/map.c:338
+#, c-format
+msgid "Layer %u"
+msgstr "Couche %u"
+
+#: engine/map.c:342
+msgid "Too many layers."
+msgstr "Trop de couches."
+
+#: engine/map.c:679
+#, c-format
+msgid "Cannot resolve sprite: %u."
+msgstr "Impossible de résoudre le sprite: %u."
+
+#: engine/map.c:702
+#, c-format
+msgid "Cannot resolve anim: %u."
+msgstr "Impossible de résoudre l'animation: %u."
+
+#: engine/map.c:720
+msgid "Warp map name is too big."
+msgstr "Le nom de carte de téléportation est trop grand."
+
+#: engine/map.c:727
+msgid "Invalid warp coordinates."
+msgstr "Coordonnées de téléportation invalides."
+
+#: engine/map.c:738
+msgid "Unknown type of noderef."
+msgstr "Type de référence de noeud inconnu."
+
+#: engine/map.c:744
+msgid "Too many transforms."
+msgstr "Trop de transformations."
+
+#: engine/map.c:775
+msgid "Too many noderefs."
+msgstr "Trop de références de noeud."
+
+#: engine/map.c:821
+msgid "Invalid map geometry."
+msgstr "Géométrie de carte invalide."
+
+#: engine/map.c:836
+msgid "Too many map layers."
+msgstr "Trop de couches de carte."
+
+#: engine/map.c:1197
+#, c-format
+msgid "%s map view"
+msgstr "Vue sur %s"
+
+#: engine/map.c:1285
+msgid "There is no active selection."
+msgstr "Il n'y a aucune sélection sur la carte."
+
+#: engine/map.c:1453
+#, c-format
+msgid "m%u (%ux%u nodes)\n"
+msgstr "m%u (%ux%u noeuds)\n"
+
+#: engine/map.c:1468
+#, c-format
+msgid "a%u (%u frames)\n"
+msgstr "a%u (%u frames)\n"
+
+#: engine/map.c:1486
+#, c-format
+msgid "%s graphics"
+msgstr "Graphiques de %s"
+
+#: engine/map.c:1511 engine/mapedit/tool/merge.c:251
+#: engine/mapedit/tool/stamp.c:66
+msgid "Replace"
+msgstr "Remplacer"
+
+#: engine/map.c:1530
+#, c-format
+msgid "%s map edition"
+msgstr "Édition de %s"
+
+#: engine/map.c:1593
+#, c-format
+msgid "  Layer #%d"
+msgstr "  Couche #%d"
+
+#: engine/prop.c:66 engine/prop.c:74
+msgid "Out of memory for string."
+msgstr "Pas assez de mémoire pour la chaîne."
+
+#: engine/prop.c:347
+#, c-format
+msgid "Unsupported property type: %d."
+msgstr "Type de propriété non supporté: %d."
+
+#: engine/prop.c:356
+#, c-format
+msgid "%s has no `%s' property (type %d)."
+msgstr "%s n'a aucune propriété `%s' (type %d)."
+
+#: engine/prop.c:570
+msgid "The prop key too big."
+msgstr "Le chemin d'accès est trop grand."
+
+#: engine/prop.c:619
+msgid "String too big."
+msgstr "La chaîne de caractères est trop grande."
+
+#: engine/prop.c:633
+msgid "Unicode string too big."
+msgstr "La chaîne de caractères Unicode est trop grande."
+
+#: engine/prop.c:642
+#, c-format
+msgid "Cannot load prop of type 0x%x."
+msgstr "Impossible de charger une propriété du type 0x%x."
+
+#: engine/prop.c:722
+#, c-format
+msgid "Cannot save prop of type 0x%x."
+msgstr "Impossible de sauvegarder une propriété de type 0x%x."
+
+#: engine/perso.c:167
+#, c-format
+msgid "%s character"
+msgstr "Caractère %s"
+
+#: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:267
+#: engine/perso.c:176
+msgid "Name: "
+msgstr "Nom: "
+
+#: engine/perso.c:180
+msgid "Level: "
+msgstr "Niveau: "
+
+#: engine/perso.c:184
+msgid "Experience: "
+msgstr "Expérience: "
+
+#: engine/perso.c:188
+msgid "Age: "
+msgstr "Age: "
+
+#: engine/perso.c:191
+msgid "Zuars: "
+msgstr "Zuars: "
+
+#: engine/perso.c:197
+msgid "HP: "
+msgstr "HP: "
+
+#: engine/perso.c:208
+msgid "MP: "
+msgstr "MP: "
+
+#: engine/view.c:74
+msgid "The viewport is already initialized."
+msgstr "La vue est déjà initialisée."
+
+#: engine/view.c:122
+msgid "Unsupported graphic mode."
+msgstr "Mode graphique non supporté."
+
+#: engine/view.c:141
+msgid "The resolution is too small."
+msgstr "La résolution est trop petite."
+
+#: engine/view.c:148
+#, c-format
+msgid "Setting %dx%dx%d mode: %s"
+msgstr "Sélection du mode %dx%dx%d: %s"
+
+#: engine/view.c:465
+msgid "The refresh rate is out of range."
+msgstr "La fréquence de rafraîchissement est hors limite."
+
+#: engine/view.c:700
+msgid "Screenshot feature requires libjpeg"
+msgstr "La capture d'écran requiert libjpeg"
+
+#: engine/transform.c:72 engine/transform.c:127
+msgid "Too many transform args."
+msgstr "Trop d'arguments de transformation."
+
+#: engine/transform.c:97 engine/transform.c:144
+msgid "Unknown transform algorithm."
+msgstr "Algorithme de transformation inconnu."
+
+#: engine/loader/ttf.c:108
+msgid "Font engine initialization failed."
+msgstr "L'initialisation du moteur de polices à échoué."
+
+#: engine/loader/ttf.c:135
+#, c-format
+msgid "Cannot font face: `%s'."
+msgstr "Mauvaise face de police: `%s'."
+
+#: engine/loader/ttf.c:143
+msgid "Error getting TTF font face."
+msgstr "Impossible d'obtenir la face de police TTF."
+
+#: engine/loader/ttf.c:147
+msgid "Bad TTF font face."
+msgstr "Face de police TTF invalide."
+
+#: engine/loader/ttf.c:157
+msgid "Failed to set font size."
+msgstr "Impossible de setter la taille de la police."
+
+#: engine/loader/ttf.c:284
+msgid "Failed to load the TTF glyph."
+msgstr "Impossible de charger le glyphe TTF."
+
+#: engine/loader/ttf.c:352
+msgid "Cannot render mono glyph."
+msgstr "Impossible d'effectuer le rendu du glyph mono."
+
+#: engine/loader/ttf.c:358
+msgid "Cannot render normal glyph."
+msgstr "Impossible d'effectuer le rendu du glyph normal."
+
+#: engine/loader/ttf.c:740
+msgid "The text has zero width."
+msgstr "Le texte a une longueur nulle."
+
+#: engine/loader/xcf.c:268
+#, c-format
+msgid "Unknown XCF compression: %d."
+msgstr "Mode de compression XCF inconnu: %d"
+
+#: engine/loader/xcf.c:549
+msgid "Cannot read XCF magic."
+msgstr "Impossible de lire la signature XCF."
+
+#: engine/loader/xcf.c:553
+msgid "Bad XCF magic."
+msgstr "Mauvaise signature XCF."
+
+#: engine/loader/xcf.c:562
+#, c-format
+msgid "Nonsense XCF geometry: %ux%u."
+msgstr "Mauvaise géométrie XCF: %ux%u."
+
+#: engine/loader/xcf.c:574
+#, c-format
+msgid "Unknown base image type: %u."
+msgstr "Mauvais type d'image de base: %u."
+
+#: engine/mapedit/layedit.c:70
+#, c-format
+msgid "%s (visible %s)\n"
+msgstr "%s (visible %s)\n"
+
+#: engine/mapedit/layedit.c:72 engine/mapedit/layedit.c:76
+msgid ", editing"
+msgstr ", édition"
+
+#: engine/mapedit/layedit.c:74
+#, c-format
+msgid "%s (invisible %s)\n"
+msgstr "%s (invisible %s)\n"
+
+#: engine/mapedit/layedit.c:173 engine/mapedit/layedit.c:194
+msgid "No layer is selected."
+msgstr "Aucune couche sélectionnée."
+
+#: engine/mapedit/layedit.c:207
+#, c-format
+msgid "%s layers"
+msgstr "Couches de %s"
+
+#: engine/mapedit/layedit.c:217
+msgid "New layer: "
+msgstr "Nouvelle couche: "
+
+#: engine/mapedit/layedit.c:220
+msgid "Push"
+msgstr "Pousser"
+
+#: engine/mapedit/layedit.c:234
+msgid "Rename"
+msgstr "Renommer"
+
+#: engine/mapedit/layedit.c:245
+msgid "Pop"
+msgstr "Popper"
+
+#: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:231
+#: engine/mapedit/tool/merge.c:286
+msgid "Edit"
+msgstr "Éditer"
+
+#: engine/mapedit/layedit.c:249
+msgid "Show/hide"
+msgstr "Montrer/cacher"
+
+#: engine/mapedit/layedit.c:254
+msgid "Layer NN (visible, editing)    "
+msgstr "Couche NN (visible, édition)    "
+
+#: engine/mapedit/nodeedit.c:121
+msgid "No node is selected."
+msgstr "Aucun noeud n'est sélectionné."
+
+#: engine/mapedit/nodeedit.c:179
+#, c-format
+msgid "%s node"
+msgstr "noeud %s"
+
+#: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:288
+msgid "Remove"
+msgstr "Enlever"
+
+#: engine/mapedit/nodeedit.c:189
+msgid "Dup"
+msgstr "Reproduire"
+
+#: engine/mapedit/nodeedit.c:192
+msgid "Up"
+msgstr "Haut"
+
+#: engine/mapedit/nodeedit.c:195
+msgid "Down"
+msgstr "Bas"
+
+#: engine/mapedit/mapedit.c:167
+msgid "Tools"
+msgstr "Outils"
+
+#: engine/mapedit/mapview.c:542
+msgid "The zoom is out of range."
+msgstr "La fréquence de rafraîchissement est hors limite."
+
+#: engine/mapedit/objedit.c:60
+msgid "No object type was specified."
+msgstr "Aucun type d'objet spécifié."
+
+#: engine/mapedit/objedit.c:68
+msgid "No such object type."
+msgstr "Type d'objet inconnu."
+
+#: engine/mapedit/objedit.c:74
+msgid "No object name was specified."
+msgstr "Aucun nom d'objet spécifié."
+
+#: engine/mapedit/objedit.c:141
+#, c-format
+msgid "The `%s' object is indestructible."
+msgstr "L'objet `%s' est indestructible."
+
+#: engine/mapedit/objedit.c:209
+msgid "Object editor"
+msgstr "Éditeur d'objet"
+
+#: engine/mapedit/objedit.c:219
+msgid "Type: "
+msgstr "Type: "
+
+#: engine/mapedit/objedit.c:230 engine/mapedit/tool/merge.c:271
+msgid "Create"
+msgstr "Créer"
+
+#: engine/mapedit/objedit.c:232
+msgid "Edit obj"
+msgstr "Éditer obj"
+
+#: engine/mapedit/objedit.c:233
+msgid "Load"
+msgstr "Charger"
+
+#: engine/mapedit/objedit.c:235
+msgid "Destroy"
+msgstr "Détruire"
+
+#: engine/mapedit/tool/eraser.c:70
+msgid "Eraser"
+msgstr "Gomme a effacer"
+
+#: engine/mapedit/tool/eraser.c:75 engine/mapedit/tool/flip.c:71
+#: engine/mapedit/tool/shift.c:78
+msgid "All"
+msgstr "Tout"
+
+#: engine/mapedit/tool/eraser.c:76 engine/mapedit/tool/flip.c:72
+#: engine/mapedit/tool/shift.c:77
+msgid "Highest"
+msgstr "Plus haut"
+
+#: engine/mapedit/tool/fill.c:66 engine/mapedit/tool/fill.c:76
+msgid "Fill"
+msgstr "Remplir"
+
+#: engine/mapedit/tool/fill.c:67
+msgid "Clear"
+msgstr "Vider"
+
+#: engine/mapedit/tool/fill.c:94
+msgid "No source node."
+msgstr "Aucun noeud source."
+
+#: engine/mapedit/tool/flip.c:66
+msgid "Horizontal"
+msgstr "Horizontal"
+
+#: engine/mapedit/tool/flip.c:67
+msgid "Vertical"
+msgstr "Vertical"
+
+#: engine/mapedit/tool/flip.c:81
+msgid "Flip"
+msgstr "Retourner"
+
+#: engine/mapedit/tool/magnifier.c:61
+msgid "No map is visible."
+msgstr "Aucune carte n'est visible."
+
+#: engine/mapedit/tool/magnifier.c:99
+msgid "Magnifier"
+msgstr "Loupe"
+
+#: engine/mapedit/tool/magnifier.c:106
+msgid "1:1 zoom"
+msgstr "Zoom 1:1"
+
+#: engine/mapedit/tool/magnifier.c:115
+msgid "Zoom %: "
+msgstr "Zoom %: "
+
+#: engine/mapedit/tool/merge.c:135
+msgid "No brush name was given."
+msgstr "Aucun nom de pinceau n'a été donné."
+
+#: engine/mapedit/tool/merge.c:141
+#, c-format
+msgid "A `%s' brush exists."
+msgstr "Un pinceau nommé `%s' existe."
+
+#: engine/mapedit/tool/merge.c:245
+msgid "Merge tool"
+msgstr "Fusion"
+
+#: engine/mapedit/tool/merge.c:259
+msgid "Random shift"
+msgstr "Déplacement au hazard"
+
+#: engine/mapedit/tool/merge.c:282
+msgid "Load set"
+msgstr "Charger"
+
+#: engine/mapedit/tool/merge.c:284
+msgid "Save set"
+msgstr "Sauvegarder"
+
+#: engine/mapedit/tool/propedit.c:244
+msgid "Node props"
+msgstr "Propriétés de noeud"
+
+#: engine/mapedit/tool/propedit.c:250
+msgid "Block"
+msgstr "Bloquer"
+
+#: engine/mapedit/tool/propedit.c:251
+msgid "Walk"
+msgstr "Marcher"
+
+#: engine/mapedit/tool/propedit.c:252
+msgid "Climb"
+msgstr "Grimper"
+
+#: engine/mapedit/tool/propedit.c:259
+msgid "Bio"
+msgstr "Bio"
+
+#: engine/mapedit/tool/propedit.c:260
+msgid "Regen"
+msgstr "Régénérer"
+
+#: engine/mapedit/tool/propedit.c:261
+msgid "Slow"
+msgstr "Lent"
+
+#: engine/mapedit/tool/propedit.c:262
+msgid "Haste"
+msgstr "Rapide"
+
+#: engine/mapedit/tool/propedit.c:271
+msgid "Origin"
+msgstr "Origine"
+
+#: engine/mapedit/tool/select.c:57
+msgid "There is no selection to copy."
+msgstr "Il n'y a aucune sélection a copier."
+
+#: engine/mapedit/tool/select.c:91
+msgid "The copy buffer is empty!"
+msgstr "Le tampon de copie est vide!"
+
+#: engine/mapedit/tool/select.c:129
+msgid "There is no selection to kill."
+msgstr "Il n'y a aucune sélection a tuer."
+
+#: engine/mapedit/tool/select.c:147
+msgid "There is no selection to cut."
+msgstr "Il n'y a aucune sélection a couper."
+
+#: engine/mapedit/tool/shift.c:71
+msgid "Shift"
+msgstr "Déplacement"
+
+#: engine/mapedit/tool/shift.c:87
+msgid "Multi"
+msgstr "Multiple"
+
+#: engine/mapedit/tool/stamp.c:67
+msgid "Insert"
+msgstr "Insérer"
+
+#: engine/mapedit/tool/stamp.c:75
+msgid "Stamp"
+msgstr "Étampe"
+
+#: engine/mapedit/tool/stamp.c:91
+msgid "No source node is selected."
+msgstr "Aucun noeud source n'est sélectionné."
+
+#: engine/monitor/screenshot.c:72
+msgid "A JPEG error has occured."
+msgstr "Une erreur JPEG s'est produite."
+
+#: engine/monitor/screenshot.c:114
+#, c-format
+msgid "Status: xmit frame %d."
+msgstr "État: transmission image %d."
+
+#: engine/monitor/screenshot.c:171
+msgid "Already connected to a server."
+msgstr "Déjà connecté au serveur."
+
+#: engine/monitor/screenshot.c:180
+msgid "Missing server hostname/port."
+msgstr "Nom d'hôte ou port du serveur non spécifiés."
+
+#: engine/monitor/screenshot.c:184
+#, c-format
+msgid "Status: connecting to %s:%s..."
+msgstr "État: connexion à %s:%s..."
+
+#: engine/monitor/screenshot.c:192
+#, c-format
+msgid "Status: %s."
+msgstr "État: %s."
+
+#: engine/monitor/screenshot.c:200
+msgid "failed to create socket"
+msgstr "impossible de créer le socket"
+
+#: engine/monitor/screenshot.c:204
+msgid "connection refused"
+msgstr "connexion refusée"
+
+#: engine/monitor/screenshot.c:213
+#, c-format
+msgid "Status: %s: %s."
+msgstr "État: %s: %s."
+
+#: engine/monitor/screenshot.c:217
+#, c-format
+msgid "Status: connected to %s."
+msgstr "État: connecté à %s."
+
+#: engine/monitor/screenshot.c:238
+msgid "Status: disconnected."
+msgstr "État: aucune connexion."
+
+#: engine/monitor/screenshot.c:240
+msgid "Not connected."
+msgstr "Pas connecté au serveur."
+
+#: engine/monitor/monitor.c:68 engine/monitor/screenshot.c:257
+msgid "Screenshot"
+msgstr "Capture d'écran"
+
+#: engine/monitor/screenshot.c:263
+msgid "Status: Not connected."
+msgstr "État: aucune connexion."
+
+#: engine/monitor/screenshot.c:264
+msgid "Host: "
+msgstr "Hôte: "
+
+#: engine/monitor/screenshot.c:265
+msgid "Port: "
+msgstr "Port: "
+
+#: engine/monitor/screenshot.c:273 sumo/sumo.c:294
+msgid "Connect"
+msgstr "Connexion"
+
+#: engine/monitor/screenshot.c:278
+msgid "Disconnect"
+msgstr "Déconnexion"
+
+#: engine/monitor/monitor.c:71
+msgid "Widgets"
+msgstr "Widgets"
+
+#: engine/monitor/monitor.c:73 engine/monitor/view_params.c:55
+msgid "Viewport"
+msgstr "Vue"
+
+#: engine/monitor/monitor.c:85
+msgid "Debug monitor"
+msgstr "Moniteur de déboguage"
+
+#: engine/monitor/widget_browser.c:76 engine/monitor/widget_browser.c:94
+#: engine/monitor/widget_browser.c:112 engine/monitor/widget_browser.c:249
+msgid "No window is selected."
+msgstr "Aucune fenêtre n'est sélectionnée."
+
+#: engine/monitor/widget_browser.c:159
+msgid "No widget is selected."
+msgstr "Aucun widget n'est sélectionné."
+
+#: engine/monitor/widget_browser.c:165
+#, c-format
+msgid "%s widget"
+msgstr "Widget %s"
+
+#: engine/monitor/widget_browser.c:171 engine/monitor/widget_browser.c:260
+#, c-format
+msgid "Name: \"%s\""
+msgstr "Nom: \"%s\""
+
+#: engine/monitor/widget_browser.c:173 engine/monitor/widget_browser.c:261
+#, c-format
+msgid "Flags: 0x%x"
+msgstr "Flags: 0x%x"
+
+#: engine/monitor/widget_browser.c:177
+#, c-format
+msgid "Geo: %dx%d at %d,%d (view %d,%d)"
+msgstr "Géo: %dx%d sur %d,%d (vue %d,%d)"
+
+#: engine/monitor/widget_browser.c:181
+msgid "Geo: 0000x0000 at 0000x0000 (view 0000,0000)"
+msgstr "Géo: 0000x0000 sur 0000x0000 (vue 0000,0000)"
+
+#: engine/monitor/widget_browser.c:257
+#, c-format
+msgid "%s window"
+msgstr "Fenêtre %s"
+
+#: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
+msgid "Examine"
+msgstr "Examiner"
+
+#: engine/monitor/widget_browser.c:288
+msgid "Window stack"
+msgstr "Pile de fenêtres"
+
+#: engine/monitor/widget_browser.c:300
+msgid "Show"
+msgstr "Montrer"
+
+#: engine/monitor/widget_browser.c:302
+msgid "Hide"
+msgstr "Cacher"
+
+#: engine/monitor/widget_browser.c:304
+msgid "Detach"
+msgstr "Détacher"
+
+#: engine/monitor/view_params.c:64
+msgid "GUI"
+msgstr "GUI"
+
+#: engine/monitor/view_params.c:67
+msgid "Tile-based"
+msgstr "Basé-tiles"
+
+#: engine/monitor/view_params.c:70
+#, c-format
+msgid "Graphic engine: %s %s"
+msgstr "Moteur graphique: %s %s"
+
+#: engine/monitor/view_params.c:76
+#, c-format
+msgid "Window op: %d (%p)"
+msgstr "Opération fenêtre: %d (%p)"
+
+#: engine/monitor/view_params.c:79
+msgid "Window op: 000 (0x00000000)"
+msgstr "Opération fenêtre: 000 (0x00000000)"
+
+#: engine/monitor/view_params.c:85
+msgid "Map: %[obj]"
+msgstr "Carte: %[obj]"
+
+#: engine/monitor/view_params.c:87
+#, c-format
+msgid "Map geometry: %dx%d"
+msgstr "Géométrie de carte: %dx%d"
+
+#: engine/monitor/view_params.c:89
+#, c-format
+msgid "Map offset: %d,%d (soft %d,%d)"
+msgstr "Position carte: %d,%d (soft %d,%d)"
+
+#: engine/widget/text.c:46
+msgid "Error"
+msgstr "Erreur"
+
+#: engine/widget/text.c:47
+msgid "Warning"
+msgstr "Avertissement"
+
+#: engine/widget/text.c:48
+msgid "Information"
+msgstr "Information"
+
+#: engine/widget/text.c:369
+msgid "Ok"
+msgstr "Ack-é!"
+
+#: engine/typesw.c:42
+msgid "Object"
+msgstr "Objet"
+
+#: engine/typesw.c:43
+msgid "Map"
+msgstr "Carte"
+
+#: engine/typesw.c:44
+msgid "Character"
+msgstr "Caractère"
+
+#: sumo/session.c:74
+#, c-format
+msgid "%lu MB"
+msgstr "%lu MO"
+
+#: sumo/session.c:77
+#, c-format
+msgid "%lu KB"
+msgstr "%lu KO"
+
+#: sumo/session.c:80
+#, c-format
+msgid "%lu B"
+msgstr "%lu O"
+
+#: sumo/session.c:235
+msgid "No directory is selected"
+msgstr "Aucun répertoire n'est sélectionné"
+
+#: sumo/session.c:435
+msgid "new"
+msgstr "nouveau"
+
+#: sumo/session.c:466
+msgid "Queue"
+msgstr "Attente"
+
+#: sumo/session.c:470
+msgid "Start download"
+msgstr "Télécharger"
+
+#: sumo/session.c:518 sumo/session.c:548
+#, c-format
+msgid "I/O error: %s"
+msgstr "Erreur entrée/sortie: %s"
+
+#: sumo/session.c:521 sumo/session.c:551
+msgid "EOF from server"
+msgstr "EOF en provenance du serveur"
+
+#: sumo/session.c:643
+msgid "idle"
+msgstr "inactif"
+
+#: sumo/session.c:653
+msgid "busy"
+msgstr "occupé"
+
+#: sumo/session.c:682
+msgid "exiting"
+msgstr "fermeture"
+
+#: sumo/sumo.c:61
+msgid "SUMO Client"
+msgstr "Client SUMO"
+
+#: screenshotd/screenshotd.c:56 sumo/sumo.c:62
+msgid "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
+msgstr "Copyright (c) 2003 Communications CubeSoft, Inc.\n"
+
+#: sumo/sumo.c:129
+#, c-format
+msgid "%2d. (locked session)"
+msgstr "%2d. (session verouillée)"
+
+#: sumo/sumo.c:157
+msgid "Missing SUMO host/port."
+msgstr "Nom d'hôte ou port du serveur SUMO non spécifiés"
+
+#: sumo/sumo.c:161
+msgid "Missing FTP host/port."
+msgstr "Nom d'hôte ou port du serveur FTP non spécifiés"
+
+#: sumo/sumo.c:165
+msgid "Missing FTP user/pass."
+msgstr "Nom d'utilisateur ou mot de passe FTP manquant"
+
+#: sumo/sumo.c:213
+#, c-format
+msgid "%s failed"
+msgstr "%s a échoué"
+
+#: sumo/sumo.c:261
+msgid "SUMO sessions"
+msgstr "Sessions SUMO"
+
+#: sumo/sumo.c:265
+msgid "SUMO host: "
+msgstr "Hôte SUMO: "
+
+#: sumo/sumo.c:266
+msgid "SUMO port: "
+msgstr "Port SUMO: "
+
+#: sumo/sumo.c:280
+msgid "FTP host: "
+msgstr "Hôte FTP: "
+
+#: sumo/sumo.c:281
+msgid "FTP port: "
+msgstr "Port FTP: "
+
+#: sumo/sumo.c:282
+msgid "FTP user: "
+msgstr "Compte FTP: "
+
+#: sumo/sumo.c:283
+msgid "FTP pass: "
+msgstr "Mot de passe FTP: "
+
+#: sumo/sumo.c:284
+msgid "Passive mode"
+msgstr "Mode passif"
+
+#: sumo/sumo.c:382
+#, c-format
+msgid "Usage: %s [-vfFe] [-w width] [-h height]"
+msgstr "Usage: %s [-vfFe] [-w largeur] [-h hauteur]"
+
+#: screenshotd/screenshotd.c:156 sumo/sumo.c:384
+msgid " [-r fps] [-t font,size,style]"
+msgstr " [-r fps] [-t police,taille,style]"
+
+#: screenshotd/screenshotd.c:55
+msgid "Agar screenshot daemon"
+msgstr "Démon de capture d'écran Agar"
+
+#: screenshotd/screenshotd.c:153
+#, c-format
+msgid " %s [-vfF] [-w width] [-h height]"
+msgstr " %s [-vfF] [-w largeur] [-h hauteur]"
+
+#: screenshotd/screenshotd.c:155
+msgid " [-H host] [-P port]"
+msgstr " [-H hôte] [-P port]"
+
+#: screenshotd/screenshotd.c:158
+msgid " [-d level] [-T]"
+msgstr " [-d niveau] [-T]"
+
+#: screenshotd/server.c:100
+msgid "Too many clients."
+msgstr "Trop de clients."
+
+#: screenshotd/server.c:168
+#, c-format
+msgid "%s: %s failed"
+msgstr "%s: %s a échoué"
+
+#: screenshotd/session.c:106
+msgid "Bad JPEG magic."
+msgstr "Mauvaise signature JPEG."
