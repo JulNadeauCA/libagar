@@ -1,10 +1,15 @@
-/*	$Csoft$	*/
+/*	$Csoft: keycodes.h,v 1.6 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct keycode {
 	char	*name;
 	SDLKey	 key;
-	int	 modmask;	/* Checked if non-zero */
+	int	 modmask;
+
+	/*
+	 * Callback routine must be invoked when the textbox's text
+	 * substructure is locked.
+	 */
 	void	(*callback)(struct textbox *, SDLKey, int, char *);
 	char	*arg;
 };
