@@ -168,7 +168,7 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
 	    fi; \
 	fi
-        @export _share="${SHARE}"; \
+	@export _share="${SHARE}"; \
         if [ "$$_share" != "" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
