@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.17 2004/03/18 03:03:10 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.18 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -124,8 +124,17 @@ combo_expand(int argc, union evarg *argv)
 	}
 }
 
+void
+combo_select(struct combo *com, struct tlist_item *it)
+{
+	pthread_mutex_lock(&com->list->lock);
+	textbox_printf(com->tbox, "%s", it->text);
+	tlist_select(com->list, it);
+	pthread_mutex_unlock(&com->list->lock);
+}
+
 static void
-combo_select(int argc, union evarg *argv)
+combo_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct combo *com = argv[1].p;
@@ -134,7 +143,7 @@ combo_select(int argc, union evarg *argv)
 	pthread_mutex_lock(&tl->lock);
 	if ((ti = tlist_item_selected(tl)) != NULL) {
 		textbox_printf(com->tbox, "%s", ti->text);
-		event_post(NULL, com, "combo-selected", "%s", ti);
+		event_post(NULL, com, "combo-selected", "%p", ti);
 	}
 	pthread_mutex_unlock(&tl->lock);
 	combo_collapse(com);
@@ -189,7 +198,7 @@ combo_init(struct combo *com, const char *label, int flags)
 		com->list->flags |= TLIST_POLL;
 
 	event_new(com->button, "button-pushed", combo_expand, "%p", com);
-	event_new(com->list, "tlist-changed", combo_select, "%p", com);
+	event_new(com->list, "tlist-changed", combo_selected, "%p", com);
 	event_new(com->tbox, "textbox-return", combo_return, "%p", com);
 #if 0
 	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
