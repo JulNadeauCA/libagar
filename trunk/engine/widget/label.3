@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.8 2002/09/17 21:54:12 vedge Exp $
+.\"	$Csoft: label.3,v 1.9 2002/11/14 07:18:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -41,27 +41,100 @@ The
 widget displays a string of text, which can change at runtime.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft struct label *
+.Ft "struct label *"
 .Fn label_new "struct region *reg" "int w" "int h" "const char *fmt" "..."
 .Pp
+.Ft "struct label *"
+.Fn label_polled_new "struct region *reg" "int w" "int h" \
+                     "pthread_mutex_t *mutex" "const char *fmt" "..."
+.Pp
 .Ft void
-.Fn label_init "struct label *label" "char *caption" "int w" "int h"
+.Fn label_init "struct label *label" "enum label_type type" "const char *s" \
+               "int w" "int h"
 .nr nS 0
 .Pp
 The
 .Fn label_new
-function allocates, initializes, and attaches a
+function allocates, initializes and attaches a
 .Nm
-widget.
+widget of size
+.Fa w
+x
+.Fa h
+pixels.
+The
+.Fa fmt
+argument is a
+.Xr printf 3
+style format string.
+.Pp
+The
+.Fn label_polled_new
+function allocates, initializes and attaches a
+.Nm
+with contents updated before the widget is redrawn.
+The draw operation will attempt to acquire
+.Fa mutex ,
+unless it is
+.Dv NULL .
+.Fa fmt
+is a
+.Xr printf 3
+like format string, except that each subsequent argument is a pointer to a
+value.
+The
+.Fa fmt
+format string may include:
+.Pp
+.Bl -tag -compact -width "%d, %i, %x"
+.It %d, %i, %x
+int
+.It %o, %u, %X
+unsigned int
+.It %c
+char
+.It %s
+char *
+.It %p
+void *
+.It %[u8]
+Uint8 *
+.It %[s8]
+Sint8 *
+.It %[u16]
+Uint16 *
+.It %[s16]
+Sint16 *
+.It %[u32]
+Uint32 *
+.It %[s32]
+Sint32 *
+.It %[wxh]
+SDL_Rect *
+.It %[x,y]
+SDL_Rect *
+.It %[rect]
+SDL_Rect *
+.El
+.Pp
 The
 .Fn label_init
 function initializes a
 .Nm
 widget.
-The
-.Fa caption
-argument is a pointer to a null-terminated string that will be
-displayed initially.
+If
+.Fa type
+is
+.Dv LABEL_STATIC ,
+the
+.Fa s
+argument is the string to display.
+If
+.Fa type
+is LABEL_POLLED ,
+the
+.Fa s
+argument is the format string.
 .Pp
 The
 justification defaults to
@@ -83,9 +156,11 @@ enum {
 The
 .Fn label_printf
 function changes the string being displayed by
-.Fa label .
-.Fn label_printf
-accepts a
+.Fa label ,
+which must be of type
+.Dv LABEL_STATIC .
+.Fa fmt
+is a
 .Xr printf 3
 style format string.
 .Sh EVENTS

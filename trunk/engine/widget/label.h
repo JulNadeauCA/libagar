@@ -1,19 +1,28 @@
-/*	$Csoft: label.h,v 1.13 2002/09/11 23:54:37 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.14 2002/11/14 07:18:33 vedge Exp $	*/
 /*	Public domain	*/
 
-struct label {
-	struct	 widget wid;
+#define LABEL_MAX_LENGTH	2048
+#define LABEL_MAX_POLLITEMS	32
 
+enum label_type {
+	LABEL_STATIC,
+	LABEL_POLLED
+};
+
+struct label {
+	struct widget	wid;
+	enum label_type	type;
 	struct {
 		char		*caption;
-		pthread_mutex_t	 lock;
 		SDL_Surface	*surface;
+		pthread_mutex_t	 lock;
 	} text;
-	
-	int	 flags;
-#define LABEL_BOLD	0x01		/* Bold text */
-#define LABEL_ITALIC	0x02		/* Italic text */
-
+	struct {
+		char		*fmt;
+		void		*ptrs[LABEL_MAX_POLLITEMS];
+		int		 nptrs;
+		pthread_mutex_t	*lock;
+	} poll;
 	enum {
 		LABEL_LEFT,
 		LABEL_CENTER,
@@ -22,7 +31,10 @@ struct label {
 };
 
 struct label	*label_new(struct region *, int, int, const char *, ...);
-void		 label_init(struct label *, const char *, int, int);
+struct label	*label_polled_new(struct region *, int, int, pthread_mutex_t *,
+		     const char *, ...);
+void		 label_init(struct label *, enum label_type, const char *,
+		     int, int);
 void	 	 label_destroy(void *);
 void		 label_draw(void *);
 void		 label_printf(struct label *, const char *, ...);
