@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.170 2004/03/23 02:26:10 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.171 2004/03/24 08:46:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1609,14 +1609,13 @@ object_edit(void *p)
 	
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
-		label_new(bo, _("Type: %s"), ob->type);
-		label_polled_new(bo, &ob->lock, _("Flags : 0x%x"), &ob->flags);
-
-		label_polled_new(bo, &linkage_lock, _("Parent: %[obj]"),
-		    &ob->parent);
-		label_polled_new(bo, &ob->lock, "Pos: %p", &ob->pos);
-		label_polled_new(bo, &ob->lock,
-		    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]",
+		label_new(bo, LABEL_STATIC, _("Type: %s"), ob->type);
+		label_new(bo, LABEL_POLLED_MT, _("Flags : 0x%x"), &ob->lock,
+		    &ob->flags);
+		label_new(bo, LABEL_POLLED_MT, _("Parent: %[obj]"),
+		    &linkage_lock, &ob->parent);
+		label_new(bo, LABEL_POLLED_MT,
+		    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]", &ob->lock,
 		    &ob->gfx_used, &ob->audio_used, &ob->data_used);
 	}
 
@@ -1625,7 +1624,7 @@ object_edit(void *p)
 	{
 		struct tlist *tl;
 
-		label_new(bo, _("Dependencies:"));
+		label_new(bo, LABEL_STATIC, _("Dependencies:"));
 		tl = tlist_new(bo, TLIST_POLL);
 		tlist_prescale(tl, "XXXXXXXXXXXX", 2);
 		event_new(tl, "tlist-poll", object_poll_deps, "%p", ob);

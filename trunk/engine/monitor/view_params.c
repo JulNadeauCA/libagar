@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.16 2003/07/28 15:29:59 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.17 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -67,26 +67,27 @@ view_params_window(void)
 			engine = _("Tile-based");
 			break;
 		}
-		label_new(vb, _("Graphic engine: %s %s"), engine,
+		label_new(vb, LABEL_STATIC, _("Graphic engine: %s %s"), engine,
 		    view->opengl ? "(OpenGL)" : "");
-		lab = label_polled_new(vb, &view->lock, "%dx%dx%d", &view->w,
-		    &view->h, &view->depth);
+
+		lab = label_new(vb, LABEL_POLLED_MT, "%dx%dx%d",
+		    &view->lock, &view->w, &view->h, &view->depth);
 		label_prescale(lab, "0000x0000x00");
-		lab = label_polled_new(vb, &view->lock,
-		    _("Window op: %d (%p)"),
-		    &view->winop, &view->wop_win);
+
+		lab = label_new(vb, LABEL_POLLED_MT, _("Window op: %d (%p)"),
+		    &view->lock, &view->winop, &view->wop_win);
 		label_prescale(lab,
 		    _("Window op: 000 (0x00000000)"));
 
 		if (view->rootmap != NULL) {
 			struct viewmap *rm = view->rootmap;
 		
-			label_polled_new(vb, &view->lock,
-			    _("Map: %[obj]"), &rm->map);
-			label_new(vb,
-			    _("Map geometry: %dx%d"), rm->w, rm->h);
-			label_polled_new(vb, &view->lock,
-			    _("Map offset: %d,%d (soft %d,%d)"),
+			label_new(vb, LABEL_POLLED_MT, _("Map: %[obj]"),
+			    &view->lock, &rm->map);
+			label_new(vb, LABEL_STATIC, _("Map geometry: %dx%d"),
+			    rm->w, rm->h);
+			label_new(vb, LABEL_POLLED_MT,
+			    _("Map offset: %d,%d (soft %d,%d)"), &view->lock,
 			    &rm->x, &rm->y, &rm->sx, &rm->sy);
 		}
 	}

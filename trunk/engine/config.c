@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.108 2004/03/18 21:27:46 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.109 2004/03/25 09:00:52 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -303,7 +303,7 @@ config_window(struct config *con)
 	{
 		struct tlist *tl;
 
-		label_new(vb, _("Input devices:"));
+		label_new(vb, LABEL_STATIC, _("Input devices:"));
 		tl = tlist_new(vb, TLIST_POLL);
 		tlist_prescale(tl, "keyboard0", 6);
 		event_new(tl, "tlist-poll", poll_input_devs, NULL);
