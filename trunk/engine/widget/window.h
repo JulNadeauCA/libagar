@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.17 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.18 2002/05/24 09:15:31 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -18,6 +18,8 @@ struct window {
 #define WINDOW_ANIMATE		0x04	/* Redraw each tick */
 #define WINDOW_TITLEBAR		0x08	/* Draw title bar */
 #define WINDOW_ROUNDEDGES	0x10	/* Round edges */
+#define WINDOW_ABSOLUTE		0x20	/* Requested coordinates/geometry
+					   is absolute (scaled otherwise) */
 	enum	 window_type type;
 	char	*caption;		/* Titlebar text */
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
