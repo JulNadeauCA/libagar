@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.136 2003/01/26 08:01:03 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.137 2003/01/27 00:34:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -282,10 +282,15 @@ map_set_zoom(struct map *m, Uint16 zoom)
 {
 	pthread_mutex_lock(&m->lock);
 
-	m->zoom = zoom > 4 ? zoom : 4;
+	m->zoom = zoom;
 	m->tilew = m->zoom * TILEW / 100;
 	m->tileh = m->zoom * TILEH / 100;
-	
+
+	if (m->tilew > 32767)			/* For soft scrolling */
+		m->tilew = 32767;
+	if (m->tileh > 32767)
+		m->tileh = 32767;
+
 	pthread_mutex_unlock(&m->lock);
 }
 
