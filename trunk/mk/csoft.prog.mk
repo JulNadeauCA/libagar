@@ -1,6 +1,6 @@
-# $Csoft: csoft.prog.mk,v 1.32 2003/09/28 17:34:24 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.36 2004/01/03 04:13:27 vedge Exp $
 
-# Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+# Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -38,12 +38,14 @@ LFLAGS?=
 YACC?=		yacc
 YFLAGS?=	-d
 SHARE?=
+CONF?=
+CONFDIR?=
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
 deinstall: deinstall-prog deinstall-subdir
 clean: clean-prog clean-subdir
-cleandir: cleandir-prog cleandir-subdir
+cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
@@ -105,6 +107,10 @@ _prog_objs:
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
+		if [ $$? != 0 ]; then \
+			echo "${MAKE}: failure"; \
+			exit 1; \
+		fi; \
 	    done; \
 	fi
 
@@ -116,6 +122,10 @@ _prog_pobjs:
 	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	        ${MAKE} $$F; \
+		if [ $$? != 0 ]; then \
+			echo "${MAKE}: failure"; \
+			exit 1; \
+		fi; \
 	    done; \
 	fi
 
@@ -194,7 +204,7 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f *.core *~
+	rm -f core *.core
 
 install-prog:
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
@@ -212,6 +222,25 @@ install-prog:
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
+	@export _conf="${CONF}"; \
+        if [ "$$_conf" != "" ]; then \
+            if [ ! -d "${CONFDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${CONFDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${CONFDIR}; \
+            fi; \
+	    echo "+----------------"; \
+	    echo "| The following configuration files have been preserved."; \
+	    echo "| You may want to compare them to the current sample files.";\
+	    echo "|"; \
+            for F in $$_conf; do \
+	        if [ -e "${CONFDIR}/$$F" ]; then \
+          	      echo "| - $$F"; \
+		else \
+         	       ${SUDO} ${INSTALL_DATA} $$F ${CONFDIR}; \
+		fi; \
+            done; \
+	    echo "+----------------"; \
+	fi
 
 deinstall-prog:
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
@@ -223,6 +252,17 @@ deinstall-prog:
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
+	fi
+	@if [ "${CONF}" != "" ]; then \
+	    echo "+----------------"; \
+	    echo "| To completely deinstall ${PROG} you need to perform."; \
+	    echo "| this step as root:"; \
+	    echo "|"; \
+	    echo "|           rm -fR ${CONFDIR}"; \
+	    echo "|"; \
+	    echo "| Do not do this if you plan on re-installing ${PROG}"; \
+	    echo "| at some future time."; \
+	    echo "+----------------"; \
 	fi
 
 .PHONY: install deinstall clean cleandir regress depend

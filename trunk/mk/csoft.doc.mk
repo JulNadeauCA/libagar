@@ -1,6 +1,6 @@
-# $Csoft: csoft.dep.mk,v 1.16 2004/01/03 04:13:27 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.33 2004/01/03 04:13:27 vedge Exp $
 
-# Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+# Copyright (c) 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -24,21 +24,31 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-MKDEP=	sh ${TOP}/mk/mkdep
-CC?=	cc
+NROFF?=	nroff
+DOCS?=
 
-depend:	${DPADD} depend-subdir
-	@rm -f .depend
-	@files="${SRCS}"; \
-	 if [ "$$files" != "" ]; then \
-	  if [ "${BUILD}" != "" ]; then \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I${BUILD} \
-	       $$files; \
-	  else \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
-	  fi; \
-	 fi
+all: all-subdir ${DOCS}
+install: install-doc-dirs install-doc install-subdir
+deinstall: deinstall-subdir
+clean: clean-doc clean-subdir
+cleandir: clean-doc clean-subdir cleandir-subdir
+regress: regress-subdir
+depend: depend-subdir
 
-clean-depend:
-	rm -f .depend
+.SUFFIXES: .doc .ps
 
+.doc.ps:
+	@echo "${NROFF} -Tps $< > $@"
+	@(cat $< | \
+	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
+	  sed 's,\$$PREFIX,${PREFIX},' | \
+	  sed 's,\$$SHAREDIR,${SHAREDIR},' | \
+	  ${NROFF} -Tps > $@) || (rm -f $@; false)
+
+clean-doc:
+	rm -f ${DOCS}
+
+.PHONY: install deinstall clean cleandir regress depend
+.PHONY: clean-doc
+
+include ${TOP}/mk/csoft.common.mk

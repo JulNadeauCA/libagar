@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# $Csoft: mkconcurrent.pl,v 1.16 2003/08/13 03:57:04 vedge Exp $
+# $Csoft: mkconcurrent.pl,v 1.17 2004/01/03 04:13:27 vedge Exp $
 #
-# Copyright (c) 2003 CubeSoft Communications, Inc.
+# Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -65,7 +65,7 @@ sub ConvertMakefile
 		}
 	}
 
-	print DSTMAKEFILE '# $Csoft: mkconcurrent.pl,v 1.16 2003/08/13 03:57:04 vedge Exp $', "\n";
+	print DSTMAKEFILE '# $Csoft: mkconcurrent.pl,v 1.17 2004/01/03 04:13:27 vedge Exp $', "\n";
 	print DSTMAKEFILE "SRC=$SRC\n";
 	print DSTMAKEFILE "BUILD=$BUILD\n";
 	print DSTMAKEFILE "\n";
