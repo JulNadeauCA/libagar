@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.23 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.24 2002/04/10 09:25:09 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -42,7 +42,7 @@ struct object {
 #define OBJECT(ob)	((struct object *)(ob))
 #define SPRITE(ob, sp)	OBJECT((ob))->sprites[(sp)]
 
-int	 object_init(struct object *, char *, int, struct obvec *vec);
+void	 object_init(struct object *, char *, int, void *);
 int	 object_addanim(struct object *, struct anim *);
 int	 object_addsprite(struct object *, SDL_Surface *);
 int	 object_destroy(void *);

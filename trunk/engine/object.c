@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.36 2002/04/14 01:35:12 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.37 2002/04/16 08:44:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -105,8 +105,8 @@ object_addsprite(struct object *ob, SDL_Surface *sprite)
 	return (0);
 }
 
-int
-object_init(struct object *ob, char *name, int flags, struct obvec *vec)
+void
+object_init(struct object *ob, char *name, int flags, void *vecp)
 {
 	static int curid = 0;	/* The world has id 0 */
 
@@ -115,7 +115,7 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 	ob->desc = NULL;
 	sprintf(ob->saveext, "ag");
 	ob->flags = flags;
-	ob->vec = vec;
+	ob->vec = vecp;
 
 	ob->sprites = NULL;
 	ob->nsprites = 0;
@@ -125,8 +125,6 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 	ob->maxanims = 0;
 
 	ob->pos = NULL;
-
-	return (ob->id);
 }
 
 int
