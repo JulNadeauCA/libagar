@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.130 2002/12/21 12:06:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.131 2002/12/25 02:28:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -174,7 +174,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 		asprintf(&wname, "win-generic%d", curwindow++);
 	}
-	object_init(&win->wid.obj, "window", wname, NULL, -1, &window_ops);
+	object_init(&win->wid.obj, "window", wname, NULL, 0, &window_ops);
 	free(wname);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
