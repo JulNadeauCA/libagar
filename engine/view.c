@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.97 2002/12/29 02:13:54 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.98 2002/12/29 03:24:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -376,9 +376,6 @@ view_set_refresh(int min_delay, int max_delay)
 		error_set("out of range");
 		return (-1);
 	}
-
-	dprintf("minimum delay = %d, maximum delay = %d\n",
-	    min_delay, max_delay);
 
 	pthread_mutex_lock(&view->lock);
 	view->refresh.current = 0;
