@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.7 2003/05/26 03:01:55 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.8 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/combo.h>
 
 #include "mapedit.h"
 
@@ -47,33 +48,32 @@ create_obj(int argc, union evarg *argv)
 	struct tlist *objs_tl = argv[1].p;
 	struct textbox *name_tb = argv[2].p;
 	struct textbox *type_tb = argv[3].p;
-	struct tlist_item *it;
+	struct tlist_item *parent_it;
 	void *nobj;
 	int i;
 
-	if ((it = tlist_item_selected(objs_tl)) == NULL) {
-		text_msg("Error", "No parent selected");
+	if ((parent_it = tlist_item_selected(objs_tl)) == NULL) {
+		text_msg("Error", "No parent object selected");
 		return;
 	}
 
-	textbox_copy_string(name_tb, name, sizeof(name));
 	textbox_copy_string(type_tb, type, sizeof(type));
-	if (name[0] == '\0') {
-		text_msg("Error", "No object name specified");
-		return;
-	}
 	if (type[0] == '\0') {
 		text_msg("Error", "No object type specified");
 		return;
 	}
-
-	/* Look for a matching type. */
 	for (i = 0; i < ntypesw; i++) {
 		if (strcmp(typesw[i].type, type) == 0)
 			break;
 	}
 	if (i == ntypesw) {
-		text_msg("Error", "Unknown object type `%s'", type);
+		text_msg("Error", "No such object type");
+		return;
+	}
+
+	textbox_copy_string(name_tb, name, sizeof(name));
+	if (name[0] == '\0') {
+		text_msg("Error", "No object name specified");
 		return;
 	}
 
@@ -81,10 +81,9 @@ create_obj(int argc, union evarg *argv)
 	if (typesw[i].ops->init != NULL) {
 		typesw[i].ops->init(nobj, name);
 	} else {
-		object_init(nobj, type, name, NULL);
+		object_init(nobj, typesw[i].type, name, NULL);
 	}
-
-	object_attach((it != NULL) ? it->p1 : world, nobj);
+	object_attach(parent_it->p1, nobj);
 }
 
 /* Edit the selected objects. */
@@ -179,9 +178,9 @@ objedit_window(void)
 {
 	struct window *win;
 	struct vbox *vb;
-	struct hbox *hb;
-	struct textbox *name_tb, *type_tb;
+	struct textbox *name_tb;
 	struct button *create_bu, *edit_bu, *destroy_bu;
+	struct combo *types_com;
 	struct tlist *objs_tl;
 
 	win = window_new("mapedit-objedit");
@@ -189,12 +188,21 @@ objedit_window(void)
 	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 	window_set_closure(win, WINDOW_HIDE);
 
-	vb = vbox_new(win, VBOX_WFILL);
+	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
-		name_tb = textbox_new(vb, "New: ");
-		type_tb = textbox_new(vb, "Type: ");
-		textbox_printf(type_tb, "map");
+		struct hbox *hb;
+		int i;
 
+		name_tb = textbox_new(vb, "New: ");
+		types_com = combo_new(vb, "Type: ");
+		for (i = 0; i < ntypesw; i++) {
+			char label[TLIST_LABEL_MAX];
+
+			strlcpy(label, typesw[i].type, sizeof(label));
+			tlist_insert_item(types_com->list, NULL, label,
+			    &typesw[i]);
+		}
+		
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			create_bu = button_new(hb, "Create");
@@ -202,19 +210,16 @@ objedit_window(void)
 			destroy_bu = button_new(hb, "Destroy");
 			button_disable(destroy_bu);
 		}
+		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	}
 	
-	objs_tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	event_new(objs_tl, "tlist-changed", select_objs, "%p, %p", objs_tl,
 	    destroy_bu);
-	
-	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p",
-	    objs_tl, name_tb, type_tb);
-	event_new(type_tb, "textbox-return", create_obj, "%p, %p, %p",
-	    objs_tl, name_tb, type_tb);
-	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p",
-	    objs_tl, name_tb, type_tb);
+	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p", objs_tl,
+	    name_tb, types_com->tbox);
+	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p", objs_tl,
+	    name_tb, types_com->tbox);
 	event_new(edit_bu, "button-pushed", edit_objs, "%p", objs_tl);
 	event_new(destroy_bu, "button-pushed", destroy_objs, "%p", objs_tl);
 
