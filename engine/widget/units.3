@@ -1,4 +1,4 @@
-.\"	$Csoft: units.3,v 1.1 2004/05/11 01:42:25 vedge Exp $
+.\"	$Csoft: units.3,v 1.2 2004/05/11 02:29:01 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,13 +42,20 @@ The Agar
 .Nm
 facility implements linear as well as nonlinear unit conversion.
 Each unit is attributed an abbreviation and a long name.
-A double-precision divider is associated with linear units, and a function
-pointer is associated with nonlinear units.
+A numerical coefficient is associated with linear units and a function pointer
+is associated with nonlinear units.
+.Pp
+The
+.Fn fspinbutton
+and
+.Fn mfspinbutton
+widgets use this interface.
+.Pp
 Units are arranged in unit groups, and Agar's
 .Pa engine/widget/units.c
 defines the groups:
 .Pp
-.Bl -tag -compact -width "metabolic_expenditure_units "
+.Bl -tag -compact -width "substance_amt_units "
 .It length_units
 Units of length/distance
 .It area_units
@@ -65,7 +72,7 @@ Units of time
 Units of electrical current
 .It temperature_units
 Units of temperature
-.It substance_amount_units
+.It substance_amt_units
 Units of substance amount
 .It light_units
 Units of light measurement
@@ -83,14 +90,20 @@ Units of electrical inductance
 Units of frequency
 .It pressure_units
 Units of pressure and stress
-.It metabolic_expenditure_units
-Units of metabolic cost of physical activities
+.It met_units
+Units of metabolic expenditure
 (somewhat humorous)
 .El
 .Sh INTERFACE
 .nr nS 1
 .Ft "const struct unit *"
-.Fn unit "const struct unit group[]" "const char *abbr"
+.Fn unit_find "const char *key"
+.Pp
+.Ft "const struct unit *"
+.Fn unit_best "const struct unit *unit_group" "double n"
+.Pp
+.Ft "const char *"
+.Fn unit_abbr "const struct unit *unit"
 .Pp
 .Ft "double"
 .Fn unit2base "double n" "const struct unit *unit"
@@ -104,12 +117,18 @@ Units of metabolic cost of physical activities
 .nr nS 0
 .Pp
 The
-.Fn unit
-function looks up
-.Fa group
-for an unit with an abbreviation matching
-.Fa abbr ,
-and returns the unit on success and NULL if none was found.
+.Fn unit_find
+function searches the unit database for a unit matching the given
+.Fa key ,
+and returns a pointer to the unit on success or NULL if none was found.
+.Pp
+.Fn unit_best
+returns the unit which yields the least number of figures when displaying the
+given number
+.Fa n .
+.Pp
+.Fn unit_abbr
+returns the abbreviation string associated with the given unit.
 .Pp
 The
 .Fn unit2base
@@ -126,7 +145,7 @@ in base units to the equivalent number in given units.
 The following code fragment prints the equivalent milliseconds for a given
 number of seconds:
 .Bd -literal -offset indent
-const struct unit *ms = unit(time_units, "ms");
+const struct unit *ms = unit_find("ms");
 double secs = 5;
 
 printf("%f seconds = %f milliseconds", secs, base2unit(secs, ms));
@@ -135,14 +154,15 @@ printf("%f seconds = %f milliseconds", secs, base2unit(secs, ms));
 The following code fragment prints the equivalent of 27 degrees Celsius,
 in kilo Kelvins:
 .Bd -literal -offset indent
-const struct unit *degC = unit(temperature_units, "degC");
-const struct unit *kK = unit(temperature_units, "kK");
+const struct unit *degC = unit_find("degC");
+const struct unit *kk = unit_find("kk");
 
-printf("27C = %fkK", unit2unit(27, degC, kK));
+printf("27C = %fkk", unit2unit(27.0, degC, kk));
 .Ed
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr fspinbutton 3 ,
+.Xr mfspinbutton 3 ,
 .Xr widget 3
 .Sh HISTORY
 The

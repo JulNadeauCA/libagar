@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.19 2004/05/12 01:00:40 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.20 2004/08/21 10:54:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -30,26 +30,97 @@
 
 #include "units.h"
 
+#define ASTRONOMICAL_UNITS
+/* #define HISTORICAL_UNITS */
+/* #define MET_UNITS */
+
+const struct unit *unit_groups[] = {
+	identity_unit,
+	length_units,
+	area_units,
+	volume_units,
+	speed_units,
+	mass_units,
+	time_units,
+	current_units,
+	temperature_units,
+	substance_amt_units,
+	light_units,
+	power_units,
+	emf_units,
+	resistance_units,
+	capacitance_units,
+	inductance_units,
+	frequency_units,
+	pressure_units,
+#ifdef MET_UNITS
+	met_units,
+#endif
+};
+const int nunit_groups = sizeof(unit_groups) / sizeof(unit_groups[0]);
+
 /*
- * Return the unit in the given group with a matching abbreviation.
- * If abbr=NULL, return the base unit.
+ * Return the unit in the given group with a matching key.
+ * If key=NULL, return the base unit.
  */
 const struct unit *
-unit(const struct unit group[], const char *abbr)
+unit_find(const char *key)
 {
-	const struct unit *unit;
+	int i;
 
-	for (unit = &group[0]; unit->abbr != NULL; unit++) {
-		if (abbr == NULL) {
-			/* Assume the first identity to be the base unit. */
-			if (unit->divider == 1)
-				return (unit);
-		} else {
-			if (strcmp(unit->abbr, abbr) == 0)
-				return (unit);
+	for (i = 0; i < nunit_groups; i++) {
+		const struct unit *group = unit_groups[i];
+		const struct unit *unit;
+
+		for (unit = &group[0]; unit->key != NULL; unit++) {
+			if (key == NULL) {
+				if (unit->divider == 1)
+					return (unit);
+			} else {
+				if (strcmp(unit->key, key) == 0)
+					return (unit);
+			}
 		}
 	}
+	fatal("no such unit: `%s'", key);
 	return (NULL);
+}
+
+/* Return the unit which yields the number the most close to 0. */
+const struct unit *
+unit_best(const struct unit ugroup[], double n)
+{
+	const struct unit *unit, *bestunit = NULL;
+	double nearest = n;
+	double quotient;
+
+	if (n == 0) {
+		goto defunit;
+	}
+	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+		quotient = n/unit->divider;
+		if (quotient >= 1.0 && quotient < 1e6) {
+			nearest = quotient;
+			bestunit = unit;
+		}
+	}
+	if (bestunit == NULL) {
+		goto defunit;
+	}
+	return (bestunit);
+defunit:
+	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+		if (unit->divider == 1.0)
+			break;
+	}
+	return (unit);
+}
+
+/* Return the abbreviation associated with the given unit. */
+const char *
+unit_abbr(const struct unit *unit)
+{
+	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
 }
 
 /* Convert from n in given unit to base unit. */
@@ -81,294 +152,300 @@ unit2unit(double n, const struct unit *ufrom, const struct unit *uto)
 }
 
 /* Default unit (identity) */
-const struct unit identity_unit = { "", "", 1, NULL };
+const struct unit identity_unit[] = {
+	{ "identity", "", "",	1.0, NULL },
+	{ NULL,	NULL, NULL,	0, NULL }
+};
 
 /* Units of length/distance */
 const struct unit length_units[] = {
-	{ "\xc3\x85",	N_("\xc3\x85ngstroms"),	0.0000000001,		NULL },
-	{ "\xc2\xb5",	N_("Microns"),		0.000001,		NULL },
-	{ "mil",	N_("Mils"),		0.000025,		NULL },
-	{ "mm",		N_("Millimeters"),	0.001,			NULL },
-	{ "in",		N_("Inches"),		0.0254,			NULL },
-	{ "cm",		N_("Centimeters"),	0.01,			NULL },
-	{ "dm",		N_("Decimeters"),	0.1,			NULL },
-	{ "lnk",	N_("Links"),		0.201168,		NULL },
-	{ "span",	N_("Spans"),		0.2286,			NULL },
-	{ "cbt",	N_("Cubits"),		0.4572,			NULL },
-	{ "ft",		N_("Feet"),		0.3048,			NULL },
-	{ "var",	N_("Varas"),		0.846668,		NULL },
-	{ "yd",		N_("Yards"),		0.9144,			NULL },
-	{ "m",		N_("Meters"),		1,			NULL },
-	{ "fh",		N_("Fathoms"),		1.8288,			NULL },
-	{ "rod",	N_("Rods"),		5.0292,			NULL },
-	{ "cha",	N_("Chains"),		20.1168,		NULL },
-	{ "fur",	N_("Furlongs"),		201.167981,		NULL },
-	{ "cbl",	N_("Cable lengths"),	219.456,		NULL },
-	{ "km",		N_("Kilometers"),	1000,			NULL },
-	{ "mi",		N_("Miles"),		1609.344,		NULL },
-	{ "nmi",	N_("Nautical miles"),	1852,			NULL },
-	{ "lg",		N_("Leagues"),		4828.031551,		NULL },
-	{ "nlg",	N_("Nautical leagues"),	5556,			NULL },
-	{ "A.U.",	N_("Astronomical units"), 159598073000.0,	NULL },
-	{ "L.Y.",	N_("Light years"),	946075309081900.0,	NULL },
-	{ "P.S.",	N_("Parsecs"),		30856780000000000.0,	NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "Ang", "\xc3\x85", N_("\xc3\x85ngstroms"), 1e-10, NULL },
+	{ "um", "\xc2\xb5", N_("Microns"),	1e-6, NULL },
+	{ "mil", "", N_("Mils"),		25e-6, NULL },
+	{ "mm", "", N_("Millimeters"),		1e-3, NULL },
+	{ "in", "", N_("Inches"),		0.0254, NULL },
+	{ "cm",	"", N_("Centimeters"),		1e-2, NULL },
+	{ "dm",	"", N_("Decimeters"),		0.1, NULL },
+	{ "ft",	"", N_("Feet"),			0.3048, NULL },
+	{ "yd", "", N_("Yards"),		0.9144,	NULL },
+	{ "m", "", N_("Meters"),		1.0, NULL },
+	{ "km", "", N_("Kilometers"),		1000, NULL },
+	{ "mi", "", N_("Miles"),		1609.344, NULL },
+	{ "mi(naut)", "", N_("Nautical miles"),	1852, NULL },
+	{ "leagues", "", N_("Leagues"),		4828.031551, NULL },
+	{ "leagues(naut)", "", N_("Nautical leagues"), 5556, NULL },
+#ifdef HISTORICAL_UNITS
+	{ "lnk", "", N_("Links"),		0.201168,	NULL },
+	{ "span", "", N_("Spans"),		0.2286,		NULL },
+	{ "cbt", "", N_("Cubits"),		0.4572,		NULL },
+	{ "var", "", N_("Varas"),		0.846668,	NULL },
+	{ "fh", "", N_("Fathoms"),		1.8288,		NULL },
+	{ "rod", "", N_("Rods"),		5.0292,		NULL },
+	{ "cha", "", N_("Chains"),		20.1168,	NULL },
+	{ "fur", "", N_("Furlongs"),		201.167981,	NULL },
+	{ "cbl", "", N_("Cable lengths"),	219.456,	NULL },
+#endif
+#ifdef ASTRONOMICAL_UNITS
+	{ "A.U.", "", N_("Astronomical units"), 159598073000.0,	NULL },
+	{ "L.Y.", "", N_("Light years"),	946075309081900.0, NULL },
+	{ "P.S.", "", N_("Parsecs"),		3085678e10, NULL },
+#endif
+	{ NULL,	NULL, NULL,			0, NULL }
 };
 
 /* Units of area (SI derived) */
 const struct unit area_units[] = {
-	{ "\xc2\xb5\xc2\xb2", N_("Square micrometers"),	0.000001,	NULL },
-	{ "mm\xc2\xb2",	N_("Square millimeters"),	0.001,		NULL },
-	{ "cm\xc2\xb2",	N_("Square centimeters"),	0.01,		NULL },
-	{ "in\xc2\xb2",	N_("Square inches"),		0.0254,		NULL },
-	{ "ft\xc2\xb2",	N_("Square feet"),		0.3048,		NULL },
-	{ "yd\xc2\xb2",	N_("Square yards"),		0.9144,		NULL },
-	{ "m\xc2\xb2",	N_("Square meters"),		1,		NULL },
-	{ "km\xc2\xb2",	N_("Square kilometers"),	1000,		NULL },
-	{ "mi\xc2\xb2",	N_("Square miles"),		1609.35,	NULL },
-	{ NULL,		NULL,				0,		NULL }
+	{ "u^2", "\xc2\xb5\xc2\xb2", N_("Square micrometers"),	1e-6, NULL },
+	{ "mm^2", "mm\xc2\xb2",	N_("Square millimeters"),	1e-3, NULL },
+	{ "cm^2", "cm\xc2\xb2",	N_("Square centimeters"),	1e-2, NULL },
+	{ "in^2", "in\xc2\xb2",	N_("Square inches"),		0.0254,	NULL },
+	{ "ft^2", "ft\xc2\xb2",	N_("Square feet"),		0.3048,	NULL },
+	{ "yd^2", "yd\xc2\xb2",	N_("Square yards"),		0.9144,	NULL },
+	{ "m^2", "m\xc2\xb2",	N_("Square meters"),		1.0, NULL },
+	{ "km^2", "km\xc2\xb2",	N_("Square kilometers"),	1000, NULL },
+	{ "mi^2", "mi\xc2\xb2",	N_("Square miles"),		1609.35, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
 };
 
 /* Units of volume (SI derived) */
 const struct unit volume_units[] = {
-	{ "\xc2\xb5m\xc2\xb3", N_("Cubic micrometers"),	0.000001,	NULL },
-	{ "mm\xc2\xb3",	N_("Cubic millimeters"),	0.001,		NULL },
-	{ "cm\xc2\xb3",	N_("Cubic centimeters"),	0.01,		NULL },
-	{ "in\xc2\xb3",	N_("Cubic inches"),		0.0254,		NULL },
-	{ "ft\xc2\xb3",	N_("Cubic feet"),		0.3048,		NULL },
-	{ "yd\xc2\xb3",	N_("Cubic yards"),		0.9144,		NULL },
-	{ "m\xc2\xb3",	N_("Cubic meters"),		1,		NULL },
-	{ "km\xc2\xb3",	N_("Cubic kilometers"),		1000,		NULL },
-	{ "mi\xc2\xb3",	N_("Cubic miles"),		1609.35,	NULL },
-	{ NULL,		NULL,				0,		NULL }
+	{ "u^3", "\xc2\xb5m\xc2\xb3", N_("Cubic micrometers"),	1e-6, NULL },
+	{ "mm^3", "mm\xc2\xb3",	N_("Cubic millimeters"),	1e-3, NULL },
+	{ "cm^3", "cm\xc2\xb3",	N_("Cubic centimeters"),	1e-2, NULL },
+	{ "in^3", "in\xc2\xb3",	N_("Cubic inches"),		0.0254, NULL },
+	{ "ft^3", "ft\xc2\xb3",	N_("Cubic feet"),		0.3048,	NULL },
+	{ "yd^3", "yd\xc2\xb3",	N_("Cubic yards"),		0.9144, NULL },
+	{ "m^3", "m\xc2\xb3", N_("Cubic meters"),		1.0, NULL },
+	{ "km^3", "km\xc2\xb3",	N_("Cubic kilometers"),		1e3, NULL },
+	{ "mi^3", "mi\xc2\xb3",	N_("Cubic miles"),		1609.35, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
 };
 
 /* Units of speed/velocity (SI derived) */
 const struct unit speed_units[] = {
-	{ "\xc2\xb5m/s", N_("Micrometers per second"),	0.000001,	NULL },
-	{ "mm/s",	N_("Millimeters per second"),	0.001,		NULL },
-	{ "cm/s",	N_("Centimeters per second"),	0.01,		NULL },
-	{ "in/s",	N_("Inches per second"),	0.0254,		NULL },
-	{ "ft/s",	N_("Feet per second"),		0.3048,		NULL },
-	{ "yd/s",	N_("Yards per second"),		0.9144,		NULL },
-	{ "m/s",	N_("Meters per second"),	1,		NULL },
-	{ "km/s",	N_("Kilometers per second"),	1000,		NULL },
-	{ "mi/s",	N_("Miles per second"),		1609.35,	NULL },
-	{ NULL,		NULL,				0,		NULL }
+	{ "um/s", "\xc2\xb5m/s", N_("Micrometers per second"),	1e-6, NULL },
+	{ "mm/s", "", N_("Millimeters per second"),		1e-3, NULL },
+	{ "cm/s", "", N_("Centimeters per second"),		1e-2, NULL },
+	{ "in/s", "", N_("Inches per second"),			0.0254, NULL },
+	{ "ft/s", "", N_("Feet per second"),			0.3048,	NULL },
+	{ "yd/s", "", N_("Yards per second"),			0.9144,	NULL },
+	{ "m/s", "", N_("Meters per second"),			1.0, NULL },
+	{ "km/s", "", N_("Kilometers per second"),		1e3, NULL },
+	{ "mi/s", "", N_("Miles per second"),			1609.35, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
 };
 
 /* Units of weight */
 const struct unit mass_units[] = {
-	{ "\xc2\xb5g",	N_("Micrograms"),	0.000001,		NULL },
-	{ "mg",		N_("Milligrams"),	0.001,			NULL },
-	{ "gr",		N_("Grains"),		0.0648,			NULL },
-	{ "cg",		N_("Centigrams"),	0.01,			NULL },
-	{ "dg",		N_("Decigrams"),	0.1,			NULL },
-	{ "car",	N_("Carats [troy]"),	0.2,			NULL },
-	{ "g", 		N_("Grams"),		1,			NULL },
-	{ "sc", 	N_("Scruples [apot]"),	1.296,			NULL },
-	{ "pw", 	N_("Pennyweight"),	1.5552,			NULL },
-	{ "dr", 	N_("Drams"),		1.771875,		NULL },
-	{ "dr(a)", 	N_("Drams [apot]"),	3.888,			NULL },
-	{ "pda",	N_("Poundals"),		14.086956521739129,	NULL },
-	{ "oz", 	N_("Ounces [comm]"),	28.349,			NULL },
-	{ "oz(t)", 	N_("Ounces [troy]"),	31.104,			NULL },
-	{ "lb",		N_("Pounds [comm]"),	453.59,			NULL },
-	{ "lb(t)",	N_("Pounds [troy]"),	373.248,		NULL },
-	{ "kg", 	N_("Kilograms"),	1000,			NULL },
-	{ "sto",	N_("Stones"),		6530.40,		NULL },
-	{ "qu",		N_("Quarters"),		11340,			NULL },
-	{ "slu", 	N_("Slugs"),		14605.92,		NULL },
-	{ "100wt", 	N_("100 weights"),	45360,			NULL },
-	{ "t(s)",	N_("Tons [short]"),	907200,			NULL },
-	{ "Mg", 	N_("Megagrams"),	1000000,		NULL },
-	{ "t",		N_("Tons [metric]"),	1000000,		NULL },
-	{ "t(l)",	N_("Tons [long]"),	1016064,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "ug", "\xc2\xb5g", N_("Micrograms"),	1e-6, NULL },
+	{ "mg", "", N_("Milligrams"),		1e-3, NULL },
+	{ "cg", "", N_("Centigrams"),		1e-2, NULL },
+	{ "dg", "", N_("Decigrams"),		1e-1, NULL },
+	{ "g", "", N_("Grams"),			1.0, NULL },
+	{ "oz", "", N_("Ounces [comm]"),	28.349,	NULL },
+	{ "lbs", "", N_("Pounds [comm]"),	453.59,	NULL },
+	{ "kg", "", N_("Kilograms"),		1e3, NULL },
+	{ "t(s)", "", N_("Tons [short]"),	907200, NULL },
+	{ "t", "", N_("Tons [metric]"),		1e6, NULL },
+	{ "t(l)", "", N_("Tons [long]"),	1016064, NULL },
+#ifdef HISTORICAL_UNITS
+	{ "grains", "", N_("Grains"),			0.0648,	NULL },
+	{ "carats", "", N_("Carats [troy]"),		0.2, NULL },
+	{ "oz(troy)", "", N_("Ounces [troy]"),		31.104,	NULL },
+	{ "lb(troy)", "", N_("Pounds [troy]"),		373.248, NULL },
+	{ "scruples", "", N_("Scruples [apot]"),	1.296, NULL },
+	{ "pennywts", "", N_("Pennyweights"),		1.5552, NULL },
+	{ "drams", "", N_("Drams"),			1.771875, NULL },
+	{ "poundals", "", N_("Poundals"),		14.086956521739, NULL },
+	{ "stones", "", N_("Stones"),			6530.40, NULL },
+	{ "quarters", "", N_("Quarters"),		11340, NULL },
+	{ "slugs", "", N_("Slugs"),			14605.92, NULL },
+	{ "100wts", "", N_("100 weights"),		45360, NULL },
+	{ "drams(apot)", "", N_("Drams [apot]"),	3.888, NULL },
+	{ "batmans", "", _("Batmans"),			16e6, NULL },
+#endif
+	{ NULL, NULL, NULL,				0, NULL }
 };
 
 /* Units of time */
 const struct unit time_units[] = {
-	{ "ns",		N_("Nanoseconds"),	0.000000001,		NULL },
-	{ "\xc2\xb5s",	N_("Microseconds"),	0.000001,		NULL },
-	{ "ms",		N_("Milliseconds"),	0.001,			NULL },
-	{ "s", 		N_("Seconds"),		1,			NULL },
-	{ "m",		N_("Minutes"),		60,			NULL },
-	{ "h", 		N_("Hours"),		3600,			NULL },
-	{ "d",		N_("Days"),		86400,			NULL },
-	{ "\xce\x9a\x64", N_("Weeks [Erisian]"), 432000,		NULL },
-	{ "w",		N_("Weeks"),		604800,			NULL },
-	{ "\xce\x9am",	N_("Months [Erisian]"),	6307200,		NULL },
-	{ "y",		N_("Years"),		31104000,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "ns", "", N_("Nanoseconds"),			1e-9, NULL },
+	{ "us", "\xc2\xb5s", N_("Microseconds"),	1e-6, NULL },
+	{ "ms", "", N_("Milliseconds"),			1e-3, NULL },
+	{ "sec", "", N_("Seconds"),			1.0, NULL },
+	{ "min", "", N_("Minutes"),			60, NULL },
+	{ "hr", "", N_("Hours"),			3600, NULL },
+	{ "day", "", N_("Days"),			86400, NULL },
+	{ "w(poee)", "\xce\x9a\x64", N_("Weeks [POEE]"), 432000, NULL },
+	{ "wks", "", N_("Weeks"),			604800,	NULL },
+	{ "m(poee)", "\xce\x9am", N_("Months [POEE]"),	6307200, NULL },
+	{ "yrs", "", N_("Years"),			31104000, NULL },
+	{ NULL,	NULL, NULL,				0, NULL }
 };
 
 /* Units of electrical current */
 const struct unit current_units[] = {
-	{ "pA",		N_("Picoamperes"),	0.000000000001,		NULL },
-	{ "nA",		N_("Nanoamperes"),	0.000000001,		NULL },
-	{ "\xc2\xb5\x41", N_("Microamperes"),	0.000001,		NULL },
-	{ "mA",		N_("Milliamperes"),	0.001,			NULL },
-	{ "A",		N_("Amperes"),		1,			NULL },
-	{ "kA",		N_("Kiloamperes"),	1000,			NULL },
-	{ "MA",		N_("Megaamperes"),	1000000,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "pA", "", N_("Picoamperes"),			1e-12, NULL },
+	{ "nA", "", N_("Nanoamperes"),			1e-9, NULL },
+	{ "uA", "\xc2\xb5\x41", N_("Microamperes"),	1e-6, NULL },
+	{ "mA", "", N_("Milliamperes"),			1e-3, NULL },
+	{ "A", "", N_("Amperes"),			1.0, NULL },
+	{ "kA", "", N_("Kiloamperes"),			1e3, NULL },
+	{ "MA", "", N_("Megaamperes"),			1e6, NULL },
+	{ NULL, NULL, NULL,				0, NULL }
 };
 
 /* Units of temperature */
 static double degF2K(double degF) { return ((degF-32)/1.8 + 273.15); }
-static double degC2K(double degC) { return (degC + 273.15); }
+static double degC2K(double degC) { return (degC+273.15); }
 static double degRa2K(double degRa) { return ((degRa-32-459.67)/1.8 + 273.15); }
-static double degR2K(double degR) { return (degR*1.25 + 273.15); }
+static double degRe2K(double degR) { return (degR*1.25 + 273.15); }
 const struct unit temperature_units[] = {
-	{ "K",		N_("Kelvins"),			1,		NULL },
-	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	0,	      degC2K },
-	{ "\xc2\xb0\x46", N_("Degrees Farenheit"),	0,	      degF2K },
-	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0,           degRa2K },
-	{ "\xc2\xb0\x65", N_("Degrees Reaumur"),	0,            degR2K },
-	{ "\xc2\xb5K",	N_("Microkelvins"),		0.000001,	NULL },
-	{ "mK",		N_("Millikelvins"),		0.001,		NULL },
-	{ "kK",		N_("Kilokelvins"),		1000,		NULL },
-	{ "MK",		N_("Megakelvins"),		1000000,	NULL },
-	{ NULL,		NULL,				0,		NULL }
+	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),	0, degC2K },
+	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"),	0, degF2K },
+#ifdef HISTORICAL_UNITS
+	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),	0, degRa2K },
+	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),	0, degRe2K },
+#endif
+	{ "uk", "\xc2\xb5k", "Microkelvins",			1e-6, NULL },
+	{ "mk", "", "Millikelvins",				1e-3, NULL },
+	{ "k", "", "Kelvins",					1.0, NULL },
+	{ "kk",	"", "Kilokelvins",				1e3, NULL },
+	{ "Mk",	"", N_("Megakelvins"),				1e6, NULL },
+	{ NULL,	NULL, NULL,					0, NULL }
 };
 
 /* Units of substance amount */
-const struct unit substance_amount_units[] = {
-	{ "pmol",	N_("Picomoles"),	0.000000000001,		NULL },
-	{ "\xc2\xb5mol",N_("Micromoles"),	0.000001,		NULL },
-	{ "mmol",	N_("Millimoles"),	0.001,			NULL },
-	{ "mol",	N_("Moles"),		1,			NULL },
-	{ "kmol",	N_("Kilomoles"),	1000,			NULL },
-	{ "Mmol",	N_("Megamoles"),	1000000,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+const struct unit substance_amt_units[] = {
+	{ "pmol", "", "Picomoles",			1e-12, NULL },
+	{ "umol", "\xc2\xb5mol", "Micromoles",		1e-6, NULL },
+	{ "mmol", "", "Millimoles",			1e-3, NULL },
+	{ "mol", "", "Moles",				1.0, NULL },
+	{ "kmol", "", "Kilomoles",			1e3, NULL },
+	{ "Mmol", "", N_("Megamoles"),			1e6, NULL },
+	{ NULL,	NULL, NULL,				0, NULL }
 };
 
 /* Units of light measurement */
 const struct unit light_units[] = {
-	{ "\xc2\xb5\x63\x64", N_("Microcandelas"),	0.000001,	NULL },
-	{ "mcd",	N_("Millicandelas"),		0.001,		NULL },
-	{ "cd",		N_("Candelas"),			1,		NULL },
-	{ "kcd",	N_("Kilocandelas"),		1000,		NULL },
-	{ "Mcd",	N_("Megacandelas"),		1000000,	NULL },
-	{ NULL,		NULL,				0,		NULL }
+	{ "ucd", "\xc2\xb5\x63\x64", "Microcandelas",		1e-6, NULL },
+	{ "mcd", "", "Millicandelas",				1e-3, NULL },
+	{ "cd", "", "Candelas",					1.0, NULL },
+	{ "kcd", "", "Kilocandelas",				1e3, NULL },
+	{ "Mcd", "", N_("Megacandelas"),			1e6, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
 };
 
 /* Units of power */
 const struct unit power_units[] = {
-	{ "\xc2\xb5W",	N_("Microwatts"),	0.000001,		NULL },
-	{ "mW",		N_("Milliwatts"),	0.001,			NULL },
-	{ "BTU/h",	N_("BTU/hour"),		0.292875,		NULL },
-	{ "f-lbs/s",	N_("Foot-lbs/sec"),	1.355818,		NULL },
-	{ "W",		N_("Watts"),		1,			NULL },
-	{ "kC/m",	N_("Kilocalories/min"),	69.733,			NULL },
-	{ "HP",		N_("Horsepower"),	746,			NULL },
-	{ "kW",		N_("Kilowatts"),	1000,			NULL },
-	{ "kC/s",	N_("Kilocalories/sec"),	4183.98,		NULL },
-	{ "MW",		N_("Megawatts"),	1000000,		NULL },
-	{ "GW",		N_("Gigawatts"),	1000000000,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "uW", "\xc2\xb5W", "Microwatts",	1e-6, NULL },
+	{ "mW", "", "Milliwatts",		1e-3, NULL },
+	{ "BTU/h", "", "BTU/hr",		0.292875, NULL },
+	{ "f-lbs/s", "", N_("Foot-lbs/sec"),	1.355818, NULL },
+	{ "W", "", "Watts",			1.0, NULL },
+	{ "kC/m", "", "Kilocalories/min",	69.733, NULL },
+	{ "HP", "", N_("Horsepower"),		746, NULL },
+	{ "kW", "", "Kilowatts",		1e3, NULL },
+	{ "kC/s", "", "Kilocalories/sec",	4183.98, NULL },
+	{ "MW", "", N_("Megawatts"),		1e6, NULL },
+	{ "GW", "", "Gigawatts",		1e9, NULL },
+	{ NULL, NULL, NULL,			0, NULL }
 };
 
 /* Units of electromotive force */
 const struct unit emf_units[] = {
-	{ "\xc2\xb5V",	N_("Microvolts"),	0.000001,		NULL },
-	{ "mV",		N_("Millivolts"),	0.001,			NULL },
-	{ "V",		N_("Volts"),		1,			NULL },
-	{ "kV",		N_("Kilovolts"),	1000,			NULL },
-	{ "MV",		N_("Megavolts"),	1000000,		NULL },
-	{ NULL,		NULL,			0,			NULL }
+	{ "uV", "\xc2\xb5V", "Microvolts",	1e-6, NULL },
+	{ "mV", "", "Millivolts",		1e-3, NULL },
+	{ "V", "", "Volts",			1.0, NULL },
+	{ "kV", "", "Kilovolts",		1e3, NULL },
+	{ "MV", "", N_("Megavolts"),		1e6, NULL },
+	{ NULL, NULL, NULL,			0, NULL }
 };
 
 /* Units of electrical resistance */
 const struct unit resistance_units[] = {
-	{ "\xc2\xb5\xce\xa9",	N_("Microohms"),	0.000001,	NULL },
-	{ "m\xce\xa9",		N_("Milliohms"),	0.001,		NULL },
-	{ "\xce\xa9",		N_("Ohms"),		1,		NULL },
-	{ "k\xce\xa9",		N_("Kilohms"),		1000,		NULL },
-	{ "M\xce\xa9",		N_("Megohms"),		1000000,	NULL },
-	{ NULL,			NULL,			0,		NULL }
+	{ "uohms", "\xc2\xb5\xce\xa9", "Microohms",	1e-6, NULL },
+	{ "mohms", "m\xce\xa9", "Milliohms",		1e-3, NULL },
+	{ "ohms", "\xce\xa9", "Ohms",			1.0, NULL },
+	{ "kohms", "k\xce\xa9",	"Kilohms",		1e3, NULL },
+	{ "megaohms", "M\xce\xa9", N_("Megaohms"),	1e6, NULL },
+	{ NULL, NULL, NULL,				0, NULL }
 };
 
 /* Units of electrical capacitance */
 const struct unit capacitance_units[] = {
-	{ "pF",			N_("Picofarads"),	0.000000000001,	NULL },
-	{ "nF",			N_("Nanofarads"),	0.000000001,	NULL },
-	{ "\xc2\xb5\x46",	N_("Microfarads"),	0.000001,	NULL },
-	{ "mF"	,		N_("Millifarads"),	0.001,		NULL },
-	{ "F",			N_("Farads"),		1,		NULL },
-	{ "kF",			N_("Kilofarads"),	1000,		NULL },
-	{ "MF",			N_("Megafarads"),	1000000,	NULL },
-	{ NULL,			NULL,			0,		NULL }
+	{ "pF", "", "Picofarads",			1e-12, NULL },
+	{ "nF", "", "Nanofarads",			1e-9, NULL },
+	{ "uF", "\xc2\xb5\x46",	"Microfarads",		1e-6, NULL },
+	{ "mF", "", "Millifarads",			1e-3, NULL },
+	{ "F", "", "Farads",				1.0, NULL },
+	{ "kF", "", "Kilofarads",			1e3, NULL },
+	{ NULL,	NULL, NULL,				0, NULL }
 };
 
 /* Units of electrical inductance */
 const struct unit inductance_units[] = {
-	{ "\xc2\xb5\x48",	N_("Microhenries"),	0.000001,	NULL },
-	{ "mH"	,		N_("Millihenries"),	0.001,		NULL },
-	{ "H",			N_("Henries"),		1,		NULL },
-	{ "kH",			N_("Kilohenries"),	1000,		NULL },
-	{ NULL,			NULL,			0,		NULL }
+	{ "uH", "\xc2\xb5\x48",	"Microhenries",		1e-6, NULL },
+	{ "mH", "", "Millihenries",			1e-3, NULL },
+	{ "H", "", "Henries",				1.0, NULL },
+	{ "kH", "", "Kilohenries",			1e3, NULL },
+	{ NULL, NULL, NULL,				0, NULL }
 };
 
 /* Units of frequency */
 const struct unit frequency_units[] = {
-	{ "\xc2\xb5Hz",		N_("Microhertz"),	0.000001,	NULL },
-	{ "mHz"	,		N_("Millihertz"),	0.001,		NULL },
-	{ "Hz",			N_("Hertz"),		1,		NULL },
-	{ "kHz",		N_("Kilohertz"),	1000,		NULL },
-	{ "MHz",		N_("Megahertz"),	1000000,	NULL },
-	{ "GHz",		N_("Gigahertz"),	1000000000,	NULL },
-	{ NULL,			NULL,			0,		NULL }
+	{ "uHz", "\xc2\xb5Hz","Microhertz",	1e-6, NULL },
+	{ "mHz", "", "Millihertz",		1e-3, NULL },
+	{ "Hz", "", "Hertz",			1.0, NULL },
+	{ "kHz", "", "Kilohertz",		1e3, NULL },
+	{ "MHz", "", N_("Megahertz"),		1e6, NULL },
+	{ "GHz", "", "Gigahertz",		1e9, NULL },
+	{ NULL, NULL, NULL,			0, NULL }
 };
 
 /* Units of pressure and stress */
 const struct unit pressure_units[] = {
-	{ "Pa",			N_("Pascals"),		1,		NULL },
-	{ "hPa",		N_("Hectopascals"),	100,		NULL },
-	{ "Mba",		N_("Millibars"),	100,		NULL },
-	{ "kPa",		N_("Kilopascals"),	1000,		NULL },
-	{ "Bar",		N_("Bars"),		100000,		NULL },
-	{ "Kg-f/m\xc2\xb2",	N_("Kg-force per square meters"), 9.80665,
-	  NULL },
-	{ "Cm H\xc2\xb2O",	N_("Centimeters of water"), 98.0665,	NULL },
-	{ "In H\xc2\xb2O",	N_("Inches of water"),	249.08891,	NULL },
-	{ "Cm Hg",		N_("Centimeters of mercury"), 1333.22,	NULL },
-	{ "Ft H\xc2\xb2O",	N_("Feet of water"),	2989.06692,	NULL },
-	{ "In Hg",		N_("Inches of mercury"), 3386.388,	NULL },
-	{ "m H\xc2\xb2O",	N_("Meters of water"),	9806.65,	NULL },
-	{ "Ki/In\xc2\xb2",	N_("Kips per square inch"), 6894760,	NULL },
-	{ "P/A",		N_("Pluto Atmospheres"), 0.5,		NULL },
-	{ "E/A",		N_("Earth Atmospheres"), 101325,	NULL },
-	{ "M/A",		N_("Mars Atmospheres"), 1000,		NULL },
-	{ NULL,			NULL,			0,		NULL }
+	{ "Pa", "", "Pascals",					1.0, NULL },
+	{ "Mba", "", "Millibars",				1e2, NULL },
+	{ "kPa", "", "Kilopascals",				1e3, NULL },
+	{ "Bar", "", "Bars",					1e5, NULL },
+	{ "Kg-f/m^2", "Kg-f/m\xc2\xb2",	N_("Kg-force per m^2"), 9.80665, NULL },
+	{ "Cm H2O", "Cm H\xc2\xb2O", N_("Centimeters of water"),98.0665, NULL },
+	{ "In H2O", "In H\xc2\xb2O", N_("Inches of water"),  249.08891, NULL },
+	{ "Cm Hg", "", N_("Centimeters of mercury"),		1333.22, NULL },
+	{ "Ft H2O", "Ft H\xc2\xb2O", N_("Feet of water"),    2989.06692, NULL },
+	{ "In Hg", "", N_("Inches of mercury"),		       3386.388, NULL },
+	{ "m H2O", "m H\xc2\xb2O", N_("Meters of water"),	9806.65, NULL },
+	{ "Kips/in^2", "Kips/In\xc2\xb2", N_("Kips per in^2"),	6894760, NULL },
+#ifdef ASTRONOMICAL_UNITS
+	{ "Atm(Pluto)", "", N_("Pluto Atmospheres"),		0.5, NULL },
+	{ "Atm(Earth)", "", N_("Earth Atmospheres"),		101325, NULL },
+	{ "Atm(Mars)", "", N_("Mars Atmospheres"),		1e3, NULL },
+#endif
+	{ NULL,	NULL, NULL,					0, NULL }
 };
 
-/* Units of metabolic cost of physical activity */
-const struct unit metabolic_expenditure_units[] = {
-	{ "MET",	N_("Metabolic equivalent"),		1,	NULL },
-	{ "Kcal/min",	N_("Kilokalories per minute"),		1,	NULL },
-	{ "O\xc2/kg",	N_("Ml O\xc2/kg/minute"),		3.5,	NULL },
-	{ "Mess",	N_("Attending church"),			2.5,	NULL },
-	{ "Slo-mos",	N_("Very slow walking (<2.0mph)"),	2,	NULL },
-	{ "Slomarches",	N_("Slow walking (2.0mph)"),		2.5,	NULL },
-	{ "Minimarches", N_("Walking (2.5mph)"),		3,	NULL },
-	{ "Marches",	N_("Moderate walking (3.0mph)"),	3.5,	NULL },
-	{ "Supermarches", N_("Walking - brisk (3.5mph)"),	4,	NULL },
-	{ "Hypermarches", N_("Walking - very brisk (4.5mph)"),	4.5,	NULL },
-	{ "Treks",	N_("Walking (3-5mph, mountains)"), 	5,	NULL },
-	{ "Uptreks",	N_("Uphill walking (3.5mph)"),		6,	NULL },
-	{ "Minibikes",	N_("Light biking (10-11.9mph)"),	6,	NULL },
-	{ "Bikes",	N_("Moderate biking (12-13.9mph)"),	8,	NULL },
-	{ "Superbikes",	N_("Vigorous biking (14-15.9mph)"),	10,	NULL },
-	{ "Megabikes",	N_("Race biking (16-19mph)"),		12,	NULL },
-	{ "Gigabikes",	N_("Race biking (>20mph)"),		16,	NULL },
-	{ "Buttes",	N_("Mountain and rock climbing"),	8,	NULL },
-	{ "Yogas",	N_("Stretching, yoga"),			4,	NULL },
-	{ "Jogs",	N_("Jogging"),				7,	NULL },
-	{ "Skis",	N_("General/cross-country skiing"),	7,	NULL },
-	{ "Superskis",	N_("Cross-country/moderate skiing"),	8,	NULL },
-	{ "Gigaskis",	N_("Cross-country/vigorous skiing"),	14,	NULL },
-	{ NULL,		NULL,					0,	NULL }
+#ifdef MET_UNITS
+/* Units of metabolic cost (ie. physical activity) */
+const struct unit met_units[] = {
+	{ "MET", "", N_("Metabolic equivalent"),		1.0, NULL },
+	{ "MESS", "", N_("Attending church"),			2.5, NULL },
+	{ "Kcal/min", "", N_("Kilokalories per minute"),	1.0, NULL },
+	{ "O2/kg", "O\xc2/kg", "Millilitres O\xc2/kg/min",	3.5, NULL },
+	{ "Slo-mos", "", N_("Slow walking (<=2.0mph)"),		2.0, NULL },
+	{ "Marches", "", N_("Moderate walking (3.0mph)"),	3.5, NULL },
+	{ "Supermarches", "", N_("Walking - brisk (3.5mph)"),	4.0, NULL },
+	{ "Treks", "",	N_("Walking (3.5mph) + biking (10-11.9mph)"), 6, NULL},
+	{ "Hypermarches", "", N_("Walking - very brisk (4.5mph)"), 4.5,	NULL },
+	{ "Bikes", "", N_("Moderate biking (12-13.9mph)"),	8, NULL },
+	{ "Superbikes", "", N_("Vigorous biking (14-15.9mph)"),	10, NULL },
+	{ "Megabikes", "", N_("Race biking (16-19mph)"),	12, NULL },
+	{ "Gigabikes", "", N_("Race biking (>20mph)"),		16, NULL },
+	{ "Buttes", "", N_("Mountain and rock climbing"),	8, NULL },
+	{ "Yogas", "", N_("Stretching, yoga"),			4, NULL },
+	{ "Skis", "", N_("General/cross-country skiing"),	7, NULL },
+	{ "Superskis", "", N_("Cross-country/moderate skiing"),	8, NULL },
+	{ "Hyperskis", "", N_("Cross-country/vigorous skiing"),	14, NULL },
+	{ NULL, NULL, NULL,					0, NULL }
 };
-
+#endif
