@@ -59,8 +59,8 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	omtmapx = med->mtmapx;
 	omtmapy = med->mtmapy;
 
-	med->mmapx = (ev->motion.x / m->tilew);
-	med->mmapy = (ev->motion.y / m->tileh);
+	med->mmapx = (ev->motion.x / TILEW);
+	med->mmapy = (ev->motion.y / TILEH);
 	med->mtmapx = med->mmapx;
 	med->mtmapy = med->mmapy;
 	mx = (m->view->mapx + med->mmapx) - m->view->mapxoffs;
@@ -167,8 +167,8 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 		return;
 	}
 
-	vx = (ev->button.x / m->tilew);
-	vy = (ev->button.y / m->tileh);
+	vx = (ev->button.x / TILEW);
+	vy = (ev->button.y / TILEH);
 	mx = (m->view->mapx + vx) - m->view->mapxoffs;
 	my = (m->view->mapy + vy) - m->view->mapyoffs;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.46 2002/06/01 09:24:27 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.47 2002/06/01 14:21:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -105,7 +105,6 @@ event_hotkey(SDL_Event *ev)
 		pthread_mutex_unlock(&world->lock);
 		engine_stop();
 		return;
-		break;
 	default:
 		break;
 	}
@@ -163,11 +162,20 @@ event_loop(void *arg)
 		} else if (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
+				dprintf("expose\n");
 				view_redraw(mainview);
 				break;
 			case SDL_MOUSEMOTION:
-				if (curmapedit != NULL) {	/* XXX */
-					mapedit_event(curmapedit, &ev);
+				rv = 0;
+				pthread_mutex_lock(&mainview->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					rv = window_event_all(mainview, &ev);
+				}
+				pthread_mutex_unlock(&mainview->lock);
+				if (rv == 0) {
+					if (curmapedit != NULL) { /* XXX */
+						mapedit_event(curmapedit, &ev);
+					}
 				}
 				break;
 			case SDL_MOUSEBUTTONUP:

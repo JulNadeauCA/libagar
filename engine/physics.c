@@ -301,7 +301,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					mapdir_set(dir, DIR_UP, 0);
 				}
 			}
-			if (nref->yoffs <= (-map->tilew + dir->speed)) {
+			if (nref->yoffs <= (-TILEW + dir->speed)) {
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_UP;
 				moved |= DIR_UP;
@@ -320,7 +320,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs -= dir->speed;
 				} else {
-					nref->yoffs = -map->tileh;
+					nref->yoffs = -TILEH;
 				}
 			}
 		}
@@ -342,7 +342,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					mapdir_set(dir, DIR_DOWN, 0);
 				}
 			}
-			if (nref->yoffs >= map->tilew - dir->speed) {
+			if (nref->yoffs >= TILEW - dir->speed) {
 				nref->yoffs = 1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_DOWN;
@@ -361,7 +361,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs += dir->speed;
 				} else {
-					nref->yoffs = map->tileh;
+					nref->yoffs = TILEH;
 				}
 			}
 		}
@@ -384,7 +384,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					mapdir_set(dir, DIR_LEFT, 0);
 				}
 			}
-			if (nref->xoffs <= (-map->tilew + dir->speed)) {
+			if (nref->xoffs <= (-TILEW + dir->speed)) {
 				nref->xoffs = -1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_LEFT;
@@ -404,7 +404,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs -= dir->speed;
 				} else {
-					nref->xoffs = -map->tilew;
+					nref->xoffs = -TILEW;
 				}
 			}
 		}
@@ -426,7 +426,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					mapdir_set(dir, DIR_RIGHT, 0);
 				}
 			}
-			if (nref->xoffs >= (map->tilew - dir->speed)) {
+			if (nref->xoffs >= (TILEW - dir->speed)) {
 				nref->xoffs = 1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_RIGHT;
@@ -445,7 +445,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs += dir->speed;
 				} else {
-					nref->xoffs = map->tilew;
+					nref->xoffs = TILEW;
 				}
 			}
 		}

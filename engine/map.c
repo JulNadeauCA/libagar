@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.91 2002/06/01 02:39:12 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.92 2002/06/01 14:21:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -74,20 +74,18 @@ struct draw {
  * Map must be locked.
  */
 void
-map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
+map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 {
 	Uint32 i, x, y;
 	
 	m->mapw = w;
 	m->maph = h;
-	m->tilew = tilew;
-	m->tileh = tileh;
 
 	/* This is why sprite sizes must be a power of two. */
-	for (i = 0; (1 << i) != tilew; i++)
+	for (i = 0; (1 << i) != TILEW; i++)
 	    ;;
 	m->shtilex = i;
-	for (i = 1; (1 << i) != tileh; i++)
+	for (i = 1; (1 << i) != TILEH; i++)
 	    ;;
 	m->shtiley = i;
 
@@ -151,8 +149,6 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	m->fps = 100;		/* XXX pref */
 	m->mapw = 0;
 	m->maph = 0;
-	m->tilew = 0;
-	m->tileh = 0;
 	m->shtilex = 0;
 	m->shtiley = 0;
 	m->defx = 0;
@@ -483,7 +479,7 @@ map_animate(struct map *m)
 						MAPEDIT_PREDRAW(m, nnode,
 						    vx - 1, vy);
 						map_rendernode(m, nnode,
-						    rx - m->tilew, ry);
+						    rx - TILEW, ry);
 						MAPEDIT_POSTDRAW(m, nnode,
 						    vx - 1, vy);
 						view->rects[ri++] =
@@ -497,7 +493,7 @@ map_animate(struct map *m)
 						MAPEDIT_PREDRAW(m, nnode,
 						    vx + 1, vy);
 						map_rendernode(m, nnode,
-						    rx + m->tilew, ry);
+						    rx + TILEW, ry);
 						MAPEDIT_POSTDRAW(m, nnode,
 						    vx + 1, vy);
 						view->rects[ri++] =
@@ -511,7 +507,7 @@ map_animate(struct map *m)
 						MAPEDIT_PREDRAW(m, nnode,
 						    vx, vy - 1);
 						map_rendernode(m, nnode,
-						    rx, ry - m->tileh);
+						    rx, ry - TILEH);
 						MAPEDIT_POSTDRAW(m, nnode,
 						    vx, vy - 1);
 						view->rects[ri++] =
@@ -525,7 +521,7 @@ map_animate(struct map *m)
 						MAPEDIT_PREDRAW(m, nnode,
 						    vx, vy + 1);
 						map_rendernode(m, nnode,
-						    rx, ry + m->tileh);
+						    rx, ry + TILEH);
 						MAPEDIT_POSTDRAW(m, nnode,
 						    vx, vy + 1);
 						view->rects[ri++] =
@@ -609,8 +605,8 @@ map_draw(struct map *m)
 
 					rd.x = rx + nref->xoffs;
 					rd.y = ry + nref->yoffs;
-					rd.w = m->tilew;
-					rd.h = m->tileh;
+					rd.w = TILEW;
+					rd.h = TILEH;
 					SDL_BlitSurface(
 					    SPRITE(nref->pobj, nref->offs),
 					    NULL, view->v, &rd);
@@ -681,8 +677,10 @@ map_load(void *ob, int fd)
 	m->maph  = fobj_read_uint32(fd);
 	m->defx  = fobj_read_uint32(fd);
 	m->defy  = fobj_read_uint32(fd);
-	m->tilew = fobj_read_uint32(fd);
-	m->tileh = fobj_read_uint32(fd);
+
+	/* Pad: tilew, tileh */
+	fobj_read_uint32(fd);
+	fobj_read_uint32(fd);
 
 	/* Load the object map. */
 	nobjs = fobj_read_uint32(fd);
@@ -711,7 +709,7 @@ map_load(void *ob, int fd)
 		map_freenodes(m);
 		m->map = NULL;
 	}
-	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
+	map_allocnodes(m, m->mapw, m->maph);
 
 	/* Adjust the view. */
 	view_setmode(m->view, m, -1, NULL);
@@ -789,8 +787,8 @@ map_save(void *ob, int fd)
 	fobj_bwrite_uint32(buf, m->maph);
 	fobj_bwrite_uint32(buf, m->defx);
 	fobj_bwrite_uint32(buf, m->defy);
-	fobj_bwrite_uint32(buf, m->tilew);
-	fobj_bwrite_uint32(buf, m->tileh);
+	fobj_bwrite_uint32(buf, TILEW);
+	fobj_bwrite_uint32(buf, TILEH);
 	
 	soffs = buf->offs;
 	fobj_bwrite_uint32(buf, 0);
