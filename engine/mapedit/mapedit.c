@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.150 2003/03/10 05:49:10 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.151 2003/03/11 00:12:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -310,7 +310,7 @@ mapedit_win_new_view(int argc, union evarg *argv)
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	mv = mapview_new(reg, m, MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT, 100, 100);
+	mv = mapview_new(reg, m, MAPVIEW_INDEPENDENT, 100, 100);
 
 	win->focus = WIDGET(mv);
 
@@ -371,8 +371,7 @@ mapedit_win_new(struct map *m)
 	    60, 70);
 
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, m,
-	    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT,
+	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT,
 	    100, 100);
 
 	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);
