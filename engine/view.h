@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.8 2002/02/25 11:07:24 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.9 2002/02/25 11:22:45 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -21,7 +21,7 @@ struct viewport {
 
 extern struct viewport *mainview;	/* view.c */
 
-struct viewport *view_create(int, int, int, int);
+struct viewport *view_create(Uint32, Uint32, Uint32, Uint32);
 int		 view_setmode(struct viewport *, struct map *, int, char *);
 void		 view_destroy(struct viewport *);
 int		 view_fullscreen(struct viewport *, int);
