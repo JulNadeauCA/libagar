@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.56 2003/03/02 04:13:15 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.57 2003/03/08 00:58:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 		/* Copy the original surface. */
 		is = view_copy_surface(image);
 		if (is == NULL) {
-			fatal("view_copy_surface: %s\n", error_get());
+			fatal("view_copy_surface: %s", error_get());
 		}
 		b->caption = NULL;
 		b->label_s = is;

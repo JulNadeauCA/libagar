@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.52 2003/03/02 04:13:15 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.53 2003/03/03 05:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -178,7 +178,7 @@ label_printf(struct label *label, const char *fmt, ...)
 
 #ifdef DEBUG
 	if (label->type != LABEL_STATIC) {
-		fatal("not a static label\n");
+		fatal("not a static label");
 	}
 #endif
 
@@ -328,15 +328,14 @@ label_draw(void *p)
 							    rd->x, rd->y);
 							fmtp += 5;
 						} else {
-							fatal("bad cast\n");
+							fatal("bad cast");
 						}
 						break;
 					case '%':
 						Asprintf(&s2, "%%");
 						break;
 					default:
-						fatal("bad format: %c\n",
-						    *(fmtp+1));
+						fatal("bad format");
 					}
 					fmtp++;
 				} else {
@@ -348,7 +347,7 @@ label_draw(void *p)
 
 					scl = strlcat(sp, s2, LABEL_MAX_LENGTH);
 					if (scl > LABEL_MAX_LENGTH) {
-						fatal("overflow\n");
+						fatal("overflow");
 					}
 					sp += scl;
 					free(s2);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.166 2003/03/04 00:32:55 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.167 2003/03/04 23:17:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -488,8 +488,9 @@ window_draw(struct window *win)
 				}
 
 				if (wid->w > 0 && wid->h > 0) {
-					if (wid->x < 0 || wid->y < 0)
-						fatal("neg widget coords\n");
+					if (wid->x < 0 || wid->y < 0) {
+						fatal("neg widget coords");
+					}
 					WIDGET_OPS(wid)->widget_draw(wid);
 				}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.54 2003/03/03 05:17:06 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.55 2003/03/04 00:32:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -78,11 +78,11 @@ text_load_font(char *name, int size, int style)
 
 	path = object_path(name, "ttf");
 	if (path == NULL) {
-		fatal("%s.ttf: %s\n", name, error_get());
+		fatal("%s.ttf: %s", name, error_get());
 	}
 	nfont = ttf_open_font(path, size);
 	if (nfont == NULL) {
-		fatal("%s: %s\n", path, error_get());
+		fatal("%s: %s", path, error_get());
 	}
 	free(path);
 
@@ -115,12 +115,11 @@ text_init(void)
 void
 text_set_default_font(char *name, int size, int style)
 {
-#ifdef DEBUG
 	if (font != NULL) {
 		/* Replacing the default font would be thread-unsafe. */
-		fatal("exists\n");
+		fatal("default font already set");
 	}
-#endif
+
 	dprintf("%s:%d,%d\n",
 	    prop_get_string(config, "font-engine.default-font"),
 	    prop_get_int(config, "font-engine.default-size"),
@@ -135,8 +134,6 @@ text_set_default_font(char *name, int size, int style)
 static void
 text_destroy_font(struct text_font *fon)
 {
-	dprintf("freeing font %s\n", fon->name);
-
 	free(fon->name);
 	ttf_close_font(fon->font);
 }
@@ -220,7 +217,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 		/* Render a single line. */
 		su = ttf_render_text_solid(fon, sd, col);
 		if (su == NULL) {
-			fatal("ttf_render_text_solid: %s\n", error_get());
+			fatal("ttf_render_text_solid: %s", error_get());
 		}
 	} else {
 		SDL_Surface **lines, **lp;
@@ -242,8 +239,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 			}
 			*lp = ttf_render_text_solid(fon, sp, col);
 			if (*lp == NULL) {
-				fatal("ttf_render_text_solid: %s\n",
-				    error_get());
+				fatal("ttf_render_text_solid: %s", error_get());
 			}
 			if ((*lp)->w > maxw) {
 				maxw = (*lp)->w;	/* Grow width */
