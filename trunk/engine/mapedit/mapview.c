@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.46 2003/01/20 12:06:57 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.47 2003/01/21 03:41:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -99,7 +99,6 @@ mapview_node_win_close(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
-	window_hide(win);
 	widget_set_int(mv->node_button, "state", 0);
 }
 
@@ -182,6 +181,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->constr.nflags = NODEREF_SAVEABLE;
 	mv->tmap_win = NULL;
 	mv->cur_node = NULL;
+	mv->node_button = NULL;
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
 		fatal("no map editor\n");
@@ -193,8 +193,8 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	widget_map_color(mv, POSITION_CURSOR_COLOR, "pos-cursor", 0, 100, 150);
 	widget_map_color(mv, CONSTR_ORIGIN_COLOR, "constr-orig", 100, 100, 130);
 	widget_map_color(mv, SRC_NODE_COLOR, "src-node", 0, 190, 0);
-	widget_map_color(mv, BACKGROUND2_COLOR, "background-2", 175, 175, 175);
-	widget_map_color(mv, BACKGROUND1_COLOR, "background-1", 114, 114, 114);
+	widget_map_color(mv, BACKGROUND2_COLOR, "background-2", 75, 75, 75);
+	widget_map_color(mv, BACKGROUND1_COLOR, "background-1", 14, 14, 14);
 
 	event_new(mv, "widget-scaled", mapview_scaled, NULL);
 	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
@@ -536,7 +536,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 	} else if (mv->flags & MAPVIEW_EDIT && med->curtool != NULL &&
 	    TOOL_OPS(med->curtool)->tool_effect != NULL) {
 		if ((x != mv->mouse.x || y != mv->mouse.y) &&
-		    (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) &&
+		    (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) &&
 		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 		    (mv->mx+x < mv->map->mapw && mv->my+y < mv->map->maph)) {
 			TOOL_OPS(med->curtool)->tool_effect(med->curtool,
@@ -566,8 +566,9 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	int y = argv[3].i / mv->map->tileh;
 	
 	WIDGET_FOCUS(mv);
-	if (button > 1) {
+	if (button != 1) {
 		mv->mouse.move++;
+		return;
 	}
 
 	if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
@@ -579,15 +580,13 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			    mv, mv->mx+x, mv->my+y);
 		}
 		
-		if (button == 1) {
-			mv->cur_node = &mv->map->map[mv->my+y][mv->mx+x];
-			if (mv->flags & MAPVIEW_TILEMAP) {
-				if ((SDL_GetModState() & KMOD_CTRL)) {
-					mv->constr.x = mv->mx+x;
-					mv->constr.y = mv->my+y;
-				}
-				med->src_node = mv->cur_node;
+		mv->cur_node = &mv->map->map[mv->my+y][mv->mx+x];
+		if (mv->flags & MAPVIEW_TILEMAP) {
+			if ((SDL_GetModState() & KMOD_CTRL)) {
+				mv->constr.x = mv->mx+x;
+				mv->constr.y = mv->my+y;
 			}
+			med->src_node = mv->cur_node;
 		}
 	}
 }
@@ -659,6 +658,11 @@ mapview_scaled(int argc, union evarg *argv)
 	WIDGET(mv)->h = argv[2].i;
 
 	mapview_zoom(mv, mv->map->zoom);
+
+	if (mv->flags & MAPVIEW_CENTER) {
+		mapview_center(mv, mv->map->defx, mv->map->defy);
+		mv->flags &= ~(MAPVIEW_CENTER);
+	}
 }
 
 static void
@@ -673,22 +677,19 @@ void
 mapview_center(struct mapview *mv, int x, int y)
 {
 	struct map *m = mv->map;
-	int nx, ny;
 
-	nx = x - mv->mw/2;
-	ny = y - mv->mh/2;
-	
-	if (nx < 0)
-		nx = 0;
-	if (ny < 0)
-		ny = 0;
-	if (nx >= m->mapw-mv->mw)
-		nx = m->mapw - mv->mw;
-	if (ny >= m->maph-mv->mh)
-		ny = m->maph - mv->mh;
+	mv->mx = x - mv->mw/2;
+	mv->my = y - mv->mh/2;
 
-	mv->mx = nx;
-	mv->my = ny;
+	if (mv->mx < 0)
+		mv->mx = 0;
+	if (mv->my < 0)
+		mv->my = 0;
+	if (mv->mx >= m->mapw - mv->mw)
+		mv->mx = m->mapw - mv->mw;
+	if (mv->my >= m->maph - mv->mh)
+		mv->my = m->maph - mv->mh;
+#endif
 }
 
 static void
