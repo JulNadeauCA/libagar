@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.44 2004/11/30 11:36:54 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.45 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,20 +50,28 @@ static struct widget_ops radio_ops = {
 enum {
 	XSPACING =	7,
 	YSPACING =	2,
-	XPADDING =	4,
+	XPADDING =	3,
 	YPADDING =	4,
+	RADIUS =	6,
+	SEL_RADIUS =	3
 };
 
 enum {
-	INSIDE_COLOR,
-	OUTSIDE_COLOR,
+	SEL_COLOR,
+	OVERSEL_COLOR,
+	HIGH_COLOR,
+	LOW_COLOR,
 	TEXT_COLOR,
-	FRAME_COLOR,
+	FRAME_COLOR
+};
+
+enum {
 	MOUSEBUTTONDOWN_EVENT,
 	KEYDOWN_EVENT
 };
 
-static void	radio_event(int, union evarg *);
+static void radio_event(int, union evarg *);
+static void mousemotion(int, union evarg *);
 
 struct radio *
 radio_new(void *parent, const char **items)
@@ -82,17 +90,19 @@ radio_init(struct radio *rad, const char **items)
 	const char *s, **itemsp = items;
 	int i;
 
-	widget_init(rad, "radio", &radio_ops, WIDGET_FOCUSABLE);
+	widget_init(rad, "radio", &radio_ops, WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(rad, "value", WIDGET_INT, &rad->value);
 
-	widget_map_color(rad, INSIDE_COLOR, "inside", 210, 210, 210, 255);
-	widget_map_color(rad, OUTSIDE_COLOR, "outside", 180, 180, 180, 255);
+	widget_map_color(rad, SEL_COLOR, "sel", 210, 210, 210, 255);
+	widget_map_color(rad, OVERSEL_COLOR, "oversel", 90, 90, 80, 255);
+	widget_map_color(rad, HIGH_COLOR, "high", 180, 180, 180, 255);
+	widget_map_color(rad, LOW_COLOR, "low", 80, 80, 70, 255);
 	widget_map_color(rad, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(rad, FRAME_COLOR, "frame", 120, 120, 120, 255);
+	widget_map_color(rad, FRAME_COLOR, "frame", 100, 100, 100, 255);
 
 	rad->value = -1;
-	rad->radius = text_font_height/2;
 	rad->max_w = 0;
+	rad->oversel = -1;
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
 		;;
@@ -107,14 +117,15 @@ radio_init(struct radio *rad, const char **items)
 	event_new(rad, "window-mousebuttondown", radio_event, "%i",
 	    MOUSEBUTTONDOWN_EVENT);
 	event_new(rad, "window-keydown", radio_event, "%i", KEYDOWN_EVENT);
+	event_new(rad, "window-mousemotion", mousemotion, NULL);
 }
 
 void
 radio_draw(void *p)
 {
 	struct radio *rad = p;
-	int i, val;
-	int x = XPADDING + rad->radius*2 + XSPACING;
+	int i, val, j;
+	int x = XPADDING + RADIUS*2 + XSPACING;
 	int y = YPADDING;
 
 	primitives.frame(rad,
@@ -128,21 +139,46 @@ radio_draw(void *p)
 
 	for (i = 0;
 	     i < rad->nitems;
-	     i++, y += (rad->radius*2 + YSPACING)) {
-		primitives.circle(rad,
-		    XPADDING + rad->radius,
-		    y + rad->radius,
-		    rad->radius,
-		    OUTSIDE_COLOR);
+	     i++, y += (RADIUS*2 + YSPACING)) {
+		int xc = XPADDING + RADIUS;
+		int yc = y + RADIUS;
+
+		widget_put_pixel(rad, xc-5, yc+1, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-5, yc, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-5, yc-1, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-4, yc-2, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-4, yc-3, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-3, yc-4, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-2, yc-4, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc-1, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
+		widget_put_pixel(rad, xc+1, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
+		
+		widget_put_pixel(rad, xc+5, yc-1, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+5, yc, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+5, yc+1, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+4, yc+2, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+4, yc+3, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+3, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+3, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+2, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+1, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
+		widget_put_pixel(rad, xc+1, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
 
 		if (i == val) {
 			primitives.circle(rad,
-			    XPADDING + rad->radius,
-			    y + rad->radius,
-			    rad->radius/2,
-			    INSIDE_COLOR);
+			    XPADDING + RADIUS,
+			    y + RADIUS,
+			    SEL_RADIUS,
+			    SEL_COLOR);
+		} else if (i == rad->oversel) {
+			primitives.circle(rad,
+			    XPADDING + RADIUS,
+			    y + RADIUS,
+			    SEL_RADIUS,
+			    OVERSEL_COLOR);
 		}
-
 		widget_blit(rad, rad->labels[i], x, y);
 	}
 }
@@ -167,12 +203,19 @@ radio_scale(void *p, int rw, int rh)
 	struct radio *rad = p;
 
 	if (rw == -1)
-		WIDGET(rad)->w = XPADDING*2 + XSPACING + rad->radius*2 +
-		    rad->max_w;
-
+		WIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2 + rad->max_w;
 	if (rh == -1)
-		WIDGET(rad)->h = rad->nitems * (YSPACING + rad->radius*2) + 
-		    YPADDING*2;
+		WIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2) + YPADDING*2;
+}
+
+static void
+mousemotion(int argc, union evarg *argv)
+{
+	struct radio *rad = argv[0].p;
+	int x = argv[1].i;
+	int y = argv[2].i - YPADDING;
+
+	rad->oversel = (y/(RADIUS*2 + YSPACING));
 }
 
 static void
@@ -189,9 +232,11 @@ radio_event(int argc, union evarg *argv)
 	switch (type) {
 	case MOUSEBUTTONDOWN_EVENT:
 		button = argv[2].i;
-		y = argv[4].i;
-		*sel = (y/(rad->radius*2 + YSPACING/2));
-		widget_focus(rad);
+		if (button == SDL_BUTTON_LEFT) {
+			y = argv[4].i - YPADDING;
+			*sel = (y/(RADIUS*2 + YSPACING));
+			widget_focus(rad);
+		}
 		break;
 	case KEYDOWN_EVENT:
 		keysym = argv[2].i;
