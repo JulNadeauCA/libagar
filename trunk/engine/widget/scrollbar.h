@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.h,v 1.3 2002/09/13 11:14:51 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.4 2002/11/04 08:34:13 vedge Exp $	*/
 /*	Public domain	*/
 
 struct scrollbar {
@@ -20,9 +20,11 @@ struct scrollbar {
 	} range;
 };
 
-void			 scrollbar_set_range(struct scrollbar *, int);
 struct scrollbar	*scrollbar_new(struct region *, int, int, int, int);
 void			 scrollbar_init(struct scrollbar *, int, int, int, int);
 void		 	 scrollbar_destroy(void *);
 void			 scrollbar_draw(void *);
+
+void			 scrollbar_set_range(struct scrollbar *, int);
+void			 scrollbar_set_position(struct scrollbar *, int);
 

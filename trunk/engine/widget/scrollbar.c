@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.7 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.8 2002/11/17 23:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -117,6 +117,14 @@ scrollbar_set_range(struct scrollbar *sb, int max)
 {
 	pthread_mutex_lock(&sb->range.max_lock);
 	sb->range.max = max;
+	pthread_mutex_unlock(&sb->range.max_lock);
+}
+
+void
+scrollbar_set_position(struct scrollbar *sb, int start)
+{
+	pthread_mutex_lock(&sb->range.max_lock);
+	sb->range.start = start;
 	pthread_mutex_unlock(&sb->range.max_lock);
 }
 
