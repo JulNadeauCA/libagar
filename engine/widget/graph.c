@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.48 2004/03/28 06:08:14 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.49 2004/06/18 03:11:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ graph_draw(void *p)
 {
 	struct graph *gra = p;
 	struct graph_item *gi;
-	int x, y, oy;
+	int x, y, ox = 0, oy;
 	Uint32 i, origin_y;
 	graph_val_t oval;
 
@@ -216,9 +216,9 @@ graph_draw(void *p)
 		if (gra->xoffs > gi->nvals || gra->xoffs < 0)
 			continue;
 
-		for (x = 1, i = gra->xoffs;
+		for (x = 2, ox = 0, i = gra->xoffs;
 		     ++i < gi->nvals && x < WIDGET(gra)->w;
-		     x++) {
+		     ox = x, x += 2) {
 
 			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
 			y = origin_y - oval;
@@ -250,7 +250,7 @@ graph_draw(void *p)
 					ncolor = widget_push_color(WIDGET(gra),
 					    gi->color);
 					primitives.line(gra,
-					    x,
+					    ox,
 					    oy,
 					    x,
 					    y,
