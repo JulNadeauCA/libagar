@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.162 2003/09/07 00:15:23 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.163 2003/09/07 07:58:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -444,7 +444,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	struct object *ob = p;
 	struct event *ev;
 
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->lock);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, name) == 0)
@@ -470,7 +470,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		va_end(ap);
 	}
 
-	pthread_mutex_unlock(&ob->events_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
 
@@ -522,7 +522,7 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 
 	debug(DEBUG_EVENT_DELIVERY, "%s to %s\n", evname, ob->name);
 
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
 		if (strcmp(evname, eev->name) != 0)
 			continue;
@@ -563,7 +563,7 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 		}
 		break;
 	}
-	pthread_mutex_unlock(&ob->events_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (eev != NULL);
 }
 
@@ -577,7 +577,7 @@ event_forward(void *p, const char *evname, int argc, union evarg *argv)
 
 	debug(DEBUG_EVENT_DELIVERY, "%s event to %s\n", evname, ob->name);
 
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->lock);
 	memcpy(nargv, argv, argc * sizeof(union evarg));
 	nargv[0].p = ob;
 	TAILQ_FOREACH(ev, &ob->events, events) {
@@ -595,6 +595,6 @@ event_forward(void *p, const char *evname, int argc, union evarg *argv)
 			unlock_linkage();
 		}
 	}
-	pthread_mutex_unlock(&ob->events_lock);
+	pthread_mutex_unlock(&ob->lock);
 }
 

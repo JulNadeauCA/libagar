@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.2 2003/10/11 04:31:35 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.3 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -127,7 +127,7 @@ position_init(void *p)
 	struct position *po = p;
 	struct window *win;
 	struct box *bo;
-	struct tlist *tl;
+	struct tlist *objs_tl;
 
 	tool_init(&po->tool, "position", &position_ops, MAPEDIT_TOOL_POSITION);
 
@@ -136,10 +136,10 @@ position_init(void *p)
 	window_set_caption(win, _("Position"));
 	event_new(win, "window-close", tool_window_close, "%p", po);
 
-	tl = po->objs_tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
-	WIDGET(tl)->flags |= WIDGET_HFILL;
-	tlist_prescale(tl, "XXXXXXXXXXXXXXXX", 5);
-	event_new(tl, "tlist-poll", poll_objs, "%p", world);
+	objs_tl = po->objs_tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
+	WIDGET(objs_tl)->flags |= WIDGET_HFILL;
+	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);
+	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
@@ -147,12 +147,12 @@ position_init(void *p)
 		struct combo *com;
 
 		com = combo_new(bo, COMBO_POLL, _("Submap: "));
+		event_new(com->list, "tlist-poll", poll_submaps, "%p", objs_tl);
 		po->submaps_tl = com->list;
-		event_new(com, "combo-poll", poll_submaps, "%p", tl);
 
 		com = combo_new(bo, COMBO_POLL, _("Input device: "));
+		event_new(com->list, "tlist-poll", poll_input_devs, NULL);
 		po->inputs_tl = com->list;
-		event_new(com, "tlist-poll", poll_input_devs, NULL);
 		
 		cb = checkbox_new(bo, _("Center view"));
 		widget_bind(cb, "state", WIDGET_BOOL, &po->center_view);

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.43 2003/09/14 02:29:52 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.44 2003/10/09 22:39:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -158,13 +158,13 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 	}
 	va_end(ap);
 
-	pthread_mutex_lock(&ob->props_lock);
+	pthread_mutex_lock(&ob->lock);
 	if (!modify) {
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
 	} else {
 		event_post(ob, "prop-modified", "%p", nprop);
 	}
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (nprop);
 }
 
@@ -258,13 +258,13 @@ prop_set_bool(void *ob, const char *key, int i)
 void
 prop_lock(void *p)
 {
-	pthread_mutex_lock(&OBJECT(p)->props_lock);
+	pthread_mutex_lock(&OBJECT(p)->lock);
 }
 
 void
 prop_unlock(void *p)
 {
-	pthread_mutex_unlock(&OBJECT(p)->props_lock);
+	pthread_mutex_unlock(&OBJECT(p)->lock);
 }
 
 /* Return a pointer to the data of a property. */
@@ -274,7 +274,7 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 	struct object *ob = obp;
 	struct prop *prop;
 
-	pthread_mutex_lock(&ob->props_lock);
+	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		if (strcmp(key, prop->key) != 0)
 			continue;
@@ -328,13 +328,13 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 				goto fail;
 			}
 		}
-		pthread_mutex_unlock(&ob->props_lock);
+		pthread_mutex_unlock(&ob->lock);
 		return (prop);
 	}
 
 	error_set(_("%s has no `%s' property (type %d)."), ob->name, key, t);
 fail:
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (NULL);
 }
 
@@ -510,7 +510,7 @@ prop_load(void *p, struct netbuf *buf)
 	if (version_read(buf, &prop_ver, NULL) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&ob->props_lock);
+	pthread_mutex_lock(&ob->lock);
 
 	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0)
 		object_free_props(ob);
@@ -583,10 +583,10 @@ prop_load(void *p, struct netbuf *buf)
 			goto fail;
 		}
 	}
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 
@@ -601,7 +601,7 @@ prop_save(void *p, struct netbuf *buf)
 	
 	version_write(buf, &prop_ver);
 	
-	pthread_mutex_lock(&ob->props_lock);
+	pthread_mutex_lock(&ob->lock);
 
 	count_offs = netbuf_tell(buf);				/* Skip count */
 	write_uint32(buf, 0);
@@ -662,11 +662,11 @@ prop_save(void *p, struct netbuf *buf)
 		}
 		nprops++;
 	}
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	pwrite_uint32(buf, nprops, count_offs);		/* Write count */
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 

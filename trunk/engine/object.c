@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.149 2003/10/09 22:35:21 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.150 2003/10/13 23:48:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -131,8 +131,6 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
-	pthread_mutex_init(&ob->props_lock, &recursive_mutexattr);
-	pthread_mutex_init(&ob->events_lock, &recursive_mutexattr);
 }
 
 /*
@@ -416,7 +414,7 @@ object_free_props(struct object *ob)
 {
 	struct prop *prop, *nextprop;
 
-	pthread_mutex_lock(&ob->props_lock);
+	pthread_mutex_lock(&ob->lock);
 	for (prop = TAILQ_FIRST(&ob->props);
 	     prop != TAILQ_END(&ob->props);
 	     prop = nextprop) {
@@ -425,7 +423,7 @@ object_free_props(struct object *ob)
 		free(prop);
 	}
 	TAILQ_INIT(&ob->props);
-	pthread_mutex_unlock(&ob->props_lock);
+	pthread_mutex_unlock(&ob->lock);
 }
 
 /* Clear an object's event handler list. */
@@ -434,7 +432,7 @@ object_free_events(struct object *ob)
 {
 	struct event *eev, *nexteev;
 
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->lock);
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
 	     eev = nexteev) {
@@ -442,7 +440,7 @@ object_free_events(struct object *ob)
 		free(eev);
 	}
 	TAILQ_INIT(&ob->events);
-	pthread_mutex_unlock(&ob->events_lock);
+	pthread_mutex_unlock(&ob->lock);
 }
 
 /* Release the resources allocated by an object and its children. */
@@ -484,8 +482,6 @@ object_destroy(void *p)
 	object_free_events(ob);
 
 	pthread_mutex_destroy(&ob->lock);
-	pthread_mutex_destroy(&ob->events_lock);
-	pthread_mutex_destroy(&ob->props_lock);
 	return (0);
 }
 
