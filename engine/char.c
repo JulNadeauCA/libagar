@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.32 2002/04/11 06:45:22 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.33 2002/04/14 01:35:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -246,11 +246,7 @@ char_unlink(void *ob)
 int
 char_destroy(void *p)
 {
-	struct character *ch = (struct character *)p;
-
-	pthread_mutex_lock(&world->lock);
-	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
-	pthread_mutex_unlock(&world->lock);
+	/* ... */
 
 	return (0);
 }
