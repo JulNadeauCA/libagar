@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.127 2004/09/14 11:15:31 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.128 2005/01/05 04:44:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 1
+	6, 2
 };
 
 const struct object_ops config_ops = {
@@ -89,6 +89,7 @@ extern int text_rightleft;
 extern int window_freescale;
 extern int kbd_unitrans;
 extern int event_idle;
+extern int server_mode;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -259,6 +260,9 @@ config_load(void *p, struct netbuf *buf)
 	if (rv.minor >= 1 && read_uint8(buf) == 1)
 		mapedit_load(buf);
 #endif
+	if (rv.minor >= 2) {
+		server_mode = read_uint8(buf);
+	}
 	return (0);
 }
 
@@ -287,6 +291,7 @@ config_save(void *p, struct netbuf *buf)
 #else
 	write_uint8(buf, 0);
 #endif
+	write_uint8(buf, server_mode);
 	return (0);
 }
 
@@ -354,6 +359,9 @@ config_window(struct config *con)
 #ifdef DEBUG
 	cbox = checkbox_new(vb, _("Debugging"));
 	widget_bind(cbox, "state", WIDGET_INT, &engine_debug);
+
+	cbox = checkbox_new(vb, _("Server mode"));
+	widget_bind(cbox, "state", WIDGET_INT, &server_mode);
 #endif
 
 	vb = vbox_new(hb, 0);
