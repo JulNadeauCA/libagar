@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.3 2005/02/05 02:55:29 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.4 2005/02/05 03:23:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 	if (tv->zoom > 800) {
 		return (0);
 	}
-	tileview_set_zoom(tv, tv->zoom+4, 1);
+	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom+5 : tv->zoom+20, 1);
 	return (ival);
 }
 
@@ -83,7 +83,7 @@ zoomout_tick(void *obj, Uint32 ival, void *arg)
 	if (tv->zoom < 10) {
 		return (0);
 	}
-	tileview_set_zoom(tv, tv->zoom-4, 1);
+	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom-5 : tv->zoom-20, 1);
 	return (ival);
 }
 
@@ -153,14 +153,13 @@ tileview_buttondown(int argc, union evarg *argv)
 		tv->scrolling++;
 		break;
 	case SDL_BUTTON_WHEELUP:
-		if (tv->zoom < 800) {
-			tileview_set_zoom(tv, tv->zoom+10, 1);
-		}
+		tileview_set_zoom(tv,
+		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+20, 1);
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		if (tv->zoom > 10) {
-			tileview_set_zoom(tv, tv->zoom-10, 1);
-		}
+		tileview_set_zoom(tv,
+		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-20, 1);
+		tileview_set_zoom(tv, tv->zoom-10, 1);
 		break;
 	}
 }
@@ -217,6 +216,10 @@ tileview_mousemotion(int argc, union evarg *argv)
 	if (tv->flags |= TILEVIEW_PRESEL) {
 		tv->xms = x - tv->xoffs;
 		tv->yms = y - tv->yoffs;
+		tv->xsub = tv->xms%tv->pxsz;
+		tv->ysub = tv->yms%tv->pxsz;
+		tv->xms -= tv->xsub;
+		tv->yms -= tv->ysub;
 	}
 }
 
@@ -284,6 +287,8 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 
 	tv->zoom = z2;
 	tv->pxsz = z2/100;
+	if (tv->pxsz < 1)
+		tv->pxsz = 1;
 
 	tv->scaled = SDL_CreateRGBSurface(SDL_SWSURFACE,
 	    t->su->w*z2/100,
