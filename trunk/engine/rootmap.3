@@ -1,4 +1,4 @@
-.\"	$Csoft: rootmap.3,v 1.3 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: rootmap.3,v 1.4 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,11 +42,16 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-functions must be used only after
+interface manages a single tile-based
+.Xr map 3
+display.
+.Pp
+.Nm
+functions must be used only after a call to
 .Xr view_init 3
-has been called with the
+with the
 .Dv GFX_ENGINE_TILEBASED
-graphic mode argument.
+argument.
 .Sh MAP DISPLAY
 .nr nS 1
 .Ft "void"
@@ -94,7 +99,7 @@ function moves the view in the given
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr map 3 ,
-.Xr physics 3
+.Xr view 3
 .Sh HISTORY
 The
 .Nm
