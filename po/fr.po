@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.22 2003/09/17 05:37:06 vedge Exp $
+# $Csoft: fr.po,v 1.23 2003/11/20 04:44:02 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -1510,7 +1510,7 @@ msgid "Winds Tritron tools"
 msgstr "Outils Vents Tritron"
 
 msgid "Unreasonable refresh rate"
-msgstr "Fréquence de rafraîchissement déraisonnable\n"
+msgstr "Fréquence de rafraîchissement déraisonnable"
 
 msgid "Resistance Calculation"
 msgstr "Calcul de Résistance"
