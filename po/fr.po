@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.19 2003/09/05 10:24:54 vedge Exp $
+# $Csoft: fr.po,v 1.20 2003/09/07 00:46:46 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -131,7 +131,7 @@ msgid "Idle time prediction"
 msgstr "Prédiction de temps d'attente"
 
 msgid "Input devices:"
-msgstr ""
+msgstr "Pilotes d'entrée"
 
 msgid "Data save dir: "
 msgstr "Répertoire de sauvegarde: "
