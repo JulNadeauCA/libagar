@@ -1,10 +1,10 @@
-#	$Csoft: Makefile,v 1.2 2002/01/27 12:15:22 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2002/01/27 12:47:10 vedge Exp $
 
 TOP=	../..
 
 LIB=	mapedit
-SRCS=	mapedit.c
-OBJS=	mapedit.o
+SRCS=	mapedit.c command.c
+OBJS=	mapedit.o command.o
 FOBJS=	mapedit.fob
 
 CFLAGS+=	${SDL_CFLAGS} ${GLIB_CFLAGS}
