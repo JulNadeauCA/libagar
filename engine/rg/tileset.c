@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.4 2005/01/26 14:04:56 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.5 2005/01/30 05:41:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/menu.h>
 
 #include "tileset.h"
 
@@ -124,6 +125,10 @@ tileset_reinit(void *obj)
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
 		nsk = TAILQ_NEXT(sk, sketches);
+#ifdef DEBUG
+		if (sk->nrefs > 0)
+			dprintf("sketch %s nrefs > 0\n", sk->name);
+#endif
 //		sketch_destroy(sk);
 		vg_destroy(sk->vg);
 		Free(sk, M_RG);
@@ -134,6 +139,10 @@ tileset_reinit(void *obj)
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
 		npx = TAILQ_NEXT(px, pixmaps);
+#ifdef DEBUG
+		if (px->nrefs > 0)
+			dprintf("pixmap %s nrefs > 0\n", px->name);
+#endif
 		SDL_FreeSurface(px->su);
 		Free(px, M_RG);
 	}
@@ -476,8 +485,8 @@ insert_tile_dlg(int argc, union evarg *argv)
 	struct mspinbutton *msb;
 	struct checkbox *cb;
 
-	win = window_new(WINDOW_DETACH|WINDOW_NO_RESIZE|WINDOW_NO_MINIMIZE,
-		         NULL);
+	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
+	                 WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("Insert new tile"));
 	
 	tb = textbox_new(win, _("Name:"));
@@ -568,6 +577,8 @@ tileset_edit(void *p)
 	struct box *box;
 	struct textbox *tb;
 	struct mspinbutton *msb;
+	struct AGMenu *m;
+	struct AGMenuItem *mi;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
@@ -577,6 +588,29 @@ tileset_edit(void *p)
 	tlist_init(tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	event_new(tl, "tlist-poll", poll_tileset, "%p", ts);
 	
+	m = ag_menu_new(win);
+	mi = ag_menu_add_item(m, _("Tiles"));
+	{
+		ag_menu_action(mi, _("Insert tile..."), NULL, 0, 0,
+		    insert_tile_dlg, "%p,%p", ts, win);
+		ag_menu_action(mi, _("Edit tile(s)"), NULL, 0, 0,
+		    edit_tiles, "%p,%p,%p", ts, tl, win);
+		ag_menu_action(mi, _("Delete tile(s)"), NULL, 0, 0,
+		    delete_tiles, "%p,%p", tl, ts);
+	}
+	
+	mi = ag_menu_add_item(m, _("Features"));
+	{
+	}
+	
+	mi = ag_menu_add_item(m, _("Sketches"));
+	{
+	}
+	
+	mi = ag_menu_add_item(m, _("Pixmaps"));
+	{
+	}
+
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	box_set_padding(box, 1);
 	box_set_spacing(box, 1);

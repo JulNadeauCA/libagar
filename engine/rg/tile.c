@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.5 2005/01/30 02:34:42 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.6 2005/01/30 05:41:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -323,20 +323,32 @@ edit_feature(int argc, union evarg *argv)
 	struct tileview *tv = argv[1].p;
 	struct tlist *tl = argv[2].p;
 	struct window *pwin = argv[3].p;
+	int replace = argv[4].i;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
 	struct tlist_item *it;
 
-	if (strcmp(sndr->type, "tlist") == 0)
-		tv->edit_mode = !tv->edit_mode;
-
-	if (tv->edit_mode == 0) {
-		feature_close(tv, pwin);
-		return;
-	} else {
+	if (replace) {
+		if (tv->edit_mode) {
+			feature_close(tv, pwin);
+			tv->edit_mode = 0;
+		}
 		if ((it = tlist_item_selected(tl)) == NULL) {
 			tv->edit_mode = 0;
 			return;
+		}
+	} else {
+		if (strcmp(sndr->type, "button") != 0)
+			tv->edit_mode = !tv->edit_mode;
+
+		if (tv->edit_mode == 0) {
+			feature_close(tv, pwin);
+			return;
+		} else {
+			if ((it = tlist_item_selected(tl)) == NULL) {
+				tv->edit_mode = 0;
+				return;
+			}
 		}
 	}
 	
@@ -359,6 +371,7 @@ delete_feature(int argc, union evarg *argv)
 	struct tile *t = argv[3].p;
 	struct tlist *feat_tl = argv[4].p;
 	struct window *pwin = argv[5].p;
+	int detach_only = argv[6].i;
 	struct tlist_item *it = tlist_item_selected(feat_tl);
 	struct tile_feature *tft;
 
@@ -367,8 +380,16 @@ delete_feature(int argc, union evarg *argv)
 	
 	if (strcmp(it->class, "feature") == 0) {
 		struct tile_feature *tft = it->p1;
+		struct feature *ft = tft->ft;
 
 		tile_remove_feature(t, tft->ft);
+		if (ft->nrefs == 0 && !detach_only) {
+			text_tmsg(MSG_INFO, 500,
+			    _("Destroying feature \"%s\""), ft->name);
+			feature_destroy(ft);
+			TAILQ_REMOVE(&ts->features, ft, features);
+			Free(ft, M_RG);
+		}
 	} else if (strcmp(it->class, "sketch") == 0) {
 		//
 	} else if (strcmp(it->class, "pixmap") == 0) {
@@ -416,8 +437,8 @@ resize_tile_dlg(int argc, union evarg *argv)
 	struct button *b;
 	struct checkbox *ckey_cb, *alpha_cb;
 
-	win = window_new(WINDOW_DETACH|WINDOW_NO_RESIZE|WINDOW_NO_MINIMIZE,
-	    NULL);
+	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
+		         WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("Resize tile `%s'"), t->name);
 
 	msb = mspinbutton_new(win, "x", _("New size:"));
@@ -451,7 +472,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 {
 	struct window *win;
 	struct box *box;
-	struct AGMenu *menu;
+	struct AGMenu *m;
 	struct AGMenuItem *item;
 	struct tileview *tv;
 	struct tlist *feat_tl;
@@ -469,8 +490,22 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tlist_prescale(feat_tl, _("Feature #00 (0,0)"), 10);
 	event_new(feat_tl, "tlist-poll", poll_features, "%p,%p", ts, t);
 
-	menu = ag_menu_new(win);
-	item = ag_menu_add_item(menu, _("Features"));
+	item = tlist_set_popup(feat_tl, "feature");
+	{
+		ag_menu_action(item, _("Edit feature"), NULL, 0, 0,
+		    edit_feature, "%p,%p,%p,%p", tv, feat_tl, win, 1);
+		
+		ag_menu_action(item, _("Detach feature"), NULL, 0, 0,
+		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl,
+		    win, 1);
+		
+		ag_menu_action(item, _("Destroy feature"), NULL, 0, 0,
+		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl,
+		    win, 0);
+	}
+
+	m = ag_menu_new(win);
+	item = ag_menu_add_item(m, _("Features"));
 	{
 		ag_menu_action(item, _("Fill"), NULL,
 		    SDLK_f, KMOD_CTRL, insert_fill, "%p,%p,%p", tv, win,
@@ -489,7 +524,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    SDLK_r, KMOD_CTRL, NULL, "%p,%p", ts, t);
 	}
 
-	item = ag_menu_add_item(menu, _("Edit"));
+	item = ag_menu_add_item(m, _("Edit"));
 	{
 		ag_menu_action(item, _("Resize tile..."), NULL,
 		    0, 0, resize_tile_dlg, "%p,%p,%p,%p", ts, t, win, tv);
@@ -514,14 +549,9 @@ tile_edit(struct tileset *ts, struct tile *t)
 			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
 
 			event_new(fbu, "button-pushed", edit_feature,
-			    "%p,%p,%p", tv, feat_tl, win);
+			    "%p,%p,%p,%i", tv, feat_tl, win, 0);
 			event_new(feat_tl, "tlist-dblclick", edit_feature,
-			    "%p,%p,%p", tv, feat_tl, win);
-			
-			fbu = button_new(fbox, _("Delete"));
-			event_new(fbu, "button-pushed", delete_feature,
-			    "%p,%p,%p,%p,%p", tv, ts, t, feat_tl, win);
-			WIDGET(fbu)->flags |= WIDGET_WFILL;
+			    "%p,%p,%p,%i", tv, feat_tl, win, 0);
 		}
 		
 		object_attach(box, tv);
