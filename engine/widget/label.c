@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.74 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.75 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -163,7 +163,6 @@ label_polled_new(void *parent, pthread_mutex_t *mutex, const char *fmt, ...)
 	return (label);
 }
 
-/* Modify the surface of a static label. */
 void
 label_set_surface(struct label *label, SDL_Surface *su)
 {
@@ -179,7 +178,6 @@ label_set_surface(struct label *label, SDL_Surface *su)
 	pthread_mutex_unlock(&label->lock);
 }
 
-/* Display a string of text in a static label. */
 void
 label_printf(struct label *label, const char *fmt, ...)
 {
@@ -196,10 +194,12 @@ label_printf(struct label *label, const char *fmt, ...)
 	
 	if (s[0] != '\0') {
 		SDL_Surface *su;
-
-		su = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
-		label_set_surface(label, su);
-		SDL_FreeSurface(su);
+		
+		if (label->surface != NULL) {
+			SDL_FreeSurface(label->surface);
+		}
+		label->surface = text_render(NULL, -1,
+		    WIDGET_COLOR(label, TEXT_COLOR), s);
 	} else {
 		label_set_surface(label, NULL);
 	}
