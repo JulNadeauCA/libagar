@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.12 2004/03/02 08:58:59 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.13 2004/03/13 02:35:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -71,6 +71,8 @@ struct gfx {
 extern pthread_mutex_t	gfxq_lock;
 
 __BEGIN_DECLS
+void		 gfx_init(struct gfx *, const char *);
+void		 gfx_destroy(struct gfx *);
 struct gfx	*gfx_fetch(const char *);
 void		 gfx_unused(struct gfx *);
 void		 gfx_wire(struct gfx *);
