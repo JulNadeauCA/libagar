@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.3 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -43,8 +43,8 @@ sketch_init(struct sketch *sk, struct tileset *ts, int flags)
 	sk->flags = flags;
 	sk->ts = ts;
 	sk->h = 0.0;
-	sk->s = 0.5;
-	sk->v = 0.5;
+	sk->s = 0.0;
+	sk->v = 0.0;
 	sk->a = 1.0;
 
 	sk->vg = Malloc(sizeof(struct vg), M_VG);
@@ -99,6 +99,7 @@ sketch_load(struct sketch *sk, struct netbuf *buf)
 		return (-1);
 	}
 	sk->vg->redraw++;
+	vg_rasterize(sk->vg);
 	return (0);
 }
 
