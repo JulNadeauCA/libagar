@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.11 2002/07/23 23:49:09 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.12 2002/07/29 01:11:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -65,6 +65,11 @@ static void	mapview_scaled(int, union evarg *);
 static void	mapview_lostfocus(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
 
+static __inline__ void	draw_node_scaled(struct mapview *, SDL_Surface *,
+			    int, int);
+static __inline__ void	draw_node_props(struct mapview *, struct node *,
+			    int, int);
+
 struct mapview *
 mapview_new(struct region *reg, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
@@ -121,7 +126,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 }
 
 static __inline__ void
-mapview_draw_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
+draw_node_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 {
 	int x, y, xfac, yfac;
 	Uint32 col = 0;
@@ -143,6 +148,34 @@ mapview_draw_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 		}
 	}
 	SDL_UnlockSurface(view->v);
+}
+
+static __inline__ void
+draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
+{
+	if (node->flags & NODE_BLOCK) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);
+	} else if (node->flags & NODE_WALK) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_WALK), rx, ry);
+	} else if (node->flags & NODE_CLIMB) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_CLIMB), rx, ry);
+	}
+	
+	if (node->flags & NODE_BIO) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BIO), rx, ry);
+	} else if (node->flags & NODE_REGEN) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_REGEN), rx, ry);
+	}
+	
+	if (node->flags & NODE_SLOW) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_SLOW), rx, ry);
+	} else if (node->flags & NODE_HASTE) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_HASTE), rx, ry);
+	}
+
+	if (node->flags & NODE_ORIGIN) {
+		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_ORIGIN), rx, ry);
+	}
 }
 
 void
@@ -174,8 +207,10 @@ mapview_draw(void *p)
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
+					nsprites++;
+
 					if (mv->zoom != 100) {
-						mapview_draw_scaled(mv,
+						draw_node_scaled(mv,
 						    SPRITE(nref->pobj,
 						    nref->offs), rx, ry);
 					} else {
@@ -183,12 +218,13 @@ mapview_draw(void *p)
 						    SPRITE(nref->pobj,
 						    nref->offs), rx, ry);
 					}
-					nsprites++;
 				} else if (nref->flags & MAPREF_ANIM) {
 					SDL_Surface *src;
 					struct anim *anim;
 					int i, j, frame;
 					Uint32 t;
+					
+					nsprites++;
 
 					anim = ANIM(nref->pobj, nref->offs);
 					if (anim == NULL) {
@@ -242,7 +278,7 @@ mapview_draw(void *p)
 					    i < anim->nparts; i++, j--) {
 						src = anim->frames[j][frame];
 						if (mv->zoom != 100) {
-							mapview_draw_scaled(mv,
+							draw_node_scaled(mv,
 							    src,
 							    rx + nref->xoffs,
 							    ry + nref->yoffs -
@@ -257,8 +293,9 @@ mapview_draw(void *p)
 				}
 			}
 			
-			if (nsprites > 0 && mv->flags & MAPVIEW_EDIT) {
-			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
+			if (nsprites > 0 && mv->flags & MAPVIEW_PROPS &&
+			    mv->zoom > 30) {
+				draw_node_props(mv, node, rx, ry);
 			}
 		
 			if (mv->flags & MAPVIEW_GRID) {
