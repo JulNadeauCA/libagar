@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.12 2003/01/20 14:22:11 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.13 2003/01/23 03:17:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -341,13 +341,8 @@ tl_windows_examine(int argc, union evarg *argv)
 		    "Caption: \"%s\"", &pwin->caption);
 
 		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Titlebar height: %d pixels", &pwin->titleh);
-
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Effective geometry: %[wxh] (min %dx%d) at %[x,y]",
-		    &pwin->rd,
-		    &pwin->minw, &pwin->minh,
-		    &pwin->rd);
+		    "Effective geometry: %[wxh] at %[x,y]",
+		    &pwin->rd, &pwin->rd);
 
 		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Body: %[rect]", &pwin->body);
