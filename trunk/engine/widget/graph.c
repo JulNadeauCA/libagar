@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.1 2002/07/20 18:55:59 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.2 2002/07/21 10:57:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -64,15 +64,16 @@ enum {
 static void	graph_scroll(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
+static void	graph_scaled(int, union evarg *);
 
 struct graph *
 graph_new(struct region *reg, const char *caption, enum graph_type t, int flags,
-    int w, int h)
+    Sint32 yrange, int w, int h)
 {
 	struct graph *graph;
 
 	graph = emalloc(sizeof(struct graph));
-	graph_init(graph, caption, t, flags, w, h);
+	graph_init(graph, caption, t, flags, yrange, w, h);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, graph);
@@ -83,7 +84,7 @@ graph_new(struct region *reg, const char *caption, enum graph_type t, int flags,
 
 void
 graph_init(struct graph *graph, const char *caption, enum graph_type t,
-    int flags, int w, int h)
+    int flags, Sint32 yrange, int w, int h)
 {
 	widget_init(&graph->wid, "graph", "widget", &graph_ops, w, h);
 	graph->type = t;
@@ -91,11 +92,16 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	graph->caption = strdup(caption);
 	graph->xoffs = 0;
 	graph->xinc = 2;
+	graph->yrange = yrange;
+	graph->origin_color[0] = SDL_MapRGB(view->v->format, 150, 150, 150);
+	graph->origin_color[1] = SDL_MapRGB(view->v->format, 60, 60, 60);
+	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
 	event_new(graph, "window-mousemotion", 0, graph_scroll, NULL);
 	event_new(graph, "window-mousebuttonup", 0, graph_resume_scroll, NULL);
 	event_new(graph, "window-mousebuttondown", 0, graph_focus, NULL);
+	event_new(graph, "widget-scaled", 0, graph_scaled, NULL);
 }
 
 static void
@@ -109,6 +115,11 @@ graph_scroll(int argc, union evarg *argv)
 		if (gra->xoffs < 0) {
 			gra->xoffs = 0;
 		}
+		gra->origin_y += yrel;
+		if (gra->origin_y < 0)
+			gra->origin_y = 0;
+		if (gra->origin_y > WIDGET(gra)->h)
+			gra->origin_y = WIDGET(gra)->h;
 	}
 }
 
@@ -129,15 +140,34 @@ graph_focus(int argc, union evarg *argv)
 	WIDGET_FOCUS(gra);
 }
 
+static void
+graph_scaled(int argc, union evarg *argv)
+{
+	struct graph *gra = argv[0].p;
+
+	gra->origin_y = WIDGET(gra)->h / 2;
+}
+
 void
 graph_draw(void *p)
 {
 	struct graph *gra = p;
 	struct graph_item *gi;
-	int x, y, oy, orig_y, i;
-	Sint32 *val;
+	int x, y, oy, i;
+	Sint32 *val, oval;
 
-	orig_y = WIDGET(gra)->h / 2;
+	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0);
+
+	if (gra->flags & GRAPH_ORIGIN) {
+		primitives.line(gra, 0, gra->origin_y,
+		    WIDGET(gra)->w, gra->origin_y,
+		    WIDGET_FOCUSED(gra) ?
+		    gra->origin_color[0] : gra->origin_color[1]);
+		primitives.line(gra, 0, gra->origin_y+1,
+		    WIDGET(gra)->w, gra->origin_y+1,
+		    WIDGET_FOCUSED(gra) ?
+		    gra->origin_color[1] : gra->origin_color[0]);
+	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
 		if (gra->xoffs > gi->nvals) {
@@ -146,28 +176,41 @@ graph_draw(void *p)
 		for (x = 1, i = gra->xoffs; ++i < gi->nvals; x += gra->xinc) {
 			if (x > WIDGET(gra)->w) {
 				if (gra->flags & GRAPH_SCROLL) {
-					gra->xoffs++;
-					x--;
+					gra->xoffs += gra->xinc;
+					x -= gra->xinc;
 				} else {
 					continue;
 				}
 			}
-			y = orig_y - gi->vals[i];
-			if (y > 0 && y < WIDGET(gra)->h) {
-				switch (gra->type) {
-				case GRAPH_POINTS:
-					WIDGET_PUT_PIXEL(gra, x, y, gi->color);
-					break;
-				case GRAPH_LINES:
-					if (i > 1) {
-						oy = orig_y - gi->vals[i-1];
-					} else {
-						oy = orig_y;
-					}
-					primitives.line(gra,
-					    x - gra->xinc, oy, x, y, gi->color);
-					break;
-				}
+
+			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
+			y = gra->origin_y - oval;
+			if (i > 1) {
+				oval = gi->vals[i-1] * WIDGET(gra)->h /
+				    gra->yrange;
+				oy = gra->origin_y - oval;
+			} else {
+				oy = gra->origin_y;
+			}
+
+			if (y < 0)
+				y = 0;
+			if (oy < 0)
+				oy = 0;
+			if (y > WIDGET(gra)->h)
+				y = WIDGET(gra)->h;
+			if (oy > WIDGET(gra)->h)
+				oy = WIDGET(gra)->h;
+
+			switch (gra->type) {
+			case GRAPH_POINTS:
+				WIDGET_PUT_PIXEL(gra, x, y, gi->color);
+				break;
+			case GRAPH_LINES:
+				primitives.line(gra,
+				    x - gra->xinc, oy,
+				    x, y, gi->color);
+				break;
 			}
 		}
 	}
