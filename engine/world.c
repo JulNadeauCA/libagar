@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.4 2002/02/03 11:21:43 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.5 2002/02/07 05:17:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,10 +33,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
-
 #include <engine/engine.h>
 
 static void	world_destroy(void *);
@@ -56,7 +52,6 @@ world_create(char *name)
 
 	SLIST_INIT(&world->wobjsh);
 	SLIST_INIT(&world->wcharsh);
-	SLIST_INIT(&world->wmapsh);
 
 	world->agef = 0.01;
 	pthread_mutex_init(&world->lock, NULL);
@@ -88,15 +83,11 @@ void
 world_dump(struct world *wo)
 {
 	struct object *ob;
-	struct map *m;
 	struct character *ch;
 
 	printf("objs\n");
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs)
 		object_dump(ob);
-	printf("maps\n");
-	SLIST_FOREACH(m, &wo->wmapsh, wmaps)
-		map_dump(m);
 	printf("characters\n");
 	SLIST_FOREACH(ch, &wo->wcharsh, wchars)
 		char_dump(ch);

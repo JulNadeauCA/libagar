@@ -1,9 +1,6 @@
-/*	$Csoft: world.h,v 1.2 2002/02/03 11:21:43 vedge Exp $	*/
-
-#include <glib.h>
+/*	$Csoft: world.h,v 1.3 2002/02/07 05:17:21 vedge Exp $	*/
 
 SLIST_HEAD(objs_head, object);
-SLIST_HEAD(maps_head, map);
 SLIST_HEAD(chars_head, character);
 
 struct world {
@@ -11,7 +8,6 @@ struct world {
 	float	agef;			/* Global ageing factor */
 
 	struct	objs_head wobjsh;	/* Active objects */
-	struct	maps_head wmapsh;	/* Active maps */
 	struct	chars_head wcharsh;	/* Active characters */
 	
 	pthread_mutex_t lock;		/* R/W lock on object lists */
