@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.12 2003/03/13 08:43:32 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.13 2003/03/25 13:48:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -7,6 +7,9 @@
 #include <config/floating_point.h>
 #include <config/have_ieee754.h>
 #include <config/have_long_double.h>
+
+#define PROP_KEY_MAX		256
+#define PROP_STRING_MAX		65536
 
 struct prop {
 	char *key;
@@ -49,8 +52,8 @@ struct prop {
 	TAILQ_ENTRY(prop) props;
 };
 
-int	 prop_load(void *, int);
-int	 prop_save(void *, int);
+int	 prop_load(void *, struct netbuf *);
+int	 prop_save(void *, struct netbuf *);
 void	 prop_destroy(struct prop *);
 
 struct prop	*prop_set(void *, char *, enum prop_type, ...);
