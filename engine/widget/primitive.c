@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.64 2005/01/30 05:38:41 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.65 2005/01/31 03:45:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -121,17 +121,16 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int lcol, rcol;
+	int shade;
 
-	lcol = widget_push_color(wid, alter_color(color, 80, 80, 80));
-	rcol = widget_push_color(wid, alter_color(color, -80, -80, -80));
+	shade = widget_push_color(wid, alter_color(WIDGET_COLOR(wid,ncolor),
+				                  -40, -40, -40));
 
-	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, lcol);
-	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
-	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
-	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
+	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, ncolor);
+	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, ncolor);
+	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, shade);
+	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, shade);
 
-	widget_pop_color(wid);
 	widget_pop_color(wid);
 }
 
