@@ -1,0 +1,9 @@
+dnl
+dnl $Csoft: configure.in,v 1.1 2003/12/07 05:41:09 vedge Exp $
+dnl
+dnl Process this file with GNU autoconf to produce a configure script.
+dnl Public domain
+dnl
+AC_INIT(csoftadm, 1.0)
+AC_CONFIG_HEADER()
+
