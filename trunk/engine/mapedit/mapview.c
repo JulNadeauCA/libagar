@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.98 2003/03/26 10:03:33 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.100 2003/04/17 08:22:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -549,19 +549,19 @@ mapview_zoom_tick(Uint32 ival, void *p)
 static void
 mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 {
+	int max;
+
 	if (xrel > 0 && (*mv->ssx += xrel) >= *mv->tilew) {
 		if (--mv->mx < 0) {
 			mv->mx = 0;
-			if (mv->mw < mv->map->mapw)
-				*mv->ssx = *mv->tilew;
 		} else {
 			*mv->ssx = 0;
 		}
 	} else if (xrel < 0 && ((*mv->ssx) += xrel) <= -(*mv->tilew)) {
 		if (mv->mw < mv->map->mapw) {
-			if (++mv->mx > mv->map->mapw - mv->mw - 1) {
-				mv->mx = mv->map->mapw - mv->mw - 1;
-				*mv->ssx = -(*mv->tilew);
+			max = mv->map->mapw - mv->mw - 1;
+			if (++mv->mx > max) {
+				mv->mx = max;
 			} else {
 				*mv->ssx = 0;
 			}
@@ -570,16 +570,14 @@ mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 	if (yrel > 0 && ((*mv->ssy) += yrel) >= *mv->tileh) {
 		if (--mv->my < 0) {
 			mv->my = 0;
-			if (mv->mh < mv->map->maph)
-				*mv->ssy = *mv->tileh;
 		} else {
 			*mv->ssy = 0;
 		}
 	} else if (yrel < 0 && (*mv->ssy += yrel) <= -(*mv->tileh)) {
 		if (mv->mh < mv->map->maph) {
-			if (++mv->my > mv->map->maph - mv->mh - 1) {
-				mv->my = mv->map->maph - mv->mh - 1;
-				*mv->ssy = -(*mv->tileh);
+			max = mv->map->maph - mv->mh - 1;
+			if (++mv->my > max) {
+				mv->my = max;
 			} else {
 				*mv->ssy = 0;
 			}
