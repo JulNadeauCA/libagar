@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.1 2005/01/27 05:46:24 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.2 2005/01/28 01:21:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -270,8 +270,8 @@ find_objs(struct command *cmd, struct object *pob, int depth)
 {
 	struct object *cob;
 
-	printf("%d/%s/%s/0x%08x/%u", depth, pob->name, pob->type, pob->flags,
-	    pob->data_used);
+	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->type,
+	    pob->flags, pob->data_used);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
 		find_objs(cmd, cob, depth+1);
@@ -282,6 +282,7 @@ static int
 cmd_world(struct command *cmd, void *p)
 {
 	lock_linkage();
+	fputs("0 ", stdout);
 	find_objs(cmd, world, 0);
 	fputc('\n', stdout);
 	unlock_linkage();
