@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.32 2003/01/08 23:10:19 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.33 2003/01/08 23:14:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -458,6 +458,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int y = argv[3].i;
 	struct tlist_item *ti;
 	int *value, *max;
+	int tind;
 	
 	WIDGET_FOCUS(tl);
 
@@ -482,23 +483,66 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	}
 	
 	pthread_mutex_lock(&tl->items_lock);
-	ti = tlist_item_index(tl,
-	    (widget_get_int(sb, "value") + y / tl->item_h) + 1);
-	if (ti != NULL) {
-		if (tl->flags & TLIST_MULTI_STICKY ||
-		   ((tl->flags & TLIST_MULTI) &&
-		    (SDL_GetModState() & KMOD_CTRL))) {
-			if (ti->selected) {
-				ti->selected = 0;
-			} else {
-				ti->selected++;
+	tind = (widget_get_int(sb, "value") + y / tl->item_h) + 1;
+	ti = tlist_item_index(tl, tind);
+	if (ti == NULL) {
+		goto out;
+	}
+
+	if (tl->flags & TLIST_MULTI) {
+		if (SDL_GetModState() & KMOD_SHIFT) {
+			struct tlist_item *oitem;
+			int oind = -1, i = 0, nitems = 0;
+
+			TAILQ_FOREACH(oitem, &tl->items, items) {
+				if (oitem->selected) {
+					oind = i;
+				} else if (oind != -1) {
+					oitem->selected = 0;	/* Reset */
+				}
+				i++;
+				nitems++;
+			}
+			if (oind == -1)
+				goto out;
+
+			if (oind < tind) {			/* Forward */
+				i = 0;
+				TAILQ_FOREACH(oitem, &tl->items, items) {
+					if (i >= oind) {
+						oitem->selected = 1;
+					}
+					if (i == tind)
+						break;
+					i++;
+				}
+			} else if (oind > tind) {		/* Backward */
+				i = nitems;
+				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
+				    items, tlist_itemq) {
+					if (i <= oind) {
+						oitem->selected = 1;
+					}
+					if (i == tind)
+						break;
+					i--;
+				}
 			}
 		} else {
-			tlist_unselect_all(tl);
-			ti->selected++;
+			if ((tl->flags & TLIST_MULTI_STICKY) ||
+			    (SDL_GetModState() & KMOD_CTRL)) {
+			    	ti->selected = !ti->selected;
+			} else {
+				tlist_unselect_all(tl);
+				ti->selected++;
+			}
 		}
-		event_post(tl, "tlist-changed", "%p, %i", ti, 1);
+	} else {
+		tlist_unselect_all(tl);
+		ti->selected++;
 	}
+out:
+	event_post(tl, "tlist-changed", "%p, %i", ti, 1);
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
