@@ -49,13 +49,18 @@ static void	fullscrn_cbox_push(struct checkbox *);
 static void
 close_button_push(struct button *b)
 {
-	object_unlink(WIDGET(b)->win);
+	window_unlink(WIDGET(b)->win);
 }
 
 static void
 fullscrn_cbox_push(struct checkbox *b)
 {
-	view_fullscreen(mainview, b->flags & CHECKBOX_PRESSED);
+	SDL_Event nev;
+
+	view_fullscreen(mainview,
+	    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
+	nev.type = SDL_VIDEOEXPOSE;
+	SDL_PushEvent(&nev);
 }
 
 static void
@@ -71,12 +76,17 @@ engine_config(void)
 	struct checkbox *fullscr_cbox;
 	struct button *close_button, *color_button;
 	struct label *sharedir_label;
+	struct winseg *upper_seg, *lower_seg;
 	char sharetxt[2048];
 
 	/* Settings window */
 	win = window_new(mainview, "Engine settings", WINDOW_TITLEBAR,
 	    WINDOW_GRADIENT, 64, 64, 512, 256);
-	
+	pthread_mutex_lock(&win->lock);
+	upper_seg = SLIST_FIRST(&win->winsegsh);
+	pthread_mutex_unlock(&win->lock);
+	lower_seg = winseg_new(win, upper_seg, WINSEG_HORIZ, 20);
+
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
 	sharedir_label = label_new(win, sharetxt, 0, 10, 35);
