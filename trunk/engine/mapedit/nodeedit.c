@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.2 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.3 2003/03/05 02:16:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -98,20 +98,20 @@ nodeedit_poll(int argc, union evarg *argv)
 
 		switch (nref->type) {
 		case NODEREF_SPRITE:
-			Asprintf(&text, "%d. s(%s:%d)", i, nref->pobj->name,
-			    nref->offs);
+			Asprintf(&text, "%d. s(%s:%d)", nref->layer,
+			    nref->pobj->name, nref->offs);
 			icon = nref->pobj->art->sprites[nref->offs];
 			break;
 		case NODEREF_ANIM:
-			Asprintf(&text, "%d. a(%s:%d)", i, nref->pobj->name,
-			    nref->offs);
+			Asprintf(&text, "%d. a(%s:%d)", nref->layer,
+			    nref->pobj->name, nref->offs);
 			anim = nref->pobj->art->anims[nref->offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
 			}
 			break;
 		case NODEREF_WARP:
-			Asprintf(&text, "%d. w(%s:%d,%d)", i,
+			Asprintf(&text, "%d. w(%s:%d,%d)", nref->layer,
 			    nref->data.warp.map, nref->data.warp.x,
 			    nref->data.warp.y);
 			break;
