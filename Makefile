@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.41 2004/03/18 03:34:57 vedge Exp $
+#	$Csoft: Makefile,v 1.42 2004/03/18 05:53:12 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -38,19 +38,27 @@ release: cleandir
 
 install-includes:
 	${INSTALL_INCL_DIR} ${INCLDIR}
-	${SUDO} pax -rw -pa -L `find . -follow -type f -name '*.h' -print` \
-	    ${INCLDIR}
+	${SUDO} env \
+	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+	    INSTALL_INCL="${INSTALL_INCL}" \
+	    ${FIND} . -follow -type d \! -name CVS \
+	    -exec ${SH} mk/install-includes.sh "{}" "${INCLDIR}/{}" \;
 	@if [ "${SRC}" != "" ]; then \
-		cd ${SRC} && ${SUDO} pax -rw -pa -L \
-		    `find . -follow -type f -name '*.h' -print` \
-		    ${INCLDIR}; \
+		(cd ${SRC} && ${SUDO} env \
+		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+		    INSTALL_INCL="${INSTALL_INCL}" \
+		    ${FIND} . -follow -type d \! -name CVS \
+		    -exec ${SH} mk/install-includes.sh "{}" \
+		    "${INCLDIR}/{}" \;); \
 	fi
 
 deinstall-includes:
-	find . -follow -type f -name '*.h' -print \
-	    | awk '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' | ${SUDO} sh
-	cd ${SRC} && find . -follow -type f -name '*.h' -print \
-	    | awk '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' | ${SUDO} sh
+	${FIND} . -follow -type f -name '*.h' -print \
+	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
+	    | ${SUDO} ${SH}
+	(cd ${SRC} && ${FIND} . -follow -type f -name '*.h' -print \
+	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
+	    | ${SUDO} ${SH})
 
 .PHONY: clean cleandir install deinstall depend regress
 .PHONY: prereq configure clean-config release
