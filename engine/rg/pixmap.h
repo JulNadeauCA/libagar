@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.3 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.4 2005/02/18 03:31:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -25,11 +25,18 @@ struct pixmap_undoblk {
 struct pixmap {
 	char name[PIXMAP_NAME_MAX];
 	int flags;
-	struct tileset *ts;		/* Back pointer to tileset */
-	SDL_Surface *su;		/* Pixmap surface */
-	SDL_Surface *bg;		/* Saved background (optimization) */
-	u_int nrefs;			/* Number of tile references */
-	float h, s, v, a;		/* Current pixel value */
+	struct tileset *ts;	/* Back pointer to tileset */
+	SDL_Surface *su;	/* Pixmap surface */
+	SDL_Surface *bg;	/* Saved background (optimization) */
+	u_int nrefs;		/* Number of tile references */
+
+	float h, s, v, a;		/* Current editor pixel value */
+	enum pixmap_blend_mode {
+		PIXMAP_BLEND_SRCALPHA,	/* Blend (specified alpha) */
+		PIXMAP_BLEND_DSTALPHA,	/* Blend (destination alpha) */
+		PIXMAP_BLEND_MIXALPHA,	/* Blend (mixed src+dest alpha) */
+		PIXMAP_NO_BLENDING	/* Overwrite alpha value */
+	} blend_mode;
 
 	struct pixmap_undoblk *ublks;	/* Blocks of undoable modifications */
 	unsigned int	      nublks;

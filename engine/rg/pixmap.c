@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.5 2005/02/16 14:49:09 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.6 2005/02/18 03:31:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <engine/widget/checkbox.h>
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/label.h>
+#include <engine/widget/radio.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -56,6 +57,7 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->ublks = Malloc(sizeof(struct pixmap_undoblk), M_RG);
 	px->curblk = 0;
 	px->nublks = 1;
+	px->blend_mode = PIXMAP_NO_BLENDING;
 	pixmap_begin_undoblk(px);
 }
 
@@ -137,20 +139,22 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	window_set_caption(win, _("Pixmap %s"), px->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	cb = checkbox_new(win, _("Visible"));
-	widget_bind(cb, "state", WIDGET_INT, &tel->visible);
-	event_new(cb, "checkbox-changed", update_tv, "%p", tv);
-
 	msb = mspinbutton_new(win, ",", _("Coordinates: "));
 	widget_bind(msb, "xvalue", WIDGET_INT, &tel->tel_pixmap.x);
 	widget_bind(msb, "yvalue", WIDGET_INT, &tel->tel_pixmap.y);
 	mspinbutton_set_range(msb, 0, TILE_SIZE_MAX-1);
 	event_new(msb, "mspinbutton-changed", update_tv, "%p", tv);
-
+	
+	cb = checkbox_new(win, _("Visible"));
+	widget_bind(cb, "state", WIDGET_INT, &tel->visible);
+	event_new(cb, "checkbox-changed", update_tv, "%p", tv);
+	
+#if 0
 	sb = spinbutton_new(win, _("Transparency: "));
 	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
 	spinbutton_set_range(sb, 0, 255);
 	event_new(sb, "spinbutton-changed", update_tv, "%p", tv);
+#endif
 
 #ifdef DEBUG
 	label_new(win, LABEL_POLLED, "Undo level: %u/%u", &px->curblk,
@@ -158,35 +162,70 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 #endif
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	box_set_spacing(bo, 0);
 	{
 		struct hsvpal *pal;
 		struct fspinbutton *fsb;
+		struct box *hb;
 
 		pal = hsvpal_new(bo, px->su->format);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
+	
+		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		box_set_padding(hb, 1);
+		{
+			fsb = fspinbutton_new(hb, NULL, _("H: "));
+			fspinbutton_prescale(fsb, "000");
+			widget_bind(fsb, "value", WIDGET_FLOAT, &px->h);
+			fspinbutton_set_range(fsb, 0.0, 359.0);
+			fspinbutton_set_increment(fsb, 1);
+			fspinbutton_set_precision(fsb, "f", 0);
+		
+			fsb = fspinbutton_new(hb, NULL, _("S: "));
+			fspinbutton_prescale(fsb, "00.00");
+			widget_bind(fsb, "value", WIDGET_FLOAT, &px->s);
+			fspinbutton_set_range(fsb, 0.0, 1.0);
+			fspinbutton_set_increment(fsb, 0.01);
+			fspinbutton_set_precision(fsb, "f", 2);
+		}
+		
+		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		box_set_padding(hb, 1);
+		{
+			fsb = fspinbutton_new(hb, NULL, _("V: "));
+			fspinbutton_prescale(fsb, "00.00");
+			widget_bind(fsb, "value", WIDGET_FLOAT, &px->v);
+			fspinbutton_set_range(fsb, 0.0, 1.0);
+			fspinbutton_set_increment(fsb, 0.01);
+			fspinbutton_set_precision(fsb, "f", 2);
+			
+			fsb = fspinbutton_new(hb, NULL, _("A: "));
+			fspinbutton_prescale(fsb, "0.000");
+			widget_bind(fsb, "value", WIDGET_FLOAT, &px->a);
+			fspinbutton_set_range(fsb, 0.0, 1.0);
+			fspinbutton_set_increment(fsb, 0.005);
+			fspinbutton_set_precision(fsb, "f", 3);
+		}
+	}
+		
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		static const char *blend_modes[] = {
+			N_("Blend using specified alpha"),
+			N_("Blend using pixmap alpha"),
+			N_("Blend using both alphas"),
+			N_("Disable blending"),
+			NULL
+		};
+		struct radio *rad;
 
-		fsb = fspinbutton_new(win, NULL, _("Hue: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &px->h);
-		fspinbutton_set_range(fsb, 0.0, 359.0);
-		fspinbutton_set_increment(fsb, 1);
-		
-		fsb = fspinbutton_new(win, NULL, _("Saturation: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &px->s);
-		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.01);
-		
-		fsb = fspinbutton_new(win, NULL, _("Value: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &px->v);
-		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.01);
-		
-		fsb = fspinbutton_new(win, NULL, _("Source alpha: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &px->a);
-		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.01);
+		label_new(bo, LABEL_STATIC, _("Blending method:"));
+		rad = radio_new(bo, blend_modes);
+		WIDGET(rad)->flags |= WIDGET_WFILL;
+		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
 	}
 	return (win);
 }
@@ -256,9 +295,10 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel,
 	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
 	struct pixmap_umod *umod;
 	Uint8 *src;
+	Uint8 r, g, b, a;
 	int i;
 
-	/* Avoid duplicate undo mods. */
+	/* Avoid duplicate modifications to the same pixel in this block. */
 	for (i = ublk->numods-1; i >= 0; i--) {
 		struct pixmap_umod *um = &ublk->umods[i];
 
@@ -278,18 +318,40 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel,
 		SDL_LockSurface(px->su);
 
 	src = (Uint8 *)px->su->pixels + y*px->su->pitch +
-	    x*px->su->format->BytesPerPixel;
+	                                x*px->su->format->BytesPerPixel;
 	umod->val = *(Uint32 *)src;
 
 	if (SDL_MUSTLOCK(px->su))
 		SDL_UnlockSurface(px->su);
 
 	/* Plot the pixel on the pixmap and update the scaled display. */
-	prim_put_pixel(px->su, x, y, val);
-	tileview_scaled_pixel(tv,
-	    tel->tel_pixmap.x + x,
-	    tel->tel_pixmap.y + y,
-	    val);
+	switch (px->blend_mode) {
+	case PIXMAP_NO_BLENDING:
+		prim_put_pixel(px->su, x, y, val);
+		tileview_scaled_pixel(tv,
+		    tel->tel_pixmap.x + x,
+		    tel->tel_pixmap.y + y,
+		    val);
+		break;
+	case PIXMAP_BLEND_SRCALPHA:
+		SDL_GetRGBA(val, px->su->format, &r, &g, &b, &a);
+		prim_blend_rgb(px->su, x, y, PRIM_BLEND_SRCALPHA, r, g, b, a);
+		/* XXX optimize using background caching */
+		tv->tile->flags |= TILE_DIRTY;
+		break;
+	case PIXMAP_BLEND_DSTALPHA:
+		SDL_GetRGBA(val, px->su->format, &r, &g, &b, &a);
+		prim_blend_rgb(px->su, x, y, PRIM_BLEND_DSTALPHA, r, g, b, a);
+		/* XXX optimize using background caching */
+		tv->tile->flags |= TILE_DIRTY;
+		break;
+	case PIXMAP_BLEND_MIXALPHA:
+		SDL_GetRGBA(val, px->su->format, &r, &g, &b, &a);
+		prim_blend_rgb(px->su, x, y, PRIM_BLEND_MIXALPHA, r, g, b, a);
+		/* XXX optimize using background caching */
+		tv->tile->flags |= TILE_DIRTY;
+		break;
+	}
 }
 
 void
@@ -302,7 +364,8 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
 
 	pixmap_begin_undoblk(px);
-	pixmap_put_pixel(tv, tel, x, y, SDL_MapRGB(px->su->format, r, g, b));
+	pixmap_put_pixel(tv, tel, x, y,
+	    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)));
 }
 
 void
@@ -322,6 +385,6 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 	if (state & SDL_BUTTON_LEFT) {
 		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
 		pixmap_put_pixel(tv, tel, x, y,
-		    SDL_MapRGB(px->su->format, r, g, b));
+		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)));
 	}
 }
