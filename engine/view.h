@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.18 2002/05/06 02:19:14 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.19 2002/05/11 04:06:56 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -6,6 +6,10 @@ enum {
 	VIEW_FIGHT	/* Battle display */
 };
 
+/*
+ * This structure shares the mutex of the map being displayed,
+ * thus limiting maps to be shown in only one map at a time.
+ */
 struct viewport {
 	int	mode;			/* Display mode */
 	int	fps;			/* Refresh rate in FPS */
@@ -21,7 +25,6 @@ struct viewport {
 	SDL_Rect **maprects;		/* Rectangles (optimization) */
 	SDL_Rect *rects;		/* List big enough to hold all
 					   possible rectangles in a view. */
-	pthread_mutex_t lock;		/* Lock on mask arrays */
 
 	SDL_Surface	*v;		/* Surface */
 };
@@ -29,16 +32,16 @@ struct viewport {
 #define VIEW_MAPMASK(view, vx, vy)	\
     ((view)->mapmask[(vy) - (view)->mapyoffs][(vx) - (view)->mapxoffs])
 
+/* XXX thread unsafe, but cannot change during execution. */
 extern struct viewport *mainview;	/* view.c */
 
 struct viewport *view_new(int, int, int, int);
 int		 view_setmode(struct viewport *, struct map *, int, char *);
 void		 view_destroy(struct viewport *);
-int		 view_fullscreen(struct viewport *, int);
+void		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
 void		 view_maskfill(struct viewport *, SDL_Rect *, int);
 void		 view_redraw(struct viewport *);
-
 #ifdef DEBUG
 void		 view_dumpmask(struct viewport *);
 #endif

@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.11 2002/04/24 13:18:20 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.12 2002/05/11 04:06:56 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
@@ -7,6 +7,7 @@ struct world {
 	char	*udatadir;		/* User data directory path */
 	char	*sysdatadir;		/* System-wide data directory path */
 	struct	map *curmap;		/* Map being displayed */
+	struct	viewport *curview;	/* Current view. XXX multi */
 
 	SLIST_HEAD(, object) wobjsh;	/* Active objects */
 	int	nobjs;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.29 2002/04/24 14:04:37 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.30 2002/04/26 04:24:51 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -43,19 +43,19 @@ struct mapedit {
 	struct	object obj;
 	
 	int	flags;	
-#define MAPEDIT_DRAWGRID	0x01	/* Draw a grid on the map */
+#define MAPEDIT_DRAWGRID	0x01	/* Draw a grid on the map (slow) */
 #define MAPEDIT_DRAWPROPS	0x02	/* Draw tile properties (slow) */
 #define MAPEDIT_INSERT		0x04	/* Insert mode (else replace) */
 
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
 	Uint32	x, y;			/* Cursor position */
-	Uint32	mmapx, mmapy;		/* Map view coordinates */
-	Uint32	mtmapx, mtmapy;		/* Lists coordinates */
+	int	mmapx, mmapy;		/* Map view coordinates */
+	int	mtmapx, mtmapy;		/* Lists coordinates */
+	int	redraw;			/* Redraw lists and map */
 
 	struct	eobjs_head eobjsh;	/* Editor object references */
 	int	neobjs;
-	pthread_mutex_t eobjslock;
 
 	struct	editobj *curobj;	/* Default object */
 	int	curoffs;		/* Default reference index */
@@ -74,11 +74,11 @@ struct mapedit {
 	int	 tilelist_offs;
 
 	/* Obj list (top) */
-	SDL_Rect objlist;
-	struct	 gendir olistw_dir;
+	SDL_Rect objlist;		/* Region */
+	struct	 gendir olistw_dir;	/* Scrolling direction */
 	int	 objlist_offs;
 
-	SDL_TimerID timer;
+	pthread_mutex_t	lock;		/* Lock on whole structure */
 };
 
 /* Editor anims */
@@ -117,15 +117,15 @@ enum {
 };
 
 #define MAPEDIT_PREDRAW(m, node, vx, vy) do {				\
-	    if (curmapedit != NULL) {					\
-		mapedit_predraw((m), (node)->flags, (vx), (vy));	\
-	    }								\
+		if (curmapedit != NULL) {				\
+			mapedit_predraw((m), (node)->flags, (vx), (vy));\
+		}							\
 	} while (0)
 
 #define MAPEDIT_POSTDRAW(m, node, vx, vy) do {				\
-	    if (curmapedit != NULL) {					\
-		mapedit_postdraw((m), (node)->flags, (vx), (vy));	\
-	    }								\
+		if (curmapedit != NULL) {				\
+			mapedit_postdraw((m), (node)->flags, (vx), (vy));\
+		}							\
 	} while (0)
 
 void	mapedit_init(struct mapedit *, char *);
@@ -134,14 +134,12 @@ int	mapedit_unlink(void *);
 int	mapedit_load(void *, int);
 int	mapedit_save(void *, int);
 void	mapedit_event(void *, SDL_Event *);
-void	mapedit_tilelist(struct mapedit *);
-void	mapedit_tilestack(struct mapedit *);
-void	mapedit_objlist(struct mapedit *);
 void	mapedit_move(struct mapedit *, Uint32, Uint32);
 void	mapedit_predraw(struct map *, Uint32, Uint32, Uint32);
 void	mapedit_postdraw(struct map *, Uint32, Uint32, Uint32);
 
 void	mapedit_sticky(struct mapedit *);
 
+/* XXX thread unsafe, but this does not change during execution. */
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 

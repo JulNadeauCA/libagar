@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.32 2002/05/11 04:06:56 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.33 2002/05/11 05:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,19 +43,21 @@
 
 static int	**view_allocmask(int, int);
 static SDL_Rect	**view_allocmaprects(struct map *, int, int);
-static SDL_Rect	*view_allocrects(struct map *, int, int);
-static void	view_freemask(struct viewport *);
-static void	view_freemaprects(struct viewport *);
+static SDL_Rect	 *view_allocrects(struct map *, int, int);
+static void	  view_freemask(struct viewport *);
+static void	  view_freemaprects(struct viewport *);
 
-struct viewport *mainview;
+struct viewport *mainview;	/* XXX thread unsafe */
 extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
+extern pthread_mutex_t windows_lock;
 
-/* Start displaying the given map inside the given view. */
+/*
+ * Start displaying the given map inside the given view.
+ * Map/view must be locked.
+ */
 int
 view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 {
-	pthread_mutex_lock(&v->lock);
-
 	if (mode > -1) {
 		v->mode = mode;
 	}
@@ -122,11 +124,10 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 
 	SDL_ShowCursor(SDL_ENABLE);
 	
-	pthread_mutex_unlock(&v->lock);
 	return (0);
 }
 
-/* View must be locked. */
+/* Allocate a mask of the given size. */
 static int **
 view_allocmask(int w, int h)
 {
@@ -145,7 +146,10 @@ view_allocmask(int w, int h)
 	return (mask);
 }
 
-/* View must be locked. */
+/*
+ * Precalculate rectangles.
+ * Map/view must be locked.
+ */
 static SDL_Rect **
 view_allocmaprects(struct map *m, int w, int h)
 {
@@ -169,7 +173,10 @@ view_allocmaprects(struct map *m, int w, int h)
 	return (rects);
 }
 
-/* View must be locked. */
+/*
+ * Allocate an array able to hold wxh rectangles,
+ * for optimization purposes.
+ */
 static SDL_Rect *
 view_allocrects(struct map *m, int w, int h)
 {
@@ -183,21 +190,26 @@ view_allocrects(struct map *m, int w, int h)
 	return (rects);
 }
 
+/*
+ * Increment mask nodes matching rd.
+ * Map/view must be locked.
+ */
 void
 view_maskfill(struct viewport *v, SDL_Rect *rd, int n)
 {
 	int x, y;
 
-	pthread_mutex_lock(&v->lock);
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
 			v->mapmask[y][x] += n;
 		}
 	}
-	pthread_mutex_unlock(&v->lock);
 }
 
-/* View must be locked. */
+/*
+ * Free mask nodes.
+ * Map/view must be locked.
+ */
 static void
 view_freemask(struct viewport *v)
 {
@@ -210,7 +222,10 @@ view_freemask(struct viewport *v)
 	v->mapmask = NULL;
 }
 
-/* View must be locked. */
+/*
+ * Free a map rectangle array.
+ * View must be locked.
+ */
 static void
 view_freemaprects(struct viewport *v)
 {
@@ -246,16 +261,14 @@ view_new(int w, int h, int depth, int flags)
 	v->mapmask = NULL;
 	v->maprects = NULL;
 	v->rects = NULL;
-	pthread_mutex_init(&v->lock, NULL);
 
 	return (v);
 }
 
+/* Must be called on the view is not attached to any map. */
 void
 view_destroy(struct viewport *v)
 {
-	pthread_mutex_lock(&v->lock);
-
 	if (v->mapmask != NULL) {
 		view_freemask(v);
 	}
@@ -266,26 +279,41 @@ view_destroy(struct viewport *v)
 		free(v->rects);
 		v->rects = NULL;
 	}
-	pthread_mutex_unlock(&v->lock);
-	pthread_mutex_destroy(&v->lock);
 	free(v);
 }
 
-int
+/*
+ * Switch to/from full screen mode.
+ * Map/view must not be locked inside the calling thread.
+ */
+void
 view_fullscreen(struct viewport *v, int full)
 {
+	SDL_Event nev;
+
+	pthread_mutex_lock(&v->map->lock);
+
 	if (full) {
 		v->flags |= SDL_FULLSCREEN;
 	} else {
 		v->flags &= ~(SDL_FULLSCREEN);
 	}
-	
+
+	/* Reset the mode. */
 	view_setmode(v, v->map, -1, NULL);
 	v->map->redraw++;
 
-	return (0);
+	pthread_mutex_unlock(&v->map->lock);
+
+	/* Redraw everything. */
+	nev.type = SDL_VIDEOEXPOSE;
+	SDL_PushEvent(&nev);
 }
 
+/*
+ * Center the view.
+ * Map/view must be locked.
+ */
 void
 view_center(struct viewport *view, int mapx, int mapy)
 {
@@ -328,22 +356,24 @@ scroll(struct map *m, int dir)
 	m->redraw++;
 }
 
+/*
+ * Redraw a view entirely.
+ * The window list must not be locked by the caller thread.
+ */
 void
 view_redraw(struct viewport *view)
 {
-	if (view->map != NULL) {
+	if (view->map != NULL) {	/* Async */
 		view->map->redraw++;
 	}
-	if (curmapedit != NULL) {
-		mapedit_objlist(curmapedit);
-
-		pthread_mutex_lock(&curmapedit->map->lock);
-		mapedit_tilelist(curmapedit);
-		pthread_mutex_unlock(&curmapedit->map->lock);
+	if (curmapedit != NULL) {	/* Async */
+		curmapedit->redraw++;
 	}
-	if (!TAILQ_EMPTY(&windowsh)) {
+	pthread_mutex_lock(&windows_lock);
+	if (!TAILQ_EMPTY(&windowsh)) {	/* Sync */
 		window_draw_all();
 	}
+	pthread_mutex_unlock(&windows_lock);
 }
 
 #ifdef DEBUG
@@ -351,14 +381,13 @@ void
 view_dumpmask(struct viewport *v)
 {
 	int x, y;
-	pthread_mutex_lock(&v->lock);
+
 	for (y = 0; y < v->maph; y++) {
 		for (x = 0; x < v->mapw; x++) {
 			printf("(%d)", v->mapmask[y][x]);
 		}
 		printf("\n");
 	}
-	pthread_mutex_unlock(&v->lock);
 }
 #endif
 

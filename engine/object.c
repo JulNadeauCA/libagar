@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.47 2002/05/08 09:44:41 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.48 2002/05/11 04:05:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -96,14 +96,13 @@ int
 object_addsprite(struct object_art *art, SDL_Surface *sprite)
 {
 	if (art->sprites == NULL) {			/* Initialize */
-		art->sprites = (SDL_Surface **)
-		    emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
+		art->sprites = emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
 		art->maxsprites = NSPRITES_INIT;
 		art->nsprites = 0;
 	} else if (art->nsprites >= art->maxsprites) {	/* Grow */
 		SDL_Surface **newsprites;
 
-		newsprites = (SDL_Surface **)erealloc(art->sprites,
+		newsprites = erealloc(art->sprites,
 		    (NSPRITES_GROW * art->maxsprites) * sizeof(SDL_Surface *));
 		art->maxsprites *= NSPRITES_GROW;
 		art->sprites = newsprites;
@@ -112,6 +111,7 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite)
 	return (0);
 }
 
+/* Load images into the media pool. */
 static struct object_art *
 object_get_art(char *media)
 {
@@ -128,7 +128,7 @@ object_get_art(char *media)
 		struct fobj *fob;
 		Uint32 i;
 
-		art = (struct object_art *)emalloc(sizeof(struct object_art));
+		art = emalloc(sizeof(struct object_art));
 		art->name = strdup(media);
 		art->sprites = NULL;
 		art->nsprites = 0;
@@ -151,6 +151,7 @@ object_get_art(char *media)
 	return (art);
 }
 
+/* Load audio into the media pool. */
 static struct object_audio *
 object_get_audio(char *media)
 {
@@ -168,8 +169,7 @@ object_get_audio(char *media)
 		struct fobj *fob;
 		Uint32 i;
 
-		audio = (struct object_audio *)
-		    emalloc(sizeof(struct object_audio));
+		audio = emalloc(sizeof(struct object_audio));
 		audio->name = strdup(media);
 		/* XXX todo */
 		audio->samples = NULL;
@@ -330,7 +330,7 @@ object_destroy_gc(void)
 int
 object_loadfrom(void *p, char *path)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	int fd;
 
 	if (ob->vec->load == NULL) {
@@ -359,7 +359,7 @@ object_loadfrom(void *p, char *path)
 int
 object_load(void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	char *path;
 	int fd, rv;
 
@@ -390,7 +390,7 @@ object_load(void *p)
 int
 object_save(void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	char path[FILENAME_MAX];
 	int fd;
 
@@ -413,7 +413,7 @@ object_save(void *p)
 }
 
 /*
- * Link an object to the world, from this point, static members of
+ * Link an object to the world, from this point, unprotected members of
  * the object structure cannot be modified.
  *
  * World must be locked.
@@ -421,7 +421,7 @@ object_save(void *p)
 int
 object_link(void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	
 	if (ob->vec->link != NULL) {
 		ob->vec->link(ob);
@@ -499,6 +499,7 @@ decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 
 /*
  * Search for an object matching the given string.
+ * The world must be locked.
  * XXX hash
  */
 struct object *
@@ -506,7 +507,6 @@ object_strfind(char *s)
 {
 	struct object *ob;
 
-	pthread_mutex_assert(&world->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		if (strcmp(ob->name, s) == 0) {
 			return (ob);
@@ -518,7 +518,7 @@ object_strfind(char *s)
 void
 object_dump(void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 
 	printf("--\n%d. %s", ob->id, ob->name);
 	if (ob->desc != NULL) {
@@ -548,12 +548,12 @@ struct mappos *
 object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
     struct map *m, Uint32 x, Uint32 y)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	struct node *node;
 	struct mappos *pos;
 
 	node = &m->map[y][x];
-	pos = (struct mappos *)emalloc(sizeof(struct mappos));
+	pos = emalloc(sizeof(struct mappos));
 	pos->map = m;
 	pos->x = x;
 	pos->y = y;
@@ -591,7 +591,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 void
 object_delpos(void *obp)	/* XXX will change */
 {
-	struct object *ob = (struct object *)obp;
+	struct object *ob = obp;
 	struct mappos *pos;
 	
 	pthread_mutex_lock(&ob->pos_lock);

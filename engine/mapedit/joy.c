@@ -28,6 +28,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* XXX use generic input, remapping */
+
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
@@ -36,6 +38,10 @@
 #include "command.h"
 #include "joy.h"
 
+/*
+ * Joystick motion handler.
+ * Map editor and map must be locked, called in event context.
+ */
 void
 joy_axismotion(struct mapedit *med, SDL_Event *ev)
 {
@@ -71,13 +77,15 @@ joy_axismotion(struct mapedit *med, SDL_Event *ev)
 	}
 }
 
+/*
+ * Joystick button handler.
+ * Map editor and map must be locked, called in event context.
+ */
 void
 joy_button(struct mapedit *med, SDL_Event *ev)
 {
-	struct node *node = &med->map->map[med->y][med->x];
-	struct map *map = med->map;
-
-	pthread_mutex_lock(&map->lock);
+	struct map *m = med->map;
+	struct node *node = &m->map[med->y][med->x];
 
 	/* XXX customize */
 	switch (ev->jbutton.button) {
@@ -95,7 +103,5 @@ joy_button(struct mapedit *med, SDL_Event *ev)
 		break;
 	/* XXX ... */
 	}
-	
-	pthread_mutex_unlock(&map->lock);
 }
 

@@ -28,6 +28,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* XXX use generic input, remapping */
+
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
@@ -41,13 +43,13 @@ static void	mouse_objlsel(struct mapedit *, Uint32);
 
 /*
  * Map editor mouse motion handler.
- * Must be called on a locked map.
+ * Map editor and map must be locked, called in event context.
  */
 void
 mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
-	static Uint32 ommapx, ommapy;
-	static Uint32 omtmapx, omtmapy;
+	static int ommapx, ommapy;
+	static int omtmapx, omtmapy;
 	struct map *m = med->map;
 	Uint32 mx, my;
 	Uint8 ms;
@@ -68,7 +70,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 		/* Nothing to do. */
 		return;
 	}
-	
+
 	ms = SDL_GetMouseState(NULL, NULL);
 
 	/* Tile stack. No functionality. */
@@ -88,7 +90,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			    ++med->objlist_offs > med->neobjs - 1) {
 				med->objlist_offs = 0;
 			}
-			mapedit_objlist(med);
+			med->redraw++;
 		}
 		return;
 	}
@@ -106,7 +108,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			    ++med->tilelist_offs > med->curobj->nrefs - 1) {
 				med->tilelist_offs = 0;
 			}
-			mapedit_tilelist(med);
+			med->redraw++;
 		}
 		return;
 	}
@@ -120,7 +122,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			/* Move */
 			mapedit_move(med, mx, my);
 			mapedit_sticky(med);
-			med->map->redraw++;
+			med->redraw++;
 		} else if (ms & SDL_BUTTON_RMASK) {
 			/* Add/move */
 			mapedit_push(med, &m->map[my][mx], med->curoffs,
@@ -153,7 +155,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 
 /*
  * Map editor mouse button handler.
- * Must be called on a locked map.
+ * Map editor and map must be locked, called in event context.
  */
 void
 mouse_button(struct mapedit *med, SDL_Event *ev)
@@ -177,8 +179,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 		case 2:
 		case 3:
 			mouse_objlsel(med, vx);
-			mapedit_objlist(med);
-			mapedit_tilelist(med);
+			med->redraw++;
 			break;
 		}
 	} else if (vx >= m->view->mapw - 1 && vy <= m->view->maph) {  /* XXX? */
@@ -187,7 +188,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 		case 2:
 		case 3:
 			mouse_tlsel(med, vy);
-			mapedit_tilelist(med);
+			med->redraw++;
 			break;
 		}
 	} else if (m->view->mapxoffs+vx <= m->view->mapw+1 &&
@@ -211,7 +212,10 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	}
 }
 
-/* Select a node on the tile list. */
+/*
+ * Select a node on the tile list.
+ * Map editor and map must be locked.
+ */
 static void
 mouse_tlsel(struct mapedit *med, Uint32 vy)
 {
@@ -227,13 +231,15 @@ mouse_tlsel(struct mapedit *med, Uint32 vy)
 	}
 }
 
-
-/* Select a node on the obj list. */
+/*
+ * Select a node on the obj list.
+ * Map editor and map must be locked.
+ */
 static void
 mouse_objlsel(struct mapedit *med, Uint32 vx)
 {
 	struct editobj *eob;
-	Uint32 curoffs;
+	int curoffs;
 
 	curoffs = med->objlist_offs + (vx - 1);
 	if (curoffs < 0) {
