@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: version.c,v 1.9 2002/06/06 10:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ version_read(int fd, const struct version *ver)
 
 	if (read(fd, sig, siglen) != siglen ||
 	    strncmp(sig, ver->name, siglen) != 0) {
-		fatal("%s: bad magic\n", ver->name);
+		warning("%s: bad magic\n", ver->name);
 		return (-1);
 	}
 	vermin = fobj_read_uint32(fd);
@@ -71,7 +71,7 @@ version_read(int fd, const struct version *ver)
 	host = fobj_read_string(fd);
 
 	if (vermaj != ver->vermaj) {
-		fatal("%s: : v%d.%d != %d.%d major differs\n", ver->name,
+		warning("%s: : v%d.%d != %d.%d major differs\n", ver->name,
 		    vermaj, vermin, ver->vermaj, ver->vermin);
 		return (-1);
 	}
