@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.3 2002/09/07 04:34:38 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.4 2002/09/09 01:24:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -11,9 +11,12 @@ struct tlist_item {
 	size_t		 text_len;
 	void		*p1;		/* User data */
 	struct tlist	*tl_bp;		/* Back pointer to widget */
+	int		 selected;	/* Item selection */
 
 	TAILQ_ENTRY(tlist_item) items;
 };
+
+TAILQ_HEAD(tlist_itemq, tlist_item);
 
 struct tlist {
 	struct widget wid;
@@ -21,35 +24,37 @@ struct tlist {
 	struct scrollbar *vbar;	/* Vertical scrollbar */
 
 	int	 flags;
-#define TLIST_DROPDOWN	0x01	/* Drop-down menu */
+#define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
+#define TLIST_MULTI_STICKY	0x02	/* Sticky multiple selections */
+#define TLIST_DROPDOWN		0x04	/* Drop-down menu */
 
 	int	 xspacing;	/* Horiz spacing */
 	int	 yspacing;	/* Vert spacing */
 	int	 item_h;	/* Item height */
 
-	struct {
-		int	soft_start;
-		int	start;
-		int	sel;
-	} offs;
-
 	struct {	/* XXX */
 		void	(*update)(struct tlist *);	/* Before redraw */
 	} ops;
 
-
-	TAILQ_HEAD(, tlist_item) items;
+	struct tlist_itemq	 items;
 	int			 nitems;
 	pthread_mutex_t		 items_lock;
 };
 
-struct tlist	*tlist_new(struct region *, int, int, int);
-void		 tlist_init(struct tlist *, int, int, int);
-void	 	 tlist_draw(void *);
-void	 	 tlist_destroy(void *);
+struct tlist		*tlist_new(struct region *, int, int, int);
+void			 tlist_init(struct tlist *, int, int, int);
+void	 		 tlist_draw(void *);
+void	 		 tlist_destroy(void *);
 
 void			 tlist_remove_item(struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
+void			 tlist_unselect_items(struct tlist *);
 struct tlist_item	*tlist_insert_item(struct tlist *, SDL_Surface *,
 			     char *, void *);
+
+struct tlist_item	*_tlist_item_index(struct tlist *, int, int);
+struct tlist_item	*_tlist_item_text(struct tlist *, char *, int);
+
+#define	tlist_item_index(tl, index)	_tlist_item_index((tl), (index), 1)
+#define	tlist_item_text(tl, index)	_tlist_item_text((tl), (index), 1)
 
