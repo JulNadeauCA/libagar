@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.44 2003/10/10 04:10:46 vedge Exp $
+.\"	$Csoft: widget.3,v 1.45 2003/10/13 23:49:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -569,9 +569,9 @@ argument.
 should be called when done manipulating the data.
 .Pp
 The
-.Fn widget_get_TYPE
+.Fn widget_get_*
 and
-.Fn widget_set_TYPE
+.Fn widget_set_*
 variants manipulate the bound values atomically.
 .Pp
 The
@@ -612,6 +612,17 @@ The widget no longer holds focus.
 .It Fn widget-bound "struct widget_binding *binding"
 A widget binding has been added or modified.
 .El
+.Sh TROUBLETONS
+The atomic
+.Fn widget_get_*
+and
+.Fn widget_set_*
+functions should probably be removed in favor of
+.Fn widget_get_binding .
+.Pp
+The
+.Dv WIDGET_PROP
+binding is not used enough to justify the translation code.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr window 3 ,
