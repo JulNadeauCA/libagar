@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.25 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.26 2002/04/14 04:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -38,9 +38,9 @@
 #include <engine/physics.h>
 #include <engine/mapedit/mapedit.h>
 
-static Uint32	**view_allocmask(Uint32, Uint32);
-static SDL_Rect	**view_allocmaprects(struct map *, Uint32, Uint32);
-static SDL_Rect	*view_allocrects(struct map *, Uint32, Uint32);
+static int	**view_allocmask(int, int);
+static SDL_Rect	**view_allocmaprects(struct map *, int, int);
+static SDL_Rect	*view_allocrects(struct map *, int, int);
 static void	view_freemask(struct viewport *);
 static void	view_freemaprects(struct viewport *);
 static void	view_freerects(struct viewport *);
@@ -118,9 +118,9 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		view_freemaprects(v);
 	if (v->rects != NULL)
 		view_freerects(v);
-	v->mapmask = view_allocmask(v->mapw + 2, v->maph + 2);
-	v->maprects = view_allocmaprects(m, v->mapw + 2, v->maph + 2);
-	v->rects = view_allocrects(m, v->mapw + 2, v->maph + 2);
+	v->mapmask = view_allocmask(v->mapw, v->maph);
+	v->maprects = view_allocmaprects(m, v->mapw, v->maph);
+	v->rects = view_allocrects(m, v->mapw, v->maph);
 
 	if (curmapedit != NULL) {
 		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
@@ -130,33 +130,32 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	return (0);
 }
 
-static Uint32 **
-view_allocmask(Uint32 w, Uint32 h)
+static int **
+view_allocmask(int w, int h)
 {
-	Uint32 **mask;
-	Uint32 x, y;
+	int **mask, y, x = 0;
 
-	mask = (Uint32 **)emalloc((w * h) * sizeof(Uint32));
+	mask = emalloc((w * h) * sizeof(int *));
 	for (y = 0; y < h; y++) {
-		*(mask + y) = (Uint32 *)emalloc(w * sizeof(Uint32));
+		*(mask + y) = emalloc(w * sizeof(int));
 	}
-	
+
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
 			mask[y][x] = 0;
 		}
 	}
-	
+
 	return (mask);
 }
 
 static SDL_Rect **
-view_allocmaprects(struct map *m, Uint32 w, Uint32 h)
+view_allocmaprects(struct map *m, int w, int h)
 {
 	SDL_Rect **rects;
-	Uint32 x, y;
+	int x, y;
 	
-	rects = (SDL_Rect **)emalloc((w * h) * sizeof(SDL_Rect));
+	rects = (SDL_Rect **)emalloc((w * h) * sizeof(SDL_Rect *));
 	for (y = 0; y < h; y++) {
 		*(rects + y) = (SDL_Rect *)emalloc(w * sizeof(SDL_Rect));
 	}
@@ -174,10 +173,10 @@ view_allocmaprects(struct map *m, Uint32 w, Uint32 h)
 }
 
 static SDL_Rect *
-view_allocrects(struct map *m, Uint32 w, Uint32 h)
+view_allocrects(struct map *m, int w, int h)
 {
 	SDL_Rect *rects;
-	Uint32 len;
+	size_t len;
 	
 	len = (w * h) * sizeof(SDL_Rect *);
 	rects = (SDL_Rect *)emalloc(len);
@@ -189,23 +188,22 @@ view_allocrects(struct map *m, Uint32 w, Uint32 h)
 void
 view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 n)
 {
+#if 1
 	Uint32 x, y;
-	
 	pthread_mutex_lock(&v->lock);
-
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
 			v->mapmask[y][x] += n;
 		}
 	}
-	
 	pthread_mutex_unlock(&v->lock);
+#endif
 }
 
 static void
 view_freemask(struct viewport *v)
 {
-	Uint32 y;
+	int y;
 	
 	for (y = 0; y < v->maph; y++) {
 		free(*(v->mapmask + y));
@@ -217,7 +215,7 @@ view_freemask(struct viewport *v)
 static void
 view_freemaprects(struct viewport *v)
 {
-	Uint32 y;
+	int y;
 
 	for (y = 0; y < v->maph; y++) {
 		free(*(v->maprects + y));

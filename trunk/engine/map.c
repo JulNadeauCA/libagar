@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.77 2002/04/28 11:05:52 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.78 2002/04/30 01:12:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -408,9 +408,8 @@ map_animate(struct map *m)
 		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
 		     x++, vx++) {
 			static struct node *node;
-		
-			if (view->mapmask[vy - view->mapyoffs]
-			    [vx - view->mapxoffs] > 0) {
+
+			if (VIEW_MAPMASK(view, vx, vy) > 0) {
 				continue;
 			}
 
@@ -527,8 +526,7 @@ map_draw(struct map *m)
 			static struct noderef *nref;
 			static Uint32 nsprites;
 
-			if (view->mapmask[vy - view->mapyoffs]
-			    [vx - view->mapxoffs] > 0) {
+			if (VIEW_MAPMASK(view, vx, vy) > 0) {
 				continue;
 			}
 
