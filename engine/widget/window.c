@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.149 2003/01/23 02:00:57 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.150 2003/01/23 02:12:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1562,8 +1562,9 @@ window_resize(struct window *win)
 			reg->x += win->xspacing;
 			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 				if (wid->rw != -1) {
-					fatal("%s has scaled width\n",
+					dprintf("%s has scaled width\n",
 					    OBJECT(wid)->name);
+					continue;
 				}
 				event_post(wid, "widget-scaled",
 				    "%i, %i", -1, -1);
@@ -1588,8 +1589,9 @@ window_resize(struct window *win)
 			reg->y += win->yspacing;
 			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 				if (wid->rh != -1) {
-					fatal("%s has scaled height\n",
+					dprintf("%s has scaled height\n",
 					    OBJECT(wid)->name);
+					continue;
 				}
 				event_post(wid, "widget-scaled", "%i, %i",
 				    -1, -1);
@@ -1622,9 +1624,13 @@ window_resize(struct window *win)
 
 			/* Set the widget's effective width. */
 			if (wid->rw > 0) {		/* % of region */
-				wid->w =
-				    (wid->rw * (reg->w - ((reg->nwidgets-1) *
-				     reg->xspacing))) / 100;
+				if (reg->flags & REGION_HALIGN) {
+					wid->w = (wid->rw *
+					    (reg->w - ((reg->nwidgets-1) *
+					     reg->xspacing))) / 100;
+				} else {
+					wid->w = wid->rw * reg->w / 100;
+				}
 			} else if (wid->rw == 0) {	/* auto size width */
 				if (reg->flags & REGION_HALIGN) {
 					wid->w = reg->w/reg->nwidgets -
@@ -1636,9 +1642,13 @@ window_resize(struct window *win)
 			
 			/* Set the widget's effective height. */
 			if (wid->rh > 0) {		/* % of region */
-				wid->h =
-				    (wid->rh * (reg->h - ((reg->nwidgets-1) *
-				     reg->yspacing))) / 100;
+				if (reg->flags & REGION_VALIGN) {
+					wid->h = (wid->rh *
+					    (reg->h - ((reg->nwidgets-1) *
+					     reg->yspacing))) / 100;
+				} else {
+					wid->h = wid->rh * reg->h / 100;
+				}
 			} else if (wid->rh == 0) {	/* auto size height */
 				if (reg->flags & REGION_VALIGN) {
 					wid->h = reg->h/reg->nwidgets -
@@ -1665,9 +1675,8 @@ window_resize(struct window *win)
 		
 		if (reg->rw == -1)
 			regx += reg->w + win->xspacing;
-		if (reg->rh == -1) {
+		if (reg->rh == -1)
 			regy += reg->h + win->yspacing;
-		}
  	}
 
 	debug_n(DEBUG_RESIZE_GEO, "%s: %dx%d\n", OBJECT(win)->name,
