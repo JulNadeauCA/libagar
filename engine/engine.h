@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.85 2004/08/27 06:50:18 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.86 2004/08/30 03:20:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -28,8 +28,14 @@
 
 #include <SDL.h>
 #include <SDL_endian.h>
+
 #ifdef HAVE_OPENGL
-#include <GL/gl.h>
+# ifdef __APPLE__ /* OS X */
+#  include <OpenGL/gl.h> /* OpenGL.framework */
+#  include <AGL/agl.h>   /* AGL.framework */
+# else
+#  include <GL/gl.h>
+# endif
 #endif
 
 #ifdef HAVE_BOUNDED_ATTRIBUTE
