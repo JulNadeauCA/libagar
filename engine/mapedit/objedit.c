@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.6 2003/05/25 08:27:58 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.7 2003/05/26 03:01:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -29,12 +29,12 @@
 #include <engine/engine.h>
 #include <engine/typesw.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/tlist.h>
-#include <engine/widget/text.h>
 
 #include "mapedit.h"
 
@@ -178,41 +178,36 @@ struct window *
 objedit_window(void)
 {
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
 	struct textbox *name_tb, *type_tb;
 	struct button *create_bu, *edit_bu, *destroy_bu;
 	struct tlist *objs_tl;
 
-	win = window_generic_new(320, 240, "mapedit-objedit");
+	win = window_new("mapedit-objedit");
 	window_set_caption(win, "Object editor");
-	event_new(win, "window-close", window_generic_hide, "%p", win);
+	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	window_set_closure(win, WINDOW_HIDE);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, VBOX_WFILL);
 	{
-		name_tb = textbox_new(reg, "New: ");
-		type_tb = textbox_new(reg, "Type: ");
+		name_tb = textbox_new(vb, "New: ");
+		type_tb = textbox_new(vb, "Type: ");
 		textbox_printf(type_tb, "map");
+
+		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		{
+			create_bu = button_new(hb, "Create");
+			edit_bu = button_new(hb, "Edit");
+			destroy_bu = button_new(hb, "Destroy");
+			button_disable(destroy_bu);
+		}
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
-	{
-		create_bu = button_new(reg, "Create", NULL, 0, 33, -1);
-		edit_bu = button_new(reg, "Edit", NULL, 0, 34, -1);
-		destroy_bu = button_new(reg, "Destroy", NULL, 0, 33, -1);
-		button_disable(destroy_bu);
-	}
-	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	{
-		objs_tl = tlist_new(reg, 100, 100,
-		    TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-#if 0
-		tlist_set_item_height(objs_tl, ttf_font_height(font)*2);
-#endif
-		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
-		event_new(objs_tl, "tlist-changed", select_objs, "%p, %p",
-		    objs_tl, destroy_bu);
-	}
+	objs_tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
+	event_new(objs_tl, "tlist-changed", select_objs, "%p, %p", objs_tl,
+	    destroy_bu);
 	
 	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p",
 	    objs_tl, name_tb, type_tb);

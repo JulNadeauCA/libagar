@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.26 2003/05/07 13:01:58 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.27 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,8 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 
@@ -35,34 +33,32 @@
 
 #include <string.h>
 
+/* Handler for window-close events on tool windows. */
 static void
 tool_window_close(int argc, union evarg *argv)
 {
 	struct tool *tool = argv[1].p;
 
 	widget_set_int(tool->button, "state", 0);
-
 	mapedit.curtool = NULL;
 }
 
 void
-tool_init(struct tool *tool, char *name, const void *ops)
+tool_init(struct tool *tool, const char *name, const void *ops)
 {
-	char toolname[OBJECT_NAME_MAX];
-
-	snprintf(toolname, sizeof(toolname), "tool-%s", name);
-	object_init(&tool->obj, "tool", toolname, ops);
-	object_load_art(tool, "tool", 0);
+	object_init(tool, "tool", name, ops);
+	object_load_art(tool, "/engine/mapedit/tool/tool", 0);
 
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;
 	if (tool->win != NULL) {
-		event_new(tool->win, "window-close",
-		    tool_window_close, "%p", tool);
+		event_new(tool->win, "window-close", tool_window_close, "%p",
+		    tool);
 	}
-	tool->type = Strdup(name);
+	strlcpy(tool->type, name, sizeof(tool->type));
 	tool->button = NULL;
 	tool->cursor = NULL;
+	tool->icon = NULL;
 	SLIST_INIT(&tool->bindings);
 }
 
@@ -72,8 +68,6 @@ tool_destroy(void *p)
 	struct tool *tool = p;
 	struct tool_binding *binding, *nbinding;
 
-	free(tool->type);
-	
 	for (binding = SLIST_FIRST(&tool->bindings);
 	     binding != SLIST_END(&tool->bindings);
 	     binding = nbinding) {
@@ -82,28 +76,39 @@ tool_destroy(void *p)
 	}
 }
 
+/* Return the first focused mapview(3) widget found. */
+static struct mapview *
+find_mapview(struct widget *pwid)
+{
+	struct widget *cwid;
+	
+	if (strcmp(pwid->type, "mapview") == 0)
+		return ((struct mapview *)pwid);
+
+	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
+		struct mapview *mv;
+
+		if (!widget_holds_focus(cwid))
+			continue;
+		if ((mv = find_mapview(cwid)) != NULL)
+			return (mv);
+	}
+	return (NULL);
+}
+
 /* Return the first visible mapview widget. */
 struct mapview *
 tool_mapview(void)
 {
 	struct window *win;
-	struct region *reg;
-	struct widget *wid;
+	struct mapview *mv;
 
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		if ((win->flags & (WINDOW_SHOWN|WINDOW_HIDDEN_BODY)) == 0) {
+		if (!win->visible)
 			continue;
-		}
-		TAILQ_FOREACH(reg, &win->regionsh, regions) {
-			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
-				if (!WIDGET_FOCUSED(wid))
-					continue;
-				if (strcmp(wid->type, "mapview") == 0)
-					return ((struct mapview *)wid);
-			}
-		}
+		if ((mv = find_mapview(WIDGET(win))) != NULL)
+			return (mv);
 	}
-	error_set("no map is visible");
 	return (NULL);
 }
 
@@ -121,3 +126,4 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 	binding->edit = edit;
 	SLIST_INSERT_HEAD(&tool->bindings, binding, bindings);
 }
+

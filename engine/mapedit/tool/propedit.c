@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.35 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.36 2003/05/26 03:03:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,11 +27,11 @@
  */
 
 #include <engine/engine.h>
+#include <engine/view.h>
 
 #include "propedit.h"
 
-#include <engine/view.h>
-
+#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
@@ -155,6 +155,7 @@ propedit_init(void *p)
 	struct propedit *pe = p;
 
 	tool_init(&pe->tool, "propedit", &propedit_ops);
+	TOOL(pe)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_PROPEDIT);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
@@ -214,17 +215,15 @@ propedit_window(void *p)
 {
 	struct propedit *pe = p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 	struct radio *rad;
 	struct checkbox *cbox;
 
-	win = window_new("mapedit-tool-propedit", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    221, 339,
-	    221, 339);
+	win = window_new("mapedit-tool-propedit");
 	window_set_caption(win, "Node props");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
 	{
 		static const char *node_modes[] = {
 			"Block",
@@ -244,20 +243,19 @@ propedit_window(void *p)
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		int i;
 
-		rad = radio_new(reg, node_modes);
+		rad = radio_new(vb, node_modes);
+		widget_set_focus(rad);
 		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
 
-		cbox = checkbox_new(reg, "Origin");
+		cbox = checkbox_new(vb, "Origin");
 		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
 
 		for (i = 0; i < nprops; i++) {
-			cbox = checkbox_new(reg, "%s", props[i].name);
+			cbox = checkbox_new(vb, "%s", props[i].name);
 			event_new(cbox, "checkbox-changed", toggle_node_flag,
 			    "%p, %i", pe, props[i].flag);
 		}
 	}
-
-	win->focus = WIDGET(rad);
 	return (win);
 }
 

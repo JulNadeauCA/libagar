@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.19 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.20 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,8 @@
 
 #include "fill.h"
 
+#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
-#include <engine/widget/text.h>
 
 const struct tool_ops fill_ops = {
 	{
@@ -53,6 +53,7 @@ fill_init(void *p)
 	struct fill *fill = p;
 
 	tool_init(&fill->tool, "fill", &fill_ops);
+	TOOL(fill)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_FILL);
 	TOOL(fill)->cursor = SPRITE(fill, TOOL_FILL_CURSOR);
 	fill->mode = FILL_FILL_MAP;
 }
@@ -60,29 +61,23 @@ fill_init(void *p)
 struct window *
 fill_window(void *p)
 {
+	static const char *mode_items[] = {
+		"Fill",
+		"Clear",
+		NULL
+	};
 	struct fill *fi = p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct radio *rad;
 
-	win = window_new("mapedit-tool-fill", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    126, 128,
-	    126, 128);
+	win = window_new("mapedit-tool-fill");
 	window_set_caption(win, "Fill");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	{
-		static const char *mode_items[] = {
-			"Fill",
-			"Clear",
-			NULL
-		};
-		struct radio *rad;
-
-		rad = radio_new(reg, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
-		win->focus = WIDGET(rad);
-	}
+	vb = vbox_new(win, 0);
+	rad = radio_new(vb, mode_items);
+	widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
 	return (win);
 }
 

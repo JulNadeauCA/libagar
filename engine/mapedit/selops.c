@@ -1,4 +1,4 @@
-/*	$Csoft: selops.c,v 1.4 2003/03/25 13:48:03 vedge Exp $	*/
+/*	$Csoft: selops.c,v 1.5 2003/03/26 10:04:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -28,8 +28,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-
-#include <engine/widget/text.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>

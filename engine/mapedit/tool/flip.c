@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.9 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.10 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,8 @@
 
 #include "flip.h"
 
+#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
-#include <engine/widget/text.h>
 
 const struct tool_ops flip_ops = {
 	{
@@ -53,6 +53,7 @@ flip_init(void *p)
 	struct flip *flip = p;
 
 	tool_init(&flip->tool, "flip", &flip_ops);
+	TOOL(flip)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_FLIP);
 	flip->mode = FLIP_HORIZ;
 	flip->which = FLIP_ALL;
 }
@@ -60,35 +61,31 @@ flip_init(void *p)
 struct window *
 flip_window(void *p)
 {
+	static const char *mode_items[] = {
+		"Horizontal",
+		"Vertical",
+		NULL
+	};
+	static const char *which_items[] = {
+		"All",
+		"Highest",
+		NULL
+	};
 	struct flip *flip = p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct radio *rad;
 
-	win = window_new("mapedit-tool-flip", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    177, 196,
-	    177, 196);
+	win = window_new("mapedit-tool-flip");
 	window_set_caption(win, "Flip");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	vb = vbox_new(win, 0);
 	{
-		static const char *mode_items[] = {
-			"Horizontal",
-			"Vertical",
-			NULL
-		};
-		static const char *which_items[] = {
-			"All",
-			"Highest",
-			NULL
-		};
-		struct radio *rad;
-
-		rad = radio_new(reg, mode_items);
+		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->mode);
-		win->focus = WIDGET(rad);
-		
-		rad = radio_new(reg, which_items);
+
+		rad = radio_new(vb, which_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->which);
 	}
 	return (win);

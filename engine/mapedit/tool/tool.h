@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.12 2003/04/25 09:47:08 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.13 2003/05/07 13:01:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_TOOL_H_
@@ -29,17 +29,18 @@ struct tool_binding {
 	const char	 *name;
 	SDLMod		  mod;
 	SDLKey		  key;
-	int		  edit;			/* Require MAPVIEW_EDIT? */
+	int		  edit;
 	void		(*func)(void *, struct mapview *);
 	SLIST_ENTRY(tool_binding) bindings;
 };
 
 struct tool {
 	struct object	 obj;
-	char		*type;
+	char		 type[OBJECT_TYPE_MAX];
 	struct window	*win;			/* Tool settings window */
 	struct button	*button;		/* Trigger */
 	SDL_Surface	*cursor;		/* Static cursor */
+	SDL_Surface	*icon;
 	SLIST_HEAD(,tool_binding) bindings;
 };
 
@@ -54,11 +55,8 @@ enum {
 #define	TOOL(t)		((struct tool *)(t))
 #define TOOL_OPS(t)	((struct tool_ops *)OBJECT((t))->ops)
 
-#define TOOL_DIALOG_X	16
-#define TOOL_DIALOG_Y	205
-
 __BEGIN_DECLS
-extern DECLSPEC void	tool_init(struct tool *, char *, const void *);
+extern DECLSPEC void	tool_init(struct tool *, const char *, const void *);
 extern DECLSPEC void	tool_destroy(void *);
 extern DECLSPEC void	tool_bind_key(void *, SDLMod, SDLKey,
 				      void (*)(void *, struct mapview *), int);
