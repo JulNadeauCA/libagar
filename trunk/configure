@@ -185,6 +185,8 @@ echo "    --with-gl                      OpenGL rendering support [default: chec
 echo "    --with-jpeg                    JPEG screenshot support [default: check]"
 echo "    --enable-edition               Graphical edition [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
+echo "    --enable-astro-units           Include astronomical units [default: no]"
+echo "    --enable-histo-units           Include historical units [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
 echo "    --enable-static                Produce a static binary [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
@@ -1658,6 +1660,24 @@ echo "#define THREADS" $THREADS >> config/threads.h
 echo "#endif /* THREADS */" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
+fi
+if [ "${enable_astro_units}" = "yes" ]
+ then
+ASTRONOMICAL_UNITS=1
+echo "#ifndef ASTRONOMICAL_UNITS" > config/astronomical_units.h
+echo "#define ASTRONOMICAL_UNITS" $ASTRONOMICAL_UNITS >> config/astronomical_units.h
+echo "#endif /* ASTRONOMICAL_UNITS */" >> config/astronomical_units.h
+else
+echo "#undef ASTRONOMICAL_UNITS" > config/astronomical_units.h
+fi
+if [ "${enable_histo_units}" = "yes" ]
+ then
+HISTORICAL_UNITS=1
+echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
+echo "#define HISTORICAL_UNITS" $HISTORICAL_UNITS >> config/historical_units.h
+echo "#endif /* HISTORICAL_UNITS */" >> config/historical_units.h
+else
+echo "#undef HISTORICAL_UNITS" > config/historical_units.h
 fi
 if [ "${enable_floating_point}" != "no" ]
  then
