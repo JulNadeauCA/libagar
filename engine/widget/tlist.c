@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.93 2004/05/10 23:46:02 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.94 2004/05/14 05:08:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -145,7 +145,7 @@ key_tick(int argc, union evarg *argv)
 	widget_binding_unlock(offsetb);
 	pthread_mutex_unlock(&tl->lock);
 
-	tl->moved++;
+	tl->keymoved++;
 	event_resched(tl, "key-tick", kbd_repeat);
 }
 
@@ -166,7 +166,7 @@ lost_focus(int argc, union evarg *argv)
 
 	event_cancel(tl, "key-tick");
 	event_cancel(tl, "dblclick-expire");
-	tl->moved = 0;
+	tl->keymoved = 0;
 }
 
 void
@@ -184,7 +184,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->flags = flags;
 	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
 	tl->selected = NULL;
-	tl->moved = 0;
+	tl->keymoved = 0;
 	tl->item_h = text_font_height(NULL)+2;
 	tl->dblclicked = 0;
 	TAILQ_INIT(&tl->items);
@@ -783,11 +783,11 @@ tlist_keyup(int argc, union evarg *argv)
 	case SDLK_DOWN:
 	case SDLK_PAGEUP:
 	case SDLK_PAGEDOWN:
-		if (tl->moved == 0) {
+		if (tl->keymoved == 0) {
 			event_post(NULL, tl, "key-tick", "%i", keysym);
 		}
 		event_cancel(tl, "key-tick");
-		tl->moved = 0;
+		tl->keymoved = 0;
 		break;
 	default:
 		break;

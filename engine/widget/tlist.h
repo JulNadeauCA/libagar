@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.35 2004/05/02 09:38:10 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.36 2004/05/14 05:08:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -45,11 +45,11 @@ struct tlist {
 
 	void	*selected;		/* Default `selected' binding */
 	int	 prew, preh;		/* Prescale hint */
-	int	 moved;			/* Used for key repeat */
 
 	pthread_mutex_t		 lock;
 	int	 		 item_h;	/* Item height */
-	int			 dblclicked;	/* Last clicked on this item */
+	int			 dblclicked;	/* Used by double click */
+	int			 keymoved;	/* Used by key repeat */
 	struct tlist_itemq	 items;		/* Current Items */
 	struct tlist_itemq	 selitems;	/* Saved items */
 	int			 nitems;	/* Current item count */
