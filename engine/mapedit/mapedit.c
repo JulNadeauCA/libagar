@@ -133,7 +133,8 @@ mapedit_init(void)
 	int i;
 
 	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_STATIC, &mapedit_ops);
+	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_STATIC|OBJECT_RELOAD_PROPS,
+	    &mapedit_ops);
 	med->curtool = NULL;
 	med->src_node = NULL;
 	map_init(&med->copybuf, "mapedit-copybuf", NULL);
@@ -142,6 +143,7 @@ mapedit_init(void)
 	prop_set_uint32(med, "default-map-height", 32);
 	prop_set_uint32(med, "default-brush-width", 5);
 	prop_set_uint32(med, "default-brush-height", 5);
+	prop_set_bool(med, "sel-bounded-edition", 0);
 
 	mapedition = 1;
 
