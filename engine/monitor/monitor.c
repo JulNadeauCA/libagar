@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.28 2003/01/21 03:26:41 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.29 2003/01/23 03:17:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ toolbar_selected_tool(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tlist_item *it = argv[1].p;
-	struct window *(*win_func)() = it->p1;
+	struct window *(*win_func)() = it->p1;		/* XXX unsafe */
 	struct window *win;
 
 	if ((win = (win_func)()) != NULL) {
@@ -66,40 +66,44 @@ toolbar_selected_tool(int argc, union evarg *argv)
 void
 monitor_init(struct monitor *mon, char *name)
 {
+	const struct tool_ent {
+		int		 ind;
+		char		*name;
+		struct window	*(*window_func)(void);
+	} tool_ents[] = {
+		{ MONITOR_FPS_COUNTER, "FPS counter", event_show_fps_counter },
+		{ MONITOR_OBJECT_BROWSER, "Objects", object_browser_window },
+		{ MONITOR_LEVEL_BROWSER, "Levels", level_browser_window },
+		{ MONITOR_WIDGET_BROWSER, "Widgets", widget_browser_window },
+		{ MONITOR_VIEW_PARAMS, "View params", view_params_window },
+		{ MONITOR_MEDIA_BROWSER, "Graphics", art_browser_window }
+	};
+	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct region *reg;
-	struct tlist *tl_tools;
 
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_SYSTEM|OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
 
-	mon->toolbar = window_new("monitor-toolbar", 0, 0, view->h - 124,
-	    177, 124, 177, 124);
+	mon->toolbar = window_new("monitor-toolbar", 0,
+	    0, view->h - 124,
+	    177, 124,
+	    177, 124);
 	window_set_caption(mon->toolbar, "Debug monitor");
 
 	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
+	{
+		struct tlist *tl_tools;
+		int i;
 
-	tl_tools = tlist_new(reg, 100, 100, 0);
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_FPS_COUNTER), "FPS counter",
-	    event_show_fps_counter);
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_OBJECT_BROWSER), "Object browser",
-	    object_browser_window);
-#if 0
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_LEVEL_BROWSER), "Level browser",
-	    level_browser_window);
-#endif
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_WIDGET_BROWSER), "Window stack",
-	    widget_browser_window);
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_VIEW_PARAMS), "View params",
-	    view_params_window);
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_MEDIA_BROWSER), "Art browser",
-	    art_browser_window);
-	event_new(tl_tools, "tlist-changed", toolbar_selected_tool, NULL);
+		tl_tools = tlist_new(reg, 100, 100, 0);
+		event_new(tl_tools, "tlist-changed",
+		    toolbar_selected_tool, NULL);
+		for (i = 0; i < ntool_ents; i++) {
+			tlist_insert_item(tl_tools,
+			    SPRITE(mon, tool_ents[i].ind), tool_ents[i].name,
+			    tool_ents[i].window_func);
+		}
+	}
 }
 
 void
