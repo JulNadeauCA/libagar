@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.h,v 1.12 2002/08/21 23:51:39 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.1 2002/09/12 09:42:33 vedge Exp $	*/
 /*	Public domain	*/
 
 struct scrollbar {
@@ -14,6 +14,7 @@ struct scrollbar {
 		int	soft_start;	/* Soft scroll offset */
 		int	start;		/* Display offset */
 		int	max;		/* Range */
+		pthread_mutex_t max_lock;
 	} range;
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.27 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.1 2002/09/12 09:42:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -99,6 +99,7 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int item_size, int flags)
 	sb->range.soft_start = 0;
 	sb->range.start = 0;
 	sb->range.max = 100;
+	pthread_mutex_init(&sb->range.max_lock, NULL);
 
 	event_new(sb, "window-mousebuttondown", 0,
 	    scrollbar_mouse_button, NULL);
@@ -109,7 +110,9 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int item_size, int flags)
 void
 scrollbar_set_range(struct scrollbar *sb, int max)
 {
+	pthread_mutex_lock(&sb->range.max_lock);
 	sb->range.max = max;
+	pthread_mutex_unlock(&sb->range.max_lock);
 }
 
 static void
@@ -132,14 +135,17 @@ scrollbar_mouse_motion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 
+	WIDGET_ASSERT(sb, "scrollbar");
+
 	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) == 0) {
 		return;
 	}
 	
-	dprintf("x, y: %d,%d; xrel, yrel: %d,%d\n", x, y, xrel, yrel);
-	
+	pthread_mutex_lock(&sb->range.max_lock);
+
 	if (yrel < 0 && (sb->range.soft_start += yrel) < 0) {
 		sb->range.soft_start = sb->item_size;
+
 		if (++sb->range.start > sb->range.max) {
 			sb->range.start = sb->range.max;
 		}
@@ -151,6 +157,8 @@ scrollbar_mouse_motion(int argc, union evarg *argv)
 			sb->range.start = 0;
 		}
 	}
+
+	pthread_mutex_unlock(&sb->range.max_lock);
 
 	event_post(sb, "scrollbar-changed", "%i", sb->range.start);
 }
@@ -227,6 +235,7 @@ scrollbar_draw(void *p)
 		/*
 		 * Scrolling bar
 		 */
+		pthread_mutex_lock(&sb->range.max_lock);
 
 		/* Calculate height */
 		h = sb->item_size*sb->range.max - (WIDGET(sb)->h - 40);
@@ -242,6 +251,8 @@ scrollbar_draw(void *p)
 		/* Calculate position */
 		y = (sb->range.start * sb->item_size) *
 		    (sb->range.max * sb->item_size) / (WIDGET(sb)->h + 40);
+		
+		pthread_mutex_unlock(&sb->range.max_lock);
 
 		if (20 + h + y > WIDGET(sb)->h - 20) {
 			y = WIDGET(sb)->h - 40 - h;
