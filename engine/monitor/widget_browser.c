@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.21 2003/06/07 22:26:42 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.22 2003/06/13 02:48:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ show_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg("Error", "No window is selected");
+		text_msg(MSG_ERROR, _("No window is selected"));
 		return;
 	}
 
@@ -91,7 +91,7 @@ hide_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg("Error", "No window is selected");
+		text_msg(MSG_ERROR, _("No window is selected"));
 		return;
 	}
 
@@ -109,7 +109,7 @@ detach_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg("Error", "No window is selected");
+		text_msg(MSG_ERROR, _("No window is selected"));
 		return;
 	}
 
@@ -156,7 +156,7 @@ examine_widget(int argc, union evarg *argv)
 	struct vbox *vb;
 
 	if ((it = tlist_item_selected(tl)) == NULL) {
-		text_msg("Error", "No widget is selected.");
+		text_msg(MSG_ERROR, _("No widget is selected"));
 		return;
 	}
 	wid = it->p1;
@@ -235,7 +235,7 @@ examine_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(wintl);
 	if (it == NULL) {
-		text_msg("Error", "No window is selected");
+		text_msg(MSG_ERROR, _("No window is selected"));
 		return;
 	}
 	pwin = it->p1;

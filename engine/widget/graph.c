@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.33 2003/06/08 00:21:04 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.34 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -203,11 +203,11 @@ graph_key(int argc, union evarg *argv)
 		break;
 	case SDLK_s:
 		if (object_save(gra) == -1)
-			text_msg("Error saving", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 		break;
 	case SDLK_l:
 		if (object_load(gra) == -1)
-			text_msg("Error loading", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 	default:
 		break;
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.175 2003/06/12 00:30:57 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.176 2003/06/13 22:45:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -213,7 +213,7 @@ mapedit_load(void *p, struct netbuf *buf)
 
 		if (OBJECT(tool)->ops->load != NULL &&
 		    object_load(tool) == -1) {
-			text_msg("Error loading", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 		}
 	}
 	return (0);
@@ -229,7 +229,7 @@ mapedit_save(void *p, struct netbuf *buf)
 
 		if (OBJECT(tool)->ops->save != NULL &&
 		    object_save(mapedit.tools[i]) == -1) {
-			text_msg("Error saving", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 		}
 	}
 	return (0);
@@ -283,7 +283,7 @@ set_mapview_opt(int argc, union evarg *argv)
 static void
 mapedit_close(int argc, union evarg *argv)
 {
-	text_msg("blah", "bozo");
+	/* todo */
 }
 
 /* Create a new, editable map display. */
@@ -295,7 +295,7 @@ mapedit_window(struct map *m)
 	struct mapview *mv;
 
 	win = window_new(NULL);
-	window_set_caption(win, "%s edition", OBJECT(m)->name);
+	window_set_caption(win, _("%s edition"), OBJECT(m)->name);
 	event_new(win, "window-close", mapedit_close, NULL);
 
 	mv = Malloc(sizeof(struct mapview));
@@ -355,7 +355,7 @@ mapedit_window(struct map *m)
 		    MAPEDIT_TOOL_LAYEDIT);
 		mv->layed.trigger = bu;
 
-		lab = label_polled_new(hb, NULL, "  Layer #%d",
+		lab = label_polled_new(hb, NULL, _("  Layer #%d"),
 		    &mv->map->cur_layer);
 	}
 

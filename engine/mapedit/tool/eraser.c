@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.33 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.34 2003/06/06 09:03:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -66,13 +66,13 @@ eraser_window(void *p)
 
 	win = window_new("mapedit-tool-eraser");
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	window_set_caption(win, "Eraser");
+	window_set_caption(win, _("Eraser"));
 
 	vb = vbox_new(win, 0);
 	{
 		static const char *mode_items[] = {
-			"All",
-			"Highest",
+			N_("All"),
+			N_("Highest"),
 			NULL
 		};
 		struct radio *rad;

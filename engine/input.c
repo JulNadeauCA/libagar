@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.45 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.46 2003/06/06 02:41:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -51,13 +51,13 @@ input_new(enum input_type type, int index)
 
 	switch (type) {
 	case INPUT_KEYBOARD:
-		snprintf(name, sizeof(name), "keyboard%d", index);
+		snprintf(name, sizeof(name), _("keyboard%d"), index);
 		break;
 	case INPUT_JOY:
-		snprintf(name, sizeof(name), "joy%d", index);
+		snprintf(name, sizeof(name), _("joy%d"), index);
 		break;
 	case INPUT_MOUSE:
-		snprintf(name, sizeof(name), "mouse%d", index);
+		snprintf(name, sizeof(name), _("mouse%d"), index);
 		break;
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.28 2003/03/25 13:42:46 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.30 2003/04/14 08:56:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ version_read(struct netbuf *buf, const struct version *ver,
 
 	if (netbuf_read(buf, sig, siglen) != siglen ||
 	    strncmp(sig, ver->name, siglen) != 0) {
-		error_set("%s: bad magic", ver->name);
+		error_set(_("%s: bad magic"), ver->name);
 		return (-1);
 	}
 	minor = read_uint32(buf);
@@ -68,12 +68,12 @@ version_read(struct netbuf *buf, const struct version *ver,
 	}
 
 	if (major != ver->major) {
-		error_set("%s: major differs: v%d.%d != %d.%d", ver->name,
+		error_set(_("%s: major differs: v%d.%d != %d.%d"), ver->name,
 		    major, minor, ver->major, ver->minor);
 		return (-1);
 	}
 	if (minor != ver->minor) {
-		warning("%s: minor differs: v%d.%d != %d.%d\n", ver->name,
+		dprintf("%s: minor differs: v%d.%d != %d.%d\n", ver->name,
 		    major, minor, ver->major, ver->minor);
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.30 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.31 2003/06/09 00:03:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ magnifier_zoomN(int argc, union evarg *argv)
 	struct mapview *mv;
 
 	if ((mv = tool_mapview()) == NULL) {
-		text_msg("Error", "no mapview(3) widget visible");
+		text_msg(MSG_ERROR, _("No map is visible"));
 		return;
 	}
 	mapview_zoom(mv, textbox_int(tb));
@@ -70,7 +70,7 @@ magnifier_zoom100(int argc, union evarg *argv)
 	struct mapview *mv;
 	
 	if ((mv = tool_mapview()) == NULL) {
-		text_msg("Error", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
 	mapview_zoom(mv, 100);
@@ -95,14 +95,14 @@ magnifier_window(void *p)
 	struct vbox *vb;
 
 	win = window_new("mapedit-tool-magnifier");
-	window_set_caption(win, "Magnifier");
+	window_set_caption(win, _("Magnifier"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HOMOGENOUS);
 	{
 		struct button *button;
 
-		button = button_new(vb, "1:1");
+		button = button_new(vb, _("1:1 zoom"));
 		event_new(button, "button-pushed", magnifier_zoom100,
 		    "%p", mag);
 	}
@@ -111,7 +111,7 @@ magnifier_window(void *p)
 	{
 		struct textbox *tbox;
 
-		tbox = textbox_new(vb, "%: ");			/* XXX int */
+		tbox = textbox_new(vb, _("Zoom %: "));		/* XXX int */
 		event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
 		textbox_printf(tbox, "100");
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.10 2003/06/12 00:30:57 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.11 2003/06/13 02:49:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ create_obj(int argc, union evarg *argv)
 
 	textbox_copy_string(type_tb, type, sizeof(type));
 	if (type[0] == '\0') {
-		text_msg("Error", "No object type specified");
+		text_msg(MSG_ERROR, _("No object type was specified"));
 		return;
 	}
 	for (i = 0; i < ntypesw; i++) {
@@ -65,13 +65,13 @@ create_obj(int argc, union evarg *argv)
 			break;
 	}
 	if (i == ntypesw) {
-		text_msg("Error", "No such object type");
+		text_msg(MSG_ERROR, _("No such object type"));
 		return;
 	}
 
 	textbox_copy_string(name_tb, name, sizeof(name));
 	if (name[0] == '\0') {
-		text_msg("Error", "No object name specified");
+		text_msg(MSG_ERROR, _("No object name was specified"));
 		return;
 	}
 
@@ -110,13 +110,13 @@ invoke_op(int argc, union evarg *argv)
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
-				text_msg("Error loading", "%s: %s", ob->name,
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 			}
 			break;
 		case OBJEDIT_SAVE:
 			if (object_save(ob) == -1) {
-				text_msg("Error saving", "%s: %s", ob->name,
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 			}
 			break;
@@ -182,8 +182,8 @@ objedit_window(void)
 		struct hbox *hb;
 		int i;
 
-		name_tb = textbox_new(vb, "New: ");
-		types_com = combo_new(vb, "Type: ");
+		name_tb = textbox_new(vb, _("New: "));
+		types_com = combo_new(vb, _("Type: "));
 		for (i = 0; i < ntypesw; i++) {
 			char label[TLIST_LABEL_MAX];
 
@@ -194,11 +194,11 @@ objedit_window(void)
 		
 		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
 		{
-			create_bu = button_new(hb, "Create");
-			edit_bu = button_new(hb, "Edit");
-			load_bu = button_new(hb, "Load");
-			save_bu = button_new(hb, "Save");
-			destroy_bu = button_new(hb, "Destroy");
+			create_bu = button_new(hb, _("Create"));
+			edit_bu = button_new(hb, _("Edit"));
+			load_bu = button_new(hb, _("Load"));
+			save_bu = button_new(hb, _("Save"));
+			destroy_bu = button_new(hb, _("Destroy"));
 		}
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);

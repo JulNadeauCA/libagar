@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.19 2003/06/13 01:45:14 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.20 2003/06/14 11:28:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -9,6 +9,12 @@
 #include "begin_code.h"
 
 extern ttf_font *font;
+
+enum text_msg_title {
+	MSG_ERROR,
+	MSG_WARNING,
+	MSG_INFO
+};
 
 enum text_engine {
 	TEXT_ENGINE_FREETYPE,	/* Use FreeType */
@@ -34,7 +40,7 @@ extern __inline__ SDL_Surface	*text_render_glyph(const char *, int, Uint32,
 extern DECLSPEC void	 text_prescale_unicode(const Uint16 *, int *, int *);
 extern __inline__ void	 text_prescale(const char *, int *, int *);
 
-extern DECLSPEC void	 text_msg(const char *, const char *, ...);
+extern DECLSPEC void	 text_msg(enum text_msg_title, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

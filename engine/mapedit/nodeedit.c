@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.12 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.13 2003/06/07 15:42:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -70,41 +70,41 @@ nodeedit_poll(int argc, union evarg *argv)
 	
 	flags[0] = '\0';
 	if (node->flags & NODE_WALK) {				/* Movement */
-		strlcat(flags, "walk ", sizeof(flags));
+		strlcat(flags, _("walk "), sizeof(flags));
 	} else if (node->flags & NODE_CLIMB) {
-		strlcat(flags, "climb ", sizeof(flags));
+		strlcat(flags, _("climb "), sizeof(flags));
 	} else {
-		strlcat(flags, "block ", sizeof(flags));
+		strlcat(flags, _("block "), sizeof(flags));
 	}
 	if (node->flags & NODE_SLIP)
-		strlcat(flags, "slip ", sizeof(flags));
+		strlcat(flags, _("slip "), sizeof(flags));
 
 	if (node->flags & NODE_BIO) {				/* Health mod */
-		strlcat(flags, "bio ", sizeof(flags));
+		strlcat(flags, _("bio "), sizeof(flags));
 	} else if (node->flags & NODE_REGEN) {
-		strlcat(flags, "regen ", sizeof(flags));
+		strlcat(flags, _("regen "), sizeof(flags));
 	}
 	if (node->flags & NODE_SLOW) {				/* Speed mod */
-		strlcat(flags, "slow ", sizeof(flags));
+		strlcat(flags, _("slow "), sizeof(flags));
 	} else if (node->flags & NODE_HASTE) {
-		strlcat(flags, "haste ", sizeof(flags));
+		strlcat(flags, _("haste "), sizeof(flags));
 	}
 
 	if (node->flags & (NODE_EDGE_NW)) {			/* Edges */
-		strlcat(flags, "NW-edge ", sizeof(flags));
+		strlcat(flags, _("NW-edge "), sizeof(flags));
 	} else if (node->flags & (NODE_EDGE_NE)) {
-		strlcat(flags, "NE-edge ", sizeof(flags));
+		strlcat(flags, _("NE-edge "), sizeof(flags));
 	} else if (node->flags & (NODE_EDGE_SW)) {
-		strlcat(flags, "SW-edge ", sizeof(flags));
+		strlcat(flags, _("SW-edge "), sizeof(flags));
 	} else if (node->flags & (NODE_EDGE_SE)) {
-		strlcat(flags, "SE-edge ", sizeof(flags));
+		strlcat(flags, _("SE-edge "), sizeof(flags));
 	} else if (node->flags & NODE_EDGE_N) {
-		strlcat(flags, "N-edge ", sizeof(flags));
+		strlcat(flags, _("N-edge "), sizeof(flags));
 	} else if (node->flags & NODE_EDGE_S) {
-		strlcat(flags, "S-edge ", sizeof(flags));
+		strlcat(flags, _("S-edge "), sizeof(flags));
 	}
 
-	label_printf(mv->nodeed.node_flags_lab, "Node flags: [ %s]", flags);
+	label_printf(mv->nodeed.node_flags_lab, _("Node flags: [ %s]"), flags);
 
 	tlist_clear_items(tl);
 
@@ -151,28 +151,29 @@ nodeedit_poll(int argc, union evarg *argv)
 
 			switch (nref->type) {
 			case NODEREF_SPRITE:
-				type = "sprite";
+				type = _("sprite");
 				break;
 			case NODEREF_ANIM:
-				type = "animation";
+				type = _("animation");
 				break;
 			case NODEREF_WARP:
-				type = "warp";
+				type = _("warp");
 				break;
 			}
 			
 			nrflags[0] = '\0';
 			if (nref->flags & NODEREF_SAVEABLE)
-				strlcat(nrflags, "saveable ", sizeof(nrflags));
+				strlcat(nrflags, _("saveable "),
+				    sizeof(nrflags));
 			if (nref->flags & NODEREF_BLOCK)
-				strlcat(nrflags, "block ", sizeof(nrflags));
+				strlcat(nrflags, _("block "), sizeof(nrflags));
 
 			label_printf(mv->nodeed.noderef_type_lab,
-			    "Noderef type: %s", type);
+			    _("Noderef type: %s"), type);
 			label_printf(mv->nodeed.noderef_flags_lab,
-			    "Noderef flags: [ %s]", nrflags);
+			    _("Noderef flags: [ %s]"), nrflags);
 			label_printf(mv->nodeed.noderef_center_lab,
-			    "Noderef centering: %d,%d",
+			    _("Noderef centering: %d,%d"),
 			    nref->xcenter, nref->ycenter);
 			break;
 		}
@@ -198,7 +199,7 @@ mapview_node_op(int argc, union evarg *argv)
 	int sx, sy;
 
 	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
-		text_msg("Error", "No node is selected");
+		text_msg(MSG_ERROR, _("No node is selected"));
 		return;
 	}
 	node = &mv->map->map[sy][sx];
@@ -257,7 +258,7 @@ nodeedit_init(struct mapview *mv)
 	    OBJECT(m)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, "%s node", OBJECT(m)->name);
+	window_set_caption(win, _("%s node"), OBJECT(m)->name);
 	event_new(win, "window-close", nodeedit_close_win, "%p", mv);
 	
 	vb = vbox_new(win, VBOX_WFILL);
@@ -273,16 +274,16 @@ nodeedit_init(struct mapview *mv)
 	{
 		struct button *bu;
 
-		bu = button_new(hb, "Remove");
+		bu = button_new(hb, _("Remove"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_REMOVE);
-		bu = button_new(hb, "Dup");
+		bu = button_new(hb, _("Dup"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_DUP);
-		bu = button_new(hb, "Move up");
+		bu = button_new(hb, _("Move up"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_UP);
-		bu = button_new(hb, "Move down");
+		bu = button_new(hb, _("Move down"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_DOWN);
 	}

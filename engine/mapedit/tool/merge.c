@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.38 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.39 2003/06/09 00:03:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -111,17 +111,17 @@ merge_create_brush(int argc, union evarg *argv)
 
 	if (textbox_copy_string(name_tbox, brush_name, sizeof(brush_name) - 8)
 	    > sizeof(brush_name) - 8) {
-		text_msg("Error", "Brush name too big");
+		text_msg(MSG_ERROR, _("Brush name is too big"));
 		return;
 	}
 	if (brush_name[0] == '\0') {
-		text_msg("Error", "No brush name given");
+		text_msg(MSG_ERROR, _("No brush name was given"));
 		return;
 	}
 	
 	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
-		text_msg("Error", "%s already exists", m_name);
+		text_msg(MSG_ERROR, _("A `%s' brush exists"), m_name);
 		return;
 	}
 
@@ -131,7 +131,7 @@ merge_create_brush(int argc, union evarg *argv)
 		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
 		    prop_get_uint32(&mapedit, "default-brush-height")) == -1) {
-			text_msg("Error", "map_alloc_nodes: %s", error_get());
+			text_msg(MSG_ERROR, "map_alloc_nodes: %s", error_get());
 			map_destroy(m);
 			free(m);
 			return;
@@ -203,7 +203,7 @@ merge_load_brush_set(int argc, union evarg *argv)
 	struct merge *mer = argv[1].p;
 
 	if (object_load(mer) == -1)
-		text_msg("Error loading brush set", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 }
 
 static void
@@ -212,7 +212,7 @@ merge_save_brush_set(int argc, union evarg *argv)
 	struct merge *mer = argv[1].p;
 	
 	if (object_save(mer) == -1)
-		text_msg("Error saving brush set", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 }
 
 struct window *
@@ -225,13 +225,13 @@ merge_window(void *p)
 	struct textbox *name_tbox;
 
 	win = window_new("mapedit-tool-merge");
-	window_set_caption(win, "Merge tool");
+	window_set_caption(win, _("Merge tool"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, 0);
 	{
 		static const char *mode_items[] = {
-			"Replace",
+			N_("Replace"),
 			NULL
 		};
 		struct radio *rad;
@@ -239,9 +239,9 @@ merge_window(void *p)
 
 		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
-		cb = checkbox_new(vb, "Inherit node flags");
+		cb = checkbox_new(vb, _("Inherit node flags"));
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->inherit_flags);
-		cb = checkbox_new(vb, "Random shift");
+		cb = checkbox_new(vb, _("Random shift"));
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
 	
@@ -249,11 +249,11 @@ merge_window(void *p)
 	{
 		struct button *bu;
 		
-		name_tbox = textbox_new(hb, "Name: ");
+		name_tbox = textbox_new(hb, _("Name: "));
 		event_new(name_tbox, "textbox-return", merge_create_brush,
 		    "%p, %p", mer, name_tbox);
 
-		bu = button_new(hb, "Create");
+		bu = button_new(hb, _("Create"));
 		button_set_padding(bu, 6);			/* Align */
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", merge_create_brush, "%p, %p",
@@ -264,16 +264,13 @@ merge_window(void *p)
 	{
 		struct button *bu;
 		
-		bu = button_new(hb, "Load set");
+		bu = button_new(hb, _("Load set"));
 		event_new(bu, "button-pushed", merge_load_brush_set, "%p", mer);
-		
-		bu = button_new(hb, "Save set");
+		bu = button_new(hb, _("Save set"));
 		event_new(bu, "button-pushed", merge_save_brush_set, "%p", mer);
-
-		bu = button_new(hb, "Edit");
+		bu = button_new(hb, _("Edit"));
 		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
-
-		bu = button_new(hb, "Remove");
+		bu = button_new(hb, _("Remove"));
 		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
 	}
 	
@@ -648,7 +645,7 @@ merge_load(void *p, struct netbuf *buf)
 
 		if (copy_string(m_name, buf, sizeof(m_name)) >=
 		    sizeof(m_name)) {
-			text_msg("String overflow", "Brush name is too big");
+			text_msg(MSG_ERROR, "Brush name is too big");
 			continue;
 		}
 		dprintf("loading brush: %s\n", m_name);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.131 2003/06/15 21:34:27 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.132 2003/06/15 22:42:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/combo.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -374,7 +375,7 @@ object_file(struct object *ob)
 		}
 		free(file);
 	}
-	error_set("%s.%s not in <load-path>", ob->name, ob->type);
+	error_set(_("%s.%s is not in <load-path>"), ob->name, ob->type);
 	free(path);
 	free(objname);
 	return (NULL);
@@ -583,7 +584,7 @@ object_control(void *p, const char *inname)
 	struct input *in;
 
 	if ((in = input_find(inname)) == NULL) {
-		error_set("no such input device: `%s'", inname);
+		error_set("no such input device: %s", inname);
 		return (-1);
 	}
 
@@ -980,22 +981,18 @@ object_invoke_op(int argc, union evarg *argv)
 
 	switch (op) {
 	case LOAD_OP:
-		if (object_load(ob) == -1) {
-			text_msg("Error loading", "%s: %s", ob->name,
-			    error_get());
-		}
+		if (object_load(ob) == -1)
+			text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
 		break;
 	case SAVE_OP:
-		if (object_save(ob) == -1) {
-			text_msg("Error saving", "%s: %s", ob->name,
-			    error_get());
-		}
+		if (object_save(ob) == -1)
+			text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
 		break;
 	case EDIT_OP:
 		if (ob->ops->edit != NULL) {
 			ob->ops->edit(ob);
 		} else {
-			text_msg("Error", "%s has no edit op", ob->name);
+			text_msg(MSG_ERROR, _("%s has no edit op"), ob->name);
 		}
 		break;
 	}
@@ -1035,28 +1032,35 @@ object_edit(void *p)
 	if ((win = window_new("object-edit-%s", obname)) == NULL) {
 		goto out;
 	}
-	window_set_caption(win, "%s object", ob->name);
+	window_set_caption(win, _("%s object"), ob->name);
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
 	window_set_closure(win, WINDOW_DETACH);
 
-	label_new(win, "Name: \"%s\"", ob->name);
-	label_new(win, "Type: \"%s\"", ob->type);
-	label_new(win, "Flags : 0x%02x", ob->flags);
+	label_new(win, _("Name: \"%s\""), ob->name);
+	label_new(win, _("Type: \"%s\""), ob->type);
+	label_new(win, _("Flags : 0x%02x"), ob->flags);
 
-	label_polled_new(win, NULL, "Parent: %p", &ob->parent);
-	label_polled_new(win, NULL, "Gfx: %p", &ob->art);
-	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
+	label_polled_new(win, NULL, _("Parent: %p"), &ob->parent);
+	label_polled_new(win, &ob->lock, _("Pos: %p"), &ob->pos);
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		struct combo *gfx_com, *aud_com;
+
+		gfx_com = combo_new(bo, _("Gfx: "));
+		aud_com = combo_new(bo, _("Audio: "));
+	}
 
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	box_set_padding(bo, 0);
 	{
-		bu = button_new(bo, "Load");
+		bu = button_new(bo, _("Load"));
 		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
 		    LOAD_OP);
-		bu = button_new(bo, "Save");
+		bu = button_new(bo, _("Save"));
 		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
 		    SAVE_OP);
-		bu = button_new(bo, "Edit");
+		bu = button_new(bo, _("Edit"));
 		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
 		    EDIT_OP);
 	}

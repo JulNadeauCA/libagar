@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.119 2003/06/11 23:03:58 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.120 2003/06/13 22:45:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -911,13 +911,13 @@ mapview_keydown(int argc, union evarg *argv)
 		switch (keysym) {
 		case SDLK_s:
 			if (object_save(mv->map) == -1) {
-				text_msg("Error saving map", "%s: %s",
+				text_msg(MSG_ERROR, "%s: %s",
 				    OBJECT(mv->map)->name, error_get());
 			}
 			break;
 		case SDLK_l:
 			if (object_load(mv->map) == -1) {
-				text_msg("Error loading map", "%s: %s",
+				text_msg(MSG_ERROR, "%s: %s",
 				    OBJECT(mv->map)->name, error_get());
 			}
 			break;

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.49 2003/05/26 03:03:30 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.50 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -44,7 +44,7 @@ fileops_save_map(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 
 	if (object_save(mv->map) == -1)
-		text_msg("Error saving", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 }
 
 /* Revert to the map on disk. */
@@ -55,7 +55,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	struct map *m = mv->map;
 
 	if (object_load(mv->map) == -1) {
-		text_msg("Error reverting", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
 	mapview_center(mv, m->origin.x, m->origin.y);

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.155 2003/06/09 23:14:59 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.156 2003/06/15 08:54:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -91,11 +91,11 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_F2:
 		if (object_save(world) == -1)
-			text_msg("Error saving world", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 		break;
 	case SDLK_F4:
 		if (object_load(world) == -1)
-			text_msg("Error loading world", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 		break;
 	case SDLK_F6:
 		window_show(fps_win);
@@ -157,7 +157,7 @@ static void
 event_init_fps_counter(void)
 {
 	fps_win = window_new("fps-counter");
-	window_set_caption(fps_win, "Refresh rate");
+	window_set_caption(fps_win, _("Refresh rate"));
 	window_set_position(fps_win, WINDOW_LOWER_CENTER, 0);
 	window_set_closure(fps_win, WINDOW_HIDE);
 

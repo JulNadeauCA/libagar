@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.107 2003/06/14 11:28:01 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.108 2003/06/15 05:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		prog->name = __progname;
 	}
 #endif
-	printf("Agar engine v%s\n", ENGINE_VERSION);
+	printf(_("Agar engine v%s\n"), ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
 	printf("%s\n\n", prog->copyright);
 	proginfo = prog;
@@ -123,41 +123,41 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 			char unaccel[4096];
 			size_t size = 4096;
 
-			printf(
-			    "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n",
+			printf(_("Video device is %dbpp "
+			         "(ckey=0x%x, alpha=0x%04x)\n"),
 			    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
 			    vinfo->vfmt->alpha);
-			printf("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n",
+			printf(_("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"),
 			    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
 			    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
-			printf("Window manager is %savailable.\n",
+			printf(_("Window manager is %savailable.\n"),
 			    vinfo->wm_available ? "" : "un");
-			printf("Hardware surfaces are %savailable.\n",
+			printf(_("Hardware surfaces are %savailable.\n"),
 			    vinfo->hw_available ? "" : "un");
 		
 			accel[0] = '\0';
 			unaccel[0] = '\0';
 
 			strlcat(vinfo->blit_hw ? accel : unaccel,
-			    "\tHardware blits\n", size);
+			    _("\tHardware blits\n"), size);
 			strlcat(vinfo->blit_hw_CC ? accel : unaccel,
-			    "\tHardware->hardware colorkey blits\n", size);
+			    _("\tHardware->hardware colorkey blits\n"), size);
 			strlcat(vinfo->blit_hw_A ? accel : unaccel,
-			    "\tHardware->hardware alpha blits\n", size);
+			    _("\tHardware->hardware alpha blits\n"), size);
 		
 			strlcat(vinfo->blit_sw ? accel : unaccel,
-			    "\tSoftware->hardware blits\n", size);
+			    _("\tSoftware->hardware blits\n"), size);
 			strlcat(vinfo->blit_sw_CC ? accel : unaccel,
-			    "\tSoftware->hardware colorkey blits\n", size);
+			    _("\tSoftware->hardware colorkey blits\n"), size);
 			strlcat(vinfo->blit_sw_A ? accel : unaccel,
-			    "\tSoftware->hardware alpha blits\n", size);
+			    _("\tSoftware->hardware alpha blits\n"), size);
 			strlcat(vinfo->blit_fill ? accel : unaccel,
-			    "\tColor fills\n", size);
+			    _("\tColor fills\n"), size);
 
 			if (accel[0] != '\0')
-				printf("Accelerated operations:\n%s", accel);
+				printf(_("Accelerated operations:\n%s"), accel);
 			if (unaccel[0] != '\0')
-				printf("Unaccelerated operations:\n%s",
+				printf(_("Unaccelerated operations:\n%s"),
 				    unaccel);
 			printf("\n");
 		}
