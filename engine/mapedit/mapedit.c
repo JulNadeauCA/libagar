@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.181 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.182 2003/07/08 04:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -117,7 +117,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 void
 mapedit_init(void)
 {
-	struct window *win, *tilesets_win, *objedit_win;
+	struct window *win, *objedit_win;
 	struct box *bo;
 	int i;
 	
@@ -132,7 +132,6 @@ mapedit_init(void)
 	map_init(&mapedit.copybuf, "copybuf");
 	mapedit.curtool = NULL;
 	mapedit.src_node = NULL;
-	TAILQ_INIT(&mapedit.tilesets);
 	TAILQ_INIT(&mapedit.dobjs);
 	TAILQ_INIT(&mapedit.gobjs);
 
@@ -160,10 +159,7 @@ mapedit_init(void)
 		dprintf("loading mapedit: %s\n", error_get());
 	}
 
-	tilesets_win = tilesets_window();
 	objedit_win = objedit_window();
-
-	window_show(tilesets_win);
 	window_show(objedit_win);
 
 	/* Create the toolbar window. */
@@ -177,12 +173,6 @@ mapedit_init(void)
 	{
 		struct button *button;
 		int i;
-		
-		button = button_new(bo, NULL);
-		button_set_label(button,
-		    SPRITE(&mapedit, MAPEDIT_TOOL_TILESETS));
-		event_new(button, "button-pushed", window_generic_show, "%p",
-		    tilesets_win);
 		
 		button = button_new(bo, NULL);
 		button_set_label(button,
@@ -206,18 +196,11 @@ mapedit_init(void)
 static void
 mapedit_destroy(void *p)
 {
-	struct mapedit_tileset *tset, *ntset;
 	struct mapedit_obj *mobj, *nmobj;
 	int i;
 
 	map_destroy(&mapedit.copybuf);
 
-	for (tset = TAILQ_FIRST(&mapedit.tilesets);
-	     tset != TAILQ_END(&mapedit.tilesets);
-	     tset = ntset) {
-		ntset = TAILQ_NEXT(tset, tilesets);
-		free(tset);
-	}
 	for (mobj = TAILQ_FIRST(&mapedit.dobjs);
 	     mobj != TAILQ_END(&mapedit.dobjs);
 	     mobj = nmobj) {
@@ -277,6 +260,7 @@ mapedit_close_objdata(int argc, union evarg *argv)
 	view_detach(mobj->win);
 	TAILQ_REMOVE(&mapedit.dobjs, mobj, objs);
 	object_del_dep(mapedit.pseudo, mobj->obj);
+	object_page_out(mobj->obj, OBJECT_DATA);
 	free(mobj);
 }
 
@@ -296,6 +280,7 @@ mapedit_edit_objdata(struct object *ob)
 	}
 	
 	object_add_dep(mapedit.pseudo, ob);
+	object_page_in(ob, OBJECT_DATA);
 	
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;

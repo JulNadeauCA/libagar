@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.79 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.80 2003/07/14 03:40:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,27 +45,9 @@ enum {
 	OBJQ_INSERT_DOWN
 };
 
-static void	load_tileset(int, union evarg *);
-static void	save_tileset(int, union evarg *);
-static void	close_tileset(int, union evarg *);
-
-static void
-toggle_edition(int argc, union evarg *argv)
-{
-	struct mapedit_tileset *tset = argv[1].p;
-
-	if (tset->mv->flags & MAPVIEW_EDIT) {
-		tset->mv->flags &= ~(MAPVIEW_EDIT);
-		window_hide(tset->import_win);
-	} else {
-		tset->mv->flags |= MAPVIEW_EDIT;
-		window_show(tset->import_win);
-	}
-}
-
 /* Generate graphical noderefs from newly imported graphics. */
 static void
-import_gfx(int argc, union evarg *argv)
+objq_import_gfx(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
@@ -80,9 +62,9 @@ import_gfx(int argc, union evarg *argv)
 	}
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct node *node;
 		struct object *pobj = it->p1;
 		struct map *submap = it->p1;
+		struct node *node;
 		int t, xinc, yinc;
 		Uint32 ind;
 		unsigned int nw, nh;
@@ -137,7 +119,7 @@ import_gfx(int argc, union evarg *argv)
 			node_destroy(m, node);
 			node_init(node);
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
-			node_add_sprite(m, node, pobj, ind);
+			r = node_add_sprite(m, node, pobj, ind);
 			break;
 		case NODEREF_ANIM:
 			node = &m->map[mv->esel.y][mv->esel.x];
@@ -156,10 +138,32 @@ import_gfx(int argc, union evarg *argv)
 				     sx++, dx++) {
 					struct node *sn = &submap->map[sy][sx];
 					struct node *dn = &m->map[dy][dx];
+					struct noderef *r;
 
 					node_destroy(m, dn);
 					node_init(dn);
 					node_copy(submap, sn, -1, m, dn, -1);
+
+					TAILQ_FOREACH(r, &dn->nrefs, nrefs) {
+						switch (r->type) {
+						case NODEREF_SPRITE:
+							if (r->r_sprite.obj
+							    != NULL) {
+								break;
+							}
+							r->r_sprite.obj = m;
+							break;
+						case NODEREF_ANIM:
+							if (r->r_anim.obj
+							    != NULL) {
+								break;
+							}
+							r->r_anim.obj = m;
+							break;
+						default:
+							break;
+						}
+					}
 				}
 			}
 			break;
@@ -189,8 +193,8 @@ import_gfx(int argc, union evarg *argv)
 }
 
 /* Create the graphic import selection window. */
-static struct window *
-gfx_import_window(struct object *ob, struct mapview *mv)
+struct window *
+objq_import_window(struct object *ob, struct mapview *mv)
 {
 	char label[TLIST_LABEL_MAX];
 	struct window *win;
@@ -243,7 +247,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 		for (i = 0; i < 4; i++) {
 			bu = button_new(hb, NULL);
 			button_set_label(bu, SPRITE(&mapedit, icons[i]));
-			event_new(bu, "button-pushed", import_gfx,
+			event_new(bu, "button-pushed", objq_import_gfx,
 			    "%p, %p, %i", tl, mv, i);
 		}
 #if 0
@@ -252,169 +256,6 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 		widget_bind(bu, "state", WIDGET_INT, NULL, &mv->constr.replace);
 #endif
 	}
-	return (win);
-}
-
-/* Load a tileset from disk. */
-static void
-load_tileset(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (object_load(mv->map) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(mv->map)->name,
-		    error_get());
-	}
-}
-
-/* Save a tileset to disk. */
-static void
-save_tileset(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (object_save(mv->map) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(mv->map)->name,
-		    error_get());
-		return;
-	}
-}
-
-/* Display a tileset. */
-static void
-open_tileset(int argc, union evarg *argv)
-{
-	struct tlist_item *eob_item = argv[1].p;
-	struct object *ob = eob_item->p1;
-	struct mapedit_tileset *tset;
-	struct box *bo;
-	struct button *bu;
-
-	TAILQ_FOREACH(tset, &mapedit.tilesets, tilesets) {
-		if (tset->obj == ob)
-			break;
-	}
-	if (tset != NULL) {
-		window_show(tset->win);
-		return;
-	}
-	
-	object_add_dep(mapedit.pseudo, ob);
-
-	tset = Malloc(sizeof(struct mapedit_tileset));
-	tset->obj = ob;
-	tset->map = ob->gfx->tile_map;
-	tset->win = window_new(NULL);
-	window_set_caption(tset->win, "%s", ob->name);
-	window_set_position(tset->win, WINDOW_MIDDLE_RIGHT, 1);
-	
-	tset->mv = Malloc(sizeof(struct mapview));
-	mapview_init(tset->mv, tset->map, MAPVIEW_TILESET|MAPVIEW_PROPS|
-	                                  MAPVIEW_GRID);
-	window_attach(tset->win, tset->mv->nodeed.win);
-	window_attach(tset->win, tset->mv->layed.win);
-
-	mapview_set_selection(tset->mv, 0, 0, 1, 1);
-	mapview_prescale(tset->mv, 1, 8);
-
-	if (object_load(tset->map) == -1)
-		dprintf("loading tileset: %s\n", error_get());
-
-	/* Create the map operation buttons. */
-	bo = box_new(tset->win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
-	WIDGET(bo)->flags |= WIDGET_CLIPPING;
-	box_set_spacing(bo, 0);
-	{
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP));
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", load_tileset, "%p", tset->mv);
-
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP));
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", save_tileset, "%p", tset->mv);
-		
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", toggle_edition, "%p", tset);
-	}
-	object_attach(tset->win, tset->mv);
-	event_new(tset->win, "window-close", close_tileset, "%p", tset);
-
-	/* Create the graphic import window. */
-	tset->import_win = gfx_import_window(ob, tset->mv);
-	TAILQ_INSERT_TAIL(&mapedit.tilesets, tset, tilesets);
-	window_attach(tset->win, tset->import_win);
-	window_show(tset->win);
-}
-
-/* Close a tileset display. */
-static void
-close_tileset(int argc, union evarg *argv)
-{
-	struct mapedit_tileset *tset = argv[1].p;
-
-	object_del_dep(mapedit.pseudo, tset->obj);
-
-	TAILQ_REMOVE(&mapedit.tilesets, tset, tilesets);
-	free(tset);
-	
-	view_detach(tset->win);
-}
-
-/* Recursive function to find objects linked to gfx. */
-static void
-find_gfx(struct tlist *tl, struct object *pob)
-{
-	char label[TLIST_LABEL_MAX];
-	struct object *cob;
-
-	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
-		if (cob->gfx != NULL) {
-			snprintf(label, sizeof(label), "%s\n%ua/%us/%um\n",
-			    cob->name, cob->gfx->nanims, cob->gfx->nsprites,
-			    cob->gfx->nsubmaps);
-			tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
-		}
-		find_gfx(tl, cob);
-	}
-}
-
-static void
-poll_tilesets(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-
-	tlist_clear_items(tl);
-	
-	lock_linkage();
-	find_gfx(tl, world);
-	unlock_linkage();
-
-	tlist_restore_selections(tl);
-}
-
-/* Create the tilesets window . */
-struct window *
-tilesets_window(void)
-{
-	struct window *win;
-	struct tlist *tl;
-
-	if ((win = window_new("mapedit-tilesets")) == NULL) {
-		return (NULL);
-	}
-	window_set_caption(win, _("Tilesets"));
-	window_set_position(win, WINDOW_UPPER_RIGHT, 0);
-	window_set_closure(win, WINDOW_HIDE);
-
-	tl = tlist_new(win, TLIST_POLL);
-	tlist_set_item_height(tl, ttf_font_height(font)*2);
-	event_new(tl, "tlist-poll", poll_tilesets, NULL);
-	event_new(tl, "tlist-changed", open_tileset, NULL);
 	return (win);
 }
 
