@@ -35,6 +35,7 @@
 #include <engine/engine.h>
 #include <engine/queue.h>
 
+#include "text.h"
 #include "window.h"
 #include "widget.h"
 #include "textbox.h"
@@ -53,7 +54,13 @@ static void	 key_kill(struct textbox *, SDL_Event *, char *);
 static void	 key_left(struct textbox *, SDL_Event *, char *);
 static void	 key_right(struct textbox *, SDL_Event *, char *);
 
-#include "keymaps/us.h"
+extern TTF_Font *font;		/* XXX pref */
+
+#if KEYCODES_KEYMAP == KEYMAP_US
+# include "keymaps/us.h"
+#else
+# error "Unknown KEYCODES_KEYMAP"
+#endif
 
 static char *
 insert_char(struct textbox *tbox, char c)
@@ -172,5 +179,59 @@ key_right(struct textbox *tbox, SDL_Event *ev, char *arg)
 	if (tbox->textpos < strlen(tbox->text)) {
 		tbox->textpos++;
 	}
+}
+
+void
+keycodes_init(void)
+{
+	memset(keycodes_cache, (int)NULL, sizeof(*keycodes_cache));
+}
+
+void
+keycodes_loadglyphs(void)
+{
+	static SDL_Color white = { 255, 255, 255 };	/* XXX pref */
+	char c[2];
+	unsigned char an;
+	int i;
+
+	for (i = (int)KEYCODES_CACHE_START,
+	     an = (unsigned char)KEYCODES_CACHE_START;
+	     i <= (int)KEYCODES_CACHE_END; i++) {
+		SDL_Surface *s;
+	
+		s = keycodes_cache[i-KEYCODES_CACHE_START];
+		if (s != NULL) {
+			dprintf("freed existing\n");
+			SDL_FreeSurface(s);
+		}
+
+		c[0] = an++;
+		c[1] = '\0';
+		s = TTF_RenderText_Solid(font, c, white);
+		if (s == NULL) {
+			warning("TTF_RenderText_Solid: %s\n", SDL_GetError());
+			keycodes_cache[i-KEYCODES_CACHE_START] = NULL;
+		} else {
+			keycodes_cache[i-KEYCODES_CACHE_START] = s;
+		}
+	}
+	dprintf("cached %d glyphs\n", i);
+}
+
+void
+keycodes_freeglyphs(void)
+{
+	int i;
+	SDL_Surface *s;
+
+	for (i = KEYCODES_CACHE_START; i < KEYCODES_CACHE_END; i++) {
+		s = keycodes_cache[i-KEYCODES_CACHE_START];
+		if (s != NULL) {
+			SDL_FreeSurface(s);
+			keycodes_cache[i-KEYCODES_CACHE_START] = NULL;
+		}
+	}
+	dprintf("freed %d glyphs\n", i);
 }
 

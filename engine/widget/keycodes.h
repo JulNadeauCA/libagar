@@ -33,5 +33,19 @@ struct keycode {
 	char	*arg;
 };
 
-extern const struct keycode keycodes[];
+#define KEYMAP_US		0x01
+
+#ifndef KEYCODES_KEYMAP
+#define KEYCODES_KEYMAP		KEYMAP_US
+#endif
+
+#define KEYCODES_CACHE_START	0x20	/* sp */
+#define KEYCODES_CACHE_END	0x7e	/* ~ */
+
+extern const struct keycode keycodes[];		/* keymap */
+extern SDL_Surface *keycodes_cache[];		/* keymap */
+
+void	keycodes_init(void);
+void	keycodes_loadglyphs(void);
+void	keycodes_freeglyphs(void);
 
