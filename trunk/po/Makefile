@@ -1,9 +1,9 @@
-#	$Csoft: Makefile,v 1.1 2003/06/19 00:02:35 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2003/07/27 15:59:10 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-PROJECT=agar
+DOMAIN=	agar
 POS=	fr.po
 MOS=	fr.mo
 

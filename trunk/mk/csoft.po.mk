@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.2 2003/07/27 16:33:56 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.5 2003/07/27 22:14:18 vedge Exp $
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -38,19 +38,37 @@ MOS?=
 all: ${DOMAIN}.pot ${MOS}
 
 .po.pox:
-	${MAKE} ${DOMAIN}.pot
-	${MSGMERGE} $< ${DOMAIN}.pot -o $*.pox
+	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+		echo "${MAKE} ${DOMAIN}.pot"; \
+		${MAKE} ${DOMAIN}.pot; \
+		echo "${MSGMERGE} $< ${DOMAIN}.pot -o $@.pox"; \
+		${MSGMERGE} $< ${DOMAIN}.pot -o $@.pox; \
+	fi
 
 .po.mo:
-	${MSGFMT} -o $@ $<
+	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+		echo "${MSGFMT} -o $@ $<"; \
+		${MSGFMT} -o $@ $<; \
+	fi
 
 ${POTFILES}:
-	(cwd=`pwd`; cd ${SRC} && find . -name \*.c > $$cwd/${POTFILES})
+	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+		echo "(cd ${SRC} && find . -name \*.c > ${POTFILES})"; \
+		(cwd=`pwd`; cd ${SRC} && find . -name \*.c > \
+		    $$cwd/${POTFILES}); \
+	fi
 
 ${DOMAIN}.pot: ${POTFILES}
-	${XGETTEXT} --default-domain=${DOMAIN} --directory=${SRC} \
-	    --add-comments --keyword=_ --keyword=N_ \
-	    --files-from=${POTFILES} -o $@
+	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+		echo "${XGETTEXT} --default-domain=${DOMAIN} \
+		    --directory=${SRC} --add-comments \
+		    --keyword=_ --keyword=N_ \
+		    --files-from=${POTFILES} -o $@"; \
+		${XGETTEXT} --default-domain=${DOMAIN} \
+		    --directory=${SRC} --add-comments \
+		    --keyword=_ --keyword=N_ \
+		    --files-from=${POTFILES} -o $@; \
+	fi
 
 depend:
 	# nothing
@@ -59,14 +77,17 @@ regress:
 	# nothing
 
 clean:
-	rm -f ${POTFILES}
+	if [ "${POTFILES}" != "" -o "${MOS}" != "" ]; then \
+		echo "rm -f ${POTFILES} ${MOS}"; \
+		rm -f ${POTFILES} ${MOS}; \
+	fi
 
 cleandir:
 	# nothing
 
 install: ${MOS}
 	@export _mos="${MOS}"; \
-        if [ "$$_mos" != "" ]; then \
+	if [ "${HAVE_GETTEXT}" = "yes" -a "$$_mos" != "" ]; then \
             if [ ! -d "${LOCALEDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
                 ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
@@ -88,7 +109,7 @@ install: ${MOS}
 
 deinstall:
 	@export _mos="${MOS}"; \
-        if [ "$$_mos" != "" ]; then \
+        if [ "${HAVE_GETTEXT}" = "yes" -a "$$_mos" != "" ]; then \
             for F in $$_mos; do \
 	        _lang=`echo $$F | sed 's,\.mo,,'`; \
                 echo "${DEINSTALL_DATA} \

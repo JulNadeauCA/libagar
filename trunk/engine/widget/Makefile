@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.48 2003/06/10 06:58:17 vedge Exp $
+#	$Csoft: Makefile,v 1.49 2003/06/21 06:50:26 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -39,7 +39,7 @@ PSMAN3=	widget.ps3 button.ps3 graph.ps3 \
 	text.ps3 box.ps3 hbox.ps3 \
 	vbox.ps3
 
-CFLAGS+=${SDL_CFLAGS}
+CFLAGS+=${SDL_CFLAGS} ${GETTEXT_CFLAGS}
 
 include ${TOP}/dencomp/Makefile.inc
 include ${TOP}/mk/csoft.lib.mk

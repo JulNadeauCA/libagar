@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.69 2003/06/23 14:14:08 vedge Exp $
+# $Csoft: configure.in,v 1.70 2003/07/26 20:37:01 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -32,6 +32,8 @@ mdefine(TTFDIR, "$PREFIX/share/cave/fonts");
 hdefine(TTFDIR, "\"$PREFIX/share/cave/fonts\"");
 mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
 mdefine(INST_PSDIR, "$PREFIX/share/agar/ps");
+mdefine(LOCALEDIR, "$PREFIX/share/locale");
+hdefine(LOCALEDIR, "\"$PREFIX/share/locale\"");
 
 check(cc);
 check(progname);
@@ -52,10 +54,11 @@ mdefine(CFLAGS, "$CFLAGS -I$SRC");
 #mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
 #mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
 
+# Require SDL and FreeType.
 require(sdl, 1.2.0);
 require(freetype, 7.0.1);
 
-# Include X11-specific code?
+# Include X11-specific code? (only used for debugging)
 if [ "${with_x11}" != "no" ]; then
 	check(x11);
 else

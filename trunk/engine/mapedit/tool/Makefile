@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.12 2003/06/21 06:50:24 vedge Exp $
+#	$Csoft: Makefile,v 1.13 2003/06/25 00:25:38 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
@@ -16,7 +16,7 @@ DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
 XCF=		fill.xcf magnifier.xcf resize.xcf select.xcf
 
-CFLAGS+=${SDL_CFLAGS}
+CFLAGS+=${SDL_CFLAGS} ${GETTEXT_CFLAGS}
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/dencomp/Makefile.inc

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.71 2003/06/25 00:26:13 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.72 2003/07/04 12:33:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,6 +7,7 @@
 #define ENGINE_VERSION	"1.0-beta"
 
 #include <config/have_opengl.h>
+#include <config/have_gettext.h>
 #include <config/threads.h>
 #include <config/edition.h>
 
@@ -53,15 +54,21 @@
 #include <engine/unicode/unicode.h>
 #include <engine/widget/text.h>
 
-/* Preparation for m17n. */
-#undef _
-#undef N_
-#undef textdomain
-#undef bindtextdomain
-#define _(s) (s)
-#define N_(s) (s)
-#define textdomain(d)
-#define bindtextdomain(p, d)
+#ifdef HAVE_GETTEXT
+# include <libintl.h>
+# define _(String) gettext(String)
+# define gettext_noop(String) (String)
+# define N_(String) gettext_noop(String)
+#else
+# undef _
+# undef N_
+# undef textdomain
+# undef bindtextdomain
+# define _(s) (s)
+# define N_(s) (s)
+# define textdomain(d)
+# define bindtextdomain(p, d)
+#endif
 
 #ifdef THREADS
 extern pthread_mutexattr_t	recursive_mutexattr;
