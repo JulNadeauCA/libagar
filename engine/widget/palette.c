@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.25 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.26 2005/01/23 11:49:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,8 @@ const struct widget_ops palette_ops = {
 
 enum {
 	BG_COLOR,
+	TILE1_COLOR,
+	TILE2_COLOR,
 	CURRENT_COLOR
 };
 
@@ -72,10 +74,12 @@ palette_init(struct palette *pal, enum palette_type type, SDL_PixelFormat *fmt)
 	int i;
 
 	widget_init(pal, "palette", &palette_ops,
-	    WIDGET_FOCUSABLE|WIDGET_WFILL);
+	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_CLIPPING);
 	widget_bind(pal, "color", WIDGET_UINT32, &pal->color);
 
 	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
+	widget_map_color(pal, TILE1_COLOR, "tile1", 10, 10, 10, 255);
+	widget_map_color(pal, TILE2_COLOR, "tile2", 200, 200, 200, 255);
 	widget_map_color(pal, CURRENT_COLOR, "_current", 0, 0, 0, 255);
 
 	pal->color = 0;
@@ -187,16 +191,6 @@ palette_draw(void *p)
 
 	color = WIDGET_COLOR(pal, CURRENT_COLOR) =
 	    widget_get_uint32(pal, "color");
-
-	primitives.rect_filled(pal,
-	    pal->rpreview.x, pal->rpreview.y,
-	    pal->rpreview.w, pal->rpreview.h,
-	    CURRENT_COLOR);
-	primitives.frame(pal,
-	    pal->rpreview.x, pal->rpreview.y,
-	    pal->rpreview.w, pal->rpreview.h,
-	    BG_COLOR);
-	
 	SDL_GetRGBA(color, pal->format, &r, &g, &b, &a);
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
@@ -204,8 +198,28 @@ palette_draw(void *p)
 	if (pal->nbars >= 4)
 		widget_set_int(pal->bars[3], "value", (int)a);
 
-	label_color = SDL_MapRGB(pal->format, 255-r, 255-g, 255-b);
-	snprintf(text, sizeof(text), "%u\n%u\n%u\n", r, g, b);
+	if (pal->type == PALETTE_RGBA)  {
+		int x, y;
+
+		primitives.tiling(pal, pal->rpreview, 16, 0, TILE1_COLOR,
+		    TILE2_COLOR);
+		for (y = 0; y < WIDGET(pal)->h; y++) {
+			for (x = 0; x < WIDGET(pal)->w; x++) {
+				view_alpha_blend(view->v,
+				    WIDGET(pal)->cx+x,
+				    WIDGET(pal)->cy+y,
+				    r, g, b, a);
+			}
+		}
+	} else {
+		primitives.rect_filled(pal,
+		    pal->rpreview.x, pal->rpreview.y,
+		    pal->rpreview.w, pal->rpreview.h,
+		    CURRENT_COLOR);
+	}
+	
+	label_color = SDL_MapRGB(pal->format, 0, 0, 0);
+	snprintf(text, sizeof(text), "%u\n%u\n%u\n%u\n", r, g, b, a);
 	label = text_render(prop_get_string(config, "font-engine.default-font"),
 	    10, label_color, text);
 	widget_blit(pal, label,
