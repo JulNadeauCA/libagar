@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.26 2002/12/04 01:50:23 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.27 2002/12/04 04:23:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -37,7 +37,6 @@
 #include <engine/widget/button.h>
 
 #include "mapedit.h"
-#include "command.h"
 #include "toolbar.h"
 #include "fileops.h"
 #include "tilestack.h"
