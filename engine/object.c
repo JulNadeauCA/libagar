@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.10 2002/02/07 23:34:09 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.11 2002/02/08 01:14:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -177,26 +177,6 @@ object_strfind(char *s)
 	}
 
 	return (NULL);
-}
-
-int
-object_wait(void *obp, int mask)
-{
-	struct object *ob = (struct object *)obp;
-	int i = 300;
-
-	while (i-- > 0) {
-		if (ob->wmask & mask) {
-			ob->wmask &= ~(mask);
-			return (1);
-		}
-		SDL_Delay(1);
-	}
-
-	ob->wmask &= ~(mask);
-	fatal("%s: timeout waiting on mask 0x%x\n", ob->name, mask);
-
-	return (0);
 }
 
 #ifdef DEBUG

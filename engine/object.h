@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.9 2002/02/07 05:16:36 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.10 2002/02/07 23:34:09 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -46,7 +46,6 @@ int	 object_link(void *);
 int	 object_unlink(void *);
 void	 increase(int *, int, int);
 void	 decrease(int *, int, int);
-int	 object_wait(void *, int);
 #ifdef DEBUG
 void	 object_dump(struct object *);
 #endif
