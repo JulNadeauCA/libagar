@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.47 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.48 2003/01/05 08:42:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -60,9 +60,7 @@ label_new(struct region *reg, int w, int h, const char *fmt, ...)
 	char *buf;
 
 	va_start(args, fmt);
-	if (vasprintf(&buf, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
 	label = emalloc(sizeof(struct label));
@@ -279,7 +277,7 @@ label_draw(void *p)
 							    label->poll.ptrs
 							    [ri++];
 
-							asprintf(&s2,
+							Asprintf(&s2,
 							    "%dx%d",
 							    rd->w, rd->h);
 							fmtp += 4;
@@ -289,7 +287,7 @@ label_draw(void *p)
 							    label->poll.ptrs
 							    [ri++];
 
-							asprintf(&s2,
+							Asprintf(&s2,
 							    "[%d,%d]",
 							    rd->x, rd->y);
 							fmtp += 4;
@@ -299,7 +297,7 @@ label_draw(void *p)
 							    label->poll.ptrs
 							    [ri++];
 
-							asprintf(&s2,
+							Asprintf(&s2,
 							    "%dx%d at [%d,%d]",
 							    rd->w, rd->h,
 							    rd->x, rd->y);
@@ -309,7 +307,7 @@ label_draw(void *p)
 						}
 						break;
 					case '%':
-						asprintf(&s2, "%%");
+						Asprintf(&s2, "%%");
 						break;
 					default:
 						fatal("bad format: %c\n",
@@ -317,7 +315,7 @@ label_draw(void *p)
 					}
 					fmtp++;
 				} else {
-					asprintf(&s2, "%c", *fmtp);
+					Asprintf(&s2, "%c", *fmtp);
 				}
 				
 				if (s2 != NULL) {
