@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.13 2004/01/03 04:13:27 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.14 2004/04/24 04:42:26 vedge Exp $
 
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -76,11 +76,11 @@ ${DOMAIN}.pot: ${POTFILES}
 	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
-		    --keyword=_ --keyword=N_ \
+		    --keyword=_ --keyword=N_ --from-code=UTF-8 \
 		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@"; \
 		${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
-		    --keyword=_ --keyword=N_ \
+		    --keyword=_ --keyword=N_ --from-code=UTF-8 \
 		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@; \
 	else \
 		echo "skipping $@ (no gettext)"; \
