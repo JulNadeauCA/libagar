@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.37 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.38 2002/06/12 20:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -80,7 +80,6 @@ world_init(struct world *wo, char *name)
 	}
 	
 	object_init(&wo->obj, "world", name, name, OBJ_ART, &world_ops);
-	wo->curmap = NULL;
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjsh);
 	pthread_mutex_init(&wo->lock, NULL);
@@ -145,10 +144,6 @@ world_destroy(void *p)
 {
 	struct world *wo = p;
 	struct object *ob, *nextob;
-	
-	if (wo->curmap != NULL) {
-		map_unfocus(wo->curmap);
-	}
 	
 	pthread_mutex_lock(&wo->lock);
 
