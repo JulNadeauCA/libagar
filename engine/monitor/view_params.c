@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.18 2004/03/30 16:32:51 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.19 2004/04/20 09:03:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -88,6 +88,13 @@ view_params_window(void)
 		    &view->lock, &view->winop, &view->wop_win);
 		label_prescale(lab,
 		    _("Window op: 000 (0x00000000)"));
+		
+		lab = label_new(vb, LABEL_POLLED_MT,
+		    _("Refresh rate (effective): %d"),
+		    &view->lock, &view->refresh.r);
+		lab = label_new(vb, LABEL_POLLED_MT,
+		    _("Refresh rate (nominal): %d"),
+		    &view->lock, &view->refresh.rnom);
 
 		if (view->rootmap != NULL) {
 			struct viewmap *rm = view->rootmap;

@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.87 2004/04/20 09:16:39 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.88 2004/04/26 03:21:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -31,9 +31,8 @@ struct viewport {
 	int		 depth;		/* Depth in bpp */
 	int		 opengl;	/* OpenGL rendering? (if available) */
 	struct {
-		int	 current;	/* Estimated refresh rate in ms */
-		int	 delay;		/* Current refresh delay in ms */
-		int	 max_delay;	/* Nominal refresh rate delay in ms */
+		int	 r;		/* Estimated refresh rate in ms */
+		int	 rnom;		/* Nominal FPS (expressed as 1000/n) */
 	} refresh;
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	unsigned int	 ndirty;	/* Number of rectangles to update */
