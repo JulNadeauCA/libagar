@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.37 2005/01/23 11:55:36 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.38 2005/02/22 04:20:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -269,7 +269,7 @@ examine_window(int argc, union evarg *argv)
 
 	mi = tlist_set_popup(tl, "widget");
 	{
-		ag_menu_action(mi, _("Display informations..."), NULL, 0, 0,
+		menu_action(mi, _("Display informations..."), -1,
 		    examine_widget, "%p,%p", tl, pwin);
 	}
 	window_show(win);
@@ -294,12 +294,12 @@ widget_debug_window(void)
 
 	it = tlist_set_popup(tl, "window");
 	{
-		ag_menu_action(it, _("Display informations..."), NULL, 0, 0,
+		menu_action(it, _("Display informations..."), -1,
 		    examine_window, "%p", tl);
-		ag_menu_separator(it);
-		ag_menu_action(it, _("Show this window"), NULL, 0, 0,
+		menu_separator(it);
+		menu_action(it, _("Show this window"), -1,
 		    show_window, "%p", tl);
-		ag_menu_action(it, _("Hide this window"), NULL, 0, 0,
+		menu_action(it, _("Hide this window"), -1,
 		    hide_window, "%p", tl);
 	}
 	window_set_geometry(win, view->w/4, view->h/3, view->w/2, view->h/4);

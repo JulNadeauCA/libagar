@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.3 2004/11/30 11:36:10 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.4 2005/01/31 08:32:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -63,47 +63,50 @@ struct AGMenuView {
 };
 
 __BEGIN_DECLS
-struct AGMenu	  *ag_menu_new(void *);
-void		   ag_menu_init(struct AGMenu *);
-void	 	   ag_menu_scale(void *, int, int);
-void		   ag_menu_draw(void *);
-void	 	   ag_menu_destroy(void *);
+struct AGMenu	  *menu_new(void *);
+void		   menu_init(struct AGMenu *);
+void	 	   menu_scale(void *, int, int);
+void		   menu_draw(void *);
+void	 	   menu_destroy(void *);
 
-struct AGMenuItem *ag_menu_add_item(struct AGMenu *, const char *);
-void		   ag_menu_free_items(struct AGMenu *);
-void		   ag_menu_free_subitems(struct AGMenuItem *);
+struct AGMenuItem *menu_add_item(struct AGMenu *, const char *);
+void		   menu_free_items(struct AGMenu *);
+void		   menu_free_subitems(struct AGMenuItem *);
 
-struct window *ag_menu_expand(struct AGMenu *, struct AGMenuItem *, int, int);
-void   	       ag_menu_collapse(struct AGMenu *, struct AGMenuItem *);
+struct window *menu_expand(struct AGMenu *, struct AGMenuItem *, int, int);
+void   	       menu_collapse(struct AGMenu *, struct AGMenuItem *);
 
-struct AGMenuItem *ag_menu_action(struct AGMenuItem *,
-		                  const char *, SDL_Surface *, SDLKey,
-				  SDLMod, void (*)(int, union evarg *),
-				  const char *, ...);
-struct AGMenuItem *ag_menu_int_bool(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, int *,
-				    pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_int8_bool(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, Uint8 *,
-				    pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_int_flags(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, int *,
-				    int, pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_int8_flags(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, Uint8 *,
-				    Uint8, pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_int16_flags(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, Uint16 *,
-				    Uint16, pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_int32_flags(struct AGMenuItem *, const char *,
-			            SDL_Surface *, SDLKey, SDLMod, Uint32 *,
-				    Uint32, pthread_mutex_t *, int);
-struct AGMenuItem *ag_menu_separator(struct AGMenuItem *);
+struct AGMenuItem *menu_action(struct AGMenuItem *,
+		               const char *, int,
+			       void (*)(int, union evarg *),
+			       const char *, ...);
+struct AGMenuItem *menu_action_kb(struct AGMenuItem *,
+		                  const char *, int, SDLKey, SDLMod,
+			          void (*)(int, union evarg *),
+			          const char *, ...);
 
-void   ag_menu_view_init(void *, struct window *, struct AGMenu *,
-	                 struct AGMenuItem *);
-void   ag_menu_view_draw(void *);
-void   ag_menu_view_scale(void *, int, int);
+struct AGMenuItem *menu_int_bool(struct AGMenuItem *, const char *, int, int *,
+				 pthread_mutex_t *, int);
+
+struct AGMenuItem *menu_int8_bool(struct AGMenuItem *, const char *, int,
+				  Uint8 *, pthread_mutex_t *, int);
+struct AGMenuItem *menu_int_flags(struct AGMenuItem *, const char *, int,
+			            int *, int, pthread_mutex_t *, int);
+struct AGMenuItem *menu_int8_flags(struct AGMenuItem *, const char *,
+			            int, Uint8 *, Uint8, pthread_mutex_t *,
+				    int);
+struct AGMenuItem *menu_int16_flags(struct AGMenuItem *, const char *,
+			            int, Uint16 *, Uint16, pthread_mutex_t *,
+				    int);
+struct AGMenuItem *menu_int32_flags(struct AGMenuItem *, const char *,
+			            int, Uint32 *, Uint32, pthread_mutex_t *,
+				    int);
+struct AGMenuItem *menu_separator(struct AGMenuItem *);
+
+void menu_view_init(void *, struct window *, struct AGMenu *,
+                    struct AGMenuItem *);
+void menu_view_draw(void *);
+void menu_view_scale(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"

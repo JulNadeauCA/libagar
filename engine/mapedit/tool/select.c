@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.23 2004/05/25 07:27:04 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.24 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@ const struct tool select_tool = {
 	N_("Selection"),
 	N_("Select a rectangle of nodes."),
 	SELECT_TOOL_ICON,
-	SELECT_CURSOR,
+	SELECT_CURSORBMP,
 	select_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

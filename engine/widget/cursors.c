@@ -1,4 +1,4 @@
-/*	$Csoft: cursors.c,v 1.1 2005/02/27 05:57:07 vedge Exp $	*/
+/*	$Csoft: cursors.c,v 1.2 2005/02/27 06:52:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
 
-SDL_Cursor *fill_cursor, *erase_cursor, *pick_cursor;
+SDL_Cursor *cursors[LAST_CURSOR];
 
 static SDL_Cursor *
 create_cursor(char *xpm[], int xHot, int yHot)
@@ -46,13 +46,7 @@ create_cursor(char *xpm[], int xHot, int yHot)
 	Uint8 mask[4*CURSOR_MAX_H];
 	int w, h, num_colors, cpp;
 
-#ifdef DEBUG
-	sscanf(xpm[0], "%d %d %d %d", &w, &h, &num_colors, &cpp);
-	if (num_colors != 3 || cpp != 1)
-		fatal("illegal xpm format");
-#else
 	sscanf(xpm[0], "%d %d", &w, &h);
-#endif
 
 	for (row = 0; row < h; row++) {
 		for (col = 0; col < w; col++) {
@@ -85,15 +79,16 @@ create_cursor(char *xpm[], int xHot, int yHot)
 void
 cursors_init(void)
 {
-	fill_cursor = create_cursor(fill_xpm, 23, 25);
-	erase_cursor = create_cursor(erase_xpm, 10, 20);
-	pick_cursor = create_cursor(pick_xpm, 8, 22);
+	cursors[FILL_CURSOR] = create_cursor(fill_xpm, 23, 25);
+	cursors[ERASE_CURSOR] = create_cursor(erase_xpm, 10, 20);
+	cursors[PICK_CURSOR] = create_cursor(pick_xpm, 8, 22);
 }
 
 void
 cursors_destroy(void)
 {
-	SDL_FreeCursor(fill_cursor);
-	SDL_FreeCursor(erase_cursor);
-	SDL_FreeCursor(pick_cursor);
+	int i;
+
+	for (i = 0; i < LAST_CURSOR; i++)
+		SDL_FreeCursor(cursors[i]);
 }

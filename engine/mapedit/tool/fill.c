@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.33 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.34 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@ const struct tool fill_tool = {
 	N_("Clear/Fill"),
 	N_("Clear or fill the whole layer/selection."),
 	FILL_TOOL_ICON,
-	FILL_CURSOR,
+	FILL_CURSORBMP,
 	fill_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

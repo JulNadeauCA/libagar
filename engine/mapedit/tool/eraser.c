@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.46 2004/04/10 21:24:10 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.47 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@ const struct tool eraser_tool = {
 	N_("Eraser"),
 	N_("Remove the highest node reference."),
 	ERASER_TOOL_ICON,
-	ERASER_CURSOR,
+	ERASER_CURSORBMP,
 	eraser_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.237 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.238 2005/02/08 15:57:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1744,122 +1744,107 @@ map_edit(void *p)
 	mapview_init(mv, m, flags, toolbar, statbar);
 	mapview_prescale(mv, 12, 8);
 
-	menu = ag_menu_new(win);
-	pitem = ag_menu_add_item(menu, _("Map"));
+	menu = menu_new(win);
+	pitem = menu_add_item(menu, _("Map"));
 	{
-		ag_menu_action(pitem, _("Save"), ICON(OBJSAVE_ICON),
-		    SDLK_s, KMOD_CTRL, save_map, "%p", m);
-		ag_menu_action(pitem, _("Revert"), ICON(OBJLOAD_ICON),
-		    SDLK_r, KMOD_CTRL, revert_map, "%p", m);
+		menu_action(pitem, _("Save"), OBJSAVE_ICON, save_map, "%p", m);
+		menu_action(pitem, _("Revert"), OBJLOAD_ICON, revert_map,
+		    "%p", m);
 
-		ag_menu_separator(pitem);
+		menu_separator(pitem);
 
-		ag_menu_action(pitem, _("Properties..."), ICON(SETTINGS_ICON),
-		    0, 0, edit_properties, "%p, %p", mv, win);
-		
-		ag_menu_action(pitem, _("Import media..."),
-		    ICON(MEDIASEL_ICON), SDLK_m, KMOD_CTRL,
+		menu_action(pitem, _("Properties..."), SETTINGS_ICON,
+		    edit_properties, "%p, %p", mv, win);
+		menu_action(pitem, _("Import media..."), MEDIASEL_ICON,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &mediasel_tool, m, 1));
 		
-		ag_menu_separator(pitem);
+		menu_separator(pitem);
 
-		ag_menu_int_flags(pitem, _("Editable"), ICON(EDIT_ICON),
-		    0, 0, &OBJECT(m)->flags, OBJECT_READONLY,
+		menu_int_flags(pitem, _("Editable"), EDIT_ICON,
+		    &OBJECT(m)->flags, OBJECT_READONLY,
 		    &OBJECT(m)->lock, 1);
-		ag_menu_int_flags(pitem, _("Indestructible"), ICON(TRASH_ICON),
-		    0, 0, &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE,
+		menu_int_flags(pitem, _("Indestructible"), TRASH_ICON,
+		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE,
 		    &OBJECT(m)->lock, 0);
 		
-		ag_menu_separator(pitem);
+		menu_separator(pitem);
 
-		ag_menu_action(pitem, _("Close"), ICON(CLOSE_ICON),
-		    SDLK_q, KMOD_CTRL, close_map, "%p, %p", m, win);
+		menu_action(pitem, _("Close"), CLOSE_ICON,
+		    close_map, "%p, %p", m, win);
 	}
 
-	pitem = ag_menu_add_item(menu, _("View"));
+	pitem = menu_add_item(menu, _("View"));
 	{
 		extern int mapview_bg, mapview_bg_moving;
 
-		ag_menu_action(pitem, _("New view"),
-		    ICON(NEW_VIEW_ICON), 0, 0,
+		menu_action(pitem, _("New view"), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
 
-		ag_menu_separator(pitem);
+		menu_separator(pitem);
 
-		ag_menu_int_flags(pitem, _("Grid"), ICON(GRID_ICON),
-		    0, 0, &mv->flags, MAPVIEW_GRID, NULL, 0);
-
-		ag_menu_int_flags(pitem, _("Node properties"),
-		    ICON(PROPS_ICON), 0, 0, &mv->flags, MAPVIEW_PROPS, NULL, 0);
-
-		ag_menu_int_flags(pitem, _("Cursor"), ICON(SELECT_TOOL_ICON),
-		    0, 0, &mv->flags, MAPVIEW_NO_CURSOR, NULL, 1);
+		menu_int_flags(pitem, _("Display grid"), GRID_ICON,
+		    &mv->flags, MAPVIEW_GRID, NULL, 0);
+		menu_int_flags(pitem, _("Display node properties"), PROPS_ICON,
+		    &mv->flags, MAPVIEW_PROPS, NULL, 0);
+		menu_int_flags(pitem, _("Cursor"), SELECT_TOOL_ICON,
+		    &mv->flags, MAPVIEW_NO_CURSOR, NULL, 1);
 		
-		ag_menu_int_bool(pitem, _("Tiled background"), ICON(GRID_ICON),
-		    0, 0, &mapview_bg, NULL, 0);
-		
-		ag_menu_int_bool(pitem, _("Moving background"), ICON(GRID_ICON),
-		    0, 0, &mapview_bg_moving, NULL, 0);
+		menu_int_bool(pitem, _("Tiled background"), GRID_ICON,
+		    &mapview_bg, NULL, 0);
+		menu_int_bool(pitem, _("Moving background"), GRID_ICON,
+		    &mapview_bg_moving, NULL, 0);
 #ifdef DEBUG
-		ag_menu_int_flags(pitem, _("Clipped edges"), ICON(GRID_ICON),
-		    0, 0, &WIDGET(mv)->flags, WIDGET_CLIPPING, NULL, 1);
+		menu_int_flags(pitem, _("Clipped edges"), GRID_ICON,
+		    &WIDGET(mv)->flags, WIDGET_CLIPPING, NULL, 1);
 #endif		
-		ag_menu_separator(pitem);
+		menu_separator(pitem);
 
-		ag_menu_action(pitem, _("Zoom settings..."),
-		    ICON(MAGNIFIER_CURSOR), 0, 0,
+		menu_action(pitem, _("Zoom settings..."), MAGNIFIER_CURSORBMP,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &magnifier_tool, m, 0));
 	}
 	
-	pitem = ag_menu_add_item(menu, _("Layers"));
+	pitem = menu_add_item(menu, _("Layers"));
 	{
-		ag_menu_action(pitem, _("Edit layers"),
-		    ICON(MAGNIFIER_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Edit layers"), MAGNIFIER_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &layedit_tool, m, 1));
 	}
 
-	pitem = ag_menu_add_item(menu, _("Tools"));
+	pitem = menu_add_item(menu, _("Tools"));
 	{
-		ag_menu_action(pitem, _("Select"), ICON(SELECT_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Select"), SELECT_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &select_tool, m, 1));
-		ag_menu_action(pitem, _("Stamp"), ICON(STAMP_TOOL_ICON),
+		menu_action(pitem, _("Stamp"), STAMP_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &stamp_tool, m, 0));
-		ag_menu_action(pitem, _("Eraser"), ICON(ERASER_TOOL_ICON),
+		menu_action(pitem, _("Eraser"), ERASER_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &eraser_tool, m, 0));
-		ag_menu_action(pitem, _("Resize"), ICON(RESIZE_TOOL_ICON),
+		menu_action(pitem, _("Resize"), RESIZE_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &resize_tool, m, 1));
 
-		ag_menu_action(pitem, _("Fill region"),
-		    ICON(FILL_TOOL_ICON),
+		menu_action_kb(pitem, _("Fill region"), FILL_TOOL_ICON,
 		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &fill_tool, m, 1));
-		ag_menu_action(pitem, _("Apply texture"),
-		    ICON(MERGE_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Apply texture"), MERGE_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &merge_tool, m, 1));
 		
-		ag_menu_action(pitem, _("Entity properties"),
-		    ICON(PROPEDIT_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Entity properties"), PROPEDIT_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &propedit_tool, m, 0));
-		ag_menu_action(pitem, _("Displace sprite"),
-		    ICON(SHIFT_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Displace sprite"), SHIFT_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &shift_tool, m, 0));
-		ag_menu_action(pitem, _("Flip/mirror sprite"),
-		    ICON(FLIP_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &flip_tool, m, 0));
-		ag_menu_action(pitem, _("Invert sprite"),
-		    ICON(INVERT_TOOL_ICON),
-		    0, 0, switch_tool, "%p, %p", mv,
+		menu_action(pitem, _("Invert sprite"), INVERT_TOOL_ICON,
+		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &invert_tool, m, 0));
 	}
 	
