@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.88 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.89 2003/01/16 04:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -48,6 +48,8 @@
 #ifdef DEBUG
 #include "monitor/monitor.h"
 #endif
+
+#include "mapedit/mapedit.h"
 
 #include "widget/text.h"
 #include "widget/widget.h"
@@ -279,9 +281,13 @@ engine_stop(void)
 void
 engine_destroy(void)
 {
+	if (mapedition) {
+		object_save(&mapedit);
+	}
 	world_destroy(world);
 	text_engine_destroy();
 	input_destroy_all();
+
 	object_destroy(view);
 	object_destroy(config);
 #ifdef SERIALIZATION

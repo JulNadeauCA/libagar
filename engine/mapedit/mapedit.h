@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.66 2003/01/27 08:00:00 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.67 2003/02/02 21:13:59 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -71,6 +71,7 @@ enum {
 };
 
 void		 mapedit_init(void);
+
 struct window	*objq_window(void);
 void		 fileops_new_map(int, union evarg *);
 struct window	*fileops_new_map_window(void);
