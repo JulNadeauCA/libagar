@@ -1,4 +1,4 @@
-/*	$Csoft: mkpath.h,v 1.2 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: mkpath.h,v 1.3 2004/02/19 03:53:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MKPATH_H_
@@ -6,7 +6,7 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-int	mkpath(char *, mode_t, mode_t);
+int	mkpath(char *);
 __END_DECLS
 
 #include "close_code.h"
