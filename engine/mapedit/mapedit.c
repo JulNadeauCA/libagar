@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.63 2002/03/14 03:32:25 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.64 2002/03/14 04:50:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -508,10 +508,15 @@ mapedit_tilelist(struct mapedit *med)
 			    sn + med->curobj->nrefs);
 			if (ref == NULL) {
 				/* XXX hack */
+				pthread_mutex_unlock(&med->curobj->lock);
 				goto nextref;
 			}
 		}
 		pthread_mutex_unlock(&med->curobj->lock);
+
+		if (ref == NULL) {
+			goto nextref;
+		}
 
 		switch (ref->type) {
 		case EDITREF_SPRITE:
