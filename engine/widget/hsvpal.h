@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.h,v 1.1 2005/02/16 14:47:45 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.2 2005/02/17 02:02:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
@@ -10,7 +10,7 @@
 
 struct hsvpal {
 	struct widget	   wid;
-	float		   h, s, v;	/* Default bindings */
+	float		   h, s, v, a;	/* Default bindings */
 	SDL_PixelFormat	  *format;	/* Target pixel format */
 	SDL_Rect	   rpreview;	/* Color preview rectangle */
 	int		   selcircle_r;	/* Radius of selection circles */
