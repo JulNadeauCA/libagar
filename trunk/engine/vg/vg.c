@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.31 2004/06/22 05:34:57 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.32 2004/08/06 04:50:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -601,6 +601,10 @@ vg_rasterize(struct vg *vg)
 	struct vg_element *vge;
 	struct vg_block *vgb;
 	int i;
+
+	/* TODO */
+	if (view->opengl)
+		return;
 
 	pthread_mutex_lock(&vg->lock);
 
