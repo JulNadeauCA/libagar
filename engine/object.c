@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.162 2004/03/09 06:16:18 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.163 2004/03/10 04:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -42,8 +42,6 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/textbox.h>
-
-#include <engine/mapedit/mediasel.h>
 #endif
 
 #include <sys/stat.h>
@@ -622,10 +620,7 @@ fail:
 	return (-1);
 }
 
-/*
- * Decrement the reference count on the data of an object. If the count
- * reaches 0, save and release the data (preserving the dependency table).
- */
+/* Page out or decrement reference counts on media/data. */
 int
 object_page_out(void *p, enum object_page_item item)
 {
@@ -897,6 +892,7 @@ object_load_generic(void *p)
 	/* Decode the gfx reference and resolve if graphics are resident. */
 	Free(ob->gfx_name);
 	if ((ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
 		if (ob->gfx != NULL) {
 			gfx_unused(ob->gfx);
 			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
@@ -911,11 +907,11 @@ object_load_generic(void *p)
 			ob->gfx = NULL;
 		}
 	}
-	dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
 
 	/* Decode the audio reference and resolve if audio is resident. */
 	Free(ob->audio_name);
 	if ((ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		dprintf("%s: audio=%s\n", ob->name, ob->audio_name);
 		if (ob->audio != NULL) {
 			audio_unused(ob->audio);
 			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
@@ -930,7 +926,6 @@ object_load_generic(void *p)
 			ob->audio = NULL;
 		}
 	}
-	dprintf("%s: audio=%s\n", ob->name, ob->audio_name);
 
 	/*
 	 * Load the generic part of the child objects.
@@ -1560,8 +1555,6 @@ object_edit(void *p)
 		event_new(tbox, "textbox-prechg", object_name_prechg, "%p", ob);
 		event_new(tbox, "textbox-postchg", object_name_postchg, "%p",
 		    ob);
-
-		mediasel_new(bo, MEDIASEL_GFX, ob);
 	}
 	
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
