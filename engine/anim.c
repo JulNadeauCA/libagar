@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.21 2002/11/22 23:11:02 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.22 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -141,7 +141,7 @@ void
 anim_init(struct anim *anim, int delay)
 {
 	static int curanim = 0;
-	static pthread_mutex_t curanim_lock = { PTHREAD_MUTEX_INITIALIZER };
+	static pthread_mutex_t curanim_lock = PTHREAD_MUTEX_INITIALIZER;
 	char *aniname;
 
 	pthread_mutex_lock(&curanim_lock);

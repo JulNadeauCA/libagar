@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.23 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.24 2002/11/22 23:11:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -58,7 +58,7 @@ region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 void
 region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
-	static pthread_mutex_t curreg_lock = { PTHREAD_MUTEX_INITIALIZER };
+	static pthread_mutex_t curreg_lock = PTHREAD_MUTEX_INITIALIZER;
 	static int curreg = 0;
 	char *name;
 

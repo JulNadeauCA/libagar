@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.4 2002/11/06 05:05:01 vedge Exp $	*/
+/*	$Csoft: media.c,v 1.5 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -44,7 +44,7 @@ enum {
 
 static LIST_HEAD(, media_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
 static LIST_HEAD(, media_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
-static pthread_mutex_t media_lock = { PTHREAD_MUTEX_INITIALIZER };
+static pthread_mutex_t media_lock = PTHREAD_MUTEX_INITIALIZER;
 static SDL_TimerID gctimer;
 
 extern int mapediting;
