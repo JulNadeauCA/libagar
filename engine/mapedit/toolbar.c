@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.8 2002/07/08 05:24:48 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.9 2002/07/08 08:39:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -52,6 +52,7 @@
 #include "tool/tool.h"
 #include "tool/stamp.h"
 #include "tool/eraser.h"
+#include "tool/magnifier.h"
 
 static void
 push(int argc, union evarg *argv)
@@ -85,6 +86,9 @@ push(int argc, union evarg *argv)
 	case MAPEDIT_TOOL_ERASER:
 		med->curtool = med->tools.eraser;
 		break;
+	case MAPEDIT_TOOL_MAGNIFIER:
+		med->curtool = med->tools.magnifier;
+		break;
 	}
 	
 	if (med->curtool->win != NULL) {
@@ -98,6 +102,7 @@ init_tools(struct mapedit *med)
 {
 	med->tools.stamp = TOOL(stamp_new(med, 0));
 	med->tools.eraser = TOOL(eraser_new(med, 0));
+	med->tools.magnifier = TOOL(magnifier_new(med, 0));
 }
 
 void
@@ -118,7 +123,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	 * Create the toolbar.
 	 */
 	win = window_new("Tool", WINDOW_SOLID,
-	    16, 16, 68, 119, 68, 119);
+	    16, 16,
+	    68, 146,
+	    68, 146);
 
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
@@ -141,6 +148,12 @@ mapedit_init_toolbar(struct mapedit *med)
 	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, 0, 0);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_ERASER);
+	
+	/* Magnifier */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p, %i", med,
+	    MAPEDIT_TOOL_MAGNIFIER);
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
