@@ -154,11 +154,6 @@ window_init(struct window *win, char *caption, int flags,
 	win->w = (win->x + win->w < view->w) ? win->w : view->w;
 	win->h = (win->y + win->h < view->h) ? win->h : view->h;
 
-	win->body.x = win->x + win->borderw;
-	win->body.y = win->y + win->borderw*2 + win->titleh;
-	win->body.w = win->w - win->borderw*2;
-	win->body.h = win->h - win->borderw*2 - win->titleh;
-	
 	switch (win->type) {
 	case WINDOW_CUBIC:
 	case WINDOW_CUBIC2:
@@ -999,8 +994,11 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
-
-	dprintf("resize\n");
+	
+	win->body.x = win->x + win->borderw;
+	win->body.y = win->y + win->borderw*2 + win->titleh;
+	win->body.w = win->w - win->borderw*2;
+	win->body.h = win->h - win->borderw*2 - win->titleh;
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
@@ -1057,20 +1055,16 @@ window_resize(struct window *win)
 			wid->x = x;
 			wid->y = y;
 
-			if (wid->rw > 0) {
+			if (wid->rw > 0)
 				wid->w = wid->rw * reg->w / 100;
-			}
-			if (wid->rh > 0) {
+			if (wid->rh > 0)
 				wid->h = wid->rh * reg->h / 100;
-			}
 
-			if (wid->w > reg->w) {
+			if (wid->w > reg->w)
 				wid->w = reg->w;
-			}
-			if (wid->h > reg->h) {
+			if (wid->h > reg->h)
 				wid->h = reg->h;
-			}
-			
+
 			event_post(wid, "window-widget-scaled", "%i, %i",
 			    reg->w, reg->h);
 
