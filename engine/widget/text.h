@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.33 2004/08/20 01:36:32 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.34 2004/08/22 12:07:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -58,6 +58,9 @@ __inline__ void		 text_prescale(const char *, int *, int *);
 void text_msg(enum text_msg_title, const char *, ...)
 	          FORMAT_ATTRIBUTE(printf, 2, 3)
 	          NONNULL_ATTRIBUTE(2);
+void text_tmsg(enum text_msg_title, Uint32, const char *, ...)
+	          FORMAT_ATTRIBUTE(printf, 3, 4)
+	          NONNULL_ATTRIBUTE(3);
 
 void text_edit_float(double *, double, double, const char *, const char *, ...)
 		         FORMAT_ATTRIBUTE(printf, 5, 6)
