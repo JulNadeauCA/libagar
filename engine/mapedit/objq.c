@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.31 2002/12/16 13:36:42 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.32 2002/12/17 06:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,7 +119,6 @@ tl_objs_selected(int argc, union evarg *argv)
 	static int cury = 140;
 	char *wname;
 
-	/* Create a new window for the tile map. */
 	win = window_generic_new(88, 264, "mapedit-tmap-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
@@ -133,13 +132,12 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 	window_set_caption(win, "%s", ob->name);
 
-	/* Create the tile map. */
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, med, ob->art->map,
+	mapview_init(mv, med, ob->art->tiles.map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
 	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
-	
+
 	/* Tools */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
 	reg->spacing = 1;
@@ -199,11 +197,11 @@ objq_window(struct mapedit *med)
 	struct region *reg;
 
 	win = window_generic_new(215, 140, "mapedit-objq");
+	if (win == NULL)
+		return (NULL);		/* Exists */
+	event_new(win, "window-close", window_generic_hide, "%p", win);
 	win->rd.x = view->w - 88;
 	win->rd.y = 0;
-	if (win == NULL) {
-		return (NULL);		/* Exists */
-	}
 	window_set_caption(win, "Objects");
 
 	reg = region_new(win, 0, 0, 0, 100, 100);
