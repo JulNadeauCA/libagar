@@ -72,27 +72,40 @@ sub ConvertMakefile
 		my @srcs = ();
 		my @objs = ();
 
-		if (/^\s*(OBJS|CATMAN\d)\s*=\s*(.+)$/) {
+		if (/^\s*(OBJS|CATMAN\d|PSMAN\d)\s*=\s*(.+)$/) {
 			my $type = $1;
 			foreach my $obj (split(/\s/, $2)) {
 				next unless $obj;
 				my $objsrc = $obj;
 
-				if ($type eq 'OBJS') {			# C
+				if ($type eq 'OBJS') {
+					# C source
 					$objsrc =~ s/\.o$/\.c/g;
-				} elsif ($type =~ /CATMAN\d/) {		# Nroff
+				} elsif ($type =~ /CATMAN\d/) {
+					# Nroff->catman
 					$objsrc =~ s/\.cat(\d)$/.\1/;
+				} elsif ($type =~ /PSMAN\d/) {
+					# Nroff->postscript
+					$objsrc =~ s/\.ps(\d)$/.\1/;
 				}
 				push @deps, "$obj: $SRC/$ndir/$objsrc";
-				if ($type eq 'OBJS') {			# C
+				if ($type eq 'OBJS') {
+					# C source
 					push @deps, << 'EOF';
 	@echo "${CC} ${CFLAGS} ${CPPFLAGS}" -c $<
 	@${CC} ${CFLAGS} -I`pwd` -I${BUILD} ${CPPFLAGS} -c $<
 EOF
-				} elsif ($type =~ /CATMAN\d/) {		# Nroff
+				} elsif ($type =~ /CATMAN\d/) {
+					# Nroff->catman
 					push @deps, << 'EOF';
-	@echo "${NROFF} ${NROFF_FLAGS} $< > $@"
-	@${NROFF} ${NROFF_FLAGS} $< > $@ || exit 0
+	@echo "${NROFF} -Tascii -mandoc $< > $@"
+	@${NROFF} -Tascii -mandoc $< > $@ || exit 0
+EOF
+				} elsif ($type =~ /PSMAN\d/) {
+					# Nroff->postscript
+					push @deps, << 'EOF';
+	@echo "${NROFF} -Tps -mandoc $< > $@"
+	@${NROFF} -Tps -mandoc $< > $@ || exit 0
 EOF
 				}
 			}
