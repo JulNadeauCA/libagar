@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.41 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.42 2002/04/28 11:05:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -182,7 +182,7 @@ char_save(void *p, int fd)
 
 	/* Write character properties. */
 	fobj_bwrite_string(buf, ch->obj.name);
-	fobj_bwrite_uint32(buf, ch->flags &= ~(CHAR_DONTSAVE));
+	fobj_bwrite_uint32(buf, ch->flags & ~(CHAR_DONTSAVE));
 	fobj_bwrite_uint32(buf, ch->level);
 	fobj_bwrite_uint32(buf, ch->exp);
 	fobj_bwrite_uint32(buf, ch->age);
