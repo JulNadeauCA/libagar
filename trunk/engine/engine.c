@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.84 2002/12/24 10:27:05 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.85 2002/12/29 02:13:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,6 +51,8 @@
 #include "widget/text.h"
 #include "widget/widget.h"
 #include "widget/window.h"
+#include "widget/textbox.h"
+#include "widget/keycodes.h"
 
 #ifdef DEBUG
 int	engine_debug = 1;		/* Enable debugging */
@@ -186,6 +188,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 				input_new(INPUT_JOY, i);
 			}
 		}
+		keycodes_init();
 	}
 
 #ifdef XDEBUG

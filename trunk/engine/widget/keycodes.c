@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.18 2002/09/07 05:11:40 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.19 2002/11/22 08:56:55 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -26,6 +26,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/input.h>
 
 #include <ctype.h>
 
@@ -194,7 +195,23 @@ key_right(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 void
 keycodes_init(void)
 {
+	struct input *kbd;
+
 	memset(keycodes_cache, (int)NULL, sizeof(*keycodes_cache));
+
+	kbd = input_find("keyboard0");
+	if (kbd != NULL) {
+		int i = 1;
+		const struct keycode *kcode = &keycodes[0];
+
+		for (;;) {
+			kcode = &keycodes[i++];
+			if (kcode->name == NULL) {
+				break;
+			}
+			prop_set_uint16(kbd, kcode->name, (Uint16)kcode->key);
+		}
+	}
 }
 
 void
