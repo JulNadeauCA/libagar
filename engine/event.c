@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.8 2002/02/07 09:22:45 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.9 2002/02/07 23:40:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -40,20 +40,16 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-extern void quit(void);
+static void	event_hotkey(SDL_Event *);
 
-static int	event_hotkey(SDL_Event *);
-
-static int
+static void
 event_hotkey(SDL_Event *ev)
 {
-	/* Print active object list. */
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_w:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
 			world_dump(world);
-			return (0);
 		}
 		break;
 #endif /* DEBUG */
@@ -61,16 +57,14 @@ event_hotkey(SDL_Event *ev)
 		if (ev->key.keysym.mod & KMOD_CTRL) {
 			view_fullscreen(mainview,
 			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-			return (0);
 		}
 		break;
 	case SDLK_ESCAPE:
-		quit();
-		break;
+		engine_destroy();
+		/*NOTREACHED*/
 	default:
 		break;
 	}
-	return (-1);
 }
 
 void
@@ -83,8 +77,6 @@ event_loop(void)
 		case SDL_VIDEOEXPOSE:
 			curmap->redraw++;
 			continue;
-		case SDL_QUIT:
-			return;
 		case SDL_MOUSEMOTION:
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
@@ -98,10 +90,10 @@ event_loop(void)
 			} else if (curmapedit != NULL) {
 				curmapedit->event_hook(curmapedit, &ev);
 			}
-			if (event_hotkey(&ev) == 0) {
-				continue;
-			}
+			event_hotkey(&ev);
 			break;
+		case SDL_QUIT:
+			return;
 		}
 	}
 }
