@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.28 2003/03/25 13:27:27 vedge Exp $
+.\"	$Csoft: object.3,v 1.29 2003/03/29 03:01:43 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,9 +38,9 @@
 #include <engine/object.h>
 .Ed
 .Sh DESCRIPTION
-The agar
+The Agar game logic is built upon the
 .Nm
-layer implements:
+structure, which implements:
 .Pp
 .Bl -bullet -compact
 .It
@@ -52,61 +52,71 @@ States saving to network format.
 .It
 State loading from network format.
 .It
-Positions on maps (back references for game mode).
+Positions on maps.
 .It
-Dependencies between objects.
+Object interdependencies.
+.It
+Generic events and properties.
 .El
+.Pp
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct object *"
-.Fn object_new "char *type" "char *name" "char *archive" "int flags" \
-               "const void *ops"
+.Fn object_new "void *parent" "char *type" "char *name" "char *archive" \
+               "int flags" "const void *ops"
 .Ft "void"
 .Fn object_init "struct object *ob" "char *type" "char *name" "char *archive" \
                 "int flags" "const void *ops"
 .Pp
 .Ft "void"
-.Fn object_destroy "void *ob"
-.nr nS 0
+.Fn object_attach "void *parent" "void *child"
 .Pp
+.Ft "void"
+.Fn object_detach "void *parent" "void *child"
+.Pp
+.Ft "void"
+.Fn object_destroy "void *ob"
+.Pp
+.nr nS 0
 The
 .Fn object_new
-function allocates, initializes and attaches a new, generic object to the
-world.
+function allocates, initializes and attaches a new, generic object to a parent
+(if
+.Fa parent
+is not NULL).
 The
 .Fn object_init
 function initializes
 .Fa ob
 as an object of type
 .Fa type .
-If
 .Fa name
-exceeds
+must not exceed
 .Fa OBJECT_MAX_NAME
-or
+- 1 in length and
 .Fa type
-exceeds
-.Fa OBJECT_MAX_TYPE ,
-a fatal condition is raised.
+must not exceed
+.Fa OBJECT_MAX_TYPE
+- 1 in length.
 .Pp
 If the
 .Fa archive
 argument is not NULL, it identifies a
 .Xr fobj 3
-(with the
+archive (with the
 .Sq .fob
 suffix) to be looked up in the data directories (the
 .Sq path.data_path
-setting) and loaded.
+setting), from which to load graphical/audio data.
 .Pp
 The
 .Fa ops
 argument, if not NULL, is a pointer to the following structure:
 .Bd -literal
 struct object_ops {
-	void	(*destroy)(void *ob);		/* Free resources */
-	int	(*load)(void *ob, int fd);	/* Load from fd */
-	int	(*save)(void *ob, int fd);	/* Save to fd */
+	void (*destroy)(void *obj);		      /* Free resources */
+	int  (*load)(void *obj, struct netbuf *buf);  /* Load from buf */
+	int  (*save)(void *obj, struct netbuf *buf);  /* Save to buf */
 };
 .Ed
 .Pp
@@ -125,19 +135,33 @@ argument may contain:
 .Ed
 .Pp
 The
+.Fn object_attach
+and
+.Fn object_detach
+functions respectively link and unlink a
+.Fa child
+object against a
+.Fa parent
+object.
+.Pp
+The
 .Fn object_destroy
-function is called to free all resources associated with
-.Fa ob .
+function is called to free all resources reserved by
+.Fa ob
+and its children.
+To allow static allocation of
+.Nm
+structures,
+.Fn object_destroy
+does not call
+.Xr free 3 .
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
-.Fn object_load "void *ob"
+.Fn object_load "void *ob" "char *path"
 .Pp
 .Ft "int"
-.Fn object_load_from "void *ob" "char *path"
-.Pp
-.Ft "int"
-.Fn object_save "void *ob"
+.Fn object_save "void *ob" "char *path"
 .Pp
 .Ft "int"
 .Fn object_path "char *name" "const char *suffix" "char *dst" "size_t dst_size"
@@ -147,16 +171,65 @@ The
 .Fn object_load
 function loads the state of
 .Fa ob
-from the first file found in data directories.
-.Fn object_loadfrom
-loads the state of
-.Fa ob
-from the file at
-.Fa path .
+from network format.
+The data is loaded from a file at the given location if
+.Fa path
+is not NULL.
+Otherwise, the data is loaded from the first file found in data directories
+(the
+.Sq path.data_path
+.Xr config 3
+setting).
+.Pp
+The
 .Fn object_save
-saves the state of
+function saves the state of
 .Fa ob
-to the user's data directory.
+in network format.
+The data is saved to a specific file if
+.Fa path
+is not NULL, otherwise it is saved in the user's data directory (the
+.Sq path.user_data_dir
+.Xr config 3
+setting).
+.Pp
+Recursively, each child associated with
+.Fa ob
+is loaded/saved as well.
+Note that
+.Fn object_load
+only reinitializes existing child objects.
+If a parent needs to reload its children differently, it should do so it its
+own
+.Va save
+routine.
+.Pp
+Object derivates set the
+.Va load
+and
+.Va save
+operations in order to save custom data.
+In addition to this custom data,
+.Fn object_load
+and
+.Fn object_save
+also preserve:
+.Bl -bullet -compact
+.It
+Position, if any.
+.It
+Generic properties (machine-independent types only).
+.It
+Child
+.Nm
+structures.
+.El
+.Pp
+Both
+.Fn object_load
+and
+.Fn object_save
+return 0 on success or -1 if an error occured.
 .Pp
 The
 .Fn object_path
@@ -173,57 +246,54 @@ and the result is NUL-terminated.
 .Fn object_path
 returns 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
-Agar maintains a stack of noderef structures for each node on a
-.Xr map 3 .
-Some types of noderefs point to specific data associated with an object,
-such as sprites or animations.
-Game objects (such as characters) store a back reference to a single node on a
-.Xr map 3 .
-This node is expected to contain an arbitrary amount of noderefs that move
-along with the object on the map.
-.Pp
+The illusion of objects (such as characters) moving inside a
+.Xr map 3
+is achieved by maintaining a copy of the object's current submap (a pointer to a
+.Xr map 3
+structure associated with the object).
+Most moving game characters provide submaps called
+.Sq [nswe]-idle
+and
+.Sq [nswe]-move ,
+for instance.
+The
+.Nm
+layer is responsible for keeping the submap copy in sync, and adjusting the
+motion offsets of its noderefs in response to movement.
 .nr nS 1
-.Ft "void"
-.Fn object_set_position "void *ob" "struct noderef *nref" "struct map *map" \
-                        "Uint32 x" "Uint32 y"
+.Ft "int"
+.Fn object_set_submap "void *ob" "char *map_name"
 .Pp
 .Ft "void"
-.Fn object_move "void *ob" "struct map *dst_map" "Uint32 dst_x" "Uint32 dst_y"
+.Fn object_load_submap "void *ob" "char *map_name"
+.Pp
+.Ft "void"
+.Fn object_set_position "void *ob" "struct map *map" "int x" "int y" "int layer"
+.Pp
+.Ft "void"
+.Fn object_unset_position "void *ob"
 .Pp
 .Ft "void"
 .Fn object_control "void *ob" "struct input *in" "int center"
 .Pp
-.Ft "int"
-.Fn object_vanish "void *ob"
 .nr nS 0
+The
+.Fn object_set_submap
+function searches an object's children list for a map called
+.Fa map_name
+and selects it.
+.Fn object_set_submap
+returns 0 on success or -1 on failure.
+.Fn object_load_submap
+initializes and loads a submap called
+.Fa map_name .
 .Pp
 The
 .Fn object_set_position
-function sets the object's unique position to the node at the
-.Fa x ,
-.Fa y
-coordinates of
+function sets the object's unique position to the given coordinates of
 .Fa map .
-.Fn object_set_position
-does not create any noderef but if there is currently a position, its
-noderefs are removed.
-.Fn object_set_position
-is usually called after a new noderef is created (with
-.Fn node_add_sprite
-or
-.Fn node_add_anim ,
-for example), in order to update the object's back reference.
-.Pp
-The
-.Fn object_move
-function moves
-.Fa ob
-from its current position to the
-.Fa dst_x
-and
-.Fa dst_y
-coordinates of
-.Fa dst_map .
+.Fn object_unset_position
+causes an object to vanish from its current position, if there is any.
 .Pp
 The
 .Fn object_control
@@ -234,26 +304,23 @@ to the position associated with
 centering the view and enabling soft-scrolling if
 .Fa center
 is non-zero .
+.Sh DEPENDENCY TABLES
+These functions load/save arrays of structures containing each:
+.Bl -bullet -compact -enum
+.It
+An object name string.
+.It
+An object type string.
+.It
+A reference count.
+.El
 .Pp
-The
-.Fn object_vanish
-function removes the current position associated with
-.Fa ob
-by setting
-.Va pos
-to
-.Dv NULL ,
-as well as removing the associated noderef.
-.Fn object_vanish
-returns 0 on success, -1 on error.
-.Sh OBJECT TABLES
-These functions load and save arrays of object names with reference counts.
-This allows load/save routines to keep dependency lists and reference objects
-with indexes instead of strings.
+This allows load/save routines to keep track of an object's dependencies,
+as well as to encode object references using indexes.
 .Pp
 .nr nS 1
-.Ft "struct object_table *"
-.Fn object_table_new "void"
+.Ft "void"
+.Fn object_table_init "struct object_table *table"
 .Pp
 .Ft "void"
 .Fn object_table_destroy "struct object_table *table"
@@ -262,18 +329,20 @@ with indexes instead of strings.
 .Fn object_table_insert "struct object_table *table" "struct object *obj"
 .Pp
 .Ft "void"
-.Fn object_table_save "struct fobj_buf *buf" "struct object_table *table"
+.Fn object_table_save "struct object_table *table" "struct netbuf *buf"
 .Pp
-.Ft "struct object_table *"
-.Fn object_table_load "int fd" "char *objname"
+.Ft "int"
+.Fn object_table_load "struct object_table *table" "struct netbuf *buf" \
+                      "char *objname"
+.Pp
 .nr nS 0
-.Pp
 The
-.Fn object_table_new
-function allocates, initializes and return a new object table with 0 elements.
-The
+.Fn object_table_init
+function initializes
+.Fa table
+as a new, empty dependency table.
 .Fn object_table_destroy
-frees
+frees the resources allocated by
 .Fa table .
 .Pp
 The
@@ -285,18 +354,22 @@ in
 .Pp
 The
 .Fn object_table_save
-function write
+function writes
 .Fa table
 to
 .Fa buf .
 The
 .Fn object_table_load
-function allocates and reads the object table from
-.Fa fd .
-.Fn object_table_load
-returns the new object table, or NULL on failure.
+reads dependencies from
+.Fa buf
+into
+.Fa table ,
+and returns 0 on success or -1 if an error occured.
 .Sh SEE ALSO
 .Xr agar 3
+.Xr event 3
+.Xr prop 3
+.Xr physics 3
 .Sh HISTORY
 The
 .Nm

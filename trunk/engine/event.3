@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.5 2003/03/05 18:22:20 vedge Exp $
+.\"	$Csoft: event.3,v 1.6 2003/03/20 01:17:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,7 +38,7 @@
 #include <engine/event.h>
 .Ed
 .Sh DESCRIPTION
-Agar implements generic events using a list of event handlers for
+Agar implements generic events using a list of event handlers inside
 .Xr object 3
 structures.
 The
@@ -48,9 +48,11 @@ subsystem also implements the
 used by Agar applications, which performs the following operations:
 .Bl -tag -width "Event processing"
 .It Video updates
-The display is updated when a counter exceeds a refresh rate.
-The time it took for the frame to be drawn is taken in consideration as the
-refresh rate is recalculated, so animations always show the same speed.
+The display is updated when a counter exceeds a fixed amount of ticks, obtained
+from
+.Xr SDL_GetTicks 3 .
+The time it took for the frame to render is taken in consideration as the
+refresh rate is recalculated, so animations do not vary in speed, for instance.
 Video updates have precedence in the event loop.
 .Pp
 If the frame was too complicated to draw in one cycle, the minimum delay is
@@ -58,14 +60,20 @@ decremented down to the minimum set by
 .Xr view_set_refresh 3 .
 This can be avoided by lowering the frame rate to ensure that the frame is
 rendered in one cycle, or reducing the amount of time spent in rendering
-functions.
+routines.
+If the last frame was drawn in a reasonable amount of time, the event loop
+calls
+.Xr SDL_Delay 3
+to relinquish the CPU (taking into account the approximative
+.Xr SDL_Delay 3
+granularity).
 .It Event processing
 SDL events are translated to
 .Nm
 structures, which are sent to the relevant subsystems.
 .El
 .Sh EVENT HANDLERS
-Event handlers are identified by null-terminated strings.
+Event handlers are referenced by NUL-terminated strings.
 Event handler arguments are described by an array of unions:
 .Pp
 .Bd -literal
@@ -78,24 +86,26 @@ typedef union evarg {
 	double	 f;
 } *evargs;
 .Ed
+.Pp
+Note that floating-point arguments are only available with the
+.Dv FLOATING_POINT
+option defined at compile-time.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "struct event *"
-.Fn event_new "void *obj" "char *event" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Fn event_new "void *obj" "char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_post "void *obj" "char *event" "const char *fmt" "..."
+.Fn event_post "void *obj" "char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_forward "void *obj" "char *event" "int argc" "union evarg *argv"
+.Fn event_forward "void *obj" "char *event_name" "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
 .Fn event_new
-function registers a new event handler for an event identified by the
-null-terminated
-.Fa event
-string.
+function registers a new event handler to service events called
+.Fa event_name .
 .Fa obj
 will be passed as the first argument to the event handler function.
 .Fa handler
@@ -105,33 +115,42 @@ The
 argument is a
 .Xr printf 3
 style format string.
-The following arguments will be inserted at the start of the evarg
-array.
+The following arguments will be inserted at the start of the evarg array.
 .Pp
 The
 .Fn event_post
-function invokes the event handler matching the event identified by the
-null-terminated
-.Fa event
-string, if any.
+function arranges for the event handler associated with
+.Fa event_name ,
+if any, to be invoked.
+For events of type
+.Dv EVENT_ASYNC ,
+a new thread is created in order to service the event (assuming that the
+.Dv THREADS
+compile-time option was enabled).
 The
 .Fa fmt
 argument is a
 .Xr printf 3
 like format string.
-The following arguments will be inserted at the end of the evarg
-array.
+The arguments following
+.Fa fmt
+will be inserted at the end of the evarg array.
 .Pp
 The
 .Fn event_forward
 function forwards the event identified by
-.Fa event
+.Fa event_name
 to object
 .Fa obj .
 .Fn event_forward
-is usually called from an event handler.
+is usually called from an event handler, but may also be used to send
+.Sq fake
+events, as an alternative to the
+.Fn event_post
+interface.
 .Sh SEE ALSO
-.Xr agar 3 .
+.Xr agar 3 ,
+.Xr object 3
 .Sh HISTORY
 The
 .Nm
