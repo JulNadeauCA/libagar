@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.150 2003/05/19 01:16:24 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.151 2003/05/22 05:45:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -218,10 +218,8 @@ event_loop(void)
 
 		if ((t - ltick) > view->refresh.delay) {
 			pthread_mutex_lock(&view->lock);
-
 			view->ndirty = 0;
 
-			/* Tile-based mode */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				struct map *m = view->rootmap->map;
 				
@@ -230,7 +228,6 @@ event_loop(void)
 					pthread_mutex_unlock(&view->lock);
 					return;
 				}
-				
 				pthread_mutex_lock(&m->lock);
 				rootmap_animate();
 				if (m->redraw != 0) {
@@ -238,12 +235,9 @@ event_loop(void)
 					rootmap_draw();
 				}
 				pthread_mutex_unlock(&m->lock);
-
-				/* Queue the video update. */
 				VIEW_UPDATE(view->v->clip_rect);
 			}
 
-			/* Update the windows. */
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN)
@@ -252,19 +246,16 @@ event_loop(void)
 			}
 			pthread_mutex_unlock(&view->lock);
 
-			/* Update the display. */
 			if (view->ndirty > 0) {
 #ifdef HAVE_OPENGL
 				if (view->opengl) {
 					SDL_GL_SwapBuffers();
-				} else {
+				} else
+#endif
+				{
 					SDL_UpdateRects(view->v, view->ndirty,
 					    view->dirty);
 				}
-#else
-				SDL_UpdateRects(view->v, view->ndirty,
-				    view->dirty);
-#endif
 				view->ndirty = 0;
 				event_adjust_refresh(t);
 			}
@@ -296,7 +287,6 @@ static void
 event_dispatch(SDL_Event *ev)
 {
 	struct window *win;
-	int rv;
 	int old_w, old_h;
 
 	pthread_mutex_lock(&view->lock);
@@ -335,9 +325,8 @@ event_dispatch(SDL_Event *ev)
 		}
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
-			if (win->flags & WINDOW_SHOWN) {
+			if (win->flags & WINDOW_SHOWN)
 				window_draw(win);
-			}
 			pthread_mutex_unlock(&win->lock);
 		}
 #ifdef HAVE_OPENGL
@@ -346,17 +335,13 @@ event_dispatch(SDL_Event *ev)
 #endif
 		break;
 	case SDL_MOUSEMOTION:
-		rv = 0;
-		if (!TAILQ_EMPTY(&view->windows)) {
-			rv = window_event(ev);
-		}
+		if (!TAILQ_EMPTY(&view->windows))
+			window_event(ev);
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		rv = 0;
-		if (!TAILQ_EMPTY(&view->windows)) {
-			rv = window_event(ev);
-		}
+		if (!TAILQ_EMPTY(&view->windows))
+			window_event(ev);
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
@@ -375,19 +360,20 @@ event_dispatch(SDL_Event *ev)
 		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
 		    (int)ev->key.keysym.sym,
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
-		rv = 0;
-		if (!TAILQ_EMPTY(&view->windows)) {
-			rv = window_event(ev);
-		}
-		if (rv == 0) {
-			input_event(INPUT_KEYBOARD, ev);
+		{
+			int rv = 0;
+
+			if (!TAILQ_EMPTY(&view->windows))
+				rv = window_event(ev);
+			if (rv == 0)
+				input_event(INPUT_KEYBOARD, ev);
 		}
 		break;
 	case SDL_QUIT:
-		if (view->rootmap == NULL) {			/* XXX */
+		if (view->rootmap == NULL) 			/* XXX */
 			pthread_mutex_unlock(&view->lock);
-		}
 		engine_stop();
+		break;
 	}
 	
 	if (!TAILQ_EMPTY(&view->detach))
@@ -575,15 +561,11 @@ event_forward(void *child, const char *name, int argc, union evarg *argv)
 	    name, ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
-
-	/* Replace argument zero. */
 	memcpy(nargv, argv, argc * sizeof(union evarg));
 	nargv[0].p = child;
-
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(name, ev->name) != 0) {
+		if (strcmp(name, ev->name) != 0)
 			continue;
-		}
 		ev->handler(argc, nargv);
 	}
 	pthread_mutex_unlock(&ob->events_lock);
