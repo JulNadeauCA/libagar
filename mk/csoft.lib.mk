@@ -182,14 +182,9 @@ ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
 depend:	depend-subdir
-	rm -f .depend
-	@files="${SRCS}"; \
-	 if [ "$$files" != "" ]; then \
-	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	  ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	 fi
 
 regress:	regress-subdir
 
 include ${TOP}/mk/csoft.common.mk
+include ${TOP}/mk/csoft.dep.mk
 include ${TOP}/mk/csoft.subdir.mk
