@@ -884,9 +884,9 @@ exit 1
 fi
 if [ "${with_x11}" != "no" ]
  then
-echo -n "checking for X11 (http://www.xfree86.org/)..."
-echo -n "checking for X11 (http://www.xfree86.org/)..." >> config.log
-echo "checking for X11 (http://www.xfree86.org/)..." >> config.log
+echo -n "checking for X11..."
+echo -n "checking for X11..." >> config.log
+echo "checking for X11..." >> config.log
 if [ -d /usr/X11R6/include/X11 ]; then
 X11_CFLAGS=-I/usr/X11R6/include
 else
@@ -968,10 +968,8 @@ else
 NONE=1
 fi
 if [ "${X11_CFLAGS}" != "" ]; then
-echo -n "ok"
-echo -n "ok" >> config.log
-echo ", $X11_CFLAGS"
-echo ", $X11_CFLAGS" >> config.log
+echo -n "yes"
+echo -n "yes" >> config.log
 x11_found=yes
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 else
