@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.4 2003/08/13 01:47:35 vedge Exp $
+#	$Csoft: Makefile,v 1.5 2004/02/26 10:18:58 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
@@ -10,6 +10,5 @@ DEN_NAME=	"Mapview property indicators"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
 
-include ${TOP}/mk/csoft.common.mk
-include ${TOP}/mk/csoft.subdir.mk
+include ${TOP}/mk/csoft.prog.mk
 include ${TOP}/dencomp/Makefile.inc
