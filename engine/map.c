@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.223 2004/04/11 03:29:15 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.224 2004/05/02 09:37:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1377,6 +1377,7 @@ map_edit(void *p)
 	
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
+	window_set_closure(win, WINDOW_DETACH);
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
