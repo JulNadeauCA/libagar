@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.55 2002/07/21 10:58:15 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.56 2002/07/27 07:03:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -154,11 +154,17 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	}
 	mouse = input_new(INPUT_MOUSE, 0);
 
+	/*
+	 * Set the video mode.
+	 * Initialize the masks and rectangles in game mode.
+	 */
+	view_init(mapediting ? GFX_ENGINE_GUI : GFX_ENGINE_TILEBASED);
+
+
 #ifdef XDEBUG
 	/* Request synchronous X events, and set error handlers. */
 	engine_xdebug();
 #endif
-	
 	return (0);
 }
 
@@ -217,19 +223,12 @@ int
 engine_start(void)
 {
 	struct mapedit *medit;
-	int ge = mapediting ? GFX_ENGINE_GUI : GFX_ENGINE_TILEBASED;
 	struct map *m;
-
-	/*
-	 * Set the video mode.
-	 * Initialize the masks and rectangles in game mode.
-	 */
-	view_init(ge);
 
 	/* Create the configuration settings window. */
 	config_window(config);
 
-	switch (ge) {
+	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		/* Start with a default map. */
 		m = emalloc(sizeof(struct map));
