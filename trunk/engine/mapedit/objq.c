@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.15 2002/08/25 09:11:29 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.16 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,7 +33,6 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>
@@ -53,7 +52,7 @@ static const struct widget_ops objq_ops = {
 		NULL		/* save */
 	},
 	objq_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 static void	 objq_scaled(int, union evarg *);
@@ -160,7 +159,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 
 	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
 		if (tm->ob == eob->pobj) {
-			window_show(tm->win);
+			window_show(tm->win, 0, 0);
 			view_focus(tm->win);
 			return;
 		}
@@ -229,7 +228,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	SLIST_INSERT_HEAD(&oq->tmaps, tm, tmaps);
 
 	view_attach(win);
-	window_show_locked(win);
+	window_show(win, 0, 0);
 }
 
 static void
@@ -308,6 +307,8 @@ objq_destroy(void *p)
 		ntm = SLIST_NEXT(tm, tmaps);
 		free(tm);
 	}
+
+	widget_destroy(p);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.21 2002/09/01 09:01:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.22 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,12 +46,12 @@
 
 static const struct widget_ops mapview_ops = {
 	{
-		NULL,		/* destroy */
+		widget_destroy
 		NULL,		/* load */
 		NULL		/* save */
 	},
 	mapview_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
