@@ -244,15 +244,15 @@ VERSION="\"1.0-beta\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif /* VERSION */" >> config/version.h
-TTFDIR="$PREFIX/share/cave/fonts"
+TTFDIR="$PREFIX/share/agar/fonts"
 echo "TTFDIR=$TTFDIR" >> Makefile.config
-TTFDIR="\"$PREFIX/share/cave/fonts\""
+TTFDIR="\"$PREFIX/share/agar/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
 echo "#endif /* TTFDIR */" >> config/ttfdir.h
-SHAREDIR="$PREFIX/share/cave"
+SHAREDIR="$PREFIX/share/agar"
 echo "SHAREDIR=$SHAREDIR" >> Makefile.config
-SHAREDIR="\"$PREFIX/share/cave\""
+SHAREDIR="\"$PREFIX/share/agar\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
 echo "#endif /* SHAREDIR */" >> config/sharedir.h
