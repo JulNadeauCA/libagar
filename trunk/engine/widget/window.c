@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.137 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.138 2003/01/01 05:18:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -207,7 +207,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	    80, 200, 200);
 	widget_map_color(&win->wid, TITLEBAR_BUTTONS_FOCUSED_COLOR,
 	    "titlebar-buttons-focused",
-	    70, 150, 150);
+	    70, 120, 120);
 
 	/* XXX pref */
 	win->borderw = default_nborder;
