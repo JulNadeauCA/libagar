@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.61 2003/03/27 23:59:06 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.62 2003/04/12 01:42:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strlcat.h>
 #include <engine/compat/strlcpy.h>
@@ -43,11 +43,12 @@
 #include <stdarg.h>
 #include <errno.h>
 
-static const struct widget_ops label_ops = {
+const struct widget_ops label_ops = {
 	{
+		NULL,		/* init */
 		label_destroy,
-		NULL,	/* load */
-		NULL	/* save */
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	label_draw,
 	NULL		/* update */
@@ -57,6 +58,7 @@ enum {
 	TEXT_COLOR
 };
 
+/* Create and attach a new static label. */
 struct label *
 label_new(struct region *reg, int w, int h, const char *fmt, ...)
 {
@@ -98,6 +100,7 @@ label_scaled(int argc, union evarg *argv)
 	}
 }
 
+/* Initialize a static or polled label. */
 void
 label_init(struct label *label, enum label_type type, const char *s,
     int rw, int rh)
@@ -134,6 +137,7 @@ label_init(struct label *label, enum label_type type, const char *s,
 	event_new(label, "widget-scaled", label_scaled, NULL);
 }
 
+/* Create a new polled label. */
 struct label *
 label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
     const char *fmt, ...)
@@ -170,6 +174,7 @@ label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
 	return (label);
 }
 
+/* Update the text of a static label. */
 void
 label_printf(struct label *label, const char *fmt, ...)
 {
@@ -187,7 +192,6 @@ label_printf(struct label *label, const char *fmt, ...)
 	Vasprintf(&label->text.caption, fmt, args);
 	va_end(args);
 
-	/* Update the static surface. */
 	if (label->text.surface != NULL)
 		SDL_FreeSurface(label->text.surface);
 	if (label->text.caption[0] != '\0') {
@@ -201,6 +205,202 @@ label_printf(struct label *label, const char *fmt, ...)
 		WIDGET(label)->h = 0;
 	}
 	pthread_mutex_unlock(&label->text.lock);
+}
+
+#define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
+
+static void
+label_uint8(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%u", LABEL_ARG(Uint8));
+}
+
+static void
+label_sint8(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%d", LABEL_ARG(Sint8));
+}
+
+static void
+label_uint16(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%u", LABEL_ARG(Uint16));
+}
+
+static void
+label_sint16(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%d", LABEL_ARG(Sint16));
+}
+
+static void
+label_uint32(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%u", LABEL_ARG(Uint32));
+}
+
+static void
+label_sint32(struct label *label, char *s, size_t len, int ri)
+{
+	snprintf(s, len, "%d", LABEL_ARG(Sint32));
+}
+
+static void
+label_obj(struct label *label, char *s, size_t len, int ri)
+{
+	struct object *ob = LABEL_ARG(struct object *);
+
+	snprintf(s, len, "%s", ob->name);
+}
+
+static void
+label_objt(struct label *label, char *s, size_t len, int ri)
+{
+	struct object *ob = LABEL_ARG(struct object *);
+
+	snprintf(s, len, "%s", ob->type);
+}
+
+static void
+label_wxh(struct label *label, char *s, size_t len, int ri)
+{
+	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+
+	snprintf(s, len, "%ux%u", rd->w, rd->h);
+}
+
+static void
+label_xy(struct label *label, char *s, size_t len, int ri)
+{
+	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+
+	snprintf(s, len, "%d,%d", rd->x, rd->y);
+}
+
+static void
+label_rect(struct label *label, char *s, size_t len, int ri)
+{
+	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+
+	snprintf(s, len, "%ux%u at %d,%d", rd->w, rd->h, rd->x, rd->y);
+}
+
+static const struct {
+	char	 *fmt;
+	size_t	  fmt_len;
+	void	(*func)(struct label *, char *, size_t, int);
+} fmts[] = {
+	{ "u8", sizeof("u8"),		label_uint8 },
+	{ "s8", sizeof("s8"),		label_sint8 },
+	{ "u16", sizeof("u16"),		label_uint16 },
+	{ "s16", sizeof("s16"),		label_sint16 },
+	{ "u32", sizeof("u32"),		label_uint32 },
+	{ "s32", sizeof("s32"),		label_sint32 },
+	{ "obj", sizeof("obj"),		label_obj },
+	{ "objt", sizeof("objt"),	label_objt },
+	{ "wxh", sizeof("wxh"),		label_wxh },
+	{ "x,y", sizeof("x,y"),		label_xy },
+	{ "rect", sizeof("rect"),	label_rect },
+};
+static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
+
+/* Display a polled label. */
+static __inline__ void
+label_draw_polled(struct label *label)
+{
+	char s[LABEL_MAX_LENGTH];
+	char s2[32];
+	SDL_Surface *ts;
+	char *fmtp;
+	int i, ri = 0;
+
+	s[0] = '\0';
+	s2[0] = '\0';
+
+	if (label->poll.lock != NULL)
+		pthread_mutex_lock(label->poll.lock);
+
+	for (fmtp = label->poll.fmt; *fmtp != '\0'; fmtp++) {
+		if (*fmtp == '%' && *(fmtp+1) != '\0') {
+			switch (*(fmtp+1)) {
+			case 'd':
+			case 'i':
+				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'o':
+				snprintf(s2, sizeof(s2), "%o",
+				    LABEL_ARG(unsigned int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'u':
+				snprintf(s2, sizeof(s2), "%u",
+				    LABEL_ARG(unsigned int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'x':
+				snprintf(s2, sizeof(s2), "%x",
+				    LABEL_ARG(unsigned int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'X':
+				snprintf(s2, sizeof(s2), "%X",
+				    LABEL_ARG(unsigned int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'c':
+				s2[0] = LABEL_ARG(char);
+				s2[1] = '\0';
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 's':
+				strlcat(s, LABEL_ARG(char *), sizeof(s));
+				ri++;
+				break;
+			case 'p':
+				snprintf(s2, sizeof(s2),
+				    "%p", LABEL_ARG(void *));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case '[':
+				for (i = 0; i < nfmts; i++) {
+					if (strncmp(fmts[i].fmt, fmtp+2,
+					    fmts[i].fmt_len-1) != 0)
+						continue;
+					fmts[i].func(label, s2, sizeof(s2), ri);
+					fmtp += fmts[i].fmt_len;
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				}
+				break;
+			case '%':
+				s2[0] = '%';
+				s2[1] = '\0';
+				strlcat(s, s2, sizeof(s));
+				break;
+			}
+			fmtp++;
+		} else {
+			s2[0] = *fmtp;
+			s2[1] = '\0';
+			strlcat(s, s2, sizeof(s));
+		}
+	}
+
+	if (label->poll.lock != NULL)
+		pthread_mutex_unlock(label->poll.lock);
+
+	ts = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
+	widget_blit(label, ts, 0, 0);
+	SDL_FreeSurface(ts);
 }
 
 void
@@ -219,142 +419,7 @@ label_draw(void *p)
 		pthread_mutex_unlock(&label->text.lock);
 		break;
 	case LABEL_POLLED:
-		{
-			SDL_Surface *ts;
-			char s[LABEL_MAX_LENGTH], *s2, *fmtp, *sp;
-			int ri = 0;
-			
-			s[0] = '\0';
-
-			if (label->poll.lock != NULL)
-				pthread_mutex_lock(label->poll.lock);
-
-			for (sp = s, fmtp = label->poll.fmt;
-			     *fmtp != '\0';
-			     fmtp++) {
-
-#define LABEL_ARG(fmt, _la_type)					\
-	Asprintf(&s2, (fmt), *(_la_type *)label->poll.ptrs[ri++])
-
-				if (*fmtp == '%' && *(fmtp+1) != '\0') {
-					switch (*(fmtp+1)) {
-					case 'd':
-					case 'i':
-						LABEL_ARG("%d", int);
-						break;
-					case 'o':
-						LABEL_ARG("%o", unsigned int);
-						break;
-					case 'u':
-						LABEL_ARG("%u", unsigned int);
-						break;
-					case 'x':
-						LABEL_ARG("%x", unsigned int);
-						break;
-					case 'X':
-						LABEL_ARG("%X", unsigned int);
-						break;
-					case 'c':
-						LABEL_ARG("%c", char);
-						break;
-					case 's':
-						LABEL_ARG("%s", char *);
-						break;
-					case 'p':
-						LABEL_ARG("%p", void *);
-						break;
-					case '[':
-						if (strncmp("u8", fmtp+2, 2)
-						    == 0) {
-							LABEL_ARG("%d", Uint8);
-							fmtp += 3;
-						} else if (strncmp("s8",
-						           fmtp+2, 2) == 0) {
-							LABEL_ARG("%d", Sint8);
-							fmtp += 3;
-						} else if (strncmp("u16",
-						           fmtp+2, 3) == 0) {
-							LABEL_ARG("%d", Uint16);
-							fmtp += 4;
-						} else if (strncmp("s16",
-						           fmtp+2, 3) == 0) {
-							LABEL_ARG("%d", Sint16);
-							fmtp += 4;
-						} else if (strncmp("u32",
-						           fmtp+2, 3) == 0) {
-							LABEL_ARG("%d", Uint32);
-							fmtp += 4;
-						} else if (strncmp("s32",
-						           fmtp+2, 3) == 0) {
-							LABEL_ARG("%d", Sint32);
-							fmtp += 4;
-						} else if (strncmp("wxh",
-						           fmtp+2, 3) == 0) {
-							SDL_Rect *rd =
-							    label->poll.ptrs
-							    [ri++];
-
-							Asprintf(&s2,
-							    "%ux%u",
-							    rd->w, rd->h);
-							fmtp += 4;
-						} else if (strncmp("x,y",
-						           fmtp+2, 3) == 0) {
-							SDL_Rect *rd =
-							    label->poll.ptrs
-							    [ri++];
-
-							Asprintf(&s2,
-							    "[%d,%d]",
-							    rd->x, rd->y);
-							fmtp += 4;
-						} else if (strncmp("rect",
-						           fmtp+2, 4) == 0) {
-							SDL_Rect *rd =
-							    label->poll.ptrs
-							    [ri++];
-
-							Asprintf(&s2,
-							    "%ux%u at [%d,%d]",
-							    rd->w, rd->h,
-							    rd->x, rd->y);
-							fmtp += 5;
-						} else {
-							fatal("bad cast");
-						}
-						break;
-					case '%':
-						Asprintf(&s2, "%%");
-						break;
-					default:
-						fatal("bad format");
-					}
-					fmtp++;
-				} else {
-					Asprintf(&s2, "%c", *fmtp);
-				}
-				
-				if (s2 != NULL) {
-					size_t scl;
-
-					scl = strlcat(sp, s2, LABEL_MAX_LENGTH);
-					if (scl > LABEL_MAX_LENGTH) {
-						fatal("overflow");
-					}
-					sp += scl;
-					free(s2);
-				}
-			}
-			*sp = '\0';
-
-			if (label->poll.lock != NULL)
-				pthread_mutex_unlock(label->poll.lock);
-
-			ts = text_render(NULL, -1,
-			    WIDGET_COLOR(label, TEXT_COLOR), s);
-			widget_blit(label, ts, 0, 0);
-			SDL_FreeSurface(ts);
-		}
+		label_draw_polled(label);
 		break;
 	}
 }
