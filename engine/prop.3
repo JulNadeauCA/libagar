@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.2 2003/02/25 01:26:30 vedge Exp $
+.\"	$Csoft: prop.3,v 1.3 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -74,7 +74,87 @@ ignores properties of type
 .Dv PROP_POINTER
 and
 .Dv PROP_INT .
-.Sh DATA ACCESS ROUTINES
+.Sh READING PROPERTIES
+.nr nS 1
+.Ft "struct prop *"
+.Fn prop_get "void *obj" "char *key" "enum prop_type type" "void *dst"
+.Pp
+.Ft int
+.Fn prop_get_bool "void *obj" "char *key"
+.Pp
+.Ft int
+.Fn prop_get_int "void *obj" "char *key"
+.Pp
+.Ft Uint8
+.Fn prop_get_uint8 "void *obj" "char *key"
+.Pp
+.Ft Sint8
+.Fn prop_get_sint8 "void *obj" "char *key"
+.Pp
+.Ft Uint16
+.Fn prop_get_uint16 "void *obj" "char *key"
+.Pp
+.Ft Sint16
+.Fn prop_get_sint16 "void *obj" "char *key"
+.Pp
+.Ft Uint32
+.Fn prop_get_uint32 "void *obj" "char *key"
+.Pp
+.Ft Sint32
+.Fn prop_get_sint32 "void *obj" "char *key"
+.Pp
+.Ft float
+.Fn prop_get_float "void *obj" "char *key"
+.Pp
+.Ft double
+.Fn prop_get_double "void *obj" "char *key"
+.Pp
+.Ft "long double"
+.Fn prop_get_long_double "void *obj" "char *key"
+.Pp
+.Ft "char *"
+.Fn prop_get_string "void *obj" "char *key"
+.Pp
+.Ft size_t
+.Fn prop_copy_string "void *obj" "char *key" "char *dst" "size_t dst_size"
+.Pp
+.Ft "void *"
+.Fn prop_get_pointer "void *obj" "char *key"
+.Pp
+.nr nS 0
+The
+.Fn prop_get
+function searches for a property of type
+.Fa type
+named
+.Fa key
+and writes its value to
+.Fa dst ,
+which should point to a variable of the specific data type associated with the
+property.
+.Fa prop_get
+returns a pointer to the related
+.Nm
+structure, or NULL if no property matches
+.Fa key .
+.Pp
+The other data access functions look for a property named
+.Fa key
+and return its value.
+If the
+.Fa key
+does not match an existing property, a fatal condition is raised.
+.Pp
+.Fn prop_get_string
+returns a copy of the actual string.
+.Pp
+.Fn prop_copy_string
+copies up to
+.Fa dst_size
+- 1 characters from the value of a string property to
+.Fa dst ,
+NUL-terminating the result.
+.Sh WRITING PROPERTIES
 .nr nS 1
 .Ft "struct prop *"
 .Fn prop_set "void *obj" "const char *name" "enum prop_type type" "..."
@@ -115,22 +195,42 @@ and
 .Ft "struct prop *"
 .Fn prop_set_long_double "void *obj" "char *key" "long double value"
 .nr nS 0
+The
+.Fn prop_set
+function searches for a property of type
+.Fa type
+named
+.Fa key
+and sets its value to data read from the next arguments, which should be
+data of the specific data type associated with the property.
+If the
+.Fa key
+does not match an existing property, a new one is created.
 .Pp
-.Sh 
+The other data write functions iook for a property named
+.Fa key
+and set its value to
+.Fa value ,
+returning a pointer to the modified property.
+If the
+.Fa key
+does not match an existing property, a new one is created.
+.Sh SAVING/LOADING
 .nr nS 1
 .Ft int
 .Fn prop_load "void *obj" "int fd"
 .Pp
 .Ft int
 .Fn prop_save "void *obj" "int fd"
+.Pp
 .nr nS 0
 The
 .Fn prop_load
-function loads an object's property table from
+function loads an object's property table in machine-independent format from
 .Fa fd ,
 and
 .Fn prop_save
-saves an object's property table to
+saves an object's property table in machine-independent format to
 .Fa fd .
 .Sh SEE ALSO
 .Xr agar 3 ,
