@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.28 2004/05/31 07:16:30 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.29 2004/06/18 03:11:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -266,10 +266,10 @@ vg_update_fragments(struct vg *vg)
 	sd.h = TILESZ;
 	
 	for (y = 0, my = 0;
-	     y < vg->su->h;
+	     y < vg->su->h && my < rmap->maph;
 	     y += TILESZ, my++) {
 		for (x = 0, mx = 0;
-		     x < vg->su->w;
+		     x < vg->su->w && mx < rmap->mapw;
 		     x += TILESZ, mx++) {
 			struct node *n = &rmap->map[my][mx];
 			SDL_Surface *fragsu = NULL;
