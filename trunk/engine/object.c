@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.160 2004/03/02 08:58:59 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.161 2004/03/05 15:22:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,7 +34,6 @@
 #include <engine/rootmap.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
-
 #ifdef EDITION
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -44,13 +43,11 @@
 #include <engine/widget/textbox.h>
 #endif
 
-#include <engine/loader/den.h>
+#include "mediasel.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
 
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
@@ -569,31 +566,27 @@ object_page_in(void *p, enum object_page_item item)
 	case OBJECT_GFX:
 		debug(DEBUG_PAGING, "gfx of %s: %s; used = %u++\n", ob->name,
 		    ob->gfx_name, ob->gfx_used);
-		if (ob->gfx_name == NULL) {
-			error_set(_("The `%s' object uses no graphics set."),
-			    ob->name);
-			goto fail;
-		}
-		if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
-			goto fail;
-		}
-		if (++ob->gfx_used > OBJECT_DEP_MAX) {
-			ob->gfx_used = OBJECT_DEP_MAX;
+		if (ob->gfx == NULL) {
+			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
+				goto fail;
+			}
+			ob->gfx_used = 1;
+		} else {
+			if (++ob->gfx_used > OBJECT_DEP_MAX)
+				ob->gfx_used = OBJECT_DEP_MAX;
 		}
 		break;
 	case OBJECT_AUDIO:
 		debug(DEBUG_PAGING, "audio of %s: %s; used = %u++\n", ob->name,
 		    ob->audio_name, ob->audio_used);
-		if (ob->audio_name == NULL) {
-			error_set(_("The `%s' object uses no audio."),
-			    ob->name);
-			goto fail;
-		}
-		if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
-			goto fail;
-		}
-		if (++ob->audio_used > OBJECT_DEP_MAX) {
-			ob->audio_used = OBJECT_DEP_MAX;
+		if (ob->audio == NULL) {
+			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
+				goto fail;
+			}
+			ob->audio_used = 1;
+		} else {
+			if (++ob->audio_used > OBJECT_DEP_MAX)
+				ob->audio_used = OBJECT_DEP_MAX;
 		}
 		break;
 	case OBJECT_DATA:
@@ -653,12 +646,12 @@ object_page_out(void *p, enum object_page_item item)
 		}
 		break; 
 	case OBJECT_AUDIO:
+		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
+		    ob->audio_used);
 #ifdef DEBUG
 		if (ob->audio_used == 0)
 			fatal("neg audio ref count");
 #endif
-		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
-		    ob->audio_used);
 		if (ob->audio_used != OBJECT_DEP_MAX &&
 		    --ob->audio_used == 0) {
 			audio_unused(ob->audio);
@@ -671,7 +664,7 @@ object_page_out(void *p, enum object_page_item item)
 		if (ob->flags & OBJECT_NON_PERSISTENT) {
 			debug(DEBUG_PAGING, "%s: non-persistent; skipping\n",
 			    ob->name);
-			goto out;
+			goto done;
 		}
 #ifdef DEBUG
 		if (ob->data_used == 0)
@@ -686,7 +679,7 @@ object_page_out(void *p, enum object_page_item item)
 		}
 		break;
 	}
-out:
+done:
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
@@ -1526,122 +1519,7 @@ object_poll_deps(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
-/* Search subdirectories for .den files containing a given hint. */
-static void
-object_scan_dens(const struct object *ob, const char *hint, struct combo *com,
-    const char *spath)
-{
-	DIR *di;
-	struct dirent *dent;
-
-	if ((di = opendir(".")) == NULL) {
-		text_msg(MSG_ERROR, ".: %s", strerror(errno));
-		return;
-	}
-	while ((dent = readdir(di)) != NULL) {
-		char path[MAXPATHLEN];
-		struct stat sta;
-		char *ext;
-
-		if (strcmp(dent->d_name, ".") == 0 ||
-		    strcmp(dent->d_name, "..") == 0) {
-			continue;
-		}
-		if (stat(dent->d_name, &sta) == -1) {
-			dprintf("%s: %s\n", dent->d_name, strerror(errno));
-			continue;
-		}
-
-		strlcpy(path, spath, sizeof(path));
-		strlcat(path, "/", sizeof(path));
-		strlcat(path, dent->d_name, sizeof(path));
-
-		if ((sta.st_mode & S_IFREG) &&
-		    (ext = strrchr(dent->d_name, '.')) != NULL &&
-		    strcasecmp(ext, ".den") == 0) {
-			struct den *den;
-
-			if ((den = den_open(dent->d_name, DEN_READ)) != NULL) {
-				if (strcmp(den->hint, hint) == 0 &&
-				    (ext = strrchr(path, '.')) != NULL) {
-					*ext = '\0';
-					tlist_insert_item(com->list, NULL, path,
-					    NULL);
-				}
-				den_close(den);
-			}
-		} else if (sta.st_mode & S_IFDIR) {
-			if (chdir(dent->d_name) == 0) {
-				object_scan_dens(ob, hint, com, path);
-				if (chdir("..") == -1) {
-					text_msg(MSG_ERROR, "..: %s",
-					    strerror(errno));
-					closedir(di);
-					return;
-				}
-			}
-		}
-	}
-	closedir(di);
-}
-
-static void
-fetch_gfx(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-
-}
-
-/* Select a new graphics package to associate with the object. */
-static void
-select_gfx(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-
-	if (ob->gfx != NULL) {
-		gfx_unused(ob->gfx);
-		ob->gfx = NULL;
-	}
-	if (ob->gfx_name != NULL) {
-		free(ob->gfx_name);
-		ob->gfx_name = NULL;
-	}
-	if (it->text[0] == '\0')
-		return;
-
-	if ((ob->gfx = gfx_fetch(it->text)) == NULL) {
-		text_msg(MSG_ERROR, "%s: %s", ob->gfx_name, error_get());
-		return;
-	}
-	ob->gfx_name = Strdup(it->text);
-}
-
-/* Select a new audio package to associate with the object. */
-static void
-select_audio(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-
-	if (ob->audio != NULL) {
-		audio_unused(ob->audio);
-		ob->audio = NULL;
-	}
-	if (ob->audio_name != NULL) {
-		free(ob->audio_name);
-		ob->audio_name = NULL;
-	}
-	if (it->text[0] == '\0')
-		return;
-
-	if ((ob->audio = audio_fetch(it->text)) == NULL) {
-		text_msg(MSG_ERROR, "%s: %s", ob->audio_name, error_get());
-		return;
-	}
-	ob->audio_name = Strdup(it->text);
-}
-
+/* Object rename pre-hook. */
 static void
 object_name_prechg(int argc, union evarg *argv)
 {
@@ -1651,6 +1529,7 @@ object_name_prechg(int argc, union evarg *argv)
 	object_unlink_datafiles(ob);
 }
 
+/* Object rename post-hook. */
 static void
 object_name_postchg(int argc, union evarg *argv)
 {
@@ -1674,10 +1553,6 @@ object_edit(void *p)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
-		char den_path[MAXPATHLEN];
-		struct combo *gfx_com, *aud_com;
-		char *dir, *last;
-	
 		tbox = textbox_new(bo, _("Name: "));
 		widget_bind(tbox, "string", WIDGET_STRING, ob->name,
 		    sizeof(ob->name));
@@ -1685,43 +1560,7 @@ object_edit(void *p)
 		event_new(tbox, "textbox-postchg", object_name_postchg, "%p",
 		    ob);
 
-		gfx_com = combo_new(bo, 0, _("Graphics: "));
-		aud_com = combo_new(bo, 0, _("Audio: "));
-
-		textbox_prescale(gfx_com->tbox, "XXXXXXXXXXXXXX");
-
-		event_new(gfx_com, "combo-selected", select_gfx, "%p", ob);
-		event_new(aud_com, "combo-selected", select_audio, "%p", ob);
-
-		if (ob->gfx_name != NULL)
-			textbox_printf(gfx_com->tbox, "%s", ob->gfx_name);
-		if (ob->audio_name != NULL)
-			textbox_printf(aud_com->tbox, "%s", ob->audio_name);
-
-		prop_copy_string(config, "den-path", den_path,
-		    sizeof(den_path));
-
-		for (dir = strtok_r(den_path, ":", &last);
-		     dir != NULL;
-		     dir = strtok_r(NULL, ":", &last)) {
-			char cwd[MAXPATHLEN];
-
-			if (getcwd(cwd, sizeof(cwd)) == NULL) {
-				text_msg(MSG_ERROR, "getcwd: %s",
-				    strerror(errno));
-				continue;
-			}
-
-			if (chdir(dir) == 0) {
-				object_scan_dens(ob, "gfx", gfx_com, "");
-				object_scan_dens(ob, "audio", aud_com, "");
-				if (chdir(cwd) == -1) {
-					text_msg(MSG_ERROR, "chdir %s: %s",
-					    cwd, strerror(errno));
-					continue;
-				}
-			}
-		}
+		mediasel_new(bo, MEDIASEL_GFX, ob);
 	}
 	
 	bo = box_new(win, BOX_VERT, BOX_WFILL);

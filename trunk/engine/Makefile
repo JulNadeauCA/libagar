@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.74 2004/02/20 04:20:33 vedge Exp $
+#	$Csoft: Makefile,v 1.75 2004/02/26 10:14:46 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
@@ -15,7 +15,7 @@ LIB=	engine
 
 SRCS=	audio.c config.c engine.c event.c gfx.c input.c map.c mkpath.c \
 	object.c perso.c position.c prop.c rootmap.c transform.c \
-	typesw.c view.c
+	typesw.c view.c mediasel.c
 
 MAN3=	agar.3 map.3 object.3 view.3 rootmap.3 event.3 prop.3 input.3
 

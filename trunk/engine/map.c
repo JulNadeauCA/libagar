@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.202 2004/03/02 08:57:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.203 2004/03/05 15:21:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -30,16 +30,15 @@
 #include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
-
 #ifdef EDITION
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
-
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
+#include <engine/mediasel.h>
 #endif
 
 #include <compat/math.h>
@@ -1237,7 +1236,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 
 /* Create a new map view window. */
 static void
-map_new_view(int argc, union evarg *argv)
+create_new_view(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct window *pwin = argv[2].p;
@@ -1253,7 +1252,7 @@ map_new_view(int argc, union evarg *argv)
 
 /* Toggle the map grid display. */
 static void
-map_toggle_grid(int argc, union evarg *argv)
+toggle_grid(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
@@ -1266,7 +1265,7 @@ map_toggle_grid(int argc, union evarg *argv)
 
 /* Toggle the node property display. */
 static void
-map_toggle_props(int argc, union evarg *argv)
+toggle_props(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
@@ -1279,7 +1278,7 @@ map_toggle_props(int argc, union evarg *argv)
 
 /* Toggle the node edition dialog. */
 static void
-map_toggle_nodeed(int argc, union evarg *argv)
+toggle_nodeed(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	
@@ -1288,7 +1287,7 @@ map_toggle_nodeed(int argc, union evarg *argv)
 
 /* Toggle the layer edition dialog. */
 static void
-map_toggle_layed(int argc, union evarg *argv)
+toggle_layed(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	
@@ -1297,16 +1296,33 @@ map_toggle_layed(int argc, union evarg *argv)
 
 /* Toggle the media import dialog. */
 static void
-map_toggle_mimport(int argc, union evarg *argv)
+toggle_media(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
+	struct window *win = mv->mimport.win;
 	
-	window_toggle_visibility(mv->mimport.win);
+	if (win->visible) {
+		if (OBJECT(mv->map)->gfx != NULL) {
+			object_page_out(mv->map, OBJECT_GFX);
+		}
+		if (OBJECT(mv->map)->audio != NULL) {
+			object_page_out(mv->map, OBJECT_AUDIO);
+		}
+		window_hide(win);
+	} else {
+		if (OBJECT(mv->map)->gfx != NULL) {
+			object_page_in(mv->map, OBJECT_GFX);
+		}
+		if (OBJECT(mv->map)->audio != NULL) {
+			object_page_in(mv->map, OBJECT_AUDIO);
+		}
+		window_show(win);
+	}
 }
 
 /* Toggle map read-write mode. */
 static void
-map_toggle_edition(int argc, union evarg *argv)
+toggle_edition(int argc, union evarg *argv)
 {
 	struct button *bu = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -1502,13 +1518,27 @@ media_import(int argc, union evarg *argv)
 }
 
 static void
-map_close_import_window(int argc, union evarg *argv)
+media_window_close(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
 	widget_set_int(mv->mimport.trigger, "state", 0);
 	window_hide(win);
+}
+
+static void
+media_window_hidden(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	if (OBJECT(mv->map)->gfx != NULL) {
+		object_page_out(mv->map, OBJECT_GFX);
+	}
+	if (OBJECT(mv->map)->audio != NULL) {
+		object_page_out(mv->map, OBJECT_AUDIO);
+	}
 }
 
 /* Update the graphic import list. */
@@ -1559,11 +1589,15 @@ media_window(struct mapview *mv)
 	struct object *ob = OBJECT(mv->map);
 	struct window *win;
 	struct box *bo;
+	struct combo *gfx_com, *aud_com;
 	struct tlist *tl;
 
 	win = window_new(NULL);
-	window_set_caption(win, _("Import media"));
+	window_set_caption(win, _("Load media into `%s'"), ob->name);
 	window_set_closure(win, WINDOW_HIDE);
+
+	mediasel_new(win, MEDIASEL_GFX, ob);
+	mediasel_new(win, MEDIASEL_AUDIO, ob);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	tlist_set_item_height(tl, ttf_font_height(font)*2);
@@ -1586,14 +1620,10 @@ media_window(struct mapview *mv)
 			event_new(bu, "button-pushed", media_import,
 			    "%p, %p, %i, %p", tl, mv, i, ob);
 		}
-#if 0
-		bu = button_new(bo, _("Replace"));
-		button_set_sticky(bu, 1);
-		widget_bind(bu, "state", WIDGET_INT, &mv->constr.replace);
-#endif
 	}
 
-	event_new(win, "window-close", map_close_import_window, "%p", mv);
+	event_new(win, "window-close", media_window_close, "%p", mv);
+	event_new(win, "widget-hidden", media_window_hidden, "%p", mv);
 	return (win);
 }
 
@@ -1632,46 +1662,47 @@ map_edit(void *p)
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW));
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", map_new_view, "%p, %p", mv, win);
+		event_new(bu, "button-pushed", create_new_view, "%p, %p", mv,
+		    win);
 
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
 		button_set_focusable(bu, 0);
 		button_set_sticky(bu, 1);
 		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", map_toggle_grid, "%p", mv);
+		event_new(bu, "button-pushed", toggle_grid, "%p", mv);
 		
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_PROPS));
 		button_set_focusable(bu, 0);
 		button_set_sticky(bu, 1);
 		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", map_toggle_props, "%p", mv);
+		event_new(bu, "button-pushed", toggle_props, "%p", mv);
 
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
 		button_set_focusable(bu, 0);
 		button_set_sticky(bu, 1);
 		widget_set_bool(bu, "state", !ro);
-		event_new(bu, "button-pushed", map_toggle_edition, "%p", mv);
+		event_new(bu, "button-pushed", toggle_edition, "%p", mv);
 
 		mv->nodeed.trigger = bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", map_toggle_nodeed, "%p", mv);
+		event_new(bu, "button-pushed", toggle_nodeed, "%p", mv);
 		
 		mv->layed.trigger = bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", map_toggle_layed, "%p", mv);
+		event_new(bu, "button-pushed", toggle_layed, "%p", mv);
 		
 		mv->mimport.trigger = bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_MIMPORT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", map_toggle_mimport, "%p", mv);
+		event_new(bu, "button-pushed", toggle_media, "%p", mv);
 #if 0
 		/* XXX combo */
 		lab = label_polled_new(bo, NULL, _("  Layer #%d"),
@@ -1680,6 +1711,7 @@ map_edit(void *p)
 	}
 	object_attach(win, mv);
 	widget_focus(mv);
+
 	return (win);
 }
 #endif /* EDITION */
