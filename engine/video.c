@@ -1,7 +1,7 @@
-/*	$Csoft: video.c,v 1.13 2002/02/15 02:31:32 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.14 2002/02/25 09:06:26 vedge Exp $	 */
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without

@@ -1,7 +1,7 @@
-/*	$Csoft: char.c,v 1.26 2002/03/15 07:35:40 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.27 2002/03/17 09:13:48 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without

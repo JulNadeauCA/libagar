@@ -1,7 +1,7 @@
-/*	$Csoft: map.c,v 1.64 2002/03/17 11:58:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.65 2002/03/17 12:02:55 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without

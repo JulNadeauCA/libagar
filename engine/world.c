@@ -1,7 +1,7 @@
-/*	$Csoft: world.c,v 1.19 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.20 2002/03/27 03:24:07 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without

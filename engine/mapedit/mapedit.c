@@ -1,7 +1,7 @@
-/*	$Csoft: mapedit.c,v 1.67 2002/03/14 08:57:32 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.69 2002/03/17 09:15:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without
