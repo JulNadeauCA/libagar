@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.45 2002/07/07 06:30:21 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.46 2002/07/08 03:15:53 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -41,7 +41,6 @@ struct mapedit {
 	struct	 window *tileq_win;
 	struct	 window *new_map_win;
 	struct	 window *load_map_win;
-	struct	 window *settings_win;
 	struct	 window *coords_win;
 	struct	 label *coords_label;
 

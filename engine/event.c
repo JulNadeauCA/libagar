@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.59 2002/07/08 03:17:08 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.60 2002/07/08 05:24:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -191,7 +191,7 @@ event_loop(void *arg)
 	struct label *fps_label;
 	
 	fps_win = window_new("Frames/second", WINDOW_SOLID,
-	    view->w - 141, view->h - 65, 140, 64);
+	    view->w-141, view->h-65, 140, 64, 140, 64);
 	fps_reg = region_new(fps_win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	fps_label = label_new(fps_reg, "...", 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.5 2002/07/08 03:16:09 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.6 2002/07/08 05:24:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -59,7 +59,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 	sprintf(caption, "%s (%dx%d)", OBJECT(m)->name, m->mapw, m->maph);
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, WINDOW_SCALE|WINDOW_SOLID, 10, 16, 75, 70);
+	window_init(win, caption, WINDOW_SOLID,
+	    96, 96, 375, 293, 375, 293);
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));

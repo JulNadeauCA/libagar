@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.2 2002/07/07 06:32:44 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.3 2002/07/08 05:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ eraser_window(void *p)
 	};
 
 	win = window_new("Eraser", WINDOW_SOLID,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120);
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120, 120, 120);
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0, 0);
 	event_new(rad, "radio-changed", 0, eraser_event, "%p, %c", er, 'm');

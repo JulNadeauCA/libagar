@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.46 2002/07/08 05:24:50 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.48 2002/07/08 07:42:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -62,11 +62,13 @@ static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 static void	window_move(struct window *, Uint16, Uint16);
 
 struct window *
-window_new(char *caption, int flags, int x, int y, int w, int h) {
+window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
+    int minh)
+{
 	struct window *win;
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, flags, x, y, w, h);
+	window_init(win, caption, flags, x, y, w, h, minw, minh);
 
 	/* Attach window to main view, make it visible. */
 	pthread_mutex_lock(&view->lock);
@@ -78,7 +80,7 @@ window_new(char *caption, int flags, int x, int y, int w, int h) {
 
 void
 window_init(struct window *win, char *caption, int flags,
-    int rx, int ry, int rw, int rh)
+    int rx, int ry, int rw, int rh, int minw, int minh)
 {
 	static int nwindow = 0;
 	char *name;
@@ -153,6 +155,8 @@ window_init(struct window *win, char *caption, int flags,
 	}
 	win->w = (win->x + win->w < view->w) ? win->w : view->w;
 	win->h = (win->y + win->h < view->h) ? win->h : view->h;
+	win->minw = minw;
+	win->minh = minh;
 
 	switch (win->type) {
 	case WINDOW_CUBIC:
@@ -754,6 +758,7 @@ window_event_all(SDL_Event *ev)
 	struct window *win;
 	struct widget *wid;
 	int gavefocus = 0;
+	int nx, ny;
 
 	if (ev->type == SDL_MOUSEBUTTONUP && view->winop != VIEW_WINOP_NONE) {
 		view->winop = VIEW_WINOP_NONE;
@@ -792,14 +797,16 @@ window_event_all(SDL_Event *ev)
 				if (view->wop_win != win) {
 					goto nextwin;
 				}
+				nx = win->x;
+				ny = win->y;
 				switch (view->winop) {
 				case VIEW_WINOP_LRESIZE:
 					if (ev->motion.xrel < 0) {
 						win->w -= ev->motion.xrel;
-						win->x += ev->motion.xrel;
+						nx = win->x + ev->motion.xrel;
 					} else if (ev->motion.xrel > 0) {
 						win->w -= ev->motion.xrel;
-						win->x += ev->motion.xrel;
+						nx = win->x + ev->motion.xrel;
 					}
 					if (ev->motion.yrel < 0) {
 						win->h += ev->motion.yrel;
@@ -826,6 +833,16 @@ window_event_all(SDL_Event *ev)
 						win->h += ev->motion.yrel;
 					}
 				default:
+				}
+				if (win->w < win->minw) {
+					win->w = win->minw;
+				} else {
+					win->x = nx;
+				}
+				if (win->h < win->minh) {
+					win->h = win->minh;
+				} else {
+					win->y = ny;
 				}
 				window_resize(win);
 				break;
@@ -994,7 +1011,16 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
-	
+
+	if (win->x < 16)
+		win->x = 16;
+	if (win->y < 16)
+		win->y = 16;
+	if (win->x+win->w > view->w)
+		win->w = view->w - win->x - 16;
+	if (win->y+win->h > view->h)
+		win->h = view->h - win->y - 16;
+
 	win->body.x = win->x + win->borderw;
 	win->body.y = win->y + win->borderw*2 + win->titleh;
 	win->body.w = win->w - win->borderw*2;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.109 2002/07/07 10:14:48 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.110 2002/07/08 05:24:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,7 +48,6 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
-#include "config.h"
 #include "toolbar.h"
 #include "fileops.h"
 
@@ -94,9 +93,8 @@ mapedit_init(struct mapedit *med, char *name)
 
 	/* XXX messy */
 	mapedit_init_toolbar(med);
-	med->settings_win = mapedit_config_win(med);
 	med->coords_win = window_new("Coordinates", WINDOW_SOLID,
-	    32, 32, 320, 64);
+	    32, 32, 320, 64, 320, 64);
 	coords_reg = region_new(med->coords_win, REGION_HALIGN|REGION_CENTER,
 	    0,   0, 100, 100);
 	med->coords_label = label_new(coords_reg, "...", 0);
@@ -346,8 +344,6 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_setorigin(med, &mapx, &mapy);
 				mapedit_move(med, mapx, mapy);
-			} else {
-				window_show(med->settings_win);
 			}
 			break;
 		case SDLK_l:
