@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.58 2002/03/05 17:06:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.59 2002/03/05 18:53:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -94,18 +94,22 @@ mapedit_create(char *name)
 	med->map = NULL;
 	med->x = 0;
 	med->y = 0;
+	med->mmapx = 0;
+	med->mmapy = 0;
+	med->mtmapy = 0;
 	med->cursor_speed = DEFAULT_CURSOR_SPEED;
 	med->listw_speed = DEFAULT_LISTW_SPEED;
 	
 	med->curobj = NULL;
 	med->curoffs = 0;
 	med->curflags = 0;
+	med->tilelist_offs = 0;
 
 	mapdir_init(&med->cursor_dir, (struct object *)med, NULL, -1, -1);
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
-	fob = fobj_load(savepath(name, "fob"));
+	fob = fobj_load(savepath("mapedit", "fob"));
 	if (fob == NULL) {
 		return (NULL);
 	}
@@ -263,7 +267,10 @@ mapedit_link(void *p)
 	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
 	med->tilelist.h = m->view->height;
-	
+
+	/* Center on the icon. */
+	med->tilelist_offs = 0 - ((med->tilelist.h / m->tileh) / 2);
+
 	med->tilestack.x = 0;
 	med->tilestack.y = m->tileh;
 	med->tilestack.w = m->tilew;
@@ -489,7 +496,7 @@ mapedit_tilelist(struct mapedit *med)
 	 * predict which sprite to draw first according to the window
 	 * geometry.
 	 */
-	for (i = 0, sn = med->curoffs - ((med->tilelist.h / m->tileh) / 2);
+	for (i = 0, sn = med->tilelist_offs;
 	     i < (med->tilelist.h / rd.h) - 1;
 	     i++, rd.y += m->tileh) {
 		struct editref *ref;
