@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.19 2003/02/04 02:39:41 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.20 2003/02/25 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,13 +101,14 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 	for (y = 0; y < sprite->h; y += TILEH) {
 		for (x = 0; x < sprite->w; x += TILEW) {
 			SDL_Surface *su;
-			Uint32 sflags;
-			Uint8 salpha;
+			Uint32 saflags = sprite->flags &
+			    (SDL_SRCALPHA|SDL_RLEACCEL);
+			Uint8 salpha = sprite->format->alpha;
 
 			/* Allocate a surface for the fragment. */
-			su = SDL_CreateRGBSurface(
-			    sprite->flags &
-			    (SDL_SWSURFACE|SDL_HWSURFACE|SDL_SRCALPHA),
+			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
+			    (sprite->flags &
+			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 			    TILEW, TILEH, sprite->format->BitsPerPixel,
 			    sprite->format->Rmask, sprite->format->Gmask,
 			    sprite->format->Bmask, sprite->format->Amask);
@@ -115,24 +116,14 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 				fatal("SDL_CreateRGBSurface: %s\n",
 				    SDL_GetError());
 			}
-
-			/* Disable alpha blending. */
-			sflags = sprite->flags & (SDL_SRCALPHA|SDL_RLEACCELOK);
-			salpha = sprite->format->alpha;
-			if (sflags & SDL_SRCALPHA) {
-				SDL_SetAlpha(sprite, 0, 0);
-			}
-
+			
 			/* Copy the fragment as is. */
+			SDL_SetAlpha(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, su, &rd);
 			art_insert_sprite(art, su, 0);
-
-			/* Restore the alpha blending. */
-			if (sflags & SDL_SRCALPHA) {
-				SDL_SetAlpha(sprite, sflags, salpha);
-			}
+			SDL_SetAlpha(sprite, saflags, salpha);
 		}
 	}
 }
