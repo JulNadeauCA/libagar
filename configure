@@ -137,7 +137,7 @@ echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: yes]"
-echo "    --enable-floating-point        Floating point [default: yes]"
+echo "    --enable-floating-point        Floating point operations [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support 24 bpp display [default: yes]"
@@ -1107,7 +1107,7 @@ echo "#endif /* THREADS */" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
 fi
-if [ "${enable_threads}" != "no" ]
+if [ "${enable_floating_point}" != "no" ]
  then
 FLOATING_POINT=1
 echo "#ifndef FLOATING_POINT" > config/floating_point.h
