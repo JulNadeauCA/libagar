@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.3 2002/06/12 20:40:08 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.1 2002/06/23 02:38:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -55,10 +55,10 @@ mapwin_new(struct mapedit *med, struct map *m)
 	sprintf(caption, "%s (%dx%d)", OBJECT(m)->name, m->mapw, m->maph);
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, 0, 10, 10, 70, 60);
+	window_init(win, caption, WINDOW_SOLID, 10, 10, 65, 56);
 	map_reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 
-	mv = mapview_new(map_reg, med, m, 0, 100, 100);
+	mv = mapview_new(map_reg, med, m, MAPVIEW_CENTER, 100, 100);
 	win->focus = WIDGET(mv);
 
 	return (win);
