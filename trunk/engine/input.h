@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.7 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.8 2002/10/30 17:18:04 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -26,5 +26,5 @@ void		 input_destroy(void *);
 void		 input_destroy_all(void);
 void		 input_event(enum input_type, SDL_Event *);
 struct input	*input_find_ev(enum input_type, SDL_Event *);
-struct input	*input_find_str(char *);
+struct input	*input_find(char *);
 
