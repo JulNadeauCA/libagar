@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.4 2002/01/26 20:11:48 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.5 2002/01/27 10:59:35 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <fcntl.h>
