@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.45 2002/03/01 14:45:04 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.46 2002/03/03 06:23:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -148,7 +148,6 @@ map_draw_th(void *p)
 			map_draw(m);
 		}
 		pthread_mutex_unlock(&m->lock);
-		text_drawall();	/* XXX some waste */
 		SDL_Delay(2);
 	}
 
@@ -400,7 +399,7 @@ map_animate(struct map *m)
 			static Uint32 rx, ry;
 			
 			if (m->view->mapmask[vy - m->view->mapyoffs]
-			    [vx - m->view->mapxoffs] & MAPMASK_NORENDER) {
+			    [vx - m->view->mapxoffs] > 0) {
 				continue;
 			}
 
@@ -523,7 +522,7 @@ map_draw(struct map *m)
 			static int nsprites;
 
 			if (m->view->mapmask[vy - m->view->mapyoffs]
-			    [vx - m->view->mapxoffs] & MAPMASK_NORENDER) {
+			    [vx - m->view->mapxoffs] > 0) {
 				continue;
 			}
 
