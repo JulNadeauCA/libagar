@@ -1,12 +1,16 @@
-/*	$Csoft: widget.h,v 1.35 2002/09/06 08:31:14 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.36 2002/09/07 02:30:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
 
 struct widget_ops {
 	const	 struct object_ops obops;
+
+	/* Draw directly to video memory. */
 	void	 (*widget_draw)(void *);
-	void	 (*widget_animate)(void *);
+
+	/* Update cached surface. */
+	void	 (*widget_update)(void *, SDL_Surface *);
 };
 
 struct widget_color {
@@ -26,7 +30,12 @@ struct widget {
 	int	 flags;
 #define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
 #define WIDGET_MOUSEOUT		0x02	/* Receive window-mouseout events */
-	
+	struct {
+		SDL_Surface	*source;	/* Source surface */
+		int		 redraw;	/* Update the source surface */
+		pthread_mutex_t  lock;
+	} surface;
+
 	char	*type;			/* Widget type identifier */
 	struct	window *win;		/* Parent window */
 	struct	region *reg;		/* Parent region */
@@ -39,7 +48,8 @@ struct widget {
 	int	ncolors;
 	struct	widget_colorq colors;
 
-	TAILQ_ENTRY(widget) widgets;	/* Widgets inside region */
+	TAILQ_ENTRY(widget) widgets;		/* Widgets inside region */
+	TAILQ_HEAD(, widget) subwidgets;	/* Widgets inside widget */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
@@ -51,6 +61,13 @@ struct widget {
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->x) + WIDGET((wi))->x)
 #define WIDGET_ABSY(wi)	((WIDGET((wi))->win->y) + WIDGET((wi))->y)
 
+#define WIDGET_REDRAW(wi) do {					\
+	pthread_mutex_lock(&WIDGET((wi))->surface.lock);	\
+	WIDGET((wi))->surface.redraw++;				\
+	pthread_mutex_unlock(&WIDGET((wi))->surface.lock);	\
+} while (/*CONSTCOND*/0)
+
+/* XXX optimize - move rect to wid structure */
 #define WIDGET_DRAW(wi, s, xo, yo) do {					\
 	static SDL_Rect _wdrd;						\
 									\
@@ -61,6 +78,7 @@ struct widget {
 	SDL_BlitSurface((s), NULL, WIDGET_SURFACE((wi)), &_wdrd);	\
 } while (/*CONSTCOND*/0)
 
+/* XXX optimize - move rect to wid structure */
 #define WIDGET_FILL(wi, xo, yo, wdrw, wdrh, col) do {		\
 	static SDL_Rect _wdrd;					\
 								\
@@ -139,5 +157,10 @@ struct widget {
 #endif
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
+void	widget_destroy(void *);
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
+void	widget_invalidate_surface(void *);
+
+void	widget_attach(void *, void *);
+void	widget_detach(void *, void *);
 
