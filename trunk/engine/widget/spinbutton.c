@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.17 2004/04/15 01:44:37 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.18 2004/04/21 00:15:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -359,7 +359,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_UINT8:
 		{
-			Uint8 i = va_arg(ap, Uint8);
+			Uint8 i = (Uint8)va_arg(ap, int);
 
 			*(Uint8 *)value = i < (Uint8)*min ? (Uint8)*min :
 			                  i > (Uint8)*max ? (Uint8)*max :
@@ -368,7 +368,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_SINT8:
 		{
-			Sint8 i = va_arg(ap, Sint8);
+			Sint8 i = (Sint8)va_arg(ap, int);
 
 			*(Sint8 *)value = i < (Sint8)*min ? (Sint8)*min :
 			                  i > (Sint8)*max ? (Sint8)*max :
@@ -377,7 +377,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_UINT16:
 		{
-			Uint16 i = va_arg(ap, Uint16);
+			Uint16 i = (Uint16)va_arg(ap, int);
 
 			*(Uint16 *)value = i < (Uint16)*min ? (Uint16)*min :
 			                   i > (Uint16)*max ? (Uint16)*max :
@@ -386,7 +386,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_SINT16:
 		{
-			Sint16 i = va_arg(ap, Sint16);
+			Sint16 i = (Sint16)va_arg(ap, int);
 
 			*(Sint16 *)value = i < (Sint16)*min ? (Sint16)*min :
 			                   i > (Sint16)*max ? (Sint16)*max :
@@ -395,7 +395,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_UINT32:
 		{
-			Uint32 i = va_arg(ap, Uint32);
+			Uint32 i = (Uint32)va_arg(ap, int);
 
 			*(Uint32 *)value = i < (Uint32)*min ? (Uint32)*min :
 			                   i > (Uint32)*max ? (Uint32)*max :
@@ -404,7 +404,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		break;
 	case WIDGET_SINT32:
 		{
-			Sint32 i = va_arg(ap, Sint32);
+			Sint32 i = (Sint32)va_arg(ap, int);
 
 			*(Sint32 *)value = i < (Sint32)*min ? (Sint32)*min :
 			                   i > (Sint32)*max ? (Sint32)*max :

@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.2 2004/03/25 09:00:33 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.3 2004/03/26 04:57:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -423,7 +423,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_UINT8:
 		{
-			Uint8 i = va_arg(ap, Uint8);
+			Uint8 i = (Uint8)va_arg(ap, int);
 
 			if (i < (Uint8)*min) {
 				*(Uint8 *)value = *min;
@@ -436,7 +436,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_SINT8:
 		{
-			Sint8 i = va_arg(ap, Sint8);
+			Sint8 i = (Sint8)va_arg(ap, int);
 
 			if (i < (Sint8)*min) {
 				*(Sint8 *)value = *min;
@@ -449,7 +449,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_UINT16:
 		{
-			Uint16 i = va_arg(ap, Uint16);
+			Uint16 i = (Uint16)va_arg(ap, int);
 
 			if (i < (Uint16)*min) {
 				*(Uint16 *)value = *min;
@@ -462,7 +462,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_SINT16:
 		{
-			Sint16 i = va_arg(ap, Sint16);
+			Sint16 i = (Sint16)va_arg(ap, int);
 
 			if (i < (Sint16)*min) {
 				*(Sint16 *)value = *min;
@@ -475,7 +475,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_UINT32:
 		{
-			Uint32 i = va_arg(ap, Uint32);
+			Uint32 i = (Uint32)va_arg(ap, int);
 
 			if (i < (Uint32)*min) {
 				*(Uint32 *)value = *min;
@@ -488,7 +488,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_SINT32:
 		{
-			Sint32 i = va_arg(ap, Sint32);
+			Sint32 i = (Sint32)va_arg(ap, int);
 
 			if (i < (Sint32)*min) {
 				*(Sint32 *)value = *min;
