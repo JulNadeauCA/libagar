@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.21 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.22 2002/05/19 14:32:54 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -34,6 +34,46 @@ struct viewport {
 #define VIEW_MAPMASK(view, vx, vy)	\
     ((view)->mapmask[(vy) - (view)->mapyoffs][(vx) - (view)->mapxoffs])
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+# define _PUT_PIXEL_24(dst, c)		\
+	(dst)[0] = ((c)>>16) & 0xff;	\
+	(dst)[1] = ((c)>>8) & 0xff;	\
+	(dst)[2] =  (c) & 0xff
+#else
+# define _PUT_PIXEL_24(dst, c)		\
+	(dst)[0] =  (c) & 0xff;		\
+	(dst)[1] = ((c)>>8) & 0xff;	\
+	(dst)[2] = ((c)>>16) & 0xff
+#endif
+
+/*
+ * Set the pixel at x,y to c inside surface s.
+ * Surface must be locked.
+ */
+#define VIEW_PUT_PIXEL(s, vx, vy, c) do {			\
+	Uint8 *_putpixel_dst;					\
+								\
+	_putpixel_dst = (Uint8 *)(s)->pixels +			\
+	    (vy)*(s)->pitch +					\
+	    (vx)*(s)->format->BytesPerPixel;			\
+								\
+	switch ((s)->format->BytesPerPixel) {			\
+	case 1:							\
+		*_putpixel_dst = (c);				\
+		break;						\
+	case 2:							\
+		*(Uint16 *)_putpixel_dst = (c);			\
+		break;						\
+	case 3:							\
+		_PUT_PIXEL_24(_putpixel_dst, (c));		\
+		break;						\
+	case 4:							\
+		*(Uint32 *)_putpixel_dst = (c);			\
+		break;						\
+	}							\
+} while (/*CONSTCOND*/0)
+
+
 extern struct viewport *mainview;	/* view.c */
 
 struct viewport *view_new(int, int, int, int);
@@ -47,6 +87,7 @@ void		 view_center(struct viewport *, int, int);
 void		 view_maskfill(struct viewport *, SDL_Rect *, int);
 void		 view_redraw(struct viewport *);
 SDL_Surface	 *view_surface(int, int, int);
+void		 view_focus(struct viewport *, struct window *);
 
 #ifdef DEBUG
 void		 view_dumpmask(struct viewport *);
