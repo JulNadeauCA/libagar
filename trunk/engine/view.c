@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.161 2005/01/23 11:53:04 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.162 2005/01/26 02:41:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -457,7 +457,9 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 	int x, y;
 
 	if (*ds == NULL) {
-		*ds = SDL_CreateRGBSurface(ss->flags, w, h,
+		*ds = SDL_CreateRGBSurface(
+		    ss->flags & (SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY),
+		    w, h,
 		    ss->format->BitsPerPixel,
 		    ss->format->Rmask,
 		    ss->format->Gmask,
@@ -502,7 +504,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 			Uint8 *src = (Uint8 *)ss->pixels +
 			    (y*ss->h/(*ds)->h)*ss->pitch +
 			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
-			Uint8 *dst = (Uint8 *)(*ds)->pixels +
+			Uint8 *dst = (Uint8 *)((*ds)->pixels) +
 			    y*(*ds)->pitch + x*(*ds)->format->BytesPerPixel;
 			Uint32 color;
 
