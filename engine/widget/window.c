@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.87 2002/11/08 06:02:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.88 2002/11/08 07:35:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -263,6 +263,17 @@ window_draw(struct window *win)
 
 	/* Render the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
+		SDL_Rect bgrd;
+
+		bgrd.x = win->x + win->borderw;
+		bgrd.y = win->y + win->borderw;
+		bgrd.w = win->w - win->borderw*2;
+		bgrd.h = win->titleh - win->borderw;
+
+		/* Titlebar background */
+		SDL_FillRect(view->v, &bgrd,
+		    SDL_MapRGB(view->v->format, 200, 100, 100));
+	
 		/* Caption */
 		rd.x = win->x + (win->w - win->caption_s->w - win->borderw);
 		rd.y = win->y + win->borderw;
@@ -808,7 +819,6 @@ window_event(SDL_Event *ev)
 						    (wid->x+wid->win->x),
 						    ev->button.y -
 						    (wid->y+wid->win->y));
-						goto posted;
 					}
 				}
 			}
@@ -866,13 +876,14 @@ window_event(SDL_Event *ev)
 			break;
 		case SDL_KEYUP:
 		case SDL_KEYDOWN:
-			switch (ev->key.keysym.sym) {	/* Always ignore */
+			switch (ev->key.keysym.sym) {
 			case SDLK_LSHIFT:
 			case SDLK_RSHIFT:
 			case SDLK_LALT:
 			case SDLK_RALT:
 			case SDLK_LCTRL:
 			case SDLK_RCTRL:
+				/* Always ignore modifiers */
 				pthread_mutex_unlock(&win->lock);
 				return (0);
 			default:
@@ -887,20 +898,18 @@ window_event(SDL_Event *ev)
 				goto posted;
 			}
 			/* Widget event */
-			TAILQ_FOREACH(reg, &win->regionsh, regions) {
-				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if (!WIDGET_FOCUSED(wid)) {
-						continue;
-					}
-					event_post(wid,
-					    (ev->type == SDL_KEYUP) ?
-					    "window-keyup" :
-					    "window-keydown",
-					    "%i, %i",
-					    (int)ev->key.keysym.sym,
-					    (int)ev->key.keysym.mod);
-					goto posted;
-				}
+			if (WINDOW_FOCUSED(win) && win->focus != NULL) {
+				dprintf("post %s to %s\n",
+				    (ev->type == SDL_KEYUP) ?
+				    "keyup" : "keydown",
+				    OBJECT(win->focus)->name);
+				event_post(win->focus,
+				    (ev->type == SDL_KEYUP) ?
+				    "window-keyup" :
+				    "window-keydown",
+				    "%i, %i",
+				    (int)ev->key.keysym.sym,
+				    (int)ev->key.keysym.mod);
 			}
 		}
 nextwin:
