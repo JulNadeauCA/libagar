@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.78 2004/04/09 07:31:37 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.79 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -403,7 +403,7 @@ label_draw(void *p)
 	switch (label->type) {
 	case LABEL_STATIC:
 		pthread_mutex_lock(&label->lock);
-		widget_blit2(label, label->surface, 0, 0);
+		widget_blit_surface(label, label->surface, 0, 0);
 		pthread_mutex_unlock(&label->lock);
 		break;
 	case LABEL_POLLED:

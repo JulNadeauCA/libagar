@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.99 2004/05/17 07:08:48 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.100 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -347,7 +347,7 @@ tlist_draw(void *p)
 				    view_scale_surface(it->iconsrc,
 				    tl->item_h, tl->item_h));
 			}
-			widget_blit2(tl, it->icon, x, y);
+			widget_blit_surface(tl, it->icon, x, y);
 		}
 drawtext:
 		x += tl->item_h + 5;
@@ -357,7 +357,7 @@ drawtext:
 			    text_render(NULL, -1, WIDGET_COLOR(tl, TEXT_COLOR),
 			        it->text));
 		}
-		widget_blit2(tl, it->label,
+		widget_blit_surface(tl, it->label,
 		    x,
 		    y + tl->item_h/2 - WIDGET_SURFACE(tl,it->label)->h/2 + 1);
 
