@@ -1,4 +1,4 @@
-$Csoft: README,v 1.4 2002/03/15 08:36:41 vedge Exp $
+$Csoft: README.mapedit,v 1.1 2002/04/18 03:58:57 vedge Exp $
 
 The map editor manipulates map nodes and their properties.
 
@@ -53,5 +53,5 @@ Ctrl+'I':	Fill the map with the current tile.
 Ctrl+'N':	Initialize an empty map.
 Ctrl+'G':	Toggle the map grid.
 Ctrl+'P':	Toggle the node property sprites.
-
+Ctrl+'C':	Toggle the coordinates window.
 
