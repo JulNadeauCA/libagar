@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.13 2002/02/17 07:59:07 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.14 2002/02/17 23:15:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -87,21 +87,28 @@ event_loop(void)
 		case SDL_MOUSEMOTION:
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
+			if (curmapedit != NULL) {	/* XXX */
+				mapedit_event(curmapedit, &ev);
+				break;
+			}
+			input_event(mouse, &ev);
+			break;
 		case SDL_JOYAXISMOTION:
 		case SDL_JOYBUTTONDOWN:
 		case SDL_JOYBUTTONUP:
+			if (curmapedit != NULL) {	/* XXX */
+				mapedit_event(curmapedit, &ev);
+				break;
+			}
+			input_event(joy, &ev);
+			break;
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			if (curchar != NULL) {
-				if (curchar->obj.vec->event != NULL) {
-					curchar->obj.vec->event(curchar, &ev);
-				}
-			} else if (curmapedit != NULL) {
-				if (curmapedit->obj.vec->event != NULL) {
-					curmapedit->obj.vec->event(curmapedit,
-					    &ev);
-				}
+			if (curmapedit != NULL) {	/* XXX */
+				mapedit_event(curmapedit, &ev);
+				break;
 			}
+			input_event(keyboard, &ev);
 			break;
 		case SDL_QUIT:
 			return;
