@@ -1,10 +1,12 @@
-/*	$Csoft: mapview.h,v 1.36 2003/03/15 04:21:37 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.37 2003/03/16 04:08:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
 #define _AGAR_MAPEDIT_MAPVIEW_H_
 
 #include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/button.h>
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>

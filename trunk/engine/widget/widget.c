@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.48 2003/03/13 08:43:33 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.49 2003/03/23 04:54:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,16 @@
  */
 
 #include <config/floating_point.h>
+#include <engine/compat/snprintf.h>
 
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include <stdarg.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
 
-#include "widget.h"
-#include "window.h"
+#include <stdarg.h>
+#include <string.h>
 
 #ifdef DEBUG
 #define DEBUG_BINDINGS		0x01
@@ -48,17 +50,16 @@ void
 widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 {
 	static pthread_mutex_t curwidget_lock = PTHREAD_MUTEX_INITIALIZER;
-	static unsigned int curwidget = 0;
-	char *widname;
+	static Uint32 curwidget = 0;
+	char widname[OBJECT_NAME_MAX];
 
 	pthread_mutex_lock(&curwidget_lock);
 	curwidget++;
 	pthread_mutex_unlock(&curwidget_lock);
 
-	Asprintf(&widname, "%s%u", name, curwidget);
+	snprintf(widname, sizeof(widname), "%s%u", name, curwidget);
 	object_init(&wid->obj, "widget", widname, name,
 	    OBJECT_ART|OBJECT_ART_CACHE|OBJECT_ART_CAN_FAIL, wops);
-	free(widname);
 
 	wid->type = Strdup(name);
 	wid->flags = 0;
@@ -142,7 +143,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		}
 	}
 
-	binding = emalloc(sizeof(struct widget_binding));	/* Create */
+	binding = Malloc(sizeof(struct widget_binding));	/* Create */
 	binding->type = type;
 	binding->name = Strdup(name);
 	binding->p1 = p1;
@@ -626,7 +627,7 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 
 	wid->color[ind] = SDL_MapRGB(view->v->format, r, g, b);
 
-	col = emalloc(sizeof(struct widget_color));
+	col = Malloc(sizeof(struct widget_color));
 	col->name = Strdup(name);
 	col->ind = ind;
 	SLIST_INSERT_HEAD(&wid->colors, col, colors);

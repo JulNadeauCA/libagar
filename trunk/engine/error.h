@@ -1,5 +1,10 @@
-/*	$Csoft: error.h,v 1.15 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.16 2003/03/13 22:43:53 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <sys/types.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef __GNUC__
 # define warning(fmt, args...) \
@@ -22,8 +27,8 @@
 } while (0)
 
 char	*Strdup(const char *);
-void	*emalloc(size_t);
-void	*erealloc(void *, size_t);
+void	*Malloc(size_t);
+void	*Realloc(void *, size_t);
 
 const char	*error_get(void);
 void		 error_set(const char *, ...);

@@ -1,5 +1,8 @@
-/*	$Csoft: prop.h,v 1.11 2003/03/02 00:35:36 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.12 2003/03/13 08:43:32 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_PROP_H_
+#define _AGAR_PROP_H_
 
 #include <config/floating_point.h>
 #include <config/have_ieee754.h>
@@ -89,3 +92,4 @@ char		*prop_get_string(void *, char *);
 size_t		 prop_copy_string(void *, char *, char *, size_t);
 void		*prop_get_pointer(void *, char *);
 
+#endif /* _AGAR_PROP_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.26 2003/03/13 08:43:32 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.27 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,15 +29,16 @@
 #include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
-#include "compat/vasprintf.h"
-#include "compat/strlcpy.h"
-#include "engine.h"
+#include <engine/compat/vasprintf.h>
+#include <engine/compat/strlcpy.h>
+
+#include <engine/engine.h>
+#include <engine/version.h>
 
 #include <fcntl.h>
-
-#include <libfobj/fobj.h>
-
-#include "version.h"
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
 
 static const struct version prop_ver = {
 	"agar property map",
@@ -69,7 +70,7 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		}
 	}
 	if (nprop == NULL) {
-		nprop = emalloc(sizeof(struct prop));
+		nprop = Malloc(sizeof(struct prop));
 		nprop->key = Strdup(key);
 		nprop->type = type;
 	} else {

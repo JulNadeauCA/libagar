@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.22 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.23 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,18 +28,6 @@
 
 #include <engine/engine.h>
 
-#include <engine/map.h>
-
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/text.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include "tool.h"
 #include "resize.h"
 
 static const struct tool_ops resize_ops = {
@@ -60,7 +48,6 @@ resize_init(void *p)
 	struct resize *res = p;
 
 	tool_init(&res->tool, "resize", &resize_ops);
-
 	res->mode = RESIZE_GROW;
 }
 
@@ -68,9 +55,6 @@ void
 resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 {
 	struct map *m = mv->map;
-
-	if (mv->cxrel != 0 && mv->cyrel != 0)
-		dprintf("cxrel = %d, cyrel = %d\n", mv->cxrel, mv->cyrel);
 
 	if (mv->cxrel < 0 && m->mapw > 1) {
 		map_resize(m, m->mapw - 1, m->maph);

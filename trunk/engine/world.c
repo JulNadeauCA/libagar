@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.60 2003/03/14 07:13:33 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.61 2003/03/22 04:26:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,13 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
 
-#include "world.h"
+#include <engine/world.h>
 
-#include <libfobj/fobj.h>
-
-#include "mapedit/mapedit.h"
+#include <engine/mapedit/mapedit.h>
 
 static const struct object_ops world_ops = {
 	NULL,		/* destroy */

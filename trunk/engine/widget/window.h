@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.58 2003/03/11 00:13:34 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.59 2003/03/23 04:54:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -16,6 +16,8 @@ enum window_event {
 };
 	
 TAILQ_HEAD(regionsq, region);
+
+struct widget;
 
 struct window {
 	struct widget	wid;		/* For primitives and color schemes */

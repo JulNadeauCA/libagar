@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.157 2003/03/22 04:27:09 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.158 2003/03/24 12:08:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,6 +31,9 @@
 #include <engine/map.h>
 #include <engine/world.h>
 #include <engine/view.h>
+#include <engine/prop.h>
+
+#include <stdlib.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -146,7 +149,7 @@ mapedit_init(void)
 	for (i = 0; i < ntools; i++) {
 		const struct tools_ent *toolent = &tools[i];
 
-		*toolent->p = emalloc(toolent->size);
+		*toolent->p = Malloc(toolent->size);
 		toolent->init(*toolent->p);
 		world_attach(*toolent->p);
 	}
@@ -315,7 +318,7 @@ mapedit_win_new_view(int argc, union evarg *argv)
 	struct window *win;
 	struct region *reg;
 
-	win = emalloc(sizeof(struct window));
+	win = Malloc(sizeof(struct window));
 	window_init(win, NULL, WINDOW_SCALE|WINDOW_CENTER, -1, -1,
 	    50, 60,
 	    50, 60);
@@ -377,12 +380,12 @@ mapedit_win_new(struct map *m)
 	struct region *reg;
 	struct mapview *mv;
 
-	win = emalloc(sizeof(struct window));
+	win = Malloc(sizeof(struct window));
 	window_init(win, NULL, WINDOW_SCALE|WINDOW_CENTER, -1, -1,
 	    60, 70,
 	    60, 70);
 
-	mv = emalloc(sizeof(struct mapview));
+	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT,
 	    100, 100);
 

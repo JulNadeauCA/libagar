@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.24 2003/03/03 05:18:04 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.25 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,14 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "primitive.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
 #include "radio.h"
+
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+#include <engine/widget/region.h>
+#include <engine/widget/window.h>
 
 static struct widget_ops radio_ops = {
 	{
@@ -60,11 +60,9 @@ radio_new(struct region *reg, const char **items)
 {
 	struct radio *rad;
 
-	rad = emalloc(sizeof(struct radio));
+	rad = Malloc(sizeof(struct radio));
 	radio_init(rad, items);
-
 	region_attach(reg, rad);
-
 	return (rad);
 }
 
@@ -94,7 +92,7 @@ radio_init(struct radio *rad, const char **items)
 	
 	for (rad->nitems = 0; (s = *items++) != NULL; rad->nitems++) ;;
 
-	rad->labels = emalloc(sizeof(SDL_Surface *) * rad->nitems);
+	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems);
 
 	for (i = 0; i < rad->nitems; i++) {
 		SDL_Surface *su;
@@ -182,23 +180,19 @@ radio_event(int argc, union evarg *argv)
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
 		y = argv[4].i;
-	
 		*sel = (y / (rad->radius + rad->yspacing/2));
-
 		WIDGET_FOCUS(rad);
 		break;
 	case WINDOW_KEYDOWN:
 		keysym = argv[2].i;
 		switch ((SDLKey)keysym) {
 		case SDLK_DOWN:
-			if (++(*sel) > rad->nitems) {
+			if (++(*sel) > rad->nitems)
 				*sel = 0;
-			}
 			break;
 		case SDLK_UP:
-			if (--(*sel) < 0) {
+			if (--(*sel) < 0)
 				*sel = 0;
-			}
 			break;
 		default:
 			break;

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.53 2003/03/02 00:35:37 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.54 2003/03/23 04:54:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -48,9 +48,6 @@ struct widget_binding {
 	void				*p1, *p2;
 	SLIST_ENTRY(widget_binding)	 bindings;
 };
-
-struct window;
-struct region;
 
 /* Structure shares the parent window's lock. */
 struct widget {

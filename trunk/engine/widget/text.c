@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.56 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.57 2003/03/22 04:27:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,18 +28,22 @@
 
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strsep.h>
-#include <engine/engine.h>
 
+#include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
 
-#include "widget.h"
-#include "window.h"
-#include "label.h"
-#include "button.h"
-#include "text.h"
-#include "textbox.h"
-#include "keycodes.h"
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
+#include <engine/widget/text.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/keycodes.h>
+
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
 
 ttf_font *font = NULL;		/* Default font */
 
@@ -83,7 +87,7 @@ text_load_font(char *name, int size, int style)
 
 	ttf_set_font_style(nfont, style);
 
-	fon = emalloc(sizeof(struct text_font));
+	fon = Malloc(sizeof(struct text_font));
 	fon->name = Strdup(name);
 	fon->size = size;
 	fon->style = style;
@@ -222,7 +226,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 		 * Render the text to an array of surfaces, since we cannot
 		 * predict the width of the final surface.
 		 */
-		lines = emalloc(sizeof(SDL_Surface *) * nlines);
+		lines = Malloc(sizeof(SDL_Surface *) * nlines);
 		for (lp = lines, maxw = 0;
 		    (sp = strsep(&sd, "\n")) != NULL;
 		    lp++) {

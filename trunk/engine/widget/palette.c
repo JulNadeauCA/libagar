@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.8 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.9 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,13 +27,13 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "widget.h"
-#include "window.h"
 #include "palette.h"
-#include "primitive.h"
+
+#include <engine/widget/primitive.h>
+#include <engine/widget/region.h>
+#include <engine/widget/window.h>
 
 static const struct widget_ops palette_ops = {
 	{
@@ -60,10 +60,9 @@ palette_new(struct region *reg, int w, int h, int nbars)
 {
 	struct palette *pal;
 
-	pal = emalloc(sizeof(struct palette));
+	pal = Malloc(sizeof(struct palette));
 	palette_init(pal, w, h, nbars);
 	region_attach(reg, pal);
-
 	return (pal);
 }
 
@@ -80,10 +79,10 @@ palette_init(struct palette *pal, int rw, int rh, int nbars)
 	
 	pal->cur_sb = NULL;
 	pal->nbars = nbars;
-	pal->bars = emalloc(sizeof(struct scrollbar *) * pal->nbars);
+	pal->bars = Malloc(sizeof(struct scrollbar *) * pal->nbars);
 
 	for (i = 0; i < pal->nbars; i++) {
-		pal->bars[i] = emalloc(sizeof(struct scrollbar));
+		pal->bars[i] = Malloc(sizeof(struct scrollbar));
 		scrollbar_init(pal->bars[i], -1, -1, SCROLLBAR_HORIZ);
 		WIDGET(pal->bars[i])->flags |= WIDGET_NO_FOCUS;
 		widget_set_int(pal->bars[i], "max", 255);
@@ -243,6 +242,5 @@ palette_destroy(void *p)
 		widget_destroy(pal->bars[i]);
 	}
 	free(pal->bars);
-
 	widget_destroy(pal);
 }

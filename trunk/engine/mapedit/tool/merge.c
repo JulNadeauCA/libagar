@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.25 2003/03/20 01:17:51 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.26 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,12 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/version.h>
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include "merge.h"
+
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/text.h>
@@ -40,14 +39,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include <libfobj/fobj.h>
 #include <libfobj/vector.h>
-
-#include "tool.h"
-#include "merge.h"
 
 static const struct version merge_ver = {
 	"agar merge tool",
@@ -113,7 +105,7 @@ merge_create_brush(int argc, union evarg *argv)
 		return;
 	}
 
-	m = emalloc(sizeof(struct map));
+	m = Malloc(sizeof(struct map));
 	map_init(m, m_name, NULL);
 
 	if (object_load(m) == -1) {
@@ -150,11 +142,11 @@ merge_edit_brush(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		win = window_generic_new(200, 150, "mapedit-tool-merge-%s",
+		win = window_generic_new(169, 242, "mapedit-tool-merge-%s",
 		   OBJECT(brush)->name);
 		if (win == NULL) 		/* Exists */
 			continue;
-		window_set_min_geo(win, 67, 88);
+		window_set_min_geo(win, 181, 189);
 
 		reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 		{
@@ -623,7 +615,7 @@ merge_load(void *p, int fd)
 
 		m_name = read_string(fd, NULL);
 
-		nbrush = emalloc(sizeof(struct map));
+		nbrush = Malloc(sizeof(struct map));
 		map_init(nbrush, m_name, NULL);
 		map_load(nbrush, fd);
 
@@ -649,7 +641,7 @@ merge_save(void *p, int fd)
 	write_uint32(fd, (Uint32)mer->inherit_flags);
 	write_uint32(fd, (Uint32)mer->random_shift);
 
-	count_offs = lseek(fd, 0, SEEK_CUR);
+	count_offs = Lseek(fd, 0, SEEK_CUR);
 	write_uint32(fd, 0);				/* Skip count */
 	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
 		struct brush *brush = (struct brush *)ob;

@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.52 2003/03/10 02:13:40 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.53 2003/03/12 07:59:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,13 +26,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
 
-#include "map.h"
-#include "rootmap.h"
-#include "input.h"
-#include "physics.h"
-#include "view.h"
+#include <engine/map.h>
+#include <engine/rootmap.h>
+#include <engine/input.h>
+#include <engine/physics.h>
+#include <engine/view.h>
 
 /*
  * These timings have a granularity proportional to the

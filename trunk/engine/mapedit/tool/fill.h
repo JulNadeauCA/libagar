@@ -1,5 +1,7 @@
-/*	$Csoft: fill.h,v 1.1 2003/02/20 04:57:28 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.2 2003/03/07 03:24:49 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum fill_mode {
 	FILL_FILL_MAP,

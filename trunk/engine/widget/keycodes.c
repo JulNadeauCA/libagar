@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.22 2003/01/04 14:10:33 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.23 2003/03/02 04:13:15 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,14 +28,16 @@
 
 #include <engine/engine.h>
 #include <engine/input.h>
+#include <engine/prop.h>
 
 #include <ctype.h>
+#include <string.h>
 
-#include "text.h"
-#include "widget.h"
-#include "window.h"
-#include "textbox.h"
-#include "keycodes.h"
+#include <engine/widget/text.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/keycodes.h>
 
 static char	*insert_char(struct textbox *, char);
 
@@ -65,7 +67,7 @@ insert_char(struct textbox *tbox, char c)
 	char *s;
 	
 	end = strlen(tbox->text.s);
-	tbox->text.s = erealloc(tbox->text.s, end + 2);
+	tbox->text.s = Realloc(tbox->text.s, end + 2);
 	if (tbox->text.pos == end) {
 		tbox->text.s[end] = c;
 	} else {

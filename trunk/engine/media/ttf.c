@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.6 2003/03/12 07:59:02 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.7 2003/03/25 07:59:28 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -120,7 +120,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	FT_Face face;
 	FT_Fixed scale;
 
-	font = emalloc(sizeof(ttf_font));
+	font = Malloc(sizeof(ttf_font));
 	memset(font, 0, sizeof(ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
@@ -343,7 +343,7 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 		    dst->width, dst->rows);
 #endif
 		if (dst->rows != 0) {
-			dst->buffer = emalloc(dst->pitch * dst->rows);
+			dst->buffer = Malloc(dst->pitch * dst->rows);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {
@@ -554,7 +554,7 @@ ttf_size_text(ttf_font *font, char *text, int *w, int *h)
 
 	/* Copy the Latin-1 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * (sizeof *unicode_text));
+	unicode_text = Malloc((unicode_len + 1) * (sizeof *unicode_text));
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
@@ -573,7 +573,7 @@ ttf_size_utf8(ttf_font *font, char *text, int *w, int *h)
 
 	/* Copy the UTF-8 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
+	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
@@ -654,7 +654,7 @@ ttf_render_text_solid(ttf_font *font, char *text, SDL_Color fg)
 
 	/* Copy the Latin-1 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
+	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
@@ -674,7 +674,7 @@ ttf_render_utf8_solid(ttf_font *font, char *text, SDL_Color fg)
 
 	/* Copy the UTF-8 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
+	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */

@@ -1,5 +1,7 @@
-/*	$Csoft: merge.h,v 1.10 2003/03/10 02:13:44 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.11 2003/03/19 02:22:59 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum merge_mode {
 	MERGE_REPLACE		/* Replace, including empty source nodes */

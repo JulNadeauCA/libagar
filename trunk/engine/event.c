@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.144 2003/03/20 03:20:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.145 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,27 +28,28 @@
 
 #include <config/threads.h>
 
-#include "engine.h"
-#include "map.h"
-#include "input.h"
-#include "config.h"
-#include "rootmap.h"
-#include "view.h"
-#include "world.h"
+#include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/input.h>
+#include <engine/config.h>
+#include <engine/rootmap.h>
+#include <engine/view.h>
+#include <engine/world.h>
 
-#include "mapedit/mapedit.h"
-
+#include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
 #ifdef DEBUG
-#include "monitor/monitor.h"
+#include <engine/monitor/monitor.h>
 #endif
 
-#include "widget/widget.h"
-#include "widget/window.h"
-#include "widget/label.h"
-#include "widget/text.h"
-#include "widget/graph.h"
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/text.h>
+#include <engine/widget/graph.h>
 
-#include "mapedit/mapview.h"
+#include <string.h>
+#include <stdarg.h>
 
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
@@ -528,7 +529,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 	pthread_mutex_unlock(&ob->events_lock);
 
 	if (eev == NULL) {
-		eev = emalloc(sizeof(struct event));
+		eev = Malloc(sizeof(struct event));
 		eev->name = Strdup(name);
 		newev = 1;
 	}
@@ -595,7 +596,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		if (strcmp(name, eev->name) != 0) {
 			continue;
 		}
-		neev = emalloc(sizeof(struct event));
+		neev = Malloc(sizeof(struct event));
 		memcpy(neev, eev, sizeof(struct event));
 		if (fmt != NULL) {
 			va_list ap;

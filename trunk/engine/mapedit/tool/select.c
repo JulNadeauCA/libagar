@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.6 2003/03/13 00:02:30 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.7 2003/03/16 03:57:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,17 +27,12 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
+
+#include "select.h"
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
 #include <engine/mapedit/selops.h>
-
-#include "tool.h"
-#include "select.h"
 
 static const struct tool_ops select_ops = {
 	{

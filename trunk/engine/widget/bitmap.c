@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.10 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.11 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,11 +27,10 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "widget.h"
-#include "window.h"
+#include <engine/widget/region.h>
+
 #include "bitmap.h"
 
 static const struct widget_ops bitmap_ops = {
@@ -49,11 +48,9 @@ bitmap_new(struct region *reg, SDL_Surface *surface, int w, int h)
 {
 	struct bitmap *bitmap;
 
-	bitmap = emalloc(sizeof(struct bitmap));
+	bitmap = Malloc(sizeof(struct bitmap));
 	bitmap_init(bitmap, surface, w, h);
-
 	region_attach(reg, bitmap);
-
 	return (bitmap);
 }
 
@@ -113,7 +110,6 @@ bitmap_destroy(void *p)
 	if (bmp->surface_s != NULL) {
 		SDL_FreeSurface(bmp->surface_s);
 	}
-
 	widget_destroy(bmp);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.61 2003/03/20 04:27:15 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.62 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,15 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "primitive.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+#include <engine/widget/region.h>
+
 #include "button.h"
+
+#include <engine/widget/window.h>
 
 static const struct widget_ops button_ops = {
 	{
@@ -64,7 +65,7 @@ button_new(struct region *reg, char *caption, SDL_Surface *image, int flags,
 {
 	struct button *button;
 
-	button = emalloc(sizeof(struct button));
+	button = Malloc(sizeof(struct button));
 	button_init(button, caption, image, flags, rw, rh);
 
 	region_attach(reg, button);
@@ -130,7 +131,6 @@ button_destroy(void *p)
 	if (b->slabel_s != NULL) {
 		SDL_FreeSurface(b->label_s);
 	}
-
 	widget_destroy(b);
 }
 

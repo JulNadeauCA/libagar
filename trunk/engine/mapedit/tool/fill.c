@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.12 2003/03/18 06:34:50 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.13 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,20 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include "fill.h"
+
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include <libfobj/fobj.h>
-
-#include "tool.h"
-#include "fill.h"
 
 static const struct tool_ops fill_ops = {
 	{
@@ -60,7 +51,6 @@ fill_init(void *p)
 	struct fill *fill = p;
 
 	tool_init(&fill->tool, "fill", &fill_ops);
-
 	fill->mode = FILL_FILL_MAP;
 }
 

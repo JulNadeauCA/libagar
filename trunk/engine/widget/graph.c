@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.24 2003/03/14 07:13:37 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.25 2003/03/20 02:53:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,18 +27,16 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/version.h>
 #include <engine/view.h>
 #include <engine/world.h>
 
-#include <libfobj/fobj.h>
-
-#include "text.h"
-#include "widget.h"
-#include "window.h"
 #include "graph.h"
-#include "primitive.h"
+
+#include <engine/widget/text.h>
+#include <engine/widget/primitive.h>
+#include <engine/widget/region.h>
+#include <engine/widget/window.h>
 
 static const struct version graph_ver = {
 	"agar graph",
@@ -78,11 +76,9 @@ graph_new(struct region *reg, const char *caption, enum graph_type t,
 {
 	struct graph *graph;
 
-	graph = emalloc(sizeof(struct graph));
+	graph = Malloc(sizeof(struct graph));
 	graph_init(graph, caption, t, flags, yrange, w, h);
-	
 	region_attach(reg, graph);
-
 	return (graph);
 }
 
@@ -326,7 +322,7 @@ graph_add_item(struct graph *gra, char *name, Uint32 color)
 {
 	struct graph_item *gi;
 
- 	gi = emalloc(sizeof(struct graph_item));
+ 	gi = Malloc(sizeof(struct graph_item));
 	gi->name = Strdup(name);
 	gi->color = color;
 	gi->vals = NULL;
@@ -342,13 +338,13 @@ void
 graph_plot(struct graph_item *gi, Sint32 val)
 {
 	if (gi->vals == NULL) {				/* Initialize */
-		gi->vals = emalloc(NITEMS_INIT * sizeof(Sint32));
+		gi->vals = Malloc(NITEMS_INIT * sizeof(Sint32));
 		gi->maxvals = NITEMS_INIT;
 		gi->nvals = 0;
 	} else if (gi->nvals >= gi->maxvals) {		/* Grow */
 		Sint32 *newvals;
 
-		newvals = erealloc(gi->vals,
+		newvals = Realloc(gi->vals,
 		    (NITEMS_GROW * gi->maxvals) * sizeof(Sint32));
 		gi->maxvals += NITEMS_GROW;
 		gi->vals = newvals;

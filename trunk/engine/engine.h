@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.56 2003/03/02 01:20:52 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.57 2003/03/14 04:09:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -11,13 +11,6 @@
 #include <config/have_opengl.h>
 
 #include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
 
 #ifdef THREADS
 # if !defined(__OpenBSD__)
@@ -39,6 +32,7 @@
 #endif
 
 #include <engine/compat/queue.h> /* For queue(3) definitions */
+#include <libfobj/fobj.h>	 /* For the fobj(3) operations */
 #include <libfobj/buf.h>	 /* For the fobj_buf type */
 #include <engine/error.h>	 /* Wrappers and error messages */
 #include <engine/debug.h>	 /* Debugging macros */

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.47 2003/03/22 04:22:45 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.48 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,12 @@
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
+#include <engine/widget/region.h>
+
+#include <string.h>
+#include <stdarg.h>
+#include <strings.h>
+#include <errno.h>
 
 static const struct widget_ops textbox_ops = {
 	{
@@ -67,7 +73,7 @@ textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 {
 	struct textbox *textbox;
 
-	textbox = emalloc(sizeof(struct textbox));
+	textbox = Malloc(sizeof(struct textbox));
 	textbox_init(textbox, label, flags, rw, rh);
 	region_attach(reg, textbox);
 	return (textbox);

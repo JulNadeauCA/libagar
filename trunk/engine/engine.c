@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.95 2003/03/02 04:13:12 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.96 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,36 +26,36 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/threads.h>
 #include <config/have_x11.h>
+#include <engine/compat/setenv.h>
+#include <engine/compat/strlcat.h>
 
-#include "compat/setenv.h"
-#include "compat/strlcat.h"
-#include "engine.h"
+#include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
+#include <engine/input.h>
+#include <engine/config.h>
+#include <engine/rootmap.h>
+#include <engine/view.h>
+#include <engine/world.h>
+
+#ifdef DEBUG
+#include <engine/monitor/monitor.h>
+#endif
+#include <engine/mapedit/mapedit.h>
+
+#include <engine/widget/text.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/keycodes.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef HAVE_X11
 #include <SDL_syswm.h>
 #endif
-
-#include "map.h"
-#include "physics.h"
-#include "input.h"
-#include "config.h"
-#include "rootmap.h"
-#include "view.h"
-#include "world.h"
-
-#ifdef DEBUG
-#include "monitor/monitor.h"
-#endif
-
-#include "mapedit/mapedit.h"
-
-#include "widget/text.h"
-#include "widget/widget.h"
-#include "widget/window.h"
-#include "widget/textbox.h"
-#include "widget/keycodes.h"
 
 #ifdef DEBUG
 int	engine_debug = 1;		/* Enable debugging */
@@ -169,7 +169,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	object_load(config);
 
 	/* Initialize the world structure. */
-	world = emalloc(sizeof(struct world));
+	world = Malloc(sizeof(struct world));
 	world_init(world, prog->prog);
 	world_attach(config);
 

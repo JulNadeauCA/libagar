@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.25 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.26 2003/03/13 06:24:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,12 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
 
-#include "map.h"
-#include "rootmap.h"
-#include "physics.h"
-#include "view.h"
+#include <engine/map.h>
+#include <engine/rootmap.h>
+#include <engine/physics.h>
+#include <engine/view.h>
 
 #ifdef DEBUG
 #define DEBUG_FOCUS	0x01
@@ -253,9 +253,9 @@ rootmap_alloc_maprects(int w, int h)
 	int x, y;
 
 	/* Calculate the default coordinates of visible rectangles. */
-	rects = emalloc(h * sizeof(SDL_Rect *));
+	rects = Malloc(h * sizeof(SDL_Rect *));
 	for (y = 0; y < h; y++) {
-		rects[y] = emalloc(w * sizeof(SDL_Rect));
+		rects[y] = Malloc(w * sizeof(SDL_Rect));
 		for (x = 0; x < w; x++) {
 			rects[y][x].x = x * TILEW;
 			rects[y][x].y = y * TILEH;

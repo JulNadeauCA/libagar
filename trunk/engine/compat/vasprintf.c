@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.5 2002/12/24 10:29:21 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.6 2003/01/01 05:18:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,9 +30,11 @@
 
 #ifndef HAVE_VASPRINTF
 
-#include <unistd.h>
+#include <sys/types.h>
+
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <engine/error.h>
 
@@ -47,7 +49,7 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 
 	/* Make a guess, might save one call. */
 	buflen = strlen(fmt) + 128;
-	buf = emalloc(buflen);
+	buf = Malloc(buflen);
 	size = vsprintf(buf, fmt, ap);
 	if (size <= buflen) {
 		*ret = buf;
@@ -55,7 +57,7 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 	}
 
 	/* Too large. */
-	buf = erealloc(buf, size);
+	buf = Realloc(buf, size);
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);

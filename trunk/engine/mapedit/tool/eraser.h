@@ -1,5 +1,7 @@
-/*	$Csoft: eraser.h,v 1.10 2003/03/08 00:55:41 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.11 2003/03/16 02:57:49 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum eraser_mode {
 	ERASER_ALL,

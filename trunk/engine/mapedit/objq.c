@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.57 2003/03/14 07:11:54 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.58 2003/03/24 12:08:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,16 +33,13 @@
 #include <engine/view.h>
 #include <engine/world.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
-#include <engine/widget/label.h>
 #include <engine/widget/text.h>
+#include <engine/widget/window.h>
 
-#include "mapedit.h"
-#include "mapview.h"
+#include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
 
 enum {
 	OBJQ_INSERT_LEFT,
@@ -318,7 +315,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	window_set_caption(win, "%s", ob->name);
 	window_set_spacing(win, 1, 4);
 
-	mv = emalloc(sizeof(struct mapview));
+	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
 	    100, 100);
 	mapview_set_selection(mv, 0, 0, 1, 1);

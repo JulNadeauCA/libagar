@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.66 2003/03/22 04:24:48 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.67 2003/03/24 12:08:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,29 +29,32 @@
 #include <config/sharedir.h>
 #include <config/have_x11.h>
 
-#include "engine.h"
+#include <engine/engine.h>
+#include <engine/version.h>
+#include <engine/config.h>
+#include <engine/view.h>
+#include <engine/map.h>
+#include <engine/world.h>
+#include <engine/prop.h>
+
+#include <engine/widget/text.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
+#include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/keycodes.h>
+#include <engine/widget/primitive.h>
+#include <engine/widget/tlist.h>
 
 #include <sys/stat.h>
 
+#include <errno.h>
+#include <stdlib.h>
 #include <pwd.h>
-
-#include "version.h"
-#include "config.h"
-#include "view.h"
-#include "map.h"
-#include "world.h"
-
-#include "widget/text.h"
-#include "widget/widget.h"
-#include "widget/window.h"
-#include "widget/label.h"
-#include "widget/button.h"
-#include "widget/radio.h"
-#include "widget/checkbox.h"
-#include "widget/textbox.h"
-#include "widget/keycodes.h"
-#include "widget/primitive.h"
-#include "widget/tlist.h"
+#include <unistd.h>
 
 static const struct version config_ver = {
 	"agar config",
@@ -86,7 +89,7 @@ config_new(void)
 {
 	struct config *con;
 
-	con = emalloc(sizeof(struct config));
+	con = Malloc(sizeof(struct config));
 	config_init(con);
 	return (con);
 }

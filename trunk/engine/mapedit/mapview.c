@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.95 2003/03/19 02:19:43 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.96 2003/03/24 12:08:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,8 +44,6 @@
 
 #include "tool/tool.h"
 #include "tool/shift.h"
-#include "tool/eraser.h"
-#include "tool/stamp.h"
 
 static const struct widget_ops mapview_ops = {
 	{
@@ -114,7 +112,7 @@ mapview_new(struct region *reg, struct map *m, int flags, int rw, int rh)
 {
 	struct mapview *mv;
 
-	mv = emalloc(sizeof(struct mapview));
+	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, m, flags, rw, rh);
 	region_attach(reg, mv);
 	return (mv);
@@ -476,7 +474,8 @@ next_layer:
 
 	/* Draw the cursor for the current tool. */
 	if (mv->flags & MAPVIEW_EDIT &&
-	   (mv->flags & MAPVIEW_NO_CURSOR) == 0) {
+	   (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
+	   !mapview_selecting()) {
 		mapview_draw_tool_cursor(mv);
 	}
 #if 0
@@ -671,8 +670,10 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 
 	switch (button) {
 	case 1:						/* Select/edit */
-		if (mapview_selecting())
+		if (mapview_selecting()) {
 			mapview_begin_selection(mv);
+			goto out;
+		}
 		break;
 	case 2:						/* Adjust centering */
 		mv->flags |= MAPVIEW_NO_CURSOR;
