@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.18 2002/11/13 00:22:31 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.19 2002/11/14 00:41:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -666,8 +666,8 @@ primitive_config_window(void)
 	win = window_new("config-primitive-algorithm-sw",
 	    "Primitive algorithm switch", WINDOW_CENTER,
 	    0, 0,
-	    640, 480,
-	    320, 240);
+	    503, 440,
+	    424, 267);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 93);
 	
