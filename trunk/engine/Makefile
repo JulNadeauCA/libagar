@@ -1,9 +1,13 @@
-#	$Csoft: Makefile,v 1.48 2002/11/22 23:36:10 vedge Exp $
+#	$Csoft: Makefile,v 1.49 2002/11/23 22:41:47 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	compat mapedit widget monitor
+SUBDIR=	compat \
+	mapedit \
+	widget \
+	monitor \
+	media
 
 SHARE=	README.engine \
 	README.xcf
@@ -17,13 +21,13 @@ CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3 version.cat3 rootmap.cat3 \
 
 LIB=	engine
 
-SRCS=	engine.c error.c event.c anim.c oldxcf.c ttf.c view.c physics.c \
-	input.c object.c media.c audio.c world.c map.c rootmap.c \
-	perso.c version.c config.c prop.c
+SRCS=	engine.c error.c event.c oldxcf.c ttf.c view.c physics.c \
+	input.c object.c audio.c world.c map.c rootmap.c perso.c \
+	version.c config.c prop.c
 
-OBJS=	engine.o error.o event.o anim.o oldxcf.o ttf.o view.o physics.o \
-	input.o object.o media.o audio.o world.o map.o rootmap.o \
-	perso.o version.o config.o prop.o
+OBJS=	engine.o error.o event.o oldxcf.o ttf.o view.o physics.o \
+	input.o object.o audio.o world.o map.o rootmap.o perso.o \
+	version.o config.o prop.o
 
 OBJS+=	mapedit/mapedit.o \
 	monitor/monitor.o
