@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: eraser.h,v 1.1 2002/07/07 00:23:40 vedge Exp $	*/
 /*	Public domain	*/
 
 struct eraser {
@@ -19,5 +19,5 @@ struct eraser {
 struct eraser	*eraser_new(struct mapedit *, int);
 void		 eraser_init(struct eraser *, struct mapedit *, int);
 struct window	*eraser_window(void *);
-void		 eraser_effect(void *, struct map *, Uint32, Uint32);
+void		 eraser_effect(void *, struct mapview *, Uint32, Uint32);
 
