@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.227 2004/05/24 03:27:25 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.228 2004/06/18 03:11:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -345,16 +345,16 @@ map_init(void *obj, const char *name)
 	m->ssy = TILESZ;
 	m->cur_layer = 0;
 
-	m->layers = Malloc(1 * sizeof(struct map_layer), M_MAP);
+	m->layers = Malloc(sizeof(struct map_layer), M_MAP);
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
 
 #ifdef EDITION
 	if (mapedition) {
-		map_alloc_nodes(m,
-		    prop_get_uint32(&mapedit, "default-map-width"),
-		    prop_get_uint32(&mapedit, "default-map-height"));
+		extern int mapedit_def_mapw, mapedit_def_maph;
+
+		map_alloc_nodes(m, mapedit_def_mapw, mapedit_def_maph);
 	}
 #endif
 }
