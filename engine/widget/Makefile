@@ -1,9 +1,10 @@
-#	$Csoft: Makefile,v 1.64 2004/03/26 04:57:10 vedge Exp $
+#	$Csoft: Makefile,v 1.65 2004/03/30 15:50:44 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
-SUBDIR=	fonts
+SUBDIR=	fonts \
+	pixmaps
 
 LIB=		widget
 LIB_SHARED=	Yes
@@ -18,15 +19,7 @@ MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 textbox.3 \
 	window.3 bitmap.3 scrollbar.3 tlist.3 palette.3 text.3 box.3 \
 	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3 spinbutton.3
 
-XCF=		window.xcf
-DEN=		window.den
-DEN_DIR=	engine/widget
-DEN_NAME=	"Window titlebar icons"
-DEN_AUTHOR=	"vedge@"
-DEN_COPYRIGHT=	"2003, 2004 CubeSoft Communications, Inc."
-
 CFLAGS+=${SDL_CFLAGS}
 
-include ${TOP}/dencomp/Makefile.inc
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk

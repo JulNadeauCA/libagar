@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.1 2004/04/11 03:29:18 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2004/04/17 00:31:15 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -16,5 +16,5 @@ DEN_NAME=	"Agar GUI icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2001, 2002, 2003, 2004 CubeSoft Communications, Inc"
 
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/dencomp/Makefile.inc
+DENCOMP=${TOP}/dencomp/dencomp
+include ${TOP}/mk/csoft.den.mk
