@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.176 2004/03/20 08:21:55 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.177 2004/03/30 16:32:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -52,9 +52,10 @@
 #define DEBUG_KEY_EV		0x010
 #define DEBUG_EVENTS		0x040
 #define DEBUG_ASYNC		0x080
+#define DEBUG_PROPAGATION	0x100
 
 int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
-	              DEBUG_ASYNC;
+	              DEBUG_ASYNC|DEBUG_PROPAGATION;
 #define	engine_debug event_debug
 int	event_count = 0;
 
@@ -418,7 +419,19 @@ event_dispatch(SDL_Event *ev)
 	pthread_mutex_unlock(&view->lock);
 }
 
-/* Register a new event handler. */
+/* Register a real-time event sequence. */
+struct eventseq *
+eventseq_new(void *p, const char *name)
+{
+	struct eventseq *eseq;
+
+	eseq = Malloc(sizeof(struct eventseq), M_EVENT);
+	strlcpy(eseq->name, name, sizeof(eseq->name));
+	TAILQ_INIT(&eseq->events);
+	return (eseq);
+}
+
+/* Register an event handling function. */
 struct event *
 event_new(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
@@ -476,13 +489,15 @@ event_remove(void *p, const char *name)
 }
 
 /* Forward an event to an object's descendents. */
-static __inline__ void
-event_forward_children(void *p, struct event *ev)
+static void
+event_propagate(void *p, struct event *ev)
 {
 	struct object *ob = p, *cob;
 
 	OBJECT_FOREACH_CHILD(cob, ob, object)
-		event_forward(cob, ev->name, ev->argc, ev->argv);
+		event_propagate(cob, ev);
+
+	event_forward(ob, ev->name, ev->argc, ev->argv);
 }
 
 #ifdef THREADS
@@ -493,11 +508,15 @@ event_async(void *p)
 	struct event *eev = p;
 	struct object *rcvr = eev->argv[0].p;
 
-	if (eev->flags & EVENT_FORWARD_CHILDREN) {
-		debug(DEBUG_ASYNC, "%s: propagating %s\n", rcvr->name,
-		    eev->name);
+	if (eev->flags & EVENT_PROPAGATE) {
+		struct object *cobj;
+
+		debug(DEBUG_PROPAGATION, "%s: propagate %s (async)\n",
+		    rcvr->name, eev->name);
 		lock_linkage();
-		event_forward_children(rcvr, eev);
+		OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
+			event_propagate(cobj, eev);
+		}
 		unlock_linkage();
 	}
 
@@ -559,12 +578,16 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			break;
 		}
 #endif
-		if (neev->flags & EVENT_FORWARD_CHILDREN) {
-			debug(DEBUG_EVENTS, "%s: forward %s\n", rcvr->name,
-			    evname);
+		if (neev->flags & EVENT_PROPAGATE) {
+			struct object *cobj;
+
+			debug(DEBUG_PROPAGATION, "%s: propagate %s (post)\n",
+			    rcvr->name, evname);
 
 			lock_linkage();
-			event_forward_children(rcvr, neev);
+			OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
+				event_propagate(cobj, neev);
+			}
 			unlock_linkage();
 		}
 		if (neev->handler != NULL) {
@@ -598,12 +621,16 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 		if (strcmp(evname, ev->name) != 0)
 			continue;
 
-		if (ev->flags & EVENT_FORWARD_CHILDREN) {
-			debug(DEBUG_EVENTS, "%s to %s descendents\n", evname,
-			    rcvr->name);
+		if (ev->flags & EVENT_PROPAGATE) {
+			struct object *cobj;
+
+			debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
+			    rcvr->name, evname);
 
 			lock_linkage();
-			event_forward_children(rcvr, ev);
+			OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
+				event_propagate(cobj, ev);
+			}
 			unlock_linkage();
 		}
 		if (ev->handler != NULL)
