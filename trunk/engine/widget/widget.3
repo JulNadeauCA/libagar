@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.11 2002/09/07 04:55:17 vedge Exp $
+.\"	$Csoft: widget.3,v 1.12 2002/09/11 23:56:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -45,7 +45,7 @@ Widgets are attached to window
 structures, and their coordinates and geometry are variable.
 .Pp
 Two rendering methods are available to widgets:
-.Bl -tag -width "widget_update" -indent
+.Bl -tag -width "widget_update"
 .It widget_draw
 The widget draws directly to video memory at every tick, using macros that
 hide window/region coordinate and boundary checking from the widget.
@@ -308,7 +308,7 @@ Widgets with the
 flag set can assume that a
 .Fn widget-scaled
 event will be posted before the surface cache is updated.
-.El.
+.El
 .Pp
 .Sh SEE ALSO
 .Xr agar 3 ,
