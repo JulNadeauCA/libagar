@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.23 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.24 2003/02/02 23:05:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ static const struct tool_ops stamp_ops = {
 		NULL		/* save */
 	},
 	stamp_window,
-	NULL,			/* cursor */
+	stamp_cursor,
 	stamp_effect
 };
 
@@ -121,5 +121,22 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 		node_copy_ref(nref, dstnode);
 	}
 	dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+}
+
+int
+stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+{
+	struct stamp *st = p;
+	SDL_Surface *srcsu;
+	struct noderef *nref;
+
+	if (mapedit.src_node == NULL) {
+		return (-1);
+	}
+
+	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
+		noderef_draw(mv->map, nref, rd->x, rd->y);
+	}
+	return (0);
 }
 
