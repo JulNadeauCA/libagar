@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.81 2003/07/04 12:30:26 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.82 2003/07/08 00:05:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -42,8 +42,8 @@ struct viewport {
 		int	 max_delay;	/* Maximum delay in ms */
 	} refresh;
 	SDL_Rect	*dirty;		/* Video rectangles to update */
-	int		 ndirty;	/* Number of rectangles to update */
-	int		 maxdirty;	/* Size of dirty rectangle array */
+	unsigned int	 ndirty;	/* Number of rectangles to update */
+	unsigned int	 maxdirty;	/* Size of dirty rectangle array */
 
 	pthread_mutex_t	 lock;
 	struct windowq	 windows;	/* Windows in view */
