@@ -1,6 +1,6 @@
-.\"	$Csoft$
+.\"	$Csoft: 03.Object.me,v 1.1 2004/01/23 06:27:00 vedge Exp $
 .\"
-.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
 .\" All rights reserved.
 .\"
@@ -26,97 +26,247 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .c1 "The Object System"
-.pp
+.lp
 The logic of Agar applications is built around a tree of persistent 
 \fBobjects\fP.
-In a game, for instance, these objects will be created by a level designer,
+In a game scenario, these objects will be created by a level designer,
 and will typically include maps, characters, monsters and \fIdoodads\fP.
 Agar handles memory management, persistance and dependency issues for such
 objects, in a generic manner.
-.pp
+.lp
 The programmer is free to implement new types of objects and derive objects
 from others.
-Several types of objects are already implemented as part of the base Agar
-engine, these include \fBmap\fP (layered, tile-based 2D maps) and \fBperso\fP
-(game characters).
-.c2 "The Type Switch"
+Throughout the Agar documentation, the term \fIobject\fP or \fIgeneric object\fP
+refers to the \fBstruct object\fP part of derived objects, and the term
+\fIdata\fP or \fIobject data\fP refers to the rest of the structure.
+The generic part of objects is always resident, but the object data may be
+moved dynamically between mass storage and memory.
+.\"
+.\".c2 "Built-in object types"
+.\".sp
+.\".Bd -fig "Built-in object types"
+.\".TS
+.\"center allbox tab(:);
+.\"c c
+.\"l l.
+.\"map:2D layered, tile-based maps
+.\"perso:Game characters
+.\".TE
+.\".Ed
+.\"
+.c2 "The \fBobject\fP structure"
+.lp
+The members of the \fBobject\fP structure in Fig. X may be referenced
+directly.
+Except in edition mode, these variables should be considered read-only.
+.Bd -fig "Public members of the \fBobject\fP structure"
+.TS
+center allbox tab(:);
+c c cw(4i)
+l l lw(4i).
+Member:Type:Description
+_
+\f(CRtype\fP:String:T{
+This is an identifier which indicates the type of object.
+For example, this will be set to "map" for map objects and "perso" for
+character objects.
+T}
+\f(CRname\fP:String:T{
+This is the object's identifier, unique to the object's parent.
+In order to reference a specific object in the world, an absolute reference
+as returned by
+.Fn object_copy_name ,
+must be used.
+T}
+\f(CRsave_pfx\fP:String:T{
+This path indicates an alternate directory location where to store the data
+files of this object and its descendants.
+It is typically used for special objects which are not linked to the world.
+T}
+\f(CRops\fP:Pointer:Generic object operation vector (\(-> Fig. X).
+\f(CRflags\fP:Integer:Generic object flags (\(-> Fig. X).
+.TE
+.Ed
+.sp
+.Bd -fig "Generic \fBobject\fP flags"
+.TS
+center allbox tab(:);
+c cw(3.8i)
+l lw(3.8i).
+Flag:Description
+_
+\f(CROBJECT_RELOAD_PROPS\fP:T{
+If this flag is set, the table of generic properties is not cleared prior to
+a load operation.
+T}
+\f(CROBJECT_NON_PERSISTENT\fP:This flag inhibits load and save operations on the object.
+\f(CROBJECT_INDESTRUCTIBLE\fP:T{
+This is an advisory flag that indicates that this object should not be
+destroyed.
+It is used notably by the level editor to prevent destruction of system
+objects (such as the \fBmap-editor\fP pseudo-object which is used only for
+dependency tracking in edition mode).
+T}
+\f(CROBJECT_DATA_RESIDENT\fP:T{
+This is a non-persistent flag which indicates that the object data is
+currently resident.
+T}
+\f(CROBJECT_PRESERVE_DEPS\fP:T{
+This flag inhibits the deletion of entries in this object's dependency table
+whose reference count has reached 0.
+T}
+\f(CROBJECT_STATIC\fP:T{
+If this flag is set,
+.Xr free 3
+is not invoked after this object has been detached and freed.
+This allows objects to be statically allocated.
+T}
+\f(CROBJECT_READONLY\fP:T{
+This is an advisory flag to indicate that this object should not be edited
+or modified in any way.
+T}
+.TE
+.Ed
+.c2 "Persistance"
+.lp
+One of the primary design goals of Agar is the ability to maintain a large,
+persistent world.
+The object system provides interfaces for saving the state of objects in
+machine-independent format.
+Implementations of persistent objects provide pointers to \fBload\fP and
+\fBsave\fP functions, which typically use Agar's I/O library to read and
+write primitive data types.
+Agar also provides signature and versioning facilities.
+.c3 "The object load algorithm"
+.lp
+The
+.Fn object_load
+function is called to restore the state of a previously saved object and its
+children, recursively.
 .pp
+Firstly, this function frees the object data, if it is resident, and reads the
+generic part of the object from the save.
+Note that the entries of the dependency table are not yet resolved at this
+point, since the whole object tree must be restored before the dependencies are
+resolved.
+.pp
+Second, the generic property table of the object is read.
+Unless the
+.Dv OBJECT_RELOAD_PROPS
+flag is set, the table is cleared beforehand.
+.pp
+If the save includes a unique object position (see Chapter X), it is decoded
+but the object is not positioned until the object tree has been completely
+restored, since the maps must be in a consistent state before the projections
+are made.
+.pp
+The next step is to decode the graphics and audio package references.
+These are resolved only if the object currently references matching
+and resident graphics/audio packages.
+If that is not the case, the references will be resolved later, whenever they
+are needed.
+.pp
+The state of the object's children (their generic part) is then restored.
+If the save contains child objects which do not match with an existing object,
+they are allocated from scratch using the type switch (see section 3.3.2).
+Existing objects which do not have a match in the save are destroyed
+(as long as they are not currently referenced).
+.pp
+Finally, the object's dependency table is resolved and the data of the object
+(if it is resident), and those of its children which are resident is restored.
+.\"
+.c3 "The Type Switch"
+.lp
 When creating an object, Agar allocates enough space for the generic
 \fBobject\fP structure, as well as object derivate data, depending on the
 type of object.
 Exactly how much space is needed for a given type of object is defined by
-a table called the \fBtype switch\fP.
-This information is particularly useful for dynamically reconstructing
-objects from previously saved data.
-.c2 "Overview of the Object System"
-.c3 "Persistance"
-.pp
-One of the primary design goals of Agar is the ability to maintain a large,
-persistent world.
-The Object System provides interfaces for saving the state of objects in
-machine-independent format.
-Implementations of persistent objects provide \fBload\fP and \fBsave\fP
-routines, which typically use Agar's I/O library to read and write primitive
-data types.
-Agar also provides signature and versioning facilities.
-.c3 "Memory management"
-.pp
+a table referred to as the \fBtype switch\fP.
+This information is particularly useful when allocating space for objects that
+have been previously saved but do not currently exist.
+.c2 "Memory management"
+.lp
 Agar is able to accomodate complex applications such as a role-playing game
 with hundreds of maps, using limited resources.
-This is done using a paging algorithm, where the data is stored to disk
+This is done using a dynamic paging algorithm, where the data is stored to disk
 (or network) when it is not needed, and loaded back into memory, on demand.
-.pp
-In addition, data (typically graphics, 3d models and sounds) may be shared
+.lp
+In addition, data (typically graphics, 3D models and sounds) may be shared
 between objects, while Agar keeps reference counts for purposes of garbage
 collection.
-.pp
-For example, in the case of a single player game, only the current map
-(and all of the graphics and sounds it references) have to remain in memory.
-.c3 "Dependencies"
-.pp
+.lp
+Figure X illustrates a game scenario, where two maps are currently visible,
+Cave L1 and Cave L2.
+Both these maps are sharing the same set of graphics and audio samples.
+The third map is not visible so its nodes are saved to disk and freed.
+.\"
+.Bd -fig "Sharing of data between objects"
+.PS
+Cave1: circle "\fBCave L1\fP" "Visible" "Nodes/data" "(resident)" rad 0.45
+Cave2: circle "\fBCave L2\fP" "Visible" "Nodes/data" "(resident)" rad 0.45 at Cave1 - (0,0.9)
+Cave3: circle "\fBCave L3\fP" "Not visible" "Nodes/data" "(paged out)" rad 0.45 at Cave2 - (0,0.9)
+CaveAudio: box "\fBCave audio\fP" "2 refs" at Cave2 + (-1,0)
+CaveTiles: box "\fBCave tiles\fP" "3 refs" at Cave2 + (1,0)
+arrow from Cave1.w to CaveAudio.ne
+arrow from Cave1.e to CaveTiles.nw
+arrow from Cave2.e to CaveTiles.w
+arrow from Cave3.w to CaveAudio.se
+arrow from Cave3.e to CaveTiles.sw
+line from Cave1.w to Cave1.e
+line from Cave2.w to Cave2.e
+line from Cave3.w to Cave3.e
+.PE
+.Ed
+.c2 "Dependencies"
+.lp
 The garbage collection process requires a way to tell whether an object
 is currently in use.
 To achieve this, the \fBobject\fP structure includes a dependency table,
 indicating the other objects this object depends upon.
 This way, it is possible to tell whether an given object is in use by traversing
 the object tree and searching for references to it.
-.c3 "Generic events"
-.pp
+.\"
+.c2 "Generic events"
+.lp
 The object structure includes a table to associate specific event handler
 functions to specific types of events, which are identified by strings.
-.pp
+.lp
 The event system is used extensively by the widget system to deliver keyboard
 and mouse events, but it is also useful in games.
-.c3 "Generic properties"
-.pp
+.\"
+.c2 "Generic properties"
+.lp
 The \fBobject\fP structure also includes a table of generic properties, which
 are simple key=value pairs, where the value may be one of many primitive
 types (notably integer, floating-point, string, pointer and boolean values).
-While this facility is much less useful than the event system, it proves to be
-helpful in situations where the level designers have to store miscellaneous
-data along with different objects.
-.c3 "Positionment"
-.pp
+This facility is helpful in situations where the level designers have to
+store miscellaneous data along with different objects.
+.\"
+.c2 "Positionment"
+.lp
 Many game-related objects (characters, for once) occupy a unique position in
 the world.
 To accomodate this, the \fBobject\fP structure includes optional position
 information, such as the \fBmap\fP coordinates, orientation and associated
 input device, if any.
+.\"
 .c2 "A sample object implementation"
-.pp
-Here is what the implementation of a persistent door object may look like.
+.lp
+Here is what the implementation of a persistent "door" object may look like.
 We want this object to preserve state as to whether the door is open/closed
 and locked.
-We also generate a unique key, which must be matched in order to
-open the door, if it is locked.
+We also generate a unique key, which must be matched in order to open the door,
+if it is locked.
 Some doors may have to hold inscriptions, so we include a text string for
 this purpose.
+We don't need sophisticated collision detection, so we use node flags to
+indicate whether other objects can move through the door.
 .c3 "Data structures"
-.pp
-We first define a \fBdoor\fP structure, which is derived from the
-\fBobject\fP structure.
-We also initialize a \fBversion\fP structure, for purposes of data file
-signing and versioning.
+.lp
+We first define a \fBdoor\fP structure, which is derived from the \fBobject\fP
+structure.
+We also initialize a \fBversion\fP structure, for purposes of data file signing
+and versioning.
 The \fBobject_ops\fP structure which is passed to
 .Fn object_init
 indicates object-specific operations.
@@ -140,7 +290,7 @@ const struct object_ops door_ops = {
 };
 .Ed
 .c3 "Initialization"
-.pp
+.lp
 The
 .Fn object_init
 function is invoked to initialize the \fBobject\fP part of the \fBdoor\fP
@@ -157,6 +307,22 @@ for operating systems without one.
 We register an event handler function,
 .Fn door_open ,
 for the "door-open" event, and we initially display the submap "Closed".
+.lp
+An artist could come up with a door bitmap containing three layers:
+.(l
+\(bu Background and decorations
+\(bu Closed door
+\(bu Opened door
+.l)
+.lp
+The level designer will then construct a model object with two submaps by
+importing the background on the two, the closed door layer for the
+"Closed" submap and the opened door layer for the "Open" submap.
+The level designer then creates copies of the model door, for subsequent
+doors in the game.
+Of course, the level designer will probably want to use more than one door
+model, either using Agar map transformations or different door bitmaps
+altogether.
 .Bd -code "Initialization of the \fBdoor\fP object"
 void
 door_init(void *obj, const char *name)
@@ -173,7 +339,7 @@ door_init(void *obj, const char *name)
 }
 .Ed
 .c3 "Load and save routines"
-.pp
+.lp
 The object system will invoke the \fBload\fP operation to read the relevant
 parts of the door structure from file/network, and the \fBsave\fP operation
 to write its contents to machine independent format.
@@ -216,7 +382,7 @@ door_save(void *obj, struct netbuf *buf)
 }
 .Ed
 .c3 "Event handlers"
-.pp
+.lp
 Objects (such as characters) will attempt to open the door by posting it a
 "door-open" event using
 .Fn event_post
@@ -244,21 +410,32 @@ door_open(int argc, union evarg *argv)
 }
 .Ed
 .c3 "Submaps"
-.pp
+.lp
 In Agar games, the \fBmap\fP object is used to represent not only levels, but
 also the appearance of certain objects inside those levels.
-For instance, the appearance of a character will be controlled by a set of
-maps, such as "Moving North", "Moving South", "Idle North", "Idle South" and
-so on.
-Among other things, it allows the game designers to apply transforms,
-such as "mirror", this way the artist does not have to come up with separate
+For instance, the appearance of a character will be defined by a set of maps,
+which could be named "Moving North", "Moving South", "Idle North",
+"Idle South", and so on.
+.lp
+Among other things, this method allows the game designers to apply transforms,
+such as \fBmirror\fP, so that the artist does not have to come up with separate
 "Moving West" and "Moving East" sprites, for instance.
-.pp
+For a pseudo-3D game (such as \fIDiablo\fP\(dg), an object's set of submaps
+could be automatically generated from a 3D model.
+.(f
+\(dg \fIDiablo\fP is a trademark of Blizzard Entertainment.
+.)f
+.lp
+Since submaps may include more than one tile, node-specific flags provide a
+coarse but efficient collision detection method.
+Bitmap masks and other techniques are used when more sophisticated collision
+detection is required (see chapter X).
+.lp
 The
 .Fn object_set_submap
 function selects among a series of \fBmap\fPs attached to the object,
 which one should be laid on top of the level map, and moved as the object moves.
-.pp
+.lp
 As far as our \fBdoor\fP object is concerned, the level designer will have
 to create two maps, "Closed" and "Open", and make sure that the relevant tiles
 have the \fIwalkable\fP flag in "Open".
