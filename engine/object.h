@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.61 2002/12/14 04:27:47 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.62 2002/12/15 15:56:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -42,6 +42,7 @@ struct object {
 #define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
 #define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
 #define OBJECT_CANNOT_MAP	0x40	/* Don't insert in object tables */
+#define OBJECT_SYSTEM		0x80
 
 	enum {
 		OBJECT_EMBRYONIC,	/* Unattached */
