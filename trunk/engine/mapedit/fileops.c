@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.19 2002/12/13 12:33:29 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.20 2002/12/14 11:28:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -231,18 +231,19 @@ out:
 void
 fileops_revert_map(int argc, union evarg *argv)
 {
-	char *path;
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	char *s;
+	char *path, *udatadir;
+
+	udatadir = prop_get_string(config, "path.user_data_dir");
 
 	/* Always edit the user copy. */
-	s = prop_string(config, "path.user_data_dir");
-	asprintf(&path, "%s/maps/%s.m", s, OBJECT(m)->name);
-	free(s);
+	asprintf(&path, "%s/maps/%s.map", udatadir, OBJECT(m)->name);
 
 	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
+	} else {
+		text_msg("Error", "Could not revert: %s", error_get());
 	}
 	free(path);
 }
