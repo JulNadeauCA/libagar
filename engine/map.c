@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -109,7 +109,7 @@ map_create(char *name, char *desc, int flags, int width, int height,
 	}
 
 	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", name, width, height,
-	    flags, mapsize / 1024);
+	    flags, (int)mapsize / 1024);
 
 	if (path != NULL) {
 		map_load(em, path);
@@ -299,8 +299,8 @@ map_clean(struct map *em, struct object *ob, int offs, int flags, int rflags)
 		}
 	}
 
-	dprintf("initialized %dx%d map (%dKb base) origin at %dx%d\n",
-	    x, y, mapsize / 1024, em->defx, em->defy);
+	dprintf("initialized %dx%d map origin at %dx%d\n", x, y,
+	    em->defx, em->defy);
 	em->map[em->defx][em->defy].flags |= MAPENTRY_ORIGIN;
 }
 
