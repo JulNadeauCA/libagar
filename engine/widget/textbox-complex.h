@@ -13,15 +13,16 @@
 struct textbox {
 	struct widget wid;
 	
-	char string[TEXTBOX_STRING_MAX]; /* Default string binding */
-	SDL_Surface *label;		 /* Label to display */
+	char	string[TEXTBOX_STRING_MAX];	/* UTF-8 text buffer */
+	Uint32	compose;			/* For input composition */
+	SDL_Surface *label;			/* Label to display */
 
-	int prew, preh;			/* Prescale */
-	int writeable;			/* Read/write? */
-	int xpadding, ypadding;		/* Text padding */
-	int pos;			/* Cursor position */
-	int compose;			/* Input composition */
-	int offs;			/* Display offset */
+	int	 prew, preh;			/* Prescale */
+	int	 writeable;			/* Read/write? */
+	int	 xpadding, ypadding;		/* Text padding */
+	int	 newx;				/* Mouse seek */
+	int	 pos;				/* Position in text */
+	int	 offs;				/* Text display offset */
 };
 
 __BEGIN_DECLS
