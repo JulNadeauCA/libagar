@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.12 2002/11/07 04:30:50 vedge Exp $
+.\"	$Csoft: window.3,v 1.13 2002/11/08 06:02:47 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -46,16 +46,19 @@ structures.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
-.Fn window_new "char *name" "char *caption" "int flags" "int x" "int y" "int defw" "int defh" "int minwidth, int minheight"
+.Fn window_new "char *name" "char *caption" "int flags" "int x" "int y" "int w" "int h" "int minwidth, int minheight"
+.Pp
+.Ft "struct window *"
+.Fn window_generic_new "int w" "int h" "const char *caption_fmt" "..."
 .Pp
 .Ft void
-.Fn window_init "struct window *win" "char *name" "char *caption" "int flags" "int x" "int y" "int defw" "int defh, int minwidth, int minheight"
+.Fn window_init "struct window *win" "char *name" "char *caption" "int flags" "int x" "int y" "int w" "int h, int minwidth, int minheight"
 .Pp
 .Ft void
 .Fn window_destroy "struct window *win"
 .Pp
 .Ft void
-.Fn window_titlebar_printf "struct window *win" "const char *fmt" "..."
+.Fn window_set_caption "struct window *win" "const char *fmt" "..."
 .Pp
 .Ft void
 .Fn window_attach "struct window *parent" "struct region *child"
@@ -69,6 +72,14 @@ The
 function allocates, initializes, and attaches a
 .Nm
 structure.
+.Fn window_generic_new
+allocates, initializes and attaches a centered
+.Nm
+with a minimum and default geometry of
+.Fa w
+by
+.Fa h
+pixels.
 The
 .Fn window_init
 function initializes a
@@ -85,20 +96,20 @@ The
 .Fa caption
 argument points to a null-terminated string that will be displayed in the
 title bar (which can be changed at runtime using the
-.Fn window_titlebar_printf
+.Fn window_set_caption
 function).
 The
 .Fa x
 and
 .Fa y
-arguments define the initial absolute position of the window, and are
-ignored with the
+arguments define the initial absolute position of the window in pixels,
+and are ignored with the
 .Dv WINDOW_CENTER
 flag.
 The
-.Fa defw
+.Fa w
 and
-.Fa defh
+.Fa h
 arguments define the default window geometry in pixels (or in percentiles
 of the total view size with the
 .Dv WINDOW_SCALE
@@ -135,18 +146,10 @@ function detaches the region
 .Fa region
 from the window
 .Fa parent .
-The parent window must be locked when
-.Fn window_attach
-or
-.Fn window_detach
-is called.
 .Pp
 The
-.Fn window_titlebar_printf
+.Fn window_set_caption
 function sets the text shown inside the window titlebar.
-The window structure must be locked when
-.Fn window_titlebar_printf
-is called.
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
@@ -212,13 +215,17 @@ is called.
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
-.Fn window_detach_generic "int argc" "union evarg *argv"
+.Fn window_generic_detached "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
-.Fn window_detach_generic
+.Fn window_generic_detached
 event handler detaches the window given as the first argument, freeing all
 associated resources.
+This function is registered as the
+.Sq window-close
+event handler for windows created with
+.Fn window_generic_new .
 .Sh EVENTS
 The
 .Nm
