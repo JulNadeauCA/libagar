@@ -28,17 +28,27 @@ MKDEP=	sh ${TOP}/mk/mkdep
 CC?=	cc
 
 depend:	${DPADD} depend-subdir
-	@rm -f .depend
+	@echo > .depend
 	@files="${SRCS}"; \
-	 if [ "$$files" != "" ]; then \
-	  if [ "${BUILD}" != "" ]; then \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I${BUILD} \
-	       $$files; \
-	  else \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
-	  fi; \
-	 fi
+	if [ "$$files" != "" ]; then \
+	    if [ "${BUILD}" != "" ]; then \
+	    	if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	   	     env CC=${CC} ${MKDEP} -a -l ${MKDEP} ${CFLAGS} -I${BUILD} \
+	       	         $$files; \
+		else \
+	   	     env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I${BUILD} \
+	       	         $$files; \
+		fi; \
+	    else \
+	    	if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	        	env CC=${CC} ${MKDEP} -a -l ${MKDEP} ${CFLAGS} \
+			    $$files; \
+		else \
+	        	env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
+		fi; \
+	    fi; \
+	fi
 
 clean-depend:
-	rm -f .depend
+	echo > .depend
 
