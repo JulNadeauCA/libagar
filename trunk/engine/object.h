@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.21 2002/03/03 06:24:37 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.22 2002/03/05 16:57:33 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -16,7 +16,6 @@ struct obvec {
 	int	(*save)(void *, int);
 	int	(*link)(void *);
 	int	(*unlink)(void *);
-	void	(*dump)(void *);
 };
 
 struct object {

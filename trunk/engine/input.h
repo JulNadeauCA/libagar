@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.1 2002/02/25 08:58:11 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.2 2002/03/03 06:23:14 vedge Exp $	*/
 
 struct object;
 struct mappos;
@@ -15,6 +15,7 @@ struct input {
 	void	*p;			/* User data */
 
 	struct	mappos *pos;		/* Controlled map position */
+	SDL_TimerID timer;
 };
 
 extern struct input *keyboard, *joy, *mouse;

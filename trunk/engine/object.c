@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.29 2002/03/05 18:54:08 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.30 2002/03/12 15:51:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <fcntl.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
 
@@ -109,9 +110,9 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 {
 	static int curid = 0;	/* The world has id 0 */
 
+	ob->id = curid++;
 	ob->name = strdup(name);
 	ob->desc = NULL;
-	ob->id = curid++;
 	sprintf(ob->saveext, "ag");
 	ob->flags = flags;
 	ob->vec = vec;
@@ -125,7 +126,7 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 
 	ob->pos = NULL;
 
-	return (0);
+	return (ob->id);
 }
 
 int
@@ -345,12 +346,7 @@ object_dump(void *p)
 		printf("link ");
 	if (ob->vec->unlink != NULL)
 		printf("unlink ");
-	if (ob->vec->dump != NULL)
-		printf("dump ");
 	printf("]\n");
-	if (ob->vec->dump != NULL) {
-		ob->vec->dump(ob);
-	}
 }
 
 /*

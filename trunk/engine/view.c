@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.22 2002/03/13 07:51:28 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.23 2002/03/14 08:57:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -34,6 +34,8 @@
 #include <string.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/mapedit/mapedit.h>
 
 static Uint32	**view_allocmask(Uint32, Uint32);

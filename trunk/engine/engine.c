@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.21 2002/03/05 06:35:04 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.22 2002/03/07 13:12:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -35,7 +35,10 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/input.h>
+
 #include <engine/mapedit/mapedit.h>
 #include <engine/text/text.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.11 2002/03/03 06:22:34 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.12 2002/03/12 15:51:27 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -18,9 +18,7 @@
 #include <engine/object.h>
 #include <engine/world.h>
 #include <engine/xcf.h>
-#include <engine/map.h>
 #include <engine/view.h>
-#include <engine/char.h>
 
 #define ENGINE_VERSION	"0.1"
 

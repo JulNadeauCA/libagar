@@ -42,7 +42,6 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
-#include "key.h"
 #include "mouse.h"
 #include "joy.h"
 
