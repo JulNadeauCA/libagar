@@ -183,22 +183,11 @@ ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
 depend:	depend-subdir
 	rm -f .depend
-	@files="${.ALLSRC:M*.s} ${.ALLSRC:M*.S}"; \
-	 if [ "$$files" != " " ]; then \
-	  echo mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} ${AINC} $$files;\
-	  mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} ${AINC} $$files; \
-	 fi
-	@files="${.ALLSRC:M*.c}"; \
+	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
 	  echo mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
 	  mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
 	 fi
-	@files="${.ALLSRC:M*.cc} ${.ALLSRC:M*.C} ${.ALLSRC:M*.cxx}"; \
-	 if [ "$$files" != "  " ]; then \
-	  echo mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
-	  mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
-	 fi
-
 
 regress:	regress-subdir
 

@@ -181,7 +181,7 @@ deinstall: deinstall-subdir
 	    fi; \
 	fi
 
-depend: depend-subdir
+depend:	depend-subdir
 	rm -f .depend
 	@files="${.ALLSRC:M*.s} ${.ALLSRC:M*.S}"; \
 	 if [ "$$files" != " " ]; then \
