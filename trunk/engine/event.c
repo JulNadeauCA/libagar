@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.3 2002/01/30 12:43:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ event_dispatch(void *arg, void *p)
 }
 
 /* Global hotkeys. */
-static __inline void
+static __inline__ void
 event_hotkey(SDL_Event *ev)
 {
 	/* Print active object list. */
