@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.5 2002/12/24 10:32:11 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.6 2003/01/01 05:18:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #define XCF_SIGNATURE	"gimp xcf "
@@ -63,9 +63,11 @@ struct xcf_prop {
 		 * Channel properties
 		 */
 		Uint8	 color[3];		/* RGB triplet for color */
+#ifdef HAVE_IEEE754
 		struct {
 			float	x, y;		/* Resolution */
 		} resolution;
+#endif
 	} data;
 };
 
