@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.92 2002/05/21 04:36:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.93 2002/05/25 08:56:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -1098,8 +1098,8 @@ mapedit_show_coords(struct mapedit *med)
 		struct region *coords_reg;
 
 		/* Coordinates window/label. */
-		nw = window_new("Coordinates", WINDOW_SOLID, 0,
-		    64, 64, 224, 32);
+		nw = window_new("Coordinates", WINDOW_SOLID|WINDOW_ABSOLUTE, 0,
+		    64, 64, 224, 64);
 		coords_reg = region_new(nw, REGION_HALIGN|REGION_CENTER,
 		    0, 0, 100, 100);
 		coords_label = label_new(coords_reg, "...", 0);
