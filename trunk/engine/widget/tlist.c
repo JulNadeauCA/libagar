@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.5 2002/09/09 01:24:40 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.6 2002/09/12 09:43:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -103,8 +103,11 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->ops.update = NULL;
 	tl->nitems = 0;
 	TAILQ_INIT(&tl->items);
-	pthread_mutex_init(&tl->items_lock, NULL);
-	
+
+	pthread_mutexattr_init(&tl->items_lockattr);
+	pthread_mutexattr_settype(&tl->items_lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&tl->items_lock, &tl->items_lockattr);
+
 	tl->vbar = emalloc(sizeof(struct scrollbar));
 	scrollbar_init(tl->vbar, -1, -1, tl->item_h, SCROLLBAR_VERTICAL);
 
@@ -120,8 +123,10 @@ tlist_destroy(void *p)
 {
 	struct tlist *tl = p;
 	struct tlist_item *it, *nextit;
-
+	
 	tlist_clear_items(tl);
+
+	pthread_mutexattr_destroy(&tl->items_lockattr);
 	pthread_mutex_destroy(&tl->items_lock);
 	
 	object_destroy(tl->vbar);
@@ -285,10 +290,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	return (it);
 }
 
-/*
- * Unset the selection flag on all items.
- * Item list must not be locked by the caller thread.
- */
+/* Unset the selection flag on all items. */
 void
 tlist_unselect_items(struct tlist *tl)
 {
@@ -311,7 +313,7 @@ tlist_mouse_motion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	Uint8 ms;
-	
+
 	if (x > WIDGET(tl)->w - WIDGET(tl->vbar)->w) {
 		event_forward(tl->vbar, "window-mousemotion", argc, argv);
 		return;
@@ -349,15 +351,15 @@ tlist_mouse_button(int argc, union evarg *argv)
 		event_forward(sb, "window-mousebuttondown", argc, argv);
 		return;
 	}
-	
+
 	WIDGET_FOCUS(tl);
 	if (button != SELECTION_MOUSE_BUTTON) {
 		return;
 	}
 	
 	pthread_mutex_lock(&tl->items_lock);
-	ti = _tlist_item_index(tl,
-	    (sb->range.start + (y - sb->range.soft_start) / tl->item_h), 0);
+	ti = tlist_item_index(tl,
+	    (sb->range.start + (y - sb->range.soft_start) / tl->item_h));
 	if (ti != NULL) {
 		if (tl->flags & TLIST_MULTI_STICKY ||
 		   ((tl->flags & TLIST_MULTI) &&
@@ -450,49 +452,42 @@ tlist_keydown(int argc, union evarg *argv)
 		break;
 	default:
 	}
-	
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
-/*
- * Return the item at the given index.
- * Item list must not be locked by the caller thread.
- */
+/* Return the item at the given index. */
 struct tlist_item *
-_tlist_item_index(struct tlist *tl, int index, int mustlock)
+tlist_item_index(struct tlist *tl, int index)
 {
 	struct tlist_item *it;
 	int i = 0;
 
-	if (mustlock) pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (++i == index) {
 			pthread_mutex_unlock(&tl->items_lock);
 			return (it);
 		}
 	}
-	if (mustlock) pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->items_lock);
 	return (NULL);
 }
 
-/*
- * Return the first item matching a text string.
- * Item list must not be locked by the caller thread.
- */
+/* Return the first item matching a text string. */
 struct tlist_item *
-_tlist_item_text(struct tlist *tl, char *text, int mustlock)
+tlist_item_text(struct tlist *tl, char *text)
 {
 	struct tlist_item *it;
 	int i;
 
-	if (mustlock) pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (strncmp(it->text, text, it->text_len) == 0) {
 			pthread_mutex_unlock(&tl->items_lock);
 			return (it);
 		}
 	}
-	if (mustlock) pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->items_lock);
 	return (NULL);
 }
 
