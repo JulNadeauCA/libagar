@@ -1,7 +1,8 @@
-/*	$Csoft: mapview.h,v 1.28 2003/02/26 02:03:43 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.29 2003/03/02 07:29:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/nodeedit.h>
+#include <engine/mapedit/layedit.h>
 
 struct mapview {
 	struct widget	wid;
@@ -50,6 +51,7 @@ struct mapview {
 		int	tilew, tileh;
 	} izoom;
 	struct nodeedit	 nodeed;
+	struct layedit	 layed;
 	struct window	*tmap_win;	/* Tile map window */
 	int		 tmap_insert;	/* Insert mode? */
 	struct button	*tmap_button;
@@ -94,4 +96,4 @@ void		 mapview_center(struct mapview *, int, int);
 void		 mapview_zoom(struct mapview *, int);
 
 extern __inline__ void	mapview_draw_props(struct mapview *, struct node *,
-			    int, int);
+			    int, int, int, int);

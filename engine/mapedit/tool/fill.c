@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.3 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.4 2003/02/26 02:03:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,7 +117,6 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 		for (x = 0; x < m->mapw; x++) {
 			struct node *dstnode = &m->map[y][x];
 			struct noderef *nref;
-			int origin;
 
 			MAP_CHECK_NODE(dstnode, x, y);
 
@@ -126,7 +125,6 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 				continue;
 			}
 
-			origin = dstnode->flags & NODE_ORIGIN;
 			node_destroy(dstnode);
 			node_init(dstnode, x, y);
 
@@ -139,9 +137,6 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 			}
 
 			dstnode->flags = srcnode->flags;
-			if (origin) {
-				dstnode->flags |= NODE_ORIGIN;
-			}
 		}
 	}
 }
