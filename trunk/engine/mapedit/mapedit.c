@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.28 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.29 2002/02/15 03:50:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -134,12 +134,13 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 
 	object_link(med);
 
-	pthread_mutex_lock(&map->lock);
+	/* Set the cursor to its initial position. */
 	med->map = map;
 	med->x = map->defx;
 	med->y = map->defy;
-	MAP_ADDANIM(map, med->x, med->y,
-	    (struct object *)med, MAPEDIT_SELECT);
+	pthread_mutex_lock(&map->lock);
+	node_addref(&map->map[med->x][med->y],
+	    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
 	(&med->map->map[med->x][med->y])->flags |= NODE_ANIM;
 	pthread_mutex_unlock(&map->lock);
 
@@ -151,7 +152,6 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (NULL);
 	}
-	
 	med->timer = SDL_AddTimer(100, mapedit_listw_tick, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());

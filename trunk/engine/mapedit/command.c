@@ -42,26 +42,26 @@ mapedit_setpointer(struct mapedit *med, int enable)
 {
 	static int oxoffs = 0, oyoffs = 0;
 	struct map_aref *aref;
+	struct node *node = &med->map->map[med->x][med->y];
 
 	if (enable) {
-		MAP_ADDANIM(med->map, med->x, med->y, (struct object *)med,
-		    MAPEDIT_SELECT);
-		aref = node_arefobj(&med->map->map[med->x][med->y],
-		    (struct object *)med, MAPEDIT_SELECT);
+		aref = node_addref(node,
+		    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
+		node->flags |= NODE_ANIM;
 
 		/* Restore direction state. */
 		aref->xoffs = oxoffs;
 		aref->yoffs = oyoffs;
 	} else {
-		aref = node_arefobj(&med->map->map[med->x][med->y],
+		aref = node_arefobj(node,
 		    (struct object *)med, MAPEDIT_SELECT);
-		
+		node->flags &= ~(NODE_ANIM);
+	
 		/* Save direction state. */
 		oxoffs = aref->xoffs;
 		oyoffs = aref->yoffs;
 
-		MAP_DELREF(med->map, med->x, med->y, (struct object *)med,
-		    MAPEDIT_SELECT);
+		node_delref(node, aref);
 	}
 }
 
