@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.119 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.120 2003/04/26 06:26:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -90,7 +90,7 @@ view_init(enum gfx_engine ge)
 	}
 
 	v = Malloc(sizeof(struct viewport));
-	object_init(&v->obj, "view-port", "view", OBJECT_STATIC, &viewport_ops);
+	object_init(&v->obj, "view-port", "view", 0, &viewport_ops);
 	v->gfx_engine = ge;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
@@ -236,26 +236,21 @@ view_destroy(void *p)
 {
 	struct viewport *v = p;
 	struct window *win;
-	
+
 	pthread_mutex_lock(&v->lock);
-	
 	if (v->rootmap != NULL) {
 		rootmap_free_maprects(v);
 		free(v->rootmap);
 		v->rootmap = NULL;
 	}
-
 	TAILQ_FOREACH(win, &v->windows, windows) {
 		view_detach(win);
 	}
-	if (!TAILQ_EMPTY(&view->detach)) {
-		view_detach_queued();
-	}
-
+#if 0
+	view_detach_queued();
+#endif
 	free(v->dirty);
-
 	pthread_mutex_unlock(&v->lock);
-
 	pthread_mutex_destroy(&v->lock);
 }
 
