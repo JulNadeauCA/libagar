@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.42 2002/11/14 08:02:33 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.43 2002/11/22 08:56:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -28,6 +28,8 @@
 # define pthread_mutexattr_t	int
 # define pthread_t		int
 #endif
+
+#undef _XOPEN_SOURCE
 
 #include <SDL.h>		 /* For SDL types */
 

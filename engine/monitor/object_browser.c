@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.10 2002/11/22 08:56:54 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.11 2002/11/26 01:42:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
+#include <engine/engine.h>
 
 #ifdef DEBUG
 

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.78 2002/11/25 23:57:59 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.79 2002/11/26 01:38:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,9 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
 #include "compat/setenv.h"
 #include "compat/strlcat.h"
+#include "engine.h"
 
 #ifdef XDEBUG
 #include <SDL_syswm.h>

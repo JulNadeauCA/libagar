@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.25 2002/11/17 23:13:58 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.26 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
+#include <engine/engine.h>
 
 #include <engine/map.h>
 #include <engine/view.h>

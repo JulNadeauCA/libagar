@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.25 2002/11/24 03:10:33 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.26 2002/11/28 02:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
 #include "compat/asprintf.h"
+#include "engine.h"
 
 #include "map.h"
 #include "physics.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.20 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.21 2002/11/22 23:11:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,11 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "compat/asprintf.h"
+
 #include "engine.h"
 #include "map.h"
 #include "anim.h"
-
-#include "compat/asprintf.h"
 
 static const struct object_ops anim_ops = {
 	NULL,	/* destroy */
