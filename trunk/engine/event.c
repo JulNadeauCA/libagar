@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.51 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.52 2002/06/25 17:38:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -166,6 +166,22 @@ event_hotkey(SDL_Event *ev)
 	pthread_mutex_unlock(&world->lock);
 }
 
+#ifdef DEBUG
+#define UPDATE_FPS(delta)	label_printf(fps_label, "%d FPS", (delta))
+#else
+#define UPDATE_FPS(delta)
+#endif
+
+#define COMPUTE_DELTA(delta, ntick) do {			\
+	(delta) = EVENT_MAXFPS - (SDL_GetTicks() - (ntick));	\
+	UPDATE_FPS((delta));					\
+	if ((delta) < 1) {					\
+		dprintf("%d FPS\n", (delta));			\
+		(delta) = 1;					\
+	}							\
+} while (/*CONSTCOND*/0)
+
+
 void *
 event_loop(void *arg)
 {
@@ -190,8 +206,7 @@ event_loop(void *arg)
 	/* Start the garbage collection process. */
 	object_init_gc();
 
-	/* XXX pref: max fps */
-	for (ntick = 0, ltick = SDL_GetTicks(), delta = 100;;) {
+	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&view->lock);
@@ -210,16 +225,7 @@ event_loop(void *arg)
 				rootmap_animate(m);
 				if (m->redraw != 0) {
 					rootmap_draw(m);
-					delta = m->fps - (SDL_GetTicks() -
-					    ntick);
-#ifdef DEBUG
-					label_printf(fps_label, "%d FPS",
-					    delta);
-#endif
-					if (delta < 1) {
-						dprintf("%d FPS\n", delta);
-						delta = 1;
-					}
+					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
 				}
 				pthread_mutex_unlock(&m->lock);
@@ -231,9 +237,12 @@ event_loop(void *arg)
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
 					window_animate(win);
-				    	/* XXX ignore redraw flag,
-					   that will require a fancy
-					   microtile algorithm */
+					if (win->redraw != 0) {
+				    		/* XXX ignore redraw flag,
+						   that will require a fancy
+						   microtile algorithm */
+						COMPUTE_DELTA(delta, ntick);
+					}
 					window_draw(win);
 				}
 				pthread_mutex_unlock(&win->lock);
