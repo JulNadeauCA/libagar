@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.8 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.9 2004/04/22 12:36:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -105,9 +105,11 @@ struct vg_layer {
 
 struct vg_element {
 	enum vg_element_type type;
+	struct vg_element_ops ops;
+
 	int layer;
-	int redraw;
-	int drawn;
+	int redraw;				/* Element redraw */
+	int drawn;				/* Avoid overdraw */
 	Uint32 color;
 
 	struct vg_vertex *vtx;
@@ -148,6 +150,7 @@ struct vg {
 #define VG_VISBBOXES	0x10		/* Display bounding boxes */
 
 	pthread_mutex_t lock;
+	int redraw;			/* Global redraw */
 	int **mask;			/* Fragment mask */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
@@ -183,7 +186,8 @@ void		 vg_destroy(struct vg *);
 void		 vg_scale(struct vg *, double, double, double);
 void		 vg_clear(struct vg *);
 void		 vg_rasterize(struct vg *);
-__inline__ void	 vg_regen_fragments(struct vg *);
+__inline__ void	 vg_redraw_elements(struct vg *);
+__inline__ void	 vg_update_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
 
 __inline__ void	 vg_vcoords2(struct vg *, int, int, int, int, double *,
@@ -200,8 +204,8 @@ void		 vg_pop_vertex(struct vg *);
 struct vg_layer *vg_push_layer(struct vg *, const char *);
 __inline__ void	 vg_pop_layer(struct vg *);
 
-struct vg_element *vg_begin(struct vg *, enum vg_element_type);
-void		   vg_undo_element(struct vg *, struct vg_element *);
+struct vg_element *vg_begin_element(struct vg *, enum vg_element_type);
+void		   vg_destroy_element(struct vg *, struct vg_element *);
 __inline__ int	   vg_collision(struct vg *, struct vg_rect *,
 		                struct vg_rect *);
  

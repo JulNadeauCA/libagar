@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.3 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.4 2004/04/22 12:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -106,13 +106,13 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 			cur_ellipse->vg_arc.h = y - vg->origin[2].y;
 		} 
 		cur_ellipse->redraw++;
-		vg_rasterize(vg);
 	} else {
 		vg->origin[2].x = x;
 		vg->origin[2].y = y;
 	}
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
+	vg->redraw++;
 }
 
 static void
@@ -126,7 +126,7 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	case 1:
 		switch (seq++) {
 		case 0:
-			cur_ellipse = vg_begin(vg, VG_ELLIPSE);
+			cur_ellipse = vg_begin_element(vg, VG_ELLIPSE);
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			tool_push_status(t, _("Specify the ellipse's geometry "
@@ -138,9 +138,7 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		break;
 	default:
 		if (cur_ellipse != NULL) {
-			vg_undo_element(vg, cur_ellipse);
-			cur_ellipse->redraw++;
-			vg_rasterize(vg);
+			vg_destroy_element(vg, cur_ellipse);
 		}
 		goto finish;
 	}

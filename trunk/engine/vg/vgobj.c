@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.3 2004/04/19 02:15:30 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.4 2004/04/22 01:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -71,7 +71,6 @@ vgobj_init(void *p, const char *name)
 	object_init(vgo, "vgobj", name, &vgobj_ops);
 	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID|VG_VISBBOXES);
 	vg_scale(vgo->vg, 8.5, 11, 1);
-	vg_rasterize(vgo->vg);
 }
 
 void
@@ -105,18 +104,18 @@ vgobj_save(void *p, struct netbuf *buf)
 static void
 geochg(int argc, union evarg *argv)
 {
-	struct vgobj *vgo = argv[1].p;
+	struct vg *vg = argv[1].p;
 
-	vg_scale(vgo->vg, vgo->vg->w, vgo->vg->h, vgo->vg->scale);
-	vg_rasterize(vgo->vg);
+	vg_scale(vg, vg->w, vg->h, vg->scale);
+	vg->redraw++;
 }
 
 static void
 vgchg(int argc, union evarg *argv)
 {
-	struct vgobj *vgo = argv[1].p;
+	struct vg *vg = argv[1].p;
 
-	vg_rasterize(vgo->vg);
+	vg->redraw++;
 }
 
 static void
@@ -140,51 +139,51 @@ vgobj_settings(int argc, union evarg *argv)
 	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vg->h);
 	mfspinbutton_set_min(mfsu, 1.0);
 	mfspinbutton_set_increment(mfsu, 0.1);
-	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vgo);
+	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vg);
 
 	fsu = fspinbutton_new(win, NULL, _("First origin point radius: "));
 	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[0]);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
 	
 	fsu = fspinbutton_new(win, NULL, _("Second origin point radius: "));
 	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[1]);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
 	
 	fsu = fspinbutton_new(win, NULL, _("Grid interval: "));
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->grid_gap);
 	fspinbutton_set_min(fsu, 0.0625);
 	fspinbutton_set_increment(fsu, 0.0625);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
 	
 	fsu = fspinbutton_new(win, NULL, _("Scaling factor: "));
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->scale);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", geochg, "%p", vgo);
+	event_new(fsu, "fspinbutton-changed", geochg, "%p", vg);
 		
 	label_new(win, LABEL_STATIC, _("Background color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->fill_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+	event_new(pal, "palette-changed", vgchg, "%p", vg);
 	
 	label_new(win, LABEL_STATIC, _("Grid color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->grid_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+	event_new(pal, "palette-changed", vgchg, "%p", vg);
 
 	label_new(win, LABEL_STATIC, _("First origin color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[0]);
-	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+	event_new(pal, "palette-changed", vgchg, "%p", vg);
 	
 	label_new(win, LABEL_STATIC, _("Second origin color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[1]);
-	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+	event_new(pal, "palette-changed", vgchg, "%p", vg);
 
 	window_attach(pwin, win);
 	window_show(win);
@@ -252,6 +251,18 @@ select_layer(int argc, union evarg *argv)
 		i++;
 	}
 	text_msg(MSG_ERROR, _("No layer is selected."));
+}
+
+static void
+rasterize_vg(struct mapview *mv, void *p)
+{
+	struct vg *vg = p;
+
+	if (vg->redraw) {
+		vg->redraw = 0;
+		vg_clear(vg);
+		vg_rasterize(p);
+	}
 }
 
 struct window *
@@ -329,6 +340,8 @@ vgobj_edit(void *obj)
 			mv = mapview_new(bo, vg->map,
 			    MAPVIEW_EDIT|MAPVIEW_INDEPENDENT, tbar, statbar);
 			mapview_prescale(mv, 10, 8);
+			mapview_reg_draw_cb(mv, rasterize_vg, vg);
+
 			mapview_reg_tool(mv, &origin_tool, vg);
 			mapview_reg_tool(mv, &point_tool, vg);
 			mapview_reg_tool(mv, &line_tool, vg);

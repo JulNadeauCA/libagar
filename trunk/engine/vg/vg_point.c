@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.5 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.6 2004/04/22 12:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -94,7 +94,7 @@ point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vg->origin[1].x,
 	    &vg->origin[1].y);
-	vg_rasterize(vg);
+	vg->redraw++;
 }
 
 static void
@@ -104,10 +104,9 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	vg_begin(vg, VG_POINTS);
+	vg_begin_element(vg, VG_POINTS);
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 	vg_vertex2(vg, vx, vy);
-	vg_rasterize(vg);
 }
 
 const struct tool point_tool = {
