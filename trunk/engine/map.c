@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.131 2003/01/17 03:49:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.132 2003/01/18 08:07:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -523,8 +523,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
 			} else {
-				debug(DEBUG_NODEREFS, "null sprite at %d\n",
-				    obji);
+				fatal("missing sprite dep 0x%x\n", obji);
 			}
 		}
 		break;
@@ -553,8 +552,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
 			} else {
-				debug(DEBUG_NODEREFS,
-				    "null anim at %d\n", obji);
+				fatal("missing anim dep 0x%x\n", obji);
 			}
 		}
 		break;
