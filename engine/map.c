@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.73 2002/04/18 04:03:50 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.74 2002/04/24 13:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -619,7 +619,8 @@ map_load(void *ob, int fd)
 	m->defy  = fobj_read_uint32(fd);
 	m->tilew = fobj_read_uint32(fd);
 	m->tileh = fobj_read_uint32(fd);
-	
+
+	/* Load the object map. */
 	nobjs = fobj_read_uint32(fd);
 	pobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
 	for (i = 0; i < nobjs; i++) {
@@ -636,17 +637,14 @@ map_load(void *ob, int fd)
 		} else {
 			warning("cannot translate \"%s\"\n", s);
 		}
-		
+
 		free(s);
 	}
-	
+
+	/* Read the nodes. */
 	pthread_mutex_lock(&m->lock);
-	
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
-
-	/* Adapt the viewport to this tile geometry. */
 	view_setmode(m->view, m, -1, NULL);
-
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
@@ -681,21 +679,13 @@ map_load(void *ob, int fd)
 			}
 		}
 	}
-	
 	pthread_mutex_unlock(&m->lock);
 
-	free(pobjs);
-
-	/* XXX not sure about this */
 	m->redraw++;
-
+	free(pobjs);
 	return (0);
 }
 
-/*
- * Save a map to a file.
- * Must be called on a locked map.
- */
 int
 map_save(void *ob, int fd)
 {
@@ -706,7 +696,7 @@ map_save(void *ob, int fd)
 	size_t solen = 0;
 	off_t soffs;
 
-	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
+	buf = fobj_create_buf(65536, 32767);
 
 	version_write(fd, "agar map", 1, 11);
 
@@ -721,25 +711,23 @@ map_save(void *ob, int fd)
 	soffs = buf->offs;
 	fobj_bwrite_uint32(buf, 0);
 
-	pthread_mutex_lock(&world->lock);
-	/* XXX ugly */
+	/* Write the object map. */
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
 		solen += sizeof(struct object *);
 	}
 	pobjs = (struct object **)emalloc(solen);
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
-		if ((pob->flags & OBJ_ART) == 0)
+		if ((pob->flags & OBJ_ART) == 0) {
 			continue;
+		}
 		fobj_bwrite_string(buf, pob->name);
 		fobj_bwrite_uint32(buf, 0);
 		pobjs[nobjs++] = pob;
 	}
-	pthread_mutex_unlock(&world->lock);
-
 	fobj_bpwrite_uint32(buf, nobjs, soffs);
-	
-	pthread_mutex_lock(&m->lock);
 
+	/* Write the nodes. */
+	pthread_mutex_lock(&m->lock);
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
@@ -775,15 +763,13 @@ map_save(void *ob, int fd)
 			totrefs += nrefs;
 		}
 	}
-	
 	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
-	text_msg(5, TEXT_SLEEP, "%s: %dx%d, %d refs\n", m->obj.name,
-	    m->mapw, m->maph, totrefs);
 
+	dprintf("%s: %dx%d, %d refs\n", OBJECT(m)->name, m->mapw, m->maph,
+	    totrefs);
 	free(pobjs);
-
 	return (0);
 }
 

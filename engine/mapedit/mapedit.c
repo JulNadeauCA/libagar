@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.78 2002/04/23 07:23:52 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.79 2002/04/24 14:04:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -206,8 +206,13 @@ mapedit_setcaption(struct mapedit *med, char *path)
 {
 	static char caption[FILENAME_MAX];
 	struct map *m = med->map;
+	struct object *fmap;
 
-	if (object_strfind(med->margs.name) == NULL) {
+	pthread_mutex_lock(&world->lock);
+	fmap = object_strfind(med->margs.name);
+	pthread_mutex_unlock(&world->lock);
+
+	if (fmap == NULL) {
 		sprintf(caption, "%s [unknown] (%s)", OBJECT(m)->name, path);
 		object_link(m);
 	} else {

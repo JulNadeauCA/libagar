@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.23 2002/04/23 07:19:49 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.24 2002/04/24 13:18:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -117,25 +117,20 @@ world_init(struct world *wo, char *name)
 	pthread_mutex_init(&wo->lock, NULL);
 }
 
+/*
+ * Load state of active objects.
+ * Must be called on a locked world.
+ */
 int
 world_load(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob, **objs;
-	Uint32 i = 0, nobjs;
+	struct object *ob;
 
 	/* XXX load the state map */
 
-	/* XXX dangerous */
-	pthread_mutex_lock(&wo->lock);
-	nobjs = wo->nobjs;
-	SLIST_DUP(objs, nobjs, &wo->wobjsh, object, wobjs);
-	pthread_mutex_unlock(&wo->lock);
-
-	for (i = 0; i < nobjs; i++) {
-		ob = objs[i];
-	
-		printf("loading %s (%d)\n", ob->name, i);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		dprintf("loading %s\n", ob->name);
 
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
@@ -144,29 +139,21 @@ world_load(void *p, int fd)
 		object_load(ob);
 	}
 	dprintf("%s: loaded %d objects\n", OBJECT(wo)->name, wo->nobjs);
-
-	free(objs);
 	return (0);
 }
 
+/*
+ * Save the world!
+ * Must be called on a locked world.
+ */
 int
 world_save(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob, **objs;
-	Uint32 i, nobjs;
+	struct object *ob;
 
-	pthread_mutex_lock(&wo->lock);
-	nobjs = wo->nobjs;
-	fobj_write_uint32(fd, nobjs);
-	SLIST_DUP(objs, nobjs, &wo->wobjsh, object, wobjs);
-	pthread_mutex_unlock(&wo->lock);
-
-	pthread_mutex_lock(&wo->lock);
-	for (i = 0; i < nobjs; i++) {
-		ob = objs[i];
-
-		printf("saving %s (%d)\n", ob->name, i);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		dprintf("saving %s\n", ob->name);
 
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
@@ -175,15 +162,10 @@ world_save(void *p, int fd)
 		fobj_write_uint32(fd, ob->id);
 		fobj_write_string(fd, ob->name);
 		fobj_write_string(fd, (ob->desc != NULL) ? ob->desc : "");
-		pthread_mutex_unlock(&wo->lock);
 		object_save(ob);
-		pthread_mutex_lock(&wo->lock);
 	}
-	pthread_mutex_unlock(&wo->lock);
-	
-	dprintf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
 
-	free(objs);
+	dprintf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
 	return (0);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.38 2002/04/20 09:15:55 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.39 2002/04/24 13:15:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -328,6 +328,7 @@ object_lategc(void)
 	}
 }
 
+/* Must be called on a locked world. */
 int
 object_loadfrom(void *p, char *path)
 {
@@ -352,6 +353,7 @@ object_loadfrom(void *p, char *path)
 	return (0);
 }
 
+/* Must be called on a locked world. */
 int
 object_load(void *p)
 {
@@ -379,6 +381,7 @@ object_load(void *p)
 	return (rv);
 }
 
+/* Must be called on a locked world. */
 int
 object_save(void *p)
 {
@@ -459,20 +462,21 @@ decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 	}
 }
 
+/*
+ * Search for an object matching the given string.
+ * Must be called on a locked world.
+ * XXX hash
+ */
 struct object *
 object_strfind(char *s)
 {
 	struct object *ob;
 
-	pthread_mutex_lock(&world->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		if (strcmp(ob->name, s) == 0) {
-			pthread_mutex_unlock(&world->lock);
 			return (ob);
 		}
 	}
-	pthread_mutex_unlock(&world->lock);
-
 	return (NULL);
 }
 
