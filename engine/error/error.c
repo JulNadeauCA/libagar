@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.7 2004/04/18 02:18:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -137,14 +137,9 @@ error_realloc(void *oldp, size_t len, int type)
 {
 	void *newp;
 	
-	if ((newp = realloc(oldp, len)) == NULL)
+	if ((newp = realloc(oldp, len)) == NULL) {
 		fatal("realloc");
-#ifdef DEBUG
-	if (type > 0) {
-		error_mements[type].nreallocs++;
-		error_mements[type].rsize += len;
 	}
-#endif
 	return (newp);
 }
 
