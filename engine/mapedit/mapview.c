@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.156 2004/05/25 07:27:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.157 2004/05/30 23:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -361,8 +361,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 
 	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100, 255);
 	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100, 255);
-	widget_map_color(mv, BG1_COLOR, "background-1", 24, 24, 24, 255);
-	widget_map_color(mv, BG2_COLOR, "background-2", 37, 34, 38, 255);
+	widget_map_color(mv, BG1_COLOR, "background-1", 33, 52, 24, 255);
+	widget_map_color(mv, BG2_COLOR, "background-2", 16, 77, 24, 255);
 	widget_map_color(mv, MSEL_COLOR, "mouse-sel", 150, 150, 150, 255);
 	widget_map_color(mv, ESEL_COLOR, "effective-sel", 180, 180, 180, 255);
 
