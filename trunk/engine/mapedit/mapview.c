@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.26 2002/11/07 04:28:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.27 2002/11/07 17:48:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -63,11 +63,15 @@ enum {
 
 static SDL_TimerID zoomin_timer, zoomout_timer;
 
-static void	mapview_event(int, union evarg *);
 static void	mapview_scaled(int, union evarg *);
 static void	mapview_lostfocus(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
 static void	mapview_stop_zoom(struct mapview *);
+static void	mapview_mousemotion(int, union evarg *);
+static void	mapview_mousebuttondown(int, union evarg *);
+static void	mapview_mousebuttonup(int, union evarg *);
+static void	mapview_keyup(int, union evarg *);
+static void	mapview_keydown(int, union evarg *);
 
 static __inline__ void	draw_node_scaled(struct mapview *, SDL_Surface *,
 			    int, int);
@@ -121,20 +125,14 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	widget_map_color(mv, TILE_SELECTION_COLOR, "mapview-tile-selection",
 	    0, 200, 0);
 
-	event_new(mv, "widget-scaled", 0,
-	    mapview_scaled, NULL);
-	event_new(mv, "widget-lostfocus", 0,
-	    mapview_lostfocus, NULL);
-	event_new(mv, "window-mousebuttonup", 0,
-	    mapview_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(mv, "window-mousebuttondown", 0,
-	    mapview_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(mv, "window-keyup", 0,
-	    mapview_event, "%i", WINDOW_KEYUP);
-	event_new(mv, "window-keydown", 0,
-	    mapview_event, "%i", WINDOW_KEYDOWN);
-	event_new(mv, "window-mousemotion", 0,
-	    mapview_event, "%i", WINDOW_MOUSEMOTION);
+	event_new(mv, "widget-scaled", 0, mapview_scaled, NULL);
+	event_new(mv, "widget-lostfocus", 0, mapview_lostfocus, NULL);
+	event_new(mv, "window-keyup", 0, mapview_keyup, NULL);
+	event_new(mv, "window-keydown", 0, mapview_keydown, NULL);
+	event_new(mv, "window-mousemotion", 0, mapview_mousemotion, NULL);
+	event_new(mv, "window-mousebuttonup", 0, mapview_mousebuttonup, NULL);
+	event_new(mv, "window-mousebuttondown", 0, mapview_mousebuttondown,
+	    NULL);
 }
 
 static __inline__ void
@@ -393,7 +391,7 @@ mapview_draw(void *p)
 	}
 	SDL_SetClipRect(view->v, NULL);
 	
-	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
+	if (WIDGET_FOCUSED(mv) && VIEW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.square(mv,
 		    0, 0,
 		    WIDGET(mv)->w, WIDGET(mv)->h,
@@ -481,184 +479,199 @@ mapview_zoomout(Uint32 ival, void *p)
 }
 
 static void
-mapview_event(int argc, union evarg *argv)
+mapview_mousemotion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	struct mapedit *med = mv->med;
-	int type = argv[1].i;
-	int button, x, y;
+	int x = argv[1].i;
+	int y = argv[2].i;
 
-	switch (type) {
-	case WINDOW_MOUSEMOTION:
-		x = argv[2].i;
-		y = argv[3].i;
-
-		if (!WIDGET_INSIDE_RELATIVE(mv, x, y)) {
-			if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
-				SDL_ShowCursor(SDL_ENABLE);
-			}
-			return;
-		}
-
-		x /= mv->tilew;
-		y /= mv->tileh;
-
+	if (!WIDGET_INSIDE_RELATIVE(mv, x, y)) {
 		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
-			SDL_ShowCursor(SDL_DISABLE);
+			SDL_ShowCursor(SDL_ENABLE);
 		}
+	}
 
-		/* Scroll */
-		if (mv->mouse.move) {
-			mapview_scroll(mv,
-			    (mv->mouse.x < x) ? DIR_LEFT :
-			    (mv->mouse.x > x) ? DIR_RIGHT :
-			    (mv->mouse.y < y) ? DIR_UP :
-			    (mv->mouse.y > y) ? DIR_DOWN : 0);
-		} else if (mv->flags & MAPVIEW_EDIT) {
-			if (med->curtool != NULL &&
-			    (x != mv->mouse.x || y != mv->mouse.y) &&
-			    SDL_GetMouseState(NULL, NULL) &
-			    SDL_BUTTON_LMASK &&
-			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-			    (mv->mx+x < mv->map->mapw) &&
-			    (mv->my+y < mv->map->maph) &&
-			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-				TOOL_OPS(med->curtool)->tool_effect(
-				    med->curtool, mv, mv->mx+x, mv->my+y);
-			}
+	x /= mv->tilew;
+	y /= mv->tileh;
+
+	if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
+		SDL_ShowCursor(SDL_DISABLE);
+	}
+
+	/* Scroll */
+	if (mv->mouse.move) {
+		mapview_scroll(mv,
+		    (mv->mouse.x < x) ? DIR_LEFT :
+		    (mv->mouse.x > x) ? DIR_RIGHT :
+		    (mv->mouse.y < y) ? DIR_UP :
+		    (mv->mouse.y > y) ? DIR_DOWN : 0);
+	} else if (mv->flags & MAPVIEW_EDIT) {
+		if (med->curtool != NULL &&
+		    (x != mv->mouse.x || y != mv->mouse.y) &&
+		    SDL_GetMouseState(NULL, NULL) &
+		    SDL_BUTTON_LMASK &&
+		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+		    (mv->mx+x < mv->map->mapw) &&
+		    (mv->my+y < mv->map->maph) &&
+		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+			TOOL_OPS(med->curtool)->tool_effect(
+			    med->curtool, mv, mv->mx+x, mv->my+y);
 		}
-		if (mv->flags & MAPVIEW_TILEMAP) {
-			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK &&
-			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-			    (mv->mx+x < mv->map->mapw) &&
-			    (mv->my+y < mv->map->maph)) {
-				struct node *n;
-				struct editobj *eo = NULL;
+	}
+	if (mv->flags & MAPVIEW_TILEMAP) {
+		if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK &&
+		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+		    (mv->mx+x < mv->map->mapw) &&
+		    (mv->my+y < mv->map->maph)) {
+			struct node *n;
+			struct editobj *eo = NULL;
 
-				n = &mv->map->map[mv->my+y][mv->mx+x];
-				if (!TAILQ_EMPTY(&n->nrefsh)) {
-					struct noderef *nref;
+			n = &mv->map->map[mv->my+y][mv->mx+x];
+			if (!TAILQ_EMPTY(&n->nrefsh)) {
+				struct noderef *nref;
 					
-					nref = TAILQ_FIRST(&n->nrefsh);
-					TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
-						if (eo->pobj == nref->pobj) {
-							break;
-						}
+				nref = TAILQ_FIRST(&n->nrefsh);
+				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
+					if (eo->pobj == nref->pobj) {
+						break;
 					}
-					if (eo != NULL) {
-						med->curobj = eo;
-						med->node.flags = n->flags;
-						med->ref.obj = eo->pobj;
-						med->ref.offs = nref->offs;
-						med->ref.flags = nref->flags;
-						dprintf("%s:%d[0x%x]\n",
-						    med->ref.obj->name,
-						    med->ref.offs,
-						    med->ref.flags);
-					} else {
-						warning("unusable reference\n");
-					}
+				}
+				if (eo != NULL) {
+					med->curobj = eo;
+					med->node.flags = n->flags;
+					med->ref.obj = eo->pobj;
+					med->ref.offs = nref->offs;
+					med->ref.flags = nref->flags;
+					dprintf("%s:%d[0x%x]\n",
+					    med->ref.obj->name,
+					    med->ref.offs,
+					    med->ref.flags);
+				} else {
+					warning("unusable reference\n");
 				}
 			}
 		}
+	}
 	
-		mv->mouse.x = x;
-		mv->mouse.y = y;
-		break;
-	case WINDOW_MOUSEBUTTONDOWN:
-		button = argv[2].i;
-		x = argv[3].i / mv->tilew;
-		y = argv[4].i / mv->tileh;
-		WIDGET_FOCUS(mv);
-		if (button > 1) {
-			mv->mouse.move++;
-		} else if (mv->flags & MAPVIEW_EDIT) {
-			if (med->curtool != NULL &&
-			   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-			   (mv->mx+x < mv->map->mapw) &&
-			   (mv->my+y < mv->map->maph) &&
-			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-				TOOL_OPS(med->curtool)->tool_effect(
-				    med->curtool, mv, mv->mx+x, mv->my+y);
-			}
-		}
-		if (mv->flags & MAPVIEW_TILEMAP) {
-			if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-			    (mv->mx+x < mv->map->mapw) &&
-			    (mv->my+y < mv->map->maph)) {
-				struct node *n;
-				struct editobj *eo = NULL;
+	mv->mouse.x = x;
+	mv->mouse.y = y;
+}
 
-				n = &mv->map->map[mv->my+y][mv->mx+x];
-				if (!TAILQ_EMPTY(&n->nrefsh)) {
-					struct noderef *nref;
+static void
+mapview_mousebuttondown(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	struct mapedit *med = mv->med;
+	int button = argv[1].i;
+	int x = argv[2].i / mv->tilew;
+	int y = argv[3].i / mv->tileh;
+	
+	WIDGET_FOCUS(mv);
+	if (button > 1) {
+		mv->mouse.move++;
+	} else if (mv->flags & MAPVIEW_EDIT) {
+		if (med->curtool != NULL &&
+		   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+		   (mv->mx+x < mv->map->mapw) &&
+		   (mv->my+y < mv->map->maph) &&
+		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+			TOOL_OPS(med->curtool)->tool_effect(
+			    med->curtool, mv, mv->mx+x, mv->my+y);
+		}
+	}
+	if (mv->flags & MAPVIEW_TILEMAP) {
+		if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+		    (mv->mx+x < mv->map->mapw) &&
+		    (mv->my+y < mv->map->maph)) {
+			struct node *n;
+			struct editobj *eo = NULL;
+
+			n = &mv->map->map[mv->my+y][mv->mx+x];
+			if (!TAILQ_EMPTY(&n->nrefsh)) {
+				struct noderef *nref;
 					
-					nref = TAILQ_FIRST(&n->nrefsh);
-					TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
-						if (eo->pobj == nref->pobj) {
-							break;
-						}
-					}
-					if (eo != NULL) {
-						med->curobj = eo;
-						med->node.flags = n->flags;
-						med->ref.obj = eo->pobj;
-						med->ref.offs = nref->offs;
-						med->ref.flags = nref->flags;
-						dprintf("%s:%d[0x%x]\n",
-						    med->ref.obj->name,
-						    med->ref.offs,
-						    med->ref.flags);
-					} else {
-						warning("unusable reference\n");
+				nref = TAILQ_FIRST(&n->nrefsh);
+				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
+					if (eo->pobj == nref->pobj) {
+						break;
 					}
 				}
-			}
-		}
-		break;
-	case WINDOW_MOUSEBUTTONUP:
-		button = argv[2].i;
-		if (button > 1) {
-			mv->mouse.move = 0;
-		}
-		break;
-	case WINDOW_KEYDOWN:
-		if (mv->flags & MAPVIEW_ZOOM) {
-			switch (argv[2].i) {
-			case SDLK_EQUALS:
-				/* XXX logarithmic curve */
-				zoomin_timer =
-				    SDL_AddTimer(60, mapview_zoomin, mv);
-				if (zoomin_timer == NULL) {
-					warning("SDL_AddTimer: %s\n",
-					    SDL_GetError());
+				if (eo != NULL) {
+					med->curobj = eo;
+					med->node.flags = n->flags;
+					med->ref.obj = eo->pobj;
+					med->ref.offs = nref->offs;
+					med->ref.flags = nref->flags;
+					dprintf("%s:%d[0x%x]\n",
+					    med->ref.obj->name,
+					    med->ref.offs,
+					    med->ref.flags);
+				} else {
+					warning("unusable reference\n");
 				}
-				break;
-			case SDLK_MINUS:
-				zoomout_timer =
-				    SDL_AddTimer(60, mapview_zoomout, mv);
-				if (zoomout_timer == NULL) {
-					warning("SDL_AddTimer: %s\n",
-					    SDL_GetError());
-				}
-				break;
-			case SDLK_0:
-				mapview_zoom(mv, 100);
-				mapview_stop_zoom(mv);
-				break;
 			}
 		}
-		break;
-	case WINDOW_KEYUP:
-		if (mv->flags & MAPVIEW_ZOOM) {
-			switch (argv[2].i) {
-			case SDLK_EQUALS:
-			case SDLK_MINUS:
-				mapview_stop_zoom(mv);
-				break;
-			}
+	}
+}
+
+static void
+mapview_mousebuttonup(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	int button = argv[1].i;
+
+	if (button > 1) {
+		mv->mouse.move = 0;
+	}
+}
+
+static void
+mapview_keyup(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	int keysym = argv[1].i;
+
+	if (mv->flags & MAPVIEW_ZOOM) {
+		switch (keysym) {
+		case SDLK_EQUALS:
+		case SDLK_MINUS:
+			mapview_stop_zoom(mv);
+			break;
 		}
-		break;
+	}
+}
+
+static void
+mapview_keydown(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	int keysym = argv[1].i;
+
+	if (mv->flags & MAPVIEW_ZOOM) {
+		switch (keysym) {
+		case SDLK_EQUALS:
+			/* XXX logarithmic curve */
+			zoomin_timer =
+			    SDL_AddTimer(60, mapview_zoomin, mv);
+			if (zoomin_timer == NULL) {
+				warning("SDL_AddTimer: %s\n",
+				    SDL_GetError());
+			}
+			break;
+		case SDLK_MINUS:
+			zoomout_timer =
+			    SDL_AddTimer(60, mapview_zoomout, mv);
+			if (zoomout_timer == NULL) {
+				warning("SDL_AddTimer: %s\n",
+				    SDL_GetError());
+			}
+			break;
+		case SDLK_0:
+			mapview_zoom(mv, 100);
+			mapview_stop_zoom(mv);
+			break;
+		}
 	}
 }
 
