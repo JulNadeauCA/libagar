@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.80 2004/09/27 03:58:03 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.81 2004/11/30 11:32:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -42,6 +42,7 @@ struct window {
 #define WINDOW_NO_CLOSE		0x0400	/* Disable close button */
 #define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
 #define WINDOW_MAXIMIZE		0x1000	/* Enable maximize button */
+#define WINDOW_MODAL		0x2000	/* Modal window behavior */
 
 #ifdef DEBUG
 	char	 caption[128];

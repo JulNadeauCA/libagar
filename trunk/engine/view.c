@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.162 2005/01/26 02:41:22 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.163 2005/01/28 12:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -78,6 +78,9 @@ view_init(enum gfx_engine ge)
 	view->maxdirty = 4;
 	view->dirty = Malloc(view->maxdirty * sizeof(SDL_Rect), M_VIEW);
 	view->opengl = 0;
+	view->modal_win = NULL;
+	view->wop_win = NULL;
+	view->focus_win = NULL;
 	TAILQ_INIT(&view->windows);
 	TAILQ_INIT(&view->detach);
 	pthread_mutex_init(&view->lock, &recursive_mutexattr);

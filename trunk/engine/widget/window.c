@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.234 2004/11/30 11:32:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.235 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -421,6 +421,9 @@ window_shown(int argc, union evarg *argv)
 
 	view->focus_win = win;
 	window_focus(win);
+	
+	if (win->flags & WINDOW_MODAL)
+		view->modal_win = win;
 
 	if (init) {
 		/* First pass: initial sizing. */
@@ -447,6 +450,9 @@ window_hidden(int argc, union evarg *argv)
 	
 	/* Remove the focus. XXX cycle */
 	view->focus_win = NULL;
+	
+	if (win->flags & WINDOW_MODAL)
+		view->modal_win = NULL;
 
 	/* Update the background if necessary. */
 	if (!window_surrounded(win)) {
@@ -740,6 +746,10 @@ window_event(SDL_Event *ev)
 
 	/* Process the input events. */
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
+		if (view->modal_win != NULL &&
+		    win != view->modal_win) {
+			continue;
+		}
 		pthread_mutex_lock(&win->lock);
 		if (!win->visible) {
 			pthread_mutex_unlock(&win->lock);
