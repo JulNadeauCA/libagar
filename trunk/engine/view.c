@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.145 2004/04/24 04:33:33 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.146 2004/04/25 08:18:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -39,11 +39,6 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
-
-#ifdef DEBUG
-#include <engine/monitor/monitor.h>
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -66,7 +61,6 @@ const SDL_VideoInfo *vinfo;
 
 static void destroy_window(struct window *);
 
-/* Initialize the graphic engine. */
 int
 view_init(enum gfx_engine ge)
 {
@@ -190,19 +184,6 @@ view_init(enum gfx_engine ge)
 		fprintf(stderr, "%s\n", error_get());
 		goto fail;
 	}
-
-	primitives_init();
-
-	config_window(config);
-#ifdef DEBUG
-	if (engine_debug > 0) {
-		monitor_init(&monitor, "debug-monitor");
-		window_show(monitor.toolbar);
-	}
-#endif
-	object_init(&engine_icons, "object", "icons", NULL);
-	object_wire_gfx(&engine_icons, "/engine/icons/icons");
-
 	return (0);
 fail:
 	pthread_mutex_destroy(&view->lock);
@@ -211,7 +192,6 @@ fail:
 	return (-1);
 }
 
-/* Release the resources allocated by the graphic engine. */
 void
 view_destroy(void)
 {
@@ -328,6 +308,7 @@ view_copy_surface(SDL_Surface *ss)
 }
 
 /* Scaling routine optimized for ds > ss case. */
+/* XXX generalizes to ds.y > ss.y */
 static __inline__ void
 grow_surface(SDL_Surface *ss, SDL_Surface *ds)
 {

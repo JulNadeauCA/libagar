@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.28 2004/04/17 23:38:13 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.29 2004/04/22 12:36:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -22,12 +22,14 @@ enum text_msg_title {
 	MSG_INFO
 };
 
-#define TEXT_TTF	0x01	/* Use FreeType */
-#define TEXT_BITMAP	0x02	/* Use fixed-size bitmap fonts */
-#define TEXT_PIXMAP	0x04	/* Use fixed-size >1bpp fonts */
+enum text_engine {
+	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
+	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
+};
 
 __BEGIN_DECLS
-int	 text_init(int);
+int	 text_init(enum text_engine);
 void	 text_parse_fontspec(char *);
 void	 text_destroy(void);
 int	 text_font_height(struct text_font *);

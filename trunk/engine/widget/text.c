@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.81 2004/04/20 09:20:31 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.82 2004/04/22 12:36:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -99,12 +99,13 @@ out:
 
 /* Initialize the text rendering engine and set the default font. */
 int
-text_init(int flags)
+text_init(enum text_engine te)
 {
 	if (prop_get_bool(config, "font-engine") == 0)
 		return (0);
 
-	if (flags & TEXT_TTF) {
+	switch (te) {
+	case TEXT_ENGINE_TTF:
 		if (ttf_init() == -1) {
 			error_set("ttf_init: %s", SDL_GetError());
 			return (-1);
@@ -117,6 +118,9 @@ text_init(int flags)
 		    prop_get_string(config, "font-engine.default-font"),
 		    prop_get_int(config, "font-engine.default-size"),
 		    prop_get_int(config, "font-engine.default-style"));
+		break;
+	default:
+		fatal("unimplemented text engine");
 	}
 	return (0);
 }
