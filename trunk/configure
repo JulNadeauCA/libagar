@@ -198,6 +198,7 @@ echo "    --enable-warnings              Enable compiler warnings [default: no]"
 exit 1
 fi
 if [ "${enable_debug}" = "yes" ]; then
+	echo "LDFLAGS=-g" >> Makefile.config
 	echo "#ifndef DEBUG" > config/debug.h
 	echo "#define DEBUG 1" >> config/debug.h
 	echo "#endif /* DEBUG */" >> config/debug.h
