@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.167 2003/03/26 10:04:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.168 2003/03/30 03:37:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,6 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
 
 #include <libfobj/fobj.h>
@@ -38,7 +39,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	4, 3
+	4, 4
 };
 
 static const struct object_ops map_ops = {
@@ -283,8 +284,9 @@ map_init(struct map *m, char *name, char *media)
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
-	m->defx = 0;
-	m->defy = 0;
+	m->origin.x = 0;
+	m->origin.y = 0;
+	m->origin.layer = 0;
 	m->map = NULL;
 	m->tilew = TILEW;
 	m->tileh = TILEH;
@@ -296,10 +298,7 @@ map_init(struct map *m, char *name, char *media)
 	m->layers = Malloc(sizeof(struct map_layer));
 	m->nlayers = 1;
 	map_layer_init(&m->layers[0], "Layer 0");
-
-	pthread_mutexattr_init(&m->lockattr);
-	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&m->lock, &m->lockattr);
+	pthread_mutex_init(&m->lock, &recursive_mutexattr);
 
 	OBJECT(m)->flags |= OBJECT_CONSISTENT;
 
@@ -330,21 +329,24 @@ map_layer_destroy(struct map_layer *lay)
 int
 map_push_layer(struct map *m, char *name)
 {
+	char layname[MAP_LAYER_NAME_MAX];
+
+	if (name != NULL) {
+		if (snprintf(layname, sizeof(layname), "%s", name) >=
+		    sizeof(layname)) {
+			error_set("layer name too big");
+		}
+	} else {
+		snprintf(layname, sizeof(layname), "Layer %u", m->nlayers);
+	}
+
 	if (m->nlayers+1 > MAP_MAX_LAYERS) {
 		error_set("too many layers");
 		return (-1);
 	}
 	m->layers = Realloc(m->layers,
 	    (m->nlayers+1) * sizeof(struct map_layer));
-	if (name == NULL) {				/* Default name */
-		char *s;
-
-		Asprintf(&s, "Layer %d", m->nlayers);
-		map_layer_init(&m->layers[m->nlayers], s);
-		free(s);
-	} else {
-		map_layer_init(&m->layers[m->nlayers], name);
-	}
+	map_layer_init(&m->layers[m->nlayers], layname);
 	m->nlayers++;
 	return (0);
 }
@@ -353,9 +355,8 @@ map_push_layer(struct map *m, char *name)
 void
 map_pop_layer(struct map *m)
 {
-	if (--m->nlayers < 1) {
+	if (--m->nlayers < 1)
 		m->nlayers = 1;
-	}
 }
 
 /*
@@ -583,7 +584,6 @@ map_destroy(void *p)
 		map_free_layers(m);
 
 	pthread_mutex_destroy(&m->lock);
-	pthread_mutexattr_destroy(&m->lockattr);
 }
 
 /*
@@ -591,19 +591,19 @@ map_destroy(void *p)
  * The noderef's parent map must be locked.
  */
 int
-noderef_load(int fd, struct object_table *deps, struct node *node,
+noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
     struct noderef **nref)
 {
 	enum noderef_type type;
 	Uint32 ntrans = 0;
-	Uint32 flags;
+	Uint8 flags;
 	Uint8 layer;
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
-	type = read_uint32(fd);
-	flags = read_uint32(fd);
-	layer = read_uint8(fd);
+	type = read_uint32(buf);
+	flags = (Uint8)read_uint32(buf);
+	layer = read_uint8(buf);
 
 	/* Read the reference data. */
 	switch (type) {
@@ -612,14 +612,14 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			Uint32 obji, offs;
 			Sint16 xcenter, ycenter;
 
-			obji = read_uint32(fd);		/* Object# */
+			obji = read_uint32(buf);		/* Object# */
 			if (obji > deps->nobjs) {
 				error_set("bad sprite obj#");
 				return (-1);
 			}
-			offs = read_uint32(fd);		/* Sprite# */
-			xcenter = read_sint16(fd);
-			ycenter = read_sint16(fd);
+			offs = read_uint32(buf);		/* Sprite# */
+			xcenter = read_sint16(buf);
+			ycenter = read_sint16(buf);
 
 			debug(DEBUG_NODEREFS,
 			    "sprite: obj[%u]:%u, center %d,%d\n",
@@ -646,15 +646,15 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			Uint32 obji, offs, animflags;
 			Sint16 xcenter, ycenter;
 
-			obji = read_uint32(fd);
+			obji = read_uint32(buf);
 			if (obji > deps->nobjs) {
 				error_set("bad anim obj#");
 				return (-1);
 			}
-			offs = read_uint32(fd);
-			xcenter = read_sint16(fd);
-			ycenter = read_sint16(fd);
-			animflags = read_uint32(fd);
+			offs = read_uint32(buf);
+			xcenter = read_sint16(buf);
+			ycenter = read_sint16(buf);
+			animflags = read_uint32(buf);
 
 			if (deps->objs[obji] != NULL) {
 				debug(DEBUG_NODEREFS,
@@ -682,19 +682,19 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			Uint32 ox, oy;
 			Uint8 dir;
 
-			if (copy_string(map_id, fd, sizeof(map_id)) >=
+			if (copy_string(map_id, buf, sizeof(map_id)) >=
 			    sizeof(map_id)) {
 				error_set("map_id too big");
 				return (-1);
 			}
-			ox = (int)read_uint32(fd);
-			oy = (int)read_uint32(fd);
+			ox = (int)read_uint32(buf);
+			oy = (int)read_uint32(buf);
 			if (ox < 0 || ox > MAP_MAX_WIDTH || 
 			    ox < 0 || oy > MAP_MAX_HEIGHT) {
 				error_set("bad warp coords");
 				return (-1);
 			}
-			dir = read_uint8(fd);
+			dir = read_uint8(buf);
 			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
 			    map_id, ox, oy, dir);
 
@@ -712,7 +712,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 	}
 
 	/* Read the transforms. */
-	if ((ntrans = read_uint32(fd)) > NODEREF_MAX_TRANSFORMS) {
+	if ((ntrans = read_uint32(buf)) > NODEREF_MAX_TRANSFORMS) {
 		error_set("too many transforms");
 		goto fail;
 	}
@@ -721,7 +721,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 
 		trans = Malloc(sizeof(struct transform));
 		transform_init(trans, 0, 0, NULL);
-		if (transform_load(fd, trans) == -1) {
+		if (transform_load(buf, trans) == -1) {
 			free(trans);
 			goto fail;
 		}
@@ -737,23 +737,23 @@ fail:
 }
 
 int
-node_load(int fd, struct object_table *deps, struct node *node)
+node_load(struct netbuf *buf, struct object_table *deps, struct node *node)
 {
 	Uint32 nrefs;
 	struct noderef *nref;
 	int i;
 	
 	/* Load the node properties. */
-	node->flags = read_uint32(fd);
-	read_uint32(fd);			/* Pad: v1 */
+	node->flags = read_uint32(buf);
+	read_uint32(buf);			/* Pad: v1 */
 	
 	/* Load the node references. */
-	if ((nrefs = read_uint32(fd)) > NODE_MAX_NODEREFS) {
+	if ((nrefs = read_uint32(buf)) > NODE_MAX_NODEREFS) {
 		error_set("too many nrefs");
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
-		if (noderef_load(fd, deps, node, &nref) == -1) {
+		if (noderef_load(buf, deps, node, &nref) == -1) {
 			node_destroy(node);
 			node_init(node);
 			return (-1);
@@ -763,26 +763,28 @@ node_load(int fd, struct object_table *deps, struct node *node)
 }
 
 static void
-map_layer_load(int fd, struct map *m, struct map_layer *lay)
+map_layer_load(struct netbuf *buf, struct map *m, struct map_layer *lay)
 {
-	lay->name = read_string(fd, NULL);
-	lay->visible = (int)read_uint8(fd);
-	lay->xinc = read_sint16(fd);
-	lay->yinc = read_sint16(fd);
-	lay->alpha = read_uint8(fd);
+	lay->name = read_string(buf, NULL);
+	lay->visible = (int)read_uint8(buf);
+	lay->xinc = read_sint16(buf);
+	lay->yinc = read_sint16(buf);
+	lay->alpha = read_uint8(buf);
 }
 
 int
-map_load(void *ob, int fd)
+map_load(void *ob, struct netbuf *buf)
 {
 	struct map *m = ob;
-	struct object_table *deps = NULL;
+	struct object_table deps;
 	struct version ver;
-	Uint32 w, h, defx, defy, tilew, tileh;
+	Uint32 w, h, origin_x, origin_y, tilew, tileh;
 	int x, y;
 
-	if (version_read(fd, &map_ver, &ver) != 0)
+	if (version_read(buf, &map_ver, &ver) != 0)
 		return (-1);
+
+	object_table_init(&deps);
 
 	pthread_mutex_lock(&m->lock);
 
@@ -793,15 +795,15 @@ map_load(void *ob, int fd)
 			map_free_layers(m);
 	}
 
-	read_uint32(fd);				/* Always 0 */
-	w = read_uint32(fd);
-	h = read_uint32(fd);
-	defx = read_uint32(fd);
-	defy = read_uint32(fd);
-	tilew = read_uint32(fd);
-	tileh = read_uint32(fd);
+	read_uint32(buf);				/* Always 0 */
+	w = read_uint32(buf);
+	h = read_uint32(buf);
+	origin_x = read_uint32(buf);
+	origin_y = read_uint32(buf);
+	tilew = read_uint32(buf);
+	tileh = read_uint32(buf);
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
-	    defx > MAP_MAX_WIDTH || defy > MAP_MAX_HEIGHT ||
+	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT ||
 	    tilew > MAP_MAX_WIDTH || tileh > MAP_MAX_HEIGHT) {
 		error_set("bad geo/coords");
 		goto fail;
@@ -810,37 +812,39 @@ map_load(void *ob, int fd)
 	m->maph = (unsigned int)h;
 	m->tilew = (unsigned int)tilew;
 	m->tileh = (unsigned int)tileh;
-	m->defx = (int)defx;
-	m->defy = (int)defy;
+	m->origin.x = (int)origin_x;
+	m->origin.y = (int)origin_y;
 
-	m->zoom = read_uint16(fd);
+	m->zoom = read_uint16(buf);
 	if (ver.minor >= 1) {				/* Soft-scroll offs */
-		m->ssx = read_sint16(fd);
-		m->ssy = read_sint16(fd);
+		m->ssx = read_sint16(buf);
+		m->ssy = read_sint16(buf);
 	}
 	if (ver.minor >= 2) {				/* Multilayering */
 		int i;
 
-		if ((m->nlayers = read_uint32(fd)) > MAP_MAX_LAYERS) {
+		if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
 			error_set("too many layers");
 			goto fail;
 		}
 		debug(DEBUG_STATE, "%d layers\n", m->nlayers);
 		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
 		for (i = 0; i < m->nlayers; i++) {
-			map_layer_load(fd, m, &m->layers[i]);
+			map_layer_load(buf, m, &m->layers[i]);
 		}
 	}
-	if (ver.minor >= 3) {				/* Edited layer */
-		m->cur_layer = read_uint8(fd);
-	}
+	if (ver.minor >= 3) 				/* Edited layer */
+		m->cur_layer = (int)read_uint8(buf);
+	if (ver.minor >= 4) 				/* Origin layer */
+		m->origin.layer = (int)read_uint8(buf);
 
 	debug(DEBUG_STATE,
-	    "geo %ux%u, origin at %d,%d, %u%% zoom, %ux%u tiles\n",
-	    m->mapw, m->maph, m->defx, m->defy, m->zoom, m->tilew, m->tileh);
+	    "geo %ux%u, origin at [%d,%d,%d], %u%% zoom, %ux%u tiles\n",
+	    m->mapw, m->maph, m->origin.x, m->origin.y, m->origin.layer,
+	    m->zoom, m->tilew, m->tileh);
 
 	/* Read the possible dependencies. */
-	if ((deps = object_table_load(fd, OBJECT(m)->name)) == NULL)
+	if (object_table_load(&deps, buf, OBJECT(m)->name) == -1)
 		goto fail;
 
 	/* Allocate and load the nodes. */
@@ -849,18 +853,16 @@ map_load(void *ob, int fd)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			if (node_load(fd, deps, &m->map[y][x]) == -1)
+			if (node_load(buf, &deps, &m->map[y][x]) == -1)
 				goto fail;
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
-	object_table_destroy(deps);
+	object_table_destroy(&deps);
 	return (0);
 fail:
-	if (deps != NULL) {
-		object_table_destroy(deps);
-	}
 	pthread_mutex_unlock(&m->lock);
+	object_table_destroy(&deps);
 	return (-1);
 }
 
@@ -869,7 +871,7 @@ fail:
  * The noderef's parent map must be locked.
  */
 void
-noderef_save(struct fobj_buf *buf, struct object_table *deps,
+noderef_save(struct netbuf *buf, struct object_table *deps,
     struct noderef *nref)
 {
 	off_t ntrans_offs;
@@ -877,9 +879,9 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 	struct transform *trans;
 
 	/* Save the type of reference and flags. */
-	buf_write_uint32(buf, nref->type);
-	buf_write_uint32(buf, nref->flags);
-	buf_write_uint8(buf, nref->layer);
+	write_uint32(buf, nref->type);
+	write_uint32(buf, (Uint32)nref->flags);
+	write_uint8(buf, nref->layer);
 
 	debug(DEBUG_NODEREFS, "type %d, flags 0x%x, layer %d\n",
 	    nref->type, nref->flags, nref->layer);
@@ -891,10 +893,10 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 			if (deps->objs[i] == nref->pobj)
 				break;
 		}
-		buf_write_uint32(buf, i);		/* Object# */
-		buf_write_uint32(buf, nref->offs);	/* Sprite# */
-		buf_write_sint16(buf, nref->xcenter);
-		buf_write_sint16(buf, nref->ycenter);
+		write_uint32(buf, i);			/* Object# */
+		write_uint32(buf, nref->offs);		/* Sprite# */
+		write_sint16(buf, nref->xcenter);
+		write_sint16(buf, nref->ycenter);
 		debug(DEBUG_NODEREFS, "sprite: obj[%d]:%d, center %d,%d\n",
 		    i, nref->offs, nref->xcenter, nref->ycenter);
 		break;
@@ -903,21 +905,21 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 			if (deps->objs[i] == nref->pobj)
 				break;
 		}
-		buf_write_uint32(buf, i);		/* Object# */
-		buf_write_uint32(buf, nref->offs);	/* Anim# */
-		buf_write_sint16(buf, nref->xcenter);
-		buf_write_sint16(buf, nref->ycenter);
-		buf_write_uint32(buf, (Uint32)nref->data.anim.flags);
+		write_uint32(buf, i);			/* Object# */
+		write_uint32(buf, nref->offs);		/* Anim# */
+		write_sint16(buf, nref->xcenter);
+		write_sint16(buf, nref->ycenter);
+		write_uint32(buf, (Uint32)nref->data.anim.flags);
 		debug(DEBUG_NODEREFS,
 		    "anim: obj[%d]:%d, center %d,%d, aflags 0x%x\n",
 		    i, nref->offs, nref->xcenter, nref->ycenter,
 		    nref->data.anim.flags);
 		break;
 	case NODEREF_WARP:
-		buf_write_string(buf, nref->data.warp.map);
-		buf_write_uint32(buf, nref->data.warp.x);
-		buf_write_uint32(buf, nref->data.warp.y);
-		buf_write_uint8(buf, nref->data.warp.dir);
+		write_string(buf, nref->data.warp.map);
+		write_uint32(buf, nref->data.warp.x);
+		write_uint32(buf, nref->data.warp.y);
+		write_uint8(buf, nref->data.warp.dir);
 		debug(DEBUG_NODEREFS, "warp: to %s:[%d,%d], dir 0x%x",
 		    nref->data.warp.map, nref->data.warp.x, nref->data.warp.y,
 		    nref->data.warp.dir);
@@ -928,28 +930,28 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 
 	/* Save the transforms. */
 	ntrans_offs = buf->offs;
-	buf_write_uint32(buf, 0);				/* Skip count */
+	write_uint32(buf, 0);					/* Skip count */
 	SLIST_FOREACH(trans, &nref->transforms, transforms) {
 		transform_save(buf, trans);
 		ntrans++;
 	}
-	buf_pwrite_uint32(buf, ntrans, ntrans_offs);		/* Save count */
+	pwrite_uint32(buf, ntrans, ntrans_offs);		/* Save count */
 }
 
 void
-node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
+node_save(struct netbuf *buf, struct object_table *deps, struct node *node)
 {
 	struct noderef *nref;
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
 
 	/* Save the node properties. */
-	buf_write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
-	buf_write_uint32(buf, 0);			/* Pad: v1 */
+	write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
+	write_uint32(buf, 0);				/* Pad: v1 */
 
 	/* Save the node references. */
 	nrefs_offs = buf->offs;
-	buf_write_uint32(buf, 0);			/* Skip */
+	write_uint32(buf, 0);				/* Skip */
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 		MAP_CHECK_NODEREF(nref);
 		if ((nref->flags & NODEREF_SAVEABLE) == 0)
@@ -957,88 +959,82 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 		noderef_save(buf, deps, nref);
 		nrefs++;
 	}
-	buf_pwrite_uint32(buf, nrefs, nrefs_offs);
+	pwrite_uint32(buf, nrefs, nrefs_offs);
 }
 
 static void
-map_layer_save(struct fobj_buf *buf, struct map_layer *lay)
+map_layer_save(struct netbuf *buf, struct map_layer *lay)
 {
-	buf_write_string(buf, lay->name);
-	buf_write_uint8(buf, (Uint8)lay->visible);
-	buf_write_sint16(buf, lay->xinc);
-	buf_write_sint16(buf, lay->yinc);
-	buf_write_uint8(buf, lay->alpha);
+	write_string(buf, lay->name);
+	write_uint8(buf, (Uint8)lay->visible);
+	write_sint16(buf, lay->xinc);
+	write_sint16(buf, lay->yinc);
+	write_uint8(buf, lay->alpha);
 }
 
 int
-map_save(void *p, int fd)
+map_save(void *p, struct netbuf *buf)
 {
 	struct map *m = p;
-	struct fobj_buf *buf;
 	struct object *pob;
-	struct object_table *deps;
+	struct object_table deps;
 	int x, y;
 	
-	version_write(fd, &map_ver);
-
-	buf = fobj_create_buf(65536, 32767);
+	version_write(buf, &map_ver);
 
 	pthread_mutex_lock(&m->lock);
-
 	debug(DEBUG_STATE,
-	    "geo %ux%u, origin at %d,%d, %u%% zoom %ux%u tiles\n",
-	    m->mapw, m->maph, m->defx, m->defy, m->zoom, m->tilew, m->tileh);
+	    "geo %ux%u, origin at [%d,%d,%d], %u%% zoom %ux%u tiles\n",
+	    m->mapw, m->maph, m->origin.x, m->origin.y, m->origin.layer,
+	    m->zoom, m->tilew, m->tileh);
 
-	buf_write_uint32(buf, 0);			/* Always 0 */
-	buf_write_uint32(buf, (Uint32)m->mapw);
-	buf_write_uint32(buf, (Uint32)m->maph);
-	buf_write_uint32(buf, (Uint32)m->defx);
-	buf_write_uint32(buf, (Uint32)m->defy);
-	buf_write_uint32(buf, (Uint32)m->tilew);
-	buf_write_uint32(buf, (Uint32)m->tileh);
-	buf_write_uint16(buf, m->zoom);
+	write_uint32(buf, 0);				/* Always 0 */
+	write_uint32(buf, (Uint32)m->mapw);
+	write_uint32(buf, (Uint32)m->maph);
+	write_uint32(buf, (Uint32)m->origin.x);
+	write_uint32(buf, (Uint32)m->origin.y);
+	write_uint32(buf, (Uint32)m->tilew);
+	write_uint32(buf, (Uint32)m->tileh);
+	write_uint16(buf, m->zoom);
 	if (map_ver.minor >= 1) {			/* Soft-scroll offs */
-		buf_write_sint16(buf, m->ssx);
-		buf_write_sint16(buf, m->ssy);
+		write_sint16(buf, m->ssx);
+		write_sint16(buf, m->ssy);
 	}
 	if (map_ver.minor >= 2) {			/* Multilayering */
 		int i;
 
-		buf_write_uint32(buf, m->nlayers);
-		for (i = 0; i < m->nlayers; i++) {
+		write_uint32(buf, m->nlayers);
+		for (i = 0; i < m->nlayers; i++)
 			map_layer_save(buf, &m->layers[i]);
-		}
 	}
-	if (map_ver.minor >= 3) {			/* Edited layer */
-		buf_write_uint8(buf, m->cur_layer);
-	}
+	if (map_ver.minor >= 3) 			/* Edited layer */
+		write_uint8(buf, m->cur_layer);
+	if (map_ver.minor >= 4) 			/* Origin layer */
+		write_uint8(buf, m->origin.layer);
 
 	/* Write the dependencies. */
-	deps = object_table_new();
+	object_table_init(&deps);
 	pthread_mutex_lock(&world->lock);
 	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		if ((pob->flags & OBJECT_ART) == 0 ||		/* XXX */
 		     pob->flags & OBJECT_CANNOT_MAP) {
 			continue;
 		} 
-		object_table_insert(deps, pob);
+		object_table_insert(&deps, pob);
 	}
 	pthread_mutex_unlock(&world->lock);
-	object_table_save(buf, deps);
+	object_table_save(&deps, buf);
 
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			MAP_CHECK_NODE(&m->map[y][x]);
-			node_save(buf, deps, &m->map[y][x]);
+			node_save(buf, &deps, &m->map[y][x]);
 		}
 	}
-	
 	pthread_mutex_unlock(&m->lock);
 
-	fobj_flush_buf(buf, fd);
-	fobj_destroy_buf(buf);
-	object_table_destroy(deps);
+	object_table_destroy(&deps);
 	return (0);
 }
 
@@ -1185,8 +1181,7 @@ noderef_draw_sprite(struct noderef *nref)
 
 		/* Allocate the new sprite surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
-		    (origsu->flags &
-		     (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+		    (origsu->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 		     origsu->w, origsu->h, origsu->format->BitsPerPixel,
 		     origsu->format->Rmask,
 		     origsu->format->Gmask,
