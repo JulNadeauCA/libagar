@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.54 2003/02/04 02:35:38 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.55 2003/02/05 01:09:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -508,6 +508,7 @@ mapview_draw(void *p)
 	     	     (mx - mv->mx) <= mv->mw && mx < m->mapw;
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
+
 			MAP_CHECK_NODE(node, mx, my);
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
@@ -518,9 +519,8 @@ mapview_draw(void *p)
 				    WIDGET_ABSY(mv) + ry);
 			}
 
-			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
+			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60)
 				draw_node_props(mv, node, rx, ry);
-			}
 
 			if (mv->flags & MAPVIEW_GRID) {
 				/* XXX overdraw */
@@ -911,6 +911,20 @@ mapview_keydown(int argc, union evarg *argv)
 		if (mapedition)
 			object_load(mv->map);
 		break;
+	case SDLK_g:
+		if (mv->flags & MAPVIEW_GRID) {
+			mv->flags &= ~(MAPVIEW_GRID);
+		} else {
+			mv->flags |= MAPVIEW_GRID;
+		}
+		break;
+	case SDLK_p:
+		if (mv->flags & MAPVIEW_PROPS) {
+			mv->flags &= ~(MAPVIEW_PROPS);
+		} else {
+			mv->flags |= MAPVIEW_PROPS;
+		}
+		break;
 	}
 
 	pthread_mutex_unlock(&mv->map->lock);
@@ -933,6 +947,8 @@ mapview_scaled(int argc, union evarg *argv)
 		mapview_center(mv, mv->map->defx, mv->map->defy);
 		mv->flags &= ~(MAPVIEW_CENTER);
 	}
+
+	mapview_zoom(mv, *mv->zoom);
 	
 	pthread_mutex_unlock(&mv->map->lock);
 }
