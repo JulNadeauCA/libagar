@@ -5,12 +5,35 @@ echo -n "checking for SDL >= 1.2.0...";
 SDL_VERSION=`sdl-config --version 2>/dev/null`
 SDL_CFLAGS=`sdl-config --cflags 2>/dev/null`
 SDL_LIBS=`sdl-config --libs 2>/dev/null`
+SDL11_VERSION=`sdl11-config --version 2>/dev/null`
+SDL11_CFLAGS=`sdl11-config --cflags 2>/dev/null`
+SDL11_LIBS=`sdl11-config --libs 2>/dev/null`
 
 if [ "$SDL_VERSION" != "" ]; then
- echo "ok";echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+ SDL_FOUND=yes
+
+ echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 
  echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 
+else
+ SDL_FOUND=no
+
+fi
+
+if [ "$SDL11_VERSION" != "" ]; then
+ SDL_FOUND=yes
+
+ echo SDL11_CFLAGS=$SDL11_CFLAGS >> Makefile.config
+
+ echo SDL11_LIBS=$SDL11_LIBS >> Makefile.config
+
+else
+ false
+fi
+
+if [ "$SDL_FOUND" == "yes" ]; then
+ echo "ok";
 else
  echo "missing";
  echo "*** This package requires SDL >= 1.2.0";
