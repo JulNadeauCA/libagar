@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.22 2004/03/12 02:51:18 vedge Exp $
+.\"	$Csoft: view.3,v 1.23 2004/04/17 00:33:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -82,9 +82,6 @@ function sets the nominal refresh rate, given in frames per second.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn view_surface "Uint32 flags" "int width" "int height"
-.Pp
-.Ft "SDL_Surface *"
 .Fn view_copy_surface "SDL_Surface *src"
 .Pp
 .Ft "SDL_Surface *"
@@ -110,22 +107,6 @@ function sets the nominal refresh rate, given in frames per second.
 These functions operate on
 .Xr SDL_Surface 3
 structures.
-.Fn view_surface
-allocates a 32bpp surface using one of the following RGBA masks depending
-on host byte order:
-.Bd -literal
-/* Big endian */
-0xff000000
-0x00ff0000
-0x0000ff00
-0x000000ff
-
-/* Little endian */
-0x000000ff
-0x0000ff00
-0x00ff0000
-0xff000000
-.Ed
 .Pp
 The
 .Fn view_copy_surface

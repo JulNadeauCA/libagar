@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.140 2004/03/24 08:47:05 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.141 2004/04/17 00:33:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -60,6 +60,7 @@
 /* Read-only as long as the engine is running. */
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
+const SDL_VideoInfo *vinfo;
 
 static void destroy_window(struct window *);
 
@@ -143,6 +144,11 @@ view_init(enum gfx_engine ge)
 		    view->depth, SDL_GetError());
 		goto fail;
 	}
+	vfmt = view->v->format;
+	printf(_("Video display is %dbpp "
+	         "(ckey=0x%x, alpha=0x%04x)\n"),
+	    vfmt->BitsPerPixel, vfmt->colorkey,
+	    vfmt->alpha);
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
@@ -177,7 +183,6 @@ view_init(enum gfx_engine ge)
 
 	prop_set_uint16(config, "view.w", view->w);
 	prop_set_uint16(config, "view.h", view->h);
-	vfmt = view->v->format;
 
 	if (view_set_refresh(prop_get_uint8(config, "view.fps")) == -1) {
 		fprintf(stderr, "%s\n", error_get());
@@ -300,18 +305,6 @@ view_detach_queued(void)
 	TAILQ_INIT(&view->detach);
 }
 
-SDL_Surface *
-view_surface(Uint32 flags, int w, int h)
-{
-	SDL_Surface *s;
-
-	if ((s = SDL_CreateRGBSurface(flags, w, h, 32,
-	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-	}
-	return (s);
-}
-
 /* Return a newly allocated surface containing a copy of ss. */
 SDL_Surface *
 view_copy_surface(SDL_Surface *ss)
@@ -327,6 +320,76 @@ view_copy_surface(SDL_Surface *ss)
 	return (rs);
 }
 
+/* Scaling routine optimized for ds > ss case. */
+static __inline__ void
+grow_surface(SDL_Surface *ss, SDL_Surface *ds)
+{
+	Uint8 *dst = (Uint8 *)ds->pixels;
+	int dx = (ds->w/ss->w)*ss->format->BytesPerPixel;
+	int dy = (ds->h/ss->h);
+	int x, y, i;
+	void *scanline;
+
+	scanline = Malloc(ds->pitch, M_VIEW);
+	for (y = 0; y < ds->h; y += dy) {
+		Uint8 *sp = (Uint8 *)scanline;
+
+		for (x = 0; x < ds->w; x++) {
+			Uint8 *src = (Uint8 *)ss->pixels +
+			    (y*ss->h/ds->h)*ss->pitch +
+			    (x*ss->w/ds->w)*ss->format->BytesPerPixel;
+			Uint8 r1, g1, b1, a1;
+			Uint32 color;
+
+			switch (ss->format->BytesPerPixel) {
+			case 4:
+				SDL_GetRGBA(*(Uint32 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 3:
+			case 2:
+				SDL_GetRGBA(*(Uint16 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 1:
+				SDL_GetRGBA(*src, ss->format, &r1, &g1, &b1,
+				    &a1);
+				break;
+			}
+
+			color = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
+			switch (ds->format->BytesPerPixel) {
+			case 4:
+				*(Uint32 *)sp = color;
+				break;
+			case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+				sp[0] = (color>>16) & 0xff;
+				sp[1] = (color>>8) & 0xff;
+				sp[2] = color & 0xff;
+#else
+				sp[2] = (color>>16) & 0xff;
+				sp[1] = (color>>8) & 0xff;
+				sp[0] = color & 0xff;
+#endif
+				break;
+			case 2:
+				*(Uint16 *)sp = 0;
+				break;
+			case 1:
+				*sp = color;
+				break;
+			}
+			sp += ds->format->BytesPerPixel;
+		}
+		for (i = 0; i < dy; i++) {
+			memcpy(dst, scanline, ds->pitch);
+			dst += ds->pitch;
+		}
+	}
+	Free(scanline, M_VIEW);
+}
+
 /*
  * Allocate a new surface containing a pixmap of ss scaled to wxh.
  * The source surface must not be locked by the calling thread.
@@ -335,11 +398,15 @@ SDL_Surface *
 view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 {
 	SDL_Surface *ds;
-	Uint32 col = 0;
-	Uint8 *src, *dst, r1, g1, b1, a1;
+	Uint8 r1, g1, b1, a1;
 	int x, y;
 
-	ds = view_surface(ss->flags, w, h);
+	ds = SDL_CreateRGBSurface(ss->flags, w, h, ss->format->BitsPerPixel,
+	    ss->format->Rmask, ss->format->Gmask, ss->format->Bmask,
+	    ss->format->Amask);
+	if (ds == NULL) {
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
 	ds->format->alpha = ss->format->alpha;
 	ds->format->colorkey = ss->format->colorkey;
 
@@ -349,7 +416,6 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 		Uint32 sckflags = ss->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
 		Uint32 sckey = ss->format->colorkey;
 
-		/* Return a copy of the original surface. */
 		SDL_SetAlpha(ss, 0, 0);
 		SDL_SetColorKey(ss, 0, 0);
 		SDL_BlitSurface(ss, NULL, ds, NULL);
@@ -362,14 +428,22 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 		SDL_LockSurface(ss);
 	if (SDL_MUSTLOCK(ds))
 		SDL_LockSurface(ds);
+
+	/* Use an incremental algorithm if ds > ss in size. */
+	if (ds->h > ss->h && ds->w > ss->w) {
+		grow_surface(ss, ds);
+		goto out;
+	}
+	
+	/* Otherwise revert to the brute-force algorithm. */
 	for (y = 0; y < ds->h; y++) {
 		for (x = 0; x < ds->w; x++) {
-			src = (Uint8 *)ss->pixels +
-			    (y * ss->h / ds->h) * ss->pitch +
-			    (x * ss->w / ds->w) * ss->format->BytesPerPixel;
-			dst = (Uint8 *)ds->pixels +
-			    y * ds->pitch +
-			    x * ds->format->BytesPerPixel;
+			Uint8 *src = (Uint8 *)ss->pixels +
+			    (y*ss->h/ds->h)*ss->pitch +
+			    (x*ss->w/ds->w)*ss->format->BytesPerPixel;
+			Uint8 *dst = (Uint8 *)ds->pixels +
+			    y*ds->pitch + x*ds->format->BytesPerPixel;
+			Uint32 color;
 
 			switch (ss->format->BytesPerPixel) {
 			case 4:
@@ -377,9 +451,6 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 				    &r1, &g1, &b1, &a1);
 				break;
 			case 3:
-				SDL_GetRGBA(*(Uint16 *)src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
 			case 2:
 				SDL_GetRGBA(*(Uint16 *)src, ss->format,
 				    &r1, &g1, &b1, &a1);
@@ -389,20 +460,33 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 				    &r1, &g1, &b1, &a1);
 				break;
 			}
-			/* XXX transparency hack for text surfaces. */
-			if (r1 == 15 && g1 == 15 && b1 == 15) {
-				a1 = 0;
-			}
 
-			col = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
+			color = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
 			switch (ds->format->BytesPerPixel) {
-				_VIEW_PUTPIXEL_8(dst, col)
-				_VIEW_PUTPIXEL_16(dst, col)
-				_VIEW_PUTPIXEL_24(dst, col)
-				_VIEW_PUTPIXEL_32(dst, col)
+			case 4:
+				*(Uint32 *)dst = color;
+				break;
+			case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+				dst[0] = (color>>16) & 0xff;
+				dst[1] = (color>>8) & 0xff;
+				dst[2] = color & 0xff;
+#else
+				dst[2] = (color>>16) & 0xff;
+				dst[1] = (color>>8) & 0xff;
+				dst[0] = color & 0xff;
+#endif
+				break;
+			case 2:
+				*(Uint16 *)dst = color;
+				break;
+			case 1:
+				*dst = color;
+				break;
 			}
 		}
 	}
+out:
 	if (SDL_MUSTLOCK(ds))
 		SDL_UnlockSurface(ds);
 	if (SDL_MUSTLOCK(ss))
@@ -411,6 +495,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 }
 
 /* Set the alpha value of all pixels in a surface where a != 0. */
+/* XXX */
 void
 view_set_trans(SDL_Surface *su, Uint8 alpha)
 {
@@ -428,13 +513,8 @@ view_set_trans(SDL_Surface *su, Uint8 alpha)
 
 			SDL_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
 
-			if (r == 15 && g == 15 && b == 15) {
-				/* XXX transparency hack for text surfaces. */
-				a = 0;
-			} else {
-				if (a != 0)
-					a = alpha;
-			}
+			if (a != 0)
+				a = alpha;
 
 			npixel = SDL_MapRGBA(su->format, r, g, b, a);
 			switch (su->format->BytesPerPixel) {
