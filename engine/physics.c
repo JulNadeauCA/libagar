@@ -30,9 +30,13 @@
 
 #include <engine/engine.h>
 
+static void	direction_change(struct direction *, struct map_aref *);
+
 int
-direction_init(struct direction *dir, int flags, int hiwat)
+direction_init(struct direction *dir, void *ob, struct map *map,
+    int flags, int hiwat, int speed)
 {
+	dir->set = 0;
 	dir->current = 0;
 	dir->clear = 0;
 	dir->moved = 0;
@@ -40,6 +44,9 @@ direction_init(struct direction *dir, int flags, int hiwat)
 
 	dir->tick = 0;
 	dir->hiwat = hiwat;
+	dir->speed = speed;
+	dir->ob = ob;
+	dir->map = map;
 
 	return (0);
 }
@@ -49,23 +56,57 @@ direction_init(struct direction *dir, int flags, int hiwat)
  * clear it (asynchronously).
  */
 void
-direction_set(struct direction *dir, int dirmask, int set)
+direction_set(struct direction *dir, int direction, int set)
 {
-	if (!set) {
-		dir->clear |= dirmask;
-		return;
+	if (set) {
+		dprintf("set 0x%x\n", direction);
+		dir->set |= direction;
+	} else {
+		dprintf("clear 0x%x\n", direction);
+		dir->clear |= direction;
 	}
+}
 
-	if (dirmask & DIR_UP)
+/* Change direction if necessary. */
+static void
+direction_change(struct direction *dir, struct map_aref *aref)
+{
+	if (dir->set & DIR_UP) {
+		dir->set &= ~(DIR_UP);
+		aref->yoffs = -1;
+		dir->current |= DIR_UP;
 		dir->current &= ~(DIR_DOWN);
-	if (dirmask & DIR_DOWN)
-		dir->current &= ~(DIR_UP);
-	if (dirmask & DIR_LEFT)
-		dir->current &= ~(DIR_RIGHT);
-	if (dirmask & DIR_RIGHT)
+		aref->xoffs = 0;
 		dir->current &= ~(DIR_LEFT);
-
-	dir->current |= dirmask;
+		dir->current &= ~(DIR_RIGHT);
+	}
+	if (dir->set & DIR_DOWN) {
+		dir->set &= ~(DIR_DOWN);
+		aref->yoffs = 1;
+		dir->current |= DIR_DOWN;
+		dir->current &= ~(DIR_UP);
+		aref->xoffs = 0;
+		dir->current &= ~(DIR_LEFT);
+		dir->current &= ~(DIR_RIGHT);
+	}
+	if (dir->set & DIR_LEFT) {
+		dir->set &= ~(DIR_LEFT);
+		aref->xoffs = -1;
+		dir->current |= DIR_LEFT;
+		dir->current &= ~(DIR_RIGHT);
+		aref->yoffs = 0;
+		dir->current &= ~(DIR_UP);
+		dir->current &= ~(DIR_DOWN);
+	}
+	if (dir->set & DIR_RIGHT) {
+		dir->set &= ~(DIR_RIGHT);
+		aref->xoffs = 1;
+		dir->current |= DIR_RIGHT;
+		dir->current &= ~(DIR_LEFT);
+		aref->yoffs = 0;
+		dir->current &= ~(DIR_UP);
+		dir->current &= ~(DIR_DOWN);
+	}
 }
 
 /*
@@ -74,68 +115,156 @@ direction_set(struct direction *dir, int dirmask, int set)
  * reference on the map).
  */
 int
-direction_update(struct direction *dir, struct map *map, int *mapx, int *mapy)
+direction_update(struct direction *dir, int *mapx, int *mapy)
 {
-	int move = 0;
+	struct map *map;
+	struct map_aref *aref;
+	struct node *node;
+	int moved = 0;
 
-	if (dir->clear != 0) {
-		dir->current &= ~dir->clear;
-		dir->clear = 0;
-	}
+	map = dir->map;
+	node = &map->map[*mapx][*mapy];
+	aref = node_arefobj(node, (struct object *)dir->ob, -1);
 
-	if (dir->current != 0 &&
-	   (dir->moved == 0 || ++dir->tick > dir->hiwat)) {
+	if (aref->yoffs == 0 && aref->xoffs == 0) {
+		/* See if movement is requested. */
+		direction_change(dir, aref);
+	} else if (dir->moved == 0 || 1) {	/* ... wait */
 		dir->tick = 0;
 
-		if (dir->current & DIR_UP) {
-			dir->moved |= DIR_UP;
-			if (dir->flags & DIR_ONMAP) {
+		/* Up */
+		if (aref->yoffs < 0) {
+			if (aref->yoffs == -1) {	/* Once */
+				map->map[*mapx][*mapy - 1].flags |= NODE_ANIM;
+			}
+			if (aref->yoffs <= (-map->view->tilew + dir->speed)) {
+				node->flags &= ~(NODE_ANIM);
+				dir->moved |= DIR_UP;
+				moved |= DIR_UP;
 				decrease(mapy, 1, 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapy - *mapy) >= 0) {
 				    	scroll(map, DIR_UP);
 				}
+			} else {
+				aref->yoffs -= dir->speed;
+				/* XXX soft scroll */
 			}
-			move |= DIR_UP;
 		}
-		if (dir->current & DIR_DOWN) {
-			dir->moved |= DIR_DOWN;
-			if (dir->flags & DIR_ONMAP) {
+		/* Down */
+		if (aref->yoffs > 0) {
+			if (aref->yoffs == 1) {		/* Once */
+				map->map[*mapx][*mapy + 1].flags |= NODE_ANIM;
+			}
+			if (aref->yoffs >= map->view->tilew - dir->speed) {
+				aref->yoffs = 1;
+				node->flags &= ~(NODE_ANIM);
+				dir->moved |= DIR_DOWN;
+				moved |= DIR_DOWN;
 				increase(mapy, 1, map->maph - 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapy - *mapy) <=
 				     -map->view->maph) {
 					scroll(map, DIR_DOWN);
 				}
+			} else {
+				aref->yoffs += dir->speed;
+				/* XXX soft scroll */
 			}
-			move |= DIR_DOWN;
 		}
-		if (dir->current & DIR_LEFT) {
-			dir->moved |= DIR_LEFT;
-			if (dir->flags & DIR_ONMAP) {
+		
+		/* Left */
+		if (aref->xoffs < 0) {
+			if (aref->xoffs == -1) {	/* Once */
+				map->map[*mapx - 1][*mapy].flags |= NODE_ANIM;
+			}
+			if (aref->xoffs <= (-map->view->tilew + dir->speed)) {
+				aref->xoffs = -1;
+				node->flags &= ~(NODE_ANIM);
+				dir->moved |= DIR_LEFT;
+				moved |= DIR_LEFT;
 				decrease(mapx, 1, 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapx - *mapx) >= 0) {
 					scroll(map, DIR_LEFT);
 				}
+			} else {
+				aref->xoffs -= dir->speed;
+				/* XXX soft scroll */
 			}
-			move |= DIR_LEFT;
 		}
-		if (dir->current & DIR_RIGHT) {
-			dir->moved |= DIR_RIGHT;
-			if (dir->flags & DIR_ONMAP) {
+		/* Right */
+		if (aref->xoffs > 0) {
+			if (aref->xoffs == 1) {		/* Once */
+				map->map[*mapx + 1][*mapy].flags |= NODE_ANIM;
+			}
+			if (aref->xoffs >= (map->view->tilew - dir->speed)) {
+				aref->xoffs = 1;
+				node->flags &= ~(NODE_ANIM);
+				dir->moved |= DIR_RIGHT;
+				moved |= DIR_RIGHT;
 				increase(mapx, 1, map->mapw - 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapx - *mapx) <=
-				    -map->view->mapw) {
+				     -map->view->mapw) {
 					scroll(map, DIR_RIGHT);
 				}
+			} else {
+				aref->xoffs += dir->speed;
+				/* XXX soft scroll */
 			}
-			move |= DIR_RIGHT;
+		}
+	}
+	return (moved);
+}
+
+/*
+ * Called after a movement, to ensure continuation if necessary, or
+ * stop moving.
+ */
+void
+direction_moved(struct direction *dir, int *mapx, int *mapy, int moved)
+{
+	struct node *node;
+	struct map_aref *aref;
+
+	node = &dir->map->map[*mapx][*mapy];
+	aref = node_arefobj(node, (struct object *)dir->ob, -1);
+
+	/* Clear any direction first (ie. key release). */
+	if (dir->clear != 0) {
+		if (dir->clear & DIR_UP) {
+			dir->current &= ~(DIR_UP);
+			dir->clear &= ~(DIR_UP);
+			aref->yoffs = 0;
+		}
+		if (dir->clear & DIR_DOWN) {
+			dir->current &= ~(DIR_DOWN);
+			dir->clear &= ~(DIR_DOWN);
+			aref->yoffs = 0;
+		}
+		if (dir->clear & DIR_LEFT) {
+			dir->current &= ~(DIR_LEFT);
+			dir->clear &= ~(DIR_LEFT);
+			aref->xoffs = 0;
+		}
+		if (dir->clear & DIR_RIGHT) {
+			dir->current &= ~(DIR_RIGHT);
+			dir->clear &= ~(DIR_RIGHT);
+			aref->xoffs = 0;
 		}
 	}
 
-	return (move);
+	if (dir->current != 0) {
+		if (dir->set == 0) {
+			/* Continue moving in the same direction. */
+			dir->set = moved;
+		} else {
+			/* Change directions. */
+		}
+		direction_change(dir, aref);
+		dir->current |= dir->set;
+		dir->set = 0;
+	}
 }
-
 
