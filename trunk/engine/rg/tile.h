@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.11 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.12 2005/03/24 04:00:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -46,6 +46,7 @@ struct tile {
 	char name[TILE_NAME_MAX];
 	struct tileset *ts;
 	SDL_Surface *su;
+	Uint32 sprite;			/* Matching sprite index */
 	Uint8 flags;
 #define TILE_SRCCOLORKEY 0x01		/* Colorkey source */
 #define TILE_SRCALPHA	 0x02		/* Alpha source */
