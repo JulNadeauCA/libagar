@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: radio.c,v 1.1 2002/07/07 00:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -136,7 +136,7 @@ radio_draw(void *p)
 
 		s = rad->items[i];
 		/* Radio button */
-		su = primitive_circle(rad, rad->radio.w, rad->radio.h, 5, 1);
+		su = primitive_circle(rad, rad->radio.w, rad->radio.h, 6, 1);
 		WIDGET_DRAW(rad, su, 0, (i * rad->radio.h) + rad->yspacing);
 		SDL_FreeSurface(su);
 
@@ -174,10 +174,9 @@ radio_event(int argc, union evarg *argv)
 	switch (type) {
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
-		x = argv[3].i;
 		y = argv[4].i;
 	
-		sel = y / rad->radio.h;
+		sel = (y / (rad->radio.h + rad->yspacing/2));
 
 		WIDGET_FOCUS(rad);
 		break;
