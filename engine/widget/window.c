@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.189 2003/05/25 02:53:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.190 2003/06/06 03:18:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -515,8 +515,6 @@ window_focus(struct window *win)
 			lastwin->focus = NULL;
 		}
 #endif
-		/* Notify the previous window of the focus change. */
-		event_post(lastwin, "window-lostfocus", NULL);
 	}
 
 	if (win != NULL) {
@@ -526,9 +524,6 @@ window_focus(struct window *win)
 		 */
 		TAILQ_REMOVE(&view->windows, win, windows);
 		TAILQ_INSERT_TAIL(&view->windows, win, windows);
-
-		/* Notify the new window of the focus change. */
-		event_post(win, "window-gainfocus", NULL);
 	}
 }
 
