@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.23 2002/06/25 17:32:50 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.24 2002/07/07 06:48:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -99,9 +99,9 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 		b->label_s = image;
 	}
 	
-	if (rw == 0)
+	if (rw == -1)
 		WIDGET(b)->w = b->label_s->w + b->xmargin;
-	if (rh == 0)
+	if (rh == -1)
 		WIDGET(b)->h = b->label_s->h + b->ymargin;
 
 	event_new(b, "window-mousebuttonup", 0,
@@ -170,7 +170,7 @@ button_event(int argc, union evarg *argv)
 	int button, keysym;
 	int pushed = 0;
 	
-	OBJECT_ASSERT(b, "widget");
+	WIDGET_ASSERT(b, "button");
 
 	switch (type) {
 	case WINDOW_MOUSEOUT:
