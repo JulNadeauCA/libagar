@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.20 2003/06/06 02:44:04 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.21 2003/06/07 22:26:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -249,7 +249,7 @@ examine_window(int argc, union evarg *argv)
 	label_new(win, "Name: \"%s\"", OBJECT(pwin)->name);
 	label_polled_new(win, &pwin->lock, "Flags: 0x%x", &pwin->flags);
 
-	tl = tlist_new(win, TLIST_POLL);
+	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);
 
 	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
