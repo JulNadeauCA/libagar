@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.9 2005/01/23 11:53:05 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.10 2005/01/31 08:32:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -148,6 +148,7 @@ mousebuttondown(int argc, union evarg *argv)
 	}
 }
 
+#if 0
 static void
 mousebuttonup(int argc, union evarg *argv)
 {
@@ -156,7 +157,6 @@ mousebuttonup(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 
-#if 0
 	if (m->sel_item != NULL && m->sel_subitem == NULL &&
 	    x >= m->sel_item->x &&
 	    x < (m->sel_item->x + WIDGET_SURFACE(m,m->sel_item->label)->w +
@@ -165,8 +165,8 @@ mousebuttonup(int argc, union evarg *argv)
 	    y < (m->sel_item->y + m->itemh)) {
 		m->sel_item = NULL;
 	}
-#endif
 }
+#endif
 
 static void
 mousemotion(int argc, union evarg *argv)
@@ -226,7 +226,9 @@ ag_menu_init(struct AGMenu *m)
 	m->itemh = text_font_height + m->vspace;
 
 	event_new(m, "window-mousebuttondown", mousebuttondown, NULL);
+#if 0
 	event_new(m, "window-mousebuttonup", mousebuttonup, NULL);
+#endif
 	event_new(m, "window-mousemotion", mousemotion, NULL);
 }
 

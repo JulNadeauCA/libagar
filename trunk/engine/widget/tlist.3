@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.43 2004/09/18 06:37:43 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.44 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -85,7 +85,7 @@ may include:
 .Pp
 .Bd -literal
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
-#define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
+#define TLIST_MULTITOGGLE	0x02  /* Multiple toggle selections */
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
 #define TLIST_TREE		0x10  /* Hack to display trees */
 .Ed
@@ -298,10 +298,12 @@ widget provides the following bindings:
 .It Va void *selected
 The
 .Va p1
-value of the selected item, or NULL if there is no selection (not for use
-with the
+(user pointer) value of the selected item, or NULL if there is no selection.
+The value of this binding is undefined if the
 .Dv TLIST_MULTI
-flag).
+or
+.Dv TLIST_MULTITOGGLE
+flags are in use.
 .El
 .Sh TROUBLETONS
 A horizontal scrollbar should display when there are labels exceeding the
