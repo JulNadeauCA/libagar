@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.95 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.96 2003/07/08 00:34:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -136,6 +136,7 @@ int		 map_resize(struct map *, unsigned int, unsigned int);
 void		 map_set_zoom(struct map *, Uint16);
 int		 map_push_layer(struct map *, const char *);
 void		 map_pop_layer(struct map *);
+void		 map_init_layer(struct map_layer *, const char *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);
