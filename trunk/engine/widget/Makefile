@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.56 2003/11/19 11:36:30 vedge Exp $
+#	$Csoft: Makefile,v 1.57 2003/11/20 06:49:06 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -12,7 +12,7 @@ SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	ucombo.c units.c
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 textbox.3 \
 	window.3 bitmap.3 scrollbar.3 tlist.3 palette.3 text.3 box.3 \
-	hbox.3 vbox.3 combo.3 fspinbutton.3
+	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3
 
 XCF=		window.xcf
 DEN=		window.den
