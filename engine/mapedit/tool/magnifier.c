@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.16 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.17 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,8 +49,8 @@ static const struct tool_ops magnifier_ops = {
 		NULL		/* save */
 	},
 	magnifier_window,
-	magnifier_effect,
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	magnifier_effect
 };
 
 static void	magnifier_event(int, union evarg *);
@@ -61,7 +61,9 @@ magnifier_init(void *p)
 	struct magnifier *mag = p;
 
 	tool_init(&mag->tool, "magnifier", &magnifier_ops);
+	mag->tool.flags |= TOOL_NO_EDIT;
 	mag->mode = MAGNIFIER_ZOOM_IN;
+	mag->increment = prop_get_int(&mapedit, "zoom-increment");
 }
 
 struct window *
@@ -73,11 +75,11 @@ magnifier_window(void *p)
 
 	win = window_new("mapedit-tool-magnifier", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    109, 171,
-	    109, 171);
+	    102, 147,
+	    102, 147);
 	window_set_caption(win, "Magnifier");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		struct radio *rad;
 		static const char *mode_items[] = {
@@ -92,20 +94,20 @@ magnifier_window(void *p)
 		win->focus = WIDGET(rad);
 	}
 
-	reg = region_new(win, REGION_VALIGN, 0, 50, 97, 20);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
 		struct button *button;
 
-		button = button_new(reg, "0:0", NULL, 0, 100, 100);
+		button = button_new(reg, "1:1", NULL, 0, 100, -1);
 		event_new(button, "button-pushed", magnifier_event,
 		    "%p, %c", mag, 'o');
 	}
 
-	reg = region_new(win, REGION_VALIGN, 0, 70, 97, 30);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
 		struct textbox *tbox;
 
-		tbox = textbox_new(reg, "%: ", 0, 100, 100);	/* XXX int */
+		tbox = textbox_new(reg, "%: ", 0, 100, -1);	/* XXX int */
 		event_new(tbox, "textbox-changed", magnifier_event,
 		    "%p, %c", mag, 's');
 		textbox_printf(tbox, "100");
@@ -143,21 +145,21 @@ magnifier_event(int argc, union evarg *argv)
 }
 
 void
-magnifier_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+magnifier_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct magnifier *mag = p;
 
 	switch (mag->mode) {
 	case MAGNIFIER_ZOOM_IN:
-		mapview_zoom(mv, mv->map->zoom + 10);
-		mapview_center(mv, x, y);
+		mapview_zoom(mv, mv->map->zoom + mag->increment);
+		mapview_center(mv, mv->cx, mv->cy);
 		break;
 	case MAGNIFIER_ZOOM_OUT:
-		mapview_zoom(mv, mv->map->zoom - 10);
-		mapview_center(mv, x, y);
+		mapview_zoom(mv, mv->map->zoom - mag->increment);
+		mapview_center(mv, mv->cx, mv->cy);
 		break;
 	case MAGNIFIER_CENTER:
-		mapview_center(mv, x, y);
+		mapview_center(mv, mv->cx, mv->cy);
 		break;
 	}
 }

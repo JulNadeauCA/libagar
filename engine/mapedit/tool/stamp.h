@@ -1,9 +1,10 @@
-/*	$Csoft: stamp.h,v 1.5 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.6 2003/01/29 00:35:29 vedge Exp $	*/
 /*	Public domain	*/
 
 enum stamp_mode {
 	STAMP_REPLACE,
-	STAMP_INSERT_HIGHEST
+	STAMP_INSERT_HIGHEST,
+	STAMP_INSERT_INDEX
 };
 
 struct stamp {
@@ -13,5 +14,5 @@ struct stamp {
 
 void		 stamp_init(void *);
 struct window	*stamp_window(void *);
-void		 stamp_effect(void *, struct mapview *, Uint32, Uint32);
+void		 stamp_effect(void *, struct mapview *, struct node *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.14 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.15 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,11 +49,11 @@ static const struct tool_ops resize_ops = {
 		NULL		/* save */
 	},
 	resize_window,
-	NULL,			/* effect */
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	NULL			/* effect */
 };
 
-static void	resize_do(int, union evarg *);
+static void	resize_effect(int, union evarg *);
 
 void
 resize_init(void *p)
@@ -76,29 +76,29 @@ resize_window(void *p)
 
 	win = window_new("window-tool-resize", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    174, 110,
-	    174, 110);
+	    164, 78,
+	    164, 78);
 	window_set_caption(win, "Resize map");
 
 	/* Scale textboxes */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
-	tbox_w = textbox_new(reg, "W: ", 0, 50, 100);	/* XXX int */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+	tbox_w = textbox_new(reg, "W: ", 0, 50, -1);	/* XXX int */
 	win->focus = WIDGET(tbox_w);
-	tbox_h = textbox_new(reg, "H: ", 0, 50, 100);	/* XXX int */
+	tbox_h = textbox_new(reg, "H: ", 0, 50, -1);	/* XXX int */
 	textbox_printf(tbox_w, "0");
 	textbox_printf(tbox_h, "0");
 
 	/* Resize button */
-	reg = region_new(win, REGION_HALIGN, 0, 40, 100, 60);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	button = button_new(reg, "Resize", NULL, 0, 100, 100);
 	event_new(button, "button-pushed",
-	    resize_do, "%p, %p, %p", res, tbox_w, tbox_h);
+	    resize_effect, "%p, %p, %p", res, tbox_w, tbox_h);
 
 	return (win);
 }
 
 static void
-resize_do(int argc, union evarg *argv)
+resize_effect(int argc, union evarg *argv)
 {
 	struct resize *res = argv[1].p;
 	struct textbox *tbox_w = argv[2].p, *tbox_h = argv[3].p;

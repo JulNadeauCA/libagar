@@ -154,8 +154,10 @@ objq_insert_tiles(int argc, union evarg *argv)
 			srcsu = anim->frames[0];
 			break;
 		default:
-			continue;
+			fatal("bad noderef\n");
 		}
+
+		dprintf("constr: %d,%d\n", mv->constr.x, mv->constr.y);
 
 		map_adjust(m,
 		    mv->constr.x + srcsu->w/TILEW + 1,
@@ -163,14 +165,16 @@ objq_insert_tiles(int argc, union evarg *argv)
 		node = &m->map[mv->constr.y][mv->constr.x];
 		switch (t) {
 		case NODEREF_SPRITE:
+			dprintf("+sprite: %s:%d\n", pobj->name, ind);
 			nref = node_add_sprite(node, pobj, ind);
 			break;
 		case NODEREF_ANIM:
+			dprintf("+anim: %s:%d\n", pobj->name, ind);
 			nref = node_add_anim(node, pobj, ind,
 			    NODEREF_ANIM_AUTO);
 			break;
 		default:
-			break;
+			fatal("bad noderef\n");
 		}
 		nref->flags |= mv->constr.nflags;
 
@@ -241,8 +245,7 @@ tl_objs_selected(int argc, union evarg *argv)
 
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, ob->art->tiles.map,
-	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
-	    MAPVIEW_PROPS,
+	    MAPVIEW_TILEMAP|MAPVIEW_PROPS|MAPVIEW_ZOOM,
 	    100, 100);
 	
 	if (object_load(ob->art->tiles.map) == -1) {
@@ -270,7 +273,6 @@ tl_objs_selected(int argc, union evarg *argv)
 		
 		bu = button_new(reg, NULL,		/* Toggle grid */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
-		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.27 2003/01/25 06:29:29 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.28 2003/01/27 08:00:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -249,18 +249,24 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
 	struct editref *eref;
-	Uint32 x, y;
+	Uint32 x, y, orx = 0, ory = 0;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
 
+			if (node->flags & NODE_ORIGIN) {
+				orx = x;
+				ory = y;
+			}
 			node_destroy(node, x, y);
 			node_init(node, x, y);
 		}
 	}
 
 	/* Reset the origin. */
-	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
+	if (orx > 0 && ory > 0) {
+		m->map[orx][ory].flags |= NODE_ORIGIN;
+	}
 }
 

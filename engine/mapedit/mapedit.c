@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.136 2003/01/27 00:53:36 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.137 2003/01/27 08:00:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@
 #include "tool/propedit.h"
 #include "tool/select.h"
 #include "tool/shift.h"
+#include "tool/merge.h"
 
 struct mapedit	mapedit;
 int		mapedition = 0;
@@ -62,6 +63,7 @@ static const struct tools_ent {
 	{ &mapedit.tools.propedit, sizeof(struct propedit), propedit_init },
 	{ &mapedit.tools.select, sizeof(struct select), select_init },
 	{ &mapedit.tools.shift, sizeof(struct shift), shift_init },
+	{ &mapedit.tools.merge, sizeof(struct merge), merge_init },
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
@@ -97,7 +99,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 void
 mapedit_init(void)
 {
-	const int xdiv = 100, ydiv = 20;
+	const int xdiv = 100, ydiv = 17;
 	struct window *win;
 	struct region *reg;
 	struct button *button;
@@ -111,13 +113,15 @@ mapedit_init(void)
 
 	prop_set_int(med, "zoom-minimum", 4);
 	prop_set_int(med, "zoom-maximum", 400);
-	prop_set_int(med, "zoom-increment", 16);
+	prop_set_int(med, "zoom-increment", 8);
 	prop_set_int(med, "zoom-speed", 60);
 	prop_set_int(med, "tilemap-item-size", 16);
 	prop_set_bool(med, "tilemap-scroll-x", 0);
 	prop_set_bool(med, "tilemap-scroll-y", 1);
 	prop_set_bool(med, "tilemap-bg-moving", 1);
 	prop_set_int(med, "tilemap-bg-square-size", 16);
+	
+	mapedition = 1;
 	
 	/* Initialize the map edition tools. */
 	for (i = 0; i < ntools; i++) {
@@ -176,6 +180,13 @@ mapedit_init(void)
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p", med->tools.select);
+		
+		button = med->tools.merge->button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_MERGE),
+		    BUTTON_NOFOCUS|BUTTON_STICKY,
+		    xdiv, ydiv);
+		event_new(button, "button-pushed", mapedit_select_tool,
+		    "%p", med->tools.merge);
 	}
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
@@ -219,8 +230,6 @@ mapedit_init(void)
 	window_show(med->win.toolbar);
 	window_show(med->win.objlist);
 	
-	mapedition = 1;
-
 	world_attach(med);
 }
 
