@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.31 2004/03/24 08:46:14 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.32 2004/04/20 09:14:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -250,13 +250,17 @@ gfx_unused(struct gfx *gfx)
 
 /* Allocate a private gfx structure for a given object. */
 struct gfx *
-gfx_new_pvt(struct object *ob)
+gfx_new_pvt(struct object *ob, const char *name)
 {
 	struct gfx *gfx;
 	
 	gfx = Malloc(sizeof(struct gfx), M_GFX);
-	gfx_init(gfx, GFX_PRIVATE, NULL);
-
+	gfx_init(gfx, GFX_PRIVATE, name);
+#ifdef DEBUG
+	pthread_mutex_lock(&gfxq_lock);
+	TAILQ_INSERT_TAIL(&gfxq, gfx, gfxs);
+	pthread_mutex_unlock(&gfxq_lock);
+#endif
 	pthread_mutex_lock(&ob->lock);
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
