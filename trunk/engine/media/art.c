@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.24 2003/03/12 06:15:14 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.25 2003/03/16 04:38:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ static void	art_destroy(struct art *);
 static void	art_destroy_anim(struct art_anim *);
 
 /* Attach a surface of arbitrary size. */
-int
+Uint32
 art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
 	if (art->sprites == NULL) {			/* Initialize */
@@ -111,6 +111,10 @@ art_scan_alpha(SDL_Surface *su)
 			switch (su->format->BytesPerPixel) {
 			case 4:
 				SDL_GetRGBA(*(Uint32 *)pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			case 3:
+				SDL_GetRGBA(*(Uint16 *)pixel, su->format,
 				    &r, &g, &b, &a);
 				break;
 			case 2:
@@ -174,6 +178,7 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 	Asprintf(&name, "frag-%s%d", art->name);
 	map_init(fragmap, name, NULL);
 	free(name);
+
 	if (map_alloc_nodes(fragmap, mw, mh) == -1) {
 		fatal("map_alloc_nodes: %s", error_get());
 	}
@@ -403,7 +408,7 @@ art_insert_anim(struct art *art, int delay)
 static void
 art_destroy_anim(struct art_anim *anim)
 {
-	int i;
+	Uint32 i;
 
 	for (i = 0; i < anim->nframes; i++) {
 		SDL_FreeSurface(anim->frames[i]);
@@ -447,7 +452,7 @@ art_get_sprite(struct object *ob, int i)
 }
 
 struct art_anim *
-art_get_anim(struct object *ob, int i)
+art_get_anim(struct object *ob, Uint32 i)
 {
 	if ((ob->flags & OBJECT_ART) == 0)
 		fatal("%s: no art", ob->name);
@@ -506,7 +511,7 @@ tl_sprites_poll(int argc, union evarg *argv)
 	struct tlist *tl_medias = argv[1].p;
 	struct tlist_item *it_media;
 	struct art *art;
-	int i;
+	Uint32 i;
 
 	it_media = tlist_item_selected(tl_medias);
 	if (it_media == NULL) {
@@ -533,7 +538,7 @@ tl_anims_poll(int argc, union evarg *argv)
 	struct tlist *tl_medias = argv[1].p;
 	struct tlist_item *it_media;
 	struct art *art;
-	int i;
+	Uint32 i;
 
 	it_media = tlist_item_selected(tl_medias);
 	if (it_media == NULL) {
@@ -567,7 +572,7 @@ tl_submaps_poll(int argc, union evarg *argv)
 	struct tlist *tl_medias = argv[1].p;
 	struct tlist_item *it_media;
 	struct art *art;
-	int i;
+	Uint32 i;
 
 	if ((it_media = tlist_item_selected(tl_medias)) == NULL)
 		return;					/* No selection */
