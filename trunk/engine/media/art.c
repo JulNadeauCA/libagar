@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.26 2003/03/17 04:29:05 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.27 2003/03/17 23:48:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/button.h>
-#include <engine/widget/bitmap.h>
 
 #include <libfobj/fobj.h>
 
@@ -495,16 +494,6 @@ tl_medias_selected(int argc, union evarg *argv)
 }
 
 static void
-tl_sprites_selected(int argc, union evarg *argv)
-{
-	struct tlist *tl_sprites = argv[0].p;
-	struct bitmap *bmp_sprite = argv[1].p;
-	struct tlist_item *it_sprite = argv[2].p;
-
-	bitmap_set_surface(bmp_sprite, (SDL_Surface *)it_sprite->p1);
-}
-
-static void
 tl_sprites_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -591,26 +580,12 @@ tl_submaps_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
-static void
-tl_anims_selected(int argc, union evarg *argv)
-{
-	struct tlist *tl_anims = argv[0].p;
-	struct bitmap *bmp_anim = argv[1].p;
-	struct tlist_item *it_anim = argv[2].p;
-	struct art_anim *anim = it_anim->p1;
-
-	if (anim->nframes > 0) {
-		bitmap_set_surface(bmp_anim, anim->frames[0]);
-	}
-}
-
 struct window *
 art_browser_window(void)
 {
 	struct window *win;
 	struct region *reg;
 	struct tlist *tl_medias;
-	struct bitmap *bmp_sprite, *bmp_anim;
 
 	if ((win = window_generic_new(512, 246, "monitor-art-browser"))
 	    == NULL) {
@@ -619,33 +594,22 @@ art_browser_window(void)
 	window_set_caption(win, "Graphics");
 
 	/* Art entries */
-	reg = region_new(win, 0, 0, 0, 30, 100);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 30, 100);
 	{
 		tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_medias, "tlist-poll", tl_medias_poll, NULL);
 	}
 	
-	/* Bitmap display */
-	reg = region_new(win, REGION_VALIGN, 70, 0, 30, 100);
-	{
-		bmp_sprite = bitmap_new(reg, NULL, 100, 50);
-		bmp_anim = bitmap_new(reg, NULL, 100, 50);
-	}
-
 	/* Sprites/animation lists */
-	reg = region_new(win, REGION_VALIGN, 30, 0, 40, 100);
+	reg = region_new(win, REGION_VALIGN, 30, 0, 70, 100);
 	{
 		struct tlist *tl_sprites, *tl_anims, *tl_submaps;
 	
 		tl_sprites = tlist_new(reg, 100, 33, TLIST_POLL);
-		event_new(tl_sprites, "tlist-changed",
-		    tl_sprites_selected, "%p", bmp_sprite);
 		event_new(tl_sprites, "tlist-poll",
 		    tl_sprites_poll, "%p", tl_medias);
 		
 		tl_anims = tlist_new(reg, 100, 33, TLIST_POLL);
-		event_new(tl_anims, "tlist-changed",
-		    tl_anims_selected, "%p", bmp_anim);
 		event_new(tl_anims, "tlist-poll",
 		    tl_anims_poll, "%p", tl_medias);
 		
