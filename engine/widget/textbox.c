@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.5 2002/05/26 00:49:56 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.6 2002/05/26 05:59:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -80,7 +80,6 @@ textbox_new(struct region *reg, char *label, int flags, int rw)
 void
 textbox_init(struct textbox *b, char *label, int flags, int rw)
 {
-	int h;
 	SDL_Surface *s;
 
 	s = TTF_RenderText_Solid(font, "ABCD1234", white);
@@ -91,9 +90,9 @@ textbox_init(struct textbox *b, char *label, int flags, int rw)
 	b->xmargin = 4;
 	b->ymargin = 3;
 
-	h = s->h + b->ymargin*4;
+	widget_init(&b->wid, "textbox", "widget", &textbox_ops, rw, 0);
+	WIDGET(b)->h = s->h + b->ymargin*2;
 
-	widget_init(&b->wid, "textbox", "widget", &textbox_ops, rw, h);
 	b->flags = flags;
 	b->flags |= TEXTBOX_CURSOR;
 	b->text = strdup("");
