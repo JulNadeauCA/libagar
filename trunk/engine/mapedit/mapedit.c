@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.103 2002/06/22 20:42:33 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.104 2002/06/22 20:44:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@
 #include "config.h"
 #include "toolbar.h"
 #include "fileops.h"
+#include "tilewin.h"
 
 static const struct version mapedit_ver = {
 	"agar map editor",
@@ -88,10 +89,14 @@ mapedit_init(struct mapedit *med, char *name)
 	med->flags = 0;
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
+	med->curobj = NULL;
+	med->curoffs = 0;
+	med->curflags = 0;
 	pthread_mutex_init(&med->lock, NULL);
 
 	/* XXX messy */
 	mapedit_init_toolbar(med);
+	mapedit_init_tilewin(med);
 	med->settings_win = mapedit_config_win(med);
 	med->coords_win = window_new("Coordinates",
 	    WINDOW_SOLID|WINDOW_ABSOLUTE,
@@ -100,7 +105,7 @@ mapedit_init(struct mapedit *med, char *name)
 	    REGION_HALIGN|REGION_CENTER,
 	    0,   0, 100, 100);
 	med->coords_label = label_new(coords_reg, "...", 0);
-
+	
 	event_new(med, "attached", 0, mapedit_attached, NULL);
 	event_new(med, "detached", 0, mapedit_detached, NULL);
 }
@@ -135,13 +140,13 @@ mapedit_shadow(struct mapedit *med, void *parent)
 
 		dprintf("%s: %d sprites, %d anims\n", ob->name,
 		    eob->nsprites, eob->nanims);
-#if 0
-		/* XXX save editor sessions? */
-		if (eob->nsprites > 0) {
+
+		/* XXX default */
+		if (eob->nsprites > 0 && strcmp(ob->name, "worldmap") == 0) {
 			med->curobj = eob;
-			med->curoffs = 1;
+			med->curoffs = 0;
+			med->curflags = 0;
 		}
-#endif
 
 		/* Create shadow references for sprites. */
 		pthread_mutex_lock(&eob->lock);
@@ -202,6 +207,7 @@ mapedit_attached(int argc, union evarg *argv)
 
 	/* Set up the GUI. */
 	window_show(med->toolbar_win);
+	window_show(med->tile_win);
 
 	dprintf("editing %d object(s)\n", med->neobjs);
 
