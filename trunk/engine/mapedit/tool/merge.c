@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.7 2003/02/12 01:09:32 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.8 2003/02/12 02:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -388,6 +388,7 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	struct map *sm;
 	Uint32 sx, sy, dx, dy;
 	struct tlist_item *it;
+	int rv = -1;
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		if (!it->selected)
@@ -403,9 +404,10 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 					noderef_draw(mv->map, nref, dx, dy);
+					rv = 0;
 				}
 			}
 		}
 	}
-	return (0);
+	return (-1);
 }
