@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.17 2003/02/22 11:44:05 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.18 2003/02/22 11:48:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -107,22 +107,21 @@ resize_effect(int argc, union evarg *argv)
 	struct textbox *tbox_w = argv[2].p, *tbox_h = argv[3].p;
 	struct mapview *mv;
 	struct map *m;
-	Uint32 w, h;
+	int w, h;
 
-	mv = tool_mapview();
-	if (mv == NULL)
-		return;			/* No selection */
+	if ((mv = tool_mapview()) == NULL)
+		return;				/* No selection */
+
 	m = mv->map;
-
-	w = (Uint32)textbox_int(tbox_w);
-	h = (Uint32)textbox_int(tbox_h);
+	w = textbox_int(tbox_w);
+	h = textbox_int(tbox_h);
 
 	switch (res->mode) {
 	case RESIZE_GROW:
-		map_grow(m, w, h);
+		map_grow(m, (unsigned int)w, (unsigned int)h);
 		break;
 	case RESIZE_SHRINK:
-		map_shrink(m, w, h);
+		map_shrink(m, (unsigned int)w, (unsigned int)h);
 		break;
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: physics.h,v 1.17 2002/11/23 22:40:46 vedge Exp $	    */
+/*	$Csoft: physics.h,v 1.18 2002/12/13 12:17:45 vedge Exp $	    */
 /*	Public domain	*/
 
 struct noderef;
@@ -41,7 +41,7 @@ struct mapdir {
 /* Position on a map. */
 struct mappos {
 	struct map	*map;	/* Map (or NULL) */
-	Uint32		 x, y;	/* Map coordinates */
+	int		 x, y;	/* Map coordinates */
 	struct noderef	*nref;	/* Node reference */
 	struct mapdir	 dir;	/* Map direction (not saved) */
 	struct input	*input;	/* Controller (or NULL) */
@@ -57,6 +57,6 @@ void	mapdir_init(struct mapdir *, struct object *, struct map *, Uint32,
 	    Uint32);
 void	mapdir_set(struct mapdir *, Uint32);
 void	mapdir_unset(struct mapdir *, Uint32);
-int	mapdir_move(struct mapdir *, Uint32 *, Uint32 *);
-void	mapdir_postmove(struct mapdir *, Uint32 *, Uint32 *, Uint32);
+int	mapdir_move(struct mapdir *, int *, int *);
+void	mapdir_postmove(struct mapdir *, int *, int *, Uint32);
 

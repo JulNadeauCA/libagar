@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.18 2003/03/05 02:16:34 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.19 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -116,9 +116,14 @@ merge_create_brush(int argc, union evarg *argv)
 	map_init(m, MAP_2D, m_name, NULL);
 
 	if (object_load(m) == -1) {
-		map_alloc_nodes(m,
+		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
-		    prop_get_uint32(&mapedit, "default-brush-height"));
+		    prop_get_uint32(&mapedit, "default-brush-height")) == -1) {
+			text_msg("Error", "map_alloc_nodes: %s", error_get());
+			map_destroy(m);
+			free(m);
+			return;
+		}
 	}
 
 	SLIST_INSERT_HEAD(&mer->brushes, OBJECT(m), wobjs);
@@ -272,7 +277,7 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *sm;
-		Uint32 sx, sy, dx, dy;
+		int sx, sy, dx, dy;
 
 		if (!it->selected)
 			continue;
@@ -296,7 +301,7 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 
 static void
 merge_copy_node(struct merge *mer, struct node *srcnode, struct node *dstnode,
-    Uint32 dx, Uint32 dy)
+    int dx, int dy)
 {
 	struct noderef *nref, *nnref;
 
@@ -314,7 +319,7 @@ static void
 merge_copy_edge(struct merge *mer, struct map *sm, struct node *dstnode,
     Uint32 nedge)
 {
-	Uint32 sx, sy;
+	int sx, sy;
 
 	/* Copy the first edge with the requested orientation. */
 	for (sy = 0; sy < sm->maph; sy++) {
@@ -345,7 +350,7 @@ merge_copy_edge(struct merge *mer, struct map *sm, struct node *dstnode,
 static void
 merge_copy_filling(struct merge *mer, struct map *sm, struct node *dstnode)
 {
-	Uint32 sx, sy;
+	int sx, sy;
 
 	/* Copy the first node with the requested orientation (0=filling). */
 	for (sy = 0; sy < sm->maph; sy++) {
@@ -376,7 +381,7 @@ merge_copy_filling(struct merge *mer, struct map *sm, struct node *dstnode)
 
 void
 merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
-    struct node *dstnode, Uint32 dx, Uint32 dy, struct mapview *mv)
+    struct node *dstnode, int dx, int dy, struct mapview *mv)
 {
 	Uint32 srcedge = srcnode->flags & NODE_EDGE_ANY;
 	Uint32 dstedge = dstnode->flags & NODE_EDGE_ANY;
@@ -670,7 +675,7 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	struct noderef *nref;
 	struct map *dm = mv->map;
 	struct map *sm;
-	Uint32 sx, sy, dx, dy;
+	int sx, sy, dx, dy;
 	struct tlist_item *it;
 	int rv = -1;
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.50 2003/01/01 05:18:34 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.51 2003/02/10 23:07:59 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -44,7 +44,7 @@ enum {
 };
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
-static int	mapdir_canmove(struct mapdir *, struct map *, Uint32, Uint32);
+static int	mapdir_canmove(struct mapdir *, struct map *, int, int);
 
 #ifdef DEBUG
 #define DEBUG_MOVE	0x01
@@ -234,7 +234,7 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
  * Map must be locked.
  */
 static int
-mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
+mapdir_canmove(struct mapdir *dir, struct map *m, int x, int y)
 {
 	struct node *node = &m->map[y][x];
 	struct noderef *nref;
@@ -266,7 +266,7 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
  * Map must be locked.
  */
 int
-mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
+mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 {
 	struct map *m = dir->map;
 	struct noderef *onref, *nref;
@@ -274,11 +274,10 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 	Uint32 moved = 0;
 
 	/* XXX pick the first reference to this object */
-#ifdef DEBUG
 	if (*mapy > m->maph || *mapx > m->mapw) {
 		fatal("bad coordinates\n");
 	}
-#endif
+
 	node = &m->map[*mapy][*mapx];
 	nref = NULL;
 	TAILQ_FOREACH(onref, &node->nrefs, nrefs) {	
@@ -430,7 +429,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
  * Map must be locked.
  */
 void
-mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
+mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, Uint32 moved)
 {
 	struct node *node;
 	struct noderef *nref = NULL, *onref;

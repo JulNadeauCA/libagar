@@ -1,4 +1,4 @@
-.\"	$Csoft: physics.3,v 1.7 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: physics.3,v 1.8 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -120,10 +120,10 @@ adjacent map nodes.
 .Fn mapdir_unset "struct mapdir *dir" "Uint32 direction"
 .Pp
 .Ft "Uint32"
-.Fn mapdir_move "struct mapdir *dir" "Uint32 *map_x" "Uint32 *map_y"
+.Fn mapdir_move "struct mapdir *dir" "int *map_x" "int *map_y"
 .Pp
 .Ft "void"
-.Fn mapdir_postmove "struct mapdir *dir" "Uint32 *map_x" "Uint32 *map_y" \
+.Fn mapdir_postmove "struct mapdir *dir" "int *map_x" "int *map_y" \
                     "Uint32 moved"
 .nr nS 0
 .Pp

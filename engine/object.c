@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.105 2003/02/10 06:14:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.106 2003/02/12 01:18:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -371,7 +371,7 @@ object_vanish(void *p)
  */
 void
 object_set_position(void *p, struct noderef *nref, struct map *m,
-    Uint32 x, Uint32 y)
+    int x, int y)
 {
 	struct object *ob = p;
 
@@ -408,12 +408,12 @@ object_set_position(void *p, struct noderef *nref, struct map *m,
  * The current noderef is moved from the current node to the new position.
  */
 void
-object_move(void *p, struct map *dst_map, Uint32 dst_x, Uint32 dst_y)
+object_move(void *p, struct map *dst_map, int dst_x, int dst_y)
 {
 	struct object *ob = p;
 	struct map *src_map;
 	struct node *src_node, *dst_node;
-	Uint32 src_x, src_y;
+	int src_x, src_y;
 	
 	pthread_mutex_lock(&ob->pos_lock);
 	if (ob->pos == NULL) {

@@ -1,10 +1,13 @@
-/*	$Csoft: map.h,v 1.69 2003/03/07 03:25:49 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.70 2003/03/08 23:05:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
 #define TILEH		32
 #define TILEW_SHIFT	5
 #define TILEH_SHIFT	5
+
+#define MAP_MAX_WIDTH	32767
+#define MAP_MAX_HEIGHT	32767
 
 #include <engine/transform.h>
 
@@ -38,7 +41,7 @@ struct noderef {
 		} anim;
 		struct {
 			char	*map;		/* Map identifier */
-			Uint32	 x, y;		/* Origin override */
+			int	 x, y;		/* Origin override */
 			Uint8	 dir;		/* Default direction */
 		} warp;
 	} data;
@@ -52,7 +55,7 @@ struct node {
 #ifdef DEBUG
 	char	magic[5];
 #define NODE_MAGIC "node"
-	Uint32	x, y;
+	int	x, y;
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
 	Uint32		 flags;
@@ -97,11 +100,11 @@ struct map {
 	pthread_mutex_t		lock;
 	pthread_mutexattr_t	lockattr;
 
-	Uint32		  mapw, maph;	/* Map geometry */
+	unsigned int	  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
 	int		  tilew, tileh;	/* Tile geometry */
-	Uint32		  defx, defy;	/* Map origin */
+	int		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
 
@@ -117,11 +120,11 @@ void		 map_init(struct map *, enum map_type, char *, char *);
 int		 map_load(void *, int);
 int		 map_save(void *, int);
 void		 map_destroy(void *);
-void		 map_alloc_nodes(struct map *, Uint32, Uint32);
+int		 map_alloc_nodes(struct map *, unsigned int, unsigned int);
 void		 map_free_nodes(struct map *);
-void		 map_shrink(struct map *, Uint32, Uint32);
-void		 map_grow(struct map *, Uint32, Uint32);
-void		 map_adjust(struct map *, Uint32, Uint32);
+void		 map_shrink(struct map *, unsigned int, unsigned int);
+int		 map_grow(struct map *, unsigned int, unsigned int);
+int		 map_adjust(struct map *, int, int);
 void		 map_set_zoom(struct map *, Uint16);
 int		 map_push_layer(struct map *, char *);
 void		 map_pop_layer(struct map *);
@@ -149,7 +152,7 @@ void		 node_movetail_ref(struct node *, struct noderef *);
 void		 node_movehead_ref(struct node *, struct noderef *);
 struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
-struct noderef	*node_add_warp(struct node *, char *, Uint32, Uint32, Uint8);
+struct noderef	*node_add_warp(struct node *, char *, int, int, Uint8);
 
 extern __inline__ void	 noderef_draw(struct map *, struct noderef *,
 			     Sint16, Sint16);

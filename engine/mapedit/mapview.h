@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.30 2003/03/05 02:16:32 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.31 2003/03/10 01:23:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -46,13 +46,13 @@ struct mapview {
 	/* Selections */
 	struct {
 		int	set;
-		Uint32	x, y;		/* Selection origin */
+		int	x, y;		/* Selection origin */
 		int	xoffs, yoffs;	/* Displacement from origin */
 	} msel;
 	struct {
-		int	set;
-		Uint32	x, y;		/* Selection origin */
-		Uint32	w, h;		/* Displacement from origin */
+		int		set;
+		int		x, y;		/* Selection origin */
+		unsigned int	w, h;		/* Displacement from origin */
 	} esel;
 
 	/* Zoom and soft-scroll offsets. */
@@ -69,7 +69,7 @@ struct mapview {
 	struct map	*map;		/* Map to display */
 	Uint8		 cur_layer;	/* Layer being edited */
 	int		 mx, my;	/* Display offset (nodes). XXX u32? */
-	int		 mw, mh;	/* Display size (nodes) */
+	unsigned int	 mw, mh;	/* Display size (nodes) */
 	
 	int		 cx, cy;	/* Cursor position (nodes) */
 	struct node	*cur_node;

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.14 2003/01/16 04:07:05 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.15 2003/02/22 11:49:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ perso_load(void *p, int fd)
 		    OBJECT(perso)->name);
 	} else {					/* One position */
 		char *map_id, *input_id;
-		Uint32 dst_x, dst_y;
+		int dst_x, dst_y;
 		struct mappos *npos;
 		struct node *dst_node;
 		struct noderef *old_nref;
@@ -167,8 +167,8 @@ perso_load(void *p, int fd)
 
 		/* Read the map id, node coordinates and input device id. */
 		map_id = read_string(fd, NULL);
-		dst_x = read_uint32(fd);
-		dst_y = read_uint32(fd);
+		dst_x = (int)read_uint32(fd);
+		dst_y = (int)read_uint32(fd);
 		input_id = read_string(fd, NULL);
 		debug(DEBUG_STATE, "%s is at %s:%d,%d, controlled by %s\n",
 		    OBJECT(perso)->name, map_id, dst_x, dst_y, input_id);
@@ -345,7 +345,7 @@ perso_time(Uint32 ival, void *p)
 	struct object *ob = p;
 	struct map *m;
 	struct mappos *pos;
-	Uint32 x, y, moved = 0;
+	int x, y, moved = 0;
 
 	/* XXX thread unsafe */
 

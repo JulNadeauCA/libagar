@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.34 2003/02/24 04:06:37 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.35 2003/03/05 02:16:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -144,7 +144,7 @@ fileops_new_map(int argc, union evarg *argv)
 	struct window *win;
 	struct map *m;
 	char *name, *path;
-	Uint32 w, h;
+	int w, h;
 
 	name = textbox_string(name_tbox);
 
@@ -154,16 +154,20 @@ fileops_new_map(int argc, union evarg *argv)
 	}
 	path = object_path(name, "map");			/* Existing? */
 	if (path != NULL) {
-		free(path);
 		text_msg("Error", "Existing map (%s).", path);
+		free(path);
 		goto out;
 	}
-	w = (Uint32)textbox_int(w_tbox);
-	h = (Uint32)textbox_int(h_tbox);
+	w = textbox_int(w_tbox);
+	h = textbox_int(h_tbox);
 
 	m = emalloc(sizeof(struct map));
 	map_init(m, MAP_2D, name, NULL);
-	map_alloc_nodes(m, w, h);
+	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
+		text_msg("Error allocating nodes", "%s", error_get());
+		map_destroy(m);
+		free(m);
+	}
 
 	m->defx = w / 2;
 	m->defy = h - 2;	/* XXX pref */
@@ -260,7 +264,7 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
 	struct editref *eref;
-	Uint32 x, y, orx = 0, ory = 0;
+	int x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {

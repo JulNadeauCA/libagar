@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.5 2003/03/05 02:16:34 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.6 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -105,7 +105,7 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct fill *fi = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
-	Uint32 x, y;
+	int x, y;
 
 	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
 		text_msg("Error", "No source node");
