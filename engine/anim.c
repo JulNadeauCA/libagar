@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.16 2002/09/02 08:13:59 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.17 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,6 +31,12 @@
 
 #include "engine.h"
 #include "map.h"
+
+static const struct object_ops anim_ops = {
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL	/* save */
+};
 
 enum {
 	FRAMES_INIT = 16,
@@ -135,10 +141,23 @@ anim_insert(struct media_art *art, struct anim *anim, int mflags)
 void
 anim_init(struct anim *anim, int delay)
 {
+	static int curanim = 0;
+	static pthread_mutex_t curanim_lock = PTHREAD_MUTEX_INITIALIZER;
+	char *aniname;
+
+	pthread_mutex_lock(&curanim_lock);
+	asprintf(&aniname, "anim%d", curanim++);
+	object_init(&anim->obj, "anim", aniname, NULL, 0, &anim_ops);
+	free(aniname);
+	pthread_mutex_unlock(&curanim_lock);
+
 	anim->frames = NULL;
 	anim->maxframes = 0;
+	anim->w = -1;
+	anim->h = -1;
 	anim->frame = 0;
 	anim->nframes = 0;
+	anim->nparts = 0;
 	anim->delta = 0;
 	anim->delay = delay;
 }

@@ -1,12 +1,14 @@
-/*	$Csoft: anim.h,v 1.9 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: anim.h,v 1.10 2002/09/02 08:13:59 vedge Exp $	*/
 /*	Public domain	*/
 
 struct anim {
-	SDL_Surface ***frames;
-	int	maxframes;
-	int	w, h;
-	int	frame, nframes, nparts;
-	int	delta, delay;	/* For MAPREF_ANIM_DELTA */
+	struct object obj;		/* For error checking */
+
+	SDL_Surface	***frames;
+	int		maxframes;
+	int		w, h;
+	int		frame, nframes, nparts;
+	int		delta, delay;	/* For MAPREF_ANIM_DELTA */
 };
 
 void	 anim_init(struct anim *, int);
