@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.30 2003/01/01 05:18:42 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.31 2003/01/05 08:42:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -89,8 +89,6 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120);
 
 	tl->flags = flags;
-	tl->xspacing = 6;
-	tl->yspacing = 3;
 	tl->item_h = 16;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
@@ -336,8 +334,8 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	struct scrollbar *sb = tl->vbar;
 
 	it = emalloc(sizeof(struct tlist_item));
-	it->icon_w = 16;
-	it->icon_h = 16;
+	it->icon_w = tl->item_h;			/* Square */
+	it->icon_h = tl->item_h;
 	it->selected = 0;
 	if (icon != NULL) {
 		it->icon = view_scale_surface(icon, it->icon_w, it->icon_h);
@@ -643,5 +641,21 @@ tlist_item_text(struct tlist *tl, char *text)
 	}
 	pthread_mutex_unlock(&tl->items_lock);
 	return (NULL);
+}
+
+/* If the tlist is attached, its parent window must be locked. */
+void
+tlist_set_item_height(struct tlist *tl, int ih)
+{
+	struct tlist_item *it;
+
+	tl->item_h = ih;
+
+	pthread_mutex_lock(&tl->items_lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		it->icon_w = ih;			/* Square */
+		it->icon_h = ih;
+	}
+	pthread_mutex_unlock(&tl->items_lock);
 }
 

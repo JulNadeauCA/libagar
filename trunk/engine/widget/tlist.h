@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.12 2002/11/19 06:08:38 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.13 2002/12/21 10:25:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -34,8 +34,6 @@ struct tlist {
 #define TLIST_POLL		0x08	/* Generate a tlist-poll event before
 					   each draw and each event. */
 
-	int	 xspacing;	/* Horiz spacing */
-	int	 yspacing;	/* Vert spacing */
 	int	 item_h;	/* Item height */
 
 	struct tlist_itemq	 items;		/* Current Items */
@@ -50,6 +48,7 @@ struct tlist		*tlist_new(struct region *, int, int, int);
 void			 tlist_init(struct tlist *, int, int, int);
 void	 		 tlist_draw(void *);
 void	 		 tlist_destroy(void *);
+void			 tlist_set_item_height(struct tlist *, int);
 
 void			 tlist_save_selections(struct tlist *);
 void			 tlist_restore_selections(struct tlist *);
