@@ -1,9 +1,12 @@
-#	$Csoft: Makefile,v 1.1 2004/06/26 03:42:18 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2004/11/23 02:32:39 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=	mat
+LIB=		mat
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	mat.c lu.c vec.c veci.c gaussj.c
 
 CFLAGS+=${SDL_CFLAGS}
