@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.41 2003/03/22 04:36:28 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.42 2003/03/24 12:08:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -26,13 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 #include <engine/compat/strlcat.h>
 #include <engine/engine.h>
 
 #include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
+#include <engine/prop.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -67,19 +68,17 @@ fileops_new_map_window(void)
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		char *s;
+		char s[16];
 
 		w_tbox = textbox_new(reg, "W: ", 0, 50, -1);
-		Asprintf(&s, "%d",
+		snprintf(s, sizeof(s), "%u",
 		    prop_get_uint32(&mapedit, "default-map-width"));
 		textbox_printf(w_tbox, s);
-		free(s);
 
 		h_tbox = textbox_new(reg, "H: ", 0, 50, -1);
-		Asprintf(&s, "%d",
+		snprintf(s, sizeof(s), "%u",
 		    prop_get_uint32(&mapedit, "default-map-height"));
 		textbox_printf(h_tbox, s);
-		free(s);
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
@@ -162,7 +161,7 @@ fileops_new_map(int argc, union evarg *argv)
 	w = textbox_int(w_tbox);
 	h = textbox_int(h_tbox);
 
-	m = emalloc(sizeof(struct map));
+	m = Malloc(sizeof(struct map));
 	map_init(m, name, NULL);
 	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
 		text_msg("Error allocating nodes", "%s", error_get());
@@ -214,7 +213,7 @@ fileops_load_map(int argc, union evarg *argv)
 		return;
 	}
 	
-	m = emalloc(sizeof(struct map));
+	m = Malloc(sizeof(struct map));
 	map_init(m, name, NULL);
 
 	if (object_load(m) == -1) {
