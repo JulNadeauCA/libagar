@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.13 2003/08/26 07:55:00 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.14 2003/08/26 13:48:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,6 +34,11 @@
 
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
+
+#ifdef DEBUG
+#include <engine/widget/window.h>
+#include <engine/widget/tlist.h>
+#endif
 
 enum {
 	NANIMS_INIT =	1,
@@ -509,5 +514,96 @@ gfx_get_anim(struct object *ob, Uint32 i)
 		fatal("no anim at %s:%d", ob->name, i);
 	return (ob->gfx->anims[i]);
 }
+
+static void
+gfx_debug_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct gfx *gfx;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&gfxq_lock);
+
+	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
+		char label[TLIST_LABEL_MAX];
+		struct tlist_item *it;
+		Uint32 i;
+
+		snprintf(label, sizeof(label), "%s (%lu refs)\n%ds/%da/%dm\n",
+		    gfx->name,
+		    (gfx->used != GFX_MAX_USED) ? (unsigned long)gfx->used : 0,
+		    gfx->nsprites,
+		    gfx->nanims, gfx->nsubmaps);
+		it = tlist_insert_item(tl, NULL, label, gfx);
+		it->depth = 0;
+
+		if (gfx->nsprites > 0 || gfx->nanims > 0 || gfx->nsubmaps > 0)
+			it->flags |= TLIST_HAS_CHILDREN;
+
+		if ((it->flags & TLIST_HAS_CHILDREN) &&
+		    tlist_visible_childs(tl, it)) {
+			for (i = 0; i < gfx->nsprites; i++) {
+				SDL_Surface *su = gfx->sprites[i];
+				struct tlist_item *it;
+				struct gfx_spritecl *scl = &gfx->csprites[i];
+				struct gfx_cached_sprite *csp;
+
+				snprintf(label, sizeof(label),
+				    "%ux%ux%u (%d bytes)",
+				    su->w, su->h, su->format->BitsPerPixel,
+				    (int)su->w*su->h*su->format->BytesPerPixel);
+
+				it = tlist_insert_item(tl, gfx->sprites[i],
+				    label, gfx->sprites[i]);
+				it->depth = 1;
+
+				if (!SLIST_EMPTY(&scl->sprites)) {
+					it->flags |= TLIST_HAS_CHILDREN;
+				}
+				if ((it->flags & TLIST_HAS_CHILDREN) &&
+		    		    tlist_visible_childs(tl, it)) {
+					SLIST_FOREACH(csp, &scl->sprites,
+					    sprites) {
+						struct tlist_item *it;
+
+						snprintf(label, sizeof(label),
+						    "%u ticks\n",
+						    csp->last_drawn);
+						transform_print(
+						    &csp->transforms,
+						    label, sizeof(label));
+
+						it = tlist_insert_item(tl,
+						    csp->su, label, csp);
+						it->depth = 2;
+					}
+				}
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&gfxq_lock);
+	tlist_restore_selections(tl);
+}
+
+struct window *
+gfx_debug_window(void)
+{
+	struct window *win;
+	struct tlist *tl;
+
+	if ((win = window_new("gfx-debug")) == NULL) {
+		return (NULL);
+	}
+	window_set_caption(win, _("Resident graphics"));
+	window_set_closure(win, WINDOW_DETACH);
+
+	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
+	tlist_set_item_height(tl, text_font_height(font)*2 + 5);
+	event_new(tl, "tlist-poll", gfx_debug_poll, NULL);
+
+	return (win);
+}
+
 #endif /* DEBUG */
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.26 2003/07/08 00:34:57 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.27 2003/07/28 15:29:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -276,7 +276,7 @@ examine_window(int argc, union evarg *argv)
 }
 
 struct window *
-widget_browser_window(void)
+widget_debug_window(void)
 {
 	struct window *win;
 	struct hbox *hb;
