@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.4 2002/11/20 04:09:33 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.5 2002/11/22 08:56:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -394,7 +394,7 @@ widget_browser_window(void)
 	struct tlist *tl;
 
 
-	if ((win = window_generic_new(184, 100, "monitor-widget-browser"))
+	if ((win = window_generic_new(542, 156, "monitor-widget-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}

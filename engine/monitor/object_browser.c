@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.9 2002/11/22 05:41:43 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.10 2002/11/22 08:56:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -272,7 +272,7 @@ object_browser_window(void)
 	struct region *reg;
 	struct tlist *tl_objs;
 
-	if ((win = window_generic_new(184, 100, "monitor-object-browser"))
+	if ((win = window_generic_new(251, 259, "monitor-object-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
