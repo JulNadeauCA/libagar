@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.39 2005/03/03 10:59:25 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.40 2005/03/09 06:39:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 #include <engine/widget/palette.h>
+#include <engine/widget/spinbutton.h>
 
 #include <engine/mapedit/mapview.h>
 
@@ -200,6 +201,16 @@ poll_widgets(int argc, union evarg *argv)
 }
 
 static void
+scale_window(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	window_scale(win, -1, -1);
+	window_scale(win, WIDGET(win)->w, WIDGET(win)->h);
+	WINDOW_UPDATE(win);
+}
+
+static void
 examine_window(int argc, union evarg *argv)
 {
 	struct tlist *wintl = argv[1].p;
@@ -207,6 +218,7 @@ examine_window(int argc, union evarg *argv)
 	struct window *pwin, *win;
 	struct tlist *tl;
 	struct AGMenuItem *mi;
+	struct spinbutton *sb;
 
 	if ((it = tlist_item_selected(wintl)) == NULL) {
 		text_msg(MSG_ERROR, _("No window is selected."));
@@ -218,11 +230,31 @@ examine_window(int argc, union evarg *argv)
 	    OBJECT(pwin)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, _("Window info: %s"), OBJECT(pwin)->name);
+	window_set_caption(win, "%s", OBJECT(pwin)->name);
 
-	label_new(win, LABEL_STATIC, _("Name: \"%s\""), OBJECT(pwin)->name);
-	label_new(win, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
+	label_new(win, LABEL_STATIC, "Name: \"%s\"", OBJECT(pwin)->name);
+	label_new(win, LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
 	    &pwin->flags);
+
+	sb = spinbutton_new(win, _("Widget spacing: "));
+	widget_bind(sb, "value", WIDGET_INT, &pwin->spacing);
+	spinbutton_set_min(sb, 0);
+	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	
+	sb = spinbutton_new(win, _("Top padding: "));
+	widget_bind(sb, "value", WIDGET_INT, &pwin->ypadding_top);
+	spinbutton_set_min(sb, 0);
+	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	
+	sb = spinbutton_new(win, _("Bottom padding: "));
+	widget_bind(sb, "value", WIDGET_INT, &pwin->ypadding_bot);
+	spinbutton_set_min(sb, 0);
+	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	
+	sb = spinbutton_new(win, _("Horizontal padding: "));
+	widget_bind(sb, "value", WIDGET_INT, &pwin->xpadding);
+	spinbutton_set_min(sb, 0);
+	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
 
 	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);
