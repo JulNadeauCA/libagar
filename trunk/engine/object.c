@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.56 2002/05/31 10:41:15 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.57 2002/06/06 10:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -87,6 +87,47 @@ object_addanim(struct object_art *art, struct anim *anim)
 }
 
 int
+object_breaksprite(struct object_art *art, SDL_Surface *sprite)
+{
+	int x, y;
+	SDL_Rect sd, rd;
+
+	sd.x = 0;
+	sd.y = 0;
+	sd.w = TILEW;
+	sd.h = TILEH;
+
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = TILEW;
+	rd.h = TILEH;
+
+	for (y = 0; y < sprite->h; y += TILEH) {
+		for (x = 0; x < sprite->w; x += TILEW) {
+			SDL_Surface *s;
+
+			s = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+			    TILEW, TILEH, 32,
+			    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+			if (s == NULL) {
+				fatal("SDL_AllocSurface: %s\n", SDL_GetError());
+			}
+
+			SDL_SetAlpha(sprite, 0, 0);
+			sd.x = x;
+			sd.y = y;
+			SDL_BlitSurface(sprite, &sd, s, &rd);
+			object_addsprite(art, s);
+			SDL_SetAlpha(sprite, SDL_SRCALPHA,
+			    SDL_ALPHA_TRANSPARENT);
+		}
+	}
+	SDL_FreeSurface(sprite);
+
+	return (0);
+}
+
+int
 object_addsprite(struct object_art *art, SDL_Surface *sprite)
 {
 	if (art->sprites == NULL) {			/* Initialize */
@@ -141,6 +182,7 @@ object_get_art(char *media)
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
 			xcf_load(fob, i, art);
+
 		}
 		fobj_free(fob);
 		
@@ -235,9 +277,11 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
-	pthread_mutex_init(&ob->pos_lock, NULL);
+	ob->maps = NULL;
 	TAILQ_INIT(&ob->events);
+	pthread_mutex_init(&ob->pos_lock, NULL);
 	pthread_mutex_init(&ob->events_lock, NULL);
+	pthread_mutex_init(&ob->maps_lock, NULL);
 
 	ob->art = (ob->flags & OBJ_ART) ? object_get_art(media) : NULL;
 	ob->audio = (ob->flags & OBJ_AUDIO) ? object_get_audio(media) : NULL;
@@ -254,12 +298,7 @@ object_destroy(void *p)
 		OBJECT_OPS(ob)->destroy(ob);
 	}
 	
-	pthread_mutex_lock(&ob->pos_lock);
-	ob->pos = NULL;
-	pthread_mutex_unlock(&ob->pos_lock);
-	pthread_mutex_destroy(&ob->pos_lock);
-
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->events_lock);	/* XXX */
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
 	     eev = nexteev) {
@@ -277,6 +316,11 @@ object_destroy(void *p)
 			OBJECT_UNUSED(ob, audio);
 		}
 	}
+	
+	ob->pos = NULL;
+	ob->maps = NULL;
+	pthread_mutex_destroy(&ob->pos_lock);
+	pthread_mutex_destroy(&ob->maps_lock);
 
 	if (ob->name != NULL)
 		free(ob->name);
