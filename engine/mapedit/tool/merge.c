@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.28 2003/03/26 10:04:18 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.29 2003/03/28 01:43:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ merge_create_brush(int argc, union evarg *argv)
 		return;
 	}
 	
-	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
+	snprintf(m_name, sizeof(m_name), "brUsh(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
 		text_msg("Error", "%s already exists", m_name);
 		return;
@@ -189,6 +189,22 @@ merge_remove_brush(int argc, union evarg *argv)
 	}
 }
 
+static void
+merge_load_brush_set(int argc, union evarg *argv)
+{
+	struct merge *mer = argv[1].p;
+
+	object_load(mer);
+}
+
+static void
+merge_save_brush_set(int argc, union evarg *argv)
+{
+	struct merge *mer = argv[1].p;
+	
+	object_save(mer);
+}
+
 struct window *
 merge_window(void *p)
 {
@@ -238,11 +254,17 @@ merge_window(void *p)
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
 		struct button *bu;
+		
+		bu = button_new(reg, "Load set", NULL, BUTTON_NOFOCUS, 25, -1);
+		event_new(bu, "button-pushed", merge_load_brush_set, "%p", mer);
+		
+		bu = button_new(reg, "Save set", NULL, BUTTON_NOFOCUS, 25, -1);
+		event_new(bu, "button-pushed", merge_save_brush_set, "%p", mer);
 
-		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 50, -1);
+		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 25, -1);
 		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
 
-		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 50, -1);
+		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 25, -1);
 		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
 	}
 	
@@ -611,21 +633,24 @@ merge_load(void *p, int fd)
 	mer->inherit_flags = (Uint32)read_uint32(fd);
 	mer->random_shift = (Uint32)read_uint32(fd);
 
+	tlist_clear_items(mer->brushes_tl);
+
 	nbrushes = read_uint32(fd);
 	for (i = 0; i < nbrushes; i++) {
 		struct map *nbrush;
 		char *m_name;
 
 		m_name = read_string(fd, NULL);
+		dprintf("`%s'\n", m_name);
 
 		nbrush = Malloc(sizeof(struct map));
 		map_init(nbrush, m_name, NULL);
 		map_load(nbrush, fd);
 
-		free(m_name);
-	
 		SLIST_INSERT_HEAD(&mer->brushes, OBJECT(nbrush), wobjs);
 		tlist_insert_item(mer->brushes_tl, NULL, m_name, nbrush);
+		
+		free(m_name);
 	}
 	return (0);
 }
@@ -648,8 +673,8 @@ merge_save(void *p, int fd)
 	write_uint32(fd, 0);				/* Skip count */
 	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
 		struct brush *brush = (struct brush *)ob;
-	
-		write_string(fd, OBJECT(brush)->name);
+
+		write_string(fd, ob->name);
 		map_save(brush, fd);
 		nbrushes++;
 	}
