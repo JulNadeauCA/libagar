@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.92 2002/11/30 02:09:47 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.93 2002/12/01 14:41:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -28,14 +28,20 @@
 #include "compat/asprintf.h"
 #include "engine.h"
 
+#include "version.h"
+
 #include <sys/stat.h>
 
 #include <fcntl.h>
+
+#include <libfobj/fobj.h>
 
 #include "config.h"
 #include "map.h"
 #include "physics.h"
 #include "input.h"
+#include "view.h"
+#include "rootmap.h"
 #include "world.h"
 
 extern int mapediting;
@@ -45,6 +51,15 @@ static const struct object_ops null_ops = {
 	NULL,	/* load */
 	NULL	/* save */
 };
+
+#ifdef DEBUG
+#define DEBUG_STATE	0x01
+#define DEBUG_POSITION	0x02
+#define DEBUG_DEPS	0x04
+
+int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_DEPS;
+#define engine_debug object_debug
+#endif
 
 char *
 object_name(const char *base, int num)
@@ -75,10 +90,8 @@ void
 object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
-	pthread_mutexattr_t attr;
-
-	ob->type = strdup(type);
-	ob->name = strdup(name);
+	ob->type = Strdup(type);
+	ob->name = Strdup(name);
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
@@ -99,7 +112,6 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 #endif
 }
 
-/* Object must not be attached. */
 void
 object_destroy(void *p)
 {
@@ -112,14 +124,16 @@ object_destroy(void *p)
 		OBJECT_OPS(ob)->destroy(ob);
 	}
 
-	if ((ob->flags & OBJECT_KEEP_MEDIA) == 0) {
-		if (ob->art != NULL)
-			art_unused(ob->art);
-#if 0
-		if (ob->audio != NULL)
-			audio_unused(ob->audio);
-#endif
+	if (((ob->flags & OBJECT_ART_CACHE) == 0) &&
+	    (ob->art != NULL)) {
+		art_unused(ob->art);
 	}
+#if 0
+	if (((ob->flags & OBJECT_AUDIO_CACHE) == 0) &&
+	    (ob->audio != NULL)) {
+		audio_unused(ob->audio);
+	}
+#endif
 
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
@@ -145,12 +159,13 @@ object_destroy(void *p)
 	free(ob);
 }
 
-/* Load an object from an alternate file. */
 int
 object_load_from(void *p, char *path)
 {
 	struct object *ob = p;
 	int fd;
+
+	debug(DEBUG_STATE, "loading %s from %s\n", ob->name, path);
 
 	fd = open(path, O_RDONLY, 00600);
 	if (fd == -1) {
@@ -176,13 +191,14 @@ object_load_from(void *p, char *path)
 	return (0);
 }
 
-/* Load an object from its default location. */
 int
 object_load(void *p)
 {
 	struct object *ob = p;
 	char *path;
 	int fd, rv = 0;
+	
+	debug(DEBUG_STATE, "loading %s\n", ob->name);
 
 	path = object_path(ob->name, ob->type);
 	if (path == NULL) {
@@ -217,7 +233,6 @@ object_load(void *p)
 	return (rv);
 }
 
-/* Save an object state. */
 int
 object_save(void *p)
 {
@@ -238,6 +253,8 @@ object_save(void *p)
 	}
 	asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
 	free(typedir);
+	
+	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, path);
 
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	if (fd == -1) {
@@ -270,7 +287,7 @@ object_path(char *obname, const char *suffix)
 	char *datapath, *datapathp, *path;
 
 	path = emalloc((size_t)FILENAME_MAX);
-	datapathp = datapath = strdup(prop_string(config, "path.data_path"));
+	datapathp = datapath = Strdup(prop_string(config, "path.data_path"));
 
 	for (p = strtok_r(datapath, ":", &last);
 	     p != NULL;
@@ -288,127 +305,226 @@ object_path(char *obname, const char *suffix)
 	return (NULL);
 }
 
-/* XXX too intricate */
-
-/* Add a noderef at m:x,y, and a back reference to it. */
-struct mappos *
-object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
-    struct map *m, Uint32 x, Uint32 y, Uint32 speed)
+/* Control an object's position with an input device. */
+void
+object_control(void *p, struct input *in, int center)
 {
 	struct object *ob = p;
-	struct node *node;
-	struct mappos *pos;
 
-	pthread_mutex_lock(&m->lock);
+	pthread_mutex_lock(&ob->pos_lock);
 
-	node = &m->map[y][x];
-	pos = emalloc(sizeof(struct mappos));
-	pos->map = m;
-	pos->x = x;
-	pos->y = y;
-	pos->speed = speed;
-
-	/* Add a noderef at m:x,y. */
-	pos->nref = node_addref(node, ob, offs, flags);
-	if (pos->nref == NULL) {
-		free(pos);
-		pthread_mutex_unlock(&m->lock);
-		return (NULL);
+	if (ob->pos == NULL) {
+		pthread_mutex_unlock(&ob->pos_lock);
+		fatal("%s is nowhere\n", ob->name);
 	}
-
-	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, speed);
 
 	/* Set the input device. */
-	pos->input = in;
-	if (in != NULL) {
-		in->pos = pos;	/* XXX lock */
+	ob->pos->input = in;
+
+	if (center && view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		/* Center on the object and enable soft-scrolling. */
+		ob->pos->dir.flags |= DIR_SCROLLVIEW;
+		rootmap_center(ob->pos->map, ob->pos->x, ob->pos->y);
+	}
+	pthread_mutex_unlock(&ob->pos_lock);
+}
+
+int
+object_vanish(void *p)
+{
+	struct object *ob = p;
+	struct map *m;
+	struct node *node;
+
+	pthread_mutex_lock(&ob->pos_lock);
+	if (ob->pos == NULL) {
+		pthread_mutex_unlock(&ob->pos_lock);
+		error_set("%s is nowhere\n", ob);
+		return (-1);
 	}
 
-	/* Link this back reference to its object. */
-	pthread_mutex_lock(&ob->pos_lock);
-	ob->pos = pos;
+	m = ob->pos->map;
+	node = &m->map[ob->pos->y][ob->pos->x];
+
+	debug(DEBUG_POSITION, "%s vanishing from %s:%d,%d\n", ob->name,
+	    OBJECT(m)->name, ob->pos->x, ob->pos->y);
+
+	node_del_ref(&m->map[ob->pos->y][ob->pos->x], ob->pos->nref);
+
+	free(ob->pos);
+	ob->pos = NULL;
+
 	pthread_mutex_unlock(&ob->pos_lock);
-	
-	pthread_mutex_unlock(&m->lock);
-	return (pos);
+	return (0);
 }
 
 /*
- * Remove the only back reference of this object.
- * Map must be locked.
+ * Update an object's map position.
+ *
+ * This is usually called after a new noderef is created to update the
+ * object's back reference to it.
+ *
+ * If there is a current noderef, it is removed. No noderef is added,
+ * the code should use the node_add_* functions to create new noderefs
+ * since there are various types of noderefs with different arguments.
  */
 void
-object_delpos(void *obp)	/* XXX will change */
+object_set_position(void *p, struct noderef *nref, struct map *m,
+    Uint32 x, Uint32 y)
 {
-	struct object *ob = obp;
-	struct mappos *pos;
-	
+	struct object *ob = p;
+
 	pthread_mutex_lock(&ob->pos_lock);
-	if (ob->pos != NULL) {
-		pos = ob->pos;
-		if (pos->map != NULL) {
-			struct node *node;
-	
-			node = &pos->map->map[pos->y][pos->x];
-			node_delref(node, pos->nref);
-		}
-		free(pos);
-		ob->pos = NULL;
+
+	if (ob->pos == NULL) {				/* Allocate position */
+		debug(DEBUG_POSITION,
+		    "%s: new position on %s:%d,%d\n", ob->name,
+		    OBJECT(m)->name, x, y);
+		ob->pos = emalloc(sizeof(struct mappos));
+		ob->pos->input = NULL;
+		mapdir_init(&ob->pos->dir, ob, m, DIR_SOFTSCROLL, 1);
 	} else {
-		dprintf("%s: no position\n", ob->name);
+		debug(DEBUG_POSITION,
+		    "%s: position change from %s:%d,%d to %s:%d,%d\n", ob->name,
+		    OBJECT(ob->pos->map)->name, ob->pos->x, ob->pos->y,
+		    OBJECT(m)->name, x, y);
+
+		/* Remove the old noderef. */
+		debug(DEBUG_POSITION, "%s: removing old noderef\n", ob->name);
+		node_del_ref(&ob->pos->map->map[ob->pos->y][ob->pos->x], nref);
 	}
+	ob->pos->map = m;				/* Update position */
+	ob->pos->x = x;
+	ob->pos->y = y;
+	ob->pos->nref = nref;
+
 	pthread_mutex_unlock(&ob->pos_lock);
 }
 
 /*
- * Move a noderef from its current node to m:x,y and update
- * the back reference. Return the new position.
- *
- * Map must be locked, ob->pos must not.
+ * Move the object from its current position to dst_map:dst_x,dst_y.
+ * The current noderef is moved from the current node to the new position.
  */
-struct mappos *
-object_movepos(void *obp, struct map *m, Uint32 x, Uint32 y)
+void
+object_move(void *p, struct map *dst_map, Uint32 dst_x, Uint32 dst_y)
 {
-	struct mappos oldpos, *pos, *newpos;
-	struct noderef *oldnref;
-	struct object *ob = obp;
-
-	/* Obtain the object's position. */
-	pthread_mutex_lock(&ob->pos_lock);
-	pos = ob->pos;
-	if (pos == NULL) {
-		dprintf("%s: no position\n", ob->name);
-		pthread_mutex_unlock(&ob->pos_lock);
-		return (NULL);
-	}
-	oldpos = *pos;
-	pthread_mutex_unlock(&ob->pos_lock);
+	struct object *ob = p;
+	struct map *src_map;
+	struct node *src_node, *dst_node;
+	Uint32 src_x, src_y;
 	
-	/* Save and remove the old reference. */
-	oldnref = oldpos.nref;
-	object_delpos(oldnref->pobj);
+	pthread_mutex_lock(&ob->pos_lock);
+	if (ob->pos == NULL) {
+		fatal("%s is nowhere\n", ob->name);
+	}
+	src_map = ob->pos->map;
+	src_x = ob->pos->x;
+	src_y = ob->pos->y;
 
-	/* Insert at the new position. */
-	newpos = object_addpos(oldnref->pobj, oldnref->offs, oldnref->flags,
-	    oldpos.input, m, x, y, oldpos.speed);
-	newpos->dir = oldpos.dir;
+	pthread_mutex_lock(&src_map->lock);
+	src_node = &src_map->map[src_y][src_x];
 
-	m->redraw++;
+	pthread_mutex_lock(&dst_map->lock);
+	dst_node = &dst_map->map[dst_y][dst_x];
 
-	return (newpos);
+#ifdef DEBUG
+	if (dst_x > dst_map->mapw || dst_y > dst_map->maph) {
+		fatal("%d,%d exceeds map boundaries\n", dst_x, dst_y);
+	}
+#endif
+	if (src_map == dst_map && src_x == dst_x && src_y == dst_y) {
+		pthread_mutex_unlock(&dst_map->lock);
+		pthread_mutex_unlock(&src_map->lock);
+		pthread_mutex_unlock(&ob->pos_lock);
+		debug(DEBUG_POSITION, "%s is already at %s:%d,%d\n", ob->name,
+		    OBJECT(dst_map)->name, dst_x, dst_y);
+		return;					/* Nothing to do */
+	}
+	
+	debug(DEBUG_POSITION, "moving %s from %s:%d,%d to %s:%d,%d\n", ob->name,
+	     OBJECT(src_map)->name, src_x, src_y,
+	     OBJECT(dst_map)->name, dst_x, dst_y);
+
+	/* Move the noderef to the new node. */
+	node_move_ref(ob->pos->nref, src_node, dst_node);
+	
+	/* Update the object's back reference. */
+	ob->pos->map = dst_map;
+	ob->pos->x = dst_x;
+	ob->pos->y = dst_y;
+
+	pthread_mutex_unlock(&dst_map->lock);
+	pthread_mutex_unlock(&src_map->lock);
+	pthread_mutex_unlock(&ob->pos_lock);
 }
 
-/* Return current map position of an object. XXX */
-struct mappos *
-object_get_pos(void *obp)
+/*
+ * Allocate, read and translate a list of objects.
+ * This is mostly used to read dependency lists.
+ */
+void
+object_table_load(int fd, struct object *obj, struct object ***pobjs,
+    Uint32 *nobjs)
 {
-	struct object *ob = obp;
-	struct mappos *pos;
+	Uint32 i;
+	
+	/* Allocate the table. */
+	*nobjs = read_uint32(fd);
+	*pobjs = emalloc(*nobjs * sizeof(struct object *));
+	
+	/* Read the table. */
+	pthread_mutex_lock(&world->lock);
+	for (i = 0; i < *nobjs; i++) {
+		struct object *pob;
+		char *s;
 
-	pthread_mutex_lock(&ob->pos_lock);
-	pos = ob->pos;
-	pthread_mutex_unlock(&ob->pos_lock);
+		s = read_string(fd, NULL);
+		pob = world_find(s);
+		debug_n(DEBUG_DEPS, "%s: depends on `%s'...", obj->name, s);
+		if (pob == NULL) {
+			debug_n(DEBUG_DEPS, "missing\n");
+			fatal("%s: missing dependency on `%s'\n", obj->name, s);
+		}
+		*pobjs[i] = pob;
+		debug_n(DEBUG_DEPS, "%p\n", pob);
+		free(s);
+	}
+	pthread_mutex_unlock(&world->lock);
+}
 
-	return (pos);
+/*
+ * Allocate, initialize and save a list of objects.
+ * This is mostly used to save dependency lists.
+ */
+void
+object_table_save(struct fobj_buf *buf, struct object *obj,
+    struct object ***pobjs, Uint32 *nobjs)
+{
+	size_t solen = 0;
+	struct object *pob;
+	off_t nobjs_offs;
+
+	nobjs_offs = buf->offs;
+	buf_write_uint32(buf, 0);		/* Skip */
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
+		solen += sizeof(struct object *);
+	}
+	*pobjs = emalloc(solen);
+	*nobjs = 0;
+	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
+		debug_n(DEBUG_DEPS, "%s: %s dependency ", obj->name, pob->name);
+		if ((pob->flags & OBJECT_ART) == 0 ||
+		     pob->flags & OBJECT_CANNOT_MAP) {
+		     	debug_n(DEBUG_DEPS, "skipped\n");
+			continue;
+		}
+		debug_n(DEBUG_DEPS, "registered\n");
+		buf_write_string(buf, pob->name);
+		*pobjs[(*nobjs)++] = pob;
+	}
+	buf_pwrite_uint32(buf, *nobjs, nobjs_offs);
+	pthread_mutex_unlock(&world->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.58 2002/11/30 02:09:47 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.59 2002/12/01 14:41:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -30,11 +30,12 @@ struct object {
 
 	int	 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
-#define OBJECT_AUDIO		0x02	/* Load audio */
-#define OBJECT_KEEP_MEDIA	0x04	/* Keep graphics/audio cached */
-#define OBJECT_BLOCK		0x10	/* Map: cannot walk through. XXX */
-#define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
-#define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
+#define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
+#define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
+#define OBJECT_AUDIO		0x08	/* Load audio */
+#define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
+#define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
+#define OBJECT_CANNOT_MAP	0x40	/* Don't insert in object tables */
 
 	enum {
 		OBJECT_EMBRYONIC,	/* Unattached */
@@ -66,11 +67,7 @@ struct object {
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\
 	if (strcmp(OBJECT((ob))->type, typestr) != 0) {			\
-		fprintf(stderr, "%s:%d: %s (%s) is not a %s\n",		\
-		    __FILE__,						\
-		    __LINE__, OBJECT((ob))->name, OBJECT((ob))->type,	\
-		    typestr);						\
-		abort();						\
+		fatal("%s is not a %s\n", OBJECT((ob))->name, typestr);	\
 	}								\
 } while (/*CONSTCOND*/0)
 #else
@@ -88,11 +85,14 @@ int		 object_save(void *);
 void		 object_destroy(void *);
 char		*object_name(const char *, int);
 char		*object_path(char *, const char *);
-
-struct mappos  *object_addpos(void *, Uint32, Uint32, struct input *,
-		    struct map *, Uint32, Uint32, Uint32);
-struct mappos  *object_movepos(void *, struct map *, Uint32, Uint32);
-void		object_delpos(void *);
-struct mappos  *object_get_pos(void *);
+void		 object_control(void *, struct input *, int);
+void		 object_set_position(void *, struct noderef *, struct map *,
+		     Uint32, Uint32);
+void		 object_move(void *, struct map *, Uint32, Uint32);
+int		 object_vanish(void *);
+void		 object_table_load(int, struct object *, struct object ***,
+		     Uint32 *);
+void		 object_table_save(struct fobj_buf *, struct object *,
+		     struct object ***, Uint32 *);
 
 #endif	/* !_AGAR_OBJECT_H */
