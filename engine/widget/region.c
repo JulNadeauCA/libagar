@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.10 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.11 2002/06/25 17:32:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -126,14 +126,11 @@ region_attach(void *parent, void *child)
 	OBJECT_ASSERT(child, "widget");
 	
 	wid->win = reg->win;
+	wid->reg = reg;
 
 	event_post(child, "attached", "%p", parent);
 
 	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);
-	
-	/* Reposition/resize regions and widgets. */
-	window_resize(wid->win);
-	wid->win->redraw++;
 }
 
 /*
@@ -152,6 +149,5 @@ region_detach(void *parent, void *child)
 	event_post(child, "detached", parent);
 
 	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);
-	wid->win->redraw++;
 }
 
