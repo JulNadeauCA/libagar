@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.16 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.17 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -137,6 +137,7 @@ graph_load(void *p, int fd)
 		nvals = read_uint32(fd);
 
 		nitem = graph_add_item(gra, s, color);
+		free(s);
 
 		for (vi = 0; vi < nvals; vi++) {
 			graph_plot(nitem, read_sint32(fd));
