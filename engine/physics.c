@@ -29,6 +29,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/map.h>
 #include <engine/input.h>
 #include <engine/physics.h>
 
@@ -205,6 +206,8 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 /*
  * Update a map direction, and return a non-zero value if the map
  * coordinates have changed (so that the caller can move the reference).
+ *
+ * Must be called on a locked map.
  */
 int
 mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
@@ -359,6 +362,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 /*
  * Called after a movement, to ensure continuation if necessary, or
  * stop moving.
+ *
+ * Must be called on a locked map.
  */
 void
 mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)

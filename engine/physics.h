@@ -1,7 +1,6 @@
 /*	$Csoft	    */
 
 struct noderef;
-struct mapdir;
 struct input;
 
 enum {
@@ -47,7 +46,6 @@ struct mappos {
 	struct	mapdir dir;	/* Map direction (not saved) */
 	struct	input *input;	/* Controller (or NULL) */
 };
-
 
 void	gendir_init(struct gendir *);
 Uint32	gendir_set(struct gendir *, Uint32, Uint32);

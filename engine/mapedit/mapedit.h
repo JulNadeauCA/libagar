@@ -1,6 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.26 2002/03/12 16:03:15 vedge Exp $	*/
-
-#include <engine/physics.h>
+/*	$Csoft: mapedit.h,v 1.27 2002/03/14 03:32:25 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -37,6 +35,9 @@ struct mapedit_margs {
 	int	 tilew;
 	int	 tileh;
 };
+
+struct mapdir;
+struct gendir;
 
 struct mapedit {
 	struct	object obj;

@@ -29,6 +29,8 @@
  */
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 
 #include "mapedit.h"
 #include "command.h"

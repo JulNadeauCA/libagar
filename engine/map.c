@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.61 2002/03/15 22:12:29 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.62 2002/03/17 05:32:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,7 +37,10 @@
 #include <libfobj/fobj.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/version.h>
+
 #include <engine/text/text.h>
 #include <engine/mapedit/mapedit.h>
 

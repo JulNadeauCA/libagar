@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.8 2002/02/25 09:07:53 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.9 2002/02/28 12:53:55 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
@@ -19,7 +19,6 @@ struct world	*world_create(char *);
 int		 world_load(void *, int);
 int		 world_save(void *, int);
 int		 world_destroy(void *);
-void		 world_dump(void *);
 
 char		*savepath(char *, const char *);
 

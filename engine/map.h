@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.26 2002/03/12 14:00:07 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.27 2002/03/15 22:12:06 vedge Exp $	*/
 
 struct noderef {
 	struct	object *pobj;	/* Object pointer */
@@ -82,7 +82,6 @@ void		 map_clean(struct map *, struct object *, Uint32, Uint32,
 		     Uint32);
 void		 map_allocnodes(struct map *, Uint32, Uint32, Uint32, Uint32);
 void		 map_freenodes(struct map *);
-void		 map_dump(void *);
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_findref(struct node *, void *, Sint32, Uint32);

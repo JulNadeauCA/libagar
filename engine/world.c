@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.17 2002/03/04 03:19:00 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.18 2002/03/15 07:35:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -28,8 +28,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/config.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -39,15 +37,15 @@
 #include <errno.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
+
 #include <engine/mapedit/mapedit.h>
 
 static struct obvec world_vec = {
 	world_destroy,
 	world_load,
-	world_save,
-	NULL,		/* link */
-	NULL,		/* unlink */
-	world_dump
+	world_save
 };
 
 char *
@@ -219,16 +217,5 @@ world_destroy(void *p)
 	pthread_mutex_destroy(&wo->lock);
 
 	return (0);
-}
-
-void
-world_dump(void *p)
-{
-	struct world *wo = (struct world *)p;
-	struct object *ob;
-
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		object_dump(ob);
-	}
 }
 

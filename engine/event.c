@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.17 2002/03/12 14:07:34 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.18 2002/03/12 15:51:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -34,7 +34,10 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/input.h>
+
 #include <engine/mapedit/mapedit.h>
 
 static void	event_hotkey(SDL_Event *);
@@ -46,7 +49,13 @@ event_hotkey(SDL_Event *ev)
 #ifdef DEBUG
 	case SDLK_w:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			world_dump(world);
+			struct object *ob;
+
+			pthread_mutex_lock(&world->lock);
+			SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+				object_dump(ob);
+			}
+			pthread_mutex_unlock(&world->lock);
 		}
 		break;
 #endif /* DEBUG */
