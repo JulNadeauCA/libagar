@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -24,6 +24,7 @@ struct window {
 	Uint32	 border[5];		/* Border colors */
 	int	 x, y;			/* Absolute coordinates */
 	int	 w, h;			/* Geometry */
+	int	 xmargin, ymargin;
 	struct	 viewport *view;	/* Parent view */
 	SDL_Rect vmask;			/* View mask (units) */
 

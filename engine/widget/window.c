@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.22 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.23 2002/05/19 15:27:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -102,6 +102,8 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->y = y;
 	win->w = w;
 	win->h = h;
+	win->xmargin = 16;
+	win->ymargin = 32;
 	win->redraw = 0;
 	
 	/* XXX pref */
@@ -496,12 +498,16 @@ window_resize(struct window *win)
 		struct widget *wid;
 		int x, y;
 
-		x = reg->x;
-		y = reg->y;
+		x = reg->x + reg->win->xmargin;
+		y = reg->y + reg->win->ymargin;
 	
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			wid->x = x;
 			wid->y = y;
+
+			if (wid->y > (reg->win->h - reg->win->ymargin)) {
+				wid->y -= reg->win->ymargin;
+			}
 
 			if (!(wid->flags & WIDGET_HIDE)) {
 				WIDGET_OPS(wid)->widget_draw(wid);
@@ -515,6 +521,7 @@ window_resize(struct window *win)
 				y += wid->h + reg->spacing;
 				break;
 			}
+
 		}
 	}
 }

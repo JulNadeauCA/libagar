@@ -80,8 +80,8 @@ engine_config(void)
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    64, 64, 512, 256);
-	body_reg = region_new(win, WIDGET_VALIGN, 0, 0, 100, 80, 5);
-	buttons_reg = region_new(win, WIDGET_HALIGN, 0, 80, 100, 20, 5);
+	body_reg = region_new(win, WIDGET_VALIGN, 0, 0, 100, 80, 10);
+	buttons_reg = region_new(win, WIDGET_HALIGN, 0, 80, 100, 20, 10);
 
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
