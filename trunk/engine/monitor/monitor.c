@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.5 2002/09/06 01:30:09 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.6 2002/09/09 00:42:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -70,14 +70,10 @@ show_tool(int argc, union evarg *argv)
 	
 	switch (argv[2].i) {
 	case MONITOR_OBJECT_BROWSER:
-		pthread_mutex_lock(&mon->wins.object_browser->lock);
-		window_show_locked(mon->wins.object_browser);
-		pthread_mutex_unlock(&mon->wins.object_browser->lock);
+		window_show(mon->wins.object_browser, 0, 1);
 		break;
 	case MONITOR_SPRITE_BROWSER:
-		pthread_mutex_lock(&mon->wins.sprite_browser->lock);
-		window_show_locked(mon->wins.sprite_browser);
-		pthread_mutex_unlock(&mon->wins.sprite_browser->lock);
+		window_show(mon->wins.sprite_browser, 0, 1);
 		break;
 	}
 }
