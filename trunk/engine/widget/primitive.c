@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.49 2003/06/08 00:21:05 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.50 2003/06/09 01:31:12 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -441,10 +441,8 @@ line_bresenham(void *widget, int px1, int py1, int px2, int py2, int ncolor)
 	int xyinc = vfmt->BytesPerPixel + yinc;
 	Uint8 *fb1, *fb2;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int x1 = wid->cx + px1;
-	int y1 = wid->cy + py1;
-	int x2 = wid->cx + px2;
-	int y2 = wid->cy + py2;
+	int x1 = wid->cx + px1, y1 = wid->cy + py1;	/* Left endpoint */
+	int x2 = wid->cx + px2, y2 = wid->cy + py2;	/* Right endpoint */
 
 	if (x1 > x2) {		/* Swap inverse X coords */
 		dx = x1;
