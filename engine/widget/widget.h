@@ -1,13 +1,24 @@
-/*	$Csoft: widget.h,v 1.26 2002/07/18 12:05:20 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.27 2002/07/20 18:56:49 vedge Exp $	*/
 /*	Public domain	*/
 
-struct window;
+#define WIDGET_MAXCOLORS	16
 
 struct widget_ops {
 	const	 struct object_ops obops;
 	void	 (*widget_draw)(void *);
 	void	 (*widget_animate)(void *);
 };
+
+struct widget_color {
+	char	*name;		/* Identifier */
+	int	ind;		/* Index into color array */
+	SLIST_ENTRY(widget_color) colors;
+};
+
+SLIST_HEAD(widget_colorq, widget_color);
+
+struct window;
+struct region;
 
 struct widget {
 	struct	 object obj;
@@ -21,6 +32,10 @@ struct widget {
 	int	rw, rh;			/* Requested geometry (%) */
 	int	x, y;			/* Allocated coordinates in window */
 	int	w, h;			/* Allocated geometry */
+
+	Uint32	color[WIDGET_MAXCOLORS];
+	int	ncolors;
+	struct	widget_colorq colors;
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets inside region */
 };
@@ -123,4 +138,5 @@ enum {
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
 void	widget_event(void *, SDL_Event *, int);
+void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8, Uint8);
 
