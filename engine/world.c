@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.11 2002/02/19 01:46:18 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.12 2002/02/20 00:38:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -179,18 +179,31 @@ int
 world_destroy(void *p)
 {
 	struct world *wo = (struct world *)p;
-	struct object *nob;
+	struct object *ob;
 
 	if (world->curmap != NULL) {
 		map_unfocus(world->curmap);
 	}
 
-	SLIST_FOREACH(nob, &wo->wobjsh, wobjs) {
-		object_unlink(nob);
-		object_destroy(nob);
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		if (ob->vec->unlink != NULL) {
+			ob->vec->unlink(ob);
+		}
 	}
-	
+	SDL_Delay(100);	/* XXX */
+
+	printf("freed:");
+	fflush(stdout);
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		printf(" %s", ob->name);
+		fflush(stdout);
+		object_destroy(ob);
+	}
 	object_lategc();
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
+	}
+	printf(".\n");
 
 	free(wo->datapath);
 	free(wo->udatadir);
@@ -210,12 +223,6 @@ world_dump(struct world *wo)
 		object_dump(ob);
 	}
 	object_dump((struct object *)wo);
-#if 0
-	struct character *ch;
-	printf("characters\n");
-	SLIST_FOREACH(ch, &wo->wcharsh, wchars)
-		char_dump(ch);
-#endif
 }
 
 #endif /* DEBUG */
