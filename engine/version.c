@@ -28,7 +28,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#include <libfobj/fobj.h>
+
+#include <engine/debug.h>
+#include <engine/version.h>
 
 /*
  * The version minor of a structure is incremented when the changes
@@ -49,8 +59,8 @@ version_read(int fd, char *osig, int overmin, int overmaj)
 
 	siglen = strlen(osig);
 
-	if (read(fd, sig, siglen) != siglen) ||
-	   (strcmp(sig, osig) != 0) {
+	if (read(fd, sig, siglen) != siglen ||
+	    strcmp(sig, osig) != 0) {
 		fatal("%s: bad magic\n", osig);
 		return (-1);
 	}
@@ -75,19 +85,21 @@ version_read(int fd, char *osig, int overmin, int overmaj)
 	return (0);
 }
 
-void
+int
 version_write(int fd, char *osig, int overmin, int overmaj)
 {
 	struct passwd *pw;
 	char host[64];
 
-	write(fd, sig, strlen(osig));
+	write(fd, osig, strlen(osig));
 	fobj_write_uint32(fd, overmaj);
 	fobj_write_uint32(fd, overmin);
 	
-	pw = getpwnam(getuid());
+	pw = getpwuid(getuid());
 	fobj_write_string(fd, pw->pw_name);
 	gethostname(host, sizeof(*host));
 	fobj_write_string(fd, host);
+
+	return (0);
 }
 
