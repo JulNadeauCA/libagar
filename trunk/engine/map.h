@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.16 2002/02/15 10:49:28 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.17 2002/02/16 04:56:31 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -74,12 +74,11 @@ struct map {
 	SLIST_ENTRY(map) wmaps;		/* Active maps */
 };
 
-extern struct map *curmap;	/* Currently focused map */
-
 struct map	*map_create(char *, char *, int);
-void		 map_destroy(void *);
-int		 map_load(void *, char *);
-int		 map_save(void *, char *);
+int		 map_load(void *, int);
+int		 map_save(void *, int);
+int		 map_destroy(void *);
+
 int		 map_focus(struct map *);
 int		 map_unfocus(struct map *);
 void		 map_clean(struct map *, struct object *, int, int, int);

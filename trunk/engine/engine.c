@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.11 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.12 2002/02/16 04:52:10 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -57,7 +57,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 	h = 480;
 	depth = 32;
 	flags = SDL_SWSURFACE;
-	curmap = NULL;
 
 	/* XXX ridiculous */
 	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:X:Y:")) != -1) {
@@ -172,6 +171,7 @@ engine_mapedit(void)
 		/* Edit a loaded map, or create a new one. */
 		medit = mapedit_create(mapstr, mapdesc, mapw, maph,
 		    tilew, tileh);
+		object_link(medit);
 		if (medit == NULL) {
 			fatal("mapedit_create\n");
 			return (1);
