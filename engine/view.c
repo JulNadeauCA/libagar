@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.14 2002/02/25 11:12:14 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.15 2002/02/28 12:54:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -59,8 +59,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPEDIT:
 		dprintf("map edition mode\n");
 		v->map = m;
-		v->mapw = (v->width / m->tilew) - 1;
-		v->maph = (v->height / m->tileh);
+		v->mapw = (v->width / m->tilew) - 2;
+		v->maph = (v->height / m->tileh) - 1;
 		v->mapxoffs = 1;
 		v->mapyoffs = 1;
 		break;
