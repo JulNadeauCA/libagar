@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.60 2003/04/25 09:38:49 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.61 2003/05/17 23:59:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -190,7 +190,7 @@ text_render_glyph(char *fontname, int fontsize, Uint32 color, char ch)
 	    prop_get_int(config, "font-engine.default-style"));
 
 	/* Decompose the color. */
-	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	col.r = r;
 	col.g = g;
 	col.b = b;
@@ -223,7 +223,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	fon_h = text_font_height(fon);
 
 	/* Decompose the color. */
-	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	col.r = r;
 	col.g = g;
 	col.b = b;

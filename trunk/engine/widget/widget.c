@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.53 2003/05/08 11:59:55 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.54 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -626,7 +626,7 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 	if (ind > wid->ncolors)
 		wid->ncolors++;
 
-	wid->color[ind] = SDL_MapRGB(view->v->format, r, g, b);
+	wid->color[ind] = SDL_MapRGB(vfmt, r, g, b);
 
 	col = Malloc(sizeof(struct widget_color));
 	col->name = Strdup(name);

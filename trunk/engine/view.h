@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.75 2003/04/26 06:26:09 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.76 2003/05/18 00:16:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -144,6 +144,7 @@ case 4:					\
 } while (0)
 
 extern struct viewport *view;	/* view.c */
+extern SDL_PixelFormat *vfmt;	/* view.c */
 
 __BEGIN_DECLS
 extern DECLSPEC int		 view_init(enum gfx_engine);

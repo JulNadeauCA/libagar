@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.181 2003/04/29 01:40:10 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.182 2003/05/18 00:17:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -248,7 +248,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	win->borderw = default_nborder;
 	win->border = Malloc(win->borderw * sizeof(Uint32));
 	for (i = 0; i < win->borderw; i++) {
-		win->border[i] = SDL_MapRGB(view->v->format,
+		win->border[i] = SDL_MapRGB(vfmt,
 		    default_border[i].r, default_border[i].g,
 		    default_border[i].b);
 	}
@@ -540,7 +540,7 @@ window_draw(struct window *win)
 				primitives.rect_outlined(win,
 				    reg->x, reg->y,
 				    reg->w, reg->h,
-				    SDL_MapRGB(view->v->format, 255, 255, 255));
+				    SDL_MapRGB(vfmt, 255, 255, 255));
 			}
 #endif
 		}
@@ -842,7 +842,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 		if (view->opengl) {
 			Uint8 r, g, b;
 
-			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
+			SDL_GetRGB(fillcolor, vfmt, &r, &g, &b);
 			glColor3ub(r, g, b);
 
 			if (rfill1.w > 0) {
@@ -1388,7 +1388,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		if (view->opengl) {
 			Uint8 r, g, b;
 
-			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
+			SDL_GetRGB(fillcolor, vfmt, &r, &g, &b);
 			glColor3ub(r, g, b);
 
 			if (rfill1.w > 0) {
