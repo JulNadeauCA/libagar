@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.39 2003/03/26 10:03:33 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.40 2003/04/25 09:47:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -80,6 +80,7 @@ struct mapview {
 };
 
 enum mapview_prop_labels {
+	MAPVIEW_BASE,
 	MAPVIEW_FRAME_0,
 	MAPVIEW_FRAME_1,
 	MAPVIEW_FRAME_2,
