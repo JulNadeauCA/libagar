@@ -1,18 +1,20 @@
-$Csoft: TREE,v 1.2 2002/04/28 17:01:36 vedge Exp $
+$Csoft: TREE,v 1.3 2002/06/09 10:15:53 vedge Exp $
 
           +-[char]
           |
-          +-[world]
-          | 
-[object]--+-[map]
-          |
-	  +-[input]
-	  |
-	  +-[widget]----+--[button]
+          +-[world]     +--[window]
+          |             |
+[object]--+-[map]       +--[graph]
+          |             |
+	  +-[input]     +--[button]
 	  |             |
-	  +-[window]    +--[label]
-	                |
-			+--[checkbox]
+	  +-[widget]----+--[checkbox]
+	  |             |
+	  +-[mapedit]   +--[graph]
+	  |             |
+          +-[video]     +--[label]
                         |
+			+--[radio]
+			|
 			+--[textbox]
 
