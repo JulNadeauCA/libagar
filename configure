@@ -17,8 +17,7 @@ if [ "$SDL_VERSION" != "" ]; then
  echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 
 else
- SDL_FOUND=no
-
+ false
 fi
 
 if [ "$SDL11_VERSION" != "" ]; then
