@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.9 2004/05/12 05:33:45 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.10 2004/05/24 03:28:09 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -706,6 +706,14 @@ ttf_render_unicode_solid(ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 			xstart -= glyph->minx;
 
 		for (row = 0; row < current->rows; ++row) {
+			/*
+			 * Work around bug seen with FreeType 9.3.3 that
+			 * occurs inconsistently with MALLOC_OPTIONS=AFGJ
+			 * under OpenBSD 3.5.
+			 */
+			if (glyph->yoffset < 0)
+				glyph->yoffset = 0;
+
 			if (row+glyph->yoffset >= textsu->h)
 				continue;
 
