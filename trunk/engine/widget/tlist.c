@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.91 2004/05/06 06:24:09 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.92 2004/05/06 08:45:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -266,11 +266,16 @@ tlist_draw(void *p)
 		}
 
 		if (it->iconsrc != NULL) {
-			if (it->icon == NULL) {
-				it->icon = view_scale_surface(it->iconsrc,
-				    tl->item_h, tl->item_h);
+			if ((tl->flags & TLIST_STATIC_ICONS) == 0) {
+				if (it->icon == NULL) {
+					it->icon = view_scale_surface(
+					    it->iconsrc, tl->item_h,
+					    tl->item_h);
+				}
+				widget_blit(tl, it->icon, x, y);
+			} else {
+				widget_blit(tl, it->iconsrc, x, y);
 			}
-			widget_blit(tl, it->icon, x, y);
 		}
 drawtext:
 		x += tl->item_h + 5;
