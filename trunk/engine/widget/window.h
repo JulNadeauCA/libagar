@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.26 2002/07/07 06:34:25 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.27 2002/07/08 05:24:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -50,6 +50,7 @@ struct window {
 	int	 titleh;		/* Titlebar height */
 	int	 x, y;			/* Absolute coordinates */
 	int	 w, h;			/* Geometry */
+	int	 minw, minh;
 	int	 spacing;		/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
 	SDL_Rect vmask;			/* View mask (in nodes)
@@ -121,9 +122,9 @@ struct window {
 
 /* Wrappers for high-level code. */
 
-struct window	*window_new(char *, int, int, int, int, int);
+struct window	*window_new(char *, int, int, int, int, int, int, int);
 void	 	 window_init(struct window *, char *, int,
-		     int, int, int, int);
+		     int, int, int, int, int, int);
 
 void	 window_destroy(void *);
 void	 window_attach(void *, void *);

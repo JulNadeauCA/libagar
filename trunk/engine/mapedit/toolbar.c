@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.7 2002/07/08 03:15:07 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.8 2002/07/08 05:24:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -117,7 +117,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the toolbar.
 	 */
-	win = window_new("Tool", WINDOW_SOLID, 16, 16, 68, 119);
+	win = window_new("Tool", WINDOW_SOLID,
+	    16, 16, 68, 119, 68, 119);
 
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
@@ -166,8 +167,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	med->toolbar_win = win;
 
 	/* Object list window */
-	win = window_new("Object", WINDOW_CUBIC, 83, 16,
-	    view->w - 96, 74);
+	win = window_new("Object", WINDOW_CUBIC,
+	    83, 16, view->w-96, TILEH+51, TILEW+42, TILEH+51);
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	oqueue = objq_new(reg, med, 0, 100, 100);
@@ -175,8 +176,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	med->objlist_win = win;
 
 	/* Tile list window */
-	win = window_new("Tile", WINDOW_CUBIC, view->w - 64, 90,
-	    49, view->h - 110);
+	win = window_new("Tile", WINDOW_CUBIC,
+	    view->w-64, 90, 49, view->h-110, TILEW+42, TILEH+51);
 	reg = region_new(win, REGION_HALIGN,
 	    -6, 0, 100, 100);
 	tqueue = tileq_new(reg, med, 0, 100, 100);
@@ -186,7 +187,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `New map' dialog.
 	 */
-	win = window_new("New map", WINDOW_CENTER, 0, 0, 320, 200);
+	win = window_new("New map", WINDOW_CENTER,
+	     0, 0, 320, 200, 258, 198);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
 	name_tbox = textbox_new(reg, "Name: ", 0, 100, 50);
@@ -213,7 +215,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `Load map' dialog.
 	 */
-	win = window_new("Load map", WINDOW_CENTER, 0, 0, 320, 128);
+	win = window_new("Load map", WINDOW_CENTER,
+	    0, 0, 320, 128, 120, 96);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 99);
 	/* Map name */

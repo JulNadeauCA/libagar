@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.2 2002/07/07 06:32:44 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.3 2002/07/08 05:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ stamp_window(void *p)
 	};
 
 	win = window_new("Stamp", WINDOW_SOLID,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 145, 96);
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 145, 96, 145, 96);
 	
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);

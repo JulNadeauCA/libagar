@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.20 2002/06/25 17:33:04 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.21 2002/07/08 05:24:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -166,7 +166,8 @@ config_settings_win(struct config *con)
 #endif
 
 	/* Settings window */
-	win = window_new("Engine settings", WINDOW_CENTER, 0, 0, 320, 260);
+	win = window_new("Engine settings", WINDOW_CENTER,
+	    0, 0, 320, 260, 235, 236);
 
 	/* Font cache */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 25);

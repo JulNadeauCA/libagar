@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.2 2002/07/06 23:57:44 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.3 2002/07/07 00:24:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -180,7 +180,7 @@ objq_draw(void *p)
 	int x = 0, i, sn;
 	
 	for (i = 0, sn = oq->offs;
-	     i < (WIDGET(oq)->w / TILEW) - 1;
+	     i < (WIDGET(oq)->w / TILEW);
 	     i++, x += TILEW) {
 		if (sn > -1) {
 			/* Absolute */
