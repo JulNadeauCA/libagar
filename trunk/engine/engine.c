@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.24 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.25 2002/04/02 19:52:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@
 int	engine_debug = 1;
 #endif
 struct	world *world;
+struct	gameinfo *gameinfo;
 
 static char *mapdesc = NULL, *mapstr = NULL;
 static int mapw = 64, maph = 64;
@@ -71,12 +72,13 @@ printusage(char *progname)
 }
 
 int
-engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
+engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
 
 	curmapedit = NULL;
+	gameinfo = gi;
 
 	njoy = 0;
 	mapediting = 0;
