@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use Cwd;
-#use Errno qw(EEXIST);
+use Errno qw(EEXIST);
 
 $COOKIE = ".mkconcurrent_$$";
 @DIRS = ();
@@ -98,7 +98,11 @@ sub Scan
 		$ndir =~ s/^\.\///;
 
 		if (-d "$dir/$ent" and ! -e "$dir/$ent/$COOKIE") {
-			mkdir("$BUILD/$ndir/$ent", 0755);
+			unless (mkdir("$BUILD/$ndir/$ent")) {
+				if ($! != EEXIST) {
+					die "$BUILD/$ndir/$ent: $!";
+				}
+			}
 			Scan("$dir/$ent");
 		} else {
 			if ($ent eq 'Makefile') {
