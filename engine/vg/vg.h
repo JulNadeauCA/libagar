@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.2 2004/03/30 16:05:11 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.3 2004/04/10 03:01:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -22,6 +22,7 @@ enum vg_alignment {
 };
 #include "close_code.h"
 
+#include <engine/vg/vg_snap.h>
 #include <engine/vg/vg_point.h>
 #include <engine/vg/vg_line.h>
 #include <engine/vg/vg_circle.h>
@@ -114,6 +115,8 @@ struct vg {
 	SDL_Surface *su;		/* Surface for rasterization */
 	struct map *submap;		/* Pointer to the fragment submap */
 	struct map *map;		/* Raster map */
+	enum vg_snap_mode snap_mode;	/* Positional restriction */
+
 	TAILQ_HEAD(,vg_element) vges;	/* Graphic elements */
 };
 

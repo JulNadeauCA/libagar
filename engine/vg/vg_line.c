@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
-#include "vgedit.h"
+#include "vgobj.h"
 
 void
 vg_draw_lines(struct vg *vg, struct vg_element *vge)
@@ -101,7 +101,7 @@ line_init(struct tool *t)
 	struct window *win;
 	struct radio *rad;
 
-	win = tool_window(t, "vgedit-tool-line");
+	win = tool_window(t, "vg-tool-line");
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 	
@@ -120,11 +120,13 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		if (seq++ == 0) {
 			vg_begin(vg, VG_LINES);
 			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_snap_to(vg, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			tool_push_status(t,
 			    _("Specify second point or [undo].\n"), seq);
 		} else {
 			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_snap_to(vg, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			vg_end(vg);
 			vg_rasterize(vg);
@@ -144,7 +146,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			vg_rasterize(vg);
-		} else  {
+		} else {
 			vg_end(vg);
 			seq = 0;
 			tool_pop_status(t);
