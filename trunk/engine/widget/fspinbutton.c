@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.3 2003/11/17 15:11:17 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.4 2003/11/19 00:48:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ static struct widget_ops fspinbutton_ops = {
 static void	fspinbutton_unitsel(int, union evarg *);
 
 struct fspinbutton *
-fspinbutton_new(void *parent, double min, double max, float increment,
+fspinbutton_new(void *parent, float increment, const struct unit *unit,
     const char *fmt, ...)
 {
 	char label[LABEL_MAX];
@@ -69,7 +69,7 @@ fspinbutton_new(void *parent, double min, double max, float increment,
 	va_end(ap);
 
 	fsu = Malloc(sizeof(struct fspinbutton));
-	fspinbutton_init(fsu, min, max, increment, label);
+	fspinbutton_init(fsu, increment, unit, label);
 	object_attach(parent, fsu);
 	return (fsu);
 }
@@ -172,8 +172,8 @@ fspinbutton_unitsel(int argc, union evarg *argv)
 }
 
 void
-fspinbutton_init(struct fspinbutton *fsu, double min, double max,
-    float increment, const char *label)
+fspinbutton_init(struct fspinbutton *fsu, float increment,
+    const struct unit *unit, const char *label)
 {
 	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE|
 	    WIDGET_WFILL);
@@ -182,20 +182,19 @@ fspinbutton_init(struct fspinbutton *fsu, double min, double max,
 	fsu->value = 0;
 	fsu->incr = increment;
 	fsu->input = textbox_new(fsu, label);
-	fsu->unit = &identity_unit;
-	fsu->units = NULL;
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
 	pthread_mutex_init(&fsu->lock, NULL);
-
-	/*
-	 * If min/max is infinite, limit to the maximum value representable
-	 * by the binding types (from the 'bound' event handler).
-	 */
-	if (!isinf(min))
-		fsu->min = min;
-	if (!isinf(max))
-		fsu->max = max;
+	
+	if (unit != NULL) {
+		fsu->units = ucombo_new(fsu);
+		event_new(fsu->units, "ucombo-selected", fspinbutton_unitsel,
+		    "%p", fsu);
+		fspinbutton_set_units(fsu, unit);
+	} else {
+		fsu->unit = &identity_unit;
+		fsu->units = NULL;
+	}
 
 	fsu->incbu = button_new(fsu, _("+"));
 	fsu->decbu = button_new(fsu, _("-"));
@@ -367,13 +366,14 @@ fspinbutton_set_increment(struct fspinbutton *fsu, float incr)
 
 /* Set the precision to display. */
 void
-fspinbutton_set_precision(struct fspinbutton *fsu, int precision)
+fspinbutton_set_precision(struct fspinbutton *fsu, const char *mode,
+    int precision)
 {
 	pthread_mutex_lock(&fsu->lock);
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
 	snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
-	strlcat(fsu->format, "g", sizeof(fsu->format));
+	strlcat(fsu->format, mode, sizeof(fsu->format));
 	pthread_mutex_unlock(&fsu->lock);
 }
 
@@ -383,15 +383,8 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
 {
 	const struct unit *unit;
 
-	if (fsu->units == NULL) {
-		fsu->units = ucombo_new(fsu);
-		event_new(fsu->units, "ucombo-selected", fspinbutton_unitsel,
-		    "%p", fsu);
-		widget_scale(fsu, WIDGET(fsu)->w, WIDGET(fsu)->h);
-		widget_update_coords(fsu, WIDGET(fsu)->cx, WIDGET(fsu)->cy);
-	}
-
 	pthread_mutex_lock(&fsu->units->list->lock);
+	tlist_unselect_all(fsu->units->list);
 	for (unit = &units[0]; unit->abbr != NULL; unit++) {
 		struct tlist_item *it;
 
@@ -406,10 +399,33 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
 	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
+/* Select the unit to use. */
+void
+fspinbutton_select_unit(struct fspinbutton *fsu, const char *uname)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&fsu->units->list->lock);
+	tlist_unselect_all(fsu->units->list);
+	TAILQ_FOREACH(it, &fsu->units->list->items, items) {
+		const struct unit *u = it->p1;
+
+		if (strcmp(u->abbr, uname) == 0) {
+			it->selected++;
+			fsu->unit = u;
+			button_printf(fsu->units->button, "%s", u->abbr);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&fsu->units->list->lock);
+}
+
 /* Set the writeability of a fspinbutton. */
 void
 fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 {
+	pthread_mutex_lock(&fsu->lock);
+
 	fsu->writeable = writeable;
 	textbox_set_writeable(fsu->input, writeable);
 	if (writeable) {
@@ -419,4 +435,16 @@ fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 		button_disable(fsu->incbu);
 		button_disable(fsu->decbu);
 	}
+
+	pthread_mutex_unlock(&fsu->lock);
+}
+
+/* Define the range of acceptable values. */
+void
+fspinbutton_set_range(struct fspinbutton *fsu, double min, double max)
+{
+	pthread_mutex_lock(&fsu->lock);
+	fsu->min = min;
+	fsu->max = max;
+	pthread_mutex_unlock(&fsu->lock);
 }
