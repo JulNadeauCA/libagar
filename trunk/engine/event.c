@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.145 2003/03/24 12:08:39 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.146 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -85,7 +85,9 @@ int	event_idletime = -1;		/* SDL_Delay() granularity */
 
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
+#ifdef THREADS
 static void	*event_post_async(void *);
+#endif
 
 /* View must be locked. */
 static void
@@ -104,10 +106,12 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_F2:
-		object_save(world);
+		if (object_save(world, NULL) == -1)
+			text_msg("Error saving world", "%s", error_get());
 		break;
 	case SDLK_F4:
-		object_load(world);
+		if (object_load(world, NULL) == -1)
+			text_msg("Error loading world", "%s", error_get());
 		break;
 	case SDLK_F6:
 		window_show(fps_win);
@@ -556,10 +560,10 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 	return (eev);
 }
 
+#ifdef THREADS
 static void *
 event_post_async(void *p)
 {
-#ifdef THREADS
 	struct event *eev = p;
 
 	debug(DEBUG_ASYNC_EVENTS, "%p: async event start\n",
@@ -567,13 +571,10 @@ event_post_async(void *p)
 	eev->handler(eev->argc, eev->argv);
 	debug(DEBUG_ASYNC_EVENTS, "%p: async event end\n",
 	    (void *)pthread_self());
-
 	free(eev);
-#else
-	fatal("requires THREADS");
-#endif
 	return (NULL);
 }
+#endif
 
 /*
  * Invoke an event handler. The lock on the object's event list is recursive
