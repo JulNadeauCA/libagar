@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.57 2003/03/14 04:09:20 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.58 2003/03/25 13:48:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -32,14 +32,14 @@
 #endif
 
 #include <engine/compat/queue.h> /* For queue(3) definitions */
-#include <libfobj/fobj.h>	 /* For the fobj(3) operations */
-#include <libfobj/buf.h>	 /* For the fobj_buf type */
+#include <libfobj/fobj.h>	 /* For struct netbuf */
 #include <engine/error.h>	 /* Wrappers and error messages */
 #include <engine/debug.h>	 /* Debugging macros */
 #include <engine/object.h> 	 /* Most structures are derived from this */
 #include <engine/event.h>	 /* For event handler prototypes */
 
 #ifdef THREADS
+extern pthread_mutexattr_t	recursive_mutexattr;
 # ifdef _SGI_SOURCE
 #  undef PTHREAD_MUTEX_INITIALIZER
 #  define PTHREAD_MUTEX_INITIALIZER { { 0 } }

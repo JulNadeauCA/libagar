@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.96 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.97 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -32,7 +32,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/physics.h>
 #include <engine/input.h>
 #include <engine/config.h>
 #include <engine/rootmap.h>
@@ -62,9 +61,10 @@ int	engine_debug = 1;		/* Enable debugging */
 #endif
 
 #ifdef THREADS
-pthread_key_t engine_errorkey;		/* Multi-threaded error code */
+pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
+pthread_key_t		engine_errorkey;	/* Multi-threaded error code */
 #else
-char *engine_errorkey;			/* Single-threaded error code */
+char *engine_errorkey;				/* Single-threaded error code */
 #endif
 
 const struct engine_proginfo *proginfo;	/* Game name, copyright, version */
@@ -90,14 +90,15 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	}
 
 #ifdef THREADS
-	/* Create a thread-specific key for errno style error messages. */
+	pthread_mutexattr_init(&recursive_mutexattr);
+	pthread_mutexattr_settype(&recursive_mutexattr,
+	    PTHREAD_MUTEX_RECURSIVE);
+	
 	pthread_key_create(&engine_errorkey, NULL);
 #else
-	/* Use a string for errno style error messages. */
 	engine_errorkey = NULL;
 #endif
 
-	/* Obtain the application information. */
 	printf("Agar engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
 	printf("%s\n\n", prog->copyright);
@@ -166,7 +167,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	
 	/* Initialize/load engine settings. */
 	config = config_new();
-	object_load(config);
+	object_load(config, NULL);
 
 	/* Initialize the world structure. */
 	world = Malloc(sizeof(struct world));
@@ -285,14 +286,17 @@ void
 engine_destroy(void)
 {
 	if (mapedition) {
-		object_save(&mapedit);
+		object_save(&mapedit, NULL);
 	}
 	world_destroy(world);
 	text_destroy();
 	input_destroy_all();
 
 	object_destroy(view);
+	free(view);
 	object_destroy(config);
+	free(config);
+
 #ifdef THREADS
 	pthread_key_delete(engine_errorkey);
 #else
