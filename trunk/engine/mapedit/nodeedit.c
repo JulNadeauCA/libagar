@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.13 2003/06/07 15:42:14 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.14 2003/06/17 23:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -110,19 +110,19 @@ nodeedit_poll(int argc, union evarg *argv)
 
 	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
-		struct art_anim *anim;
+		struct gfx_anim *anim;
 		char label[TLIST_LABEL_MAX];
 
 		switch (nref->type) {
 		case NODEREF_SPRITE:
 			snprintf(label, sizeof(label), "%u. [%u] s(%s:%u)",
 			    i, nref->layer, nref->pobj->name, nref->offs);
-			icon = nref->pobj->art->sprites[nref->offs];
+			icon = nref->pobj->gfx->sprites[nref->offs];
 			break;
 		case NODEREF_ANIM:
 			snprintf(label, sizeof(label), "%u. [%u] a(%s:%u)",
 			    i, nref->layer, nref->pobj->name, nref->offs);
-			anim = nref->pobj->art->anims[nref->offs];
+			anim = nref->pobj->gfx->anims[nref->offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
 			}

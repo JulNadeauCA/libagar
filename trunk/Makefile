@@ -1,6 +1,6 @@
-#	$Csoft: Makefile,v 1.33 2003/03/13 05:54:20 vedge Exp $
+#	$Csoft: Makefile,v 1.34 2003/03/14 08:14:34 vedge Exp $
 
-SUBDIR=	 libfobj fobjcomp engine
+SUBDIR=	 dencomp denex engine
 SUBDIR+= cave
 
 all: Makefile.config all-subdir
@@ -13,10 +13,11 @@ regress: regress-subdir
 
 prereq:
 	(cd engine/compat && ${MAKE})
-	(cd libfobj && ${MAKE})
-	(cd fobjcomp && ${MAKE})
+	(cd engine/error && ${MAKE})
+	(cd engine/loader && ${MAKE})
+	(cd dencomp && ${MAKE})
 
-configure: .PHONY
+configure:
 	cat configure.in | manuconf > configure
 	chmod 755 configure
 	cvs commit -m "sync; rien" configure

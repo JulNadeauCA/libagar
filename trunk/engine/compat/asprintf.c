@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.c,v 1.5 2003/03/28 00:23:20 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.6 2003/06/14 00:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <engine/error.h>
+#include <engine/error/error.h>
 
 #include "asprintf.h"
 

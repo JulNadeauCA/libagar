@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.34 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.35 2003/06/17 23:30:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/view.h>
 
 #include "graph.h"
@@ -167,7 +166,7 @@ graph_save(void *p, struct netbuf *buf)
 	TAILQ_FOREACH(gi, &gra->items, items)
 		nitems++;
 
-	nitems_offs = buf->offs;
+	nitems_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(gi, &gra->items, items) {
 		Uint32 i;

@@ -1,10 +1,10 @@
-/*	$Csoft: text.h,v 1.22 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.23 2003/06/18 01:10:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
-#include <engine/media/loader/ttf.h>
+#include <engine/loader/ttf.h>
 
 #include "begin_code.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.65 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.66 2003/06/15 08:54:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <config/floating_point.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>

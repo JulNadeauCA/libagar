@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.1 2003/06/18 01:10:20 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,13 +30,11 @@
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
-#include <engine/map.h>
+#include <engine/map.h>			/* For TILEW/TILEH */
+#include <engine/loader/xcf.h>
 
 #include <string.h>
-#include <errno.h>
-#include <unistd.h>
-
-#include "xcf.h"
+#include <stdlib.h>
 
 static SDL_Surface	*xcf_convert_layer(struct netbuf *, Uint32,
 			     struct xcf_header *, struct xcf_layer *);
@@ -201,15 +199,12 @@ xcf_read_tile_rle(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 	ssize_t rv;
 
 	tilep = tile = Malloc(len);
-	rv = fread(tile, len, 1, buf->file);	    /* XXX violates layers */
+	rv = netbuf_eread(tile, sizeof(Uint8), len, buf);
+#if 0
 	if (rv < len) {
 		error_set("short read");
 		free(tile);
 		return (NULL);
-	}
-#if 0
-	if (rv != (ssize_t)len) {
-		warning("read(%ld): read %ld bytes\n", (long)len, (long)rv);
 	}
 #endif
 
@@ -549,14 +544,12 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 
 	netbuf_seek(buf, xcf_offs, SEEK_SET);
 
-	/* XXX violates layers */
-	if (fread(magic, sizeof(magic), 1, buf->file) < sizeof(magic)) {
+	if (netbuf_eread(magic, sizeof(magic), 1, buf) < 1) {
 		error_set("error reading magic");
 		return (-1);
 	}
 	if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) != 0) {
 		error_set("bad magic");
-		abort();
 		return (-1);
 	}
 
@@ -564,11 +557,12 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	head = Malloc(sizeof(struct xcf_header));
 	head->w = read_uint32(buf);
 	head->h = read_uint32(buf);
-	if (head->w > 65536 || head->h > 65536) {
+	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
 		error_set("nonsense geometry: %ux%u", head->w, head->h);
 		free(head);
 		return (-1);
 	}
+
 	head->base_type = read_uint32(buf);
 	switch (head->base_type) {
 	case XCF_IMAGE_RGB:

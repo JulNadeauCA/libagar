@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.27 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.28 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ void
 tool_init(struct tool *tool, const char *name, const void *ops)
 {
 	object_init(tool, "tool", name, ops);
-	object_load_art(tool, "/engine/mapedit/tool/tool", 0);
+	OBJECT(tool)->gfx = gfx_fetch(tool, "/engine/mapedit/tool/tool");
 
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;

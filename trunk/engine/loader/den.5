@@ -1,0 +1,108 @@
+.\"	$Csoft: xcf.5,v 1.1 2003/06/19 01:53:38 vedge Exp $
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd JUNE 19, 2003
+.Dt DEN 5
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Os
+.Sh NAME
+.Nm den
+.Nd agar den archive format
+.Sh DESCRIPTION
+The
+.Nm
+file format has been designed to encapsulate data (such as graphics or audio),
+with support for language-specific overrides and searching facilities.
+.Pp
+Integers are stored in network format, strings are length-encoded.
+A
+.Nm
+archive starts with the
+.Sq agar den
+string, followed by a 64-bit version code and
+a
+.Nm
+header, which looks like:
+.Bd -literal
+struct den {
+	char	 hint[DEN_HINT_MAX];	/* Hint on type of content */
+	char	 name[DEN_NAME_MAX];	/* Name of the package */
+	char	*author;		/* Author of the contents */
+	char	*copyright;		/* Copyright notice */
+	char	*descr;			/* Description of contents */
+	char	*keywords;		/* Comma-separated keywords */
+
+	struct den_member *members;
+	Uint32		  nmembers;
+};
+.Ed
+.Pp
+The
+.Va hint
+field gives a hint about the type of contents, and is only for searching
+purposes.
+The
+.Va name
+is an identifier for the whole archive.
+.Pp
+The
+.Va author ,
+.Va copyright ,
+.Va descr
+are optional.
+.Va keywords
+is provided for searching purposes.
+.Pp
+The
+.Va members
+table describes the contents of the archive.
+Each element, in its encoded form, looks like:
+.Bd -literal
+struct den_member {
+	Uint32	 name_len;
+	char	 name[DEN_MEMBER_NAME_MAX];	/* Identifier */
+	Uint32	 lang_len;
+	char	 lang[DEN_MEMBER_LANG_MAX];	/* ISO 639 language code */
+	Uint32	 offs;				/* Position in archive */
+	Uint32	 size;				/* Size in bytes */
+};
+.Ed
+.Pp
+The
+.Va name
+string identifies this archive member.
+.Va lang
+is an ISO 639 language code, or a null string to indicate that this member
+contains no language-specific data.
+The loader chooses which member to read depending on language preferences.
+.Sh SEE ALSO
+.Xr agar 3
+.Sh HISTORY
+The
+.Nm
+file format first appeared in Agar 1.0

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.108 2003/06/15 05:08:39 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.109 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -51,15 +51,8 @@
 #include <SDL_syswm.h>
 #endif
 
-#ifdef DEBUG
-int	engine_debug = 1;		/* Enable debugging */
-#endif
-
 #ifdef THREADS
 pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
-pthread_key_t		engine_errorkey;	/* Multithreaded error code */
-#else
-char *engine_errorkey;				/* Unithreaded error code */
 #endif
 
 struct engine_proginfo *proginfo;	/* Game name, copyright, version */
@@ -73,39 +66,43 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 {
 	static int inited = 0;
 	const SDL_VideoInfo *vinfo;
-
+	
 	if (inited) {
 		error_set("engine already initialized");
 		return (-1);
 	}
 
+	/* Initialize the error handling facility. */
+	error_init();
+
 #ifdef THREADS
+	/* Initialize default recursive mutex attributes. */
 	pthread_mutexattr_init(&recursive_mutexattr);
 	pthread_mutexattr_settype(&recursive_mutexattr,
 	    PTHREAD_MUTEX_RECURSIVE);
-	pthread_key_create(&engine_errorkey, NULL);
+
+	/* Initialize the global linkage lock. */
 	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
-#else
-	engine_errorkey = NULL;
 #endif
 
 #ifdef HAVE_PROGNAME
+	/* Prefer __progname on BSD systems. */
 	{
 		extern char *__progname;
-
 		prog->name = __progname;
 	}
 #endif
+
 	printf(_("Agar engine v%s\n"), ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
 	printf("%s\n\n", prog->copyright);
 	proginfo = prog;
 
+	/* Initialize the SDL library. */
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		error_set("SDL_Init: %s", SDL_GetError());
 		return (-1);
 	}
-
 	if (flags & ENGINE_INIT_GFX) {
 #ifdef HAVE_X11
 		setenv("SDL_VIDEO_X11_WMCLASS", prog->progname, 1);
@@ -163,16 +160,19 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		}
 	}
 
+	/* Initialize and load the user engine settings. */
 	config = Malloc(sizeof(struct config));
 	config_init(config);
 	object_load(config);
 
+	/* Initialize the font engine. */
 	unicode_init();
 	if (prop_get_bool(config, "font-engine") &&
 	    text_init() == -1) {
 		fatal("text_init: %s", error_get());
 	}
 
+	/* Attach the input devices. */
 	if (flags & ENGINE_INIT_INPUT) {
 		input_new(INPUT_KEYBOARD, 0);
 		input_new(INPUT_MOUSE, 0);
@@ -187,8 +187,10 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		}
 	}
 
+	/* Create the world. */
 	world = object_new(NULL, "world", "world", NULL);
 	object_load(world);
+
 	inited++;
 	return (0);
 }
@@ -216,14 +218,10 @@ engine_destroy(void)
 	object_destroy(config);
 	free(config);
 
-#ifdef THREADS
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */
 #endif
-	pthread_key_delete(engine_errorkey);
-#else
-	Free(engine_errorkey);
-#endif
+	error_destroy();
 	SDL_Quit();
 	exit(0);
 }

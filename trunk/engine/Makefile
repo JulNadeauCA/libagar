@@ -1,14 +1,15 @@
-#	$Csoft: Makefile,v 1.68 2003/06/17 23:22:01 vedge Exp $
+#	$Csoft: Makefile,v 1.69 2003/06/19 01:43:40 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	compat \
+	error \
 	mapedit \
 	widget \
 	monitor \
-	media \
-	unicode
+	unicode \
+	loader
 
 CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
 
@@ -27,15 +28,15 @@ PSMAN3=	agar.ps3 map.ps3 object.ps3 \
 
 LIB=	engine
 
-SRCS=	engine.c error.c event.c view.c physics.c \
+SRCS=	engine.c event.c view.c physics.c \
 	input.c object.c map.c rootmap.c perso.c \
 	config.c prop.c transform.c \
-	typesw.c mkpath.c
+	typesw.c mkpath.c gfx.c
 
-OBJS=	engine.o error.o event.o view.o physics.o \
+OBJS=	engine.o event.o view.o physics.o \
 	input.o object.o map.o rootmap.o perso.o \
 	config.o prop.o transform.o \
-	typesw.o mkpath.o
+	typesw.o mkpath.o gfx.o
 
 OBJS+=	mapedit/mapedit.o \
 	monitor/monitor.o

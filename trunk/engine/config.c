@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.86 2003/06/15 08:58:27 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.87 2003/06/17 23:30:42 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,11 +28,9 @@
 
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
-
 #include <engine/compat/asprintf.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/map.h>

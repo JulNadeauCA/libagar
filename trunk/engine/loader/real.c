@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: real.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,21 +26,27 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/media/loader/real.h>
+#include <SDL_types.h>
+#include <SDL_endian.h>
+
+#include <engine/loader/netbuf.h>
+#include <engine/loader/real.h>
 
 float
 read_float(struct netbuf *buf)
 {
 	float f;
+
 	netbuf_read(&f, sizeof(f), 1, buf);
 	return (f);
 }
+
 void
 write_float(struct netbuf *buf, float f)
 {
 	netbuf_write(&f, sizeof(f), 1, buf);
 }
+
 void
 pwrite_float(struct netbuf *buf, float f, off_t offs)
 {
@@ -51,14 +57,17 @@ double
 read_double(struct netbuf *buf)
 {
 	double f;
+
 	netbuf_read(&f, sizeof(f), 1, buf);
 	return (f);
 }
+
 void
 write_double(struct netbuf *buf, double f)
 {
 	netbuf_write(&f, sizeof(f), 1, buf);
 }
+
 void
 pwrite_double(struct netbuf *buf, double f, off_t offs)
 {

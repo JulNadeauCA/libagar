@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.1 2003/06/18 01:10:20 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -35,13 +35,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
-
 #include <SDL_endian.h>
 
-#include <engine/media/loader/ttf.h>
+#include <engine/loader/ttf.h>
 
 
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using

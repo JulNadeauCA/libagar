@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.69 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.70 2003/06/17 23:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -128,7 +128,7 @@ import_gfx(int argc, union evarg *argv)
 		case 'a':
 			{
 				struct object *pobj = it->p1;
-				struct art_anim *anim = ANIM(pobj, ind);
+				struct gfx_anim *anim = ANIM(pobj, ind);
 				SDL_Surface *srcsu = anim->frames[0];
 
 				t = NODEREF_ANIM;
@@ -270,23 +270,23 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 	tl = tlist_new(win, TLIST_MULTI);
 	tlist_set_item_height(tl, ttf_font_height(font)*2);
 
-	for (i = 0; i < ob->art->nsubmaps; i++) {
-		struct map *sm = ob->art->submaps[i];
+	for (i = 0; i < ob->gfx->nsubmaps; i++) {
+		struct map *sm = ob->gfx->submaps[i];
 
 		snprintf(label, sizeof(label), _("m%u\n%ux%u nodes\n"), i,
 		    sm->mapw, sm->maph);
 		tlist_insert_item(tl, NULL, label, sm);
 	}
-	for (i = 0; i < ob->art->nsprites; i++) {
-		SDL_Surface *sp = ob->art->sprites[i];
+	for (i = 0; i < ob->gfx->nsprites; i++) {
+		SDL_Surface *sp = ob->gfx->sprites[i];
 	
 		snprintf(label, sizeof(label),
 		    "s%u\n%ux%u pixels, %ubpp\n", i, sp->w, sp->h,
 		    sp->format->BitsPerPixel);
-		tlist_insert_item(tl, ob->art->sprites[i], label, ob);
+		tlist_insert_item(tl, ob->gfx->sprites[i], label, ob);
 	}
-	for (i = 0; i < ob->art->nanims; i++) {
-		struct art_anim *an = ob->art->anims[i];
+	for (i = 0; i < ob->gfx->nanims; i++) {
+		struct gfx_anim *an = ob->gfx->anims[i];
 
 		snprintf(label, sizeof(label), _("a%u\n%u frames\n"), i,
 		    an->nframes);
@@ -336,10 +336,10 @@ open_tileset(int argc, union evarg *argv)
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 1);
 
 	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILESET|MAPVIEW_PROPS);
+	mapview_init(mv, ob->gfx->tile_map, MAPVIEW_TILESET|MAPVIEW_PROPS);
 	mapview_set_selection(mv, 0, 0, 1, 1);
 
-	object_load(ob->art->tile_map);
+	object_load(ob->gfx->tile_map);
 
 	/* Map operation buttons */
 	hb = hbox_new(win, 1);
@@ -408,13 +408,11 @@ find_gfx(struct tlist *tl, struct object *pob)
 	struct object *cob;
 
 	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
-		if (cob->art == NULL)
+		if (cob->gfx == NULL)
 			continue;
 		snprintf(label, sizeof(label), "%s\n%ua/%us/%um\n",
-		    cob->name,
-		    cob->art->nanims,
-		    cob->art->nsprites,
-		    cob->art->nsubmaps);
+		    cob->name, cob->gfx->nanims, cob->gfx->nsprites,
+		    cob->gfx->nsubmaps);
 		tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
 		find_gfx(tl, cob);
 	}
