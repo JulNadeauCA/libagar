@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.45 2002/11/28 07:35:15 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.46 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -238,25 +238,33 @@ text_msg(char *title, char *fmt, ...)
 	struct button *button;
 	va_list args;
 	char *msg;
+	SDL_Surface *msg_eval;
+	Uint16 w, h;
 
-	win = window_generic_new(253, 140, NULL);
-	if (win == NULL) {
-		return;
-	}
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	
 	va_start(args, fmt);
 	if (vasprintf(&msg, fmt, args) == -1) {
 		fatal("vasprintf: %s\n", strerror(errno));
 	}
 	va_end(args);
 
-	lab = label_new(reg, 100, 60, msg);
-	button = button_new(reg, "Ok", NULL, 0, 99, 40);
-	WIDGET_FOCUS(button);
+	/* Auto-size the window. XXX waste */
+	msg_eval = text_render(NULL, -1, 0, msg);
+	w = msg_eval->w;
+	h = msg_eval->h;
+	SDL_FreeSurface(msg_eval);
 
-	event_new(button, "button-pushed", window_generic_detach, "%p", win);
-	window_show(win);
+	win = window_generic_new(w + 20, h + 100, NULL);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	{
+		lab = label_new(reg, 100, 60, msg);
+		button = button_new(reg, "Ok", NULL, 0, 99, 40);
+		WIDGET_FOCUS(button);
+
+		event_new(button, "button-pushed",
+		    window_generic_detach, "%p", win);
+		window_show(win);
+	}
 
 	free(msg);
 }
