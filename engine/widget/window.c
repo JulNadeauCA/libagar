@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.4 2002/04/20 09:17:16 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.5 2002/04/21 09:07:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,13 +51,13 @@ static struct obvec window_vec = {
 	window_unlink
 };
 
-static TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
-static pthread_mutex_t windowslock = PTHREAD_MUTEX_INITIALIZER;
+/* The event loop accesses this list frequently. */
+TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
+pthread_mutex_t windowslock = PTHREAD_MUTEX_INITIALIZER;
 
-static SDL_TimerID timer = NULL;
+static Uint32 nwindows = 0;
+
 static Uint32 delta = 0, delta2 = 256;
-
-static Uint32	window_time(Uint32, void *);
 
 struct window *
 window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
@@ -72,10 +72,20 @@ window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
 	win->view = view;
 	win->flags = flags;
 	win->bgtype = bgtype;
+
+	switch (win->bgtype) {
+	case WINDOW_CUBIC:
+	case WINDOW_CUBIC2:
+		win->flags |= WINDOW_ANIMATE;
+		break;
+	}
+
 	win->x = x;
 	win->y = y;
 	win->w = w;
 	win->h = h;
+	win->redraw = 0;
+	/* XXX pref */
 	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
 
@@ -94,71 +104,50 @@ window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
 	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	
 	TAILQ_INIT(&win->widgetsh);
+	win->nwidgets = 0;
 
 	if (pthread_mutex_init(&win->widgetslock, NULL) != 0) {
 		perror("widgetslock");
 		return (NULL);
 	}
-
 	return (win);
 }
 
-int
-window_init(void)
-{
-	return (0);
-}
-
+/*
+ * Dispatch a mouse click event to the appropriate window,
+ * switching focus when appropriate.
+ *
+ * Called from the event loop.
+ */
 void
-window_quit(void)
+window_mouse_button(SDL_Event *ev, Uint32 flags)
 {
-	if (timer != NULL) {
-		SDL_RemoveTimer(timer);
-	}
-}
-
-void
-window_event(SDL_Event *ev, Uint32 flags)
-{
-	struct window *w;
-
+	struct window *win, **winds;
+	struct widget *w = NULL, **wids;
+	Uint32 i, j;
+	
 	pthread_mutex_lock(&windowslock);
-	TAILQ_FOREACH(w, &windowsh, windows) {
-		if (w->flags & flags) {
-			dprintf("event to %s\n", OBJECT(w)->name);
-			widget_event(w, ev, 0);
+	TAILQ_DUP(winds, nwindows, &windowsh, window, windows);
+	pthread_mutex_unlock(&windowslock);
+
+	for (i = 0; i < nwindows; i++) {
+		win = winds[i];
+
+		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
+			continue;
+		}
+		pthread_mutex_lock(&win->widgetslock);
+		TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
+		pthread_mutex_unlock(&win->widgetslock);
+
+		for (j = 0; j < win->nwidgets; j++) {
+			w = wids[j];
+
+			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y)) {
+				widget_event(w, ev, 0);
+			}
 		}
 	}
-	pthread_mutex_unlock(&windowslock);
-}
-
-static Uint32
-window_time(Uint32 ival, void *wp)
-{
-	if (delta++ > 256) {
-		delta = 0;
-	}
-	if (delta2-- < 1) {
-		delta2 = 256;
-	}
-
-	if (wp != NULL) {
-		WINDOW(wp)->view->map->redraw++;
-	}
-	
-	return (ival);
-}
-
-void
-window_drawall(void)
-{
-	struct window *w;
-
-	pthread_mutex_lock(&windowslock);
-	TAILQ_FOREACH(w, &windowsh, windows) {
-		window_draw(w);
-	}
-	pthread_mutex_unlock(&windowslock);
 }
 
 void
@@ -265,6 +254,18 @@ window_draw(struct window *w)
 	pthread_mutex_unlock(&w->widgetslock);
 
 	SDL_UpdateRect(v, w->x, w->y, w->w, w->h);
+
+	if (w->flags & WINDOW_ANIMATE) {
+		if (delta++ > 256) {
+			delta = 0;
+		}
+		if (delta2-- < 1) {
+			delta2 = 256;
+		}
+		w->redraw++;
+	} else {
+		w->redraw = 0;
+	}
 }
 
 int
@@ -305,52 +306,68 @@ window_link(void *ob)
 	struct window *w = (struct window *)ob;
 
 	pthread_mutex_lock(&windowslock);
-
 	TAILQ_INSERT_HEAD(&windowsh, w, windows);
-
-	if (timer != NULL) {
-		SDL_RemoveTimer(timer);	
-	}
-	timer = SDL_AddTimer(100, window_time, w);
-	
 	pthread_mutex_unlock(&windowslock);
+
+	nwindows++;
+
+	w->redraw++;
 
 	return (0);
 }
 
+/* Implies unlink of child widgets. */
 int
 window_unlink(void *ob)
 {
-	struct window *w = (struct window *)ob;
-	
-	pthread_mutex_lock(&windowslock);
-	TAILQ_REMOVE(&windowsh, w, windows);
-	pthread_mutex_unlock(&windowslock);
+	struct window *win = (struct window *)ob;
+	struct widget *wid, **wids;
+	Uint32 i;
 
+	pthread_mutex_lock(&win->widgetslock);
+	TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
+	pthread_mutex_unlock(&win->widgetslock);
+
+	for (i = 0; i < win->nwidgets; i++) {
+		wid = (struct widget *)wids[i];
+		object_unlink(wid);
+	}
+
+	pthread_mutex_lock(&windowslock);
+	TAILQ_REMOVE(&windowsh, win, windows);
+	pthread_mutex_unlock(&windowslock);
+	
+	nwindows--;
+
+
+	free(wids);
 	return (0);
 }
 
 int
 window_destroy(void *ob)
 {
-	struct window *w = (struct window *)ob;
-	struct widget *wid;
-	
-	pthread_mutex_lock(&w->widgetslock);
-	TAILQ_FOREACH(wid, &w->widgetsh, widgets) {
-		dprintf("destroy widget %s\n", OBJECT(wid)->name);
-		object_unlink(wid);
+	struct window *win = (struct window *)ob;
+	struct widget *wid, **wids;
+	Uint32 i;
+
+	pthread_mutex_lock(&win->widgetslock);
+	TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
+	pthread_mutex_unlock(&win->widgetslock);
+
+	/* Implicitely free child widgets. */
+	for (i = 0; i < win->nwidgets; i++) {
+		wid = (struct widget *)wids[i];
 		object_destroy(wid);
 	}
-	pthread_mutex_unlock(&w->widgetslock);
 
-	free(w->caption);
+	free(win->caption);
+	view_maskfill(win->view, &win->vmask, -1);
+	win->view->map->redraw++;
 	
-	view_maskfill(w->view, &w->vmask, -1);
-	w->view->map->redraw++;
-	
-	pthread_mutex_destroy(&w->widgetslock);
+	pthread_mutex_destroy(&win->widgetslock);
 
+	free(wids);
 	return (0);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.2 2002/04/21 03:14:22 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.3 2002/04/21 09:07:44 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -6,6 +6,7 @@ struct window {
 	Uint32	 flags;
 #define WINDOW_PLAIN	0x01		/* Solid, no borders */
 #define WINDOW_FOCUS	0x02
+#define WINDOW_ANIMATE	0x04		/* Redraw each tick */
 
 	Uint32	bgtype;
 #define WINDOW_SOLID	0x04
@@ -18,18 +19,25 @@ struct window {
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
 	Uint32	 border[5];		/* Border colors */
 	
-	Sint16	 x, y, w, h;		/* Rectangle within view (pixels) */
+	Sint16	 x, y;			/* Absolute coordinates */
+	Uint16	 w, h;			/* Geometry */
+
+	int	 redraw;		/* Redraw at next tick */
 
 	SDL_Rect vmask;			/* View mask (units) */
 
 	TAILQ_HEAD(, widget) widgetsh;	/* Widgets within this window */
 	pthread_mutex_t widgetslock;	/* Lock on widgets list */
+	Uint32	nwidgets;		/* Widget count */
 	
 	struct viewport *view;		/* Parent view */
 	TAILQ_ENTRY(window) windows;	/* Windows within this view */
 };
 
-#define WINDOW(w)	((struct window *)(w))
+#define WINDOW(w)		((struct window *)(w))
+#define WINDOW_INSIDE(wina, xa, ya)					\
+	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
+	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
 
 struct window	*window_create(struct viewport *, char *, char *, Uint32,
 		    Uint32, Sint16, Sint16, Uint16, Uint16);
@@ -39,9 +47,6 @@ int		 window_save(void *, int);
 int		 window_link(void *);
 int		 window_unlink(void *);
 
-int		 window_init(void);
-void		 window_quit(void);
 void		 window_draw(struct window *);
-void		 window_drawall(void);
-void		 window_event(SDL_Event *, Uint32);
+void		 window_mouse_button(SDL_Event *, Uint32);
 
