@@ -74,7 +74,7 @@ else
 UNAME=""
 fi
 if [ "$UNAME" = "IRIX64" ]; then
-ARCH64=yes
+ARCH64=1
 echo "#ifndef ARCH64" >> engine/config.h
 echo "#define ARCH64 $ARCH64" >> engine/config.h
 echo "#endif /* ARCH64 */" >> engine/config.h
