@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.2 2004/09/29 05:49:33 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.3 2004/09/29 08:15:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -121,7 +121,7 @@ mousebuttondown(int argc, union evarg *argv)
 		if (x >= mitem->x &&
 		    x < (mitem->x + label->w + m->hspace) &&
 		    y >= mitem->y &&
-		    y < (mitem->y + label->h + m->vspace)) {
+		    y < (mitem->y + m->itemh)) {
 		    	if (m->sel_item == mitem) {
 				ag_menu_collapse(m, mitem);
 				m->sel_item = NULL;
@@ -155,8 +155,7 @@ mousebuttonup(int argc, union evarg *argv)
 	    x < (m->sel_item->x + WIDGET_SURFACE(m,m->sel_item->label)->w +
 	        m->hspace) &&
 	    y >= m->sel_item->y &&
-	    y < (m->sel_item->y + WIDGET_SURFACE(m,m->sel_item->label)->h +
-	        m->vspace)) {
+	    y < (m->sel_item->y + m->itemh)) {
 		m->sel_item = NULL;
 	}
 #endif
@@ -180,7 +179,7 @@ mousemotion(int argc, union evarg *argv)
 		if (x >= mitem->x &&
 		    x < (mitem->x + label->w + m->hspace) &&
 		    y >= mitem->y &&
-		    y < (mitem->y + label->h + m->vspace)) {
+		    y < (mitem->y + m->itemh)) {
 		    	if (mitem != m->sel_item) {
 				if (m->sel_item != NULL) {
 					ag_menu_collapse(m, m->sel_item);
@@ -277,7 +276,7 @@ ag_menu_add_subitem(struct AGMenuItem *pitem, const char *text,
 	subitem->view = NULL;
 	subitem->pmenu = m;
 	subitem->sel_subitem = NULL;
-	subitem->y = (pitem->nsubitems-1)*m->itemh;
+	subitem->y = pitem->nsubitems*m->itemh - m->itemh;
 	subitem->pitem = pitem;
 
 	snprintf(evname, sizeof(evname), "select-%p", subitem);
@@ -355,7 +354,7 @@ ag_menu_draw(void *p)
 			    mitem->x,
 			    mitem->y - m->vspace/2,
 			    label->w + m->hspace,
-			    label->h + m->vspace - 1,
+			    m->itemh - 1,
 			    SEL_COLOR);
 		}
 		widget_blit_surface(m, mitem->label,
@@ -385,11 +384,11 @@ ag_menu_scale(void *p, int w, int h)
 
 			x += label->w+m->hspace;
 			if (WIDGET(m)->h < label->h) {
-				WIDGET(m)->h += label->h + m->vspace;
+				WIDGET(m)->h += m->itemh;
 			}
 			if (x > view->w/2) {
 				x = m->hspace;			/* Wrap */
-				y += label->h + m->vspace;
+				y += m->itemh;
 				WIDGET(m)->h += label->h;
 			} else {
 				WIDGET(m)->w += label->w + m->hspace;
