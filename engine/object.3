@@ -72,7 +72,7 @@ and
 functions.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "int"
+.Ft "void"
 .Fn object_init "struct object *ob" "char *name" "int flags" "struct obvec *vec"
 .Pp
 .Ft "int"
@@ -87,8 +87,7 @@ functions.
 .Pp
 .Fn object_init
 initializes
-.Fa ob
-and returns a unique identifier.
+.Fa ob .
 .Fn object_destroy
 frees all resources allocated for
 .Fa ob
