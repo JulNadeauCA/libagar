@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.152 2003/03/04 23:19:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.153 2003/03/05 02:15:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -142,7 +142,6 @@ noderef_destroy(struct noderef *nref)
 	}
 }
 
-/* Allocate the node arrays. */
 void
 map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 {
@@ -165,7 +164,6 @@ map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 	pthread_mutex_unlock(&m->lock);
 }
 
-/* Free the node arrays. */
 void
 map_free_nodes(struct map *m)
 {
@@ -344,8 +342,6 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 static void
 map_layer_init(struct map_layer *lay, char *name)
 {
-	dprintf("name `%s'\n", name);
-
 	lay->name = Strdup(name);
 	lay->visible = 1;
 	lay->xinc = 1;
@@ -359,6 +355,7 @@ map_layer_destroy(struct map_layer *lay)
 	free(lay->name);
 }
 
+/* Create a new layer. */
 int
 map_push_layer(struct map *m, char *name)
 {
@@ -368,21 +365,20 @@ map_push_layer(struct map *m, char *name)
 	}
 	m->layers = erealloc(m->layers,
 	    (m->nlayers+1) * sizeof(struct map_layer));
-	if (name == NULL) {
+	if (name == NULL) {				/* Default name */
 		char *s;
 
 		Asprintf(&s, "Layer %d", m->nlayers);
-		dprintf("adding layer `%s' at %d\n", s, m->nlayers);
 		map_layer_init(&m->layers[m->nlayers], s);
 		free(s);
 	} else {
-		dprintf("adding layer `%s' at %d\n", name, m->nlayers);
 		map_layer_init(&m->layers[m->nlayers], name);
 	}
 	m->nlayers++;
 	return (0);
 }
 
+/* Remove the last layer. */
 void
 map_pop_layer(struct map *m)
 {
@@ -812,8 +808,10 @@ map_load(void *ob, int fd)
 
 	if (m->map != NULL)
 		map_free_nodes(m);
-	if (m->layers != NULL)
-		map_free_layers(m);
+	if (ver.minor >= 2) {				/* Multilayering */
+		if (m->layers != NULL)
+			map_free_layers(m);
+	}
 
 	m->type = (enum map_type)read_uint32(fd);
 	m->mapw = read_uint32(fd);
@@ -1070,7 +1068,7 @@ map_check(void *arg)
 
 #endif	/* DEBUG && THREADS */
 
-static __inline__ void
+static void
 noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 {
 	SDL_Rect clip;
