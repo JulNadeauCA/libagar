@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.53 2004/03/23 02:25:02 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.54 2004/04/09 08:05:43 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -294,6 +294,7 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 		    (cx-x)*vfmt->BytesPerPixel;
 		pixel4 = (Uint8 *)view->v->pixels + (cy-y)*view->v->pitch +
 		    (cx-x)*vfmt->BytesPerPixel;
+
 		clip_pixel(view->v, &pixel1);
 		clip_pixel(view->v, &pixel2);
 		clip_pixel(view->v, &pixel3);
@@ -308,13 +309,19 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			break;
 		case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = (color>>16)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[1] = pixel1[1] = (color>>8)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[2] = pixel1[2] = color&0xff;
+			pixel1[0] = pixel2[0] = (color>>16)&0xff;
+			pixel3[0] = pixel4[0] = pixel1[0];
+			pixel2[1] = pixel1[1] = (color>>8)&0xff;
+			pixel3[1] = pixel4[1] = pixel1[1];
+			pixel1[2] = pixel2[2] = color&0xff;
+			pixel3[2] = pixel4[2] = pixel1[2];
 #else
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = color&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = (color>>16)&0xff;
+			pixel1[0] = pixel2[0] = color&0xff;
+			pixel3[0] = pixel4[0] = pixel1[0];
+			pixel2[1] = pixel1[1] = (color>>8)&0xff;
+			pixel3[1] = pixel4[1] = pixel1[1];
+			pixel1[2] = pixel2[2] = (color>>16)&0xff;
+			pixel3[2] = pixel4[2] = pixel1[2];
 #endif /* SDL_BYTEORDER */
 			break;
 		case 2:
@@ -361,15 +368,21 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			*(Uint32 *)pixel4 = color;
 			break;
 		case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = (color>>16)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = color&0xff;
-# else
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = color&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
-			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = (color>>16)&0xff;
-# endif /* SDL_BYTEORDER */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pixel1[0] = pixel2[0] = (color>>16)&0xff;
+			pixel3[0] = pixel4[0] = pixel1[0];
+			pixel2[1] = pixel1[1] = (color>>8)&0xff;
+			pixel3[1] = pixel4[1] = pixel1[1];
+			pixel1[2] = pixel2[2] = color&0xff;
+			pixel3[2] = pixel4[2] = pixel1[2];
+#else
+			pixel1[0] = pixel2[0] = color&0xff;
+			pixel3[0] = pixel4[0] = pixel1[0];
+			pixel2[1] = pixel1[1] = (color>>8)&0xff;
+			pixel3[1] = pixel4[1] = pixel1[1];
+			pixel1[2] = pixel2[2] = (color>>16)&0xff;
+			pixel3[2] = pixel4[2] = pixel1[2];
+#endif /* SDL_BYTEORDER */
 			break;
 		case 2:
 			*(Uint16 *)pixel1 = color;
