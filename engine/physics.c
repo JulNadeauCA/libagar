@@ -184,6 +184,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (*mapy - 1 > 1) {
 					map->map[*mapx][*mapy - 1].flags
 					    |= NODE_ANIM;
+				} else {
+					nref->yoffs = 0;
 				}
 			}
 			if (nref->yoffs <= (-map->tilew + dir->speed)) {
@@ -209,6 +211,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (*mapy + 1 < map->maph - 1) {
 					map->map[*mapx][*mapy + 1].flags
 					    |= NODE_ANIM;
+				} else {
+					nref->yoffs = 0;
 				}
 			}
 			if (nref->yoffs >= map->tilew - dir->speed) {
@@ -237,6 +241,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (*mapx - 1 > 1) {
 					map->map[*mapx - 1][*mapy].flags
 					    |= NODE_ANIM;
+				} else {
+					nref->xoffs = 0;
 				}
 			}
 			if (nref->xoffs <= (-map->tilew + dir->speed)) {
@@ -263,6 +269,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (*mapx + 1 < map->mapw - 1) {
 					map->map[*mapx + 1][*mapy].flags
 					    |= NODE_ANIM;
+				} else {
+					nref->xoffs = 0;
 				}
 			}
 			if (nref->xoffs >= (map->tilew - dir->speed)) {
