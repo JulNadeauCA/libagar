@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.25 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.26 2003/05/24 15:53:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,20 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strlcpy.h>
 #include <engine/engine.h>
-
-#include <libfobj/fobj.h>
-
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/perso.h>
 #include <engine/version.h>
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
 
 #include <errno.h>
@@ -68,7 +63,7 @@ int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
 #endif
 
 struct perso *
-perso_new(void *parent, char *name)
+perso_new(void *parent, const char *name)
 {
 	struct perso *pers;
 
@@ -79,12 +74,15 @@ perso_new(void *parent, char *name)
 }
 
 void
-perso_init(void *obj, char *name)
+perso_init(void *obj, const char *name)
 {
 	struct perso *pers = obj;
+	char dname[OBJECT_NAME_MAX];
 
 	object_init(pers, "perso", name, &perso_ops);
-	object_load_art(pers, name, 0);
+	
+	snprintf(dname, sizeof(dname), "/%s/%s", proginfo->progname, name);
+	object_load_art(pers, dname, 0);
 #if 0
 	object_load_submap(pers, "n-idle");
 	object_load_submap(pers, "s-idle");
@@ -166,18 +164,18 @@ perso_edit(void *obj)
 {
 	struct perso *pers = obj;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 
-	win = window_generic_new(320, 200, "perso-edit-%s", OBJECT(pers)->name);
-	if (win == NULL)
+	if ((win = window_new("perso-edit-%s", OBJECT(pers)->name)) == NULL)
 		return;
 	window_set_caption(win, "%s personage", OBJECT(pers)->name);
+	window_set_closure(win, WINDOW_DETACH);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
 	{
 		struct textbox *tb;
 
-		tb = textbox_new(reg, "Name: ");
+		tb = textbox_new(vb, "Name: ");
 		widget_bind(tb, "string", WIDGET_STRING, NULL, pers->name,
 		    sizeof(pers->name));
 	}
