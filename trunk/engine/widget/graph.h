@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.14 2003/07/14 03:29:12 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.15 2003/07/14 03:39:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
@@ -21,6 +21,7 @@ struct graph_item {
 	graph_val_t *vals;			/* Value array */
 	Uint32	 nvals;
 	Uint32	 maxvals;
+	Uint32	 limit;
 
 	struct graph		*graph;		/* Back pointer */
 	TAILQ_ENTRY(graph_item)	 items;
@@ -54,7 +55,7 @@ struct graph *graph_new(void *, const char *, enum graph_type, int,
 	                graph_val_t);
 
 struct graph_item	*graph_add_item(struct graph *, const char *, Uint8,
-			                Uint8, Uint8);
+			                Uint8, Uint8, Uint32);
 void			 graph_free_items(struct graph *);
 
 void	 graph_init(struct graph *, const char *, enum graph_type, int,

@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.16 2003/07/14 03:29:12 vedge Exp $
+.\"	$Csoft: graph.3,v 1.17 2003/07/14 03:39:28 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,15 +40,16 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a resizable/scrollable graph display that can plot
-different values on a dynamic range.
+widget implements a scrollable graph display.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct graph *"
-.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" "int flags" "graph_val_t yrange"
+.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" \
+              "int flags" "graph_val_t yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph" "const char *caption" "enum graph_type type" "int flags" "graph_val_t yrange"
+.Fn graph_init "struct graph *graph" "const char *caption" \
+               "enum graph_type type" "int flags" "graph_val_t yrange"
 .nr nS 0
 .Pp
 The
@@ -66,7 +67,7 @@ exceeds
 .Dv GRAPH_CAPTION_MAX - 1
 characters.
 .Fa yrange
-is the default range to display.
+is the maximum expected value for which to adjust display.
 The
 .Fa type
 argument is one of:
@@ -89,7 +90,7 @@ may include:
 .nr nS 1
 .Ft "struct graph_item *"
 .Fn graph_add_item "struct graph *graph" "const char *name" \
-                   "Uint8 r" "Uint8 g" "Uint8 b"
+                   "Uint8 r" "Uint8 g" "Uint8 b" "Uint32 limit"
 .Pp
 .Ft void
 .Fn graph_plot "struct graph_item *item" "graph_val_t val"
@@ -109,6 +110,8 @@ The
 .Fa g ,
 .Fa b
 triplet composes a color to visually identify the item.
+.Fa limit
+is the maximum number of points (if 0, the maximum is implicitely 0xffffffff-1).
 .Pp
 The
 .Fn graph_plot
@@ -135,6 +138,8 @@ Start moving.
 The
 .Nm
 widget does not generate any event.
+.Sh TROUBLETONS
+Floating point values are not supported.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
@@ -143,7 +148,3 @@ widget does not generate any event.
 The
 .Nm
 widget first appeared in Agar 1.0.
-.Sh BUGS
-The
-.Nm
-widget is not very sophisticated.
