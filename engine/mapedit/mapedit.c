@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.47 2002/02/21 02:24:13 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.48 2002/02/25 09:08:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 
 #include <engine/engine.h>
 #include <engine/version.h>
+#include <engine/text/text.h>
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
@@ -69,10 +70,15 @@ static const int stickykeys[] = {	/* Keys applied after each move. */
 static pthread_mutex_t keyslock =	/* Keys can be processed. */
     PTHREAD_MUTEX_INITIALIZER;
 
+enum {
+	BG_HORIZONTAL,
+	BG_VERTICAL
+};
+
 static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_cursor_tick(Uint32, void *);
 static Uint32	mapedit_listw_tick(Uint32, void *);
-static void	mapedit_bg(SDL_Surface *, SDL_Rect *);
+static void	mapedit_bg(SDL_Surface *, SDL_Rect *, Uint32);
 
 struct mapedit *
 mapedit_create(char *name)
@@ -81,9 +87,9 @@ mapedit_create(char *name)
 	struct fobj *fob;
 
 	med = (struct mapedit *)emalloc(sizeof(struct mapedit));
-	object_init(&med->obj, strdup(name), 0, &mapedit_vec);
+	object_init(&med->obj, name, 0, &mapedit_vec);
 	med->obj.desc = strdup("map editor");
-	med->flags = MAPEDIT_DRAWPROPS;
+	med->flags = MAPEDIT_DRAWPROPS|MAPEDIT_INSERT;
 	med->map = NULL;
 	med->x = -1;
 	med->y = -1;
@@ -220,6 +226,8 @@ mapedit_link(void *p)
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *m = med->map;
 	struct node *node;
+	struct text *text;
+	char s[4096];
 	int fd, new = 0;
 	
 	/* Users must copy maps to udatadir in order to edit them. */
@@ -253,23 +261,31 @@ mapedit_link(void *p)
 	mapdir_init(&med->cursor_dir, (struct object *)med, m,
 	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
 	med->tilelist.x = m->view->width - m->tilew;
-	med->tilelist.y = 0;
+	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
-	med->tilelist.h = m->view->height - m->tileh;
+	med->tilelist.h = m->view->height;
 	
 	med->tilestack.x = 0;
 	med->tilestack.y = m->tileh;
 	med->tilestack.w = m->tilew;
-	med->tilestack.h = m->view->height - m->tileh;
+	med->tilestack.h = m->view->height + m->tileh;
 
 	med->objlist.x = m->tilew;
 	med->objlist.y = 0;
-	med->objlist.w = m->view->width - m->tilew*2;
+	med->objlist.w = m->view->width - m->tilew;
 	med->objlist.h = m->tileh;
 
 	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
 	mapedit_setcaption(med, new ? "new" : path);
+
+	/* Display text for ~10 seconds */
+	text = text_create(64, 64, med->map->view->width - 128, 32,
+	    TEXT_SLEEP, 6000);
+	object_link(text);
+	text_clear(text);
+	sprintf(s, "Editing \"%s\" (%s)", m->obj.name, new ? "new" : path);
+	text_render(text, s);
 
 	/* Create the structures defining what is editable. */
 	mapedit_shadow(med);
@@ -356,20 +372,20 @@ mapedit_destroy(void *p)
 }
 
 static void
-mapedit_bg(SDL_Surface *v, SDL_Rect *rd)
+mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 {
-	static Uint32 col[2];
 	Uint8 *dst = v->pixels;
 	Uint32 x, y;
-
-	col[0] = SDL_MapRGB(v->format, 0x66, 0x66, 0x66);
-	col[1] = SDL_MapRGB(v->format, 0x99, 0x99, 0x99);
 
 	for (y = rd->y; y < rd->h; y++) {
 		for (x = rd->x; x < rd->w; x++) {
 			static Uint32 c;
 			
-			c = col[((x ^ y) >> 3) & 1];
+			if (flags & BG_VERTICAL) {
+				c = SDL_MapRGB(v->format, x * 2, 0, y >> 2);
+			} else {
+				c = SDL_MapRGB(v->format, y * 2, 0, x >> 2);
+			}
 
 			SDL_LockSurface(v);
 			switch (v->format->BytesPerPixel) {
@@ -407,17 +423,17 @@ mapedit_tilelist(struct mapedit *med)
 	static SDL_Rect rs, rd;
 	Uint32 i;
 	int sn;
-
+	
 	rs.w = m->tilew;
 	rs.h = m->tileh;
 	rs.x = 0;
 	rs.y = 0;
 
-	mapedit_bg(m->view->v, &med->tilelist);
-
 	rd = med->tilelist;	/* Structure copy */
-	rd.h = m->tileh;
-	
+	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
+	rd.h = m->tilew;
+	rd.y = m->tileh;
+
 	/*
 	 * Draw the sprite/anim list in a circular fashion. We must
 	 * predict which sprite to draw first according to the window
@@ -497,7 +513,7 @@ mapedit_tilestack(struct mapedit *med)
 	rs.y = 0;
 
 	rd = med->tilestack;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd);
+	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
 	rd.h = m->tileh;
 
 	i = 0;
@@ -539,7 +555,7 @@ mapedit_objlist(struct mapedit *med)
 	rs.h = m->tileh;
 
 	rd = med->objlist;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd);
+	mapedit_bg(m->view->v, &rd, BG_HORIZONTAL);
 	rd.x = m->tilew;
 
 	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
