@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.176 2005/03/09 06:39:17 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.177 2005/03/27 03:11:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -115,6 +115,8 @@ mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar,
 void
 mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 {
+	struct window *pwin;
+
 	if (mv->curtool != NULL) {
 		if (mv->curtool->trigger != NULL) {
 			widget_set_bool(mv->curtool->trigger, "state", 0);
@@ -143,6 +145,11 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 			dprintf("%s(%p): no window\n", ntool->name, ntool);
 		}
 		tool_update_status(ntool);
+	}
+
+	if ((pwin = widget_parent_window(mv)) != NULL) {
+		view->focus_win = pwin;
+		widget_focus(mv);
 	}
 }
 
@@ -306,6 +313,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->statusbar = statbar;
 	mv->status = (statbar != NULL) ?
 	             statusbar_add_label(statbar, LABEL_STATIC, "...") : NULL;
+	mv->art_tl = NULL;
+	mv->objs_tl = NULL;
+	mv->layers_tl = NULL;
 	mv->curtool = NULL;
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
@@ -448,8 +458,8 @@ draw_cursor(struct mapview *mv)
 		return;
 	}
 	
-	rd.x = mv->mouse.x*mv->tilesz - (mv->xoffs+mv->map->ssx);
-	rd.y = mv->mouse.y*mv->tilesz - (mv->yoffs+mv->map->ssy);
+	rd.x = mv->mouse.x*mv->tilesz + (mv->xoffs+mv->map->ssx);
+	rd.y = mv->mouse.y*mv->tilesz + (mv->yoffs+mv->map->ssy);
 
 	if (mv->curtool == NULL)
 		return;
