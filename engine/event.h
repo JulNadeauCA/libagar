@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.10 2002/11/14 05:57:34 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.11 2002/11/28 06:23:30 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef union evarg {
@@ -10,7 +10,6 @@ typedef union evarg {
 	double	 f;
 } *evargs;
 
-#define EVENT_MAXFPS	100
 #define EVENT_MAXARGS	16
 
 struct event {
