@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.80 2003/05/25 08:00:02 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.81 2003/06/06 02:39:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -95,9 +95,12 @@ extern DECLSPEC void	 object_detach(void *, void *);
 extern DECLSPEC void	 object_move(void *, void *, void *);
 extern DECLSPEC char	*object_name(void *);
 extern DECLSPEC void	*object_find(void *, const char *);
+
 extern DECLSPEC int	 object_load(void *);
 extern DECLSPEC int	 object_save(void *);
 extern DECLSPEC void	 object_destroy(void *);
+extern DECLSPEC void	 object_edit(void *);
+
 extern DECLSPEC void	 object_free_childs(struct object *);
 extern DECLSPEC void	 object_free_props(struct object *);
 extern DECLSPEC void 	 object_free_events(struct object *);
