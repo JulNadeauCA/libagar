@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.7 2002/11/30 02:09:47 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.1 2002/12/01 14:41:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,6 +33,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/button.h>
+#include <engine/widget/bitmap.h>
 
 #include <libfobj/fobj.h>
 
@@ -410,14 +411,119 @@ art_get_anim(struct object *ob, int i)
 }
 
 static void
-tl_arts_selected(int argc, union evarg *argv)
+tl_arts_poll(int argc, union evarg *argv)
 {
+	struct tlist *tl = argv[0].p;
+	struct art *art;
+
+	tlist_clear_items(tl);
+
+	pthread_mutex_lock(&artq_lock);
+	TAILQ_FOREACH(art, &artq, arts) {
+		tlist_insert_item(tl,
+		    art->nsprites > 0 ? art->sprites[0] : NULL,
+		    art->name, art);
+	}
+	pthread_mutex_unlock(&artq_lock);
+
+	tlist_restore_selections(tl);
 }
 
 static void
-tl_arts_poll(int argc, union evarg *argv)
+tl_sprites_selected(int argc, union evarg *argv)
 {
-	
+	struct tlist *tl_sprites = argv[0].p;
+	struct bitmap *bmp_sprite = argv[1].p;
+	struct tlist_item *it_sprite;
+
+	it_sprite = tlist_item_selected(tl_sprites);
+	if (it_sprite != NULL) {
+		bitmap_set_surface(bmp_sprite, (SDL_Surface *)it_sprite->p1);
+	}
+}
+
+static void
+tl_sprites_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tlist *tl_medias = argv[1].p;
+	struct tlist_item *it_media;
+	struct art *art;
+	int i;
+
+	it_media = tlist_item_selected(tl_medias);
+	if (it_media == NULL) {
+		return;		/* No selection */
+	}
+	art = it_media->p1;
+
+	tlist_clear_items(tl);
+	for (i = 0; i < art->nsprites; i++) {
+		SDL_Surface *su = art->sprites[i];
+		char *s;
+
+		asprintf(&s, "%s:%d (%dx%d)", art->name, i, su->w, su->h);
+		if (s == NULL) {
+			fatal("asprintf: %s\n", strerror(errno));
+		}
+		tlist_insert_item(tl, su, s, su);
+		free(s);
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
+tl_anims_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tlist *tl_medias = argv[1].p;
+	struct tlist_item *it_media;
+	struct art *art;
+	int i;
+
+	it_media = tlist_item_selected(tl_medias);
+	if (it_media == NULL) {
+		return;		/* No selection */
+	}
+	art = it_media->p1;
+
+	tlist_clear_items(tl);
+	for (i = 0; i < art->nanims; i++) {
+		struct art_anim *anim = art->anims[i];
+		SDL_Surface *su = NULL;
+		char *s;
+
+		if (anim->nframes > 0) {
+			su = anim->frames[0];
+			asprintf(&s, "%s:%d (%dx%d)", art->name, i,
+			    su->w, su->h);
+		} else {
+			asprintf(&s, "%s:%d", art->name, i);
+		}
+		if (s == NULL) {
+			fatal("asprintf: %s\n", strerror(errno));
+		}
+		tlist_insert_item(tl, su, s, anim);
+		free(s);
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
+tl_anims_selected(int argc, union evarg *argv)
+{
+	struct tlist *tl_anims = argv[0].p;
+	struct bitmap *bmp_anim = argv[1].p;
+	struct tlist_item *it_anim;
+
+	it_anim = tlist_item_selected(tl_anims);
+	if (it_anim != NULL) {
+		struct art_anim *anim = it_anim->p1;
+
+		if (anim->nframes > 0) {
+			bitmap_set_surface(bmp_anim, anim->frames[0]);
+		}
+	}
 }
 
 struct window *
@@ -426,17 +532,46 @@ art_browser_window(void)
 	struct window *win;
 	struct region *reg;
 	struct tlist *tl_medias;
+	struct bitmap *bmp_sprite, *bmp_anim;
+
 
 	if ((win = window_generic_new(251, 259, "monitor-media-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
-	window_set_caption(win, "Media browser");
+	window_set_caption(win, "Art browser");
 
-	reg = region_new(win, 0, 0, 0, 100, 100);
-	tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
-	event_new(tl_medias, "tlist-changed", tl_arts_selected, NULL);
-	event_new(tl_medias, "tlist-poll", tl_arts_poll, NULL);
+	/* Art entries */
+	reg = region_new(win, 0, 0, 0, 30, 100);
+	{
+		tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl_medias, "tlist-poll", tl_arts_poll, NULL);
+	}
+	
+	/* Bitmap display */
+	reg = region_new(win, REGION_VALIGN, 70, 0, 30, 100);
+	{
+		bmp_sprite = bitmap_new(reg, NULL, 100, 50);
+		bmp_anim = bitmap_new(reg, NULL, 100, 50);
+	}
+
+	/* Sprites/animation lists */
+	reg = region_new(win, REGION_VALIGN, 30, 0, 40, 100);
+	{
+		struct tlist *tl_sprites, *tl_anims;
+	
+		tl_sprites = tlist_new(reg, 100, 50, TLIST_POLL);
+		event_new(tl_sprites, "tlist-changed",
+		    tl_sprites_selected, "%p", bmp_sprite);
+		event_new(tl_sprites, "tlist-poll",
+		    tl_sprites_poll, "%p", tl_medias);
+		
+		tl_anims = tlist_new(reg, 100, 50, TLIST_POLL);
+		event_new(tl_anims, "tlist-changed",
+		    tl_anims_selected, "%p", bmp_anim);
+		event_new(tl_anims, "tlist-poll",
+		    tl_anims_poll, "%p", tl_medias);
+	}
 
 	return (win);
 }
