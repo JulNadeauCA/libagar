@@ -97,11 +97,10 @@ else
     PREFIX=/usr/local
 fi
 S=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/pwd" ]; then
-		S=`${i}/pwd `
-	fi
-done
+which="`which pwd`"
+if [ -n "$which" -a -x "$which" ]; then
+	S=`${which} `
+fi
 echo >Makefile.config
 echo >engine/mcconfig.h
 if [ "${help}" = "yes" ]
@@ -221,41 +220,35 @@ echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 sdl_version=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl-config" ]; then
-		sdl_version=`${i}/sdl-config --version`
-	fi
-done
+which="`which sdl-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl_version=`${which} --version`
+fi
 SDL_CFLAGS=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl-config" ]; then
-		SDL_CFLAGS=`${i}/sdl-config --cflags`
-	fi
-done
+which="`which sdl-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	SDL_CFLAGS=`${which} --cflags`
+fi
 SDL_LIBS=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl-config" ]; then
-		SDL_LIBS=`${i}/sdl-config --libs`
-	fi
-done
+which="`which sdl-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	SDL_LIBS=`${which} --libs`
+fi
 sdl11_version=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl11-config" ]; then
-		sdl11_version=`${i}/sdl11-config --version`
-	fi
-done
+which="`which sdl11-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl11_version=`${which} --version`
+fi
 sdl11_cflags=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl11-config" ]; then
-		sdl11_cflags=`${i}/sdl11-config --cflags`
-	fi
-done
+which="`which sdl11-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl11_cflags=`${which} --cflags`
+fi
 sdl11_libs=""
-for i in `echo $PATH |sed 's/:/ /g'`; do
-	if [ -x "${i}/sdl11-config" ]; then
-		sdl11_libs=`${i}/sdl11-config --libs`
-	fi
-done
+which="`which sdl11-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl11_libs=`${which} --libs`
+fi
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -275,7 +268,16 @@ fi
 if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 else
-NONE=1
+echo "Missing SDL"
+exit 1
+fi
+echo -n "checking for SDL_ttf (http://www.libsdl.org/projects/SDL_ttf/release/)..."
+if [ -x `which showfont` -a -x `which glfont` ]; then
+found=yes
+echo "ok"
+else
+echo "missing"
+exit 1
 fi
 if [ "${with_x11}" != "no" ]
  then
@@ -309,7 +311,8 @@ echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
-NONE=1
+echo "missing"
+exit 1
 fi
 	if [ "${x11_found}" = "yes" ]
  then
