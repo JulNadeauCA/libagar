@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.88 2004/08/20 01:37:15 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.89 2004/08/22 12:07:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -58,10 +58,10 @@ pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct text_font *default_font = NULL;		/* Default font */
 static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
     SLIST_HEAD_INITIALIZER(&text_fonts);
-
 static struct {
 	SLIST_HEAD(, text) texts;
 } text_cache[TEXT_NBUCKETS];
+static struct timeout text_timeout;		/* Timer for text_tmsg() */
 
 static struct text_font *
 fetch_font(const char *name, int size, int style)
@@ -98,6 +98,15 @@ fetch_font(const char *name, int size, int style)
 out:
 	pthread_mutex_unlock(&text_lock);
 	return (font);
+}
+
+static Uint32
+expire_tmsg(void *obj, Uint32 ival, void *arg)
+{
+	struct window *win = arg;
+
+	view_detach(win);
+	return (0);
 }
 
 /* Initialize the text rendering engine and set the default font. */
@@ -417,6 +426,38 @@ text_msg(enum text_msg_title title, const char *format, ...)
 
 	widget_focus(bu);
 	window_show(win);
+}
+
+/* Display a message for a given period of time. */
+void
+text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
+{
+	char msg[LABEL_MAX];
+	struct window *win;
+	struct vbox *vb;
+	va_list args;
+
+	va_start(args, format);
+	vsnprintf(msg, sizeof(msg), format, args);
+	va_end(args);
+
+	win = window_new(NULL);
+	window_set_caption(win, "%s", _(text_msg_titles[title]));
+	window_set_position(win, WINDOW_CENTER, 1);
+
+	vb = vbox_new(win, 0);
+	label_new(vb, LABEL_STATIC, msg);
+	window_show(win);
+
+	lock_timeout(NULL);
+	if (timeout_scheduled(NULL, &text_timeout)) {
+		view_detach((struct window *)text_timeout.arg);
+		timeout_del(NULL, &text_timeout);
+	}
+	unlock_timeout(NULL);
+
+	timeout_set(&text_timeout, expire_tmsg, win, TIMEOUT_LOADABLE);
+	timeout_add(NULL, &text_timeout, expire);
 }
 
 /* Prompt the user for a floating-point value. */
