@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.89 2004/05/01 06:54:48 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.90 2004/05/02 09:38:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -568,6 +568,7 @@ tlist_select_item(struct tlist *tl, struct tlist_item *it)
 	*selected = it->p1;
 	it->selected++;
 	event_post(NULL, tl, "tlist-changed", "%p, %i", it, 1);
+	event_post(NULL, tl, "tlist-selected", "%p", it);
 	widget_binding_modified(selectedb);
 	widget_binding_unlock(selectedb);
 }
