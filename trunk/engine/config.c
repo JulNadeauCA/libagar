@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.64 2003/03/14 07:13:33 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.65 2003/03/16 02:47:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -122,7 +122,7 @@ config_init(struct config *con)
 	char *spath;
 	char *udatadir, *sysdatadir;
 
-	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_SYSTEM,
+	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_STATIC,
 	    &config_ops);
 
 	/* Object settings */
@@ -139,6 +139,8 @@ config_init(struct config *con)
 #endif
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
+	prop_set_uint16(con, "view.min-w", 320);
+	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
 
 	/* Font engine settings */
@@ -165,8 +167,8 @@ config_init(struct config *con)
 	if (stat(sysdatadir, &sta) != 0) {
 		warning("%s: %s\n", sysdatadir, strerror(errno));
 	}
-	if (stat(udatadir, &sta) != 0 && mkdir(udatadir, 00700) != 0) {
-		warning("created %s\n", udatadir);
+	if (stat(udatadir, &sta) != 0 &&
+	    mkdir(udatadir, 00700) != 0) {
 		fatal("%s: %s", udatadir, strerror(errno));
 	}
 	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
