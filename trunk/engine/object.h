@@ -1,10 +1,11 @@
-/*	$Csoft: object.h,v 1.47 2002/08/25 11:39:08 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.48 2002/09/02 08:11:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
 #include <engine/media.h>
+#include <engine/prop.h>
 
 struct map;
 struct noderef;
@@ -53,12 +54,14 @@ struct obmap {
 };
 
 struct object {
-	/* Read-only once attached */
+	/*
+	 * Read-only once attached
+	 */
 	char	*type;			/* Type of immediate descendent */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
 	char	 saveext[4];		/* File extension for state saves */
-	const struct object_ops *ops;	/* Generic operations */
+	const struct object_ops	*ops;	/* Generic operations */
 	int	 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
 #define OBJECT_AUDIO		0x02	/* Load audio */
@@ -70,15 +73,21 @@ struct object {
 	struct	 media_art *art;	/* Static sprites */
 	struct	 media_audio *audio;	/* Static samples */
 
-	/* Read-write */
-	struct	 mappos *pos;		/* Unique position on a map
-					   (ie. for characters) */
+	/*
+	 * Read-write
+	 */
+	struct	 mappos *pos;		/* Unique position on a map */
 	pthread_mutex_t	pos_lock;
 
-	TAILQ_HEAD(,event) events;	/* Event handlers */
+	TAILQ_HEAD(, event) events;	/* Event handlers */
 	pthread_mutex_t	events_lock;
 
-	/* Locking policy defined by the parent */
+	TAILQ_HEAD(, prop) props;	/* Properties */
+	pthread_mutex_t props_lock;
+
+	/*
+	 * Locking policy defined by the parent
+	 */
 	SLIST_ENTRY(object) wobjs;	/* Attached objects */
 };
 
@@ -121,4 +130,4 @@ struct mappos  *object_addpos(void *, Uint32, Uint32, struct input *,
 struct mappos  *object_movepos(void *, struct map *, Uint32, Uint32);
 void		object_delpos(void *);
 
-#endif	/* _AGAR_OBJECT_H_ */
+#endif	/* !_AGAR_OBJECT_H */

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.77 2002/08/25 11:39:08 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.78 2002/09/02 08:11:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -31,14 +31,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-
-#include <libfobj/fobj.h>
 
 #include "engine.h"
 #include "config.h"
@@ -91,8 +90,10 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->flags = flags;
 	ob->pos = NULL;
 	TAILQ_INIT(&ob->events);
+	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->pos_lock, NULL);
 	pthread_mutex_init(&ob->events_lock, NULL);
+	pthread_mutex_init(&ob->props_lock, NULL);
 
 	ob->art = (ob->flags & OBJECT_ART) ?
 	    media_get_art(media, ob) : NULL;
@@ -106,20 +107,11 @@ object_destroy(void *p)
 {
 	struct object *ob = p;
 	struct event *eev, *nexteev;
+	struct prop *prop, *nextprop;
 	
 	if (OBJECT_OPS(ob)->destroy != NULL) {
 		OBJECT_OPS(ob)->destroy(ob);
 	}
-	
-	pthread_mutex_lock(&ob->events_lock);	/* XXX */
-	for (eev = TAILQ_FIRST(&ob->events);
-	     eev != TAILQ_END(&ob->events);
-	     eev = nexteev) {
-		nexteev = TAILQ_NEXT(eev, events);
-		free(eev);
-	}
-	pthread_mutex_unlock(&ob->events_lock);
-	pthread_mutex_destroy(&ob->events_lock);
 
 	if ((ob->flags & OBJECT_KEEP_MEDIA) == 0) {
 		if (ob->art != NULL)
@@ -128,8 +120,23 @@ object_destroy(void *p)
 			OBJECT_UNUSED(ob, audio);
 	}
 
-	ob->pos = NULL;
+	for (eev = TAILQ_FIRST(&ob->events);
+	     eev != TAILQ_END(&ob->events);
+	     eev = nexteev) {
+		nexteev = TAILQ_NEXT(eev, events);
+		free(eev);
+	}
+
+	for (prop = TAILQ_FIRST(&ob->props);
+	     prop != TAILQ_END(&ob->props);
+	     prop = nextprop) {
+		nextprop = TAILQ_NEXT(prop, props);
+		free(prop);
+	}
+	
 	pthread_mutex_destroy(&ob->pos_lock);
+	pthread_mutex_destroy(&ob->events_lock);
+	pthread_mutex_destroy(&ob->props_lock);
 
 	if (ob->name != NULL)
 		free(ob->name);
@@ -141,10 +148,7 @@ object_destroy(void *p)
 	free(ob);
 }
 
-/*
- * Load an object from an alternate file.
- * World must be locked.
- */
+/* Load an object from an alternate file. */
 int
 object_loadfrom(void *p, char *path)
 {
@@ -170,10 +174,7 @@ object_loadfrom(void *p, char *path)
 	return (0);
 }
 
-/*
- * Load an object from its default location.
- * World must be locked.
- */
+/* Load an object from its default location. */
 int
 object_load(void *p)
 {
@@ -202,10 +203,7 @@ object_load(void *p)
 	return (rv);
 }
 
-/*
- * Save an object state.
- * World must be locked; config must not be locked by the caller thread.
- */
+/* Save an object state. */
 int
 object_save(void *p)
 {
@@ -217,15 +215,15 @@ object_save(void *p)
 		return (0);
 	}
 
-	pthread_mutex_lock(&config->lock);
 	if (strcmp(ob->saveext, "m") == 0) {
-		sprintf(path, "%s/maps/%s.m", config->path.user_data_dir,
+		sprintf(path, "%s/maps/%s.m",
+		    prop_string(config, "path.user_data_dir"),
 		    ob->name);
 	} else {
-		sprintf(path, "%s/%s.%s", config->path.user_data_dir,
+		sprintf(path, "%s/%s.%s",
+		    prop_string(config, "path.user_data_dir"),
 		    ob->name, ob->saveext);
 	}
-	pthread_mutex_unlock(&config->lock);
 
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 	if (fd == -1) {
@@ -258,10 +256,7 @@ object_strfind(char *s)
 	return (NULL);
 }
 
-/*
- * Search the data file directories for the given file.
- * The config structure must not be locked by the caller thread.
- */
+/* Search the data file directories for the given file. */
 char *
 object_path(char *obname, const char *suffix)
 {
@@ -270,9 +265,7 @@ object_path(char *obname, const char *suffix)
 	char *datapath, *datapathp, *path;
 
 	path = emalloc((size_t)FILENAME_MAX);
-	pthread_mutex_lock(&config->lock);
-	datapathp = datapath = strdup(config->path.data_path);
-	pthread_mutex_unlock(&config->lock);
+	datapathp = datapath = strdup(prop_string(config, "path.data_path"));
 
 	for (p = strtok_r(datapath, ":;", &last);
 	     p != NULL;
