@@ -30,14 +30,8 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-mc_last_arg=
 mc_optarg=
 for mc_arg; do
-	if test -n "$mc_last_arg"; then
-		eval "$mc_last_arg=\$mc_arg"
-		mc_last_arg=
-		continue
-	fi
 	case "$mc_arg" in
 	-*=*)
 	    mc_optarg=`echo "$mc_arg" | sed 's/[-_a-zA-Z0-9]*=//'`
@@ -46,7 +40,6 @@ for mc_arg; do
 	    mc_optarg=
 	    ;;
 	esac
-
 	case "$mc_arg" in
 	--prefix=*)
 	    mc_prefix=$mc_optarg
@@ -129,6 +122,47 @@ SHAREDIR="\"$PREFIX/share/geggy\""
 echo "#ifndef SHAREDIR" >> engine/mcconfig.h
 echo "#define SHAREDIR $SHAREDIR" >> engine/mcconfig.h
 echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
+echo -n "checking for a usable make(1)..."
+if [ "$MAKE" = "" ]; then
+	for i in `echo $PATH |sed 's/:/ /g'`; do
+		if [ -x "${i}/make" ]; then
+			MAKE="${i}/make"
+		elif [ -x "${i}/make" ]; then
+			MAKE="${i}/make"
+		fi
+	done
+fi
+
+cat << 'EOT' > .maketest
+ASSIGN= foo
+ASSIGN?= foo
+ASSIGN+= bar
+
+all: write-test
+
+write-test: .PHONY
+	@echo > .maketest2
+
+.BEGIN:
+	@echo -n
+
+TOP=	.
+include ${TOP}/.maketest3
+EOT
+
+echo >> .maketest3
+
+echo "$MAKE -f .maketest" >>config.log
+$MAKE -f .maketest 2>>config.log
+if [ $? != 0 -o ! -e .maketest2 ]; then
+    echo "-> failure" >> config.log
+    echo "no"
+    exit 1
+else
+    echo "yes"
+    echo "-> success" >> config.log
+fi
+rm -f .maketest .maketest2 .maketest3
 echo -n "checking for a usable C compiler..."
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
@@ -305,3 +339,4 @@ echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/mcconfig.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/mcconfig.h
 echo "#endif /* PREFIX */" >> engine/mcconfig.h
+echo "Don't forget to run \"make depend\"."
