@@ -1,17 +1,14 @@
-/*	$Csoft: asprintf.h,v 1.2 2002/11/07 18:25:13 vedge Exp $	*/
+/*	$Csoft: vasprintf.h,v 1.4 2002/11/07 19:00:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mcconfig.h>
 
-#ifndef HAVE_ASPRINTF
-#error "no compat asprintf()"
+#ifdef HAVE_ASPRINTF
+# ifdef __linux__
+#  define _GNU_SOURCE
+# endif
+# include <stdio.h>
+#else
+extern int asprintf(char **, const char *, ...);
 #endif
-
-#ifdef __linux__
-#define _GNU_SOURCE
-#endif
-
-#include <stdio.h>
-
-#undef _GNU_SOURCE
 
