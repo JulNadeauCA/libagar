@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.89 2005/02/06 07:05:03 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.90 2005/02/08 15:46:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -126,6 +126,12 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 #endif
 #ifndef MAX
 #define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+#ifndef MIN3
+#define	MIN3(a,b,c) (((a)<(b)<(c))?(a) : (b)<(a)<(c)?(b) : (c))
+#endif
+#ifndef MAX3
+#define	MAX3(a,b,c) (((a)>(b)>(c))?(a) : (b)>(a)>(c)?(b) : (c))
 #endif
 
 #include "begin_code.h"
