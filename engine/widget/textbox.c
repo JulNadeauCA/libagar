@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.57 2003/05/25 03:59:52 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.58 2003/05/25 04:22:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -174,6 +174,7 @@ drawtext:
 	    tbox->writeable ?
 	        WIDGET_COLOR(tbox, FRAME_COLOR) :
 		WIDGET_COLOR(tbox, FRAME_READONLY_COLOR));
+	x += tbox->xpadding;
 	if (WIDGET_FOCUSED(tbox)) {
 		x++;
 		y++;
