@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.6 2003/01/02 20:28:16 vedge Exp $
+#	$Csoft: dist.sh,v 1.7 2003/03/13 23:18:34 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -25,6 +25,7 @@ md5 ${DISTFILE}.tar.gz > ${DISTFILE}.tar.gz.md5
 rmd160 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 
-scp ${DISTFILE}.tar.{gz,gz.md5}		vedge@resin:www/snap
-scp ${DISTFILE}.tar.{gz,gz.md5}		vedge@resin:www/beta.csoft.org/agar
+echo "uploading"
+scp -C ${DISTFILE}.tar.{gz,gz.md5} vedge@resin:www/snap
+ssh vedge@resin "cp -f www/snap/${DISTFILE}.tar.{gz,gz.md5} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.tar.{gz,gz.md5}"
 
