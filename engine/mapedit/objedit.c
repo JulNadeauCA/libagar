@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.52 2004/10/06 00:52:08 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.53 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ create_obj(int argc, union evarg *argv)
 		unsigned int nameno = 0;
 		struct object *ch;
 tryname:
-		snprintf(name, sizeof(name), _("New %s #%d"), type, nameno);
+		snprintf(name, sizeof(name), "%s #%d", type, nameno);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
 			if (strcmp(ch->name, name) == 0)
 				break;
