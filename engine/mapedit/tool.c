@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.1 2004/03/30 15:56:51 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.2 2004/04/10 04:55:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -130,9 +130,9 @@ tool_unbind_key(void *p, SDLMod keymod, SDLKey keysym)
 void
 tool_update_status(struct tool *t)
 {
-	char *text = t->status[t->nstatus-1];
+	if (t->nstatus > 0 && t->mv->status != NULL) {
+		char *text = t->status[t->nstatus-1];
 
-	if (t->mv->status != NULL) {
 		if (t->mv->status->surface != NULL) {
 			SDL_FreeSurface(t->mv->status->surface);
 		}
