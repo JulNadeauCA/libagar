@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.14 2002/02/17 08:13:31 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.15 2002/02/18 03:55:20 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -27,22 +27,16 @@ static void
 printusage(char *progname)
 {
 	fprintf(stderr,
-	    "Usage: %s [-vxf] [-l game] [-n newgame]\n",
+	    "Usage: %s [-vxf] [-w width] [-h height] [-d depth] [-j joy#]\n",
 	    progname);
 	fprintf(stderr,
-	    "Usage: %s        [-w width] [-h height] [-d depth] [-j joy#]\n",
-	    progname);
+	    "                 [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n");
 	fprintf(stderr,
-	    "Usage: %s        [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n",
-	    progname);
-	fprintf(stderr,
-	    "Usage: %s        [-W mapw] [-H maph] [-X tilew] [-Y tileh]\n",
-	    progname);
+	    "                 [-W mapw] [-H maph] [-X tilew] [-Y tileh]\n");
 }
 
 int
-engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
-    char *path)
+engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
@@ -50,7 +44,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 	curmapedit = NULL;
 	curchar = NULL;
 
-	*scriptflags = 0;
 	njoy = 0;
 	mapediting = 0;
 	w = 640;
@@ -70,14 +63,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 			    gameinfo->ver[0], gameinfo->ver[1]);
 			printf("%s\n", gameinfo->copyright);
 			exit (255);
-		case 'l':
-			*scriptflags |= LOAD_GAME;
-			strcpy(path, optarg);
-			break;
-		case 'n':
-			*scriptflags |= NEW_GAME;
-			strcpy(path, optarg);
-			break;
 		case 'f':
 			flags |= SDL_FULLSCREEN;
 			break;
@@ -118,25 +103,27 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 		}
 	}
 
-	if (*scriptflags == 0 && !mapediting) {
-		printusage(argv[0]);
-		exit(255);
-	}
-
 	/* Initialize SDL. */
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|
 	    SDL_INIT_EVENTTHREAD|SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
 		return (-1);
 	}
-	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
+		njoy = -1;
+	}
+#if 0
+	if (njoy >= 0) {
 		joy = SDL_JoystickOpen(njoy);
 		if (joy != NULL) {
-			dprintf("using joystick 0x%x (%s)\n",
+			dprintf("using joystick #%d: %s\n",
 			    njoy, SDL_JoystickName(njoy));
 			SDL_JoystickEventState(SDL_ENABLE);
+		} else if (njoy > 0) {
+			warning("no joystick at #%d\n", njoy);
 		}
 	}
+#endif
 	if (flags & SDL_FULLSCREEN) {
 		/* Give the new mode some time to take effect. */
 		SDL_Delay(1000);
@@ -162,17 +149,16 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 	return (0);
 }
 
-int
-engine_mapedit(void)
+void
+engine_start(void)
 {
 	if (mapediting) {
 		struct mapedit *medit;
 
 		medit = mapedit_create("mapedit");
 		if (medit == NULL) {
-			return (1);
+			return;
 		}
-
 		/* Set the map edition arguments. */
 		medit->margs.name = strdup(mapstr);
 		medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
@@ -184,19 +170,12 @@ engine_mapedit(void)
 		/* Start map edition. */
 		object_link(medit);
 	}
-	return (0);
-}
-
-void
-engine_join(void)
-{
 	event_loop();
 }
 
 void
 engine_destroy(void)
 {
-	exit(0);
 	object_destroy(world);
 
 	if (joy != NULL) {

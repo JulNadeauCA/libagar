@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.6 2002/02/14 05:25:47 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.7 2002/02/16 04:52:20 vedge Exp $	*/
 
 #include <pthread.h>
 
@@ -29,15 +29,10 @@ struct gameinfo {
 	int	 ver[2];
 };
 
-enum {
-	NEW_GAME =	0x01,
-	LOAD_GAME =	0x02
-};
-
-int	engine_init(int, char **, struct gameinfo *, int *, char *);
+int	engine_init(int, char **, struct gameinfo *, char *);
 int	engine_mapedit(void);
 void	engine_destroy(void);
-void	engine_join(void);
+void	engine_start(void);
 
 void	*emalloc(size_t);
 
