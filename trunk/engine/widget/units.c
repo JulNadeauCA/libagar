@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.5 2003/11/19 11:09:06 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.6 2003/11/19 11:20:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@ const struct unit identity_unit = { "", "", 1, NULL };
 
 /* Units of length/distance */
 const struct unit length_units[] = {
+	{ "\xc3\x85",	N_("\xc3\x85ngstroms"),	0.0000000001,		NULL },
 	{ "\xc2\xb5",	N_("Microns"),		0.000001,		NULL },
 	{ "\xc2\xb5m",	N_("Micrometers"),	0.000001,		NULL },
 	{ "mil",	N_("Mils"),		0.000025,		NULL },
