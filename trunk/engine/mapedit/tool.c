@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tool.c,v 1.1 2004/03/30 15:56:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,8 @@
 
 #include "tool.h"
 
+#include <stdarg.h>
+
 void
 tool_init(struct tool *tool, struct mapview *mv)
 {
@@ -43,6 +45,7 @@ tool_init(struct tool *tool, struct mapview *mv)
 	tool->cursor_su = NULL;
 	tool->trigger = NULL;
 	tool->mv = mv;
+	tool->nstatus = 0;
 	SLIST_INIT(&tool->kbindings);
 
 	if (tool->init != NULL)
@@ -53,6 +56,10 @@ void
 tool_destroy(struct tool *tool)
 {
 	struct tool_kbinding *kbinding, *nkbinding;
+	int i;
+
+	for (i = 0; i < tool->nstatus; i++)
+		Free(tool->status[i], 0);
 
 	for (kbinding = SLIST_FIRST(&tool->kbindings);
 	     kbinding != SLIST_END(&tool->kbindings);
@@ -118,4 +125,42 @@ tool_unbind_key(void *p, SDLMod keymod, SDLKey keysym)
 		SLIST_REMOVE(&tool->kbindings, kb, tool_kbinding, kbindings);
 		Free(kb, M_MAPEDIT);
 	}
+}
+
+void
+tool_update_status(struct tool *t)
+{
+	char *text = t->status[t->nstatus-1];
+
+	if (t->mv->status != NULL) {
+		if (t->mv->status->surface != NULL) {
+			SDL_FreeSurface(t->mv->status->surface);
+		}
+		t->mv->status->surface = text_render(NULL, -1,
+		    WIDGET_COLOR(t->mv->status, 0), text);
+	}
+}
+
+void
+tool_push_status(struct tool *t, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (t->nstatus+1 >= TOOL_STATUS_MAX)
+		return;
+
+	va_start(ap, fmt);
+	vasprintf(&t->status[t->nstatus++], fmt, ap);
+	va_end(ap);
+	tool_update_status(t);
+}
+
+void
+tool_pop_status(struct tool *t)
+{
+	if (t->nstatus == 1)
+		return;
+
+	Free(t->status[--t->nstatus], 0);
+	tool_update_status(t);
 }

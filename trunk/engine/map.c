@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.220 2004/03/30 16:00:08 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.221 2004/04/10 02:35:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1353,7 +1353,7 @@ create_view(int argc, union evarg *argv)
 
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
-	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT, NULL);
+	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT, NULL, NULL);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -1367,7 +1367,7 @@ map_edit(void *p)
 	struct map *m = p;
 	struct window *win;
 	struct toolbar *toolbar;
-	struct statusbar *sbar;
+	struct statusbar *statbar;
 	struct combo *laysel;
 	struct mapview *mv;
 	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
@@ -1379,10 +1379,16 @@ map_edit(void *p)
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
+
 	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
 	toolbar_add_button(toolbar, 0, SPRITE(&mapedit, NEW_VIEW_ICON), 0, 0,
 	    create_view, "%p, %p", mv, win);
-	mapview_init(mv, m, flags, toolbar);
+
+	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
+	statusbar_init(statbar);
+	statusbar_add_label(statbar, LABEL_STATIC, ".");
+
+	mapview_init(mv, m, flags, toolbar, statbar);
 	mapview_reg_tool(mv, &stamp_tool, m);
 	mapview_reg_tool(mv, &eraser_tool, m);
 	mapview_reg_tool(mv, &magnifier_tool, m);
@@ -1403,13 +1409,8 @@ map_edit(void *p)
 	event_new(laysel, "combo-selected", mapview_selected_layer, "%p", mv);
 	
 	object_attach(win, mv);
+	object_attach(win, statbar);
 	widget_focus(mv);
-	
-	sbar = statusbar_new(win);
-	mapview_bind_statusbar(mv, sbar);
-	statusbar_add_label(sbar, LABEL_POLLED, "%d,%d [%d%D,%d%D]",
-	    &mv->cx, &mv->cy, &mv->msel.x, &mv->msel.xoffs,
-	    &mv->msel.y, &mv->msel.yoffs);
 	return (win);
 }
 #endif /* EDITION */

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.52 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.53 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -221,7 +221,7 @@ merge_edit_brush(int argc, union evarg *argv)
 
 		tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 		mapview_new(win, brush, MAPVIEW_EDIT|MAPVIEW_GRID|
-		                        MAPVIEW_PROPS, tbar);
+		                        MAPVIEW_PROPS, tbar, NULL);
 		window_show(win);
 	}
 }

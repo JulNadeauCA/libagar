@@ -1,4 +1,4 @@
-/*	$Csoft: vgedit.c,v 1.1 2004/03/30 16:05:42 vedge Exp $	*/
+/*	$Csoft: vgedit.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -175,7 +175,7 @@ vgedit_edit(void *obj)
 	struct window *win;
 	struct mapview *mv;
 	struct toolbar *tbar;
-	struct statusbar *sbar;
+	struct statusbar *statbar;
 
 	win = window_new(NULL);
 	window_set_caption(win, _("Vector drawing: %s"), OBJECT(vged)->name);
@@ -185,13 +185,16 @@ vgedit_edit(void *obj)
 	toolbar_add_button(tbar, 0, SPRITE(&mapedit, SETTINGS_ICON), 0, 0,
 	    vgedit_settings, "%p, %p", win, vged);
 
+	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
+	statusbar_init(statbar);
+	statusbar_add_label(statbar, LABEL_STATIC, ".");
+
 	mv = mapview_new(win, vged->vg->map, MAPVIEW_EDIT|MAPVIEW_INDEPENDENT,
-	    tbar);
+	    tbar, statbar);
 	mapview_prescale(mv, 4, 4);
 	mapview_reg_tool(mv, &line_tool, vged->vg);
 	mapview_reg_tool(mv, &point_tool, vged->vg);
 
-	sbar = statusbar_new(win);
-	mapview_bind_statusbar(mv, sbar);
+	object_attach(win, statbar);
 	return (win);
 }

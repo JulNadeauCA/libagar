@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.145 2004/03/30 15:56:51 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.146 2004/04/10 02:43:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -111,12 +111,13 @@ selecting(struct mapview *mv)
 }
 
 struct mapview *
-mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar)
+mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar,
+    struct statusbar *statbar)
 {
 	struct mapview *mv;
 
 	mv = Malloc(sizeof(struct mapview), M_OBJECT);
-	mapview_init(mv, m, flags, toolbar);
+	mapview_init(mv, m, flags, toolbar, statbar);
 	object_attach(parent, mv);
 	return (mv);
 }
@@ -145,6 +146,8 @@ mapview_sel_tool(int argc, union evarg *argv)
 
 	if (ntool->win != NULL)
 		window_show(ntool->win);
+
+	tool_update_status(ntool);
 }
 
 static void
@@ -154,7 +157,11 @@ update_tooltips(int argc, union evarg *argv)
 	struct tool *tool = argv[2].p;
 	int in = argv[3].i;
 
-	mapview_status(mv, "%s", in ? _(tool->desc) : "");
+	if (in) {
+		mapview_status(mv, "%s", _(tool->desc));
+	} else {
+		tool_update_status(tool);
+	}
 }
 
 void
@@ -310,7 +317,7 @@ mapview_attached(int argc, union evarg *argv)
 
 void
 mapview_init(struct mapview *mv, struct map *m, int flags,
-    struct toolbar *toolbar)
+    struct toolbar *toolbar, struct statusbar *statbar)
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
@@ -334,8 +341,13 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->zoom_tm = NULL;
 	mv->map = m;
 	mv->toolbar = toolbar;
-	mv->statusbar = NULL;
-	mv->status = NULL;
+	mv->statusbar = statbar;
+	if (statbar != NULL) {
+		mv->status = statusbar_add_label(statbar, LABEL_STATIC, "...");
+	} else {
+		mv->status = NULL;
+	}
+
 	mv->curtool = NULL;
 	TAILQ_INIT(&mv->tools);
 
@@ -675,7 +687,7 @@ draw_layer:
 				esel_w = mv->map->tilesz*mv->esel.w;
 				esel_h = mv->map->tilesz*mv->esel.h;
 			}
-			if (mv->map->tilesz < MAP_MIN_SCALE)
+			if (mv->map->tilesz < MAP_MIN_TILESZ)
 				continue;
 #endif /* EDITION */
 		}
@@ -858,39 +870,36 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int xoff, yoff;
-	struct node *curnode;
 	
 	widget_focus(mv);
 
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
-	if (mv->cx < 0 || mv->cy < 0) {
+	if (mv->cx < 0 || mv->cy < 0)
 		goto out;
-	}
-	curnode = &mv->map->map[mv->cy][mv->cx];
 
 	/* XXX configurable */
 	switch (button) {
 	case 1:						/* Select/edit */
 		if (selecting(mv)) {
 			mapview_begin_selection(mv);
-			goto out;
 		}
 		break;
 	case 2:						/* Adjust centering */
 		mv->flags |= MAPVIEW_NO_CURSOR;
 		mv->mouse.centering++;
-		goto out;
+		break;
 	case 3:						/* Scroll */
 		mv->mouse.scrolling++;
-		goto out;
+		break;
 	}
 
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL) {
-		if (mv->curtool->effect != NULL &&
+		if (button == 1 && mv->curtool->effect != NULL &&
 		    selbounded(mv, mv->cx, mv->cy)) {
-			mv->curtool->effect(mv->curtool, curnode);
+			mv->curtool->effect(mv->curtool,
+			    &mv->map->map[mv->cy][mv->cx]);
 		}
 		if (mv->curtool->mousebuttondown != NULL) {
 			mv->curtool->mousebuttondown(mv->curtool,
@@ -906,8 +915,14 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int button = argv[1].i;
-	int sx = argv[2].i, x = sx;
-	int sy = argv[3].i, y = sy;
+	int x = argv[2].i;
+	int y = argv[3].i;
+	int xoff, yoff;
+	
+	pthread_mutex_lock(&mv->map->lock);
+	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
+	if (mv->cx < 0 || mv->cy < 0)
+		goto out;
 
 	/* XXX configurable */
 	switch (argv[1].i) {
@@ -936,11 +951,11 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 	if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
 		if (mv->curtool->mousebuttonup != NULL) {
 			mv->curtool->mousebuttonup(mv->curtool, mv->cx, mv->cy,
-			    sx - x*(*mv->tilesz),
-			    sy - y*(*mv->tilesz),
-			    button);
+			    xoff, yoff, button);
 		}
 	}
+out:
+	pthread_mutex_unlock(&mv->map->lock);
 }
 
 /* Begin a mouse selection. */
@@ -1230,13 +1245,6 @@ mapview_prescale(struct mapview *mv, int w, int h)
 {
 	mv->prew = w;
 	mv->preh = h;
-}
-
-void
-mapview_bind_statusbar(struct mapview *mv, struct statusbar *sb)
-{
-	mv->statusbar = sb;
-	mv->status = statusbar_add_label(sb, LABEL_STATIC, "...");
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.1 2004/03/30 16:04:06 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -66,15 +66,9 @@ vg_draw_points(struct vg *vg, struct vg_element *vge)
 
 #ifdef EDITION
 static void
-point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txoffrel, int tyoffrel, int b)
+point_init(struct tool *t)
 {
-	struct vg *vg = t->p;
-	double vx, vy;
-	
-	vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-	mapview_status(t->mv, "%d+%d,%d+%d -> %.2f,%.2f", tx, txoff, ty, tyoff,
-	    vx, vy);
+	tool_push_status(t, _("Specify point.\n"));
 }
 
 static void
@@ -99,13 +93,13 @@ const struct tool point_tool = {
 	N_("Trace individual points."),
 	VGPOINTS_ICON,
 	-1,
-	NULL,			/* init */
+	point_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	point_mousemotion,
+	NULL,			/* mousemotion */
 	point_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */

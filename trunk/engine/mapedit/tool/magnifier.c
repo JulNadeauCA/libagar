@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.40 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.41 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -102,9 +102,9 @@ magnifier_mousebuttondown(struct tool *t, int x, int y, int xoff, int yoff,
 	struct mapview *mv = t->mv;
 	int z = *mv->zoom;
 
-	if (b & SDL_BUTTON(1)) {
+	if (b == 1) {
 		z += 1;
-	} else if (b & SDL_BUTTON(3)) {
+	} else if (b == 3) {
 		z -= 1;
 	}
 	mapview_zoom(mv, z);

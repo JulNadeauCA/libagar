@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.1 2004/03/30 16:03:58 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -48,7 +48,6 @@ vg_draw_lines(struct vg *vg, struct vg_element *vge)
 	for (i = 0; i < vge->nvtx-1; i += 2) {
 		vg_rcoords(vg, vge->vtx[i].x, vge->vtx[i].y, &x1, &y1);
 		vg_rcoords(vg, vge->vtx[i+1].x, vge->vtx[i+1].y, &x2, &y2);
-
 		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
 	}
 }
@@ -64,8 +63,8 @@ vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 	int i;
 
 	for (i = 1; i < vge->nvtx; i++) {
-		vx += vge->vtx[i].x;
-		vy += vge->vtx[i].y;
+		vx = vge->vtx[i].x;
+		vy = vge->vtx[i].y;
 
 		vg_rcoords(vg, px, py, &x1, &y1);
 		vg_rcoords(vg, vx, vy, &x2, &y2);
@@ -82,7 +81,12 @@ vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 }
 
 #ifdef EDITION
-static int mode = 0;
+static enum {
+	MODE_SEGMENTS,
+	MODE_STRIP,
+	MODE_LOOP
+} mode = MODE_STRIP;
+
 static int seq = 0;
 
 static void
@@ -100,18 +104,8 @@ line_init(struct tool *t)
 	win = tool_window(t, "vgedit-tool-line");
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
-}
-
-static void
-line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txoffrel, int tyoffrel, int b)
-{
-	struct vg *vg = t->p;
-	double vx, vy;
 	
-	vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-	mapview_status(t->mv, "%d+%d,%d+%d -> %.2f,%.2f", tx, txoff, ty, tyoff,
-	    vx, vy);
+	tool_push_status(t, _("Specify first point.\n"));
 }
 
 static void
@@ -121,20 +115,42 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	switch (seq++) {
-	case 0:
-		vg_begin(vg, VG_LINES);
-		vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-		vg_vertex2(vg, vx, vy);
-		mapview_status(t->mv, "%.2f,%.2f ->", vx, vy);
+	switch (mode) {
+	case MODE_SEGMENTS:
+		if (seq++ == 0) {
+			vg_begin(vg, VG_LINES);
+			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_vertex2(vg, vx, vy);
+			tool_push_status(t,
+			    _("Specify second point or [undo].\n"), seq);
+		} else {
+			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_vertex2(vg, vx, vy);
+			vg_end(vg);
+			vg_rasterize(vg);
+			tool_pop_status(t);
+		}
 		break;
-	case 1:
-		vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-		vg_vertex2(vg, vx, vy);
-		vg_end(vg);
-		vg_rasterize(vg);
-		seq = 0;
-		mapview_status(t->mv, "-> %.2f,%.2f", vx, vy);
+	case MODE_STRIP:
+		if (b == 1) {
+			if (seq++ == 0) {
+				vg_begin(vg, VG_LINE_STRIP);
+			} else {
+				tool_pop_status(t);
+			}
+			tool_push_status(t,
+			    _("Specify point %d or [close].\n"), seq+1);
+
+			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_vertex2(vg, vx, vy);
+			vg_rasterize(vg);
+		} else  {
+			vg_end(vg);
+			seq = 0;
+			tool_pop_status(t);
+		}
+		break;
+	default:
 		break;
 	}
 }
@@ -150,7 +166,7 @@ const struct tool line_tool = {
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	line_mousemotion,
+	NULL,			/* mousemotion */
 	line_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
