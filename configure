@@ -167,6 +167,14 @@ X11_LIBS=-L/usr/X386/lib
 else
 NONE=1
 fi
+if [ -d /usr/bin/X11 ]; then
+X11BASE=/usr/bin/X11
+CONF_X11=1
+X11_CFLAGS=-I/usr/bin/X11/include
+X11_LIBS=-L/usr/bin/X11/lib
+else
+NONE=1
+fi
 if [ "$X11BASE" != "" ]; then
 echo "$X11BASE"
 echo "#ifndef CONF_X11" >> engine/config.h
@@ -176,10 +184,7 @@ echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
-echo "*** X11R6 >= 3 is required"
-echo "*** Get it from http://www.xfree86.org/"
-echo "ERROR: X11R6 >= 3 is missing"
-exit 1
+NONE=1
 fi
 echo -n "checking for smpeg >= 0.4.3..."
 if [ -x "`which smpeg-config`" ]; then
