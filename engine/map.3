@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.41 2003/06/29 11:33:41 vedge Exp $
+.\"	$Csoft: map.3,v 1.42 2003/07/08 00:34:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -293,16 +293,23 @@ from
 and frees it.
 .Pp
 The
-.Fn node_add_sprite ,
-.Fn node_add_anim
-and
-.Fn node_add_warp
-functions create sprite references, animation references and
-warp points, respectively.
-The
-.Fn new_map
-argument of
-.Fn node_add_warp
+.Fn node_add_*
+functions create node references:
+.Pp
+.Bl -tag -width "node_add_sprite() "
+.It Fn node_add_sprite
+Adds a reference to a
+.Xr SDL_Surface 3 ,
+where
+.Fa obj
+is the object containing the graphics.
+.It Fn node_add_anim
+Adds a reference to an animation, where
+.Fa obj
+is the object containing the graphics.
+.It Fn node_add_warp
+Adds a warp point, where
+.Fa new_map
 is the pathname of the destination map (as returned by
 .Fn object_copy_name ) .
 The
@@ -311,9 +318,9 @@ The
 and
 .Fa dir
 arguments describe the initial position and direction of warped objects.
+.El
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr mapedit 3 ,
 .Xr object 3
 .Sh HISTORY
 The
