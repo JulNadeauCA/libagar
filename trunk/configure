@@ -127,7 +127,7 @@ echo "#define SHAREDIR" $SHAREDIR >> engine/mcconfig.h
 echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
 MAPDIR="$PREFIX/share/cave/map"
 echo MAPDIR=$MAPDIR >> Makefile.config
-TTFDIR="$PREFIX/share/cave/map"
+TTFDIR="$PREFIX/share/cave/ttf"
 echo TTFDIR=$TTFDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config

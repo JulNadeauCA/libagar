@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.86 2002/11/09 07:43:52 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.87 2002/11/09 21:45:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -292,12 +292,11 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONDOWN:
 		EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
 		    (ev->button.type == SDL_MOUSEBUTTONUP) ?
 		    "UP" : "DOWN", ev->button.button, ev->button.x,
 		    ev->button.y);
-		/* FALLTHROUGH */
-	case SDL_MOUSEBUTTONDOWN:
 		rv = 0;
 		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
