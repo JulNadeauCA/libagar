@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.48 2002/06/03 18:36:52 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.49 2002/06/06 10:14:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,10 +44,13 @@
 
 #include "widget/window.h"
 #include "widget/widget.h"
+#include "widget/label.h"
 #include "widget/text.h"
 
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
+
+#ifdef DEBUG
 
 static const struct event_proto {
 	char *evname;
@@ -57,8 +60,8 @@ static const struct event_proto {
 	{ "attached", "%p" },		/* Being attached to object %p */
 	{ "detached", "%p" },		/* Being detached from object %p */
 	/* Widget type */
-	{ "shown", NULL },
-	{ "hidden", NULL },
+	{ "shown", "%p" },
+	{ "hidden", "%p" },
 	{ "button-pushed", NULL },
 	{ "checkbox-changed", "%i" },    /* Changed to state %i */
 	{ "textbox-return", "%s" },	 /* Text %s entered */
@@ -69,6 +72,10 @@ static const struct event_proto {
 	{ "window-keyup", "%i, %i" },
 	{ "window-keydown", "%i, %i" },
 };
+
+static struct window *fps_win;
+
+#endif	/* DEBUG */
 
 #define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
 	if ((eev)->argc == EVENT_MAXARGS) {				\
@@ -108,7 +115,12 @@ event_hotkey(SDL_Event *ev)
 		object_load(world);
 		break;
 	case SDLK_F5:
+		text_msg(2, TEXT_SLEEP, "Checking %s\n",
+		    OBJECT(world->curmap)->name);
 		map_verify(world->curmap);
+		break;
+	case SDLK_F6:
+		window_show(fps_win);
 		break;
 #endif
 	case SDLK_F1:
@@ -143,8 +155,21 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
+#ifdef DEBUG
+	struct region *fps_reg;
+	struct label *fps_label;
+#endif
 	int rv;
-	
+
+#ifdef DEBUG
+	fps_win = window_new("Frames/second",
+	    WINDOW_SOLID|WINDOW_TITLEBAR|WINDOW_ABSOLUTE, 0,
+	    64, 96, 128, 64);
+	fps_reg = region_new(fps_win, REGION_HALIGN,
+	    0, 0, 100, 100);
+	fps_label = label_new(fps_reg, "...", 0);
+#endif
+
 	/* Start the garbage collection process. */
 	object_init_gc();
 
@@ -167,6 +192,9 @@ event_loop(void *arg)
 				m->redraw = 0;
 				map_draw(m);
 				delta = m->fps - (SDL_GetTicks() - ntick);
+#ifdef DEBUG
+				label_printf(fps_label, "%d FPS", delta);
+#endif
 				if (delta < 1) {
 					dprintf("overrun (delta=%d)\n", delta);
 					delta = 1;
