@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.188 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.189 2005/01/27 05:46:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,7 +74,7 @@ const struct object_ops object_ops = {
 #define DEBUG_GC	0x20
 #define DEBUG_PAGING	0x40
 
-int	object_debug = DEBUG_STATE|DEBUG_DEPRESV|DEBUG_GC;
+int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
 #endif
 
