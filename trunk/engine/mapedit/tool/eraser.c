@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.34 2003/06/06 09:03:57 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.35 2003/06/17 23:30:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,27 +85,25 @@ eraser_window(void *p)
 }
 
 void
-eraser_effect(void *p, struct mapview *mv, struct node *node)
+eraser_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 {
 	struct eraser *er = p;
 	struct noderef *nref, *nnref;
 	
-	if (TAILQ_EMPTY(&node->nrefs))
+	if (TAILQ_EMPTY(&dn->nrefs))
 		return;
 	
-	for (nref = TAILQ_FIRST(&node->nrefs);
-	     nref != TAILQ_END(&node->nrefs);
+	for (nref = TAILQ_FIRST(&dn->nrefs);
+	     nref != TAILQ_END(&dn->nrefs);
 	     nref = nnref) {
 		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == mv->map->cur_layer) {
-			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-			noderef_destroy(nref);
-			free(nref);
+		if (nref->layer == m->cur_layer) {
+			TAILQ_REMOVE(&dn->nrefs, nref, nrefs);
+			noderef_destroy(m, nref);
 
 			if (er->mode == ERASER_HIGHEST)
 				break;
 		}
 	}
-	node->flags = 0;
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.22 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.23 2003/06/17 23:30:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -93,6 +93,7 @@ void
 shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
 	struct shift *sh = p;
+	struct map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;
 	int sely = mv->my + mv->mouse.y;
 	int w = 1;
@@ -101,58 +102,24 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 
 	if (!sh->multi ||
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
-		if (selx < 0 || selx >= mv->map->mapw ||
-		    sely < 0 || sely >= mv->map->maph)
+		if (selx < 0 || selx >= m->mapw ||
+		    sely < 0 || sely >= m->maph)
 			return;
 	}
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
-			struct node *node = &mv->map->map[y][x];
+			struct node *node = &m->map[y][x];
 			struct noderef *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != mv->map->cur_layer)
+				if (nref->layer != m->cur_layer)
 					continue;
 
-//				if (SDL_GetModState() & KMOD_CTRL) {
-					noderef_set_center(nref,
-					    nref->xcenter+relx,
-					    nref->ycenter+rely);
-#if 0
-				} else {
-					noderef_set_motion(nref,
-					    nref->xmotion+relx,
-					    nref->ymotion+rely);
+				noderef_set_center(nref,
+				    nref->r_gfx.xcenter+relx,
+				    nref->r_gfx.ycenter+rely);
 
-					dprintf("motion: %d,%d\n",
-					    (int)nref->xmotion,
-					    (int)nref->ymotion);
-
-					if (nref->xmotion < -(TILEW/2)) {
-						if (node_move_ref(nref, node,
-						    mv->map, x-1, y) == 0)
-							mv->mouse.x--;
-						nref->xmotion = TILEW/2;
-					} else if (nref->xmotion > TILEW/2) {
-						if (node_move_ref(nref, node,
-						    mv->map, x+1, y) == 0)
-							mv->mouse.x++;
-						nref->xmotion = -(TILEW/2);
-					}
-					if (nref->ymotion < -(TILEH/2)) {
-						if (node_move_ref(nref, node,
-						    mv->map, x, y-1) == 0)
-							mv->mouse.y--;
-						nref->ymotion = TILEH/2;
-					} else if (nref->ymotion > TILEH/2) {
-						if (node_move_ref(nref, node,
-						    mv->map, x, y+1) == 0)
-							mv->mouse.y++;
-						nref->ymotion = -(TILEH/2);
-					}
-				}
-#endif
 				if (sh->mode == SHIFT_HIGHEST)
 					break;
 			}

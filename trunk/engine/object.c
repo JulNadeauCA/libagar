@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.137 2003/06/25 10:33:39 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.138 2003/06/26 02:42:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -119,6 +119,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->gfx = NULL;
 	ob->audio = NULL;
 	ob->pos = NULL;
+	SLIST_INIT(&ob->deps);
 	TAILQ_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
@@ -480,7 +481,7 @@ object_load(void *p)
 			} else {
 				object_init(child, ctype, cname, type->ops);
 			}
-			child->flags |= cflags;
+			child->flags |= (int)cflags;
 
 			object_attach(ob, child);
 
@@ -567,7 +568,7 @@ object_save(void *p)
 	TAILQ_FOREACH(child, &ob->childs, cobjs) {	/* Save descendents */
 		write_string(buf, child->name);
 		write_string(buf, child->type);
-		write_uint32(buf, child->flags);
+		write_uint32(buf, (Uint32)child->flags);
 
 		if (object_save(child) == -1)
 			goto fail;
@@ -638,25 +639,25 @@ object_center(void *p)
 	pthread_mutex_unlock(&ob->lock);
 }
 
-/* Copy the current submap to the level map. */
+/* Project the current submap onto the level map. */
 static void
 object_project_submap(struct object_position *pos)
 {
-	int x, y;
+	struct map *sm = pos->submap;
+	struct map *dm = pos->map;
+	int sx, sy, dx, dy;
 
-	dprintf("blit: [%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
-	    pos->submap->mapw, pos->submap->maph);
+	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer, sm->mapw,
+	    sm->maph);
 
-	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
-		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
-			struct node *srcnode = &pos->submap->map[y][x];
-			struct node *dstnode = &pos->map->map[y][x];
-			struct noderef *nref, *nnref;
-
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = pos->layer;
-			}
+	for (sy = 0, dy = pos->y;
+	     sy < sm->maph && dy < pos->y+dm->maph;
+	     sy++, dy++) {
+		for (sx = 0, dx = pos->x;
+		     sx < sm->mapw && dx < pos->x+dm->mapw;
+		     sx++, dx++) {
+			node_copy(sm, &sm->map[sy][sx], -1,
+			    dm, &dm->map[dy][dx], pos->layer);
 		}
 	}
 }
@@ -667,12 +668,12 @@ object_unproject_submap(struct object_position *pos)
 {
 	int x, y;
 	
-	dprintf("unblit: [%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
+	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
 	    pos->submap->mapw, pos->submap->maph);
 
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
-			node_clear_layer(&pos->map->map[y][x], pos->layer);
+			node_clear(pos->map, &pos->map->map[y][x], pos->layer);
 		}
 	}
 }
@@ -804,7 +805,7 @@ object_save_position(void *p, struct netbuf *buf)
 	write_uint8(buf, (Uint8)pos->layer);
 	write_uint8(buf, (Uint8)pos->center);
 	write_string(buf, (pos->submap != NULL) ?
-	    OBJECT(pos->submap)->name : "");
+	    OBJECT(pos->submap)->name : NULL);
 	write_string(buf, (pos->input != NULL) ?
 	    OBJECT(pos->input)->name : "");
 }
@@ -816,55 +817,53 @@ object_save_position(void *p, struct netbuf *buf)
 int
 object_load_position(void *p, struct netbuf *buf)
 {
-	char submap_id[OBJECT_NAME_MAX];
-	char input_id[OBJECT_NAME_MAX];
 	int x, y, layer, center;
 	struct object *ob = p;
 	struct map *m = ob->parent;
+	char *submap_id, *input_id;
 
 	pthread_mutex_lock(&ob->lock);
+	pthread_mutex_lock(&m->lock);
+
 	x = (int)read_uint32(buf);
 	y = (int)read_uint32(buf);
 	layer = (int)read_uint8(buf);
 	center = (int)read_uint8(buf);
 
-	if (copy_string(submap_id, buf, sizeof(submap_id)) >=
-	    sizeof(submap_id)) {
-		error_set("submap_id too big");
-		goto fail;
-	}
-	if (copy_string(input_id, buf, sizeof(input_id)) >= sizeof(input_id)) {
-		error_set("input_id too big");
-		goto fail;
-	}
-	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name,
-	    x, y, layer, center ? ", centered" : "");
+	submap_id = read_string(buf);
+	input_id = read_string(buf);
 
-	pthread_mutex_lock(&m->lock);
+	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, layer,
+	    center ? ", centered" : "");
+
 	if (x < 0 || x >= m->mapw ||
 	    y < 0 || y >= m->maph ||
 	    layer < 0 || layer >= m->nlayers) {
 		error_set("bad coords: %d,%d,%d", x, y, layer);
-		pthread_mutex_unlock(&m->lock);
 		goto fail;
 	}
-	if (object_set_submap(ob, submap_id) == -1) {
-		pthread_mutex_unlock(&m->lock);
+	if (submap_id != NULL &&
+	    object_set_submap(ob, submap_id) == -1) {
 		goto fail;
 	}
 	object_set_position(ob, m, x, y, layer);
-	pthread_mutex_unlock(&m->lock);
 
-	if (input_id[0] != '\0') {
+	if (input_id != NULL) {
 		if (object_control(ob, input_id) == -1)
 			debug(DEBUG_STATE, "%s: %s\n", ob->name, error_get());
 	} else {
 		debug(DEBUG_STATE, "%s: no controller\n", ob->name);
 	}
-	
+
+	free(submap_id);
+	free(input_id);
+	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
+	free(submap_id);
+	free(input_id);
+	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
@@ -980,6 +979,58 @@ void
 object_set_ops(void *p, const void *ops)
 {
 	OBJECT(p)->ops = ops;
+}
+
+/* Add a new dependency or increment a reference count on one. */
+void
+object_add_dep(void *p, void *depobj)
+{
+	struct object *ob = p;
+	struct object_dep *dep;
+
+	SLIST_FOREACH(dep, &ob->deps, deps) {
+		if (dep->obj == depobj)
+			break;
+	}
+	if (dep != NULL) {
+		dprintf("incrementing %s's ref count\n", OBJECT(depobj)->name);
+		if (++dep->count > OBJECT_DEP_MAX) {
+			dprintf("too many deps on %s (wiring)\n",
+			    OBJECT(depobj)->name);
+			dep->count = OBJECT_DEP_MAX;
+		}
+	} else {
+		dep = Malloc(sizeof(struct object_dep));
+		dep->obj = depobj;
+		dep->count = 1;
+		SLIST_INSERT_HEAD(&ob->deps, dep, deps);
+		dprintf("new dep to %s\n", OBJECT(depobj)->name);
+	}
+}
+
+/*
+ * Decrement the reference count of a dependency, removing it if the count
+ * reaches 0.
+ */
+void
+object_del_dep(void *p, void *depobj)
+{
+	struct object *ob = p;
+	struct object_dep *dep;
+
+	SLIST_FOREACH(dep, &ob->deps, deps) {
+		if (dep->obj == depobj)
+			break;
+	}
+	if (dep == NULL)
+		fatal("no such dep");
+
+	dprintf("decrement refcount to %s\n", OBJECT(depobj)->name);
+	if (--dep->count == 0) {
+		dprintf("removing dep to %s\n", OBJECT(depobj)->name);
+		SLIST_REMOVE(&ob->deps, dep, object_dep, deps);
+		free(dep);
+	}
 }
 
 #ifdef EDITION

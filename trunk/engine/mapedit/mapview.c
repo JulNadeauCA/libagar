@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.122 2003/06/21 06:50:22 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.123 2003/06/25 06:15:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -242,25 +242,32 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
     int mx, int my)
 {
 	const struct {
-		Uint32		flag;
-		Uint32		sprite;
+		Uint32	flag;
+		Uint32	sprite;
 	} flags[] = {
-		{ NODE_WALK,	MAPVIEW_WALK },
-		{ NODE_CLIMB,	MAPVIEW_CLIMB },
-		{ NODE_BIO,	MAPVIEW_BIO },
-		{ NODE_REGEN,	MAPVIEW_REGEN },
-		{ NODE_SLOW,	MAPVIEW_SLOW },
-		{ NODE_HASTE,	MAPVIEW_HASTE },
-		{ NODE_EDGE_E,	MAPVIEW_EDGE_E },
-		{ NODE_EDGE_N,	MAPVIEW_EDGE_N },
-		{ NODE_EDGE_S,	MAPVIEW_EDGE_S },
-		{ NODE_EDGE_W,	MAPVIEW_EDGE_W },
-		{ NODE_EDGE_NW,	MAPVIEW_EDGE_NW },
-		{ NODE_EDGE_NE,	MAPVIEW_EDGE_NE },
-		{ NODE_EDGE_SW,	MAPVIEW_EDGE_SW },
-		{ NODE_EDGE_SE,	MAPVIEW_EDGE_SE }
+		{ NODEREF_WALK,		MAPVIEW_WALK },
+		{ NODEREF_CLIMB,	MAPVIEW_CLIMB },
+		{ NODEREF_BIO,		MAPVIEW_BIO },
+		{ NODEREF_REGEN,	MAPVIEW_REGEN },
+		{ NODEREF_SLOW,		MAPVIEW_SLOW },
+		{ NODEREF_HASTE,	MAPVIEW_HASTE },
+	};
+	const struct {
+		Uint32	edge;
+		Uint32	sprite;
+	} edges[] = {
+		{ NODEREF_EDGE_E,	MAPVIEW_EDGE_E },
+		{ NODEREF_EDGE_N,	MAPVIEW_EDGE_N },
+		{ NODEREF_EDGE_S,	MAPVIEW_EDGE_S },
+		{ NODEREF_EDGE_W,	MAPVIEW_EDGE_W },
+		{ NODEREF_EDGE_NW,	MAPVIEW_EDGE_NW },
+		{ NODEREF_EDGE_NE,	MAPVIEW_EDGE_NE },
+		{ NODEREF_EDGE_SW,	MAPVIEW_EDGE_SW },
+		{ NODEREF_EDGE_SE,	MAPVIEW_EDGE_SE }
 	};
 	const int nflags = sizeof(flags) / sizeof(flags[0]);
+	const int nedges = sizeof(edges) / sizeof(edges[0]);
+	struct noderef *r;
 	int i;
 
 	if (mv->prop_style > 0)
@@ -270,12 +277,25 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 		widget_blit(mv, SPRITE(mv, MAPVIEW_ORIGIN), x, y);
 		x += SPRITE(mv,MAPVIEW_ORIGIN)->w;
 	}
-	for (i = 0; i < nflags; i++) {
-		if ((node->flags & flags[i].flag) == 0)
+
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != mv->map->cur_layer)
 			continue;
 
-		widget_blit(mv, SPRITE(mv, flags[i].sprite), x, y);
-		x += SPRITE(mv,flags[i].sprite)->w;
+		for (i = 0; i < nflags; i++) {
+			if ((r->flags & flags[i].flag) == 0) {
+				continue;
+			}
+			widget_blit(mv, SPRITE(mv, flags[i].sprite), x, y);
+			x += SPRITE(mv,flags[i].sprite)->w;
+		}
+		for (i = 0; i < nedges; i++) {
+			if (r->r_gfx.edge != edges[i].edge) {
+				continue;
+			}
+			widget_blit(mv, SPRITE(mv, edges[i].sprite), x, y);
+			x += SPRITE(mv, edges[i].sprite)->w;
+		}
 	}
 }
 
@@ -409,11 +429,7 @@ draw_layer:
 	     	     ((mx - mv->mx) < (mv->mw+2)) && (mx < m->mapw);
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
-			MAP_CHECK_NODE(node);
-
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				MAP_CHECK_NODEREF(nref);
-
 				if (nref->layer == layer) {
 					noderef_draw(m, nref,
 					    WIDGET(mv)->cx + rx,
@@ -645,7 +661,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    (mapview_selbounded(mv, mv->cx, mv->cy))) {
-				TOOL_OPS(tool)->effect(tool, mv,
+				TOOL_OPS(tool)->effect(tool, mv, mv->map,
 				    &mv->map->map[mv->cy][mv->cx]);
 			}
 			/* Invoke 'mouse' tool operations. */
@@ -710,7 +726,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		    TOOL_OPS(mapedit.curtool)->effect != NULL &&
 		    mapview_selbounded(mv, mv->cx, mv->cy)) {
 			TOOL_OPS(mapedit.curtool)->effect(mapedit.curtool,
-			    mv, curnode);
+			    mv, mv->map, curnode);
 		}
 	}
 	if (mv->flags & MAPVIEW_TILESET) {

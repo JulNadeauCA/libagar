@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.h,v 1.10 2003/05/08 12:27:32 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.11 2003/06/18 00:47:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -16,7 +16,8 @@ struct propedit {
 __BEGIN_DECLS
 void		 propedit_init(void *);
 struct window	*propedit_window(void *);
-void		 propedit_effect(void *, struct mapview *, struct node *);
+void		 propedit_effect(void *, struct mapview *, struct map *,
+		                 struct node *);
 int		 propedit_cursor(void *, struct mapview *, SDL_Rect *);
 __END_DECLS
 

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.11 2003/06/13 04:32:19 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.12 2003/06/17 23:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -135,8 +135,7 @@ layedit_rename(int argc, union evarg *argv)
 	}
 	lay = it->p1;
 
-	free(lay->name);
-	lay->name = textbox_string(name_tbox);
+	textbox_copy_string(name_tbox, lay->name, sizeof(lay->name));
 	textbox_printf(name_tbox, "");
 }
 
