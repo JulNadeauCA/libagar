@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.6 2002/02/01 11:56:03 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.7 2002/02/03 11:27:12 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -22,7 +22,7 @@ struct map_aref {
 	int	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
 				   used for direction and soft scroll. */
 
-	SLIST_ENTRY(map_aref) marefs;	/* Map entry reference list */
+	TAILQ_ENTRY(map_aref) marefs;	/* Map entry reference list */
 };
 
 /* Back reference to map:x,y coordinate. */
@@ -31,7 +31,7 @@ struct map_bref {
 	int	x, y;		/* X:Y coordinate */
 };
 
-SLIST_HEAD(map_arefs_head, map_aref);
+TAILQ_HEAD(map_arefs_head, map_aref);
 
 /* Coordinate within a map. */
 struct node {
@@ -70,7 +70,6 @@ struct map {
 };
 
 extern struct map *curmap;	/* Currently focused map */
-extern int mapedit;		/* Map edition in progress */
 
 /* Add a sprite reference to ob:offs at m:x,y */
 #define MAP_ADDSPRITE(m, x, y, ob, soffs)			\
