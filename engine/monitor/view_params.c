@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.1 2002/11/26 02:21:51 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.1 2002/11/26 11:01:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -41,6 +41,8 @@
 
 #include "monitor.h"
 
+static struct label *cliprect_label;
+
 struct window *
 view_params_window(void)
 {
@@ -64,6 +66,13 @@ view_params_window(void)
 		    &view->ndirty, &view->maxdirty);
 		label_polled_new(reg, 100, 0, &view->lock, "Window op: %d (%p)",
 		    &view->winop, &view->wop_win);
+		label_polled_new(reg, 100, 0, NULL,
+		    "Clipping: [%[u16]x%[u16] at %[s16],%[s16]]",
+		    &view->v->clip_rect.w,
+		    &view->v->clip_rect.h,
+		    &view->v->clip_rect.x,
+		    &view->v->clip_rect.y);
+
 		if (view->rootmap != NULL) {
 			struct viewmap *rm = view->rootmap;
 		
