@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.129 2002/12/17 09:25:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.130 2002/12/21 12:06:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -174,9 +174,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 		asprintf(&wname, "win-generic%d", curwindow++);
 	}
-
-	object_init(&win->wid.obj, "window", wname, "window",
-	    OBJECT_ART|OBJECT_ART_CACHE, &window_ops);
+	object_init(&win->wid.obj, "window", wname, NULL, -1, &window_ops);
 	free(wname);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
@@ -487,8 +485,7 @@ window_draw(struct window *win)
 			}
 
 #ifdef DEBUG
-			if (prop_uint32(config, "widgets.flags") &
-			    CONFIG_REGION_BORDERS) {
+			if (prop_get_bool(config, "widget.reg-borders")) {
 				primitives.square(win,
 				    reg->x, reg->y,
 				    reg->w, reg->h,
@@ -1213,15 +1210,13 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Clamp to minimum window geometry. */
 	if (win->rd.w < win->minw &&
-	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
-	    == 0) {
+	    !prop_get_bool(config, "widget.any-size")) {
 		win->rd.w = win->minw;
 	} else {
 		win->rd.x = nx;
 	}
 	if (win->rd.h < win->minh &&
-	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
-	    == 0) {
+	    !prop_get_bool(config, "widget.any-size")) {
 		win->rd.h = win->minh;
 	} else {
 		win->rd.y = ny;
@@ -1293,8 +1288,7 @@ window_resize(struct window *win)
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
-	if ((prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
-	    == 0) {
+	if (!prop_get_bool(config, "widget.any-size")) {
 		if (win->rd.w < win->minw)
 			win->rd.w = win->minw;
 		if (win->rd.h < win->minh)
