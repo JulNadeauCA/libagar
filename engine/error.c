@@ -93,3 +93,56 @@ error_get(void)
 	return ((const char *)engine_errorkey);
 #endif
 }
+
+void
+_dprintf_noop(const char *fmt, ...)
+{
+}
+
+void
+_deprintf_noop(const char *fmt, ...)
+{
+}
+
+void
+_debug_noop(int, const char *fmt, ...)
+{
+}
+
+void
+_dprintf(const char *fmt, ...)
+{
+	if (engine_debug > 0) {
+		va_list args;
+
+		va_start(args, fmt);
+		printf(fmt, args);
+		va_end(args);
+	}
+}
+
+void
+_debug(int mask, const char *fmt, ...)
+{
+	if (engine_debug & mask) {
+		va_list args;
+
+		va_start(args, fmt);
+		printf(fmt, args);
+		printf("\n");
+		va_end(args);
+	}
+}
+
+void
+_debug_n(int mask, const char *fmt, ...)
+{
+	if (engine_debug & mask) {
+		va_list args;
+
+		va_start(args, fmt);
+		fprintf(stderr, fmt, args);
+		va_end(args);
+	}
+}
+
