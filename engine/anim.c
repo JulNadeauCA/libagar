@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.8 2002/04/24 13:18:38 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.9 2002/05/03 20:12:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -32,7 +32,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <engine/engine.h>
+#include "engine.h"
+#include "map.h"
 
 enum {
 	NFINIT = 1,	/* Pointers allocated at initialization. */
@@ -43,19 +44,59 @@ int
 anim_addframe(struct anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {			/* Initialize */
-		anim->frames = (SDL_Surface **)emalloc(NFINIT *
-		    sizeof(SDL_Surface *));
+		anim->frames = emalloc(NFINIT * sizeof(SDL_Surface *));
 		anim->maxframes = NFINIT;
 		anim->nframes = 0;
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
 		SDL_Surface **newframes;
 
-		newframes = (SDL_Surface **)erealloc(anim->frames,
+		newframes = erealloc(anim->frames,
 		    (NFGROW * anim->maxframes) * sizeof(SDL_Surface *));
 		anim->maxframes *= NFGROW;
 		anim->frames = newframes;
 	}
 	anim->frames[anim->nframes++] = surface;
+	return (0);
+}
+
+int
+anim_breakframe(struct anim *anim, SDL_Surface *sprite)
+{
+	int x, y;
+	SDL_Rect sd, rd;
+
+	sd.x = 0;
+	sd.y = 0;
+	sd.w = TILEW;
+	sd.h = TILEH;
+
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = TILEW;
+	rd.h = TILEH;
+
+	for (y = 0; y < sprite->h; y += TILEH) {
+		for (x = 0; x < sprite->w; x += TILEW) {
+			SDL_Surface *s;
+
+			s = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+			    TILEW, TILEH, 32,
+			    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+			if (s == NULL) {
+				fatal("SDL_AllocSurface: %s\n", SDL_GetError());
+			}
+
+			SDL_SetAlpha(sprite, 0, 0);
+			sd.x = x;
+			sd.y = y;
+			SDL_BlitSurface(sprite, &sd, s, &rd);
+			anim_addframe(anim, s);
+			SDL_SetAlpha(sprite, SDL_SRCALPHA,
+			    SDL_ALPHA_TRANSPARENT);
+		}
+	}
+	SDL_FreeSurface(sprite);
+
 	return (0);
 }
 
