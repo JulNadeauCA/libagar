@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.21 2003/08/13 03:57:04 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.23 2003/08/26 03:22:33 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -616,9 +616,9 @@ install-man: preformat-man install-man-dirs
 	fi
 
 man:
-	if [ "${MAN}" != "" ]; then \
-		echo "nroff -Tascii -mandoc ${MAN} | ${PAGER}"; \
-		nroff -Tascii -mandoc ${MAN} | ${PAGER}; \
+	@if [ "${MAN}" != "" ]; then \
+		echo "${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}"; \
+		${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}; \
 	else \
 		echo "Usage: ${MAKE} read MAN=(manpage)"; \
 		exit 1; \
