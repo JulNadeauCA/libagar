@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.75 2003/05/08 12:12:25 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.76 2003/05/18 00:16:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -51,7 +51,7 @@ struct object {
 	const struct object_ops	*ops;	/* Generic operations */
 	void	*parent;		/* Parent object (or NULL) */
 
-	Uint8	 flags;
+	Uint32	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
 #define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
 #define OBJECT_STATIC		0x04	/* Parent should not call free(3) */
