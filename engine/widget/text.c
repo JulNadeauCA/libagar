@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.55 2003/03/04 00:32:09 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.56 2003/03/11 00:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -57,13 +57,12 @@ static pthread_mutex_t fonts_lock = PTHREAD_MUTEX_INITIALIZER;
 static ttf_font *
 text_load_font(char *name, int size, int style)
 {
-	char *path;
+	char path[FILENAME_MAX];
 	ttf_font *nfont;
 	struct text_font *fon;
 
-	if (name == NULL) {		/* Default font */
+	if (name == NULL) 		/* Default font */
 		return (font);
-	}
 
 	pthread_mutex_lock(&fonts_lock);
 
@@ -76,15 +75,11 @@ text_load_font(char *name, int size, int style)
 		}
 	}
 
-	path = object_path(name, "ttf");
-	if (path == NULL) {
+	if (object_path(name, "ttf", path, sizeof(path)) == -1)
 		fatal("%s.ttf: %s", name, error_get());
-	}
-	nfont = ttf_open_font(path, size);
-	if (nfont == NULL) {
+
+	if ((nfont = ttf_open_font(path, size)) == NULL)
 		fatal("%s: %s", path, error_get());
-	}
-	free(path);
 
 	ttf_set_font_style(nfont, style);
 
@@ -94,10 +89,8 @@ text_load_font(char *name, int size, int style)
 	fon->style = style;
 	fon->font = nfont;
 
-	SLIST_INSERT_HEAD(&fonts, fon, fonts);
-
+	SLIST_INSERT_HEAD(&fonts, fon, fonts);			/* Cache */
 	pthread_mutex_unlock(&fonts_lock);
-
 	return (nfont);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.38 2003/03/13 08:38:27 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.39 2003/03/14 07:13:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -137,26 +137,26 @@ fileops_load_map_window(void)
 void
 fileops_new_map(int argc, union evarg *argv)
 {
+	char path[FILENAME_MAX], name[OBJECT_NAME_MAX];
 	struct widget *wid = argv[0].p;
 	struct textbox *name_tbox = argv[1].p;
 	struct textbox *w_tbox = argv[2].p;
 	struct textbox *h_tbox = argv[3].p;
 	struct window *win;
 	struct map *m;
-	char *name, *path;
 	int w, h;
 
-	name = textbox_string(name_tbox);
-
-	if (strcmp(name, "") == 0) {				/* Not empty? */
-		text_msg("Error", "No map name given.");
-		goto out;
+	if (textbox_copy_string(name_tbox, name, sizeof(name)) > sizeof(name)) {
+		text_msg("Error", "Map name too big.");
+		return;
 	}
-	path = object_path(name, "map");			/* Existing? */
-	if (path != NULL) {
+	if (name[0] == '\0') {
+		text_msg("Error", "No map name given.");
+		return;
+	}
+	if (object_path(name, "map", path, sizeof(path)) == 0) {
 		text_msg("Error", "Existing map (%s).", path);
-		free(path);
-		goto out;
+		return;
 	}
 	w = textbox_int(w_tbox);
 	h = textbox_int(h_tbox);
@@ -165,8 +165,8 @@ fileops_new_map(int argc, union evarg *argv)
 	map_init(m, name, NULL);
 	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
 		text_msg("Error allocating nodes", "%s", error_get());
-		map_destroy(m);
-		free(m);
+		object_destroy(m);
+		return;
 	}
 
 	m->defx = w / 2;
@@ -178,8 +178,6 @@ fileops_new_map(int argc, union evarg *argv)
 
 	textbox_printf(name_tbox, "");
 	window_hide(wid->win);
-out:
-	free(name);
 }
 
 /* Save the map to the default location. */
@@ -196,25 +194,23 @@ fileops_save_map(int argc, union evarg *argv)
 void
 fileops_load_map(int argc, union evarg *argv)
 {
+	char path[FILENAME_MAX], name[OBJECT_NAME_MAX];
 	struct widget *wid = argv[0].p;
 	struct textbox *name_tbox = argv[1].p;
 	struct window *win;
 	struct map *m;
-	char *name;
-	char *path;
 
-	name = textbox_string(name_tbox);
-
-	if (strcmp(name, "") == 0) {				/* Not empty? */
-		text_msg("Error", "No map name given.");
-		goto out;
+	if (textbox_copy_string(name_tbox, name, sizeof(name)) > sizeof(name)) {
+		text_msg("Error", "Map name too big.");
+		return;
 	}
-	path = object_path(name, "map");			/* Existing? */
-	if (path == NULL) {
+	if (name[0] == '\0') {
+		text_msg("Error", "No map name given.");
+		return;
+	}
+	if (object_path(name, "map", path, sizeof(path)) == -1) {
 		text_msg("Error finding map", "%s", error_get());
-		goto out;
-	} else {
-		free(path);
+		return;
 	}
 	
 	m = emalloc(sizeof(struct map));
@@ -222,8 +218,8 @@ fileops_load_map(int argc, union evarg *argv)
 
 	if (object_load(m) == -1) {
 		text_msg("Error loading map", "%s", error_get());
-		free(m);
-		goto out;
+		object_destroy(m);
+		return;
 	}
 
 	win = mapedit_win_new(m);
@@ -233,8 +229,6 @@ fileops_load_map(int argc, union evarg *argv)
 	textbox_printf(name_tbox, "");
 
 	window_hide(wid->win);
-out:
-	free(name);
 }
 
 /* Revert to the map on disk. */
@@ -243,19 +237,26 @@ fileops_revert_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	char *path, *udatadir;
-
-	udatadir = prop_get_string(config, "path.user_data_dir");
+	char path[FILENAME_MAX], file[FILENAME_MAX];
 
 	/* Always edit the user copy. */
-	Asprintf(&path, "%s/map/%s.map", udatadir, OBJECT(m)->name);
+	if (prop_copy_string(config, "path.user_data_dir", path, sizeof(path)) >
+	    sizeof(path))
+		goto toobig;
+	if (snprintf(file, sizeof(path), "/map/%s.map", OBJECT(m)->name) >
+	    sizeof(path))
+		goto toobig;
+	if (strlcat(path, file, sizeof(path)) > sizeof(path))
+		goto toobig;
 
 	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
 	} else {
 		text_msg("Error reverting", "%s", error_get());
 	}
-	free(path);
+	return;
+toobig:
+	text_msg("Error reverting", "Path too big.");
 }
 
 /* Clear all nodes on a map. */
