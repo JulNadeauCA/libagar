@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.6 2004/11/22 05:26:28 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.7 2004/11/22 21:57:40 phip Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -209,7 +209,7 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 	unsigned int i;
 	int data_w, label_w;
 
-	if (!tv || tv->locked || cid == ID_INVALID)
+	if (tv->locked || cid == ID_INVALID)
 		return;
 
 	pthread_mutex_lock(&tv->lock);
@@ -297,9 +297,6 @@ tableview_row_addfn(struct tableview * tv, int flags,
 	colID cid;
 	void *data;
 
-	if (!tv)
-		return (NULL);
-
 	pthread_mutex_lock(&tv->lock);
 
 	tv->locked = 1;
@@ -377,7 +374,7 @@ tableview_row_del(struct tableview * tv, struct tableview_row * row)
 	unsigned int i;
 	struct tableview_row *row1, *row2;
 
-	if (NULL == tv || NULL == row)
+	if (NULL == row)
 		return;
 
 	pthread_mutex_lock(&tv->lock);
@@ -402,8 +399,8 @@ tableview_row_del(struct tableview * tv, struct tableview_row * row)
 	}
 
 	for (i = 0; i < tv->columncount; i++) {
-		Free(row->cell[i].image, M_WIDGET);
-		Free(row->cell[i].text, M_WIDGET);
+		SDL_FreeSurface(row->cell[i].image);
+		free(row->cell[i].text);
 	}
 
 	Free(row->cell, M_WIDGET);
@@ -438,14 +435,13 @@ tableview_row_del_all(struct tableview * tv)
 void
 tableview_row_select(struct tableview * tv, struct tableview_row * row)
 {
-	if (NULL == tv || NULL == row)
-		return;
-
 	pthread_mutex_lock(&tv->lock);
+	
 	if (!tv->selmulti) {
 		tableview_row_deselect_all(tv, NULL);
 	}
 	row->selected = 1;
+	
 	pthread_mutex_unlock(&tv->lock);
 }
 
@@ -453,9 +449,6 @@ struct tableview_row *
 tableview_row_get(struct tableview * tv, rowID rid)
 {
 	struct tableview_row *row;
-
-	if (NULL == tv)
-		return (NULL);
 
 	/* XXX pointless lock */
 	pthread_mutex_lock(&tv->lock);
@@ -468,7 +461,7 @@ tableview_row_get(struct tableview * tv, rowID rid)
 void
 tableview_row_select_all(struct tableview * tv, struct tableview_row * root)
 {
-	if (NULL == tv || !tv->selmulti)
+	if (!tv->selmulti)
 		return;
 
 	pthread_mutex_lock(&tv->lock);
@@ -483,53 +476,48 @@ tableview_row_select_all(struct tableview * tv, struct tableview_row * root)
 void
 tableview_row_deselect_all(struct tableview * tv, struct tableview_row * root)
 {
-	if (NULL == tv)
-		return;
-
 	pthread_mutex_lock(&tv->lock);
+	
 	if (NULL == root) {
 		deselect_all(&tv->children);
 	} else {
 		deselect_all(&root->children);
 	}
+	
 	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_expand(struct tableview * tv, struct tableview_row * in)
 {
-	if (NULL == tv || NULL == in)
-		return;
-
 	pthread_mutex_lock(&tv->lock);
+	
 	if (!in->expanded) {
 		in->expanded = 1;
-
 		if (visible(in)) {
 			tv->expandedrows +=
 			    count_visible_descendants(&in->children, 0);
 			tv->visible.dirty = 1;
 		}
 	}
+	
 	pthread_mutex_unlock(&tv->lock);
 }
 
 void
 tableview_row_collapse(struct tableview * tv, struct tableview_row * in)
 {
-	if (NULL == tv || NULL == in)
-		return;
-
 	pthread_mutex_lock(&tv->lock);
+	
 	if (in->expanded) {
 		in->expanded = 0;
-
 		if (visible(in)) {
 			tv->expandedrows -=
 			    count_visible_descendants(&in->children, 0);
 			tv->visible.dirty = 1;
 		}
 	}
+	
 	pthread_mutex_unlock(&tv->lock);
 }
 
