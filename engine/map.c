@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.59 2002/03/15 07:37:11 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.60 2002/03/15 22:12:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -603,7 +603,7 @@ map_load(void *ob, int fd)
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
 	
-	if (version_read(fd, "agar map", 1, 10) != 0) {
+	if (version_read(fd, "agar map", 1, 11) != 0) {
 		return (-1);
 	}
 
@@ -695,7 +695,7 @@ map_save(void *ob, int fd)
 
 	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
-	version_write(fd, "agar map", 1, 10);
+	version_write(fd, "agar map", 1, 11);
 
 	fobj_bwrite_uint32(buf, m->flags);
 	fobj_bwrite_uint32(buf, m->mapw);
