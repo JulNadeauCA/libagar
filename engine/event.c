@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.88 2002/11/10 01:07:09 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.89 2002/11/12 02:25:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,7 +88,7 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_F5:
 		if (view->rootmap != NULL) {
-			text_msg("Checking %s\n",
+			text_msg("Map consistency check", "Scanning %s...\n",
 			    OBJECT(view->rootmap->map)->name);
 			map_verify(view->rootmap->map);
 		}
@@ -115,8 +115,10 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_ESCAPE:
 		dprintf("shutting down (escape)\n");
+#if 0
 		pthread_mutex_unlock(&view->lock);
 		pthread_mutex_unlock(&world->lock);
+#endif
 		engine_stop();
 	default:
 		break;
@@ -179,7 +181,7 @@ event_loop(void)
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&view->lock);
 
-			/* Tile-based rendering */
+			/* Render a the in the background. */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				struct map *m = view->rootmap->map;
 
@@ -197,12 +199,10 @@ event_loop(void)
 
 				/* Update static nodes individually. */
 				if (m->redraw != 0) {
-					dprintf("tile: redraw\n");
 					rootmap_draw();
 					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
 				}
-				
 				pthread_mutex_unlock(&m->lock);
 				pthread_mutex_unlock(&world->lock);
 			}
@@ -331,7 +331,9 @@ event_dispatch(SDL_Event *ev)
 	case SDL_QUIT:
 		EVENT_DEBUG("SDL_QUIT\n");
 		dprintf("shutting down (SDL_QUIT)\n");
+#if 0
 		pthread_mutex_unlock(&view->lock);
+#endif
 		engine_stop();
 	}
 	
