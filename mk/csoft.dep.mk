@@ -33,6 +33,10 @@ depend:	${DPADD} depend-subdir
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
 	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	  ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
+	  if ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; then \
+	   echo "ok"; \
+	  else \
+	   exit 1; \
+	  fi \
 	 fi
 
