@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.43 2005/02/08 15:57:18 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.44 2005/03/11 08:59:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/notebook.h>
 
 #include <errno.h>
 #include <stdarg.h>
@@ -80,13 +81,13 @@ perso_init(void *obj, const char *name)
 	pthread_mutex_init(&pers->lock, NULL);
 	pers->name[0] = '\0';
 	pers->flags = 0;
-	pers->level = 1;
+	pers->level = 0;
 	pers->exp = 0;
-	pers->age = 5;
+	pers->age = 0;
 	pers->seed = 0;			/* TODO arc4random */
-	pers->hp = pers->maxhp = 10;
+	pers->hp = pers->maxhp = 1;
 	pers->mp = pers->maxmp = 0;
-	pers->nzuars = 73;
+	pers->nzuars = 0;
 }
 
 void
@@ -153,34 +154,34 @@ perso_edit(void *obj)
 {
 	struct perso *pers = obj;
 	struct window *win;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 	struct vbox *vb;
 
 	win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, _("%s character"), OBJECT(pers)->name);
+	window_set_caption(win, _("Character \"%s\""), OBJECT(pers)->name);
 
-	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Stats"), BOX_VERT);
 	{
 		struct textbox *tb;
 		struct spinbutton *sbu;
 		struct hbox *hb;
 
-		tb = textbox_new(vb, _("Name: "));
+		tb = textbox_new(ntab, _("Name: "));
 		widget_bind(tb, "string", WIDGET_STRING, pers->name,
 		    sizeof(pers->name));
 
-		sbu = spinbutton_new(vb, _("Level: "));
+		sbu = spinbutton_new(ntab, _("Level: "));
 		widget_bind(sbu, "value", WIDGET_SINT32, &pers->level);
 
-		sbu = spinbutton_new(vb, _("Experience: "));
+		sbu = spinbutton_new(ntab, _("Experience: "));
 		widget_bind(sbu, "value", WIDGET_UINT32, &pers->exp);
 
-		sbu = spinbutton_new(vb, _("Age: "));
-		widget_bind(sbu, "value", WIDGET_INT, &pers->age);
-
-		sbu = spinbutton_new(vb, _("Zuars: "));
+		sbu = spinbutton_new(ntab, _("Zuars: "));
 		widget_bind(sbu, "value", WIDGET_UINT32, &pers->nzuars);
 
-		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("HP: "));
 			widget_bind(sbu, "value", WIDGET_INT, &pers->hp);
@@ -189,7 +190,7 @@ perso_edit(void *obj)
 			widget_bind(sbu, "value", WIDGET_INT, &pers->maxhp);
 		}
 		
-		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("MP: "));
 			widget_bind(sbu, "value", WIDGET_INT, &pers->mp);
@@ -197,6 +198,11 @@ perso_edit(void *obj)
 			sbu = spinbutton_new(hb, " / ");
 			widget_bind(sbu, "value", WIDGET_INT, &pers->maxmp);
 		}
+	}
+	
+	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
+	{
+		
 	}
 	return (win);
 }
