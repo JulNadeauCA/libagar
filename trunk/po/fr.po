@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.14 2003/08/26 06:08:42 vedge Exp $
+# $Csoft: fr.po,v 1.15 2003/08/28 05:33:04 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -32,7 +32,7 @@ msgstr ""
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Trek to the Cave"
@@ -61,7 +61,7 @@ msgid ""
 msgstr ""
 
 msgid "Unreasonable refresh rate\n"
-msgstr "Fréquence de rafraîchissement déraisonnable\n"
+msgstr "FrÃ©quence de rafraÃ®chissement dÃ©raisonnable\n"
 
 msgid "width"
 msgstr "largeur"
@@ -93,20 +93,20 @@ msgstr "chemin-polices"
 #, c-format
 msgid "Save the configuration and restart %s for OpenGL mode to take effect"
 msgstr ""
-"Veuillez sauvegarder la configuration et redémarrer %s afin que le mode "
+"Veuillez sauvegarder la configuration et redÃ©marrer %s afin que le mode "
 "OpenGL prenne effet"
 
 #, c-format
 msgid "Save the configuration and restart %s for async blits to take effect"
 msgstr ""
-"Veuillez sauvegarder la configuration et redémarrer %s afin que les blits "
+"Veuillez sauvegarder la configuration et redÃ©marrer %s afin que les blits "
 "asynchrones prennent effet"
 
 msgid "Engine settings"
 msgstr "Configuration du moteur"
 
 msgid "Full screen"
-msgstr "Plein écran"
+msgstr "Plein Ã©cran"
 
 msgid "Asynchronous blits"
 msgstr "Blits asynchrones"
@@ -119,22 +119,22 @@ msgstr "Saisie de clavier Unicode"
 
 #. Thread unsafe, but not very dangerous.
 msgid "Debugging"
-msgstr "Déboguage"
+msgstr "DÃ©boguage"
 
 msgid "Idle time prediction"
-msgstr "Prédiction de temps d'attente"
+msgstr "PrÃ©diction de temps d'attente"
 
 msgid "Data save dir: "
-msgstr "Répertoire de sauvegarde: "
+msgstr "RÃ©pertoire de sauvegarde: "
 
 msgid "Data load path: "
-msgstr "Chemin d'accès objets: "
+msgstr "Chemin d'accÃ¨s objets: "
 
 msgid "Font path: "
-msgstr "Chemin d'accès polices: "
+msgstr "Chemin d'accÃ¨s polices: "
 
 msgid "Den path: "
-msgstr "Chemin d'accès den: "
+msgstr "Chemin d'accÃ¨s den: "
 
 #. XXX propose some default resolutions.
 msgid "Width: "
@@ -150,11 +150,11 @@ msgid "Save"
 msgstr "Sauvegarder"
 
 msgid "The search path is too big."
-msgstr "Le chemin d'accès est trop grand."
+msgstr "Le chemin d'accÃ¨s est trop grand."
 
 #, c-format
 msgid "Cannot find `%s.%s' in <%s>."
-msgstr "Impossible de trouver «%s.%s» dans <%s>."
+msgstr "Impossible de trouver Â«%s.%sÂ» dans <%s>."
 
 #, c-format
 msgid "Agar engine v%s\n"
@@ -166,37 +166,37 @@ msgstr "L'affichage est %dbpp (ckey=0x%x, alpha=0x%04x)\n"
 
 #, c-format
 msgid "Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"
-msgstr "Le masque vidéo est 0x%04x,0x%04x,0x%04x,0x%04x\n"
+msgstr "Le masque vidÃ©o est 0x%04x,0x%04x,0x%04x,0x%04x\n"
 
 msgid "Window manager is available.\n"
-msgstr "Un gestionnaire de fenêtres est disponible.\n"
+msgstr "Un gestionnaire de fenÃªtres est disponible.\n"
 
 msgid "Window manager is unavailable.\n"
-msgstr "Aucun gestionnaire de fenêtres n'est disponible.\n"
+msgstr "Aucun gestionnaire de fenÃªtres n'est disponible.\n"
 
 msgid "Hardware surfaces are available.\n"
-msgstr "Les surfaces matérielles sont disponibles.\n"
+msgstr "Les surfaces matÃ©rielles sont disponibles.\n"
 
 msgid "Hardware surfaces are unavailable.\n"
-msgstr "Les surfaces matérielles ne sont pas disponibles.\n"
+msgstr "Les surfaces matÃ©rielles ne sont pas disponibles.\n"
 
 msgid "\tHardware blits\n"
-msgstr "\tBlits matériels\n"
+msgstr "\tBlits matÃ©riels\n"
 
 msgid "\tHardware->hardware colorkey blits\n"
-msgstr "\tBlits matériel->matériel avec clef de couleur\n"
+msgstr "\tBlits matÃ©riel->matÃ©riel avec clef de couleur\n"
 
 msgid "\tHardware->hardware alpha blits\n"
-msgstr "\tBlits matériel->matériel avec canal alpha\n"
+msgstr "\tBlits matÃ©riel->matÃ©riel avec canal alpha\n"
 
 msgid "\tSoftware->hardware blits\n"
-msgstr "\tBlits logiciel->matériel\n"
+msgstr "\tBlits logiciel->matÃ©riel\n"
 
 msgid "\tSoftware->hardware colorkey blits\n"
-msgstr "\tBlits logiciel->matériel avec clef de couleur\n"
+msgstr "\tBlits logiciel->matÃ©riel avec clef de couleur\n"
 
 msgid "\tSoftware->hardware alpha blits\n"
-msgstr "\tBlits logiciel->matériel avec canal alpha\n"
+msgstr "\tBlits logiciel->matÃ©riel avec canal alpha\n"
 
 msgid "\tColor fills\n"
 msgstr "\tRemplissages de couleur\n"
@@ -206,7 +206,7 @@ msgid ""
 "Accelerated operations:\n"
 "%s"
 msgstr ""
-"Opérations accélérées:\n"
+"OpÃ©rations accÃ©lÃ©rÃ©es:\n"
 "%s"
 
 #, c-format
@@ -214,71 +214,71 @@ msgid ""
 "Unaccelerated operations:\n"
 "%s"
 msgstr ""
-"Opérations non-accélérées:\n"
+"OpÃ©rations non-accÃ©lÃ©rÃ©es:\n"
 "%s"
 
 #, c-format
 msgid "The path exceeds >= %lu bytes."
-msgstr "Le chemin d'accès fait >= %lu octets."
+msgstr "Le chemin d'accÃ¨s fait >= %lu octets."
 
 #, c-format
 msgid "The `%s' object is in use."
-msgstr "L'objet «%s» est en cours d'utilisation."
+msgstr "L'objet Â«%sÂ» est en cours d'utilisation."
 
 #, c-format
 msgid "The object `%s' does not exist."
-msgstr "L'objet «%s» n'existe pas."
+msgstr "L'objet Â«%sÂ» n'existe pas."
 
 #, c-format
 msgid "The %s/%s.%s file is not in load-path."
-msgstr "Le fichier «%s/%s.%s» est introuvable dans le chemin de chargement."
+msgstr "Le fichier Â«%s/%s.%sÂ» est introuvable dans le chemin de chargement."
 
 #, c-format
 msgid "The `%s' object contains no graphics."
-msgstr "L'objet «%s» ne contient aucun graphique."
+msgstr "L'objet Â«%sÂ» ne contient aucun graphique."
 
 #, c-format
 msgid "The `%s' object contains no audio."
-msgstr "L'objet «%s» ne contient aucun son."
+msgstr "L'objet Â«%sÂ» ne contient aucun son."
 
 #, c-format
 msgid "The `%s' object is non-persistent."
-msgstr "L'objet «%s» n'est pas persistant."
+msgstr "L'objet Â«%sÂ» n'est pas persistant."
 
 #, c-format
 msgid "The `%s' save has inconsistent flags."
-msgstr "La sauvegarde de «%s» contient des flags inconsistents."
+msgstr "La sauvegarde de Â«%sÂ» contient des flags inconsistents."
 
 #, c-format
 msgid "Unknown object type: `%s'"
-msgstr "Type d'objet inconnu: «%s»"
+msgstr "Type d'objet inconnu: Â«%sÂ»"
 
 #, c-format
 msgid "The data of `%s' is already resident."
-msgstr "Les données de «%s» sont déjà en mémoire."
+msgstr "Les donnÃ©es de Â«%sÂ» sont dÃ©jÃ  en mÃ©moire."
 
 #, c-format
 msgid "There is no input device named `%s'."
-msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
+msgstr "Il n'y a aucun pilote d'entrÃ©e sous le nom de Â«%sÂ»."
 
 msgid "There is no position to control."
-msgstr "Il n'y pas de position a contrôler."
+msgstr "Il n'y pas de position a contrÃ´ler."
 
 #, c-format
 msgid "There is no submap named `%s'."
-msgstr "Aucune sous-carte n'est nommée «%s»."
+msgstr "Aucune sous-carte n'est nommÃ©e Â«%sÂ»."
 
 #, c-format
 msgid "Bad coordinates: %d,%d,%d"
-msgstr "Mauvaises coordonnées: %d,%d,%d"
+msgstr "Mauvaises coordonnÃ©es: %d,%d,%d"
 
 #, c-format
 msgid "%s object"
-msgstr "Objet «%s»"
+msgstr "Objet Â«%sÂ»"
 
 #, c-format
 msgid "Name: %s (%s)"
-msgstr "Nom: «%s» (%s)"
+msgstr "Nom: Â«%sÂ» (%s)"
 
 #, c-format
 msgid "Type: %s"
@@ -298,10 +298,10 @@ msgid "Audio: "
 msgstr "Son: "
 
 msgid "Dependencies:"
-msgstr "Dépendances:"
+msgstr "DÃ©pendances:"
 
 msgid "Refresh rate"
-msgstr "Fréquence de rafraîchissement"
+msgstr "FrÃ©quence de rafraÃ®chissement"
 
 #, c-format
 msgid "keyboard%d"
@@ -317,7 +317,7 @@ msgstr "souris%d"
 
 #, c-format
 msgid "%ux%u nodes exceed %ux%u."
-msgstr "%ux%u noeuds dépassent la limite de %ux%u."
+msgstr "%ux%u noeuds dÃ©passent la limite de %ux%u."
 
 msgid "Layer 0"
 msgstr "Couche 0"
@@ -331,43 +331,43 @@ msgstr "Trop de couches."
 
 #, c-format
 msgid "Cannot resolve sprite: %u."
-msgstr "Impossible de résoudre le sprite: %u."
+msgstr "Impossible de rÃ©soudre le sprite: %u."
 
 #, c-format
 msgid "Cannot resolve anim: %u."
-msgstr "Impossible de résoudre l'animation: %u."
+msgstr "Impossible de rÃ©soudre l'animation: %u."
 
 msgid "Warp map name is too big."
-msgstr "Le nom de carte de téléportation est trop grand."
+msgstr "Le nom de carte de tÃ©lÃ©portation est trop grand."
 
 msgid "Invalid warp coordinates."
-msgstr "Coordonnées de téléportation invalides."
+msgstr "CoordonnÃ©es de tÃ©lÃ©portation invalides."
 
 msgid "Unknown type of noderef."
-msgstr "Type de référence de noeud inconnu."
+msgstr "Type de rÃ©fÃ©rence de noeud inconnu."
 
 msgid "Too many transforms."
 msgstr "Trop de transformations."
 
 msgid "Too many noderefs."
-msgstr "Trop de références de noeud."
+msgstr "Trop de rÃ©fÃ©rences de noeud."
 
 msgid "Invalid map geometry."
-msgstr "Géométrie de carte invalide."
+msgstr "GÃ©omÃ©trie de carte invalide."
 
 msgid "Too many map layers."
 msgstr "La carte comporte trop de couches."
 
 #, c-format
 msgid "%s map view"
-msgstr "Vue sur «%s»"
+msgstr "Vue sur Â«%sÂ»"
 
 #, c-format
 msgid "The `%s' map is read-only."
-msgstr "La carte «%s» est en mode lecture-seulement."
+msgstr "La carte Â«%sÂ» est en mode lecture-seulement."
 
 msgid "There is no active selection."
-msgstr "La carte ne comporte aucune sélection."
+msgstr "La carte ne comporte aucune sÃ©lection."
 
 #, c-format
 msgid "m%u (%ux%u nodes)\n"
@@ -383,14 +383,14 @@ msgstr "a%u (%u frames)\n"
 
 #, c-format
 msgid "%s graphics"
-msgstr "Graphiques de «%s»"
+msgstr "Graphiques de Â«%sÂ»"
 
 msgid "Replace"
 msgstr "Remplacer"
 
 #, c-format
 msgid "%s map edition"
-msgstr "Édition de «%s»"
+msgstr "Ã‰dition de Â«%sÂ»"
 
 #. XXX combo
 #, c-format
@@ -398,36 +398,36 @@ msgid "  Layer #%d"
 msgstr "  Couche #%d"
 
 msgid "Out of memory for string."
-msgstr "Mémoire insuffisante pour la chaîne de caractères."
+msgstr "MÃ©moire insuffisante pour la chaÃ®ne de caractÃ¨res."
 
 #, c-format
 msgid "Unsupported property type: %d."
-msgstr "Type de propriété non supporté: %d."
+msgstr "Type de propriÃ©tÃ© non supportÃ©: %d."
 
 #, c-format
 msgid "%s has no `%s' property (type %d)."
-msgstr "%s n'a aucune propriété du nom de «%s» (type %d)."
+msgstr "%s n'a aucune propriÃ©tÃ© du nom de Â«%sÂ» (type %d)."
 
 msgid "The prop key too big."
-msgstr "Le chemin d'accès est trop grand."
+msgstr "Le chemin d'accÃ¨s est trop grand."
 
 msgid "String too big."
-msgstr "La chaîne de caractères est trop grande."
+msgstr "La chaÃ®ne de caractÃ¨res est trop grande."
 
 msgid "Unicode string too big."
-msgstr "La chaîne de caractères Unicode est trop grande."
+msgstr "La chaÃ®ne de caractÃ¨res Unicode est trop grande."
 
 #, c-format
 msgid "Cannot load prop of type 0x%x."
-msgstr "Impossible de charger une propriété du type 0x%x."
+msgstr "Impossible de charger une propriÃ©tÃ© du type 0x%x."
 
 #, c-format
 msgid "Cannot save prop of type 0x%x."
-msgstr "Impossible de sauvegarder une propriété de type 0x%x."
+msgstr "Impossible de sauvegarder une propriÃ©tÃ© de type 0x%x."
 
 #, c-format
 msgid "%s character"
-msgstr "Personnage «%s»"
+msgstr "Personnage Â«%sÂ»"
 
 msgid "Name: "
 msgstr "Nom: "
@@ -436,10 +436,10 @@ msgid "Level: "
 msgstr "Niveau: "
 
 msgid "Experience: "
-msgstr "Expérience: "
+msgstr "ExpÃ©rience: "
 
 msgid "Age: "
-msgstr "Âge: "
+msgstr "Ã‚ge: "
 
 msgid "Zuars: "
 msgstr "Zuars: "
@@ -451,23 +451,23 @@ msgid "MP: "
 msgstr "MP: "
 
 msgid "The viewport is already initialized."
-msgstr "La vue est déjà initialisée."
+msgstr "La vue est dÃ©jÃ  initialisÃ©e."
 
 msgid "Unsupported graphic mode."
-msgstr "Mode graphique non supporté."
+msgstr "Mode graphique non supportÃ©."
 
 msgid "The resolution is too small."
-msgstr "La résolution est trop petite."
+msgstr "La rÃ©solution est trop petite."
 
 #, c-format
 msgid "Setting %dx%dx%d mode: %s"
-msgstr "Sélection du mode %dx%dx%d: %s"
+msgstr "SÃ©lection du mode %dx%dx%d: %s"
 
 msgid "The refresh rate is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
+msgstr "La frÃ©quence de rafraÃ®chissement est hors limite."
 
 msgid "Screenshot feature requires libjpeg"
-msgstr "La capture d'écran requiert libjpeg"
+msgstr "La capture d'Ã©cran requiert libjpeg"
 
 msgid "Too many transform args."
 msgstr "Trop d'arguments de transformation."
@@ -476,11 +476,11 @@ msgid "Unknown transform algorithm."
 msgstr "Algorithme de transformation inconnu."
 
 msgid "Font engine initialization failed."
-msgstr "L'initialisation du moteur de polices à échoué."
+msgstr "L'initialisation du moteur de polices Ã  Ã©chouÃ©."
 
 #, c-format
 msgid "Cannot font face: `%s'."
-msgstr "Mauvaise face de police: «%s»."
+msgstr "Mauvaise face de police: Â«%sÂ»."
 
 msgid "Error getting TTF font face."
 msgstr "Impossible d'obtenir la face de police TTF."
@@ -515,7 +515,7 @@ msgstr "Mauvaise signature XCF."
 
 #, c-format
 msgid "Nonsense XCF geometry: %ux%u."
-msgstr "Mauvaise géométrie XCF: %ux%u."
+msgstr "Mauvaise gÃ©omÃ©trie XCF: %ux%u."
 
 #, c-format
 msgid "Unknown base image type: %u."
@@ -526,18 +526,18 @@ msgid "%s (visible %s)\n"
 msgstr "%s (visible %s)\n"
 
 msgid ", editing"
-msgstr ", édition"
+msgstr ", Ã©dition"
 
 #, c-format
 msgid "%s (invisible %s)\n"
 msgstr "%s (invisible %s)\n"
 
 msgid "No layer is selected."
-msgstr "Aucune couche n'est sélectionnée."
+msgstr "Aucune couche n'est sÃ©lectionnÃ©e."
 
 #, c-format
 msgid "%s layers"
-msgstr "Couches de «%s»"
+msgstr "Couches de Â«%sÂ»"
 
 msgid "New layer: "
 msgstr "Nom: "
@@ -552,20 +552,20 @@ msgid "Pop"
 msgstr "Supprimer"
 
 msgid "Edit"
-msgstr "Éditer"
+msgstr "Ã‰diter"
 
 msgid "Show/hide"
 msgstr "Montrer/cacher"
 
 msgid "Layer NN (visible, editing)    "
-msgstr "Couche NN (visible, édition)    "
+msgstr "Couche NN (visible, Ã©dition)    "
 
 msgid "No node is selected."
-msgstr "Aucun noeud n'est sélectionné."
+msgstr "Aucun noeud n'est sÃ©lectionnÃ©."
 
 #, c-format
 msgid "%s node"
-msgstr "Noeud sur «%s»"
+msgstr "Noeud sur Â«%sÂ»"
 
 msgid "Remove"
 msgstr "Enlever"
@@ -583,44 +583,44 @@ msgid "Tools"
 msgstr "Outils"
 
 msgid "The zoom is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
+msgstr "La frÃ©quence de rafraÃ®chissement est hors limite."
 
 msgid "No object type was specified."
-msgstr "Aucun type d'objet spécifié."
+msgstr "Aucun type d'objet spÃ©cifiÃ©."
 
 msgid "No such object type."
 msgstr "Type d'objet inconnu."
 
 msgid "No object name was specified."
-msgstr "Aucun nom d'objet spécifié."
+msgstr "Aucun nom d'objet spÃ©cifiÃ©."
 
 #, c-format
 msgid "The `%s' object is indestructible."
-msgstr "L'objet «%s» est indestructible."
+msgstr "L'objet Â«%sÂ» est indestructible."
 
 msgid " (resident)"
-msgstr " (en mémoire)"
+msgstr " (en mÃ©moire)"
 
 msgid "Object editor"
-msgstr "Éditeur d'objet"
+msgstr "Ã‰diteur d'objet"
 
 msgid "Type: "
 msgstr "Type: "
 
 msgid "Create"
-msgstr "Créer"
+msgstr "CrÃ©er"
 
 msgid "Edit obj"
-msgstr "Éditer obj"
+msgstr "Ã‰diter obj"
 
 msgid "Load"
 msgstr "Charger"
 
 msgid "Destroy"
-msgstr "Détruire"
+msgstr "DÃ©truire"
 
 msgid "Eraser"
-msgstr "Gomme à effacer"
+msgstr "Gomme Ã  effacer"
 
 msgid "All"
 msgstr "Tout"
@@ -659,17 +659,17 @@ msgid "Zoom %: "
 msgstr "Zoom %: "
 
 msgid "No brush name was given."
-msgstr "Aucun nom de pinceau n'a été donné."
+msgstr "Aucun nom de pinceau n'a Ã©tÃ© donnÃ©."
 
 #, c-format
 msgid "A `%s' brush exists."
-msgstr "Un pinceau du nom de «%s» existe."
+msgstr "Un pinceau du nom de Â«%sÂ» existe."
 
 msgid "Merge tool"
 msgstr "Fusion"
 
 msgid "Random shift"
-msgstr "Déplacement au hazard"
+msgstr "DÃ©placement au hazard"
 
 msgid "Load set"
 msgstr "Charger"
@@ -678,7 +678,7 @@ msgid "Save set"
 msgstr "Sauvegarder"
 
 msgid "Node props"
-msgstr "Propriétés de noeud"
+msgstr "PropriÃ©tÃ©s de noeud"
 
 msgid "Block"
 msgstr "Bloquer"
@@ -693,7 +693,7 @@ msgid "Bio"
 msgstr "Bio"
 
 msgid "Regen"
-msgstr "Régénérer"
+msgstr "RÃ©gÃ©nÃ©rer"
 
 msgid "Slow"
 msgstr "Lent"
@@ -705,78 +705,78 @@ msgid "Origin"
 msgstr "Origine"
 
 msgid "There is no selection to copy."
-msgstr "Il n'y a aucune sélection a copier."
+msgstr "Il n'y a aucune sÃ©lection a copier."
 
 msgid "The copy buffer is empty!"
 msgstr "Le tampon de copie est vide!"
 
 msgid "There is no selection to kill."
-msgstr "Il n'y a aucune sélection à supprimer."
+msgstr "Il n'y a aucune sÃ©lection Ã  supprimer."
 
 msgid "There is no selection to cut."
-msgstr "Il n'y a aucune sélection à couper."
+msgstr "Il n'y a aucune sÃ©lection Ã  couper."
 
 msgid "Shift"
-msgstr "Déplacement"
+msgstr "DÃ©placement"
 
 msgid "Multi"
 msgstr "Multiple"
 
 msgid "Insert"
-msgstr "Insérer"
+msgstr "InsÃ©rer"
 
 msgid "Stamp"
-msgstr "Étampe"
+msgstr "Ã‰tampe"
 
 msgid "A JPEG error has occured."
 msgstr "Une erreur JPEG s'est produite."
 
 #, c-format
 msgid "Status: xmit frame %d."
-msgstr "État: transmission image %d."
+msgstr "Ã‰tat: transmission image %d."
 
 msgid "Already connected to a server."
-msgstr "Déjà connecté au serveur."
+msgstr "DÃ©jÃ  connectÃ© au serveur."
 
 msgid "Missing server hostname/port."
-msgstr "Nom d'hôte ou port du serveur non spécifiés."
+msgstr "Nom d'hÃ´te ou port du serveur non spÃ©cifiÃ©s."
 
 #, c-format
 msgid "Status: connecting to %s:%s..."
-msgstr "État: connexion à %s:%s..."
+msgstr "Ã‰tat: connexion Ã  %s:%s..."
 
 #, c-format
 msgid "Status: %s."
-msgstr "État: %s."
+msgstr "Ã‰tat: %s."
 
 msgid "failed to create socket"
-msgstr "impossible de créer le socket"
+msgstr "impossible de crÃ©er le socket"
 
 msgid "connection refused"
-msgstr "connexion refusée"
+msgstr "connexion refusÃ©e"
 
 #, c-format
 msgid "Status: %s: %s."
-msgstr "État: %s: %s."
+msgstr "Ã‰tat: %s: %s."
 
 #, c-format
 msgid "Status: connected to %s."
-msgstr "État: connecté à %s."
+msgstr "Ã‰tat: connectÃ© Ã  %s."
 
 msgid "Status: disconnected."
-msgstr "État: aucune connexion."
+msgstr "Ã‰tat: aucune connexion."
 
 msgid "Not connected."
 msgstr "Aucune connexion."
 
 msgid "Screenshot"
-msgstr "Capture d'écran"
+msgstr "Capture d'Ã©cran"
 
 msgid "Status: Not connected."
-msgstr "État: aucune connexion."
+msgstr "Ã‰tat: aucune connexion."
 
 msgid "Host: "
-msgstr "Hôte: "
+msgstr "HÃ´te: "
 
 msgid "Port: "
 msgstr "Port: "
@@ -785,7 +785,7 @@ msgid "Connect"
 msgstr "Connexion"
 
 msgid "Disconnect"
-msgstr "Déconnexion"
+msgstr "DÃ©connexion"
 
 msgid "Widgets"
 msgstr "Widgets"
@@ -794,13 +794,13 @@ msgid "Viewport"
 msgstr "Vue"
 
 msgid "Debug monitor"
-msgstr "Moniteur de déboguage"
+msgstr "Moniteur de dÃ©boguage"
 
 msgid "No window is selected."
-msgstr "Aucune fenêtre n'est sélectionnée."
+msgstr "Aucune fenÃªtre n'est sÃ©lectionnÃ©e."
 
 msgid "No widget is selected."
-msgstr "Aucun widget n'est sélectionné."
+msgstr "Aucun widget n'est sÃ©lectionnÃ©."
 
 #, c-format
 msgid "%s widget"
@@ -808,7 +808,7 @@ msgstr "Widget %s"
 
 #, c-format
 msgid "Name: \"%s\""
-msgstr "Nom: «%s»"
+msgstr "Nom: Â«%sÂ»"
 
 #, c-format
 msgid "Flags: 0x%x"
@@ -816,20 +816,20 @@ msgstr "Flags: 0x%x"
 
 #, c-format
 msgid "Geo: %dx%d at %d,%d (view %d,%d)"
-msgstr "Géo: %dx%d sur %d,%d (vue %d,%d)"
+msgstr "GÃ©o: %dx%d sur %d,%d (vue %d,%d)"
 
 msgid "Geo: 0000x0000 at 0000x0000 (view 0000,0000)"
-msgstr "Géo: 0000x0000 sur 0000x0000 (vue 0000,0000)"
+msgstr "GÃ©o: 0000x0000 sur 0000x0000 (vue 0000,0000)"
 
 #, c-format
 msgid "%s window"
-msgstr "Fenêtre «%s»"
+msgstr "FenÃªtre Â«%sÂ»"
 
 msgid "Examine"
 msgstr "Examiner"
 
 msgid "Window stack"
-msgstr "Pile de fenêtres"
+msgstr "Pile de fenÃªtres"
 
 msgid "Show"
 msgstr "Montrer"
@@ -838,13 +838,13 @@ msgid "Hide"
 msgstr "Cacher"
 
 msgid "Detach"
-msgstr "Détacher"
+msgstr "DÃ©tacher"
 
 msgid "GUI"
 msgstr "GUI"
 
 msgid "Tile-based"
-msgstr "Orienté-tile"
+msgstr "OrientÃ©-tile"
 
 #, c-format
 msgid "Graphic engine: %s %s"
@@ -852,17 +852,17 @@ msgstr "Moteur graphique: %s %s"
 
 #, c-format
 msgid "Window op: %d (%p)"
-msgstr "Opération fenêtre: %d (%p)"
+msgstr "OpÃ©ration fenÃªtre: %d (%p)"
 
 msgid "Window op: 000 (0x00000000)"
-msgstr "Opération fenêtre: 000 (0x00000000)"
+msgstr "OpÃ©ration fenÃªtre: 000 (0x00000000)"
 
 msgid "Map: %[obj]"
-msgstr "Carte: «%[obj]»"
+msgstr "Carte: Â«%[obj]Â»"
 
 #, c-format
 msgid "Map geometry: %dx%d"
-msgstr "Géométrie de carte: %dx%d"
+msgstr "GÃ©omÃ©trie de carte: %dx%d"
 
 #, c-format
 msgid "Map offset: %d,%d (soft %d,%d)"
@@ -878,7 +878,7 @@ msgid "Information"
 msgstr "Information"
 
 msgid "Ok"
-msgstr "Ack-é!"
+msgstr "Ack-Ã©!"
 
 msgid "Object"
 msgstr "Objet"
@@ -902,7 +902,7 @@ msgid "%lu B"
 msgstr "%lu O"
 
 msgid "No directory is selected"
-msgstr "Aucun répertoire n'est sélectionné"
+msgstr "Aucun rÃ©pertoire n'est sÃ©lectionnÃ©"
 
 msgid "new"
 msgstr "nouveau"
@@ -911,11 +911,11 @@ msgid "Queue"
 msgstr "Attente"
 
 msgid "Start download"
-msgstr "Télécharger"
+msgstr "TÃ©lÃ©charger"
 
 #, c-format
 msgid "I/O error: %s"
-msgstr "Erreur entrée/sortie: %s"
+msgstr "Erreur entrÃ©e/sortie: %s"
 
 msgid "EOF from server"
 msgstr "EOF en provenance du serveur"
@@ -924,7 +924,7 @@ msgid "idle"
 msgstr "inactif"
 
 msgid "busy"
-msgstr "occupé"
+msgstr "occupÃ©"
 
 msgid "exiting"
 msgstr "fermeture"
@@ -937,32 +937,32 @@ msgstr "Copyright (c) 2003 Communications CubeSoft, Inc.\n"
 
 #, c-format
 msgid "%2d. (locked session)"
-msgstr "%2d. (session verouillée)"
+msgstr "%2d. (session verouillÃ©e)"
 
 msgid "Missing SUMO host/port."
-msgstr "Nom d'hôte ou port du serveur SUMO non spécifiés"
+msgstr "Nom d'hÃ´te ou port du serveur SUMO non spÃ©cifiÃ©s"
 
 msgid "Missing FTP host/port."
-msgstr "Nom d'hôte ou port du serveur FTP non spécifiés"
+msgstr "Nom d'hÃ´te ou port du serveur FTP non spÃ©cifiÃ©s"
 
 msgid "Missing FTP user/pass."
 msgstr "Nom d'utilisateur ou mot de passe FTP manquant"
 
 #, c-format
 msgid "%s failed"
-msgstr "%s a échoué"
+msgstr "%s a Ã©chouÃ©"
 
 msgid "SUMO sessions"
 msgstr "Sessions SUMO"
 
 msgid "SUMO host: "
-msgstr "Hôte SUMO: "
+msgstr "HÃ´te SUMO: "
 
 msgid "SUMO port: "
 msgstr "Port SUMO: "
 
 msgid "FTP host: "
-msgstr "Hôte FTP: "
+msgstr "HÃ´te FTP: "
 
 msgid "FTP port: "
 msgstr "Port FTP: "
@@ -984,14 +984,14 @@ msgid " [-r fps] [-t font,size,style]"
 msgstr " [-r fps] [-t police,taille,style]"
 
 msgid "Agar screenshot daemon"
-msgstr "Démon de capture d'écran Agar"
+msgstr "DÃ©mon de capture d'Ã©cran Agar"
 
 #, c-format
 msgid " %s [-vfF] [-w width] [-h height]"
 msgstr " %s [-vfF] [-w largeur] [-h hauteur]"
 
 msgid " [-H host] [-P port]"
-msgstr " [-H hôte] [-P port]"
+msgstr " [-H hÃ´te] [-P port]"
 
 msgid " [-d level] [-T]"
 msgstr " [-d niveau] [-T]"
@@ -1001,7 +1001,7 @@ msgstr "Trop de clients."
 
 #, c-format
 msgid "%s: %s failed"
-msgstr "%s: %s à échoué"
+msgstr "%s: %s Ã  Ã©chouÃ©"
 
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
@@ -1010,4 +1010,4 @@ msgstr "Mauvaise signature JPEG."
 #~ msgstr "Mental raide!\n"
 
 #~ msgid "No source node is selected."
-#~ msgstr "Aucun noeud source n'est sélectionné."
+#~ msgstr "Aucun noeud source n'est sÃ©lectionnÃ©."
