@@ -626,7 +626,8 @@ mapview_mousemotion(int argc, union evarg *argv)
 			if (TOOL_OPS(tool)->effect != NULL &&
 			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
-			    mapview_selbounded(mv, mv->cx, mv->cy)) {
+			    (!prop_get_bool(&mapedit, "sel-bounded-edition") ||
+			     mapview_selbounded(mv, mv->cx, mv->cy))) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
 			} else if (TOOL_OPS(tool)->mouse != NULL) {
