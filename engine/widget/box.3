@@ -1,0 +1,115 @@
+.\"	$Csoft: checkbox.3,v 1.14 2003/06/06 03:18:14 vedge Exp $
+.\"
+.\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 10, 2003
+.Dt BOX 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm box
+.Nd agar container widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/box.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget packs its children horizontally or vertically.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct box *"
+.Fn box_new "void *parent" "enum box_type type" "int flags"
+.Pp
+.Ft "void"
+.Fn box_init "struct box *box" "enum box_type type" "int flags"
+.Pp
+.Ft void
+.Fn box_set_homogenous "struct box *box" "int homogenous"
+.Pp
+.Ft void
+.Fn box_set_padding "struct box *box" "int padding"
+.Pp
+.Ft void
+.Fn box_set_spacing "struct box *box" "int spacing"
+.nr nS 0
+.Pp
+The
+.Fn box_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn box_init
+initializes a
+.Nm
+widget.
+.Fa type
+defines whether child widgets are packed horizontally:
+.Bd -literal
+enum box_type {
+	BOX_HORIZ,
+	BOX_VERT
+};
+.Ed
+.Pp
+Acceptable
+.Fa flags
+include:
+.Bd -literal
+#define BOX_HOMOGENOUS	0x01	/* Divide space evenly */
+#define BOX_WFILL	0x02	/* Expand to fill available width */
+#define BOX_HFILL	0x04	/* Expand to fill available height */
+.Ed
+.Pp
+The
+.Fn box_set_homogenous
+function sets/clears the
+.Dv BOX_HOMOGENOUS
+flag, which controls whether available space is divided evenly between widgets.
+.Pp
+The
+.Fn box_set_padding
+function sets the padding around the group of child widgets to
+.Fa padding
+pixels.
+.Fn box_set_spacing
+sets the spacing between individual child widgets to
+.Fa spacing
+pixels.
+.Sh EVENTS
+The
+.Nm
+widget neither reacts to nor generates any event.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
