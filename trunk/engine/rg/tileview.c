@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.22 2005/03/04 13:35:08 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.23 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1244,11 +1244,15 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 /* Plot a scaled pixel on the tileview's cache surface. */
 void
-tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint32 pc)
+tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint8 r, Uint8 g,
+    Uint8 b)
 {
 	int sx = x*tv->pxsz;
 	int sy = y*tv->pxsz;
+	Uint32 pixel;
 	Uint8 *dst;
+
+	pixel = SDL_MapRGB(tv->scaled->format, r, g, b);
 
 	if (SDL_MUSTLOCK(tv->scaled))
 		SDL_LockSurface(tv->scaled);
@@ -1256,7 +1260,7 @@ tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint32 pc)
 	if (tv->pxsz == 1) {
 		dst = (Uint8 *)tv->scaled->pixels + y*tv->scaled->pitch +
 		    x*tv->scaled->format->BytesPerPixel;
-		*(Uint32 *)dst = pc;
+		*(Uint32 *)dst = pixel;
 	} else {
 		int px, py;
 		
@@ -1266,7 +1270,7 @@ tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint32 pc)
 
 		for (py = 0; py < tv->pxsz; py++) {
 			for (px = 0; px < tv->pxsz; px++) {
-				*(Uint32 *)dst = pc;
+				*(Uint32 *)dst = pixel;
 				dst += tv->scaled->format->BytesPerPixel;
 			}
 			dst += tv->scaled->pitch - tv->pxlen;

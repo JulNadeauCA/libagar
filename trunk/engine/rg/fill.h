@@ -1,4 +1,4 @@
-/*	$Csoft: fill.h,v 1.3 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.4 2005/03/05 12:13:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FILL_H_
@@ -18,6 +18,7 @@ struct fill {
 		FILL_CGRADIENT,
 		FILL_PATTERN
 	} type;
+	Uint8 alpha;
 	union {
 		struct {
 			Uint32 c;
