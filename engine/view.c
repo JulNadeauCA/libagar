@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.70 2002/09/19 20:56:44 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.71 2002/09/20 02:41:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -250,7 +250,6 @@ view_detach(void *child)
 	pthread_mutex_lock(&view->lock);
 	TAILQ_INSERT_HEAD(&view->detach, win, detach);
 	pthread_mutex_unlock(&view->lock);
-
 }
 
 SDL_Surface *

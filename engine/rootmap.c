@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.6 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.7 2002/09/19 20:55:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -163,8 +163,6 @@ rootmap_animate(void)
 	struct node *nnode;
 	int x, y, vx, vy, rx, ry, ox, oy;
 	int ri = 0;
-
-	return;
 
 	for (y = rm->y, vy = 0;				/* Downward */
 	     y < m->maph && vy <= rm->h;
@@ -404,6 +402,8 @@ int **
 rootmap_alloc_mask(int w, int h)
 {
 	int **mask, y, x = 0;
+
+	dprintf("alloc mask %dx%d\n", w, h);
 
 	mask = emalloc((w * h) * sizeof(int *));
 	for (y = 0; y < h; y++) {

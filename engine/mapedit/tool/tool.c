@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.5 2002/09/06 01:26:43 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.6 2002/09/12 09:35:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -66,7 +66,7 @@ tool_mapview(void)
 	struct region *reg;
 	struct widget *wid;
 
-	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		if ((win->flags & WINDOW_SHOWN) == 0) {
 			continue;
 		}
