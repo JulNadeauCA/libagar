@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.3 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.4 2003/10/09 22:39:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -9,8 +9,6 @@
 #include <engine/widget/button.h>
 
 #include "begin_code.h"
-
-#define SPINBUTTON_LABEL_MAX	32
 
 struct spinbutton {
 	struct widget wid;

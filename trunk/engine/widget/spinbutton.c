@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.5 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.6 2003/11/09 10:55:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/label.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -55,7 +56,7 @@ static struct widget_ops spinbutton_ops = {
 struct spinbutton *
 spinbutton_new(void *parent, const char *fmt, ...)
 {
-	char label[SPINBUTTON_LABEL_MAX];
+	char label[LABEL_MAX];
 	struct spinbutton *sbu;
 	va_list ap;
 
@@ -146,12 +147,11 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	
 	sbu->value = 0;
-	sbu->min = -1;
-	sbu->max = -1;
-	sbu->tbox = textbox_new(sbu, label);
-	
-	pthread_mutex_init(&sbu->lock, NULL);
 	sbu->incr = 1;
+	sbu->min = 0;
+	sbu->max = 0;
+	pthread_mutex_init(&sbu->lock, NULL);
+	sbu->tbox = textbox_new(sbu, label);
 
 	event_new(sbu, "widget-bound", spinbutton_bound, NULL);
 	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
@@ -230,60 +230,82 @@ spinbutton_draw(void *p)
 	widget_binding_unlock(valueb);
 }
 
-/* Add to the bound value. */
 void
 spinbutton_add(struct spinbutton *sbu, int inc)
 {
-	struct widget_binding *valueb;
+	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
+	int *min, *max;
 
 	valueb = widget_get_binding(sbu, "value", &value);
+	minb = widget_get_binding(sbu, "min", &min);
+	maxb = widget_get_binding(sbu, "max", &max);
+
 	switch (valueb->type) {
 	case WIDGET_INT:
 		if (*(int *)value + inc >= INT_MIN+1 &&
-		    *(int *)value + inc <= INT_MAX-1)
+		    *(int *)value + inc <= INT_MAX-1 &&
+		    *(int *)value + inc >= *min &&
+		    *(int *)value + inc <= *max)
 			*(int *)value += inc;
 		break;
 	case WIDGET_UINT:
 		if (*(unsigned int *)value + inc >= 0 &&
-		    *(unsigned int *)value + inc <= UINT_MAX-1)
+		    *(unsigned int *)value + inc <= UINT_MAX-1 &&
+		    *(unsigned int *)value + inc >= *min &&
+		    *(unsigned int *)value + inc <= *max)
 			*(unsigned int *)value += inc;
 		break;
 	case WIDGET_UINT8:
 		if (*(Uint8 *)value + inc >= 0 &&
-		    *(Uint8 *)value + inc <= 0xffU)
+		    *(Uint8 *)value + inc <= 0xffU &&
+		    *(Uint8 *)value + inc >= *min &&
+		    *(Uint8 *)value + inc <= *max)
 			*(Uint8 *)value += inc;
 		break;
 	case WIDGET_SINT8:
 		if (*(Sint8 *)value + inc >= -0x7f+1 &&
-		    *(Sint8 *)value + inc <=  0x7f-1)
+		    *(Sint8 *)value + inc <=  0x7f-1 &&
+		    *(Sint8 *)value + inc >= *min &&
+		    *(Sint8 *)value + inc <= *max)
 			*(Sint8 *)value += inc;
 		break;
 	case WIDGET_UINT16:
 		if (*(Uint16 *)value + inc >= 0 &&
-		    *(Uint16 *)value + inc <= 0xffffU)
+		    *(Uint16 *)value + inc <= 0xffffU &&
+		    *(Uint16 *)value + inc >= *min &&
+		    *(Uint16 *)value + inc <= *max)
 			*(Uint16 *)value += inc;
 		break;
 	case WIDGET_SINT16:
 		if (*(Sint16 *)value + inc >= -0x7fff+1 &&
-		    *(Sint16 *)value + inc <=  0x7fff-1)
+		    *(Sint16 *)value + inc <=  0x7fff-1 &&
+		    *(Sint16 *)value + inc >= *min &&
+		    *(Sint16 *)value + inc <= *max)
 			*(Sint16 *)value += inc;
 		break;
 	case WIDGET_UINT32:
 		if (*(Uint32 *)value + inc >= 0 &&
-		    *(Uint32 *)value + inc <= 0xffffffffU)
+		    *(Uint32 *)value + inc <= 0xffffffffU &&
+		    *(Uint32 *)value + inc >= *min &&
+		    *(Uint32 *)value + inc <= *max)
 			*(Uint32 *)value += inc;
 		break;
 	case WIDGET_SINT32:
 		if (*(Sint32 *)value + inc >= -0x7fffffff+1 &&
-		    *(Sint32 *)value + inc <=  0x7fffffff-1)
+		    *(Sint32 *)value + inc <=  0x7fffffff-1 &&
+		    *(Sint32 *)value + inc >= *min &&
+		    *(Sint32 *)value + inc <= *max)
 			*(Sint32 *)value += inc;
 		break;
 	default:
-		fatal("unknown binding type");
+		break;
 	}
+
 	event_post(sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
+	widget_binding_unlock(maxb);
+	widget_binding_unlock(minb);
 	widget_binding_unlock(valueb);
 }
 
