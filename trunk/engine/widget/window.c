@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.231 2004/09/25 01:57:09 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.232 2004/09/27 03:58:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1186,7 +1186,7 @@ window_scale(void *p, int w, int h)
 	if (win->tbar != NULL) {
 		WIDGET(win->tbar)->x = 1;
 		WIDGET(win->tbar)->y = 1;
-		WIDGET(win->tbar)->w = WIDGET(win)->w - 2;
+		WIDGET(win->tbar)->w = WIDGET(win)->w - 1;
 	}
 out:
 	pthread_mutex_unlock(&win->lock);
