@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.14 2002/07/30 22:20:52 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.15 2002/08/12 06:55:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@
 
 #include "mapedit.h"
 #include "mapview.h"
-#include "edcursor.h"
 
 #include "tool/tool.h"
 
@@ -109,7 +108,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->mh = 0;
 	mv->tilew = TILEW;
 	mv->tileh = TILEH;
-	mv->cursor = (flags & MAPVIEW_EDIT) ? edcursor_new(0, mv, m) : NULL;
 	mv->zoom = 100;
 
 	widget_map_color(mv, BORDER_COLOR, "mapview-border",
@@ -501,10 +499,8 @@ mapview_event(int argc, union evarg *argv)
 			    (mv->mx+x < mv->map->mapw) &&
 			    (mv->my+y < mv->map->maph) &&
 			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-				edcursor_set(mv->cursor, 0);
 				TOOL_OPS(med->curtool)->tool_effect(
 				    med->curtool, mv, mv->mx+x, mv->my+y);
-				    edcursor_set(mv->cursor, 1);
 			}
 		}
 		if (mv->flags & MAPVIEW_TILEMAP) {
@@ -551,12 +547,9 @@ mapview_event(int argc, union evarg *argv)
 			   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 			   (mv->mx+x < mv->map->mapw) &&
 			   (mv->my+y < mv->map->maph) &&
-			    TOOL_OPS(med->curtool)->tool_effect != NULL
-			    ) {
-				edcursor_set(mv->cursor, 0);
+			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
 				TOOL_OPS(med->curtool)->tool_effect(
 				    med->curtool, mv, mv->mx+x, mv->my+y);
-				edcursor_set(mv->cursor, 1);
 			}
 		}
 		if (mv->flags & MAPVIEW_TILEMAP) {
@@ -594,10 +587,6 @@ mapview_event(int argc, union evarg *argv)
 		}
 		break;
 	case WINDOW_KEYDOWN:
-		if (mv->flags & MAPVIEW_EDIT && mv->cursor != NULL) {
-			event_post(mv->cursor, "window-keydown",
-			    "%i, %i", argv[2].i, argv[3].i);
-		}
 		if (mv->flags & MAPVIEW_ZOOM) {
 			switch (argv[2].i) {
 			case SDLK_EQUALS:
@@ -630,10 +619,6 @@ mapview_event(int argc, union evarg *argv)
 		}
 		break;
 	case WINDOW_KEYUP:
-		if (mv->flags & MAPVIEW_EDIT && mv->cursor != NULL) {
-			event_post(mv->cursor, "window-keyup",
-			    "%i, %i", argv[2].i, argv[3].i);
-		}
 		if (mv->flags & MAPVIEW_ZOOM) {
 			switch (argv[2].i) {
 			case SDLK_EQUALS:
