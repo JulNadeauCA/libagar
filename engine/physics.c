@@ -30,10 +30,57 @@
 
 #include <engine/engine.h>
 
-static void	direction_change(struct direction *, struct map_aref *);
+static void	mapdir_change(struct mapdir *, struct map_aref *);
 
 int
-direction_init(struct direction *dir, void *ob, struct map *map,
+gendir_init(struct gendir *dir)
+{
+	dir->set = 0;
+	dir->clear = 0;
+	dir->moved = 0;
+
+	return (0);
+}
+
+int
+gendir_set(struct gendir *dir, int direction, int set)
+{
+	if (set) {
+		dir->set |= direction;
+	} else {
+		dir->clear |= direction;
+	}
+	return (0);
+}
+
+int
+gendir_move(struct gendir *dir)
+{
+	if (dir->current == 0 && dir->set != 0) {
+		dir->current |= dir->set;
+		dir->set = 0;
+	}
+	return (dir->current);
+}
+
+void
+gendir_postmove(struct gendir *dir, int moved)
+{
+	/* Clear this direction (eg. key release). */
+	if (dir->clear != 0) {
+		dir->current &= ~(dir->clear);
+		dir->clear = 0;
+	}
+	
+	/* Set this direction (eg. key press). */
+	if (dir->set != 0) {
+		dir->current |= dir->set;
+		dir->set = 0;
+	}
+}
+
+int
+mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
     int flags, int hiwat, int speed)
 {
 	dir->set = 0;
@@ -52,11 +99,11 @@ direction_init(struct direction *dir, void *ob, struct map *map,
 }
 
 /*
- * Set the given direction if set is non-zero, otherwise
+ * Set the given map direction if set is non-zero, otherwise
  * clear it (asynchronously).
  */
 void
-direction_set(struct direction *dir, int direction, int set)
+mapdir_set(struct mapdir *dir, int direction, int set)
 {
 	if (set) {
 		dir->set |= direction;
@@ -65,9 +112,12 @@ direction_set(struct direction *dir, int direction, int set)
 	}
 }
 
-/* Change direction if necessary. */
+/*
+ * Change map direction if necessary. X/Y velocity values are
+ * mutually exclusive, and so are direction flags.
+ */
 static void
-direction_change(struct direction *dir, struct map_aref *aref)
+mapdir_change(struct mapdir *dir, struct map_aref *aref)
 {
 	if (dir->set & DIR_UP) {
 		dir->set &= ~(DIR_UP);
@@ -108,12 +158,11 @@ direction_change(struct direction *dir, struct map_aref *aref)
 }
 
 /*
- * Update a direction, and return a non-zero value if the map
- * coordinates have changed (so that the caller can move the
- * reference on the map).
+ * Update a map direction, and return a non-zero value if the map
+ * coordinates have changed (so that the caller can move the reference).
  */
 int
-direction_update(struct direction *dir, int *mapx, int *mapy)
+mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 {
 	struct map *map;
 	struct map_aref *aref;
@@ -126,7 +175,7 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
 
 	if (aref->yoffs == 0 && aref->xoffs == 0) {
 		/* See if movement is requested. */
-		direction_change(dir, aref);
+		mapdir_change(dir, aref);
 	} else if (dir->moved == 0 || 1) {	/* ... wait */
 		dir->tick = 0;
 
@@ -140,13 +189,16 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
 				dir->moved |= DIR_UP;
 				moved |= DIR_UP;
 				decrease(mapy, 1, 1);
-				if ((dir->flags & DIR_SCROLL) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) >= 0) {
 				    	scroll(map, DIR_UP);
 				}
 			} else {
-				aref->yoffs -= dir->speed;
-				/* XXX soft scroll */
+				if (dir->flags & DIR_SOFTSCROLL) {
+					aref->yoffs -= dir->speed;
+				} else {
+					aref->yoffs = -map->view->tileh;
+				}
 			}
 		}
 		/* Down */
@@ -160,14 +212,17 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
 				dir->moved |= DIR_DOWN;
 				moved |= DIR_DOWN;
 				increase(mapy, 1, map->maph - 1);
-				if ((dir->flags & DIR_SCROLL) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) <=
 				     -map->view->maph) {
 					scroll(map, DIR_DOWN);
 				}
 			} else {
-				aref->yoffs += dir->speed;
-				/* XXX soft scroll */
+				if (dir->flags & DIR_SOFTSCROLL) {
+					aref->yoffs += dir->speed;
+				} else {
+					aref->yoffs = map->view->tileh;
+				}
 			}
 		}
 		
@@ -182,13 +237,16 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
 				dir->moved |= DIR_LEFT;
 				moved |= DIR_LEFT;
 				decrease(mapx, 1, 1);
-				if ((dir->flags & DIR_SCROLL) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) >= 0) {
 					scroll(map, DIR_LEFT);
 				}
 			} else {
-				aref->xoffs -= dir->speed;
-				/* XXX soft scroll */
+				if (dir->flags & DIR_SOFTSCROLL) {
+					aref->xoffs -= dir->speed;
+				} else {
+					aref->xoffs = -map->view->tilew;
+				}
 			}
 		}
 		/* Right */
@@ -202,14 +260,17 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
 				dir->moved |= DIR_RIGHT;
 				moved |= DIR_RIGHT;
 				increase(mapx, 1, map->mapw - 1);
-				if ((dir->flags & DIR_SCROLL) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) <=
 				     -map->view->mapw) {
 					scroll(map, DIR_RIGHT);
 				}
 			} else {
-				aref->xoffs += dir->speed;
-				/* XXX soft scroll */
+				if (dir->flags & DIR_SOFTSCROLL) {
+					aref->xoffs += dir->speed;
+				} else {
+					aref->xoffs = map->view->tilew;
+				}
 			}
 		}
 	}
@@ -221,7 +282,7 @@ direction_update(struct direction *dir, int *mapx, int *mapy)
  * stop moving.
  */
 void
-direction_moved(struct direction *dir, int *mapx, int *mapy, int moved)
+mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, int moved)
 {
 	struct node *node;
 	struct map_aref *aref;
@@ -260,7 +321,7 @@ direction_moved(struct direction *dir, int *mapx, int *mapy, int moved)
 		} else {
 			/* Change directions. */
 		}
-		direction_change(dir, aref);
+		mapdir_change(dir, aref);
 		dir->current |= dir->set;
 		dir->set = 0;
 	}
