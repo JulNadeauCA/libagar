@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.7 2002/09/19 22:07:53 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.8 2002/11/07 17:54:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -37,7 +37,11 @@
 #include "engine.h"
 #include "error.h"
 
+#ifdef SERIALIZATION
 extern pthread_key_t engine_errorkey;	/* engine.c */
+#else
+extern char *engine_errorkey;		/* engine.c */
+#endif
 
 void *
 emalloc(size_t len)
@@ -77,15 +81,24 @@ error_set(const char *fmt, ...)
 	}
 	va_end(args);
 
+#ifdef SERIALIZATION
 	ekey = (char *)pthread_getspecific(engine_errorkey);
 	if (ekey != NULL) {
 		free(ekey);
 	}
 	pthread_setspecific(engine_errorkey, buf);
+#else
+	Free(engine_errorkey);
+	engine_errorkey = buf;
+#endif
 }
 
 const char *
 error_get(void)
 {
+#ifdef SERIALIZATION
 	return ((const char *)pthread_getspecific(engine_errorkey));
+#else
+	return ((const char *)engine_errorkey);
+#endif
 }
