@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.2 2002/11/19 05:08:54 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.3 2002/11/19 06:08:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,18 +51,18 @@
 static void
 tl_windows_poll(int argc, union evarg *argv)
 {
-	struct tlist *tl_windows = argv[0].p;
+	struct tlist *tl = argv[0].p;
 	struct window *win;
 
-	tlist_clear_items(tl_windows);
+	tlist_clear_items(tl);
 
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		tlist_insert_item(tl_windows, NULL, OBJECT(win)->name, win);
+		tlist_insert_item(tl, NULL, OBJECT(win)->name, win);
 	}
 	pthread_mutex_unlock(&view->lock);
 
-	tlist_restore_selections(tl_windows);
+	tlist_restore_selections(tl);
 }
 
 static void
@@ -207,6 +207,103 @@ tl_widgets_detach(int argc, union evarg *argv)
 }
 
 static void
+tl_colors_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct widget *wid = argv[1].p;
+	struct widget_color *wc;
+
+	tlist_clear_items(tl);
+
+	pthread_mutex_lock(&wid->win->lock);
+	SLIST_FOREACH(wc, &wid->colors, colors) {
+		tlist_insert_item(tl, NULL, wc->name, wc);
+	}
+	pthread_mutex_unlock(&wid->win->lock);
+
+	tlist_restore_selections(tl);
+}
+
+#if 0
+static void
+tl_colors_selected(int argc, union evarg *argv)
+{
+	struct tlist *tl_colors = argv[0].p;
+	struct widget *wid = argv[1].p;
+	struct palette *pal = argv[2].p;
+	struct tlist_item *it = argv[3].p;
+	struct widget_color *color = it->p1;
+	Uint32 color32;
+	Uint8 r, g, b;
+
+	color32 = WIDGET_COLOR(wid, color->ind);
+	SDL_GetRGB(color32, view->v->format, &r, &g, &b);
+
+	palette_set_color(pal, r, g, b);
+}
+#endif
+
+static void
+tl_widgets_selected(int argc, union evarg *argv)
+{
+	struct tlist_item *it = argv[1].p;
+	struct widget *wid = it->p1;
+	struct window *win, *pwin = wid->win;
+	struct region *reg;
+	int i;
+
+	win = window_generic_new(466, 261,
+	    "monitor-widget-browser-%s-%s-wid",
+	    OBJECT(pwin)->name, OBJECT(wid)->name);
+	if (win == NULL) {
+		return;		/* Exists */
+	}
+	window_set_caption(win, "%s widget", OBJECT(wid)->name);
+	
+	pthread_mutex_lock(&pwin->lock);
+
+	reg = region_new(win, REGION_VALIGN,	0, 0,		100, 50);
+	{
+		label_new(reg, 100, 0, "Identifier: \"%s\"",
+		    OBJECT(wid)->name);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Flags: 0x%x", &wid->flags);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Type: %s", &wid->type);
+		
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Parent: region %p in window %p", &wid->reg, &wid->win);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Geometry: requested %dx%d, allocated %dx%d at [%d,%d]",
+		    &wid->rw, &wid->rh, &wid->w, &wid->h, &wid->x, &wid->y);
+	}
+
+	/* Color array */
+	reg = region_new(win, REGION_HALIGN,	0,  50,		100, 50);
+	{
+		struct tlist *tl_colors;
+		struct palette *pal;
+#if 0
+		pal = palette_new(reg, 10, 100, 0);
+#endif
+
+		tl_colors = tlist_new(reg, 90, 100, TLIST_POLL);
+		event_new(tl_colors, "tlist-poll",
+		    tl_colors_poll, "%p", wid);
+#if 0
+		event_new(tl_colors, "tlist-changed",
+		    tl_colors_selected, "%p, %p", wid, pal);
+#endif
+	}
+	
+	pthread_mutex_unlock(&pwin->lock);
+	window_show(win);
+}
+
+static void
 tl_windows_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_windows = argv[0].p;
@@ -257,36 +354,38 @@ tl_windows_selected(int argc, union evarg *argv)
 		    &pwin->focus);
 	}
 
+	/* Region list */
 	reg = region_new(win, 0,		0,  50,		80, 25);
 	{
 		tl_regions = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_regions, "tlist-poll",
 		    tl_regions_poll, "%p", pwin);
 	}
-	
 	reg = region_new(win, REGION_VALIGN,	81, 50,		19, 25);
 	{
 		struct button *bu;
 
 		bu = button_new(reg, "Detach", NULL, 0, 100, 100);
-		event_new(bu, "button-pushed", tl_regions_detach, "%p, %p",
-		    tl_regions, pwin);
+		event_new(bu, "button-pushed",
+		    tl_regions_detach, "%p, %p", tl_regions, pwin);
 	}
-	
+
+	/* Widget list */
 	reg = region_new(win, 0,		0,  75,		80, 25);
 	{
 		tl_widgets = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_widgets, "tlist-poll", tl_widgets_poll, "%p, %p",
-		    pwin, tl_regions);
+		event_new(tl_widgets, "tlist-poll",
+		    tl_widgets_poll, "%p, %p", pwin, tl_regions);
+		event_new(tl_widgets, "tlist-changed",
+		    tl_widgets_selected, NULL);
 	}
-	
 	reg = region_new(win, REGION_VALIGN,	81, 75,		19, 25);
 	{
 		struct button *bu;
 
 		bu = button_new(reg, "Detach", NULL, 0, 100, 100);
-		event_new(bu, "button-pushed", tl_widgets_detach, "%p, %p",
-		    tl_widgets, tl_regions, pwin);
+		event_new(bu, "button-pushed",
+		    tl_widgets_detach, "%p, %p", tl_widgets, tl_regions, pwin);
 	}
 
 	pthread_mutex_unlock(&pwin->lock);
