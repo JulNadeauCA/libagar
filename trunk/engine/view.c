@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.98 2002/12/29 03:24:30 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.99 2002/12/31 00:53:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,7 +59,7 @@ view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
 	int screenflags = SDL_SWSURFACE;
-	int bpp;
+	int depth;
 
 	if (view != NULL) {
 		error_set("viewport is already initialized");
@@ -82,7 +82,7 @@ view_init(gfx_engine_t ge)
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
 	/* Obtain the display preferences. */
-	bpp = prop_get_uint8(config, "view.bpp");
+	depth = prop_get_uint8(config, "view.depth");
 	v->w = prop_get_uint16(config, "view.w");
 	v->h = prop_get_uint16(config, "view.h");
 	if (prop_get_bool(config, "view.full-screen"))
@@ -91,8 +91,8 @@ view_init(gfx_engine_t ge)
 		screenflags |= SDL_ASYNCBLIT;
 
 	/* Negotiate the depth. */
-	v->bpp = SDL_VideoModeOK(v->w, v->h, bpp, screenflags);
-	if (v->bpp == 8)
+	v->depth = SDL_VideoModeOK(v->w, v->h, depth, screenflags);
+	if (v->depth == 8)
 		screenflags |= SDL_HWPALETTE;
 
 	switch (v->gfx_engine) {
@@ -138,7 +138,7 @@ view_init(gfx_engine_t ge)
 	/* Set the video mode. */
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
-		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->bpp,
+		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->depth,
 		    SDL_GetError());
 		goto fail;
 	}
@@ -155,14 +155,14 @@ view_init(gfx_engine_t ge)
 		SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &dbuf);
 		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
 
-		dprintf("depth = %d\n", depth);
-		dprintf("red = %d, green = %d, blue = %d, alpha = %d\n",
+		dprintf("gl: depth = %d\n", depth);
+		dprintf("gl: red = %d, green = %d, blue = %d, alpha = %d\n",
 		    red, green, blue, alpha);
-		dprintf("double-buffering = %s, buffer = %s\n",
+		dprintf("gl: double-buffering = %s, buffer = %s\n",
 		    dbuf ? "on" : "off", bsize);
 	
 		if (!dbuf) {
-			error_set("could not enable OpenGL double buffering");
+			error_set("gl: could not enable double buffering");
 			goto fail;
 		}
 	}
