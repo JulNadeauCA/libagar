@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.84 2002/11/09 06:01:51 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.85 2002/11/10 01:43:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -298,10 +298,7 @@ object_path(char *obname, const char *suffix)
 
 /* XXX too intricate */
 
-/*
- * Add a noderef at m:x,y, and a back reference to it.
- * Map must be locked, ob->pos must not.
- */
+/* Add a noderef at m:x,y, and a back reference to it. */
 struct mappos *
 object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
     struct map *m, Uint32 x, Uint32 y)
@@ -309,6 +306,8 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	struct object *ob = p;
 	struct node *node;
 	struct mappos *pos;
+
+	pthread_mutex_lock(&m->lock);
 
 	node = &m->map[y][x];
 	pos = emalloc(sizeof(struct mappos));
@@ -321,6 +320,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	pos->nref = node_addref(node, ob, offs, flags);
 	if (pos->nref == NULL) {
 		free(pos);
+		pthread_mutex_unlock(&m->lock);
 		return (NULL);
 	}
 
@@ -342,6 +342,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	ob->pos = pos;
 	pthread_mutex_unlock(&ob->pos_lock);
 	
+	pthread_mutex_unlock(&m->lock);
 	return (pos);
 }
 
