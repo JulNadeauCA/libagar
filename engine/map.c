@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.207 2004/03/10 03:20:11 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.208 2004/03/10 04:30:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1419,24 +1419,21 @@ media_import(int argc, union evarg *argv)
 			text_msg(MSG_ERROR, "%s", error_get());
 			continue;
 		}
-
+		
 		switch (t) {
 		case NODEREF_SPRITE:
 			node = &m->map[mv->esel.y][mv->esel.x];
-			node_destroy(m, node);
-			node_init(node);
-			dprintf("+sprite: %s:%d\n", ob->name, ind);
+			node_clear(m, node, m->cur_layer);
 			r = node_add_sprite(m, node, ob, ind);
+			r->layer = m->cur_layer;
 			break;
 		case NODEREF_ANIM:
 			node = &m->map[mv->esel.y][mv->esel.x];
-			node_destroy(m, node);
-			node_init(node);
-			dprintf("+anim: %s:%d\n", ob->name, ind);
+			node_clear(m, node, m->cur_layer);
 			r = node_add_anim(m, node, ob, ind, NODEREF_ANIM_AUTO);
+			r->layer = m->cur_layer;
 			break;
 		case -1:					/* Submap */
-			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
 			/*
 			 * Copy the elements of a fragment submap. The NULL
 			 * references are translated to the object itself,
@@ -1452,11 +1449,14 @@ media_import(int argc, union evarg *argv)
 					struct node *dn = &m->map[dy][dx];
 					struct noderef *r;
 
-					node_destroy(m, dn);
-					node_init(dn);
-					node_copy(submap, sn, -1, m, dn, -1);
+					node_clear(m, dn, m->cur_layer);
+					node_copy(submap, sn, -1, m, dn,
+					    m->cur_layer);
 
 					TAILQ_FOREACH(r, &dn->nrefs, nrefs) {
+						if (r->layer != m->cur_layer) {
+							continue;
+						}
 						switch (r->type) {
 						case NODEREF_SPRITE:
 							if (r->r_sprite.obj
@@ -1487,6 +1487,7 @@ media_import(int argc, union evarg *argv)
 						default:
 							break;
 						}
+						r->layer = m->cur_layer;
 					}
 				}
 			}
