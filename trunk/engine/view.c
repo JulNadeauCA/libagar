@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.41 2002/05/22 02:03:23 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.42 2002/05/25 08:56:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -358,16 +358,24 @@ scroll(struct map *m, int dir)
 {
 	switch (dir) {
 	case DIR_UP:
-		decrease_uint32(&m->view->mapy, 1, 0);
+		if (--m->view->mapy < 0) {
+			m->view->mapy = 0;
+		}
 		break;
 	case DIR_DOWN:
-		increase_uint32(&m->view->mapy, 1, m->maph - m->view->maph);
+		if (++m->view->mapy > (m->maph - m->view->maph)) {
+			m->view->mapy = (m->maph - m->view->maph);
+		}
 		break;
 	case DIR_LEFT:
-		decrease_uint32(&m->view->mapx, 1, 0);
+		if (--m->view->mapx < 0) {
+			m->view->mapx = 0;
+		}
 		break;
 	case DIR_RIGHT:
-		increase_uint32(&m->view->mapx, 1, m->mapw - m->view->mapw);
+		if (++m->view->mapx > (m->mapw - m->view->mapw)) {
+			m->view->mapx = (m->mapw - m->view->mapw);
+		}
 		break;
 	}
 	m->redraw++;
@@ -437,15 +445,18 @@ view_attach(void *parent, void *child)
 }
 
 /*
- * Detach a window from a view, free its resouces immediately.
- * Will lock view.
+ * Detach a window from a view.
+ * Window must be locked.
  */
 void
 view_detach(void *parent, void *child)
 {
 	struct viewport *view = parent;
 	struct window *win = child;
-	
+
+	OBJECT_ASSERT(parent, "viewport");
+	OBJECT_ASSERT(child, "window");
+
 	/* Notify the child being detached. */
 	if (OBJECT_OPS(win)->ondetach != NULL) {
 		OBJECT_OPS(win)->ondetach(view, win);
@@ -454,8 +465,6 @@ view_detach(void *parent, void *child)
 	pthread_mutex_lock(&view->lock);
 	TAILQ_REMOVE(&view->windowsh, win, windows);
 	pthread_mutex_unlock(&view->lock);
-
-	object_destroy(win);
 }
 
 SDL_Surface *
