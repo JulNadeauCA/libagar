@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.157 2004/09/18 06:37:42 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.158 2004/10/14 05:20:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <config/have_jpeg.h>
-#include <config/have_x11.h>
 
 #include <compat/dir.h>
 
@@ -53,10 +52,6 @@
 
 #ifdef HAVE_JPEG
 #include <jpeglib.h>
-#endif
-
-#if defined(DEBUG) && defined(HAVE_X11)
-#include <SDL_syswm.h>
 #endif
 
 /* Read-only as long as the engine is running. */
@@ -149,19 +144,6 @@ view_init(enum gfx_engine ge)
 	         "(ckey=0x%x, alpha=0x%04x)\n"),
 	    vfmt->BitsPerPixel, vfmt->colorkey,
 	    vfmt->alpha);
-
-#if defined(DEBUG) && defined(HAVE_X11)
-	{
-		SDL_SysWMinfo wminf;
-
-		if (SDL_GetWMInfo(&wminf)) {
-			dprintf("enabled synchronous x11 events\n");
-			wminf.info.x11.lock_func();
-			XSynchronize(wminf.info.x11.display, 1);
-			wminf.info.x11.unlock_func();
-		}
-	}
-#endif
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
