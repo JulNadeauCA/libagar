@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.86 2002/11/13 23:13:32 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.87 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,6 +26,7 @@
  */
 
 #include "engine.h"
+#include "compat/asprintf.h"
 
 #include <sys/stat.h>
 
