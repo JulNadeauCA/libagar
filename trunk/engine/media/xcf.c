@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.4 2002/12/23 03:05:44 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.5 2002/12/24 10:32:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -64,7 +64,7 @@ extern ssize_t	pwrite(int, const void *, size_t, off64_t);
 #define DEBUG_LAYER_NAMES	0x400
 #define DEBUG_UNKNOWN_PROPS	0x800
 
-int	xcf_debug = DEBUG_CHANNELS|DEBUG_PARASITES;
+int	xcf_debug = 0;
 #define	engine_debug xcf_debug
 #endif
 
