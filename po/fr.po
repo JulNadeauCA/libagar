@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.26 2004/02/15 03:33:48 vedge Exp $
+# $Csoft: fr.po,v 1.27 2004/02/24 13:32:42 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -565,7 +565,7 @@ msgid "%s node"
 msgstr "Noeud sur «%s»"
 
 msgid "Remove"
-msgstr "Enlever"
+msgstr "Supprimer"
 
 msgid "Dup"
 msgstr "Reproduire"
