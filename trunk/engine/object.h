@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.55 2002/11/15 00:23:21 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.56 2002/11/27 05:11:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -95,7 +95,7 @@ char		*object_name(const char *, int);
 char		*object_path(char *, const char *);
 
 struct mappos  *object_addpos(void *, Uint32, Uint32, struct input *,
-		    struct map *, Uint32, Uint32);
+		    struct map *, Uint32, Uint32, Uint32);
 struct mappos  *object_movepos(void *, struct map *, Uint32, Uint32);
 void		object_delpos(void *);
 struct mappos  *object_get_pos(void *);
