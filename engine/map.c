@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.241 2005/04/02 04:08:29 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.242 2005/04/04 01:06:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1485,7 +1485,8 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
 			char num[16];
 
-			snprintf(num, sizeof(num), "s%u", r->r_sprite.offs);
+			snprintf(num, sizeof(num), "  (s%u)",
+			    r->r_sprite.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
 			freesu++;
@@ -1500,7 +1501,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
 			char num[16];
 
-			snprintf(num, sizeof(num), "a%u", r->r_anim.offs);
+			snprintf(num, sizeof(num), "  (a%u)", r->r_anim.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
 			freesu++;
@@ -2025,6 +2026,8 @@ map_edit(void *p)
 	    view->w/4, view->h/4,
 	    view->w/2, view->h/2);
 
+	widget_replace_surface(mv->status, mv->status->surface,
+	    text_render(NULL, -1, COLOR(TEXT_COLOR), _("Select a tool.")));
 	widget_focus(mv);
 	return (win);
 }
