@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.29 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.30 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -98,7 +98,7 @@ magnifier_window(void *p)
 	window_set_caption(win, "Magnifier");
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	vb = vbox_new(win, 0);
+	vb = vbox_new(win, VBOX_WFILL|VBOX_HOMOGENOUS);
 	{
 		struct button *button;
 
@@ -107,7 +107,7 @@ magnifier_window(void *p)
 		    "%p", mag);
 	}
 
-	vb = vbox_new(win, 0);
+	vb = vbox_new(win, VBOX_WFILL);
 	{
 		struct textbox *tbox;
 
