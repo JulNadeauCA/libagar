@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.13 2005/02/24 05:26:44 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.14 2005/02/27 03:13:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 
 #include <engine/loader/surface.h>
 
+#include <engine/widget/cursors.h>
 #include <engine/widget/window.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/fspinbutton.h>
@@ -45,6 +46,8 @@
 
 #include "tileset.h"
 #include "tileview.h"
+
+static SDL_Cursor *saved_cursor = NULL;
 
 void
 pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
@@ -585,7 +588,7 @@ pixmap_redo(struct tileview *tv, struct tile_element *tel)
 	dprintf("redo (curblk=%d )\n", px->curblk);
 }
 
-void
+int
 pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
     Uint32 pixel, int once)
 {
@@ -608,7 +611,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 	}
 	if (i >= 0) {
 		if (once)
-			return;
+			return (1);
 	} else {
 		ublk->umods = Realloc(ublk->umods, (ublk->numods+1) *
 				                   sizeof(struct pixmap_umod));
@@ -691,6 +694,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 		}
 		break;
 	}
+	return (0);
 }
 
 void
@@ -844,21 +848,106 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 		px->blend_mode = bmode_save;
 }
 
+static void
+fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
+    Uint32 cOrig, Uint32 cFill)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *pDst = (Uint8 *)px->su->pixels +
+		     y*px->su->pitch +
+		     x*px->su->format->BytesPerPixel;
+	Uint32 cDst = *(Uint32 *)pDst;
+
+	if (cDst != cOrig)
+		return;
+	
+	if (pixmap_put_pixel(tv, tel, x, y, cFill, 1) == 1)
+		return;
+
+	if (x-1 >= 0)		fill_ortho(tv, tel, x-1, y, cOrig, cFill);
+	if (y-1 >= 0)		fill_ortho(tv, tel, x, y-1, cOrig, cFill);
+	if (x+1 < px->su->w)	fill_ortho(tv, tel, x+1, y, cOrig, cFill);
+	if (y+1 < px->su->h)	fill_ortho(tv, tel, x, y+1, cOrig, cFill);
+}
+
+static void
+pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 r, g, b, a = (Uint8)(px->a*255);
+	Uint8 *keystate;
+	Uint8 *pOrig = (Uint8 *)px->su->pixels +
+		     y*px->su->pitch +
+		     x*px->su->format->BytesPerPixel;
+	Uint32 cOrig = *(Uint32 *)pOrig, cFill;
+
+	keystate = SDL_GetKeyState(NULL);
+	if (keystate[SDLK_e]) {
+		r = 0;
+		g = 0;
+		b = 0;
+		a = 0;
+	} else {
+		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
+	}
+	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
+	fill_ortho(tv, tel, x, y, cOrig, cFill);
+	tv->tile->flags |= TILE_DIRTY;
+}
+
 void
 pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     int x, int y, int button)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *keystate;
 
 	pixmap_begin_undoblk(px);
-	pixmap_apply(tv, tel, x, y);
-
+	
+	keystate = SDL_GetKeyState(NULL);
+	if (keystate[SDLK_f]) {
+		pixmap_fill(tv, tel, x, y);
+	} else {
+		tv->tv_pixmap.state = TILEVIEW_PIXMAP_FREEHAND;
+		pixmap_apply(tv, tel, x, y);
+	}
 }
 
 void
 pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
     int y, int button)
 {
+	tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
+}
+
+void
+pixmap_keydown(struct tileview *tv, struct tile_element *tel,
+    int keysym, int keymod)
+{
+	switch (keysym) {
+	case SDLK_f:
+		if (saved_cursor == NULL) {
+			saved_cursor = SDL_GetCursor();
+			SDL_SetCursor(fill_cursor);
+		}
+		break;
+	case SDLK_e:
+		if (saved_cursor == NULL) {
+			saved_cursor = SDL_GetCursor();
+			SDL_SetCursor(erase_cursor);
+		}
+		break;
+	}
+}
+
+void
+pixmap_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
+    int keymod)
+{
+	if (saved_cursor != NULL) {
+		SDL_SetCursor(saved_cursor);
+		saved_cursor = NULL;
+	}
 }
 
 void
@@ -867,7 +956,6 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 
-	if (state & SDL_BUTTON_LEFT) {
+	if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND)
 		pixmap_apply(tv, tel, x, y);
-	}
 }

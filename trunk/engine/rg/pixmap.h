@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.8 2005/02/22 08:44:16 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.9 2005/02/23 07:37:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -78,15 +78,17 @@ void pixmap_mousebuttonup(struct tileview *, struct tile_element *,
 			  int, int, int);
 void pixmap_mousemotion(struct tileview *, struct tile_element *,
 		        int, int, int, int, int);
-int  pixmap_mousewheel(struct tileview *, struct tile_element *, int);
+int pixmap_mousewheel(struct tileview *, struct tile_element *, int);
+void pixmap_keydown(struct tileview *, struct tile_element *, int, int);
+void pixmap_keyup(struct tileview *, struct tile_element *, int, int);
 
 void pixmap_begin_undoblk(struct pixmap *);
 void pixmap_undo(struct tileview *, struct tile_element *);
 void pixmap_redo(struct tileview *, struct tile_element *);
 void pixmap_register_umod(struct pixmap *, enum pixmap_umod_type, Uint16,
                           Uint16, Uint32);
-void pixmap_put_pixel(struct tileview *, struct tile_element *, int, int,
-                      Uint32, int);
+int pixmap_put_pixel(struct tileview *, struct tile_element *, int, int,
+                     Uint32, int);
 void pixmap_apply_brush(struct tileview *, struct tile_element *, int, int,
 			Uint32);
 
