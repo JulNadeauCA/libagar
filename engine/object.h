@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.2 2002/01/25 11:17:26 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.3 2002/01/30 12:46:34 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -51,7 +51,6 @@ struct object {
 	int	 nsprites;	/* Sprite count */
 	pthread_mutex_t lock;	/* Lock on sprite list */
 
-	void	 (*time_hook)(struct object *);
 	void	 (*event_hook)(struct object *, SDL_Event *);
 	void	 (*destroy_hook)(struct object *);
 	int	 (*load)(void *, char *);
