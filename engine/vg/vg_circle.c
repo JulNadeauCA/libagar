@@ -1,4 +1,4 @@
-/*	$Csoft: vg_points.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.1 2004/03/30 16:03:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -51,14 +51,14 @@ vg_circle_diameter(struct vg *vg, double diameter)
 void
 vg_draw_circle(struct vg *vg, struct vg_element *vge)
 {
-#ifdef DEBUG
-	if (vge->nvertices < 2)
-		fatal("no vertices specified");
-#endif
-	vg_circle_primitive(vg,
-	    VG_X(vg, vge->vertices[0]), VG_Y(vg, vge->vertices[1]),
-	    VG_PX(vg, vge->vg_circle.radius),
-	    vge->color);
-}
+	int rx, ry, radius;
 
+#ifdef DEBUG
+	if (vge->nvtx < 2)
+		fatal("<2 vertices");
+#endif
+	vg_rcoords(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
+	vg_rlength(vg, vge->vg_circle.radius, &radius);
+	vg_circle_primitive(vg, rx, ry, radius, vge->color);
+}
 

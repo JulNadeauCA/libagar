@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.2 2004/03/30 16:05:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -22,7 +22,6 @@ enum vg_alignment {
 };
 #include "close_code.h"
 
-#include <engine/vg/vg_vertex.h>
 #include <engine/vg/vg_point.h>
 #include <engine/vg/vg_line.h>
 #include <engine/vg/vg_circle.h>
@@ -64,19 +63,23 @@ struct vg_fill_style {
 		VG_PATTERN
 	} style;
 	struct {
-		struct object *sobj;
-		Uint32 soffs;
+		struct object *gfx_obj;
+		Uint32 gfx_offs;
 	} pat;
 	Uint32 color;
 };
 
+struct vg_vertex {
+	double x, y, z, w;
+};
+
 struct vg_element {
 	enum vg_element_type type;
-	double *vertices;
-	int    nvertices;
-	Uint32 color;
-	struct vg_line_style line;
-	struct vg_fill_style fill;
+	struct vg_vertex *vtx;				/* Vertices */
+	unsigned int	 nvtx;
+	Uint32 color;					/* Foreground color */
+	struct vg_line_style line;			/* Line style */
+	struct vg_fill_style fill;			/* Filling style */
 	union {
 		struct {
 			double radius;
@@ -98,13 +101,15 @@ struct vg_element {
 
 struct vg {
 	int flags;
-#define VG_ANTIALIAS	0x01
-#define VG_HWSURFACE	0x02
+#define VG_ANTIALIAS	0x01		/* Anti-alias where possible */
+#define VG_HWSURFACE	0x02		/* Prefer video memory for fragments */
+#define VG_VISORIGIN	0x04		/* Display an origin indicator */
 
 	pthread_mutex_t lock;
 	double w, h, scale;		/* Geometry in tiles */
 	double ox, oy;			/* Origin offset */
 	Uint32 fill_color;		/* Background filling color */
+	Uint32 origin_color;		/* Origin point color */
 	struct object *pobj;		/* Parent object */
 	SDL_Surface *su;		/* Surface for rasterization */
 	struct map *submap;		/* Pointer to the fragment submap */
@@ -112,31 +117,32 @@ struct vg {
 	TAILQ_HEAD(,vg_element) vges;	/* Graphic elements */
 };
 
-#define VG_X(vg,v) ((int)((v)*(vg)->scale*TILESZ) + \
-                     (int)((vg)->ox*(vg)->scale*TILESZ))
-#define VG_Y(vg,v) ((int)((v)*(vg)->scale*TILESZ) + \
-                     (int)((vg)->oy*(vg)->scale*TILESZ))
 #define VG_PX(vg,v) ((int)((v)*(vg)->scale*TILESZ))
 
 __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
 void		 vg_destroy(struct vg *);
 void		 vg_scale(struct vg *, double, double, double);
-__inline__ void	 vg_mvtail(struct vg *, struct vg_element *);
-__inline__ void	 vg_mvhead(struct vg *, struct vg_element *);
 __inline__ void	 vg_regen_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
-#ifdef DEBUG
-__inline__ int	 vg_x(struct vg *, double);
-__inline__ int	 vg_y(struct vg *, double);
-#endif
+
+__inline__ void	 vg_vcoords(struct vg *, int, int, int, int, double *,
+                            double *);
+__inline__ void  vg_rcoords(struct vg *, double, double, int *, int *);
+__inline__ void  vg_rlength(struct vg *, double, int *);
 
 __inline__ void	   vg_origin(struct vg *, double, double);
 struct vg_element *vg_begin(struct vg *, enum vg_element_type);
 #define		   vg_end(vg) /* nothing */
 
-__inline__ void	vg_clear(struct vg *);
-__inline__ void	vg_rasterize(struct vg *);
+struct vg_vertex *vg_vertex2(struct vg *, double, double);
+struct vg_vertex *vg_vertex3(struct vg *, double, double, double);
+struct vg_vertex *vg_vertex4(struct vg *, double, double, double, double);
+void		  vg_vertex_array(struct vg *, const struct vg_vertex *,
+		                  unsigned int);
+
+void	vg_clear(struct vg *);
+void	vg_rasterize(struct vg *);
 __END_DECLS
 
 #include "close_code.h"

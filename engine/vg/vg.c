@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.2 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.3 2004/03/30 16:05:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <engine/view.h>
 
 #include "vg.h"
+#include "vg_primitive.h"
 
 static const struct {
 	enum vg_element_type type;
@@ -57,6 +58,7 @@ vg_new(void *p, int flags)
 	vg->h = 0;
 	vg->scale = 1;
 	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
+	vg->origin_color = SDL_MapRGB(vfmt, 200, 200, 255);
 	vg->su = NULL;
 	vg->pobj = ob;
 	vg->ox = 0.5;
@@ -86,7 +88,7 @@ vg_destroy(struct vg *vg)
 	     vge != TAILQ_END(&vg->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vges);
-		Free(vge->vertices, M_VG);
+		Free(vge->vtx, M_VG);
 		Free(vge, M_VG);
 	}
 
@@ -168,7 +170,6 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	if (scale < 0)
 		fatal("neg scale");
 #endif
-
 	vg->w = w;
 	vg->h = h;
 	vg->scale = scale;
@@ -194,24 +195,24 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
-	vge->vertices = NULL;
-	vge->nvertices = 0;
-	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
+	vge->vtx = NULL;
+	vge->nvtx = 0;
 	vge->line.style = VG_CONTINUOUS;
 	vge->line.stipple = 0x0;
 	vge->line.thickness = 1;
 	vge->fill.style = VG_NOFILL;
-	vge->fill.pat.sobj = NULL;
-	vge->fill.pat.soffs = 0;
+	vge->fill.pat.gfx_obj = NULL;
+	vge->fill.pat.gfx_offs = 0;
 	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
 	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
+	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
 	switch (eltype) {
 	case VG_POINTS:
 		vge->vg_point.radius = 0.05;
 		break;
 	case VG_CIRCLE:
-		vge->vg_circle.radius = 0.1;
+		vge->vg_circle.radius = 0.025;
 		break;
 	case VG_TEXT:
 		vge->vg_text.text[0] = '\0';
@@ -224,27 +225,23 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	return (vge);
 }
 
-/* Move the given element to the tail of the list. */
-void
-vg_mvtail(struct vg *vg, struct vg_element *vge)
-{
-	TAILQ_REMOVE(&vg->vges, vge, vges);
-	TAILQ_INSERT_TAIL(&vg->vges, vge, vges);
-}
-
-/* Move the given element to the head of the list. */
-void
-vg_mvhead(struct vg *vg, struct vg_element *vge)
-{
-	TAILQ_REMOVE(&vg->vges, vge, vges);
-	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
-}
-
 /* Clear the surface with the filling color. */
 void
 vg_clear(struct vg *vg)
 {
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
+}
+
+static __inline__ void
+vg_draw_origin(struct vg *vg)
+{
+	int rx, ry, radius;
+
+	vg_rcoords(vg, vg->ox, vg->oy, &rx, &ry);
+	vg_rlength(vg, 0.325, &radius);
+	vg_circle_primitive(vg, rx, ry, radius, vg->origin_color);
+	vg_line_primitive(vg, rx, ry, rx+radius, ry, vg->origin_color);
+	vg_line_primitive(vg, rx, ry, rx, ry+radius, vg->origin_color);
 }
 
 void
@@ -254,12 +251,16 @@ vg_rasterize(struct vg *vg)
 	int i;
 
 	vg_clear(vg);
+
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < nvge_types; i++) {
 			if (vge_types[i].type == vge->type)
 				vge_types[i].draw_func(vg, vge);
 		}
 	}
+	if (vg->flags & VG_VISORIGIN)
+		vg_draw_origin(vg);
+
 	vg_regen_fragments(vg);
 }
 
@@ -270,28 +271,98 @@ vg_origin(struct vg *vg, double x, double y)
 	vg->oy = y;
 }
 
+/* Translate tile coordinates to vg coordinates. */
+void
+vg_vcoords(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
+    double *vy)
+{
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ -
+	    vg->ox/vg->scale;
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ -
+	    vg->oy/vg->scale;
+}
+
+/* Translate vg coordinates to raster coordinates. */
+void
+vg_rcoords(struct vg *vg, double vx, double vy, int *rx, int *ry)
+{
+	*rx = (int)(vx*vg->scale*TILESZ) + (int)(vg->ox*vg->scale*TILESZ);
+	*ry = (int)(vy*vg->scale*TILESZ) + (int)(vg->oy*vg->scale*TILESZ);
 #ifdef DEBUG
-int
-vg_x(struct vg *vg, double v)
-{
-	int px = (int)(v*vg->scale*TILESZ) +
-	         (int)(vg->ox*vg->scale*TILESZ);
-
-	if (px > vg->su->w) {
-		fatal("out of bounds");
-	}
-	return (px);
+	if (*rx > vg->su->w || *ry > vg->su->h)
+		dprintf("%d,%d > %ux%u\n", *rx, *ry, vg->su->w, vg->su->h);
+#endif
 }
 
-int
-vg_y(struct vg *vg, double v)
+/* Translate vg length to pixel length. */
+void
+vg_rlength(struct vg *vg, double len, int *rlen)
 {
-	int py = (int)(v*vg->scale*TILESZ) +
-	         (int)(vg->ox*vg->scale*TILESZ);
-
-	if (py > vg->su->h) {
-		fatal("out of bounds");
-	}
-	return (py);
+	*rlen = (int)(len*vg->scale*TILESZ);
 }
-#endif /* DEBUG */
+
+static __inline__ struct vg_vertex *
+vg_alloc_vertex(struct vg_element *vge)
+{
+	if (vge->vtx == NULL) {
+		vge->vtx = Malloc(sizeof(struct vg_vertex), M_VG);
+	} else {
+		vge->vtx = Realloc(vge->vtx,
+		    (vge->nvtx+1)*sizeof(struct vg_vertex), M_VG);
+	}
+	return (&vge->vtx[vge->nvtx++]);
+}
+
+struct vg_vertex *
+vg_vertex2(struct vg *vg, double x, double y)
+{
+	struct vg_vertex *vtx;
+
+	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx->x = x;
+	vtx->y = y;
+	vtx->z = 0;
+	vtx->w = 1.0;
+	return (vtx);
+}
+
+struct vg_vertex *
+vg_vertex3(struct vg *vg, double x, double y, double z)
+{
+	struct vg_vertex *vtx;
+
+	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx->x = x;
+	vtx->y = y;
+	vtx->z = z;
+	vtx->w = 1.0;
+	return (vtx);
+}
+
+struct vg_vertex *
+vg_vertex4(struct vg *vg, double x, double y, double z, double w)
+{
+	struct vg_vertex *vtx;
+
+	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx->x = x;
+	vtx->y = y;
+	vtx->z = z;
+	vtx->w = w;
+	return (vtx);
+}
+
+void
+vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	unsigned int i;
+	
+	for (i = 0; i < nsvtx; i++) {
+		struct vg_vertex *vtx;
+
+		vtx = vg_alloc_vertex(vge);
+		memcpy(vtx, &svtx[i], sizeof(struct vg_vertex));
+	}
+}
+
