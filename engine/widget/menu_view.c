@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.10 2005/02/01 03:27:30 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.11 2005/02/03 04:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -290,7 +290,7 @@ ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	mview->panel = panel;
 	mview->pmenu = pmenu;
 	mview->pitem = pitem;
-	mview->hspace = 5;
+	mview->hspace = 6;
 	mview->vpadding = 4;
 
 	/* XXX */
@@ -394,18 +394,19 @@ ag_menu_view_scale(void *p, int w, int h)
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
 			struct AGMenuItem *subitem = &pitem->subitems[i];
-			int req_w = mview->hspace*3 + m->itemh;
+			int req_w = mview->hspace*2;
 
 			if (subitem->icon != -1) {
 				req_w += WIDGET_SURFACE(m,subitem->icon)->w +
 				    mview->hspace;
 			}
 			if (subitem->label != -1) {
-				req_w += WIDGET_SURFACE(m,subitem->label)->w;
+				req_w += WIDGET_SURFACE(m,subitem->label)->w +
+				    mview->hspace;
 			}
 			if (subitem->nsubitems > 0) {
 				req_w += WIDGET_SURFACE(mview,0)->w +
-				    mview->hspace*2;
+				    mview->hspace;
 			}
 			if (req_w > WIDGET(mview)->w) {
 				WIDGET(mview)->w = req_w;
