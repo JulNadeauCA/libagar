@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.30 2004/01/03 04:25:11 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.31 2004/02/20 04:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -26,10 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/debug.h>
 #ifdef DEBUG
 
+#include <engine/engine.h>
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
@@ -49,6 +49,7 @@
 static void
 poll_windows(int argc, union evarg *argv)
 {
+	char text[TLIST_LABEL_MAX];
 	struct tlist *tl = argv[0].p;
 	struct window *win;
 
@@ -56,7 +57,11 @@ poll_windows(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		tlist_insert_item(tl, NULL, OBJECT(win)->name, win);
+		strlcpy(text, OBJECT(win)->name, sizeof(text));
+		strlcat(text, " (", sizeof(text));
+		strlcat(text, win->caption, sizeof(text));
+		strlcat(text, ")", sizeof(text));
+		tlist_insert_item(tl, NULL, text, win);
 	}
 	pthread_mutex_unlock(&view->lock);
 
@@ -198,9 +203,18 @@ examine_widget(int argc, union evarg *argv)
 static void
 find_widgets(struct widget *wid, struct tlist *widtl, int depth)
 {
+	char text[TLIST_LABEL_MAX];
 	struct tlist_item *it;
 
-	it = tlist_insert_item(widtl, NULL, OBJECT(wid)->name, wid);
+	strlcpy(text, OBJECT(wid)->name, sizeof(text));
+	if (strcmp(wid->type, "window") == 0) {
+		struct window *win = (struct window *)wid;
+
+		strlcat(text, " (", sizeof(text));
+		strlcat(text, win->caption, sizeof(text));
+		strlcat(text, ")", sizeof(text));
+	}
+	it = tlist_insert_item(widtl, NULL, text, wid);
 	it->depth = depth;
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
