@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.150 2004/04/23 03:27:14 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.151 2004/04/27 11:41:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -299,6 +299,7 @@ mapview_destroy(void *p)
 	     tool != TAILQ_END(&mv->tools);
 	     tool = ntool) {
 		ntool = TAILQ_NEXT(tool, tools);
+		tool_destroy(tool);
 		Free(tool, M_MAPEDIT);
 	}
 	for (dcb = SLIST_FIRST(&mv->draw_cbs);
@@ -362,6 +363,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->status = (statbar != NULL) ?
 	             statusbar_add_label(statbar, LABEL_STATIC, "...") : NULL;
 	mv->curtool = NULL;
+	mv->nodeed.trigger = NULL;
+	mv->layed.trigger = NULL;
+	mv->mediasel.trigger = NULL;
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
 
@@ -414,33 +418,32 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "attached", mapview_attached, NULL);
+}
 
-	if (mv->toolbar != NULL) {
-		toolbar_add_button(toolbar, 0, ICON(GRID_ICON), 1,
-		    (flags & MAPVIEW_GRID),
-		    mapview_toggle_grid, "%p", mv);
-		toolbar_add_button(toolbar, 0, ICON(PROPS_ICON), 1,
-		    (flags & MAPVIEW_PROPS),
-		    mapview_toggle_props, "%p", mv);
-		toolbar_add_button(toolbar, 0, ICON(EDIT_ICON), 1,
-		    (flags & MAPVIEW_EDIT),
-		    mapview_toggle_rw, "%p", mv);
+/* Register standard map-level edition tools. */
+void
+mapview_reg_stdtools(struct mapview *mv)
+{
+	toolbar_add_button(mv->toolbar, 0, ICON(GRID_ICON), 1,
+	    (mv->flags & MAPVIEW_GRID),
+	    mapview_toggle_grid, "%p", mv);
+	toolbar_add_button(mv->toolbar, 0, ICON(PROPS_ICON), 1,
+	    (mv->flags & MAPVIEW_PROPS),
+	    mapview_toggle_props, "%p", mv);
+	toolbar_add_button(mv->toolbar, 0, ICON(EDIT_ICON), 1,
+	    (mv->flags & MAPVIEW_EDIT),
+	    mapview_toggle_rw, "%p", mv);
 #ifdef EDITION
-		mv->nodeed.trigger = toolbar_add_button(toolbar, 0,
-		    ICON(NODE_EDITOR_ICON), 1, 0,
-		    mapview_toggle_nodeedit, "%p", mv);
-		mv->layed.trigger = toolbar_add_button(toolbar, 0,
-		    ICON(LAYER_EDITOR_ICON), 1, 0,
-		    mapview_toggle_layedit, "%p", mv);
-		mv->mediasel.trigger = toolbar_add_button(toolbar, 0,
-		    ICON(MEDIASEL_ICON), 1, 0,
-		    mapview_toggle_mediasel, "%p", mv);
+	mv->nodeed.trigger = toolbar_add_button(mv->toolbar, 0,
+	    ICON(NODE_EDITOR_ICON), 1, 0,
+	    mapview_toggle_nodeedit, "%p", mv);
+	mv->layed.trigger = toolbar_add_button(mv->toolbar, 0,
+	    ICON(LAYER_EDITOR_ICON), 1, 0,
+	    mapview_toggle_layedit, "%p", mv);
+	mv->mediasel.trigger = toolbar_add_button(mv->toolbar, 0,
+	    ICON(MEDIASEL_ICON), 1, 0,
+	    mapview_toggle_mediasel, "%p", mv);
 #endif
-	} else {
-		mv->nodeed.trigger = NULL;
-		mv->layed.trigger = NULL;
-		mv->mediasel.trigger = NULL;
-	}
 }
 
 /*
