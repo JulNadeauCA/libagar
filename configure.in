@@ -1,7 +1,11 @@
-#	$Csoft: configure.in,v 1.7 2002/02/19 22:10:58 vedge Exp $
+# $Csoft$
 
 makeout(Makefile.config);
 inclout(engine/config.h);
+
+mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S");
+hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
+hdefine(DEBUG, 1);
 
 register("--with-smpeg",	"Play videos through the smpeg library [yes]");
 register("--without-smpeg",	"");
@@ -9,12 +13,7 @@ register("--without-smpeg",	"");
 if ("$1" = "--help") {
 	help();
 	exit(1);
-}
-
-if ("$1" = "--version") {
-	version();
-	exit(1);
-}
+};
 
 check(64bit);
 require(SDL, 1.2.0);
@@ -22,5 +21,5 @@ require(SDL, 1.2.0);
 if ("$WITHOUT_SMPEG" = "") {
 	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
 	check(smpeg, 0.4.3);
-}
+};
 
