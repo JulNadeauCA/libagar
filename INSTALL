@@ -1,11 +1,19 @@
 
-DEPENDENCIES
-------------
-
+Prerequisites
+-------------
 Agar requires the Software DirectMedia Layer (http://www.libsdl.org) as
 well as the FreeType library (http://www.freetype.org).
 
-INSTALLATION
+Options
+-------
+- The experimental GL mode (-g) requires an OpenGL library.
+- The video playback option requires the smpeg library, available from
+  http://www.icculus.org/smpeg/.
+- The screenshot feature (F9) requires the jpeg library, available from
+  ftp://ftp.uu.net/graphics/jpeg/.
+- Threads support (--enable-threads) requires POSIX threads.
+
+Installation
 ------------
 
 1) Execute the configure script (use `./configure --help' for options).
@@ -24,4 +32,4 @@ INSTALLATION
    $ cat config.log | \
      mail -s "compiles and runs ok" report@agar.csoft.org
 
-$Csoft: INSTALL,v 1.13 2004/01/26 08:54:48 vedge Exp $
+$Csoft: INSTALL,v 1.14 2004/03/10 14:30:41 vedge Exp $
