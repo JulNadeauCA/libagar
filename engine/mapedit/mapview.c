@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.166 2004/11/21 11:17:12 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.167 2004/11/23 02:54:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1039,6 +1039,7 @@ key_down(int argc, union evarg *argv)
 				     OBJECT_READONLY)))) {
 					continue;
 				}
+				tool->mv = mv;
 				kbinding->func(tool, 1);
 			}
 		}
