@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.23 2002/03/05 06:34:31 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.24 2002/03/05 13:26:40 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -49,10 +49,7 @@ struct mapedit {
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
 	Uint32	x, y;			/* Cursor position */
-	Uint32	mmapx, mmapy;		/* Mouse coordinates */
-
-	Uint32	cursor_speed;		/* Cursor speed in ms */
-	Uint32	listw_speed;		/* List scrolling speed in ms */
+	Uint32	mmapx, mmapy, mtmapy;	/* Mouse coordinates */
 
 	struct	eobjs_head eobjsh;	/* Editor object references */
 	int	neobjs;
@@ -62,12 +59,20 @@ struct mapedit {
 	int	curflags;		/* Default map entry flags */
 
 	struct	mapdir cursor_dir;	/* Cursor direction */
-	struct	gendir listw_dir;	/* Tile list window direction */
-	struct	gendir olistw_dir;	/* Obj list window direction */
+	Uint32	cursor_speed;		/* Cursor speed in ms */
+	Uint32	listw_speed;		/* List scrolling speed in ms */
 	
-	SDL_Rect	tilelist;	/* Tile list (right) */
-	SDL_Rect	tilestack;	/* Tile stack (left) */
-	SDL_Rect	objlist;	/* Object list (top) */
+	/* Tile stack (left) */
+	SDL_Rect tilestack;		/* Region */
+
+	/* Tile list (right) */
+	SDL_Rect tilelist;		/* Region */
+	struct	 gendir listw_dir;	/* Scrolling direction */
+	int	 tilelist_offs;		/* First reference to show */
+
+	/* Obj list (top) */
+	SDL_Rect objlist;
+	struct	 gendir olistw_dir;
 
 	SDL_TimerID timer;
 };
