@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.117 2002/09/16 16:03:59 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.118 2002/11/10 01:43:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -69,20 +69,31 @@ static __inline__ void
 node_init(struct node *node)
 {
 	memset(node, 0, sizeof(struct node));
+#ifdef DEBUG
+	strncpy(node->magic, NODE_MAGIC, 16);
+#endif
 	TAILQ_INIT(&node->nrefsh);
 }
 
 static __inline__ void
 node_free(struct map *m, int x, int y)
 {
-	struct node *_node = &m->map[(y)][(x)];
-	struct noderef *_nref, *_nextnref;
+	struct node *node = &m->map[(y)][(x)];
+	struct noderef *nref, *nextnref;
 
-	for (_nref = TAILQ_FIRST(&_node->nrefsh);
-	     _nref != TAILQ_END(&_node->nrefsh);
-	     _nref = _nextnref) {
-		_nextnref = TAILQ_NEXT(_nref, nrefs);
-		free(_nref);
+#ifdef DEBUG
+	if (strcmp(NODE_MAGIC, node->magic) != 0 ||
+	    node->x != x || node->y != y) {
+		fatal("inconsistent node");
+	}
+	strncpy(node->magic, "bad", 16);
+#endif
+
+	for (nref = TAILQ_FIRST(&node->nrefsh);
+	     nref != TAILQ_END(&node->nrefsh);
+	     nref = nextnref) {
+		nextnref = TAILQ_NEXT(nref, nrefs);
+		free(nref);
 	}
 }
 
@@ -96,7 +107,6 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 	Uint32 i, x, y;
 	struct node *node;
 
-	
 	m->mapw = w;
 	m->maph = h;
 
@@ -253,6 +263,12 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 {
 	struct noderef *nref;
 
+#ifdef DEBUG
+	if (strcmp(node->magic, NODE_MAGIC) != 0) {
+		fatal("inconsistent node");
+	}
+#endif
+
 	nref = emalloc(sizeof(struct noderef));
 	nref->pobj = (struct object *)ob;
 	nref->offs = offs;
@@ -283,6 +299,12 @@ node_popref(struct node *node)
 {
 	struct noderef *nref;
 
+#ifdef DEBUG
+	if (strcmp(node->magic, NODE_MAGIC) != 0) {
+		fatal("inconsistent node");
+	}
+#endif
+
 	if (TAILQ_EMPTY(&node->nrefsh)) {
 		return (NULL);
 	}
@@ -305,6 +327,12 @@ node_popref(struct node *node)
 void
 node_pushref(struct node *node, struct noderef *nref)
 {
+#ifdef DEBUG
+	if (strcmp(node->magic, NODE_MAGIC) != 0) {
+		fatal("inconsistent node");
+	}
+#endif
+
 	TAILQ_INSERT_HEAD(&node->nrefsh, nref, nrefs);
 	node->nnrefs++;
 	
@@ -320,6 +348,12 @@ node_pushref(struct node *node, struct noderef *nref)
 int
 node_delref(struct node *node, struct noderef *nref)
 {
+#ifdef DEBUG
+	if (strcmp(node->magic, NODE_MAGIC) != 0) {
+		fatal("inconsistent node");
+	}
+#endif
+
 	if (nref->flags & MAPREF_ANIM) {
 		node->nanims--;
 	}
@@ -362,8 +396,7 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
 			
-			memset(node, 0, sizeof(struct node));
-			TAILQ_INIT(&node->nrefsh);
+			node_init(node);
 			node->flags = nflags;
 #ifdef DEBUG
 			node->x = x;
@@ -923,7 +956,7 @@ map_verify(struct map *m)
 {
 	pthread_t verify_th;
 
-	pthread_create(&verify_th, NULL, map_verify_loop, m);
+	Pthread_create(&verify_th, NULL, map_verify_loop, m);
 }
 
 #endif	/* DEBUG */
