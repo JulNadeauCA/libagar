@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.214 2004/03/18 06:08:12 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.215 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -879,19 +879,20 @@ map_load(void *ob, struct netbuf *buf)
 		error_set(_("Too many map layers."));
 		goto fail;
 	}
-	dprintf("%ux%u nodes, %u layers\n", m->mapw, m->maph, m->nlayers);
-	if (m->layers > 0) {
-		m->layers = Malloc(m->nlayers * sizeof(struct map_layer),
-		    M_MAP);
-		for (i = 0; i < m->nlayers; i++) {
-			struct map_layer *lay = &m->layers[i];
+	if (m->nlayers < 1) {
+		error_set(_("Missing layer zero."));
+		goto fail;
+	}
+	m->layers = Realloc(m->layers, m->nlayers*sizeof(struct map_layer),
+	    M_MAP);
+	for (i = 0; i < m->nlayers; i++) {
+		struct map_layer *lay = &m->layers[i];
 
-			copy_string(lay->name, buf, sizeof(lay->name));
-			lay->visible = (int)read_uint8(buf);
-			lay->xinc = read_sint16(buf);
-			lay->yinc = read_sint16(buf);
-			lay->alpha = read_uint8(buf);
-		}
+		copy_string(lay->name, buf, sizeof(lay->name));
+		lay->visible = (int)read_uint8(buf);
+		lay->xinc = read_sint16(buf);
+		lay->yinc = read_sint16(buf);
+		lay->alpha = read_uint8(buf);
 	}
 	m->cur_layer = (int)read_uint8(buf);
 	m->origin.layer = (int)read_uint8(buf);
