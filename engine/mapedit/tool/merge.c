@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.22 2003/03/11 01:57:32 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.23 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -211,11 +211,7 @@ merge_window(void *p)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		static const char *mode_items[] = {
-			"Fill",
 			"Replace",
-			"Insert highest",
-			"Insert empty",
-			"Erase",
 			NULL
 		};
 		struct radio *rad;
