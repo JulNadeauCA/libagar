@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.30 2004/03/21 07:03:22 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.31 2004/03/24 08:46:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -548,9 +548,12 @@ poll_gfx(int argc, union evarg *argv)
 				struct gfx_cached_sprite *csp;
 
 				snprintf(label, sizeof(label),
-				    "%ux%ux%u (%d bytes)",
+				    "%ux%ux%u (%d bytes%s)",
 				    su->w, su->h, su->format->BitsPerPixel,
-				    (int)su->w*su->h*su->format->BytesPerPixel);
+				    (int)su->w*su->h*su->format->BytesPerPixel,
+				    (su->flags & SDL_SRCALPHA) ? ", alpha":
+				    (su->flags & SDL_SRCCOLORKEY) ? ", ckey":
+				    "");
 
 				it = tlist_insert_item(tl, gfx->sprites[i],
 				    label, gfx->sprites[i]);
