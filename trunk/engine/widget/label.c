@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.71 2003/09/07 00:20:34 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.72 2003/11/09 13:13:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,9 +55,9 @@ enum {
 struct label *
 label_new(void *parent, const char *fmt, ...)
 {
+	char buf[LABEL_MAX];
 	struct label *label;
 	va_list args;
-	char buf[LABEL_MAX];
 
 	va_start(args, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, args);
