@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.28 2002/11/28 07:35:13 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.29 2002/12/13 07:38:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -320,7 +320,9 @@ input_event(enum input_type type, SDL_Event *ev)
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
+#if 0
 		dprintf("%s: unbound input event\n", OBJECT(in)->name);
+#endif
 		goto done;
 	}
 	switch (type) {
