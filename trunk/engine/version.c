@@ -51,50 +51,50 @@
  */
 
 int
-version_read(int fd, char *osig, int overmin, int overmaj)
+version_read(int fd, const struct version *ver)
 {
 	char sig[64];
 	int siglen;
 	Uint32 vermin, vermaj;
 	char *user, *host;
 
-	siglen = strlen(osig);
+	siglen = strlen(ver->name);
 
 	if (read(fd, sig, siglen) != siglen ||
-	    strncmp(sig, osig, siglen) != 0) {
-		fatal("%s: bad magic\n", osig);
+	    strncmp(sig, ver->name, siglen) != 0) {
+		fatal("%s: bad magic\n", ver->name);
 		return (-1);
 	}
-	vermaj = fobj_read_uint32(fd);
 	vermin = fobj_read_uint32(fd);
+	vermaj = fobj_read_uint32(fd);
 	user = fobj_read_string(fd);
 	host = fobj_read_string(fd);
 
-	if (vermaj != overmaj) {
-		fatal("%s: : v%d.%d > %d.%d\n", osig,
-		    vermaj, vermin, overmaj, overmin);
+	if (vermaj != ver->vermaj) {
+		fatal("%s: : v%d.%d != %d.%d major differs\n", ver->name,
+		    vermaj, vermin, ver->vermaj, ver->vermin);
 		return (-1);
 	}
-	if (vermin != overmin) {
-		warning("%s: v%d.%d != %d.%d\n", osig,
-		    vermaj, vermin, overmaj, overmin);
+	if (vermin != ver->vermin) {
+		warning("%s: v%d.%d != %d.%d\n", ver->name,
+		    vermaj, vermin, ver->vermaj, ver->vermin);
 	}
 
-	dprintf("%s: v%d.%d (%s@%s)\n", osig, vermin, vermaj, user, host);
+	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
 	free(user);
 
 	return (0);
 }
 
 int
-version_write(int fd, char *osig, int overmin, int overmaj)
+version_write(int fd, const struct version *ver)
 {
 	struct passwd *pw;
 	char host[64];
 
-	write(fd, osig, strlen(osig));
-	fobj_write_uint32(fd, overmaj);
-	fobj_write_uint32(fd, overmin);
+	write(fd, ver->name, strlen(ver->name));
+	fobj_write_uint32(fd, ver->vermin);
+	fobj_write_uint32(fd, ver->vermaj);
 	
 	pw = getpwuid(getuid());
 	fobj_write_string(fd, pw->pw_name);
