@@ -123,62 +123,6 @@ echo "*** Get it from http://www.libsdl.org/"
 echo "ERROR: SDL >= 1.2.0 is missing"
 exit 1
 fi
-echo -n "checking for glib >= 1.2.0..."
-if [ -x "`which glib-config`" ]; then
-GLIB_VERSION=`glib-config --version`
-else
-GLIB_VERSION=""
-fi
-if [ -x "`which glib-config`" ]; then
-GLIB_CFLAGS=`glib-config --cflags`
-else
-GLIB_CFLAGS=""
-fi
-if [ -x "`which glib-config`" ]; then
-GLIB_LIBS=`glib-config --libs`
-else
-GLIB_LIBS=""
-fi
-if [ -x "`which glib12-config`" ]; then
-GLIB12_VERSION=`glib12-config --version`
-else
-GLIB12_VERSION=""
-fi
-if [ -x "`which glib12-config`" ]; then
-GLIB12_CFLAGS=`glib12-config --cflags`
-else
-GLIB12_CFLAGS=""
-fi
-if [ -x "`which glib12-config`" ]; then
-GLIB12_LIBS=`glib12-config --libs`
-else
-GLIB12_LIBS=""
-fi
-if [ "$GLIB_VERSION" != "" ]; then
-GLIB_FOUND=yes
-echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
-echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
-else
-NONE=1
-fi
-if [ "$GLIB12_VERSION" != "" ]; then
-GLIB_FOUND=yes
-GLIB_CFLAGS=$GLIB12_CFLAGS
-GLIB_LIBS=$GLIB12_LIBS
-echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
-echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
-else
-NONE=1
-fi
-if [ "$GLIB_FOUND" = "yes" ]; then
-echo "ok"
-else
-echo "missing"
-echo "*** This package requires glib >= 1.2.0"
-echo "*** Get it from http://www.gtk.org/"
-echo "ERROR: Missing glib"
-exit 1
-fi
 if [ "$WITHOUT_SMPEG" = "" ]; then
 echo -n "checking for x11..."
 if [ -d /usr/X11R6 ]; then
