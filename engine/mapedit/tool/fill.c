@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.18 2003/05/08 04:14:55 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.19 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@ const struct tool_ops fill_ops = {
 		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	fill_window,
 	NULL,			/* cursor */

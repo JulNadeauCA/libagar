@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.27 2003/05/07 13:07:52 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.28 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,7 +40,8 @@ const struct tool_ops magnifier_ops = {
 		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	magnifier_window,
 	NULL,
@@ -111,7 +112,7 @@ magnifier_window(void *p)
 	{
 		struct textbox *tbox;
 
-		tbox = textbox_new(reg, "%: ", 0, 100, -1);	/* XXX int */
+		tbox = textbox_new(reg, "%: ");			/* XXX int */
 		event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
 		textbox_printf(tbox, "100");
 	}

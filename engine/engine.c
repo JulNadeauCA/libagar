@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.100 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.101 2003/05/20 11:30:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -191,7 +191,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 			for (i = 0; i < njoys; i++)
 				input_new(INPUT_JOY, i);
 		}
-		keycodes_init();
 	}
 
 	world = object_new(NULL, "world", "world", NULL);

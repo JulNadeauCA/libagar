@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.59 2003/05/22 08:30:57 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.60 2003/05/22 09:51:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,10 +45,11 @@ static struct widget_ops tlist_ops = {
 		NULL,		/* init */
 		tlist_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	tlist_draw,
-	NULL		/* update */
+	NULL			/* size */
 };
 
 enum {

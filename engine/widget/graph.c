@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.28 2003/05/08 11:59:20 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.29 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,8 @@ const struct widget_ops graph_ops = {
 		NULL,		/* init */
 		graph_destroy,
 		graph_load,
-		graph_save
+		graph_save,
+		NULL		/* edit */
 	},
 	graph_draw,
 	NULL		/* update */

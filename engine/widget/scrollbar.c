@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.22 2003/04/17 03:59:17 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.23 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,7 +40,8 @@ const struct widget_ops scrollbar_ops = {
 		NULL,		/* init */
 		widget_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	scrollbar_draw,
 	NULL		/* update */

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.77 2003/05/19 01:15:56 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.78 2003/05/20 11:30:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -11,26 +11,23 @@
 #include "begin_code.h"
 
 struct map;
-struct noderef;
 struct input;
 struct event;
 
-/* Generic object operations */
 struct object_ops {
 	void	(*init)(void *, char *);		/* Initialize */
 	void	(*destroy)(void *);			/* Free resources */
 	int	(*load)(void *, struct netbuf *);	/* Load from network */
 	int	(*save)(void *, struct netbuf *);	/* Save to network */
+	void	(*edit)(void *);			/* Edition */
 };
 
-/* Object dependency table */
 struct object_table {
 	struct object	**objs;
 	Uint32		 nobjs;
 	int		 *used;
 };
 
-/* Unique position in the world */
 struct object_position {
 	struct map	*map;		/* Map (or NULL) */
 	int		 x, y;		/* Map coordinates */
@@ -44,7 +41,6 @@ struct object_position {
 #define OBJECT_TYPE_MAX		32
 #define OBJECT_NAME_MAX		64
 
-/* Generic object */
 struct object {
 	char	 type[OBJECT_TYPE_MAX];	/* Type of object */
 	char	 name[OBJECT_NAME_MAX];	/* Identifier */

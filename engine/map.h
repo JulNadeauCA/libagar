@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.90 2003/04/25 23:01:42 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.91 2003/05/18 00:16:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -122,12 +122,14 @@ struct map {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC void		 map_init(void *, char *);
 extern DECLSPEC struct map	*map_new(void *, char *);
 
+extern DECLSPEC void	 map_init(void *, char *);
 extern DECLSPEC int	 map_load(void *, struct netbuf *);
 extern DECLSPEC int	 map_save(void *, struct netbuf *);
 extern DECLSPEC void	 map_destroy(void *);
+extern DECLSPEC void	 map_edit(void *);
+
 extern DECLSPEC int	 map_alloc_nodes(struct map *, unsigned int,
 			                 unsigned int);
 extern DECLSPEC void	 map_free_nodes(struct map *);
