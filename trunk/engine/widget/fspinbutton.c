@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.2 2003/11/15 03:52:45 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.3 2003/11/17 15:11:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -184,6 +184,7 @@ fspinbutton_init(struct fspinbutton *fsu, double min, double max,
 	fsu->input = textbox_new(fsu, label);
 	fsu->unit = &identity_unit;
 	fsu->units = NULL;
+	fsu->writeable = 1;
 	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
 	pthread_mutex_init(&fsu->lock, NULL);
 
@@ -378,8 +379,7 @@ fspinbutton_set_precision(struct fspinbutton *fsu, int precision)
 
 /* Select which unit system to use. */
 void
-fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[],
-    double mindiv, double maxdiv)
+fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
 {
 	const struct unit *unit;
 
@@ -395,10 +395,6 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[],
 	for (unit = &units[0]; unit->abbr != NULL; unit++) {
 		struct tlist_item *it;
 
-		if ((!isinf(mindiv) && unit->divider < mindiv) ||
-		    (!isinf(maxdiv) && unit->divider > maxdiv)) {
-			continue;
-		}
 		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
 		    unit);
 		if (unit->divider == 1) {
@@ -410,3 +406,17 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[],
 	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
+/* Set the writeability of a fspinbutton. */
+void
+fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
+{
+	fsu->writeable = writeable;
+	textbox_set_writeable(fsu->input, writeable);
+	if (writeable) {
+		button_enable(fsu->incbu);
+		button_enable(fsu->decbu);
+	} else {
+		button_disable(fsu->incbu);
+		button_disable(fsu->decbu);
+	}
+}
