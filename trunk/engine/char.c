@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.11 2002/02/11 23:33:27 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.12 2002/02/14 05:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -263,8 +263,23 @@ char_del(struct character *ch, struct map *m, int x, int y)
 int
 char_move(struct character *ch, int nx, int ny)
 {
+	struct map_aref *aref;
+	int oxoffs, oyoffs;
+
+	/* XXX recurse */
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, -1);
+	oxoffs = aref->xoffs;
+	oyoffs = aref->yoffs;
+
 	char_del(ch, ch->map, ch->x, ch->y);
 	char_add(ch, ch->map, nx, ny);
+
+	/* XXX recurse */
+	aref = node_arefobj(&ch->map->map[nx][ny],
+	    (struct object *)ch, -1);
+	aref->xoffs = oxoffs;
+	aref->yoffs = oyoffs;
 
 	ch->x = nx;
 	ch->y = ny;
