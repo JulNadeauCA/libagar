@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.5 2002/11/15 04:18:33 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.1 2002/11/17 23:13:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -61,7 +61,7 @@ tl_windows_poll(int argc, union evarg *argv)
 	tlist_clear_items(tl_windows);
 
 	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH(win, &view->windows, windows) {
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		tlist_insert_item(tl_windows, NULL, OBJECT(win)->name, win);
 	}
 	pthread_mutex_unlock(&view->lock);
@@ -140,20 +140,32 @@ tl_windows_selected(int argc, union evarg *argv)
 	{
 		label_new(reg, 100, 0, "Identifier: \"%s\"",
 		    OBJECT(pwin)->name);
-		label_new(reg, 100, 0, "Flags: 0x%x", pwin->flags);
-		label_new(reg, 100, 0, "Caption: \"%s\"", pwin->caption);
-		label_new(reg, 100, 0, "Titlebar height: %d pixels",
-		    pwin->titleh);
-		label_new(reg, 100, 0, "Geometry: %dx%d (min %dx%d) at [%d,%d]",
-		    pwin->rd.w, pwin->rd.h, pwin->minw, pwin->minh,
-		    pwin->rd.x, pwin->rd.y);
-		label_new(reg, 100, 0, "Region spacing: %d pixels",
-		    pwin->spacing);
-		label_new(reg, 100, 0, "Body: %dx%d at [%d,%d]",
-		    pwin->body.w, pwin->body.h, pwin->body.x, pwin->body.y);
 
-		label_new(reg, 100, 0, "Focus: %s",
-		    (pwin->focus != NULL) ? OBJECT(pwin->focus)->name : "none");
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Flags: 0x%x", &pwin->flags);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Caption: \"%s\"", &pwin->caption);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Titlebar height: %d pixels", &pwin->titleh);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Geometry: %[wxh] (min %dx%d) at %[x,y]",
+		    &pwin->rd,
+		    &pwin->minw, &pwin->minh,
+		    &pwin->rd);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Region spacing: %d pixels",
+		    &pwin->spacing);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Body: %[rect]", &pwin->body);
+
+		label_polled_new(reg, 100, 0, &pwin->lock,
+		    "Focus: %p",
+		    &pwin->focus);
 	}
 	
 	reg = region_new(win, 0, 0, 70, 60, 30);
