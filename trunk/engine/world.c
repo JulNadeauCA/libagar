@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.63 2003/03/30 03:37:29 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.64 2003/04/12 01:45:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -49,7 +49,7 @@ int	world_debug = DEBUG_STATE|DEBUG_GC;
 void
 world_init(struct world *wo, char *name)
 {
-	object_init(&wo->obj, "world", name, NULL, 0, &world_ops);
+	object_init(&wo->obj, "world", name, 0, &world_ops);
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjs);
 	pthread_mutex_init(&wo->lock, &recursive_mutexattr);

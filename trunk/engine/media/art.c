@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.35 2003/04/14 08:56:22 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.36 2003/04/17 08:21:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -182,7 +182,7 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 	fragmap = Malloc(sizeof(struct map));
 	snprintf(mapname, sizeof(mapname), "frag-%s%u", art->name,
 	    art->nsubmaps);
-	map_init(fragmap, mapname, NULL);
+	map_init(fragmap, mapname);
 	if (map_alloc_nodes(fragmap, mw, mh) == -1) {
 		fatal("map_alloc_nodes: %s", error_get());
 	}
@@ -252,19 +252,19 @@ art_unused(struct art *art)
 
 /* Load graphical data associated with an object. */
 struct art *
-art_fetch(char *archive, struct object *ob)
+art_fetch(struct object *ob, const char *key)
 {
 	char path[FILENAME_MAX];
-	struct art *art;
+	struct art *art = NULL;
 	struct fobj *fob;
 	struct netbuf buf;
 	Uint32 i;
 
 	pthread_mutex_lock(&artq_lock);
 
-	/* Look for a cached entry. XXX inefficient */
+	/* Look for a cached entry. */
 	TAILQ_FOREACH(art, &artq, arts) {
-		if (strcmp(art->name, archive) == 0)
+		if (strcmp(art->name, key) == 0)
 			break;
 	}
 	if (art != NULL) {
@@ -274,17 +274,11 @@ art_fetch(char *archive, struct object *ob)
 	}
 
 	/* Load the data file. */
-	if (object_path(archive, "fob", path, sizeof(path)) == -1) {
-		if (ob->flags & OBJECT_ART_CAN_FAIL) {
-			ob->flags &= ~(OBJECT_ART);
-			goto out;
-		} else {
-			fatal("loading %s: %s", archive, error_get());
-		}
-	}
+	if (object_path(key, "fob", path, sizeof(path)) == -1)
+		goto out;
 
 	art = Malloc(sizeof(struct art));
-	art->name = Strdup(archive);
+	art->name = Strdup(key);
 	art->pobj = ob;				/* For submap refs */
 	art->sprites = NULL;
 	art->csprites = NULL;
@@ -304,9 +298,8 @@ art_fetch(char *archive, struct object *ob)
 		char mapname[OBJECT_NAME_MAX];
 
 		art->tile_map = Malloc(sizeof(struct map));
-		snprintf(mapname, sizeof(mapname), "t-%s", archive);
-		map_init(art->tile_map, mapname, NULL);
-
+		snprintf(mapname, sizeof(mapname), "t-%s", key);
+		map_init(art->tile_map, mapname);
 		if (map_alloc_nodes(art->tile_map, 2, 2) == -1)
 			fatal("failed node alloc: %s", error_get());
 	} else {
@@ -319,10 +312,8 @@ art_fetch(char *archive, struct object *ob)
 
 	netbuf_init(&buf, fob->fd, NETBUF_BIG_ENDIAN);
 	for (i = 0; i < fob->head.nobjs; i++) {
-		if (xcf_load(&buf, (off_t)fob->offs[i], art) == -1) {
-			debug(DEBUG_LOADING, "loading xcf in slot %d: %s\n", i, error_get());
-			abort();
-		}
+		if (xcf_load(&buf, (off_t)fob->offs[i], art) == -1)
+			fatal("loading xcf in slot %d: %s\n", i, error_get());
 	}
 	netbuf_destroy(&buf);
 	fobj_free(fob);
@@ -515,10 +506,8 @@ art_anim_tick(struct art_anim *an, struct noderef *nref)
 SDL_Surface *
 art_get_sprite(struct object *ob, Uint32 i)
 {
-	if ((ob->flags & OBJECT_ART) == 0)
-		fatal("%s: no art", ob->name);
 	if (ob->art == NULL)
-		fatal("%s: null art", ob->name);
+		fatal("no art in %s", ob->name);
 	if (i > ob->art->nsprites)
 		fatal("no sprite at %s:%d", ob->name, i);
 
@@ -528,10 +517,8 @@ art_get_sprite(struct object *ob, Uint32 i)
 struct art_anim *
 art_get_anim(struct object *ob, Uint32 i)
 {
-	if ((ob->flags & OBJECT_ART) == 0)
-		fatal("%s: no art", ob->name);
 	if (ob->art == NULL)
-		fatal("%s: null art", ob->name);
+		fatal("no art in %s", ob->name);
 	if (i > ob->art->nanims)
 		fatal("no anim at %s:%d", ob->name, i);
 	return (ob->art->anims[i]);
@@ -544,7 +531,6 @@ tl_medias_poll(int argc, union evarg *argv)
 	struct art *art;
 
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&artq_lock);
 	TAILQ_FOREACH(art, &artq, arts) {
 		tlist_insert_item(tl,
@@ -552,7 +538,6 @@ tl_medias_poll(int argc, union evarg *argv)
 		    art->name, art);
 	}
 	pthread_mutex_unlock(&artq_lock);
-
 	tlist_restore_selections(tl);
 }
 

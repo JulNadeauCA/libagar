@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.160 2003/03/26 10:04:15 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.162 2003/04/17 08:18:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -132,12 +132,15 @@ mapedit_init(void)
 	struct mapedit *med = &mapedit;
 	int i;
 
-	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_STATIC|OBJECT_RELOAD_PROPS,
+	object_init(&med->obj, "map-editor", "map-editor",
+	    OBJECT_STATIC|OBJECT_RELOAD_PROPS,
 	    &mapedit_ops);
+	if (object_load_art(med, "mapedit", 1) == -1)
+		fatal("mapedit: %s", error_get());
+
 	med->curtool = NULL;
 	med->src_node = NULL;
-	map_init(&med->copybuf, "mapedit-copybuf", NULL);
+	map_init(&med->copybuf, "mapedit-copybuf");
 
 	prop_set_uint32(med, "default-map-width", 64);
 	prop_set_uint32(med, "default-map-height", 32);
@@ -167,8 +170,8 @@ mapedit_init(void)
 	/* Create the toolbar. */
 	win = med->win.toolbar = window_new("mapedit-toolbar", 0,
 	    0, 0,
-	    94, 153,
-	    63, 126);
+	    63, 185,
+	    46, 135);
 	window_set_caption(win, "Tools");
 	window_set_spacing(win, 0, 0);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: art.h,v 1.9 2003/03/22 04:21:47 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.10 2003/03/24 12:08:43 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -67,7 +67,7 @@ struct art {
 #define ANIM(ob, i)	((struct object *)(ob))->art->anims[(i)]
 #endif
 
-struct art	*art_fetch(char *, struct object *);
+struct art	*art_fetch(struct object *, const char *);
 void		 art_unused(struct art *);
 void		 art_wire(struct art *);
 void		 art_scan_alpha(SDL_Surface *);

@@ -1,4 +1,4 @@
-/*	$Csoft: timer.c,v 1.2 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: timer.c,v 1.3 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,8 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <engine/compat/snprintf.h>
 
+#include <engine/engine.h>
 #include <engine/timer.h>
 #include <engine/world.h>
 
@@ -53,9 +54,7 @@ timer_new(const char *name, Uint32 ival, Uint32 (*callback)(Uint32, void *),
 
 	timer = Malloc(sizeof(struct timer));
 	timer_init(timer, name, ival, callback, arg);
-
 	world_attach(timer);
-
 	return (timer);
 }
 
@@ -63,11 +62,10 @@ void
 timer_init(struct timer *timer, const char *name, Uint32 ival,
     Uint32 (*callback)(Uint32, void *), void *arg)
 {
-	char *tname;
+	char tname[OBJECT_NAME_MAX];
 
-	Asprintf(&tname, "t-%s", name);
-	object_init(&timer->obj, "timer", tname, NULL, 0, &timer_ops);
-	free(tname);
+	snprintf(tname, sizeof(tname), "t-%s", name);
+	object_init(&timer->obj, "timer", tname, 0, &timer_ops);
 
 	timer->ival = ival;
 	timer->callback = callback;
