@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.18 2003/03/05 16:13:09 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.20 2003/09/30 02:37:24 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -42,6 +42,24 @@ all-subdir:
 		done; \
 	fi)
 
+all-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
+
 clean-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
@@ -54,6 +72,24 @@ clean-subdir:
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
 		    if [ $$? != 0 ]; then \
 		    	exit 1; \
+		    fi; \
+		done; \
+	fi)
+
+clean-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
 		    fi; \
 		done; \
 	fi)
@@ -74,6 +110,23 @@ install-subdir:
 		done; \
 	fi)
 
+install-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ install); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
 
 deinstall-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
@@ -87,6 +140,24 @@ deinstall-subdir:
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
 		    if [ $$? != 0 ]; then \
 		    	exit 1; \
+		    fi; \
+		done; \
+	fi)
+
+deinstall-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
 		    fi; \
 		done; \
 	fi)
@@ -107,6 +178,25 @@ depend-subdir:
 		done; \
 	fi)
 
+depend-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ depend); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
+
+
 cleandir-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
@@ -119,6 +209,24 @@ cleandir-subdir:
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
 		    if [ $$? != 0 ]; then \
 		    	exit 1; \
+		    fi; \
+		done; \
+	fi)
+
+cleandir-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
 		    fi; \
 		done; \
 	fi)
@@ -139,5 +247,26 @@ regress-subdir:
 		done; \
 	fi)
 
-.PHONY:	all-subdir clean-subdir cleandir-subdir install-subdir deinstall-subdir  depend-subdir regress-subdir
+regress-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ regress); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
 
+.PHONY:	all-subdir clean-subdir cleandir-subdir
+.PHONY: install-subdir deinstall-subdir depend-subdir regress-subdir
+.PHONY:	all-subdir-ifexists clean-subdir-ifexists cleandir-subdir-ifexists
+.PHONY: install-subdir-ifexists deinstall-subdir-ifexists
+.PHONY: depend-subdir-ifexists regress-subdir-ifexists

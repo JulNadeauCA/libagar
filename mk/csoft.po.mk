@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.8 2003/08/13 03:57:04 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.11 2003/09/28 17:34:24 vedge Exp $
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -25,6 +25,7 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 XGETTEXT?=	xgettext
+XGETTEXT_FLAGS?=--no-location
 MSGMERGE?=	msgmerge
 MSGMERGE_FLAGS?=--no-location
 MSGFMT?=	msgfmt
@@ -36,7 +37,13 @@ MOS?=
 
 .SUFFIXES: .c .po .pox .mo
 
-all: ${DOMAIN}.pot ${MOS}
+all: all-subdir ${DOMAIN}.pot ${MOS}
+install: install-po install-subdir
+deinstall: deinstall-po deinstall-subdir
+clean: clean-po clean-subdir
+cleandir: cleandir-subdir
+regress: regress-subdir
+depend: depend-subdir
 
 .po.pox:
 	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
@@ -70,48 +77,39 @@ ${DOMAIN}.pot: ${POTFILES}
 		echo "${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
-		    --files-from=${POTFILES} -o $@"; \
+		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@"; \
 		${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
-		    --files-from=${POTFILES} -o $@; \
+		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
 
-depend:
-	# nothing
-
-regress:
-	# nothing
-
-clean:
+clean-po:
 	if [ "${POTFILES}" != "" -o "${MOS}" != "" ]; then \
 		echo "rm -f ${POTFILES} ${MOS}"; \
 		rm -f ${POTFILES} ${MOS}; \
 	fi
 
-cleandir:
-	# nothing
-
-install: ${MOS}
+install-po:
 	@export _mos="${MOS}"; \
 	if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" \
 	     -a "$$_mos" != "" ]; then \
             if [ ! -d "${LOCALEDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
-                ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
             fi; \
             for F in $$_mos; do \
 	        _lang=`echo $$F | sed 's,\.mo,,'`; \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang"; \
-                ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang; \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
-                ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
 		cp -f $$F ${DOMAIN}.mo; \
                 echo "${INSTALL_DATA} ${DOMAIN}.mo \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
-                ${INSTALL_DATA} ${DOMAIN}.mo \
+                ${SUDO} ${INSTALL_DATA} ${DOMAIN}.mo \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
 		rm -f ${DOMAIN}.mo; \
             done; \
@@ -119,18 +117,34 @@ install: ${MOS}
 		echo "skipping $@ (no gettext)"; \
 	fi
 
-deinstall:
+deinstall-po:
 	@export _mos="${MOS}"; \
         if [ "${HAVE_GETTEXT}" = "yes" -a "$$_mos" != "" ]; then \
             for F in $$_mos; do \
 	        _lang=`echo $$F | sed 's,\.mo,,'`; \
                 echo "${DEINSTALL_DATA} \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo"; \
-                ${DEINSTALL_DATA} \
+                ${SUDO} ${DEINSTALL_DATA} \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
             done; \
 	fi
 
-.PHONY: ${POTFILES}
+count:
+	@for F in ${POS}; do \
+		echo -n "$$F: "; \
+		cat $$F |grep "^msgid " |cut -c 7- |\
+		    perl -pe '!s/^\"(.*)\"/$$1/' | \
+		    perl -pe '!s/<.+>//g' | \
+		    perl -pe '!s/\\n//g' | \
+		    perl -pe '!s/&(lt|gt|nbsp|copy);//g' | \
+		    perl -pe '!s/`%[diouxXDOUeEfgGcspn]'\''/$$1/g' | \
+		    perl -pe '!s/%[diouxXDOUeEfgGcspn]/$$1/g' | \
+		    wc -w; \
+	done
+
+.PHONY: install deinstall clean cleandir regress depend
+.PHONY: install-po deinstall-po clean-po
+.PHONY: ${POTFILES} count
 
 include ${TOP}/mk/csoft.common.mk
+include ${TOP}/mk/csoft.subdir.mk
