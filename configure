@@ -702,6 +702,38 @@ else
 
 	echo "no"
 fi
+echo -n "checking for a setlocale() function..."
+echo -n "checking for a setlocale() function..." >> config.log
+cat << EOT > conftest.c
+#include <locale.h>
+
+int
+main(int argc, char *argv[])
+{
+	setlocale(LC_ALL, "");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SETLOCALE" > config/have_setlocale.h
+echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> config/have_setlocale.h
+echo "#endif /* HAVE_SETLOCALE */" >> config/have_setlocale.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SETLOCALE" > config/have_setlocale.h
+
+	echo "no"
+fi
 CFLAGS="$CFLAGS -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
 echo -n "checking for SDL (http://www.libsdl.org)..."
