@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.29 2004/03/09 06:22:11 vedge Exp $
+# $Csoft: fr.po,v 1.30 2004/03/10 17:17:26 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -336,7 +336,7 @@ msgstr "Type de propriété non supporté: %d."
 
 #, c-format
 msgid "%s has no `%s' property (type %d)."
-msgstr "%s n'a aucune propriété du nom de «%s» (type %d)."
+msgstr "%s ne possède aucune propriété du nom de «%s» (type %d)."
 
 msgid "The prop key too big."
 msgstr "Le chemin d'accès est trop grand."
@@ -619,7 +619,7 @@ msgid "Save set"
 msgstr "Sauvegarder"
 
 msgid "No brush name was given."
-msgstr "Aucun nom de pinceau n'a été donné."
+msgstr "Aucun nom de pinceau fut spécifié."
 
 #, c-format
 msgid "A `%s' brush exists."
