@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.17 2004/05/11 02:29:01 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.18 2004/05/11 02:53:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -223,9 +223,9 @@ static double degRa2K(double degRa) { return ((degRa-32-459.67)/1.8 + 273.15); }
 static double degR2K(double degR) { return (degR*1.25 + 273.15); }
 const struct unit temperature_units[] = {
 	{ "K",		N_("Kelvins"),			1,		NULL },
-	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	0,	      degC2k},
+	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	0,	      degC2K },
 	{ "\xc2\xb0\x46", N_("Degrees Farenheit"),	0,	      degF2K },
-	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0            degRa2K },
+	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0,           degRa2K },
 	{ "\xc2\xb0\x65", N_("Degrees Reaumur"),	0,            degR2K },
 	{ "\xc2\xb5K",	N_("Microkelvins"),		0.000001,	NULL },
 	{ "mK",		N_("Millikelvins"),		0.001,		NULL },
