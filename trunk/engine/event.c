@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.184 2004/05/24 00:37:17 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.185 2004/06/08 00:59:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -167,11 +167,12 @@ init_fps_counter(void)
 	window_set_closure(fps_win, WINDOW_HIDE);
 
 	fps_label = label_new(fps_win, LABEL_POLLED,
-	    "%dms (%dms nom.), %d events, %dms idle",
+	    "%dms (nom %dms), %d evnt, %dms idle",
 	    &view->refresh.r, &view->refresh.rnom, &event_count,
 	    &event_idletime);
+	label_prescale(fps_label, "___ms (nom ___ms), __ evnt, __ms idle");
 
-	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
+	fps_graph = graph_new(fps_win, _("Refresh rate"), GRAPH_LINES,
 	    GRAPH_ORIGIN, 100);
 	/* XXX use polling */
 
