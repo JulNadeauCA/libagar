@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.50 2002/07/29 04:05:36 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.51 2002/07/29 05:30:37 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -55,9 +55,9 @@ struct mapedit {
 	struct	 eobjs_head eobjsh;	/* Shadow object tree */
 	int	 neobjs;
 
-	struct	 editobj *curobj;
-	int	 curoffs;
-	int	 curflags;
+	struct	 editobj *curobj;	/* Current reference */
+	Uint32	 curoffs;		/* Current reference offset */
+	Uint32	 curflags;		/* Current node flags */
 };
 
 /* Editor sprites */
