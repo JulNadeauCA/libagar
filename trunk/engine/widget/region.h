@@ -1,4 +1,6 @@
-/*	$Csoft: region.h,v 1.3 2002/05/21 03:22:05 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.4 2002/05/24 09:15:31 vedge Exp $	*/
+
+TAILQ_HEAD(widgetsq, widget);
 
 /* Widget container, attach to windows. */
 struct region {
@@ -17,12 +19,12 @@ struct region {
 	int	rw, rh;			/* Requested geometry (%) */
 	int	x, y;			/* Allocated coordinates (pixels) */
 	int	w, h;			/* Allocated geometry (pixels) */
-	int	spacing;		/* Spacing between widgets */
+	int	spacing;		/* Spacing factor between widgets */
 
 	/* Set on attach */
 	struct	window *win;		/* Back pointer to window */
-	TAILQ_HEAD(, widget) widgetsh;	/* Child widgets */
-	SLIST_ENTRY(region) regions;	/* Regions in window */
+	struct	widgetsq widgetsh;	/* Child widgets */
+	TAILQ_ENTRY(region) regions;	/* Regions in window */
 };
 
 #ifdef DEBUG

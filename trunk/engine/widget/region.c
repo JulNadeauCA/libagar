@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.5 2002/05/24 09:15:31 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.6 2002/05/25 08:48:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	free(regname);
 
 	reg->flags = flags;
-#ifdef WIDGET_DEBUG
+#if 0
 	reg->flags |= REGION_BORDER;
 #endif
 
