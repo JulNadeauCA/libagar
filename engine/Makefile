@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.40 2002/09/04 03:18:47 vedge Exp $
+#	$Csoft: Makefile,v 1.41 2002/09/06 01:22:17 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -10,8 +10,8 @@ SHARE=	README.engine \
 
 CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${FREETYPE_CFLAGS} ${X11_CFLAGS}
 
-MAN3=	agar.3 map.3 object.3 view.3 version.3
-CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3 version.cat3
+MAN3=	agar.3 map.3 object.3 view.3 version.3 rootmap.3
+CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3 version.cat3 rootmap.cat3
 
 LIB=	engine
 
