@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.12 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.13 2004/04/30 05:24:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -517,10 +517,10 @@ vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
 	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ -
-	    vg->origin[0].x/vg->scale;
+	    vg->origin[0].x;
 	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ -
-	    vg->origin[0].y/vg->scale;
-
+	    vg->origin[0].y;
+	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		vg_snap_to(vg, vx, vy);
 	if (vg->ortho_mode != VG_NO_ORTHO)
