@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.23 2003/04/24 07:01:00 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.24 2003/05/06 05:54:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,6 +52,7 @@ tool_init(struct tool *tool, char *name, const void *ops)
 
 	snprintf(toolname, sizeof(toolname), "tool-%s", name);
 	object_init(&tool->obj, "tool", toolname, 0, ops);
+	object_load_art(tool, "tool", 0);
 
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;
