@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.106 2002/07/08 07:42:36 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.107 2002/07/20 02:09:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -968,6 +968,21 @@ done:
 	    totcomp * 100 / (m->mapw * m->maph), totcomp, (m->mapw * m->maph));
 	free(pobjs);
 	return (0);
+}
+
+/*
+ * Grow the map to ensure that m:[mx,my] is a valid node.
+ * Map must be locked.
+ */
+void
+map_adjust(struct map *m, Uint32 mx, Uint32 my)
+{
+	if (mx >= m->mapw) {
+		map_grow(m, m->mapw + mx, m->maph);
+	}
+	if (my >= m->maph) {
+		map_grow(m, m->mapw, m->maph + my);
+	}
 }
 
 #ifdef DEBUG

@@ -1,4 +1,4 @@
-/*	$Csoft: anim.h,v 1.7 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: anim.h,v 1.8 2002/06/09 15:04:29 vedge Exp $	*/
 /*	Public domain	*/
 
 struct anim {
@@ -11,5 +11,6 @@ struct anim {
 
 void	 anim_init(struct anim *, int);
 void	 anim_destroy(struct anim *);
-int	 anim_addframe(struct anim *, SDL_Surface *);
+int	 anim_add_frame(struct anim *, SDL_Surface *);
+void	 anim_insert(struct object_art *, struct anim *, int);
 

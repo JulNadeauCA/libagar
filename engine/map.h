@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.39 2002/06/25 17:42:18 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.40 2002/07/20 02:09:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -108,6 +108,7 @@ void	map_allocnodes(struct map *, Uint32, Uint32);
 void	map_freenodes(struct map *);
 void	map_shrink(struct map *, Uint32, Uint32);
 void	map_grow(struct map *, Uint32, Uint32);
+void	map_adjust(struct map *, Uint32, Uint32);
 #ifdef DEBUG
 void	map_verify(struct map *);
 #endif

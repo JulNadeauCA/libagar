@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.67 2002/07/20 16:11:40 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.68 2002/07/27 07:03:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,10 +48,7 @@ enum {
 	NSPRITES_INIT =	4,
 	NANIMS_GROW =	2,
 	NSPRITES_GROW = 2,
-	MAPW_INIT =	3,
-	MAPH_INIT =	16,
-	MAPW_GROW =	1,
-	MAPH_GROW =	8
+	TILEMAP_MINW =	2
 };
 
 static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
@@ -69,52 +66,9 @@ static const struct object_ops null_ops = {
 
 static struct object_art	*object_get_art(char *, struct object *);
 static struct object_audio	*object_get_audio(char *, struct object *);
-static __inline__ void		 adjust_map(struct object_art *);
 
-int
-object_addanim(struct object_art *art, struct anim *anim)
-{
-	if (art->anims == NULL) {			/* Initialize */
-		art->anims = emalloc(NANIMS_INIT * sizeof(struct anim *));
-		art->maxanims = NANIMS_INIT;
-		art->nanims = 0;
-	} else if (art->nanims >= art->maxanims) {	/* Grow */
-		struct anim **newanims;
-
-		newanims = erealloc(art->anims,
-		    (NANIMS_GROW * art->maxanims) * sizeof(struct anim *));
-		art->maxanims += NANIMS_GROW;
-		art->anims = newanims;
-	}
-	art->anims[art->nanims++] = anim;
-	
-	if (art->mx++ > art->map->mapw) {
-		art->mx = 0;
-	}
-	adjust_map(art);
-	node_addref(&art->map->map[art->my][art->mx], art->pobj,
-	    art->curanim++,
-	    MAPREF_ANIM|MAPREF_ANIM_DELTA);
-	return (0);
-}
-
-static __inline__ void
-adjust_map(struct object_art *art)
-{
-	if (art->mx >= art->map->mapw) {
-		map_grow(art->map,
-		    art->map->mapw+MAPW_GROW,
-		    art->map->maph);
-	}
-	if (art->my >= art->map->maph) {
-		map_grow(art->map,
-		    art->map->mapw,
-		    art->map->maph+MAPH_GROW);
-	}
-}
-
-int
-object_breaksprite(struct object_art *art, SDL_Surface *sprite)
+void
+object_break_sprite(struct object_art *art, SDL_Surface *sprite)
 {
 	int x, y, mw, mh;
 	SDL_Rect sd, rd;
@@ -136,32 +90,32 @@ object_breaksprite(struct object_art *art, SDL_Surface *sprite)
 			    TILEW, TILEH, 32,
 			    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 			if (s == NULL) {
-				fatal("SDL_AllocSurface: %s\n", SDL_GetError());
+				fatal("SDL_CreateRGBSurface: %s\n",
+				    SDL_GetError());
 			}
 
 			SDL_SetAlpha(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, s, &rd);
-			object_addsprite(art, s, 0);
+			object_add_sprite(art, s, MAPREF_SPRITE, 0);
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 
-			if (art->mx > art->map->mapw) {
+			if (art->mx > m->mapw) {
 				art->mx = 0;
 			}
-			adjust_map(art);
-			node_addref(&art->map->map[art->my][art->mx], art->pobj,
+			map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
+			node_addref(&m->map[art->my][art->mx], art->pobj,
 			    art->cursprite++, MAPREF_SPRITE);
 		}
 	}
 	SDL_FreeSurface(sprite);
-
-	return (0);
 }
 
-int
-object_addsprite(struct object_art *art, SDL_Surface *sprite, int map_tiles)
+void
+object_add_sprite(struct object_art *art, SDL_Surface *sprite, Uint32 mflags,
+    int map_tiles)
 {
 	if (art->sprites == NULL) {			/* Initialize */
 		art->sprites = emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
@@ -177,28 +131,15 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite, int map_tiles)
 	}
 	art->sprites[art->nsprites++] = sprite;
 
-	if (map_tiles) { 
-		if (++art->mx >= art->map->mapw) {
+	if (map_tiles && mapediting) { 
+		if (++art->mx > TILEMAP_MINW) {
 			art->mx = 0;
-			if (++art->my >= art->map->maph) {
-				map_grow(art->map,
-				    art->map->mapw,
-				    art->map->maph+MAPH_GROW);
-			}
+			art->my++;
 		}
-		
-		if (art->mx >= art->map->mapw)
-			map_grow(art->map,
-			    art->map->mapw+MAPW_GROW,
-			    art->map->maph);
-		if (art->my >= art->map->maph)
-			map_grow(art->map,
-			    art->map->mapw,
-			    art->map->maph+MAPH_GROW);
+		map_adjust(art->map, (Uint32)art->mx, (Uint32)art->my);
 		node_addref(&art->map->map[art->my][art->mx],
-		    art->pobj, art->cursprite++, MAPREF_SPRITE);
+		    art->pobj, art->cursprite++, mflags);
 	}
-	return (0);
 }
 
 /* Load images into the media pool. */
@@ -254,7 +195,7 @@ object_get_art(char *media, struct object *ob)
 			art->map = emalloc(sizeof(struct map));
 			sprintf(s, "t-%s", media);
 			map_init(art->map, s, NULL, 0);
-			map_allocnodes(art->map, MAPW_INIT, MAPH_INIT);
+			map_allocnodes(art->map, 1, 1);
 		}
 
 		fob = fobj_load(obpath);
