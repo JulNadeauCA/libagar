@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.8 2004/05/12 04:53:51 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.9 2004/06/18 03:11:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -136,9 +136,14 @@ void *
 error_realloc(void *oldp, size_t len)
 {
 	void *newp;
-	
-	if ((newp = realloc(oldp, len)) == NULL) {
-		fatal("realloc");
+
+	/* XXX redundant with most reallocs */
+	if (oldp == NULL) {
+		if ((newp = malloc(len)) == NULL)
+			fatal("malloc");
+	} else {
+		if ((newp = realloc(oldp, len)) == NULL)
+			fatal("realloc");
 	}
 	return (newp);
 }
