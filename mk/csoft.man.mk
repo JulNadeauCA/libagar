@@ -25,15 +25,6 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 NROFF?=	nroff
-MAN1?=""
-MAN2?=""
-MAN3?=""
-MAN4?=""
-MAN5?=""
-MAN6?=""
-MAN7?=""
-MAN8?=""
-MAN9?=""
 MANS=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 
 all: all-subdir preformat-man
