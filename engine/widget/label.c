@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -28,11 +28,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __linux__
+#define _GNU_SOURCE	/* for vasprintf() */
+#endif
+
 #include <sys/types.h>
 
-#include <unistd.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <engine/engine.h>
 #include <engine/queue.h>
@@ -57,6 +63,8 @@ static const struct widget_ops label_ops = {
 	NULL		/* widget event */
 };
 
+static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+
 struct label *
 label_new(struct region *reg, char *caption, int flags)
 {
@@ -73,13 +81,36 @@ label_new(struct region *reg, char *caption, int flags)
 }
 
 void
+label_printf(struct label *label, char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+	SDL_Surface *s;
+
+	va_start(args, fmt);
+	vasprintf(&buf, fmt, args);
+	va_end(args);
+
+	label->caption = erealloc(label->caption, strlen(buf));
+	sprintf(label->caption, buf);
+	free(buf);
+
+	SDL_FreeSurface(label->label_s);
+	s = TTF_RenderText_Solid(font, label->caption, white);
+	if (s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+	label->label_s = s;
+	WIDGET(label)->w = s->w;
+	WIDGET(label)->h = s->h;
+}
+
+void
 label_init(struct label *label, char *caption, int flags)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	SDL_Surface *s;
 
 	label->caption = strdup(caption);
-
 	s = TTF_RenderText_Solid(font, label->caption, white);
 	if (s == NULL) {
 		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
