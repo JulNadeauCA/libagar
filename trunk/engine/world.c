@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.16 2002/02/28 12:53:35 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.17 2002/03/04 03:19:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -65,7 +65,6 @@ savepath(char *obname, const char *suffix)
 	     p = strtok_r(NULL, ":;", &last)) {
 		sprintf(path, "%s/%s.%s", p, obname, suffix);
 		if (stat(path, &sta) == 0) {
-			dprintf("loading %s\n", path);
 			free(datapathp);
 			return (path);
 		}
@@ -136,6 +135,7 @@ world_load(void *p, int fd)
 	/* XXX load the state map */
 
 	dprintf("loading state\n");
+	pthread_mutex_lock(&wo->lock);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
@@ -143,6 +143,7 @@ world_load(void *p, int fd)
 		}
 		object_load(ob);
 	}
+	pthread_mutex_unlock(&wo->lock);
 	return (0);
 }
 
@@ -159,6 +160,8 @@ world_save(void *p, int fd)
 	/* Write the state map. */
 	soffs = lseek(fd, 0, SEEK_SET);
 	fobj_write_uint32(fd, 0);
+	
+	pthread_mutex_lock(&wo->lock);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
@@ -170,6 +173,7 @@ world_save(void *p, int fd)
 		object_save(ob);
 		nobjs++;
 	}
+	pthread_mutex_unlock(&wo->lock);
 	fobj_pwrite_uint32(fd, nobjs, soffs);
 	dprintf("%s: %d objects\n", wo->obj.name, nobjs);
 	return (0);
@@ -184,6 +188,8 @@ world_destroy(void *p)
 	if (world->curmap != NULL) {
 		map_unfocus(world->curmap);
 	}
+
+	pthread_mutex_lock(&wo->lock);
 
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		if (ob->vec->unlink != NULL) {
@@ -204,11 +210,14 @@ world_destroy(void *p)
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 	}
 	printf(".\n");
+	
+	pthread_mutex_unlock(&wo->lock);
 
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
-	
+	pthread_mutex_destroy(&wo->lock);
+
 	return (0);
 }
 
