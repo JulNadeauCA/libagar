@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.54 2002/12/03 04:00:09 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.55 2002/12/04 04:22:44 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -27,13 +27,13 @@ struct viewport {
 
 	/* Read-only */
 	gfx_engine_t	 gfx_engine;	/* Rendering method */
-	int		 w, h, bpp;	/* Viewport geometry */
 	SDL_Surface	*v;		/* Video surface */
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
-	struct {
-		int	w, h;		/* Viewport margin in pixels */
-	} margin;
 	
+	int	w, h, bpp;		/* Viewport geometry */
+	int	max_fps_ticks;		/* Maximum frames/second */
+	int	cur_fps_ticks;		/* Current frames/second */
+
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	int		 ndirty;	/* Number of rectangles to update */
 	int		 maxdirty;	/* Size of dirty rectangle array */
@@ -52,6 +52,7 @@ struct viewport {
 		VIEW_WINOP_RRESIZE,	/* Right resize */
 		VIEW_WINOP_HRESIZE,	/* Height resize */
 	} winop;
+
 	pthread_mutex_t		lock;	/* Lock on regions. */
 	pthread_mutexattr_t	lockattr;
 };
@@ -194,6 +195,7 @@ void	 view_attach(void *);
 void	 view_detach(void *);
 void	 view_detach_queued(void);
 void	 view_destroy(void *);
+void	 view_set_max_ticks(int);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
