@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.110 2003/03/14 07:20:55 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.111 2003/03/18 02:54:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -549,9 +549,9 @@ object_table_load(int fd, char *objname)
 		free(type);
 	}
 	pthread_mutex_unlock(&world->lock);
-
 	return (obt);
 fail:
+	pthread_mutex_unlock(&world->lock);
 	object_table_destroy(obt);
 	return (NULL);
 }
