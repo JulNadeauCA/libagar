@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.45 2003/04/16 18:17:11 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.46 2003/04/24 07:04:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -176,7 +176,7 @@ fileops_new_map(int argc, union evarg *argv)
 	m->origin.x = w / 2;
 	m->origin.y = h - 2;	/* XXX pref */
 
-	win = mapedit_win_new(m);
+	win = mapedit_window(m);
 	view_attach(win);
 	window_show(win);
 
@@ -228,7 +228,7 @@ fileops_load_map(int argc, union evarg *argv)
 		return;
 	}
 
-	win = mapedit_win_new(m);
+	win = mapedit_window(m);
 	view_attach(win);
 	window_show(win);
 

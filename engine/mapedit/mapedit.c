@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.164 2003/05/08 12:14:05 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.165 2003/05/18 00:16:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -94,6 +94,7 @@ static const struct tools_ent {
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
+/* Select a map edition tool. */
 static void
 mapedit_select_tool(int argc, union evarg *argv)
 {
@@ -122,51 +123,16 @@ mapedit_select_tool(int argc, union evarg *argv)
 	}
 }
 
-void
-mapedit_init(void)
+/* Create the toolbar. */
+static struct window *
+toolbar_window(struct window *tilesets_win)
 {
-	const int xdiv = 100, ydiv = 14;
 	struct window *win;
 	struct region *reg;
-	struct button *button;
 	struct mapedit *med = &mapedit;
-	int i;
+	const int xdiv = 100, ydiv = 14;	/* XXX ridiculous */
 
-	object_init(&med->obj, "map-editor", "map-editor", &mapedit_ops);
-	OBJECT(med)->flags |= OBJECT_RELOAD_PROPS;
-	if (object_load_art(med, "mapedit", 1) == -1)
-		fatal("mapedit: %s", error_get());
-
-	med->curtool = NULL;
-	med->src_node = NULL;
-	map_init(&med->copybuf, "mapedit-copybuf");
-
-	prop_set_uint32(med, "default-map-width", 64);
-	prop_set_uint32(med, "default-map-height", 32);
-	prop_set_uint32(med, "default-brush-width", 5);
-	prop_set_uint32(med, "default-brush-height", 5);
-	prop_set_bool(med, "sel-bounded-edition", 0);
-
-	mapedition = 1;
-
-	/* Initialize the map edition tools. */
-	for (i = 0; i < ntools; i++) {
-		const struct tools_ent *toolent = &tools[i];
-
-		*toolent->p = Malloc(toolent->size);
-		toolent->init(*toolent->p);
-	}
-	
-	/* Load the settings. */
-	object_load(&mapedit, NULL);
-
-	/* Create the dialogs. */
-	med->win.objlist = objq_window();
-	med->win.new_map = fileops_new_map_window();
-	med->win.load_map = fileops_load_map_window();
-	
-	/* Create the toolbar. */
-	win = med->win.toolbar = window_new("mapedit-toolbar", 0,
+	win = window_new("mapedit-toolbar", 0,
 	    0, 0,
 	    63, 185,
 	    46, 135);
@@ -176,16 +142,18 @@ mapedit_init(void)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
 	region_set_spacing(reg, 0, 0);
 	{
+		struct button *button;
+
 		button = button_new(reg, NULL,			/* New map */
 		    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, xdiv, ydiv);
 		event_new(button, "button-pushed", window_generic_show,
-		    "%p", med->win.new_map);
+		    "%p", fileops_new_map_window());
 		win->focus = WIDGET(button);
 		
 		button = button_new(reg, NULL,			/* Obj list */
 		    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, xdiv, ydiv);
 		event_new(button, "button-pushed", window_generic_show,
-		    "%p", med->win.objlist);
+		    "%p", tilesets_win);
 	
 		button = med->tools[MAPEDIT_STAMP]->button =
 		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_STAMP),
@@ -218,11 +186,13 @@ mapedit_init(void)
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	region_set_spacing(reg, 0, 0);
 	{
+		struct button *button;
+
 		button = button_new(reg, NULL,			/* Load map */
 		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, ydiv);
 		win->focus = WIDGET(button);
 		event_new(button, "button-pushed", window_generic_show,
-		    "%p", med->win.load_map);
+		    "%p", fileops_load_map_window());
 
 		button = med->tools[MAPEDIT_ERASER]->button =
 		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_ERASER),
@@ -266,11 +236,48 @@ mapedit_init(void)
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p", med->tools[MAPEDIT_FLIP]);
 	}
-	
-	window_show(med->win.toolbar);
-	window_show(med->win.objlist);
+	return (win);
 }
 
+/* Initialize the map editor. */
+void
+mapedit_init(void)
+{
+	struct window *toolbar_win, *tilesets_win;
+	int i;
+	
+	object_init(&mapedit, "map-editor", "map-editor", &mapedit_ops);
+	OBJECT(&mapedit)->flags |= OBJECT_RELOAD_PROPS;
+	if (object_load_art(&mapedit, "mapedit", 1) == -1)
+		fatal("mapedit: %s", error_get());
+
+	map_init(&mapedit.copybuf, "mapedit-copybuf");
+	mapedit.curtool = NULL;
+	mapedit.src_node = NULL;
+	mapedition = 1;
+
+	prop_set_uint32(&mapedit, "default-map-width", 64);
+	prop_set_uint32(&mapedit, "default-map-height", 32);
+	prop_set_uint32(&mapedit, "default-brush-width", 5);
+	prop_set_uint32(&mapedit, "default-brush-height", 5);
+	prop_set_bool(&mapedit, "sel-bounded-edition", 0);
+
+	for (i = 0; i < ntools; i++) {
+		const struct tools_ent *toolent = &tools[i];
+
+		*toolent->p = Malloc(toolent->size);
+		toolent->init(*toolent->p);
+	}
+	object_load(&mapedit, NULL);
+
+	tilesets_win = tilesets_window();
+	toolbar_win = toolbar_window(tilesets_win);
+
+	window_show(toolbar_win);
+	window_show(tilesets_win);
+}
+
+/* Release resources allocated by the map editor. */
 void
 mapedit_destroy(void *p)
 {
@@ -285,6 +292,7 @@ mapedit_destroy(void *p)
 	}
 }
 
+/* Load the current tool states. */
 int
 mapedit_load(void *p, struct netbuf *buf)
 {
@@ -301,6 +309,7 @@ mapedit_load(void *p, struct netbuf *buf)
 	return (0);
 }
 
+/* Save the current tool states. */
 int
 mapedit_save(void *p, struct netbuf *buf)
 {
@@ -317,10 +326,11 @@ mapedit_save(void *p, struct netbuf *buf)
 	return (0);
 }
 
+/* Create a new, read-only map view. */
 static void
-mapedit_win_new_view(int argc, union evarg *argv)
+new_view(int argc, union evarg *argv)
 {
-	struct mapview *mv, *parent = argv[1].p;
+	struct mapview *parent = argv[1].p;
 	struct map *m = parent->map;
 	struct window *win;
 	struct region *reg;
@@ -330,20 +340,23 @@ mapedit_win_new_view(int argc, union evarg *argv)
 	    50, 60,
 	    50, 60);
 
-	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	mv = mapview_new(reg, m, MAPVIEW_INDEPENDENT, 100, 100);
+	{
+		struct mapview *mv;
 
-	win->focus = WIDGET(mv);
-
-	event_new(win, "window-close", window_generic_detach, "%p", win);
-
-	view_attach(win);
-	window_show(win);
+		mv = mapview_new(reg, m, MAPVIEW_INDEPENDENT, 100, 100);
+		WIDGET_FOCUS(mv);
+	
+		event_new(win, "window-close", window_generic_detach, "%p",
+		    win);
+		view_attach(win);
+		window_show(win);
+	}
 }
 
+/* Toggle mapview(3) options. */
 static void
-mapedit_win_option(int argc, union evarg *argv)
+tog_mvoption(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int opt = argv[2].i;
@@ -380,8 +393,9 @@ mapedit_win_option(int argc, union evarg *argv)
 	}
 }
 
+/* Create a new, editable map display. */
 struct window *
-mapedit_win_new(struct map *m)
+mapedit_window(struct map *m)
 {
 	struct window *win;
 	struct region *reg;
@@ -406,13 +420,12 @@ mapedit_win_new(struct map *m)
 			{ fileops_revert_map,	MAPEDIT_TOOL_LOAD_MAP,	0, 0 },
 			{ fileops_save_map,	MAPEDIT_TOOL_SAVE_MAP,	0, 0 },
 			{ fileops_clear_map,	MAPEDIT_TOOL_CLEAR_MAP,	0, 0 },
-			{ mapedit_win_new_view,	MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
-			{ mapedit_win_option,	MAPEDIT_TOOL_GRID,	1, 0 },
-			{ mapedit_win_option,	MAPEDIT_TOOL_PROPS,	1, 1 }
+			{ new_view,		MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
+			{ tog_mvoption,		MAPEDIT_TOOL_GRID,	1, 0 },
+			{ tog_mvoption,		MAPEDIT_TOOL_PROPS,	1, 1 }
 		};
 		const int nfileops = sizeof(fileops) / sizeof(fileops[0]);
 		struct button *bu;
-		struct label *lab;
 		int i;
 
 		for (i = 0; i < nfileops; i++) {
@@ -433,23 +446,23 @@ mapedit_win_new(struct map *m)
 			widget_set_bool(bu, "state", fileops[i].def);
 		}
 
-		bu = button_new(reg, NULL,	      /* Toggle node edition */
+		bu = button_new(reg, NULL,
 		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT),
 		    BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-		event_new(bu, "button-pushed",
-		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		    MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
 		
 		bu = button_new(reg, NULL,	      /* Toggle layer edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT),
 		    BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-		event_new(bu, "button-pushed",
-		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_LAYEDIT);
+		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		    MAPEDIT_TOOL_LAYEDIT);
 		mv->layed.trigger = bu;
 
-		lab = label_polled_new(reg, 60, -1, NULL,
+		label_polled_new(reg, 60, -1, NULL,
 		    " Layer: %d, [%ux%u] at [%d,%d]",
 		    &mv->map->cur_layer,
 		    &mv->esel.w, &mv->esel.h,
