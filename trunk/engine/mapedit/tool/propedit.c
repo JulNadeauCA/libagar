@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.32 2003/05/08 05:17:35 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.33 2003/05/08 12:27:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,8 +34,9 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static const struct tool_ops propedit_ops = {
+const struct tool_ops propedit_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.23 2003/05/08 12:15:53 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.24 2003/05/09 01:59:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -48,23 +48,21 @@
 
 enum {
 	DEFAULT_HP	= 10,
-	DEFAULT_MP	= 10,
-	DEFAULT_SPEED	= 16,
-	DEFAULT_ZUARS	= 0
+	DEFAULT_MP	= 0,
+	DEFAULT_NZUARS	= 0
 };
 
-static const struct version perso_ver = {
+const struct version perso_ver = {
 	"agar personage",
 	2, 0
 };
 
-static const struct object_ops perso_ops = {
+const struct object_ops perso_ops = {
+	perso_init,
 	perso_destroy,
 	perso_load,
 	perso_save
 };
-
-static Uint32	perso_time(Uint32, void *);
 
 #ifdef DEBUG
 #define	DEBUG_STATE	0x01
@@ -75,22 +73,23 @@ int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
 #endif
 
 struct perso *
-perso_new(struct map *map, char *name, int hp, int mp)
+perso_new(void *parent, char *name)
 {
 	struct perso *pers;
 
 	pers = Malloc(sizeof(struct perso));
-	perso_init(pers, name, hp, mp);
-	object_attach(map, pers);
+	perso_init(pers, name);
+	object_attach(parent, pers);
 	return (pers);
 }
 
 void
-perso_init(struct perso *pers, char *name, int hp, int mp)
+perso_init(void *obj, char *name)
 {
-	object_init(&pers->obj, "perso", name, 0, &perso_ops);
-	object_load_art(pers, name, 0);
+	struct perso *pers = obj;
 
+	object_init(pers, "perso", name, &perso_ops);
+	object_load_art(pers, name, 0);
 	object_load_submap(pers, "n-idle");
 	object_load_submap(pers, "s-idle");
 	object_load_submap(pers, "w-idle");
@@ -100,42 +99,35 @@ perso_init(struct perso *pers, char *name, int hp, int mp)
 	object_load_submap(pers, "w-move");
 	object_load_submap(pers, "e-move");
 
+	pthread_mutex_init(&pers->lock, NULL);
 	pers->name = Strdup(name);
 	pers->flags = 0;
 	pers->level = 0;
 	pers->exp = 0;
 	pers->age = 0;
-	pers->seed = (Uint32)lrand48();
-
-	pers->hp = pers->maxhp = hp;
-	pers->mp = pers->maxmp = mp;
-	pers->nzuars = DEFAULT_ZUARS;
-
-	pthread_mutex_init(&pers->lock, NULL);
-
-	event_new(pers, "attached", perso_attached, NULL);
-	event_new(pers, "detached", perso_detached, NULL);
+	pers->seed = 0;			/* TODO arc4random */
+	pers->hp = pers->maxhp = DEFAULT_HP;
+	pers->mp = pers->maxmp = DEFAULT_MP;
+	pers->nzuars = DEFAULT_NZUARS;
 }
 
 void
-perso_destroy(void *p)
+perso_destroy(void *obj)
 {
-	struct perso *perso = p;
+	struct perso *perso = obj;
 
 	free(perso->name);
 }
 
 int
-perso_load(void *p, struct netbuf *buf)
+perso_load(void *obj, struct netbuf *buf)
 {
-	struct perso *perso = p;
+	struct perso *perso = obj;
 
 	if (version_read(buf, &perso_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&perso->lock);
-
-	/* Read the character status. */
 	perso->name = read_string(buf, perso->name);
 	perso->flags = read_uint32(buf);
 	perso->level = read_uint32(buf);
@@ -147,37 +139,20 @@ perso_load(void *p, struct netbuf *buf)
 	perso->maxmp = (int)read_uint32(buf);
 	perso->mp = (int)read_uint32(buf);
 	perso->nzuars = read_uint32(buf);
-
-	debug(DEBUG_STATE,
-	    "%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d nzuars=%d\n",
-	    OBJECT(perso)->name, perso->flags, perso->level, perso->exp,
-	    perso->age, perso->hp, perso->maxhp, perso->mp, perso->maxhp,
-	    perso->nzuars);
-
-	if (read_uint32(buf) == 0) {
-		debug(DEBUG_STATE, "%s is nowhere.\n", OBJECT(perso)->name);
-	} else {
-		if (object_load_position(perso, buf) == -1)
-			goto fail;
-	}
-
 	pthread_mutex_unlock(&perso->lock);
 	return (0);
-fail:
-	pthread_mutex_unlock(&perso->lock);
-	return (-1);
 }
 
 int
-perso_save(void *p, struct netbuf *buf)
+perso_save(void *obj, struct netbuf *buf)
 {
-	struct perso *perso = p;
+	struct perso *perso = obj;
 
 	version_write(buf, &perso_ver);
 
 	pthread_mutex_lock(&perso->lock);
 	write_string(buf, perso->name);
-	write_uint32(buf, perso->flags & ~(PERSO_EPHEMERAL));
+	write_uint32(buf, perso->flags);
 	write_uint32(buf, perso->level);
 	write_uint32(buf, (Uint32)perso->exp);
 	write_uint32(buf, perso->age);
@@ -187,75 +162,7 @@ perso_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)perso->maxmp);
 	write_uint32(buf, (Uint32)perso->mp);
 	write_uint32(buf, perso->nzuars);
-	write_uint32(buf, 1);			/* One position */
-	object_save_position(perso, buf);
 	pthread_mutex_unlock(&perso->lock);
 	return (0);
-}
-
-void
-perso_attached(int argc, union evarg *argv)
-{
-	struct perso *pers = argv[0].p;
-
-	pthread_mutex_lock(&pers->lock);
-	pers->timer = SDL_AddTimer(30, perso_time, pers);
-	pthread_mutex_unlock(&pers->lock);
-}
-
-void
-perso_detached(int argc, union evarg *argv)
-{
-	struct perso *pers = argv[0].p;
-
-	pthread_mutex_lock(&pers->lock);
-	SDL_RemoveTimer(pers->timer);
-	pthread_mutex_unlock(&pers->lock);
-}
-
-static Uint32
-perso_time(Uint32 ival, void *p)
-{
-	struct object *ob = p;
-
-	pthread_mutex_lock(&ob->lock);
-	if (ob->pos != NULL &&
-	    mapdir_move(&ob->pos->dir) == -1) {
-		debug(DEBUG_POSITION, "%s: %s\n", ob->name, error_get());
-	} else {
-		debug(DEBUG_POSITION, "%s is nowhere!\n", ob->name);
-	}
-	pthread_mutex_unlock(&ob->lock);
-	return (ival);
-}
-
-void
-perso_say(struct perso *pers, const char *fmt, ...)
-{
-	struct window *win;
-	struct region *reg;
-	struct label *lab;
-	struct button *button;
-	va_list args;
-	char *msg;
-
-	win = window_generic_new(253, 140, NULL);
-	if (win == NULL) {
-		return;
-	}
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	
-	va_start(args, fmt);
-	Vasprintf(&msg, fmt, args);
-	va_end(args);
-
-	lab = label_new(reg, 100, 60, msg);
-	button = button_new(reg, "Ok", NULL, 0, 99, 40);
-	WIDGET_FOCUS(button);
-
-	event_new(button, "button-pushed", window_generic_detach, "%p", win);
-	window_show(win);
-
-	free(msg);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.31 2003/04/12 01:45:40 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.32 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,16 +45,17 @@
 
 #include <string.h>
 
-static const struct version merge_ver = {
+const struct version merge_ver = {
 	"agar merge tool",
 	4, 0
 };
 
-static const struct tool_ops merge_ops = {
+const struct tool_ops merge_ops = {
 	{
-		merge_destroy,	/* destroy */
-		merge_load,	/* load */
-		merge_save	/* save */
+		NULL,		/* init */
+		merge_destroy,
+		merge_load,
+		merge_save
 	},
 	merge_window,
 	merge_cursor,
@@ -72,7 +73,7 @@ merge_init(void *p)
 	merge->inherit_flags = 1;
 	merge->random_shift = 0;
 	merge->layer = 0;
-	SLIST_INIT(&merge->brushes);
+	TAILQ_INIT(&merge->brushes);
 }
 
 #if 0
@@ -81,14 +82,14 @@ merge_free_brushes(struct merge *mer)
 {
 	struct object *ob, *nob;
 
-	for (ob = SLIST_FIRST(&mer->brushes);
-	     ob != SLIST_END(&mer->brushes);
+	for (ob = TAILQ_FIRST(&mer->brushes);
+	     ob != TAILQ_END(&mer->brushes);
 	     ob = nob) {
-		nob = SLIST_NEXT(ob, wobjs);
+		nob = TAILQ_NEXT(ob, cobjs);
 		object_destroy(ob);
 		free(ob);
 	}
-	SLIST_INIT(&mer->brushes);
+	TAILQ_INIT(&mer->brushes);
 }
 #endif
 
@@ -138,7 +139,7 @@ merge_create_brush(int argc, union evarg *argv)
 		}
 	}
 
-	SLIST_INSERT_HEAD(&mer->brushes, OBJECT(m), wobjs);
+	TAILQ_INSERT_HEAD(&mer->brushes, OBJECT(m), cobjs);
 	tlist_unselect_all(mer->brushes_tl);
 	tlist_select(tlist_insert_item_head(mer->brushes_tl, NULL, m_name, m));
 	textbox_printf(name_tbox, "");
@@ -193,7 +194,7 @@ merge_remove_brush(int argc, union evarg *argv)
 				view_detach(win);
 			}
 
-			SLIST_REMOVE(&mer->brushes, brush, object, wobjs);
+			TAILQ_REMOVE(&mer->brushes, brush, cobjs);
 			tlist_remove_item(it);
 			object_destroy(brush);
 			free(brush);
@@ -647,7 +648,7 @@ merge_load(void *p, struct netbuf *buf)
 	mer->random_shift = (Uint32)read_uint32(buf);
 
 	tlist_clear_items(mer->brushes_tl);
-	SLIST_INIT(&mer->brushes);
+	TAILQ_INIT(&mer->brushes);
 
 	nbrushes = read_uint32(buf);
 	for (i = 0; i < nbrushes; i++) {
@@ -665,7 +666,7 @@ merge_load(void *p, struct netbuf *buf)
 		map_init(nbrush, m_name);
 		map_load(nbrush, buf);
 
-		SLIST_INSERT_HEAD(&mer->brushes, OBJECT(nbrush), wobjs);
+		TAILQ_INSERT_HEAD(&mer->brushes, OBJECT(nbrush), cobjs);
 		tlist_insert_item_head(mer->brushes_tl, NULL, m_name, nbrush);
 	}
 	return (0);
@@ -687,7 +688,7 @@ merge_save(void *p, struct netbuf *buf)
 
 	count_offs = buf->offs;				/* Skip count */
 	write_uint32(buf, 0);	
-	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
+	TAILQ_FOREACH(ob, &mer->brushes, cobjs) {
 		struct brush *brush = (struct brush *)ob;
 
 		write_string(buf, ob->name);

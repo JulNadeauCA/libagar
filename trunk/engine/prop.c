@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.30 2003/04/17 08:18:13 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.31 2003/05/06 01:03:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include <string.h>
 #include <errno.h>
 
-static const struct version prop_ver = {
+const struct version prop_ver = {
 	"agar property map",
 	1, 0
 };

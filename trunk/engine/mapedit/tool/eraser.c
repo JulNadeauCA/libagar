@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.29 2003/03/26 10:04:17 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.30 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,8 +32,9 @@
 
 #include <engine/widget/radio.h>
 
-static const struct tool_ops eraser_ops = {
+const struct tool_ops eraser_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
@@ -45,12 +46,11 @@ static const struct tool_ops eraser_ops = {
 };
 
 void
-eraser_init(void *p)
+eraser_init(void *obj)
 {
-	struct eraser *eraser = p;
+	struct eraser *eraser = obj;
 
 	tool_init(&eraser->tool, "eraser", &eraser_ops);
-
 	eraser->mode = ERASER_ALL;
 }
 

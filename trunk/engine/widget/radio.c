@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.25 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.26 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@
 
 static struct widget_ops radio_ops = {
 	{
-		radio_destroy,	/* destroy */
+		NULL,		/* init */
+		radio_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},

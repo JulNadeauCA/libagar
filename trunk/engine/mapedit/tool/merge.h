@@ -1,4 +1,4 @@
-/*	$Csoft: merge.h,v 1.13 2003/04/12 01:45:40 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.14 2003/04/25 09:47:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -9,7 +9,7 @@ enum merge_mode {
 	MERGE_REPLACE		/* Replace, including empty source nodes */
 };
 
-SLIST_HEAD(brushq, object);
+TAILQ_HEAD(brushq, object);
 
 struct merge {
 	struct tool	 tool;

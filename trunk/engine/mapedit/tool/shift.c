@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.17 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.18 2003/05/08 12:26:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,8 +33,9 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static const struct tool_ops shift_ops = {
+const struct tool_ops shift_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

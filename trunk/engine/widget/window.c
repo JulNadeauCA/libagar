@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.180 2003/04/29 01:31:55 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.181 2003/04/29 01:40:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,12 +47,13 @@
 #include <stdarg.h>
 #include <errno.h>
 
-static const struct version window_ver = {
+const struct version window_ver = {
 	"agar window",
 	2, 0
 };
 
-static const struct object_ops window_ops = {
+const struct object_ops window_ops = {
+	NULL,			/* init */
 	window_destroy,
 	window_load,
 	window_save
@@ -212,7 +213,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		if (wname[i] == '/') 		/* XXX restrict further */
 			wname[i] = '_';
 	}
-	object_init(OBJECT(win), "window", wname, 0, &window_ops);
+	object_init(win, "window", wname, &window_ops);
 	if (object_load_art(win, "window", 1) == -1)
 		fatal("window: %s", error_get());
 	

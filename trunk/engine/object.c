@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.121 2003/05/08 12:12:25 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.122 2003/05/09 01:59:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/compat/snprintf.h>
 #include <engine/compat/strlcat.h>
+#include <engine/compat/strlcpy.h>
 
 #include <engine/engine.h>
 #include <engine/version.h>
@@ -37,7 +38,7 @@
 #include <engine/input.h>
 #include <engine/view.h>
 #include <engine/rootmap.h>
-#include <engine/world.h>
+#include <engine/typesw.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,12 +48,13 @@
 #include <string.h>
 #include <unistd.h>
 
-static const struct version object_ver = {
+const struct version object_ver = {
 	"agar object",
 	1, 0
 };
 
-static const struct object_ops null_ops = {
+const struct object_ops object_ops = {
+	NULL,	/* init */
 	NULL,	/* destroy */
 	NULL,	/* load */
 	NULL	/* save */
@@ -64,21 +66,22 @@ static const struct object_ops null_ops = {
 #define DEBUG_DEPS	0x004
 #define DEBUG_SUBMAPS	0x008
 #define DEBUG_CONTROL	0x010
-#define DEBUG_ATTACH	0x020
+#define DEBUG_LINKAGE	0x020
 #define DEBUG_GC	0x040
 
 int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
-	               DEBUG_ATTACH|DEBUG_GC|DEBUG_DEPS;
+	               DEBUG_LINKAGE|DEBUG_GC|DEBUG_DEPS;
 #define engine_debug object_debug
 #endif
 
+/* Allocate, initialize and attach a generic object. */
 struct object *
-object_new(void *parent, char *type, char *name, int flags, const void *opsp)
+object_new(void *parent, const char *type, char *name, const void *opsp)
 {
 	struct object *ob;
 
 	ob = Malloc(sizeof(struct object));
-	object_init(ob, type, name, flags, opsp);
+	object_init(ob, type, name, opsp);
 
 	if (parent != NULL) {
 		object_attach(parent, ob);
@@ -86,30 +89,100 @@ object_new(void *parent, char *type, char *name, int flags, const void *opsp)
 	return (ob);
 }
 
+/* Initialize a generic object structure. */
 void
-object_init(struct object *ob, char *type, char *name, int flags,
-    const void *opsp)
+object_init(void *p, const char *type, char *name, const void *opsp)
 {
-	if (strlen(type) >= OBJECT_TYPE_MAX ||
-	    strlen(name) >= OBJECT_NAME_MAX) {
-		fatal("name/type too big");
-	}
-	ob->type = Strdup(type);
-	ob->name = Strdup(name);
+	struct object *ob = p;
+
+	if (strlcpy(ob->type, type, sizeof(ob->type)) >= sizeof(ob->type))
+		fatal("type too big");
+	if (strlcpy(ob->name, name, sizeof(ob->name)) >= sizeof(ob->name))
+		fatal("name too big");
+
+	ob->ops = (opsp != NULL) ? opsp : &object_ops;
+	ob->parent = NULL;
+	ob->flags = 0;
 	ob->art = NULL;
-	ob->ops = (opsp != NULL) ? opsp : &null_ops;
-	ob->flags = flags;
 	ob->pos = NULL;
-	ob->state = OBJECT_EMBRYONIC;
-	SLIST_INIT(&ob->childs);
+	TAILQ_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
-	pthread_mutex_init(&ob->lock, NULL);
+	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 	pthread_mutex_init(&ob->props_lock, &recursive_mutexattr);
 	pthread_mutex_init(&ob->events_lock, &recursive_mutexattr);
 }
 
-/* Attach a child object to a parent object. */
+/* Recursive function to construct absolute object names. */
+static void
+object_name_search(void *obj, char **s, size_t *sl)
+{
+	struct object *ob = obj;
+	size_t namelen;
+	char *sp;
+
+	namelen = strlen(ob->name);
+	*sl += namelen+1;
+	sp = *s = Realloc(*s, *sl);
+
+	memmove(sp+namelen+1, sp, (*sl)-namelen-1);
+	sp[0] = '/';
+	memcpy(sp+1, ob->name, namelen);
+
+	if (ob->parent != NULL)
+		object_name_search(ob->parent, s, sl);
+}
+
+/* Return the absolute name of an object. */
+char *
+object_name(void *obj)
+{
+	struct object *ob = obj;
+	size_t sl, namelen;
+	char *s;
+
+	namelen = strlen(ob->name);
+	sl = 1+namelen+1;
+	s = Malloc(sl);
+
+	s[0] = '/';
+	memcpy(s+1, ob->name, namelen);
+
+	if (ob->parent != NULL)
+		object_name_search(ob->parent, &s, &sl);
+
+	s[sl-1] = '\0';
+	return (s);
+}
+
+/* Move an object from a parent to another. */
+void
+object_move(void *oldparentp, void *childp, void *newparentp)
+{
+	struct object *oldparent = oldparentp;
+	struct object *child = childp;
+	struct object *newparent = newparentp;
+
+	pthread_mutex_lock(&oldparent->lock);
+	pthread_mutex_lock(&newparent->lock);
+
+	TAILQ_REMOVE(&oldparent->childs, child, cobjs);
+	child->parent = NULL;
+	event_post(child, "detached", "%p", oldparent);
+
+	TAILQ_INSERT_TAIL(&newparent->childs, child, cobjs);
+	child->parent = newparent;
+	event_post(child, "attached", "%p", newparent);
+	event_post(child, "moved", "%p, %p", oldparent, newparent);
+
+	debug(DEBUG_LINKAGE, "%s: moved %s to %s\n", oldparent->name,
+	    child->name, newparent->name);
+
+	pthread_mutex_unlock(&newparent->lock);
+	pthread_mutex_unlock(&oldparent->lock);
+}
+
+/* Attach a child object to a parent. */
 void
 object_attach(void *parentp, void *childp)
 {
@@ -117,8 +190,12 @@ object_attach(void *parentp, void *childp)
 	struct object *child = childp;
 
 	pthread_mutex_lock(&parent->lock);
-	SLIST_INSERT_HEAD(&parent->childs, child, wobjs);
-	debug(DEBUG_ATTACH, "%s: attached %s\n", parent->name, child->name);
+
+	TAILQ_INSERT_TAIL(&parent->childs, child, cobjs);
+	child->parent = parent;
+	event_post(child, "attached", "%p", parent);
+
+	debug(DEBUG_LINKAGE, "%s: attached %s\n", parent->name, child->name);
 	pthread_mutex_unlock(&parent->lock);
 }
 
@@ -130,9 +207,33 @@ object_detach(void *parentp, void *childp)
 	struct object *child = childp;
 
 	pthread_mutex_lock(&parent->lock);
-	SLIST_REMOVE(&parent->childs, child, object, wobjs);
-	debug(DEBUG_ATTACH, "%s: detached %s\n", parent->name, child->name);
+
+	TAILQ_REMOVE(&parent->childs, child, cobjs);
+	child->parent = NULL;
+	event_post(child, "detached", "%p", parent);
+
+	debug(DEBUG_LINKAGE, "%s: detached %s\n", parent->name, child->name);
 	pthread_mutex_unlock(&parent->lock);
+}
+
+/* Search for the named object. The name is relative to the parent. */
+void *
+object_find(void *parentp, char *name)
+{
+	struct object *parent = parentp;
+	struct object *child = NULL;
+
+	if (parent == NULL)
+		parent = world;
+
+	/* XXX TODO recurse! */
+	pthread_mutex_lock(&parent->lock);
+	TAILQ_FOREACH(child, &parent->childs, cobjs) {
+		if (strcmp(child->name, name) == 0)
+			break;
+	}
+	pthread_mutex_unlock(&parent->lock);
+	return (child);
 }
 
 /* Detach and free child objects. */
@@ -142,15 +243,16 @@ object_free_childs(struct object *ob)
 	struct object *cob, *ncob;
 
 	pthread_mutex_lock(&ob->lock);
-	for (cob = SLIST_FIRST(&ob->childs);
-	     cob != SLIST_END(&ob->childs);
+	for (cob = TAILQ_FIRST(&ob->childs);
+	     cob != TAILQ_END(&ob->childs);
 	     cob = ncob) {
-		ncob = SLIST_NEXT(ob, wobjs);
+		ncob = TAILQ_NEXT(ob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", ob->name, cob->name);
 		object_destroy(cob);
-		free(cob);
+		if ((cob->flags & OBJECT_STATIC) == 0)
+			free(cob);
 	}
-	SLIST_INIT(&ob->childs);
+	TAILQ_INIT(&ob->childs);
 	pthread_mutex_unlock(&ob->lock);
 }
 
@@ -171,7 +273,7 @@ object_free_props(struct object *ob)
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_unlock(&ob->props_lock);
 }
-	
+
 /* Clear an object's event handler list. */
 void
 object_free_events(struct object *ob)
@@ -189,6 +291,7 @@ object_free_events(struct object *ob)
 	pthread_mutex_unlock(&ob->events_lock);
 }
 
+/* Import graphical data into an object. */
 int
 object_load_art(void *p, const char *key, int wired)
 {
@@ -202,6 +305,7 @@ object_load_art(void *p, const char *key, int wired)
 	return (0);
 }
 
+/* Release the resources allocated by an object and its child objects. */
 void
 object_destroy(void *p)
 {
@@ -209,6 +313,7 @@ object_destroy(void *p)
 	
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
+
 	if (ob->art != NULL)
 		art_unused(ob->art);
 
@@ -219,13 +324,14 @@ object_destroy(void *p)
 	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
 	pthread_mutex_destroy(&ob->props_lock);
-
-	free(ob->name);
-	free(ob->type);
 }
 
+/*
+ * Load the state of an object and its child objects.
+ * The child objects are allocated and initialized from scratch.
+ */
 static int
-object_load_data(struct object *ob, struct netbuf *buf)
+object_load_data(struct object *ob, struct netbuf *buf, int load)
 {
 	Uint32 i, nchilds;
 
@@ -240,28 +346,59 @@ object_load_data(struct object *ob, struct netbuf *buf)
 	    object_load_position(ob, buf) == -1)
 		goto fail;
 
-	nchilds = read_uint32(buf);
-	for (i = 0; i < nchilds; i++) {
-		char childname[OBJECT_NAME_MAX];
-		struct object *child;
+	if (ob->flags & OBJECT_RELOAD_CHILDS) {
+		fatal("not yet");
+	} else {
+		object_free_childs(ob);
 
-		if (copy_string(childname, buf, sizeof(childname)) >=
-		    sizeof(childname)) {
-			error_set("child object name too big");
-			goto fail;
-		}
-		SLIST_FOREACH(child, &ob->childs, wobjs) {
-			if (strcmp(child->name, childname) == 0)
-				break;
-		}
-		if (child != NULL) {
-			dprintf("%s: loading child: %s\n", ob->name,
-			    child->name);
-			if (object_load_data(child, buf) == -1)
+		nchilds = read_uint32(buf);
+		for (i = 0; i < nchilds; i++) {
+			char cname[OBJECT_NAME_MAX];
+			char ctype[OBJECT_TYPE_MAX];
+			struct object *child;
+			Uint32 cflags;
+			const struct object_type *type;
+			int ti;
+
+			if (copy_string(cname, buf, sizeof(cname)) >=
+			    sizeof(cname)) {
+				error_set("child name too big");
 				goto fail;
-		} else {
-			dprintf("%s: no child matches `%s'\n", ob->name,
-			    childname);
+			}
+			if (copy_string(ctype, buf, sizeof(ctype)) >=
+			    sizeof(ctype)) {
+				error_set("child type too big");
+				goto fail;
+			}
+			cflags = read_uint32(buf);
+
+			/*
+			 * Find out how much memory to allocate and which
+			 * function to call for initialization.
+			 */
+		 	for (ti = 0, type = NULL; ti < ntypesw; ti++) {
+				if (strcmp(typesw[ti].type, ctype) == 0) {
+					type = &typesw[ti];
+					break;
+				}
+			}
+			if (type == NULL) {
+				error_set("unknown type `%s'", ctype);
+				goto fail;
+			}
+
+			dprintf("%s: %s (%lu bytes)\n", type->type,
+			    type->desc, (unsigned long)type->size);
+			child = Malloc(type->size);
+			if (type->ops->init != NULL) {
+				type->ops->init(child, cname);
+			} else {
+				object_init(child, ctype, cname, type->ops);
+			}
+			child->flags |= cflags;
+
+			if (object_load_data(child, buf, 0) == -1)
+				goto fail;
 		}
 	}
 
@@ -276,6 +413,7 @@ fail:
 	return (-1);
 }
 
+/* Recursively load the state of an object and its childs objects. */
 int
 object_load(void *p, char *opath)
 {
@@ -302,12 +440,13 @@ object_load(void *p, char *opath)
 	}
 
 	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);	
-	rv = object_load_data(ob, &buf);
+	rv = object_load_data(ob, &buf, 1);
 	netbuf_destroy(&buf);
 	close(fd);
 	return (rv);
 }
 
+/* Save the state of an object and its child objects. */
 static int
 object_save_data(struct object *ob, struct netbuf *buf)
 {
@@ -330,13 +469,16 @@ object_save_data(struct object *ob, struct netbuf *buf)
 
 	nchilds_offs = buf->offs;
 	write_uint32(buf, 0);				/* Skip count */
-	SLIST_FOREACH(child, &ob->childs, wobjs) {
+	TAILQ_FOREACH(child, &ob->childs, cobjs) {
 		write_string(buf, child->name);
+		write_string(buf, child->type);
+		write_uint32(buf, child->flags);
+
 		if (object_save_data(child, buf) == -1)
 			goto fail;
 		nchilds++;
 	}
-	pwrite_uint32(buf, nchilds, nchilds_offs);
+	pwrite_uint32(buf, nchilds, nchilds_offs);	/* Write count */
 
 	if (ob->ops->save != NULL &&			/* Save custom data */
 	    ob->ops->save(ob, buf) == -1)
@@ -349,6 +491,7 @@ fail:
 	return (-1);
 }
 
+/* Recursively save the state of an object and its child objects. */
 int
 object_save(void *p, char *opath)
 {
@@ -509,6 +652,7 @@ object_unblit_submap(struct object_position *pos)
 	}
 }
 
+/* Load a submap of a given name. */
 void
 object_load_submap(void *p, char *name)
 {
@@ -536,7 +680,7 @@ object_set_submap(void *p, char *name)
 	debug(DEBUG_SUBMAPS, "%s: %s -> %s\n", ob->name,
 	    ob->pos != NULL ? OBJECT(ob->pos->submap)->name : "none", name);
 
-	SLIST_FOREACH(submap, &ob->childs, wobjs) {
+	TAILQ_FOREACH(submap, &ob->childs, cobjs) {
 		if (strcmp(submap->name, name) == 0)
 			break;
 	}
@@ -579,6 +723,7 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
 		mapdir_init(&ob->pos->dir, ob, dstmap, DIR_SOFTSCROLL, 1);
 	} else {
 		object_unblit_submap(ob->pos);
+		object_detach(ob->pos->map, ob);
 	}
 
 	pthread_mutex_lock(&dstmap->lock);
@@ -589,6 +734,7 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
 		ob->pos->x = x;
 		ob->pos->y = y;
 		ob->pos->layer = layer;
+		object_attach(ob->pos->map, ob);
 		object_blit_submap(ob->pos);
 	} else {
 		debug(DEBUG_POSITION, "%s: bad coords %s:[%d,%d,%d]\n",
@@ -601,6 +747,7 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
 	pthread_mutex_unlock(&ob->lock);
 }
 
+/* Unset an object's position. */
 void
 object_unset_position(void *p)
 {
@@ -609,6 +756,7 @@ object_unset_position(void *p)
 	pthread_mutex_lock(&ob->lock);
 	debug(DEBUG_POSITION, "%s: unset %p\n", ob->name, ob->pos);
 	if (ob->pos != NULL) {
+		object_detach(ob->pos->map, ob);
 		object_unblit_submap(ob->pos);
 		free(ob->pos);
 		ob->pos = NULL;
@@ -616,13 +764,16 @@ object_unset_position(void *p)
 	pthread_mutex_unlock(&ob->lock);
 }
 
+/*
+ * Save the position of an object relative to its parent map, as well as
+ * the current submap and associated input device, if any.
+ */
 void
 object_save_position(void *p, struct netbuf *buf)
 {
 	struct object *ob = p;
 	struct object_position *pos = ob->pos;
-		
-	write_string(buf, OBJECT(pos->map)->name);
+
 	write_uint32(buf, (Uint32)pos->x);
 	write_uint32(buf, (Uint32)pos->y);
 	write_uint8(buf, (Uint8)pos->layer);
@@ -633,22 +784,20 @@ object_save_position(void *p, struct netbuf *buf)
 	    OBJECT(pos->input)->name : "");
 }
 
+/*
+ * Load the position of an object inside its parent map, as well as the
+ * submap to display. Try to reassign the last used input device.
+ */
 int
 object_load_position(void *p, struct netbuf *buf)
 {
-	char map_id[OBJECT_NAME_MAX];
 	char submap_id[OBJECT_NAME_MAX];
 	char input_id[OBJECT_NAME_MAX];
 	int x, y, layer, center;
-	struct map *dst_map;
 	struct object *ob = p;
+	struct map *m = ob->parent;
 
 	pthread_mutex_lock(&ob->lock);
-
-	if (copy_string(map_id, buf, sizeof(map_id)) >= sizeof(map_id)) {
-		error_set("map_id too big");
-		goto fail;
-	}
 	x = (int)read_uint32(buf);
 	y = (int)read_uint32(buf);
 	layer = (int)read_uint8(buf);
@@ -663,25 +812,23 @@ object_load_position(void *p, struct netbuf *buf)
 		error_set("input_id too big");
 		goto fail;
 	}
-	if ((dst_map = world_find(map_id)) == NULL)
-		goto fail;
-	debug(DEBUG_STATE, "%s: at %s:[%d,%d,%d]%s\n", ob->name,
-	    OBJECT(dst_map)->name, x, y, layer, center ? ", centered" : "");
+	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name,
+	    x, y, layer, center ? ", centered" : "");
 
-	pthread_mutex_lock(&dst_map->lock);
-	if (x < 0 || x >= dst_map->mapw ||
-	    y < 0 || y >= dst_map->maph ||
-	    layer < 0 || layer >= dst_map->nlayers) {
+	pthread_mutex_lock(&m->lock);
+	if (x < 0 || x >= m->mapw ||
+	    y < 0 || y >= m->maph ||
+	    layer < 0 || layer >= m->nlayers) {
 		error_set("bad coords: %d,%d,%d", x, y, layer);
-		pthread_mutex_unlock(&dst_map->lock);
+		pthread_mutex_unlock(&m->lock);
 		goto fail;
 	}
 	if (object_set_submap(ob, submap_id) == -1) {
-		pthread_mutex_unlock(&dst_map->lock);
+		pthread_mutex_unlock(&m->lock);
 		goto fail;
 	}
-	object_set_position(ob, dst_map, x, y, layer);
-	pthread_mutex_unlock(&dst_map->lock);
+	object_set_position(ob, m, x, y, layer);
+	pthread_mutex_unlock(&m->lock);
 
 	if (input_id[0] != '\0') {
 		if (object_control(ob, input_id) == -1)
@@ -697,6 +844,7 @@ fail:
 	return (-1);
 }
 
+/* Initialize a dependency table. */
 void
 object_table_init(struct object_table *obt)
 {
@@ -705,6 +853,7 @@ object_table_init(struct object_table *obt)
 	obt->nobjs = 0;
 }
 
+/* Release the resources allocated by a dependency table. */
 void
 object_table_destroy(struct object_table *obt)
 {
@@ -712,6 +861,7 @@ object_table_destroy(struct object_table *obt)
 	Free(obt->used);
 }
 
+/* Insert an object into a dependency table. */
 void
 object_table_insert(struct object_table *obt, struct object *obj)
 {
@@ -736,6 +886,7 @@ object_table_insert(struct object_table *obt, struct object *obj)
 	obt->nobjs++;
 }
 
+/* Encode a dependency table. */
 void
 object_table_save(struct object_table *obt, struct netbuf *buf)
 {
@@ -746,13 +897,20 @@ object_table_save(struct object_table *obt, struct netbuf *buf)
 	nobjs_offs = buf->offs;
 	write_uint32(buf, 0);				/* Skip */
 	for (i = 0; i < obt->nobjs; i++) {
+		char *name;
+
 		pob = obt->objs[i];
+		name = object_name(pob);
+
 		write_string(buf, pob->name);
 		write_string(buf, pob->type);
+
+		free(name);
 	}
 	pwrite_uint32(buf, obt->nobjs, nobjs_offs);
 }
 
+/* Decode a dependency table. */
 int
 object_table_load(struct object_table *obt, struct netbuf *buf, char *objname)
 {
@@ -774,7 +932,7 @@ object_table_load(struct object_table *obt, struct netbuf *buf, char *objname)
 			goto fail;
 		}
 		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
-		if ((pob = world_find(name)) != NULL) {
+		if ((pob = object_find(world, name)) != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
 				error_set("%s: expected %s to be of type %s",

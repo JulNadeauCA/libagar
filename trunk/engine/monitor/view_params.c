@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.10 2003/03/22 04:27:26 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.11 2003/03/24 12:08:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 
 #ifdef DEBUG
 
-#include <engine/world.h>
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>

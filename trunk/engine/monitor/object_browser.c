@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.27 2003/03/24 12:08:44 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.28 2003/04/12 01:40:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,7 +32,6 @@
 #ifdef DEBUG
 
 #include <engine/engine.h>
-#include <engine/world.h>
 #include <engine/view.h>
 
 #include <string.h>
@@ -50,12 +49,6 @@
 
 #include "monitor.h"
 
-static void	events_poll(int, union evarg *);
-static void	events_show(int, union evarg *);
-static void	props_poll(int, union evarg *);
-static void	props_show(int, union evarg *);
-static void	childs_poll(int, union evarg *);
-static void	childs_show(int, union evarg *);
 static void	objs_poll(int, union evarg *);
 static void	objs_show(int, union evarg *);
 
@@ -73,14 +66,14 @@ events_poll(int argc, union evarg *argv)
 
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ob->events_lock);
-
-	TAILQ_FOREACH(evh, &ob->events, events)
+	TAILQ_FOREACH(evh, &ob->events, events) {
 		tlist_insert_item(tl, NULL, evh->name, evh);
-
+	}
 	pthread_mutex_unlock(&ob->events_lock);
 	tlist_restore_selections(tl);
 }
 
+/* Display event handler information. */
 static void
 events_show(int argc, union evarg *argv)
 {
@@ -106,6 +99,7 @@ events_show(int argc, union evarg *argv)
 	window_show(win);
 }
 
+/* Update the list of generic properties. */
 static void
 props_poll(int argc, union evarg *argv)
 {
@@ -127,6 +121,7 @@ props_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
+/* Display the generic properties of an object. */
 static void
 props_show(int argc, union evarg *argv)
 {
@@ -174,28 +169,7 @@ props_show(int argc, union evarg *argv)
 	window_show(win);
 }
 
-static void
-childs_poll(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct object *child;
-
-	tlist_clear_items(tl);
-	pthread_mutex_lock(&ob->lock);
-
-	SLIST_FOREACH(child, &ob->childs, wobjs) {
-		SDL_Surface *icon = NULL;
-
-		if (ob->art != NULL && ob->art->nsprites > 0)
-			icon = SPRITE(ob, 0);
-		tlist_insert_item(tl, icon, child->name, child);
-	}
-
-	pthread_mutex_unlock(&ob->lock);
-	tlist_restore_selections(tl);
-}
-
+/* Display an object's descendants. */
 static void
 childs_show(int argc, union evarg *argv)
 {
@@ -208,7 +182,7 @@ childs_show(int argc, union evarg *argv)
 	    ob->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, "%s: childs", ob->name);
+	window_set_caption(win, "%s: descendants", ob->name);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
@@ -220,33 +194,45 @@ childs_show(int argc, union evarg *argv)
 		struct tlist *tl;
 
 		tl = tlist_new(reg, 100, 0, TLIST_POLL);
-		event_new(tl, "tlist-poll", childs_poll, "%p", ob);
+		event_new(tl, "tlist-poll", objs_poll, "%p", ob);
 		event_new(showbu, "button-pushed", objs_show, "%p", tl);
 	}
 	window_show(win);
+
 }
 
+/* Update an object tree display. */
+static void
+objs_poll_update(struct tlist *tl, struct object *parent)
+{
+	struct object *ob;
+	char *name;
+
+	pthread_mutex_lock(&parent->lock);
+
+	name = object_name(parent);
+	tlist_insert_item(tl, OBJECT_ICON(parent), name, parent);
+	free(name);
+
+	TAILQ_FOREACH(ob, &parent->childs, cobjs)
+		objs_poll_update(tl, ob);			/* Recurse */
+
+	pthread_mutex_unlock(&parent->lock);
+}
+
+/* Update a list of objects attached to a given parent. */
 static void
 objs_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct object *ob;
-	
+	struct object *parent = argv[1].p;
+
 	tlist_clear_items(tl);
-	pthread_mutex_lock(&world->lock);
-
-	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
-		SDL_Surface *icon = NULL;
-
-		if (ob->art != NULL && ob->art->nsprites > 0)
-			icon = SPRITE(ob, 0);
-		tlist_insert_item(tl, icon, ob->name, ob);
-	}
-
-	pthread_mutex_unlock(&world->lock);
+	objs_poll_update(tl, parent);
 	tlist_restore_selections(tl);
 }
 
+/* Display information about an object. */
 static void
 objs_show(int argc, union evarg *argv)
 {
@@ -268,16 +254,13 @@ objs_show(int argc, union evarg *argv)
 	}
 	window_set_caption(win, "%s object", ob->name);
 	
-	if (ob->art != NULL && ob->art->nsprites > 0) {
-		reg = region_new(win, REGION_VALIGN, 0, 0, 15, -32);
-		bitmap_new(reg, SPRITE(ob, 0), -1, -1);
-	}
-	reg = region_new(win, REGION_VALIGN, 15, 0, 80, -1);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 80, -1);
 	{
 		label_new(reg, 100, -1, "Name: %s", ob->name);
 		label_new(reg, 100, -1, "Type: %s", ob->type);
-		label_new(reg, 100, -1, "Flags: 0x%x", ob->flags);
-		label_polled_new(reg, 100, -1, NULL, "State: %d", &ob->state);
+		label_polled_new(reg, 100, -1, &ob->lock, "Flags: 0x%x",
+		    &ob->flags);
+		label_polled_new(reg, 100, -1, &ob->lock, "Gfx: %p", &ob->art);
 		label_polled_new(reg, 100, -1, &ob->lock, "Pos: %p", &ob->pos);
 	}
 
@@ -362,7 +345,7 @@ props_update(int argc, union evarg *argv)
 	}
 }
 
-/* Detach a property. */
+/* Remove a generic property. */
 static void
 props_remove(int argc, union evarg *argv)
 {
@@ -385,7 +368,10 @@ props_remove(int argc, union evarg *argv)
 	pthread_mutex_unlock(&ob->props_lock);
 }
 
-/* Alter the value of a property. */
+/*
+ * Alter the value of a property.
+ * XXX move the translation to prop.c.
+ */
 static void
 props_change(int argc, union evarg *argv)
 {
@@ -470,7 +456,7 @@ object_browser_window(void)
 
 		tl = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl, "tlist-changed", objs_show, "%p", tl);
-		event_new(tl, "tlist-poll", objs_poll, NULL);
+		event_new(tl, "tlist-poll", objs_poll, "%p", world);
 	}
 	return (win);
 }

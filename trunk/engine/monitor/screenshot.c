@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.2 2003/03/20 03:21:25 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.3 2003/03/25 13:48:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,6 @@
 
 #include <jpeglib.h>
 
-#include <engine/world.h>
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>

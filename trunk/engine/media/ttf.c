@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.9 2003/04/29 23:04:42 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.10 2003/05/09 03:38:41 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -705,15 +705,15 @@ ttf_render_unicode_solid(ttf_font *font, Uint16 *text, SDL_Color fg)
 	struct cached_glyph *glyph;
 
 	/* Get the dimensions of the text surface. */
-	if ((ttf_size_unicode(font, text, &width, NULL) < 0) || !width) {
+	if ((ttf_size_unicode(font, text, &width, NULL) < 0) ||
+	    width == 0) {
 		error_set("text has zero width");
 		return (NULL);
 	}
 	height = font->height;
 
 	/* Create the target surface. */
-	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE,
-	    width, height, 8,
+	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 8,
 	    0, 0, 0, 0);
 	if (textsu == NULL) {
 		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());

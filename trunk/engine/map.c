@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.173 2003/04/24 06:58:24 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.174 2003/04/25 22:53:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,15 +34,15 @@
 #include <engine/map.h>
 #include <engine/version.h>
 #include <engine/config.h>
-#include <engine/world.h>
 #include <engine/view.h>
 
-static const struct version map_ver = {
+const struct version map_ver = {
 	"agar map",
 	4, 4
 };
 
-static const struct object_ops map_ops = {
+const struct object_ops map_ops = {
+	map_init,
 	map_destroy,
 	map_load,
 	map_save
@@ -317,10 +317,26 @@ map_set_zoom(struct map *m, Uint16 zoom)
 	pthread_mutex_unlock(&m->lock);
 }
 
-void
-map_init(struct map *m, char *name)
+struct map *
+map_new(void *parent, char *name)
 {
-	object_init(&m->obj, "map", name, 0, &map_ops);
+	struct map *m;
+
+	m = Malloc(sizeof(struct map));
+	map_init(m, name);
+
+	if (parent != NULL)
+		object_attach(parent, m);
+
+	return (m);
+}
+
+void
+map_init(void *obj, char *name)
+{
+	struct map *m = obj;
+
+	object_init(m, "map", name, &map_ops);
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
@@ -339,8 +355,6 @@ map_init(struct map *m, char *name)
 	m->nlayers = 1;
 	map_layer_init(&m->layers[0], "Layer 0");
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
-
-	OBJECT(m)->flags |= OBJECT_CONSISTENT;
 
 #if defined(DEBUG) && defined(THREADS)
 	if (map_debug & DEBUG_SCAN) {

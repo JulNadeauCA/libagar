@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.62 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.63 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,8 +37,9 @@
 
 #include <engine/widget/window.h>
 
-static const struct widget_ops button_ops = {
+const struct widget_ops button_ops = {
 	{
+		NULL,		/* init */
 		button_destroy,
 		NULL,		/* load */
 		NULL		/* save */

@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.9 2003/03/26 10:04:18 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.10 2003/05/08 03:31:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -34,8 +34,9 @@
 #include <engine/widget/window.h>
 #include <engine/mapedit/selops.h>
 
-static const struct tool_ops select_ops = {
+const struct tool_ops select_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

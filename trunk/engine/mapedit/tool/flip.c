@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.7 2003/03/28 00:23:23 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.8 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -33,8 +33,9 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
 
-static const struct tool_ops flip_ops = {
+const struct tool_ops flip_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

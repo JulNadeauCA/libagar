@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.147 2003/04/12 01:34:43 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.148 2003/04/26 04:42:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,7 +34,6 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
-#include <engine/world.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -56,20 +55,15 @@ extern struct window *game_menu_win;
 
 #ifdef DEBUG
 #define DEBUG_UNDERRUNS		0x001
-#define DEBUG_VIDEO_UPDATES	0x002
-#define DEBUG_VIDEORESIZE_EV	0x004
-#define DEBUG_VIDEOEXPOSE_EV	0x008
-#define DEBUG_MOUSEMOTION_EV	0x010
-#define DEBUG_MOUSEBUTTON_EV	0x020
-#define DEBUG_JOY_EV		0x040
-#define DEBUG_KEY_EV		0x080
-#define DEBUG_QUIT_EV		0x100
-#define DEBUG_EVENT_NEW		0x200
-#define DEBUG_EVENT_DELIVERY	0x400
-#define DEBUG_ASYNC_EVENTS	0x800
+#define DEBUG_VIDEORESIZE_EV	0x002
+#define DEBUG_VIDEOEXPOSE_EV	0x004
+#define DEBUG_JOY_EV		0x008
+#define DEBUG_KEY_EV		0x010
+#define DEBUG_EVENT_NEW		0x020
+#define DEBUG_EVENT_DELIVERY	0x040
+#define DEBUG_ASYNC_EVENTS	0x080
 
-int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
-			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
+int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
 int	event_count;
 
@@ -93,8 +87,6 @@ static void	*event_post_async(void *);
 static void
 event_hotkey(SDL_Event *ev)
 {
-	pthread_mutex_lock(&world->lock);
-
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_r:
@@ -105,30 +97,19 @@ event_hotkey(SDL_Event *ev)
 			SDL_PushEvent(&vexp);
 		}
 		break;
-	case SDLK_F2:
-		if (object_save(world, NULL) == -1)
-			text_msg("Error saving world", "%s", error_get());
-		break;
-	case SDLK_F4:
-		if (object_load(world, NULL) == -1)
-			text_msg("Error loading world", "%s", error_get());
-		break;
 	case SDLK_F6:
 		window_show(fps_win);
 		break;
 	case SDLK_F7:
-		if (engine_debug > 0) {
-			window_show(monitor.toolbar);
-		}
+		window_show(monitor.toolbar);
 		break;
 #endif /* DEBUG */
 	case SDLK_F1:
 		window_show(config->settings);
 		break;
 	case SDLK_t:
-		if (mapedition) {
+		if (mapedition)
 			window_show(mapedit.win.toolbar);
-		}
 		break;
 	case SDLK_F8:
 		view_capture(view->v);
@@ -151,8 +132,6 @@ event_hotkey(SDL_Event *ev)
 	default:
 		break;
 	}
-
-	pthread_mutex_unlock(&world->lock);
 }
 
 #ifdef DEBUG
@@ -209,9 +188,8 @@ event_init_fps_counter(void)
 		    SDL_MapRGB(view->v->format, 200, 200, 200));
 	}
 	
-	if (engine_debug > 0) {
+	if (engine_debug > 0)
 		window_show(monitor.toolbar);
-	}
 }
 #endif /* DEBUG */
 
@@ -221,15 +199,14 @@ event_adjust_refresh(Uint32 ntick)
 {
 	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
 #ifdef DEBUG
-	if (fps_win->flags & WINDOW_SHOWN) {
+	if (fps_win->flags & WINDOW_SHOWN)
 		event_update_fps_counter();
-	}
 #endif
-	if (view->refresh.current < 1) {
+	if (view->refresh.current < 1)
 		view->refresh.current = 1;
-	}
 }
 
+/* Process SDL events, perform video updates and idle when we can afford it. */
 void
 event_loop(void)
 {
@@ -260,37 +237,26 @@ event_loop(void)
 					return;
 				}
 				
-				pthread_mutex_lock(&world->lock);
 				pthread_mutex_lock(&m->lock);
-
-				/* Draw animated nodes. */
 				rootmap_animate();
-
-				/* Draw static nodes. */
 				if (m->redraw != 0) {
 					m->redraw = 0;
 					rootmap_draw();
 				}
 				pthread_mutex_unlock(&m->lock);
-				pthread_mutex_unlock(&world->lock);
 
 				/* Queue the video update. */
 				VIEW_UPDATE(view->v->clip_rect);
 			}
 
 			/* Update the windows. */
-			debug_n(DEBUG_VIDEO_UPDATES, "updating windows: ");
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
-				if (win->flags & WINDOW_SHOWN) {
-					debug_n(DEBUG_VIDEO_UPDATES, " %s",
-					    OBJECT(win)->name);
+				if (win->flags & WINDOW_SHOWN)
 					window_draw(win);
-				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
-			debug_n(DEBUG_VIDEO_UPDATES, ".\n");
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
@@ -345,18 +311,15 @@ event_dispatch(SDL_Event *ev)
 	case SDL_VIDEORESIZE:
 		debug(DEBUG_VIDEORESIZE_EV,
 		    "SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w, ev->resize.h);
-
 		SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0, view->v->flags);
 		if (view->v == NULL) {
 			fatal("setting %dx%d mode: %s",
 			    ev->resize.w, ev->resize.h, SDL_GetError());
 		}
-
 		old_w = view->w;
 		old_h = view->h;
 		view->w = ev->resize.w;
 		view->h = ev->resize.h;
-
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			win->rd.x = win->rd.x * ev->resize.w/old_w;
 			win->rd.y = win->rd.y * ev->resize.h/old_h;
@@ -366,24 +329,16 @@ event_dispatch(SDL_Event *ev)
 			win->saved_rd.y = win->saved_rd.y * ev->resize.h/old_h;
 			win->saved_rd.w = win->saved_rd.w * ev->resize.w/old_w;
 			win->saved_rd.h = win->saved_rd.h * ev->resize.h/old_h;
-
 			window_resize(win);
 		}
 		break;
 	case SDL_VIDEOEXPOSE:
 		debug(DEBUG_VIDEOEXPOSE_EV, "SDL_VIDEOEXPOSE\n");
-
-		switch (view->gfx_engine) {
-		case GFX_ENGINE_TILEBASED:
-			/* Redraw the map only. */
-			pthread_mutex_lock(&world->lock);
+		if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+			pthread_mutex_lock(&view->rootmap->map->lock);
 			view->rootmap->map->redraw++;
-			pthread_mutex_unlock(&world->lock);
-			break;
-		default:
-			break;
+			pthread_mutex_unlock(&view->rootmap->map->lock);
 		}
-
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
 			if (win->flags & WINDOW_SHOWN) {
@@ -392,14 +347,11 @@ event_dispatch(SDL_Event *ev)
 			pthread_mutex_unlock(&win->lock);
 		}
 #ifdef HAVE_OPENGL
-		if (view->opengl) {
+		if (view->opengl)
 			SDL_GL_SwapBuffers();
-		}
 #endif
 		break;
 	case SDL_MOUSEMOTION:
-		debug(DEBUG_MOUSEMOTION_EV, "SDL_MOUSEMOTION x=%d y=%d\n",
-		    ev->motion.x, ev->motion.y);
 		rv = 0;
 		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
@@ -407,11 +359,6 @@ event_dispatch(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		debug(DEBUG_MOUSEBUTTON_EV,
-		    "SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
-		    (ev->button.type == SDL_MOUSEBUTTONUP) ?
-		    "UP" : "DOWN", ev->button.button, ev->button.x,
-		    ev->button.y);
 		rv = 0;
 		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
@@ -434,7 +381,6 @@ event_dispatch(SDL_Event *ev)
 		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
 		    (int)ev->key.keysym.sym,
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
-
 		rv = 0;
 		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
@@ -444,17 +390,14 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_QUIT:
-		debug(DEBUG_QUIT_EV, "SDL_QUIT\n");
 		if (view->rootmap == NULL) {			/* XXX */
 			pthread_mutex_unlock(&view->lock);
 		}
 		engine_stop();
 	}
 	
-	/* Process the detach queue. */
-	if (!TAILQ_EMPTY(&view->detach)) {
+	if (!TAILQ_EMPTY(&view->detach))
 		view_detach_queued();
-	}
 	pthread_mutex_unlock(&view->lock);
 }
 
@@ -515,7 +458,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
 	struct object *ob = p;
-	struct event *ev, *eev = NULL;
+	struct event *ev = NULL;
 	int newev = 0;
 
 	debug(DEBUG_EVENT_NEW, "%s: registered `%s' event\n", ob->name, name);
@@ -526,38 +469,37 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 			debug(DEBUG_EVENT_NEW,
 			    "replacing %s's existing `%s' handler\n",
 			    ob->name, ev->name);
-			eev = ev;
 			break;
 		}
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 
-	if (eev == NULL) {
-		eev = Malloc(sizeof(struct event));
-		eev->name = Strdup(name);
+	if (ev == NULL) {
+		ev = Malloc(sizeof(struct event));
+		ev->name = Strdup(name);
 		newev = 1;
 	}
-	eev->flags = 0;
-	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAX_ARGS);
-	eev->argv[0].p = ob;
-	eev->argc = 1;
-	eev->handler = handler;
+	ev->flags = 0;
+	memset(ev->argv, 0, sizeof(union evarg) * EVENT_MAX_ARGS);
+	ev->argv[0].p = ob;
+	ev->argc = 1;
+	ev->handler = handler;
 
 	if (fmt != NULL) {
 		va_list ap;
 
 		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-			EVENT_PUSH_ARG(ap, *fmt, eev);
+			EVENT_PUSH_ARG(ap, *fmt, ev);
 		}
 		va_end(ap);
 	}
 
 	if (newev) {
 		pthread_mutex_lock(&ob->events_lock);
-		TAILQ_INSERT_TAIL(&ob->events, eev, events);
+		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 		pthread_mutex_unlock(&ob->events_lock);
 	}
-	return (eev);
+	return (ev);
 }
 
 #ifdef THREADS
@@ -566,11 +508,12 @@ event_post_async(void *p)
 {
 	struct event *eev = p;
 
-	debug(DEBUG_ASYNC_EVENTS, "%p: async event start\n",
-	    (void *)pthread_self());
+	debug(DEBUG_ASYNC_EVENTS, "%s: async event `%s' start\n",
+	    OBJECT(eev->argv[0].p)->name, eev->name);
 	eev->handler(eev->argc, eev->argv);
-	debug(DEBUG_ASYNC_EVENTS, "%p: async event end\n",
-	    (void *)pthread_self());
+	debug(DEBUG_ASYNC_EVENTS, "%s: async event `%s' end\n",
+	    OBJECT(eev->argv[0].p)->name, eev->name);
+
 	free(eev);
 	return (NULL);
 }

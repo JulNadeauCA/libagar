@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.17 2003/05/07 13:07:52 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.18 2003/05/08 04:14:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,8 +33,9 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
 
-static const struct tool_ops fill_ops = {
+const struct tool_ops fill_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
