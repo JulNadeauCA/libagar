@@ -1,4 +1,4 @@
-/*	$Csoft: region.h,v 1.7 2002/12/26 07:03:41 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.8 2003/01/23 02:00:57 vedge Exp $	*/
 /*	Public domain	*/
 
 TAILQ_HEAD(widgetsq, widget);
@@ -31,7 +31,7 @@ struct region {
 #ifdef DEBUG
 # define REGION_PUT_PIXEL(reg, rrx, rry, c) do {			\
 	if ((rrx) > (reg)->w || (rry) > (reg)->h) {			\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(reg)->name,		\
+		fatal("%s: %d,%d > %dx%d", OBJECT(reg)->name,		\
 		    (rrx), (rry), (reg)->w, (reg)->h);			\
 	}								\
 	WINDOW_PUT_PIXEL((reg)->win, (reg)->x+(rrx), (reg)->y+(rry),	\
@@ -39,7 +39,7 @@ struct region {
 } while (/*CONSTCOND*/0)
 # define REGION_PUT_ALPHAPIXEL(reg, rrx, rry, c, wa) do {		\
 	if ((rrx) > (reg)->w || (rry) > (reg)->h) {			\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(reg)->name,		\
+		fatal("%s: %d,%d > %dx%d", OBJECT(reg)->name,		\
 		    (rrx), (rry), (reg)->w, (reg)->h);			\
 	}								\
 	WINDOW_PUT_ALPHAPIXEL((reg)->win, (reg)->x+(rrx),		\

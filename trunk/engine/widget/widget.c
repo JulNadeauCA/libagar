@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.45 2003/03/02 00:35:37 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.46 2003/03/04 00:43:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -165,7 +165,7 @@ widget_get_int(void *wid, const char *name)
 	int *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 
@@ -175,7 +175,7 @@ widget_get_uint8(void *wid, const char *name)
 	Uint8 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 Sint8
@@ -184,7 +184,7 @@ widget_get_sint8(void *wid, const char *name)
 	Sint8 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 
@@ -194,7 +194,7 @@ widget_get_uint16(void *wid, const char *name)
 	Uint16 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 Sint16
@@ -203,7 +203,7 @@ widget_get_sint16(void *wid, const char *name)
 	Sint16 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 
@@ -213,7 +213,7 @@ widget_get_uint32(void *wid, const char *name)
 	Uint32 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 Sint32
@@ -222,7 +222,7 @@ widget_get_sint32(void *wid, const char *name)
 	Sint32 *i;
 
 	if (widget_binding_get(wid, name, &i) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*i);
 }
 
@@ -233,7 +233,7 @@ widget_get_float(void *wid, const char *name)
 	float *f;
 
 	if (widget_binding_get(wid, name, &f) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*f);
 }
 
@@ -243,7 +243,7 @@ widget_get_double(void *wid, const char *name)
 	double *d;
 
 	if (widget_binding_get(wid, name, &d) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (*d);
 }
 #endif /* FLOATING_POINT */
@@ -254,7 +254,7 @@ widget_get_string(void *wid, const char *name)
 	char *s;
 
 	if (widget_binding_get(wid, name, &s) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (s);
 }
 
@@ -264,7 +264,7 @@ widget_get_pointer(void *wid, const char *name)
 	void *p;
 
 	if (widget_binding_get(wid, name, &p) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	return (p);
 }
 
@@ -275,7 +275,7 @@ widget_set_int(void *wid, const char *name, int ni)
 	int *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -287,7 +287,7 @@ widget_set_uint8(void *wid, const char *name, Uint8 ni)
 	Uint8 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -299,7 +299,7 @@ widget_set_sint8(void *wid, const char *name, Sint8 ni)
 	Sint8 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -311,7 +311,7 @@ widget_set_uint16(void *wid, const char *name, Uint16 ni)
 	Uint16 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -323,7 +323,7 @@ widget_set_sint16(void *wid, const char *name, Sint16 ni)
 	Sint16 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -335,7 +335,7 @@ widget_set_uint32(void *wid, const char *name, Uint32 ni)
 	Uint32 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -347,7 +347,7 @@ widget_set_sint32(void *wid, const char *name, Sint32 ni)
 	Sint32 *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -360,7 +360,7 @@ widget_set_float(void *wid, const char *name, float nf)
 	float *f;
 
 	if ((binding = widget_binding_get_locked(wid, name, &f)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*f = nf;
 	widget_binding_unlock(binding);
 }
@@ -372,7 +372,7 @@ widget_set_double(void *wid, const char *name, double nd)
 	double *d;
 
 	if ((binding = widget_binding_get_locked(wid, name, &d)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	*d = nd;
 	widget_binding_unlock(binding);
 }
@@ -385,7 +385,7 @@ widget_set_string(void *wid, const char *name, char *ns)
 	char **s;
 
 	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 
 	/* XXX realloc */
 	free(*s);
@@ -400,7 +400,7 @@ widget_set_pointer(void *wid, const char *name, void *np)
 	void **p;
 
 	if ((binding = widget_binding_get_locked(wid, name, &p)) == NULL)
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 
 	*p = np;
 	widget_binding_unlock(binding);
@@ -503,7 +503,7 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 				prop = prop_get(binding->p1,
 				    (char *)binding->p2, PROP_ANY, NULL);
 				if (prop == NULL) {
-					fatal("%s\n", error_get());
+					fatal("%s", error_get());
 				}
 
 				switch (prop->type) {
@@ -554,11 +554,11 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 					    (void **)&prop->data.p;
 					break;
 				default:
-					fatal("cannot translate property\n");
+					fatal("cannot translate prop");
 				}
 				break;
 			default:
-				fatal("unknown binding type\n");
+				fatal("unknown binding type");
 			}
 			if (binding->mutex != NULL && !return_locked)
 				pthread_mutex_unlock(binding->mutex);
@@ -617,11 +617,11 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 	
 	if (strcmp(OBJECT(wid)->name, "widget") == 0 ||
 	    strcmp(OBJECT(wid)->name, "window") == 0) {
-		fatal("%s is not a widget/window\n", OBJECT(wid)->name);
+		fatal("%s is not a widget/window", OBJECT(wid)->name);
 	}
 	
 	if (ind > WIDGET_MAX_COLORS)
-		fatal("%d colors > %d\n", ind, WIDGET_MAX_COLORS);
+		fatal("%d colors > %d", ind, WIDGET_MAX_COLORS);
 	if (ind > wid->ncolors)
 		wid->ncolors++;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.56 2003/01/25 06:22:26 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.57 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -67,7 +67,7 @@ struct window {
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
 	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
 	    (wrx) < 0 || (wry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
+		fatal("%s: %d,%d > %dx%d", OBJECT(win)->name,		\
 		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
 	}								\
 	VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry), (c)); \
@@ -76,7 +76,7 @@ struct window {
 # define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) do {		\
 	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
 	    (wrx) < 0 || (wry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
+		fatal("%s: %d,%d > %dx%d", OBJECT(win)->name,		\
 		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
 	}								\
 	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx),			\
