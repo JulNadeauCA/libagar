@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.81 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.82 2005/01/26 02:40:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -227,13 +227,9 @@ textbox_key(int argc, union evarg *argv)
 		   (kcode->key != keysym || kcode->func == NULL))
 			continue;
 		
-		dprintf("key %d (mod 0x%x), pos=%d\n", kcode->key,
-		    kcode->modmask, tbox->pos);
-
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
 		  	if (kcode->clr_compo) {
-				dprintf("clear compo\n");
 				tbox->compose = 0;
 			}
 			event_post(NULL, tbox, "textbox-prechg", NULL);
