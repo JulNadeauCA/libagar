@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.112 2002/11/26 05:21:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.113 2002/11/26 06:00:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -74,11 +74,12 @@ static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
 #ifdef DEBUG
-#define DEBUG_STATE	0x01
-#define DEBUG_RESIZE	0x02
-#define DEBUG_DRAW	0x04
+#define DEBUG_STATE		0x01
+#define DEBUG_RESIZE		0x02
+#define DEBUG_DRAW		0x04
+#define DEBUG_RESIZE_GEO	0x08
 
-int	window_debug = 0;
+int	window_debug = DEBUG_RESIZE_GEO;
 #define	engine_debug window_debug
 #endif
 
@@ -578,7 +579,7 @@ cycle_widgets(struct window *win, int reverse)
 	struct widget *nwid;
 
 	if (wid == NULL) {
-		dprintf("%s: no focus\n", OBJECT(win)->name);
+		/* No focus */
 		return;
 	}
 
@@ -1268,12 +1269,8 @@ window_resize(struct window *win)
 		}
 	}
 
-#ifdef DEBUG
-	if (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE) {
-		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->rd.w,
-		    win->rd.h);
-	}
-#endif
+	debug_n(DEBUG_RESIZE_GEO, "%s: %dx%d\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h);
 }
 
 void
@@ -1343,7 +1340,6 @@ window_generic_detach(int argc, union evarg *argv)
 
 	OBJECT_ASSERT(win, "window");
 
-	dprintf("%s\n", OBJECT(win)->name);
 	view_detach(win);
 }
 
