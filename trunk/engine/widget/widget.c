@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.69 2003/07/03 07:24:41 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.70 2003/07/04 12:25:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -822,7 +822,10 @@ widget_focus(void *p)
 	} while ((pwid = OBJECT(pwid)->parent) != NULL);
 }
 
-/* Render a widget and its descendents, recursively. */
+/*
+ * Render a widget and its descendents, recursively.
+ * The view must be locked.
+ */
 void
 widget_draw(void *p)
 {
@@ -850,11 +853,8 @@ widget_draw(void *p)
 		}
 	}
 
-	lock_linkage();
-	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
+	OBJECT_FOREACH_CHILD(cwid, wid, widget)
 		widget_draw(cwid);
-	}
-	unlock_linkage();
 }
 
 /* Set the geometry of a widget and invoke its scale operation. */
