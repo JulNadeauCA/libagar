@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.4 2002/03/17 09:14:13 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.5 2002/03/17 11:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -113,19 +113,29 @@ input_time(Uint32 ival, void *p)
 		static struct mappos opos;
 		struct mappos *npos;
 		struct noderef *nref;
-	
-		opos = *in->pos;
-		nref = opos.nref;
-		dprintf("moved %s %dx%d\n", opos.nref->pobj->name, x, y);
-	
-		object_mdel(nref->pobj, nref->offs, nref->flags,
-		    m, opos.x, opos.y);
-		npos = object_madd(nref->pobj, nref->offs, nref->flags,
-		    opos.input, m, x, y);
-		npos->dir = opos.dir;
+		struct node *nnode;
 
-		m->redraw++;
-		mapdir_postmove(&npos->dir, &x, &y, moved);
+		nnode = &m->map[x][y];
+		if ((nnode->flags & NODE_BLOCK) == 0) {
+			opos = *in->pos;
+			nref = opos.nref;
+	
+			object_mdel(nref->pobj, nref->offs, nref->flags,
+			    m, opos.x, opos.y);
+			npos = object_madd(nref->pobj, nref->offs, nref->flags,
+			    opos.input, m, x, y);
+			npos->dir = opos.dir;
+
+			m->redraw++;
+			mapdir_postmove(&npos->dir, &x, &y, moved);
+		} else {
+			opos = *in->pos;
+			nref = opos.nref;
+
+			nref->xoffs = 0;
+			nref->yoffs = 0;
+			m->redraw++;
+		}
 	}
 	pthread_mutex_unlock(&m->lock);
 
@@ -143,21 +153,25 @@ input_key(struct input *in, SDL_Event *ev)
 	case SDLK_UP:
 		if (in->pos->y > 1) {
 			mapdir_set(&in->pos->dir, DIR_UP, set);
+			in->pos->nref->offs = 0;
 		}
 		break;
 	case SDLK_DOWN:
 		if (in->pos->y < in->pos->map->maph - 2) {
 			mapdir_set(&in->pos->dir, DIR_DOWN, set);
+			in->pos->nref->offs = 1;
 		}
 		break;
 	case SDLK_LEFT:
 		if (in->pos->x > 1) {
 			mapdir_set(&in->pos->dir, DIR_LEFT, set);
+			in->pos->nref->offs = 2;
 		}
 		break;
 	case SDLK_RIGHT:
 		if (in->pos->x < in->pos->map->mapw - 2) {
 			mapdir_set(&in->pos->dir, DIR_RIGHT, set);
+			in->pos->nref->offs = 3;
 		}
 		break;
 	default:
@@ -236,15 +250,12 @@ input_event(void *p, SDL_Event *ev)
 
 	switch (in->type) {
 	case INPUT_KEYBOARD:
-		dprintf("input: keyboard\n");
 		input_key(in, ev);
 		break;
 	case INPUT_JOY:
-		dprintf("input: joy\n");
 		input_joy(in, ev);
 		break;
 	case INPUT_MOUSE:
-		dprintf("input: mouse\n");
 		input_mouse(in, ev);
 		break;
 	}
