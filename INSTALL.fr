@@ -1,0 +1,32 @@
+
+DÉPENDANCES
+-----------
+
+Agar utilise la librarie SDL (http://www.libsdl.org/), ainsi que le moteur
+de polices de caractères FreeType (http://www.freetype.org/).
+
+INSTALLATION
+------------
+
+1) Exécuter le script d'autoconfiguration (voir './configure --help').
+   $ ./configure
+
+2) Générer les dépendances avec la cible `depend'.
+   $ make depend
+
+3) Compiler la librarie, les exécutables ansi que les pages de manuel
+   (si nroff(1) est disponible).
+   $ make
+
+4) Installer la librarie, les exécutables, les fichiers de données et la
+   documentation.
+   # make install
+
+5) Exécuter le jeux ou l'éditeur.
+   $ cave					# Lancer en mode jeux
+   $ cave -e					# Lancer en mode édition
+   $ cave -e -T $HOME/fonts -t myfont,18	# Specifier la police
+   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Specifier le chemin d'accès
+   						# aux fichiers de données.
+
+$Csoft$
