@@ -82,7 +82,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_a:
-			mapedit_push(med, node);
+			mapedit_push(med, node, med->curoffs, med->curflags);
 			break;
 		case SDLK_d:
 			mapedit_pop(med, node);

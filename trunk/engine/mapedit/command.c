@@ -63,7 +63,7 @@ mapedit_setpointer(struct mapedit *med, int enable)
 
 /* Push a reference onto the node stack. */
 void
-mapedit_push(struct mapedit *med, struct node *node)
+mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 {
 	struct editref *eref;
 
@@ -71,13 +71,13 @@ mapedit_push(struct mapedit *med, struct node *node)
 
 	/* XXX inefficent */
 	pthread_mutex_lock(&med->curobj->lock);
-	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
+	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, refn);
 	pthread_mutex_unlock(&med->curobj->lock);
 
 #ifdef DEBUG
 	/* XXX should not happen */
 	if (eref == NULL) {
-		fatal("no editor ref at %d\n", med->curoffs);
+		fatal("no editor ref at %d\n", refn);
 	}
 #endif
 
@@ -91,7 +91,7 @@ mapedit_push(struct mapedit *med, struct node *node)
 		    MAPREF_ANIM|MAPREF_SAVE);
 		break;
 	}
-	node->flags = med->curflags;
+	node->flags = nflags;
 	mapedit_setpointer(med, 1);
 	med->map->redraw++;
 }
@@ -273,22 +273,18 @@ mapedit_editflags(struct mapedit *med, int mask)
 }
 
 void
-mapedit_nodeflags(struct mapedit *med, struct node *me, int flag)
+mapedit_nodeflags(struct mapedit *med, struct node *node, int flag)
 {
-	if (me->nnrefs < 2) {
-		dprintf("empty tile\n");
-		return;
-	}
-
 	if (flag == 0) {
-		me->flags = 0;
+		node->flags = 0;
 	} else {
-		if (me->flags & flag) {
-			me->flags &= ~(flag);
+		if (node->flags & flag) {
+			node->flags &= ~(flag);
 		} else {
-			me->flags |= flag;
+			node->flags |= flag;
 		}
 	}
-	med->curflags = me->flags;
+	/* XXX pref */
+	med->curflags = node->flags;
 }
 
