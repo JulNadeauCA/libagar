@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.140 2003/02/02 21:06:45 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.141 2003/02/04 02:31:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -235,7 +235,7 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 		} else if (w >= m->mapw) {
 			m->map[y] = erealloc(m->map[y],
 			    w * sizeof(struct node));
-			for (x = m->mapw - 1; x <= w; x++) {
+			for (x = m->mapw - 1; x < w; x++) {
 				node_init(&m->map[y][x], x, y);
 			}
 		}
