@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.24 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.25 2003/03/13 22:43:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,10 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/threads.h>
+#include <engine/compat/vasprintf.h>
+#include <engine/compat/strlcpy.h>
+#include <engine/engine.h>
 
-#include "compat/vasprintf.h"
-#include "engine.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifdef THREADS
 extern pthread_key_t engine_errorkey;	/* engine.c */
@@ -45,7 +50,6 @@ emalloc(size_t len)
 	p = malloc(len);
 	if (p == NULL) {
 		fatal("could not malloc %lu bytes", (unsigned long)len);
-		engine_stop();
 	}
 	return (p);
 }
@@ -58,7 +62,6 @@ erealloc(void *ptr, size_t len)
 	p = realloc(ptr, len);
 	if (p == NULL) {
 		fatal("could not realloc %lu bytes", (unsigned long)len);
-		engine_stop();
 	}
 	return (p);
 }
@@ -165,12 +168,13 @@ error_fatal(const char *fmt, ...)
 char *
 Strdup(const char *s)
 {
-	char *sd;
-
-	if ((sd = strdup(s)) == NULL) {
-		fatal("strdup: out of memory");
-	}
-	return (sd);
+	size_t len;
+	char *ns;
+	
+	len = strlen(s) + 1;
+	ns = emalloc(len);
+	strlcpy(ns, s, len);
+	return (ns);
 }
 
 void
