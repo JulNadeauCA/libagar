@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.28 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.29 2002/04/14 04:34:04 vedge Exp $	*/
 
 enum {
 	MAP_MINWIDTH	= 10,
@@ -59,8 +59,8 @@ struct map {
 #define MAP_VARTILEGEO	0x0010		/* Variable tile geometry */
 #define MAP_2D		0x0020		/* Two-dimensional */
 
+	int	redraw;			/* Redraw at next tick */
 	Uint32	fps;			/* Minimum/maximum fps */
-	Uint32	redraw;			/* Redraw at next tick */
 	Uint32	mapw, maph;		/* Map geometry */
 	Uint32	tilew, tileh;		/* Tile geometry */
 	Uint32	shtilex, shtiley;	/* Tile shift (optimization) */
