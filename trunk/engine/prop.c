@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.12 2002/12/22 12:08:35 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.13 2002/12/24 10:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -153,9 +153,9 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	pthread_mutex_lock(&ob->props_lock);
 	if (!modify) {
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
-		event_post(ob, "prop-created", "%p", nprop);
+		event_post(ob, "prop-registered", "%p", nprop);
 	} else {
-		event_post(ob, "prop-changed", "%p", nprop);
+		event_post(ob, "prop-modified", "%p", nprop);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	return (nprop);
@@ -285,7 +285,7 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			continue;
 		}
 		if (p != NULL) {
-			switch (t) {
+			switch (prop->type) {
 			case PROP_INT:
 			case PROP_BOOL:
 				*(int *)p = prop->data.i;
