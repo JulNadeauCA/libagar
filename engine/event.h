@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.7 2002/06/27 00:15:44 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.8 2002/08/18 00:40:23 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef union evarg {
@@ -32,4 +32,5 @@ void	 event_loop(void);
 void	 event_new(void *, char *, int, void (*)(int, union evarg *),
 	     const char *, ...);
 void	 event_post(void *, char *, const char *fmt, ...);
+void	 event_forward(void *, char *, int, union evarg *);
 
