@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.47 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.48 2004/01/22 09:58:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -723,7 +723,7 @@ prop_print_value(char *s, size_t len, struct prop *prop)
 		strlcpy(s, prop->data.i ? "true" : "false", len);
 		break;
 	default:
-		snprintf(s, len, "<???>");
+		snprintf(s, len, "?");
 		break;
 	}
 }
