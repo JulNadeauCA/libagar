@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.36 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.37 2005/01/23 11:55:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,6 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
-#include <engine/widget/hbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
@@ -46,24 +45,30 @@
 #include "monitor.h"
 
 static void
-poll_subwindows(struct tlist *tl, struct window *win, int depth)
+poll_windows_do(struct tlist *tl, struct window *win, int depth)
 {
 	char text[TLIST_LABEL_MAX];
 	struct window *subwin;
 	struct tlist_item *it;
-	
-	strlcpy(text, OBJECT(win)->name, sizeof(text));
-	strlcat(text, " (", sizeof(text));
-	strlcat(text, win->caption, sizeof(text));
-	strlcat(text, ")", sizeof(text));
+
+	if (strcmp(win->caption, "win-popup") == 0)
+		return;
+
+	strlcpy(text, win->caption, sizeof(text));
+	if (strcmp(OBJECT(win)->name, "win-generic") != 0) {
+		strlcat(text, " (", sizeof(text));
+		strlcat(text, OBJECT(win)->name, sizeof(text));
+		strlcat(text, ")", sizeof(text));
+	}
+
 	it = tlist_insert_item(tl, NULL, text, win);
 	it->depth = depth;
+	it->class = "window";
 
 	TAILQ_FOREACH(subwin, &win->subwins, swins)
-		poll_subwindows(tl, subwin, depth+1);
+		poll_windows_do(tl, subwin, depth+1);
 }
 
-/* Update the window list display. */
 static void
 poll_windows(int argc, union evarg *argv)
 {
@@ -73,13 +78,12 @@ poll_windows(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		poll_subwindows(tl, win, 0);
+		poll_windows_do(tl, win, 0);
 	}
 	pthread_mutex_unlock(&view->lock);
 	tlist_restore_selections(tl);
 }
 
-/* Set the visibility bit on a window. */
 static void
 show_window(int argc, union evarg *argv)
 {
@@ -87,17 +91,13 @@ show_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *win;
 
-	it = tlist_item_selected(tl);
-	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected."));
+	if ((it = tlist_item_selected(tl)) == NULL)
 		return;
-	}
 
 	win = it->p1;
 	window_show(win);
 }
 
-/* Clear the visibility bit on a window. */
 static void
 hide_window(int argc, union evarg *argv)
 {
@@ -105,32 +105,11 @@ hide_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *win;
 
-	it = tlist_item_selected(tl);
-	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected."));
+	if ((it = tlist_item_selected(tl)) == NULL)
 		return;
-	}
 
 	win = it->p1;
 	window_hide(win);
-}
-
-/* Detach a window (assuming it is not referenced). */
-static void
-detach_window(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
-	struct window *win;
-
-	it = tlist_item_selected(tl);
-	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected."));
-		return;
-	}
-
-	win = it->p1;
-	view_detach(win);
 }
 
 /* Update the list of colors for a widget. */
@@ -172,13 +151,12 @@ examine_widget(int argc, union evarg *argv)
 	struct vbox *vb;
 
 	if ((it = tlist_item_selected(tl)) == NULL) {
-		text_msg(MSG_ERROR, _("No widget is selected."));
 		return;
 	}
 	wid = it->p1;
 
 	win = window_new(0, NULL);
-	window_set_caption(win, _("%s widget"), OBJECT(wid)->name);
+	window_set_caption(win, _("Widget info: %s"), OBJECT(wid)->name);
 	
 	vb = vbox_new(win, VBOX_WFILL);
 	{
@@ -213,7 +191,7 @@ examine_widget(int argc, union evarg *argv)
 }
 
 static void
-find_widgets(struct widget *wid, struct tlist *widtl, int depth)
+poll_widgets_do(struct widget *wid, struct tlist *widtl, int depth)
 {
 	char text[TLIST_LABEL_MAX];
 	struct tlist_item *it;
@@ -228,6 +206,7 @@ find_widgets(struct widget *wid, struct tlist *widtl, int depth)
 	}
 	it = tlist_insert_item(widtl, NULL, text, wid);
 	it->depth = depth;
+	it->class = "widget";
 	
 	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
@@ -238,11 +217,10 @@ find_widgets(struct widget *wid, struct tlist *widtl, int depth)
 		struct widget *cwid;
 
 		OBJECT_FOREACH_CHILD(cwid, wid, widget)
-			find_widgets(cwid, widtl, depth+1);
+			poll_widgets_do(cwid, widtl, depth+1);
 	}
 }
 
-/* Update the widget tree display. */
 static void
 poll_widgets(int argc, union evarg *argv)
 {
@@ -253,14 +231,13 @@ poll_widgets(int argc, union evarg *argv)
 	lock_linkage();
 	pthread_mutex_lock(&win->lock);
 
-	find_widgets(WIDGET(win), widtl, 0);
+	poll_widgets_do(WIDGET(win), widtl, 0);
 
 	pthread_mutex_unlock(&win->lock);
 	unlock_linkage();
 	tlist_restore_selections(widtl);
 }
 
-/* Display window information. */
 static void
 examine_window(int argc, union evarg *argv)
 {
@@ -268,10 +245,9 @@ examine_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *pwin, *win;
 	struct tlist *tl;
-	struct hbox *hb;
+	struct AGMenuItem *mi;
 
-	it = tlist_item_selected(wintl);
-	if (it == NULL) {
+	if ((it = tlist_item_selected(wintl)) == NULL) {
 		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
@@ -281,7 +257,7 @@ examine_window(int argc, union evarg *argv)
 	    OBJECT(pwin)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, _("%s window"), OBJECT(pwin)->name);
+	window_set_caption(win, _("Window info: %s"), OBJECT(pwin)->name);
 
 	label_new(win, LABEL_STATIC, _("Name: \"%s\""), OBJECT(pwin)->name);
 	label_new(win, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
@@ -289,16 +265,13 @@ examine_window(int argc, union evarg *argv)
 
 	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);
+	event_new(tl, "tlist-dblclick", examine_widget, "%p,%p", tl, pwin);
 
-	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
+	mi = tlist_set_popup(tl, "widget");
 	{
-		struct button *bu;
-
-		bu = button_new(hb, _("Examine"));
-		event_new(bu, "button-pushed", examine_widget, "%p, %p",
-		    tl, pwin);
+		ag_menu_action(mi, _("Display informations..."), NULL, 0, 0,
+		    examine_widget, "%p,%p", tl, pwin);
 	}
-
 	window_show(win);
 }
 
@@ -306,8 +279,8 @@ struct window *
 widget_debug_window(void)
 {
 	struct window *win;
-	struct hbox *hb;
 	struct tlist *tl;
+	struct AGMenuItem *it;
 
 	if ((win = window_new(WINDOW_DETACH, "monitor-window-stack"))
 	    == NULL) {
@@ -317,20 +290,19 @@ widget_debug_window(void)
 
 	tl = tlist_new(win, TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_windows, NULL);
+	event_new(tl, "tlist-dblclick", examine_window, "%p", tl);
 
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	it = tlist_set_popup(tl, "window");
 	{
-		struct button *bu;
-		
-		bu = button_new(hb, _("Examine"));
-		event_new(bu, "button-pushed", examine_window, "%p", tl);
-		bu = button_new(hb, _("Show"));
-		event_new(bu, "button-pushed", show_window, "%p", tl);
-		bu = button_new(hb, _("Hide"));
-		event_new(bu, "button-pushed", hide_window, "%p", tl);
-		bu = button_new(hb, _("Detach"));
-		event_new(bu, "button-pushed", detach_window, "%p", tl);
+		ag_menu_action(it, _("Display informations..."), NULL, 0, 0,
+		    examine_window, "%p", tl);
+		ag_menu_separator(it);
+		ag_menu_action(it, _("Show this window"), NULL, 0, 0,
+		    show_window, "%p", tl);
+		ag_menu_action(it, _("Hide this window"), NULL, 0, 0,
+		    hide_window, "%p", tl);
 	}
+	window_set_geometry(win, view->w/4, view->h/3, view->w/2, view->h/4);
 	return (win);
 }
 
