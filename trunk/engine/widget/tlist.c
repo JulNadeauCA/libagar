@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.57 2003/05/20 12:05:20 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.58 2003/05/22 05:43:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/strlcpy.h>
 
 #include <engine/engine.h>
 #include <engine/view.h>
