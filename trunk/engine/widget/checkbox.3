@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.9 2003/02/02 21:16:15 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.10 2003/03/05 01:21:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,10 +42,10 @@ widget implements a checkbox with a label.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct checkbox *
-.Fn checkbox_new "struct region *reg" "char *caption" "int rh"
+.Fn checkbox_new "struct region *reg" "int rh" "const char *caption_fmt" "..."
 .Pp
 .Ft void
-.Fn checkbox_init "struct checkbox *checkbox" "char *caption" "int rh"
+.Fn checkbox_init "struct checkbox *checkbox" "int rh" "char *caption"
 .nr nS 0
 .Pp
 The
