@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.4 2004/04/11 03:28:43 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.5 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -55,29 +55,36 @@ vg_draw_lines(struct vg *vg, struct vg_element *vge)
 void
 vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 {
-	double vx = vge->vtx[0].x;
-	double vy = vge->vtx[0].y;
-	double px = vx;
-	double py = vy;
 	int x1, y1, x2, y2;
 	int i;
+	
+	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
 
 	for (i = 1; i < vge->nvtx; i++) {
-		vx = vge->vtx[i].x;
-		vy = vge->vtx[i].y;
-
-		vg_rcoords2(vg, px, py, &x1, &y1);
-		vg_rcoords2(vg, vx, vy, &x2, &y2);
+		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
 		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
-
-		px = vx;
-		py = vy;
+		x1 = x2;
+		y1 = y2;
 	}
 }
 
 void
 vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 {
+	int x1, y1, x2, y2;
+	int x0, y0;
+	int i;
+
+	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
+	x0 = x1;
+	y0 = y1;
+	for (i = 1; i < vge->nvtx; i++) {
+		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
+		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+		x1 = x2;
+		y1 = y2;
+	}
+	vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
 }
 
 #ifdef EDITION
@@ -161,9 +168,12 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		}
 		break;
 	case MODE_STRIP:
+	case MODE_LOOP:
 		if (b == 1) {
 			if (seq++ == 0) {
-				cur_line = vg_begin(vg, VG_LINE_STRIP);
+				cur_line = vg_begin(vg, mode == MODE_STRIP ?
+				                        VG_LINE_STRIP :
+							VG_LINE_LOOP);
 				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 				vg_vertex2(vg, vx, vy);
 			} else {
