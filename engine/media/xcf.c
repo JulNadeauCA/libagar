@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.11 2003/02/28 14:36:27 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.12 2003/02/28 15:13:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,6 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
@@ -41,15 +42,7 @@ static void		 xcf_insert_surface(struct art *, SDL_Surface *,
 			     char *, struct art_anim **);
 static Uint8		*xcf_read_tile(struct xcf_header *, int, Uint32, int,
 			    int, int);
-static Uint8		*xcf_read_tile_flat(int, Uint32, int, int, int);
-static Uint8		*xcf_read_tile_rle(int, Uint32, int, int, int);
 static void		 xcf_read_property(int, struct xcf_prop *);
-
-#if defined(__GNUC__) && defined(_SGI_SOURCE)
-/* XXX hack for gcc 2.95 under IRIX. */
-extern ssize_t	pread(int, void *, size_t, off64_t);
-extern ssize_t	pwrite(int, const void *, size_t, off64_t);
-#endif
 
 #ifdef DEBUG
 #define DEBUG_COLORMAPS		0x0001
@@ -74,8 +67,10 @@ int
 xcf_check(int fd, off_t xcf_offs)
 {
 	char magic[XCF_MAGIC_LEN];
+	ssize_t rv;
+	off_t oldoffs;
 
-	if ((pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
+	if ((Pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
 		if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) == 0) {
 			return (0);
 		}
@@ -142,7 +137,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 			    prop->data.guide.orientation);
 		}
 		break;
-#ifdef HAVE_IEEE754
+#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 	case PROP_RESOLUTION:				 /* Image resolution */
 		prop->data.resolution.x = read_float(fd);
 		prop->data.resolution.y = read_float(fd);
@@ -191,7 +186,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	}
 }
 
-static Uint8 *
+static __inline__ Uint8 *
 xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
@@ -201,11 +196,11 @@ xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 	return (load);
 }
 
-static Uint8 *
+static __inline__ Uint8 *
 xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 {
 	int i, size, count, j, length;
-	unsigned char *tilep, *tile, *data, *d, val;
+	Uint8 *tilep, *tile, *data, *d, val;
 	ssize_t rv;
 
 	tilep = tile = emalloc(len);
