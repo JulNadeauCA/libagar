@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.93 2004/10/01 03:09:31 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.94 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -930,12 +930,25 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 	}
 }
 
+#ifdef HAVE_OPENGL
+static __inline__ int
+powof2(int i)
+{
+	int val = 1;
+
+	while (val < i) {
+		val <<= 1;
+	}
+	return (val);
+}
+#endif
+
 /*
  * Perform a fast blit from a registered surface to the display
  * at coordinates relative to the widget; clipping is done.
  */
 void
-widget_blit_from(void *p, void *srcp, int name, int x, int y)
+widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 {
 	struct widget *wid = p;
 	struct widget *srcwid = srcp;
@@ -952,10 +965,20 @@ widget_blit_from(void *p, void *srcp, int name, int x, int y)
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
+		GLfloat tmptexcoord[4];
 		GLuint texture = srcwid->textures[name];
-		GLfloat *texcoord = &srcwid->texcoords[name*4];
+		GLfloat *texcoord;
 		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
 
+		if (rs == NULL) {
+			texcoord = &srcwid->texcoords[name*4];
+		} else {
+			texcoord = &tmptexcoord[0];
+			texcoord[0] = (GLfloat)rs->x/powof2(rs->x);
+			texcoord[1] = (GLfloat)rs->y/powof2(rs->y);
+			texcoord[2] = (GLfloat)rs->w/powof2(rs->w);
+			texcoord[3] = (GLfloat)rs->h/powof2(rs->h);
+		}
 #ifdef DEBUG
 		if (texture == 0)
 			fatal("invalid texture name");
@@ -990,7 +1013,7 @@ widget_blit_from(void *p, void *srcp, int name, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_BlitSurface(su, NULL, view->v, &rd);
+		SDL_BlitSurface(su, rs, view->v, &rd);
 	}
 }
 
