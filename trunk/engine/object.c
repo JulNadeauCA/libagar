@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.18 2002/02/17 08:27:48 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.19 2002/02/17 10:32:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -330,27 +330,22 @@ object_strfind(char *s)
 void
 object_dump(struct object *ob)
 {
-	static const char *vecnames[] = {
-		"destroy",
-		"event",
-		"load",
-		"save",
-		"link",
-		"unlink"
-	};
-	void *vecp;
-	int i;
-
-	printf("%3d. %10s (", ob->id, ob->name);
-	for (i = 0, vecp = ob->vec;
-	     i < sizeof(*vecnames) / sizeof(char *);
-	     i++, vecp += sizeof(void *)) {
-		if (vecp != NULL) {
-			printf(" %s", vecnames[i]);
-		}
-	}
+	printf("%3d. %10s ( ", ob->id, ob->name);
+	if (ob->vec->destroy != NULL)
+		printf("destroy ");
+	if (ob->vec->event != NULL)
+		printf("event ");
+	if (ob->vec->load != NULL)
+		printf("load ");
+	if (ob->vec->save != NULL)
+		printf("save ");
+	if (ob->vec->link != NULL)
+		printf("link ");
+	if (ob->vec->unlink != NULL)
+		printf("unlink ");
+	printf(")\n");
 	if (ob->desc != NULL) {
-		printf("                ( %s )\n", ob->desc);
+		printf("                (%s)\n", ob->desc);
 	}
 }
 
