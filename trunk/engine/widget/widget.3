@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.9 2002/08/28 05:24:45 vedge Exp $
+.\"	$Csoft: widget.3,v 1.10 2002/09/07 04:30:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -46,8 +46,12 @@ structures, and their coordinates and geometry are variable.
 .Sh LOCKING POLICIES
 Widget initialization and free routines do not need to be concerned about
 locking.
+Locking is only relevant once a widget is attached to a region, and the
+region's parent window is attached to a view.
 .Pp
-Widget event handlers can assume that the parent window is locked.
+In widget event context, the widget can assume its parent window is locked.
+The visibility of any window may be altered, and
+new windows may be attached, but windows may not be detached.
 .Pp
 Widget structure members that can be manipulated from code outside of
 the event loop (such as the
@@ -55,7 +59,7 @@ the event loop (such as the
 range or the
 .Xr textbox 3
 text) must provide a thread-safe interface, and move the read-write
-structure members to their own substructure, for clarity.
+structure members as well as their mutex to a substructure, for clarity.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -206,6 +210,11 @@ onto the widget at offset
 .Fa y
 with
 .Xr SDL_BlitSurface 3 .
+.Pp
+The
+.Fn WIDGET_FILL
+macro fills a rectangle inside the surface of a widget using
+.Xr SDL_FillRect 3 .
 .Pp
 The
 .Fn WIDGET_PUT_PIXEL
