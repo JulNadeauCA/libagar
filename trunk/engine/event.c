@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.77 2002/09/02 08:13:59 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.78 2002/09/06 01:23:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -292,8 +292,7 @@ event_loop(void)
 					SDL_UpdateRect(view->v, 0, 0, 0 ,0);
 					break;
 				}
-				TAILQ_FOREACH(win, &view->windowsh,
-				    windows) {
+				TAILQ_FOREACH(win, &view->windowsh, windows) {
 					pthread_mutex_lock(&win->lock);
 					if (win->flags & WINDOW_SHOWN) {
 						window_draw(win);
