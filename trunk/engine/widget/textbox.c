@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.40 2003/01/04 14:10:33 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.41 2003/01/05 08:40:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -329,7 +329,7 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	char *buf;
 
 	va_start(args, fmt);
-	vasprintf(&buf, fmt, args);
+	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
 	pthread_mutex_lock(&tbox->text.lock);
