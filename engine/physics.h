@@ -33,12 +33,26 @@ struct mapdir {
 #define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
 };
 
-int	gendir_init(struct gendir *);
+/* Map position back reference. */
+struct mappos {
+	Uint32	flags;
+#define POS_SPRITE	0x01	/* Offset is sprite# */
+#define POS_ANIM	0x02	/* Offset is anim# */
+
+	struct	map *m;		/* Map */
+	Uint32	x, y;		/* Coordinates */
+	Uint32	offs;		/* Offset */
+
+	Uint32	curspeed;	/* Current speed in ms */
+	struct	mapdir dir;	/* Direction */
+};
+
+void	gendir_init(struct gendir *);
 int	gendir_set(struct gendir *, int, int);
 int	gendir_move(struct gendir *);
 void	gendir_postmove(struct gendir *, int);
 
-int	mapdir_init(struct mapdir *, struct object *, struct map *,
+void	mapdir_init(struct mapdir *, struct object *, struct map *,
 	    int, int);
 void	mapdir_set(struct mapdir *, int, int);
 int	mapdir_move(struct mapdir *, int *, int *);

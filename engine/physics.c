@@ -32,14 +32,12 @@
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
 
-int
+void
 gendir_init(struct gendir *dir)
 {
 	dir->set = 0;
 	dir->clear = 0;
 	dir->moved = 0;
-
-	return (0);
 }
 
 int
@@ -81,7 +79,7 @@ gendir_postmove(struct gendir *dir, int moved)
 	}
 }
 
-int
+void
 mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
     int flags, int speed)
 {
@@ -93,8 +91,6 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->speed = speed;
 	dir->ob = ob;
 	dir->map = map;
-
-	return (0);
 }
 
 /*
