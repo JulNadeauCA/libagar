@@ -152,18 +152,26 @@ mapdir_set(struct mapdir *dir, Uint32 direction, Uint32 set)
 	}
 }
 
+/*
+ * Set the sprite/animation for a given position.
+ * Map must be locked, ob->pos must not.
+ */
 static void
 mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
 {
 	struct noderef *nref;
+	struct mappos *pos;
 
 	if (dir->flags & DIR_STATIC) {
 		return;
 	}
 
-	nref = dir->ob->pos->nref;
-	nref->offs = sprite;
+	pthread_mutex_lock(&dir->ob->pos_lock);
+	pos = dir->ob->pos;
+	pthread_mutex_unlock(&dir->ob->pos_lock);
 
+	nref = pos->nref;
+	nref->offs = sprite;
 	if (isanim) {
 		nref->flags |= MAPREF_ANIM;
 		nref->flags &= ~(MAPREF_SPRITE);
@@ -176,6 +184,8 @@ mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
 /*
  * Change map direction if necessary. X/Y velocity values are
  * mutually exclusive, and so are direction flags.
+ *
+ * Map and dir->ob->pos must not be locked within this thread.
  */
 static void
 mapdir_change(struct mapdir *dir, struct noderef *nref)
@@ -226,17 +236,26 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	}
 }
 
+/*
+ * See if dir can move to m:x,y.
+ * Map must be locked.
+ */
 static int
 mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 {
 	struct node *node = &m->map[y][x];
+	struct noderef *nref;
 
 	if (dir->flags & DIR_PASSTHROUGH) {
 		return (1);
 	}
-
 	if (node->flags & NODE_BLOCK) {
 		return (0);
+	}
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+		if (nref->pobj->flags & OBJ_BLOCK) {
+			return (0);
+		}
 	}
 
 	return (1);
@@ -245,6 +264,8 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 /*
  * Update a map direction, and return a non-zero value if the map
  * coordinates have changed (so that the caller can move the reference).
+ *
+ * Map must be locked.
  */
 int
 mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
@@ -255,7 +276,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 	Uint32 moved = 0;
 
 	map = dir->map;
-	pthread_mutex_assert(&map->lock);
 	node = &map->map[*mapy][*mapx];
 	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 	if (nref == NULL) {
@@ -428,6 +448,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 /*
  * Called after a movement, to ensure continuation if necessary, or
  * stop moving.
+ *
+ * Map must be locked.
  */
 void
 mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
@@ -435,7 +457,6 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 	struct node *node;
 	struct noderef *nref;
 
-	pthread_mutex_assert(&dir->map->lock);
 	node = &dir->map->map[*mapy][*mapx];
 	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 
