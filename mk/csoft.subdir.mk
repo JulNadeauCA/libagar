@@ -94,6 +94,20 @@ depend-subdir:
 		done; \
 	fi)
 
+cleandir-subdir:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    echo "==> ${REL}$$F"; \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
+		done; \
+	fi)
+
+
 regress-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \

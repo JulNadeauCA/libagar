@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.11 2002/02/02 08:50:06 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.13 2002/03/16 07:00:08 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -28,12 +28,12 @@
 
 NROFF=nroff
 
-MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8}
-CATMANS=${CATMAN1} ${CATMAN2} ${CATMAN3} ${CATMAN4} ${CATMAN5} ${CATMAN6} ${CATMAN7} ${CATMAN8}
+MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
+CATMANS=${CATMAN1} ${CATMAN2} ${CATMAN3} ${CATMAN4} ${CATMAN5} ${CATMAN6} ${CATMAN7} ${CATMAN8} ${CATMAN9}
 
-.SUFFIXES: .1 .2 .3 .4 .5 .6 .7 .8 .cat1 .cat2 .cat3 .cat4 .cat5 .cat6 .cat7 .cat8
+.SUFFIXES: .1 .2 .3 .4 .5 .6 .7 .8 .9 .cat1 .cat2 .cat3 .cat4 .cat5 .cat6 .cat7 .cat8 .cat9
 
-.1.cat1 .2.cat2 .3.cat3 .4.cat4 .5.cat5 .6.cat6 .7.cat7 .8.cat8:
+.1.cat1 .2.cat2 .3.cat3 .4.cat4 .5.cat5 .6.cat6 .7.cat7 .8.cat8 .9.cat9:
 	@if [ -x "`which ${NROFF}`" ]; then \
 	    echo "${NROFF} -Tascii -mandoc $< > $@"; \
 	    ${NROFF} -Tascii -mandoc $< > $@; \
@@ -87,6 +87,10 @@ install-man: ${MANS} ${CATMANS}
 	        echo "${INSTALL_DATA} $$F ${INST_MANDIR}/man8"; \
 	        ${INSTALL_DATA} $$F ${INST_MANDIR}/man8; \
 	    done; \
+	    for F in ${MAN9}; do \
+	        echo "${INSTALL_DATA} $$F ${INST_MANDIR}/man9"; \
+	        ${INSTALL_DATA} $$F ${INST_MANDIR}/man9; \
+	    done; \
 	fi
 	@if [ "${CATMANS}" != "       " ]; then \
 	    if [ -d "${INST_MANDIR}/cat1" ]; then \
@@ -111,6 +115,36 @@ install-man: ${MANS} ${CATMANS}
 	        for F in ${CATMAN4}; do \
 	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat4"; \
 	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat4; \
+	        done; \
+	    fi; \
+	    if [ -d "${INST_MANDIR}/cat5" ]; then \
+	        for F in ${CATMAN5}; do \
+	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat5"; \
+	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat5; \
+	        done; \
+	    fi; \
+	    if [ -d "${INST_MANDIR}/cat6" ]; then \
+	        for F in ${CATMAN6}; do \
+	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat6"; \
+	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat6; \
+	        done; \
+	    fi; \
+	    if [ -d "${INST_MANDIR}/cat7" ]; then \
+	        for F in ${CATMAN7}; do \
+	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat7"; \
+	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat7; \
+	        done; \
+	    fi; \
+	    if [ -d "${INST_MANDIR}/cat8" ]; then \
+	        for F in ${CATMAN8}; do \
+	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat8"; \
+	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat8; \
+	        done; \
+	    fi; \
+	    if [ -d "${INST_MANDIR}/cat9" ]; then \
+	        for F in ${CATMAN9}; do \
+	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat9"; \
+	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat9; \
 	        done; \
 	    fi; \
 	fi
@@ -149,6 +183,10 @@ deinstall-man:
 	        echo "${DEINSTALL_DATA} ${INST_MANDIR}/man8/$$F"; \
 	        ${DEINSTALL_DATA} ${INST_MANDIR}/man8/$$F; \
 	    done; \
+	    for F in ${MAN9}; do \
+	        echo "${DEINSTALL_DATA} ${INST_MANDIR}/man9/$$F"; \
+	        ${DEINSTALL_DATA} ${INST_MANDIR}/man9/$$F; \
+	    done; \
 	fi
 	@if [ "${CATMANS}" != "       " ]; then \
 	    for F in ${CATMAN1}; do \
@@ -182,6 +220,10 @@ deinstall-man:
 	    for F in ${CATMAN8}; do \
 	        echo "${DEINSTALL_DATA} ${INST_MANDIR}/cat8/$$F"; \
 	        ${DEINSTALL_DATA} ${INST_MANDIR}/cat8/$$F; \
+	    done; \
+	    for F in ${CATMAN9}; do \
+	        echo "${DEINSTALL_DATA} ${INST_MANDIR}/cat9/$$F"; \
+	        ${DEINSTALL_DATA} ${INST_MANDIR}/cat9/$$F; \
 	    done; \
 	fi
 
