@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.11 2002/10/30 17:18:33 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.12 2002/11/14 05:59:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,8 +119,10 @@ monitor_init(struct monitor *mon, char *name)
 {
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
-	event_new(mon, "world-attached-object", object_browser_attached, NULL);
-	event_new(mon, "world-detached-object", object_browser_detached, NULL);
+	event_new(mon, "world-attached-object",
+	    object_browser_attached_object, NULL);
+	event_new(mon, "world-detached-object",
+	    object_browser_detached_object, NULL);
 
 	mon->wins.object_browser = object_browser_window(mon);
 	mon->wins.sprite_browser = sprite_browser_window(mon);

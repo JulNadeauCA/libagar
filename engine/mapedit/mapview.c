@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.30 2002/11/12 02:31:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.31 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -439,13 +439,13 @@ mapview_caption(struct mapview *mv)
 	struct window *win = WIDGET(mv)->win;
 
 	if (mv->flags & MAPVIEW_TILEMAP) {
-		window_titlebar_printf(win, "%s", OBJECT(mv->map)->name);
+		window_set_caption(win, "%s", OBJECT(mv->map)->name);
 	} else {
 		if ((mv->flags & MAPVIEW_EDIT) == 0) {
-			window_titlebar_printf(win, "@ %s (%d%%)",
+			window_set_caption(win, "@ %s (%d%%)",
 			    OBJECT(mv->map)->name, mv->zoom);
 		} else {
-			window_titlebar_printf(win, "%s (%d%%)",
+			window_set_caption(win, "%s (%d%%)",
 			    OBJECT(mv->map)->name, mv->zoom);
 		}
 	}
