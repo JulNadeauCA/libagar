@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.18 2003/03/12 06:15:14 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.19 2003/03/13 22:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -567,7 +567,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	head->w = read_uint32(fd);
 	head->h = read_uint32(fd);
 	if (head->w > 65536 || head->h > 65536) {
-		error_set("nonsense geometry: %dx%d", head->w, head->h);
+		error_set("nonsense geometry: %ux%u", head->w, head->h);
 		free(head);
 		return (-1);
 	}
@@ -578,7 +578,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	case XCF_IMAGE_INDEXED:
 		break;
 	default:
-		error_set("unknown base image type: %d", head->base_type);
+		error_set("unknown base image type: %u", head->base_type);
 		free(head);
 		return (-1);
 	}
@@ -630,7 +630,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		layer->layer_type = read_uint32(fd);
 		layer->name = read_string(fd, NULL);
 
-		debug(DEBUG_LAYER_NAMES, "%s: %dx%d\n", layer->name,
+		debug(DEBUG_LAYER_NAMES, "%s: %ux%u\n", layer->name,
 		    layer->w, layer->h);
 
 		/* Read the layer properties. */
