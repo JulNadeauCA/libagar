@@ -1,7 +1,7 @@
-/*	$Csoft: tool.c,v 1.13 2004/11/26 10:32:34 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.14 2004/12/28 01:47:16 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: primitive.c,v 1.59 2004/09/19 03:49:39 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.60 2004/09/19 10:31:28 vedge Exp $	    */
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: vg_mask.c,v 1.2 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.3 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: string.c,v 1.7 2003/09/12 03:09:04 vedge Exp $	*/
+/*	$Csoft: string.c,v 1.8 2004/01/03 04:25:08 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

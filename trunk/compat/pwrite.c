@@ -1,7 +1,7 @@
-/*	$Csoft: pwrite.c,v 1.6 2004/01/03 04:25:05 vedge Exp $	*/
+/*	$Csoft: pwrite.c,v 1.1 2004/02/26 09:19:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

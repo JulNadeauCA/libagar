@@ -1,7 +1,7 @@
-/*	$Csoft: window.c,v 1.233 2004/09/29 05:48:34 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.234 2004/11/30 11:32:08 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

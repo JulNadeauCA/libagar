@@ -1,7 +1,7 @@
-/*	$Csoft: vg_snap.c,v 1.6 2004/10/06 04:56:08 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.7 2004/11/30 11:50:03 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

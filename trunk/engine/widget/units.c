@@ -1,7 +1,7 @@
-/*	$Csoft: units.c,v 1.27 2004/08/26 06:25:10 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.28 2004/08/27 03:32:17 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: radio.c,v 1.43 2004/04/22 12:36:48 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.44 2004/11/30 11:36:54 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

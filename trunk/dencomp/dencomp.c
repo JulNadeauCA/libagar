@@ -1,7 +1,7 @@
-/*	$Csoft: dencomp.c,v 1.3 2004/01/03 04:25:02 vedge Exp $	*/
+/*	$Csoft: dencomp.c,v 1.4 2004/02/26 10:34:56 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

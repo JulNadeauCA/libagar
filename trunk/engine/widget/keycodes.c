@@ -1,7 +1,7 @@
-/*	$Csoft: keycodes.c,v 1.36 2003/10/11 04:31:35 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.37 2004/01/03 04:25:13 vedge Exp $	    */
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: palette.c,v 1.23 2004/03/24 01:18:09 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.24 2004/05/21 03:30:14 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: nodemask.c,v 1.4 2004/04/30 05:10:12 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.5 2004/06/18 03:11:24 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

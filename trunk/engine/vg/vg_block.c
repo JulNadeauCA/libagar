@@ -1,7 +1,7 @@
-/*	$Csoft: vg_block.c,v 1.10 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.11 2004/11/25 02:49:01 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: netbuf.c,v 1.3 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: netbuf.c,v 1.4 2004/04/18 02:18:47 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

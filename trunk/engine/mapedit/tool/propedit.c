@@ -1,7 +1,7 @@
-/*	$Csoft: propedit.c,v 1.49 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.50 2004/05/25 07:27:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: perso.c,v 1.40 2004/03/24 08:46:43 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.41 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: checkbox.c,v 1.49 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.50 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft$	*/
+/*	$Csoft: statusbar.c,v 1.1 2004/03/30 15:50:44 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

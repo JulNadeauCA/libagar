@@ -1,7 +1,7 @@
-/*	$Csoft: timeout.c,v 1.5 2004/05/25 07:25:47 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.6 2004/07/21 11:06:37 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

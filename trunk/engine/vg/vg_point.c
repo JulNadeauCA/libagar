@@ -1,7 +1,7 @@
-/*	$Csoft: vg_point.c,v 1.12 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.13 2004/10/06 04:37:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

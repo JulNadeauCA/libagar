@@ -1,7 +1,7 @@
-/*	$Csoft: mediasel.c,v 1.15 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.16 2004/11/30 11:41:30 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

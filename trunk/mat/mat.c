@@ -1,7 +1,7 @@
-/*	$Csoft: mat.c,v 1.2 2004/07/29 05:05:38 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
