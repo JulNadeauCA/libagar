@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.11 2003/03/05 01:31:03 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.12 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,24 +44,23 @@ widget implements a checkbox with a label.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct checkbox *
-.Fn checkbox_new "struct region *reg" "int rh" "const char *caption_fmt" "..."
+.Fn checkbox_new "struct region *reg" "const char *caption_fmt" "..."
 .Pp
 .Ft void
-.Fn checkbox_init "struct checkbox *checkbox" "int rh" "char *caption"
+.Fn checkbox_init "struct checkbox *checkbox" "char *caption"
 .nr nS 0
 .Pp
 The
 .Fn checkbox_new
 function allocates, initializes, and attaches a
 .Nm
-widget.
-The
+widget and accepts a
+.Xr printf 3
+style format string to set the text of the label.
 .Fn checkbox_init
-function initializes a
+initializes a
 .Nm
-widget of height
-.Fa rh
-and a label set to
+widget with the label set to
 .Fa caption .
 .Sh BINDINGS
 The
@@ -78,14 +77,13 @@ The
 widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
-.It window-mousecheckboxup
-Release the checkbox.
-.It window-mousecheckboxdown
-Press the checkbox.
-.It window-keyup
-Release the checkbox.
+.It window-mousebuttondown
+Trigger the state if button is 1, otherwise give focus to the widget.
 .It window-keydown
-Press the checkbox.
+Trigger the state if key is
+.Dv SDLK_RETURN
+or
+.Dv SDLK_SPACE .
 .El
 .Pp
 The
@@ -97,7 +95,7 @@ widget generates the following events:
 Checkbox state changed (1 = pressed, 0 = released).
 The
 .Sq state
-binding is locked during the event handler's execution.
+binding remains locked during the event handler's execution.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
