@@ -1,7 +1,6 @@
-/*	$Csoft: mapview.h,v 1.7 2002/07/29 04:05:50 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.8 2002/07/30 22:21:15 vedge Exp $	*/
 /*	Public domain	*/
 
-struct edcursor;
 struct mapedit;
 
 struct mapview {
@@ -21,8 +20,6 @@ struct mapview {
 		Sint16	x;
 		Sint16	y;
 	} mouse;
-
-	struct	edcursor *cursor;
 
 	struct	map *map;
 	int	mx, my;		/* Map offset */
