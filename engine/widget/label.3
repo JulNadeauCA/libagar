@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.19 2003/11/09 13:13:59 vedge Exp $
+.\"	$Csoft: label.3,v 1.20 2004/01/08 02:20:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -162,6 +162,11 @@ The
 .Nm
 widget neither reacts to nor generates any event.
 .Pp
+.Sh TROUBLETONS
+The label polling mechanism is ugly and predates the implementation of widget
+bindings.
+Ideally it should be reworked to perform substitutions for discrete binding
+values inside polled label specifications.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
