@@ -1,12 +1,10 @@
-/*	$Csoft: radio.h,v 1.2 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.3 2002/07/29 05:29:29 vedge Exp $	*/
 /*	Public domain	*/
 
 struct radio {
 	struct	widget wid;
 
-	int	flags;
-
-	const	char **items;
+	char	**items;
 	int	nitems;
 	int	selitem;	/* Index of selected item */
 
@@ -23,7 +21,7 @@ struct radio {
 	} justify;
 };
 
-struct radio	*radio_new(struct region *, const char *[], int, int);
-void		 radio_init(struct radio *, const char *[], int, int);
+struct radio	*radio_new(struct region *, char *[], int);
+void		 radio_init(struct radio *, char *[], int);
 void	 	 radio_draw(void *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.10 2002/09/05 03:51:50 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.11 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -58,12 +58,12 @@ enum {
 static void	radio_event(int, union evarg *);
 
 struct radio *
-radio_new(struct region *reg, const char **items, int selitem, int flags)
+radio_new(struct region *reg, char **items, int selitem)
 {
 	struct radio *rad;
 
 	rad = emalloc(sizeof(struct radio));
-	radio_init(rad, items, selitem, flags);
+	radio_init(rad, items, selitem);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, rad);
@@ -73,9 +73,9 @@ radio_new(struct region *reg, const char **items, int selitem, int flags)
 }
 
 void
-radio_init(struct radio *rad, const char **items, int selitem, int flags)
+radio_init(struct radio *rad, char **items, int selitem)
 {
-	const char *s;
+	char *s;
 	int maxw;
 
 	widget_init(&rad->wid, "radio", "widget", &radio_ops, -1, -1);
@@ -84,7 +84,6 @@ radio_init(struct radio *rad, const char **items, int selitem, int flags)
 	widget_map_color(rad, OUTSIDE_COLOR, "radio-outside", 150, 150, 200);
 	widget_map_color(rad, TEXT_COLOR, "radio-text", 240, 240, 240);
 
-	rad->flags = flags;
 	rad->items = items;
 	rad->selitem = 0;
 	rad->xspacing = 6;
@@ -96,9 +95,7 @@ radio_init(struct radio *rad, const char **items, int selitem, int flags)
 	for (rad->nitems = 0, maxw = 0; (s = *items++) != NULL;) {
 		SDL_Surface *su;
 
-		/* XXX */
-		su = text_render(NULL, -1,
-		    WIDGET_COLOR(rad, TEXT_COLOR), (char *)s);
+		su = text_render(NULL, -1, WIDGET_COLOR(rad, TEXT_COLOR), s);
 		if (su->w > maxw) {
 			maxw = su->w;
 		}
@@ -134,7 +131,7 @@ radio_draw(void *p)
 
 	for (i = 0, y = 0; i < rad->nitems;
 	     i++, y += rad->radio.h+rad->yspacing/2) {
-		const char *s;
+		char *s;
 		SDL_Surface *ls;
 	
 		s = rad->items[i];
@@ -154,7 +151,7 @@ radio_draw(void *p)
 
 		/* XXX cache */
 		ls = text_render(NULL, -1,
-		    WIDGET_COLOR(rad, TEXT_COLOR), (char *)s);
+		    WIDGET_COLOR(rad, TEXT_COLOR), s);
 		WIDGET_DRAW(rad, ls, rad->radio.w, y);
 		SDL_FreeSurface(ls);
 	}
