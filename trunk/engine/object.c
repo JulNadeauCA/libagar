@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.169 2004/03/20 02:44:57 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.170 2004/03/23 02:26:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -608,7 +608,7 @@ object_page_in(void *p, enum object_page_item item)
 		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx == NULL) {
 			if (ob->gfx_name != NULL &&
-			   (ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
+			   (ob->gfx = gfx_fetch_shd(ob->gfx_name)) == NULL) {
 				goto fail;
 			}
 			ob->gfx_used = 1;
@@ -818,12 +818,10 @@ object_reload_data(void *p)
 	struct object *ob = p, *cob;
 
 	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("%s: was resident; reloading\n", ob->name);
+		dprintf("reloading %s\n", ob->name);
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);
-	} else {
-		dprintf("%s: was not resident\n", ob->name);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_reload_data(cob) == -1)
@@ -941,7 +939,7 @@ object_load_generic(void *p)
 		ob->gfx_name = mname;
 		if (ob->gfx != NULL) {
 			gfx_unused(ob->gfx);
-			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
+			if ((ob->gfx = gfx_fetch_shd(ob->gfx_name)) == NULL) {
 				Free(ob->gfx_name, 0);
 				ob->gfx_name = NULL;
 				goto fail;
@@ -1282,7 +1280,7 @@ object_wire_gfx(void *p, const char *key)
 
 	Free(ob->gfx_name, 0);
 	ob->gfx_name = Strdup(key);
-	if ((ob->gfx = gfx_fetch(key)) == NULL) {
+	if ((ob->gfx = gfx_fetch_shd(key)) == NULL) {
 		fatal("%s: %s", key, error_get());
 	}
 	gfx_wire(ob->gfx);
