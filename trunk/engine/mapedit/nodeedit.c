@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.6 2003/03/16 04:08:41 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.7 2003/03/24 12:08:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,6 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/strlcat.h>
+#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
 
 #include <engine/physics.h>
@@ -71,20 +73,33 @@ nodeedit_poll(int argc, union evarg *argv)
 	node = &mv->map->map[sy][sx];
 	
 	flags[0] = '\0';
-	if (node->flags & NODE_WALK)		strcat(flags, "walk ");
-	else if (node->flags & NODE_CLIMB)	strcat(flags, "climb ");
-	if (node->flags & NODE_SLIP)		strcat(flags, "slip ");
-	if (node->flags & NODE_BIO)		strcat(flags, "bio ");
-	else if (node->flags & NODE_REGEN)	strcat(flags, "regen ");
-	if (node->flags & NODE_SLOW)		strcat(flags, "slow ");
-	else if (node->flags & NODE_HASTE)	strcat(flags, "haste ");
+	if (node->flags & NODE_WALK)
+		strlcat(flags, "walk ", sizeof(flags));
+	else if (node->flags & NODE_CLIMB)
+		strlcat(flags, "climb ", sizeof(flags));
+	if (node->flags & NODE_SLIP)
+		strlcat(flags, "slip ", sizeof(flags));
+	if (node->flags & NODE_BIO)
+		strlcat(flags, "bio ", sizeof(flags));
+	else if (node->flags & NODE_REGEN)
+		strlcat(flags, "regen ", sizeof(flags));
+	if (node->flags & NODE_SLOW)
+		strlcat(flags, "slow ", sizeof(flags));
+	else if (node->flags & NODE_HASTE)
+		strlcat(flags, "haste ", sizeof(flags));
 	
-	if (node->flags & (NODE_EDGE_NW))	strcat(flags, "NW-edge ");
-	else if (node->flags & (NODE_EDGE_NE))	strcat(flags, "NE-edge ");
-	else if (node->flags & (NODE_EDGE_SW))	strcat(flags, "SW-edge ");
-	else if (node->flags & (NODE_EDGE_SE))	strcat(flags, "SE-edge ");
-	else if (node->flags & NODE_EDGE_N)	strcat(flags, "N-edge ");
-	else if (node->flags & NODE_EDGE_S)	strcat(flags, "S-edge ");
+	if (node->flags & (NODE_EDGE_NW))
+		strlcat(flags, "NW-edge ", sizeof(flags));
+	else if (node->flags & (NODE_EDGE_NE))
+		strlcat(flags, "NE-edge ", sizeof(flags));
+	else if (node->flags & (NODE_EDGE_SW))
+		strlcat(flags, "SW-edge ", sizeof(flags));
+	else if (node->flags & (NODE_EDGE_SE))
+		strlcat(flags, "SE-edge ", sizeof(flags));
+	else if (node->flags & NODE_EDGE_N)
+		strlcat(flags, "N-edge ", sizeof(flags));
+	else if (node->flags & NODE_EDGE_S)
+		strlcat(flags, "S-edge ", sizeof(flags));
 
 	label_printf(mv->nodeed.node_flags_lab, "Node flags: %s", flags);
 
@@ -93,30 +108,29 @@ nodeedit_poll(int argc, union evarg *argv)
 	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
 		struct art_anim *anim;
-		char *text;
+		char text[8 + MAP_LAYER_NAME_MAX + 10 + 2];
 
 		switch (nref->type) {
 		case NODEREF_SPRITE:
-			Asprintf(&text, "%d. s(%s:%d)", nref->layer,
-			    nref->pobj->name, nref->offs);
+			snprintf(text, sizeof(text), "%u. s(%s:%u)",
+			    nref->layer, nref->pobj->name, nref->offs);
 			icon = nref->pobj->art->sprites[nref->offs];
 			break;
 		case NODEREF_ANIM:
-			Asprintf(&text, "%d. a(%s:%d)", nref->layer,
-			    nref->pobj->name, nref->offs);
+			snprintf(text, sizeof(text), "%u. a(%s:%u)",
+			    nref->layer, nref->pobj->name, nref->offs);
 			anim = nref->pobj->art->anims[nref->offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
 			}
 			break;
 		case NODEREF_WARP:
-			Asprintf(&text, "%d. w(%s:%d,%d)", nref->layer,
-			    nref->data.warp.map, nref->data.warp.x,
+			snprintf(text, sizeof(text), "%u. w(%s:%d,%d)",
+			    nref->layer, nref->data.warp.map, nref->data.warp.x,
 			    nref->data.warp.y);
 			break;
 		}
 		tlist_insert_item(tl, icon, text, nref);
-		free(text);
 		i++;
 
 		nodesz += sizeof(nref);
@@ -150,9 +164,9 @@ nodeedit_poll(int argc, union evarg *argv)
 			
 			flags[0] = '\0';
 			if (nref->flags & NODEREF_SAVEABLE)
-				strcat(flags, "saveable ");
+				strlcat(flags, "saveable ", sizeof(flags));
 			if (nref->flags & NODEREF_BLOCK)
-				strcat(flags, "block ");
+				strlcat(flags, "block ", sizeof(flags));
 			
 			label_printf(mv->nodeed.noderef_type_lab,
 			    "Noderef type: %s", type);
