@@ -159,9 +159,12 @@ objq_insert_tiles(int argc, union evarg *argv)
 
 		dprintf("constr: %d,%d\n", mv->constr.x, mv->constr.y);
 
-		map_adjust(m,
+		if (map_adjust(m,
 		    mv->constr.x + srcsu->w/TILEW + 1,
-		    mv->constr.y + srcsu->h/TILEH + 1);
+		    mv->constr.y + srcsu->h/TILEH + 1) == -1) {
+			text_msg("Error growing map", "%s");
+			continue;
+		}
 		node = &m->map[mv->constr.y][mv->constr.x];
 		if (mv->tmap_insert == 0) {			/* Replace */
 			node_init(node, mv->constr.x, mv->constr.y);

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.156 2003/03/08 23:05:05 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.157 2003/03/09 00:12:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -142,10 +142,16 @@ noderef_destroy(struct noderef *nref)
 	}
 }
 
-void
-map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
+int
+map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 {
-	Uint32 x, y;
+	int x, y;
+	
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
+		error_set("%ux%u nodes > %ux%u", w, h,
+		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+		return (-1);
+	}
 
 	pthread_mutex_lock(&m->lock);
 
@@ -162,12 +168,13 @@ map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 	}
 
 	pthread_mutex_unlock(&m->lock);
+	return (0);
 }
 
 void
 map_free_nodes(struct map *m)
 {
-	Uint32 x, y;
+	int x, y;
 	struct node *node;
 
 	pthread_mutex_lock(&m->lock);
@@ -201,12 +208,12 @@ map_free_layers(struct map *m)
 
 /* Shrink a map, freeing the excess nodes. */
 void
-map_shrink(struct map *m, Uint32 w, Uint32 h)
+map_shrink(struct map *m, unsigned int w, unsigned int h)
 {
-	Uint32 x, y;
 	struct node *node;
+	int x, y;
 	
-	debug(DEBUG_RESIZE, "%dx%d -> %dx%d\n", m->mapw, m->maph, w, h);
+	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 	
 	pthread_mutex_lock(&m->lock);
 	
@@ -236,12 +243,18 @@ map_shrink(struct map *m, Uint32 w, Uint32 h)
 }
 
 /* Grow a map and initialize the new nodes. */
-void
-map_grow(struct map *m, Uint32 w, Uint32 h)
+int
+map_grow(struct map *m, unsigned int w, unsigned int h)
 {
 	int i, x, y;
 
-	debug(DEBUG_RESIZE, "%dx%d -> %dx%d\n", m->mapw, m->maph, w, h);
+	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
+
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
+		error_set("%ux%u nodes > %ux%u", w, h,
+		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+		return (-1);
+	}
 
 	pthread_mutex_lock(&m->lock);
 
@@ -268,20 +281,38 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 	m->maph = h;
 
 	pthread_mutex_unlock(&m->lock);
+
+	return (0);
 }
 
 /* Grow the map to ensure that m:[mx,my] is a valid node. */
-void
-map_adjust(struct map *m, Uint32 mx, Uint32 my)
+int
+map_adjust(struct map *m, int mx, int my)
 {
+	int rv = 0;
+
 	debug(DEBUG_RESIZE, "%d,%d\n", mx, my);
 
+	if (mx > MAP_MAX_WIDTH || my > MAP_MAX_HEIGHT) {
+		error_set("%ux%u nodes > %ux%u", mx, my,
+		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+		return (-1);
+	}
+
 	pthread_mutex_lock(&m->lock);
-	if (mx > m->mapw)
-		map_grow(m, mx, m->maph);
-	if (my > m->maph)
-		map_grow(m, m->mapw, my);
+	if (mx > m->mapw) {
+		if (map_grow(m, mx, m->maph) == -1) {
+			rv = -1;
+		}
+	}
+	if (my > m->maph) {
+		if (map_grow(m, m->mapw, my) == -1) {
+			rv = -1;
+		}
+	}
 	pthread_mutex_unlock(&m->lock);
+
+	return (rv);
 }
 
 /* Modify the zoom factor. */
@@ -444,9 +475,12 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
  * The map containing the node must be locked.
  */
 struct noderef *
-node_add_warp(struct node *node, char *mapname, Uint32 x, Uint32 y, Uint8 dir)
+node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
 {
 	struct noderef *nref;
+
+	if (x > MAP_MAX_WIDTH || y > MAP_MAX_HEIGHT)
+		fatal("bad warp coords\n");
 
 	nref = emalloc(sizeof(struct noderef));
 	noderef_init(nref);
@@ -777,7 +811,6 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 	}
 }
 
-/* Load a node. */
 void
 node_load(int fd, struct object_table *deps, struct node *node)
 {
@@ -817,11 +850,11 @@ map_load(void *ob, int fd)
 	struct map *m = ob;
 	struct object_table *deps;
 	struct version ver;
-	Uint32 x, y;
+	Uint32 w, h, defx, defy, tilew, tileh;
+	int x, y;
 
-	if (version_read(fd, &map_ver, &ver) != 0) {
+	if (version_read(fd, &map_ver, &ver) != 0)
 		return (-1);
-	}
 
 	pthread_mutex_lock(&m->lock);
 
@@ -833,12 +866,24 @@ map_load(void *ob, int fd)
 	}
 
 	m->type = (enum map_type)read_uint32(fd);
-	m->mapw = read_uint32(fd);
-	m->maph = read_uint32(fd);
-	m->defx = read_uint32(fd);
-	m->defy = read_uint32(fd);
-	m->tilew = (int)read_uint32(fd);
-	m->tileh = (int)read_uint32(fd);
+	w = read_uint32(fd);
+	h = read_uint32(fd);
+	defx = read_uint32(fd);
+	defy = read_uint32(fd);
+	tilew = read_uint32(fd);
+	tileh = read_uint32(fd);
+	if (w > 65535 || h > 65535 ||
+	    defx > 65535 || defy > 65535 ||
+	    tilew > 65535 || tileh > 65535) {
+		error_set("bad geo/coords");
+	}
+	m->mapw = (unsigned int)w;
+	m->maph = (unsigned int)h;
+	m->defx = (int)defx;
+	m->defy = (int)defy;
+	m->tilew = (int)tilew;
+	m->tileh = (int)tileh;
+
 	m->zoom = read_uint16(fd);
 	if (ver.minor >= 1) {				/* Soft-scroll offs */
 		m->ssx = read_sint16(fd);
@@ -856,8 +901,8 @@ map_load(void *ob, int fd)
 	}
 
 	debug(DEBUG_STATE,
-	    "type %s, geo %dx%d, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
-	    m->type==MAP_2D ? "2d" : m->type==MAP_3D ? "3d" : "???",
+	    "type %s, geo %ux%u, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
+	    m->type == MAP_2D ? "2d" : m->type == MAP_3D ? "3d" : "???",
 	    m->mapw, m->maph, m->defx, m->defy, m->tilew, m->tileh,
 	    m->zoom);
 
@@ -990,7 +1035,7 @@ map_save(void *p, int fd)
 	struct fobj_buf *buf;
 	struct object *pob;
 	struct object_table *deps;
-	Uint32 x, y;
+	int x, y;
 	
 	version_write(fd, &map_ver);
 
@@ -1004,10 +1049,10 @@ map_save(void *p, int fd)
 	    m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
 
 	buf_write_uint32(buf, (Uint32)m->type);
-	buf_write_uint32(buf, m->mapw);
-	buf_write_uint32(buf, m->maph);
-	buf_write_uint32(buf, m->defx);
-	buf_write_uint32(buf, m->defy);
+	buf_write_uint32(buf, (Uint32)m->mapw);
+	buf_write_uint32(buf, (Uint32)m->maph);
+	buf_write_uint32(buf, (Uint32)m->defx);
+	buf_write_uint32(buf, (Uint32)m->defy);
 	buf_write_uint32(buf, (Uint32)m->tilew);
 	buf_write_uint32(buf, (Uint32)m->tileh);
 	buf_write_uint16(buf, m->zoom);

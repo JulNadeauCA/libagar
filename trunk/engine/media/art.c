@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.20 2003/02/25 01:26:41 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.21 2003/03/02 04:07:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -195,7 +195,9 @@ art_fetch(char *archive, struct object *ob)
 		map_init(art->tiles.map, MAP_2D, mapname, NULL);
 		free(mapname);
 
-		map_alloc_nodes(art->tiles.map, 2, 2);
+		if (map_alloc_nodes(art->tiles.map, 2, 2) == -1) {
+			fatal("failed node alloc: %s\n", error_get());
+		}
 	}
 
 	/* Load images in XCF format. */

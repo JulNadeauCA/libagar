@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.22 2003/03/09 00:11:55 vedge Exp $
+.\"	$Csoft: map.3,v 1.23 2003/03/09 00:34:42 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -71,20 +71,20 @@ contain centering/motion offsets, a list of transforms, and a layer number.
 .Ft int
 .Fn map_save "void *map" "int fd"
 .Pp
-.Ft void
-.Fn map_alloc_nodes "struct map *map" "Uint32 w" "Uint32 h"
+.Ft int
+.Fn map_alloc_nodes "struct map *map" "unsigned int w" "unsigned int h"
 .Pp
 .Ft void
 .Fn map_free_nodes "struct map *map"
 .Pp
-.Ft void
-.Fn map_grow "struct map *map" "Uint32 w" "Uint32 h"
+.Ft int
+.Fn map_grow "struct map *map" "unsigned int w" "unsigned int h"
 .Pp
 .Ft void
-.Fn map_shrink "struct map *map" "Uint32 w" "Uint32 h"
+.Fn map_shrink "struct map *map" "unsigned int w" "unsigned int h"
 .Pp
-.Ft void
-.Fn map_adjust "struct map *map" "Uint32 x" "Uint32 y"
+.Ft int
+.Fn map_adjust "struct map *map" "int x" "int y"
 .Pp
 .Ft void
 .Fn map_set_zoom "struct map *map" "Uint16 factor"
@@ -128,7 +128,12 @@ function allocates
 .Fa w
 x
 .Fa h
-nodes, assuming that no node is currently allocated.
+nodes, assuming that no node is currently allocated, and returns
+0 on success or -1 on failure.
+The maximum allowable geometry is defined by
+.Dv MAP_MAX_WIDTH
+and
+.Dv MAP_MAX_HEIGHT .
 The
 .Fn map_free_nodes
 function releases the nodes allocated by
@@ -143,12 +148,14 @@ functions respectively increase and decrease a map's size by
 x
 .Fa h
 nodes.
+.Fn map_grow
+returns 0 on success and -1 on failure.
 The
 .Fn map_adjust
 function grows the map so that the node at
 .Fa x ,
 .Fa y
-is initialized.
+is initialized, and returns 0 on sucess or -1 on failure.
 .Pp
 The
 .Fn map_set_zoom
@@ -237,7 +244,7 @@ Pointers to objects are encoded using the dependency table
 .Pp
 .Ft "struct noderef *"
 .Fn node_add_warp "struct node *dst_node" "char *new_map" \
-                  "Uint32 x" "Uint32 y" "Uint8 dir"
+                  "int x" "int y" "Uint8 dir"
 .nr nS 0
 .Pp
 The
