@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.147 2003/01/20 14:21:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.148 2003/01/21 04:21:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ static void	resize_reg(int, struct window *, struct region *);
 #define DEBUG_DRAW		0x04
 #define DEBUG_RESIZE_GEO	0x08
 
-int	window_debug = DEBUG_RESIZE_GEO|DEBUG_STATE;
+int	window_debug = DEBUG_RESIZE_GEO;
 #define	engine_debug window_debug
 #endif
 
@@ -229,6 +229,8 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	win->caption = Strdup("Untitled");
 	win->minw = minw;
 	win->minh = minh;
+	win->xspacing = 3;
+	win->yspacing = 3;
 
 	/* Set the initial window position/geometry. */
 	if (win->flags & WINDOW_SCALE) {
@@ -445,24 +447,38 @@ window_draw(struct window *win)
 	/* Render the widgets. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
+			SDL_Rect regclip_save;
+
 			debug_n(DEBUG_DRAW, " %s(%d,%d)\n", OBJECT(reg)->name,
 			    reg->x, reg->y);
-			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-				SDL_Rect rclip_save;
 
+			if (reg->flags & REGION_CLIPPING) {
+				SDL_Rect regclip;
+
+				regclip.x = win->rd.x+reg->x;
+				regclip.y = win->rd.y+reg->y;
+				regclip.w = reg->w;
+				regclip.h = reg->h;
+				SDL_GetClipRect(view->v, &regclip_save);
+				SDL_SetClipRect(view->v, &regclip);
+			}
+
+			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
+				SDL_Rect widclip_save;
+			
 				debug_n(DEBUG_DRAW, "  %s(%d,%d)\n",
 				    OBJECT(wid)->name,
 				    wid->x, wid->y);
 
 				if (wid->flags & WIDGET_CLIPPING) {
-					SDL_Rect rclip;
+					SDL_Rect widclip;
 
-					rclip.x = WIDGET_ABSX(wid);
-					rclip.y = WIDGET_ABSY(wid);
-					rclip.w = wid->w;
-					rclip.h = wid->h;
-					SDL_GetClipRect(view->v, &rclip_save);
-					SDL_SetClipRect(view->v, &rclip);
+					widclip.x = WIDGET_ABSX(wid);
+					widclip.y = WIDGET_ABSY(wid);
+					widclip.w = wid->w;
+					widclip.h = wid->h;
+					SDL_GetClipRect(view->v, &widclip_save);
+					SDL_SetClipRect(view->v, &widclip);
 				}
 
 				if (wid->w > 0 && wid->h > 0) {
@@ -470,8 +486,12 @@ window_draw(struct window *win)
 				}
 
 				if (wid->flags & WIDGET_CLIPPING) {
-					SDL_SetClipRect(view->v, &rclip_save);
+					SDL_SetClipRect(view->v, &widclip_save);
 				}
+			}
+			
+			if (reg->flags & REGION_CLIPPING) {
+				SDL_SetClipRect(view->v, &regclip_save);
 			}
 
 #ifdef DEBUG
@@ -571,7 +591,7 @@ window_show(struct window *win)
 	view->focus_win = win;		/* Focus */
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+		TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 			event_post(wid, "widget-shown", "%p", win);
 		}
 	}
@@ -604,7 +624,7 @@ window_hide(struct window *win)
 
 	/* Notify the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+		TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 			event_post(wid, "widget-hidden", "%p", win);
 		}
 	}
@@ -672,14 +692,14 @@ cycle_widgets(struct window *win, int reverse)
 	}
 
 	TAILQ_FOREACH(nreg, &win->regionsh, regions) {
-		TAILQ_FOREACH(owid, &nreg->widgetsh, widgets) {
+		TAILQ_FOREACH(owid, &nreg->widgets, widgets) {
 			if (owid != wid) {
 				continue;
 			}
 			if (reverse) {
 				rreg = TAILQ_PREV(nreg, regionsq, regions);
 				if (rreg != NULL) {
-					rwid = TAILQ_LAST(&rreg->widgetsh,
+					rwid = TAILQ_LAST(&rreg->widgets,
 					    widgetsq);
 					if (rwid != NULL) {
 						WIDGET_FOCUS(rwid);
@@ -690,8 +710,7 @@ cycle_widgets(struct window *win, int reverse)
 					    regionsq);
 					if (rreg != NULL) {
 						rwid = TAILQ_LAST(
-						    &rreg->widgetsh,
-						    widgetsq);
+						    &rreg->widgets, widgetsq);
 						if (rwid != NULL) {
 							WIDGET_FOCUS(rwid);
 							return;
@@ -701,7 +720,7 @@ cycle_widgets(struct window *win, int reverse)
 			} else {
 				rreg = TAILQ_NEXT(nreg, regions);
 				if (rreg != NULL) {
-					rwid = TAILQ_FIRST(&rreg->widgetsh);
+					rwid = TAILQ_FIRST(&rreg->widgets);
 					if (rwid != NULL) {
 						WIDGET_FOCUS(rwid);
 						return;
@@ -710,7 +729,7 @@ cycle_widgets(struct window *win, int reverse)
 					rreg = TAILQ_FIRST(&win->regionsh);
 					if (rreg != NULL) {
 						rwid = TAILQ_FIRST(
-						    &rreg->widgetsh);
+						    &rreg->widgets);
 						if (rwid != NULL) {
 							WIDGET_FOCUS(rwid);
 							return;
@@ -992,7 +1011,7 @@ scan_wins:
 					window_resize(win);
 				}
 #endif
-				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 					if ((WINDOW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
@@ -1036,7 +1055,7 @@ scan_wins:
 				reg->flags &= ~(REGION_RESIZING);
 
 				/* Send the mousebuttonup event to widgets. */
-				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 					if ((WINDOW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
@@ -1116,7 +1135,7 @@ scan_wins:
 				}
 #endif
 				/* Post mousebuttondown event to widget. */
-				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 					if (!WIDGET_INSIDE(wid, ev->button.x,
 					    ev->button.y)) {
 						continue;
@@ -1425,7 +1444,7 @@ window_load(void *p, int fd)
 	    OBJECT(win)->name, win->rd.w, win->rd.h, view_w, view_h,
 	    win->rd.x, win->rd.y);
 
-	/* Ensure the window fits inside the view area. */
+	/* Effect the change, ensure the window fits inside the view area. */
 	window_resize(win);
 
 	return (0);
@@ -1485,6 +1504,8 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
+	int regx, regy;
+	int xmar, ymar;
 
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
@@ -1507,122 +1528,145 @@ window_resize(struct window *win)
 	win->wid.w = win->rd.w;
 	win->wid.h = win->rd.h;
 
-	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+	xmar = win->borderw + win->xspacing + 1;
+	ymar = win->borderw + win->titleh + 1;
+	regx = xmar;
+	regy = ymar;
+
+	TAILQ_FOREACH_REVERSE(reg, &win->regionsh, regions, regionsq) {
 		struct widget *wid;
-		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
-		int nwidgets = 0;
+		int x, y;
 
 		debug_n(DEBUG_RESIZE, " %s(%d,%d)\n", OBJECT(reg)->name,
 		    reg->x, reg->y);
 
-		/* XXX */
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
-			nwidgets++;
-
-		/* Figure the region's coordinates */
-		if (reg->rx > 0) {
-			reg->x = (reg->rx * win->body.w / 100) +
-			    (win->body.x - win->rd.x) + 1;
-		} else if (reg->rx == 0) {
-			reg->x = x;
-		} else {
-			reg->x = abs(reg->rx);
+		/* Set the region's effective coordinates. */
+		if (reg->rx > 0) {			/* % of width */
+			reg->x = reg->rx * win->body.w / 100 +
+			    (win->body.x - win->rd.x);
+			reg->x += win->xspacing;
+		} else {				/* auto position */
+			reg->x = regx;
 		}
-		if (reg->ry > 0) {
+		if (reg->ry > 0) {			/* % of height */
 			reg->y = (reg->ry * win->body.h / 100) +
 			    (win->body.y - win->rd.y);
-		} else if (reg->ry == 0) {
-			reg->y = y;
-		} else {
-			reg->y = abs(reg->ry);
+			reg->y += win->yspacing;
+		} else {				/* auto position */
+			reg->y = regy;
 		}
 
-		/* Figure the region's geometry. */
-		if (reg->rw > 0) {
-			reg->w = (reg->rw * win->body.w / 100);
-			if (reg->w > win->rd.w - 16) {
-				reg->w = win->rd.w - 16;
+		/* Set the region's effective width. */
+		if (reg->rw < 0) {			/* auto size width */
+			reg->w = 0;
+			reg->x += win->xspacing;
+			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
+				if (wid->rw != -1) {
+					fatal("%s has scaled width\n",
+					    OBJECT(wid)->name);
+				}
+				event_post(wid, "widget-scaled",
+				    "%i, %i", -1, -1);
+				if (reg->flags & REGION_HALIGN)
+					reg->w += wid->w + reg->xspacing;
+				else if (wid->h > reg->h)
+					reg->w = wid->w;
 			}
-		} else if (reg->rw == 0) {
-			reg->w = win->rd.w - x;
-		} else {
-			reg->w = abs(reg->rw);
+		} else if (reg->rw > 0) {		/* % of window width */
+			reg->x += win->xspacing;
+			reg->w = reg->rw * (win->body.w - win->xspacing) / 100;
+			reg->w -= win->xspacing;
+			if (reg->rw == 100)
+				reg->w -= win->xspacing + 1;
+		} else if (reg->rw == 0) {		/* remaining space */
+			reg->w = win->body.w - regx - xmar;
 		}
-		if (reg->rh >= 0) {
-			reg->h = (reg->rh * win->body.h / 100) - 4;
-			if (reg->h > win->rd.h - 32) {
-				reg->h = win->rd.h - 32;
+
+		/* Set the region's effective height. */
+		if (reg->rh < 0) {			/* auto size height */
+			reg->h = 0;
+			reg->y += win->yspacing;
+			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
+				if (wid->rh != -1) {
+					fatal("%s has scaled height\n",
+					    OBJECT(wid)->name);
+				}
+				event_post(wid, "widget-scaled", "%i, %i",
+				    -1, -1);
+				if (reg->flags & REGION_VALIGN)
+					reg->h += wid->h + reg->yspacing;
+				else if (wid->h > reg->h)
+					reg->h = wid->h;
 			}
-		} else if (reg->rh == 0) {
-			reg->h = win->rd.h - y;
-		} else {
-			reg->h = abs(reg->rh);
+		} else if (reg->rh > 0) {		/* % of window height */
+			reg->y += win->yspacing;
+			reg->h = reg->rh * (win->body.h - win->yspacing) / 100;
+			reg->h -= win->yspacing;
+			if (reg->rh == 100)
+				reg->h -= win->yspacing;
+		} else if (reg->rh == 0) {		/* remaining space */
+			reg->h = win->body.h - regy - ymar;
 		}
 
-		/* Space the regions. */
-		reg->x += reg->spacing / 2;
-		reg->y += reg->spacing / 2;
-		reg->w -= reg->spacing;
-		reg->h -= reg->spacing;
-
-		/* Render the widgets. */
+		/* Resize the widgets. */
 		x = reg->x;
 		y = reg->y;
 
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			int rw, rh;
-		
+		TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 			debug_n(DEBUG_RESIZE, "  %s(%d,%d)\n",
 			    OBJECT(wid)->name, x, y);
 
-			/* Update the widget coordinates. */
+			/* Set the widget's effective coordinates. */
 			wid->x = x;
 			wid->y = y;
 
-			/* Figure the widget's requested geometry. */
-			rw = wid->rw;
-			rh = wid->rh;
-			if (rw == 0) {
-				rw = (reg->flags & REGION_HALIGN) ?
-				    100 / (nwidgets + 2) : 100;
+			/* Set the widget's effective width. */
+			if (wid->rw > 0) {		/* % of region */
+				wid->w =
+				    (wid->rw * (reg->w - ((reg->nwidgets-1) *
+				     reg->xspacing))) / 100;
+			} else if (wid->rw == 0) {	/* auto size width */
+				if (reg->flags & REGION_HALIGN) {
+					wid->w = reg->w/reg->nwidgets -
+					    reg->xspacing*(reg->nwidgets-1);
+				} else {
+					wid->w = reg->w;
+				}
 			}
-			if (rh == 0) {
-				rh = (reg->flags & REGION_VALIGN) ?
-				    100 / (nwidgets + 2) : 100;
+			
+			/* Set the widget's effective height. */
+			if (wid->rh > 0) {		/* % of region */
+				wid->h =
+				    (wid->rh * (reg->h - ((reg->nwidgets-1) *
+				     reg->yspacing))) / 100;
+			} else if (wid->rh == 0) {	/* auto size height */
+				if (reg->flags & REGION_VALIGN) {
+					wid->h = reg->h/reg->nwidgets -
+					   reg->yspacing*(reg->nwidgets-1);
+				} else {
+					wid->h = reg->h;
+				}
 			}
-
-			/* Scale the widget. */
-			if (rw >= 0)
-				wid->w = rw * reg->w / 100;
-			if (rh >= 0)
-				wid->h = rh * reg->h / 100;
 			if (wid->w > reg->w)
-				wid->w = reg->w;
+				wid->w = reg->w - x;
 			if (wid->h > reg->h)
-				wid->h = reg->h;
+				wid->h = reg->h - y;
+
 			event_post(wid, "widget-scaled", "%i, %i",
 			    reg->w, reg->h);
 
-			/* Space the widgets. */
+			/* Move */
 			if (reg->flags & REGION_VALIGN) {
-				if (rw > 0) {
-					if (TAILQ_LAST(&reg->widgetsh,
-					    widgetsq) == wid) {
-						wid->h -= reg->spacing/2;
-					}
-					wid->h -= reg->spacing/nwidgets;
-				}
-				y += wid->h + reg->spacing;
+				y += wid->h + reg->yspacing;
 			} else {
-				if (rw > 0) {
-					if (TAILQ_LAST(&reg->widgetsh,
-					    widgetsq) == wid) {
-						wid->w -= reg->spacing/2;
-					}
-					wid->w -= reg->spacing/nwidgets;
-				}
-				x += wid->w + reg->spacing;
+				x += wid->w + reg->xspacing;
 			}
+		}
+		
+		if (reg->rw == -1)
+			regx += reg->w + win->xspacing;
+		if (reg->rh == -1) {
+			regy += reg->h + win->yspacing;
 		}
  	}
 
@@ -1630,3 +1674,11 @@ window_resize(struct window *win)
 	    win->rd.w, win->rd.h);
 }
 
+void	
+window_set_spacing(struct window *win, Uint8 xsp, Uint8 ysp)
+{
+	pthread_mutex_lock(&win->lock);
+	win->xspacing = xsp;
+	win->yspacing = ysp;
+	pthread_mutex_unlock(&win->lock);
+}
