@@ -567,7 +567,7 @@ else
 NONE=1
 fi
 if [ "${freetype_found}" = "yes" ]; then
-echo -n "found, "
+echo "yes"
 else
 echo "Could not find the FreeType2 library"
 exit 1
@@ -620,7 +620,7 @@ else
 	echo "no"
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
-echo "works"
+NONE=1
 else
 echo "The FreeType2 test would not compile."
 exit 1
