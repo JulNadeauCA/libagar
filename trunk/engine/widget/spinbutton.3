@@ -1,0 +1,186 @@
+.\"	$Csoft: spinbutton.3,v 1.3 2004/03/24 06:23:25 vedge Exp $
+.\"
+.\" Copyright (c) 2004 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 24, 2004
+.Dt SPINBUTTON 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm spinbutton
+.Nd agar integer spinbutton widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/spinbutton.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget binds to an integer value of type
+.Dv int ,
+.Dv unsigned int ,
+.Dv [SU]int8 ,
+.Dv [SU]int16
+or
+.Dv [SU]int32 .
+For floating point values, see
+.Xr spinbutton 3 .
+.Pp
+This widget is composed of a
+.Xr textbox 3
+for manually entering the value and a set of
+.Xr button 3
+widgets to increment or decrement the value.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct spinbutton *"
+.Fn spinbutton_new "void *parent" "const char *label_fmt" "..."
+.Pp
+.Ft void
+.Fn spinbutton_init "struct spinbutton *sbu" "const char *label"
+.Pp
+.Ft void
+.Fn spinbutton_set_value "struct spinbutton *sbu" "..."
+.Pp
+.Ft void
+.Fn spinbutton_add_value "struct spinbutton *sbu" "..."
+.Pp
+.Ft void
+.Fn spinbutton_set_min "struct spinbutton *sbu" "int min_value"
+.Pp
+.Ft void
+.Fn spinbutton_set_max "struct spinbutton *sbu" "int max_value"
+.Pp
+.Ft void
+.Fn spinbutton_set_range "struct spinbutton *sbu" "int min" "int max"
+.Pp
+.Ft void
+.Fn spinbutton_set_increment "struct spinbutton *sbu" "int increment"
+.Pp
+.Ft void
+.Fn spinbutton_set_writeable "struct spinbutton *sbu" "int writeable"
+.Pp
+.nr nS 0
+The
+.Fn spinbutton_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn spinbutton_init
+function initializes a
+.Nm
+widget.
+.Pp
+The
+.Fn spinbutton_set_value
+function sets the bound value to the argument, and
+.Fn spinbutton_add_value
+adds the bound value to the argument.
+The argument following
+.Fa sbu
+should be of the same type as the current
+.Sq value
+binding.
+Both of these functions may clamp the value to fit inside the specified range.
+.Pp
+The
+.Fn spinbutton_set_min ,
+.Fn spinbutton_set_max
+and
+.Fn spinbutton_set_range
+functions define the range of acceptable values.
+Invocations of these functions must always follow
+.Fn widget_bind ,
+since binding to
+.Sq value
+automatically selects a range suitable to the new binding type.
+.Pp
+The
+.Fn spinbutton_set_increment
+function defines the step value for the "+" and "-" buttons.
+.Pp
+.Fn spinbutton_set_writeable
+sets the writeability flag.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It widget-bound
+Adjust the range of acceptable values depending on the data type of the binding.
+.It window-keydown
+Increment or decrement the value if
+.Dv SDLK_UP
+or
+.Dv SDLK_DOWN
+is pressed.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn spinbutton-changed "void"
+The value has been modified by the textbox or the +/- buttons.
+.It Fn spinbutton-return "void"
+The value has been modified by the textbox and return was pressed.
+.El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "unsigned int *value "
+.It Va int *value
+The value to display/edit (WIDGET_INT).
+.It Va unsigned int *value
+The value to display/edit (WIDGET_UINT).
+.It Va [SU]int8 *value
+The value to display/edit (WIDGET_[SU]INT8).
+.It Va [SU]int16 *value
+The value to display/edit (WIDGET_[SU]INT16).
+.It Va [SU]int32 *value
+The value to display/edit (WIDGET_[SU]INT32).
+.El
+.Sh TROUBLETONS
+The increment value and boundaries are
+.Ft int
+regardless of the binding type.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr button 3 ,
+.Xr fspinbutton 3 ,
+.Xr textbox 3 ,
+.Xr ucombo 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
