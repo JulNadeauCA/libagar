@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.19 2002/02/28 12:51:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.20 2002/03/03 06:22:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -200,6 +200,7 @@ engine_editmap(void)
 		/* Start map edition. */
 		object_link(medit);
 		event_loop();
+		engine_destroy();
 	}
 }
 
