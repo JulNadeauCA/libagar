@@ -1,4 +1,4 @@
-/*	$Csoft: audio.h,v 1.6 2003/06/25 00:31:37 vedge Exp $	*/
+/*	$Csoft: audio.h,v 1.7 2003/06/25 03:53:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -29,7 +29,7 @@ struct audio {
 #endif
 
 __BEGIN_DECLS
-int	 audio_fetch(void *, const char *);
+int	 audio_fetch(void *);
 void	 audio_unused(struct audio *);
 void	 audio_wire(struct audio *);
 Uint32	 audio_insert_sample(struct audio *, SDL_AudioSpec *, Uint8 *, size_t);

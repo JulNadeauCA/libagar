@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.7 2003/06/25 03:53:37 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.8 2003/07/14 03:42:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ audio_unused(struct audio *audio)
 
 /* Load the named audio package. */
 int
-audio_fetch(void *p, const char *key)
+audio_fetch(void *p)
 {
 	char path[MAXPATHLEN];
 	struct object *ob = p;
@@ -102,7 +102,7 @@ audio_fetch(void *p, const char *key)
 	pthread_mutex_lock(&audioq_lock);
 
 	TAILQ_FOREACH(audio, &audioq, audios) {
-		if (strcmp(audio->name, key) == 0)
+		if (strcmp(audio->name, ob->audio_name) == 0)
 			break;
 	}
 	if (audio != NULL) {
@@ -112,12 +112,12 @@ audio_fetch(void *p, const char *key)
 		goto out;
 	}
 
-	if (config_search_file("load-path", key, "den", path, sizeof(path))
-	    == -1)
+	if (config_search_file("load-path", ob->audio_name, "den", path,
+	    sizeof(path)) == -1)
 		goto fail;
 
 	audio = Malloc(sizeof(struct audio));
-	audio->name = Strdup(key);
+	audio->name = Strdup(ob->audio_name);
 	audio->samples = NULL;
 	audio->nsamples = 0;
 	audio->maxsamples = 0;

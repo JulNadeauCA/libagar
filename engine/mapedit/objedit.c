@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.17 2003/07/08 04:43:39 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.18 2003/07/26 12:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -163,7 +163,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 
 	strlcpy(label, pob->name, sizeof(label));
 	if (pob->flags & OBJECT_DATA_RESIDENT) {
-		strlcat(label, " (resident)", sizeof(label));
+		strlcat(label, _(" (resident)"), sizeof(label));
 	}
 	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
 	it->depth = depth;
