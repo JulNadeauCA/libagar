@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.11 2002/02/11 23:32:27 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.12 2002/02/14 05:26:49 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -47,10 +47,12 @@ struct node {
 #define NODE_REGEN	0x0020		/* Cause HP Regeneration */
 #define NODE_SLOW	0x0040		/* Decrease speed by v1 */
 #define NODE_HASTE	0x0080		/* Increase speed by v1 */
-#define NODE_ANIM	0x0100		/* Let map_animate() draw this node */
-	int	v1;			/* Extra property */
+#define NODE_ANIM	0x0100		/* One anim at least (optimization) */
+#define NODE_DONTSAVE	(NODE_ANIM)
+	int	v1, v2;			/* Extra properties */
 	int	nanims;			/* Animation count */
 };
+
 
 /* Region within the world. */
 struct map {
