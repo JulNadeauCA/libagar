@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.38 2004/12/28 01:48:34 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.39 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -216,7 +216,7 @@ vg_destroy(struct vg *vg)
 	Free(vg->origin_radius, M_VG);
 	Free(vg->origin_color, M_VG);
 
-	if (ob->gfx != NULL) {
+	if (ob != NULL && ob->gfx != NULL) {
 		gfx_destroy(ob->gfx);
 		ob->gfx = NULL;
 	}
@@ -246,7 +246,10 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 	vg->redraw = 1;
 }
 
-/* Generate tile-sized fragments of the raster surface. */
+/*
+ * Generate tile-sized fragments of the raster surface.
+ * The vg must be tied to an object.
+ */
 void
 vg_update_fragments(struct vg *vg)
 {
@@ -327,6 +330,10 @@ vg_update_fragments(struct vg *vg)
 	}
 }
 
+/*
+ * Release the raster fragments.
+ * The vg must be tied to an object.
+ */
 void
 vg_destroy_fragments(struct vg *vg)
 {
@@ -387,7 +394,9 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 
 	/* Resize the fragment map. */
-	vg_destroy_fragments(vg);
+	if (vg->pobj != NULL) {
+		vg_destroy_fragments(vg);
+	}
 	mw = vg->su->w/TILESZ+1;
 	mh = vg->su->h/TILESZ+1;
 	if (map_alloc_nodes(vg->map, mw, mh) == -1)
@@ -626,7 +635,9 @@ vg_rasterize(struct vg *vg)
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
 
-	vg_update_fragments(vg);
+	if (vg->pobj != NULL) {
+		vg_update_fragments(vg);
+	}
 	pthread_mutex_unlock(&vg->lock);
 }
 

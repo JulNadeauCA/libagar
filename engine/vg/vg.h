@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.20 2004/06/22 05:34:58 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.21 2004/10/06 04:37:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -193,16 +193,16 @@ struct vg {
 #define VG_VISBBOXES	0x10		/* Display bounding boxes (debug) */
 
 	pthread_mutex_t lock;
-	int redraw;				/* Global redraw */
-	int **mask;				/* Fragment mask */
-	double w, h;				/* Calculated bounding box */
-	double scale;				/* Scaling factor */
+	int redraw;			/* Global redraw */
+	int **mask;			/* Fragment mask */
+	double w, h;			/* Calculated bounding box */
+	double scale;			/* Scaling factor */
 	Uint32 fill_color, grid_color;
 	double grid_gap;
 
-	struct vg_vertex *origin;		/* Origin point vertices */
-	float		 *origin_radius;	/* Origin point radii */
-	Uint32		 *origin_color;		/* Origin point colors */
+	struct vg_vertex *origin;	/* Origin point vertices */
+	float		 *origin_radius; /* Origin point radii */
+	Uint32		 *origin_color;	/* Origin point colors */
 	Uint32		 norigin;
 	struct vg_layer *layers;
 	Uint32		nlayers;
@@ -210,16 +210,16 @@ struct vg {
 	struct vg_block	*cur_block;	/* Block selected for edition */
 	struct vg_element *cur_vge;	/* Element selected for edition */
 
-	enum vg_snap_mode  snap_mode;		/* Positional restriction */
-	enum vg_ortho_mode ortho_mode;		/* Orthogonal restriction */
+	enum vg_snap_mode  snap_mode;	/* Positional restriction */
+	enum vg_ortho_mode ortho_mode;	/* Orthogonal restriction */
 
-	struct object *pobj;		/* Object managing the vg */
+	struct object *pobj;		/* Tied object */
 	SDL_Surface *su;		/* Raster surface */
 	struct map *map;		/* Raster map */
 
-	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */
-	TAILQ_HEAD(,vg_block) blocks;		/* Blocks in drawing */
-	TAILQ_HEAD(,vg_style) styles;		/* Global default styles */
+	TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
+	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
+	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 };
 
 __BEGIN_DECLS
