@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: gettext.c,v 1.1.1.1 2003/08/06 01:57:47 vedge Exp $	*/
 /*	$NetBSD: gettext.c,v 1.9 2001/02/16 07:20:35 minoura Exp $	*/
 
 /*-
@@ -28,6 +28,9 @@
  */
 
 #include <config/localedir.h>
+#include <config/enable_nls.h>
+
+#ifdef ENABLE_NLS
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -543,10 +546,15 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 	if (!domainname)
 		domainname = __current_domainname;
 	cname = lookup_category(category);
-	if (!domainname || !cname)
+	if (!domainname || !cname) {
 		goto fail;
+	}
 
 	language = getenv("LANGUAGE");
+	if (language == NULL) {
+		language = getenv("LANG");
+	}
+
 	locale = setlocale(LC_MESSAGES, NULL);	/*XXX*/
 	if (locale)
 		locale = split_locale(locale);
@@ -576,7 +584,8 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 
 	/* don't bother looking it up if the values are the same */
 	if (odomainname && strcmp(domainname, odomainname) == 0 &&
-	    ocname && strcmp(cname, ocname) == 0 && strcmp(lpath, olpath) == 0 &&
+	    ocname && strcmp(cname, ocname) == 0 &&
+	    strcmp(lpath, olpath) == 0 &&
 	    db->mohandle.mo.mo_magic)
 		goto found;
 
@@ -626,3 +635,5 @@ fail:
 	/* LINTED const cast */
 	return (char *)msgid;
 }
+
+#endif	/* ENABLE_NLS */

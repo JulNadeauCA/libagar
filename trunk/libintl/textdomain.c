@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: textdomain.c,v 1.1.1.1 2003/08/06 01:57:48 vedge Exp $	*/
 /*	$NetBSD: textdomain.c,v 1.5 2001/02/16 07:20:35 minoura Exp $	*/
 
 /*-
@@ -28,6 +28,9 @@
  */
 
 #include <config/localedir.h>
+#include <config/enable_nls.h>
+
+#ifdef ENABLE_NLS
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -38,7 +41,6 @@
 
 #include "libintl.h"
 #include "libintl_local.h"
-#include "pathnames.h"
 
 static struct domainbinding __default_binding = {
 	NULL, DEFAULT_DOMAINNAME, LOCALEDIR,
@@ -120,3 +122,5 @@ bind_textdomain_codeset(domainname, codeset)
 	/* yet to be done - always fail */
 	return NULL;
 }
+
+#endif	/* ENABLE_NLS */
