@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.20 2003/09/07 00:46:46 vedge Exp $
+# $Csoft: fr.po,v 1.21 2003/09/07 00:47:59 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-09-06 21:45-0300\n"
+"POT-Creation-Date: 2003-09-17 02:32-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -240,7 +240,11 @@ msgstr "L'objet «%s» n'existe pas."
 
 #, c-format
 msgid "The %s/%s.%s file is not in load-path."
-msgstr "Le fichier «%s/%s.%s» est introuvable dans le chemin de chargement."
+msgstr "Le fichier «%s/%s.%s» est introuvable dans chemin de chargement."
+
+#, c-format
+msgid "The %s directory is not in load-path."
+msgstr "Le répertoire «%s» est introuvable dans le chemin de chargement."
 
 #, c-format
 msgid "The `%s' object contains no graphics."
@@ -255,8 +259,16 @@ msgid "The `%s' object is non-persistent."
 msgstr "L'objet «%s» n'est pas persistant."
 
 #, c-format
+msgid "%s: Cannot resolve dependency `%s'"
+msgstr "%s: Impossible de résoudre la dépendance: «%s»"
+
+#, c-format
 msgid "The `%s' save has inconsistent flags."
 msgstr "La sauvegarde de «%s» contient des flags inconsistents."
+
+#, c-format
+msgid "Bad coordinates: %d,%d,%d"
+msgstr "Mauvaises coordonnées: %d,%d,%d"
 
 #, c-format
 msgid "Unknown object type: `%s'"
@@ -278,16 +290,17 @@ msgid "There is no submap named `%s'."
 msgstr "Aucune sous-carte n'est nommée «%s»."
 
 #, c-format
-msgid "Bad coordinates: %d,%d,%d"
-msgstr "Mauvaises coordonnées: %d,%d,%d"
-
-#, c-format
 msgid "%s object"
 msgstr "Objet «%s»"
 
-#, c-format
-msgid "Name: %s (%s)"
-msgstr "Nom: «%s» (%s)"
+msgid "Name: "
+msgstr "Nom: "
+
+msgid "Graphics: "
+msgstr "Graphiques: "
+
+msgid "Audio: "
+msgstr "Son: "
 
 #, c-format
 msgid "Type: %s"
@@ -299,12 +312,6 @@ msgstr "Flags : 0x%x"
 
 msgid "Parent: %[obj]"
 msgstr "Parent: %[obj]"
-
-msgid "Graphics: "
-msgstr "Graphiques: "
-
-msgid "Audio: "
-msgstr "Son: "
 
 msgid "Dependencies:"
 msgstr "Dépendances:"
@@ -425,9 +432,6 @@ msgstr "Impossible de sauvegarder une propriété de type 0x%x."
 #, c-format
 msgid "%s character"
 msgstr "Personnage «%s»"
-
-msgid "Name: "
-msgstr "Nom: "
 
 msgid "Level: "
 msgstr "Niveau: "
@@ -579,9 +583,6 @@ msgstr "Bas"
 msgid "Tools"
 msgstr "Outils"
 
-msgid "The zoom is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
-
 msgid "No object type was specified."
 msgstr "Aucun type d'objet spécifié."
 
@@ -613,8 +614,17 @@ msgstr "Éditer obj"
 msgid "Load"
 msgstr "Charger"
 
+msgid "Move up"
+msgstr "Déplacer haut"
+
+msgid "Move down"
+msgstr "Déplacer bas"
+
 msgid "Destroy"
 msgstr "Détruire"
+
+msgid "The zoom is out of range."
+msgstr "La fréquence de rafraîchissement est hors limite."
 
 msgid "All"
 msgstr "Tout"
@@ -646,6 +656,9 @@ msgstr "Retourner"
 msgid "No map is visible."
 msgstr "Aucune carte n'est visible."
 
+msgid "There is no visible map."
+msgstr "Aucune carte n'est présentement visible."
+
 msgid "Magnifier"
 msgstr "Loupe"
 
@@ -655,24 +668,21 @@ msgstr "Zoom 1:1"
 msgid "Zoom %: "
 msgstr "Zoom %: "
 
-msgid "No brush name was given."
-msgstr "Aucun nom de pinceau n'a été donné."
-
-#, c-format
-msgid "A `%s' brush exists."
-msgstr "Un pinceau du nom de «%s» existe."
-
 msgid "Merge tool"
 msgstr "Fusion"
-
-msgid "Random shift"
-msgstr "Déplacement au hazard"
 
 msgid "Load set"
 msgstr "Charger"
 
 msgid "Save set"
 msgstr "Sauvegarder"
+
+msgid "No brush name was given."
+msgstr "Aucun nom de pinceau n'a été donné."
+
+#, c-format
+msgid "A `%s' brush exists."
+msgstr "Un pinceau du nom de «%s» existe."
 
 msgid "Node props"
 msgstr "Propriétés de noeud"
@@ -725,12 +735,15 @@ msgstr "Insérer"
 msgid "Stamp"
 msgstr "Étampe"
 
+msgid "Position"
+msgstr ""
+
 msgid "A JPEG error has occured."
 msgstr "Une erreur JPEG s'est produite."
 
 #, c-format
-msgid "Status: xmit frame %d."
-msgstr "État: transmission image %d."
+msgid "Transmitting frame %d"
+msgstr "Transmission image %d."
 
 msgid "Already connected to a server."
 msgstr "Déjà connecté au serveur."
@@ -739,12 +752,8 @@ msgid "Missing server hostname/port."
 msgstr "Nom d'hôte ou port du serveur non spécifiés."
 
 #, c-format
-msgid "Status: connecting to %s:%s..."
-msgstr "État: connexion à %s:%s..."
-
-#, c-format
-msgid "Status: %s."
-msgstr "État: %s."
+msgid "Connecting to %s:%s.."
+msgstr "Connexion à %s:%s..."
 
 msgid "failed to create socket"
 msgstr "impossible de créer le socket"
@@ -753,30 +762,33 @@ msgid "connection refused"
 msgstr "connexion refusée"
 
 #, c-format
-msgid "Status: %s: %s."
-msgstr "État: %s: %s."
+msgid "Connected to %s"
+msgstr "Connecté à %s."
 
-#, c-format
-msgid "Status: connected to %s."
-msgstr "État: connecté à %s."
-
-msgid "Status: disconnected."
-msgstr "État: aucune connexion."
-
-msgid "Not connected."
-msgstr "Aucune connexion."
+msgid "Disconnected"
+msgstr "Déconnecté"
 
 msgid "Screenshot"
 msgstr "Capture d'écran"
 
-msgid "Status: Not connected."
-msgstr "État: aucune connexion."
+msgid "Idle"
+msgstr "Prêt"
+
+#, c-format
+msgid "Status: %s."
+msgstr "État: %s."
+
+msgid "Transmitting frame XXXXXXXXXXX"
+msgstr ""
 
 msgid "Host: "
 msgstr "Hôte: "
 
 msgid "Port: "
 msgstr "Port: "
+
+msgid "Refresh rate (ms): "
+msgstr "Fréquence de rafraîchissement (ms):"
 
 msgid "Connect"
 msgstr "Connexion"
@@ -1011,6 +1023,24 @@ msgstr "%s: %s à échoué"
 
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
+
+#~ msgid "Name: %s (%s)"
+#~ msgstr "Nom: «%s» (%s)"
+
+#~ msgid "Random shift"
+#~ msgstr "Déplacement au hazard"
+
+#~ msgid "Status: %s: %s."
+#~ msgstr "État: %s: %s."
+
+#~ msgid "Status: disconnected."
+#~ msgstr "État: aucune connexion."
+
+#~ msgid "Not connected."
+#~ msgstr "Aucune connexion."
+
+#~ msgid "Status: Not connected."
+#~ msgstr "État: aucune connexion."
 
 #~ msgid "Bad joystick index"
 #~ msgstr "Mauvais index de joystick"
