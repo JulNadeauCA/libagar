@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.6 2002/11/08 07:36:29 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.7 2002/11/12 00:38:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -72,5 +72,13 @@ void		 error_set(const char *, ...);
 		     "???",						\
 		    strerror(errno));					\
 	}								\
+} while (/*CONSTCOND*/0)
+
+#define Vasprintf(msg, fmt, args) do {				\
+	va_start((args), (fmt));				\
+	if (vasprintf((msg), (fmt), (args)) == -1) {		\
+		fatal("vasprintf: %s\n", strerror(errno));	\
+	}							\
+	va_end((args));						\
 } while (/*CONSTCOND*/0)
 
