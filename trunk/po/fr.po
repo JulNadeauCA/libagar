@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.32 2004/03/20 08:25:13 vedge Exp $
+# $Csoft: fr.po,v 1.33 2004/04/06 01:24:45 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2004-03-20 04:22-0400\n"
+"POT-Creation-Date: 2004-05-14 15:32-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -95,12 +95,17 @@ msgstr "Chemin d'accès polices: "
 msgid "Den path: "
 msgstr "Chemin d'accès den: "
 
-#. XXX propose some default resolutions.
-msgid "Width: "
-msgstr "Largeur: "
+msgid "Default resolution: "
+msgstr "Résolution par défaut: "
 
-msgid "Height: "
-msgstr "Hauteur: "
+msgid "Mouse double click delay (ms): "
+msgstr "Délai double clic (ms): "
+
+msgid "Keyboard repeat delay (ms): "
+msgstr "Délai répétition clavier (ms): "
+
+msgid "Keyboard repeat interval (ms): "
+msgstr "Intervalle répétition clavier (ms): "
 
 msgid "Close"
 msgstr "Fermer"
@@ -116,12 +121,12 @@ msgid "Cannot find `%s.%s' in %s (%s)."
 msgstr "Impossible de trouver «%s.%s» dans %s (%s)."
 
 #, c-format
-msgid "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n"
-msgstr "L'affichage est %dbpp (ckey=0x%x, alpha=0x%04x)\n"
+msgid "Video device is %dbpp (ckey=%d, alpha=%d)\n"
+msgstr "L'affichage est %dbpp (ckey=%d, alpha=%d)\n"
 
 #, c-format
-msgid "Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"
-msgstr "Le masque vidéo est 0x%04x,0x%04x,0x%04x,0x%04x\n"
+msgid "Video mask is 0x%08x,0x%08x,0x%08x,0x%08x\n"
+msgstr "Le masque vidéo est 0x%08x,0x%08x,0x%08x,0x%08x\n"
 
 msgid "Window manager is available.\n"
 msgstr "Un gestionnaire de fenêtres est disponible.\n"
@@ -182,15 +187,15 @@ msgstr "L'objet «%s» est présentement utilisé par «%s»."
 
 #, c-format
 msgid "The object `%s' does not exist."
-msgstr "L'objet «%s» n'existe pas."
+msgstr "L'objet «%s» est inexistant."
 
 #, c-format
 msgid "The %s%s/%s.%s file is not in load-path."
-msgstr "Fichier %s/%s.%s non-existant dans le chemin de chargement."
+msgstr "Fichier %s/%s.%s inexistant dans le chemin de chargement."
 
 #, c-format
 msgid "The %s directory is not in load-path."
-msgstr "Répertoire %s non-existant dans le chemin de chargement."
+msgstr "Répertoire %s inexistant dans le chemin de chargement."
 
 #, c-format
 msgid "The `%s' object is non-persistent."
@@ -245,7 +250,7 @@ msgid "Resident graphics"
 msgstr "Graphiques en mémoire"
 
 msgid "Refresh rate"
-msgstr "Fréquence de rafraîchissement"
+msgstr "Taux de rafraîchissement"
 
 #, c-format
 msgid "%ux%u nodes exceed %ux%u."
@@ -350,6 +355,191 @@ msgstr "HP: "
 msgid "MP: "
 msgstr "MP: "
 
+msgid "Untitled"
+msgstr "Sans titre"
+
+#, c-format
+msgid "%s (visible %s)\n"
+msgstr "%s (visible %s)\n"
+
+msgid ", editing"
+msgstr ", édition"
+
+#, c-format
+msgid "%s (invisible %s)\n"
+msgstr "%s (invisible %s)\n"
+
+msgid "No layer is selected."
+msgstr "Aucun calque n'est sélectionné."
+
+msgid "Circle"
+msgstr "Cercle"
+
+msgid "Specify the circle's center point.\n"
+msgstr "Spécifiez le point central du cercle.\n"
+
+msgid "Specify the circle's radius or [undo circle].\n"
+msgstr "Spécifiez le rayon du cercle ou [défaire cercle].\n"
+
+msgid "Circles"
+msgstr "Cercles"
+
+msgid "Draw circles."
+msgstr "Dessiner des cercles."
+
+msgid "Text"
+msgstr "Texte"
+
+msgid "Illegal font size."
+msgstr "Taille de police non permise."
+
+msgid "Alignment: "
+msgstr "Alignement: "
+
+msgid "Top/left"
+msgstr "Haut/gauche"
+
+msgid "Top/center"
+msgstr "Haut/centre"
+
+msgid "Top/right"
+msgstr "Haut/droite"
+
+msgid "Middle/left"
+msgstr "Milieu/gauche"
+
+msgid "Middle/center"
+msgstr "Milieu/centre"
+
+msgid "Middle/right"
+msgstr "Milieu/droite"
+
+msgid "Bottom/left"
+msgstr "Bas/gauche"
+
+msgid "Bottom/center"
+msgstr "Bas/centre"
+
+msgid "Bottom/right"
+msgstr "Bas/droite"
+
+msgid "Specify the text's center point.\n"
+msgstr "Spécifiez le point central du texte.\n"
+
+msgid "Position the text or [undo element].\n"
+msgstr "Positionnez le texte ou [défaire l'élément].\n"
+
+msgid "Insert text labels."
+msgstr "Insérer du texte."
+
+msgid "Points"
+msgstr "Points"
+
+msgid "Specify point.\n"
+msgstr "Positionnez le point.\n"
+
+msgid "Trace individual points."
+msgstr "Tracer des points individuels."
+
+msgid "Line segments"
+msgstr "Segments"
+
+msgid "Line strip"
+msgstr ""
+
+msgid "Line loop"
+msgstr ""
+
+msgid "Specify first point.\n"
+msgstr "Indiquez la position du premier point.\n"
+
+msgid "Specify second point or [undo line].\n"
+msgstr "Indiquez la position du second point ou [défaire la ligne].\n"
+
+#, c-format
+msgid "Specify point %d or [close/undo vertex].\n"
+msgstr "Indiquez la position du point %d ou [fermer/défaire la vertex]"
+
+msgid "Lines and polylines"
+msgstr "Lignes et polylignes"
+
+msgid "Draw line segments, strips and loops."
+msgstr ""
+
+#, c-format
+msgid "Parameters for \"%s\""
+msgstr "Paramètres de «%s»"
+
+msgid "Geometry: "
+msgstr "Géométrie: "
+
+msgid "Grid interval: "
+msgstr "Intervalle grille: "
+
+msgid "Scaling factor: "
+msgstr "Échelle: "
+
+msgid "Background color: "
+msgstr "Couleur de fond: "
+
+msgid "Grid color: "
+msgstr "Couleur de grille: "
+
+#, c-format
+msgid "Vector graphic: %s"
+msgstr "Dessin vectoriel: %s"
+
+msgid "Origin#: "
+msgstr "Origine#: "
+
+msgid "Specify origin point.\n"
+msgstr "Indiquez la position du point d'origine.\n"
+
+msgid "Origin"
+msgstr "Origine"
+
+msgid "Displace the origin point."
+msgstr "Déplacer le point d'origine."
+
+msgid "Ellipse"
+msgstr "Ellipse"
+
+msgid "Arc"
+msgstr ""
+
+msgid "Specify the ellipse's center point."
+msgstr "Indiquez la position du point central de l'ellipse."
+
+msgid "Specify the ellipse's geometry or [undo ellipse]."
+msgstr "Spécifiez la géométrie elliptique ou [défaire l'ellipse]."
+
+msgid "Ellipses"
+msgstr "Ellipses"
+
+msgid "Draw ellipses."
+msgstr "Dessiner des ellipses."
+
+msgid "Specify the curve's origin point.\n"
+msgstr "Indiquez la position du point d'origine de la courbe.\n"
+
+msgid "Specify the first control point or [undo curve].\n"
+msgstr "Spécifiez le premier point de contrôle ou [défaire la courbe].\n"
+
+msgid "Bezier curves"
+msgstr "Courbes de Bézier"
+
+msgid "Specify cubic Bezier curves and Bezigons."
+msgstr "Dessiner des courbes de Bézier et des Bézigones."
+
+msgid "Blocks"
+msgstr "Blocs"
+
+msgid "Destroy"
+msgstr "Détruire"
+
+msgid "Polygonal mask"
+msgstr "Masque polygonal"
+
 msgid "The viewport is already initialized."
 msgstr "La vue est déjà initialisée."
 
@@ -363,14 +553,18 @@ msgstr "La résolution est insuffisante."
 msgid "Setting %dx%dx%d mode: %s"
 msgstr "Sélection du mode %dx%dx%d: %s"
 
+#, c-format
+msgid "Video display is %dbpp (ckey=0x%x, alpha=0x%04x)\n"
+msgstr "L'affichage est %dbpp (ckey=0x%x, alpha=0x%04x)\n"
+
 msgid "The refresh rate is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
+msgstr "Le taux de rafraîchissement est hors limite."
 
 msgid "Screenshot feature requires libjpeg"
 msgstr "La capture d'écran requiert libjpeg"
 
 msgid "Unreasonable refresh rate; ignoring\n"
-msgstr "Fréquence de rafraîchissement déraisonnable ignorée\n"
+msgstr "Taux de rafraîchissement déraisonnable ignorée\n"
 
 msgid "Too many transform args."
 msgstr "Trop d'arguments de transformation."
@@ -382,14 +576,11 @@ msgid "Font engine initialization failed."
 msgstr "L'initialisation du moteur de polices à échoué."
 
 #, c-format
-msgid "Cannot font face: `%s'."
-msgstr "Mauvaise face de police: «%s»."
+msgid "Cannot find font face: `%s'."
+msgstr "Police inexistante: «%s»."
 
 msgid "Error getting TTF font face."
 msgstr "Impossible d'obtenir la face de police TTF."
-
-msgid "Bad TTF font face."
-msgstr "Face de police TTF invalide."
 
 msgid "Failed to set font size."
 msgstr "Impossible d'attribuer la taille de la police."
@@ -424,23 +615,26 @@ msgstr "Mauvaise géométrie XCF: %ux%u."
 msgid "Unknown base image type: %u."
 msgstr "Mauvais type d'image de base: %u."
 
+msgid "Layer editor"
+msgstr "Éditeur de calques"
+
+msgid "Edit the layer information."
+msgstr "Éditer la liste des calques."
+
 #, c-format
-msgid "%s (visible %s)\n"
-msgstr "%s (visible %s)\n"
-
-msgid ", editing"
-msgstr ", édition"
+msgid "%s (visible%s)\n"
+msgstr "%s (visible%s)\n"
 
 #, c-format
-msgid "%s (invisible %s)\n"
-msgstr "%s (invisible %s)\n"
-
-msgid "No layer is selected."
-msgstr "Aucun calque n'est sélectionné."
+msgid "%s (invisible%s)\n"
+msgstr "%s (invisible%s)\n"
 
 #, c-format
 msgid "%s layers"
 msgstr "Calques de «%s»"
+
+msgid "Layer NN (visible, editing)    "
+msgstr "Calque NN (visible, édition)    "
 
 msgid "New layer: "
 msgstr "Nom: "
@@ -463,30 +657,41 @@ msgstr "Éditer"
 msgid "Show/hide"
 msgstr "Montrer/cacher"
 
-msgid "Layer NN (visible, editing)    "
-msgstr "Calque NN (visible, édition)    "
-
-msgid "No node is selected."
-msgstr "Aucun noeud n'est sélectionné."
+#, c-format
+msgid "The `%s' map is read-only."
+msgstr "La carte «%s» est en mode lecture-seulement."
 
 #, c-format
-msgid "%s node"
-msgstr "Noeud sur «%s»"
+msgid "%d%% magnification"
+msgstr "Agrandissement %d%%"
 
-msgid "Remove"
-msgstr "Supprimer"
-
-msgid "Dup"
-msgstr "Reproduire"
-
-msgid "Up"
-msgstr "Haut"
-
-msgid "Down"
-msgstr "Bas"
+#, c-format
+msgid "Selected area %d,%d (%dx%d)"
+msgstr "Zone sélectionnée %d,%d (%dx%d)"
 
 msgid "Tools"
 msgstr "Outils"
+
+msgid "Map editor settings"
+msgstr "Paramètres de l'éditeur de cartes"
+
+msgid "Enable background tiling"
+msgstr "Tuiles de fond"
+
+msgid "Moving tiles"
+msgstr "Tuiles mouvantes"
+
+msgid "Tile size: "
+msgstr "Taille de tuile: "
+
+msgid "Selection-bounded edition"
+msgstr "Restreindre l'édition à la sélection"
+
+msgid "Default map geometry: "
+msgstr "Géométrie de carte par défaut: "
+
+msgid "Default brush geometry: "
+msgstr "Géométrie de pinceau par défaut: "
 
 msgid "No object type was specified."
 msgstr "Aucun type d'objet spécifié."
@@ -494,8 +699,9 @@ msgstr "Aucun type d'objet spécifié."
 msgid "No such object type."
 msgstr "Type d'objet inconnu."
 
-msgid "No object name was specified."
-msgstr "Aucun nom d'objet spécifié."
+#, c-format
+msgid "New %s #%d"
+msgstr "Nouveau %s #%d"
 
 #, c-format
 msgid "The `%s' object is indestructible."
@@ -510,33 +716,11 @@ msgstr "Éditeur d'objet"
 msgid "Type: "
 msgstr "Type: "
 
-msgid "Create"
-msgstr "Créer"
+msgid "Media selector"
+msgstr "Sélection de média"
 
-msgid "Edit obj"
-msgstr "Éditer obj"
-
-msgid "Load"
-msgstr "Charger"
-
-msgid "Duplicate"
-msgstr "Dupliquer"
-
-msgid "Move up"
-msgstr "Déplacer haut"
-
-msgid "Move down"
-msgstr "Déplacer bas"
-
-msgid "Destroy"
-msgstr "Détruire"
-
-#, c-format
-msgid "The `%s' map is read-only."
-msgstr "La carte «%s» est en mode lecture-seulement."
-
-msgid "The zoom is out of range."
-msgstr "La fréquence de rafraîchissement est hors limite."
+msgid "Import graphics or audio into the map."
+msgstr "Importer des graphiques ou du son sur une carte."
 
 msgid "There is no active selection."
 msgstr "La carte ne comporte aucune sélection."
@@ -572,11 +756,17 @@ msgstr "Gomme à effacer"
 msgid "Remove the highest node reference."
 msgstr "Supprimer le dernier élément."
 
+msgid "Specify the tile to delete."
+msgstr "Indiquez la tuile à supprimer."
+
 msgid "Color Inversion"
 msgstr "Inversion de couleur"
 
 msgid "Invert the color of a tile."
 msgstr "Inverser les couleurs d'une tuile."
+
+msgid "Specify the tile to invert."
+msgstr "Indiquez la tuile à inverser."
 
 msgid "Clear/Fill"
 msgstr "Effacement/Remplissage"
@@ -599,6 +789,12 @@ msgstr "Symétrie"
 msgid "Apply a flip/mirror transformation on a tile."
 msgstr "Effectuer une symétrie."
 
+msgid "Specify the tile to flip horizontally."
+msgstr "Indiquez la tuile à retourner horizontalement."
+
+msgid "Specify the tile to flip vertically."
+msgstr "Indiquez la tuile à retourner verticalement."
+
 msgid "Horizontal"
 msgstr "Horizontal"
 
@@ -617,11 +813,17 @@ msgstr "Fusion"
 msgid "Apply patterns, interpolating edge tiles."
 msgstr "Application de motifs et de terrain."
 
+msgid "Create"
+msgstr "Créer"
+
 msgid "Load set"
 msgstr "Charger"
 
 msgid "Save set"
 msgstr "Sauvegarder"
+
+msgid "Remove"
+msgstr "Supprimer"
 
 msgid "No brush name was given."
 msgstr "Aucun nom de pinceau fut spécifié."
@@ -636,15 +838,15 @@ msgstr "Loupe"
 msgid "Zoom in and out specific areas of the map."
 msgstr "Zoom avant et arrière sur la carte."
 
-msgid "There is no visible map."
-msgstr "Aucune carte n'est présentement visible."
-
 msgid "1:1 zoom"
 msgstr "Zoom 1:1"
 
 #, c-format
 msgid "Zoom %%: "
 msgstr "Zoom %%: "
+
+msgid "Click to [zoom-in/center/zoom-out]."
+msgstr "Cliquez pour [zoom avant/centrage/zoom arrière]."
 
 msgid "Stamp"
 msgstr "Étampe"
@@ -658,14 +860,17 @@ msgstr "Remplacer"
 msgid "Insert"
 msgstr "Insérer"
 
+msgid "Specify the destination node."
+msgstr "Spécifiez le noeud de destination."
+
 msgid "Shift tool"
 msgstr "Déplacement"
 
 msgid "Displace a tile with the mouse."
-msgstr "Déplacement fin d'une tuile à l'aide de la souris."
+msgstr "Déplacement fin de tuile avec la souris."
 
 msgid "Highest"
-msgstr "Plus haut"
+msgstr "Haut"
 
 msgid "All"
 msgstr "Tout"
@@ -721,9 +926,6 @@ msgstr "Bio"
 msgid "Regen"
 msgstr "Régénérer"
 
-msgid "Origin"
-msgstr "Origine"
-
 msgid "Selection"
 msgstr "Sélection"
 
@@ -745,8 +947,8 @@ msgstr "Il n'y a aucune sélection à couper."
 msgid "Resize tool"
 msgstr "Redimensionnement"
 
-msgid "Resize a map's node array."
-msgstr "Effectuer un redimensionnement de la carte."
+msgid "Resize the node array."
+msgstr "Redimensionner la carte."
 
 msgid "A JPEG error has occured."
 msgstr "Une erreur JPEG s'est produite."
@@ -798,7 +1000,7 @@ msgid "Port: "
 msgstr "Port: "
 
 msgid "Refresh rate (ms): "
-msgstr "Fréquence de rafraîchissement (ms):"
+msgstr "Taux de rafraîchissement (ms):"
 
 msgid "Connect"
 msgstr "Connexion"
@@ -806,17 +1008,20 @@ msgstr "Connexion"
 msgid "Disconnect"
 msgstr "Déconnexion"
 
-msgid "Widgets"
-msgstr "Widgets"
+msgid "Leak detection"
+msgstr "Détection de fuite de mémoire"
 
-msgid "Viewport"
-msgstr "Vue"
+msgid "Running timers"
+msgstr "Timers en exécution"
 
 msgid "Unicode conversion"
 msgstr "Conversion Unicode"
 
-msgid "Leak detection"
-msgstr "Détection de fuite de mémoire"
+msgid "Viewport"
+msgstr "Vue"
+
+msgid "Widgets"
+msgstr "Widgets"
 
 msgid "Debug monitor"
 msgstr "Moniteur de déboguage"
@@ -869,18 +1074,42 @@ msgid "GUI"
 msgstr "GUI"
 
 msgid "Tile-based"
-msgstr "Tuile-orienté"
+msgstr "À base de tuile"
 
 #, c-format
 msgid "Graphic engine: %s %s"
 msgstr "Moteur graphique: %s %s"
 
 #, c-format
+msgid "Depth: %dbpp"
+msgstr "Profondeur: %dbpp"
+
+#, c-format
+msgid "Video masks: %08x,%08x,%08x,%08x"
+msgstr "Masques vidéo: %08x,%08x,%08x,%08x"
+
+#, c-format
+msgid "Color key: %d"
+msgstr "Clef de couleur: %d"
+
+#, c-format
+msgid "Alpha: %d"
+msgstr "Alpha: %d"
+
+#, c-format
 msgid "Window op: %d (%p)"
-msgstr "Opération fenêtre: %d (%p)"
+msgstr "Opération de fenêtre: %d (%p)"
 
 msgid "Window op: 000 (0x00000000)"
-msgstr "Opération fenêtre: 000 (0x00000000)"
+msgstr "Opération de fenêtre: 000 (0x00000000)"
+
+#, c-format
+msgid "Refresh rate (effective): %d"
+msgstr "Taux de rafraîchissement (effectif): %d"
+
+#, c-format
+msgid "Refresh rate (nominal): %d"
+msgstr "Taux de rafraîchissement (nominal): %d"
 
 msgid "Map: %[obj]"
 msgstr "Carte: «%[obj]»"
@@ -1148,6 +1377,10 @@ msgstr "Tonnes [métriques]"
 msgid "Tons [long]"
 msgstr "Tonnes [longues]"
 
+#, fuzzy
+msgid "Nanoseconds"
+msgstr "Microsecondes"
+
 msgid "Microseconds"
 msgstr "Microsecondes"
 
@@ -1199,26 +1432,26 @@ msgstr "Kiloampères"
 msgid "Megaamperes"
 msgstr "Méga-ampères"
 
+msgid "Kelvins"
+msgstr "Kelvins"
+
+msgid "Degrees Celsius"
+msgstr "Degrés Celsius"
+
+msgid "Degrees Farenheit"
+msgstr "Degrés Farenheit"
+
+msgid "Degrees Rankine"
+msgstr "Degrés Rankine"
+
+msgid "Degrees Reaumur"
+msgstr "Degrés Reaumur"
+
 msgid "Microkelvins"
 msgstr "Microkelvins"
 
 msgid "Millikelvins"
 msgstr "Millikelvins"
-
-msgid "Degrees Rankine"
-msgstr "Degrés Rankine"
-
-msgid "Kelvins"
-msgstr "Kelvins"
-
-msgid "Degrees Farenheit"
-msgstr "Degrés Farenheit"
-
-msgid "Degrees Celsius"
-msgstr "Degrés Celsius"
-
-msgid "Degrees Reaumur"
-msgstr "Degrés Reaumur"
 
 msgid "Kilokelvins"
 msgstr "Kilokelvins"
@@ -1490,12 +1723,6 @@ msgstr "Ski de fond modéré"
 msgid "Cross-country/vigorous skiing"
 msgstr "Ski de fond vigoureux"
 
-msgid "+"
-msgstr "+"
-
-msgid "-"
-msgstr "-"
-
 msgid "Mouse"
 msgstr "Souris"
 
@@ -1508,6 +1735,60 @@ msgstr "Joystick"
 #, c-format
 msgid "Illegal coordinates: %s[%d,%d,%d]"
 msgstr "Coordonées illégales: %s[%d,%d,%d]"
+
+#~ msgid "Width: "
+#~ msgstr "Largeur: "
+
+#~ msgid "Height: "
+#~ msgstr "Hauteur: "
+
+#~ msgid "Bad TTF font face."
+#~ msgstr "Face de police TTF invalide."
+
+#~ msgid "No node is selected."
+#~ msgstr "Aucun noeud n'est sélectionné."
+
+#~ msgid "%s node"
+#~ msgstr "Noeud sur «%s»"
+
+#~ msgid "Dup"
+#~ msgstr "Reproduire"
+
+#~ msgid "Up"
+#~ msgstr "Haut"
+
+#~ msgid "Down"
+#~ msgstr "Bas"
+
+#~ msgid "No object name was specified."
+#~ msgstr "Aucun nom d'objet spécifié."
+
+#~ msgid "Edit obj"
+#~ msgstr "Éditer obj"
+
+#~ msgid "Load"
+#~ msgstr "Charger"
+
+#~ msgid "Duplicate"
+#~ msgstr "Dupliquer"
+
+#~ msgid "Move up"
+#~ msgstr "Déplacer haut"
+
+#~ msgid "Move down"
+#~ msgstr "Déplacer bas"
+
+#~ msgid "The zoom is out of range."
+#~ msgstr "La fréquence de rafraîchissement est hors limite."
+
+#~ msgid "There is no visible map."
+#~ msgstr "Aucune carte n'est présentement visible."
+
+#~ msgid "+"
+#~ msgstr "+"
+
+#~ msgid "-"
+#~ msgstr "-"
 
 #~ msgid "Cannot resolve anim: %u."
 #~ msgstr "Impossible de résoudre l'animation: %u."
@@ -1970,9 +2251,6 @@ msgstr "Coordonées illégales: %s[%d,%d,%d]"
 
 #~ msgid "Node props"
 #~ msgstr "Propriétés de noeud"
-
-#~ msgid "Name: %s (%s)"
-#~ msgstr "Nom: «%s» (%s)"
 
 #~ msgid "Random shift"
 #~ msgstr "Déplacement au hazard"
