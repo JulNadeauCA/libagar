@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.92 2004/09/14 10:55:30 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.93 2004/09/25 01:58:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -490,7 +490,7 @@ text_edit_float(double *fp, double min, double max, const char *unit,
 	WIDGET(fsb)->flags |= WIDGET_WFILL;
 	widget_bind(fsb, "value", WIDGET_DOUBLE, fp);
 	fspinbutton_set_range(fsb, min, max);
-	event_new(fsb, "fspinbutton-return", window_generic_detach, "%p", win);
+//	event_new(fsb, "fspinbutton-return", window_generic_detach, "%p", win);
 	
 	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
 	button = button_new(vb, _("Ok"));

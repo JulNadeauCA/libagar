@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.161 2004/08/26 07:33:59 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.162 2004/09/18 06:37:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -121,30 +121,38 @@ mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar,
 
 #ifdef EDITION
 
-static void
-mapview_sel_tool(int argc, union evarg *argv)
+void
+mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 {
-	struct mapview *mv = argv[1].p;
-	struct tool *ntool = argv[2].p;
-
-	if (mv->curtool == ntool) {
-		if (ntool->win != NULL) {
-			window_hide(ntool->win);
-		}
-		mv->curtool = NULL;
-		return;
-	}
 	if (mv->curtool != NULL) {
-		widget_set_bool(mv->curtool->trigger, "state", 0);
+		if (mv->curtool->trigger != NULL)
+			widget_set_bool(mv->curtool->trigger, "state", 0);
 		if (mv->curtool->win != NULL)
 			window_hide(mv->curtool->win);
 	}
 	mv->curtool = ntool;
 
-	if (ntool->win != NULL)
-		window_show(ntool->win);
+	if (ntool != NULL) {
+		ntool->p = p;
+		if (ntool->win != NULL) {
+			window_show(ntool->win);
+		}
+		tool_update_status(ntool);
+	}
+}
 
-	tool_update_status(ntool);
+static void
+sel_tool(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct tool *tool = argv[2].p;
+	void *p = argv[3].p;
+
+	if (mv->curtool == tool) {
+		mapview_select_tool(mv, NULL, NULL);
+	} else {
+		mapview_select_tool(mv, tool, p);
+	}
 }
 
 static void
@@ -175,8 +183,8 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
 
 		ntool->trigger = toolbar_add_button(mv->toolbar,
-		    mv->toolbar->nrows-1, icon, 1, 0, mapview_sel_tool,
-		    "%p, %p", mv, ntool);
+		    mv->toolbar->nrows-1, icon, 1, 0, sel_tool,
+		    "%p, %p, %p", mv, ntool, p);
 		event_new(ntool->trigger, "button-mouseoverlap",
 		    update_tooltips, "%p, %p", mv, ntool);
 	}
