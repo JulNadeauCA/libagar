@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.25 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.26 2002/12/21 10:25:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -80,16 +80,12 @@ tlist_new(struct region *reg, int rw, int rh, int flags)
 void
 tlist_init(struct tlist *tl, int rw, int rh, int flags)
 {
-	widget_init(&tl->wid, "tlist", "widget", &tlist_ops, rw, rh);
+	widget_init(&tl->wid, "tlist", &tlist_ops, rw, rh);
 
-	widget_map_color(tl, TEXT_COLOR, "tlist-text",
-	    240, 240, 240);
-	widget_map_color(tl, BACKGROUND_COLOR, "tlist-background",
-	    120, 120, 120);
-	widget_map_color(tl, LINE_COLOR, "tlist-line",
-	    50, 50, 50);
-	widget_map_color(tl, SELECTION_COLOR, "tlist-selection",
-	    50, 50, 120);
+	widget_map_color(tl, BACKGROUND_COLOR, "background", 120, 120, 120);
+	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240);
+	widget_map_color(tl, LINE_COLOR, "line", 50, 50, 50);
+	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120);
 
 	tl->flags = flags;
 	tl->xspacing = 6;
@@ -164,7 +160,7 @@ tlist_draw(void *p)
 	struct scrollbar *sb = tl->vbar;
 	int item_h;
 	int y = 0, i = 0;
-	int val = 0, visitems = 0;
+	int val, visitems = 0;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
@@ -179,7 +175,7 @@ tlist_draw(void *p)
 	rclip.w = WIDGET(tl)->w;
 	rclip.h = WIDGET(tl)->h;
 
-	scrollbar_get_value(sb, &val);
+	val = widget_get_int(sb, "value");
 
 	SDL_SetClipRect(view->v, &rclip);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -248,7 +244,8 @@ tlist_remove_item(struct tlist_item *it)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_REMOVE(&tl->items, it, items);
-	scrollbar_set_range(sb, 0, --tl->nitems);
+	widget_set_int(sb, "min", 0);
+	widget_set_int(sb, "max", --tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
 	tlist_free_item(it);
@@ -286,7 +283,8 @@ tlist_clear_items(struct tlist *tl)
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
 	
-	scrollbar_set_range(sb, 0, 0);
+	widget_set_int(sb, "min", 0);
+	widget_set_int(sb, "max", 0);
 	
 	pthread_mutex_unlock(&tl->items_lock);
 }
@@ -344,7 +342,8 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
-	scrollbar_set_range(sb, 0, ++tl->nitems);
+	widget_set_int(sb, "min", 0);
+	widget_set_int(sb, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -412,18 +411,26 @@ tlist_mousemotion(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
+	struct widget_binding *valueb, *maxb;
 	int x = argv[1].i;
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
+	int *value, *max;
 	Uint8 ms;
 	
 	event_forward(sb, "window-mousemotion", argc, argv);
 
-	if (sb->value >= sb->max) {
+	maxb = widget_binding_get_locked(sb, "max", &max);
+	valueb = widget_binding_get_locked(sb, "value", &value);
+
+	if (*value >= *max) {
 		/* Don't scroll past the end. */
-		sb->value = sb->max - tl->nvisitems - 1;
+		*value = *max - tl->nvisitems - 1;
 	}
+
+	widget_binding_unlock(valueb);
+	widget_binding_unlock(maxb);
 }
 
 static void
@@ -443,16 +450,23 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tlist_item *ti;
+	int *value, *max;
 	
 	WIDGET_FOCUS(tl);
 
 	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar click? */
-		event_forward(sb, "window-mousebuttondown", argc, argv);
+		struct widget_binding *maxb, *valueb;
 	
-		if (sb->value >= sb->max) {
+		event_forward(sb, "window-mousebuttondown", argc, argv);
+
+		maxb = widget_binding_get_locked(sb, "max", &max);
+		valueb = widget_binding_get_locked(sb, "value", &value);
+		if (*value >= *max) {
 			/* Don't scroll past the end. */
-			sb->value = sb->max - tl->nvisitems - 1;
+			*value = *max - tl->nvisitems - 1;
 		}
+		widget_binding_unlock(valueb);
+		widget_binding_unlock(maxb);
 		return;
 	}
 	
@@ -462,7 +476,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&tl->items_lock);
 	ti = tlist_item_index(tl,
-	    (sb->value + y / tl->item_h) + 1);
+	    (widget_get_int(sb, "value") + y / tl->item_h) + 1);
 	if (ti != NULL) {
 		if (tl->flags & TLIST_MULTI_STICKY ||
 		   ((tl->flags & TLIST_MULTI) &&
@@ -487,9 +501,13 @@ tlist_keydown(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
 	struct tlist_item *it, *pit;
+	struct widget_binding *maxb, *valueb;
 	int keysym = argv[1].i;
 	int sel;
-	
+	int *sb_value;
+
+	valueb = widget_binding_get_locked(sb, "value", &sb_value);
+
 	pthread_mutex_lock(&tl->items_lock);
 	switch (keysym) {
 	case SDLK_UP:
@@ -531,28 +549,35 @@ tlist_keydown(int argc, union evarg *argv)
 		}
 		break;
 	case SDLK_LEFT:
-		if (--sb->value < 0) {
-			sb->value = 0;
+		if (*sb_value < 0) {
+			*sb_value = 0;
 		}
+		widget_binding_modified(valueb);
 		break;
 	case SDLK_RIGHT:
-		if (++sb->value > tl->nitems) {		/* XXX */
-			sb->value = tl->nitems;
+		if (++(*sb_value) > tl->nitems) {		/* XXX */
+			*sb_value = tl->nitems;
 		}
+		widget_binding_modified(valueb);
 		break;
 	case SDLK_PAGEUP:
-		if ((sb->value -= 4) < 0) {
-			sb->value = 0;
+		if ((*sb_value -= 4) < 0) {
+			*sb_value = 0;
 		}
+		widget_binding_modified(valueb);
 		break;
 	case SDLK_PAGEDOWN:
-		if ((sb->value += 4) > tl->nitems - tl->nvisitems) { /* XXX */
-			sb->value = tl->nitems - tl->nvisitems;
+		if ((*sb_value += 4) > tl->nitems - tl->nvisitems) { /* XXX */
+			*sb_value = tl->nitems - tl->nvisitems;
 		}
+		widget_binding_modified(valueb);
 		break;
 	default:
 		break;
 	}
+
+	widget_binding_unlock(valueb);
+	
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
