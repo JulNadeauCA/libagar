@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.3 2004/04/13 01:21:46 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.4 2004/08/26 06:25:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -28,11 +28,13 @@ struct toolbar {
 	struct toolbar_button *buttons;
 	enum toolbar_type type;
 	int nrows;
+	int flags;
+#define TOOLBAR_HOMOGENOUS	0x01
 };
 
 __BEGIN_DECLS
-struct toolbar	*toolbar_new(void *, enum toolbar_type, int);
-void		 toolbar_init(struct toolbar *, enum toolbar_type, int);
+struct toolbar	*toolbar_new(void *, enum toolbar_type, int, int);
+void		 toolbar_init(struct toolbar *, enum toolbar_type, int, int);
 void		 toolbar_scale(void *, int, int);
 void	 	 toolbar_destroy(void *);
 struct button	*toolbar_add_button(struct toolbar *, int, SDL_Surface *, int,
