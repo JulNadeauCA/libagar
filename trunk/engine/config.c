@@ -37,6 +37,8 @@
 
 #include <libfobj/fobj.h>
 
+#include <engine/compat/strlcpy.h>
+
 #include "engine.h"
 #include "map.h"
 #include "physics.h"
