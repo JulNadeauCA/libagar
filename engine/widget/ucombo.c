@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.6 2004/02/29 17:34:40 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.7 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -161,6 +161,8 @@ ucombo_destroy(void *p)
 		object_detach(com->list);
 		view_detach(com->win);
 	}
+	object_destroy(com->list);
+	Free(com->list, M_OBJECT);
 	widget_destroy(com);
 }
 
