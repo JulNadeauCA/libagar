@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.127 2002/12/28 02:58:28 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.128 2002/12/30 03:00:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -854,6 +854,7 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 	SDL_Rect clip;
 
 	/* XXX cache the scaled surfaces. */
+	/* XXX inefficient */
 	SDL_LockSurface(view->v);
 	for (y = 0; y < m->tileh; y++) {
 		for (x = 0; x < m->tilew; x++) {
@@ -864,8 +865,7 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 			    &r1, &g1, &b1, &a1);
 			col = SDL_MapRGB(view->v->format, r1, g1, b1);
 			if (a1 > 200) {
-				VIEW_PUT_PIXEL_CLIPPED(view->v,
-				    rx+x, ry+y, col);
+				VIEW_PUT_PIXEL(view->v, rx+x, ry+y, col);
 			}
 		}
 	}

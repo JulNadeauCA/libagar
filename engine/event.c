@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.119 2002/12/29 02:13:53 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.120 2002/12/31 02:20:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -94,7 +94,10 @@ event_hotkey(SDL_Event *ev)
 #ifdef DEBUG
 	case SDLK_r:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			VIEW_REDRAW();
+			SDL_Event vexp;
+
+			vexp.type = SDL_VIDEOEXPOSE;
+			SDL_PushEvent(&vexp);
 		}
 		break;
 	case SDLK_F2:
@@ -317,21 +320,16 @@ event_loop(void)
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
-				switch (view->gfx_engine) {
-				case GFX_ENGINE_GUI:
-				case GFX_ENGINE_TILEBASED:
-					SDL_UpdateRects(view->v, view->ndirty,
-					    view->dirty);
-					break;
 #ifdef HAVE_OPENGL
-				case GFX_ENGINE_GL:
+				if (view->opengl) {
 					SDL_GL_SwapBuffers();
-					break;
-#endif
+					goto updated;
 				}
+#endif
+				SDL_UpdateRects(view->v, view->ndirty,
+				    view->dirty);
+updated:
 				view->ndirty = 0;
-
-				/* Update and adjust the refresh rate. */
 				event_adjust_refresh(ntick);
 			}
 			ltick = SDL_GetTicks();		/* Rendering ends */
@@ -408,11 +406,6 @@ event_dispatch(SDL_Event *ev)
 			    SDL_MapRGB(view->v->format, 0, 0, 0));
 			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
 			break;
-#ifdef HAVE_OPENGL
-		case GFX_ENGINE_GL:
-			SDL_GL_SwapBuffers();
-			break;
-#endif
 		}
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
