@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.20 2002/11/04 08:33:04 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.21 2002/11/07 18:57:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -180,7 +180,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 
 	asprintf(&wname, "t-win-%s", OBJECT(ob->art->map)->name);
 	window_init(win, wname, ob->name, WINDOW_SOLID,
-	    view->w - 170, cury, 154, 264, 156, 94);
+	    view->w - 170, cury, 88, 264, 56, 117);
 	free(wname);
 
 	/* Map view */
@@ -193,38 +193,43 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	/*
 	 * Tools
 	 */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 93, 10);
 	reg->spacing = 1;
 
 	/* Load map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
-	    0, -1, -1);
+	    0,
+	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
 
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
-	    0, -1, -1);
+	    0,
+	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
 
 	/* Grid */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
-	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	    BUTTON_STICKY|BUTTON_PRESSED,
+	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 	/* Props */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
-	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	    BUTTON_STICKY|BUTTON_PRESSED,
+	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 	/* Edition */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_EDIT),
-	    BUTTON_STICKY, -1, -1);
+	    BUTTON_STICKY,
+	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
