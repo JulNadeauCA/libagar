@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.9 2002/02/07 23:40:26 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.10 2002/02/08 01:38:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -73,6 +73,9 @@ event_loop(void)
 	SDL_Event ev;
 
 	while (SDL_WaitEvent(&ev)) {
+		if (ev.type == SDL_KEYDOWN) {
+			event_hotkey(&ev);
+		}
 		switch (ev.type) {
 		case SDL_VIDEOEXPOSE:
 			curmap->redraw++;
@@ -90,7 +93,6 @@ event_loop(void)
 			} else if (curmapedit != NULL) {
 				curmapedit->event_hook(curmapedit, &ev);
 			}
-			event_hotkey(&ev);
 			break;
 		case SDL_QUIT:
 			return;
