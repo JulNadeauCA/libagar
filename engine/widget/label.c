@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.59 2003/03/25 05:18:50 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.60 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -192,7 +192,7 @@ label_printf(struct label *label, const char *fmt, ...)
 	pthread_mutex_lock(&label->text.lock);
 
 	/* Update the string. */
-	label->text.caption = Realloc(label->text.caption, sl);
+	label->text.caption = Realloc(label->text.caption, sl+1);
 	strlcpy(label->text.caption, buf, sl+1);
 	free(buf);
 
