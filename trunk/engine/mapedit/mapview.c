@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.57 2003/02/10 04:02:55 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.58 2003/02/10 23:08:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -487,7 +487,7 @@ mapview_draw(void *p)
 		m->tilew = *mv->tilew;
 		m->tileh = *mv->tileh;
 	}
-
+	
 	for (my = mv->my, ry = mv->ssy - mv->map->tileh;
 	     (my - mv->my) <= mv->mh && my < m->maph;
 	     my++, ry += mv->map->tileh) {
@@ -507,7 +507,8 @@ mapview_draw(void *p)
 				    WIDGET_ABSY(mv) + ry);
 			}
 
-			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60)
+			if (mv->flags & MAPVIEW_PROPS &&
+			    mv->map->zoom >= 60)
 				draw_node_props(mv, node, rx, ry);
 
 			if (mv->flags & MAPVIEW_GRID) {
@@ -535,10 +536,11 @@ mapview_draw(void *p)
 				rd.w = mv->map->tilew;
 				rd.h = mv->map->tileh;
 
-				if (curtool == NULL ||
-				    TOOL_OPS(curtool)->cursor == NULL ||
-				    TOOL_OPS(curtool)->cursor(curtool, mv,
-				    &rd) == -1) {
+				if (((mv->flags & MAPVIEW_NO_CURSOR) == 0) &&
+				    (curtool == NULL ||
+				     TOOL_OPS(curtool)->cursor == NULL ||
+				     TOOL_OPS(curtool)->cursor(curtool, mv, &rd)
+				     == -1)) {
 					primitives.rect_outlined(mv,
 					    rx+1, ry+1,
 					    mv->map->tilew-1, mv->map->tileh-1,
@@ -778,6 +780,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		mv->cur_node = srcnode;
 		break;
 	case 2:						/* Select/center */
+		mv->flags |= MAPVIEW_NO_CURSOR;
 		mv->cur_node = srcnode;
 		goto out;
 	case 3:						/* Scroll */
@@ -814,6 +817,9 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 	int button = argv[1].i;
 
 	switch (button) {
+	case 2:
+		mv->flags &= ~(MAPVIEW_NO_CURSOR);
+		break;
 	case 3:
 		mv->mouse.scrolling = 0;
 		break;
@@ -844,6 +850,7 @@ mapview_keydown(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&mv->map->lock);
 
+	/* Zoom keys */
 	if (mv->flags & MAPVIEW_ZOOM) {
 		Uint32 ival;
 		int incr;
@@ -877,6 +884,7 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 	}
 	
+	/* Edition keys */
 	if (mv->flags & MAPVIEW_EDIT && mv->cur_node != NULL) {
 		switch (keysym) {
 		case SDLK_INSERT:
@@ -892,15 +900,20 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 	}
 
-	switch (keysym) {
-	case SDLK_s:
-		if (mapedition)
+	/* Save/load keys */
+	if (mv->flags & MAPVIEW_SAVEABLE) {
+		switch (keysym) {
+		case SDLK_s:
 			object_save(mv->map);
-		break;
-	case SDLK_l:
-		if (mapedition)
+			break;
+		case SDLK_l:
 			object_load(mv->map);
-		break;
+			break;
+		}
+	}
+
+	/* Grid, props keys */
+	switch (keysym) {
 	case SDLK_g:
 		if (mv->flags & MAPVIEW_GRID) {
 			mv->flags &= ~(MAPVIEW_GRID);
