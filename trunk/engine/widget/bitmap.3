@@ -1,4 +1,4 @@
-.\"	$Csoft: bitmap.3,v 1.2 2002/09/07 04:30:24 vedge Exp $
+.\"	$Csoft: bitmap.3,v 1.3 2002/12/03 03:58:36 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -46,6 +46,9 @@ widget displays a bitmap scaled to the widget's geometry.
 .Pp
 .Ft void
 .Fn bitmap_init "struct bitmap *bmp" "SDL_Surface *surface" "int w" "int h"
+.Pp
+.Ft void
+.Fn bitmap_set_surface "struct bitmap *bmp" "SDL_Surface *surface"
 .nr nS 0
 .Pp
 The
@@ -63,6 +66,11 @@ The
 argument is a pointer to an
 .Xr SDL_Surface 3
 structure.
+.Pp
+The
+.Fn bitmap_set_surface
+function changes the source surface to
+.Fa surface .
 .Sh EVENTS
 The
 .Nm
