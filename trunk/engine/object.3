@@ -31,7 +31,7 @@
 .Os
 .Sh NAME
 .Nm object
-.Nd AGAR object abstraction
+.Nd agar object abstraction
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/object.h>
@@ -53,34 +53,29 @@ tile mapping (for map edition).
 .It
 state saving/loading.
 .El
-.Pp
-Each object structure holds optional entry points,
-.Pp
-.Bd -literal
-struct obvec {
-	void	(*destroy)(void *ob);		/* called before destroy */
-	int	(*load)(void *ob, int fd);	/* load from fd */
-	int	(*save)(void *ob, int fd);	/* save to fd */
-};
-.Ed
-.Pp
-which are called by
-the generic
-.Fn object_destroy ,
-.Fn object_load
-and
-.Fn object_save
-functions.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn object_init "struct object *ob" "char *type" "char *name" "char *media" "int flags" "const void *vecp"
+.Fn object_new "char *type" "char *name" "char *media" "int flags" \
+               "const void *ops"
+.Ft "void"
+.Fn object_init "struct object *ob" "char *type" "char *name" "char *media" \
+                "int flags" "const void *ops"
 .Pp
 .Ft "void"
 .Fn object_destroy "void *ob"
 .Pp
+.Ft "char *"
+.Fn object_name "char *base" "int num"
+.nr nS 0
+.Pp
+The
+.Fn object_new
+function allocates, initializes and attaches a new, generic object to the
+world.
+The
 .Fn object_init
-initializes
+function initializes
 .Fa ob
 as an object of type
 .Fa type
@@ -89,23 +84,39 @@ and loads data from
 .Fa media
 into the static media pool, if the latter is not NULL.
 .Pp
+The
 .Fn object_destroy
-frees all resources associated with this object.
-.Fn object_destroy
-must be called once the object is not attached to any other object.
+function frees all resources associated with this object, and must be
+called when the object is not attached to any other object.
+The
+.Fa ops
+argument is a pointer to the following structure:
+.Bd -literal
+struct object_ops {
+	void	(*destroy)(void *ob);		/* Free resources */
+	int	(*load)(void *ob, int fd);	/* Load from fd */
+	int	(*save)(void *ob, int fd);	/* Save to fd */
+};
+.Ed
 .Pp
-If
+The
 .Fa flags
-contains
-.Dv OBJ_ART
-or
-.Dv OBJ_AUDIO ,
-graphics and samples are loaded from media.
-.Dv OBJ_KEEPMEDIA
-prevents garbage collection from freeing the media when the reference
-count drops to zero.
-.Dv OBJ_OPTMEDIA
-makes media load failures non-fatal.
+argument may contain:
+.Bd -literal
+#define OBJECT_ART		0x01	/* Load graphics */
+#define OBJECT_AUDIO		0x02	/* Load audio */
+#define OBJECT_KEEP_MEDIA	0x04	/* Keep graphics/audio cached */
+#define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
+#define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
+.Ed
+.Pp
+The
+.Fn object_name
+function returns a string containing the
+.Fa name
+string followed by the
+.Fa num
+integer.
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
@@ -117,10 +128,13 @@ makes media load failures non-fatal.
 .Ft "int"
 .Fn object_save "void *ob"
 .Pp
+.Ft "char *"
+.Fn object_path "char *name" "const char *suffix"
 .nr nS 0
 .Pp
+The
 .Fn object_load
-loads the state of
+function loads the state of
 .Fa ob
 from the first file found in data directories.
 .Fn object_loadfrom
@@ -132,8 +146,26 @@ from the file at
 saves the state of
 .Fa ob
 to the user's data directory.
-These routines are called when the world's list of objects is
-locked.
+.Pp
+The
+.Fn object_load ,
+.Fn object_loadfrom
+and
+.Fn object_save
+functions must be called when the world is locked.
+.Pp
+The thread-safe
+.Fn object_path
+function searches the data directories for a file matching the
+.Fa name
+and
+.Fa suffix
+arguments.
+If the file is found, a pointer to the full pathname is returned,
+otherwise a
+.Dv NULL
+pointer is returned and the error message may be retrieved using
+.Xr error_get 3 .
 .Sh MAP OPERATIONS
 .nr nS 1
 .Ft "struct mappos *"
@@ -142,19 +174,136 @@ locked.
 .Ft "void"
 .Fn object_delpos "void *ob" "Uint32 offs" "Uint32 flags" "struct map *map" "Uint32 x" "Uint32 y"
 .Pp
-.nr nS 0
-.Fn object_addpos
-adds a reference to
-.Fa ob
-at the given map coordinates, and creates a back reference (mappos)
-structure, which defines the single position of this object on a map,
-as well as speed, direction (mapdir) and an optional input device pointer.
+.Ft "void"
+.Fn object_movepos "void *ob" "struct map *m" "Uint32 x" "Uint32 y"
 .Pp
-.Fn object_delpos
-removes a reference to
+.nr nS 0
+The
+.Fn object_addpos
+function adds a reference to
 .Fa ob
-at the given map coordinates, and destroys the back reference (mappos)
+at the given map coordinates, and creates a back reference structure,
+which defines the single position of this object on a map, as well as speed,
+direction and an optional input device associated with the object.
+The
+.Fn object_addpos
+function must be called when the map is locked, and the object's position
+structure is not locked by the caller thread.
+.Pp
+The
+.Fn object_delpos
+function removes a reference to
+.Fa ob
+at the given map coordinates, and destroys the back reference structure.
+The
+.Fn object_delpos
+function must be called when the map is locked.
+.Pp
+The
+.Fn object_movepos
+function moves an object reference from its current node to the
+.Fa x
+and
+.Fa y
+coordinates of the map structure
+.Fa m ,
+and updates the back reference.
+The
+.Fn object_movepos
+function must be called when the map is locked, and the object's position
+structure is not locked by the caller thread.
+.Sh GRAPHICS
+.nr nS 1
+.Ft "void"
+.Fn object_add_sprite "struct object_art *art" "SDL_Surface *surface" \
+                      "Uint32 mflags" "int map_tiles"
+.Pp
+.Ft "void"
+.Fn object_break_sprite "struct object_art *art" "SDL_Surface *surface"
+.nr nS 0
+.Pp
+The
+.Fn object_add_sprite
+function adds
+.Fa surface
+to the
+.Fa art
 structure.
+If
+.Fa map_tiles
+is non-zero, the sprite is mapped onto the object's tile map,
+and the
+.Fa mflags
+argument are the node flags to be associated with the sprite.
+The
+.Fa map_tiles
+and
+.Fa mflags
+arguments are only relevant when map edition mode is in use.
+.Pp
+The
+.Fn object_break_sprite
+function divides an arbitrary-size
+.Xr SDL_Surface 3
+into several surfaces of
+.Dv TILEW
+by
+.Dv TILEH ,
+and attaches those surfaces to the
+.Fa art
+structure.
+.Sh GARBAGE COLLECTION
+.nr nS 1
+.Ft "void"
+.Fn object_init_gc "void"
+.Pp
+.Ft "Uint32"
+.Fn object_start_gc "Uint32 ival" "void *arg"
+.Pp
+.Ft "void"
+.Fn object_destroy_gc "void"
+.nr nS 0
+.Pp
+The
+.Fn object_init_gc
+function initializes the garbage collector.
+The thread-safe
+.Fn object_start_gc
+function executes garbage collection.
+The
+.Fn object_destroy_gc
+function frees resources used by the garbage collector.
+.Sh LOOKUP
+.nr nS 1
+.Ft "struct object *"
+.Fn object_strfind "char *name"
+.Ft "void"
+.Fn OBJECT_UNUSED "struct object *ob" "TYPE type"
+.Pp
+.Ft "void"
+.Fn OBJECT_ASSERT "struct object *ob" "char *obtype"
+.nr nS 0
+.Pp
+The
+.Fn object_strfind
+function looks up the list of objects linked against the world for an
+object identified by the null-terminated string
+.Fa name .
+The
+.Fn object_strfind
+function must be called when the world is locked.
+.Pp
+The
+.Fn OBJECT_UNUSED
+macro atomically decrements the reference count of an object structure
+member.
+.Pp
+The
+.Fn OBJECT_ASSERT
+macro causes failure if the object
+.Fa ob
+is not of type
+.Fa obtype .
 .Sh SEE ALSO
 .Xr agar 3
 .Sh HISTORY
