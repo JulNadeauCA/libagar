@@ -296,7 +296,6 @@ object_load(void *p, char *opath)
 
 	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);	
 	rv = object_load_data(ob, &buf);
-	netbuf_flush(&buf);
 	netbuf_destroy(&buf);
 	close(fd);
 	return (rv);

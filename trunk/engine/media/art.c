@@ -318,22 +318,14 @@ art_fetch(char *archive, struct object *ob)
 		fatal("%s: %s", path, fobj_error);
 
 	netbuf_init(&buf, fob->fd, NETBUF_BIG_ENDIAN);
-
 	for (i = 0; i < fob->head.nobjs; i++) {
-		if (xcf_check(&buf, fob->offs[i]) == 0) {
-			int rv;
-				
-			rv = xcf_load(&buf, (off_t)fob->offs[i], art);
-			if (rv != 0) {
-				fatal("xcf_load: %s", error_get());
-			}
-		} else {
-			debug(DEBUG_LOADING, "not a xcf in slot %d\n", i);
+		if (xcf_load(&buf, (off_t)fob->offs[i], art) == -1) {
+			debug(DEBUG_LOADING, "loading xcf in slot %d: %s\n", i, error_get());
+			abort();
 		}
 	}
-	fobj_free(fob);
-	netbuf_flush(&buf);
 	netbuf_destroy(&buf);
+	fobj_free(fob);
 
 	TAILQ_INSERT_HEAD(&artq, art, arts);			/* Cache */
 out:

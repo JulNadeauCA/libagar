@@ -191,21 +191,6 @@ Asprintf(char **ret, const char *format, ...)
 	va_end(ap);
 }
 
-off_t
-Lseek(int fd, off_t off, int whence)
-{
-	off_t rv;
-	
-	if ((rv = lseek(fd, off, whence)) == -1) {
-		fatal("lseek(%ld, %s): %s", (long)off,
-		    (whence == SEEK_SET) ? "SET" :
-		    (whence == SEEK_CUR) ? "CUR" :
-		    (whence == SEEK_END) ? "END" : "?",
-		    strerror(errno));
-	}
-	return (rv);
-}
-
 ssize_t
 Read(int fd, void *buf, size_t size)
 {
