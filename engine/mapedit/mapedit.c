@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.45 2002/02/18 09:56:39 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.46 2002/02/19 01:50:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ static pthread_mutex_t keyslock =	/* Keys can be processed. */
 static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_cursor_tick(Uint32, void *);
 static Uint32	mapedit_listw_tick(Uint32, void *);
-static void	mapedit_bg(SDL_Surface *, int, int, int, int);
+static void	mapedit_bg(SDL_Surface *, SDL_Rect *);
 
 struct mapedit *
 mapedit_create(char *name)
@@ -253,18 +253,20 @@ mapedit_link(void *p)
 	med->y = m->defy;
 	mapdir_init(&med->cursor_dir, (struct object *)med, m,
 	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
-	med->tilelist = window_create(m->view,
-	    (m->view->width - m->tilew), m->tileh,
-	    m->tilew, m->view->height + m->tileh,
-	    "Tile list");
-	med->tilestack = window_create(m->view,
-	    0, m->tileh,
-	    m->tilew, m->view->height + m->tileh,
-	    "Tile stack");
-	med->objlist = window_create(m->view,
-	    m->tilew, 0,
-	    m->view->width - m->tilew, m->tileh,
-	    "Object list");
+	med->tilelist.x = m->view->width - m->tilew;
+	med->tilelist.y = 0;
+	med->tilelist.w = m->tilew;
+	med->tilelist.h = m->view->height - m->tileh;
+	
+	med->tilestack.x = 0;
+	med->tilestack.y = m->tileh;
+	med->tilestack.w = m->tilew;
+	med->tilestack.h = m->view->height - m->tileh;
+
+	med->objlist.x = m->tilew;
+	med->objlist.y = 0;
+	med->objlist.w = m->view->width - m->tilew*2;
+	med->objlist.h = m->tileh;
 
 	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
@@ -315,9 +317,9 @@ mapedit_unlink(void *p)
 	struct node *node;
 	struct noderef *nref;
 
-	curmapedit = NULL;
-
 	SDL_RemoveTimer(med->timer);
+	SDL_Delay(100);	/* XXX */
+	curmapedit = NULL;
 
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[med->x][med->y];
@@ -327,10 +329,6 @@ mapedit_unlink(void *p)
 		node->flags &= ~(NODE_ANIM);
 	}
 	pthread_mutex_unlock(&m->lock);
-
-	window_destroy(med->tilelist);
-	window_destroy(med->tilestack);
-	window_destroy(med->objlist);
 
 	m->redraw++;
 	return (0);
@@ -359,7 +357,7 @@ mapedit_destroy(void *p)
 }
 
 static void
-mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
+mapedit_bg(SDL_Surface *v, SDL_Rect *rd)
 {
 	static Uint32 col[2];
 	Uint8 *dst = v->pixels;
@@ -368,8 +366,8 @@ mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
 	col[0] = SDL_MapRGB(v->format, 0x66, 0x66, 0x66);
 	col[1] = SDL_MapRGB(v->format, 0x99, 0x99, 0x99);
 
-	for (y = ay; y < h; y++) {
-		for (x = ax; x < w; x++) {
+	for (y = rd->y; y < rd->h; y++) {
+		for (x = rd->x; x < rd->w; x++) {
 			static Uint32 c;
 			
 			c = col[((x ^ y) >> 3) & 1];
@@ -384,13 +382,13 @@ mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
 				break;
 			case 3:
 				if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
-					dst[x * 3] = c;
-					dst[x * 3 + 1] = c >> 8;
-					dst[x * 3 + 2] = c >> 16;
+					dst[x*3] = c;
+					dst[x*3 + 1] = c>>8;
+					dst[x*3 + 2] = c>>16;
 				} else {
-					dst[x * 3] = c >> 16;
-					dst[x * 3 + 1] = c >> 8;
-					dst[x * 3 + 2] = c;
+					dst[x*3] = c>>16;
+					dst[x*3 + 1] = c>>8;
+					dst[x*3 + 2] = c;
 				}
 				break;
 			case 4:
@@ -406,7 +404,6 @@ mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
 void
 mapedit_tilelist(struct mapedit *med)
 {
-	struct window *win = med->tilelist;
 	struct map *m = med->map;
 	static SDL_Rect rs, rd;
 	int i, sn;
@@ -416,12 +413,9 @@ mapedit_tilelist(struct mapedit *med)
 	rs.x = 0;
 	rs.y = 0;
 
-	rd.x = win->x;
-	rd.y = win->y;
-	rd.w = m->tilew;
-	rd.h = win->height;
-	mapedit_bg(win->view->v, rd.x, rd.y, win->view->width,
-	    win->view->height + m->tileh); /* XXX */
+	mapedit_bg(m->view->v, &med->tilelist);
+
+	rd = med->tilelist;	/* Structure copy */
 	rd.h = m->tileh;
 	
 	/*
@@ -429,8 +423,8 @@ mapedit_tilelist(struct mapedit *med)
 	 * predict which sprite to draw first according to the window
 	 * geometry.
 	 */
-	for (i = 0, sn = med->curoffs - ((win->height / m->tileh) / 2);
-	     i < (win->height / m->tileh) - 1;
+	for (i = 0, sn = med->curoffs - ((med->tilelist.h / m->tileh) / 2);
+	     i < (med->tilelist.h / rd.h) - 1;
 	     i++, rd.y += m->tileh) {
 		struct editref *ref;
 		struct anim *anim;
@@ -457,23 +451,23 @@ mapedit_tilelist(struct mapedit *med)
 		/* Plot the icon. */
 		switch (ref->type) {
 		case EDITREF_SPRITE:
-			SDL_BlitSurface(ref->p, &rs, win->view->v, &rd);
+			SDL_BlitSurface(ref->p, &rs, m->view->v, &rd);
 			break;
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
-			SDL_BlitSurface(anim->frames[0],
-			    &rs, win->view->v, &rd);
+			SDL_BlitSurface(anim->frames[0], &rs, m->view->v,
+			    &rd);
 			break;
 		}
 
 		if (med->curoffs == sn) {
 			SDL_BlitSurface(
 			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL],
-			    &rs, win->view->v, &rd);
+			    &rs, m->view->v, &rd);
 		} else {
 			SDL_BlitSurface(
-			    curmapedit->obj.sprites[MAPEDIT_GRID], &rs,
-			    win->view->v, &rd);
+			    curmapedit->obj.sprites[MAPEDIT_GRID],
+			    &rs, m->view->v, &rd);
 		}
 nextref:
 		if (++sn >= med->curobj->nrefs) {
@@ -481,8 +475,8 @@ nextref:
 		}
 	}
 	SDL_UpdateRect(m->view->v,
-	    (m->view->width - m->tileh), 0,
-	    m->tilew, m->view->height);
+	    med->tilelist.x, med->tilelist.y,
+	    med->tilelist.w, med->tilelist.h);
 }
 
 /*
@@ -494,7 +488,6 @@ mapedit_tilestack(struct mapedit *med)
 {
 	static SDL_Rect rs, rd;
 	struct map *m = med->map;
-	struct window *win = med->tilestack;
 	struct noderef *nref;
 	int i;
 
@@ -503,16 +496,13 @@ mapedit_tilestack(struct mapedit *med)
 	rs.x = 0;
 	rs.y = 0;
 
-	rd.x = win->x;
-	rd.y = win->y;
-	rd.w = m->tilew;
-	rd.h = win->height;
-	mapedit_bg(win->view->v, rd.x, rd.y, rd.w, rd.h);
+	rd = med->tilestack;	/* Structure copy */
+	mapedit_bg(m->view->v, &rd);
 	rd.h = m->tileh;
 
 	i = 0;
 	TAILQ_FOREACH(nref, &(&m->map[med->x][med->y])->nrefsh, nrefs) {
-		if (++i > (win->height / m->tileh) - 1) {
+		if (++i > (med->tilestack.h / rd.h) - 1) {
 			return;
 		}
 		if (nref->flags & MAPREF_ANIM) {
@@ -520,14 +510,14 @@ mapedit_tilestack(struct mapedit *med)
 
 			anim = nref->pobj->anims[nref->offs];
 			SDL_BlitSurface(anim->frames[0],
-			    &rs, win->view->v, &rd);
+			    &rs, m->view->v, &rd);
 		} else if (nref->flags & MAPREF_SPRITE) {
 			SDL_BlitSurface(nref->pobj->sprites[nref->offs],
-			    &rs, win->view->v, &rd);
+			    &rs, m->view->v, &rd);
 		}
 
 		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_GRID],
-		    &rs, win->view->v, &rd);
+		    &rs, m->view->v, &rd);
 		rd.y += m->tileh;
 	}
 }
@@ -540,7 +530,6 @@ void
 mapedit_objlist(struct mapedit *med)
 {
 	static SDL_Rect rs, rd;
-	struct window *win = med->objlist;
 	struct map *m = med->map;
 	struct editobj *eob;
 
@@ -549,30 +538,27 @@ mapedit_objlist(struct mapedit *med)
 	rs.w = m->tilew;
 	rs.h = m->tileh;
 
-	rd.x = win->x;
-	rd.y = win->y;
-	rd.w = win->width;
-	rd.h = m->tileh;
-	mapedit_bg(win->view->v, rd.x, rd.y, rd.w, rd.h);
+	rd = med->objlist;	/* Structure copy */
+	mapedit_bg(m->view->v, &rd);
 	rd.x = m->tilew;
 
 	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
 		SDL_BlitSurface(eob->pobj->sprites[0],
-		    &rs, win->view->v, &rd);
+		    &rs, m->view->v, &rd);
 		if (med->curobj == eob) {
 			SDL_BlitSurface(
-			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL],
-			    &rs, win->view->v, &rd);
+			    med->obj.sprites[MAPEDIT_CIRQSEL],
+			    &rs, m->view->v, &rd);
 		} else {
 			SDL_BlitSurface(
-			    curmapedit->obj.sprites[MAPEDIT_GRID],
-			    &rs, win->view->v, &rd);
+			    med->obj.sprites[MAPEDIT_GRID],
+			    &rs, m->view->v, &rd);
 		}
 		rd.x += m->tilew;
 	}
 	SDL_UpdateRect(m->view->v,
-	    0, (m->view->width - m->tilew),
-	    m->view->width, m->tileh);
+	    med->tilelist.x, med->tilelist.y,
+	    med->tilelist.w, med->tilelist.h);
 }
 
 void
@@ -663,7 +649,11 @@ mapedit_cursor_tick(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
 	int x, y, moved;
-	
+
+	if (curmapedit == NULL) {
+		return (0);
+	}
+
 	x = med->x;
 	y = med->y;
 	
@@ -705,17 +695,10 @@ mapedit_listw_tick(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
 	int moved;
-#if 0
-	static int tick = 0;
 
-	if(med->listw_dir.clear == 0) {		/* Keyups have precedence */
-		if (++tick < 8) {
-			return (ival);
-		} else {
-			tick = 0;
-		}
+	if (curmapedit == NULL) {
+		return (0);
 	}
-#endif
 
 	pthread_mutex_lock(&keyslock);
 	pthread_mutex_lock(&med->map->lock);
