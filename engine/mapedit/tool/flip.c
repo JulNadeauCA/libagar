@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.1 2003/03/13 06:19:19 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.2 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -99,19 +99,19 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 	struct flip *flip = p;
 	struct map *m = mv->map;
 	struct transform *trans;
+	enum transform_type type;
 	struct noderef *nref;
-
+	
 	trans = emalloc(sizeof(struct transform));
-	switch (flip->mode) {
-	case FLIP_HORIZ:
-		transform_init(trans, TRANSFORM_HFLIP);
-		break;
-	case FLIP_VERT:
-		transform_init(trans, TRANSFORM_VFLIP);
-		break;
+	type = (flip->mode == FLIP_HORIZ) ? TRANSFORM_HFLIP : TRANSFORM_VFLIP;
+	if (transform_init(trans, type, 0, NULL) == -1) {
+		text_msg("Error initing transform", "%s", error_get());
+		free(trans);
+		return;
 	}
 
 	/* XXX remove other flips! */
+	/* XXX highest, all */
 
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 		if (nref->layer != mv->cur_layer)
