@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.29 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.30 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -90,6 +90,8 @@ resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 	else if (h > MAP_MAX_HEIGHT)
 		h = MAP_MAX_HEIGHT;
 
-	if (w != m->mapw || h != m->maph)
+	if (w != m->mapw || h != m->maph) {
+		mv->esel.set = 0;
 		map_resize(m, w, h);
+	}
 }
