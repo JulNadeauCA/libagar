@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.2 2002/04/21 13:35:20 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.3 2002/04/22 04:37:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -51,8 +51,8 @@ static struct widvec button_vec = {
 		button_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		button_link,	/* link */
-		button_unlink	/* unlink */
+		button_link,
+		button_unlink
 	},
 	button_draw,
 	button_event
@@ -156,6 +156,10 @@ void
 button_event(void *p, SDL_Event *ev, Uint32 flags)
 {
 	struct button *b = (struct button *)p;
+	
+	if (ev->button.button != 1) {
+		return;
+	}
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
@@ -165,9 +169,8 @@ button_event(void *p, SDL_Event *ev, Uint32 flags)
 	case SDL_MOUSEBUTTONUP:
 		b->flags &= ~(BUTTON_PRESSED);
 		WIDGET(b)->win->redraw++;
-		if (b->push != NULL) {
-			b->push(b);
-		}
+		if (b->push != NULL)
+			b->push(b, ev->button.button);
 		break;
 	}
 }
