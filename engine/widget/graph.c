@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.18 2002/12/13 06:47:27 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.19 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -67,7 +67,7 @@ enum {
 };
 
 static void	graph_key(int, union evarg *);
-static void	graph_scroll(int, union evarg *);
+static void	graph_move(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
 
@@ -105,7 +105,7 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
-	event_new(graph, "window-mousemotion", graph_scroll, NULL);
+	event_new(graph, "window-mousemotion", graph_move, NULL);
 	event_new(graph, "window-keydown", graph_key, NULL);
 	event_new(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
 	event_new(graph, "window-mousebuttondown", graph_focus, NULL);
@@ -123,7 +123,7 @@ graph_load(void *p, int fd)
 	gra->origin_y = read_uint8(fd);
 	gra->xinc = read_uint8(fd);
 	gra->yrange = read_sint32(fd);
-	gra->xoffs = read_uint32(fd);
+	gra->xoffs = read_sint32(fd);
 	gra->caption = read_string(fd, gra->caption);
 	
 	nitems = read_uint32(fd);
@@ -160,7 +160,7 @@ graph_save(void *p, int fd)
 	write_uint8(fd, gra->origin_y);
 	write_uint8(fd, gra->xinc);
 	write_uint32(fd, gra->yrange);
-	write_uint32(fd, gra->xoffs);
+	write_sint32(fd, gra->xoffs);
 	write_string(fd, gra->caption);
 	
 	TAILQ_FOREACH(gi, &gra->items, items) {
@@ -216,7 +216,7 @@ graph_key(int argc, union evarg *argv)
 }
 
 static void
-graph_scroll(int argc, union evarg *argv)
+graph_move(int argc, union evarg *argv)
 {
 	struct graph *gra = argv[0].p;
 	int xrel = argv[3].i;
@@ -351,10 +351,13 @@ graph_plot(struct graph_item *gi, Sint32 val)
 		gi->vals = newvals;
 	}
 	gi->vals[gi->nvals++] = val;
-	
-	if (gi->graph->flags & GRAPH_SCROLL &&
-	    gi->nvals > WIDGET(gi->graph)->w/2) {
-		gi->graph->xoffs++;
+}
+
+void
+graph_scroll(struct graph *gra, int i)
+{
+	if (gra->flags & GRAPH_SCROLL) {
+		gra->xoffs += i;
 	}
 }
 
