@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.7 2003/03/25 07:59:28 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.8 2003/03/25 13:48:06 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -100,10 +100,14 @@ static int	ttf_find_glyph(ttf_font *, Uint16, int);
 int
 ttf_init(void)
 {
+	FT_Int maj, min, patch;
+
 	if (FT_Init_FreeType(&library) != 0) {
 		error_set("font engine init failed");
 		return (-1);
 	}
+	FT_Library_Version(library, &maj, &min, &patch);
+	printf("Font engine: Freetype %d.%d.%d\n", maj, min, patch);
 	return (0);
 }
 
