@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.21 2003/03/15 04:21:37 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.22 2003/03/16 04:08:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -145,6 +145,12 @@ also disables any mouse selection in progress.
 The
 .Fn mapview_get_selection
 returns 1 if there is an active selection or 0 if there is none.
+If there is no selection, no value is written to
+.Fa x ,
+.Fa y ,
+.Fa w
+and
+.Fa h .
 .Sh EVENTS
 The
 .Nm
