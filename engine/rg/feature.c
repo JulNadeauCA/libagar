@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.4 2005/01/31 08:40:35 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.5 2005/02/03 04:59:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -188,6 +188,10 @@ feature_edit(struct tileview *tv, struct feature *ft)
 	
 	tv->state = TILEVIEW_FEATURE_EDIT;
 	tv->edit_mode = 1;
+	tv->sargs.feature.ft = ft;
+	
+	if (ft->ops->flags & FEATURE_AUTOREDRAW)
+		tileview_set_autoredraw(tv, 1, 125);
 
 	if (ft->ops->edit != NULL) {
 		win = ft->ops->edit(ft, tv);
@@ -205,15 +209,15 @@ feature_edit(struct tileview *tv, struct feature *ft)
 void
 feature_close(struct tileview *tv)
 {
-	switch (tv->state) {
-	case TILEVIEW_FEATURE_EDIT:
-		if (tv->sargs.feature.edit_win != NULL) {
-			view_detach(tv->sargs.feature.edit_win);
-		}
-		break;
-	default:
-		break;
-	}
+	if (tv->state != TILEVIEW_FEATURE_EDIT)
+		return;
+
+	if (tv->sargs.feature.ft->ops->flags & FEATURE_AUTOREDRAW)
+		tileview_set_autoredraw(tv, 0, 0);
+
+	if (tv->sargs.feature.edit_win != NULL)
+		view_detach(tv->sargs.feature.edit_win);
+
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.2 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.3 2005/02/05 02:55:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -220,6 +220,18 @@ tileview_mousemotion(int argc, union evarg *argv)
 	}
 }
 
+static Uint32
+autoredraw(void *obj, Uint32 ival, void *arg)
+{
+	struct tileview *tv = obj;
+
+	tile_generate(tv->tile);
+	view_scale_surface(tv->tile->su, tv->scaled->w, tv->scaled->h,
+	    &tv->scaled);
+	tv->tile->flags &= ~TILE_DIRTY;
+	return (ival);
+}
+
 void
 tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
     int flags)
@@ -242,12 +254,26 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->edit_mode = 0;
 	widget_map_surface(tv, NULL);
 	tileview_set_zoom(tv, 100, 0);
+
+	timeout_set(&tv->redraw_to, autoredraw, NULL, 0);
 	
 	event_new(tv, "window-keydown", tileview_keydown, NULL);
 	event_new(tv, "window-keyup", tileview_keyup, NULL);
 	event_new(tv, "window-mousebuttonup", tileview_buttonup, NULL);
 	event_new(tv, "window-mousebuttondown", tileview_buttondown, NULL);
 	event_new(tv, "window-mousemotion", tileview_mousemotion, NULL);
+}
+
+void
+tileview_set_autoredraw(struct tileview *tv, int ena, int rate)
+{
+	if (ena) {
+		timeout_add(tv, &tv->redraw_to, rate);
+		dprintf("enabled autoredraw\n");
+	} else {
+		timeout_del(tv, &tv->redraw_to);
+		dprintf("disabled autoredraw\n");
+	}
 }
 
 void
@@ -312,7 +338,6 @@ tileview_draw(void *p)
 	int drawbg = 2;
 
 	if (t->flags & TILE_DIRTY) {
-		dprintf("redraw\n");
 		t->flags &= ~TILE_DIRTY;
 		tile_generate(t);
 		view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,

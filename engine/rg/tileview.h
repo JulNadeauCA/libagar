@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.2 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.3 2005/02/05 02:55:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -28,7 +28,7 @@ struct tileview {
 #define TILEVIEW_PRESEL		0x02	/* Pre-selection mode (ctrl) */
 	int edit_mode;
 	struct timeout zoom_to;		/* Zoom timeout */
-	struct timeout refresh_to;	/* Refresh timeout */
+	struct timeout redraw_to;	/* Auto redraw timeout */
 	enum {
 		TILEVIEW_TILE_EDIT,	/* Default edition mode */
 		TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
@@ -37,7 +37,8 @@ struct tileview {
 	} state;
 	union {
 		struct {
-			struct window *edit_win;    /* Feature edit window */
+			struct feature *ft;   
+			struct window *edit_win;
 		} feature;
 	} sargs;
 };
@@ -50,6 +51,7 @@ void	 tileview_destroy(void *);
 void	 tileview_draw(void *);
 void	 tileview_scale(void *, int, int);
 void	 tileview_set_zoom(struct tileview *, int, int);
+void	 tileview_set_autoredraw(struct tileview *, int, int);
 __END_DECLS
 
 #include "close_code.h"

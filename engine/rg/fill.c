@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.1 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.2 2005/01/26 02:43:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,7 @@ const struct feature_ops fill_ops = {
 	"fill",
 	sizeof(struct fill),
 	N_("Fill tile with solid color/pattern."),
+	FEATURE_AUTOREDRAW,
 	fill_init,
 	fill_load,
 	fill_save,
