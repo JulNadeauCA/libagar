@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.4 2002/04/23 07:24:22 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.5 2002/04/23 13:36:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -40,7 +40,6 @@
 
 #include "text.h"
 #include "widget.h"
-#include "widget_offs.h"
 #include "window.h"
 #include "button.h"
 
@@ -51,60 +50,32 @@ static struct widvec button_vec = {
 		button_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		button_link,
-		button_unlink
+		widget_link,
+		widget_unlink
 	},
 	button_draw,
 	button_event
 };
 
-struct button *
-button_create(struct window *win, char *name, char *caption, Uint32 flags,
-    Sint16 x, Sint16 y)
+void
+button_init(struct button *b, struct window *win, char *name, char *caption,
+    Uint32 flags, Sint16 x, Sint16 y)
 {
-	struct button *b;
-	struct fobj *fob;
-
-	b = (struct button *)emalloc(sizeof(struct button));
-	widget_init(&b->wid, name, 0, &button_vec, win, x, y, 0, 0);
+	widget_init(&b->wid, name, &button_vec, win, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
 	b->xmargin = 6;
 	b->ymargin = 6;
-
-	fob = fobj_load(savepath("widget", "fob"));
-	if (fob == NULL) {
-		return (NULL);
-	}
-	xcf_load(fob, BUTTON_XCF, OBJECT(b));
-
-	return (b);
 }
 
-int
+void
 button_destroy(void *ob)
 {
 	struct button *b = (struct button*)ob;
 
 	free(b->caption);
-
-	return (0);
-}
-
-/* XXX */
-int
-button_link(void *p)
-{
-	return (widget_link(p));
-}
-
-/* XXX */
-int
-button_unlink(void *p)
-{
-	return (widget_unlink(p));
 }
 
 void

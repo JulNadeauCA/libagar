@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.3 2002/04/20 06:11:08 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.4 2002/04/24 06:38:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ static void	 text_renderbg(SDL_Surface *, SDL_Rect *);
 
 /* Called at engine initialization. */
 int
-text_init(void)
+text_engine_init(void)
 {
 	char *path;
 	SDL_Surface *stext;
@@ -104,7 +104,7 @@ text_init(void)
 
 /* Called at engine shutdown. */
 void
-text_quit(void)
+text_engine_destroy(void)
 {
 	if (font != NULL) {
 		TTF_CloseFont(font);
@@ -113,20 +113,21 @@ text_quit(void)
 	TTF_Quit();
 }
 
-struct text *
-text_create(Uint32 x, Uint32 y, Uint32 w, Uint32 h, Uint32 flags,
-    Uint32 sleepms)
+void
+text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
+    Uint32 flags, Uint8 sleepms)
 {
-	struct text *te;
+	static int textid = 0;
+	char textname[128];
 
 #ifdef DEBUG
 	if ((flags & TEXT_DEBUG) && !engine_debug) {
-		return (NULL);
+		return;
 	}
 #endif
 
-	te = (struct text *)emalloc(sizeof(struct text));
-	object_init(&te->obj, "text", NULL, 0, &text_vec);
+	sprintf(textname, "text%d\n", textid++);
+	object_init(&te->obj, textname, NULL, 0, &text_vec);
 	te->flags = flags;
 
 	te->sleepms = sleepms;
@@ -154,13 +155,9 @@ text_create(Uint32 x, Uint32 y, Uint32 w, Uint32 h, Uint32 flags,
 	te->mvmask.h = (te->h / te->view->map->tileh);
 
 	view_maskfill(te->view, &te->mvmask, 1);
-	
-	ntexts++;
-
-	return (te);
 }
 
-int
+void
 text_destroy(void *p)
 {
 	struct text *te = (struct text *)p;
@@ -169,17 +166,14 @@ text_destroy(void *p)
 		SDL_FreeSurface(te->surface);
 	}
 	
-	ntexts--;
-
-
 	/*
 	 * Decrease the map view mask values under this rectangle,
 	 * and redraw the map.
 	 */
 	view_maskfill(te->view, &te->mvmask, -1);
-	te->view->map->redraw++;
-
-	return (0);
+	if (te->view->map != NULL) {
+		te->view->map->redraw++;
+	}
 }
 
 void
@@ -205,6 +199,8 @@ text_link(void *p)
 	pthread_mutex_lock(&textslock);
 	TAILQ_INSERT_TAIL(&textsh, te, texts);
 	pthread_mutex_unlock(&textslock);
+	
+	ntexts++;
 
 	return (0);
 }
@@ -213,6 +209,8 @@ int
 text_unlink(void *p)
 {
 	struct text *te = (struct text *)p;
+	
+	ntexts--;
 
 	pthread_mutex_lock(&textslock);
 	TAILQ_REMOVE(&textsh, te, texts);
@@ -398,7 +396,7 @@ text_printf(struct text *te, char *fmt, ...)
  * given by the cascading algorithm.
  */
 void
-text_msg(Uint32 delay, Uint32 flags, char *fmt, ...)
+text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 {
 	va_list args;
 	char *buf, *bufc, *s, *last;
@@ -456,7 +454,8 @@ text_msg(Uint32 delay, Uint32 flags, char *fmt, ...)
 		gx = wgran;
 	}
 
-	te = text_create(gx, gy, w, h, flags, delay);
+	te = emalloc(sizeof(struct text));
+	text_init(te, gx, gy, w, h, flags, delay);
 	if (te != NULL) {
 		object_link(te);
 

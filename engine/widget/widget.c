@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.3 2002/04/20 06:20:44 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.4 2002/04/22 04:39:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,19 +42,16 @@
 #include "window.h"
 #include "widget.h"
 
-#if 0
-static struct obvec widget_vec = {
-	widget_destroy,
-	widget_load,
-	widget_save,
+static const struct obvec widget_vec = {
+	NULL,		/* destroy */
+	NULL,		/* load */
+	NULL,		/* save */
 	widget_link,
 	widget_unlink
 };
-#endif
 
-/* XXX vec */
 void
-widget_init(struct widget *wid, char *name, Uint32 flags, void *vecp,
+widget_init(struct widget *wid, char *name, void *vecp,
     struct window *win, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
 	char *widname;
@@ -65,9 +62,9 @@ widget_init(struct widget *wid, char *name, Uint32 flags, void *vecp,
 	strcat(widname, ".");
 	strcat(widname, name);
 
-	object_init(&wid->obj, widname, 0, vecp);
+	object_init(&wid->obj, widname, "widget", OBJ_ART, vecp);
 
-	wid->flags = flags;
+	wid->flags = 0;
 	wid->win = win;
 	wid->x = x;
 	wid->y = y;

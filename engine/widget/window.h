@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.4 2002/04/22 04:44:17 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.5 2002/04/23 07:24:56 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -39,16 +39,16 @@ struct window {
 	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
 	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
 
-struct window	*window_create(struct viewport *, char *, char *, Uint32,
-		    Uint32, Sint16, Sint16, Uint16, Uint16);
-int		 window_destroy(void *);
-int		 window_load(void *, int);
-int		 window_save(void *, int);
-int		 window_link(void *);
-int		 window_unlink(void *);
+void	 window_init(struct window *, struct viewport *, char *, char *, Uint32,
+	     Uint32, Sint16, Sint16, Uint16, Uint16);
+void	 window_destroy(void *);
+int	 window_load(void *, int);
+int	 window_save(void *, int);
+int	 window_link(void *);
+int	 window_unlink(void *);
 
-void		 window_draw(struct window *);
-void		 window_mouse_motion(SDL_Event *);
-void		 window_mouse_button(SDL_Event *);
-void		 window_key(SDL_Event *);
+void	 window_draw(struct window *);
+void	 window_mouse_motion(SDL_Event *);
+void	 window_mouse_button(SDL_Event *);
+void	 window_key(SDL_Event *);
 
