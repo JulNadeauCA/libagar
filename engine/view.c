@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.65 2002/09/06 01:25:58 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.66 2002/09/07 04:17:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -55,10 +55,12 @@ struct cached_surface {
 	size_t		 size;		/* Size of scaled surface in bytes */
 	int		 nrefs;		/* Reference count */
 
-	SLIST_ENTRY(cached_surface) surfaces;
+	TAILQ_ENTRY(cached_surface) surfaces;
 };
-static SLIST_HEAD(, cached_surface) cached_surfaces;
+static TAILQ_HEAD(, cached_surface) cached_surfaces;
 static pthread_mutex_t cached_surfaces_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void	free_cached_surface(struct cached_surface *);
 
 /* Initialize the graphic engine. */
 void
@@ -256,7 +258,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	pthread_mutex_lock(&cached_surfaces_lock);
 
 	/* Cache lookup */
-	SLIST_FOREACH(cs, &cached_surfaces, surfaces) {
+	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
 		if (cs->source_s == ss &&
 		    cs->scaled_s->w == w && cs->scaled_s->h == h) {
 			cs->nrefs++;
@@ -326,7 +328,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	cs->scaled_s = ds;
 	cs->size = (ds->w * ds->h) * ds->format->BytesPerPixel;
 	cs->nrefs = 0;
-	SLIST_INSERT_HEAD(&cached_surfaces, cs, surfaces);
+	TAILQ_INSERT_HEAD(&cached_surfaces, cs, surfaces);
 	
 	pthread_mutex_unlock(&cached_surfaces_lock);
 
@@ -339,12 +341,36 @@ view_unused_surface(SDL_Surface *scaled)
 	struct cached_surface *cs;
 
 	pthread_mutex_lock(&cached_surfaces_lock);
-	SLIST_FOREACH(cs, &cached_surfaces, surfaces) {
+	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
 		if (cs->scaled_s == scaled) {
 			cs->nrefs--;
 		}
 	}
 	pthread_mutex_unlock(&cached_surfaces_lock);
+}
+
+static void
+free_cached_surface(struct cached_surface *cs)
+{
+	SDL_FreeSurface(cs->scaled_s);
+	free(cs);
+}
+
+void
+view_invalidate_surface(SDL_Surface *scaled)
+{
+	struct cached_surface *cs;
+
+	pthread_mutex_lock(&cached_surfaces_lock);
+	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
+		if (cs->scaled_s == scaled) {
+			free_cached_surface(cs);
+			TAILQ_REMOVE(&cached_surfaces, cs, surfaces);
+			pthread_mutex_unlock(&cached_surfaces_lock);
+			return;
+		}
+	}
+	fatal("not in surface cache: %p\n", scaled);
 }
 
 /*
