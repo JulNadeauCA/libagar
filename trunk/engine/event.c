@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.39 2002/05/19 15:27:54 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.40 2002/05/21 03:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,22 +51,19 @@ static void	event_hotkey(SDL_Event *);
 static void
 event_hotkey(SDL_Event *ev)
 {
-	struct object *ob;
-
 	pthread_mutex_lock(&world->lock);
 
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_m:
-		view_dumpmask(mainview);
-		break;
-	case SDLK_w:
-		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-			object_dump(ob);
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			view_dumpmask(mainview);
 		}
 		break;
 	case SDLK_r:
-		world->curmap->redraw++;
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			world->curmap->redraw++;
+		}
 		break;
 	case SDLK_F2:
 		object_save(world);
@@ -76,9 +73,6 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_F5:
 		map_verify(world->curmap);
-		break;
-	case SDLK_t:
-		text_msg(5, TEXT_SLEEP, "%d ticks\n", SDL_GetTicks());
 		break;
 #endif
 	case SDLK_F1:
@@ -92,9 +86,12 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_v:
-		text_msg(10, TEXT_SLEEP, "AGAR engine v%s\n%s v%d.%d\n%s\n",
-		    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
-		    gameinfo->ver[1], gameinfo->copyright);
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			text_msg(10, TEXT_SLEEP,
+			    "AGAR engine v%s\n%s v%d.%d\n%s\n",
+			    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
+			    gameinfo->ver[1], gameinfo->copyright);
+		}
 		break;
 	case SDLK_ESCAPE:
 		pthread_mutex_unlock(&world->lock);
@@ -103,7 +100,6 @@ event_hotkey(SDL_Event *ev)
 	default:
 		break;
 	}
-
 	pthread_mutex_unlock(&world->lock);
 }
 
@@ -114,6 +110,7 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
+	int rv;
 	
 	/* Start the garbage collection process. */
 	object_init_gc();
@@ -125,7 +122,7 @@ event_loop(void *arg)
 			/* XXX inefficient locking */
 			pthread_mutex_lock(&world->lock);
 			m = world->curmap;
-			pthread_mutex_lock(&m->lock);
+			pthread_mutex_lock(&m->lock);	
 			map_animate(m);
 			if (m->redraw != 0) {
 				m->redraw = 0;
@@ -149,9 +146,6 @@ event_loop(void *arg)
 
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
-			if (ev.type == SDL_KEYDOWN) {
-				event_hotkey(&ev);
-			}
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
 				view_redraw(mainview);
@@ -163,39 +157,43 @@ event_loop(void *arg)
 				break;
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN:
-				if (curmapedit != NULL) {	/* XXX */
-					mapedit_event(curmapedit, &ev);
-				}
+				rv = 0;
 				pthread_mutex_lock(&mainview->lock);
 				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					window_event_all(mainview, &ev);
+					rv = window_event_all(mainview, &ev);
 				}
 				pthread_mutex_unlock(&mainview->lock);
+				if (rv == 0) {
+					if (curmapedit != NULL) { /* XXX */
+						mapedit_event(curmapedit, &ev);
+					}
+				}
 				break;
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
-					break;
 				} else {
 					input_event(joy, &ev);
 				}
 				break;
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				if (curmapedit != NULL) {	/* XXX */
-					mapedit_event(curmapedit, &ev);
-					break;
-				} else {
-					input_event(keyboard, &ev);
-				}
-
+				rv = 0;
 				pthread_mutex_lock(&mainview->lock);
 				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					window_event_all(mainview, &ev);
+					rv = window_event_all(mainview, &ev);
 				}
 				pthread_mutex_unlock(&mainview->lock);
+				if (rv == 0) {
+					if (curmapedit != NULL) { /* XXX */
+						mapedit_event(curmapedit, &ev);
+					} else {
+						input_event(keyboard, &ev);
+					}
+				}
+				event_hotkey(&ev);
 				break;
 			case SDL_QUIT:
 				return (NULL);
