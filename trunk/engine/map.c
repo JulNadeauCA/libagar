@@ -463,7 +463,8 @@ map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 			nrefs = read_uint32(fd);
 #ifdef DEBUG
 			if (nrefs > 256)
-				dprintnode(m, x, y, "funny node");
+				dprintf("[%s:%d,%d]: funny node\n",
+				    OBJECT(m)->name, x, y);
 #endif
 			for (i = 0; i < nrefs; i++) {
 				Uint32 obji, offs, frame, flags;
@@ -511,7 +512,8 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 		nnrefs = read_uint32(fd);
 #ifdef DEBUG
 		if (nnrefs > 256)
-			dprintnode(m, x, y, "funny node");
+			dprintf("[%s:%d,%d]: funny node\n",
+			    OBJECT(m)->name, x, y);
 #endif
 		for (i = 0; i < nnrefs; i++) {
 			struct object *pobj;
@@ -524,15 +526,16 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 			flags = read_uint32(fd);
 #ifdef DEBUG
 			if (offs > 4096)
-				dprintnode(m, x, y, "bad offset");
+				dprintf("[%s:%d,%d]: funky offset",
+				    OBJECT(m)->name, x, y);
 #endif
 			if (pobj != NULL) {
 				nref = node_addref(&node, pobj, offs, flags);
 				nref->frame = frame;
 				refs++;
 			} else {
-				dprintf("at %dx%d:[%d]\n", x, y, i);
-				fatal("nothing at index %d\n", obji);
+				fatal("[%s:%d,%d]: nothing at offset %d\n",
+				    OBJECT(m)->name, x, y, obji);
 			}
 		}
 		totnodes++;
@@ -915,7 +918,8 @@ map_verify_loop(void *arg)
 				if (n->nnrefs > 0xff ||
 				    ((n->flags & NODE_BLOCK) &&
 				     (n->flags & NODE_WALK))) {
-					dprintnode(m, x, y, "funny node");
+					dprintf("[%s:%d,%d]: funny node\n",
+					    OBJECT(m)->name, x, y);
 					continue;
 				}
 				TAILQ_FOREACH(nref, &n->nrefsh, nrefs) {
@@ -923,7 +927,7 @@ map_verify_loop(void *arg)
 					    nref->offs > 0xffff ||
 					    nref->xoffs > 0xff ||
 					    nref->yoffs > 0xff) {
-						fatal("%s:%d,%d: funny ref\n",
+						dprintf("%s:%d,%d: funny ref\n",
 						    OBJECT(m)->name, x, y);
 					}
 					if (nref->flags & MAPREF_SPRITE) {

@@ -227,8 +227,6 @@ rootmap_draw(void)
 	struct noderef *nref;
 	Uint32 nsprites;
 
-	dprintf("offset %d,%d\n", rm->x, rm->y);
-
 	if (rm->y > m->maph - rm->h ||
 	    rm->x > m->mapw - rm->w) {
 		dprintf("exceeds map boundaries\n");
