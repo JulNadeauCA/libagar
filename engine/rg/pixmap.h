@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.12 2005/03/04 13:34:38 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.13 2005/03/05 12:13:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -92,6 +92,9 @@ int pixmap_put_pixel(struct tileview *, struct tile_element *, int, int,
                      Uint32, int);
 void pixmap_apply_brush(struct tileview *, struct tile_element *, int, int,
 			Uint32);
+Uint32 pixmap_source_pixel(struct tileview *, struct tile_element *, int, int);
+void pixmap_source_rgba(struct tileview *, struct tile_element *, int, int,
+			Uint8 *, Uint8 *, Uint8 *, Uint8 *);
 
 struct pixmap_brush *pixmap_insert_brush(struct pixmap *,
 		                         enum pixmap_brush_type,
@@ -101,6 +104,7 @@ void		     pixmap_remove_brush(struct pixmap *,
 
 void pixmap_open_menu(struct tileview *, int, int);
 void pixmap_close_menu(struct tileview *);
+
 __END_DECLS
 
 #include "close_code.h"

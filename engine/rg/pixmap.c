@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.21 2005/03/06 06:30:36 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.22 2005/03/06 06:44:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -577,19 +577,11 @@ pixmap_undo(struct tileview *tv, struct tile_element *tel)
 		struct pixmap_mod *mod = &ublk->mods[i];
 
 		prim_put_pixel(px->su, mod->x, mod->y, mod->val);
-#if 0
-		tileview_scaled_pixel(tv,
-		    tel->tel_pixmap.x + mod->x,
-		    tel->tel_pixmap.y + mod->y,
-		    mod->val);
-#endif
 	}
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_UnlockSurface(tv->scaled); }
 
 	px->curblk--;
-#if 1
 	tv->tile->flags |= TILE_DIRTY;
-#endif
 }
 
 void
@@ -641,6 +633,9 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 
 	/* Plot the pixel on the pixmap and update the scaled display. */
 	/* XXX use background caching to avoid regen for alpha pixels */
+	
+	SDL_GetRGBA(pixel, px->su->format, &r, &g, &b, &a);
+
 	switch (px->blend_mode) {
 	case PIXMAP_NO_BLENDING:
 		prim_put_pixel(px->su, x, y, pixel);
@@ -648,7 +643,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			tileview_scaled_pixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    pixel);
+			    r, g, b);
 		} else {
 			tv->tile->flags |= TILE_DIRTY;
 		}
@@ -659,27 +654,24 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			tileview_scaled_pixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    pixel);
+			    r, g, b);
 		} else {
-			SDL_GetRGB(pixel, px->su->format, &r, &g, &b);
 			prim_blend_rgb(px->su, x, y, PRIM_BLEND_SRCALPHA,
 			    r, g, b, a);
 			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
 	case PIXMAP_SPEC_AND_DEST_ALPHA:
-		SDL_GetRGB(pixel, px->su->format, &r, &g, &b);
 		prim_blend_rgb(px->su, x, y, PRIM_BLEND_MIXALPHA, r, g, b, a);
 		tv->tile->flags |= TILE_DIRTY;
 		break;
 	case PIXMAP_BRUSH_ALPHA:
-		SDL_GetRGBA(pixel, px->su->format, &r, &g, &b, &a);
 		if (a == 255) {
 			prim_put_pixel(px->su, x, y, pixel);
 			tileview_scaled_pixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    pixel);
+			    r, g, b);
 		} else {
 			prim_blend_rgb(px->su, x, y, PRIM_BLEND_SRCALPHA,
 			    r, g, b, a);
@@ -687,7 +679,6 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 		}
 		break;
 	case PIXMAP_BRUSH_AND_DEST_ALPHA:
-		SDL_GetRGBA(pixel, px->su->format, &r, &g, &b, &a);
 		prim_blend_rgb(px->su, x, y, PRIM_BLEND_MIXALPHA, r, g, b, a);
 		tv->tile->flags |= TILE_DIRTY;
 		break;
@@ -697,9 +688,8 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			tileview_scaled_pixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
-			    pixel);
+			    r, g, b);
 		} else {
-			SDL_GetRGB(pixel, px->su->format, &r, &g, &b);
 			prim_blend_rgb(px->su, x, y, PRIM_BLEND_DSTALPHA,
 			    r, g, b, a);
 			tv->tile->flags |= TILE_DIRTY;
@@ -861,6 +851,55 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 		px->blend_mode = bmode_save;
 }
 
+Uint32
+pixmap_source_pixel(struct tileview *tv, struct tile_element *tel, int x, int y)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *pSrc;
+	Uint32 cSrc;
+
+	if (pixmap_source) {
+		SDL_LockSurface(px->su);
+		pSrc = (Uint8 *)px->su->pixels +
+		     y*px->su->pitch +
+		     x*px->su->format->BytesPerPixel;
+		cSrc = *(Uint32 *)pSrc;
+		SDL_UnlockSurface(px->su);
+	} else {
+		SDL_LockSurface(tv->tile->su);
+		pSrc = (Uint8 *)tv->tile->su->pixels +
+		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
+		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
+		cSrc = *(Uint32 *)pSrc;
+		SDL_UnlockSurface(tv->tile->su);
+	}
+	return (cSrc);
+}
+
+void
+pixmap_source_rgba(struct tileview *tv, struct tile_element *tel, int x, int y,
+    Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *pSrc;
+
+	if (pixmap_source) {
+		SDL_LockSurface(px->su);
+		pSrc = (Uint8 *)px->su->pixels +
+		     y*px->su->pitch +
+		     x*px->su->format->BytesPerPixel;
+		SDL_GetRGBA(*(Uint32 *)pSrc, px->su->format, r, g, b, a);
+		SDL_UnlockSurface(px->su);
+	} else {
+		SDL_LockSurface(tv->tile->su);
+		pSrc = (Uint8 *)tv->tile->su->pixels +
+		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
+		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
+		SDL_GetRGBA(*(Uint32 *)pSrc, tv->tile->su->format, r, g, b, a);
+		SDL_UnlockSurface(tv->tile->su);
+	}
+}
+
 static void
 fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill)
@@ -868,20 +907,8 @@ fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 *pDst;
 	Uint32 cDst;
-	
-	SDL_LockSurface(px->su);
-	if (pixmap_source) {
-		pDst = (Uint8 *)px->su->pixels +
-		     y*px->su->pitch +
-		     x*px->su->format->BytesPerPixel;
-	} else {
-		pDst = (Uint8 *)tv->tile->su->pixels +
-		     y*tv->tile->su->pitch +
-		     x*tv->tile->su->format->BytesPerPixel;
-	}
-	cDst = *(Uint32 *)pDst;
-	SDL_UnlockSurface(px->su);
 
+	cDst = pixmap_source_pixel(tv, tel, x, y);
 	if (cDst != cOrig)
 		return;
 	
@@ -900,22 +927,9 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
 	Uint8 *keystate;
-	Uint8 *pOrig;
 	Uint32 cOrig, cFill;
 
-	SDL_LockSurface(px->su);
-	if (pixmap_source) {
-		pOrig = (Uint8 *)px->su->pixels +
-		     y*px->su->pitch +
-		     x*px->su->format->BytesPerPixel;
-	} else {
-		pOrig = (Uint8 *)tv->tile->su->pixels +
-		     y*tv->tile->su->pitch +
-		     x*tv->tile->su->format->BytesPerPixel;
-	}
-	cOrig = *(Uint32 *)pOrig;
-	SDL_UnlockSurface(px->su);
-
+	cOrig = pixmap_source_pixel(tv, tel, x, y);
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_e]) {
 		r = 0;
@@ -934,29 +948,11 @@ static void
 pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	Uint8 *pSrc;
-	Uint32 cSrc;
 	Uint8 r, g, b, a;
 
-	SDL_LockSurface(px->su);
-	if (pixmap_source) {
-		pSrc = (Uint8 *)px->su->pixels +
-		     y*px->su->pitch +
-		     x*px->su->format->BytesPerPixel;
-		cSrc = *(Uint32 *)pSrc;
-		SDL_GetRGBA(cSrc, px->su->format, &r, &g, &b, &a);
-	} else {
-		pSrc = (Uint8 *)tv->tile->su->pixels +
-		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
-		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
-		cSrc = *(Uint32 *)pSrc;
-		SDL_GetRGB(cSrc, tv->tile->su->format, &r, &g, &b);
-		a = 255;
-	}
-	SDL_UnlockSurface(px->su);
-
+	pixmap_source_rgba(tv, tel, x, y, &r, &g, &b, &a);
 	prim_rgb2hsv(r, g, b, &px->h, &px->s, &px->v);
-	px->a = (float)(a/255);
+	px->a = ((float)a)/255.0;
 }
 
 void
