@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.7 2002/12/30 02:56:58 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.8 2003/02/25 01:20:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_ieee754.h>
@@ -14,6 +14,8 @@ struct prop {
 		PROP_SINT16,
 		PROP_UINT32,
 		PROP_SINT32,
+		PROP_UINT64_UNUSED,
+		PROP_SINT64_UNUSED,
 		PROP_FLOAT,
 		PROP_DOUBLE,
 		PROP_LONG_DOUBLE,
