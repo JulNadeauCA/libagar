@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.10 2002/02/14 06:32:07 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.11 2002/02/15 03:51:04 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -76,6 +76,10 @@ struct mapedit {
 #define MAPEDIT_SLOW	10
 #define MAPEDIT_HASTE	11
 #define MAPEDIT_ANIM	12
+#define MAPEDIT_NVEL	13
+#define MAPEDIT_SVEL	14
+#define MAPEDIT_WVEL	15
+#define MAPEDIT_EVEL	16
 
 struct mapedit *mapedit_create(char *, char *, int, int);
 void		mapedit_tilelist(struct mapedit *);
