@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.12 2002/09/11 23:56:14 vedge Exp $
+.\"	$Csoft: widget.3,v 1.13 2002/09/12 09:54:00 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -61,12 +61,11 @@ invalidated when the widget is hidden).
 .Sh LOCKING POLICIES
 Widget initialization and free routines do not need to be concerned about
 locking.
-Locking is only relevant once a widget is attached to a region, and the
-region's parent window is attached to a view.
 .Pp
 In widget event context, the widget can assume its parent window is locked,
 so widgets can manipulate the internal properties of other widgets inside
-the same window.
+the same window (for widgets inside other windows, explicit locking is
+required).
 The visibility of any window may be altered, and new windows may be attached,
 but windows may not be detached.
 .Pp
@@ -88,7 +87,8 @@ mode, rendering macros perform boundary checks.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn widget_init "struct widget *wid" "char *name" "char *media" "const void *widget_ops" "int rw" "int rh"
+.Fn widget_init "struct widget *wid" "char *name" "char *media" \
+                "const void *widget_ops" "int rw" "int rh"
 .nr nS 0
 .Pp
 The
@@ -114,7 +114,6 @@ struct widget_ops {
 .Pp
 Since widgets don't hold persistent properties, their identification
 string is simply the widget type followed by a random number.
-Certain widgets may have save/load routines.
 .Pp
 The widget initially requests an area of size
 .Fa rw
@@ -139,20 +138,18 @@ can be changed at runtime, and may include:
 .Pp
 .Bd -literal
 #define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
-#define WIDGET_MOUSEOUT		0x02	/* Catch window-mouseout events */
+#define WIDGET_UNFOCUSED_MOTION	0x02	/* Receive mouse motion events
+					   when the widget isn't focused */
 .Ed
 .Pp
 The
 .Dv WIDGET_NO_FOCUS
 flag prevents the widget from gaining focus.
-The
-.Dv WIDGET_MOUSEOUT
-flag triggers a window-mouseout event whenever the mouse moves outside of
-the area covered by the widget.
 .Sh COLOR SCHEME
 .nr nS 1
 .Ft void
-.Fn widget_map_color "struct widget *wid" "int index" "char *name" "Uint8 r" "Uint8 g" "Uint8 b"
+.Fn widget_map_color "struct widget *wid" "int index" "char *name" "Uint8 r" \
+                     "Uint8 g" "Uint8 b"
 .Pp
 .Ft Uint32
 .Fn WIDGET_COLOR "struct widget *wid" "int index"
@@ -171,10 +168,10 @@ and
 .Fa b .
 The
 .Fa index
-argument is an index into the widget color table (an arbitrary-size
-array of color values).
+argument is an index into the widget color table (an arbitrary-sized array of
+color values).
 This allows the color scheme to change at run time without expensive
-operations in widget rendering routines.
+lookup operations in widget rendering routines.
 .Pp
 The
 .Fn WIDGET_COLOR
@@ -190,6 +187,9 @@ macro returns the color at index
 .Pp
 .Ft bool
 .Fn WIDGET_INSIDE "struct widget *wid" "Sint16 x" "Sint16 y"
+.Pp
+.Ft bool
+.Fn WIDGET_INSIDE_RELATIVE "struct widget *wid" "Sint16 x" "Sint16 y"
 .nr nS 0
 .Pp
 The
@@ -200,24 +200,34 @@ macros return the absolute coordinates of a widget.
 .Pp
 The
 .Fn WIDGET_INSIDE
-macro evaluates to true if coordinates
+macro evaluates to true if absolute coordinates
 .Fa x
+and
+.Fa y
+are inside the widget area.
+The
+.Fn WIDGET_INSIDE_RELATIVE
+macro evaluates to true if widget-relative coordiates
+.FA x
 and
 .Fa y
 are inside the widget area.
 .Sh RENDERING
 .nr nS 1
 .Ft void
-.Fn WIDGET_DRAW "struct widget *wid" "SDL_Surface *surface" "Sint16 x" "Sint16 y"
+.Fn WIDGET_DRAW "struct widget *wid" "SDL_Surface *surface" "Sint16 x" \
+                "Sint16 y"
 .Pp
 .Ft void
-.Fn WIDGET_FILL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint16 w" "Uint16 h" "Uint32 color"
+.Fn WIDGET_FILL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint16 w" \
+                "Uint16 h" "Uint32 color"
 .Pp
 .Ft void
 .Fn WIDGET_PUT_PIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color"
 .Pp
 .Ft void
-.Fn WIDGET_PUT_ALPHAPIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color" "Uint8 a"
+.Fn WIDGET_PUT_ALPHAPIXEL "struct widget *wid" "Sint16 x" "Sint16 y" \
+                          "Uint32 color" "Uint8 a"
 .Pp
 .Ft SDL_Surface *
 .Fn WIDGET_SURFACE "struct widget *wid"
