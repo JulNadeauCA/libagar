@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.15 2002/02/25 11:25:28 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.16 2002/02/28 12:53:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ savepath(char *obname, const char *suffix)
 		}
 	}
 
-	warning("%s.%s not in %s\n", obname, suffix, world->datapath);
+	fatal("%s.%s not in %s\n", obname, suffix, world->datapath);
 	free(datapathp);
 	return (NULL);
 }
