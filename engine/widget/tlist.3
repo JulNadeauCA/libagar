@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.32 2004/01/08 02:20:10 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.33 2004/03/21 07:00:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -146,6 +146,9 @@ function sets the position of the scrollbar to
 .Ft "struct tlist_item *"
 .Fn tlist_item_selected "struct tlist *tlist"
 .Pp
+.Ft "int"
+.Fn tlist_item_pointer "struct tlist *tlist" "void **p"
+.Pp
 .Ft "struct tlist_item *"
 .Fn tlist_item_text "struct tlist *tlist" "const char *text"
 .Pp
@@ -228,6 +231,11 @@ The
 function returns the first selected item, or
 .Dv NULL
 if there are none.
+.Fn tlist_item_pointer
+is a variant that copies the user pointer associated with the first
+selected item into
+.Fa p ,
+returning 0 on success or -1 if there is no item selected.
 The
 .Fn tlist_item_text
 function searches
