@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.15 2003/06/21 06:50:22 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.16 2003/06/29 11:33:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -190,10 +190,10 @@ nodeedit_init(struct mapview *mv)
 		bu = button_new(bo, _("Dup"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_DUP);
-		bu = button_new(bo, _("Move up"));
+		bu = button_new(bo, _("Up"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_UP);
-		bu = button_new(bo, _("Move down"));
+		bu = button_new(bo, _("Down"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_DOWN);
 	}
