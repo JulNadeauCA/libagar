@@ -1175,16 +1175,16 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 	fi
 done
 if [ "${smpeg_version}" != "" ]; then
-echo "ok"
-echo "ok" >> config.log
+echo "yes"
+echo "yes" >> config.log
 echo "#ifndef HAVE_SMPEG" > config/have_smpeg.h
 echo "#define HAVE_SMPEG" $HAVE_SMPEG >> config/have_smpeg.h
 echo "#endif /* HAVE_SMPEG */" >> config/have_smpeg.h
 echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
 echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
-echo "missing"
-exit 1
+echo "no"
+echo "no" >> config.log
 echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 else
