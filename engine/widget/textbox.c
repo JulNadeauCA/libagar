@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.54 2003/05/24 01:15:46 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.55 2003/05/24 15:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,6 +57,7 @@ const struct widget_ops textbox_ops = {
 };
 
 enum {
+	MOUSE_SCROLL_INCR =	4,
 	FRAME_COLOR,
 	FRAME_READONLY_COLOR,
 	TEXT_COLOR,
@@ -107,7 +108,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	}
 	tbox->text.pos = -1;
 	tbox->text.offs = 0;
-	pthread_mutex_init(&tbox->text.lock, NULL);
+	pthread_mutex_init(&tbox->text.lock, &recursive_mutexattr);
 	tbox->newx = -1;
 
 	event_new(tbox, "window-keydown", textbox_key, NULL);
@@ -134,7 +135,7 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	struct widget_binding *stringb;
-	int i, lx, th;
+	int i, lx, th, cursdrawn = 0;
 	int x = 0;
 	int y = tbox->ypadding;
 	size_t tlen;
@@ -168,27 +169,31 @@ textbox_draw(void *p)
 
 	/* Move to the beginning of the string? */
 	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
-		tbox->newx = -1;
+		if (tbox->newx < tbox->label->w - tbox->xpadding) {
+			if ((tbox->text.offs -= MOUSE_SCROLL_INCR) < 0)
+				tbox->text.offs = 0;
+		}
 		tbox->text.pos = tbox->text.offs;
-		dprintf("move to start (%d, offs=%d)\n", tbox->text.pos,
-		    tbox->text.offs);
+		tbox->newx = -1;
 	}
 
 	x += tbox->xpadding;
 	for (i = tbox->text.offs, lx = -1;
-	     i < tlen+1;
+	     i <= tlen;
 	     i++) {
+		SDL_Surface *glyph;
+		char ch = s[i];
+
 		/* Move to a position inside the string? */
 		if (tbox->newx >= 0 &&
 		    tbox->newx >= lx && tbox->newx < x) {
 			tbox->newx = -1;
 			tbox->text.pos = i;
-			dprintf("move to %d\n", i);
 		}
 		lx = x;
 
-		/* Draw the text cursor. */
 		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox)) {
+			dprintf("curs at %d\n", (int)i);
 			primitives.line(tbox,
 			    x, y,
 			    x, y + tbox->label->h - 2,
@@ -197,35 +202,43 @@ textbox_draw(void *p)
 			    x+1, y,
 			    x+1, y + tbox->label->h - 2,
 			    WIDGET_COLOR(tbox, CURSOR_COLOR2));
+			cursdrawn++;
 		}
+		
+		if (x > WIDGET(tbox)->w - tbox->xpadding*4)
+			break;
 
-		/* Draw the characters. */
-		if (i < tlen && s[i] != '\0' &&
-		    x < WIDGET(tbox)->w - (tbox->xpadding*4)) {
-			SDL_Surface *glyph;
-			char ch = s[i];
+		if (ch == '\n') {
+			y += tbox->label->h + 2;
+		} else {
+			char cs[2];
 
-			if (ch == '\n') {
-				y += tbox->label->h + 2;
-			} else {
-				char cs[2];
-
-				cs[0] = ch;
-				cs[1] = '\0';
-				glyph = text_render(NULL, -1,
-				    WIDGET_COLOR(tbox, TEXT_COLOR), cs);
-				widget_blit(tbox, glyph, x, y);
-				x += glyph->w;
-				SDL_FreeSurface(glyph);
-			}
+			/* XXX use text_render_glyph when it is fixed */
+			cs[0] = ch;
+			cs[1] = '\0';
+			glyph = text_render(NULL, -1,
+			    WIDGET_COLOR(tbox, TEXT_COLOR), cs);
+			widget_blit(tbox, glyph, x, y);
+			x += glyph->w;
+			SDL_FreeSurface(glyph);
+		}
+	}
+	if (WIDGET_FOCUSED(tbox) && !cursdrawn) {
+		dprintf("offs=%d, pos=%d, i=%d\n", (int)tbox->text.offs,
+		    (int)tbox->text.pos, i);
+		if (tbox->text.pos > i) {
+			tbox->text.offs++;
 		}
 	}
 
-	/* Move to the visible end of the string? */
+	/* Move beyond the visible end of the string? */
 	if (tbox->newx >= 0) {
 		tbox->newx = -1;
 		tbox->text.pos = i-1;
-		dprintf("move to end\n");
+		if (i < tlen) {
+			tbox->text.offs += MOUSE_SCROLL_INCR;
+			tbox->text.pos++;
+		}
 	}
 	widget_binding_unlock(stringb);
 	pthread_mutex_unlock(&tbox->text.lock);
