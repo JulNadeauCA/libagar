@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.21 2003/01/23 01:53:52 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.22 2003/01/25 06:24:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,6 +73,7 @@ radio_init(struct radio *rad, const char **items)
 {
 	const char *s;
 	int i, maxw;
+	int fh;
 
 	widget_init(&rad->wid, "radio", &radio_ops, -1, -1);
 	WIDGET(rad)->flags |= WIDGET_CLIPPING;
@@ -87,7 +88,9 @@ radio_init(struct radio *rad, const char **items)
 	rad->items = items;
 	rad->xspacing = 2;
 	rad->yspacing = 2;
-	rad->radius = (Uint8)font_h;
+
+	fh = ttf_font_height(font);
+	rad->radius = (fh > 0 && fh < 256) ? fh : 10;
 	rad->max_w = 0;
 	
 	for (rad->nitems = 0; (s = *items++) != NULL; rad->nitems++) ;;

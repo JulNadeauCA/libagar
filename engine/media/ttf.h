@@ -1,40 +1,40 @@
-/*	$Csoft: ttf.h,v 1.4 2002/11/04 08:33:14 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.1 2003/03/02 00:45:24 vedge Exp $	*/
 /*	Public domain	*/
 
-typedef struct _TTF_Font TTF_Font;
+typedef struct _ttf_font ttf_font;
 
-int	  TTF_Init(void);
-TTF_Font *TTF_OpenFont(const char *, int);
-TTF_Font *TTF_OpenFontIndex(const char *, int, long);
+int	 ttf_init(void);
+void	 ttf_destroy(void);
 
-int	 TTF_GetFontStyle(TTF_Font *);
-void	 TTF_SetFontStyle(TTF_Font *, int);
+ttf_font	*ttf_open_font(const char *, int);
+ttf_font	*ttf_open_font_index(const char *, int, long);
+void		 ttf_close_font(ttf_font *);
+
+int	 ttf_get_font_style(ttf_font *);
+void	 ttf_set_font_style(ttf_font *, int);
 #define TTF_STYLE_NORMAL	0x00
 #define TTF_STYLE_BOLD		0x01
 #define TTF_STYLE_ITALIC	0x02
 #define TTF_STYLE_UNDERLINE	0x04
 
-int	 TTF_FontHeight(TTF_Font *);
-int	 TTF_FontAscent(TTF_Font *);
-int	 TTF_FontDescent(TTF_Font *);
-int	 TTF_FontLineSkip(TTF_Font *);
-long	 TTF_FontFaces(TTF_Font *);
+int	 ttf_font_height(ttf_font *);
+int	 ttf_font_ascent(ttf_font *);
+int	 ttf_font_descent(ttf_font *);
+int	 ttf_font_line_skip(ttf_font *);
+long	 ttf_font_faces(ttf_font *);
 
-int	 TTF_FontFaceIsFixedWidth(TTF_Font *);
-char	*TTF_FontFaceFamilyName(TTF_Font *);
-char	*TTF_FontFaceStyleName(TTF_Font *);
+int	 ttf_font_face_fixed_width(ttf_font *);
+char	*ttf_font_face_family_name(ttf_font *);
+char	*ttf_font_face_style_name(ttf_font *);
 
-int	 TTF_GlyphMetrics(TTF_Font *, unsigned int, int *, int *, int *, int *,
-	     int *);
-int	 TTF_SizeText(TTF_Font *, char *, int *, int *);
-int	 TTF_SizeUTF8(TTF_Font *, char *, int *, int *);
-int	 TTF_SizeUNICODE(TTF_Font *, unsigned int *, int *, int *);
+int	 ttf_glyph_metrics(ttf_font *, unsigned int, int *, int *, int *,
+	     int *, int *);
+int	 ttf_size_text(ttf_font *, char *, int *, int *);
+int	 ttf_size_utf8(ttf_font *, char *, int *, int *);
+int	 ttf_size_unicode(ttf_font *, unsigned int *, int *, int *);
 
-SDL_Surface	*TTF_RenderText_Solid(TTF_Font *, char *, SDL_Color);
-SDL_Surface	*TTF_RenderUTF8_Solid(TTF_Font *, char *, SDL_Color);
-SDL_Surface	*TTF_RenderUNICODE_Solid(TTF_Font *, unsigned int *, SDL_Color);
-SDL_Surface	*TTF_RenderGlyph_Solid(TTF_Font *, unsigned int, SDL_Color);
-
-void	 TTF_CloseFont(TTF_Font *);
-void	 TTF_Quit(void);
+SDL_Surface *ttf_render_text_solid(ttf_font *, char *, SDL_Color);
+SDL_Surface *ttf_render_utf8_solid(ttf_font *, char *, SDL_Color);
+SDL_Surface *ttf_render_unicode_solid(ttf_font *, unsigned int *, SDL_Color);
+SDL_Surface *ttf_render_glyph_solid(ttf_font *, unsigned int, SDL_Color);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.54 2003/01/25 06:21:54 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.55 2003/02/25 03:57:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,8 +35,6 @@
 #include "widget.h"
 #include "window.h"
 #include "button.h"
-
-extern TTF_Font *font;		/* text */
 
 static const struct widget_ops button_ops = {
 	{

@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.1 2003/03/02 00:45:24 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.2 2003/03/02 01:19:55 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -74,7 +74,7 @@ struct cached_glyph {
 	FT_UInt	cached;
 };
 
-struct _TTF_Font {
+struct _ttf_font {
 	/* Freetype2 maintains all sorts of useful info itself */
 	FT_Face	face;
 
@@ -84,7 +84,6 @@ struct _TTF_Font {
 	int	lineskip;
 	int	style;
 	int	glyph_overhang;
-
 #ifdef FLOATING_POINT
 	float	glyph_italics;
 #endif
@@ -99,10 +98,9 @@ struct _TTF_Font {
 
 /* The FreeType font engine/library */
 static FT_Library library;
-static int TTF_initialized = 0;
 
 int
-TTF_Init(void)
+ttf_init(void)
 {
 	int status;
 	FT_Error error;
@@ -112,22 +110,20 @@ TTF_Init(void)
 	if (error) {
 		error_set("cannot initialize FreeType");
 		status = -1;
-	} else {
-		TTF_initialized = 1;
 	}
 	return (status);
 }
 
-TTF_Font *
-TTF_OpenFontIndex(const char *file, int ptsize, long index)
+ttf_font *
+ttf_open_font_index(const char *file, int ptsize, long index)
 {
-	TTF_Font* font;
+	ttf_font *font;
 	FT_Error error;
 	FT_Face face;
 	FT_Fixed scale;
 
-	font = emalloc(sizeof(TTF_Font));
-	memset(font, 0, sizeof(TTF_Font));
+	font = emalloc(sizeof(ttf_font));
+	memset(font, 0, sizeof(ttf_font));
 
 	error = FT_New_Face(library, file, 0, &font->face);
 	if (error != 0) {
@@ -154,14 +150,14 @@ TTF_OpenFontIndex(const char *file, int ptsize, long index)
 
 	if (!FT_IS_SCALABLE(face)) {
 		error_set("font face is not scalable");
-		TTF_CloseFont(font);
+		ttf_close_font(font);
 		return (NULL);
 	}
 
 	error = FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0);
 	if (error != 0) {
 		error_set("could not set font size");
-		TTF_CloseFont(font);
+		ttf_close_font(font);
 		return (NULL);
 	}
 
@@ -191,10 +187,10 @@ TTF_OpenFontIndex(const char *file, int ptsize, long index)
 	return (font);
 }
 
-TTF_Font *
-TTF_OpenFont(const char *file, int ptsize)
+ttf_font *
+ttf_open_font(const char *file, int ptsize)
 {
-	return (TTF_OpenFontIndex(file, ptsize, 0));
+	return (ttf_open_font_index(file, ptsize, 0));
 }
 
 static void
@@ -214,7 +210,7 @@ Flush_Glyph(struct cached_glyph *glyph)
 }
 	
 static void
-Flush_Cache(TTF_Font *font)
+Flush_Cache(ttf_font *font)
 {
 	int size = sizeof(font->cache) / sizeof(font->cache[0]);
 	int i;
@@ -231,7 +227,7 @@ Flush_Cache(TTF_Font *font)
 }
 
 static FT_Error
-Load_Glyph(TTF_Font *font, FT_UInt ch, struct cached_glyph *cached, int want)
+Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 {
 	FT_Face face;
 	FT_Error error;
@@ -437,7 +433,7 @@ Load_Glyph(TTF_Font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 }
 
 static FT_Error
-Find_Glyph(TTF_Font *font, FT_UInt ch, int want)
+Find_Glyph(ttf_font *font, FT_UInt ch, int want)
 {
 	int retval = 0;
 
@@ -456,7 +452,7 @@ Find_Glyph(TTF_Font *font, FT_UInt ch, int want)
 }
 
 void
-TTF_CloseFont(TTF_Font *font)
+ttf_close_font(ttf_font *font)
 {
 	Flush_Cache(font);
 	FT_Done_Face(font->face);
@@ -505,56 +501,56 @@ UTF8_to_UNICODE(FT_UInt *unicode, char *utf8, int len)
 }
 
 int
-TTF_FontHeight(TTF_Font *font)
+ttf_font_height(ttf_font *font)
 {
 	return (font->height);
 }
 
 int
-TTF_FontAscent(TTF_Font *font)
+ttf_font_ascent(ttf_font *font)
 {
        return (font->ascent);
 }
 
 int
-TTF_FontDescent(TTF_Font *font)
+ttf_font_descent(ttf_font *font)
 {
 	return (font->descent);
 }
 
 int
-TTF_FontLineSkip(TTF_Font *font)
+ttf_font_line_skip(ttf_font *font)
 {
 	return (font->lineskip);
 }
 
 long
-TTF_FontFaces(TTF_Font *font)
+ttf_font_faces(ttf_font *font)
 {
 	return (font->face->num_faces);
 }
 
 int
-TTF_FontFaceIsFixedWidth(TTF_Font *font)
+ttf_font_face_fixed_width(ttf_font *font)
 {
 	return (FT_IS_FIXED_WIDTH(font->face));
 }
 
 char *
-TTF_FontFaceFamilyName(TTF_Font *font)
+ttf_font_face_family_name(ttf_font *font)
 {
 	return (font->face->family_name);
 }
 
 char *
-TTF_FontFaceStyleName(TTF_Font *font)
+ttf_font_face_style_name(ttf_font *font)
 {
 	return (font->face->style_name);
 }
 
 int
-TTF_GlyphMetrics(TTF_Font *font, unsigned int ch, int *minx, int *maxx, int *miny,
-    int *maxy, int *advance)
+ttf_glyph_metrics(ttf_font *font, unsigned int ch, int *minx,
+    int *maxx, int *miny, int *maxy, int *advance)
 {
 	FT_Error error;
 
@@ -578,7 +574,7 @@ TTF_GlyphMetrics(TTF_Font *font, unsigned int ch, int *minx, int *maxx, int *min
 }
 
 int
-TTF_SizeText(TTF_Font *font, char *text, int *w, int *h)
+ttf_size_text(ttf_font *font, char *text, int *w, int *h)
 {
 	FT_UInt *unicode_text;
 	int unicode_len;
@@ -590,14 +586,14 @@ TTF_SizeText(TTF_Font *font, char *text, int *w, int *h)
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	status = TTF_SizeUNICODE(font, unicode_text, w, h);
+	status = ttf_size_unicode(font, unicode_text, w, h);
 
 	free(unicode_text);
 	return (status);
 }
 
 int
-TTF_SizeUTF8(TTF_Font *font, char *text, int *w, int *h)
+ttf_size_utf8(ttf_font *font, char *text, int *w, int *h)
 {
 	FT_UInt *unicode_text;
 	int unicode_len;
@@ -609,14 +605,14 @@ TTF_SizeUTF8(TTF_Font *font, char *text, int *w, int *h)
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	status = TTF_SizeUNICODE(font, unicode_text, w, h);
+	status = ttf_size_unicode(font, unicode_text, w, h);
 
 	free(unicode_text);
 	return (status);
 }
 
 int
-TTF_SizeUNICODE(TTF_Font *font, unsigned int *text, int *w, int *h)
+ttf_size_unicode(ttf_font *font, unsigned int *text, int *w, int *h)
 {
 	int status;
 	FT_UInt *ch;
@@ -626,10 +622,6 @@ TTF_SizeUNICODE(TTF_Font *font, unsigned int *text, int *w, int *h)
 	struct cached_glyph *glyph;
 	FT_Error error;
 
-	/* Initialize everything to 0. */
-	if (!TTF_initialized) {
-		return (-1);
-	}
 	status = 0;
 	minx = maxx = 0;
 	miny = maxy = 0;
@@ -684,7 +676,7 @@ TTF_SizeUNICODE(TTF_Font *font, unsigned int *text, int *w, int *h)
 
 /* Convert the Latin-1 text to UNICODE and render it. */
 SDL_Surface *
-TTF_RenderText_Solid(TTF_Font *font, char *text, SDL_Color fg)
+ttf_render_text_solid(ttf_font *font, char *text, SDL_Color fg)
 {
 	SDL_Surface *textbuf;
 	FT_UInt *unicode_text;
@@ -696,7 +688,7 @@ TTF_RenderText_Solid(TTF_Font *font, char *text, SDL_Color fg)
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	textbuf = TTF_RenderUNICODE_Solid(font, unicode_text, fg);
+	textbuf = ttf_render_unicode_solid(font, unicode_text, fg);
 
 	free(unicode_text);
 	return (textbuf);
@@ -704,7 +696,7 @@ TTF_RenderText_Solid(TTF_Font *font, char *text, SDL_Color fg)
 
 /* Convert the UTF-8 text to UNICODE and render it. */
 SDL_Surface *
-TTF_RenderUTF8_Solid(TTF_Font *font, char *text, SDL_Color fg)
+ttf_render_utf8_solid(ttf_font *font, char *text, SDL_Color fg)
 {
 	SDL_Surface *textbuf;
 	FT_UInt *unicode_text;
@@ -716,14 +708,14 @@ TTF_RenderUTF8_Solid(TTF_Font *font, char *text, SDL_Color fg)
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	textbuf = TTF_RenderUNICODE_Solid(font, unicode_text, fg);
+	textbuf = ttf_render_unicode_solid(font, unicode_text, fg);
 
 	free(unicode_text);
 	return (textbuf);
 }
 
 SDL_Surface *
-TTF_RenderUNICODE_Solid(TTF_Font *font, unsigned int *text, SDL_Color fg)
+ttf_render_unicode_solid(ttf_font *font, unsigned int *text, SDL_Color fg)
 {
 	int xstart;
 	int width, height;
@@ -736,7 +728,7 @@ TTF_RenderUNICODE_Solid(TTF_Font *font, unsigned int *text, SDL_Color fg)
 	FT_Error error;
 
 	/* Get the dimensions of the text surface. */
-	if ((TTF_SizeUNICODE(font, text, &width, NULL) < 0) || !width) {
+	if ((ttf_size_unicode(font, text, &width, NULL) < 0) || !width) {
 		fatal("text has zero width\n");
 		return (NULL);
 	}
@@ -810,7 +802,7 @@ TTF_RenderUNICODE_Solid(TTF_Font *font, unsigned int *text, SDL_Color fg)
 }
 
 SDL_Surface *
-TTF_RenderGlyph_Solid(TTF_Font *font, unsigned int ch, SDL_Color fg)
+ttf_render_glyph_solid(ttf_font *font, unsigned int ch, SDL_Color fg)
 {
 	SDL_Surface *textbuf;
 	SDL_Palette *palette;
@@ -871,24 +863,21 @@ TTF_RenderGlyph_Solid(TTF_Font *font, unsigned int ch, SDL_Color fg)
 }
 
 void
-TTF_SetFontStyle(TTF_Font *font, int style)
+ttf_set_font_style(ttf_font *font, int style)
 {
 	font->style = style;
 	Flush_Cache(font);
 }
 
 int
-TTF_GetFontStyle(TTF_Font *font)
+ttf_get_font_style(ttf_font *font)
 {
 	return (font->style);
 }
 
 void
-TTF_Quit(void)
+ttf_destroy(void)
 {
-	if (TTF_initialized) {
-		FT_Done_FreeType(library);
-	}
-	TTF_initialized = 0;
+	FT_Done_FreeType(library);
 }
 
