@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.56 2003/03/01 20:14:57 vedge Exp $
+# $Csoft: configure.in,v 1.57 2003/03/04 21:56:29 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -29,6 +29,7 @@ mdefine(MAPDIR, "$PREFIX/share/cave/map");
 mdefine(TTFDIR, "$PREFIX/share/cave/ttf");
 mdefine(FOBJDIR, "$PREFIX/share/cave/fob");
 mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
+mdefine(INST_PSDIR, "$PREFIX/share/agar/ps");
 
 check(cc);
 
@@ -53,6 +54,8 @@ require(freetype, 7.0.1);
 # Include X11-specific code?
 if [ "${with_x11}" != "no" ]; then
 	check(x11);
+else
+	hundef(HAVE_X11);
 fi
 
 # OpenGL support?
