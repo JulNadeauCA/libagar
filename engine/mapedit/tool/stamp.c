@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.3 2002/07/08 05:24:49 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.4 2002/07/08 08:39:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 #include <engine/widget/radio.h>
 
 #include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
 
 #include "tool.h"
 #include "stamp.h"
@@ -122,9 +123,10 @@ stamp_event(int argc, union evarg *argv)
 }
 
 void
-stamp_effect(void *p, struct map *m, Uint32 x, Uint32 y)
+stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 {
 	struct stamp *st = p;
+	struct map *m = mv->map;
 	struct mapedit *med = TOOL(st)->med;
 	struct node *n = &m->map[y][x];
 	struct noderef *nref, *nnref;
