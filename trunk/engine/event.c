@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.47 2002/06/01 14:21:20 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.48 2002/06/03 18:36:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,6 +49,27 @@
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
 
+static const struct event_proto {
+	char *evname;
+	char *fmt;
+} protos[] = {
+	/* Generic */
+	{ "attached", "%p" },		/* Being attached to object %p */
+	{ "detached", "%p" },		/* Being detached from object %p */
+	/* Widget type */
+	{ "shown", NULL },
+	{ "hidden", NULL },
+	{ "button-pushed", NULL },
+	{ "checkbox-changed", "%i" },    /* Changed to state %i */
+	{ "textbox-return", "%s" },	 /* Text %s entered */
+	{ "textbox-changed", "%s, %c" }, /* Character %c inserted in %s */
+	/* Window type */
+	{ "window-mousebuttonup", "%i, %i, %i" },
+	{ "window-mousebuttondown", "%i, %i, %i" },
+	{ "window-keyup", "%i, %i" },
+	{ "window-keydown", "%i, %i" },
+};
+
 #define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
 	if ((eev)->argc == EVENT_MAXARGS) {				\
 		fatal("too many args\n");				\
@@ -58,6 +79,10 @@ extern struct window *game_menu_win;
 
 static void	 event_hotkey(SDL_Event *);
 static void	*event_post_async(void *);
+#ifdef DEBUG
+static void	 event_checkproto(struct object *, char *, const char *);
+#endif
+
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -232,7 +257,6 @@ event_loop(void *arg)
 
 #define EVENT_PUSHARG(ap, fmt, eev)				\
 	switch ((fmt)) {					\
-	case 'd':						\
 	case 'i':						\
 	case 'o':						\
 	case 'u':						\
@@ -285,6 +309,11 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 	struct object *ob = p;
 	struct event *eev;
 
+#ifdef DEBUG
+	if (engine_debug)
+		event_checkproto(ob, name, NULL);
+#endif
+
 	eev = emalloc(sizeof(struct event));
 	eev->name = name;
 	eev->flags = flags;
@@ -326,10 +355,15 @@ event_post_async(void *p)
  * handler list is not modified.
  */
 void
-event_post(void *obp, const char *name, const char *fmt, ...)
+event_post(void *obp, char *name, const char *fmt, ...)
 {
 	struct object *ob = obp;
 	struct event *eev, *neev;
+
+#ifdef DEBUG
+	if (engine_debug)
+		event_checkproto(ob, name, fmt);
+#endif
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
@@ -363,4 +397,28 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }
+
+#ifdef DEBUG
+static void
+event_checkproto(struct object *ob, char *evname, const char *fmt)
+{
+	const struct event_proto *eproto = NULL;
+	int i;
+
+	for (i = 0; i < sizeof(protos) / sizeof(struct event_proto); i++) {
+		eproto = &protos[i];
+
+		if (strcmp(eproto->evname, evname) == 0) {
+			if (fmt != NULL && strcmp(eproto->fmt, fmt) != 0) {
+				fatal("'%s' events use format: '%s'\n", evname,
+				    eproto->fmt);
+			}
+			break;
+		}
+	}
+	if (eproto == NULL) {
+		fatal("unknown event type `%s'\n", evname);
+	}
+}
+#endif
 
