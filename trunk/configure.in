@@ -1,11 +1,11 @@
-# $Csoft: configure.in,v 1.57 2003/03/04 21:56:29 vedge Exp $
+# $Csoft: configure.in,v 1.58 2003/03/05 16:14:53 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"OpenGL rendering support [default: check]");
 register("--enable-debug",	"Engine debugging [default: yes]");
-register("--enable-threads",	"Thread safety [default: yes]");
+register("--enable-threads",	"Thread safety [default: no]");
 register("--enable-floating-point", "Floating point operations [default: yes]");
 register("--enable-static",	"Produce a static binary [default: no]");
 register("--enable-8bpp",	"Support for 8 bpp display [default: yes]");
@@ -83,7 +83,7 @@ else
 fi
 
 # Thread safety?
-if [ "${enable_threads}" != "no" ]; then
+if [ "${enable_threads}" = "yes" ]; then
 	hdefine(THREADS, 1);
 else
 	hundef(THREADS);
