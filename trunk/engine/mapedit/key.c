@@ -76,9 +76,9 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 		struct node *node;
 		int mapx, mapy;
 
-		node = &med->map->map[mapx][mapy];
 		mapx = med->x;
 		mapy = med->y;
+		node = &med->map->map[mapx][mapy];
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_a:
