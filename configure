@@ -1052,8 +1052,6 @@ else
 	echo "no"
 fi
 if [ "${HAVE_X11}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
 x11_found=yes
 echo "#ifndef HAVE_X11" > config/have_x11.h
 echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
@@ -1061,8 +1059,6 @@ echo "#endif /* HAVE_X11 */" >> config/have_x11.h
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
-echo "no"
-echo "no" >> config.log
 x11_found=no
 echo "#undef HAVE_X11" > config/have_x11.h
 fi
