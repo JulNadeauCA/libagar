@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.22 2005/03/24 04:02:06 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.23 2005/04/02 04:07:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -116,7 +116,6 @@ tileset_reinit(void *obj)
 	struct pixmap *px, *npx;
 	struct feature *ft, *nft;
 	struct animation *ani, *nani;
-	Uint32 i;
 
 	pthread_mutex_lock(&ts->lock);
 	
