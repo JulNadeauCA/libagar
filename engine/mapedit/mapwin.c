@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.8 2002/07/09 09:27:44 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.9 2002/07/18 11:50:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -46,6 +46,9 @@
 #include "fileops.h"
 #include "tilestack.h"
 
+static void	mapwin_new_view(int, union evarg *);
+static void	mapwin_option(int, union evarg *);
+
 static void
 mapwin_new_view(int argc, union evarg *argv)
 {
@@ -71,6 +74,32 @@ mapwin_new_view(int argc, union evarg *argv)
 	pthread_mutex_lock(&win->lock);
 	window_show_locked(win);
 	pthread_mutex_unlock(&win->lock);
+}
+
+static void
+mapwin_option(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	int opt = argv[2].i;
+
+	switch (opt) {
+	case MAPEDIT_TOOL_GRID:
+		if (mv->flags & MAPVIEW_GRID) {
+			mv->flags &= ~(MAPVIEW_GRID);
+		} else {
+			mv->flags |= MAPVIEW_GRID;
+		}
+		break;
+	case MAPEDIT_TOOL_PROPS:
+		if (mv->flags & MAPVIEW_PROPS) {
+			mv->flags &= ~(MAPVIEW_PROPS);
+		} else {
+			mv->flags |= MAPVIEW_PROPS;
+		}
+		break;
+	}
+
+	dprintf("opt %d\n", opt);
 }
 
 struct window *
@@ -100,12 +129,12 @@ mapwin_new(struct mapedit *med, struct map *m)
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
 	reg->spacing = 1;
 	/* Load map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0,
-	    -1, -1);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
+	    0, -1, -1);
 	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
 	/* Save map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0,
-	    -1, -1);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
+	    0, -1, -1);
 	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
 	/* Clear map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0,
@@ -115,6 +144,16 @@ mapwin_new(struct mapedit *med, struct map *m)
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW), 0,
 	    -1, -1);
 	event_new(bu, "button-pushed", 0, mapwin_new_view, "%p", mv);
+	/* Grid */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
+	    BUTTON_STICKY, -1, -1);
+	event_new(bu, "button-pushed", 0,
+	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+	/* Props */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
+	    BUTTON_STICKY, -1, -1);
+	event_new(bu, "button-pushed", 0,
+	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 
 	/* Tile stack */
 	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 90);
