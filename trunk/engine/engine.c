@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.50 2002/06/03 18:36:52 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.51 2002/06/12 20:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -69,9 +69,6 @@ struct input *keyboard = NULL;
 struct input *joy = NULL;
 struct input *mouse = NULL;
 
-static char *mapdesc = NULL, *mapstr = NULL;
-static int mapw = 64, maph = 64;	/* Default map geometry */
-
 static void	printusage(char *);
 #ifdef XDEBUG
 static int	engine_xerror(Display *, XErrorEvent *);
@@ -83,31 +80,21 @@ static void
 printusage(char *progname)
 {
 	fprintf(stderr,
-	    "Usage: %s [-vf] [-w width] [-h height] [-j joy#]\n",
+	    "Usage: %s [-efv] [-j joy#]\n",
 	    progname);
-	fprintf(stderr,
-	    "             [-e mapname]\n");
 }
 
 int
 engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
-	int c, w, h, depth, njoy, flags;
+	int c, njoy = -1, fullscreen = 0;
 
 	pthread_key_create(&engine_errorkey, NULL);
 
-	curmapedit = NULL;
-	gameinfo = gi;
-
-	njoy = 0;
 	mapediting = 0;
-	w = 640;	/* XXX pref */
-	h = 480;
-	depth = 32;
-	flags = SDL_SWSURFACE;
-
-	/* XXX ridiculous */
-	while ((c = getopt(argc, argv, "vfl:n:w:h:j:e:W:H:")) != -1) {
+	gameinfo = gi;
+	
+	while ((c = getopt(argc, argv, "vfel:n:j:W:H:")) != -1) {
 		switch (c) {
 		case 'v':
 			printf("AGAR engine v%s\n", ENGINE_VERSION);
@@ -116,26 +103,13 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 			printf("%s\n", gameinfo->copyright);
 			exit (255);
 		case 'f':
-			flags |= SDL_FULLSCREEN;
-			break;
-		case 'w':
-			w = atoi(optarg);
-			break;
-		case 'h':
-			h = atoi(optarg);
+			fullscreen++;
 			break;
 		case 'j':
 			njoy = atoi(optarg);
 			break;
 		case 'e':
 			mapediting++;
-			mapstr = optarg;
-			break;
-		case 'W':
-			mapw = atoi(optarg);
-			break;
-		case 'H':
-			maph = atoi(optarg);
 			break;
 		default:
 			printusage(argv[0]);
@@ -149,17 +123,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		fatal("SDL_Init: %s\n", SDL_GetError());
 		return (-1);
 	}
-	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
-		njoy = -1;
+	if (njoy != -1) {	/* XXX default */
+		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
+			njoy = -1;
+		}
 	}
-
-	if (flags & SDL_FULLSCREEN) {
-		/* Give the new mode some time to take effect. */
-		SDL_Delay(1000);
-	}
-	
-	/* Set the video mode, initialize the masks and rectangles. */
-	view_init(mapediting ? VIEW_MAPEDIT : VIEW_MAPNAV, w, h, depth, flags);
 
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
@@ -173,10 +141,17 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	/* Initialize/load engine settings. */
 	config = config_new();
 	object_load(config);
+
+	/* Overrides */
+	if (fullscreen) {
+		config->flags |= CONFIG_FULLSCREEN;
+	}
 	
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
-	joy = input_new(INPUT_JOY, njoy);
+	if (njoy != -1) {	/* XXX default */
+		joy = input_new(INPUT_JOY, njoy);
+	}
 	mouse = input_new(INPUT_MOUSE, 0);
 
 #ifdef XDEBUG
@@ -242,22 +217,39 @@ int
 engine_start(void)
 {
 	struct mapedit *medit;
-	
+	int ge = mapediting ? GFX_ENGINE_GUI : GFX_ENGINE_TILEBASED;
+	struct map *m;
+
+	/*
+	 * Set the video mode.
+	 * Initialize the masks and rectangles in game mode.
+	 */
+	dprintf("mode: %dx%dx%d\n", config->view.h, config->view.w,
+	    config->view.bpp);
+	view_init(ge);
+
 	/* Create the configuration settings window. */
 	config_window(config);
 
-	if (!mapediting) {
+	switch (ge) {
+	case GFX_ENGINE_TILEBASED:
+		/* Start with a default map. */
+		m = emalloc(sizeof(struct map));
+		map_init(m, "base", NULL, 0);
+		pthread_mutex_lock(&world->lock);
+		world_attach(world, m);
+		pthread_mutex_unlock(&world->lock);
+		if (object_load(m) != 0) {
+			fatal("cannot load base.m\n");
+		}
+		rootmap_focus(m);
 		return (0);
+	case GFX_ENGINE_GUI:
+		break;
 	}
 
 	medit = emalloc(sizeof(struct mapedit));
 	mapedit_init(medit, "mapedit0");
-
-	/* Set the map edition arguments. */
-	medit->margs.name = strdup(mapstr);
-	medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
-	medit->margs.mapw = mapw;
-	medit->margs.maph = maph;
 
 	/* Start map edition. */
 	pthread_mutex_lock(&world->lock);
@@ -271,9 +263,13 @@ engine_start(void)
 void
 engine_stop(void)
 {
-	pthread_mutex_lock(&world->lock);
-	world->curmap = NULL;
-	pthread_mutex_unlock(&world->lock);
+	if (view->rootmap != NULL) {
+		pthread_mutex_lock(&view->lock);
+		view->rootmap->map = NULL;
+		pthread_mutex_unlock(&view->lock);
+	} else {
+		engine_destroy();
+	}
 }
 
 /* Caller must not hold world->lock. */
@@ -296,10 +292,12 @@ engine_destroy(void)
 	/* Shut down the input devices. XXX link */
 	input_destroy(keyboard);
 	input_destroy(mouse);
-	input_destroy(joy);
+	if (joy != NULL) {	/* XXX default */
+		input_destroy(joy);
+	}
 
 	/* Destroy the views. */
-	object_destroy(mainview);
+	object_destroy(view);
 
 	/* Free the config structure. */
 	object_destroy(config);
