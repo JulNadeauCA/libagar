@@ -80,8 +80,10 @@ engine_config(void)
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    64, 64, 512, 256);
-	body_reg = region_new(win, WIDGET_VALIGN, 0, 0, 100, 80, 10);
-	buttons_reg = region_new(win, WIDGET_HALIGN, 0, 80, 100, 20, 10);
+	body_reg = region_new(win, REGION_VALIGN|REGION_LEFT,
+	    0,  0, 100, 80);
+	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
+	    0, 80, 100, 20);
 
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
@@ -90,10 +92,10 @@ engine_config(void)
 	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
 	fullscr_cbox->push = fullscrn_cbox_push;
 
-	color_button = button_new(buttons_reg, "Colors", 0, 128, 32);
+	color_button = button_new(buttons_reg, "Colors", 0, 20, 100);
 	color_button->push = color_button_push;
 	
-	close_button = button_new(buttons_reg, "Close", 0, 128, 32);
+	close_button = button_new(buttons_reg, "Close", 0, 20, 100);
 	close_button->push = close_button_push;
 }
 
