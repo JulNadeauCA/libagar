@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.88 2002/11/22 23:16:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.89 2002/11/27 05:11:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -294,7 +294,7 @@ object_path(char *obname, const char *suffix)
 /* Add a noderef at m:x,y, and a back reference to it. */
 struct mappos *
 object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
-    struct map *m, Uint32 x, Uint32 y)
+    struct map *m, Uint32 x, Uint32 y, Uint32 speed)
 {
 	struct object *ob = p;
 	struct node *node;
@@ -307,7 +307,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	pos->map = m;
 	pos->x = x;
 	pos->y = y;
-	pos->speed = 1;
+	pos->speed = speed;
 
 	/* Add a noderef at m:x,y. */
 	pos->nref = node_addref(node, ob, offs, flags);
@@ -322,7 +322,8 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	if (y > 1) {
 		m->map[y - 1][x].overlap++;
 	}
-	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 3);
+	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL,
+	    speed);
 
 	/* Set the input device. */
 	pos->input = in;
@@ -400,7 +401,7 @@ object_movepos(void *obp, struct map *m, Uint32 x, Uint32 y)
 
 	/* Insert at the new position. */
 	newpos = object_addpos(oldnref->pobj, oldnref->offs, oldnref->flags,
-	    oldpos.input, m, x, y);
+	    oldpos.input, m, x, y, oldpos.speed);
 	newpos->dir = oldpos.dir;
 
 	m->redraw++;
