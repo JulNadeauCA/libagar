@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.58 2002/07/29 01:18:46 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.59 2002/08/15 20:50:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -230,7 +230,7 @@ engine_start(void)
 	struct map *m;
 
 	/* Create the configuration settings window. */
-	config_window(config);
+	config_init_wins(config);
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
