@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.50 2003/01/05 00:08:12 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.51 2003/01/20 12:05:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,11 +84,11 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(b, TEXT_COLOR, "text", 240, 240, 240);
 
-	widget_bind(b, "value", WIDGET_BOOL, NULL, &b->def.value);
+	widget_bind(b, "state", WIDGET_BOOL, NULL, &b->def.state);
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
-	b->def.value = 0;
+	b->def.state = 0;
 
 	if (caption != NULL) {
 		b->caption = Strdup(caption);
@@ -176,7 +176,7 @@ button_draw(void *p)
 	int x = 0, y = 0;
 	int pressed;
 
-	pressed = widget_get_bool(b, "value");
+	pressed = widget_get_bool(b, "state");
 
 	/* Button */
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h, pressed ? -1 : 1,
@@ -210,19 +210,19 @@ static void
 button_mousemotion(int argc, union evarg *argv)
 {
 	struct button *b = argv[0].p;
-	struct widget_binding *valueb;
+	struct widget_binding *stateb;
 	int x = argv[1].i;
 	int y = argv[2].i;
 	int *pressed;
 
-	valueb = widget_binding_get_locked(b, "value", &pressed);
+	stateb = widget_binding_get_locked(b, "state", &pressed);
 	if (!WIDGET_INSIDE_RELATIVE(b, x, y) &&
 	    !(b->flags & BUTTON_STICKY) &&
 	    *pressed == 1) {
 		*pressed = 0;
-		widget_binding_modified(valueb);
+		widget_binding_modified(stateb);
 	}
-	widget_binding_unlock(valueb);
+	widget_binding_unlock(stateb);
 }
 
 static void
@@ -230,7 +230,7 @@ button_mousebuttondown(int argc, union evarg *argv)
 {
 	struct button *b = argv[0].p;
 	int button = argv[1].i;
-	struct widget_binding *valueb;
+	struct widget_binding *stateb;
 	int *pushed;
 
 	WIDGET_FOCUS(b);
@@ -238,15 +238,15 @@ button_mousebuttondown(int argc, union evarg *argv)
 	if (button != 1)
 		return;
 	
-	valueb = widget_binding_get_locked(b, "value", &pushed);
+	stateb = widget_binding_get_locked(b, "state", &pushed);
 	if ((b->flags & BUTTON_STICKY) == 0) {
 		*pushed = 1;
 	} else {
 		*pushed = !(*pushed);
 		event_post(b, "button-pushed", NULL);
 	}
-	widget_binding_modified(valueb);
-	widget_binding_unlock(valueb);
+	widget_binding_modified(stateb);
+	widget_binding_unlock(stateb);
 }
 
 static void
@@ -254,7 +254,7 @@ button_mousebuttonup(int argc, union evarg *argv)
 {
 	struct button *b = argv[0].p;
 	int button = argv[1].i;
-	struct widget_binding *valueb;
+	struct widget_binding *stateb;
 	int *pushed;
 	int x = argv[2].i;
 	int y = argv[3].i;
@@ -262,16 +262,16 @@ button_mousebuttonup(int argc, union evarg *argv)
 	if (!WIDGET_INSIDE_RELATIVE(b, x, y))
 		return;
 	
-	valueb = widget_binding_get_locked(b, "value", &pushed);
+	stateb = widget_binding_get_locked(b, "state", &pushed);
 	if (*pushed &&
 	    button == 1 &&
 	    (b->flags & BUTTON_STICKY) == 0) {
 	    	*pushed = 0;
-		widget_binding_modified(valueb);
+		widget_binding_modified(stateb);
 
 		event_post(b, "button-pushed", NULL);
 	}
-	widget_binding_unlock(valueb);
+	widget_binding_unlock(stateb);
 }
 
 static void
@@ -281,7 +281,7 @@ button_keydown(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(b, "value", 1);
+		widget_set_bool(b, "state", 1);
 	}
 }
 
@@ -292,7 +292,7 @@ button_keyup(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(b, "value", 0);
+		widget_set_bool(b, "state", 0);
 		event_post(b, "button-pushed", NULL);
 	}
 }

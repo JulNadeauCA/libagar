@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.17 2002/12/21 10:26:33 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.18 2003/01/20 12:05:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -19,7 +19,7 @@ struct button {
 		BUTTON_RIGHT
 	} justify;
 	struct {			/* Default binding */
-		int	value;
+		int	state;
 	} def;
 };
 
