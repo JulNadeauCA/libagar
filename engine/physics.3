@@ -1,4 +1,4 @@
-.\"	$Csoft: version.3,v 1.2 2002/09/07 04:30:26 vedge Exp $
+.\"	$Csoft: physics.3,v 1.5 2002/11/23 22:41:47 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 .\" All rights reserved.
@@ -37,7 +37,16 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-interface implements movement.
+interface implements two-dimensional movement.
+.Bd -literal
+enum {
+	DIR_UP =	0x01,
+	DIR_DOWN =	0x02,
+	DIR_LEFT =	0x04,
+	DIR_RIGHT =	0x08,
+	DIR_ALL =	0xff
+};
+.Ed
 .Sh GENERIC DIRECTIONS
 This interface implements two-dimensional movement of an undefined construct
 inside an undefined area, with a key delay and key repeat.
