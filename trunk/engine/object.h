@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.32 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.33 2002/05/16 21:13:35 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -15,7 +15,7 @@ struct object_ops {
 	int	(*load)(void *, int);		/* Load from fd */
 	int	(*save)(void *, int);		/* Save to fd */
 
-	/* Called when the container is locked. */
+	/* Called when the container is locked, order is irrelevant. */
 	void	(*onattach)(void *, void *);	/* On attach to container */
 	void	(*ondetach)(void *, void *);	/* On detach to container */
 
@@ -80,6 +80,20 @@ struct object {
 #define SPRITE(ob, sp)	OBJECT((ob))->art->sprites[(sp)]
 #define ANIM(ob, sp)	OBJECT((ob))->art->anims[(sp)]
 #define SAMPLE(ob, sp)	OBJECT((ob))->audio->samples[(sp)]
+
+#ifdef DEBUG
+#define OBJECT_ASSERT(ob, typestr) do {					\
+	if (strcmp(OBJECT((ob))->type, typestr) != 0) {			\
+		fprintf(stderr, "%s:%d: %s is not a %s\n", __FILE__,	\
+		    __LINE__, OBJECT((ob))->name, typestr);		\
+		abort();						\
+	}								\
+} while (/*CONSTCOND*/0)
+#else
+#define OBJECT_ASSERT(ob, type)
+#endif
+
+#define OBJECT_TYPE(pob, ptype)	(strcmp(OBJECT((pob))->type, (ptype)) == 0)
 
 struct object	*object_new(char *, char *, char *, int, const void *);
 int		 object_load(void *);
