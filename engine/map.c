@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.185 2003/07/26 12:30:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.186 2003/07/28 04:36:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1275,6 +1275,7 @@ map_import_gfx(int argc, union evarg *argv)
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
 	int mode = argv[3].i;
+	struct object *ob = argv[4].p;
 	struct tlist_item *it;
 	struct map *m = mv->map;
 	int sx, sy, dx, dy;
@@ -1286,36 +1287,38 @@ map_import_gfx(int argc, union evarg *argv)
 	}
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct object *pobj = it->p1;
-		struct map *submap = it->p1;
+		char ind_str[32];
 		struct node *node;
 		int t, xinc, yinc;
 		Uint32 ind;
 		unsigned int nw, nh;
- 
+		struct map *submap = it->p1;
+		SDL_Surface *srcsu = it->p1;
+		struct gfx_anim *anim = it->p1;
+
 		if (!it->selected)
 			continue;
 
-		ind = (Uint32)atoi(it->text + 1);
+		strlcpy(ind_str, it->text+1, sizeof(ind_str));
+		*(strchr(ind_str, ' ')) = '\0';
+		ind = (Uint32)atoi(ind_str);
+
+		dprintf("ind=%u (str=%s)\n", ind, ind_str);
+
 		switch (it->text[0]) {
 		case 's':
-			{
-				SDL_Surface *srcsu = SPRITE(pobj, ind);
-
-				t = NODEREF_SPRITE;
-				xinc = srcsu->w / TILEW;
-				yinc = srcsu->h / TILEW;
-			}
+			t = NODEREF_SPRITE;
+			xinc = srcsu->w / TILEW;
+			yinc = srcsu->h / TILEW;
 			break;
 		case 'a':
 			{
-				struct object *pobj = it->p1;
-				struct gfx_anim *anim = ANIM(pobj, ind);
-				SDL_Surface *srcsu = anim->frames[0];
+				SDL_Surface *frame = anim->frames[0];
 
 				t = NODEREF_ANIM;
-				xinc = srcsu->w / TILEW;
-				yinc = srcsu->h / TILEW;
+				/* XXX */
+				xinc = frame->w / TILEW;
+				yinc = frame->h / TILEW;
 			}
 			break;
 		case 'm':
@@ -1329,6 +1332,7 @@ map_import_gfx(int argc, union evarg *argv)
 
 		nw = mv->esel.x + xinc + 1;
 		nh = mv->esel.y + yinc + 1;
+		dprintf("inc %d,%d, ngeo=%ux%u\n", xinc, yinc, nw, nh);
 
 		if (map_resize(m,
 		    nw > m->mapw ? nw : m->mapw,
@@ -1342,15 +1346,15 @@ map_import_gfx(int argc, union evarg *argv)
 			node = &m->map[mv->esel.y][mv->esel.x];
 			node_destroy(m, node);
 			node_init(node);
-			dprintf("+sprite: %s:%d\n", pobj->name, ind);
-			r = node_add_sprite(m, node, pobj, ind);
+			dprintf("+sprite: %s:%d\n", ob->name, ind);
+			r = node_add_sprite(m, node, ob, ind);
 			break;
 		case NODEREF_ANIM:
 			node = &m->map[mv->esel.y][mv->esel.x];
 			node_destroy(m, node);
 			node_init(node);
-			dprintf("+anim: %s:%d\n", pobj->name, ind);
-			node_add_anim(m, node, pobj, ind, NODEREF_ANIM_AUTO);
+			dprintf("+anim: %s:%d\n", ob->name, ind);
+			r = node_add_anim(m, node, ob, ind, NODEREF_ANIM_AUTO);
 			break;
 		case -1:					/* Submap */
 			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
@@ -1436,33 +1440,37 @@ map_import_poll(int argc, union evarg *argv)
 	struct object *ob = argv[1].p;
 	char label[TLIST_LABEL_MAX];
 	Uint32 i;
+	
+	tlist_clear_items(tl);
 
 	if (ob->gfx == NULL)
 		return;
-
+	
 	for (i = 0; i < ob->gfx->nsubmaps; i++) {
 		struct map *sm = ob->gfx->submaps[i];
 
-		snprintf(label, sizeof(label), _("m%u\n%ux%u nodes\n"), i,
-		    sm->mapw, sm->maph);
+		snprintf(label, sizeof(label),
+		    _("m%u (%ux%u nodes)\n"), i, sm->mapw, sm->maph);
 		tlist_insert_item(tl, NULL, label, sm);
 	}
 	for (i = 0; i < ob->gfx->nsprites; i++) {
 		SDL_Surface *sp = ob->gfx->sprites[i];
 	
 		snprintf(label, sizeof(label),
-		    "s%u\n%ux%u pixels, %ubpp\n", i, sp->w, sp->h,
+		    _("s%u (%ux%u pixels, %ubpp)\n"), i, sp->w, sp->h,
 		    sp->format->BitsPerPixel);
-		tlist_insert_item(tl, ob->gfx->sprites[i], label, ob);
+		tlist_insert_item(tl, sp, label, sp);
 	}
 	for (i = 0; i < ob->gfx->nanims; i++) {
 		struct gfx_anim *an = ob->gfx->anims[i];
 
-		snprintf(label, sizeof(label), _("a%u\n%u frames\n"), i,
-		    an->nframes);
+		snprintf(label, sizeof(label),
+		    _("a%u (%u frames)\n"), i, an->nframes);
 		tlist_insert_item(tl, (an->nframes > 0) ?
-		    an->frames[0] : NULL, label, ob);
+		    an->frames[0] : NULL, label, an);
 	}
+
+	tlist_restore_selections(tl);
 }
 
 /* Create the graphic import selection window. */
@@ -1497,7 +1505,7 @@ map_import_window(struct mapview *mv)
 			bu = button_new(bo, NULL);
 			button_set_label(bu, SPRITE(&mapedit, icons[i]));
 			event_new(bu, "button-pushed", map_import_gfx,
-			    "%p, %p, %i", tl, mv, i);
+			    "%p, %p, %i, %p", tl, mv, i, ob);
 		}
 #if 0
 		bu = button_new(bo, _("Replace"));

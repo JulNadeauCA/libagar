@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.47 2003/07/14 03:40:41 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.48 2003/07/26 12:35:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -7,12 +7,18 @@
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/button.h>
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
-#include <engine/mapedit/mimport.h>
 
 #include "begin_code.h"
+
+struct mimport {
+	struct window	*win;
+	struct button	*trigger;
+};
 
 struct mapview {
 	struct widget wid;
