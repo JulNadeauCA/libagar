@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.107 2002/12/04 04:22:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.108 2002/12/13 07:38:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -439,7 +439,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 
 	if (eev == NULL) {
 		eev = emalloc(sizeof(struct event));
-		eev->name = strdup(name);
+		eev->name = Strdup(name);
 		newev = 1;
 	}
 	eev->flags = 0;
