@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.32 2002/07/07 10:17:43 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.33 2002/07/08 06:42:10 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -50,7 +50,6 @@ struct viewport {
 	struct	windowq windowsh;	/* Hidden/shown windows */
 	struct	window *focus_win;	/* Give focus to this window */
 	struct	window *wop_win;	/* Window operations */
-	int	wop_mapx, wop_mapy;
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,
