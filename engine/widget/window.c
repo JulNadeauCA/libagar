@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.150 2003/01/23 02:12:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.151 2003/01/23 02:41:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1574,11 +1574,8 @@ window_resize(struct window *win)
 					reg->w = wid->w;
 			}
 		} else if (reg->rw > 0) {		/* % of window width */
-			reg->x += win->xspacing;
 			reg->w = reg->rw * (win->body.w - win->xspacing) / 100;
 			reg->w -= win->xspacing;
-			if (reg->rw == 100)
-				reg->w -= win->xspacing + 1;
 		} else if (reg->rw == 0) {		/* remaining space */
 			reg->w = win->body.w - (regx - xmar) - win->xspacing;
 		}
@@ -1601,11 +1598,8 @@ window_resize(struct window *win)
 					reg->h = wid->h;
 			}
 		} else if (reg->rh > 0) {		/* % of window height */
-			reg->y += win->yspacing;
 			reg->h = reg->rh * (win->body.h - win->yspacing) / 100;
 			reg->h -= win->yspacing;
-			if (reg->rh == 100)
-				reg->h -= win->yspacing;
 		} else if (reg->rh == 0) {		/* remaining space */
 			reg->h = win->body.h - (regy - ymar) - win->yspacing;
 		}
