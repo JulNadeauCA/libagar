@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.3 2002/01/26 20:08:11 vedge Exp $
+#	$Csoft: Makefile,v 1.4 2002/01/27 11:53:26 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
@@ -14,8 +14,8 @@ deinstall: deinstall-subdir
 	    sh configure; \
 	fi
 
-configure: configure.in
-	cat configure.in |perl ~/src/csoft-mk/mkconf.pl > configure
+configure: configure.in /home/vedge/src/csoft-mk/manuconf.pl
+	cat configure.in |perl /home/vedge/src/csoft-mk/manuconf.pl > configure
 	chmod 755 configure
 
 include mk/csoft.subdir.mk
