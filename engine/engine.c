@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.134 2004/05/02 09:37:17 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.135 2004/05/10 02:41:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <config/have_x11.h>
-#include <config/have_progname.h>
 #include <config/have_setlocale.h>
 #include <config/localedir.h>
 #include <config/version.h>
@@ -71,7 +70,7 @@
 pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
 #endif
 
-struct engine_proginfo *proginfo;
+const char *progname = "untitled";
 struct config *config;
 struct object *world;
 pthread_mutex_t linkage_lock;
@@ -81,7 +80,7 @@ extern pthread_mutex_t timeout_lock;
 
 /* Initialize the Agar engine. */
 int
-engine_preinit(struct engine_proginfo *prog, int flags)
+engine_preinit(const char *name)
 {
 	static int inited = 0;
 	
@@ -107,30 +106,19 @@ engine_preinit(struct engine_proginfo *prog, int flags)
 	pthread_mutex_init(&gfxq_lock, &recursive_mutexattr);
 	pthread_mutex_init(&timeout_lock, &recursive_mutexattr);
 #endif
-
-#ifdef HAVE_PROGNAME
-	{
-		extern char *__progname;
-
-		prog->progname = __progname;
-	}
-#endif
-
-	printf("Agar %s\n", VERSION);
-	proginfo = prog;
-
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		error_set("SDL_Init: %s", SDL_GetError());
 		return (-1);
 	}
 #ifdef HAVE_X11
-	setenv("SDL_VIDEO_X11_WMCLASS", prog->progname, 1);
+	setenv("SDL_VIDEO_X11_WMCLASS", name, 1);
 #endif
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
 		return (-1);
 	}
-	SDL_WM_SetCaption(prog->name, prog->progname);
+	SDL_WM_SetCaption(name, name);
+	progname = name;
 
 	vinfo = SDL_GetVideoInfo();
 	if (vinfo != NULL) {
