@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.43 2003/09/07 07:58:37 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.44 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,10 +29,12 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include "graph.h"
-
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+
+#include <string.h>
+
+#include "graph.h"
 
 const struct version graph_ver = {
 	"agar graph",

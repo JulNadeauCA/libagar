@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.4 2003/08/08 00:19:08 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.5 2003/10/09 22:39:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
@@ -147,26 +147,24 @@ __END_DECLS
 #ifdef THREADS
 # ifdef DEBUG
 #  define pthread_mutex_lock(mutex) \
-	if (pthread_mutex_lock(mutex) != 0) \
-		fatal("lock")
+	if (pthread_mutex_lock((mutex)) != 0) \
+		abort()
 #  define pthread_mutex_unlock(mutex) \
-	if (pthread_mutex_unlock(mutex) != 0) \
-		fatal("unlock")
+	if (pthread_mutex_unlock((mutex)) != 0) \
+		abort()
 #  define pthread_mutex_init(mutex, attr) \
 	if (pthread_mutex_init((mutex), (attr)) != 0) \
-		fatal("mutex init")
-#  define pthread_mutex_destroy(mutex) do {			\
-	int _rv;						\
-	if ((_rv = pthread_mutex_destroy(mutex)) != 0)		\
-		fatal("mutex destroy: %s", strerror(_rv));	\
- } while (0)
+		abort()
+#  define pthread_mutex_destroy(mutex) \
+	if (pthread_mutex_destroy((mutex)) != 0) \
+		abort()
 # endif /* DEBUG */
 # define Pthread_create(thread, attr, func, arg) \
 	if (pthread_create((thread), (attr), (func), (arg)) != 0) \
-		fatal("thread create")
+		abort()
 # define Pthread_join(thread, valptr) \
 	if (pthread_join((thread), (valptr)) != 0) \
-		fatal("thread join")
+		abort()
 #endif /* THREADS */
 
 #endif /* _AGAR_ENGINE_ERROR_ERROR_H_ */

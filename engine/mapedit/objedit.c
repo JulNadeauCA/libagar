@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.21 2003/10/13 23:48:59 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.22 2004/01/03 04:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,8 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+
+#include <string.h>
 
 #include "mapedit.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.50 2003/09/07 04:15:05 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.51 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -30,6 +30,8 @@
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
+
+#include <string.h>
 
 struct input_devq input_devs;
 pthread_mutex_t	  input_lock = PTHREAD_MUTEX_INITIALIZER;

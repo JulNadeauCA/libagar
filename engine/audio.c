@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.9 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.10 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -31,6 +31,8 @@
 
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
+
+#include <string.h>
 
 enum {
 	NSAMPLES_INIT =	1,
