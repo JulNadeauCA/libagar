@@ -1,13 +1,12 @@
-/*	$Csoft: widget.h,v 1.21 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.22 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
 
 struct widget_ops {
 	const	 struct object_ops obops;
-
-	/* Render widget. */
 	void	 (*widget_draw)(void *);
+	void	 (*widget_animate)(void *);
 };
 
 struct widget {
