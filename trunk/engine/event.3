@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.7 2003/04/12 00:35:06 vedge Exp $
+.\"	$Csoft: event.3,v 1.8 2003/04/26 04:42:44 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,9 +38,40 @@
 #include <engine/event.h>
 .Ed
 .Sh DESCRIPTION
-Agar implements generic events using a list of event handlers inside
+The
 .Xr object 3
-structures.
+structure contains a table of functions registered as event handlers for
+specific types of events.
+The prototype for event handler functions looks like this:
+.Pp
+.nr nS 1
+.Ft void
+.Fn foo "int argc" "union evarg *argv"
+.nr nS 0
+.Pp
+The
+.Fa argv
+argument is a pointer to an array of
+.Fa argc
+unions, defined as:
+.Bd -literal
+typedef union evarg {
+	void	*p;
+	char	*s;
+	char	 c;
+	int	 i;
+	long int li;
+	double	 f;
+} *evargs;
+.Ed
+.Pp
+Note that
+.Va argv[0]
+is always a pointer to the
+.Xr object 3
+receiving the event.
+.Ed
+.Pp
 The
 .Nm
 subsystem also implements the
@@ -72,24 +103,6 @@ SDL events are translated to
 .Nm
 structures, which are sent to the relevant subsystems.
 .El
-.Sh EVENT HANDLERS
-Event handlers are referenced by NUL-terminated strings.
-Event handler arguments are described by an array of unions:
-.Pp
-.Bd -literal
-typedef union evarg {
-	void	*p;
-	char	*s;
-	char	 c;
-	int	 i;
-	long int li;
-	double	 f;
-} *evargs;
-.Ed
-.Pp
-Note that floating-point arguments are only available with the
-.Dv FLOATING_POINT
-option defined at compile-time.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "struct event *"
@@ -104,18 +117,41 @@ option defined at compile-time.
 .Pp
 The
 .Fn event_new
-function registers a new event handler to service events called
+function registers a new event handler to service events of type
 .Fa name .
 .Fa obj
 will be passed as the first argument to the event handler function.
 .Fa handler
 points to the event-handling function.
-The
 .Fa fmt
-argument is a
-.Xr printf 3
-style format string.
-The following arguments will be inserted at the start of the evarg array.
+is a format string and the arguments following it are inserted at the start of
+the
+.Fa evarg
+array, followed by the arguments to
+.Fn event_post .
+.Pp
+The following sequences are valid in
+.Fa fmt :
+.Bl -tag -compact -width "diouxX"
+.It diouxX
+Converted to
+.Ft int
+.It DOU
+Converted to
+.Ft long int
+.It eEfgG
+Converted to
+.Ft double
+.It c
+Converted to
+.Ft char
+.It s
+Converted to
+.Ft char *
+.It p
+Converted to
+.Ft void *
+.El
 .Pp
 The
 .Fn event_post
@@ -127,14 +163,13 @@ For events of type
 a new thread is created in order to service the event (assuming that the
 .Dv THREADS
 compile-time option was enabled).
-The
 .Fa fmt
-argument is a
-.Xr printf 3
-like format string.
-The arguments following
-.Fa fmt
-will be inserted at the end of the evarg array.
+is a format string and the arguments following it are inserted
+after the arguments registed by
+.Fn event_new
+in the
+.Fa evarg
+array.
 .Pp
 The
 .Fn event_forward
