@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.7 2003/11/20 04:47:34 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.8 2003/12/09 06:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -265,6 +265,27 @@ const struct unit frequency_units[] = {
 	{ "kHz",		N_("Kilohertz"),	1000,		NULL },
 	{ "MHz",		N_("Megahertz"),	1000000,	NULL },
 	{ "GHz",		N_("Gigahertz"),	1000000000,	NULL },
+	{ NULL,			NULL,			0,		NULL }
+};
+
+/* Units of pressure */
+const struct unit pressure_units[] = {
+	{ "Pa",			N_("Pascals"),		1,		NULL },
+	{ "hPa",		N_("Hectopascals"),	100,		NULL },
+	{ "Mba",		N_("Millibars"),	100,		NULL },
+	{ "kPa",		N_("Kilopascals"),	1000,		NULL },
+	{ "Bar",		N_("Bars"),		100000,		NULL },
+	{ "N/m\xc2\xb2",	N_("Newtons per square meters"), 1,	NULL },
+	{ "Kg-f/m\xc2\xb2",	N_("Kg-force per square meters"), 9.80665,
+	  NULL },
+	{ "Cm H\xc2\xb2O",	N_("Centimeters of water"), 98.0665,	NULL },
+	{ "In H\xc2\xb2O",	N_("Inches of water"),	249.08891,	NULL },
+	{ "Cm Hg",		N_("Centimeters of mercury"), 1333.22,	NULL },
+	{ "Ft H\xc2\xb2O",	N_("Feet of water"),	2989.06692,	NULL },
+	{ "In Hg",		N_("Inches of mercury"), 3386.388,	NULL },
+	{ "m H\xc2\xb2O",	N_("Meters of water"),	9806.65,	NULL },
+	{ "Atm",		N_("Atmospheres"),	101325,		NULL },
+	{ "Ki/In\xc2\xb2",	N_("Kips per square inch"), 6894760,	NULL },
 	{ NULL,			NULL,			0,		NULL }
 };
 
