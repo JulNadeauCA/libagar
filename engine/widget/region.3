@@ -1,4 +1,4 @@
-.\"	$Csoft: region.3,v 1.5 2002/09/07 04:30:24 vedge Exp $
+.\"	$Csoft: region.3,v 1.6 2003/01/01 05:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -51,10 +51,12 @@ structures.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct region *
-.Fn region_new "struct window *parent" "int flags" "int rx" "int ry" "int rw" "int rh"
+.Fn region_new "struct window *parent" "int flags" "int rx" \
+               "int ry" "int rw" "int rh"
 .Pp
 .Ft void
-.Fn region_init "struct region *region" "int flags" "int rx" "int ry" "int rw" "int rh"
+.Fn region_init "struct region *region" "int flags" "int rx" \
+                "int ry" "int rw" "int rh"
 .Pp
 .Ft void
 .Fn region_attach "struct region *parent" "struct widget *child"
@@ -75,25 +77,51 @@ function initializes a
 .Nm
 structure.
 The
-.Fa rx ,
-.Fa ry ,
+.Fa rx
+and
+.Fa ry
+arguments define the position of the region inside the window, and have the
+following meanings:
+.Pp
+.Bl -tag -compact -width ">= 0"
+.It >= 0
+A value in % scaled to the window size.
+.It -1
+With
+.Dv REGION_HALIGN ,
+position at the left of the last region.
+With
+.Dv REGION_VALIGN ,
+position at the bottom of the last region.
+.El
+.Pp
+The
 .Fa rw
 and
 .Fa rh
-arguments are percentiles of the window space, or fixed coordinates if
-negative.
-The region takes all remaining space if coordinates are zero.
+arguments define the size of the region, and have the following meanings:
+.Pp
+.Bl -tag -compact -width ">= 0"
+.It > 0
+A value in % scaled to the view size.
+.It 0
+With
+.Dv REGION_HALIGN ,
+all remaining space at the right of the last region.
+With
+.Dv REGION_VALIGN ,
+all remaining space at the bottom the last region.
+.El
+.Pp
 The
 .Fa flags
-can be changed at runtime, and may include:
+may include:
 .Pp
 .Bd -literal
 #define REGION_HALIGN	0x01	/* Align widgets horizontally */
 #define REGION_VALIGN	0x02	/* Align widgets vertically */
-#define REGION_LEFT	0x04	/* Left/top justify widgets */
-#define REGION_CENTER	0x08	/* Center widgets */
-#define REGION_RIGHT	0x10	/* Right/down justify widgets */
-#define REGION_BORDER	0x20	/* Draw region decorations */
+#define REGION_CLIPPING	0x04	/* Set the clipping rectangle to the region
+			 	   area before drawing */
 .Ed
 .Pp
 .Sh EVENTS
@@ -111,6 +139,7 @@ Widget detached from region
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
+.Xr view 3 ,
 .Xr widget 3 ,
 .Xr window 3
 .Sh HISTORY
