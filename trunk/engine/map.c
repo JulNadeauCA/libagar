@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.89 2002/05/19 14:32:54 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.90 2002/05/25 08:56:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -36,14 +36,15 @@
 
 #include <libfobj/fobj.h>
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/physics.h>
-#include <engine/version.h>
+#include "engine.h"
+#include "map.h"
+#include "physics.h"
+#include "version.h"
+#include "config.h"
 
-#include <engine/mapedit/mapedit.h>
+#include "mapedit/mapedit.h"
 
-#include <engine/widget/text.h>
+#include "widget/text.h"
 
 static const struct version map_ver = {
 	"agar map",
@@ -187,7 +188,7 @@ map_focus(struct map *m)
 
 /*
  * Display a particular map.
- * Map must be locked, world must not.
+ * Map and world must be locked.
  */
 void
 map_unfocus(struct map *m)
@@ -195,12 +196,13 @@ map_unfocus(struct map *m)
 	m->view->map = NULL;
 	m->flags &= ~(MAP_FOCUSED);	/* Will stop the rendering thread */
 
-	pthread_mutex_lock(&world->lock);
+#if 0
+	/* XXX bleah */
 	world->curmap = NULL;
 	if (curmapedit != NULL) {
 		world_detach(world, curmapedit);
 	}
-	pthread_mutex_unlock(&world->lock);
+#endif
 }
 
 /*
@@ -666,6 +668,7 @@ map_load(void *ob, int fd)
 	struct map *m = (struct map *)ob;
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
+	static int first = 0;
 
 	/* The viewport (and the map mask), might change sizes. */
 	text_destroyall();
@@ -763,6 +766,11 @@ map_load(void *ob, int fd)
 
 	m->redraw++;
 	free(pobjs);
+
+	if (!first++) {
+		config_window(config);	/* XXX special case */
+	}
+	
 	return (0);
 }
 
