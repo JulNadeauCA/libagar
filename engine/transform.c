@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.5 2003/03/18 06:34:27 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.6 2003/03/24 12:05:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,10 +27,9 @@
  */
 
 #include <engine/engine.h>
+
 #include <engine/map.h>
 #include <engine/view.h>
-
-#include <libfobj/fobj.h>
 
 #include <string.h>
 
@@ -50,26 +49,39 @@ enum {
 	TRANSFORM_MAX_ARGS =	64
 };
 
+struct transform *
+transform_new(enum transform_type type, int nargs, Uint32 *args)
+{
+	struct transform *trans;
+
+	trans = Malloc(sizeof(struct transform));
+	if (transform_init(trans, type, nargs, args) == -1) {
+		free(trans);
+		return (NULL);
+	}
+	return (trans);
+}
+
 int
 transform_init(struct transform *trans, enum transform_type type,
-    int argc, Uint32 *argv)
+    int nargs, Uint32 *args)
 {
 	int i;
 
-	dprintf("type %d, %d args\n", type, argc);
-
-	if (argc > TRANSFORM_MAX_ARGS) {
+	if (nargs > TRANSFORM_MAX_ARGS) {
 		error_set("too many args");
 		return (-1);
 	}
 
+	dprintf("type %d, %d args\n", type, nargs);
+
 	memset(trans, 0, sizeof(struct transform));
 	trans->type = type;
 	trans->func = NULL;
-	trans->nargs = argc;
-	if (argc > 0) {
-		trans->args = emalloc(argc * sizeof(Uint32));
-		memcpy(trans->args, argv, argc * sizeof(Uint32));
+	trans->nargs = nargs;
+	if (nargs > 0) {
+		trans->args = Malloc(nargs * sizeof(Uint32));
+		memcpy(trans->args, args, nargs * sizeof(Uint32));
 	} else {
 		trans->args = NULL;
 	}
@@ -94,22 +106,6 @@ transform_destroy(struct transform *trans)
 	Free(trans->args);
 }
 
-void
-transform_copy(struct transform *src, struct transform *dst)
-{
-	dst->type = src->type;
-	dst->func = src->func;
-
-	dst->nargs = src->nargs;
-	Free(dst->args);
-	if (src->args != NULL) {
-		dst->args = emalloc(src->nargs * sizeof(Uint32));
-		memcpy(dst->args, src->args, src->nargs * sizeof(Uint32));
-	} else {
-		dst->args = NULL;
-	}
-}
-
 __inline__ int
 transform_compare(struct transform *tr1, struct transform *tr2)
 {
@@ -132,7 +128,7 @@ transform_load(int fd, struct transform *trans)
 	}
 
 	Free(trans->args);
-	trans->args = emalloc(trans->nargs * sizeof(Uint32));
+	trans->args = Malloc(trans->nargs * sizeof(Uint32));
 	for (i = 0; i < trans->nargs; i++)
 		trans->args[i] = read_uint32(fd);
 
@@ -164,14 +160,55 @@ transform_save(void *bufp, struct transform *trans)
 }
 
 static void
-transform_hflip(SDL_Surface **su, int argc, Uint32 *argv)
+transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 {
-	/* ... */
+	SDL_Surface *su = *sup;
+	Uint8 *row, *rowp;
+	Uint8 *fb = su->pixels;
+	int x, y;
+
+	row = Malloc(su->pitch);
+
+	for (y = 0; y < su->h; y++) {
+		memcpy(row, fb, su->pitch);
+		rowp = row + su->pitch - su->format->BytesPerPixel;
+		for (x = 0; x < su->w; x++) {
+			switch (su->format->BytesPerPixel) {
+			case 4:
+				*(Uint32 *)fb = *(Uint32 *)rowp;
+				break;
+			case 3:
+			case 2:
+				*(Uint16 *)fb = *(Uint16 *)rowp;
+				break;
+			case 1:
+				*fb = *rowp;
+				break;
+			}
+			fb += su->format->BytesPerPixel;
+			rowp -= su->format->BytesPerPixel;
+		}
+	}
+	free(row);
 }
 
 static void
-transform_vflip(SDL_Surface **su, int argc, Uint32 *argv)
+transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 {
-	/* ... */
+	SDL_Surface *su = *sup;
+	size_t totsize = su->h*su->pitch;
+	Uint8 *row, *rowbuf;
+	Uint8 *fb = su->pixels;
+	int y;
+
+	rowbuf = Malloc(totsize);
+	memcpy(rowbuf, fb, totsize);
+	row = rowbuf + totsize - su->pitch;
+	for (y = 0; y < su->h; y++) {
+		memcpy(fb, row, su->pitch);
+		row -= su->pitch;
+		fb += su->pitch;
+	}
+	free(rowbuf);
 }
 

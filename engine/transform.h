@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.2 2003/03/18 06:34:27 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.3 2003/03/24 12:05:37 vedge Exp $	*/
 /*	Public domain	*/
 
 enum transform_type {
@@ -14,11 +14,13 @@ struct transform {
 	SLIST_ENTRY(transform)	transforms;
 };
 
-int	transform_init(struct transform *, enum transform_type, int, Uint32 *);
+struct transform *transform_new(enum transform_type, int, Uint32 *);
+int		  transform_init(struct transform *, enum transform_type,
+		      int, Uint32 *);
+
 int	transform_load(int, struct transform *);
 void	transform_save(void *, struct transform *);
 void	transform_destroy(struct transform *);
 
-void		transform_copy(struct transform *, struct transform *);
 __inline__ int	transform_compare(struct transform *, struct transform *);
 
