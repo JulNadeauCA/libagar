@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.23 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.24 2002/06/09 10:27:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/ailment.h>
@@ -27,14 +27,6 @@ struct character {
 	SLIST_ENTRY(character) wchars;	/* Active characters */
 
 	pthread_mutex_t	lock;	/* Lock on whole structure */
-};
-
-/* Sprites */
-enum {
-	CHAR_ICON,
-	CHAR_IDLE,
-	CHAR_UP,
-	CHAR_DOWN
 };
 
 #define CHARACTER(ob)	((struct character *)(ob))
