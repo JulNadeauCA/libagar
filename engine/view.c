@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.73 2002/11/09 07:43:52 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.74 2002/11/12 02:25:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -215,7 +215,7 @@ view_destroy(void *p)
 		deprintf("freeing root map: mask");
 		rootmap_free_mask(v);
 		deprintf(" rects");
-		frootmap_free_maprects(v);
+		rootmap_free_maprects(v);
 		free(v->rootmap->rects);
 		deprintf(".\n");
 	}
