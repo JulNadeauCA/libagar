@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.27 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.28 2003/03/26 10:04:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/snprintf.h>
 
 #include <engine/engine.h>
 #include <engine/version.h>
@@ -90,16 +92,21 @@ merge_create_brush(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
 	struct textbox *name_tbox = argv[2].p;
-	char *brush_name, *m_name;
+	char brush_name[OBJECT_NAME_MAX];
+	char m_name[OBJECT_NAME_MAX];
 	struct map *m;
 
-	brush_name = textbox_string(name_tbox);
-	if (strcmp(brush_name, "") == 0) {
+	if (textbox_copy_string(name_tbox, brush_name, sizeof(brush_name) - 8)
+	    > sizeof(brush_name) - 8) {
+		text_msg("Error", "Brush name too big");
+		return;
+	}
+	if (brush_name[0] == '\0') {
 		text_msg("Error", "No brush name given");
 		return;
 	}
 	
-	Asprintf(&m_name, "brush(%s)", brush_name);
+	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
 		text_msg("Error", "%s already exists", m_name);
 		return;
@@ -124,8 +131,6 @@ merge_create_brush(int argc, union evarg *argv)
 	tlist_unselect_all(mer->brushes_tl);
 	tlist_insert_item_selected(mer->brushes_tl, NULL, m_name, m);
 	textbox_printf(name_tbox, "");
-	
-	free(m_name);
 }
 
 static void
@@ -168,16 +173,15 @@ merge_remove_brush(int argc, union evarg *argv)
 		if (it->selected) {
 			struct object *brush = it->p1;
 			struct window *win;
-			char *wname;
+			char wname[OBJECT_NAME_MAX];
 
-			Asprintf(&wname, "win-mapedit-tool-merge-%s",
-			    OBJECT(brush)->name);
+			snprintf(wname, sizeof(wname),
+			    "win-mapedit-tool-merge-%s", OBJECT(brush)->name);
 			if ((win = view_window_exists(wname)) != NULL) {
 				window_hide(win);
 				view_detach(win);
 			}
-			free(wname);
-			
+
 			tlist_remove_item(it);
 			SLIST_REMOVE(&mer->brushes, brush, object, wobjs);
 			object_destroy(brush);
@@ -258,9 +262,8 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 	struct map *dm = mv->map;
 
 	/* Avoid circular references. XXX ugly */
-	if (strncmp(OBJECT(dm)->name, "brush(", 6) == 0) {
+	if (strncmp(OBJECT(dm)->name, "brush(", 6) == 0)
 		return;
-	}
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *sm;
