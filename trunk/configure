@@ -157,9 +157,9 @@ SHAREDIR="\"$PREFIX/share/cave\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
 echo "#endif /* SHAREDIR */" >> config/sharedir.h
-TTFDIR="$PREFIX/share/cave/ttf"
+TTFDIR="$PREFIX/share/cave/fonts"
 echo TTFDIR=$TTFDIR >> Makefile.config
-TTFDIR="\"$PREFIX/share/cave/ttf\""
+TTFDIR="\"$PREFIX/share/cave/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
 echo "#endif /* TTFDIR */" >> config/ttfdir.h
