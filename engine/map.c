@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.99 2002/06/10 04:27:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.100 2002/06/12 20:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -132,7 +132,7 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	object_init(&m->obj, "map", name, media, (media != NULL) ? OBJ_ART : 0,
 	    &map_ops);
 	sprintf(m->obj.saveext, "m");
-	m->flags = flags;
+	m->flags = (flags != 0) ? flags : MAP_2D;
 	m->redraw = 0;
 	m->fps = 100;		/* XXX pref */
 	m->mapw = 0;
@@ -148,8 +148,7 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 /*
  * Display a particular map.
  *
- * This map, the current map and the world must not be locked by the
- * caller thread. World must be locked.
+ * World must be locked, map must not.
  */
 void
 map_focus(struct map *m)
@@ -165,9 +164,10 @@ map_focus(struct map *m)
 
 	pthread_mutex_lock(&m->lock);
 	m->flags |= MAP_FOCUSED;
+	m->redraw++;
 	pthread_mutex_unlock(&m->lock);
-	
-	mainview->map = m;		/* XXX */
+
+	mainview->map = m;		/* XXX atomic */
 }
 
 /*
@@ -335,12 +335,12 @@ map_destroy(void *p)
 static __inline__ void
 map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
+	SDL_Rect rd;
 	struct noderef *nref;
 	struct anim *anim;
 	SDL_Surface *src;
-	SDL_Rect rd;
-	Uint32 t;
 	int i, j, frame;
+	Uint32 t;
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {

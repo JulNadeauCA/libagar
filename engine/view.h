@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.28 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.29 2002/06/12 20:38:49 vedge Exp $	*/
 /*	Public domain	*/
 
 enum {
@@ -135,7 +135,6 @@ void		 view_detach(void *);
 void		 view_destroy(void *);
 
 void		 view_fullscreen(int);
-void		 view_center(int, int);
 void		 view_maskfill(SDL_Rect *, int);
 void		 view_redraw(void);
 SDL_Surface	*view_surface(int, int, int);
@@ -143,5 +142,7 @@ void		 view_focus(struct window *);
 #ifdef DEBUG
 void		 view_dumpmask(void);
 #endif
-void		 scroll(struct map *, int);
+
+void		 view_center(struct map *, int, int);
+void		 view_scroll(struct map *, int);
 
