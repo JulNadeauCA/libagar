@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.62 2002/03/17 05:32:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.63 2002/03/17 09:15:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -239,6 +239,7 @@ node_delref(struct node *node, struct noderef *nref)
 {
 	if (nref->flags & MAPREF_ANIM) {
 		node->nanims--;
+		node->flags &= ~(MAPREF_ANIM);
 	}
 	
 	TAILQ_REMOVE(&node->nrefsh, nref, nrefs);
@@ -530,7 +531,8 @@ map_draw(struct map *m)
 
 			node = &m->map[x][y];
 
-			if (node->nanims > 0 || (node->flags & NODE_ANIM)) {
+			if (node->nanims > 0 || (node->flags &
+			   (NODE_ANIM|NODE_OVERLAP))) {
 				/* map_animate() shall handle this. */
 				continue;
 			}
