@@ -1,29 +1,31 @@
-/*	$Csoft: mapedit.h,v 1.67 2003/02/02 21:13:59 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.68 2003/02/04 02:22:12 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
 struct gendir;
 struct tool;
 
+enum {
+	MAPEDIT_STAMP,
+	MAPEDIT_ERASER,
+	MAPEDIT_MAGNIFIER,
+	MAPEDIT_RESIZE,
+	MAPEDIT_PROPEDIT,
+	MAPEDIT_SELECT,
+	MAPEDIT_SHIFT,
+	MAPEDIT_MERGE,
+	MAPEDIT_NTOOLS
+};
+
 struct mapedit {
 	struct object	obj;
-
 	struct {
 		struct window	*toolbar;
 		struct window	*objlist;
 		struct window	*new_map;
 		struct window	*load_map;
 	} win;
-	struct {
-		struct tool	*stamp;
-		struct tool	*eraser;
-		struct tool	*magnifier;
-		struct tool	*resize;
-		struct tool	*propedit;
-		struct tool	*select;
-		struct tool	*shift;
-		struct tool	*merge;
-	} tools;
+	struct tool	*tools[MAPEDIT_NTOOLS];
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
 };
@@ -70,7 +72,9 @@ enum {
 	MAPEDIT_TOOL_MERGE
 };
 
-void		 mapedit_init(void);
+void	 mapedit_init(void);
+int	 mapedit_load(void *, int);
+int	 mapedit_save(void *, int);
 
 struct window	*objq_window(void);
 void		 fileops_new_map(int, union evarg *);
