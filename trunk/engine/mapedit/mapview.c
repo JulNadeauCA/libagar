@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.100 2003/04/17 08:22:38 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.101 2003/04/17 08:33:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -93,7 +93,8 @@ static void	mapview_effect_selection(struct mapview *);
 static __inline__ int
 mapview_selbounded(struct mapview *mv, int x, int y)
 {
-	return (!mv->esel.set ||
+	return (!prop_get_bool(&mapedit, "sel-bounded-edition") ||
+	    !mv->esel.set ||
 	    (x >= mv->esel.x &&
 	     y >= mv->esel.y &&
 	     x <  mv->esel.x + mv->esel.w &&
@@ -624,8 +625,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 			if (TOOL_OPS(tool)->effect != NULL &&
 			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
-			    (!prop_get_bool(&mapedit, "sel-bounded-edition") ||
-			     mapview_selbounded(mv, mv->cx, mv->cy))) {
+			    (mapview_selbounded(mv, mv->cx, mv->cy))) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
 			} else if (TOOL_OPS(tool)->mouse != NULL) {
