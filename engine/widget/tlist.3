@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.21 2003/06/06 03:18:15 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.22 2003/06/08 00:21:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -106,10 +106,10 @@ function sets the position of the scrollbar to
 .nr nS 1
 .Ft "struct tlist_item *"
 .Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" \
-                      "const char *text" "void *p1"
+                      "const char *text" "const void *p1"
 .Pp
 .Fn tlist_insert_item_head "struct tlist *tlist" "SDL_Surface *icon" \
-                           "const char *text" "void *p1"
+                           "const char *text" "const void *p1"
 .Pp
 .Ft "void"
 .Fn tlist_remove_item "struct tlist *tlist" "struct tlist_item *item"

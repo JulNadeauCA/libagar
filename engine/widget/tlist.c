@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.66 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.67 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -446,7 +446,7 @@ tlist_visible_childs(struct tlist *tl, struct tlist_item *cit)
 
 static struct tlist_item *
 tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
-    void *p1)
+    const void *p1)
 {
 	struct tlist_item *it;
 
@@ -459,7 +459,7 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
 
 	strlcpy(it->text, text, sizeof(it->text));
 	it->text_len = strlen(text);
-	it->p1 = p1;
+	it->p1 = (void *)p1;
 	tlist_set_item_icon(tl, it, icon);			/* Square */
 	return (it);
 }
@@ -467,7 +467,7 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
 /* Add an item to the list. */
 struct tlist_item *
 tlist_insert_item(struct tlist *tl, SDL_Surface *icon, const char *text,
-    void *p1)
+    const void *p1)
 {
 	struct tlist_item *it;
 
@@ -484,7 +484,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, const char *text,
 
 struct tlist_item *
 tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
-    void *p1)
+    const void *p1)
 {
 	struct tlist_item *it;
 
