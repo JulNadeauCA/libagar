@@ -141,7 +141,7 @@ direction_update(struct direction *dir, struct map *map, int *mapx, int *mapy)
 		}
 		if (dir->current & DIR_LEFT) {
 			dir->moved |= DIR_LEFT;
-			if (dir->flags & DIR_LEFT) {
+			if (dir->flags & DIR_ONMAP) {
 				decrease(mapx, 1, 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapx - *mapx) >= 0) {
@@ -152,7 +152,7 @@ direction_update(struct direction *dir, struct map *map, int *mapx, int *mapy)
 		}
 		if (dir->current & DIR_RIGHT) {
 			dir->moved |= DIR_RIGHT;
-			if (dir->flags & DIR_RIGHT) {
+			if (dir->flags & DIR_ONMAP) {
 				increase(mapx, 1, map->mapw - 1);
 				if ((dir->flags & DIR_SCROLL) &&
 				    (map->view->mapx - *mapx) <=
