@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tile.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -54,32 +54,60 @@ tile_init(struct tile *t, const char *name)
 }
 
 void
-tile_scale(struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
+tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 {
 	Uint32 sflags = SDL_SWSURFACE;
 
-	if (flags & TILE_CKEYING)	sflags |= SDL_SRCCOLORKEY;
-	if (flags & TILE_BLENDING)	sflags |= SDL_SRCALPHA;
+	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
+	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 
 	if (t->su != NULL) {
 		SDL_FreeSurface(t->su);
 	}
 	t->flags = flags;
-	t->su = SDL_CreateRGBSurface(sflags, w, h, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	);
-	if (t->su == NULL) {
+	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
+	    ts->fmt->Rmask,
+	    ts->fmt->Gmask,
+	    ts->fmt->Bmask,
+	    ts->fmt->Amask);
+
+	if (t->su == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+
+#if 0
+	dprintf("Surface masks=%08x,%08x,%08x,%08x\n",
+	    t->su->format->Rmask,
+	    t->su->format->Gmask,
+	    t->su->format->Bmask,
+	    t->su->format->Amask);
+	dprintf("Surface shifts=%08x,%08x,%08x,%08x\n",
+	    t->su->format->Rshift,
+	    t->su->format->Gshift,
+	    t->su->format->Bshift,
+	    t->su->format->Ashift);
+	dprintf("Surface losses=%08x,%08x,%08x,%08x\n",
+	    t->su->format->Rloss,
+	    t->su->format->Gloss,
+	    t->su->format->Bloss,
+	    t->su->format->Aloss);
+	dprintf("Surface colorkey=%08x\n", t->su->format->colorkey);
+	dprintf("Surface alpha=%02x\n", t->su->format->alpha);
+#endif
+}
+
+void
+tile_generate(struct tile *t)
+{
+	u_int i;
+
+	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
+
+	for (i = 0; i < t->nfeatures; i++) {
+		struct tile_feature *tft = &t->features[i];
+		struct feature *ft = tft->ft;
+
+		if (ft->ops->apply != NULL)
+			ft->ops->apply(ft, t, tft->x, tft->y);
 	}
 }
 
@@ -146,7 +174,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	flags = read_uint8(buf);
 	w = read_uint16(buf);
 	h = read_uint16(buf);
-	tile_scale(t, w, h, flags);
+	tile_scale(ts, t, w, h, flags);
 
 	nfeatures = read_uint32(buf);
 	dprintf("%s: %ux%u, %u features\n", t->name, w, h, nfeatures);
@@ -172,6 +200,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 		}
 		tile_add_feature(t, ft);
 	}
+	tile_generate(t);
 	return (0);
 }
 
@@ -198,17 +227,124 @@ close_tile(int argc, union evarg *argv)
 static void
 insert_fill(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tile *t = argv[2].p;
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *feat_tl = argv[3].p;
+	struct tlist_item *feat_it;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
 	struct fill *fill;
 
 	fill = Malloc(sizeof(struct fill), M_RG);
-	fill_init(fill, "Fill #0", 0);
+	fill_init(fill, ts, 0);
 	TAILQ_INSERT_TAIL(&ts->features, FEATURE(fill), features);
 	tile_add_feature(t, fill);
+	tile_generate(t);
 
-	if (FEATURE(fill)->ops->edit != NULL)
-		FEATURE(fill)->ops->edit(fill);
+	if (tv->edit_mode) {
+		feature_close(tv, pwin);
+	}
+	feature_edit(tv, FEATURE(fill), pwin);
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, feat_tl, "tlist-poll", NULL);
+	tlist_unselect_all(feat_tl);
+	TAILQ_FOREACH(feat_it, &feat_tl->items, items) {
+		struct tile_feature *tft;
+
+		if (strcmp(feat_it->class, "feature") != 0) {
+			continue;
+		}
+		tft = feat_it->p1;
+		if (tft->ft == FEATURE(fill)) {
+			tlist_select(feat_tl, feat_it);
+			break;
+		}
+	}
+}
+
+static void
+poll_features(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	u_int i;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&ts->lock);
+
+	for (i = 0; i < t->nfeatures; i++) {
+		char label[TLIST_LABEL_MAX];
+		struct tile_feature *tft = &t->features[i];
+		struct feature_sketch *fsk;
+		struct feature_pixmap *fpx;
+		struct tlist_item *it;
+
+		it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
+		    tft->ft->name, tft->x, tft->y,
+		    tft->visible ? "" : " (invisible)");
+		it->class = "feature";
+		it->p1 = tft;
+		it->depth = 0;
+
+		if (!TAILQ_EMPTY(&tft->ft->sketches) ||
+		    !TAILQ_EMPTY(&tft->ft->pixmaps)) {
+			it->flags |= TLIST_HAS_CHILDREN;
+		}
+		if (!tlist_visible_children(tl, it))
+			continue;
+
+		TAILQ_FOREACH(fsk, &tft->ft->sketches, sketches) {
+			it = tlist_insert(tl, ICON(DRAWING_ICON),
+			    "%s (%d,%d) %s", fsk->sk->name, fsk->x, fsk->y,
+			    fsk->visible ? "" : " (invisible)");
+			it->class = "sketch";
+			it->p1 = tft;
+		}
+		TAILQ_FOREACH(fpx, &tft->ft->pixmaps, pixmaps) {
+			it = tlist_insert(tl, ICON(DRAWING_ICON),
+			    "%s (%d,%d) %s", fpx->px->name, fpx->x, fpx->y,
+			    fpx->visible ? "" : " (invisible)");
+			it->class = "pixmap";
+			it->p1 = tft;
+		}
+	}
+
+	pthread_mutex_unlock(&ts->lock);
+	tlist_restore_selections(tl);
+}
+
+static void
+edit_feature(int argc, union evarg *argv)
+{
+	struct button *fbu = argv[0].p;
+	struct tileview *tv = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct window *pwin = argv[3].p;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
+	struct tlist_item *it;
+
+	if (tv->edit_mode == 0) {
+		feature_close(tv, pwin);
+		return;
+	} else {
+		if ((it = tlist_item_selected(tl)) == NULL) {
+			tv->edit_mode = 0;
+			return;
+		}
+	}
+	
+	if (strcmp(it->class, "feature") == 0) {
+		struct tile_feature *tft = it->p1;
+
+		feature_edit(tv, tft->ft, pwin);
+	} else if (strcmp(it->class, "sketch") == 0) {
+		//
+	} else if (strcmp(it->class, "pixmap") == 0) {
+		//
+	}
 }
 
 struct window *
@@ -216,19 +352,30 @@ tile_edit(struct tileset *ts, struct tile *t)
 {
 	struct window *win;
 	struct box *box;
-	struct tileview *tv;
 	struct AGMenu *menu;
 	struct AGMenuItem *item;
+	struct tileview *tv;
+	struct tlist *feat_tl;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
 	event_new(win, "window-close", close_tile, "%p,%p", ts, t);
+	
+	tv = Malloc(sizeof(struct tileview), M_OBJECT);
+	tileview_init(tv, ts, t, TILEVIEW_AUTOREGEN);
+	
+	feat_tl = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(feat_tl, TLIST_POLL|TLIST_TREE);
+	WIDGET(feat_tl)->flags &= ~(WIDGET_WFILL);
+	tlist_prescale(feat_tl, _("Feature #00 (0,0)"), 10);
+	event_new(feat_tl, "tlist-poll", poll_features, "%p,%p", ts, t);
 
 	menu = ag_menu_new(win);
 	item = ag_menu_add_item(menu, _("Features"));
 	{
 		ag_menu_action(item, _("Fill"), NULL,
-		    SDLK_f, KMOD_CTRL, insert_fill, "%p,%p", ts, t);
+		    SDLK_f, KMOD_CTRL, insert_fill, "%p,%p,%p", tv, win,
+		    feat_tl);
 		    
 		ag_menu_action(item, _("Sketch projection"), NULL,
 		    SDLK_s, KMOD_CTRL, NULL, "%p,%p", ts, t);
@@ -247,11 +394,74 @@ tile_edit(struct tileset *ts, struct tile *t)
 	{
 	}
 
-	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL|BOX_FRAME);
+	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_FRAME);
+	box_set_padding(box, 0);
+	box_set_spacing(box, 0);
 	{
-		tv = tileview_new(box, ts, t);
+		struct box *fbox;
+		struct button *fbu;
+
+		fbox = box_new(box, BOX_VERT, BOX_HFILL|BOX_FRAME);
+		box_set_padding(fbox, 0);
+		box_set_spacing(fbox, 0);
+		{
+			object_attach(fbox, feat_tl);
+	
+			fbu = button_new(fbox, _("Edit"));
+			button_set_sticky(fbu, 1);
+			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
+			WIDGET(fbu)->flags |= WIDGET_WFILL;
+		}
+		
+		object_attach(box, tv);
+		widget_focus(tv);
+		
+		event_new(fbu, "button-pushed", edit_feature, "%p,%p,%p", tv,
+		    feat_tl, win);
 	}
 
 	t->used++;
 	return (win);
+}
+
+void
+tile_put_pixel(struct tile *t, int x, int y, Uint32 color)
+{
+	Uint8 *dst = (Uint8 *)t->su->pixels + y*t->su->pitch +
+	    x*t->su->format->BytesPerPixel;
+
+	if (x < 0 || y < 0 ||
+	    x > t->su->w || y > t->su->h)
+		return;
+
+	*(Uint32 *)dst = color;
+}
+
+void
+tile_blend_rgb(struct tile *t, int x, int y, enum tile_blend_mode mode,
+    Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	Uint8 dr, dg, db, da, ba;
+	Uint8 *dst;
+
+	if (x < 0 || y < 0 ||
+	    x > t->su->w || y > t->su->h)
+		return;
+
+	dst = (Uint8 *)t->su->pixels + y*t->su->pitch +
+	    x*t->su->format->BytesPerPixel;
+	SDL_GetRGBA(*(Uint32 *)dst, t->su->format, &dr, &dg, &db, &da);
+
+	if (mode == TILE_BLEND_SRCALPHA) {
+		ba = a;
+	} else if (mode == TILE_BLEND_DSTALPHA) {
+		ba = da;
+	} else {
+		ba = (Uint8)(da+a)/2;
+	}
+
+	*(Uint32 *)dst = SDL_MapRGB(t->su->format,
+	    (((r - dr) * ba) >> 8) + dr,
+	    (((g - dg) * ba) >> 8) + dg,
+	    (((b - db) * ba) >> 8) + db);
 }
