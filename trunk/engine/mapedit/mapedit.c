@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.75 2002/04/14 04:34:05 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.76 2002/04/18 04:03:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -37,7 +37,12 @@
 #include <engine/version.h>
 #include <engine/map.h>
 #include <engine/physics.h>
+
+#include <engine/widget/widget.h>
 #include <engine/widget/text.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
@@ -76,12 +81,17 @@ enum {
 	BG_VERTICAL
 };
 
+static struct window *coords_win = NULL;
+static struct label *coords_label;
+
+
 static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_cursor_tick(Uint32, void *);
 static Uint32	mapedit_lists_tick(Uint32, void *);
 static void	mapedit_bg(SDL_Surface *, SDL_Rect *, Uint32);
 static void	mapedit_state(struct mapedit *, SDL_Rect *);
 static void	mapedit_key(struct mapedit *, SDL_Event *);
+static void	mapedit_show_coords(struct mapedit *);
 
 struct mapedit *
 mapedit_create(char *name)
@@ -426,9 +436,7 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 	}
 }
 
-/*
- * Draw the map edition status indicator.
- */
+/* Draw the map edition status indicator. */
 static void
 mapedit_state(struct mapedit *med, SDL_Rect *rd)
 {
@@ -744,7 +752,11 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			mapedit_nodeflags(med, node, NODE_WALK);
 			break;
 		case SDLK_c:
-			mapedit_nodeflags(med, node, NODE_CLIMB);
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				mapedit_show_coords(med);
+			} else {
+				mapedit_nodeflags(med, node, NODE_CLIMB);
+			}
 			break;
 		case SDLK_p:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -805,7 +817,6 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 	}
 }
 
-
 void
 mapedit_event(void *ob, SDL_Event *ev)
 {
@@ -816,6 +827,23 @@ mapedit_event(void *ob, SDL_Event *ev)
 	
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
+		if (coords_win != NULL) {
+			if (ev->motion.y <= med->map->tileh ||
+			    med->mmapx >= med->map->view->mapw-1) {
+				sprintf(coords_label->caption,
+				    "%s:%d (0x%x)",
+				    OBJECT(med->curobj->pobj)->name,
+				    med->curoffs, med->curflags);
+			} else {
+				sprintf(coords_label->caption,
+				    "%d,%d [%s:%d,%d]",
+				    ev->motion.x, ev->motion.y,
+				    OBJECT(med->map)->name,
+				    med->map->view->mapx + med->mmapx - 1,
+				    med->map->view->mapy + med->mmapy - 1);
+			}
+			coords_win->redraw++;
+		}
 		mouse_motion(med, ev);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
@@ -1054,5 +1082,28 @@ mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 	} else if (flags & NODE_HASTE) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_HASTE), NULL,
 		    m->view->v, rd);
+	}
+}
+
+static void
+mapedit_show_coords(struct mapedit *med)
+{
+	struct window *nw;
+
+	if (coords_win == NULL) {
+		nw = window_create(med->map->view, "coords-window",
+		    "Coordinates", WINDOW_SOLID, 0, 64, 64, 224, 32);
+
+		coords_label = label_create(nw, "abs-label", "...",
+		    0, 7, 7);
+		object_link(coords_label);
+
+		object_link(nw);
+		coords_win = nw;
+	} else {
+		nw = coords_win;
+		object_unlink(nw);
+		object_destroy(nw);
+		coords_win = NULL;
 	}
 }
