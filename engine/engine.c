@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.30 2002/04/23 13:28:01 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.31 2002/04/23 13:36:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -171,22 +171,22 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	}
 
 	/* Initialize the world structure. */
-	world = world_create(gameinfo->prog);
-	if (world == NULL) {
-		fatal("world_create\n");
-		return (-1);
-	}
+	world = (struct world *)emalloc(sizeof(struct world));
+	world_init(world, gameinfo->prog);
 	
 	/* Initialize the font engine. */
-	if (text_init() != 0) {
+	if (text_engine_init() != 0) {
 		return (-1);
 	}
 	
 	/* Initialize input devices. */
-	keyboard = input_create(INPUT_KEYBOARD, 0);
-	joy = input_create(INPUT_JOY, njoy);
-	mouse = input_create(INPUT_MOUSE, 0);
-
+	keyboard = (struct input *)emalloc(sizeof(struct input));
+	joy = (struct input *)emalloc(sizeof(struct input));
+	mouse = (struct input *)emalloc(sizeof(struct input));
+	input_init(keyboard, INPUT_KEYBOARD, 0);
+	input_init(joy, INPUT_JOY, njoy);
+	input_init(mouse, INPUT_MOUSE, 0);
+	
 	return (0);
 }
 
@@ -195,10 +195,9 @@ engine_editmap(void)
 {
 	struct mapedit *medit;
 
-	medit = mapedit_create("mapedit0");
-	if (medit == NULL) {
-		return;
-	}
+	medit = emalloc(sizeof(struct mapedit));
+	mapedit_init(medit, "mapedit0");
+
 	/* Set the map edition arguments. */
 	medit->margs.name = strdup(mapstr);
 	medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
@@ -216,14 +215,18 @@ engine_editmap(void)
 void
 engine_destroy(void)
 {
-#if 0
+	/* Free the whole media pool. */
+	object_mediapool_quit();
+
+	/* Free all objects. */
 	object_destroy(world);
 	
 	/* Destroy the font engine. */
-	text_quit();
-	
+	text_engine_destroy();
+
+	/* Shut down SDL. */
 	SDL_Quit();
-#endif
+
 	exit(0);
 }
 
@@ -244,24 +247,21 @@ void
 engine_config(void)
 {
 	struct window *w;
-	struct label *fullscreen_label, *audio_label;
+	struct label *fullscreen_label;
 	struct button *close_button;
-	
-	w = window_create(mainview, "engine-config",
-	    "Engine configuration", 0, WINDOW_GRADIENT,
-	    64, 64, 512, 256);
+
+	w = emalloc(sizeof(struct window));
+	window_init(w, mainview, "engine-config", "Engine settings", 0,
+	    WINDOW_GRADIENT, 64, 64, 512, 256);
 	object_link(w);
 
-	fullscreen_label = label_create(w, "fullscreen-label", 
-	    "Full-screen mode", 0, 10, 10);
+	fullscreen_label = emalloc(sizeof(struct label));
+	label_init(fullscreen_label, w, "fullscreen-label", "Full-screen",
+	    0, 10, 10);
 	object_link(fullscreen_label);
 
-	audio_label = label_create(w, "audio-label", 
-	    "Audio enabled", 0, 10, 40);
-	object_link(audio_label);
-
-	close_button = button_create(w, "close-button",
-	    "Close", 0, 100, 100);
+	close_button = emalloc(sizeof(struct button));
+	button_init(close_button, w, "close-button", "Close", 0, 100, 100);
 	close_button->push = close_button_push;
 	object_link(close_button);
 }
