@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.23 2003/03/02 00:48:17 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.24 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,7 +44,7 @@ emalloc(size_t len)
 
 	p = malloc(len);
 	if (p == NULL) {
-		perror("malloc");
+		fatal("could not malloc %lu bytes", (unsigned long)len);
 		engine_stop();
 	}
 	return (p);
@@ -57,7 +57,7 @@ erealloc(void *ptr, size_t len)
 
 	p = realloc(ptr, len);
 	if (p == NULL) {
-		perror("realloc");
+		fatal("could not realloc %lu bytes", (unsigned long)len);
 		engine_stop();
 	}
 	return (p);
@@ -216,27 +216,6 @@ Read(int fd, void *buf, size_t size)
 }
 
 ssize_t
-Pread(int fd, void *buf, size_t size, off_t offs)
-{
-	off_t offs_save;
-	ssize_t rv;
-
-	offs_save = Lseek(fd, 0, SEEK_CUR);
-
-	Lseek(fd, offs, SEEK_SET);
-	rv = read(fd, buf, size);
-	if (rv == -1) {
-		fatal("write(%lu): %s", (unsigned long)size, strerror(errno));
-	} else if (rv != size) {
-		fatal("short write: %lu/%lu", (unsigned long)rv,
-		    (unsigned long)size);
-	}
-
-	Lseek(fd, offs_save, SEEK_SET);
-	return (rv);
-}
-
-ssize_t
 Write(int fd, const void *buf, size_t size)
 {
 	ssize_t rv;
@@ -249,27 +228,6 @@ Write(int fd, const void *buf, size_t size)
 		fatal("short write: %lu/%lu", (unsigned long)rv,
 		    (long)size);
 	}
-	return (rv);
-}
-
-ssize_t
-Pwrite(int fd, const void *buf, size_t size, off_t offs)
-{
-	off_t offs_save;
-	ssize_t rv;
-
-	offs_save = Lseek(fd, 0, SEEK_CUR);
-
-	Lseek(fd, offs, SEEK_SET);
-	rv = write(fd, buf, size);
-	if (rv == -1) {
-		fatal("write(%lu): %s", (unsigned long)size, strerror(errno));
-	} else if (rv != size) {
-		fatal("short write: %lu/%lu", (unsigned long)rv,
-		    (unsigned long)size);
-	}
-
-	Lseek(fd, offs_save, SEEK_SET);
 	return (rv);
 }
 

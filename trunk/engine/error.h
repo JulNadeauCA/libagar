@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.14 2003/03/02 00:48:17 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.15 2003/03/12 07:59:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -30,9 +30,7 @@ void		 error_set(const char *, ...);
 void		 error_fatal(const char *, ...);
 
 ssize_t	Write(int, const void *, size_t);
-ssize_t	Pwrite(int, const void *, size_t, off_t);
 ssize_t	Read(int, void *, size_t);
-ssize_t	Pread(int, void *, size_t, off_t);
 off_t	Lseek(int, off_t, int);
 
 void	Asprintf(char **, const char *, ...);
