@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.25 2003/04/17 01:26:03 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.26 2003/04/24 07:43:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -551,7 +551,6 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct art *art)
 		error_set("error reading magic");
 		return (-1);
 	}
-	printf("magic: `%s'\n", magic);
 	if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) != 0) {
 		error_set("bad magic");
 		abort();
