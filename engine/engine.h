@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.46 2002/11/28 07:35:13 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.47 2002/11/28 07:36:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -34,6 +34,8 @@
 #include <SDL.h>		 /* For SDL types */
 
 #include <engine/compat/queue.h> /* For queue(3) definitions */
+
+#include <libfobj/buf.h>	 /* For the fobj_buf type */
 
 #include <engine/error.h>	 /* Wrappers and error messages */
 #include <engine/debug.h>	 /* Debugging macros */
