@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.4 2003/06/25 00:33:30 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.5 2003/06/25 03:53:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -68,6 +68,8 @@ struct gfx {
 #define SPRITE(ob, i)	((struct object *)(ob))->gfx->sprites[(i)]
 #define ANIM(ob, i)	((struct object *)(ob))->gfx->anims[(i)]
 #endif
+
+extern pthread_mutex_t	gfxq_lock;
 
 __BEGIN_DECLS
 int	 gfx_fetch(void *, const char *);

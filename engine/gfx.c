@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.7 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.8 2003/07/04 12:35:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ enum {
 };
 
 static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
-pthread_mutex_t		 gfxq_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t		 gfxq_lock;
 
 static void	gfx_destroy(struct gfx *);
 static void	gfx_destroy_anim(struct gfx_anim *);
@@ -244,8 +244,8 @@ gfx_unused(struct gfx *gfx)
 int
 gfx_fetch(void *p, const char *key)
 {
+	char path[MAXPATHLEN];
 	struct object *ob = p;
-	char *path = NULL;
 	struct gfx *gfx = NULL;
 	struct den *den;
 	Uint32 i;
@@ -263,7 +263,7 @@ gfx_fetch(void *p, const char *key)
 		goto out;
 	}
 
-	if ((path = config_search_file("load-path", key, "den")) == NULL)
+	if (config_search_file("load-path", key, "den", path, sizeof(path)))
 		goto fail;
 
 	gfx = Malloc(sizeof(struct gfx));
@@ -318,7 +318,6 @@ out:
 		gfx_unused(ob->gfx);
 	}
 	ob->gfx = gfx;
-	Free(path);
 	return (0);
 fail:
 	pthread_mutex_unlock(&gfxq_lock);
@@ -331,7 +330,6 @@ fail:
 		free(gfx->name);
 		free(gfx);
 	}
-	Free(path);
 	return (-1);
 }
 
