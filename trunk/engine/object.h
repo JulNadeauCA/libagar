@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.50 2002/09/13 11:08:29 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.51 2002/09/16 16:05:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -12,7 +12,6 @@ struct noderef;
 struct mapdir;
 struct mappos;
 struct input;
-struct anim;
 struct event;
 
 struct object_ops {
