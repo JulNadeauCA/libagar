@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.9 2003/08/26 13:48:19 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.10 2003/09/04 03:15:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -88,6 +88,7 @@ void		 gfx_anim_tick(struct gfx_anim *, struct noderef *);
 #ifdef DEBUG
 __inline__ SDL_Surface		*gfx_get_sprite(struct object *, Uint32);
 __inline__ struct gfx_anim	*gfx_get_anim(struct object *, Uint32);
+struct window			*gfx_debug_window(void);
 #endif
 __END_DECLS
 
