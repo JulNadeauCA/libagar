@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.13 2002/02/16 04:59:13 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.14 2002/02/17 08:16:27 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -27,6 +27,15 @@ struct editobj {
 
 TAILQ_HEAD(eobjs_head, editobj);
 
+struct mapedit_margs {
+	char	*name;
+	char	*desc;
+	int	 mapw;
+	int	 maph;
+	int	 tilew;
+	int	 tileh;
+};
+
 struct mapedit {
 	struct	object obj;
 	
@@ -37,6 +46,7 @@ struct mapedit {
 #define MAPEDIT_DRAWGRID	0x08	/* Draw a grid on the map */
 #define MAPEDIT_DRAWPROPS	0x10	/* Draw a grid on the map */
 
+	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
 	int	x, y;			/* Cursor position */
 	int	mmapx, mmapy;		/* Mouse coordinates */
@@ -83,7 +93,7 @@ struct mapedit {
 #define MAPEDIT_WVEL	15
 #define MAPEDIT_EVEL	16
 
-struct mapedit *mapedit_create(char *, char *, int, int, int, int);
+struct mapedit *mapedit_create(char *);
 int		mapedit_link(void *);
 int		mapedit_unlink(void *);
 int		mapedit_destroy(void *);
