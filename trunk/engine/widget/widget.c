@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.62 2003/06/10 07:59:29 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.63 2003/06/11 23:21:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -728,7 +728,6 @@ widget_clear_focus(void *p)
 	struct widget *wid = p, *cwid;
 
 	if (wid->flags & WIDGET_FOCUSED) {
-		dprintf("%s lost focus\n", OBJECT(wid)->name);
 		wid->flags &= ~(WIDGET_FOCUSED);
 		event_post(wid, "widget-lostfocus", NULL);
 	}
@@ -779,7 +778,6 @@ widget_focus(void *p)
 			break;
 		}
 #endif
-		dprintf("%s gained focus\n", OBJECT(pwid)->name);
 		pwid->flags |= WIDGET_FOCUSED;
 		event_post(pwid, "widget-gainfocus", NULL);
 	} while ((pwid = OBJECT(pwid)->parent) != NULL);
