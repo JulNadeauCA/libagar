@@ -12,6 +12,7 @@ TODO
 ----
 
 engine:
+- use freetype directly.
 - document the engine.
 - rewrite xcf loader.
 - variable-sized sprite centering.
