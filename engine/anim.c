@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.4 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.5 2002/02/28 12:50:25 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,7 +42,10 @@ anim_create(int delay)
 
 	anim = emalloc(sizeof(struct anim));
 	anim->frames = NULL;
+	anim->maxframes = 0;
+	anim->frame = 0;
 	anim->nframes = 0;
+	anim->delta = 0;
 	anim->delay = delay;
 
 	return (anim);
