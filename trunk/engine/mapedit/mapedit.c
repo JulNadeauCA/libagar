@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.52 2002/03/03 06:26:42 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.53 2002/03/03 07:54:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -133,7 +133,7 @@ mapedit_shadow(struct mapedit *med)
 			dprintf("skipping %s (non-editable)\n", ob->name);
 			continue;
 		}
-		if (ob->nsprites < 1 || ob->nanims < 1) {
+		if (ob->nsprites < 1 && ob->nanims < 1) {
 			dprintf("skipping %s (no sprite/anim)\n", ob->name);
 			continue;
 		}
