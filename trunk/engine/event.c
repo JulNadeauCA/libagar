@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.132 2003/01/25 06:29:28 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.133 2003/01/26 06:15:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -105,13 +105,6 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_F4:
 		object_load(world);
-		break;
-	case SDLK_F5:
-		if (view->rootmap != NULL) {
-			text_msg("Map consistency check", "Scanning %s...\n",
-			    OBJECT(view->rootmap->map)->name);
-			map_verify(view->rootmap->map);
-		}
 		break;
 	case SDLK_F6:
 		window_show(fps_win);
