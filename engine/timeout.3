@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.4 2004/05/13 10:32:59 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.5 2004/05/15 05:55:34 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -196,6 +196,10 @@ always cancels every scheduled timeout.
 .Pp
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
+.Sh TROUBLETONS
+It is not clear whether
+.Dv TIMEOUT_LOADABLE
+is any useful.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
