@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.22 2002/04/18 04:03:50 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.23 2002/04/20 09:15:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -63,14 +63,6 @@ event_hotkey(SDL_Event *ev)
 			pthread_mutex_unlock(&world->lock);
 		}
 		break;
-#endif /* DEBUG */
-	case SDLK_f:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			view_fullscreen(mainview,
-			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-		}
-		break;
-#ifdef DEBUG
 	case SDLK_F1:
 		engine_config();
 		break;
@@ -84,6 +76,16 @@ event_hotkey(SDL_Event *ev)
 		text_msg(5, TEXT_SLEEP, "%d ticks\n", SDL_GetTicks());
 		break;
 #endif
+	case SDLK_f:
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			static SDL_Event nev;
+
+			view_fullscreen(mainview,
+			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
+			nev.type = SDL_VIDEOEXPOSE;
+			SDL_PushEvent(&nev);
+		}
+		break;
 	case SDLK_v:
 		text_msg(10, TEXT_SLEEP, "AGAR engine v%s\n%s v%d.%d\n%s\n",
 		    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
@@ -137,14 +139,23 @@ event_loop(void)
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
 				world->curmap->redraw++;
+				if (curmapedit != NULL) {
+					mapedit_tilelist(curmapedit);
+					mapedit_objlist(curmapedit);
+				}
 				continue;
 			case SDL_MOUSEMOTION:
+				if (curmapedit != NULL) {	/* XXX */
+					mapedit_event(curmapedit, &ev);
+				}
+				window_event(&ev, WINDOW_FOCUS);
+				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
-					break;
 				}
+				window_event(&ev, 0);
 				break;
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
@@ -164,6 +175,7 @@ event_loop(void)
 				} else {
 					input_event(keyboard, &ev);
 				}
+				window_event(&ev, WINDOW_FOCUS);
 				break;
 			case SDL_QUIT:
 				return;
