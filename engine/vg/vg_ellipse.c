@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.4 2004/04/22 12:36:09 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.5 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,21 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+
+const struct vg_element_ops vg_ellipse_ops = {
+	N_("Ellipse"),
+	vg_ellipse_init,
+	NULL,
+	vg_draw_ellipse,
+	vg_ellipse_bbox
+};
+const struct vg_element_ops vg_arc_ops = {
+	N_("Arc"),
+	vg_ellipse_init,
+	NULL,
+	vg_draw_ellipse,
+	vg_ellipse_bbox
+};
 
 void
 vg_ellipse_init(struct vg *vg, struct vg_element *vge)
@@ -88,7 +103,7 @@ ellipse_tool_init(struct tool *t)
 {
 	seq = 0;
 	cur_ellipse = NULL;
-	tool_push_status(t, _("Specify the ellipse's center point.\n"));
+	tool_push_status(t, _("Specify the ellipse's center point."));
 }
 
 static void
@@ -102,8 +117,16 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 
 	if (cur_ellipse != NULL) {
 		if (seq == 1) {
-			cur_ellipse->vg_arc.w = x - vg->origin[2].x;
-			cur_ellipse->vg_arc.h = y - vg->origin[2].y;
+			double rx, ry;
+			double theta, m;
+
+			rx = fabs(x - vg->origin[2].x);
+			ry = fabs(y - vg->origin[2].y);
+
+			theta = rx>0 ? atan(ry/rx) : 0;
+			m = sqrt(pow(rx,2) + pow(ry,2));
+			cur_ellipse->vg_arc.w = cos(theta)*m*2;
+			cur_ellipse->vg_arc.h = sin(theta)*m*2;
 		} 
 		cur_ellipse->redraw++;
 	} else {
@@ -130,7 +153,7 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			tool_push_status(t, _("Specify the ellipse's geometry "
-			                      "or [undo ellipse].\n"));
+			                      "or [undo ellipse]."));
 			break;
 		default:
 			goto finish;
