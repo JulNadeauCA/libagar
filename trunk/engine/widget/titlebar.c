@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.18 2004/09/25 01:57:09 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.19 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,11 +65,6 @@ titlebar_new(void *parent, int flags)
 {
 	struct titlebar *tbar;
 
-#ifdef DEBUG
-	if (strcmp(OBJECT(parent)->type, "window") != 0)
-		fatal("titlebars only attach to windows");
-#endif
-
 	tbar = Malloc(sizeof(struct titlebar), M_OBJECT);
 	titlebar_init(tbar, flags);
 	object_attach(parent, tbar);
@@ -80,6 +75,8 @@ titlebar_new(void *parent, int flags)
 void
 titlebar_init(struct titlebar *tbar, int flags)
 {
+	extern const struct widget_ops button_ops_titlebar;
+
 	box_init(&tbar->hb, BOX_HORIZ, BOX_WFILL);
 	object_set_ops(tbar, &titlebar_ops);
 	object_wire_gfx(tbar, "/engine/widget/pixmaps");
@@ -96,7 +93,6 @@ titlebar_init(struct titlebar *tbar, int flags)
 	tbar->flags = flags;
 	tbar->pressed = 0;
 	tbar->win = NULL;
-	
 	tbar->label = label_new(tbar, LABEL_STATIC, _("Untitled"));
 	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
 
@@ -108,6 +104,12 @@ titlebar_init(struct titlebar *tbar, int flags)
 		button_set_padding(tbar->hide_bu, 1);
 		event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win,
 		    "%p", tbar);
+	
+		/* XXX */
+		OBJECT(tbar->hide_bu)->ops =
+		    (const void *)&button_ops_titlebar;
+	} else {
+		tbar->hide_bu = NULL;
 	}
 	if ((flags & TITLEBAR_NO_CLOSE) == 0) {
 		tbar->close_bu = button_new(tbar, NULL);
@@ -117,6 +119,12 @@ titlebar_init(struct titlebar *tbar, int flags)
 		button_set_padding(tbar->close_bu, 1);
 		event_new(tbar->close_bu, "button-pushed", titlebar_close_win,
 		    "%p", tbar);
+	
+		/* XXX */
+		OBJECT(tbar->close_bu)->ops =
+		    (const void *)&button_ops_titlebar;
+	} else {
+		tbar->close_bu = NULL;
 	}
 
 	event_new(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
