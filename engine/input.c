@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.29 2002/12/13 07:38:15 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.30 2002/12/14 03:31:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,6 +31,7 @@
 #include "map.h"
 #include "physics.h"
 #include "input.h"
+#include "world.h"
 
 static TAILQ_HEAD(, input) inputs;
 static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -55,7 +56,8 @@ input_new(int type, int index)
 	}
 
 	input = emalloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, NULL, 0, NULL);
+	object_init(&input->obj, "input-device", name, NULL, OBJECT_SYSTEM,
+	    NULL);
 	free(name);
 	input->type = type;
 	input->index = index;
@@ -84,6 +86,7 @@ input_new(int type, int index)
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
 	pthread_mutex_unlock(&inputs_lock);
 
+	world_attach(world, input);
 	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
 	return (input);
 }
