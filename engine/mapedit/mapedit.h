@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.39 2002/06/22 20:42:33 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.40 2002/06/23 02:41:59 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -37,7 +37,9 @@ struct mapedit {
 	Uint32	 flags;
 
 	struct	 window *toolbar_win;
-	struct	 window *tile_win;
+	struct	 window *objlist_win;
+	struct	 window *tileq_win;
+	struct	 window *tilestack_win;
 	struct	 window *new_map_win;
 	struct	 window *settings_win;
 	struct	 window *coords_win;
@@ -88,7 +90,9 @@ enum {
 	MAPEDIT_TOOL_LOAD_MAP,
 	MAPEDIT_TOOL_SAVE_MAP,
 	MAPEDIT_TOOL_SAVE_MAP_TO,
-	MAPEDIT_TOOL_TILES
+	MAPEDIT_TOOL_TILEQ,
+	MAPEDIT_TOOL_TILESTACK,
+	MAPEDIT_TOOL_OBJLIST,
 };
 
 void	mapedit_init(struct mapedit *, char *);
