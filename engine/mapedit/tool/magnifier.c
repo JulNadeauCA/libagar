@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.5 2002/07/30 22:19:52 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.6 2002/08/12 06:56:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -153,10 +153,10 @@ magnifier_event(int argc, union evarg *argv)
 			int fac;
 
 			fac = atoi(tbox->text);
-			if (fac < -800) {
-				fac = -800;
-			} else if (fac > 800) {
-				fac = 800;
+			if (fac < -32767) {
+				fac = -32767;
+			} else if (fac > 32767) {
+				fac = 32767;
 			}
 			mapview_zoom(mv, fac);
 		}
