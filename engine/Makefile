@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.66 2003/06/14 03:22:08 vedge Exp $
+#	$Csoft: Makefile,v 1.67 2003/06/17 21:18:55 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -35,7 +35,7 @@ SRCS=	engine.c error.c event.c view.c physics.c \
 OBJS=	engine.o error.o event.o view.o physics.o \
 	input.o object.o map.o rootmap.o perso.o \
 	version.o config.o prop.o transform.o \
-	typesw.o gfx.o mkpath.o
+	typesw.o mkpath.o
 
 OBJS+=	mapedit/mapedit.o \
 	monitor/monitor.o
