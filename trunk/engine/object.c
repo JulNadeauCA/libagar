@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.6 2002/01/30 18:35:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.7 2002/02/03 11:20:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -67,7 +67,6 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 		perror("object");
 		return (-1);
 	}
-	ob->event_hook = NULL;
 	ob->destroy_hook = NULL;
 
 	return (0);
@@ -218,8 +217,6 @@ void
 object_dump(struct object *ob)
 {
 	printf("%3d. %10s (", ob->id, ob->name);
-	if (ob->flags & EVENT_HOOK)
-		printf(" event");
 	if (ob->flags & DESTROY_HOOK)
 		printf(" destroy");
 	if (ob->flags & LOAD_FUNC)
