@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.2 2002/04/20 05:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ static int maxfonth;		/* Maximum font height */
 #define LINESPACE	0
 #define TIMEGRANUL	1000
 
-static TTF_Font *font;
+TTF_Font *font;
 static SDL_Color white = { 255, 255, 255 };
 
 static Uint32	 text_tick(Uint32, void *);
