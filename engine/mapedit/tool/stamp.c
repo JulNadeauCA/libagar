@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.58 2004/04/10 21:24:10 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.59 2004/11/25 02:48:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -85,10 +85,10 @@ stamp_effect(struct tool *t, struct node *n)
 	struct map *copybuf = &mapedit.copybuf;
 	int sx, sy, dx, dy;
 	
-	for (sy = 0, dy = mv->cy - copybuf->maph/2;
+	for (sy = 0, dy = mv->cy;
 	     sy < copybuf->maph && dy < m->maph;
 	     sy++, dy++) {
-		for (sx = 0, dx = mv->cx - copybuf->mapw/2;
+		for (sx = 0, dx = mv->cx;
 		     sx < copybuf->mapw && dx < m->mapw;
 		     sx++, dx++) {
 			struct node *sn = &copybuf->map[sy][sx];
