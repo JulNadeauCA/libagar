@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.8 2002/04/08 23:56:26 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.9 2002/05/06 02:16:47 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
@@ -37,6 +37,8 @@ extern int engine_debug;
 
 #endif	/* DEBUG */
 
+#define dprintnode(m, x, y, str)					\
+	printf("%s:[%d,%d]: %s\n", OBJECT((m))->name, (x), (y), (str))
 
 /*
  * Lock debugging
@@ -74,6 +76,7 @@ extern pthread_key_t lockassert_key;	/* engine.c */
 			fatal("mutex(%p): %s\n", mutex, strerror(errno)); \
 		}							\
 	} while (/*CONSTCOND*/0)
+#if 0
 #define pthread_mutex_assert(mutex)					\
 	do {								\
 		pthread_setspecific(lockassert_key, LOCKASSERT_CHECK);	\
@@ -85,6 +88,9 @@ extern pthread_key_t lockassert_key;	/* engine.c */
 		}							\
 		pthread_setspecific(lockassert_key, LOCKASSERT_NOOP);	\
 	} while (/*CONSTCOND*/0)
+#else
+#define pthread_mutex_assert(mutex) ((void)(0))
+#endif
 #define pthread_mutex_init(mutex, attr)	do {				\
 		if (pthread_mutex_init((mutex), (attr)) != 0) {		\
 			fatal("pthread_mutex_init: %s\n",		\
