@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: dir.h,v 1.1 2004/04/23 10:50:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_COMPAT_DIR_H_
@@ -7,8 +7,12 @@
 
 #ifdef WIN32
 #include <windows.h>
+#undef SLIST_ENTRY
+#undef INPUT_KEYBOARD
+#undef INPUT_MOUSE
 #endif
 
+#if 0
 struct compat_dirent {
 #ifdef WIN32
 	WIN32_FIND_DATA ent;
@@ -27,14 +31,15 @@ struct compat_dir {
 	struct dirent *ent;
 #endif
 };
+#endif
 
-__BEGIN_DECLS
 int		      compat_mkdir(const char *);
 int		      compat_rmdir(const char *);
+#if 0
 int		      compat_opendir(const char *, struct compat_dir *);
 struct compat_dirent *compat_readdir(struct compat_dir *);
 int		      compat_closedir(struct compat_dir *);
-__END_DECLS
+#endif
 
 #include "close_code.h"
 #endif /* _AGAR_COMPAT_DIR_H_ */
