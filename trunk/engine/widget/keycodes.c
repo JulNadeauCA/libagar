@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.25 2003/05/24 15:43:55 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.26 2003/06/06 03:18:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ insert_alpha(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	int i;
 	size_t arglen;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	arglen = strlen(arg);
 
 	for (i = 0; i < arglen; i++) {
@@ -107,7 +107,7 @@ insert_ascii(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	int i;
 	size_t arglen;
 	
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	arglen = strlen(arg);
 
 	for (i = 0; i < arglen; i++) {
@@ -126,7 +126,7 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	size_t len;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	len = strlen(s);
 	if (tbox->pos == 0 || len == 0)
 		goto out;
@@ -158,7 +158,7 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	size_t len;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	len = strlen(s);
 
 	if (tbox->pos == len && len > 0) {
@@ -189,7 +189,7 @@ key_end(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	struct widget_binding *stringb;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	tbox->pos = strlen(s);
 	widget_binding_unlock(stringb);
 
@@ -203,7 +203,7 @@ key_kill(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	struct widget_binding *stringb;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	s[tbox->pos] = '\0';
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
@@ -227,7 +227,7 @@ key_right(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	struct widget_binding *stringb;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	if (tbox->pos < strlen(s))
 		tbox->pos++;
 	widget_binding_unlock(stringb);

@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.30 2003/05/24 15:50:34 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.31 2003/06/06 02:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -388,7 +388,7 @@ props_change(int argc, union evarg *argv)
 	prop = it->p1;
 
 	pthread_mutex_lock(&tb_set->lock);
-	stringb = widget_binding_get_locked(tb_set, "string", &s);
+	stringb = widget_get_binding(tb_set, "string", &s);
 
 	switch (prop->type) {
 	case PROP_INT:

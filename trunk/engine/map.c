@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.178 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.179 2003/06/06 02:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -849,7 +849,7 @@ node_load(struct netbuf *buf, struct object_table *deps, struct node *node)
 static void
 map_layer_load(struct netbuf *buf, struct map *m, struct map_layer *lay)
 {
-	lay->name = read_string(buf, NULL);
+	lay->name = read_string(buf);
 	lay->visible = (int)read_uint8(buf);
 	lay->xinc = read_sint16(buf);
 	lay->yinc = read_sint16(buf);

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.34 2003/06/10 08:07:16 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.35 2003/06/13 02:47:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -121,16 +121,14 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 		nprop->data.d = va_arg(ap, double);
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
-# ifdef USE_LONG_DOUBLE
-	case PROP_LONG_DOUBLE:
-		nprop->data.ld = va_arg(ap, long double);
-		debug(DEBUG_SET, "long double %s: %Lf\n", key, nprop->data.ld);
-		break;
-# endif
-#endif /* FLOATING_POINT */
+#endif
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
+		break;
+	case PROP_UNICODE:
+		nprop->data.ucs = va_arg(ap, Uint16 *);
+		debug(DEBUG_SET, "unicode %s: ...\n", key);
 		break;
 	case PROP_POINTER:
 		nprop->data.p = va_arg(ap, void *);
@@ -211,15 +209,7 @@ prop_set_double(void *ob, const char *key, double d)
 {
 	return (prop_set(ob, key, PROP_DOUBLE, d));
 }
-
-# ifdef USE_LONG_DOUBLE
-struct prop *
-prop_set_long_double(void *ob, const char *key, long double ld)
-{
-	return (prop_set(ob, key, PROP_LONG_DOUBLE, ld));
-}
-# endif
-#endif /* FLOATING_POINT */
+#endif
 
 struct prop *
 prop_set_string(void *ob, const char *key, const char *fmt, ...)
@@ -232,6 +222,12 @@ prop_set_string(void *ob, const char *key, const char *fmt, ...)
 	va_end(ap);
 
 	return (prop_set(ob, key, PROP_STRING, s));
+}
+
+struct prop *
+prop_set_unicode(void *ob, const char *key, Uint16 *ucs)
+{
+	return (prop_set(ob, key, PROP_UNICODE, ucs));
 }
 
 struct prop *
@@ -258,7 +254,7 @@ prop_unlock(void *p)
 	pthread_mutex_unlock(&OBJECT(p)->props_lock);
 }
 
-/* Obtain the value of a property. */
+/* Return a pointer to the data of a property. */
 struct prop *
 prop_get(void *obp, const char *key, enum prop_type t, void *p)
 {
@@ -306,14 +302,12 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 			case PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
-# ifdef USE_LONG_DOUBLE
-			case PROP_LONG_DOUBLE:
-				*(long double *)p = prop->data.ld;
-				break;
-# endif
-#endif /* FLOATING_POINT */
+#endif
 			case PROP_STRING:
 				*(char **)p = prop->data.s;
+				break;
+			case PROP_UNICODE:
+				*(Uint16 **)p = prop->data.ucs;
 				break;
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
@@ -443,18 +437,6 @@ prop_get_double(void *p, const char *key)
 		fatal("%s", error_get());
 	return (d);
 }
-
-# ifdef USE_LONG_DOUBLE
-long double
-prop_get_long_double(void *p, const char *key)
-{
-	long double ld;
-
-	if (prop_get(p, key, PROP_LONG_DOUBLE, &ld) == NULL)
-		fatal("%s", error_get());
-	return (ld);
-}
-# endif
 #endif /* FLOATING_POINT */
 
 char *
@@ -470,6 +452,19 @@ prop_get_string(void *p, const char *key)
 	return (sd);
 }
 
+Uint16 *
+prop_get_unicode(void *p, const char *key)
+{
+	Uint16 *ucs, *ucsd;
+
+	prop_lock(p);
+	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL)
+		fatal("%s", error_get());
+	ucsd = ucsdup(ucs);
+	prop_unlock(p);
+	return (ucsd);
+}
+
 size_t
 prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 {
@@ -480,6 +475,20 @@ prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 	if (prop_get(p, key, PROP_STRING, &s) == NULL)
 		fatal("%s", error_get());
 	sl = strlcpy(buf, s, bufsize);
+	prop_unlock(p);
+	return (sl);
+}
+
+size_t
+prop_copy_unicode(void *p, const char *key, Uint16 *buf, size_t bufsize)
+{
+	Uint16 *ucs;
+	size_t sl;
+
+	prop_lock(p);
+	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL)
+		fatal("%s", error_get());
+	sl = ucslcpy(buf, ucs, bufsize);
 	prop_unlock(p);
 	return (sl);
 }
@@ -504,12 +513,10 @@ prop_load(void *p, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&ob->props_lock);
-
-	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0)
+	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0) {
 		object_free_props(ob);
-
+	}
 	nprops = read_uint32(buf);
-
 	for (i = 0; i < nprops; i++) {
 		char key[PROP_KEY_MAX];
 		Uint32 t;
@@ -557,28 +564,37 @@ prop_load(void *p, struct netbuf *buf)
 		case PROP_DOUBLE:
 			prop_set_double(ob, key, read_double(buf));
 			break;
-# ifdef USE_LONG_DOUBLE
-		case PROP_LONG_DOUBLE:
-			prop_set_long_double(ob, key, read_long_double(buf));
-			break;
-# endif
-#endif /* FLOATING_POINT and HAVE_IEEE754 */
+#endif
 		case PROP_STRING:
 			{
-				char *sd;
+				char *s;
 
-				sd = read_string(buf, NULL);
-				if (strlen(sd) > PROP_STRING_MAX) {
+				s = read_string(buf);
+				if (strlen(s) >= PROP_STRING_MAX) {
 					error_set("string too big");
-					free(sd);
+					free(s);
 					goto fail;
 				}
-				prop_set_string(ob, key, "%s", sd);
-				free(sd);
+				prop_set_string(ob, key, "%s", s);
+				free(s);
+			}
+			break;
+		case PROP_UNICODE:
+			{
+				Uint16 *ucs;
+
+				ucs = read_unicode(buf);
+				if (ucslen(ucs) >= PROP_UNICODE_MAX) {
+					error_set("unicode string too big");
+					free(ucs);
+					goto fail;
+				}
+				prop_set_unicode(ob, key, ucs);
+				free(ucs);
 			}
 			break;
 		default:
-			error_set("cannot load prop of type %d", t);
+			error_set("cannot load prop of type 0x%x", t);
 			goto fail;
 		}
 	}
@@ -645,14 +661,12 @@ prop_save(void *p, struct netbuf *buf)
 		case PROP_DOUBLE:
 			write_double(buf, prop->data.d);
 			break;
-# ifdef USE_LONG_DOUBLE
-		case PROP_LONG_DOUBLE:
-			write_long_double(buf, prop->data.ld);
-			break;
-# endif
 #endif
 		case PROP_STRING:
 			write_string(buf, prop->data.s);
+			break;
+		case PROP_UNICODE:
+			write_unicode(buf, prop->data.ucs);
 			break;
 		case PROP_POINTER:
 			debug(DEBUG_STATE,
@@ -660,14 +674,17 @@ prop_save(void *p, struct netbuf *buf)
 			    prop->key);
 			break;
 		default:
-			fatal("unknown prop type: %d", prop->type);
+			error_set("cannot save prop of type 0x%x", prop->type);
+			goto fail;
 		}
 		nprops++;
 	}
 	pthread_mutex_unlock(&ob->props_lock);
-
 	pwrite_uint32(buf, nprops, count_offs);		/* Write count */
 	return (0);
+fail:
+	pthread_mutex_unlock(&ob->props_lock);
+	return (-1);
 }
 
 void
@@ -677,12 +694,14 @@ prop_destroy(struct prop *prop)
 	case PROP_STRING:
 		Free(prop->data.s);
 		break;
-	default:
+	case PROP_UNICODE:
+		Free(prop->data.s);
 		break;
 	}
 	free(prop->key);
 }
 
+/* XXX unicode */
 void
 prop_print_value(char *s, size_t len, struct prop *prop)
 {
@@ -727,6 +746,7 @@ prop_print_value(char *s, size_t len, struct prop *prop)
 		snprintf(s, len, "%s", prop->data.i ? "true" : "false");
 		break;
 	default:
+		snprintf(s, len, "<???>");
 		break;
 	}
 }

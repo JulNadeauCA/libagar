@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.1 2003/06/08 23:49:39 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.2 2003/06/10 07:59:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -104,7 +104,7 @@ spinbutton_return(int argc, union evarg *argv)
 	struct widget_binding *stringb;
 	char *s;
 
-	stringb = widget_binding_get_locked(sbu->tbox, "string", &s);
+	stringb = widget_get_binding(sbu->tbox, "string", &s);
 	spinbutton_set_value(sbu, atoi(s));
 	widget_binding_unlock(stringb);
 
@@ -218,7 +218,7 @@ spinbutton_draw(void *p)
 	if (WIDGET(sbu->tbox)->flags & WIDGET_FOCUSED)
 		return;
 
-	valueb = widget_binding_get_locked(sbu, "value", &value);
+	valueb = widget_get_binding(sbu, "value", &value);
 	textbox_printf(sbu->tbox, "%d", *value);
 	widget_binding_unlock(valueb);
 }
@@ -230,7 +230,7 @@ spinbutton_add(struct spinbutton *sbu, int inc)
 	struct widget_binding *valueb;
 	void *value;
 
-	valueb = widget_binding_get_locked(sbu, "value", &value);
+	valueb = widget_get_binding(sbu, "value", &value);
 	switch (valueb->type) {
 	case WIDGET_INT:
 		if (*(int *)value + inc >= INT_MIN+1 &&
@@ -286,7 +286,7 @@ spinbutton_set_value(struct spinbutton *sbu, int nvalue)
 	struct widget_binding *valueb;
 	int *value;
 
-	valueb = widget_binding_get_locked(sbu, "value", &value);
+	valueb = widget_get_binding(sbu, "value", &value);
 	*value = nvalue;
 	event_post(sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
@@ -299,7 +299,7 @@ spinbutton_set_min(struct spinbutton *sbu, int nmin)
 	struct widget_binding *minb;
 	int *min;
 
-	minb = widget_binding_get_locked(sbu, "min", &min);
+	minb = widget_get_binding(sbu, "min", &min);
 	*min = nmin;
 	widget_binding_modified(minb);
 	widget_binding_unlock(minb);
@@ -311,7 +311,7 @@ spinbutton_set_max(struct spinbutton *sbu, int nmax)
 	struct widget_binding *maxb;
 	int *max;
 
-	maxb = widget_binding_get_locked(sbu, "max", &max);
+	maxb = widget_get_binding(sbu, "max", &max);
 	*max = nmax;
 	widget_binding_modified(maxb);
 	widget_binding_unlock(maxb);

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.37 2003/06/11 23:21:04 vedge Exp $
+.\"	$Csoft: widget.3,v 1.38 2003/06/11 23:35:44 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -391,10 +391,7 @@ widget defines
 .Sq min
 and
 .Sq max
-as
-.Dv WIDGET_INT
-bindings
-and
+as bindings to integral or floating point values and
 .Xr textbox 3
 edits a
 .Dv WIDGET_STRING
@@ -410,10 +407,7 @@ is called to override those default bindings.
                 "enum widget_binding_type type" "..."
 .Pp
 .Ft "struct widget_binding *"
-.Fn widget_binding_get "void *widget" "const char *binding" "void *res"
-.Pp
-.Ft "struct widget_binding *"
-.Fn widget_binding_get_locked "void *widget" "const char *binding" "void *res"
+.Fn widget_get_binding "void *widget" "const char *binding" "..."
 .Pp
 .Ft void
 .Fn widget_binding_lock "struct widget_binding *binding"
@@ -454,15 +448,19 @@ is called to override those default bindings.
 .Ft double
 .Fn widget_get_double "void *widget" "const char *binding"
 .Pp
-.Ft char *
+.Ft "char *"
 .Fn widget_get_string "void *widget" "const char *binding"
+.Pp
+.Ft "Uint16 *"
+.Fn widget_get_unicode "void *widget" "const char *binding"
 .Pp
 .Ft size_t
 .Fn widget_copy_string "void *widget" "const char *binding" "char *dst" \
                        "size_t dst_size"
 .Pp
-.Ft void *
-.Fn widget_get_pointer "void *widget" "const char *binding"
+.Ft size_t
+.Fn widget_copy_unicode "void *widget" "const char *binding" "Uint16 *dst" \
+                        "size_t dst_size"
 .Pp
 .Ft void
 .Fn widget_set_bool "void *widget" "const char *binding" "int i"
@@ -498,50 +496,15 @@ is called to override those default bindings.
 .Fn widget_set_double "void *widget" "const char *binding" "double d"
 .Pp
 .Ft void
-.Fn widget_set_string "void *widget" "const char *binding" "char *s"
+.Fn widget_set_string "void *widget" "const char *binding" "const char *s"
 .Pp
 .Ft void
-.Fn widget_set_pointer "void *widget" "const char *binding" "void *p"
+.Fn widget_set_unicode "void *widget" "const char *binding" "const Uint16 *ucs"
 .Pp
 .nr nS 0
 The
 .Fn widget_bind
 function either overrides or creates a new binding.
-.Pp
-If
-.Fa type
-is
-.Dv WIDGET_PROP ,
-the following arguments are:
-.Bl -tag -width "struct object * " -compact
-.It struct object *
-The object that holds the property.
-.It const char *
-The property identifier.
-.El
-.Pp
-If
-.Fa type
-is
-.Dv WIDGET_STRING ,
-the following arguments are:
-.Bl -tag -width "pthread_mutex_t * " -compact
-.It pthread_mutex_t *
-A lock to acquire when manipulating the data, or NULL
-.It const char *
-A pointer to the string.
-.It size_t
-The full size of the string buffer.
-.El
-.Pp
-Otherwise, the following arguments are:
-.Bl -tag -width "pthread_mutex_t * " -compact
-.It pthread_mutex_t *
-A lock to acquire when manipulating the data, or NULL.
-.It void *
-A pointer to the data.
-.El
-.Pp
 Correct values for the
 .Fa type
 argument include:
@@ -560,29 +523,79 @@ enum widget_binding_type {
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
 	WIDGET_STRING,
-	WIDGET_POINTER,
+	WIDGET_UNICODE,
 	WIDGET_PROP
 }
 .Ed
 .Pp
+The meaning of the following arguments depend on the type:
+.Bl -tag -width "WIDGET_UNICODE "
+.It WIDGET_PROP
+Translate a
+.Xr prop 3
+value transparently.
+.Pp
+.Bl -tag -width "struct object *obj " -compact
+.It "struct object *obj"
+Object holding the property.
+.It "const char *key"
+Property key.
+.El
+.It WIDGET_STRING
+Fixed-size Latin-1 text buffer.
+.Pp
+.Bl -tag -width "pthread_mutex_t *lock " -compact
+.It "pthread_mutex_t *lock"
+Lock to acquire, or NULL.
+.It "const char *text"
+Fixed-size Latin-1 text buffer.
+.It "size_t bufsize"
+Total buffer size in bytes.
+.El
+.It WIDGET_UNICODE
+Fixed-size Unicode text buffer.
+.Pp
+.Bl -tag -width "pthread_mutex_t *lock " -compact
+.It "pthread_mutex_t *lock"
+Lock to acquire, or NULL.
+.It "const Uint16 *text"
+Fixed-size Unicode text buffer.
+.It "size_t bufsize"
+Total buffer size in bytes.
+.El
+.It WIDGET_*
+Other types of data.
+.Pp
+.Bl -tag -width "pthread_mutex_t *lock " -compact
+.It "pthread_mutex_t *lock"
+Lock to acquire, or NULL.
+.It "void *p"
+Pointer to the data.
+.El
+.El
+.Pp
 The
-.Fn widget_binding_get
-function returns a matching binding, or NULL if none was found.
-If a binding was found, a pointer to it is written to
-.Fa res .
-.Fn widget_binding_get_locked
-is a variant that does not unlock the binding before returning, so the
-caller must invoke
-.Fa widget_binding_unlock
-when done manipulating the data.
+.Fn widget_get_binding
+function returns a matching binding (locked), or NULL if none was found.
+If a binding was found, one or more pointers to it are written to arguments
+(for most types, there is a single
+.Ft "void *"
+argument).
+The
+.Fn widget_binding_unlock
+function should be called when done manipulating the data.
 .Pp
 The
 .Fn widget_get_TYPE
 and
 .Fn widget_set_TYPE
 variants manipulate the bound values atomically.
+.Pp
 .Fn widget_get_string
 returns a copy of the string (or NULL on failure).
+The
+.Fn widget_get_unicode
+variant copies Unicode text.
 .Fn widget_copy_string
 copies up to
 .Fa dst_size
@@ -592,6 +605,9 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
+The
+.Fn widget_copy_unicode
+variant copies Unicode text.
 .Sh THREAD SAFETY
 In event context, the widgets can assume that their parent window is locked,
 and internal properties of other widgets inside the same window can be
@@ -604,7 +620,7 @@ the current event is complete.
 .Sh EVENTS
 The
 .Nm
-structure generates the following events:
+layer generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn widget-shown "void"
@@ -642,9 +658,5 @@ The
 .Nm
 interface first appeared in Agar 1.0.
 .Sh BUGS
-The
-.Fn widget_binding_get
-interface is too complicated.
-.Pp
 The primitives should use a current color (OpenGL-style), but that could not be
 efficiently thread safe.

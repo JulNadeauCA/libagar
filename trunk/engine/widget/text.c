@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.66 2003/06/13 03:59:51 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.67 2003/06/14 11:28:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,8 +29,6 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
-
-#include <engine/unicode/unicode.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -208,12 +206,12 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint16 ch)
 __inline__ SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
-	Uint16 *unicode;
+	Uint16 *ucs;
 	SDL_Surface *su;
 
-	unicode = unicode_import(UNICODE_FROM_LATIN1, text);
-	su = text_render_unicode(fontname, fontsize, color, unicode);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
+	su = text_render_unicode(fontname, fontsize, color, ucs);
+	free(ucs);
 	return (su);
 }
 
@@ -222,29 +220,29 @@ __inline__ SDL_Surface *
 text_render_utf8(const char *fontname, int fontsize, Uint32 color,
     const char *utf8)
 {
-	Uint16 *unicode;
+	Uint16 *ucs;
 	SDL_Surface *su;
 
-	unicode = unicode_import(UNICODE_FROM_UTF8, utf8);
-	su = text_render_unicode(fontname, fontsize, color, unicode);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
+	su = text_render_unicode(fontname, fontsize, color, ucs);
+	free(ucs);
 	return (su);
 }
 
 /* Render (possibly multi-line) UTF-16 encoded text onto a new surface. */
 SDL_Surface *
 text_render_unicode(const char *fontname, int fontsize, Uint32 color,
-    const Uint16 *unicode)
+    const Uint16 *text)
 {
 	SDL_Rect rd;
 	SDL_Color col;
 	SDL_Surface *su;
 	ttf_font *fon;
-	Uint16 *text, *textp;
+	Uint16 *ucs, *ucsp;
 	int nlines, maxw, fon_h;
 	Uint8 r, g, b;
 
-	if (unicode == NULL || unicode[0] == '\0') {
+	if (text == NULL || text[0] == '\0') {
 		return (view_surface(SDL_SWSURFACE, 0, 0));
 	}
 
@@ -259,21 +257,21 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	col.b = b;
 
 	/* Find out the line count. */
-	text = ucsdup(unicode);
-	for (textp = text, nlines = 0; *textp != '\0'; textp++) {
-		if (*textp == '\n')
+	ucs = ucsdup(text);
+	for (ucsp = ucs, nlines = 0; *ucsp != '\0'; ucsp++) {
+		if (*ucsp == '\n')
 			nlines++;
 	}
 
 	if (nlines == 0) {					/* One line */
-		su = ttf_render_unicode_solid(fon, text, col);
+		su = ttf_render_unicode_solid(fon, ucs, col);
 		if (su == NULL) {
 			fatal("ttf_render_text_solid: %s", error_get());
 		}
 	} else {						/* Multiline */
 		SDL_Surface **lines, **lp;
 		int lineskip, i;
-		Uint16 *sep;
+		const Uint16 sep[2] = { '\n', '\0' };
 
 		/*
 		 * Render the text to an array of surfaces, since we cannot
@@ -281,19 +279,14 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		 */
 		lineskip = ttf_font_line_skip(fon);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines);
-		sep = unicode_import(UNICODE_FROM_ASCII, "\n");
 		for (lp = lines, maxw = 0;
-		    (textp = ucssep(&text, sep)) != NULL;
+		    (ucsp = ucssep(&ucs, sep)) != NULL;
 		    lp++) {
-		    	if (textp[0] == '\0') {
+		    	if (ucsp[0] == '\0') {
 				*lp = NULL;
 				continue;
 			}
-			fprintf(stderr, "line: ");
-		    	ucsdump(textp);
-			fprintf(stderr, "\n");
-
-			if ((*lp = ttf_render_unicode_solid(fon, textp, col)) ==
+			if ((*lp = ttf_render_unicode_solid(fon, ucsp, col)) ==
 			    NULL) {
 				fatal("ttf_render_unicode_solid: %s",
 				    error_get());
@@ -320,21 +313,20 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 			SDL_BlitSurface(lines[i], NULL, su, &rd);
 			SDL_FreeSurface(lines[i]);
 		}
-		free(sep);
 		free(lines);
 	}
 
-	free(text);
+	free(ucs);
 	return (su);
 }
 
 /* Return the expected size of an UTF-16 encoded text. */
 void
-text_prescale_unicode(const Uint16 *unicode, int *w, int *h)
+text_prescale_unicode(const Uint16 *ucs, int *w, int *h)
 {
 	SDL_Surface *su;
 
-	su = text_render_unicode(NULL, -1, 0, unicode);
+	su = text_render_unicode(NULL, -1, 0, ucs);
 	if (w != NULL)
 		*w = (int)su->w;
 	if (h != NULL)
@@ -346,11 +338,11 @@ text_prescale_unicode(const Uint16 *unicode, int *w, int *h)
 __inline__ void
 text_prescale(const char *text, int *w, int *h)
 {
-	Uint16 *unicode;
+	Uint16 *ucs;
 
-	unicode = unicode_import(UNICODE_FROM_LATIN1, text);
-	text_prescale_unicode(unicode, w, h);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
+	text_prescale_unicode(ucs, w, h);
+	free(ucs);
 }
 
 /* Display a message. */

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: ucslcpy.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -24,18 +24,20 @@
 #include "unicode.h"
 
 /*
- * Copy src to string dst of size siz.  At most siz-1 Unicode characters
- * will be copied.  Always NUL terminates (unless siz == 0).
- * Returns ucslen(src); if retval >= siz, truncation occurred.
+ * Copy src to string dst of size bytes. At most (bytes-1)/sizeof(u16)
+ * Unicode characters will be copied.
+ *
+ * Always NUL terminates (unless bytes == 0).
+ * Returns ucslen(src)*sizeof(u16); if retval >= bytes, truncation occurred.
  */
 size_t
-ucslcpy(Uint16 *dst, const Uint16 *src, size_t siz)
+ucslcpy(Uint16 *dst, const Uint16 *src, size_t bytes)
 {
 	Uint16 *d = dst;
 	const Uint16 *s = src;
-	size_t n = siz;
+	size_t n = bytes / sizeof(Uint16);
 
-	/* Copy as many characters as will fit */
+	/* Copy as many characters as will fit. */
 	if (n != 0 && --n != 0) {
 		do {
 			if ((*d++ = *s++) == 0) {
@@ -44,15 +46,15 @@ ucslcpy(Uint16 *dst, const Uint16 *src, size_t siz)
 		} while (--n != 0);
 	}
 
-	/* Not enough room in dst, add NUL and traverse rest of src */
+	/* Not enough room in dst, add NUL and traverse rest of src. */
 	if (n == 0) {
-		if (siz != 0) {
-			*d = '\0';		/* NUL-terminate dst */
+		if (bytes != 0) {
+			*d = '\0';			 /* NUL-terminate dst */
 		}
 		while (*s++)
 			;
 	}
 
-	return (s - src - 1);	/* count does not include NUL */
+	return ((s - src - 1) * sizeof(Uint16));      /* Does not include NUL */
 }
 

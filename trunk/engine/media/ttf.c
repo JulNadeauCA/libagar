@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.14 2003/06/14 11:25:06 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.15 2003/06/14 11:25:47 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -30,7 +30,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/unicode/unicode.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +40,6 @@
 #include <freetype/ftoutln.h>
 
 #include <SDL_types.h>
-#undef linux			/* XXX broken byte swap macros */
 #include <SDL_endian.h>
 
 #include "ttf.h"
@@ -600,12 +598,12 @@ ttf_glyph_metrics(ttf_font *font, Uint16 ch, int *minx,
 int
 ttf_size_text(ttf_font *font, const char *text, int *w, int *h)
 {
-	Uint16 *unicode;
+	Uint16 *ucs;
 	int status;
 
-	unicode = unicode_import(UNICODE_FROM_LATIN1, text);
-	status = ttf_size_unicode(font, unicode, w, h);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
+	status = ttf_size_unicode(font, ucs, w, h);
+	free(ucs);
 	return (status);
 }
 
@@ -613,18 +611,18 @@ ttf_size_text(ttf_font *font, const char *text, int *w, int *h)
 int
 ttf_size_utf8(ttf_font *font, const char *utf8, int *w, int *h)
 {
-	Uint16 *unicode;
+	Uint16 *ucs;
 	int status;
 
-	unicode = unicode_import(UNICODE_FROM_UTF8, utf8);
-	status = ttf_size_unicode(font, unicode, w, h);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
+	status = ttf_size_unicode(font, ucs, w, h);
+	free(ucs);
 	return (status);
 }
 
 /* Size Unicode text. */
 int
-ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
+ttf_size_unicode(ttf_font *font, const Uint16 *ucs, int *w, int *h)
 {
 	int status;
 	const Uint16 *ch;
@@ -639,13 +637,13 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 
 	/* Load each character and sum it's bounding box. */
 	x = 0;
-	for (ch = unicode; *ch != '\0'; ch++) {
+	for (ch = ucs; *ch != '\0'; ch++) {
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
 		}
 		glyph = font->current;
 
-		if ((ch == unicode) && (glyph->minx < 0)) {
+		if ((ch == ucs) && (glyph->minx < 0)) {
 			/*
 			 * Fixes the texture wrapping bug when the first
 			 * letter has a negative minx value or horibearing
@@ -704,11 +702,11 @@ SDL_Surface *
 ttf_render_text_solid(ttf_font *font, const char *latin1, SDL_Color fg)
 {
 	SDL_Surface *textsu;
-	Uint16 *unicode;
+	Uint16 *ucs;
 
-	unicode = unicode_import(UNICODE_FROM_LATIN1, latin1);
-	textsu = ttf_render_unicode_solid(font, unicode, fg);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_LATIN1, latin1);
+	textsu = ttf_render_unicode_solid(font, ucs, fg);
+	free(ucs);
 	return (textsu);
 }
 
@@ -717,17 +715,17 @@ SDL_Surface *
 ttf_render_utf8_solid(ttf_font *font, const char *utf8, SDL_Color fg)
 {
 	SDL_Surface *textsu;
-	Uint16 *unicode;
+	Uint16 *ucs;
 
-	unicode = unicode_import(UNICODE_FROM_UTF8, utf8);
-	textsu = ttf_render_unicode_solid(font, unicode, fg);
-	free(unicode);
+	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
+	textsu = ttf_render_unicode_solid(font, ucs, fg);
+	free(ucs);
 	return (textsu);
 }
 
 /* Render UNICODE text. */
 SDL_Surface *
-ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
+ttf_render_unicode_solid(ttf_font *font, const Uint16 *ucs, SDL_Color fg)
 {
 	int xstart;
 	int width, height;
@@ -739,7 +737,7 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 	struct cached_glyph *glyph;
 
 	/* Get the dimensions of the text surface. */
-	if ((ttf_size_unicode(font, unicode, &width, NULL) < 0) ||
+	if ((ttf_size_unicode(font, ucs, &width, NULL) < 0) ||
 	    width == 0) {
 		error_set("text has zero width");
 		return (NULL);
@@ -767,7 +765,7 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 	/* Load and render each character. */
 	xstart = 0;
 
-	for (ch = unicode; *ch; ch++) {
+	for (ch = ucs; *ch; ch++) {
 		FT_Bitmap *current = NULL;
 
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
@@ -778,7 +776,7 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 		current = &glyph->bitmap;
 
 		/* Compensate for wrap around bug with negative minx's */
-		if ((ch == unicode) && (glyph->minx < 0))
+		if ((ch == ucs) && (glyph->minx < 0))
 			xstart -= glyph->minx;
 
 		for (row = 0; row < current->rows; ++row) {
@@ -820,7 +818,7 @@ fail1:
 
 /* Render UNICODE glyph. */
 SDL_Surface *
-ttf_render_glyph_solid(ttf_font *font, Uint16 unicode, SDL_Color fg)
+ttf_render_glyph_solid(ttf_font *font, Uint16 uch, SDL_Color fg)
 {
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
@@ -829,7 +827,7 @@ ttf_render_glyph_solid(ttf_font *font, Uint16 unicode, SDL_Color fg)
 	struct cached_glyph *glyph;
 
 	/* Get the glyph itself */
-	if (ttf_find_glyph(font, unicode, CACHED_METRICS|CACHED_BITMAP) != 0) {
+	if (ttf_find_glyph(font, uch, CACHED_METRICS|CACHED_BITMAP) != 0) {
 		fatal("ttf_find_glyph: %s", error_get());
 	}
 	glyph = font->current;

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.63 2003/06/11 23:21:04 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.64 2003/06/12 22:27:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ widget_load(void *p, struct netbuf *buf)
 		Uint8 r, g, b, a;
 		char *name;
 
-		name = read_string(buf, NULL);
+		name = read_string(buf);
 		r = read_uint8(buf);
 		g = read_uint8(buf);
 		b = read_uint8(buf);
@@ -198,140 +198,355 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	return (binding);
 }
 
+/*
+ * Lookup a binding and copy its data to pointers passed as arguments.
+ * The caller should invoke widget_binding_unlock() when done reading/writing
+ * the data.
+ */
+struct widget_binding *
+widget_get_binding(void *widp, const char *name, ...)
+{
+	struct widget *wid = widp;
+	struct widget_binding *binding;
+	struct prop *prop;
+	va_list ap;
+	void *r1;
+
+	pthread_mutex_lock(&wid->bindings_lock);
+	SLIST_FOREACH(binding, &wid->bindings, bindings) {
+		if (strcmp(binding->name, name) != 0)
+			continue;
+
+		va_start(ap, name);
+
+		if (binding->mutex != NULL) {
+			pthread_mutex_lock(binding->mutex);
+		}
+		switch (binding->type) {
+		case WIDGET_BOOL:
+		case WIDGET_INT:
+			r1 = va_arg(ap, int *);
+			*(int **)r1 = (int *)binding->p1;
+			break;
+		case WIDGET_UINT:
+			r1 = va_arg(ap, unsigned int *);
+			*(unsigned int **)r1 = (unsigned int *)binding->p1;
+			break;
+		case WIDGET_UINT8:
+			r1 = va_arg(ap, Uint8 *);
+			*(Uint8 **)r1 = (Uint8 *)binding->p1;
+			break;
+		case WIDGET_SINT8:
+			r1 = va_arg(ap, Sint8 *);
+			*(Sint8 **)r1 = (Sint8 *)binding->p1;
+			break;
+		case WIDGET_UINT16:
+			r1 = va_arg(ap, Uint16 *);
+			*(Uint16 **)r1 = (Uint16 *)binding->p1;
+			break;
+		case WIDGET_SINT16:
+			r1 = va_arg(ap, Sint16 *);
+			*(Sint16 **)r1 = (Sint16 *)binding->p1;
+			break;
+		case WIDGET_UINT32:
+			r1 = va_arg(ap, Uint32 *);
+			*(Uint32 **)r1 = (Uint32 *)binding->p1;
+			break;
+		case WIDGET_SINT32:
+			r1 = va_arg(ap, Sint32 *);
+			*(Sint32 **)r1 = (Sint32 *)binding->p1;
+			break;
+#ifdef FLOATING_POINT
+		case WIDGET_FLOAT:
+			r1 = va_arg(ap, float *);
+			*(float **)r1 = (float *)binding->p1;
+			break;
+		case WIDGET_DOUBLE:
+			r1 = va_arg(ap, double *);
+			*(double **)r1 = (double *)binding->p1;
+			break;
+#endif
+		case WIDGET_STRING:
+			r1 = va_arg(ap, char **);
+			*(char ***)r1 = (char **)binding->p1;
+			break;
+		case WIDGET_UNICODE:
+			r1 = va_arg(ap, Uint16 **);
+			*(Uint16 ***)r1 = (Uint16 **)binding->p1;
+			break;
+		case WIDGET_PROP:			/* Convert */
+			if ((prop = prop_get(binding->p1, (char *)binding->p2,
+			    PROP_ANY, NULL)) == NULL) {
+				fatal("%s", error_get());
+			}
+			switch (prop->type) {
+			case PROP_BOOL:
+			case PROP_INT:
+				r1 = va_arg(ap, int *);
+				*(int **)r1 = (int *)&prop->data.i;
+				break;
+			case PROP_UINT8:
+				r1 = va_arg(ap, Uint8 *);
+				*(Uint8 **)r1 = (Uint8 *)&prop->data.u8;
+				break;
+			case PROP_SINT8:
+				r1 = va_arg(ap, Sint8 *);
+				*(Sint8 **)r1 = (Sint8 *)&prop->data.s8;
+				break;
+			case PROP_UINT16:
+				r1 = va_arg(ap, Uint16 *);
+				*(Uint16 **)r1 = (Uint16 *)&prop->data.u16;
+				break;
+			case PROP_SINT16:
+				r1 = va_arg(ap, Sint16 *);
+				*(Sint16 **)r1 = (Sint16 *)&prop->data.s16;
+				break;
+			case PROP_UINT32:
+				r1 = va_arg(ap, Uint32 *);
+				*(Uint32 **)r1 = (Uint32 *)&prop->data.u32;
+				break;
+			case PROP_SINT32:
+				r1 = va_arg(ap, Sint32 *);
+				*(Sint32 **)r1 = (Sint32 *)&prop->data.s32;
+				break;
+#ifdef FLOATING_POINT
+			case PROP_FLOAT:
+				r1 = va_arg(ap, float *);
+				*(float **)r1 = (float *)&prop->data.f;
+				break;
+			case PROP_DOUBLE:
+				r1 = va_arg(ap, double *);
+				*(double **)r1 = (double *)&prop->data.d;
+				break;
+#endif
+			case PROP_STRING:
+				r1 = va_arg(ap, char **);
+				*(char ***)r1 = (char **)&prop->data.s;
+				break;
+			case PROP_UNICODE:
+				r1 = va_arg(ap, Uint16 **);
+				*(Uint16 ***)r1 = (Uint16 **)&prop->data.ucs;
+				break;
+			default:
+				error_set("prop translation failed");
+				binding = NULL;
+				goto out;
+			}
+			break;
+		default:
+			error_set("unknown binding type");
+			binding = NULL;
+			goto out;
+		}
+out:
+		pthread_mutex_unlock(&wid->bindings_lock);
+		va_end(ap);
+		return (binding);			/* Return locked */
+	}
+	pthread_mutex_unlock(&wid->bindings_lock);
+
+	error_set("no such binding `%s'", name);
+	return (NULL);
+}
+
 __inline__ int
 widget_get_int(void *wid, const char *name)
 {
-	int *i;
+	struct widget_binding *b;
+	int *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ unsigned int
 widget_get_uint(void *wid, const char *name)
 {
-	unsigned int *i;
+	struct widget_binding *b;
+	unsigned int *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ Uint8
 widget_get_uint8(void *wid, const char *name)
 {
-	Uint8 *i;
+	struct widget_binding *b;
+	Uint8 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
+
 __inline__ Sint8
 widget_get_sint8(void *wid, const char *name)
 {
-	Sint8 *i;
+	struct widget_binding *b;
+	Sint8 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ Uint16
 widget_get_uint16(void *wid, const char *name)
 {
-	Uint16 *i;
+	struct widget_binding *b;
+	Uint16 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
+
 __inline__ Sint16
 widget_get_sint16(void *wid, const char *name)
 {
-	Sint16 *i;
+	struct widget_binding *b;
+	Sint16 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ Uint32
 widget_get_uint32(void *wid, const char *name)
 {
-	Uint32 *i;
+	struct widget_binding *b;
+	Uint32 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
+
 __inline__ Sint32
 widget_get_sint32(void *wid, const char *name)
 {
-	Sint32 *i;
+	struct widget_binding *b;
+	Sint32 *i, rv;
 
-	if (widget_binding_get(wid, name, &i) == NULL)
+	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
-	return (*i);
+	}
+	rv = *i;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 #ifdef FLOATING_POINT
 __inline__ float
 widget_get_float(void *wid, const char *name)
 {
-	float *f;
+	struct widget_binding *b;
+	float *f, rv;
 
-	if (widget_binding_get(wid, name, &f) == NULL)
+	if ((b = widget_get_binding(wid, name, &f)) == NULL) {
 		fatal("%s", error_get());
-	return (*f);
+	}
+	rv = *f;
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ double
 widget_get_double(void *wid, const char *name)
 {
-	double *d;
+	struct widget_binding *b;
+	double *d, rv;
 
-	if (widget_binding_get(wid, name, &d) == NULL)
+	if ((b = widget_get_binding(wid, name, &d)) == NULL) {
 		fatal("%s", error_get());
-	return (*d);
+	}
+	rv = *d;
+	widget_binding_unlock(b);
+	return (rv);
 }
 #endif /* FLOATING_POINT */
 
 __inline__ char *
 widget_get_string(void *wid, const char *name)
 {
-	struct widget_binding *binding;
+	struct widget_binding *b;
 	char *s, *sd;
 
-	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
+	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
 		fatal("%s", error_get());
+	}
 	sd = Strdup(s);
-	widget_binding_unlock(binding);
-	return (s);
+	widget_binding_unlock(b);
+	return (sd);
+}
+
+__inline__ Uint16 *
+widget_get_unicode(void *wid, const char *name)
+{
+	struct widget_binding *b;
+	Uint16 *ucs, *ucsd;
+
+	if ((b = widget_get_binding(wid, name, &ucs)) == NULL) {
+		fatal("%s", error_get());
+	}
+	ucsd = ucsdup(ucs);
+	widget_binding_unlock(b);
+	return (ucsd);
 }
 
 __inline__ size_t
 widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 {
-	struct widget_binding *binding;
+	struct widget_binding *b;
 	char *s;
 	size_t rv;
 
-	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
+	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
 		fatal("%s", error_get());
+	}
 	rv = strlcpy(dst, s, dst_size);
-	widget_binding_unlock(binding);
+	widget_binding_unlock(b);
 	return (rv);
 }
 
-__inline__ void *
-widget_get_pointer(void *wid, const char *name)
+__inline__ size_t
+widget_copy_unicode(void *wid, const char *name, Uint16 *dst, size_t dst_size)
 {
-	void *p;
+	struct widget_binding *b;
+	Uint16 *s;
+	size_t rv;
 
-	if (widget_binding_get(wid, name, &p) == NULL)
+	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
 		fatal("%s", error_get());
-	return (p);
+	}
+	rv = ucslcpy(dst, s, dst_size);
+	widget_binding_unlock(b);
+	return (rv);
 }
 
 __inline__ void
@@ -340,8 +555,9 @@ widget_set_int(void *wid, const char *name, int ni)
 	struct widget_binding *binding;
 	int *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -352,8 +568,9 @@ widget_set_uint(void *wid, const char *name, unsigned int ni)
 	struct widget_binding *binding;
 	unsigned int *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -364,8 +581,9 @@ widget_set_uint8(void *wid, const char *name, Uint8 ni)
 	struct widget_binding *binding;
 	Uint8 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -376,8 +594,9 @@ widget_set_sint8(void *wid, const char *name, Sint8 ni)
 	struct widget_binding *binding;
 	Sint8 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -388,8 +607,9 @@ widget_set_uint16(void *wid, const char *name, Uint16 ni)
 	struct widget_binding *binding;
 	Uint16 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -400,8 +620,9 @@ widget_set_sint16(void *wid, const char *name, Sint16 ni)
 	struct widget_binding *binding;
 	Sint16 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -412,8 +633,9 @@ widget_set_uint32(void *wid, const char *name, Uint32 ni)
 	struct widget_binding *binding;
 	Uint32 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -424,8 +646,9 @@ widget_set_sint32(void *wid, const char *name, Sint32 ni)
 	struct widget_binding *binding;
 	Sint32 *i;
 
-	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*i = ni;
 	widget_binding_unlock(binding);
 }
@@ -437,8 +660,9 @@ widget_set_float(void *wid, const char *name, float nf)
 	struct widget_binding *binding;
 	float *f;
 
-	if ((binding = widget_binding_get_locked(wid, name, &f)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &f)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*f = nf;
 	widget_binding_unlock(binding);
 }
@@ -449,152 +673,42 @@ widget_set_double(void *wid, const char *name, double nd)
 	struct widget_binding *binding;
 	double *d;
 
-	if ((binding = widget_binding_get_locked(wid, name, &d)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &d)) == NULL) {
 		fatal("%s", error_get());
+	}
 	*d = nd;
 	widget_binding_unlock(binding);
 }
 #endif /* FLOATING_POINT */
 
 __inline__ void
-widget_set_string(void *wid, const char *name, char *ns)
+widget_set_string(void *wid, const char *name, const char *ns)
 {
 	struct widget_binding *binding;
 	char *s;
 
-	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &s)) == NULL) {
 		fatal("%s", error_get());
-	strlcpy(s, ns, binding->size);
+	}
+	if (strlcpy(s, ns, binding->size) >= binding->size) {
+		dprintf("%s: string oflow\n", name);
+	}
 	widget_binding_unlock(binding);
 }
 
 __inline__ void
-widget_set_pointer(void *wid, const char *name, void *np)
+widget_set_unicode(void *wid, const char *name, const Uint16 *text)
 {
 	struct widget_binding *binding;
-	void **p;
+	Uint16 *ucs;
 
-	if ((binding = widget_binding_get_locked(wid, name, &p)) == NULL)
+	if ((binding = widget_get_binding(wid, name, &ucs)) == NULL) {
 		fatal("%s", error_get());
-	*p = np;
-	widget_binding_unlock(binding);
-}
-
-/* Look for a binding and return the pointer value in p. */
-struct widget_binding *
-_widget_binding_get(void *widp, const char *name, void *res, int return_locked)
-{
-	struct widget *wid = widp;
-	struct widget_binding *binding;
-	struct prop *prop;
-
-	pthread_mutex_lock(&wid->bindings_lock);
-	SLIST_FOREACH(binding, &wid->bindings, bindings) {
-		if (strcmp(binding->name, name) != 0)
-			continue;
-
-		if (binding->mutex != NULL) {
-			pthread_mutex_lock(binding->mutex);
-		}
-		switch (binding->type) {
-		case WIDGET_BOOL:
-		case WIDGET_INT:
-			*(int **)res = (int *)binding->p1;
-			break;
-		case WIDGET_UINT:
-			*(unsigned int **)res = (unsigned int *)binding->p1;
-			break;
-		case WIDGET_UINT8:
-			*(Uint8 **)res = (Uint8 *)binding->p1;
-			break;
-		case WIDGET_SINT8:
-			*(Sint8 **)res = (Sint8 *)binding->p1;
-			break;
-		case WIDGET_UINT16:
-			*(Uint16 **)res = (Uint16 *)binding->p1;
-			break;
-		case WIDGET_SINT16:
-			*(Sint16 **)res = (Sint16 *)binding->p1;
-			break;
-		case WIDGET_UINT32:
-			*(Uint32 **)res = (Uint32 *)binding->p1;
-			break;
-		case WIDGET_SINT32:
-			*(Sint32 **)res = (Sint32 *)binding->p1;
-			break;
-#ifdef FLOATING_POINT
-		case WIDGET_FLOAT:
-			*(float **)res = (float *)binding->p1;
-			break;
-		case WIDGET_DOUBLE:
-			*(double **)res = (double *)binding->p1;
-			break;
-#endif
-		case WIDGET_STRING:
-			*(char ***)res = (char **)binding->p1;
-			break;
-		case WIDGET_POINTER:
-			*(void ***)res = (void **)binding->p1;
-			break;
-		case WIDGET_PROP:			/* Convert */
-			if ((prop = prop_get(binding->p1, (char *)binding->p2,
-			    PROP_ANY, NULL)) == NULL) {
-				fatal("%s", error_get());
-			}
-			switch (prop->type) {
-			case PROP_BOOL:
-			case PROP_INT:
-				*(int **)res = (int *)&prop->data.i;
-				break;
-			case PROP_UINT8:
-				*(Uint8 **)res = (Uint8 *)&prop->data.u8;
-				break;
-			case PROP_SINT8:
-				*(Sint8 **)res = (Sint8 *)&prop->data.s8;
-				break;
-			case PROP_UINT16:
-				*(Uint16 **)res = (Uint16 *)&prop->data.u16;
-				break;
-			case PROP_SINT16:
-				*(Sint16 **)res = (Sint16 *)&prop->data.s16;
-				break;
-			case PROP_UINT32:
-				*(Uint32 **)res = (Uint32 *)&prop->data.u32;
-				break;
-			case PROP_SINT32:
-				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
-				break;
-#ifdef FLOATING_POINT
-			case PROP_FLOAT:
-				*(float **)res = (float *)&prop->data.f;
-				break;
-			case PROP_DOUBLE:
-				*(double **)res = (double *)&prop->data.d;
-				break;
-#endif
-			case PROP_STRING:
-				*(char ***)res = (char **)&prop->data.s;
-				break;
-			case PROP_POINTER:
-				*(void ***)res = (void **)&prop->data.p;
-				break;
-			default:
-				fatal("cannot translate prop");
-			}
-			break;
-		default:
-			fatal("unknown binding type");
-		}
-		if (binding->mutex != NULL && !return_locked) {
-			pthread_mutex_unlock(binding->mutex);
-		}
-		pthread_mutex_unlock(&wid->bindings_lock);
-		return (binding);
 	}
-	pthread_mutex_unlock(&wid->bindings_lock);
-
-	error_set("%s: no such binding: `%s'", OBJECT(wid)->name, name);
-	return (NULL);
+	if (ucslcpy(ucs, text, binding->size) >= binding->size) {
+		dprintf("%s: string oflow\n", name);
+	}
+	widget_binding_unlock(binding);
 }
 
 __inline__ void
@@ -635,13 +749,12 @@ widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
 {
 	struct widget *wid = p;
 
-#ifdef DEBUG
 	if (ind >= WIDGET_COLORS_MAX)
 		fatal("color stack oflow");
-#endif
+
 	wid->colors[ind] = SDL_MapRGBA(vfmt, r, g, b, a);
 	strlcpy(wid->color_names[ind], name, sizeof(wid->color_names[ind]));
-	
+
 	if (ind >= wid->ncolors)
 		wid->ncolors = ind+1;
 }
@@ -663,7 +776,7 @@ widget_destroy(void *p)
 }
 
 /*
- * Perform a blit from a source surface to the display, at coordinates
+ * Perform a fast blit from a source surface to the display, at coordinates
  * relative to the widget; clipping is done.
  */
 __inline__ void

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.106 2003/06/13 03:59:50 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.107 2003/06/14 11:28:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -37,7 +37,6 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
-#include <engine/unicode/unicode.h>
 #include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/widget.h>

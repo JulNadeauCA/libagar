@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.3 2003/06/11 23:35:25 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.4 2003/06/12 00:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ combo_collapse(struct combo *com)
 	view_detach(com->win);
 	com->win = NULL;
 	
-	stateb = widget_binding_get_locked(com->button, "state", &state);
+	stateb = widget_get_binding(com->button, "state", &state);
 	*state = 0;
 	widget_binding_modified(stateb);
 	widget_binding_unlock(stateb);

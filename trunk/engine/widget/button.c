@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.71 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.72 2003/06/13 01:44:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -182,7 +182,7 @@ button_mousemotion(int argc, union evarg *argv)
 	if (!bu->sensitive)
 		return;
 
-	stateb = widget_binding_get_locked(bu, "state", &pressed);
+	stateb = widget_get_binding(bu, "state", &pressed);
 	if (!widget_relative_area(bu, x, y) &&
 	    !bu->sticky && *pressed == 1) {
 		*pressed = 0;
@@ -207,7 +207,7 @@ button_mousebuttondown(int argc, union evarg *argv)
 	if (button != 1)
 		return;
 	
-	stateb = widget_binding_get_locked(bu, "state", &pushed);
+	stateb = widget_get_binding(bu, "state", &pushed);
 	if (!bu->sticky) {
 		*pushed = 1;
 	} else {
@@ -233,7 +233,7 @@ button_mousebuttonup(int argc, union evarg *argv)
 	    x > WIDGET(bu)->w || y > WIDGET(bu)->h)
 		return;
 	
-	stateb = widget_binding_get_locked(bu, "state", &pushed);
+	stateb = widget_get_binding(bu, "state", &pushed);
 	if (*pushed && button == 1 && !bu->sticky) {
 	    	*pushed = 0;
 		event_post(bu, "button-pushed", "%i", *pushed);

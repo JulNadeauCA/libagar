@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.16 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.17 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -106,9 +106,7 @@ palette_changed(int argc, union evarg *argv)
 	Uint32 *color;
 	Uint8 r, g, b, a;
 
-	if ((colorb = widget_binding_get_locked(pal, "color", &color)) == NULL)
-		fatal("%s", error_get());
-
+	colorb = widget_get_binding(pal, "color", &color);
 	SDL_GetRGBA(*color, vfmt, &r, &g, &b, &a);
 	switch (nbar) {
 	case 0:

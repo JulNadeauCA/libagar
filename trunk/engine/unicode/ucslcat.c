@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: ucslcat.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -24,21 +24,23 @@
 #include "unicode.h"
 
 /*
- * Appends src to string dst of size siz (unlike strncat, siz is the
- * full size of dst, not space left).  At most siz-1 characters
- * will be copied.  Always NUL terminates (unless siz <= ucslen(dst)).
- * Returns ucslen(src) + MIN(siz, ucslen(initial dst)).
- * If retval >= siz, truncation occurred.
+ * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(u16)
+ * Unicode characters will be copied.
+ *
+ * Always NUL terminates (unless bytes <= ucslen(dst)*sizeof(u16)).
+ * Returns (ucslen(src) + MIN(bytes, ucslen(initial dst))) * sizeof(u16)
+ * If retval >= bytes, truncation occurred.
  */
 size_t
-ucslcat(Uint16 *dst, const Uint16 *src, size_t siz)
+ucslcat(Uint16 *dst, const Uint16 *src, size_t bytes)
 {
 	Uint16 *d = dst;
 	const Uint16 *s = src;
+	size_t siz = bytes / sizeof(Uint16);
 	size_t n = siz;
 	size_t dlen;
 
-	/* Find the end of dst and adjust bytes left but don't go past end */
+	/* Find the end of dst and adjust bytes left but don't go past end. */
 	while (n-- != 0 && *d != '\0') {
 		d++;
 	}
@@ -46,7 +48,7 @@ ucslcat(Uint16 *dst, const Uint16 *src, size_t siz)
 	n = siz - dlen;
 
 	if (n == 0) {
-		return (dlen + ucslen(s));
+		return ((dlen + ucslen(s))*sizeof(Uint16));
 	}
 	while (*s != '\0') {
 		if (n != 1) {
@@ -57,6 +59,6 @@ ucslcat(Uint16 *dst, const Uint16 *src, size_t siz)
 	}
 	*d = '\0';
 
-	return (dlen + (s - src));	/* count does not include NUL */
+	return ((dlen + (s - src))*sizeof(Uint16));   /* Does not include NUL */
 }
 
