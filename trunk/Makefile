@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.37 2003/08/06 04:11:22 vedge Exp $
+#	$Csoft: Makefile,v 1.38 2003/08/07 22:41:46 vedge Exp $
 
 SUBDIR=	 dencomp \
 	 denex \
@@ -16,7 +16,7 @@ depend: prereq depend-subdir
 regress: regress-subdir
 
 prereq:
-	(cd engine/compat && ${MAKE})
+	(cd compat && ${MAKE})
 	(cd engine/error && ${MAKE})
 	(cd engine/loader && ${MAKE})
 	(cd dencomp && ${MAKE})

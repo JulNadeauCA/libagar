@@ -1,4 +1,4 @@
-/*	$Csoft: den.c,v 1.2 2003/06/21 07:14:19 vedge Exp $	*/
+/*	$Csoft: den.c,v 1.3 2004/01/03 04:25:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/strlcpy.h>
+#include <compat/strlcpy.h>
 
 #include <engine/error/error.h>
 
