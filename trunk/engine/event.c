@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.110 2002/12/13 23:36:41 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.111 2002/12/14 05:29:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -69,9 +69,10 @@ int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
 #define	engine_debug event_debug
 
 static struct window *fps_win;
+static struct label *fps_label;
+static struct graph *fps_graph;
+static struct graph_item *fps_item;
 #endif
-
-#define EVENT_DELTA	80
 
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
@@ -139,36 +140,37 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
-#define UPDATE_FPS(delta) do {						\
-	label_printf(fps_label, "%d/%d", (delta), EVENT_DELTA);		\
-	graph_plot(fps_item, (delta));					\
-} while (/*CONSTCOND*/0)
-#else
-#define UPDATE_FPS(delta)
+static __inline__ void
+event_update_fps_counter(void)
+{
+	label_printf(fps_label, "%d/%d ticks", view->cur_fps_ticks,
+	    view->max_fps_ticks);
+	graph_plot(fps_item, view->cur_fps_ticks);
+}
 #endif
 
-#define COMPUTE_DELTA(delta, ntick) do {			\
-	(delta) = EVENT_DELTA - (SDL_GetTicks() - (ntick));	\
-	UPDATE_FPS((delta));					\
-	if ((delta) < 1) {					\
-		debug(DEBUG_UNDERRUNS, "underrun: %d frames\n",	\
-		    (delta));					\
-		(delta) = 1;					\
-	}							\
-} while (/*CONSTCOND*/0)
+static __inline__ void
+event_adjust_fps(Uint32 ntick)
+{
+	view->cur_fps_ticks = view->max_fps_ticks - (SDL_GetTicks() - ntick);
+#ifdef DEBUG
+	event_update_fps_counter();
+#endif
+	if (view->cur_fps_ticks < 1) {
+		debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
+		    view->cur_fps_ticks, view->max_fps_ticks);
+		view->cur_fps_ticks = 1;
+	}
+}
 
 void
 event_loop(void)
 {
 	SDL_Event ev;
-	Uint32 ltick, ntick;
-	int rv, delta;
+	Uint32 ltick, ntick = 0;
 	struct window *win;
 #ifdef DEBUG
 	struct region *reg;
-	struct label *fps_label;
-	struct graph *fps_graph;
-	struct graph_item *fps_item;
 
 	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
 	    133, 104, 125, 91);
@@ -186,10 +188,13 @@ event_loop(void)
 	}
 #endif
 
-	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_DELTA;;) {
+	view_set_max_ticks(50);
+
+	ltick = SDL_GetTicks();
+	for (;;) {
 		ntick = SDL_GetTicks();			/* Rendering starts */
 
-		if ((ntick - ltick) >= delta) {
+		if ((ntick - ltick) > view->max_fps_ticks) {
 			pthread_mutex_lock(&view->lock);
 
 			view->ndirty = 0;
@@ -217,7 +222,7 @@ event_loop(void)
 					debug(DEBUG_VIDEO_UPDATES,
 					    "updating static nodes\n");
 					rootmap_draw();
-					COMPUTE_DELTA(delta, ntick);
+					event_adjust_fps(ntick);
 					m->redraw = 0;
 				}
 				pthread_mutex_unlock(&m->lock);
@@ -249,11 +254,11 @@ event_loop(void)
 
 				if (view->gfx_engine == GFX_ENGINE_GUI) {
 					/* Event/motion interpolation. */
-					COMPUTE_DELTA(delta, ntick);
+					event_adjust_fps(ntick);
 				}
 #ifdef DEBUG
 				/* Update the fps counter. */
-				COMPUTE_DELTA(delta, ntick);
+				event_adjust_fps(ntick);
 #endif
 			}
 			ltick = SDL_GetTicks();		/* Rendering ends */
@@ -268,8 +273,9 @@ event_loop(void)
 static void
 event_dispatch(SDL_Event *ev)
 {
-	int rv;
 	struct window *win;
+	int rv;
+	int old_w, old_h;
 
 	pthread_mutex_lock(&view->lock);
 
@@ -277,11 +283,34 @@ event_dispatch(SDL_Event *ev)
 	case SDL_VIDEORESIZE:
 		debug(DEBUG_VIDEORESIZE_EV,
 		    "SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w, ev->resize.h);
+
+		SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0, view->v->flags);
+		if (view->v == NULL) {
+			fatal("setting %dx%d mode: %s\n",
+			    ev->resize.w, ev->resize.h, SDL_GetError());
+		}
+
+		old_w = view->w;
+		old_h = view->h;
 		view->w = ev->resize.w;
 		view->h = ev->resize.h;
+
+		TAILQ_FOREACH(win, &view->windows, windows) {
+			win->rd.x = win->rd.x * ev->resize.w/old_w;
+			win->rd.y = win->rd.y * ev->resize.h/old_h;
+			win->rd.w = win->rd.w * ev->resize.w/old_w;
+			win->rd.h = win->rd.h * ev->resize.h/old_h;
+			win->saved_rd.x = win->saved_rd.x * ev->resize.w/old_w;
+			win->saved_rd.y = win->saved_rd.y * ev->resize.h/old_h;
+			win->saved_rd.w = win->saved_rd.w * ev->resize.w/old_w;
+			win->saved_rd.h = win->saved_rd.h * ev->resize.h/old_h;
+
+			window_resize(win);
+		}
 		break;
 	case SDL_VIDEOEXPOSE:
 		debug(DEBUG_VIDEOEXPOSE_EV, "SDL_VIDEOEXPOSE\n");
+
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_TILEBASED:
 			/* Redraw the map only. */

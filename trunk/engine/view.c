@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.89 2002/12/03 04:00:09 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.90 2002/12/04 04:22:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -96,7 +96,7 @@ view_init(gfx_engine_t ge)
 	v->winop = VIEW_WINOP_NONE;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
-
+	
 	/* Allocate the dirty rectangle array. */
 	v->maxdirty = v->w/TILEW * v->h/TILEH;
 	v->ndirty = 0;
@@ -106,10 +106,11 @@ view_init(gfx_engine_t ge)
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
-#if 0
-	/* XXX thread unsafe */
-	screenflags |= SDL_RESIZABLE;
-#endif
+	if (v->gfx_engine == GFX_ENGINE_GUI) {
+		/* XXX thread unsafe */
+		screenflags |= SDL_RESIZABLE;
+	}
+
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
 		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->bpp,
@@ -140,7 +141,7 @@ view_init(gfx_engine_t ge)
 		break;
 	}
 	view = v;
-
+	
 	return (0);
 }
 
@@ -324,5 +325,18 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
 	return (ds);
+}
+
+void
+view_set_max_ticks(int fps)
+{
+	if (fps < 1 || fps > 800) {
+		fatal("bad fps\n");
+	}
+
+	pthread_mutex_lock(&view->lock);
+	view->cur_fps_ticks = 0;
+	view->max_fps_ticks = fps;
+	pthread_mutex_unlock(&view->lock);
 }
 
