@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.6 2003/03/20 01:17:33 vedge Exp $
+.\"	$Csoft: event.3,v 1.7 2003/04/12 00:35:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -93,19 +93,19 @@ option defined at compile-time.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "struct event *"
-.Fn event_new "void *obj" "char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Fn event_new "void *obj" "const char *name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_post "void *obj" "char *event_name" "const char *fmt" "..."
+.Fn event_post "void *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_forward "void *obj" "char *event_name" "int argc" "union evarg *argv"
+.Fn event_forward "void *obj" "const char *name" "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
 .Fn event_new
 function registers a new event handler to service events called
-.Fa event_name .
+.Fa name .
 .Fa obj
 will be passed as the first argument to the event handler function.
 .Fa handler
@@ -120,7 +120,7 @@ The following arguments will be inserted at the start of the evarg array.
 The
 .Fn event_post
 function arranges for the event handler associated with
-.Fa event_name ,
+.Fa name ,
 if any, to be invoked.
 For events of type
 .Dv EVENT_ASYNC ,
@@ -139,7 +139,7 @@ will be inserted at the end of the evarg array.
 The
 .Fn event_forward
 function forwards the event identified by
-.Fa event_name
+.Fa name
 to object
 .Fa obj .
 .Fn event_forward
