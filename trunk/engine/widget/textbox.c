@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.1 2002/05/24 09:17:01 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.2 2002/05/24 10:23:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -53,8 +53,8 @@ static const struct widget_ops textbox_ops = {
 		textbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,		/* onattach */
-		NULL,		/* ondetach */
+		textbox_onattach, /* onattach */
+		textbox_ondetach, /* ondetach */
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
@@ -63,12 +63,12 @@ static const struct widget_ops textbox_ops = {
 };
 
 struct textbox *
-textbox_new(struct region *reg, int flags, int rw, int rh)
+textbox_new(struct region *reg, char *label, int flags, int rw)
 {
 	struct textbox *textbox;
 
 	textbox = emalloc(sizeof(struct textbox));
-	textbox_init(textbox, flags, rw, rh);
+	textbox_init(textbox, label, flags, rw);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, textbox);
@@ -78,7 +78,7 @@ textbox_new(struct region *reg, int flags, int rw, int rh)
 }
 
 void
-textbox_init(struct textbox *b, int flags, int rw, int rh)
+textbox_init(struct textbox *b, char *label, int flags, int rw)
 {
 	int h;
 	SDL_Surface *s;
@@ -91,15 +91,31 @@ textbox_init(struct textbox *b, int flags, int rw, int rh)
 	b->xmargin = 4;
 	b->ymargin = 3;
 
-	h = (rh > s->h) ? rh : s->h;
-	h += b->ymargin * 4;
+	h = s->h + b->ymargin*4;
 
 	widget_init(&b->wid, "textbox", "widget", &textbox_ops, rw, h);
 	b->flags = flags;
 	b->flags |= TEXTBOX_CURSOR;
-	b->text = strdup("foo");
+	b->text = strdup("");
+	b->label = label != NULL ? strdup(label) : NULL;
 	b->textpos = -1;
 	b->typed = NULL;
+}
+
+void
+textbox_onattach(void *parent, void *child)
+{
+	if (SDL_EnableKeyRepeat(250, 30) != 0) {	/* XXX pref */
+		warning("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
+	}
+}
+
+void
+textbox_ondetach(void *parent, void *child)
+{
+	if (SDL_EnableKeyRepeat(0, 0) != 0) {		/* XXX pref */
+		fatal("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
+	}
 }
 
 void
@@ -108,6 +124,7 @@ textbox_destroy(void *ob)
 	struct textbox *b = ob;
 
 	free(b->text);
+	free(b->label);
 }
 
 void
@@ -216,8 +233,8 @@ textbox_event(void *p, SDL_Event *ev, int flags)
 			    kcode->callback == NULL) {
 				continue;
 			}
-			if ((int)kcode->modmask == 0 ||
-			    (int)ev->key.keysym.mod & (int)kcode->modmask) {
+			if (kcode->modmask == 0 ||
+			    (int)ev->key.keysym.mod & kcode->modmask) {
 				textbox_keycodes[i].callback(tbox, ev);
 				WIDGET(tbox)->win->redraw++;
 				return;
