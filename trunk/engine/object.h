@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.37 2002/05/31 10:41:15 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.38 2002/06/06 10:18:19 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -53,8 +53,41 @@ struct object_audio {
 	pthread_mutex_t used_lock;
 };
 
+struct obnoderef {
+	struct	 object *pobj;
+	Uint32	 flags;
+#define OBNODEREF_SPRITE	0x0002
+#define OBNODEREF_ANIM		0x0010
+#define OBNODEREF_ANY		0x00ff
+#define OBNODEREF_SAVE		0x0100
+	Uint32	 offs;
+
+	TAILQ_ENTRY(obnoderef) nrefs;
+};
+
+struct obnode {
+	TAILQ_HEAD(, obnoderef) nrefs;	/* Node references */
+	Uint32	 nnrefs;
+
+	Uint32	 flags;
+#define OBNODE_ORIGIN		0x01	/* Origin of this map */
+#define OBNODE_WALKTHROUGH	0x02	/* Can walk through */
+#define OBNODE_WALKBEHIND	0x04	/* Can walk behind */
+
+	Uint32	 v1, v2;		/* Extra properties */
+};
+
+struct obmap {
+	Uint32	 flags;
+#define OBMAP_2D		0x0020	/* Two-dimensional */
+	Uint32	 mapw, maph;		/* Map geometry */
+	Uint32	 defx, defy;		/* Map origin */
+	struct	 obnode **map;		/* Array of nodes */
+};
+
 struct object {
 	/* Read-only once attached */
+
 	char	*type;			/* Type of immediate descendent */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
@@ -72,10 +105,15 @@ struct object {
 	struct	 object_audio *audio;	/* Static samples */
 
 	/* Read-write */
+	struct	 obmap **maps;		/* Array of maps */
+	pthread_mutex_t	maps_lock;
+#if 1
 	struct	 mappos *pos;		/* Position on the map. XXX array */
-	pthread_mutex_t	pos_lock;	/* Lock on position */
+	pthread_mutex_t	pos_lock;
+#endif
+
 	TAILQ_HEAD(,event) events;	/* Event handlers */
-	pthread_mutex_t	events_lock;	/* Lock on events/events processing */
+	pthread_mutex_t	events_lock;
 
 	/* Locking policy defined by the parent */
 	SLIST_ENTRY(object) wobjs;	/* Attached objects */
@@ -119,6 +157,7 @@ char	*object_name(char *, int);
 int	 object_loadfrom(void *, char *);
 int	 object_addanim(struct object_art *, struct anim *);
 int	 object_addsprite(struct object_art *, SDL_Surface *);
+int	 object_breaksprite(struct object_art *, SDL_Surface *);
 void	 object_dump(void *);
 char	*object_path(char *, const char *);
 
