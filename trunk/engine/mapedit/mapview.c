@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.3 2002/07/06 23:55:42 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.4 2002/07/07 00:24:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -83,6 +83,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
 	widget_init(&mv->wid, "mapview", "widget", &mapview_ops, rw, rh);
+	WIDGET(mv)->flags |= WIDGET_MOUSEOUT;
 
 	mv->flags = flags;
 	mv->med = med;
@@ -103,6 +104,8 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	    mapview_event, "%i", WINDOW_KEYDOWN);
 	event_new(mv, "window-mousemotion", 0,
 	    mapview_event, "%i", WINDOW_MOUSEMOTION);
+	event_new(mv, "window-mouseout", 0,
+	    mapview_event, "%i", WINDOW_MOUSEOUT);
 	event_new(mv, "window-widget-scaled", 0,
 	    mapview_scaled, NULL);
 }
@@ -257,6 +260,9 @@ mapview_event(int argc, union evarg *argv)
 	OBJECT_ASSERT(mv, "widget");
 
 	switch (type) {
+	case WINDOW_MOUSEOUT:
+		mv->mouse.move = 0;
+		break;
 	case WINDOW_MOUSEMOTION:
 		x = argv[2].i / TILEW;
 		y = argv[3].i / TILEH;
@@ -272,7 +278,8 @@ mapview_event(int argc, union evarg *argv)
 			if (med->curtool != NULL &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    SDL_GetMouseState(NULL, NULL) &
-			    SDL_BUTTON_LMASK) {
+			    SDL_BUTTON_LMASK &&
+			    (x > 0 && y > 0 && x < mv->mw && y < mv->mh)) {
 				if (TOOL_OPS(med->curtool)->tool_effect
 				    != NULL) {
 				    	edcursor_set(mv->cursor, 0);
@@ -296,6 +303,7 @@ mapview_event(int argc, union evarg *argv)
 			mv->mouse.move++;
 		} else {
 			if (med->curtool != NULL &&
+			   (x > 0 && y > 0 && x < mv->mw && y < mv->mh) &&
 			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
 				edcursor_set(mv->cursor, 0);
 				TOOL_OPS(med->curtool)->tool_effect(

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.55 2002/06/27 00:50:22 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.56 2002/07/06 23:49:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -84,6 +84,7 @@ static const struct event_proto {
 	{ "window-mousebuttonup", "%i, %i, %i" },	/* button, x, y */
 	{ "window-mousebuttondown", "%i, %i, %i" },	/* button, x, y */
 	{ "window-mousemotion", "%i, %i" },		/* x, y */
+	{ "window-mouseout", NULL },
 	{ "window-keyup", "%i, %i" },			/* keysym, keymod */
 	{ "window-keydown", "%i, %i" },			/* keysym, keymod */
 	/* Widget was just scaled */
