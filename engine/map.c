@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.26 2002/02/15 10:00:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.27 2002/02/15 10:49:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -435,7 +435,8 @@ map_animate(struct map *m)
 						}
 					}
 				}
-			
+
+				/* XXX ... use a specific flag. */
 				if (node->flags & NODE_ANIM &&
 				    nref->flags & MAPREF_ANIM) {
 					struct draw *ndraw;
@@ -451,6 +452,24 @@ map_animate(struct map *m)
 				} else {
 					map_plot_sprite(m, src, rx, ry);
 				}
+#ifdef DEBUG
+				if (nref->yoffs < 0)
+					map_plot_sprite(m,
+					    curmapedit->obj.sprites[
+					    MAPEDIT_NVEL], rx, ry);
+				if (nref->yoffs > 0)
+					map_plot_sprite(m,
+					    curmapedit->obj.sprites[
+					    MAPEDIT_SVEL], rx, ry);
+				if (nref->xoffs < 0)
+					map_plot_sprite(m,
+					    curmapedit->obj.sprites[
+					    MAPEDIT_WVEL], rx, ry);
+				if (nref->xoffs > 0)
+					map_plot_sprite(m,
+					    curmapedit->obj.sprites[
+					    MAPEDIT_EVEL], rx, ry);
+#endif
 			}
 
 			if (curmapedit != NULL) {
@@ -599,7 +618,7 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	if (flags & NODE_HASTE)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
 		    vx, vy);
-#if 0
+#if 1
 	if (flags & NODE_ANIM)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
 		    vx, vy);
