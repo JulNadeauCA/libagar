@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.124 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.125 2002/12/04 03:45:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -60,7 +60,6 @@ mapedit_init(struct mapedit *med, char *name)
 {
 	object_init(&med->obj, "map-editor", name, "mapedit",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &mapedit_ops);
-	med->flags = 0;
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
 	med->ref.obj = NULL;
@@ -99,7 +98,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		/* Create a shadow structure for this object. */
 		eob = emalloc(sizeof(struct editobj));
 		eob->pobj = ob;
-		SIMPLEQ_INIT(&eob->erefsh);
+		SIMPLEQ_INIT(&eob->erefs);
 		eob->nrefs = 0;
 		eob->nsprites = ob->art->nsprites;
 		eob->nanims = ob->art->nanims;
@@ -123,7 +122,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 				eref->spritei = y;
 				eref->p = SPRITE(ob, y);
 				eref->type = EDITREF_SPRITE;
-				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				SIMPLEQ_INSERT_TAIL(&eob->erefs, eref, erefs);
 				eob->nrefs++;
 			}
 		}
@@ -140,7 +139,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 				eref->spritei = -1;
 				eref->p = ANIM(ob, z);
 				eref->type = EDITREF_ANIM;
-				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				SIMPLEQ_INSERT_TAIL(&eob->erefs, eref, erefs);
 				eob->nrefs++;
 			}
 		}
@@ -181,8 +180,8 @@ mapedit_detached(int argc, union evarg *argv)
 		struct editref *eref, *nexteref;
 
 		nexteob = TAILQ_NEXT(eob, eobjs);
-		for (eref = SIMPLEQ_FIRST(&eob->erefsh);
-		     eref != SIMPLEQ_END(&eob->erefsh);
+		for (eref = SIMPLEQ_FIRST(&eob->erefs);
+		     eref != SIMPLEQ_END(&eob->erefs);
 		     eref = nexteref) {
 			nexteref = SIMPLEQ_NEXT(eref, erefs);
 			free(eref);

@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.25 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.26 2002/12/04 01:50:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -200,11 +200,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	 */
 
 	/* Object list window */
-	win = window_new("mapedit-object-list", 0,
-	    83, 0, view->w-96, TILEH+51, TILEW+42, TILEH+51);
-	window_set_caption(win, "Objects");
-	reg = region_new(win, REGION_HALIGN,
-	    0, 0, 100, 100);
 	med->objlist_win = objq_window(med);
 
 	/*

@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.27 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.28 2002/12/04 01:50:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,9 +119,11 @@ tl_objs_selected(int argc, union evarg *argv)
 	static int cury = 85;
 	char *wname;
 
-	/* XXX use generic windows for this */
 	/* Create a new window for the tile map. */
 	win = window_generic_new(88, 264, "mapedit-tmap-%s", ob->name);
+	if (win == NULL) {
+		return;		/* Exists */
+	}
 	win->rd.x = view->w - 170;
 	win->rd.y = cury;
 	win->minw = 56;
