@@ -75,27 +75,25 @@ engine_config(void)
 	struct checkbox *fullscr_cbox;
 	struct button *close_button, *color_button;
 	struct label *sharedir_label;
-	struct segment *body_seg, *buttons_seg;
+	struct region *body_reg, *buttons_reg;
 
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    64, 64, 512, 256);
-	body_seg = segment_new(win, SEGMENT_HORIZ, 80);
-	buttons_seg = segment_new(win, SEGMENT_HORIZ, 10);
+	body_reg = region_new(win, WIDGET_VALIGN, 0, 0, 100, 80, 5);
+	buttons_reg = region_new(win, WIDGET_HALIGN, 0, 80, 100, 20, 5);
 
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
-	sharedir_label = label_new(body_seg, sharetxt, 0, 10, 35);
+	sharedir_label = label_new(body_reg, sharetxt, 0);
 
-	fullscr_cbox = checkbox_new(body_seg, "Full-screen mode", 0, 10, 60);
+	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
 	fullscr_cbox->push = fullscrn_cbox_push;
 
-	color_button = button_new(buttons_seg, "Colors", 0,
-	    (win->w)/3-64, win->h-64);
+	color_button = button_new(buttons_reg, "Colors", 0, 128, 32);
 	color_button->push = color_button_push;
 	
-	close_button = button_new(buttons_seg, "Close", 0,
-	    (win->w)/2-64, win->h-64);
+	close_button = button_new(buttons_reg, "Close", 0, 128, 32);
 	close_button->push = close_button_push;
 }
 
