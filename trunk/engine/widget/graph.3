@@ -84,32 +84,64 @@ can be changed at runtime, and may include:
 #define BUTTON_PRESSED	0x01		/* Button is pressed */
 #define BUTTON_STICKY	0x02		/* Button state is static */
 .Ed
+.Sh PLOTTING
+.nr nS 1
+.Ft "struct graph_item *"
+.Fn graph_add_item "struct graph *graph" "char *name" "Uint32 color"
+.Pp
+.Ft void
+.Fn graph_plot "struct graph_item *item" "Sint32 val"
+.Pp
+.Ft int
+.Fn graph_load "struct graph_item *item" "int fd"
+.Pp
+.Ft int
+.Fn graph_save "struct graph_item *item" "int fd"
+.nr nS 0
+.Pp
+The
+.Fn graph_add_item
+function creates an item identified by the null-terminated string pointed to
+by
+.Fa name .
+.Pp
+The
+.Fn graph_plot
+function adds a value
+.Fa val
+to the graph item
+.Fa item .
+The
+.Fn graph_load
+function loads graph data from file descriptor
+.Fn fd .
+.Pp
+The
+.Fn graph_save
+function saves graph data to file descriptor
+.Fn fd .
 .Sh EVENTS
 The
 .Nm
 widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n -indent
-.It window-mousebuttonup
-Release the button.
-.It window-mousebuttondown
-Press the button.
-.It window-keyup
-Release the button.
+.It window-mousemotion
+Scroll (x motion) or change the origin position (y motion).
 .It window-keydown
-Press the button.
-.It window-mouseout
-Abort a button press
+Key 0 moves to offset 0, left key scrolls left, right key scrolls right,
+S key saves the graph, L key loads the graph.
+.It window-mousebuttonup
+Stop moving.
+.It window-mousebuttondown
+Start moving.
+.It widget-scaled
+Adjust the graph.
 .El
 .Pp
 The
 .Nm
-widget generates the following events:
-.Pp
-.Bl -tag -compact -width 25n -indent
-.It button-pushed
-Button press.
-.El
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3
