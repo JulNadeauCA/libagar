@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.45 2002/12/21 10:26:33 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.46 2002/12/25 03:29:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -43,7 +43,7 @@ struct widget_binding {
 	enum widget_binding_type	 type;		/* Type of value */
 	char				*name;		/* Identifier */
 	pthread_mutex_t			*mutex;		/* Optional lock */
-	void				*p1, *p2;	/* Pointers to values */
+	void				*p1, *p2;
 	SLIST_ENTRY(widget_binding)	 bindings;
 };
 
@@ -184,13 +184,17 @@ void	widget_destroy(void *);
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 
 struct widget_binding	*widget_bind(void *, const char *,
-			     enum widget_binding_type, pthread_mutex_t *, ...);
-#define			 widget_bind_prop(ob, binding, propobj, propname)    \
-			     widget_bind((ob), (binding), WIDGET_PROP, NULL, \
-			     (propobj), (propname))
+			     enum widget_binding_type, ...);
 
-struct widget_binding	*widget_get_binding(void *, const char *, void *, int);
-void			 widget_unlock_binding(void *, const char *);
+struct widget_binding	*_widget_binding_get(void *, const char *, void *, int);
+#define			  widget_binding_get(widp, name, res) \
+			 _widget_binding_get((widp), (name), (res), 0)
+#define			  widget_binding_get_locked(widp, name, res) \
+			 _widget_binding_get((widp), (name), (res), 1)
+
+void	widget_binding_lock(struct widget_binding *);
+void	widget_binding_modified(struct widget_binding *);
+void	widget_binding_unlock(struct widget_binding *);
 
 int	widget_get_int(void *, const char *);
 #define	widget_get_bool	widget_get_int
