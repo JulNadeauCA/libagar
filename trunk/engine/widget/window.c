@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.170 2003/03/15 00:45:28 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.171 2003/03/16 23:57:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/config.h>
 #include <engine/version.h>
 #include <engine/view.h>
+
 #include <engine/mapedit/mapedit.h>
 
 #include <libfobj/fobj.h>
@@ -164,32 +165,32 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
     int rw, int rh, int minw, int minh)
 {
 	size_t namelen;
-	char *wname;
+	char wname[OBJECT_NAME_MAX];
 	int i, fl = flags;
 
 	if (name != NULL) {					/* Unique */
-		Asprintf(&wname, "win-%s", name);
+		snprintf(wname, sizeof(wname), "win-%s", name);
 		fl |= WINDOW_SAVE_POSITION;
 	} else {						/* Generic */
-		static int curwindow = 0;
+		static Uint32 curwindow = 0;
 		static pthread_mutex_t curwindow_lock =
 		    PTHREAD_MUTEX_INITIALIZER;
 
+		/* XXX ugly */
 		pthread_mutex_lock(&curwindow_lock);
 		curwindow++;
 		pthread_mutex_unlock(&curwindow_lock);
-
-		Asprintf(&wname, "win-generic%d", curwindow++);
+		snprintf(wname, sizeof(wname), "win-generic%u", curwindow++);
 	}
-	namelen = strlen(wname);
-	for (i = 0; i < namelen; i++) {	
-		if (wname[i] == '/') {		/* XXX restrict further */
+	for (i = 0; i < sizeof(wname); i++) {	
+		if (wname[i] == '\0')
+			break;
+		if (wname[i] == '/') 		/* XXX restrict further */
 			wname[i] = '_';
-		}
 	}
-	object_init(&win->wid.obj, "window", wname, "window",
-	    OBJECT_ART|OBJECT_ART_CACHE, &window_ops);
-	free(wname);
+	object_init(OBJECT(win), "window", wname, "window", OBJECT_ART,
+	    &window_ops);
+	art_wire(OBJECT(win)->art);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
 	    "background",
@@ -435,7 +436,7 @@ window_draw(struct window *win)
 	SDL_Rect rd = win->rd;
 	int i;
 	
-	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
+	debug_n(DEBUG_DRAW, "drawing %s (%ux%u):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
 	/* Fill the background. */

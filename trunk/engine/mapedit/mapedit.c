@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.155 2003/03/14 07:13:34 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.156 2003/03/16 04:00:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -131,7 +131,7 @@ mapedit_init(void)
 	int i;
 
 	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_SYSTEM, &mapedit_ops);
+	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_STATIC, &mapedit_ops);
 	med->curtool = NULL;
 	med->src_node = NULL;
 	map_init(&med->copybuf, "mapedit-copybuf", NULL);
@@ -287,9 +287,8 @@ mapedit_load(void *p, int fd)
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT_OPS(mapedit.tools[i])->load == NULL)
+		if (OBJECT(mapedit.tools[i])->ops->load == NULL)
 			continue;
-
 		object_load(mapedit.tools[i]);
 	}
 	return (0);
@@ -301,12 +300,10 @@ mapedit_save(void *p, int fd)
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT_OPS(mapedit.tools[i])->save == NULL)
+		if (OBJECT(mapedit.tools[i])->ops->save == NULL)
 			continue;
-
-		if (object_save(mapedit.tools[i]) == -1) {
+		if (object_save(mapedit.tools[i]) == -1)
 			text_msg("Error saving", "%s", error_get());
-		}
 	}
 	return (0);
 }
