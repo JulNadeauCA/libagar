@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.152 2003/05/25 16:05:34 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.153 2003/06/06 02:06:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -198,7 +198,7 @@ event_loop(void)
 
 	ltick = SDL_GetTicks();
 	for (;;) {
-		t = SDL_GetTicks();			/* Rendering starts */
+		t = SDL_GetTicks();			/* Rendering begins */
 
 		if ((t - ltick) > view->refresh.delay) {
 			pthread_mutex_lock(&view->lock);
@@ -210,7 +210,7 @@ event_loop(void)
 				if (m == NULL) {
 					dprintf("NULL map, exiting\n");
 					pthread_mutex_unlock(&view->lock);
-					return;
+					break;
 				}
 
 				pthread_mutex_lock(&m->lock);
@@ -235,7 +235,6 @@ event_loop(void)
 				    WIDGET(win)->w, WIDGET(win)->h);
 				pthread_mutex_unlock(&win->lock);
 			}
-			pthread_mutex_unlock(&view->lock);
 
 			if (view->ndirty > 0) {
 #ifdef HAVE_OPENGL
@@ -250,6 +249,8 @@ event_loop(void)
 				view->ndirty = 0;
 				event_adjust_refresh(t);
 			}
+			pthread_mutex_unlock(&view->lock);
+
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
@@ -363,10 +364,17 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_QUIT:
-		if (view->rootmap == NULL) { 			/* XXX */
+		switch (view->gfx_engine) {
+		case GFX_ENGINE_TILEBASED:
+			/* Stop the event loop synchronously. */
+			view->rootmap->map = NULL;
+			break;
+		default:
+			/* Shut down immediately. */
 			pthread_mutex_unlock(&view->lock);
+			engine_destroy();
+			/* NOTREACHED */
 		}
-		engine_stop();
 		break;
 	}
 	

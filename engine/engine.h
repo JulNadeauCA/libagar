@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.63 2003/05/20 11:30:34 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.64 2003/06/06 02:41:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -102,7 +102,6 @@ extern struct object *world;	/* Roots of Evil */
 __BEGIN_DECLS
 extern DECLSPEC int	 engine_init(int, char **, struct engine_proginfo *,
 			             int);
-extern DECLSPEC void	 engine_stop(void);
 extern DECLSPEC void	 engine_destroy(void);
 extern __inline__ void	 lock_linkage(void);
 extern __inline__ void	 unlock_linkage(void);
