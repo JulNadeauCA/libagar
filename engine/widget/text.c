@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.83 2004/04/26 03:21:19 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.84 2004/05/12 05:33:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -190,6 +190,7 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint32 ch)
 }
 
 /* Render UTF-8 text onto a new surface. */
+/* XXX use state variables for font spec */
 SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
@@ -204,6 +205,7 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 }
 
 /* Render (possibly multi-line) UCS-4 text onto a new surface. */
+/* TODO use pools to get rid of all the insane allocations */
 SDL_Surface *
 text_render_unicode(const char *fontname, int fontsize, Uint32 color,
     const Uint32 *text)
@@ -279,7 +281,8 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		rd.h = font_h;
 
 		/* Generate the final surface. */
-		su = SDL_CreateRGBSurface(SDL_SWSURFACE, maxw, lineskip*nlines,
+		su = SDL_CreateRGBSurface(SDL_SWSURFACE, maxw,
+		    lineskip*(nlines+1),
 		    vfmt->BitsPerPixel,
 		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
 		if (su == NULL)
@@ -288,7 +291,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		colorkey = SDL_MapRGB(su->format, 15, 15, 15);
 		SDL_FillRect(su, NULL, colorkey);
 
-		for (i = 0;
+		for (i = 0, rd.y = lineskip/2;
 		     i < nlines;
 		     i++, rd.y += lineskip) {
 			rd.w = lines[i]->w;
