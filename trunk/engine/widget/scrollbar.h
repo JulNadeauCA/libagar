@@ -1,20 +1,24 @@
-/*	$Csoft: scrollbar.h,v 1.6 2002/12/21 10:21:16 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.7 2002/12/26 07:04:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SCROLLBAR_H_
 #define _AGAR_WIDGET_SCROLLBAR_H_
 
+enum scrollbar_orientation {
+	SCROLLBAR_HORIZ,
+	SCROLLBAR_VERT
+};
+
 struct scrollbar {
 	struct widget wid;
 
 	/* Read-only once attached. */
-	int	 flags;
-#define SCROLLBAR_HORIZONTAL	0x01	/* Horizontal scroll bar */
-#define SCROLLBAR_VERTICAL	0x02	/* Vertical scroll bar */
+	enum scrollbar_orientation orientation;
+	int			   button_size;		/* Scroll button size */
 
+	/* Shares window lock. */
 	int	 curbutton;		/* Button held */
 	int	 bar_size;		/* Scroll bar size */
-	int	 button_size;		/* Scroll button size */
 
 	/* Default bindings */
 	struct {
@@ -25,8 +29,10 @@ struct scrollbar {
 	} def;
 };
 
-struct scrollbar	*scrollbar_new(struct region *, int, int, int);
-void			 scrollbar_init(struct scrollbar *, int, int, int);
+struct scrollbar	*scrollbar_new(struct region *, int, int,
+			     enum scrollbar_orientation);
+void			 scrollbar_init(struct scrollbar *, int, int,
+			     enum scrollbar_orientation);
 void		 	 scrollbar_destroy(void *);
 void			 scrollbar_draw(void *);
 
