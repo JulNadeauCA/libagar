@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.143 2003/02/20 04:57:25 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.144 2003/02/20 05:37:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -129,7 +129,7 @@ mapedit_init(void)
 	med->src_node = NULL;
 
 	prop_set_int(med, "zoom-minimum", 4);
-	prop_set_int(med, "zoom-maximum", 400);
+	prop_set_int(med, "zoom-maximum", 500);
 	prop_set_int(med, "zoom-increment", 8);
 	prop_set_int(med, "zoom-speed", 60);
 	prop_set_int(med, "tilemap-item-size", 16);
