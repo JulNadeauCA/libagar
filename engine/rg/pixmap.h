@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.6 2005/02/19 07:22:01 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.7 2005/02/21 09:43:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -21,10 +21,12 @@ struct pixmap_undoblk {
 };
 
 enum pixmap_blend_mode {
-	PIXMAP_BLEND_SRCALPHA,		/* Blend (specified alpha) */
-	PIXMAP_BLEND_DSTALPHA,		/* Blend (destination alpha) */
-	PIXMAP_BLEND_MIXALPHA,		/* Blend (mixed src+dest alpha) */
-	PIXMAP_NO_BLENDING		/* Overwrite alpha value */
+	PIXMAP_SPECIFIC_ALPHA,
+	PIXMAP_SPEC_AND_DEST_ALPHA,
+	PIXMAP_BRUSH_ALPHA,
+	PIXMAP_BRUSH_AND_DEST_ALPHA,
+	PIXMAP_DEST_ALPHA,
+	PIXMAP_NO_BLENDING
 };
 
 enum pixmap_brush_type {
@@ -36,14 +38,16 @@ struct pixmap_brush {
 	char name[PIXMAP_NAME_MAX];
 	enum pixmap_brush_type type;
 	int flags;
-	char px_name[PIXMAP_NAME_MAX];
-	struct pixmap *px;
+	int xorig, yorig;			/* Origin of brush */
+	char px_name[PIXMAP_NAME_MAX];		/* Pixmap reference */
+	struct pixmap *px;			/* Resolved pixmap */
 	TAILQ_ENTRY(pixmap_brush) brushes;
 };
 
 struct pixmap {
 	char name[PIXMAP_NAME_MAX];
 	int flags;
+	int xorig, yorig;		/* Pixmap origin (dflt to 0,0) */
 	struct tileset *ts;		/* Back pointer to tileset */
 	SDL_Surface *su;		/* Pixmap surface */
 	u_int nrefs;			/* Number of tile references */

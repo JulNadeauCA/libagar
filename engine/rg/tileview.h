@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.10 2005/02/17 04:47:18 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.11 2005/02/18 03:31:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -57,6 +57,7 @@ struct tileview_ctrl {
 	struct event *motion;
 	struct event *buttonup;
 	struct event *buttondown;
+	int xoffs, yoffs;
 
 	TAILQ_ENTRY(tileview_ctrl) ctrls;
 };
