@@ -1,4 +1,4 @@
-.\"	$Csoft: char.3,v 1.2 2002/01/30 12:13:51 vedge Exp $
+.\"	$Csoft: map.3,v 1.1 2002/01/30 17:48:14 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -57,10 +57,10 @@ Extra animation data (frame#, delay).
 "char *path"
 .Pp
 .Ft "int"
-.Fn map_animset "struct map *map" "int toggle"
+.Fn map_focus "struct map *map"
 .Pp
 .Ft "int"
-.Fn map_focus "struct map *map"
+.Fn map_unfocus "struct map *map"
 .Pp
 .Ft "int"
 .Fn map_clean "struct map *map" "struct object *obj" "int offs" "int flags" \
@@ -74,10 +74,10 @@ If
 .Fa path
 is non-NULL, the description, flags and geometry arguments can be NULL
 or -1.
-.Fn map_animset
-toggles rendering of animations.
 .Fn map_focus
-mark a map as being currently visualized.
+displays a map and start animations.
+.Fn map_unfocus
+disables animations.
 .Fn map_clean
 initializes the entire map with an arbitrary reference.
 .Sh MANIPULATING REFERENCES
