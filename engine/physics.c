@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.40 2002/08/28 03:43:15 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.41 2002/09/06 01:29:12 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -270,7 +270,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 	Uint32 moved = 0;
 
 	node = &m->map[*mapy][*mapx];
-	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
+	nref = node_findref(m, node, dir->ob, -1, MAPREF_ANY);
 	if (nref == NULL) {
 		dprintf("%s not at %s:%dx%d\n", dir->ob->name,
 		    OBJECT(m)->name, *mapx, *mapy);
@@ -475,7 +475,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 	struct noderef *nref;
 
 	node = &dir->map->map[*mapy][*mapx];
-	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
+	nref = node_findref(dir->map, node, dir->ob, -1, MAPREF_ANY);
 
 	/* Clear any direction first (ie. key release). */
 	if (dir->clear != 0) {
