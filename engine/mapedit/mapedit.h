@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.36 2002/06/09 10:08:07 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.37 2002/06/12 20:40:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -78,6 +78,8 @@ struct mapedit {
 	int	 objlist_offs;
 
 	struct	 window *settings_win;
+	struct	 window *coords_win;
+	struct	 label *coords_label;
 
 	/*
 	 * Map must be locked before this mutex is acquired, otherwise
