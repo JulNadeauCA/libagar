@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.5 2002/02/05 05:54:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.6 2002/02/05 14:54:20 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -19,7 +19,7 @@ int	engine_debug = 1;
 struct	world *world;
 
 static char *mapdesc = NULL, *mapstr = NULL;
-static int mapw, maph;
+static int mapw = 64, maph = 64;
 static int mapediting;
 
 static SDL_Joystick *joy = NULL;
@@ -142,7 +142,7 @@ engine_mapedit(void)
 		struct mapedit *medit;
 
 		/* Edit a loaded map, or create a new one. */
-		medit = mapedit_create(mapstr, mapdesc);
+		medit = mapedit_create(mapstr, mapdesc, mapw, maph);
 		if (medit == NULL) {
 			fatal("mapedit_create\n");
 			return (1);
