@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.44 2002/03/01 06:03:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.45 2002/03/01 14:45:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	m->shtiley = i;
 
 	/* Allocate the two-dimensional node array. */
-	m->map = (struct node **)emalloc(((w) * (h)) * sizeof(struct node *));
+	m->map = (struct node **)emalloc((w * h) * sizeof(struct node *));
 	for (i = 0; i < h; i++) {
 		*(m->map + i) = (struct node *)emalloc(w * sizeof(struct node));
 	}
@@ -398,6 +398,11 @@ map_animate(struct map *m)
 			static struct noderef *nref;
 			static SDL_Surface *src;
 			static Uint32 rx, ry;
+			
+			if (m->view->mapmask[vy - m->view->mapyoffs]
+			    [vx - m->view->mapxoffs] & MAPMASK_NORENDER) {
+				continue;
+			}
 
 			node = &m->map[x][y];
 
@@ -517,6 +522,11 @@ map_draw(struct map *m)
 			static struct noderef *nref;
 			static int nsprites;
 
+			if (m->view->mapmask[vy - m->view->mapyoffs]
+			    [vx - m->view->mapxoffs] & MAPMASK_NORENDER) {
+				continue;
+			}
+
 			node = &m->map[x][y];
 
 			if (node->nanims > 0 || (node->flags & NODE_ANIM)) {
@@ -607,10 +617,6 @@ map_load(void *ob, int fd)
 
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
 
-	dprintf("%s: v%d.%d flags 0x%x geo %dx%d tilegeo %dx%d\n",
-	    m->obj.name, vermaj, vermin, m->flags, m->mapw, m->maph,
-	    m->tilew, m->tileh);
-
 	/* Adapt the viewport to this tile geometry. */
 	view_setmode(m->view, m, -1, NULL);
 
@@ -655,9 +661,7 @@ map_load(void *ob, int fd)
 			}
 		}
 	}
-
-	dprintf("%s: %d refs, origin: %dx%d\n", m->obj.name,
-	    refs, m->defx, m->defy);
+	
 	return (0);
 badver:
 	fatal("map version %d.%d > %d.%d\n", vermaj, vermin,
