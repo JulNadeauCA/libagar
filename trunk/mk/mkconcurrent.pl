@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use Cwd;
-use Errno qw(EEXIST);
+#use Errno qw(EEXIST);
 
 $COOKIE = ".mkconcurrent_$$";
 @DIRS = ();
@@ -37,16 +37,15 @@ sub ConvertMakefile
 		}
 	}
 
+	print DSTMAKEFILE "SRC=$SRC\n";
+	print DSTMAKEFILE "BUILD=$BUILD\n";
+
 	my @deps = ();
 
 	foreach $_ (@lines) {
 		my @srcs = ();
 		my @objs = ();
 
-		s/%SRC%/$SRC/g;
-		s/%BUILD%/$BUILD/g;
-		s/%SEPARATE_BUILD%/concurrent/g;
-		
 		if (/^\s*(OBJS|CATMAN\d)\s*=\s*(.+)$/) {
 			my $type = $1;
 			foreach my $obj (split(/\s/, $2)) {
@@ -59,6 +58,17 @@ sub ConvertMakefile
 					$objsrc =~ s/\.cat(\d)$/.\1/;
 				}
 				push @deps, "$obj: $SRC/$ndir/$objsrc";
+				if ($type eq 'OBJS') {			# C
+					push @deps, << 'EOF';
+	@echo "${CC} ${CFLAGS} ${CPPFLAGS}" -c $<
+	@${CC} ${CFLAGS} -I`pwd` -I${BUILD} ${CPPFLAGS} -c $<
+EOF
+				} elsif ($type =~ /CATMAN\d/) {		# Nroff
+					push @deps, << 'EOF';
+	@echo "${NROFF} ${NROFF_FLAGS} $< > $@"
+	@${NROFF} ${NROFF_FLAGS} $< > $@ || exit 0
+EOF
+				}
 			}
 		}
 		if (/^\s*(SRCS|MAN\d|XCF|TTF|MAP)\s*=\s*(.+)$/) {
@@ -73,15 +83,23 @@ sub ConvertMakefile
 				$srcs[$i] = "$SRC/$ndir/$srcs[$i]";
 				$i++;
 			}
-			print DSTMAKEFILE "${type}=" . join(' ', @srcs), "\n";
+			print DSTMAKEFILE $type . '=' . join(' ', @srcs), "\n";
 		} else {
 			print DSTMAKEFILE $_, "\n";
 		}
 	}
-	print DSTMAKEFILE "\n", join("\n", @deps), "\n";
-	
+	if (@deps) {
+		print DSTMAKEFILE "\n", join("\n", @deps), "\n";
+		print DSTMAKEFILE 'include .depend'."\n";
+	}
+
 	close(DSTMAKEFILE);
 	close(SRCMAKEFILE);
+
+	# Prevent make from complaining.
+	open(DSTDEPEND, ">$BUILD/$ndir/.depend") or
+	    die "$BUILD/$ndir/.depend: $!";
+	close(DSTDEPEND);
 }
 
 sub Scan
@@ -98,11 +116,7 @@ sub Scan
 		$ndir =~ s/^\.\///;
 
 		if (-d "$dir/$ent" and ! -e "$dir/$ent/$COOKIE") {
-			unless (mkdir("$BUILD/$ndir/$ent")) {
-				if ($! != EEXIST) {
-					die "$BUILD/$ndir/$ent: $!";
-				}
-			}
+			mkdir("$BUILD/$ndir/$ent", 0755);
 			Scan("$dir/$ent");
 		} else {
 			if ($ent eq 'Makefile') {
