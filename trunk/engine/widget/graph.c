@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.11 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.12 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,7 +46,7 @@
 
 static const struct version graph_ver = {
 	"agar graph",
-	1, 0
+	2, 0
 };
 
 static const struct widget_ops graph_ops = {
@@ -61,7 +61,9 @@ static const struct widget_ops graph_ops = {
 
 enum {
 	FRAME_COLOR,
-	TEXT_COLOR
+	TEXT_COLOR,
+	ORIGIN_COLOR1,
+	ORIGIN_COLOR2
 };
 
 enum {
@@ -73,7 +75,6 @@ static void	graph_key(int, union evarg *);
 static void	graph_scroll(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
-static void	graph_scaled(int, union evarg *);
 
 struct graph *
 graph_new(struct region *reg, const char *caption, enum graph_type t,
@@ -98,6 +99,8 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	widget_init(&graph->wid, "graph", "widget", &graph_ops, w, h);
 	widget_map_color(graph, FRAME_COLOR, "graph-frame", 50, 50, 50);
 	widget_map_color(graph, TEXT_COLOR, "graph-text", 200, 200, 200);
+	widget_map_color(graph, ORIGIN_COLOR1, "graph-origin1", 50, 50, 50);
+	widget_map_color(graph, ORIGIN_COLOR2, "graph-origin2", 150, 150, 150);
 	
 	graph->type = t;
 	graph->flags = flags;
@@ -105,8 +108,7 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	graph->xoffs = 0;
 	graph->xinc = 2;
 	graph->yrange = yrange;
-	graph->origin_color[0] = SDL_MapRGB(view->v->format, 150, 150, 150);
-	graph->origin_color[1] = SDL_MapRGB(view->v->format, 60, 60, 60);
+	graph->origin_y = 50;
 	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
@@ -114,7 +116,6 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	event_new(graph, "window-keydown", 0, graph_key, NULL);
 	event_new(graph, "window-mousebuttonup", 0, graph_resume_scroll, NULL);
 	event_new(graph, "window-mousebuttondown", 0, graph_focus, NULL);
-	event_new(graph, "widget-scaled", 0, graph_scaled, NULL);
 }
 
 int
@@ -126,10 +127,8 @@ graph_load(void *p, int fd)
 	version_read(fd, &graph_ver);
 	gra->type = read_uint32(fd);
 	gra->flags = read_uint32(fd);
-	gra->origin_y = read_uint32(fd);
-	gra->origin_color[0] = read_uint32(fd);
-	gra->origin_color[1] = read_uint32(fd);
-	gra->xinc = read_uint32(fd);
+	gra->origin_y = read_uint8(fd);
+	gra->xinc = read_uint8(fd);
 	gra->yrange = read_sint32(fd);
 	gra->xoffs = read_uint32(fd);
 	gra->caption = read_string(fd);
@@ -165,10 +164,8 @@ graph_save(void *p, int fd)
 	version_write(fd, &graph_ver);
 	write_uint32(fd, gra->type);
 	write_uint32(fd, gra->flags);
-	write_uint32(fd, gra->origin_y);
-	write_uint32(fd, gra->origin_color[0]);
-	write_uint32(fd, gra->origin_color[1]);
-	write_uint32(fd, gra->xinc);
+	write_uint8(fd, gra->origin_y);
+	write_uint8(fd, gra->xinc);
 	write_uint32(fd, gra->yrange);
 	write_uint32(fd, gra->xoffs);
 	write_string(fd, gra->caption);
@@ -228,19 +225,20 @@ static void
 graph_scroll(int argc, union evarg *argv)
 {
 	struct graph *gra = argv[0].p;
-	int xrel = argv[3].i, yrel = argv[4].i;
+	int xrel = argv[3].i;
+	int yrel = argv[4].i;
 
-	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
-		gra->xoffs -= xrel;
-		if (gra->xoffs < 0) {
-			gra->xoffs = 0;
-		}
-		gra->origin_y += yrel;
-		if (gra->origin_y < 0)
-			gra->origin_y = 0;
-		if (gra->origin_y > WIDGET(gra)->h)
-			gra->origin_y = WIDGET(gra)->h;
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) == 0) {
+		return;
 	}
+
+	gra->xoffs -= xrel;
+	if (gra->xoffs < 0)
+		gra->xoffs = 0;
+
+	gra->origin_y += yrel;
+	if (gra->origin_y > 100)
+		gra->origin_y = 100;
 }
 
 static void
@@ -260,34 +258,30 @@ graph_focus(int argc, union evarg *argv)
 	WIDGET_FOCUS(gra);
 }
 
-static void
-graph_scaled(int argc, union evarg *argv)
-{
-	struct graph *gra = argv[0].p;
-
-	gra->origin_y = WIDGET(gra)->h / 2;
-}
-
 void
 graph_draw(void *p)
 {
 	struct graph *gra = p;
 	struct graph_item *gi;
-	Uint32 x, y, oy, i;
+	int x, y, oy;
+	Uint32 i, origin_y;
 	Sint32 oval;
+
+	origin_y = WIDGET(gra)->h * gra->origin_y / 100;
 
 	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0,
 	    WIDGET_COLOR(gra, FRAME_COLOR));
 
 	if (gra->flags & GRAPH_ORIGIN) {
-		primitives.line(gra, 0, gra->origin_y,
-		    WIDGET(gra)->w, gra->origin_y,
+		primitives.line(gra, 0, origin_y, WIDGET(gra)->w, origin_y,
 		    WIDGET_FOCUSED(gra) ?
-		    gra->origin_color[0] : gra->origin_color[1]);
-		primitives.line(gra, 0, gra->origin_y+1,
-		    WIDGET(gra)->w, gra->origin_y+1,
+		    WIDGET_COLOR(gra, ORIGIN_COLOR1) :
+		    WIDGET_COLOR(gra, ORIGIN_COLOR2));
+		primitives.line(gra, 0, origin_y+1,
+		    WIDGET(gra)->w, origin_y+1,
 		    WIDGET_FOCUSED(gra) ?
-		    gra->origin_color[1] : gra->origin_color[0]);
+		    WIDGET_COLOR(gra, ORIGIN_COLOR2) :
+		    WIDGET_COLOR(gra, ORIGIN_COLOR1));
 	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
@@ -299,13 +293,13 @@ graph_draw(void *p)
 		     x += gra->xinc) {
 
 			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
-			y = gra->origin_y - oval;
+			y = origin_y - oval;
 			if (i > 1) {
 				oval = gi->vals[i-1] * WIDGET(gra)->h /
 				    gra->yrange;
-				oy = gra->origin_y - oval;
+				oy = origin_y - oval;
 			} else {
-				oy = gra->origin_y;
+				oy = origin_y;
 			}
 
 			if (y < 0)
