@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.9 2002/07/18 11:49:46 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.10 2002/07/20 19:10:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -61,6 +62,7 @@ static SDL_TimerID zoomin_timer, zoomout_timer;
 
 static void	mapview_event(int, union evarg *);
 static void	mapview_scaled(int, union evarg *);
+static void	mapview_lostfocus(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
 
 struct mapview *
@@ -97,9 +99,13 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->tileh = TILEH;
 	mv->cursor = (flags & MAPVIEW_EDIT) ? edcursor_new(0, mv, m) : NULL;
 	mv->zoom = 100;
+	mv->border_color = SDL_MapRGB(view->v->format, 200, 200, 200);
+	mv->grid_color = SDL_MapRGB(view->v->format, 100, 100, 100);
 
 	event_new(mv, "widget-scaled", 0,
 	    mapview_scaled, NULL);
+	event_new(mv, "widget-lostfocus", 0,
+	    mapview_lostfocus, NULL);
 	event_new(mv, "window-mousebuttonup", 0,
 	    mapview_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(mv, "window-mousebuttondown", 0,
@@ -175,7 +181,7 @@ mapview_draw(void *p)
 	for (my = mv->my, ry = 0;
 	     my-mv->my < mv->mh && my < m->maph;
 	     my++, ry += mv->tileh) {
-
+		
 		for (mx = mv->mx, rx = 0;
 	     	     mx-mv->mx < mv->mw && mx < m->mapw;
 		     mx++, rx += mv->tilew) {
@@ -256,12 +262,12 @@ mapview_draw(void *p)
 							    src,
 							    rx + nref->xoffs,
 							    ry + nref->yoffs -
-							    (i * TILEH));
+							    (i * mv->tileh));
 						} else {
 							WIDGET_DRAW(mv, src,
 							    rx + nref->xoffs,
 							    ry + nref->yoffs -
-							    (i * TILEH));
+							    (i * mv->tileh));
 						}
 					}
 				}
@@ -270,9 +276,27 @@ mapview_draw(void *p)
 			if (nsprites > 0 && mv->flags & MAPVIEW_EDIT) {
 			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
 			}
+		
+			if (mv->flags & MAPVIEW_GRID) {
+				primitives.line(mv,
+				    rx, 0,
+				    rx, WIDGET(mv)->h-1,
+				    mv->grid_color);
+			}
+		}
+		if (mv->flags & MAPVIEW_GRID) {
+			primitives.line(mv, 0, ry, WIDGET(mv)->w-1, ry,
+			   mv->grid_color);
 		}
 	}
 	SDL_SetClipRect(view->v, NULL);
+	
+	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
+		primitives.square(mv,
+		    0, 0,
+		    WIDGET(mv)->w, WIDGET(mv)->h,
+		    mv->border_color);
+	}
 }
 
 static void
@@ -366,14 +390,6 @@ mapview_event(int argc, union evarg *argv)
 	switch (type) {
 	case WINDOW_MOUSEOUT:
 		mv->mouse.move = 0;
-		break;
-	case WINDOW_LOSTFOCUS:
-		if (zoomin_timer != NULL) {
-			SDL_RemoveTimer(zoomin_timer);
-		}
-		if (zoomout_timer != NULL) {
-			SDL_RemoveTimer(zoomout_timer);
-		}
 		break;
 	case WINDOW_MOUSEMOTION:
 		x = argv[2].i / mv->tilew;
@@ -555,6 +571,19 @@ mapview_scaled(int argc, union evarg *argv)
 	WIDGET(mv)->h = argv[2].i;
 
 	mapview_zoom(mv, mv->zoom);
+}
+
+static void
+mapview_lostfocus(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	
+	if (zoomin_timer != NULL) {
+		SDL_RemoveTimer(zoomin_timer);
+	}
+	if (zoomout_timer != NULL) {
+		SDL_RemoveTimer(zoomout_timer);
+	}
 }
 
 void
