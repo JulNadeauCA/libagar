@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.c,v 1.1 2004/05/05 16:46:05 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.2 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -76,32 +76,24 @@ vg_draw_mask(struct vg *vg, struct vg_element *vge)
 void
 vg_mask_scale(struct vg *vg, float scale)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_mask.scale = scale;
+	vg->cur_vge->vg_mask.scale = scale;
 }
 
 void
 vg_mask_visible(struct vg *vg, int vis)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_mask.visible = vis;
+	vg->cur_vge->vg_mask.visible = vis;
 }
 
 void
 vg_mask_pointer(struct vg *vg, void *p)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_mask.p = p;
+	vg->cur_vge->vg_mask.p = p;
 }
 
 void
 vg_mask_mousebutton(struct vg *vg, void (*func)(void *, Uint8), void *p)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_mask.mousebutton = func;
-	vge->vg_mask.p = p;
+	vg->cur_vge->vg_mask.mousebutton = func;
+	vg->cur_vge->vg_mask.p = p;
 }

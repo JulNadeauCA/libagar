@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.h,v 1.2 2004/05/06 08:47:55 vedge Exp $	*/
+/*	$Csoft: vg_block.h,v 1.3 2004/05/24 03:32:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_BLOCK_H_
@@ -28,6 +28,7 @@ struct vg_block	  *vg_get_block(struct vg *, const char *);
 void		   vg_move_block(struct vg *, struct vg_block *,
 		                 double, double, int);
 void		   vg_rotate_block(struct vg *, struct vg_block *, double);
+void		   vg_clear_block(struct vg *, struct vg_block *);
 void		   vg_destroy_block(struct vg *, struct vg_block *);
 void		   vg_block_offset(struct vg *, struct vg_vertex *);
 struct window	  *vg_block_editor(struct vg *);

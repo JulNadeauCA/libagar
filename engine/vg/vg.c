@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.23 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.24 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -118,6 +118,7 @@ vg_init(struct vg *vg, int flags)
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
 	vg->cur_block = NULL;
+	vg->cur_vge = NULL;
 	vg_push_layer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
 	vg->ortho_mode = VG_NO_ORTHO;
@@ -144,9 +145,12 @@ vg_init(struct vg *vg, int flags)
 	vg->norigin = VG_NORIGINS;
 }
 
-static void
-vg_free_element(struct vg_element *vge)
+void
+vg_free_element(struct vg *vg, struct vg_element *vge)
 {
+	if (vge->ops->destroy != NULL) {
+		vge->ops->destroy(vg, vge);
+	}
 	Free(vge->vtx, M_VG);
 	Free(vge, M_VG);
 }
@@ -160,7 +164,7 @@ vg_destroy_elements(struct vg *vg)
 	     vge != TAILQ_END(&vg->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vges);
-		vg_free_element(vge);
+		vg_free_element(vg, vge);
 	}
 	TAILQ_INIT(&vg->vges);
 }
@@ -196,10 +200,13 @@ vg_destroy_styles(struct vg *vg)
 void
 vg_reinit(struct vg *vg)
 {
-	vg_destroy_elements(vg);
 	vg_destroy_blocks(vg);
+	vg_destroy_elements(vg);
 	vg_destroy_styles(vg);
+
 	vg_destroy_fragments(vg);
+	if (map_alloc_nodes(vg->map, 1, 1) == -1)
+		fatal("%s", error_get());
 }
 
 void
@@ -225,8 +232,8 @@ vg_destroy(struct vg *vg)
 		Free(vg->mask, M_VG);
 	}
 #endif
-	vg_destroy_elements(vg);
 	vg_destroy_blocks(vg);
+	vg_destroy_elements(vg);
 	vg_destroy_styles(vg);
 	pthread_mutex_destroy(&vg->lock);
 }
@@ -238,7 +245,7 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 		TAILQ_REMOVE(&vge->block->vges, vge, vgbmbs);
 
 	TAILQ_REMOVE(&vg->vges, vge, vges);
-	vg_free_element(vge);
+	vg_free_element(vg, vge);
 	vg->redraw = 1;
 }
 
@@ -402,7 +409,10 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	vg_redraw_elements(vg);
 }
 
-/* Allocate the given type of element and begin its parametrization. */
+/*
+ * Allocate the given type of element and begin its parametrization.
+ * If a block is selected, associate the element with it.
+ */
 struct vg_element *
 vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 {
@@ -433,6 +443,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 
 	pthread_mutex_lock(&vg->lock);
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
+
 	if (vg->cur_block != NULL) {
 		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
 		vge->block = vg->cur_block;
@@ -443,12 +454,23 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	}
 
 	vge->ops = vge_types[eltype];
-	if (vge->ops->init != NULL) {
+	if (vge->ops->init != NULL)
 		vge->ops->init(vg, vge);
-	}
+
 	vg->redraw = 1;
+	vg->cur_vge = vge;
 	pthread_mutex_unlock(&vg->lock);
 	return (vge);
+}
+
+/*
+ * End the parametrization of the current element.
+ * The vg must be locked.
+ */
+void
+vg_end_element(struct vg *vg)
+{
+	vg->cur_vge = NULL;
 }
 
 /*
@@ -458,8 +480,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 void
 vg_select_element(struct vg *vg, struct vg_element *vge)
 {
-	TAILQ_REMOVE(&vg->vges, vge, vges);
-	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
+	vg->cur_vge = vge;
 }
 
 /*
@@ -694,11 +715,14 @@ vg_alloc_vertex(struct vg_element *vge)
 void
 vg_pop_vertex(struct vg *vg)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 
 	if (vge->vtx == NULL)
 		return;
-
+#ifdef DEBUG
+	if (vge->nvtx-1 < 0)
+		fatal("neg nvtx");
+#endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex),
 	    M_VG);
 }
@@ -709,7 +733,7 @@ vg_vertex2(struct vg *vg, double x, double y)
 {
 	struct vg_vertex *vtx;
 
-	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx = vg_alloc_vertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = 0;
@@ -724,7 +748,7 @@ vg_vertex3(struct vg *vg, double x, double y, double z)
 {
 	struct vg_vertex *vtx;
 
-	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx = vg_alloc_vertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = z;
@@ -739,7 +763,7 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 {
 	struct vg_vertex *vtx;
 
-	vtx = vg_alloc_vertex(TAILQ_FIRST(&vg->vges));
+	vtx = vg_alloc_vertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = z;
@@ -752,7 +776,7 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 void
 vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 	unsigned int i;
 	
 	for (i = 0; i < nsvtx; i++) {
@@ -799,7 +823,7 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 int
 vg_style(struct vg *vg, const char *name)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 	struct vg_style *st;
 
 	TAILQ_FOREACH(st, &vg->styles, styles) {
@@ -830,36 +854,28 @@ vg_style(struct vg *vg, const char *name)
 void
 vg_layer(struct vg *vg, int layer)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->layer = layer;
+	vg->cur_vge->layer = layer;
 }
 
 /* Specify the color of the current element (format-specific). */
 void
 vg_color(struct vg *vg, Uint32 color)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->color = color;
+	vg->cur_vge->color = color;
 }
 
 /* Specify the color of the current element (RGB triplet). */
 void
 vg_color3(struct vg *vg, int r, int g, int b)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->color = SDL_MapRGB(vfmt, r, g, b);
+	vg->cur_vge->color = SDL_MapRGB(vfmt, r, g, b);
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
 void
 vg_color4(struct vg *vg, int r, int g, int b, int a)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->color = SDL_MapRGBA(vfmt, r, g, b, a);
+	vg->cur_vge->color = SDL_MapRGBA(vfmt, r, g, b, a);
 }
 
 /* Push a new layer onto the layer stack. */
@@ -1063,6 +1079,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->grid_gap = read_double(buf);
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;
+	vg->cur_vge = NULL;
 	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
 	    vg->scale);
 	vg_scale(vg, vg->w, vg->h, vg->scale);
@@ -1255,13 +1272,14 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		default:
 			break;
 		}
+		vg_end_element(vg);
 	}
 
-	vg->redraw++;
+	vg->redraw = 1;
 	pthread_mutex_unlock(&vg->lock);
 	return (0);
 fail:
-	vg->redraw++;
+	vg->redraw = 1;
 	pthread_mutex_unlock(&vg->lock);
 	return (-1);
 }
@@ -1276,7 +1294,7 @@ vg_geo_changed(int argc, union evarg *argv)
 	struct vg *vg = argv[1].p;
 
 	vg_scale(vg, vg->w, vg->h, vg->scale);
-	vg->redraw++;
+	vg->redraw = 1;
 }
 
 void
@@ -1284,7 +1302,7 @@ vg_changed(int argc, union evarg *argv)
 {
 	struct vg *vg = argv[1].p;
 
-	vg->redraw++;
+	vg->redraw = 1;
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.6 2004/05/12 04:50:26 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.7 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -64,7 +64,7 @@ vg_ellipse_init(struct vg *vg, struct vg_element *vge)
 void
 vg_ellipse_diameter2(struct vg *vg, double w, double h)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 
 	vge->vg_arc.w = w;
 	vge->vg_arc.h = h;
@@ -152,6 +152,8 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			cur_ellipse = vg_begin_element(vg, VG_ELLIPSE);
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
+			vg_end_element(vg);
+
 			tool_push_status(t, _("Specify the ellipse's geometry "
 			                      "or [undo ellipse]."));
 			break;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.10 2004/05/18 02:48:54 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.11 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -54,17 +54,13 @@ vg_circle_init(struct vg *vg, struct vg_element *vge)
 void
 vg_circle_radius(struct vg *vg, double radius)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_circle.radius = radius;
+	vg->cur_vge->vg_circle.radius = radius;
 }
 
 void
 vg_circle_diameter(struct vg *vg, double diameter)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_circle.radius = diameter/2;
+	vg->cur_vge->vg_circle.radius = diameter/2;
 }
 
 void
@@ -141,6 +137,8 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			cur_radius = vg_vertex2(vg, vx, vy);
+			vg_end_element(vg);
+
 			tool_push_status(t, _("Specify the circle's radius "
 			                      "or [undo circle]."));
 		} else {
