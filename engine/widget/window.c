@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.164 2003/03/02 04:13:15 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.165 2003/03/03 05:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -798,8 +798,8 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill2.w = oldpos.w;
 			rfill2.h = oldpos.y - newpos.y;
 		}
-		if (view->opengl) {
 #ifdef HAVE_OPENGL
+		if (view->opengl) {
 			Uint8 r, g, b;
 
 			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
@@ -815,8 +815,9 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 				    rfill2.x + rfill2.w,
 				    rfill2.y + rfill2.h);
 			}
-#endif
-		} else {
+		} else
+#endif /* HAVE_OPENGL */
+		{
 			if (rfill1.w > 0) {
 				SDL_FillRect(view->v, &rfill1, fillcolor);
 				SDL_UpdateRects(view->v, 1, &rfill1);
@@ -1350,8 +1351,8 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill2.w = ro.w;
 			rfill2.h = ro.h - win->rd.h;
 		}
-		if (view->opengl) {
 #ifdef HAVE_OPENGL
+		if (view->opengl) {
 			Uint8 r, g, b;
 
 			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
@@ -1367,8 +1368,9 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 				    rfill2.x + rfill2.w,
 				    rfill2.y + rfill2.h);
 			}
-#endif
-		} else {
+		} else
+#endif /* HAVE_OPENGL */
+		{
 			if (rfill1.w > 0) {
 				SDL_FillRect(view->v, &rfill1, fillcolor);
 				SDL_UpdateRects(view->v, 1, &rfill1);
