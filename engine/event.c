@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.95 2002/11/14 08:02:33 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.96 2002/11/15 04:18:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -461,6 +461,7 @@ event_post_async(void *p)
 	return (NULL);
 #else
 	fatal("thread safety not compiled in\n");
+	return (NULL);
 #endif
 }
 
