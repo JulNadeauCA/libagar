@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.14 2002/07/29 02:16:19 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.15 2002/08/21 04:24:54 vedge Exp $	*/
 /*	Public domain	*/
 
 struct button {
@@ -9,7 +9,9 @@ struct button {
 #define BUTTON_STICKY	0x02		/* Button state is static */
 
 	char	*caption;		/* String, or NULL */
+
 	SDL_Surface	*label_s;	/* Label (or image) */
+	SDL_Surface	*slabel_s;	/* Scaled label surface */
 
 	enum {
 		BUTTON_LEFT,
