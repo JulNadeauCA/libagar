@@ -1,13 +1,33 @@
-/*	$Csoft: object.h,v 1.17 2002/02/19 00:49:18 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.18 2002/02/21 02:19:25 vedge Exp $	*/
+
+#include <engine/physics.h>
+
+/*
+ * Back reference to map entry. This holds additional information
+ * for structures which move on the map.
+ */
+struct map_bref {
+	struct	map *map;	/* Map */
+	Uint32	x, y;		/* Map coordinates */
+	struct	noderef *nref;	/* Node reference */
+
+	struct	mapdir dir;	/* Direction */
+	Uint32	speed;		/* Current speed in ms */
+	struct	input *input;	/* Controller (or NULL) */
+
+	SLIST_ENTRY(map_bref) brefs;	/* Map back references */
+};
 
 struct obvec {
 	int	(*destroy)(void *);
-	void	(*event)(void *, SDL_Event *);
 	int	(*load)(void *, int);
 	int	(*save)(void *, int);
 	int	(*link)(void *);
 	int	(*unlink)(void *);
 	void	(*dump)(void *);
+	int	(*madd)(void *, struct map_bref *);
+	int	(*mmove)(void *, struct map_bref *);
+	int	(*mdel)(void *, struct map_bref *);
 };
 
 struct object {
@@ -28,6 +48,7 @@ struct object {
 	int	 nsprites;
 	int	 maxsprites;
 
+	SLIST_HEAD(, map_bref) brefsh;	/* Map back references */
 	SLIST_ENTRY(object) wobjs;	/* All objects */
 };
 
@@ -43,9 +64,11 @@ int	 object_loadfrom(void *, char *);
 int	 object_save(void *);
 void	 increase(int *, int, int);
 void	 decrease(int *, int, int);
-#ifdef DEBUG
-void	 object_dump(struct object *);
-#endif
+void	 object_dump(void *);
 
 struct object	*object_strfind(char *);
+struct map_bref	*object_madd(void *, Uint32, Uint32, struct map *, Uint32,
+		     Uint32);
+void		 object_mdel(void *, Uint32, Uint32, struct map *, Uint32,
+		     Uint32);
 
