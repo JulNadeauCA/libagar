@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.2 2003/11/15 03:53:05 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.3 2003/11/17 15:10:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -165,11 +165,11 @@ const struct unit current_units[] = {
 const struct unit temperature_units[] = {
 	{ "\xc2\xb5K",	N_("Microkelvins"),	0.000001 },
 	{ "mK",		N_("Millikelvins"),	0.001 },
-	{ "Ra",		N_("Degrees Rankine"),	0.5555556 },
+	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0.5555556 },
 	{ "K",		N_("Kelvins"),		1 },
-	{ "F",		N_("Degrees Farenheit"), 255.9277778 },
-	{ "C",		N_("Degrees Celsius"),	274.15 },
-	{ "Re",		N_("Degrees Reaumur"),	274.4 },
+	{ "\xc2\xb0\x46", N_("Degrees Farenheit"), 255.9277778 },
+	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	274.15 },
+	{ "\xc2\xb0\x65", N_("Degrees Reaumur"),	274.4 },
 	{ "kK",		N_("Kilokelvins"),	1000 },
 	{ "MK",		N_("Megakelvins"),	1000000 },
 	{ NULL,		NULL,			0 }
