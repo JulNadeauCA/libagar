@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.11 2002/08/19 05:28:47 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.12 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -80,7 +80,9 @@ version_read(int fd, const struct version *ver)
 		    ver->vermaj, ver->vermin);
 	}
 
+#if 0
 	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
+#endif
 	free(user);
 
 	return (0);
