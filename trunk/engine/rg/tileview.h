@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.18 2005/03/11 08:56:15 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.19 2005/03/11 08:59:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -131,8 +131,7 @@ struct tileview {
 	SDL_Surface *scaled;		/* Scaled surface */
 	int scrolling;
 	int flags;
-#define TILEVIEW_AUTOREGEN	0x01	/* Regenerate the tile periodically */
-#define TILEVIEW_NO_SCROLLING	0x02	/* Disable right click scrolling */
+#define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */
@@ -197,13 +196,15 @@ struct tileview {
 #define TILEVIEW_TOOL(p) ((struct tileview_tool *)p)
 
 __BEGIN_DECLS
-struct tileview	*tileview_new(void *, struct tileset *, struct tile *, int);
+struct tileview	*tileview_new(void *, struct tileset *, int);
 struct tileview_tool *tileview_reg_tool(struct tileview *, const void *);
 
-void tileview_init(struct tileview *, struct tileset *, struct tile *, int);
+void tileview_init(struct tileview *, struct tileset *, int);
 void tileview_destroy(void *);
 void tileview_draw(void *);
 void tileview_scale(void *, int, int);
+
+void tileview_set_tile(struct tileview *, struct tile *);
 void tileview_set_zoom(struct tileview *, int, int);
 void tileview_set_autoredraw(struct tileview *, int, int);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.29 2005/03/11 08:56:15 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.30 2005/03/11 08:59:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -30,6 +30,8 @@
 #include <engine/map.h>
 #include <engine/view.h>
 
+#include <engine/loader/surface.h>
+
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/tlist.h>
@@ -50,9 +52,9 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 {
 	strlcpy(t->name, name, sizeof(t->name));
 	t->flags = 0;
-	t->used = 0;
 	t->su = NULL;
 	t->ts = ts;
+	t->nrefs = 0;
 	TAILQ_INIT(&t->elements);
 }
 
@@ -76,26 +78,6 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 
 	if (t->su == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-
-#if 0
-	dprintf("Surface masks=%08x,%08x,%08x,%08x\n",
-	    t->su->format->Rmask,
-	    t->su->format->Gmask,
-	    t->su->format->Bmask,
-	    t->su->format->Amask);
-	dprintf("Surface shifts=%08x,%08x,%08x,%08x\n",
-	    t->su->format->Rshift,
-	    t->su->format->Gshift,
-	    t->su->format->Bshift,
-	    t->su->format->Ashift);
-	dprintf("Surface losses=%08x,%08x,%08x,%08x\n",
-	    t->su->format->Rloss,
-	    t->su->format->Gloss,
-	    t->su->format->Bloss,
-	    t->su->format->Aloss);
-	dprintf("Surface colorkey=%08x\n", t->su->format->colorkey);
-	dprintf("Surface alpha=%02x\n", t->su->format->alpha);
-#endif
 }
 
 void
@@ -285,8 +267,7 @@ tile_save(struct tile *t, struct netbuf *buf)
 
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
-	write_uint16(buf, t->su->w);
-	write_uint16(buf, t->su->h);
+	write_surface(buf, t->su);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -340,16 +321,13 @@ int
 tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 {
 	Uint32 i, nelements;
-	Uint16 w, h;
 	Uint8 flags;
 	
-	flags = read_uint8(buf);
-	w = read_uint16(buf);
-	h = read_uint16(buf);
-	tile_scale(ts, t, w, h, flags);
+	t->flags = read_uint8(buf);
+	t->su = read_surface(buf, ts->fmt);
 
 	nelements = read_uint32(buf);
-	dprintf("%s: %ux%u, %u elements\n", t->name, w, h, nelements);
+	dprintf("%s: %u elements\n", t->name, nelements);
 	for (i = 0; i < nelements; i++) {
 		enum tile_element_type type;
 		struct tile_element *tel;
@@ -451,19 +429,7 @@ tile_destroy(struct tile *t)
 	
 }
 
-static void
-close_tile(int argc, union evarg *argv)
-{
-	struct window *win = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct tile *t = argv[2].p;
-	
-	pthread_mutex_lock(&ts->lock);
-	t->used--;
-	pthread_mutex_unlock(&ts->lock);
-
-	view_detach(win);
-}
+#ifdef EDITION
 
 static void
 tile_ctrl_buttonup(int argc, union evarg *argv)
@@ -1409,10 +1375,10 @@ tile_edit(struct tileset *ts, struct tile *t)
 		return (NULL);
 	}
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
-	event_new(win, "window-close", close_tile, "%p,%p", ts, t);
 	
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
-	tileview_init(tv, ts, t, TILEVIEW_AUTOREGEN);
+	tileview_init(tv, ts, 0);
+	tileview_set_tile(tv, t);
 	{
 		extern struct tileview_sketch_tool_ops sketch_line_ops;
 		extern struct tileview_sketch_tool_ops sketch_circle_ops;
@@ -1601,13 +1567,15 @@ tile_edit(struct tileset *ts, struct tile *t)
 		widget_focus(tv);
 	}
 
-	t->used++;
+	/* Set the tile edition mode. */
 	close_element(tv);
 
 	window_scale(win, -1, -1);
 	window_set_geometry(win,
 	    view->w/4, view->h/4,
 	    view->w/2, view->h/2);
+	
 	return (win);
 }
 
+#endif /* EDITION */
