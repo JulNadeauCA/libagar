@@ -1,18 +1,15 @@
-/*	$Csoft: object.c,v 1.78 2002/09/02 08:11:34 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.79 2002/09/05 12:16:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -110,6 +107,7 @@ object_destroy(void *p)
 	struct prop *prop, *nextprop;
 	
 	if (OBJECT_OPS(ob)->destroy != NULL) {
+		/* Destroy object specific data. */
 		OBJECT_OPS(ob)->destroy(ob);
 	}
 
@@ -165,7 +163,14 @@ object_loadfrom(void *p, char *path)
 		dprintf("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
+	
+	/* Load generic properties. */
+	if (prop_load(ob, fd) != 0) {
+		close(fd);
+		return (-1);
+	}
 
+	/* Load object specific data. */
 	if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
 		close(fd);
 		return (-1);
@@ -180,11 +185,7 @@ object_load(void *p)
 {
 	struct object *ob = p;
 	char *path;
-	int fd, rv;
-
-	if (OBJECT_OPS(ob)->load == NULL) {
-		return (0);
-	}
+	int fd, rv = 0;
 
 	path = object_path(ob->name, ob->saveext);
 	if (path == NULL) {
@@ -198,7 +199,18 @@ object_load(void *p)
 		dprintf("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
-	rv = OBJECT_OPS(ob)->load(ob, fd);
+
+	/* Load generic properties. */
+	if (prop_load(ob, fd) != 0) {
+		close(fd);
+		return (-1);
+	}
+
+	if (OBJECT_OPS(ob)->load != NULL) {
+		/* Load object specific data. */
+		rv = OBJECT_OPS(ob)->load(ob, fd);
+	}
+
 	close(fd);
 	return (rv);
 }
@@ -211,10 +223,7 @@ object_save(void *p)
 	char path[FILENAME_MAX];
 	int fd;
 
-	if (OBJECT_OPS(ob)->save == NULL) {
-		return (0);
-	}
-
+	/* Save maps inside the maps subdirectory. XXX */
 	if (strcmp(ob->saveext, "m") == 0) {
 		sprintf(path, "%s/maps/%s.m",
 		    prop_string(config, "path.user_data_dir"),
@@ -230,9 +239,19 @@ object_save(void *p)
 		fatal("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
-	if (OBJECT_OPS(ob)->save(ob, fd) != 0) {
+
+	/* Save generic properties. */
+	if (prop_save(ob, fd) != 0) {
 		close(fd);
 		return (-1);
+	}
+
+	if (OBJECT_OPS(ob)->save != NULL) {
+		/* Save object specific data. */
+		if (OBJECT_OPS(ob)->save(ob, fd) != 0) {
+			close(fd);
+			return (-1);
+		}
 	}
 	close(fd);
 	return (0);
