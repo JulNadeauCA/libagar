@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.24 2002/06/04 22:50:10 darkroot Exp $
+#	$Csoft: Makefile,v 1.25 2002/08/18 20:28:59 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= cave
@@ -14,6 +14,7 @@ regress: regress-subdir
 
 prereq:
 	(cd libfobj && ${MAKE})
+	(cd compat && ${MAKE})
 	(cd fobjcomp && ${MAKE})
 
 configure: .PHONY
