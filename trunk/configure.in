@@ -1,11 +1,11 @@
-# $Csoft: configure.in,v 1.70 2003/07/26 20:37:01 vedge Exp $
+# $Csoft: configure.in,v 1.71 2003/07/28 04:37:00 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"OpenGL rendering support [default: check]");
 register("--with-jpeg",		"JPEG screenshot support [default: check]");
-register("--with-gettext",	"M17N with gettext library [default: check]");
+register("--with-gettext",	"Use gettext tools [default: check]");
 register("--enable-edition",	"Graphical edition [default: yes]");
 register("--enable-debug",	"Engine debugging [default: yes]");
 register("--enable-threads",	"Thread safety [default: no]");
@@ -15,6 +15,7 @@ register("--enable-8bpp",	"Support for 8 bpp display [default: yes]");
 register("--enable-16bpp",	"Support for 16 bpp display [default: yes]");
 register("--enable-24bpp",	"Support for 24 bpp display [default: yes]");
 register("--enable-32bpp",	"Support for 32 bpp display [default: yes]");
+register("--enable-nls",	"Native Language Support [default: yes]");
 register("--help",		"Show this message");
 
 if [ "${help}" = "yes" ]; then
@@ -89,13 +90,6 @@ else
 	hundef(HAVE_SMPEG);
 fi
 
-# Look for a gettext library.
-if [ "${with_gettext}" != "no" ]; then
-	check(gettext);
-else
-	hundef(HAVE_GETTEXT);
-fi
-
 # Compile a static binary?
 if [ "${enable_static}" = "yes" ]; then
 	mdefine(LDFLAGS, "-static");
@@ -152,3 +146,20 @@ if [ "${enable_32bpp}" != "no" ]; then
 else
 	hundef(VIEW_32BPP);
 fi
+
+# Look for a gettext library (for build only; always use local libintl).
+if [ "${with_gettext}" != "no" ]; then
+	check(gettext);
+else
+	hundef(HAVE_GETTEXT);
+fi
+
+# Native Language Support?
+if [ "${enable_nls}" != "no" ]; then
+	mdefine(ENABLE_NLS, "yes");
+	hdefine(ENABLE_NLS, 1);
+else
+	mdefine(ENABLE_NLS, "no");
+	hundef(ENABLE_NLS);
+fi
+

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.72 2003/07/04 12:33:48 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.73 2003/07/28 04:37:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,7 +7,7 @@
 #define ENGINE_VERSION	"1.0-beta"
 
 #include <config/have_opengl.h>
-#include <config/have_gettext.h>
+#include <config/enable_nls.h>
 #include <config/threads.h>
 #include <config/edition.h>
 
@@ -54,8 +54,8 @@
 #include <engine/unicode/unicode.h>
 #include <engine/widget/text.h>
 
-#ifdef HAVE_GETTEXT
-# include <libintl.h>
+#ifdef ENABLE_NLS
+# include <libintl/libintl.h>
 # define _(String) gettext(String)
 # define gettext_noop(String) (String)
 # define N_(String) gettext_noop(String)

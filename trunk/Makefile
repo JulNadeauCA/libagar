@@ -1,9 +1,12 @@
-#	$Csoft: Makefile,v 1.35 2003/06/21 06:50:07 vedge Exp $
+#	$Csoft: Makefile,v 1.36 2003/07/28 04:23:49 vedge Exp $
 
-SUBDIR=	 dencomp denex engine
-SUBDIR+= cave
-SUBDIR+= po
-
+SUBDIR=	 dencomp \
+	 denex \
+	 engine \
+	 libintl \
+	 cave \
+	 po
+	
 all: Makefile.config all-subdir
 clean: clean-subdir
 cleandir: clean-config cleandir-subdir
