@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.104 2002/06/22 20:44:58 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.105 2002/06/23 02:41:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,7 +51,6 @@
 #include "config.h"
 #include "toolbar.h"
 #include "fileops.h"
-#include "tilewin.h"
 
 static const struct version mapedit_ver = {
 	"agar map editor",
@@ -96,7 +95,6 @@ mapedit_init(struct mapedit *med, char *name)
 
 	/* XXX messy */
 	mapedit_init_toolbar(med);
-	mapedit_init_tilewin(med);
 	med->settings_win = mapedit_config_win(med);
 	med->coords_win = window_new("Coordinates",
 	    WINDOW_SOLID|WINDOW_ABSOLUTE,
@@ -207,7 +205,8 @@ mapedit_attached(int argc, union evarg *argv)
 
 	/* Set up the GUI. */
 	window_show(med->toolbar_win);
-	window_show(med->tile_win);
+	window_show(med->objlist_win);
+	window_show(med->tileq_win);
 
 	dprintf("editing %d object(s)\n", med->neobjs);
 
