@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.44 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.45 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,7 +31,6 @@
 
 #include "merge.h"
 
-#include <engine/widget/vbox.h>
 #include <engine/widget/hbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
@@ -43,8 +42,23 @@
 
 const struct version merge_ver = {
 	"agar merge tool",
-	5, 0
+	6, 0
 };
+
+static void	merge_destroy(void *);
+static int	merge_load(void *, struct netbuf *);
+static int	merge_save(void *, struct netbuf *);
+static int	merge_cursor(void *, struct mapview *, SDL_Rect *);
+static void	merge_effect(void *, struct mapview *, struct map *,
+		             struct node *);
+static void	merge_create_brush(int, union evarg *);
+static void	merge_edit_brush(int, union evarg *);
+static void	merge_remove_brush(int, union evarg *);
+static void	merge_load_brush_set(int, union evarg *);
+static void	merge_save_brush_set(int, union evarg *);
+static void	merge_interpolate(struct merge *, struct map *, struct node *,
+		                  struct noderef *, struct map *, struct node *,
+				  struct noderef *);
 
 const struct tool_ops merge_ops = {
 	{
@@ -55,7 +69,6 @@ const struct tool_ops merge_ops = {
 		merge_save,
 		NULL		/* edit */
 	},
-	merge_window,
 	merge_cursor,
 	merge_effect,
 	NULL			/* mouse */
@@ -85,16 +98,50 @@ merge_table[9][9] = {
 void
 merge_init(void *p)
 {
-	struct merge *merge = p;
+	struct merge *mer = p;
+	struct window *win;
+	struct hbox *hb;
 
-	tool_init(&merge->tool, "merge", &merge_ops, MAPEDIT_TOOL_MERGE);
-	merge->mode = MERGE_REPLACE;
-	merge->random_shift = 0;
-	merge->layer = 0;
-	TAILQ_INIT(&merge->brushes);
+	tool_init(&mer->tool, "merge", &merge_ops, MAPEDIT_TOOL_MERGE);
+	TAILQ_INIT(&mer->brushes);
+	
+	win = TOOL(mer)->win = window_new("mapedit-tool-merge");
+	window_set_caption(win, _("Merge tool"));
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", mer);
+
+	hb = hbox_new(win, HBOX_WFILL);
+	{
+		struct button *bu;
+		struct textbox *tb;
+		
+		tb = textbox_new(hb, _("Name: "));
+		event_new(tb, "textbox-return", merge_create_brush, "%p, %p",
+		    mer, tb);
+
+		bu = button_new(hb, _("Create"));
+		button_set_padding(bu, 6);			/* Align */
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", merge_create_brush, "%p, %p",
+		    mer, tb);
+	}
+
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	{
+		struct button *bu;
+		
+		bu = button_new(hb, _("Load set"));
+		event_new(bu, "button-pushed", merge_load_brush_set, "%p", mer);
+		bu = button_new(hb, _("Save set"));
+		event_new(bu, "button-pushed", merge_save_brush_set, "%p", mer);
+		bu = button_new(hb, _("Edit"));
+		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
+		bu = button_new(hb, _("Remove"));
+		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
+	}
+	mer->brushes_tl = tlist_new(win, TLIST_MULTI);
 }
 
-#if 0
 static void
 merge_free_brushes(struct merge *mer)
 {
@@ -109,13 +156,13 @@ merge_free_brushes(struct merge *mer)
 	}
 	TAILQ_INIT(&mer->brushes);
 }
-#endif
 
-void
+static void
 merge_destroy(void *p)
 {
 	struct merge *mer = p;
 
+	merge_free_brushes(mer);
 	tool_destroy(mer);
 }
 
@@ -165,12 +212,11 @@ static void
 merge_edit_brush(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
-	struct window *win;
 	struct tlist_item *it;
-	struct vbox *vb;
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *brush = it->p1;
+		struct window *win;
 
 		if (!it->selected)
 			continue;
@@ -180,8 +226,8 @@ merge_edit_brush(int argc, union evarg *argv)
 			continue;
 		/* XXX close dialog */
 
-		vb = vbox_new(win, 0);
-		mapview_new(vb, brush, MAPVIEW_EDIT|MAPVIEW_GRID|MAPVIEW_PROPS);
+		mapview_new(win, brush,
+		    MAPVIEW_EDIT|MAPVIEW_GRID|MAPVIEW_PROPS);
 		window_show(win);
 	}
 }
@@ -231,68 +277,6 @@ merge_save_brush_set(int argc, union evarg *argv)
 		text_msg(MSG_ERROR, "%s", error_get());
 }
 
-struct window *
-merge_window(void *p)
-{
-	struct merge *mer = p;
-	struct window *win;
-	struct vbox *vb;
-	struct hbox *hb;
-	struct textbox *name_tbox;
-
-	win = window_new("mapedit-tool-merge");
-	window_set_caption(win, _("Merge tool"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-
-	vb = vbox_new(win, 0);
-	{
-		static const char *mode_items[] = {
-			N_("Replace"),
-			NULL
-		};
-		struct radio *rad;
-		struct checkbox *cb;
-
-		rad = radio_new(vb, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
-		cb = checkbox_new(vb, _("Random shift"));
-		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
-	}
-	
-	hb = hbox_new(win, HBOX_WFILL);
-	{
-		struct button *bu;
-		
-		name_tbox = textbox_new(hb, _("Name: "));
-		event_new(name_tbox, "textbox-return", merge_create_brush,
-		    "%p, %p", mer, name_tbox);
-
-		bu = button_new(hb, _("Create"));
-		button_set_padding(bu, 6);			/* Align */
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", merge_create_brush, "%p, %p",
-		    mer, name_tbox);
-	}
-	
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
-	{
-		struct button *bu;
-		
-		bu = button_new(hb, _("Load set"));
-		event_new(bu, "button-pushed", merge_load_brush_set, "%p", mer);
-		bu = button_new(hb, _("Save set"));
-		event_new(bu, "button-pushed", merge_save_brush_set, "%p", mer);
-		bu = button_new(hb, _("Edit"));
-		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
-		bu = button_new(hb, _("Remove"));
-		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
-	}
-	
-	mer->brushes_tl = tlist_new(win, TLIST_MULTI);
-	
-	return (win);
-}
-
 static void
 merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
     struct noderef *sr, struct map *dm, struct node *dn, struct noderef *dr)
@@ -307,7 +291,7 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
 
 	switch (op) {
 	case NODE:
-		node_copy_ref(sr, dm, dn, mer->layer);
+		node_copy_ref(sr, dm, dn, dm->cur_layer);
 		break;
 	case FILL:
 		for (y = 0; y < sm->maph; y++) {
@@ -319,7 +303,7 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
 					if (r->r_gfx.edge != 0) {
 						continue;
 					}
-					node_copy_ref(r, dm, dn, mer->layer);
+					node_copy_ref(r, dm, dn, dm->cur_layer);
 				}
 				return;
 			}
@@ -343,7 +327,7 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
 					if (r->r_gfx.edge != op) {
 						continue;
 					}
-					node_copy_ref(r, dm, dn, mer->layer);
+					node_copy_ref(r, dm, dn, dm->cur_layer);
 				}
 				return;
 			}
@@ -352,7 +336,7 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
 	}
 }
 
-void
+static void
 merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct merge *mer = p;
@@ -362,8 +346,6 @@ merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	if (strncmp(OBJECT(m)->name, "brush(", 6) == 0)
 		return;
 	
-	mer->layer = m->cur_layer;
-
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *sm;
 		int sx, sy, dx, dy;
@@ -393,7 +375,7 @@ merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	}
 }
 
-int
+static int
 merge_load(void *p, struct netbuf *buf)
 {
 	struct merge *mer = p;
@@ -402,11 +384,8 @@ merge_load(void *p, struct netbuf *buf)
 	if (version_read(buf, &merge_ver, NULL) != 0)
 		return (-1);
 
-	mer->mode = (Uint32)read_uint32(buf);
-	mer->random_shift = (Uint32)read_uint32(buf);
-
+	merge_free_brushes(mer);
 	tlist_clear_items(mer->brushes_tl);
-	TAILQ_INIT(&mer->brushes);
 
 	nbrushes = read_uint32(buf);
 	for (i = 0; i < nbrushes; i++) {
@@ -424,7 +403,7 @@ merge_load(void *p, struct netbuf *buf)
 	return (0);
 }
 
-int
+static int
 merge_save(void *p, struct netbuf *buf)
 {
 	struct merge *mer = p;
@@ -433,9 +412,6 @@ merge_save(void *p, struct netbuf *buf)
 	off_t count_offs;
 
 	version_write(buf, &merge_ver);
-
-	write_uint32(buf, (Uint32)mer->mode);
-	write_uint32(buf, (Uint32)mer->random_shift);
 
 	count_offs = netbuf_tell(buf);				/* Skip count */
 	write_uint32(buf, 0);	
@@ -450,7 +426,7 @@ merge_save(void *p, struct netbuf *buf)
 	return (0);
 }
 
-int
+static int
 merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct merge *mer = p;

@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.26 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.27 2003/08/29 04:56:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,6 +32,9 @@
 
 #include <engine/widget/radio.h>
 
+static void	 fill_effect(void *, struct mapview *, struct map *,
+		             struct node *);
+
 const struct tool_ops fill_ops = {
 	{
 		NULL,		/* init */
@@ -41,7 +44,6 @@ const struct tool_ops fill_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* window */
 	NULL,			/* cursor */
 	fill_effect,
 	NULL			/* mouse */
@@ -66,11 +68,13 @@ fill_init(void *p)
 	win = TOOL(fi)->win = window_new("mapedit-tool-fill");
 	window_set_caption(win, _("Fill"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", fi);
+
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
 }
 
-void
+static void
 fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct fill *fi = p;

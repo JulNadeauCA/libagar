@@ -1,7 +1,7 @@
-/*	$Csoft: stamp.h,v 1.15 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.16 2003/08/26 07:55:02 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool/tool.h>
+#include <engine/mapedit/tool.h>
 
 #include "begin_code.h"
 
@@ -11,17 +11,13 @@ enum stamp_mode {
 };
 
 struct stamp {
-	struct tool	 tool;
-	int		 mode;
-	struct map	 map;
+	struct tool tool;
+
+	int	mode;				/* Mode of operation */
 };
 
 __BEGIN_DECLS
-void		 stamp_init(void *);
-void		 stamp_destroy(void *);
-int		 stamp_cursor(void *, struct mapview *, SDL_Rect *);
-void		 stamp_effect(void *, struct mapview *, struct map *,
-		              struct node *);
+void	stamp_init(void *);
 __END_DECLS
 
 #include "close_code.h"

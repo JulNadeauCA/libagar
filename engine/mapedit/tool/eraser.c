@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.38 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.39 2003/08/29 04:55:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,6 +32,9 @@
 
 #include <engine/widget/radio.h>
 
+static void	 eraser_effect(void *, struct mapview *, struct map *,
+		               struct node *);
+
 const struct tool_ops eraser_ops = {
 	{
 		NULL,		/* init */
@@ -41,7 +44,6 @@ const struct tool_ops eraser_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,
 	NULL,			/* cursor */
 	eraser_effect,
 	NULL			/* mouse */
@@ -62,15 +64,16 @@ eraser_init(void *p)
 	tool_init(&er->tool, "eraser", &eraser_ops, MAPEDIT_TOOL_ERASER);
 	er->mode = ERASER_ALL;
 
-	win = window_new("mapedit-tool-eraser");
+	win = TOOL(er)->win = window_new("mapedit-tool-eraser");
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	window_set_caption(win, _("Eraser"));
+	event_new(win, "window-close", tool_window_close, "%p", er);
+
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
-	widget_focus(rad);
 }
 
-void
+static void
 eraser_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 {
 	struct eraser *er = p;

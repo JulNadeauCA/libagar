@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.185 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.186 2003/08/26 07:55:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -41,11 +41,12 @@
 #include "mapedit.h"
 #include "mapview.h"
 
-#include "tool/tool.h"
+#include "tool.h"
 #include "tool/stamp.h"
 #include "tool/eraser.h"
 #include "tool/magnifier.h"
 #include "tool/resize.h"
+#include "tool/position.h"
 #include "tool/propedit.h"
 #include "tool/select.h"
 #include "tool/shift.h"
@@ -83,7 +84,9 @@ static const struct tools_ent {
 	{ &mapedit.tools[MAPEDIT_SHIFT], sizeof(struct shift), shift_init },
 	{ &mapedit.tools[MAPEDIT_MERGE], sizeof(struct merge), merge_init },
 	{ &mapedit.tools[MAPEDIT_FILL], sizeof(struct fill), fill_init },
-	{ &mapedit.tools[MAPEDIT_FLIP], sizeof(struct flip), flip_init }
+	{ &mapedit.tools[MAPEDIT_FLIP], sizeof(struct flip), flip_init },
+	{ &mapedit.tools[MAPEDIT_POSITION], sizeof(struct position),
+	    position_init },
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.25 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.26 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -43,7 +43,6 @@ const struct tool_ops shift_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	shift_window,
 	NULL,			/* cursor */
 	NULL,			/* effect */
 	NULL			/* mouse */
@@ -53,22 +52,17 @@ void
 shift_init(void *p)
 {
 	struct shift *sh = p;
+	struct window *win;
+	struct vbox *vb;
 
 	tool_init(&sh->tool, "shift", &shift_ops, MAPEDIT_TOOL_SHIFT);
 	sh->mode = 0;
 	sh->multi = 0;
-}
-
-struct window *
-shift_window(void *p)
-{
-	struct shift *sh = p;
-	struct window *win;
-	struct vbox *vb;
-
-	win = window_new("mapedit-tool-shift");
+	
+	win = TOOL(sh)->win = window_new("mapedit-tool-shift");
 	window_set_caption(win, _("Shift"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", sh);
 
 	vb = vbox_new(win, 0);
 	{
@@ -86,7 +80,6 @@ shift_window(void *p)
 		cb = checkbox_new(vb, _("Multi"));
 		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
 	}
-	return (win);
 }
 
 void

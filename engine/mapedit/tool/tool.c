@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.33 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.34 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,8 +33,7 @@
 
 #include <string.h>
 
-/* Handler for window-close events on tool windows. */
-static void
+void
 tool_window_close(int argc, union evarg *argv)
 {
 	struct tool *tool = argv[1].p;
@@ -55,12 +54,7 @@ tool_init(struct tool *tool, const char *name, const void *ops, int icon)
 	tool->button = NULL;
 	tool->icon = SPRITE(&mapedit, icon);
 	tool->cursor = NULL;
-	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
-	    TOOL_OPS(tool)->window(tool) : NULL;
-	if (tool->win != NULL) {
-		event_new(tool->win, "window-close", tool_window_close, "%p",
-		    tool);
-	}
+	tool->win = NULL;
 	SLIST_INIT(&tool->bindings);
 }
 

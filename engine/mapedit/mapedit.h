@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.88 2003/08/29 04:55:29 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.89 2003/09/06 23:05:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -23,6 +23,7 @@ enum {
 	MAPEDIT_MERGE,
 	MAPEDIT_FILL,
 	MAPEDIT_FLIP,
+	MAPEDIT_POSITION,
 	MAPEDIT_NTOOLS
 };
 
@@ -64,7 +65,8 @@ enum {
 	MAPEDIT_TOOL_MERGE,
 	MAPEDIT_TOOL_FILL,
 	MAPEDIT_TOOL_FLIP,
-	MAPEDIT_TOOL_MIMPORT
+	MAPEDIT_TOOL_MIMPORT,
+	MAPEDIT_TOOL_POSITION
 };
 
 extern struct mapedit	mapedit;

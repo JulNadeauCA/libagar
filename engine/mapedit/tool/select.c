@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.16 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.17 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,6 @@ const struct tool_ops select_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* window */
 	NULL,			/* cursor */
 	NULL,			/* effect */
 	NULL			/* mouse */

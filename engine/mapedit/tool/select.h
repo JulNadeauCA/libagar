@@ -1,7 +1,7 @@
-/*	$Csoft: select.h,v 1.7 2003/04/25 09:47:08 vedge Exp $	*/
+/*	$Csoft: select.h,v 1.8 2003/06/18 00:47:01 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool/tool.h>
+#include <engine/mapedit/tool.h>
 
 #include "begin_code.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.42 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.43 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,13 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
+static void	 propedit_effect(void *, struct mapview *, struct map *,
+		                 struct node *);
+static int	 propedit_cursor(void *, struct mapview *, SDL_Rect *);
+static void	 set_node_mode(int, union evarg *);
+static void	 toggle_node_flag(int, union evarg *);
+static void	 toggle_origin(int, union evarg *);
+
 const struct tool_ops propedit_ops = {
 	{
 		NULL,		/* init */
@@ -44,7 +51,6 @@ const struct tool_ops propedit_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	propedit_window,
 	propedit_cursor,
 	propedit_effect,
 	NULL			/* mouse */
@@ -174,8 +180,14 @@ void
 propedit_init(void *p)
 {
 	struct propedit *pe = p;
+	struct window *win;
+	struct vbox *vb;
 
 	tool_init(&pe->tool, "propedit", &propedit_ops, MAPEDIT_TOOL_PROPEDIT);
+	pe->node_flags = 0;
+	pe->node_mode = 0;
+	pe->origin = 0;
+
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
@@ -188,9 +200,45 @@ propedit_init(void *p)
 	tool_bind_key(pe, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_b, propedit_flag_block, 1);
 
-	pe->node_flags = 0;
-	pe->node_mode = 0;
-	pe->origin = 0;
+	win = TOOL(pe)->win = window_new("mapedit-tool-propedit");
+	window_set_caption(win, _("Node props"));
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", pe);
+
+	vb = vbox_new(win, 0);
+	{
+		static const char *node_modes[] = {
+			N_("Block"),
+			N_("Walk"),
+			N_("Climb"),
+			NULL
+		};
+		static const struct {
+			Uint32	flag;
+			char	*name;
+		} props[] = {
+			{ NODEREF_BIO,		N_("Bio")	 },
+			{ NODEREF_REGEN,	N_("Regen")	 },
+			{ NODEREF_SLOW,		N_("Slow")	 },
+			{ NODEREF_HASTE,	N_("Haste")	 },
+		};
+		const int nprops = sizeof(props) / sizeof(props[0]);
+		struct radio *rad;
+		struct checkbox *cbox;
+		int i;
+
+		rad = radio_new(vb, node_modes);
+		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
+
+		cbox = checkbox_new(vb, _("Origin"));
+		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
+
+		for (i = 0; i < nprops; i++) {
+			cbox = checkbox_new(vb, "%s", _(props[i].name));
+			event_new(cbox, "checkbox-changed", toggle_node_flag,
+			    "%p, %i", pe, props[i].flag);
+		}
+	}
 }
 
 static void
@@ -230,59 +278,10 @@ toggle_origin(int argc, union evarg *argv)
 	pe->origin = state;
 }
 
-struct window *
-propedit_window(void *p)
-{
-	struct propedit *pe = p;
-	struct window *win;
-	struct vbox *vb;
-	struct radio *rad;
-	struct checkbox *cbox;
-
-	win = window_new("mapedit-tool-propedit");
-	window_set_caption(win, _("Node props"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-
-	vb = vbox_new(win, 0);
-	{
-		static const char *node_modes[] = {
-			N_("Block"),
-			N_("Walk"),
-			N_("Climb"),
-			NULL
-		};
-		static const struct {
-			Uint32	flag;
-			char	*name;
-		} props[] = {
-			{ NODEREF_BIO,		N_("Bio")	 },
-			{ NODEREF_REGEN,	N_("Regen")	 },
-			{ NODEREF_SLOW,		N_("Slow")	 },
-			{ NODEREF_HASTE,	N_("Haste")	 },
-		};
-		const int nprops = sizeof(props) / sizeof(props[0]);
-		int i;
-
-		rad = radio_new(vb, node_modes);
-		widget_focus(rad);
-		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
-
-		cbox = checkbox_new(vb, _("Origin"));
-		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
-
-		for (i = 0; i < nprops; i++) {
-			cbox = checkbox_new(vb, "%s", _(props[i].name));
-			event_new(cbox, "checkbox-changed", toggle_node_flag,
-			    "%p, %i", pe, props[i].flag);
-		}
-	}
-	return (win);
-}
-
-int
+static int
 propedit_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
-	/* TODO */
+	/* XXX TODO */
 	return (-1);
 }
 
@@ -299,7 +298,7 @@ set_edge(struct map *m, struct node *node, Uint32 edge)
 	}
 }
 
-void
+static void
 propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct propedit *pe = p;

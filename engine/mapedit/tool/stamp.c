@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.49 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.50 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,16 +32,19 @@
 
 #include <engine/widget/radio.h>
 
+static int	 stamp_cursor(void *, struct mapview *, SDL_Rect *);
+static void	 stamp_effect(void *, struct mapview *, struct map *,
+		              struct node *);
+
 const struct tool_ops stamp_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		stamp_destroy,
+		tool_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* window */
 	stamp_cursor,
 	stamp_effect,
 	NULL			/* mouse */
@@ -61,27 +64,17 @@ stamp_init(void *p)
 
 	tool_init(&st->tool, "stamp", &stamp_ops, MAPEDIT_TOOL_STAMP);
 	st->mode = STAMP_REPLACE;
-	map_init(&st->map, "stampbuf");
-	map_alloc_nodes(&st->map, 4, 4);
 
 	win = TOOL(st)->win = window_new("mapedit-tool-stamp");
 	window_set_caption(win, _("Stamp"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", st);
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
-	widget_focus(rad);
 }
 
-void
-stamp_destroy(void *p)
-{
-	struct stamp *st = p;
-
-	object_destroy(&st->map);
-}
-
-void
+static void
 stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct stamp *st = p;
@@ -107,7 +100,7 @@ stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	}
 }
 
-int
+static int
 stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct map *copybuf = &mapedit.copybuf;
