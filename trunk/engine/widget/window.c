@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.70 2002/08/28 05:11:23 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.71 2002/09/01 00:43:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -277,16 +277,16 @@ window_draw(struct window *win)
 
 	/* Render the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+		/* Draw the widgets. */
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			WIDGET_OPS(wid)->widget_draw(wid);
+		}
+		
 		if (config->widget_flags & CONFIG_REGION_BORDERS) {
 			primitives.square(win,
 			    reg->x, reg->y,
 			    reg->w, reg->h,
 			    SDL_MapRGB(view->v->format, 255, 255, 255));
-		}
-
-		/* Draw the widgets. */
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			WIDGET_OPS(wid)->widget_draw(wid);
 		}
 	}
 
@@ -1075,7 +1075,10 @@ window_resize(struct window *win)
 	win->body.y = win->y + win->borderw*2 + win->titleh;
 	win->body.w = win->w - win->borderw*2;
 	win->body.h = win->h - win->borderw*2 - win->titleh;
-	
+
+	win->wid.w = win->w;
+	win->wid.h = win->h;
+
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
 		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
