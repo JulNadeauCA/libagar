@@ -168,9 +168,9 @@ mapedit_load(struct mapedit *med)
 	int x, y;
 
 	mapedit_setpointer(med, 0);
-	map_clean(map, NULL, 0, 0, 0);
+	map_freenodes(map);
 	sprintf(path, "%s.map", map->obj.name);
-	if (map->obj.load(med->map, path) == 0) {
+	if (map_load(med->map, path) == 0) {
 		x = map->defx;
 		y = map->defy;
 		map->map[x][y].flags |= NODE_ORIGIN;

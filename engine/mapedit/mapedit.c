@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.36 2002/02/16 05:33:26 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.37 2002/02/16 05:51:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -697,7 +697,7 @@ mapedit_postdraw(struct map *m, int flags, int vx, int vy)
 	if (flags & NODE_HASTE)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
 		    vx, vy);
-#if 1
+#if 0
 	if (flags & NODE_ANIM)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
 		    vx, vy);
