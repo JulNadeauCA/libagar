@@ -1,11 +1,12 @@
-/*	$Csoft: view.h,v 1.48 2002/11/09 06:01:41 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.49 2002/11/12 05:17:16 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
-	GFX_ENGINE_GUI,
-	GFX_ENGINE_TILEBASED
+	GFX_ENGINE_GUI,		/* Solid background */
+	GFX_ENGINE_TILEBASED	/* Map background */
 } gfx_engine_t;
 
+/* Map display */
 struct viewmap {
 	/* Read-only */
 	int	w, h;			/* View geometry in nodes */
@@ -14,32 +15,35 @@ struct viewmap {
 	struct	map *map;		/* Currently visible map */
 	int	x, y;			/* Offset in map */
 
-	SDL_Rect	**maprects;	/* Rectangles (optimization) */
-	SDL_Rect	*rects;		/* List big enough to hold all
-					   possible rectangles in the view. */
+	/* Optimizations */
+	SDL_Rect **maprects;		/* Rectangles needed to draw the map. */
 };
 
 TAILQ_HEAD(windowq, window);
-TAILQ_HEAD(windowdetachq, window);
 
 struct viewport {
 	struct	object obj;
 
 	/* Read-only */
-	gfx_engine_t gfx_engine;	/* Type of rendering engine */
-	int	w, h, bpp;		/* Viewport geometry */
+	gfx_engine_t	 gfx_engine;	/* Rendering method */
+	int		 w, h, bpp;	/* Viewport geometry */
 	SDL_Surface	*v;		/* Video surface */
-	struct	viewmap *rootmap;	/* Non-NULL in game mode */
+	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	struct {
 		int	w, h;		/* Viewport margin in pixels */
 	} margin;
+	
+	SDL_Rect	*dirty;		/* Video rectangles to update */
+	int		 ndirty;	/* Number of rectangles to update */
+	int		 maxdirty;	/* Size of dirty rectangle array */
 
 	/* Read-write, thread-safe */
-	struct	windowq windows;	/* Windows in view */
-	struct	windowdetachq detach;	/* Windows to free */
+	struct windowq	windows;	/* Windows in view */
+	struct windowq	detach;		/* Windows to free */
 
-	struct	window *focus_win;	/* Give focus to this window */
-	struct	window *wop_win;	/* Window operations */
+	struct window	*focus_win;	/* Give focus to this window,
+					   when event processing is done. */
+	struct window	*wop_win;	/* Window being moved/resized/etc. */
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,
@@ -47,7 +51,7 @@ struct viewport {
 		VIEW_WINOP_RRESIZE,	/* Right resize */
 		VIEW_WINOP_HRESIZE,	/* Height resize */
 	} winop;
-	pthread_mutex_t		lock;
+	pthread_mutex_t		lock;	/* Lock on regions. */
 	pthread_mutexattr_t	lockattr;
 };
 
@@ -158,6 +162,14 @@ case 4:					\
 
 #define VIEW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
+#define VIEW_UPDATE(rect) do {						\
+	if (view->ndirty + 1 > view->maxdirty) {			\
+		view->dirty = erealloc(view->dirty,			\
+		    ++view->maxdirty * sizeof(SDL_Rect *));		\
+	}								\
+	view->dirty[view->ndirty++] = (rect);				\
+} while (/*CONSTCOND*/0)
+	
 extern struct viewport *view;	/* view.c */
 
 void	 view_init(gfx_engine_t);

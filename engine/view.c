@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.75 2002/11/12 02:30:59 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.76 2002/11/12 05:17:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -76,12 +76,10 @@ view_init(gfx_engine_t ge)
 	mw = w / TILEW;
 	mh = h / TILEH;
 
-	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN) {
+	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN)
 		screenflags |= SDL_FULLSCREEN;
-	}
-	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT) {
+	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT)
 		screenflags |= SDL_ASYNCBLIT;
-	}
 
 	v = emalloc(sizeof(struct viewport));
 	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
@@ -89,23 +87,26 @@ view_init(gfx_engine_t ge)
 	v->bpp = SDL_VideoModeOK(w, h, bpp, screenflags);
 	v->w = prop_uint32(config, "view.w");
 	v->h = prop_uint32(config, "view.h");
+	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
+		v->w -= v->w % TILEW;
+		v->h -= v->h % TILEH;
+	}
+	if (v->w < 640 || v->h < 480) {
+		fatal("minimum resolution is 640x480\n");
+	}
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 
+	/* Dirty rectangle array */
+	v->maxdirty = v->w/TILEW * v->h/TILEH;
+	v->ndirty = 0;
+	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
+
 	pthread_mutexattr_init(&v->lockattr);
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
-
-	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
-		v->w -= v->w % TILEW;
-		v->h -= v->h % TILEH;
-	}
-
-	if (v->w < 640 || v->h < 480) {
-		fatal("minimum resolution is 640x480\n");
-	}
 
 	switch (v->bpp) {
 	case 8:
@@ -145,7 +146,6 @@ view_init(gfx_engine_t ge)
 		 * for optimization purposes.
 		 */
 		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
-		v->rootmap->rects = rootmap_alloc_rects(mw, mh);
 
 		dprintf("precalculated %dx%d rectangles (%d Kb)\n",
 		    mw, mh, (mw*mh * sizeof(SDL_Rect)) / 1024);
@@ -201,11 +201,14 @@ view_destroy(void *p)
 		view_detach_queued();
 	}
 
+	/* Free precalculated map rectangles. */
 	if (v->rootmap != NULL) {
-		dprintf("freeing rectangles\n");
 		rootmap_free_maprects(v);
-		free(v->rootmap->rects);
+		free(v->rootmap);
 	}
+
+	/* Free the dirty rectangle array. */
+	free(v->dirty);
 
 	pthread_mutex_unlock(&v->lock);
 	pthread_mutexattr_destroy(&v->lockattr);

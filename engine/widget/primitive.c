@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.16 2002/09/07 04:36:59 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.17 2002/09/11 23:55:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -316,10 +316,10 @@ line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p;
 	Uint8 *fb1, *fb2;
 	
-	x1 += WIDGET(wid)->win->x + WIDGET(wid)->x;
-	y1 += WIDGET(wid)->win->y + WIDGET(wid)->y;
-	x2 += WIDGET(wid)->win->x + WIDGET(wid)->x;
-	y2 += WIDGET(wid)->win->y + WIDGET(wid)->y;
+	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
 
 	fb1 = (Uint8 *)view->v->pixels +
 	    y1*view->v->pitch +

@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.8 2002/10/30 17:16:20 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.9 2002/11/12 05:17:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,28 +34,12 @@
 #include "rootmap.h"
 #include "physics.h"
 
-#ifdef DEBUG
-#define CHECK_RECTS(view, ri) {						\
-	int _i;								\
-	for (_i = 0; _i < (ri); _i++) {					\
-		if ((view)->rootmap->rects[_i].x > (view)->w ||		\
-		    (view)->rootmap->rects[_i].y > (view)->h ) {	\
-			dprintrect("bogus",				\
-			    &(view)->rootmap->rects[_i]);		\
-			dprintf("bogus rectangle %d/%d\n", _i, (ri));	\
-		}							\
-	}								\
-}
-#else
-#define CHECK_RECTS(view, ri)
-#endif
-
 /*
  * Render a map node.
  * Inline since this is called from draw functions with many variables.
  * Must be called on a locked map.
  */
-static void
+static __inline__ void
 rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
 	SDL_Rect rd;
@@ -147,7 +131,6 @@ rootmap_animate(void)
 	struct viewmap *rm = view->rootmap;
 	struct node *nnode;
 	int x, y, vx, vy, rx, ry, ox, oy;
-	int ri = 0;
 
 	for (y = rm->y, vy = 0;				/* Downward */
 	     y < m->maph && vy <= rm->h;
@@ -193,30 +176,41 @@ rootmap_animate(void)
 						    (vx > 1 && vy > 1) &&
 						    (vx < rm->w) &&
 						    (vy < rm->h)) {
+
+							/* Render the node. */
 							rootmap_draw_node(m,
 							    nnode,
 							    rx + (TILEW*ox),
 							    ry + (TILEH*oy));
-							rm->rects[ri++] =
+
+							/* Queue video update */
+							VIEW_UPDATE(
 							    rm->maprects
-							    [vy+oy][vx+ox];
+							    [vy+oy][vx+ox]);
 						}
 					}
 				}
 
-				/* Draw the node itself. */
+				/* Render the node. */
 				rootmap_draw_node(m, node, rx, ry);
-				rm->rects[ri++] = rm->maprects[vy][vx];
+
+				/* Queue the video update. */
+				VIEW_UPDATE(rm->maprects[vy][vx]);
 #endif
 			} else if (node->nanims > 0) {
+#ifdef DEBUG
+				if (node->x != vx+rm->x ||
+				    node->y != vy+rm->y) {
+					fatal("inconsistent node\n");
+				}
+#endif
+				/* Render the node. */
 				rootmap_draw_node(m, node, rx, ry);
-				rm->rects[ri++] = rm->maprects[vy][vx];
+
+				/* Queue the video update. */
+				VIEW_UPDATE(rm->maprects[vy][vx]);
 			}
 		}
-	}
-	if (ri > 0) {
-		CHECK_RECTS(view, ri);
-		SDL_UpdateRects(view->v, ri, rm->rects);
 	}
 }
 
@@ -233,7 +227,6 @@ rootmap_draw(void)
 	struct node *node;
 	struct noderef *nref;
 	Uint32 nsprites;
-	int ri = 0;
 
 	dprintf("offset %d,%d\n", rm->x, rm->y);
 
@@ -283,13 +276,9 @@ rootmap_draw(void)
 					nsprites++;
 				}
 			}
-			rm->rects[ri++] = rm->maprects[vy][vx];
+			/* Queue the video update. */
+			VIEW_UPDATE(rm->maprects[vy][vx]);
 		}
-	}
-
-	if (ri > 0) {
-		CHECK_RECTS(view, ri);
-		SDL_UpdateRects(view->v, ri, rm->rects);
 	}
 }
 
@@ -396,22 +385,6 @@ rootmap_alloc_maprects(int w, int h)
 }
 
 /*
- * Allocate an array able to hold wxh rectangles,
- * for optimization purposes.
- */
-SDL_Rect *
-rootmap_alloc_rects(int w, int h)
-{
-	SDL_Rect *rects;
-	size_t len;
-	
-	len = (w * h) * sizeof(SDL_Rect *);
-	rects = emalloc(len);
-	memset(rects, NULL, len);
-	return (rects);
-}
-
-/*
  * Free a map rectangle array.
  * View must be locked.
  */
@@ -423,7 +396,5 @@ rootmap_free_maprects(struct viewport *v)
 	for (y = 0; y < v->rootmap->h; y++) {
 		free(*(v->rootmap->maprects + y));
 	}
-	free(v->rootmap->maprects);
-	v->rootmap->maprects = NULL;
 }
 

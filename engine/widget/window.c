@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.96 2002/11/12 03:44:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.97 2002/11/12 05:17:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -105,10 +105,10 @@ window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
 static void
 window_round(struct window *win, int x, int y, int w, int h)
 {
-	win->x = x - (x % TILEW);
-	win->y = y - (y % TILEH);
-	win->w = w - (w % TILEW);
-	win->h = h - (h % TILEH);
+	win->rd.x = x - (x % TILEW);
+	win->rd.y = y - (y % TILEH);
+	win->rd.w = w - (w % TILEW);
+	win->rd.h = h - (h % TILEH);
 }
 
 void
@@ -186,19 +186,19 @@ window_init(struct window *win, char *name, char *caption, int flags,
 
 	/* Set the initial window position/geometry. */
 	if (win->flags & WINDOW_SCALE) {
-		win->x = rx * view->w / 100;
-		win->y = ry * view->h / 100;
-		win->w = rw * view->w / 100;
-		win->h = rh * view->h / 100;
+		win->rd.x = rx * view->w / 100;
+		win->rd.y = ry * view->h / 100;
+		win->rd.w = rw * view->w / 100;
+		win->rd.h = rh * view->h / 100;
 	} else {
-		win->x = rx;
-		win->y = ry;
-		win->w = rw;
-		win->h = rh;
+		win->rd.x = rx;
+		win->rd.y = ry;
+		win->rd.w = rw;
+		win->rd.h = rh;
 	}
 	if (win->flags & WINDOW_CENTER) {
-		win->x = view->w/2 - win->w/2;
-		win->y = view->h/2 - win->h/2;
+		win->rd.x = view->w/2 - win->rd.w/2;
+		win->rd.y = view->h/2 - win->rd.h/2;
 	}
 	
 	/* Clamp down to view area and leave a margin. */
@@ -224,78 +224,75 @@ window_init(struct window *win, char *name, char *caption, int flags,
 void
 window_draw(struct window *win)
 {
-	SDL_Rect rd;
 	SDL_Surface *v = view->v;
 	struct region *reg;
 	struct widget *wid;
 	int i;
 
-	rd.x = win->x;
-	rd.y = win->y;
-	rd.w = win->w;
-	rd.h = win->h;
-
-	SDL_FillRect(v, &rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
+	SDL_FillRect(v, &win->rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
 
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
 		    i, i,
-		    win->w - i, i,
+		    win->rd.w - i, i,
 		    win->border[i]);
 		primitives.line(win,		/* Bottom */
-		    i, win->h - i,
-		    win->w - i, win->h - i,
+		    i, win->rd.h - i,
+		    win->rd.w - i, win->rd.h - i,
 		    win->border[i]);
 		primitives.line(win,		/* Left */
 		    i, i,
-		    i, win->h - i,
+		    i, win->rd.h - i,
 		    win->border[i]);
 		primitives.line(win,		/* Right */
-		    win->w - i, i,
-		    win->w - i, win->h - i,
+		    win->rd.w - i, i,
+		    win->rd.w - i, win->rd.h - i,
 		    win->border[i]);
 	}
 
 	/* Render the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
-		SDL_Rect bgrd;
 		SDL_Surface *caption;
+		SDL_Rect rd;
 
 		/* XXX yuck */
-		bgrd.x = win->x + win->borderw;
-		bgrd.y = win->y + win->borderw;
-		bgrd.w = win->w - win->borderw*2+1;
-		bgrd.h = win->titleh - win->borderw/2;
+		rd.x = win->rd.x + win->borderw;
+		rd.y = win->rd.y + win->borderw;
+		rd.w = win->rd.w - win->borderw*2+1;
+		rd.h = win->titleh - win->borderw/2;
 
 		/* Titlebar background */
-		SDL_FillRect(view->v, &bgrd,
+		SDL_FillRect(view->v, &rd,
 		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
 		    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
-	
+		
+		rd.w = win->rd.w;
+		rd.h = win->rd.h;
+		
 		/* Caption */
 		caption = text_render(NULL, -1,
 		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
 		    TITLEBAR_TEXT_FOCUSED_COLOR :
 		    TITLEBAR_TEXT_UNFOCUSED_COLOR),
 		    win->caption);
-		rd.x = win->x + (win->w - caption->w - win->borderw);
-		rd.y = win->y + win->borderw;
+		rd.x = win->rd.x + (win->rd.w - caption->w - win->borderw);
+		rd.y = win->rd.y + win->borderw;
 		SDL_BlitSurface(caption, NULL, v, &rd);
 		SDL_FreeSurface(caption);
 
 		/* Close button */
-		rd.x = win->x + win->borderw;
-		rd.y = win->y + win->borderw;
+		rd.x = win->rd.x + win->borderw;
+		rd.y = win->rd.y + win->borderw;
 		SDL_BlitSurface(SPRITE(win, 0), NULL, view->v, &rd);
 		
 		/* Border */
 		primitives.line(win,
 		    win->borderw, win->titleh+2,
-		    win->w-win->borderw, win->titleh+2,
+		    win->rd.w-win->borderw, win->titleh+2,
 		    win->border[3]);
 		primitives.line(win,
 		    win->borderw, win->titleh+3,
-		    win->w-win->borderw, win->titleh+3,
+		    win->rd.w-win->borderw, win->titleh+3,
 		    win->border[1]);
 	}
 
@@ -314,6 +311,9 @@ window_draw(struct window *win)
 		}
 #endif
 	}
+
+	/* Queue the video update. */
+	VIEW_UPDATE(win->rd);
 }
 
 /*
@@ -439,15 +439,9 @@ window_hide(struct window *win)
 
 	/* Redraw the background in GUI mode. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_Rect rd;
-
-		rd.x = win->x;
-		rd.y = win->y;
-		rd.w = win->w;
-		rd.h = win->h;
-
-		SDL_FillRect(view->v, &rd, 0);
-		SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
+		SDL_FillRect(view->v, &win->rd, bg_color);
+		SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
+		    win->rd.w, win->rd.h);
 	}
 
 	if (win->flags & WINDOW_SAVE_POSITION) {
@@ -547,57 +541,58 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Save the old window position in GUI mode. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		oldpos.x = win->x;
-		oldpos.y = win->y;
-		oldpos.w = win->w;
-		oldpos.h = win->h;
+		oldpos = win->rd;		/* Structure copy */
 	}
 
 	/* Update the window coordinates, adjust to view area. */
-	win->x += motion->xrel;
-	win->y += motion->yrel;
+	win->rd.x += motion->xrel;
+	win->rd.y += motion->yrel;
 	window_clamp(win);
 
 	/* Update around the window in GUI mode. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		SDL_Rect nrd;
 
-		if (win->x > oldpos.x) {	/* Right */
+		if (win->rd.x > oldpos.x) {	/* Right */
 			nrd.x = oldpos.x;
 			nrd.y = oldpos.y;
-			nrd.w = win->x - oldpos.x;
-			nrd.h = win->h;
+			nrd.w = win->rd.x - oldpos.x;
+			nrd.h = win->rd.h;
 			SDL_FillRect(view->v, &nrd, bg_color);
 			SDL_UpdateRect(view->v, nrd.x,
 			    nrd.y, nrd.w, nrd.h);
 		}
-		if (win->y > oldpos.y) {	/* Down */
+		if (win->rd.y > oldpos.y) {	/* Down */
 			nrd.x = oldpos.x;
 			nrd.y = oldpos.y;
-			nrd.w = win->w;
-			nrd.h = win->y - oldpos.y;
+			nrd.w = win->rd.w;
+			nrd.h = win->rd.y - oldpos.y;
 			SDL_FillRect(view->v, &nrd, bg_color);
 			SDL_UpdateRect(view->v, nrd.x,
 			    nrd.y, nrd.w, nrd.h);
 		}
-		if (win->x < oldpos.x) {	/* Left */
-			nrd.x = win->x + win->w;
-			nrd.y = win->y;
-			nrd.w = oldpos.x - win->x;
+		if (win->rd.x < oldpos.x) {	/* Left */
+			nrd.x = win->rd.x + win->rd.w;
+			nrd.y = win->rd.y;
+			nrd.w = oldpos.x - win->rd.x;
 			nrd.h = oldpos.h;
 			SDL_FillRect(view->v, &nrd, bg_color);
 			SDL_UpdateRect(view->v, nrd.x,
 			    nrd.y, nrd.w, nrd.h);
 		}
-		if (win->y < oldpos.y) {	/* Up */
+		if (win->rd.y < oldpos.y) {	/* Up */
 			nrd.x = oldpos.x;
-			nrd.y = win->y + win->h;
+			nrd.y = win->rd.y + win->rd.h;
 			nrd.w = oldpos.w;
-			nrd.h = oldpos.y - win->y;
+			nrd.h = oldpos.y - win->rd.y;
 			SDL_FillRect(view->v, &nrd, bg_color);
 			SDL_UpdateRect(view->v, nrd.x,
 			    nrd.y, nrd.w, nrd.h);
 		}
+	}
+	
+	if (view->rootmap != NULL) {
+		view->rootmap->map->redraw++;
 	}
 }
 
@@ -715,9 +710,9 @@ scan_wins:
 						    "window-mousemotion",
 						    "%i, %i, %i, %i",
 						    (int)ev->motion.x -
-						     (wid->x + wid->win->x),
+						     (wid->x + wid->win->rd.x),
 						    (int)ev->motion.y -
-						     (wid->y + wid->win->y),
+						     (wid->y + wid->win->rd.y),
 						    (int)ev->motion.xrel,
 						    (int)ev->motion.yrel);
 					}
@@ -744,9 +739,9 @@ scan_wins:
 						    "%i, %i, %i",
 						    ev->button.button,
 						    ev->button.x -
-						    (wid->x+wid->win->x),
+						    (wid->x+wid->win->rd.x),
 						    ev->button.y -
-						    (wid->y+wid->win->y));
+						    (wid->y+wid->win->rd.y));
 					}
 				}
 			}
@@ -758,19 +753,19 @@ scan_wins:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto next_win;
 			}
-			if (ev->button.y - win->y <= win->titleh) {
+			if (ev->button.y - win->rd.y <= win->titleh) {
 				/* Close the window. */
-			    	if (ev->button.x - win->x < 20) { /* XXX */
+			    	if (ev->button.x - win->rd.x < 20) { /* XXX */
 					window_hide(win);
 					event_post(win, "window-close", NULL);
 				}
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
-			} else if (ev->button.y-win->y > win->h-win->borderw) {
+			} else if (ev->button.y-win->rd.y > win->rd.h-win->borderw) {
 				/* Resize the window. */
-			    	if (ev->button.x-win->x < 17) {
+			    	if (ev->button.x-win->rd.x < 17) {
 					view->winop = VIEW_WINOP_LRESIZE;
-				} else if (ev->button.x-win->x > win->w-17) {
+				} else if (ev->button.x-win->rd.x > win->rd.w-17) {
 					view->winop = VIEW_WINOP_RRESIZE;
 				} else {
 					view->winop = VIEW_WINOP_HRESIZE;
@@ -792,9 +787,9 @@ scan_wins:
 					    "%i, %i, %i",
 					    ev->button.button,
 					    ev->button.x -
-					    (wid->x + wid->win->x),
+					    (wid->x + wid->win->rd.x),
 					    ev->button.y -
-					    (wid->y + wid->win->y));
+					    (wid->y + wid->win->rd.y));
 					goto posted;
 				}
 			}
@@ -875,14 +870,14 @@ posted:
 static void
 window_clamp(struct window *win)
 {
-	if (win->x < 0)
-		win->x = 0;
-	if (win->y < 0)
-		win->y = 0;
-	if (win->x+win->w > view->w)
-		win->x = view->w - win->w;
-	if (win->y+win->h > view->h)
-		win->y = view->h - win->h;
+	if (win->rd.x < 0)
+		win->rd.x = 0;
+	if (win->rd.y < 0)
+		win->rd.y = 0;
+	if (win->rd.x+win->rd.w > view->w)
+		win->rd.x = view->w - win->rd.w;
+	if (win->rd.y+win->rd.h > view->h)
+		win->rd.y = view->h - win->rd.h;
 }
 
 /*
@@ -892,98 +887,101 @@ window_clamp(struct window *win)
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect ro, rn;
+	SDL_Rect ro;
 	int nx, ny;
 
-	ro.x = win->x;
-	ro.y = win->y;
-	ro.w = win->w;
-	ro.h = win->h;
-	SDL_FillRect(view->v, &ro, 0);
+	ro = win->rd;		/* Structure copy */
 
-	nx = win->x;
-	ny = win->y;
+#if 0
+	SDL_FillRect(view->v, &win->rd, bg_color);
+#endif
+
+	nx = win->rd.x;
+	ny = win->rd.y;
 
 	/* Resize the window accordingly. */
 	switch (op) {
 	case VIEW_WINOP_LRESIZE:
 		if (motion->xrel < 0) {
-			win->w -= motion->xrel;
-			nx = win->x + motion->xrel;
+			win->rd.w -= motion->xrel;
+			nx = win->rd.x + motion->xrel;
 		} else if (motion->xrel > 0) {
-			win->w -= motion->xrel;
-			nx = win->x + motion->xrel;
+			win->rd.w -= motion->xrel;
+			nx = win->rd.x + motion->xrel;
 		}
 		if (motion->yrel < 0 || motion->yrel > 0) {
-			win->h += motion->yrel;
+			win->rd.h += motion->yrel;
 		}
 		break;
 	case VIEW_WINOP_RRESIZE:
 		if (motion->xrel < 0 || motion->xrel > 0) {
-			win->w += motion->xrel;
+			win->rd.w += motion->xrel;
 		}
 		if (motion->yrel < 0 || motion->yrel > 0) {
-			win->h += motion->yrel;
+			win->rd.h += motion->yrel;
 		}
 		break;
 	case VIEW_WINOP_HRESIZE:
 		if (motion->yrel < 0 || motion->yrel > 0) {
-			win->h += motion->yrel;
+			win->rd.h += motion->yrel;
 		}
 	default:
 	}
 
 	/* Clamp to minimum window geometry. */
-	if (win->w < win->minw &&
+	if (win->rd.w < win->minw &&
 	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
 	    == 0) {
-		win->w = win->minw;
+		win->rd.w = win->minw;
 	} else {
-		win->x = nx;
+		win->rd.x = nx;
 	}
-	if (win->h < win->minh &&
+	if (win->rd.h < win->minh &&
 	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
 	    == 0) {
-		win->h = win->minh;
+		win->rd.h = win->minh;
 	} else {
-		win->y = ny;
+		win->rd.y = ny;
 	}
 	
-	if (win->x < 0)
-		win->x = 0;
-	if (win->y < 0)
-		win->y = 0;
+	if (win->rd.x < 0)
+		win->rd.x = 0;
+	if (win->rd.y < 0)
+		win->rd.y = 0;
 
 	/* Clamp to view boundaries. */
-	if (win->x + win->w > view->w) {
-		win->x = ro.x;
-		win->w = ro.w;
+	if (win->rd.x + win->rd.w > view->w) {
+		win->rd.x = ro.x;
+		win->rd.w = ro.w;
 	}
-	if (win->y + win->h > view->h) {
-		win->y = ro.y;
-		win->h = ro.h;
+	if (win->rd.y + win->rd.h > view->h) {
+		win->rd.y = ro.y;
+		win->rd.h = ro.h;
 	}
 
 	/* Effect the change. */
 	window_resize(win);
 
-	/* Rectangle at the left (lresize operation). */
-	if (win->x > ro.x) {
-		SDL_UpdateRect(view->v,
-		    ro.x, ro.y,
-		    win->x-ro.x, win->h);
-	}
-	/* Rectangle at the right (rresize and hresize ops). */
-	if (win->w < ro.w) {
-		SDL_UpdateRect(view->v,
-		    win->x + win->w, win->y,
-		    ro.w - win->w, ro.h);
-	}
-	/* Rectangle at the bottom (rresize and hresize ops). */
-	if (win->h < ro.h) {
-		SDL_UpdateRect(view->v,
-		    win->x, win->y + win->h,
-		    ro.w, ro.h - win->h);
+	/* Update the surrounding rectangles in GUI mode. */
+	if (view->gfx_engine == GFX_ENGINE_GUI) {
+		/* Rectangle at the left (lresize operation). */
+		if (win->rd.x > ro.x) {
+			SDL_UpdateRect(view->v,
+			    ro.x, ro.y,
+			    win->rd.x-ro.x, win->rd.h);
+		}
+		/* Rectangle at the right (rresize and hresize ops). */
+		if (win->rd.w < ro.w) {
+			SDL_UpdateRect(view->v,
+			    win->rd.x + win->rd.w, win->rd.y,
+			    ro.w - win->rd.w, ro.h);
+		}
+		/* Rectangle at the bottom (rresize and hresize ops). */
+		if (win->rd.h < ro.h) {
+			SDL_UpdateRect(view->v,
+			    win->rd.x, win->rd.y + win->rd.h,
+			    ro.w, ro.h - win->rd.h);
+		}
 	}
 }
 
@@ -996,13 +994,13 @@ window_resize(struct window *win)
 	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
 
-	win->body.x = win->x + win->borderw;
-	win->body.y = win->y + win->borderw*2 + win->titleh;
-	win->body.w = win->w - win->borderw*2;
-	win->body.h = win->h - win->borderw*2 - win->titleh;
+	win->body.x = win->rd.x + win->borderw;
+	win->body.y = win->rd.y + win->borderw*2 + win->titleh;
+	win->body.w = win->rd.w - win->borderw*2;
+	win->body.h = win->rd.h - win->borderw*2 - win->titleh;
 
-	win->wid.w = win->w;
-	win->wid.h = win->h;
+	win->wid.w = win->rd.w;
+	win->wid.h = win->rd.h;
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
@@ -1016,7 +1014,7 @@ window_resize(struct window *win)
 		/* Region coordinates */
 		if (reg->rx > 0) {
 			reg->x = (reg->rx * win->body.w / 100) +
-			    (win->body.x - win->x) + 1;
+			    (win->body.x - win->rd.x) + 1;
 		} else if (reg->rx == 0) {
 			reg->x = x;
 		} else {
@@ -1024,7 +1022,7 @@ window_resize(struct window *win)
 		}
 		if (reg->ry > 0) {
 			reg->y = (reg->ry * win->body.h / 100) +
-			    (win->body.y - win->y);
+			    (win->body.y - win->rd.y);
 		} else if (reg->ry == 0) {
 			reg->y = y;
 		} else {
@@ -1035,7 +1033,7 @@ window_resize(struct window *win)
 		if (reg->rw > 0) {
 			reg->w = (reg->rw * win->body.w / 100);
 		} else if (reg->rw == 0) {
-			reg->w = win->w - x;
+			reg->w = win->rd.w - x;
 		} else {
 			reg->w = abs(reg->rw);
 		}
@@ -1043,7 +1041,7 @@ window_resize(struct window *win)
 		if (reg->rh >= 0) {
 			reg->h = (reg->rh * win->body.h / 100) - 4; /* XXX */
 		} else if (reg->rh == 0) {
-			reg->h = win->h - y;
+			reg->h = win->rd.h - y;
 		} else {
 			reg->h = abs(reg->rh);
 		}
@@ -1112,7 +1110,7 @@ window_resize(struct window *win)
 
 #ifdef DEBUG
 	if (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE) {
-		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->w, win->h);
+		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->rd.w, win->rd.h);
 	}
 #endif
 }
@@ -1142,10 +1140,10 @@ window_load(void *p, int fd)
 		return (-1);
 	}
 
-	win->x = read_uint32(fd);
-	win->y = read_uint32(fd);
-	win->w = read_uint32(fd);
-	win->h = read_uint32(fd);
+	win->rd.x = read_uint32(fd);
+	win->rd.y = read_uint32(fd);
+	win->rd.w = read_uint32(fd);
+	win->rd.h = read_uint32(fd);
 
 	/* XXX scale */
 
@@ -1161,10 +1159,10 @@ window_save(void *p, int fd)
 	struct window *win = p;
 
 	version_write(fd, &window_ver);
-	write_uint32(fd, win->x);
-	write_uint32(fd, win->y);
-	write_uint32(fd, win->w);
-	write_uint32(fd, win->h);
+	write_uint32(fd, win->rd.x);
+	write_uint32(fd, win->rd.y);
+	write_uint32(fd, win->rd.w);
+	write_uint32(fd, win->rd.h);
 	
 	return (0);
 }
