@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.4 2003/03/07 00:44:55 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.5 2003/03/10 05:49:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -57,18 +57,19 @@ nodeedit_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
-	struct node *node = mv->cur_node;
+	struct node *node;
 	struct tlist_item *it;
 	struct noderef *nref;
 	size_t nodesz = 0;
-	int i = 0;
+	int i = 0, sx, sy;
 	char flags[96];
 	
-	if (node == NULL) {
+	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
 		label_printf(mv->nodeed.node_flags_lab, "-");
 		label_printf(mv->nodeed.node_size_lab, "-");
 		return;
 	}
+	node = &mv->map->map[sy][sx];
 	
 	flags[0] = '\0';
 	if (node->flags & NODE_WALK)		strcat(flags, "walk ");
@@ -124,8 +125,8 @@ nodeedit_poll(int argc, union evarg *argv)
 
 	tlist_restore_selections(tl);
 	
-	label_printf(mv->nodeed.node_size_lab, "Node size: %lu bytes",
-	    (unsigned long)nodesz);
+	label_printf(mv->nodeed.node_size_lab,
+	    "Node size: %lu bytes", (unsigned long)nodesz);
 	label_printf(mv->nodeed.noderef_type_lab, "-");
 	label_printf(mv->nodeed.noderef_flags_lab, "-");
 	label_printf(mv->nodeed.noderef_center_lab, "-");
@@ -180,13 +181,15 @@ mapview_node_op(int argc, union evarg *argv)
 	int op = argv[2].i;
 	struct tlist *tl = mv->nodeed.refs_tl;
 	struct tlist_item *it;
-	struct node *node = mv->cur_node;
+	struct node *node;
 	struct noderef *nref;
+	int sx, sy;
 
-	if (node == NULL) {
+	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
 		text_msg("Error", "No node is selected");
 		return;
 	}
+	node = &mv->map->map[sy][sx];
 
 	switch (op) {
 	case MAPVIEW_NODE_REMOVE:

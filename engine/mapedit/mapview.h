@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.35 2003/03/13 08:37:16 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.36 2003/03/15 04:21:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -9,7 +9,7 @@
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
 
-/* Construction of source tile maps */
+/* For construction of source tile maps. */
 struct mapview_constr {
 	int		 x, y;		/* Current position */
 	struct window	*win;		/* Source tiles window */
@@ -31,47 +31,44 @@ struct mapview {
 #define MAPVIEW_CENTER		 0x080
 #define MAPVIEW_SAVEABLE	 0x100	/* Load/save keys */
 #define MAPVIEW_NO_CURSOR	 0x200	/* Hide cursor */
-
 	int	 prop_bg;		/* Background of node attributes */
 	int	 prop_style;		/* Style of node attributes */
 
-	/* Mouse scrolling state */
-	struct {
+	struct {		/* Mouse scrolling state */
 		int	scrolling;	/* Currently scrolling? */
 		int	x, y;		/* Current mouse position */
 	} mouse;
-
-	/* Selections */
-	struct {
+	struct {		/* Temporary mouse selection */
 		int	set;
 		int	x, y;		/* Selection origin */
 		int	xoffs, yoffs;	/* Displacement from origin */
 	} msel;
-	struct {
-		int		set;
-		int		x, y;		/* Selection origin */
-		unsigned int	w, h;		/* Displacement from origin */
+	struct {		/* Effective map selection */
+		int	set;
+		int	x, y;	/* Rectangle origin */
+		int	w, h;	/* Rectangle geometry */
 	} esel;
 
-	/* Zoom and soft-scroll offsets. */
-	Uint16		*zoom;		/* Zoom (%) */
+	Uint16		*zoom;		/* Zoom factor (%) */
+	int		 zoom_inc;	/* Zoom increment (%) */
+	int		 zoom_ival;	/* Zoom interval (ms) */
+	SDL_TimerID	 zoom_tm;	/* Zoom timer */
+
 	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
-	int		*tilew, *tileh;
-	SDL_TimerID	 zoom_tm;
-	struct {
-		Uint16	zoom;
-		Sint16	ssx, ssy;
-		int	tilew, tileh;
+	int		*tilew, *tileh;	/* Current tile geometry */
+
+	struct {		/* For MAPVIEW_INDEPENDENT zoom */
+		Uint16	 zoom;
+		Sint16	 ssx, ssy;
+		int	 tilew, tileh;
 	} izoom;
 
 	struct map	*map;		/* Map to display */
 	Uint8		 cur_layer;	/* Layer being edited */
-	int		 mx, my;	/* Display offset (nodes). XXX u32? */
+	int		 mx, my;	/* Display offset (nodes) */
 	unsigned int	 mw, mh;	/* Display size (nodes) */
-	
 	int		 cx, cy;	/* Cursor position (nodes) */
-	int		 cxrel, cyrel;
-	struct node	*cur_node;
+	int		 cxrel, cyrel;	/* Displacement from last position */
 
 	struct mapview_constr	constr;	/* Source tile mapping */
 	struct nodeedit		nodeed;	/* Node editor */
@@ -107,6 +104,8 @@ enum mapview_prop_labels {
 	MAPVIEW_HASTE
 };
 
+struct node;
+
 struct mapview	*mapview_new(struct region *, struct map *, int, int, int);
 void		 mapview_init(struct mapview *, struct map *, int, int, int);
 void		 mapview_destroy(void *);
@@ -118,9 +117,8 @@ void		 mapview_draw_props(struct mapview *, struct node *, int, int,
 void		 mapview_center(struct mapview *, int, int);
 int		 mapview_zoom(struct mapview *, int);
 void		 mapview_map_coords(struct mapview *, int *, int *);
-void		 mapview_set_selection(struct mapview *, int, int,
-		     unsigned int, unsigned int);
+void		 mapview_set_selection(struct mapview *, int, int, int, int);
 int		 mapview_get_selection(struct mapview *, int *, int *,
-		     unsigned int *, unsigned int *);
+		    int *, int *);
 
 #endif /* _AGAR_MAPEDIT_MAPVIEW_H_ */
