@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.4 2004/03/12 04:06:33 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.5 2004/03/17 12:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -461,7 +461,7 @@ close_window(int argc, union evarg *argv)
 }
 
 void
-mediasel_init(struct mapview *mv)
+mediasel_init(struct mapview *mv, struct window *pwin)
 {
 	struct object *ob = OBJECT(mv->map);
 	struct window *win;
@@ -531,6 +531,7 @@ mediasel_init(struct mapview *mv)
 		}
 	}
 	mv->mediasel.win = win;
+	window_attach(pwin, win);
 }
 
 void
@@ -538,7 +539,6 @@ mediasel_destroy(struct mapview *mv)
 {
 	free(mv->mediasel.gfx);
 	free(mv->mediasel.audio);
-	view_detach(mv->mediasel.win);
 }
 
 #endif	/* EDITION */

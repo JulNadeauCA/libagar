@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.141 2004/02/20 04:18:09 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.142 2004/03/17 12:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -211,6 +211,36 @@ mapview_toggle_props(int argc, union evarg *argv)
 }
 
 void
+mapview_destroy(void *p)
+{
+	struct mapview *mv = p;
+
+#ifdef EDITION
+	if (mapedition) {
+		nodeedit_destroy(mv);
+		layedit_destroy(mv);
+		mediasel_destroy(mv);
+	}
+#endif
+	widget_destroy(mv);
+}
+
+static void
+mapview_attached(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	struct window *win = argv[argc].p;
+
+#ifdef EDITION
+	if (mapedition) {
+		nodeedit_init(mv, win);
+		layedit_init(mv, win);
+		mediasel_init(mv, win);
+	}
+#endif
+}
+
+void
 mapview_init(struct mapview *mv, struct map *m, int flags)
 {
 	widget_init(mv, "mapview", &mapview_ops,
@@ -292,28 +322,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
-
-#ifdef EDITION
-	if (mapedition) {
-		nodeedit_init(mv);
-		layedit_init(mv);
-		mediasel_init(mv);
-	}
-#endif
-}
-
-void
-mapview_destroy(void *p)
-{
-	struct mapview *mv = p;
-
-#ifdef EDITION
-	if (mapedition) {
-		nodeedit_destroy(mv);
-		layedit_destroy(mv);
-		mediasel_destroy(mv);
-	}
-#endif
+	event_new(mv, "attached", mapview_attached, NULL);
 }
 
 /*

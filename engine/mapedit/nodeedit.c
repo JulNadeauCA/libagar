@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.24 2004/02/20 04:18:09 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.25 2004/03/17 12:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -177,7 +177,7 @@ node_operation(int argc, union evarg *argv)
 }
 
 void
-nodeedit_init(struct mapview *mv)
+nodeedit_init(struct mapview *mv, struct window *pwin)
 {
 	struct map *m = mv->map;
 	struct window *win;
@@ -212,12 +212,12 @@ nodeedit_init(struct mapview *mv)
 
 	mv->nodeed.refs = tl;
 	mv->nodeed.win = win;
+	window_attach(pwin, win);
 }
 
 void
 nodeedit_destroy(struct mapview *mv)
 {
-	view_detach(mv->nodeed.win);
 }
 
 #endif	/* EDITION */
