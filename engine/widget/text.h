@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.7 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.8 2002/06/12 20:40:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
@@ -32,6 +32,7 @@ struct text {
 };
 
 extern TTF_Font *font;
+extern int font_h;
 
 int	 text_engine_init(void);
 void	 text_engine_destroy(void);
