@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.75 2003/08/31 11:58:07 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.76 2003/10/09 22:39:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -9,6 +9,7 @@
 #include <config/have_opengl.h>
 #include <config/enable_nls.h>
 #include <config/threads.h>
+#include <config/floating_point.h>
 #include <config/edition.h>
 #include <config/have_bounded_attribute.h>
 #include <config/have_format_attribute.h>
@@ -41,12 +42,12 @@
 #ifdef HAVE_FORMAT_ATTRIBUTE
 #define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
 #else
-#define FORMAT_ATTRIBUTE(t, a, b)
+#define FORMAT_ATTRIBUTE(t, a, b) /* nothing */
 #endif
 #ifdef HAVE_NONNULL_ATTRIBUTE
 #define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
 #else
-#define NONNULL_ATTRIBUTE(a)
+#define NONNULL_ATTRIBUTE(a) /* nothing */
 #endif
 
 #include <engine/error/error.h>
