@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.4 2002/09/06 01:29:16 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.5 2002/09/06 01:30:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,8 +48,8 @@
 #include "monitor.h"
 
 #include "tool/monitor_tool.h"
+#include "tool/sprite_browser.h"
 #include "tool/object_browser.h"
-#include "tool/media_browser.h"
 
 const struct object_ops monitor_ops = {
 	monitor_destroy,
@@ -73,12 +73,12 @@ show_tool(int argc, union evarg *argv)
 		pthread_mutex_lock(&mon->wins.object_browser->lock);
 		window_show_locked(mon->wins.object_browser);
 		pthread_mutex_unlock(&mon->wins.object_browser->lock);
-		return;
-	case MONITOR_MEDIA_BROWSER:
-		pthread_mutex_lock(&mon->wins.media_browser->lock);
-		window_show_locked(mon->wins.media_browser);
-		pthread_mutex_unlock(&mon->wins.media_browser->lock);
-		return;
+		break;
+	case MONITOR_SPRITE_BROWSER:
+		pthread_mutex_lock(&mon->wins.sprite_browser->lock);
+		window_show_locked(mon->wins.sprite_browser);
+		pthread_mutex_unlock(&mon->wins.sprite_browser->lock);
+		break;
 	}
 }
 
@@ -97,21 +97,21 @@ toolbar_window(struct monitor *mon)
 	
 	reg = region_new(win, REGION_VALIGN, 0,  0, 100, 50);
 	reg->spacing = 1;
-
+	
 	/* Object browser */
 	button = button_new(reg, NULL,
 	    SPRITE(mon, MONITOR_OBJECT_BROWSER), 0, xdiv, ydiv);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0,
 	    show_tool, "%p, %i", mon, MONITOR_OBJECT_BROWSER);
-	
-	/* Media browser */
+
+	/* Sprite browser */
 	button = button_new(reg, NULL,
-	    SPRITE(mon, MONITOR_MEDIA_BROWSER), 0, xdiv, ydiv);
+	    SPRITE(mon, MONITOR_SPRITE_BROWSER), 0, xdiv, ydiv);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0,
-	    show_tool, "%p, %i", mon, MONITOR_MEDIA_BROWSER);
-
+	    show_tool, "%p, %i", mon, MONITOR_SPRITE_BROWSER);
+	
 	reg = region_new(win, REGION_VALIGN, -1, 50, 100, 50);
 	reg->spacing = 1;
 	
@@ -125,7 +125,7 @@ monitor_init(struct monitor *mon, char *name)
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
 	mon->wins.toolbar = toolbar_window(mon);
 	mon->wins.object_browser = object_browser_window(mon);
-	mon->wins.media_browser = media_browser_window(mon);
+	mon->wins.sprite_browser = sprite_browser_window(mon);
 }
 
 void

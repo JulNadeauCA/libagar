@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.5 2002/09/06 01:30:13 vedge Exp $	*/
+/*	$Csoft: sprite_browser.c,v 1.6 2002/09/07 05:12:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -50,44 +50,44 @@
 #include <engine/mapedit/mapview.h>
 
 #include "monitor_tool.h"
-#include "object_browser.h"
+#include "sprite_browser.h"
 
-static const struct monitor_tool_ops object_browser_ops = {
+static const struct monitor_tool_ops sprite_browser_ops = {
 	{
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	object_browser_window
+	sprite_browser_window
 };
 
 static void	lookup_object(int, union evarg *);
 
-struct object_browser *
-object_browser_new(struct monitor *mon, int flags)
+struct sprite_browser *
+sprite_browser_new(struct monitor *mon, int flags)
 {
-	struct object_browser *object_browser;
+	struct sprite_browser *sprite_browser;
 
-	object_browser = emalloc(sizeof(struct object_browser));
-	object_browser_init(object_browser, mon, flags);
+	sprite_browser = emalloc(sizeof(struct sprite_browser));
+	sprite_browser_init(sprite_browser, mon, flags);
 
-	return (object_browser);
+	return (sprite_browser);
 }
 
 void
-object_browser_init(struct object_browser *object_browser, struct monitor *mon,
+sprite_browser_init(struct sprite_browser *sprite_browser, struct monitor *mon,
     int flags)
 {
-	monitor_tool_init(&object_browser->tool, "object_browser", mon,
-	    &object_browser_ops);
+	monitor_tool_init(&sprite_browser->tool, "sprite_browser", mon,
+	    &sprite_browser_ops);
 
-	object_browser->flags = flags;
+	sprite_browser->flags = flags;
 }
 
 struct window *
-object_browser_window(void *p)
+sprite_browser_window(void *p)
 {
-	struct object_browser *obr = p;
+	struct sprite_browser *obr = p;
 	struct window *win;
 	struct region *reg;
 	struct textbox *obj_tbox, *offs_tbox;
