@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.83 2002/09/16 16:01:29 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.84 2002/09/19 20:55:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -114,10 +114,10 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_ESCAPE:
+		dprintf("shutting down (escape)\n");
 		pthread_mutex_unlock(&view->lock);
 		pthread_mutex_unlock(&world->lock);
 		engine_stop();
-		return;
 	default:
 		break;
 	}
@@ -209,7 +209,7 @@ event_loop(void)
 
 			/* Update the windows. */
 			nwrects = 0;
-			TAILQ_FOREACH(win, &view->windowsh, windows) {
+			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
 					/* XXX use indirect blit & microtiles */
@@ -275,7 +275,7 @@ event_dispatch(SDL_Event *ev)
 			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
 			break;
 		}
-		TAILQ_FOREACH(win, &view->windowsh, windows) {
+		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
 			if (win->flags & WINDOW_SHOWN) {
 				window_draw(win);
@@ -287,7 +287,7 @@ event_dispatch(SDL_Event *ev)
 		EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n", ev->motion.x,
 		    ev->motion.y);
 		rv = 0;
-		if (!TAILQ_EMPTY(&view->windowsh)) {
+		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
 		}
 		break;
@@ -299,7 +299,7 @@ event_dispatch(SDL_Event *ev)
 		/* FALLTHROUGH */
 	case SDL_MOUSEBUTTONDOWN:
 		rv = 0;
-		if (!TAILQ_EMPTY(&view->windowsh)) {
+		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
 		}
 		break;
@@ -310,7 +310,7 @@ event_dispatch(SDL_Event *ev)
 		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
 		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
-		input_event(joy, ev);
+		input_event(INPUT_JOY, ev);
 		break;
 	case SDL_KEYDOWN:
 		event_hotkey(ev);
@@ -322,18 +322,18 @@ event_dispatch(SDL_Event *ev)
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
 
 		rv = 0;
-		if (!TAILQ_EMPTY(&view->windowsh)) {
+		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
 		}
 		if (rv == 0) {
-			input_event(keyboard, ev);
+			input_event(INPUT_KEYBOARD, ev);
 		}
 		break;
 	case SDL_QUIT:
 		EVENT_DEBUG("SDL_QUIT\n");
+		dprintf("shutting down (SDL_QUIT)\n");
 		pthread_mutex_unlock(&view->lock);
 		engine_stop();
-		break;
 	}
 	
 	/* Process the detach queue. */

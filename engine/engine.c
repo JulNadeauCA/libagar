@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.66 2002/09/06 01:23:39 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.67 2002/09/08 03:45:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -67,11 +67,6 @@ struct world *world;			/* Describes game elements */
 struct config *config;			/* Global configuration settings */
 int mapediting;				/* Map edition mode */
 
-/* Input devices */
-struct input *keyboard = NULL;
-struct input *joy = NULL;
-struct input *mouse = NULL;
-
 static void	printusage(char *, int);
 #ifdef XDEBUG
 static int	engine_xerror(Display *, XErrorEvent *);
@@ -82,7 +77,7 @@ static void	engine_xdebug(void);
 static void
 printusage(char *progname, int flags)
 {
-	fprintf(stderr, "Usage: %s [-efv] [-w width] [-h height] [-j joy#]\n",
+	fprintf(stderr, "Usage: %s [-efv] [-w width] [-h height]\n",
 	    progname);
 }
 
@@ -90,7 +85,7 @@ int
 engine_init(int argc, char *argv[], const struct gameinfo *gi,
     char *path, int flags)
 {
-	int c, njoy = -1, fullscreen = 0;
+	int c, fullscreen = 0;
 	int w = -1, h = -1;
 
 	pthread_key_create(&engine_errorkey, NULL);
@@ -108,9 +103,6 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 			exit (0);
 		case 'f':
 			fullscreen++;
-			break;
-		case 'j':
-			njoy = atoi(optarg);
 			break;
 		case 'e':
 			mapediting++;
@@ -140,11 +132,6 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	    SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
 	}
-	if (njoy != -1) {	/* XXX default */
-		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
-			njoy = -1;
-		}
-	}
 	
 	/* Initialize/load engine settings. */
 	config = config_new();
@@ -168,12 +155,17 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	if (h > 0)
 		prop_set_uint32(config, "view.h", h);
 
-	/* Initialize input devices. */
-	keyboard = input_new(INPUT_KEYBOARD, 0);
-	if (njoy != -1) {	/* XXX default */
-		joy = input_new(INPUT_JOY, njoy);
+	/* Initialize the default input devices. */
+	input_new(INPUT_KEYBOARD, 0);
+	input_new(INPUT_MOUSE, 0);
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+		int i, njoys;
+
+		njoys = SDL_NumJoysticks();
+		for (i = 0; i < njoys; i++) {
+			input_new(INPUT_JOY, i);
+		}
 	}
-	mouse = input_new(INPUT_MOUSE, 0);
 
 	/*
 	 * Set the video mode.
@@ -323,12 +315,8 @@ engine_destroy(void)
 	/* Free glyph cache. */
 	keycodes_freeglyphs();
 
-	/* Shut down the input devices. XXX link */
-	input_destroy(keyboard);
-	input_destroy(mouse);
-	if (joy != NULL) {	/* XXX default */
-		input_destroy(joy);
-	}
+	/* Shut down the input devices. */
+	input_destroy_all();
 
 	/* Destroy the views. */
 	object_destroy(view);
