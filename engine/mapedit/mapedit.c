@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.172 2003/06/08 00:21:02 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.173 2003/06/11 22:27:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -298,8 +298,6 @@ mapedit_window(struct map *m)
 	struct window *win;
 	struct hbox *hb;
 	struct mapview *mv;
-
-	/* XXX order */
 
 	win = window_new(NULL);
 	window_set_caption(win, "%s edition", OBJECT(m)->name);

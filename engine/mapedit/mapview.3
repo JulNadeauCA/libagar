@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.24 2003/03/29 03:01:58 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.25 2003/06/06 02:47:50 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -152,7 +152,7 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -width 25n
 .It widget-lostfocus
-Stop any zooming in process.
+Stop any zooming in progress.
 .It window-mousebuttondown
 The right mouse button enables scrolling.
 The left mouse button invokes the current tool, if
@@ -166,16 +166,22 @@ If a mouse selection is in progress, adjust the position relative to
 the selection origin.
 In edition mode, call current tool if the left mouse button is held,
 or adjust the centering if the middle mouse button is held.
-.It window-keyup
-- or + keys stop zooming.
 .It window-keydown
-- or + keys start zooming.
-0/1 keys zooms to 1:1.
-In
-.Dv MAPVIEW_EDIT
-mode, edition keys are available.
-.It window-mouseout
-Stop moving.
+The default keys bindings are:
+.Bl -tag -width "SDLK_EQUALS " -compact
+.It Dv SDLK_EQUALS
+Increment the zoom.
+.It Dv SDLK_MINUS
+Decrement the zoom.
+.It Dv SDLK_[01]
+Zoom to 1:1 (no scaling).
+.It Dv SDLK_[2-9]
+Zoom to a predefine value.
+.It Dv SDLK_o
+Center around the map origin.
+.El
+.It window-keyup
+Stop any zooming in progress
 .El
 .Pp
 The
@@ -191,3 +197,5 @@ widget does not generate any event.
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Sh BUGS
+The zoom uses unsafe SDL timers.
