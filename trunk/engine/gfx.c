@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.32 2004/04/20 09:14:53 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.33 2004/04/22 01:49:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -250,8 +250,9 @@ gfx_unused(struct gfx *gfx)
 
 /* Allocate a private gfx structure for a given object. */
 struct gfx *
-gfx_new_pvt(struct object *ob, const char *name)
+gfx_alloc_pvt(void *p, const char *name)
 {
+	struct object *ob = p;
 	struct gfx *gfx;
 	
 	gfx = Malloc(sizeof(struct gfx), M_GFX);
