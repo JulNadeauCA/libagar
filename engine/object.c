@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.22 2002/02/19 00:49:18 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.23 2002/02/21 02:19:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -256,6 +256,8 @@ int
 object_link(void *p)
 {
 	struct object *ob = p;
+	
+	SLIST_INIT(&ob->brefsh);
 
 	if (ob->vec->link != NULL &&
 	    ob->vec->link(ob) != 0) {
@@ -272,10 +274,17 @@ object_link(void *p)
 	return (0);
 }
 
+/* Unlink an object from the world and all maps. */
 int
 object_unlink(void *p)
 {
 	struct object *ob = p;
+	struct map_bref *bref;
+
+	SLIST_FOREACH(bref, &ob->brefsh, brefs) {
+		free(bref);
+	}
+	SLIST_INIT(&ob->brefsh);
 
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
@@ -315,25 +324,27 @@ object_strfind(char *s)
 {
 	struct object *ob;
 
-	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-		if (strcmp(ob->name, s) == 0) {
-			return (ob);
+	if (pthread_mutex_lock(&world->lock) == 0) {
+		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+			if (strcmp(ob->name, s) == 0) {
+				return (ob);
+			}
 		}
+	} else {
+		perror("world");
 	}
 
 	return (NULL);
 }
 
-#ifdef DEBUG
-
 void
-object_dump(struct object *ob)
+object_dump(void *p)
 {
+	struct object *ob = (struct object *)p;
+
 	printf("%3d. %10s ( ", ob->id, ob->name);
 	if (ob->vec->destroy != NULL)
 		printf("destroy ");
-	if (ob->vec->event != NULL)
-		printf("event ");
 	if (ob->vec->load != NULL)
 		printf("load ");
 	if (ob->vec->save != NULL)
@@ -344,15 +355,73 @@ object_dump(struct object *ob)
 		printf("unlink ");
 	if (ob->vec->dump != NULL)
 		printf("dump ");
+	if (ob->vec->madd != NULL)
+		printf("madd ");
 	printf(")\n");
 	if (ob->vec->dump != NULL) {
 		ob->vec->dump(ob);
-		printf(" --\n");
 	}
 	if (ob->desc != NULL) {
 		printf("                (%s)\n", ob->desc);
 	}
+	printf(" --\n");
 }
 
-#endif /* DEBUG */
+/*
+ * Add a reference to ob:offs(flags) at m:x,y, and a back reference.
+ * The madd entry point performs any processing (or fails) before
+ * the map reference and the back references are added.
+ *
+ * Must be called on a locked map.
+ */
+struct map_bref *
+object_madd(void *p, Uint32 offs, Uint32 flags, struct map *m, Uint32 x,
+    Uint32 y)
+{
+	struct object *ob = (struct object *)p;
+	struct node *node = &m->map[x][y];
+	struct map_bref *nbref;
+
+	nbref = (struct map_bref *)emalloc(sizeof(struct map_bref));
+	nbref->map = m;
+	nbref->nref = node_findref(node, p, offs, flags);
+	nbref->x = x;
+	nbref->y = y;
+	mapdir_init(&nbref->dir, ob, m, 0, DIR_SCROLLVIEW|DIR_SOFTSCROLL);
+	nbref->speed = 1;	/* ... */
+	nbref->input = NULL;	/* Not controlled */
+
+	if (ob->vec->madd(ob, nbref) != 0) {
+		/* Don't add any reference on this node. */
+		free(nbref);
+		return (NULL);
+	}
+
+	/* Insert the map reference. */
+	node_addref(node, ob, offs, flags);
+
+	/* Insert the back reference. XXX lock */
+	SLIST_INSERT_HEAD(&ob->brefsh, nbref, brefs);
+
+	dprintf("bref[%s:%d,%d] offs[%d] speed[%d]\n", m->obj.name,
+	    nbref->x, nbref->y, nbref->nref->offs, nbref->speed);
+	
+	return (nbref);
+}
+
+/*
+ * Remove a reference to ob:offs(flags) on m:x,y.
+ */
+void
+object_mdel(void *obp, Uint32 offs, Uint32 flags, struct map *m,
+    Uint32 x, Uint32 y)
+{
+	struct node *node = &m->map[x][y];
+	struct noderef *nref;
+
+	nref = node_findref(node, obp, offs, flags);
+	if (nref != NULL) {
+		node_delref(node, nref);
+	}
+}
 
