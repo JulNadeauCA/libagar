@@ -229,11 +229,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Up */
 		if (nref->yoffs < 0) {
 			if (nref->yoffs == -1) {	/* Once */
-				if (*mapy - 1 > 1) {
+				if (*mapy > 1) {
 					map->map[*mapx][*mapy - 1].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
+					mapdir_set(dir, DIR_UP, 0);
 				}
 			}
 			if (nref->yoffs <= (-map->tilew + dir->speed)) {
@@ -258,11 +259,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Down */
 		if (nref->yoffs > 0) {
 			if (nref->yoffs == 1) {		/* Once */
-				if (*mapy + 1 < map->maph - 1) {
+				if (*mapy + 1 < map->maph - 2) {
 					map->map[*mapx][*mapy + 1].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
+					mapdir_set(dir, DIR_DOWN, 0);
 				}
 			}
 			if (nref->yoffs >= map->tilew - dir->speed) {
@@ -290,11 +292,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Left */
 		if (nref->xoffs < 0) {
 			if (nref->xoffs == -1) {	/* Once */
-				if (*mapx - 1 > 1) {
+				if (*mapx > 1) {
 					map->map[*mapx - 1][*mapy].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
+					mapdir_set(dir, DIR_LEFT, 0);
 				}
 			}
 			if (nref->xoffs <= (-map->tilew + dir->speed)) {
@@ -320,11 +323,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Right */
 		if (nref->xoffs > 0) {
 			if (nref->xoffs == 1) {		/* Once */
-				if (*mapx + 1 < map->mapw - 1) {
+				if (*mapx + 1 < map->mapw - 2) {
 					map->map[*mapx + 1][*mapy].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
+					mapdir_set(dir, DIR_RIGHT, 0);
 				}
 			}
 			if (nref->xoffs >= (map->tilew - dir->speed)) {
