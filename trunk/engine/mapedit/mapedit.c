@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.34 2002/02/15 10:04:28 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.35 2002/02/16 04:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -640,8 +640,8 @@ mapedit_listw_tick(Uint32 ival, void *p)
 void
 mapedit_predraw(struct map *m, int flags, int vx, int vy)
 {
-	vx >>= m->shtilex;
-	vy >>= m->shtiley;
+	vx <<= m->shtilex;
+	vy <<= m->shtiley;
 
 	/* XXX inefficient */
 	mapedit_bg(m->view->v, vx, vy, m->tilew, m->tileh);
@@ -650,8 +650,8 @@ mapedit_predraw(struct map *m, int flags, int vx, int vy)
 void
 mapedit_postdraw(struct map *m, int flags, int vx, int vy)
 {
-	vx >>= m->shtilex;
-	vy >>= m->shtiley;
+	vx <<= m->shtilex;
+	vy <<= m->shtiley;
 
 	if (curmapedit->flags & MAPEDIT_DRAWGRID)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_GRID],
