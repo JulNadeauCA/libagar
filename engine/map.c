@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.236 2004/12/17 03:19:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.237 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -174,6 +174,12 @@ noderef_destroy(struct map *m, struct noderef *r)
 	case NODEREF_WARP:
 		Free(r->r_warp.map, 0);
 		break;
+	case NODEREF_GOBJ:
+		if (r->r_gobj.p != NULL) {
+			object_del_dep(m, r->r_gobj.p);
+			object_page_out(r->r_gobj.p, OBJECT_GFX);
+		}
+		break;
 	default:
 		break;
 	}
@@ -348,8 +354,8 @@ map_init(void *obj, const char *name)
 	m->map = NULL;
 	m->tilesz = TILESZ;
 	m->zoom = 100;
-	m->ssx = TILESZ;
-	m->ssy = TILESZ;
+	m->ssx = 0;
+	m->ssy = 0;
 	m->cur_layer = 0;
 
 	m->layers = Malloc(sizeof(struct map_layer), M_MAP);
@@ -466,6 +472,29 @@ node_add_warp(struct map *map, struct node *node, const char *mapname,
 }
 
 /*
+ * Insert a reference to a geometric object.
+ * The map must be locked.
+ */
+struct noderef *
+node_add_gobj(struct map *map, struct node *node, void *gobj)
+{
+	struct noderef *r;
+
+	if (gobj != NULL) {
+		object_add_dep(map, gobj);
+		if (object_page_in(gobj, OBJECT_GFX) == -1)
+			fatal("page gobj: %s", error_get());
+	}
+
+	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
+	noderef_init(r, NODEREF_GOBJ);
+	r->r_gobj.p = gobj;
+	r->r_gobj.flags = 0;
+	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
+	return (r);
+}
+
+/*
  * Move a reference to a specified node and optionally assign to a
  * specified layer.
  */
@@ -558,6 +587,9 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 	case NODEREF_WARP:
 		dr = node_add_warp(dm, dn, sr->r_warp.map, sr->r_warp.x,
 		    sr->r_warp.y, sr->r_warp.dir);
+		break;
+	case NODEREF_GOBJ:
+		dr = node_add_gobj(dm, dn, sr->r_gobj.p);
 		break;
 	}
 	dr->flags = sr->flags;
@@ -796,6 +828,20 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			(*r)->friction = friction;
 		}
 		break;
+	case NODEREF_GOBJ:
+		{
+			struct object *gobj;
+			Uint32 gobj_id;
+			
+			gobj_id = read_uint32(buf);
+			if ((gobj = object_find_dep(m, gobj_id)) == NULL) {
+				error_set("No such gobject: %u.", gobj_id);
+				return (-1);
+			}
+			*r = node_add_gobj(m, node, gobj);
+			(*r)->r_gobj.flags = read_uint32(buf);
+		}
+		break;
 	default:
 		error_set(_("Unknown type of noderef."));
 		return (-1);
@@ -976,6 +1022,11 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		write_uint32(buf, (Uint32)r->r_warp.x);
 		write_uint32(buf, (Uint32)r->r_warp.y);
 		write_uint8(buf, r->r_warp.dir);
+		break;
+	case NODEREF_GOBJ:
+		write_uint32(buf, object_dep_index(m, r->r_gobj.p));
+		write_uint32(buf, r->r_gobj.flags);
+		break;
 	default:
 		dprintf("not saving %d node\n", r->type);
 		break;
@@ -1596,9 +1647,9 @@ edit_properties(int argc, union evarg *argv)
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 	
-		msb = mspinbutton_new(bo, "x", _("Scrolling offset: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->ssx);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->ssy);
+		msb = mspinbutton_new(bo, "x", _("Display offset: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
 		mspinbutton_set_range(msb, 1, MAP_MAX_TILESZ);
 	
 		msb = mspinbutton_new(bo, "x", _("Display area: "));

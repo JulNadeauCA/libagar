@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.111 2004/11/30 11:30:50 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.112 2004/12/17 03:19:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -20,13 +20,15 @@
 #include <engine/space.h>
 #include <engine/transform.h>
 #include <engine/nodemask.h>
+#include <engine/gobject.h>
 
 #include "begin_code.h"
 
 enum noderef_type {
 	NODEREF_SPRITE,			/* Reference to a sprite */
 	NODEREF_ANIM,			/* Reference to an animation */
-	NODEREF_WARP			/* Reference to another map */
+	NODEREF_WARP,			/* Reference to another location */
+	NODEREF_GOBJ			/* Reference to a geometric object */
 };
 
 enum noderef_edge {
@@ -63,23 +65,26 @@ struct noderef {
 	} r_gfx;
 	union {
 		struct {
-			struct object	*obj;		/* Gfx object */
-			Uint32		 offs;		/* Sprite index */
+			struct object *obj;	/* Gfx object */
+			Uint32 offs;		/* Sprite index */
 		} sprite;
 		struct {
-			struct object	*obj;		/* Gfx object */
-			Uint32		 offs;		/* Anim index */
-
-			Uint8	flags;
+			struct object *obj;	/* Gfx object */
+			Uint32 offs;		/* Anim index */
+			Uint8 flags;
 #define NODEREF_SHD_FRAME 0x01			/* Use shared frame# */
 #define NODEREF_PVT_FRAME 0x02			/* Use private frame# */
-			Uint32	frame;		/* Private frame# */
+			Uint32 frame;		/* Private frame# */
 		} anim;
 		struct {
-			char	*map;		/* Map identifier */
-			int	 x, y;		/* Origin override */
-			Uint8	 dir;		/* Default direction */
+			char *map;		/* Map identifier */
+			int x, y;		/* Origin override */
+			Uint8 dir;		/* Default direction */
 		} warp;
+		struct {
+			void *p;		/* Geometric object */
+			Uint32 flags;
+		} gobj;
 	} nref;
 	struct transformq transforms;		/* Transformations to apply */
 	struct nodemaskq masks;			/* Collision detection masks */
@@ -87,6 +92,7 @@ struct noderef {
 #define r_sprite	nref.sprite
 #define r_anim		nref.anim
 #define r_warp		nref.warp
+#define r_gobj		nref.gobj
 };
 
 TAILQ_HEAD(noderefq, noderef);
@@ -123,6 +129,8 @@ struct map {
 	struct map_layer *layers;	/* Layer descriptions */
 	Uint32		 nlayers;
 };
+
+#define MAP(ob) ((struct map *)(ob))
 
 __BEGIN_DECLS
 struct map	*map_new(void *, const char *);
@@ -177,6 +185,7 @@ struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32,
 		               Uint8);
 struct noderef	*node_add_warp(struct map *, struct node *, const char *, int,
 		               int, Uint8);
+struct noderef	*node_add_gobj(struct map *, struct node *, void *);
 __END_DECLS
 
 #include "close_code.h"
