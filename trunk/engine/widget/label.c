@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.15 2002/05/21 03:07:57 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.16 2002/05/22 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -66,7 +66,7 @@ static const struct widget_ops label_ops = {
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 struct label *
-label_new(struct region *reg, char *caption, int flags)
+label_new(struct region *reg, const char *caption, int flags)
 {
 	struct label *label;
 
@@ -81,7 +81,7 @@ label_new(struct region *reg, char *caption, int flags)
 }
 
 void
-label_printf(struct label *label, char *fmt, ...)
+label_printf(struct label *label, const char *fmt, ...)
 {
 	va_list args;
 	char *buf;
@@ -106,7 +106,7 @@ label_printf(struct label *label, char *fmt, ...)
 }
 
 void
-label_init(struct label *label, char *caption, int flags)
+label_init(struct label *label, const char *caption, int flags)
 {
 	SDL_Surface *s;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.8 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.9 2002/05/21 03:21:32 vedge Exp $	*/
 
 struct label {
 	struct	 widget wid;
@@ -17,9 +17,9 @@ struct label {
 	} justify;
 };
 
-struct label	*label_new(struct region *, char *, int);
-void		 label_init(struct label *, char *, int);
+struct label	*label_new(struct region *, const char *, int);
+void		 label_init(struct label *, const char *, int);
 void	 	 label_destroy(void *);
 void		 label_draw(void *);
-void		 label_printf(struct label *, char *, ...);
+void		 label_printf(struct label *, const char *, ...);
 
