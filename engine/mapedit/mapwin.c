@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.9 2002/07/18 11:50:04 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.10 2002/07/29 02:16:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -98,8 +98,6 @@ mapwin_option(int argc, union evarg *argv)
 		}
 		break;
 	}
-
-	dprintf("opt %d\n", opt);
 }
 
 struct window *
@@ -128,30 +126,42 @@ mapwin_new(struct mapedit *med, struct map *m)
 	 */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
 	reg->spacing = 1;
+
 	/* Load map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
 	    0, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
+
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
 	    0, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
+
 	/* Clear map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0,
 	    -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
+
 	/* New map view */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW), 0,
 	    -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0, mapwin_new_view, "%p", mv);
+
 	/* Grid */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
 	    BUTTON_STICKY, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+
 	/* Props */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
 	    BUTTON_STICKY, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 
