@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.11 2002/12/13 11:18:36 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.12 2002/12/22 12:08:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/have_ieee754.h>
+#include <config/have_long_double.h>
 
 #include "compat/vasprintf.h"
 #include "engine.h"
@@ -75,11 +78,11 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	switch (type) {
 	case PROP_INT:
 		nprop->data.i = va_arg(ap, int);
-		debug(DEBUG_SET, "bool %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "int %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_BOOL:
 		nprop->data.i = va_arg(ap, int);		/* Promoted */
-		debug(DEBUG_SET, "int %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "bool %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_UINT8:
 		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
@@ -147,11 +150,14 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	}
 	va_end(ap);
 
+	pthread_mutex_lock(&ob->props_lock);
 	if (!modify) {
-		pthread_mutex_lock(&ob->props_lock);
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
-		pthread_mutex_unlock(&ob->props_lock);
+		event_post(ob, "prop-created", "%p", nprop);
+	} else {
+		event_post(ob, "prop-changed", "%p", nprop);
 	}
+	pthread_mutex_unlock(&ob->props_lock);
 	return (nprop);
 }
 
@@ -260,18 +266,25 @@ prop_set_bool(void *ob, char *key, int i)
 	return (prop_set(ob, key, PROP_BOOL, i));
 }
 
-/* Obtain the value of a property. */
-int
+/*
+ * Obtain the value of a property.
+ * XXX use a hash table
+ */
+struct prop *
 prop_get(void *obp, char *key, enum prop_type t, void *p)
 {
 	struct object *ob = obp;
 	struct prop *prop;
 
-	/* XXX use a hash table */
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		if (prop->type == t &&
-		    strcmp(key, prop->key) == 0) {
+		if (strcmp(key, prop->key) != 0) {
+			continue;
+		}
+		if (t != PROP_ANY && t != prop->type) {
+			continue;
+		}
+		if (p != NULL) {
 			switch (t) {
 			case PROP_INT:
 			case PROP_BOOL:
@@ -317,104 +330,118 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 # endif
 #endif
 			case PROP_STRING:
+				/* Strdup'd for thread safety. */
 				*(char **)p = Strdup(prop->data.s);
 				break;
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
 				break;
 			default:
-				error_set("type not supported: %d\n", t);
+				error_set("unsupported property type: %d\n", t);
 				goto fail;
 			}
-			pthread_mutex_unlock(&ob->props_lock);
-			return (0);
 		}
+		pthread_mutex_unlock(&ob->props_lock);
+		return (prop);
 	}
-	error_set("%s has no \"%s\" property (type 0x%x)\n", ob->name, key, t);
+
+	error_set("%s has no `%s' property (type %d)\n", ob->name, key, t);
 fail:
 	pthread_mutex_unlock(&ob->props_lock);
-	return (-1);
+	return (NULL);
 }
 
 int
-prop_int(void *p, char *key)
+prop_get_int(void *p, char *key)
 {
 	struct object *ob = p;
 	int i;
 
-	if (prop_get(ob, key, PROP_INT, &i) == -1) {
+	if (prop_get(ob, key, PROP_INT, &i) == NULL) {
+		fatal("%s\n", error_get());
+	}
+	return (i);
+}
+
+int
+prop_get_bool(void *p, char *key)
+{
+	struct object *ob = p;
+	int i;
+
+	if (prop_get(ob, key, PROP_BOOL, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Uint8
-prop_uint8(void *p, char *key)
+prop_get_uint8(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint8 i;
 
-	if (prop_get(ob, key, PROP_UINT8, &i) == -1) {
+	if (prop_get(ob, key, PROP_UINT8, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Sint8
-prop_sint8(void *p, char *key)
+prop_get_sint8(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint8 i;
 
-	if (prop_get(ob, key, PROP_SINT8, &i) == -1) {
+	if (prop_get(ob, key, PROP_SINT8, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Uint16
-prop_uint16(void *p, char *key)
+prop_get_uint16(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint16 i;
 
-	if (prop_get(ob, key, PROP_UINT16, &i) == -1) {
+	if (prop_get(ob, key, PROP_UINT16, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Sint16
-prop_sint16(void *p, char *key)
+prop_get_sint16(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint16 i;
 
-	if (prop_get(ob, key, PROP_SINT16, &i) == -1) {
+	if (prop_get(ob, key, PROP_SINT16, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Uint32
-prop_uint32(void *p, char *key)
+prop_get_uint32(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint32 i;
 
-	if (prop_get(ob, key, PROP_UINT32, &i) == -1) {
+	if (prop_get(ob, key, PROP_UINT32, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Sint32
-prop_sint32(void *p, char *key)
+prop_get_sint32(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint32 i;
 
-	if (prop_get(ob, key, PROP_SINT32, &i) == -1) {
+	if (prop_get(ob, key, PROP_SINT32, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -422,24 +449,24 @@ prop_sint32(void *p, char *key)
 
 #ifdef SDL_HAS_64BIT_TYPE
 Uint64
-prop_uint64(void *p, char *key)
+prop_get_uint64(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint64 i;
 
-	if (prop_get(ob, key, PROP_UINT64, &i) == -1) {
+	if (prop_get(ob, key, PROP_UINT64, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
 }
 
 Sint64
-prop_sint64(void *p, char *key)
+prop_get_sint64(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint64 i;
 
-	if (prop_get(ob, key, PROP_SINT64, &i) == -1) {
+	if (prop_get(ob, key, PROP_SINT64, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -448,24 +475,24 @@ prop_sint64(void *p, char *key)
 
 #ifdef HAVE_IEEE754
 float
-prop_float(void *p, char *key)
+prop_get_float(void *p, char *key)
 {
 	struct object *ob = p;
 	float f;
 
-	if (prop_get(ob, key, PROP_FLOAT, &f) == -1) {
+	if (prop_get(ob, key, PROP_FLOAT, &f) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (f);
 }
 
 double
-prop_double(void *p, char *key)
+prop_get_double(void *p, char *key)
 {
 	struct object *ob = p;
 	double d;
 
-	if (prop_get(ob, key, PROP_DOUBLE, &d) == -1) {
+	if (prop_get(ob, key, PROP_DOUBLE, &d) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (d);
@@ -473,12 +500,12 @@ prop_double(void *p, char *key)
 
 # ifdef HAVE_LONG_DOUBLE
 long double
-prop_long_double(void *p, char *key)
+prop_get_long_double(void *p, char *key)
 {
 	struct object *ob = p;
 	double ld;
 
-	if (prop_get(ob, key, PROP_LONG_DOUBLE, &ld) == -1) {
+	if (prop_get(ob, key, PROP_LONG_DOUBLE, &ld) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (ld);
@@ -487,24 +514,24 @@ prop_long_double(void *p, char *key)
 #endif /* HAVE_IEEE754 */
 
 char *
-prop_string(void *p, char *key)
+prop_get_string(void *p, char *key)
 {
 	struct object *ob = p;
 	char *s;
 
-	if (prop_get(ob, key, PROP_STRING, &s) == -1) {
+	if (prop_get(ob, key, PROP_STRING, &s) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (s);
 }
 
 void *
-prop_pointer(void *p, char *key)
+prop_get_pointer(void *p, char *key)
 {
 	struct object *ob = p;
 	void *np;
 
-	if (prop_get(ob, key, PROP_POINTER, &np) == -1) {
+	if (prop_get(ob, key, PROP_POINTER, &np) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (np);
@@ -589,7 +616,7 @@ prop_load(void *p, int fd)
 			}
 			break;
 		default:
-			fatal("unsupported property: %d\n", t);
+			fatal("cannot load property of type %d\n", t);
 			break;
 		}
 		free(key);
@@ -671,11 +698,12 @@ prop_save(void *p, int fd)
 			break;
 		case PROP_INT:
 		case PROP_POINTER:
-			debug(DEBUG_STATE, "ignored property \"%s\"\n",
+			debug(DEBUG_STATE,
+			    "skipped machine-dependent property `%s'\n",
 			    prop->key);
 			break;
 		default:
-			fatal("unsupported type: %d\n", prop->type);
+			fatal("unknown property type: %d\n", prop->type);
 		}
 		nprops++;
 	}

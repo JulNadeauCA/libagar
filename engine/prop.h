@@ -1,5 +1,8 @@
-/*	$Csoft: prop.h,v 1.4 2002/12/08 07:57:48 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.5 2002/12/22 12:08:35 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <config/have_ieee754.h>
+#include <config/have_long_double.h>
 
 struct prop {
 	char *key;
@@ -18,7 +21,8 @@ struct prop {
 		PROP_LONG_DOUBLE,
 		PROP_STRING,
 		PROP_POINTER,
-		PROP_BOOL
+		PROP_BOOL,
+		PROP_ANY
 	} type;
 	union {
 		int	 i;
@@ -45,9 +49,10 @@ struct prop {
 	TAILQ_ENTRY(prop) props;
 };
 
-struct prop	*prop_set(void *, char *, enum prop_type, ...);
-int		 prop_get(void *, char *, enum prop_type, void *);
+int		 prop_load(void *, int);
+int		 prop_save(void *, int);
 
+struct prop	*prop_set(void *, char *, enum prop_type, ...);
 struct prop	*prop_set_bool(void *, char *, int);
 struct prop	*prop_set_int(void *, char *, int);
 struct prop	*prop_set_uint8(void *, char *, Uint8);
@@ -60,7 +65,6 @@ struct prop	*prop_set_sint32(void *, char *, Sint32);
 struct prop	*prop_set_uint64(void *, char *, Uint64);
 struct prop	*prop_set_sint64(void *, char *, Sint64);
 #endif
-
 #ifdef HAVE_IEEE754
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
@@ -68,32 +72,29 @@ struct prop	*prop_set_double(void *, char *, double);
 struct prop	*prop_set_long_double(void *, char *, long double);
 # endif
 #endif
-
 struct prop	*prop_set_string(void *, char *, char *, ...);
 struct prop	*prop_set_pointer(void *, char *, void *);
 
-int		 prop_bool(void *, char *);
-int		 prop_int(void *, char *);
-Uint8	 	 prop_uint8(void *, char *);
-Sint8	 	 prop_sint8(void *, char *);
-Uint16	 	 prop_uint16(void *, char *);
-Sint16	 	 prop_sint16(void *, char *);
-Uint32	 	 prop_uint32(void *, char *);
-Sint32	 	 prop_sint32(void *, char *);
+struct prop	*prop_get(void *, char *, enum prop_type, void *);
+int		 prop_get_bool(void *, char *);
+int		 prop_get_int(void *, char *);
+Uint8	 	 prop_get_uint8(void *, char *);
+Sint8	 	 prop_get_sint8(void *, char *);
+Uint16	 	 prop_get_uint16(void *, char *);
+Sint16	 	 prop_get_sint16(void *, char *);
+Uint32	 	 prop_get_uint32(void *, char *);
+Sint32	 	 prop_get_sint32(void *, char *);
 #ifdef SDL_HAS_64BIT_TYPE
-Uint64	 	 prop_uint64(void *, char *);
-Sint64		 prop_sint64(void *, char *);
+Uint64	 	 prop_get_uint64(void *, char *);
+Sint64		 prop_get_sint64(void *, char *);
 #endif
 #ifdef HAVE_IEEE754
-float		 prop_float(void *, char *);
-double		 prop_double(void *, char *);
+float		 prop_get_float(void *, char *);
+double		 prop_get_double(void *, char *);
 # ifdef HAVE_LONG_DOUBLE
-long double	 prop_long_double(void *, char *);
+long double	 prop_get_long_double(void *, char *);
 # endif
 #endif /* HAVE_IEEE754 */
-char		*prop_string(void *, char *);
-void		*prop_pointer(void *, char *);
-
-int		 prop_load(void *, int);
-int		 prop_save(void *, int);
+char		*prop_get_string(void *, char *);
+void		*prop_get_pointer(void *, char *);
 
