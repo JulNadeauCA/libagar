@@ -1,14 +1,14 @@
-/*	$Csoft: eraser.h,v 1.1 2002/07/07 00:23:40 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.2 2002/07/09 08:25:21 vedge Exp $	*/
 /*	Public domain	*/
 
 struct eraser {
 	struct	 tool tool;
 	int	 flags;
 	enum {
-		ERASER_ALL = 0,		/* Erase all refs */
-		ERASER_HIGHEST = 1,	/* Erase last ref */
-		ERASER_LOWEST = 2,	/* Erase first ref */
-		ERASER_SELECTIVE = 3	/* Erase specified refs */
+		ERASER_ALL,		/* Erase all refs */
+		ERASER_HIGHEST,		/* Erase last ref */
+		ERASER_LOWEST,		/* Erase first ref */
+		ERASER_SELECTIVE	/* Erase specified refs */
 	} mode;
 	struct {
 		struct	object *pobj;

@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.3 2002/07/20 19:10:23 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.4 2002/07/21 10:58:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,7 +57,8 @@ static const struct tool_ops magnifier_ops = {
 		NULL		/* save */
 	},
 	magnifier_window,
-	magnifier_effect
+	magnifier_effect,
+	NULL			/* cursor */
 };
 
 static void	magnifier_event(int, union evarg *);

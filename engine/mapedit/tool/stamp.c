@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.6 2002/07/21 10:58:17 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.7 2002/07/22 05:23:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,7 +57,8 @@ static const struct tool_ops stamp_ops = {
 		NULL		/* save */
 	},
 	stamp_window,
-	stamp_effect
+	stamp_effect,
+	NULL			/* cursor */
 };
 
 static void	stamp_event(int, union evarg *);
