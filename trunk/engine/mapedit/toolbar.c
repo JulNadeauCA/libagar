@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.3 2002/06/12 20:40:08 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.1 2002/06/22 20:49:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -45,17 +45,27 @@
 #include "command.h"
 #include "toolbar.h"
 #include "fileops.h"
+#include "tilestack.h"
+#include "tileq.h"
+#include "objq.h"
 
 static void
-tool_push(int argc, union evarg *argv)
+push(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[1].p;
-
-	dprintf("push\n");
 
 	switch (argv[2].c) {
 	case 'n':
 		window_show_locked(med->new_map_win);
+		break;
+	case 'o':
+		window_show_locked(med->objlist_win);
+		break;
+	case 'q':
+		window_show_locked(med->tileq_win);
+		break;
+	case 's':
+		window_show_locked(med->tilestack_win);
 		break;
 	}
 }
@@ -67,30 +77,73 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct region *reg;
 	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
+	struct tilestack *tstack;
+	struct tileq *tqueue;
+	struct objq *oqueue;
 
 	/*
 	 * Create the toolbar.
 	 */
-
-	win = window_new("Tool", WINDOW_ABSOLUTE, 32, 32, 63, 128);
+	win = window_new("Tool", WINDOW_ABSOLUTE, 16, 16, 63, 128);
 
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
 
+	/* New map */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_FILEOP_NEW_MAP), 0, 0, 0);
-	event_new(button, "button-pushed", 0, tool_push, "%p %c", med, 'n');
+	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, 0, 0);
 	win->focus = WIDGET(button);
-
+	event_new(button, "button-pushed", 0, push, "%p %c", med, 'n');
+	
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
 
+	/* Object list */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p %c", med, 'o');
+
+	/* Tile list */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p %c", med, 'q');
+
+	/* Tile stack */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_TILESTACK), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p %c", med, 's');
+
 	med->toolbar_win = win;
+
+	/* Object list window */
+	win = window_new("Object", WINDOW_ABSOLUTE|WINDOW_SOLID,
+	    80, 16, view->w - 96, 74);
+	reg = region_new(win, REGION_HALIGN,
+	    0, 0, 100, 100);
+	oqueue = objq_new(reg, med, 0, 100, 100);
+	win->focus = WIDGET(oqueue);
+	med->objlist_win = win;
+
+	/* Tile list window */
+	win = window_new("Tile", WINDOW_ABSOLUTE|WINDOW_SOLID,
+	    view->w - 80, 80, 48, view->h - 110);
+	reg = region_new(win, REGION_HALIGN,
+	    0, 0, 100, 100);
+	tqueue = tileq_new(reg, med, 0, 100, 100);
+	win->focus = WIDGET(tqueue);
+	med->tileq_win = win;
+
+	/* Tile stack window */
+	win = window_new("Stack", WINDOW_ABSOLUTE|WINDOW_SOLID,
+	    80, 80, 64, view->h - 96);
+	reg = region_new(win, REGION_HALIGN,
+	    0, 0, 100, 100);
+	tstack = tilestack_new(reg, 0, 100, 100);
+	med->tilestack_win = win;
 
 	/*
 	 * Create the `New map' dialog.
 	 */
-
 	win = window_new("New map", 0, 20, 20, 50, 40);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
