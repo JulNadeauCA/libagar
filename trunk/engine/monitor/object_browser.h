@@ -1,9 +1,11 @@
-/*	$Csoft: object_browser.h,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: object_browser.h,v 1.2 2002/11/14 05:59:02 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object_browser {
-	struct	 monitor_tool tool;
-	int	 flags;
+	struct monitor_tool	 tool;
+	struct tlist		*objlist;
+
+	int	flags;
 };
 
 struct object_browser	*object_browser_new(struct monitor *, int);
