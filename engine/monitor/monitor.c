@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.23 2002/12/24 10:33:23 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.24 2002/12/31 00:12:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -79,6 +79,9 @@ monitor_init(struct monitor *mon, char *name)
 	reg->spacing = 1;
 
 	tl_tools = tlist_new(reg, 100, 100, 0);
+	tlist_insert_item(tl_tools,
+	    SPRITE(mon, MONITOR_FPS_COUNTER), "FPS counter",
+	    event_show_fps_counter);
 	tlist_insert_item(tl_tools,
 	    SPRITE(mon, MONITOR_OBJECT_BROWSER), "Object browser",
 	    object_browser_window);
