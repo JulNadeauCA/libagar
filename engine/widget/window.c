@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.122 2002/12/14 09:15:35 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.123 2002/12/14 09:46:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,6 +88,7 @@ window_new(char *name, int flags, int x, int y, int w, int h,
 
 	win = emalloc(sizeof(struct window));
 	window_init(win, name, flags, x, y, w, h, minw, minh);
+	window_clamp(win);
 
 	view_attach(win);			/* Attach to view */
 	return (win);
@@ -137,6 +138,8 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 		genxoffs = 0;
 	if ((genyoffs += 3) + h > view->h/2)
 		genyoffs = 0;
+
+	window_clamp(win);
 
 	pthread_mutex_unlock(&genlock);
 	
@@ -1081,6 +1084,10 @@ window_clamp(struct window *win)
 		win->rd.x = 0;
 	if (win->rd.y < 0)
 		win->rd.y = 0;
+	if (win->rd.w > view->w)
+		win->rd.w = view->w;
+	if (win->rd.h > view->h)
+		win->rd.h = view->h;
 	if (win->rd.x+win->rd.w > view->w)
 		win->rd.x = view->w - win->rd.w;
 	if (win->rd.y+win->rd.h > view->h)
@@ -1417,5 +1424,11 @@ window_generic_detach(int argc, union evarg *argv)
 void
 window_generic_hide(int argc, union evarg *argv)
 {
-	/* Already hidden */
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(win, "window");
+
+	if (win->flags & WINDOW_SHOWN) {
+		window_hide(win);
+	}
 }

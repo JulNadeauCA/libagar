@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.15 2002/11/15 04:15:31 vedge Exp $
+.\"	$Csoft: window.3,v 1.16 2002/12/14 02:08:36 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -214,17 +214,25 @@ is called.
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
-.Fn window_generic_detached "int argc" "union evarg *argv"
+.Fn window_generic_detach "int argc" "union evarg *argv"
+.Pp
+.Ft void
+.Fn window_generic_hide "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
-.Fn window_generic_detached
+.Fn window_generic_detach
 event handler detaches the window given as the first argument, freeing all
 associated resources.
-This function is registered as the
+.Fn window_generic_detach
+is registered as the
 .Sq window-close
 event handler for windows created with
 .Fn window_generic_new .
+The
+.Fn window_generic_hide
+function hides the window given as the first argument, if it is currently
+visible.
 .Sh EVENTS
 The
 .Nm
