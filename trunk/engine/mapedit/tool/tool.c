@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.29 2003/06/21 06:50:24 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.30 2003/06/25 06:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,20 +47,22 @@ void
 tool_init(struct tool *tool, const char *name, const void *ops)
 {
 	object_init(tool, "tool", name, ops);
+	OBJECT(tool)->flags |= OBJECT_RELOAD;
+	OBJECT(tool)->save_pfx = "/map-editor";
 
 	if (gfx_fetch(tool, "/engine/mapedit/tool/tool") == -1)
 		fatal("%s", error_get());
 
+	strlcpy(tool->type, name, sizeof(tool->type));
+	tool->button = NULL;
+	tool->icon = NULL;
+	tool->cursor = NULL;
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;
 	if (tool->win != NULL) {
 		event_new(tool->win, "window-close", tool_window_close, "%p",
 		    tool);
 	}
-	strlcpy(tool->type, name, sizeof(tool->type));
-	tool->button = NULL;
-	tool->cursor = NULL;
-	tool->icon = NULL;
 	SLIST_INIT(&tool->bindings);
 }
 
