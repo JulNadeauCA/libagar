@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.30 2004/06/22 04:24:59 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.31 2004/06/22 05:34:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -1452,8 +1452,10 @@ zoom_ident(struct tool *t, int state)
 {
 	struct vg *vg = t->p;
 
-	zoom_status(t, vg);
-	vg_scale(vg, vg->w, vg->h, 1.0);
+	if (state) {
+		zoom_status(t, vg);
+		vg_scale(vg, vg->w, vg->h, 1.0);
+	}
 }
 
 static void
