@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.4 2002/12/13 12:34:42 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.5 2002/12/16 13:40:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -27,7 +27,8 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/oldxcf.h>
+
+#include "xcf.h"
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -81,20 +82,23 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite)
 	return (art->cursprite++);
 }
 
+/* Insert a sprite on a tile map. */
 struct noderef *
 art_map_sprite(struct art *art, int offs)
 {
 	struct node *node;
 	struct noderef *nref;
+	SDL_Surface *su;
 
 	if (!mapediting) {
 		return (NULL);
 	}
-
+	
 	if (++art->mx > 2) {	/* XXX pref */
 		art->mx = 0;
 		art->my++;
 	}
+
 	map_adjust(art->map, (Uint32)art->mx, (Uint32)art->my);
 	node = &art->map->map[art->my][art->mx];
 	nref = node_add_sprite(node, art->pobj, offs);
@@ -106,7 +110,7 @@ art_map_sprite(struct art *art, int offs)
 	return (nref);
 }
 
-/* Break a sprite into tiles and insert them. */
+/* Break a sprite into tiles and insert/map them. */
 void
 art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 {
@@ -165,7 +169,6 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 	}
 }
 
-
 void
 art_unused(struct art *art)
 {
@@ -179,6 +182,7 @@ art_unused(struct art *art)
 	pthread_mutex_unlock(&art->used_lock);
 }
 
+/* Called when an object is initialized. */
 struct art *
 art_fetch(char *media, struct object *ob)
 {
@@ -290,6 +294,7 @@ art_destroy(struct art *art)
 	free(art);
 }
 
+/* Insert a frame into an animation. */
 void
 art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 {
@@ -309,6 +314,7 @@ art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 	anim->frames[anim->nframes++] = surface;
 }
 
+/* Create a new animation. */
 struct art_anim *
 art_insert_anim(struct art *art, int delay)
 {
