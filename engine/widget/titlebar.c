@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.15 2004/04/22 01:52:27 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.16 2004/09/16 04:07:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 	object_set_ops(tbar, &titlebar_ops);
 	object_wire_gfx(tbar, "/engine/widget/pixmaps");
 
-	box_set_padding(&tbar->hb, 1);
+	box_set_padding(&tbar->hb, 3);
 	box_set_spacing(&tbar->hb, 0);
 
 	widget_set_type(tbar, "titlebar");
@@ -112,8 +112,8 @@ titlebar_init(struct titlebar *tbar, int flags)
 
 	button_set_label(tbar->close_bu, SPRITE(tbar, TITLEBAR_CLOSE_ICON));
 	button_set_label(tbar->hide_bu, SPRITE(tbar, TITLEBAR_HIDE_ICON));
-	button_set_padding(tbar->close_bu, 0);
-	button_set_padding(tbar->hide_bu, 0);
+	button_set_padding(tbar->close_bu, 2);
+	button_set_padding(tbar->hide_bu, 2);
 
 	event_new(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
 	    NULL);
@@ -180,10 +180,6 @@ titlebar_close_win(int argc, union evarg *argv)
 void
 titlebar_set_caption(struct titlebar *tbar, const char *caption)
 {
-	SDL_Surface *su;
-
-	/* XXX use widget_blit2 */
-	su = text_render(NULL, -1, WIDGET_COLOR(tbar, CAPTION_COLOR), caption);
-	label_set_surface(tbar->label, su);
-	SDL_FreeSurface(su);
+	label_set_surface(tbar->label, (caption==NULL) ? NULL :
+	    text_render(NULL, -1, WIDGET_COLOR(tbar, CAPTION_COLOR), caption));
 }

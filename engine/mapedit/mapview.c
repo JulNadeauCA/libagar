@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.160 2004/07/24 02:08:54 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.161 2004/08/26 07:33:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1154,9 +1154,6 @@ mapview_status(struct mapview *mv, const char *fmt, ...)
 	vsnprintf(status, sizeof(status), fmt, ap);
 	va_end(ap);
 
-	if (mv->status->surface != NULL) {
-		SDL_FreeSurface(mv->status->surface);
-	}
-	mv->status->surface = text_render(NULL, -1, WIDGET_COLOR(mv->status, 0),
-	    status);
+	widget_replace_surface(mv->status, mv->status->surface,
+	    text_render(NULL, -1, WIDGET_COLOR(mv->status, 0), status));
 }

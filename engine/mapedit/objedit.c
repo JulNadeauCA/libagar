@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.48 2004/08/26 07:34:18 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.49 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -368,8 +368,7 @@ objedit_window(void)
 	
 		tbar = toolbar_new(vb, TOOLBAR_HORIZ, 1);
 
-		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE|
-		                        TLIST_STATIC_ICONS);
+		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 		event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,

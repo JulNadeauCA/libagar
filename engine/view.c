@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.155 2004/08/31 00:58:51 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.156 2004/09/12 05:54:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -163,16 +163,19 @@ view_init(enum gfx_engine ge)
 		prop_set_int(config, "view.gl.alpha_size", alpha);
 		prop_set_int(config, "view.gl.buffer_size", bsize);
 
+		dprintf("gl depth=%d size=(%d,%d,%d,%d) bsize=%d\n", depth,
+		    red, green, blue, alpha, bsize);
+	
 		glViewport(0, 0, view->w, view->h);
 		glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
-		glClearColor(0, 0, 0, 0);
+		glClearColor(0, 0, 0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DITHER);
-		glEnable(GL_TEXTURE_2D);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_TEXTURE_2D);
 	}
 #endif /* HAVE_OPENGL */
 
@@ -655,12 +658,15 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
+	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(texsu);
 	return (texture);

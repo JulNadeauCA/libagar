@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.10 2004/06/25 13:02:37 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.11 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -136,13 +136,9 @@ void
 tool_update_status(struct tool *t)
 {
 	if (t->nstatus > 0 && t->mv->status != NULL) {
-		char *text = t->status[t->nstatus-1];
-
-		if (t->mv->status->surface != NULL) {
-			SDL_FreeSurface(t->mv->status->surface);
-		}
-		t->mv->status->surface = text_render(NULL, -1,
-		    WIDGET_COLOR(t->mv->status, 0), text);
+		widget_replace_surface(t->mv->status, t->mv->status->surface,
+		    text_render(NULL, -1, WIDGET_COLOR(t->mv->status, 0),
+		    t->status[t->nstatus-1]));
 	}
 }
 

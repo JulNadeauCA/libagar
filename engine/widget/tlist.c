@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.98 2004/05/15 02:34:36 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.99 2004/05/17 07:08:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -64,7 +64,7 @@ static void tlist_mousebuttondown(int, union evarg *);
 static void tlist_keydown(int, union evarg *);
 static void tlist_keyup(int, union evarg *);
 static void tlist_scrolled(int, union evarg *);
-static __inline__ void tlist_free_item(struct tlist_item *);
+static void free_item(struct tlist *, struct tlist_item *);
 static void tlist_select_item(struct tlist *, struct tlist_item *);
 static void tlist_unselect_item(struct tlist *, struct tlist_item *);
 
@@ -223,13 +223,13 @@ tlist_destroy(void *p)
 	     it != TAILQ_END(&tl->selitems);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, selitems);
-		tlist_free_item(it);
+		free_item(tl, it);
 	}
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		tlist_free_item(it);
+		free_item(tl, it);
 	}
 	pthread_mutex_destroy(&tl->lock);
 	widget_destroy(tl);
@@ -342,27 +342,24 @@ tlist_draw(void *p)
 		}
 
 		if (it->iconsrc != NULL) {
-			if ((tl->flags & TLIST_STATIC_ICONS) == 0) {
-				if (it->icon == NULL) {
-					it->icon = view_scale_surface(
-					    it->iconsrc, tl->item_h,
-					    tl->item_h);
-				}
-				widget_blit(tl, it->icon, x, y);
-			} else {
-				widget_blit(tl, it->iconsrc, x, y);
+			if (it->icon == -1) {
+				it->icon = widget_map_surface(tl,
+				    view_scale_surface(it->iconsrc,
+				    tl->item_h, tl->item_h));
 			}
+			widget_blit2(tl, it->icon, x, y);
 		}
 drawtext:
 		x += tl->item_h + 5;
 
-		if (it->label == NULL) {
-			it->label = text_render(NULL, -1,
-			    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
+		if (it->label == -1) {
+			it->label = widget_map_surface(tl,
+			    text_render(NULL, -1, WIDGET_COLOR(tl, TEXT_COLOR),
+			        it->text));
 		}
-		widget_blit(tl, it->label,
+		widget_blit2(tl, it->label,
 		    x,
-		    y + tl->item_h/2 - it->label->h/2);
+		    y + tl->item_h/2 - WIDGET_SURFACE(tl,it->label)->h/2 + 1);
 
 		y += tl->item_h;
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y, LINE_COLOR);
@@ -407,12 +404,12 @@ tlist_adjust_scrollbar(struct tlist *tl)
 }
 
 static void
-tlist_free_item(struct tlist_item *it)
+free_item(struct tlist *tl, struct tlist_item *it)
 {
-	if (it->label != NULL)
-		SDL_FreeSurface(it->label);
-	if (it->icon != NULL)
-		SDL_FreeSurface(it->icon);
+	if (it->label != -1)
+		widget_unmap_surface(tl, it->label);
+	if (it->icon != -1)
+		widget_unmap_surface(tl, it->icon);
 
 	Free(it, M_WIDGET);
 }
@@ -429,7 +426,7 @@ tlist_remove_item(struct tlist *tl, struct tlist_item *it)
 	nitems = --tl->nitems;
 	pthread_mutex_unlock(&tl->lock);
 
-	tlist_free_item(it);
+	free_item(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
 	widget_set_int(tl->sbar, "max", nitems);
@@ -458,7 +455,7 @@ tlist_clear_items(struct tlist *tl)
 		    (it->selected || (it->flags & TLIST_HAS_CHILDREN))) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
-			tlist_free_item(it);
+			free_item(tl, it);
 		}
 	}
 	TAILQ_INIT(&tl->items);
@@ -497,7 +494,7 @@ tlist_restore_selections(struct tlist *tl)
 				cit->flags &= ~(TLIST_VISIBLE_CHILDREN);
 			}
 		}
-		tlist_free_item(sit);
+		free_item(tl, sit);
 	}
 	TAILQ_INIT(&tl->selitems);
 
@@ -535,13 +532,13 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
 
 	it = Malloc(sizeof(struct tlist_item), M_WIDGET);
 	it->selected = 0;
-	it->label = NULL;
-	it->iconsrc = NULL;
-	it->icon = NULL;
 	it->p1 = (void *)p1;
 	it->depth = 0;
 	it->flags = 0;
 	strlcpy(it->text, text, sizeof(it->text));
+
+	it->icon = -1;
+	it->label = -1;
 	tlist_set_icon(tl, it, iconsrc);
 	return (it);
 }
@@ -898,10 +895,10 @@ tlist_set_item_height(struct tlist *tl, int ih)
 	pthread_mutex_lock(&tl->lock);
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->icon != NULL) {
-			SDL_FreeSurface(it->icon);
-			it->icon = view_scale_surface(it->iconsrc, tl->item_h,
-			    tl->item_h);
+		if (it->icon != -1) {
+			widget_replace_surface(tl, it->icon,
+			    view_scale_surface(it->iconsrc, tl->item_h,
+			    tl->item_h));
 		}
 	}
 	pthread_mutex_unlock(&tl->lock);
@@ -913,18 +910,9 @@ tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
 {
 	it->iconsrc = iconsrc;
 
-	if (it->icon != NULL) {
-		SDL_FreeSurface(it->icon);
-		it->icon = NULL;
-	}
-
-	if ((tl->flags & TLIST_STATIC_ICONS) == 0) {
-		if (iconsrc != NULL) {
-			it->icon = view_scale_surface(iconsrc, tl->item_h,
-			    tl->item_h);
-		} else {
-			it->icon = NULL;
-		}
+	if (it->icon != -1) {
+		widget_unmap_surface(tl, it->icon);
+		it->icon = -1;
 	}
 }
 
