@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.9 2002/02/05 05:47:22 vedge Exp $
+#	$Csoft: Makefile,v 1.10 2002/02/10 01:37:13 vedge Exp $
 
 TOP=	..
 SUBDIR=	mapedit
@@ -11,10 +11,10 @@ CATMAN3=char.cat3 agar.cat3 map.cat3
 LIB=	engine
 
 SRCS=	engine.c event.c anim.c xcf.c view.c physics.c \
-	object.c audio.c video.o world.c map.c char.c
+	object.c audio.c video.c world.c map.c char.c
 
 OBJS=	engine.o event.o anim.o xcf.o view.o physics.o \
-	object.o audio.o video.o world.o map.o char.o
+	object.o audio.o video.o world.o map.o char.o mapedit/mapedit.o
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
