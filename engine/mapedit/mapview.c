@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.108 2003/05/08 03:29:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.109 2003/05/08 05:16:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -285,20 +285,23 @@ mapview_draw_tool_cursor(struct mapview *mv)
 {
 	struct tool *curtool = mapedit.curtool;
 	SDL_Rect rd;
+	int msx, msy;
 
-	rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
-	rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
 	rd.w = mv->map->tilew;
 	rd.h = mv->map->tileh;
 
 	if (SDL_GetModState() & KMOD_CTRL) {		/* XXX inefficient? */
-		rd.x += WIDGET_ABSX(mv);
-		rd.y += WIDGET_ABSY(mv);
+		SDL_GetMouseState(&msx, &msy);
+		rd.x = msx;
+		rd.y = msy;
 		SDL_BlitSurface(
 		    SPRITE(mapedit.tools[MAPEDIT_SELECT], TOOL_SELECT_CURSOR),
 		    NULL, view->v, &rd);
 		return;
 	}
+	
+	rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
+	rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
 
 	if (curtool == NULL)
 		goto defcurs;
