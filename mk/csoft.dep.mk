@@ -1,4 +1,4 @@
-# $Csoft: csoft.dep.mk,v 1.11 2002/12/24 10:07:38 vedge Exp $
+# $Csoft: csoft.dep.mk,v 1.12 2002/12/24 14:11:16 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -30,10 +30,12 @@ depend:	${DPADD} depend-subdir
 	@rm -f .depend
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
-	  env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I`pwd` $$files; \
-	  if [ $$? != 0 ]; then \
-	   exit 1; \
-	  fi \
+	  if [ "${BUILD}" != "" ]; then \
+	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I`pwd` -I${BUILD} \
+	       $$files; \
+	  else \
+	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I`pwd` $$files; \
+	  fi; \
 	 fi
 
 clean-depend:
