@@ -1,10 +1,8 @@
-/*	$Csoft: debug.h,v 1.15 2002/09/13 04:39:48 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.16 2002/09/13 04:53:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
-
-#include <errno.h>
 
 #ifdef DEBUG
 extern int engine_debug;
