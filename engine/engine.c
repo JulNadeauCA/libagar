@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.115 2003/07/14 03:42:51 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.116 2003/07/26 17:48:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <config/have_x11.h>
 #include <config/have_progname.h>
 #include <config/have_setlocale.h>
+#include <config/localedir.h>
 
 #include <engine/compat/setenv.h>
 #include <engine/compat/strlcat.h>
@@ -51,6 +52,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
 #endif
@@ -82,6 +85,10 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 #ifdef HAVE_SETLOCALE
 	setlocale(LC_ALL, "");
 #endif
+#ifdef HAVE_GETTEXT
+	bindtextdomain("agar", LOCALEDIR);
+	textdomain("agar");
+#endif
 
 	/* Initialize the error handling facility. */
 	error_init();
@@ -105,7 +112,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 
 	printf(_("Agar engine v%s\n"), ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
-	printf("%s\n\n", prog->copyright);
+	printf(_("%s\n\n"), prog->copyright);
 	proginfo = prog;
 
 	/* Initialize the SDL library. */
