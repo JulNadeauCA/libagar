@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.11 2002/02/05 14:19:34 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.12 2002/02/07 05:21:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ static void	mapedit_pointer(struct mapedit *, int);
 struct mapedit *curmapedit;
 
 struct mapedit *
-mapedit_create(char *name, char *desc)
+mapedit_create(char *name, char *desc, int mapw, int maph)
 {
 	char path[FILENAME_MAX];
 	struct mapedit *med;
@@ -74,9 +74,8 @@ mapedit_create(char *name, char *desc)
 		map_load(map, path);
 	} else {
 		/* Create a new map. */
-		printf("anew");
 		dprintf("creating %s anew\n", name);
-		map = map_create(name, desc, MAP_2D, 128, 128);
+		map = map_create(name, desc, MAP_2D, mapw, maph);
 	}
 	if (object_strfind(name) == NULL) {
 		dprintf("%s is not in core\n", name);
@@ -629,18 +628,26 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 		med->mmapx = ev->motion.x / em->view->tilew;
 		med->mmapy = ev->motion.y / em->view->tileh;
 		if (ommapx < med->mmapx) {
-			SCROLL_LEFT(&med->map);
-			med->map->redraw++;
+			if (em->view->mapx > 0) {
+				SCROLL_LEFT(&med->map);
+				med->map->redraw++;
+			}
 		} else if (med->mmapx < ommapx) {
-			SCROLL_RIGHT(&med->map);
-			med->map->redraw++;
+			if (em->view->mapx + em->view->mapw < em->mapw) {
+				SCROLL_RIGHT(&med->map);
+				med->map->redraw++;
+			}
 		}
 		if (ommapy < med->mmapy) {
-			SCROLL_UP(&med->map);
-			med->map->redraw++;
+			if (em->view->mapy > 0) {
+				SCROLL_UP(&med->map);
+				med->map->redraw++;
+			}
 		} else if (med->mmapy < ommapy) {
-			SCROLL_DOWN(&med->map);
-			med->map->redraw++;
+			if (em->view->mapy + em->view->maph < em->maph) {
+				SCROLL_DOWN(&med->map);
+				med->map->redraw++;
+			}
 		}
 		return;
 	}
@@ -653,9 +660,12 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			return;
 		}
 		if (pthread_mutex_lock(&em->lock) == 0) {
-			MAPEDIT_MOVE(med,
-			    em->view->mapx + ev->button.x / em->view->tilew,
-			    em->view->mapy + ev->button.y / em->view->tileh);
+			static int mx, my;
+
+			mx = em->view->mapx + ev->button.x / em->view->tilew;
+			my = em->view->mapy + ev->button.y / em->view->tileh;
+
+			MAPEDIT_MOVE(med, mx, my);
 			pthread_mutex_unlock(&em->lock);
 			em->redraw++;
 		} else {
