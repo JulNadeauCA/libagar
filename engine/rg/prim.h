@@ -1,9 +1,11 @@
-/*	$Csoft: prim.h,v 1.1 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: prim.h,v 1.2 2005/02/15 04:05:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PRIM_H_
 #define _AGAR_RG_PRIM_H_
 #include "begin_code.h"
+
+struct tile;
 
 enum prim_blend_mode {
 	PRIM_BLEND_DSTALPHA,
