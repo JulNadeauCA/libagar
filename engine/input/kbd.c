@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.9 2004/05/14 05:03:31 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.10 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@ const struct input_driver kbd_driver = {
 
 int kbd_unitrans = 1;				/* Unicode translation */
 int kbd_delay = 250;				/* Key repeat delay */
-int kbd_repeat = 90;				/* Key repeat interval */
+int kbd_repeat = 35;				/* Key repeat interval */
 
 struct kbd *
 kbd_new(int index)
