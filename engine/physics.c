@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.38 2002/08/19 05:33:00 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.39 2002/08/24 04:10:12 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -312,8 +312,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					*mapy = 1;
 				}
 
-				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-				    (dir->flags & DIR_SCROLLVIEW) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->y - *mapy) <= 0) {
 				    	rootmap_scroll(m, DIR_UP);
@@ -355,8 +354,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (++(*mapy) > m->maph - 1) {
 					*mapy = m->maph - 1;
 				}
-				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-				    (dir->flags & DIR_SCROLLVIEW) &&
+				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->y - *mapy) <=
 				     -view->rootmap->h + 2) {
