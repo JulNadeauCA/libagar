@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.11 2004/05/29 05:33:48 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.12 2004/06/04 19:58:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -95,7 +95,8 @@ enum {
 	EDA_START_SIM_ICON,
 	EDA_STOP_SIM_ICON,
 	EDA_SIM_SETTINGS_ICON,
-	EDA_MESH_ICON
+	EDA_MESH_ICON,
+	EDA_SPICE_ICON
 };
 
 extern struct object engine_icons;			/* engine.c */
