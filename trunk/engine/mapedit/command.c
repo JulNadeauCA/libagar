@@ -35,6 +35,11 @@
 
 static void	mapedit_setpointer(struct mapedit *, int);
 
+/*
+ * All the following operations must be performed
+ * on a locked map.
+ */
+
 static void
 mapedit_setpointer(struct mapedit *med, int enable)
 {
@@ -123,6 +128,8 @@ mapedit_clearmap(struct mapedit *med)
 	map_clean(med->map, NULL, 0, 0, 0);
 	mapedit_setpointer(med, 1);
 	med->map->redraw++;
+	mapedit_objlist(med);
+	mapedit_tilelist(med);
 }
 
 /* Fill the map with the current reference. */
@@ -152,6 +159,8 @@ mapedit_fillmap(struct mapedit *med)
 
 	mapedit_setpointer(med, 1);
 	med->map->redraw++;
+	mapedit_objlist(med);
+	mapedit_tilelist(med);
 }
 
 void
@@ -193,6 +202,9 @@ mapedit_loadmap(struct mapedit *med)
 	}
 	mapedit_setpointer(med, 1);
 	map->redraw++;
+
+	mapedit_objlist(med);
+	mapedit_tilelist(med);
 }
 
 void
