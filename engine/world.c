@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.56 2003/01/19 12:11:38 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.57 2003/01/26 06:15:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -164,7 +164,7 @@ world_detach(void *child)
 	event_post(ob, "detached", "%p", world);
 	SLIST_REMOVE(&world->wobjs, ob, object, wobjs);
 	world->nobjs--;
-	ob->state = OBJECT_ZOMBIE;
+	ob->state = OBJECT_DETACHED;
 
 	pthread_mutex_unlock(&world->lock);
 
