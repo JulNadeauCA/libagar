@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.47 2002/12/26 07:10:36 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.48 2002/12/30 00:08:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -33,7 +33,6 @@ enum widget_binding_type {
 	WIDGET_SINT64,
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
-	WIDGET_LONG_DOUBLE,
 	WIDGET_STRING,
 	WIDGET_POINTER,
 	WIDGET_PROP
@@ -199,9 +198,29 @@ void	widget_binding_lock(struct widget_binding *);
 void	widget_binding_modified(struct widget_binding *);
 void	widget_binding_unlock(struct widget_binding *);
 
-int	widget_get_int(void *, const char *);
-#define	widget_get_bool	widget_get_int
+int	 widget_get_int(void *, const char *);
+#define	 widget_get_bool widget_get_int
+Uint8	 widget_get_uint8(void *, const char *);
+Sint8	 widget_get_sint8(void *, const char *);
+Uint16	 widget_get_uint16(void *, const char *);
+Sint16	 widget_get_sint16(void *, const char *);
+Uint32	 widget_get_uint32(void *, const char *);
+Sint32	 widget_get_sint32(void *, const char *);
+float	 widget_get_float(void *, const char *);
+double	 widget_get_double(void *, const char *);
+char	*widget_get_string(void *, const char *);
+void	*widget_get_pointer(void *, const char *);
 
-void	widget_set_int(void *, const char *, int);
-#define	widget_set_bool	widget_set_int
+void	 widget_set_int(void *, const char *, int);
+#define	 widget_set_bool widget_set_int
+void	 widget_set_uint8(void *, const char *, Uint8);
+void	 widget_set_sint8(void *, const char *, Sint8);
+void	 widget_set_uint16(void *, const char *, Uint16);
+void	 widget_set_sint16(void *, const char *, Sint16);
+void	 widget_set_uint32(void *, const char *, Uint32);
+void	 widget_set_sint32(void *, const char *, Sint32);
+void	 widget_set_float(void *, const char *, float);
+void	 widget_set_double(void *, const char *, double);
+void	 widget_set_string(void *, const char *, char *);
+void	 widget_set_pointer(void *, const char *, void *);
 

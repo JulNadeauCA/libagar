@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.34 2002/12/26 07:10:36 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.35 2002/12/30 00:08:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,7 +26,6 @@
  */
 
 #include <config/have_ieee754.h>
-#include <config/have_long_double.h>
 
 #include <engine/engine.h>
 #include <engine/view.h>
@@ -161,12 +160,106 @@ widget_get_int(void *wid, const char *name)
 {
 	int *i;
 
-	if (widget_binding_get(wid, name, &i) == NULL) {
+	if (widget_binding_get(wid, name, &i) == NULL)
 		fatal("%s\n", error_get());
-	}
-	debug_n(DEBUG_BINDING_LOOKUPS, "%s: %s:", OBJECT(wid)->name, name);
-	debug_n(DEBUG_BINDING_LOOKUPS, "%d\n", *i);
 	return (*i);
+}
+
+Uint8
+widget_get_uint8(void *wid, const char *name)
+{
+	Uint8 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+Sint8
+widget_get_sint8(void *wid, const char *name)
+{
+	Sint8 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+
+Uint16
+widget_get_uint16(void *wid, const char *name)
+{
+	Uint16 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+Sint16
+widget_get_sint16(void *wid, const char *name)
+{
+	Sint16 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+
+Uint32
+widget_get_uint32(void *wid, const char *name)
+{
+	Uint32 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+Sint32
+widget_get_sint32(void *wid, const char *name)
+{
+	Sint32 *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s\n", error_get());
+	return (*i);
+}
+
+float
+widget_get_float(void *wid, const char *name)
+{
+	float *f;
+
+	if (widget_binding_get(wid, name, &f) == NULL)
+		fatal("%s\n", error_get());
+	return (*f);
+}
+
+double
+widget_get_double(void *wid, const char *name)
+{
+	double *d;
+
+	if (widget_binding_get(wid, name, &d) == NULL)
+		fatal("%s\n", error_get());
+	return (*d);
+}
+
+char *
+widget_get_string(void *wid, const char *name)
+{
+	char *s;
+
+	if (widget_binding_get(wid, name, &s) == NULL)
+		fatal("%s\n", error_get());
+	return (s);
+}
+
+void *
+widget_get_pointer(void *wid, const char *name)
+{
+	void *p;
+
+	if (widget_binding_get(wid, name, &p) == NULL)
+		fatal("%s\n", error_get());
+	return (p);
 }
 
 void
@@ -175,10 +268,134 @@ widget_set_int(void *wid, const char *name, int ni)
 	struct widget_binding *binding;
 	int *i;
 
-	if ((binding = widget_binding_get(wid, name, &i)) == NULL) {
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
 		fatal("%s\n", error_get());
-	}
 	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_uint8(void *wid, const char *name, Uint8 ni)
+{
+	struct widget_binding *binding;
+	Uint8 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_sint8(void *wid, const char *name, Sint8 ni)
+{
+	struct widget_binding *binding;
+	Sint8 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_uint16(void *wid, const char *name, Uint16 ni)
+{
+	struct widget_binding *binding;
+	Uint16 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_sint16(void *wid, const char *name, Sint16 ni)
+{
+	struct widget_binding *binding;
+	Sint16 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_uint32(void *wid, const char *name, Uint32 ni)
+{
+	struct widget_binding *binding;
+	Uint32 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_sint32(void *wid, const char *name, Sint32 ni)
+{
+	struct widget_binding *binding;
+	Sint32 *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s\n", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_float(void *wid, const char *name, float nf)
+{
+	struct widget_binding *binding;
+	float *f;
+
+	if ((binding = widget_binding_get_locked(wid, name, &f)) == NULL)
+		fatal("%s\n", error_get());
+	*f = nf;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_double(void *wid, const char *name, double nd)
+{
+	struct widget_binding *binding;
+	double *d;
+
+	if ((binding = widget_binding_get_locked(wid, name, &d)) == NULL)
+		fatal("%s\n", error_get());
+	*d = nd;
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_string(void *wid, const char *name, char *ns)
+{
+	struct widget_binding *binding;
+	char **s;
+
+	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
+		fatal("%s\n", error_get());
+
+	/* XXX realloc */
+	free(*s);
+	*s = Strdup(ns);
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_pointer(void *wid, const char *name, void *np)
+{
+	struct widget_binding *binding;
+	void **p;
+
+	if ((binding = widget_binding_get_locked(wid, name, &p)) == NULL)
+		fatal("%s\n", error_get());
+
+	*p = np;
+	widget_binding_unlock(binding);
 }
 
 /*
@@ -256,7 +473,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 				*(Sint64 **)res = (Sint64 *)binding->p1;
 				break;
 #endif
-#ifdef HAVE_IEEE754
 			case WIDGET_FLOAT:
 				*(float **)res = (float *)binding->p1;
 				debug(DEBUG_BINDING_LOOKUPS,
@@ -269,16 +485,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 				    "\tdouble %s = %f\n",
 				    name, *(double *)binding->p1);
 				break;
-# ifdef HAVE_LONG_DOUBLE
-			case WIDGET_LONG_DOUBLE:
-				*(long double **)res =
-				    (long double *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tlong double %s = %Lf\n",
-				    name, *(long double *)binding->p1);
-				break;
-# endif
-#endif
 			case WIDGET_STRING:
 				*(char ***)res = (char **)binding->p1;
 				debug(DEBUG_BINDING_LOOKUPS,
@@ -337,7 +543,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 					    (Sint64 *)&prop->data.s64;
 					break;
 #endif
-#ifdef HAVE_IEEE754
 				case PROP_FLOAT:
 					*(float **)res =
 					    (float *)&prop->data.f;
@@ -346,13 +551,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 					*(double **)res =
 					    (double *)&prop->data.d;
 					break;
-# ifdef HAVE_LONG_DOUBLE
-				case PROP_LONG_DOUBLE:
-					*(long double **)res =
-					    (long double *)&prop->data.ld;
-					break;
-# endif
-#endif /* HAVE_IEEE754 */
 				case PROP_STRING:
 					*(char ***)res =
 					    (char **)&prop->data.s;
