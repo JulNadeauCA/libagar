@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.4 2002/07/08 08:39:41 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.5 2002/07/18 12:02:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -90,7 +90,7 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 	oq->flags = (flags != 0) ? flags : OBJQ_HORIZ;
 	SLIST_INIT(&oq->tmaps);
 	
-	event_new(oq, "window-widget-scaled", 0,
+	event_new(oq, "widget-scaled", 0,
 	    objq_scaled, NULL);
 	event_new(oq, "window-mousemotion", 0,
 	    objq_event, "%i", WINDOW_MOUSEMOTION);

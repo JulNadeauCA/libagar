@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.8 2002/07/09 09:28:45 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.9 2002/07/18 11:49:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <engine/physics.h>
 #include <engine/map.h>
 
-#include <engine/widget/primitive.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 
@@ -99,6 +98,8 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->cursor = (flags & MAPVIEW_EDIT) ? edcursor_new(0, mv, m) : NULL;
 	mv->zoom = 100;
 
+	event_new(mv, "widget-scaled", 0,
+	    mapview_scaled, NULL);
 	event_new(mv, "window-mousebuttonup", 0,
 	    mapview_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(mv, "window-mousebuttondown", 0,
@@ -111,8 +112,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	    mapview_event, "%i", WINDOW_MOUSEMOTION);
 	event_new(mv, "window-mouseout", 0,
 	    mapview_event, "%i", WINDOW_MOUSEOUT);
-	event_new(mv, "window-widget-scaled", 0,
-	    mapview_scaled, NULL);
 }
 
 static __inline__ void
@@ -367,6 +366,14 @@ mapview_event(int argc, union evarg *argv)
 	switch (type) {
 	case WINDOW_MOUSEOUT:
 		mv->mouse.move = 0;
+		break;
+	case WINDOW_LOSTFOCUS:
+		if (zoomin_timer != NULL) {
+			SDL_RemoveTimer(zoomin_timer);
+		}
+		if (zoomout_timer != NULL) {
+			SDL_RemoveTimer(zoomout_timer);
+		}
 		break;
 	case WINDOW_MOUSEMOTION:
 		x = argv[2].i / mv->tilew;
