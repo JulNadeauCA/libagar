@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.76 2004/03/31 02:30:04 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.77 2004/04/10 02:34:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -79,6 +79,9 @@ struct widget {
 #define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
 
 __BEGIN_DECLS
+extern int kbd_delay;
+extern int kbd_repeat;
+
 void	 widget_init(void *, const char *, const void *, int);
 void	 widget_destroy(void *);
 void	 widget_draw(void *);
