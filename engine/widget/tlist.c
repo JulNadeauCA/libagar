@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.26 2002/12/21 10:25:05 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.27 2002/12/26 07:05:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -101,7 +101,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	pthread_mutex_init(&tl->items_lock, &tl->items_lockattr);
 
 	tl->vbar = emalloc(sizeof(struct scrollbar));
-	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERTICAL);
+	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERT);
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
 	event_new(tl, "window-mousemotion", tlist_mousemotion, NULL);
