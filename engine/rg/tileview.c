@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.2 2005/01/26 02:46:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 	if (tv->zoom > 800) {
 		return (0);
 	}
-	tileview_resize(tv, tv->zoom+4);
+	tileview_set_zoom(tv, tv->zoom+4, 1);
 	return (ival);
 }
 
@@ -83,7 +83,7 @@ zoomout_tick(void *obj, Uint32 ival, void *arg)
 	if (tv->zoom < 10) {
 		return (0);
 	}
-	tileview_resize(tv, tv->zoom-4);
+	tileview_set_zoom(tv, tv->zoom-4, 1);
 	return (ival);
 }
 
@@ -94,6 +94,10 @@ tileview_keydown(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 
 	switch (keysym) {
+	case SDLK_LCTRL:
+	case SDLK_RCTRL:
+		tv->flags |= TILEVIEW_PRESEL;
+		break;
 	case SDLK_EQUALS:
 		timeout_set(&tv->zoom_to, zoomin_tick, NULL, 0);
 		timeout_del(tv, &tv->zoom_to);
@@ -108,7 +112,10 @@ tileview_keydown(int argc, union evarg *argv)
 		break;
 	case SDLK_0:
 	case SDLK_1:
-		tileview_resize(tv, 100);
+		tileview_set_zoom(tv, 100, 1);
+		break;
+	case SDLK_r:
+		tv->tile->flags |= TILE_DIRTY;
 		break;
 	}
 }
@@ -120,6 +127,10 @@ tileview_keyup(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 
 	switch (keysym) {
+	case SDLK_LCTRL:
+	case SDLK_RCTRL:
+		tv->flags &= ~TILEVIEW_PRESEL;
+		break;
 	case SDLK_EQUALS:
 	case SDLK_MINUS:
 		timeout_del(tv, &tv->zoom_to);
@@ -135,17 +146,20 @@ tileview_buttondown(int argc, union evarg *argv)
 
 	widget_focus(tv);
 	switch (button) {
+	case SDL_BUTTON_LEFT:
+		break;
+	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
 		tv->scrolling++;
 		break;
 	case SDL_BUTTON_WHEELUP:
-		if (tv->zoom < 400) {
-			tileview_resize(tv, tv->zoom+10);
+		if (tv->zoom < 800) {
+			tileview_set_zoom(tv, tv->zoom+10, 1);
 		}
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		if (tv->zoom > 10) {
-			tileview_resize(tv, tv->zoom-10);
+			tileview_set_zoom(tv, tv->zoom-10, 1);
 		}
 		break;
 	}
@@ -157,8 +171,31 @@ tileview_buttonup(int argc, union evarg *argv)
 	struct tileview *tv = argv[0].p;
 	int button = argv[1].i;
 
-	if (button == SDL_BUTTON_RIGHT) {
+	if (button == SDL_BUTTON_RIGHT ||
+	    button == SDL_BUTTON_MIDDLE) {
 		tv->scrolling = 0;
+	}
+}
+
+static __inline__ void
+clamp_offsets(struct tileview *tv)
+{
+	int lim;
+
+	if (tv->xoffs >
+	   (lim = (WIDGET(tv)->w - TILEVIEW_MIN_W))) {
+		tv->xoffs = lim;
+	} else if (tv->xoffs <
+	   (lim = (-tv->scaled->w + TILEVIEW_MIN_W))) {
+		tv->xoffs = lim;
+	}
+
+	if (tv->yoffs >
+	    (lim = (WIDGET(tv)->h - TILEVIEW_MIN_H))) {
+		tv->yoffs = lim;
+	} else if (tv->yoffs <
+	    (lim = (-tv->scaled->h + TILEVIEW_MIN_H))) {
+		tv->yoffs = lim;
 	}
 }
 
@@ -175,6 +212,11 @@ tileview_mousemotion(int argc, union evarg *argv)
 	if (tv->scrolling) {
 		tv->xoffs += xrel;
 		tv->yoffs += yrel;
+		clamp_offsets(tv);
+	}
+	if (tv->flags |= TILEVIEW_PRESEL) {
+		tv->xms = x - tv->xoffs;
+		tv->yms = y - tv->yoffs;
 	}
 }
 
@@ -199,7 +241,7 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 	widget_map_surface(tv, NULL);
-	tileview_resize(tv, 100);
+	tileview_set_zoom(tv, 100, 0);
 	
 	event_new(tv, "window-keydown", tileview_keydown, NULL);
 	event_new(tv, "window-keyup", tileview_keyup, NULL);
@@ -209,15 +251,17 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 }
 
 void
-tileview_resize(struct tileview *tv, int zoom)
+tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 {
 	struct tile *t = tv->tile;
-	
-	tv->zoom = zoom;
+	int z1 = tv->zoom;
+
+	tv->zoom = z2;
+	tv->pxsz = z2/100;
 
 	tv->scaled = SDL_CreateRGBSurface(SDL_SWSURFACE,
-	    t->su->w*zoom/100,
-	    t->su->h*zoom/100,
+	    t->su->w*z2/100,
+	    t->su->h*z2/100,
 	    t->su->format->BitsPerPixel,
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
@@ -228,16 +272,33 @@ tileview_resize(struct tileview *tv, int zoom)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	widget_replace_surface(tv, 0, tv->scaled);
+
+	if (adj_offs) {
+		tv->xoffs += (t->su->w*z1 - t->su->w*z2)/100/2;
+		tv->yoffs += (t->su->h*z1 - t->su->h*z2)/100/2;
+	}
+
+	t->flags |= TILE_DIRTY;
 }
 
 void
 tileview_scale(void *p, int rw, int rh)
 {
 	struct tileview *tv = p;
+	int lim;
 
 	if (rw == -1 && rh == -1) {
-		WIDGET(tv)->w = tv->tile->su->w + 32;
-		WIDGET(tv)->h = tv->tile->su->h + 32;
+		WIDGET(tv)->w = tv->tile->su->w + TILEVIEW_MIN_W;
+		WIDGET(tv)->h = tv->tile->su->h + TILEVIEW_MIN_H;
+	} else {
+		if (tv->xoffs >
+		   (lim = (WIDGET(tv)->w - TILEVIEW_MIN_W))) {
+			tv->xoffs = lim;
+		}
+		if (tv->yoffs >
+		   (lim	= (WIDGET(tv)->h - TILEVIEW_MIN_H))) {
+			tv->yoffs = lim;
+		}
 	}
 }
 
@@ -246,19 +307,84 @@ tileview_draw(void *p)
 {
 	struct tileview *tv = p;
 	struct tile *t = tv->tile;
-	SDL_Rect rtiling;
+	SDL_Rect rsrc, rdst;
+	int dxoffs, dyoffs;
+	int drawbg = 2;
 
-	if (tv->flags & TILEVIEW_AUTOREGEN)
-		tile_generate(tv->tile);
+	if (t->flags & TILE_DIRTY) {
+		dprintf("redraw\n");
+		t->flags &= ~TILE_DIRTY;
+		tile_generate(t);
+		view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,
+		    &tv->scaled);
+	}
 
-	rtiling.x = 0;
-	rtiling.y = 0;
-	rtiling.w = WIDGET(tv)->w;
-	rtiling.h = WIDGET(tv)->h;
-	primitives.tiling(tv, rtiling, 9, 0, TILE1_COLOR, TILE2_COLOR);
+	rsrc.x = 0;
+	rsrc.y = 0;
+	rsrc.w = tv->scaled->w;
+	rsrc.h = tv->scaled->h;
+	rdst.x = tv->xoffs;
+	rdst.y = tv->yoffs;
 
-	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
-	widget_blit_surface(tv, 0, tv->xoffs, tv->yoffs);
+	if (tv->xoffs > 0 &&
+	    tv->xoffs + tv->scaled->w > WIDGET(tv)->w) {
+		rsrc.w = WIDGET(tv)->w - tv->xoffs;
+	} else if (tv->xoffs < 0 &&
+	          -tv->xoffs < tv->scaled->w) {
+		rdst.x = 0;
+		rsrc.x = -tv->xoffs;
+		rsrc.w = tv->scaled->w - (-tv->xoffs);
+		if (rsrc.w > WIDGET(tv)->w) {
+			rsrc.w = WIDGET(tv)->w;
+			drawbg--;
+		}
+	}
+
+	if (tv->yoffs > 0 &&
+	    tv->yoffs + tv->scaled->h > WIDGET(tv)->h) {
+		rsrc.h = WIDGET(tv)->h - tv->yoffs;
+	} else if (tv->yoffs < 0 &&
+	          -tv->yoffs < tv->scaled->h) {
+		rdst.y = 0;
+		rsrc.y = -tv->yoffs;
+		rsrc.h = tv->scaled->h - (-tv->yoffs);
+		if (rsrc.h > WIDGET(tv)->h) {
+			rsrc.h = WIDGET(tv)->h;
+			drawbg--;
+		}
+	}
+	
+	if (drawbg) {
+		SDL_Rect rtiling;
+	
+		rtiling.x = 0;
+		rtiling.y = 0;
+		rtiling.w = WIDGET(tv)->w;
+		rtiling.h = WIDGET(tv)->h;
+		primitives.tiling(tv, rtiling, 9, 0, TILE1_COLOR, TILE2_COLOR);
+	}
+
+	widget_blit_from(tv, tv, 0, &rsrc, rdst.x, rdst.y);
+
+	if (tv->flags & TILEVIEW_PRESEL) {
+		int x1 = WIDGET(tv)->cx + tv->xoffs + tv->xms;
+		int y1 = WIDGET(tv)->cy + tv->yoffs + tv->yms;
+		int dx, dy;
+
+		for (dy = 0; dy < tv->pxsz; dy++) {
+			for (dx = 0; dx < tv->pxsz; dx++) {
+				if (x1+dx < WIDGET(tv)->cx ||
+				    y1+dy < WIDGET(tv)->cy ||
+				    x1+dx > WIDGET(tv)->cx+WIDGET(tv)->w ||
+				    y1+dy > WIDGET(tv)->cy+WIDGET(tv)->h)
+					break;
+
+				view_alpha_blend(view->v,
+				    x1+dx, y1+dy,
+				    255, 255, 255, 128);
+			}
+		}
+	}
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.7 2005/01/31 08:40:35 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.8 2005/02/03 04:59:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -123,6 +123,8 @@ tile_add_feature(struct tile *t, void *ft)
 	tft->y = 0;
 	tft->visible = 1;
 	TAILQ_INSERT_TAIL(&t->features, tft, features);
+
+	t->flags |= TILE_DIRTY;
 	return (tft);
 }
 
@@ -202,7 +204,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 		}
 		tile_add_feature(t, ft);
 	}
-	tile_generate(t);
+	t->flags &= ~TILE_DIRTY;
 	return (0);
 }
 
@@ -241,7 +243,6 @@ insert_fill(int argc, union evarg *argv)
 	fill_init(fill, ts, 0);
 	TAILQ_INSERT_TAIL(&ts->features, FEATURE(fill), features);
 	tile_add_feature(t, fill);
-	tile_generate(t);
 
 	if (tv->edit_mode) {
 		feature_close(tv);
@@ -419,7 +420,7 @@ resize_tile(int argc, union evarg *argv)
 		flags |= SDL_SRCCOLORKEY;
 
 	tile_scale(ts, t, w, h, flags);
-	tileview_resize(tv, 100);
+	tileview_set_zoom(tv, 100, 0);
 	view_detach(dlg_w);
 }
 
