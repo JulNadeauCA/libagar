@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.96 2002/06/09 10:02:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.97 2002/06/09 10:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -351,23 +351,27 @@ map_destroy(void *p)
 static __inline__ void
 map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
-	static struct noderef *nref;
-	static SDL_Surface *src;
-	static SDL_Rect rd;
+	struct noderef *nref;
+	struct anim *anim;
+	SDL_Surface *src;
+	SDL_Rect rd;
+	Uint32 t;
+	int i, frame;
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
 			src = SPRITE(nref->pobj, nref->offs);
+			rd.w = src->w;
+			rd.h = src->h;
+			rd.x = rx + nref->xoffs;
+			rd.y = ry + nref->yoffs;
+			SDL_BlitSurface(src, NULL, m->view->v, &rd);
 		} else if (nref->flags & MAPREF_ANIM) {
-			static struct anim *anim;
-
 			anim = ANIM(nref->pobj, nref->offs);
+			frame = anim->frame;
 		
 			if (nref->flags & MAPREF_ANIM_DELTA &&
 			   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
-				Uint32 t;
-				src = anim->frames[anim->frame];
-
 				t = SDL_GetTicks();
 				if ((t - anim->delta) >= anim->delay) {
 					anim->delta = t;
@@ -378,7 +382,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 					}
 				}
 			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-				src = anim->frames[nref->frame];
+				frame = nref->frame;
 
 				if ((nref->flags & MAPREF_ANIM_STATIC) == 0) {
 					if ((anim->delay < 1) ||
@@ -392,12 +396,16 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 					}
 				}
 			}
+			
+			for (i = 0; i < anim->nparts; i++) {
+				src = anim->frames[anim->nparts - i - 1][frame];
+				rd.w = src->w;
+				rd.h = src->h;
+				rd.x = rx + nref->xoffs;
+				rd.y = ry + nref->yoffs - (i * TILEH);
+				SDL_BlitSurface(src, NULL, m->view->v, &rd);
+			}
 		}
-		rd.w = src->w;
-		rd.h = src->h;
-		rd.x = rx + nref->xoffs;
-		rd.y = ry + nref->yoffs;
-		SDL_BlitSurface(src, NULL, m->view->v, &rd);
 	}
 }
 
@@ -430,12 +438,13 @@ void
 map_animate(struct map *m)
 {
 	struct viewport *view = m->view;
-	static int x, y, vx, vy, rx, ry;
+	struct node *nnode;
+	int x, y, vx, vy, rx, ry, ox, oy;
 	int ri = 0;
 
-	for (y = (view->mapy + view->vmaph) - 1,
-	     vy = (view->vmaph + view->mapyoffs) - 1;
-	     vy > 0; y--, vy--) {
+	for (y = view->mapy, vy = view->mapyoffs;
+	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
+	     y++, vy++) {
 
 		ry = vy << m->shtiley;
 	
@@ -465,63 +474,39 @@ map_animate(struct map *m)
 			rx = vx << m->shtilex;
 
 			if (node->flags & NODE_ANIM) {
-				static struct node *nnode;
-
-				/* Draw nearby nodes. XXX */
-				if (x > 1) {
-					nnode = &m->map[y][x - 1]; /* Left */
-					if (nnode->flags & NODE_OVERLAP &&
-					    vx > 1) {
-						MAPEDIT_PREDRAW(m, nnode,
-						    vx - 1, vy);
-						map_rendernode(m, nnode,
-						    rx - TILEW, ry);
-						MAPEDIT_POSTDRAW(m, nnode,
-						    vx - 1, vy);
-						view->rects[ri++] =
-						    view->maprects[vy][vx - 1];
-					}
-				}
-				if (x < m->mapw - 1) {
-					nnode = &m->map[y][x + 1]; /* Right */
-					if (nnode->flags & NODE_OVERLAP &&
-					    vx < view->mapw + view->mapxoffs) {
-						MAPEDIT_PREDRAW(m, nnode,
-						    vx + 1, vy);
-						map_rendernode(m, nnode,
-						    rx + TILEW, ry);
-						MAPEDIT_POSTDRAW(m, nnode,
-						    vx + 1, vy);
-						view->rects[ri++] =
-						    view->maprects[vy][vx + 1];
-					}
-				}
-				if (y > 1) {
-					nnode = &m->map[y - 1][x]; /* Up */
-					if (nnode->flags & NODE_OVERLAP &&
-					    vy > 1) {
-						MAPEDIT_PREDRAW(m, nnode,
-						    vx, vy - 1);
-						map_rendernode(m, nnode,
-						    rx, ry - TILEH);
-						MAPEDIT_POSTDRAW(m, nnode,
-						    vx, vy - 1);
-						view->rects[ri++] =
-						    view->maprects[vy - 1][vx];
-					}
-				}
-				if (y < m->maph - 1) {
-					nnode = &m->map[y + 1][x]; /* Down */
-					if (nnode->flags & NODE_OVERLAP &&
-					    vy < view->maph + view->mapyoffs) {
-						MAPEDIT_PREDRAW(m, nnode,
-						    vx, vy + 1);
-						map_rendernode(m, nnode,
-						    rx, ry + TILEH);
-						MAPEDIT_POSTDRAW(m, nnode,
-						    vx, vy + 1);
-						view->rects[ri++] =
-						    view->maprects[vy + 1][vx];
+				/*
+				 * ooo
+				 * ooo
+				 * oSo
+				 * ooo
+				 */
+				for (oy = -2; oy < 2; oy++) {
+					for (ox = -1; ox < 2; ox++) {
+						if (ox == 0 && oy == 0) {
+							/* Origin */
+							continue;
+						}
+						nnode = &m->map[y + oy][x + ox];
+						if ((nnode->flags &
+						    NODE_OVERLAP) &&
+						    vx > 1 && vy > 1 &&
+						    (vx < view->mapw + /* XXX */
+						    view->mapxoffs) &&
+						    (vy < view->maph +
+						    view->mapyoffs)) {
+							MAPEDIT_PREDRAW(m,
+							    nnode,
+							    vx+ox, vy+oy);
+							map_rendernode(m, nnode,
+							    rx + (TILEW*ox),
+							    ry + (TILEH*oy));
+							MAPEDIT_POSTDRAW(m,
+							    nnode,
+							    vx+ox, vy+oy);
+							view->rects[ri++] =
+							    view->maprects
+							    [vy+oy][vx+ox];
+						}
 					}
 				}
 
@@ -556,19 +541,19 @@ map_draw(struct map *m)
 	static int x, y, vx, vy, rx, ry;
 	struct viewport *view = m->view;
 	int ri = 0;
+	struct node *node;
+	struct noderef *nref;
+	Uint32 nsprites;
 		
-	for (y = (view->mapy + view->vmaph) - 1,
-	     vy = (view->vmaph + view->mapyoffs) - 1;
-	     vy > 0; y--, vy--) {
+	for (y = view->mapy, vy = view->mapyoffs;
+	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
+	     y++, vy++) {
 
 		ry = vy << m->shtilex;
 
 		for (x = (view->mapx + view->vmapw) - 1,
 		     vx = (view->vmapw + view->mapxoffs) - 1;
 		     vx > 0; x--, vx--) {
-			static struct node *node;
-			static struct noderef *nref;
-			static Uint32 nsprites;
 #ifdef DEBUG
 			int i;
 
