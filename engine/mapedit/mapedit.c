@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.24 2002/02/10 05:03:19 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.25 2002/02/11 23:32:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -94,12 +94,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 		dprintf("%s is in core\n", name);
 	}
 
-	med = (struct mapedit *)malloc(sizeof(struct mapedit));
-	if (med == NULL) {
-		perror("mapedit");
-		return (NULL);
-	}
-
+	med = (struct mapedit *)emalloc(sizeof(struct mapedit));
 	object_create(&med->obj, "mapedit", "Map editor", DESTROY_HOOK);
 	med->obj.destroy_hook = mapedit_destroy;
 	med->event_hook = mapedit_event;
@@ -110,9 +105,9 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	med->curobj = NULL;
 	med->curflags = 0;
 
-	direction_init(&med->cursor_dir, med, DIR_SCROLL, 2, 10);
-	direction_init(&med->listw_dir, med, DIR_SCROLL, 2, 10);
-	direction_init(&med->olistw_dir, med, 0, 2, 10);
+	direction_init(&med->cursor_dir, med, med->map, DIR_SCROLL, 2, 10);
+	direction_init(&med->listw_dir, med, med->map, DIR_SCROLL, 2, 10);
+	direction_init(&med->olistw_dir, med, med->map, 0, 2, 10);
 
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
 	    MAPEDIT_DRAWPROPS;
@@ -190,11 +185,7 @@ mapedit_shadow(struct mapedit *med)
 			continue;
 		}
 
-		eob = malloc(sizeof(struct editobj));
-		if (eob == NULL) {
-			goto fail;
-		}
-
+		eob = emalloc(sizeof(struct editobj));
 		eob->pobj = ob;
 		SIMPLEQ_INIT(&eob->erefsh);
 		eob->nrefs = 0;
@@ -219,10 +210,7 @@ mapedit_shadow(struct mapedit *med)
 			for (y = 0; y < ob->nsprites; y++) {
 				struct editref *eref;
 		
-				eref = malloc(sizeof(struct editref));
-				if (eref == NULL) {
-					goto fail;
-				}
+				eref = emalloc(sizeof(struct editref));
 				eref->animi = -2;
 				eref->spritei = y;
 				eref->p = g_slist_nth_data(ob->sprites, y);
@@ -239,11 +227,7 @@ mapedit_shadow(struct mapedit *med)
 			for (z = 0; z < ob->nanims; z++) {
 				struct editref *eref;
 
-				eref = malloc(sizeof(struct editref));
-				if (eref == NULL) {
-					goto fail;
-				}
-				
+				eref = emalloc(sizeof(struct editref));
 				eref->animi = z;
 				eref->spritei = -1;
 				eref->p = g_slist_nth_data(ob->anims, z);
@@ -639,36 +623,33 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 
 	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
 		int set;
-		struct map_aref *aref;
 
 		set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
-		aref = node_arefobj(&map->map[mapx][mapy],
-		    (struct object *)med, -1);
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_UP:
-			direction_set(&med->cursor_dir, aref, DIR_UP, set);
+			direction_set(&med->cursor_dir, DIR_UP, set);
 			break;
 		case SDLK_DOWN:
-			direction_set(&med->cursor_dir, aref, DIR_DOWN, set);
+			direction_set(&med->cursor_dir, DIR_DOWN, set);
 			break;
 		case SDLK_LEFT:
-			direction_set(&med->cursor_dir, aref, DIR_LEFT, set);
+			direction_set(&med->cursor_dir, DIR_LEFT, set);
 			break;
 		case SDLK_RIGHT:
-			direction_set(&med->cursor_dir, aref, DIR_RIGHT, set);
+			direction_set(&med->cursor_dir, DIR_RIGHT, set);
 			break;
 		case SDLK_PAGEUP:
-			direction_set(&med->listw_dir, aref, DIR_UP, set);
+			direction_set(&med->listw_dir, DIR_UP, set);
 			break;
 		case SDLK_PAGEDOWN:
-			direction_set(&med->listw_dir, aref, DIR_DOWN, set);
+			direction_set(&med->listw_dir, DIR_DOWN, set);
 			break;
 		case SDLK_DELETE:
-			direction_set(&med->olistw_dir, aref, DIR_LEFT, set);
+			direction_set(&med->olistw_dir, DIR_LEFT, set);
 			break;
 		case SDLK_END:
-			direction_set(&med->olistw_dir, aref, DIR_RIGHT, set);
+			direction_set(&med->olistw_dir, DIR_RIGHT, set);
 			break;
 		default:
 			break;
@@ -687,18 +668,21 @@ mapedit_time(Uint32 ival, void *p)
 	
 	mapx = med->x;
 	mapy = med->y;
+	
+	pthread_mutex_lock(&map->lock);
 
 	aref = node_arefobj(&map->map[mapx][mapy], (struct object *)med, -1);
 
-	pthread_mutex_lock(&map->lock);
-
-	moved = direction_update(&med->cursor_dir, map, &mapx, &mapy, aref);
+	/* Move the map edition cursor. */
+	moved = direction_update(&med->cursor_dir, &mapx, &mapy);
 	if (moved != 0) {
-		static int i, nkeys;
-		static SDL_Event nev;
+		SDL_Event nev;
+		int i, nkeys;
 
 		MAPEDIT_MOVE(med, mapx, mapy);
 		map->redraw++;
+
+		direction_moved(&med->cursor_dir, &mapx, &mapy, moved);
 
 		for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
 			if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
