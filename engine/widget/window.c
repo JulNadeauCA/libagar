@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.98 2002/11/13 00:22:31 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.99 2002/11/13 01:23:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -170,7 +170,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		    default_border[i].b);
 	}
 
-	fl |= WINDOW_TITLEBAR;
+	fl |= (WINDOW_TITLEBAR|WINDOW_MATERIALIZE|WINDOW_DEMATERIALIZE);
 
 	win->titleh = font_h + win->borderw;
 	win->flags = fl;
@@ -402,9 +402,13 @@ window_show(struct window *win)
 			event_post(wid, "widget-shown", "%p", win);
 		}
 	}
-
+	
 	window_focus(win);
 	window_resize(win);		/* In case the window is new. */
+
+	if (win->flags & WINDOW_MATERIALIZE) {
+		primitive_sequence(win, PRIMITIVE_SEQ_MATERIALIZE);
+	}
 
 	pthread_mutex_unlock(&win->lock);
 	pthread_mutex_unlock(&view->lock);
@@ -424,6 +428,10 @@ window_hide(struct window *win)
 		pthread_mutex_unlock(&win->lock);
 		pthread_mutex_unlock(&view->lock);
 		return (0);
+	}
+
+	if (win->flags & WINDOW_DEMATERIALIZE) {
+		primitive_sequence(win, PRIMITIVE_SEQ_DEMATERIALIZE);
 	}
 
 	/* XXX cycle focus */
@@ -593,9 +601,8 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			SDL_UpdateRect(view->v, nrd.x,
 			    nrd.y, nrd.w, nrd.h);
 		}
-	}
-
-	if (view->rootmap != NULL) {		/* Redraw the map. */
+	} else if (view->rootmap != NULL) {		/* Tile-based */
+		/* Redraw the map. */
 		view->rootmap->map->redraw++;
 	}
 }
