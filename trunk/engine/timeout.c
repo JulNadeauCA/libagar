@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.7 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.8 2005/01/22 05:31:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -125,6 +125,15 @@ timeout_del(void *p, struct timeout *to)
 		}
 	}
 	object_unlock(ob);
+}
+
+void
+timeout_replace(void *obj, struct timeout *to, Uint32 nival)
+{
+	lock_timeout(obj);
+	timeout_del(obj, to);
+	timeout_add(obj, to, nival);
+	unlock_timeout(obj);
 }
 
 void

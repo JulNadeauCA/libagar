@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.7 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.8 2005/01/22 05:31:30 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -76,6 +76,9 @@ internally to implement timing-related events (registered using
 .Fn timeout_add "void *obj" "struct timeout *to" "Uint32 ival"
 .Pp
 .Ft "void"
+.Fn timeout_replace "void *obj" "struct timeout *to" "Uint32 ival"
+.Pp
+.Ft "void"
 .Fn timeout_del "void *obj" "struct timeout *to"
 .Pp
 .Ft "int"
@@ -142,6 +145,14 @@ On a multiprocessor system, one might consider a multithreaded timing scheme.
 The
 .Nm
 interface remains consistent across different timing schemes.
+.Pp
+The
+.Fn timeout_replace
+function is a variant of
+.Fn timeout_add
+which invokes
+.Fn timeout_del
+implicitly, prior to scheduling the event.
 .Pp
 The
 .Fn timeout_del
