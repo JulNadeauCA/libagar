@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.149 2004/04/22 01:52:20 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.150 2004/04/23 03:27:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -171,8 +171,8 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 
 	ntool = Malloc(sizeof(struct tool), M_MAPEDIT);
 	memcpy(ntool, tool, sizeof(struct tool));
-	tool_init(ntool, mv);
 	ntool->p = p;
+	tool_init(ntool, mv);
 
 	if (mv->toolbar != NULL) {
 		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
