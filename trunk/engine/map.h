@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.18 2002/02/17 07:58:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.19 2002/02/25 09:01:54 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -17,7 +17,7 @@ struct noderef {
 	Uint32	frame;		/* Animation frame # */
 	Uint32	fwait;		/* Animation delay counter */
 
-	Uint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
+	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
 				   used for direction and soft scroll. */
 
 	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
