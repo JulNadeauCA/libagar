@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.91 2002/11/09 07:39:03 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.92 2002/11/09 07:43:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -75,13 +75,13 @@ static Uint32 bg_color = 0;
 /* XXX struct */
 #include "borders/green1.h"
 
-static void	window_move(struct window *, SDL_MouseMotionEvent *);
 static void	window_update_mask(struct window *);
 static void	window_clamp(struct window *);
 static void	window_round(struct window *, int, int, int, int);
 static void	window_update_titlebar(struct window *);
-static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 static void	window_focus(struct window *);
+static void	winop_move(struct window *, SDL_MouseMotionEvent *);
+static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
 struct window *
 window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
@@ -419,6 +419,10 @@ window_destroy(void *p)
 	struct window *win = p;
 	struct region *reg, *nextreg = NULL;
 
+	dprintf("destroy %s (\"%s\")\n", OBJECT(win)->name, win->caption);
+
+	OBJECT_ASSERT(win, "window");
+
 	for (reg = TAILQ_FIRST(&win->regionsh);
 	     reg != TAILQ_END(&win->regionsh);
 	     reg = nextreg) {
@@ -427,7 +431,9 @@ window_destroy(void *p)
 		object_destroy(reg);
 	}
 
-	free(win->caption);
+	if (win->caption != NULL) {
+		free(win->caption);
+	}
 	free(win->border);
 
 	pthread_mutex_destroy(&win->lock);
@@ -625,7 +631,7 @@ window_update_mask(struct window *win)
 
 /* View and window must be locked. */
 static void
-window_move(struct window *win, SDL_MouseMotionEvent *motion)
+winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos;
 	int moved = 0;
@@ -752,6 +758,7 @@ window_focus(struct window *win)
 
 	if (lastwin != NULL) {
 #if 0
+		/* XXX */
 		if (lastwin->focus != NULL) {
 			/* Take the focus off the widget. */
 			event_post(lastwin->focus, "widget-lostfocus", NULL);
@@ -776,24 +783,6 @@ window_focus(struct window *win)
 }
 
 /*
- * Focus windows if necessary.
- * View must be locked, window list must not be empty.
- */
-static void
-window_mousefocus(Uint16 x, Uint16 y)
-{
-	struct window *win;
-
-	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		if (WINDOW_INSIDE(win, x, y) && win->flags & WINDOW_SHOWN) {
-			view->focus_win = win;
-			return;
-		}
-	}
-	view->focus_win = NULL;
-}
-
-/*
  * Dispatch events to widgets and windows.
  * View must be locked, window list must not be empty.
  */
@@ -806,10 +795,18 @@ window_event(SDL_Event *ev)
 	static int ox = 0, oy = 0;
 	int nx, ny;
 	int focus_changed = 0;
+	static struct window *keydown_win = NULL;	/* XXX hack */
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-		window_mousefocus(ev->button.x, ev->button.y);
+		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
+			if (WINDOW_INSIDE(win, ev->button.x, ev->button.y) &&
+			    win->flags & WINDOW_SHOWN) {
+				view->focus_win = win;
+				goto scan_wins;
+			}
+		}
+		view->focus_win = NULL;
 		focus_changed++;
 		break;
 	case SDL_MOUSEBUTTONUP:
@@ -817,34 +814,34 @@ window_event(SDL_Event *ev)
 		break;
 	}
 
+scan_wins:
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOWN) == 0) {
-			goto nextwin;
+			goto next_win;
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			/*
-			 * Window mouse motion operation
-			 */
 			if (view->winop != VIEW_WINOP_NONE &&
 			    view->wop_win != win) {
-				goto nextwin;
+				goto next_win;
 			}
 			switch (view->winop) {
 			case VIEW_WINOP_MOVE:
-				window_move(win, &ev->motion);
+				winop_move(win, &ev->motion);
 				goto posted;
 			case VIEW_WINOP_LRESIZE:
 			case VIEW_WINOP_RRESIZE:
 			case VIEW_WINOP_HRESIZE:
-				/* Resize the window. */
 				winop_resize(view->winop, win, &ev->motion);
 				goto posted;
 			case VIEW_WINOP_NONE:
 			}
 			/*
-			 * Widget mouse motion event
+			 * Post the mouse motion event to the widget that
+			 * holds the focus inside the focused window, and
+			 * to any widget with the WIDGET_UNFOCUSED_MOTION
+			 * flag set.
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -866,11 +863,13 @@ window_event(SDL_Event *ev)
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			/* Cancel window operations. */ 
+			/* Cancel any current window operation. */ 
 			view->winop = VIEW_WINOP_NONE;
 			view->wop_win = NULL;
 			/*
-			 * Widget mouse button up event
+			 * Send the mouse button release event to the widget
+			 * that holds focus inside the focused window, and
+			 * any widget with the WIDGET_UNFOCUSED_BUTTONUP flag.
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -895,12 +894,10 @@ window_event(SDL_Event *ev)
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
-				goto nextwin;
+				goto next_win;
 			}
-			/*
-			 * Window mouse button down operation
-			 */
 			if (ev->button.y - win->y <= win->titleh) {
+				/* Close the window. */
 			    	if (ev->button.x - win->x < 20) { /* XXX */
 					window_hide(win);
 					event_post(win, "window-close", NULL);
@@ -908,6 +905,7 @@ window_event(SDL_Event *ev)
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
 			} else if (ev->button.y-win->y > win->h-win->borderw) {
+				/* Resize the window. */
 			    	if (ev->button.x-win->x < 17) {
 					view->winop = VIEW_WINOP_LRESIZE;
 				} else if (ev->button.x-win->x > win->w-17) {
@@ -918,7 +916,8 @@ window_event(SDL_Event *ev)
 				view->wop_win = win;
 			}
 			/*
-			 * Widget mouse button down event
+			 * Send the mouse button press event to the
+			 * widget under the cursor.
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -942,6 +941,15 @@ window_event(SDL_Event *ev)
 			}
 			break;
 		case SDL_KEYUP:
+			if (keydown_win != NULL && keydown_win != win) {
+				/*
+				 * Key was initially pressed while another
+				 * window was holding focus, ignore.
+				 */
+				keydown_win = NULL;
+				break;
+			}
+			/* FALLTHROUGH */
 		case SDL_KEYDOWN:
 			switch (ev->key.keysym.sym) {
 			case SDLK_LSHIFT:
@@ -973,9 +981,16 @@ window_event(SDL_Event *ev)
 				    "%i, %i",
 				    (int)ev->key.keysym.sym,
 				    (int)ev->key.keysym.mod);
+				/*
+				 * Ensure the keyup event is posted to
+				 * this window when the key is released,
+				 * in case a keydown event handler changes
+				 * the window focus.
+				 */
+				keydown_win = win; 
 			}
 		}
-nextwin:
+next_win:
 		pthread_mutex_unlock(&win->lock);
 	}
 	return (0);
