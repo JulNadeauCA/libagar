@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.149 2003/02/26 02:04:53 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.150 2003/03/02 04:11:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -368,6 +368,14 @@ map_add_layer(struct map *m, char *name)
 	}
 	m->nlayers++;
 	return (0);
+}
+
+void
+map_remove_layer(struct map *m)
+{
+	if (--m->nlayers < 1) {
+		m->nlayers = 1;
+	}
 }
 
 /*
