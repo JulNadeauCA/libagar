@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.2 2002/12/20 08:57:21 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.3 2002/12/22 11:37:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -302,53 +302,53 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	}
 
 	/* Read the hierarchy. */
-	elseek(fd, xcfoffs + layer->hierarchy_file_offset, SEEK_SET);
+	elseek(fd, xcfoffs + layer->hierarchy_offset, SEEK_SET);
 	hier = emalloc(sizeof(struct xcf_hierarchy));
 	hier->w = read_uint32(fd);
 	hier->h = read_uint32(fd);
 	hier->bpp = read_uint32(fd);
 
 	/* Read the level offsets. */
-	hier->level_file_offsets = NULL;
+	hier->level_offsets = NULL;
 	i = 0;
 	do {
 		/* XXX inefficient */
-		hier->level_file_offsets = erealloc(hier->level_file_offsets,
+		hier->level_offsets = erealloc(hier->level_offsets,
 		    sizeof(Uint32) * (i + 1));
-		hier->level_file_offsets[i] = read_uint32(fd);
-	} while (hier->level_file_offsets[i++]);
+		hier->level_offsets[i] = read_uint32(fd);
+	} while (hier->level_offsets[i++]);
 
 	/* Read the levels. */
 	level = NULL;
-	for (i = 0; hier->level_file_offsets[i]; i++) {
+	for (i = 0; hier->level_offsets[i]; i++) {
 		struct xcf_level *l;
 
-		elseek(fd, xcfoffs + hier->level_file_offsets[i], SEEK_SET);
+		elseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
 		level = emalloc(sizeof(struct xcf_level));
 		level->w = read_uint32(fd);
 		level->h = read_uint32(fd);
-		level->tile_file_offsets = NULL;
+		level->tile_offsets = NULL;
 		j = 0;
 		do {
 			/* XXX inefficient */
-			level->tile_file_offsets =
-			    erealloc(level->tile_file_offsets,
+			level->tile_offsets =
+			    erealloc(level->tile_offsets,
 			    sizeof(Uint32) * (j + 1));
-			level->tile_file_offsets[j] = read_uint32(fd);
-		} while (level->tile_file_offsets[j++]);
+			level->tile_offsets[j] = read_uint32(fd);
+		} while (level->tile_offsets[j++] != 0);
 
 		ty = 0;
 		tx = 0;
-		for (j = 0; level->tile_file_offsets[j]; j++) {
-			elseek(fd, xcfoffs + level->tile_file_offsets[j],
+		for (j = 0; level->tile_offsets[j] != 0; j++) {
+			elseek(fd, xcfoffs + level->tile_offsets[j],
 			    SEEK_SET);
 			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
 			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
 
-			if (level->tile_file_offsets[j + 1]) {
+			if (level->tile_offsets[j + 1]) {
 				tile = xcf_read_tile(head, fd,
-				    level->tile_file_offsets[j + 1] -
-				    level->tile_file_offsets[j],
+				    level->tile_offsets[j + 1] -
+				    level->tile_offsets[j],
 				    hier->bpp,
 				    ox, oy);
 			} else {
@@ -475,10 +475,10 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 			}
 			free(tile);
 		}
-		free(level->tile_file_offsets);
+		free(level->tile_offsets);
 		free(level);
 	}
-	free(hier->level_file_offsets);
+	free(hier->level_offsets);
 	free(hier);
 
 	return (su);
@@ -518,8 +518,7 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 			*anim = NULL;
 				
 			/* Original size */
-		   	offs = art_insert_sprite(art, su);
-			art_map_sprite(art, offs);
+		   	art_insert_sprite(art, su, 0);
 
 			if (su->h > TILEH ||
 			    su->w > TILEW) {
@@ -629,8 +628,8 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 			}
 		} while (prop.id != PROP_END);
 
-		layer->hierarchy_file_offset = read_uint32(fd);
-		layer->layer_mask_offset = read_uint32(fd);
+		layer->hierarchy_offset = read_uint32(fd);
+		layer->mask_offset = read_uint32(fd);
 
 		/* Convert this layer to a SDL surface. */
 		su = xcf_convert_layer(fd, xcf_offs, head, layer);

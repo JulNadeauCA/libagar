@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.2 2002/12/20 08:57:22 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.3 2002/12/22 11:37:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #define XCF_SIGNATURE	"gimp xcf "
@@ -92,19 +92,19 @@ struct xcf_layer {
 	Uint32	 offset_x, offset_y;	/* Offset of layer in image */
 	Uint32	 opacity;		/* Layer opacity */
 	Uint32	 mode;			/* Application mode */
-	Uint32	 hierarchy_file_offset;	/* Offset of xcf_hierarchy */
-	Uint32	 layer_mask_offset;	/* Offset of mask xcf_layer */
+	Uint32	 hierarchy_offset;	/* Offset of xcf_hierarchy */
+	Uint32	 mask_offset;		/* Offset of mask xcf_layer */
 };
 
 struct xcf_hierarchy {
 	Uint32	 w, h;
 	Uint32	 bpp;
-	Uint32	*level_file_offsets;
+	Uint32	*level_offsets;
 };
 
 struct xcf_level {
 	Uint32	 w, h;
-	Uint32	*tile_file_offsets;
+	Uint32	*tile_offsets;
 };
 
 /* XCF property */
