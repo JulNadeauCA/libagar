@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.132 2002/12/26 01:33:53 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.133 2002/12/26 05:07:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -588,10 +588,6 @@ window_show(struct window *win)
 	window_focus(win);
 	window_resize(win);		/* In case the window is new. */
 
-	if (win->flags & WINDOW_MATERIALIZE) {
-		primitive_sequence(win, PRIMITIVE_SEQ_MATERIALIZE);
-	}
-
 	pthread_mutex_unlock(&win->lock);
 	pthread_mutex_unlock(&view->lock);
 	return (0);
@@ -610,10 +606,6 @@ window_hide(struct window *win)
 		pthread_mutex_unlock(&win->lock);
 		pthread_mutex_unlock(&view->lock);
 		return (0);
-	}
-
-	if (win->flags & WINDOW_DEMATERIALIZE) {
-		primitive_sequence(win, PRIMITIVE_SEQ_DEMATERIALIZE);
 	}
 
 	/* XXX cycle focus */
