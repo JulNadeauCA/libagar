@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.1 2002/04/20 05:46:51 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.2 2002/04/21 03:14:22 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -11,6 +11,7 @@ struct window {
 #define WINDOW_SOLID	0x04
 #define WINDOW_GRADIENT	0x08
 #define WINDOW_CUBIC	0x10
+#define WINDOW_CUBIC2	0x20
 
 	char	*caption;		/* Titlebar text */
 
