@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.1 2002/06/24 18:41:11 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.1 2002/06/25 17:27:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,13 @@ static const struct widget_ops objq_ops = {
 static void	 objq_scaled(int, union evarg *);
 static void	 objq_event(int, union evarg *);
 
+enum {
+	OBJQ_SELECT_BUTTON =		1,
+	OBJQ_SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
+	OBJQ_SCROLLUP_KEY =		SDLK_PAGEUP,
+	OBJQ_SCROLLDOWN_KEY =		SDLK_PAGEDOWN
+};
+
 struct objq *
 objq_new(struct region *reg, struct mapedit *med, int flags, int rw, int rh)
 {
@@ -111,7 +118,7 @@ objq_event(int argc, union evarg *argv)
 		oq->mouse.x = x;
 
 		ms = SDL_GetMouseState(NULL, NULL);
-		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
+		if (ms & OBJQ_SCROLL_BUTTON_MASK) {
 			pthread_mutex_lock(&med->lock);
 			if (oq->mouse.x > ox &&		/* Down */
 			    --oq->offs < 0) {
@@ -128,7 +135,7 @@ objq_event(int argc, union evarg *argv)
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
 		x = argv[3].i;
-		if (button == 1) {
+		if (button != OBJQ_SELECT_BUTTON) {
 			break;
 		}
 		pthread_mutex_lock(&med->lock);
@@ -145,7 +152,9 @@ objq_event(int argc, union evarg *argv)
 		TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
 		med->curobj = eob;
 		med->curoffs = 0;
-	
+
+		dprintf("obj: %p\n", med->curobj);
+
 		pthread_mutex_unlock(&med->lock);
 		break;
 	case WINDOW_KEYDOWN:

@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.1 2002/06/24 18:41:11 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.2 2002/06/25 17:27:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,13 @@ static const struct widget_ops tileq_ops = {
 static void	 tileq_scaled(int, union evarg *);
 static void	 tileq_event(int, union evarg *);
 
+enum {
+	TILEQ_SELECT_BUTTON =		1,
+	TILEQ_SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
+	TILEQ_SCROLLUP_KEY =		SDLK_PAGEUP,
+	TILEQ_SCROLLDOWN_KEY =		SDLK_PAGEDOWN
+};
+
 #define TILEQ_ADJUST(tq, med) do {			\
 	if ((tq)->offs > (med)->curobj->nrefs) {	\
 		(tq)->offs = 0;				\
@@ -116,7 +123,7 @@ tileq_event(int argc, union evarg *argv)
 		tq->mouse.y = y;
 
 		ms = SDL_GetMouseState(NULL, NULL);
-		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
+		if (ms & TILEQ_SCROLL_BUTTON_MASK) {
 			pthread_mutex_lock(&med->lock);
 			pthread_mutex_lock(&med->curobj->lock);
 			TILEQ_ADJUST(tq, med);
@@ -138,7 +145,7 @@ tileq_event(int argc, union evarg *argv)
 		button = argv[2].i;
 		y = argv[4].i;
 	
-		if (button == 1) {
+		if (button != TILEQ_SELECT_BUTTON) {
 			break;
 		}
 		pthread_mutex_lock(&med->lock);
@@ -165,12 +172,12 @@ tileq_event(int argc, union evarg *argv)
 
 		/* XXX gendir */
 		switch ((SDLKey)argv[2].i) {
-		case SDLK_PAGEUP:
+		case TILEQ_SCROLLUP_KEY:
 			if (--tq->offs < 0) {
 				tq->offs = med->curobj->nrefs - 1;
 			}
 			break;
-		case SDLK_PAGEDOWN:
+		case TILEQ_SCROLLDOWN_KEY:
 			if (++tq->offs > med->curobj->nrefs-1) {
 				tq->offs = 0;
 			}
@@ -203,7 +210,11 @@ tileq_draw(void *p)
 	struct tileq *tq = p;
 	struct mapedit *med = tq->med;
 	int y = 0, i, sn;
-	
+
+	if (med->curobj == NULL) {
+		return;
+	}
+
 	pthread_mutex_lock(&med->lock);
 	pthread_mutex_lock(&med->curobj->lock);
 
