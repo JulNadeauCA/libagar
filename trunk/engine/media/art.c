@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.37 2003/04/24 07:04:44 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.38 2003/06/06 01:55:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -155,7 +155,7 @@ art_scan_alpha(SDL_Surface *su)
 		SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
 #if 0
 	/* XXX causes some images to be rendered incorrectly. */
-	} else if (aflags & XCF_ALPHA_TRANSPARENT) {
+	} else if (aflags & ART_ALPHA_TRANSPARENT) {
 		dprintf("colorkey %u\n", oldckey);
 		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
 #endif
@@ -250,7 +250,7 @@ art_unused(struct art *art)
 	pthread_mutex_unlock(&art->used_lock);
 }
 
-/* Load graphical data associated with an object. */
+/* Page the tileset identified by key. */
 struct art *
 art_fetch(struct object *ob, const char *key)
 {
