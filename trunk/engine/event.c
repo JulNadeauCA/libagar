@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.194 2005/02/08 15:47:17 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.195 2005/02/11 04:51:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -229,14 +229,16 @@ event_loop(void)
 				view_update(0, 0, 0, 0);
 			}
 			TAILQ_FOREACH(win, &view->windows, windows) {
+				if (!win->visible)
+					continue;
+
 				pthread_mutex_lock(&win->lock);
-				if (win->visible) {
-					widget_draw(win);
-					view_update(
-					    WIDGET(win)->x, WIDGET(win)->y,
-					    WIDGET(win)->w, WIDGET(win)->h);
-				}
+				widget_draw(win);
 				pthread_mutex_unlock(&win->lock);
+
+				view_update(
+				    WIDGET(win)->x, WIDGET(win)->y,
+				    WIDGET(win)->w, WIDGET(win)->h);
 			}
 
 			if (view->ndirty > 0) {
