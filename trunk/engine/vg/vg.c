@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.34 2004/10/06 04:37:09 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.35 2004/10/06 04:56:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -1616,7 +1616,7 @@ vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
 	extern struct tool vg_text_tool;
 	struct AGMenuItem *sitem;
 	
-	sitem = ag_menu_add_subitem(pitem, _("Snapping mode"),
+	sitem = ag_menu_add_subitem(pitem, _("Snap to"),
 	    ICON(SNAP_FREE_ICON), 0, 0, NULL, NULL);
 	vg_reg_snap_menu(m, sitem, vg);
 
