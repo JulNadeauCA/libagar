@@ -1,10 +1,18 @@
-/*	$Csoft: map.h,v 1.34 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.35 2002/06/03 18:36:52 vedge Exp $	*/
+/*	Public domain	*/
 
 #ifndef TILEW
 #define TILEW	32
 #endif
 #ifndef TILEH
 #define TILEH	32
+#endif
+
+#ifndef CHARW
+#define CHARW	32
+#endif
+#ifndef CHARH
+#define CHARH	64
 #endif
 
 enum {
@@ -33,11 +41,11 @@ struct noderef {
 	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
 };
 
-TAILQ_HEAD(nrefs_head, noderef);
+TAILQ_HEAD(noderefq, noderef);
 
 /* Coordinate within a map. */
 struct node {
-	struct	nrefs_head nrefsh;
+	struct	noderefq nrefsh;
 	Uint32	nnrefs;
 	Uint32	flags;
 #define NODE_BLOCK	0x0001		/* Cannot walk through */
