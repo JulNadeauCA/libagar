@@ -1080,7 +1080,7 @@ if [ "${with_jpeg}" != "no" ]
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
 JPEG_CFLAGS=-I/usr/local/include
-JPEG_LIBS=-L/usr/local/lib -ljpeg
+JPEG_LIBS="-L/usr/local/lib -ljpeg"
 echo "ok"
 echo "ok" >> config.log
 echo -n "checking whether libjpeg works..."
