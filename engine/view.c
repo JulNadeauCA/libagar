@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.20 2002/03/05 17:02:24 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.21 2002/03/12 15:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -198,15 +198,11 @@ view_freemask(struct viewport *v)
 {
 	Uint32 y;
 	
-	pthread_mutex_lock(&v->lock);
-
 	for (y = 0; y < v->maph; y++) {
 		free(*(v->mapmask + y));
 	}
 	free(v->mapmask);
 	v->mapmask = NULL;
-	
-	pthread_mutex_unlock(&v->lock);
 }
 
 static void
@@ -214,15 +210,11 @@ view_freemaprects(struct viewport *v)
 {
 	Uint32 y;
 
-	pthread_mutex_lock(&v->lock);
-
 	for (y = 0; y < v->maph; y++) {
 		free(*(v->maprects + y));
 	}
 	free(v->maprects);
 	v->maprects = NULL;
-	
-	pthread_mutex_unlock(&v->lock);
 }
 
 static void
