@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.10 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.11 2002/04/24 13:18:20 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
@@ -12,7 +12,7 @@ struct world {
 	int	nobjs;
 	SLIST_HEAD(, character) wcharsh; /* Active characters */
 	int	nchars;
-	pthread_mutex_t lock;		/* R/W lock on lists */
+	pthread_mutex_t lock;		/* Lock on the entire structure */
 };
 
 extern struct world *world;
