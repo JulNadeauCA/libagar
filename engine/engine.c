@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.13 2002/02/17 07:58:06 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.14 2002/02/17 08:13:31 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -168,17 +168,21 @@ engine_mapedit(void)
 	if (mapediting) {
 		struct mapedit *medit;
 
-		/* Edit a loaded map, or create a new one. */
-		medit = mapedit_create(mapstr, mapdesc, mapw, maph,
-		    tilew, tileh);
-		object_link(medit);
+		medit = mapedit_create("mapedit");
 		if (medit == NULL) {
-			fatal("mapedit_create\n");
 			return (1);
 		}
 
-		/* Map is in a consistent state. Display animations. */
-		map_focus(medit->map);
+		/* Set the map edition arguments. */
+		medit->margs.name = strdup(mapstr);
+		medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
+		medit->margs.mapw = mapw;
+		medit->margs.maph = maph;
+		medit->margs.tilew = tilew;
+		medit->margs.tileh = tileh;
+
+		/* Start map edition. */
+		object_link(medit);
 	}
 	return (0);
 }
