@@ -1,15 +1,10 @@
-/*	$Csoft: anim.h,v 1.1 2002/02/05 05:47:17 vedge Exp $	*/
+/*	$Csoft: anim.h,v 1.2 2002/02/08 00:18:01 vedge Exp $	*/
 
 struct anim {
 	SDL_Surface **frames;	/* Array of surfaces. */
 	int	maxframes;	/* Allocated surfaces. */
 	int	nframes;	/* Active surfaces. */
-
 	int	delay;		/* Interval in milliseconds */
-
-	/* XXX used by the map editor. */
-	int	gframe;
-	int	gframedc;
 };
 
 struct anim	*anim_create(int);
