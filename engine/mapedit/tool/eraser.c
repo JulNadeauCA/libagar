@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.14 2002/11/28 07:05:06 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.15 2002/12/13 07:47:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -133,12 +133,12 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		break;
 	case ERASER_HIGHEST:
 		if (!TAILQ_EMPTY(&n->nrefs)) {
-			node_del_ref(n, TAILQ_LAST(&n->nrefs, noderefq));
+			node_remove_ref(n, TAILQ_LAST(&n->nrefs, noderefq));
 		}
 		break;
 	case ERASER_LOWEST:
 		if (!TAILQ_EMPTY(&n->nrefs)) {
-			node_del_ref(n, TAILQ_FIRST(&n->nrefs));
+			node_remove_ref(n, TAILQ_FIRST(&n->nrefs));
 		}
 		break;
 #if 0
@@ -146,7 +146,7 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 			if (nref->pobj == er->selection.pobj &&
 			    nref->offs == er->selection.offs) {
-				node_del_ref(n, nref);
+				node_remove_ref(n, nref);
 			}
 		}
 		break;
