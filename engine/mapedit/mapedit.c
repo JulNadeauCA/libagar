@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.95 2002/06/01 14:20:36 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.96 2002/06/03 18:36:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/text.h>
 #include <engine/widget/window.h>
+#include <engine/widget/checkbox.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 
@@ -49,6 +50,7 @@
 #include "command.h"
 #include "mouse.h"
 #include "joy.h"
+#include "config.h"
 
 static const struct version mapedit_ver = {
 	"agar map editor",
@@ -59,8 +61,6 @@ static const struct object_ops mapedit_ops = {
 	NULL,
 	mapedit_load,
 	mapedit_save,
-	NULL,
-	NULL,
 	NULL,		 /* attach */
 	NULL		 /* detach */
 };
@@ -118,6 +118,8 @@ mapedit_init(struct mapedit *med, char *name)
 	med->curoffs = 0;
 	med->curflags = 0;
 	pthread_mutex_init(&med->lock, NULL);
+	
+	med->settings_win = mapedit_config_win(med);
 
 	mapdir_init(&med->cursor_dir, OBJECT(med), NULL, -1, -1);
 	gendir_init(&med->listw_dir);
@@ -259,7 +261,6 @@ mapedit_onattach(int argc, union evarg *argv)
 
 		new++;
 	}
-
 
 	/* Initialize the map editor. */
 	med->map = m;
@@ -781,6 +782,8 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_setorigin(med, &mapx, &mapy);
 				mapedit_move(med, mapx, mapy);
+			} else {
+				window_show(med->settings_win);
 			}
 			break;
 		case SDLK_l:
