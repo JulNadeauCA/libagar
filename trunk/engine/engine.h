@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.37 2002/11/07 04:27:14 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.38 2002/11/07 17:47:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -9,7 +9,10 @@
 #if defined(__linux__)
 #define _XOPEN_SOURCE 500	/* XXX recursive mutexes */
 #endif
+
 #include <pthread.h>
+
+#undef _XOPEN_SOURCE
 
 #include <SDL.h>
 
