@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.5 2004/03/30 00:22:56 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.6 2004/05/10 05:15:01 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -56,11 +56,11 @@ widgets to increment and decrement the value.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct fspinbutton *"
-.Fn fspinbutton_new "void *parent, const struct unit *unit" \
+.Fn fspinbutton_new "void *parent, const char *unit_key" \
                     "const char *label_fmt" "..."
 .Pp
 .Ft void
-.Fn fspinbutton_init "struct fspinbutton *fsu, const struct unit *unit" \
+.Fn fspinbutton_init "struct fspinbutton *fsu, const char *unit_key" \
                      "const char *label"
 .Pp
 .Ft void
@@ -82,10 +82,7 @@ widgets to increment and decrement the value.
 .Fn fspinbutton_set_increment "struct fspinbutton *fsu" "double increment"
 .Pp
 .Ft void
-.Fn fspinbutton_set_units "struct fspinbutton *fsu" "const struct unit[]"
-.Pp
-.Ft void
-.Fn fspinbutton_select_unit "struct fspinbutton *fsu" "const char *unit_abbr"
+.Fn fspinbutton_select_unit "struct fspinbutton *fsu" "const char *unit_key"
 .Pp
 .Ft void
 .Fn fspinbutton_set_precision "struct fspinbutton *fsu, const char *fmt" \
@@ -106,8 +103,9 @@ function initializes a
 .Nm
 widget.
 The
-.Fa unit
-argument defines the unit system to use (if NULL, no conversion is done).
+.Fa unit_key
+argument defines the unit system to use (if set to NULL or "identity", no
+conversion is done).
 .Pp
 The
 .Fn fspinbutton_set_value
@@ -135,11 +133,8 @@ The
 .Fn fspinbutton_set_increment
 function defines the step value for the "+" and "-" buttons.
 .Pp
-The
-.Fn fspinbutton_set_units
-function defines the unit system to use.
 .Fn fspinbutton_select_unit
-selects the default conversion by prefix.
+changes the current conversion unit.
 .Pp
 The
 .Fn fspinbutton_set_precision

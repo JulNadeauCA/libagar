@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.20 2004/05/17 07:08:48 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.21 2004/08/20 01:31:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
+#include <engine/widget/units.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -54,7 +55,7 @@ static struct widget_ops fspinbutton_ops = {
 };
 
 struct fspinbutton *
-fspinbutton_new(void *parent, const struct unit *unit, const char *fmt, ...)
+fspinbutton_new(void *parent, const char *unit, const char *fmt, ...)
 {
 	char label[LABEL_MAX];
 	struct fspinbutton *fsu;
@@ -73,7 +74,7 @@ fspinbutton_new(void *parent, const struct unit *unit, const char *fmt, ...)
 
 /* Adjust the default range depending on the data type of a new binding. */
 static void
-fspinbutton_bound(int argc, union evarg *argv)
+binding_changed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[0].p;
 	struct widget_binding *binding = argv[1].p;
@@ -95,7 +96,7 @@ fspinbutton_bound(int argc, union evarg *argv)
 }
 
 static void
-fspinbutton_keydown(int argc, union evarg *argv)
+key_pressed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[0].p;
 	int keysym = argv[1].i;
@@ -113,7 +114,7 @@ fspinbutton_keydown(int argc, union evarg *argv)
 }
 
 static void
-fspinbutton_return(int argc, union evarg *argv)
+return_pressed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[1].p;
 	struct widget_binding *stringb;
@@ -128,7 +129,7 @@ fspinbutton_return(int argc, union evarg *argv)
 }
 
 static void
-fspinbutton_up(int argc, union evarg *argv)
+increment_pressed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[1].p;
 
@@ -138,7 +139,7 @@ fspinbutton_up(int argc, union evarg *argv)
 }
 
 static void
-fspinbutton_down(int argc, union evarg *argv)
+decrement_pressed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[1].p;
 	
@@ -148,22 +149,66 @@ fspinbutton_down(int argc, union evarg *argv)
 }
 
 static void
-fspinbutton_unitsel(int argc, union evarg *argv)
+update_unit_button(struct fspinbutton *fsu)
+{
+	button_printf(fsu->units->button, "%s", unit_abbr(fsu->unit));
+}
+
+static void
+selected_unit(int argc, union evarg *argv)
 {
 	struct ucombo *ucom = argv[0].p;
 	struct fspinbutton *fsu = argv[1].p;
 	struct tlist_item *ti = argv[2].p;
-	const struct unit *unit = ti->p1;
 
+	fsu->unit = (const struct unit *)ti->p1;
+	update_unit_button(fsu);
+}
+
+static void
+init_unit_system(struct fspinbutton *fsu, const char *unit_key)
+{
+	const struct unit *unit = NULL;
+	const struct unit *ugroup = NULL;
+	int found = 0;
+	int i;
+
+	for (i = 0; i < nunit_groups; i++) {
+		ugroup = unit_groups[i];
+		for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+			if (strcmp(unit->key, unit_key) == 0) {
+				found++;
+				break;
+			}
+		}
+		if (found)
+			break;
+	}
+	if (!found) {
+		fatal("unknown unit: `%s'", unit_key);
+	}
+	dprintf("found unit %s (%f)\n", unit->key, unit->divider);
 	fsu->unit = unit;
-	button_printf(ucom->button, "%s", unit->abbr);
+	update_unit_button(fsu);
+
+	pthread_mutex_lock(&fsu->units->list->lock);
+	tlist_unselect_all(fsu->units->list);
+	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+		struct tlist_item *it;
+
+		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
+		    unit);
+		if (unit == fsu->unit)
+			it->selected++;
+	}
+	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
 void
-fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
-    const char *label)
+fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 {
-	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE);
+	widget_init(fsu, "fspinbutton", &fspinbutton_ops,
+	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
 	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
 	widget_bind(fsu, "max", WIDGET_DOUBLE, &fsu->max);
@@ -177,11 +222,11 @@ fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
 	
 	if (unit != NULL) {
 		fsu->units = ucombo_new(fsu);
-		event_new(fsu->units, "ucombo-selected", fspinbutton_unitsel,
+		event_new(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
-		fspinbutton_set_units(fsu, unit);
+		init_unit_system(fsu, unit);
 	} else {
-		fsu->unit = &identity_unit;
+		fsu->unit = unit_find("identity");
 		fsu->units = NULL;
 	}
 
@@ -190,11 +235,11 @@ fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
 	button_set_padding(fsu->incbu, 0);
 	button_set_padding(fsu->decbu, 0);
 
-	event_new(fsu, "widget-bound", fspinbutton_bound, NULL);
-	event_new(fsu, "window-keydown", fspinbutton_keydown, NULL);
-	event_new(fsu->input, "textbox-return", fspinbutton_return, "%p", fsu);
-	event_new(fsu->incbu, "button-pushed", fspinbutton_up, "%p", fsu);
-	event_new(fsu->decbu, "button-pushed", fspinbutton_down, "%p", fsu);
+	event_new(fsu, "widget-bound", binding_changed, NULL);
+	event_new(fsu, "window-keydown", key_pressed, NULL);
+	event_new(fsu->input, "textbox-return", return_pressed, "%p", fsu);
+	event_new(fsu->incbu, "button-pushed", increment_pressed, "%p", fsu);
+	event_new(fsu->decbu, "button-pushed", decrement_pressed, "%p", fsu);
 }
 
 void
@@ -219,7 +264,7 @@ fspinbutton_scale(void *p, int w, int h)
 	int uw, uh;
 
 	if (units != NULL) {
-		text_prescale("XXXXX", &uw, &uh);
+		text_prescale("XXXXXXXX", &uw, &uh);
 	} else {
 		uw = 0;
 		uh = 0;
@@ -412,27 +457,6 @@ fspinbutton_set_precision(struct fspinbutton *fsu, const char *mode,
 }
 
 void
-fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
-{
-	const struct unit *unit;
-
-	pthread_mutex_lock(&fsu->units->list->lock);
-	tlist_unselect_all(fsu->units->list);
-	for (unit = &units[0]; unit->abbr != NULL; unit++) {
-		struct tlist_item *it;
-
-		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
-		    unit);
-		if (unit->divider == 1) {
-			it->selected++;
-			fsu->unit = unit;
-			button_printf(fsu->units->button, _(unit->abbr));
-		}
-	}
-	pthread_mutex_unlock(&fsu->units->list->lock);
-}
-
-void
 fspinbutton_select_unit(struct fspinbutton *fsu, const char *uname)
 {
 	struct tlist_item *it;
@@ -440,12 +464,12 @@ fspinbutton_select_unit(struct fspinbutton *fsu, const char *uname)
 	pthread_mutex_lock(&fsu->units->list->lock);
 	tlist_unselect_all(fsu->units->list);
 	TAILQ_FOREACH(it, &fsu->units->list->items, items) {
-		const struct unit *u = it->p1;
+		const struct unit *unit = it->p1;
 
-		if (strcmp(u->abbr, uname) == 0) {
+		if (strcmp(unit->key, uname) == 0) {
 			it->selected++;
-			fsu->unit = u;
-			button_printf(fsu->units->button, "%s", u->abbr);
+			fsu->unit = unit;
+			update_unit_button(fsu);
 			break;
 		}
 	}
@@ -456,7 +480,6 @@ void
 fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 {
 	pthread_mutex_lock(&fsu->lock);
-
 	fsu->writeable = writeable;
 	textbox_set_writeable(fsu->input, writeable);
 	if (writeable) {
@@ -466,7 +489,6 @@ fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 		button_disable(fsu->incbu);
 		button_disable(fsu->decbu);
 	}
-
 	pthread_mutex_unlock(&fsu->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.15 2004/03/25 07:17:04 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.1 2004/03/26 04:57:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
+#include <engine/widget/units.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -54,7 +55,7 @@ static struct widget_ops mfspinbutton_ops = {
 };
 
 struct mfspinbutton *
-mfspinbutton_new(void *parent, const struct unit *unit, const char *sep,
+mfspinbutton_new(void *parent, const char *unit, const char *sep,
     const char *fmt, ...)
 {
 	char label[LABEL_MAX];
@@ -186,22 +187,67 @@ mfspinbutton_right(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_unitsel(int argc, union evarg *argv)
+update_unit_button(struct mfspinbutton *fsu)
+{
+	button_printf(fsu->units->button, "%s", unit_abbr(fsu->unit));
+}
+
+static void
+selected_unit(int argc, union evarg *argv)
 {
 	struct ucombo *ucom = argv[0].p;
 	struct mfspinbutton *fsu = argv[1].p;
 	struct tlist_item *ti = argv[2].p;
-	const struct unit *unit = ti->p1;
 
+	fsu->unit = (const struct unit *)ti->p1;
+	update_unit_button(fsu);
+}
+
+static void
+init_unit_system(struct mfspinbutton *fsu, const char *unit_key)
+{
+	const struct unit *unit = NULL;
+	const struct unit *ugroup = NULL;
+	int found = 0;
+	int i;
+	
+	for (i = 0; i < nunit_groups; i++) {
+		ugroup = unit_groups[i];
+		for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+			if (strcmp(unit->key, unit_key) == 0) {
+				found++;
+				break;
+			}
+		}
+		if (found)
+			break;
+	}
+	if (!found) {
+		fatal("unknown unit: `%s'", unit_key);
+	}
+	dprintf("found unit %s (%f)\n", unit->key, unit->divider);
 	fsu->unit = unit;
-	button_printf(ucom->button, "%s", unit->abbr);
+	update_unit_button(fsu);
+
+	pthread_mutex_lock(&fsu->units->list->lock);
+	tlist_unselect_all(fsu->units->list);
+	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
+		struct tlist_item *it;
+
+		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
+		    unit);
+		if (unit == fsu->unit)
+			it->selected++;
+	}
+	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
 void
-mfspinbutton_init(struct mfspinbutton *fsu, const struct unit *unit,
+mfspinbutton_init(struct mfspinbutton *fsu, const char *unit,
     const char *sep, const char *label)
 {
-	widget_init(fsu, "mfspinbutton", &mfspinbutton_ops, WIDGET_FOCUSABLE);
+	widget_init(fsu, "mfspinbutton", &mfspinbutton_ops,
+	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(fsu, "xvalue", WIDGET_DOUBLE, &fsu->xvalue);
 	widget_bind(fsu, "yvalue", WIDGET_DOUBLE, &fsu->yvalue);
 	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
@@ -221,11 +267,11 @@ mfspinbutton_init(struct mfspinbutton *fsu, const struct unit *unit,
 	
 	if (unit != NULL) {
 		fsu->units = ucombo_new(fsu);
-		event_new(fsu->units, "ucombo-selected", mfspinbutton_unitsel,
+		event_new(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
-		mfspinbutton_set_units(fsu, unit);
+		init_unit_system(fsu, unit);
 	} else {
-		fsu->unit = &identity_unit;
+		fsu->unit = unit_find("identity");
 		fsu->units = NULL;
 	}
 
@@ -464,27 +510,6 @@ mfspinbutton_set_precision(struct mfspinbutton *fsu, const char *mode,
 }
 
 void
-mfspinbutton_set_units(struct mfspinbutton *fsu, const struct unit units[])
-{
-	const struct unit *unit;
-
-	pthread_mutex_lock(&fsu->units->list->lock);
-	tlist_unselect_all(fsu->units->list);
-	for (unit = &units[0]; unit->abbr != NULL; unit++) {
-		struct tlist_item *it;
-
-		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
-		    unit);
-		if (unit->divider == 1) {
-			it->selected++;
-			fsu->unit = unit;
-			button_printf(fsu->units->button, _(unit->abbr));
-		}
-	}
-	pthread_mutex_unlock(&fsu->units->list->lock);
-}
-
-void
 mfspinbutton_select_unit(struct mfspinbutton *fsu, const char *uname)
 {
 	struct tlist_item *it;
@@ -494,10 +519,10 @@ mfspinbutton_select_unit(struct mfspinbutton *fsu, const char *uname)
 	TAILQ_FOREACH(it, &fsu->units->list->items, items) {
 		const struct unit *u = it->p1;
 
-		if (strcmp(u->abbr, uname) == 0) {
+		if (strcmp(u->key, uname) == 0) {
 			it->selected++;
 			fsu->unit = u;
-			button_printf(fsu->units->button, "%s", u->abbr);
+			update_unit_button(fsu);
 			break;
 		}
 	}
