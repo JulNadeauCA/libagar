@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.224 2004/05/02 09:37:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.225 2004/05/06 06:22:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
+#include <engine/mapedit/layedit.h>
 #endif
 
 #include <string.h>
@@ -206,15 +207,17 @@ map_free_nodes(struct map *m)
 	struct node *node;
 
 	pthread_mutex_lock(&m->lock);
-	for (y = 0; y < m->maph; y++) {
-		for (x = 0; x < m->mapw; x++) {
-			node = &m->map[y][x];
-			node_destroy(m, node);
+	if (m->map != NULL) {
+		for (y = 0; y < m->maph; y++) {
+			for (x = 0; x < m->mapw; x++) {
+				node = &m->map[y][x];
+				node_destroy(m, node);
+			}
+			Free(m->map[y], M_MAP);
 		}
-		Free(m->map[y], M_MAP);
+		Free(m->map, M_MAP);
+		m->map = NULL;
 	}
-	Free(m->map, M_MAP);
-	m->map = NULL;
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -1361,6 +1364,7 @@ create_view(int argc, union evarg *argv)
 struct window *
 map_edit(void *p)
 {
+	extern const struct tool mediasel_tool, layedit_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
 	    resize_tool, position_tool, propedit_tool, select_tool,
 	    shift_tool, merge_tool, fill_tool, flip_tool, invert_tool;
@@ -1391,6 +1395,8 @@ map_edit(void *p)
 
 	mapview_init(mv, m, flags, toolbar, statbar);
 	mapview_reg_stdtools(mv);
+	mapview_reg_tool(mv, &mediasel_tool, m);
+	mapview_reg_tool(mv, &layedit_tool, m);
 	mapview_reg_tool(mv, &stamp_tool, m);
 	mapview_reg_tool(mv, &eraser_tool, m);
 	mapview_reg_tool(mv, &magnifier_tool, m);
@@ -1407,7 +1413,7 @@ map_edit(void *p)
 	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
 	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
 	    m->layers[m->cur_layer].name);
-	event_new(laysel->list, "tlist-poll", layedit_poll, "%p", mv);
+	event_new(laysel->list, "tlist-poll", layedit_poll, "%p", m);
 	event_new(laysel, "combo-selected", mapview_selected_layer, "%p", mv);
 	
 	object_attach(win, mv);
