@@ -1,0 +1,210 @@
+.\"	$Csoft: agar.3,v 1.12 2002/12/20 00:33:22 vedge Exp $
+.\"
+.\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd DECEMBER 21, 2002
+.Dt XCF 5
+.Os
+.Sh NAME
+.Nm xcf
+.Nd Gimp image format
+.Sh DESCRIPTION
+The
+.Nm
+file format has been designed to store tiled and layered images in
+.Xr gimp 1 .
+Integers are stored in network format, strings are length-encoded.
+An
+.Nm
+file start by a 14-byte magic starting with the
+.Sq gimp xcf file
+string.
+These fields start at offset 14:
+.Bd -literal
+struct xcf_image {
+	Uint32	width, height;		/* Geometry in pixels */
+	Sint32	image_type;		/* Type of image */
+#define XCF_IMAGE_RGB		0
+#define XCF_IMAGE_GREYSCALE	1
+#define XCF_IMAGE_INDEXED	2
+	{
+		PROP_COLORMAP, PROP_COMPRESSION, PROP_GUIDES,
+		PROP_RESOLUTION, PROP_TATTOO, PROP_PARASITES,
+		PROP_UNIT, PROP_PATHS, PROP_USER_UNIT
+	};
+	Uint32	layer_file_offsets[];	/* Offsets for xcf_layer items */
+	Uint32	channel_file_offsets[]; /* Offsets for xcf_channel items */
+};
+.Ed
+.Pp
+Generic properties are used to make the
+.Nm
+file format extensible.
+When reading an
+.Nm
+file, unknown properties must be skipped.
+.Bd -literal
+struct xcf_prop {
+	Uint32	id;
+	Uint32	size;
+	Uint8	data[size];
+};
+.Ed
+.Bd -literal
+struct xcf_layer {
+	Uint32	 width, height;		/* In pixels */
+	Sint32	 layer_type;		/* Image type */
+	char	*name;			/* Identifier */
+	Props {
+		PROP_ACTIVE_LAYER, PROP_FLOATING_SELECTION,
+		PROP_OPACITY, PROP_MODE, PROP_VISIBLE,
+		PROP_LINKED, PROP_PRESERVE_TRANSPARENCY,
+		PROP_APPLY_MASK, PROP_EDIT_MASK, PROP_SHOW_MASK,
+		PROP_OFFSETS
+	}
+	Uint32	 hierarchy_file_offset;	/* Offset of layer hier */
+	Uint32	 layer_mask_offset;	/* Offset of mask hier */
+};
+struct xcf_channel {
+	Uint32	 width, height;		/* In pixels */
+	char	*name;			/* Identifier */
+	Props {
+		PROP_ACTIVE_CHANNEL, PROP_SELECTION, PROP_OPACITY,
+		PROP_VISIBLE, PROP_SHOW_MASKED, PROP_COLOR
+	};
+	Uint32	 hierarchy_file_offset;	/* Offset of hier */
+};
+struct xcf_hier {
+	Uint32	 width, height;		/* In pixels */
+	Uint32	 bpp;			/* Depth */
+	Uint32	 level_file_offsets[];	/* Offsets of levels */
+};
+struct xcf_level {
+	Uint32	 width, height;		/* In pixels */
+	Uint32	 tile_file_offsets[];	/* Offsets of tiles */
+};
+struct xcf_tile {
+	Uint8	 data[]	;		/* Pixel information */
+};
+.Ed
+.Sh IMAGE PROPERTIES
+.Bl -tag -width "PROP_COMPRESSION"
+.It PROP_COLORMAP
+Color map (array of RGB triplets) for images of type
+.Dv IMAGE_INDEXED.
+.Bd -literal
+struct xcf_colormap {
+	Uint32	ncolors;
+	Uint8	colormap[ncolors];
+};
+.Ed
+.It PROP_COMPRESSION
+Compression mode for tiles.
+.Bd -literal
+struct xcf_compression {
+	Uint8	mode;
+#define XCF_COMPRESSION_NONE	0
+#define XCF_COMPRESSION_RLE	1
+#define XCF_COMPRESSION_ZLIB	2   /* Unimplemented */
+#define XCF_COMPRESSION_FRACTAL	3   /* Unimplemented */
+};
+.Ed
+.El
+.Sh LAYER PROPERTIES
+.Bl -tag -width "PROP_PRESERVE_TRANSPARENCY"
+.It PROP_ACTIVE_LAYER
+Currently undefined.
+.It PROP_FLOATING_SELECTION
+Floating selection.
+.Bd -literal
+struct xcf_floating_selection {
+	Uint32	drawable_offset;
+};
+.Ed
+.It PROP_OPACITY
+Opacity of a layer
+.Bd -literal
+struct xcf_opacity {
+	Uint32	opacity;
+};
+.Ed
+.It PROP_MODE
+Application mode for a layer.
+.Bd -literal
+struct xcf_mode {
+	Sint32	mode;
+};
+.Ed
+.It PROP_VISIBLE
+Visibility of a layer (boolean).
+.It PROP_LINKED
+Layer linkage setting (boolean).
+.It PROP_PRESERVE_TRANSPARENCY
+Whether to apply this layer's
+.Va opacity
+setting (boolean).
+.It PROP_APPLY_MASK
+Controls the mask application setting (boolean).
+.It PROP_EDIT_MASK
+Whether to edit the mask instead of the layer (boolean).
+.It PROP_SHOW_MASK
+Whether to show the mask instead of the layer (boolean).
+.It PROP_OFFSETS
+Offset of the layer in the image.
+.Bd -literal
+struct xcf_offsets {
+	Uint32	x_offs;
+	Uint32	y_offs;
+};
+.Ed
+.El
+.Sh CHANNEL PROPERTIES
+.Bl -tag -width "PROP_ACTIVE_CHANNEL"
+.It PROP_ACTIVE_CHANNEL
+Currently undefined.
+.It PROP_SELECTION
+Currently undefined.
+.It PROP_SHOW_MASKED
+Show masked areas, as opposed to selected areas (boolean).
+.It PROP_COLOR
+The RGB triplet for this channel's color.
+.Bd -literal
+struct xcf_color {
+	Uint8	r;
+	Uint8	g;
+	Uint8	b;
+};
+.Ed
+.El
+.Sh AUTHORS
+The
+.Nm
+file format was designed by Spencer Kimball and Peter Mattis.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr fobj 3 ,
+.Xr gimp 1
