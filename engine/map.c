@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.81 2002/05/06 02:17:53 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.82 2002/05/11 03:57:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -131,8 +131,8 @@ map_freenodes(struct map *m)
 				nextnref = TAILQ_NEXT(nref, nrefs);
 				free(nref);
 			}
-			free(node);
 		}
+		free(*(m->map + y));
 	}
 	free(m->map);
 }
