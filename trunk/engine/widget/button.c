@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.25 2002/07/18 12:06:44 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.26 2002/07/20 18:56:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -56,6 +56,11 @@ static const struct widget_ops button_ops = {
 	NULL		/* animate */
 };
 
+enum {
+	BUTTON_FRAME	= 0,
+	BUTTON_TEXT	= 1
+};
+
 static void	button_event(int, union evarg *);
 
 struct button *
@@ -78,10 +83,11 @@ void
 button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
     int rw, int rh)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-
 	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
 	WIDGET(b)->flags |= WIDGET_MOUSEOUT;
+
+	widget_map_color(b, BUTTON_FRAME, "button-frame", 100, 100, 100);
+	widget_map_color(b, BUTTON_TEXT, "button-text", 240, 240, 240);
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
@@ -90,10 +96,9 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 
 	if (caption != NULL) {
 		b->caption = strdup(caption);
-		b->label_s = TTF_RenderText_Solid(font, caption, white);
-		if (b->label_s == NULL) {
-			fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-		}
+		/* XXX recolor */
+		b->label_s = text_render(NULL, -1,
+		    WIDGET(b)->color[BUTTON_TEXT], caption);
 	} else if (image != NULL) {
 		b->caption = NULL;
 		b->label_s = image;
@@ -137,7 +142,8 @@ button_draw(void *p)
 
 	/* Button */
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
-	    (b->flags & BUTTON_PRESSED) ? -1 : 1);
+	    (b->flags & BUTTON_PRESSED) ? -1 : 1,
+	    WIDGET(b)->color[BUTTON_FRAME]);
 
 	/* Label */
 	switch (b->justify) {

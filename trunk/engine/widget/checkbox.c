@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.16 2002/06/20 16:36:18 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.17 2002/07/20 18:56:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -53,6 +53,11 @@ static struct widget_ops checkbox_ops = {
 	NULL		/* animate */
 };
 
+enum {
+	FRAME_COLOR	= 0,
+	TEXT_COLOR	= 1
+};
+
 static void	checkbox_event(int, union evarg *);
 
 struct checkbox *
@@ -73,20 +78,22 @@ checkbox_new(struct region *reg, char *caption, int rh, int flags)
 void
 checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	SDL_Surface *s;
-	
-	s = TTF_RenderText_Solid(font, caption, white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
 
 	cbox->cbox_w = 16;	/* XXX */
 	cbox->xspacing = 6;
 
-	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops, -1,
-	    rh < 0 ? s->h : rh);
+	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops, -1, rh);
+	
+	widget_map_color(cbox, FRAME_COLOR, "checkbox-frame", 100, 100, 100);
+	widget_map_color(cbox, TEXT_COLOR, "checkbox-text", 250, 250, 250);
+	
+	s = text_render(NULL, -1, WIDGET(cbox)->color[TEXT_COLOR], caption);
+	if (rh < 0) {
+		WIDGET(cbox)->h = s->h;
+	}
 	WIDGET(cbox)->w = cbox->cbox_w + cbox->xspacing + s->w;
+
 	cbox->caption = strdup(caption);
 	cbox->flags = flags;
 	cbox->justify = CHECKBOX_LEFT;
@@ -119,7 +126,8 @@ checkbox_draw(void *p)
 
 	/* Checkbox */
 	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
-	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1);
+	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1,
+	    WIDGET(cbox)->color[FRAME_COLOR]);
 
 	/* Label (cached) */
 	switch (cbox->justify) {
@@ -129,7 +137,6 @@ checkbox_draw(void *p)
 		y = 0;
 		break;
 	}
-
 	WIDGET_DRAW(cbox, cbox->label_s, x, y);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.2 2002/07/21 10:57:12 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.3 2002/07/22 05:22:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,6 +57,10 @@ static const struct widget_ops graph_ops = {
 };
 
 enum {
+	FRAME_COLOR	= 0
+};
+
+enum {
 	NITEMS_INIT =	32,
 	NITEMS_GROW =	16
 };
@@ -87,6 +91,8 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
     int flags, Sint32 yrange, int w, int h)
 {
 	widget_init(&graph->wid, "graph", "widget", &graph_ops, w, h);
+	widget_map_color(graph, FRAME_COLOR, "graph-frame", 50, 50, 50);
+	
 	graph->type = t;
 	graph->flags = flags;
 	graph->caption = strdup(caption);
@@ -156,7 +162,8 @@ graph_draw(void *p)
 	int x, y, oy, i;
 	Sint32 *val, oval;
 
-	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0);
+	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0,
+	    WIDGET(gra)->color[FRAME_COLOR]);
 
 	if (gra->flags & GRAPH_ORIGIN) {
 		primitives.line(gra, 0, gra->origin_y,
