@@ -44,26 +44,26 @@ joy_axismotion(struct mapedit *med, SDL_Event *ev)
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_LEFT;
 			lastdir &= ~(DIR_RIGHT);
-			direction_set(&med->cursor_dir, DIR_LEFT, 1);
+			mapdir_set(&med->cursor_dir, DIR_LEFT, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_RIGHT;
 			lastdir &= ~(DIR_LEFT);
-			direction_set(&med->cursor_dir, DIR_RIGHT, 1);
+			mapdir_set(&med->cursor_dir, DIR_RIGHT, 1);
 		} else {
-			direction_set(&med->cursor_dir, DIR_ALL, 0);
+			mapdir_set(&med->cursor_dir, DIR_ALL, 0);
 		}
 		break;
 	case 1:	/* Y */
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_UP;
 			lastdir &= ~(DIR_DOWN);
-			direction_set(&med->cursor_dir, DIR_UP, 1);
+			mapdir_set(&med->cursor_dir, DIR_UP, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_DOWN;
 			lastdir &= ~(DIR_UP);
-			direction_set(&med->cursor_dir, DIR_DOWN, 1);
+			mapdir_set(&med->cursor_dir, DIR_DOWN, 1);
 		} else {
-			direction_set(&med->cursor_dir, DIR_ALL, 0);
+			mapdir_set(&med->cursor_dir, DIR_ALL, 0);
 		}
 		break;
 	}
@@ -86,10 +86,10 @@ joy_button(struct mapedit *med, SDL_Event *ev)
 		mapedit_pop(med, node);
 		break;
 	case 4: /* Tile list up */
-		direction_set(&med->listw_dir, DIR_UP, 1);
+		gendir_set(&med->listw_dir, DIR_UP, 1);
 		break;
 	case 5: /* Tile list down */
-		direction_set(&med->listw_dir, DIR_DOWN, 1);
+		gendir_set(&med->listw_dir, DIR_DOWN, 1);
 		break;
 	/* XXX ... */
 	}
