@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.15 2002/12/31 00:13:02 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.16 2003/01/01 05:18:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,6 +44,8 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
 #include <engine/widget/bitmap.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/text.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
@@ -89,7 +91,7 @@ tl_events_selected(int argc, union evarg *argv)
 	struct button *bu;
 	int i;
 
-	win = window_generic_new(368, 362,
+	win = window_generic_new(299, 173,
 	    "monitor-object-browser-%s-evh-%s", ob->name, evh->name);
 	if (win == NULL) {
 		return;		/* Exists */
@@ -97,19 +99,23 @@ tl_events_selected(int argc, union evarg *argv)
 	window_set_caption(win, "%s handler", evh->name);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
-	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
-	lab = label_polled_new(reg, 100, 0, &ob->events_lock,
-	    "Flags: 0x%x", &evh->flags);
-	lab = label_polled_new(reg, 100, 0, &ob->events_lock,
-	    "Handler: %p", &evh->handler);
+	{
+		lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
+		lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+		    "Flags: 0x%x", &evh->flags);
+		lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+		    "Handler: %p", &evh->handler);
+	}
 
 	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
-	bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
-	event_new(bu, "button-pushed", tl_events_trigger, "%p, %p", ob, evh);
-
-	bu = button_new(reg, "Unregister", NULL, 0, 50, 100);
-	event_new(bu, "button-pushed", tl_events_unregister, "%p, %p, %p",
-	    tl_events, ob, evh);
+	{
+		bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
+		event_new(bu, "button-pushed", tl_events_trigger,
+		    "%p, %p", ob, evh);
+		bu = button_new(reg, "Unregister", NULL, 0, 50, 100);
+		event_new(bu, "button-pushed", tl_events_unregister,
+		    "%p, %p, %p", tl_events, ob, evh);
+	}
 
 	window_show(win);
 }
@@ -229,7 +235,131 @@ tl_objs_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
-/* Show information about an object. */
+static void
+tl_props_selected(int argc, union evarg *argv)
+{
+	struct tlist *tl_props = argv[0].p;
+	struct label *lab_name = argv[1].p;
+	struct textbox *tb_set = argv[2].p;
+	struct tlist_item *it = argv[3].p;
+	int selected = argv[4].i;
+	struct prop *prop = it->p1;
+
+	if (selected) {
+		label_printf(lab_name, "%s", prop->key);
+		switch (prop->type) {
+		case PROP_INT:
+			textbox_printf(tb_set, "%d", prop->data.i);
+			break;
+		case PROP_UINT8:
+			textbox_printf(tb_set, "%d", prop->data.u8);
+			break;
+		case PROP_SINT8:
+			textbox_printf(tb_set, "%d", prop->data.s8);
+			break;
+		case PROP_UINT16:
+			textbox_printf(tb_set, "%d", prop->data.u16);
+			break;
+		case PROP_SINT16:
+			textbox_printf(tb_set, "%d", prop->data.s16);
+			break;
+		case PROP_UINT32:
+			textbox_printf(tb_set, "%d", prop->data.u32);
+			break;
+		case PROP_SINT32:
+			textbox_printf(tb_set, "%d", prop->data.s32);
+			break;
+		case PROP_FLOAT:
+			textbox_printf(tb_set, "%f", prop->data.f);
+			break;
+		case PROP_DOUBLE:
+			textbox_printf(tb_set, "%f", prop->data.d);
+			break;
+		case PROP_STRING:
+			textbox_printf(tb_set, "%s", prop->data.s);
+			break;
+		case PROP_POINTER:
+			textbox_printf(tb_set, "%p", prop->data.p);
+			break;
+		case PROP_BOOL:
+			textbox_printf(tb_set, "%s",
+			    prop->data.i ? "true" : "false");
+			break;
+		default:
+			break;
+		};
+	} else {
+		label_printf(lab_name, ".");
+		textbox_printf(tb_set, "");
+	}
+}
+
+static void
+tl_props_apply(int argc, union evarg *argv)
+{
+	struct tlist *tl_props = argv[1].p;
+	struct textbox *tb_set = argv[2].p;
+	struct object *ob = argv[3].p;
+	struct tlist_item *it;
+	struct prop *prop;
+
+	it = tlist_item_selected(tl_props);
+	if (it == NULL) {
+		text_msg("Error", "No property is selected.");
+		return;
+	}
+	prop = it->p1;
+
+	pthread_mutex_lock(&tb_set->text.lock);
+
+	switch (prop->type) {
+	case PROP_INT:
+		prop_set_int(ob, prop->key, atoi(tb_set->text.s));
+		break;
+	case PROP_UINT8:
+		prop_set_uint8(ob, prop->key, (Uint8)atoi(tb_set->text.s));
+		break;
+	case PROP_SINT8:
+		prop_set_sint8(ob, prop->key, (Sint8)atoi(tb_set->text.s));
+		break;
+	case PROP_UINT16:
+		prop_set_uint16(ob, prop->key, (Uint16)atoi(tb_set->text.s));
+		break;
+	case PROP_SINT16:
+		prop_set_sint16(ob, prop->key, (Sint16)atoi(tb_set->text.s));
+		break;
+	case PROP_UINT32:
+		prop_set_uint32(ob, prop->key, (Uint32)atoi(tb_set->text.s));
+		break;
+	case PROP_SINT32:
+		prop_set_sint32(ob, prop->key, (Sint32)atoi(tb_set->text.s));
+		break;
+	case PROP_FLOAT:
+		prop_set_float(ob, prop->key, (float)atof(tb_set->text.s));
+		break;
+	case PROP_DOUBLE:
+		prop_set_double(ob, prop->key, atof(tb_set->text.s));
+		break;
+	case PROP_STRING:
+		prop_set_string(ob, prop->key, tb_set->text.s);
+		break;
+	case PROP_BOOL:
+		if (strcasecmp(tb_set->text.s, "true") == 0) {
+			prop_set_bool(ob, prop->key, 1);
+		} else if (strcasecmp(tb_set->text.s, "false") == 0) {
+			prop_set_bool(ob, prop->key, 0);
+		} else {
+			text_msg("Error", "Bad boolean string.");
+		}
+		break;
+	default:
+		text_msg("Error", "Read-only property type.");
+		break;
+	}
+	
+	pthread_mutex_unlock(&tb_set->text.lock);
+}
+
 static void
 tl_objs_selected(int argc, union evarg *argv)
 {
@@ -264,20 +394,39 @@ tl_objs_selected(int argc, union evarg *argv)
 		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 40);
 		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
 	}
-	
-	reg = region_new(win, 0, 0, 40, 100, 60);
+
+	/* Display the generic properties. */
+	reg = region_new(win, REGION_HALIGN, 0, 40, 70, 30);
+	{
+		struct tlist *tl_props;
+
+		tl_props = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl_props, "tlist-poll", tl_props_poll, "%p", ob);
+
+		reg = region_new(win, REGION_VALIGN, 70, 40, 30, 30);
+		{
+			struct label *lab_name;
+			struct textbox *tb_set;
+			struct button *bu;
+
+			lab_name = label_new(reg, 100, 30, " ");
+			tb_set = textbox_new(reg, " ", 0, 100, 30);
+
+			event_new(tl_props, "tlist-changed", tl_props_selected,
+			    "%p, %p", lab_name, tb_set);
+
+			bu = button_new(reg, "Apply", NULL, 0, 100, 30);
+			event_new(bu, "button-pushed", tl_props_apply,
+			    "%p, %p, %p", tl_props, tb_set, ob);
+		}
+	}
+
+	/* Display the event handlers. */
+	reg = region_new(win, 0, 0, 70, 100, 30);
 	{
 		struct tlist *tl;
 
-		/* Generic properties. */
-		tl = tlist_new(reg, 60, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_props_poll, "%p", ob);
-#if 0
-		event_new(tl, "tlist-changed", tl_props_selected, "%p", ob);
-#endif
-	
-		/* Events handlers */
-		tl = tlist_new(reg, 40, 100, TLIST_POLL);
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl, "tlist-poll", tl_events_poll, "%p", ob);
 		event_new(tl, "tlist-changed", tl_events_selected, "%p", ob);
 	}
