@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.30 2002/12/30 06:29:28 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.31 2002/12/31 05:47:58 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -27,10 +27,15 @@
 
 #include <engine/engine.h>
 
+#include <config/have_opengl.h>
 #include <config/view_8bpp.h>
 #include <config/view_16bpp.h>
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
+
+#ifdef HAVE_OPENGL
+#include <GL/gl.h>
+#endif
 
 #include <engine/view.h>
 
@@ -45,14 +50,11 @@ static void	apply(int, union evarg *);
 static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
 static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
 
-/* Types of primitives */
 enum {
 	BOX,
 	FRAME,
 	CIRCLE,
-	LINE,
-	SQUARE,
-	TRIANGLE
+	LINE
 };
 
 static __inline__ Uint32
@@ -69,7 +71,6 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 	} else {
 		nr += r;
 	}
-	
 	if (ng+g > 255) {
 		ng = 255;
 	} else if (ng+g < 0) {
@@ -77,7 +78,6 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 	} else {
 		ng += g;
 	}
-	
 	if (nb+b > 255) {
 		nb = 255;
 	} else if (nb+b < 0) {
@@ -85,10 +85,92 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 	} else {
 		nb += b;
 	}
-
 	return (SDL_MapRGB(view->v->format, nr, ng, nb));
 }
 
+/* Surface must be locked. */
+static __inline__ void
+put_pixel1(Uint8 bpp, Uint8 *dst, Uint32 color)
+{
+	switch (bpp) {
+#ifdef VIEW_8BPP
+	case 1:
+		*dst = color;
+		break;
+#endif
+#ifdef VIEW_16BPP
+	case 2:
+		*(Uint16 *)dst = color;
+		break;
+#endif
+#ifdef VIEW_24BPP
+	case 3:
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		dst[0] = (color >> 16)	& 0xff;
+		dst[1] = (color >> 8)	& 0xff;
+		dst[2] = color		& 0xff;
+# else
+		dst[0] = color		& 0xff;
+		dst[1] = (color >> 8)	& 0xff;
+		dst[2] = (color >> 16)	& 0xff;
+# endif
+		break;
+#endif
+#ifdef VIEW_32BPP
+	case 4:
+		*(Uint32 *)dst = color;
+		break;
+#endif
+	}
+}
+
+/* Surface must be locked. */
+static __inline__ void
+put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
+{
+	switch (bpp) {
+#ifdef VIEW_8BPP
+	case 1:
+		*dst1 = color;
+		*dst2 = color;
+		break;
+#endif
+#ifdef VIEW_16BPP
+	case 2:
+		*(Uint16 *)dst1 = color;
+		*(Uint16 *)dst2 = color;
+		break;
+#endif
+#ifdef VIEW_24BPP
+	case 3:
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		dst1[0] = (color >> 16)	& 0xff;
+		dst1[1] = (color >> 8)	& 0xff;
+		dst1[2] = color		& 0xff;
+# else
+		dst1[0] = color		& 0xff;
+		dst1[1] = (color >> 8)	& 0xff;
+		dst1[2] = (color >> 16)	& 0xff;
+# endif
+		break;
+#endif
+#ifdef VIEW_32BPP
+	case 4:
+		*(Uint32 *)dst1 = color;
+		*(Uint32 *)dst2 = color;
+		break;
+#endif
+	}
+}
+
+/*
+ * Box algorithm
+ */
+static void
+box_rect(void *p, SDL_Rect *rd, int z, Uint32 color)
+{
+	primitives.box(p, rd->x, rd->y, rd->w, rd->h, z, color);
+}
 static void
 box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
     Uint32 color)
@@ -96,13 +178,10 @@ box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	struct widget *wid = p;
 	Uint32 bgcolor;
 
-	bgcolor = (z < 0) ?
-	    alter_color(color, -20, -20, -20) :
-	    color;
+	bgcolor = (z < 0) ? alter_color(color, -20, -20, -20) : color;
 	if (WIDGET_FOCUSED(wid)) {
 		bgcolor = alter_color(bgcolor, 6, 6, 15);
 	}
-
 	/* Background */
 	WIDGET_FILL(wid, xoffs, yoffs, w, h, bgcolor);
 
@@ -119,13 +198,6 @@ box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	    xoffs+w-1, yoffs,
 	    xoffs+w-1, yoffs+h-1, color);
 }
-
-static void
-box_rect(void *p, SDL_Rect *rd, int z, Uint32 color)
-{
-	primitives.box(p, rd->x, rd->y, rd->w, rd->h, z, color);
-}
-
 static void
 box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
     Uint32 color)
@@ -136,11 +208,9 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	lcol = (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
 	    alter_color(color, 60, 60, 60);
-	
 	rcol = (z < 0) ?
 	    alter_color(color, 60, 60, 60) :
 	    alter_color(color, -60, -60, -60);
-
 	bcol = (z < 0) ?
 	    alter_color(color, -20, -20, -20) :
 	    color;
@@ -148,7 +218,6 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	if (WIDGET_FOCUSED(wid)) {
 		bcol = alter_color(bcol, 6, 6, 15);
 	}
-
 	/* Background */
 	WIDGET_FILL(wid, xoffs, yoffs, w, h, bcol);
 
@@ -166,84 +235,14 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	    xoffs+w-1, yoffs+h-1, rcol);
 }
 
-static void
-box_3d_dark(void *p, int xoffs, int yoffs, int w, int h, int z,
-    Uint32 color, int ra, int ga, int ba)
-{
-	struct widget *wid = p;
-	Uint32 lcol, rcol, bcol;
-	
-	color = alter_color(color, ra, ga, ba);
-
-	lcol = (z < 0) ?
-	    alter_color(color, -60, -60, -60) :
-	    alter_color(color, 60, 60, 60);
-	
-	rcol = (z < 0) ?
-	    alter_color(color, 60, 60, 60) :
-	    alter_color(color, -60, -60, -60);
-
-	bcol = (z < 0) ?
-	    alter_color(color, -20, -20, -20) :
-	    color;
-
-	if (WIDGET_FOCUSED(wid)) {
-		bcol = alter_color(bcol, 6, 6, 15);
-	}
-
-	/* Background */
-	WIDGET_FILL(wid, xoffs, yoffs, w, h, bcol);
-
-	primitives.line(wid,			/* Top */
-	    xoffs, yoffs,
-	    xoffs+w-1, yoffs, lcol);
-	primitives.line(wid,			/* Left */
-	    xoffs, yoffs,
-	    xoffs, yoffs+h-1, lcol);
-	primitives.line(wid,			/* Bottom */
-	    xoffs, yoffs+h-1,
-	    xoffs+w-1, yoffs+h-1, rcol);
-	primitives.line(wid,			/* Right */
-	    xoffs+w-1, yoffs,
-	    xoffs+w-1, yoffs+h-1, rcol);
-}
-
-static void
-box_3d_dark1(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
-{
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -10, -10, -15);
-}
-
-static void
-box_3d_dark2(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
-{
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -15, -15, -20);
-}
-
-static void
-box_3d_dark3(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
-{
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -20, -20, -25);
-}
-
-static void
-box_3d_dark4(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
-{
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -60, -60, -70);
-}
-
-static void
-box_3d_dark5(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
-{
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -120, -120, -120);
-}
-
+/*
+ * Frame algorithm
+ */
 static void
 frame_rect(void *p, SDL_Rect *rd, Uint32 color)
 {
 	primitives.frame(p, rd->x, rd->y, rd->w, rd->h, color);
 }
-
 static void
 frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
@@ -263,6 +262,9 @@ frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	    xoffs+w-1, yoffs+h-1, color);
 }
 
+/*
+ * Circle algorithm
+ */
 static void
 circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
     Uint32 color)
@@ -301,87 +303,9 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 	SDL_UnlockSurface(view->v);
 }
 
-/* Surface must be locked. */
-static __inline__ void
-put_pixel1(Uint8 bpp, Uint8 *dst, Uint32 color)
-{
-	switch (bpp) {
-#ifdef VIEW_8BPP
-	case 1:
-		*dst = color;
-		break;
-#endif
-
-#ifdef VIEW_16BPP
-	case 2:
-		*(Uint16 *)dst = color;
-		break;
-#endif
-
-#ifdef VIEW_24BPP
-	case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		dst[0] = (color >> 16)	& 0xff;
-		dst[1] = (color >> 8)	& 0xff;
-		dst[2] = color		& 0xff;
-# else
-		dst[0] = color		& 0xff;
-		dst[1] = (color >> 8)	& 0xff;
-		dst[2] = (color >> 16)	& 0xff;
-# endif
-		break;
-#endif
-
-#ifdef VIEW_32BPP
-	case 4:
-		*(Uint32 *)dst = color;
-		break;
-#endif
-	}
-}
-
-/* Surface must be locked. */
-static __inline__ void
-put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
-{
-	switch (bpp) {
-#ifdef VIEW_8BPP
-	case 1:
-		*dst1 = color;
-		*dst2 = color;
-		break;
-#endif
-
-#ifdef VIEW_16BPP
-	case 2:
-		*(Uint16 *)dst1 = color;
-		*(Uint16 *)dst2 = color;
-		break;
-#endif
-
-#ifdef VIEW_24BPP
-	case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		dst1[0] = (color >> 16)	& 0xff;
-		dst1[1] = (color >> 8)	& 0xff;
-		dst1[2] = color		& 0xff;
-# else
-		dst1[0] = color		& 0xff;
-		dst1[1] = (color >> 8)	& 0xff;
-		dst1[2] = (color >> 16)	& 0xff;
-# endif
-		break;
-#endif
-
-#ifdef VIEW_32BPP
-	case 4:
-		*(Uint32 *)dst1 = color;
-		*(Uint32 *)dst2 = color;
-		break;
-#endif
-	}
-}
-
+/*
+ * Line algorithm
+ */
 static void
 line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
@@ -504,9 +428,30 @@ right_and_up_2:
 done:
 	SDL_UnlockSurface(view->v);
 }
+#ifdef HAVE_OPENGL
+static void
+line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+
+	glBegin(GL_LINES);
+	{
+		Uint8 r, g, b;
+
+		SDL_GetRGB(color, view->v->format, &r, &g, &b);
+		glColor3ub(r, g, b);
+		glVertex2s(x1, y1);
+		glVertex2s(x2, y2);
+	}
+	glEnd();
+}
+#endif /* HAVE_OPENGL */
 
 static void
-square_lines(void *p, int x, int y, int w, int h, Uint32 color)
+rectangle_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
@@ -531,6 +476,12 @@ square_lines(void *p, int x, int y, int w, int h, Uint32 color)
 	    x+w - 1, y + h - 1, color);
 }
 
+static void
+rectangle_filled(void *p, SDL_Rect *rd, Uint32 color)
+{
+	SDL_FillRect(view->v, rd, color);
+}
+
 /* Default primitives ops */
 struct primitive_ops primitives = {
 	box_3d,			/* box */
@@ -539,8 +490,19 @@ struct primitive_ops primitives = {
 	frame_rect,		/* frame (SDL_Rect) */
 	circle_bresenham,	/* circle */
 	line_bresenham,		/* line */
-	square_lines		/* square */
+	rectangle_outlined,	/* outlined rectangle */
+	rectangle_filled	/* filled rectangle */
 };
+
+void
+primitives_init(void)
+{
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		primitives.line = line_opengl;
+	}
+#endif
+}
 
 struct window *
 primitive_config_window(void)
@@ -562,16 +524,6 @@ primitive_config_window(void)
 		    "2d-style", box_2d);
 		tlist_insert_item_selected(tl, NULL,
 		    "3d-style", box_3d);
-		tlist_insert_item(tl, NULL,
-		    "Dark 3d-style #1", box_3d_dark1);
-		tlist_insert_item(tl, NULL,
-		    "Dark 3d-style #2", box_3d_dark2);
-		tlist_insert_item(tl, NULL,
-		    "Dark 3d-style #3", box_3d_dark3);
-		tlist_insert_item(tl, NULL,
-		    "Dark 3d-style #4", box_3d_dark4);
-		tlist_insert_item(tl, NULL,
-		    "Dark 3d-style #5", box_3d_dark5);
 		event_new(tl, "tlist-changed", apply, "%i", BOX);
 
 		lab = label_new(reg, 100, 5, "Frame:");
@@ -587,6 +539,10 @@ primitive_config_window(void)
 		tl = tlist_new(reg, 100, 40, 0);
 		tlist_insert_item_selected(tl, NULL,
 		    "Bresenham", line_bresenham);
+#ifdef HAVE_OPENGL
+		tlist_insert_item_selected(tl, NULL,
+		    "OpenGL", line_opengl);
+#endif
 		event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
 		lab = label_new(reg, 100, 5, "Circle:");

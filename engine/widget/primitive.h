@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.14 2002/12/21 10:25:34 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.15 2002/12/26 07:03:22 vedge Exp $	*/
 /*	Public domain	*/
 
 struct primitive_ops {
@@ -11,16 +11,13 @@ struct primitive_ops {
 	void	(*circle)(void *p, int xoffs, int yoffs, int w, int h,
 		         int radius, Uint32 color);
 	void	(*line)(void *p, int x1, int y1, int x2, int y2, Uint32 color);
-	void	(*square)(void *p, int x, int y, int w, int h, Uint32 color);
+	void	(*rect_outlined)(void *p, int x, int y, int w, int h,
+		                 Uint32 color);
+	void	(*rect_filled)(void *p, SDL_Rect *rd, Uint32 color);
 };
 
 extern struct primitive_ops primitives;
 
-enum primitive_seq {
-	PRIMITIVE_SEQ_MATERIALIZE,
-	PRIMITIVE_SEQ_DEMATERIALIZE
-};
-
 struct window	*primitive_config_window(void);
-void		 primitive_sequence(struct window *, enum primitive_seq);
+void		 primitives_init(void);
 
