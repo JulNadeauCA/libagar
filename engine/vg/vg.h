@@ -1,8 +1,10 @@
-/*	$Csoft: vg.h,v 1.5 2004/04/12 03:38:02 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.6 2004/04/17 00:43:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
+
+#define VG_LAYER_NAME_MAX 128
 
 #include <engine/map.h>
 
@@ -27,6 +29,7 @@ enum vg_alignment {
 #include <engine/vg/vg_point.h>
 #include <engine/vg/vg_line.h>
 #include <engine/vg/vg_circle.h>
+#include <engine/vg/vg_ellipse.h>
 #include <engine/vg/vg_text.h>
 
 #include "begin_code.h"
@@ -43,6 +46,7 @@ enum vg_element_type {
 	VG_QUAD_STRIP,		/* Series of connected four-sided polygons */
 	VG_POLYGON,		/* Simple, convex polygon */
 	VG_CIRCLE,		/* Single circle */
+	VG_ARC,			/* Single arc */
 	VG_ELLIPSE,		/* Single ellipse */
 	VG_BEZIER_CURVE,	/* Bezier curve */
 	VG_BEZIGON,		/* Bezigon */
@@ -54,8 +58,15 @@ struct vg_line_style {
 		VG_CONTINUOUS,
 		VG_STIPPLED
 	} style;
-	Uint16 stipple;		/* OpenGL-style */
-	Uint8 thickness;	/* Pixels */
+	enum {
+		VG_SQUARE,
+		VG_BEVELED,
+		VG_ROUNDED,
+		VG_MITERED
+	} endpoint_style;
+	Uint16 stipple;			/* OpenGL-style stipple pattern */
+	Uint8 thickness;		/* Pixels */
+	Uint8 miter_len;		/* Miter length for VG_MITERED */
 };
 
 struct vg_fill_style {
@@ -75,13 +86,29 @@ struct vg_vertex {
 	double x, y, z, w;
 };
 
+struct vg_rect {
+	double x, y;
+	double w, h;
+};
+
+struct vg_layer {
+	char name[VG_LAYER_NAME_MAX];
+	int visible;
+	int alpha;
+	Uint32 color;
+};
+
 struct vg_element {
 	enum vg_element_type type;
-	struct vg_vertex *vtx;				/* Vertices */
-	unsigned int	 nvtx;
-	Uint32 color;					/* Foreground color */
-	struct vg_line_style line;			/* Line style */
-	struct vg_fill_style fill;			/* Filling style */
+	int layer;
+	Uint32 color;
+
+	struct vg_rect	  bbox;
+	struct vg_vertex *vtx;
+	unsigned int     nvtx;
+
+	struct vg_line_style line;
+	struct vg_fill_style fill;
 	union {
 		struct {
 			double radius;
@@ -90,6 +117,10 @@ struct vg_element {
 			double radius;
 		} vg_circle;
 		struct {
+			double w, h;		/* Ellipse geometry */
+			double s, e;		/* Start/end angles (degrees) */
+		} vg_arc;
+		struct {
 			char text[VG_TEXT_MAX];
 			double angle;
 			enum vg_alignment align;
@@ -97,6 +128,7 @@ struct vg_element {
 	} vg_args;
 #define vg_point   vg_args.vg_point
 #define vg_circle  vg_args.vg_circle
+#define vg_arc	   vg_args.vg_arc
 #define vg_text	   vg_args.vg_text
 	TAILQ_ENTRY(vg_element) vges;
 };
@@ -109,8 +141,8 @@ struct vg {
 #define VG_VISGRID	0x08		/* Display the grid */
 
 	pthread_mutex_t lock;
-	double w, h;
-	double scale;
+	double w, h;			/* Bounding box */
+	double scale;			/* Scaling factor */
 	Uint32 fill_color;		/* Background color */
 	Uint32 grid_color;		/* Grid color */
 	double grid_gap;		/* Grid interval */
@@ -119,6 +151,10 @@ struct vg {
 	float		 *origin_radius;	/* Origin point radii */
 	Uint32		 *origin_color;		/* Origin point colors */
 	Uint32		 norigin;
+	
+	struct vg_layer *layers;		/* Layers */
+	unsigned int	nlayers;
+	int		 cur_layer;		/* Layer selected for edition */
 	
 	struct object *pobj;
 	SDL_Surface *su;		/* Raster surface */
@@ -129,7 +165,8 @@ struct vg {
 	TAILQ_HEAD(,vg_element) vges;
 };
 
-#define VG_PX(vg,v) ((int)((v)*(vg)->scale*TILESZ))
+extern int vg_cos_tbl[];
+extern int vg_sin_tbl[];
 
 __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
@@ -140,6 +177,7 @@ void		 vg_clear(struct vg *);
 void		 vg_rasterize(struct vg *);
 __inline__ void	 vg_regen_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
+
 __inline__ void	 vg_vcoords2(struct vg *, int, int, int, int, double *,
                              double *);
 __inline__ void	 vg_avcoords2(struct vg *, int, int, int, int, double *,
@@ -147,19 +185,25 @@ __inline__ void	 vg_avcoords2(struct vg *, int, int, int, int, double *,
 __inline__ void  vg_rcoords2(struct vg *, double, double, int *, int *);
 __inline__ void	 vg_arcoords2(struct vg *, double, double, int *, int *);
 __inline__ void  vg_rlength(struct vg *, double, int *);
+int		 vg_near_vertex2(struct vg *, const struct vg_vertex *,
+		                 double, double, double);
+void		 vg_pop_vertex(struct vg *);
+
+struct vg_layer *vg_push_layer(struct vg *, const char *);
+__inline__ void	 vg_pop_layer(struct vg *);
 
 struct vg_element *vg_begin(struct vg *, enum vg_element_type);
-
-struct vg_vertex *vg_vertex2(struct vg *, double, double);
-struct vg_vertex *vg_vertex3(struct vg *, double, double, double);
-struct vg_vertex *vg_vertex4(struct vg *, double, double, double, double);
-void		  vg_vertex_array(struct vg *, const struct vg_vertex *,
-		                  unsigned int);
-int		  vg_near_vertex2(struct vg *, const struct vg_vertex *,
-		                  double, double, double);
-
-void		  vg_undo_element(struct vg *, struct vg_element *);
-void		  vg_pop_vertex(struct vg *);
+void		   vg_undo_element(struct vg *, struct vg_element *);
+ 
+__inline__ void	   vg_layer(struct vg *, int);
+__inline__ void	   vg_color(struct vg *, Uint32);
+__inline__ void	   vg_color3(struct vg *, int, int, int);
+__inline__ void	   vg_color4(struct vg *, int, int, int, int);
+struct vg_vertex  *vg_vertex2(struct vg *, double, double);
+struct vg_vertex  *vg_vertex3(struct vg *, double, double, double);
+struct vg_vertex  *vg_vertex4(struct vg *, double, double, double, double);
+void		   vg_vertex_array(struct vg *, const struct vg_vertex *,
+		                   unsigned int);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.5 2004/04/12 03:38:02 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.6 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -40,7 +40,8 @@ static const struct {
 	{ VG_LINE_STRIP,	vg_draw_line_strip },
 	{ VG_LINE_LOOP,		vg_draw_line_loop },
 	{ VG_POINTS,		vg_draw_points },
-	{ VG_CIRCLE,		vg_draw_circle }
+	{ VG_CIRCLE,		vg_draw_circle },
+	{ VG_ELLIPSE,		vg_draw_ellipse }
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
@@ -73,25 +74,32 @@ vg_init(struct vg *vg, int flags)
 	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vfmt, 128, 128, 128);
 	vg->grid_gap = 0.5;
-	vg->origin = Malloc(sizeof(struct vg_vertex)*2, M_VG);
-	vg->origin_radius = Malloc(sizeof(float)*2, M_VG);
-	vg->origin_color = Malloc(sizeof(Uint32)*2, M_VG);
+	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
+	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
+	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS, M_VG);
 	vg->pobj = NULL;
 	vg->map = NULL;
+	vg->layers = Malloc(sizeof(struct vg_layer), M_VG);
+	vg->nlayers = 1;
+	vg->cur_layer = 0;
 	TAILQ_INIT(&vg->vges);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
 		vg->origin[i].y = 0;
 		vg->origin[i].z = 0;
 		vg->origin[i].w = 1.0;
+		vg->origin_radius[i] = 0.0625;
+		vg->origin_color[i] = SDL_MapRGB(vfmt, 0, 0, 180);
 	}
 	vg->origin_radius[0] = 0.25;
 	vg->origin_radius[1] = 0.125;
+	vg->origin_radius[2] = 0.0625;
 	vg->origin_color[0] = SDL_MapRGB(vfmt, 0, 200, 0);
 	vg->origin_color[1] = SDL_MapRGB(vfmt, 0, 150, 0);
-	vg->norigin = 2;
+	vg->origin_color[2] = SDL_MapRGB(vfmt, 0, 50, 150);
+	vg->norigin = VG_NORIGINS;
 }
 
 void
@@ -109,6 +117,7 @@ vg_destroy(struct vg *vg)
 		gfx_destroy(ob->gfx);
 		ob->gfx = NULL;
 	}
+	Free(vg->layers, M_VG);
 
 	for (vge = TAILQ_FIRST(&vg->vges);
 	     vge != TAILQ_END(&vg->vges);
@@ -228,6 +237,7 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
+	vge->layer = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->line.style = VG_CONTINUOUS;
@@ -238,6 +248,10 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	vge->fill.pat.gfx_offs = 0;
 	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
 	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
+	vge->bbox.x = 0;
+	vge->bbox.y = 0;
+	vge->bbox.w = 0;
+	vge->bbox.h = 0;
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
 	switch (eltype) {
@@ -246,6 +260,13 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 		break;
 	case VG_CIRCLE:
 		vge->vg_circle.radius = 0.025;
+		break;
+	case VG_ARC:
+	case VG_ELLIPSE:
+		vge->vg_arc.w = 1;
+		vge->vg_arc.h = 1;
+		vge->vg_arc.s = 0;
+		vge->vg_arc.e = 360;
 		break;
 	case VG_TEXT:
 		vge->vg_text.text[0] = '\0';
@@ -421,4 +442,60 @@ vg_near_vertex2(struct vg *vg, const struct vg_vertex *vtx, double x, double y,
 {
 	return (x > vtx->x-fudge && x < vtx->x+fudge &&
 	        y > vtx->y-fudge && y < vtx->y+fudge);
+}
+
+void
+vg_layer(struct vg *vg, int layer)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	vge->layer = layer;
+}
+
+void
+vg_color(struct vg *vg, Uint32 color)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	vge->color = color;
+}
+
+void
+vg_color3(struct vg *vg, int r, int g, int b)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	vge->color = SDL_MapRGB(vfmt, r, g, b);
+}
+
+void
+vg_color4(struct vg *vg, int r, int g, int b, int a)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	vge->color = SDL_MapRGBA(vfmt, r, g, b, a);
+}
+
+struct vg_layer *
+vg_push_layer(struct vg *vg, const char *name)
+{
+	struct vg_layer *vgl;
+
+	vg->layers = Realloc(vg->layers, (vg->nlayers+1) *
+	                                 sizeof(struct vg_layer), M_VG);
+	vgl = &vg->layers[vg->nlayers];
+	vg->nlayers++;
+
+	strlcpy(vgl->name, name, sizeof(vgl->name));
+	vgl->visible = 1;
+	vgl->alpha = 255;
+	vgl->color = SDL_MapRGB(vfmt, 255, 255, 255);
+	return (vgl);
+}
+
+void
+vg_pop_layer(struct vg *vg)
+{
+	if (--vg->nlayers < 1)
+		vg->nlayers = 1;
 }

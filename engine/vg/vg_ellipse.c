@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.3 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.1 2004/04/19 02:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -58,7 +58,6 @@ vg_draw_ellipse(struct vg *vg, struct vg_element *vge)
 	vg_rlength(vg, vge->vg_arc.h, &h);
 	vg_rlength(vg, vge->vg_arc.s, &s);
 	vg_rlength(vg, vge->vg_arc.e, &e);
-
 	vg_arc_primitive(vg, x, y, w, h, s, e, vge->color);
 }
 
