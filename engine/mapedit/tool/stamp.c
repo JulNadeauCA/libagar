@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.14 2002/11/22 05:41:42 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.15 2002/11/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -149,6 +149,6 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		break;
 	}
 
-	n->flags = med->node.flags &= ~(NODE_ORIGIN|NODE_ANIM);
+	n->flags = med->node.flags &= ~NODE_ORIGIN;
 }
 

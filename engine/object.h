@@ -1,11 +1,11 @@
-/*	$Csoft: object.h,v 1.57 2002/11/28 01:05:33 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.58 2002/11/30 02:09:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
-#include <engine/media.h>
 #include <engine/prop.h>
+#include <engine/media/art.h>
 
 struct map;
 struct noderef;
@@ -42,9 +42,10 @@ struct object {
 		OBJECT_ZOMBIE		/* Detached */
 	} state;
 
-	struct media_art	*art;	/* Static sprites */
-	struct media_audio	*audio;	/* Static samples */
-
+	struct art	*art;		/* Static sprites */
+#if 0
+	struct audio	*audio;		/* Samples */
+#endif
 	/*
 	 * Read-write
 	 */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.33 2002/11/17 23:13:58 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.34 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -30,7 +30,6 @@
 #include <engine/physics.h>
 #include <engine/map.h>
 #include <engine/view.h>
-#include <engine/anim.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -70,8 +69,6 @@ static void	mapview_mousebuttonup(int, union evarg *);
 static void	mapview_keyup(int, union evarg *);
 static void	mapview_keydown(int, union evarg *);
 
-static __inline__ void	draw_node_scaled(struct mapview *, SDL_Surface *,
-			    int, int);
 static __inline__ void	draw_node_props(struct mapview *, struct node *,
 			    int, int);
 
@@ -102,9 +99,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->my = m->defy;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
-	mv->tilew = TILEW;
-	mv->tileh = TILEH;
-	mv->zoom = 100;
 	mv->prop_style = -1; 
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
@@ -127,31 +121,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
-}
-
-static __inline__ void
-draw_node_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
-{
-	int x, y;
-	Uint32 col = 0;
-	Uint8 *src, r1, g1, b1, a1;
-
-	SDL_LockSurface(view->v);
-	for (y = 0; y < mv->tileh && ry+y < WIDGET(mv)->h; y++) {
-		for (x = 0; x < mv->tilew && rx+x < WIDGET(mv)->w; x++) {
-			src = (Uint8 *)s->pixels +
-			    (y*TILEH/mv->tileh)*s->pitch +
-			    (x*TILEW/mv->tilew)*s->format->BytesPerPixel;
-
-			SDL_GetRGBA(*(Uint32 *)src, s->format,
-			    &r1, &g1, &b1, &a1);
-			col = SDL_MapRGB(view->v->format, r1, g1, b1);
-			if (a1 > 200) {
-				WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
-			}
-		}
-	}
-	SDL_UnlockSurface(view->v);
 }
 
 static __inline__ void
@@ -203,7 +172,6 @@ mapview_draw(void *p)
 	struct noderef *nref;
 	struct mapedit *med = mv->med;
 	int mx, my, rx, ry;
-	int nsprites;
 	SDL_Rect clip;
 
 	clip.x = WIDGET_ABSX(mv);
@@ -212,13 +180,15 @@ mapview_draw(void *p)
 	clip.h = WIDGET(mv)->h;
 	SDL_SetClipRect(view->v, &clip);
 
+	/* XXX soft scroll */
+
 	for (my = mv->my, ry = 0;
 	     my-mv->my < mv->mh && my < m->maph;
-	     my++, ry += mv->tileh) {
+	     my++, ry += mv->map->tileh) {
 		
 		for (mx = mv->mx, rx = 0;
 	     	     mx-mv->mx < mv->mw && mx < m->mapw;
-		     mx++, rx += mv->tilew) {
+		     mx++, rx += mv->map->tilew) {
 
 			node = &m->map[my][mx];
 #ifdef DEBUG
@@ -227,99 +197,19 @@ mapview_draw(void *p)
 				    mx, my, node->x, node->y);
 			}
 #endif
-			nsprites = 0;
-			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-				/* XXX style */
-				if (nref->flags & MAPREF_SPRITE) {
-					nsprites++;
+			node_draw(m, node,
+			    WIDGET_ABSX(mv)+rx, WIDGET_ABSY(mv)+ry);
 
-					if (mv->zoom != 100) {
-						draw_node_scaled(mv,
-						    SPRITE(nref->pobj,
-						    nref->offs), rx, ry);
-					} else {
-						WIDGET_DRAW(mv,
-						    SPRITE(nref->pobj,
-						    nref->offs), rx, ry);
-					}
-				} else if (nref->flags & MAPREF_ANIM) {
-					SDL_Surface *src;
-					struct anim *anim;
-					int i, j, frame;
-					Uint32 t;
-					
-					nsprites++;
-
-					anim = ANIM(nref->pobj, nref->offs);
-					if (anim == NULL) {
-						fatal("%s:%d invalid\n",
-						    nref->pobj->name,
-						    nref->offs);
-					}
-					frame = anim->frame;
-					
-					if ((nref->flags & MAPREF_ANIM) == 0) {
-						continue;
-					}
-
-					if (nref->flags & MAPREF_ANIM_DELTA &&
-					   (nref->flags & MAPREF_ANIM_STATIC)
-					    == 0) {
-						t = SDL_GetTicks();
-						if ((t - anim->delta) >=
-						    anim->delay) {
-							anim->delta = t;
-							if (++anim->frame >
-							    anim->nframes - 1) {
-								/* Loop */
-								anim->frame = 0;
-							}
-						}
-					} else if (nref->flags &
-					    MAPREF_ANIM_INDEPENDENT) {
-						frame = nref->frame;
-
-						if ((nref->flags &
-						    MAPREF_ANIM_STATIC) == 0) {
-							if ((anim->delay < 1) ||
-							    (++nref->fdelta >
-							       anim->delay+1)) {
-								nref->fdelta =
-								    0;
-								if (
-								++nref->frame >
-								anim->nframes -
-								1) {
-									nref->
-									frame =
-									0;
-								}
-							}
-						}
-					}
-
-					for (i = 0, j = anim->nparts - 1;
-					    i < anim->nparts; i++, j--) {
-						src = anim->frames[j][frame];
-						if (mv->zoom != 100) {
-							draw_node_scaled(mv,
-							    src,
-							    rx + nref->xoffs,
-							    ry + nref->yoffs -
-							    (i * mv->tileh));
-						} else {
-							WIDGET_DRAW(mv, src,
-							    rx + nref->xoffs,
-							    ry + nref->yoffs -
-							    (i * mv->tileh));
-						}
+			/* Draw node properties. */
+			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
+				TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+					if (nref->flags & MAPREF_SPRITE ||
+					    nref->flags & MAPREF_ANIM) {
+						draw_node_props(mv, node,
+						    rx, ry);
+						break;
 					}
 				}
-			}
-			
-			if (nsprites > 0 && mv->flags & MAPVIEW_PROPS &&
-			    mv->zoom >= 60) {
-				draw_node_props(mv, node, rx, ry);
 			}
 
 			if (mv->flags & MAPVIEW_GRID) {
@@ -329,6 +219,8 @@ mapview_draw(void *p)
 				    rx, WIDGET(mv)->h-1,
 				    WIDGET_COLOR(mv, GRID_COLOR));
 			}
+
+			/* Draw the cursor for the current tool. */
 			if (mx-mv->mx == mv->mouse.x &&
 			    my-mv->my == mv->mouse.y &&
 			    mv->mouse.x < mv->mw &&
@@ -342,23 +234,24 @@ mapview_draw(void *p)
 				    TOOL_OPS(curtool)->tool_cursor != NULL) {
 					TOOL_OPS(curtool)->tool_cursor(curtool,
 					    mv, mx, my);
-				} else if (mv->tilew > 6 && mv->tileh > 6) {
+				} else if (mv->map->tilew > 6 &&
+				    mv->map->tileh > 6) {
 					/* XXX cosmetic */
 					primitives.square(mv,
 					    rx+1, ry+1,
-					    mv->tilew-1, mv->tileh-1,
+					    mv->map->tilew-1, mv->map->tileh-1,
 					    WIDGET_COLOR(mv, CURSOR_COLOR));
 					primitives.square(mv,
 					    rx+2, ry+2,
-					    mv->tilew-3, mv->tileh-3,
+					    mv->map->tilew-3, mv->map->tileh-3,
 					    WIDGET_COLOR(mv, CURSOR_COLOR));
 				}
-
 			}
-				
+
+			/* Draw the tile map selection cursor. */
 			if ((mv->flags & MAPVIEW_TILEMAP) &&
 			    !TAILQ_EMPTY(&node->nrefsh) &&
-			    mv->tilew > 6 && mv->tileh > 6) {
+			    mv->map->tilew > 6 && mv->map->tileh > 6) {
 				struct noderef *nref;
 
 				nref = TAILQ_FIRST(&node->nrefsh);
@@ -368,12 +261,12 @@ mapview_draw(void *p)
 					/* XXX cosmetic */
 					primitives.square(mv,
 					    rx+1, ry+1,
-					    mv->tilew-1, mv->tileh-1,
+					    mv->map->tilew-1, mv->map->tileh-1,
 					    WIDGET_COLOR(mv,
 					        TILE_SELECTION_COLOR));
 					primitives.square(mv,
 					    rx+2, ry+2,
-					    mv->tilew-3, mv->tileh-3,
+					    mv->map->tilew-3, mv->map->tileh-3,
 					    WIDGET_COLOR(mv,
 					        TILE_SELECTION_COLOR));
 				}
@@ -386,7 +279,8 @@ mapview_draw(void *p)
 		}
 	}
 	SDL_SetClipRect(view->v, NULL);
-	
+
+	/* Highlight if the widget is focused. */
 	if (WIDGET_FOCUSED(mv) && VIEW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.square(mv,
 		    0, 0,
@@ -398,6 +292,7 @@ mapview_draw(void *p)
 static void
 mapview_scroll(struct mapview *mv, int dir)
 {
+	/* XXX soft scroll */
 	switch (dir) {
 	case DIR_LEFT:
 		if (mv->flags & MAPVIEW_TILEMAP) {	/* XXX hack */
@@ -438,24 +333,21 @@ mapview_caption(struct mapview *mv)
 	} else {
 		if ((mv->flags & MAPVIEW_EDIT) == 0) {
 			window_set_caption(win, "@ %s (%d%%)",
-			    OBJECT(mv->map)->name, mv->zoom);
+			    OBJECT(mv->map)->name, mv->map->zoom);
 		} else {
 			window_set_caption(win, "%s (%d%%)",
-			    OBJECT(mv->map)->name, mv->zoom);
+			    OBJECT(mv->map)->name, mv->map->zoom);
 		}
 	}
 }
 
 void
-mapview_zoom(struct mapview *mv, int fac)
+mapview_zoom(struct mapview *mv, int zoom)
 {
-	mv->zoom = fac > 4 ? fac : 4;
+	map_set_zoom(mv->map, zoom);
 
-	mv->tilew = mv->zoom*TILEW / 100;
-	mv->tileh = mv->zoom*TILEH / 100;
-
-	mv->mw = WIDGET(mv)->w/mv->tilew + 1;
-	mv->mh = WIDGET(mv)->h/mv->tileh + 1;
+	mv->mw = WIDGET(mv)->w/mv->map->tilew + 1;
+	mv->mh = WIDGET(mv)->h/mv->map->tileh + 1;
 
 	mapview_caption(mv);
 }
@@ -466,7 +358,7 @@ mapview_zoomin(Uint32 ival, void *p)
 	struct mapview *mv = p;
 	
 	/* XXX pref */
-	mapview_zoom(mv, mv->zoom + 2);
+	mapview_zoom(mv, mv->map->zoom + 2);
 	return (ival);
 }
 
@@ -476,7 +368,7 @@ mapview_zoomout(Uint32 ival, void *p)
 	struct mapview *mv = p;
 
 	/* XXX pref */
-	mapview_zoom(mv, mv->zoom - 2);
+	mapview_zoom(mv, mv->map->zoom - 2);
 	return (ival);
 }
 
@@ -494,8 +386,8 @@ mapview_mousemotion(int argc, union evarg *argv)
 		}
 	}
 
-	x /= mv->tilew;
-	y /= mv->tileh;
+	x /= mv->map->tilew;
+	y /= mv->map->tileh;
 
 	if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
 		SDL_ShowCursor(SDL_DISABLE);
@@ -566,8 +458,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	struct mapedit *med = mv->med;
 	int button = argv[1].i;
-	int x = argv[2].i / mv->tilew;
-	int y = argv[3].i / mv->tileh;
+	int x = argv[2].i / mv->map->tilew;
+	int y = argv[3].i / mv->map->tileh;
 	
 	WIDGET_FOCUS(mv);
 	if (button > 1) {
@@ -654,16 +546,13 @@ mapview_keydown(int argc, union evarg *argv)
 		switch (keysym) {
 		case SDLK_EQUALS:
 			/* XXX logarithmic curve */
-			zoomin_timer =
-			    SDL_AddTimer(60, mapview_zoomin, mv);
+			zoomin_timer = SDL_AddTimer(60, mapview_zoomin, mv);
 			if (zoomin_timer == NULL) {
-				warning("SDL_AddTimer: %s\n",
-				    SDL_GetError());
+				warning("SDL_AddTimer: %s\n", SDL_GetError());
 			}
 			break;
 		case SDLK_MINUS:
-			zoomout_timer =
-			    SDL_AddTimer(60, mapview_zoomout, mv);
+			zoomout_timer = SDL_AddTimer(60, mapview_zoomout, mv);
 			if (zoomout_timer == NULL) {
 				warning("SDL_AddTimer: %s\n",
 				    SDL_GetError());
@@ -685,18 +574,15 @@ mapview_scaled(int argc, union evarg *argv)
 	WIDGET(mv)->w = argv[1].i;
 	WIDGET(mv)->h = argv[2].i;
 
-	mapview_zoom(mv, mv->zoom);
+	mapview_zoom(mv, mv->map->zoom);
 }
 
 static void
 mapview_lostfocus(int argc, union evarg *argv)
 {
-	if (zoomin_timer != NULL) {
-		SDL_RemoveTimer(zoomin_timer);
-	}
-	if (zoomout_timer != NULL) {
-		SDL_RemoveTimer(zoomout_timer);
-	}
+	struct mapview *mv = argv[0].p;
+
+	mapview_stop_zoom(mv);
 }
 
 void
@@ -705,8 +591,8 @@ mapview_center(struct mapview *mv, int x, int y)
 	struct map *m = mv->map;
 	int nx, ny;
 
-	nx = x - (mv->mw / 2);
-	ny = y - (mv->mh / 2);
+	nx = x - mv->mw/2;
+	ny = y - mv->mh/2;
 	
 	if (nx < 0)
 		nx = 0;

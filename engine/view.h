@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.51 2002/11/26 01:38:28 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.52 2002/11/30 02:09:47 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -151,6 +151,22 @@ case 4:					\
 		_VIEW_PUTPIXEL_16(_view_dst, (c))			\
 		_VIEW_PUTPIXEL_24(_view_dst, (c))			\
 		_VIEW_PUTPIXEL_32(_view_dst, (c))			\
+	}								\
+} while (/*CONSTCOND*/0)
+
+#define VIEW_PUT_PIXEL_CLIPPED(s, vx, vy, c) do {			\
+	if ((vx) >= view->v->clip_rect.x &&				\
+	    (vx) <= view->v->clip_rect.x+view->v->clip_rect.w &&	\
+	    (vy) >= view->v->clip_rect.y &&				\
+	    (vy) <= view->v->clip_rect.y+view->v->clip_rect.h) {	\
+		Uint8 *_view_dst =_view_dst = (Uint8 *)(s)->pixels +	\
+		    (vy)*(s)->pitch + (vx)*(s)->format->BytesPerPixel;	\
+		switch ((s)->format->BytesPerPixel) {			\
+			_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
+			_VIEW_PUTPIXEL_16(_view_dst, (c))		\
+			_VIEW_PUTPIXEL_24(_view_dst, (c))		\
+			_VIEW_PUTPIXEL_32(_view_dst, (c))		\
+		}							\
 	}								\
 } while (/*CONSTCOND*/0)
 

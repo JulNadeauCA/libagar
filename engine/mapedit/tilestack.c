@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.12 2002/11/17 23:13:58 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.13 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -29,7 +29,6 @@
 
 #include <engine/map.h>
 #include <engine/view.h>
-#include <engine/anim.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -121,10 +120,10 @@ tilestack_draw(void *p)
 		if (nref->flags & MAPREF_SPRITE) {
 			WIDGET_DRAW(ts, SPRITE(nref->pobj, nref->offs), 0, y);
 		} else if (nref->flags & MAPREF_ANIM) {
-			struct anim *an;
+			struct art_anim *an;
 			
 			an = ANIM(nref->pobj, nref->offs);
-			WIDGET_DRAW(ts, an->frames[0][0], 0, y);
+			WIDGET_DRAW(ts, an->frames[0], 0, y);
 			
 			if (nref->flags & MAPREF_ANIM_DELTA) {
 				WIDGET_DRAW(ts, SPRITE(mv->med,
