@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.2 2002/01/30 17:47:43 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.3 2002/02/05 05:54:16 vedge Exp $	*/
 
 #include <pthread.h>
 
@@ -10,14 +10,15 @@
 #include <engine/queue.h>
 #include <engine/debug.h>
 
+#include <engine/event.h>
 #include <engine/anim.h>
 #include <engine/object.h>
 #include <engine/world.h>
-
 #include <engine/view.h>
 #include <engine/xcf.h>
+
+#include <engine/physics.h>
 #include <engine/map.h>
-#include <engine/event.h>
 #include <engine/char.h>
 
 #define ENGINE_VERSION	"0.1"
