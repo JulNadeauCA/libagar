@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.105 2002/11/29 23:59:55 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.106 2002/12/01 14:28:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,7 +65,6 @@ extern struct window *game_menu_win;
 #define DEBUG_ASYNC_EVENTS	0x800
 
 int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
-			DEBUG_MOUSEBUTTON_EV|DEBUG_JOY_EV|
 			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
 
