@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.56 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.57 2003/05/20 12:05:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -199,11 +199,30 @@ tlist_draw(void *p)
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
-		if (it->text != NULL)
+		if (it->text != NULL) {
 			textsu = text_render(NULL, -1,
 			    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
-		if (it->icon != NULL)
+		}
+
+		if (it->icon != NULL) {
 			widget_blit(tl, it->icon, x, y);
+		}
+		
+		if (it->haschilds) {
+			int ts = tl->item_h/2;
+			int ty = y + ts/2;
+
+			primitives.rect_outlined(tl,
+			    x+5, ty,
+			    ts, ts,
+			    WIDGET_COLOR(tl, LINE_COLOR));
+			
+			primitives.plus(tl,
+			    !it->vischilds,
+			    x+6, ty+1,
+			    ts-2, ts-2,
+			    WIDGET_COLOR(tl, LINE_COLOR));
+		}
 
 		x += tl->item_h + 4;
 		if (textsu != NULL) {
@@ -300,29 +319,31 @@ tlist_scroll(struct tlist *tl, int pos)
 	pthread_mutex_unlock(&tl->lock);
 }
 
-/* Clear the items on the list, save selections. */
+/* Clear the items on the list. */
 void
 tlist_clear_items(struct tlist *tl)
 {
 	struct tlist_item *it, *nit;
 	
 	pthread_mutex_lock(&tl->lock);
-	
-	/* Free the saved selection list. */
-	for (it = TAILQ_FIRST(&tl->selitems);
-	     it != TAILQ_END(&tl->selitems);
-	     it = nit) {
-		nit = TAILQ_NEXT(it, selitems);
-		tlist_free_item(it);
-	}
-	TAILQ_INIT(&tl->selitems);
 
-	/* Clear items, saving the selections. */
+	if (tl->flags & TLIST_POLL) {
+		/* Clear the saved selection list. */
+		for (it = TAILQ_FIRST(&tl->selitems);
+		     it != TAILQ_END(&tl->selitems);
+		     it = nit) {
+			nit = TAILQ_NEXT(it, selitems);
+			tlist_free_item(it);
+		}
+		TAILQ_INIT(&tl->selitems);
+	}
+
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		if (it->selected) {
+		if ((tl->flags & TLIST_POLL) &&
+		    (it->selected || it->haschilds)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
 			tlist_free_item(it);
@@ -343,7 +364,7 @@ tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
 	return (it1->p1 == it2->p1);
 }
 
-/* Restore previous item selections. */
+/* Restore previous item selection state. */
 void
 tlist_restore_selections(struct tlist *tl)
 {
@@ -351,11 +372,32 @@ tlist_restore_selections(struct tlist *tl)
 
 	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
 		TAILQ_FOREACH(cit, &tl->items, items) {
-			if (tlist_item_compare(sit, cit))
-				cit->selected++;
+			if (tlist_item_compare(sit, cit)) {
+				cit->selected = sit->selected;
+				cit->vischilds = sit->vischilds;
+			}
 		}
 	}
 	tlist_adjust_scrollbar(tl);
+}
+
+/*
+ * See if the child items of an item are supposed to be visible; called from
+ * polling routines when displaying trees.
+ */
+int
+tlist_visible_childs(struct tlist *tl, struct tlist_item *cit)
+{
+	struct tlist_item *sit;
+
+	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
+		if (tlist_item_compare(sit, cit))
+			break;
+	}
+	if (sit == NULL) 
+		return (0);				/* Default */
+
+	return (sit->vischilds);
 }
 
 static struct tlist_item *
@@ -366,6 +408,8 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	it = Malloc(sizeof(struct tlist_item));
 	it->icon = NULL;
 	it->selected = 0;
+	it->vischilds = 0;
+	it->haschilds = 0;
 
 	strlcpy(it->text, text, sizeof(it->text));
 	it->text_len = strlen(text);
@@ -519,7 +563,13 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
 
-	if (tl->flags & TLIST_MULTI) {			  /* Multi selections */
+	if (ti->haschilds &&
+	    x >= 5 && x <= 5+tl->item_h/2) {		/* Tree visible flag */
+		ti->vischilds = !ti->vischilds;
+		goto out;
+	}
+
+	if (tl->flags & TLIST_MULTI) {			/* Multi selections */
 		if (SDL_GetModState() & KMOD_SHIFT) {
 			struct tlist_item *oitem;
 			int oind = -1, i = 0, nitems = 0;
