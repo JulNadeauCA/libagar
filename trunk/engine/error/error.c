@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.32 2003/06/14 03:36:26 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.1 2003/06/21 02:45:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ int		 engine_debug = 1;	/* Default debug level */
 void
 error_init(void)
 {
-#ifdef THREAD
+#ifdef THREADS
 	pthread_key_create(&error_key, NULL);
 #else
 	error_key = NULL;

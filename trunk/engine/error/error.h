@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.22 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.1 2003/06/21 02:45:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
@@ -25,7 +25,8 @@
 #ifdef __GNUC__
 #define fatal(fmt, args...)						\
 	do {								\
-		fprintf(stderr, "%s: " fmt "\n", __FUNCTION__ , ##args); \
+		fprintf(stderr, "%s: " fmt, __FUNCTION__ , ##args);	\
+		fprintf(stderr, "\n");					\
 		abort();						\
 	} while (0)
 #else
@@ -72,16 +73,21 @@ __END_DECLS
 #ifdef DEBUG
 
 #ifdef __GNUC__
+
 # define dprintf(fmt, args...) \
-	printf("%s: " fmt, __FUNCTION__ , ##args);
+	printf("%s: " fmt, __FUNCTION__ , ##args)
+
 # define deprintf(fmt, args...) \
-	fprintf(stderr, fmt, ##args);
+	fprintf(stderr, fmt, ##args)
+
 # define debug(mask, fmt, args...)				\
 	if (engine_debug & (mask)) 				\
 		printf("%s: " fmt , __FUNCTION__ , ##args)
+
 # define debug_n(mask, fmt, args...)				\
 	if (engine_debug & (mask))				\
 		fprintf(stderr, fmt, ##args)
+
 #else
 # define dprintf	error_dprintf
 # define deprintf	error_dprintf
