@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.22 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.23 2002/09/12 09:33:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -166,8 +166,6 @@ checkbox_event(int argc, union evarg *argv)
 	}
 
 	if (pushed) {
-		WIDGET(cbox)->win->redraw++;
-
 		if (cbox->flags & CHECKBOX_PRESSED) {
 			cbox->flags &= ~(CHECKBOX_PRESSED);
 		} else {

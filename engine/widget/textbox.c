@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.27 2002/09/12 09:33:25 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.28 2002/11/10 01:38:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -308,15 +308,16 @@ textbox_mouse(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case WINDOW_MOUSEBUTTONDOWN: {
-			int button = argv[2].i, x = argv[3].i;
+			int button = argv[2].i;
+			int x = argv[3].i;
 	
 			WIDGET(tbox)->win->focus = WIDGET(tbox);
-			WIDGET(tbox)->win->redraw++;
 			tbox->newx = x;
 		}
 		break;
 	case WINDOW_MOUSEMOTION: {
-			int x = argv[2].i, y = argv[3].i;
+			int x = argv[2].i;
+			int y = argv[3].i;
 			Uint8 ms;
 
 			ms = SDL_GetMouseState(NULL, NULL);
