@@ -1,8 +1,4 @@
-/*	$Csoft: map.h,v 1.25 2002/03/05 18:53:57 vedge Exp $	*/
-
-#define MAP_MAGIC	"agar map  "
-#define MAP_VERMAJ	1
-#define MAP_VERMIN	10
+/*	$Csoft: map.h,v 1.26 2002/03/12 14:00:07 vedge Exp $	*/
 
 struct noderef {
 	struct	object *pobj;	/* Object pointer */
