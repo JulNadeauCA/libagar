@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.15 2002/07/21 10:58:18 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.16 2002/08/19 05:29:49 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -33,7 +33,6 @@
 #include <ctype.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 
 #include "text.h"
 #include "widget.h"
@@ -70,20 +69,20 @@ insert_char(struct textbox *tbox, char c)
 	int end;
 	char *s;
 	
-	end = strlen(tbox->text);
-	tbox->text = erealloc(tbox->text, end + 2);
-	if (tbox->textpos == end) {
-		tbox->text[end] = c;
+	end = strlen(tbox->text.s);
+	tbox->text.s = erealloc(tbox->text.s, end + 2);
+	if (tbox->text.pos == end) {
+		tbox->text.s[end] = c;
 	} else {
-		s = tbox->text + tbox->textpos;
-		memcpy(s + 1, s, end - tbox->textpos);
-		tbox->text[tbox->textpos] = c;
+		s = tbox->text.s + tbox->text.pos;
+		memcpy(s + 1, s, end - tbox->text.pos);
+		tbox->text.s[tbox->text.pos] = c;
 	}
-	tbox->text[end + 1] = '\0';
-	tbox->textpos++;
+	tbox->text.s[end + 1] = '\0';
+	tbox->text.pos++;
 
-	event_post(tbox, "textbox-changed", "%s", tbox->text);
-	return (&tbox->text[end]);
+	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
+	return (&tbox->text.s[end]);
 }
 
 static void
@@ -119,26 +118,26 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	int textlen;
 
-	textlen = strlen(tbox->text);
+	textlen = strlen(tbox->text.s);
 
-	if (tbox->textpos == textlen) {
-		tbox->text[--tbox->textpos] = '\0';
-	} else if (tbox->textpos > 0) {
+	if (tbox->text.pos == textlen) {
+		tbox->text.s[--tbox->text.pos] = '\0';
+	} else if (tbox->text.pos > 0) {
 		int i;
 
-		for (i = tbox->textpos-1; i < textlen; i++) {
-			tbox->text[i] =
-			tbox->text[i+1];
+		for (i = tbox->text.pos-1; i < textlen; i++) {
+			tbox->text.s[i] =
+			tbox->text.s[i+1];
 		}
-		tbox->textpos--;
+		tbox->text.pos--;
 	}
 	
-	if (tbox->textpos == tbox->textoffs) {
-		tbox->textoffs -= 4;
-		if (tbox->textoffs < 1)
-			tbox->textoffs = 0;
+	if (tbox->text.pos == tbox->text.offs) {
+		tbox->text.offs -= 4;
+		if (tbox->text.offs < 1)
+			tbox->text.offs = 0;
 	}
-	event_post(tbox, "textbox-changed", "%s", tbox->text);
+	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
 }
 
 static void
@@ -146,60 +145,60 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	int textlen;
 
-	textlen = strlen(tbox->text);
+	textlen = strlen(tbox->text.s);
 
-	if (tbox->textpos == textlen) {
-		tbox->text[--tbox->textpos] = '\0';
-	} else if (tbox->textpos > 0) {
+	if (tbox->text.pos == textlen) {
+		tbox->text.s[--tbox->text.pos] = '\0';
+	} else if (tbox->text.pos > 0) {
 		int i;
 
-		for (i = tbox->textpos; i < textlen; i++) {
-			tbox->text[i] = tbox->text[i + 1];
+		for (i = tbox->text.pos; i < textlen; i++) {
+			tbox->text.s[i] = tbox->text.s[i + 1];
 		}
 	}
-	event_post(tbox, "textbox-changed", "%s", tbox->text);
+	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
 }
 
 static void
 key_home(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	tbox->textpos = 0;
-	if (tbox->textoffs > 0) {
-		tbox->textoffs = 0;
+	tbox->text.pos = 0;
+	if (tbox->text.offs > 0) {
+		tbox->text.offs = 0;
 	}
 }
 
 static void
 key_end(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	tbox->textpos = strlen(tbox->text);
+	tbox->text.pos = strlen(tbox->text.s);
 
 	/* XXX botch */
-	tbox->textoffs = 0;
+	tbox->text.offs = 0;
 }
 
 static void
 key_kill(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	tbox->text[tbox->textpos] = '\0';
+	tbox->text.s[tbox->text.pos] = '\0';
 }
 
 static void
 key_left(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	if (--tbox->textpos < 1) {
-		tbox->textpos = 0;
+	if (--tbox->text.pos < 1) {
+		tbox->text.pos = 0;
 	}
-	if (tbox->textpos == tbox->textoffs) {
-		tbox->textoffs--;
+	if (tbox->text.pos == tbox->text.offs) {
+		tbox->text.offs--;
 	}
 }
 
 static void
 key_right(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	if (tbox->textpos < strlen(tbox->text)) {
-		tbox->textpos++;
+	if (tbox->text.pos < strlen(tbox->text.s)) {
+		tbox->text.pos++;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.23 2002/09/05 03:51:32 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.24 2002/09/06 01:28:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,11 +32,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
-#include <engine/version.h>
 
 #include <engine/compat/vasprintf.h>
 
@@ -104,12 +101,13 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	SDL_FreeSurface(s);
 
 	tbox->flags = flags;
-	tbox->text = strdup("");
 	tbox->label = label != NULL ? strdup(label) : NULL;
 	tbox->label_s = text_render(NULL, -1,
 	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
-	tbox->textpos = -1;
-	tbox->textoffs = 0;
+	tbox->text.s = strdup("");
+	tbox->text.pos = -1;
+	tbox->text.offs = 0;
+	pthread_mutex_init(&tbox->text.lock, NULL);
 	tbox->newx = -1;
 
 	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
@@ -140,10 +138,11 @@ textbox_hidden(int argc, union evarg *argv)
 void
 textbox_destroy(void *ob)
 {
-	struct textbox *b = ob;
+	struct textbox *tb = ob;
 
-	free(b->text);
-	free(b->label);
+	free(tb->label);
+	free(tb->text.s);
+	pthread_mutex_destroy(&tb->text.lock);
 }
 
 void
@@ -175,42 +174,42 @@ textbox_draw(void *p)
 	 */
 	x += tbox->xmargin;
 
-	tw = strlen(tbox->text);
-	if (tbox->textpos < 0) {
-		tbox->textpos = tw;
+	pthread_mutex_lock(&tbox->text.lock);
+
+	tw = strlen(tbox->text.s);
+	if (tbox->text.pos < 0) {
+		tbox->text.pos = tw;
 	}
 
 	if (tbox->newx >= 0 && tbox->newx <= tbox->label_s->w) {
-		dprintf("begin\n");
-		tbox->textpos = tbox->textoffs;
+		tbox->text.pos = tbox->text.offs;
 		tbox->newx = -1;
 	}
 
-	for (i = tbox->textoffs, lx = -1; i < (tw + 1); i++) {
+	for (i = tbox->text.offs, lx = -1; i < (tw + 1); i++) {
 		if (x >= WIDGET(tbox)->w) {
-			if (tbox->textpos >= tw-4) {
-				tbox->textoffs++;	/* Scroll */
+			if (tbox->text.pos >= tw-4) {
+				tbox->text.offs++;	/* Scroll */
 			}
-			return;
+			goto out;
 		}
 
 		/* Effect mouse cursor moves. */
 		if (tbox->newx >= 0) {
-			dprintf("newx %d lx %d x %d\n", tbox->newx, lx, x);
 			if (tbox->newx >= lx && tbox->newx < x) {
-				tbox->textpos = i - 1;
+				tbox->text.pos = i - 1;
 				tbox->newx = -1;
 			}
 		}
 		lx = x;
 
 		/* Draw the characters. */
-		if (i < tw && tbox->text[i] != '\0' &&
+		if (i < tw && tbox->text.s[i] != '\0' &&
 		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_Surface *text_s;
 			char c, str[2];
 
-			c = tbox->text[i];
+			c = tbox->text.s[i];
 
 			if (c >= (char)KEYCODES_CACHE_START &&
 			    c <= (char)KEYCODES_CACHE_END &&
@@ -237,7 +236,7 @@ textbox_draw(void *p)
 		}
 	
 		/* Draw the text cursor. */
-		if (i == tbox->textpos && WIDGET_FOCUSED(tbox) &&
+		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox) &&
 		    x < WIDGET(tbox)->w - tbox->xmargin*4) {
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
 			for (j = 1; j < label_s->h; j++) {
@@ -251,9 +250,11 @@ textbox_draw(void *p)
 	}
 
 	if (tbox->newx >= 0) {
-		tbox->textpos = i - 1;
+		tbox->text.pos = i - 1;
 		tbox->newx = -1;
 	}
+out:
+	pthread_mutex_unlock(&tbox->text.lock);
 }
 	
 static void
@@ -263,12 +264,14 @@ textbox_key(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 	int textlen, i;
-	
-	textlen = strlen(tbox->text);
+
+	pthread_mutex_lock(&tbox->text.lock);
+
+	textlen = strlen(tbox->text.s);
 
 	if (keysym == SDLK_RETURN) {
-		event_post(tbox, "textbox-return", "%s", tbox->text);
-		return;
+		event_post(tbox, "textbox-return", "%s", tbox->text.s);
+		goto out;
 	}
 
 	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
@@ -281,9 +284,11 @@ textbox_key(int argc, union evarg *argv)
 		if (kcode->modmask == 0 || keymod & kcode->modmask) {
 			keycodes[i].callback(tbox, (SDLKey)keysym,
 			    keymod, keycodes[i].arg);
-			return;
+			goto out;
 		}
 	}
+out:
+	pthread_mutex_unlock(&tbox->text.lock);
 }
 
 static void
@@ -315,7 +320,6 @@ textbox_mouse(int argc, union evarg *argv)
 	}
 }
 
-/* Window must be locked */
 void
 textbox_printf(struct textbox *tbox, const char *fmt, ...)
 {
@@ -326,11 +330,35 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	vasprintf(&buf, fmt, args);
 	va_end(args);
 
-	free(tbox->text);
-	tbox->text = buf;
+	pthread_mutex_lock(&tbox->text.lock);
+	free(tbox->text.s);
+	tbox->text.s = buf;
+	tbox->text.pos = 0;
+	tbox->text.offs = 0;
+	pthread_mutex_unlock(&tbox->text.lock);
+}
 
-	WIDGET(tbox)->win->redraw++;
-	tbox->textpos = 0;
-	tbox->textoffs = 0;
+char *
+textbox_string(struct textbox *tb)
+{
+	char *s;
+
+	pthread_mutex_lock(&tb->text.lock);
+	s = strdup(tb->text.s);
+	pthread_mutex_unlock(&tb->text.lock);
+
+	return (s);
+}
+
+int
+textbox_int(struct textbox *tb)
+{
+	int i;
+
+	pthread_mutex_lock(&tb->text.lock);
+	i = atoi(tb->text.s);
+	pthread_mutex_unlock(&tb->text.lock);
+
+	return (i);
 }
 
