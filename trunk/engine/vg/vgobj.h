@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.h,v 1.1 2004/04/11 03:27:45 vedge Exp $	*/
+/*	$Csoft: vgobj.h,v 1.2 2004/04/26 07:03:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VGOBJ_H_
@@ -15,6 +15,7 @@ struct vgobj {
 
 __BEGIN_DECLS
 void		 vgobj_init(void *, const char *);
+void		 vgobj_reinit(void *);
 void		 vgobj_destroy(void *);
 struct window	*vgobj_edit(void *);
 int		 vgobj_load(void *, struct netbuf *);
