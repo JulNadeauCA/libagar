@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.25 2002/11/28 07:35:15 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.26 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,10 +27,7 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
-
-#include <math.h>
 
 #include "text.h"
 #include "widget.h"
@@ -79,9 +76,11 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	reg->y = 0;
 	reg->w = 0;
 	reg->h = 0;
-	reg->spacing = 5;
+	reg->xspacing = 4;
+	reg->yspacing = 4;
 	reg->win = NULL;
-	TAILQ_INIT(&reg->widgetsh);
+	TAILQ_INIT(&reg->widgets);
+	reg->nwidgets = 0;
 }
 
 void
@@ -90,14 +89,14 @@ region_destroy(void *p)
 	struct region *reg = p;
 	struct widget *wid, *nextwid;
 
-	for (wid = TAILQ_FIRST(&reg->widgetsh);
-	     wid != TAILQ_END(&reg->widgetsh);
+	for (wid = TAILQ_FIRST(&reg->widgets);
+	     wid != TAILQ_END(&reg->widgets);
 	     wid = nextwid) {
 		nextwid = TAILQ_NEXT(wid, widgets);
 		event_post(wid, "detached", p);		/* Notify */
 		object_destroy(wid);			/* Free */
 	}
-	TAILQ_INIT(&reg->widgetsh);
+	TAILQ_INIT(&reg->widgets);
 }
 
 /* Attach a widget to this region. */
@@ -114,7 +113,8 @@ region_attach(void *parent, void *child)
 	wid->reg = reg;
 
 	pthread_mutex_lock(&reg->win->lock);
-	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);	/* Attach */
+	TAILQ_INSERT_TAIL(&reg->widgets, wid, widgets);		/* Attach */
+	reg->nwidgets++;
 	pthread_mutex_unlock(&reg->win->lock);
 	
 	OBJECT(child)->state = OBJECT_CONSISTENT;
@@ -132,12 +132,24 @@ region_detach(void *parent, void *child)
 	OBJECT_ASSERT(child, "widget");
 
 	pthread_mutex_lock(&reg->win->lock);
-	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);		/* Detach */
+	TAILQ_REMOVE(&reg->widgets, wid, widgets);		/* Detach */
+	if (--reg->nwidgets < 0) {
+		fatal("nwidgets < 0");
+	}
 	pthread_mutex_unlock(&reg->win->lock);
 	
-	event_post(child, "detached", parent);			/* Notify */
+	event_post(wid, "detached", "%p", parent);		/* Notify */
 
-	OBJECT(child)->state = OBJECT_ZOMBIE;
+	OBJECT(wid)->state = OBJECT_ZOMBIE;
 	object_destroy(wid);
 }
 
+/* Change the spacing between widgets. */
+void
+region_set_spacing(struct region *reg, Uint8 xsp, Uint8 ysp)
+{
+	pthread_mutex_lock(&reg->win->lock);
+	reg->xspacing = xsp;
+	reg->yspacing = ysp;
+	pthread_mutex_unlock(&reg->win->lock);
+}
