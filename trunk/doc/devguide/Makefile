@@ -1,4 +1,4 @@
-# $Csoft: Makefile,v 1.4 2004/02/14 05:06:57 vedge Exp $
+# $Csoft: Makefile,v 1.5 2004/02/14 05:07:52 vedge Exp $
 
 TOP=	../..
 
@@ -21,7 +21,7 @@ DOCSRC+=	A.Code-listings.me \
 
 include ${TOP}/mk/csoft.doc.mk
 
-update: ${DOC}
-	scp ${DOC} vedge@resin:www/agar/docs
+update: ${DOCPS} ${DOCPDF}
+	scp ${DOCPS} ${DOCPDF} vedge@resin:www/agar/docs
 
 .PHONY: upload
