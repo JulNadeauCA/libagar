@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.48 2002/12/31 05:25:40 vedge Exp $
+# $Csoft: configure.in,v 1.49 2002/12/31 05:40:49 vedge Exp $
 # Public domain
 
 makeout(Makefile.config);
@@ -31,6 +31,7 @@ check(make);
 check(cc);
 
 check(progname);
+check(math);
 check(getenv);
 check(setenv);
 check(strsep);
