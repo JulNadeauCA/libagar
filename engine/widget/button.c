@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.80 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.81 2004/04/09 07:30:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -41,7 +41,7 @@ const struct widget_ops button_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		button_destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -76,13 +76,19 @@ button_new(void *parent, const char *caption)
 void
 button_init(struct button *bu, const char *caption)
 {
+	SDL_Surface *label;
+
 	widget_init(bu, "button", &button_ops, WIDGET_FOCUSABLE |
 	    WIDGET_UNFOCUSED_MOTION);
 	widget_bind(bu, "state", WIDGET_BOOL, &bu->state);
-
+	
 	widget_map_color(bu, FRAME_COLOR, "frame", 100, 100, 100, 255);
 	widget_map_color(bu, TEXT_COLOR, "text", 240, 240, 240, 255);
 	widget_map_color(bu, DISABLED_COLOR, "disabled", 110, 110, 110, 255);
+
+	label = (caption == NULL) ? NULL :
+	    text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), caption);
+	widget_map_surface(bu, label);
 
 	bu->state = 0;
 	bu->sensitive = 1;
@@ -90,13 +96,6 @@ button_init(struct button *bu, const char *caption)
 	bu->justify = BUTTON_CENTER;
 	bu->padding = 4;
 	bu->moverlap = 0;
-
-	if (caption != NULL) {
-		bu->label = text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR),
-		    caption);
-	} else {
-		bu->label = NULL;
-	}
 
 	event_new(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
 	event_new(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
@@ -106,28 +105,18 @@ button_init(struct button *bu, const char *caption)
 }
 
 void
-button_destroy(void *p)
-{
-	struct button *bu = p;
-
-	if (bu->label != NULL)
-		SDL_FreeSurface(bu->label);
-
-	widget_destroy(bu);
-}
-
-void
 button_scale(void *p, int w, int h)
 {
 	struct button *bu = p;
+	SDL_Surface *label = WIDGET_SURFACE(bu,0);
 
 	if (w == -1 && h == -1) {
-		if (bu->label != NULL) {
-			WIDGET(bu)->w = bu->label->w + bu->padding*2;
-			WIDGET(bu)->h = bu->label->h + bu->padding;
+		if (label != NULL) {
+			WIDGET(bu)->w = label->w + bu->padding*2;
+			WIDGET(bu)->h = label->h + bu->padding*2;
 		} else {
-			WIDGET(bu)->w = 5;
-			WIDGET(bu)->h = 5;
+			WIDGET(bu)->w = 1;
+			WIDGET(bu)->h = 1;
 		}
 	}
 }
@@ -136,11 +125,12 @@ void
 button_draw(void *p)
 {
 	struct button *bu = p;
+	SDL_Surface *label = WIDGET_SURFACE(bu,0);
 	int x = 0, y = 0;
 	int pressed;
 	
 	if (WIDGET(bu)->w < bu->padding*2 ||
-	    WIDGET(bu)->h < bu->padding)
+	    WIDGET(bu)->h < bu->padding*2)
 		return;
 
 	pressed = widget_get_bool(bu, "state");
@@ -158,25 +148,25 @@ button_draw(void *p)
 		    FRAME_COLOR);
 	}
 
-	if (bu->label != NULL) {
+	if (label != NULL) {
 		switch (bu->justify) {
 		case BUTTON_LEFT:
 			x = bu->padding;
 			break;
 		case BUTTON_CENTER:
-			x = WIDGET(bu)->w/2 - bu->label->w/2;
+			x = WIDGET(bu)->w/2 - label->w/2;
 			break;
 		case BUTTON_RIGHT:
-			x = WIDGET(bu)->w - bu->label->w - bu->padding;
+			x = WIDGET(bu)->w - label->w - bu->padding;
 			break;
 		}
-		y = ((WIDGET(bu)->h - bu->label->h) / 2) - 1;
+		y = ((WIDGET(bu)->h - label->h)/2) - 1;		/* Middle */
 
 		if (pressed) {
 			x++;
 			y++;
 		}
-		widget_blit(bu, bu->label, x, y);
+		widget_blit2(bu, 0, x, y);
 	}
 }
 
@@ -335,13 +325,7 @@ button_set_justify(struct button *bu, enum button_justify jus)
 void
 button_set_label(struct button *bu, SDL_Surface *su)
 {
-	if (bu->label != NULL) {
-		SDL_FreeSurface(bu->label);
-		bu->label = NULL;
-	}
-	if (su != NULL) {
-		bu->label = view_copy_surface(su);
-	}
+	widget_replace_surface(bu, 0, su);
 }
 
 void
@@ -354,9 +338,7 @@ button_printf(struct button *bu, const char *fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	if (bu->label != NULL) {
-		SDL_FreeSurface(bu->label);
-	}
-	bu->label = text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), buf);
+	widget_replace_surface(bu, 0,
+	    text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), buf));
 }
 

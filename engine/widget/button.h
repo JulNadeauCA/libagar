@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.28 2003/11/10 22:40:47 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.29 2004/04/09 07:30:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -17,10 +17,7 @@ enum button_justify {
 struct button {
 	struct widget wid;
 	int state;			/* Default state binding */
-
-	SDL_Surface *label;		/* Label surface */
 	enum button_justify justify;	/* Label justification */
-
 	int sensitive;			/* Service events? */
 	int sticky;			/* Sticky behavior? */
 	int padding;			/* Padding in pixels */
