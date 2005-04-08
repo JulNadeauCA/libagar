@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.12 2005/03/06 10:39:54 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.13 2005/03/08 08:40:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/box.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/notebook.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -147,8 +148,8 @@ fill_edit(void *p, struct tileview *tv)
 	struct box *box;
 
 	win = window_new(0, NULL);
+	window_set_caption(win, _("Fill/gradient"));
 
-	label_new(win, LABEL_STATIC, _("Filling/gradient type:"));
 	rad = radio_new(win, modes);
 	widget_bind(rad, "value", WIDGET_INT, &f->type);
 
@@ -156,20 +157,29 @@ fill_edit(void *p, struct tileview *tv)
 	{
 		struct hsvpal *hsv1, *hsv2;
 		struct spinbutton *sb;
+		struct notebook *nb;
+		struct notebook_tab *ntab;
 		struct box *hb;
 
-		hb = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+		nb = notebook_new(box, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+		ntab = notebook_add_tab(nb, _("Color A"), BOX_VERT);
+		notebook_select_tab(nb, ntab);
 		{
-			hsv1 = hsvpal_new(hb, tv->ts->fmt);
+			hsv1 = hsvpal_new(ntab, tv->ts->fmt);
+			WIDGET(hsv1)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
 			    &f->f_gradient.c1);
+		}
 
-			hsv2 = hsvpal_new(hb, tv->ts->fmt);
+		ntab = notebook_add_tab(nb, _("Color B"), BOX_VERT);
+		{
+			hsv2 = hsvpal_new(ntab, tv->ts->fmt);
+			WIDGET(hsv2)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 			widget_bind(hsv2, "pixel", WIDGET_UINT32,
 			    &f->f_gradient.c2);
 		}
 		
-		sb = spinbutton_new(box, _("Alpha: "));
+		sb = spinbutton_new(box, _("Overall alpha: "));
 		widget_bind(sb, "value", WIDGET_UINT8, &f->alpha);
 		spinbutton_set_range(sb, 0, 255);
 		spinbutton_set_increment(sb, 5);
