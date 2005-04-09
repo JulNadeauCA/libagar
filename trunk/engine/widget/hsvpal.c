@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.9 2005/03/06 06:31:54 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.10 2005/03/09 06:37:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -228,8 +228,8 @@ hsvpal_scale(void *p, int w, int h)
 	int i, y = 0;
 
 	if (w == -1 && h == -1) {
-		WIDGET(pal)->w = 128;			/* XXX */
-		WIDGET(pal)->h = 160;
+		WIDGET(pal)->w = view->w/5;
+		WIDGET(pal)->h = view->h/3;
 	}
 	pal->rpreview.x = 0;
 	pal->rpreview.h = 32;
