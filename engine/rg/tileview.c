@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.28 2005/03/24 04:00:56 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.29 2005/04/02 04:04:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -926,7 +926,9 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	if (tv->pxsz < 1)
 		tv->pxsz = 1;
 
-	tv->scaled = SDL_CreateRGBSurface(SDL_SWSURFACE,
+	tv->scaled = SDL_CreateRGBSurface(
+	    SDL_SWSURFACE|
+	    (t->su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 	    z2>=100 ? t->su->w*tv->pxsz : t->su->w*z2/100,
 	    z2>=100 ? t->su->h*tv->pxsz : t->su->h*z2/100,
 	    t->su->format->BitsPerPixel,
@@ -935,9 +937,9 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	if (tv->scaled == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
-	tv->pxlen = tv->pxsz*tv->scaled->format->BytesPerPixel;
 	tv->scaled->format->alpha = t->su->format->alpha;
 	tv->scaled->format->colorkey = t->su->format->colorkey;
+	tv->pxlen = tv->pxsz*tv->scaled->format->BytesPerPixel;
 
 	widget_replace_surface(tv, 0, tv->scaled);
 

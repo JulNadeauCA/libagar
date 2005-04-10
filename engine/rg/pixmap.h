@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.14 2005/03/06 10:40:32 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.15 2005/03/11 08:59:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -21,10 +21,8 @@ struct pixmap_undoblk {
 };
 
 enum pixmap_blend_mode {
-	PIXMAP_SPECIFIC_ALPHA,
-	PIXMAP_SPEC_AND_DEST_ALPHA,
-	PIXMAP_BRUSH_ALPHA,
-	PIXMAP_BRUSH_AND_DEST_ALPHA,
+	PIXMAP_OVERLAY_ALPHA,
+	PIXMAP_AVERAGE_ALPHA,
 	PIXMAP_DEST_ALPHA,
 	PIXMAP_NO_BLENDING
 };

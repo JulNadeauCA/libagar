@@ -1,4 +1,4 @@
-/*	$Csoft: prim.h,v 1.2 2005/02/15 04:05:23 vedge Exp $	*/
+/*	$Csoft: prim.h,v 1.3 2005/02/16 14:48:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PRIM_H_
@@ -8,9 +8,10 @@
 struct tile;
 
 enum prim_blend_mode {
-	PRIM_BLEND_DSTALPHA,
-	PRIM_BLEND_SRCALPHA,
-	PRIM_BLEND_MIXALPHA
+	PRIM_OVERLAY_ALPHA,
+	PRIM_AVERAGE_ALPHA,
+	PRIM_SRC_ALPHA,
+	PRIM_DST_ALPHA,
 };
 
 __BEGIN_DECLS

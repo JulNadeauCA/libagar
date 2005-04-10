@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.31 2005/03/24 04:00:56 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.32 2005/04/02 04:07:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,13 +39,75 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/menu.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/spinbutton.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/toolbar.h>
+#include <engine/widget/label.h>
+#include <engine/widget/separator.h>
 
 #include "tileset.h"
 #include "tileview.h"
 
 #include "fill.h"
+
+/*
+ * Blend a pixmap with the tile; add the source alpha to the destination
+ * alpha of each pixel.
+ */
+static void
+blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
+{
+	u_int sx, sy, dx, dy;
+	Uint8 *pSrc, *pDst;
+	Uint8 sR, sG, sB, sA;
+	Uint8 dR, dG, dB, dA;
+	int alpha;
+
+	SDL_LockSurface(px->su);
+	SDL_LockSurface(t->su);
+	for (sy = 0, dy = rd->y; sy < px->su->h; sy++, dy++) {
+		for (sx = 0, dx = rd->x; sx < px->su->w; sx++, dx++) {
+			if (!VIEW_INSIDE_CLIP_RECT(t->su, dx, dy))
+				continue;
+
+			pSrc = (Uint8 *)px->su->pixels + sy*px->su->pitch +
+				        (sx << 2);
+
+			if (*(Uint32 *)pSrc == px->su->format->colorkey)
+				continue;
+
+			pDst = (Uint8 *)t->su->pixels + dy*t->su->pitch +
+					(dx << 2);
+
+			if (*(Uint32 *)pDst != t->su->format->colorkey) {
+				SDL_GetRGBA(*(Uint32 *)pDst, t->su->format,
+				    &dR, &dG, &dB, &dA);
+				SDL_GetRGBA(*(Uint32 *)pSrc, px->su->format,
+				    &sR, &sG, &sB, &sA);
+
+				alpha = dA + sA;
+				if (alpha > 255) {
+					alpha = 255;
+				}
+				*(Uint32 *)pDst = SDL_MapRGBA(t->su->format,
+				    (((sR - dR) * sA) >> 8) + dR,
+				    (((sG - dG) * sA) >> 8) + dG,
+				    (((sB - dB) * sA) >> 8) + dB,
+				    (Uint8)alpha);
+			} else {
+				*(Uint32 *)pDst = *(Uint32 *)pSrc;
+			}
+		}
+	}
+	SDL_UnlockSurface(t->su);
+	SDL_UnlockSurface(px->su);
+}
+
+static void
+blend_normal(struct tile *t, struct pixmap *px, SDL_Rect *rd)
+{
+	SDL_BlitSurface(px->su, NULL, t->su, rd);
+}
 
 void
 tile_init(struct tile *t, struct tileset *ts, const char *name)
@@ -56,16 +118,18 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->ts = ts;
 	t->nrefs = 0;
 	t->sprite = 0;
+	t->blend_fn = blend_overlay_alpha;
 	TAILQ_INIT(&t->elements);
 }
 
 void
-tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
+tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
+    Uint8 alpha)
 {
 	Uint32 sflags = SDL_SWSURFACE;
 
-	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
 	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
+	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
 
 	if (t->su != NULL) {
 		SDL_FreeSurface(t->su);
@@ -73,8 +137,10 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
-	if (t->su == NULL)
+	if (t->su == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
+	t->su->format->alpha = alpha;
 
 	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
 }
@@ -113,7 +179,7 @@ tile_generate(struct tile *t)
 				rd.y = tel->tel_pixmap.y;
 				rd.w = px->su->w;
 				rd.h = px->su->h;
-				SDL_BlitSurface(px->su, NULL, t->su, &rd);
+				t->blend_fn(t, px, &rd);
 			}
 			break;
 		case TILE_SKETCH:
@@ -280,8 +346,6 @@ tile_save(struct tile *t, struct netbuf *buf)
 			{
 				struct feature *ft = tel->tel_feature.ft;
 
-				dprintf("%s: saving %s feature ref\n", t->name,
-				    ft->name);
 				write_string(buf, ft->name);
 				write_sint32(buf, (Sint32)tel->tel_feature.x);
 				write_sint32(buf, (Sint32)tel->tel_feature.y);
@@ -291,8 +355,6 @@ tile_save(struct tile *t, struct netbuf *buf)
 			{
 				struct pixmap *px = tel->tel_pixmap.px;
 
-				dprintf("%s: saving %s pixmap ref\n", t->name,
-				    px->name);
 				write_string(buf, px->name);
 				write_sint32(buf, (Sint32)tel->tel_pixmap.x);
 				write_sint32(buf, (Sint32)tel->tel_pixmap.y);
@@ -303,8 +365,6 @@ tile_save(struct tile *t, struct netbuf *buf)
 			{
 				struct sketch *sk = tel->tel_sketch.sk;
 
-				dprintf("%s: saving %s sketch ref\n", t->name,
-				    sk->name);
 				write_string(buf, sk->name);
 				write_sint32(buf, (Sint32)tel->tel_sketch.x);
 				write_sint32(buf, (Sint32)tel->tel_sketch.y);
@@ -327,7 +387,6 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	t->su = read_surface(buf, ts->fmt);
 	t->sprite = read_uint32(buf);
 	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
-	dprintf("map sprite %u\n", t->sprite);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -446,12 +505,7 @@ tile_ctrl_buttonup(int argc, union evarg *argv)
 	int h = tileview_int(ctrl, 3);
 	
 	if (w != t->su->w || h != t->su->h)  {
-		int flags = 0;
-
-		if (t->su->flags & SDL_SRCALPHA)    flags |= SDL_SRCALPHA;
-		if (t->su->flags & SDL_SRCCOLORKEY) flags |= SDL_SRCCOLORKEY;
-
-		tile_scale(ts, t, w, h, flags);
+		tile_scale(ts, t, w, h, t->flags, t->su->format->alpha);
 		tileview_set_zoom(tv, tv->zoom, 0);
 	}
 }
@@ -1204,24 +1258,26 @@ resize_tile(int argc, union evarg *argv)
 	struct window *dlg_w = argv[3].p;
 	struct checkbox *ckey_cb = argv[4].p;
 	struct checkbox *alpha_cb = argv[5].p;
+	struct spinbutton *alpha_sb = argv[6].p;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
 	int w = widget_get_int(msb, "xvalue");
 	int h = widget_get_int(msb, "yvalue");
-	int flags = 0;
+	u_int flags = 0;
 
-	if (widget_get_int(ckey_cb, "state") == 1)
-		flags |= SDL_SRCALPHA;
-	if (widget_get_int(alpha_cb, "state") == 1)
-		flags |= SDL_SRCCOLORKEY;
+	if (widget_get_bool(ckey_cb, "state"))
+		flags |= TILE_SRCCOLORKEY;
+	if (widget_get_bool(alpha_cb, "state"))
+		flags |= TILE_SRCALPHA;
 
-	tile_scale(ts, t, w, h, flags);
+	tile_scale(ts, t, w, h, flags,
+	    (Uint8)widget_get_int(alpha_sb, "value"));
 	tileview_set_zoom(tv, 100, 0);
 	view_detach(dlg_w);
 }
 
 static void
-resize_tile_dlg(int argc, union evarg *argv)
+tile_infos(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
@@ -1232,27 +1288,39 @@ resize_tile_dlg(int argc, union evarg *argv)
 	struct box *box;
 	struct button *b;
 	struct checkbox *ckey_cb, *alpha_cb;
+	struct spinbutton *alpha_sb;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 		         WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("Resize tile `%s'"), t->name);
 
-	msb = mspinbutton_new(win, "x", _("New size:"));
+	msb = mspinbutton_new(win, "x", _("Geometry:"));
 	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
 	widget_set_int(msb, "xvalue", t->su->w);
 	widget_set_int(msb, "yvalue", t->su->h);
+	
+	alpha_sb = spinbutton_new(win, _("Overall alpha: "));
+	spinbutton_set_range(alpha_sb, 0, 255);
+	widget_set_int(alpha_sb, "value", t->su->format->alpha);
+	
+	separator_new(win, SEPARATOR_HORIZ);
+	
+	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"), &t->sprite);
+
+	separator_new(win, SEPARATOR_HORIZ);
 
 	ckey_cb = checkbox_new(win, _("Colorkeying"));
-	widget_set_int(ckey_cb, "state", t->su->flags & SDL_SRCCOLORKEY);
+	widget_set_int(ckey_cb, "state", t->flags & TILE_SRCCOLORKEY);
 
-	alpha_cb = checkbox_new(win, _("Alpha blending"));
-	widget_set_int(alpha_cb, "state", t->su->flags & SDL_SRCALPHA);
-
+	alpha_cb = checkbox_new(win, _("Source alpha"));
+	widget_set_int(alpha_cb, "state", t->flags & TILE_SRCALPHA);
+	
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
 		b = button_new(box, _("OK"));
 		event_new(b, "button-pushed", resize_tile,
-		    "%p,%p,%p,%p,%p", tv, msb, win, ckey_cb, alpha_cb);
+		    "%p,%p,%p,%p,%p,%p", tv, msb, win, ckey_cb, alpha_cb,
+		    alpha_sb);
 
 		b = button_new(box, _("Cancel"));
 		event_new(b, "button-pushed", window_generic_detach, "%p", win);
@@ -1501,10 +1569,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 	me = menu_new(win);
 	mi = menu_add_item(me, _("Tile"));
 	{
+		menu_action(mi, _("Tile settings..."),
+		    RG_PIXMAP_RESIZE_ICON,
+		    tile_infos, "%p,%p", tv, win);
 		menu_action(mi, _("Regenerate"), RG_PIXMAP_ICON,
 		    regenerate_tile, "%p", tv);
-		menu_action(mi, _("Resize..."), RG_PIXMAP_RESIZE_ICON,
-		    resize_tile_dlg, "%p,%p", tv, win);
 	}
 	
 	mi = menu_add_item(me, _("Edit"));

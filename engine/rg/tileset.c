@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.24 2005/04/06 04:00:09 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.25 2005/04/06 07:34:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -90,7 +90,8 @@ tileset_init(void *obj, const char *name)
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
 
-	ts->icon = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+	ts->icon = SDL_CreateRGBSurface(
+	    SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY,
 	    32, 32, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
  	    0xff000000,
@@ -639,7 +640,7 @@ insert_tile(int argc, union evarg *argv)
 	struct tileset *ts = argv[2].p;
 	struct gfx *gfx = OBJECT(ts)->gfx;
 	struct tile *t;
-	int flags = 0;
+	u_int flags = 0;
 
 	if (ins_alpha)		flags |= TILE_SRCALPHA;
 	if (ins_colorkey)	flags |= TILE_SRCCOLORKEY;
@@ -693,7 +694,7 @@ tryname2:
 	if (gfx->nsprites > ts->max_sprites) {
 		ts->max_sprites = gfx->nsprites;
 	}
-	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags);
+	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	ins_tile_name[0] = '\0';
@@ -838,7 +839,7 @@ insert_anim_dlg(int argc, union evarg *argv)
 	cb = checkbox_new(win, _("Alpha blending"));
 	widget_bind(cb, "state", WIDGET_INT, &ins_alpha);
 	
-	cb = checkbox_new(win, _("Colorkeying"));
+	cb = checkbox_new(win, _("Colorkey"));
 	widget_bind(cb, "state", WIDGET_INT, &ins_colorkey);
 
 	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);

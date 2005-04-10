@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.4 2005/02/27 06:47:29 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.5 2005/03/06 06:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -175,47 +175,75 @@ prim_color_u32(struct tile *t, Uint32 pc)
 void
 prim_put_pixel(SDL_Surface *su, int x, int y, Uint32 pc)
 {
-	Uint8 *dst = (Uint8 *)su->pixels + y*su->pitch +
-	    x*su->format->BytesPerPixel;
-
-	if (x < 0 || y < 0 ||
-	    x >= su->w || y >= su->h)
+	Uint8 *dst;
+	    
+	if (x < 0 || y < 0 || x >= su->w || y >= su->h)
 		return;
-
 #ifdef DEBUG
 	if (su->format->BitsPerPixel != 32)
 		fatal("surface != 32bpp");
 #endif
+	dst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
 	*(Uint32 *)dst = pc;
 }
 
 /* Blend the pixel at t:[x,y] with the given RGBA value. */
 void
 prim_blend_rgb(SDL_Surface *su, int x, int y, enum prim_blend_mode mode,
-    Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+    Uint8 sR, Uint8 sG, Uint8 sB, Uint8 sA)
 {
-	Uint8 dr, dg, db, da, ba;
-	Uint8 *dst;
+	Uint8 dR, dG, dB, dA;
+	Uint8 *pDst;
+	int alpha;
 
 	if (x < 0 || y < 0 ||
-	    x > su->w || y > su->h)
+	    x >= su->w || y >= su->h)
 		return;
+#ifdef DEBUG
+	if (su->format->BitsPerPixel != 32)
+		fatal("surface != 32bpp");
+#endif
+	pDst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
+	if (*(Uint32 *)pDst != su->format->colorkey) {
+		SDL_GetRGBA(*(Uint32 *)pDst, su->format, &dR, &dG, &dB, &dA);
 
-	dst = (Uint8 *)su->pixels + y*su->pitch + x*su->format->BytesPerPixel;
-	SDL_GetRGBA(*(Uint32 *)dst, su->format, &dr, &dg, &db, &da);
-
-	if (mode == PRIM_BLEND_SRCALPHA) {
-		ba = a;
-	} else if (mode == PRIM_BLEND_DSTALPHA) {
-		ba = da;
+		switch (mode) {
+		case PRIM_OVERLAY_ALPHA:
+			alpha = dA + sA;
+			if (alpha > 255) {
+				alpha = 255;
+			}
+			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			    (((sR - dR) * sA) >> 8) + dR,
+			    (((sG - dG) * sA) >> 8) + dG,
+			    (((sB - dB) * sA) >> 8) + dB,
+			    (Uint8)alpha);
+			break;
+		case PRIM_AVERAGE_ALPHA:
+			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			    (((sR - dR) * sA) >> 8) + dR,
+			    (((sG - dG) * sA) >> 8) + dG,
+			    (((sB - dB) * sA) >> 8) + dB,
+			    (Uint8)((dA*sA)/2));
+			break;
+		case PRIM_SRC_ALPHA:
+			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			    (((sR - dR) * sA) >> 8) + dR,
+			    (((sG - dG) * sA) >> 8) + dG,
+			    (((sB - dB) * sA) >> 8) + dB,
+			    (Uint8)(sA));
+			break;
+		case PRIM_DST_ALPHA:
+			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			    (((sR - dR) * sA) >> 8) + dR,
+			    (((sG - dG) * sA) >> 8) + dG,
+			    (((sB - dB) * sA) >> 8) + dB,
+			    dA);
+			break;
+		}
 	} else {
-		ba = (Uint8)(da+a)/2;
+		*(Uint32 *)pDst = SDL_MapRGBA(su->format, sR, sG, sB, sA);
 	}
-
-	*(Uint32 *)dst = SDL_MapRGB(su->format,
-	    (((r - dr) * ba) >> 8) + dr,
-	    (((g - dg) * ba) >> 8) + dg,
-	    (((b - db) * ba) >> 8) + db);
 }
 
 /*
