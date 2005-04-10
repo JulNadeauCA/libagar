@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.22 2005/03/06 06:44:36 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.23 2005/03/06 10:40:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/notebook.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -70,7 +71,7 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->v = 1.0;
 	px->a = 1.0;
 	px->curbrush = NULL;
-	px->blend_mode = PIXMAP_SPECIFIC_ALPHA;
+	px->blend_mode = PIXMAP_OVERLAY_ALPHA;
 	TAILQ_INIT(&px->brushes);
 
 	pixmap_begin_undoblk(px);
@@ -211,9 +212,9 @@ pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 		SDL_SetColorKey(nsu, px->su->flags &
 		    (SDL_SRCCOLORKEY|SDL_RLEACCEL),
 		    px->su->format->colorkey);
+
 		SDL_SetAlpha(px->su, 0, 0);
 		SDL_SetColorKey(px->su, 0, 0);
-
 		rd.x = xoffs;
 		rd.y = yoffs;
 		SDL_BlitSurface(px->su, NULL, nsu, &rd);
@@ -243,10 +244,10 @@ poll_brushes(int argc, union evarg *argv)
 	it->class = "brush";
 	it->p1 = NULL;
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
-		it = tlist_insert(tl, br->px->su, "%s%s %s",
-		    (br == px->curbrush) ? "*" : "",
-		    br->name,
-		    (br->type == PIXMAP_BRUSH_RGB) ? "(rgb)" : "(mono)");
+		it = tlist_insert(tl, br->px->su, "%s%s %s%s",
+		    (br == px->curbrush) ? "*" : "", br->name,
+		    (br->flags & PIXMAP_BRUSH_ONESHOT) ? _("one-shot ") : "",
+		    (br->type == PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
 		it->class = "brush";
 		it->p1 = br;
 	}
@@ -256,12 +257,17 @@ poll_brushes(int argc, union evarg *argv)
 static void
 select_brush(int argc, union evarg *argv)
 {
-	struct combo *com = argv[0].p;
+	struct tlist *tl = argv[0].p;
 	struct pixmap *px = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct pixmap_brush *br = it->p1;
+	struct tlist_item *it;
 
-	px->curbrush = (px->curbrush == br) ? NULL : br;
+	if ((it = tlist_item_selected(tl)) != NULL) {
+		struct pixmap_brush *br = it->p1;
+
+		px->curbrush = (px->curbrush == br) ? NULL : br;
+	} else {
+		px->curbrush = NULL;
+	}
 }
 
 static void
@@ -318,14 +324,13 @@ update_bropts(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct textbox *tb_name = argv[1].p;
-	struct tlist_item *it;
+	struct tlist_item *it = argv[2].p;
 	struct pixmap *spx;
 
-	if ((it = tlist_item_selected(tl)) == NULL) {
-		return;
+	if (it != NULL) {
+		spx = it->p1;
+		textbox_printf(tb_name, "%s", spx->name);
 	}
-	spx = it->p1;
-	textbox_printf(tb_name, "%s", spx->name);
 }
 
 static void
@@ -404,45 +409,30 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	struct mspinbutton *msb;
 	struct spinbutton *sb;
 	struct checkbox *cb;
-	struct box *bo;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Pixmap %s"), px->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-#if 0
-	msb = mspinbutton_new(win, ",", _("Coordinates: "));
-	widget_bind(msb, "xvalue", WIDGET_INT, &tel->tel_pixmap.x);
-	widget_bind(msb, "yvalue", WIDGET_INT, &tel->tel_pixmap.y);
-	mspinbutton_set_range(msb, 0, TILE_SIZE_MAX-1);
-	event_new(msb, "mspinbutton-changed", update_tv, "%p", tv);
-#endif
 
-#if 0
-	sb = spinbutton_new(win, _("Transparency: "));
-	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
-	spinbutton_set_range(sb, 0, 255);
-	event_new(sb, "spinbutton-changed", update_tv, "%p", tv);
-#endif
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 
-#if 0
-	label_new(win, LABEL_POLLED, "Undo level: %u/%u", &px->curblk,
-	    &px->nublks);
-#endif
-
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	ntab = notebook_add_tab(nb, _("Colors"), BOX_VERT);
+	notebook_select_tab(nb, ntab);
 	{
 		struct hsvpal *pal;
 		struct fspinbutton *fsb;
 		struct box *hb;
 
-		pal = hsvpal_new(bo, tv->ts->fmt);
+		pal = hsvpal_new(ntab, tv->ts->fmt);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
 		widget_bind(pal, "alpha", WIDGET_FLOAT, &px->a);
 	
-		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		hb = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		box_set_padding(hb, 1);
 		{
 			fsb = fspinbutton_new(hb, NULL, _("H: "));
@@ -460,7 +450,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 			fspinbutton_set_precision(fsb, "f", 2);
 		}
 		
-		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		hb = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		box_set_padding(hb, 1);
 		{
 			fsb = fspinbutton_new(hb, NULL, _("V: "));
@@ -477,54 +467,50 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 			fspinbutton_set_increment(fsb, 0.005);
 			fspinbutton_set_precision(fsb, "f", 3);
 		}
-	}
 		
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+		separator_new(ntab, SEPARATOR_HORIZ);
+		cb = checkbox_new(ntab, _("Source pixmap only"));
+		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
+	}
+
+	ntab = notebook_add_tab(nb, _("Brushes"), BOX_VERT);
+	{
+		struct button *bu;
+		struct tlist *tl;
+
+		tl = tlist_new(ntab, TLIST_POLL);
+		tlist_set_item_height(tl, TILESZ);
+		event_new(tl, "tlist-poll", poll_brushes, "%p", px);
+		event_new(tl, "tlist-dblclick", select_brush, "%p", px);
+		tlist_select_pointer(tl, px->curbrush);
+
+		bu = button_new(ntab, _("Create new brush"));
+		WIDGET(bu)->flags |= WIDGET_WFILL;
+		event_new(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
+		    tv, px, win);
+	}
+	
+	ntab = notebook_add_tab(nb, _("Blending"), BOX_VERT);
 	{
 		static const char *blend_modes[] = {
-			N_("Specific alpha only"),
-			N_("Specific+dest alphas"),
-			N_("Brush alpha only"),
-			N_("Brush+dest alphas"),
-			N_("Destination alpha only"),
+			N_("Overlay alpha"),
+			N_("Average alpha"),
+			N_("Destination alpha"),
 			N_("Disable blending"),
 			NULL
 		};
 		struct radio *rad;
 		struct checkbox *cb;
 
-		label_new(bo, LABEL_STATIC, _("Blending method:"));
-		rad = radio_new(bo, blend_modes);
+		label_new(ntab, LABEL_STATIC, _("Blending method:"));
+		rad = radio_new(ntab, blend_modes);
 		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
 
-		cb = checkbox_new(bo, _("Source pixmap only"));
+		separator_new(ntab, SEPARATOR_HORIZ);
+		cb = checkbox_new(ntab, _("Source pixmap only"));
 		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
 	}
 
-	separator_new(win, SEPARATOR_HORIZ);
-
-	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	{
-		struct button *bu;
-		struct combo *com;
-
-		com = combo_new(bo, COMBO_POLL, _("Brush: "));
-		event_new(com->list, "tlist-poll", poll_brushes, "%p", px);
-		event_new(com, "combo-selected", select_brush, "%p", px);
-
-		if (px->curbrush != NULL) {
-			textbox_printf(com->tbox, "%s %s", px->curbrush->name,
-			    (px->curbrush->type == PIXMAP_BRUSH_RGB) ?
-			    "(rgb)" : "(mono)");
-		} else {
-			textbox_printf(com->tbox, _("(none)"));
-		}
-
-		bu = button_new(bo, _("Insert brush"));
-		WIDGET(bu)->flags |= WIDGET_WFILL;
-		event_new(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
-		    tv, px, win);
-	}
 	return (win);
 }
 
@@ -648,7 +634,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
-	case PIXMAP_SPECIFIC_ALPHA:
+	case PIXMAP_OVERLAY_ALPHA:
 		if (a == 255) {
 			prim_put_pixel(px->su, x, y, pixel);
 			tileview_scaled_pixel(tv,
@@ -656,44 +642,18 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			    tel->tel_pixmap.y + y,
 			    r, g, b);
 		} else {
-			prim_blend_rgb(px->su, x, y, PRIM_BLEND_SRCALPHA,
+			prim_blend_rgb(px->su, x, y, PRIM_OVERLAY_ALPHA,
 			    r, g, b, a);
 			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
-	case PIXMAP_SPEC_AND_DEST_ALPHA:
-		prim_blend_rgb(px->su, x, y, PRIM_BLEND_MIXALPHA, r, g, b, a);
-		tv->tile->flags |= TILE_DIRTY;
-		break;
-	case PIXMAP_BRUSH_ALPHA:
-		if (a == 255) {
-			prim_put_pixel(px->su, x, y, pixel);
-			tileview_scaled_pixel(tv,
-			    tel->tel_pixmap.x + x,
-			    tel->tel_pixmap.y + y,
-			    r, g, b);
-		} else {
-			prim_blend_rgb(px->su, x, y, PRIM_BLEND_SRCALPHA,
-			    r, g, b, a);
-			tv->tile->flags |= TILE_DIRTY;
-		}
-		break;
-	case PIXMAP_BRUSH_AND_DEST_ALPHA:
-		prim_blend_rgb(px->su, x, y, PRIM_BLEND_MIXALPHA, r, g, b, a);
+	case PIXMAP_AVERAGE_ALPHA:
+		prim_blend_rgb(px->su, x, y, PRIM_AVERAGE_ALPHA, r, g, b, a);
 		tv->tile->flags |= TILE_DIRTY;
 		break;
 	case PIXMAP_DEST_ALPHA:
-		if (a == 255) {
-			prim_put_pixel(px->su, x, y, pixel);
-			tileview_scaled_pixel(tv,
-			    tel->tel_pixmap.x + x,
-			    tel->tel_pixmap.y + y,
-			    r, g, b);
-		} else {
-			prim_blend_rgb(px->su, x, y, PRIM_BLEND_DSTALPHA,
-			    r, g, b, a);
-			tv->tile->flags |= TILE_DIRTY;
-		}
+		prim_blend_rgb(px->su, x, y, PRIM_DST_ALPHA, r, g, b, a);
+		tv->tile->flags |= TILE_DIRTY;
 		break;
 	}
 	return (0);
@@ -708,7 +668,7 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 	SDL_Surface *brsu = br->px->su;
 	Uint8 *pBrush = brsu->pixels;
 	Uint8 r, g, b, specA;
-	int x, y;
+	int x, y, dx, dy;
 	
 	if (brsu->format->Amask != 0) {
 		u_int v = (specPx & brsu->format->Amask) >>
@@ -723,19 +683,17 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 	if (SDL_MUSTLOCK(brsu)) {
 		SDL_LockSurface(brsu);
 	}
-	for (y = 0; y < brsu->h; y++) {
-		if (y0+y >= px->su->h) {
-			break;
-		}
-		for (x = 0; x < brsu->w; x++) {
+	for (y = 0, dy = y0; y < brsu->h; y++, dy++) {
+		for (x = 0, dx = x0; x < brsu->w; x++, dx++) {
 			Uint32 Px, brPx;
 			Uint8 brA;
 
-			if (x0+x >= px->su->w)
-				break;
-
 			brPx = *(Uint32 *)pBrush;
 			pBrush += sizeof(Uint32);
+			
+			if (dy < 0 || dy >= px->su->h ||
+			    dx < 0 || dx >= px->su->w)
+				continue;
 
 			if (brsu->format->Amask != 0) {
 				u_int v = (brPx & brsu->format->Amask) >>
@@ -760,8 +718,8 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 
 			/* TODO use a specific mod type */
 			if (brA != 0)
-				pixmap_put_pixel(tv, tel, x0+x, y0+y, Px,
-				br->flags & PIXMAP_BRUSH_ONESHOT);
+				pixmap_put_pixel(tv, tel, dx, dy, Px,
+				    br->flags & PIXMAP_BRUSH_ONESHOT);
 		}
 	}
 	if (SDL_MUSTLOCK(brsu))
@@ -836,7 +794,9 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 			px->curbrush->type = PIXMAP_BRUSH_MONO;
 		}
 
-		pixmap_apply_brush(tv, tel, x, y,
+		pixmap_apply_brush(tv, tel,
+		    x - px->curbrush->px->xorig,
+		    y - px->curbrush->px->yorig,
 		    SDL_MapRGBA(px->su->format, r, g, b, a));
 
 		if (erase_mode) {

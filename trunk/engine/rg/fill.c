@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.13 2005/03/08 08:40:26 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.14 2005/04/08 02:51:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -200,7 +200,9 @@ fill_apply(void *p, struct tile *t, int x, int y)
 
 	switch (fi->type) {
 	case FILL_SOLID:
-		SDL_FillRect(su, NULL, fi->f_solid.c);
+		SDL_GetRGB(fi->f_solid.c, t->ts->fmt, &r1, &g1, &b1);
+		SDL_FillRect(su, NULL, SDL_MapRGBA(t->ts->fmt, r1, g1, b1,
+		    fi->alpha));
 		break;
 	case FILL_HGRADIENT:
 		{
@@ -225,7 +227,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 						    (((b1 - b2)*a) >> 8) + b2));
 					} else {
 						prim_blend_rgb(t->su, x, y,
-						    PRIM_BLEND_SRCALPHA,
+						    PRIM_OVERLAY_ALPHA,
 						    (((r1 - r2)*a) >> 8) + r2,
 						    (((g1 - g2)*a) >> 8) + g2,
 						    (((b1 - b2)*a) >> 8) + b2,
@@ -246,7 +248,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 					Uint8 a = (su->h-x)*255/su->h;
 				
 					prim_blend_rgb(t->su, x, y,
-					    PRIM_BLEND_SRCALPHA,
+					    PRIM_OVERLAY_ALPHA,
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,
 					    (((b1 - b2) * a) >> 8) + b2,
