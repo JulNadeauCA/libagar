@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.3 2005/03/10 09:43:34 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.4 2005/04/11 12:02:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -129,12 +129,12 @@ colors_init(void)
 	colors[MENU_SEP2_COLOR] = SDL_MapRGB(vfmt, 120, 120, 120);
 	colors[NOTEBOOK_BG_COLOR] = SDL_MapRGB(vfmt, 60, 60, 60);
 	colors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(vfmt, 70, 70, 70);
-	colors[NOTEBOOK_TXT_COLOR] = SDL_MapRGB(vfmt, 250, 250, 250);
+	colors[NOTEBOOK_TXT_COLOR] = colors[TEXT_COLOR];
 	colors[RADIO_SEL_COLOR] = SDL_MapRGB(vfmt, 210, 210, 210);
 	colors[RADIO_OVER_COLOR] = SDL_MapRGB(vfmt, 90, 90, 90);
 	colors[RADIO_HI_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
 	colors[RADIO_LO_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
-	colors[RADIO_TXT_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
+	colors[RADIO_TXT_COLOR] = colors[TEXT_COLOR];
 	colors[SCROLLBAR_COLOR] = SDL_MapRGB(vfmt, 120, 120, 120);
 	colors[SCROLLBAR_BTN_COLOR] = colors[BUTTON_COLOR];
 	colors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
