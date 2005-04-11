@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.147 2005/03/09 06:39:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.148 2005/03/10 05:37:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -260,8 +260,8 @@ engine_destroy(void)
 	if (mapedition)
 		object_save(&mapedit);
 #endif
-	view_destroy();
 	object_destroy(world);
+	view_destroy();
 	text_destroy();
 	input_destroy();
 	
