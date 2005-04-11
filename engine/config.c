@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.137 2005/03/08 08:40:10 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.138 2005/03/09 06:39:15 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -456,6 +456,11 @@ config_window(struct config *con)
 		for (i = 0; i < LAST_COLOR; i++) {
 			it = tlist_insert(tl, NULL, _(colors_names[i]));
 			it->p1 = &colors[i];
+		}
+		for (i = 0; i < colors_border_size; i++) {
+			it = tlist_insert(tl, NULL, _("Window border #%i"),
+			    i);
+			it->p1 = &colors_border[i];
 		}
 
 		hsv = hsvpal_new(tab, vfmt);
