@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.41 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.42 2005/04/02 03:12:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,9 +29,13 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/config.h>
+#include <engine/view.h>
+
 #include <engine/mapedit/mapedit.h>
+
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
+
 #ifdef DEBUG
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
@@ -54,7 +58,61 @@ enum {
 struct gfxq gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t gfxq_lock;
 
-/* Allocate a new sprite. */
+/* Allocate space for n new sprites and initialize them. */
+void
+gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
+{
+	Uint32 i;
+
+	if (n > 0) {
+		gfx->sprites = Realloc(gfx->sprites, n*sizeof(SDL_Surface *));
+		gfx->csprites = Realloc(gfx->csprites,
+		    n*sizeof(struct gfx_spritecl));
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			gfx->textures = Realloc(gfx->textures,
+			    n*sizeof(GLuint));
+			gfx->texcoords = Realloc(gfx->texcoords,
+			    n*sizeof(GLfloat)*4);
+		}
+#endif
+	} else {
+		Free(gfx->sprites, M_GFX);
+		Free(gfx->csprites, M_GFX);
+		gfx->sprites = NULL;
+		gfx->csprites = NULL;
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			Free(gfx->textures, M_GFX);
+			Free(gfx->texcoords, M_GFX);
+			gfx->textures = NULL;
+			gfx->texcoords = NULL;
+		}
+#endif
+	}
+	gfx->maxsprites = n;
+	gfx->nsprites = n;
+
+	for (i = 0; i < n; i++) {
+		struct gfx_spritecl *spritecl = &gfx->csprites[i];
+
+		gfx->sprites[i] = NULL;
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			GLfloat *texcoords = &gfx->texcoords[i];
+
+			gfx->textures[i] = 0;
+			texcoords[0] = 0.0f;
+			texcoords[1] = 0.0f;
+			texcoords[2] = 0.0f;
+			texcoords[3] = 0.0f;
+		}
+#endif
+		SLIST_INIT(&spritecl->sprites);
+	}
+}
+
+/* Allocate and initialize a new sprite at the end of the array. */
 Uint32
 gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite)
 {
@@ -62,95 +120,94 @@ gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite)
 
 	if (gfx->sprites == NULL) {
 		gfx->sprites = Malloc(
-		    NSPRITES_INIT * sizeof(SDL_Surface *), M_GFX);
+		    NSPRITES_INIT*sizeof(SDL_Surface *), M_GFX);
 		gfx->csprites = Malloc(
-		    NSPRITES_INIT * sizeof(struct gfx_spritecl), M_GFX);
+		    NSPRITES_INIT*sizeof(struct gfx_spritecl), M_GFX);
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			gfx->textures = Malloc(NSPRITES_INIT*sizeof(GLuint),
+			    M_GFX);
+			gfx->texcoords = Malloc(NSPRITES_INIT*sizeof(GLfloat)*4,
+			    M_GFX);
+		}
+#endif
 		gfx->maxsprites = NSPRITES_INIT;
 		gfx->nsprites = 0;
 	} else if (gfx->nsprites+1 > gfx->maxsprites) {
 		gfx->maxsprites += NSPRITES_GROW;
 		gfx->sprites = Realloc(gfx->sprites,
-		    gfx->maxsprites * sizeof(SDL_Surface *));
+		    gfx->maxsprites*sizeof(SDL_Surface *));
 		gfx->csprites = Realloc(gfx->csprites,
-		    gfx->maxsprites * sizeof(struct gfx_spritecl));
+		    gfx->maxsprites*sizeof(struct gfx_spritecl));
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			gfx->textures = Realloc(gfx->textures,
+			    gfx->maxsprites*sizeof(GLuint));
+			gfx->texcoords = Realloc(gfx->texcoords,
+			    gfx->maxsprites*sizeof(GLfloat)*4);
+		}
+#endif
 	}
+
 	gfx->sprites[gfx->nsprites] = sprite;
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		GLuint name;
+
+		name = view_surface_texture(sprite,
+		    &gfx->texcoords[gfx->nsprites]);
+		if (name == 0) {
+			fatal("texture");
+		}
+		gfx->textures[gfx->nsprites] = name;
+	}
+#endif
 	spritecl = &gfx->csprites[gfx->nsprites];
 	SLIST_INIT(&spritecl->sprites);
+	
 	return (gfx->nsprites++);
 }
 
 /*
- * Scan for alpha pixels on a surface and choose an optimal
- * alpha/colorkey setting.
+ * Scan for pixels with a non-opaque alpha channel on a surface and
+ * return 1 if there are any.
  */
-void
-gfx_scan_alpha(SDL_Surface *su)
+int
+gfx_transparent(SDL_Surface *su)
 {
-	enum {
-		GFX_ALPHA_TRANSPARENT = 0x01,
-		GFX_ALPHA_OPAQUE =	0x02,
-		GFX_ALPHA_ALPHA =	0x04
-	} aflags = 0;
-	Uint8 oldalpha = su->format->alpha;
-#if 0
-	Uint8 oldckey = su->format->colorkey;
-#endif
 	int x, y;
+	int rv = 0;
+	Uint8 *pSrc;
+
+	if (su->format->Amask == 0x0)
+		return (0);
 
 	if (SDL_MUSTLOCK(su)) {
 		SDL_LockSurface(su);
 	}
+	pSrc = (Uint8 *)su->pixels;
+
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
-			Uint8 *pixel = (Uint8 *)su->pixels +
-			    y*su->pitch + x*su->format->BytesPerPixel;
 			Uint8 r, g, b, a;
 
-			switch (su->format->BytesPerPixel) {
-			case 4:
-				SDL_GetRGBA(*(Uint32 *)pixel, su->format,
-				    &r, &g, &b, &a);
-				break;
-			case 3:
-			case 2:
-				SDL_GetRGBA(*(Uint16 *)pixel, su->format,
-				    &r, &g, &b, &a);
-				break;
-			case 1:
-				SDL_GetRGBA(*pixel, su->format,
-				    &r, &g, &b, &a);
-				break;
+			SDL_GetRGBA(GET_PIXEL(su, pSrc), su->format,
+			    &r, &g, &b, &a);
+
+			if (a != SDL_ALPHA_OPAQUE) {
+				rv = 1;
+				goto out;
 			}
 
-			switch (a) {
-			case SDL_ALPHA_TRANSPARENT:
-				aflags |= GFX_ALPHA_TRANSPARENT;
-				break;
-			case SDL_ALPHA_OPAQUE:
-				aflags |= GFX_ALPHA_OPAQUE;
-				break;
-			default:
-				aflags |= GFX_ALPHA_ALPHA;
-				break;
-			}
+			pSrc += su->format->BytesPerPixel;
 		}
 	}
-	if (SDL_MUSTLOCK(su))
+out:
+	if (SDL_MUSTLOCK(su)) {
 		SDL_UnlockSurface(su);
-
-	/* XXX use rleaccel */
-	SDL_SetAlpha(su, 0, 0);
-	SDL_SetColorKey(su, 0, 0);
-	if (aflags & (GFX_ALPHA_ALPHA|GFX_ALPHA_TRANSPARENT)) {
-		SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
-#if 0
-	/* XXX causes some images to be rendered incorrectly. */
-	} else if (aflags & GFX_ALPHA_TRANSPARENT) {
-		dprintf("colorkey %u\n", oldckey);
-		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
-#endif
 	}
+	return (rv);
 }
 
 /* Break a surface into tile-sized fragments, and map them. */
@@ -181,7 +238,10 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			SDL_Surface *su;
 			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
 			                                  SDL_RLEACCEL);
+			Uint32 sckflags = sprite->flags & (SDL_SRCCOLORKEY|
+			                                   SDL_RLEACCEL);
 			Uint8 salpha = sprite->format->alpha;
+			Uint32 scolorkey = sprite->format->colorkey;
 			struct node *node = &fragmap->map[my][mx];
 			Uint32 nsprite;
 			int fw = TILESZ;
@@ -207,14 +267,21 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			
 			/* Copy the fragment as-is. */
 			SDL_SetAlpha(sprite, 0, 0);
+			SDL_SetColorKey(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, su, &rd);
 			nsprite = gfx_insert_sprite(gfx, su);
 			SDL_SetAlpha(sprite, saflags, salpha);
+			SDL_SetColorKey(sprite, sckflags, scolorkey);
 
-			/* Adjust the alpha properties of the fragment. */
-			gfx_scan_alpha(su);
+			/*
+			 * Enable alpha blending if there are any pixels
+			 * with a non-opaque alpha channel on the surface.
+			 */
+			if (gfx_transparent(su))
+				SDL_SetAlpha(su, SDL_SRCALPHA,
+				    su->format->alpha);
 
 			/* Map the sprite as a NULL reference. */
 			node_add_sprite(fragmap, node, NULL, nsprite);
@@ -282,6 +349,10 @@ gfx_init(struct gfx *gfx, int type, const char *name)
 	gfx->canims = NULL;
 	gfx->nanims = 0;
 	gfx->maxanims = 0;
+#ifdef HAVE_OPENGL
+	gfx->textures = NULL;
+	gfx->texcoords = NULL;
+#endif
 	gfx->submaps = NULL;
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
@@ -347,6 +418,47 @@ fail:
 }
 
 static void
+gfx_free_sprite_transforms(struct gfx *gfx, Uint32 name)
+{
+	struct gfx_spritecl *spritecl = &gfx->csprites[name];
+	struct gfx_cached_sprite *csprite, *ncsprite;
+	struct transform *trans, *ntrans;
+		
+	for (csprite = SLIST_FIRST(&spritecl->sprites);
+	     csprite != SLIST_END(&spritecl->sprites);
+	     csprite = ncsprite) {
+		ncsprite = SLIST_NEXT(csprite, sprites);
+		for (trans = TAILQ_FIRST(&csprite->transforms);
+		     trans != TAILQ_END(&csprite->transforms);
+		     trans = ntrans) {
+			ntrans = TAILQ_NEXT(trans, transforms);
+			transform_destroy(trans);
+		}
+		SDL_FreeSurface(csprite->su);
+		Free(csprite, M_GFX);
+	}
+	SLIST_INIT(&spritecl->sprites);
+}
+
+static void
+gfx_free_sprite(struct gfx *gfx, Uint32 name)
+{
+	gfx_free_sprite_transforms(gfx, name);
+
+	if (gfx->sprites[name] != NULL) {
+		SDL_FreeSurface(gfx->sprites[name]);
+		gfx->sprites[name] = NULL;
+	}
+#ifdef HAVE_OPENGL
+	if (view->opengl &&
+	    gfx->textures[name] != NULL) {
+		glDeleteTextures(1, &gfx->textures[name]);
+		gfx->textures[name] = NULL;
+	}
+#endif
+}
+
+static void
 destroy_anim(struct gfx_anim *anim)
 {
 	Uint32 i;
@@ -356,6 +468,34 @@ destroy_anim(struct gfx_anim *anim)
 	}
 	Free(anim->frames, M_GFX);
 	Free(anim, M_GFX);
+}
+
+static void
+gfx_free_anim(struct gfx *gfx, Uint32 name)
+{
+	struct gfx_animcl *animcl = &gfx->canims[name];
+	struct gfx_cached_anim *canim, *ncanim;
+	struct transform *trans, *ntrans;
+
+	for (canim = SLIST_FIRST(&animcl->anims);
+	     canim != SLIST_END(&animcl->anims);
+	     canim = ncanim) {
+		ncanim = SLIST_NEXT(canim, anims);
+		for (trans = TAILQ_FIRST(&canim->transforms);
+		     trans != TAILQ_END(&canim->transforms);
+		     trans = ntrans) {
+			ntrans = TAILQ_NEXT(trans, transforms);
+			transform_destroy(trans);
+		}
+		destroy_anim(canim->anim);
+		Free(canim, M_GFX);
+	}
+	SLIST_INIT(&animcl->anims);
+
+	if (gfx->anims[name] != NULL) {
+		destroy_anim(gfx->anims[name]);
+		gfx->anims[name] = NULL;
+	}
 }
 
 /* Release a graphics package that is no longer in use. */
@@ -369,46 +509,12 @@ gfx_destroy(struct gfx *gfx)
 		TAILQ_REMOVE(&gfxq, gfx, gfxs);
 		pthread_mutex_unlock(&gfxq_lock);
 	}
-	for (i = 0; i < gfx->nsprites; i++) {
-		struct gfx_spritecl *spritecl = &gfx->csprites[i];
-		struct gfx_cached_sprite *csprite, *ncsprite;
-		struct transform *trans, *ntrans;
-		
-		for (csprite = SLIST_FIRST(&spritecl->sprites);
-		     csprite != SLIST_END(&spritecl->sprites);
-		     csprite = ncsprite) {
-			ncsprite = SLIST_NEXT(csprite, sprites);
-			for (trans = TAILQ_FIRST(&csprite->transforms);
-			     trans != TAILQ_END(&csprite->transforms);
-			     trans = ntrans) {
-				ntrans = TAILQ_NEXT(trans, transforms);
-				transform_destroy(trans);
-			}
-			SDL_FreeSurface(csprite->su);
-			Free(csprite, M_GFX);
-		}
-		SDL_FreeSurface(gfx->sprites[i]);
-	}
-	for (i = 0; i < gfx->nanims; i++) {
-		struct gfx_animcl *animcl = &gfx->canims[i];
-		struct gfx_cached_anim *canim, *ncanim;
-		struct transform *trans, *ntrans;
 
-		for (canim = SLIST_FIRST(&animcl->anims);
-		     canim != SLIST_END(&animcl->anims);
-		     canim = ncanim) {
-			ncanim = SLIST_NEXT(canim, anims);
-			for (trans = TAILQ_FIRST(&canim->transforms);
-			     trans != TAILQ_END(&canim->transforms);
-			     trans = ntrans) {
-				ntrans = TAILQ_NEXT(trans, transforms);
-				transform_destroy(trans);
-			}
-			destroy_anim(canim->anim);
-			Free(canim, 0);
-		}
-		destroy_anim(gfx->anims[i]);
-	}
+	for (i = 0; i < gfx->nsprites; i++)
+		gfx_free_sprite(gfx, i);
+	for (i = 0; i < gfx->nanims; i++)
+		gfx_free_anim(gfx, i);
+		
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
 		Free(gfx->submaps[i], M_OBJECT);
@@ -416,6 +522,10 @@ gfx_destroy(struct gfx *gfx)
 	Free(gfx->name, 0);
 	Free(gfx->sprites, M_GFX);
 	Free(gfx->csprites, M_GFX);
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		Free(gfx->textures, M_GFX);
+#endif
 	Free(gfx->anims, M_GFX);
 	Free(gfx->canims, M_GFX);
 	Free(gfx->submaps, M_GFX);
@@ -489,6 +599,38 @@ gfx_insert_anim(struct gfx *gfx)
 	SLIST_INIT(&animcl->anims);
 	gfx->nanims++;
 	return (anim);
+}
+
+/* Replace an entry into the sprite array; flushing any cached transform. */
+void
+gfx_replace_sprite(struct gfx *gfx, Uint32 name, SDL_Surface *su)
+{
+#ifdef DEBUG
+	if (name >= gfx->nsprites)
+		fatal("no sprite %u", name);
+#endif
+	gfx_free_sprite(gfx, name);
+	gfx->sprites[name] = su;
+	gfx_update_sprite(gfx, name);
+}
+
+/* Flush cached transforms and regenerate the texture of a sprite. */
+void
+gfx_update_sprite(struct gfx *gfx, Uint32 name)
+{
+	gfx_free_sprite_transforms(gfx, name);
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		GLuint texname;
+
+		if ((texname = view_surface_texture(gfx->sprites[name],
+		    &gfx->texcoords[name])) == 0) {
+			fatal("texture");
+		}
+		gfx->textures[name] = texname;
+	}
+#endif
 }
 
 #ifdef DEBUG
