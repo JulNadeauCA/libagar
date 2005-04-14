@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.112 2004/12/17 03:19:39 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.113 2005/02/08 15:57:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -161,6 +161,10 @@ int		 noderef_load(struct map *, struct netbuf *, struct node *,
 			      struct noderef **);
 void	 	 noderef_save(struct map *, struct netbuf *, struct noderef *);
 __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int, int);
+__inline__ void	 noderef_set_sprite(struct noderef *, struct map *, void *,
+		                    Uint32);
+__inline__ void	 noderef_set_anim(struct noderef *, struct map *, void *,
+		                  Uint32, Uint8);
 
 __inline__ void	 node_init(struct node *);
 int		 node_load(struct map *, struct netbuf *, struct node *);
