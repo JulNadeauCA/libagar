@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.4 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.5 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,8 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/view.h>
+
+#include <engine/map/map.h>
+#include <engine/map/mapedit.h>
+#include <engine/map/mapview.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -39,9 +42,6 @@
 #include <engine/widget/toolbar.h>
 #include <engine/widget/statusbar.h>
 #include <engine/widget/combo.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
 
 #include <errno.h>
 #include <stdarg.h>

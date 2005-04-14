@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.5 2005/01/30 05:09:41 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.6 2005/02/08 08:26:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -31,10 +31,10 @@
 #ifdef DEBUG
 
 #include <engine/view.h>
+#include <engine/map/mapview.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/tableview.h>
-#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 

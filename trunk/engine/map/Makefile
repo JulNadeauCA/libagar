@@ -1,0 +1,20 @@
+#	$Csoft: Makefile,v 1.66 2005/02/03 05:00:27 vedge Exp $
+
+TOP=	../..
+include ${TOP}/Makefile.config
+
+SUBDIR=	pixmaps
+
+LIB=		map
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
+SRCS=	eraser.c fill.c flip.c invert.c layedit.c magnifier.c map.c mapedit.c \
+	mapview.c mediasel.c merge.c nodemask.c propedit.c \
+	resize.c rootmap.c select.c shift.c stamp.c tool.c transform.c
+MAN3=	map.3 mapview.3 rootmap.3
+
+CFLAGS+=${SDL_CFLAGS}
+
+include ${TOP}/mk/csoft.lib.mk
+include ${TOP}/mk/csoft.man.mk

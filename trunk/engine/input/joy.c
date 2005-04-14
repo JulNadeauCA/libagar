@@ -1,4 +1,4 @@
-/*	$Csoft: joy.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: joy.c,v 1.7 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,8 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/input.h>
+
+#include <engine/map/map.h>
 
 static void	joy_close(void *);
 static int	joy_match(const void *, const SDL_Event *);

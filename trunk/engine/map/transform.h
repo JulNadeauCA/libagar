@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.12 2003/10/09 22:39:28 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.13 2003/12/04 03:26:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
@@ -10,6 +10,7 @@
 enum transform_type {
 	TRANSFORM_HFLIP,
 	TRANSFORM_VFLIP,
+	TRANSFORM_ROT90,
 	TRANSFORM_INVERT
 };
 

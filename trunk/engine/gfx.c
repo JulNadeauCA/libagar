@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.42 2005/04/02 03:12:53 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.43 2005/04/12 11:49:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,11 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
 
-#include <engine/mapedit/mapedit.h>
+#include <engine/map/map.h>
+#include <engine/map/mapedit.h>
 
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>

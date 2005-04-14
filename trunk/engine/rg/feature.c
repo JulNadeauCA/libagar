@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.8 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.9 2005/03/11 08:59:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,8 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/view.h>
+
+#include <engine/map/map.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>

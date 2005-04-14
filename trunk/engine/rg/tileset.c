@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.26 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.27 2005/04/14 02:49:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,10 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/view.h>
 
-#include <ctype.h>
+#include <engine/map/map.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -43,6 +42,8 @@
 #include <engine/widget/notebook.h>
 
 #include "tileset.h"
+
+#include <ctype.h>
 
 const struct version tileset_ver = {
 	"agar tileset",

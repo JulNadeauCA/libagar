@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.53 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.54 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/input.h>
 
 #include <string.h>

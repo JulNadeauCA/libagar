@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.42 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.1 2005/02/08 15:57:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,8 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
+
+#include <engine/map/map.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>

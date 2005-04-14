@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.8 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.9 2005/01/30 05:21:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,8 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/input.h>
+
+#include <engine/map/map.h>
 
 static int	mouse_match(const void *, const SDL_Event *);
 static void	mouse_event(void *, const SDL_Event *);

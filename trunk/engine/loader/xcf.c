@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.16 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.17 2005/02/11 02:29:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,7 +30,9 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
-#include <engine/map.h>			/* For TILESZ */
+
+#include <engine/map/map.h>			/* For TILESZ */
+
 #include <engine/loader/xcf.h>
 
 #include <string.h>

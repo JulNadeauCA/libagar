@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.250 2005/04/02 04:30:26 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.251 2005/04/04 01:05:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,10 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/rootmap.h>
 #include <engine/config.h>
 #include <engine/view.h>
+
+#include <engine/map/map.h>
+#include <engine/map/rootmap.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/widget.h>

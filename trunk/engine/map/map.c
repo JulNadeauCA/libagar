@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.245 2005/04/06 04:47:42 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.246 2005/04/14 02:47:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,11 +27,17 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
 
+#include <engine/map/map.h>
 #ifdef EDITION
+#include <engine/map/mapedit.h>
+#include <engine/map/mapview.h>
+#include <engine/map/layedit.h>
+
+#include <engine/rg/tileset.h>
+
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/checkbox.h>
@@ -47,12 +53,6 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/separator.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-#include <engine/mapedit/layedit.h>
-
-#include <engine/rg/tileset.h>
 #endif
 
 #include <string.h>
@@ -164,23 +164,10 @@ noderef_destroy(struct map *m, struct noderef *r)
 
 	switch (r->type) {
 	case NODEREF_SPRITE:
-		if (r->r_sprite.obj != NULL) {
-			extern int objmgr_exiting;
-
-			if (r->r_sprite.obj->gfx != NULL &&
-			    r->r_sprite.obj->gfx->type == GFX_PRIVATE &&
-			    !objmgr_exiting) {
-				object_page_out(r->r_sprite.obj, OBJECT_DATA);
-			}
-			object_del_dep(m, r->r_sprite.obj);
-			object_page_out(r->r_sprite.obj, OBJECT_GFX);
-		}
+		noderef_set_sprite(r, m, NULL, 0);
 		break;
 	case NODEREF_ANIM:
-		if (r->r_anim.obj != NULL) {
-			object_del_dep(m, r->r_anim.obj);
-			object_page_out(r->r_anim.obj, OBJECT_GFX);
-		}
+		noderef_set_anim(r, m, NULL, 0, 0);
 		break;
 	case NODEREF_WARP:
 		Free(r->r_warp.map, 0);
@@ -415,6 +402,18 @@ map_pop_layer(struct map *m)
 void
 noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 {
+	if (r->r_sprite.obj != NULL) {
+		extern int objmgr_exiting;
+
+		if (r->r_sprite.obj->gfx != NULL &&
+		    r->r_sprite.obj->gfx->type == GFX_PRIVATE &&
+		    !objmgr_exiting) {
+			object_page_out(r->r_sprite.obj, OBJECT_DATA);
+		}
+		object_del_dep(map, r->r_sprite.obj);
+		object_page_out(r->r_sprite.obj, OBJECT_GFX);
+	}
+
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
 		if (object_page_in(pobj, OBJECT_GFX) == -1) {
@@ -424,6 +423,7 @@ noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 		    object_page_in(pobj, OBJECT_DATA) == -1)
 			fatal("paging data: %s", error_get());
 	}
+
 	r->r_sprite.obj = pobj;
 	r->r_sprite.offs = offs;
 }
@@ -449,6 +449,18 @@ void
 noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs,
     Uint8 flags)
 {
+	if (r->r_anim.obj != NULL) {
+		extern int objmgr_exiting;
+
+		if (r->r_anim.obj->gfx != NULL &&
+		    r->r_anim.obj->gfx->type == GFX_PRIVATE &&
+		    !objmgr_exiting) {
+			object_page_out(r->r_anim.obj, OBJECT_DATA);
+		}
+		object_del_dep(map, r->r_anim.obj);
+		object_page_out(r->r_anim.obj, OBJECT_GFX);
+	}
+
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
 		if (object_page_in(pobj, OBJECT_GFX) == -1)

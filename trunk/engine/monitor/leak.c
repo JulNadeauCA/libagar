@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.12 2005/01/13 01:16:41 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.13 2005/02/11 02:29:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -31,10 +31,10 @@
 #ifdef DEBUG
 
 #include <engine/view.h>
+#include <engine/map/mapview.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/tableview.h>
-#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 

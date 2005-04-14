@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.44 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.45 2005/03/24 04:01:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
+
+#include <engine/map/map.h>
+
 #include <engine/vg/vg.h>
 #include <engine/vg/drawing.h>
 

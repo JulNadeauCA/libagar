@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.10 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.11 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -29,8 +29,8 @@
 #include <engine/engine.h>
 
 #ifdef EDITION
-#include <engine/mapedit/mapview.h>
-#include <engine/mapedit/tool.h>
+#include <engine/map/mapview.h>
+#include <engine/map/tool.h>
 #endif
 
 #include "vg.h"
