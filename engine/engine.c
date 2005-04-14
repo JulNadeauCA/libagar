@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.148 2005/03/10 05:37:31 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.149 2005/04/11 17:50:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,16 +36,17 @@
 #include <compat/strlcat.h>
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/input.h>
 #include <engine/config.h>
-#include <engine/rootmap.h>
 #include <engine/view.h>
 #include <engine/typesw.h>
 
+#include <engine/map/map.h>
+#include <engine/map/rootmap.h>
 #ifdef EDITION
-#include <engine/mapedit/mapedit.h>
+#include <engine/map/mapedit.h>
 #endif
+
 #ifdef DEBUG
 #include <engine/monitor/monitor.h>
 #endif

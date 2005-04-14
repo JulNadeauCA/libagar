@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.5 2004/06/18 03:11:24 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.6 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,9 +27,9 @@
  */
 
 #include <engine/engine.h>
-
-#include <engine/map.h>
 #include <engine/view.h>
+
+#include "map.h"
 
 #include <string.h>
 

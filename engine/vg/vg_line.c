@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.16 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.17 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -29,10 +29,11 @@
 #include <engine/engine.h>
 
 #ifdef EDITION
+#include <engine/map/mapview.h>
+#include <engine/map/tool.h>
+
 #include <engine/widget/window.h>
 #include <engine/widget/radio.h>
-#include <engine/mapedit/mapview.h>
-#include <engine/mapedit/tool.h>
 #endif
 
 #include "vg.h"

@@ -1,7 +1,7 @@
-/*	$Csoft: gfx.h,v 1.22 2004/12/17 03:17:51 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.23 2005/04/12 11:49:01 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/transform.h>
+#include <engine/map/transform.h>
 
 #include "begin_code.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.33 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.34 2005/04/14 02:49:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,8 +27,9 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/view.h>
+
+#include <engine/map/map.h>
 
 #include <engine/loader/surface.h>
 
@@ -47,7 +48,6 @@
 
 #include "tileset.h"
 #include "tileview.h"
-
 #include "fill.h"
 
 /*

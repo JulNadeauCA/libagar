@@ -1,10 +1,10 @@
-/*	$Csoft: vg.h,v 1.24 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.25 2005/03/11 08:59:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
-#include <engine/map.h>
+#include <engine/map/map.h>
 
 #include "begin_code.h"
 

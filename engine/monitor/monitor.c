@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.62 2005/03/04 06:05:37 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.63 2005/03/10 09:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,12 +32,13 @@
 
 #ifdef DEBUG
 
-#include <engine/map.h>
+#include <engine/map/map.h>
+#include <engine/map/mapview.h>
+
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/tableview.h>
-#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 

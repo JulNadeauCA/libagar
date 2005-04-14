@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.40 2005/03/09 06:39:18 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.41 2005/03/10 09:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,10 +27,12 @@
  */
 
 #include <config/debug.h>
+
 #ifdef DEBUG
 
 #include <engine/engine.h>
 #include <engine/view.h>
+#include <engine/map/mapview.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -40,8 +42,6 @@
 #include <engine/widget/button.h>
 #include <engine/widget/palette.h>
 #include <engine/widget/spinbutton.h>
-
-#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 

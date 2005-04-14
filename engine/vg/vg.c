@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.42 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.43 2005/03/11 08:59:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -30,13 +30,14 @@
 #include <engine/view.h>
 
 #ifdef EDITION
+#include <engine/map/mapview.h>
+#include <engine/map/tool.h>
+
 #include <engine/widget/toolbar.h>
 #include <engine/widget/button.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/menu.h>
-#include <engine/mapedit/mapview.h>
-#include <engine/mapedit/tool.h>
 #endif
 
 #include "vg.h"

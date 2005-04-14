@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.14 2005/03/24 03:58:31 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.15 2005/03/27 03:51:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,8 @@
 #include <engine/view.h>
 #include <engine/config.h>
 
+#include <engine/map/mapedit.h>
+
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/vbox.h>
@@ -48,8 +50,6 @@
 
 #include <string.h>
 #include <ctype.h>
-
-#include <engine/mapedit/mapedit.h>
 
 #include "objmgr.h"
 

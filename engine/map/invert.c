@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.18 2005/02/08 15:52:28 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.6 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,55 +27,67 @@
  */
 
 #include <engine/engine.h>
-#include <engine/typesw.h>
 
-#include <engine/object.h>
-#include <engine/perso.h>
+#include <engine/widget/radio.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapedit.h>
-#include <engine/vg/drawing.h>
-#include <engine/rg/tileset.h>
+#include "map.h"
+#include "mapedit.h"
 
-struct object_type *typesw = NULL;
-int ntypesw = 0;
+static void invert_init(struct tool *);
+static void invert_effect(struct tool *, struct node *);
 
-/* Initialize the type switch and register the built-in types. */
-void
-typesw_init(void)
+const struct tool invert_tool = {
+	N_("Color Inversion"),
+	N_("Invert the color of a tile."),
+	INVERT_TOOL_ICON,
+	INVERT_TOOL_ICON,
+	invert_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	invert_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+
+static void
+invert_init(struct tool *t)
 {
-	extern const struct object_ops object_ops, map_ops,
-	    perso_ops, drawing_ops, tileset_ops;
-
-	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
-
-	typesw_register("object", sizeof(struct object), &object_ops, OBJ_ICON);
-	typesw_register("map", sizeof(struct map), &map_ops, MAP_ICON);
-	typesw_register("perso", sizeof(struct perso), &perso_ops, PERSO_ICON);
-	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
-	    DRAWING_ICON);
-	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
-	    DRAWING_ICON);
+	tool_push_status(t, _("Specify the tile to invert."));
 }
 
-void
-typesw_destroy(void)
+static void
+invert_effect(struct tool *t, struct node *n)
 {
-	Free(typesw, M_TYPESW);
-}
+	struct map *m = t->mv->map;
+	struct noderef *nref;
+	struct transform *trans;
+	
+	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
+		if (nref->layer != m->cur_layer)
+			continue;
 
-/* Register an object type. */
-void
-typesw_register(const char *type, size_t size, const struct object_ops *ops,
-    int icon)
-{
-	struct object_type *ntype;
+		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
+			if (trans->type == TRANSFORM_INVERT) {
+				TAILQ_REMOVE(&nref->transforms, trans,
+				    transforms);
+				break;
+			}
+		}
+		if (trans != NULL)
+			continue;
 
-	typesw = Realloc(typesw, (ntypesw+1)*sizeof(struct object_type));
-	ntype = &typesw[ntypesw++];
-	strlcpy(ntype->type, type, sizeof(ntype->type));
-	ntype->size = size;
-	ntype->ops = ops;
-	ntype->icon = icon;
+		if ((trans = transform_new(TRANSFORM_INVERT, 0, NULL))
+		    == NULL) {
+			text_msg(MSG_ERROR, "%s", error_get());
+			continue;
+		}
+		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
+		break;
+	}
 }
 

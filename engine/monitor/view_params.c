@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.22 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.23 2005/03/03 10:52:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #ifdef DEBUG
 
 #include <engine/view.h>
+#include <engine/map/mapview.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -38,7 +39,6 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
 #include <engine/widget/textbox.h>
-#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 

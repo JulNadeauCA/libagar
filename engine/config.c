@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.138 2005/03/09 06:39:15 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.139 2005/04/11 12:01:28 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,9 +37,13 @@
 #include <engine/engine.h>
 #include <engine/config.h>
 #include <engine/view.h>
-#include <engine/map.h>
 #include <engine/prop.h>
 #include <engine/input.h>
+
+#include <engine/map/map.h>
+#ifdef EDITION
+#include <engine/map/mapedit.h>
+#endif
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -55,10 +59,6 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/hsvpal.h>
-
-#ifdef EDITION
-#include <engine/mapedit/mapedit.h>
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.198 2005/03/11 05:30:54 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.199 2005/03/24 03:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,12 +30,13 @@
 #include <config/have_opengl.h>
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/input.h>
 #include <engine/config.h>
-#include <engine/rootmap.h>
 #include <engine/view.h>
 #include <engine/timeout.h>
+
+#include <engine/map/map.h>
+#include <engine/map/rootmap.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/menu.h>

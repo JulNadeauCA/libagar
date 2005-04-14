@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.18 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.19 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,18 +27,21 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 #include <engine/view.h>
+
+#include "map.h"
 
 #include <string.h>
 
 static void transform_hflip(SDL_Surface **, int, Uint32 *);
 static void transform_vflip(SDL_Surface **, int, Uint32 *);
+static void transform_rot90(SDL_Surface **, int, Uint32 *);
 static void transform_invert(SDL_Surface **, int, Uint32 *);
 
 const struct transform_ent transforms[] = {
 	{ "h-flip",	TRANSFORM_HFLIP,	transform_hflip },
 	{ "v-flip",	TRANSFORM_VFLIP,	transform_vflip },
+	{ "rot-90",	TRANSFORM_ROT90,	transform_rot90 },
 	{ "invert",	TRANSFORM_INVERT,	transform_invert }
 };
 const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
@@ -161,18 +164,7 @@ transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 		memcpy(row, fb, su->pitch);
 		rowp = row + su->pitch - su->format->BytesPerPixel;
 		for (x = 0; x < su->w; x++) {
-			switch (su->format->BytesPerPixel) {
-			case 4:
-				*(Uint32 *)fb = *(Uint32 *)rowp;
-				break;
-			case 3:
-			case 2:
-				*(Uint16 *)fb = *(Uint16 *)rowp;
-				break;
-			case 1:
-				*fb = *rowp;
-				break;
-			}
+			PUT_PIXEL(su, fb, GET_PIXEL(su, rowp));
 			fb += su->format->BytesPerPixel;
 			rowp -= su->format->BytesPerPixel;
 		}
@@ -199,6 +191,13 @@ transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 		fb += su->pitch;
 	}
 	Free(rowbuf, M_NODEXFORM);
+}
+
+/* Rotate a surface 90 degrees. */
+static void
+transform_rot90(SDL_Surface **sup, int argc, Uint32 *argv)
+{
+	/* TODO */
 }
 
 #ifdef DEBUG
