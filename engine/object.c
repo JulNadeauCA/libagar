@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.196 2005/04/06 04:10:56 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.197 2005/04/06 07:34:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1610,6 +1610,7 @@ poll_gfx(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct gfx *gfx = ob->gfx;
+	struct tlist_item *it;
 	Uint32 i;
 	
 	if (gfx == NULL)
@@ -1618,12 +1619,32 @@ poll_gfx(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	for (i = 0; i < gfx->nsprites; i++) {
 		SDL_Surface *su = gfx->sprites[i];
+		struct gfx_spritecl *scl = &gfx->csprites[i];
+		struct gfx_cached_sprite *csp;
 
 		if (su != NULL) {
-			tlist_insert(tl, su, "%u. %ux%ux%u", i, su->w, su->h,
-			    su->format->BitsPerPixel);
+			it = tlist_insert(tl, su, "%u. %ux%ux%u", i,
+			    su->w, su->h, su->format->BitsPerPixel);
 		} else {
-			tlist_insert(tl, su, "%u. (null)", i);
+			it = tlist_insert(tl, su, "%u. (null)", i);
+		}
+		it->p1 = &gfx->sprites[i];
+		it->depth = 0;
+
+		if (!SLIST_EMPTY(&scl->sprites)) {
+			it->flags |= TLIST_HAS_CHILDREN;
+		}
+		SLIST_FOREACH(csp, &scl->sprites, sprites) {
+			char label[TLIST_LABEL_MAX];
+			struct tlist_item *it;
+
+			snprintf(label, sizeof(label), "%u ticks\n",
+			    csp->last_drawn);
+			transform_print(&csp->transforms, label,
+			    sizeof(label));
+
+			it = tlist_insert_item(tl, csp->su, label, csp);
+			it->depth = 1;
 		}
 	}
 	tlist_restore_selections(tl);
