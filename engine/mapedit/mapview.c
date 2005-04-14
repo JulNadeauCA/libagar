@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.178 2005/04/04 01:06:58 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.179 2005/04/04 10:28:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -741,17 +741,19 @@ mouse_buttondown(int argc, union evarg *argv)
 	case SDL_BUTTON_LEFT:
 		if (selecting(mv)) {
 			begin_selection(mv);
+			goto out;
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
-#if 0
-		mv->flags |= MAPVIEW_NO_CURSOR;
-		mv->mouse.centering++;
+		if ((mv->flags & MAPVIEW_EDIT) == 0 ||
+		    mv->curtool == NULL) {
+		    	mv->mouse.scrolling++;
+			break;
+		}
 		break;
-#endif
 	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling++;
-		break;
+		goto out;
 	case SDL_BUTTON_WHEELDOWN:
 		mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
 		mapview_status(mv, _("%d%% magnification"), mv->zoom);
