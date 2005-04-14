@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.62 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.63 2005/04/04 01:06:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@ static enum {
 	STAMP_SRC_COPYBUF	/* From copy/paste buffer */
 } source = STAMP_SRC_ARTWORK;
 
-static int replace = 0;
+static int replace = 1;
 
 static void
 init(struct tool *t)
@@ -151,20 +151,20 @@ cursor(struct tool *t, SDL_Rect *rd)
 	} else if (mv->art_tl != NULL &&
 	   (it = tlist_item_selected(mv->art_tl)) != NULL &&
 	   strcmp(it->class, "tile") == 0) {
-		struct tile *t = it->p1;
+		struct tile *tile = it->p1;
 		int dx, dy;
 
-		if (t->su != NULL) {
+		if (tile->su != NULL) {
 			struct noderef rtmp;
 
 			noderef_init(&rtmp, NODEREF_SPRITE);
-			rtmp.r_sprite.obj = (void *)t->ts;
-			rtmp.r_sprite.offs = t->sprite;
+			noderef_set_sprite(&rtmp, m, tile->ts, tile->sprite);
 			noderef_draw(m, &rtmp,
 			    WIDGET(mv)->cx + rd->x,
 			    WIDGET(mv)->cy + rd->y,
 			    mv->tilesz);
-			rv = 0;
+			noderef_destroy(m, &rtmp);
+			rv = -1;
 		}
 	}
 	return (rv);
