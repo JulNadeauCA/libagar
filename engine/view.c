@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.170 2005/03/10 05:37:31 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.171 2005/03/11 08:59:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -360,6 +360,56 @@ view_detach(struct window *win)
 	pthread_mutex_unlock(&view->lock);
 }
 
+/* Return the 32-bit form of the pixel at the given location. */
+Uint32
+view_get_pixel(SDL_Surface *s, Uint8 *pSrc)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		return (*(Uint32 *)pSrc);
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		return ((pSrc[0] << 16) +
+		        (pSrc[1] << 8) +
+		         pSrc[2]);
+#else
+		return  (pSrc[0] +
+		        (pSrc[1] << 8) +
+		        (pSrc[2] << 16));
+#endif
+	case 2:
+		return (*(Uint16 *)pSrc);
+	}
+	return (*pSrc);
+}
+
+void
+view_put_pixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)pDst = cDst;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		pDst[0] = (cDst>>16) & 0xff;
+		pDst[1] = (cDst>>8) & 0xff;
+		pDst[2] = cDst & 0xff;
+#else
+		pDst[2] = (cDst>>16) & 0xff;
+		pDst[1] = (cDst>>8) & 0xff;
+		pDst[0] = cDst & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)pDst = cDst;
+		break;
+	default:
+		*pDst = cDst;
+		break;
+	}
+}
+
 /* Release the windows on the detachment queue. */
 void
 view_detach_queued(void)
@@ -388,78 +438,20 @@ view_copy_surface(SDL_Surface *ss)
 		error_set("SDL_ConvertSurface: %s", SDL_GetError());
 		return (NULL);
 	}
+	rs->format->alpha = ss->format->alpha;
+	rs->format->colorkey = ss->format->colorkey;
 	return (rs);
 }
 
-/* Scaling routine optimized for ds > ss case. */
-/* XXX generalizes to ds.y > ss.y */
-static __inline__ void
-grow_surface(SDL_Surface *ss, SDL_Surface *ds)
+int
+view_same_pixel_fmt(SDL_Surface *s1, SDL_Surface *s2)
 {
-	Uint8 *dst = (Uint8 *)ds->pixels;
-	int dx = (ds->w/ss->w)*ss->format->BytesPerPixel;
-	int dy = (ds->h/ss->h);
-	int x, y, i;
-	void *scanline;
-
-	scanline = Malloc(ds->pitch, M_VIEW);
-	for (y = 0; y < ds->h; y += dy) {
-		Uint8 *sp = (Uint8 *)scanline;
-
-		for (x = 0; x < ds->w; x++) {
-			Uint8 *src = (Uint8 *)ss->pixels +
-			    (y*ss->h/ds->h)*ss->pitch +
-			    (x*ss->w/ds->w)*ss->format->BytesPerPixel;
-			Uint8 r1, g1, b1, a1;
-			Uint32 color;
-
-			switch (ss->format->BytesPerPixel) {
-			case 4:
-				SDL_GetRGBA(*(Uint32 *)src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
-			case 3:
-			case 2:
-				SDL_GetRGBA(*(Uint16 *)src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
-			case 1:
-				SDL_GetRGBA(*src, ss->format, &r1, &g1, &b1,
-				    &a1);
-				break;
-			}
-
-			color = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
-			switch (ds->format->BytesPerPixel) {
-			case 4:
-				*(Uint32 *)sp = color;
-				break;
-			case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				sp[0] = (color>>16) & 0xff;
-				sp[1] = (color>>8) & 0xff;
-				sp[2] = color & 0xff;
-#else
-				sp[2] = (color>>16) & 0xff;
-				sp[1] = (color>>8) & 0xff;
-				sp[0] = color & 0xff;
-#endif
-				break;
-			case 2:
-				*(Uint16 *)sp = 0;
-				break;
-			case 1:
-				*sp = color;
-				break;
-			}
-			sp += ds->format->BytesPerPixel;
-		}
-		for (i = 0; i < dy; i++) {
-			memcpy(dst, scanline, ds->pitch);
-			dst += ds->pitch;
-		}
-	}
-	Free(scanline, M_VIEW);
+	return (s1->format->BytesPerPixel == s2->format->BytesPerPixel &&
+	        s1->format->Rmask == s2->format->Rmask &&
+		s1->format->Gmask == s2->format->Gmask &&
+		s1->format->Bmask == s2->format->Bmask &&
+		s1->format->Amask == s2->format->Amask &&
+		s1->format->colorkey == s2->format->colorkey);
 }
 
 /*
@@ -470,8 +462,9 @@ void
 view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 {
 	Uint8 r1, g1, b1, a1;
-	Uint8 *dst;
+	Uint8 *pDst;
 	int x, y;
+	int same_fmt;
 
 	if (*ds == NULL) {
 		*ds = SDL_CreateRGBSurface(
@@ -487,6 +480,10 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 		}
 		(*ds)->format->alpha = ss->format->alpha;
 		(*ds)->format->colorkey = ss->format->colorkey;
+		same_fmt = 1;
+	} else {
+		//same_fmt = view_same_pixel_fmt(*ds, ss);
+		same_fmt = 0;
 	}
 
 	if (ss->w == w && ss->h == h) {
@@ -508,62 +505,26 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 	if (SDL_MUSTLOCK((*ds)))
 		SDL_LockSurface(*ds);
 
-#if 0
-	/* Use an incremental algorithm if ds > ss in size. */
-	if ((*ds)->h > ss->h && (*ds)->w > ss->w) {
-		grow_surface(ss, *ds);
-		goto out;
-	}
-#endif	
-	/* Otherwise revert to the brute-force algorithm. */
-	dst = (Uint8 *)((*ds)->pixels);
+	/* XXX only efficient when shrinking; inefficient when expanding */
+	pDst = (Uint8 *)(*ds)->pixels;
 	for (y = 0; y < (*ds)->h; y++) {
 		for (x = 0; x < (*ds)->w; x++) {
-			Uint8 *src = (Uint8 *)ss->pixels +
+			Uint8 *pSrc = (Uint8 *)ss->pixels +
 			    (y*ss->h/(*ds)->h)*ss->pitch +
 			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
-			Uint32 color;
+			Uint32 cSrc = GET_PIXEL(ss, pSrc);
+			Uint32 cDst;
 
-			switch (ss->format->BytesPerPixel) {
-			case 4:
-				SDL_GetRGBA(*(Uint32 *)src, ss->format,
+			if (same_fmt) {
+				cDst = cSrc;
+			} else {
+				SDL_GetRGBA(cSrc, ss->format,
 				    &r1, &g1, &b1, &a1);
-				break;
-			case 3:
-			case 2:
-				SDL_GetRGBA(*(Uint16 *)src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
-			case 1:
-				SDL_GetRGBA(*src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
+				cDst = SDL_MapRGBA((*ds)->format,
+				    r1, g1, b1, a1);
 			}
-
-			color = SDL_MapRGBA((*ds)->format, r1, g1, b1, a1);
-			switch ((*ds)->format->BytesPerPixel) {
-			case 4:
-				*(Uint32 *)dst = color;
-				break;
-			case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				dst[0] = (color>>16) & 0xff;
-				dst[1] = (color>>8) & 0xff;
-				dst[2] = color & 0xff;
-#else
-				dst[2] = (color>>16) & 0xff;
-				dst[1] = (color>>8) & 0xff;
-				dst[0] = color & 0xff;
-#endif
-				break;
-			case 2:
-				*(Uint16 *)dst = color;
-				break;
-			case 1:
-				*dst = color;
-				break;
-			}
-			dst += (*ds)->format->BytesPerPixel;
+			PUT_PIXEL((*ds), pDst, cDst);
+			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
 out:
@@ -574,9 +535,8 @@ out:
 }
 
 /* Set the alpha value of all pixels in a surface where a != 0. */
-/* XXX */
 void
-view_set_trans(SDL_Surface *su, Uint8 alpha)
+view_pixels_alpha(SDL_Surface *su, Uint8 alpha)
 {
 	int x, y;
 
@@ -587,7 +547,6 @@ view_set_trans(SDL_Surface *su, Uint8 alpha)
 			Uint8 *dst = (Uint8 *)su->pixels +
 			    y*su->pitch +
 			    x*su->format->BytesPerPixel;
-			Uint32 npixel;
 			Uint8 r, g, b, a;
 
 			SDL_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
@@ -595,13 +554,8 @@ view_set_trans(SDL_Surface *su, Uint8 alpha)
 			if (a != 0)
 				a = alpha;
 
-			npixel = SDL_MapRGBA(su->format, r, g, b, a);
-			switch (su->format->BytesPerPixel) {
-				_VIEW_PUTPIXEL_8(dst, npixel)
-				_VIEW_PUTPIXEL_16(dst, npixel)
-				_VIEW_PUTPIXEL_24(dst, npixel)
-				_VIEW_PUTPIXEL_32(dst, npixel)
-			}
+			PUT_PIXEL(su, dst,
+			    SDL_MapRGBA(su->format, r, g, b, a));
 		}
 	}
 	if (SDL_MUSTLOCK(su))
@@ -645,6 +599,8 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	GLuint texture;
 	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 	Uint8 salpha = sourcesu->format->alpha;
+	Uint32 sckflags = sourcesu->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+	Uint32 scolorkey = sourcesu->format->colorkey;
 	int w, h;
 
 	/* The size of OpenGL surfaces must be a power of two. */
@@ -655,7 +611,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	texcoord[2] = (GLfloat)sourcesu->w / w;
 	texcoord[3] = (GLfloat)sourcesu->h / h;
 
-	/* Create a surface with the OpenGL RGBA masks. */
+	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		0xff000000,
@@ -669,15 +625,14 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 		0xff000000
 #endif
 	    );
-	if (texsu == NULL) {
+	if (texsu == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-	}
 
 	/* Copy the source surface onto the GL texture surface. */
 	SDL_SetAlpha(sourcesu, 0, 0);
-	if (SDL_BlitSurface(sourcesu, NULL, texsu, NULL) == -1) {
-		fatal("SDL_BlitSurface: %s", SDL_GetError());
-	}
+	SDL_SetColorKey(sourcesu, 0, 0);
+	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
+	SDL_SetColorKey(sourcesu, sckflags, scolorkey);
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
@@ -701,55 +656,20 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
  * Blend the specified components with the pixel at s:[x,y], using the
  * given source alpha value.
  *
- * Clipping is done; the surface must be locked.
+ * Clipping is not done; the destination surface must be locked.
  */
 void
-view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
-    Uint8 b, Uint8 a)
+view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	Uint32 color, dstcolor = 0;
-	Uint8 dr, dg, db;
-	Uint8 *dst;
+	Uint32 cDst;
+	Uint8 dR, dG, dB;
 
-	if (!VIEW_INSIDE_CLIP_RECT(s, x, y))
-		return;
-
-	dst = (Uint8 *)s->pixels + y*s->pitch + x*s->format->BytesPerPixel;
-	switch (s->format->BytesPerPixel) {
-	case 4:
-		dstcolor = *(Uint32 *)dst;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		dstcolor = (dst[0] << 16) +
-		           (dst[1] << 8) +
-			    dst[2];
-#else
-		dstcolor =  dst[0] +
-		           (dst[1] << 8) +
-			   (dst[2] << 16);
-#endif
-		break;
-	case 2:
-		dstcolor = *(Uint16 *)dst;
-		break;
-	case 1:
-		dstcolor = *dst;
-		break;
-	}
-	SDL_GetRGB(dstcolor, s->format, &dr, &dg, &db);
-
-	dr = (((r - dr) * a) >> 8) + dr;
-	dg = (((g - dg) * a) >> 8) + dg;
-	db = (((b - db) * a) >> 8) + db;
-	color = SDL_MapRGB(s->format, dr, dg, db);
-
-	switch (s->format->BytesPerPixel) {
-		_VIEW_PUTPIXEL_8(dst,  color)
-		_VIEW_PUTPIXEL_16(dst, color)
-		_VIEW_PUTPIXEL_24(dst, color)
-		_VIEW_PUTPIXEL_32(dst, color)
-	}
+	cDst = GET_PIXEL(s, pDst);
+	SDL_GetRGB(cDst, s->format, &dR, &dG, &dB);
+	dR = (((r - dR) * a) >> 8) + dR;
+	dG = (((g - dG) * a) >> 8) + dG;
+	dB = (((b - dB) * a) >> 8) + dB;
+	PUT_PIXEL(s, pDst, SDL_MapRGB(s->format, dR, dG, dB));
 }
 
 /* Dump a surface to a JPEG image. */

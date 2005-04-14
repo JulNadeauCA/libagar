@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.27 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: view.3,v 1.28 2005/01/23 11:54:50 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -87,18 +87,17 @@ function sets the nominal refresh rate, given in frames per second.
 .Ft "void"
 .Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height" "SDL_Surface **dst"
 .Pp
+.Ft "int"
+.Fn view_same_pixel_fmt "SDL_Surface *s1" "SDL_Surface *s2"
+.Pp
 .Ft "void"
-.Fn view_set_trans "SDL_Surface *su" "Uint8 alpha"
+.Fn view_pixels_alpha "SDL_Surface *surface" "Uint8 alpha"
 .Pp
 .Ft "GLuint"
 .Fn view_surface_texture "SDL_Surface *src" "GLfloat *texcoord"
 .Pp
 .Ft "void"
 .Fn view_update "int x" "int y" "int w" "int h"
-.Pp
-.Ft "void"
-.Fn view_alpha_blend "SDL_Surface *dstsu" "Sint16 x" "Sint16 y" "Uint8 r" \
-                     "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft "void"
 .Fn view_capture "SDL_Surface *su"
@@ -124,11 +123,21 @@ by
 pixels.
 If
 .Fa dst
-is NULL, a new surface is allocated and written to it.
+is NULL, a new surface is allocated.
 .Pp
 The
-.Fn view_set_trans
-function sets the alpha value of all pixels with a non-zero alpha component.
+.Fn view_same_pixel_fmt
+function returns 1 if the surfaces
+.Fa s1
+and
+.Fa s2
+share the same depth, RGBA masks and colorkey.
+.Pp
+The
+.Fn view_pixels_alpha
+function changes the alpha value of all pixels except those with an
+alpha channel of 0, to
+.Fa alpha .
 .Pp
 If OpenGL support is available,
 .Fn view_surface_texture
@@ -151,26 +160,101 @@ when the display is refreshed.
 is a no-op if OpenGL is enabled.
 .Pp
 The
-.Fn view_alpha_blend
-function performs software alpha blending between the pixel at
-.Fa x ,
-.Fa y
-coordinates of
-.Fa dstsu
-and a pixel composed by
-.Fa r ,
-.Fa g ,
-.Fa b
-with the alpha value
-.Fa a .
-.Fn view_alpha_blend
-expects
-.Fa dstsu
-to be locked.
-.Pp
-The
 .Fn view_capture
 function encode a JPEG image file from the contents of a surface.
+.Sh PIXEL OPERATIONS
+.nr nS 1
+.Ft "void"
+.Fn CLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn UNCLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
+.Pp
+.Ft "Uint32"
+.Fn GET_PIXEL "SDL_Surface *s" "Uint8 *p"
+.Pp
+.Ft "Uint32"
+.Fn GET_PIXEL2 "SDL_Surface *s" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn PUT_PIXEL "SDL_Surface *s" "Uint8 *p" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn PUT_PIXEL2 "SDL_Surface *s" "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn PUT_PIXEL2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn BLEND_RGBA "SDL_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
+.Fn BLEND_RGBA2 "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
+.Fn BLEND_RGBA2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha"
+.Pp
+.Ft "void"
+.Fn VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn VIEW_PUT_PIXEL2 "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn VIEW_PUT_PIXEL2_CLIPPED "int x" "int y" "Uint32 c"
+.nr nS 0
+.Pp
+The macros
+.Fn CLIPPED_PIXEL
+and
+.Fn UNCLIPPED_PIXEL
+evaluate whether the pixel at the given coordinates resides inside or outside
+of the clipping rectangle of the given surface.
+.Pp
+.Fn GET_PIXEL
+returns a 32-bit interpretation of the pixel at the given location
+.Fa p
+in the pixel data of the surface
+.Fa s .
+The
+.Fn GET_PIXEL2
+variant finds the location of the pixel in the surface from the coordinates
+.Fa x ,
+.Fa y .
+.Pp
+.Fn PUT_PIXEL
+and
+.Fn PUT_PIXEL2
+write the color
+.Fa c
+to the pixel at the given location, without doing any clipping.
+The
+.Fn PUT_PIXEL2_CLIPPED
+variant ensures that the pixel is inside the clipping rectangle of the surface
+before writing to it.
+.Pp
+The
+.Fa BLEND_RGBA ,
+.Fa BLEND_RGBA2
+and
+.Fa BLEND_RGBA2_CLIPPED
+macros operate in a manner similar to
+.Fa PUT_PIXEL* ,
+except that the destination pixel is alpha-blended with the color described
+by the given RGB triplet, whose weight is defined by the
+.Fa alpha
+parameter.
+.Pp
+The macros
+.Fn VIEW_PUT_PIXEL ,
+.Fn VIEW_PUT_PIXEL2
+and
+.Fn VIEW_PUT_PIXEL2_CLIPPED
+behave in a manner similar to
+.Fn PUT_PIXEL* ,
+except that they are optimized for the display surface.
+For instance, support for specific display depths may have been disabled
+at compile-time.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
