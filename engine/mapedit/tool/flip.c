@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.23 2004/04/10 21:24:10 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.24 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,56 +29,9 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void flip_init(struct tool *);
-static int stamp_cursor(struct tool *, SDL_Rect *);
-static void flip_effect(struct tool *, struct node *);
-
-const struct tool flip_tool = {
-	N_("Flip Tile"),
-	N_("Apply a flip/mirror transformation on a tile."),
-	FLIP_TOOL_ICON,
-	FLIP_TOOL_ICON,
-	flip_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	flip_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
-static enum flip_mode {
-	FLIP_HORIZ,		/* Mirror */
-	FLIP_VERT		/* Flip */
-} mode = FLIP_HORIZ;
-
-static int multi = 0;			/* Flip/mirror whole selection */
 static int multi_ind = 0;		/* Apply to tiles individually */
-
-
-static void
-mode_changed(int argc, union evarg *argv)
-{
-	struct tool *t = argv[1].p;
-
-	switch (mode) {
-	case FLIP_HORIZ:
-		tool_push_status(t,
-		    _("Specify the tile to flip horizontally."));
-		break;
-	case FLIP_VERT:
-		tool_push_status(t,
-		    _("Specify the tile to flip vertically."));
-		break;
-	}
-}
 
 static void
 flip_init(struct tool *t)
@@ -94,20 +47,32 @@ flip_init(struct tool *t)
 
 	win = tool_window(t, "mapedit-tool-flip");
 
-	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &mode);
-	event_new(rad, "radio-changed", mode_changed, "%p", t);
-	event_post(NULL, rad, "radio-changed", NULL);
-
-	cb = checkbox_new(win, _("Multi"));
-	widget_bind(cb, "state", WIDGET_INT, &multi);
-
-	cb = checkbox_new(win, _("Multi (individual)"));
+	cb = checkbox_new(win, _("Flip entire selection"));
 	widget_bind(cb, "state", WIDGET_INT, &multi_ind);
+	
+	tool_push_status(t, _("Specify entity/selection (L=mirror, R=flip)."));
 }
 
 static void
-flip_effect(struct tool *t, struct node *n)
+toggle_transform(struct noderef *nref, int type)
+{
+	struct transform *trans;
+
+	TAILQ_FOREACH(trans, &nref->transforms, transforms) {
+		if (trans->type == type) {
+			TAILQ_REMOVE(&nref->transforms, trans, transforms);
+			return;
+		}
+	}
+	if ((trans = transform_new(type, 0, NULL)) == NULL) {
+		text_msg(MSG_ERROR, "%s", error_get());
+		return;
+	}
+	TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
+}
+
+static void
+flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -116,6 +81,7 @@ flip_effect(struct tool *t, struct node *n)
 	int w = 1;
 	int h = 1;
 	int x, y;
+	int mode = (b == SDL_BUTTON_LEFT) ? TRANSFORM_HFLIP : TRANSFORM_VFLIP;
 
 	if (!multi_ind ||
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
@@ -130,42 +96,36 @@ flip_effect(struct tool *t, struct node *n)
 			struct noderef *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				enum transform_type type = TRANSFORM_HFLIP;
-				struct transform *trans;
-		
 				if (nref->layer != m->cur_layer)
 					continue;
 
-				switch (mode) {
-				case FLIP_HORIZ:
-					type = TRANSFORM_HFLIP;
-					break;
-				case FLIP_VERT:
-					type = TRANSFORM_VFLIP;
-					break;
-				}
-
-				TAILQ_FOREACH(trans, &nref->transforms,
-				    transforms) {
-					if (trans->type == type) {
-						TAILQ_REMOVE(&nref->transforms,
-						    trans, transforms);
-						break;
-					}
-				}
-				if (trans != NULL)
-					continue;
-
-				if ((trans = transform_new(type, 0, NULL))
-				    == NULL) {
-					text_msg(MSG_ERROR, "%s", error_get());
-					continue;
-				}
-				TAILQ_INSERT_TAIL(&nref->transforms, trans,
-				    transforms);
-				break;
+				toggle_transform(nref, mode);
 			}
 		}
 	}
 }
+
+static int
+flip_cursor(struct tool *t, SDL_Rect *rd)
+{
+	return (-1);
+}
+
+const struct tool flip_tool = {
+	N_("Flip Tile"),
+	N_("Apply a flip/mirror transformation on a tile."),
+	FLIP_TOOL_ICON,
+	FLIP_TOOL_ICON,
+	flip_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	flip_cursor,
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	flip_mousebuttondown,
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
