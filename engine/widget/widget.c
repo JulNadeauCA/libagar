@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.100 2005/03/11 08:56:33 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.101 2005/04/04 01:05:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1124,7 +1124,7 @@ widget_put_pixel(void *p, int wx, int wy, Uint32 color)
 	int y = wid->cy+wy;
 	Uint8 *d;
 
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
+	if (CLIPPED_PIXEL(view->v, x, y))
 		return;
 
 	d = (Uint8 *)view->v->pixels + y*view->v->pitch + x*vfmt->BytesPerPixel;

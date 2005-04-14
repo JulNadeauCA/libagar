@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.10 2005/03/09 06:37:36 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.11 2005/04/09 05:55:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -358,7 +358,7 @@ hsvpal_draw(void *p)
 			for (x = pal->rpreview.x + 20;
 			     x < pal->rpreview.x + pal->rpreview.w - 20;
 			     x++) {
-				view_alpha_blend(view->v,
+				BLEND_RGBA2_CLIPPED(view->v,
 				    WIDGET(pal)->cx+x,
 				    WIDGET(pal)->cy+y,
 				    r, g, b, a);
