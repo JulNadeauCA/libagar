@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.25 2005/04/06 07:34:28 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.26 2005/04/10 09:09:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -134,7 +134,7 @@ tileset_reinit(void *obj)
 	}
 
 	ts->max_sprites = 0;
-	OBJECT(ts)->gfx->nsprites = 0;
+	gfx_alloc_sprites(OBJECT(ts)->gfx, 0);
 
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
@@ -203,17 +203,11 @@ tileset_load(void *obj, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&ts->lock);
-
 	ts->flags = read_uint32(buf);
 	ts->max_sprites = read_uint32(buf);
 
-	gfx->nsprites = ts->max_sprites;
-	gfx->sprites = Realloc(gfx->sprites, gfx->nsprites *
-			                     sizeof(SDL_Surface *));
-	for (i = 0; i < gfx->nsprites; i++)
-		gfx->sprites[i] = NULL;
-
-	dprintf("%u sprites\n", ts->max_sprites);
+	/* Resize the sprite array. */
+	gfx_alloc_sprites(gfx, ts->max_sprites);
 
 	/* Load the vectorial sketches. */
 	nsketches = read_uint32(buf);

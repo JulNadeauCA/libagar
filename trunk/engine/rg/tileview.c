@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.29 2005/04/02 04:04:52 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.30 2005/04/10 09:09:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1005,10 +1005,10 @@ tileview_pixel2i(struct tileview *tv, int x, int y)
 				continue;
 
 			if (tv->c.a < 255) {
-				view_alpha_blend(view->v, cx, cy,
+				BLEND_RGBA2_CLIPPED(view->v, cx, cy,
 				    tv->c.r, tv->c.g, tv->c.b, tv->c.a);
 			} else {
-				VIEW_PUT_PIXEL(view->v, cx, cy, tv->c.pc);
+				VIEW_PUT_PIXEL2_CLIPPED(cx, cy, tv->c.pc);
 			}
 		}
 	}

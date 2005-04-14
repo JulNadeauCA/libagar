@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.32 2005/04/02 04:07:50 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.33 2005/04/10 09:09:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
 	SDL_LockSurface(t->su);
 	for (sy = 0, dy = rd->y; sy < px->su->h; sy++, dy++) {
 		for (sx = 0, dx = rd->x; sx < px->su->w; sx++, dx++) {
-			if (!VIEW_INSIDE_CLIP_RECT(t->su, dx, dy))
+			if (CLIPPED_PIXEL(t->su, dx, dy))
 				continue;
 
 			pSrc = (Uint8 *)px->su->pixels + sy*px->su->pitch +
@@ -142,7 +142,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	}
 	t->su->format->alpha = alpha;
 
-	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
+	gfx_replace_sprite(OBJECT(ts)->gfx, t->sprite, t->su);
 }
 
 void
@@ -197,6 +197,8 @@ tile_generate(struct tile *t)
 			break;
 		}
 	}
+
+	gfx_update_sprite(OBJECT(t->ts)->gfx, t->sprite);
 }
 
 struct tile_element *
@@ -386,7 +388,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
 	t->sprite = read_uint32(buf);
-	OBJECT(ts)->gfx->sprites[t->sprite] = t->su;
+	gfx_replace_sprite(OBJECT(ts)->gfx, t->sprite, t->su);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);

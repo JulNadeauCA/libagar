@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.27 2005/01/25 01:18:57 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.28 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -193,7 +193,7 @@ palette_draw(void *p)
 		    COLOR(HSVPAL_TILE2_COLOR));
 		for (y = 0; y < WIDGET(pal)->h; y++) {
 			for (x = 0; x < WIDGET(pal)->w; x++) {
-				view_alpha_blend(view->v,
+				BLEND_RGBA2_CLIPPED(view->v,
 				    WIDGET(pal)->cx+x,
 				    WIDGET(pal)->cy+y,
 				    r, g, b, a);

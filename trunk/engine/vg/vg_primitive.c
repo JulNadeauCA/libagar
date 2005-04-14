@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.7 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.8 2005/03/03 10:56:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@ vg_put_pixel(struct vg *vg, int x, int y, Uint32 c)
 {
 	Uint8 *d;
 
-	if (!VIEW_INSIDE_CLIP_RECT(vg->su, x, y))
+	if (CLIPPED_PIXEL(vg->su, x, y))
 		return;
 
 	d = (Uint8 *)vg->su->pixels +
