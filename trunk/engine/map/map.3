@@ -1,0 +1,370 @@
+.\"	$Csoft: map.3,v 1.53 2005/01/05 04:44:03 vedge Exp $
+.\"
+.\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd JANUARY 30, 2002
+.Dt MAP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm map
+.Nd agar layered 2D space
+.Sh SYNOPSIS
+.Fd #include <engine/map/map.h>
+.Sh DESCRIPTION
+The
+.Nm
+object implements a multilayered 2D
+.Xr space 3
+which is partitioned into fixed-size nodes.
+The
+.Nm
+space is suitable for 2D overhead, isometric and platform graphics.
+Each nodes contains a stack of elements (such as references to sprites and
+tiles).
+.Pp
+In a game scenario, for instance, the rendering of a scene might be achieved by
+blitting the graphical references in the vicinity, while the audio system is
+playing samples from nearby audio elements.
+.Pp
+Four types of references are currently defined:
+.Pp
+.Bl -tag -width "NODEREF_SPRITE " -compact
+.It NODEREF_SPRITE
+Pointer to a static image of arbitrary size.
+Visible elements of this type are drawn only when the
+.Va redraw
+flag of the parent map is set.
+.It NODEREF_ANIM
+Pointer to an animation of arbitrary size.
+Visible elements of this type are redrawn every
+.Va n
+milliseconds (possibly by another thread on a multiprocessor system).
+.It NODEREF_WARP
+Pointer to a node residing another map.
+Geometrical objects coming in contact with this type of element are
+transported to coordinates
+.Va x ,
+.Va y ,
+.Va z
+of map
+.Va m .
+.It NODEREF_GOBJ
+Pointer to a dynamic geometrical object (such as a character).
+.El
+.Pp
+Graphical elements define two displacements in pixels of the image from
+the tile's origin, the
+.Em centering offset
+and the
+.Em motion offset.
+.Pp
+The centering offset is typically assigned by a level designer, and the
+motion offset is for animation purposes.
+If the map is drawn scaled, the centering offset is scaled to the
+tile size, but the motion offset is not.
+.Pp
+Graphical elements provide the renderer with a list of graphical transformations
+that should be applied before the tile is drawn (the resulting tile is cached).
+A per-element layer attribute also defines the attributed layer.
+.Pp
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr object 3 ->
+.Xr space 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn map_init "void *obj" "const char *name"
+.Pp
+.Ft "struct map *"
+.Fn map_new "void *parent" "const char *name"
+.Pp
+.Ft int
+.Fn map_alloc_nodes "struct map *map" "u_int w" "u_int h"
+.Pp
+.Ft void
+.Fn map_free_nodes "struct map *map"
+.Pp
+.Ft int
+.Fn map_adjust "struct map *map" "int x" "int y"
+.Pp
+.Ft void
+.Fn map_set_zoom "struct map *map" "u_int factor"
+.nr nS 0
+.Pp
+.Fn map_init
+initializes
+.Fa obj
+as a
+.Nm
+identified by the string
+.Fa name .
+.Fn map_new
+allocates, initializes and attaches a new map to
+.Fa parent ,
+unless the latter is a NULL pointer.
+.Pp
+The
+.Fn map_alloc_nodes
+function allocates
+.Fa w
+x
+.Fa h
+nodes, assuming that no node is currently allocated.
+.Fn map_alloc_nodes
+returns 0 on success or -1 on failure.
+The maximum allowable geometry is defined by
+.Dv MAP_MAX_WIDTH
+and
+.Dv MAP_MAX_HEIGHT .
+The
+.Fn map_free_nodes
+function releases the nodes allocated by
+.Fa map .
+.Pp
+The
+.Fn map_resize
+function reallocates the nodes arrays, initializing the new nodes and
+freeing the excess ones.
+.Fn map_resize
+returns 0 on sucess or -1 on failure.
+.Pp
+The
+.Fn map_set_zoom
+function sets the zoom factor for a map.
+Geometric entities are displayed to this scale.
+.Pp
+.Sh NODE INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn node_init "struct node *node"
+.Pp
+.Ft int
+.Fn node_load "struct map *map" "struct netbuf *buf" "struct node *node"
+.Pp
+.Ft void
+.Fn node_save "const struct map *map, struct netbuf *buf" \
+              "const struct node *node"
+.Pp
+.Ft void
+.Fn node_destroy "struct map *map" "struct node *node"
+.nr nS 0
+.Pp
+The
+.Fn node_init
+function initializes a node.
+The
+.Fn node_destroy
+function frees resources allocated by a node (such as the reference stack).
+To reinitialize a node, this function must be followed by
+.Fn node_init .
+.Pp
+The
+.Fn node_load
+function loads a node from
+.Fa buf ,
+returning 0 on success or -1 on failure.
+.Fn node_save
+saves a node to
+.Fa buf .
+.Sh NODE REFERENCES
+.nr nS 1
+.Ft void
+.Fn noderef_init "struct noderef *r"
+.Pp
+.Ft void
+.Fn noderef_set_center "struct noderef *r" "int xcenter" "int ycenter"
+.Pp
+.Ft void
+.Fn noderef_set_motion "struct noderef *r" "int xmotion" "int ymotion"
+.Pp
+.Ft void
+.Fn noderef_set_sprite "struct noderef *r" "struct map *m" "void *object" "Uint32 offset"
+.Pp
+.Ft void
+.Fn noderef_set_anim "struct noderef *r" "struct map *m" "void *object" "Uint32 offset" "Uint8 flags"
+.Pp
+.Ft void
+.Fn noderef_destroy "struct map *map" "struct noderef *r"
+.Pp
+.Ft int
+.Fn noderef_load "struct map *map, struct netbuf *buf, struct node *node" \
+                 "struct noderef **r"
+.Pp
+.Ft void
+.Fn noderef_save "const struct map *map, struct netbuf *buf" \
+                 "const struct noderef *r"
+.nr nS 0
+.Pp
+The
+.Fn noderef_init
+function initializes a node element structure.
+.Pp
+The
+.Fn noderef_set_center
+function sets the centering offset of a graphical element.
+.Fn noderef_set_motion
+sets the motion offset of a graphical element.
+.Pp
+The functions
+.Fn noderef_set_sprite
+and
+.Fn noderef_set_anim
+associate a new sprite or animation to the element
+.Fa r
+(of type
+.Dv NODEREF_SPRITE
+or
+.Dv NODEREF_ANIM ) .
+Unless
+.Fa object
+is NULL, a dependency of type
+.Dv OBJECT_GFX
+is generated by the operation.
+.Pp
+The
+.Fn noderef_destroy
+function frees the resources reserved by a node element.
+It must be followed by
+.Fa noderef_init
+to reinitialize the node element structure.
+.Pp
+The
+.Fn noderef_load
+and
+.Fn noderef_save
+functions are used to decode and encode an element, respectively.
+.Fn noderef_load
+returns 0 on success or -1 on failure.
+.Sh NODE MANIPULATIONS
+.nr nS 1
+.Ft void
+.Fn node_move_ref "struct map *src_map, struct node *src_node" \
+                  "struct noderef *src_r, struct map *dst_map" \
+                  "struct node *dst_node, int dst_layer"
+.Pp
+.Ft "struct noderef *"
+.Fn node_copy_ref "const struct noderef *src_r, struct map *dst_map" \
+                  "struct node *dst_node, int dst_layer"
+.Pp
+.Ft void
+.Fn node_remove_ref "struct map *map, struct node *node, struct noderef *r"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_sprite "struct map *map, struct node *node, const void *obj" \
+                    "Uint32 index"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_anim "struct map *map, struct node *node, const void *obj" \
+                  "Uint32 index, Uint32 flags"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_warp "struct map *map, struct node *dst_node" \
+                  "const char *new_map, int x, int y, Uint8 dir"
+.nr nS 0
+.Pp
+The
+.Fn node_move_ref
+function moves
+.Fa src_r
+from
+.Fa src_node
+to the node at specific map coordinates and returns 0, or -1 if
+the coordinates are outside of
+.Fa dst_map .
+The element is associated with the layer
+.Fa dlayer ,
+unless it is -1.
+.Pp
+The
+.Fn node_copy_ref
+function inserts a copy of
+.Fa src_r
+on top of
+.Fa dst_node,
+and associate with
+.Fa dst_layer
+(unless it is -1).
+.Pp
+The
+.Fn node_remove_ref
+function detaches and destroys the given node element.
+.Pp
+The
+.Fn node_add_*
+functions create new node elements.
+.Pp
+.Bl -tag -width "node_add_sprite() "
+.It Fn node_add_sprite
+Creates a graphical element consisting of a single pointer to a
+.Xr SDL_Surface 3 .
+Since graphics are managed by Agar objects, the reference is actually a
+pointer to an object and an index into this object's
+.Va gfx->sprites[]
+array.
+.It Fn node_add_anim
+Creates a graphical element consisting of a series of frames.
+The animation reference consists of a pointer to an object and an index into
+this object's
+.Va gfx->anims[]
+array.
+.It Fn node_add_warp
+Creates a warp point, where
+.Fa new_map
+is the pathname of the destination map (as returned by
+.Fn object_copy_name ) ,
+and the
+.Fa x ,
+.Fa y
+and
+.Fa dir
+arguments describe the initial position and direction of the object in the
+destination map.
+.El
+.Sh TROUBLETONS
+The node operation functions should probably use a state variable instead of
+arguments for the layer number.
+.Pp
+.Dv NODEREF_WARP
+could probably be replaced by a "warp" object.
+.Pp
+The
+.Dv NODEREF_REGEN
+and
+.Dv NODEREF_BIO
+flags could be replaced by a special type of reference for such attributes.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr object 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0.
