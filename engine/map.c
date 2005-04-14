@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.244 2005/04/06 04:10:56 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.245 2005/04/06 04:47:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,7 +74,6 @@ const struct object_ops map_ops = {
 };
 
 int map_smooth_scaling = 0;
-int map_smooth_lvl = 10;
 
 void
 node_init(struct node *node)
@@ -92,6 +91,7 @@ node_destroy(struct map *m, struct node *node)
 	     r = nr) {
 		nr = TAILQ_NEXT(r, nrefs);
 		noderef_destroy(m, r);
+		Free(r, M_MAP_NODEREF);
 	}
 }
 
@@ -194,10 +194,9 @@ noderef_destroy(struct map *m, struct noderef *r)
 	default:
 		break;
 	}
-	Free(r, M_MAP_NODEREF);
 }
 
-/* Allocate and initialize the node arrays. */
+/* Allocate and initialize the node map. */
 int
 map_alloc_nodes(struct map *m, u_int w, u_int h)
 {
@@ -223,7 +222,7 @@ map_alloc_nodes(struct map *m, u_int w, u_int h)
 	return (0);
 }
 
-/* Release the node arrays. */
+/* Release the node map. */
 void
 map_free_nodes(struct map *m)
 {
@@ -254,7 +253,7 @@ map_free_layers(struct map *m)
 	map_init_layer(&m->layers[0], _("Layer 0"));
 }
 
-/* Resize a map, initializing new nodes and destroying excess ones. */
+/* Resize a map, initializing new nodes and destroying any excess ones. */
 int
 map_resize(struct map *m, u_int w, u_int h)
 {
@@ -314,7 +313,7 @@ fail:
 	return (-1);
 }
 
-/* Set the zoom factor. */
+/* Set the display scaling factor. */
 void
 map_set_zoom(struct map *m, u_int zoom)
 {
@@ -413,6 +412,22 @@ map_pop_layer(struct map *m)
 		m->nlayers = 1;
 }
 
+void
+noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
+{
+	if (pobj != NULL) {
+		object_add_dep(map, pobj);
+		if (object_page_in(pobj, OBJECT_GFX) == -1) {
+			fatal("paging gfx: %s", error_get());
+		}
+		if (OBJECT(pobj)->gfx->type == GFX_PRIVATE &&
+		    object_page_in(pobj, OBJECT_DATA) == -1)
+			fatal("paging data: %s", error_get());
+	}
+	r->r_sprite.obj = pobj;
+	r->r_sprite.offs = offs;
+}
+
 /*
  * Insert a reference to a sprite at pobj:offs.
  * The map must be locked.
@@ -425,24 +440,29 @@ node_add_sprite(struct map *map, struct node *node, void *p, Uint32 offs)
 
 	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_SPRITE);
-	r->r_sprite.obj = pobj;
-	r->r_sprite.offs = offs;
+	noderef_set_sprite(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
-
-	if (pobj != NULL) {
-		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1) {
-			fatal("paging gfx: %s", error_get());
-		}
-		if (pobj->gfx->type == GFX_PRIVATE &&
-		    object_page_in(pobj, OBJECT_DATA) == -1)
-			fatal("paging data: %s", error_get());
-	}
 	return (r);
 }
 
+void
+noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs,
+    Uint8 flags)
+{
+	if (pobj != NULL) {
+		object_add_dep(map, pobj);
+		if (object_page_in(pobj, OBJECT_GFX) == -1)
+			fatal("paging gfx: %s", error_get());
+	}
+
+	r->r_anim.obj = pobj;
+	r->r_anim.offs = offs;
+	r->r_anim.flags = flags;
+	r->r_anim.frame = 0;
+}
+
 /*
- * Insert a reference to an animation at pobj:offs.
+ * Insert a reference to an animation.
  * The map must be locked.
  */
 struct noderef *
@@ -450,25 +470,16 @@ node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
     Uint8 flags)
 {
 	struct noderef *r;
-	
-	if (pobj != NULL) {
-		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1)
-			fatal("paging gfx: %s", error_get());
-	}
 
 	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_ANIM);
-	r->r_anim.obj = pobj;
-	r->r_anim.offs = offs;
-	r->r_anim.flags = flags;
-	r->r_anim.frame = 0;
+	noderef_set_anim(r, map, pobj, offs, flags);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
 }
 
 /*
- * Insert a warp point.
+ * Insert a reference to a location on another map.
  * The map must be locked.
  */
 struct noderef *
@@ -488,7 +499,7 @@ node_add_warp(struct map *map, struct node *node, const char *mapname,
 }
 
 /*
- * Insert a reference to a geometric object.
+ * Insert a reference to a geometric (dynamic) object.
  * The map must be locked.
  */
 struct noderef *
@@ -638,10 +649,9 @@ void
 node_remove_ref(struct map *m, struct node *node, struct noderef *r)
 {
 	pthread_mutex_lock(&m->lock);
-
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
 	noderef_destroy(m, r);
-
+	Free(r, M_MAP_NODEREF);
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -662,6 +672,7 @@ node_clear(struct map *m, struct node *node, int layer)
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
 		noderef_destroy(m, r);
+		Free(r, M_MAP_NODEREF);
 	}
 
 	pthread_mutex_unlock(&m->lock);
@@ -900,6 +911,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 fail:
 	if (*r != NULL) {
 		noderef_destroy(m, *r);
+		Free(*r, M_MAP_NODEREF);
 		*r = NULL;
 	}
 	return (-1);
@@ -1135,164 +1147,60 @@ map_save(void *p, struct netbuf *buf)
 }
 
 /* Render surface s, scaled to rx,ry pixels. */
-/* XXX use something more sophisticated / cache */
-/* XXX breaks rle accel */
+/* XXX efficient with shrinking but inefficient with growing. */
 static void
-draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
+blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
 {
 	int x, y, sx, sy;
-	Uint8 *src, r1, g1, b1, a1;
-	int dw = s->w*tilesz/TILESZ;
-	int dh = s->h*tilesz/TILESZ;
+	Uint8 r1, g1, b1, a1;
+	Uint32 c;
+	u_int wDst = (u_int)(s->w*tilesz/TILESZ);
+	u_int hDst = (u_int)(s->h*tilesz/TILESZ);
+	int same_fmt = view_same_pixel_fmt(s, view->v);
 
-	if (SDL_MUSTLOCK(view->v))
-		SDL_LockSurface(view->v);
-
-	for (y = 0; y < dh; y++) {
-		if ((sy = y*TILESZ/tilesz) >= s->h) {
+	if (SDL_MUSTLOCK(s)) {
+		SDL_LockSurface(s);
+	}
+	SDL_LockSurface(view->v);
+	
+	for (y = 0; y < hDst; y++) {
+		if ((sy = y*TILESZ/tilesz) >= s->h)
 			break;
-		}
-		for (x = 0; x < dw; x++) {
-			if ((sx = x*TILESZ/tilesz) >= s->w) {
+
+		for (x = 0; x < wDst; x++) {
+			if ((sx = x*TILESZ/tilesz) >= s->w)
 				break;
-			}
-			src = (Uint8 *)s->pixels +
+		
+			c = GET_PIXEL(s, (Uint8 *)s->pixels +
 			    sy*s->pitch +
-			    sx*s->format->BytesPerPixel;
+			    sx*s->format->BytesPerPixel);
+			
+			if ((s->flags & SDL_SRCCOLORKEY) &&
+			    c == s->format->colorkey)
+				continue;
+		
 			if (s->flags & SDL_SRCALPHA) {
-				switch (s->format->BytesPerPixel) {
-				case 4:
-					SDL_GetRGBA(*(Uint32 *)src, s->format,
-					    &r1, &g1, &b1, &a1);
-					break;
-				case 3:
-				case 2:
-					SDL_GetRGBA(*(Uint16 *)src, s->format,
-					    &r1, &g1, &b1, &a1);
-					break;
-				case 1:
-					SDL_GetRGBA(*src, s->format,
-					    &r1, &g1, &b1, &a1);
-					break;
-				}
-				view_alpha_blend(view->v, rx+x, ry+y,
+				SDL_GetRGBA(c, s->format, &r1, &g1, &b1, &a1);
+				BLEND_RGBA2_CLIPPED(view->v, rx+x, ry+y,
 				    r1, g1, b1, a1);
 			} else {
-				switch (s->format->BytesPerPixel) {
-				case 4:
-					SDL_GetRGB(*(Uint32 *)src, s->format,
+				if (same_fmt) {
+					VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y, c);
+				} else {
+					SDL_GetRGB(c, s->format,
 					    &r1, &g1, &b1);
-					break;
-				case 3:
-				case 2:
-					SDL_GetRGB(*(Uint16 *)src, s->format,
-					    &r1, &g1, &b1);
-					break;
-				case 1:
-					SDL_GetRGB(*src, s->format,
-					    &r1, &g1, &b1);
-					break;
+					VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
+					    SDL_MapRGB(vfmt, r1, g1, b1));
 				}
-				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
-				    SDL_MapRGB(vfmt, r1, g1, b1));
 			}
 		}
 	}
-	if (SDL_MUSTLOCK(view->v))
-		SDL_UnlockSurface(view->v);
+	if (SDL_MUSTLOCK(s)) {
+		SDL_UnlockSurface(s);
+	}
+	SDL_UnlockSurface(view->v);
 }
 					
-static __inline__ void
-blend_orthopixels(SDL_PixelFormat *fmt, Uint8 **srcs, Uint8 *pR, Uint8 *pG,
-    Uint8 *pB, Uint8 *pA)
-{
-	Uint32 r = 0, g = 0, b = 0, a = 0;
-	Uint8 rx, gx, bx, ax;
-	int i;
-	
-	for (i = 0; i < 5; i++) {
-		switch (fmt->BytesPerPixel) {
-		case 4:
-			SDL_GetRGBA(*((Uint32 *)srcs[i]), fmt, &rx, &gx, &bx,
-			    &ax);
-			break;
-		case 3:
-		case 2:
-			SDL_GetRGBA(*((Uint16 *)srcs[i]), fmt, &rx, &gx, &bx,
-			    &ax);
-			break;
-		case 1:
-			SDL_GetRGBA(*((Uint8 *)srcs[i]), fmt, &rx, &gx, &bx,
-			    &ax);
-			break;
-		}
-		r += rx*(i == 0 ? map_smooth_lvl : 1);
-		g += gx*(i == 0 ? map_smooth_lvl : 1);
-		b += bx*(i == 0 ? map_smooth_lvl : 1);
-		a += ax*(i == 0 ? map_smooth_lvl : 1);
-	}
-	*pR = r/(5+map_smooth_lvl);
-	*pG = g/(5+map_smooth_lvl);
-	*pB = b/(5+map_smooth_lvl);
-	if (pA != NULL)
-		*pA = a/(5+map_smooth_lvl);
-}
-
-static void
-draw_scaled_smooth(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
-{
-	Uint8 *srcs[5];
-	Uint8 r, g, b, a;
-	int x, y, sx, sy;
-	int dw = s->w*tilesz/TILESZ;
-	int dh = s->h*tilesz/TILESZ;
-
-	if (SDL_MUSTLOCK(view->v))
-		SDL_LockSurface(view->v);
-
-	for (y = 0; y < dh; y++) {
-		sy = y*TILESZ/tilesz;
-		if (sy >= s->h)
-			break;
-
-		for (x = 0; x < dw; x++) {
-			sx = x*TILESZ/tilesz;
-			if (sx >= s->w)
-				break;
-
-			srcs[0] = (Uint8 *)s->pixels +
-			    sy*s->pitch +
-			    sx*s->format->BytesPerPixel;
-			srcs[1] = (Uint8 *)s->pixels +
-			    (sy+1)*s->pitch +
-			    (sx)*s->format->BytesPerPixel;
-			srcs[2] = (Uint8 *)s->pixels +
-			    (sy)*s->pitch +
-			    (sx+1)*s->format->BytesPerPixel;
-			srcs[3] = (sx > 0) ? (Uint8 *)s->pixels +
-			    (sy)*s->pitch +
-			    (sx-1)*s->format->BytesPerPixel : srcs[0];
-			srcs[4] = (sy > 0) ? (Uint8 *)s->pixels +
-			    (sy-1)*s->pitch +
-			    (sx)*s->format->BytesPerPixel : srcs[0];
-
-			if (s->flags & SDL_SRCALPHA) {
-				blend_orthopixels(s->format, srcs,
-				    &r, &g, &b, &a);
-				view_alpha_blend(view->v, rx+x, ry+y,
-				    r, g, b, a);
-			} else {
-				blend_orthopixels(s->format, srcs,
-				    &r, &g, &b, NULL);
-				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
-				    SDL_MapRGB(vfmt, r, g, b));
-			}
-		}
-	}
-	if (SDL_MUSTLOCK(view->v))
-		SDL_UnlockSurface(view->v);
-}
-
 /*
  * Return a pointer to the referenced sprite surface.
  * If there are transforms to apply, return a pointer to a matching
@@ -1497,7 +1405,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
 			char num[16];
 
-			snprintf(num, sizeof(num), "  (s%u)",
+			snprintf(num, sizeof(num), "(s%u)",
 			    r->r_sprite.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
@@ -1513,7 +1421,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
 			char num[16];
 
-			snprintf(num, sizeof(num), "  (a%u)", r->r_anim.offs);
+			snprintf(num, sizeof(num), "(a%u)", r->r_anim.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
 			freesu++;
@@ -1533,11 +1441,7 @@ draw:
 		int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
 		         r->r_gfx.ymotion*tilesz/TILESZ;
 
-		if (map_smooth_scaling) {
-			draw_scaled_smooth(m, su, rx, ry, tilesz);
-		} else {
-			draw_scaled(m, su, rx, ry, tilesz);
-		}
+		blit_scaled(m, su, rx, ry, tilesz);
 	} else {
 		SDL_Rect rd;
 
@@ -1639,10 +1543,6 @@ edit_properties(int argc, union evarg *argv)
 	{
 		cbox = checkbox_new(bo, _("Smooth scaling"));
 		widget_bind(cbox, "state", WIDGET_INT, &map_smooth_scaling);
-		
-		sb = spinbutton_new(bo, _("Inverse smoothing factor: "));
-		widget_bind(sb, "value", WIDGET_INT, &map_smooth_lvl);
-		spinbutton_set_min(sb, -4);
 	}
 
 	bo = box_new(win, BOX_VERT, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.47 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.48 2005/03/03 10:59:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -68,6 +68,7 @@ eraser_effect(struct tool *t, struct node *n)
 
 		TAILQ_REMOVE(&n->nrefs, nref, nrefs);
 		noderef_destroy(m, nref);
+		Free(nref, M_MAP_NODEREF);
 		break;
 	}
 }

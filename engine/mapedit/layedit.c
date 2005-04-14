@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.24 2004/05/15 02:27:35 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.25 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -170,6 +170,7 @@ pop_layer(int argc, union evarg *argv)
 
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
 					noderef_destroy(m, r);
+					Free(r, M_MAP_NODEREF);
 				}
 			}
 		}
