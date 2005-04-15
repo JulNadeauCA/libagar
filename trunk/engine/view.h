@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.93 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.94 2005/04/14 02:45:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -156,7 +156,7 @@ case 4:					\
 	    (x)*(s)->format->BytesPerPixel)
 
 #define PUT_PIXEL(s, p, c) view_put_pixel((s),(p),(c))
-#define PUT_PIXEL2(s, p, c) do {					\
+#define PUT_PIXEL2(s, x, y, c) do {					\
 	view_put_pixel((s),						\
 	    (Uint8 *)(s)->pixels + (y)*(s)->pitch +			\
 	    (x)*(s)->format->BytesPerPixel,				\
