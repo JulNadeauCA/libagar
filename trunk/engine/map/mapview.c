@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.180 2005/04/14 02:44:26 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -710,9 +710,30 @@ mouse_buttondown(int argc, union evarg *argv)
 	int y = argv[3].i;
 	int xoff, yoff;
 	struct tool *tool;
-
+	
 	widget_focus(mv);
 
+	switch (button) {
+	case SDL_BUTTON_RIGHT:
+		if ((mv->flags & MAPVIEW_EDIT) == 0 ||
+		    mv->curtool == NULL) {
+		    	mv->mouse.scrolling++;
+			break;
+		}
+		break;
+	case SDL_BUTTON_MIDDLE:
+		mv->mouse.scrolling++;
+		return;
+	case SDL_BUTTON_WHEELDOWN:
+		mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		break;
+	case SDL_BUTTON_WHEELUP:
+		mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		break;
+	}
+	
 	pthread_mutex_lock(&m->lock);
 	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	if (mv->cx < 0 || mv->cy < 0)
@@ -743,24 +764,6 @@ mouse_buttondown(int argc, union evarg *argv)
 			begin_selection(mv);
 			goto out;
 		}
-		break;
-	case SDL_BUTTON_RIGHT:
-		if ((mv->flags & MAPVIEW_EDIT) == 0 ||
-		    mv->curtool == NULL) {
-		    	mv->mouse.scrolling++;
-			break;
-		}
-		break;
-	case SDL_BUTTON_MIDDLE:
-		mv->mouse.scrolling++;
-		goto out;
-	case SDL_BUTTON_WHEELDOWN:
-		mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), mv->zoom);
-		break;
-	case SDL_BUTTON_WHEELUP:
-		mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), mv->zoom);
 		break;
 	}
 
