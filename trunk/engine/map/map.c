@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.246 2005/04/14 02:47:46 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -107,6 +107,30 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->r_gfx.xmotion = 0;
 	r->r_gfx.ymotion = 0;
 	r->r_gfx.edge = 0;
+
+	switch (type) {
+	case NODEREF_SPRITE:
+		r->r_sprite.obj = NULL;
+		r->r_sprite.offs = 0;
+		break;
+	case NODEREF_ANIM:
+		r->r_anim.obj = NULL;
+		r->r_anim.offs = 0;
+		r->r_anim.flags = 0;
+		r->r_anim.frame = 0;
+		break;
+	case NODEREF_WARP:
+		r->r_warp.map = NULL;
+		r->r_warp.x = 0;
+		r->r_warp.y = 0;
+		r->r_warp.dir = 0;
+		break;
+	case NODEREF_GOBJ:
+		r->r_gobj.p = NULL;
+		r->r_gobj.flags = 0;
+		break;
+	}
+	
 	TAILQ_INIT(&r->transforms);
 	TAILQ_INIT(&r->masks);
 }
@@ -1272,7 +1296,6 @@ draw_sprite(struct noderef *r)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		
 		ncsprite = Malloc(sizeof(struct gfx_cached_sprite), M_GFX);
-		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
 		TAILQ_INIT(&ncsprite->transforms);
 
@@ -1282,9 +1305,14 @@ draw_sprite(struct noderef *r)
 		SDL_SetColorKey(origsu, scflags, scolorkey);
 		SDL_SetAlpha(origsu, saflags, salpha);
 
-		SDL_LockSurface(su);
 		TAILQ_FOREACH(trans, &r->transforms, transforms) {
-			trans->func(&su, trans->nargs, trans->args);
+			SDL_Surface *sNew;
+
+			sNew = trans->func(su, trans->nargs, trans->args);
+			if (su != sNew) {
+				SDL_FreeSurface(su);
+				su = sNew;
+			}
 
 			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
 			transform_init(ntrans, trans->type, trans->nargs,
@@ -1292,8 +1320,8 @@ draw_sprite(struct noderef *r)
 			TAILQ_INSERT_TAIL(&ncsprite->transforms, ntrans,
 			    transforms);
 		}
-		SDL_UnlockSurface(su);
 		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
+		ncsprite->su = su;
 		return (su);
 	}
 }
@@ -1355,7 +1383,7 @@ draw_anim(struct noderef *r)
 		nanim->frame = oanim->frame;
 
 		for (i = 0; i < nanim->nframes; i++) {
-			SDL_Surface *oframe = oanim->frames[i], *nframe;
+			SDL_Surface *oframe = oanim->frames[i], *sFrame;
 			Uint32 saflags = oframe->flags &
 			    (SDL_SRCALPHA|SDL_RLEACCEL);
 			Uint8 salpha = oframe->format->alpha;
@@ -1363,28 +1391,34 @@ draw_anim(struct noderef *r)
 			    (SDL_SRCCOLORKEY|SDL_RLEACCEL);
 			Uint32 scolorkey = oframe->format->colorkey;
 
-			nframe = nanim->frames[i] =
+			sFrame =
 			    SDL_CreateRGBSurface(SDL_SWSURFACE |
 			    (oframe->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|
 			                    SDL_RLEACCEL)),
 			     oframe->w, oframe->h, oframe->format->BitsPerPixel,
 			     oframe->format->Rmask, oframe->format->Gmask,
 			     oframe->format->Bmask, oframe->format->Amask);
-			if (nframe == NULL)
+			if (sFrame == NULL)
 				fatal("SDL_CreateRGBSurface: %s",
 				    SDL_GetError());
 		
 			SDL_SetAlpha(oframe, 0, 0);
 			SDL_SetColorKey(oframe, 0, 0);
-			SDL_BlitSurface(oframe, NULL, nframe, NULL);
+			SDL_BlitSurface(oframe, NULL, sFrame, NULL);
 			SDL_SetColorKey(oframe, scflags, scolorkey);
 			SDL_SetAlpha(oframe, saflags, salpha);
 
-			SDL_LockSurface(nframe);
 			TAILQ_FOREACH(trans, &r->transforms, transforms) {
-				trans->func(&nframe, trans->nargs, trans->args);
+				SDL_Surface *sNew;
+
+				sNew = trans->func(sFrame, trans->nargs,
+				    trans->args);
+				if (sNew != sFrame) {
+					SDL_FreeSurface(sFrame);
+					sFrame = sNew;
+				}
 			}
-			SDL_UnlockSurface(nframe);
+			nanim->frames[i] = sFrame;
 		}
 		TAILQ_FOREACH(trans, &r->transforms, transforms) {
 			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
