@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.19 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,19 +32,42 @@
 #include "map.h"
 
 #include <string.h>
+#include <stdarg.h>
 
-static void transform_hflip(SDL_Surface **, int, Uint32 *);
-static void transform_vflip(SDL_Surface **, int, Uint32 *);
-static void transform_rot90(SDL_Surface **, int, Uint32 *);
-static void transform_invert(SDL_Surface **, int, Uint32 *);
+const struct transform_ent transforms[];
+const int ntransforms;
 
-const struct transform_ent transforms[] = {
-	{ "h-flip",	TRANSFORM_HFLIP,	transform_hflip },
-	{ "v-flip",	TRANSFORM_VFLIP,	transform_vflip },
-	{ "rot-90",	TRANSFORM_ROT90,	transform_rot90 },
-	{ "invert",	TRANSFORM_INVERT,	transform_invert }
-};
-const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
+/*
+ * Add a new rotate transformation or update an existing one. If angle is 0,
+ * any existing rotation is removed.
+ */
+struct transform *
+transform_rotate(struct noderef *r, int angle)
+{
+	Uint32 theta = (Uint32)angle;
+	struct transform *tr;
+
+	TAILQ_FOREACH(tr, &r->transforms, transforms) {
+		if (tr->type == TRANSFORM_ROTATE) {
+			if (angle == 0) {
+				TAILQ_REMOVE(&r->transforms, tr, transforms);
+				Free(tr, M_NODEXFORM);
+				return (NULL);
+			}
+			break;
+		}
+	}
+	if (angle == 0) {
+		return (NULL);
+	}
+	if (tr == NULL) {
+		tr = transform_new(TRANSFORM_ROTATE, 1, &theta);
+		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
+	} else {
+		tr->args[0] = theta;
+	}
+	return (tr);
+}
 
 struct transform *
 transform_new(enum transform_type type, int nargs, Uint32 *args)
@@ -53,7 +76,7 @@ transform_new(enum transform_type type, int nargs, Uint32 *args)
 
 	trans = Malloc(sizeof(struct transform), M_NODEXFORM);
 	if (transform_init(trans, type, nargs, args) == -1) {
-		free(trans);
+		Free(trans, M_NODEXFORM);
 		return (NULL);
 	}
 	return (trans);
@@ -151,10 +174,9 @@ transform_save(struct netbuf *buf, const struct transform *trans)
 }
 
 /* Flip a surface horizontally. */
-static void
-transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
+static SDL_Surface *
+hflip(SDL_Surface *su, int argc, Uint32 *argv)
 {
-	SDL_Surface *su = *sup;
 	Uint8 *row, *rowp;
 	Uint8 *fb = su->pixels;
 	int x, y;
@@ -170,13 +192,13 @@ transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 		}
 	}
 	Free(row, M_NODEXFORM);
+	return (su);
 }
 
 /* Flip a surface vertically. */
-static void
-transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
+static SDL_Surface *
+vflip(SDL_Surface *su, int argc, Uint32 *argv)
 {
-	SDL_Surface *su = *sup;
 	size_t totsize = su->h*su->pitch;
 	Uint8 *row, *rowbuf;
 	Uint8 *fb = su->pixels;
@@ -191,13 +213,58 @@ transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 		fb += su->pitch;
 	}
 	Free(rowbuf, M_NODEXFORM);
+	return (su);
 }
 
-/* Rotate a surface 90 degrees. */
-static void
-transform_rot90(SDL_Surface **sup, int argc, Uint32 *argv)
+/* Rotate a surface by the given number of degrees. */
+static SDL_Surface *
+rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 {
-	/* TODO */
+	SDL_Surface *sNew;
+	Uint32 theta = argv[0];
+	int x, y;
+	int xp, yp;
+	int swapdims = (theta == 90 || theta == 270);
+
+	sNew = SDL_CreateRGBSurface(SDL_SWSURFACE |
+	    (sOrig->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	    swapdims ? sOrig->h : sOrig->w,
+	    swapdims ? sOrig->w : sOrig->h,
+	    sOrig->format->BitsPerPixel,
+	    sOrig->format->Rmask,
+	    sOrig->format->Gmask,
+	    sOrig->format->Bmask,
+	    sOrig->format->Amask);
+	if (sNew == NULL)
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+
+	switch (theta) {
+	case 90:
+		for (y = 0; y < sOrig->h; y++) {
+			for (x = 0; x < sOrig->w; x++) {
+				PUT_PIXEL2(sNew, y, x,
+				    GET_PIXEL2(sOrig, x, sOrig->h-1-y));
+			}
+		}
+		break;
+	case 180:
+		for (y = 0, yp = sOrig->h-1; y < sOrig->h; y++, yp--) {
+			for (x = 0, xp = sOrig->w-1; x < sOrig->w; x++, xp--) {
+				PUT_PIXEL2(sNew, x, y,
+				    GET_PIXEL2(sOrig, xp, yp));
+			}
+		}
+		break;
+	case 270:
+		for (y = 0; y < sOrig->h; y++) {
+			for (x = 0; x < sOrig->w; x++) {
+				PUT_PIXEL2(sNew, y, x,
+				    GET_PIXEL2(sOrig, sOrig->w-x, y));
+			}
+		}
+		break;
+	}
+	return (sNew);
 }
 
 #ifdef DEBUG
@@ -233,46 +300,31 @@ transform_print(const struct transformq *transq, char *buf, size_t buf_size)
 #endif
 
 /* Invert the colors of a surface. */
-static void
-transform_invert(SDL_Surface **sup, int argc, Uint32 *argv)
+static SDL_Surface *
+invert(SDL_Surface *su, int argc, Uint32 *argv)
 {
-	SDL_Surface *su = *sup;
 	size_t size = su->w*su->h;
-	Uint8 *pixel = su->pixels;
+	Uint8 *p = su->pixels;
 	Uint8 r, g, b, a;
 	int i;
 
-	for (i = 0; i < size; i++, pixel += su->format->BytesPerPixel) {
-		switch (su->format->BytesPerPixel) {
-		case 4:
-			SDL_GetRGBA(*(Uint32 *)pixel, su->format, &r, &g, &b,
-			    &a);
-			break;
-		case 3:
-		case 2:
-			SDL_GetRGBA(*(Uint16 *)pixel, su->format, &r, &g, &b,
-			    &a);
-			break;
-		case 1:
-			SDL_GetRGBA(*pixel, su->format, &r, &g, &b, &a);
-			break;
-		}
-
-		r = 255 - r;
-		g = 255 - g;
-		b = 255 - b;
-
-		switch (su->format->BytesPerPixel) {
-		case 4:
-			*(Uint32 *)pixel = SDL_MapRGBA(su->format, r, g, b, a);
-			break;
-		case 3:
-		case 2:
-			*(Uint16 *)pixel = SDL_MapRGBA(su->format, r, g, b, a);
-			break;
-		case 1:
-			*pixel = SDL_MapRGBA(su->format, r, g, b, a);
-			break;
-		}
+	for (i = 0; i < size; i++) {
+		SDL_GetRGBA(GET_PIXEL(su, p), su->format, &r, &g, &b, &a);
+		PUT_PIXEL(su, p, SDL_MapRGBA(su->format,
+		    255 - r,
+		    255 - g,
+		    255 - b,
+		    a));
+		p += su->format->BytesPerPixel;
 	}
+	return (su);
 }
+
+const struct transform_ent transforms[] = {
+	{ "h-flip",	TRANSFORM_HFLIP,	hflip },
+	{ "v-flip",	TRANSFORM_VFLIP,	vflip },
+	{ "rotate",	TRANSFORM_ROTATE,	rotate },
+	{ "invert",	TRANSFORM_INVERT,	invert }
+};
+const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
+

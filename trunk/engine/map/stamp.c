@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.64 2005/04/14 02:43:48 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/spinbutton.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 
@@ -44,6 +45,7 @@ static enum {
 } source = STAMP_SRC_ARTWORK;
 
 static int replace = 1;
+static int angle = 0;
 
 static void
 init(struct tool *t)
@@ -56,6 +58,8 @@ init(struct tool *t)
 	struct window *win;
 	struct radio *rad;
 	struct checkbox *cb;
+	struct spinbutton *sb;
+	struct combo *com;
 
 	win = tool_window(t, "mapedit-tool-stamp");
 
@@ -66,11 +70,16 @@ init(struct tool *t)
 	cb = checkbox_new(win, _("Replace mode"));
 	widget_bind(cb, "state", WIDGET_INT, &replace);
 
+	sb = spinbutton_new(win, _("Angle: "));
+	widget_bind(sb, "value", WIDGET_INT, &angle);
+	spinbutton_set_range(sb, 0, 360);
+	spinbutton_set_increment(sb, 90);
+
 	tool_push_status(t, _("Specify the destination node."));
 }
 
 static void
-effect(struct tool *t, struct node *n)
+stamp_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -110,12 +119,13 @@ effect(struct tool *t, struct node *n)
 			}
 			r = node_add_sprite(m, n, t->ts, t->sprite);
 			r->layer = m->cur_layer;
+			transform_rotate(r, angle);
 		}
 	}
 }
 
 static int
-cursor(struct tool *t, SDL_Rect *rd)
+stamp_cursor(struct tool *t, SDL_Rect *rd)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -159,18 +169,27 @@ cursor(struct tool *t, SDL_Rect *rd)
 
 		if (tile->su != NULL) {
 			struct noderef rtmp;
+			struct transform *trans;
 
 			noderef_init(&rtmp, NODEREF_SPRITE);
 			noderef_set_sprite(&rtmp, m, tile->ts, tile->sprite);
+			transform_rotate(&rtmp, angle);
 			noderef_draw(m, &rtmp,
 			    WIDGET(mv)->cx + rd->x,
 			    WIDGET(mv)->cy + rd->y,
 			    mv->tilesz);
 			noderef_destroy(m, &rtmp);
-			rv = -1;
+			rv = 0;
 		}
 	}
 	return (rv);
+}
+
+static void
+stamp_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
+{
+	if (b == SDL_BUTTON_RIGHT)
+		angle = (angle + 90) % 360;
 }
 
 const struct tool stamp_tool = {
@@ -182,10 +201,10 @@ const struct tool stamp_tool = {
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	cursor,
-	effect,
+	stamp_cursor,
+	stamp_effect,
 	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
+	stamp_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
 	NULL			/* keyup */
