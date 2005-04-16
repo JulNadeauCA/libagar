@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.25 2005/04/14 02:44:04 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -73,6 +73,7 @@ toggle_transform(struct noderef *nref, int type)
 	TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
 }
 
+#if 0
 static void
 flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 {
@@ -106,6 +107,46 @@ flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 		}
 	}
 }
+#else
+
+static void
+flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
+{
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
+	int selx = mv->mx + mv->mouse.x;
+	int sely = mv->my + mv->mouse.y;
+	int w = 1;
+	int h = 1;
+	int x, y;
+
+	if (!multi_ind ||
+	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
+		if (selx < 0 || selx >= m->mapw ||
+		    sely < 0 || sely >= m->maph)
+			return;
+	}
+
+	for (y = sely; y < sely+h; y++) {
+		for (x = selx; x < selx+w; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				if (nref->layer != m->cur_layer)
+					continue;
+
+				if (b == SDL_BUTTON_LEFT) {
+					toggle_transform(nref, TRANSFORM_HFLIP);
+				} else if (b == SDL_BUTTON_RIGHT) {
+					toggle_transform(nref, TRANSFORM_VFLIP);
+				}
+			}
+		}
+	}
+}
+
+#endif
 
 static int
 flip_cursor(struct tool *t, SDL_Rect *rd)
