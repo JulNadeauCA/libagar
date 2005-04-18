@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.11 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.12 2005/03/11 08:56:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -153,7 +153,7 @@ tableview_init(struct tableview * tv, int flags, datafunc data_callback,
 	}
 	tv->column = NULL;
 	tv->columncount = 0;
-	tv->sortMode = tableview_sort_not;
+	tv->sortMode = TABLEVIEW_SORT_NOT;
 
 	tv->sortColumn = ID_INVALID;
 	tv->enterEdit = ID_INVALID;
@@ -1228,10 +1228,10 @@ mousebuttonup(int argc, union evarg * argv)
 		    coord_x < (left + tv->column[i].w)) {
 			/* toggle the sort mode */
 			if (tv->sortColumn == ID_INVALID ||
-			    tv->sortMode == tableview_sort_dsc) {
-				tv->sortMode = tableview_sort_asc;
+			    tv->sortMode == TABLEVIEW_SORT_DSC) {
+				tv->sortMode = TABLEVIEW_SORT_ASC;
 			} else {
-				tv->sortMode = tableview_sort_dsc;
+				tv->sortMode = TABLEVIEW_SORT_DSC;
 			}
 
 			tv->sortColumn = tv->column[i].cid;
