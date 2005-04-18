@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.1 2005/03/27 03:10:48 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.2 2005/03/27 03:50:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -154,7 +154,7 @@ select_and_validate_file(int argc, union evarg *argv)
 }
 
 static void
-validate(int argc, union evarg *argv)
+validate_file(int argc, union evarg *argv)
 {
 	char file[MAXPATHLEN];
 	struct AGFileDlg *fdg = argv[1].p;
@@ -164,7 +164,7 @@ validate(int argc, union evarg *argv)
 }
 
 static void
-cancel(int argc, union evarg *argv)
+do_cancel(int argc, union evarg *argv)
 {
 	struct AGFileDlg *fdg = argv[1].p;
 
@@ -206,9 +206,9 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	event_new(fdg->tl_files, "tlist-dblclick", select_and_validate_file,
 	    "%p", fdg);
 
-	event_new(fdg->tb_file, "textbox-return", validate, "%p", fdg);
-	event_new(fdg->btn_ok, "button-pushed", validate, "%p", fdg);
-	event_new(fdg->btn_cancel, "button-pushed", cancel, "%p", fdg);
+	event_new(fdg->tb_file, "textbox-return", validate_file, "%p", fdg);
+	event_new(fdg->btn_ok, "button-pushed", validate_file, "%p", fdg);
+	event_new(fdg->btn_cancel, "button-pushed", do_cancel, "%p", fdg);
 
 	update_listing(fdg);
 }
