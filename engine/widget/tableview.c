@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.12 2005/03/11 08:56:33 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.13 2005/04/18 04:11:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -654,9 +654,6 @@ tableview_draw(void *p)
 	u_int i;
 	int y, update = 0;
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
-
-	if (WIDGET(tv)->w < 26 || WIDGET(tv)->h < 5)
-		return;
 
 	pthread_mutex_lock(&tv->lock);
 
