@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.112 2005/03/14 03:59:04 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.113 2005/03/17 03:10:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -260,7 +260,7 @@ tlist_draw(void *p)
 	struct tlist *tl = p;
 	struct tlist_item *it;
 	int y = 0, i = 0;
-	int offset, visitems = 0;
+	int offset;
 
 	if (WIDGET(tl)->w < 26 || WIDGET(tl)->h < 5)	/* XXX */
 		return;
@@ -370,16 +370,6 @@ drawtext:
 		    0, y,
 		    WIDGET(tl)->w, y,
 		    COLOR(TLIST_LINE_COLOR));
-		visitems++;
-	}
-
-	tl->nvisitems = visitems;
-	if (tl->nitems > 0 && visitems > 0 && visitems < tl->nitems) {
-		scrollbar_set_bar_size(tl->sbar,
-		    visitems*(WIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
-		    tl->nitems);
-	} else {
-		scrollbar_set_bar_size(tl->sbar, -1);		/* Full range */
 	}
 	pthread_mutex_unlock(&tl->lock);
 }
@@ -391,19 +381,35 @@ tlist_adjust_scrollbar(struct tlist *tl)
 	struct widget_binding *maxb, *offsetb;
 	int *max, *offset;
 	int noffset;
+	
+	tl->nvisitems = WIDGET(tl)->h / tl->item_h;
+	if (WIDGET(tl)->h % tl->item_h)
+		tl->nvisitems++;
 
 	maxb = widget_get_binding(tl->sbar, "max", &max);
 	offsetb = widget_get_binding(tl->sbar, "value", &offset);
 	noffset = *offset;
 
-	if (noffset > *max - tl->nvisitems)
-		noffset = *max - tl->nvisitems;
+	*max = tl->nitems - tl->nvisitems;
+
+	if (noffset > *max)
+		noffset = *max;
 	if (noffset < 0)
 		noffset = 0;
 
 	if (*offset != noffset) {
 		*offset = noffset;
 		widget_binding_modified(offsetb);
+	}
+
+	if (tl->nitems > 0 && tl->nvisitems > 0 &&
+	    tl->nvisitems < tl->nitems) {
+		scrollbar_set_bar_size(tl->sbar,
+		    tl->nvisitems *
+		    (WIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
+		    tl->nitems);
+	} else {
+		scrollbar_set_bar_size(tl->sbar, -1);		/* Full range */
 	}
 
 	widget_binding_unlock(offsetb);
