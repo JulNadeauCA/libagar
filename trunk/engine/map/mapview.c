@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.2 2005/04/16 05:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -420,8 +420,8 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 		widget_blit(mv, ICON(mv->prop_style), x, y);
 
 	if (mx == mv->map->origin.x && my == mv->map->origin.y) {
-		widget_blit(mv, SPRITE(mv,MAPVIEW_ORIGIN), x, y);
-		x += SPRITE(mv,MAPVIEW_ORIGIN)->w;
+		widget_blit(mv, SPRITE(mv,MAPVIEW_ORIGIN).su, x, y);
+		x += (SPRITE(mv,MAPVIEW_ORIGIN).su)->w;
 	}
 
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
@@ -432,15 +432,15 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 			if ((r->flags & flags[i].flag) == 0) {
 				continue;
 			}
-			widget_blit(mv, SPRITE(mv,flags[i].sprite), x, y);
-			x += SPRITE(mv,flags[i].sprite)->w;
+			widget_blit(mv, SPRITE(mv,flags[i].sprite).su, x, y);
+			x += (SPRITE(mv,flags[i].sprite).su)->w;
 		}
 		for (i = 0; i < nedges; i++) {
 			if (r->r_gfx.edge != edges[i].edge) {
 				continue;
 			}
-			widget_blit(mv, SPRITE(mv, edges[i].sprite), x, y);
-			x += SPRITE(mv, edges[i].sprite)->w;
+			widget_blit(mv, SPRITE(mv,edges[i].sprite).su, x, y);
+			x += (SPRITE(mv,edges[i].sprite).su)->w;
 		}
 	}
 }

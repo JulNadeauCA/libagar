@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.34 2005/04/14 02:49:25 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.35 2005/04/14 06:19:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -131,9 +131,8 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
 
-	if (t->su != NULL) {
-		SDL_FreeSurface(t->su);
-	}
+	/* Previous surface will be freed by sprite_set_surface(). */
+
 	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
@@ -141,8 +140,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	t->su->format->alpha = alpha;
-
-	gfx_replace_sprite(OBJECT(ts)->gfx, t->sprite, t->su);
+	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
 }
 
 void
@@ -198,7 +196,7 @@ tile_generate(struct tile *t)
 		}
 	}
 
-	gfx_update_sprite(OBJECT(t->ts)->gfx, t->sprite);
+	sprite_update(&SPRITE(t->ts,t->sprite));
 }
 
 struct tile_element *
@@ -388,7 +386,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
 	t->sprite = read_uint32(buf);
-	gfx_replace_sprite(OBJECT(ts)->gfx, t->sprite, t->su);
+	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -490,8 +488,8 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 void
 tile_destroy(struct tile *t)
 {
-	if (t->su != NULL)
-		SDL_FreeSurface(t->su);
+	sprite_destroy(&SPRITE(t->ts,t->sprite));
+	t->su = NULL;
 }
 
 #ifdef EDITION

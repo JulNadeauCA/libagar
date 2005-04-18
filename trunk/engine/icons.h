@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.16 2005/03/03 10:51:51 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.17 2005/03/24 03:58:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -135,7 +135,7 @@ enum {
 };
 
 extern struct object engine_icons;			/* engine.c */
-#define ICON(n)	SPRITE(&engine_icons, (n))
+#define ICON(n)	(SPRITE(&engine_icons,(n)).su)
 
 #include "close_code.h"
 #endif	/* _AGAR_ICONS_H_ */
