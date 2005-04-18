@@ -1,4 +1,4 @@
-/*	$Csoft: surface.c,v 1.1 2005/01/23 11:55:20 vedge Exp $	*/
+/*	$Csoft: surface.c,v 1.2 2005/02/14 06:40:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -96,8 +96,20 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-			case 3:
 				write_uint32(buf, *(Uint32 *)src);
+				break;
+			case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+				write_uint32(buf,
+				    (src[0] << 16) +
+				    (src[1] << 8) +
+				     src[2]);
+#else
+				write_uint32(buf,
+				    (src[2] << 16) +
+				    (src[1] << 8) +
+				     src[0]);
+#endif
 				break;
 			case 2:
 				write_uint16(buf, *(Uint16 *)src);
@@ -191,8 +203,21 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-			case 3:
 				*(Uint32 *)dst = read_uint32(buf);
+				break;
+			case 3:
+				{
+					Uint32 c = read_uint32(buf);
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+					dst[0] = (c >> 16) & 0xff;
+					dst[1] = (c >> 8) & 0xff;
+					dst[2] = c & 0xff;
+#else
+					dst[2] = (c >> 16) & 0xff;
+					dst[1] = (c >> 8) & 0xff;
+					dst[0] = c & 0xff;
+#endif
+				}
 				break;
 			case 2:
 				*(Uint16 *)dst = read_uint16(buf);
