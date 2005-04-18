@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.13 2005/04/18 04:11:42 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.14 2005/04/18 06:54:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -754,8 +754,8 @@ static void
 view_changed(struct tableview * tv)
 {
 	int rows_per_view, max, filled, value;
-	int view_height =
-	WIDGET(tv)->h - (NULL == tv->sbar_h ? 0 : WIDGET(tv->sbar_h)->h);
+	int view_height = WIDGET(tv)->h - (NULL == tv->sbar_h ? 0 :
+			                   WIDGET(tv->sbar_h)->h);
 	int scrolling_area = WIDGET(tv->sbar_v)->h - tv->sbar_v->button_size*2;
 	u_int i;
 
