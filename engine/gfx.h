@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.23 2005/04/12 11:49:01 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.24 2005/04/14 06:19:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -23,7 +23,7 @@ struct gfx_cached_sprite {
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
 	GLuint texture;
-	GLfloat texcoord;
+	GLfloat texcoords[4];
 #endif
 	Uint32 last_drawn;			/* Time last draw occured */
 	struct transformq transforms;		/* Applied transforms */
@@ -37,12 +37,18 @@ struct gfx_cached_anim {
 	SLIST_ENTRY(gfx_cached_anim) anims;
 };
 
-struct gfx_spritecl {
-	SLIST_HEAD(,gfx_cached_sprite)	sprites;
-};
-
 struct gfx_animcl {
 	SLIST_HEAD(,gfx_cached_anim)	anims;
+};
+
+struct sprite {
+	SDL_Surface *su;
+	int xOrig, yOrig;
+#ifdef HAVE_OPENGL
+	GLuint texture;
+	GLfloat texcoords[4];
+#endif
+	SLIST_HEAD(,gfx_cached_sprite) csprites;
 };
 
 struct gfx {
@@ -52,14 +58,8 @@ struct gfx {
 		GFX_PRIVATE			/* Object-managed graphics */
 	} type;
 
-	SDL_Surface	**sprites;
-#ifdef HAVE_OPENGL
-	GLuint		  *textures;
-	GLfloat		  *texcoords;
-#endif
-	struct gfx_spritecl	 *csprites;	/* Sprite transform cache */
-	Uint32			  nsprites;
-	Uint32			maxsprites;
+	struct sprite	  *sprites;		/* Images */
+	Uint32		  nsprites;
 
 	struct gfx_anim		 **anims;	/* Animations */
 	struct gfx_animcl	 *canims;	/* Anim transform cache */
@@ -78,7 +78,6 @@ struct gfx {
 };
 
 #define SPRITE(ob, i)		((struct object *)(ob))->gfx->sprites[(i)]
-#define SPRITE_TEX(ob, i)	((struct object *)(ob))->gfx->textures[(i)]
 #define ANIM(ob, i)		((struct object *)(ob))->gfx->anims[(i)]
 
 #define GFX_ANIM_FRAME(r, an) \
@@ -99,9 +98,6 @@ void		 gfx_wire(struct gfx *);
 int		 gfx_transparent(SDL_Surface *);
 
 void		 gfx_alloc_sprites(struct gfx *, Uint32);
-void		 gfx_replace_sprite(struct gfx *, Uint32, SDL_Surface *);
-void		 gfx_update_sprite(struct gfx *, Uint32);
-
 Uint32		 gfx_insert_sprite(struct gfx *, SDL_Surface *);
 struct map	*gfx_insert_fragments(struct gfx *, SDL_Surface *);
 Uint32		 gfx_insert_submap(struct gfx *, struct map *);
@@ -111,6 +107,11 @@ Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
 #ifdef DEBUG
 struct window	*gfx_debug_window(void);
 #endif
+
+void		 sprite_init(struct sprite *);
+void		 sprite_destroy(struct sprite *);
+__inline__ void	 sprite_set_surface(struct sprite *, SDL_Surface *);
+__inline__ void	 sprite_update(struct sprite *);
 __END_DECLS
 
 #include "close_code.h"

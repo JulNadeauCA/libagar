@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.43 2005/03/11 08:59:35 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.44 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -305,7 +305,8 @@ vg_update_fragments(struct vg *vg)
 				if (r->type == NODEREF_SPRITE &&
 				    r->layer == vg->map->cur_layer &&
 				    r->r_sprite.obj == pobj) {
-					fragsu = SPRITE(pobj, r->r_sprite.offs);
+					fragsu = SPRITE(pobj,
+					                r->r_sprite.offs).su;
 					break;
 				}
 			}
@@ -317,10 +318,9 @@ vg_update_fragments(struct vg *vg)
 				    vg->fmt->Gmask,
 				    vg->fmt->Bmask,
 				    vg->fmt->Amask);
-				if (fragsu == NULL)
-					fatal("SDL_CreateRGBSurface: %s",
-					    SDL_GetError());
 			}
+			if (fragsu == NULL)
+				continue;
 			
 			sd.x = x;
 			sd.y = y;
@@ -350,7 +350,7 @@ vg_destroy_fragments(struct vg *vg)
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++) {
-		SDL_FreeSurface(gfx->sprites[i]);
+		sprite_destroy(&gfx->sprites[i]);
 	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
@@ -358,8 +358,6 @@ vg_destroy_fragments(struct vg *vg)
 	}
 	gfx->nsprites = 0;
 	gfx->nsubmaps = 0;
-	gfx->sprites = NULL;
-	gfx->submaps = NULL;
 
 	if (vg->map != NULL)
 		map_free_nodes(vg->map);

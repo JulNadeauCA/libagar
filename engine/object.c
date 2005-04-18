@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.198 2005/04/14 02:45:04 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.199 2005/04/14 06:19:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1619,8 +1619,8 @@ poll_gfx(int argc, union evarg *argv)
 	
 	tlist_clear_items(tl);
 	for (i = 0; i < gfx->nsprites; i++) {
-		SDL_Surface *su = gfx->sprites[i];
-		struct gfx_spritecl *scl = &gfx->csprites[i];
+		struct sprite *spr = &gfx->sprites[i];
+		SDL_Surface *su = spr->su;
 		struct gfx_cached_sprite *csp;
 
 		if (su != NULL) {
@@ -1629,13 +1629,13 @@ poll_gfx(int argc, union evarg *argv)
 		} else {
 			it = tlist_insert(tl, su, "%u. (null)", i);
 		}
-		it->p1 = &gfx->sprites[i];
+		it->p1 = spr;
 		it->depth = 0;
 
-		if (!SLIST_EMPTY(&scl->sprites)) {
+		if (!SLIST_EMPTY(&spr->csprites)) {
 			it->flags |= TLIST_HAS_CHILDREN;
 		}
-		SLIST_FOREACH(csp, &scl->sprites, sprites) {
+		SLIST_FOREACH(csp, &spr->csprites, sprites) {
 			char label[TLIST_LABEL_MAX];
 			struct tlist_item *it;
 

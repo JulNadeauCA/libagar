@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.22 2005/03/11 05:13:23 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.23 2005/04/04 01:05:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -129,7 +129,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 		tbar->maximize_btn = button_new(tbar, NULL);
 		button_set_focusable(tbar->maximize_btn, 0);
 		button_set_label(tbar->maximize_btn,
-		    SPRITE(tbar, TITLEBAR_MAXIMIZE_ICON));
+		    SPRITE(tbar,TITLEBAR_MAXIMIZE_ICON).su);
 		button_set_padding(tbar->maximize_btn, 1);
 		event_new(tbar->maximize_btn, "button-pushed", maximize_window,
 		    "%p", tbar);
@@ -141,7 +141,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 		tbar->minimize_btn = button_new(tbar, NULL);
 		button_set_focusable(tbar->minimize_btn, 0);
 		button_set_label(tbar->minimize_btn,
-		    SPRITE(tbar, TITLEBAR_MINIMIZE_ICON));
+		    SPRITE(tbar,TITLEBAR_MINIMIZE_ICON).su);
 		button_set_padding(tbar->minimize_btn, 1);
 		event_new(tbar->minimize_btn, "button-pushed", minimize_window,
 		    "%p", tbar);
@@ -153,7 +153,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 		tbar->close_btn = button_new(tbar, NULL);
 		button_set_focusable(tbar->close_btn, 0);
 		button_set_label(tbar->close_btn,
-		    SPRITE(tbar, TITLEBAR_CLOSE_ICON));
+		    SPRITE(tbar,TITLEBAR_CLOSE_ICON).su);
 		button_set_padding(tbar->close_btn, 1);
 		event_new(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);

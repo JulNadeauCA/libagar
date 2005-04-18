@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.2 2005/04/16 05:53:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1245,83 +1245,80 @@ blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
 static __inline__ SDL_Surface *
 draw_sprite(struct noderef *r)
 {
-	struct gfx_cached_sprite *csprite;
-	struct gfx_spritecl *spritecl;
-	SDL_Surface *origsu = SPRITE(r->r_sprite.obj, r->r_sprite.offs);
+	struct sprite *spr = &SPRITE(r->r_sprite.obj,r->r_sprite.offs);
+	struct gfx_cached_sprite *csp;
 
 	if (TAILQ_EMPTY(&r->transforms))
-		return (origsu);
+		return (spr->su);
 
 	/*
 	 * Look for a cached sprite with the same transforms applied
 	 * in the same order.
 	 */
-	spritecl = &r->r_sprite.obj->gfx->csprites[r->r_sprite.offs];
-	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
+	SLIST_FOREACH(csp, &spr->csprites, sprites) {
 		struct transform *tr1, *tr2;
 				
 		for (tr1 = TAILQ_FIRST(&r->transforms),
-		     tr2 = TAILQ_FIRST(&csprite->transforms);
+		     tr2 = TAILQ_FIRST(&csp->transforms);
 		     tr1 != TAILQ_END(&r->transforms) &&
-		     tr2 != TAILQ_END(&csprite->transforms);
+		     tr2 != TAILQ_END(&csp->transforms);
 		     tr1 = TAILQ_NEXT(tr1, transforms),
 		     tr2 = TAILQ_NEXT(tr2, transforms)) {
 			if (!transform_compare(tr1, tr2))
 				break;
 		}
 		if (tr1 == TAILQ_END(&r->transforms) &&
-		    tr2 == TAILQ_END(&csprite->transforms))
+		    tr2 == TAILQ_END(&csp->transforms))
 			break;
 	}
-	if (csprite != NULL) {
-		csprite->last_drawn = SDL_GetTicks();
-		return (csprite->su);
+	if (csp != NULL) {
+		csp->last_drawn = SDL_GetTicks();
+		return (csp->su);
 	} else {
-		struct transform *trans, *ntrans;
+		struct transform *tr;
+		SDL_Surface *sOrig = spr->su;
 		SDL_Surface *su;
-		Uint32 saflags = origsu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-		Uint8 salpha = origsu->format->alpha;
-		Uint32 scflags = origsu->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-		Uint32 scolorkey = origsu->format->colorkey;
-		struct gfx_cached_sprite *ncsprite;
+		Uint32 saflags = sOrig->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+		Uint8 salpha = sOrig->format->alpha;
+		Uint32 scflags = sOrig->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+		Uint32 scolorkey = sOrig->format->colorkey;
 
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
-		    (origsu->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
-		     origsu->w, origsu->h, origsu->format->BitsPerPixel,
-		     origsu->format->Rmask,
-		     origsu->format->Gmask,
-		     origsu->format->Bmask,
-		     origsu->format->Amask);
+		    (sOrig->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+		     sOrig->w, sOrig->h, sOrig->format->BitsPerPixel,
+		     sOrig->format->Rmask,
+		     sOrig->format->Gmask,
+		     sOrig->format->Bmask,
+		     sOrig->format->Amask);
 		if (su == NULL)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		
-		ncsprite = Malloc(sizeof(struct gfx_cached_sprite), M_GFX);
-		ncsprite->last_drawn = SDL_GetTicks();
-		TAILQ_INIT(&ncsprite->transforms);
+		csp = Malloc(sizeof(struct gfx_cached_sprite), M_GFX);
+		csp->last_drawn = SDL_GetTicks();
+		TAILQ_INIT(&csp->transforms);
 
-		SDL_SetAlpha(origsu, 0, 0);
-		SDL_SetColorKey(origsu, 0, 0);
-		SDL_BlitSurface(origsu, NULL, su, NULL);
-		SDL_SetColorKey(origsu, scflags, scolorkey);
-		SDL_SetAlpha(origsu, saflags, salpha);
+		SDL_SetAlpha(sOrig, 0, 0);
+		SDL_SetColorKey(sOrig, 0, 0);
+		SDL_BlitSurface(sOrig, NULL, su, NULL);
+		SDL_SetColorKey(sOrig, scflags, scolorkey);
+		SDL_SetAlpha(sOrig, saflags, salpha);
 
-		TAILQ_FOREACH(trans, &r->transforms, transforms) {
+		TAILQ_FOREACH(tr, &r->transforms, transforms) {
 			SDL_Surface *sNew;
+			struct transform *trNew;
 
-			sNew = trans->func(su, trans->nargs, trans->args);
+			sNew = tr->func(su, tr->nargs, tr->args);
 			if (su != sNew) {
 				SDL_FreeSurface(su);
 				su = sNew;
 			}
 
-			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
-			transform_init(ntrans, trans->type, trans->nargs,
-			    trans->args);
-			TAILQ_INSERT_TAIL(&ncsprite->transforms, ntrans,
-			    transforms);
+			trNew = Malloc(sizeof(struct transform), M_NODEXFORM);
+			transform_init(trNew, tr->type, tr->nargs, tr->args);
+			TAILQ_INSERT_TAIL(&csp->transforms, trNew, transforms);
 		}
-		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
-		ncsprite->su = su;
+		SLIST_INSERT_HEAD(&spr->csprites, csp, sprites);
+		csp->su = su;
 		return (su);
 	}
 }
@@ -1451,8 +1448,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
 			char num[16];
 
-			snprintf(num, sizeof(num), "(s%u)",
-			    r->r_sprite.offs);
+			snprintf(num, sizeof(num), "(s%u)", r->r_sprite.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
 			freesu++;

@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.18 2005/03/11 08:59:33 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -458,7 +458,7 @@ poll_gfxmedia(int argc, union evarg *argv)
 		tlist_insert_item(tl, NULL, label, sm);
 	}
 	for (i = 0; i < ob->gfx->nsprites; i++) {
-		SDL_Surface *sp = ob->gfx->sprites[i];
+		SDL_Surface *sp = ob->gfx->sprites[i].su;
 	
 		snprintf(label, sizeof(label),
 		    _("s%u (%ux%u pixels, %ubpp)\n"), i, sp->w, sp->h,

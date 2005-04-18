@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.16 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.17 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -283,7 +283,7 @@ menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	mview->vpadding = 4;
 
 	/* XXX */
-	widget_map_surface(mview, view_copy_surface(SPRITE(mview,3)));
+	widget_map_surface(mview, view_copy_surface(SPRITE(mview,3).su));
 	
 	event_new(mview, "window-mousemotion", mousemotion, NULL);
 	event_new(mview, "window-mousebuttonup", mousebuttonup, NULL);

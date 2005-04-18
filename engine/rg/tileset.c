@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.27 2005/04/14 02:49:26 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.28 2005/04/14 06:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -685,12 +685,12 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ts, ins_tile_name);
-	t->sprite = gfx_insert_sprite(gfx, t->su);
-	if (gfx->nsprites > ts->max_sprites) {
-		ts->max_sprites = gfx->nsprites;
-	}
+	t->sprite = gfx_insert_sprite(gfx, NULL);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
+	
+	if (gfx->nsprites > ts->max_sprites)
+		ts->max_sprites = gfx->nsprites;
 
 	ins_tile_name[0] = '\0';
 	view_detach(pwin);

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.43 2005/04/12 11:49:01 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.44 2005/04/14 06:19:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,8 +47,6 @@
 enum {
 	NANIMS_INIT =	1,
 	NANIMS_GROW =	4,
-	NSPRITES_INIT =	1,
-	NSPRITES_GROW = 4,
 	FRAMES_INIT =	2,
 	FRAMES_GROW =	8,
 	NSUBMAPS_INIT =	1,
@@ -58,114 +56,132 @@ enum {
 struct gfxq gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t gfxq_lock;
 
+void
+sprite_init(struct sprite *spr)
+{
+	spr->su = NULL;
+	spr->xOrig = 0;
+	spr->yOrig = 0;
+	SLIST_INIT(&spr->csprites);
+
+#ifdef HAVE_OPENGL
+	spr->texture = 0;
+	spr->texcoords[0] = 0.0f;
+	spr->texcoords[1] = 0.0f;
+	spr->texcoords[2] = 0.0f;
+	spr->texcoords[3] = 0.0f;
+#endif
+}
+
+static __inline__ void
+sprite_free_transforms(struct sprite *spr)
+{
+	struct gfx_cached_sprite *csprite, *ncsprite;
+	struct transform *trans, *ntrans;
+
+	for (csprite = SLIST_FIRST(&spr->csprites);
+	     csprite != SLIST_END(&spr->csprites);
+	     csprite = ncsprite) {
+		ncsprite = SLIST_NEXT(csprite, sprites);
+		for (trans = TAILQ_FIRST(&csprite->transforms);
+		     trans != TAILQ_END(&csprite->transforms);
+		     trans = ntrans) {
+			ntrans = TAILQ_NEXT(trans, transforms);
+			transform_destroy(trans);
+		}
+		SDL_FreeSurface(csprite->su);
+		Free(csprite, M_GFX);
+	}
+	SLIST_INIT(&spr->csprites);
+}
+
+void
+sprite_destroy(struct sprite *spr)
+{
+	if (spr->su != NULL) {
+		SDL_FreeSurface(spr->su);
+		spr->su = NULL;
+	}
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		if (spr->texture != 0) {
+			glDeleteTextures(1, &spr->texture);
+			spr->texture = 0;
+		}
+		spr->texcoords[0] = 0.0f;
+		spr->texcoords[1] = 0.0f;
+		spr->texcoords[2] = 0.0f;
+		spr->texcoords[3] = 0.0f;
+	}
+#endif
+	sprite_free_transforms(spr);
+}
+
+/*
+ * Associate a different surface to a sprite; update the texture and
+ * destroy the transform cache. The previous surface is freed if any.
+ */
+void
+sprite_set_surface(struct sprite *spr, SDL_Surface *su)
+{
+	sprite_destroy(spr);
+	spr->su = su;
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		spr->texture = (su != NULL) ?
+		               view_surface_texture(su, &spr->texcoords[0]) : 0;
+	}
+#endif
+}
+
+/* Flush cached transforms and regenerate the texture of a sprite. */
+void
+sprite_update(struct sprite *spr)
+{
+	sprite_free_transforms(spr);
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		if (spr->texture != 0) {
+			glDeleteTextures(1, &spr->texture);
+		}
+		spr->texture = (spr->su != NULL) ?
+		    view_surface_texture(spr->su, &spr->texcoords[0]) : 0;
+	}
+#endif
+}
+
 /* Allocate space for n new sprites and initialize them. */
 void
 gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
 {
 	Uint32 i;
 
+	for (i = 0; i < gfx->nsprites; i++)
+		sprite_destroy(&gfx->sprites[i]);
+
 	if (n > 0) {
-		gfx->sprites = Realloc(gfx->sprites, n*sizeof(SDL_Surface *));
-		gfx->csprites = Realloc(gfx->csprites,
-		    n*sizeof(struct gfx_spritecl));
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			gfx->textures = Realloc(gfx->textures,
-			    n*sizeof(GLuint));
-			gfx->texcoords = Realloc(gfx->texcoords,
-			    n*sizeof(GLfloat)*4);
-		}
-#endif
+		gfx->sprites = Realloc(gfx->sprites, n*sizeof(struct sprite));
 	} else {
 		Free(gfx->sprites, M_GFX);
-		Free(gfx->csprites, M_GFX);
 		gfx->sprites = NULL;
-		gfx->csprites = NULL;
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			Free(gfx->textures, M_GFX);
-			Free(gfx->texcoords, M_GFX);
-			gfx->textures = NULL;
-			gfx->texcoords = NULL;
-		}
-#endif
 	}
-	gfx->maxsprites = n;
 	gfx->nsprites = n;
 
-	for (i = 0; i < n; i++) {
-		struct gfx_spritecl *spritecl = &gfx->csprites[i];
-
-		gfx->sprites[i] = NULL;
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			GLfloat *texcoords = &gfx->texcoords[i];
-
-			gfx->textures[i] = 0;
-			texcoords[0] = 0.0f;
-			texcoords[1] = 0.0f;
-			texcoords[2] = 0.0f;
-			texcoords[3] = 0.0f;
-		}
-#endif
-		SLIST_INIT(&spritecl->sprites);
-	}
+	for (i = 0; i < n; i++)
+		sprite_init(&gfx->sprites[i]);
 }
 
 /* Allocate and initialize a new sprite at the end of the array. */
 Uint32
-gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite)
+gfx_insert_sprite(struct gfx *gfx, SDL_Surface *su)
 {
-	struct gfx_spritecl *spritecl;
-
-	if (gfx->sprites == NULL) {
-		gfx->sprites = Malloc(
-		    NSPRITES_INIT*sizeof(SDL_Surface *), M_GFX);
-		gfx->csprites = Malloc(
-		    NSPRITES_INIT*sizeof(struct gfx_spritecl), M_GFX);
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			gfx->textures = Malloc(NSPRITES_INIT*sizeof(GLuint),
-			    M_GFX);
-			gfx->texcoords = Malloc(NSPRITES_INIT*sizeof(GLfloat)*4,
-			    M_GFX);
-		}
-#endif
-		gfx->maxsprites = NSPRITES_INIT;
-		gfx->nsprites = 0;
-	} else if (gfx->nsprites+1 > gfx->maxsprites) {
-		gfx->maxsprites += NSPRITES_GROW;
-		gfx->sprites = Realloc(gfx->sprites,
-		    gfx->maxsprites*sizeof(SDL_Surface *));
-		gfx->csprites = Realloc(gfx->csprites,
-		    gfx->maxsprites*sizeof(struct gfx_spritecl));
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			gfx->textures = Realloc(gfx->textures,
-			    gfx->maxsprites*sizeof(GLuint));
-			gfx->texcoords = Realloc(gfx->texcoords,
-			    gfx->maxsprites*sizeof(GLfloat)*4);
-		}
-#endif
-	}
-
-	gfx->sprites[gfx->nsprites] = sprite;
-
-#ifdef HAVE_OPENGL
-	if (view->opengl) {
-		GLuint name;
-
-		name = view_surface_texture(sprite,
-		    &gfx->texcoords[gfx->nsprites]);
-		if (name == 0) {
-			fatal("texture");
-		}
-		gfx->textures[gfx->nsprites] = name;
-	}
-#endif
-	spritecl = &gfx->csprites[gfx->nsprites];
-	SLIST_INIT(&spritecl->sprites);
+	struct sprite *spr;
 	
+	gfx->sprites = Realloc(gfx->sprites, (gfx->nsprites+1) *
+	                                     sizeof(struct sprite));
+	spr = &gfx->sprites[gfx->nsprites];
+	sprite_init(spr);
+	sprite_set_surface(spr, su);
 	return (gfx->nsprites++);
 }
 
@@ -210,7 +226,7 @@ out:
 	return (rv);
 }
 
-/* Break a surface into tile-sized fragments, and map them. */
+/* Break a surface into tile-sized fragments and generate a map. */
 struct map *
 gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 {
@@ -342,17 +358,11 @@ gfx_init(struct gfx *gfx, int type, const char *name)
 	gfx->name = name != NULL ? Strdup(name) : NULL;
 	gfx->type = type;
 	gfx->sprites = NULL;
-	gfx->csprites = NULL;
 	gfx->nsprites = 0;
-	gfx->maxsprites = 0;
 	gfx->anims = NULL;
 	gfx->canims = NULL;
 	gfx->nanims = 0;
 	gfx->maxanims = 0;
-#ifdef HAVE_OPENGL
-	gfx->textures = NULL;
-	gfx->texcoords = NULL;
-#endif
 	gfx->submaps = NULL;
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
@@ -418,47 +428,6 @@ fail:
 }
 
 static void
-gfx_free_sprite_transforms(struct gfx *gfx, Uint32 name)
-{
-	struct gfx_spritecl *spritecl = &gfx->csprites[name];
-	struct gfx_cached_sprite *csprite, *ncsprite;
-	struct transform *trans, *ntrans;
-		
-	for (csprite = SLIST_FIRST(&spritecl->sprites);
-	     csprite != SLIST_END(&spritecl->sprites);
-	     csprite = ncsprite) {
-		ncsprite = SLIST_NEXT(csprite, sprites);
-		for (trans = TAILQ_FIRST(&csprite->transforms);
-		     trans != TAILQ_END(&csprite->transforms);
-		     trans = ntrans) {
-			ntrans = TAILQ_NEXT(trans, transforms);
-			transform_destroy(trans);
-		}
-		SDL_FreeSurface(csprite->su);
-		Free(csprite, M_GFX);
-	}
-	SLIST_INIT(&spritecl->sprites);
-}
-
-static void
-gfx_free_sprite(struct gfx *gfx, Uint32 name)
-{
-	gfx_free_sprite_transforms(gfx, name);
-
-	if (gfx->sprites[name] != NULL) {
-		SDL_FreeSurface(gfx->sprites[name]);
-		gfx->sprites[name] = NULL;
-	}
-#ifdef HAVE_OPENGL
-	if (view->opengl &&
-	    gfx->textures[name] != NULL) {
-		glDeleteTextures(1, &gfx->textures[name]);
-		gfx->textures[name] = NULL;
-	}
-#endif
-}
-
-static void
 destroy_anim(struct gfx_anim *anim)
 {
 	Uint32 i;
@@ -510,24 +479,21 @@ gfx_destroy(struct gfx *gfx)
 		pthread_mutex_unlock(&gfxq_lock);
 	}
 
-	for (i = 0; i < gfx->nsprites; i++)
-		gfx_free_sprite(gfx, i);
-	for (i = 0; i < gfx->nanims; i++)
+	for (i = 0; i < gfx->nsprites; i++) {
+		sprite_destroy(&gfx->sprites[i]);
+	}
+	for (i = 0; i < gfx->nanims; i++) {
 		gfx_free_anim(gfx, i);
-		
+	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
 		Free(gfx->submaps[i], M_OBJECT);
 	}
-	Free(gfx->name, 0);
+
 	Free(gfx->sprites, M_GFX);
-	Free(gfx->csprites, M_GFX);
-#ifdef HAVE_OPENGL
-	if (view->opengl)
-		Free(gfx->textures, M_GFX);
-#endif
 	Free(gfx->anims, M_GFX);
 	Free(gfx->canims, M_GFX);
+	Free(gfx->name, 0);
 	Free(gfx->submaps, M_GFX);
 	pthread_mutex_destroy(&gfx->used_lock);
 	Free(gfx, M_GFX);
@@ -601,38 +567,6 @@ gfx_insert_anim(struct gfx *gfx)
 	return (anim);
 }
 
-/* Replace an entry into the sprite array; flushing any cached transform. */
-void
-gfx_replace_sprite(struct gfx *gfx, Uint32 name, SDL_Surface *su)
-{
-#ifdef DEBUG
-	if (name >= gfx->nsprites)
-		fatal("no sprite %u", name);
-#endif
-	gfx_free_sprite(gfx, name);
-	gfx->sprites[name] = su;
-	gfx_update_sprite(gfx, name);
-}
-
-/* Flush cached transforms and regenerate the texture of a sprite. */
-void
-gfx_update_sprite(struct gfx *gfx, Uint32 name)
-{
-	gfx_free_sprite_transforms(gfx, name);
-
-#ifdef HAVE_OPENGL
-	if (view->opengl) {
-		GLuint texname;
-
-		if ((texname = view_surface_texture(gfx->sprites[name],
-		    &gfx->texcoords[name])) == 0) {
-			fatal("texture");
-		}
-		gfx->textures[name] = texname;
-	}
-#endif
-}
-
 #ifdef DEBUG
 static void
 poll_gfx(int argc, union evarg *argv)
@@ -662,9 +596,9 @@ poll_gfx(int argc, union evarg *argv)
 		if ((it->flags & TLIST_HAS_CHILDREN) &&
 		    tlist_visible_children(tl, it)) {
 			for (i = 0; i < gfx->nsprites; i++) {
-				SDL_Surface *su = gfx->sprites[i];
+				struct sprite *spr = &gfx->sprites[i];
+				SDL_Surface *su = spr->su;
 				struct tlist_item *it;
-				struct gfx_spritecl *scl = &gfx->csprites[i];
 				struct gfx_cached_sprite *csp;
 
 				if (su != NULL) {
@@ -684,16 +618,15 @@ poll_gfx(int argc, union evarg *argv)
 					    sizeof(label));
 				}
 
-				it = tlist_insert_item(tl, gfx->sprites[i],
-				    label, gfx->sprites[i]);
+				it = tlist_insert_item(tl, su, label, spr);
 				it->depth = 1;
 
-				if (!SLIST_EMPTY(&scl->sprites)) {
+				if (!SLIST_EMPTY(&spr->csprites)) {
 					it->flags |= TLIST_HAS_CHILDREN;
 				}
 				if ((it->flags & TLIST_HAS_CHILDREN) &&
 		    		    tlist_visible_children(tl, it)) {
-					SLIST_FOREACH(csp, &scl->sprites,
+					SLIST_FOREACH(csp, &spr->csprites,
 					    sprites) {
 						struct tlist_item *it;
 
