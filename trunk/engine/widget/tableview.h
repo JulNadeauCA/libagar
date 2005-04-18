@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.5 2005/02/07 05:37:52 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.6 2005/03/11 08:56:33 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -15,12 +15,12 @@ typedef char *(*datafunc)(colID, rowID);
 typedef int (*compfunc)(colID, rowID, rowID, char mode);
 
 enum {
-	tableview_sort_not = 0,
-	tableview_sort_asc = 1,
-	tableview_sort_dsc = 2,
+	TABLEVIEW_SORT_NOT = 0,
+	TABLEVIEW_SORT_ASC = 1,
+	TABLEVIEW_SORT_DSC = 2,
 	 
-	tableview_sorted_afirst = 1,
-	tableview_sorted_bfirst = 2
+	TABLEVIEW_SORTED_AFIRST = 1,
+	TABLEVIEW_SORTED_BFIRST = 2
 };
 
 struct tableview_column {
