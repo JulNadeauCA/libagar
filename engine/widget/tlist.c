@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.113 2005/03/17 03:10:26 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.114 2005/04/18 11:46:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -383,8 +383,6 @@ tlist_adjust_scrollbar(struct tlist *tl)
 	int noffset;
 	
 	tl->nvisitems = WIDGET(tl)->h / tl->item_h;
-	if (WIDGET(tl)->h % tl->item_h)
-		tl->nvisitems++;
 
 	maxb = widget_get_binding(tl->sbar, "max", &max);
 	offsetb = widget_get_binding(tl->sbar, "value", &offset);
