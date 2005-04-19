@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.35 2005/04/14 06:19:44 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.36 2005/04/18 03:38:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -334,6 +334,8 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_uint8(buf, t->flags);
 	write_surface(buf, t->su);
 	write_uint32(buf, t->sprite);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).xOrig);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).yOrig);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -387,6 +389,8 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	t->su = read_surface(buf, ts->fmt);
 	t->sprite = read_uint32(buf);
 	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
+	SPRITE(ts,t->sprite).xOrig = (int)read_sint16(buf);
+	SPRITE(ts,t->sprite).yOrig = (int)read_sint16(buf);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -495,7 +499,7 @@ tile_destroy(struct tile *t)
 #ifdef EDITION
 
 static void
-tile_ctrl_buttonup(int argc, union evarg *argv)
+geo_ctrl_buttonup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	struct tileview_ctrl *ctrl = argv[1].p;
@@ -546,19 +550,41 @@ close_element(struct tileview *tv)
 		break;
 	}
 	
-	if (tv->state == TILEVIEW_TILE_EDIT &&
-	    tv->tv_tile.ctrl != NULL) {
-		tileview_remove_ctrl(tv, tv->tv_tile.ctrl);
+	if (tv->state == TILEVIEW_TILE_EDIT) {
+		if (tv->tv_tile.geo_ctrl != NULL)
+			tileview_remove_ctrl(tv, tv->tv_tile.geo_ctrl);
+		if (tv->tv_tile.orig_ctrl != NULL)
+			tileview_remove_ctrl(tv, tv->tv_tile.orig_ctrl);
 	}
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 
-	tv->tv_tile.ctrl = tileview_insert_ctrl(tv, TILEVIEW_RDIMENSIONS,
+	tv->tv_tile.geo_ctrl = tileview_insert_ctrl(tv, TILEVIEW_RDIMENSIONS,
 	    "%i,%i,%u,%u", 0, 0,
 	    (u_int)tv->tile->su->w,
 	    (u_int)tv->tile->su->h);
-	tv->tv_tile.ctrl->buttonup = event_new(tv, NULL, tile_ctrl_buttonup,
-	    "%p", tv->tv_tile.ctrl);
+	tv->tv_tile.geo_ctrl->buttonup = event_new(tv, NULL, geo_ctrl_buttonup,
+	    "%p", tv->tv_tile.geo_ctrl);
+
+	tv->tv_tile.orig_ctrl = tileview_insert_ctrl(tv, TILEVIEW_POINT,
+	    "%*i,%*i",
+	    &SPRITE(tv->ts,tv->tile->sprite).xOrig,
+	    &SPRITE(tv->ts,tv->tile->sprite).yOrig);
+	tv->tv_tile.orig_ctrl->cIna.r = 0;
+	tv->tv_tile.orig_ctrl->cIna.g = 255;
+	tv->tv_tile.orig_ctrl->cIna.b = 0;
+	tv->tv_tile.orig_ctrl->cHigh.r = 73;
+	tv->tv_tile.orig_ctrl->cHigh.g = 186;
+	tv->tv_tile.orig_ctrl->cHigh.b = 51;
+	tv->tv_tile.orig_ctrl->cLow.r = 86;
+	tv->tv_tile.orig_ctrl->cLow.g = 161;
+	tv->tv_tile.orig_ctrl->cLow.b = 71;
+	tv->tv_tile.orig_ctrl->cOver.r = 191;
+	tv->tv_tile.orig_ctrl->cOver.g = 170;
+	tv->tv_tile.orig_ctrl->cOver.b = 47;
+	tv->tv_tile.orig_ctrl->aEna = 70;
+	tv->tv_tile.orig_ctrl->aIna = 30;
+	tv->tv_tile.orig_ctrl->aOver= 100;
 
 	if (tv->tel_tbar != NULL) {
 		struct window *pwin = widget_parent_window(tv->tel_tbar);
@@ -623,8 +649,10 @@ open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
 {
 	if (tv->state == TILEVIEW_TILE_EDIT) {
-		tileview_remove_ctrl(tv, tv->tv_tile.ctrl);
-		tv->tv_tile.ctrl = NULL;
+		tileview_remove_ctrl(tv, tv->tv_tile.geo_ctrl);
+		tileview_remove_ctrl(tv, tv->tv_tile.orig_ctrl);
+		tv->tv_tile.geo_ctrl = NULL;
+		tv->tv_tile.orig_ctrl = NULL;
 	}
 
 	switch (tel->type) {

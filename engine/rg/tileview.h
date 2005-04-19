@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.20 2005/03/24 04:00:56 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.21 2005/04/02 04:04:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -51,7 +51,9 @@ struct tileview_handle {
 
 struct tileview_ctrl {
 	enum tileview_ctrl_type type;
-	Uint8 r, g, b, a;
+
+	SDL_Color c, cIna, cEna, cOver, cHigh, cLow;
+	Uint8	  a, aIna, aEna, aOver;
 
 	enum tileview_val_type	*valtypes;		/* Entry types */
 	union tileview_val	*vals;			/* Values/pointers */
@@ -177,7 +179,8 @@ struct tileview {
 			struct window *menu_win;
 		} pixmap;
 		struct {
-			struct tileview_ctrl *ctrl;
+			struct tileview_ctrl *geo_ctrl;
+			struct tileview_ctrl *orig_ctrl;
 		} tile;
 	} sargs;
 #define tv_feature sargs.feature
@@ -211,6 +214,7 @@ void tileview_set_autoredraw(struct tileview *, int, int);
 
 void tileview_color3i(struct tileview *, Uint8, Uint8, Uint8);
 void tileview_color4i(struct tileview *, Uint8, Uint8, Uint8, Uint8);
+void tileview_sdl_color(struct tileview *, SDL_Color *, Uint8);
 void tileview_alpha(struct tileview *, Uint8);
 
 void tileview_pixel2i(struct tileview *, int, int);

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.13 2005/04/02 04:07:50 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.14 2005/04/10 09:09:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -51,6 +51,7 @@ struct tile {
 #define TILE_SRCCOLORKEY 0x01		/* Colorkey source */
 #define TILE_SRCALPHA	 0x02		/* Alpha source */
 #define TILE_DIRTY	 0x04		/* Mark for redraw */
+	
 	u_int nrefs;
 	SDL_Color c;			/* Current color (rgb) */
 	Uint32 pc;			/* Current color (pixel value) */
