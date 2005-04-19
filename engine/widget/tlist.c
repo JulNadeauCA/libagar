@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.114 2005/04/18 11:46:13 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.115 2005/04/19 02:21:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -261,9 +261,6 @@ tlist_draw(void *p)
 	struct tlist_item *it;
 	int y = 0, i = 0;
 	int offset;
-
-	if (WIDGET(tl)->w < 26 || WIDGET(tl)->h < 5)	/* XXX */
-		return;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    COLOR(TLIST_BG_COLOR));
