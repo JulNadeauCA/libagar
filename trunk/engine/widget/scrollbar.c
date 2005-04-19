@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.44 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.45 2005/04/19 01:54:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -234,7 +234,7 @@ scrollbar_draw(void *p)
 	min = widget_get_int(sb, "min");
 	max = widget_get_int(sb, "max");
 	
-	if (max < min)
+	if (max < min || max == 0)
 		return;
 
 #ifdef DEBUG
@@ -331,6 +331,19 @@ scrollbar_draw(void *p)
 		    COLOR(SCROLLBAR_BTN_COLOR));
 		break;
 	}
+#if 0
+	{
+		SDL_Surface *txt;
+		char label[32];
+
+		snprintf(label, sizeof(label), "%d\n%d\n%d\n",
+		    value, min, max);
+		txt = text_render(NULL, -1, COLOR(TEXT_COLOR), label);
+		widget_blit(sb, txt, 0, 0);
+		SDL_FreeSurface(txt);
+		    
+	}
+#endif
 }
 
 void
