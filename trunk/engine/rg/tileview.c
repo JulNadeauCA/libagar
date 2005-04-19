@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.30 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.31 2005/04/14 02:49:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -737,7 +737,8 @@ tileview_init(struct tileview *tv, struct tileset *ts, int flags)
 	tv->scrolling = 0;
 	tv->flags = flags;
 	tv->state = TILEVIEW_TILE_EDIT;
-	tv->tv_tile.ctrl = NULL;
+	tv->tv_tile.geo_ctrl = NULL;
+	tv->tv_tile.orig_ctrl = NULL;
 	tv->edit_mode = 0;
 	tv->c.r = 255;
 	tv->c.g = 255;
@@ -777,10 +778,6 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 
 	ctrl = Malloc(sizeof(struct tileview_ctrl), M_WIDGET);
 	ctrl->type = type;
-	ctrl->r = 255;
-	ctrl->g = 255;
-	ctrl->b = 255;
-	ctrl->a = 128;
 	ctrl->vals = Malloc(sizeof(union tileview_val)*strlen(fmt), M_WIDGET);
 	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type)*strlen(fmt),
 	    M_WIDGET);
@@ -790,6 +787,30 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 	ctrl->buttonup = NULL;
 	ctrl->xoffs = 0;
 	ctrl->yoffs = 0;
+	
+	ctrl->c.r = 255;
+	ctrl->c.g = 255;
+	ctrl->c.b = 255;
+	ctrl->a = 255;
+	ctrl->cIna.r = 128;
+	ctrl->cIna.g = 128;
+	ctrl->cIna.b = 128;
+	ctrl->aIna = 255;
+	ctrl->cEna.r = 250;
+	ctrl->cEna.g = 250;
+	ctrl->cEna.b = 250;
+	ctrl->aEna = 255;
+	ctrl->cOver.r = 200;
+	ctrl->cOver.g = 200;
+	ctrl->cOver.b = 200;
+	ctrl->aOver = 255;
+	ctrl->cHigh.r = 200;
+	ctrl->cHigh.g = 200;
+	ctrl->cHigh.b = 200;
+	ctrl->cLow.r = 60;
+	ctrl->cLow.g = 60;
+	ctrl->cLow.b = 60;
+
 	TAILQ_INSERT_TAIL(&tv->ctrls, ctrl, ctrls);
 
 	if (fmt == NULL)
@@ -1053,6 +1074,16 @@ tileview_color4i(struct tileview *tv, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 }
 
 void
+tileview_sdl_color(struct tileview *tv, SDL_Color *c, Uint8 a)
+{
+	tv->c.r = c->r;
+	tv->c.g = c->g;
+	tv->c.b = c->b;
+	tv->c.a = a;
+	tv->c.pc = SDL_MapRGBA(vfmt, c->r, c->g, c->b, a);
+}
+
+void
 tileview_alpha(struct tileview *tv, Uint8 a)
 {
 	tv->c.a = a;
@@ -1169,26 +1200,31 @@ tileview_double(struct tileview_ctrl *ctrl, int nval)
 }
 
 static void
-draw_handle(struct tileview *tv, struct tileview_handle *th)
+draw_handle(struct tileview *tv, struct tileview_ctrl *ctrl,
+    struct tileview_handle *th)
 {
 	int x = th->x;
 	int y = th->y;
 
-	if (th->over) {
-		tileview_color4i(tv, 200, 200, 200, 255);
+	/* Draw the inner circle. */
+	if (th->over && !th->enable) {
+		tileview_sdl_color(tv, &ctrl->cOver, ctrl->aOver);
 	} else {
-		tileview_color4i(tv, 110, 110, 110, 255);
+		tileview_sdl_color(tv,
+		    th->enable ? &ctrl->cEna : &ctrl->cIna,
+		    th->enable ? ctrl->aEna : ctrl->aIna);
 	}
-	tileview_rect2(tv, x-1, y-1, 3, 3);		/* Inner circle */
+	tileview_rect2(tv, x-1, y-1, 3, 3);
 
-	tileview_color4i(tv, 255, 255, 255, 128);
-	tileview_pixel2i(tv, x, y);			/* Origin */
+	/* Draw the central point. */
+	tileview_color4i(tv, 255, 255, 255,
+	    th->enable ? ctrl->aEna : ctrl->aIna);
+	tileview_pixel2i(tv, x, y);
 
-	if (!th->enable)
-		tileview_color4i(tv, 200, 200, 200, 200);
-	else
-		tileview_color4i(tv, 60, 60, 60, 200);
-	
+	/* Draw the highlights. */
+	tileview_sdl_color(tv,
+	    th->enable ? &ctrl->cLow : &ctrl->cHigh,
+	    255);
 	tileview_pixel2i(tv, x-2, y+1);			/* Highlight left */
 	tileview_pixel2i(tv, x-2, y);
 	tileview_pixel2i(tv, x-2, y-1);
@@ -1196,11 +1232,9 @@ draw_handle(struct tileview *tv, struct tileview_handle *th)
 	tileview_pixel2i(tv, x,   y-2);
 	tileview_pixel2i(tv, x+1, y-2);
 	
-	if (th->enable)
-		tileview_color4i(tv, 200, 200, 200, 200);
-	else
-		tileview_color4i(tv, 60, 60, 60, 200);
-		
+	tileview_sdl_color(tv,
+	    th->enable ? &ctrl->cHigh : &ctrl->cLow,
+	    255);
 	tileview_pixel2i(tv, x-1, y+2);			/* Occlusion bottom */
 	tileview_pixel2i(tv, x,   y+2);
 	tileview_pixel2i(tv, x+1, y+2);
@@ -1214,7 +1248,7 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 {
 	int i;
 
-	tileview_color4i(tv, ctrl->r, ctrl->g, ctrl->b, ctrl->a);
+	tileview_sdl_color(tv, &ctrl->c, ctrl->a);
 
 	switch (ctrl->type) {
 	case TILEVIEW_RECTANGLE:
@@ -1269,7 +1303,7 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 	}
 
 	for (i = 0; i < ctrl->nhandles; i++)
-		draw_handle(tv, &ctrl->handles[i]);
+		draw_handle(tv, ctrl, &ctrl->handles[i]);
 }
 
 /* Plot a scaled pixel on the tileview's cache surface. */
