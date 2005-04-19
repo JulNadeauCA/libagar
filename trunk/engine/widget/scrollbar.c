@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.43 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.44 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -115,6 +115,9 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int totalsize)
 	min = widget_get_int(sb, "min");
 	max = widget_get_int(sb, "max");
 	
+	if (max < min)
+		return;
+	
 	/* mouse below min */
 	if (coord <= sb->button_size) {
 		widget_set_int(sb, "value", min);
@@ -145,11 +148,14 @@ scrollbar_mousebuttondown(int argc, union evarg *argv)
 		WIDGET(sb)->w : WIDGET(sb)->h;
 	int min, value, max, nvalue;
 
-	widget_focus(sb);
-	
 	min = widget_get_int(sb, "min");
-	value = widget_get_int(sb, "value");
 	max = widget_get_int(sb, "max");
+	value = widget_get_int(sb, "value");
+
+	if (max < min)
+		return;
+	
+	widget_focus(sb);
 	
 	/* click on the up button */
 	if (coord <= sb->button_size) {
@@ -227,12 +233,11 @@ scrollbar_draw(void *p)
 	value = widget_get_int(sb, "value");
 	min = widget_get_int(sb, "min");
 	max = widget_get_int(sb, "max");
+	
+	if (max < min)
+		return;
 
 #ifdef DEBUG
-	if (max < min) {
-        	dprintf("invalid range: min=%d, max=%d\n", min, max);
-		return;
-	}
 	if (value < min || value > max) {
 		dprintf("invalid value: min=%d, value=%d, max=%d\n", min,
 		    value, max);
