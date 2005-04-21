@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.38 2005/04/21 04:45:28 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.39 2005/04/21 07:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -639,7 +639,7 @@ sketch_ctrl_buttonup(int argc, union evarg *argv)
 	int h = tileview_int(ctrl, 3);
 	
 	if (w != sk->vg->su->w || h != sk->vg->su->h) 
-		sketch_scale(sk, w, h, 1.0);
+		sketch_scale(sk, w, h, 1.0, ctrl->xoffs, ctrl->yoffs);
 
 	tile_generate(t);
 	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
@@ -834,7 +834,7 @@ tryname:
 		goto tryname;
 	}
 
-	sketch_scale(sk, 32, 32, 1.0);
+	sketch_scale(sk, 32, 32, 1.0, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->sketches, sk, sketches);
 	tel = tile_add_sketch(tv->tile, sk, 0, 0);
 	tv->tile->flags |= TILE_DIRTY;
