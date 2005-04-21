@@ -1,4 +1,4 @@
-/*	$Csoft: palette.h,v 1.6 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: palette.h,v 1.7 2005/01/23 11:49:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PALETTE_H_
@@ -15,8 +15,7 @@ enum palette_type {
 
 struct palette {
 	struct widget	   wid;
-	Uint32		   color;	/* Pixel binding */
-	SDL_PixelFormat	  *format;
+	Uint32		   color;	/* Default pixel binding */
 
 	enum palette_type  type;
 	struct scrollbar   *bars[4];	/* RGB[A] scrollbars */
@@ -25,9 +24,9 @@ struct palette {
 };
 
 __BEGIN_DECLS
-struct palette	*palette_new(void *, enum palette_type, SDL_PixelFormat *);
+struct palette	*palette_new(void *, enum palette_type, SDL_PixelFormat **);
 void		 palette_init(struct palette *, enum palette_type,
-		              SDL_PixelFormat *);
+		              SDL_PixelFormat **);
 void		 palette_destroy(void *);
 void		 palette_scale(void *, int, int);
 void		 palette_draw(void *);

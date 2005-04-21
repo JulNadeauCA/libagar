@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.28 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.29 2005/04/14 02:49:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,28 +51,29 @@ const struct widget_ops palette_ops = {
 static void palette_changed(int, union evarg *);
 
 struct palette *
-palette_new(void *parent, enum palette_type type, SDL_PixelFormat *fmt)
+palette_new(void *parent, enum palette_type type, SDL_PixelFormat **pFormat)
 {
 	struct palette *pal;
 
 	pal = Malloc(sizeof(struct palette), M_OBJECT);
-	palette_init(pal, type, fmt);
+	palette_init(pal, type, pFormat);
 	object_attach(parent, pal);
 	return (pal);
 }
 
 void
-palette_init(struct palette *pal, enum palette_type type, SDL_PixelFormat *fmt)
+palette_init(struct palette *pal, enum palette_type type,
+    SDL_PixelFormat **pFormat)
 {
 	int i;
 
 	widget_init(pal, "palette", &palette_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_CLIPPING);
 	widget_bind(pal, "color", WIDGET_UINT32, &pal->color);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, pFormat);
 
 	pal->color = 0;
 	pal->type = type; 
-	pal->format = fmt;
 
 	switch (type) {
 	case PALETTE_RGB:
@@ -97,12 +98,14 @@ palette_changed(int argc, union evarg *argv)
 {
 	struct palette *pal = argv[1].p;
 	int nbar = argv[2].i;
-	struct widget_binding *colorb;
+	struct widget_binding *bColor, *bFormat;
 	Uint32 *color;
+	SDL_PixelFormat **pFormat;
 	Uint8 r, g, b, a;
 
-	colorb = widget_get_binding(pal, "color", &color);
-	SDL_GetRGBA(*color, pal->format, &r, &g, &b, &a);
+	bColor = widget_get_binding(pal, "color", &color);
+	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
+	SDL_GetRGBA(*color, *pFormat, &r, &g, &b, &a);
 	switch (nbar) {
 	case 0:
 		r = widget_get_int(pal->bars[nbar], "value");
@@ -117,8 +120,9 @@ palette_changed(int argc, union evarg *argv)
 		a = widget_get_int(pal->bars[nbar], "value");
 		break;
 	}
-	*color = SDL_MapRGBA(pal->format, r, g, b, a);
-	widget_binding_unlock(colorb);
+	*color = SDL_MapRGBA(*pFormat, r, g, b, a);
+	widget_binding_unlock(bFormat);
+	widget_binding_unlock(bColor);
 
 	event_post(NULL, pal, "palette-changed", NULL);
 }
@@ -173,12 +177,16 @@ palette_draw(void *p)
 {
 	char text[16];
 	struct palette *pal = p;
-	Uint32 color, label_color;
+	Uint32 c, cLabel;
 	Uint8 r, g, b, a;
 	SDL_Surface *label;
+	struct widget_binding *bFormat;
+	SDL_PixelFormat **pFormat;
 
-	color = widget_get_uint32(pal, "color");
-	SDL_GetRGBA(color, pal->format, &r, &g, &b, &a);
+	c = widget_get_uint32(pal, "color");
+	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
+	SDL_GetRGBA(c, *pFormat, &r, &g, &b, &a);
+	
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
 	widget_set_int(pal->bars[2], "value", (int)b);
@@ -200,16 +208,19 @@ palette_draw(void *p)
 			}
 		}
 	} else {
+		SDL_GetRGB(c, *pFormat, &r, &g, &b);
 		primitives.rect_filled(pal,
 		    pal->rpreview.x, pal->rpreview.y,
 		    pal->rpreview.w, pal->rpreview.h,
-		    color);
+		    SDL_MapRGB(vfmt, r, g, b));
 	}
+
+	widget_binding_unlock(bFormat);
 	
-	label_color = SDL_MapRGB(pal->format, 0, 0, 0);
+	cLabel = SDL_MapRGB(vfmt, 0, 0, 0);
 	snprintf(text, sizeof(text), "%u\n%u\n%u\n%u\n", r, g, b, a);
 	label = text_render(prop_get_string(config, "font-engine.default-font"),
-	    10, label_color, text);
+	    10, cLabel, text);
 	widget_blit(pal, label,
 	    pal->rpreview.x + pal->rpreview.w/2 - label->w/2,
 	    pal->rpreview.y + pal->rpreview.h/2 - label->h/2);
