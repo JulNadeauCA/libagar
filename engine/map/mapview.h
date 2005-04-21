@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.64 2005/04/04 01:06:58 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -64,6 +64,7 @@ struct mapview {
 	int		 wfit, hfit;	/* Dimension fits into display? */
 	int		 wmod, hmod;	/* Remainders */
 	int		 cx, cy;	/* Cursor position (nodes) */
+	int		 cxoffs, cyoffs; /* Cursor offset (pixels) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 	int		 dblclicked;
 
@@ -127,11 +128,8 @@ void	 mapview_center(struct mapview *, int, int);
 void	 mapview_set_scale(struct mapview *, u_int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
-
-__inline__ void	 mapview_ncoords(struct mapview *, int *, int *, int *, int *);
-void	 	 mapview_reg_draw_cb(struct mapview *,
-				     void (*)(struct mapview *, void *),
-				     void *);
+void	 mapview_reg_draw_cb(struct mapview *,
+	                     void (*)(struct mapview *, void *), void *);
 
 #ifdef EDITION
 struct tool	*mapview_reg_tool(struct mapview *, const struct tool *,

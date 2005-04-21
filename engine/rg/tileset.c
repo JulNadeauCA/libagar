@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.28 2005/04/14 06:19:45 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.29 2005/04/18 03:38:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version tileset_ver = {
 	"agar tileset",
-	0, 2
+	1, 0
 };
 
 const struct object_ops tileset_ops = {
@@ -294,7 +294,7 @@ tileset_load(void *obj, struct netbuf *buf)
 	}
 
 	/* Load the animation information. */
-	nanimations = ver.minor>=2 ? read_uint32(buf) : 0;
+	nanimations = read_uint32(buf);
 	for (i = 0; i < nanimations; i++) {
 		char name[ANIMATION_NAME_MAX];
 		struct animation *ani;

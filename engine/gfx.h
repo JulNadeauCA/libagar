@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.24 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.25 2005/04/18 03:38:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -41,14 +41,21 @@ struct gfx_animcl {
 	SLIST_HEAD(,gfx_cached_anim)	anims;
 };
 
+enum gfx_snap_mode {
+	GFX_SNAP_NOT,
+	GFX_SNAP_TO_GRID,
+	GFX_SNAP_TO_CENTER
+};
+
 struct sprite {
-	SDL_Surface *su;
-	int xOrig, yOrig;
+	SDL_Surface *su;			/* Sprite surface */
+	int xOrig, yOrig;			/* Origin point */
+	enum gfx_snap_mode snap_mode;		/* Preferred snapping mode */
 #ifdef HAVE_OPENGL
-	GLuint texture;
-	GLfloat texcoords[4];
+	GLuint texture;				/* Cached OpenGL texture */
+	GLfloat texcoords[4];			/* Texture coordinates. */
 #endif
-	SLIST_HEAD(,gfx_cached_sprite) csprites;
+	SLIST_HEAD(,gfx_cached_sprite) csprites; /* Transform cache */
 };
 
 struct gfx {
