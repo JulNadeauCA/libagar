@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.45 2005/04/18 03:38:21 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.46 2005/04/21 04:45:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -140,6 +140,21 @@ sprite_set_surface(struct sprite *spr, SDL_Surface *su)
 		               view_surface_texture(su, &spr->texcoords[0]) : 0;
 	}
 #endif
+}
+
+/* Set the snapping mode of a sprite entry. */
+void
+sprite_set_snap_mode(struct sprite *spr, enum gfx_snap_mode snap_mode)
+{
+	spr->snap_mode = snap_mode;
+}
+
+/* Set the origin point of a sprite. */
+void
+sprite_set_origin(struct sprite *spr, int x, int y)
+{
+	spr->xOrig = x;
+	spr->yOrig = y;
 }
 
 /* Flush cached transforms and regenerate the texture of a sprite. */
