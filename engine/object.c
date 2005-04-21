@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.199 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.200 2005/04/18 03:38:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -80,6 +80,8 @@ const struct object_ops object_ops = {
 int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
 #endif
+
+int object_ignore_data_errors;		/* Don't fail on a data load failure. */
 
 /* Allocate, initialize and attach a generic object. */
 struct object *
@@ -865,12 +867,24 @@ object_reload_data(void *p)
 	if ((ob->flags & OBJECT_WAS_RESIDENT) ||
 	    (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT))) {
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
-		if (object_load_data(p) == -1)
-			return (-1);
+		if (object_load_data(ob) == -1) {
+			if (object_ignore_data_errors) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
+			} else {
+				return (-1);
+			}
+		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_reload_data(cob) == -1)
-			return (-1);
+		if (object_reload_data(cob) == -1) {
+			if (object_ignore_data_errors) {
+				text_msg(MSG_ERROR, "%s: %s", cob->name,
+				    error_get());
+			} else {
+				return (-1);
+			}
+		}
 	}
 	return (0);
 }
@@ -1608,6 +1622,7 @@ poll_deps(int argc, union evarg *argv)
 static void
 poll_gfx(int argc, union evarg *argv)
 {
+	extern char *gfx_snap_names[];
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct gfx *gfx = ob->gfx;
@@ -1624,8 +1639,9 @@ poll_gfx(int argc, union evarg *argv)
 		struct gfx_cached_sprite *csp;
 
 		if (su != NULL) {
-			it = tlist_insert(tl, su, "%u. %ux%ux%u", i,
-			    su->w, su->h, su->format->BitsPerPixel);
+			it = tlist_insert(tl, su, "%u. %ux%ux%u (%s)",
+			    i, su->w, su->h, su->format->BitsPerPixel,
+			    gfx_snap_names[spr->snap_mode]);
 		} else {
 			it = tlist_insert(tl, su, "%u. (null)", i);
 		}
