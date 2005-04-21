@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.25 2005/04/18 03:38:21 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.26 2005/04/21 04:45:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -60,7 +60,7 @@ struct sprite {
 
 struct gfx {
 	char *name;
-	enum {
+	enum gfx_type {
 		GFX_SHARED,			/* Managed, shared graphics */
 		GFX_PRIVATE			/* Object-managed graphics */
 	} type;
@@ -118,6 +118,8 @@ struct window	*gfx_debug_window(void);
 void		 sprite_init(struct sprite *);
 void		 sprite_destroy(struct sprite *);
 __inline__ void	 sprite_set_surface(struct sprite *, SDL_Surface *);
+__inline__ void	 sprite_set_origin(struct sprite *, int, int);
+__inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
 __inline__ void	 sprite_update(struct sprite *);
 __END_DECLS
 
