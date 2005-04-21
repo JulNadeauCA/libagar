@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.5 2005/04/02 04:05:08 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.6 2005/04/21 07:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -59,14 +59,25 @@ sketch_init(struct sketch *sk, struct tileset *ts, int flags)
 }
 
 void
-sketch_scale(struct sketch *sk, int w, int h, float scale)
+sketch_scale(struct sketch *sk, int w, int h, float scale, int x, int y)
 {
 	struct vg *vg = sk->vg;
+	struct vg_element *vge;
+	double xoffs = (float)x/(float)TILESZ/scale;
+	double yoffs = (float)y/(float)TILESZ/scale;
+	Uint32 i;
 
 	vg_scale(vg,
 	    (float)w/(float)TILESZ/scale,
 	    (float)h/(float)TILESZ/scale,
 	    scale);
+	
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		for (i = 0; i < vge->nvtx; i++) {
+			vge->vtx[i].x += xoffs;
+			vge->vtx[i].y += yoffs;
+		}
+	}
 	vg->redraw++;
 }
 
