@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.2 2005/04/16 05:53:33 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.3 2005/04/18 03:38:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1482,8 +1482,9 @@ draw:
 		         r->r_gfx.xmotion*tilesz/TILESZ;
 		int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
 		         r->r_gfx.ymotion*tilesz/TILESZ;
+		/* TODO precalculate the scaled offset */
 
-		blit_scaled(m, su, rx, ry, tilesz);
+		blit_scaled(m, su, dx, dy, tilesz);
 	} else {
 		SDL_Rect rd;
 
@@ -1754,6 +1755,25 @@ poll_art(int argc, union evarg *argv)
 }
 
 static void
+selected_art(int argc, union evarg *argv)
+{
+	extern const struct tool stamp_tool;
+	extern enum gfx_snap_mode stamp_snap_mode;
+	struct tlist *tl = argv[0].p;
+	struct mapview *mv = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+
+	if (it->p1 != NULL &&
+	    strcmp(it->class, "tile") == 0) {
+		struct tile *t = it->p1;
+		struct sprite *spr = &SPRITE(t->ts,t->sprite);
+	
+		stamp_snap_mode = spr->snap_mode;
+	}
+
+}
+
+static void
 poll_objs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -1939,6 +1959,7 @@ map_edit(void *p)
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
 			event_new(tl, "tlist-poll", poll_art, "%p", world);
+			event_new(tl, "tlist-selected", selected_art, "%p", mv);
 			mv->art_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,14 +44,17 @@ static enum {
 	STAMP_SRC_COPYBUF	/* From copy/paste buffer */
 } source = STAMP_SRC_ARTWORK;
 
+enum gfx_snap_mode stamp_snap_mode = GFX_SNAP_NOT;
+
 static int replace = 1;
 static int angle = 0;
 
 static void
 init(struct tool *t)
 {
+	extern const char *gfx_snap_names[];
 	static const char *source_items[] = {
-		N_("Artwork list"),
+		N_("Artwork"),
 		N_("Map buffer"),
 		NULL
 	};
@@ -66,16 +69,49 @@ init(struct tool *t)
 	label_new(win, LABEL_STATIC, _("Source: "));
 	rad = radio_new(win, source_items);
 	widget_bind(rad, "value", WIDGET_INT, &source);
+	
+	label_new(win, LABEL_STATIC, _("Snap to: "));
+	rad = radio_new(win, gfx_snap_names);
+	widget_bind(rad, "value", WIDGET_INT, &stamp_snap_mode);
 
 	cb = checkbox_new(win, _("Replace mode"));
 	widget_bind(cb, "state", WIDGET_INT, &replace);
 
-	sb = spinbutton_new(win, _("Angle: "));
+	sb = spinbutton_new(win, _("Rotation: "));
 	widget_bind(sb, "value", WIDGET_INT, &angle);
 	spinbutton_set_range(sb, 0, 360);
 	spinbutton_set_increment(sb, 90);
 
 	tool_push_status(t, _("Specify the destination node."));
+}
+
+static void
+init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
+{
+	struct map *m = mv->map;
+	struct sprite *spr = &SPRITE(t->ts,t->sprite);
+	int sm;
+
+	noderef_init(r, NODEREF_SPRITE);
+	noderef_set_sprite(r, m, t->ts, t->sprite);
+	r->layer = m->cur_layer;
+	r->r_gfx.xcenter = -spr->xOrig;
+	r->r_gfx.ycenter = -spr->yOrig;
+
+	switch (stamp_snap_mode) {
+	case GFX_SNAP_NOT:
+		r->r_gfx.xcenter += mv->cxoffs*TILESZ/mv->tilesz;
+		r->r_gfx.ycenter += mv->cyoffs*TILESZ/mv->tilesz;
+		break;
+	case GFX_SNAP_TO_GRID:
+		break;
+	case GFX_SNAP_TO_CENTER:
+		r->r_gfx.xcenter += TILESZ/2;
+		r->r_gfx.ycenter += TILESZ/2;
+		break;
+	}
+
+	transform_rotate(r, angle);
 }
 
 static void
@@ -117,9 +153,9 @@ stamp_effect(struct tool *t, struct node *n)
 			if (replace) {
 				node_clear(m, n, m->cur_layer);
 			}
-			r = node_add_sprite(m, n, t->ts, t->sprite);
-			r->layer = m->cur_layer;
-			transform_rotate(r, angle);
+			r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
+			init_tile_noderef(mv, r, t);
+			TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 		}
 	}
 }
@@ -171,9 +207,7 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 			struct noderef rtmp;
 			struct transform *trans;
 
-			noderef_init(&rtmp, NODEREF_SPRITE);
-			noderef_set_sprite(&rtmp, m, tile->ts, tile->sprite);
-			transform_rotate(&rtmp, angle);
+			init_tile_noderef(mv, &rtmp, tile);
 			noderef_draw(m, &rtmp,
 			    WIDGET(mv)->cx + rd->x,
 			    WIDGET(mv)->cy + rd->y,

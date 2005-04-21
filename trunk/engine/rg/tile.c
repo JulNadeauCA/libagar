@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.36 2005/04/18 03:38:35 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.37 2005/04/19 04:20:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 #include <engine/widget/toolbar.h>
 #include <engine/widget/label.h>
 #include <engine/widget/separator.h>
+#include <engine/widget/radio.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -336,6 +337,7 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_uint32(buf, t->sprite);
 	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).xOrig);
 	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).yOrig);
+	write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprite).snap_mode);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -391,6 +393,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
 	SPRITE(ts,t->sprite).xOrig = (int)read_sint16(buf);
 	SPRITE(ts,t->sprite).yOrig = (int)read_sint16(buf);
+	SPRITE(ts,t->sprite).snap_mode = (int)read_uint8(buf);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -1307,6 +1310,7 @@ resize_tile(int argc, union evarg *argv)
 static void
 tile_infos(int argc, union evarg *argv)
 {
+	extern const char *gfx_snap_names[];
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
 	struct tileset *ts = tv->ts;
@@ -1317,6 +1321,7 @@ tile_infos(int argc, union evarg *argv)
 	struct button *b;
 	struct checkbox *ckey_cb, *alpha_cb;
 	struct spinbutton *alpha_sb;
+	struct radio *rad;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 		         WINDOW_NO_MINIMIZE, NULL);
@@ -1331,17 +1336,20 @@ tile_infos(int argc, union evarg *argv)
 	spinbutton_set_range(alpha_sb, 0, 255);
 	widget_set_int(alpha_sb, "value", t->su->format->alpha);
 	
-	separator_new(win, SEPARATOR_HORIZ);
-	
-	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"), &t->sprite);
-
-	separator_new(win, SEPARATOR_HORIZ);
-
 	ckey_cb = checkbox_new(win, _("Colorkeying"));
 	widget_set_int(ckey_cb, "state", t->flags & TILE_SRCCOLORKEY);
 
 	alpha_cb = checkbox_new(win, _("Source alpha"));
 	widget_set_int(alpha_cb, "state", t->flags & TILE_SRCALPHA);
+
+	label_new(win, LABEL_STATIC, _("Default snapping mode:"));
+	rad = radio_new(win, gfx_snap_names);
+	widget_bind(rad, "value", WIDGET_INT,
+	    &SPRITE(t->ts,t->sprite).snap_mode);
+
+	separator_new(win, SEPARATOR_HORIZ);
+	
+	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"), &t->sprite);
 	
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{

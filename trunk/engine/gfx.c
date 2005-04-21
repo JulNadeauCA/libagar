@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.44 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.45 2005/04/18 03:38:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,6 +55,13 @@ enum {
 
 struct gfxq gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t gfxq_lock;
+	
+const char *gfx_snap_names[] = {
+	N_("Free positioning"),
+	N_("Snap to grid"),
+	N_("Snap to center"),
+	NULL
+};
 
 void
 sprite_init(struct sprite *spr)
@@ -62,6 +69,7 @@ sprite_init(struct sprite *spr)
 	spr->su = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
+	spr->snap_mode = GFX_SNAP_NOT;
 	SLIST_INIT(&spr->csprites);
 
 #ifdef HAVE_OPENGL
