@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.37 2005/04/19 04:20:43 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.38 2005/04/21 04:45:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@
  * alpha of each pixel.
  */
 static void
-blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
+blend_overlay_alpha(struct tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
 	u_int sx, sy, dx, dy;
 	Uint8 *pSrc, *pDst;
@@ -64,17 +64,16 @@ blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
 	Uint8 dR, dG, dB, dA;
 	int alpha;
 
-	SDL_LockSurface(px->su);
+	SDL_LockSurface(su);
 	SDL_LockSurface(t->su);
-	for (sy = 0, dy = rd->y; sy < px->su->h; sy++, dy++) {
-		for (sx = 0, dx = rd->x; sx < px->su->w; sx++, dx++) {
+	for (sy = 0, dy = rd->y; sy < su->h; sy++, dy++) {
+		for (sx = 0, dx = rd->x; sx < su->w; sx++, dx++) {
 			if (CLIPPED_PIXEL(t->su, dx, dy))
 				continue;
 
-			pSrc = (Uint8 *)px->su->pixels + sy*px->su->pitch +
-				        (sx << 2);
+			pSrc = (Uint8 *)su->pixels + sy*su->pitch + (sx << 2);
 
-			if (*(Uint32 *)pSrc == px->su->format->colorkey)
+			if (*(Uint32 *)pSrc == su->format->colorkey)
 				continue;
 
 			pDst = (Uint8 *)t->su->pixels + dy*t->su->pitch +
@@ -83,7 +82,7 @@ blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
 			if (*(Uint32 *)pDst != t->su->format->colorkey) {
 				SDL_GetRGBA(*(Uint32 *)pDst, t->su->format,
 				    &dR, &dG, &dB, &dA);
-				SDL_GetRGBA(*(Uint32 *)pSrc, px->su->format,
+				SDL_GetRGBA(*(Uint32 *)pSrc, su->format,
 				    &sR, &sG, &sB, &sA);
 
 				alpha = dA + sA;
@@ -101,13 +100,13 @@ blend_overlay_alpha(struct tile *t, struct pixmap *px, SDL_Rect *rd)
 		}
 	}
 	SDL_UnlockSurface(t->su);
-	SDL_UnlockSurface(px->su);
+	SDL_UnlockSurface(su);
 }
 
 static void
-blend_normal(struct tile *t, struct pixmap *px, SDL_Rect *rd)
+blend_normal(struct tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
-	SDL_BlitSurface(px->su, NULL, t->su, rd);
+	SDL_BlitSurface(su, NULL, t->su, rd);
 }
 
 void
@@ -178,7 +177,7 @@ tile_generate(struct tile *t)
 				rd.y = tel->tel_pixmap.y;
 				rd.w = px->su->w;
 				rd.h = px->su->h;
-				t->blend_fn(t, px, &rd);
+				t->blend_fn(t, px->su, &rd);
 			}
 			break;
 		case TILE_SKETCH:
@@ -191,7 +190,7 @@ tile_generate(struct tile *t)
 				rd.y = tel->tel_sketch.y;
 				rd.w = vg->su->w;
 				rd.h = vg->su->h;
-				SDL_BlitSurface(vg->su, NULL, t->su, &rd);
+				t->blend_fn(t, vg->su, &rd);
 			}
 			break;
 		}

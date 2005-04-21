@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.4 2005/03/06 04:54:10 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.5 2005/04/02 04:05:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@ sketch_init(struct sketch *sk, struct tileset *ts, int flags)
 	sk->a = 1.0;
 
 	sk->vg = Malloc(sizeof(struct vg), M_VG);
-	vg_init(sk->vg, 0);
+	vg_init(sk->vg, VG_ANTIALIAS|VG_ALPHA);
 
 	sk->ublks = Malloc(sizeof(struct sketch_undoblk), M_RG);
 	sk->nublks = 1;
