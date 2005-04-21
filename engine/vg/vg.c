@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.44 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.45 2005/04/18 03:38:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -102,7 +102,12 @@ vg_new(void *p, int flags)
 void
 vg_init(struct vg *vg, int flags)
 {
+	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i, x, y;
+
+	if (flags & VG_ALPHA)		sflags |= SDL_SRCALPHA;
+	if (flags & VG_COLORKEY)	sflags |= SDL_SRCCOLORKEY;
+	if (flags & VG_RLEACCEL)	sflags |= SDL_RLEACCEL;
 
 	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
@@ -110,24 +115,24 @@ vg_init(struct vg *vg, int flags)
 	vg->w = 0;
 	vg->h = 0;
 	vg->scale = 1;
-	vg->su = SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 16, 32,
+	vg->su = SDL_CreateRGBSurface(sflags, 16, 16, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	    0xff000000,
 	    0x00ff0000,
 	    0x0000ff00,
-	    0x000000ff
+	    (flags & VG_ALPHA) ? 0x000000ff : 0x0
 #else
 	    0x000000ff,
 	    0x0000ff00,
 	    0x00ff0000,
-	    0xff000000
+	    (flags & VG_ALPHA) ? 0xff000000 : 0x0
 #endif
 	);
 	if (vg->su == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	vg->fmt = vg->su->format;
-	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 255, 0);
+	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
 	vg->grid_gap = 0.25;
 	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
@@ -295,6 +300,7 @@ vg_update_fragments(struct vg *vg)
 			scflags = vg->su->flags&(SDL_SRCCOLORKEY|SDL_RLEACCEL);
 			salpha = vg->su->format->alpha;
 			scolorkey = vg->su->format->colorkey;
+
 			fw = vg->su->w-x < TILESZ ? vg->su->w-x : TILESZ;
 			fh = vg->su->h-y < TILESZ ? vg->su->h-y : TILESZ;
 
@@ -313,7 +319,7 @@ vg_update_fragments(struct vg *vg)
 			if (r == NULL) {
 				fragsu = SDL_CreateRGBSurface(SDL_SWSURFACE|
 				    saflags|scflags, fw, fh,
-				    vg->fmt->BytesPerPixel,
+				    vg->fmt->BitsPerPixel,
 				    vg->fmt->Rmask,
 				    vg->fmt->Gmask,
 				    vg->fmt->Bmask,
@@ -332,8 +338,11 @@ vg_update_fragments(struct vg *vg)
 			SDL_SetColorKey(vg->su, scflags, scolorkey);
 
 			if (r == NULL) {
-				node_add_sprite(vg->map, n, vg->pobj,
-				    gfx_insert_sprite(vg->pobj->gfx, fragsu));
+				Uint32 sp;
+
+				sp = gfx_insert_sprite(pobj->gfx, fragsu);
+				SPRITE(pobj,sp).snap_mode = GFX_SNAP_TO_GRID;
+				node_add_sprite(vg->map, n, pobj, sp);
 			}
 		}
 	}
@@ -375,20 +384,23 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	Uint32 Bmask = vg->fmt->Bmask;
 	Uint32 Amask = vg->fmt->Amask;
 	int depth = vg->fmt->BitsPerPixel;
-	Uint32 flags;
+	Uint32 colorkey = vg->fmt->colorkey;
+	Uint8 alpha = vg->fmt->alpha;
+	Uint32 sFlags = vg->su->flags & (SDL_SWSURFACE|SDL_SRCALPHA|
+	                                 SDL_SRCCOLORKEY|SDL_RLEACCEL);
 
-	if (scale < 0)
+#ifdef DEBUG
+	if (scale < 0.0)
 		fatal("neg scale");
+#endif
+
+	SDL_FreeSurface(vg->su);
 
 	vg->scale = scale;
 	vg->w = w;
 	vg->h = h;
-	dprintf("%.02fx%.02f*%.02f, %dx%d pixels\n", w, h, scale, pw, ph);
 
-	SDL_FreeSurface(vg->su);
-	flags = SDL_SWSURFACE|SDL_SRCALPHA;
-//	flags |= (vg->flags & VG_ANTIALIAS) ? SDL_SRCALPHA : SDL_SRCCOLORKEY;
-	if ((vg->su = SDL_CreateRGBSurface(flags, pw, ph, depth,
+	if ((vg->su = SDL_CreateRGBSurface(sFlags, pw, ph, depth,
 	    Rmask, Gmask, Bmask, Amask)) == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
@@ -587,11 +599,8 @@ vg_rasterize(struct vg *vg)
 	struct vg_block *vgb;
 	int i;
 
-	/* TODO */
-	if (view->opengl)
-		return;
-
 	pthread_mutex_lock(&vg->lock);
+
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
 
 	if (vg->flags & VG_VISGRID)
@@ -610,9 +619,8 @@ vg_rasterize(struct vg *vg)
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
 
-	if (vg->pobj != NULL) {
+	if (vg->pobj != NULL)
 		vg_update_fragments(vg);
-	}
 
 	vg->redraw = 0;
 	pthread_mutex_unlock(&vg->lock);
@@ -1464,8 +1472,8 @@ zoom_ident(struct tool *t, int state)
 	struct vg *vg = t->p;
 
 	if (state) {
-		zoom_status(t, vg);
 		vg_scale(vg, vg->w, vg->h, 1.0);
+		zoom_status(t, vg);
 	}
 }
 
@@ -1529,8 +1537,8 @@ init_scale_tool(struct tool *t)
 	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, 0);
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, 1, zoom_out, 0);
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELDOWN, 1, zoom_in, 0);
+	tool_bind_mousebutton(t, SDL_BUTTON_WHEELDOWN, 1, zoom_out, 0);
+	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, 1, zoom_in, 0);
 
 	timeout_set(&zoom_in_to, zoom_in_tick, t, 0);
 	timeout_set(&zoom_out_to, zoom_out_tick, t, 0);

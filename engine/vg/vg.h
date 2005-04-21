@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.25 2005/03/11 08:59:35 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.26 2005/04/14 06:19:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -191,6 +191,9 @@ struct vg {
 #define VG_VISORIGIN	0x04		/* Display the origin points */
 #define VG_VISGRID	0x08		/* Display the grid */
 #define VG_VISBBOXES	0x10		/* Display bounding boxes (debug) */
+#define VG_ALPHA	0x20		/* Enable alpha channel */
+#define VG_COLORKEY	0x40		/* Enable colorkey */
+#define VG_RLEACCEL	0x80		/* Enable RLE acceleration */
 
 	pthread_mutex_t lock;
 	int redraw;			/* Global redraw */
