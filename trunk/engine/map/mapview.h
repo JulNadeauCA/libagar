@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.2 2005/04/21 04:45:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -32,6 +32,8 @@ struct mapview {
 #define MAPVIEW_PROPS		0x04	/* Display node properties */
 #define MAPVIEW_CENTER		0x08	/* Request initial centering */
 #define MAPVIEW_NO_CURSOR	0x10	/* Disable the cursor */
+#define MAPVIEW_NO_BMPZOOM	0x20	/* Disable bitmap scaling */
+#define MAPVIEW_NO_BG		0x40	/* Disable background tiles */ 
 
 	int prop_bg;			/* Background attributes style */
 	int prop_style;			/* Foreground attributes style */
