@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.2 2005/04/16 05:55:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.3 2005/04/18 03:38:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -363,24 +363,24 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
  * Translate widget coordinates to node coordinates.
  * The map must be locked.
  */
-void
-mapview_ncoords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
+static __inline__ void
+get_node_coords(struct mapview *mv, int *x, int *y)
 {
-	*x -= (mv->xoffs+mv->map->ssx);
-	*y -= (mv->yoffs+mv->map->ssy);
+	*x -= (mv->xoffs + mv->map->ssx);
+	*y -= (mv->yoffs + mv->map->ssy);
+	
+	mv->cxoffs = *x % mv->tilesz;
+	mv->cyoffs = *y % mv->tilesz;
 
-	*xoff = *x % mv->tilesz;
-	*yoff = *y % mv->tilesz;
-
-	*x = ((*x)-(*xoff))/mv->tilesz;
-	*y = ((*y)-(*yoff))/mv->tilesz;
+	*x = ((*x) - mv->cxoffs)/mv->tilesz;
+	*y = ((*y) - mv->cyoffs)/mv->tilesz;
 
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
 
-	if (mv->cx < 0 || mv->cx >= mv->map->mapw || *xoff < 0)
+	if (mv->cx < 0 || mv->cx >= mv->map->mapw || mv->cxoffs < 0)
 		mv->cx = -1;
-	if (mv->cy < 0 || mv->cy >= mv->map->maph || *yoff < 0)
+	if (mv->cy < 0 || mv->cy >= mv->map->maph || mv->cyoffs < 0)
 		mv->cy = -1;
 }
 
@@ -458,6 +458,7 @@ draw_cursor(struct mapview *mv)
 		SDL_GetMouseState(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
+		/* XXX opengl */
 		SDL_BlitSurface(ICON(SELECT_CURSORBMP), NULL, view->v, &rd);
 		return;
 	}
@@ -662,11 +663,10 @@ mouse_motion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	int state = argv[5].i;
-	int xoff, yoff;
 
 	pthread_mutex_lock(&mv->map->lock);
 
-	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
+	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 
@@ -687,8 +687,10 @@ mouse_motion(int argc, union evarg *argv)
 		}
 		if (mv->curtool->mousemotion != NULL) {
 			mv->curtool->mousemotion(mv->curtool,
-			    mv->cx, mv->cy, mv->cxrel, mv->cyrel,
-			    xoff, yoff, xrel, yrel, state);
+			    mv->cx, mv->cy,
+			    mv->cxrel, mv->cyrel,
+			    mv->cxoffs, mv->cyoffs,
+			    xrel, yrel, state);
 		}
 	}
 	pthread_mutex_unlock(&mv->map->lock);
@@ -708,7 +710,6 @@ mouse_buttondown(int argc, union evarg *argv)
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
-	int xoff, yoff;
 	struct tool *tool;
 	
 	widget_focus(mv);
@@ -735,7 +736,7 @@ mouse_buttondown(int argc, union evarg *argv)
 	}
 	
 	pthread_mutex_lock(&m->lock);
-	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
+	get_node_coords(mv, &x, &y);
 	if (mv->cx < 0 || mv->cy < 0)
 		goto out;
 	
@@ -776,13 +777,15 @@ mouse_buttondown(int argc, union evarg *argv)
 		}
 		if (mv->curtool->mousebuttondown != NULL)
 			mv->curtool->mousebuttondown(mv->curtool,
-			    mv->cx, mv->cy, xoff, yoff, button);
+			    mv->cx, mv->cy,
+			    mv->cxoffs, mv->cyoffs,
+			    button);
 	}
 
 	if (mv->dblclicked) {
 		event_cancel(mv, "dblclick-expire");
 		event_post(NULL, mv, "mapview-dblclick", "%i, %i, %i, %i, %i",
-		    button, x, y, xoff, yoff);
+		    button, x, y, mv->cxoffs, mv->cyoffs);
 		mv->dblclicked = 0;
 	} else {
 		mv->dblclicked++;
@@ -801,11 +804,10 @@ mouse_buttonup(int argc, union evarg *argv)
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
-	int xoff, yoff;
 	struct tool *tool;
 	
 	pthread_mutex_lock(&m->lock);
-	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
+	get_node_coords(mv, &x, &y);
 	if (mv->cx < 0 || mv->cy < 0) {
 		mv->mouse.scrolling = 0;
 		goto out;
@@ -858,8 +860,10 @@ mouse_buttonup(int argc, union evarg *argv)
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL) {
 		if (mv->curtool->mousebuttonup != NULL)
-			mv->curtool->mousebuttonup(mv->curtool, mv->cx, mv->cy,
-			    xoff, yoff, button);
+			mv->curtool->mousebuttonup(mv->curtool,
+			    mv->cx, mv->cy,
+			    mv->cxoffs, mv->cyoffs,
+			    button);
 	}
 out:
 	pthread_mutex_unlock(&m->lock);
