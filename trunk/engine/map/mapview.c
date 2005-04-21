@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.3 2005/04/18 03:38:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.4 2005/04/21 04:44:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -514,7 +514,8 @@ mapview_draw(void *p)
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
 
-	if (mapview_bg) {
+	if (mapview_bg &&
+	    (mv->flags & MAPVIEW_NO_BG) == 0) {
 		SDL_Rect rtiling;
 
 		rtiling.x = 0;
@@ -726,12 +727,16 @@ mouse_buttondown(int argc, union evarg *argv)
 		mv->mouse.scrolling++;
 		return;
 	case SDL_BUTTON_WHEELDOWN:
-		mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
+			mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
+			mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		}
 		break;
 	case SDL_BUTTON_WHEELUP:
-		mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
+			mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
+			mapview_status(mv, _("%d%% magnification"), mv->zoom);
+		}
 		break;
 	}
 	
