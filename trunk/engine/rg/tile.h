@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.14 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.15 2005/04/19 04:20:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -64,7 +64,7 @@ struct tile {
 		} endpoint;
 	} line;
 	struct tile_elementq elements;
-	void (*blend_fn)(struct tile *, struct pixmap *, SDL_Rect *);
+	void (*blend_fn)(struct tile *, SDL_Surface *, SDL_Rect *);
 	TAILQ_ENTRY(tile) tiles;
 };
 
