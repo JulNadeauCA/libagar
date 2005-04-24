@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.83 2004/08/26 08:09:21 vedge Exp $
+# $Csoft: configure.in,v 1.84 2005/01/28 01:21:30 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -6,7 +6,8 @@ REGISTER("--with-x11",		"X11-specific code [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-libqnet",	"Network support [default: check]")
-REGISTER("--enable-edition",	"Graphical edition [default: yes]")
+REGISTER("--enable-edition",	"Graphical editors [default: yes]")
+REGISTER("--enable-network",	"Network support [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
@@ -137,6 +138,13 @@ if [ "${enable_edition}" != "no" ]; then
 	HDEFINE(EDITION, 1)
 else
 	HUNDEF(EDITION)
+fi
+
+# Disable network support by default.
+if [ "${enable_network}" = "yes" ]; then
+	HDEFINE(NETWORK, 1)
+else
+	HUNDEF(NETWORK)
 fi
 
 # Support 8/16/24/32bpp video displays by default.
