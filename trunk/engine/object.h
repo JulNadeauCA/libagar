@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.116 2005/02/03 09:19:05 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.117 2005/04/06 07:34:27 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -57,6 +57,7 @@ struct object {
 #define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
 #define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
 #define OBJECT_EDIT_RESIDENT	0x400	/* Remain resident (for editor) */
+#define OBJECT_DETACHED_SAVE	0x800	/* Don't include in parent save */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
 				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
 				 OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT)

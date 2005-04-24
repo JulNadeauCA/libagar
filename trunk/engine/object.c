@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.200 2005/04/18 03:38:21 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.201 2005/04/21 04:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -81,7 +81,8 @@ int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
 #endif
 
-int object_ignore_data_errors;		/* Don't fail on a data load failure. */
+int object_ignore_dataerrs = 0;    /* Don't fail on a data load failure. */
+int object_ignore_unkobjs = 0; /* Don't fail on unknown object types. */
 
 /* Allocate, initialize and attach a generic object. */
 struct object *
@@ -868,9 +869,9 @@ object_reload_data(void *p)
 	    (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT))) {
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(ob) == -1) {
-			if (object_ignore_data_errors) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (object_ignore_dataerrs) {
+				text_msg(MSG_ERROR, _("%s: %s (ignored)"),
+				    ob->name, error_get());
 			} else {
 				return (-1);
 			}
@@ -878,9 +879,9 @@ object_reload_data(void *p)
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_reload_data(cob) == -1) {
-			if (object_ignore_data_errors) {
-				text_msg(MSG_ERROR, "%s: %s", cob->name,
-				    error_get());
+			if (object_ignore_dataerrs) {
+				text_msg(MSG_ERROR, _("%s: %s (ignored)"),
+				    cob->name, error_get());
 			} else {
 				return (-1);
 			}
@@ -1041,8 +1042,15 @@ object_load_generic(void *p)
 					break;
 			}
 			if (ti == ntypesw) {
-				error_set(_("Unknown object type: `%s'"),
-				    ctype);
+				error_set(_("%s: unknown object type: `%s'"),
+				    ob->name, ctype);
+				if (object_ignore_unkobjs) {
+					text_msg(MSG_ERROR, _("%s (ignored)"),
+					    error_get());
+					continue;
+				} else {
+					goto fail;
+				}
 				goto fail;
 			}
 
@@ -1247,7 +1255,8 @@ object_save(void *p)
 	write_uint32(buf, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (child->flags & OBJECT_NON_PERSISTENT) {
+		if (child->flags & (OBJECT_NON_PERSISTENT|
+		                    OBJECT_DETACHED_SAVE)) {
 			continue;
 		}
 		write_string(buf, child->name);
