@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.9 2004/02/26 10:35:00 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.10 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -101,21 +101,7 @@ version_write(struct netbuf *buf, const struct version *ver)
 	netbuf_write(ver->name, strlen(ver->name), 1, buf);
 	write_uint32(buf, ver->minor);
 	write_uint32(buf, ver->major);
-
-#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	if ((pw = getpwuid(getuid())) != NULL) {
-		write_string(buf, pw->pw_name);
-	} else {
-		write_string(buf, "???");
-	}
-#else
-	write_string(buf, "???");
-#endif
-
-	if (gethostname(host, sizeof(host)) == 0) {
-		write_string(buf, host);
-	} else {
-		write_string(buf, "???");
-	}
+	write_string(buf, NULL);
+	write_string(buf, NULL);
 }
 
