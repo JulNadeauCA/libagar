@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.6 2005/04/13 03:29:05 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.7 2005/04/21 04:34:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -146,9 +146,9 @@ colors_init(void)
 	colors[TABLEVIEW_LINE_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);
 	colors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
 	colors[TEXTBOX_RW_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[TEXTBOX_RO_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);
+	colors[TEXTBOX_RO_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
 	colors[TEXTBOX_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);
+	colors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(vfmt, 251, 255, 197);
 	colors[TLIST_TXT_COLOR] = colors[TEXT_COLOR];
 	colors[TLIST_BG_COLOR] = colors[FRAME_COLOR];
 	colors[TLIST_LINE_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);

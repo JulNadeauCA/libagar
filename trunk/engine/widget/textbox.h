@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.36 2005/04/25 02:19:52 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.37 2005/04/25 02:31:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -17,8 +17,8 @@ struct textbox {
 	SDL_Surface *label;		 /* Label to display */
 	u_int flags;
 #define TEXTBOX_WRITEABLE	0x01	/* Writeable */
-#define TEXTBOX_COMPOSE		0x02	/* Input composition */
-#define TEXTBOX_BLINK_ON	0x04	/* Cursor blink state */
+#define TEXTBOX_COMPOSE		0x02	/* Input composition (internal) */
+#define TEXTBOX_BLINK_ON	0x04	/* Cursor blink state (internal) */
 #define TEXTBOX_PASSWORD	0x08	/* Password (hidden) input */
 #define TEXTBOX_ABANDON_FOCUS	0x10	/* Abandon focus on return */
 
