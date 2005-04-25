@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.84 2005/01/28 01:21:30 vedge Exp $
+# $Csoft: configure.in,v 1.85 2005/04/24 05:54:07 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -52,6 +52,8 @@ CHECK(snprintf)
 CHECK(vsnprintf)
 CHECK(setlocale)
 CHECK(arc4random)
+CHECK(md5)
+
 CHECK(libqnet)
 
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
