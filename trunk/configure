@@ -1146,6 +1146,76 @@ else
 
 	echo "no"
 fi
+echo -n "checking for SHA1 functions..."
+echo -n "checking for SHA1 functions..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sha1.h>
+
+int
+main(int argc, char *argv[])
+{
+	SHA1_CTX sha1;
+
+	SHA1Init(&sha1);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SHA1" > config/have_sha1.h
+echo "#define HAVE_SHA1" $HAVE_SHA1 >> config/have_sha1.h
+echo "#endif /* HAVE_SHA1 */" >> config/have_sha1.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SHA1" > config/have_sha1.h
+
+	echo "no"
+fi
+echo -n "checking for RMD160 functions..."
+echo -n "checking for RMD160 functions..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <rmd160.h>
+
+int
+main(int argc, char *argv[])
+{
+	RMD160_CTX rmd160;
+
+	RMD160Init(&rmd160);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_RMD160" > config/have_rmd160.h
+echo "#define HAVE_RMD160" $HAVE_RMD160 >> config/have_rmd160.h
+echo "#endif /* HAVE_RMD160 */" >> config/have_rmd160.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_RMD160" > config/have_rmd160.h
+
+	echo "no"
+fi
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
 libqnet_version=""
