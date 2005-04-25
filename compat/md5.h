@@ -16,6 +16,7 @@
 
 #ifdef HAVE_MD5
 
+#include <sys/types.h>
 #include <md5.h>
 
 #else /* !HAVE_MD5 */
