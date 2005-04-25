@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.139 2005/04/11 12:01:28 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.140 2005/04/14 06:19:35 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include <engine/view.h>
 #include <engine/prop.h>
 #include <engine/input.h>
+#include <engine/rcs.h>
 
 #include <engine/map/map.h>
 #ifdef EDITION
@@ -59,6 +60,7 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/hsvpal.h>
+#include <engine/widget/separator.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -74,7 +76,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 6
+	7, 0
 };
 
 const struct object_ops config_ops = {
@@ -249,36 +251,33 @@ config_load(void *p, struct netbuf *buf)
 
 	if (version_read(buf, &config_ver, &rv) != 0)
 		return (-1);
-
-	kbd_unitrans = read_uint8(buf);
-	text_composition = read_uint8(buf);
-	window_freescale = read_uint8(buf);
-	text_rightleft = read_uint8(buf);
-	event_idle = (int)read_uint8(buf);
+	
 #ifdef DEBUG
 	engine_debug = read_uint8(buf);
+#else
+	read_uint8(buf);
 #endif
+	server_mode = read_uint8(buf);
+	event_idle = (int)read_uint8(buf);
+	window_freescale = read_uint8(buf);
+	text_composition = read_uint8(buf);
+	text_rightleft = read_uint8(buf);
+	kbd_unitrans = read_uint8(buf);
 	kbd_delay = (int)read_uint32(buf);
 	kbd_repeat = (int)read_uint32(buf);
 	mouse_dblclick_delay = (int)read_uint32(buf);
-	if (rv.minor >= 3) {
-		mouse_spin_delay = (int)read_uint16(buf);
-		mouse_spin_ival = (int)read_uint16(buf);
-	}
-#ifdef EDITION
-	if (rv.minor >= 1 && read_uint8(buf) == 1)
-		mapedit_load(buf);
-#endif
-	if (rv.minor >= 2)
-		server_mode = read_uint8(buf);
-	if (rv.minor >= 4)
-		view_screenshot_quality = (int)read_uint8(buf);
-	if (rv.minor >= 5)
-		text_tab_width = (int)read_uint16(buf);
-	if (vfmt != NULL &&
-	    rv.minor >= 6)
-		colors_load(buf);
+	mouse_spin_delay = (int)read_uint16(buf);
+	mouse_spin_ival = (int)read_uint16(buf);
+	view_screenshot_quality = (int)read_uint8(buf);
+	text_tab_width = (int)read_uint16(buf);
+	
+	copy_string(rcs_hostname, buf, sizeof(rcs_hostname));
+	rcs_port = (u_int)read_uint16(buf);
+	copy_string(rcs_username, buf, sizeof(rcs_username));
+	copy_string(rcs_password, buf, sizeof(rcs_password));
 
+	mapedit_load(buf);
+	colors_load(buf);
 	return (0);
 }
 
@@ -287,31 +286,31 @@ config_save(void *p, struct netbuf *buf)
 {
 	version_write(buf, &config_ver);
 
-	write_uint8(buf, (Uint8)kbd_unitrans);
-	write_uint8(buf, (Uint8)text_composition);
-	write_uint8(buf, (Uint8)window_freescale);
-	write_uint8(buf, (Uint8)text_rightleft);
-	write_uint8(buf, (Uint8)event_idle);
 #ifdef DEBUG
 	write_uint8(buf, (Uint8)engine_debug);
 #else
 	write_uint8(buf, 0);
 #endif
+	write_uint8(buf, server_mode);
+	write_uint8(buf, (Uint8)event_idle);
+	write_uint8(buf, (Uint8)window_freescale);
+	write_uint8(buf, (Uint8)text_composition);
+	write_uint8(buf, (Uint8)text_rightleft);
+	write_uint8(buf, (Uint8)kbd_unitrans);
 	write_uint32(buf, (Uint32)kbd_delay);
 	write_uint32(buf, (Uint32)kbd_repeat);
 	write_uint32(buf, (Uint32)mouse_dblclick_delay);
 	write_uint16(buf, (Uint16)mouse_spin_delay);
 	write_uint16(buf, (Uint16)mouse_spin_ival);
-
-#ifdef EDITION
-	write_uint8(buf, 1);
-	mapedit_save(buf);
-#else
-	write_uint8(buf, 0);
-#endif
-	write_uint8(buf, server_mode);
 	write_uint8(buf, (Uint8)view_screenshot_quality);
 	write_uint16(buf, (Uint16)text_tab_width);
+
+	write_string(buf, rcs_hostname);
+	write_uint16(buf, (Uint16)rcs_port);
+	write_string(buf, rcs_username);
+	write_string(buf, rcs_password);
+
+	mapedit_save(buf);
 	colors_save(buf);
 	return (0);
 }
@@ -469,6 +468,32 @@ config_window(struct config *con)
 		event_new(tl, "tlist-selected", selected_color, "%p", hsv);
 	}
 
+#ifdef NETWORK
+	tab = notebook_add_tab(nb, _("RCS"), BOX_VERT);
+	{
+		struct textbox *tb;
+		struct spinbutton *sb;
+
+		tb = textbox_new(tab, _("Server hostname: "));
+		widget_bind(tb, "string", WIDGET_STRING, rcs_hostname,
+		    sizeof(rcs_hostname));
+	
+		sb = spinbutton_new(tab, _("Server port: "));
+		widget_bind(sb, "value", WIDGET_UINT, &rcs_port);
+
+		separator_new(tab, SEPARATOR_HORIZ);
+
+		tb = textbox_new(tab, _("Username: "));
+		widget_bind(tb, "string", WIDGET_STRING, rcs_username,
+		    sizeof(rcs_username));
+
+		tb = textbox_new(tab, _("Password: "));
+		textbox_set_password(tb, 1);
+		widget_bind(tb, "string", WIDGET_STRING, rcs_password,
+		    sizeof(rcs_password));
+	}
+#endif /* NETWORK */
+
 #ifdef DEBUG
 	tab = notebook_add_tab(nb, _("Debug"), BOX_VERT);
 	{
@@ -479,7 +504,6 @@ config_window(struct config *con)
 		widget_bind(cbox, "state", WIDGET_INT, &server_mode);
 	}
 #endif
-
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
 	{
