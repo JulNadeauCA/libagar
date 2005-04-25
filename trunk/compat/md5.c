@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: md5.c,v 1.1 2005/04/25 04:33:02 vedge Exp $	*/
 /*	$OpenBSD: md5.c,v 1.7 2004/05/28 15:10:27 millert Exp $	*/
 
 /*
@@ -21,11 +21,8 @@
 #include <config/have_md5.h>
 
 #ifndef HAVE_MD5
-
 #include <engine/engine.h>
-
 #include <string.h>
-
 #include <compat/md5.h>
 
 #define PUT_64BIT_LE(cp, value) do {					\
@@ -254,4 +251,4 @@ MD5Transform(Uint32 state[4], const Uint8 block[MD5_BLOCK_LENGTH])
 	state[3] += d;
 }
 
-#endif /* HAVE_MD5 */
+#endif /* !HAVE_MD5 */
