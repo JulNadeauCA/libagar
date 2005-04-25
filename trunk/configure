@@ -1111,6 +1111,40 @@ else
 
 	echo "no"
 fi
+echo -n "checking for MD5 functions..."
+echo -n "checking for MD5 functions..." >> config.log
+cat << EOT > conftest.c
+#include <md5.h>
+
+int
+main(int argc, char *argv[])
+{
+	MD5_CTX md5;
+
+	MD5Init(&md5);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_MD5" > config/have_md5.h
+echo "#define HAVE_MD5" $HAVE_MD5 >> config/have_md5.h
+echo "#endif /* HAVE_MD5 */" >> config/have_md5.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_MD5" > config/have_md5.h
+
+	echo "no"
+fi
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
 libqnet_version=""
