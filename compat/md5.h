@@ -1,3 +1,4 @@
+/*	$Csoft$	*/
 /*	$OpenBSD: md5.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -13,7 +14,6 @@
  */
 
 #include <config/have_md5.h>
-
 #ifdef HAVE_MD5
 
 #include <sys/types.h>
@@ -49,5 +49,4 @@ char	*MD5Data(const Uint8 *, size_t, char *)
 		BOUNDED_ATTROBUTE(__string__,1,2);
 __END_DECLS
 
-#endif /* HAVE_MD5 */
-
+#endif /* !HAVE_MD5 */
