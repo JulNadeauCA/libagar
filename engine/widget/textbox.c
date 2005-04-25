@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.88 2005/03/27 03:49:27 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.89 2005/03/27 04:05:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -94,7 +94,7 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
 		  	if (kcode->clr_compo) {
-				tb->compose = 0;
+				tb->flags &= ~(TEXTBOX_COMPOSE);
 			}
 			event_post(NULL, tb, "textbox-prechg", NULL);
 			rv = kcode->func(tb, keysym, keymod, kcode->arg,
@@ -125,7 +125,7 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 
 	timeout_replace(tb, &tb->repeat_to, kbd_repeat);
 	timeout_del(tb, &tb->cblink_to);
-	tb->blink_state = 1;
+	tb->flags |= TEXTBOX_BLINK_ON;
 	return (0);
 }
 
@@ -134,7 +134,11 @@ blink_expire(void *obj, Uint32 ival, void *arg)
 {
 	struct textbox *tb = obj;
 
-	tb->blink_state = !tb->blink_state;
+	if (tb->flags & TEXTBOX_BLINK_ON) {
+		tb->flags &= ~(TEXTBOX_BLINK_ON);
+	} else {
+		tb->flags |= TEXTBOX_BLINK_ON;
+	}
 	return (ival);
 }
 
@@ -171,13 +175,11 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
-	tbox->writeable = 1;
+	tbox->flags = TEXTBOX_WRITEABLE|TEXTBOX_BLINK_ON;
 	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
 	tbox->pos = 0;
 	tbox->offs = 0;
-	tbox->compose = 0;
-	tbox->blink_state = 1;
 	tbox->sel_x1 = 0;
 	tbox->sel_x2 = 0;
 	tbox->sel_edit = 0;
@@ -247,8 +249,8 @@ textbox_draw(void *p)
 	    WIDGET(tbox)->w - x - 1,
 	    WIDGET(tbox)->h,
 	    (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? -1 : 1,
-	    tbox->writeable ? COLOR(TEXTBOX_RW_COLOR) :
-	                      COLOR(TEXTBOX_RO_COLOR));
+	    (tbox->flags & TEXTBOX_WRITEABLE) ? COLOR(TEXTBOX_RW_COLOR) :
+	                                        COLOR(TEXTBOX_RO_COLOR));
 
 	x += tbox->xpadding;
 	if (WIDGET(tbox)->flags & WIDGET_FOCUSED) {
@@ -259,7 +261,7 @@ textbox_draw(void *p)
 		int invert = 0;
 
 		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
-		    tbox->blink_state) {
+		    tbox->flags & TEXTBOX_BLINK_ON) {
 			if (i == tbox->pos) {
 				primitives.line(tbox,
 				    x,
@@ -282,11 +284,17 @@ textbox_draw(void *p)
 
 		{
 			FT_Bitmap *ftbmp;
-			Uint32 ch = (Uint32)s[i];
+			Uint32 ch;
 			struct ttf_font *ttf = font->p;
 			struct ttf_glyph *glyph;
 			int xglyph, yglyph;
 			Uint8 *src;
+
+			if (tbox->flags & TEXTBOX_PASSWORD) {
+				ch = (Uint32)('*');
+			} else {
+				ch = (Uint32)s[i];
+			}
 
 			if (ttf_find_glyph(ttf, ch,
 			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
@@ -354,7 +362,7 @@ keydown(int argc, union evarg *argv)
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
 
-	if (!tbox->writeable)
+	if ((tbox->flags & TEXTBOX_WRITEABLE) == 0)
 		return;
 
 	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
@@ -369,7 +377,7 @@ keydown(int argc, union evarg *argv)
 	tbox->repeat.key = keysym;
 	tbox->repeat.mod = keymod;
 	tbox->repeat.unicode = unicode;
-	tbox->blink_state = 1;
+	tbox->flags |= TEXTBOX_BLINK_ON;
 
 	lock_timeout(tbox);
 	timeout_del(tbox, &tbox->repeat_to);
@@ -573,6 +581,17 @@ textbox_int(struct textbox *tbox)
 void
 textbox_set_writeable(struct textbox *tbox, int wr)
 {
-	tbox->writeable = wr;
+	if (wr)
+		tbox->flags |= TEXTBOX_WRITEABLE;
+	else
+		tbox->flags &= ~(TEXTBOX_WRITEABLE);
 }
 
+void
+textbox_set_password(struct textbox *tbox, int pw)
+{
+	if (pw)
+		tbox->flags |= TEXTBOX_PASSWORD;
+	else
+		tbox->flags &= ~(TEXTBOX_PASSWORD);
+}
