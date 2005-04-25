@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.201 2005/04/21 04:43:55 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.202 2005/04/24 05:53:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <compat/md5.h>
 
 #include <engine/engine.h>
 #include <engine/config.h>
@@ -1587,6 +1589,7 @@ fail:
 	return (NULL);
 }
 
+/* Return the icon associated with this object type, if any. */
 SDL_Surface *
 object_icon(void *p)
 {
@@ -1599,6 +1602,49 @@ object_icon(void *p)
 			    NULL);
 	}
 	return (NULL);
+}
+
+/* Return a cryptographic digest for an object's last saved state. */
+size_t
+object_checksum(void *p, enum object_checksum_alg alg, char *digest)
+{
+	struct object *ob = p;
+	char save_path[MAXPATHLEN];
+	char buf[BUFSIZ];
+	FILE *f;
+	off_t offs;
+	size_t totlen = 0;
+	size_t rv;
+	
+	if (object_copy_filename(ob, save_path, sizeof(save_path)) == -1) {
+		return (0);
+	}
+	/* TODO locking */
+	if ((f = fopen(save_path, "r")) == NULL) {
+		error_set("%s: %s", save_path, strerror(errno));
+		return (0);
+	}
+
+	switch (alg) {
+	case OBJECT_MD5:
+		{
+			MD5_CTX ctx;
+
+			MD5Init(&ctx);
+			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
+				MD5Update(&ctx, buf, (u_int)rv);
+				totlen += rv;
+			}
+			MD5End(&ctx, digest);
+		}
+		break;
+	case OBJECT_SHA1:
+	case OBJECT_RMD160:
+		break;
+	}
+	fclose(f);
+
+	return (totlen);
 }
 
 #ifdef EDITION
@@ -1708,6 +1754,20 @@ rename_object(int argc, union evarg *argv)
 	event_post(NULL, ob, "renamed", NULL);
 }
 
+static void
+refresh_checksums(int argc, union evarg *argv)
+{
+	char sum_md5[128];
+	struct object *ob = argv[1].p;
+	struct textbox *tb_md5 = argv[2].p;
+
+	if (object_checksum(ob, OBJECT_MD5, sum_md5) > 0) {
+		textbox_printf(tb_md5,  "%s", sum_md5);
+	} else {
+		textbox_printf(tb_md5,  "(%s)", error_get());
+	}
+}
+
 struct window *
 object_edit(void *p)
 {
@@ -1717,15 +1777,20 @@ object_edit(void *p)
 	struct notebook *nb;
 	struct notebook_tab *ntab;
 	struct tlist *tl;
+	struct button *btn;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Object %s"), ob->name);
-	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
+	window_set_position(win, WINDOW_UPPER_RIGHT, 1);
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Infos"), BOX_VERT);
 	notebook_select_tab(nb, ntab);
 	{
+		char path[OBJECT_PATH_MAX];
+		char sum_md5[128];
+		struct textbox *tb_md5;
+
 		tbox = textbox_new(ntab, _("Name: "));
 		textbox_printf(tbox, ob->name);
 		event_new(tbox, "textbox-return", rename_object, "%p", ob);
@@ -1745,8 +1810,19 @@ object_edit(void *p)
 		    &ob->gfx_used);
 		label_new(ntab, LABEL_POLLED, _("Audio references: %[u32]"),
 		    &ob->audio_used);
-	}
+		
+		separator_new(ntab, SEPARATOR_HORIZ);
 
+		tb_md5 = textbox_new(ntab, _("MD5: "));
+		textbox_prescale(tbox, "88888888888888888888888888888888");
+		tb_md5->flags &= ~(TEXTBOX_WRITEABLE);
+	
+		btn = button_new(ntab, _("Refresh checksums"));
+		event_new(btn, "button-pushed", refresh_checksums, "%p,%p",
+		    ob, tb_md5);
+		event_post(NULL, btn, "button-pushed", NULL);
+	}
+	
 	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);

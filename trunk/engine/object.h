@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.117 2005/04/06 07:34:27 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.118 2005/04/24 05:53:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -92,6 +92,12 @@ enum object_page_item {
 	OBJECT_DATA		/* Object data */
 };
 
+enum object_checksum_alg {
+	OBJECT_MD5,
+	OBJECT_SHA1,
+	OBJECT_RMD160
+};
+
 #define OBJECT_INITIALIZER(ob, type, name, ops) {		\
 		(type), (name), "/world", (ops), 0,		\
 		PTHREAD_MUTEX_INITIALIZER,			\
@@ -164,6 +170,7 @@ int	 object_load_generic(void *);
 int	 object_reload_data(void *);
 int	 object_resolve_deps(void *);
 int	 object_load_data(void *);
+size_t	 object_checksum(void *, enum object_checksum_alg, char *);
 
 void	 object_attach(void *, void *);
 void	 object_detach(void *);
