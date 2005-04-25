@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.202 2005/04/24 05:53:27 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.203 2005/04/25 06:44:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <compat/md5.h>
+#include <compat/sha1.h>
+#include <compat/rmd160.h>
 
 #include <engine/engine.h>
 #include <engine/config.h>
@@ -1639,7 +1641,28 @@ object_checksum(void *p, enum object_checksum_alg alg, char *digest)
 		}
 		break;
 	case OBJECT_SHA1:
+		{
+			SHA1_CTX ctx;
+
+			SHA1Init(&ctx);
+			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
+				SHA1Update(&ctx, buf, (u_int)rv);
+				totlen += rv;
+			}
+			SHA1End(&ctx, digest);
+		}
+		break;
 	case OBJECT_RMD160:
+		{
+			RMD160_CTX ctx;
+
+			RMD160Init(&ctx);
+			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
+				RMD160Update(&ctx, buf, (u_int)rv);
+				totlen += rv;
+			}
+			RMD160End(&ctx, digest);
+		}
 		break;
 	}
 	fclose(f);
@@ -1757,14 +1780,28 @@ rename_object(int argc, union evarg *argv)
 static void
 refresh_checksums(int argc, union evarg *argv)
 {
-	char sum_md5[128];
+	char checksum[128];
 	struct object *ob = argv[1].p;
 	struct textbox *tb_md5 = argv[2].p;
+	struct textbox *tb_sha1 = argv[3].p;
+	struct textbox *tb_rmd160 = argv[4].p;
 
-	if (object_checksum(ob, OBJECT_MD5, sum_md5) > 0) {
-		textbox_printf(tb_md5,  "%s", sum_md5);
+	if (object_checksum(ob, OBJECT_MD5, checksum) > 0) {
+		textbox_printf(tb_md5,  "%s", checksum);
 	} else {
 		textbox_printf(tb_md5,  "(%s)", error_get());
+	}
+	
+	if (object_checksum(ob, OBJECT_SHA1, checksum) > 0) {
+		textbox_printf(tb_sha1,  "%s", checksum);
+	} else {
+		textbox_printf(tb_sha1,  "(%s)", error_get());
+	}
+	
+	if (object_checksum(ob, OBJECT_RMD160, checksum) > 0) {
+		textbox_printf(tb_rmd160,  "%s", checksum);
+	} else {
+		textbox_printf(tb_rmd160,  "(%s)", error_get());
 	}
 }
 
@@ -1788,8 +1825,7 @@ object_edit(void *p)
 	notebook_select_tab(nb, ntab);
 	{
 		char path[OBJECT_PATH_MAX];
-		char sum_md5[128];
-		struct textbox *tb_md5;
+		struct textbox *tb_md5, *tb_sha1, *tb_rmd160;
 
 		tbox = textbox_new(ntab, _("Name: "));
 		textbox_printf(tbox, ob->name);
@@ -1813,13 +1849,21 @@ object_edit(void *p)
 		
 		separator_new(ntab, SEPARATOR_HORIZ);
 
-		tb_md5 = textbox_new(ntab, _("MD5: "));
-		textbox_prescale(tbox, "88888888888888888888888888888888");
+		tb_md5 = textbox_new(ntab, "MD5: ");
+		textbox_prescale(tb_md5, "888888888888888888888888888888888");
 		tb_md5->flags &= ~(TEXTBOX_WRITEABLE);
+		
+		tb_sha1 = textbox_new(ntab, "SHA1: ");
+		textbox_prescale(tb_sha1, "8888888888888888888888888");
+		tb_sha1->flags &= ~(TEXTBOX_WRITEABLE);
+		
+		tb_rmd160 = textbox_new(ntab, "RMD160: ");
+		textbox_prescale(tb_rmd160, "88888888888888888888888");
+		tb_rmd160->flags &= ~(TEXTBOX_WRITEABLE);
 	
 		btn = button_new(ntab, _("Refresh checksums"));
-		event_new(btn, "button-pushed", refresh_checksums, "%p,%p",
-		    ob, tb_md5);
+		event_new(btn, "button-pushed", refresh_checksums,
+		    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
 		event_post(NULL, btn, "button-pushed", NULL);
 	}
 	
