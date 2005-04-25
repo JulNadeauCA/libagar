@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.89 2005/03/27 04:05:21 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.90 2005/04/25 02:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -369,7 +369,9 @@ keydown(int argc, union evarg *argv)
 		return;
 	}
 	if (keysym == SDLK_RETURN) {
-		widget_unset_focus(tbox);
+		if (tbox->flags & TEXTBOX_ABANDON_FOCUS) {
+			widget_unset_focus(tbox);
+		}
 		event_post(NULL, tbox, "textbox-return", NULL);
 		return;
 	}
