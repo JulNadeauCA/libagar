@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.26 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.27 2005/01/11 07:41:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -60,6 +60,9 @@ The string may contain UTF-8 encoded characters.
 .Fn textbox_set_writeable "struct textbox *textbox" "int writeable"
 .Pp
 .Ft void
+.Fn textbox_set_password "struct textbox *textbox" "int password"
+.Pp
+.Ft void
 .Fn textbox_prescale "struct textbox *textbox" "const char *text"
 .nr nS 0
 .Pp
@@ -78,6 +81,9 @@ widget with the label text set to
 The
 .Fn textbox_set_writeable
 function controls the writeability of the string.
+.Pp
+.Fn textbox_set_password
+controls password (no print) input.
 .Pp
 .Fn textbox_prescale
 requests that the initial geometry of
