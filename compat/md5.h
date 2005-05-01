@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: md5.h,v 1.3 2005/04/25 07:47:50 vedge Exp $	*/
 /*	$OpenBSD: md5.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -40,13 +40,13 @@ void	 MD5Init(MD5_CTX *);
 void	 MD5Update(MD5_CTX *, const Uint8 *, size_t)
 	 	BOUNDED_ATTRIBUTE(__string__,2,3);
 void	 MD5Pad(MD5_CTX *);
-void	 MD5Final(Uint8, MD5_CTX *);
-void	 MD5Transform(Uint32, const Uint8)
+void	 MD5Final(Uint8 [MD5_DIGEST_LENGTH], MD5_CTX *);
+void	 MD5Transform(Uint32 [4], const Uint8 [MD5_BLOCK_LENGTH]);
 char	*MD5End(MD5_CTX *, char *);
 char	*MD5File(const char *, char *);
-char	*MD5FileChunk(const char *, char *, off_t, off_t)
+char	*MD5FileChunk(const char *, char *, off_t, off_t);
 char	*MD5Data(const Uint8 *, size_t, char *)
-		BOUNDED_ATTROBUTE(__string__,1,2);
+		BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS
 
 #endif /* !HAVE_MD5 */

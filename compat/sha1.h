@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: sha1.h,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
 /*	$OpenBSD: sha1.h,v 1.23 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -35,10 +35,10 @@ typedef struct {
 __BEGIN_DECLS
 void SHA1Init(SHA1_CTX *);
 void SHA1Pad(SHA1_CTX *);
-void SHA1Transform(Uint32, const Uint8);
+void SHA1Transform(Uint32 [5], const Uint8 [SHA1_BLOCK_LENGTH]);
 void SHA1Update(SHA1_CTX *, const Uint8 *, size_t)
 	BOUNDED_ATTRIBUTE(__string__,2,3);
-void SHA1Final(Uint8, SHA1_CTX *);
+void SHA1Final(Uint8 [SHA1_DIGEST_LENGTH], SHA1_CTX *);
 char *SHA1End(SHA1_CTX *, char *);
 char *SHA1File(const char *, char *);
 char *SHA1FileChunk(const char *, char *, off_t, off_t);
