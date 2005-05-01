@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.114 2005/04/14 02:47:46 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -17,7 +17,7 @@
 #define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_MASKS	16384
 
-#include <engine/space.h>
+#include <engine/space/space.h>
 #include <engine/map/transform.h>
 #include <engine/map/nodemask.h>
 #include <engine/gobject.h>

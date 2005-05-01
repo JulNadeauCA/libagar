@@ -1,10 +1,10 @@
-/*	$Csoft: gobject.h,v 1.16 2003/09/02 02:07:48 vedge Exp $	*/
+/*	$Csoft: gobject.h,v 1.1 2005/02/08 15:57:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_GOBJECT_H_
 #define _AGAR_GOBJECT_H_
 
-#include <engine/space.h>
+#include <engine/space/space.h>
 
 #include "begin_code.h"
 

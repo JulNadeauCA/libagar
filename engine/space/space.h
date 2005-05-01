@@ -1,4 +1,4 @@
-/*	$Csoft: space.h,v 1.1 2004/11/21 11:15:44 vedge Exp $	*/
+/*	$Csoft: space.h,v 1.2 2004/11/22 03:56:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PHYS_SPACE_H_
