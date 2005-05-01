@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.3 2005/05/01 00:56:20 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.4 2005/05/01 08:17:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -463,11 +463,13 @@ rcs_update(struct object *ob)
 		    ob->name, repo_rev);
 		goto out;
 	case RCS_LOCALMOD:
+#if 0
 		text_msg(MSG_ERROR,
 		    _("Working copy of %s was modified locally.\n"
 		      "Please do a RCS commit prior to updating.\n"),
 		       ob->name);
 		goto out;
+#endif
 	case RCS_DESYNCH:
 		break;
 	}
