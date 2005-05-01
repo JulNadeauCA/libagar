@@ -1,4 +1,4 @@
-/*	$Csoft: rmd160.h,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
+/*	$Csoft: rmd160.h,v 1.2 2005/05/01 00:11:12 vedge Exp $	*/
 /*	$OpenBSD: rmd160.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -58,8 +58,6 @@ void	 RMD160Update(RMD160_CTX *, const Uint8 *, size_t)
 void	 RMD160Pad(RMD160_CTX *);
 void	 RMD160Final(Uint8 [RMD160_DIGEST_LENGTH], RMD160_CTX *);
 char	*RMD160End(RMD160_CTX *, char *);
-char	*RMD160File(const char *, char *);
-char	*RMD160FileChunk(const char *, char *, off_t, off_t);
 char	*RMD160Data(const Uint8 *, size_t, char *)
 		BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS

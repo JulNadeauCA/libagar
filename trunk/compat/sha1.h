@@ -1,4 +1,4 @@
-/*	$Csoft: sha1.h,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
+/*	$Csoft: sha1.h,v 1.2 2005/05/01 00:11:12 vedge Exp $	*/
 /*	$OpenBSD: sha1.h,v 1.23 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -40,8 +40,6 @@ void SHA1Update(SHA1_CTX *, const Uint8 *, size_t)
 	BOUNDED_ATTRIBUTE(__string__,2,3);
 void SHA1Final(Uint8 [SHA1_DIGEST_LENGTH], SHA1_CTX *);
 char *SHA1End(SHA1_CTX *, char *);
-char *SHA1File(const char *, char *);
-char *SHA1FileChunk(const char *, char *, off_t, off_t);
 char *SHA1Data(const Uint8 *, size_t, char *)
 	BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS

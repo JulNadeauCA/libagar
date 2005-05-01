@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: rmd160.c,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -375,4 +375,33 @@ RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
 	state[0] = t;
 }
 
+char *
+RMD160End(RMD160_CTX *ctx, char *buf)
+{
+	int i;
+	Uint8 digest[RMD160_DIGEST_LENGTH];
+	static const char hex[] = "0123456789abcdef";
+
+	if (buf == NULL && (buf = malloc(RMD160_DIGEST_STRING_LENGTH)) == NULL)
+		return (NULL);
+
+	RMD160Final(digest, ctx);
+	for (i = 0; i < RMD160_DIGEST_LENGTH; i++) {
+		buf[i + i] = hex[digest[i] >> 4];
+		buf[i + i + 1] = hex[digest[i] & 0x0f];
+	}
+	buf[i + i] = '\0';
+	memset(digest, 0, sizeof(digest));
+	return (buf);
+}
+
+char *
+RMD160Data(const u_char *data, size_t len, char *buf)
+{
+	RMD160_CTX ctx;
+
+	RMD160Init(&ctx);
+	RMD160Update(&ctx, data, len);
+	return (RMD160End(&ctx, buf));
+}
 #endif /* !HAVE_RMD160 */

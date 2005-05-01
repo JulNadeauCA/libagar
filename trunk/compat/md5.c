@@ -1,5 +1,6 @@
-/*	$Csoft: md5.c,v 1.1 2005/04/25 04:33:02 vedge Exp $	*/
+/*	$Csoft: md5.c,v 1.2 2005/04/25 06:44:25 vedge Exp $	*/
 /*	$OpenBSD: md5.c,v 1.7 2004/05/28 15:10:27 millert Exp $	*/
+/*	$OpenBSD: helper.c,v 1.6 2004/06/22 01:57:29 jfb Exp $	*/
 
 /*
  * This code implements the MD5 message-digest algorithm.
@@ -16,6 +17,15 @@
  * MD5Context structure, pass it to MD5Init, call MD5Update as
  * needed on buffers full of bytes, and then call MD5Final, which
  * will fill a supplied 16-byte array with the digest.
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * <phk@login.dkuug.dk> wrote this file.  As long as you retain this notice you
+ * can do whatever you want with this stuff. If we meet some day, and you think
+ * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
+ * ----------------------------------------------------------------------------
  */
 
 #include <config/have_md5.h>
@@ -249,6 +259,36 @@ MD5Transform(Uint32 state[4], const Uint8 block[MD5_BLOCK_LENGTH])
 	state[1] += b;
 	state[2] += c;
 	state[3] += d;
+}
+
+char *
+MD5End(MD5_CTX *ctx, char *buf)
+{
+	int i;
+	Uint8 digest[MD5_DIGEST_LENGTH];
+	static const char hex[] = "0123456789abcdef";
+
+	if (buf == NULL && (buf = malloc(MD5_DIGEST_STRING_LENGTH)) == NULL)
+		return (NULL);
+
+	MD5Final(digest, ctx);
+	for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+		buf[i + i] = hex[digest[i] >> 4];
+		buf[i + i + 1] = hex[digest[i] & 0x0f];
+	}
+	buf[i + i] = '\0';
+	memset(digest, 0, sizeof(digest));
+	return (buf);
+}
+
+char *
+MD5Data(const Uint8 *data, size_t len, char *buf)
+{
+	MD5_CTX ctx;
+
+	MD5Init(&ctx);
+	MD5Update(&ctx, data, len);
+	return (MD5End(&ctx, buf));
 }
 
 #endif /* !HAVE_MD5 */
