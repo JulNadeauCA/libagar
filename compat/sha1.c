@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: sha1.c,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
 /*	$OpenBSD: sha1.c,v 1.19 2004/05/28 15:10:27 millert Exp $	*/
 
 /*
@@ -13,6 +13,15 @@
  *   84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1
  * A million repetitions of "a"
  *   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
+ */
+
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * <phk@login.dkuug.dk> wrote this file.  As long as you retain this notice you
+ * can do whatever you want with this stuff. If we meet some day, and you think
+ * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
+ * ----------------------------------------------------------------------------
  */
 
 #include <config/have_sha1.h>
@@ -175,6 +184,36 @@ SHA1Final(Uint8 digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 		}
 		memset(context, 0, sizeof(*context));
 	}
+}
+
+char *
+SHA1End(SHA1_CTX *ctx, char *buf)
+{
+	int i;
+	Uint8 digest[SHA1_DIGEST_LENGTH];
+	static const char hex[] = "0123456789abcdef";
+
+	if (buf == NULL && (buf = malloc(SHA1_DIGEST_STRING_LENGTH)) == NULL)
+		return (NULL);
+
+	SHA1Final(digest, ctx);
+	for (i = 0; i < SHA1_DIGEST_LENGTH; i++) {
+		buf[i + i] = hex[digest[i] >> 4];
+		buf[i + i + 1] = hex[digest[i] & 0x0f];
+	}
+	buf[i + i] = '\0';
+	memset(digest, 0, sizeof(digest));
+	return (buf);
+}
+
+char *
+SHA1Data(const u_char *data, size_t len, char *buf)
+{
+	SHA1_CTX ctx;
+
+	SHA1Init(&ctx);
+	SHA1Update(&ctx, data, len);
+	return (SHA1End(&ctx, buf));
 }
 
 #endif /* !HAVE_SHA1 */
