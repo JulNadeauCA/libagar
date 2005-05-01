@@ -26,6 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/engine.h>
+
 #include <compat/md5.h>
 #include <compat/sha1.h>
 #include <compat/rmd160.h>
@@ -33,7 +35,6 @@
 #include <config/network.h>
 #include <config/version.h>
 
-#include <engine/engine.h>
 #include <engine/widget/text.h>
 
 #include "rcs.h"
