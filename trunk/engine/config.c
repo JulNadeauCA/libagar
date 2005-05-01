@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.140 2005/04/14 06:19:35 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.141 2005/04/25 02:32:23 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -473,6 +473,7 @@ config_window(struct config *con)
 	{
 		struct textbox *tb;
 		struct spinbutton *sb;
+		struct box *box;
 
 		tb = textbox_new(tab, _("Server hostname: "));
 		widget_bind(tb, "string", WIDGET_STRING, rcs_hostname,
@@ -483,14 +484,17 @@ config_window(struct config *con)
 
 		separator_new(tab, SEPARATOR_HORIZ);
 
-		tb = textbox_new(tab, _("Username: "));
-		widget_bind(tb, "string", WIDGET_STRING, rcs_username,
-		    sizeof(rcs_username));
+		box = box_new(tab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		{
+			tb = textbox_new(box, _("Username: "));
+			widget_bind(tb, "string", WIDGET_STRING, rcs_username,
+			    sizeof(rcs_username));
 
-		tb = textbox_new(tab, _("Password: "));
-		textbox_set_password(tb, 1);
-		widget_bind(tb, "string", WIDGET_STRING, rcs_password,
-		    sizeof(rcs_password));
+			tb = textbox_new(box, _("Password: "));
+			textbox_set_password(tb, 1);
+			widget_bind(tb, "string", WIDGET_STRING, rcs_password,
+			    sizeof(rcs_password));
+		}
 	}
 #endif /* NETWORK */
 

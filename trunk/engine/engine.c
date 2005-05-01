@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.149 2005/04/11 17:50:01 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.150 2005/04/14 06:19:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <config/have_libqnet.h>
 #include <config/localedir.h>
 #include <config/version.h>
+#include <config/network.h>
 
 #include <compat/setenv.h>
 #include <compat/strlcat.h>
@@ -43,10 +44,13 @@
 
 #include <engine/map/map.h>
 #include <engine/map/rootmap.h>
+
 #ifdef EDITION
 #include <engine/map/mapedit.h>
 #endif
-
+#ifdef NETWORK
+#include <engine/rcs.h>
+#endif
 #ifdef DEBUG
 #include <engine/monitor/monitor.h>
 #endif
@@ -184,11 +188,14 @@ engine_preinit(const char *name)
 
 	typesw_init();
 	colors_init();
+#ifdef NETWORK
+	rcs_init();
+#endif
 
 	config = Malloc(sizeof(struct config), M_OBJECT);
 	config_init(config);
 	object_load(config);
-	
+
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
@@ -202,6 +209,7 @@ engine_set_gfxmode(enum gfx_engine mode)
 	gfx_mode  = mode;
 }
 
+/* Initialize graphics and input devices. */
 int
 engine_init(void)
 {
@@ -261,6 +269,10 @@ engine_destroy(void)
 	if (mapedition)
 		object_save(&mapedit);
 #endif
+#ifdef NETWORK
+	rcs_destroy();
+#endif
+
 	object_destroy(world);
 	view_destroy();
 	text_destroy();
