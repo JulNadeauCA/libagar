@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.92 2005/02/27 06:51:47 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.93 2005/04/24 05:54:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -33,7 +33,9 @@
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__ /* OS X */
 #  include <OpenGL/gl.h> /* OpenGL.framework */
+#if 0
 #  include <AGL/agl.h>   /* AGL.framework */
+#endif
 # else
 #  include <GL/gl.h>
 # endif
