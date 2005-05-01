@@ -240,7 +240,7 @@ engine_init(void)
 	if (engine_debug > 0) {
 		monitor_init();
 	}
-# ifdef HAVE_LIBQNET
+# if defined(HAVE_LIBQNET) && defined(THREADS)
 	if (server_mode)
 		server_start();
 # endif

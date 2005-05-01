@@ -30,7 +30,7 @@
 #include <config/have_jpeg.h>
 #include <config/have_libqnet.h>
 
-#if defined(DEBUG) && defined(HAVE_LIBQNET)
+#if defined(DEBUG) && defined(HAVE_LIBQNET) && defined(THREADS)
 
 #include <engine/view.h>
 #include <engine/config.h>
@@ -398,4 +398,4 @@ server_window(void)
 	object_attach(win, tl);
 	return (win);
 }
-#endif	/* DEBUG and LIBQNET */
+#endif	/* DEBUG and LIBQNET and THREADS */
