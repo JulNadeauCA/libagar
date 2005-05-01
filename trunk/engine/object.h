@@ -139,7 +139,7 @@ int	 object_copy_dirname(const void *, char *, size_t)
 int	 object_copy_filename(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 size_t	 object_copy_checksum(const void *, enum object_checksum_alg, char *);
-int	 object_copy_digest(const void *, u_int *, char *);
+int	 object_copy_digest(const void *, size_t *, char *);
 
 void		*object_find(const char *);
 __inline__ void	*object_root(const void *);

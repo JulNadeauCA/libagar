@@ -1677,7 +1677,7 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 }
 
 int
-object_copy_digest(const void *ob, u_int *len, char *digest)
+object_copy_digest(const void *ob, size_t *len, char *digest)
 {
 	char md5[MD5_DIGEST_STRING_LENGTH];
 	char sha1[SHA1_DIGEST_STRING_LENGTH];
