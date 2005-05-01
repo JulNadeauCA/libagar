@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.118 2005/04/24 05:53:28 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.119 2005/04/25 06:44:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -7,6 +7,7 @@
 #define OBJECT_TYPE_MAX	32
 #define OBJECT_NAME_MAX	128
 #define OBJECT_PATH_MAX	1024
+#define OBJECT_DIGEST_MAX 170
 
 #include <engine/timeout.h>
 #include <engine/prop.h>
@@ -137,6 +138,8 @@ int	 object_copy_dirname(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 object_copy_filename(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+size_t	 object_copy_checksum(const void *, enum object_checksum_alg, char *);
+int	 object_copy_digest(const void *, u_int *, char *);
 
 void		*object_find(const char *);
 __inline__ void	*object_root(const void *);
@@ -170,7 +173,6 @@ int	 object_load_generic(void *);
 int	 object_reload_data(void *);
 int	 object_resolve_deps(void *);
 int	 object_load_data(void *);
-size_t	 object_checksum(void *, enum object_checksum_alg, char *);
 
 void	 object_attach(void *, void *);
 void	 object_detach(void *);

@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.15 2005/03/27 03:51:46 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.16 2005/04/14 06:19:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,6 +47,10 @@
 #include <engine/widget/label.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/file_dlg.h>
+
+#ifdef NETWORK
+#include <engine/rcs.h>
+#endif
 
 #include <string.h>
 #include <ctype.h>
@@ -124,7 +128,11 @@ enum {
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
 	OBJEDIT_MOVE_DOWN,
-	OBJEDIT_DUP
+	OBJEDIT_DUP,
+	OBJEDIT_RCS_UPDATE,
+	OBJEDIT_RCS_COMMIT,
+	OBJEDIT_RCS_IMPORT,
+	OBJEDIT_RCS_CHECKOUT
 };
 
 static void
@@ -399,6 +407,88 @@ obj_op(int argc, union evarg *argv)
 			}
 			world_changed = 1;
 			break;
+#ifdef NETWORK
+		case OBJEDIT_RCS_IMPORT:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				text_msg(MSG_ERROR,
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+				break;
+			}
+			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
+				    ob->name, error_get());
+				break;
+			}
+			if (rcs_import(ob) == -1) {
+				text_msg(MSG_ERROR, _("Import failed: %s"),
+				    error_get());
+			} else {
+				/* Save the updated working revision. */
+				object_save(ob);
+			}
+			break;
+		case OBJEDIT_RCS_COMMIT:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				text_msg(MSG_ERROR,
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+				break;
+			}
+			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
+				    ob->name, error_get());
+				break;
+			}
+			if (rcs_commit(ob) == -1) {
+				text_msg(MSG_ERROR, _("Commit failed: %s"),
+				    error_get());
+			} else {
+				/* Save the updated working revision. */
+				object_save(ob);
+			}
+			break;
+		case OBJEDIT_RCS_UPDATE:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				text_msg(MSG_ERROR,
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+				break;
+			}
+			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
+				    ob->name, error_get());
+				break;
+			}
+			if (rcs_update(ob) == -1) {
+				text_msg(MSG_ERROR, _("RCS update failed: %s"),
+				    error_get());
+			} else {
+				/* Save the updated working revision. */
+				object_save(ob);
+			}
+			break;
+		case OBJEDIT_RCS_CHECKOUT:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				text_msg(MSG_ERROR,
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+				break;
+			}
+			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
+				    ob->name, error_get());
+				break;
+			}
+			if (rcs_checkout(ob) == -1) {
+				text_msg(MSG_ERROR,
+				    _("RCS checkout failed: %s"), error_get());
+			} else {
+				/* Save the updated working revision. */
+				object_save(ob);
+			}
+			break;
+#endif /* NETWORK */
 		}
 	}
 }
@@ -612,7 +702,27 @@ objmgr_window(void)
 			    "%p, %i", objs_tl, OBJEDIT_SAVE);
 			menu_action(mi, _("Export to..."), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
+
+#ifdef NETWORK
+			menu_separator(mi);
 			
+			menu_action(mi, _("Commit to repository"),
+			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_RCS_COMMIT);
+
+			menu_action(mi, _("Update from repository"),
+			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_RCS_UPDATE);
+			
+			menu_action(mi, _("Import to repository"),
+			    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_RCS_IMPORT);
+			
+			menu_action(mi, _("Checkout from repository"),
+			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_RCS_CHECKOUT);
+#endif
+
 			menu_separator(mi);
 			
 			menu_action(mi, _("Duplicate"), OBJDUP_ICON,

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.203 2005/04/25 06:44:11 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.204 2005/04/25 08:11:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,10 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/separator.h>
+#endif
+
+#ifdef NETWORK
+#include <engine/rcs.h>
 #endif
 
 #include <sys/stat.h>
@@ -113,9 +117,9 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	strlcpy(ob->type, type, sizeof(ob->type));
 	strlcpy(ob->name, name, sizeof(ob->name));
 
-	/* Prevent the pathname separator from creating ambiguities. */
+	/* Prevent ambiguous characters in the name. */
 	for (c = ob->name; *c != '\0'; c++) {
-		if (*c == '/')
+		if (*c == '/' || *c == '.')
 			*c = '_';
 	}
 
@@ -123,6 +127,8 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->ops = (opsp != NULL) ? opsp : &object_ops;
 	ob->parent = NULL;
 	ob->flags = 0;
+
+	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 	ob->gfx = NULL;
 	ob->gfx_name = NULL;
 	ob->gfx_used = 0;
@@ -135,7 +141,6 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	CIRCLEQ_INIT(&ob->timeouts);
-	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 }
 
 /*
@@ -1608,9 +1613,9 @@ object_icon(void *p)
 
 /* Return a cryptographic digest for an object's last saved state. */
 size_t
-object_checksum(void *p, enum object_checksum_alg alg, char *digest)
+object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 {
-	struct object *ob = p;
+	const struct object *ob = p;
 	char save_path[MAXPATHLEN];
 	char buf[BUFSIZ];
 	FILE *f;
@@ -1668,6 +1673,26 @@ object_checksum(void *p, enum object_checksum_alg alg, char *digest)
 	fclose(f);
 
 	return (totlen);
+}
+
+int
+object_copy_digest(const void *ob, u_int *len, char *digest)
+{
+	char md5[MD5_DIGEST_STRING_LENGTH];
+	char sha1[SHA1_DIGEST_STRING_LENGTH];
+	char rmd160[RMD160_DIGEST_STRING_LENGTH];
+
+	if ((*len = object_copy_checksum(ob, OBJECT_MD5, md5)) == 0 ||
+	    object_copy_checksum(ob, OBJECT_SHA1, sha1) == 0 ||
+	    object_copy_checksum(ob, OBJECT_RMD160, rmd160) == 0) {
+		return (-1);
+	}
+	if (snprintf(digest, OBJECT_DIGEST_MAX, "(md5|%s,sha1|%s,rmd160|%s)",
+	    md5, sha1, rmd160) >= OBJECT_DIGEST_MAX) {
+		error_set("Digest is too big.");
+		return (-1);
+	}
+	return (0);
 }
 
 #ifdef EDITION
@@ -1786,24 +1811,58 @@ refresh_checksums(int argc, union evarg *argv)
 	struct textbox *tb_sha1 = argv[3].p;
 	struct textbox *tb_rmd160 = argv[4].p;
 
-	if (object_checksum(ob, OBJECT_MD5, checksum) > 0) {
+	if (object_copy_checksum(ob, OBJECT_MD5, checksum) > 0) {
 		textbox_printf(tb_md5,  "%s", checksum);
 	} else {
 		textbox_printf(tb_md5,  "(%s)", error_get());
 	}
 	
-	if (object_checksum(ob, OBJECT_SHA1, checksum) > 0) {
+	if (object_copy_checksum(ob, OBJECT_SHA1, checksum) > 0) {
 		textbox_printf(tb_sha1,  "%s", checksum);
 	} else {
 		textbox_printf(tb_sha1,  "(%s)", error_get());
 	}
 	
-	if (object_checksum(ob, OBJECT_RMD160, checksum) > 0) {
+	if (object_copy_checksum(ob, OBJECT_RMD160, checksum) > 0) {
 		textbox_printf(tb_rmd160,  "%s", checksum);
 	} else {
 		textbox_printf(tb_rmd160,  "(%s)", error_get());
 	}
 }
+
+#ifdef NETWORK
+static void
+refresh_rcs_status(int argc, union evarg *argv)
+{
+	char obj_path[OBJECT_PATH_MAX];
+	char digest[OBJECT_DIGEST_MAX];
+	struct object *ob = argv[1].p;
+	struct label *lb_status = argv[2].p;
+	extern const char *rcs_status_strings[];
+	enum rcs_status status;
+	size_t len;
+	u_int working_rev, repo_rev;
+
+	if (object_copy_name(ob, obj_path, sizeof(obj_path)) == -1 ||
+	    object_copy_digest(ob, &len, digest) == -1) {
+		text_msg(MSG_ERROR, "%s", error_get());
+		return;
+	}
+	if (rcs_connect() == -1) {
+		text_msg(MSG_ERROR, "%s", error_get());
+		return;
+	}
+	status = rcs_status(ob, obj_path, digest, &repo_rev, &working_rev);
+	label_printf(lb_status,
+	    _("RCS status: %s\n"
+	      "Working revision: #%u\n"
+	      "Repository revision: #%u\n"),
+	    rcs_status_strings[status],
+	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? working_rev : 0,
+	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? repo_rev: 0);
+	rcs_disconnect();
+}
+#endif
 
 struct window *
 object_edit(void *p)
@@ -1815,6 +1874,7 @@ object_edit(void *p)
 	struct notebook_tab *ntab;
 	struct tlist *tl;
 	struct button *btn;
+	struct box *box;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Object %s"), ob->name);
@@ -1826,6 +1886,9 @@ object_edit(void *p)
 	{
 		char path[OBJECT_PATH_MAX];
 		struct textbox *tb_md5, *tb_sha1, *tb_rmd160;
+#ifdef NETWORK
+		struct label *lb_status;
+#endif
 
 		tbox = textbox_new(ntab, _("Name: "));
 		textbox_printf(tbox, ob->name);
@@ -1860,21 +1923,34 @@ object_edit(void *p)
 		tb_rmd160 = textbox_new(ntab, "RMD160: ");
 		textbox_prescale(tb_rmd160, "88888888888888888888888");
 		tb_rmd160->flags &= ~(TEXTBOX_WRITEABLE);
-	
-		btn = button_new(ntab, _("Refresh checksums"));
-		event_new(btn, "button-pushed", refresh_checksums,
-		    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
-		event_post(NULL, btn, "button-pushed", NULL);
+
+#ifdef NETWORK
+		lb_status = label_new(ntab, LABEL_STATIC, "...");
+#endif
+
+		box = box_new(ntab, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+		{
+			btn = button_new(box, _("Refresh checksums"));
+			event_new(btn, "button-pushed", refresh_checksums,
+			    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
+			event_post(NULL, btn, "button-pushed", NULL);
+#ifdef NETWORK	
+			btn = button_new(box, _("Refresh RCS status"));
+			event_new(btn, "button-pushed", refresh_rcs_status,
+			    "%p,%p", ob, lb_status);
+			event_post(NULL, btn, "button-pushed", NULL);
+#endif
+		}
 	}
 	
-	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
+	ntab = notebook_add_tab(nb, _("Dependencies"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
 		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
 		event_new(tl, "tlist-poll", poll_deps, "%p", ob);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Gfx"), BOX_VERT);
+	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
 		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
@@ -1882,7 +1958,7 @@ object_edit(void *p)
 		event_new(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Props"), BOX_VERT);
+	ntab = notebook_add_tab(nb, _("Properties"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
 		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
