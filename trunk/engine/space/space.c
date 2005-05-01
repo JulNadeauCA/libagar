@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.1 2004/11/21 11:15:44 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.2 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
