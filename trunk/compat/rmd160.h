@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: rmd160.h,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
 /*	$OpenBSD: rmd160.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
 
 /*
@@ -52,11 +52,11 @@ typedef struct RMD160Context {
 
 __BEGIN_DECLS
 void	 RMD160Init(RMD160_CTX *);
-void	 RMD160Transform(Uint32, const Uint8);
+void	 RMD160Transform(Uint32 [5], const Uint8 [RMD160_BLOCK_LENGTH]);
 void	 RMD160Update(RMD160_CTX *, const Uint8 *, size_t)
 		BOUNDED_ATTRIBUTE(__string__,2,3);
 void	 RMD160Pad(RMD160_CTX *);
-void	 RMD160Final(Uint8, RMD160_CTX *);
+void	 RMD160Final(Uint8 [RMD160_DIGEST_LENGTH], RMD160_CTX *);
 char	*RMD160End(RMD160_CTX *, char *);
 char	*RMD160File(const char *, char *);
 char	*RMD160FileChunk(const char *, char *, off_t, off_t);
