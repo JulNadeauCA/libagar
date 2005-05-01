@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.16 2005/04/14 06:19:36 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.17 2005/05/01 00:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -423,9 +423,6 @@ obj_op(int argc, union evarg *argv)
 			if (rcs_import(ob) == -1) {
 				text_msg(MSG_ERROR, _("Import failed: %s"),
 				    error_get());
-			} else {
-				/* Save the updated working revision. */
-				object_save(ob);
 			}
 			break;
 		case OBJEDIT_RCS_COMMIT:
@@ -443,9 +440,6 @@ obj_op(int argc, union evarg *argv)
 			if (rcs_commit(ob) == -1) {
 				text_msg(MSG_ERROR, _("Commit failed: %s"),
 				    error_get());
-			} else {
-				/* Save the updated working revision. */
-				object_save(ob);
 			}
 			break;
 		case OBJEDIT_RCS_UPDATE:
@@ -460,12 +454,14 @@ obj_op(int argc, union evarg *argv)
 				    ob->name, error_get());
 				break;
 			}
-			if (rcs_update(ob) == -1) {
+			if (rcs_update(ob) == 0) {
+				if (object_load(ob) == -1) {
+					text_msg(MSG_ERROR, "%s: %s",
+					    ob->name, error_get());
+				}
+			} else {
 				text_msg(MSG_ERROR, _("RCS update failed: %s"),
 				    error_get());
-			} else {
-				/* Save the updated working revision. */
-				object_save(ob);
 			}
 			break;
 		case OBJEDIT_RCS_CHECKOUT:
