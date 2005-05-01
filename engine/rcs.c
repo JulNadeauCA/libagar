@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: rcs.c,v 1.2 2005/05/01 00:29:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -125,11 +125,13 @@ rcs_get_working_rev(struct object *ob, u_int *pRev)
 		error_set("%s: not a number", path);
 		return (-1);
 	}
+#if 0
 	if ((errno == ERANGE && (rev == LONG_MAX || rev == LONG_MIN)) ||
 	    (rev > INT_MAX || rev < INT_MIN)) {
 		error_set("%s: out of range", path);
 		return (-1);
 	}
+#endif
 	*pRev = rev;
 	return (0);
 }
