@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.2 2005/05/01 00:29:46 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.3 2005/05/01 00:56:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -159,7 +159,7 @@ rcs_set_working_rev(struct object *ob, u_int rev)
 
 /* Obtain the RCS status of an object. */
 enum rcs_status
-rcs_status(struct object *ob, const char *obj_path, const char *digest,
+rcs_status(struct object *ob, const char *objdir, const char *digest,
     u_int *repo_rev, u_int *working_rev)
 {
 	enum rcs_status rv = RCS_UPTODATE;
@@ -170,7 +170,7 @@ rcs_status(struct object *ob, const char *obj_path, const char *digest,
 	char *s;
 	
 	if (client_write(&rcs_client, "rcs-info\nobject-path=%s\n\n",
-	    &obj_path[1]) == -1) {
+	    &objdir[1]) == -1) {
 		error_set("%s", qerror_get());
 		return (RCS_ERROR);
 	}
@@ -219,8 +219,8 @@ int
 rcs_import(struct object *ob)
 {
 	char buf[BUFSIZ];
-	char obj_path[OBJECT_PATH_MAX];
-	char save_path[OBJECT_PATH_MAX];
+	char objdir[OBJECT_PATH_MAX];
+	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
 	struct response *res;
 	size_t wrote = 0, len, rv;
@@ -228,14 +228,15 @@ rcs_import(struct object *ob)
 	FILE *f;
 	enum rcs_status status;
 
-	if (object_copy_name(ob, obj_path, sizeof(obj_path)) == -1 ||
-	    object_copy_digest(ob, &len, digest) == -1)
+	if (object_copy_name(ob, objdir, sizeof(objdir)) == -1 ||
+	    object_copy_digest(ob, &len, digest) == -1 ||
+	    object_copy_filename(ob, objpath, sizeof(objpath)) == -1)
 		return (-1);
 
 	if (rcs_connect() == -1)
 		return (-1);
 
-	switch ((status = rcs_status(ob, obj_path, digest, &repo_rev,
+	switch ((status = rcs_status(ob, objdir, digest, &repo_rev,
 	                             &working_rev))) {
 	case RCS_ERROR:
 		text_msg(MSG_ERROR, "%s", error_get());
@@ -250,11 +251,9 @@ rcs_import(struct object *ob)
 		goto out;
 	}
 	
-	object_copy_filename(ob, save_path, sizeof(save_path));
-
 	/* TODO locking */
-	if ((f = fopen(save_path, "r")) == NULL) {
-		error_set("%s: %s", save_path, strerror(errno));
+	if ((f = fopen(objpath, "r")) == NULL) {
+		error_set("%s: %s", objpath, strerror(errno));
 		rcs_disconnect();
 		return (-1);
 	}
@@ -265,7 +264,7 @@ rcs_import(struct object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &obj_path[1], ob->name, ob->type,
+	    &objdir[1], ob->name, ob->type,
 	    (u_long)len, digest) == -1)
 		goto fail;
 	
@@ -323,22 +322,23 @@ int
 rcs_commit(struct object *ob)
 {
 	char buf[BUFSIZ];
-	char obj_path[OBJECT_PATH_MAX];
-	char save_path[OBJECT_PATH_MAX];
+	char objdir[OBJECT_PATH_MAX];
+	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
 	struct response *res;
 	size_t wrote = 0, len, rv;
 	u_int repo_rev, working_rev;
 	FILE *f;
 
-	if (object_copy_name(ob, obj_path, sizeof(obj_path)) == -1 ||
-	    object_copy_digest(ob, &len, digest) == -1)
+	if (object_copy_name(ob, objdir, sizeof(objdir)) == -1 ||
+	    object_copy_digest(ob, &len, digest) == -1 ||
+	    object_copy_filename(ob, objpath, sizeof(objpath)) == -1)
 		return (-1);
 
 	if (rcs_connect() == -1)
 		return (-1);
 
-	switch (rcs_status(ob, obj_path, digest, &repo_rev, &working_rev)) {
+	switch (rcs_status(ob, objdir, digest, &repo_rev, &working_rev)) {
 	case RCS_LOCALMOD:
 		break;
 	case RCS_ERROR:
@@ -362,11 +362,9 @@ rcs_commit(struct object *ob)
 		goto out;
 	}
 	
-	object_copy_filename(ob, save_path, sizeof(save_path));
-
 	/* TODO locking */
-	if ((f = fopen(save_path, "r")) == NULL) {
-		error_set("%s: %s", save_path, strerror(errno));
+	if ((f = fopen(objpath, "r")) == NULL) {
+		error_set("%s: %s", objpath, strerror(errno));
 		rcs_disconnect();
 		return (-1);
 	}
@@ -377,7 +375,7 @@ rcs_commit(struct object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &obj_path[1], ob->name, ob->type,
+	    &objdir[1], ob->name, ob->type,
 	    (u_long)len, digest) == -1)
 		goto fail;
 	
@@ -434,19 +432,24 @@ fail:
 int
 rcs_update(struct object *ob)
 {
-	char obj_path[OBJECT_PATH_MAX];
+	char buf[BUFSIZ];
+	char objdir[OBJECT_PATH_MAX];
+	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
-	size_t len;
 	u_int working_rev, repo_rev;
+	struct response *res;
+	size_t len, wrote = 0;
+	FILE *f;
 	
-	if (object_copy_name(ob, obj_path, sizeof(obj_path)) == -1 ||
-	    object_copy_digest(ob, &len, digest) == -1)
+	if (object_copy_name(ob, objdir, sizeof(objdir)) == -1 ||
+	    object_copy_digest(ob, &len, digest) == -1 ||
+	    object_copy_filename(ob, objpath, sizeof(objpath)) == -1)
 		return (-1);
 
 	if (rcs_connect() == -1)
 		return (-1);
 	
-	switch (rcs_status(ob, obj_path, digest, &repo_rev, &working_rev)) {
+	switch (rcs_status(ob, objdir, digest, &repo_rev, &working_rev)) {
 	case RCS_ERROR:
 		goto fail;
 	case RCS_UNKNOWN:
@@ -468,7 +471,33 @@ rcs_update(struct object *ob)
 	case RCS_DESYNCH:
 		break;
 	}
-	text_tmsg(MSG_INFO, 500, _("Updating %s..."), ob->name);
+
+	res = client_query_binary(&rcs_client, "rcs-update\n"
+			                       "object-path=%s\n"
+			                       "object-name=%s\n"
+			                       "object-type=%s\n"
+					       "revision=%u\n",
+					       &objdir[1], ob->name, ob->type,
+					       repo_rev);
+	if (res == NULL || res->argc < 1) {
+		error_set("RCS update error: %s", qerror_get());
+		goto fail;
+	}
+
+	/* TODO locking, backup */
+	if ((f = fopen(objpath, "w")) == NULL) {
+		error_set("%s: %s", objpath, strerror(errno));
+		goto fail;
+	}
+	if (fwrite(res->argv[0], 1, res->argv_len[0], f) < res->argv_len[0]) {
+		error_set("%s: write error", objpath);
+		fclose(f);
+		goto fail;
+	}
+	fclose(f);
+	rcs_set_working_rev(ob, repo_rev);
+	text_tmsg(MSG_INFO, 1000, "%s: r#%u -> r#%u (%lu bytes)", ob->name,
+	    working_rev, repo_rev, (unsigned long)res->argv_len[0]);
 out:
 	rcs_disconnect();
 	return (0);
