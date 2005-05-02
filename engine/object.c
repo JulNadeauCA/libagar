@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.204 2005/04/25 08:11:53 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.207 2005/05/01 00:52:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 
 	/* Prevent ambiguous characters in the name. */
 	for (c = ob->name; *c != '\0'; c++) {
-		if (*c == '/' || *c == '.')
+		if (*c == '/' || *c == '.' || *c == ':' || *c == ',')
 			*c = '_';
 	}
 
