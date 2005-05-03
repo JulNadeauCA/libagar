@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.4 2005/05/01 08:17:44 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.5 2005/05/01 08:30:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <config/version.h>
 
 #include <engine/widget/text.h>
+#include <engine/widget/tlist.h>
 
 #include "rcs.h"
 
@@ -164,7 +165,6 @@ rcs_status(struct object *ob, const char *objdir, const char *digest,
 {
 	enum rcs_status rv = RCS_UPTODATE;
 	char *buf, *bufp;
-	struct response *res;
 	int sum_match = 1;
 	int i;
 	char *s;
@@ -222,7 +222,6 @@ rcs_import(struct object *ob)
 	char objdir[OBJECT_PATH_MAX];
 	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
-	struct response *res;
 	size_t wrote = 0, len, rv;
 	u_int repo_rev, working_rev;
 	FILE *f;
@@ -244,11 +243,10 @@ rcs_import(struct object *ob)
 	case RCS_UNKNOWN:
 		break;
 	default:
-		text_tmsg(MSG_INFO, 3000,
-		    _("Object %s is already in repository (r#%u):\n"
-		      "Status: %s\n"),
+		error_set(_("Object %s is already in repository (r#%u):\n"
+		            "Status: %s\n"),
 		    ob->name, repo_rev, rcs_status_strings[status]);
-		goto out;
+		goto fail;
 	}
 	
 	/* TODO locking */
@@ -266,13 +264,13 @@ rcs_import(struct object *ob)
 	    "object-digest=%s\n\n",
 	    &objdir[1], ob->name, ob->type,
 	    (u_long)len, digest) == -1)
-		goto fail;
+		goto fail_close;
 	
 	if (client_read(&rcs_client, 12) <= 2 ||
 	    rcs_client.read.buf[0] != '0') {
 		error_set(_("Server refused data: %s"),
 		    &rcs_client.read.buf[2]);
-		goto fail;
+		goto fail_close;
 	}
 	
 	while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
@@ -281,22 +279,22 @@ rcs_import(struct object *ob)
 		nw = write(rcs_client.sock, buf, rv);
 		if (nw == 0) {
 			error_set(_("EOF from server"));
-			goto fail;
+			goto fail_close;
 		} else if (nw < 0) {
 			error_set(_("Write error"));
-			goto fail;
+			goto fail_close;
 		}
 		wrote += nw;
 	}
 	if (wrote < len) {
 		error_set(_("Upload incomplete"));
-		goto fail;
+		goto fail_close;
 	}
 	if (client_read(&rcs_client, 32) < 1 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		error_set(_("Commit failed: %s"), rcs_client.read.buf);
-		goto fail;
+		goto fail_close;
 	}
 
 	text_tmsg(MSG_INFO, 4000,
@@ -308,11 +306,11 @@ rcs_import(struct object *ob)
 
 	rcs_set_working_rev(ob, 1);
 	fclose(f);
-out:
 	rcs_disconnect();
 	return (0);
-fail:
+fail_close:
 	fclose(f);
+fail:
 	rcs_disconnect();
 	return (-1);
 }
@@ -325,7 +323,6 @@ rcs_commit(struct object *ob)
 	char objdir[OBJECT_PATH_MAX];
 	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
-	struct response *res;
 	size_t wrote = 0, len, rv;
 	u_int repo_rev, working_rev;
 	FILE *f;
@@ -345,21 +342,22 @@ rcs_commit(struct object *ob)
 		text_msg(MSG_ERROR, "%s", error_get());
 		break;
 	case RCS_UNKNOWN:
-		text_msg(MSG_ERROR,
+		error_set(
 		    _("Object %s does not exist on the repository.\n"
-		      "Please use the RCS import command.\n"), ob->name);
-		goto out;
+		      "Please use the RCS import command.\n"),
+		      ob->name);
+		goto fail;
 	case RCS_UPTODATE:
-		text_tmsg(MSG_INFO, 3000,
-		    _("Working copy of %s is up-to-date (r#%u)."), ob->name,
-		        repo_rev);
-		goto out;
+		error_set(
+		    _("Working copy of %s is up-to-date (r#%u)."),
+		    ob->name, repo_rev);
+		goto fail;
 	case RCS_DESYNCH:
-		text_msg(MSG_ERROR,
+		error_set(
 		    _("Your copy of %s is outdated (working=r#%u, repo=r#%u)\n"
 		      "Please do a RCS update prior to committing.\n"),
 		       ob->name, working_rev, repo_rev);
-		goto out;
+		goto fail;
 	}
 	
 	/* TODO locking */
@@ -377,13 +375,13 @@ rcs_commit(struct object *ob)
 	    "object-digest=%s\n\n",
 	    &objdir[1], ob->name, ob->type,
 	    (u_long)len, digest) == -1)
-		goto fail;
+		goto fail_close;
 	
 	if (client_read(&rcs_client, 12) <= 2 ||
 	    rcs_client.read.buf[0] != '0') {
 		error_set(_("Server refused data: %s"),
 		    &rcs_client.read.buf[2]);
-		goto fail;
+		goto fail_close;
 	}
 	
 	while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
@@ -392,22 +390,22 @@ rcs_commit(struct object *ob)
 		nw = write(rcs_client.sock, buf, rv);
 		if (nw == 0) {
 			error_set(_("EOF from server"));
-			goto fail;
+			goto fail_close;
 		} else if (nw < 0) {
 			error_set(_("Write error"));
-			goto fail;
+			goto fail_close;
 		}
 		wrote += nw;
 	}
 	if (wrote < len) {
 		error_set(_("Upload incomplete"));
-		goto fail;
+		goto fail_close;
 	}
 	if (client_read(&rcs_client, 32) < 1 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		error_set(_("Commit failed: %s"), rcs_client.read.buf);
-		goto fail;
+		goto fail_close;
 	}
 
 	text_tmsg(MSG_INFO, 4000,
@@ -419,11 +417,11 @@ rcs_commit(struct object *ob)
 
 	rcs_set_working_rev(ob, repo_rev+1);
 	fclose(f);
-out:
 	rcs_disconnect();
 	return (0);
-fail:
+fail_close:
 	fclose(f);
+fail:
 	rcs_disconnect();
 	return (-1);
 }
@@ -453,22 +451,23 @@ rcs_update(struct object *ob)
 	case RCS_ERROR:
 		goto fail;
 	case RCS_UNKNOWN:
-		text_msg(MSG_ERROR,
+		error_set(
 		    _("Object %s does not exist on the repository.\n"
 		      "Please use the RCS import command.\n"), ob->name);
-		goto out;
+		goto fail;
 	case RCS_UPTODATE:
-		text_tmsg(MSG_INFO, 2000,
+		error_set(
 		    _("Working copy of %s is already up-to-date (r#%u)."),
 		    ob->name, repo_rev);
-		goto out;
+		goto fail;
 	case RCS_LOCALMOD:
-#if 0
-		text_msg(MSG_ERROR,
+#if 1
+		/* TODO move working version */
+		error_set(
 		    _("Working copy of %s was modified locally.\n"
 		      "Please do a RCS commit prior to updating.\n"),
 		       ob->name);
-		goto out;
+		goto fail;
 #endif
 	case RCS_DESYNCH:
 		break;
@@ -489,29 +488,51 @@ rcs_update(struct object *ob)
 	/* TODO locking, backup */
 	if ((f = fopen(objpath, "w")) == NULL) {
 		error_set("%s: %s", objpath, strerror(errno));
-		goto fail;
+		goto fail_res;
 	}
 	if (fwrite(res->argv[0], 1, res->argv_len[0], f) < res->argv_len[0]) {
 		error_set("%s: write error", objpath);
 		fclose(f);
-		goto fail;
+		goto fail_res;
 	}
 	fclose(f);
 	rcs_set_working_rev(ob, repo_rev);
 	text_tmsg(MSG_INFO, 1000, "%s: r#%u -> r#%u (%lu bytes)", ob->name,
 	    working_rev, repo_rev, (unsigned long)res->argv_len[0]);
-out:
+	
+	response_free(res);
 	rcs_disconnect();
 	return (0);
+fail_res:
+	response_free(res);
 fail:
 	rcs_disconnect();
 	return (-1);
 }
 
 int
-rcs_checkout(struct object *ob)
+rcs_log(const char *objdir, struct tlist *tl)
 {
-	error_set("Unimplemented");
-	return (-1);
+	struct response *res;
+	int i;
+
+	res = client_query(&rcs_client, "rcs-log\n"
+				        "object-path=%s\n", &objdir[1]);
+	if (res == NULL) {
+		error_set("%s", qerror_get());
+		return (-1);
+	}
+
+	for (i = 0; i < res->argc; i++) {
+		char *s = res->argv[i];
+		char *rev = strsep(&s, ",");
+		char *author = strsep(&s, ",");
+		char *sum = strsep(&s, ",");
+		
+		tlist_insert(tl, NULL, "%s. [%s] %s", rev, author, s);
+	}
+	response_free(res);
+	return (0);
 }
+
 #endif /* NETWORK */

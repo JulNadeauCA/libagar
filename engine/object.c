@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.207 2005/05/01 00:52:49 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.208 2005/05/02 10:14:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1688,7 +1688,7 @@ object_copy_digest(const void *ob, size_t *len, char *digest)
 	    object_copy_checksum(ob, OBJECT_RMD160, rmd160) == 0) {
 		return (-1);
 	}
-	if (snprintf(digest, OBJECT_DIGEST_MAX, "(md5|%s,sha1|%s,rmd160|%s)",
+	if (snprintf(digest, OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
 	    md5, sha1, rmd160) >= OBJECT_DIGEST_MAX) {
 		error_set("Digest is too big.");
 		return (-1);
@@ -1835,25 +1835,24 @@ refresh_checksums(int argc, union evarg *argv)
 static void
 refresh_rcs_status(int argc, union evarg *argv)
 {
-	char obj_path[OBJECT_PATH_MAX];
+	char objdir[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
 	struct object *ob = argv[1].p;
 	struct label *lb_status = argv[2].p;
+	struct tlist *tl = argv[3].p;
 	extern const char *rcs_status_strings[];
 	enum rcs_status status;
 	size_t len;
 	u_int working_rev, repo_rev;
 
-	if (object_copy_name(ob, obj_path, sizeof(obj_path)) == -1 ||
+	if (object_copy_name(ob, objdir, sizeof(objdir)) == -1 ||
 	    object_copy_digest(ob, &len, digest) == -1) {
-		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
 	if (rcs_connect() == -1) {
-		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
-	status = rcs_status(ob, obj_path, digest, &repo_rev, &working_rev);
+	status = rcs_status(ob, objdir, digest, &repo_rev, &working_rev);
 	label_printf(lb_status,
 	    _("RCS status: %s\n"
 	      "Working revision: #%u\n"
@@ -1861,9 +1860,15 @@ refresh_rcs_status(int argc, union evarg *argv)
 	    rcs_status_strings[status],
 	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? working_rev : 0,
 	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? repo_rev: 0);
+
+	tlist_clear_items(tl);
+	rcs_log(objdir, tl);
+	tlist_restore_selections(tl);
+
 	rcs_disconnect();
 }
-#endif
+
+#endif /* NETWORK */
 
 struct window *
 object_edit(void *p)
@@ -1887,9 +1892,6 @@ object_edit(void *p)
 	{
 		char path[OBJECT_PATH_MAX];
 		struct textbox *tb_md5, *tb_sha1, *tb_rmd160;
-#ifdef NETWORK
-		struct label *lb_status;
-#endif
 
 		tbox = textbox_new(ntab, _("Name: "));
 		textbox_printf(tbox, ob->name);
@@ -1925,26 +1927,35 @@ object_edit(void *p)
 		textbox_prescale(tb_rmd160, "88888888888888888888888");
 		tb_rmd160->flags &= ~(TEXTBOX_WRITEABLE);
 
-#ifdef NETWORK
-		lb_status = label_new(ntab, LABEL_STATIC, "...");
-#endif
-
 		box = box_new(ntab, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
 		{
 			btn = button_new(box, _("Refresh checksums"));
 			event_new(btn, "button-pushed", refresh_checksums,
 			    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
 			event_post(NULL, btn, "button-pushed", NULL);
-#ifdef NETWORK	
-			btn = button_new(box, _("Refresh RCS status"));
-			event_new(btn, "button-pushed", refresh_rcs_status,
-			    "%p,%p", ob, lb_status);
-			event_post(NULL, btn, "button-pushed", NULL);
-#endif
 		}
 	}
-	
-	ntab = notebook_add_tab(nb, _("Dependencies"), BOX_VERT);
+
+#ifdef NETWORK
+	ntab = notebook_add_tab(nb, _("RCS"), BOX_VERT);
+	{
+		struct label *lb_status;
+		struct tlist *tl;
+
+		lb_status = label_new(ntab, LABEL_STATIC, "...");
+
+		label_new(ntab, LABEL_STATIC, _("Revision history:"));
+		tl = tlist_new(ntab, 0);
+
+		btn = button_new(ntab, _("Refresh RCS status"));
+		WIDGET(btn)->flags |= WIDGET_WFILL;
+		event_new(btn, "button-pushed", refresh_rcs_status, "%p,%p,%p",
+		    ob, lb_status, tl);
+		event_post(NULL, btn, "button-pushed", NULL);
+	}
+#endif
+
+	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
 		tlist_prescale(tl, "XXXXXXXXXXXX", 6);

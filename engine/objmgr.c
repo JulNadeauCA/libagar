@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.17 2005/05/01 00:19:52 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.18 2005/05/01 08:17:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -131,8 +131,7 @@ enum {
 	OBJEDIT_DUP,
 	OBJEDIT_RCS_UPDATE,
 	OBJEDIT_RCS_COMMIT,
-	OBJEDIT_RCS_IMPORT,
-	OBJEDIT_RCS_CHECKOUT
+	OBJEDIT_RCS_IMPORT
 };
 
 static void
@@ -421,8 +420,7 @@ obj_op(int argc, union evarg *argv)
 				break;
 			}
 			if (rcs_import(ob) == -1) {
-				text_msg(MSG_ERROR, _("Import failed: %s"),
-				    error_get());
+				text_msg(MSG_ERROR, "%s", error_get());
 			}
 			break;
 		case OBJEDIT_RCS_COMMIT:
@@ -438,8 +436,7 @@ obj_op(int argc, union evarg *argv)
 				break;
 			}
 			if (rcs_commit(ob) == -1) {
-				text_msg(MSG_ERROR, _("Commit failed: %s"),
-				    error_get());
+				text_msg(MSG_ERROR, "%s", error_get());
 			}
 			break;
 		case OBJEDIT_RCS_UPDATE:
@@ -460,28 +457,7 @@ obj_op(int argc, union evarg *argv)
 					    ob->name, error_get());
 				}
 			} else {
-				text_msg(MSG_ERROR, _("RCS update failed: %s"),
-				    error_get());
-			}
-			break;
-		case OBJEDIT_RCS_CHECKOUT:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				text_msg(MSG_ERROR,
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-				break;
-			}
-			if (object_save(ob) == -1) {
-				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
-				    ob->name, error_get());
-				break;
-			}
-			if (rcs_checkout(ob) == -1) {
-				text_msg(MSG_ERROR,
-				    _("RCS checkout failed: %s"), error_get());
-			} else {
-				/* Save the updated working revision. */
-				object_save(ob);
+				text_msg(MSG_ERROR, "%s", error_get());
 			}
 			break;
 #endif /* NETWORK */
@@ -713,10 +689,6 @@ objmgr_window(void)
 			menu_action(mi, _("Import to repository"),
 			    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 			    OBJEDIT_RCS_IMPORT);
-			
-			menu_action(mi, _("Checkout from repository"),
-			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
-			    OBJEDIT_RCS_CHECKOUT);
 #endif
 
 			menu_separator(mi);

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: rcs.h,v 1.1 2005/05/01 00:19:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RCSMGR_H_
@@ -19,6 +19,8 @@ enum rcs_status {
 	RCS_DESYNCH,	/* Working copy < last revision */
 };
 
+struct tlist;
+
 __BEGIN_DECLS
 #ifdef NETWORK
 void rcs_init(void);
@@ -28,11 +30,11 @@ void rcs_disconnect(void);
 int rcs_update(struct object *);
 int rcs_commit(struct object *);
 int rcs_import(struct object *);
-int rcs_checkout(struct object *);
 int rcs_get_working_rev(struct object *, u_int *);
 int rcs_set_working_rev(struct object *, u_int);
 enum rcs_status rcs_status(struct object *, const char *, const char *,
 		           u_int *, u_int *);
+int rcs_log(const char *, struct tlist *);
 #endif /* NETWORK */
 __END_DECLS
 
