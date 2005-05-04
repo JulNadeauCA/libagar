@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.15 2005/04/18 08:05:44 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.16 2005/04/18 11:46:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -229,7 +229,7 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 	col->mousedown = 0;
 	col->moving = 0;
 	col->editable = 0;
-	col->resizable = 0;
+	col->resizable = 1;
 	col->update = 0;
 	col->fill = 0;
 	col->dynamic = 0;
@@ -239,8 +239,8 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 		col->editable = 1;
 	if (flags & TABLEVIEW_COL_ENTEREDIT)
 		tv->enterEdit = cid;
-	if (flags & TABLEVIEW_COL_RESIZABLE)
-		col->resizable = 1;
+	if (flags & TABLEVIEW_COL_NORESIZE)
+		col->resizable = 0;
 	if ((flags & TABLEVIEW_COL_UPDATE) &&
 	    (flags & TABLEVIEW_COL_DYNAMIC))
 		col->update = 1;
