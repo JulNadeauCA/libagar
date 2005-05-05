@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.18 2005/05/01 08:17:44 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.19 2005/05/03 04:28:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <engine/typesw.h>
 #include <engine/view.h>
 #include <engine/config.h>
+#include <engine/timeout.h>
 
 #include <engine/map/mapedit.h>
 
@@ -47,6 +48,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/file_dlg.h>
+#include <engine/widget/notebook.h>
 
 #ifdef NETWORK
 #include <engine/rcs.h>
@@ -66,6 +68,10 @@ static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
 static int edit_on_create = 1;
 static void *current_pobj = NULL;
+
+#ifdef NETWORK
+static struct timeout repo_timeout;
+#endif
 
 int objmgr_exiting = 0;
 
@@ -603,6 +609,19 @@ create_obj_dlg(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static Uint32
+repo_update(void *obj, Uint32 ival, void *arg)
+{
+	struct tlist *tl = obj;
+
+	if (rcs_connect() == -1) {
+		return (ival);
+	}
+	rcs_list(tl);
+	rcs_disconnect();
+	return (ival);
+}
+
 /* Create the object editor window. */
 struct window *
 objmgr_window(void)
@@ -614,6 +633,8 @@ objmgr_window(void)
 	struct tlist *objs_tl;
 	struct AGMenu *me;
 	struct AGMenuItem *mi, *mi_objs;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
@@ -650,13 +671,13 @@ objmgr_window(void)
 		    "%p", world);
 	}
 
-	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
-	vbox_set_padding(vb, 1);
-	vbox_set_spacing(vb, 1);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
+	notebook_select_tab(nb, ntab);
 	{
 		struct AGMenuItem *mi;
 
-		object_attach(vb, objs_tl);
+		object_attach(ntab, objs_tl);
 
 		mi = tlist_set_popup(objs_tl, "object");
 		{
@@ -732,6 +753,19 @@ objmgr_window(void)
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 #endif
 	}
+
+#ifdef NETWORK
+	ntab = notebook_add_tab(nb, _("Repository"), BOX_VERT);
+	{
+		struct tlist *tl;
+
+		tl = tlist_new(ntab, TLIST_MULTI);
+		tlist_set_compare_fn(tl, tlist_compare_strings);
+
+		timeout_set(&repo_timeout, repo_update, NULL, 0);
+		timeout_add(tl, &repo_timeout, 5000);
+	}
+#endif
 	
 	window_show(win);
 	return (win);

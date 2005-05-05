@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.5 2005/05/01 08:30:54 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.6 2005/05/03 04:28:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/typesw.h>
 
 #include <compat/md5.h>
 #include <compat/sha1.h>
@@ -37,6 +38,7 @@
 
 #include <engine/widget/text.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/tableview.h>
 
 #include "rcs.h"
 
@@ -525,14 +527,64 @@ rcs_log(const char *objdir, struct tlist *tl)
 
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *rev = strsep(&s, ",");
-		char *author = strsep(&s, ",");
-		char *sum = strsep(&s, ",");
+		char *rev = strsep(&s, ":");
+		char *author = strsep(&s, ":");
+		char *type = strsep(&s, ":");
+		char *name = strsep(&s, ":");
+		char *sum = strsep(&s, ":");
+		char *msg = strsep(&s, ":");
+		struct object_type *t;
+		SDL_Surface *icon = NULL;
+
+		if (rev == NULL || author == NULL || sum == NULL)
+			continue;
 		
-		tlist_insert(tl, NULL, "%s. [%s] %s", rev, author, s);
+		for (t = &typesw[0]; t < &typesw[ntypesw]; t++) {
+			if (strcmp(type, t->type) == 0) {
+				icon = t->icon >= 0 ? ICON(t->icon) : NULL;
+				break;
+			}
+		}
+		tlist_insert(tl, icon, "[#%s.%s] %s", rev, author, msg);
 	}
 	response_free(res);
 	return (0);
 }
 
+int
+rcs_list(struct tlist *tl)
+{
+	struct response *res;
+	int i;
+
+	if ((res = client_query(&rcs_client, "rcs-list\n")) == NULL) {
+		error_set("%s", qerror_get());
+		return (-1);
+	}
+	tlist_clear_items(tl);
+	for (i = 0; i < res->argc; i++) {
+		char *s = res->argv[i];
+		char *name = strsep(&s, ",");
+		char *rev = strsep(&s, ",");
+		char *author = strsep(&s, ",");
+		char *type = strsep(&s, ",");
+		struct object_type *t;
+		SDL_Surface *icon = NULL;
+
+		if (name == NULL || rev == NULL || author == NULL ||
+		    type == NULL)
+			continue;
+
+		for (t = &typesw[0]; t < &typesw[ntypesw]; t++) {
+			if (strcmp(type, t->type) == 0) {
+				icon = t->icon >= 0 ? ICON(t->icon) : NULL;
+				break;
+			}
+		}
+		tlist_insert(tl, icon, "%s <%s,%s>", name, rev, author);
+	}
+	tlist_restore_selections(tl);
+	response_free(res);
+	return (0);
+}
 #endif /* NETWORK */
