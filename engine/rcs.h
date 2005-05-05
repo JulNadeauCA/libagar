@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.h,v 1.2 2005/05/03 04:28:09 vedge Exp $	*/
+/*	$Csoft: rcs.h,v 1.3 2005/05/05 05:51:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RCSMGR_H_
@@ -33,9 +33,10 @@ int rcs_import(struct object *);
 int rcs_get_working_rev(struct object *, u_int *);
 int rcs_set_working_rev(struct object *, u_int);
 enum rcs_status rcs_status(struct object *, const char *, const char *,
-		           u_int *, u_int *);
+		           char *, char *, u_int *, u_int *);
 int rcs_log(const char *, struct tlist *);
 int rcs_list(struct tlist *);
+int rcs_update_object(const char *);
 #endif /* NETWORK */
 __END_DECLS
 

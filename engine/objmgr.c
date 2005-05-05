@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.19 2005/05/03 04:28:09 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.20 2005/05/05 05:51:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -90,7 +90,7 @@ create_obj(int argc, union evarg *argv)
 	if ((it = tlist_item_selected(objs_tl)) != NULL) {
 		pobj = it->p1;
 	} else {
-		 pobj = world;
+		pobj = world;
 	}
 	textbox_copy_string(name_tb, name, sizeof(name));
 	view_detach(dlg_win);
@@ -609,18 +609,36 @@ create_obj_dlg(int argc, union evarg *argv)
 	window_show(win);
 }
 
-static Uint32
-repo_update(void *obj, Uint32 ival, void *arg)
-{
-	struct tlist *tl = obj;
+#ifdef NETWORK
 
-	if (rcs_connect() == -1) {
-		return (ival);
+static void
+update_repo_listing(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+
+	if (rcs_connect() == -1 ||
+	    rcs_list(tl) == -1) {
+		text_msg(MSG_ERROR, "%s", error_get());
 	}
-	rcs_list(tl);
 	rcs_disconnect();
-	return (ival);
 }
+
+static void
+update_from_repo(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (!it->selected)
+			continue;
+
+		if (rcs_update_object(it->text) == -1)
+			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
+	}
+}
+
+#endif /* NETWORK */
 
 /* Create the object editor window. */
 struct window *
@@ -758,14 +776,23 @@ objmgr_window(void)
 	ntab = notebook_add_tab(nb, _("Repository"), BOX_VERT);
 	{
 		struct tlist *tl;
+		struct button *btn;
+		struct AGMenuItem *pop;
 
-		tl = tlist_new(ntab, TLIST_MULTI);
+		tl = tlist_new(ntab, TLIST_MULTI|TLIST_TREE);
 		tlist_set_compare_fn(tl, tlist_compare_strings);
+		pop = tlist_set_popup(tl, "object");
+		{
+			menu_action(pop, _("Update from repository"),
+			    OBJLOAD_ICON, update_from_repo, "%p", tl);
+		}
 
-		timeout_set(&repo_timeout, repo_update, NULL, 0);
-		timeout_add(tl, &repo_timeout, 5000);
+		btn = button_new(ntab, _("Refresh listing"));
+		WIDGET(btn)->flags |= WIDGET_WFILL;
+		event_new(btn, "button-pushed", update_repo_listing, "%p", tl);
+		event_post(NULL, btn, "button-pushed", NULL);
 	}
-#endif
+#endif /* NETWORK */
 	
 	window_show(win);
 	return (win);

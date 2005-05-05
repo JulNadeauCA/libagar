@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.6 2005/05/03 04:28:09 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.7 2005/05/05 05:51:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -59,6 +59,7 @@ u_int rcs_port = 6785;
 #include <qnet/client.h>
 
 static struct client rcs_client;
+static int connected = 0;
 const char *rcs_status_strings[] = {
 	N_("Error"),
 	N_("Not in repository"),
@@ -84,11 +85,13 @@ rcs_connect(void)
 {
 	char port[12];
 
-	snprintf(port, sizeof(port), "%u", rcs_port);
-	if (client_connect(&rcs_client, rcs_hostname, port,
-	    rcs_username, rcs_password) == -1) {
-		error_set("RCS connection: %s", qerror_get());
-		return (-1);
+	if (++connected == 1) {
+		snprintf(port, sizeof(port), "%u", rcs_port);
+		if (client_connect(&rcs_client, rcs_hostname, port,
+		    rcs_username, rcs_password) == -1) {
+			error_set("RCS connection: %s", qerror_get());
+			return (-1);
+		}
 	}
 	return (0);
 }
@@ -96,7 +99,8 @@ rcs_connect(void)
 void
 rcs_disconnect(void)
 {
-	client_disconnect(&rcs_client);
+	if (--connected == 0)
+		client_disconnect(&rcs_client);
 }
 
 /* Get the working revision of an object. */
@@ -163,7 +167,7 @@ rcs_set_working_rev(struct object *ob, u_int rev)
 /* Obtain the RCS status of an object. */
 enum rcs_status
 rcs_status(struct object *ob, const char *objdir, const char *digest,
-    u_int *repo_rev, u_int *working_rev)
+    char *name, char *type, u_int *repo_rev, u_int *working_rev)
 {
 	enum rcs_status rv = RCS_UPTODATE;
 	char *buf, *bufp;
@@ -196,6 +200,10 @@ rcs_status(struct object *ob, const char *objdir, const char *digest,
 			sum_match = 0;
 		} else if (strcmp(key, "r") == 0) {
 			*repo_rev = (u_int)strtol(val, NULL, 10);
+		} else if (strcmp(key, "t") == 0 && type != NULL) {
+			strlcpy(type, val, OBJECT_TYPE_MAX);
+		} else if (strcmp(key, "n") == 0 && name != NULL) {
+			strlcpy(type, val, OBJECT_NAME_MAX);
 		}
 	}
 
@@ -237,7 +245,7 @@ rcs_import(struct object *ob)
 	if (rcs_connect() == -1)
 		return (-1);
 
-	switch ((status = rcs_status(ob, objdir, digest, &repo_rev,
+	switch ((status = rcs_status(ob, objdir, digest, NULL, NULL, &repo_rev,
 	                             &working_rev))) {
 	case RCS_ERROR:
 		text_msg(MSG_ERROR, "%s", error_get());
@@ -337,7 +345,8 @@ rcs_commit(struct object *ob)
 	if (rcs_connect() == -1)
 		return (-1);
 
-	switch (rcs_status(ob, objdir, digest, &repo_rev, &working_rev)) {
+	switch (rcs_status(ob, objdir, digest, NULL, NULL, &repo_rev,
+	                   &working_rev)) {
 	case RCS_LOCALMOD:
 		break;
 	case RCS_ERROR:
@@ -433,6 +442,7 @@ int
 rcs_update(struct object *ob)
 {
 	char buf[BUFSIZ];
+	char type[OBJECT_TYPE_MAX];
 	char objdir[OBJECT_PATH_MAX];
 	char objpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
@@ -449,7 +459,8 @@ rcs_update(struct object *ob)
 	if (rcs_connect() == -1)
 		return (-1);
 	
-	switch (rcs_status(ob, objdir, digest, &repo_rev, &working_rev)) {
+	switch (rcs_status(ob, objdir, digest, NULL, type, &repo_rev,
+	                   &working_rev)) {
 	case RCS_ERROR:
 		goto fail;
 	case RCS_UNKNOWN:
@@ -473,6 +484,11 @@ rcs_update(struct object *ob)
 #endif
 	case RCS_DESYNCH:
 		break;
+	}
+	if (strcmp(type, ob->type) != 0) {
+		error_set(_("Repository has different object type (%s/%s)"),
+		    type, ob->type);
+		goto fail;
 	}
 
 	res = client_query_binary(&rcs_client, "rcs-update\n"
@@ -555,6 +571,7 @@ int
 rcs_list(struct tlist *tl)
 {
 	struct response *res;
+	struct tlist_item *it;
 	int i;
 
 	if ((res = client_query(&rcs_client, "rcs-list\n")) == NULL) {
@@ -562,14 +579,22 @@ rcs_list(struct tlist *tl)
 		return (-1);
 	}
 	tlist_clear_items(tl);
+	it = tlist_insert(tl, NULL, "/");
+	it->flags |= TLIST_HAS_CHILDREN;
+	it->class = "object";
+	it->depth = 0;
+
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *name = strsep(&s, ",");
-		char *rev = strsep(&s, ",");
-		char *author = strsep(&s, ",");
-		char *type = strsep(&s, ",");
+		char *name = strsep(&s, ":");
+		char *rev = strsep(&s, ":");
+		char *author = strsep(&s, ":");
+		char *type = strsep(&s, ":");
 		struct object_type *t;
 		SDL_Surface *icon = NULL;
+		struct tlist_item *it;
+		char *c;
+		int depth = 0;
 
 		if (name == NULL || rev == NULL || author == NULL ||
 		    type == NULL)
@@ -581,10 +606,106 @@ rcs_list(struct tlist *tl)
 				break;
 			}
 		}
-		tlist_insert(tl, icon, "%s <%s,%s>", name, rev, author);
+		for (c = &name[0]; *c != '\0'; c++) {
+			if (*c == '/')
+				depth++;
+		}
+
+		it = tlist_insert(tl, icon, "%s", &name[1]);
+		it->class = "object";
+		it->depth = depth;
 	}
+out:
 	tlist_restore_selections(tl);
 	response_free(res);
 	return (0);
 }
+
+int
+rcs_update_object(const char *path)
+{
+	char localpath[OBJECT_PATH_MAX];
+	char digest[OBJECT_DIGEST_MAX];
+	char name[OBJECT_NAME_MAX];
+	char type[OBJECT_TYPE_MAX];
+	char *buf, *s;
+	int i;
+	u_int rev = 0;
+	struct object *obj;
+	struct object_type *t;
+
+	if (rcs_connect() == -1)
+		goto fail;
+
+	if (client_write(&rcs_client, "rcs-info\nobject-path=%s\n\n", path)
+	    == -1) {
+		error_set("%s", qerror_get());
+		goto fail;
+	}
+	if (client_read(&rcs_client, 16) <= 2 ||
+	    rcs_client.read.buf[0] != '0' ||
+	    rcs_client.read.buf[1] == '\0') {
+		error_set("RCS info: %s", rcs_client.read.buf);
+		goto fail;
+	}
+
+	buf = &rcs_client.read.buf[2];
+	while ((s = strsep(&buf, ":")) != NULL) {
+		char *key = strsep(&s, "=");
+		char *val = strsep(&s, "=");
+
+		if (key == NULL || val == NULL)
+			continue;
+		
+		switch (key[0]) {
+		case 'd':
+			strlcpy(digest, val, OBJECT_DIGEST_MAX);
+			break;
+		case 'r':
+			rev = (u_int)strtol(val, NULL, 10);
+			break;
+		case 't':
+			strlcpy(type, val, OBJECT_TYPE_MAX);
+			break;
+		case 'n':
+			strlcpy(name, val, OBJECT_NAME_MAX);
+			break;
+		}
+	}
+
+	for (t = &typesw[0]; t < &typesw[ntypesw]; t++) {
+		if (strcmp(type, t->type) == 0)
+			break;
+	}
+
+	strlcpy(localpath, "/world/", sizeof(localpath));
+	strlcat(localpath, path, sizeof(localpath));
+	if ((obj = object_find(localpath)) == NULL) {
+		if (t == &typesw[ntypesw]) {
+			error_set(_("Unimplemented object type: %s"), type);
+			goto fail;
+		}
+		obj = Malloc(t->size, M_OBJECT);
+		if (t->ops->init != NULL) {
+			t->ops->init(obj, name);
+		} else {
+			object_init(obj, t->type, name, NULL);
+		}
+		object_attach(world, obj);
+		object_save(obj);
+	}
+	if (rcs_set_working_rev(obj, 0) == -1) {
+		goto fail;
+	}
+	if (rcs_update(obj) == -1) {
+		goto fail;
+	}
+	text_tmsg(MSG_INFO, 1000, _("Object %s updated."), name);
+	rcs_disconnect();
+	return (0);
+fail:
+	rcs_disconnect();
+	return (-1);
+}
+
 #endif /* NETWORK */
