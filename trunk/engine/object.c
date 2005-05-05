@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.208 2005/05/02 10:14:55 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.209 2005/05/03 04:28:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1852,7 +1852,8 @@ refresh_rcs_status(int argc, union evarg *argv)
 	if (rcs_connect() == -1) {
 		return;
 	}
-	status = rcs_status(ob, objdir, digest, &repo_rev, &working_rev);
+	status = rcs_status(ob, objdir, digest, NULL, NULL, &repo_rev,
+	    &working_rev);
 	label_printf(lb_status,
 	    _("RCS status: %s\n"
 	      "Working revision: #%u\n"
