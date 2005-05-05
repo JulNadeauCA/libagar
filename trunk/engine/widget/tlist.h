@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.45 2005/03/07 04:08:29 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.46 2005/03/17 03:10:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -21,7 +21,6 @@ struct tlist_popup {
 
 struct tlist_item {
 	int	selected;		/* Effective selection */
-	int	overlap;		/* Temporary selection */
 
 	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
 	int		 icon;			/* Cached icon surface */
@@ -64,6 +63,7 @@ struct tlist {
 	int			 nvisitems;	/* Visible item count */
 	struct scrollbar	*sbar;		/* Vertical scrollbar */
 	TAILQ_HEAD(,tlist_popup) popups;	/* Popup menus */
+	int (*compare_fn)(const struct tlist_item *, const struct tlist_item *);
 };
 
 /* Traverse the user pointer of tlist items assumed to be of the same type. */
@@ -110,6 +110,14 @@ struct tlist_item	*tlist_item_first(struct tlist *);
 struct tlist_item	*tlist_item_last(struct tlist *);
 
 struct AGMenuItem	*tlist_set_popup(struct tlist *, const char *);
+
+void tlist_set_compare_fn(struct tlist *,
+    int (*)(const struct tlist_item *, const struct tlist_item *));
+
+int tlist_compare_strings(const struct tlist_item *, const struct tlist_item *);
+int tlist_compare_ptrs(const struct tlist_item *, const struct tlist_item *);
+int tlist_compare_ptrs_classes(const struct tlist_item *,
+			       const struct tlist_item *);
 __END_DECLS
 
 #include "close_code.h"

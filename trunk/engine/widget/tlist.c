@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.115 2005/04/19 02:21:40 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.116 2005/04/19 04:12:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -180,6 +180,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
+	tl->compare_fn = tlist_compare_ptrs;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
@@ -459,8 +460,7 @@ tlist_clear_items(struct tlist *tl)
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		if ((tl->flags & TLIST_POLL) &&
-		    (it->selected || (it->flags & TLIST_HAS_CHILDREN))) {
+		if (it->selected || (it->flags & TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
 			free_item(tl, it);
@@ -475,10 +475,34 @@ tlist_clear_items(struct tlist *tl)
 	pthread_mutex_unlock(&tl->lock);
 }
 
-static __inline__ int
-tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
+int
+tlist_compare_strings(const struct tlist_item *it1,
+    const struct tlist_item *it2)
+{
+	return (it1->text != NULL && it2->text != NULL &&
+	        strcmp(it1->text, it2->text) == 0);
+}
+
+int
+tlist_compare_ptrs(const struct tlist_item *it1, const struct tlist_item *it2)
 {
 	return (it1->p1 == it2->p1);
+}
+
+int
+tlist_compare_ptrs_classes(const struct tlist_item *it1,
+    const struct tlist_item *it2)
+{
+	return ((it1->p1 == it2->p1) &&
+	        (it1->class != NULL && it2->class != NULL &&
+		 (strcmp(it1->class, it2->class) == 0)));
+}
+
+void
+tlist_set_compare_fn(struct tlist *tl,
+    int (*fn)(const struct tlist_item *, const struct tlist_item *))
+{
+	tl->compare_fn = fn;
 }
 
 /* Restore previous item selection state. */
@@ -492,7 +516,7 @@ tlist_restore_selections(struct tlist *tl)
 	     sit = nsit) {
 		nsit = TAILQ_NEXT(sit, selitems);
 		TAILQ_FOREACH(cit, &tl->items, items) {
-			if (!tlist_item_compare(sit, cit)) {
+			if (!tl->compare_fn(sit, cit)) {
 				continue;
 			}
 			cit->selected = sit->selected;
@@ -519,7 +543,7 @@ tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
 	struct tlist_item *sit;
 
 	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
-		if (tlist_item_compare(sit, cit))
+		if (tl->compare_fn(sit, cit))
 			break;
 	}
 	if (sit == NULL) 
