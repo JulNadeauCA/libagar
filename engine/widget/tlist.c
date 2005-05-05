@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.116 2005/04/19 04:12:09 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.117 2005/05/05 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -830,10 +830,14 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	case SDL_BUTTON_RIGHT:
 		if (ti->class != NULL) {
 			struct tlist_popup *tp;
-		
+	
 			widget_focus(tl);
-			tlist_unselect_all(tl);
-			select_item(tl, ti);
+		
+			if (!(tl->flags & (TLIST_MULTITOGGLE|TLIST_MULTI)) ||
+			    !(SDL_GetModState() & (KMOD_CTRL|KMOD_SHIFT))) {
+				tlist_unselect_all(tl);
+				select_item(tl, ti);
+			}
 	
 			TAILQ_FOREACH(tp, &tl->popups, popups) {
 				if (strcmp(tp->iclass, ti->class) == 0)
