@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.16 2005/04/18 11:46:06 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.17 2005/05/04 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -265,7 +265,7 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 		width = "";
 	}
 	text_prescale(width, &data_w, NULL);
-	col->w = (label_w > data_w ? label_w : data_w) + 6;
+	col->w = MAX(label_w,data_w) + 6;
 
 	tv->visible.dirty = 1;
 
