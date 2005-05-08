@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.68 2005/03/09 06:39:20 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.69 2005/05/08 04:19:28 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -620,11 +620,14 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 
 /* Draw a 3D-style box with chamfered top edges. */
 static void
-box_chamfered_gl(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
+box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
 {
 	struct widget *wid = p;
 	Uint32 lcol, rcol;
 	int x, y;
+	int crad;
+	Uint8 r, g, b;
+	int i;
 
 	lcol = (z < 0) ?
 	    alter_color(bcol, -60, -60, -60) :
@@ -635,70 +638,80 @@ box_chamfered_gl(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
 
 	/* Fill the background except the corners. */
 	primitives.rect_filled(wid,			/* Body */
-	    r->x + rad,
-	    r->y + rad,
-	    r->w - rad*2,
-	    r->h - rad,
+	    rd->x + rad,
+	    rd->y + rad,
+	    rd->w - rad*2,
+	    rd->h - rad,
 	    bcol);
 	primitives.rect_filled(wid,			/* Top */
-	    r->x + rad,
-	    r->y,
-	    r->w - rad*2,
-	    r->h,
+	    rd->x + rad,
+	    rd->y,
+	    rd->w - rad*2,
+	    rd->h,
 	    bcol);
 	primitives.rect_filled(wid,			/* Left */
-	    r->x,
-	    r->y + rad,
+	    rd->x,
+	    rd->y + rad,
 	    rad,
-	    r->h - rad,
+	    rd->h - rad,
 	    bcol);
 	primitives.rect_filled(wid,			/* Right */
-	    r->x + r->w - rad,
-	    r->y + rad,
+	    rd->x + rd->w - rad,
+	    rd->y + rad,
 	    rad,
-	    r->h - rad,
+	    rd->h - rad,
 	    bcol);
 
 	/* Draw the three straight lines. */
 	primitives.line(wid,				/* Top line */
-	    r->x + rad,
-	    r->y,
-	    r->x + r->w - rad,
-	    r->y,
+	    rd->x + rad,
+	    rd->y,
+	    rd->x + rd->w - rad,
+	    rd->y,
 	    bcol);
 	primitives.line(wid,				/* Left line */
-	    r->x,
-	    r->y + rad,
-	    r->x,
-	    r->y + r->h,
+	    rd->x,
+	    rd->y + rad,
+	    rd->x,
+	    rd->y + rd->h,
 	    lcol);
 	primitives.line(wid,				/* Right line */
-	    r->x + r->w - 1,
-	    r->y + rad,
-	    r->x + r->w - 1,
-	    r->y + r->h,
+	    rd->x + rd->w - 1,
+	    rd->y + rad,
+	    rd->x + rd->w - 1,
+	    rd->y + rd->h,
 	    rcol);
 
-	x = 0;
-	y = rad;
+	crad = rad/2;
+	x = rd->x;
+	y = rd->y + rad;
 
 	/* Draw the two chamfered edges. */
-	glBegin(GL_LINE_LOOP);
-	{
-		Uint8 r, g, b;
+	SDL_GetRGB(bcol, vfmt, &r, &g, &b);
 
-		SDL_GetRGB(lcol, vfmt, &r, &g, &b);
+	glPushMatrix();
+	glTranslatef(wid->cx+x, wid->cy+y, 0);
+	glBegin(GL_POLYGON);
+	{
 		glColor3ub(r, g, b);
-#if 0
-		for (i = 0; i < 10; i++) {
-			glVertex2f(wid->cx + x + rad*cos((2*M_PI*i)/10),
-			           wid->cy + y + rad*sin((2*M_PI*i)/10));
-		}
-#endif
-		glVertex2s(wid->cx, wid->cy+rad);
-		glVertex2s(wid->cx+rad, wid->cy);
+		glVertex2s(rad, -rad);
+		glVertex2s(0, 0);
+		glVertex2s(rad, 0);
 	}
 	glEnd();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(wid->cx+x+rd->w, wid->cy+y, 0);
+	glBegin(GL_POLYGON);
+	{
+		glColor3ub(r, g, b);
+		glVertex2s(-rad, -rad);
+		glVertex2s(0, 0);
+		glVertex2s(-rad, 0);
+	}
+	glEnd();
+	glPopMatrix();
 }
 #endif /* HAVE_OPENGL */
 
