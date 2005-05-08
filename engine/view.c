@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.173 2005/04/14 06:19:36 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.174 2005/05/08 02:10:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -632,9 +632,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 
 	/* Copy the source surface onto the GL texture surface. */
 	SDL_SetAlpha(sourcesu, 0, 0);
-	SDL_SetColorKey(sourcesu, 0, 0);
 	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
-	SDL_SetColorKey(sourcesu, sckflags, scolorkey);
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
