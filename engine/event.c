@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.200 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.201 2005/05/08 09:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -382,7 +382,7 @@ event_dispatch(SDL_Event *ev)
 					    unminimize_window, "%p", win);
 				}
 				
-				SDL_GetMouseState(&x, &y);
+				mouse_get_state(&x, &y);
 				menu_expand(me, mi, x+4, y+4);
 			}
 		}

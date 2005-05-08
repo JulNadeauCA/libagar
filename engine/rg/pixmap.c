@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.24 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.25 2005/04/14 06:19:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -926,7 +926,7 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
-		SDL_GetMouseState(&x, &y);
+		mouse_get_state(&x, &y);
 		pixmap_open_menu(tv, x, y);
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {

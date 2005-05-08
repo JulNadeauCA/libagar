@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -111,7 +111,7 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 			return;
 	}
 
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == 0)
+	if ((mouse_get_state(NULL, NULL) & SDL_BUTTON(1)) == 0)
 		return;
 
 	for (y = sely; y < sely+h; y++) {
