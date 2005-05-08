@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.9 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.10 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ unicode_import(enum unicode_conv conv, const char *s)
 {
 	Uint32 *ucs;
 	size_t len;
-	int i, j;
+	size_t i, j;
 
 	len = strlen(s);
 	ucs = Malloc((len + 1) * sizeof(Uint32), 0);
@@ -119,6 +119,95 @@ unicode_import(enum unicode_conv conv, const char *s)
 		break;
 	}
 	return (ucs);
+}
+
+size_t
+unicode_copy(enum unicode_conv conv, const char *s, Uint32 *ucs,
+    size_t ucs_len)
+{
+	size_t len;
+	size_t i, j;
+
+	len = strlen(s);
+
+	switch (conv) {
+	case UNICODE_FROM_US_ASCII:
+		if (len > ucs_len) {
+			len = ucs_len;
+		}
+		for (i = 0; i < len; i++) {
+			ucs[i] = ((const unsigned char *)s)[i];
+		}
+		ucs[i] = '\0';
+		return (i);
+	case UNICODE_FROM_UTF8:
+		for (i = 0, j = 0; i < len; i++, j++) {
+			switch (utf8_length(s[i])) {
+			case 1:
+				if (i+1 >= ucs_len) {
+					break;
+				}
+				ucs[j] = (Uint32)s[i];
+				break;
+			case 2:
+				if (i+2 >= ucs_len) {
+					break;
+				}
+				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				break;
+			case 3:
+				if (i+3 >= ucs_len) {
+					break;
+				}
+				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				break;
+			case 4:
+				if (i+4 >= ucs_len) {
+					break;
+				}
+				ucs[j]  = (Uint32)(s[i]   & 0x07) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				break;
+			case 5:
+				if (i+5 >= ucs_len) {
+					break;
+				}
+				ucs[j]  = (Uint32)(s[i]   & 0x03) << 24;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				break;
+			case 6:
+				if (i+6 >= ucs_len) {
+					break;
+				}
+				ucs[j]  = (Uint32)(s[i]   & 0x01) << 30;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 24;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
+				break;
+			case -1:
+				if (i+1 >= ucs_len) {
+					break;
+				}
+				ucs[j] = '?';
+				break;
+			}
+		}
+		ucs[j] = '\0';
+		return (j);
+	default:
+		break;
+	}
+	return (0);
 }
 
 /*
