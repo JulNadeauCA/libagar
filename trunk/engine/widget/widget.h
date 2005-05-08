@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.89 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.90 2005/03/11 08:56:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -117,6 +117,7 @@ struct window	*widget_parent_window(void *);
 
 int		 widget_map_surface(void *, SDL_Surface *);
 __inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);
+__inline__ void	 widget_update_surface(void *, int);
 
 void	 widget_blit(void *, SDL_Surface *, int, int);
 void	 widget_blit_from(void *, void *, int, SDL_Rect *, int, int);

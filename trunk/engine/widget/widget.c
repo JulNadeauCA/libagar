@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.101 2005/04/04 01:05:42 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.102 2005/04/14 02:49:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -781,6 +781,19 @@ widget_replace_surface(void *p, int name, SDL_Surface *su)
 		}
 		wid->textures[name] = (su == NULL) ? 0 :
 		    view_surface_texture(su, &wid->texcoords[name*4]);
+	}
+#endif
+}
+
+void
+widget_update_surface(void *p, int name)
+{
+	struct widget *wid = p;
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		view_update_texture(wid->surfaces[name],
+		    wid->textures[name]);
 	}
 #endif
 }

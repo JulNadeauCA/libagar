@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.94 2005/04/14 02:45:58 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.95 2005/04/15 06:17:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -218,6 +218,7 @@ __inline__ void		 view_update(int, int, int, int);
 
 #ifdef HAVE_OPENGL
 GLuint			 view_surface_texture(SDL_Surface *, GLfloat *);
+void			 view_update_texture(SDL_Surface *, int);
 #endif
 
 __inline__ int	  view_same_pixel_fmt(SDL_Surface *, SDL_Surface *);
