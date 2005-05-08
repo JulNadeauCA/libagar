@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.175 2005/05/08 07:19:20 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.176 2005/05/08 09:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -597,6 +597,50 @@ powof2(int i)
 	return (val);
 }
 
+void
+view_update_texture(SDL_Surface *sourcesu, int texture)
+{
+	SDL_Surface *texsu;
+	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+	Uint8 salpha = sourcesu->format->alpha;
+	int w, h;
+
+	w = powof2(sourcesu->w);
+	h = powof2(sourcesu->h);
+
+	/* Create a surface with the masks expected by OpenGL. */
+	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
+#else
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+#endif
+	);
+	if (texsu == NULL)
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	
+	/* Copy the source surface onto the GL texture surface. */
+	SDL_SetAlpha(sourcesu, 0, 0);
+	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
+	SDL_SetAlpha(sourcesu, saflags, salpha);
+
+	/* Create the OpenGL texture. */
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+	    GL_UNSIGNED_BYTE, texsu->pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
+
+	SDL_FreeSurface(texsu);
+}
+
 GLuint
 view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 {
@@ -604,8 +648,6 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	GLuint texture;
 	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 	Uint8 salpha = sourcesu->format->alpha;
-	Uint32 sckflags = sourcesu->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-	Uint32 scolorkey = sourcesu->format->colorkey;
 	int w, h;
 
 	/* The size of OpenGL surfaces must be a power of two. */
