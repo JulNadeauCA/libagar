@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.67 2005/03/08 08:39:24 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.68 2005/03/09 06:39:20 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -617,13 +617,95 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 	glVertex2i(x1, y2);
 	glEnd();
 }
+
+/* Draw a 3D-style box with chamfered top edges. */
+static void
+box_chamfered_gl(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
+{
+	struct widget *wid = p;
+	Uint32 lcol, rcol;
+	int x, y;
+
+	lcol = (z < 0) ?
+	    alter_color(bcol, -60, -60, -60) :
+	    alter_color(bcol, 60, 60, 60);
+	rcol = (z < 0) ?
+	    alter_color(bcol, 60, 60, 60) :
+	    alter_color(bcol, -60, -60, -60);
+
+	/* Fill the background except the corners. */
+	primitives.rect_filled(wid,			/* Body */
+	    r->x + rad,
+	    r->y + rad,
+	    r->w - rad*2,
+	    r->h - rad,
+	    bcol);
+	primitives.rect_filled(wid,			/* Top */
+	    r->x + rad,
+	    r->y,
+	    r->w - rad*2,
+	    r->h,
+	    bcol);
+	primitives.rect_filled(wid,			/* Left */
+	    r->x,
+	    r->y + rad,
+	    rad,
+	    r->h - rad,
+	    bcol);
+	primitives.rect_filled(wid,			/* Right */
+	    r->x + r->w - rad,
+	    r->y + rad,
+	    rad,
+	    r->h - rad,
+	    bcol);
+
+	/* Draw the three straight lines. */
+	primitives.line(wid,				/* Top line */
+	    r->x + rad,
+	    r->y,
+	    r->x + r->w - rad,
+	    r->y,
+	    bcol);
+	primitives.line(wid,				/* Left line */
+	    r->x,
+	    r->y + rad,
+	    r->x,
+	    r->y + r->h,
+	    lcol);
+	primitives.line(wid,				/* Right line */
+	    r->x + r->w - 1,
+	    r->y + rad,
+	    r->x + r->w - 1,
+	    r->y + r->h,
+	    rcol);
+
+	x = 0;
+	y = rad;
+
+	/* Draw the two chamfered edges. */
+	glBegin(GL_LINE_LOOP);
+	{
+		Uint8 r, g, b;
+
+		SDL_GetRGB(lcol, vfmt, &r, &g, &b);
+		glColor3ub(r, g, b);
+#if 0
+		for (i = 0; i < 10; i++) {
+			glVertex2f(wid->cx + x + rad*cos((2*M_PI*i)/10),
+			           wid->cy + y + rad*sin((2*M_PI*i)/10));
+		}
+#endif
+		glVertex2s(wid->cx, wid->cy+rad);
+		glVertex2s(wid->cx+rad, wid->cy);
+	}
+	glEnd();
+}
 #endif /* HAVE_OPENGL */
 
 void
 primitives_init(void)
 {
 	primitives.box = box;
-	primitives.box_chamfered = box_chamfered;
 	primitives.frame = frame;
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;
@@ -637,6 +719,7 @@ primitives_init(void)
 		primitives.rect_filled = rect_opengl;
 		primitives.circle = circle_opengl;
 		primitives.circle2 = circle2_opengl;
+		primitives.box_chamfered = box_chamfered_gl;
 	} else
 #endif
 	{
@@ -644,6 +727,7 @@ primitives_init(void)
 		primitives.rect_filled = rect_filled;
 		primitives.circle = circle_bresenham;
 		primitives.circle2 = circle2_bresenham;
+		primitives.box_chamfered = box_chamfered;
 	}
 }
 
