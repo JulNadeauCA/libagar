@@ -187,6 +187,7 @@ echo "    --with-libqnet                 Network support [default: check]"
 echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-network               Network support [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
+echo "    --enable-map                   2D maps [default: yes]"
 echo "    --enable-astro-units           Include astronomical units [default: no]"
 echo "    --enable-histo-units           Include historical units [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
@@ -1994,6 +1995,15 @@ echo "#define NETWORK" $NETWORK >> config/network.h
 echo "#endif /* NETWORK */" >> config/network.h
 else
 echo "#undef NETWORK" > config/network.h
+fi
+if [ "${enable_map}" != "no" ]
+ then
+MAP=1
+echo "#ifndef MAP" > config/map.h
+echo "#define MAP" $MAP >> config/map.h
+echo "#endif /* MAP */" >> config/map.h
+else
+echo "#undef MAP" > config/map.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
