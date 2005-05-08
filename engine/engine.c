@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.152 2005/05/01 00:30:14 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.153 2005/05/08 02:10:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -167,20 +167,20 @@ engine_preinit(const char *name)
 		unaccel[0] = '\0';
 
 		strlcat(vinfo->blit_hw ? accel : unaccel,
-		    _("\tHardware blits\n"), size);
+		    _("\tSDL hardware blits\n"), size);
 		strlcat(vinfo->blit_hw_CC ? accel : unaccel,
-		    _("\tHardware->hardware colorkey blits\n"), size);
+		    _("\tSDL hardware->hardware colorkey blits\n"), size);
 		strlcat(vinfo->blit_hw_A ? accel : unaccel,
-		    _("\tHardware->hardware alpha blits\n"), size);
+		    _("\tSDL hardware->hardware alpha blits\n"), size);
 		
 		strlcat(vinfo->blit_sw ? accel : unaccel,
-		    _("\tSoftware->hardware blits\n"), size);
+		    _("\tSDL software->hardware blits\n"), size);
 		strlcat(vinfo->blit_sw_CC ? accel : unaccel,
-		    _("\tSoftware->hardware colorkey blits\n"), size);
+		    _("\tSDL software->hardware colorkey blits\n"), size);
 		strlcat(vinfo->blit_sw_A ? accel : unaccel,
-		    _("\tSoftware->hardware alpha blits\n"), size);
+		    _("\tSDL software->hardware alpha blits\n"), size);
 		strlcat(vinfo->blit_fill ? accel : unaccel,
-		    _("\tColor fills\n"), size);
+		    _("\tSDL color fills\n"), size);
 
 		if (accel[0] != '\0')
 			printf(_("Accelerated operations:\n%s"), accel);
