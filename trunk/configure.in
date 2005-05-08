@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.86 2005/04/25 04:33:01 vedge Exp $
+# $Csoft: configure.in,v 1.87 2005/04/25 07:35:09 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -9,6 +9,7 @@ REGISTER("--with-libqnet",	"Network support [default: check]")
 REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-network",	"Network support [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
+REGISTER("--enable-map",	"2D maps [default: yes]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
 REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
@@ -150,6 +151,14 @@ if [ "${enable_network}" = "yes" ]; then
 else
 	HUNDEF(NETWORK)
 fi
+
+# Enable map support by default
+if [ "${enable_map}" != "no" ]; then
+	HDEFINE(MAP, 1)
+else
+	HUNDEF(MAP)
+fi
+
 
 # Support 8/16/24/32bpp video displays by default.
 # Disable unused modes to reduce code size and gain some cycles.
