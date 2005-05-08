@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.119 2005/04/25 06:44:11 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.121 2005/05/01 00:52:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -175,6 +175,7 @@ int	 object_resolve_deps(void *);
 int	 object_load_data(void *);
 
 void	 object_attach(void *, void *);
+int	 object_attach_path(const char *, void *);
 void	 object_detach(void *);
 void	 object_move(void *, void *);
 

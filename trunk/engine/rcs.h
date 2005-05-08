@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.h,v 1.3 2005/05/05 05:51:10 vedge Exp $	*/
+/*	$Csoft: rcs.h,v 1.4 2005/05/05 08:50:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RCSMGR_H_
@@ -36,7 +36,7 @@ enum rcs_status rcs_status(struct object *, const char *, const char *,
 		           char *, char *, u_int *, u_int *);
 int rcs_log(const char *, struct tlist *);
 int rcs_list(struct tlist *);
-int rcs_update_object(const char *);
+int rcs_checkout(const char *);
 #endif /* NETWORK */
 __END_DECLS
 

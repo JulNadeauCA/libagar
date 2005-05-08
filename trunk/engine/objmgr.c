@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.20 2005/05/05 05:51:10 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.21 2005/05/05 08:50:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -633,7 +633,7 @@ update_from_repo(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		if (rcs_update_object(it->text) == -1)
+		if (rcs_checkout(it->text) == -1)
 			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
 	}
 }
