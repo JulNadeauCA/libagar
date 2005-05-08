@@ -155,17 +155,6 @@ RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
 SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
 HOST="$SYSTEM-$RELEASE-$MACHINE"
 echo "Host: $HOST"
-
-echo > Makefile.config
-echo "Host: $HOST" > config.log
-mkdir config 1>/dev/null 2>&1
-
-if [ "${with_manpages}" = "no" ]; then
-    echo "NOMAN=yes" >> Makefile.config
-fi
-if [ "${with_docs}" = "no" ]; then
-    echo "NODOC=yes" >> Makefile.config
-fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
@@ -199,6 +188,17 @@ echo "    --enable-32bpp                 Support for 32 bpp display [default: ye
 echo "    --enable-warnings              Enable compiler warnings [default: no]"
 exit 1
 fi
+
+echo > Makefile.config
+echo "Host: $HOST" > config.log
+mkdir config 1>/dev/null 2>&1
+
+if [ "${with_manpages}" = "no" ]; then
+    echo "NOMAN=yes" >> Makefile.config
+fi
+if [ "${with_docs}" = "no" ]; then
+    echo "NODOC=yes" >> Makefile.config
+fi
 if [ "${enable_debug}" = "yes" ]; then
 	echo "LDFLAGS=-g" >> Makefile.config
 	echo "#ifndef DEBUG" > config/debug.h
@@ -207,6 +207,7 @@ if [ "${enable_debug}" = "yes" ]; then
 else
 	echo "#undef DEBUG" > config/debug.h
 fi
+
 if [ "${enable_nls}" = "yes" ]; then
 	ENABLE_NLS="yes"
 	echo "#ifndef ENABLE_NLS" > config/enable_nls.h
