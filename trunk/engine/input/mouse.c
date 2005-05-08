@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.10 2005/04/14 06:19:37 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.11 2005/05/08 11:09:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,18 +35,15 @@ int mouse_dblclick_delay = 250;		/* Mouse double-click delay */
 int mouse_spin_delay = 250;		/* Spinbutton repeat delay */
 int mouse_spin_ival = 50;		/* Spinbutton repeat interval */
 
-struct mouse *
-mouse_new(int index)
-{
-	char name[INPUT_NAME_MAX];
-	struct mouse *ms;
+static int mouse_match(const void *, const SDL_Event *);
+static void mouse_event(void *, const SDL_Event *);
 
-	ms = Malloc(sizeof(struct mouse), M_INPUT);
-	ms->index = index;
-	snprintf(name, sizeof(name), "mouse%d", index);
-	input_register(ms, INPUT_MOUSE, name, &mouse_driver);
-	return (ms);
-}
+const struct input_driver mouse_driver = {
+	N_("Mouse"),
+	NULL,
+	mouse_match,
+	mouse_event
+};
 
 static int
 mouse_match(const void *p, const SDL_Event *ev)
@@ -108,6 +105,19 @@ mouse_event(void *p, const SDL_Event *ev)
 #endif
 }
 
+struct mouse *
+mouse_new(int index)
+{
+	char name[INPUT_NAME_MAX];
+	struct mouse *ms;
+
+	ms = Malloc(sizeof(struct mouse), M_INPUT);
+	ms->index = index;
+	snprintf(name, sizeof(name), "mouse%d", index);
+	input_register(ms, INPUT_MOUSE, name, &mouse_driver);
+	return (ms);
+}
+
 Uint8
 mouse_get_state(int *x, int *y)
 {
@@ -121,9 +131,3 @@ mouse_get_state(int *x, int *y)
 	return (rv);
 }
 
-const struct input_driver mouse_driver = {
-	N_("Mouse"),
-	NULL,
-	mouse_match,
-	mouse_event
-};
