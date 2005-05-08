@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.7 2005/05/05 05:51:10 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.8 2005/05/05 08:50:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -622,7 +622,7 @@ out:
 }
 
 int
-rcs_update_object(const char *path)
+rcs_checkout(const char *path)
 {
 	char localpath[OBJECT_PATH_MAX];
 	char digest[OBJECT_DIGEST_MAX];
@@ -637,6 +637,7 @@ rcs_update_object(const char *path)
 	if (rcs_connect() == -1)
 		goto fail;
 
+	/* Fetch the object information from the repository. */
 	if (client_write(&rcs_client, "rcs-info\nobject-path=%s\n\n", path)
 	    == -1) {
 		error_set("%s", qerror_get());
@@ -648,7 +649,6 @@ rcs_update_object(const char *path)
 		error_set("RCS info: %s", rcs_client.read.buf);
 		goto fail;
 	}
-
 	buf = &rcs_client.read.buf[2];
 	while ((s = strsep(&buf, ":")) != NULL) {
 		char *key = strsep(&s, "=");
@@ -672,31 +672,44 @@ rcs_update_object(const char *path)
 			break;
 		}
 	}
-
 	for (t = &typesw[0]; t < &typesw[ntypesw]; t++) {
 		if (strcmp(type, t->type) == 0)
 			break;
 	}
+	if (t == &typesw[ntypesw]) {
+		error_set(_("Unimplemented object type: %s"), type);
+		goto fail;
+	}
 
-	strlcpy(localpath, "/world/", sizeof(localpath));
+	/* Create the working copy if it does not exist. */
+	localpath[0] = '/';
+	localpath[1] = '\0';
 	strlcat(localpath, path, sizeof(localpath));
 	if ((obj = object_find(localpath)) == NULL) {
-		if (t == &typesw[ntypesw]) {
-			error_set(_("Unimplemented object type: %s"), type);
-			goto fail;
-		}
+		text_tmsg(MSG_INFO, 750, _("Creating working copy of %s (%s)."),
+		    name, type);
+
 		obj = Malloc(t->size, M_OBJECT);
 		if (t->ops->init != NULL) {
 			t->ops->init(obj, name);
 		} else {
 			object_init(obj, t->type, name, NULL);
 		}
-		object_attach(world, obj);
-		object_save(obj);
+
+		if (object_attach_path(localpath, obj) == -1) {
+			object_destroy(obj);
+			goto fail;
+		}
+		if (object_save(obj) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", name, error_get());
+		}
+		if (rcs_set_working_rev(obj, 0) == -1) {
+			object_detach(obj);
+			object_destroy(obj);
+			goto fail;
+		}
 	}
-	if (rcs_set_working_rev(obj, 0) == -1) {
-		goto fail;
-	}
+
 	if (rcs_update(obj) == -1) {
 		goto fail;
 	}

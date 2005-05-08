@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.209 2005/05/03 04:28:09 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.210 2005/05/05 08:50:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -340,6 +340,39 @@ object_attach(void *parentp, void *childp)
 	event_post(child, parent, "child-attached", NULL);
 	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
 	unlock_linkage();
+}
+
+/* Attach a child object to some parent object according to a path. */
+int
+object_attach_path(const char *path, void *child)
+{
+	char ppath[MAXPATHLEN];
+	void *parent;
+	char *p;
+
+	lock_linkage();
+	if (strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
+		error_set("path too big");
+		goto fail;
+	}
+	if ((p = strrchr(ppath, '/')) != NULL) {
+		*p = '\0';
+	} else {
+		error_set("invalid path");
+		goto fail;
+	}
+	if ((parent = object_find(ppath)) == NULL) {
+		goto fail;
+	}
+	dprintf("path = %s, ppath = %s\n", path, ppath);
+	dprintf("parent = %s, child = %s\n", OBJECT(parent)->name,
+	    OBJECT(child)->name);
+	object_attach(parent, child);
+	unlock_linkage();
+	return (0);
+fail:
+	unlock_linkage();
+	return (-1);
 }
 
 /* Detach a child object from its parent. */
