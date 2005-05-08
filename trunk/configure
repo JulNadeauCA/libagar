@@ -149,12 +149,6 @@ else
 #	fi
 	SRC=`pwd`
 fi
-
-MACHINE=`uname -m 2>/dev/null` || MACHINE=unknown
-RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
-SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
-HOST="$SYSTEM-$RELEASE-$MACHINE"
-echo "Host: $HOST"
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
@@ -189,8 +183,16 @@ echo "    --enable-warnings              Enable compiler warnings [default: no]"
 exit 1
 fi
 
+MACHINE=`uname -m 2>/dev/null` || MACHINE=unknown
+RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
+SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
+HOST="$SYSTEM-$RELEASE-$MACHINE"
+echo "Host: $HOST"
+
 echo > Makefile.config
-echo "Host: $HOST" > config.log
+echo "Machine: $MACHINE" > config.log
+echo "Release: $RELEASE" >> config.log
+echo "System: $SYSTEM" >> config.log
 mkdir config 1>/dev/null 2>&1
 
 if [ "${with_manpages}" = "no" ]; then
