@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.12 2005/04/14 02:49:28 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.13 2005/05/08 09:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,6 +49,8 @@ const struct widget_ops hsvpal_ops = {
 	hsvpal_draw,
 	hsvpal_scale
 };
+
+static void render_palette(struct hsvpal *);
 
 struct hsvpal *
 hsvpal_new(void *parent, SDL_PixelFormat *fmt)
@@ -102,6 +104,10 @@ update_h(struct hsvpal *pal, int x, int y)
 	}
 	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
 	update_pixel_from_hsv(pal);
+
+	/* XXX use a timer */
+	render_palette(pal);
+	widget_update_surface(pal, 0);
 	
 	event_post(NULL, pal, "h-changed", NULL);
 }
@@ -218,11 +224,67 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = HSVPAL_SEL_NONE;
+	pal->surface = NULL;
+	widget_map_surface(pal, NULL);
 
 	event_new(pal, "window-mousebuttonup", mousebuttonup, NULL);
 	event_new(pal, "window-mousebuttondown", mousebuttondown, NULL);
 	event_new(pal, "window-mousemotion", mousemotion, NULL);
 	event_new(pal, "widget-bound", binding_changed, NULL);
+}
+
+static void
+render_palette(struct hsvpal *pal)
+{
+	float h, cur_h;
+	Uint32 pc;
+	Uint8 r, g, b;
+	int x, y, i;
+	
+	cur_h = widget_get_float(pal, "hue");
+	cur_h /= 360.0;
+	cur_h *= 2*M_PI;
+
+	SDL_LockSurface(pal->surface);
+
+	/* Render the circle of hues. */
+	for (h = 0.0; h < 2*M_PI; h += pal->circle.dh) {
+		prim_hsv2rgb((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
+		pc = SDL_MapRGB(vfmt, r, g, b);
+
+		for (i = 0; i < pal->circle.width; i++) {
+			x = (pal->circle.rout - i)*cos(h);
+			y = (pal->circle.rout - i)*sin(h);
+
+			PUT_PIXEL2(pal->surface,
+			    pal->circle.x+x,
+			    pal->circle.y+y,
+			    pc);
+		}
+	}
+
+	/* Render the triangle of saturation and value. */
+	for (y = 0; y < pal->triangle.h; y += 2) {
+		float sat = (float)(pal->triangle.h - y) /
+		            (float)(pal->triangle.h);
+
+		for (x = 0; x < y; x++) {
+			prim_hsv2rgb((cur_h/(2*M_PI))*360.0, sat,
+			    1.0 - ((float)x/(float)pal->triangle.h),
+			    &r, &g, &b);
+			pc = SDL_MapRGB(vfmt, r, g, b);
+			PUT_PIXEL2(pal->surface,
+			    pal->triangle.x + x - y/2,
+			    pal->triangle.y + y,
+			    pc);
+			PUT_PIXEL2(pal->surface,
+			    pal->triangle.x + x - y/2,
+			    pal->triangle.y + y + 1,
+			    pc);
+		}
+	}
+	
+	SDL_UnlockSurface(pal->surface);
 }
 
 void
@@ -253,6 +315,17 @@ hsvpal_scale(void *p, int w, int h)
 			  pal->circle.rin*sin((270.0/360.0)*(2*M_PI));
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
+
+	pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
+	    WIDGET(pal)->w, WIDGET(pal)->h - pal->rpreview.h, 32,
+	    vfmt->Rmask,
+	    vfmt->Gmask,
+	    vfmt->Bmask, 0);
+	if (pal->surface == NULL) {
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
+	render_palette(pal);
+	widget_replace_surface(pal, 0, pal->surface);
 }
 
 void
@@ -260,11 +333,10 @@ hsvpal_draw(void *p)
 {
 	struct hsvpal *pal = p;
 	float cur_h, cur_s, cur_v;
-	float h;
 	Uint32 pc;
-	Uint8 r, g, b, a;
 	int x, y;
 	int i;
+	Uint8 r, g, b, a;
 
 #if 0
 	/* numerically instable */
@@ -285,47 +357,7 @@ hsvpal_draw(void *p)
 	cur_h /= 360.0;
 	cur_h *= 2*M_PI;
 
-	SDL_LockSurface(view->v);
-	
-	/* Render the circle of hues. */
-	for (h = 0.0; h < 2*M_PI; h += pal->circle.dh) {
-		prim_hsv2rgb((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
-		pc = SDL_MapRGB(vfmt, r, g, b);
-
-		for (i = 0; i < pal->circle.width; i++) {
-			x = (pal->circle.rout - i)*cos(h);
-			y = (pal->circle.rout - i)*sin(h);
-
-			widget_put_pixel(pal,
-			    pal->circle.x+x,
-			    pal->circle.y+y,
-			    pc);
-		}
-	}
-
-	/* Render the triangle of saturation and value. */
-	for (y = 0; y < pal->triangle.h; y += 2) {
-		float sat = (float)(pal->triangle.h - y) /
-		            (float)(pal->triangle.h);
-
-		for (x = 0; x < y; x++) {
-			prim_hsv2rgb((cur_h/(2*M_PI))*360.0, sat,
-			    1.0 - ((float)x/(float)pal->triangle.h),
-			    &r, &g, &b);
-			pc = SDL_MapRGB(vfmt, r, g, b);
-
-			widget_put_pixel(pal,
-			    pal->triangle.x + x - y/2,
-			    pal->triangle.y + y,
-			    pc);
-			widget_put_pixel(pal,
-			    pal->triangle.x + x - y/2,
-			    pal->triangle.y + y + 1,
-			    pc);
-		}
-	}
-
-	SDL_UnlockSurface(view->v);
+	widget_blit_from(pal, pal, 0, NULL, 0, 0);
 
 	/* Indicate the current selection. */
 	primitives.circle(pal,
