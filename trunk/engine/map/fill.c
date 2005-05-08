@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.35 2005/03/03 10:59:24 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include <engine/widget/radio.h>
 
@@ -116,3 +118,4 @@ fill_effect(struct tool *t, struct node *n)
 	}
 }
 
+#endif /* MAP */

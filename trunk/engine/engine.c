@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.150 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.152 2005/05/01 00:30:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,15 +42,19 @@
 #include <engine/view.h>
 #include <engine/typesw.h>
 
+#ifdef MAP
 #include <engine/map/map.h>
 #include <engine/map/rootmap.h>
+#endif
 
 #ifdef EDITION
 #include <engine/map/mapedit.h>
 #endif
+
 #ifdef NETWORK
 #include <engine/rcs.h>
 #endif
+
 #ifdef DEBUG
 #include <engine/monitor/monitor.h>
 #endif
@@ -265,7 +269,7 @@ engine_destroy(void)
 	if (engine_atexit_func != NULL)
 		engine_atexit_func();
 
-#ifdef EDITION
+#if defined(MAP) && defined(EDITION)
 	if (mapedition)
 		object_save(&mapedit);
 #endif

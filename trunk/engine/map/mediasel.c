@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.2 2005/04/18 03:38:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -26,11 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/edition.h>
-
-#ifdef EDITION
-
 #include <engine/engine.h>
+
+#if defined(MAP) && defined(EDITION)
+
 #include <engine/config.h>
 #include <engine/view.h>
 
@@ -557,4 +556,4 @@ mediasel_init(struct tool *t)
 	}
 }
 
-#endif	/* EDITION */
+#endif /* MAP and EDITION */

@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include "map.h"
@@ -267,7 +270,6 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 	return (sNew);
 }
 
-#ifdef DEBUG
 /* Print the transform chain. */
 void
 transform_print(const struct transformq *transq, char *buf, size_t buf_size)
@@ -297,7 +299,6 @@ transform_print(const struct transformq *transq, char *buf, size_t buf_size)
 	if (!TAILQ_EMPTY(transq))
 		strlcat(buf, "\n", buf_size);
 }
-#endif
 
 /* Invert the colors of a surface. */
 static SDL_Surface *
@@ -328,3 +329,4 @@ const struct transform_ent transforms[] = {
 };
 const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
 
+#endif /* MAP */

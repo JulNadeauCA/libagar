@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.2 2005/05/01 00:46:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -129,8 +129,6 @@ struct map {
 	struct map_layer *layers;	/* Layer descriptions */
 	Uint32		 nlayers;
 };
-
-#define MAP(ob) ((struct map *)(ob))
 
 __BEGIN_DECLS
 struct map	*map_new(void *, const char *);

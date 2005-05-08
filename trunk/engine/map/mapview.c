@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.4 2005/04/21 04:44:49 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.5 2005/04/21 07:51:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>
@@ -1119,3 +1122,5 @@ mapview_status(struct mapview *mv, const char *fmt, ...)
 	widget_replace_surface(mv->status, mv->status->surface,
 	    text_render(NULL, -1, COLOR(TEXT_COLOR), status));
 }
+
+#endif /* MAP */

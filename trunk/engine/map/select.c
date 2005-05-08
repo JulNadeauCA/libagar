@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.25 2005/03/03 10:59:24 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include "map.h"
 #include "mapedit.h"
@@ -171,3 +173,4 @@ select_init(struct tool *t)
 	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
 
+#endif /* MAP */

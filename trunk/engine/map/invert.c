@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.6 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include <engine/widget/radio.h>
 
@@ -91,3 +93,4 @@ invert_effect(struct tool *t, struct node *n)
 	}
 }
 
+#endif /* MAP */

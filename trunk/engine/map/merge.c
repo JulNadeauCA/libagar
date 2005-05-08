@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.61 2005/03/05 12:15:09 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include <engine/widget/hbox.h>
@@ -450,3 +453,4 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 	}
 	return (rv);
 }
+#endif /* MAP */

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.93 2005/04/24 05:54:08 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.94 2005/05/01 00:59:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -13,6 +13,8 @@
 #include <config/have_bounded_attribute.h>
 #include <config/have_format_attribute.h>
 #include <config/have_nonnull_attribute.h>
+
+#include <config/map.h>
 
 #include <sys/types.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.17 2005/04/04 01:06:58 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include <engine/map/map.h>
@@ -188,3 +191,5 @@ tool_pop_status(struct tool *t)
 	Free(t->status[--t->nstatus], 0);
 	tool_update_status(t);
 }
+
+#endif /* MAP */
