@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.172 2005/04/14 02:45:58 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.173 2005/04/14 06:19:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,8 +34,10 @@
 #include <engine/view.h>
 #include <engine/prop.h>
 
+#ifdef MAP
 #include <engine/map/rootmap.h>
 #include <engine/map/map.h>
+#endif
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
