@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.118 2005/05/05 06:35:26 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.119 2005/05/08 11:09:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+#include <engine/input.h>
 
 #include "tlist.h"
 

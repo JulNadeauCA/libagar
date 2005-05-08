@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.3 2005/05/08 11:09:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,6 +29,8 @@
 #include <engine/engine.h>
 
 #ifdef MAP
+
+#include <engine/input.h>
 
 #include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
