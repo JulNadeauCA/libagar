@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.17 2005/05/04 03:32:55 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.18 2005/05/05 05:49:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -1299,9 +1299,8 @@ columnresize(int argc, union evarg * argv)
 	int col = argv[1].i, left = argv[2].i;
 	int x;
 
-	SDL_GetMouseState(&x, NULL);
+	mouse_get_state(&x, NULL);
 	x -= WIDGET(tv)->cx;
-
 	tv->column[col].w = (x - left > tv->column[col].label_img->w) ?
 	    (x - left) : tv->column[col].label_img->w;
 
@@ -1322,7 +1321,7 @@ columnmove(int argc, union evarg * argv)
 	 */
 	tv->column[col].moving = 1;
 
-	SDL_GetMouseState(&x, NULL);
+	mouse_get_state(&x, NULL);
 	x -= WIDGET(tv)->cx;
 
 	/* dragging to the left */

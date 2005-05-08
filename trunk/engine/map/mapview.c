@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.5 2005/04/21 07:51:50 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.6 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -458,7 +458,7 @@ draw_cursor(struct mapview *mv)
 	rd.h = mv->tilesz;
 
 	if (mv->msel.set) {
-		SDL_GetMouseState(&msx, &msy);
+		mouse_get_state(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
 		/* XXX opengl */

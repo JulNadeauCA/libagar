@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.117 2005/05/05 05:49:59 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.118 2005/05/05 06:35:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1058,7 +1058,7 @@ show_popup(struct tlist *tl, struct tlist_popup *tp)
 	if (widget_parent_window(tl) == NULL)
 		fatal("%s is unattached", OBJECT(tl)->name);
 #endif
-	SDL_GetMouseState(&x, &y);
+	mouse_get_state(&x, &y);
 
 	if (tp->panel != NULL) {
 		menu_collapse(m, tp->item);

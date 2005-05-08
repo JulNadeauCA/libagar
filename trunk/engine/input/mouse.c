@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.9 2005/01/30 05:21:50 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.10 2005/04/14 06:19:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,16 +30,6 @@
 #include <engine/input.h>
 
 #include <engine/map/map.h>
-
-static int	mouse_match(const void *, const SDL_Event *);
-static void	mouse_event(void *, const SDL_Event *);
-
-const struct input_driver mouse_driver = {
-	N_("Mouse"),
-	NULL,
-	mouse_match,
-	mouse_event
-};
 
 int mouse_dblclick_delay = 250;		/* Mouse double-click delay */
 int mouse_spin_delay = 250;		/* Spinbutton repeat delay */
@@ -118,3 +108,22 @@ mouse_event(void *p, const SDL_Event *ev)
 #endif
 }
 
+Uint8
+mouse_get_state(int *x, int *y)
+{
+	Uint8 rv;
+
+	rv = SDL_GetMouseState(x, y);
+#if defined(__APPLE__) && defined(HAVE_OPENGL)
+	if (view->opengl && y != NULL)
+		*y = view->h - *y;
+#endif
+	return (rv);
+}
+
+const struct input_driver mouse_driver = {
+	N_("Mouse"),
+	NULL,
+	mouse_match,
+	mouse_event
+};

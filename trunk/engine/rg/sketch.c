@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.6 2005/04/21 07:58:18 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.7 2005/04/21 10:31:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -240,7 +240,7 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
-		SDL_GetMouseState(&x, &y);
+		mouse_get_state(&x, &y);
 		sketch_open_menu(tv, x, y);
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {
