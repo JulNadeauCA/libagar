@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.11 2005/05/08 11:09:20 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.12 2005/05/08 11:17:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/input.h>
+#include <engine/view.h>
 
 #include <engine/map/map.h>
 
