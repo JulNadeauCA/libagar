@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.209 2005/02/03 05:00:27 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/prop.h>
 #include <engine/objmgr.h>
 
@@ -192,3 +195,5 @@ mapedit_settings(void *p)
 	}
 	return (win);
 }
+
+#endif /* MAP */

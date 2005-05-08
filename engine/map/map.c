@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.3 2005/04/18 03:38:33 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.4 2005/04/21 04:45:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,10 +27,13 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/config.h>
 #include <engine/view.h>
-
 #include <engine/map/map.h>
+
 #ifdef EDITION
 #include <engine/map/mapedit.h>
 #include <engine/map/mapview.h>
@@ -2007,3 +2010,4 @@ map_edit(void *p)
 	return (win);
 }
 #endif /* EDITION */
+#endif /* MAP */

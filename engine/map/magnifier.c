@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.50 2005/03/27 03:11:05 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include <engine/widget/button.h>
@@ -122,3 +125,5 @@ const struct tool magnifier_tool = {
 	NULL,				/* keydown */
 	NULL				/* keyup */
 };
+
+#endif /* MAP */

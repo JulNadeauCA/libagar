@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.18 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/input.h>
 
 #include <engine/widget/tlist.h>
@@ -222,3 +225,4 @@ position_tool_effect(struct tool *t, struct node *n)
 		ob->pos->flags |= POSITION_PASS_THROUGH;
 }
 
+#endif /* MAP */

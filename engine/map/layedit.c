@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.26 2005/04/14 02:47:47 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -26,10 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/edition.h>
-#ifdef EDITION
-
 #include <engine/engine.h>
+
+#if defined(MAP) && defined(EDITION)
+
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
@@ -289,4 +289,4 @@ layedit_init(struct tool *t)
 	object_attach(win, tl);
 }
 
-#endif	/* EDITION */
+#endif /* MAP and EDITION */

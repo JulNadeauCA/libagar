@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.34 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
@@ -132,3 +134,4 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 	}
 }
 
+#endif /* MAP */

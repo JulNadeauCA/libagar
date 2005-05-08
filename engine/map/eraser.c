@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.49 2005/04/14 02:47:49 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include "map.h"
 #include "mapedit.h"
@@ -75,3 +77,4 @@ eraser_effect(struct tool *t, struct node *n)
 	}
 }
 
+#endif /* MAP */

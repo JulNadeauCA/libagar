@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.3 2005/04/21 04:45:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include <engine/rg/tileset.h>
 
@@ -243,3 +245,5 @@ const struct tool stamp_tool = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
+
+#endif /* MAP */

@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.6 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include "map.h"
@@ -200,3 +203,5 @@ nodemask_intersect(const struct nodemask *m1, const struct nodemask *m2)
 	/* TODO */
 	return (0);
 }
+
+#endif /* MAP */

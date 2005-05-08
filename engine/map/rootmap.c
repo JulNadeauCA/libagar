@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.41 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.1 2005/04/14 06:20:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
+
 #include <engine/view.h>
 
 #include "map.h"
@@ -229,3 +232,4 @@ rootmap_redraw(void)
 	}
 }
 
+#endif /* MAP */

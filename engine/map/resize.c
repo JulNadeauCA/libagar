@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.40 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include "map.h"
 #include "mapedit.h"
@@ -93,3 +95,5 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 		map_resize(m, w, h);
 	}
 }
+
+#endif /* MAP */

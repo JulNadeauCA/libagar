@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.2 2005/04/16 05:52:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  */
 
 #include <engine/engine.h>
+
+#ifdef MAP
 
 #include <engine/widget/checkbox.h>
 
@@ -172,3 +174,4 @@ const struct tool flip_tool = {
 	NULL			/* keyup */
 };
 
+#endif /* MAP */
