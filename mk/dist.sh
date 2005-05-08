@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.16 2004/03/13 02:34:08 vedge Exp $
+#	$Csoft: dist.sh,v 1.17 2004/03/13 09:26:44 vedge Exp $
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
@@ -20,7 +20,7 @@ cp -fRp agar agar-${VER}
 cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}/ChangeLog-${VER}
 cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
 
-rm -fR `find agar-${VER} \( -name CVS \
+rm -fR `find agar-${VER} \( -name Root \
     -or -name \*~ \
     -or -name \*.o \
     -or -name \*.a \
