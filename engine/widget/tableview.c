@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.18 2005/05/05 05:49:37 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.19 2005/05/08 11:09:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -28,6 +28,7 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
+#include <engine/input.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

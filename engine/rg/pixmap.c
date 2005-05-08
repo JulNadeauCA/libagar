@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.25 2005/04/14 06:19:44 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.26 2005/05/08 11:09:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+#include <engine/input.h>
 
 #include <engine/map/map.h>
 

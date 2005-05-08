@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.6 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.7 2005/05/08 11:09:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #ifdef MAP
 
 #include <engine/view.h>
+#include <engine/input.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
