@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.h,v 1.7 2003/09/05 20:57:43 vedge Exp $	*/
+/*	$Csoft: unicode.h,v 1.8 2003/10/09 22:39:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -15,6 +15,7 @@ __BEGIN_DECLS
 Uint32	*unicode_import(enum unicode_conv, const char *);
 ssize_t	 unicode_export(enum unicode_conv, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
+size_t	 unicode_copy(enum unicode_conv, const char *, Uint32 *, size_t);
 
 size_t	 ucs4_len(const Uint32 *);
 size_t	 ucs4_lcpy(Uint32 *, const Uint32 *, size_t);
