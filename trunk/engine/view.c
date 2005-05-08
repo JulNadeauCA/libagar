@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.174 2005/05/08 02:10:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.175 2005/05/08 07:19:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -154,6 +154,7 @@ view_init(enum gfx_engine ge)
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
 		int red, blue, green, alpha, depth, bsize;
+		Uint8 bR, bG, bB;
 
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
 		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
@@ -174,7 +175,9 @@ view_init(enum gfx_engine ge)
 	
 		glViewport(0, 0, view->w, view->h);
 		glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
-		glClearColor(0, 0, 0, 1.0);
+
+		SDL_GetRGB(COLOR(BG_COLOR), vfmt, &bR, &bG, &bB);
+		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);

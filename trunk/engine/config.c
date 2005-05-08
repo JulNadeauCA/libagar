@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.141 2005/04/25 02:32:23 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.142 2005/05/01 00:19:52 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -326,6 +326,25 @@ selected_color(int argc, union evarg *argv)
 	widget_bind(hsv, "pixel", WIDGET_UINT32, c);
 }
 
+static void
+updated_bg(int argc, union evarg *argv)
+{
+	struct hsvpal *hsv = argv[0].p;
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	Uint8 r, g, b;
+
+	if ((it = tlist_item_selected(tl)) != NULL &&
+	    it->p1 == &colors[BG_COLOR]) {
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			SDL_GetRGB(COLOR(BG_COLOR), vfmt, &r, &g, &b);
+			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
+		}
+#endif
+	}
+}
+
 void
 config_window(struct config *con)
 {
@@ -464,7 +483,8 @@ config_window(struct config *con)
 
 		hsv = hsvpal_new(tab, vfmt);
 		WIDGET(hsv)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		
+		event_new(hsv, "h-changed", updated_bg, "%p", tl);
+		event_new(hsv, "sv-changed", updated_bg, "%p", tl);
 		event_new(tl, "tlist-selected", selected_color, "%p", hsv);
 	}
 

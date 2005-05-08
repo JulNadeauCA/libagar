@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.11 2005/04/09 05:55:09 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.12 2005/04/14 02:49:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -102,6 +102,8 @@ update_h(struct hsvpal *pal, int x, int y)
 	}
 	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
 	update_pixel_from_hsv(pal);
+	
+	event_post(NULL, pal, "h-changed", NULL);
 }
 
 static void
@@ -127,6 +129,8 @@ update_sv(struct hsvpal *pal, int ax, int ay)
 	widget_set_float(pal, "saturation", s);
 	widget_set_float(pal, "value", v);
 	update_pixel_from_hsv(pal);
+
+	event_post(NULL, pal, "sv-changed", NULL);
 }
 
 static void

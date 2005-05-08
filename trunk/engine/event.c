@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.199 2005/03/24 03:58:31 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.200 2005/04/14 06:19:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -213,10 +213,8 @@ event_loop(void)
 			view->ndirty = 0;
 
 #if defined(DEBUG) && defined(HAVE_OPENGL)
-			if (view->opengl) {
-				glClearColor(0, 0, 0, 1.0);
+			if (view->opengl)
 				glClear(GL_COLOR_BUFFER_BIT);
-			}
 #endif
 
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {

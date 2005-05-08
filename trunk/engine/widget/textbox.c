@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.90 2005/04/25 02:19:52 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.91 2005/04/25 02:31:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -282,7 +282,7 @@ textbox_draw(void *p)
 			continue;
 		}
 
-		{
+		if (!view->opengl) {
 			FT_Bitmap *ftbmp;
 			Uint32 ch;
 			struct ttf_font *ttf = font->p;
@@ -330,7 +330,26 @@ textbox_draw(void *p)
 				src += ftbmp->pitch;
 			}
 			x += glyph->advance;
+		} else {
+#ifdef HAVE_OPENGL
+			Uint32 ucs[2];
+			SDL_Surface *su;
+			
+			if (tbox->flags & TEXTBOX_PASSWORD) {
+				ucs[0] = (Uint32)('*');
+			} else {
+				ucs[0] = (Uint32)s[i];
+			}
+			ucs[1] = '\0';
+			su = text_render_unicode(NULL, -1,
+			    COLOR(TEXTBOX_TXT_COLOR), ucs);
+			widget_blit(tbox, su, x, y);
+			x += su->w;
+			SDL_FreeSurface(su);
+#endif
 		}
+		if (x >= WIDGET(tbox)->w - 1)
+			break;
 	}
 out:
 	widget_binding_unlock(stringb);
