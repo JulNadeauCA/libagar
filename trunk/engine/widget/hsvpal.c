@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.13 2005/05/08 09:22:42 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.14 2005/05/08 13:26:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -116,12 +116,12 @@ static void
 update_sv(struct hsvpal *pal, int ax, int ay)
 {
 	float s, v;
-	int x, y;
+	int x = ax - pal->triangle.x;
+	int y = ay - pal->triangle.y;
 
-	y = ay - pal->triangle.y;
-	x = ax - pal->triangle.x;
 	if (x < -y/2) { x = -y/2; }
 	if (x > y/2) { x = y/2; }
+	if (y > pal->triangle.h-1) { y = pal->triangle.h-1; }
 
 	s = 1.0 - (float)y/(float)pal->triangle.h;
 	v = 1.0 - (float)(x + y/2)/(float)pal->triangle.h;
@@ -318,9 +318,7 @@ hsvpal_scale(void *p, int w, int h)
 
 	pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 	    WIDGET(pal)->w, WIDGET(pal)->h - pal->rpreview.h, 32,
-	    vfmt->Rmask,
-	    vfmt->Gmask,
-	    vfmt->Bmask, 0);
+	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
 	if (pal->surface == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
