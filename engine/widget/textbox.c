@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.91 2005/04/25 02:31:39 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.92 2005/05/08 09:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -334,6 +334,7 @@ textbox_draw(void *p)
 #ifdef HAVE_OPENGL
 			Uint32 ucs[2];
 			SDL_Surface *su;
+			SDL_Color cFg;
 			
 			if (tbox->flags & TEXTBOX_PASSWORD) {
 				ucs[0] = (Uint32)('*');
@@ -341,8 +342,9 @@ textbox_draw(void *p)
 				ucs[0] = (Uint32)s[i];
 			}
 			ucs[1] = '\0';
-			su = text_render_unicode(NULL, -1,
-			    COLOR(TEXTBOX_TXT_COLOR), ucs);
+			SDL_GetRGB(COLOR(TEXTBOX_TXT_COLOR), vfmt,
+			    &cFg.r, &cFg.g, &cFg.b);
+			su = text_render_unicode(NULL, -1, cFg, ucs);
 			widget_blit(tbox, su, x, y);
 			x += su->w;
 			SDL_FreeSurface(su);
