@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.4 2004/11/26 06:10:55 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.5 2005/02/08 15:48:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_TTF_H_
@@ -73,7 +73,7 @@ int ttf_size_unicode(struct ttf_font *, const Uint32 *, int *, int *);
 
 SDL_Surface *ttf_render_text_solid(struct ttf_font *, const char *, SDL_Color);
 SDL_Surface *ttf_render_unicode_solid(struct ttf_font *, const Uint32 *,
-		                      SDL_Color);
+		                      SDL_Color *, SDL_Color);
 __END_DECLS
 
 #include "close_code.h"

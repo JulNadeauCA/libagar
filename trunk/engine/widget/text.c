@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.99 2005/02/08 15:45:38 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.100 2005/03/11 09:52:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,7 +58,7 @@ int text_font_line_skip = 0;		/* Default font line skip (px) */
 int text_tab_width = 40;		/* Tab width (px) */
 int text_blink_rate = 250;		/* Cursor blink rate (ms) */
 
-#define TEXT_NBUCKETS 1024
+#define GLYPH_NBUCKETS 1024
 
 static const char *text_msg_titles[] = {
 	N_("Error"),
@@ -70,10 +70,13 @@ pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct text_font *default_font = NULL;		/* Default font */
 static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
     SLIST_HEAD_INITIALIZER(&text_fonts);
+
 static struct {
-	SLIST_HEAD(, text) texts;
-} text_cache[TEXT_NBUCKETS];
+	SLIST_HEAD(, text_glyph) glyphs;
+} glyph_cache[GLYPH_NBUCKETS];
+
 static struct timeout text_timeout;		/* Timer for text_tmsg() */
+
 
 struct text_font *
 text_fetch_font(const char *name, int size, int style)
@@ -149,18 +152,18 @@ text_init(void)
 	text_font_line_skip = ttf_font_line_skip(default_font->p);
 #endif
 
-	for (i = 0; i < TEXT_NBUCKETS; i++) {
-		SLIST_INIT(&text_cache[i].texts);
+	for (i = 0; i < GLYPH_NBUCKETS; i++) {
+		SLIST_INIT(&glyph_cache[i].glyphs);
 	}
 	return (0);
 }
 
 static void
-free_text(struct text *txt)
+free_glyph(struct text_glyph *gl)
 {
-	Free(txt->s, 0);
-	SDL_FreeSurface(txt->su);
-	Free(txt, M_TEXT);
+	Free(gl->s, 0);
+	SDL_FreeSurface(gl->su);
+	Free(gl, M_TEXT);
 }
 
 void
@@ -169,16 +172,16 @@ text_destroy(void)
 	struct text_font *fon, *nextfon;
 	int i;
 	
-	for (i = 0; i < TEXT_NBUCKETS; i++) {
-		struct text *txt, *ntxt;
+	for (i = 0; i < GLYPH_NBUCKETS; i++) {
+		struct text_glyph *gl, *ngl;
 
-		for (txt = SLIST_FIRST(&text_cache[i].texts);
-		     txt != SLIST_END(&text_cache[i].texts);
-		     txt = ntxt) {
-			ntxt = SLIST_NEXT(txt, texts);
-			free_text(txt);
+		for (gl = SLIST_FIRST(&glyph_cache[i].glyphs);
+		     gl != SLIST_END(&glyph_cache[i].glyphs);
+		     gl = ngl) {
+			ngl = SLIST_NEXT(gl, glyphs);
+			free_glyph(gl);
 		}
-		SLIST_INIT(&text_cache[i].texts);
+		SLIST_INIT(&glyph_cache[i].glyphs);
 	}
 	
 	for (fon = SLIST_FIRST(&text_fonts);
@@ -196,7 +199,7 @@ text_destroy(void)
 }
 
 static __inline__ int
-text_hash(const char *s)
+hash_glyph(const char *s)
 {
 	unsigned long h;
 	const unsigned char *p;
@@ -205,85 +208,88 @@ text_hash(const char *s)
 	for (h = 0; *p != '\0'; p++) {
 		h = 37*h + *p;
 	}
-	return (h % TEXT_NBUCKETS);
+	return (h % GLYPH_NBUCKETS);
 }
 
-/* Look up the text surface cache. */
-struct text *
-text_render2(const char *fontname, int fontsize, Uint32 color, const char *s)
+/* Lookup/insert a glyph in the glyph cache. */
+struct text_glyph *
+text_render_glyph(const char *fontname, int fontsize, Uint32 color,
+    const char *s)
 {
-	struct text *txt;
+	struct text_glyph *gl;
 	int h;
 
-	h = text_hash(s);
-	SLIST_FOREACH(txt, &text_cache[h].texts, texts) {
-		if (fontsize == txt->fontsize &&
-		    color == txt->color &&
-		    strcmp(fontname, txt->fontname) == 0 &&
-		    strcmp(s, txt->s) == 0)
+	h = hash_glyph(s);
+	SLIST_FOREACH(gl, &glyph_cache[h].glyphs, glyphs) {
+		if (fontsize == gl->fontsize &&
+		    color == gl->color &&
+		    ((fontname == NULL && gl->fontname[0] == '\0') ||
+		     (strcmp(fontname, gl->fontname) == 0)) &&
+		    strcmp(s, gl->s) == 0)
 			break;
 	}
-	if (txt == NULL) {
+	if (gl == NULL) {
 		Uint32 *ucs;
+		SDL_Color c;
 
-		txt = Malloc(sizeof(struct text), M_TEXT);
-		strlcpy(txt->fontname, fontname, sizeof(txt->fontname));
-		txt->fontsize = fontsize;
-		txt->color = color;
-		txt->s = Strdup(s);
-		txt->nrefs = 1;
+		gl = Malloc(sizeof(struct text_glyph), M_TEXT);
+		strlcpy(gl->fontname, fontname, sizeof(gl->fontname));
+		gl->fontsize = fontsize;
+		gl->color = color;
+		gl->s = Strdup(s);
+		gl->nrefs = 1;
 
 		ucs = unicode_import(UNICODE_FROM_UTF8, s);
-		txt->su = text_render_unicode(fontname, fontsize, color, ucs);
+		SDL_GetRGB(color, vfmt, &c.r, &c.g, &c.b);
+		gl->su = text_render_unicode(fontname, fontsize, c, ucs);
 		free(ucs);
 	} else {
-		txt->nrefs++;
+		gl->nrefs++;
 	}
-	return (txt);
+	return (gl);
 }
 
 void
-text_unused2(struct text *txt)
+text_unused_glyph(struct text_glyph *gl)
 {
-	if (--txt->nrefs == 0) {
+	if (--gl->nrefs == 0) {
 		int h;
 
-		h = text_hash(txt->s);
-		SLIST_REMOVE(&text_cache[h].texts, txt, text, texts);
-		free_text(txt);
+		h = hash_glyph(gl->s);
+		SLIST_REMOVE(&glyph_cache[h].glyphs, gl, text_glyph, glyphs);
+		free_glyph(gl);
 	}
 }
 
-/* Render UTF-8 text onto a new surface. */
+/* Render UTF-8 text onto a newly allocated transparent surface. */
 /* XXX use state variables for font spec */
-/* XXX inefficient */
 SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
+	SDL_Color c;
 	Uint32 *ucs;
 	SDL_Surface *su;
 
 	ucs = unicode_import(UNICODE_FROM_UTF8, text);
-	su = text_render_unicode(fontname, fontsize, color, ucs);
+	SDL_GetRGB(color, vfmt, &c.r, &c.g, &c.b);
+	su = text_render_unicode(fontname, fontsize, c, ucs);
 	free(ucs);
 	return (su);
 }
 
 #ifdef HAVE_FREETYPE
 
-/* Render (possibly multi-line) UCS-4 text onto a new surface. */
-/* TODO use pools to get rid of all the insane allocations */
+/* Render (possibly multi-line) UCS-4 text onto a newly allocated surface. */
 SDL_Surface *
-text_render_unicode(const char *fontname, int fontsize, Uint32 color,
+text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
 	SDL_Rect rd;
-	SDL_Color col;
 	SDL_Surface *su;
 	struct text_font *font;
 	Uint32 *ucs, *ucsd, *ucsp;
 	int nlines, maxw, font_h;
-	Uint8 r, g, b;
+	Uint8 r, g, b, a;
 
 	if (text == NULL || text[0] == '\0') {
 		SDL_Surface *su;
@@ -301,12 +307,6 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	    prop_get_int(config, "font-engine.default-size"), 0);
 	font_h = ttf_font_height(font->p);
 
-	/* Decompose the color. */
-	SDL_GetRGB(color, vfmt, &r, &g, &b);
-	col.r = r;
-	col.g = g;
-	col.b = b;
-
 	/* Find out the line count. */
 	ucsd = ucs = ucs4_dup(text);
 	for (ucsp = ucs, nlines = 0; *ucsp != '\0'; ucsp++) {
@@ -315,7 +315,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	}
 
 	if (nlines == 0) {					/* One line */
-		su = ttf_render_unicode_solid(font->p, ucs, col);
+		su = ttf_render_unicode_solid(font->p, ucs, NULL, cFg);
 		if (su == NULL) {
 			fatal("ttf_render_text_solid: %s", error_get());
 		}
@@ -335,7 +335,8 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		for (i = 0, maxw = 0;
 		    (ucsp = ucs4_sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
 		    i++) {
-			lines[i] = ttf_render_unicode_solid(font->p, ucsp, col);
+			lines[i] = ttf_render_unicode_solid(font->p, ucsp,
+			    NULL, cFg);
 			if (lines[i] == NULL) {
 				fatal("ttf_render_unicode_solid: %s",
 				    error_get());
@@ -356,7 +357,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
 		if (su == NULL)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-	
+
 		colorkey = SDL_MapRGB(su->format, 15, 15, 15);
 		SDL_FillRect(su, NULL, colorkey);
 
@@ -380,7 +381,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 #else /* !HAVE_FREETYPE */
 
 SDL_Surface *
-text_render_unicode(const char *fontname, int fontsize, Uint32 color,
+text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
 	/* TODO bitmap version */
@@ -394,9 +395,14 @@ void
 text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
 {
 	SDL_Surface *su;
+	SDL_Color c;
+
+	c.r = 0;
+	c.g = 0;
+	c.b = 0;
 
 	/* XXX get the bounding box instead */
-	su = text_render_unicode(NULL, -1, 0, ucs);
+	su = text_render_unicode(NULL, -1, c, ucs);
 	if (w != NULL)
 		*w = (int)su->w;
 	if (h != NULL)

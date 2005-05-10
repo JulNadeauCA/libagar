@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.12 2005/02/08 15:48:36 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.13 2005/02/11 02:29:24 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -616,14 +616,15 @@ ttf_render_text_solid(struct ttf_font *font, const char *utf8, SDL_Color fg)
 	Uint32 *ucs;
 
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	textsu = ttf_render_unicode_solid(font, ucs, fg);
+	textsu = ttf_render_unicode_solid(font, ucs, NULL, fg);
 	free(ucs);
 	return (textsu);
 }
 
 /* Render UCS-4 text to a new surface. */
 SDL_Surface *
-ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs, SDL_Color fg)
+ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
+    SDL_Color *cBg, SDL_Color cFg)
 {
 	struct ttf_glyph *glyph;
 	SDL_Surface *textsu;
@@ -647,13 +648,19 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 
 	/* Fill the palette with the foreground color. */
 	palette = textsu->format->palette;
-	palette->colors[0].r = 255 - fg.r;
-	palette->colors[0].g = 255 - fg.g;
-	palette->colors[0].b = 255 - fg.b;
-	palette->colors[1].r = fg.r;
-	palette->colors[1].g = fg.g;
-	palette->colors[1].b = fg.b;
-	SDL_SetColorKey(textsu, SDL_SRCCOLORKEY, 0);
+	if (cBg != NULL) {
+		palette->colors[0].r = cBg->r;
+		palette->colors[0].g = cBg->g;
+		palette->colors[0].b = cBg->b;
+	} else {
+		palette->colors[0].r = 0;
+		palette->colors[0].g = 0;
+		palette->colors[0].b = 0;
+		SDL_SetColorKey(textsu, SDL_SRCCOLORKEY, 0);
+	}
+	palette->colors[1].r = cFg.r;
+	palette->colors[1].g = cFg.g;
+	palette->colors[1].b = cFg.b;
 
 	/* Load and render each character. */
 	xstart = 0;
