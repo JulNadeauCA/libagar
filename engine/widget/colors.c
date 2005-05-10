@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.7 2005/04/21 04:34:27 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.8 2005/04/25 06:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -96,7 +96,8 @@ const char *colors_names[] = {
 	N_("Tileview tiling 1"),
 	N_("Tileview tiling 2"),
 	N_("Tileview text background"),
-	N_("Tileview text")
+	N_("Tileview text"),
+	N_("(Transparent color)")
 };
 
 void
@@ -163,6 +164,7 @@ colors_init(void)
 	colors[TILEVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
 	colors[TILEVIEW_TEXTBG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
 	colors[TILEVIEW_TEXT_COLOR] = SDL_MapRGB(vfmt, 240, 240, 240);
+	colors[TRANSPARENT_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
 
 	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
 	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);
