@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.13 2005/02/08 08:25:39 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.14 2005/05/05 05:50:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -213,7 +213,7 @@ select_range(int argc, union evarg *argv)
 		}
 		snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         
-		tableview_row_add(tv, 0, NULL, i, 
+		tableview_row_add(tv, 0, NULL, NULL, i,
 		    0, text[0],
 		    1, text[1]);
 	}
