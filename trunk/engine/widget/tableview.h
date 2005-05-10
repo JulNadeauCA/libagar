@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.7 2005/04/18 04:11:42 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.8 2005/05/04 03:32:55 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -11,7 +11,9 @@
 typedef Uint32 rowID;
 typedef Uint32 colID;
 
-typedef char *(*datafunc)(colID, rowID);
+struct tableview;
+
+typedef char *(*datafunc)(struct tableview *, colID, rowID);
 typedef int (*compfunc)(colID, rowID, rowID, char mode);
 
 enum {
@@ -51,9 +53,11 @@ struct tableview_row {
 	} *cell;
 	int selected : 1;
 	int expanded : 1;
+	int dynamic : 1;
 	struct tableview_row *parent;
 	TAILQ_ENTRY(tableview_row) siblings;
 	struct tableview_rowq children;
+	void *userp;
 };
 
 struct tableview {
@@ -133,6 +137,9 @@ struct tableview {
 #define TABLEVIEW_NOHEADER	0x20 /* do not display the header */
 #define TABLEVIEW_NOSORT	0x40 /* do not sort. header not clickable */
 
+/* Flags for tableview_add_row() */
+#define TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
+
 __BEGIN_DECLS
 void tableview_destroy(void *p);
 void tableview_scale(void *, int, int);
@@ -149,7 +156,8 @@ void tableview_col_add(struct tableview *, int, colID, const char *, char *);
 
 struct tableview_row *tableview_row_get(struct tableview *, rowID);
 struct tableview_row *tableview_row_addfn(struct tableview *, int,
-				          struct tableview_row *, rowID, ...);
+				          struct tableview_row *, void *,
+					  rowID, ...);
 #define tableview_row_add(...) \
 	tableview_row_addfn(__VA_ARGS__, -1)
 
@@ -176,8 +184,8 @@ void tableview_row_collapse_all(struct tableview *, struct tableview_row *);
 			tableview_row_expand(TV, (ROW));	\
 	} while (0)
 
-#define tableview_rowid_add(TV, ID, IDNEW) \
-	tableview_row_add((TV), tableview_row_get((TV), (ID)), (IDNEW))
+#define tableview_rowid_add(TV, ID, IDNEW, USERP) \
+	tableview_row_add((TV), tableview_row_get((TV), (ID)), (USERP), (IDNEW))
 
 #define tableview_rowid_delete(TV, ID) \
 	tableview_row_delete((TV), tableview_row_get((TV), (ID)))
