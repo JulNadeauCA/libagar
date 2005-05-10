@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.13 2005/02/11 02:29:25 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.14 2005/04/14 06:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -116,7 +116,7 @@ leak_window(void)
 			      _("Requests"), "XXXXXXXXX");
 	
 	for (i = 0; i < nleak_ents; i++)
-		tableview_row_add(tv, 0, NULL, i);
+		tableview_row_add(tv, 0, NULL, NULL, i);
 
 	return (win);
 }

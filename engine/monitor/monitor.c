@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.63 2005/03/10 09:43:55 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.64 2005/04/14 06:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -94,7 +94,7 @@ monitor_init(void)
 	event_new(tv, "tableview-dblclick", selected_tool, NULL);
 
 	for (i = 0; i < ntool_ents; i++)
-		tableview_row_add(tv, 0, NULL, i, 0, tool_ents[i].name);
+		tableview_row_add(tv, 0, NULL, NULL, i, 0, tool_ents[i].name);
 
 	window_show(win);
 }

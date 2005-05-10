@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.6 2005/02/08 08:26:09 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.7 2005/04/14 06:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -58,14 +58,14 @@ timeouts_refresh(void *obj, Uint32 ival, void *arg)
 		char text[128];
 		struct tableview_row *row1;
 		
-		row1 = tableview_row_add(tv, 0, NULL, id++, 0, ob->name);
+		row1 = tableview_row_add(tv, 0, NULL, NULL, id++, 0, ob->name);
 		tableview_row_expand(tv, row1);
 
 		pthread_mutex_lock(&ob->lock);
 		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
 			snprintf(text, sizeof(text), "%p: %u ticks", to,
 			    to->ticks);
-			tableview_row_add(tv, 0, row1, id++, 0, text);
+			tableview_row_add(tv, 0, row1, NULL, id++, 0, text);
 		}
 		pthread_mutex_unlock(&ob->lock);
 	}
