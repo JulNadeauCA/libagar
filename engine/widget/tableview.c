@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.19 2005/05/08 11:09:23 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.20 2005/05/08 11:13:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -283,8 +283,8 @@ tableview_set_update(struct tableview * tv, u_int ms)
 }
 
 struct tableview_row *
-tableview_row_addfn(struct tableview * tv, int flags,
-    struct tableview_row * parent, rowID rid,...)
+tableview_row_addfn(struct tableview *tv, int flags,
+    struct tableview_row *parent, void *userp, rowID rid, ...)
 {
 	struct tableview_row *row;
 	u_int i;
@@ -303,6 +303,8 @@ tableview_row_addfn(struct tableview * tv, int flags,
 	}
 	row = Malloc(sizeof(struct tableview_row), M_WIDGET);
 	row->cell = Malloc(sizeof(struct cell) * tv->columncount, M_WIDGET);
+	row->userp = userp;
+	row->dynamic = !(flags & TABLEVIEW_STATIC_ROW);
 
 	/* initialize cells */
 	for (i = 0; i < tv->columncount; i++) {
@@ -327,7 +329,9 @@ tableview_row_addfn(struct tableview * tv, int flags,
 				if (row->cell[i].image != NULL) {
 					SDL_FreeSurface(row->cell[i].image);
 				}
-				row->cell[i].text = Strdup((char *) data);
+				row->cell[i].text = (data != NULL) ?
+				                    Strdup((char *)data) :
+						    Strdup("(null)");
 				row->cell[i].image = text_render(NULL, -1,
 				    COLOR(TABLEVIEW_CTXT_COLOR),
 				    row->cell[i].text);
@@ -945,18 +949,21 @@ render_dyncolumn(struct tableview * tv, u_int idx)
 	u_int i, cidx = tv->column[idx].idx;
 
 	for (i = 0; i < tv->visible.count; i++) {
-		if (NULL == (row = tv->visible.items[i].row))
+		if ((row = tv->visible.items[i].row) == NULL)
 			break;
+		if (!row->dynamic)
+			continue;
 
 		if (row->cell[cidx].image)
 			SDL_FreeSurface(row->cell[cidx].image);
 
-		celltext = tv->data_callback(tv->column[idx].cid,
+		celltext = tv->data_callback(tv,
+		    tv->column[idx].cid,
 		    tv->visible.items[i].row->rid);
 
 		row->cell[cidx].image =
 		    text_render(NULL, -1, COLOR(TABLEVIEW_CTXT_COLOR),
-		    celltext);
+		    celltext != NULL ? celltext : "");
 	}
 }
 
