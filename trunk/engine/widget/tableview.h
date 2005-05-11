@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.8 2005/05/04 03:32:55 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.9 2005/05/10 12:23:51 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -150,7 +150,8 @@ void tableview_init(struct tableview *, int, datafunc, compfunc);
 void tableview_prescale(struct tableview *, const char *, int);
 void tableview_set_update(struct tableview *, u_int);
 
-void tableview_col_add(struct tableview *, int, colID, const char *, char *);
+struct tableview_column *tableview_col_add(struct tableview *, int, colID,
+			                   const char *, const char *);
 
 #define tableview_row_getID(ROW) (*(rowID *)(ROW))
 
