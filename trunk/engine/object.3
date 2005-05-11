@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.71 2005/02/03 09:19:05 vedge Exp $
+.\"	$Csoft: object.3,v 1.72 2005/05/11 09:59:30 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -576,56 +576,6 @@ The
 function decrements the reference count on shared media or object data.
 .Pp
 These functions return 0 on success or -1 if an error occured.
-.Sh POSITIONING
-The illusion of objects (such as characters) moving inside a
-.Xr map 3
-is achieved by maintaining a copy of the object's current projection map.
-Most moving game characters provide projection maps called
-.Sq [nswe]-idle
-and
-.Sq [nswe]-move ,
-for instance.
-The
-.Nm
-layer is responsible for keeping the object's projection in sync.
-When an object is in motion, a two-dimensional "motion" offset (kept in the
-.Ft position
-structure) is incremented at a specific rate, until it leaves the tile area
-.nr nS 1
-.Ft "int"
-.Fn object_set_projmap "void *obj" "const char *map_name"
-.Pp
-.Ft "void"
-.Fn object_set_position "void *obj" "struct map *map" "int x" "int y" "int layer"
-.Pp
-.Ft "void"
-.Fn object_unset_position "void *obj"
-.Pp
-.Ft "void"
-.Fn object_set_input "void *obj" "const char *input_dev"
-.nr nS 0
-.Pp
-The
-.Fn object_set_projmap
-function searches an object's descendents for a map named
-.Fa map_name
-and selects it as the current projection map.
-.Fn object_set_projmap
-returns 0 on success or -1 on failure.
-.Pp
-The
-.Fn object_set_position
-function sets the object's unique position to the given coordinates of
-.Fa map .
-.Fn object_unset_position
-causes an object to vanish from its current position, if there is any.
-.Pp
-The
-.Fn object_set_input
-function assigns the input device named
-.Fa input_dev
-to the position associated with
-.Fa obj .
 .Sh EVENTS
 The
 .Nm
@@ -657,19 +607,12 @@ This event originates from the current parent object.
 The object's name has just been modified.
 .El
 .Sh TROUBLETONS
-The positioning functions should probably be moved to a subclass.
-.Pp
 If the maximum number of references (0xffffffff-2) is reached, the object
 remains resident and the reference count is no longer incremented or
 decremented.
-The behavior of objects when this occurs requires special attention.
 .Pp
 Code should be careful not to rely on an object's absolute path being constant,
 since it is possible to move objects between different parents.
-.Pp
-Eventually, if media types other than gfx/audio are required, the
-.Nm
-interface could handle media associations in a more generic manner.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
