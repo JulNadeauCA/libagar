@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.59 2005/03/09 06:39:21 vedge Exp $
+.\"	$Csoft: widget.3,v 1.60 2005/03/11 08:56:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -79,8 +79,7 @@ The behavior is undefined if one attempts to attach children to such widgets.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn widget_init "void *widget, const char *type, const void *widget_ops" \
-                "int flags"
+.Fn widget_init "void *widget, const char *type, const void *widget_ops" "int flags"
 .nr nS 0
 .Pp
 The
@@ -262,45 +261,31 @@ direct video primitives in OpenGL mode.
 .Fn widget_put_pixel "void *widget" "int x" "int y" "Uint32 color"
 .Pp
 .Ft void
-.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" \
-                   "int ncolor"
+.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" \
-                   "int ncolor"
+.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" \
-                     "int ncolor"
+.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.circle "void *widget" "int x" "int y" "int radius" \
-                      "int ncolor"
+.Fn primitives.circle "void *widget" "int x" "int y" "int radius" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" \
-                      "int ncolor"
+.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" \
-                    "int ncolor"
+.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" \
-                    "int ncolor"
+.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" \
-                             "int ncolor"
+.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" \
-                           "int ncolor"
-.Pp
-.Ft void
-.Fn primitives.rect_textured "void *widget, int x, int y, int w, int h" \
-                             "int tex_x, int tex_y"
-                              
+.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" "int ncolor"
 .nr nS 0
 The
 .Fn widget_blit
@@ -363,19 +348,6 @@ draws a rectangle outline of
 draws a filled rectangle of size
 .Fa w ,
 .Fa h .
-.Pp
-.Fn primitives.rect_textured
-draws a textured rectangle of
-.Fa w ,
-.Fa h ,
-with the texture fragment obtained from coordinates
-.Fa tex_x ,
-.Fa tex_y
-of the texture named
-.Fa tex_name .
-This operation is very efficient in OpenGL mode, but in SDL mode some
-memory must be sacrified to avoid expensive blitting (in particular with
-small textures).
 .Sh BINDINGS
 The
 .Nm widget
@@ -405,8 +377,7 @@ initialized by the widget itself.
 is called to override those default bindings.
 .nr nS 1
 .Ft "struct widget_binding *"
-.Fn widget_bind "void *widget, const char *binding" \
-                "enum widget_binding_type type, ..."
+.Fn widget_bind "void *widget, const char *binding" "enum widget_binding_type type, ..."
 .Pp
 .Ft "struct widget_binding *"
 .Fn widget_get_binding "void *widget" "const char *binding" "void *res"

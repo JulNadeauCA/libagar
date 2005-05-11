@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.44 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.45 2005/02/01 08:24:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -60,8 +60,7 @@ Single or multiple selections of items are possible.
 .Fn tlist_set_item_height "struct tlist *tl" "int itemh"
 .Pp
 .Ft void
-.Fn tlist_set_item_icon "struct tlist *tl, struct tlist_item *item" \
-                        "SDL_Surface *icon"
+.Fn tlist_set_item_icon "struct tlist *tl, struct tlist_item *item" "SDL_Surface *icon"
 .Pp
 .Ft void
 .Fn tlist_prescale "struct tlist *tl" "const char *text" "int nitems"
@@ -119,11 +118,9 @@ function sets the position of the scrollbar to
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "struct tlist_item *"
-.Fn tlist_insert_item "struct tlist *tlist, SDL_Surface *iconsrc" \
-                      "const char *text" "const void *p1"
+.Fn tlist_insert_item "struct tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
-.Fn tlist_insert_item_head "struct tlist *tlist, SDL_Surface *iconsrc" \
-                           "const char *text" "const void *p1"
+.Fn tlist_insert_item_head "struct tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
 .Ft "void"
 .Fn tlist_remove_item "struct tlist *tlist" "struct tlist_item *item"

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.70 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: object.3,v 1.71 2005/02/03 09:19:05 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -63,8 +63,7 @@ Event processing and scheduling
 .Fn object_new "void *parent" "const char *name"
 .Pp
 .Ft "void"
-.Fn object_init "void *obj" "const char *type" "const char *name" \
-                "const void *ops"
+.Fn object_init "void *obj" "const char *type" "const char *name" "const void *ops"
 .Pp
 .Ft "void"
 .Fn object_attach "void *new_parent" "void *obj"
@@ -534,7 +533,7 @@ If there is no currently attached object matching an archived one,
 it is dynamically allocated and initialized using the type switch (the
 .Va typesw[]
 array).
-If a currently attached object has no archived counterpart, it is\
+If a currently attached object has no archived counterpart, it is
 destroyed (as long as it is not currently in use).
 .It
 Resolve the dependencies of
@@ -597,8 +596,7 @@ structure) is incremented at a specific rate, until it leaves the tile area
 .Fn object_set_projmap "void *obj" "const char *map_name"
 .Pp
 .Ft "void"
-.Fn object_set_position "void *obj" "struct map *map" "int x" "int y" \
-                        "int layer"
+.Fn object_set_position "void *obj" "struct map *map" "int x" "int y" "int layer"
 .Pp
 .Ft "void"
 .Fn object_unset_position "void *obj"

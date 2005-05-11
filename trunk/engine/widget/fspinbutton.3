@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.9 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.10 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -61,12 +61,10 @@ widgets to increment and decrement the value.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct fspinbutton *"
-.Fn fspinbutton_new "void *parent, const char *unit_key" \
-                    "const char *label_fmt" "..."
+.Fn fspinbutton_new "void *parent, const char *unit_key" "const char *label_fmt" "..."
 .Pp
 .Ft void
-.Fn fspinbutton_init "struct fspinbutton *fsu, const char *unit_key" \
-                     "const char *label"
+.Fn fspinbutton_init "struct fspinbutton *fsu, const char *unit_key" "const char *label"
 .Pp
 .Ft void
 .Fn fspinbutton_set_value "struct fspinbutton *fsu" "double value"
@@ -90,8 +88,7 @@ widgets to increment and decrement the value.
 .Fn fspinbutton_select_unit "struct fspinbutton *fsu" "const char *unit_key"
 .Pp
 .Ft void
-.Fn fspinbutton_set_precision "struct fspinbutton *fsu, const char *fmt" \
-                              "int precision"
+.Fn fspinbutton_set_precision "struct fspinbutton *fsu, const char *fmt" "int precision"
 .Pp
 .Ft void
 .Fn fspinbutton_set_writeable "struct fspinbutton *fsu" "int writeable"

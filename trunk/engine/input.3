@@ -1,4 +1,4 @@
-.\"	$Csoft: input.3,v 1.4 2004/05/10 05:14:52 vedge Exp $
+.\"	$Csoft: input.3,v 1.5 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -50,8 +50,7 @@ positions, allowing players to control characters, for instance.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn input_register "void *p, enum input_type type, const char *name" \
-                   "const struct input_driver *drv"
+.Fn input_register "void *p, enum input_type type, const char *name" "const struct input_driver *drv"
 .Pp
 .Ft "void"
 .Fn input_deregister "void *p"

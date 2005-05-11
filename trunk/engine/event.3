@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.25 2004/10/13 14:36:00 vedge Exp $
+.\"	$Csoft: event.3,v 1.26 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -128,12 +128,10 @@ are expired.
 .Fn event_remove "void *obj" "const char *event_name"
 .Pp
 .Ft "int"
-.Fn event_post "void *sndr" "void *rcvr" "const char *event_name" \
-               "const char *fmt" "..."
+.Fn event_post "void *sndr" "void *rcvr" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn event_schedule "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" \
-                   "const char *fmt" "..."
+.Fn event_schedule "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
 .Fn event_resched "void *obj" "const char *event_name" "Uint32 ticks"
