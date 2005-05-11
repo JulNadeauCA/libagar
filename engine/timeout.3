@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.8 2005/01/22 05:31:30 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.9 2005/01/30 05:23:31 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -69,8 +69,7 @@ internally to implement timing-related events (registered using
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn timeout_set "struct timeout *to" \
-                "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
+.Fn timeout_set "struct timeout *to" "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
 .Pp
 .Ft "void"
 .Fn timeout_add "void *obj" "struct timeout *to" "Uint32 ival"

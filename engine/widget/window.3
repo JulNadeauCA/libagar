@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.45 2005/03/10 09:43:34 vedge Exp $
+.\"	$Csoft: window.3,v 1.46 2005/03/11 05:13:23 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -81,15 +81,13 @@ After this initial sizing, widget containers may scale widgets to any size.
 .Fn window_set_closure "struct window *win" "int mode"
 .Pp
 .Ft "void"
-.Fn window_set_padding "struct window *win" "int xpadding" "int ypadding_top" \
-                       "int ypadding_bot"
+.Fn window_set_padding "struct window *win" "int xpadding" "int ypadding_top" "int ypadding_bot"
 .Pp
 .Ft "void"
 .Fn window_set_spacing "struct window *win" "int spacing"
 .Pp
 .Ft "void"
-.Fn window_set_position "struct window *win, enum window_alignment alignment" \
-                        "int cascade"
+.Fn window_set_position "struct window *win, enum window_alignment alignment" "int cascade"
 .Pp
 .Ft "void"
 .Fn window_set_geometry "struct window *win" "int x" "int y" "int w" "int h"

@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.21 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: graph.3,v 1.22 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -49,12 +49,10 @@ widget implements a scrollable graph display.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct graph *"
-.Fn graph_new "void *parent, const char *caption, enum graph_type type" \
-              "int flags" "graph_val_t yrange"
+.Fn graph_new "void *parent, const char *caption, enum graph_type type" "int flags" "graph_val_t yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph, const char *caption" \
-               "enum graph_type type, int flags, graph_val_t yrange"
+.Fn graph_init "struct graph *graph, const char *caption" "enum graph_type type, int flags, graph_val_t yrange"
 .nr nS 0
 .Pp
 The
@@ -93,8 +91,7 @@ may include:
 .Sh PLOTTING
 .nr nS 1
 .Ft "struct graph_item *"
-.Fn graph_add_item "struct graph *graph, const char *name" \
-                   "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
+.Fn graph_add_item "struct graph *graph, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
 .Pp
 .Ft void
 .Fn graph_plot "struct graph_item *item" "graph_val_t val"

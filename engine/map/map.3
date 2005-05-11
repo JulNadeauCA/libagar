@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.53 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: map.3,v 1.1 2005/04/14 06:20:45 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -171,8 +171,7 @@ Geometric entities are displayed to this scale.
 .Fn node_load "struct map *map" "struct netbuf *buf" "struct node *node"
 .Pp
 .Ft void
-.Fn node_save "const struct map *map, struct netbuf *buf" \
-              "const struct node *node"
+.Fn node_save "const struct map *map, struct netbuf *buf" "const struct node *node"
 .Pp
 .Ft void
 .Fn node_destroy "struct map *map" "struct node *node"
@@ -216,12 +215,10 @@ saves a node to
 .Fn noderef_destroy "struct map *map" "struct noderef *r"
 .Pp
 .Ft int
-.Fn noderef_load "struct map *map, struct netbuf *buf, struct node *node" \
-                 "struct noderef **r"
+.Fn noderef_load "struct map *map, struct netbuf *buf, struct node *node" "struct noderef **r"
 .Pp
 .Ft void
-.Fn noderef_save "const struct map *map, struct netbuf *buf" \
-                 "const struct noderef *r"
+.Fn noderef_save "const struct map *map, struct netbuf *buf" "const struct noderef *r"
 .nr nS 0
 .Pp
 The
@@ -267,28 +264,22 @@ returns 0 on success or -1 on failure.
 .Sh NODE MANIPULATIONS
 .nr nS 1
 .Ft void
-.Fn node_move_ref "struct map *src_map, struct node *src_node" \
-                  "struct noderef *src_r, struct map *dst_map" \
-                  "struct node *dst_node, int dst_layer"
+.Fn node_move_ref "struct map *src_map, struct node *src_node" "struct noderef *src_r, struct map *dst_map" "struct node *dst_node, int dst_layer"
 .Pp
 .Ft "struct noderef *"
-.Fn node_copy_ref "const struct noderef *src_r, struct map *dst_map" \
-                  "struct node *dst_node, int dst_layer"
+.Fn node_copy_ref "const struct noderef *src_r, struct map *dst_map" "struct node *dst_node, int dst_layer"
 .Pp
 .Ft void
 .Fn node_remove_ref "struct map *map, struct node *node, struct noderef *r"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_sprite "struct map *map, struct node *node, const void *obj" \
-                    "Uint32 index"
+.Fn node_add_sprite "struct map *map, struct node *node, const void *obj" "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct map *map, struct node *node, const void *obj" \
-                  "Uint32 index, Uint32 flags"
+.Fn node_add_anim "struct map *map, struct node *node, const void *obj" "Uint32 index, Uint32 flags"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_warp "struct map *map, struct node *dst_node" \
-                  "const char *new_map, int x, int y, Uint8 dir"
+.Fn node_add_warp "struct map *map, struct node *dst_node" "const char *new_map, int x, int y, Uint8 dir"
 .nr nS 0
 .Pp
 The
