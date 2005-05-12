@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.10 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.11 2005/05/08 09:21:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,7 +33,7 @@
 
 #include "unicode.h"
 
-/* Calculate the length of a UTF-8 sequence in bytes. */
+/* Parse the first byte of a possible UTF8 sequence. */
 static __inline__ int
 utf8_length(Uint8 ch)
 {

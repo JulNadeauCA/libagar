@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.103 2005/05/08 13:26:03 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.104 2005/05/12 02:33:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1314,5 +1314,6 @@ widget_parse_sizespec(const char *spec_text, int *w)
 		text_prescale(spec, w, NULL);
 		break;
 	}
+	return (WIDGET_BAD_SPEC);
 }
 
