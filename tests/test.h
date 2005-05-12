@@ -1,9 +1,9 @@
-/*	$Csoft$	*/
+/*	$Csoft: test.h,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
 #include <engine/view.h>
-#include <engine/map.h>
+#include <engine/map/map.h>
 #include <engine/widget/everything.h>
 
 struct testfn_ops {

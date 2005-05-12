@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: pixelops.c,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -30,25 +30,25 @@ destroy_view(void)
 static void
 test_view_putpixel(void)
 {
-	VIEW_PUT_PIXEL(view->v->pixels, 0xdeadbeef);
+	VIEW_PUT_PIXEL(view->v->pixels, 1);
 }
 
 static void
 test_view_putpixel2(void)
 {
-	VIEW_PUT_PIXEL2(4, 5, 0xdeadbeef);
+	VIEW_PUT_PIXEL2(4, 5, 1);
 }
 
 static void
 test_view_putpixel2_clipped(void)
 {
-	VIEW_PUT_PIXEL2_CLIPPED(1, 1, 0xdeadbeef);
+	VIEW_PUT_PIXEL2_CLIPPED(1, 1, 1);
 }
 
 static void
 test_view_putpixel2_clipped_out(void)
 {
-	VIEW_PUT_PIXEL2_CLIPPED(32000, 32000, 0xdeadbeef);
+	VIEW_PUT_PIXEL2_CLIPPED(32000, 32000, 1);
 }
 
 static void
@@ -66,25 +66,25 @@ test_get_pixel2(void)
 static void
 test_put_pixel(void)
 {
-	PUT_PIXEL(su, su->pixels, 0xdeadbeef);
+	PUT_PIXEL(su, su->pixels, 1);
 }
 
 static void
 test_put_pixel2(void)
 {
-	PUT_PIXEL2(su, 1, 1, 0xdeadbeef);
+	PUT_PIXEL2(su, 1, 1, 1);
 }
 
 static void
 test_put_pixel2_clipped(void)
 {
-	PUT_PIXEL2_CLIPPED(su, 1, 1, 0xdeadbeef);
+	PUT_PIXEL2_CLIPPED(su, 1, 1, 1);
 }
 
 static void
 test_put_pixel2_clipped_out(void)
 {
-	PUT_PIXEL2_CLIPPED(su, 35, 100, 0xdeadbeef);
+	PUT_PIXEL2_CLIPPED(su, 35, 100, 1);
 }
 
 static void

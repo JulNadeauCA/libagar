@@ -1,4 +1,4 @@
-/*	$Csoft: main.c,v 1.6 2004/09/12 05:58:25 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -122,13 +122,14 @@ tests_callback(struct tableview *tv, colID cid, rowID rid)
 	case 0:
 		return (ops->name);
 	case 1:
-		snprintf(text, sizeof(text), "%.1f ns", ops->last_result);
-		return (text);
-	case 2:
 		snprintf(text, sizeof(text), "%u", ops->runs);
 		return (text);
-	case 3:
+	case 2:
 		snprintf(text, sizeof(text), "%u", ops->iterations);
+		return (text);
+	case 3:
+		snprintf(text, sizeof(text), "%.1f ns (%u/%u)",
+		    ops->last_result, ops->runs, ops->iterations);
 		return (text);
 	}
 }
@@ -150,14 +151,13 @@ tests_window(void)
 	tableview_set_update(tv, 250);
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
 			      0, "Test",
-			      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE|
-			      TABLEVIEW_COL_FILL,
-			      1, "Result", "XXXXXXXXXXX");
+			      "<VIEW_PUT_PIXEL_2_CLIPPED - Clipped>");
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
-			      2, "Runs", "XXX");
+			      1, "Runs", "<XX>");
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
-			      3, "Iterations", "XXXXXXXXX");
+			      2, "Iterations", "<XXXXXXXXX>");
+	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
+			      3, "Result", NULL);
 
 	for (i = 0; i < ntests; i++) {
 		struct test_ops *test = tests[i];
