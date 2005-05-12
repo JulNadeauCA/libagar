@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.7 2005/04/14 06:19:43 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.8 2005/05/10 12:26:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -95,7 +95,7 @@ timeouts_window(void)
 
 	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
-	tableview_col_add(tv, TABLEVIEW_COL_FILL, 0, NULL, NULL);
+	tableview_col_add(tv, 0, 0, NULL, NULL);
 	
 	timeout_set(&refresher, timeouts_refresh, tv, 0);
 	timeout_add(tv, &refresher, 50);
