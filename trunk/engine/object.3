@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.72 2005/05/11 09:59:30 vedge Exp $
+.\"	$Csoft: object.3,v 1.73 2005/05/11 10:14:06 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -67,6 +67,9 @@ Event processing and scheduling
 .Pp
 .Ft "void"
 .Fn object_attach "void *new_parent" "void *obj"
+.Pp
+.Ft "void"
+.Fn object_attach_path "const char *parent_path" "void *child"
 .Pp
 .Ft "void"
 .Fn object_detach "void *obj"
@@ -249,6 +252,13 @@ These operations raise
 and
 .Fn detached
 events.
+.Pp
+The
+.Fn object_attach_path
+function is a variant of
+.Fn object_attach
+which looks up the parent object using
+.Fa parent_path .
 .Pp
 .Fn object_move
 moves
