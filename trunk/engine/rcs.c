@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.8 2005/05/05 08:50:28 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.9 2005/05/08 02:10:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -706,6 +706,12 @@ rcs_checkout(const char *path)
 		if (rcs_set_working_rev(obj, 0) == -1) {
 			object_detach(obj);
 			object_destroy(obj);
+			goto fail;
+		}
+	} else {
+		if (strcmp(type, obj->type) != 0) {
+			error_set("%s: existing object of different type (%s)",
+			    localpath, obj->type);
 			goto fail;
 		}
 	}
