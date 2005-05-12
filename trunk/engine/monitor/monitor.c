@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.64 2005/04/14 06:19:43 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.65 2005/05/10 12:26:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ monitor_init(void)
 
 	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
-	tableview_col_add(tv, TABLEVIEW_COL_FILL, 0, NULL, NULL);
+	tableview_col_add(tv, 0, 0, NULL, NULL);
 	
 	event_new(tv, "tableview-dblclick", selected_tool, NULL);
 

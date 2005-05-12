@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.14 2005/05/05 05:50:23 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.15 2005/05/10 12:26:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -241,7 +241,7 @@ uniconv_window(void)
 	tv = tableview_new(win, TABLEVIEW_NOSORT, NULL, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	tableview_col_add(tv, 0, 0, "Char", NULL);
-	tableview_col_add(tv, TABLEVIEW_COL_FILL, 1, "Hex", "0000");
+	tableview_col_add(tv, 0, 1, "Hex", "<0000>");
 	
 	event_new(com, "combo-selected", select_range, "%p", tv);
 	return (win);
