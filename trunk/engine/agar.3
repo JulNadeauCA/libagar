@@ -1,0 +1,136 @@
+.\"	$Csoft: agar.3,v 1.41 2004/04/23 11:58:44 vedge Exp $
+.\"
+.\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd NOVEMBER 26, 2001
+.Dt AGAR 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm agar
+.Nd agar manual index
+.Sh DESCRIPTION
+The
+.Nm
+library is a highly portable graphical toolkit and application framework. This
+manual documents the programming interfaces offered by the Agar subsystems.
+.Pp
+.Sh CORE AGAR LIBRARY
+.Bl -tag -width "position "
+.It Xr engine 3
+Global engine initialization routines.
+.It Xr event 3
+Event handling for objects.
+.It Xr gfx 3
+Graphic resource management.
+.It Xr input 3
+Input device management.
+.It Xr object 3
+Implements object linkage, memory management, persistence, dependencies and
+events.
+.It Xr prop 3
+Generic runtime properties for objects.
+.It Xr view 3
+Interface to the graphics display.
+.El
+.Sh MAP LIBRARY
+.Bl -tag -width "map "
+.It Xr map 3
+Two-dimensional, multilayer maps suitable to overhead and platform games.
+.It Xr mapview 3
+Display and edition of maps.
+.It Xr rootmap 3
+Alternative to
+.Xr mapview 3
+which does not use the widget system.
+.El
+.Sh USER INTERFACE RELATED
+.Bl -tag -width "map "
+.It Xr text 3
+High-level interface to font engine (ie. FreeType).
+.It Xr units 3
+Conversion between different unit systems.
+.It Xr widget 3
+Generic widget interface.
+.It Xr window 3
+Basic window widget; interface to built-in window manager.
+.El
+.Sh STANDARD WIDGETS
+.Bl -tag -width "map "
+.It Xr bitmap 3
+Displays a single pixmap.
+.It Xr box 3
+Container which packs widgets either horizontally or vertically.
+.Xr box 3 .
+.It Xr button 3
+Generic push-button widget (boolean bindings).
+.It Xr checkbox 3
+Generic checkbox widget (boolean bindings).
+.It Xr combo 3
+Text input/drop-down menu widget.
+.It Xr fspinbutton 3
+Spinbutton widget with built-in unit conversion (floating-point bindings).
+.It Xr graph 3
+Plot a set of integral values.
+.It Xr hbox 3
+Alternate interface to
+.It Xr label 3
+Display a string of text (static or individual polled values).
+.It Xr mgraph 3
+Plot real-valued functions.
+.It Xr palette 3
+Edit a RGB color value (Uint32/SDL_PixelFormat bindings). Obsoleted
+by
+.Xr hsvpal 3 ) .
+.It Xr radio 3
+Simple radio group widget (integral bindings).
+.It Xr scrollbar 3
+Horizontal or vertical scrollbar (integral range and value bindings).
+.It Xr spinbutton 3
+Spinbutton widget for integer values (integral bindings).
+.It Xr tableview 3
+Table display widget (either static or polled; trees supported).
+.It Xr textbox 3
+Text edition widget (string bindings, UTF-8 supported).
+.It Xr tlist 3
+Tree/list widget (either static or polled).
+.It Xr toolbar 3
+Button container specialized for use as a toolbar.
+.It Xr ucombo 3
+Variant of
+.Xr combo 3
+which displays a button instead of a text input.
+.It Xr vbox 3
+Alternate interface to
+.Xr box 3 .
+.El
+.Bd -literal
+http://www.libsdl.org/
+http://www.opengl.org/
+.Ed
