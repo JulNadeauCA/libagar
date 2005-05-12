@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.9 2005/05/10 12:23:51 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.10 2005/05/11 15:15:51 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -124,7 +124,6 @@ struct tableview {
 #define TABLEVIEW_COL_ENTEREDIT	0x02	/* Begin edits on enter */
 #define TABLEVIEW_COL_NORESIZE	0x04	/* Disallow resizing */
 #define TABLEVIEW_COL_UPDATE	0x08	/* Updates periodically */
-#define TABLEVIEW_COL_FILL	0x10	/* Fills all unused space */
 #define TABLEVIEW_COL_DYNAMIC	0x20	/* Uses the callback */
 #define TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
 

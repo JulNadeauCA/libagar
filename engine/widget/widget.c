@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.102 2005/04/14 02:49:28 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.103 2005/05/08 13:26:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1274,5 +1274,45 @@ widget_update_coords(void *parent, int x, int y)
 
 	OBJECT_FOREACH_CHILD(cwid, pwid, widget)
 		widget_update_coords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
+}
+
+/* Parse a generic size specification. */
+enum widget_size_spec
+widget_parse_sizespec(const char *spec_text, int *w)
+{
+	char spec[256];
+	char *p;
+
+	strlcpy(spec, spec_text, sizeof(spec));
+	for (p = &spec[0]; (p[0] != '\0' && p[1] != '\0'); p++) {
+		break;
+	}
+	switch (*p) {
+	case '%':
+		*p = '\0';
+		*w = (int)strtol(spec, NULL, 10);
+		return (WIDGET_PERCENT);
+	case '>':
+		if (spec[0] != '<') {
+			return (WIDGET_BAD_SPEC);
+		}
+		*p = '\0';
+		text_prescale(&spec[1], w, NULL);
+		return (WIDGET_STRINGLEN);
+	case 'x':
+		{
+			const char *ep;
+
+			if ((ep = strchr(spec, 'p')) == NULL) {
+				return (WIDGET_BAD_SPEC);
+			}
+			ep = '\0';
+			*w = (int)strtol(ep, NULL, 10);
+			return (WIDGET_PIXELS);
+		}
+	default:
+		text_prescale(spec, w, NULL);
+		break;
+	}
 }
 

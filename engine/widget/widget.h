@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.90 2005/03/11 08:56:33 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.91 2005/05/08 13:26:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -39,6 +39,14 @@ enum widget_binding_type {
 	WIDGET_STRING,
 	WIDGET_POINTER,
 	WIDGET_PROP
+};
+
+enum widget_size_spec {
+	WIDGET_BAD_SPEC,
+	WIDGET_PIXELS,			/* Pixel count */
+	WIDGET_PERCENT,			/* % of available space */
+	WIDGET_STRINGLEN,		/* Width of given string */
+	WIDGET_FILL			/* Fill remaining space */
 };
 
 struct widget_binding {
@@ -172,6 +180,8 @@ __inline__ void	 widget_set_float(void *, const char *, float);
 __inline__ void	 widget_set_double(void *, const char *, double);
 __inline__ void	 widget_set_string(void *, const char *, const char *);
 __inline__ void	 widget_set_pointer(void *, const char *, void *);
+
+enum widget_size_spec widget_parse_sizespec(const char *, int *);
 __END_DECLS
 
 #include "close_code.h"

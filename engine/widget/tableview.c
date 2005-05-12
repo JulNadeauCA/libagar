@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.21 2005/05/10 12:23:51 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.22 2005/05/11 15:15:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -197,7 +197,6 @@ tableview_col_add(struct tableview *tv, int flags, colID cid,
 {
 	struct tableview_column *col = NULL;
 	u_int i;
-	int data_w;
 
 	if (tv->locked || cid == ID_INVALID)
 		return (NULL);
@@ -249,15 +248,17 @@ tableview_col_add(struct tableview *tv, int flags, colID cid,
 	    col->label);
 
 	/* column width */
-	switch (widget_parse_sizespec(size, &col->w)) {
-	case WIDGET_PERCENT:
-		col->w = col->w*WIDGET(tv)->w/100;
-		break;
-	case WIDGET_FILL:
+	if (size != NULL) {
+		switch (widget_parse_sizespec(size, &col->w)) {
+		case WIDGET_PERCENT:
+			col->w = col->w*WIDGET(tv)->w/100;
+			break;
+		default:
+			break;
+		}
+	} else {
+		col->w = 6;
 		col->fill = 1;
-		break;
-	default:
-		break;
 	}
 
 	tv->visible.dirty = 1;
