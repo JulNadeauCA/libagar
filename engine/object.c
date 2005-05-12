@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.210 2005/05/05 08:50:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.211 2005/05/08 02:10:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -350,7 +350,6 @@ object_attach_path(const char *path, void *child)
 	void *parent;
 	char *p;
 
-	lock_linkage();
 	if (strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
 		error_set("path too big");
 		goto fail;
@@ -358,16 +357,21 @@ object_attach_path(const char *path, void *child)
 	if ((p = strrchr(ppath, '/')) != NULL) {
 		*p = '\0';
 	} else {
-		error_set("invalid path");
+		error_set("not an absolute path: `%s'", path);
 		goto fail;
 	}
-	if ((parent = object_find(ppath)) == NULL) {
-		goto fail;
+
+	lock_linkage();
+	if (ppath[0] == '\0') {
+		object_attach(world, child);
+	} else {
+		if ((parent = object_find(ppath)) == NULL) {
+			error_set("%s: cannot attach to `%s': %s",
+			    OBJECT(child)->name, ppath, error_get());
+			goto fail;
+		}
+		object_attach(parent, child);
 	}
-	dprintf("path = %s, ppath = %s\n", path, ppath);
-	dprintf("parent = %s, child = %s\n", OBJECT(parent)->name,
-	    OBJECT(child)->name);
-	object_attach(parent, child);
 	unlock_linkage();
 	return (0);
 fail:
@@ -418,9 +422,12 @@ object_find_child(const struct object *parent, const char *name)
 			continue;
 
 		if ((s = strchr(name, '/')) != NULL) {
-			rv = object_find_child(child, s+1);
-			if (rv != NULL)
+			rv = object_find_child(child, &s[1]);
+			if (rv != NULL) {
 				return (rv);
+			} else {
+				return (NULL);
+			}
 		}
 		return (child);
 	}
@@ -435,10 +442,10 @@ object_find(const char *name)
 
 #ifdef DEBUG
 	if (name[0] != '/')
-		fatal("not an absolute path");
+		fatal("not an absolute path: `%s'", name);
 #endif
 	lock_linkage();
-	rv = object_find_child(world, name+1);
+	rv = object_find_child(world, &name[1]);
 	unlock_linkage();
 
 	if (rv == NULL) {
