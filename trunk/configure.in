@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.87 2005/04/25 07:35:09 vedge Exp $
+# $Csoft: configure.in,v 1.88 2005/05/08 02:10:27 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -10,6 +10,7 @@ REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-network",	"Network support [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-map",	"2D maps [default: yes]")
+REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
 REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
@@ -117,6 +118,13 @@ if [ "${enable_threads}" = "yes" ]; then
 	HDEFINE(THREADS, 1)
 else
 	HUNDEF(THREADS)
+fi
+
+# Disable UTF8 support by default.
+if [ "${enable_utf8}" = "yes" ]; then
+	HDEFINE(UTF8, 1)
+else
+	HUNDEF(UTF8)
 fi
 
 if [ "${enable_astro_units}" = "yes" ]; then

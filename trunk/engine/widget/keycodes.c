@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.39 2005/02/07 13:17:16 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.40 2005/02/07 13:47:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/utf8.h>
 
 #include <engine/engine.h>
 #include <engine/input.h>
@@ -160,19 +162,58 @@ static struct {
 static const int ncompose = sizeof(compose) / sizeof(compose[0]);
 #endif /* UTF8 */
 
+static Uint32
+kbdtoupper(Uint32 key)
+{
+	if (isalpha(key)) {
+		return (toupper(key));
+	} else {
+		switch (key) {
+		case SDLK_1:		return ('!');
+		case SDLK_2:		return ('@');
+		case SDLK_3:		return ('#');
+		case SDLK_4:		return ('$');
+		case SDLK_5:		return ('%');
+		case SDLK_6:		return ('^');
+		case SDLK_7:		return ('&');
+		case SDLK_8:		return ('*');
+		case SDLK_9:		return ('(');
+		case SDLK_0:		return (')');
+		case SDLK_BACKQUOTE:	return ('~');
+		case SDLK_MINUS:	return ('_');
+		case SDLK_EQUALS:	return ('+');
+		case SDLK_LEFTBRACKET:	return ('{');
+		case SDLK_RIGHTBRACKET:	return ('}');
+		case SDLK_BACKSLASH:	return ('|');
+		case SDLK_SEMICOLON:	return (':');
+		case SDLK_QUOTE:	return ('"');
+		case SDLK_COMMA:	return ('<');
+		case SDLK_PERIOD:	return ('>');
+		case SDLK_SLASH:	return ('?');
+		}
+	}
+	return ('?');
+}
+
+static __inline__ Uint32
+kbdtolower(Uint32 key)
+{
+	return (tolower(key));
+}
+
 /* Apply modifiers (when not using Unicode keyboard translation). */
 static __inline__ Uint32
 key_apply_mod(Uint32 key, int kmod)
 {
 	if (kmod & KMOD_CAPS) {
 		if (kmod & KMOD_SHIFT) {
-			return (tolower(key));
+			return (kbdtolower(key));
 		} else {
-			return (toupper(key));
+			return (kbdtoupper(key));
 		}
 	} else {
 		if (kmod & KMOD_SHIFT) {
-			return (toupper(key));
+			return (kbdtoupper(key));
 		} else {
 			return (key);
 		}
@@ -256,16 +297,11 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 	if (len+nins >= stringb->size/sizeof(Uint32))
 		goto skip;
 
-	dprintf("len=%d nins=%d s32=%d pos=%d\n", len, nins,
-	    stringb->size/sizeof(Uint32), tbox->pos);
-
 	if (tbox->pos == len) {
 		/* Append to the end of string */
 		if (kbd_unitrans) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++) {
-					dprintf("append ucs %d: %d\n", len+i, 
-					    ins[i]);
 					ucs[len+i] = ins[i];
 				}
 			} else {
@@ -273,7 +309,6 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 			}
 		} else if (keysym != 0) {
 			for (i = 0; i < nins; i++)
-				dprintf("append ascii %d: %d\n", len+i, ins[i]);
 				ucs[len+i] = ins[i];
 		} else {
 			goto skip;
@@ -281,16 +316,11 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 	} else {
 		Uint32 *p = ucs + tbox->pos;
 		
-		dprintf("insert ucs at %d (%d bytes)\n", tbox->pos,
-		    (len - tbox->pos)*sizeof(Uint32));
-
 		/* Insert at the cursor position in the string. */
 		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
 		if (kbd_unitrans) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++) {
-					dprintf("insert ucs %d: %d\n",
-					    tbox->pos+i, ins[i]);
 					ucs[tbox->pos+i] = ins[i];
 				}
 			} else {
@@ -298,8 +328,6 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 			}
 		} else if (keysym != 0) {
 			for (i = 0; i < nins; i++) {
-				dprintf("insert ascii %d: %d\n",
-				    tbox->pos+i, ins[i]);
 				ucs[len+i] = ins[i];
 			}
 		} else {
@@ -352,7 +380,6 @@ key_char_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 out:
 	s[len+1] = '\0';
 	tbox->pos++;
-	dprintf("pos -> %d\n", tbox->pos);
 skip:
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
