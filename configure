@@ -171,6 +171,7 @@ echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-network               Network support [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-map                   2D maps [default: yes]"
+echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-astro-units           Include astronomical units [default: no]"
 echo "    --enable-histo-units           Include historical units [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
@@ -1953,6 +1954,15 @@ echo "#define THREADS" $THREADS >> config/threads.h
 echo "#endif /* THREADS */" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
+fi
+if [ "${enable_utf8}" = "yes" ]
+ then
+UTF8=1
+echo "#ifndef UTF8" > config/utf8.h
+echo "#define UTF8" $UTF8 >> config/utf8.h
+echo "#endif /* UTF8 */" >> config/utf8.h
+else
+echo "#undef UTF8" > config/utf8.h
 fi
 if [ "${enable_astro_units}" = "yes" ]
  then
