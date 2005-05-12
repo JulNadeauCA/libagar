@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.92 2005/05/08 09:22:42 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.93 2005/05/10 12:25:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <engine/config.h>
 
 #include <config/have_freetype.h>
+#include <config/utf8.h>
 
 #ifdef HAVE_FREETYPE
 #include <engine/loader/ttf.h>
@@ -94,7 +95,7 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
 		  	if (kcode->clr_compo) {
-				tb->flags &= ~(TEXTBOX_COMPOSE);
+				tb->compose = 0;
 			}
 			event_post(NULL, tb, "textbox-prechg", NULL);
 			rv = kcode->func(tb, keysym, keymod, kcode->arg,
@@ -183,6 +184,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->sel_x1 = 0;
 	tbox->sel_x2 = 0;
 	tbox->sel_edit = 0;
+	tbox->compose = 0;
 
 	if (label != NULL) {
 		tbox->label = text_render(NULL, -1, COLOR(TEXTBOX_TXT_COLOR),
@@ -226,7 +228,10 @@ textbox_draw(void *p)
 	int i, x, y;
 	size_t len;
 	char *s;
-	
+#ifdef UTF8
+	Uint32 *ucs;
+#endif
+
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label, 0,
 		    WIDGET(tbox)->h/2 - tbox->label->h/2);
@@ -238,7 +243,12 @@ textbox_draw(void *p)
 	    0);
 
 	stringb = widget_get_binding(tbox, "string", &s);
+#ifdef UTF8
+	ucs = unicode_import(UNICODE_FROM_UTF8, s);
+	len = ucs4_len(ucs);
+#else
 	len = strlen(s);
+#endif
 
 	x = ((tbox->label!=NULL) ? tbox->label->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
@@ -257,7 +267,13 @@ textbox_draw(void *p)
 		x++;
 		y++;
 	}
+
 	for (i = 0; i <= len; i++) {
+#ifdef UTF8
+		Uint32 c = ucs[i];
+#else
+		char c = s[i];
+#endif
 		int invert = 0;
 
 		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
@@ -274,10 +290,10 @@ textbox_draw(void *p)
 		if (i == len)
 			break;
 
-		if (s[i] == '\n') {
+		if (c == '\n') {
 			y += text_font_line_skip;
 			continue;
-		} else if (s[i] == '\t') {
+		} else if (c == '\t') {
 			x += text_tab_width;
 			continue;
 		}
@@ -293,7 +309,7 @@ textbox_draw(void *p)
 			if (tbox->flags & TEXTBOX_PASSWORD) {
 				ch = (Uint32)('*');
 			} else {
-				ch = (Uint32)s[i];
+				ch = c;
 			}
 
 			if (ttf_find_glyph(ttf, ch,
@@ -332,19 +348,19 @@ textbox_draw(void *p)
 			x += glyph->advance;
 		} else {
 #ifdef HAVE_OPENGL
-			Uint32 ucs[2];
+			Uint32 ccs[2];
 			SDL_Surface *su;
 			SDL_Color cFg;
 			
 			if (tbox->flags & TEXTBOX_PASSWORD) {
-				ucs[0] = (Uint32)('*');
+				ccs[0] = (Uint32)('*');
 			} else {
-				ucs[0] = (Uint32)s[i];
+				ccs[0] = c;
 			}
-			ucs[1] = '\0';
+			ccs[1] = '\0';
 			SDL_GetRGB(COLOR(TEXTBOX_TXT_COLOR), vfmt,
 			    &cFg.r, &cFg.g, &cFg.b);
-			su = text_render_unicode(NULL, -1, cFg, ucs);
+			su = text_render_unicode(NULL, -1, cFg, ccs);
 			widget_blit(tbox, su, x, y);
 			x += su->w;
 			SDL_FreeSurface(su);
