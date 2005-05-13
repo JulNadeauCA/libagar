@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.100 2005/03/11 09:52:18 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.101 2005/05/10 12:25:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -161,8 +161,11 @@ text_init(void)
 static void
 free_glyph(struct text_glyph *gl)
 {
-	Free(gl->s, 0);
 	SDL_FreeSurface(gl->su);
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		glDeleteTextures(1, &gl->texture);
+#endif
 	Free(gl, M_TEXT);
 }
 
@@ -170,19 +173,31 @@ void
 text_destroy(void)
 {
 	struct text_font *fon, *nextfon;
+#ifdef DEBUG
+	int maxbucketsz = 0;
+#endif
 	int i;
 	
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		struct text_glyph *gl, *ngl;
+		int bucketsz = 0;
 
 		for (gl = SLIST_FIRST(&glyph_cache[i].glyphs);
 		     gl != SLIST_END(&glyph_cache[i].glyphs);
 		     gl = ngl) {
 			ngl = SLIST_NEXT(gl, glyphs);
 			free_glyph(gl);
+#ifdef DEBUG
+			bucketsz++;
+#endif
 		}
 		SLIST_INIT(&glyph_cache[i].glyphs);
+#ifdef DEBUG
+		if (bucketsz > maxbucketsz)
+			maxbucketsz = bucketsz;
+#endif
 	}
+	dprintf("max glyph bucket size: %d\n", maxbucketsz);
 	
 	for (fon = SLIST_FIRST(&text_fonts);
 	     fon != SLIST_END(&text_fonts);
@@ -198,51 +213,51 @@ text_destroy(void)
 #endif
 }
 
-static __inline__ int
-hash_glyph(const char *s)
+static __inline__ u_int
+hash_glyph(Uint32 ch)
 {
-	unsigned long h;
-	const unsigned char *p;
-
-	p = (const unsigned char *)s;
-	for (h = 0; *p != '\0'; p++) {
-		h = 37*h + *p;
-	}
-	return (h % GLYPH_NBUCKETS);
+	return (ch % GLYPH_NBUCKETS);
 }
 
 /* Lookup/insert a glyph in the glyph cache. */
 struct text_glyph *
 text_render_glyph(const char *fontname, int fontsize, Uint32 color,
-    const char *s)
+    Uint32 ch)
 {
 	struct text_glyph *gl;
-	int h;
+	u_int h;
 
-	h = hash_glyph(s);
+	h = hash_glyph(ch);
 	SLIST_FOREACH(gl, &glyph_cache[h].glyphs, glyphs) {
 		if (fontsize == gl->fontsize &&
 		    color == gl->color &&
 		    ((fontname == NULL && gl->fontname[0] == '\0') ||
 		     (strcmp(fontname, gl->fontname) == 0)) &&
-		    strcmp(s, gl->s) == 0)
+		    ch == gl->ch)
 			break;
 	}
 	if (gl == NULL) {
-		Uint32 *ucs;
+		Uint32 ucs[2];
 		SDL_Color c;
 
 		gl = Malloc(sizeof(struct text_glyph), M_TEXT);
-		strlcpy(gl->fontname, fontname, sizeof(gl->fontname));
+		if (fontname == NULL) {
+			gl->fontname[0] = '\0';
+		} else {
+			strlcpy(gl->fontname, fontname, sizeof(gl->fontname));
+		}
 		gl->fontsize = fontsize;
 		gl->color = color;
-		gl->s = Strdup(s);
-		gl->nrefs = 1;
+		gl->ch = ch;
 
-		ucs = unicode_import(UNICODE_FROM_UTF8, s);
 		SDL_GetRGB(color, vfmt, &c.r, &c.g, &c.b);
+		ucs[0] = ch;
+		ucs[1] = '\0';
 		gl->su = text_render_unicode(fontname, fontsize, c, ucs);
-		free(ucs);
+		gl->texture = view_surface_texture(gl->su, gl->texcoord);
+	
+		gl->nrefs = 1;
+		SLIST_INSERT_HEAD(&glyph_cache[h].glyphs, gl, glyphs);
 	} else {
 		gl->nrefs++;
 	}
@@ -253,9 +268,9 @@ void
 text_unused_glyph(struct text_glyph *gl)
 {
 	if (--gl->nrefs == 0) {
-		int h;
+		u_int h;
 
-		h = hash_glyph(gl->s);
+		h = hash_glyph(gl->ch);
 		SLIST_REMOVE(&glyph_cache[h].glyphs, gl, text_glyph, glyphs);
 		free_glyph(gl);
 	}

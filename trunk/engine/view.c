@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.176 2005/05/08 09:22:42 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.177 2005/05/08 13:26:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -179,12 +179,13 @@ view_init(enum gfx_engine ge)
 		SDL_GetRGB(COLOR(BG_COLOR), vfmt, &bR, &bG, &bB);
 		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		glEnable(GL_TEXTURE_2D);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DITHER);
 		glDisable(GL_BLEND);
-		glDisable(GL_TEXTURE_2D);
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -631,12 +632,10 @@ view_update_texture(SDL_Surface *sourcesu, int texture)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
-	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(texsu);
 }
@@ -681,7 +680,6 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
-	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -689,7 +687,6 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(texsu);
 	return (texture);
