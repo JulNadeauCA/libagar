@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.101 2005/05/10 12:25:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.102 2005/05/13 03:41:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
 
 static struct {
 	SLIST_HEAD(, text_glyph) glyphs;
-} glyph_cache[GLYPH_NBUCKETS];
+} glyph_cache[GLYPH_NBUCKETS+1];
 
 static struct timeout text_timeout;		/* Timer for text_tmsg() */
 
