@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.153 2005/05/08 02:10:02 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.154 2005/05/08 03:49:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -278,8 +278,8 @@ engine_destroy(void)
 #endif
 
 	object_destroy(world);
-	view_destroy();
 	text_destroy();
+	view_destroy();
 	input_destroy();
 	
 	colors_destroy();
