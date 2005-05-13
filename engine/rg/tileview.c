@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.32 2005/04/19 04:20:43 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.33 2005/05/13 02:18:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1356,9 +1356,7 @@ tileview_draw(void *p)
 	struct tileview_ctrl *ctrl;
 	SDL_Rect rsrc, rdst;
 	int dxoffs, dyoffs;
-#if 0
-	int drawbg = 2;
-#endif
+//	int drawbg = 2;
 
 	if (t == NULL)
 		return;
@@ -1395,9 +1393,7 @@ tileview_draw(void *p)
 		rsrc.w = tv->scaled->w - (-tv->xoffs);
 		if (rsrc.w > WIDGET(tv)->w) {
 			rsrc.w = WIDGET(tv)->w;
-#if 0
-			drawbg--;
-#endif
+//			drawbg--;
 		}
 	}
 
@@ -1411,13 +1407,11 @@ tileview_draw(void *p)
 		rsrc.h = tv->scaled->h - (-tv->yoffs);
 		if (rsrc.h > WIDGET(tv)->h) {
 			rsrc.h = WIDGET(tv)->h;
-#if 0
-			drawbg--;
-#endif
+//			drawbg--;
 		}
 	}
-#if 0
-	if (drawbg) {
+
+	{
 		SDL_Rect rtiling;
 	
 		rtiling.x = 0;
@@ -1428,7 +1422,6 @@ tileview_draw(void *p)
 		    COLOR(TILEVIEW_TILE1_COLOR),
 		    COLOR(TILEVIEW_TILE2_COLOR));
 	}
-#endif
 
 	widget_blit_from(tv, tv, 0, &rsrc, rdst.x, rdst.y);
 
