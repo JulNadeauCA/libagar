@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.38 2005/04/25 06:43:44 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.39 2005/05/12 07:51:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -14,7 +14,10 @@ struct textbox {
 	struct widget wid;
 	
 	char string[TEXTBOX_STRING_MAX]; /* Default string binding */
-	SDL_Surface *label;		 /* Label to display */
+
+	SDL_Surface *label_su;		/* Label surface (left) */
+	int	     label_id;
+
 	u_int flags;
 #define TEXTBOX_WRITEABLE	0x01	/* Writeable */
 #define TEXTBOX_BLINK_ON	0x02	/* Cursor blink state (internal) */

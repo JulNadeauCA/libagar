@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.39 2005/02/08 15:45:38 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.40 2005/05/10 12:25:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -16,10 +16,14 @@ enum text_msg_title {
 struct text_glyph {
 	char fontname[32];		/* Font name */
 	int fontsize;			/* Font size in points */
-	Uint32 color;			/* Text color */
-	char *s;			/* Text string */
+	Uint32 color;			/* Glyph color */
+	Uint32 ch;			/* Unicode character */
 	Uint32 nrefs;			/* Reference count */
 	SDL_Surface *su;		/* Rendered surface */
+#ifdef HAVE_OPENGL
+	GLuint texture;			/* Rendered texture */
+	GLfloat texcoord[4];
+#endif
 	SLIST_ENTRY(text_glyph) glyphs;
 };
 
@@ -62,7 +66,7 @@ void text_prompt_string(char **, size_t, const char *, ...)
 		         FORMAT_ATTRIBUTE(printf, 3, 4)
 		         NONNULL_ATTRIBUTE(3);
 
-struct text_glyph *text_render_glyph(const char *, int, Uint32, const char *);
+struct text_glyph *text_render_glyph(const char *, int, Uint32, Uint32);
 void		   text_unused_glyph(struct text_glyph *);
 __END_DECLS
 

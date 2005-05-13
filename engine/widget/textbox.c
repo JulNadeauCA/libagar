@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.93 2005/05/10 12:25:54 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.94 2005/05/12 07:51:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ const struct widget_ops textbox_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		textbox_destroy,
+		widget_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -187,12 +187,14 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->compose = 0;
 
 	if (label != NULL) {
-		tbox->label = text_render(NULL, -1, COLOR(TEXTBOX_TXT_COLOR),
+		tbox->label_su = text_render(NULL, -1, COLOR(TEXTBOX_TXT_COLOR),
 		    (char *)label);
-		tbox->prew += tbox->label->w;
-		tbox->preh += tbox->label->h;
+		tbox->label_id = widget_map_surface(tbox, tbox->label_su);
+	
+		tbox->prew += tbox->label_su->w;
+		tbox->preh += tbox->label_su->h;
 	} else {
-		tbox->label = NULL;
+		tbox->label_id = -1;
 	}
 	
 	timeout_set(&tbox->repeat_to, repeat_expire, NULL, 0);
@@ -208,16 +210,18 @@ textbox_init(struct textbox *tbox, const char *label)
 	event_new(tbox, "widget-hidden", lost_focus, NULL);
 }
 
-void
-textbox_destroy(void *ob)
+#ifdef HAVE_OPENGL
+static __inline__ int
+powof2(int i)
 {
-	struct textbox *tbox = ob;
+	int val = 1;
 
-	if (tbox->label != NULL)
-		SDL_FreeSurface(tbox->label);
-
-	widget_destroy(tbox);
+	while (val < i) {
+		val <<= 1;
+	}
+	return (val);
 }
+#endif
 
 void
 textbox_draw(void *p)
@@ -231,10 +235,13 @@ textbox_draw(void *p)
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
+#ifdef HAVE_OPENGL
+	GLfloat texcoord[4];
+#endif
 
-	if (tbox->label != NULL) {
-		widget_blit(tbox, tbox->label, 0,
-		    WIDGET(tbox)->h/2 - tbox->label->h/2);
+	if (tbox->label_id >= 0) {
+		widget_blit_from(tbox, tbox, tbox->label_id, NULL,
+		    0, WIDGET(tbox)->h/2 - tbox->label_su->h/2);
 	}
 
 	font = text_fetch_font(
@@ -250,7 +257,7 @@ textbox_draw(void *p)
 	len = strlen(s);
 #endif
 
-	x = ((tbox->label!=NULL) ? tbox->label->w : 0) + tbox->xpadding;
+	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
 
 	primitives.box(tbox,
@@ -268,13 +275,24 @@ textbox_draw(void *p)
 		y++;
 	}
 
+#ifdef HAVE_OPENGL
+	if (view->opengl)  {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		texcoord[0] = 0.0;
+		texcoord[1] = 0.0;
+	}
+#endif
+
 	for (i = 0; i <= len; i++) {
+		struct text_glyph *gl;
+		int invert = 0;
 #ifdef UTF8
 		Uint32 c = ucs[i];
 #else
 		char c = s[i];
 #endif
-		int invert = 0;
 
 		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
 		    tbox->flags & TEXTBOX_BLINK_ON) {
@@ -298,21 +316,16 @@ textbox_draw(void *p)
 			continue;
 		}
 
+		c = (tbox->flags & TEXTBOX_PASSWORD) ? '*' : c;
+
 		if (!view->opengl) {
 			FT_Bitmap *ftbmp;
-			Uint32 ch;
 			struct ttf_font *ttf = font->p;
 			struct ttf_glyph *glyph;
 			int xglyph, yglyph;
 			Uint8 *src;
 
-			if (tbox->flags & TEXTBOX_PASSWORD) {
-				ch = (Uint32)('*');
-			} else {
-				ch = c;
-			}
-
-			if (ttf_find_glyph(ttf, ch,
+			if (ttf_find_glyph(ttf, c,
 			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 				continue;
 			}
@@ -348,36 +361,46 @@ textbox_draw(void *p)
 			x += glyph->advance;
 		} else {
 #ifdef HAVE_OPENGL
-			Uint32 ccs[2];
-			SDL_Surface *su;
-			SDL_Color cFg;
-			
-			if (tbox->flags & TEXTBOX_PASSWORD) {
-				ccs[0] = (Uint32)('*');
-			} else {
-				ccs[0] = c;
+			gl = text_render_glyph(NULL, -1,
+			    COLOR(TEXTBOX_TXT_COLOR), c);
+
+			texcoord[2] = gl->su->w / powof2(gl->su->w);
+			texcoord[3] = gl->su->h / powof2(gl->su->h);
+		
+			glBindTexture(GL_TEXTURE_2D, gl->texture);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				glTexCoord2f(0.0, 0.0);
+				glVertex2i(x, y);
+				glTexCoord2f(texcoord[2], 0.0);
+				glVertex2i(x + gl->su->w, y);
+				glTexCoord2f(0.0, texcoord[3]);
+				glVertex2i(x, y + gl->su->h);
+				glTexCoord2f(texcoord[2], texcoord[3]);
+				glVertex2i(x + gl->su->w, y + gl->su->h);
 			}
-			ccs[1] = '\0';
-			SDL_GetRGB(COLOR(TEXTBOX_TXT_COLOR), vfmt,
-			    &cFg.r, &cFg.g, &cFg.b);
-			su = text_render_unicode(NULL, -1, cFg, ccs);
-			widget_blit(tbox, su, x, y);
-			x += su->w;
-			SDL_FreeSurface(su);
-#endif
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glEnd();
+			x += gl->su->w;
+#endif /* HAVE_OPENGL */
 		}
 		if (x >= WIDGET(tbox)->w - 1)
 			break;
 	}
-out:
 	widget_binding_unlock(stringb);
+
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		glDisable(GL_BLEND);
+#endif
 }
 
 void
 textbox_prescale(struct textbox *tbox, const char *text)
 {
 	text_prescale(text, &tbox->prew, NULL);
-	tbox->prew += tbox->label->w + tbox->xpadding*2;
+	tbox->prew += (tbox->label_id >= 0) ? tbox->label_su->w : 0;
+	tbox->prew += tbox->xpadding*2;
 }
 
 void
@@ -454,7 +477,7 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 	size_t len;
 	char *s;
 
-	x = ((tbox->label!=NULL) ? tbox->label->w : 0) + tbox->xpadding;
+	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	if (mx <= x) {
 		return (-1);
 	}
@@ -537,8 +560,7 @@ mousebuttondown(int argc, union evarg *argv)
 	int my = argv[3].i;
 	int rv;
 
-	if (tbox->label == NULL ||
-	    mx > tbox->label->w)
+	if (tbox->label_id < 0 || mx > tbox->label_su->w)
 		widget_focus(tbox);
 
 	if (btn == SDL_BUTTON_LEFT)

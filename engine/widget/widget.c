@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.104 2005/05/12 02:33:36 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.105 2005/05/12 06:39:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -855,7 +855,6 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 
 		texture = view_surface_texture(srcsu, texcoord);
 	
-		glEnable(GL_TEXTURE_2D);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glBindTexture(GL_TEXTURE_2D, texture);
 	
@@ -879,9 +878,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		if (alpha) {
 			glDisable(GL_BLEND);
 		}
-
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_TEXTURE_2D);
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -942,7 +939,6 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		if (texture == 0)
 			fatal("invalid texture name");
 #endif
-		glEnable(GL_TEXTURE_2D);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -968,7 +964,6 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			glDisable(GL_BLEND);
 		}
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_TEXTURE_2D);
 	} else
 #endif /* HAVE_OPENGL */
 	{
