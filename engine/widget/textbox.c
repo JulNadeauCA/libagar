@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.94 2005/05/12 07:51:38 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.95 2005/05/13 03:41:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -235,12 +235,9 @@ textbox_draw(void *p)
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
-#ifdef HAVE_OPENGL
-	GLfloat texcoord[4];
-#endif
 
 	if (tbox->label_id >= 0) {
-		widget_blit_from(tbox, tbox, tbox->label_id, NULL,
+		widget_blit_surface(tbox, tbox->label_id,
 		    0, WIDGET(tbox)->h/2 - tbox->label_su->h/2);
 	}
 
@@ -279,9 +276,8 @@ textbox_draw(void *p)
 	if (view->opengl)  {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		texcoord[0] = 0.0;
-		texcoord[1] = 0.0;
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
+		    GL_REPLACE);
 	}
 #endif
 
@@ -361,26 +357,28 @@ textbox_draw(void *p)
 			x += glyph->advance;
 		} else {
 #ifdef HAVE_OPENGL
+			int dx, dy;
+
+			dx = WIDGET(tbox)->cx + x;
+			dy = WIDGET(tbox)->cy + y;
+
 			gl = text_render_glyph(NULL, -1,
 			    COLOR(TEXTBOX_TXT_COLOR), c);
 
-			texcoord[2] = gl->su->w / powof2(gl->su->w);
-			texcoord[3] = gl->su->h / powof2(gl->su->h);
-		
 			glBindTexture(GL_TEXTURE_2D, gl->texture);
 			glBegin(GL_TRIANGLE_STRIP);
 			{
-				glTexCoord2f(0.0, 0.0);
-				glVertex2i(x, y);
-				glTexCoord2f(texcoord[2], 0.0);
-				glVertex2i(x + gl->su->w, y);
-				glTexCoord2f(0.0, texcoord[3]);
-				glVertex2i(x, y + gl->su->h);
-				glTexCoord2f(texcoord[2], texcoord[3]);
-				glVertex2i(x + gl->su->w, y + gl->su->h);
+				glTexCoord2f(gl->texcoord[0], gl->texcoord[1]);
+				glVertex2i(dx, dy);
+				glTexCoord2f(gl->texcoord[2], gl->texcoord[1]);
+				glVertex2i(dx + gl->su->w, dy);
+				glTexCoord2f(gl->texcoord[0], gl->texcoord[3]);
+				glVertex2i(dx, dy + gl->su->h);
+				glTexCoord2f(gl->texcoord[2], gl->texcoord[3]);
+				glVertex2i(dx + gl->su->w, dy + gl->su->h);
 			}
-			glBindTexture(GL_TEXTURE_2D, 0);
 			glEnd();
+			glBindTexture(GL_TEXTURE_2D, 0);
 			x += gl->su->w;
 #endif /* HAVE_OPENGL */
 		}
