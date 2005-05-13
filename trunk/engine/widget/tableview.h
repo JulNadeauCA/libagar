@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.10 2005/05/11 15:15:51 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.11 2005/05/12 02:33:36 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -40,6 +40,7 @@ struct tableview_column {
 
 	char label[TABLEVIEW_LABEL_MAX];/* Header text */
 	SDL_Surface *label_img;		/* Rendered header text */
+	int	     label_id;
 	int w;				/* Column width */
 };
 

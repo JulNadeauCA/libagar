@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.51 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.52 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@ static struct widget_ops checkbox_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		checkbox_destroy,
+		widget_destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
@@ -80,20 +80,12 @@ checkbox_init(struct checkbox *cbox, char *caption)
 	widget_bind(cbox, "state", WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;
-	cbox->label_s = text_render(NULL, -1, COLOR(CHECKBOX_TXT_COLOR),
+	cbox->label_su = text_render(NULL, -1, COLOR(CHECKBOX_TXT_COLOR),
 	    caption);
+	cbox->label_id = widget_map_surface(cbox, cbox->label_su);
 	
 	event_new(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
 	event_new(cbox, "window-keydown", checkbox_keydown, NULL);
-}
-
-void
-checkbox_destroy(void *p)
-{
-	struct checkbox *cbox = p;
-
-	SDL_FreeSurface(cbox->label_s);
-	widget_destroy(cbox);
 }
 
 void
@@ -107,7 +99,7 @@ checkbox_draw(void *p)
 	    widget_get_bool(cbox, "state") ? -1 : 1,
 	    COLOR(CHECKBOX_COLOR));
 
-	widget_blit(cbox, cbox->label_s, WIDGET(cbox)->h + XSPACING, 0);
+	widget_blit_surface(cbox, cbox->label_id, WIDGET(cbox)->h+XSPACING, 0);
 }
 
 static void
@@ -144,9 +136,9 @@ checkbox_scale(void *p, int rw, int rh)
 	struct checkbox *cb = p;
 
 	if (rh == -1)
-		WIDGET(cb)->h = cb->label_s->h;
+		WIDGET(cb)->h = cb->label_su->h;
 	if (rw == -1)
-		WIDGET(cb)->w = WIDGET(cb)->h + XSPACING + cb->label_s->w;
+		WIDGET(cb)->w = WIDGET(cb)->h + XSPACING + cb->label_su->w;
 }
 
 /* Toggle the checkbox state. */

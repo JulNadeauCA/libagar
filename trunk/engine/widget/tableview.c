@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.22 2005/05/11 15:15:51 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.23 2005/05/12 02:33:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -246,6 +246,7 @@ tableview_col_add(struct tableview *tv, int flags, colID cid,
 	}
 	col->label_img = text_render(NULL, -1, COLOR(TABLEVIEW_HTXT_COLOR),
 	    col->label);
+	col->label_id = widget_map_surface(tv, col->label_img);
 
 	/* column width */
 	if (size != NULL) {
@@ -513,9 +514,6 @@ tableview_destroy(void *p)
 
 	tableview_row_del_all(tv);
 
-	for (i = 0; i < tv->columncount; i++) {
-		SDL_FreeSurface(tv->column[i].label_img);
-	}
 	Free(tv->column, M_WIDGET);
 	Free(tv->visible.items, M_WIDGET);
 
@@ -1110,7 +1108,7 @@ draw_column(struct tableview *tv, int visible_start, int visible_end,
 		    (tv->column[idx].mousedown ||
 		     tv->column[idx].cid == tv->sortColumn) ? -1 : 1,
 		    COLOR(TABLEVIEW_HEAD_COLOR));
-		widget_blit(tv, tv->column[idx].label_img,
+		widget_blit_surface(tv, tv->column[idx].label_id,
 		    visible_start + label_x,
 		    0);
 	}
@@ -1150,6 +1148,7 @@ draw_column(struct tableview *tv, int visible_start, int visible_end,
 			offset += tw+4;
 		}
 		if (tv->visible.items[j].row->cell[cidx].image) {
+			/* XXX inefficient in opengl mode */
 			widget_blit(tv,
 			    tv->visible.items[j].row->cell[cidx].image,
 			    offset, y+1);

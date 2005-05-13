@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.47 2005/02/19 07:05:37 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.48 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -90,12 +90,14 @@ radio_init(struct radio *rad, const char **items)
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
 		;;
-	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems, M_WIDGET);
+	rad->labels = Malloc(sizeof(int)*rad->nitems, M_WIDGET);
 	for (i = 0; i < rad->nitems; i++) {
-		rad->labels[i] = text_render(NULL, -1, COLOR(RADIO_TXT_COLOR),
-		    _(items[i]));
-		if (rad->labels[i]->w > rad->max_w)
-			rad->max_w = rad->labels[i]->w;
+		SDL_Surface *su;
+
+		su = text_render(NULL, -1, COLOR(RADIO_TXT_COLOR), _(items[i]));
+		rad->labels[i] = widget_map_surface(rad, su);
+		if (su->w > rad->max_w)
+			rad->max_w = su->w;
 	}
 
 	event_new(rad, "window-mousebuttondown", radio_event, "%i",
@@ -163,7 +165,7 @@ radio_draw(void *p)
 			    SEL_RADIUS,
 			    COLOR(RADIO_OVER_COLOR));
 		}
-		widget_blit(rad, rad->labels[i], x, y);
+		widget_blit_surface(rad, rad->labels[i], x, y);
 	}
 }
 
@@ -173,11 +175,7 @@ radio_destroy(void *p)
 	struct radio *rad = p;
 	int i;
 
-	for (i = 0; i < rad->nitems; i++) {
-		SDL_FreeSurface(rad->labels[i]);
-	}
 	Free(rad->labels, M_WIDGET);
-
 	widget_destroy(rad);
 }
 

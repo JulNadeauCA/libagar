@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.2 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.3 2005/03/28 03:01:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -140,7 +140,7 @@ notebook_draw(void *p)
 		    COLOR(NOTEBOOK_SEL_COLOR) :
 		    COLOR(NOTEBOOK_BG_COLOR));
 		
-		widget_blit_from(nb, nb, tab->label, NULL, x+SPACING, y+2);
+		widget_blit_surface(nb, tab->label, x+SPACING, y+2);
 		x += box.w;
 	}
 }
