@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.82 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.83 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -398,6 +398,7 @@ label_draw_polled(struct label *label)
 		}
 	}
 
+	/* TODO use widget_update_surface */
 	ts = text_render(NULL, -1, COLOR(TEXT_COLOR), s);
 	widget_blit(label, ts, 0, 0);
 	SDL_FreeSurface(ts);

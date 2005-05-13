@@ -1,4 +1,4 @@
-/*	$Csoft: radio.h,v 1.11 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.12 2005/02/19 06:52:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
@@ -12,7 +12,7 @@ struct radio {
 	struct widget	 wid;
 	int		 value;		/* Default value binding */
 
-	SDL_Surface	**labels;	/* Cached label surfaces */
+	int		*labels;	/* Label surface IDs */
 	const char	**items;
 	int		 nitems;
 	int		 selitem;	/* Index of selected item */

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.h,v 1.15 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.16 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CHECKBOX_H_
@@ -14,7 +14,8 @@ struct checkbox {
 	struct widget wid;
 
 	int		 state;		/* 1=pressed, 0=released */
-	SDL_Surface	*label_s;	/* Text label */
+	SDL_Surface	*label_su;	/* Text label */
+	int		 label_id;
 };
 
 __BEGIN_DECLS
