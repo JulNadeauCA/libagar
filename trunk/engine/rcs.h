@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.h,v 1.4 2005/05/05 08:50:28 vedge Exp $	*/
+/*	$Csoft: rcs.h,v 1.5 2005/05/08 02:10:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RCSMGR_H_
@@ -10,6 +10,7 @@ extern char rcs_hostname[64];
 extern char rcs_username[32];
 extern char rcs_password[32];
 extern u_int rcs_port;
+extern int rcs;
 
 enum rcs_status {
 	RCS_ERROR,	/* Status unavailable */

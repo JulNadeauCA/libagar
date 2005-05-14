@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.142 2005/05/01 00:19:52 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.143 2005/05/08 09:22:42 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -76,7 +76,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	7, 0
+	7, 1
 };
 
 const struct object_ops config_ops = {
@@ -270,7 +270,10 @@ config_load(void *p, struct netbuf *buf)
 	mouse_spin_ival = (int)read_uint16(buf);
 	view_screenshot_quality = (int)read_uint8(buf);
 	text_tab_width = (int)read_uint16(buf);
-	
+
+	if (rv.minor >= 1) {
+		rcs = (int)read_uint8(buf);
+	}
 	copy_string(rcs_hostname, buf, sizeof(rcs_hostname));
 	rcs_port = (u_int)read_uint16(buf);
 	copy_string(rcs_username, buf, sizeof(rcs_username));
@@ -305,6 +308,7 @@ config_save(void *p, struct netbuf *buf)
 	write_uint8(buf, (Uint8)view_screenshot_quality);
 	write_uint16(buf, (Uint16)text_tab_width);
 
+	write_uint8(buf, (Uint8)rcs);
 	write_string(buf, rcs_hostname);
 	write_uint16(buf, (Uint16)rcs_port);
 	write_string(buf, rcs_username);
@@ -494,6 +498,10 @@ config_window(struct config *con)
 		struct textbox *tb;
 		struct spinbutton *sb;
 		struct box *box;
+		struct checkbox *cb;
+
+		cb = checkbox_new(tab, _("Enable RCS"));
+		widget_bind(cb, "state", WIDGET_INT, &rcs);
 
 		tb = textbox_new(tab, _("Server hostname: "));
 		widget_bind(tb, "string", WIDGET_STRING, rcs_hostname,
