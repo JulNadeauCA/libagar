@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.33 2005/05/13 02:18:30 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.34 2005/05/13 02:21:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -685,6 +685,8 @@ autoredraw(void *obj, Uint32 ival, void *arg)
 	tile_generate(tv->tile);
 	view_scale_surface(tv->tile->su, tv->scaled->w, tv->scaled->h,
 	    &tv->scaled);
+	widget_replace_surface(tv, 0, tv->scaled);
+
 	tv->tile->flags &= ~TILE_DIRTY;
 	return (ival);
 }
@@ -961,7 +963,6 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	tv->scaled->format->alpha = t->su->format->alpha;
 	tv->scaled->format->colorkey = t->su->format->colorkey;
 	tv->pxlen = tv->pxsz*tv->scaled->format->BytesPerPixel;
-
 	widget_replace_surface(tv, 0, tv->scaled);
 
 	if (adj_offs) {
@@ -1010,28 +1011,56 @@ tileview_scale(void *p, int rw, int rh)
 void
 tileview_pixel2i(struct tileview *tv, int x, int y)
 {
-	int x1 = WIDGET(tv)->cx + tv->xoffs + x*tv->pxsz;
-	int y1 = WIDGET(tv)->cy + tv->yoffs + y*tv->pxsz;
+	int x1 = TILEVIEW_SCALED_X(tv,x);
+	int y1 = TILEVIEW_SCALED_Y(tv,y);
 	int dx, dy;
 
-	for (dy = 0; dy < tv->pxsz; dy++) {
-		for (dx = 0; dx < tv->pxsz; dx++) {
-			int cx = x1+dx;
-			int cy = y1+dy;
+	if (!view->opengl) {
+		for (dy = 0; dy < tv->pxsz; dy++) {
+			for (dx = 0; dx < tv->pxsz; dx++) {
+				int cx = x1+dx;
+				int cy = y1+dy;
 
-			if (cx < WIDGET(tv)->cx ||
-			    cy < WIDGET(tv)->cy ||
-			    cx > WIDGET(tv)->cx+WIDGET(tv)->w ||
-			    cy > WIDGET(tv)->cy+WIDGET(tv)->h)
-				continue;
+				if (cx < WIDGET(tv)->cx ||
+				    cy < WIDGET(tv)->cy ||
+				    cx > WIDGET(tv)->cx2 ||
+				    cy > WIDGET(tv)->cy2)
+					continue;
 
-			if (tv->c.a < 255) {
-				BLEND_RGBA2_CLIPPED(view->v, cx, cy,
-				    tv->c.r, tv->c.g, tv->c.b, tv->c.a);
-			} else {
-				VIEW_PUT_PIXEL2_CLIPPED(cx, cy, tv->c.pc);
+				if (tv->c.a < 255) {
+					BLEND_RGBA2_CLIPPED(view->v, cx, cy,
+					    tv->c.r, tv->c.g, tv->c.b, tv->c.a);
+				} else {
+					VIEW_PUT_PIXEL2_CLIPPED(cx, cy,
+					    tv->c.pc);
+				}
 			}
 		}
+	} else {
+#ifdef HAVE_OPENGL
+		int x2 = x1 + tv->pxsz;
+		int y2 = y1 + tv->pxsz;
+
+		if (x1 > WIDGET(tv)->cx2)	return;
+		if (y1 > WIDGET(tv)->cy2)	return;
+		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
+		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
+		if (x1 >= x2 || y1 >= y2)	return;
+		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
+		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
+
+		glBegin(GL_POLYGON);
+		if (tv->c.a < 255) {
+			glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
+		} else {
+			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
+		}
+		glVertex2i(x1, y1);
+		glVertex2i(x2, y1);
+		glVertex2i(x2, y2);
+		glVertex2i(x1, y2);
+		glEnd();
+#endif
 	}
 }
 
@@ -1091,13 +1120,46 @@ tileview_alpha(struct tileview *tv, Uint8 a)
 }
 
 void
-tileview_rect2(struct tileview *tv, int x1, int y1, int w, int h)
+tileview_rect2(struct tileview *tv, int x, int y, int w, int h)
 {
-	int x, y;
+	Uint8 r, g, b;
 
-	for (y = y1; y < y1+h; y++)
-		for (x = x1; x < x1+w; x++)
-			tileview_pixel2i(tv, x, y);
+	if (!view->opengl) {
+		int xi, yi;
+		int x2 = x+w;
+		int y2 = y+h;
+
+		for (yi = y; yi < y2; yi++)
+			for (xi = x; xi < x2; xi++)
+				tileview_pixel2i(tv, x, y);
+	} else {
+#ifdef HAVE_OPENGL
+		int x1 = TILEVIEW_SCALED_X(tv,x);
+		int y1 = TILEVIEW_SCALED_Y(tv,y);
+		int x2 = x1 + w*tv->pxsz;
+		int y2 = y1 + h*tv->pxsz;
+
+		if (x1 > WIDGET(tv)->cx2)	return;
+		if (y1 > WIDGET(tv)->cy2)	return;
+		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
+		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
+		if (x1 >= x2 || y1 >= y2)	return;
+		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
+		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
+
+		glBegin(GL_POLYGON);
+		if (tv->c.a < 255) {
+			glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
+		} else {
+			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
+		}
+		glVertex2i(x1, y1);
+		glVertex2i(x2, y1);
+		glVertex2i(x2, y2);
+		glVertex2i(x1, y2);
+		glEnd();
+#endif /* HAVE_OPENGL */
+	}
 }
 
 void
@@ -1134,17 +1196,60 @@ tileview_circle2o(struct tileview *tv, int x0, int y0, int r)
 }
 
 void
-tileview_rect2o(struct tileview *tv, int x1, int y1, int w, int h)
+tileview_rect2o(struct tileview *tv, int x, int y, int w, int h)
 {
-	int x, y;
+	if (!view->opengl) {
+		int xi, yi;
 
-	for (y = y1+1; y < y1+h; y++) {
-		tileview_pixel2i(tv, x1, y);
-		tileview_pixel2i(tv, x1+w, y);
-	}
-	for (x = x1; x < x1+w+1; x++) {
-		tileview_pixel2i(tv, x, y1);
-		tileview_pixel2i(tv, x, y1+h);
+		for (yi = y+1; yi < y+h; yi++) {
+			tileview_pixel2i(tv, x, yi);
+			tileview_pixel2i(tv, x+w, yi);
+		}
+		for (xi = x; xi < x+w+1; xi++) {
+			tileview_pixel2i(tv, xi, y);
+			tileview_pixel2i(tv, xi, y+h);
+		}
+	} else {
+#ifdef HAVE_OPENGL
+		int x1 = TILEVIEW_SCALED_X(tv,x);
+		int y1 = TILEVIEW_SCALED_Y(tv,y);
+		int x2 = x1 + w*tv->pxsz;
+		int y2 = y1 + h*tv->pxsz;
+		GLfloat saved_width;
+
+		glGetFloatv(GL_LINE_WIDTH, &saved_width);
+		glLineWidth(tv->pxsz);
+		glBegin(GL_LINES);
+		if (tv->c.a < 255) {
+			glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
+		} else {
+			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
+		}
+
+		if (y1 > WIDGET(tv)->cy && y1 < WIDGET(tv)->cy2 &&
+		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
+			glVertex2i(MAX(x1, WIDGET(tv)->cx), y1);
+			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y1);
+		}
+		if (x2 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx &&
+		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
+			glVertex2i(x2, MAX(y1, WIDGET(tv)->cy));
+			glVertex2i(x2, MIN(y2, WIDGET(tv)->cy2));
+		}
+		if (y2 > WIDGET(tv)->cy && y2 < WIDGET(tv)->cy2 &&
+		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
+			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y2);
+			glVertex2i(MAX(x1, WIDGET(tv)->cx), y2);
+		}
+		if (x1 > WIDGET(tv)->cx && x1 < WIDGET(tv)->cx2 &&
+		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
+			glVertex2i(x1, MIN(y2, WIDGET(tv)->cy2));
+			glVertex2i(x1, MAX(y1, WIDGET(tv)->cy));
+		}
+
+		glEnd();
+		glLineWidth(saved_width);
+#endif /* HAVE_OPENGL */
 	}
 }
 
@@ -1346,6 +1451,8 @@ tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint8 r, Uint8 g,
 
 	if (SDL_MUSTLOCK(tv->scaled))
 		SDL_UnlockSurface(tv->scaled);
+
+	widget_update_surface(tv, 0);
 }
 
 void
@@ -1354,9 +1461,8 @@ tileview_draw(void *p)
 	struct tileview *tv = p;
 	struct tile *t = tv->tile;
 	struct tileview_ctrl *ctrl;
-	SDL_Rect rsrc, rdst;
+	SDL_Rect rsrc, rdst, rtiling;
 	int dxoffs, dyoffs;
-//	int drawbg = 2;
 
 	if (t == NULL)
 		return;
@@ -1374,7 +1480,15 @@ tileview_draw(void *p)
 		tile_generate(t);
 		view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,
 		    &tv->scaled);
+		widget_update_surface(tv, 0);
 	}
+	rtiling.x = 0;
+	rtiling.y = 0;
+	rtiling.w = WIDGET(tv)->w;
+	rtiling.h = WIDGET(tv)->h;
+	primitives.tiling(tv, rtiling, 9, 0,
+	    COLOR(TILEVIEW_TILE1_COLOR),
+	    COLOR(TILEVIEW_TILE2_COLOR));
 
 	rsrc.x = 0;
 	rsrc.y = 0;
@@ -1383,53 +1497,43 @@ tileview_draw(void *p)
 	rdst.x = tv->xoffs;
 	rdst.y = tv->yoffs;
 
-	if (tv->xoffs > 0 &&
-	    tv->xoffs + tv->scaled->w > WIDGET(tv)->w) {
-		rsrc.w = WIDGET(tv)->w - tv->xoffs;
-	} else if (tv->xoffs < 0 &&
-	          -tv->xoffs < tv->scaled->w) {
-		rdst.x = 0;
-		rsrc.x = -tv->xoffs;
-		rsrc.w = tv->scaled->w - (-tv->xoffs);
-		if (rsrc.w > WIDGET(tv)->w) {
-			rsrc.w = WIDGET(tv)->w;
-//			drawbg--;
+	if (!view->opengl) {
+		if (tv->xoffs > 0 &&
+		    tv->xoffs + tv->scaled->w > WIDGET(tv)->w) {
+			rsrc.w = WIDGET(tv)->w - tv->xoffs;
+		} else if (tv->xoffs < 0 && -tv->xoffs < tv->scaled->w) {
+			rdst.x = 0;
+			rsrc.x = -tv->xoffs;
+			rsrc.w = tv->scaled->w - (-tv->xoffs);
+			if (rsrc.w > WIDGET(tv)->w)
+				rsrc.w = WIDGET(tv)->w;
+		}
+		if (tv->yoffs > 0 &&
+		    tv->yoffs + tv->scaled->h > WIDGET(tv)->h) {
+			rsrc.h = WIDGET(tv)->h - tv->yoffs;
+		} else if (tv->yoffs < 0 && -tv->yoffs < tv->scaled->h) {
+			rdst.y = 0;
+			rsrc.y = -tv->yoffs;
+			rsrc.h = tv->scaled->h - (-tv->yoffs);
+			if (rsrc.h > WIDGET(tv)->h)
+				rsrc.h = WIDGET(tv)->h;
 		}
 	}
-
-	if (tv->yoffs > 0 &&
-	    tv->yoffs + tv->scaled->h > WIDGET(tv)->h) {
-		rsrc.h = WIDGET(tv)->h - tv->yoffs;
-	} else if (tv->yoffs < 0 &&
-	          -tv->yoffs < tv->scaled->h) {
-		rdst.y = 0;
-		rsrc.y = -tv->yoffs;
-		rsrc.h = tv->scaled->h - (-tv->yoffs);
-		if (rsrc.h > WIDGET(tv)->h) {
-			rsrc.h = WIDGET(tv)->h;
-//			drawbg--;
-		}
-	}
-
-	{
-		SDL_Rect rtiling;
-	
-		rtiling.x = 0;
-		rtiling.y = 0;
-		rtiling.w = WIDGET(tv)->w;
-		rtiling.h = WIDGET(tv)->h;
-		primitives.tiling(tv, rtiling, 9, 0,
-		    COLOR(TILEVIEW_TILE1_COLOR),
-		    COLOR(TILEVIEW_TILE2_COLOR));
-	}
-
 	widget_blit_from(tv, tv, 0, &rsrc, rdst.x, rdst.y);
 
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		glEnable(GL_BLEND);
+#endif
 	tileview_color4i(tv, 255, 255, 255, 128);
 	tileview_pixel2i(tv, tv->xms, tv->yms);
-
-	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls)
+	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 		draw_control(tv, ctrl);
+	}
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		glDisable(GL_BLEND);
+#endif
 
 	if (tv->edit_mode) {
 		char status[64];
