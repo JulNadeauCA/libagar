@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.17 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.18 2005/04/18 03:38:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -80,10 +80,8 @@ submenu_timeout(void *obj, Uint32 ival, void *arg)
 	if (item != mview->pitem->sel_subitem)
 		fatal("subitem");
 #endif
-	menu_expand(m, item,
-	    WIDGET(mview)->cx + WIDGET(mview)->w,
-	    WIDGET(mview)->cy + item->y);
-
+	menu_expand(m, item, WIDGET(mview)->cx2, 
+	                     WIDGET(mview)->cy+item->y);
 	return (0);
 }
 

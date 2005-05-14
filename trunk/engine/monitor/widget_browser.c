@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.41 2005/03/10 09:43:55 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.42 2005/04/14 06:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -143,11 +143,16 @@ examine_widget(int argc, union evarg *argv)
 		    &wid->flags);
 
 		lab = label_new(vb, LABEL_POLLED_MT,
-		    _("Geometry: %dx%d at %d,%d (view %d,%d)"), &pwin->lock,
-		    &wid->w, &wid->h, &wid->x, &wid->y,
-		    &wid->cx, &wid->cy);
+		    _("Geometry: %dx%d at %d,%d"), &pwin->lock,
+		    &wid->w, &wid->h, &wid->x, &wid->y);
 		label_prescale(lab,
-		    _("Geometry: 0000x0000 at 0000x0000 (view 0000,0000)"));
+		    _("Geometry: 0000x0000 at 0000x0000"));
+		
+		lab = label_new(vb, LABEL_POLLED_MT,
+		    _("View geometry: %d,%d -> %d,%d"), &pwin->lock,
+		    &wid->cx, &wid->cy, &wid->cx2, &wid->cy2);
+		label_prescale(lab,
+		    _("View geometry: 0000x0000 -> 0000x0000"));
 	}
 	window_show(win);
 }
