@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.105 2005/05/12 06:39:43 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.106 2005/05/13 03:41:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1094,6 +1094,7 @@ widget_draw(void *p)
 			clip.y = wid->cy;
 			clip.w = wid->w;
 			clip.h = wid->h;
+
 			SDL_GetClipRect(view->v, &clip_save);
 			SDL_SetClipRect(view->v, &clip);
 		}
@@ -1266,6 +1267,8 @@ widget_update_coords(void *parent, int x, int y)
 
 	pwid->cx = x;
 	pwid->cy = y;
+	pwid->cx2 = x + pwid->w;
+	pwid->cy2 = y + pwid->h;
 
 	OBJECT_FOREACH_CHILD(cwid, pwid, widget)
 		widget_update_coords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);

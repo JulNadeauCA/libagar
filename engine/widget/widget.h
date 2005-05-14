@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.91 2005/05/08 13:26:03 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.92 2005/05/12 02:33:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -75,7 +75,8 @@ struct widget {
 #define WIDGET_HFILL		  0x40	/* Expand to fill available height */
 #define WIDGET_EXCEDENT		  0x80	/* Used internally for scale */
 
-	int	 cx, cy;		/* Coordinates in view */
+	int	 cx, cy;		/* Coordinates in view (upper left) */
+	int	 cx2, cy2;		/* Coordinates in view (lower right) */
 	int	 x, y;			/* Coordinates in container */
 	int	 w, h;			/* Allocated geometry */
 
