@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.21 2005/04/02 04:04:52 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.22 2005/04/19 04:20:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -198,6 +198,8 @@ struct tileview {
 };
 
 #define TILEVIEW_TOOL(p) ((struct tileview_tool *)p)
+#define TILEVIEW_SCALED_X(tv, x) (WIDGET(tv)->cx + (tv)->xoffs + (x)*(tv)->pxsz)
+#define TILEVIEW_SCALED_Y(tv, x) (WIDGET(tv)->cy + (tv)->yoffs + (y)*(tv)->pxsz)
 
 __BEGIN_DECLS
 struct tileview	*tileview_new(void *, struct tileset *, int);
