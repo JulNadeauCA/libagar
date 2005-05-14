@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.9 2005/05/08 02:10:54 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.10 2005/05/12 06:58:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@ char rcs_hostname[64] = "localhost";
 char rcs_username[32] = "anonymous";
 char rcs_password[32] = "";
 u_int rcs_port = 6785;
+int rcs = 0;
 
 #ifdef NETWORK
 

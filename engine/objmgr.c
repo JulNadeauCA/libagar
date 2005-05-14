@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.21 2005/05/05 08:50:28 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.22 2005/05/08 02:10:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -616,6 +616,10 @@ update_repo_listing(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 
+	if (!rcs) {
+		text_msg(MSG_ERROR, _("RCS is currently disabled."));
+		return;
+	}
 	if (rcs_connect() == -1 ||
 	    rcs_list(tl) == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
@@ -790,7 +794,9 @@ objmgr_window(void)
 		btn = button_new(ntab, _("Refresh listing"));
 		WIDGET(btn)->flags |= WIDGET_WFILL;
 		event_new(btn, "button-pushed", update_repo_listing, "%p", tl);
-		event_post(NULL, btn, "button-pushed", NULL);
+
+		if (rcs)
+			event_post(NULL, btn, "button-pushed", NULL);
 	}
 #endif /* NETWORK */
 	
