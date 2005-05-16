@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.178 2005/05/13 03:41:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.179 2005/05/16 00:40:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -648,11 +648,12 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
+	
+	w = powof2(sourcesu->w);
+	h = powof2(sourcesu->h);
 
 	/* The size of OpenGL surfaces must be a power of two. */
 	if (texcoord != NULL) {
-		w = powof2(sourcesu->w);
-		h = powof2(sourcesu->h);
 		texcoord[0] = 0.0f;
 		texcoord[1] = 0.0f;
 		texcoord[2] = (GLfloat)sourcesu->w / w;
