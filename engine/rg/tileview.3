@@ -1,0 +1,349 @@
+.\"	$Csoft: mapview.3,v 1.2 2005/05/11 09:59:32 vedge Exp $
+.\"
+.\" Copyright (c) 2005 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd MAy 16, 2005
+.Dt TILEVIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm tileview
+.Nd agar tile edition widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/rg/tileview.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays the contents of a
+.Xr tile 3
+and provides an interface for implementing different types of graphical editors
+and tools.
+Built-in graphical editors for tile pixmaps, sketches and features are provided.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct tileview *"
+.Fn tileview_new "void *parent" "struct tileset *ts" "int flags"
+.Pp
+.Ft "void"
+.Fn tileview_init "struct tileview *tv" "struct tileset *ts" "int flags"
+.Pp
+.Ft "void"
+.Fn tileview_set_tile "struct tileview *tv" "struct tile *tile"
+.Pp
+.Ft "void"
+.Fn tileview_set_zoom "struct tileview *tv" "int new_zoom" "int adj_offset"
+.Pp
+.Ft "void"
+.Fn tileview_set_autoredraw "struct tileview *tv" "int flag" "int rate"
+.nr nS 0
+.Pp
+The
+.Fn tileview_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn tileview_init
+function initializes a
+.Nm
+widget displaying the given
+.Fa tile .
+The
+.Fa flags
+may include:
+.Bd -literal
+#define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
+.Ed
+.Pp
+The
+.Fn tileview_set_tile
+function changes the tile associated with the given
+.Nm .
+.Pp
+The
+.Fn tileview_set_zoom
+function changes the display scaling factor to
+.Fa new_zoom
+(given in percents).
+If the
+.Fa adj_offset
+argument is non-zero, the display is offset to preserve centering.
+.Pp
+The
+.Fn tileview_set_autoredraw
+function controls the auto-refresh setting.
+If
+.Fa flag
+is non-zero, the tile is automatically regenerated every
+.Fa rate
+milliseconds.
+.Sh PRIMITIVES
+.nr nS 1
+.Ft "void"
+.Fn tileview_color3i "struct tileview *tv" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn tileview_color4i "struct tileview *tv" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
+.Fn tileview_sdl_color "struct tileview *tv" "SDL_Color *color" "Uint8 alpha"
+.Pp
+.Ft "void"
+.Fn tileview_alpha "struct tileview *tv "Uint8 alpha"
+.Pp
+.Ft "void"
+.Fn tileview_pixel2i "struct tileview *tv" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn tileview_scaled_pixel "struct tileview *tv" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn tileview_rect2 "struct tileview *tv" "int x" "int y" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn tileview_rect2o "struct tileview *tv" "int x" "int y" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn tileview_circle2o "struct tileview *tv" "int x" "int y" "int r"
+.Pp
+.nr nS 0
+The
+.Fn tileview_color3i ,
+.Fn tileview_color4i ,
+.Fn tileview_sdl_color
+and
+.Fn tileview_alpha
+functions modify the current RGBA value describing the color to use for
+subsequent primitive calls.
+.Pp
+The
+.Fn tileview_pixel2i
+function plots a pixel (or a filled rectangle if zoom is used) at the given
+tile coordinates.
+The pixel will not be displayed until the tile is regenerated.
+The
+.Fn tileview_scaled_pixel
+function plots a scaled pixel directly on the cached surface displayed by the
+.Nm .
+It is used as an optimization in some situations to avoid the need for
+regenerating the tile.
+.Pp
+The
+.Fn tileview_rect2
+function draws a filled rectangle of dimensions
+.Fa w ,
+.Fa h
+at tile coordinates
+.Fa x ,
+.Fa y .
+The
+.Fn tileview_rect2o
+variant draws a rectangle outline.
+.Pp
+The
+.Fn tileview_circle2o
+function draws a circle outline of radius
+.Fa r
+with the origin at
+.Fa x ,
+.Fa y .
+.Sh GRAPHICAL CONTROLS
+.nr nS 1
+.Ft "struct tileview_ctrl *"
+.Fn tileview_insert_ctrl "struct tileview *tv" "enum tileview_ctrl_type type" "const char *fmt"
+.Pp
+.Ft "void"
+.Fn tileview_remove_ctrl "struct tileview *tv" "struct tileview_ctrl *ctrl"
+.Pp
+.Ft "int"
+.Fn tileview_int "struct tileview *tv" "int nval"
+.Pp
+.Ft "u_int"
+.Fn tileview_uint "struct tileview *tv" "int nval"
+.Pp
+.Ft "float"
+.Fn tileview_float "struct tileview *tv" "int nval"
+.Pp
+.Ft "double"
+.Fn tileview_double "struct tileview *tv" "int nval"
+.Pp
+.Ft "void"
+.Fn tileview_set_int "struct tileview *tv" "int nval" "int v"
+.Pp
+.Ft "void"
+.Fn tileview_set_uint "struct tileview *tv" "int nval" "u_int v"
+.Pp
+.Ft "void"
+.Fn tileview_set_float "struct tileview *tv" "int nval" "float v"
+.Pp
+.Ft "void"
+.Fn tileview_set_double "struct tileview *tv" "int nval" "double v"
+.Pp
+.nr nS 0
+The
+.Nm
+widget implements generic graphical controls.
+It is used for moving and resizing pixmaps/sketches inside tiles and
+controlling particular features.
+A control may manipulate multiple integral and floating-point variables.
+.Pp
+The
+.Fn tileview_insert_ctrl
+function creates a new graphical control of the given type:
+.Bd -literal
+enum tileview_ctrl_type {
+	TILEVIEW_POINT,			/* Point (x,y) */
+	TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
+	TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
+	TILEVIEW_CIRCLE			/* Circle (x,y,r) */
+};
+.Ed
+.Pp
+.Dv TILEVIEW_POINT
+controls a single point value.
+It is used for setting the position of the origin of a tile, for instance.
+.Dv TILEVIEW_RECTANGLE
+controls both the coordinates and geometry of a rectangle.
+It is used for things like pixmaps and sketches.
+.Dv TILEVIEW_RDIMENSIONS
+controls the dimensions of a non-movable rectangle.
+It is used for changing the geometry of the tile itself when no sketches,
+pixmaps or features are selected.
+.Dv TILEVIEW_CIRCLE
+controls the position and radius of a circle.
+.Pp
+The special format string
+.Fa fmt
+and subsequent arguments specify the variables to edit.
+Acceptable sequences include %i (int), %u (u_int), %f (float) and %d (double).
+Sequences such as %*i specify that the argument is a pointer to the given type.
+.Pp
+The
+.Fn tileview_remove_ctrl
+function destroys the given control.
+.Pp
+The remaining
+.Fn tileview_*
+and
+.Fn tileview_set_*
+functions respectively retrieve and modify the given value associated with the
+given control.
+.Sh TOOLS
+.nr nS 1
+.Ft "void"
+.Fn tileview_select_tool "struct tileview *tv" "struct tileview_tool *tool"
+.Pp
+.Ft "void"
+.Fn tileview_unselect_tool "struct tileview *tv"
+.Pp
+.nr nS 0
+The
+.Fn tileview_select_tool
+and
+.Fn tileview_unselect_tool
+functions select or deselect the current edition tool.
+.Pp
+The generic features of all edition tools are defined by the structure:
+.Bd -literal
+struct tileview_tool_ops {
+	const char *name;		/* Name of tool */
+	const char *desc;		/* Description */
+	size_t len;			/* Length of structure */
+	int flags;				
+#define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
+#define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
+#define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
+#define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+
+	int icon;			/* Index into icons[] array */
+	int cursor;			/* Index into cursors[] array */
+
+	void		(*init)(void *);
+	void		(*destroy)(void *);
+	struct window  *(*edit)(void *);
+	void		(*selected)(void *);
+	void		(*unselected)(void *);
+};
+.Ed
+.Pp
+Two specialized derivates are available, one for bitmap-specific tools and
+another for vector-specific tools:
+.Bd -literal
+struct tileview_bitmap_tool_ops {
+	struct tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, int, int, int);
+	void (*mousebuttonup)(void *, int, int, int);
+	void (*mousemotion)(void *, int, int, int, int);
+};
+
+struct tileview_sketch_tool_ops {
+	struct tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, struct sketch *, double, double,
+	                        int);
+	void (*mousebuttonup)(void *, struct sketch *, double, double,
+	                      int);
+	void (*mousemotion)(void *, struct sketch *, double, double,
+	                    double, double);
+	int (*mousewheel)(void *, struct sketch *, int);
+	void (*keydown)(void *, struct sketch *, int, int);
+	void (*keyup)(void *, struct sketch *, int, int);
+};
+.Ed
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -width 25n
+.It window-keydown
+Forward to the active tool, or builtin function such as [ctrl-z] (undo),
+[ctrl-r] (redo), [=] (zoom 1:1), [-] (zoom out) and [+] (zoom in).
+.It window-keyup
+Forward to the active tool or stop zooming.
+.It window-mousebuttondown
+Forward to the active tool or enable a graphical control.
+.It window-mousebuttonup
+Forward to the active tool or disable a graphical control.
+.It window-mousemotion
+Forward to the active tool or displace a graphical control.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr tileset 3 ,
+.Xr tile 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.

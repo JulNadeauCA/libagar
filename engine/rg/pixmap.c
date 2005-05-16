@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.26 2005/05/08 11:09:22 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.27 2005/05/08 11:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -954,8 +954,10 @@ void
 pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
     int y, int button)
 {
-	if (button == SDL_BUTTON_LEFT)
+	if (button == SDL_BUTTON_LEFT) {
 		tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
+		tv->tile->flags |= TILE_DIRTY;
+	}
 }
 
 void
