@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.177 2005/05/08 13:26:03 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.178 2005/05/13 03:41:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -650,12 +650,14 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	int w, h;
 
 	/* The size of OpenGL surfaces must be a power of two. */
-	w = powof2(sourcesu->w);
-	h = powof2(sourcesu->h);
-	texcoord[0] = 0.0f;
-	texcoord[1] = 0.0f;
-	texcoord[2] = (GLfloat)sourcesu->w / w;
-	texcoord[3] = (GLfloat)sourcesu->h / h;
+	if (texcoord != NULL) {
+		w = powof2(sourcesu->w);
+		h = powof2(sourcesu->h);
+		texcoord[0] = 0.0f;
+		texcoord[1] = 0.0f;
+		texcoord[2] = (GLfloat)sourcesu->w / w;
+		texcoord[3] = (GLfloat)sourcesu->h / h;
+	}
 
 	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
@@ -678,7 +680,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	SDL_SetAlpha(sourcesu, 0, 0);
 	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
 	SDL_SetAlpha(sourcesu, saflags, salpha);
-
+	
 	/* Create the OpenGL texture. */
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
