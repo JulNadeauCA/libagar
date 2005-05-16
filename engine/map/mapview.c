@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.7 2005/05/08 11:09:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.8 2005/05/08 11:13:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -463,7 +463,10 @@ draw_cursor(struct mapview *mv)
 		rd.x = msx;
 		rd.y = msy;
 		/* XXX opengl */
-		SDL_BlitSurface(ICON(SELECT_CURSORBMP), NULL, view->v, &rd);
+		if (!view->opengl) {
+			SDL_BlitSurface(ICON(SELECT_CURSORBMP), NULL,
+			    view->v, &rd);
+		}
 		return;
 	}
 	
@@ -476,7 +479,11 @@ draw_cursor(struct mapview *mv)
 	if (mv->curtool->cursor_su != NULL) {
 		rd.x += WIDGET(mv)->cx;
 		rd.y += WIDGET(mv)->cy;
-		SDL_BlitSurface(mv->curtool->cursor_su, NULL, view->v, &rd);
+		/* XXX opengl */
+		if (!view->opengl) {
+			SDL_BlitSurface(mv->curtool->cursor_su, NULL,
+			    view->v, &rd);
+		}
 	} else {
 		if (mv->curtool->cursor != NULL) {
 			if (mv->curtool->cursor(mv->curtool, &rd) == -1)
@@ -514,6 +521,12 @@ mapview_draw(void *p)
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
+#ifdef HAVE_OPENGL
+	GLboolean blend_save;
+	GLenum blend_sfactor;
+	GLenum blend_dfactor;
+	GLfloat texenvmode;
+#endif
 	
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
@@ -530,11 +543,22 @@ mapview_draw(void *p)
 		    COLOR(MAPVIEW_TILE1_COLOR),
 		    COLOR(MAPVIEW_TILE2_COLOR));
 	}
-	
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		glGetBooleanv(GL_BLEND, &blend_save);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+#endif
 	pthread_mutex_lock(&m->lock);
 	if (m->map == NULL)
 		goto out;
-
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
@@ -622,6 +646,17 @@ next_layer:
 #endif /* EDITION */
 
 out:
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		if (blend_save) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+	}
+#endif
 	pthread_mutex_unlock(&m->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.4 2005/04/21 04:45:29 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.5 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1245,14 +1245,19 @@ blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
  * If there are transforms to apply, return a pointer to a matching
  * entry in the sprite transformation cache, or allocate a new one.
  */
-static __inline__ SDL_Surface *
-draw_sprite(struct noderef *r)
+static __inline__ void
+draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 {
 	struct sprite *spr = &SPRITE(r->r_sprite.obj,r->r_sprite.offs);
 	struct gfx_cached_sprite *csp;
 
-	if (TAILQ_EMPTY(&r->transforms))
-		return (spr->su);
+	if (TAILQ_EMPTY(&r->transforms)) {
+		*pSu = spr->su;
+#ifdef HAVE_OPENGL
+		*pTexture = spr->texture;
+#endif
+		return;
+	}
 
 	/*
 	 * Look for a cached sprite with the same transforms applied
@@ -1276,7 +1281,11 @@ draw_sprite(struct noderef *r)
 	}
 	if (csp != NULL) {
 		csp->last_drawn = SDL_GetTicks();
-		return (csp->su);
+		*pSu = csp->su;
+#ifdef HAVE_OPENGL
+		*pTexture = csp->texture;
+#endif
+		return;
 	} else {
 		struct transform *tr;
 		SDL_Surface *sOrig = spr->su;
@@ -1322,7 +1331,16 @@ draw_sprite(struct noderef *r)
 		}
 		SLIST_INSERT_HEAD(&spr->csprites, csp, sprites);
 		csp->su = su;
-		return (su);
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			csp->texture = view_surface_texture(su, csp->texcoords);
+		} else {
+			csp->texture = 0;
+		}
+		*pTexture = csp->texture;
+#endif
+		*pSu = csp->su;
+		return;
 	}
 }
 
@@ -1331,15 +1349,20 @@ draw_sprite(struct noderef *r)
  * If there are transforms to apply, return a pointer to a matching
  * entry in the anim transformation cache, or allocate a new one.
  */
-static SDL_Surface *
-draw_anim(struct noderef *r)
+static void
+draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 {
 	struct gfx_anim *oanim = ANIM(r->r_anim.obj, r->r_anim.offs);
 	struct gfx_cached_anim *canim;
 	struct gfx_animcl *animcl;
 
-	if (TAILQ_EMPTY(&r->transforms))
-		return (GFX_ANIM_FRAME(r, oanim));
+	if (TAILQ_EMPTY(&r->transforms)) {
+		*pSurface = GFX_ANIM_FRAME(r, oanim);
+#ifdef HAVE_OPENGL
+		*pTexture = GFX_ANIM_TEXTURE(r, oanim);
+#endif
+		return;
+	}
 
 	/*
 	 * Look for a cached animation with the same transforms applied
@@ -1364,7 +1387,11 @@ draw_anim(struct noderef *r)
 	}
 	if (canim != NULL) {
 		canim->last_drawn = SDL_GetTicks();
-		return (GFX_ANIM_FRAME(r, canim->anim));
+		*pSurface = GFX_ANIM_FRAME(r, canim->anim);
+#ifdef HAVE_OPENGL
+		*pTexture = GFX_ANIM_TEXTURE(r, canim->anim);
+#endif
+		return;
 	} else {
 		struct transform *trans, *ntrans;
 		struct gfx_anim *nanim;
@@ -1378,6 +1405,10 @@ draw_anim(struct noderef *r)
 		nanim = ncanim->anim = Malloc(sizeof(struct gfx_anim), M_GFX);
 		nanim->frames = Malloc(oanim->nframes*sizeof(SDL_Surface *),
 		    M_GFX);
+#ifdef HAVE_OPENGL
+		nanim->textures = Malloc(oanim->nframes*sizeof(GLuint),
+		    M_GFX);
+#endif
 		nanim->nframes = oanim->nframes;
 		nanim->maxframes = oanim->nframes;
 		nanim->frame = oanim->frame;
@@ -1419,6 +1450,12 @@ draw_anim(struct noderef *r)
 				}
 			}
 			nanim->frames[i] = sFrame;
+#ifdef HAVE_OPENGL
+			if (view->opengl) {
+				nanim->textures[i] =
+				    view_surface_texture(sFrame, NULL);
+			}
+#endif
 		}
 		TAILQ_FOREACH(trans, &r->transforms, transforms) {
 			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
@@ -1428,8 +1465,23 @@ draw_anim(struct noderef *r)
 			    transforms);
 		}
 		SLIST_INSERT_HEAD(&animcl->anims, ncanim, anims);
-		return (GFX_ANIM_FRAME(r, nanim));
+		*pSurface = GFX_ANIM_FRAME(r, nanim);
+#ifdef HAVE_OPENGL
+		*pTexture = GFX_ANIM_TEXTURE(r, nanim);
+#endif
+		return;
 	}
+}
+
+static __inline__ int
+powof2(int i)
+{
+	int val = 1;
+
+	while (val < i) {
+		val <<= 1;
+	}
+	return (val);
 }
 
 /*
@@ -1439,9 +1491,13 @@ draw_anim(struct noderef *r)
 void
 noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 {
-	SDL_Surface *su;
 #if defined(DEBUG) || defined(EDITION)
 	int freesu = 0;
+#endif
+	SDL_Surface *su;
+#ifdef HAVE_OPENGL
+	u_int texture;
+	GLfloat texcoord[4];
 #endif
 
 	switch (r->type) {
@@ -1458,7 +1514,11 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 			goto draw;
 		}
 #endif
-		su = draw_sprite(r);
+#ifdef HAVE_OPENGL
+		draw_sprite(r, &su, &texture);
+#else
+		draw_sprite(r, &su, NULL);
+#endif
 		break;
 	case NODEREF_ANIM:
 #if defined(DEBUG) || defined(EDITION)
@@ -1473,27 +1533,72 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 			goto draw;
 		}
 #endif
-		su = draw_anim(r);
+#ifdef HAVE_OPENGL
+		draw_anim(r, &su, &texture);
+#else
+		draw_anim(r, &su, NULL);
+#endif
 		break;
 	default:				/* Not a drawable */
 		return;
 	}
 
 draw:
-	if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
-		int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
-		         r->r_gfx.xmotion*tilesz/TILESZ;
-		int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
-		         r->r_gfx.ymotion*tilesz/TILESZ;
-		/* TODO precalculate the scaled offset */
 
-		blit_scaled(m, su, dx, dy, tilesz);
+	if (!view->opengl) {
+		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
+			int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
+			         r->r_gfx.xmotion*tilesz/TILESZ;
+			int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
+			         r->r_gfx.ymotion*tilesz/TILESZ;
+	
+			blit_scaled(m, su, dx, dy, tilesz);
+		} else {
+			SDL_Rect rd;
+	
+			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
+			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
+			SDL_BlitSurface(su, NULL, view->v, &rd);
+		}
 	} else {
+#ifdef HAVE_OPENGL
+		GLfloat texcoord[4];
 		SDL_Rect rd;
 
-		rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
-		rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
-		SDL_BlitSurface(su, NULL, view->v, &rd);
+		texcoord[0] = 0.0f;
+		texcoord[1] = 0.0f;
+		texcoord[2] = (GLfloat)su->w / powof2(su->w);
+		texcoord[3] = (GLfloat)su->h / powof2(su->h);
+		
+		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
+			rd.x = rx + r->r_gfx.xcenter*tilesz/TILESZ +
+			    r->r_gfx.xmotion*tilesz/TILESZ;
+			rd.y = ry + r->r_gfx.ycenter*tilesz/TILESZ +
+			    r->r_gfx.ymotion*tilesz/TILESZ;
+			rd.w = su->w*tilesz/TILESZ;
+			rd.h = su->h*tilesz/TILESZ;
+		} else {
+			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
+			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
+			rd.w = su->w;
+			rd.h = su->h;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glBegin(GL_TRIANGLE_STRIP);
+		{
+			glTexCoord2f(texcoord[0],	texcoord[1]);
+			glVertex2i(rd.x,		rd.y);
+			glTexCoord2f(texcoord[2],	texcoord[1]);
+			glVertex2i(rd.x+rd.w,		rd.y);
+			glTexCoord2f(texcoord[0],	texcoord[3]);
+			glVertex2i(rd.x,		rd.y+rd.h);
+			glTexCoord2f(texcoord[2],	texcoord[3]);
+			glVertex2i(rd.x+rd.w,		rd.y+rd.h);
+		}
+		glEnd();
+		glBindTexture(GL_TEXTURE_2D, 0);
+#endif /* HAVE_OPENGL */
 	}
 
 #if defined(DEBUG) || defined(EDITION)
