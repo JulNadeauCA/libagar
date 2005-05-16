@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.27 2005/05/08 11:13:49 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.28 2005/05/16 07:13:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -45,7 +45,6 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/separator.h>
-#include <engine/widget/combo.h>
 #include <engine/widget/notebook.h>
 
 #include "tileset.h"

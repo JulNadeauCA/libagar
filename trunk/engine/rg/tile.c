@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.41 2005/05/16 04:20:51 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.42 2005/05/16 04:27:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,7 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "fill.h"
+#include "polygon.h"
 
 /*
  * Blend a pixmap with the tile; add the source alpha to the destination
@@ -998,7 +999,7 @@ attach_sketch_dlg(int argc, union evarg *argv)
 	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
 		struct tlist_item *it;
 
-		it = tlist_insert(tl, ICON(DRAWING_ICON), "%s (%ux%u, %.0f%%)",
+		it = tlist_insert(tl, sk->vg->su, "%s (%ux%u, %.0f%%)",
 		    sk->name, sk->vg->su->w, sk->vg->su->h,
 		    sk->vg->scale*100.0);
 		it->p1 = sk;
@@ -1022,6 +1023,29 @@ attach_sketch_dlg(int argc, union evarg *argv)
 }
 
 static void
+select_feature(struct tlist *tl_feats, void *fp)
+{
+	struct feature *feat = fp;
+	struct tlist_item *eit;
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(eit, &tl_feats->items, items) {
+		struct tile_element *tel;
+
+		if (strcmp(eit->class, "feature") != 0) {
+			continue;
+		}
+		tel = eit->p1;
+		if (tel->tel_feature.ft == feat) {
+			tlist_select(tl_feats, eit);
+			break;
+		}
+	}
+}
+
+static void
 insert_fill(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
@@ -1037,22 +1061,26 @@ insert_fill(int argc, union evarg *argv)
 	tel = tile_add_feature(tv->tile, fill, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
+	select_feature(tl_feats, fill);
+}
 
-	/* Select the newly inserted feature. */
-	event_post(NULL, tl_feats, "tlist-poll", NULL);
-	tlist_unselect_all(tl_feats);
-	TAILQ_FOREACH(eit, &tl_feats->items, items) {
-		struct tile_element *tel;
+static void
+insert_polygon(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tlist_item *eit;
+	struct polygon *poly;
+	struct tile_element *tel;
 
-		if (strcmp(eit->class, "feature") != 0) {
-			continue;
-		}
-		tel = eit->p1;
-		if (tel->tel_feature.ft == FEATURE(fill)) {
-			tlist_select(tl_feats, eit);
-			break;
-		}
-	}
+	poly = Malloc(sizeof(struct polygon), M_RG);
+	polygon_init(poly, tv->ts, 0);
+	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(poly), features);
+	tel = tile_add_feature(tv->tile, poly, 0, 0);
+	close_element(tv);
+	open_element(tv, tel, pwin);
+	select_feature(tl_feats, poly);
 }
 
 static void
@@ -1618,13 +1646,15 @@ tile_edit(struct tileset *ts, struct tile *t)
 		menu_action_kb(mi, _("Fill"), RG_FILL_ICON,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
-		    
-		menu_action_kb(mi, _("Sketch projection"),RG_SKETCH_PROJ_ICON,
-		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
-		    NULL, "%p,%p", ts, t);
 		
 		menu_action_kb(mi, _("Polygon"), RG_POLYGON_ICON,
 		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
+		    insert_polygon, "%p,%p,%p", tv, win, tl_feats);
+
+		menu_separator(mi);
+
+		menu_action_kb(mi, _("Sketch projection"),RG_SKETCH_PROJ_ICON,
+		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 		
 		menu_action_kb(mi, _("Extrusion"), RG_EXTRUSION_ICON,

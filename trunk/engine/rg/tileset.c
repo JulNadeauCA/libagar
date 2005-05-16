@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.30 2005/04/21 04:45:28 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.31 2005/05/16 04:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -496,7 +496,7 @@ poll_art(int argc, union evarg *argv)
 		it->class = "pixmap";
 	}
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
-		it = tlist_insert(tl, ICON(DRAWING_ICON),
+		it = tlist_insert(tl, sk->vg->su,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
 		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
 		it->class = "sketch";
