@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.69 2005/05/08 04:19:28 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.70 2005/05/08 07:19:21 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -436,14 +436,16 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 
 /* Render an outlined rectangle. */
 static void
-rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
+rect_outlined(void *p, int x1, int y1, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
+	int x2 = x1+w-1;
+	int y2 = y1+h-1;
 
-	primitives.line(wid, x, y, x+w-1, y, color);
-	primitives.line(wid, x, y+h-1, x+w-1, y+h-1, color);
-	primitives.line(wid, x, y, x, y+h-1, color);
-	primitives.line(wid, x+w-1, y, x+w-1, y+h-1, color);
+	primitives.line(wid, x1, y1, x2, y1, color);
+	primitives.line(wid, x1, y2, x2, y2, color);
+	primitives.line(wid, x1, y1, x1, y2, color);
+	primitives.line(wid, x2, y1, x2, y2, color);
 }
 
 /* Render a filled rectangle. */
@@ -522,17 +524,6 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 	int x2 = wid->cx + px2;
 	int y2 = wid->cy + py2;
 	Uint8 r, g, b;
-
-	if (wid->flags & WIDGET_CLIPPING) {
-		if (x1 > wid->cx+wid->w ||
-		    y1 > wid->cy+wid->h ||
-		    x2 > wid->cx+wid->w ||
-		    y2 > wid->cy+wid->h ||
-		    x1 < wid->cx ||
-		    y1 < wid->cy) {
-			return;
-		}
-	}
 
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	glBegin(GL_LINES);
@@ -694,9 +685,9 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
-		glVertex2s(rad, -rad);
-		glVertex2s(0, 0);
-		glVertex2s(rad, 0);
+		glVertex2i(rad, -rad);
+		glVertex2i(0, 0);
+		glVertex2i(rad, 0);
 	}
 	glEnd();
 	glPopMatrix();
@@ -706,9 +697,9 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
-		glVertex2s(-rad, -rad);
-		glVertex2s(0, 0);
-		glVertex2s(-rad, 0);
+		glVertex2i(-rad, -rad);
+		glVertex2i(0, 0);
+		glVertex2i(-rad, 0);
 	}
 	glEnd();
 	glPopMatrix();
