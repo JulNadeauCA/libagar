@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.107 2005/05/14 10:05:13 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.108 2005/05/16 00:41:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1114,27 +1114,99 @@ widget_draw(void *p)
 {
 	struct widget *wid = p;
 	struct widget *cwid;
+#ifdef HAVE_OPENGL
+	GLdouble plane0sv[4];
+	GLdouble plane1sv[4];
+	GLdouble plane2sv[4];
+	GLdouble plane3sv[4];
+	int plane0ena;
+	int plane1ena;
+	int plane2ena;
+	int plane3ena;
+#ifdef DEBUG
+	GLdouble plane4sv[4];
+	int plane4ena;
+#endif
+#endif /* HAVE_OPENGL */
 
 	if (WIDGET_OPS(wid)->draw != NULL &&
 	    !widget_completely_occulted(wid)) {
 		SDL_Rect clip_save;
 
 		if (wid->flags & WIDGET_CLIPPING) {
-			SDL_Rect clip;
+			if (!view->opengl) {
+				SDL_Rect clip;
 
-			clip.x = wid->cx;
-			clip.y = wid->cy;
-			clip.w = wid->w;
-			clip.h = wid->h;
+				clip.x = wid->cx;
+				clip.y = wid->cy;
+				clip.w = wid->w;
+				clip.h = wid->h;
+				SDL_GetClipRect(view->v, &clip_save);
+				SDL_SetClipRect(view->v, &clip);
+			} else {
+#ifdef HAVE_OPENGL
+				GLdouble eq0[4] = { 1, 0, 0, -wid->cx };
+				GLdouble eq1[4] = { 0, 1, 0, -wid->cy };
+				GLdouble eq2[4] = { -1, 0, 0, wid->cx2-1 };
+				GLdouble eq3[4] = { 0, -1, 0, wid->cy2-1 };
 
-			SDL_GetClipRect(view->v, &clip_save);
-			SDL_SetClipRect(view->v, &clip);
+				plane0ena = glIsEnabled(GL_CLIP_PLANE0);
+				plane1ena = glIsEnabled(GL_CLIP_PLANE1);
+				plane2ena = glIsEnabled(GL_CLIP_PLANE2);
+				plane3ena = glIsEnabled(GL_CLIP_PLANE3);
+
+				glGetClipPlane(GL_CLIP_PLANE0, plane0sv);
+				glGetClipPlane(GL_CLIP_PLANE1, plane1sv);
+				glGetClipPlane(GL_CLIP_PLANE2, plane2sv);
+				glGetClipPlane(GL_CLIP_PLANE3, plane3sv);
+
+				glClipPlane(GL_CLIP_PLANE0, eq0);
+				glClipPlane(GL_CLIP_PLANE1, eq1);
+				glClipPlane(GL_CLIP_PLANE2, eq2);
+				glClipPlane(GL_CLIP_PLANE3, eq3);
+				
+				glEnable(GL_CLIP_PLANE0);
+				glEnable(GL_CLIP_PLANE1);
+				glEnable(GL_CLIP_PLANE2);
+				glEnable(GL_CLIP_PLANE3);
+#endif /* HAVE_OPENGL */
+			}
 		}
 
 		WIDGET_OPS(wid)->draw(wid);
 		
 		if (wid->flags & WIDGET_CLIPPING) {
-			SDL_SetClipRect(view->v, &clip_save);
+			if (!view->opengl) {
+				SDL_SetClipRect(view->v, &clip_save);
+			} else {
+#ifdef HAVE_OPENGL
+				glClipPlane(GL_CLIP_PLANE0, plane0sv);
+				glClipPlane(GL_CLIP_PLANE1, plane1sv);
+				glClipPlane(GL_CLIP_PLANE2, plane2sv);
+				glClipPlane(GL_CLIP_PLANE3, plane3sv);
+				
+				if (plane0ena) {
+					glEnable(GL_CLIP_PLANE0);
+				} else {
+					glDisable(GL_CLIP_PLANE0);
+				}
+				if (plane1ena) {
+					glEnable(GL_CLIP_PLANE1);
+				} else {
+					glDisable(GL_CLIP_PLANE1);
+				}
+				if (plane2ena) {
+					glEnable(GL_CLIP_PLANE2);
+				} else {
+					glDisable(GL_CLIP_PLANE2);
+				}
+				if (plane3ena) {
+					glEnable(GL_CLIP_PLANE3);
+				} else {
+					glDisable(GL_CLIP_PLANE3);
+				}
+#endif /* HAVE_OPENGL */
+			}
 		}
 	}
 

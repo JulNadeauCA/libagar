@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.143 2005/05/08 09:22:42 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.144 2005/05/14 10:05:54 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/fspinbutton.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/separator.h>
