@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.40 2005/04/21 10:31:27 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.41 2005/05/16 04:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -620,12 +620,10 @@ pixmap_ctrl_buttonup(int argc, union evarg *argv)
 	int w = tileview_int(ctrl, 2);
 	int h = tileview_int(ctrl, 3);
 	
-	if (w != px->su->w || h != px->su->h) 
+	if (w != px->su->w || h != px->su->h) {
 		pixmap_scale(px, w, h, ctrl->xoffs, ctrl->yoffs);
-
-	tile_generate(t);
-	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
-	t->flags &= ~(TILE_DIRTY);
+	}
+	t->flags |= TILE_DIRTY;
 }
 
 static void
@@ -638,12 +636,10 @@ sketch_ctrl_buttonup(int argc, union evarg *argv)
 	int w = tileview_int(ctrl, 2);
 	int h = tileview_int(ctrl, 3);
 	
-	if (w != sk->vg->su->w || h != sk->vg->su->h) 
+	if (w != sk->vg->su->w || h != sk->vg->su->h)  {
 		sketch_scale(sk, w, h, 1.0, ctrl->xoffs, ctrl->yoffs);
-
-	tile_generate(t);
-	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
-	t->flags &= ~(TILE_DIRTY);
+	}
+	t->flags |= TILE_DIRTY;
 }
 
 static void
