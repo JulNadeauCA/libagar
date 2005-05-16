@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.106 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.107 2005/05/14 10:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -852,16 +852,25 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		GLuint texture;
 		GLfloat texcoord[4];
 		int alpha = (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY));
+		GLboolean blend_sv;
+		GLenum blend_sfactor, blend_dfactor;
+		GLfloat texenvmode;
 
 		texture = view_surface_texture(srcsu, texcoord);
-	
+
+		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glBindTexture(GL_TEXTURE_2D, texture);
 	
 		if (alpha) {
+			glGetBooleanv(GL_BLEND, &blend_sv);
+			glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+			glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
+
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glBegin(GL_TRIANGLE_STRIP);
 		{
 			glTexCoord2f(texcoord[0], texcoord[1]);
@@ -874,11 +883,19 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 			glVertex2i(rd.x+srcsu->w, rd.y+srcsu->h);
 		}
 		glEnd();
-		glDeleteTextures(1, &texture);
-		if (alpha) {
-			glDisable(GL_BLEND);
-		}
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glDeleteTextures(1, &texture);
+
+		if (alpha) {
+			if (blend_sv) {
+				glEnable(GL_BLEND);
+			} else {
+				glDisable(GL_BLEND);
+			}
+			glBlendFunc(blend_sfactor, blend_dfactor);
+		}
+		
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -925,6 +942,9 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		GLuint texture = srcwid->textures[name];
 		GLfloat *texcoord;
 		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+		GLboolean blend_sv;
+		GLenum blend_sfactor, blend_dfactor;
+		GLfloat texenvmode;
 
 		if (rs == NULL) {
 			texcoord = &srcwid->texcoords[name*4];
@@ -939,14 +959,19 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		if (texture == 0)
 			fatal("invalid texture name");
 #endif
+		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glBindTexture(GL_TEXTURE_2D, texture);
 
 		if (alpha) {
+			glGetBooleanv(GL_BLEND, &blend_sv);
+			glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+			glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glBegin(GL_TRIANGLE_STRIP);
 		{
 			glTexCoord2f(texcoord[0], texcoord[1]);
@@ -959,11 +984,18 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			glVertex2i(rd.x+su->w, rd.y+su->h);
 		}
 		glEnd();
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		if (alpha) {
-			glDisable(GL_BLEND);
+			if (blend_sv) {
+				glEnable(GL_BLEND);
+			} else {
+				glDisable(GL_BLEND);
+			}
+			glBlendFunc(blend_sfactor, blend_dfactor);
 		}
-		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
 	} else
 #endif /* HAVE_OPENGL */
 	{
