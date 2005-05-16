@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.39 2005/04/21 07:58:18 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.40 2005/04/21 10:31:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1473,9 +1473,7 @@ regenerate_tile(int argc, union evarg *argv)
 	struct tileview *tv = argv[1].p;
 	struct tile *t = tv->tile;
 
-	tile_generate(t);
-	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
-	t->flags &= ~(TILE_DIRTY);
+	t->flags |= TILE_DIRTY;
 }
 
 struct window *
