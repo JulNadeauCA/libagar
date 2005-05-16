@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.26 2005/04/21 04:45:44 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.27 2005/04/21 06:38:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -12,7 +12,7 @@ struct gfx_anim {
 	SDL_Surface **frames;
 #ifdef HAVE_OPENGL
 	GLuint *textures;
-	GLfloat *texcoords;
+	GLfloat texcoords[4];
 #endif
 	Uint32 nframes;
 	Uint32 maxframes;
@@ -90,6 +90,9 @@ struct gfx {
 #define GFX_ANIM_FRAME(r, an) \
     (an)->frames[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
                  (r)->r_anim.frame : an->frame]
+#define GFX_ANIM_TEXTURE(r, an) \
+    (an)->textures[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
+                   (r)->r_anim.frame : an->frame]
 
 TAILQ_HEAD(gfxq, gfx);
 extern struct gfxq gfxq;
