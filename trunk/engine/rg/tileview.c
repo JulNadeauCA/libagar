@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.34 2005/05/13 02:21:55 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.35 2005/05/14 10:04:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -682,12 +682,7 @@ autoredraw(void *obj, Uint32 ival, void *arg)
 {
 	struct tileview *tv = obj;
 
-	tile_generate(tv->tile);
-	view_scale_surface(tv->tile->su, tv->scaled->w, tv->scaled->h,
-	    &tv->scaled);
-	widget_replace_surface(tv, 0, tv->scaled);
-
-	tv->tile->flags &= ~TILE_DIRTY;
+	tv->tile->flags |= TILE_DIRTY;
 	return (ival);
 }
 

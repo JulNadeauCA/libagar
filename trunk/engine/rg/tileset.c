@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.29 2005/04/18 03:38:35 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.30 2005/04/21 04:45:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -617,8 +617,8 @@ poll_tiles(int argc, union evarg *argv)
 			}
 		}
 	}
-	pthread_mutex_unlock(&ts->lock);
 	tlist_restore_selections(tl);
+	pthread_mutex_unlock(&ts->lock);
 }
 
 static char ins_tile_name[TILE_NAME_MAX];
