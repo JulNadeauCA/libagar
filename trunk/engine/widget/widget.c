@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.108 2005/05/16 00:41:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.109 2005/05/16 03:16:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1119,10 +1119,10 @@ widget_draw(void *p)
 	GLdouble plane1sv[4];
 	GLdouble plane2sv[4];
 	GLdouble plane3sv[4];
-	int plane0ena;
-	int plane1ena;
-	int plane2ena;
-	int plane3ena;
+	int plane0ena = 0;		/* XXX warnings */
+	int plane1ena = 0;
+	int plane2ena = 0;
+	int plane3ena = 0;
 #ifdef DEBUG
 	GLdouble plane4sv[4];
 	int plane4ena;
