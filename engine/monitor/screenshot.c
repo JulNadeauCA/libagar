@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.16 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.17 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -83,9 +83,10 @@ screenshot_output_message(j_common_ptr jcomp)
 static void
 screenshot_xmit(int fd)
 {
+	extern int view_screenshot_quality;
 	int nframe = 0;
 	FILE *fp;
-	SDL_Surface *srcsu = view->v;
+	SDL_Surface *su;
 	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
@@ -99,16 +100,16 @@ screenshot_xmit(int fd)
 	
 	jpeg_create_compress(&jcomp);
 
-	jcomp.image_width = srcsu->w;
-	jcomp.image_height = srcsu->h;
+	jcomp.image_width = view->w;
+	jcomp.image_height = view->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, 75, TRUE);
+	jpeg_set_quality(&jcomp, view_screenshot_quality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(srcsu->w * 3, M_VIEW);
+	jcopybuf = Malloc(view->w * 3, M_VIEW);
 
 	for (;;) {
 		JSAMPROW row[1];
@@ -121,45 +122,46 @@ screenshot_xmit(int fd)
 			break;
 		}
 
-		snprintf(status, sizeof(status),
-		    _("Transmitting frame %d"), nframe);
+		snprintf(status, sizeof(status), _("Transmitting frame %d"),
+		    nframe);
+
+		if (!view->opengl) {
+			su = view->v;
+		} else {
+#ifdef HAVE_OPENGL
+			su = view_gl_capture();
+#endif
+		}
 
 		jpeg_start_compress(&jcomp, TRUE);
 
 		while (jcomp.next_scanline < jcomp.image_height) {
-			Uint8 *src = (Uint8 *)srcsu->pixels +
-			    jcomp.next_scanline * srcsu->pitch;
-			Uint8 *dst = jcopybuf;
+			Uint8 *pSrc = (Uint8 *)su->pixels +
+			    jcomp.next_scanline * su->pitch;
+			Uint8 *pDst = jcopybuf;
 			Uint8 r, g, b;
 
 			for (x = view->w; x > 0; x--) {
-				switch (srcsu->format->BytesPerPixel) {
-				case 4:
-					SDL_GetRGB(*(Uint32 *)src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				case 3:
-				case 2:
-					SDL_GetRGB(*(Uint16 *)src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				case 1:
-					SDL_GetRGB(*src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				}
-				*dst++ = r;
-				*dst++ = g;
-				*dst++ = b;
-				src += srcsu->format->BytesPerPixel;
+				SDL_GetRGB(GET_PIXEL(su, pSrc), su->format,
+				    &r, &g, &b);
+				*pDst++ = r;
+				*pDst++ = g;
+				*pDst++ = b;
+				pSrc += su->format->BytesPerPixel;
 			}
 			row[0] = jcopybuf;
 			jpeg_write_scanlines(&jcomp, row, 1);
 		}
+
 		jpeg_finish_compress(&jcomp);
+
+#ifdef HAVE_OPENGL
+		if (view->opengl)
+			SDL_FreeSurface(su);
+#endif
+
 		SDL_Delay(xmit_delay);
 		nframe++;
-
 		pthread_mutex_unlock(&xmit_lock);
 	}
 	Free(jcopybuf, M_VIEW);

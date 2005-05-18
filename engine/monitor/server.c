@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.4 2005/01/28 12:50:59 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.6 2005/05/01 00:30:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -159,26 +159,34 @@ output_msg(j_common_ptr jcomp)
 }
 
 static int
-cmd_surface(struct command *cmd, void *p)
+cmd_surface(struct command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
 	char tmp[sizeof("/tmp/")+FILENAME_MAX];
-	SDL_Surface *srcsu = p;
+	SDL_Surface *su;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;
 	size_t l, len;
 	FILE *ftmp;
 	int fd;
 
+	if (!view->opengl || pSu != view->v) {
+		su = pSu;
+	} else {
+#ifdef HAVE_OPENGL
+		su = view_gl_capture();
+#endif
+	}
+
 	jcomp.err = jpeg_std_error(&jerrmgr);
 	jerrmgr.error_exit = error_exit;
 	jerrmgr.output_message = output_msg;
 	
 	jpeg_create_compress(&jcomp);
-	jcomp.image_width = srcsu->w;
-	jcomp.image_height = srcsu->h;
+	jcomp.image_width = su->w;
+	jcomp.image_height = su->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
 
@@ -196,9 +204,9 @@ cmd_surface(struct command *cmd, void *p)
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
 
-	jcopybuf = Malloc(srcsu->w * 3, M_VIEW);
-	if (SDL_MUSTLOCK(srcsu)) {
-		SDL_LockSurface(srcsu);
+	jcopybuf = Malloc(su->w * 3, M_VIEW);
+	if (SDL_MUSTLOCK(su)) {
+		SDL_LockSurface(su);
 	}
 	for (i = 0; i < nshots; i++) {
 		JSAMPROW row[1];
@@ -207,39 +215,31 @@ cmd_surface(struct command *cmd, void *p)
 		jpeg_start_compress(&jcomp, TRUE);
 
 		while (jcomp.next_scanline < jcomp.image_height) {
-			Uint8 *src = (Uint8 *)srcsu->pixels +
-			    jcomp.next_scanline * srcsu->pitch;
-			Uint8 *dst = jcopybuf;
+			Uint8 *pSrc = (Uint8 *)su->pixels +
+			    jcomp.next_scanline * su->pitch;
+			Uint8 *pDst = jcopybuf;
 			Uint8 r, g, b;
 
 			for (x = view->w; x > 0; x--) {
-				switch (srcsu->format->BytesPerPixel) {
-				case 4:
-					SDL_GetRGB(*(Uint32 *)src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				case 3:
-				case 2:
-					SDL_GetRGB(*(Uint16 *)src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				case 1:
-					SDL_GetRGB(*src,
-					    srcsu->format, &r, &g, &b);
-					break;
-				}
-				*dst++ = r;
-				*dst++ = g;
-				*dst++ = b;
-				src += srcsu->format->BytesPerPixel;
+				SDL_GetRGB(GET_PIXEL(su, pSrc), su->format,
+				    &r, &g, &b);
+				*pDst++ = r;
+				*pDst++ = g;
+				*pDst++ = b;
+				pSrc += su->format->BytesPerPixel;
 			}
 			row[0] = jcopybuf;
 			jpeg_write_scanlines(&jcomp, row, 1);
 		}
 		jpeg_finish_compress(&jcomp);
 	}
-	if (SDL_MUSTLOCK(srcsu))
-		SDL_UnlockSurface(srcsu);
+	if (SDL_MUSTLOCK(su)) {
+		SDL_UnlockSurface(su);
+	}
+#ifdef HAVE_OPENGL
+	if (view->opengl && su != pSu)
+		SDL_FreeSurface(su);
+#endif
 
 	/* Send the compressed data now that we know its size. */
 	len = (size_t)ftell(ftmp);
