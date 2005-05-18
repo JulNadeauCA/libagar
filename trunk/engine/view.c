@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.179 2005/05/16 00:40:45 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.180 2005/05/16 03:47:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -695,6 +695,23 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	return (texture);
 }
 
+SDL_Surface *
+view_gl_capture(void)
+{
+	Uint8 *pixels, *tmp;
+	SDL_Surface *su;
+
+	pixels = Malloc(view->w*view->h*3, M_RG);
+	glReadPixels(0, 0, view->w, view->h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	view_flip_lines(pixels, view->h, view->w*3);
+	su = SDL_CreateRGBSurfaceFrom(pixels, view->w, view->h, 24, view->w*3,
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0);
+	Free(pixels, M_GFX);
+	return (su);
+}
 #endif /* HAVE_OPENGL */
 
 /*
@@ -719,9 +736,10 @@ view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 
 /* Dump a surface to a JPEG image. */
 void
-view_capture(SDL_Surface *su)
+view_capture(SDL_Surface *pSu)
 {
 #ifdef HAVE_JPEG
+	SDL_Surface *su;
 	char path[MAXPATHLEN];
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
@@ -740,6 +758,14 @@ view_capture(SDL_Surface *su)
 	if (Mkdir(path) == -1 && errno != EEXIST) {
 		text_msg(MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
+	}
+
+	if (!view->opengl || pSu != view->v) {
+		su = pSu;
+	} else {
+#ifdef HAVE_OPENGL
+		su = view_gl_capture();
+#endif
 	}
 
 	for (;;) {
@@ -781,43 +807,35 @@ view_capture(SDL_Surface *su)
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {
-		Uint8 *src = (Uint8 *)su->pixels +
+		Uint8 *pSrc = (Uint8 *)su->pixels +
 		    jcomp.next_scanline*su->pitch;
-		Uint8 *dst = jcopybuf;
+		Uint8 *pDst = jcopybuf;
 		Uint8 r, g, b;
 
 		for (x = view->w; x > 0; x--) {
-			switch (su->format->BytesPerPixel) {
-			case 4:
-				SDL_GetRGB(*(Uint32 *)src, su->format,
-				    &r, &g, &b);
-				break;
-			case 3:
-			case 2:
-				SDL_GetRGB(*(Uint16 *)src, su->format,
-				    &r, &g, &b);
-				break;
-			case 1:
-				SDL_GetRGB(*src, su->format,
-				    &r, &g, &b);
-				break;
-			}
-			*dst++ = r;
-			*dst++ = g;
-			*dst++ = b;
-			src += su->format->BytesPerPixel;
+			SDL_GetRGB(GET_PIXEL(su, pSrc), su->format, &r, &g, &b);
+			*pDst++ = r;
+			*pDst++ = g;
+			*pDst++ = b;
+			pSrc += su->format->BytesPerPixel;
 		}
 		row[0] = jcopybuf;
 		jpeg_write_scanlines(&jcomp, row, 1);
 	}
 	jpeg_finish_compress(&jcomp);
 	jpeg_destroy_compress(&jcomp);
+
+#ifdef HAVE_OPENGL
+	if (view->opengl && su != pSu)
+		SDL_FreeSurface(su);
+#endif
+
 	fclose(fp);
 	close(fd);
 	Free(jcopybuf, M_VIEW);
 	return;
 toobig:
-	text_msg(MSG_ERROR, "Screenshot path is too big");
+	text_msg(MSG_ERROR, _("Path is too big."));
 #else
 	text_msg(MSG_ERROR, _("Screenshot feature requires libjpeg"));
 #endif
@@ -860,3 +878,23 @@ view_parse_fpsspec(const char *fpsspec)
 	prop_set_uint8(config, "view.fps", fps);
 }
 
+/* Flip the lines of a frame buffer; useful with glReadPixels(). */
+void
+view_flip_lines(Uint8 *src, int h, int pitch)
+{
+	Uint8 *tmp = Malloc(pitch, M_RG);
+	int h2 = h >> 1;
+	Uint8 *p1 = &src[0];
+	Uint8 *p2 = &src[(h-1)*pitch];
+	int i;
+
+	for (i = 0; i < h2; i++) {
+		memcpy(tmp, p1, pitch);
+		memcpy(p1, p2, pitch);
+		memcpy(p2, tmp, pitch);
+
+		p1 += pitch;
+		p2 -= pitch;
+	}
+	Free(tmp, M_RG);
+}
