@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.2 2005/05/18 05:03:51 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.2 2005/05/18 05:03:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -42,89 +42,64 @@
 
 #include "tileset.h"
 #include "tileview.h"
-#include "polygon.h"
+#include "sketchproj.h"
 
-const struct version polygon_ver = {
-	"agar rg polygon feature",
+const struct version sketchproj_ver = {
+	"agar rg sketch projection feature",
 	0, 0
 };
 
-const struct feature_ops polygon_ops = {
-	"polygon",
-	sizeof(struct polygon),
-	N_("Filled/textured polygon."),
+const struct feature_ops sketchproj_ops = {
+	"sketchproj",
+	sizeof(struct sketchproj),
+	N_("Sketch projection."),
 	FEATURE_AUTOREDRAW,
-	polygon_init,
-	polygon_load,
-	polygon_save,
+	sketchproj_init,
+	sketchproj_load,
+	sketchproj_save,
 	NULL,		/* destroy */
-	polygon_apply,
+	sketchproj_apply,
 	NULL,
 	NULL,
-	polygon_edit
+	sketchproj_edit
 };
 
 void
-polygon_init(void *p, struct tileset *ts, int flags)
+sketchproj_init(void *p, struct tileset *ts, int flags)
 {
-	struct polygon *poly = p;
-	struct sketch *sk, *osk;
-	u_int skno = 0;
+	struct sketchproj *sproj = p;
 
-	feature_init(poly, ts, flags, &polygon_ops);
-	poly->type = POLYGON_SOLID;
-	poly->alpha = 255;
-	poly->p_solid.c = SDL_MapRGB(ts->fmt, 0, 0, 0);
-	poly->sketch_tel = NULL;
-	poly->sketch = NULL;
+	feature_init(sproj, ts, flags, &sketchproj_ops);
+	sproj->alpha = 255;
+	sproj->color = SDL_MapRGB(ts->fmt, 0, 0, 0);
+	sproj->sketch_tel = NULL;
+	sproj->sketch = NULL;
 }
 
 int
-polygon_load(void *p, struct netbuf *buf)
+sketchproj_load(void *p, struct netbuf *buf)
 {
-	struct polygon *poly = p;
-	struct tileset *ts = FEATURE(poly)->ts;
+	struct sketchproj *sproj = p;
+	struct tileset *ts = FEATURE(sproj)->ts;
 
-	if (version_read(buf, &polygon_ver, NULL) == -1)
+	if (version_read(buf, &sketchproj_ver, NULL) == -1)
 		return (-1);
 
-	poly->type = (enum polygon_type)read_uint8(buf);
-	switch (poly->type) {
-	case POLYGON_SOLID:
-		poly->p_solid.c = read_color(buf, ts->fmt);
-		break;
-	case POLYGON_TEXTURED:
-		poly->p_texture.texid = (int)read_uint32(buf);
-		poly->p_texture.texcoords[0] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[1] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[2] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[3] = (int)read_uint32(buf);
-		break;
-	}
+	sproj->alpha = read_uint8(buf);
+	sproj->color = read_color(buf, ts->fmt);
 	return (0);
 }
 
 void
-polygon_save(void *p, struct netbuf *buf)
+sketchproj_save(void *p, struct netbuf *buf)
 {
-	struct polygon *poly = p;
-	struct tileset *ts = FEATURE(poly)->ts;
+	struct sketchproj *sproj = p;
+	struct tileset *ts = FEATURE(sproj)->ts;
 
-	version_write(buf, &polygon_ver);
+	version_write(buf, &sketchproj_ver);
 
-	write_uint8(buf, (Uint8)poly->type);
-	switch (poly->type) {
-	case POLYGON_SOLID:
-		write_color(buf, ts->fmt, poly->p_solid.c);
-		break;
-	case POLYGON_TEXTURED:
-		write_uint32(buf, (Uint32)poly->p_texture.texid);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[0]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[1]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[2]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[3]);
-		break;
-	}
+	write_uint8(buf, sproj->alpha);
+	write_color(buf, ts->fmt, sproj->color);
 }
 
 static void
@@ -155,37 +130,28 @@ static void
 select_sketch(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct polygon *poly = argv[1].p;
+	struct sketchproj *sproj = argv[1].p;
 	struct tile *t = argv[2].p;
 	struct tlist_item *it = argv[3].p;
 
-	poly->sketch_tel = it->p1;
-	poly->sketch = poly->sketch_tel->tel_sketch.sk;
+	sproj->sketch_tel = it->p1;
+	sproj->sketch = sproj->sketch_tel->tel_sketch.sk;
 }
 
 struct window *
-polygon_edit(void *p, struct tileview *tv)
+sketchproj_edit(void *p, struct tileview *tv)
 {
-	struct polygon *poly = p;
+	struct sketchproj *sproj = p;
 	struct window *win;
-	struct radio *rad;
-	static const char *modes[] = {
-		N_("Solid fill"),
-		N_("Texture fill"),
-		NULL
-	};
 	struct box *box;
 	struct combo *com;
 
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Polygon"));
 
-	rad = radio_new(win, modes);
-	widget_bind(rad, "value", WIDGET_INT, &poly->type);
-
 	com = combo_new(win, COMBO_POLL, _("Sketch: "));
 	event_new(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
-	event_new(com, "combo-selected", select_sketch, "%p,%p", poly,
+	event_new(com, "combo-selected", select_sketch, "%p,%p", sproj,
 	    tv->tile);
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
@@ -204,15 +170,11 @@ polygon_edit(void *p, struct tileview *tv)
 			WIDGET(hsv1)->flags |= WIDGET_WFILL|
 			                       WIDGET_HFILL;
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
-			    &poly->p_solid.c);
+			    &sproj->color);
 		}
 
-		ntab = notebook_add_tab(nb, _("Texture"), BOX_VERT);
-		{
-		}
-		
 		sb = spinbutton_new(box, _("Overall alpha: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &poly->alpha);
+		widget_bind(sb, "value", WIDGET_UINT8, &sproj->alpha);
 		spinbutton_set_range(sb, 0, 255);
 		spinbutton_set_increment(sb, 5);
 	}
@@ -220,54 +182,45 @@ polygon_edit(void *p, struct tileview *tv)
 }
 
 void
-polygon_apply(void *p, struct tile *t, int fx, int fy)
+sketchproj_apply(void *p, struct tile *t, int fx, int fy)
 {
-	struct polygon *poly = p;
+	struct sketchproj *sproj = p;
 	SDL_Surface *sDst = t->su;
-	Uint8 *pDst, *pEnd;
-	SDL_Surface *sVg;
-	int x, y, d;
+	double x1, y1, x2, y2;
 	int xorig, yorig;
-	int *left, *right;
+	struct vg *vg;
+	struct vg_element *vge;
+	int i;
 
-	if (poly->sketch == NULL) {
+	if (sproj->sketch == NULL) {
 		return;
 	}
-	sVg = poly->sketch->vg->su;
-	xorig = poly->sketch_tel->tel_sketch.x;
-	yorig = poly->sketch_tel->tel_sketch.y;
+	xorig = sproj->sketch_tel->tel_sketch.x;
+	yorig = sproj->sketch_tel->tel_sketch.y;
+	vg = sproj->sketch->vg;
 
-	left = Malloc(sVg->w*sizeof(int), M_RG);
-	right = Malloc(sVg->w*sizeof(int), M_RG);
-	memset(left, 0, sVg->w*sizeof(int));
-	memset(right, 0, sVg->w*sizeof(int));
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		switch (vge->type) {
+		case VG_LINE_STRIP:
+			x1 = vge->vtx[0].x*vg->scale*TILESZ +
+			    vg->origin[0].x*vg->scale*TILESZ;
+			y1 = vge->vtx[0].y*vg->scale*TILESZ + 
+			    vg->origin[0].y*vg->scale*TILESZ;
+			for (i = 1; i < vge->nvtx; i++) {
+				x2 = vge->vtx[i].x*vg->scale*TILESZ +
+				    vg->origin[0].x*vg->scale*TILESZ;
+				y2 = vge->vtx[i].y*vg->scale*TILESZ +
+				    vg->origin[0].y*vg->scale*TILESZ;
 
-	for (y = 0; y < sVg->h; y++) {
-		for (x = 0; x < sVg->w; x++) {
-			if (GET_PIXEL2(sVg, x, y) != sVg->format->colorkey) {
-				left[y] = x;
-				break;
+				prim_color_rgb(t, 250, 250, 0);
+				prim_wuline(t, x1, y1, x2, y2);
+				x1 = x2;
+				y1 = y2;
 			}
-		}
-		for (x = sVg->w-1; x >= 0; x--) {
-			if (GET_PIXEL2(sVg, x, y) != sVg->format->colorkey) {
-				right[y] = x;
-				break;
-			}
+			break;
+		default:
+			break;
 		}
 	}
-
-	for (y = 0;
-	     y < sVg->h && y < sDst->h;
-	     y++) {
-		if ((d = right[y] - left[y]) > 0) {
-			for (x = left[y]; x <= right[y]; x++)
-				PUT_PIXEL2_CLIPPED(sDst,
-				    xorig+x, yorig+y, poly->p_solid.c);
-		}
-	}
-
-	Free(left, M_RG);
-	Free(right, M_RG);
 }
 

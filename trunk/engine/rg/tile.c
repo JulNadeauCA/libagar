@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.42 2005/05/16 04:27:52 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.43 2005/05/16 10:35:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@
 #include "tileview.h"
 #include "fill.h"
 #include "polygon.h"
+#include "sketchproj.h"
 
 /*
  * Blend a pixmap with the tile; add the source alpha to the destination
@@ -1084,6 +1085,25 @@ insert_polygon(int argc, union evarg *argv)
 }
 
 static void
+insert_sketchproj(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tlist_item *eit;
+	struct sketchproj *sproj;
+	struct tile_element *tel;
+
+	sproj = Malloc(sizeof(struct sketchproj), M_RG);
+	sketchproj_init(sproj, tv->ts, 0);
+	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(sproj), features);
+	tel = tile_add_feature(tv->tile, sproj, 0, 0);
+	close_element(tv);
+	open_element(tv, tel, pwin);
+	select_feature(tl_feats, sproj);
+}
+
+static void
 poll_items(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -1651,12 +1671,12 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
 		    insert_polygon, "%p,%p,%p", tv, win, tl_feats);
 
+		menu_action_kb(mi, _("Sketch projection"), RG_SKETCH_PROJ_ICON,
+		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
+		    insert_sketchproj, "%p,%p,%p", tv, win, tl_feats);
+
 		menu_separator(mi);
 
-		menu_action_kb(mi, _("Sketch projection"),RG_SKETCH_PROJ_ICON,
-		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
-		    NULL, "%p,%p", ts, t);
-		
 		menu_action_kb(mi, _("Extrusion"), RG_EXTRUSION_ICON,
 		    SDLK_e, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
