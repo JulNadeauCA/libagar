@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.15 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.1 2005/05/16 10:35:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -220,20 +220,54 @@ polygon_edit(void *p, struct tileview *tv)
 }
 
 void
-polygon_apply(void *p, struct tile *t, int x, int y)
+polygon_apply(void *p, struct tile *t, int fx, int fy)
 {
 	struct polygon *poly = p;
-	SDL_Surface *su = t->su;
-	Uint8 r, g, b;
+	SDL_Surface *sDst = t->su;
+	Uint8 *pDst, *pEnd;
+	SDL_Surface *sVg;
+	int x, y, d;
+	int *left, *right;
 
-	if (poly->sketch == NULL)
+	if (poly->sketch == NULL) {
 		return;
-
-	switch (poly->type) {
-	case POLYGON_SOLID:
-		break;
-	default:
-		break;
 	}
+	sVg = poly->sketch->vg->su;
+
+	left = Malloc(sVg->w*sizeof(int), M_RG);
+	right = Malloc(sVg->w*sizeof(int), M_RG);
+	memset(left, 0, sVg->w*sizeof(int));
+	memset(right, 0, sVg->w*sizeof(int));
+
+	for (y = 0; y < sVg->h; y++) {
+		for (x = 0; x < sVg->w; x++) {
+			if (GET_PIXEL2(sVg, x, y) != sVg->format->colorkey) {
+				left[y] = x;
+				break;
+			}
+		}
+		for (x = sVg->w-1; x >= 0; x--) {
+			if (GET_PIXEL2(sVg, x, y) != sVg->format->colorkey) {
+				right[y] = x;
+				break;
+			}
+		}
+	}
+
+	for (y = 0; y < sVg->h; y++) {
+		if ((d = right[y] - left[y]) > 0) {
+			pDst = (Uint8 *)sDst->pixels + y*sDst->pitch +
+			    left[y]*sDst->format->BytesPerPixel;
+			pEnd = pDst + d*sDst->format->BytesPerPixel;
+
+			while (pDst <= pEnd) {
+				PUT_PIXEL(sDst, pDst, poly->p_solid.c);
+				pDst += sDst->format->BytesPerPixel;
+			}
+		}
+	}
+
+	Free(left, M_RG);
+	Free(right, M_RG);
 }
 
