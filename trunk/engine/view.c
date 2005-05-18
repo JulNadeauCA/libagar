@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.180 2005/05/16 03:47:37 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.181 2005/05/18 03:16:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -709,7 +709,6 @@ view_gl_capture(void)
 	    0x0000ff00,
 	    0x00ff0000,
 	    0);
-	Free(pixels, M_GFX);
 	return (su);
 }
 #endif /* HAVE_OPENGL */
@@ -779,7 +778,7 @@ view_capture(SDL_Surface *pSu)
 			} else {
 				text_msg(MSG_ERROR, "open %s: %s", file,
 				    strerror(errno));
-				return;
+				goto out;
 			}
 		}
 		break;
@@ -825,14 +824,14 @@ view_capture(SDL_Surface *pSu)
 	jpeg_finish_compress(&jcomp);
 	jpeg_destroy_compress(&jcomp);
 
+	fclose(fp);
+	close(fd);
+	Free(jcopybuf, M_VIEW);
+out:
 #ifdef HAVE_OPENGL
 	if (view->opengl && su != pSu)
 		SDL_FreeSurface(su);
 #endif
-
-	fclose(fp);
-	close(fd);
-	Free(jcopybuf, M_VIEW);
 	return;
 toobig:
 	text_msg(MSG_ERROR, _("Path is too big."));
