@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.29 2005/04/14 02:45:58 vedge Exp $
+.\"	$Csoft: view.3,v 1.30 2005/05/11 11:54:28 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -101,7 +101,7 @@ function sets the nominal refresh rate, given in frames per second.
 .Fn view_update "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
-.Fn view_capture "SDL_Surface *su"
+.Fn view_capture "SDL_Surface *su" "char *path_save"
 .Pp
 .nr nS 0
 These functions operate on
@@ -163,6 +163,11 @@ is a no-op if OpenGL is enabled.
 The
 .Fn view_capture
 function encode a JPEG image file from the contents of a surface.
+If the argument is not NULL, the name of the file is copied to
+.Fa path_save ,
+which must be
+.Dv MAXPATHLEN
+bytes in size.
 .Sh PIXEL OPERATIONS
 .nr nS 1
 .Ft "void"

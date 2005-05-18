@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.96 2005/05/08 13:26:03 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.97 2005/05/18 03:16:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -213,7 +213,7 @@ __inline__ SDL_Surface	*view_copy_surface(SDL_Surface *);
 void			 view_scale_surface(SDL_Surface *, Uint16, Uint16,
 			                    SDL_Surface **);
 void			 view_pixels_alpha(SDL_Surface *, Uint8);
-void			 view_capture(SDL_Surface *);
+void			 view_capture(SDL_Surface *, char *);
 __inline__ void		 view_update(int, int, int, int);
 
 #ifdef HAVE_OPENGL

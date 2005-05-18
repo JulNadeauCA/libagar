@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.181 2005/05/18 03:16:53 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.182 2005/05/18 03:41:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -735,7 +735,7 @@ view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 
 /* Dump a surface to a JPEG image. */
 void
-view_capture(SDL_Surface *pSu)
+view_capture(SDL_Surface *pSu, char *path_save)
 {
 #ifdef HAVE_JPEG
 	SDL_Surface *su;
@@ -783,6 +783,8 @@ view_capture(SDL_Surface *pSu)
 		}
 		break;
 	}
+	if (path_save != NULL)
+		strlcpy(path_save, path, MAXPATHLEN);
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
 		text_msg(MSG_ERROR, "fdopen: %s", strerror(errno));
