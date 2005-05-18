@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.5 2005/03/06 06:30:36 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.6 2005/04/10 09:09:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -345,7 +345,155 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 		}
 	}
 }
-	
+
+static __inline__ int
+ftrunc(double d)
+{
+	return ((int)floor(d));
+}
+
+static __inline__ double
+ffrac(double d)
+{
+	return (d - floor(d));
+}
+
+static __inline__ double
+finvfrac(double d)
+{
+	return (1 - (d - floor(d)));
+}
+
+void
+prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
+{
+	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
+	    lum1, lum2, ipart;
+	int x, y, ix1, ix2, iy1, iy2;
+	Uint32 c1, c2;
+	Uint8 r, g, b, a;
+
+	xd = x2 - x1;
+	yd = y2 - y1;
+
+	SDL_GetRGBA(t->pc, t->ts->fmt, &r, &g, &b, &a);
+
+	if (abs(xd) > abs(yd)) {			/* Horizontal */
+		if (x1 > x2) {
+			fix6 tmp;
+			
+			tmp = x1; x1 = x2; x2 = tmp;
+			tmp = y1; y1 = y2; y2 = tmp;
+			xd = (x2-x1);
+			yd = (y2-y1);
+		}
+
+		grad = yd/xd;
+
+		/* End point 1 */
+		xend = trunc(x1+0.5);
+		yend = y1 + grad*(xend-x1);
+
+		xgap = finvfrac(x1+0.5);
+
+		ix1 = (int)xend;
+		iy1 = (int)yend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		prim_blend_rgb(t->su, ix1, iy1, PRIM_OVERLAY_ALPHA, r, g, b,
+		    (Uint8)(lum1*255));
+		prim_blend_rgb(t->su, ix1, iy1+1, PRIM_OVERLAY_ALPHA, r, g, b,
+		    (Uint8)(lum2*255));
+
+		yf = yend+grad;
+
+		/* End point 2 */
+		xend = trunc(x2+0.5);
+		yend = y2 + grad*(xend-x2);
+
+		xgap = finvfrac(x2-0.5);
+
+		ix2 = (int)xend;
+		iy2 = (int)yend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		prim_blend_rgb(t->su, ix2, iy2, PRIM_OVERLAY_ALPHA, r, g, b,
+		    (Uint8)(lum1*255));
+		prim_blend_rgb(t->su, ix2, iy2+1, PRIM_OVERLAY_ALPHA, r, g, b,
+		    (Uint8)(lum2*255));
+
+		/* Main loop */
+		for (x = (ix1+1); x < ix2; x++) {
+			lum1 = finvfrac(yf);
+			lum2 = ffrac(yf);
+			prim_blend_rgb(t->su, x, (int)yf, PRIM_OVERLAY_ALPHA,
+			    r, g, b, (Uint8)(lum1*255));
+			prim_blend_rgb(t->su, x, (int)yf+1, PRIM_OVERLAY_ALPHA,
+			    r, g, b, (Uint8)(lum2*255));
+
+			yf = yf + grad;
+		}
+	} else {					/* Vertical */
+		if (x1 > x2) {
+			double tmp;
+
+			tmp = x1; x1 = x2; x2 = x1;
+			tmp = y1; y1 = y2; y2 = y1;
+			xd = (x2 - x1);
+			yd = (y2 - y1);
+		}
+		grad = xd/yd;
+
+		/* End point 1 */
+		xend = trunc(x1+0.5);
+		yend = y1 + grad*(xend-x1);
+
+		xgap = ffrac(x1+0.5);
+
+		ix1 = (int)xend;
+		iy1 = (int)yend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		prim_blend_rgb(t->su, ix1, iy1, PRIM_OVERLAY_ALPHA,
+		    r, g, b, (Uint8)(lum1*255));
+		prim_blend_rgb(t->su, ix1, iy1+1, PRIM_OVERLAY_ALPHA,
+		    r, g, b, (Uint8)(lum2*255));
+		
+		xf = xend + grad;
+
+		/* End point 2 */
+		xend = trunc(x2+0.5);
+		yend = y2 + grad*(xend-x2);
+
+		xgap = finvfrac(x2-0.5);
+
+		ix2 = (int)xend;
+		iy2 = (int)yend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		prim_blend_rgb(t->su, ix2, iy2, PRIM_OVERLAY_ALPHA,
+		    r, g, b, (Uint8)(lum1*255));
+		prim_blend_rgb(t->su, ix2, iy2+1, PRIM_OVERLAY_ALPHA,
+		    r, g, b, (Uint8)(lum2*255));
+
+		/* Main loop */
+		for (y = (iy1+1); y < iy2; y++) {
+			lum1 = finvfrac(xf);
+			lum2 = ffrac(xf);
+			prim_blend_rgb(t->su, (int)xf, y, PRIM_OVERLAY_ALPHA,
+			    r, g, b, (Uint8)(lum1*255));
+			prim_blend_rgb(t->su, (int)xf+1, y, PRIM_OVERLAY_ALPHA,
+			    r, g, b, (Uint8)(lum2*255));
+
+			xf = xf + grad;
+		}
+	}
+}
+
 void
 prim_circle2(struct tile *t, int wx, int wy, int radius)
 {
