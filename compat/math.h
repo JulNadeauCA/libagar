@@ -1,4 +1,4 @@
-/*	$Csoft: math.h,v 1.3 2004/03/25 05:37:32 vedge Exp $	*/
+/*	$Csoft: math.h,v 1.4 2005/05/18 09:07:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_math.h>
@@ -99,8 +99,12 @@ typedef Uint32 fix30;
 #define fix30div(f1, f2) (((f1) << 30) / (f2))
 
 __BEGIN_DECLS
-__inline__ Uint32	fix6trunc(fix6);
-fix30			fix30sqrt(fix30);
+__inline__ int ftrunc(double);
+__inline__ double ffrac(double);
+__inline__ double finvfrac(double);
+__inline__ int powof2(int);
+
+fix30 fix30sqrt(fix30);
 __END_DECLS
 
 #endif /* _COMPAT_MATH_H */
