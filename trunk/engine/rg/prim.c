@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.6 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.7 2005/05/18 09:07:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -391,7 +391,7 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 		grad = yd/xd;
 
 		/* End point 1 */
-		xend = trunc(x1+0.5);
+		xend = ftrunc(x1+0.5);
 		yend = y1 + grad*(xend-x1);
 
 		xgap = finvfrac(x1+0.5);
@@ -409,7 +409,7 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 		yf = yend+grad;
 
 		/* End point 2 */
-		xend = trunc(x2+0.5);
+		xend = ftrunc(x2+0.5);
 		yend = y2 + grad*(xend-x2);
 
 		xgap = finvfrac(x2-0.5);
@@ -447,7 +447,7 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 		grad = xd/yd;
 
 		/* End point 1 */
-		xend = trunc(x1+0.5);
+		xend = ftrunc(x1+0.5);
 		yend = y1 + grad*(xend-x1);
 
 		xgap = ffrac(x1+0.5);
@@ -465,7 +465,7 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 		xf = xend + grad;
 
 		/* End point 2 */
-		xend = trunc(x2+0.5);
+		xend = ftrunc(x2+0.5);
 		yend = y2 + grad*(xend-x2);
 
 		xgap = finvfrac(x2-0.5);
