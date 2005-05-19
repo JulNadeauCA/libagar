@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.97 2005/05/18 03:16:53 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.98 2005/05/18 03:50:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -53,6 +53,17 @@ struct viewport {
 		VIEW_WINOP_RRESIZE,
 		VIEW_WINOP_HRESIZE
 	} winop;
+};
+
+/* Alpha functions for view_blend_rgba(). */
+enum view_blend_func {
+	ALPHA_OVERLAY,			/* dA = sA+dA */
+	ALPHA_SRC,			/* dA = sA */
+	ALPHA_DST,			/* dA = dA */
+	ALPHA_MEAN,			/* dA = (sA+dA)/2 */
+	ALPHA_SOURCE_MINUS_DST,		/* dA = (sA-dA) */
+	ALPHA_DST_MINUS_SOURCE,		/* dA = (dA-sA) */
+	ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
 };
 
 /* Determine whether a pixel must be clipped or not. */
@@ -175,20 +186,20 @@ case 4:					\
  * Generic alpha blending macros.
  */
 
-#define BLEND_RGBA(s, p, r, g, b, a) \
-	view_blend_rgba((s),(p),(r),(g),(b),(a))
-#define BLEND_RGBA2(s, x, y, r, g, b, a) do {				\
+#define BLEND_RGBA(s, p, r, g, b, a, m) \
+	view_blend_rgba((s),(p),(r),(g),(b),(a),(m))
+#define BLEND_RGBA2(s, x, y, r, g, b, a, m) do {			\
 	view_blend_rgba((s),						\
 	    (Uint8 *)(s)->pixels + (y)*(s)->pitch +			\
 	    (x)*(s)->format->BytesPerPixel,				\
-	    (r),(g),(b),(a));						\
+	    (r),(g),(b),(a),(m));					\
 } while (0)
-#define BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a) do {			\
+#define BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, m) do {		\
 	if (NONCLIPPED_PIXEL((s), (x), (y))) {				\
 		view_blend_rgba((s),					\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
-		    (r),(g),(b),(a));					\
+		    (r),(g),(b),(a),(m));				\
 	}								\
 } while (0)
 
@@ -226,7 +237,8 @@ __inline__ int	  view_same_pixel_fmt(SDL_Surface *, SDL_Surface *);
 __inline__ Uint32 view_get_pixel(SDL_Surface *, Uint8 *);
 __inline__ void	  view_put_pixel(SDL_Surface *, Uint8 *, Uint32);
 __inline__ void	  view_blend_rgba(SDL_Surface *, Uint8 *,
-		                  Uint8, Uint8, Uint8, Uint8);
+		                  Uint8, Uint8, Uint8, Uint8,
+				  enum view_blend_func);
 
 __inline__ void view_flip_lines(Uint8 *, int, int);
 __END_DECLS
