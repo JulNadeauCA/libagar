@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.30 2005/05/11 11:54:28 vedge Exp $
+.\"	$Csoft: view.3,v 1.31 2005/05/18 03:50:42 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -192,13 +192,13 @@ bytes in size.
 .Fn PUT_PIXEL2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA "SDL_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Fn BLEND_RGBA "SDL_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum view_blend_func func"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA2 "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Fn BLEND_RGBA2 "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum view_blend_func func"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha"
+.Fn BLEND_RGBA2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha" "enum view_blend_func func"
 .Pp
 .Ft "void"
 .Fn VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"
@@ -240,16 +240,30 @@ variant ensures that the pixel is inside the clipping rectangle of the surface
 before writing to it.
 .Pp
 The
-.Fa BLEND_RGBA ,
-.Fa BLEND_RGBA2
+.Fn BLEND_RGBA ,
+.Fn BLEND_RGBA2
 and
-.Fa BLEND_RGBA2_CLIPPED
+.Fn BLEND_RGBA2_CLIPPED
 macros operate in a manner similar to
-.Fa PUT_PIXEL* ,
+.Fn PUT_PIXEL* ,
 except that the destination pixel is alpha-blended with the color described
 by the given RGB triplet, whose weight is defined by the
 .Fa alpha
 parameter.
+The
+.Fa func
+argument may be one of:
+.Bd -literal
+enum view_blend_func {
+	ALPHA_OVERLAY,			/* dA = sA+dA */
+	ALPHA_SRC,			/* dA = sA */
+	ALPHA_DST,			/* dA = dA */
+	ALPHA_MEAN,			/* dA = (sA+dA)/2 */
+	ALPHA_SOURCE_MINUS_DST,		/* dA = (sA-dA) */
+	ALPHA_DST_MINUS_SOURCE,		/* dA = (dA-sA) */
+	ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
+};
+.Ed
 .Pp
 The macros
 .Fn VIEW_PUT_PIXEL ,
@@ -299,9 +313,10 @@ and return NULL if there is no such window.
 .Xr rootmap 3 ,
 .Xr window 3 ,
 .Xr SDL_SetVideoMode 3 ,
-.Xr SDL_WM_SetCaption 3 ,
-.Xr SDL_SetCursor 3 ,
 .Xr SDL_CreateRGBSurface 3
+.Xr SDL_Surface 3 ,
+.Xr glViewport 3 ,
+.Xr glOrtho 3 .
 .Sh HISTORY
 The
 .Nm

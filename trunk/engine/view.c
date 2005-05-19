@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.182 2005/05/18 03:41:08 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.183 2005/05/18 03:50:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -587,17 +587,6 @@ view_set_refresh(int ms)
 
 #ifdef HAVE_OPENGL
 
-static __inline__ int
-powof2(int i)
-{
-	int val = 1;
-
-	while (val < i) {
-		val <<= 1;
-	}
-	return (val);
-}
-
 void
 view_update_texture(SDL_Surface *sourcesu, int texture)
 {
@@ -715,22 +704,56 @@ view_gl_capture(void)
 
 /*
  * Blend the specified components with the pixel at s:[x,y], using the
- * given source alpha value.
+ * given alpha function.
  *
  * Clipping is not done; the destination surface must be locked.
  */
 void
-view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
+    Uint8 sA, enum view_blend_func func)
 {
 	Uint32 cDst;
-	Uint8 dR, dG, dB;
+	Uint8 dR, dG, dB, dA;
+	int alpha = (int)dA;
 
 	cDst = GET_PIXEL(s, pDst);
-	SDL_GetRGB(cDst, s->format, &dR, &dG, &dB);
-	dR = (((r - dR) * a) >> 8) + dR;
-	dG = (((g - dG) * a) >> 8) + dG;
-	dB = (((b - dB) * a) >> 8) + dB;
-	PUT_PIXEL(s, pDst, SDL_MapRGB(s->format, dR, dG, dB));
+	if ((s->flags & SDL_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
+	 	PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format, sR, sG, sB, sA));
+	} else {
+		SDL_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
+		switch (func) {
+		case ALPHA_OVERLAY:
+			alpha = dA+sA;
+			break;
+		case ALPHA_SRC:
+			alpha = sA;
+			break;
+		case ALPHA_MEAN:
+			alpha = (dA+sA)/2;
+			break;
+		case ALPHA_SOURCE_MINUS_DST:
+			alpha = sA-dA;
+			break;
+		case ALPHA_DST_MINUS_SOURCE:
+			alpha = dA-sA;
+			break;
+		case ALPHA_PYTHAGOREAN:
+			alpha = (int)sqrtf((dA*dA)+(sA*sA));
+			break;
+		default:
+			break;
+		}
+		if (alpha < 0) {
+			alpha = 0;
+		} else if (alpha > 255) {
+			alpha = 255;
+		}
+		PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
+		    (((sR - dR) * sA) >> 8) + dR,
+		    (((sG - dG) * sA) >> 8) + dG,
+		    (((sB - dB) * sA) >> 8) + dB,
+		    (Uint8)alpha));
+	}
 }
 
 /* Dump a surface to a JPEG image. */
