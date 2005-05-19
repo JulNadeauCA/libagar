@@ -1,11 +1,15 @@
-/*	$Csoft: snprintf.c,v 1.1 2004/02/26 09:19:38 vedge Exp $	*/
+/*	$Csoft: math.c,v 1.1 2005/05/18 09:07:48 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/engine.h>
+
+#include "math.h"
 
 fix30
 fix30sqrt(fix30 f)
 {
 	Uint32 root = 0;
-	Uint32 remHi = 0
+	Uint32 remHi = 0;
 	Uint32 remLo = f;
 	Uint32 count = 30;	/* 15 + (30 >> 1) */
 	Uint32 testDiv;
