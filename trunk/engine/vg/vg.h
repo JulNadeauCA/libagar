@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.26 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.27 2005/04/21 07:42:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -246,6 +246,11 @@ __inline__ void	 vg_avcoords2(struct vg *, int, int, int, int, double *,
 		              double *);
 __inline__ void  vg_rcoords2(struct vg *, double, double, int *, int *);
 __inline__ void	 vg_arcoords2(struct vg *, double, double, int *, int *);
+__inline__ void  vg_rcoords2d(struct vg *, double, double, double *, double *);
+__inline__ void	 vg_arcoords2d(struct vg *, double, double, double *, double *);
+__inline__ void	 vg_vtxcoords2d(struct vg *, struct vg_vertex *, double *,
+				double *);
+__inline__ void	 vg_vtxcoords2i(struct vg *, struct vg_vertex *, int *, int *);
 __inline__ void  vg_rlength(struct vg *, double, int *);
 void		 vg_vlength(struct vg *, int, double *);
 void		 vg_pop_vertex(struct vg *);

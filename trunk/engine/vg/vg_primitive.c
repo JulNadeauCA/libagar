@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.8 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.9 2005/04/14 02:49:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -104,7 +104,6 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
 /*
  * Draw a partial ellipse centered around [cx,cy]. Angles a1, a2 are
  * given in degrees. It is assumed that a2 > a1.
- * TODO generalize Bresenham
  */
 void
 vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
@@ -229,6 +228,151 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 				}
 				vg_put_pixel(vg, x, y, color);
 			}
+		}
+	}
+}
+
+/* Render an anti-aliased line. */
+void
+vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
+    double y2p, Uint32 color)
+{
+	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
+	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
+	    lum1, lum2, ipart;
+	int x, y, ix1, ix2, iy1, iy2;
+	Uint32 c1, c2;
+	Uint8 r, g, b, a;
+
+	xd = x2 - x1;
+	yd = y2 - y1;
+
+	SDL_GetRGBA(color, vg->fmt, &r, &g, &b, &a);
+
+	if (fabs(xd) > fabs(yd)) {			/* Horizontal */
+		if (x1 > x2) {
+			double tmp;
+			
+			tmp = x1; x1 = x2; x2 = tmp;
+			tmp = y1; y1 = y2; y2 = tmp;
+			xd = (x2-x1);
+			yd = (y2-y1);
+		}
+
+		grad = yd/xd;
+
+		/* End point 1 */
+		xend = ftrunc(x1+0.5f);
+		yend = y1 + grad*(xend-x1);
+
+		xgap = finvfrac(x1+0.5f);
+
+		ix1 = (int)xend;
+		iy1 = (int)(yend+0.5f);
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
+		    (Uint8)(lum1*255), ALPHA_OVERLAY);
+		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
+		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+
+		yf = yend+grad;
+
+		/* End point 2 */
+		xend = ftrunc(x2+0.5f);
+		yend = y2 + grad*(xend-x2);
+
+		xgap = finvfrac(x2-0.5f);
+
+		ix2 = (int)xend;
+		iy2 = (int)yend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
+		    (Uint8)(lum1*255), ALPHA_OVERLAY);
+		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
+		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+
+		/* Main loop */
+		for (x = (ix1+1); x < ix2; x++) {
+			float focus;
+
+			lum1 = finvfrac(yf);
+			lum2 = ffrac(yf);
+			focus = (1.0 - fabs(lum1-lum2));
+			lum1 += 0.3*focus;
+			lum2 += 0.3*focus;
+
+			BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf, r, g, b,
+			    (Uint8)(lum1*255), ALPHA_OVERLAY);
+			BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+1, r, g, b,
+			    (Uint8)(lum2*255), ALPHA_OVERLAY);
+
+			yf = yf + grad;
+		}
+	} else {					/* Vertical */
+		if (y1 > y2) {
+			double tmp;
+
+			tmp = x1; x1 = x2; x2 = tmp;
+			tmp = y1; y1 = y2; y2 = tmp;
+			xd = (x2-x1);
+			yd = (y2-y1);
+		}
+		grad = xd/yd;
+
+		/* End point 1 */
+		yend = ftrunc(y1+0.5f);
+		xend = x1 + grad*(yend-y1);
+
+		ygap = finvfrac(y1+0.5f);
+
+		iy1 = (int)yend;
+		ix1 = (int)(xend+0.5f);
+
+		lum1 = finvfrac(yend)*ygap;
+		lum2 = ffrac(yend)*ygap;
+		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
+		    (Uint8)(lum1*255), ALPHA_OVERLAY);
+		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
+		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+		
+		xf = xend + grad;
+
+		/* End point 2 */
+		yend = ftrunc(y2+0.5f);
+		xend = x2 + grad*(yend-y2);
+
+		xgap = finvfrac(y2-0.5f);
+
+		iy2 = (int)yend;
+		ix2 = (int)xend;
+
+		lum1 = finvfrac(yend)*xgap;
+		lum2 = ffrac(yend)*xgap;
+		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
+		    (Uint8)(lum1*255), ALPHA_OVERLAY);
+		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
+		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+
+		/* Main loop */
+		for (y = (iy1+1); y < iy2; y++) {
+			float focus;
+
+			lum1 = finvfrac(xf);
+			lum2 = ffrac(xf);
+			focus = (1.0 - fabs((lum1 - lum2)));
+			lum1 += 0.3*focus;
+			lum2 += 0.3*focus;
+
+			BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y, r, g, b,
+			    (Uint8)(lum1*255), ALPHA_OVERLAY);
+			BLEND_RGBA2_CLIPPED(vg->su, (int)xf+1, y, r, g, b,
+			    (Uint8)(lum2*255), ALPHA_OVERLAY);
+
+			xf = xf + grad;
 		}
 	}
 }

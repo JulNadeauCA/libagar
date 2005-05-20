@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.17 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.18 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -61,53 +61,90 @@ const struct vg_element_ops vg_line_loop_ops = {
 	vg_line_bbox
 };
 
-
 void
 vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
 {
-	int x1, y1, x2, y2;
 	int i;
 
 	for (i = 0; i < vge->nvtx-1; i += 2) {
-		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x1, &y1);
-		vg_rcoords2(vg, vge->vtx[i+1].x, vge->vtx[i+1].y, &x2, &y2);
-		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+		if (vg->flags & VG_ANTIALIAS) {
+			double x1, y1, x2, y2;
+
+			vg_vtxcoords2d(vg, &vge->vtx[i], &x1, &y1);
+			vg_vtxcoords2d(vg, &vge->vtx[i+1], &x2, &y2);
+			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+		} else {
+			int x1, y1, x2, y2;
+
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x1, &y1);
+			vg_vtxcoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+		}
 	}
 }
 
 void
 vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 {
-	int x1, y1, x2, y2;
 	int i;
-	
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
 
-	for (i = 1; i < vge->nvtx; i++) {
-		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
-		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
-		x1 = x2;
-		y1 = y2;
+	if (vg->flags & VG_ANTIALIAS) {
+		double x1, y1, x2, y2;
+
+		vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
+			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+			x1 = x2;
+			y1 = y2;
+		}
+	} else {
+		int x1, y1, x2, y2;
+
+		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+			x1 = x2;
+			y1 = y2;
+		}
 	}
 }
 
 void
 vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 {
-	int x1, y1, x2, y2;
-	int x0, y0;
-	int i;
+	if (vg->flags & VG_ANTIALIAS) {
+		double x1, y1, x2, y2;
+		double x0, y0;
+		int i;
 
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
-	x0 = x1;
-	y0 = y1;
-	for (i = 1; i < vge->nvtx; i++) {
-		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
-		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
-		x1 = x2;
-		y1 = y2;
+		vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
+		x0 = x1;
+		y0 = y1;
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
+			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+			x1 = x2;
+			y1 = y2;
+		}
+		vg_wuline_primitive(vg, x0, y0, x1, y1, vge->color);
+	} else {
+		int x1, y1, x2, y2;
+		int x0, y0;
+		int i;
+
+		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		x0 = x1;
+		y0 = y1;
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+			x1 = x2;
+			y1 = y2;
+		}
+		vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
 	}
-	vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
 }
 
 void

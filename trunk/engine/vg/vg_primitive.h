@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.h,v 1.3 2004/04/19 02:09:44 vedge Exp $	*/
+/*	$Csoft: vg_primitive.h,v 1.4 2004/05/31 07:15:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_PRIMITIVE_H_
@@ -14,6 +14,8 @@ void		vg_circle_primitive(struct vg *, int, int, int, Uint32);
 void		vg_arc_primitive(struct vg *, int, int, int, int, int, int,
 		                 Uint32);
 void		vg_line_primitive(struct vg *, int, int, int, int, Uint32);
+void		vg_wuline_primitive(struct vg *, double, double, double,
+		                    double, Uint32);
 __inline__ void	vg_rect_primitive(struct vg *, int, int, int, int, Uint32);
 __END_DECLS
 
