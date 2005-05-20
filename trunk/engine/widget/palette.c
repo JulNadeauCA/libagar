@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.29 2005/04/14 02:49:28 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.30 2005/04/21 07:55:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -204,7 +204,7 @@ palette_draw(void *p)
 				BLEND_RGBA2_CLIPPED(view->v,
 				    WIDGET(pal)->cx+x,
 				    WIDGET(pal)->cy+y,
-				    r, g, b, a);
+				    r, g, b, a, ALPHA_OVERLAY);
 			}
 		}
 	} else {

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.95 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.96 2005/05/13 09:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -209,19 +209,6 @@ textbox_init(struct textbox *tbox, const char *label)
 	event_new(tbox, "widget-lostfocus", lost_focus, NULL);
 	event_new(tbox, "widget-hidden", lost_focus, NULL);
 }
-
-#ifdef HAVE_OPENGL
-static __inline__ int
-powof2(int i)
-{
-	int val = 1;
-
-	while (val < i) {
-		val <<= 1;
-	}
-	return (val);
-}
-#endif
 
 void
 textbox_draw(void *p)
