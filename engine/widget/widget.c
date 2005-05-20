@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.109 2005/05/16 03:16:08 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.110 2005/05/16 03:43:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -902,19 +902,6 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		SDL_BlitSurface(srcsu, NULL, view->v, &rd);
 	}
 }
-
-#ifdef HAVE_OPENGL
-static __inline__ int
-powof2(int i)
-{
-	int val = 1;
-
-	while (val < i) {
-		val <<= 1;
-	}
-	return (val);
-}
-#endif
 
 /*
  * Perform a fast blit from a registered surface to the display

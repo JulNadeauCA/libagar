@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.5 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.6 2005/05/16 00:41:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1221,7 +1221,7 @@ blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
 			if (s->flags & SDL_SRCALPHA) {
 				SDL_GetRGBA(c, s->format, &r1, &g1, &b1, &a1);
 				BLEND_RGBA2_CLIPPED(view->v, rx+x, ry+y,
-				    r1, g1, b1, a1);
+				    r1, g1, b1, a1, ALPHA_OVERLAY);
 			} else {
 				if (same_fmt) {
 					VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y, c);
@@ -1471,17 +1471,6 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 #endif
 		return;
 	}
-}
-
-static __inline__ int
-powof2(int i)
-{
-	int val = 1;
-
-	while (val < i) {
-		val <<= 1;
-	}
-	return (val);
 }
 
 /*
