@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.43 2005/05/16 10:35:14 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.44 2005/05/18 09:07:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1165,7 +1165,7 @@ poll_items(int argc, union evarg *argv)
 		} else if (tel->type == TILE_PIXMAP) {
 			struct pixmap *px = tel->tel_pixmap.px;
 
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
+			it = tlist_insert(tl, px->su, "%s%s%s",
 			    (tv->state==TILEVIEW_PIXMAP_EDIT &&
 			     tv->tv_pixmap.px == px) ? "* ": "",
 			    px->name,
@@ -1178,7 +1178,7 @@ poll_items(int argc, union evarg *argv)
 			struct vg *vg = sk->vg;
 			struct vg_element *vge;
 
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
+			it = tlist_insert(tl, sk->vg->su, "%s%s%s",
 			    (tv->state==TILEVIEW_SKETCH_EDIT &&
 			     tv->tv_sketch.sk == sk) ? "* ": "",
 			    sk->name,
