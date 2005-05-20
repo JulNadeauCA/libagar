@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.14 2005/05/08 13:26:21 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.15 2005/05/09 03:24:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -379,25 +379,25 @@ hsvpal_draw(void *p)
 	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
 	pc = SDL_MapRGB(vfmt, r, g, b);
 	if (a < 255) {
-		/* 
-		 * TODO optimize blending on the basis that the background is
-		 * predictable.
-		 */
-		primitives.tiling(pal, pal->rpreview, 8, 8,
-		    COLOR(HSVPAL_TILE1_COLOR),
-		    COLOR(HSVPAL_TILE2_COLOR));
-		for (y = pal->rpreview.y + 5;
-		     y < pal->rpreview.y + pal->rpreview.h - 5;
-		     y++) {
-			for (x = pal->rpreview.x + 20;
-			     x < pal->rpreview.x + pal->rpreview.w - 20;
-			     x++) {
-				BLEND_RGBA2_CLIPPED(view->v,
-				    WIDGET(pal)->cx+x,
-				    WIDGET(pal)->cy+y,
-				    r, g, b, a);
-			}
-		}
+		Uint8 cTile1[3], cTile2[3];
+		Uint32 c1, c2;
+
+		SDL_GetRGB(COLOR(HSVPAL_TILE1_COLOR), vfmt,
+		    &cTile1[0], &cTile1[1], &cTile1[2]);
+		SDL_GetRGB(COLOR(HSVPAL_TILE2_COLOR), vfmt,
+		    &cTile2[0], &cTile2[1], &cTile2[2]);
+
+		c1 = SDL_MapRGB(vfmt,
+		    (((r - cTile1[0]) * a) >> 8) + cTile1[0],
+		    (((g - cTile1[1]) * a) >> 8) + cTile1[1],
+		    (((b - cTile1[2]) * a) >> 8) + cTile1[2]);
+		
+		c2 = SDL_MapRGB(vfmt,
+		    (((r - cTile2[0]) * a) >> 8) + cTile2[0],
+		    (((g - cTile2[1]) * a) >> 8) + cTile2[1],
+		    (((b - cTile2[2]) * a) >> 8) + cTile2[2]);
+
+		primitives.tiling(pal, pal->rpreview, 8, 8, c1, c2);
 	} else {
 		primitives.rect_filled(pal,
 		    pal->rpreview.x, pal->rpreview.y,
