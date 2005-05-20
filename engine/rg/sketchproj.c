@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.2 2005/05/18 05:03:51 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.1 2005/05/18 09:07:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -202,16 +202,9 @@ sketchproj_apply(void *p, struct tile *t, int fx, int fy)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
 		case VG_LINE_STRIP:
-			x1 = vge->vtx[0].x*vg->scale*TILESZ +
-			    vg->origin[0].x*vg->scale*TILESZ;
-			y1 = vge->vtx[0].y*vg->scale*TILESZ + 
-			    vg->origin[0].y*vg->scale*TILESZ;
+			vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
 			for (i = 1; i < vge->nvtx; i++) {
-				x2 = vge->vtx[i].x*vg->scale*TILESZ +
-				    vg->origin[0].x*vg->scale*TILESZ;
-				y2 = vge->vtx[i].y*vg->scale*TILESZ +
-				    vg->origin[0].y*vg->scale*TILESZ;
-
+				vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
 				prim_color_rgb(t, 250, 250, 0);
 				prim_wuline(t, x1, y1, x2, y2);
 				x1 = x2;

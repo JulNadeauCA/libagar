@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.7 2005/05/18 09:07:03 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.8 2005/05/19 02:17:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -346,27 +346,10 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 	}
 }
 
-static __inline__ int
-ftrunc(double d)
-{
-	return ((int)floor(d));
-}
-
-static __inline__ double
-ffrac(double d)
-{
-	return (d - floor(d));
-}
-
-static __inline__ double
-finvfrac(double d)
-{
-	return (1 - (d - floor(d)));
-}
-
 void
-prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
+prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 {
+	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
 	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
 	    lum1, lum2, ipart;
 	int x, y, ix1, ix2, iy1, iy2;
@@ -378,9 +361,9 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 
 	SDL_GetRGBA(t->pc, t->ts->fmt, &r, &g, &b, &a);
 
-	if (abs(xd) > abs(yd)) {			/* Horizontal */
+	if (fabs(xd) > fabs(yd)) {			/* Horizontal */
 		if (x1 > x2) {
-			fix6 tmp;
+			double tmp;
 			
 			tmp = x1; x1 = x2; x2 = tmp;
 			tmp = y1; y1 = y2; y2 = tmp;
@@ -426,8 +409,14 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 
 		/* Main loop */
 		for (x = (ix1+1); x < ix2; x++) {
+			float focus;
+
 			lum1 = finvfrac(yf);
 			lum2 = ffrac(yf);
+			focus = (1.0 - fabs(lum1-lum2));
+			lum1 += 0.3*focus;
+			lum2 += 0.3*focus;
+
 			prim_blend_rgb(t->su, x, (int)yf, PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum1*255));
 			prim_blend_rgb(t->su, x, (int)yf+1, PRIM_OVERLAY_ALPHA,
@@ -439,8 +428,8 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 		if (x1 > x2) {
 			double tmp;
 
-			tmp = x1; x1 = x2; x2 = x1;
-			tmp = y1; y1 = y2; y2 = y1;
+			tmp = x1; x1 = x2; x2 = tmp;
+			tmp = y1; y1 = y2; y2 = tmp;
 			xd = (x2 - x1);
 			yd = (y2 - y1);
 		}
@@ -482,8 +471,13 @@ prim_wuline(struct tile *t, double x1, double y1, double x2, double y2)
 
 		/* Main loop */
 		for (y = (iy1+1); y < iy2; y++) {
+			float focus;
+
 			lum1 = finvfrac(xf);
 			lum2 = ffrac(xf);
+			focus = (1.0 - fabs(lum1-lum2));
+			lum1 + 0.3*focus;
+			lum2 + 0.3*focus;
 			prim_blend_rgb(t->su, (int)xf, y, PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum1*255));
 			prim_blend_rgb(t->su, (int)xf+1, y, PRIM_OVERLAY_ALPHA,
