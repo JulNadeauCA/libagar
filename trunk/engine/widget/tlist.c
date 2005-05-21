@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.119 2005/05/08 11:09:23 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.120 2005/05/08 11:13:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -177,6 +177,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->selected = NULL;
 	tl->keymoved = 0;
 	tl->item_h = text_font_height+2;
+	tl->icon_w = tl->item_h - 4;
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
@@ -274,8 +275,7 @@ tlist_draw(void *p)
 	offset = widget_get_int(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		int ts = tl->item_h/2+1;
-		int x = 2 + it->depth*ts;
+		int x = 2 + it->depth*tl->icon_w;
 
 		if (i++ < offset)
 			continue;
@@ -283,65 +283,15 @@ tlist_draw(void *p)
 			break;
 
 		if (it->selected) {
+			int x1 = x + tl->item_h + 2;
+
 			primitives.rect_filled(tl,
-			    x, y+1,
-			    WIDGET(tl)->w - WIDGET(tl->sbar)->w,
+			    x1, y+1,
+			    WIDGET(tl)->w-x1-1,
 			    tl->item_h-1,
 			    COLOR(TLIST_SEL_COLOR));
 		}
-
-		if (tl->flags & TLIST_TREE) {
-			int tx = x + 5;
-			int ty = y + ts/2;
-			int j;
-
-			primitives.line2(tl,
-			    tx - ts,
-			    ty + ts/2,
-			    tx - ts,
-			    ty - tl->item_h,
-			    COLOR(TLIST_LINE_COLOR));
-			primitives.line2(tl,
-			    tx - ts,
-			    ty + ts/2,
-			    tx,
-			    ty + ts/2,
-			    COLOR(TLIST_LINE_COLOR));
-
-			for (j = 0; j < it->depth; j++) {
-				int lx = j*ts + 7;
-
-				primitives.line2(tl,
-				    lx,
-				    ty + ts/2,
-				    lx,
-				    ty - tl->item_h,
-				    COLOR(TLIST_LINE_COLOR));
-			}
-
-			if (it->flags & TLIST_HAS_CHILDREN) {
-				primitives.frame(tl, tx, ty, ts, ts,
-				    COLOR(TLIST_LINE_COLOR));
-
-				if (it->flags & TLIST_VISIBLE_CHILDREN) {
-					primitives.minus(tl,
-					    tx + 1,
-					    ty + 1,
-					    ts - 2,
-					    ts - 2,
-					    COLOR(TLIST_LINE_COLOR));
-				} else {
-					primitives.plus(tl,
-					    tx + 1,
-					    ty + 1,
-					    ts - 2,
-					    ts - 2,
-					    COLOR(TLIST_LINE_COLOR));
-				}
-				goto drawtext;		/* Skip the icon */
-			}
-		}
-
+		
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
 				SDL_Surface *scaled = NULL;
@@ -352,16 +302,36 @@ tlist_draw(void *p)
 			}
 			widget_blit_surface(tl, it->icon, x, y);
 		}
-drawtext:
-		x += tl->item_h + 5;
 
+		if (it->flags & TLIST_HAS_CHILDREN) {
+			Uint8 cBg[4] = { 0, 0, 0, 64 };
+			Uint8 cFg[4] = { 255, 255, 255, 100 };
+
+			primitives.rect_blended(tl,
+			    x-1, y,
+			    tl->item_h + 2, tl->item_h,
+			    cBg, ALPHA_SRC);
+
+			if (it->flags & TLIST_VISIBLE_CHILDREN) {
+				primitives.minus(tl,
+				    x+2, y+2,
+				    tl->item_h-4, tl->item_h-4,
+				    cFg, ALPHA_SRC);
+			} else {
+				primitives.plus(tl,
+				    x+2, y+2,
+				    tl->item_h-4, tl->item_h-4,
+				    cFg, ALPHA_SRC);
+			}
+		}
+		
 		if (it->label == -1) {
 			it->label = widget_map_surface(tl,
 			    text_render(NULL, -1, COLOR(TLIST_TXT_COLOR),
 			        it->text));
 		}
 		widget_blit_surface(tl, it->label,
-		    x,
+		    x + tl->item_h + 5,
 		    y + tl->item_h/2 - WIDGET_SURFACE(tl,it->label)->h/2 + 1);
 
 		y += tl->item_h;
@@ -750,7 +720,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 
 	/* Expand the children if the user clicked on the [+] sign. */
 	if (ti->flags & TLIST_HAS_CHILDREN) {
-		int th = tl->item_h/2;
+		int th = tl->icon_w;
 
 		x -= 7;
 		if (x >= ti->depth*th &&
