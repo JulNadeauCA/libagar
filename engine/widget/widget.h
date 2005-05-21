@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.92 2005/05/12 02:33:36 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.93 2005/05/14 10:05:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -8,6 +8,7 @@
 
 #include <engine/widget/style.h>
 #include <engine/widget/colors.h>
+#include <engine/view.h>
 
 #include "begin_code.h"
 
@@ -134,7 +135,9 @@ void	 widget_blit_from(void *, void *, int, SDL_Rect *, int, int);
 #define widget_unmap_surface(w, n) widget_replace_surface((w),(n),NULL)
 #define	widget_blit_surface(p,n,x,y) widget_blit_from((p),(p),(n),NULL,(x),(y))
 
-__inline__ void	 widget_put_pixel(void *, int, int, Uint32);
+__inline__ void widget_put_pixel(void *, int, int, Uint32);
+__inline__ void widget_blend_pixel(void *, int, int, Uint8 [4],
+		                   enum view_blend_func);
 
 void  widget_mousemotion(struct window *, struct widget *, int, int, int, int,
 	                 int);

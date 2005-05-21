@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.110 2005/05/16 03:43:59 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.111 2005/05/20 05:56:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1220,20 +1220,22 @@ void
 widget_put_pixel(void *p, int wx, int wy, Uint32 color)
 {
 	struct widget *wid = p;
-	int x = wid->cx+wx;
-	int y = wid->cy+wy;
-	Uint8 *d;
 
-	if (CLIPPED_PIXEL(view->v, x, y))
-		return;
+	VIEW_PUT_PIXEL2_CLIPPED(wid->cx+wx, wid->cy+wy, color);
+}
 
-	d = (Uint8 *)view->v->pixels + y*view->v->pitch + x*vfmt->BytesPerPixel;
-	switch (vfmt->BytesPerPixel) {
-		_VIEW_PUTPIXEL_32(d, color);
-		_VIEW_PUTPIXEL_24(d, color);
-		_VIEW_PUTPIXEL_16(d, color);
-		_VIEW_PUTPIXEL_8(d, color);
-	}
+/*
+ * Blend with the pixel at widget-relative x,y coordinates.
+ * The display surface must be locked; clipping is done.
+ */
+void
+widget_blend_pixel(void *p, int wx, int wy, Uint8 c[4],
+    enum view_blend_func func)
+{
+	struct widget *wid = p;
+
+	BLEND_RGBA2_CLIPPED(view->v, wid->cx+wx, wid->cy+wy, c[0], c[1],
+	    c[2], c[3], func);
 }
 
 /* Evaluate to true if absolute view coords x,y are inside the widget area. */
