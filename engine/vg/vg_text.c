@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.12 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.13 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 
 const struct vg_element_ops vg_text_ops = {
 	N_("Text"),
+	VGTEXT_ICON,
 	vg_text_init,
 	vg_text_destroy,
 	vg_draw_text,

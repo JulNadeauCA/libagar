@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.c,v 1.3 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.4 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 const struct vg_element_ops vg_mask_ops = {
 	N_("Polygonal mask"),
+	-1,
 	vg_mask_init,
 	NULL,
 	vg_draw_mask,

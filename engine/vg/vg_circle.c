@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.16 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.17 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 
 const struct vg_element_ops vg_circle_ops = {
 	N_("Circle"),
+	VGCIRCLES_ICON,
 	vg_circle_init,
 	NULL,
 	vg_draw_circle,
