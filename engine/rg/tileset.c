@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.31 2005/05/16 04:20:51 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.32 2005/05/16 10:35:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -64,9 +64,11 @@ const struct object_ops tileset_ops = {
 };
 
 extern const struct feature_ops fill_ops;
+extern const struct feature_ops polygon_ops;
 
 const struct feature_ops *feature_tbl[] = {
 	&fill_ops,
+	&polygon_ops,
 	NULL
 };
 
@@ -243,7 +245,7 @@ tileset_load(void *obj, struct netbuf *buf)
 	/* Load the features. */
 	nfeatures = read_uint32(buf);
 	for (i = 0; i < nfeatures; i++) {
-		const struct feature_ops *ftops;
+		const struct feature_ops **ftops;
 		char name[FEATURE_NAME_MAX];
 		char type[FEATURE_TYPE_MAX];
 		size_t len;
@@ -254,18 +256,18 @@ tileset_load(void *obj, struct netbuf *buf)
 		copy_string(type, buf, sizeof(type));
 		flags = (int)read_uint32(buf);
 
-		for (ftops = feature_tbl[0]; ftops != NULL; ftops++) {
-			if (strcmp(ftops->type, type) == 0)
+		for (ftops = &feature_tbl[0]; *ftops != NULL; ftops++) {
+			if (strcmp((*ftops)->type, type) == 0)
 				break;
 		}
-		if (ftops == NULL) {
+		if (*ftops == NULL) {
 			/* XXX ignore? */
 			error_set("%s: unknown feature type `%s'", name, type);
 			goto fail;
 		}
 
-		ft = Malloc(ftops->len, M_RG);
-		ft->ops = ftops;
+		ft = Malloc((*ftops)->len, M_RG);
+		ft->ops = *ftops;
 		ft->ops->init(ft, ts, flags);
 
 		if (feature_load(ft, buf) == -1) {
