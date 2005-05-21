@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.2 2005/05/18 05:03:51 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.3 2005/05/18 09:07:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -58,7 +58,7 @@ const struct feature_ops polygon_ops = {
 	polygon_load,
 	polygon_save,
 	NULL,		/* destroy */
-	polygon_apply,
+	polygon_render,
 	NULL,
 	NULL,
 	polygon_edit
@@ -220,7 +220,7 @@ polygon_edit(void *p, struct tileview *tv)
 }
 
 void
-polygon_apply(void *p, struct tile *t, int fx, int fy)
+polygon_render(void *p, struct tile *t, int fx, int fy)
 {
 	struct polygon *poly = p;
 	SDL_Surface *sDst = t->su;
@@ -237,10 +237,10 @@ polygon_apply(void *p, struct tile *t, int fx, int fy)
 	xorig = poly->sketch_tel->tel_sketch.x;
 	yorig = poly->sketch_tel->tel_sketch.y;
 
-	left = Malloc(sVg->w*sizeof(int), M_RG);
-	right = Malloc(sVg->w*sizeof(int), M_RG);
-	memset(left, 0, sVg->w*sizeof(int));
-	memset(right, 0, sVg->w*sizeof(int));
+	left = Malloc(sVg->h*sizeof(int), M_RG);
+	right = Malloc(sVg->h*sizeof(int), M_RG);
+	memset(left, 0, sVg->h*sizeof(int));
+	memset(right, 0, sVg->h*sizeof(int));
 
 	for (y = 0; y < sVg->h; y++) {
 		for (x = 0; x < sVg->w; x++) {
