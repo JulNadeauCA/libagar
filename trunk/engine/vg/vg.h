@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.27 2005/04/21 07:42:55 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.28 2005/05/20 05:55:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -83,6 +83,7 @@ enum vg_element_type {
 
 struct vg_element_ops {
 	const char *name;
+	int icon;
 	void (*init)(struct vg *, struct vg_element *);
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
@@ -226,6 +227,9 @@ struct vg {
 	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
 	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 };
+
+extern const struct vg_element_ops *vg_element_types[];
+extern const char *vg_element_names[];
 
 __BEGIN_DECLS
 struct vg	*vg_new(void *, int);

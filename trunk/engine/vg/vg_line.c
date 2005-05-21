@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.18 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.19 2005/05/20 05:55:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 
 const struct vg_element_ops vg_lines_ops = {
 	N_("Line segments"),
+	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	vg_draw_line_segments,
@@ -48,6 +49,7 @@ const struct vg_element_ops vg_lines_ops = {
 };
 const struct vg_element_ops vg_line_strip_ops = {
 	N_("Line strip"),
+	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	vg_draw_line_strip,
@@ -55,6 +57,7 @@ const struct vg_element_ops vg_line_strip_ops = {
 };
 const struct vg_element_ops vg_line_loop_ops = {
 	N_("Line loop"),
+	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	vg_draw_line_loop,

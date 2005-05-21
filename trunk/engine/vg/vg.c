@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.46 2005/04/21 07:42:55 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.47 2005/05/20 05:55:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ extern const struct vg_element_ops vg_ellipse_ops;
 extern const struct vg_element_ops vg_text_ops;
 extern const struct vg_element_ops vg_mask_ops;
 
-static const struct vg_element_ops *vge_types[] = {
+const struct vg_element_ops *vg_element_types[] = {
 	&vg_points_ops,
 	&vg_lines_ops,
 	&vg_line_strip_ops,
@@ -459,7 +459,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 		vge->block = NULL;
 	}
 
-	vge->ops = vge_types[eltype];
+	vge->ops = vg_element_types[eltype];
 	if (vge->ops->init != NULL)
 		vge->ops->init(vg, vge);
 

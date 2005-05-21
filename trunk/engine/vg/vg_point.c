@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.14 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.15 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 
 const struct vg_element_ops vg_points_ops = {
 	N_("Points"),
+	VGPOINTS_ICON,
 	NULL,
 	NULL,
 	vg_draw_points,

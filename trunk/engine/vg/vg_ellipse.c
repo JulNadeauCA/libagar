@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.11 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.12 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 
 const struct vg_element_ops vg_ellipse_ops = {
 	N_("Ellipse"),
+	VGCIRCLES_ICON,
 	vg_ellipse_init,
 	NULL,
 	vg_draw_ellipse,
@@ -46,6 +47,7 @@ const struct vg_element_ops vg_ellipse_ops = {
 };
 const struct vg_element_ops vg_arc_ops = {
 	N_("Arc"),
+	VGCIRCLES_ICON,
 	vg_ellipse_init,
 	NULL,
 	vg_draw_ellipse,
