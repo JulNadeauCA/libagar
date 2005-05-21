@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.23 2005/05/12 02:33:36 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.24 2005/05/13 09:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -1131,18 +1131,20 @@ draw_column(struct tableview *tv, int visible_start, int visible_end,
 			offset += tv->visible.items[j].depth * (tw+4);
 
 			if (!TAILQ_EMPTY(&tv->visible.items[j].row->children)) {
+				Uint8 c[4] = { 255, 255, 255, 128 };
+
 				primitives.frame(tv, offset, ty, tw, tw,
 				    COLOR(TABLEVIEW_LINE_COLOR));
 				if (tv->visible.items[j].row->expanded) {
 					primitives.minus(tv, offset, ty,
 					    tw - 2,
 					    tw - 2,
-					    COLOR(TABLEVIEW_LINE_COLOR));
+					    c, ALPHA_SRC);
 				} else {
 					primitives.plus(tv, offset, ty,
 					    tw - 2,
 					    tw - 2,
-					    COLOR(TABLEVIEW_LINE_COLOR));
+					    c, ALPHA_SRC);
 				}
 			}
 			offset += tw+4;

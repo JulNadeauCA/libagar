@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.70 2005/05/08 07:19:21 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.71 2005/05/16 03:37:07 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -242,6 +242,23 @@ frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, shade);
 }
 
+/* Draw a blended 3D-style frame. */
+static void
+frame_blended(void *p, int xoffs, int yoffs, int w, int h, Uint8 c[4],
+    enum view_blend_func func)
+{
+	struct widget *wid = p;
+
+	primitives.line_blended(wid, xoffs, yoffs, xoffs+w-1, yoffs,
+	    c, func);
+	primitives.line_blended(wid, xoffs, yoffs, xoffs, yoffs+h-1,
+	    c, func);
+	primitives.line_blended(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1,
+	    c, func);
+	primitives.line_blended(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1,
+	    c, func);
+}
+
 /* Render a circle using a modified Bresenham line algorithm. */
 static void
 circle_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
@@ -434,6 +451,106 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 
 }
 
+static void
+line_blended_bresenham(void *widget, int x1, int y1, int x2, int y2,
+    Uint8 c[4], enum view_blend_func func)
+{
+	struct widget *wid = widget;
+	int dx, dy;
+	int inc1, inc2;
+	int d, x, y;
+	int xend, yend;
+	int xdir, ydir;
+
+	dx = abs(x2-x1);
+	dy = abs(y2-y1);
+
+	SDL_LockSurface(view->v);
+
+	if (dy <= dx) {
+		d = dy*2 - dx;
+		inc1 = dy*2;
+		inc2 = (dy-dx)*2;
+		if (x1 > x2) {
+			x = x2;
+			y = y2;
+			ydir = -1;
+			xend = x1;
+		} else {
+			x = x1;
+			y = y1;
+			ydir = 1;
+			xend = x2;
+		}
+		widget_blend_pixel(wid, x, y, c, func);
+
+		if (((y2-y1)*ydir) > 0) {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y++;
+					d += inc2;
+				}
+				widget_blend_pixel(wid, x, y, c, func);
+			}
+		} else {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y--;
+					d += inc2;
+				}
+				widget_blend_pixel(wid, x, y, c, func);
+			}
+		}		
+	} else {
+		d = dx*2 - dy;
+		inc1 = dx*2;
+		inc2 = (dx-dy)*2;
+		if (y1 > y2) {
+			y = y2;
+			x = x2;
+			yend = y1;
+			xdir = -1;
+		} else {
+			y = y1;
+			x = x1;
+			yend = y2;
+			xdir = 1;
+		}
+		widget_blend_pixel(wid, x, y, c, func);
+
+		if (((x2-x1)*xdir) > 0) {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x++;
+					d += inc2;
+				}
+				widget_blend_pixel(wid, x, y, c, func);
+			}
+		} else {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x--;
+					d += inc2;
+				}
+				widget_blend_pixel(wid, x, y, c, func);
+			}
+		}
+	}
+	SDL_UnlockSurface(view->v);
+}
+
 /* Render an outlined rectangle. */
 static void
 rect_outlined(void *p, int x1, int y1, int w, int h, Uint32 color)
@@ -454,12 +571,35 @@ rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 	SDL_Rect rd;
+	Uint8 a;
 
 	rd.x = wid->cx+x;
 	rd.y = wid->cy+y;
 	rd.w = w;
 	rd.h = h;
 	SDL_FillRect(view->v, &rd, color);
+}
+
+/* Render an alpha blended rectangle. */
+static void
+rect_blended(void *p, int x1, int y1, int w, int h, Uint8 c[4],
+    enum view_blend_func func)
+{
+	struct widget *wid = p;
+	Uint8 *pView = (Uint8 *)view->v->pixels +
+	    (wid->cy+y1)*view->v->pitch +
+	    (wid->cx+x1)*view->v->format->BytesPerPixel;
+	int yinc = view->v->pitch - w*view->v->format->BytesPerPixel;
+	int x, y;
+
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			BLEND_RGBA(view->v, pView, c[0], c[1], c[2], c[3],
+			    func);
+			pView += view->v->format->BytesPerPixel;
+		}
+		pView += yinc;
+	}
 }
 
 /* Draw a gimp-style background tiling. */
@@ -495,23 +635,24 @@ tiling(void *p, SDL_Rect rd, int tsz, int offs, Uint32 c1, Uint32 c2)
 
 /* Draw a [+] sign. */
 static void
-plus(void *p, int x, int y, int w, int h, Uint32 color)
+plus(void *p, int x, int y, int w, int h, Uint8 c[4], enum view_blend_func func)
 {
 	int xcen = x + w/2;
 	int ycen = y + h/2;
 
-	primitives.line2(p, xcen, y, xcen, y+h, color);
-	primitives.line2(p, x, ycen, x+w, ycen, color);
+	primitives.line_blended(p, xcen, y, xcen, y+h, c, func);
+	primitives.line_blended(p, x, ycen, x+w, ycen, c, func);
 }
 
 /* Draw a [-] sign. */
 static void
-minus(void *p, int x, int y, int w, int h, Uint32 color)
+minus(void *p, int x, int y, int w, int h, Uint8 c[4],
+    enum view_blend_func func)
 {
 	struct widget *wid = p;
 	int ycen = y+h/2;
 
-	primitives.line2(wid, x, ycen, x+w, ycen, color);
+	primitives.line_blended(wid, x, ycen, x+w, ycen, c, func);
 }
 
 #ifdef HAVE_OPENGL
@@ -531,6 +672,43 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
 	glEnd();
+}
+
+static void
+line_blended_opengl(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
+    enum view_blend_func func)
+{
+	struct widget *wid = p;
+	int x1 = wid->cx + px1;
+	int y1 = wid->cy + py1;
+	int x2 = wid->cx + px2;
+	int y2 = wid->cy + py2;
+	GLboolean blend_save;
+	GLenum sfac_save, dfac_save;
+	
+	if (c[3] < 255) {
+		glGetBooleanv(GL_BLEND, &blend_save);
+		glGetIntegerv(GL_BLEND_SRC, &sfac_save);
+		glGetIntegerv(GL_BLEND_DST, &dfac_save);
+			
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+
+	glBegin(GL_LINES);
+	glColor4ub(c[0], c[1], c[2], c[3]);
+	glVertex2s(x1, y1);
+	glVertex2s(x2, y2);
+	glEnd();
+	
+	if (c[3] < 255) {
+		if (blend_save) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(sfac_save, dfac_save);
+	}
 }
 
 static void
@@ -607,6 +785,61 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 	glVertex2i(x2, y2);
 	glVertex2i(x1, y2);
 	glEnd();
+}
+
+static void
+rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
+    enum view_blend_func func)
+{
+	struct widget *wid = p;
+	Uint8 r, g, b;
+	int x1 = wid->cx+x;
+	int y1 = wid->cy+y;
+	int x2 = x1+w;
+	int y2 = y1+h;
+	GLboolean blend_save;
+	GLenum sfac_save, dfac_save;
+
+	if (wid->flags & WIDGET_CLIPPING) {
+		if (x1 > wid->cx+wid->w ||
+		    y1 > wid->cy+wid->h) {
+			return;
+		}
+		if (x1 < wid->cx)
+			x1 = wid->cx;
+		if (y1 < wid->cy)
+			y1 = wid->cy;
+		if (x2 > wid->cx+wid->w)
+			x2 = wid->cx+wid->w;
+		if (y2 > wid->cy+wid->h)
+			y2 = wid->cy+wid->h;
+	}
+
+	if (c[3] < 255) {
+		glGetBooleanv(GL_BLEND, &blend_save);
+		glGetIntegerv(GL_BLEND_SRC, &sfac_save);
+		glGetIntegerv(GL_BLEND_DST, &dfac_save);
+			
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+
+	glBegin(GL_POLYGON);
+	glColor4ub(c[0], c[1], c[2], c[3]);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y1);
+	glVertex2i(x2, y2);
+	glVertex2i(x1, y2);
+	glEnd();
+	
+	if (c[3] < 255) {
+		if (blend_save) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(sfac_save, dfac_save);
+	}
 }
 
 /* Draw a 3D-style box with chamfered top edges. */
@@ -711,6 +944,7 @@ primitives_init(void)
 {
 	primitives.box = box;
 	primitives.frame = frame;
+	primitives.frame_blended = frame_blended;
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;
 	primitives.minus = minus;
@@ -720,7 +954,9 @@ primitives_init(void)
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
 		primitives.line = line_opengl;
+		primitives.line_blended = line_blended_opengl;
 		primitives.rect_filled = rect_opengl;
+		primitives.rect_blended = rect_blended_opengl;
 		primitives.circle = circle_opengl;
 		primitives.circle2 = circle2_opengl;
 		primitives.box_chamfered = box_chamfered_gl;
@@ -728,7 +964,9 @@ primitives_init(void)
 #endif
 	{
 		primitives.line = line_bresenham;
+		primitives.line_blended = line_blended_bresenham;
 		primitives.rect_filled = rect_filled;
+		primitives.rect_blended = rect_blended;
 		primitives.circle = circle_bresenham;
 		primitives.circle2 = circle2_bresenham;
 		primitives.box_chamfered = box_chamfered;
