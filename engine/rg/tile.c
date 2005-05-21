@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.44 2005/05/18 09:07:23 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.45 2005/05/20 05:54:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1104,7 +1104,7 @@ insert_sketchproj(int argc, union evarg *argv)
 }
 
 static void
-poll_items(int argc, union evarg *argv)
+poll_feats(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
@@ -1194,50 +1194,10 @@ poll_items(int argc, union evarg *argv)
 				continue;
 
 			TAILQ_FOREACH(vge, &vg->vges, vges) {
-				static const char *element_names[] = {
-					N_("points"),
-					N_("lines"),
-					N_("line strip"),
-					N_("line loop"),
-					N_("triangles"),
-					N_("triangle strip"),
-					N_("triangle fan"),
-					N_("quads"),
-					N_("quad strip"),
-					N_("polygon"),
-					N_("circle"),
-					N_("arc"),
-					N_("ellipse"),
-					N_("bezier curve"),
-					N_("bezigon"),
-					N_("text"),
-					N_("polygon mask")
-				};
-				static const int icons[] = {
-					VGPOINTS_ICON,
-					VGLINES_ICON,
-					VGLINES_ICON,
-					VGLINES_ICON,
-					-1,
-					-1,
-					-1,
-					-1,
-					-1,
-					-1,
-					VGCIRCLES_ICON,
-					VGCIRCLES_ICON,
-					VGCIRCLES_ICON,
-					-1,
-					-1,
-					VGTEXT_ICON,
-					-1
-				};
-			
 				it = tlist_insert(tl,
-				    icons[vge->type] != -1 ?
-				    ICON(icons[vge->type]) : NULL,
+				    ICON(vg_element_types[vge->type]->icon),
 				    "%s%s", (vge == vg->cur_vge) ? "* " : "",
-				    element_names[vge->type]);
+				    vg_element_types[vge->type]->name);
 				it->class = "sketch-element";
 				it->p1 = vge;
 				it->depth = 1;
@@ -1467,7 +1427,8 @@ visible_element(int argc, union evarg *argv)
 
 	if ((it = tlist_item_selected(tl)) == NULL ||
 	    (strcmp(it->class, "pixmap") != 0 &&
-	     strcmp(it->class, "sketch") != 0)) {
+	     strcmp(it->class, "sketch") != 0 &&
+	     strcmp(it->class, "feature") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -1551,20 +1512,26 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tlist_init(tl_feats, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl_feats)->flags &= ~(WIDGET_WFILL);
 	tlist_prescale(tl_feats, _("FEATURE #000"), 5);
-	event_new(tl_feats, "tlist-poll", poll_items, "%p,%p,%p,%p", ts, t, win,
+	event_new(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p", ts, t, win,
 	    tv);
 
 	mi = tlist_set_popup(tl_feats, "feature");
 	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl_feats);
+#if 0
 		menu_action(mi, _("Edit feature"), OBJEDIT_ICON,
 		    edit_element, "%p,%p,%p", tv, tl_feats, win);
+#endif
+		menu_separator(mi);
+
 		menu_action(mi, _("Detach feature"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
 		menu_action(mi, _("Destroy feature"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
 		
 		menu_separator(mi);
-		
+
 		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
 		    move_element_up, "%p,%p", tv, tl_feats);
@@ -1575,8 +1542,14 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	mi = tlist_set_popup(tl_feats, "pixmap");
 	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl_feats);
+
+		menu_separator(mi);
+#if 0
 		menu_action(mi, _("Edit pixmap"), OBJEDIT_ICON,
 		    edit_element, "%p,%p,%p", tv, tl_feats, win);
+#endif
 		menu_action(mi, _("Detach pixmap"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
 		menu_action(mi, _("Destroy pixmap"), TRASH_ICON,
@@ -1590,15 +1563,15 @@ tile_edit(struct tileset *ts, struct tile *t)
 		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
 		    move_element_down, "%p,%p", tv, tl_feats);
-		
-		menu_separator(mi);
-
-		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl_feats);
 	}
 	
 	mi = tlist_set_popup(tl_feats, "sketch");
 	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl_feats);
+
+		menu_separator(mi);
+
 		menu_action(mi, _("Edit sketch"), OBJEDIT_ICON,
 		    edit_element, "%p,%p,%p", tv, tl_feats, win);
 		
@@ -1617,11 +1590,6 @@ tile_edit(struct tileset *ts, struct tile *t)
 		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
 		    move_element_down, "%p,%p", tv, tl_feats);
-		
-		menu_separator(mi);
-
-		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl_feats);
 	}
 	
 	mi = tlist_set_popup(tl_feats, "sketch-element");
