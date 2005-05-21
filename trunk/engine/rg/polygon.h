@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.h,v 1.5 2005/03/06 10:40:32 vedge Exp $	*/
+/*	$Csoft: polygon.h,v 1.1 2005/05/16 10:35:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_POLYGON_H_
@@ -35,7 +35,7 @@ __BEGIN_DECLS
 void		 polygon_init(void *, struct tileset *, int);
 int		 polygon_load(void *, struct netbuf *);
 void		 polygon_save(void *, struct netbuf *);
-void		 polygon_apply(void *, struct tile *, int, int);
+void		 polygon_render(void *, struct tile *, int, int);
 struct window	*polygon_edit(void *, struct tileview *);
 __END_DECLS
 
