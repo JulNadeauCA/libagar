@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.h,v 1.5 2005/03/09 06:37:36 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.6 2005/05/08 13:26:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
@@ -11,11 +11,10 @@
 struct hsvpal {
 	struct widget	   wid;
 	int flags;
-#define HSVPAL_PIXEL	0x01	/* Edit the pixel binding */ 
+#define HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
 
 	float		   h, s, v, a;	/* Default bindings */
 	Uint32		   pixel;
-	SDL_PixelFormat	  *format;	/* Target pixel format */
 	SDL_Rect	   rpreview;	/* Color preview rectangle */
 	SDL_Surface	  *surface;	/* Cached surface */
 	int		   selcircle_r;	/* Radius of selection circles */
@@ -38,8 +37,8 @@ struct hsvpal {
 };
 
 __BEGIN_DECLS
-struct hsvpal	*hsvpal_new(void *, SDL_PixelFormat *);
-void		 hsvpal_init(struct hsvpal *, SDL_PixelFormat *);
+struct hsvpal	*hsvpal_new(void *);
+void		 hsvpal_init(struct hsvpal *);
 void		 hsvpal_destroy(void *);
 void		 hsvpal_scale(void *, int, int);
 void		 hsvpal_draw(void *);

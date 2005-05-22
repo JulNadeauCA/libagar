@@ -1,4 +1,4 @@
-.\"	$Csoft: palette.3,v 1.7 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: palette.3,v 1.8 2005/01/23 11:49:13 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,7 +40,15 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget binds to a pixel in order to manipulate its 8-bit RGBA components.
+widget binds to a pixel (and matching
+.Xr SDL_PixelFormat 3 )
+in order to manipulate its 8-bit RGBA components.
+.Pp
+The
+.Xr hsvpal 3
+widget provides an alternative to
+.Nm
+which is generally better suited for graphical editors.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr object 3 ->
@@ -49,10 +57,10 @@ widget binds to a pixel in order to manipulate its 8-bit RGBA components.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct palette *"
-.Fn palette_new "void *parent" "enum palette_type type" "SDL_PixelFormat *fmt"
+.Fn palette_new "void *parent" "enum palette_type type"
 .Pp
 .Ft void
-.Fn palette_init "struct palette *palette" "enum palette_type type" "SDL_PixelFormat *fmt"
+.Fn palette_init "struct palette *palette" "enum palette_type type"
 .nr nS 0
 .Pp
 The
@@ -69,8 +77,8 @@ widget.
 may be one of:
 .Bd -literal
 enum palette_type {
-	PALETTE_RGB,    /* RGB scrollbars */
-	PALETTE_RGBA    /* RGBA scrollbars */
+	PALETTE_RGB,    /* RGB value */
+	PALETTE_RGBA    /* RGBA value */
 };
 .Ed
 .Sh BINDINGS
@@ -78,9 +86,14 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "Uint32 *value"
-.It Va Uint32 *color
+.Bl -tag -compact -width "SDL_PixelFormat **pixel-format "
+.It Va Uint32 *pixel
 Pixel to read from and write to.
+.It Va SDL_PixelFormat **pixel-format
+Pointer to the
+.Xr SDL_PixelFormat 3
+to use with
+.Va pixel .
 .El
 .Sh EVENTS
 The
@@ -88,9 +101,7 @@ The
 widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
-.It window-mousebuttondown
-.It window-mousebuttonup
-.It window-mousemotion
+.It window-mouse*
 Alter the selected RGBA component.
 .El
 .Pp

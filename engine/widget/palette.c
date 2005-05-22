@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.30 2005/04/21 07:55:13 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.31 2005/05/20 05:56:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,28 +51,27 @@ const struct widget_ops palette_ops = {
 static void palette_changed(int, union evarg *);
 
 struct palette *
-palette_new(void *parent, enum palette_type type, SDL_PixelFormat **pFormat)
+palette_new(void *parent, enum palette_type type)
 {
 	struct palette *pal;
 
 	pal = Malloc(sizeof(struct palette), M_OBJECT);
-	palette_init(pal, type, pFormat);
+	palette_init(pal, type);
 	object_attach(parent, pal);
 	return (pal);
 }
 
 void
-palette_init(struct palette *pal, enum palette_type type,
-    SDL_PixelFormat **pFormat)
+palette_init(struct palette *pal, enum palette_type type)
 {
 	int i;
 
 	widget_init(pal, "palette", &palette_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_CLIPPING);
-	widget_bind(pal, "color", WIDGET_UINT32, &pal->color);
-	widget_bind(pal, "pixel-format", WIDGET_POINTER, pFormat);
+	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vfmt);
 
-	pal->color = 0;
+	pal->pixel = 0;
 	pal->type = type; 
 
 	switch (type) {
@@ -98,14 +97,14 @@ palette_changed(int argc, union evarg *argv)
 {
 	struct palette *pal = argv[1].p;
 	int nbar = argv[2].i;
-	struct widget_binding *bColor, *bFormat;
-	Uint32 *color;
+	struct widget_binding *bPixel, *bFormat;
+	Uint32 *pPixel;
 	SDL_PixelFormat **pFormat;
 	Uint8 r, g, b, a;
 
-	bColor = widget_get_binding(pal, "color", &color);
+	bPixel = widget_get_binding(pal, "pixel", &pPixel);
 	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
-	SDL_GetRGBA(*color, *pFormat, &r, &g, &b, &a);
+	SDL_GetRGBA(*pPixel, *pFormat, &r, &g, &b, &a);
 	switch (nbar) {
 	case 0:
 		r = widget_get_int(pal->bars[nbar], "value");
@@ -120,9 +119,9 @@ palette_changed(int argc, union evarg *argv)
 		a = widget_get_int(pal->bars[nbar], "value");
 		break;
 	}
-	*color = SDL_MapRGBA(*pFormat, r, g, b, a);
+	*pPixel = SDL_MapRGBA(*pFormat, r, g, b, a);
 	widget_binding_unlock(bFormat);
-	widget_binding_unlock(bColor);
+	widget_binding_unlock(bPixel);
 
 	event_post(NULL, pal, "palette-changed", NULL);
 }
@@ -183,7 +182,7 @@ palette_draw(void *p)
 	struct widget_binding *bFormat;
 	SDL_PixelFormat **pFormat;
 
-	c = widget_get_uint32(pal, "color");
+	c = widget_get_uint32(pal, "pixel");
 	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
 	SDL_GetRGBA(c, *pFormat, &r, &g, &b, &a);
 	

@@ -1,4 +1,4 @@
-.\"	$Csoft: hsvpal.3,v 1.8 2005/01/23 11:49:13 vedge Exp $
+.\"	$Csoft: hsvpal.3,v 1.1 2005/05/22 03:36:11 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -78,7 +78,7 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "SDL_PixelFormat **pixel-fmt "
+.Bl -tag -compact -width "SDL_PixelFormat **pixel-format "
 .It Va float *hue
 Color hue (0..1).
 .It Va float *saturation
@@ -87,7 +87,7 @@ Color saturation (0..1).
 Color brightness (0..1).
 .It Va float *alpha
 Alpha component value (0..1).
-.It Va SDL_PixelFormat **pixel-fmt
+.It Va SDL_PixelFormat **pixel-format
 Pointer to the
 .Xr SDL_PixelFormat 3
 to use for generating the
