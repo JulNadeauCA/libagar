@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.15 2005/05/09 03:24:56 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.16 2005/05/20 05:56:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -53,12 +53,12 @@ const struct widget_ops hsvpal_ops = {
 static void render_palette(struct hsvpal *);
 
 struct hsvpal *
-hsvpal_new(void *parent, SDL_PixelFormat *fmt)
+hsvpal_new(void *parent)
 {
 	struct hsvpal *pal;
 
 	pal = Malloc(sizeof(struct hsvpal), M_OBJECT);
-	hsvpal_init(pal, fmt);
+	hsvpal_init(pal);
 	object_attach(parent, pal);
 	return (pal);
 }
@@ -68,15 +68,20 @@ update_pixel_from_hsv(struct hsvpal *pal)
 {
 	float h, s, v, a;
 	Uint8 r, g, b;
+	struct widget_binding *bFormat;
+	SDL_PixelFormat **pFormat;
 
 	h = widget_get_float(pal, "hue");
 	s = widget_get_float(pal, "saturation");
 	v = widget_get_float(pal, "value");
 	a = widget_get_float(pal, "alpha");
+	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
 
 	prim_hsv2rgb(h, s, v, &r, &g, &b);
-	widget_set_uint32(pal, "pixel",
-	    SDL_MapRGBA(pal->format, r, g, b, (Uint8)(a*255.0)));
+	widget_set_uint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b,
+	    (Uint8)(a*255.0)));
+
+	widget_binding_unlock(bFormat);
 }
 
 static __inline__ void
@@ -84,13 +89,17 @@ update_hsv_from_pixel(struct hsvpal *hsv, Uint32 pixel)
 {
 	Uint8 r, g, b, a;
 	float h, s, v;
-
-	SDL_GetRGBA(pixel, hsv->format, &r, &g, &b, &a);
+	struct widget_binding *bFormat;
+	SDL_PixelFormat **pFormat;
+	
+	bFormat = widget_get_binding(hsv, "pixel-format", &pFormat);
+	SDL_GetRGBA(pixel, *pFormat, &r, &g, &b, &a);
 	prim_rgb2hsv(r, g, b, &h, &s, &v);
 	widget_set_float(hsv, "hue", h);
 	widget_set_float(hsv, "saturation", s);
 	widget_set_float(hsv, "value", v);
 	widget_set_float(hsv, "alpha", ((float)a)/255.0);
+	widget_binding_unlock(bFormat);
 }
 
 static __inline__ void
@@ -197,14 +206,16 @@ binding_changed(int argc, union evarg *argv)
 
 	if (bind->type == WIDGET_UINT32 &&
 	    strcmp(bind->name, "pixel") == 0) {
+#if 0
 		hsv->flags |= HSVPAL_PIXEL;
+#endif
 		update_hsv_from_pixel(hsv, *(Uint32 *)bind->p1);
 	}
 	
 }
 
 void
-hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
+hsvpal_init(struct hsvpal *pal)
 {
 	int i;
 
@@ -214,13 +225,13 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	widget_bind(pal, "value", WIDGET_FLOAT, &pal->v);
 	widget_bind(pal, "alpha", WIDGET_FLOAT, &pal->a);
 	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, vfmt);
 
-	pal->format = fmt;
 	pal->h = 0.0;
 	pal->s = 0.0;
 	pal->v = 0.0;
 	pal->a = 1.0;
-	pal->pixel = SDL_MapRGBA(fmt, 0, 0, 0, 255);
+	pal->pixel = SDL_MapRGBA(vfmt, 0, 0, 0, 255);
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = HSVPAL_SEL_NONE;
@@ -337,7 +348,7 @@ hsvpal_draw(void *p)
 	Uint8 r, g, b, a;
 
 #if 0
-	/* numerically instable */
+	/* XXX numerically unstable */
 	if (pal->flags & HSVPAL_PIXEL) {
 		Uint32 pixel = widget_get_uint32(pal, "pixel");
 
