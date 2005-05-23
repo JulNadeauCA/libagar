@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.16 2005/05/20 05:56:10 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.17 2005/05/22 06:31:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -114,11 +114,9 @@ update_h(struct hsvpal *pal, int x, int y)
 	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
 	update_pixel_from_hsv(pal);
 
-	/* XXX use a timer */
-	render_palette(pal);
-	widget_update_surface(pal, 0);
-	
 	event_post(NULL, pal, "h-changed", NULL);
+	
+	pal->flags |= HSVPAL_DIRTY;
 }
 
 static void
@@ -225,7 +223,7 @@ hsvpal_init(struct hsvpal *pal)
 	widget_bind(pal, "value", WIDGET_FLOAT, &pal->v);
 	widget_bind(pal, "alpha", WIDGET_FLOAT, &pal->a);
 	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
-	widget_bind(pal, "pixel-format", WIDGET_POINTER, vfmt);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vfmt);
 
 	pal->h = 0.0;
 	pal->s = 0.0;
@@ -327,14 +325,7 @@ hsvpal_scale(void *p, int w, int h)
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
-	pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-	    WIDGET(pal)->w, WIDGET(pal)->h - pal->rpreview.h, 32,
-	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
-	if (pal->surface == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-	}
-	render_palette(pal);
-	widget_replace_surface(pal, 0, pal->surface);
+	pal->flags |= HSVPAL_DIRTY;
 }
 
 void
@@ -346,6 +337,18 @@ hsvpal_draw(void *p)
 	int x, y;
 	int i;
 	Uint8 r, g, b, a;
+	
+	if (pal->flags & HSVPAL_DIRTY) {
+		pal->flags &= ~(HSVPAL_DIRTY);
+		pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		    WIDGET(pal)->w, WIDGET(pal)->h - pal->rpreview.h, 32,
+		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
+		if (pal->surface == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+		render_palette(pal);
+		widget_replace_surface(pal, 0, pal->surface);
+	}
 
 #if 0
 	/* XXX numerically unstable */
