@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.8 2005/04/25 06:43:44 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.9 2005/05/10 12:22:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ colors_init(void)
 	colors[BG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
 	colors[FRAME_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
 	colors[TEXT_COLOR] = SDL_MapRGB(vfmt, 250, 250, 250);
-	colors[WINDOW_BG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
+	colors[WINDOW_BG_COLOR] = SDL_MapRGB(vfmt, 45, 45, 45);
 	colors[WINDOW_HI_COLOR] = SDL_MapRGB(vfmt, 90, 90, 85);
 	colors[WINDOW_LO_COLOR] = SDL_MapRGB(vfmt, 36, 36, 36);
 	colors[TITLEBAR_FOCUSED_COLOR] = SDL_MapRGB(vfmt, 40, 50, 60);
