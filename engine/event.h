@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.28 2004/05/15 02:56:35 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.29 2004/06/04 19:59:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -59,9 +59,23 @@ __END_DECLS
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
 } while (0)
+#define EVENT_INSERT_ARG2(eev1, eev2, ap, member, type) do {	\
+	type _ev_val = va_arg((ap), type);			\
+	if ((eev1)->argc >= EVENT_ARGS_MAX-1 ||			\
+	    (eev2)->argc >= EVENT_ARGS_MAX-1) {			\
+		fatal("excess evargs");				\
+	}							\
+	(eev1)->argv[(eev1)->argc++].member = _ev_val;		\
+	(eev2)->argv[(eev2)->argc++].member = _ev_val;		\
+} while (0)
 #else
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
+} while (0)
+#define EVENT_INSERT_ARG2(eev1, eev2, ap, member, type) do {	\
+	type _ev_val = va_arg((ap), (type));			\
+	(eev1)->argv[(eev1)->argc++].member = _ev_val;		\
+	(eev2)->argv[(eev2)->argc++].member = _ev_val;		\
 } while (0)
 #endif /* DEBUG */
 
@@ -94,6 +108,45 @@ __END_DECLS
 		break;						\
 	case 'p':						\
 		EVENT_INSERT_ARG((eev), (ap), p, void *);	\
+		break;						\
+	case ' ':						\
+	case ',':						\
+	case ';':						\
+	case '%':						\
+		break;						\
+	default:						\
+		fatal("bad evarg spec");			\
+	}
+
+#define EVENT_PUSH_ARG2(ap, fmt, eev1, eev2)			\
+	switch ((fmt)) {					\
+	case 'i':						\
+	case 'o':						\
+	case 'u':						\
+	case 'x':						\
+	case 'X':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), i, int); \
+		break;						\
+	case 'D':						\
+	case 'O':						\
+	case 'U':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), li, long int); \
+		break;						\
+	case 'e':						\
+	case 'E':						\
+	case 'f':						\
+	case 'g':						\
+	case 'G':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), f, double); \
+		break;						\
+	case 'c':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), c, int); \
+		break;						\
+	case 's':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), s, char *); \
+		break;						\
+	case 'p':						\
+		EVENT_INSERT_ARG2((eev1), (eev2), (ap), p, void *); \
 		break;						\
 	case ' ':						\
 	case ',':						\
