@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.16 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.17 2005/03/10 09:43:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -350,6 +350,34 @@ menu_action_kb(struct AGMenuItem *pitem, const char *text,
 		va_start(ap, fmt);
 		for (; *fmt != '\0'; fmt++) {
 			EVENT_PUSH_ARG(ap, *fmt, mi->onclick);
+		}
+		va_end(ap);
+	}
+	return (mi);
+}
+
+struct AGMenuItem *
+menu_tool(struct AGMenuItem *pitem, struct toolbar *tbar,
+    const char *text, int icon, SDLKey key_equiv, SDLMod key_mod,
+    void (*fn)(int, union evarg *), const char *fmt, ...)
+{
+	struct AGMenu *m = pitem->pmenu;
+	struct AGMenuItem *mi;
+	struct button *bu;
+	struct event *bu_ev;
+	va_list ap;
+	
+	bu = button_new(tbar->rows[0], NULL);
+	button_set_label(bu, ICON(icon));
+	button_set_focusable(bu, 0);
+
+	mi = add_subitem(pitem, text, ICON(icon), key_equiv, key_mod);
+	mi->onclick = event_new(m, NULL, fn, NULL);
+	bu_ev = event_new(bu, "button-pushed", fn, NULL);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG2(ap, *fmt, mi->onclick, bu_ev);
 		}
 		va_end(ap);
 	}
