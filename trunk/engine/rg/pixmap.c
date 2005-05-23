@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.28 2005/05/16 07:13:53 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.29 2005/05/16 10:35:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -426,8 +426,9 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 		struct fspinbutton *fsb;
 		struct box *hb;
 
-		pal = hsvpal_new(ntab, tv->ts->fmt);
+		pal = hsvpal_new(ntab);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(pal, "pixel-format", WIDGET_POINTER, &tv->ts->fmt);
 		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
