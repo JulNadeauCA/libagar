@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.6 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.7 2005/04/21 07:42:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -151,13 +151,15 @@ drawing_settings(int argc, union evarg *argv)
 	event_new(fsu, "fspinbutton-changed", vg_geo_changed, "%p", vg);
 		
 	label_new(win, LABEL_STATIC, _("Background color: "));
-	pal = palette_new(win, PALETTE_RGB, &vg->fmt);
-	widget_bind(pal, "color", WIDGET_UINT32, &vg->fill_color);
+	pal = palette_new(win, PALETTE_RGB);
+	widget_bind(pal, "pixel", WIDGET_UINT32, &vg->fill_color);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vg->fmt);
 	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 	
 	label_new(win, LABEL_STATIC, _("Grid color: "));
-	pal = palette_new(win, PALETTE_RGB, &vg->fmt);
-	widget_bind(pal, "color", WIDGET_UINT32, &vg->grid_color);
+	pal = palette_new(win, PALETTE_RGB);
+	widget_bind(pal, "pixel", WIDGET_UINT32, &vg->grid_color);
+	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vg->fmt);
 	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 
 	window_attach(pwin, win);

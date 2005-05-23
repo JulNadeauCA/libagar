@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.14 2005/04/08 02:51:31 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.15 2005/04/10 09:09:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -165,16 +165,20 @@ fill_edit(void *p, struct tileview *tv)
 		ntab = notebook_add_tab(nb, _("Color A"), BOX_VERT);
 		notebook_select_tab(nb, ntab);
 		{
-			hsv1 = hsvpal_new(ntab, tv->ts->fmt);
+			hsv1 = hsvpal_new(ntab);
 			WIDGET(hsv1)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
+			    &tv->ts->fmt);
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
 			    &f->f_gradient.c1);
 		}
 
 		ntab = notebook_add_tab(nb, _("Color B"), BOX_VERT);
 		{
-			hsv2 = hsvpal_new(ntab, tv->ts->fmt);
+			hsv2 = hsvpal_new(ntab);
 			WIDGET(hsv2)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
+			    &tv->ts->fmt);
 			widget_bind(hsv2, "pixel", WIDGET_UINT32,
 			    &f->f_gradient.c2);
 		}

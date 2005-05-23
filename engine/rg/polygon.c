@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.3 2005/05/18 09:07:22 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.4 2005/05/21 03:31:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -200,9 +200,11 @@ polygon_edit(void *p, struct tileview *tv)
 		ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
 		notebook_select_tab(nb, ntab);
 		{
-			hsv1 = hsvpal_new(ntab, tv->ts->fmt);
+			hsv1 = hsvpal_new(ntab);
 			WIDGET(hsv1)->flags |= WIDGET_WFILL|
 			                       WIDGET_HFILL;
+			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
+			    &tv->ts->fmt);
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
 			    &poly->p_solid.c);
 		}

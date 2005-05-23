@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.8 2005/05/08 11:09:22 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.9 2005/05/08 11:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -142,8 +142,9 @@ sketch_edit(struct tileview *tv, struct tile_element *tel)
 		struct fspinbutton *fsb;
 		struct box *hb;
 
-		pal = hsvpal_new(bo, tv->ts->fmt);
+		pal = hsvpal_new(bo);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(pal, "pixel-format", WIDGET_POINTER, &tv->ts->fmt);
 		widget_bind(pal, "hue", WIDGET_FLOAT, &sk->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &sk->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &sk->v);

@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.144 2005/05/14 10:05:54 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.145 2005/05/16 03:16:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -486,8 +486,9 @@ config_window(struct config *con)
 			it->p1 = &colors_border[i];
 		}
 
-		hsv = hsvpal_new(tab, vfmt);
+		hsv = hsvpal_new(tab);
 		WIDGET(hsv)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(hsv, "pixel-format", WIDGET_POINTER, &vfmt);
 		event_new(hsv, "h-changed", updated_bg, "%p", tl);
 		event_new(hsv, "sv-changed", updated_bg, "%p", tl);
 		event_new(tl, "tlist-selected", selected_color, "%p", hsv);
