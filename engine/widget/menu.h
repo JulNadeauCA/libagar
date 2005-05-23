@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.5 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.6 2005/03/11 08:56:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -6,6 +6,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/toolbar.h>
 
 #include "begin_code.h"
 
@@ -84,6 +85,9 @@ struct AGMenuItem *menu_action_kb(struct AGMenuItem *,
 		                  const char *, int, SDLKey, SDLMod,
 			          void (*)(int, union evarg *),
 			          const char *, ...);
+struct AGMenuItem *menu_tool(struct AGMenuItem *, struct toolbar *,
+		             const char *, int, SDLKey, SDLMod,
+			     void (*)(int, union evarg *), const char *, ...);
 
 struct AGMenuItem *menu_int_bool(struct AGMenuItem *, const char *, int, int *,
 				 pthread_mutex_t *, int);
