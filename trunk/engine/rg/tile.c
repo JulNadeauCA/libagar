@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.45 2005/05/20 05:54:44 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.46 2005/05/21 03:32:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1481,6 +1481,108 @@ regenerate_tile(int argc, union evarg *argv)
 	t->flags |= TILE_DIRTY;
 }
 
+static void
+feature_menus(struct tileview *tv, struct tlist *tl, struct window *win)
+{
+	struct AGMenuItem *mi;
+
+	mi = tlist_set_popup(tl, "feature");
+	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl);
+#if 0
+		menu_action(mi, _("Edit feature"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p", tv, tl, win);
+#endif
+		menu_separator(mi);
+
+		menu_action(mi, _("Detach feature"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 1);
+		menu_action(mi, _("Destroy feature"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 0);
+		
+		menu_separator(mi);
+
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, tl);
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, tl);
+	}
+
+	mi = tlist_set_popup(tl, "pixmap");
+	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl);
+
+		menu_separator(mi);
+#if 0
+		menu_action(mi, _("Edit pixmap"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p", tv, tl, win);
+#endif
+		menu_action(mi, _("Detach pixmap"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 1);
+		menu_action(mi, _("Destroy pixmap"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 0);
+		
+		menu_separator(mi);
+		
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, tl);
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, tl);
+	}
+	
+	mi = tlist_set_popup(tl, "sketch");
+	{
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl);
+
+		menu_separator(mi);
+
+		menu_action(mi, _("Edit sketch"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p", tv, tl, win);
+		
+		menu_action(mi, _("Detach sketch"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 1);
+		
+		menu_action(mi, _("Destroy sketch"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 0);
+		
+		menu_separator(mi);
+		
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, tl);
+
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, tl);
+	}
+	
+	mi = tlist_set_popup(tl, "sketch-element");
+	{
+		menu_action(mi, _("Edit sketch element"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p", tv, tl, win);
+		
+		menu_action(mi, _("Delete sketch element"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl, 1);
+#if 0
+		menu_separator(mi);
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_vg_element_up, "%p,%p", tv, tl);
+
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_vg_element_down, "%p,%p", tv, tl);
+#endif
+	}
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1490,6 +1592,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	struct AGMenuItem *mi;
 	struct tileview *tv;
 	struct tlist *tl_feats;
+	struct toolbar *tbar;
 
 	if ((win = window_new(WINDOW_DETACH, "tile-%s:%s",
 	    OBJECT(ts)->name, t->name)) == NULL) {
@@ -1512,106 +1615,15 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tlist_init(tl_feats, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl_feats)->flags &= ~(WIDGET_WFILL);
 	tlist_prescale(tl_feats, _("FEATURE #000"), 5);
-	event_new(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p", ts, t, win,
-	    tv);
-
-	mi = tlist_set_popup(tl_feats, "feature");
-	{
-		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl_feats);
-#if 0
-		menu_action(mi, _("Edit feature"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl_feats, win);
-#endif
-		menu_separator(mi);
-
-		menu_action(mi, _("Detach feature"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-		menu_action(mi, _("Destroy feature"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
-		
-		menu_separator(mi);
-
-		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
-		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl_feats);
-		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl_feats);
-	}
-
-	mi = tlist_set_popup(tl_feats, "pixmap");
-	{
-		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl_feats);
-
-		menu_separator(mi);
-#if 0
-		menu_action(mi, _("Edit pixmap"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl_feats, win);
-#endif
-		menu_action(mi, _("Detach pixmap"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-		menu_action(mi, _("Destroy pixmap"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
-		
-		menu_separator(mi);
-		
-		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
-		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl_feats);
-		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl_feats);
-	}
+	event_new(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p",
+	    ts, t, win, tv);
+	feature_menus(tv, tl_feats, win);
 	
-	mi = tlist_set_popup(tl_feats, "sketch");
-	{
-		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl_feats);
-
-		menu_separator(mi);
-
-		menu_action(mi, _("Edit sketch"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl_feats, win);
-		
-		menu_action(mi, _("Detach sketch"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-		
-		menu_action(mi, _("Destroy sketch"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
-		
-		menu_separator(mi);
-		
-		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
-		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl_feats);
-
-		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl_feats);
-	}
-	
-	mi = tlist_set_popup(tl_feats, "sketch-element");
-	{
-		menu_action(mi, _("Edit sketch element"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl_feats, win);
-		
-		menu_action(mi, _("Delete sketch element"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-#if 0
-		menu_separator(mi);
-		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
-		    SDLK_u, KMOD_SHIFT,
-		    move_vg_element_up, "%p,%p", tv, tl_feats);
-
-		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-		    SDLK_d, KMOD_SHIFT,
-		    move_vg_element_down, "%p,%p", tv, tl_feats);
-#endif
-	}
-
 	me = menu_new(win);
+
+	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
+	toolbar_init(tbar, TOOLBAR_HORIZ, 1, 0);
+
 	mi = menu_add_item(me, _("Tile"));
 	{
 		menu_action(mi, _("Tile settings..."),
@@ -1631,11 +1643,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	mi = menu_add_item(me, _("Features"));
 	{
-		menu_action_kb(mi, _("Fill"), RG_FILL_ICON,
+		menu_tool(mi, tbar, _("Fill"), RG_FILL_ICON,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
 		
-		menu_action_kb(mi, _("Polygon"), RG_POLYGON_ICON,
+		menu_tool(mi, tbar, _("Polygon"), RG_POLYGON_ICON,
 		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
 		    insert_polygon, "%p,%p,%p", tv, win, tl_feats);
 
@@ -1657,18 +1669,23 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	mi = menu_add_item(me, _("Pixmaps"));
 	{
-		menu_action(mi, _("Create new pixmap..."), RG_PIXMAP_ICON,
+		menu_tool(mi, tbar, _("Create new pixmap..."), RG_PIXMAP_ICON,
+		    0, 0,
 		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
-		menu_action(mi, _("Attach pixmap..."),
+		menu_tool(mi, tbar, _("Attach pixmap..."),
 		    RG_PIXMAP_ATTACH_ICON,
+		    0, 0,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 	
 	mi = menu_add_item(me, _("Sketches"));
 	{
-		menu_action(mi, _("Create new sketch..."), RG_SKETCH_ICON,
+		menu_tool(mi, tbar, _("Create new sketch..."), RG_SKETCH_ICON,
+		    0, 0,
 		    create_sketch, "%p,%p,%p", tv, win, tl_feats);
-		menu_action(mi, _("Attach sketch..."), RG_SKETCH_ATTACH_ICON,
+		menu_tool(mi, tbar, _("Attach sketch..."),
+		    RG_SKETCH_ATTACH_ICON,
+		    0, 0,
 		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 
@@ -1678,9 +1695,8 @@ tile_edit(struct tileset *ts, struct tile *t)
 	{
 		struct box *fbox;
 		struct button *fbu;
-		struct toolbar *tbar;
 
-		fbox = box_new(box, BOX_VERT, BOX_HFILL|BOX_FRAME);
+		fbox = box_new(box, BOX_VERT, BOX_HFILL);
 		box_set_padding(fbox, 0);
 		box_set_spacing(fbox, 0);
 		{
@@ -1697,8 +1713,14 @@ tile_edit(struct tileset *ts, struct tile *t)
 			    "%p,%p,%p", tv, tl_feats, win);
 		}
 		
-		object_attach(box, tv);
-		widget_focus(tv);
+		fbox = box_new(box, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		box_set_padding(fbox, 0);
+		box_set_spacing(fbox, 0);
+		{
+			object_attach(fbox, tbar);
+			object_attach(fbox, tv);
+			widget_focus(tv);
+		}
 	}
 
 	/* Set the tile edition mode. */
