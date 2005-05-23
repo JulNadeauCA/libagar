@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.145 2005/05/16 03:16:08 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.146 2005/05/23 01:29:59 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -365,7 +365,7 @@ config_window(struct config *con)
 	struct spinbutton *sbu;
 
 	win = window_new(0, "config-engine-settings");
-	window_set_caption(win, _("Engine settings"));
+	window_set_caption(win, _("Agar settings"));
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	tab = notebook_add_tab(nb, _("Video"), BOX_VERT);
