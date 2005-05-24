@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.18 2005/04/18 03:38:39 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.19 2005/05/14 10:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -289,7 +289,7 @@ menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	timeout_set(&mview->submenu_to, submenu_timeout, NULL, 0);
 }
 
-#define MIDDLE_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
+#define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
 
 void
 menu_view_draw(void *p)
@@ -316,15 +316,23 @@ menu_view_draw(void *p)
 
 		if (subitem->icon != -1) {
 			SDL_Surface *iconsu = WIDGET_SURFACE(m,subitem->icon);
-			int dy = MIDDLE_ALIGNED(m, iconsu->h);
+			int dy = VERT_ALIGNED(m, iconsu->h);
+
+			widget_blit_from(mview, m, subitem->icon, NULL,
+			    x+(m->itemh/2 - iconsu->w/2), y+dy+2);
 
 			if (get_option(subitem)) {
-				primitives.frame(mview, x-1, y+dy-1,
-				    iconsu->w+3, iconsu->h+3,
+				Uint8 c[4];
+
+				SDL_GetRGB(COLOR(MENU_OPTION_COLOR), vfmt,
+				    &c[0], &c[1], &c[2]);
+				c[3] = 128;
+				primitives.frame(mview, x, y+2,
+				    m->itemh, m->itemh-2,
 				    COLOR(MENU_OPTION_COLOR));
+				primitives.rect_blended(mview, x, y+2,
+				    m->itemh, m->itemh-2, c, ALPHA_SRC);
 			}
-			widget_blit_from(mview, m, subitem->icon, NULL,
-			    x, y+dy);
 		}
 		
 		x = m->itemh + mview->hspace*2;
@@ -333,7 +341,7 @@ menu_view_draw(void *p)
 			SDL_Surface *lbl = WIDGET_SURFACE(m,subitem->label);
 
 			widget_blit_from(mview, m, subitem->label, NULL,
-			    x, y+MIDDLE_ALIGNED(m, lbl->h));
+			    x, y+VERT_ALIGNED(m, lbl->h));
 			x += lbl->w + mview->hspace*2;
 		} else {
 			int dy = m->itemh/2 - 1;

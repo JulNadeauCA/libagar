@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.9 2005/05/10 12:22:47 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.10 2005/05/23 03:24:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -124,7 +124,7 @@ colors_init(void)
 	colors[HSVPAL_TILE2_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
 	colors[MENU_UNSEL_COLOR] = SDL_MapRGB(vfmt, 70, 70, 70);
 	colors[MENU_SEL_COLOR] = SDL_MapRGB(vfmt, 40, 40, 110);
-	colors[MENU_OPTION_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
+	colors[MENU_OPTION_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
 	colors[MENU_TXT_COLOR] = SDL_MapRGB(vfmt, 230, 230, 230);
 	colors[MENU_SEP1_COLOR] = SDL_MapRGB(vfmt, 60, 60, 60);
 	colors[MENU_SEP2_COLOR] = SDL_MapRGB(vfmt, 120, 120, 120);
