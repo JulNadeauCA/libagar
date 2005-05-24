@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.23 2005/05/14 10:04:33 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.24 2005/05/24 05:06:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -144,6 +144,10 @@ struct tileview {
 	enum tileview_state state;
 	struct box *tel_box;		/* Element-specific toolbar container */
 	struct toolbar *tel_tbar;	/* Element-specific toolbar */
+	
+	struct AGMenu *menu;		/* Popup menu */
+	struct AGMenuItem *menu_item;
+	struct window *menu_win;
 
 	union {
 		struct {

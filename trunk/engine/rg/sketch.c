@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.9 2005/05/08 11:13:49 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.10 2005/05/23 01:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -380,14 +380,20 @@ sketch_open_menu(struct tileview *tv, int x, int y)
 	mi = tv->tv_sketch.menu_item = menu_add_item(me, NULL);
 	{
 		struct tileview_tool *tvt;
+		struct AGMenuItem *m_tool;
 
+		m_tool = menu_action(mi, _("Tools"), OBJEDIT_ICON,
+		    NULL, NULL);
 		TAILQ_FOREACH(tvt, &tv->tools, tools) {
 			if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 				continue;
 			}
-			menu_action(mi, _(tvt->ops->name), tvt->ops->icon,
+			menu_action(m_tool, _(tvt->ops->name), tvt->ops->icon,
 			    select_tool, "%p,%p", tv, tvt);
 		}
+
+		menu_int_flags(mi, _("View controls"), RG_CONTROLS_ICON,
+		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
 	}
 	tv->tv_sketch.menu->sel_item = mi;
 	tv->tv_sketch.menu_win = menu_expand(me, mi, x, y);

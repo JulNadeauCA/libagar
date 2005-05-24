@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.47 2005/05/23 03:24:10 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.48 2005/05/24 03:00:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -603,6 +603,9 @@ close_element(struct tileview *tv)
 		}
 		break;
 	default:
+		if (tv->menu != NULL) {
+			tile_close_menu(tv);
+		}
 		break;
 	}
 	
@@ -1788,6 +1791,39 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tv->yoffs = (WIDGET(tv)->h - t->su->h)/2;
 
 	return (win);
+}
+
+void
+tile_open_menu(struct tileview *tv, int x, int y)
+{
+	struct tile *t = tv->tile;
+	
+	if (tv->menu != NULL)
+		tile_close_menu(tv);
+
+	tv->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	menu_init(tv->menu);
+
+	tv->menu_item = menu_add_item(tv->menu, NULL);
+	{
+		menu_int_flags(tv->menu_item, _("View controls"),
+		    RG_CONTROLS_ICON,
+		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
+	}
+	tv->menu->sel_item = tv->menu_item;
+	tv->menu_win = menu_expand(tv->menu, tv->menu_item, x, y);
+}
+
+void
+tile_close_menu(struct tileview *tv)
+{
+	menu_collapse(tv->menu, tv->menu_item);
+	object_destroy(tv->menu);
+	Free(tv->menu, M_OBJECT);
+
+	tv->menu = NULL;
+	tv->menu_item = NULL;
+	tv->menu_win = NULL;
 }
 
 #endif /* EDITION */

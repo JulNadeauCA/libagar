@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.29 2005/05/16 10:35:14 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.30 2005/05/23 01:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1029,6 +1029,8 @@ pixmap_open_menu(struct tileview *tv, int x, int y)
 
 	mi = tv->tv_pixmap.menu_item = menu_add_item(me, NULL);
 	{
+		menu_int_flags(mi, _("View controls"), RG_CONTROLS_ICON,
+		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
 	}
 	tv->tv_pixmap.menu->sel_item = mi;
 	tv->tv_pixmap.menu_win = menu_expand(me, mi, x, y);
