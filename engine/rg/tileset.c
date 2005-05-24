@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.33 2005/05/21 03:32:12 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.34 2005/05/24 08:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -65,10 +65,12 @@ const struct object_ops tileset_ops = {
 
 extern const struct feature_ops fill_ops;
 extern const struct feature_ops polygon_ops;
+extern const struct feature_ops sketchproj_ops;
 
 const struct feature_ops *feature_tbl[] = {
 	&fill_ops,
 	&polygon_ops,
+	&sketchproj_ops,
 	NULL
 };
 

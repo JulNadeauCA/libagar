@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.h,v 1.1 2005/05/16 10:35:14 vedge Exp $	*/
+/*	$Csoft: sketchproj.h,v 1.1 2005/05/18 09:07:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCHPROJ_H_
@@ -10,9 +10,7 @@
 
 struct sketchproj {
 	struct feature ft;
-
-	struct sketch *sketch;
-	struct tile_element *sketch_tel;
+	char sketch[TILE_ELEMENT_NAME_MAX];
 	Uint8 alpha;				/* Overall alpha */
 	Uint32 color;				/* Line color */
 };
