@@ -1,4 +1,4 @@
-/*	$Csoft: pixelops.c,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
+/*	$Csoft: pixelops.c,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -90,19 +90,19 @@ test_put_pixel2_clipped_out(void)
 static void
 test_blend_rgba(void)
 {
-	BLEND_RGBA(su, su->pixels, 10, 10, 10, 100);
+	BLEND_RGBA(su, su->pixels, 10, 10, 10, 100, ALPHA_SRC);
 }
 
 static void
 test_blend_rgba2(void)
 {
-	BLEND_RGBA2(su, 1, 1, 10, 10, 10, 100);
+	BLEND_RGBA2(su, 1, 1, 10, 10, 10, 100, ALPHA_SRC);
 }
 
 static void
 test_blend_rgba2_clipped(void)
 {
-	BLEND_RGBA2_CLIPPED(su, 1, 1, 10, 10, 10, 100);
+	BLEND_RGBA2_CLIPPED(su, 1, 1, 10, 10, 10, 100, ALPHA_SRC);
 }
 
 
