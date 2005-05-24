@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.22 2005/05/08 02:10:54 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.23 2005/05/14 10:05:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -550,6 +550,25 @@ save_object(int argc, union evarg *argv)
 }
 
 static void
+exit_program(int argc, union evarg *argv)
+{
+	SDL_Event ev;
+
+	ev.type = SDL_QUIT;
+	SDL_PushEvent(&ev);
+}
+
+static void
+show_preferences(int argc, union evarg *argv)
+{
+	if (!config->settings->visible) {
+		window_show(config->settings);
+	} else {
+		window_focus(config->settings);
+	}
+}
+
+static void
 create_obj_dlg(int argc, union evarg *argv)
 {
 	struct window *win;
@@ -657,6 +676,7 @@ objmgr_window(void)
 	struct AGMenuItem *mi, *mi_objs;
 	struct notebook *nb;
 	struct notebook_tab *ntab;
+	struct toolbar *tbar;
 
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
@@ -670,11 +690,14 @@ objmgr_window(void)
 	    OBJEDIT_EDIT_DATA);
 
 	me = menu_new(win);
-	mi = menu_add_item(me, _("Objects"));
+
+	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1, 0);
+	
+	mi = menu_add_item(me, _("File"));
 	{
 		int i;
 
-		mi_objs = menu_action(mi, _("Create object"), OBJCREATE_ICON,
+		mi_objs = menu_action(mi, _("New object"), OBJCREATE_ICON,
 		    NULL, NULL);
 		for (i = ntypesw-1; i >= 0; i--) {
 			char label[32];
@@ -682,16 +705,63 @@ objmgr_window(void)
 
 			strlcpy(label, t->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
-			menu_action(mi_objs, label, t->icon,
+			menu_tool(mi_objs, tbar, label, t->icon, 0, 0,
 			    create_obj_dlg, "%p,%p", t, win);
 		}
 
 		menu_separator(mi);
-		menu_action(mi, _("Load state"), OBJLOAD_ICON, load_object,
-		    "%p", world);
-		menu_action(mi, _("Save state"), OBJSAVE_ICON, save_object,
-		    "%p", world);
+
+		menu_action(mi, _("Load full state"), OBJLOAD_ICON,
+		    load_object, "%p", world);
+		menu_action(mi, _("Save full state"), OBJSAVE_ICON,
+		    save_object, "%p", world);
+		
+		menu_separator(mi);
+		
+		menu_action(mi, _("Exit"), -1, exit_program, NULL);
 	}
+	
+	mi = menu_add_item(me, _("Edit"));
+	{
+		menu_action(mi, _("Edit object..."), OBJEDIT_ICON,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
+		menu_action(mi, _("Edit object information..."),
+		    OBJGENEDIT_ICON,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
+		
+		menu_separator(mi);
+			
+		menu_action(mi, _("Duplicate"), OBJDUP_ICON,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_MOVE_UP);
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_MOVE_DOWN);
+	
+		menu_separator(mi);
+
+		menu_action(mi, _("Preferences..."), -1, show_preferences,
+		    NULL);
+	}
+
+#ifdef NETWORK
+	mi = menu_add_item(me, _("Repository"));
+	{
+		menu_action(mi, _("Commit object"),
+		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_COMMIT);
+
+		menu_action(mi, _("Update object"),
+		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_UPDATE);
+			
+		menu_action(mi, _("Import object"),
+		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_IMPORT);
+	}
+#endif
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
@@ -705,7 +775,7 @@ objmgr_window(void)
 		{
 			menu_action(mi, _("Edit object..."), OBJEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-			menu_action(mi, _("Edit generic information..."),
+			menu_action(mi, _("Edit object information..."),
 			    OBJGENEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
 
