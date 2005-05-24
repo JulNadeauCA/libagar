@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.39 2005/05/12 07:51:38 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.40 2005/05/13 03:41:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -54,8 +54,7 @@ void	 textbox_scale(void *, int, int);
 
 void	 textbox_shown(int, union evarg *);
 void	 textbox_hidden(int, union evarg *);
-void	 textbox_printf(struct textbox *, const char *, ...)
-	     FORMAT_ATTRIBUTE(printf, 2, 3);
+void	 textbox_printf(struct textbox *, const char *, ...);
 char	*textbox_string(struct textbox *);
 size_t	 textbox_copy_string(struct textbox *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
