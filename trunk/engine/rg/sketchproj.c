@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.2 2005/05/20 05:54:44 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.3 2005/05/23 01:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -72,8 +72,7 @@ sketchproj_init(void *p, struct tileset *ts, int flags)
 	feature_init(sproj, ts, flags, &sketchproj_ops);
 	sproj->alpha = 255;
 	sproj->color = SDL_MapRGB(ts->fmt, 0, 0, 0);
-	sproj->sketch_tel = NULL;
-	sproj->sketch = NULL;
+	sproj->sketch[0] = '\0';
 }
 
 int
@@ -85,6 +84,7 @@ sketchproj_load(void *p, struct netbuf *buf)
 	if (version_read(buf, &sketchproj_ver, NULL) == -1)
 		return (-1);
 
+	copy_string(sproj->sketch, buf, sizeof(sproj->sketch));
 	sproj->alpha = read_uint8(buf);
 	sproj->color = read_color(buf, ts->fmt);
 	return (0);
@@ -98,6 +98,7 @@ sketchproj_save(void *p, struct netbuf *buf)
 
 	version_write(buf, &sketchproj_ver);
 
+	write_string(buf, sproj->sketch);
 	write_uint8(buf, sproj->alpha);
 	write_color(buf, ts->fmt, sproj->color);
 }
@@ -117,8 +118,8 @@ poll_sketches(int argc, union evarg *argv)
 		if (tel->type != TILE_SKETCH) {
 			continue;
 		}
-		it = tlist_insert(tl, tel->tel_sketch.sk->vg->su,
-		    "%s", tel->tel_sketch.sk->name);
+		it = tlist_insert(tl, tel->tel_sketch.sk->vg->su, "%s",
+		    tel->name);
 		it->p1 = tel;
 		it->class = "tile-sketch";
 	}
@@ -134,8 +135,7 @@ select_sketch(int argc, union evarg *argv)
 	struct tile *t = argv[2].p;
 	struct tlist_item *it = argv[3].p;
 
-	sproj->sketch_tel = it->p1;
-	sproj->sketch = sproj->sketch_tel->tel_sketch.sk;
+	strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }
 
 struct window *
@@ -153,6 +153,7 @@ sketchproj_edit(void *p, struct tileview *tv)
 	event_new(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
 	event_new(com, "combo-selected", select_sketch, "%p,%p", sproj,
 	    tv->tile);
+	combo_select_text(com, sproj->sketch);
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
@@ -189,17 +190,17 @@ sketchproj_apply(void *p, struct tile *t, int fx, int fy)
 	struct sketchproj *sproj = p;
 	SDL_Surface *sDst = t->su;
 	double x1, y1, x2, y2;
-	int xorig, yorig;
 	struct vg *vg;
 	struct vg_element *vge;
+	struct tile_element *ske;
+	struct sketch *sk;
 	int i;
 
-	if (sproj->sketch == NULL) {
+	if ((ske = tile_find_element(t, TILE_SKETCH, sproj->sketch)) == NULL) {
 		return;
 	}
-	xorig = sproj->sketch_tel->tel_sketch.x;
-	yorig = sproj->sketch_tel->tel_sketch.y;
-	vg = sproj->sketch->vg;
+	sk = ske->tel_sketch.sk;
+	vg = ske->tel_sketch.sk->vg;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
@@ -207,8 +208,12 @@ sketchproj_apply(void *p, struct tile *t, int fx, int fy)
 			vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
 			for (i = 1; i < vge->nvtx; i++) {
 				vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-				prim_color_rgb(t, 250, 250, 0);
-				prim_wuline(t, x1, y1, x2, y2);
+				prim_color_u32(t, sproj->color);
+				prim_wuline(t,
+				    ske->tel_sketch.x+x1,
+				    ske->tel_sketch.y+y1,
+				    ske->tel_sketch.x+x2,
+				    ske->tel_sketch.y+y2);
 				x1 = x2;
 				y1 = y2;
 			}

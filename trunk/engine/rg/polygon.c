@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.6 2005/05/24 03:00:29 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.7 2005/05/24 08:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -161,7 +161,6 @@ select_sketch(int argc, union evarg *argv)
 	struct polygon *poly = argv[1].p;
 	struct tile *t = argv[2].p;
 	struct tlist_item *it = argv[3].p;
-	struct tile_element *ske = it->p1;
 
 	strlcpy(poly->sketch, it->text, sizeof(poly->sketch));
 }
