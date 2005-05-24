@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.8 2004/09/12 05:52:26 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.9 2005/03/17 03:10:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -18,6 +18,7 @@ struct combo {
 	int flags;
 #define COMBO_POLL	0x01		/* Polled list */
 #define COMBO_TREE	0x02		/* Tree display */
+#define COMBO_ANY_TEXT	0x04		/* Accept text not matching an item */
 
 	struct textbox *tbox;		/* Text input */
 	struct button *button;		/* [...] button */
@@ -36,6 +37,7 @@ void combo_scale(void *, int, int);
 void combo_destroy(void *);
 void combo_select(struct combo *, struct tlist_item *);
 struct tlist_item *combo_select_pointer(struct combo *, void *);
+struct tlist_item *combo_select_text(struct combo *, const char *);
 __END_DECLS
 
 #include "close_code.h"
