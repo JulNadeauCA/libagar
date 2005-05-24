@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.19 2005/05/21 03:32:39 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.20 2005/05/24 03:00:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -124,6 +124,7 @@ enum {
 	RG_REVOLUTION_ICON,
 	RG_SWAP_ICON,
 	RG_INVERT_ICON,
+	RG_CONTROLS_ICON,
 
 	/* anim.xcf */
 	ANIM_PLAY_ICON,

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.37 2005/05/20 05:54:44 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.38 2005/05/24 05:06:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -334,6 +334,11 @@ mousebuttondown(int argc, union evarg *argv)
 			if (i < ctrl->nhandles)
 				break;
 		}
+	} else if (button == SDL_BUTTON_MIDDLE &&
+	    tv->state == TILEVIEW_TILE_EDIT) {
+		tile_open_menu(tv,
+		    WIDGET(tv)->cx+x,
+		    WIDGET(tv)->cy+y);
 	}
 }
 
@@ -744,6 +749,9 @@ tileview_init(struct tileview *tv, struct tileset *ts, int flags)
 	tv->cur_tool = NULL;
 	tv->tel_box = NULL;
 	tv->tel_tbar = NULL;
+	tv->menu = NULL;
+	tv->menu_item = NULL;
+	tv->menu_win = NULL;
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 

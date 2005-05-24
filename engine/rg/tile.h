@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.16 2005/04/21 07:58:18 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.17 2005/05/24 03:00:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -81,6 +81,8 @@ struct window  *tile_edit(struct tileset *, struct tile *);
 void		tile_destroy(struct tile *);
 void		tile_save(struct tile *, struct netbuf *);
 int		tile_load(struct tileset *, struct tile *, struct netbuf *);
+void		tile_open_menu(struct tileview *, int, int);
+void		tile_close_menu(struct tileview *);
 
 struct tile_element *tile_find_element(struct tile *, enum tile_element_type,
 		                       const char *);
