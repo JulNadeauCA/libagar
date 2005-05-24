@@ -1,4 +1,4 @@
-.\"	$Csoft: combo.3,v 1.4 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: combo.3,v 1.5 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -62,10 +62,10 @@ structure.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct combo *"
-.Fn combo_new "void *parent" "int flags" "const char *fmt" "..."
+.Fn combo_new "void *parent" "int flags" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn combo_init "struct combo *com" "const char *label" "int flags"
+.Fn combo_init "struct combo *combo" "const char *label" "int flags"
 .nr nS 0
 .Pp
 The
@@ -84,9 +84,45 @@ Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define COMBO_POLL	0x01		/* Polled list (TLIST_POLL) */
-#define COMBO_TREE	0x02		/* Tree display (TLIST_TREE) */
+#define COMBO_POLL	0x01	/* Polled list (TLIST_POLL) */
+#define COMBO_TREE	0x02	/* Tree display (TLIST_TREE) */
+#define COMBO_ANY_TEXT	0x04	/* Accept text not matching an item */
 .Ed
+.Sh ITEM SELECTION
+.nr nS 1
+.Ft void
+.Fn combo_select "struct combo *combo" "struct tlist_item *item"
+.Pp
+.Ft "struct tlist_item *"
+.Fn combo_select_pointer "struct combo *combo" "void *ptr"
+.Pp
+.Ft "struct tlist_item *"
+.Fn combo_select_text "struct combo *combo" "const char *text"
+.nr nS 0
+.Pp
+The
+.Fn combo_select
+function sets the selection flag on the given
+.Fa item .
+.Pp
+The
+.Fn combo_select_pointer
+function selects the first item with a user pointer value matching
+.Fa ptr .
+Similarly,
+.Fn combo_select_text
+selects the first item with a text string equal to
+.Fa text .
+.Pp
+If the
+.Dv COMBO_POLL
+option is set, both
+.Fn combo_select_pointer
+and
+.Fn combo_select_text
+will raise a
+.Sq tlist-poll
+event prior to making the selection.
 .Sh EVENTS
 The
 .Nm
@@ -95,6 +131,18 @@ widget generates the following events:
 .Bl -tag -compact -width 2n
 .It Fn combo-selected "struct tlist_item *item"
 An item was selected.
+.It Fn combo-text-entry "const char *text"
+The
+.Dv COMBO_ANY_TEXT
+option is set and the user has entered a string
+.Fa text
+which does not match any item in the list.
+.It Fn combo-text-unknown "const char *text"
+The
+.Dv COMBO_ANY_TEXT
+flag is not set and the user has entered a string
+.Fa text
+which does not match any item in the list.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

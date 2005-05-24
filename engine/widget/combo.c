@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.23 2005/03/05 12:15:10 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.24 2005/03/17 03:10:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -122,6 +122,7 @@ combo_expand(int argc, union evarg *argv)
 	}
 }
 
+/* Select a combo item based on its pointer. */
 struct tlist_item *
 combo_select_pointer(struct combo *com, void *p)
 {
@@ -129,6 +130,20 @@ combo_select_pointer(struct combo *com, void *p)
 
 	pthread_mutex_lock(&com->list->lock);
 	if ((it = tlist_select_pointer(com->list, p)) != NULL) {
+		textbox_printf(com->tbox, "%s", it->text);
+	}
+	pthread_mutex_unlock(&com->list->lock);
+	return (it);
+}
+
+/* Select a combo item based on its text. */
+struct tlist_item *
+combo_select_text(struct combo *com, const char *text)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&com->list->lock);
+	if ((it = tlist_select_text(com->list, text)) != NULL) {
 		textbox_printf(com->tbox, "%s", it->text);
 	}
 	pthread_mutex_unlock(&com->list->lock);
@@ -152,7 +167,7 @@ combo_selected(int argc, union evarg *argv)
 	struct tlist_item *ti;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_item_selected(tl)) != NULL) {
+	if ((ti = tlist_selected_item(tl)) != NULL) {
 		textbox_printf(com->tbox, "%s", ti->text);
 		event_post(NULL, com, "combo-selected", "%p", ti);
 	}
@@ -163,12 +178,32 @@ combo_selected(int argc, union evarg *argv)
 static void
 combo_return(int argc, union evarg *argv)
 {
-	char s[TEXTBOX_STRING_MAX];
+	char text[TEXTBOX_STRING_MAX];
 	struct textbox *tbox = argv[0].p;
 	struct combo *com = argv[1].p;
+	
+	pthread_mutex_lock(&com->list->lock);
 
-	textbox_copy_string(tbox, s, sizeof(s));
-	event_post(NULL, com, "combo-selected", "%s", s);
+	textbox_copy_string(tbox, text, sizeof(text));
+
+	if ((com->flags & COMBO_ANY_TEXT) == 0) {
+		struct tlist_item *it;
+	
+		if (text[0] != '\0' &&
+		    (it = tlist_select_text(com->list, text)) != NULL) {
+			textbox_printf(com->tbox, "%s", it->text);
+			event_post(NULL, com, "combo-selected", "%p", it);
+		} else {
+			tlist_unselect_all(com->list);
+			textbox_printf(com->tbox, "");
+			event_post(NULL, com, "combo-text-unknown", "%s", text);
+		}
+	} else {
+		tlist_unselect_all(com->list);
+		event_post(NULL, com, "combo-text-entry", "%s", text);
+	}
+
+	pthread_mutex_unlock(&com->list->lock);
 }
 
 #if 0
