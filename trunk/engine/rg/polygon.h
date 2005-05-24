@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.h,v 1.1 2005/05/16 10:35:14 vedge Exp $	*/
+/*	$Csoft: polygon.h,v 1.2 2005/05/21 03:31:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_POLYGON_H_
@@ -11,8 +11,7 @@
 struct polygon {
 	struct feature ft;
 
-	struct sketch *sketch;
-	struct tile_element *sketch_tel;
+	char sketch[TILE_ELEMENT_NAME_MAX];
 	enum polygon_type {
 		POLYGON_SOLID,			/* Solid fill */
 		POLYGON_TEXTURED		/* Texture fill */

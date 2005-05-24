@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.15 2005/04/19 04:20:43 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.16 2005/04/21 07:58:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -6,6 +6,7 @@
 #include "begin_code.h"
 
 #define TILE_NAME_MAX 32
+#define TILE_ELEMENT_NAME_MAX 32
 #define TILE_SIZE_MIN 2
 #define TILE_SIZE_MAX 1024
 
@@ -16,6 +17,7 @@ enum tile_element_type {
 };
 
 struct tile_element {
+	char name[TILE_ELEMENT_NAME_MAX];
 	enum tile_element_type type;
 	int visible;
 	union {
@@ -80,9 +82,15 @@ void		tile_destroy(struct tile *);
 void		tile_save(struct tile *, struct netbuf *);
 int		tile_load(struct tileset *, struct tile *, struct netbuf *);
 
-struct tile_element *tile_add_pixmap(struct tile *, struct pixmap *, int, int);
-struct tile_element *tile_add_sketch(struct tile *, struct sketch *, int, int);
-struct tile_element *tile_add_feature(struct tile *, void *, int, int);
+struct tile_element *tile_find_element(struct tile *, enum tile_element_type,
+		                       const char *);
+
+struct tile_element *tile_add_pixmap(struct tile *, const char *,
+		                     struct pixmap *, int, int);
+struct tile_element *tile_add_sketch(struct tile *, const char *,
+			             struct sketch *, int, int);
+struct tile_element *tile_add_feature(struct tile *, const char *, void *,
+				      int, int);
 
 void		     tile_remove_feature(struct tile *, void *, int);
 void		     tile_remove_pixmap(struct tile *, struct pixmap *, int);

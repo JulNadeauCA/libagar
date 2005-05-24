@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.4 2005/05/21 03:31:00 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.5 2005/05/23 01:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -72,11 +72,10 @@ polygon_init(void *p, struct tileset *ts, int flags)
 	u_int skno = 0;
 
 	feature_init(poly, ts, flags, &polygon_ops);
+	poly->sketch[0] = '\0';
 	poly->type = POLYGON_SOLID;
 	poly->alpha = 255;
 	poly->p_solid.c = SDL_MapRGB(ts->fmt, 0, 0, 0);
-	poly->sketch_tel = NULL;
-	poly->sketch = NULL;
 }
 
 int
@@ -89,6 +88,8 @@ polygon_load(void *p, struct netbuf *buf)
 		return (-1);
 
 	poly->type = (enum polygon_type)read_uint8(buf);
+	copy_string(poly->sketch, buf, sizeof(poly->sketch));
+
 	switch (poly->type) {
 	case POLYGON_SOLID:
 		poly->p_solid.c = read_color(buf, ts->fmt);
@@ -113,6 +114,8 @@ polygon_save(void *p, struct netbuf *buf)
 	version_write(buf, &polygon_ver);
 
 	write_uint8(buf, (Uint8)poly->type);
+	write_string(buf, poly->sketch);
+
 	switch (poly->type) {
 	case POLYGON_SOLID:
 		write_color(buf, ts->fmt, poly->p_solid.c);
@@ -142,8 +145,8 @@ poll_sketches(int argc, union evarg *argv)
 		if (tel->type != TILE_SKETCH) {
 			continue;
 		}
-		it = tlist_insert(tl, tel->tel_sketch.sk->vg->su,
-		    "%s", tel->tel_sketch.sk->name);
+		it = tlist_insert(tl, tel->tel_sketch.sk->vg->su, "%s",
+		    tel->name);
 		it->p1 = tel;
 		it->class = "tile-sketch";
 	}
@@ -158,9 +161,9 @@ select_sketch(int argc, union evarg *argv)
 	struct polygon *poly = argv[1].p;
 	struct tile *t = argv[2].p;
 	struct tlist_item *it = argv[3].p;
+	struct tile_element *ske = it->p1;
 
-	poly->sketch_tel = it->p1;
-	poly->sketch = poly->sketch_tel->tel_sketch.sk;
+	strlcpy(poly->sketch, ske->name, sizeof(poly->sketch));
 }
 
 struct window *
@@ -229,15 +232,15 @@ polygon_render(void *p, struct tile *t, int fx, int fy)
 	Uint8 *pDst, *pEnd;
 	SDL_Surface *sVg;
 	int x, y, d;
-	int xorig, yorig;
 	int *left, *right;
+	struct tile_element *ske;
+	struct sketch *sk;
 
-	if (poly->sketch == NULL) {
+	if ((ske = tile_find_element(t, TILE_SKETCH, poly->sketch)) == NULL) {
 		return;
 	}
-	sVg = poly->sketch->vg->su;
-	xorig = poly->sketch_tel->tel_sketch.x;
-	yorig = poly->sketch_tel->tel_sketch.y;
+	sk = ske->tel_sketch.sk;
+	sVg = sk->vg->su;
 
 	left = Malloc(sVg->h*sizeof(int), M_RG);
 	right = Malloc(sVg->h*sizeof(int), M_RG);
@@ -265,7 +268,9 @@ polygon_render(void *p, struct tile *t, int fx, int fy)
 		if ((d = right[y] - left[y]) > 0) {
 			for (x = left[y]; x <= right[y]; x++)
 				PUT_PIXEL2_CLIPPED(sDst,
-				    xorig+x, yorig+y, poly->p_solid.c);
+				    ske->tel_sketch.x+x,
+				    ske->tel_sketch.y+y,
+				    poly->p_solid.c);
 		}
 	}
 
