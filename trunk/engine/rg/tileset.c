@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.32 2005/05/16 10:35:14 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.33 2005/05/21 03:32:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -959,7 +959,7 @@ delete_pixmap(int argc, union evarg *argv)
 	struct tlist *tl_art = argv[2].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl_art)) != NULL) {
+	if ((it = tlist_selected_item(tl_art)) != NULL) {
 		struct pixmap *px = it->p1;
 	
 		if (px->nrefs > 0) {
@@ -981,7 +981,7 @@ delete_anim(int argc, union evarg *argv)
 	struct tlist *tl_anims = argv[2].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl_anims)) != NULL) {
+	if ((it = tlist_selected_item(tl_anims)) != NULL) {
 		struct animation *ani = it->p1;
 	
 		if (ani->nrefs > 0) {
@@ -1003,7 +1003,7 @@ delete_sketch(int argc, union evarg *argv)
 	struct tlist *tl_art = argv[2].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl_art)) != NULL) {
+	if ((it = tlist_selected_item(tl_art)) != NULL) {
 		struct sketch *sk = it->p1;
 	
 		if (sk->nrefs > 0) {
@@ -1025,7 +1025,7 @@ duplicate_pixmap(int argc, union evarg *argv)
 	struct tlist *tl_art = argv[2].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl_art)) != NULL) {
+	if ((it = tlist_selected_item(tl_art)) != NULL) {
 		struct pixmap *px1 = it->p1;
 		struct pixmap *px2;
 

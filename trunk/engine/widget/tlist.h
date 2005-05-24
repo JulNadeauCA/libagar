@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.47 2005/05/05 05:49:59 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.48 2005/05/21 05:54:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -102,13 +102,14 @@ void			 tlist_select(struct tlist *, struct tlist_item *);
 void			 tlist_unselect(struct tlist *, struct tlist_item *);
 void			 tlist_select_all(struct tlist *);
 struct tlist_item	*tlist_select_pointer(struct tlist *, void *);
+struct tlist_item	*tlist_select_text(struct tlist *, const char *);
 void			 tlist_unselect_all(struct tlist *);
-struct tlist_item	*tlist_item_index(struct tlist *, int);
-struct tlist_item	*tlist_item_selected(struct tlist *);
-void			*tlist_item_pointer(struct tlist *);
-struct tlist_item	*tlist_item_text(struct tlist *, const char *);
-struct tlist_item	*tlist_item_first(struct tlist *);
-struct tlist_item	*tlist_item_last(struct tlist *);
+struct tlist_item	*tlist_find_index(struct tlist *, int);
+struct tlist_item	*tlist_selected_item(struct tlist *);
+void			*tlist_find_pointer(struct tlist *);
+struct tlist_item	*tlist_find_text(struct tlist *, const char *);
+struct tlist_item	*tlist_first_item(struct tlist *);
+struct tlist_item	*tlist_last_item(struct tlist *);
 
 struct AGMenuItem	*tlist_set_popup(struct tlist *, const char *);
 

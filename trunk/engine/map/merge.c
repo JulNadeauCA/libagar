@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -181,7 +181,7 @@ merge_create_brush(int argc, union evarg *argv)
 	}
 	
 	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
-	if (tlist_item_text(brushes_tl, m_name) != NULL) {
+	if (tlist_find_text(brushes_tl, m_name) != NULL) {
 		text_msg(MSG_ERROR, _("A `%s' brush exists."), m_name);
 		return;
 	}

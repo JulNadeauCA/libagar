@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.146 2005/05/23 01:29:59 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.147 2005/05/23 07:43:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -339,7 +339,7 @@ updated_bg(int argc, union evarg *argv)
 	struct tlist_item *it;
 	Uint8 r, g, b;
 
-	if ((it = tlist_item_selected(tl)) != NULL &&
+	if ((it = tlist_selected_item(tl)) != NULL &&
 	    it->p1 == &colors[BG_COLOR]) {
 #ifdef HAVE_OPENGL
 		if (view->opengl) {

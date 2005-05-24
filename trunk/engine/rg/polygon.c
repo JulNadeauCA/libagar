@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.5 2005/05/23 01:30:00 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.6 2005/05/24 03:00:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -163,7 +163,7 @@ select_sketch(int argc, union evarg *argv)
 	struct tlist_item *it = argv[3].p;
 	struct tile_element *ske = it->p1;
 
-	strlcpy(poly->sketch, ske->name, sizeof(poly->sketch));
+	strlcpy(poly->sketch, it->text, sizeof(poly->sketch));
 }
 
 struct window *
@@ -190,6 +190,7 @@ polygon_edit(void *p, struct tileview *tv)
 	event_new(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
 	event_new(com, "combo-selected", select_sketch, "%p,%p", poly,
 	    tv->tile);
+	combo_select_text(com, poly->sketch);
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{

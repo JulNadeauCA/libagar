@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.120 2005/05/08 11:13:51 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.121 2005/05/21 05:54:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -602,6 +602,7 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
 	return (it);
 }
 
+/* Select an item based on its pointer value. */
 struct tlist_item *
 tlist_select_pointer(struct tlist *tl, void *p)
 {
@@ -616,6 +617,30 @@ tlist_select_pointer(struct tlist *tl, void *p)
 	}
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->p1 == p) {
+			it->selected++;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&tl->lock);
+	return (it);
+}
+
+/* Select an item based on text. */
+struct tlist_item *
+tlist_select_text(struct tlist *tl, const char *text)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->lock);
+	if (tl->flags & TLIST_POLL) {
+		event_post(NULL, tl, "tlist-poll", NULL);
+	}
+	if ((tl->flags & TLIST_MULTI) == 0) {
+		tlist_unselect_all(tl);
+	}
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->text[0] == text[0] &&
+		    strcmp(it->text, text) == 0) {
 			it->selected++;
 			break;
 		}
@@ -715,7 +740,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	tind = (widget_get_int(tl->sbar, "value") + y/tl->item_h) + 1;
 
 	/* XXX use array */
-	if ((ti = tlist_item_index(tl, tind)) == NULL)
+	if ((ti = tlist_find_index(tl, tind)) == NULL)
 		goto out;
 
 	/* Expand the children if the user clicked on the [+] sign. */
@@ -885,7 +910,7 @@ tlist_scrolled(int argc, union evarg *argv)
  * The tlist must be locked.
  */
 struct tlist_item *
-tlist_item_index(struct tlist *tl, int index)
+tlist_find_index(struct tlist *tl, int index)
 {
 	struct tlist_item *it;
 	int i = 0;
@@ -902,7 +927,7 @@ tlist_item_index(struct tlist *tl, int index)
  * The tlist must be locked.
  */
 struct tlist_item *
-tlist_item_selected(struct tlist *tl)
+tlist_selected_item(struct tlist *tl)
 {
 	struct tlist_item *it;
 
@@ -918,7 +943,7 @@ tlist_item_selected(struct tlist *tl)
  * The tlist must be locked.
  */
 void *
-tlist_item_pointer(struct tlist *tl)
+tlist_find_pointer(struct tlist *tl)
 {
 	struct tlist_item *it;
 
@@ -934,7 +959,7 @@ tlist_item_pointer(struct tlist *tl)
  * The tlist must be locked.
  */
 struct tlist_item *
-tlist_item_text(struct tlist *tl, const char *text)
+tlist_find_text(struct tlist *tl, const char *text)
 {
 	struct tlist_item *it;
 
@@ -950,7 +975,7 @@ tlist_item_text(struct tlist *tl, const char *text)
  * The tlist must be locked.
  */
 struct tlist_item *
-tlist_item_first(struct tlist *tl)
+tlist_first_item(struct tlist *tl)
 {
 	return (TAILQ_FIRST(&tl->items));
 }
@@ -960,7 +985,7 @@ tlist_item_first(struct tlist *tl)
  * The tlist must be locked.
  */
 struct tlist_item *
-tlist_item_last(struct tlist *tl)
+tlist_last_item(struct tlist *tl)
 {
 	return (TAILQ_LAST(&tl->items, tlist_itemq));
 }

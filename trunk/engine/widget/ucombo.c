@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.11 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.12 2005/03/05 12:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -125,7 +125,7 @@ ucombo_selected(int argc, union evarg *argv)
 	struct tlist_item *it;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((it = tlist_item_selected(tl)) != NULL) {
+	if ((it = tlist_selected_item(tl)) != NULL) {
 		it->selected++;
 		event_post(NULL, com, "ucombo-selected", "%p", it);
 	}

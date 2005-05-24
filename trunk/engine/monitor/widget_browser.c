@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.42 2005/04/14 06:19:43 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.43 2005/05/14 10:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ show_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *win;
 
-	if ((it = tlist_item_selected(tl)) == NULL)
+	if ((it = tlist_selected_item(tl)) == NULL)
 		return;
 
 	win = it->p1;
@@ -106,7 +106,7 @@ hide_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *win;
 
-	if ((it = tlist_item_selected(tl)) == NULL)
+	if ((it = tlist_selected_item(tl)) == NULL)
 		return;
 
 	win = it->p1;
@@ -124,7 +124,7 @@ examine_widget(int argc, union evarg *argv)
 	struct window *win;
 	struct vbox *vb;
 
-	if ((it = tlist_item_selected(tl)) == NULL) {
+	if ((it = tlist_selected_item(tl)) == NULL) {
 		return;
 	}
 	wid = it->p1;
@@ -225,7 +225,7 @@ examine_window(int argc, union evarg *argv)
 	struct AGMenuItem *mi;
 	struct spinbutton *sb;
 
-	if ((it = tlist_item_selected(wintl)) == NULL) {
+	if ((it = tlist_selected_item(wintl)) == NULL) {
 		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
