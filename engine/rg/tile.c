@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.46 2005/05/21 03:32:24 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.47 2005/05/23 03:24:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -201,12 +201,49 @@ tile_generate(struct tile *t)
 	sprite_update(&SPRITE(t->ts,t->sprite));
 }
 
+static __inline__ void
+gen_element_name(struct tile_element *tel, struct tile *t, const char *fname)
+{
+	struct tile_element *oel;
+	u_int elno = 0;
+
+tryname:
+	snprintf(tel->name, sizeof(tel->name), "%s <#%u>", fname,
+	    elno);
+	TAILQ_FOREACH(oel, &t->elements, elements) {
+		if (strcmp(oel->name, tel->name) == 0)
+			break;
+	}
+	if (oel != NULL) {
+		elno++;
+		goto tryname;
+	}
+}
+
 struct tile_element *
-tile_add_feature(struct tile *t, void *ft, int x, int y)
+tile_find_element(struct tile *t, enum tile_element_type type, const char *name)
+{
+	struct tile_element *tel;
+
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		if (tel->type == type &&
+		    strcmp(tel->name, name) == 0)
+			break;
+	}
+	return (tel);
+}
+
+struct tile_element *
+tile_add_feature(struct tile *t, const char *name, void *ft, int x, int y)
 {
 	struct tile_element *tel;
 
 	tel = Malloc(sizeof(struct tile_element), M_RG);
+	if (name != NULL) {
+		strlcpy(tel->name, name, sizeof(tel->name));
+	} else {
+		gen_element_name(tel, t, FEATURE(ft)->name);
+	}
 	tel->type = TILE_FEATURE;
 	tel->visible = 1;
 	tel->tel_feature.ft = ft;
@@ -243,11 +280,17 @@ tile_remove_feature(struct tile *t, void *ftp, int destroy)
 }
 
 struct tile_element *
-tile_add_pixmap(struct tile *t, struct pixmap *px, int x, int y)
+tile_add_pixmap(struct tile *t, const char *name, struct pixmap *px,
+    int x, int y)
 {
 	struct tile_element *tel;
 
 	tel = Malloc(sizeof(struct tile_element), M_RG);
+	if (name != NULL) {
+		strlcpy(tel->name, name, sizeof(tel->name));
+	} else {
+		gen_element_name(tel, t, px->name);
+	}
 	tel->type = TILE_PIXMAP;
 	tel->visible = 1;
 	tel->tel_pixmap.px = px;
@@ -262,11 +305,17 @@ tile_add_pixmap(struct tile *t, struct pixmap *px, int x, int y)
 }
 
 struct tile_element *
-tile_add_sketch(struct tile *t, struct sketch *sk, int x, int y)
+tile_add_sketch(struct tile *t, const char *name, struct sketch *sk,
+    int x, int y)
 {
 	struct tile_element *tel;
 
 	tel = Malloc(sizeof(struct tile_element), M_RG);
+	if (name != NULL) {
+		strlcpy(tel->name, name, sizeof(tel->name));
+	} else {
+		gen_element_name(tel, t, sk->name);
+	}
 	tel->type = TILE_SKETCH;
 	tel->visible = 1;
 	tel->tel_sketch.sk = sk;
@@ -343,6 +392,7 @@ tile_save(struct tile *t, struct netbuf *buf)
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(tel, &t->elements, elements) {
+		write_string(buf, tel->name);
 		write_uint32(buf, (Uint32)tel->type);
 		write_uint8(buf, (Uint8)tel->visible);
 
@@ -399,10 +449,12 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
 	for (i = 0; i < nelements; i++) {
+		char name[TILE_ELEMENT_NAME_MAX];
 		enum tile_element_type type;
 		struct tile_element *tel;
 		int visible;
 
+		copy_string(name, buf, sizeof(name));
 		type = (enum tile_element_type)read_uint32(buf);
 		visible = (int)read_uint8(buf);
 
@@ -426,7 +478,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 					error_set("bad feature: %s", feat_name);
 					return (-1);
 				}
-				tel = tile_add_feature(t, ft, x, y);
+				tel = tile_add_feature(t, name, ft, x, y);
 				tel->visible = visible;
 			}
 			break;
@@ -452,7 +504,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 					error_set("bad pixmap: %s", pix_name);
 					return (-1);
 				}
-				tel = tile_add_pixmap(t, px, x, y);
+				tel = tile_add_pixmap(t, name, px, x, y);
 				tel->tel_pixmap.alpha = alpha;
 				tel->visible = visible;
 			}
@@ -480,7 +532,7 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 					error_set("bad sketch: %s", sk_name);
 					return (-1);
 				}
-				tel = tile_add_sketch(t, sk, x, y);
+				tel = tile_add_sketch(t, name, sk, x, y);
 				tel->tel_sketch.alpha = alpha;
 				tel->visible = visible;
 			}
@@ -787,7 +839,7 @@ tryname:
 	pixmap_scale(px, 32, 32, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
 
-	tel = tile_add_pixmap(tv->tile, px, 0, 0);
+	tel = tile_add_pixmap(tv->tile, NULL, px, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 
@@ -834,7 +886,7 @@ tryname:
 
 	sketch_scale(sk, 32, 32, 1.0, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->sketches, sk, sketches);
-	tel = tile_add_sketch(tv->tile, sk, 0, 0);
+	tel = tile_add_sketch(tv->tile, NULL, sk, 0, 0);
 	tv->tile->flags |= TILE_DIRTY;
 	close_element(tv);
 	open_element(tv, tel, pwin);
@@ -873,7 +925,7 @@ attach_pixmap(int argc, union evarg *argv)
 	}
 	px = it->p1;
 
-	tel = tile_add_pixmap(tv->tile, px, 0, 0);
+	tel = tile_add_pixmap(tv->tile, NULL, px, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 
@@ -956,7 +1008,7 @@ attach_sketch(int argc, union evarg *argv)
 	}
 	sk = it->p1;
 
-	tel = tile_add_sketch(tv->tile, sk, 0, 0);
+	tel = tile_add_sketch(tv->tile, NULL, sk, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 
@@ -1059,7 +1111,7 @@ insert_fill(int argc, union evarg *argv)
 	fill = Malloc(sizeof(struct fill), M_RG);
 	fill_init(fill, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(fill), features);
-	tel = tile_add_feature(tv->tile, fill, 0, 0);
+	tel = tile_add_feature(tv->tile, NULL, fill, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 	select_feature(tl_feats, fill);
@@ -1078,7 +1130,7 @@ insert_polygon(int argc, union evarg *argv)
 	poly = Malloc(sizeof(struct polygon), M_RG);
 	polygon_init(poly, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(poly), features);
-	tel = tile_add_feature(tv->tile, poly, 0, 0);
+	tel = tile_add_feature(tv->tile, NULL, poly, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 	select_feature(tl_feats, poly);
@@ -1097,7 +1149,7 @@ insert_sketchproj(int argc, union evarg *argv)
 	sproj = Malloc(sizeof(struct sketchproj), M_RG);
 	sketchproj_init(sproj, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(sproj), features);
-	tel = tile_add_feature(tv->tile, sproj, 0, 0);
+	tel = tile_add_feature(tv->tile, NULL, sproj, 0, 0);
 	close_element(tv);
 	open_element(tv, tel, pwin);
 	select_feature(tl_feats, sproj);
@@ -1128,7 +1180,7 @@ poll_feats(int argc, union evarg *argv)
 			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
 			    (tv->state==TILEVIEW_FEATURE_EDIT &&
 			     tv->tv_feature.ft == ft) ? "* " : "",
-			    ft->name,
+			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->class = "feature";
 			it->p1 = tel;
@@ -1146,7 +1198,7 @@ poll_feats(int argc, union evarg *argv)
 				    "%s%s%s",
 				    (tv->state==TILEVIEW_SKETCH_EDIT &&
 				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
-				    fsk->sk->name,
+				    tel->name,
 				    fsk->visible ? "" : _(" (invisible)"));
 				it->class = "feature-sketch";
 				it->p1 = fsk;
@@ -1157,7 +1209,7 @@ poll_feats(int argc, union evarg *argv)
 				    "%s%s (%d,%d)%s",
 				    (tv->state==TILEVIEW_PIXMAP_EDIT &&
 				     tv->tv_pixmap.px == fpx->px) ? "* ": "",
-				    fpx->px->name, fpx->x, fpx->y,
+				    tel->name, fpx->x, fpx->y,
 				    fpx->visible ? "" : _(" (invisible)"));
 				it->class = "feature-pixmap";
 				it->p1 = fpx;
@@ -1168,7 +1220,7 @@ poll_feats(int argc, union evarg *argv)
 			it = tlist_insert(tl, px->su, "%s%s%s",
 			    (tv->state==TILEVIEW_PIXMAP_EDIT &&
 			     tv->tv_pixmap.px == px) ? "* ": "",
-			    px->name,
+			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->class = "pixmap";
 			it->p1 = tel;
@@ -1181,7 +1233,7 @@ poll_feats(int argc, union evarg *argv)
 			it = tlist_insert(tl, sk->vg->su, "%s%s%s",
 			    (tv->state==TILEVIEW_SKETCH_EDIT &&
 			     tv->tv_sketch.sk == sk) ? "* ": "",
-			    sk->name,
+			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
 			it->class = "sketch";
 			it->p1 = tel;
@@ -1614,7 +1666,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tl_feats = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_feats, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl_feats)->flags &= ~(WIDGET_WFILL);
-	tlist_prescale(tl_feats, _("FEATURE #000"), 5);
+	tlist_prescale(tl_feats, _("FEATURE #00 <#00>"), 5);
 	event_new(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p",
 	    ts, t, win, tv);
 	feature_menus(tv, tl_feats, win);
