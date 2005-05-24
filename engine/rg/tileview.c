@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.36 2005/05/16 04:20:51 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.37 2005/05/20 05:54:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1127,7 +1127,7 @@ tileview_rect2(struct tileview *tv, int x, int y, int w, int h)
 
 		for (yi = y; yi < y2; yi++)
 			for (xi = x; xi < x2; xi++)
-				tileview_pixel2i(tv, x, y);
+				tileview_pixel2i(tv, xi, yi);
 	} else {
 #ifdef HAVE_OPENGL
 		int x1 = TILEVIEW_SCALED_X(tv,x);
@@ -1307,7 +1307,6 @@ draw_handle(struct tileview *tv, struct tileview_ctrl *ctrl,
 	int x = th->x;
 	int y = th->y;
 
-	/* Draw the inner circle. */
 	if (th->over && !th->enable) {
 		tileview_sdl_color(tv, &ctrl->cOver, ctrl->aOver);
 	} else {
@@ -1315,6 +1314,8 @@ draw_handle(struct tileview *tv, struct tileview_ctrl *ctrl,
 		    th->enable ? &ctrl->cEna : &ctrl->cIna,
 		    th->enable ? ctrl->aEna : ctrl->aIna);
 	}
+	
+	/* Draw the inner circle. */
 	tileview_rect2(tv, x-1, y-1, 3, 3);
 
 	/* Draw the central point. */
@@ -1348,6 +1349,9 @@ static void
 draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 {
 	int i;
+
+	if (tv->flags & TILEVIEW_HIDE_CONTROLS)
+		return;
 
 	tileview_sdl_color(tv, &ctrl->c, ctrl->a);
 
