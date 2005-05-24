@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.18 2005/02/08 15:52:28 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.19 2005/04/14 06:19:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ typesw_init(void)
 	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
 	    DRAWING_ICON);
 	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
-	    DRAWING_ICON);
+	    TILESET_ICON);
 }
 
 void

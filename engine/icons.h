@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.18 2005/04/18 03:38:21 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.19 2005/05/21 03:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -59,6 +59,7 @@ enum {
 	OBJ_ICON,
 	MAP_ICON,
 	DRAWING_ICON,
+	TILESET_ICON,
 	PERSO_ICON,
 
 	/* vg.xcf */
