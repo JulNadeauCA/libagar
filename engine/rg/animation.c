@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.4 2005/03/06 04:54:10 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.1 2005/03/24 04:02:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -544,7 +544,7 @@ select_insn(int argc, union evarg *argv)
 	struct box *box = argv[2].p;
 	struct tlist_item *it, *eit;
 
-	if ((it = tlist_item_selected(tl)) == NULL)
+	if ((it = tlist_selected_item(tl)) == NULL)
 		return;
 
 	open_insn(ani, (struct anim_insn *)it->p1, box);
@@ -558,7 +558,7 @@ select_frame(int argc, union evarg *argv)
 	struct box *box = argv[2].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl)) == NULL)
+	if ((it = tlist_selected_item(tl)) == NULL)
 		return;
 
 	open_frame(ani, (struct anim_frame *)it->p1, box);

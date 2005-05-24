@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -133,7 +133,7 @@ rename_layer(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct map_layer *layer;
 
-	if ((it = tlist_item_selected(tl)) == NULL) {
+	if ((it = tlist_selected_item(tl)) == NULL) {
 		return;
 	}
 	layer = it->p1;

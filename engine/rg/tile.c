@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.48 2005/05/24 03:00:29 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.49 2005/05/24 05:34:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -923,7 +923,7 @@ attach_pixmap(int argc, union evarg *argv)
 	struct tile_element *tel;
 	struct pixmap *px;
 
-	if ((it = tlist_item_selected(tl_pixmaps)) == NULL) {
+	if ((it = tlist_selected_item(tl_pixmaps)) == NULL) {
 		return;
 	}
 	px = it->p1;
@@ -1006,7 +1006,7 @@ attach_sketch(int argc, union evarg *argv)
 	struct tile_element *tel;
 	struct sketch *sk;
 
-	if ((it = tlist_item_selected(tl_sketches)) == NULL) {
+	if ((it = tlist_selected_item(tl_sketches)) == NULL) {
 		return;
 	}
 	sk = it->p1;
@@ -1281,7 +1281,7 @@ edit_element(int argc, union evarg *argv)
 		return;
 	}
 	
-	if ((it = tlist_item_selected(tl)) != NULL) {
+	if ((it = tlist_selected_item(tl)) != NULL) {
 		if (strcmp(it->class, "feature") == 0 ||
 		    strcmp(it->class, "pixmap") == 0 ||
 		    strcmp(it->class, "sketch") == 0) {
@@ -1311,7 +1311,7 @@ delete_element(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct tile_element *tel;
 
-	if ((it = tlist_item_selected(tl_feats)) == NULL)
+	if ((it = tlist_selected_item(tl_feats)) == NULL)
 		return;
 
 	if (tv->state == TILEVIEW_SKETCH_EDIT &&
@@ -1433,7 +1433,7 @@ move_element_up(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct tile_element *tel, *ptel;
 
-	if ((it = tlist_item_selected(tl)) == NULL ||
+	if ((it = tlist_selected_item(tl)) == NULL ||
 	    (strcmp(it->class, "feature") != 0 &&
 	     strcmp(it->class, "pixmap") != 0 &&
 	     strcmp(it->class, "sketch") != 0)) {
@@ -1457,7 +1457,7 @@ move_element_down(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct tile_element *tel, *ntel;
 
-	if ((it = tlist_item_selected(tl)) == NULL ||
+	if ((it = tlist_selected_item(tl)) == NULL ||
 	    (strcmp(it->class, "feature") != 0 &&
 	     strcmp(it->class, "pixmap") != 0 &&
 	     strcmp(it->class, "sketch") != 0)) {
@@ -1480,7 +1480,7 @@ visible_element(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct tile_element *tel, *ntel;
 
-	if ((it = tlist_item_selected(tl)) == NULL ||
+	if ((it = tlist_selected_item(tl)) == NULL ||
 	    (strcmp(it->class, "pixmap") != 0 &&
 	     strcmp(it->class, "sketch") != 0 &&
 	     strcmp(it->class, "feature") != 0)) {

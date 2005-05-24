@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.45 2005/02/01 08:24:30 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.46 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -57,18 +57,15 @@ Single or multiple selections of items are possible.
 .Fn tlist_init "struct tlist *tlist" "int flags"
 .Pp
 .Ft void
-.Fn tlist_set_item_height "struct tlist *tl" "int itemh"
+.Fn tlist_set_item_height "struct tlist *tl" "int item_height"
 .Pp
 .Ft void
-.Fn tlist_set_item_icon "struct tlist *tl, struct tlist_item *item" "SDL_Surface *icon"
+.Fn tlist_set_icon "struct tlist *tl, struct tlist_item *item" "SDL_Surface *icon"
 .Pp
 .Ft void
 .Fn tlist_prescale "struct tlist *tl" "const char *text" "int nitems"
-.Pp
-.Ft void
-.Fn tlist_scroll "struct tlist *tl" "int pos"
-.Pp
 .nr nS 0
+.Pp
 The
 .Fn tlist_new
 function allocates, initializes, and attaches a
@@ -86,17 +83,48 @@ may include:
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
 #define TLIST_MULTITOGGLE	0x02  /* Multiple toggle selections */
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
-#define TLIST_TREE		0x10  /* Hack to display trees */
+#define TLIST_TREE		0x10  /* Arrange the items in a tree */
 .Ed
+.Pp
+If the
+.Dv TLIST_MULTI
+flag is set, selecting an item while holding the
+.Dv KMOD_CTRL
+key will not cause other currently selected item
+to be deselected.
+If the flag
+.Dv TLIST_MULTITOGGLE
+is set in addition to
+.Dv TLIST_MULTI ,
+this behavior is achieved without having to hold
+.Dv KMOD_CTRL .
+.Pp
+The
+.Dv TLIST_POLL
+flag causes the posting of a
+.Sq tlist-poll
+event every time the widget is redrawn.
+Typically, the
+.Sq tlist-poll
+event handler clears the list with
+.Fn tlist_clear_items ,
+inserts the items with
+.Fn tlist_insert
+and restores the previous selections using
+.Fn tlist_restore_selections .
+.Pp
+The
+.Dv TLIST_TREE
+option indicates that a tree is to be displayed.
 .Pp
 The
 .Fn tlist_set_item_height
 function sets the height of all items to
-.Fa itemh
+.Fa item_height
 pixels .
 .Pp
 The
-.Fn tlist_set_item_icon
+.Fn tlist_set_icon
 function updates the icon shown with
 .Fa item ,
 scaled to
@@ -110,13 +138,11 @@ requests sufficient height to display
 .Fa nitems
 items at once, and sufficient width to display an item containing
 .Fa text .
-.Pp
-The
-.Fn tlist_scroll
-function sets the position of the scrollbar to
-.Fa pos .
 .Sh MANIPULATING ITEMS
 .nr nS 1
+.Ft "struct tlist_item *"
+.Fn tlist_insert "struct tlist *tl" "SDL_Surface *iconsrc" "const char *format" "..."
+.Pp
 .Ft "struct tlist_item *"
 .Fn tlist_insert_item "struct tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
@@ -135,42 +161,55 @@ function sets the position of the scrollbar to
 .Fn tlist_select "struct tlist *tlist" "struct tlist_item *item"
 .Pp
 .Ft "void"
+.Fn tlist_select_all "struct tlist *tlist"
+.Pp
+.Ft "void"
 .Fn tlist_unselect "struct tlist *tlist" "struct tlist_item *item"
 .Pp
 .Ft "void"
 .Fn tlist_unselect_all "struct tlist *tlist"
 .Pp
 .Ft "struct tlist_item *"
-.Fn tlist_item_index "struct tlist *tlist" "int index"
+.Fn tlist_select_pointer "struct tlist *tlist" "void *ptr"
 .Pp
 .Ft "struct tlist_item *"
-.Fn tlist_item_selected "struct tlist *tlist"
+.Fn tlist_select_text "struct tlist *tlist" "const char *text"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_find_index "struct tlist *tlist" "int index"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_selected_item "struct tlist *tlist"
 .Pp
 .Ft "int"
-.Fn tlist_item_pointer "struct tlist *tlist" "void **p"
+.Fn tlist_find_pointer "struct tlist *tlist" "void **p"
 .Pp
 .Ft "struct tlist_item *"
-.Fn tlist_item_text "struct tlist *tlist" "const char *text"
+.Fn tlist_find_text "struct tlist *tlist" "const char *text"
 .Pp
 .Ft "struct tlist_item *"
-.Fn tlist_item_first "struct tlist *tlist"
+.Fn tlist_first_item "struct tlist *tlist"
 .Pp
 .Ft "struct tlist_item *"
 .Fn tlist_item_last "struct tlist *tlist"
 .nr nS 0
 .Pp
 The
-.Fn tlist_insert_item
-function inserts a new item into the list.
+.Fn tlist_insert
+function (and its alternate interface
+.Fn tlist_insert_item )
+are used to insert a new item in the list.
+.Pp
+The
+.Fa text
+argument defines the text label to display.
+Unless it is NULL,
+.Fa icon
+defines the icon to display at the left of the label.
 .Pp
 The
 .Fa p1
 argument is a user-defined pointer associated with the item.
-For selections to function properly in
-.Dv TLIST_POLLED
-mode, every unique item on the list should have a unique
-.Fa p1
-value.
 .Pp
 The
 .Fn tlist_insert_item_head
@@ -204,31 +243,46 @@ Unless the
 .Dv TLIST_MULTI
 flag is set,
 .Fn tlist_select
-clears the selection flag on every other item.
+clears the selection flag on all other items.
 The
 .Fn tlist_select_all
 and
 .Fn tlist_unselect_all
-functions manipulate the selected flag on all items attached to
+functions sets/unsets the selection on all items attached to
 .Fa tlist .
 .Pp
 The
-.Fn tlist_item_index
+.Fn tlist_select_pointer
+function selects and returns the first item with a user pointer value
+matching
+.Fa ptr .
+Similarly,
+.Fn tlist_select_text
+selects and returns the first item with a text field equal to
+.Fa text .
+Both of these functions invoke
+.Sq tlist-poll
+if the
+.Dv TLIST_POLL
+option is set.
+.Pp
+The
+.Fn tlist_find_index
 function returns the item at
 .Fa index ,
 or NULL if there is no such item.
 The
-.Fn tlist_item_selected
+.Fn tlist_selected_item
 function returns the first selected item, or
 .Dv NULL
 if there are none.
-.Fn tlist_item_pointer
+.Fn tlist_find_pointer
 is a variant that copies the user pointer associated with the first
 selected item into
 .Fa p ,
 returning 0 on success or -1 if there is no item selected.
 The
-.Fn tlist_item_text
+.Fn tlist_find_text
 function searches
 .Fa tlist
 for an item containing the
@@ -236,21 +290,21 @@ for an item containing the
 string and returns NULL if there is no such item.
 .Pp
 The
-.Fn tlist_item_first
+.Fn tlist_first_item
 and
-.Fn tlist_item_last
+.Fn tlist_last_item
 functions return the first and last items on the list.
 .Pp
 The caller must ensure that the
 .Nm
 is locked prior to invoking
-.Fn tlist_item_index ,
-.Fn tlist_item_selected ,
-.Fn tlist_item_pointer ,
-.Fn tlist_item_text ,
-.Fn tlist_item_first
+.Fn tlist_find_index ,
+.Fn tlist_selected_item ,
+.Fn tlist_find_pointer ,
+.Fn tlist_find_text ,
+.Fn tlist_first_item
 or
-.Fn tlist_item_last .
+.Fn tlist_last_item .
 .Sh EVENTS
 The
 .Nm

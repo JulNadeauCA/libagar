@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.23 2005/05/14 10:05:54 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.24 2005/05/24 03:01:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ create_obj(int argc, union evarg *argv)
 	struct object *pobj;
 	void *nobj;
 
-	if ((it = tlist_item_selected(objs_tl)) != NULL) {
+	if ((it = tlist_selected_item(objs_tl)) != NULL) {
 		pobj = it->p1;
 	} else {
 		pobj = world;
@@ -516,7 +516,7 @@ poll_objs(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 	unlock_linkage();
 
-	if (tlist_item_selected(tl) == NULL) {
+	if (tlist_selected_item(tl) == NULL) {
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->p1 == dob)
 				break;

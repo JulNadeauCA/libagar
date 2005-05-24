@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.30 2005/05/23 01:30:00 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.31 2005/05/24 05:34:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -262,7 +262,7 @@ select_brush(int argc, union evarg *argv)
 	struct pixmap *px = argv[1].p;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl)) != NULL) {
+	if ((it = tlist_selected_item(tl)) != NULL) {
 		struct pixmap_brush *br = it->p1;
 
 		px->curbrush = (px->curbrush == br) ? NULL : br;
@@ -303,7 +303,7 @@ insert_brush(int argc, union evarg *argv)
 	struct pixmap_brush *pbr;
 	struct tlist_item *it;
 
-	if ((it = tlist_item_selected(tl)) == NULL) {
+	if ((it = tlist_selected_item(tl)) == NULL) {
 		return;
 	}
 	spx = it->p1;

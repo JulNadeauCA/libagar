@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.6 2005/05/01 00:30:15 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.7 2005/05/18 03:16:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -105,7 +105,7 @@ static void
 disconnect_client(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
-	struct tlist_item *it = tlist_item_selected(tl);
+	struct tlist_item *it = tlist_selected_item(tl);
 	struct client *cl;
 
 	if (it == NULL) {

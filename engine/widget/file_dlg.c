@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.2 2005/03/27 03:50:13 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.3 2005/04/18 04:21:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -110,7 +110,7 @@ select_dir(int argc, union evarg *argv)
 	struct tlist_item *ti;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_item_selected(tl)) != NULL) {
+	if ((ti = tlist_selected_item(tl)) != NULL) {
 		if (chdir(ti->text) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", ti->text,
 			    strerror(errno));
@@ -130,7 +130,7 @@ select_file(int argc, union evarg *argv)
 	struct tlist_item *ti;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_item_selected(tl)) != NULL) {
+	if ((ti = tlist_selected_item(tl)) != NULL) {
 		textbox_printf(fdg->tb_file, "%s", ti->text);
 		event_post(NULL, fdg, "file-selected", "%s/%s",
 		    fdg->cwd, ti->text);
@@ -146,7 +146,7 @@ select_and_validate_file(int argc, union evarg *argv)
 	struct tlist_item *ti;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_item_selected(tl)) != NULL) {
+	if ((ti = tlist_selected_item(tl)) != NULL) {
 		textbox_printf(fdg->tb_file, "%s", ti->text);
 		event_post(NULL, fdg, "file-validated", "%s", ti->text);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.3 2005/04/21 04:45:29 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.4 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -147,7 +147,7 @@ stamp_effect(struct tool *t, struct node *n)
 		struct tlist_item *it;
 
 		if (mv->art_tl != NULL &&
-		    (it = tlist_item_selected(mv->art_tl)) != 0 &&
+		    (it = tlist_selected_item(mv->art_tl)) != 0 &&
 		    strcmp(it->class, "tile") == 0) {
 			struct tile *t = it->p1;
 			struct noderef *r;
@@ -200,7 +200,7 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 			}
 		}
 	} else if (mv->art_tl != NULL &&
-	   (it = tlist_item_selected(mv->art_tl)) != NULL &&
+	   (it = tlist_selected_item(mv->art_tl)) != NULL &&
 	   strcmp(it->class, "tile") == 0) {
 		struct tile *tile = it->p1;
 		int dx, dy;
