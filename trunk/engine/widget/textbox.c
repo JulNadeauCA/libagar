@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.97 2005/05/20 05:56:40 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.98 2005/05/24 08:14:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -84,6 +84,9 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
 	int i;
 	int rv = 0;
+
+	if (keysym == SDLK_RETURN)
+		return (0);
 
 	for (i = 0;; i++) {
 		const struct keycode *kcode = &keycodes[i];
@@ -413,13 +416,6 @@ keydown(int argc, union evarg *argv)
 	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
 		return;
 	}
-	if (keysym == SDLK_RETURN) {
-		if (tbox->flags & TEXTBOX_ABANDON_FOCUS) {
-			widget_unset_focus(tbox);
-		}
-		event_post(NULL, tbox, "textbox-return", NULL);
-		return;
-	}
 	
 	tbox->repeat.key = keysym;
 	tbox->repeat.mod = keymod;
@@ -449,6 +445,14 @@ keyup(int argc, union evarg *argv)
 	timeout_del(tb, &tb->delay_to);
 	timeout_replace(tb, &tb->cblink_to, text_blink_rate);
 	unlock_timeout(tb);
+	
+	if (keysym == SDLK_RETURN) {
+		if (tb->flags & TEXTBOX_ABANDON_FOCUS) {
+			widget_unset_focus(tb);
+		}
+		event_post(NULL, tb, "textbox-return", NULL);
+		return;
+	}
 }
 
 /* Map mouse coordinates to a position within the string. */
