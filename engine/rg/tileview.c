@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.38 2005/05/24 05:06:54 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.39 2005/05/24 05:34:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1494,9 +1494,11 @@ tileview_draw(void *p)
 	rtiling.y = 0;
 	rtiling.w = WIDGET(tv)->w;
 	rtiling.h = WIDGET(tv)->h;
-	primitives.tiling(tv, rtiling, 9, 0,
-	    COLOR(TILEVIEW_TILE1_COLOR),
-	    COLOR(TILEVIEW_TILE2_COLOR));
+	if ((tv->flags & TILEVIEW_NO_TILING) == 0) {
+		primitives.tiling(tv, rtiling, 9, 0,
+		    COLOR(TILEVIEW_TILE1_COLOR),
+		    COLOR(TILEVIEW_TILE2_COLOR));
+	}
 
 	rsrc.x = 0;
 	rsrc.y = 0;
@@ -1654,4 +1656,14 @@ tileview_unselect_tool(struct tileview *tv)
 			tv->cur_tool->ops->unselected(tv->cur_tool);
 	}
 	tv->cur_tool = NULL;
+}
+
+void
+tileview_generic_menu(struct tileview *tv, struct AGMenuItem *mi)
+{
+	menu_int_flags(mi, _("Show controls"), RG_CONTROLS_ICON,
+	    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
+		
+	menu_int_flags(mi, _("Show tiling"), SNAP_GRID_ICON,
+	    &tv->flags, TILEVIEW_NO_TILING, NULL, 1);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.7 2005/03/24 04:02:06 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.8 2005/04/02 04:07:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -10,6 +10,7 @@ struct sketch;
 struct pixmap;
 struct feature;
 struct animation;
+struct texture;
 
 #include <engine/vg/vg.h>
 #include <engine/rg/tile.h>
@@ -17,6 +18,7 @@ struct animation;
 #include <engine/rg/pixmap.h>
 #include <engine/rg/sketch.h>
 #include <engine/rg/animation.h>
+#include <engine/rg/texture.h>
 #include <engine/rg/prim.h>
 
 #include "begin_code.h"
@@ -33,6 +35,7 @@ struct tileset {
 	TAILQ_HEAD(, pixmap) pixmaps;
 	TAILQ_HEAD(, feature) features;
 	TAILQ_HEAD(, animation) animations;
+	TAILQ_HEAD(, texture) textures;
 };
 
 #define TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
@@ -51,6 +54,7 @@ __inline__ struct sketch *tileset_find_sketch(struct tileset *, const char *);
 __inline__ struct pixmap *tileset_find_pixmap(struct tileset *, const char *);
 __inline__ struct animation *tileset_find_animation(struct tileset *,
 		                                    const char *);
+struct pixmap *tileset_resolve_pixmap(const char *, const char *);
 __END_DECLS
 
 #include "close_code.h"

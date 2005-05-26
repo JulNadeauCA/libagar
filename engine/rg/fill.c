@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.15 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.16 2005/05/23 01:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -163,7 +163,6 @@ fill_edit(void *p, struct tileview *tv)
 
 		nb = notebook_new(box, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 		ntab = notebook_add_tab(nb, _("Color A"), BOX_VERT);
-		notebook_select_tab(nb, ntab);
 		{
 			hsv1 = hsvpal_new(ntab);
 			WIDGET(hsv1)->flags |= WIDGET_WFILL|WIDGET_HFILL;

@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.10 2005/05/23 01:30:00 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.11 2005/05/24 05:34:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -392,8 +392,8 @@ sketch_open_menu(struct tileview *tv, int x, int y)
 			    select_tool, "%p,%p", tv, tvt);
 		}
 
-		menu_int_flags(mi, _("View controls"), RG_CONTROLS_ICON,
-		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
+		menu_separator(mi);
+		tileview_generic_menu(tv, mi);
 	}
 	tv->tv_sketch.menu->sel_item = mi;
 	tv->tv_sketch.menu_win = menu_expand(me, mi, x, y);

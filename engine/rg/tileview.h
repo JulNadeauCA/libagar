@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.24 2005/05/24 05:06:54 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.25 2005/05/24 05:34:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -136,6 +136,7 @@ struct tileview {
 	int flags;
 #define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
 #define TILEVIEW_HIDE_CONTROLS	0x02	/* Hide the current controls */
+#define TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */
@@ -250,6 +251,8 @@ __inline__ void	  tileview_set_double(struct tileview_ctrl *, int, double);
 
 void tileview_select_tool(struct tileview *, struct tileview_tool *);
 void tileview_unselect_tool(struct tileview *);
+
+void tileview_generic_menu(struct tileview *, struct AGMenuItem *);
 __END_DECLS
 
 #include "close_code.h"

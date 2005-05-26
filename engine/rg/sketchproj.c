@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.3 2005/05/23 01:30:00 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.4 2005/05/24 08:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -165,7 +165,6 @@ sketchproj_edit(void *p, struct tileview *tv)
 
 		nb = notebook_new(box, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 		ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
-		notebook_select_tab(nb, ntab);
 		{
 			hsv1 = hsvpal_new(ntab);
 			WIDGET(hsv1)->flags |= WIDGET_WFILL|

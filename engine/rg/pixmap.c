@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.31 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.32 2005/05/24 08:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -420,7 +420,6 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 
 	ntab = notebook_add_tab(nb, _("Colors"), BOX_VERT);
-	notebook_select_tab(nb, ntab);
 	{
 		struct hsvpal *pal;
 		struct fspinbutton *fsb;
@@ -1029,8 +1028,7 @@ pixmap_open_menu(struct tileview *tv, int x, int y)
 
 	mi = tv->tv_pixmap.menu_item = menu_add_item(me, NULL);
 	{
-		menu_int_flags(mi, _("View controls"), RG_CONTROLS_ICON,
-		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
+		tileview_generic_menu(tv, mi);
 	}
 	tv->tv_pixmap.menu->sel_item = mi;
 	tv->tv_pixmap.menu_win = menu_expand(me, mi, x, y);
@@ -1050,3 +1048,4 @@ pixmap_close_menu(struct tileview *tv)
 	tv->tv_pixmap.menu_item = NULL;
 	tv->tv_pixmap.menu_win = NULL;
 }
+
