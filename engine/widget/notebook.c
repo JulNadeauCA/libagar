@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.3 2005/03/28 03:01:27 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.4 2005/05/13 09:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -197,6 +197,9 @@ notebook_add_tab(struct notebook *nb, const char *label, enum box_type btype)
 	tab->label = widget_map_surface(nb,
 	    text_render(NULL, -1, COLOR(NOTEBOOK_TXT_COLOR), label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
+	if (TAILQ_FIRST(&nb->tabs) == tab) {
+		notebook_select_tab(nb, tab);
+	}
 	return (tab);
 }
 
