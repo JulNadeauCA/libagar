@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.24 2004/03/30 15:55:17 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.25 2004/09/18 06:37:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -32,7 +32,9 @@ struct label {
 };
 
 __BEGIN_DECLS
-struct label	*label_new(void *, enum label_type, const char *, ...);
+struct label *label_new(void *, enum label_type, const char *, ...);
+__inline__ void label_static(void *, const char *);
+void		label_staticf(void *, const char *, ...);
 
 void	 label_init(struct label *, enum label_type, const char *);
 void 	 label_destroy(void *);
