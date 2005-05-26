@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.34 2005/05/24 08:15:10 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.35 2005/05/24 08:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 #include <engine/widget/checkbox.h>
 #include <engine/widget/menu.h>
 #include <engine/widget/notebook.h>
+#include <engine/widget/radio.h>
 
 #include "tileset.h"
 
@@ -88,12 +89,13 @@ tileset_init(void *obj, const char *name)
 	 */
 	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT;
 
-	pthread_mutex_init(&ts->lock, NULL);
+	pthread_mutex_init(&ts->lock, &recursive_mutexattr);
 	TAILQ_INIT(&ts->tiles);
 	TAILQ_INIT(&ts->sketches);
 	TAILQ_INIT(&ts->pixmaps);
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
+	TAILQ_INIT(&ts->textures);
 
 	ts->icon = SDL_CreateRGBSurface(
 	    SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY,
@@ -127,6 +129,7 @@ tileset_reinit(void *obj)
 	struct pixmap *px, *npx;
 	struct feature *ft, *nft;
 	struct animation *ani, *nani;
+	struct texture *tex, *ntex;
 
 	pthread_mutex_lock(&ts->lock);
 	
@@ -152,7 +155,6 @@ tileset_reinit(void *obj)
 		sketch_destroy(sk);
 		Free(sk, M_RG);
 	}
-
 	for (px = TAILQ_FIRST(&ts->pixmaps);
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
@@ -160,7 +162,6 @@ tileset_reinit(void *obj)
 		pixmap_destroy(px);
 		Free(px, M_RG);
 	}
-
 	for (ft = TAILQ_FIRST(&ts->features);
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
@@ -168,7 +169,6 @@ tileset_reinit(void *obj)
 		feature_destroy(ft);
 		Free(ft, M_RG);
 	}
-
 	for (ani = TAILQ_FIRST(&ts->animations);
 	     ani != TAILQ_END(&ts->animations);
 	     ani = nani) {
@@ -176,12 +176,20 @@ tileset_reinit(void *obj)
 		animation_destroy(ani);
 		Free(ani, M_RG);
 	}
+	for (tex = TAILQ_FIRST(&ts->textures);
+	     tex != TAILQ_END(&ts->textures);
+	     tex = ntex) {
+		ntex = TAILQ_NEXT(tex, textures);
+		texture_destroy(tex);
+		Free(tex, M_RG);
+	}
 	
 	TAILQ_INIT(&ts->tiles);
 	TAILQ_INIT(&ts->sketches);
 	TAILQ_INIT(&ts->pixmaps);
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
+	TAILQ_INIT(&ts->textures);
 	pthread_mutex_unlock(&ts->lock);
 }
 
@@ -201,7 +209,7 @@ tileset_load(void *obj, struct netbuf *buf)
 	struct gfx *gfx = OBJECT(ts)->gfx;
 	struct version ver;
 	struct pixmap *px;
-	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations;
+	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations, ntextures;
 	Uint32 i;
 
 	if (version_read(buf, &tileset_ver, &ver) != 0)
@@ -315,6 +323,23 @@ tileset_load(void *obj, struct netbuf *buf)
 		}
 		TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
 	}
+	
+	/* Load the textures. */
+	ntextures = read_uint32(buf);
+	for (i = 0; i < ntextures; i++) {
+		char name[TEXTURE_NAME_MAX];
+		struct texture *tex;
+		
+		tex = Malloc(sizeof(struct texture), M_RG);
+		copy_string(name, buf, sizeof(name));
+		texture_init(tex, ts, name);
+		if (texture_load(tex, buf) == -1) {
+			texture_destroy(tex);
+			Free(tex, M_RG);
+			goto fail;
+		}
+		TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
+	}
 
 	/* Resolve the pixmap brush references. */
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
@@ -349,14 +374,15 @@ tileset_save(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
 	Uint32 nsketches = 0, npixmaps = 0, ntiles = 0, nfeatures = 0,
-	       nanims = 0;
+	       nanims = 0, ntextures = 0;
 	off_t nsketches_offs, npixmaps_offs, ntiles_offs, nfeatures_offs,
-	      nanims_offs;
+	      nanims_offs, ntextures_offs;
 	struct sketch *sk;
 	struct pixmap *px;
 	struct animation *ani;
 	struct tile *t;
 	struct feature *ft;
+	struct texture *tex;
 
 	version_write(buf, &tileset_ver);
 
@@ -415,6 +441,16 @@ tileset_save(void *obj, struct netbuf *buf)
 	}
 	pwrite_uint32(buf, nanims, nanims_offs);
 	
+	/* Save the textures . */
+	ntextures_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(tex, &ts->textures, textures) {
+		write_string(buf, tex->name);
+		texture_save(tex, buf);
+		ntextures++;
+	}
+	pwrite_uint32(buf, ntextures, ntextures_offs);
+	
 	pthread_mutex_unlock(&ts->lock);
 	return (0);
 }
@@ -464,6 +500,31 @@ tileset_find_pixmap(struct tileset *ts, const char *name)
 	return (px);
 }
 
+struct pixmap *
+tileset_resolve_pixmap(const char *tsname, const char *pxname)
+{
+	struct pixmap *px;
+	struct tileset *ts;
+
+	if ((ts = object_find(tsname)) == NULL) {
+		error_set("%s: no such tileset", tsname);
+		return (NULL);
+	}
+	if (!OBJECT_TYPE(ts, "tileset")) {
+		error_set("%s: not a tileset", tsname);
+		return (NULL);
+	}
+
+	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
+		if (strcmp(px->name, pxname) == 0)
+			break;
+	}
+	if (px == NULL) {
+		error_set("%s has no `%s' pixmap", tsname, pxname);
+	}
+	return (px);
+}
+
 struct animation *
 tileset_find_animation(struct tileset *ts, const char *name)
 {
@@ -482,7 +543,7 @@ tileset_find_animation(struct tileset *ts, const char *name)
 #ifdef EDITION
 
 static void
-poll_art(int argc, union evarg *argv)
+poll_graphics(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
@@ -507,6 +568,35 @@ poll_art(int argc, union evarg *argv)
 		it->p1 = sk;
 	}
 
+	pthread_mutex_unlock(&ts->lock);
+	tlist_restore_selections(tl);
+}
+
+static void
+poll_textures(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tileset *ts = argv[1].p;
+	struct texture *tex;
+	struct tlist_item *it;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&ts->lock);
+	TAILQ_FOREACH(tex, &ts->textures, textures) {
+		struct pixmap *px;
+
+		if (tex->tileset[0] != '\0' && tex->pixmap[0] != '\0' &&
+		    (px = tileset_resolve_pixmap(tex->tileset, tex->pixmap))
+		     != NULL) {
+			it = tlist_insert(tl, px->su, "%s (<%s> %ux%u)",
+			    tex->name, px->name, px->su->w, px->su->h);
+		} else {
+			it = tlist_insert(tl, NULL, "%s (<%s:%s>?)",
+			    tex->name, tex->tileset, tex->pixmap);
+		}
+		it->class = "texture";
+		it->p1 = tex;
+	}
 	pthread_mutex_unlock(&ts->lock);
 	tlist_restore_selections(tl);
 }
@@ -626,11 +716,13 @@ poll_tiles(int argc, union evarg *argv)
 }
 
 static char ins_tile_name[TILE_NAME_MAX];
+static char ins_texture_name[TEXTURE_NAME_MAX];
 static char ins_anim_name[TILE_NAME_MAX];
 static int ins_tile_w = 32;
 static int ins_tile_h = 32;
 static int ins_alpha = 1;
 static int ins_colorkey = 0;
+static enum gfx_snap_mode ins_snap_mode = GFX_SNAP_NOT;
 
 static void
 insert_tile(int argc, union evarg *argv)
@@ -692,11 +784,72 @@ tryname2:
 	t->sprite = gfx_insert_sprite(gfx, NULL);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
-	
-	if (gfx->nsprites > ts->max_sprites)
+
+	if (gfx->nsprites > ts->max_sprites) {
 		ts->max_sprites = gfx->nsprites;
+	}
+	SPRITE(t->ts,t->sprite).snap_mode = ins_snap_mode;
 
 	ins_tile_name[0] = '\0';
+	view_detach(pwin);
+}
+
+static void
+insert_texture(int argc, union evarg *argv)
+{
+	struct window *pwin = argv[1].p;
+	struct tileset *ts = argv[2].p;
+	struct texture *tex;
+	u_int flags = 0;
+
+	if (ins_texture_name[0] == '\0') {
+		u_int nameno = 0;
+tryname1:
+		snprintf(ins_texture_name, sizeof(ins_texture_name),
+		    _("Texture #%d"), nameno);
+		TAILQ_FOREACH(tex, &ts->textures, textures) {
+			if (strcmp(tex->name, ins_texture_name) == 0)
+				break;
+		}
+		if (tex != NULL) {
+			nameno++;
+			goto tryname1;
+		}
+	} else {
+tryname2:
+		TAILQ_FOREACH(tex, &ts->textures, textures) {
+			if (strcmp(tex->name, ins_texture_name) == 0)
+				break;
+		}
+		if (tex != NULL) {
+			char *np;
+			int num = -1;
+
+			for (np = &ins_texture_name[strlen(ins_texture_name)-1];
+			     np > &ins_texture_name[0];
+			     np--) {
+				if (*np == '#' && *(np+1) != '\0') {
+					np++;
+					num = atoi(np) + 1;
+					snprintf(np, sizeof(ins_texture_name) -
+					    (np-ins_texture_name)-1, "%d", num);
+					break;
+				}
+				if (!isdigit(*np)) {
+					strlcat(ins_texture_name, "_",
+					    sizeof(ins_texture_name));
+					break;
+				}
+			}
+			goto tryname2;
+		}
+	}
+
+	tex = Malloc(sizeof(struct texture), M_RG);
+	texture_init(tex, ts, ins_texture_name);
+	TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
+	
+	ins_texture_name[0] = '\0';
 	view_detach(pwin);
 }
 
@@ -774,6 +927,7 @@ insert_tile_dlg(int argc, union evarg *argv)
 	struct textbox *tb;
 	struct mspinbutton *msb;
 	struct checkbox *cb;
+	struct radio *rad;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 	                 WINDOW_NO_MINIMIZE, NULL);
@@ -794,12 +948,53 @@ insert_tile_dlg(int argc, union evarg *argv)
 	
 	cb = checkbox_new(win, _("Colorkeying"));
 	widget_bind(cb, "state", WIDGET_INT, &ins_colorkey);
+	
+	label_static(win, _("Snapping mode: "));
+	rad = radio_new(win, gfx_snap_names);
+	widget_bind(rad, "value", WIDGET_INT, &ins_snap_mode);
 
 	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
 		btn = button_new(btnbox, "OK");
 		event_new(btn, "button-pushed", insert_tile, "%p,%p", win, ts);
+		event_new(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
 		
+		btn = button_new(btnbox, "Cancel");
+		event_new(btn, "button-pushed", window_generic_detach, "%p",
+		    win);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
+static void
+insert_texture_dlg(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct window *win;
+	struct box *btnbox;
+	struct button *btn;
+	struct textbox *tb;
+
+	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
+	                 WINDOW_NO_MINIMIZE, NULL);
+	window_set_caption(win, _("Create a new texture"));
+	
+	tb = textbox_new(win, _("Name:"));
+	widget_bind(tb, "string", WIDGET_STRING, ins_texture_name,
+	    sizeof(ins_texture_name));
+	widget_focus(tb);
+
+	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	{
+		btn = button_new(btnbox, "OK");
+		event_new(btn, "button-pushed", insert_texture, "%p,%p",
+		    win, ts);
+		event_new(tb, "textbox-return", insert_texture, "%p,%p",
+		    win, ts);
+	
 		btn = button_new(btnbox, "Cancel");
 		event_new(btn, "button-pushed", window_generic_detach, "%p",
 		    win);
@@ -845,6 +1040,7 @@ insert_anim_dlg(int argc, union evarg *argv)
 	{
 		btn = button_new(btnbox, "OK");
 		event_new(btn, "button-pushed", insert_anim, "%p,%p", win, ts);
+		event_new(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
 		
 		btn = button_new(btnbox, "Cancel");
 		event_new(btn, "button-pushed", window_generic_detach, "%p",
@@ -920,6 +1116,28 @@ edit_anims(int argc, union evarg *argv)
 		}
 		if ((win = animation_edit((struct animation *)it->p1))
 		    != NULL) {
+			window_attach(pwin, win);
+			window_show(win);
+		}
+	}
+	pthread_mutex_unlock(&ts->lock);
+}
+
+static void
+edit_textures(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct window *pwin = argv[3].p;
+	struct window *win;
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&ts->lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (!it->selected) {
+			continue;
+		}
+		if ((win = texture_edit((struct texture *)it->p1)) != NULL) {
 			window_attach(pwin, win);
 			window_show(win);
 		}
@@ -1021,6 +1239,25 @@ delete_sketch(int argc, union evarg *argv)
 }
 
 static void
+delete_textures(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl_textures = argv[2].p;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &tl_textures->items, items) {
+		struct texture *tex = it->p1;
+
+		if (!it->selected)
+			continue;
+
+		TAILQ_REMOVE(&ts->textures, tex, textures);
+		texture_destroy(tex);
+		Free(tex, M_RG);
+	}
+}
+
+static void
 duplicate_pixmap(int argc, union evarg *argv)
 {
 	struct tileset *ts = argv[1].p;
@@ -1055,7 +1292,7 @@ tileset_edit(void *p)
 {
 	struct tileset *ts = p;
 	struct window *win;
-	struct tlist *tl_tiles, *tl_art, *tl_anims;
+	struct tlist *tl_tiles, *tl_art, *tl_anims, *tl_textures;
 	struct box *box, *hbox, *bbox;
 	struct textbox *tb;
 	struct mspinbutton *msb;
@@ -1076,12 +1313,16 @@ tileset_edit(void *p)
 	
 	tl_art = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_art, TLIST_POLL);
-	event_new(tl_art, "tlist-poll", poll_art, "%p", ts);
+	event_new(tl_art, "tlist-poll", poll_graphics, "%p", ts);
 	
+	tl_textures = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(tl_textures, TLIST_POLL);
+	event_new(tl_textures, "tlist-poll", poll_textures, "%p", ts);
+
 	tl_anims = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_anims, TLIST_POLL);
 	event_new(tl_anims, "tlist-poll", poll_anims, "%p", ts);
-
+	
 	mi = tlist_set_popup(tl_tiles, "tile");
 	{
 		menu_action(mi, _("Edit tile..."), OBJEDIT_ICON,
@@ -1092,7 +1333,6 @@ tileset_edit(void *p)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Tiles"), BOX_VERT);
-	notebook_select_tab(nb, ntab);
 	{
 		object_attach(ntab, tl_tiles);
 
@@ -1114,7 +1354,7 @@ tileset_edit(void *p)
 		}
 	}
 
-	ntab = notebook_add_tab(nb, _("Tile elements"), BOX_VERT);
+	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
 	{
 		object_attach(ntab, tl_art);
 	
@@ -1140,6 +1380,35 @@ tileset_edit(void *p)
 			    OBJSAVE_ICON,
 			    export_sketch, "%p,%p", ts, tl_art);
 		}
+	}
+	
+	ntab = notebook_add_tab(nb, _("Textures"), BOX_VERT);
+	{
+		object_attach(ntab, tl_textures);
+	
+		mi = tlist_set_popup(tl_textures, "texture");
+		{
+			menu_action(mi, _("Delete texture"), TRASH_ICON,
+			    delete_textures, "%p,%p", ts, tl_textures);
+		}
+		
+		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		{
+			bu = button_new(bbox, _("Insert"));
+			event_new(bu, "button-pushed", insert_texture_dlg,
+			    "%p,%p", ts, win);
+
+			bu = button_new(bbox, _("Edit"));
+			event_new(bu, "button-pushed", edit_textures,
+			    "%p,%p,%p", ts, tl_textures, win);
+
+			bu = button_new(bbox, _("Delete"));
+			event_new(bu, "button-pushed", delete_textures,
+			    "%p,%p", ts, tl_textures);
+		}
+		
+		event_new(tl_textures, "tlist-dblclick", edit_textures,
+		    "%p,%p,%p", ts, tl_textures, win);
 	}
 	
 	ntab = notebook_add_tab(nb, _("Animations"), BOX_VERT);
@@ -1174,6 +1443,8 @@ tileset_edit(void *p)
 			    ts, tl_anims);
 		}
 	}
+
+
 	return (win);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.49 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.50 2005/05/24 08:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1368,7 +1368,6 @@ resize_tile(int argc, union evarg *argv)
 static void
 tile_infos(int argc, union evarg *argv)
 {
-	extern const char *gfx_snap_names[];
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
 	struct tileset *ts = tv->ts;
@@ -1400,7 +1399,7 @@ tile_infos(int argc, union evarg *argv)
 	alpha_cb = checkbox_new(win, _("Source alpha"));
 	widget_set_int(alpha_cb, "state", t->flags & TILE_SRCALPHA);
 
-	label_new(win, LABEL_STATIC, _("Default snapping mode:"));
+	label_static(win, _("Snapping mode: "));
 	rad = radio_new(win, gfx_snap_names);
 	widget_bind(rad, "value", WIDGET_INT,
 	    &SPRITE(t->ts,t->sprite).snap_mode);
@@ -1806,9 +1805,7 @@ tile_open_menu(struct tileview *tv, int x, int y)
 
 	tv->menu_item = menu_add_item(tv->menu, NULL);
 	{
-		menu_int_flags(tv->menu_item, _("View controls"),
-		    RG_CONTROLS_ICON,
-		    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
+		tileview_generic_menu(tv, tv->menu_item);
 	}
 	tv->menu->sel_item = tv->menu_item;
 	tv->menu_win = menu_expand(tv->menu, tv->menu_item, x, y);

@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.1 2005/03/24 04:02:06 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.2 2005/05/24 08:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -637,7 +637,6 @@ animation_edit(struct animation *ani)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	nt = notebook_add_tab(nb, _("Instructions"), BOX_VERT);
-	notebook_select_tab(nb, nt);
 	{
 		box_h = box_new(nt, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
 		{
