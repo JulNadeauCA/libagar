@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.83 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.84 2005/05/13 09:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -98,6 +98,34 @@ label_new(void *parent, enum label_type type, const char *fmt, ...)
 
 	object_attach(parent, label);
 	return (label);
+}
+
+/* Alternate constructor for static labels. */
+void
+label_static(void *parent, const char *text)
+{
+	struct label *label;
+	
+	label = Malloc(sizeof(struct label), M_OBJECT);
+	label_init(label, LABEL_STATIC, text);
+	object_attach(parent, label);
+}
+
+/* Alternate constructor for static labels. */
+void
+label_staticf(void *parent, const char *fmt, ...)
+{
+	char buf[LABEL_MAX];
+	struct label *label;
+	va_list ap;
+	
+	va_start(ap, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
+	va_end(ap);
+
+	label = Malloc(sizeof(struct label), M_OBJECT);
+	label_init(label, LABEL_STATIC, buf);
+	object_attach(parent, label);
 }
 
 void

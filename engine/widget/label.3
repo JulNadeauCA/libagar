@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.26 2005/01/17 02:19:55 vedge Exp $
+.\"	$Csoft: label.3,v 1.27 2005/03/11 08:56:32 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,6 +52,12 @@ widget displays single-line or multi-line text.
 .Fn label_new "void *parent" "enum label_type type" "const char *fmt" "..."
 .Pp
 .Ft "void"
+.Fn label_static "void *parent" "const char *text"
+.Pp
+.Ft "void"
+.Fn label_staticf "void *parent" "const char *fmt" "..."
+.Pp
+.Ft "void"
 .Fn label_init "struct label *label" "enum label_type type" "const char *text"
 .nr nS 0
 .Pp
@@ -69,6 +75,12 @@ enum label_type {
 	LABEL_POLLED_MT		/* Polling (thread safe) */
 };
 .Ed
+.Pp
+The functions
+.Fn label_static
+and
+.Fn label_staticf
+are alternate constructors optimized for static labels.
 .Pp
 For
 .Dv LABEL_STATIC
