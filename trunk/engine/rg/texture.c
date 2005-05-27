@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.11 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.1 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@ texture_init(struct texture *tex, struct tileset *ts, const char *name)
 	tex->wrap_t = TEXTURE_REPEAT;
 	tex->flags = 0;
 	tex->blend_func = ALPHA_OVERLAY;
+	tex->alpha = 255;
 }
 
 void
@@ -201,10 +202,10 @@ texture_edit(struct texture *tex)
 		label_static(ntab, _("Blending function: "));
 		rad = radio_new(ntab, view_blend_func_txt);
 		widget_bind(rad, "value", WIDGET_INT, &tex->blend_func);
-
-		sb = spinbutton_new(ntab, _("Overall alpha: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &tex->alpha);
 	}
+
+	sb = spinbutton_new(win, _("Overall alpha: "));
+	widget_bind(sb, "value", WIDGET_UINT8, &tex->alpha);
 	return (win);
 }
 
