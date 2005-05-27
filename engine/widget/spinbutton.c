@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.20 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.21 2005/01/30 05:39:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -254,13 +254,40 @@ spinbutton_draw(void *p)
 {
 	struct spinbutton *sbu = p;
 	struct widget_binding *valueb;
-	int *value;
+	void *value;
 
 	if (WIDGET(sbu->input)->flags & WIDGET_FOCUSED)
 		return;
 
 	valueb = widget_get_binding(sbu, "value", &value);
-	textbox_printf(sbu->input, "%d", *value);
+	switch (valueb->type) {
+	case WIDGET_INT:
+		textbox_printf(sbu->input, "%d", *(int *)value);
+		break;
+	case WIDGET_UINT:
+		textbox_printf(sbu->input, "%u", *(u_int *)value);
+		break;
+	case WIDGET_UINT8:
+		textbox_printf(sbu->input, "%u", *(Uint8 *)value);
+		break;
+	case WIDGET_SINT8:
+		textbox_printf(sbu->input, "%d", *(Sint8 *)value);
+		break;
+	case WIDGET_UINT16:
+		textbox_printf(sbu->input, "%u", *(Uint16 *)value);
+		break;
+	case WIDGET_SINT16:
+		textbox_printf(sbu->input, "%d", *(Sint16 *)value);
+		break;
+	case WIDGET_UINT32:
+		textbox_printf(sbu->input, "%u", *(Uint32 *)value);
+		break;
+	case WIDGET_SINT32:
+		textbox_printf(sbu->input, "%d", *(Sint32 *)value);
+		break;
+	default:
+		break;
+	}
 	widget_binding_unlock(valueb);
 }
 
