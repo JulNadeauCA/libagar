@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.27 2005/04/21 06:38:10 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.28 2005/05/16 00:40:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -97,6 +97,7 @@ struct gfx {
 TAILQ_HEAD(gfxq, gfx);
 extern struct gfxq gfxq;
 extern pthread_mutex_t gfxq_lock;
+extern const char *gfx_snap_names[];
 
 __BEGIN_DECLS
 struct gfx	*gfx_alloc_pvt(void *, const char *);
