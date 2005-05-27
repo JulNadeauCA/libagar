@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.183 2005/05/18 03:50:42 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.184 2005/05/19 06:33:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -61,6 +61,17 @@ struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
 const SDL_VideoInfo *vinfo;
 int view_screenshot_quality = 75;
+
+const char *view_blend_func_txt[] = {
+	N_("Overlay"),
+	N_("Source"),
+	N_("Destination"),
+	N_("Mean"),
+	N_("Source minus destination"),
+	N_("Destination minus source"),
+	N_("Euclidean distance"),
+	NULL
+};
 
 int
 view_init(enum gfx_engine ge)
