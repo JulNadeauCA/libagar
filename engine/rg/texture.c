@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.1 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.2 2005/05/27 02:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -82,6 +82,23 @@ texture_save(struct texture *tex, struct netbuf *buf)
 	write_uint8(buf, (Uint8)tex->wrap_t);
 	write_uint8(buf, (Uint8)tex->blend_func);
 	write_uint8(buf, tex->alpha);
+}
+
+struct texture *
+texture_find(struct tileset *ts, const char *texname)
+{
+	struct texture *tex;
+
+	TAILQ_FOREACH(tex, &ts->textures, textures) {
+		if (strcmp(tex->name, texname) == 0)
+			break;
+	}
+	if (tex == NULL ||
+	    (tex->px = tileset_resolve_pixmap(tex->tileset, tex->pixmap))
+	     == NULL) {
+		return (NULL);
+	}
+	return (tex);
 }
 
 static void
@@ -208,4 +225,3 @@ texture_edit(struct texture *tex)
 	widget_bind(sb, "value", WIDGET_UINT8, &tex->alpha);
 	return (win);
 }
-
