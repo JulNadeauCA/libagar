@@ -1,4 +1,4 @@
-/*	$Csoft: texture.h,v 1.1 2005/03/24 04:02:06 vedge Exp $	*/
+/*	$Csoft: texture.h,v 1.1 2005/05/26 06:46:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TEXTURE_H_
@@ -16,8 +16,9 @@ enum texture_wrap_mode {
 
 struct texture {
 	char name[TEXTURE_NAME_MAX];
-	char tileset[OBJECT_PATH_MAX];		/* Parent pixmap tileset name */
-	char pixmap[PIXMAP_NAME_MAX];		/* Pixmap name */
+	char tileset[OBJECT_PATH_MAX];	/* Parent pixmap tileset name */
+	char pixmap[PIXMAP_NAME_MAX];	/* Pixmap name */
+	struct pixmap *px;		/* Pixmap ref (set by texture_find()) */
 	int flags;
 	enum texture_wrap_mode wrap_s;		/* Wrap mode for s coordinate */
 	enum texture_wrap_mode wrap_t;		/* Wrap mode for t coordinate */
@@ -31,6 +32,7 @@ void texture_init(struct texture *, struct tileset *, const char *);
 void texture_destroy(struct texture *);
 int  texture_load(struct texture *, struct netbuf *);
 void texture_save(struct texture *, struct netbuf *);
+__inline__ struct texture *texture_find(struct tileset *, const char *);
 
 #ifdef EDITION
 struct window *texture_edit(struct texture *);

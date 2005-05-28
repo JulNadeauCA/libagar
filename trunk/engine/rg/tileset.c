@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.35 2005/05/24 08:39:16 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.36 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -797,8 +797,10 @@ tryname2:
 static void
 insert_texture(int argc, union evarg *argv)
 {
-	struct window *pwin = argv[1].p;
-	struct tileset *ts = argv[2].p;
+	struct window *dlgwin = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tileset *ts = argv[3].p;
+	struct window *win;
 	struct texture *tex;
 	u_int flags = 0;
 
@@ -850,7 +852,12 @@ tryname2:
 	TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
 	
 	ins_texture_name[0] = '\0';
-	view_detach(pwin);
+	view_detach(dlgwin);
+	
+	if ((win = texture_edit(tex)) != NULL) {
+		window_attach(pwin, win);
+		window_show(win);
+	}
 }
 
 static void
@@ -990,10 +997,10 @@ insert_texture_dlg(int argc, union evarg *argv)
 	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
 		btn = button_new(btnbox, "OK");
-		event_new(btn, "button-pushed", insert_texture, "%p,%p",
-		    win, ts);
-		event_new(tb, "textbox-return", insert_texture, "%p,%p",
-		    win, ts);
+		event_new(btn, "button-pushed", insert_texture, "%p,%p,%p",
+		    win, pwin, ts);
+		event_new(tb, "textbox-return", insert_texture, "%p,%p,%p",
+		    win, pwin, ts);
 	
 		btn = button_new(btnbox, "Cancel");
 		event_new(btn, "button-pushed", window_generic_detach, "%p",
