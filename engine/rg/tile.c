@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.50 2005/05/24 08:15:10 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.51 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1637,6 +1637,14 @@ feature_menus(struct tileview *tv, struct tlist *tl, struct window *win)
 	}
 }
 
+static void
+close_tile(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	event_post(NULL, win, "window-close", NULL);
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1678,13 +1686,23 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
 	toolbar_init(tbar, TOOLBAR_HORIZ, 1, 0);
 
-	mi = menu_add_item(me, _("Tile"));
+	mi = menu_add_item(me, ("Tile"));
 	{
-		menu_action(mi, _("Tile settings..."),
-		    RG_PIXMAP_RESIZE_ICON,
-		    tile_infos, "%p,%p", tv, win);
-		menu_action(mi, _("Regenerate"), RG_PIXMAP_ICON,
+		menu_action(mi, _("Import from image file..."), OBJSAVE_ICON,
+		    NULL, NULL);
+		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
+		    NULL, NULL);
+		
+		menu_separator(mi);
+		
+		menu_action(mi, _("Redraw/regenerate tile"), RG_PIXMAP_ICON,
 		    regenerate_tile, "%p", tv);
+
+		menu_separator(mi);
+
+		menu_action_kb(mi, _("Close document"), CLOSE_ICON,
+		    SDLK_w, KMOD_CTRL,
+		    close_tile, "%p", win);
 	}
 	
 	mi = menu_add_item(me, _("Edit"));
@@ -1693,6 +1711,12 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    tile_undo, "%p", tv);
 		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
 		    tile_redo, "%p", tv);
+
+		menu_separator(mi);
+
+		menu_action(mi, _("Tile settings..."),
+		    RG_PIXMAP_RESIZE_ICON,
+		    tile_infos, "%p,%p", tv, win);
 	}
 
 	mi = menu_add_item(me, _("Features"));
