@@ -1,10 +1,10 @@
-#	$Csoft: Makefile,v 1.5 2004/04/25 07:38:29 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2005/05/10 12:22:07 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
 
 PROG=	tests
-SRCS=	tests.c pixelops.c
+SRCS=	tests.c pixelops.c primitives.c
 
 CFLAGS+=${AGAR_CFLAGS} -I.
 LIBS+=	${AGAR_LIBS}

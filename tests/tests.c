@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -44,9 +44,11 @@
 #include "test.h"
 
 extern struct test_ops pixelops_test;
+extern struct test_ops primitives_test;
 
 struct test_ops *tests[] = {
-	&pixelops_test
+	&pixelops_test,
+	&primitives_test
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
@@ -128,8 +130,14 @@ tests_callback(struct tableview *tv, colID cid, rowID rid)
 		snprintf(text, sizeof(text), "%u", ops->iterations);
 		return (text);
 	case 3:
-		snprintf(text, sizeof(text), "%.1f ns (%u/%u)",
-		    ops->last_result, ops->runs, ops->iterations);
+		if (ops->last_result > 10000) {
+			snprintf(text, sizeof(text), "%f ms (%u/%u)",
+			    (double)(ops->last_result*1e-06), ops->runs,
+			    ops->iterations);
+		} else {
+			snprintf(text, sizeof(text), "%g ns (%u/%u)",
+			    ops->last_result, ops->runs, ops->iterations);
+		}
 		return (text);
 	}
 }
@@ -151,7 +159,7 @@ tests_window(void)
 	tableview_set_update(tv, 250);
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
 			      0, "Test",
-			      "<VIEW_PUT_PIXEL_2_CLIPPED - Clipped>");
+			      "< VIEW_PUT_PIXEL_2_CLIPPED() -- Clipped >");
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
 			      1, "Runs", "<XX>");
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
