@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.4 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.5 2005/05/24 08:15:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,7 +54,6 @@ static int angle = 0;
 static void
 init(struct tool *t)
 {
-	extern const char *gfx_snap_names[];
 	static const char *source_items[] = {
 		N_("Artwork"),
 		N_("Map buffer"),
