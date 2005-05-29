@@ -1,4 +1,4 @@
-/*	$Csoft: separator.c,v 1.2 2005/02/22 04:19:07 vedge Exp $	*/
+/*	$Csoft: separator.c,v 1.3 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -87,15 +87,15 @@ separator_draw(void *p)
 
 	switch (sep->type) {
 	case SEPARATOR_HORIZ:
-		primitives.line(sep, 0, 0, WIDGET(sep)->w, 0,
+		primitives.hline(sep, 0, WIDGET(sep)->w, 0,
 		    COLOR(SEPARATOR_LINE1_COLOR));
-		primitives.line(sep, 0, 1, WIDGET(sep)->w, 1,
+		primitives.hline(sep, 0, WIDGET(sep)->w, 1,
 		    COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	case SEPARATOR_VERT:
-		primitives.line(sep, 0, 0, 0, WIDGET(sep)->h,
+		primitives.vline(sep, 0, 0, WIDGET(sep)->h,
 		    COLOR(SEPARATOR_LINE1_COLOR));
-		primitives.line(sep, 1, 0, 0, WIDGET(sep)->h,
+		primitives.vline(sep, 1, 0, WIDGET(sep)->h,
 		    COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	}

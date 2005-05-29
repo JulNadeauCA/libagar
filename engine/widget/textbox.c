@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.98 2005/05/24 08:14:30 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.99 2005/05/25 08:20:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -283,10 +283,9 @@ textbox_draw(void *p)
 		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
 		    tbox->flags & TEXTBOX_BLINK_ON) {
 			if (i == tbox->pos) {
-				primitives.line(tbox,
+				primitives.vline(tbox,
 				    x,
 				    y + 1,
-				    x,
 				    y + text_font_height - 2,
 				    COLOR(TEXTBOX_CURSOR_COLOR));
 			}

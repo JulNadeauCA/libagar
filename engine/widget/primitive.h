@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.28 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.29 2005/05/21 05:52:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -17,6 +17,8 @@ struct primitive_ops {
 	void	(*line2)(void *, int, int, int, int, Uint32);
 	void	(*line_blended)(void *, int, int, int, int, Uint8 [4],
 		                enum view_blend_func);
+	void	(*hline)(void *, int, int, int, Uint32);
+	void	(*vline)(void *, int, int, int, Uint32);
 	void	(*rect_outlined)(void *, int, int, int, int, Uint32);
 	void	(*rect_filled)(void *, int, int, int, int, Uint32);
 	void	(*rect_blended)(void *, int, int, int, int, Uint8[4],

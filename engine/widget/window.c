@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.251 2005/04/04 01:05:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.252 2005/04/14 06:19:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -250,85 +250,70 @@ window_draw(void *p)
 
 	/* Draw the window frame (expected to fit inside padding). */
 	for (i = 1; i < colors_border_size-1; i++) {
-		primitives.line(win,
-		    i,
-		    i,
-		    WIDGET(win)->w - i,
+		primitives.hline(win,
+		    i, WIDGET(win)->w - i,
 		    i,
 		    colors_border[i-1]);
-		primitives.line(win,
-		    i, 
-		    WIDGET(win)->h - i,
-		    WIDGET(win)->w - i,
+		primitives.hline(win,
+		    i,  WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
 		    colors_border[i-1]);
 	}
 	for (i = 1; i < colors_border_size-1; i++) {
-		primitives.line(win,
+		primitives.vline(win,
 		    i,
-		    i,
-		    i,
-		    WIDGET(win)->h - i,
+		    i, WIDGET(win)->h - i,
 		    colors_border[i-1]);
-		primitives.line(win,
+		primitives.vline(win,
 		    WIDGET(win)->w - i,
 		    i,
-		    WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
 		    colors_border[i-1]);
 	}
 
 	if ((win->flags & WINDOW_NO_HRESIZE) == 0) {
-		primitives.line(win,
+		primitives.vline(win,
 		    18,
 		    WIDGET(win)->h - colors_border_size,
-		    18,
 		    WIDGET(win)->h - 2,
 		    COLOR(WINDOW_LO_COLOR));
-		primitives.line(win,
+		primitives.vline(win,
 		    19,
 		    WIDGET(win)->h - colors_border_size,
-		    19,
 		    WIDGET(win)->h - 2,
 		    COLOR(WINDOW_HI_COLOR));
 		
-		primitives.line(win,
+		primitives.vline(win,
 		    WIDGET(win)->w - 19,
 		    WIDGET(win)->h - colors_border_size,
-		    WIDGET(win)->w - 19,
 		    WIDGET(win)->h - 2,
 		    COLOR(WINDOW_LO_COLOR));
-		primitives.line(win,
+		primitives.vline(win,
 		    WIDGET(win)->w - 18,
 		    WIDGET(win)->h - colors_border_size,
-		    WIDGET(win)->w - 18,
 		    WIDGET(win)->h - 2,
 		    COLOR(WINDOW_HI_COLOR));
 	}
 	
 	if ((win->flags & WINDOW_NO_VRESIZE) == 0) {
-		primitives.line(win,
+		primitives.hline(win,
 		    2,
-		    WIDGET(win)->h - 20,
 		    colors_border_size,
 		    WIDGET(win)->h - 20,
 		    COLOR(WINDOW_LO_COLOR));
-		primitives.line(win,
+		primitives.hline(win,
 		    2,
-		    WIDGET(win)->h - 19,
 		    colors_border_size,
 		    WIDGET(win)->h - 19,
 		    COLOR(WINDOW_HI_COLOR));
 		
-		primitives.line(win,
+		primitives.hline(win,
 		    WIDGET(win)->w - colors_border_size,
-		    WIDGET(win)->h - 20,
 		    WIDGET(win)->w - 2,
 		    WIDGET(win)->h - 20,
 		    COLOR(WINDOW_LO_COLOR));
-		primitives.line(win,
+		primitives.hline(win,
 		    WIDGET(win)->w - colors_border_size,
-		    WIDGET(win)->h - 19,
 		    WIDGET(win)->w - 2,
 		    WIDGET(win)->h - 19,
 		    COLOR(WINDOW_HI_COLOR));

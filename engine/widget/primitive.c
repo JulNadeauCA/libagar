@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.71 2005/05/16 03:37:07 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.72 2005/05/21 05:52:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -100,10 +100,10 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	}
 
 	primitives.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
-	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, lcol);
-	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
-	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
-	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
+	primitives.hline(wid, xoffs, xoffs+w-1, yoffs, lcol);
+	primitives.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, rcol);
+	primitives.vline(wid, xoffs, yoffs, yoffs+h-1, lcol);
+	primitives.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, rcol);
 }
 
 /* Draw a 3D-style box with chamfered top edges. */
@@ -149,22 +149,19 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
 	    bcol);
 
 	/* Draw the three straight lines. */
-	primitives.line(wid,				/* Top line */
+	primitives.hline(wid,				/* Top line */
 	    r->x + rad,
-	    r->y,
 	    r->x + r->w - rad,
 	    r->y,
 	    bcol);
-	primitives.line(wid,				/* Left line */
+	primitives.vline(wid,				/* Left line */
 	    r->x,
 	    r->y + rad,
-	    r->x,
 	    r->y + r->h,
 	    lcol);
-	primitives.line(wid,				/* Right line */
+	primitives.vline(wid,				/* Right line */
 	    r->x + r->w - 1,
 	    r->y + rad,
-	    r->x + r->w - 1,
 	    r->y + r->h,
 	    rcol);
 
@@ -236,10 +233,10 @@ frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	struct widget *wid = p;
 	Uint32 shade = alter_color(color, -40, -40, -40);
 
-	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, color);
-	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, color);
-	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, shade);
-	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, shade);
+	primitives.hline(wid, xoffs, xoffs+w-1, yoffs, color);
+	primitives.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, shade);
+	primitives.vline(wid, xoffs, yoffs, yoffs+h-1, color);
+	primitives.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, shade);
 }
 
 /* Draw a blended 3D-style frame. */
@@ -448,7 +445,147 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 		}
 	}
 	SDL_UnlockSurface(view->v);
+}
 
+/* Draw a horizontal line segment. */
+static void
+hline(void *widget, int x1, int x2, int y, Uint32 c)
+{
+	struct widget *wid = widget;
+	int x, xtmp;
+	Uint8 *pDst, *pEnd;
+	int dx;
+
+	if (y >= wid->h || y < 0) { return; }
+	if (x1 >= wid->w) { x1 = wid->w - 1; } else if (x1 < 0) { x1 = 0; }
+	if (x2 >= wid->w) { x2 = wid->w - 1; } else if (x2 < 0) { x2 = 0; }
+	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
+	dx = x2 - x1;
+
+	SDL_LockSurface(view->v);
+	switch (vfmt->BytesPerPixel) {
+#ifdef VIEW_32BPP
+	case 4:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y)*view->v->pitch +
+		    ((wid->cx+x1)<<2);
+		pEnd = pDst + (dx<<2);
+		while (pDst < pEnd) {
+			*(Uint32 *)pDst = c;
+			pDst += 4;
+		}
+		break;
+#endif
+#ifdef VIEW_16BPP
+	case 2:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y)*view->v->pitch +
+		    ((wid->cx+x1)<<1);
+		pEnd = pDst + (dx<<1);
+		while (pDst < pEnd) {
+			*(Uint16 *)pDst = c;
+			pDst += 2;
+		}
+		break;
+#endif
+#ifdef VIEW_24BPP
+	case 3:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y)*view->v->pitch +
+		    (wid->cx+x1)*3;
+		pEnd = pDst + dx*3;
+		while (pDst < pEnd) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pDst[0] = (c >>16) & 0xff;
+			pDst[1] = (c >>8) & 0xff;
+			pDst[2] = c & 0xff;
+#else
+			pDst[2] = (c>>16) & 0xff;
+			pDst[1] = (c>>8) & 0xff;
+			pDst[0] = c & 0xff;
+#endif
+			pDst += 3;
+		}
+		break;
+#endif
+#ifdef VIEW_8BPP
+	case 1:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y)*view->v->pitch +
+		    (wid->cx+x1);
+		pEnd = pDst + dx;
+		memset(pDst, c, pEnd-pDst);
+		break;
+#endif
+	}
+	SDL_UnlockSurface(view->v);
+}
+
+static void
+vline(void *widget, int x, int y1, int y2, Uint32 c)
+{
+	struct widget *wid = widget;
+	int y, dy, ytmp;
+	Uint8 *pDst, *pEnd;
+
+	if (x >= wid->w || x < 0) { return; }
+	if (y1 >= wid->h) { y1 = wid->h - 1; } else if (y1 < 0) { y1 = 0; }
+	if (y2 >= wid->h) { y2 = wid->h - 1; } else if (y2 < 0) { y2 = 0; }
+	if (y1 > y2) { ytmp = y2; y2 = y1; y1 = ytmp; }
+	dy = y2 - y1;
+
+	SDL_LockSurface(view->v);
+	switch (vfmt->BytesPerPixel) {
+#ifdef VIEW_32BPP
+	case 4:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y1)*view->v->pitch +
+		    ((wid->cx+x)<<2);
+		pEnd = pDst + dy*view->v->pitch;
+		while (pDst < pEnd) {
+			*(Uint32 *)pDst = c;
+			pDst += view->v->pitch;
+		}
+		break;
+#endif
+#ifdef VIEW_16BPP
+	case 2:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y1)*view->v->pitch +
+		    ((wid->cx+x)<<1);
+		pEnd = pDst + dy*view->v->pitch;
+		while (pDst < pEnd) {
+			*(Uint16 *)pDst = c;
+			pDst += view->v->pitch;
+		}
+		break;
+#endif
+#ifdef VIEW_24BPP
+	case 3:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y1)*view->v->pitch +
+		    (wid->cx+x)*3;
+		pEnd = pDst + dy*view->v->pitch;
+		while (pDst < pEnd) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pDst[0] = (c >>16) & 0xff;
+			pDst[1] = (c >>8) & 0xff;
+			pDst[2] = c & 0xff;
+#else
+			pDst[2] = (c>>16) & 0xff;
+			pDst[1] = (c>>8) & 0xff;
+			pDst[0] = c & 0xff;
+#endif
+			pDst += view->v->pitch;
+		}
+		break;
+#endif
+#ifdef VIEW_8BPP
+	case 1:
+		pDst = (Uint8 *)view->v->pixels + (wid->cy+y1)*view->v->pitch +
+		    (wid->cx+x);
+		pEnd = pDst + dy*view->v->pitch;
+		while (pDst < pEnd) {
+			*(Uint16 *)pDst = c;
+			pDst += view->v->pitch;
+		}
+		break;
+#endif
+	}
+	SDL_UnlockSurface(view->v);
 }
 
 static void
@@ -559,10 +696,10 @@ rect_outlined(void *p, int x1, int y1, int w, int h, Uint32 color)
 	int x2 = x1+w-1;
 	int y2 = y1+h-1;
 
-	primitives.line(wid, x1, y1, x2, y1, color);
-	primitives.line(wid, x1, y2, x2, y2, color);
-	primitives.line(wid, x1, y1, x1, y2, color);
-	primitives.line(wid, x2, y1, x2, y2, color);
+	primitives.hline(wid, x1, x2, y1, color);
+	primitives.hline(wid, x1, x2, y2, color);
+	primitives.vline(wid, x1, y1, y2, color);
+	primitives.vline(wid, x2, y1, y2, color);
 }
 
 /* Render a filled rectangle. */
@@ -671,6 +808,36 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 	glColor3ub(r, g, b);
 	glVertex2s(x1, y1);
 	glVertex2s(x2, y2);
+	glEnd();
+}
+
+static void
+hline_opengl(void *p, int x1, int x2, int py, Uint32 color)
+{
+	struct widget *wid = p;
+	int y = wid->cy + py;
+	Uint8 r, g, b;
+
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
+	glBegin(GL_LINES);
+	glColor3ub(r, g, b);
+	glVertex2s(wid->cx + x1, y);
+	glVertex2s(wid->cx + x2, y);
+	glEnd();
+}
+
+static void
+vline_opengl(void *p, int px, int y1, int y2, Uint32 color)
+{
+	struct widget *wid = p;
+	int x = wid->cx + px;
+	Uint8 r, g, b;
+
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
+	glBegin(GL_LINES);
+	glColor3ub(r, g, b);
+	glVertex2s(x, wid->cy + y1);
+	glVertex2s(x, wid->cy + y2);
 	glEnd();
 }
 
@@ -887,22 +1054,19 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
 	    bcol);
 
 	/* Draw the three straight lines. */
-	primitives.line(wid,				/* Top line */
+	primitives.hline(wid,				/* Top line */
 	    rd->x + rad,
-	    rd->y,
 	    rd->x + rd->w - rad,
 	    rd->y,
 	    bcol);
-	primitives.line(wid,				/* Left line */
+	primitives.vline(wid,				/* Left line */
 	    rd->x,
 	    rd->y + rad,
-	    rd->x,
 	    rd->y + rd->h,
 	    lcol);
-	primitives.line(wid,				/* Right line */
+	primitives.vline(wid,				/* Right line */
 	    rd->x + rd->w - 1,
 	    rd->y + rad,
-	    rd->x + rd->w - 1,
 	    rd->y + rd->h,
 	    rcol);
 
@@ -954,6 +1118,8 @@ primitives_init(void)
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
 		primitives.line = line_opengl;
+		primitives.hline = hline_opengl;
+		primitives.vline = vline_opengl;
 		primitives.line_blended = line_blended_opengl;
 		primitives.rect_filled = rect_opengl;
 		primitives.rect_blended = rect_blended_opengl;
@@ -964,6 +1130,8 @@ primitives_init(void)
 #endif
 	{
 		primitives.line = line_bresenham;
+		primitives.hline = hline;
+		primitives.vline = vline;
 		primitives.line_blended = line_blended_bresenham;
 		primitives.rect_filled = rect_filled;
 		primitives.rect_blended = rect_blended;
