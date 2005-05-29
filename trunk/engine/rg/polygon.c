@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.9 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.10 2005/05/29 00:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -64,6 +64,9 @@ const struct feature_ops polygon_ops = {
 	NULL,
 	polygon_edit
 };
+
+static int *polygon_ints = NULL;
+static u_int polygon_nints = 0;
 
 void
 polygon_init(void *p, struct tileset *ts, int flags)
@@ -222,13 +225,126 @@ polygon_edit(void *p, struct tileview *tv)
 	return (win);
 }
 
+static int
+compare_ints(const void *a, const void *b)
+{
+	return (*(const int *)a) - (*(const int *)b);
+}
+
+/* Render a sketch outline into a non-simple polygon. */
+void
+polygon_render(void *p, struct tile *tile, int fx, int fy)
+{
+	struct polygon *poly = p;
+	struct vg *vg;
+	struct vg_element *vge;
+	struct tile_element *ske;
+	struct sketch *sk;
+	struct texture *tex = NULL;
+	struct vg_vertex *vtx = NULL;
+	u_int nvtx = 0, i;
+	int x, y, x1, y1, x2, y2;
+	int miny, maxy;
+	int ind1, ind2;
+	int ints;
+
+	if ((ske = tile_find_element(tile, TILE_SKETCH, poly->sketch)) == NULL)
+		return;
+
+	if ((poly->type == POLYGON_TEXTURED) &&
+	    (tex = texture_find(tile->ts, poly->p_texture)) == NULL)
+		return;
+
+	sk = ske->tel_sketch.sk;
+	vg = sk->vg;
+
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		if (vge->type == VG_LINE_STRIP) {
+			vtx = vge->vtx;
+			nvtx = vge->nvtx;
+			break;
+		}
+	}
+	if (nvtx < 3)
+		return;
+
+	if (polygon_ints == NULL) {
+		polygon_ints = Malloc(nvtx*sizeof(int), M_RG);
+		polygon_nints = nvtx;
+	} else {
+		if (nvtx > polygon_nints) {
+			polygon_ints = Realloc(polygon_ints, nvtx*sizeof(int));
+			polygon_nints = nvtx;
+		}
+	}
+
+	/* Find Y maxima */
+	miny = vtx[0].y;
+	maxy = vtx[0].y;
+	for (i = 1; i < nvtx; i++) {
+		if (vtx[i].y < miny) {
+			miny = vtx[i].y;
+		} else if (vtx[i].y > maxy) {
+			maxy = vtx[i].y;
+		}
+	}
+
+	/* Find the intersections. */
+	for (y = miny; y <= maxy; y++) {
+		ints = 0;
+		for (i = 0; i < nvtx; i++) {
+			if (i == 0) {
+				ind1 = nvtx - 1;
+				ind2 = 0;
+			} else {
+				ind1 = i - 1;
+				ind2 = i;
+			}
+			y1 = vtx[ind1].y;
+			y2 = vtx[ind2].y;
+			if (y1 < y2) {
+				x1 = vtx[ind1].x;
+				x2 = vtx[ind2].x;
+			} else if (y1 > y2) {
+				y2 = vtx[ind1].y;
+				y1 = vtx[ind2].y;
+				x2 = vtx[ind1].x;
+				x1 = vtx[ind2].x;
+			} else {
+				continue;
+			}
+			if (((y >= y1) && (y < y2)) ||
+			    ((y == maxy) && (y > y1) && (y <= y2))) {
+				polygon_ints[ints++] =
+				    ((y-y1)*65536 / (y2-y1)) *
+				    (x2-x1) + x1*65536;
+			} 
+		}
+		qsort(polygon_ints, ints, sizeof(int), compare_ints);
+
+		for (i = 0; i < ints; i += 2) {
+			int xa, xb, xi;
+
+			xa = polygon_ints[i] + 1;
+			xa = (xa >> 16) + ((xa & 32768) >> 15);
+			xb = polygon_ints[i+1] - 1;
+			xb = (xb >> 16) + ((xb & 32768) >> 15);
+			for (xi = xa; xi < xb; xi++) {
+				PUT_PIXEL2_CLIPPED(tile->su,
+				    ske->tel_sketch.x+xi,
+				    ske->tel_sketch.y+y,
+				    poly->p_solid.c);
+			}
+		}
+	}
+}
+
 /* Render a sketch outline into a simple polygon. */
 void
 polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 {
 	struct polygon *poly = p;
 	SDL_Surface *sDst = tile->su;
-	Uint8 *pDst, *pEnd;
 	SDL_Surface *sVg;
 	int x, y, d;
 	int *left, *right;
