@@ -1,4 +1,4 @@
-/*	$Csoft: animview.c,v 1.22 2005/01/28 12:49:51 vedge Exp $	*/
+/*	$Csoft: animview.c,v 1.1 2005/03/24 04:02:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ animview_new(void *parent)
 }
 
 static void
-play(int argc, union evarg *argv)
+do_play(int argc, union evarg *argv)
 {
 	struct animview *av = argv[1].p;
 
@@ -67,7 +67,7 @@ play(int argc, union evarg *argv)
 }
 
 static void
-pause(int argc, union evarg *argv)
+do_pause(int argc, union evarg *argv)
 {
 	struct animview *av = argv[1].p;
 	
@@ -78,7 +78,7 @@ pause(int argc, union evarg *argv)
 }
 
 static void
-stop(int argc, union evarg *argv)
+do_stop(int argc, union evarg *argv)
 {
 	struct animview *av = argv[1].p;
 	
@@ -143,11 +143,11 @@ open_menu(struct animview *av, int x, int y)
 		struct AGMenuItem *m_speed;
 
 		menu_action(av->menu_item, _("Play"), ANIM_PLAY_ICON,
-		    play, "%p", av);
+		    do_play, "%p", av);
 		menu_action(av->menu_item, _("Pause"), ANIM_PAUSE_ICON,
-		    pause, "%p", av);
+		    do_pause, "%p", av);
 		menu_action(av->menu_item, _("Stop"), ANIM_STOP_ICON,
-		    stop, "%p", av);
+		    do_stop, "%p", av);
 
 		menu_separator(av->menu_item);
 		m_speed = menu_action(av->menu_item, _("Playback speed"),
