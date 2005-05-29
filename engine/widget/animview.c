@@ -1,4 +1,4 @@
-/*	$Csoft: animview.c,v 1.1 2005/03/24 04:02:07 vedge Exp $	*/
+/*	$Csoft: animview.c,v 1.2 2005/05/29 15:09:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -205,15 +205,15 @@ animview_init(struct animview *av)
 	
 	av->btns.play = button_new(av, NULL);
 	button_set_label(av->btns.play, ICON(ANIM_PLAY_ICON));
-	event_new(av->btns.play, "button-pushed", play, "%p", av);
+	event_new(av->btns.play, "button-pushed", do_play, "%p", av);
 	
 	av->btns.pause = button_new(av, NULL);
 	button_set_label(av->btns.pause, ICON(ANIM_PAUSE_ICON));
-	event_new(av->btns.pause, "button-pushed", pause, "%p", av);
+	event_new(av->btns.pause, "button-pushed", do_pause, "%p", av);
 	
 	av->btns.stop = button_new(av, NULL);
 	button_set_label(av->btns.stop, ICON(ANIM_STOP_ICON));
-	event_new(av->btns.stop, "button-pushed", stop, "%p", av);
+	event_new(av->btns.stop, "button-pushed", do_stop, "%p", av);
 	
 	button_enable(av->btns.play);
 	button_disable(av->btns.pause);
