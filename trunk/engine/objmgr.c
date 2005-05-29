@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.24 2005/05/24 03:01:21 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.25 2005/05/24 08:15:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -765,7 +765,6 @@ objmgr_window(void)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
-	notebook_select_tab(nb, ntab);
 	{
 		struct AGMenuItem *mi;
 

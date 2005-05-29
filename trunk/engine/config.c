@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.147 2005/05/23 07:43:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.148 2005/05/24 08:15:07 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -369,7 +369,6 @@ config_window(struct config *con)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	tab = notebook_add_tab(nb, _("Video"), BOX_VERT);
-	notebook_select_tab(nb, tab);
 	{
 		cbox = checkbox_new(tab, _("Full screen"));
 		widget_bind(cbox, "state", WIDGET_PROP, config,
