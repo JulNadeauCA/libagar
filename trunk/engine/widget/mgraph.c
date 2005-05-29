@@ -1,4 +1,4 @@
-/*	$Csoft: mgraph.c,v 1.4 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: mgraph.c,v 1.5 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -121,9 +121,8 @@ mgraph_draw(void *p)
 	    WIDGET(gra)->w, WIDGET(gra)->h,
 	    0,
 	    COLOR(GRAPH_BG_COLOR));
-	primitives.line(gra,
+	primitives.hline(gra,
 	    0,
-	    WIDGET(gra)->h/2,
 	    WIDGET(gra)->w,
 	    WIDGET(gra)->h/2,
 	    COLOR(GRAPH_XAXIS_COLOR));

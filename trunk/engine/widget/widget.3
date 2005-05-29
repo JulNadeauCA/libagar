@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.60 2005/03/11 08:56:33 vedge Exp $
+.\"	$Csoft: widget.3,v 1.61 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -261,32 +261,39 @@ direct video primitives in OpenGL mode.
 .Fn widget_put_pixel "void *widget" "int x" "int y" "Uint32 color"
 .Pp
 .Ft void
-.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" "int ncolor"
+.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "int ncolor"
+.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" "int ncolor"
+.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.circle "void *widget" "int x" "int y" "int radius" "int ncolor"
+.Fn primitives.circle "void *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" "int ncolor"
+.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" "int ncolor"
+.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "int ncolor"
+.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" "int ncolor"
+.Fn primitives.hline "void *widget" "int x1" "int x2" "int y" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" "int ncolor"
+.Fn primitives.vline "void *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Pp
+.Ft void
+.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" "Uint32 c"
+.Pp
+.Ft void
+.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
 .nr nS 0
+.Pp
 The
 .Fn widget_blit
 function performs a surface blit from
@@ -312,9 +319,6 @@ variant draws a 3D-style box with the two top edges chamfered to the
 given
 .Fa radius .
 .Pp
-For both these routines, the background color is varied slightly depending
-on the focus state of the widget.
-.Pp
 .Fn primitives.frame
 draws a 3D-style frame of size
 .Fa w ,
@@ -329,15 +333,19 @@ and a radius of
 pixels.
 .Pp
 .Fn primitives.line
-draws a line from
+scan-converts a line segment going from point
 .Fa x1 ,
 .Fa y1
-to
+to point
 .Fa x2 ,
 .Fa y2 .
+The variants
+.Fn primitives.hline
+and
+.Fn primitives.vline
+render horizontal and vertical line segments, respectively.
 .Fn primitives.line2
-is a variant which draws two lines with a slight color difference
-(for simple 3D-style effects).
+renders two line segments of different intensities.
 .Pp
 .Fn primitives.rect_outlined
 draws a rectangle outline of
@@ -364,9 +372,8 @@ and
 .Sq max
 as bindings to integral or floating point values and
 .Xr textbox 3
-edits a
-.Dv WIDGET_STRING
-binding.
+is associated with a binding of type
+.Dv WIDGET_STRING .
 Whenever the variable changes, the value displayed by the widget is
 updated automatically.
 The widget also writes directly to the variable.
@@ -586,15 +593,6 @@ The widget no longer holds focus.
 .It Fn widget-bound "struct widget_binding *binding"
 A widget binding has been added or modified.
 .El
-.Sh TROUBLETONS
-The atomic
-.Fn widget_get_*
-and
-.Fn widget_set_*
-functions should probably be removed in favor of
-.Fn widget_get_binding .
-.Pp
-Windows should attach to any type of widget, not only other windows.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr window 3 ,

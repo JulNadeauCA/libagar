@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.19 2005/05/14 10:05:13 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.20 2005/05/24 05:06:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -347,15 +347,13 @@ menu_view_draw(void *p)
 			int dy = m->itemh/2 - 1;
 			int dx = WIDGET(mview)->w - mview->hspace - 1;
 
-			primitives.line(mview,
+			primitives.hline(mview,
 			    mview->hspace,
-			    y+dy,
 			    dx,
 			    y+dy,
 			    COLOR(MENU_SEP1_COLOR));
-			primitives.line(mview,
+			primitives.hline(mview,
 			    mview->hspace,
-			    y+dy+1,
 			    dx,
 			    y+dy+1,
 			    COLOR(MENU_SEP2_COLOR));

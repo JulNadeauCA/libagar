@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.51 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.52 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -188,10 +188,9 @@ graph_draw(void *p)
 	    COLOR(GRAPH_BG_COLOR));
 
 	if (gra->flags & GRAPH_ORIGIN) {
-		primitives.line(gra,
+		primitives.hline(gra,
 		    0,
-		    origin_y + 1,
-		    WIDGET(gra)->w,
+		    WIDGET(gra)->w-1,
 		    origin_y + 1,
 		    COLOR(GRAPH_XAXIS_COLOR));
 	}
@@ -230,10 +229,8 @@ graph_draw(void *p)
 			case GRAPH_LINES:
 				{
 					primitives.line(gra,
-					    ox,
-					    oy,
-					    x,
-					    y,
+					    ox, oy,
+					    x, y,
 					    gi->color);
 				}
 				break;
