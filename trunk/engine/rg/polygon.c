@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.8 2005/05/24 08:39:16 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.9 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "polygon.h"
+#include "texsel.h"
 
 const struct version polygon_ver = {
 	"agar rg polygon feature",
@@ -58,7 +59,7 @@ const struct feature_ops polygon_ops = {
 	polygon_load,
 	polygon_save,
 	NULL,		/* destroy */
-	polygon_render,
+	polygon_render_simple,
 	NULL,
 	NULL,
 	polygon_edit
@@ -95,11 +96,7 @@ polygon_load(void *p, struct netbuf *buf)
 		poly->p_solid.c = read_color(buf, ts->fmt);
 		break;
 	case POLYGON_TEXTURED:
-		poly->p_texture.texid = (int)read_uint32(buf);
-		poly->p_texture.texcoords[0] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[1] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[2] = (int)read_uint32(buf);
-		poly->p_texture.texcoords[3] = (int)read_uint32(buf);
+		copy_string(poly->p_texture, buf, sizeof(poly->p_texture));
 		break;
 	}
 	return (0);
@@ -121,11 +118,7 @@ polygon_save(void *p, struct netbuf *buf)
 		write_color(buf, ts->fmt, poly->p_solid.c);
 		break;
 	case POLYGON_TEXTURED:
-		write_uint32(buf, (Uint32)poly->p_texture.texid);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[0]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[1]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[2]);
-		write_uint32(buf, (Uint32)poly->p_texture.texcoords[3]);
+		write_string(buf, poly->p_texture);
 		break;
 	}
 }
@@ -193,7 +186,6 @@ polygon_edit(void *p, struct tileview *tv)
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
-		struct hsvpal *hsv1, *hsv2;
 		struct spinbutton *sb;
 		struct notebook *nb;
 		struct notebook_tab *ntab;
@@ -202,9 +194,10 @@ polygon_edit(void *p, struct tileview *tv)
 		nb = notebook_new(box, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 		ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
 		{
+			struct hsvpal *hsv1, *hsv2;
+
 			hsv1 = hsvpal_new(ntab);
-			WIDGET(hsv1)->flags |= WIDGET_WFILL|
-			                       WIDGET_HFILL;
+			WIDGET(hsv1)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
 			    &tv->ts->fmt);
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
@@ -213,6 +206,12 @@ polygon_edit(void *p, struct tileview *tv)
 
 		ntab = notebook_add_tab(nb, _("Texture"), BOX_VERT);
 		{
+			struct texsel *txsel;
+
+			txsel = texsel_new(ntab, tv->ts, 0);
+			WIDGET(txsel)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+			widget_bind(txsel, "texture-name", WIDGET_STRING,
+			    poly->p_texture, sizeof(poly->p_texture));
 		}
 		
 		sb = spinbutton_new(box, _("Overall alpha: "));
@@ -223,21 +222,27 @@ polygon_edit(void *p, struct tileview *tv)
 	return (win);
 }
 
+/* Render a sketch outline into a simple polygon. */
 void
-polygon_render(void *p, struct tile *t, int fx, int fy)
+polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 {
 	struct polygon *poly = p;
-	SDL_Surface *sDst = t->su;
+	SDL_Surface *sDst = tile->su;
 	Uint8 *pDst, *pEnd;
 	SDL_Surface *sVg;
 	int x, y, d;
 	int *left, *right;
 	struct tile_element *ske;
 	struct sketch *sk;
+	struct texture *tex = NULL;
 
-	if ((ske = tile_find_element(t, TILE_SKETCH, poly->sketch)) == NULL) {
+	if ((ske = tile_find_element(tile, TILE_SKETCH, poly->sketch)) == NULL)
 		return;
-	}
+
+	if ((poly->type == POLYGON_TEXTURED) &&
+	    (tex = texture_find(tile->ts, poly->p_texture)) == NULL)
+		return;
+
 	sk = ske->tel_sketch.sk;
 	sVg = sk->vg->su;
 
@@ -261,16 +266,41 @@ polygon_render(void *p, struct tile *t, int fx, int fy)
 		}
 	}
 
-	for (y = 0;
-	     y < sVg->h && y < sDst->h;
-	     y++) {
-		if ((d = right[y] - left[y]) > 0) {
-			for (x = left[y]; x <= right[y]; x++)
-				PUT_PIXEL2_CLIPPED(sDst,
-				    ske->tel_sketch.x+x,
-				    ske->tel_sketch.y+y,
-				    poly->p_solid.c);
+	switch (poly->type) {
+	case POLYGON_SOLID:
+		for (y = 0;
+		     y < sVg->h && y < sDst->h;
+		     y++) {
+			if ((d = right[y] - left[y]) > 0) {
+				for (x = left[y]; x <= right[y]; x++) {
+					PUT_PIXEL2_CLIPPED(sDst,
+					    ske->tel_sketch.x+x,
+					    ske->tel_sketch.y+y,
+					    poly->p_solid.c);
+				}
+			}
 		}
+		break;
+	case POLYGON_TEXTURED:
+		for (y = 0; y < sVg->h; y++) {
+			Uint8 r, g, b;
+
+			for (x = 0; x < sVg->w; x++) {
+				if (y < sDst->h && x < sDst->w &&
+				    (right[y] - left[y]) > 0 &&
+				    x >= left[y] && x <= right[y]) {
+					SDL_GetRGB(GET_PIXEL2(tex->px->su,
+					    (x % tex->px->su->w),
+					    (y % tex->px->su->h)),
+					tex->px->su->format, &r, &g, &b);
+					PUT_PIXEL2_CLIPPED(sDst,
+					    ske->tel_sketch.x+x,
+					    ske->tel_sketch.y+y,
+					    SDL_MapRGB(sDst->format, r, g, b));
+				}
+			}
+		}
+		break;
 	}
 
 	Free(left, M_RG);
