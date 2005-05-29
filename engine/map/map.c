@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.7 2005/05/20 05:56:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.8 2005/05/24 03:00:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2051,7 +2051,6 @@ map_edit(void *p)
 		nb = notebook_new(box_h, NOTEBOOK_HFILL);
 
 		ntab = notebook_add_tab(nb, _("Artwork"), BOX_VERT);
-		notebook_select_tab(nb, ntab);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
 			event_new(tl, "tlist-poll", poll_art, "%p", world);

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.46 2005/04/14 06:19:36 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.47 2005/05/01 00:16:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -165,7 +165,6 @@ perso_edit(void *obj)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Stats"), BOX_VERT);
-	notebook_select_tab(nb, ntab);
 	{
 		struct textbox *tb;
 		struct spinbutton *sbu;

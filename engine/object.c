@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.211 2005/05/08 02:10:54 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.212 2005/05/12 07:26:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1766,7 +1766,6 @@ poll_deps(int argc, union evarg *argv)
 static void
 poll_gfx(int argc, union evarg *argv)
 {
-	extern char *gfx_snap_names[];
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct gfx *gfx = ob->gfx;
@@ -1929,7 +1928,6 @@ object_edit(void *p)
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Infos"), BOX_VERT);
-	notebook_select_tab(nb, ntab);
 	{
 		char path[OBJECT_PATH_MAX];
 		struct textbox *tb_md5, *tb_sha1, *tb_rmd160;
