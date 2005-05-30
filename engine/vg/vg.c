@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.47 2005/05/20 05:55:12 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.48 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -715,10 +715,8 @@ vg_rcoords2d(struct vg *vg, double vx, double vy, double *rx, double *ry)
 void
 vg_vtxcoords2d(struct vg *vg, struct vg_vertex *vtx, double *rx, double *ry)
 {
-	*rx = vtx->x*vg->scale*TILESZ +
-	      vg->origin[0].x*vg->scale*TILESZ;
-	*ry = vtx->y*vg->scale*TILESZ +
-	      vg->origin[0].y*vg->scale*TILESZ;
+	if (rx != NULL)	*rx = VG_RASXF(vg,vtx->x);
+	if (ry != NULL)	*ry = VG_RASYF(vg,vtx->y);
 }
 
 /*
@@ -728,10 +726,8 @@ vg_vtxcoords2d(struct vg *vg, struct vg_vertex *vtx, double *rx, double *ry)
 void
 vg_vtxcoords2i(struct vg *vg, struct vg_vertex *vtx, int *rx, int *ry)
 {
-	*rx = (int)(vtx->x*vg->scale*TILESZ) +
-	      (int)(vg->origin[0].x*vg->scale*TILESZ);
-	*ry = (int)(vtx->y*vg->scale*TILESZ) +
-	      (int)(vg->origin[0].y*vg->scale*TILESZ);
+	if (rx != NULL)	*rx = VG_RASX(vg,vtx->x);
+	if (ry != NULL) *ry = VG_RASY(vg,vtx->y);
 }
 
 /*
