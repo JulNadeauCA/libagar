@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.28 2005/05/20 05:55:12 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.29 2005/05/21 03:32:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -227,6 +227,16 @@ struct vg {
 	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
 	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 };
+
+#define VG_RASXF(vg,cx) ((cx)*(vg)->scale*TILESZ + \
+                        (vg)->origin[0].x*(vg)->scale*TILESZ)
+#define VG_RASYF(vg,cy) ((cy)*(vg)->scale*TILESZ + \
+                        (vg)->origin[0].y*(vg)->scale*TILESZ)
+
+#define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale*TILESZ) + \
+                       (int)((vg)->origin[0].x*(vg)->scale*TILESZ))
+#define VG_RASY(vg,cy) ((int)((cy)*(vg)->scale*TILESZ) + \
+                       (int)((vg)->origin[0].y*(vg)->scale*TILESZ))
 
 extern const struct vg_element_ops *vg_element_types[];
 extern const char *vg_element_names[];
