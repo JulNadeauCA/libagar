@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.10 2005/05/29 00:27:26 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.11 2005/05/29 05:49:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -58,15 +58,12 @@ const struct feature_ops polygon_ops = {
 	polygon_init,
 	polygon_load,
 	polygon_save,
-	NULL,		/* destroy */
-	polygon_render_simple,
+	polygon_destroy,
+	polygon_render,
 	NULL,
 	NULL,
 	polygon_edit
 };
-
-static int *polygon_ints = NULL;
-static u_int polygon_nints = 0;
 
 void
 polygon_init(void *p, struct tileset *ts, int flags)
@@ -80,6 +77,16 @@ polygon_init(void *p, struct tileset *ts, int flags)
 	poly->type = POLYGON_SOLID;
 	poly->alpha = 255;
 	poly->p_solid.c = SDL_MapRGB(ts->fmt, 0, 0, 0);
+	poly->ints = NULL;
+	poly->nints = 0;
+}
+
+void
+polygon_destroy(void *p)
+{
+	struct polygon *poly = p;
+
+	Free(poly->ints, M_RG);
 }
 
 int
@@ -265,27 +272,29 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 			break;
 		}
 	}
-	if (nvtx < 3)
+	if (nvtx < 3) {
 		return;
+	}
 
-	if (polygon_ints == NULL) {
-		polygon_ints = Malloc(nvtx*sizeof(int), M_RG);
-		polygon_nints = nvtx;
+	if (poly->ints == NULL) {
+		poly->ints = Malloc(nvtx*sizeof(int), M_RG);
+		poly->nints = nvtx;
 	} else {
-		if (nvtx > polygon_nints) {
-			polygon_ints = Realloc(polygon_ints, nvtx*sizeof(int));
-			polygon_nints = nvtx;
+		if (nvtx > poly->nints) {
+			poly->ints = Realloc(poly->ints, nvtx*sizeof(int));
+			poly->nints = nvtx;
 		}
 	}
 
 	/* Find Y maxima */
-	miny = vtx[0].y;
-	maxy = vtx[0].y;
+	maxy = miny = VG_RASY(vg,vtx[0].y);
 	for (i = 1; i < nvtx; i++) {
-		if (vtx[i].y < miny) {
-			miny = vtx[i].y;
-		} else if (vtx[i].y > maxy) {
-			maxy = vtx[i].y;
+		int vy = VG_RASY(vg,vtx[i].y);
+
+		if (vy < miny) {
+			miny = vy;
+		} else if (vy > maxy) {
+			maxy = vy;
 		}
 	}
 
@@ -300,46 +309,60 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 				ind1 = i - 1;
 				ind2 = i;
 			}
-			y1 = vtx[ind1].y;
-			y2 = vtx[ind2].y;
+			y1 = VG_RASY(vg,vtx[ind1].y);
+			y2 = VG_RASY(vg,vtx[ind2].y);
 			if (y1 < y2) {
-				x1 = vtx[ind1].x;
-				x2 = vtx[ind2].x;
+				x1 = VG_RASX(vg,vtx[ind1].x);
+				x2 = VG_RASX(vg,vtx[ind2].x);
 			} else if (y1 > y2) {
-				y2 = vtx[ind1].y;
-				y1 = vtx[ind2].y;
-				x2 = vtx[ind1].x;
-				x1 = vtx[ind2].x;
+				y2 = VG_RASY(vg,vtx[ind1].y);
+				y1 = VG_RASY(vg,vtx[ind2].y);
+				x2 = VG_RASX(vg,vtx[ind1].x);
+				x1 = VG_RASX(vg,vtx[ind2].x);
 			} else {
 				continue;
 			}
 			if (((y >= y1) && (y < y2)) ||
 			    ((y == maxy) && (y > y1) && (y <= y2))) {
-				polygon_ints[ints++] =
-				    ((y-y1)*65536 / (y2-y1)) *
-				    (x2-x1) + x1*65536;
+				poly->ints[ints++] =
+				    (((y-y1)<<16) / (y2-y1)) *
+				    (x2-x1) + (x1<<16);
 			} 
 		}
-		qsort(polygon_ints, ints, sizeof(int), compare_ints);
+		qsort(poly->ints, ints, sizeof(int), compare_ints);
 
 		for (i = 0; i < ints; i += 2) {
 			int xa, xb, xi;
+			Uint8 r, g, b;
 
-			xa = polygon_ints[i] + 1;
-			xa = (xa >> 16) + ((xa & 32768) >> 15);
-			xb = polygon_ints[i+1] - 1;
-			xb = (xb >> 16) + ((xb & 32768) >> 15);
-			for (xi = xa; xi < xb; xi++) {
-				PUT_PIXEL2_CLIPPED(tile->su,
-				    ske->tel_sketch.x+xi,
-				    ske->tel_sketch.y+y,
-				    poly->p_solid.c);
+			xa = poly->ints[i] + 1;
+			xa = (xa>>16) + ((xa&0x8000) >> 15);
+			xb = poly->ints[i+1] - 1;
+			xb = (xb>>16) + ((xb&0x8000) >> 15);
+
+			switch (poly->type) {
+			case POLYGON_SOLID:
+				prim_hline(tile, xa, xb, y, poly->p_solid.c);
+				break;
+			case POLYGON_TEXTURED:
+				for (xi = xa; xi < xb; xi++) {
+					SDL_GetRGB(GET_PIXEL2(tex->px->su,
+					    (xi % tex->px->su->w),
+					    (y % tex->px->su->h)),
+					tex->px->su->format, &r, &g, &b);
+					PUT_PIXEL2_CLIPPED(tile->su,
+					    ske->tel_sketch.x+xi,
+					    ske->tel_sketch.y+y,
+					    SDL_MapRGB(tile->su->format,
+					    r, g, b));
+				}
+				break;
 			}
 		}
 	}
 }
 
-/* Render a sketch outline into a simple polygon. */
+/* Rendering routine for simple polygons. */
 void
 polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 {
@@ -388,12 +411,8 @@ polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 		     y < sVg->h && y < sDst->h;
 		     y++) {
 			if ((d = right[y] - left[y]) > 0) {
-				for (x = left[y]; x <= right[y]; x++) {
-					PUT_PIXEL2_CLIPPED(sDst,
-					    ske->tel_sketch.x+x,
-					    ske->tel_sketch.y+y,
-					    poly->p_solid.c);
-				}
+				prim_hline(tile, left[y], right[y], y,
+				    poly->p_solid.c);
 			}
 		}
 		break;

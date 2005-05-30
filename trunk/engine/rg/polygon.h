@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.h,v 1.3 2005/05/24 03:00:29 vedge Exp $	*/
+/*	$Csoft: polygon.h,v 1.4 2005/05/29 00:27:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_POLYGON_H_
@@ -10,7 +10,6 @@
 
 struct polygon {
 	struct feature ft;
-
 	char sketch[TILE_ELEMENT_NAME_MAX];
 	enum polygon_type {
 		POLYGON_SOLID,			/* Solid fill */
@@ -25,10 +24,13 @@ struct polygon {
 	} args;
 #define p_solid args.solid
 #define p_texture args.texture
+	int *ints;				/* Used for rendering */
+	u_int nints;
 };
 
 __BEGIN_DECLS
 void		 polygon_init(void *, struct tileset *, int);
+void		 polygon_destroy(void *);
 int		 polygon_load(void *, struct netbuf *);
 void		 polygon_save(void *, struct netbuf *);
 void		 polygon_render(void *, struct tile *, int, int);
