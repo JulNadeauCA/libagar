@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.8 2005/05/19 02:17:25 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.9 2005/05/20 05:54:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -343,6 +343,28 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 				prim_put_pixel(t->su, x, y, t->pc);
 			}
 		}
+	}
+}
+
+/* Draw a horizontal line segment. */
+void
+prim_hline(struct tile *t, int x1, int x2, int y, Uint32 c)
+{
+	int x, xtmp;
+	Uint8 *pDst, *pEnd;
+	int dx;
+
+	if (y >= t->su->h || y < 0) { return; }
+	if (x1 >= t->su->w) { x1 = t->su->w - 1; } else if (x1 < 0) { x1 = 0; }
+	if (x2 >= t->su->w) { x2 = t->su->w - 1; } else if (x2 < 0) { x2 = 0; }
+	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
+	dx = x2 - x1;
+
+	pDst = (Uint8 *)t->su->pixels + y*t->su->pitch + ((x1)<<2);
+	pEnd = pDst + (dx<<2);
+	while (pDst < pEnd) {
+		*(Uint32 *)pDst = c;
+		pDst += 4;
 	}
 }
 
