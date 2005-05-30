@@ -1,0 +1,294 @@
+.\"	$Csoft: button.3,v 1.25 2005/01/30 05:39:11 vedge Exp $
+.\"
+.\" Copyright (c) 2005 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 30, 2005
+.Dt MENU 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm menu
+.Nd agar menu widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/menu.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget implements a hierarchical menu system which supports text-based menu
+and toolbar displays.
+Individual menu items can bind to boolean values and specific bits in integer
+values.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr object 3 ->
+.Xr widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct AGMenu *"
+.Fn menu_new "void *parent"
+.Pp
+.Ft void
+.Fn menu_init "struct AGMenu *menu"
+.Pp
+.Ft void
+.Fn menu_expand "struct AGMenu *menu" "struct AGMenuItem *item" "int x" "int y"
+.Pp
+.Ft void
+.Fn menu_collapse "struct AGMenu *menu" "struct AGMenuItem *item"
+.Pp
+.nr nS 0
+.Pp
+The
+.Fn menu_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn menu_init
+function initializes a
+.Nm
+widget.
+.Pp
+The
+.Fn menu_expand
+function creates a new (frameless) window at the coordinates
+.Fa x ,
+.Fa y .
+The window contains an
+.Ft AGMenuView
+widget which shows the child entries of
+.Fa item .
+If an item is clicked on, the window is automatically destroyed.
+The
+.Fn menu_collapse
+function manually destroys the popup window.
+.Sh TOP-LEVEL ITEMS
+.nr nS 1
+.Ft "struct AGMenuItem *"
+.Fn menu_add_item "struct AGMenu *menu" "const char *text"
+.Pp
+.Ft "void"
+.Fn menu_free_items "struct AGMenu *menu" 
+.Pp
+.Ft "void"
+.Fn menu_free_subitems "struct AGMenuItem *item" 
+.nr nS 0
+.Pp
+The
+.Fn menu_add_item
+inserts a new top-level menu item with a label displaying the string
+.Fa text .
+Top-level menu items have no associated action or binding.
+The
+.Fn menu_free_items
+function destroys all top-level menu items in
+.Fa menu .
+.Fn menu_free_subitems
+destroys all subitems associated with
+.Fa item .
+.Sh ACTION ITEMS
+.nr nS 1
+.Ft "struct AGMenuItem *"
+.Fn menu_action "struct AGMenuItem *" "const char *text" "int icon" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn menu_action_kb "struct AGMenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn menu_tool "struct AGMenuItem *" "struct toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.nr nS 0
+.Pp
+The
+.Fn menu_action
+function inserts a new action item identified by the string
+.Fa text .
+The
+.Fa icon
+parameter is an index into the global
+.Va icons[]
+array (or -1 for no icon).
+.Pp
+When selected, the item will invoke the event handler function
+.Fa fn ,
+with the additional arguments specified in
+.Fa fmt
+(unless it is NULL).
+.Pp
+The
+.Fn menu_action_kb
+variant also associates the action with the given
+.Xr SDLKey 3
+and modifier.
+.Pp
+The
+.Fn menu_tool
+variant automatically inserts an item into the given
+.Fa toolbar
+as well.
+.Sh BOOLEAN AND BITMASK ITEMS
+.nr nS 1
+.Ft "struct AGMenuItem *"
+.Fn "menu_int_bool" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int_bool_mp" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int8_bool" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int8_bool_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int_flags" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int8_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int8_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int16_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int16_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int32_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert"
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn "menu_int_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "pthread_mutex_t *mutex"
+.Pp
+.nr nS 0
+The
+.Fn menu_*_bool
+functions create a new item that binds to the given boolean variable.
+If the
+.Fa invert
+parameter is non-zero, the actual value is inverted.
+.Pp
+The
+.Fn menu_*_flags
+functions create a new item controlling one or more bits inside an integer
+value.
+The
+.Fa flags
+argument specifies the bitmask.
+If
+.Fa invert
+is non-zero, the bits are inverted.
+.Pp
+The
+.Fn menu_*_bool_mp
+and
+.Fn menu_*_flags_mp
+variants accept a
+.Ft "pthread_mutex_t *"
+argument specifying a mutex to acquire prior to reading or writing the data.
+.Sh OTHER ITEMS
+.nr nS 1
+.Ft "void"
+.Fn menu_separator "struct AGMenuItem *item"
+.nr nS 0
+.Pp
+The
+.Fn menu_separator
+function inserts a horizontal menu separator.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebutton* "
+.It window-mousebutton*
+If the cursor is over a menu item, display its sub-items.
+.It window-mousemotion
+Change the current sub-item display if the cursor is moved to a different
+item.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh BINDINGS
+The
+.Nm
+widget does not provide any binding.
+.Sh EXAMPLES
+The following code fragment creates a menu with an action item, a boolean
+item and two bitmask items.
+.Bd -literal -offset indent
+int someflag = 0;
+Uint16 flags = 0;
+#define FOO_FLAG 0x01
+#define BAR_FLAG 0x02
+
+void
+hello(int argc, union evarg *argv)
+{
+	char *s = argv[1].s;
+
+	text_msg(MSG_INFO, "Hello, %s!", s);
+}
+ 
+.Li ...
+
+struct AGMenu *menu;
+struct AGMenuItem *item;
+
+menu = menu_new(win);
+item = menu_add_item(menu, "File");
+{
+	menu_action(item, "Say hello", -1, hello, "%s", "world");
+	menu_separator(item);
+	menu_int_bool(item, "Some flag", -1, &someflag, 0);
+	menu_int16_bool(item, "Foo flag", -1, &flags, FOO_FLAG, 0);
+	menu_int16_bool(item, "Bar flag", -1, &flags, BAR_FLAG, 0);
+	menu_separator(item);
+	menu_action(item, "Quit", CLOSE_ICON, quit_app, NULL);
+}
+.Ed
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr event 3 ,
+.Xr button 3 ,
+.Xr toolbar 3 ,
+.Xr tableview 3 ,
+.Xr tlist 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
