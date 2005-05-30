@@ -1,4 +1,4 @@
-/*	$Csoft: prim.h,v 1.4 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: prim.h,v 1.5 2005/05/18 09:07:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PRIM_H_
@@ -30,6 +30,7 @@ void prim_blend_rgb(SDL_Surface *, int, int, enum prim_blend_mode,
 void prim_circle2(struct tile *, int, int, int);
 void prim_line(struct tile *, int, int, int, int);
 void prim_wuline(struct tile *, double, double, double, double);
+void prim_hline(struct tile *, int, int, int, Uint32);
 __END_DECLS
 
 #include "close_code.h"
