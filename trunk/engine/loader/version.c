@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.10 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.11 2005/04/24 05:51:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -95,9 +95,6 @@ version_read(struct netbuf *buf, const struct version *ver,
 void
 version_write(struct netbuf *buf, const struct version *ver)
 {
-	struct passwd *pw;
-	char host[64];
-
 	netbuf_write(ver->name, strlen(ver->name), 1, buf);
 	write_uint32(buf, ver->minor);
 	write_uint32(buf, ver->major);
