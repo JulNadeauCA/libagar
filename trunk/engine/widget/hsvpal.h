@@ -1,10 +1,12 @@
-/*	$Csoft: hsvpal.h,v 1.7 2005/05/22 06:31:25 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.8 2005/05/23 01:28:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
 #define _AGAR_WIDGET_HSVPAL_H_
 
 #include <engine/widget/scrollbar.h>
+#include <engine/widget/menu.h>
+#include <engine/widget/window.h>
 
 #include "begin_code.h"
 
@@ -33,8 +35,14 @@ struct hsvpal {
 	enum {
 		HSVPAL_SEL_NONE,
 		HSVPAL_SEL_H,		/* Selecting hue */
-		HSVPAL_SEL_SV		/* Selecting saturation/value */
+		HSVPAL_SEL_SV,		/* Selecting saturation/value */
+		HSVPAL_SEL_A		/* Selecting transparency value */
 	} state;
+
+	struct AGMenu *menu;
+	struct AGMenuItem *menu_item;
+	struct window *menu_win;
+	Uint32 cTile;
 };
 
 __BEGIN_DECLS
