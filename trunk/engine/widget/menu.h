@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.6 2005/03/11 08:56:32 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.7 2005/05/23 03:24:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -88,23 +88,36 @@ struct AGMenuItem *menu_action_kb(struct AGMenuItem *,
 struct AGMenuItem *menu_tool(struct AGMenuItem *, struct toolbar *,
 		             const char *, int, SDLKey, SDLMod,
 			     void (*)(int, union evarg *), const char *, ...);
+struct AGMenuItem *menu_int_bool_mp(struct AGMenuItem *, const char *, int,
+		                    int *, int, pthread_mutex_t *);
+struct AGMenuItem *menu_int8_bool_mp(struct AGMenuItem *, const char *, int,
+				  Uint8 *, int, pthread_mutex_t *);
+struct AGMenuItem *menu_int_flags_mp(struct AGMenuItem *, const char *, int,
+			          int *, int, int, pthread_mutex_t *);
+struct AGMenuItem *menu_int8_flags_mp(struct AGMenuItem *, const char *,
+			            int, Uint8 *, Uint8, int,
+				    pthread_mutex_t *);
+struct AGMenuItem *menu_int16_flags_mp(struct AGMenuItem *, const char *,
+			            int, Uint16 *, Uint16, int,
+				    pthread_mutex_t *);
+struct AGMenuItem *menu_int32_flags_mp(struct AGMenuItem *, const char *,
+			            int, Uint32 *, Uint32, int,
+				    pthread_mutex_t *);
 
-struct AGMenuItem *menu_int_bool(struct AGMenuItem *, const char *, int, int *,
-				 pthread_mutex_t *, int);
+#define menu_int_bool(mi,t,i,p,inv) \
+	menu_int_bool_mp((mi),(t),(i),(p),(inv),NULL)
+#define menu_int8_bool(mi,t,i,p,inv) \
+	menu_int8_bool_mp((mi),(t),(i),(p),(inv),NULL)
 
-struct AGMenuItem *menu_int8_bool(struct AGMenuItem *, const char *, int,
-				  Uint8 *, pthread_mutex_t *, int);
-struct AGMenuItem *menu_int_flags(struct AGMenuItem *, const char *, int,
-			            int *, int, pthread_mutex_t *, int);
-struct AGMenuItem *menu_int8_flags(struct AGMenuItem *, const char *,
-			            int, Uint8 *, Uint8, pthread_mutex_t *,
-				    int);
-struct AGMenuItem *menu_int16_flags(struct AGMenuItem *, const char *,
-			            int, Uint16 *, Uint16, pthread_mutex_t *,
-				    int);
-struct AGMenuItem *menu_int32_flags(struct AGMenuItem *, const char *,
-			            int, Uint32 *, Uint32, pthread_mutex_t *,
-				    int);
+#define menu_int_flags(mi,t,i,fp,fl,inv) \
+	menu_int_flags_mp((mi),(t),(i),(fp),(fl),(inv),NULL)
+#define menu_int8_flags(mi,t,i,fp,fl,inv) \
+	menu_int8_flags_mp((mi),(t),(i),(fp),(fl),(inv),NULL)
+#define menu_int16_flags(mi,t,i,fp,fl,inv) \
+	menu_int16_flags_mp((mi),(t),(i),(fp),(fl),(inv),NULL)
+#define menu_int32_flags(mi,t,i,fp,fl,inv) \
+	menu_int32_flags_mp((mi),(t),(i),(fp),(fl),(inv),NULL)
+
 struct AGMenuItem *menu_separator(struct AGMenuItem *);
 
 void menu_view_init(void *, struct window *, struct AGMenu *,
