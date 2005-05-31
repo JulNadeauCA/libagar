@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.18 2005/05/23 01:28:23 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.19 2005/05/31 04:03:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -203,7 +203,7 @@ update_a(struct hsvpal *pal, int x)
 	bAlpha = widget_get_binding(pal, "alpha", &pAlpha);
 	switch (bAlpha->vtype) {
 	case WIDGET_FLOAT:
-		*(float *)pAlpha = ((float)x)/((float)pal->rpreview.w);
+		*(float *)pAlpha = ((float)x)/((float)pal->rAlpha.w);
 		if (*(float *)pAlpha > 1.0) {
 			*(float *)pAlpha = 1.0;
 		} else if (*(float *)pAlpha < 0.0) {
@@ -211,7 +211,7 @@ update_a(struct hsvpal *pal, int x)
 		}
 		break;
 	case WIDGET_DOUBLE:
-		*(double *)pAlpha = ((double)x)/((double)pal->rpreview.w);
+		*(double *)pAlpha = ((double)x)/((double)pal->rAlpha.w);
 		if (*(double *)pAlpha > 1.0) {
 			*(double *)pAlpha = 1.0;
 		} else if (*(double *)pAlpha < 0.0) {
@@ -219,7 +219,7 @@ update_a(struct hsvpal *pal, int x)
 		}
 		break;
 	case WIDGET_INT:
-		*(int *)pAlpha = x/pal->rpreview.w;
+		*(int *)pAlpha = x/pal->rAlpha.w;
 		if (*(int *)pAlpha > 255) {
 			*(int *)pAlpha = 255;
 		} else if (*(int *)pAlpha < 0) {
@@ -227,7 +227,7 @@ update_a(struct hsvpal *pal, int x)
 		}
 		break;
 	case WIDGET_UINT8:
-		*(Uint8 *)pAlpha = (Uint8)(x/pal->rpreview.w);
+		*(Uint8 *)pAlpha = (Uint8)(x/pal->rAlpha.w);
 		break;
 	}
 	widget_binding_unlock(bAlpha);
@@ -390,7 +390,7 @@ mousebuttondown(int argc, union evarg *argv)
 
 	switch (btn) {
 	case SDL_BUTTON_LEFT:
-		if (y > pal->rpreview.y) {
+		if (y > pal->rAlpha.y) {
 			update_a(pal, x);
 			pal->state = HSVPAL_SEL_A;
 		} else {
@@ -552,26 +552,26 @@ render_palette(struct hsvpal *pal)
 
 	/* Render the alpha selector. */
 	/* XXX overblending */
-	for (y = 0; y < pal->rpreview.h+16; y+=8) {
-		for (x = 0; x < pal->rpreview.w; x+=16) {
+	for (y = 8; y < pal->rAlpha.h+16; y+=8) {
+		for (x = 0; x < pal->rAlpha.w; x+=16) {
 			rd.w = 8;
 			rd.h = 8;
-			rd.x = pal->rpreview.x+x;
-			rd.y = pal->rpreview.y+y;
+			rd.x = pal->rAlpha.x+x;
+			rd.y = pal->rAlpha.y+y;
 			SDL_FillRect(pal->surface, &rd, pal->cTile);
 		}
 		y += 8;
-		for (x = 8; x < pal->rpreview.w; x+=16) {
+		for (x = 8; x < pal->rAlpha.w; x+=16) {
 			rd.w = 8;
 			rd.h = 8;
-			rd.x = pal->rpreview.x+x;
-			rd.y = pal->rpreview.y+y;
+			rd.x = pal->rAlpha.x+x;
+			rd.y = pal->rAlpha.y+y;
 			SDL_FillRect(pal->surface, &rd, pal->cTile);
 		}
 	}
 	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
 	da = MIN(1, pal->surface->w/255);
-	for (y = pal->rpreview.y; y < pal->surface->h; y++) {
+	for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
 		for (x = 0, a = 0; x < pal->surface->w; x++) {
 			BLEND_RGBA2(pal->surface, x, y,
 			    r, g, b, a, ALPHA_SRC);
@@ -591,17 +591,18 @@ hsvpal_scale(void *p, int w, int h)
 		WIDGET(pal)->w = view->w/5;
 		WIDGET(pal)->h = view->h/3;
 	}
-	pal->rpreview.x = 0;
-	pal->rpreview.h = 32;
-	pal->rpreview.y = WIDGET(pal)->h - pal->rpreview.h;
-	pal->rpreview.w = WIDGET(pal)->w;
-
+	
+	pal->rAlpha.x = 0;
+	pal->rAlpha.h = 32;
+	pal->rAlpha.y = WIDGET(pal)->h - 32;
+	pal->rAlpha.w = WIDGET(pal)->w;
+	
 	pal->circle.rout = MIN(WIDGET(pal)->w,
-	    WIDGET(pal)->h - pal->rpreview.h)/2;
+	    WIDGET(pal)->h - pal->rAlpha.h)/2;
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
 	pal->circle.x = WIDGET(pal)->w/2;
-	pal->circle.y = (WIDGET(pal)->h - pal->rpreview.h)/2;
+	pal->circle.y = (WIDGET(pal)->h - pal->rAlpha.h)/2;
 
 	pal->triangle.x = WIDGET(pal)->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
@@ -618,7 +619,7 @@ hsvpal_draw(void *p)
 {
 	struct hsvpal *pal = p;
 	float cur_h, cur_s, cur_v;
-	Uint8 a;
+	Uint8 r, g, b, a;
 	int x, y;
 	int i;
 	
@@ -660,23 +661,31 @@ hsvpal_draw(void *p)
 	    pal->selcircle_r,
 	    COLOR(HSVPAL_CIRCLE_COLOR));
 
-	x = a*pal->rpreview.w/255;
+	x = a*pal->rAlpha.w/255;
+	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
+
+	/* Draw the color preview. */
+	prim_hsv2rgb((cur_h*360.0)/(2*M_PI), cur_s, cur_v, &r, &g, &b);
+	primitives.rect_filled(pal,
+	    pal->rAlpha.x, pal->rAlpha.y,
+	    pal->rAlpha.w, 8,
+	    SDL_MapRGB(vfmt, r, g, b));
 
 	/* Draw the alpha bar. */
 	primitives.vline(pal,
-	    pal->rpreview.x + x,
-	    pal->rpreview.y + 1,
-	    pal->rpreview.y + pal->rpreview.h,
+	    pal->rAlpha.x + x,
+	    pal->rAlpha.y + 1,
+	    pal->rAlpha.y + pal->rAlpha.h,
 	    COLOR(HSVPAL_BAR1_COLOR));
 	primitives.vline(pal,
-	    pal->rpreview.x + x + 1,
-	    pal->rpreview.y + 1,
-	    pal->rpreview.y + pal->rpreview.h,
+	    pal->rAlpha.x + x + 1,
+	    pal->rAlpha.y + 1,
+	    pal->rAlpha.y + pal->rAlpha.h,
 	    COLOR(HSVPAL_BAR2_COLOR));
 	primitives.vline(pal,
-	    pal->rpreview.x + x + 2,
-	    pal->rpreview.y + 1,
-	    pal->rpreview.y + pal->rpreview.h,
+	    pal->rAlpha.x + x + 2,
+	    pal->rAlpha.y + 1,
+	    pal->rAlpha.y + pal->rAlpha.h,
 	    COLOR(HSVPAL_BAR1_COLOR));
 }
 
