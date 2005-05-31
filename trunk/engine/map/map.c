@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.8 2005/05/24 03:00:59 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.9 2005/05/29 00:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1957,12 +1957,12 @@ map_edit(void *p)
 		
 		menu_separator(pitem);
 
-		menu_int_flags(pitem, _("Editable"), EDIT_ICON,
-		    &OBJECT(m)->flags, OBJECT_READONLY,
-		    &OBJECT(m)->lock, 1);
-		menu_int_flags(pitem, _("Indestructible"), TRASH_ICON,
-		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE,
-		    &OBJECT(m)->lock, 0);
+		menu_int_flags_mp(pitem, _("Editable"), EDIT_ICON,
+		    &OBJECT(m)->flags, OBJECT_READONLY, 1,
+		    &OBJECT(m)->lock);
+		menu_int_flags_mp(pitem, _("Indestructible"), TRASH_ICON,
+		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE, 0,
+		    &OBJECT(m)->lock);
 	}
 
 	pitem = menu_add_item(menu, _("View"));
@@ -1975,19 +1975,19 @@ map_edit(void *p)
 		menu_separator(pitem);
 
 		menu_int_flags(pitem, _("Display grid"), GRID_ICON,
-		    &mv->flags, MAPVIEW_GRID, NULL, 0);
+		    &mv->flags, MAPVIEW_GRID, 0);
 		menu_int_flags(pitem, _("Display node properties"), PROPS_ICON,
-		    &mv->flags, MAPVIEW_PROPS, NULL, 0);
+		    &mv->flags, MAPVIEW_PROPS, 0);
 		menu_int_flags(pitem, _("Cursor"), SELECT_TOOL_ICON,
-		    &mv->flags, MAPVIEW_NO_CURSOR, NULL, 1);
+		    &mv->flags, MAPVIEW_NO_CURSOR, 1);
 		
 		menu_int_bool(pitem, _("Tiled background"), GRID_ICON,
-		    &mapview_bg, NULL, 0);
+		    &mapview_bg, 0);
 		menu_int_bool(pitem, _("Moving background"), GRID_ICON,
-		    &mapview_bg_moving, NULL, 0);
+		    &mapview_bg_moving, 0);
 #ifdef DEBUG
 		menu_int_flags(pitem, _("Clipped edges"), GRID_ICON,
-		    &WIDGET(mv)->flags, WIDGET_CLIPPING, NULL, 1);
+		    &WIDGET(mv)->flags, WIDGET_CLIPPING, 1);
 #endif		
 		menu_separator(pitem);
 
