@@ -1,4 +1,4 @@
-.\"	$Csoft: spinbutton.3,v 1.4 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: spinbutton.3,v 1.5 2005/03/11 08:59:36 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -161,17 +161,17 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "u_int *value "
+.Bl -tag -compact -width "[SU]int32 *value "
 .It Va int *value
-The value to display/edit (WIDGET_INT).
+Integer value.
 .It Va u_int *value
-The value to display/edit (WIDGET_UINT).
+Unsigned integer value.
 .It Va [SU]int8 *value
-The value to display/edit (WIDGET_[SU]INT8).
+Signed/unsigned 8-bit integer value.
 .It Va [SU]int16 *value
-The value to display/edit (WIDGET_[SU]INT16).
+Signed/unsigned 16-bit integer value.
 .It Va [SU]int32 *value
-The value to display/edit (WIDGET_[SU]INT32).
+Signed/unsigned 32-bit integer value.
 .El
 .Sh TROUBLETONS
 The increment value and boundaries are
