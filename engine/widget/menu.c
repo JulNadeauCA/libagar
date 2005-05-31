@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.17 2005/03/10 09:43:34 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.18 2005/05/23 03:24:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -385,8 +385,8 @@ menu_tool(struct AGMenuItem *pitem, struct toolbar *tbar,
 }
 
 struct AGMenuItem *
-menu_int_bool(struct AGMenuItem *pitem, const char *text, int nicon,
-    int *boolp, pthread_mutex_t *lock, int inv)
+menu_int_bool_mp(struct AGMenuItem *pitem, const char *text, int nicon,
+    int *boolp, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
@@ -400,8 +400,8 @@ menu_int_bool(struct AGMenuItem *pitem, const char *text, int nicon,
 }
 
 struct AGMenuItem *
-menu_int8_bool(struct AGMenuItem *pitem, const char *text, int nicon,
-    Uint8 *boolp, pthread_mutex_t *lock, int inv)
+menu_int8_bool_mp(struct AGMenuItem *pitem, const char *text, int nicon,
+    Uint8 *boolp, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
@@ -415,8 +415,8 @@ menu_int8_bool(struct AGMenuItem *pitem, const char *text, int nicon,
 }
 
 struct AGMenuItem *
-menu_int_flags(struct AGMenuItem *pitem, const char *text, int nicon,
-    int *flagsp, int flags, pthread_mutex_t *lock, int inv)
+menu_int_flags_mp(struct AGMenuItem *pitem, const char *text, int nicon,
+    int *flagsp, int flags, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
@@ -431,8 +431,8 @@ menu_int_flags(struct AGMenuItem *pitem, const char *text, int nicon,
 }
 
 struct AGMenuItem *
-menu_int8_flags(struct AGMenuItem *pitem, const char *text, int nicon, 
-    Uint8 *flagsp, Uint8 flags, pthread_mutex_t *lock, int inv)
+menu_int8_flags_mp(struct AGMenuItem *pitem, const char *text, int nicon, 
+    Uint8 *flagsp, Uint8 flags, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
@@ -447,8 +447,8 @@ menu_int8_flags(struct AGMenuItem *pitem, const char *text, int nicon,
 }
 
 struct AGMenuItem *
-menu_int16_flags(struct AGMenuItem *pitem, const char *text, int nicon,
-    Uint16 *flagsp, Uint16 flags, pthread_mutex_t *lock, int inv)
+menu_int16_flags_mp(struct AGMenuItem *pitem, const char *text, int nicon,
+    Uint16 *flagsp, Uint16 flags, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
@@ -463,8 +463,8 @@ menu_int16_flags(struct AGMenuItem *pitem, const char *text, int nicon,
 }
 
 struct AGMenuItem *
-menu_int32_flags(struct AGMenuItem *pitem, const char *text, int nicon, 
-    Uint32 *flagsp, Uint32 flags, pthread_mutex_t *lock, int inv)
+menu_int32_flags_mp(struct AGMenuItem *pitem, const char *text, int nicon, 
+    Uint32 *flagsp, Uint32 flags, int inv, pthread_mutex_t *lock)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
