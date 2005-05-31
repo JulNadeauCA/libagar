@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.28 2005/02/18 11:16:24 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.29 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -89,6 +89,18 @@ binding_changed(int argc, union evarg *argv)
 		case WIDGET_FLOAT:
 			fsu->min = -FLT_MAX+1;
 			fsu->max = FLT_MAX-1;
+			break;
+		case WIDGET_INT:
+			fsu->min = INT_MIN+1;
+			fsu->max = INT_MAX-1;
+			break;
+		case WIDGET_UINT:
+			fsu->min = 0;
+			fsu->max = UINT_MAX-1;
+			break;
+		case WIDGET_UINT8:
+			fsu->min = 0;
+			fsu->max = 0xffU;
 			break;
 		}
 		pthread_mutex_unlock(&fsu->lock);
@@ -337,6 +349,15 @@ fspinbutton_draw(void *p)
 		textbox_printf(fsu->input, fsu->format,
 		    base2unit(*(float *)value, fsu->unit));
 		break;
+	case WIDGET_INT:
+		textbox_printf(fsu->input, "%d", *(int *)value);
+		break;
+	case WIDGET_UINT:
+		textbox_printf(fsu->input, "%u", *(u_int *)value);
+		break;
+	case WIDGET_UINT8:
+		textbox_printf(fsu->input, "%u", *(Uint8 *)value);
+		break;
 	}
 	widget_binding_unlock(valueb);
 }
@@ -377,6 +398,39 @@ fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 		}
 		*(float *)value = unit2base(n, fsu->unit);
 		break;
+	case WIDGET_INT:
+		n = base2unit((double)(*(int *)value), fsu->unit);
+		if ((n+inc) < *min) {
+			n = *min;
+		} else if ((n+inc) > *max) {
+			n = *max;
+		} else {
+			n += inc;
+		}
+		*(int *)value = (int)n;
+		break;
+	case WIDGET_UINT:
+		n = base2unit((double)(*(u_int *)value), fsu->unit);
+		if ((n+inc) < *min) {
+			n = *min;
+		} else if ((n+inc) > *max) {
+			n = *max;
+		} else {
+			n += inc;
+		}
+		*(u_int *)value = (u_int)n;
+		break;
+	case WIDGET_UINT8:
+		n = base2unit((double)(*(Uint8 *)value), fsu->unit);
+		if ((n+inc) < *min) {
+			n = *min;
+		} else if ((n+inc) > *max) {
+			n = *max;
+		} else {
+			n += inc;
+		}
+		*(Uint8 *)value = (Uint8)n;
+		break;
 	default:
 		break;
 	}
@@ -409,6 +463,21 @@ fspinbutton_set_value(struct fspinbutton *fsu, double nvalue)
 		*(float *)value = nvalue < *min ? *min :
 		                  nvalue > *max ? *max :
 				  nvalue;
+		break;
+	case WIDGET_INT:
+		*(int *)value = nvalue < *min ? (int)*min :
+		                nvalue > *max ? (int)*max :
+				(int)nvalue;
+		break;
+	case WIDGET_UINT:
+		*(u_int *)value = nvalue < *min ? (u_int)*min :
+		                  nvalue > *max ? (u_int)*max :
+				  (u_int)nvalue;
+		break;
+	case WIDGET_UINT8:
+		*(Uint8 *)value = nvalue < *min ? (Uint8)*min :
+		                  nvalue > *max ? (Uint8)*max :
+				  (Uint8)nvalue;
 		break;
 	}
 
