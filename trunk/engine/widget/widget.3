@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.61 2005/05/11 09:59:33 vedge Exp $
+.\"	$Csoft: widget.3,v 1.62 2005/05/29 05:50:00 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -389,6 +389,9 @@ is called to override those default bindings.
 .Ft "struct widget_binding *"
 .Fn widget_get_binding "void *widget" "const char *binding" "void *res"
 .Pp
+.Ft "int"
+.Fn widget_copy_binding "void *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
+.Pp
 .Ft void
 .Fn widget_binding_lock "struct widget_binding *binding"
 .Pp
@@ -547,6 +550,15 @@ If a binding was found, a pointer to it is written in the
 argument.
 .Fn widget_binding_unlock
 should be called when done manipulating the data.
+.Pp
+The
+.Fn widget_copy_binding
+function copies the data (ie. type, pointer values) of the binding
+.Fa src_binding
+to
+.Fa dst_binding .
+The destination binding must exist.
+The function returns 0 on success, -1 if an error occured.
 .Pp
 The
 .Fn widget_get_*

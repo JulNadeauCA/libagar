@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.111 2005/05/20 05:56:40 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.112 2005/05/21 05:53:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -85,6 +85,29 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	 * of the parent on attachment.
 	 */
 	event_new(wid, "child-attached", inherit_style, NULL);
+}
+
+int
+widget_copy_binding(void *w1, const char *n1, void *w2, const char *n2)
+{
+	struct widget_binding *b1, *b2;
+
+	if ((b1 = widget_get_binding(w1, n1)) == NULL) {
+		return (-1);
+	}
+	if ((b2 = widget_get_binding(w2, n2)) == NULL) {
+		widget_binding_unlock(b1);
+		return (-1);
+	}
+	b1->type = b2->type;
+	b1->vtype = b2->vtype;
+	b1->mutex = b2->mutex;
+	b1->p1 = b2->p1;
+	b1->p2 = b2->p2;
+	b1->size = b2->size;
+	widget_binding_unlock(b2);
+	widget_binding_unlock(b1);
+	return (0);
 }
 
 /* Bind a mutex-protected variable to a widget. */
