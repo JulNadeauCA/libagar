@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.93 2005/05/14 10:05:13 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.94 2005/05/21 05:53:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -153,6 +153,8 @@ struct widget_binding	*widget_get_binding(void *, const char *, ...);
 __inline__ void		 widget_binding_lock(struct widget_binding *);
 __inline__ void		 widget_binding_unlock(struct widget_binding *);
 __inline__ void		 widget_binding_modified(struct widget_binding *);
+__inline__ int		 widget_copy_binding(void *, const char *, void *,
+			                     const char *);
 
 __inline__ u_int	 widget_get_uint(void *, const char *);
 __inline__ int		 widget_get_int(void *, const char *);
