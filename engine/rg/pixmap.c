@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.32 2005/05/24 08:15:10 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.33 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -433,42 +433,6 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
 		widget_bind(pal, "alpha", WIDGET_FLOAT, &px->a);
 	
-		hb = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-		box_set_padding(hb, 1);
-		{
-			fsb = fspinbutton_new(hb, NULL, _("H: "));
-			fspinbutton_prescale(fsb, "000");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &px->h);
-			fspinbutton_set_range(fsb, 0.0, 359.0);
-			fspinbutton_set_increment(fsb, 1);
-			fspinbutton_set_precision(fsb, "f", 0);
-		
-			fsb = fspinbutton_new(hb, NULL, _("S: "));
-			fspinbutton_prescale(fsb, "00.00");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &px->s);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.01);
-			fspinbutton_set_precision(fsb, "f", 2);
-		}
-		
-		hb = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-		box_set_padding(hb, 1);
-		{
-			fsb = fspinbutton_new(hb, NULL, _("V: "));
-			fspinbutton_prescale(fsb, "00.00");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &px->v);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.01);
-			fspinbutton_set_precision(fsb, "f", 2);
-			
-			fsb = fspinbutton_new(hb, NULL, _("A: "));
-			fspinbutton_prescale(fsb, "0.000");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &px->a);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.005);
-			fspinbutton_set_precision(fsb, "f", 3);
-		}
-		
 		separator_new(ntab, SEPARATOR_HORIZ);
 		cb = checkbox_new(ntab, _("Source pixmap only"));
 		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
