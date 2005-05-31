@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.10 2005/05/23 03:24:19 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.11 2005/05/24 05:06:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -97,7 +97,9 @@ const char *colors_names[] = {
 	N_("Tileview tiling 2"),
 	N_("Tileview text background"),
 	N_("Tileview text"),
-	N_("(Transparent color)")
+	N_("Transparent color"),
+	N_("HSV Palette bar #1"),
+	N_("HSV Palette bar #2")
 };
 
 void
@@ -156,8 +158,8 @@ colors_init(void)
 	colors[TLIST_SEL_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
 	colors[MAPVIEW_GRID_COLOR] = SDL_MapRGB(vfmt, 95, 95, 95);
 	colors[MAPVIEW_CURSOR_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
-	colors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 75, 75, 75);
+	colors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);	/* U */
+	colors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 75, 75, 75);	/* U */
 	colors[MAPVIEW_MSEL_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
 	colors[MAPVIEW_ESEL_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
 	colors[TILEVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 140, 140, 140);
@@ -165,6 +167,8 @@ colors_init(void)
 	colors[TILEVIEW_TEXTBG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
 	colors[TILEVIEW_TEXT_COLOR] = SDL_MapRGB(vfmt, 240, 240, 240);
 	colors[TRANSPARENT_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
+	colors[HSVPAL_BAR1_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
+	colors[HSVPAL_BAR2_COLOR] = SDL_MapRGBA(vfmt, 240, 240, 240, 0);
 
 	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
 	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);

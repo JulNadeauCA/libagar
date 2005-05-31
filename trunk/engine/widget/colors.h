@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.1 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.2 2005/05/10 12:22:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -68,6 +68,8 @@ enum {
 	TILEVIEW_TEXTBG_COLOR,
 	TILEVIEW_TEXT_COLOR,
 	TRANSPARENT_COLOR,
+	HSVPAL_BAR1_COLOR,
+	HSVPAL_BAR2_COLOR,
 	LAST_COLOR
 };
 
