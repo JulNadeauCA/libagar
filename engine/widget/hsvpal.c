@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.17 2005/05/22 06:31:25 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.18 2005/05/23 01:28:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 
 #include <engine/widget/primitive.h>
 #include <engine/widget/window.h>
+#include <engine/widget/fspinbutton.h>
 
 const struct widget_ops hsvpal_ops = {
 	{
@@ -63,24 +64,71 @@ hsvpal_new(void *parent)
 	return (pal);
 }
 
-static __inline__ void
-update_pixel_from_hsv(struct hsvpal *pal)
+static __inline__ Uint8
+get_alpha8(struct hsvpal *pal)
 {
-	float h, s, v, a;
-	Uint8 r, g, b;
+	struct widget_binding *bAlpha;
+	void *pAlpha;
+	Uint8 a = 255;
+
+	bAlpha = widget_get_binding(pal, "alpha", &pAlpha);
+	switch (bAlpha->vtype) {
+	case WIDGET_FLOAT:
+		a = (Uint8)((*(float *)pAlpha)*255.0);
+		break;
+	case WIDGET_DOUBLE:
+		a = (Uint8)((*(double *)pAlpha)*255.0);
+		break;
+	case WIDGET_INT:
+		a = (int)((*(int *)pAlpha));
+		break;
+	case WIDGET_UINT8:
+		a = (int)((*(Uint8 *)pAlpha));
+		break;
+	}
+	widget_binding_unlock(bAlpha);
+	return (a);
+}
+	
+static __inline__ void
+set_alpha8(struct hsvpal *pal, Uint8 a)
+{
+	struct widget_binding *bAlpha;
+	void *pAlpha;
+
+	bAlpha = widget_get_binding(pal, "alpha", &pAlpha);
+	switch (bAlpha->vtype) {
+	case WIDGET_FLOAT:
+		*(float *)pAlpha = (float)(((float)a)/255.0);
+		break;
+	case WIDGET_DOUBLE:
+		*(double *)pAlpha = (double)(((double)a)/255.0);
+		break;
+	case WIDGET_INT:
+		*(int *)pAlpha = (int)a;
+		break;
+	case WIDGET_UINT8:
+		*(Uint8 *)pAlpha = (Uint8)a;
+		break;
+	}
+	widget_binding_unlock(bAlpha);
+}
+
+static __inline__ void
+update_pixel_from_hsva(struct hsvpal *pal)
+{
+	float h, s, v;
+	Uint8 r, g, b, a;
 	struct widget_binding *bFormat;
 	SDL_PixelFormat **pFormat;
 
 	h = widget_get_float(pal, "hue");
 	s = widget_get_float(pal, "saturation");
 	v = widget_get_float(pal, "value");
-	a = widget_get_float(pal, "alpha");
 	bFormat = widget_get_binding(pal, "pixel-format", &pFormat);
-
 	prim_hsv2rgb(h, s, v, &r, &g, &b);
 	widget_set_uint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b,
-	    (Uint8)(a*255.0)));
-
+	    get_alpha8(pal)));
 	widget_binding_unlock(bFormat);
 }
 
@@ -98,7 +146,7 @@ update_hsv_from_pixel(struct hsvpal *hsv, Uint32 pixel)
 	widget_set_float(hsv, "hue", h);
 	widget_set_float(hsv, "saturation", s);
 	widget_set_float(hsv, "value", v);
-	widget_set_float(hsv, "alpha", ((float)a)/255.0);
+	set_alpha8(hsv, a);
 	widget_binding_unlock(bFormat);
 }
 
@@ -112,10 +160,9 @@ update_h(struct hsvpal *pal, int x, int y)
 		h += 2*M_PI;
 	}
 	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
-	update_pixel_from_hsv(pal);
 
+	update_pixel_from_hsva(pal);
 	event_post(NULL, pal, "h-changed", NULL);
-	
 	pal->flags |= HSVPAL_DIRTY;
 }
 
@@ -141,9 +188,195 @@ update_sv(struct hsvpal *pal, int ax, int ay)
 
 	widget_set_float(pal, "saturation", s);
 	widget_set_float(pal, "value", v);
-	update_pixel_from_hsv(pal);
 
+	update_pixel_from_hsva(pal);
 	event_post(NULL, pal, "sv-changed", NULL);
+	pal->flags |= HSVPAL_DIRTY;
+}
+
+static void
+update_a(struct hsvpal *pal, int x)
+{
+	struct widget_binding *bAlpha;
+	void *pAlpha;
+
+	bAlpha = widget_get_binding(pal, "alpha", &pAlpha);
+	switch (bAlpha->vtype) {
+	case WIDGET_FLOAT:
+		*(float *)pAlpha = ((float)x)/((float)pal->rpreview.w);
+		if (*(float *)pAlpha > 1.0) {
+			*(float *)pAlpha = 1.0;
+		} else if (*(float *)pAlpha < 0.0) {
+			*(float *)pAlpha = 0.0;
+		}
+		break;
+	case WIDGET_DOUBLE:
+		*(double *)pAlpha = ((double)x)/((double)pal->rpreview.w);
+		if (*(double *)pAlpha > 1.0) {
+			*(double *)pAlpha = 1.0;
+		} else if (*(double *)pAlpha < 0.0) {
+			*(double *)pAlpha = 0.0;
+		}
+		break;
+	case WIDGET_INT:
+		*(int *)pAlpha = x/pal->rpreview.w;
+		if (*(int *)pAlpha > 255) {
+			*(int *)pAlpha = 255;
+		} else if (*(int *)pAlpha < 0) {
+			*(int *)pAlpha = 0;
+		}
+		break;
+	case WIDGET_UINT8:
+		*(Uint8 *)pAlpha = (Uint8)(x/pal->rpreview.w);
+		break;
+	}
+	widget_binding_unlock(bAlpha);
+
+	update_pixel_from_hsva(pal);
+	event_post(NULL, pal, "a-changed", NULL);
+}
+
+static void
+close_menu(struct hsvpal *pal)
+{
+	menu_collapse(pal->menu, pal->menu_item);
+	object_destroy(pal->menu);
+	Free(pal->menu, M_OBJECT);
+
+	pal->menu = NULL;
+	pal->menu_item = NULL;
+	pal->menu_win = NULL;
+}
+
+static void
+edit_values(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+	struct window *pwin;
+	struct window *win;
+	struct fspinbutton *fsb;
+	struct widget_binding *b1, *b2;
+	float v;
+
+	if ((pwin = widget_parent_window(pal)) == NULL)
+		return;
+
+	if ((win = window_new(WINDOW_NO_MAXIMIZE|WINDOW_DETACH,
+	    "hsvpal-%p-numedit", pal)) == NULL) {
+		return;
+	}
+	window_set_caption(win, _("Color values"));
+	window_set_position(win, WINDOW_LOWER_LEFT, 0);
+	{
+		struct widget_binding *bAlpha;
+		void *pAlpha;
+
+		fsb = fspinbutton_new(win, NULL, _("Hue: "));
+		fspinbutton_prescale(fsb, "000");
+		widget_copy_binding(fsb, "value", pal, "hue");
+		fspinbutton_set_range(fsb, 0.0, 359.0);
+		fspinbutton_set_increment(fsb, 1);
+		fspinbutton_set_precision(fsb, "f", 0);
+		
+		fsb = fspinbutton_new(win, NULL, _("Saturation: "));
+		fspinbutton_prescale(fsb, "00.00");
+		widget_copy_binding(fsb, "value", pal, "saturation");
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.01);
+		fspinbutton_set_precision(fsb, "f", 2);
+
+		fsb = fspinbutton_new(win, NULL, _("Value: "));
+		fspinbutton_prescale(fsb, "00.00");
+		widget_copy_binding(fsb, "value", pal, "value");
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.01);
+		fspinbutton_set_precision(fsb, "f", 2);
+
+		fsb = fspinbutton_new(win, NULL, _("Alpha: "));
+		fspinbutton_prescale(fsb, "0.000");
+		widget_copy_binding(fsb, "value", pal, "alpha");
+		bAlpha = widget_get_binding(pal, "alpha", &pAlpha);
+		switch (bAlpha->vtype) {
+		case WIDGET_FLOAT:
+		case WIDGET_DOUBLE:
+			fspinbutton_set_range(fsb, 0.0, 1.0);
+			fspinbutton_set_increment(fsb, 0.005);
+			fspinbutton_set_precision(fsb, "f", 3);
+			break;
+		case WIDGET_INT:
+		case WIDGET_UINT:
+		case WIDGET_UINT8:
+			fspinbutton_set_range(fsb, 0.0, 255.0);
+			fspinbutton_set_increment(fsb, 1.0);
+			fspinbutton_set_precision(fsb, "f", 0);
+			break;
+		}
+		widget_binding_unlock(bAlpha);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
+static void
+complementary(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+	float hue = widget_get_float(pal, "hue");
+
+	widget_set_float(pal, "hue", ((int)hue+180) % 359);
+	pal->flags |= HSVPAL_DIRTY;
+}
+
+static void
+invert_saturation(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+
+	widget_set_float(pal, "saturation",
+	    1.0 - widget_get_float(pal, "saturation"));
+	pal->flags |= HSVPAL_DIRTY;
+}
+
+static void
+invert_value(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+
+	widget_set_float(pal, "value",
+	    1.0 - widget_get_float(pal, "value"));
+	pal->flags |= HSVPAL_DIRTY;
+}
+
+static void
+open_menu(struct hsvpal *pal)
+{
+	int x, y;
+
+	if (pal->menu != NULL)
+		close_menu(pal);
+
+	pal->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	menu_init(pal->menu);
+
+	pal->menu_item = menu_add_item(pal->menu, NULL);
+	{
+		menu_action(pal->menu_item, _("Edit numerically"), -1,
+		    edit_values, "%p", pal);
+
+		menu_separator(pal->menu_item);
+
+		menu_action(pal->menu_item, _("Complementary color"), -1,
+		    complementary, "%p", pal);
+		menu_action(pal->menu_item, _("Invert saturation"), -1,
+		    invert_saturation, "%p", pal);
+		menu_action(pal->menu_item, _("Invert value"), -1,
+		    invert_value, "%p", pal);
+	}
+	pal->menu->sel_item = pal->menu_item;
+	
+	SDL_GetMouseState(&x, &y);
+	pal->menu_win = menu_expand(pal->menu, pal->menu_item, x, y);
 }
 
 static void
@@ -151,19 +384,34 @@ mousebuttondown(int argc, union evarg *argv)
 {
 	struct hsvpal *pal = argv[0].p;
 	int btn = argv[1].i;
-	int x = argv[2].i - pal->circle.x;
-	int y = argv[3].i - pal->circle.y;
-	float r = hypot((float)x, (float)y);
+	int x = argv[2].i;
+	int y = argv[3].i;
+	float r;
 
-	if (btn == SDL_BUTTON_LEFT) {
-		if (r > (float)pal->circle.rin) {
-			update_h(pal, x, y);
-			pal->state = HSVPAL_SEL_H;
+	switch (btn) {
+	case SDL_BUTTON_LEFT:
+		if (y > pal->rpreview.y) {
+			update_a(pal, x);
+			pal->state = HSVPAL_SEL_A;
 		} else {
-			update_sv(pal, argv[2].i, argv[3].i);
-			pal->state = HSVPAL_SEL_SV;
+			x -= pal->circle.x;
+			y -= pal->circle.y;
+			r = hypot((float)x, (float)y);
+
+			if (r > (float)pal->circle.rin) {
+				update_h(pal, x, y);
+				pal->state = HSVPAL_SEL_H;
+			} else {
+				update_sv(pal, argv[2].i, argv[3].i);
+				pal->state = HSVPAL_SEL_SV;
+			}
 		}
 		widget_focus(pal);
+		break;
+	case SDL_BUTTON_MIDDLE:
+	case SDL_BUTTON_RIGHT:
+		open_menu(pal);
+		break;
 	}
 }
 
@@ -192,6 +440,9 @@ mousemotion(int argc, union evarg *argv)
 		break;
 	case HSVPAL_SEL_SV:
 		update_sv(pal, x, y);
+		break;
+	case HSVPAL_SEL_A:
+		update_a(pal, x);
 		break;
 	}
 }
@@ -225,6 +476,7 @@ hsvpal_init(struct hsvpal *pal)
 	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
 	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vfmt);
 
+	pal->flags = 0;
 	pal->h = 0.0;
 	pal->s = 0.0;
 	pal->v = 0.0;
@@ -234,6 +486,9 @@ hsvpal_init(struct hsvpal *pal)
 	pal->circle.width = 20;
 	pal->state = HSVPAL_SEL_NONE;
 	pal->surface = NULL;
+	pal->menu = NULL;
+	pal->menu_item = NULL;
+	pal->menu_win = NULL;
 	widget_map_surface(pal, NULL);
 
 	event_new(pal, "window-mousebuttonup", mousebuttonup, NULL);
@@ -245,14 +500,16 @@ hsvpal_init(struct hsvpal *pal)
 static void
 render_palette(struct hsvpal *pal)
 {
-	float h, cur_h;
+	float h, cur_h, cur_s, cur_v;
 	Uint32 pc;
-	Uint8 r, g, b;
+	Uint8 r, g, b, a, da;
+	Uint8 *pDst;
 	int x, y, i;
-	
-	cur_h = widget_get_float(pal, "hue");
-	cur_h /= 360.0;
-	cur_h *= 2*M_PI;
+	SDL_Rect rd;
+
+	cur_h = (widget_get_float(pal, "hue")/360) * 2*M_PI;
+	cur_s = widget_get_float(pal, "saturation");
+	cur_v = widget_get_float(pal, "value");
 
 	SDL_LockSurface(pal->surface);
 
@@ -292,7 +549,35 @@ render_palette(struct hsvpal *pal)
 			    pc);
 		}
 	}
-	
+
+	/* Render the alpha selector. */
+	/* XXX overblending */
+	for (y = 0; y < pal->rpreview.h+16; y+=8) {
+		for (x = 0; x < pal->rpreview.w; x+=16) {
+			rd.w = 8;
+			rd.h = 8;
+			rd.x = pal->rpreview.x+x;
+			rd.y = pal->rpreview.y+y;
+			SDL_FillRect(pal->surface, &rd, pal->cTile);
+		}
+		y += 8;
+		for (x = 8; x < pal->rpreview.w; x+=16) {
+			rd.w = 8;
+			rd.h = 8;
+			rd.x = pal->rpreview.x+x;
+			rd.y = pal->rpreview.y+y;
+			SDL_FillRect(pal->surface, &rd, pal->cTile);
+		}
+	}
+	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
+	da = MIN(1, pal->surface->w/255);
+	for (y = pal->rpreview.y; y < pal->surface->h; y++) {
+		for (x = 0, a = 0; x < pal->surface->w; x++) {
+			BLEND_RGBA2(pal->surface, x, y,
+			    r, g, b, a, ALPHA_SRC);
+			a = x*255/pal->surface->w;
+		}
+	}
 	SDL_UnlockSurface(pal->surface);
 }
 
@@ -333,41 +618,27 @@ hsvpal_draw(void *p)
 {
 	struct hsvpal *pal = p;
 	float cur_h, cur_s, cur_v;
-	Uint32 pc;
+	Uint8 a;
 	int x, y;
 	int i;
-	Uint8 r, g, b, a;
 	
 	if (pal->flags & HSVPAL_DIRTY) {
 		pal->flags &= ~(HSVPAL_DIRTY);
 		pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		    WIDGET(pal)->w, WIDGET(pal)->h - pal->rpreview.h, 32,
+		    WIDGET(pal)->w, WIDGET(pal)->h, 32,
 		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
 		if (pal->surface == NULL) {
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		}
+		pal->cTile = SDL_MapRGB(pal->surface->format, 140, 140, 140);
 		render_palette(pal);
 		widget_replace_surface(pal, 0, pal->surface);
 	}
 
-#if 0
-	/* XXX numerically unstable */
-	if (pal->flags & HSVPAL_PIXEL) {
-		Uint32 pixel = widget_get_uint32(pal, "pixel");
-
-		SDL_GetRGBA(pixel, pal->format, &r, &g, &b, &a);
-		prim_rgb2hsv(r, g, b, &cur_h, &cur_s, &cur_v);
-	} else
-#else
-	{
-		cur_h = widget_get_float(pal, "hue");
-		cur_s = widget_get_float(pal, "saturation");
-		cur_v = widget_get_float(pal, "value");
-		a = (Uint8)(widget_get_float(pal, "alpha")*255);
-	}
-#endif
-	cur_h /= 360.0;
-	cur_h *= 2*M_PI;
+	cur_h = (widget_get_float(pal, "hue") / 360.0) * 2*M_PI;
+	cur_s = widget_get_float(pal, "saturation");
+	cur_v = widget_get_float(pal, "value");
+	a = (Uint8)(widget_get_float(pal, "alpha")*255);
 
 	widget_blit_from(pal, pal, 0, NULL, 0, 0);
 
@@ -389,60 +660,23 @@ hsvpal_draw(void *p)
 	    pal->selcircle_r,
 	    COLOR(HSVPAL_CIRCLE_COLOR));
 
-	/* Draw the preview rectangle. */
-	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
-	pc = SDL_MapRGB(vfmt, r, g, b);
-	if (a < 255) {
-		Uint8 cTile1[3], cTile2[3];
-		Uint32 c1, c2;
+	x = a*pal->rpreview.w/255;
 
-		SDL_GetRGB(COLOR(HSVPAL_TILE1_COLOR), vfmt,
-		    &cTile1[0], &cTile1[1], &cTile1[2]);
-		SDL_GetRGB(COLOR(HSVPAL_TILE2_COLOR), vfmt,
-		    &cTile2[0], &cTile2[1], &cTile2[2]);
-
-		c1 = SDL_MapRGB(vfmt,
-		    (((r - cTile1[0]) * a) >> 8) + cTile1[0],
-		    (((g - cTile1[1]) * a) >> 8) + cTile1[1],
-		    (((b - cTile1[2]) * a) >> 8) + cTile1[2]);
-		
-		c2 = SDL_MapRGB(vfmt,
-		    (((r - cTile2[0]) * a) >> 8) + cTile2[0],
-		    (((g - cTile2[1]) * a) >> 8) + cTile2[1],
-		    (((b - cTile2[2]) * a) >> 8) + cTile2[2]);
-
-		primitives.tiling(pal, pal->rpreview, 8, 8, c1, c2);
-	} else {
-		primitives.rect_filled(pal,
-		    pal->rpreview.x, pal->rpreview.y,
-		    pal->rpreview.w, pal->rpreview.h,
-		    pc);
-	}
-
-	{
-		char text[LABEL_MAX];
-		Uint8 lr, lg, lb;
-		Uint32 cText;
-		SDL_Surface *sText;
-
-		if (cur_v < 0.50 ||
-		   (cur_s > 0.6 && (cur_h > 3.665 || cur_h < 0.6453))) {
-			lr = 255;
-			lg = 255;
-			lb = 255;
-		} else {
-			lr = 0;
-			lg = 0;
-			lb = 0;
-		}
-
-		cText = SDL_MapRGB(vfmt, lr, lg, lb);
-		snprintf(text, sizeof(text), "%u,%u,%u,%u", r, g, b, a);
-		sText = text_render(NULL, -1, cText, text);
-		widget_blit(pal, sText,
-		    WIDGET(pal)->w/2 - sText->w/2,
-		    pal->rpreview.y + pal->rpreview.h/2 - sText->h/2);
-		SDL_FreeSurface(sText);
-	}
+	/* Draw the alpha bar. */
+	primitives.vline(pal,
+	    pal->rpreview.x + x,
+	    pal->rpreview.y + 1,
+	    pal->rpreview.y + pal->rpreview.h,
+	    COLOR(HSVPAL_BAR1_COLOR));
+	primitives.vline(pal,
+	    pal->rpreview.x + x + 1,
+	    pal->rpreview.y + 1,
+	    pal->rpreview.y + pal->rpreview.h,
+	    COLOR(HSVPAL_BAR2_COLOR));
+	primitives.vline(pal,
+	    pal->rpreview.x + x + 2,
+	    pal->rpreview.y + 1,
+	    pal->rpreview.y + pal->rpreview.h,
+	    COLOR(HSVPAL_BAR1_COLOR));
 }
 
