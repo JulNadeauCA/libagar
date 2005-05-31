@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.11 2005/05/29 05:49:33 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.12 2005/05/30 01:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version polygon_ver = {
 	"agar rg polygon feature",
-	0, 0
+	2, 0
 };
 
 const struct feature_ops polygon_ops = {
@@ -75,8 +75,9 @@ polygon_init(void *p, struct tileset *ts, int flags)
 	feature_init(poly, ts, flags, &polygon_ops);
 	poly->sketch[0] = '\0';
 	poly->type = POLYGON_SOLID;
-	poly->alpha = 255;
-	poly->p_solid.c = SDL_MapRGB(ts->fmt, 0, 0, 0);
+	poly->cSolid = SDL_MapRGBA(ts->fmt, 0, 0, 0, 0);
+	poly->texture[0] = '\0';
+	poly->texture_alpha = 255;
 	poly->ints = NULL;
 	poly->nints = 0;
 }
@@ -100,15 +101,9 @@ polygon_load(void *p, struct netbuf *buf)
 
 	poly->type = (enum polygon_type)read_uint8(buf);
 	copy_string(poly->sketch, buf, sizeof(poly->sketch));
-
-	switch (poly->type) {
-	case POLYGON_SOLID:
-		poly->p_solid.c = read_color(buf, ts->fmt);
-		break;
-	case POLYGON_TEXTURED:
-		copy_string(poly->p_texture, buf, sizeof(poly->p_texture));
-		break;
-	}
+	poly->cSolid = read_color(buf, ts->fmt);
+	copy_string(poly->texture, buf, sizeof(poly->texture));
+	poly->texture_alpha = (int)read_uint8(buf);
 	return (0);
 }
 
@@ -122,15 +117,9 @@ polygon_save(void *p, struct netbuf *buf)
 
 	write_uint8(buf, (Uint8)poly->type);
 	write_string(buf, poly->sketch);
-
-	switch (poly->type) {
-	case POLYGON_SOLID:
-		write_color(buf, ts->fmt, poly->p_solid.c);
-		break;
-	case POLYGON_TEXTURED:
-		write_string(buf, poly->p_texture);
-		break;
-	}
+	write_color(buf, ts->fmt, poly->cSolid);
+	write_string(buf, poly->texture);
+	write_uint8(buf, (Uint8)poly->texture_alpha);
 }
 
 static void
@@ -211,7 +200,7 @@ polygon_edit(void *p, struct tileview *tv)
 			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
 			    &tv->ts->fmt);
 			widget_bind(hsv1, "pixel", WIDGET_UINT32,
-			    &poly->p_solid.c);
+			    &poly->cSolid);
 		}
 
 		ntab = notebook_add_tab(nb, _("Texture"), BOX_VERT);
@@ -221,13 +210,14 @@ polygon_edit(void *p, struct tileview *tv)
 			txsel = texsel_new(ntab, tv->ts, 0);
 			WIDGET(txsel)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 			widget_bind(txsel, "texture-name", WIDGET_STRING,
-			    poly->p_texture, sizeof(poly->p_texture));
-		}
+			    poly->texture, sizeof(poly->texture));
 		
-		sb = spinbutton_new(box, _("Overall alpha: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &poly->alpha);
-		spinbutton_set_range(sb, 0, 255);
-		spinbutton_set_increment(sb, 5);
+			sb = spinbutton_new(ntab, _("Texture alpha: "));
+			widget_bind(sb, "value", WIDGET_INT,
+			    &poly->texture_alpha);
+			spinbutton_set_range(sb, 0, 255);
+			spinbutton_set_increment(sb, 5);
+		}
 	}
 	return (win);
 }
@@ -259,7 +249,7 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 		return;
 
 	if ((poly->type == POLYGON_TEXTURED) &&
-	    (tex = texture_find(tile->ts, poly->p_texture)) == NULL)
+	    (tex = texture_find(tile->ts, poly->texture)) == NULL)
 		return;
 
 	sk = ske->tel_sketch.sk;
@@ -342,7 +332,7 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 
 			switch (poly->type) {
 			case POLYGON_SOLID:
-				prim_hline(tile, xa, xb, y, poly->p_solid.c);
+				prim_hline(tile, xa, xb, y, poly->cSolid);
 				break;
 			case POLYGON_TEXTURED:
 				for (xi = xa; xi < xb; xi++) {
@@ -379,7 +369,7 @@ polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 		return;
 
 	if ((poly->type == POLYGON_TEXTURED) &&
-	    (tex = texture_find(tile->ts, poly->p_texture)) == NULL)
+	    (tex = texture_find(tile->ts, poly->texture)) == NULL)
 		return;
 
 	sk = ske->tel_sketch.sk;
@@ -412,7 +402,7 @@ polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 		     y++) {
 			if ((d = right[y] - left[y]) > 0) {
 				prim_hline(tile, left[y], right[y], y,
-				    poly->p_solid.c);
+				    poly->cSolid);
 			}
 		}
 		break;
