@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.10 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.11 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,11 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget edits the value of a
-.Ft float
-or
-.Ft double
-variable.
+widget edits the value of a floating point or integer value.
 It is composed of a
 .Xr textbox 3
 for manually entering the value,
@@ -53,6 +49,13 @@ an
 for selecting the unit system to use, and two
 .Xr button 3
 widgets to increment and decrement the value.
+.Pp
+The integer functionality provided by
+.Nm
+is useful for bindings that may take a floating-point or integer value,
+but it is more efficient to use
+.Xr spinbutton 3
+for integer-only bindings.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr object 3 ->
@@ -111,11 +114,8 @@ conversion is done).
 .Pp
 The
 .Fn fspinbutton_set_value
-function modifies the bound value (converting to
-.Ft float
-for
-.Dv WIDGET_FLOAT
-bindings).
+function modifies the bound value, performing conversion to float or integer
+if necessary.
 .Fn fspinbutton_add_value
 adds the specified number to the bound value.
 The number is given in selected units instead of base units.
@@ -181,9 +181,15 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "double *value"
 .It Va double *value
-The value to display/edit (WIDGET_DOUBLE).
+Real number (double-precision).
 .It Va float *value
-The value to display/edit (WIDGET_FLOAT).
+Real number (single-precision).
+.It Va int *value
+Integer value.
+.It Va u_int *value
+Unsigned integer value.
+.It Va Uint8 *value
+Unsigned 8-bit value.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
