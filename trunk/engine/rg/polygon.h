@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.h,v 1.4 2005/05/29 00:27:26 vedge Exp $	*/
+/*	$Csoft: polygon.h,v 1.5 2005/05/30 01:30:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_POLYGON_H_
@@ -15,16 +15,11 @@ struct polygon {
 		POLYGON_SOLID,			/* Solid fill */
 		POLYGON_TEXTURED		/* Texture fill */
 	} type;
-	Uint8 alpha;				/* Overall alpha */
-	union {
-		struct {
-			Uint32 c;		/* Fill color */
-		} solid;
-		char texture[TEXTURE_NAME_MAX];
-	} args;
-#define p_solid args.solid
-#define p_texture args.texture
-	int *ints;				/* Used for rendering */
+	Uint32 cSolid;				/* Solid Fill color */
+	char texture[TEXTURE_NAME_MAX];		/* Texture name */
+	int texture_alpha;			/* Texture blending alpha */
+	
+	int *ints;				/* Used for scan conversion */
 	u_int nints;
 };
 
