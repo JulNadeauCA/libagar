@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.36 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.37 2005/05/28 08:40:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@
 
 const struct version tileset_ver = {
 	"agar tileset",
-	1, 0
+	2, 0
 };
 
 const struct object_ops tileset_ops = {
@@ -265,21 +265,21 @@ tileset_load(void *obj, struct netbuf *buf)
 		copy_string(name, buf, sizeof(name));
 		copy_string(type, buf, sizeof(type));
 		flags = (int)read_uint32(buf);
+		len = (size_t)read_uint32(buf);
 
 		for (ftops = &feature_tbl[0]; *ftops != NULL; ftops++) {
 			if (strcmp((*ftops)->type, type) == 0)
 				break;
 		}
 		if (*ftops == NULL) {
-			/* XXX ignore? */
-			error_set("%s: unknown feature type `%s'", name, type);
-			goto fail;
+			dprintf("%s: unimplemented feature: %s; "
+			        "skipping %lu bytes.", name, type, (u_long)len);
+			netbuf_seek(buf, len, SEEK_CUR);
 		}
 
 		ft = Malloc((*ftops)->len, M_RG);
 		ft->ops = *ftops;
 		ft->ops->init(ft, ts, flags);
-
 		if (feature_load(ft, buf) == -1) {
 			feature_destroy(ft);
 			Free(ft, M_RG);
@@ -413,10 +413,18 @@ tileset_save(void *obj, struct netbuf *buf)
 	nfeatures_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(ft, &ts->features, features) {
+		off_t ftsize_offs;
+
 		write_string(buf, ft->name);
 		write_string(buf, ft->ops->type);
 		write_uint32(buf, ft->flags);
+
+		/* Encode the size to allow skipping unimplemented features. */
+		ftsize_offs = netbuf_tell(buf);
+		write_uint32(buf, 0);
 		feature_save(ft, buf);
+		pwrite_uint32(buf, netbuf_tell(buf) - ftsize_offs, ftsize_offs);
+
 		nfeatures++;
 	}
 	pwrite_uint32(buf, nfeatures, nfeatures_offs);
