@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.39 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.40 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1662,8 +1662,7 @@ void
 tileview_generic_menu(struct tileview *tv, struct AGMenuItem *mi)
 {
 	menu_int_flags(mi, _("Show controls"), RG_CONTROLS_ICON,
-	    &tv->flags, TILEVIEW_HIDE_CONTROLS, NULL, 1);
-		
+	    &tv->flags, TILEVIEW_HIDE_CONTROLS, 1);
 	menu_int_flags(mi, _("Show tiling"), SNAP_GRID_ICON,
-	    &tv->flags, TILEVIEW_NO_TILING, NULL, 1);
+	    &tv->flags, TILEVIEW_NO_TILING, 1);
 }
