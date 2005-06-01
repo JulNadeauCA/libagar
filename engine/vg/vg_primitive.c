@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.9 2005/04/14 02:49:27 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.10 2005/05/20 05:55:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,31 +41,8 @@ vg_put_pixel(struct vg *vg, int x, int y, Uint32 c)
 	if (CLIPPED_PIXEL(vg->su, x, y))
 		return;
 
-	d = (Uint8 *)vg->su->pixels +
-	    y*vg->su->pitch + x*vg->fmt->BytesPerPixel;
-
-	switch (vg->fmt->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)d = c;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		d[0] = (c>>16) & 0xff;
-		d[1] = (c>>8) & 0xff;
-		d[2] = c & 0xff;
-#else
-		d[0] = c & 0xff;
-		d[1] = (c>>8) & 0xff;
-		d[2] = (c>>16) & 0xff;
-#endif
-		break;
-	case 2:
-		*(Uint16 *)d = c;
-		break;
-	case 1:
-		*d = c;
-		break;
-	}
+	d = (Uint8 *)vg->su->pixels + y*vg->su->pitch + (x<<2);
+	*(Uint32 *)d = c;
 }
 
 /* Render a circle using a modified Bresenham line algorithm. */
@@ -129,6 +106,29 @@ vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
 		}
 		px = x;
 		py = y;
+	}
+}
+
+/* Draw a horizontal line segment. */
+void
+vg_hline_primitive(struct vg *vg, int x1, int x2, int y, Uint32 c)
+{
+	SDL_Surface *su = vg->su;
+	int x, xtmp;
+	Uint8 *pDst, *pEnd;
+	int dx;
+
+	if (y >= su->h || y < 0) { return; }
+	if (x1 >= su->w) { x1 = su->w - 1; } else if (x1 < 0) { x1 = 0; }
+	if (x2 >= su->w) { x2 = su->w - 1; } else if (x2 < 0) { x2 = 0; }
+	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
+	dx = x2 - x1;
+
+	pDst = (Uint8 *)su->pixels + y*su->pitch + ((x1)<<2);
+	pEnd = pDst + (dx<<2);
+	while (pDst < pEnd) {
+		*(Uint32 *)pDst = c;
+		pDst += 4;
 	}
 }
 

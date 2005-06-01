@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.48 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.49 2005/05/30 01:28:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -59,6 +59,7 @@ extern const struct vg_element_ops vg_arc_ops;
 extern const struct vg_element_ops vg_ellipse_ops;
 extern const struct vg_element_ops vg_text_ops;
 extern const struct vg_element_ops vg_mask_ops;
+extern const struct vg_element_ops vg_polygon_ops;
 
 const struct vg_element_ops *vg_element_types[] = {
 	&vg_points_ops,
@@ -70,7 +71,7 @@ const struct vg_element_ops *vg_element_types[] = {
 	NULL,			/* triangle fan */
 	NULL,			/* quads */
 	NULL,			/* quad strip */
-	NULL,			/* polygon */
+	&vg_polygon_ops,
 	&vg_circle_ops,
 	&vg_arc_ops,
 	&vg_ellipse_ops,
@@ -168,6 +169,9 @@ vg_init(struct vg *vg, int flags)
 	vg->origin_color[1] = SDL_MapRGB(vg->fmt, 0, 150, 0);
 	vg->origin_color[2] = SDL_MapRGB(vg->fmt, 0, 80, 150);
 	vg->norigin = VG_NORIGINS;
+
+	vg->ints = NULL;
+	vg->nints = 0;
 }
 
 void
@@ -250,6 +254,8 @@ vg_destroy(struct vg *vg)
 	vg_destroy_elements(vg);
 	vg_destroy_styles(vg);
 	pthread_mutex_destroy(&vg->lock);
+
+	Free(vg->ints, M_VG);
 }
 
 void
@@ -448,7 +454,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->fill_st.style = VG_NOFILL;
 
 	pthread_mutex_lock(&vg->lock);
-	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
+	TAILQ_INSERT_TAIL(&vg->vges, vge, vges);
 
 	if (vg->cur_block != NULL) {
 		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
@@ -764,19 +770,20 @@ vg_alloc_vertex(struct vg_element *vge)
 }
 
 /* Pop the highest vertex off the vertex array. */
-void
+struct vg_vertex *
 vg_pop_vertex(struct vg *vg)
 {
 	struct vg_element *vge = vg->cur_vge;
 
 	if (vge->vtx == NULL)
-		return;
+		return (NULL);
 #ifdef DEBUG
 	if (vge->nvtx-1 < 0)
 		fatal("neg nvtx");
 #endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex));
 	vg->redraw++;
+	return (vge->nvtx > 0 ? &vge->vtx[vge->nvtx-1] : NULL);
 }
 
 /* Push a 2D vertex onto the vertex array. */
@@ -871,7 +878,7 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 		vgs->vg_text_st.flags = 0;
 		break;
 	}
-	TAILQ_INSERT_HEAD(&vg->styles, vgs, styles);
+	TAILQ_INSERT_TAIL(&vg->styles, vgs, styles);
 	return (vgs);
 }
 

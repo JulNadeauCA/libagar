@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.29 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.30 2005/05/30 01:28:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -45,6 +45,7 @@ struct vg_element;
 
 #include "close_code.h"
 
+#include <engine/vg/vg_math.h>
 #include <engine/vg/vg_snap.h>
 #include <engine/vg/vg_ortho.h>
 #include <engine/vg/vg_origin.h>
@@ -56,7 +57,7 @@ struct vg_element;
 #include <engine/vg/vg_ellipse.h>
 #include <engine/vg/vg_text.h>
 #include <engine/vg/vg_mask.h>
-#include <engine/vg/vg_math.h>
+#include <engine/vg/vg_polygon.h>
 
 #include "begin_code.h"
 
@@ -70,7 +71,7 @@ enum vg_element_type {
 	VG_TRIANGLE_FAN,	/* Fan of connected triangles */
 	VG_QUADS,		/* Individual four-sided polygons */
 	VG_QUAD_STRIP,		/* Series of connected four-sided polygons */
-	VG_POLYGON,		/* Simple, convex polygon */
+	VG_POLYGON,		/* Polygon */
 	VG_CIRCLE,		/* Single circle */
 	VG_ARC,			/* Single arc */
 	VG_ELLIPSE,		/* Single ellipse */
@@ -174,11 +175,13 @@ struct vg_element {
 		struct vg_ellipse_args vg_arc;
 		struct vg_text_args vg_text;
 		struct vg_mask_args vg_mask;
+		struct vg_polygon_args vg_polygon;
 	} vg_args;
 #define vg_circle   vg_args.vg_circle
 #define vg_arc	    vg_args.vg_arc
 #define vg_text	    vg_args.vg_text
 #define vg_mask	    vg_args.vg_mask
+#define vg_polygon  vg_args.vg_polygon
 
 	TAILQ_ENTRY(vg_element) vgbmbs;	/* Entry in block element list */
 	TAILQ_ENTRY(vg_element) vges;	/* Entry in global element list */
@@ -222,7 +225,10 @@ struct vg {
 	SDL_Surface *su;		/* Raster surface */
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
 	struct map *map;		/* Raster map (optional) */
-	
+
+	int *ints;			/* Used for scan conversion */
+	u_int nints;
+
 	TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
 	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
@@ -267,7 +273,7 @@ __inline__ void	 vg_vtxcoords2d(struct vg *, struct vg_vertex *, double *,
 __inline__ void	 vg_vtxcoords2i(struct vg *, struct vg_vertex *, int *, int *);
 __inline__ void  vg_rlength(struct vg *, double, int *);
 void		 vg_vlength(struct vg *, int, double *);
-void		 vg_pop_vertex(struct vg *);
+struct vg_vertex *vg_pop_vertex(struct vg *);
 
 struct vg_layer *vg_push_layer(struct vg *, const char *);
 __inline__ void	 vg_pop_layer(struct vg *);
