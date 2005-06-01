@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.28 2004/08/27 03:32:17 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.29 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/map/map.h>
 
 #include "units.h"
 
@@ -36,6 +37,7 @@
 const struct unit *unit_groups[] = {
 	identity_unit,
 	length_units,
+	video_units,
 	area_units,
 	volume_units,
 	speed_units,
@@ -195,6 +197,16 @@ const struct unit length_units[] = {
 	{ "L.Y.", "", N_("Light years"),	946075309081900.0, NULL },
 	{ "P.S.", "", N_("Parsecs"),		3085678e10, NULL },
 #endif
+	{ NULL,	NULL, NULL,			0, NULL }
+};
+
+/* Units of length/distance on a raster display. */
+/* TODO resolution-specific functions */
+const struct unit video_units[] = {
+	{ "px", "", N_("Pixels"),		1.0, NULL },
+	{ "tsz", "", N_("Agar tiles"),		TILESZ, NULL },
+	{ "kpx", "", N_("Kilopixels"),		1e3, NULL },
+	{ "Mpx", "", N_("Megapixels"),		1e6, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }
 };
 
@@ -467,3 +479,4 @@ const struct unit met_units[] = {
 	{ "Hyperskis", "", N_("Cross-country/vigorous skiing"),	14, NULL },
 	{ NULL, NULL, NULL,					0, NULL }
 };
+

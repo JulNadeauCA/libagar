@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.12 2004/08/26 06:02:26 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.13 2004/08/26 06:18:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/historical_units.h>
@@ -41,6 +41,7 @@ extern const int nunit_groups;
 
 extern const struct unit identity_unit[];
 extern const struct unit length_units[];
+extern const struct unit video_units[];
 extern const struct unit area_units[];
 extern const struct unit volume_units[];
 extern const struct unit speed_units[];
