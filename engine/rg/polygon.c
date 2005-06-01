@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.12 2005/05/30 01:30:24 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.13 2005/05/31 03:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ polygon_init(void *p, struct tileset *ts, int flags)
 	feature_init(poly, ts, flags, &polygon_ops);
 	poly->sketch[0] = '\0';
 	poly->type = POLYGON_SOLID;
-	poly->cSolid = SDL_MapRGBA(ts->fmt, 0, 0, 0, 0);
+	poly->cSolid = SDL_MapRGBA(ts->fmt, 0, 0, 0, 255);
 	poly->texture[0] = '\0';
 	poly->texture_alpha = 255;
 	poly->ints = NULL;
@@ -228,43 +228,17 @@ compare_ints(const void *a, const void *b)
 	return (*(const int *)a) - (*(const int *)b);
 }
 
-/* Render a sketch outline into a non-simple polygon. */
-void
-polygon_render(void *p, struct tile *tile, int fx, int fy)
+static __inline__ void
+render_polygon(struct tile *tile, struct polygon *poly,
+    struct tile_element *ske, struct vg *vg, struct vg_element *vge,
+    struct texture *tex)
 {
-	struct polygon *poly = p;
-	struct vg *vg;
-	struct vg_element *vge;
-	struct tile_element *ske;
-	struct sketch *sk;
-	struct texture *tex = NULL;
-	struct vg_vertex *vtx = NULL;
-	u_int nvtx = 0, i;
+	struct vg_vertex *vtx = vge->vtx;
+	u_int i, nvtx = vge->nvtx;
 	int x, y, x1, y1, x2, y2;
 	int miny, maxy;
 	int ind1, ind2;
 	int ints;
-
-	if ((ske = tile_find_element(tile, TILE_SKETCH, poly->sketch)) == NULL)
-		return;
-
-	if ((poly->type == POLYGON_TEXTURED) &&
-	    (tex = texture_find(tile->ts, poly->texture)) == NULL)
-		return;
-
-	sk = ske->tel_sketch.sk;
-	vg = sk->vg;
-
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->type == VG_LINE_STRIP) {
-			vtx = vge->vtx;
-			nvtx = vge->nvtx;
-			break;
-		}
-	}
-	if (nvtx < 3) {
-		return;
-	}
 
 	if (poly->ints == NULL) {
 		poly->ints = Malloc(nvtx*sizeof(int), M_RG);
@@ -352,6 +326,33 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 	}
 }
 
+/* Render a sketch outline into a non-simple polygon. */
+void
+polygon_render(void *p, struct tile *tile, int fx, int fy)
+{
+	struct polygon *poly = p;
+	struct tile_element *ske;
+	struct texture *tex = NULL;
+	struct vg *vg;
+	struct vg_element *vge;
+
+	if ((ske = tile_find_element(tile, TILE_SKETCH, poly->sketch)) == NULL)
+		return;
+
+	if ((poly->type == POLYGON_TEXTURED) &&
+	    (tex = texture_find(tile->ts, poly->texture)) == NULL)
+		return;
+
+	vg = ske->tel_sketch.sk->vg;
+
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		if (vge->type == VG_POLYGON &&
+		    vge->nvtx >= 3)
+			render_polygon(tile, poly, ske, vg, vge, tex);
+	}
+}
+
+#if 0
 /* Rendering routine for simple polygons. */
 void
 polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
@@ -431,4 +432,4 @@ polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 	Free(left, M_RG);
 	Free(right, M_RG);
 }
-
+#endif
