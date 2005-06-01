@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.17 2005/05/24 03:00:29 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.18 2005/05/24 05:34:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -34,6 +34,7 @@ struct tile_element {
 			struct sketch *sk;
 			int x, y;
 			int alpha;
+			float scale;
 		} sketch;
 	} data;
 #define tel_feature data.feature

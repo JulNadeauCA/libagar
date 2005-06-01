@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.51 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.52 2005/05/28 08:39:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -322,6 +322,7 @@ tile_add_sketch(struct tile *t, const char *name, struct sketch *sk,
 	tel->tel_sketch.x = x;
 	tel->tel_sketch.y = y;
 	tel->tel_sketch.alpha = 255;
+	tel->tel_sketch.scale = 1.0;
 	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
 	sk->nrefs++;
 	t->flags |= TILE_DIRTY;
@@ -688,13 +689,15 @@ sketch_ctrl_buttonup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	struct tileview_ctrl *ctrl = argv[1].p;
-	struct sketch *sk = argv[2].p;
+	struct tile_element *tel = argv[2].p;
+	struct sketch *sk = tel->tel_sketch.sk;
 	struct tile *t = tv->tile;
 	int w = tileview_int(ctrl, 2);
 	int h = tileview_int(ctrl, 3);
 	
 	if (w != sk->vg->su->w || h != sk->vg->su->h)  {
-		sketch_scale(sk, w, h, 1.0, ctrl->xoffs, ctrl->yoffs);
+		sketch_scale(sk, w, h, tel->tel_sketch.scale,
+		    ctrl->xoffs, ctrl->yoffs);
 	}
 	t->flags |= TILE_DIRTY;
 }
@@ -794,7 +797,7 @@ open_element(struct tileview *tv, struct tile_element *tel,
 			    tel->tel_sketch.sk->vg->su->h);
 			tv->tv_sketch.ctrl->buttonup =
 			    event_new(tv, NULL, sketch_ctrl_buttonup, "%p,%p",
-			    tv->tv_sketch.ctrl, tel->tel_sketch.sk);
+			    tv->tv_sketch.ctrl, tel);
 			tv->tv_sketch.win = win = sketch_edit(tv, tel);
 			tv->tv_sketch.menu = NULL;
 			tv->tv_sketch.menu_item = NULL;
@@ -839,7 +842,7 @@ tryname:
 		goto tryname;
 	}
 
-	pixmap_scale(px, 32, 32, 0, 0);
+	pixmap_scale(px, tv->tile->su->w, tv->tile->su->h, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
 
 	tel = tile_add_pixmap(tv->tile, NULL, px, 0, 0);
@@ -887,7 +890,7 @@ tryname:
 		goto tryname;
 	}
 
-	sketch_scale(sk, 32, 32, 1.0, 0, 0);
+	sketch_scale(sk, tv->tile->su->w, tv->tile->su->h, 1.0, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->sketches, sk, sketches);
 	tel = tile_add_sketch(tv->tile, NULL, sk, 0, 0);
 	tv->tile->flags |= TILE_DIRTY;
@@ -1667,9 +1670,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tileview_set_tile(tv, t);
 	{
 		extern struct tileview_sketch_tool_ops sketch_line_ops;
+		extern struct tileview_sketch_tool_ops sketch_polygon_ops;
 		extern struct tileview_sketch_tool_ops sketch_circle_ops;
 
 		tileview_reg_tool(tv, &sketch_line_ops);
+		tileview_reg_tool(tv, &sketch_polygon_ops);
 		tileview_reg_tool(tv, &sketch_circle_ops);
 	}
 	

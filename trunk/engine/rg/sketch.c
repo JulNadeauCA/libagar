@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.11 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.12 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -33,6 +33,11 @@
 #include <engine/widget/box.h>
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/fspinbutton.h>
+#include <engine/widget/spinbutton.h>
+#include <engine/widget/mspinbutton.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/notebook.h>
+#include <engine/widget/units.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -67,11 +72,20 @@ sketch_scale(struct sketch *sk, int w, int h, float scale, int x, int y)
 	double xoffs = (float)x/(float)TILESZ/scale;
 	double yoffs = (float)y/(float)TILESZ/scale;
 	Uint32 i;
+	double vw, vh;
 
-	vg_scale(vg,
-	    (float)w/(float)TILESZ/scale,
-	    (float)h/(float)TILESZ/scale,
-	    scale);
+	if (w == -1) {
+		w = vg->w;
+	} else {
+		w = (float)w/(float)TILESZ/scale;
+	}
+	if (h == -1) {
+		h = vg->h;
+	} else {
+		h = (float)h/(float)TILESZ/scale;
+	}
+
+	vg_scale(vg, w, h, scale);
 	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < vge->nvtx; i++) {
@@ -124,67 +138,70 @@ sketch_save(struct sketch *sk, struct netbuf *buf)
 	vg_save(sk->vg, buf);
 }
 
+static void
+update_sketch(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tile_element *tel = argv[2].p;
+	struct sketch *sk = tel->tel_sketch.sk;
+
+	sketch_scale(sk, -1, -1, tel->tel_sketch.scale, 0, 0);
+
+	tv->tile->flags |= TILE_DIRTY;
+}
+
 struct window *
 sketch_edit(struct tileview *tv, struct tile_element *tel)
 {
 	struct sketch *sk = tel->tel_sketch.sk;
 	struct vg *vg = sk->vg;
 	struct window *win;
-	struct box *bo;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 	
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Sketch %s"), sk->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
 	{
 		struct hsvpal *pal;
 		struct fspinbutton *fsb;
 		struct box *hb;
 
-		pal = hsvpal_new(bo);
+		pal = hsvpal_new(ntab);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 		widget_bind(pal, "pixel-format", WIDGET_POINTER, &tv->ts->fmt);
 		widget_bind(pal, "hue", WIDGET_FLOAT, &sk->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &sk->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &sk->v);
 		widget_bind(pal, "alpha", WIDGET_FLOAT, &sk->a);
-	
-		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-		box_set_padding(hb, 1);
-		{
-			fsb = fspinbutton_new(hb, NULL, _("H: "));
-			fspinbutton_prescale(fsb, "000");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &sk->h);
-			fspinbutton_set_range(fsb, 0.0, 359.0);
-			fspinbutton_set_increment(fsb, 1);
-			fspinbutton_set_precision(fsb, "f", 0);
+	}
+	ntab = notebook_add_tab(nb, _("Texture"), BOX_VERT);
+
+	ntab = notebook_add_tab(nb, _("Settings"), BOX_VERT);
+	{
+		struct fspinbutton *fsb;
+		struct spinbutton *sb;
+		struct mspinbutton *msb;
+
+		fsb = fspinbutton_new(ntab, NULL, _("Scale: "));
+		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_sketch.scale);
+		fspinbutton_set_min(fsb, 1.0);
+		fspinbutton_set_increment(fsb, 0.1);
+		event_new(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		    tv, tel);
 		
-			fsb = fspinbutton_new(hb, NULL, _("S: "));
-			fspinbutton_prescale(fsb, "00.00");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &sk->s);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.01);
-			fspinbutton_set_precision(fsb, "f", 2);
-		}
+		msb = mspinbutton_new(ntab, ",", _("Coordinates: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &tel->tel_sketch.x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &tel->tel_sketch.y);
+		event_new(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		    tv, tel);
 		
-		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-		box_set_padding(hb, 1);
-		{
-			fsb = fspinbutton_new(hb, NULL, _("V: "));
-			fspinbutton_prescale(fsb, "00.00");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &sk->v);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.01);
-			fspinbutton_set_precision(fsb, "f", 2);
-			
-			fsb = fspinbutton_new(hb, NULL, _("A: "));
-			fspinbutton_prescale(fsb, "0.000");
-			widget_bind(fsb, "value", WIDGET_FLOAT, &sk->a);
-			fspinbutton_set_range(fsb, 0.0, 1.0);
-			fspinbutton_set_increment(fsb, 0.005);
-			fspinbutton_set_precision(fsb, "f", 3);
-		}
+		sb = spinbutton_new(ntab, _("Overall alpha: "));
+		spinbutton_set_range(sb, 0, 255);
+		widget_bind(sb, "value", WIDGET_INT, &tel->tel_sketch.alpha);
 	}
 
 	return (win);
