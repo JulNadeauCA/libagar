@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.13 2005/05/31 03:59:26 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.14 2005/06/01 09:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -326,7 +326,7 @@ render_polygon(struct tile *tile, struct polygon *poly,
 	}
 }
 
-/* Render a sketch outline into a non-simple polygon. */
+/* Apply texturing/filling to VG_POLYGON elements of a sketch. */
 void
 polygon_render(void *p, struct tile *tile, int fx, int fy)
 {
@@ -346,9 +346,17 @@ polygon_render(void *p, struct tile *tile, int fx, int fy)
 	vg = ske->tel_sketch.sk->vg;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->type == VG_POLYGON &&
-		    vge->nvtx >= 3)
-			render_polygon(tile, poly, ske, vg, vge, tex);
+		vge->drawn = 0;
+		switch (vge->type) {
+		case VG_POLYGON:
+			if (vge->nvtx >= 3) {
+				render_polygon(tile, poly, ske, vg, vge, tex);
+			}
+			break;
+		default:
+			vg_rasterize_element(vg, vge);
+			break;
+		}
 	}
 }
 
