@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.30 2005/05/30 01:28:02 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.31 2005/06/01 09:06:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -51,7 +51,6 @@ struct vg_element;
 #include <engine/vg/vg_origin.h>
 #include <engine/vg/vg_block.h>
 
-#include <engine/vg/vg_point.h>
 #include <engine/vg/vg_line.h>
 #include <engine/vg/vg_circle.h>
 #include <engine/vg/vg_ellipse.h>
@@ -89,6 +88,7 @@ struct vg_element_ops {
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
+	int (*intersect)(struct vg *, struct vg_element *, int, int);
 };
 
 struct vg_layer {
@@ -166,7 +166,10 @@ struct vg_element {
 	struct vg_text_style text_st;	/* Effective text style */
 	Uint32 color;			/* Effective foreground color */
 	int layer;			/* Associated layer */
+
 	int redraw, drawn;		/* Element needs to be redrawn */
+	int selected;			/* Multiple selection flag */
+	
 	struct vg_vertex *vtx;		/* Vertices */
 	Uint32		 nvtx;
 
@@ -203,7 +206,9 @@ struct vg {
 	int redraw;			/* Global redraw */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
-	Uint32 fill_color, grid_color;
+	Uint32 fill_color;
+	Uint32 grid_color;
+	Uint32 selection_color;
 	double grid_gap;
 
 	struct vg_vertex *origin;	/* Origin point vertices */
@@ -257,6 +262,7 @@ int		 vg_load(struct vg *, struct netbuf *);
 
 void		 vg_scale(struct vg *, double, double, double);
 void		 vg_rasterize(struct vg *);
+void		 vg_rasterize_element(struct vg *, struct vg_element *);
 __inline__ void	 vg_update_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
 

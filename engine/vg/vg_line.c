@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.19 2005/05/20 05:55:12 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.20 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,31 +38,6 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
-
-const struct vg_element_ops vg_lines_ops = {
-	N_("Line segments"),
-	VGLINES_ICON,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	vg_draw_line_segments,
-	vg_line_bbox
-};
-const struct vg_element_ops vg_line_strip_ops = {
-	N_("Line strip"),
-	VGLINES_ICON,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	vg_draw_line_strip,
-	vg_line_bbox
-};
-const struct vg_element_ops vg_line_loop_ops = {
-	N_("Line loop"),
-	VGLINES_ICON,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	vg_draw_line_loop,
-	vg_line_bbox
-};
 
 void
 vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
@@ -150,8 +125,8 @@ vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 	}
 }
 
-void
-vg_line_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
 	double xmin = 0, xmax = 0;
 	double ymin = 0, ymax = 0;
@@ -174,6 +149,40 @@ vg_line_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->w = xmax-xmin;
 	r->h = ymax-ymin;
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	return (INT_MAX);
+}
+
+const struct vg_element_ops vg_lines_ops = {
+	N_("Line segments"),
+	VGLINES_ICON,
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_segments,
+	extent,
+	intsect
+};
+const struct vg_element_ops vg_line_strip_ops = {
+	N_("Line strip"),
+	VGLINES_ICON,
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_strip,
+	extent,
+	intsect
+};
+const struct vg_element_ops vg_line_loop_ops = {
+	N_("Line loop"),
+	VGLINES_ICON,
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_loop,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static enum {

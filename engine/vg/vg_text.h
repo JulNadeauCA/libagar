@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.h,v 1.5 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg_text.h,v 1.6 2004/05/28 22:31:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_TEXT_H_
@@ -18,14 +18,10 @@ struct vg_text_args {
 };
 
 __BEGIN_DECLS
-void	vg_text_init(struct vg *, struct vg_element *);
-void	vg_text_destroy(struct vg *, struct vg_element *);
 void	vg_text_align(struct vg *, enum vg_alignment);
 void	vg_text_angle(struct vg *, double);
 void	vg_printf(struct vg *, const char *, ...);
 void	vg_pprintf(struct vg *, const char *, ...);
-void	vg_draw_text(struct vg *, struct vg_element *);
-void	vg_text_bbox(struct vg *, struct vg_element *, struct vg_rect *);
 __END_DECLS
 
 #include "close_code.h"

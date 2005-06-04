@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.20 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.1 2005/06/01 09:06:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,17 +39,8 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
-const struct vg_element_ops vg_polygon_ops = {
-	N_("Polygon"),
-	RG_POLYGON_ICON,
-	vg_polygon_init,
-	NULL,				/* destroy */
-	vg_draw_polygon,
-	vg_polygon_bbox
-};
-
-void
-vg_polygon_init(struct vg *vg, struct vg_element *vge)
+static void
+init(struct vg *vg, struct vg_element *vge)
 {
 	vge->vg_polygon.outline = 0;
 }
@@ -60,8 +51,8 @@ compare_ints(const void *p1, const void *p2)
 	return (*(const int *)p1 - *(const int *)p2);
 }
 
-void
-vg_draw_polygon(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	int i;
 	int x, y, x1, y1, x2, y2;
@@ -143,8 +134,8 @@ vg_draw_polygon(struct vg *vg, struct vg_element *vge)
 	}
 }
 
-void
-vg_polygon_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
 	double xmin = 0, xmax = 0;
 	double ymin = 0, ymax = 0;
@@ -167,6 +158,22 @@ vg_polygon_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->w = xmax-xmin;
 	r->h = ymax-ymin;
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	return (INT_MAX);
+}
+
+const struct vg_element_ops vg_polygon_ops = {
+	N_("Polygon"),
+	RG_POLYGON_ICON,
+	init,
+	NULL,				/* destroy */
+	render,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static int seq;

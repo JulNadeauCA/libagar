@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.49 2005/05/30 01:28:02 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.50 2005/06/01 09:06:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version vg_ver = {
 	"agar vg",
-	0, 0
+	1, 0
 };
 
 extern const struct vg_element_ops vg_points_ops;
@@ -135,6 +135,7 @@ vg_init(struct vg *vg, int flags)
 	vg->fmt = vg->su->format;
 	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
+	vg->selection_color = SDL_MapRGB(vg->fmt, 150, 150, 0);
 	vg->grid_gap = 0.25;
 	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
@@ -439,6 +440,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->style = NULL;
 	vge->layer = vg->cur_layer;
 	vge->drawn = 0;
+	vge->selected = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
@@ -573,15 +575,24 @@ vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
  * Rasterize an element as well as other overlapping elements.
  * The vg must be locked.
  */
-static void
-rasterize_element(struct vg *vg, struct vg_element *vge)
+void
+vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 {
 	struct vg_element *ovge;
 	struct vg_rect r1, r2;
+	Uint32 color_save = 0;
 
 	if (!vge->drawn) {
+		if (vge->selected) {
+			color_save = vge->color;
+			vge->color = vg->selection_color;
+		}
+
 		vge->ops->draw(vg, vge);
 		vge->drawn = 1;
+		
+		if (vge->selected)
+			vge->color = color_save;
 	}
 	if (vge->ops->bbox != NULL) {
 		vge->ops->bbox(vg, vge, &r1);
@@ -592,7 +603,7 @@ rasterize_element(struct vg *vg, struct vg_element *vge)
 			}
 			ovge->ops->bbox(vg, ovge, &r2);
 			if (vg_rcollision(vg, &r1, &r2, NULL))
-				rasterize_element(vg, ovge);
+				vg_rasterize_element(vg, ovge);
 		}
 	}
 }
@@ -620,7 +631,7 @@ vg_rasterize(struct vg *vg)
 		vge->drawn = 0;
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		rasterize_element(vg, vge);
+		vg_rasterize_element(vg, vge);
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
@@ -995,6 +1006,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	write_double(buf, vg->scale);
 	write_color(buf, vg->fmt, vg->fill_color);
 	write_color(buf, vg->fmt, vg->grid_color);
+	write_color(buf, vg->fmt, vg->selection_color);
 	write_double(buf, vg->grid_gap);
 	write_uint32(buf, (Uint32)vg->cur_layer);
 
@@ -1147,6 +1159,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->scale = read_double(buf);
 	vg->fill_color = read_color(buf, vg->fmt);
 	vg->grid_color = read_color(buf, vg->fmt);
+	vg->selection_color = read_color(buf, vg->fmt);
 	vg->grid_gap = read_double(buf);
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;

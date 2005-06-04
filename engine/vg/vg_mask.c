@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.c,v 1.4 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.5 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -31,25 +31,16 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
-const struct vg_element_ops vg_mask_ops = {
-	N_("Polygonal mask"),
-	-1,
-	vg_mask_init,
-	NULL,
-	vg_draw_mask,
-	NULL
-};
-
-void
-vg_mask_init(struct vg *vg, struct vg_element *vge)
+static void
+init(struct vg *vg, struct vg_element *vge)
 {
 	vge->vg_mask.scale = 1.0;
 	vge->vg_mask.visible = 0;
 	vge->vg_mask.p = NULL;
 }
 
-void
-vg_draw_mask(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	int x1, y1, x2, y2;
 	int x0, y0;
@@ -98,3 +89,14 @@ vg_mask_mousebutton(struct vg *vg, void (*func)(void *, Uint8), void *p)
 	vg->cur_vge->vg_mask.mousebutton = func;
 	vg->cur_vge->vg_mask.p = p;
 }
+
+const struct vg_element_ops vg_mask_ops = {
+	N_("Polygonal mask"),
+	-1,
+	init,
+	NULL,		/* destroy */
+	render,
+	NULL,		/* extent */
+	NULL		/* intsect */
+};
+

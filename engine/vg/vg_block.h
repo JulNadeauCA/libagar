@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.h,v 1.6 2004/05/31 07:16:30 vedge Exp $	*/
+/*	$Csoft: vg_block.h,v 1.7 2004/05/31 07:25:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_BLOCK_H_
@@ -17,6 +17,7 @@ struct vg_block {
 	struct vg_vertex pos;		/* Position in vg */
 	struct vg_vertex origin;	/* Internal block origin */
 	double theta;			/* Angle of rotation */
+	int selected;
 	TAILQ_HEAD(,vg_element) vges;
 	TAILQ_ENTRY(vg_block) vgbs;
 };

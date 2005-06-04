@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.h,v 1.1 2004/05/05 16:46:05 vedge Exp $	*/
+/*	$Csoft: vg_mask.h,v 1.2 2004/05/12 04:53:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_MASK_H_
@@ -14,8 +14,6 @@ struct vg_mask_args {
 };
 
 __BEGIN_DECLS
-void	vg_mask_init(struct vg *, struct vg_element *);
-void	vg_draw_mask(struct vg *, struct vg_element *);
 void	vg_mask_scale(struct vg *, float);
 void	vg_mask_visible(struct vg *, int);
 void	vg_mask_pointer(struct vg *, void *);

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.15 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.16 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -36,35 +36,65 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
-const struct vg_element_ops vg_points_ops = {
-	N_("Points"),
-	VGPOINTS_ICON,
-	NULL,
-	NULL,
-	vg_draw_points,
-	vg_points_bbox
-};
-
-void
-vg_draw_points(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	struct vg_vertex *vtx;
 	int rx, ry;
 
-	for (vtx = &vge->vtx[0]; vtx < &vge->vtx[vge->nvtx]; vtx++) {
+	if (vge->nvtx >= 1) {
+		vtx = &vge->vtx[0];
 		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
+		vg_put_pixel(vg, rx, ry-1, vge->color);
+		vg_put_pixel(vg, rx-1, ry, vge->color);
 		vg_put_pixel(vg, rx, ry, vge->color);
+		vg_put_pixel(vg, rx+0, ry, vge->color);
+		vg_put_pixel(vg, rx, ry+1, vge->color);
 	}
 }
 
-void
-vg_points_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
-	r->x = 0;
-	r->y = 0;
-	r->w = 0;
-	r->h = 0;
+	if (vge->nvtx >= 1) {
+		struct vg_vertex *vtx = &vge->vtx[0];
+		
+		r->x = vtx->x-1;
+		r->y = vtx->y-1;
+		r->w = vtx->x+1;
+		r->h = vtx->x+1;
+	} else {
+		r->x = 0;
+		r->y = 0;
+		r->w = 0;
+		r->h = 0;
+	}
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	int rx, ry;
+	
+	if (vge->nvtx >= 1) {
+		struct vg_vertex *vtx = &vge->vtx[0];
+
+		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
+		return (vtx->x - x) + (vtx->y - y);
+	} else {
+		return (INT_MAX);
+	}
+}
+
+const struct vg_element_ops vg_points_ops = {
+	N_("Point"),
+	VGPOINTS_ICON,
+	NULL,
+	NULL,
+	render,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static void
@@ -98,8 +128,8 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 }
 
 struct tool vg_point_tool = {
-	N_("Points"),
-	N_("Trace individual points."),
+	N_("Point"),
+	N_("Trace an individual point."),
 	VGPOINTS_ICON,
 	-1,
 	point_tool_init,
