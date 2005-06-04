@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.13 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.14 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -42,17 +42,8 @@
 
 #include <stdarg.h>
 
-const struct vg_element_ops vg_text_ops = {
-	N_("Text"),
-	VGTEXT_ICON,
-	vg_text_init,
-	vg_text_destroy,
-	vg_draw_text,
-	NULL				/* bbox */
-};
-
-void
-vg_text_init(struct vg *vg, struct vg_element *vge)
+static void
+init(struct vg *vg, struct vg_element *vge)
 {
 	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
@@ -61,8 +52,8 @@ vg_text_init(struct vg *vg, struct vg_element *vge)
 	vge->vg_text.nptrs = 0;
 }
 
-void
-vg_text_destroy(struct vg *vg, struct vg_element *vge)
+static void
+destroy(struct vg *vg, struct vg_element *vge)
 {
 	if (vge->vg_text.su != NULL)
 		SDL_FreeSurface(vge->vg_text.su);
@@ -164,8 +155,8 @@ static const struct {
 };
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
-void
-vg_draw_text(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	SDL_Rect rd;
 	SDL_Surface *su;
@@ -325,13 +316,12 @@ vg_draw_text(struct vg *vg, struct vg_element *vge)
 	SDL_BlitSurface(su, NULL, vg->su, &rd);
 }
 
-void
-vg_text_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
-#ifdef DEBUG
 	if (vge->nvtx < 1)
-		fatal("nvtx < 1");
-#endif
+		return;
+
 	if (vge->vg_text.su != NULL) {
 		vg_vlength(vg, (int)vge->vg_text.su->w, &r->w);
 		vg_vlength(vg, (int)vge->vg_text.su->h, &r->h);
@@ -342,6 +332,30 @@ vg_text_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 		r->h = 0;
 	}
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	if (vge->nvtx < 1)
+		return (INT_MAX);
+
+	if (vge->vg_text.su != NULL) {
+		vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+		return (x - vge->vtx[0].x) + (y - vge->vtx[0].y);
+	} else {
+		return (INT_MAX);
+	}
+}
+
+const struct vg_element_ops vg_text_ops = {
+	N_("Text string"),
+	VGTEXT_ICON,
+	init,
+	destroy,
+	render,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static struct vg_element *cur_text;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.17 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.18 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -37,17 +37,8 @@
 #include "vg_primitive.h"
 #include "vg_math.h"
 
-const struct vg_element_ops vg_circle_ops = {
-	N_("Circle"),
-	VGCIRCLES_ICON,
-	vg_circle_init,
-	NULL,
-	vg_draw_circle,
-	vg_circle_bbox
-};
-
-void
-vg_circle_init(struct vg *vg, struct vg_element *vge)
+static void
+init(struct vg *vg, struct vg_element *vge)
 {
 	vge->vg_circle.radius = 0.025;
 }
@@ -64,8 +55,8 @@ vg_circle_diameter(struct vg *vg, double diameter)
 	vg->cur_vge->vg_circle.radius = diameter/2;
 }
 
-void
-vg_draw_circle(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	int rx, ry, radius;
 
@@ -74,14 +65,30 @@ vg_draw_circle(struct vg *vg, struct vg_element *vge)
 	vg_circle_primitive(vg, rx, ry, radius, vge->color);
 }
 
-void
-vg_circle_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
 	r->w = vge->vg_circle.radius*2;
 	r->h = vge->vg_circle.radius*2;
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	return (INT_MAX);
+}
+
+const struct vg_element_ops vg_circle_ops = {
+	N_("Circle"),
+	VGCIRCLES_ICON,
+	init,
+	NULL,
+	render,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static struct vg_element *cur_circle;

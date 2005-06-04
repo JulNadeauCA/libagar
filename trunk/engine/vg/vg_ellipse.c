@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.12 2005/04/14 06:19:46 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.13 2005/05/21 03:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -37,25 +37,8 @@
 #include "vg_primitive.h"
 #include "vg_math.h"
 
-const struct vg_element_ops vg_ellipse_ops = {
-	N_("Ellipse"),
-	VGCIRCLES_ICON,
-	vg_ellipse_init,
-	NULL,
-	vg_draw_ellipse,
-	vg_ellipse_bbox
-};
-const struct vg_element_ops vg_arc_ops = {
-	N_("Arc"),
-	VGCIRCLES_ICON,
-	vg_ellipse_init,
-	NULL,
-	vg_draw_ellipse,
-	vg_ellipse_bbox
-};
-
-void
-vg_ellipse_init(struct vg *vg, struct vg_element *vge)
+static void
+init(struct vg *vg, struct vg_element *vge)
 {
 	vge->vg_arc.w = 1;
 	vge->vg_arc.h = 1;
@@ -72,8 +55,8 @@ vg_ellipse_diameter2(struct vg *vg, double w, double h)
 	vge->vg_arc.h = h;
 }
 
-void
-vg_draw_ellipse(struct vg *vg, struct vg_element *vge)
+static void
+render(struct vg *vg, struct vg_element *vge)
 {
 	int x, y;
 	int w, h;
@@ -87,14 +70,40 @@ vg_draw_ellipse(struct vg *vg, struct vg_element *vge)
 	vg_arc_primitive(vg, x, y, w, h, s, e, vge->color);
 }
 
-void
-vg_ellipse_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+static void
+extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
 	r->w = vge->vg_arc.w;
 	r->h = vge->vg_arc.h;
 }
+
+static int
+intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+{
+	return (INT_MAX);
+}
+
+const struct vg_element_ops vg_ellipse_ops = {
+	N_("Ellipse"),
+	VGCIRCLES_ICON,
+	init,
+	NULL,
+	render,
+	extent,
+	intsect
+};
+
+const struct vg_element_ops vg_arc_ops = {
+	N_("Arc"),
+	VGCIRCLES_ICON,
+	init,
+	NULL,
+	render,
+	extent,
+	intsect
+};
 
 #ifdef EDITION
 static struct vg_element *cur_ellipse;

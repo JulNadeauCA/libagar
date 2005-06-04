@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.12 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.13 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -53,6 +53,7 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	vgb->origin.y = 0;
 	vgb->origin.z = 0;
 	vgb->theta = 0;
+	vgb->selected = 0;
 	TAILQ_INIT(&vgb->vges);
 
 	vg->cur_block = vgb;
