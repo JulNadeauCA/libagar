@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.28 2005/09/02 07:50:55 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.29 2005/09/03 12:06:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -897,6 +897,22 @@ select_all(struct tableview_rowq * children)
 	}
 }
 
+struct tableview_row *
+tableview_row_selected(struct tableview *tv)
+{
+	struct tableview_row *row;
+
+	pthread_mutex_lock(&tv->lock);
+	TAILQ_FOREACH(row, &tv->children, siblings) {
+		if (row->selected) {
+			pthread_mutex_unlock(&tv->lock);
+			return (row);
+		}
+	}
+	pthread_mutex_unlock(&tv->lock);
+	return (NULL);
+}
+
 /* clear the selection bit for all rows in and descended from the rowq */
 static void
 deselect_all(struct tableview_rowq *children)
@@ -1386,4 +1402,24 @@ columnmove(int argc, union evarg * argv)
 	}
 	event_schedule(NULL, tv, mouse_dblclick_delay, "column-move",
 	    "%i, %i", col, left);
+}
+
+void
+tableview_cell_printf(struct tableview *tv, struct tableview_row *row, int cell,
+    const char *fmt, ...)
+{
+	va_list args;
+
+	if (row->cell[cell].image != NULL) {
+		SDL_FreeSurface(row->cell[cell].image);
+	}
+	Free(row->cell[cell].text, 0);
+
+	va_start(args, fmt);
+	vasprintf(&row->cell[cell].text, fmt, args);
+	va_end(args);
+
+	row->cell[cell].image = text_render(NULL, -1,
+	    COLOR(TABLEVIEW_CTXT_COLOR),
+	    row->cell[cell].text);
 }

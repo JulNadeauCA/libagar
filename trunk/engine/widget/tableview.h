@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.13 2005/09/01 18:32:30 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.14 2005/09/02 07:50:55 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -181,6 +181,8 @@ void tableview_row_expand(struct tableview *, struct tableview_row *);
 void tableview_row_collapse(struct tableview *, struct tableview_row *);
 void tableview_row_expand_all(struct tableview *, struct tableview_row *);
 void tableview_row_collapse_all(struct tableview *, struct tableview_row *);
+void tableview_cell_printf(struct tableview *, struct tableview_row *, int,
+		           const char *, ...);
 
 #define	tableview_row_toggle(TV, ROW)				\
 	do {							\
@@ -234,6 +236,8 @@ void tableview_row_collapse_all(struct tableview *, struct tableview_row *);
 			tableview_row_expand((TV), _row);		\
 		}							\
 	} while(0)
+
+struct tableview_row *tableview_row_selected(struct tableview *);
 
 __END_DECLS
 
