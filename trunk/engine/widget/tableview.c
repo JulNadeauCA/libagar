@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.29 2005/09/03 12:06:46 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.30 2005/09/04 06:21:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -271,6 +271,27 @@ tableview_col_add(struct tableview *tv, int flags, colID cid,
 out:
 	pthread_mutex_unlock(&tv->lock);
 	return (col);
+}
+
+void
+tableview_col_select(struct tableview *tv, colID cid)
+{
+	u_int i, ind, valid = 0;
+
+	pthread_mutex_lock(&tv->lock);
+
+        /* check if cid is valid */
+        for (i = 0; i < tv->columncount; i++) {
+                if (tv->column[i].cid == cid) {
+                        valid = 1;
+			ind = i;
+		}
+        }
+
+	if (valid) {
+		tv->column[ind].mousedown = 1;
+	}
+	pthread_mutex_unlock(&tv->lock);
 }
 
 void
