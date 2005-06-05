@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.27 2005/09/01 18:32:29 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.28 2005/09/02 07:50:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -695,7 +695,7 @@ tableview_draw(void *p)
 		update = 1;
 
 	/* Draw the background box */
-	primitives.box(tv, 0, 0, view_width, WIDGET(tv)->h, -1,
+	primitives.box(tv, 0, 0, WIDGET(tv)->w, WIDGET(tv)->h, -1,
 	    COLOR(TABLEVIEW_COLOR));
 
 	/* draw row selection hilites */
