@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.52 2005/05/28 08:39:13 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.53 2005/06/01 09:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -574,6 +574,15 @@ geo_ctrl_buttonup(int argc, union evarg *argv)
 static void
 close_element(struct tileview *tv)
 {
+	struct tileview_ctrl *ctrl, *nctrl;
+
+	for (ctrl = TAILQ_FIRST(&tv->ctrls);
+	     ctrl != TAILQ_END(&tv->ctrls);
+	     ctrl = nctrl) {
+		nctrl = TAILQ_NEXT(ctrl, ctrls);
+		tileview_remove_ctrl(tv, ctrl);
+	}
+
 	switch (tv->state) {
 	case TILEVIEW_FEATURE_EDIT:
 		if (tv->tv_feature.ft->ops->flags & FEATURE_AUTOREDRAW) {
@@ -589,7 +598,6 @@ close_element(struct tileview *tv)
 		break;
 	case TILEVIEW_PIXMAP_EDIT:
 		if (tv->tv_pixmap.win != NULL) {
-			tileview_remove_ctrl(tv, tv->tv_pixmap.ctrl);
 			tv->tv_pixmap.ctrl = NULL;
 			view_detach(tv->tv_pixmap.win);
 			tv->tv_pixmap.win = NULL;
@@ -597,7 +605,6 @@ close_element(struct tileview *tv)
 		break;
 	case TILEVIEW_SKETCH_EDIT:
 		if (tv->tv_sketch.win != NULL) {
-			tileview_remove_ctrl(tv, tv->tv_sketch.ctrl);
 			tv->tv_sketch.ctrl = NULL;
 			view_detach(tv->tv_sketch.win);
 			tv->tv_sketch.win = NULL;
@@ -610,12 +617,6 @@ close_element(struct tileview *tv)
 		break;
 	}
 	
-	if (tv->state == TILEVIEW_TILE_EDIT) {
-		if (tv->tv_tile.geo_ctrl != NULL)
-			tileview_remove_ctrl(tv, tv->tv_tile.geo_ctrl);
-		if (tv->tv_tile.orig_ctrl != NULL)
-			tileview_remove_ctrl(tv, tv->tv_tile.orig_ctrl);
-	}
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 
