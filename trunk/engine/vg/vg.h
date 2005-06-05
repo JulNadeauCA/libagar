@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.32 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.33 2005/06/05 02:51:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -172,7 +172,7 @@ struct vg_element {
 	int mouseover;			/* Mouse overlap flag */
 	
 	struct vg_vertex *vtx;		/* Vertices */
-	Uint32		 nvtx;
+	u_int		 nvtx;
 
 	union {
 		struct vg_circle_args vg_circle;
