@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.12 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.13 2005/06/01 09:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -75,17 +75,17 @@ sketch_scale(struct sketch *sk, int w, int h, float scale, int x, int y)
 	double vw, vh;
 
 	if (w == -1) {
-		w = vg->w;
+		vw = vg->w;
 	} else {
-		w = (float)w/(float)TILESZ/scale;
+		vw = (float)w/(float)TILESZ/scale;
 	}
 	if (h == -1) {
-		h = vg->h;
+		vh = vg->h;
 	} else {
-		h = (float)h/(float)TILESZ/scale;
+		vh = (float)h/(float)TILESZ/scale;
 	}
 
-	vg_scale(vg, w, h, scale);
+	vg_scale(vg, vw, vh, scale);
 	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < vge->nvtx; i++) {
@@ -256,6 +256,9 @@ void
 sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     double x, double y, int button)
 {
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
@@ -275,9 +278,100 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->mousebuttondown != NULL)
-			ops->mousebuttondown(tv->cur_tool, tel->tel_sketch.sk,
-			    x, y, button);
+		if (ops->mousebuttondown != NULL) {
+			ops->mousebuttondown(tv->cur_tool, sk, x, y, button);
+			return;
+		}
+	}
+
+	{
+		struct vg_element *vge;
+		float idx, closest_idx = FLT_MAX;
+		struct vg_element *closest_vge = NULL;
+
+		TAILQ_FOREACH(vge, &vg->vges, vges) {
+			if (vge->ops->intsect != NULL) {
+				idx = vge->ops->intsect(vg, vge, x, y);
+				if (idx < closest_idx) {
+					closest_idx = idx;
+					closest_vge = vge;
+					if (idx == 0)
+						break;
+				}
+			}
+		}
+		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
+			closest_vge->selected = !closest_vge->selected;
+			vg->redraw++;
+		}
+	}
+}
+
+/* Evaluate the intersection between two rectangles. */
+int
+vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
+    struct vg_rect *ixion)
+{
+	double r1xmin, r1xmax, r1ymin, r1ymax;
+	double r2xmin, r2xmax, r2ymin, r2ymax;
+	double ixw, ixh;
+
+	r1xmin = r1->x;
+	r1ymin = r1->y;
+	r1xmax = r1->x+r1->w;
+	r1ymax = r1->y+r1->h;
+
+	r2xmin = r2->x;
+	r2ymin = r2->y;
+	r2xmax = r2->x+r2->w;
+	r2ymax = r2->y+r2->h;
+
+	if (r2xmin > r1xmin)
+		r1xmin = r2xmin;
+	if (r2ymin > r1ymin)
+		r1ymin = r2ymin;
+
+	if (r2xmax < r1xmax)
+		r1xmax = r2xmax;
+	if (r2ymax < r1ymax)
+		r1ymax = r2ymax;
+	
+	ixw = r1xmax - (r1xmin > 0 ? r1xmax-r1xmin : 0);
+	ixh = r1ymax - (r1ymin > 0 ? r1ymax-r1ymin : 0);
+	if (ixion != NULL) {
+		ixion->x = r1xmin;
+		ixion->y = r1ymin;
+		ixion->w = ixw;
+		ixion->h = ixh;
+	}
+	return (ixw > 0 && ixh > 0);
+}
+
+/*
+ * Rasterize an element as well as other overlapping elements.
+ * The vg must be locked.
+ */
+void
+vg_rasterize_element(struct vg *vg, struct vg_element *vge)
+{
+	struct vg_element *ovge;
+	struct vg_rect r1, r2;
+
+	if (!vge->drawn) {
+		vge->ops->draw(vg, vge);
+		vge->drawn = 1;
+	}
+	if (vge->ops->bbox != NULL) {
+		vge->ops->bbox(vg, vge, &r1);
+		TAILQ_FOREACH(ovge, &vg->vges, vges) {
+			if (ovge->drawn || ovge == vge ||
+			    ovge->ops->bbox == NULL) {
+				continue;
+			}
+			ovge->ops->bbox(vg, ovge, &r2);
+			if (vg_rcollision(vg, &r1, &r2, NULL))
+				vg_rasterize_element(vg, ovge);
+		}
 	}
 }
 
@@ -305,9 +399,35 @@ sketch_mousemotion(struct tileview *tv, struct tile_element *tel,
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->mousemotion != NULL)
+		if (ops->mousemotion != NULL) {
 			ops->mousemotion(tv->cur_tool, tel->tel_sketch.sk,
 			    x, y, xrel, yrel);
+			return;
+		}
+	}
+
+	{
+		struct sketch *sk = tel->tel_sketch.sk;
+		struct vg *vg = sk->vg;
+		float idx, closest_idx = FLT_MAX;
+		struct vg_element *vge, *closest_vge = NULL;
+
+		TAILQ_FOREACH(vge, &vg->vges, vges) {
+			vge->mouseover = 0;
+			if (vge->ops->intsect != NULL) {
+				idx = vge->ops->intsect(vg, vge, x, y);
+				if (idx < closest_idx) {
+					closest_idx = idx;
+					closest_vge = vge;
+					if (idx == 0)
+						break;
+				}
+			}
+		}
+		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
+			closest_vge->mouseover = 1;
+			vg->redraw++;
+		}
 	}
 }
 
@@ -410,6 +530,16 @@ sketch_open_menu(struct tileview *tv, int x, int y)
 		}
 
 		menu_separator(mi);
+	
+		menu_int_flags(mi, _("Show sketch origin"), VGORIGIN_ICON,
+		    &sk->vg->flags, VG_VISORIGIN, 0);
+		menu_int_flags(mi, _("Show sketch grid"), SNAP_GRID_ICON,
+		    &sk->vg->flags, VG_VISGRID, 0);
+		menu_int_flags(mi, _("Show sketch extents"), VGBLOCK_ICON,
+		    &sk->vg->flags, VG_VISBBOXES, 0);
+
+		menu_separator(mi);
+		
 		tileview_generic_menu(tv, mi);
 	}
 	tv->tv_sketch.menu->sel_item = mi;

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.40 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.41 2005/05/31 03:59:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -284,13 +284,9 @@ mousebuttondown(int argc, union evarg *argv)
 			struct sketch *sk = tv->tv_sketch.sk;
 			double vx, vy;
 
-			vg_vcoords2(sk->vg,
-			    sx - tel->tel_sketch.x,
-			    sy - tel->tel_sketch.y,
-			    0, 0, &vx, &vy);
-			sketch_mousebuttondown(tv, tel,
-			    vx/TILESZ, vy/TILESZ,
-			    button);
+			vx = VG_VECXF(sk->vg, sx - tel->tel_sketch.x);
+			vy = VG_VECYF(sk->vg, sy - tel->tel_sketch.y);
+			sketch_mousebuttondown(tv, tel, vx, vy, button);
 			return;
 		}
 		break;
