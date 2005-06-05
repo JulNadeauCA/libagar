@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.51 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.52 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1108,7 +1108,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 		write_uint32(buf, (Uint32)vge->text_st.flags);
 
 		/* Save the vertices. */
-		write_uint32(buf, vge->nvtx);
+		write_uint32(buf, (Uint32)vge->nvtx);
 		for (i = 0; i < vge->nvtx; i++)
 			write_vertex(buf, &vge->vtx[i]);
 
@@ -1295,7 +1295,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		vge->text_st.flags = (int)read_uint32(buf);
 
 		/* Load the vertices. */
-		vge->nvtx = read_uint32(buf);
+		vge->nvtx = (u_int)read_uint32(buf);
 		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
 		for (j = 0; j < vge->nvtx; j++)
 			read_vertex(buf, &vge->vtx[j]);
