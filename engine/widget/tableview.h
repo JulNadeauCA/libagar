@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.11 2005/05/12 02:33:36 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.12 2005/05/13 09:21:47 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -56,9 +56,10 @@ struct tableview_row {
 	int expanded : 1;
 	int dynamic : 1;
 	struct tableview_row *parent;
-	TAILQ_ENTRY(tableview_row) siblings;
 	struct tableview_rowq children;
 	void *userp;
+	TAILQ_ENTRY(tableview_row) siblings;
+	TAILQ_ENTRY(tableview_row) backstore;
 };
 
 struct tableview {
@@ -83,6 +84,7 @@ struct tableview {
 	int header :1;			/* Draw column headings */
 	int sort :1;			/* Do sort procedures */
 	int locked :1;			/* Table format is set */
+	int polled :1;
 
 	int head_height;		/* Header height */
 	int row_height;			/* Per-row height */
@@ -105,6 +107,7 @@ struct tableview {
 	
 	/* rows */
 	struct tableview_rowq children;		/* List of rows */
+	struct tableview_rowq backstore;	/* List of saved rows */
 	int expandedrows;			/* Number of rows visible */
 	
 	/* drawing hints */
@@ -136,6 +139,7 @@ struct tableview {
 #define TABLEVIEW_REORDERCOLS	0x10 /* Users may reorder the columns */
 #define TABLEVIEW_NOHEADER	0x20 /* do not display the header */
 #define TABLEVIEW_NOSORT	0x40 /* do not sort. header not clickable */
+#define TABLEVIEW_POLLED	0x80 /* remember selections */
 
 /* Flags for tableview_add_row() */
 #define TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
@@ -164,6 +168,7 @@ struct tableview_row *tableview_row_addfn(struct tableview *, int,
 
 void tableview_row_del(struct tableview *, struct tableview_row *);
 void tableview_row_del_all(struct tableview *);
+void tableview_row_restore_all(struct tableview *);
 void tableview_row_select(struct tableview *, struct tableview_row *);
 
 #define tableview_row_deselect(TV, ROW) \
