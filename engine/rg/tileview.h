@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.25 2005/05/24 05:34:32 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.26 2005/05/26 06:46:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -21,7 +21,8 @@ enum tileview_ctrl_type {
 	TILEVIEW_POINT,			/* Point (x,y) */
 	TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
 	TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
-	TILEVIEW_CIRCLE			/* Circle (x,y,r) */
+	TILEVIEW_CIRCLE,		/* Circle (x,y,r) */
+	TILEVIEW_VERTEX,		/* Vg vertex (x,y) */
 };
 
 enum tileview_val_type {
@@ -60,7 +61,10 @@ struct tileview_ctrl {
 	u_int			nvals;
 	struct tileview_handle	*handles;		/* User handles */
 	u_int			nhandles;
-	
+
+	struct vg *vg;				/* For TILEVIEW_VERTEX */
+	struct vg_element *vge;
+
 	struct event *motion;
 	struct event *buttonup;
 	struct event *buttondown;
