@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.31 2005/06/01 09:06:55 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.32 2005/06/04 04:48:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -88,7 +88,7 @@ struct vg_element_ops {
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
-	int (*intersect)(struct vg *, struct vg_element *, int, int);
+	float (*intsect)(struct vg *, struct vg_element *, double, double);
 };
 
 struct vg_layer {
@@ -169,6 +169,7 @@ struct vg_element {
 
 	int redraw, drawn;		/* Element needs to be redrawn */
 	int selected;			/* Multiple selection flag */
+	int mouseover;			/* Mouse overlap flag */
 	
 	struct vg_vertex *vtx;		/* Vertices */
 	Uint32		 nvtx;
@@ -206,10 +207,12 @@ struct vg {
 	int redraw;			/* Global redraw */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
-	Uint32 fill_color;
-	Uint32 grid_color;
-	Uint32 selection_color;
-	double grid_gap;
+	double grid_gap;		/* Grid size */
+
+	Uint32 fill_color;		/* Background color */
+	Uint32 grid_color;		/* Grid color */
+	Uint32 selection_color;		/* Selected item/block color */
+	Uint32 mouseover_color;		/* Mouse overlap item color */
 
 	struct vg_vertex *origin;	/* Origin point vertices */
 	float		 *origin_radius; /* Origin point radii */
@@ -243,11 +246,16 @@ struct vg {
                         (vg)->origin[0].x*(vg)->scale*TILESZ)
 #define VG_RASYF(vg,cy) ((cy)*(vg)->scale*TILESZ + \
                         (vg)->origin[0].y*(vg)->scale*TILESZ)
+#define VG_RASLENF(vg,i) ((i)*(vg)->scale*TILESZ)
+#define VG_VECXF(vg,rx) ((rx)/(vg)->scale/TILESZ - (vg)->origin[0].x)
+#define VG_VECYF(vg,ry) ((ry)/(vg)->scale/TILESZ - (vg)->origin[0].y)
+#define VG_VECLENF(vg,ry) ((ry)/(vg)->scale/TILESZ)
 
 #define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale*TILESZ) + \
                        (int)((vg)->origin[0].x*(vg)->scale*TILESZ))
 #define VG_RASY(vg,cy) ((int)((cy)*(vg)->scale*TILESZ) + \
                        (int)((vg)->origin[0].y*(vg)->scale*TILESZ))
+#define VG_RASLEN(vg,i) (int)((i)*(vg)->scale*TILESZ)
 
 extern const struct vg_element_ops *vg_element_types[];
 extern const char *vg_element_names[];

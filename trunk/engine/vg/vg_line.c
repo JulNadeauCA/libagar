@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.20 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.21 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -150,10 +150,184 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->h = ymax-ymin;
 }
 
-static int
-intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+/*
+ * Calculate the distance of the shortest path from a given point to any
+ * point on a line.
+ */
+static float
+intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 {
-	return (INT_MAX);
+	int dx, dy;
+	int inc1, inc2;
+	int d, x, y;
+	int xend, yend;
+	int xdir, ydir;
+	float closest = DBL_MAX;
+	double theta, rho;
+
+	dx = abs(x2-x1);
+	dy = abs(y2-y1);
+
+	if (dy <= dx) {
+		d = dy*2 - dx;
+		inc1 = dy*2;
+		inc2 = (dy-dx)*2;
+		if (x1 > x2) {
+			x = x2;
+			y = y2;
+			ydir = -1;
+			xend = x1;
+		} else {
+			x = x1;
+			y = y1;
+			ydir = 1;
+			xend = x2;
+		}
+		vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+		if (rho < closest) { closest = rho; }
+
+		if (((y2-y1)*ydir) > 0) {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y++;
+					d += inc2;
+				}
+				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				if (rho <= closest) {
+					closest = rho;
+				} else {
+					break;
+				}
+			}
+		} else {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y--;
+					d += inc2;
+				}
+				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				if (rho <= closest) {
+					closest = rho;
+				} else {
+					break;
+				}
+			}
+		}		
+	} else {
+		d = dx*2 - dy;
+		inc1 = dx*2;
+		inc2 = (dx-dy)*2;
+		if (y1 > y2) {
+			y = y2;
+			x = x2;
+			yend = y1;
+			xdir = -1;
+		} else {
+			y = y1;
+			x = x1;
+			yend = y2;
+			xdir = 1;
+		}
+		vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+		if (rho < closest) { closest = rho; }
+
+		if (((x2-x1)*xdir) > 0) {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x++;
+					d += inc2;
+				}
+				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				if (rho <= closest) {
+					closest = rho;
+				} else {
+					break;
+				}
+			}
+		} else {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x--;
+					d += inc2;
+				}
+				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				if (rho <= closest) {
+					closest = rho;
+				} else {
+					break;
+				}
+			}
+		}
+	}
+	return (closest);
+}
+
+float
+vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+{
+	int mx = VG_RASX(vg,x);
+	int my = VG_RASX(vg,y);
+	double rho, theta;
+	float d, min_distance = FLT_MAX;
+	struct vg_vertex v1, v2;
+	int x1, y1, x2, y2, x0, y0;
+	int i;
+
+	switch (vge->type) {
+	case VG_LINE_STRIP:
+		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+
+			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			if (d < min_distance) { min_distance = d; }
+
+			x1 = x2;
+			y1 = y2;
+		}
+		break;
+	case VG_LINES:
+		for (i = 0; i < vge->nvtx-1; i+=2) {
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x1, &y1);
+			vg_vtxcoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+
+			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			if (d < min_distance) { min_distance = d; }
+		}
+		break;
+	case VG_LINE_LOOP:
+	case VG_POLYGON:
+		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		x0 = x1;
+		y0 = y1;
+		for (i = 1; i < vge->nvtx; i++) {
+			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+
+			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			if (d < min_distance) { min_distance = d; }
+			
+			x1 = x2;
+			y1 = y2;
+		}
+		d = intsect_line(vg, x0, y0, x1, y1, mx, my);
+		if (d < min_distance) { min_distance = d; }
+		break;
+	default:
+		break;
+	}
+	return (VG_VECLENF(vg,min_distance));
 }
 
 const struct vg_element_ops vg_lines_ops = {
@@ -163,7 +337,7 @@ const struct vg_element_ops vg_lines_ops = {
 	NULL,				/* destroy */
 	vg_draw_line_segments,
 	extent,
-	intsect
+	vg_line_intsect
 };
 const struct vg_element_ops vg_line_strip_ops = {
 	N_("Line strip"),
@@ -172,7 +346,7 @@ const struct vg_element_ops vg_line_strip_ops = {
 	NULL,				/* destroy */
 	vg_draw_line_strip,
 	extent,
-	intsect
+	vg_line_intsect
 };
 const struct vg_element_ops vg_line_loop_ops = {
 	N_("Line loop"),
@@ -181,7 +355,7 @@ const struct vg_element_ops vg_line_loop_ops = {
 	NULL,				/* destroy */
 	vg_draw_line_loop,
 	extent,
-	intsect
+	vg_line_intsect
 };
 
 #ifdef EDITION

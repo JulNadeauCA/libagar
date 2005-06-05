@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.1 2005/06/01 09:06:55 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.2 2005/06/04 04:48:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -159,12 +159,6 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->h = ymax-ymin;
 }
 
-static int
-intsect(struct vg *vg, struct vg_element *vge, int x, int y)
-{
-	return (INT_MAX);
-}
-
 const struct vg_element_ops vg_polygon_ops = {
 	N_("Polygon"),
 	RG_POLYGON_ICON,
@@ -172,7 +166,7 @@ const struct vg_element_ops vg_polygon_ops = {
 	NULL,				/* destroy */
 	render,
 	extent,
-	intsect
+	vg_line_intsect
 };
 
 #ifdef EDITION

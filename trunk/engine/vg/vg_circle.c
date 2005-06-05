@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.18 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.19 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -74,10 +74,19 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->h = vge->vg_circle.radius*2;
 }
 
-static int
-intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+static float
+intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 {
-	return (INT_MAX);
+	double rho, theta;
+	struct vg_vertex *vtx;
+
+	if (vge->nvtx < 1) {
+		return (FLT_MAX);
+	}
+	vtx = &vge->vtx[0];
+	vg_car2pol(vg, x - vtx->x, y - vtx->y, &rho, &theta);
+
+	return (fabsf(rho - vge->vg_circle.radius));
 }
 
 const struct vg_element_ops vg_circle_ops = {

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.14 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.15 2005/06/04 04:48:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -333,17 +333,16 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	}
 }
 
-static int
-intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+static float
+intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 {
 	if (vge->nvtx < 1)
-		return (INT_MAX);
+		return (FLT_MAX);
 
 	if (vge->vg_text.su != NULL) {
-		vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
 		return (x - vge->vtx[0].x) + (y - vge->vtx[0].y);
 	} else {
-		return (INT_MAX);
+		return (FLT_MAX);
 	}
 }
 
