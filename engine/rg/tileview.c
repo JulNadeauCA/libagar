@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.41 2005/05/31 03:59:46 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.42 2005/06/05 02:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1473,11 +1473,13 @@ tileview_draw(void *p)
 
 	if (tv->state == TILEVIEW_SKETCH_EDIT) {
 		struct sketch *sk = tv->tv_sketch.sk;
+		int nredraw = sk->vg->redraw - 1;
 
-		if (sk->vg->redraw) {
-			vg_rasterize(sk->vg);
-			t->flags |= TILE_DIRTY;
-		}
+		vg_rasterize(sk->vg);
+		t->flags |= TILE_DIRTY;
+
+		/* Multiple tileviews may be rendering the same sketch. */
+		sk->vg->redraw = nredraw;
 	}
 	if (t->flags & TILE_DIRTY) {
 		t->flags &= ~TILE_DIRTY;
