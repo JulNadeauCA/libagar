@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.26 2005/08/02 01:37:58 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.27 2005/09/01 18:32:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -165,7 +165,8 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	tv->visible.count = 0;
 	tv->visible.items = NULL;
 
-	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZ", 5);
+	tv->prew = 10;
+	tv->preh = tv->head_height + (tv->row_height * 4);
 
 	/*
 	 * XXX - implement key selection / scroll changing event_new(tv,
@@ -238,6 +239,7 @@ tableview_col_add(struct tableview *tv, int flags, colID cid,
 	if (flags & TABLEVIEW_COL_NORESIZE)	col->resizable = 0;
 	if (flags & TABLEVIEW_COL_DYNAMIC)	col->dynamic = 1;
 	if (flags & TABLEVIEW_COL_EXPANDER)	tv->expanderColumn = cid;
+	if (flags & TABLEVIEW_COL_FILL)		col->fill = 1;
 	if ((flags & TABLEVIEW_COL_UPDATE) &&
 	    (flags & TABLEVIEW_COL_DYNAMIC))	col->update = 1;
 
@@ -577,8 +579,11 @@ tableview_scale(void *p, int w, int h)
 		WIDGET(tv)->w = tv->prew + tv->sbar_v->button_size;
 		WIDGET(tv)->h = tv->preh + (NULL == tv->sbar_h ? 0 :
 		                tv->sbar_h->button_size);
-		pthread_mutex_unlock(&tv->lock);
-		return;
+
+		for (i = 0; i < tv->columncount; i++) {
+			WIDGET(tv)->w += tv->column[i].w;
+		}
+		goto out;
 	}
 	/* vertical scroll bar */
 	WIDGET(tv->sbar_v)->x = w - tv->sbar_v->button_size;
@@ -667,6 +672,7 @@ tableview_scale(void *p, int w, int h)
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
+out:
 	pthread_mutex_unlock(&tv->lock);
 }
 
