@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.42 2005/06/05 02:52:46 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.43 2005/06/05 03:56:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -258,6 +258,31 @@ mousebuttondown(int argc, union evarg *argv)
 	default:
 		break;
 	}
+	
+	if (button == SDL_BUTTON_LEFT &&
+	    (tv->flags & TILEVIEW_HIDE_CONTROLS) == 0) {
+		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
+			for (i = 0; i < ctrl->nhandles; i++) {
+				struct tileview_handle *th = &ctrl->handles[i];
+		
+				if (cursor_overlap(th, sx, sy)) {
+					th->enable = 1;
+					tv->xorig = sx;
+					tv->yorig = sy;
+					ctrl->xoffs = 0;
+					ctrl->yoffs = 0;
+					if (ctrl->buttondown != NULL) {
+						event_post(NULL, tv,
+						    ctrl->buttondown->name,
+						    "%i,%i", sx, sy);
+					}
+					break;
+				}
+			}
+			if (i < ctrl->nhandles)
+				return;
+		}
+	}
 
 	switch (tv->state) {
 	case TILEVIEW_PIXMAP_EDIT:
@@ -308,29 +333,7 @@ mousebuttondown(int argc, union evarg *argv)
 		break;
 	}
 
-	if (button == SDL_BUTTON_LEFT) {
-		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
-			for (i = 0; i < ctrl->nhandles; i++) {
-				struct tileview_handle *th = &ctrl->handles[i];
-		
-				if (cursor_overlap(th, sx, sy)) {
-					th->enable = 1;
-					tv->xorig = sx;
-					tv->yorig = sy;
-					ctrl->xoffs = 0;
-					ctrl->yoffs = 0;
-					if (ctrl->buttondown != NULL) {
-						event_post(NULL, tv,
-						    ctrl->buttondown->name,
-						    "%i,%i", sx, sy);
-					}
-					break;
-				}
-			}
-			if (i < ctrl->nhandles)
-				break;
-		}
-	} else if (button == SDL_BUTTON_MIDDLE &&
+	if (button == SDL_BUTTON_MIDDLE &&
 	    tv->state == TILEVIEW_TILE_EDIT) {
 		tile_open_menu(tv,
 		    WIDGET(tv)->cx+x,
@@ -579,6 +582,12 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 		tileview_set_int(ctrl, 0, tileview_int(ctrl, 0)+dx);
 		tileview_set_int(ctrl, 1, tileview_int(ctrl, 1)+dy);
 		break;
+	case TILEVIEW_VERTEX:
+		tileview_set_double(ctrl, 0,
+		    tileview_double(ctrl, 0)+VG_VECXF(ctrl->vg,dx));
+		tileview_set_double(ctrl, 1,
+		    tileview_double(ctrl, 1)+VG_VECYF(ctrl->vg,dy));
+		break;
 	default:
 		break;
 	}
@@ -783,6 +792,8 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type)*strlen(fmt),
 	    M_WIDGET);
 	ctrl->nvals = 0;
+	ctrl->vg = NULL;
+	ctrl->vge = NULL;
 	ctrl->motion = NULL;
 	ctrl->buttondown = NULL;
 	ctrl->buttonup = NULL;
@@ -863,6 +874,10 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 out:
 	switch (ctrl->type) {
 	case TILEVIEW_POINT:
+		ctrl->nhandles = 1;
+		if (ctrl->nvals < 1) goto missingvals;
+		break;
+	case TILEVIEW_VERTEX:
 		ctrl->nhandles = 1;
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
@@ -1392,6 +1407,20 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 			tileview_circle2o(tv, x, y, 2);
 			ctrl->handles[0].x = x;
 			ctrl->handles[0].y = y;
+		}
+		break;
+	case TILEVIEW_VERTEX:
+		{
+			double x = tileview_double(ctrl, 0);
+			double y = tileview_double(ctrl, 1);
+
+			ctrl->handles[0].x = VG_RASXF(ctrl->vg,x);
+			ctrl->handles[0].y = VG_RASYF(ctrl->vg,y);
+
+			tileview_circle2o(tv,
+			    ctrl->handles[0].x,
+			    ctrl->handles[0].y,
+			    2);
 		}
 		break;
 	case TILEVIEW_CIRCLE:

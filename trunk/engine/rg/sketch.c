@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.14 2005/06/05 02:52:46 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.15 2005/06/05 03:56:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -252,6 +252,65 @@ sketch_redo(struct tileview *tv, struct tile_element *tel)
 	/* TODO */
 }
 
+static void
+vertex_ctrl_apply(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+
+	vg->redraw++;
+}
+
+static void
+select_element(struct tileview *tv, struct tile_element *tel,
+    struct vg_element *vge)
+{
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+	struct tileview_ctrl *ctrl;
+	u_int i;
+
+	vge->selected = 1;
+
+	switch (vge->type) {
+	case VG_LINES:
+	case VG_LINE_STRIP:
+	case VG_LINE_LOOP:
+	case VG_POLYGON:
+		for (i = 0; i < vge->nvtx; i++) {
+			struct vg_vertex *vtx = &vge->vtx[i];
+
+			ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX,
+			    "%*d,%*d", &vtx->x, &vtx->y);
+			ctrl->vg = vg;
+			ctrl->vge = vge;
+			ctrl->buttonup = event_new(tv, NULL, vertex_ctrl_apply,
+			    "%p", vg);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+unselect_element(struct tileview *tv, struct tile_element *tel,
+    struct vg_element *vge)
+{
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+	struct tileview_ctrl *ctrl, *nctrl;
+
+	for (ctrl = TAILQ_FIRST(&tv->ctrls);
+	     ctrl != TAILQ_END(&tv->ctrls);
+	     ctrl = nctrl) {
+		nctrl = TAILQ_NEXT(ctrl, ctrls);
+		if (ctrl->vg == vg && ctrl->vge == vge)
+			tileview_remove_ctrl(tv, ctrl);
+	}
+
+	vge->selected = 0;
+}
+
 void
 sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     double x, double y, int button)
@@ -301,7 +360,11 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 			}
 		}
 		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
-			closest_vge->selected = !closest_vge->selected;
+			if (closest_vge->selected) {
+				unselect_element(tv, tel, closest_vge);
+			} else {
+				select_element(tv, tel, closest_vge);
+			}
 			vg->redraw++;
 		}
 	}
@@ -471,6 +534,7 @@ sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
 		     vge = nvge) {
 		     	nvge = TAILQ_NEXT(vge, vges);
 			if (vge->selected) {
+				unselect_element(tv, tel, vge);
 				vg_destroy_element(vg, vge);
 				vg->redraw++;
 			}
