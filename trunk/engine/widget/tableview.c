@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.24 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.25 2005/05/21 05:52:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -80,6 +80,14 @@ static int clicked_header(struct tableview *, int, int, Uint32, void *, void *);
 static int clicked_row(struct tableview *, int, int, Uint32, void *, void *);
 static int draw_column(struct tableview *, int, int, Uint32, void *, void *);
 
+static void mousebuttonup(int, union evarg *);
+static void mousebuttondown(int, union evarg *);
+static void scrolled(int, union evarg *);
+static void dblclick_expire(int, union evarg *);
+static void lost_focus(int, union evarg *);
+static void columnresize(int, union evarg *);
+static void columnmove(int argc, union evarg *);
+
 
 struct tableview *
 tableview_new(void *parent, int flags, datafunc data_callback,
@@ -98,14 +106,6 @@ void
 tableview_init(struct tableview *tv, int flags, datafunc data_callback,
     compfunc sort_callback)
 {
-	static void mousebuttonup(int, union evarg *);
-	static void mousebuttondown(int, union evarg *);
-	static void scrolled(int, union evarg *);
-	static void dblclick_expire(int, union evarg *);
-	static void lost_focus(int, union evarg *);
-	static void columnresize(int, union evarg *);
-	static void columnmove(int argc, union evarg *);
-
 	widget_init(tv, "tableview", &tableview_ops,
 	  WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 	pthread_mutex_init(&tv->lock, &recursive_mutexattr);
