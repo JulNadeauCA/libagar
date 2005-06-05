@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.50 2005/06/01 09:06:55 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.51 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version vg_ver = {
 	"agar vg",
-	1, 0
+	2, 0
 };
 
 extern const struct vg_element_ops vg_points_ops;
@@ -135,7 +135,8 @@ vg_init(struct vg *vg, int flags)
 	vg->fmt = vg->su->format;
 	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
-	vg->selection_color = SDL_MapRGB(vg->fmt, 150, 150, 0);
+	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
+	vg->mouseover_color = SDL_MapRGB(vg->fmt, 200, 200, 0);
 	vg->grid_gap = 0.25;
 	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
@@ -441,6 +442,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->layer = vg->cur_layer;
 	vge->drawn = 0;
 	vge->selected = 0;
+	vge->mouseover = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
@@ -580,18 +582,21 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 {
 	struct vg_element *ovge;
 	struct vg_rect r1, r2;
-	Uint32 color_save = 0;
+	Uint32 color_save = 0;			/* XXX -Wuninitialized */
 
 	if (!vge->drawn) {
 		if (vge->selected) {
 			color_save = vge->color;
 			vge->color = vg->selection_color;
+		} else if (vge->mouseover) {
+			color_save = vge->color;
+			vge->color = vg->mouseover_color;
 		}
 
 		vge->ops->draw(vg, vge);
 		vge->drawn = 1;
 		
-		if (vge->selected)
+		if (vge->selected || vge->mouseover)
 			vge->color = color_save;
 	}
 	if (vge->ops->bbox != NULL) {
@@ -1007,6 +1012,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	write_color(buf, vg->fmt, vg->fill_color);
 	write_color(buf, vg->fmt, vg->grid_color);
 	write_color(buf, vg->fmt, vg->selection_color);
+	write_color(buf, vg->fmt, vg->mouseover_color);
 	write_double(buf, vg->grid_gap);
 	write_uint32(buf, (Uint32)vg->cur_layer);
 
@@ -1160,6 +1166,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->fill_color = read_color(buf, vg->fmt);
 	vg->grid_color = read_color(buf, vg->fmt);
 	vg->selection_color = read_color(buf, vg->fmt);
+	vg->mouseover_color = read_color(buf, vg->fmt);
 	vg->grid_gap = read_double(buf);
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;

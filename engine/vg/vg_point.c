@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.16 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.17 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -71,18 +71,14 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	}
 }
 
-static int
-intsect(struct vg *vg, struct vg_element *vge, int x, int y)
+static float
+intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 {
-	int rx, ry;
-	
 	if (vge->nvtx >= 1) {
 		struct vg_vertex *vtx = &vge->vtx[0];
-
-		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
 		return (vtx->x - x) + (vtx->y - y);
 	} else {
-		return (INT_MAX);
+		return (FLT_MAX);
 	}
 }
 
