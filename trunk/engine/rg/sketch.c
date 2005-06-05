@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.13 2005/06/01 09:08:45 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.14 2005/06/05 02:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -450,14 +450,32 @@ void
 sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
     int keymod)
 {
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+	struct vg_element *vge, *nvge;
+
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->keydown != NULL)
-			ops->keydown(tv->cur_tool, tel->tel_sketch.sk,
-			    keysym, keymod);
+		if (ops->keydown != NULL) {
+			ops->keydown(tv->cur_tool, sk, keysym, keymod);
+			return;
+		}
+	}
+	switch (keysym) {
+	case SDLK_DELETE:
+		for (vge = TAILQ_FIRST(&vg->vges);
+		     vge != TAILQ_END(&vg->vges);
+		     vge = nvge) {
+		     	nvge = TAILQ_NEXT(vge, vges);
+			if (vge->selected) {
+				vg_destroy_element(vg, vge);
+				vg->redraw++;
+			}
+		}
+		break;
 	}
 }
 
@@ -465,14 +483,17 @@ void
 sketch_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
     int keymod)
 {
+	struct sketch *sk = tel->tel_sketch.sk;
+
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
 		const struct tileview_sketch_tool_ops *ops =
 		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
 		
-		if (ops->keyup != NULL)
-			ops->keyup(tv->cur_tool, tel->tel_sketch.sk,
-			    keysym, keymod);
+		if (ops->keyup != NULL) {
+			ops->keyup(tv->cur_tool, sk, keysym, keymod);
+			return;
+		}
 	}
 }
 
