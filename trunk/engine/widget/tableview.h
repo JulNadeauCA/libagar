@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.h,v 1.12 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.13 2005/09/01 18:32:30 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -130,6 +130,7 @@ struct tableview {
 #define TABLEVIEW_COL_UPDATE	0x08	/* Updates periodically */
 #define TABLEVIEW_COL_DYNAMIC	0x20	/* Uses the callback */
 #define TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
+#define TABLEVIEW_COL_FILL	0x80	/* Fill remaining space */
 
 /* Flags for tableview_new() and tableview_init() */
 #define TABLEVIEW_SELMULTI	0x01 /* Multiple selections (ctrl/shift) */
