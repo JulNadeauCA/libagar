@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.25 2005/05/21 05:52:50 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.26 2005/08/02 01:37:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -121,6 +121,7 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	tv->header = 0;
 	tv->locked = 0;
 	tv->sort = 0;
+	tv->polled = 0;
 
 	/* set requested flags */
 	if (flags & TABLEVIEW_REORDERCOLS)	tv->reordercols = 1;
@@ -128,6 +129,7 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	if (!(flags & TABLEVIEW_NOSORT))	tv->sort = 1;
 	if (flags & TABLEVIEW_REORDERCOLS)	tv->reordercols = 1;
 	if (flags & TABLEVIEW_SELMULTI)		tv->selmulti = 1;
+	if (flags & TABLEVIEW_POLLED)		tv->polled = 1;
 
 	tv->head_height = tv->header ? text_font_height : 0;
 	tv->row_height = text_font_height+2;
@@ -155,6 +157,7 @@ tableview_init(struct tableview *tv, int flags, datafunc data_callback,
 	tv->expanderColumn = ID_INVALID;
 
 	TAILQ_INIT(&tv->children);
+	TAILQ_INIT(&tv->backstore);
 	tv->expandedrows = 0;
 
 	tv->visible.redraw_rate = 0;
@@ -359,6 +362,20 @@ tableview_row_addfn(struct tableview *tv, int flags,
 	return (row);
 }
 
+static void
+tableview_row_destroy(struct tableview *tv, struct tableview_row *row)
+{
+	int i;
+
+	for (i = 0; i < tv->columncount; i++) {
+		SDL_FreeSurface(row->cell[i].image);
+		free(row->cell[i].text);
+	}
+
+	Free(row->cell, M_WIDGET);
+	Free(row, M_WIDGET);
+}
+
 void
 tableview_row_del(struct tableview *tv, struct tableview_row *row)
 {
@@ -387,15 +404,12 @@ tableview_row_del(struct tableview *tv, struct tableview_row *row)
 	} else {
 		TAILQ_REMOVE(&tv->children, row, siblings);
 	}
-
-	for (i = 0; i < tv->columncount; i++) {
-		SDL_FreeSurface(row->cell[i].image);
-		free(row->cell[i].text);
+	if (tv->polled) {
+		TAILQ_INSERT_TAIL(&tv->backstore, row, backstore);
+		goto out;
 	}
-
-	Free(row->cell, M_WIDGET);
-	Free(row, M_WIDGET);
-
+	tableview_row_destroy(tv, row);
+out:
 	tv->visible.dirty = 1;
 	pthread_mutex_unlock(&tv->lock);
 }
@@ -406,7 +420,6 @@ tableview_row_del_all(struct tableview *tv)
 	struct tableview_row *row1, *row2;
 
 	pthread_mutex_lock(&tv->lock);
-
 	row1 = TAILQ_FIRST(&tv->children);
 	while (row1 != NULL) {
 		row2 = TAILQ_NEXT(row1, siblings);
@@ -417,6 +430,34 @@ tableview_row_del_all(struct tableview *tv)
 	
 	tv->expandedrows = 0;
 	tv->visible.dirty = 1;
+	pthread_mutex_unlock(&tv->lock);
+}
+
+void
+tableview_row_restore_all(struct tableview *tv)
+{
+	struct tableview_row *row, *nrow, *srow;
+	int i;
+
+	pthread_mutex_lock(&tv->lock);
+		
+	for (row = TAILQ_FIRST(&tv->backstore);
+	     row != TAILQ_END(&tv->backstore);
+	     row = nrow) {
+		nrow = TAILQ_NEXT(row, backstore);
+		TAILQ_FOREACH(srow, &tv->children, siblings) {
+			for (i = 0; i < tv->columncount; i++) {
+				if (strcmp(row->cell[i].text,
+				    srow->cell[i].text) != 0)
+					break;
+			}
+			if (i == tv->columncount)
+				srow->selected = row->selected;
+		}
+		tableview_row_destroy(tv, row);
+	}
+	TAILQ_INIT(&tv->backstore);
+
 	pthread_mutex_unlock(&tv->lock);
 }
 
