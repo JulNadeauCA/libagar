@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.30 2005/09/04 06:21:38 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.31 2005/06/05 20:03:48 twingy Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -285,10 +285,12 @@ tableview_col_select(struct tableview *tv, colID cid)
                 if (tv->column[i].cid == cid) {
                         valid = 1;
 			ind = i;
+			break;
 		}
         }
 
 	if (valid) {
+		widget_focus(tv);
 		tv->column[ind].mousedown = 1;
 	}
 	pthread_mutex_unlock(&tv->lock);
