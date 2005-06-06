@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.252 2005/04/14 06:19:47 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.253 2005/05/29 05:50:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1241,13 +1241,37 @@ apply_alignment(struct window *win)
 	}
 	if (win->flags & WINDOW_CASCADE) {
 		pthread_mutex_lock(&window_lock);
-		if ((window_xoffs += text_font_height)+WIDGET(win)->w >
-		    view->w/2) {
-			window_xoffs = 0;
-		}
-		if ((window_yoffs += colors_border_size+4) + WIDGET(win)->h >
-		    view->h/2) {
-			window_yoffs = 0;
+		switch (win->alignment) {
+		case WINDOW_UPPER_LEFT:
+		case WINDOW_UPPER_RIGHT:
+			break;
+		case WINDOW_MIDDLE_LEFT:
+		case WINDOW_MIDDLE_RIGHT:
+			window_yoffs += WIDGET(win->tbar)->h;
+			if ((WIDGET(win)->y + window_yoffs + WIDGET(win)->h) >
+			    view->h) {
+				window_yoffs = 0;
+			}
+			break;
+		case WINDOW_LOWER_LEFT:
+		case WINDOW_LOWER_RIGHT:
+			break;
+		case WINDOW_CENTER:
+			window_xoffs += WIDGET(win->tbar)->w/2;
+			window_yoffs += WIDGET(win->tbar)->h;
+			if ((WIDGET(win)->x + window_xoffs + WIDGET(win)->w) >
+			    view->w) {
+				window_xoffs = 0;
+			}
+			if ((WIDGET(win)->y + window_yoffs + WIDGET(win)->h) >
+			    view->h) {
+				window_yoffs = 0;
+			}
+			break;
+		case WINDOW_LOWER_CENTER:
+			break;
+		case WINDOW_UPPER_CENTER:
+			break;
 		}
 		WIDGET(win)->x += window_xoffs;
 		WIDGET(win)->y += window_yoffs;
