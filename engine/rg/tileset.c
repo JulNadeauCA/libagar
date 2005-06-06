@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.37 2005/05/28 08:40:20 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.38 2005/05/31 04:00:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1319,7 +1319,7 @@ tileset_edit(void *p)
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
-	window_set_position(win, WINDOW_LOWER_CENTER, 0);
+	window_set_position(win, WINDOW_LOWER_CENTER, 1);
 
 	tl_tiles = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_tiles, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
