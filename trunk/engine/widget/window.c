@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.253 2005/05/29 05:50:00 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.254 2005/06/06 04:05:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1257,8 +1257,8 @@ apply_alignment(struct window *win)
 		case WINDOW_LOWER_RIGHT:
 			break;
 		case WINDOW_CENTER:
-			window_xoffs += WIDGET(win->tbar)->w/2;
-			window_yoffs += WIDGET(win->tbar)->h;
+			window_xoffs += WIDGET(win->tbar)->h/2;
+			window_yoffs += WIDGET(win->tbar)->h/2;
 			if ((WIDGET(win)->x + window_xoffs + WIDGET(win)->w) >
 			    view->w) {
 				window_xoffs = 0;
@@ -1269,8 +1269,12 @@ apply_alignment(struct window *win)
 			}
 			break;
 		case WINDOW_LOWER_CENTER:
-			break;
 		case WINDOW_UPPER_CENTER:
+			window_xoffs += WIDGET(win->tbar)->h/2;
+			if ((WIDGET(win)->x + window_xoffs + WIDGET(win)->w) >
+			    view->w) {
+				window_xoffs = 0;
+			}
 			break;
 		}
 		WIDGET(win)->x += window_xoffs;
