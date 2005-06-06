@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.16 2005/06/05 09:38:48 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.17 2005/06/06 02:00:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,11 +36,14 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/combo.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/units.h>
+#include <engine/widget/radio.h>
 
 #include "tileset.h"
 #include "tileview.h"
+#include "texsel.h"
 
 void
 sketch_init(struct sketch *sk, struct tileset *ts, int flags)
@@ -207,6 +210,119 @@ sketch_edit(struct tileview *tv, struct tile_element *tel)
 	return (win);
 }
 
+static void
+poll_styles(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct vg *vg = argv[1].p;
+	struct vg_style *vgs;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&vg->lock);
+	TAILQ_FOREACH(vgs, &vg->styles, styles) {
+		tlist_insert_item(tl, NULL, vgs->name, vgs);
+	}
+	pthread_mutex_unlock(&vg->lock);
+	tlist_restore_selections(tl);
+}
+
+struct window *
+sketch_edit_element(struct tileview *tv, struct tile_element *tel,
+    struct vg_element *vge)
+{
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+	struct window *win;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
+	const struct vg_element_ops *ops;
+	struct radio *rad;
+	struct spinbutton *sb;
+	struct combo *com;
+	
+	if ((win = window_new(0, "%s-%p-%p", sk->name, tel, vge)) == NULL) {
+		return (NULL);
+	}
+	window_set_caption(win, _("Sketch element (%s)"), sk->name);
+	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
+
+	ops = vg_element_types[vge->type];
+	label_staticf(win, _("Element type: %s"), ops->name);
+	
+	sb = spinbutton_new(win, _("Layer: "));
+	widget_bind(sb, "value", WIDGET_INT, &vge->layer);
+	spinbutton_set_min(sb, 0);
+
+	com = combo_new(win, COMBO_POLL, _("Style: "));
+	event_new(com->list, "tlist-poll", poll_styles, "%p", vg);
+
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
+	{
+		struct hsvpal *pal;
+
+		pal = hsvpal_new(ntab);
+		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(pal, "pixel-format", WIDGET_POINTER, &sk->vg->fmt);
+		widget_bind(pal, "pixel", WIDGET_UINT32, &vge->color);
+	}
+	ntab = notebook_add_tab(nb, _("Line style"), BOX_VERT);
+	{
+		const char *line_styles[] = {
+			N_("Continuous"),
+			N_("Stippled"),
+			NULL
+		};
+		const char *endpoint_styles[] = {
+			N_("Square"),
+			N_("Beveled"),
+			N_("Rounded"),
+			N_("Mitered"),
+			NULL
+		};
+	
+		label_static(ntab, _("Line style: "));
+		rad = radio_new(ntab, line_styles);
+		widget_bind(rad, "value", WIDGET_INT, &vge->line_st.style);
+		
+		label_static(ntab, _("Endpoint style: "));
+		rad = radio_new(ntab, endpoint_styles);
+		widget_bind(rad, "value", WIDGET_INT,
+		    &vge->line_st.endpoint_style);
+
+		sb = spinbutton_new(ntab, _("Stipple pattern: "));
+		widget_bind(sb, "value", WIDGET_UINT16, &vge->line_st.stipple);
+		
+		sb = spinbutton_new(ntab, _("Thickness: "));
+		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.thickness);
+		
+		sb = spinbutton_new(ntab, _("Miter length: "));
+		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.miter_len);
+	}
+	ntab = notebook_add_tab(nb, _("Filling style"), BOX_VERT);
+	{
+		const char *fill_styles[] = {
+			N_("None"),
+			N_("Solid"),
+			N_("Textured"),
+			NULL
+		};
+		struct texsel *texsel;
+
+		label_static(ntab, _("Filling style: "));
+		rad = radio_new(ntab, fill_styles);
+		widget_bind(rad, "value", WIDGET_INT, &vge->fill_st.style);
+			
+		label_static(ntab, _("Texture: "));
+		texsel = texsel_new(ntab, tv->ts, 0);
+		WIDGET(texsel)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(texsel, "texture-name", WIDGET_STRING,
+		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
+	}
+
+	return (win);
+}
+
 void
 sketch_begin_undoblk(struct sketch *sk)
 {
@@ -281,8 +397,8 @@ update_circle_vertex(int argc, union evarg *argv)
 	vge->vtx[1].y = vge->vtx[0].y;
 }
 
-static void
-select_element(struct tileview *tv, struct tile_element *tel,
+struct window *
+sketch_select(struct tileview *tv, struct tile_element *tel,
     struct vg_element *vge)
 {
 	struct sketch *sk = tel->tel_sketch.sk;
@@ -326,15 +442,27 @@ select_element(struct tileview *tv, struct tile_element *tel,
 	default:
 		break;
 	}
+	return (sketch_edit_element(tv, tel, vge));
 }
 
-static void
-unselect_element(struct tileview *tv, struct tile_element *tel,
+void
+sketch_unselect(struct tileview *tv, struct tile_element *tel,
     struct vg_element *vge)
 {
+	char name[OBJECT_NAME_MAX];
 	struct sketch *sk = tel->tel_sketch.sk;
 	struct vg *vg = sk->vg;
 	struct tileview_ctrl *ctrl, *nctrl;
+	struct window *win;
+
+	TAILQ_FOREACH(win, &view->windows, windows) {
+		snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
+		    vge);
+		if (strcmp(name, OBJECT(win)->name) == 0) {
+			view_detach(win);
+			break;
+		}
+	}
 
 	for (ctrl = TAILQ_FIRST(&tv->ctrls);
 	     ctrl != TAILQ_END(&tv->ctrls);
@@ -397,9 +525,18 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		}
 		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
 			if (closest_vge->selected) {
-				unselect_element(tv, tel, closest_vge);
+				sketch_unselect(tv, tel, closest_vge);
 			} else {
-				select_element(tv, tel, closest_vge);
+				struct window *pwin = widget_parent_window(tv);
+				struct window *win;
+
+				win = sketch_select(tv, tel, closest_vge);
+				if (win != NULL) {
+					window_attach(pwin, win);
+					window_show(win);
+					view->focus_win = pwin;
+					widget_focus(tv);
+				}
 			}
 			vg->redraw++;
 		}
@@ -570,7 +707,7 @@ sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
 		     vge = nvge) {
 		     	nvge = TAILQ_NEXT(vge, vges);
 			if (vge->selected) {
-				unselect_element(tv, tel, vge);
+				sketch_unselect(tv, tel, vge);
 				vg_destroy_element(vg, vge);
 				vg->redraw++;
 			}
