@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.15 2005/06/05 03:56:40 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.16 2005/06/05 09:38:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -253,11 +253,32 @@ sketch_redo(struct tileview *tv, struct tile_element *tel)
 }
 
 static void
-vertex_ctrl_apply(int argc, union evarg *argv)
+redraw_sketch(int argc, union evarg *argv)
 {
 	struct vg *vg = argv[1].p;
 
 	vg->redraw++;
+}
+
+static void
+update_circle_radius(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+	struct vg_element *vge = argv[2].p;
+
+	vge->vg_circle.radius = sqrt(
+	    pow(vge->vtx[1].x - vge->vtx[0].x, 2) +
+	    pow(vge->vtx[1].y - vge->vtx[0].y, 2));
+}
+
+static void
+update_circle_vertex(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+	struct vg_element *vge = argv[2].p;
+
+	vge->vtx[1].x = vge->vtx[0].x + vge->vg_circle.radius;
+	vge->vtx[1].y = vge->vtx[0].y;
 }
 
 static void
@@ -277,15 +298,30 @@ select_element(struct tileview *tv, struct tile_element *tel,
 	case VG_LINE_LOOP:
 	case VG_POLYGON:
 		for (i = 0; i < vge->nvtx; i++) {
-			struct vg_vertex *vtx = &vge->vtx[i];
-
 			ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX,
-			    "%*d,%*d", &vtx->x, &vtx->y);
+			    "%*d,%*d", &vge->vtx[i].x, &vge->vtx[i].y);
 			ctrl->vg = vg;
 			ctrl->vge = vge;
-			ctrl->buttonup = event_new(tv, NULL, vertex_ctrl_apply,
+			ctrl->buttonup = event_new(tv, NULL, redraw_sketch,
 			    "%p", vg);
 		}
+		break;
+	case VG_CIRCLE:
+		ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX, "%*d,%*d",
+		    &vge->vtx[0].x, &vge->vtx[0].y);
+		ctrl->vg = vg;
+		ctrl->vge = vge;
+		ctrl->buttonup = event_new(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->motion = event_new(tv, NULL, update_circle_vertex,
+		    "%p,%p", vg, vge);
+		
+		ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX, "%*d,%*d",
+		    &vge->vtx[1].x, &vge->vtx[1].y);
+		ctrl->vg = vg;
+		ctrl->vge = vge;
+		ctrl->buttonup = event_new(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->motion = event_new(tv, NULL, update_circle_radius,
+		    "%p,%p", vg, vge);
 		break;
 	default:
 		break;
