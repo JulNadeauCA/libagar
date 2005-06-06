@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.11 2005/05/24 05:06:17 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.12 2005/05/31 04:01:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -134,7 +134,7 @@ colors_init(void)
 	colors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(vfmt, 70, 70, 70);
 	colors[NOTEBOOK_TXT_COLOR] = colors[TEXT_COLOR];
 	colors[RADIO_SEL_COLOR] = SDL_MapRGB(vfmt, 210, 210, 210);
-	colors[RADIO_OVER_COLOR] = SDL_MapRGB(vfmt, 90, 90, 90);
+	colors[RADIO_OVER_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
 	colors[RADIO_HI_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
 	colors[RADIO_LO_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
 	colors[RADIO_TXT_COLOR] = colors[TEXT_COLOR];
