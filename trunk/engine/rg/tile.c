@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.53 2005/06/01 09:08:45 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.54 2005/06/05 09:44:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1292,9 +1292,14 @@ edit_element(int argc, union evarg *argv)
 			tel = it->p1;
 		} else if (tv->state == TILEVIEW_SKETCH_EDIT &&
 		           strcmp(it->class, "sketch-element") == 0) {
-			vg_select_element(tv->tv_sketch.sk->vg,
-			    (struct vg_element *)it->p1);
-			t->flags |= TILE_DIRTY;
+			struct vg_element *vge = (struct vg_element *)it->p1;
+			struct window *win;
+
+			win = sketch_select(tv, tv->tv_sketch.tel, vge);
+			if (win != NULL) {
+				window_attach(pwin, win);
+				window_show(win);
+			}
 			return;
 		} else {
 			return;
@@ -1321,8 +1326,11 @@ delete_element(int argc, union evarg *argv)
 	if (tv->state == TILEVIEW_SKETCH_EDIT &&
 	    strcmp(it->class, "sketch-element") == 0) {
 	    	struct vg *vg = tv->tv_sketch.sk->vg;
+		struct vg_element *vge = (struct vg_element *)it->p1;
 
-		vg_destroy_element(vg, (struct vg_element *)it->p1);
+		sketch_unselect(tv, tv->tv_sketch.tel, vge);
+		vg_destroy_element(vg, vge);
+		vg->redraw++;
 		return;
 	}
 
@@ -1665,6 +1673,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 		return (NULL);
 	}
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
+	window_set_position(win, WINDOW_CENTER, 1);
 	
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
 	tileview_init(tv, ts, 0);

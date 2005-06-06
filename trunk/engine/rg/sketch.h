@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.h,v 1.4 2005/03/11 08:59:34 vedge Exp $	*/
+/*	$Csoft: sketch.h,v 1.5 2005/04/21 10:31:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_
@@ -38,7 +38,15 @@ void sketch_destroy(struct sketch *);
 int  sketch_load(struct sketch *, struct netbuf *);
 void sketch_save(struct sketch *, struct netbuf *);
 void sketch_scale(struct sketch *, int, int, float, int, int);
+
 struct window *sketch_edit(struct tileview *, struct tile_element *);
+struct window *sketch_edit_element(struct tileview *, struct tile_element *,
+		                   struct vg_element *);
+
+struct window *sketch_select(struct tileview *, struct tile_element *,
+ 		             struct vg_element *);
+void sketch_unselect(struct tileview *, struct tile_element *,
+		     struct vg_element *);
 
 void sketch_keydown(struct tileview *, struct tile_element *, int, int);
 void sketch_keyup(struct tileview *, struct tile_element *, int, int);
