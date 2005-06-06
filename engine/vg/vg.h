@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.33 2005/06/05 02:51:25 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.34 2005/06/05 08:45:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -120,6 +120,8 @@ struct vg_fill_style {
 		VG_SOLID,		/* Solid filling */
 		VG_TEXTURED		/* Textured */
 	} style;
+	char texture[32];
+	Uint8 texture_alpha;
 };
 
 struct vg_text_style {

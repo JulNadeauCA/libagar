@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.52 2005/06/05 02:51:25 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.53 2005/06/05 08:45:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version vg_ver = {
 	"agar vg",
-	2, 0
+	3, 0
 };
 
 extern const struct vg_element_ops vg_points_ops;
@@ -456,6 +456,8 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->text_st.size = 12;
 	vge->text_st.flags = 0;
 	vge->fill_st.style = VG_NOFILL;
+	vge->fill_st.texture[0] = '\0';
+	vge->fill_st.texture_alpha = 255;
 
 	pthread_mutex_lock(&vg->lock);
 	TAILQ_INSERT_TAIL(&vg->vges, vge, vges);
@@ -887,6 +889,8 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 		break;
 	case VG_FILL_STYLE:
 		vgs->vg_fill_st.style = VG_NOFILL;
+		vgs->vg_fill_st.texture[0] = '\0';
+		vgs->vg_fill_st.texture_alpha = 255;
 		break;
 	case VG_TEXT_STYLE:
 		vgs->vg_text_st.face[0] = '\0';
@@ -1069,6 +1073,8 @@ vg_save(struct vg *vg, struct netbuf *buf)
 			break;
 		case VG_FILL_STYLE:
 			write_uint8(buf, (Uint8)vgs->vg_fill_st.style);
+			write_string(buf, vgs->vg_fill_st.texture);
+			write_uint8(buf, vgs->vg_fill_st.texture_alpha);
 			break;
 		case VG_TEXT_STYLE:
 			write_string(buf, vgs->vg_text_st.face);
@@ -1101,6 +1107,8 @@ vg_save(struct vg *vg, struct netbuf *buf)
 
 		/* Save the filling style information. */
 		write_uint8(buf, (Uint8)vge->fill_st.style);
+		write_string(buf, vge->fill_st.texture);
+		write_uint8(buf, vge->fill_st.texture_alpha);
 		
 		/* Save the text style information. */
 		write_string(buf, vge->text_st.face);
@@ -1250,6 +1258,9 @@ vg_load(struct vg *vg, struct netbuf *buf)
 			break;
 		case VG_FILL_STYLE:
 			vgs->vg_fill_st.style = read_uint8(buf);
+			copy_string(vgs->vg_fill_st.texture, buf,
+			    sizeof(vgs->vg_fill_st.texture));
+			vgs->vg_fill_st.texture_alpha = read_uint8(buf);
 			break;
 		case VG_TEXT_STYLE:
 			copy_string(vgs->vg_text_st.face, buf,
@@ -1288,6 +1299,9 @@ vg_load(struct vg *vg, struct netbuf *buf)
 
 		/* Load the filling style information. */
 		vge->fill_st.style = read_uint8(buf);
+		copy_string(vge->fill_st.texture, buf,
+		    sizeof(vge->fill_st.texture));
+		vge->fill_st.texture_alpha = read_uint8(buf);
 
 		/* Load the text style information. */
 		copy_string(vge->text_st.face, buf, sizeof(vge->text_st.face));
