@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.17 2005/06/06 02:00:24 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.18 2005/06/06 07:16:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -161,10 +161,13 @@ sketch_edit(struct tileview *tv, struct tile_element *tel)
 	struct window *win;
 	struct notebook *nb;
 	struct notebook_tab *ntab;
+	struct combo *com;
 	
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Sketch %s"), sk->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+
+	com = vg_layer_selector(win, vg);
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
@@ -529,6 +532,14 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 			} else {
 				struct window *pwin = widget_parent_window(tv);
 				struct window *win;
+
+				if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+					TAILQ_FOREACH(vge, &vg->vges, vges) {
+						if (vge->selected)
+							sketch_unselect(tv,
+							    tel, vge);
+					}
+				}
 
 				win = sketch_select(tv, tel, closest_vge);
 				if (win != NULL) {
