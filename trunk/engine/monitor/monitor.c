@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.65 2005/05/10 12:26:16 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.66 2005/05/12 02:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -95,8 +95,6 @@ monitor_init(void)
 
 	for (i = 0; i < ntool_ents; i++)
 		tableview_row_add(tv, 0, NULL, NULL, i, 0, tool_ents[i].name);
-
-	window_show(win);
 }
 
 #endif	/* DEBUG */
