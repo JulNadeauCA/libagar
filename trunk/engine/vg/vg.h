@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.34 2005/06/05 08:45:26 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.35 2005/06/06 07:17:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -326,6 +326,10 @@ void		   vg_changed(int, union evarg *);
 struct combo	  *vg_layer_selector(void *, struct vg *);
 void		   vg_reg_menu(struct AGMenu *, struct AGMenuItem *,
 		               struct vg *, struct mapview *);
+#endif
+
+#ifdef DEBUG
+void vg_draw_bboxes(struct vg *);
 #endif
 __END_DECLS
 
