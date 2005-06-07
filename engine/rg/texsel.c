@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.c,v 1.25 2005/05/24 08:12:48 vedge Exp $	*/
+/*	$Csoft: texsel.c,v 1.1 2005/05/28 08:39:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -53,13 +53,13 @@ poll_textures(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 
 	TAILQ_FOREACH(tex, &ts->tset->textures, textures) {
-		struct pixmap *px;
+		struct tile *t;
 
-		if (tex->tileset[0] != '\0' && tex->pixmap[0] != '\0' &&
-		    (px = tileset_resolve_pixmap(tex->tileset, tex->pixmap))
+		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
+		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, px->su, "%s (<%s> %ux%u)",
-			    tex->name, px->name, px->su->w, px->su->h);
+			it = tlist_insert(tl, t->su, "%s (<%s> %ux%u)",
+			    tex->name, t->name, t->su->w, t->su->h);
 			it->class = "texture";
 			it->p1 = tex;
 		}

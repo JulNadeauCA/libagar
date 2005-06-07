@@ -1,4 +1,4 @@
-/*	$Csoft: polygon.c,v 1.14 2005/06/01 09:08:45 vedge Exp $	*/
+/*	$Csoft: polygon.c,v 1.15 2005/06/04 04:49:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -310,10 +310,10 @@ render_polygon(struct tile *tile, struct polygon *poly,
 				break;
 			case POLYGON_TEXTURED:
 				for (xi = xa; xi < xb; xi++) {
-					SDL_GetRGB(GET_PIXEL2(tex->px->su,
-					    (xi % tex->px->su->w),
-					    (y % tex->px->su->h)),
-					tex->px->su->format, &r, &g, &b);
+					SDL_GetRGB(GET_PIXEL2(tex->t->su,
+					    (xi % tex->t->su->w),
+					    (y % tex->t->su->h)),
+					    tex->t->su->format, &r, &g, &b);
 					PUT_PIXEL2_CLIPPED(tile->su,
 					    ske->tel_sketch.x+xi,
 					    ske->tel_sketch.y+y,
@@ -423,10 +423,10 @@ polygon_render_simple(void *p, struct tile *tile, int fx, int fy)
 				if (y < sDst->h && x < sDst->w &&
 				    (right[y] - left[y]) > 0 &&
 				    x >= left[y] && x <= right[y]) {
-					SDL_GetRGB(GET_PIXEL2(tex->px->su,
-					    (x % tex->px->su->w),
-					    (y % tex->px->su->h)),
-					tex->px->su->format, &r, &g, &b);
+					SDL_GetRGB(GET_PIXEL2(tex->t->su,
+					    (x % tex->t->su->w),
+					    (y % tex->t->su->h)),
+					    tex->t->su->format, &r, &g, &b);
 					PUT_PIXEL2_CLIPPED(sDst,
 					    ske->tel_sketch.x+x,
 					    ske->tel_sketch.y+y,

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.8 2005/04/02 04:07:50 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.9 2005/05/26 06:46:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -55,6 +55,7 @@ __inline__ struct pixmap *tileset_find_pixmap(struct tileset *, const char *);
 __inline__ struct animation *tileset_find_animation(struct tileset *,
 		                                    const char *);
 struct pixmap *tileset_resolve_pixmap(const char *, const char *);
+struct tile *tileset_resolve_tile(const char *, const char *);
 __END_DECLS
 
 #include "close_code.h"
