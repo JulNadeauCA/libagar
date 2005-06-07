@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.54 2005/06/06 07:17:52 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.55 2005/06/07 02:01:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -455,7 +455,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->text_st.face[0] = '\0';
 	vge->text_st.size = 12;
 	vge->text_st.flags = 0;
-	vge->fill_st.style = VG_NOFILL;
+	vge->fill_st.style = VG_SOLID;
 	vge->fill_st.texture[0] = '\0';
 	vge->fill_st.texture_alpha = 255;
 
@@ -502,7 +502,7 @@ vg_select_element(struct vg *vg, struct vg_element *vge)
 }
 
 #ifdef DEBUG
-static void
+void
 vg_draw_bboxes(struct vg *vg)
 {
 	struct vg_rect bbox;
@@ -891,7 +891,7 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 		vgs->vg_line_st.miter_len = 0;
 		break;
 	case VG_FILL_STYLE:
-		vgs->vg_fill_st.style = VG_NOFILL;
+		vgs->vg_fill_st.style = VG_SOLID;
 		vgs->vg_fill_st.texture[0] = '\0';
 		vgs->vg_fill_st.texture_alpha = 255;
 		break;
