@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.18 2005/06/06 07:16:52 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.19 2005/06/07 02:01:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -298,6 +298,7 @@ sketch_edit_element(struct tileview *tv, struct tile_element *tel,
 		
 		sb = spinbutton_new(ntab, _("Thickness: "));
 		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.thickness);
+		spinbutton_set_min(sb, 1);
 		
 		sb = spinbutton_new(ntab, _("Miter length: "));
 		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.miter_len);
