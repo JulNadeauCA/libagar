@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.4 2005/03/06 06:30:36 vedge Exp $	*/
+/*	$Csoft: sketch_polygon.c,v 1.1 2005/06/01 09:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,9 @@
 
 #include <engine/engine.h>
 
+#include <engine/vg/vg.h>
+#include <engine/vg/vg_primitive.h>
+
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/checkbox.h>
@@ -48,6 +51,117 @@ struct polygon_tool {
 	struct vg_vertex *vtx;
 	int preview;
 };
+
+static int
+compare_ints(const void *p1, const void *p2)
+{
+	return (*(const int *)p1 - *(const int *)p2);
+}
+
+/* Special rendering function for sketch polygons with texturing. */
+void
+sketch_polygon_render(struct tile *t, struct vg *vg, struct vg_element *vge)
+{
+	struct texture *tex = NULL;
+	struct vg_vertex *vtx = vge->vtx;
+	u_int i, nvtx = vge->nvtx;
+	int x, y, x1, y1, x2, y2;
+	int miny, maxy;
+	int ind1, ind2;
+	int ints;
+
+	if (vge->nvtx < 3 || vge->vg_polygon.outline) {	/* Draw outline */
+		vg_draw_line_loop(vg, vge);
+		return;
+	}
+	if ((vge->fill_st.style == VG_TEXTURED) &&
+	    (tex = texture_find(t->ts, vge->fill_st.texture)) == NULL)
+		return;
+
+	if (vg->ints == NULL) {
+		vg->ints = Malloc(nvtx*sizeof(int), M_RG);
+		vg->nints = nvtx;
+	} else {
+		if (nvtx > vg->nints) {
+			vg->ints = Realloc(vg->ints, nvtx*sizeof(int));
+			vg->nints = nvtx;
+		}
+	}
+
+	/* Find Y maxima */
+	maxy = miny = VG_RASY(vg,vtx[0].y);
+	for (i = 1; i < nvtx; i++) {
+		int vy = VG_RASY(vg,vtx[i].y);
+
+		if (vy < miny) {
+			miny = vy;
+		} else if (vy > maxy) {
+			maxy = vy;
+		}
+	}
+
+	/* Find the intersections. */
+	for (y = miny; y <= maxy; y++) {
+		ints = 0;
+		for (i = 0; i < nvtx; i++) {
+			if (i == 0) {
+				ind1 = nvtx - 1;
+				ind2 = 0;
+			} else {
+				ind1 = i - 1;
+				ind2 = i;
+			}
+			y1 = VG_RASY(vg,vtx[ind1].y);
+			y2 = VG_RASY(vg,vtx[ind2].y);
+			if (y1 < y2) {
+				x1 = VG_RASX(vg,vtx[ind1].x);
+				x2 = VG_RASX(vg,vtx[ind2].x);
+			} else if (y1 > y2) {
+				y2 = VG_RASY(vg,vtx[ind1].y);
+				y1 = VG_RASY(vg,vtx[ind2].y);
+				x2 = VG_RASX(vg,vtx[ind1].x);
+				x1 = VG_RASX(vg,vtx[ind2].x);
+			} else {
+				continue;
+			}
+			if (((y >= y1) && (y < y2)) ||
+			    ((y == maxy) && (y > y1) && (y <= y2))) {
+				vg->ints[ints++] =
+				    (((y-y1)<<16) / (y2-y1)) *
+				    (x2-x1) + (x1<<16);
+			} 
+		}
+		qsort(vg->ints, ints, sizeof(int), compare_ints);
+
+		for (i = 0; i < ints; i += 2) {
+			int xa, xb, xi;
+			Uint8 r, g, b;
+
+			xa = vg->ints[i] + 1;
+			xa = (xa>>16) + ((xa&0x8000) >> 15);
+			xb = vg->ints[i+1] - 1;
+			xb = (xb>>16) + ((xb&0x8000) >> 15);
+
+			switch (vge->fill_st.style) {
+			case VG_NOFILL:
+				break;
+			case VG_SOLID:
+				vg_hline_primitive(vg, xa, xb, y, vge->color);
+				break;
+			case VG_TEXTURED:
+				for (xi = xa; xi < xb; xi++) {
+					SDL_GetRGB(GET_PIXEL2(tex->t->su,
+					    (xi % tex->t->su->w),
+					    (y % tex->t->su->h)),
+					    tex->t->su->format, &r, &g, &b);
+					PUT_PIXEL2_CLIPPED(vg->su, xi, y,
+					    SDL_MapRGB(vg->fmt, r, g, b));
+				}
+				break;
+			}
+		}
+	}
+}
 
 static void
 init(void *p)
@@ -150,4 +264,3 @@ struct tileview_sketch_tool_ops sketch_polygon_ops = {
 	NULL,			/* keydown */
 	NULL,			/* keyup */
 };
-
