@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.20 2005/06/07 02:43:14 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.21 2005/06/07 02:49:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -139,6 +139,47 @@ sketch_save(struct sketch *sk, struct netbuf *buf)
 	write_uint32(buf, (Uint32)sk->flags);
 	write_uint32(buf, (Uint32)sk->vg->flags);
 	vg_save(sk->vg, buf);
+}
+
+void
+sketch_render(struct tile *t, struct tile_element *tel)
+{
+	struct sketch *sk = tel->tel_sketch.sk;
+	struct vg *vg = sk->vg;
+	struct vg_element *vge;
+	SDL_Rect rd;
+
+	SDL_FillRect(vg->su, NULL, vg->fill_color);
+	
+	if (vg->flags & VG_VISGRID)
+		vg_draw_grid(vg);
+#ifdef DEBUG
+	if (vg->flags & VG_VISBBOXES)
+		vg_draw_bboxes(vg);
+#endif
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		vge->drawn = 0;
+	}
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		switch (vge->type) {
+		case VG_POLYGON:
+			sketch_polygon_render(t, vg, vge);
+			vge->drawn = 1;
+			break;
+		default:
+			vg_rasterize_element(vg, vge);
+			break;
+		}
+	}
+	
+	if (vg->flags & VG_VISORIGIN)
+		vg_draw_origin(vg);
+	
+	rd.x = tel->tel_sketch.x;
+	rd.y = tel->tel_sketch.y;
+	rd.w = vg->su->w;
+	rd.h = vg->su->h;
+	t->blend_fn(t, vg->su, &rd);
 }
 
 static void

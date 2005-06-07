@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.54 2005/06/05 09:44:16 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.55 2005/06/06 07:16:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,7 +50,6 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "fill.h"
-#include "polygon.h"
 #include "sketchproj.h"
 
 /*
@@ -183,17 +182,7 @@ tile_generate(struct tile *t)
 			}
 			break;
 		case TILE_SKETCH:
-			{
-				struct sketch *sk = tel->tel_sketch.sk;
-				struct vg *vg = sk->vg;
-				SDL_Rect rd;
-
-				rd.x = tel->tel_sketch.x;
-				rd.y = tel->tel_sketch.y;
-				rd.w = vg->su->w;
-				rd.h = vg->su->h;
-				t->blend_fn(t, vg->su, &rd);
-			}
+			sketch_render(t, tel);
 			break;
 		}
 	}
@@ -475,12 +464,15 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 					if (strcmp(ft->name, feat_name) == 0)
 						break;
 				}
-				if (ft == NULL) {
-					error_set("bad feature: %s", feat_name);
-					return (-1);
+				if (ft != NULL) {
+					tel = tile_add_feature(t, name, ft,
+					    x, y);
+					tel->visible = visible;
+				} else {
+					text_msg(MSG_ERROR,
+					    _("%s: no such feature: %s "
+					      "(ignored)"), t->name, feat_name);
 				}
-				tel = tile_add_feature(t, name, ft, x, y);
-				tel->visible = visible;
 			}
 			break;
 		case TILE_PIXMAP:
@@ -1125,25 +1117,6 @@ insert_fill(int argc, union evarg *argv)
 }
 
 static void
-insert_polygon(int argc, union evarg *argv)
-{
-	struct tileview *tv = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct tlist *tl_feats = argv[3].p;
-	struct tlist_item *eit;
-	struct polygon *poly;
-	struct tile_element *tel;
-
-	poly = Malloc(sizeof(struct polygon), M_RG);
-	polygon_init(poly, tv->ts, 0);
-	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(poly), features);
-	tel = tile_add_feature(tv->tile, NULL, poly, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
-	select_feature(tl_feats, poly);
-}
-
-static void
 insert_sketchproj(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
@@ -1680,11 +1653,9 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tileview_set_tile(tv, t);
 	{
 		extern struct tileview_sketch_tool_ops sketch_line_ops;
-		extern struct tileview_sketch_tool_ops sketch_polygon_ops;
 		extern struct tileview_sketch_tool_ops sketch_circle_ops;
 
 		tileview_reg_tool(tv, &sketch_line_ops);
-		tileview_reg_tool(tv, &sketch_polygon_ops);
 		tileview_reg_tool(tv, &sketch_circle_ops);
 	}
 	
@@ -1740,10 +1711,6 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
 		
-		menu_tool(mi, tbar, _("Polygon"), RG_POLYGON_ICON,
-		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
-		    insert_polygon, "%p,%p,%p", tv, win, tl_feats);
-
 		menu_action_kb(mi, _("Sketch projection"), RG_SKETCH_PROJ_ICON,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    insert_sketchproj, "%p,%p,%p", tv, win, tl_feats);

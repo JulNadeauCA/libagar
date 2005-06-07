@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.39 2005/06/06 04:16:44 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.40 2005/06/07 03:05:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -65,12 +65,10 @@ const struct object_ops tileset_ops = {
 };
 
 extern const struct feature_ops fill_ops;
-extern const struct feature_ops polygon_ops;
 extern const struct feature_ops sketchproj_ops;
 
 const struct feature_ops *feature_tbl[] = {
 	&fill_ops,
-	&polygon_ops,
 	&sketchproj_ops,
 	NULL
 };
@@ -273,8 +271,10 @@ tileset_load(void *obj, struct netbuf *buf)
 		}
 		if (*ftops == NULL) {
 			dprintf("%s: unimplemented feature: %s; "
-			        "skipping %lu bytes.", name, type, (u_long)len);
-			netbuf_seek(buf, len, SEEK_CUR);
+			        "skipping %lu bytes.\n", name, type,
+				(u_long)len);
+			netbuf_seek(buf, len-4, SEEK_CUR);
+			continue;
 		}
 
 		ft = Malloc((*ftops)->len, M_RG);
