@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.53 2005/06/05 08:45:26 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.54 2005/06/06 07:17:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -587,18 +587,21 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 	Uint32 color_save = 0;			/* XXX -Wuninitialized */
 
 	if (!vge->drawn) {
-		if (vge->selected) {
+		if (vge->mouseover) {
+			Uint8 r, g, b;
+
 			color_save = vge->color;
-			vge->color = vg->selection_color;
-		} else if (vge->mouseover) {
-			color_save = vge->color;
-			vge->color = vg->mouseover_color;
+			SDL_GetRGB(vge->color, vg->fmt, &r, &g, &b);
+			r = MIN(r+50,255);
+			g = MIN(g+50,255);
+			b = MIN(b+50,255);
+			vge->color = SDL_MapRGB(vg->fmt, r, g, b);
 		}
 
 		vge->ops->draw(vg, vge);
 		vge->drawn = 1;
 		
-		if (vge->selected || vge->mouseover)
+		if (vge->mouseover)
 			vge->color = color_save;
 	}
 	if (vge->ops->bbox != NULL) {
