@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.19 2005/06/07 02:01:35 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.20 2005/06/07 02:43:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -251,6 +251,7 @@ sketch_edit_element(struct tileview *tv, struct tile_element *tel,
 
 	ops = vg_element_types[vge->type];
 	label_staticf(win, _("Element type: %s"), ops->name);
+	label_new(win, LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
 	
 	sb = spinbutton_new(win, _("Layer: "));
 	widget_bind(sb, "value", WIDGET_INT, &vge->layer);
