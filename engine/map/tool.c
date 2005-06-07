@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -104,7 +104,7 @@ tool_window(void *p, const char *name)
 	struct tool *tool = p;
 	struct window *win;
 
-	win = tool->win = window_new(WINDOW_INHIBIT_FOCUS, NULL);
+	win = tool->win = window_new(0, NULL);
 	window_set_caption(win, _(tool->name));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	event_new(win, "window-close", close_tool_window, "%p", tool);
