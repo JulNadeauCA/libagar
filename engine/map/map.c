@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.9 2005/05/29 00:27:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.10 2005/05/31 04:03:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1921,7 +1921,7 @@ map_edit(void *p)
 	struct AGMenu *menu;
 	struct AGMenuItem *pitem;
 	struct box *box_h, *box_v;
-	int flags = MAPVIEW_PROPS|MAPVIEW_GRID;
+	int flags = 0;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
