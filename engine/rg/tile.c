@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.55 2005/06/06 07:16:52 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.56 2005/06/07 06:49:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1653,9 +1653,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tileview_set_tile(tv, t);
 	{
 		extern struct tileview_sketch_tool_ops sketch_line_ops;
+		extern struct tileview_sketch_tool_ops sketch_polygon_ops;
 		extern struct tileview_sketch_tool_ops sketch_circle_ops;
 
 		tileview_reg_tool(tv, &sketch_line_ops);
+		tileview_reg_tool(tv, &sketch_polygon_ops);
 		tileview_reg_tool(tv, &sketch_circle_ops);
 	}
 	
