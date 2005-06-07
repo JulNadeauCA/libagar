@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.10 2005/05/20 05:55:12 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.11 2005/06/01 09:06:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -235,7 +235,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 /* Render an anti-aliased line. */
 void
 vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
-    double y2p, Uint32 color)
+    double y2p, int thick, Uint32 color)
 {
 	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
 	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
@@ -243,6 +243,8 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 	int x, y, ix1, ix2, iy1, iy2;
 	Uint32 c1, c2;
 	Uint8 r, g, b, a;
+	int yoffs;
+	float focus;
 
 	xd = x2 - x1;
 	yd = y2 - y1;
@@ -290,6 +292,7 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
+
 		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
 		    (Uint8)(lum1*255), ALPHA_OVERLAY);
 		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
@@ -297,19 +300,28 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		/* Main loop */
 		for (x = (ix1+1); x < ix2; x++) {
-			float focus;
-
 			lum1 = finvfrac(yf);
 			lum2 = ffrac(yf);
-			focus = (1.0 - fabs(lum1-lum2));
-			lum1 += 0.3*focus;
-			lum2 += 0.3*focus;
 
-			BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf, r, g, b,
-			    (Uint8)(lum1*255), ALPHA_OVERLAY);
-			BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+1, r, g, b,
-			    (Uint8)(lum2*255), ALPHA_OVERLAY);
-
+			if (thick == 1) {
+				focus = (1.0 - fabs((lum1 - lum2)));
+				lum1 += 0.3*focus;
+				lum2 += 0.3*focus;
+				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
+				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
+				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+1,
+				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+			} else {
+				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf-thick+1,
+				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
+				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+thick-1,
+				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				for (yoffs = -thick+2; yoffs < thick-1;
+				     yoffs++) {
+					PUT_PIXEL2_CLIPPED(vg->su, x,
+					    (int)yf+yoffs, color);
+				}
+			}
 			yf = yf + grad;
 		}
 	} else {					/* Vertical */
@@ -359,18 +371,28 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		/* Main loop */
 		for (y = (iy1+1); y < iy2; y++) {
-			float focus;
-
 			lum1 = finvfrac(xf);
 			lum2 = ffrac(xf);
-			focus = (1.0 - fabs((lum1 - lum2)));
-			lum1 += 0.3*focus;
-			lum2 += 0.3*focus;
 
-			BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y, r, g, b,
-			    (Uint8)(lum1*255), ALPHA_OVERLAY);
-			BLEND_RGBA2_CLIPPED(vg->su, (int)xf+1, y, r, g, b,
-			    (Uint8)(lum2*255), ALPHA_OVERLAY);
+			if (thick == 1) {
+				focus = (1.0 - fabs((lum1 - lum2)));
+				lum1 += 0.3*focus;
+				lum2 += 0.3*focus;
+				BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,
+				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
+				BLEND_RGBA2_CLIPPED(vg->su, (int)xf+1, y,
+				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+			} else {
+				BLEND_RGBA2_CLIPPED(vg->su, (int)xf-thick+1, y,
+				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
+				BLEND_RGBA2_CLIPPED(vg->su, (int)xf+thick-1, y,
+				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				for (yoffs = -thick+2; yoffs < thick-1;
+				     yoffs++) {
+					PUT_PIXEL2_CLIPPED(vg->su,
+					    (int)xf+yoffs, y, color);
+				}
+			}
 
 			xf = xf + grad;
 		}

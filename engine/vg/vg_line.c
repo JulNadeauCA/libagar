@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.21 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.22 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -50,7 +50,8 @@ vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
 
 			vg_vtxcoords2d(vg, &vge->vtx[i], &x1, &y1);
 			vg_vtxcoords2d(vg, &vge->vtx[i+1], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			    vge->line_st.thickness, vge->color);
 		} else {
 			int x1, y1, x2, y2;
 
@@ -72,7 +73,8 @@ vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 		vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
 			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			    vge->line_st.thickness, vge->color);
 			x1 = x2;
 			y1 = y2;
 		}
@@ -102,11 +104,13 @@ vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
 			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2, vge->color);
+			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			    vge->line_st.thickness, vge->color);
 			x1 = x2;
 			y1 = y2;
 		}
-		vg_wuline_primitive(vg, x0, y0, x1, y1, vge->color);
+		vg_wuline_primitive(vg, x0, y0, x1, y1,
+		    vge->line_st.thickness, vge->color);
 	} else {
 		int x1, y1, x2, y2;
 		int x0, y0;
