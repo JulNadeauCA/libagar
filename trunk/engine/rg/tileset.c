@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.38 2005/05/31 04:00:29 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.39 2005/06/06 04:16:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -533,6 +533,31 @@ tileset_resolve_pixmap(const char *tsname, const char *pxname)
 	return (px);
 }
 
+struct tile *
+tileset_resolve_tile(const char *tsname, const char *tname)
+{
+	struct tileset *ts;
+	struct tile *t;
+
+	if ((ts = object_find(tsname)) == NULL) {
+		error_set("%s: no such tileset", tsname);
+		return (NULL);
+	}
+	if (!OBJECT_TYPE(ts, "tileset")) {
+		error_set("%s: not a tileset", tsname);
+		return (NULL);
+	}
+
+	TAILQ_FOREACH(t, &ts->tiles, tiles) {
+		if (strcmp(t->name, tname) == 0)
+			break;
+	}
+	if (t == NULL) {
+		error_set("%s has no `%s' tile", tsname, tname);
+	}
+	return (t);
+}
+
 struct animation *
 tileset_find_animation(struct tileset *ts, const char *name)
 {
@@ -591,16 +616,16 @@ poll_textures(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
-		struct pixmap *px;
+		struct tile *t;
 
-		if (tex->tileset[0] != '\0' && tex->pixmap[0] != '\0' &&
-		    (px = tileset_resolve_pixmap(tex->tileset, tex->pixmap))
+		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
+		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, px->su, "%s (<%s> %ux%u)",
-			    tex->name, px->name, px->su->w, px->su->h);
+			it = tlist_insert(tl, t->su, "%s (<%s> %ux%u)",
+			    tex->name, t->name, t->su->w, t->su->h);
 		} else {
 			it = tlist_insert(tl, NULL, "%s (<%s:%s>?)",
-			    tex->name, tex->tileset, tex->pixmap);
+			    tex->name, tex->tileset, tex->tile);
 		}
 		it->class = "texture";
 		it->p1 = tex;

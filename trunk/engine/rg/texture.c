@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.2 2005/05/27 02:48:44 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.3 2005/05/28 08:40:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,7 +46,8 @@ texture_init(struct texture *tex, struct tileset *ts, const char *name)
 {
 	strlcpy(tex->name, name, sizeof(tex->name));
 	tex->tileset[0] = '\0';
-	tex->pixmap[0] = '\0';
+	tex->tile[0] = '\0';
+	tex->t = NULL;
 	tex->wrap_s = TEXTURE_REPEAT;
 	tex->wrap_t = TEXTURE_REPEAT;
 	tex->flags = 0;
@@ -63,7 +64,7 @@ int
 texture_load(struct texture *tex, struct netbuf *buf)
 {
 	copy_string(tex->tileset, buf, sizeof(tex->tileset));
-	copy_string(tex->pixmap, buf, sizeof(tex->pixmap));
+	copy_string(tex->tile, buf, sizeof(tex->tile));
 	tex->flags = (int)read_uint32(buf);
 	tex->wrap_s = (enum texture_wrap_mode)read_uint8(buf);
 	tex->wrap_t = (enum texture_wrap_mode)read_uint8(buf);
@@ -76,7 +77,7 @@ void
 texture_save(struct texture *tex, struct netbuf *buf)
 {
 	write_string(buf, tex->tileset);
-	write_string(buf, tex->pixmap);
+	write_string(buf, tex->tile);
 	write_uint32(buf, (Uint32)tex->flags);
 	write_uint8(buf, (Uint8)tex->wrap_s);
 	write_uint8(buf, (Uint8)tex->wrap_t);
@@ -94,8 +95,7 @@ texture_find(struct tileset *ts, const char *texname)
 			break;
 	}
 	if (tex == NULL ||
-	    (tex->px = tileset_resolve_pixmap(tex->tileset, tex->pixmap))
-	     == NULL) {
+	   (tex->t = tileset_resolve_tile(tex->tileset, tex->tile)) == NULL) {
 		return (NULL);
 	}
 	return (tex);
@@ -121,19 +121,19 @@ poll_tilesets(int argc, union evarg *argv)
 }
 
 static void
-poll_pixmaps(int argc, union evarg *argv)
+poll_src_tiles(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct texture *tex = argv[1].p;
-	struct pixmap *px;
 	struct tileset *ts;
+	struct tile *t;
 
 	tlist_clear_items(tl);
 	if (tex->tileset[0] != '\0' &&
 	    (ts = object_find(tex->tileset)) != NULL &&
 	    OBJECT_TYPE(ts, "tileset")) {
-		TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-			tlist_insert_item(tl, px->su, px->name, px);
+		TAILQ_FOREACH(t, &ts->tiles, tiles) {
+			tlist_insert_item(tl, t->su, t->name, t);
 		}
 	}
 	tlist_restore_selections(tl);
@@ -148,18 +148,18 @@ select_tileset(int argc, union evarg *argv)
 	struct tileset *ts = it->p1;
 
 	object_copy_name(ts, tex->tileset, sizeof(tex->tileset));
-	tex->pixmap[0] = '\0';
+	tex->tile[0] = '\0';
 }
 
 static void
-select_pixmap(int argc, union evarg *argv)
+select_src_tile(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct texture *tex = argv[1].p;
 	struct tlist_item *it = argv[2].p;
-	struct pixmap *px = it->p1;
+	struct tile *t = it->p1;
 
-	strlcpy(tex->pixmap, px->name, sizeof(tex->pixmap));
+	strlcpy(tex->tile, t->name, sizeof(tex->tile));
 }
 
 static int
@@ -198,9 +198,9 @@ texture_edit(struct texture *tex)
 	textbox_printf(com->tbox, "%s", tex->tileset);
 
 	tl = tlist_new(win, TLIST_POLL);
-	event_new(tl, "tlist-poll", poll_pixmaps, "%p", tex);
-	event_new(tl, "tlist-selected", select_pixmap, "%p", tex);
-	tlist_select_text(tl, tex->pixmap);
+	event_new(tl, "tlist-poll", poll_src_tiles, "%p", tex);
+	event_new(tl, "tlist-selected", select_src_tile, "%p", tex);
+	tlist_select_text(tl, tex->tile);
 
 	nb = notebook_new(win, NOTEBOOK_WFILL);
 	ntab = notebook_add_tab(nb, _("Wrapping"), BOX_VERT);
