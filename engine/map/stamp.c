@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.6 2005/05/29 00:27:40 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.7 2005/06/08 06:28:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -107,6 +107,8 @@ init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 		r->r_gfx.ycenter += mv->cyoffs*TILESZ/mv->tilesz;
 		break;
 	case GFX_SNAP_TO_GRID:
+		r->r_gfx.xcenter += TILESZ/2;
+		r->r_gfx.ycenter += TILESZ/2;
 		break;
 	}
 
