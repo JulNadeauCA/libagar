@@ -1,16 +1,17 @@
-/*	$Csoft$	*/
+/*	$Csoft: kbd.h,v 1.1 2003/09/07 00:24:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
 
-struct kbd {
-	struct input in;
+typedef struct ag_keyboard {
+	struct ag_input in;
+	int index;
+} AG_Keyboard;
 
-	int	index;
-};
+extern const AG_InputOps agKeyboardOps;
 
 __BEGIN_DECLS
-struct kbd	*kbd_new(int);
+AG_Keyboard *AG_KeyboardNew(int);
 __END_DECLS
 
 #include "close_code.h"

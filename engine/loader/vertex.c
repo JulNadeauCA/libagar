@@ -1,4 +1,4 @@
-/*	$Csoft: vertex.c,v 1.1 2004/05/01 00:17:26 vedge Exp $	*/
+/*	$Csoft: vertex.c,v 1.2 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -34,19 +34,19 @@
 #include "vertex.h"
 
 void
-write_vertex(struct netbuf *buf, struct vg_vertex *vtx)
+AG_WriteVertex(AG_Netbuf *buf, VG_Vtx *vtx)
 {
-	write_double(buf, vtx->x);
-	write_double(buf, vtx->y);
-	write_double(buf, vtx->z);
-	write_double(buf, vtx->w);
+	AG_WriteDouble(buf, vtx->x);
+	AG_WriteDouble(buf, vtx->y);
+	AG_WriteDouble(buf, vtx->z);
+	AG_WriteDouble(buf, vtx->w);
 }
 
 void
-read_vertex(struct netbuf *buf, struct vg_vertex *vtx)
+AG_ReadVertex(AG_Netbuf *buf, VG_Vtx *vtx)
 {
-	vtx->x = read_double(buf);
-	vtx->y = read_double(buf);
-	vtx->z = read_double(buf);
-	vtx->w = read_double(buf);
+	vtx->x = AG_ReadDouble(buf);
+	vtx->y = AG_ReadDouble(buf);
+	vtx->z = AG_ReadDouble(buf);
+	vtx->w = AG_ReadDouble(buf);
 }

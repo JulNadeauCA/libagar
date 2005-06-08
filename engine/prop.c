@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.52 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.53 2005/03/11 08:59:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <string.h>
 #include <errno.h>
 
-const struct version prop_ver = {
+const AG_Version prop_ver = {
 	"agar property map",
 	2, 0
 };
@@ -45,24 +45,24 @@ const struct version prop_ver = {
 #define DEBUG_SET	0x02
 
 int	prop_debug = 0;
-#define engine_debug prop_debug
+#define agDebugLvl prop_debug
 #endif
 
 /* Return the copy of a property. */
-struct prop *
-prop_copy(const struct prop *prop)
+AG_Prop *
+AG_CopyProp(const AG_Prop *prop)
 {
-	struct prop *nprop;
+	AG_Prop *nprop;
 
-	nprop = Malloc(sizeof(struct prop), M_PROP);
-	memcpy(nprop, prop, sizeof(struct prop));
+	nprop = Malloc(sizeof(AG_Prop), M_PROP);
+	memcpy(nprop, prop, sizeof(AG_Prop));
 
 	switch (prop->type) {
-	case PROP_STRING:
+	case AG_PROP_STRING:
 		nprop->data.s = strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
 			Free(nprop, M_PROP);
-			error_set(_("Out of memory for string."));
+			AG_SetError(_("Out of memory for string."));
 			return (NULL);
 		}
 		break;
@@ -73,11 +73,11 @@ prop_copy(const struct prop *prop)
 }
 
 /* Modify a property, or create a new one if it does not exist. */
-struct prop *
-prop_set(void *p, const char *key, enum prop_type type, ...)
+AG_Prop *
+AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 {
-	struct object *ob = p;
-	struct prop *nprop = NULL, *oprop;
+	AG_Object *ob = p;
+	AG_Prop *nprop = NULL, *oprop;
 	int modify = 0;
 	va_list ap;
 
@@ -89,7 +89,7 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 		}
 	}
 	if (nprop == NULL) {
-		nprop = Malloc(sizeof(struct prop), M_PROP);
+		nprop = Malloc(sizeof(AG_Prop), M_PROP);
 		strlcpy(nprop->key, key, sizeof(nprop->key));
 		nprop->type = type;
 	} else {
@@ -98,57 +98,57 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 
 	va_start(ap, type);
 	switch (type) {
-	case PROP_UINT:
+	case AG_PROP_UINT:
 		nprop->data.u = va_arg(ap, unsigned int);
 		debug(DEBUG_SET, "uint %s: %d\n", key, nprop->data.u);
 		break;
-	case PROP_INT:
+	case AG_PROP_INT:
 		nprop->data.i = va_arg(ap, int);
 		debug(DEBUG_SET, "int %s: %d\n", key, nprop->data.i);
 		break;
-	case PROP_BOOL:
+	case AG_PROP_BOOL:
 		nprop->data.i = va_arg(ap, int);		/* Promoted */
 		debug(DEBUG_SET, "bool %s: %d\n", key, nprop->data.i);
 		break;
-	case PROP_UINT8:
+	case AG_PROP_UINT8:
 		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "u8 %s: %d\n", key, nprop->data.u8);
 		break;
-	case PROP_SINT8:
+	case AG_PROP_SINT8:
 		nprop->data.s8 = (Sint8)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "s8 %s: %d\n", key, nprop->data.s8);
 		break;
-	case PROP_UINT16:
+	case AG_PROP_UINT16:
 		nprop->data.u16 = (Uint16)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "u16 %s: %d\n", key, nprop->data.u16);
 		break;
-	case PROP_SINT16:
+	case AG_PROP_SINT16:
 		nprop->data.s16 = (Sint16)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "s16 %s: %d\n", key, nprop->data.s16);
 		break;
-	case PROP_UINT32:
+	case AG_PROP_UINT32:
 		nprop->data.u32 = va_arg(ap, Uint32);
 		debug(DEBUG_SET, "u32 %s: %d\n", key, nprop->data.u32);
 		break;
-	case PROP_SINT32:
+	case AG_PROP_SINT32:
 		nprop->data.s32 = va_arg(ap, Sint32);
 		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
 		break;
 #ifdef FLOATING_POINT
-	case PROP_FLOAT:
+	case AG_PROP_FLOAT:
 		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
 		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
 		break;
-	case PROP_DOUBLE:
+	case AG_PROP_DOUBLE:
 		nprop->data.d = va_arg(ap, double);
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
 #endif
-	case PROP_STRING:
+	case AG_PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
 		break;
-	case PROP_POINTER:
+	case AG_PROP_POINTER:
 		nprop->data.p = va_arg(ap, void *);
 		debug(DEBUG_SET, "pointer %s: %p\n", key, nprop->data.p);
 		break;
@@ -161,76 +161,76 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 	if (!modify) {
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
 	} else {
-		event_post(NULL, ob, "prop-modified", "%p", nprop);
+		AG_PostEvent(NULL, ob, "prop-modified", "%p", nprop);
 	}
 	pthread_mutex_unlock(&ob->lock);
 	return (nprop);
 }
 
-struct prop *
-prop_set_uint(void *ob, const char *key, u_int i)
+AG_Prop *
+AG_SetUint(void *ob, const char *key, u_int i)
 {
-	return (prop_set(ob, key, PROP_UINT, i));
+	return (AG_SetProp(ob, key, AG_PROP_UINT, i));
 }
 
-struct prop *
-prop_set_int(void *ob, const char *key, int i)
+AG_Prop *
+AG_SetInt(void *ob, const char *key, int i)
 {
-	return (prop_set(ob, key, PROP_INT, i));
+	return (AG_SetProp(ob, key, AG_PROP_INT, i));
 }
 
-struct prop *
-prop_set_uint8(void *ob, const char *key, Uint8 i)
+AG_Prop *
+AG_SetUint8(void *ob, const char *key, Uint8 i)
 {
-	return (prop_set(ob, key, PROP_UINT8, i));
+	return (AG_SetProp(ob, key, AG_PROP_UINT8, i));
 }
 
-struct prop *
-prop_set_sint8(void *ob, const char *key, Sint8 i)
+AG_Prop *
+AG_SetSint8(void *ob, const char *key, Sint8 i)
 {
-	return (prop_set(ob, key, PROP_SINT8, i));
+	return (AG_SetProp(ob, key, AG_PROP_SINT8, i));
 }
 
-struct prop *
-prop_set_uint16(void *ob, const char *key, Uint16 i)
+AG_Prop *
+AG_SetUint16(void *ob, const char *key, Uint16 i)
 {
-	return (prop_set(ob, key, PROP_UINT16, i));
+	return (AG_SetProp(ob, key, AG_PROP_UINT16, i));
 }
 
-struct prop *
-prop_set_sint16(void *ob, const char *key, Sint16 i)
+AG_Prop *
+AG_SetSint16(void *ob, const char *key, Sint16 i)
 {
-	return (prop_set(ob, key, PROP_SINT16, i));
+	return (AG_SetProp(ob, key, AG_PROP_SINT16, i));
 }
 
-struct prop *
-prop_set_uint32(void *ob, const char *key, Uint32 i)
+AG_Prop *
+AG_SetUint32(void *ob, const char *key, Uint32 i)
 {
-	return (prop_set(ob, key, PROP_UINT32, i));
+	return (AG_SetProp(ob, key, AG_PROP_UINT32, i));
 }
 
-struct prop *
-prop_set_sint32(void *ob, const char *key, Sint32 i)
+AG_Prop *
+AG_SetSint32(void *ob, const char *key, Sint32 i)
 {
-	return (prop_set(ob, key, PROP_SINT32, i));
+	return (AG_SetProp(ob, key, AG_PROP_SINT32, i));
 }
 
 #ifdef FLOATING_POINT
-struct prop *
-prop_set_float(void *ob, const char *key, float f)
+AG_Prop *
+AG_SetFloat(void *ob, const char *key, float f)
 {
-	return (prop_set(ob, key, PROP_FLOAT, f));
+	return (AG_SetProp(ob, key, AG_PROP_FLOAT, f));
 }
 
-struct prop *
-prop_set_double(void *ob, const char *key, double d)
+AG_Prop *
+AG_SetDouble(void *ob, const char *key, double d)
 {
-	return (prop_set(ob, key, PROP_DOUBLE, d));
+	return (AG_SetProp(ob, key, AG_PROP_DOUBLE, d));
 }
 #endif
 
-struct prop *
-prop_set_string(void *ob, const char *key, const char *fmt, ...)
+AG_Prop *
+AG_SetString(void *ob, const char *key, const char *fmt, ...)
 {
 	va_list ap;
 	char *s;
@@ -239,90 +239,90 @@ prop_set_string(void *ob, const char *key, const char *fmt, ...)
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
 
-	return (prop_set(ob, key, PROP_STRING, s));
+	return (AG_SetProp(ob, key, AG_PROP_STRING, s));
 }
 
-struct prop *
-prop_set_pointer(void *ob, const char *key, void *p)
+AG_Prop *
+AG_SetPointer(void *ob, const char *key, void *p)
 {
-	return (prop_set(ob, key, PROP_POINTER, p));
+	return (AG_SetProp(ob, key, AG_PROP_POINTER, p));
 }
 
-struct prop *
-prop_set_bool(void *ob, const char *key, int i)
+AG_Prop *
+AG_SetBool(void *ob, const char *key, int i)
 {
-	return (prop_set(ob, key, PROP_BOOL, i));
-}
-
-void
-prop_lock(void *p)
-{
-	pthread_mutex_lock(&OBJECT(p)->lock);
+	return (AG_SetProp(ob, key, AG_PROP_BOOL, i));
 }
 
 void
-prop_unlock(void *p)
+AG_LockProps(void *p)
 {
-	pthread_mutex_unlock(&OBJECT(p)->lock);
+	pthread_mutex_lock(&AGOBJECT(p)->lock);
+}
+
+void
+AG_UnlockProps(void *p)
+{
+	pthread_mutex_unlock(&AGOBJECT(p)->lock);
 }
 
 /* Return a pointer to the data of a property. */
-struct prop *
-prop_get(void *obp, const char *key, enum prop_type t, void *p)
+AG_Prop *
+AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 {
-	struct object *ob = obp;
-	struct prop *prop;
+	AG_Object *ob = obp;
+	AG_Prop *prop;
 
 	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		if (strcmp(key, prop->key) != 0)
 			continue;
-		if (t != PROP_ANY && t != prop->type)
+		if (t != AG_PROP_ANY && t != prop->type)
 			continue;
 
 		if (p != NULL) {
 			switch (prop->type) {
-			case PROP_INT:
-			case PROP_BOOL:
+			case AG_PROP_INT:
+			case AG_PROP_BOOL:
 				*(int *)p = prop->data.i;
 				break;
-			case PROP_UINT:
+			case AG_PROP_UINT:
 				*(u_int *)p = prop->data.u;
 				break;
-			case PROP_UINT8:
+			case AG_PROP_UINT8:
 				*(Uint8 *)p = prop->data.u8;
 				break;
-			case PROP_SINT8:
+			case AG_PROP_SINT8:
 				*(Sint8 *)p = prop->data.s8;
 				break;
-			case PROP_UINT16:
+			case AG_PROP_UINT16:
 				*(Uint16 *)p = prop->data.u16;
 				break;
-			case PROP_SINT16:
+			case AG_PROP_SINT16:
 				*(Sint16 *)p = prop->data.s16;
 				break;
-			case PROP_UINT32:
+			case AG_PROP_UINT32:
 				*(Uint32 *)p = prop->data.u32;
 				break;
-			case PROP_SINT32:
+			case AG_PROP_SINT32:
 				*(Sint32 *)p = prop->data.s32;
 				break;
 #ifdef FLOATING_POINT
-			case PROP_FLOAT:
+			case AG_PROP_FLOAT:
 				*(float *)p = prop->data.f;
 				break;
-			case PROP_DOUBLE:
+			case AG_PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
 #endif
-			case PROP_STRING:
+			case AG_PROP_STRING:
 				*(char **)p = prop->data.s;
 				break;
-			case PROP_POINTER:
+			case AG_PROP_POINTER:
 				*(void **)p = prop->data.p;
 				break;
 			default:
-				error_set(_("Unsupported property type: %d."),
+				AG_SetError(_("Unsupported property type: %d."),
 				    t);
 				goto fail;
 			}
@@ -331,130 +331,130 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 		return (prop);
 	}
 
-	error_set(_("%s has no `%s' property (type %d)."), ob->name, key, t);
+	AG_SetError(_("%s has no `%s' property (type %d)."), ob->name, key, t);
 fail:
 	pthread_mutex_unlock(&ob->lock);
 	return (NULL);
 }
 
 u_int
-prop_get_uint(void *p, const char *key)
+AG_Uint(void *p, const char *key)
 {
 	u_int i;
 
-	if (prop_get(p, key, PROP_UINT, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_UINT, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 int
-prop_get_int(void *p, const char *key)
+AG_Int(void *p, const char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_INT, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_INT, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 int
-prop_get_bool(void *p, const char *key)
+AG_Bool(void *p, const char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_BOOL, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_BOOL, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Uint8
-prop_get_uint8(void *p, const char *key)
+AG_Uint8(void *p, const char *key)
 {
 	Uint8 i;
 
-	if (prop_get(p, key, PROP_UINT8, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_UINT8, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Sint8
-prop_get_sint8(void *p, const char *key)
+AG_Sint8(void *p, const char *key)
 {
 	Sint8 i;
 
-	if (prop_get(p, key, PROP_SINT8, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_SINT8, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Uint16
-prop_get_uint16(void *p, const char *key)
+AG_Uint16(void *p, const char *key)
 {
 	Uint16 i;
 
-	if (prop_get(p, key, PROP_UINT16, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_UINT16, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Sint16
-prop_get_sint16(void *p, const char *key)
+AG_Sint16(void *p, const char *key)
 {
 	Sint16 i;
 
-	if (prop_get(p, key, PROP_SINT16, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_SINT16, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Uint32
-prop_get_uint32(void *p, const char *key)
+AG_Uint32(void *p, const char *key)
 {
 	Uint32 i;
 
-	if (prop_get(p, key, PROP_UINT32, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_UINT32, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 Sint32
-prop_get_sint32(void *p, const char *key)
+AG_Sint32(void *p, const char *key)
 {
 	Sint32 i;
 
-	if (prop_get(p, key, PROP_SINT32, &i) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_SINT32, &i) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (i);
 }
 
 #ifdef FLOATING_POINT
 float
-prop_get_float(void *p, const char *key)
+AG_Float(void *p, const char *key)
 {
 	float f;
 
-	if (prop_get(p, key, PROP_FLOAT, &f) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_FLOAT, &f) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (f);
 }
 
 double
-prop_get_double(void *p, const char *key)
+AG_Double(void *p, const char *key)
 {
 	double d;
 
-	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_DOUBLE, &d) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (d);
 }
@@ -462,121 +462,121 @@ prop_get_double(void *p, const char *key)
 
 /* The object must be locked. */
 char *
-prop_get_string(void *p, const char *key)
+AG_String(void *p, const char *key)
 {
 	char *s;
 
-	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (s);
 }
 
 size_t
-prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
+AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
 {
 	size_t sl;
 	char *s;
 
-	prop_lock(p);
-	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
-		fatal("%s", error_get());
+	AG_LockProps(p);
+	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	sl = strlcpy(buf, s, bufsize);
-	prop_unlock(p);
+	AG_UnlockProps(p);
 	return (sl);
 }
 
 void *
-prop_get_pointer(void *p, const char *key)
+AG_Pointer(void *p, const char *key)
 {
 	void *np;
 
-	if (prop_get(p, key, PROP_POINTER, &np) == NULL) {
-		fatal("%s", error_get());
+	if (AG_GetProp(p, key, AG_PROP_POINTER, &np) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	return (np);
 }
 
 int
-prop_load(void *p, struct netbuf *buf)
+AG_PropLoad(void *p, AG_Netbuf *buf)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	Uint32 i, nprops;
 
-	if (version_read(buf, &prop_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, &prop_ver, NULL) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&ob->lock);
 
-	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0)
-		object_free_props(ob);
+	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
+		AG_ObjectFreeProps(ob);
 
-	nprops = read_uint32(buf);
+	nprops = AG_ReadUint32(buf);
 	for (i = 0; i < nprops; i++) {
-		char key[PROP_KEY_MAX];
+		char key[AG_PROP_KEY_MAX];
 		Uint32 t;
 
-		if (copy_string(key, buf, sizeof(key)) >= sizeof(key)) {
-			error_set(_("The prop key too big."));
+		if (AG_CopyString(key, buf, sizeof(key)) >= sizeof(key)) {
+			AG_SetError(_("The prop key too big."));
 			goto fail;
 		}
-		t = read_uint32(buf);
+		t = AG_ReadUint32(buf);
 		
 		debug(DEBUG_STATE, "prop %s (%d)\n", key, t);
 	
 		switch (t) {
-		case PROP_BOOL:
-			prop_set_bool(ob, key, (int)read_uint8(buf));
+		case AG_PROP_BOOL:
+			AG_SetBool(ob, key, (int)AG_ReadUint8(buf));
 			break;
-		case PROP_UINT8:
-			prop_set_bool(ob, key, read_uint8(buf));
+		case AG_PROP_UINT8:
+			AG_SetBool(ob, key, AG_ReadUint8(buf));
 			break;
-		case PROP_SINT8:
-			prop_set_bool(ob, key, read_sint8(buf));
+		case AG_PROP_SINT8:
+			AG_SetBool(ob, key, AG_ReadSint8(buf));
 			break;
-		case PROP_UINT16:
-			prop_set_uint16(ob, key, read_uint16(buf));
+		case AG_PROP_UINT16:
+			AG_SetUint16(ob, key, AG_ReadUint16(buf));
 			break;
-		case PROP_SINT16:
-			prop_set_sint16(ob, key, read_sint16(buf));
+		case AG_PROP_SINT16:
+			AG_SetSint16(ob, key, AG_ReadSint16(buf));
 			break;
-		case PROP_UINT32:
-			prop_set_uint32(ob, key, read_uint32(buf));
+		case AG_PROP_UINT32:
+			AG_SetUint32(ob, key, AG_ReadUint32(buf));
 			break;
-		case PROP_SINT32:
-			prop_set_sint32(ob, key, read_sint32(buf));
+		case AG_PROP_SINT32:
+			AG_SetSint32(ob, key, AG_ReadSint32(buf));
 			break;
-		case PROP_UINT:
-			prop_set_uint(ob, key, (u_int)read_uint32(buf));
+		case AG_PROP_UINT:
+			AG_SetUint(ob, key, (u_int)AG_ReadUint32(buf));
 			break;
-		case PROP_INT:
-			prop_set_int(ob, key, (int)read_sint32(buf));
+		case AG_PROP_INT:
+			AG_SetInt(ob, key, (int)AG_ReadSint32(buf));
 			break;
 #if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
-		case PROP_FLOAT:
-			prop_set_float(ob, key, read_float(buf));
+		case AG_PROP_FLOAT:
+			AG_SetFloat(ob, key, AG_ReadFloat(buf));
 			break;
-		case PROP_DOUBLE:
-			prop_set_double(ob, key, read_double(buf));
+		case AG_PROP_DOUBLE:
+			AG_SetDouble(ob, key, AG_ReadDouble(buf));
 			break;
 #endif
-		case PROP_STRING:
+		case AG_PROP_STRING:
 			{
 				char *s;
 
-				s = read_string(buf);
-				if (strlen(s) >= PROP_STRING_MAX) {
-					error_set(_("String too big."));
+				s = AG_ReadString(buf);
+				if (strlen(s) >= AG_PROP_STRING_MAX) {
+					AG_SetError(_("String too big."));
 					Free(s, 0);
 					goto fail;
 				}
-				prop_set_string(ob, key, "%s", s);
+				AG_SetString(ob, key, "%s", s);
 				Free(s, 0);
 			}
 			break;
 		default:
-			error_set(_("Cannot load prop of type 0x%x."), t);
+			AG_SetError(_("Cannot load prop of type 0x%x."), t);
 			goto fail;
 		}
 	}
@@ -588,79 +588,79 @@ fail:
 }
 
 int
-prop_save(void *p, struct netbuf *buf)
+AG_PropSave(void *p, AG_Netbuf *buf)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	off_t count_offs;
 	Uint32 nprops = 0;
-	struct prop *prop;
+	AG_Prop *prop;
 	Uint8 c;
 	
-	version_write(buf, &prop_ver);
+	AG_WriteVersion(buf, &prop_ver);
 	
 	pthread_mutex_lock(&ob->lock);
 
-	count_offs = netbuf_tell(buf);				/* Skip count */
-	write_uint32(buf, 0);
+	count_offs = AG_NetbufTell(buf);			/* Skip count */
+	AG_WriteUint32(buf, 0);
 
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		write_string(buf, (char *)prop->key);
-		write_uint32(buf, prop->type);
+		AG_WriteString(buf, (char *)prop->key);
+		AG_WriteUint32(buf, prop->type);
 		debug(DEBUG_STATE, "%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
-		case PROP_BOOL:
+		case AG_PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;
-			write_uint8(buf, c);
+			AG_WriteUint8(buf, c);
 			break;
-		case PROP_UINT8:
-			write_uint8(buf, prop->data.u8);
+		case AG_PROP_UINT8:
+			AG_WriteUint8(buf, prop->data.u8);
 			break;
-		case PROP_SINT8:
-			write_sint8(buf, prop->data.s8);
+		case AG_PROP_SINT8:
+			AG_WriteSint8(buf, prop->data.s8);
 			break;
-		case PROP_UINT16:
-			write_uint16(buf, prop->data.u16);
+		case AG_PROP_UINT16:
+			AG_WriteUint16(buf, prop->data.u16);
 			break;
-		case PROP_SINT16:
-			write_sint16(buf, prop->data.s16);
+		case AG_PROP_SINT16:
+			AG_WriteSint16(buf, prop->data.s16);
 			break;
-		case PROP_UINT32:
-			write_uint32(buf, prop->data.u32);
+		case AG_PROP_UINT32:
+			AG_WriteUint32(buf, prop->data.u32);
 			break;
-		case PROP_SINT32:
-			write_sint32(buf, prop->data.s32);
+		case AG_PROP_SINT32:
+			AG_WriteSint32(buf, prop->data.s32);
 			break;
-		case PROP_UINT:
-			write_uint32(buf, (Uint32)prop->data.u);
+		case AG_PROP_UINT:
+			AG_WriteUint32(buf, (Uint32)prop->data.u);
 			break;
-		case PROP_INT:
-			write_sint32(buf, (Sint32)prop->data.i);
+		case AG_PROP_INT:
+			AG_WriteSint32(buf, (Sint32)prop->data.i);
 			break;
 #if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
-		case PROP_FLOAT:
-			write_float(buf, prop->data.f);
+		case AG_PROP_FLOAT:
+			AG_WriteFloat(buf, prop->data.f);
 			break;
-		case PROP_DOUBLE:
-			write_double(buf, prop->data.d);
+		case AG_PROP_DOUBLE:
+			AG_WriteDouble(buf, prop->data.d);
 			break;
 #endif
-		case PROP_STRING:
-			write_string(buf, prop->data.s);
+		case AG_PROP_STRING:
+			AG_WriteString(buf, prop->data.s);
 			break;
-		case PROP_POINTER:
+		case AG_PROP_POINTER:
 			debug(DEBUG_STATE,
 			    "skipped machine-dependent property `%s'\n",
 			    prop->key);
 			break;
 		default:
-			error_set(_("Cannot save prop of type 0x%x."),
+			AG_SetError(_("Cannot save prop of type 0x%x."),
 			    prop->type);
 			goto fail;
 		}
 		nprops++;
 	}
 	pthread_mutex_unlock(&ob->lock);
-	pwrite_uint32(buf, nprops, count_offs);		/* Write count */
+	AG_PwriteUint32(buf, nprops, count_offs);	/* Write count */
 	return (0);
 fail:
 	pthread_mutex_unlock(&ob->lock);
@@ -668,56 +668,56 @@ fail:
 }
 
 void
-prop_destroy(struct prop *prop)
+AG_PropDestroy(AG_Prop *prop)
 {
 	switch (prop->type) {
-	case PROP_STRING:
+	case AG_PROP_STRING:
 		Free(prop->data.s, 0);
 		break;
 	}
 }
 
 void
-prop_print_value(char *s, size_t len, struct prop *prop)
+AG_PropPrint(char *s, size_t len, AG_Prop *prop)
 {
 	switch (prop->type) {
-	case PROP_UINT:
+	case AG_PROP_UINT:
 		snprintf(s, len, "%u", prop->data.u);
 		break;
-	case PROP_INT:
+	case AG_PROP_INT:
 		snprintf(s, len, "%d", prop->data.i);
 		break;
-	case PROP_UINT8:
+	case AG_PROP_UINT8:
 		snprintf(s, len, "%u", prop->data.u8);
 		break;
-	case PROP_SINT8:
+	case AG_PROP_SINT8:
 		snprintf(s, len, "%d", prop->data.s8);
 		break;
-	case PROP_UINT16:
+	case AG_PROP_UINT16:
 		snprintf(s, len, "%u", prop->data.u16);
 		break;
-	case PROP_SINT16:
+	case AG_PROP_SINT16:
 		snprintf(s, len, "%d", prop->data.s16);
 		break;
-	case PROP_UINT32:
+	case AG_PROP_UINT32:
 		snprintf(s, len, "%u", prop->data.u32);
 		break;
-	case PROP_SINT32:
+	case AG_PROP_SINT32:
 		snprintf(s, len, "%d", prop->data.s32);
 		break;
-	case PROP_FLOAT:
+	case AG_PROP_FLOAT:
 		snprintf(s, len, "%f", prop->data.f);
 		break;
-	case PROP_DOUBLE:
+	case AG_PROP_DOUBLE:
 		snprintf(s, len, "%f", prop->data.d);
 		break;
-	case PROP_STRING:
+	case AG_PROP_STRING:
 		strlcpy(s, prop->data.s, len);
 		break;
-	case PROP_POINTER:
+	case AG_PROP_POINTER:
 		snprintf(s, len, "%p", prop->data.p);
 		break;
-	case PROP_BOOL:
+	case AG_PROP_BOOL:
 		strlcpy(s, prop->data.i ? "true" : "false", len);
 		break;
 	default:

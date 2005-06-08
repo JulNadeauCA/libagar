@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.11 2005/05/11 09:59:33 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.12 2005/05/31 03:22:22 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -58,52 +58,52 @@ but it is more efficient to use
 for integer-only bindings.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Objet 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct fspinbutton *"
-.Fn fspinbutton_new "void *parent, const char *unit_key" "const char *label_fmt" "..."
+.Ft "AG_FSpinbutton *"
+.Fn AG_FSpinbuttonNew "void *parent, const char *unit_key" "const char *label_fmt" "..."
 .Pp
 .Ft void
-.Fn fspinbutton_init "struct fspinbutton *fsu, const char *unit_key" "const char *label"
+.Fn AG_FSpinbuttonInit "AG_FSpinbutton *fsu, const char *unit_key" "const char *label"
 .Pp
 .Ft void
-.Fn fspinbutton_set_value "struct fspinbutton *fsu" "double value"
+.Fn AG_FSpinbuttonSetValue "AG_FSpinbutton *fsu" "double value"
 .Pp
 .Ft void
-.Fn fspinbutton_add_value "struct fspinbutton *fsu" "double value"
+.Fn AG_FSpinbuttonAddValue "AG_FSpinbutton *fsu" "double value"
 .Pp
 .Ft void
-.Fn fspinbutton_set_min "struct fspinbutton *fsu" "double min_value"
+.Fn AG_FSpinbuttonSetMin "AG_FSpinbutton *fsu" "double min_value"
 .Pp
 .Ft void
-.Fn fspinbutton_set_max "struct fspinbutton *fsu" "double max_value"
+.Fn AG_FSpinbuttonSetMax "AG_FSpinbutton *fsu" "double max_value"
 .Pp
 .Ft void
-.Fn fspinbutton_set_range "struct fspinbutton *fsu" "double min" "double max"
+.Fn AG_FSpinbuttonSetRange "AG_FSpinbutton *fsu" "double min" "double max"
 .Pp
 .Ft void
-.Fn fspinbutton_set_increment "struct fspinbutton *fsu" "double increment"
+.Fn AG_FSpinbuttonSetIncrement "AG_FSpinbutton *fsu" "double increment"
 .Pp
 .Ft void
-.Fn fspinbutton_select_unit "struct fspinbutton *fsu" "const char *unit_key"
+.Fn AG_FSpinbuttonSelectUnit "AG_FSpinbutton *fsu" "const char *unit_key"
 .Pp
 .Ft void
-.Fn fspinbutton_set_precision "struct fspinbutton *fsu, const char *fmt" "int precision"
+.Fn FSpinbuttonSetPrecision "AG_FSpinbutton *fsu, const char *fmt" "int precision"
 .Pp
 .Ft void
-.Fn fspinbutton_set_writeable "struct fspinbutton *fsu" "int writeable"
+.Fn FSpinbuttonSetWriteable "AG_FSpinbutton *fsu" "int writeable"
 .Pp
 .nr nS 0
 The
-.Fn fspinbutton_new
+.Fn AG_FSpinbuttonNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn fspinbutton_init
+.Fn AG_FSpinbuttonInit
 function initializes a
 .Nm
 widget.
@@ -113,40 +113,40 @@ argument defines the unit system to use (if set to NULL or "identity", no
 conversion is done).
 .Pp
 The
-.Fn fspinbutton_set_value
+.Fn AG_FSpinbuttonSetValue
 function modifies the bound value, performing conversion to float or integer
 if necessary.
-.Fn fspinbutton_add_value
+.Fn AG_FSpinbuttonAddValue
 adds the specified number to the bound value.
 The number is given in selected units instead of base units.
 .Pp
 The
-.Fn fspinbutton_set_min ,
-.Fn fspinbutton_set_max
+.Fn AG_FSpinbuttonSetMin ,
+.Fn AG_FSpinbuttonSetMax
 and
-.Fn fspinbutton_set_range
+.Fn AG_FSpinbuttonSetRange
 functions define the range of acceptable values (in base units).
 Invocations of these functions must always follow
-.Fn widget_bind ,
+.Fn AG_WidgetBind ,
 since binding to
 .Sq value
 automatically selects a range suitable to the new binding type.
 .Pp
 The
-.Fn fspinbutton_set_increment
+.Fn AG_FSpinbuttonSetIncrement
 function defines the step value (given in selected units) for the
 "+" and "-" buttons.
 .Pp
-.Fn fspinbutton_select_unit
+.Fn AG_FSpinbuttonSelectUnit
 changes the current conversion unit.
 .Pp
 The
-.Fn fspinbutton_set_precision
+.Fn FSpinbuttonSetPrecision
 function selects the preferred style and precision for printing.
 The default is
 .Sq %.2f .
 .Pp
-.Fn fspinbutton_set_writeable
+.Fn FSpinbuttonSetWriteable
 sets the writeability flag.
 .Sh EVENTS
 The

@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.12 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.13 2005/03/10 09:43:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,84 +34,84 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static struct widget_ops box_ops = {
+static AG_WidgetOps box_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
 	NULL,		/* draw */
-	box_scale
+	AG_BoxScale
 };
 
-static struct widget_ops box_ops_visframe = {
+static AG_WidgetOps box_ops_visframe = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	box_draw,
-	box_scale
+	AG_BoxDraw,
+	AG_BoxScale
 };
 
-struct box *
-box_new(void *parent, enum box_type type, int flags)
+AG_Box *
+AG_BoxNew(void *parent, enum ag_box_type type, int flags)
 {
-	struct box *bo;
+	AG_Box *bo;
 
-	bo = Malloc(sizeof(struct box), M_OBJECT);
-	box_init(bo, type, flags);
-	object_attach(parent, bo);
+	bo = Malloc(sizeof(AG_Box), M_OBJECT);
+	AG_BoxInit(bo, type, flags);
+	AG_ObjectAttach(parent, bo);
 	return (bo);
 }
 
 void
-box_init(struct box *bo, enum box_type type, int flags)
+AG_BoxInit(AG_Box *bo, enum ag_box_type type, int flags)
 {
-	widget_init(bo, "box", (flags & BOX_FRAME) ?
+	AG_WidgetInit(bo, "box", (flags & AG_BOX_FRAME) ?
 	    &box_ops_visframe : &box_ops, 0);
 
 	bo->type = type;
 	bo->depth = -1;
 
-	if (flags & BOX_WFILL)	WIDGET(bo)->flags |= WIDGET_WFILL;
-	if (flags & BOX_HFILL)	WIDGET(bo)->flags |= WIDGET_HFILL;
+	if (flags & AG_BOX_WFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_WFILL; }
+	if (flags & AG_BOX_HFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_HFILL; }
 
 	bo->padding = 2;
 	bo->spacing = 1;
-	bo->homogenous = (flags & BOX_HOMOGENOUS);
-	pthread_mutex_init(&bo->lock, &recursive_mutexattr);
+	bo->homogenous = (flags & AG_BOX_HOMOGENOUS);
+	pthread_mutex_init(&bo->lock, &agRecursiveMutexAttr);
 }
 
 void
-box_destroy(void *p)
+AG_BoxDestroy(void *p)
 {
-	struct box *box = p;
+	AG_Box *box = p;
 
 	pthread_mutex_destroy(&box->lock);
-	widget_destroy(box);
+	AG_WidgetDestroy(box);
 }
 
 void
-box_draw(void *p)
+AG_BoxDraw(void *p)
 {
-	struct box *bo = p;
+	AG_Box *bo = p;
 
-	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, bo->depth,
-	    COLOR(FRAME_COLOR));
+	agPrim.box(bo, 0, 0, AGWIDGET(bo)->w, AGWIDGET(bo)->h, bo->depth,
+	    AG_COLOR(FRAME_COLOR));
 }
 
 void
-box_scale(void *p, int w, int h)
+AG_BoxScale(void *p, int w, int h)
 {
-	struct box *bo = p;
-	struct widget *wid;
+	AG_Box *bo = p;
+	AG_Widget *wid;
 	int x = bo->padding, y = bo->padding;
 	int nwidgets = 0;
 	int totfixed = 0;
@@ -119,16 +119,16 @@ box_scale(void *p, int w, int h)
 	pthread_mutex_lock(&bo->lock);
 	
 	/* Count the child widgets. */
-	OBJECT_FOREACH_CHILD(wid, bo, widget) {
-		WIDGET_OPS(wid)->scale(wid, -1, -1);
+	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+		AGWIDGET_OPS(wid)->scale(wid, -1, -1);
 
 		switch (bo->type) {
-		case BOX_HORIZ:
-			if ((wid->flags & WIDGET_WFILL) == 0)
+		case AG_BOX_HORIZ:
+			if ((wid->flags & AG_WIDGET_WFILL) == 0)
 				totfixed += wid->w + bo->spacing;
 			break;
-		case BOX_VERT:
-			if ((wid->flags & WIDGET_HFILL) == 0)
+		case AG_BOX_VERT:
+			if ((wid->flags & AG_WIDGET_HFILL) == 0)
 				totfixed += wid->h + bo->spacing;
 			break;
 		}
@@ -141,39 +141,39 @@ box_scale(void *p, int w, int h)
 		int maxw = 0, maxh = 0;
 		int dw, dh;
 
-		WIDGET(bo)->w = bo->padding*2;
-		WIDGET(bo)->h = bo->padding*2;
+		AGWIDGET(bo)->w = bo->padding*2;
+		AGWIDGET(bo)->h = bo->padding*2;
 
 		/* Reserve enough space to hold widgets and spacing/padding. */
-		OBJECT_FOREACH_CHILD(wid, bo, widget) {
-			WIDGET_OPS(wid)->scale(wid, -1, -1);
+		AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+			AGWIDGET_OPS(wid)->scale(wid, -1, -1);
 			if (wid->w > maxw) maxw = wid->w;
 			if (wid->h > maxh) maxh = wid->h;
 
 			switch (bo->type) {
-			case BOX_HORIZ:
+			case AG_BOX_HORIZ:
 				if ((dh = maxh + bo->padding*2) >
-				    WIDGET(bo)->h) {
-					WIDGET(bo)->h = dh;
+				    AGWIDGET(bo)->h) {
+					AGWIDGET(bo)->h = dh;
 				}
-				WIDGET(bo)->w += wid->w + bo->spacing;
+				AGWIDGET(bo)->w += wid->w + bo->spacing;
 				break;
-			case BOX_VERT:
+			case AG_BOX_VERT:
 				if ((dw = maxw + bo->padding*2) >
-				    WIDGET(bo)->w) {
-					WIDGET(bo)->w = dw;
+				    AGWIDGET(bo)->w) {
+					AGWIDGET(bo)->w = dw;
 				}
-				WIDGET(bo)->h += wid->h + bo->spacing;
+				AGWIDGET(bo)->h += wid->h + bo->spacing;
 				break;
 			}
 		}
 		if (nwidgets > 0) {
 			switch (bo->type) {
-			case BOX_HORIZ:
-				WIDGET(bo)->w -= bo->spacing;
+			case AG_BOX_HORIZ:
+				AGWIDGET(bo)->w -= bo->spacing;
 				break;
-			case BOX_VERT:
-				WIDGET(bo)->h -= bo->spacing;
+			case AG_BOX_VERT:
+				AGWIDGET(bo)->h -= bo->spacing;
 				break;
 			}
 		}
@@ -185,7 +185,7 @@ box_scale(void *p, int w, int h)
 
 		/* Divide the space among widgets. */
 		switch (bo->type) {
-		case BOX_HORIZ:
+		case AG_BOX_HORIZ:
 			if (nwidgets > 0) {
 				max = (w - bo->padding*2 -
 				       bo->spacing*(nwidgets-1));
@@ -194,7 +194,7 @@ box_scale(void *p, int w, int h)
 				max = w - bo->padding*2;
 			}
 			break;
-		case BOX_VERT:
+		case AG_BOX_VERT:
 			if (nwidgets > 0) {
 				max = (h - bo->padding*2 -
 				       bo->spacing*(nwidgets-1));
@@ -204,70 +204,29 @@ box_scale(void *p, int w, int h)
 			}
 			break;
 		}
-		OBJECT_FOREACH_CHILD(wid, bo, widget) {
+		AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
 			wid->x = x;
 			wid->y = y;
 			
 			switch (bo->type) {
-			case BOX_HORIZ:
-				WIDGET_OPS(wid)->scale(wid, -1, -1);
-#if 0
-				if (wid->w > max) {
-					wid->flags |= WIDGET_EXCEDENT;
-					excedent += wid->w - max;
-					nexcedent++;
-				} else {
-#endif
-					wid->w = max;
-//				}
+			case AG_BOX_HORIZ:
+				AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+				wid->w = max;
 				wid->h = h - bo->padding*2;
-				WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+				AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 				x += wid->w + bo->spacing;
 				break;
-			case BOX_VERT:
-#if 0
-				if (wid->h > max) {
-					wid->flags |= WIDGET_EXCEDENT;
-					excedent += wid->h - max;
-					nexcedent++;
-				} else {
-#endif
-					wid->h = max;
-//				}
+			case AG_BOX_VERT:
+				wid->h = max;
 				wid->w = w - bo->padding*2;
 				y += wid->h + bo->spacing;
 				break;
 			}
 		}
-#if 0
-		/* Adjust for widgets that are too big. */
-		x = bo->padding;
-		y = bo->padding;
-		OBJECT_FOREACH_CHILD(wid, bo, widget) {
-			wid->x = x;
-			wid->y = y;
-			switch (bo->type) {
-			case BOX_HORIZ:
-				if ((wid->flags & WIDGET_EXCEDENT) == 0 &&
-				    nexcedent < nwidgets) {
-					wid->w -= excedent/(nwidgets-nexcedent);
-				}
-				x += wid->w + bo->spacing;
-				break;
-			case BOX_VERT:
-				if ((wid->flags & WIDGET_EXCEDENT) == 0 &&
-				    nexcedent < nwidgets) {
-					wid->h -= excedent/(nwidgets-nexcedent);
-				}
-				y += wid->h + bo->spacing;
-				break;
-			}
-		}
-#endif
 		goto out;
 	}
 
-	OBJECT_FOREACH_CHILD(wid, bo, widget) {		/* Fixed/[wh]fill */
+	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {	/* Fixed/[wh]fill */
 		wid->x = x;
 		wid->y = y;
 
@@ -276,33 +235,33 @@ box_scale(void *p, int w, int h)
 		 * space to [wh]fill widgets.
 		 */
 		switch (bo->type) {
-		case BOX_HORIZ:
-			if (wid->flags & WIDGET_WFILL) {
+		case AG_BOX_HORIZ:
+			if (wid->flags & AG_WIDGET_WFILL) {
 				wid->w = w - totfixed - bo->padding*2;
 			}
-			if (wid->flags & WIDGET_HFILL) {
+			if (wid->flags & AG_WIDGET_HFILL) {
 				wid->h = h - bo->padding*2;
 			}
 			x += wid->w + bo->spacing;
 			break;
-		case BOX_VERT:
-			if (wid->flags & WIDGET_WFILL) {
+		case AG_BOX_VERT:
+			if (wid->flags & AG_WIDGET_WFILL) {
 				wid->w = w - bo->padding*2; 
 			}
-			if (wid->flags & WIDGET_HFILL) {
+			if (wid->flags & AG_WIDGET_HFILL) {
 				wid->h = h - totfixed - bo->padding*2;
 			}
 			y += wid->h + bo->spacing;
 			break;
 		}
-		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 	}
 out:
 	pthread_mutex_unlock(&bo->lock);
 }
 
 void
-box_set_homogenous(struct box *bo, int homogenous)
+AG_BoxSetHomogenous(AG_Box *bo, int homogenous)
 {
 	pthread_mutex_lock(&bo->lock);
 	bo->homogenous = homogenous;
@@ -310,7 +269,7 @@ box_set_homogenous(struct box *bo, int homogenous)
 }
 
 void
-box_set_padding(struct box *bo, int padding)
+AG_BoxSetPadding(AG_Box *bo, int padding)
 {
 	pthread_mutex_lock(&bo->lock);
 	bo->padding = padding;
@@ -318,7 +277,7 @@ box_set_padding(struct box *bo, int padding)
 }
 
 void
-box_set_spacing(struct box *bo, int spacing)
+AG_BoxSetSpacing(AG_Box *bo, int spacing)
 {
 	pthread_mutex_lock(&bo->lock);
 	bo->spacing = spacing;
@@ -326,7 +285,7 @@ box_set_spacing(struct box *bo, int spacing)
 }
 
 void
-box_set_depth(struct box *bo, int depth)
+AG_BoxSetDepth(AG_Box *bo, int depth)
 {
 	pthread_mutex_lock(&bo->lock);
 	bo->depth = depth;

@@ -1,4 +1,4 @@
-/*	$Csoft: ucslcpy.c,v 1.2 2003/06/15 05:08:42 vedge Exp $	*/
+/*	$Csoft: ucslcpy.c,v 1.3 2003/08/31 11:58:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -28,11 +28,11 @@
  * Unicode characters will be copied.
  *
  * Always NUL terminates (unless bytes == 0).
- * Returns ucs4_len(src)*sizeof(Uint32); if retval >= bytes, truncation
+ * Returns AG_UCS4Len(src)*sizeof(Uint32); if retval >= bytes, truncation
  * occurred.
  */
 size_t
-ucs4_lcpy(Uint32 *dst, const Uint32 *src, size_t bytes)
+AG_UCS4Copy(Uint32 *dst, const Uint32 *src, size_t bytes)
 {
 	Uint32 *d = dst;
 	const Uint32 *s = src;

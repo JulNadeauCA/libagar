@@ -1,4 +1,4 @@
-.\"	$Csoft: vbox.3,v 1.4 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: vbox.3,v 1.5 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,34 +45,34 @@ widget is a variant of
 which packs its children vertically.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Xr box 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct vbox *"
-.Fn vbox_new "void *parent" "int flags"
+.Ft "AG_VBox *"
+.Fn AG_VBoxNew "void *parent" "int flags"
 .Pp
 .Ft "void"
-.Fn vbox_init "struct vbox *box" "int flags"
+.Fn AG_VBoxInit "AG_VBox *box" "int flags"
 .Pp
 .Ft void
-.Fn vbox_set_homogenous "struct vbox *box" "int homogenous"
+.Fn AG_VBoxSetHomogenous "AG_VBox *box" "int homogenous"
 .Pp
 .Ft void
-.Fn vbox_set_padding "struct vbox *box" "int padding"
+.Fn AG_VBoxSetPadding "AG_VBox *box" "int padding"
 .Pp
 .Ft void
-.Fn vbox_set_spacing "struct box *vbox" "int spacing"
+.Fn AG_VBoxSetSpacing "AG_Box *vbox" "int spacing"
 .nr nS 0
 .Pp
 The
-.Fn vbox_new
+.Fn AG_VBoxNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn vbox_init
+.Fn AG_VBoxInit
 initializes a
 .Nm
 widget.
@@ -80,23 +80,23 @@ Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define VBOX_HOMOGENOUS  BOX_HOMOGENOUS  /* Divide space evenly */
-#define VBOX_WFILL       BOX_WFILL       /* Fill remaining width */
-#define VBOX_HFILL       BOX_HFILL       /* Fill remaining height */
+#define AG_VBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
+#define AG_VBOX_WFILL       AG_BOX_WFILL       /* Fill remaining width */
+#define AG_VBOX_HFILL       AG_BOX_HFILL       /* Fill remaining height */
 .Ed
 .Pp
 The
-.Fn vbox_set_homogenous
+.Fn AG_VBoxSetHomogenous
 function sets/clears the
-.Dv VBOX_HOMOGENOUS
+.Dv AG_VBOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
 .Pp
 The
-.Fn vbox_set_padding
+.Fn AG_VBoxSetPadding
 function sets the padding around the group of child widgets to
 .Fa padding
 pixels.
-.Fn vbox_set_spacing
+.Fn AG_VBoxSetSpacing
 sets the spacing between individual child widgets to
 .Fa spacing
 pixels.

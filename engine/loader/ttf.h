@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.5 2005/02/08 15:48:36 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.6 2005/05/10 12:25:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_TTF_H_
@@ -10,7 +10,7 @@
 
 #include "begin_code.h"
 
-struct ttf_glyph {
+typedef struct ag_ttf_glyph {
 	int stored;
 #define TTF_CACHED_METRICS	0x10
 #define TTF_CACHED_BITMAP	0x01
@@ -23,9 +23,9 @@ struct ttf_glyph {
 	int yoffset;
 	int advance;
 	Uint32 cached;
-};
+} AG_TTFGlyph;
 
-struct ttf_font {
+typedef struct ag_ttf_font {
 	FT_Face	face;
 	int height;
 	int ascent;
@@ -37,42 +37,42 @@ struct ttf_font {
 	int underline_offset;
 	int underline_height;
 
-	struct ttf_glyph *current;
-	struct ttf_glyph cache[256];	/* Transform cache */
-	struct ttf_glyph scratch;
+	AG_TTFGlyph *current;
+	AG_TTFGlyph cache[256];	/* Transform cache */
+	AG_TTFGlyph scratch;
 	
 	int font_size_family;		/* For non-scalable formats */
-};
+} AG_TTFFont;
 
 __BEGIN_DECLS
-int		 ttf_init(void);
-void		 ttf_destroy(void);
-struct ttf_font	*ttf_open_font(const char *, int);
-void		 ttf_close_font(struct ttf_font *);
-int		 ttf_find_glyph(struct ttf_font *, Uint32, int);
+int		 AG_TTFInit(void);
+void		 AG_TTFDestroy(void);
+AG_TTFFont	*AG_TTFOpenFont(const char *, int);
+void		 AG_TTFCloseFont(AG_TTFFont *);
+int		 AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
 
-__inline__ int	 ttf_get_font_style(struct ttf_font *);
-__inline__ void	 ttf_set_font_style(struct ttf_font *, int);
+__inline__ int	 AG_TTFGetFontStyle(AG_TTFFont *);
+__inline__ void	 AG_TTFSetFontStyle(AG_TTFFont *, int);
 #define TTF_STYLE_NORMAL	0x00
 #define TTF_STYLE_BOLD		0x01
 #define TTF_STYLE_ITALIC	0x02
 #define TTF_STYLE_UNDERLINE	0x04
 
-__inline__ int	 ttf_font_height(struct ttf_font *);
-__inline__ int	 ttf_font_ascent(struct ttf_font *);
-__inline__ int	 ttf_font_descent(struct ttf_font *);
-__inline__ int	 ttf_font_line_skip(struct ttf_font *);
-__inline__ int	 ttf_font_face_fixed_width(struct ttf_font *);
-__inline__ char	*ttf_font_face_family(struct ttf_font *);
-__inline__ char	*ttf_font_face_style(struct ttf_font *);
+__inline__ int	 AG_TTFHeight(AG_TTFFont *);
+__inline__ int	 AG_TTFAscent(AG_TTFFont *);
+__inline__ int	 AG_TTFDescent(AG_TTFFont *);
+__inline__ int	 AG_TTFLineSkip(AG_TTFFont *);
+__inline__ int	 AG_TTFFaceFixedWidth(AG_TTFFont *);
+__inline__ char	*AG_TTFFaceFamily(AG_TTFFont *);
+__inline__ char	*AG_TTFFaceStyle(AG_TTFFont *);
 
-int ttf_glyph_metrics(struct ttf_font *, Uint32 , int *, int *, int *, int *,
+int AG_TTFGlyphMetrics(AG_TTFFont *, Uint32 , int *, int *, int *, int *,
 		      int *);
-int ttf_size_text(struct ttf_font *, const char *, int *, int *);
-int ttf_size_unicode(struct ttf_font *, const Uint32 *, int *, int *);
+int AG_TTFSizeText(AG_TTFFont *, const char *, int *, int *);
+int AG_TTFSizeUnicode(AG_TTFFont *, const Uint32 *, int *, int *);
 
-SDL_Surface *ttf_render_text_solid(struct ttf_font *, const char *, SDL_Color);
-SDL_Surface *ttf_render_unicode_solid(struct ttf_font *, const Uint32 *,
+SDL_Surface *AG_TTFRenderTextSolid(AG_TTFFont *, const char *, SDL_Color);
+SDL_Surface *AG_TTFRenderUnicodeSolid(AG_TTFFont *, const Uint32 *,
 		                      SDL_Color *, SDL_Color);
 __END_DECLS
 

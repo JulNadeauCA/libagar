@@ -1,4 +1,4 @@
-.\"	$Csoft: hbox.3,v 1.4 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: hbox.3,v 1.5 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,34 +45,34 @@ widget is a variant of
 which packs its children horizontally.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Xr box 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct hbox *"
-.Fn hbox_new "void *parent" "int flags"
+.Ft "AG_HBox *"
+.Fn AG_HBoxNew "void *parent" "int flags"
 .Pp
 .Ft "void"
-.Fn hbox_init "struct hbox *box" "int flags"
+.Fn AG_HBoxInit "AG_HBox *box" "int flags"
 .Pp
 .Ft void
-.Fn hbox_set_homogenous "struct hbox *box" "int homogenous"
+.Fn AG_HBoxSetHomogenous "AG_HBox *box" "int homogenous"
 .Pp
 .Ft void
-.Fn hbox_set_padding "struct hbox *box" "int padding"
+.Fn AG_HBoxSetPadding "AG_HBox *box" "int padding"
 .Pp
 .Ft void
-.Fn hbox_set_spacing "struct box *hbox" "int spacing"
+.Fn AG_HBoxSetSpacing "AG_Box *hbox" "int spacing"
 .nr nS 0
 .Pp
 The
-.Fn hbox_new
+.Fn AG_HBoxNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn hbox_init
+.Fn AG_HBoxInit
 initializes a
 .Nm
 widget.
@@ -80,23 +80,23 @@ Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define HBOX_HOMOGENOUS  BOX_HOMOGENOUS  /* Divide space evenly */
-#define HBOX_WFILL       BOX_WFILL       /* Fill remaining width */
-#define HBOX_HFILL       BOX_HFILL       /* Fill remaining height */
+#define AG_HBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
+#define AG_HBOX_WFILL       AG_BOX_WFILL       /* Fill remaining width */
+#define AG_HBOX_HFILL       AG_BOX_HFILL       /* Fill remaining height */
 .Ed
 .Pp
 The
-.Fn hbox_set_homogenous
+.Fn AG_HBoxSetHomogenous
 function sets/clears the
-.Dv HBOX_HOMOGENOUS
+.Dv AG_HBOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
 .Pp
 The
-.Fn hbox_set_padding
+.Fn AG_HBoxSetPadding
 function sets the padding around the group of child widgets to
 .Fa padding
 pixels.
-.Fn hbox_set_spacing
+.Fn AG_HBoxSetSpacing
 sets the spacing between individual child widgets to
 .Fa spacing
 pixels.

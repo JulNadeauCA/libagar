@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: nlunits.c,v 1.1 2004/08/26 06:02:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/historical_units.h>
@@ -8,7 +8,7 @@
 #include "units.h"
 
 double
-unit_fahrenheit(double n, int f2k)
+AG_UnitFahrenheit(double n, int f2k)
 {
 	if (f2k) {
 		return ((n+459.67) / 1.8);
@@ -18,7 +18,7 @@ unit_fahrenheit(double n, int f2k)
 }
 
 double
-unit_celsius(double n, int c2k)
+AG_UnitCelsius(double n, int c2k)
 {
 	if (c2k) {
 		return (n+273.15);
@@ -29,7 +29,7 @@ unit_celsius(double n, int c2k)
 
 #ifdef HISTORICAL_UNITS
 double
-unit_rankine(double n, int ra2k)
+AG_UnitRankine(double n, int ra2k)
 {
 	if (ra2k) {
 		return (n/1.8);
@@ -39,7 +39,7 @@ unit_rankine(double n, int ra2k)
 }
 
 double
-unit_reaumur(double n, int re2k)
+AG_UnitReaumur(double n, int re2k)
 {
 	if (re2k) {
 		return (n*1.25 + 273.15);

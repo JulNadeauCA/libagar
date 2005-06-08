@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.27 2005/01/11 07:41:45 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.28 2005/04/25 02:19:52 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,47 +45,47 @@ contents.
 The string may contain UTF-8 encoded characters.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct textbox *"
-.Fn textbox_new "void *parent" "const char *label"
+.Ft "AG_Textbox *"
+.Fn AG_TextboxNew "void *parent" "const char *label"
 .Pp
 .Ft void
-.Fn textbox_init "struct textbox *textbox" "const char *label"
+.Fn AG_TextboxInit "AG_Textbox *textbox" "const char *label"
 .Pp
 .Ft void
-.Fn textbox_set_writeable "struct textbox *textbox" "int writeable"
+.Fn AG_TextboxSetWriteable "AG_Textbox *textbox" "int writeable"
 .Pp
 .Ft void
-.Fn textbox_set_password "struct textbox *textbox" "int password"
+.Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
 .Ft void
-.Fn textbox_prescale "struct textbox *textbox" "const char *text"
+.Fn AG_TextboxPrescale "AG_Textbox *textbox" "const char *text"
 .nr nS 0
 .Pp
 The
-.Fn textbox_new
+.Fn AG_TextboxNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn textbox_init
+.Fn AG_TextboxInit
 function initializes a
 .Nm
 widget with the label text set to
 .Fa label .
 .Pp
 The
-.Fn textbox_set_writeable
+.Fn AG_TextboxSetWriteable
 function controls the writeability of the string.
 .Pp
-.Fn textbox_set_password
+.Fn AG_TextboxSetPassword
 controls password (no print) input.
 .Pp
-.Fn textbox_prescale
+.Fn AG_TextboxPrescale
 requests that the initial geometry of
 .Fa textbox
 is to be sufficient to display the string
@@ -94,20 +94,20 @@ in its entirety.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
-.Fn textbox_printf "struct textbox *textbox" "const char *fmt" "..."
+.Fn AG_TextboxPrintf "AG_Textbox *textbox" "const char *fmt" "..."
 .Pp
 .Ft "char *"
-.Fn textbox_string "struct textbox *textbox"
+.Fn AG_TextboxDupString "AG_Textbox *textbox"
 .Pp
 .Ft "size_t"
-.Fn textbox_copy_string "struct textbox *textbox" "char *dst" "size_t dst_size"
+.Fn AG_TextboxCopyString "AG_Textbox *textbox" "char *dst" "size_t dst_size"
 .Pp
 .Ft int
-.Fn textbox_int "struct textbox *textbox"
+.Fn AG_TextboxInt "AG_Textbox *textbox"
 .nr nS 0
 .Pp
 The
-.Fn textbox_printf
+.Fn AG_TextboxPrintf
 function uses
 .Xr vsnprintf 3
 to overwrite the contents of the text buffer.
@@ -116,11 +116,11 @@ If the
 argument is NULL, a NUL string is assigned instead.
 .Pp
 The
-.Fn textbox_string
+.Fn AG_TextboxDupString
 function returns a copy of the text buffer.
 .Pp
 The
-.Fn textbox_copy_string
+.Fn AG_TextboxCopyString
 function copies up to
 .Fa dst_size
 - 1 bytes from the text buffer
@@ -130,7 +130,7 @@ have been copied if
 .Fa dst_size
 was unlimited.
 .Pp
-.Fn textbox_int
+.Fn AG_TextboxInt
 tries to convert the string to an integer value.
 .Sh BINDINGS
 The
@@ -174,30 +174,30 @@ The following code fragment binds a
 to a string contained in a fixed-size buffer:
 .Bd -literal -offset indent
 char name[32];
-struct textbox *tb;
+AG_Textbox *tb;
 
-tb = textbox_new(parent, "Name: ");
-widget_bind(tb, "string", WIDGET_STRING, name, sizeof(name));
+tb = AG_TextboxNew(parent, "Name: ");
+AG_WidgetBind(tb, "string", AG_WIDGET_STRING, name, sizeof(name));
 .Ed
 .Pp
 As is the case with all widgets, a default binding (residing in the widget
 structure) is provided.
 The following code uses
-.Fn textbox_printf
+.Fn AG_TextboxPrintf
 to set the value of the default binding, and
-.Fn textbox_string
+.Fn AG_TextboxDupString
 to retrieve a pointer to it:
 .Bd -literal -offset indent
-struct textbox *tb;
+AG_Textbox *tb;
 char *value_ptr;
 
-tb = textbox_new(parent, "Value: ");
-textbox_printf(tb, "Foo");
-value_ptr = textbox_string(tb);
+tb = AG_TextboxNew(parent, "Value: ");
+AG_TextboxPrintf(tb, "Foo");
+value_ptr = AG_TextboxDupString(tb);
 .Ed
 .Pp
 Note that the default binding is limited to
-.Dv TEXTBOX_STRING_MAX
+.Dv AG_TEXTBOX_STRING_MAX
 bytes in size.
 .Sh SEE ALSO
 .Xr agar 3 ,
@@ -210,7 +210,7 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 .Sh BUGS
-.Fn textbox_int
+.Fn AG_TextboxInt
 will be obsoleted by integral type bindings.
 .Pp
 UTF-8 string boundary check is not space efficient.

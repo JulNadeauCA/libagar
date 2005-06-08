@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.15 2005/05/10 12:26:16 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.16 2005/05/12 02:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -175,8 +175,8 @@ static void
 select_range(int argc, union evarg *argv)
 {
 	char text[4][128];
-	struct tableview *tv = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	AG_Tableview *tv = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
 	Uint32 i, j, end;
@@ -191,7 +191,7 @@ select_range(int argc, union evarg *argv)
 	}
 	end = (next_range != NULL) ? next_range->start-1 : 0xffff;
 
-	tableview_row_del_all(tv);
+	AG_TableviewRowDelAll(tv);
 	
 	for (i = range->start; i < end; i++) {
 		if (i == 10)
@@ -199,7 +199,7 @@ select_range(int argc, union evarg *argv)
         
 		/* prep column 0 */
 		unitext[0] = i;
-		unicode_export(UNICODE_TO_UTF8, utf8text, unitext,
+		AG_ExportUnicode(AG_UNICODE_TO_UTF8, utf8text, unitext,
 		    sizeof(unitext));
 		snprintf(text[0], sizeof(text[0]), "%s", utf8text);
         
@@ -213,37 +213,37 @@ select_range(int argc, union evarg *argv)
 		}
 		snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         
-		tableview_row_add(tv, 0, NULL, NULL, i,
+		AG_TableviewRowAdd(tv, 0, NULL, NULL, i,
 		    0, text[0],
 		    1, text[1]);
 	}
 }
 
-struct window *
-uniconv_window(void)
+AG_Window *
+AG_DebugUnicodeBrowser(void)
 {
-	struct window *win;
-	struct combo *com;
-	struct tableview *tv;
+	AG_Window *win;
+	AG_Combo *com;
+	AG_Tableview *tv;
 	int i;
 
-	if ((win = window_new(WINDOW_DETACH, "uniconv")) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "uniconv")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Unicode Conversion"));
+	AG_WindowSetCaption(win, _("Unicode Conversion"));
 
-	com = combo_new(win, 0, _("Range: "));
+	com = AG_ComboNew(win, 0, _("Range: "));
 	for (i = 0; i < nunicode_ranges; i++) {
-		tlist_insert_item(com->list, NULL, unicode_ranges[i].name,
+		AG_TlistAddPtr(com->list, NULL, unicode_ranges[i].name,
 		    (void *)&unicode_ranges[i]);
 	}
 	
-	tv = tableview_new(win, TABLEVIEW_NOSORT, NULL, NULL);
-	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
-	tableview_col_add(tv, 0, 0, "Char", NULL);
-	tableview_col_add(tv, 0, 1, "Hex", "<0000>");
+	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOSORT, NULL, NULL);
+	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
+	AG_TableviewColAdd(tv, 0, 0, "Char", NULL);
+	AG_TableviewColAdd(tv, 0, 1, "Hex", "<0000>");
 	
-	event_new(com, "combo-selected", select_range, "%p", tv);
+	AG_SetEvent(com, "combo-selected", select_range, "%p", tv);
 	return (win);
 }
 

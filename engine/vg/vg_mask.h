@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.h,v 1.2 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg_mask.h,v 1.3 2005/06/04 04:48:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_MASK_H_
@@ -14,10 +14,10 @@ struct vg_mask_args {
 };
 
 __BEGIN_DECLS
-void	vg_mask_scale(struct vg *, float);
-void	vg_mask_visible(struct vg *, int);
-void	vg_mask_pointer(struct vg *, void *);
-void	vg_mask_mousebutton(struct vg *, void (*)(void *, Uint8), void *);
+void	VG_MaskScale(struct vg *, float);
+void	VG_MaskIsVisible(struct vg *, int);
+void	VG_MaskPtr(struct vg *, void *);
+void	VG_MaskMouseButton(struct vg *, void (*)(void *, Uint8), void *);
 __END_DECLS
 
 #include "close_code.h"

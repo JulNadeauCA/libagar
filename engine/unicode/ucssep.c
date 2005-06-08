@@ -1,4 +1,4 @@
-/*	$Csoft: ucssep.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
+/*	$Csoft: ucssep.c,v 1.2 2003/08/31 11:58:09 vedge Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -44,10 +44,10 @@
  * On return, *stringp points past the last NUL written (if there might
  * be further tokens), or is NULL (if there are definitely no more tokens).
  *
- * If *stringp is NULL, ucs4_sep() returns NULL.
+ * If *stringp is NULL, AG_UCS4Sep() returns NULL.
  */
 Uint32 *
-ucs4_sep(Uint32 **stringp, const Uint32 *delim)
+AG_UCS4Sep(Uint32 **stringp, const Uint32 *delim)
 {
 	Uint32 *s;
 	const Uint32 *spanp;

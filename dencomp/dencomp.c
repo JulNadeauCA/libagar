@@ -1,4 +1,4 @@
-/*	$Csoft: dencomp.c,v 1.4 2004/02/26 10:34:56 vedge Exp $	*/
+/*	$Csoft: dencomp.c,v 1.5 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,10 +72,10 @@ main(int argc, char *argv[])
 {
 	extern char *optarg;
 	extern int optind;
-	struct den *den;
+	AG_Den *den;
 	int c, i;
 
-	error_init();
+	AG_InitError();
 
 	while ((c = getopt(argc, argv, "?vo:h:n:l:a:c:d:k:")) != -1) {
 		switch (c) {
@@ -121,9 +121,9 @@ main(int argc, char *argv[])
 		goto fail1;
 	}
 
-	den = den_open(outfile, DEN_WRITE);
+	den = AG_DenOpen(outfile, AG_DEN_WRITE);
 	if (den == NULL) {
-		fprintf(stderr, "opening %s: %s\n", outfile, error_get());
+		fprintf(stderr, "opening %s: %s\n", outfile, AG_GetError());
 		goto fail1;
 	}
 
@@ -146,7 +146,7 @@ main(int argc, char *argv[])
 	den->descr = strdup(descr);
 	den->keywords = strdup(keyw);
 
-	den_write_header(den, argc);
+	AG_DenWriteHeader(den, argc);
 	for (i = 0; i < argc; i++) {
 		char *s, *fspec = argv[i];
 		char *name = NULL, *langspec = NULL;
@@ -159,19 +159,19 @@ main(int argc, char *argv[])
 			langspec = lang;
 
 		printf("+ %s (%s)\n", name, langspec);
-		if (den_import_file(den, i, name, langspec, argv[i]) == -1) {
+		if (AG_DenImportFile(den, i, name, langspec, argv[i]) == -1) {
 			fprintf(stderr, "Import of `%s' failed\n", argv[i]);
 			goto fail2;
 		}
 	}
-	den_write_mappings(den);
-	den_close(den);
-	error_destroy();
+	AG_DenWriteMappings(den);
+	AG_DenClose(den);
+	AG_DestroyError();
 	return (0);
 fail2:
-	den_close(den);
+	AG_DenClose(den);
 fail1:
-	error_destroy();
+	AG_DestroyError();
 	return (1);
 }
 

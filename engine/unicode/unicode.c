@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.11 2005/05/08 09:21:37 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.12 2005/05/12 06:38:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ utf8_length(Uint8 ch)
 
 /* Return the UCS-4 representation of the given string/encoding. */
 Uint32 *
-unicode_import(enum unicode_conv conv, const char *s)
+AG_ImportUnicode(enum ag_unicode_conv conv, const char *s)
 {
 	Uint32 *ucs;
 	size_t len;
@@ -66,13 +66,13 @@ unicode_import(enum unicode_conv conv, const char *s)
 	ucs = Malloc((len + 1) * sizeof(Uint32), 0);
 
 	switch (conv) {
-	case UNICODE_FROM_US_ASCII:
+	case AG_UNICODE_FROM_US_ASCII:
 		for (i = 0; i < len; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
 		ucs[i] = '\0';
 		break;
-	case UNICODE_FROM_UTF8:
+	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
 			switch (utf8_length(s[i])) {
 			case 1:
@@ -122,7 +122,7 @@ unicode_import(enum unicode_conv conv, const char *s)
 }
 
 size_t
-unicode_copy(enum unicode_conv conv, const char *s, Uint32 *ucs,
+AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
     size_t ucs_len)
 {
 	size_t len;
@@ -131,7 +131,7 @@ unicode_copy(enum unicode_conv conv, const char *s, Uint32 *ucs,
 	len = strlen(s);
 
 	switch (conv) {
-	case UNICODE_FROM_US_ASCII:
+	case AG_UNICODE_FROM_US_ASCII:
 		if (len > ucs_len) {
 			len = ucs_len;
 		}
@@ -140,7 +140,7 @@ unicode_copy(enum unicode_conv conv, const char *s, Uint32 *ucs,
 		}
 		ucs[i] = '\0';
 		return (i);
-	case UNICODE_FROM_UTF8:
+	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
 			switch (utf8_length(s[i])) {
 			case 1:
@@ -219,13 +219,13 @@ unicode_copy(enum unicode_conv conv, const char *s, Uint32 *ucs,
  * conversion error has occurred.
  */
 ssize_t
-unicode_export(enum unicode_conv conv, char *dst, const Uint32 *ucs,
+AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
     size_t dst_size)
 {
 	size_t len;
 
 	switch (conv) {
-	case UNICODE_TO_UTF8:
+	case AG_UNICODE_TO_UTF8:
 		for (len = 0; *ucs != '\0' && len < dst_size; ucs++) {
 			Uint32 uch = *ucs;
 			int chlen, ch1, i;
@@ -274,7 +274,7 @@ unicode_export(enum unicode_conv conv, char *dst, const Uint32 *ucs,
  * terminating NUL.
  */
 size_t
-ucs4_len(const Uint32 *ucs)
+AG_UCS4Len(const Uint32 *ucs)
 {
 	size_t len;
 
@@ -286,12 +286,12 @@ ucs4_len(const Uint32 *ucs)
 
 /* Duplicate a UCS-4 string. */
 Uint32 *
-ucs4_dup(const Uint32 *ucs)
+AG_UCS4Dup(const Uint32 *ucs)
 {
 	size_t buflen;
 	Uint32 *ns;
 	
-	buflen = (ucs4_len(ucs)+1) * sizeof(Uint32);
+	buflen = (AG_UCS4Len(ucs)+1) * sizeof(Uint32);
 	ns = Malloc(buflen, 0);
 	memcpy(ns, ucs, buflen);
 	return (ns);

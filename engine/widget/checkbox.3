@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.16 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.17 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,39 +45,39 @@ widget displays a string of text next to a button used to trigger an
 binding.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct checkbox *"
-.Fn checkbox_new "void *parent" "const char *caption_fmt" "..."
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNew "void *parent" "const char *caption_fmt" "..."
 .Pp
 .Ft "void"
-.Fn checkbox_init "struct checkbox *checkbox" "char *caption"
+.Fn AG_CheckboxInit "AG_Checkbox *checkbox" "char *caption"
 .Pp
 .Ft "void"
-.Fn checkbox_toggle "struct checkbox *checkbox"
+.Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
 .nr nS 0
 .Pp
 The
-.Fn checkbox_new
+.Fn AG_CheckboxNew
 function allocates, initializes, and attaches a
 .Nm
 widget and accepts a
 .Xr printf 3
 style format string to set the text of the label.
-.Fn checkbox_init
+.Fn AG_CheckboxInit
 initializes a
 .Nm
 widget with the label set to
 .Fa caption .
 If the length of the label string exceeds
-.Dv CHECKBOX_CAPTION_MAX
+.Dv AG_CHECKBOX_CAPTION_MAX
 - 1, the label is truncated.
 .Pp
 The
-.Fn checkbox_toggle
+.Fn AG_CheckboxToggle
 function inverts the current state of
 .Fa checkbox .
 .Sh BINDINGS

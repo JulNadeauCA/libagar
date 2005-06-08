@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.h,v 1.9 2005/05/31 04:03:13 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.10 2005/05/31 11:14:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
@@ -10,17 +10,17 @@
 
 #include "begin_code.h"
 
-struct hsvpal {
-	struct widget	   wid;
+typedef struct ag_hsvpal {
+	struct ag_widget wid;
 	int flags;
-#define HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
-#define HSVPAL_DIRTY	0x02		/* Redraw the palette */
+#define AG_HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
+#define AG_HSVPAL_DIRTY	0x02		/* Redraw the palette */
 
-	float		   h, s, v, a;	/* Default bindings */
-	Uint32		   pixel;
-	SDL_Rect	   rAlpha;	/* Alpha selector rectangle */
-	SDL_Surface	  *surface;	/* Cached surface */
-	int		   selcircle_r;	/* Radius of selection circles */
+	float h, s, v, a;		/* Default bindings */
+	Uint32 pixel;
+	SDL_Rect rAlpha;		/* Alpha selector rectangle */
+	SDL_Surface *surface;		/* Cached surface */
+	int selcircle_r;		/* Radius of selection circles */
 	struct {
 		int x, y;		/* Origin for circle of hues */
 		int rout, rin;		/* Radii of the circle of hues */
@@ -33,24 +33,23 @@ struct hsvpal {
 		int w, h;		/* Dimensions of triangle */
 	} triangle;
 	enum {
-		HSVPAL_SEL_NONE,
-		HSVPAL_SEL_H,		/* Selecting hue */
-		HSVPAL_SEL_SV,		/* Selecting saturation/value */
-		HSVPAL_SEL_A		/* Selecting transparency value */
+		AG_HSVPAL_SEL_NONE,
+		AG_HSVPAL_SEL_H,	/* Selecting hue */
+		AG_HSVPAL_SEL_SV,	/* Selecting saturation/value */
+		AG_HSVPAL_SEL_A		/* Selecting transparency value */
 	} state;
 
-	struct AGMenu *menu;
-	struct AGMenuItem *menu_item;
-	struct window *menu_win;
+	AG_Menu *menu;
+	AG_MenuItem *menu_item;
+	AG_Window *menu_win;
 	Uint32 cTile;
-};
+} AG_HSVPal;
 
 __BEGIN_DECLS
-struct hsvpal	*hsvpal_new(void *);
-void		 hsvpal_init(struct hsvpal *);
-void		 hsvpal_destroy(void *);
-void		 hsvpal_scale(void *, int, int);
-void		 hsvpal_draw(void *);
+AG_HSVPal *AG_HSVPalNew(void *);
+void	   AG_HSVPalInit(AG_HSVPal *);
+void	   AG_HSVPalScale(void *, int, int);
+void	   AG_HSVPalDraw(void *);
 __END_DECLS
 
 #include "close_code.h"

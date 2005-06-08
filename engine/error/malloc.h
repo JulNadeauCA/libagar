@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.9 2005/02/11 02:29:26 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.10 2005/03/11 08:59:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -15,7 +15,7 @@ enum {
 	M_GFX,		/* gfx structure */
 	M_AUDIO,	/* audio structure */
 	M_MAP,		/* map nodes and layers */
-	M_MAP_NODEREF,	/* map noderefs */
+	M_MAP_NITEM,	/* map noderefs */
 	M_MAPEDIT,	/* map edition */
 	M_NODEXFORM,	/* map node transform */
 	M_NODEMASK,	/* map node mask */
@@ -35,16 +35,16 @@ enum {
 	M_LAST
 };
 
-struct error_mement {
+struct ag_malloc_type {
 	size_t msize;			/* Total allocated memory */
 	u_int nallocs;			/* Total number of allocations */
 	u_int nfrees;			/* Total number of frees */
 };
 
 __BEGIN_DECLS
-__inline__ void	*error_malloc(size_t, int);
-__inline__ void	*error_realloc(void *, size_t);
-void		 error_free(void *, int);
+__inline__ void	*AG_Malloc(size_t, int);
+__inline__ void	*AG_Realloc(void *, size_t);
+void		 AG_Free(void *, int);
 __END_DECLS
 
 #include "close_code.h"

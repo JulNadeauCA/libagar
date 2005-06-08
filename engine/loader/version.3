@@ -1,4 +1,4 @@
-.\"	$Csoft: version.3,v 1.4 2005/01/05 04:44:04 vedge Exp $
+.\"	$Csoft: version.3,v 1.5 2005/05/11 09:59:31 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,7 +42,7 @@ The agar
 .Nm
 interface encodes, or verifies the following structure:
 .Bd -literal
-struct version {
+AG_Version {
 	char	*name;			/* Signature */
 	Uint32	 vermaj, vermin;	/* Version */
 };
@@ -62,14 +62,14 @@ compatibility is preserved.
 .Sh VERSIONING
 .nr nS 1
 .Ft "int"
-.Fn version_read "struct netbuf *buf" "const struct version *ver" "struct version *rver"
+.Fn AG_ReadVersion "AG_Netbuf *buf" "const AG_Version *ver" "AG_Version *rver"
 .Pp
 .Ft "void"
-.Fn version_write "struct netbuf *buf" "const struct version *ver"
+.Fn AG_WriteVersion "AG_Netbuf *buf" "const AG_Version *ver"
 .nr nS 0
 .Pp
 The
-.Fn version_read
+.Fn AG_ReadVersion
 function reads version information from
 .Fa fd
 and returns 0 if the following data is binary compatible against the version
@@ -82,7 +82,7 @@ is not NULL, it is initialized with the version information read from
 .Fa fd .
 .Pp
 The
-.Fn version_write
+.Fn AG_WriteVersion
 function writes version information from the structure
 .Fa ver
 to

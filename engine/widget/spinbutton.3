@@ -1,4 +1,4 @@
-.\"	$Csoft: spinbutton.3,v 1.5 2005/03/11 08:59:36 vedge Exp $
+.\"	$Csoft: spinbutton.3,v 1.6 2005/05/31 03:21:54 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -57,53 +57,53 @@ for manually entering the value and a set of
 widgets to increment or decrement the value.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct spinbutton *"
-.Fn spinbutton_new "void *parent" "const char *label_fmt" "..."
+.Ft "AG_Spinbutton *"
+.Fn AG_SpinbuttonNew "void *parent" "const char *label_fmt" "..."
 .Pp
 .Ft void
-.Fn spinbutton_init "struct spinbutton *sbu" "const char *label"
+.Fn AG_SpinbuttonInit "AG_Spinbutton *sbu" "const char *label"
 .Pp
 .Ft void
-.Fn spinbutton_set_value "struct spinbutton *sbu" "..."
+.Fn AG_SpinbuttonSetValue "AG_Spinbutton *sbu" "..."
 .Pp
 .Ft void
-.Fn spinbutton_add_value "struct spinbutton *sbu" "..."
+.Fn AG_SpinbuttonAddValue "AG_Spinbutton *sbu" "..."
 .Pp
 .Ft void
-.Fn spinbutton_set_min "struct spinbutton *sbu" "int min_value"
+.Fn AG_SpinbuttonSetMin "AG_Spinbutton *sbu" "int min_value"
 .Pp
 .Ft void
-.Fn spinbutton_set_max "struct spinbutton *sbu" "int max_value"
+.Fn AG_SpinbuttonSetMax "AG_Spinbutton *sbu" "int max_value"
 .Pp
 .Ft void
-.Fn spinbutton_set_range "struct spinbutton *sbu" "int min" "int max"
+.Fn AG_SpinbuttonSetRange "AG_Spinbutton *sbu" "int min" "int max"
 .Pp
 .Ft void
-.Fn spinbutton_set_increment "struct spinbutton *sbu" "int increment"
+.Fn AG_SpinbuttonSetIncrement "AG_Spinbutton *sbu" "int increment"
 .Pp
 .Ft void
-.Fn spinbutton_set_writeable "struct spinbutton *sbu" "int writeable"
+.Fn AG_SpinbuttonSetWriteable "AG_Spinbutton *sbu" "int writeable"
 .Pp
 .nr nS 0
 The
-.Fn spinbutton_new
+.Fn AG_SpinbuttonNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn spinbutton_init
+.Fn AG_SpinbuttonInit
 function initializes a
 .Nm
 widget.
 .Pp
 The
-.Fn spinbutton_set_value
+.Fn AG_SpinbuttonSetValue
 function sets the bound value to the argument, and
-.Fn spinbutton_add_value
+.Fn AG_SpinbuttonAddValue
 adds the bound value to the argument.
 The argument following
 .Fa sbu
@@ -113,22 +113,22 @@ binding.
 Both of these functions may clamp the value to fit inside the specified range.
 .Pp
 The
-.Fn spinbutton_set_min ,
-.Fn spinbutton_set_max
+.Fn AG_SpinbuttonSetMin ,
+.Fn AG_SpinbuttonSetMax
 and
-.Fn spinbutton_set_range
+.Fn AG_SpinbuttonSetRange
 functions define the range of acceptable values.
 Invocations of these functions must always follow
-.Fn widget_bind ,
+.Fn AG_WidgetBind ,
 since binding to
 .Sq value
 automatically selects a range suitable to the new binding type.
 .Pp
 The
-.Fn spinbutton_set_increment
+.Fn AG_SpinbuttonSetIncrement
 function defines the step value for the "+" and "-" buttons.
 .Pp
-.Fn spinbutton_set_writeable
+.Fn AG_SpinbuttonSetWriteable
 sets the writeability flag.
 .Sh EVENTS
 The

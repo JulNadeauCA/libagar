@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.21 2005/01/23 11:53:05 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.22 2005/01/28 12:49:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,70 +31,71 @@
 
 #include "bitmap.h"
 
-const struct widget_ops bitmap_ops = {
+const AG_WidgetOps bitmap_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	bitmap_draw,
-	bitmap_scale
+	AG_BitmapDraw,
+	AG_BitmapScale
 };
 
-struct bitmap *
-bitmap_new(void *parent)
+AG_Bitmap *
+AG_BitmapNew(void *parent)
 {
-	struct bitmap *bmp;
+	AG_Bitmap *bmp;
 
-	bmp = Malloc(sizeof(struct bitmap), M_OBJECT);
-	bitmap_init(bmp);
-	object_attach(parent, bmp);
+	bmp = Malloc(sizeof(AG_Bitmap), M_OBJECT);
+	AG_BitmapInit(bmp);
+	AG_ObjectAttach(parent, bmp);
 	return (bmp);
 }
 
 void
-bitmap_init(struct bitmap *bmp)
+AG_BitmapInit(AG_Bitmap *bmp)
 {
-	widget_init(bmp, "bitmap", &bitmap_ops, 0);
-	widget_map_surface(bmp, NULL);
-	WIDGET(bmp)->flags |= WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL;
+	AG_WidgetInit(bmp, "bitmap", &bitmap_ops, 0);
+	AG_WidgetMapSurface(bmp, NULL);
+	AGWIDGET(bmp)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
+	                        AG_WIDGET_HFILL;
 	bmp->pre_w = 320;
 	bmp->pre_h = 240;
 }
 
 void
-bitmap_prescale(struct bitmap *bmp, int w, int h)
+AG_BitmapPrescale(AG_Bitmap *bmp, int w, int h)
 {
 	bmp->pre_w = w;
 	bmp->pre_h = h;
 }
 
 void
-bitmap_scale(void *p, int rw, int rh)
+AG_BitmapScale(void *p, int rw, int rh)
 {
-	struct bitmap *bmp = p;
+	AG_Bitmap *bmp = p;
 	
 	if (rw == -1 && rh == -1) {
-		WIDGET(bmp)->w = bmp->pre_w;
-		WIDGET(bmp)->h = bmp->pre_h;
+		AGWIDGET(bmp)->w = bmp->pre_w;
+		AGWIDGET(bmp)->h = bmp->pre_h;
 	}
 }
 
 void
-bitmap_draw(void *p)
+AG_BitmapDraw(void *p)
 {
-	struct bitmap *bmp = p;
+	AG_Bitmap *bmp = p;
 	
-	widget_blit_surface(bmp, 0, 0, 0);
+	AG_WidgetBlitSurface(bmp, 0, 0, 0);
 }
 
 /* Update the visible surface. */
 void
-bitmap_set_surface(struct bitmap *bmp, SDL_Surface *su)
+AG_BitmapSetSurface(AG_Bitmap *bmp, SDL_Surface *su)
 {
-	widget_replace_surface(bmp, 0, su);
+	AG_WidgetReplaceSurface(bmp, 0, su);
 }
 

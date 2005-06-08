@@ -1,4 +1,4 @@
-/*	$Csoft: ucslcat.c,v 1.2 2003/06/15 05:08:42 vedge Exp $	*/
+/*	$Csoft: ucslcat.c,v 1.3 2003/08/31 11:58:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -27,12 +27,12 @@
  * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(Uint32)
  * Unicode characters will be copied.
  *
- * Always NUL terminates (unless bytes <= ucs4_len(dst)*sizeof(Uint32)).
- * Returns (ucs4_len(src) + MIN(bytes, ucs4_len(initial dst)))*sizeof(Uint32)
+ * Always NUL terminates (unless bytes <= AG_UCS4Len(dst)*sizeof(Uint32)).
+ * Returns (AG_UCS4Len(src) + MIN(bytes, AG_UCS4Len(initial dst)))*sizeof(Uint32)
  * If retval >= bytes, truncation occurred.
  */
 size_t
-ucs4_lcat(Uint32 *dst, const Uint32 *src, size_t bytes)
+AG_UCS4Cat(Uint32 *dst, const Uint32 *src, size_t bytes)
 {
 	Uint32 *d = dst;
 	const Uint32 *s = src;
@@ -48,7 +48,7 @@ ucs4_lcat(Uint32 *dst, const Uint32 *src, size_t bytes)
 	n = siz - dlen;
 
 	if (n == 0) {
-		return ((dlen + ucs4_len(s))*sizeof(Uint32));
+		return ((dlen + AG_UCS4Len(s))*sizeof(Uint32));
 	}
 	while (*s != '\0') {
 		if (n != 1) {

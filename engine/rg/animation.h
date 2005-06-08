@@ -1,24 +1,24 @@
-/*	$Csoft: animation.h,v 1.4 2005/03/11 08:59:34 vedge Exp $	*/
+/*	$Csoft: animation.h,v 1.1 2005/03/24 04:02:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_ANIMATION_H_
 #define _AGAR_RG_ANIMATION_H_
 #include "begin_code.h"
 
-#define ANIMATION_NAME_MAX 32
+#define RG_ANIMATION_NAME_MAX 32
 
-enum anim_insn_type {
-	ANIM_TILE,			/* Replace/blend with prev tile */
-	ANIM_DISPX,			/* Pixmap translation */
-	ANIM_ROTPX			/* Pixmap rotation */
+enum rg_anim_insn_type {
+	RG_ANIM_TILE,			/* Replace/blend with prev tile */
+	RG_ANIM_DISPX,			/* Pixmap translation */
+	RG_ANIM_ROTPX			/* Pixmap rotation */
 };
-#define ANIM_LAST (ANIM_ROTPX+1)
+#define RG_ANIM_LAST (RG_ANIM_ROTPX+1)
 
-struct anim_insn {
-	enum anim_insn_type type;
-	struct tile *t;			/* Tile reference (for ANIM_*TILE) */
-	struct pixmap *px;		/* Pixmap reference (for ANIM_*PX) */
-	struct sketch *sk;		/* Sketch of path (for ANIM_MOVPX) */
+typedef struct rg_anim_insn {
+	enum rg_anim_insn_type type;
+	struct rg_tile *t;		/* Tile reference (for ANIM_*TILE) */
+	struct rg_pixmap *px;		/* Pixmap reference (for ANIM_*PX) */
+	struct rg_sketch *sk;		/* Sketch of path (for ANIM_MOVPX) */
 	u_int delay;			/* Delay in milliseconds */
 	union {
 		struct {
@@ -35,53 +35,53 @@ struct anim_insn {
 #define in_tile args.tile
 #define in_disPx args.disPx
 #define in_rotPx args.rotPx
-	TAILQ_ENTRY(anim_insn) insns;
-};
+	TAILQ_ENTRY(rg_anim_insn) insns;
+} RG_AnimInsn;
 
-struct anim_frame {
+typedef struct rg_anim_frame {
 	u_int name;
 	u_int delay;
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
 	GLuint texture;
 #endif
-};
+} RG_AnimFrame;
 
-struct animation {
-	char name[ANIMATION_NAME_MAX];
+typedef struct rg_anim {
+	char name[RG_ANIMATION_NAME_MAX];
 	int flags;
 #define ANIMATION_SRCALPHA	0x01
 #define ANIMATION_SRCCOLORKEY	0x02
 	u_int w, h;
-	struct tileset *tileset;
+	struct rg_tileset *tileset;
 	u_int nrefs;
 
-	struct anim_insn  *insns;		/* Animation instructions */
-	u_int		  ninsns;
-	struct anim_frame *frames;		/* Generated frames */
-	u_int	   	  nframes;
-	u_int	          gframe;		/* Current frame (global) */
+	RG_AnimInsn  *insns;		/* Animation instructions */
+	u_int	     ninsns;
+	RG_AnimFrame *frames;		/* Generated frames */
+	u_int	     nframes;
+	u_int	     gframe;		/* Current frame (global) */
 
-	TAILQ_ENTRY(animation) animations;
-};
+	TAILQ_ENTRY(rg_anim) animations;
+} RG_Anim;
 
 __BEGIN_DECLS
-void animation_init(struct animation *, struct tileset *, const char *, int);
-void animation_destroy(struct animation *);
-int  animation_load(struct animation *, struct netbuf *);
-void animation_save(struct animation *, struct netbuf *);
+void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, int);
+void RG_AnimDestroy(RG_Anim *);
+int  RG_AnimLoad(RG_Anim *, AG_Netbuf *);
+void RG_AnimSave(RG_Anim *, AG_Netbuf *);
 
-void animation_scale(struct animation *, u_int, u_int);
-void animation_generate(struct animation *);
+void RG_AnimScale(RG_Anim *, u_int, u_int);
+void RG_AnimGenerate(RG_Anim *);
 
 #ifdef EDITION
-struct window *animation_edit(struct animation *);
+AG_Window *RG_AnimEdit(RG_Anim *);
 #endif
 
-u_int	anim_insert_insn(struct animation *, enum anim_insn_type);
-void	anim_remove_insn(struct animation *, u_int);
-u_int	anim_insert_frame(struct animation *);
-void	anim_remove_frame(struct animation *, u_int);
+u_int	RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
+void	RG_AnimRemoveInsn(RG_Anim *, u_int);
+u_int	RG_AnimInsertFrame(RG_Anim *);
+void	RG_AnimRemoveFrame(RG_Anim *, u_int);
 __END_DECLS
 
 #include "close_code.h"

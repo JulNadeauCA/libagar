@@ -1,4 +1,4 @@
-/*	$Csoft: separator.c,v 1.3 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: separator.c,v 1.4 2005/05/29 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -37,66 +37,66 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-const struct widget_ops separator_ops = {
+const AG_WidgetOps separator_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	separator_draw,
-	separator_scale
+	AG_SeparatorDraw,
+	AG_SeparatorScale
 };
 
-struct separator *
-separator_new(void *parent, enum separator_type type)
+AG_Separator *
+AG_SeparatorNew(void *parent, enum ag_separator_type type)
 {
-	struct separator *sep;
+	AG_Separator *sep;
 
-	sep = Malloc(sizeof(struct separator), M_OBJECT);
-	separator_init(sep, type);
-	object_attach(parent, sep);
+	sep = Malloc(sizeof(AG_Separator), M_OBJECT);
+	AG_SeparatorInit(sep, type);
+	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
 
 void
-separator_init(struct separator *sep, enum separator_type type)
+AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
 {
-	widget_init(sep, "separator", &separator_ops,
-	    (type == SEPARATOR_HORIZ) ? WIDGET_WFILL : WIDGET_HFILL);
+	AG_WidgetInit(sep, "separator", &separator_ops,
+	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_WFILL : AG_WIDGET_HFILL);
 	sep->type = type;
 }
 
 void
-separator_scale(void *p, int w, int h)
+AG_SeparatorScale(void *p, int w, int h)
 {
-	struct separator *sep = p;
+	AG_Separator *sep = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(sep)->w = 2;
-		WIDGET(sep)->h = 2;
+		AGWIDGET(sep)->w = 2;
+		AGWIDGET(sep)->h = 2;
 	}
 }
 
 void
-separator_draw(void *p)
+AG_SeparatorDraw(void *p)
 {
-	struct separator *sep = p;
+	AG_Separator *sep = p;
 
 	switch (sep->type) {
-	case SEPARATOR_HORIZ:
-		primitives.hline(sep, 0, WIDGET(sep)->w, 0,
-		    COLOR(SEPARATOR_LINE1_COLOR));
-		primitives.hline(sep, 0, WIDGET(sep)->w, 1,
-		    COLOR(SEPARATOR_LINE2_COLOR));
+	case AG_SEPARATOR_HORIZ:
+		agPrim.hline(sep, 0, AGWIDGET(sep)->w, 0,
+		    AG_COLOR(SEPARATOR_LINE1_COLOR));
+		agPrim.hline(sep, 0, AGWIDGET(sep)->w, 1,
+		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
-	case SEPARATOR_VERT:
-		primitives.vline(sep, 0, 0, WIDGET(sep)->h,
-		    COLOR(SEPARATOR_LINE1_COLOR));
-		primitives.vline(sep, 1, 0, WIDGET(sep)->h,
-		    COLOR(SEPARATOR_LINE2_COLOR));
+	case AG_SEPARATOR_VERT:
+		agPrim.vline(sep, 0, 0, AGWIDGET(sep)->h,
+		    AG_COLOR(SEPARATOR_LINE1_COLOR));
+		agPrim.vline(sep, 1, 0, AGWIDGET(sep)->h,
+		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	}
 }

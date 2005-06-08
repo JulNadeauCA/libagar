@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.10 2004/09/12 05:55:56 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.11 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,18 +50,18 @@ char *error_key;
 #endif
 
 #ifdef DEBUG
-int engine_debug = 1;				/* Default debug level */
-struct error_mement error_mements[M_LAST];
+int agDebugLvl = 1;				/* Default debug level */
+struct ag_malloc_type agMallocTypes[M_LAST];
 #endif
 
 void
-error_init(void)
+AG_InitError(void)
 {
 #ifdef DEBUG
 	int i;
 
 	for (i = 0; i < M_LAST; i++)
-		memset(&error_mements[i], 0, sizeof(struct error_mement));
+		memset(&agMallocTypes[i], 0, sizeof(struct ag_malloc_type));
 #endif
 
 #ifdef THREADS
@@ -72,7 +72,7 @@ error_init(void)
 }
 
 void
-error_destroy(void)
+AG_DestroyError(void)
 {
 #ifdef THREADS
 	pthread_key_delete(error_key);
@@ -82,7 +82,7 @@ error_destroy(void)
 }
 
 void
-error_set(const char *fmt, ...)
+AG_SetError(const char *fmt, ...)
 {
 	va_list args;
 	char *buf;
@@ -107,7 +107,7 @@ error_set(const char *fmt, ...)
 }
 
 const char *
-error_get(void)
+AG_GetError(void)
 {
 #ifdef THREADS
 	return ((const char *)pthread_getspecific(error_key));
@@ -117,7 +117,7 @@ error_get(void)
 }
 
 void *
-error_malloc(size_t len, int type)
+AG_Malloc(size_t len, int type)
 {
 	void *p;
 	
@@ -125,15 +125,15 @@ error_malloc(size_t len, int type)
 		fatal("malloc");
 #ifdef DEBUG
 	if (type > 0) {
-		error_mements[type].nallocs++;
-		error_mements[type].msize += len;
+		agMallocTypes[type].nallocs++;
+		agMallocTypes[type].msize += len;
 	}
 #endif
 	return (p);
 }
 
 void *
-error_realloc(void *oldp, size_t len)
+AG_Realloc(void *oldp, size_t len)
 {
 	void *newp;
 
@@ -149,23 +149,23 @@ error_realloc(void *oldp, size_t len)
 }
 
 void
-error_free(void *p, int type)
+AG_Free(void *p, int type)
 {
 	/* XXX redundant on some systems */
 	if (p == NULL)
 		return;
 #ifdef DEBUG
 	if (type > 0)
-		error_mements[type].nfrees++;
+		agMallocTypes[type].nfrees++;
 #endif
 	free(p);
 }
 
 void
-error_dprintf(const char *fmt, ...)
+AG_DebugPrintf(const char *fmt, ...)
 {
 #ifdef DEBUG
-	if (engine_debug > 0) {
+	if (agDebugLvl > 0) {
 		va_list args;
 
 		va_start(args, fmt);
@@ -176,15 +176,15 @@ error_dprintf(const char *fmt, ...)
 }
 
 void
-error_dprintf_nop(const char *fmt, ...)
+AG_DebugPrintfNop(const char *fmt, ...)
 {
 }
 
 void
-error_debug(int mask, const char *fmt, ...)
+AG_Debug(int mask, const char *fmt, ...)
 {
 #ifdef DEBUG
-	if (engine_debug & mask) {
+	if (agDebugLvl & mask) {
 		va_list args;
 
 		va_start(args, fmt);
@@ -196,15 +196,15 @@ error_debug(int mask, const char *fmt, ...)
 }
 
 void
-error_debug_nop(int level, const char *fmt, ...)
+AG_DebugNop(int level, const char *fmt, ...)
 {
 }
 
 void
-error_debug_n(int mask, const char *fmt, ...)
+AG_DebugN(int mask, const char *fmt, ...)
 {
 #ifdef DEBUG
-	if (engine_debug & mask) {
+	if (agDebugLvl & mask) {
 		va_list args;
 
 		va_start(args, fmt);
@@ -215,7 +215,7 @@ error_debug_n(int mask, const char *fmt, ...)
 }
 
 void
-error_fatal(const char *fmt, ...)
+AG_FatalError(const char *fmt, ...)
 {
 	va_list args;
 
@@ -229,7 +229,7 @@ error_fatal(const char *fmt, ...)
 }
 
 char *
-error_strdup(const char *s)
+AG_Strdup(const char *s)
 {
 	size_t buflen;
 	char *ns;

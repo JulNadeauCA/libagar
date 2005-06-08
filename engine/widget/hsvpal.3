@@ -1,4 +1,4 @@
-.\"	$Csoft: hsvpal.3,v 1.1 2005/05/22 03:36:11 vedge Exp $
+.\"	$Csoft: hsvpal.3,v 1.2 2005/05/22 06:31:25 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -51,25 +51,25 @@ It can also bind to a pixel value (and matching
 on the fly.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct hsvpal *"
-.Fn hsvpal_new "void *parent"
+.Ft "AG_HSVPal *"
+.Fn AG_HSVPalNew "void *parent"
 .Pp
 .Ft void
-.Fn hsvpal_init "struct hsvpal *hsvpal"
+.Fn AG_HSVPalInit "AG_HSVPal *hsvpal"
 .nr nS 0
 .Pp
 The
-.Fn hsvpal_new
+.Fn AG_HSVPalNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn hsvpal_init
+.Fn AG_HSVPalInit
 function initializes a
 .Nm
 widget.
@@ -140,7 +140,6 @@ In cases where it is desirable to maintain the same hue throughout changes in
 saturation, the color should be stored in HSV format.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr palette 3 ,
 .Xr widget 3 ,
 .Xr window 3
 .Sh HISTORY

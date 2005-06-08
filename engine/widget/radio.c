@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.48 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.49 2005/05/13 09:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,17 +34,17 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static struct widget_ops radio_ops = {
+static AG_WidgetOps radio_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		radio_destroy,
+		AG_RadioDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	radio_draw,
-	radio_scale
+	AG_RadioDraw,
+	AG_RadioScale
 };
 
 enum {
@@ -64,25 +64,26 @@ enum {
 static void radio_event(int, union evarg *);
 static void mousemotion(int, union evarg *);
 
-struct radio *
-radio_new(void *parent, const char **items)
+AG_Radio *
+AG_RadioNew(void *parent, const char **items)
 {
-	struct radio *rad;
+	AG_Radio *rad;
 
-	rad = Malloc(sizeof(struct radio), M_OBJECT);
-	radio_init(rad, items);
-	object_attach(parent, rad);
+	rad = Malloc(sizeof(AG_Radio), M_OBJECT);
+	AG_RadioInit(rad, items);
+	AG_ObjectAttach(parent, rad);
 	return (rad);
 }
 
 void
-radio_init(struct radio *rad, const char **items)
+AG_RadioInit(AG_Radio *rad, const char **items)
 {
 	const char *s, **itemsp = items;
 	int i;
 
-	widget_init(rad, "radio", &radio_ops, WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(rad, "value", WIDGET_INT, &rad->value);
+	AG_WidgetInit(rad, "radio", &radio_ops, AG_WIDGET_FOCUSABLE|
+		                                AG_WIDGET_WFILL);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
 	rad->value = -1;
 	rad->max_w = 0;
@@ -94,16 +95,17 @@ radio_init(struct radio *rad, const char **items)
 	for (i = 0; i < rad->nitems; i++) {
 		SDL_Surface *su;
 
-		su = text_render(NULL, -1, COLOR(RADIO_TXT_COLOR), _(items[i]));
-		rad->labels[i] = widget_map_surface(rad, su);
+		su = AG_TextRender(NULL, -1, AG_COLOR(RADIO_TXT_COLOR),
+		    _(items[i]));
+		rad->labels[i] = AG_WidgetMapSurface(rad, su);
 		if (su->w > rad->max_w)
 			rad->max_w = su->w;
 	}
 
-	event_new(rad, "window-mousebuttondown", radio_event, "%i",
+	AG_SetEvent(rad, "window-mousebuttondown", radio_event, "%i",
 	    MOUSEBUTTONDOWN_EVENT);
-	event_new(rad, "window-keydown", radio_event, "%i", KEYDOWN_EVENT);
-	event_new(rad, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(rad, "window-keydown", radio_event, "%i", KEYDOWN_EVENT);
+	AG_SetEvent(rad, "window-mousemotion", mousemotion, NULL);
 }
 
 static const int highlight[18] = {
@@ -119,21 +121,21 @@ static const int highlight[18] = {
 };
 
 void
-radio_draw(void *p)
+AG_RadioDraw(void *p)
 {
-	struct radio *rad = p;
+	AG_Radio *rad = p;
 	int i, val, j;
 	int x = XPADDING + RADIUS*2 + XSPACING;
 	int y = YPADDING;
 
-	primitives.frame(rad,
+	agPrim.frame(rad,
 	    0,
 	    0,
-	    WIDGET(rad)->w,
-	    WIDGET(rad)->h,
-	    COLOR(FRAME_COLOR));
+	    AGWIDGET(rad)->w,
+	    AGWIDGET(rad)->h,
+	    AG_COLOR(FRAME_COLOR));
 
-	val = widget_get_int(rad, "value");
+	val = AG_WidgetInt(rad, "value");
 
 	for (i = 0;
 	     i < rad->nitems;
@@ -142,58 +144,58 @@ radio_draw(void *p)
 		int yc = y + RADIUS;
 
 		for (j = 0; j < 18; j+=2) {
-			widget_put_pixel(rad,
+			AG_WidgetPutPixel(rad,
 			    xc + highlight[j],
 			    yc + highlight[j+1],
-			    COLOR(RADIO_HI_COLOR));
-			widget_put_pixel(rad,
+			    AG_COLOR(RADIO_HI_COLOR));
+			AG_WidgetPutPixel(rad,
 			    xc - highlight[j],
 			    yc - highlight[j+1],
-			    COLOR(RADIO_LO_COLOR));
+			    AG_COLOR(RADIO_LO_COLOR));
 		}
 
 		if (i == val) {
-			primitives.circle(rad,
+			agPrim.circle(rad,
 			    XPADDING + RADIUS,
 			    y + RADIUS,
 			    SEL_RADIUS,
-			    COLOR(RADIO_SEL_COLOR));
+			    AG_COLOR(RADIO_SEL_COLOR));
 		} else if (i == rad->oversel) {
-			primitives.circle(rad,
+			agPrim.circle(rad,
 			    XPADDING + RADIUS,
 			    y + RADIUS,
 			    SEL_RADIUS,
-			    COLOR(RADIO_OVER_COLOR));
+			    AG_COLOR(RADIO_OVER_COLOR));
 		}
-		widget_blit_surface(rad, rad->labels[i], x, y);
+		AG_WidgetBlitSurface(rad, rad->labels[i], x, y);
 	}
 }
 
 void
-radio_destroy(void *p)
+AG_RadioDestroy(void *p)
 {
-	struct radio *rad = p;
+	AG_Radio *rad = p;
 	int i;
 
 	Free(rad->labels, M_WIDGET);
-	widget_destroy(rad);
+	AG_WidgetDestroy(rad);
 }
 
 void
-radio_scale(void *p, int rw, int rh)
+AG_RadioScale(void *p, int rw, int rh)
 {
-	struct radio *rad = p;
+	AG_Radio *rad = p;
 
 	if (rw == -1)
-		WIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2 + rad->max_w;
+		AGWIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2+rad->max_w;
 	if (rh == -1)
-		WIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2) + YPADDING*2;
+		AGWIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2)+YPADDING*2;
 }
 
 static void
 mousemotion(int argc, union evarg *argv)
 {
-	struct radio *rad = argv[0].p;
+	AG_Radio *rad = argv[0].p;
 	int x = argv[1].i;
 	int y = argv[2].i - YPADDING;
 
@@ -203,21 +205,21 @@ mousemotion(int argc, union evarg *argv)
 static void
 radio_event(int argc, union evarg *argv)
 {
-	struct radio *rad = argv[0].p;
-	struct widget_binding *valueb;
+	AG_Radio *rad = argv[0].p;
+	AG_WidgetBinding *valueb;
 	int type = argv[1].i;
 	int button, keysym;
 	int y;
 	int *sel;
 
-	valueb = widget_get_binding(rad, "value", &sel);
+	valueb = AG_WidgetGetBinding(rad, "value", &sel);
 	switch (type) {
 	case MOUSEBUTTONDOWN_EVENT:
 		button = argv[2].i;
 		if (button == SDL_BUTTON_LEFT) {
 			y = argv[4].i - YPADDING;
 			*sel = (y/(RADIUS*2 + YSPACING));
-			widget_focus(rad);
+			AG_WidgetFocus(rad);
 		}
 		break;
 	case KEYDOWN_EVENT:
@@ -241,7 +243,7 @@ radio_event(int argc, union evarg *argv)
 	if (*sel >= rad->nitems) {
 		*sel = rad->nitems - 1;
 	}
-	event_post(NULL, rad, "radio-changed", "%i", *sel);
-	widget_binding_unlock(valueb);
+	AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+	AG_WidgetUnlockBinding(valueb);
 }
 

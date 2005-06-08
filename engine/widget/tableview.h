@@ -1,33 +1,37 @@
-/*	$Csoft: tableview.h,v 1.15 2005/09/04 06:21:38 vedge Exp $	*/
+/*	$Csoft: tableview.h,v 1.16 2005/06/05 20:03:48 twingy Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
+#include <engine/widget/label.h>
+
 #include "begin_code.h"
 
-#define TABLEVIEW_LABEL_MAX	128
+#define AG_TABLEVIEW_LABEL_MAX AG_LABEL_MAX
 
-typedef Uint32 rowID;
-typedef Uint32 colID;
+typedef Uint32 AG_TableviewRowID;
+typedef Uint32 AG_TableviewColID;
 
-struct tableview;
+struct ag_tableview;
 
-typedef char *(*datafunc)(struct tableview *, colID, rowID);
-typedef int (*compfunc)(colID, rowID, rowID, char mode);
+typedef char *(*AG_TableviewDataFn)(struct ag_tableview *, AG_TableviewColID,
+		AG_TableviewRowID);
+typedef int (*AG_TableviewSortFn)(AG_TableviewColID, AG_TableviewRowID,
+	      AG_TableviewRowID, char);
 
 enum {
-	TABLEVIEW_SORT_NOT = 0,
-	TABLEVIEW_SORT_ASC = 1,
-	TABLEVIEW_SORT_DSC = 2,
+	AG_TABLEVIEW_SORT_NOT = 0,
+	AG_TABLEVIEW_SORT_ASC = 1,
+	AG_TABLEVIEW_SORT_DSC = 2,
 	 
-	TABLEVIEW_SORTED_AFIRST = 1,
-	TABLEVIEW_SORTED_BFIRST = 2
+	AG_TABLEVIEW_SORTED_AFIRST = 1,
+	AG_TABLEVIEW_SORTED_BFIRST = 2
 };
 
-struct tableview_column {
-	colID cid;
-	u_int idx;		/* Index into row->cell[] */
+typedef struct ag_tableview_col {
+	AG_TableviewColID cid;
+	u_int idx;			/* Index into row->cell[] */
 
 	/* Flags */
 	int mousedown :1;
@@ -38,43 +42,43 @@ struct tableview_column {
 	int fill :1;
 	int dynamic :1;
 
-	char label[TABLEVIEW_LABEL_MAX];/* Header text */
-	SDL_Surface *label_img;		/* Rendered header text */
-	int	     label_id;
-	int w;				/* Column width */
-};
+	char label[AG_TABLEVIEW_LABEL_MAX];	/* Header text */
+	SDL_Surface *label_img;			/* Rendered header text */
+	int label_id;
+	int w;					/* Column width */
+} AG_TableviewCol;
 
-TAILQ_HEAD(tableview_rowq, tableview_row);
+TAILQ_HEAD(ag_tableview_rowq, ag_tableview_row);
 
-struct tableview_row {
-	rowID rid;
-	struct cell {
+typedef struct ag_tableview_row {
+	AG_TableviewRowID rid;
+	struct ag_tableview_cell {
 		char *text;
 		SDL_Surface *image;
 	} *cell;
 	int selected : 1;
 	int expanded : 1;
 	int dynamic : 1;
-	struct tableview_row *parent;
-	struct tableview_rowq children;
+	struct ag_tableview_row *parent;
+	struct ag_tableview_rowq children;
 	void *userp;
-	TAILQ_ENTRY(tableview_row) siblings;
-	TAILQ_ENTRY(tableview_row) backstore;
-};
+	TAILQ_ENTRY(ag_tableview_row) siblings;
+	TAILQ_ENTRY(ag_tableview_row) backstore;
+} AG_TableviewRow;
 
-struct tableview {
-	struct widget wid;
+typedef struct ag_tableview {
+	struct ag_widget wid;
 	
 	/* child widgets */
-	struct scrollbar *sbar_v;		/* Vertical scrollbar */
-	struct scrollbar *sbar_h;		/* Horizontal scrollbar */
-	//struct textbox *editbox;		/* cell edition widget */
+	struct ag_scrollbar *sbar_v;	/* Vertical scrollbar */
+	struct ag_scrollbar *sbar_h;	/* Horizontal scrollbar */
+	//AG_Textbox *editbox;		/* Cell edition widget */
 	
 	/* mutex lock required below here */
 	pthread_mutex_t lock;
 	
-	datafunc data_callback;		/* Callback to get cell data */
-	compfunc sort_callback;		/* Callback to compare */
+	AG_TableviewDataFn data_callback;	/* Callback to get cell data */
+	AG_TableviewSortFn sort_callback;	/* Callback to compare */
 	
 	/* Flags */
 	int selmulti :1;		/* Allow more than 1 select */
@@ -93,21 +97,21 @@ struct tableview {
 	int prew, preh;			/* Prescale hint */
 	
 	/* columns */
-	u_int			 columncount;
-	struct tableview_column *column;
+	u_int columncount;
+	struct ag_tableview_col *column;
 	char sortMode;			/* Sort mode (a or b) */
 	
 	/*
 	 * Special columns - columns with a unique purpose. ID_INVALID if
 	 * unused.
 	 */
-	colID sortColumn;		/* Column we sort by */
-	colID enterEdit;		/* Column we edit on enter */
-	colID expanderColumn;		/* Column for +/- boxes */
+	AG_TableviewColID sortColumn;		/* Column we sort by */
+	AG_TableviewColID enterEdit;		/* Column we edit on enter */
+	AG_TableviewColID expanderColumn;	/* Column for +/- boxes */
 	
 	/* rows */
-	struct tableview_rowq children;		/* List of rows */
-	struct tableview_rowq backstore;	/* List of saved rows */
+	struct ag_tableview_rowq children;	/* List of rows */
+	struct ag_tableview_rowq backstore;	/* List of saved rows */
 	int expandedrows;			/* Number of rows visible */
 	
 	/* drawing hints */
@@ -116,130 +120,125 @@ struct tableview {
 		u_int redraw_rate;
 		int dirty;
 		u_int count;
-		struct rowdocket_item {
-			struct tableview_row *row;
+		struct ag_tableview_rowdocket_item {
+			struct ag_tableview_row *row;
 			u_int depth;
 		} *items;
 	} visible;
-};
+} AG_Tableview;
 
-/* Flags for tableview_col_add() */
-#define TABLEVIEW_COL_EDITABLE	0x01	/* Cells are editable */
-#define TABLEVIEW_COL_ENTEREDIT	0x02	/* Begin edits on enter */
-#define TABLEVIEW_COL_NORESIZE	0x04	/* Disallow resizing */
-#define TABLEVIEW_COL_UPDATE	0x08	/* Updates periodically */
-#define TABLEVIEW_COL_DYNAMIC	0x20	/* Uses the callback */
-#define TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
-#define TABLEVIEW_COL_FILL	0x80	/* Fill remaining space */
+/* Flags for AG_TableviewColAdd() */
+#define AG_TABLEVIEW_COL_EDITABLE	0x01	/* Cells are editable */
+#define AG_TABLEVIEW_COL_KEYEDIT	0x02	/* Begin edits on enter */
+#define AG_TABLEVIEW_COL_NORESIZE	0x04	/* Disallow resizing */
+#define AG_TABLEVIEW_COL_UPDATE		0x08	/* Updates periodically */
+#define AG_TABLEVIEW_COL_DYNAMIC	0x20	/* Uses the callback */
+#define AG_TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
+#define AG_TABLEVIEW_COL_FILL		0x80	/* Fill remaining space */
 
-/* Flags for tableview_new() and tableview_init() */
-#define TABLEVIEW_SELMULTI	0x01 /* Multiple selections (ctrl/shift) */
-//#define TABLEVIEW_SELSINGLE	0x02
-//#define TABLEVIEW_SELNOCLEAR	0x04
-#define TABLEVIEW_HORIZ		0x08 /* Can scroll horizontally if needed */
-#define TABLEVIEW_REORDERCOLS	0x10 /* Users may reorder the columns */
-#define TABLEVIEW_NOHEADER	0x20 /* do not display the header */
-#define TABLEVIEW_NOSORT	0x40 /* do not sort. header not clickable */
-#define TABLEVIEW_POLLED	0x80 /* remember selections */
+/* Flags for AG_TableviewNew() and AG_TableviewInit() */
+#define AG_TABLEVIEW_SELMULTI	 0x01 /* Multiple selections (ctrl/shift) */
+//#define AG_TABLEVIEW_SELSINGLE 0x02
+//#define AG_TABLEVIEW_SELNOCLEAR 0x04
+#define AG_TABLEVIEW_HORIZ	 0x08 /* Can scroll horizontally if needed */
+#define AG_TABLEVIEW_REORDERCOLS 0x10 /* Users may reorder the columns */
+#define AG_TABLEVIEW_NOHEADER	 0x20 /* do not display the header */
+#define AG_TABLEVIEW_NOSORT	 0x40 /* do not sort. header not clickable */
+#define AG_TABLEVIEW_POLLED	 0x80 /* remember selections */
 
 /* Flags for tableview_add_row() */
-#define TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
+#define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
 
 __BEGIN_DECLS
-void tableview_destroy(void *p);
-void tableview_scale(void *, int, int);
-void tableview_draw(void *);
+void AG_TableviewDestroy(void *p);
+void AG_TableviewScale(void *, int, int);
+void AG_TableviewDraw(void *);
 
-struct tableview *tableview_new(void *, int, datafunc, compfunc);
-void tableview_init(struct tableview *, int, datafunc, compfunc);
-void tableview_prescale(struct tableview *, const char *, int);
-void tableview_set_update(struct tableview *, u_int);
+AG_Tableview *AG_TableviewNew(void *, int, AG_TableviewDataFn,
+		              AG_TableviewSortFn);
+void AG_TableviewInit(AG_Tableview *, int, AG_TableviewDataFn,
+		      AG_TableviewSortFn);
+void AG_TableviewPrescale(AG_Tableview *, const char *, int);
+void AG_TableviewSetUpdate(AG_Tableview *, u_int);
 
-struct tableview_column *tableview_col_add(struct tableview *, int, colID,
-			                   const char *, const char *);
-void tableview_col_select(struct tableview *, colID);
+AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
+			            const char *, const char *);
+void AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
 
-#define tableview_row_getID(ROW) (*(rowID *)(ROW))
-
-struct tableview_row *tableview_row_get(struct tableview *, rowID);
-struct tableview_row *tableview_row_addfn(struct tableview *, int,
-				          struct tableview_row *, void *,
-					  rowID, ...);
-#define tableview_row_add(...) \
-	tableview_row_addfn(__VA_ARGS__, -1)
-
-void tableview_row_del(struct tableview *, struct tableview_row *);
-void tableview_row_del_all(struct tableview *);
-void tableview_row_restore_all(struct tableview *);
-void tableview_row_select(struct tableview *, struct tableview_row *);
-
-#define tableview_row_deselect(TV, ROW) \
-	((ROW)->flags &= ~TABLEVIEW_ROW_SELECTED)
-
-void tableview_row_select_all(struct tableview *, struct tableview_row *);
-void tableview_row_deselect_all(struct tableview *, struct tableview_row *);
-void tableview_row_expand(struct tableview *, struct tableview_row *);
-void tableview_row_collapse(struct tableview *, struct tableview_row *);
-void tableview_row_expand_all(struct tableview *, struct tableview_row *);
-void tableview_row_collapse_all(struct tableview *, struct tableview_row *);
-void tableview_cell_printf(struct tableview *, struct tableview_row *, int,
+AG_TableviewRow *AG_TableviewRowGet(AG_Tableview *, AG_TableviewRowID);
+AG_TableviewRow *AG_TableviewRowAddFn(AG_Tableview *, int, AG_TableviewRow *,
+			              void *, AG_TableviewRowID, ...);
+void AG_TableviewRowDel(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowDelAll(AG_Tableview *);
+void AG_TableviewRowRestoreAll(AG_Tableview *);
+void AG_TableviewRowSelect(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowSelectAll(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowDeselectAll(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowExpand(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowCollapse(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowExpandAll(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewRowCollapseAll(AG_Tableview *, AG_TableviewRow *);
+void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 		           const char *, ...);
 
-#define	tableview_row_toggle(TV, ROW)				\
+#define AG_TableviewRowGetID(ROW) (*(AG_TableviewRowID *)(ROW))
+#define AG_TableviewRowAdd(...) AG_TableviewRowAddFn(__VA_ARGS__, -1)
+#define AG_TableviewRowDeselect(TV, ROW) ((ROW)->selected = 0)
+#define	AG_TableviewRowToggle(TV, ROW)				\
 	do {							\
 		if (NULL == (ROW)) break			\
 		if ((ROW)->flags & TABLEVIEW_ROW_EXPANDED)	\
-			tableview_row_collapse(TV, (ROW));	\
+			AG_TableviewRowCollapse(TV, (ROW));	\
 		else						\
-			tableview_row_expand(TV, (ROW));	\
+			AG_TableviewRowExpand(TV, (ROW));	\
 	} while (0)
 
-#define tableview_rowid_add(TV, ID, IDNEW, USERP) \
-	tableview_row_add((TV), tableview_row_get((TV), (ID)), (USERP), (IDNEW))
+#define AG_TableviewRowIDAdd(TV, ID, IDNEW, USERP) \
+	AG_TableviewRowAdd((TV), AG_TableviewRowGet((TV), (ID)), (USERP), \
+	(IDNEW))
 
-#define tableview_rowid_delete(TV, ID) \
-	tableview_row_delete((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDDel(TV, ID) \
+	AG_TableviewRowDelete((TV), AG_TableviewRowGet((TV), (ID)))
 
-#define tableview_rowid_select(TV, ID) \
-	tableview_row_select((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDSelect(TV, ID) \
+	AG_TableviewRowSelect((TV), AG_TableviewRowGet((TV), (ID)))
 
-#define tableview_rowid_deselect(TV, ID)				\
+#define AG_TableviewRowIDDeselect(TV, ID)				\
 	do {								\
-		struct tableview_row *_row = tableview_row_get((TV), (ID)); \
-		if (_row) _row->flags &= ~TABLEVIEW_ROW_SELECTED;	\
+		AG_TableviewRow *_row = AG_TableviewRowGet((TV), (ID)); \
+		if (_row != NULL) _row->selected = 0; \
 	} while(0)
 
-#define tableview_rowid_select_all(TV, ID) \
-	tableview_row_select_all((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDSelectAll(TV, ID) \
+	AG_TableviewRowSelectAll((TV), AG_TableviewRowGet((TV), (ID)))
 
-#define tableview_rowid_deselect_all(TV, ID) \
-	tableview_row_deselect_all((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDDeselect_all(TV, ID) \
+	AG_TableviewRowDeselectAll((TV), AG_TableviewRowGet((TV), (ID)))
 
-#define tableview_rowid_expand(TV, ID) \
-	tableview_row_expand((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDExpand(TV, ID) \
+	AG_TableviewRowExpand((TV), AG_TableviewRowGet((TV), (ID)))
 
-#define tableview_rowid_collapse(TV, ID) \
-	tableview_row_collapse((TV), tableview_row_get((TV), (ID)))
+#define AG_TableviewRowIDCollapse(TV, ID) \
+	AG_TableviewRowCollapse((TV), AG_TableviewRowGet((TV), (ID)))
 /*
-#define tableview_rowid_expand_all(TV, ID) \
-	tableview_row_expand_all(TV, tableview_row_get(TV, ID))
-#define tableview_rowid_collapse_all(TV, ID) \
-	tableview_row_collapse_all(TV, tableview_row_get(TV, ID))
+#define AG_TableviewRowIDExpand_all(TV, ID) \
+	AG_TableviewRowExpandAll(TV, AG_TableviewRowGet(TV, ID))
+#define AG_TableviewRowIDCollapse_all(TV, ID) \
+	AG_TableviewRowCollapseAll(TV, AG_TableviewRowGet(TV, ID))
 */
 
-#define tableview_rowid_toggle(TV, ID)					\
+#define AG_TableviewRowIDToggle(TV, ID)					\
 	do {								\
-		struct tableview_row *_row = tableview_row_get((TV), (ID)); \
+		AG_TableviewRow *_row = AG_TableviewRowGet((TV), (ID)); \
 		if (NULL == _row) break;				\
 		if (_row->flags & TABLEVIEW_ROW_EXPANDED) {		\
-			tableview_row_collapse((TV), _row);		\
+			AG_TableviewRowCollapse((TV), _row);		\
 		} else {						\
-			tableview_row_expand((TV), _row);		\
+			AG_TableviewRowExpand((TV), _row);		\
 		}							\
 	} while(0)
 
-struct tableview_row *tableview_row_selected(struct tableview *);
-
+AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
 __END_DECLS
 
 #include "close_code.h"

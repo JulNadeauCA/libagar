@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.54 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.55 2005/04/14 06:19:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,95 +31,94 @@
 
 #include <string.h>
 
-struct input_devq input_devs;
-pthread_mutex_t	  input_lock = PTHREAD_MUTEX_INITIALIZER;
+struct ag_input_devq ag_input_devs;
+pthread_mutex_t	     ag_input_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* Initialize and attach an input device. */
 void
-input_register(void *p, enum input_type type, const char *name,
-    const struct input_driver *drv)
+AG_InputSet(void *p, enum ag_input_type type, const char *name,
+    const AG_InputOps *ops)
 {
-	struct input *in = p;
+	AG_Input *in = p;
 
 	strlcpy(in->name, name, sizeof(in->name));
 	in->type = type;
-	in->drv = drv;
-	in->pos = NULL;
+	in->ops = ops;
 
-	pthread_mutex_lock(&input_lock);
-	SLIST_INSERT_HEAD(&input_devs, in, inputs);
-	pthread_mutex_unlock(&input_lock);
+	pthread_mutex_lock(&ag_input_lock);
+	SLIST_INSERT_HEAD(&ag_input_devs, in, inputs);
+	pthread_mutex_unlock(&ag_input_lock);
 
-	dprintf("registered %s (%s)\n", in->name, in->drv->name);
+	dprintf("registered %s (%s)\n", in->name, in->ops->name);
 }
 
 /* Detach and free an input device structure. */
 void
-input_deregister(void *p)
+AG_InputRemove(void *p)
 {
-	struct input *in = p;
+	AG_Input *in = p;
 
-	if (in->drv->in_close != NULL)
-		in->drv->in_close(in);
+	if (in->ops->in_close != NULL)
+		in->ops->in_close(in);
 
-	pthread_mutex_lock(&input_lock);
-	SLIST_REMOVE(&input_devs, in, input, inputs);
-	pthread_mutex_unlock(&input_lock);
+	pthread_mutex_lock(&ag_input_lock);
+	SLIST_REMOVE(&ag_input_devs, in, ag_input, inputs);
+	pthread_mutex_unlock(&ag_input_lock);
 
 	free(in);
 }
 
 /* Destroy all attached input device structures. */
 void
-input_destroy(void)
+AG_InputDestroy(void)
 {
-	struct input *in, *nin;
+	AG_Input *in, *nin;
 
-	pthread_mutex_lock(&input_lock);
-	for (in = SLIST_FIRST(&input_devs);
-	     in != SLIST_END(&input_devs);
+	pthread_mutex_lock(&ag_input_lock);
+	for (in = SLIST_FIRST(&ag_input_devs);
+	     in != SLIST_END(&ag_input_devs);
 	     in = nin) {
 		nin = SLIST_NEXT(in, inputs);
 
-		if (in->drv->in_close != NULL) {
-			in->drv->in_close(in);
+		if (in->ops->in_close != NULL) {
+			in->ops->in_close(in);
 		}
 		free(in);
 	}
-	SLIST_INIT(&input_devs);
-	pthread_mutex_unlock(&input_lock);
+	SLIST_INIT(&ag_input_devs);
+	pthread_mutex_unlock(&ag_input_lock);
 }
 
 /* Look for an input device of the given name. */
 void *
-input_find(const char *name)
+AG_InputFind(const char *name)
 {
-	struct input *in;
+	AG_Input *in;
 
-	pthread_mutex_lock(&input_lock);
-	SLIST_FOREACH(in, &input_devs, inputs) {
+	pthread_mutex_lock(&ag_input_lock);
+	SLIST_FOREACH(in, &ag_input_devs, inputs) {
 		if (strcmp(in->name, name) == 0)
 			break;
 	}
-	pthread_mutex_unlock(&input_lock);
+	pthread_mutex_unlock(&ag_input_lock);
 	return (in);
 }
 
 /* Translate an SDL event. */
 void
-input_event(enum input_type type, const SDL_Event *ev)
+AG_InputEvent(enum ag_input_type type, const SDL_Event *ev)
 {
-	struct input *in;
+	AG_Input *in;
 
-	pthread_mutex_lock(&input_lock);
-	SLIST_FOREACH(in, &input_devs, inputs) {
+	pthread_mutex_lock(&ag_input_lock);
+	SLIST_FOREACH(in, &ag_input_devs, inputs) {
 		if (in->type == type &&
-		    in->drv->in_match(in, ev))
+		    in->ops->in_match(in, ev))
 			break;
 	}
-	if (in != NULL && in->pos != NULL) {
-		in->drv->in_event(in, ev);
+	if (in != NULL) {
+		in->ops->in_event(in, ev);
 	}
-	pthread_mutex_unlock(&input_lock);
+	pthread_mutex_unlock(&ag_input_lock);
 }
 

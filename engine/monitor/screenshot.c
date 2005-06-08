@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.17 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.18 2005/05/18 03:16:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ static int sock = -1;
 static int aflag = 0;
 static int xmit_delay = 1000;
 
-static struct textbox *hosttb, *porttb;
+static AG_Textbox *hosttb, *porttb;
 static char status[128];
 
 static struct jpeg_error_mgr		 jerrmgr;
@@ -72,7 +72,7 @@ static struct jpeg_compress_struct	 jcomp;
 static void
 screenshot_error_exit(j_common_ptr jcomp)
 {
-	text_msg(MSG_ERROR, _("A JPEG error has occured."));
+	AG_TextMsg(AG_MSG_ERROR, _("A JPEG error has occured."));
 }
 
 static void
@@ -83,14 +83,14 @@ screenshot_output_message(j_common_ptr jcomp)
 static void
 screenshot_xmit(int fd)
 {
-	extern int view_screenshot_quality;
+	extern int agScreenshotQuality;
 	int nframe = 0;
 	FILE *fp;
 	SDL_Surface *su;
 	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
-		text_msg(MSG_ERROR, "fdopen: %s", strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "fdopen: %s", strerror(errno));
 		return;
 	}
 
@@ -100,16 +100,16 @@ screenshot_xmit(int fd)
 	
 	jpeg_create_compress(&jcomp);
 
-	jcomp.image_width = view->w;
-	jcomp.image_height = view->h;
+	jcomp.image_width = agView->w;
+	jcomp.image_height = agView->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, view_screenshot_quality, TRUE);
+	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(view->w * 3, M_VIEW);
+	jcopybuf = Malloc(agView->w * 3, M_VIEW);
 
 	for (;;) {
 		JSAMPROW row[1];
@@ -125,11 +125,11 @@ screenshot_xmit(int fd)
 		snprintf(status, sizeof(status), _("Transmitting frame %d"),
 		    nframe);
 
-		if (!view->opengl) {
-			su = view->v;
+		if (!agView->opengl) {
+			su = agView->v;
 		} else {
 #ifdef HAVE_OPENGL
-			su = view_gl_capture();
+			su = AG_CaptureGLView();
 #endif
 		}
 
@@ -141,8 +141,8 @@ screenshot_xmit(int fd)
 			Uint8 *pDst = jcopybuf;
 			Uint8 r, g, b;
 
-			for (x = view->w; x > 0; x--) {
-				SDL_GetRGB(GET_PIXEL(su, pSrc), su->format,
+			for (x = agView->w; x > 0; x--) {
+				SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
 				    &r, &g, &b);
 				*pDst++ = r;
 				*pDst++ = g;
@@ -156,7 +156,7 @@ screenshot_xmit(int fd)
 		jpeg_finish_compress(&jcomp);
 
 #ifdef HAVE_OPENGL
-		if (view->opengl)
+		if (agView->opengl)
 			SDL_FreeSurface(su);
 #endif
 
@@ -181,15 +181,15 @@ screenshot_connect(int argc, union evarg *argv)
 	pthread_mutex_lock(&lock);
 
 	if (sock != -1) {
-		text_msg(MSG_ERROR, _("Already connected to a server."));
+		AG_TextMsg(AG_MSG_ERROR, _("Already connected to a server."));
 		goto out1;
 	}
 
-	textbox_copy_string(hosttb, host, sizeof(host));
-	textbox_copy_string(porttb, port, sizeof(port));
+	AG_TextboxCopyString(hosttb, host, sizeof(host));
+	AG_TextboxCopyString(porttb, port, sizeof(port));
 
 	if (host[0] == '\0' || port[0] == '\0') {
-		text_msg(MSG_ERROR, _("Missing server hostname/port."));
+		AG_TextMsg(AG_MSG_ERROR, _("Missing server hostname/port."));
 		goto out1;
 	}
 
@@ -200,7 +200,7 @@ screenshot_connect(int argc, union evarg *argv)
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
-		text_msg(MSG_ERROR, "%s: %s", host,
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
 		snprintf(status, sizeof(status), "%s", gai_strerror(rv));
 		goto out2;
@@ -222,7 +222,7 @@ screenshot_connect(int argc, union evarg *argv)
 		break;
 	}
 	if (sock == -1) {
-		text_msg(MSG_ERROR, "%s: %s", host, cause);
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host, cause);
 		snprintf(status, sizeof(status), "%s: %s", host, cause);
 		goto out2;
 	}
@@ -247,53 +247,53 @@ screenshot_disconnect(int argc, union evarg *argv)
 	snprintf(status, sizeof(status), _("Disconnected"));
 }
 
-struct window *
-screenshot_window(void)
+AG_Window *
+AG_DebugScreenshot(void)
 {
-	struct window *win;
-	struct vbox *vb;
-	struct hbox *hb;
-	struct label *lab;
-	struct spinbutton *sbu;
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_HBox *hb;
+	AG_Label *lab;
+	AG_Spinbutton *sbu;
 	
-	if ((win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE,
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_VRESIZE,
 	    "monitor-screenshot")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Screenshot"));
+	AG_WindowSetCaption(win, _("Screenshot"));
 
-	vb = vbox_new(win, VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
 		strlcpy(status, _("Idle"), sizeof(status));
-		lab = label_new(vb, LABEL_POLLED, _("Status: %s."), &status);
-		label_prescale(lab, _("Transmitting frame XXXXXXXXXXX"));
-		WIDGET(lab)->flags |= WIDGET_CLIPPING;
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED, _("Status: %s."), &status);
+		AG_LabelPrescale(lab, _("Transmitting frame XXXXXXXXXXX"));
+		AGWIDGET(lab)->flags |= AG_WIDGET_CLIPPING;
 
-		hosttb = textbox_new(vb, _("Host: "));
-		porttb = textbox_new(vb, _("Port: "));
+		hosttb = AG_TextboxNew(vb, _("Host: "));
+		porttb = AG_TextboxNew(vb, _("Port: "));
 
-		sbu = spinbutton_new(vb, _("Refresh rate (ms): "));
-		spinbutton_set_min(sbu, 1);
-		widget_bind_protected(sbu, "value", &xmit_lock, WIDGET_INT,
+		sbu = AG_SpinbuttonNew(vb, _("Refresh rate (ms): "));
+		AG_SpinbuttonSetMin(sbu, 1);
+		AG_WidgetBindMp(sbu, "value", &xmit_lock, AG_WIDGET_INT,
 		    &xmit_delay);
-		spinbutton_set_max(sbu, 10000);
+		AG_SpinbuttonSetMax(sbu, 10000);
 
-		textbox_printf(porttb, "%i", default_port);
+		AG_TextboxPrintf(porttb, "%i", default_port);
 	}
 
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL|AG_HBOX_HFILL);
 	{
-		struct event *ev;
-		struct button *bu;
+		AG_Event *ev;
+		AG_Button *bu;
 
-		bu = button_new(hb, _("Connect"));
-		ev = event_new(bu, "button-pushed", screenshot_connect, NULL);
-		ev->flags |= EVENT_ASYNC;
+		bu = AG_ButtonNew(hb, _("Connect"));
+		ev = AG_SetEvent(bu, "button-pushed", screenshot_connect, NULL);
+		ev->flags |= AG_EVENT_ASYNC;
 		
-		bu = button_new(hb, _("Disconnect"));
-		ev = event_new(bu, "button-pushed", screenshot_disconnect,
+		bu = AG_ButtonNew(hb, _("Disconnect"));
+		ev = AG_SetEvent(bu, "button-pushed", screenshot_disconnect,
 		    NULL);
-		ev->flags |= EVENT_ASYNC;
+		ev->flags |= AG_EVENT_ASYNC;
 	}
 	return (win);
 }

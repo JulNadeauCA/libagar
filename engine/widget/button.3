@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.24 2005/01/11 07:41:45 vedge Exp $
+.\"	$Csoft: button.3,v 1.25 2005/01/30 05:39:11 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,52 +44,52 @@ widget implements a simple push-button containing a string of text or
 an image.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_ObjectAttach 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct button *"
-.Fn button_new "void *parent" "char *caption"
+.Ft "AG_Button *"
+.Fn AG_ButtonNew "void *parent" "char *caption"
 .Pp
 .Ft void
-.Fn button_init "struct button *button" "char *caption"
+.Fn AG_ButtonInit "AG_Button *button" "char *caption"
 .Pp
 .Ft void
-.Fn button_enable "struct button *button"
+.Fn AG_ButtonEnable "AG_Button *button"
 .Pp
 .Ft void
-.Fn button_disable "struct button *button"
+.Fn AG_ButtonDisable "AG_Button *button"
 .Pp
 .Ft void
-.Fn button_set_padding "struct button *button" "int padding"
+.Fn AG_ButtonSetPadding "AG_Button *button" "int padding"
 .Pp
 .Ft void
-.Fn button_set_focusable "struct button *button" "int focusable"
+.Fn AG_ButtonSetFocusable "AG_Button *button" "int focusable"
 .Pp
 .Ft void
-.Fn button_set_sticky "struct button *button" "int sticky"
+.Fn AG_ButtonSetSticky "AG_Button *button" "int sticky"
 .Pp
 .Ft void
-.Fn button_set_justify "struct button *button" "enum button_justify jus"
+.Fn AG_ButtonSetJustification "AG_Button *button" "enum ag_button_justify jus"
 .Pp
 .Ft void
-.Fn button_set_label "struct button *button" "SDL_Surface *su"
+.Fn AG_ButtonSetSurface "AG_Button *button" "SDL_Surface *su"
 .Pp
 .Ft void
-.Fn button_set_repeat "struct button *button" "int repeat_flag"
+.Fn AG_ButtonSetRepeatMode "AG_Button *button" "int repeat_flag"
 .Pp
 .Ft void
-.Fn button_printf "struct button *button" "const char *fmt" "..."
+.Fn AG_ButtonPrintf "AG_Button *button" "const char *fmt" "..."
 .nr nS 0
 .Pp
 The
-.Fn button_new
+.Fn AG_ButtonNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn button_init
+.Fn AG_ButtonInit
 function initializes a
 .Nm
 widget displaying
@@ -97,24 +97,24 @@ widget displaying
 unless it is NULL.
 .Pp
 The
-.Fn button_enable
+.Fn AG_ButtonEnable
 and
-.Fn button_disable
+.Fn AG_ButtonDisable
 functions trigger the sensitivity of the
 .Nm
 widget.
 .Pp
 The
-.Fn button_set_padding
+.Fn AG_ButtonSetPadding
 function sets the padding around the label in pixels.
 .Pp
 The
-.Fn button_set_focusable
+.Fn AG_ButtonSetFocusable
 function with an argument of 0 prevents the button from gaining focus.
 The default is to allow buttons to gain focus.
 .Pp
 The
-.Fn button_set_sticky
+.Fn AG_ButtonSetSticky
 function with an argument of 1 arranges for the button to trigger its state
 only on reception of
 .Fn window-mousebuttondown
@@ -124,25 +124,25 @@ By default,
 events reset the state to 0.
 .Pp
 The
-.Fn button_set_justify
+.Fn AG_ButtonSetJustification
 function controls the label justification setting:
 .Pp
 .Bd -literal
-enum button_justify {
-	BUTTON_LEFT,
-	BUTTON_CENTER,
-	BUTTON_RIGHT
+enum ag_button_justify {
+	AG_BUTTON_LEFT,
+	AG_BUTTON_CENTER,
+	AG_BUTTON_RIGHT
 };
 .Ed
 .Pp
 The
-.Fn button_set_label
+.Fn AG_ButtonSetSurface
 and
-.Fn button_printf
+.Fn AG_ButtonPrintf
 functions are used to modify the button label.
 .Pp
 The
-.Fn button_set_repeat
+.Fn AG_ButtonSetRepeatMode
 flag enables or disables repeat mode.
 Repeat mode causes multiple
 .Sq button-pushed
@@ -178,7 +178,7 @@ The button was pressed.
 The
 .Fa new_state
 argument is useful in conjunction with the
-.Dv BUTTON_STICKY
+.Dv AG_BUTTON_STICKY
 flag.
 .It Fn button-mouseoverlap "int overlap"
 The mouse cursor has entered/exited the button area.
@@ -204,15 +204,15 @@ hello(int argc, union evarg *argv)
 {
 	char *s = argv[1].s;
 
-	text_msg(MSG_INFO, "Hello, %s!", s);
+	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
 }
  
 .Li ...
 
-struct button *btn;
+AG_Button *btn;
 
-btn = button_new(parent, "Hello");
-event_new(btn, "button-pushed", hello, "%s", "world");
+btn = AG_ButtonNew(parent, "Hello");
+AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
 .Ed
 .Sh SEE ALSO
 .Xr agar 3 ,
@@ -224,6 +224,6 @@ The
 widget first appeared in Agar 1.0.
 .Sh BUGS
 A more general interface may be preferable to
-.Fn button_enable
+.Fn AG_ButtonEnable
 and
-.Fn button_disable .
+.Fn AG_ButtonDisable .

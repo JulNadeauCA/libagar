@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.62 2005/05/29 05:50:00 vedge Exp $
+.\"	$Csoft: widget.3,v 1.63 2005/05/31 01:31:42 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -74,16 +74,16 @@ The behavior is undefined if one attempts to attach children to such widgets.
 .El
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn widget_init "void *widget, const char *type, const void *widget_ops" "int flags"
+.Fn AG_WidgetInit "void *widget, const char *type, const void *widget_ops" "int flags"
 .nr nS 0
 .Pp
 The
-.Fn widget_init
+.Fn AG_WidgetInit
 function initializes a generic
 .Nm
 structure.
@@ -92,48 +92,48 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define WIDGET_FOCUSABLE          0x01  /* Able to grab focus */
-#define WIDGET_FOCUSED            0x02  /* Holds focus (optimization) */
-#define WIDGET_UNFOCUSED_MOTION   0x04  /* Unfocused mousemotion */
-#define WIDGET_UNFOCUSED_BUTTONUP 0x08  /* Unfocused mousebuttonup */
-#define WIDGET_CLIPPING           0x10  /* Enable clipping */
-#define WIDGET_WFILL              0x20  /* Fill available width */
-#define WIDGET_HFILL              0x40  /* Fill available height */
+#define AG_WIDGET_FOCUSABLE          0x01  /* Able to grab focus */
+#define AG_WIDGET_FOCUSED            0x02  /* Holds focus (optimization) */
+#define AG_WIDGET_UNFOCUSED_MOTION   0x04  /* Unfocused mousemotion */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP 0x08  /* Unfocused mousebuttonup */
+#define AG_WIDGET_CLIPPING           0x10  /* Enable clipping */
+#define AG_WIDGET_WFILL              0x20  /* Fill available width */
+#define AG_WIDGET_HFILL              0x40  /* Fill available height */
 .Ed
 .Pp
 Only widgets with the
-.Dv WIDGET_FOCUSABLE
+.Dv AG_WIDGET_FOCUSABLE
 flag are able to gain keyboard and mousemotion focus.
 If the flags
-.Dv WIDGET_UNFOCUSED_MOTION
+.Dv AG_WIDGET_UNFOCUSED_MOTION
 and
-.Dv WIDGET_UNFOCUSED_BUTTONUP
+.Dv AG_WIDGET_UNFOCUSED_BUTTONUP
 are set, the widget will always receive
 .Sq window-mousemotion
 and
 .Sq window-mousebuttonup
 events, even if it's not holding focus.
 .Pp
-.Dv WIDGET_CLIPPING
+.Dv AG_WIDGET_CLIPPING
 arranges for a clipping rectangle (as set by
 .Xr SDL_SetClipRect 3 )
 to surround the widget area for the duration of the draw operation.
 .Pp
 The
-.Dv WIDGET_WFILL
+.Dv AG_WIDGET_WFILL
 and
-.Dv WIDGET_HFILL
+.Dv AG_WIDGET_HFILL
 flags indicate to container widgets that the widget wishes to allocate the
 remaining width or height inside the container area.
 .Pp
 The
 .Fa widget_ops
 argument to
-.Fn widget_init
+.Fn AG_WidgetInit
 is a pointer to the following structure:
 .Bd -literal
-struct widget_ops {
-	const struct object_ops obops;          /* Generic object(3) ops */
+AG_WidgetOps {
+	const AG_ObjectOps ops;                 /* Generic AG_Object(3) ops */
 	void (*draw)(void *p);                  /* Rendering routine */
 	void (*scale)(void *p, int w, int h);   /* Size request routine */
 };
@@ -171,19 +171,19 @@ parent container.
 .Sh FOCUS STATE
 .nr nS 1
 .Ft "int"
-.Fn widget_holds_focus "void *widget"
+.Fn AG_WidgetHoldsFocus "void *widget"
 .Pp
 .Ft "void"
-.Fn widget_focus "void *widget"
+.Fn AG_WidgetFocus "void *widget"
 .nr nS 0
 .Pp
 The
-.Fn widget_holds_focus
+.Fn AG_WidgetHoldsFocus
 function returns 1 if a widget (as well as its parents) holds the keyboard
 and mousemotion focus.
 .Pp
 The
-.Fn widget_focus
+.Fn AG_WidgetFocus
 function moves the keyboard/mousemotion focus over the given widget
 (and its parents).
 .Pp
@@ -202,20 +202,20 @@ macro may be used to determine the focus state of a given window.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
-.Fn widget_area "void *widget" "int x" "int y"
+.Fn AG_WidgetArea "void *widget" "int x" "int y"
 .Pp
 .Ft int
-.Fn widget_relative_area "void *widget" "int x" "int y"
+.Fn AG_WidgetRelativeArea "void *widget" "int x" "int y"
 .nr nS 0
 .Pp
 The
-.Fn widget_area
+.Fn AG_WidgetArea
 function returns 1 if absolute view coordinates
 .Fa x
 and
 .Fa y
 are inside the area allocated by the widget.
-.Fn widget_relative_area
+.Fn AG_WidgetRelativeArea
 evaluates to 1 if widget-relative view coordinates
 .Fa x
 and
@@ -228,8 +228,8 @@ operation, if not NULL, is expected to render the given widget and its
 children to the video display.
 .Pp
 The
-.Fn primitives.*
-functions are 2D primitives (and some higher-level drawing routines)
+.Fn agPrim.*
+functions are 2D agPrim (and some higher-level drawing routines)
 specially designed for widgets.
 For a more general vector graphics API, look into OpenGL or
 Agar's
@@ -237,7 +237,7 @@ Agar's
 library.
 .Pp
 The coordinates for the
-.Fn primitives.*
+.Fn agPrim.*
 functions are given in pixels and are
 relative to the parent (container) widget, and the
 .Fa ncolor
@@ -248,65 +248,65 @@ and
 .Fn widget_push_color ) .
 .Pp
 Primitive functions are members of the
-.Va primitives
+.Va agPrim
 structure since the underlying functions may be selected at run-time.
 For instance, appropriate OpenGL routines are substituted for the
-direct video primitives in OpenGL mode.
+direct video agPrim in OpenGL mode.
 .Pp
 .nr nS 1
 .Ft void
-.Fn widget_blit "void *widget" "SDL_Surface *src" "int x" "int y"
+.Fn AG_WidgetBlit "void *widget" "SDL_Surface *src" "int x" "int y"
 .Pp
 .Ft void
-.Fn widget_put_pixel "void *widget" "int x" "int y" "Uint32 color"
+.Fn AG_WidgetPutPixel "void *widget" "int x" "int y" "Uint32 color"
 .Pp
 .Ft void
-.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
+.Fn agPrim.box "void *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
+.Fn agPrim.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" "Uint32 c"
+.Fn agPrim.frame "void *widget" "int x" "int y" "int w" "int h" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.circle "void *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn agPrim.circle "void *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn agPrim.circle2 "void *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn agPrim.line "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn agPrim.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.hline "void *widget" "int x1" "int x2" "int y" "Uint32 c"
+.Fn agPrim.hline "void *widget" "int x1" "int x2" "int y" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.vline "void *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Fn agPrim.vline "void *widget" "int x" "int y1" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" "Uint32 c"
+.Fn agPrim.rect_outlined "void *widget, int x, int y, int w, int h" "Uint32 c"
 .Pp
 .Ft void
-.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
+.Fn agPrim.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
 .nr nS 0
 .Pp
 The
-.Fn widget_blit
+.Fn AG_WidgetBlit
 function performs a surface blit from
 .Fa src
 to the video display at the given widget coordinates.
 .Pp
 The
-.Fn widget_put_pixel
+.Fn AG_WidgetPutPixel
 function writes a pixel of value
 .Fa color
 at the given widget coordinates, without checking the clipping rectangle.
 .Pp
-.Fn primitives.box
+.Fn agPrim.box
 draws a 3D-style box of size
 .Fa w ,
 .Fa h ,
@@ -319,12 +319,12 @@ variant draws a 3D-style box with the two top edges chamfered to the
 given
 .Fa radius .
 .Pp
-.Fn primitives.frame
+.Fn agPrim.frame
 draws a 3D-style frame of size
 .Fa w ,
 .Fa h .
 .Pp
-.Fn primitives.circle
+.Fn agPrim.circle
 draws a circle with the origin at
 .Fa x ,
 .Fa y
@@ -332,7 +332,7 @@ and a radius of
 .Fa radius
 pixels.
 .Pp
-.Fn primitives.line
+.Fn agPrim.line
 scan-converts a line segment going from point
 .Fa x1 ,
 .Fa y1
@@ -340,19 +340,19 @@ to point
 .Fa x2 ,
 .Fa y2 .
 The variants
-.Fn primitives.hline
+.Fn agPrim.hline
 and
-.Fn primitives.vline
+.Fn agPrim.vline
 render horizontal and vertical line segments, respectively.
-.Fn primitives.line2
+.Fn agPrim.line2
 renders two line segments of different intensities.
 .Pp
-.Fn primitives.rect_outlined
+.Fn agPrim.rect_outlined
 draws a rectangle outline of
 .Fa w ,
 .Fa h .
 .Pp
-.Fn primitives.rect_filled
+.Fn agPrim.rect_filled
 draws a filled rectangle of size
 .Fa w ,
 .Fa h .
@@ -373,147 +373,147 @@ and
 as bindings to integral or floating point values and
 .Xr textbox 3
 is associated with a binding of type
-.Dv WIDGET_STRING .
+.Dv AG_WIDGET_STRING .
 Whenever the variable changes, the value displayed by the widget is
 updated automatically.
 The widget also writes directly to the variable.
 .Pp
 All widgets provide default bindings, which point to data allocated and
 initialized by the widget itself.
-.Fn widget_bind
+.Fn AG_WidgetBind
 is called to override those default bindings.
 .nr nS 1
-.Ft "struct widget_binding *"
-.Fn widget_bind "void *widget, const char *binding" "enum widget_binding_type type, ..."
+.Ft "AG_WidgetBinding *"
+.Fn AG_WidgetBind "void *widget, const char *binding" "enum ag_widget_binding_type type, ..."
 .Pp
-.Ft "struct widget_binding *"
-.Fn widget_get_binding "void *widget" "const char *binding" "void *res"
+.Ft "AG_WidgetBinding *"
+.Fn AG_WidgetGetBinding "void *widget" "const char *binding" "void *res"
 .Pp
 .Ft "int"
-.Fn widget_copy_binding "void *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
+.Fn AG_WidgetCopyBinding "void *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
 .Pp
 .Ft void
-.Fn widget_binding_lock "struct widget_binding *binding"
+.Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
 .Pp
 .Ft void
-.Fn widget_binding_unlock "struct widget_binding *binding"
+.Fn AG_WidgetUnlockBinding "AG_WidgetBinding *binding"
 .Pp
 .Ft int
-.Fn widget_get_bool "void *widget" "const char *binding"
+.Fn AG_WidgetBool "void *widget" "const char *binding"
 .Pp
 .Ft int
-.Fn widget_get_int "void *widget" "const char *binding"
+.Fn AG_WidgetInt "void *widget" "const char *binding"
 .Pp
 .Ft "u_int"
-.Fn widget_get_uint "void *widget" "const char *binding"
+.Fn AG_WidgetUint "void *widget" "const char *binding"
 .Pp
 .Ft Uint8
-.Fn widget_get_uint8 "void *widget" "const char *binding"
+.Fn AG_WidgetUint8 "void *widget" "const char *binding"
 .Pp
 .Ft Sint8
-.Fn widget_get_sint8 "void *widget" "const char *binding"
+.Fn AG_WidgetSint8 "void *widget" "const char *binding"
 .Pp
 .Ft Uint16
-.Fn widget_get_uint16 "void *widget" "const char *binding"
+.Fn AG_WidgetUint16 "void *widget" "const char *binding"
 .Pp
 .Ft Sint16
-.Fn widget_get_sint16 "void *widget" "const char *binding"
+.Fn AG_WidgetSint16 "void *widget" "const char *binding"
 .Pp
 .Ft Uint32
-.Fn widget_get_uint32 "void *widget" "const char *binding"
+.Fn AG_WidgetUint32 "void *widget" "const char *binding"
 .Pp
 .Ft Sint32
-.Fn widget_get_sint32 "void *widget" "const char *binding"
+.Fn AG_WidgetSint32 "void *widget" "const char *binding"
 .Pp
 .Ft float
-.Fn widget_get_float "void *widget" "const char *binding"
+.Fn AG_WidgetFloat "void *widget" "const char *binding"
 .Pp
 .Ft double
-.Fn widget_get_double "void *widget" "const char *binding"
+.Fn AG_WidgetDouble "void *widget" "const char *binding"
 .Pp
 .Ft "char *"
-.Fn widget_get_string "void *widget" "const char *binding"
+.Fn AG_WidgetString "void *widget" "const char *binding"
 .Pp
 .Ft size_t
-.Fn widget_copy_string "void *widget, const char *binding, char *dst" \
+.Fn AG_WidgetCopyString "void *widget, const char *binding, char *dst" \
                        "size_t dst_size"
 .Pp
 .Ft void
-.Fn widget_set_bool "void *widget" "const char *binding" "int i"
+.Fn AG_WidgetSetBool "void *widget" "const char *binding" "int i"
 .Pp
 .Ft void
-.Fn widget_set_int "void *widget" "const char *binding" "int i"
+.Fn AG_WidgetSetInt "void *widget" "const char *binding" "int i"
 .Pp
 .Ft void
-.Fn widget_set_uint "void *widget" "const char *binding" "u_int i"
+.Fn AG_WidgetSetUint "void *widget" "const char *binding" "u_int i"
 .Pp
 .Ft void
-.Fn widget_set_uint8 "void *widget" "const char *binding" "Uint8 u8"
+.Fn AG_WidgetSetUint8 "void *widget" "const char *binding" "Uint8 u8"
 .Pp
 .Ft void
-.Fn widget_set_sint8 "void *widget" "const char *binding" "Sint8 u8"
+.Fn AG_WidgetSetSint8 "void *widget" "const char *binding" "Sint8 u8"
 .Pp
 .Ft void
-.Fn widget_set_uint16 "void *widget" "const char *binding" "Uint16 u16"
+.Fn AG_WidgetSetUint16 "void *widget" "const char *binding" "Uint16 u16"
 .Pp
 .Ft void
-.Fn widget_set_sint16 "void *widget" "const char *binding" "Sint16 u16"
+.Fn AG_WidgetSetSint16 "void *widget" "const char *binding" "Sint16 u16"
 .Pp
 .Ft void
-.Fn widget_set_uint32 "void *widget" "const char *binding" "Uint32 u32"
+.Fn AG_WidgetSetUint32 "void *widget" "const char *binding" "Uint32 u32"
 .Pp
 .Ft void
-.Fn widget_set_sint32 "void *widget" "const char *binding" "Sint32 u32"
+.Fn AG_WidgetSetSint32 "void *widget" "const char *binding" "Sint32 u32"
 .Pp
 .Ft void
-.Fn widget_set_float "void *widget" "const char *binding" "float f"
+.Fn AG_WidgetSetFloat "void *widget" "const char *binding" "float f"
 .Pp
 .Ft void
-.Fn widget_set_double "void *widget" "const char *binding" "double d"
+.Fn AG_WidgetSetDouble "void *widget" "const char *binding" "double d"
 .Pp
 .Ft void
-.Fn widget_set_string "void *widget" "const char *binding" "const char *s"
+.Fn AG_WidgetSetString "void *widget" "const char *binding" "const char *s"
 .Pp
 .nr nS 0
 The
-.Fn widget_bind
+.Fn AG_WidgetBind
 function either overrides or creates a new binding.
 Correct values for the
 .Fa type
 argument include:
 .Bd -literal
-enum widget_binding_type {
-	WIDGET_NONE,
-	WIDGET_BOOL,
-	WIDGET_UINT,
-	WIDGET_INT,
-	WIDGET_UINT8,
-	WIDGET_SINT8,
-	WIDGET_UINT16,
-	WIDGET_SINT16,
-	WIDGET_UINT32,
-	WIDGET_SINT32,
-	WIDGET_FLOAT,
-	WIDGET_DOUBLE,
-	WIDGET_STRING,
-	WIDGET_PROP
+enum ag_widget_binding_type {
+	AG_WIDGET_NONE,
+	AG_WIDGET_BOOL,
+	AG_WIDGET_UINT,
+	AG_WIDGET_INT,
+	AG_WIDGET_UINT8,
+	AG_WIDGET_SINT8,
+	AG_WIDGET_UINT16,
+	AG_WIDGET_SINT16,
+	AG_WIDGET_UINT32,
+	AG_WIDGET_SINT32,
+	AG_WIDGET_FLOAT,
+	AG_WIDGET_DOUBLE,
+	AG_WIDGET_STRING,
+	AG_WIDGET_PROP
 }
 .Ed
 .Pp
 The meaning of the following arguments depend on the type:
-.Bl -tag -width "WIDGET_STRING "
-.It WIDGET_PROP
+.Bl -tag -width "AG_WIDGET_STRING "
+.It AG_WIDGET_PROP
 Translate a
 .Xr prop 3
 value transparently.
 .Pp
-.Bl -tag -width "struct object *obj " -compact
-.It "struct object *obj"
+.Bl -tag -width "const char *key " -compact
+.It "AG_Object *obj"
 Object holding the property.
 .It "const char *key"
 Property key.
 .El
-.It WIDGET_STRING
+.It AG_WIDGET_STRING
 Fixed-size, NUL-terminated string.
 .Pp
 .Bl -tag -width "pthread_mutex_t *lock " -compact
@@ -543,16 +543,16 @@ Pointer to the data.
 .El
 .Pp
 The
-.Fn widget_get_binding
+.Fn AG_WidgetGetBinding
 function returns a matching binding (locked), or NULL if none was found.
 If a binding was found, a pointer to it is written in the
 .Fa res
 argument.
-.Fn widget_binding_unlock
+.Fn AG_WidgetUnlockBinding
 should be called when done manipulating the data.
 .Pp
 The
-.Fn widget_copy_binding
+.Fn AG_WidgetCopyBinding
 function copies the data (ie. type, pointer values) of the binding
 .Fa src_binding
 to
@@ -567,9 +567,9 @@ and
 variants manipulate the bound values atomically.
 .Pp
 The
-.Fn widget_get_string
+.Fn AG_WidgetString
 function returns a copy of the string (or NULL on failure).
-.Fn widget_copy_string
+.Fn AG_WidgetCopyString
 copies up to
 .Fa dst_size
 - 1 bytes from the string to
@@ -602,7 +602,7 @@ The widget now holds focus inside its parent container.
 This event originates from the parent container object.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
-.It Fn widget-bound "struct widget_binding *binding"
+.It Fn widget-bound "AG_WidgetBinding *binding"
 A widget binding has been added or modified.
 .El
 .Sh SEE ALSO
@@ -618,7 +618,6 @@ A widget binding has been added or modified.
 .Xr hbox 3 ,
 .Xr label 3 ,
 .Xr mapview 3 ,
-.Xr palette 3 ,
 .Xr radio 3 ,
 .Xr scrollbar 3 ,
 .Xr spinbutton 3 ,

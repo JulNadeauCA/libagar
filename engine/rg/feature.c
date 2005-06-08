@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.9 2005/03/11 08:59:34 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.10 2005/04/14 06:19:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -42,11 +42,11 @@
 #include "tileview.h"
 
 void
-feature_init(void *p, struct tileset *ts, int flags,
-    const struct feature_ops *ops)
+AG_FeatureInit(void *p, RG_Tileset *ts, int flags,
+    const RG_FeatureOps *ops)
 {
-	struct feature *ft = p;
-	struct feature *oft;
+	RG_Feature *ft = p;
+	RG_Feature *oft;
 	u_int featno = 0;
 	
 tryname:
@@ -67,12 +67,12 @@ tryname:
 	TAILQ_INIT(&ft->pixmaps);
 }
 
-struct feature_sketch *
-feature_insert_sketch(struct feature *ft, struct sketch *sk)
+RG_FeatureSketch *
+RG_FeatureAddSketch(RG_Feature *ft, RG_Sketch *sk)
 {
-	struct feature_sketch *fsk;
+	RG_FeatureSketch *fsk;
 
-	fsk = Malloc(sizeof(struct feature_sketch), M_RG);
+	fsk = Malloc(sizeof(RG_FeatureSketch), M_RG);
 	fsk->sk = sk;
 	fsk->x = 0;
 	fsk->y = 0;
@@ -82,9 +82,9 @@ feature_insert_sketch(struct feature *ft, struct sketch *sk)
 }
 
 void
-feature_remove_sketch(struct feature *ft, struct sketch *sk)
+RG_FeatureDelSketch(RG_Feature *ft, RG_Sketch *sk)
 {
-	struct feature_sketch *fsk;
+	RG_FeatureSketch *fsk;
 
 	TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
 		if (fsk->sk == sk)
@@ -96,12 +96,12 @@ feature_remove_sketch(struct feature *ft, struct sketch *sk)
 	}
 }
 
-struct feature_pixmap *
-feature_insert_pixmap(struct feature *ft, struct pixmap *px)
+RG_FeaturePixmap *
+RG_FeatureAddPixmap(RG_Feature *ft, RG_Pixmap *px)
 {
-	struct feature_pixmap *fpx;
+	RG_FeaturePixmap *fpx;
 
-	fpx = Malloc(sizeof(struct feature_pixmap), M_RG);
+	fpx = Malloc(sizeof(RG_FeaturePixmap), M_RG);
 	fpx->px = px;
 	fpx->x = 0;
 	fpx->y = 0;
@@ -111,9 +111,9 @@ feature_insert_pixmap(struct feature *ft, struct pixmap *px)
 }
 
 void
-feature_remove_pixmap(struct feature *ft, struct pixmap *px)
+RG_FeatureDelPixmap(RG_Feature *ft, RG_Pixmap *px)
 {
-	struct feature_pixmap *fpx;
+	RG_FeaturePixmap *fpx;
 
 	TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
 		if (fpx->px == px)
@@ -126,10 +126,10 @@ feature_remove_pixmap(struct feature *ft, struct pixmap *px)
 }
 
 void
-feature_destroy(struct feature *ft)
+AG_FeatureDestroy(RG_Feature *ft)
 {
-	struct feature_sketch *fsk, *nfsk;
-	struct feature_pixmap *fpx, *nfpx;
+	RG_FeatureSketch *fsk, *nfsk;
+	RG_FeaturePixmap *fpx, *nfpx;
 
 #ifdef DEBUG
 	if (ft->nrefs > 0)
@@ -155,9 +155,9 @@ feature_destroy(struct feature *ft)
 }
 
 int
-feature_load(void *p, struct netbuf *buf)
+RG_FeatureLoad(void *p, AG_Netbuf *buf)
 {
-	struct feature *ft = p;
+	RG_Feature *ft = p;
 
 	if (ft->ops->load != NULL &&
 	    ft->ops->load(ft, buf) == -1) {
@@ -167,44 +167,44 @@ feature_load(void *p, struct netbuf *buf)
 }
 
 void
-feature_save(void *p, struct netbuf *buf)
+RG_FeatureSave(void *p, AG_Netbuf *buf)
 {
-	struct feature *ft = p;
+	RG_Feature *ft = p;
 
 	ft->ops->save(ft, buf);
 }
 
 void
-feature_open_menu(struct tileview *tv, int x, int y)
+RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	struct feature *ft = tv->tv_feature.ft;
+	RG_Feature *ft = tv->tv_feature.ft;
 	
 	if (tv->tv_feature.menu != NULL)
-		feature_close_menu(tv);
+		RG_FeatureCloseMenu(tv);
 
 	if (ft->ops->menu == NULL)
 		return;
 
-	tv->tv_feature.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	menu_init(tv->tv_feature.menu);
+	tv->tv_feature.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(tv->tv_feature.menu);
 
-	tv->tv_feature.menu_item = menu_add_item(tv->tv_feature.menu, NULL);
+	tv->tv_feature.menu_item = AG_MenuAddItem(tv->tv_feature.menu, NULL);
 	tv->tv_feature.menu->sel_item = tv->tv_feature.menu_item;
 
 	ft->ops->menu(ft, tv->tv_feature.menu_item);
 
-	tv->tv_feature.menu_win = menu_expand(tv->tv_feature.menu,
+	tv->tv_feature.menu_win = AG_MenuExpand(tv->tv_feature.menu,
 	    tv->tv_feature.menu_item, x, y);
 }
 
 void
-feature_close_menu(struct tileview *tv)
+RG_FeatureCloseMenu(RG_Tileview *tv)
 {
-	struct AGMenu *menu = tv->tv_feature.menu;
-	struct AGMenuItem *item = tv->tv_feature.menu_item;
+	AG_Menu *menu = tv->tv_feature.menu;
+	AG_MenuItem *item = tv->tv_feature.menu_item;
 
-	menu_collapse(menu, item);
-	object_destroy(menu);
+	AG_MenuCollapse(menu, item);
+	AG_ObjectDestroy(menu);
 	Free(menu, M_OBJECT);
 
 	tv->tv_feature.menu = NULL;

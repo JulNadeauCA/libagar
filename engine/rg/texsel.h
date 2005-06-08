@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.h,v 1.10 2005/05/24 08:12:48 vedge Exp $	*/
+/*	$Csoft: texsel.h,v 1.1 2005/05/28 08:39:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TEXSEL_H_
@@ -11,18 +11,19 @@
 
 #include "begin_code.h"
 
-struct texsel {
-	struct tlist tl;		/* Superclass */
-	struct tileset *tset;		/* Attached tileset */
-	char texname[TEXTURE_NAME_MAX];	/* Default texture name binding */
+typedef struct rg_texture_selector {
+	AG_Tlist tl;		/* Superclass */
+	RG_Tileset *tset;		/* Attached tileset */
+	char texname[RG_TEXTURE_NAME_MAX];	/* Default texture name binding */
 	int flags;
-};
+} RG_TextureSelector;
 
 __BEGIN_DECLS
-struct texsel *texsel_new(void *, struct tileset *, int);
-void texsel_init(struct texsel *, struct tileset *, int);
-void texsel_scale(void *, int, int);
-void texsel_destroy(void *);
+RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, int);
+void 		    RG_TextureSelectorInit(RG_TextureSelector *,
+		                           RG_Tileset *, int);
+void 		    RG_TextureSelectorScale(void *, int, int);
+void		    RG_TextureSelectorDestroy(void *);
 __END_DECLS
 
 #include "close_code.h"

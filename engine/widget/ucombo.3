@@ -1,4 +1,4 @@
-.\"	$Csoft: ucombo.3,v 1.3 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: ucombo.3,v 1.4 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -54,24 +54,24 @@ structure.
 .Pp
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Objet 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct ucombo *"
-.Fn ucombo_new "void *parent"
+.Ft "AG_UCombo *"
+.Fn AG_UComboNew "void *parent"
 .Pp
 .Ft "void"
-.Fn ucombo_init "struct ucombo *com"
+.Fn AG_UComboInit "AG_UCombo *com"
 .nr nS 0
 .Pp
 The
-.Fn ucombo_new
+.Fn AG_UComboNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn ucombo_init
+.Fn AG_UComboInit
 initializes a
 .Nm
 widget.
@@ -81,7 +81,7 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
-.It Fn ucombo-selected "struct tlist_item *item"
+.It Fn ucombo-selected "AG_TlistItem *item"
 An item was selected.
 .El
 .Sh SEE ALSO

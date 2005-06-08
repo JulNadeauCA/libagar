@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ortho.c,v 1.2 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_ortho.c,v 1.3 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #include "vg_primitive.h"
 
 void
-vg_ortho_restrict(struct vg *vg, double *x, double *y)
+VG_RestrictOrtho(VG *vg, double *x, double *y)
 {
 	switch (vg->ortho_mode) {
 	case VG_HORIZ_ORTHO:
@@ -49,7 +49,7 @@ vg_ortho_restrict(struct vg *vg, double *x, double *y)
 }
 
 void
-vg_ortho_mode(struct vg *vg, enum vg_ortho_mode mode)
+VG_OrthoRestrictMode(VG *vg, enum vg_ortho_mode mode)
 {
 	vg->ortho_mode = mode;
 }
@@ -57,28 +57,28 @@ vg_ortho_mode(struct vg *vg, enum vg_ortho_mode mode)
 static void
 select_mode(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
-	struct toolbar *tbar = argv[1].p;
-	struct vg *vg = argv[2].p;
+	AG_Button *bu = argv[0].p;
+	AG_Toolbar *tbar = argv[1].p;
+	VG *vg = argv[2].p;
 	int ortho_mode = argv[3].i;
 
-	toolbar_select_unique(tbar, bu);
-	vg_ortho_mode(vg, ortho_mode);
+	AG_ToolbarSelectUnique(tbar, bu);
+	VG_OrthoRestrictMode(vg, ortho_mode);
 }
 
-struct toolbar *
-vg_ortho_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
+AG_Toolbar *
+VG_OrthoRestrictToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 {
-	struct toolbar *snbar;
-	struct button *bu;
+	AG_Toolbar *snbar;
+	AG_Button *bu;
 
-	snbar = toolbar_new(parent, ttype, 1, TOOLBAR_HOMOGENOUS);
-	bu = toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS);
+	bu = AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_NO_ORTHO);
-	widget_set_int(bu, "state", 1);
-	toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+	AG_WidgetSetInt(bu, "state", 1);
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_HORIZ_ORTHO);
-	toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_VERT_ORTHO);
 
 	return (snbar);

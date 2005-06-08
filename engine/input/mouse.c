@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.12 2005/05/08 11:17:56 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.13 2005/05/08 11:19:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,24 +32,14 @@
 
 #include <engine/map/map.h>
 
-int mouse_dblclick_delay = 250;		/* Mouse double-click delay */
-int mouse_spin_delay = 250;		/* Spinbutton repeat delay */
-int mouse_spin_ival = 50;		/* Spinbutton repeat interval */
-
-static int mouse_match(const void *, const SDL_Event *);
-static void mouse_event(void *, const SDL_Event *);
-
-const struct input_driver mouse_driver = {
-	N_("Mouse"),
-	NULL,
-	mouse_match,
-	mouse_event
-};
+int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
+int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
+int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
 
 static int
-mouse_match(const void *p, const SDL_Event *ev)
+match(const void *p, const SDL_Event *ev)
 {
-	const struct mouse *ms = p;
+	const AG_Mouse *ms = p;
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
@@ -68,67 +58,41 @@ mouse_match(const void *p, const SDL_Event *ev)
 }
 
 static void
-mouse_event(void *p, const SDL_Event *ev)
+proc_event(void *p, const SDL_Event *ev)
 {
-#if 0
-	struct input *in = p;
-	static int lastdir = 0;
-
-	/* XXX map ... */
-	switch (ev->jaxis.axis) {
-	case 0:	/* X */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_W;
-			lastdir &= ~(DIR_E);
-			mapdir_set(&in->pos->dir, DIR_W);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_E;
-			lastdir &= ~(DIR_W);
-			mapdir_set(&in->pos->dir, DIR_E);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	case 1:	/* Y */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_N;
-			lastdir &= ~(DIR_S);
-			mapdir_set(&in->pos->dir, DIR_N);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_S;
-			lastdir &= ~(DIR_N);
-			mapdir_set(&in->pos->dir, DIR_S);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	}
-#endif
+	/* TODO */
 }
 
-struct mouse *
-mouse_new(int index)
+AG_Mouse *
+AG_MouseNew(int index)
 {
-	char name[INPUT_NAME_MAX];
-	struct mouse *ms;
+	char name[AG_INPUT_NAME_MAX];
+	AG_Mouse *ms;
 
-	ms = Malloc(sizeof(struct mouse), M_INPUT);
+	ms = Malloc(sizeof(AG_Mouse), M_INPUT);
 	ms->index = index;
 	snprintf(name, sizeof(name), "mouse%d", index);
-	input_register(ms, INPUT_MOUSE, name, &mouse_driver);
+	AG_InputSet(ms, AG_INPUT_MOUSE, name, &agMouseOps);
 	return (ms);
 }
 
 Uint8
-mouse_get_state(int *x, int *y)
+AG_MouseGetState(int *x, int *y)
 {
 	Uint8 rv;
 
 	rv = SDL_GetMouseState(x, y);
 #if defined(__APPLE__) && defined(HAVE_OPENGL)
-	if (view->opengl && y != NULL)
-		*y = view->h - *y;
+	if (agView->opengl && y != NULL)
+		*y = agView->h - *y;
 #endif
 	return (rv);
 }
+
+const AG_InputOps agMouseOps = {
+	N_("Mouse"),
+	NULL,
+	match,
+	proc_event
+};
 

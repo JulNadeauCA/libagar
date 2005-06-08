@@ -1,4 +1,4 @@
-.\"	$Csoft: scrollbar.3,v 1.12 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: scrollbar.3,v 1.13 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,42 +43,42 @@ The
 widget represents a single value inside a fixed range.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct scrollbar *"
-.Fn scrollbar_new "void *parent" "enum scrollbar_type type"
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNew "void *parent" "enum ag_scrollbar_type type"
 .Pp
 .Ft void
-.Fn scrollbar_init "struct scrollbar *scrollbar" "enum scrollbar_type type"
+.Fn AG_ScrollbarInit "AG_Scrollbar *scrollbar" "enum ag_scrollbar_type type"
 .Pp
 .Ft void
-.Fn scrollbar_set_bar_size "struct scrollbar *scrollbar" "int size"
+.Fn AG_ScrollbarSetBarSize "AG_Scrollbar *scrollbar" "int size"
 .Pp
 .Ft void
-.Fn scrollbar_get_bar_size "struct scrollbar *scrollbar" "int *sizep"
+.Fn AG_ScrollbarGetBarSize "AG_Scrollbar *scrollbar" "int *sizep"
 .Pp
 .nr nS 0
 The
-.Fn scrollbar_new
+.Fn AG_ScrollbarNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn scrollbar_init
+.Fn AG_ScrollbarInit
 initializes a
 .Nm
 widget of the given type:
 .Bd -literal
-enum scrollbar_type {
-	SCROLLBAR_HORIZ,
-	SCROLLBAR_VERT
+enum ag_scrollbar_type {
+	AG_SCROLLBAR_HORIZ,
+	AG_SCROLLBAR_VERT
 };
 .Ed
 .Pp
 The
-.Fn scrollbar_set_bar_size
+.Fn AG_ScrollbarSetBarSize
 function sets the size of the scrollbar to
 .Fa size ,
 which is usually calculated from the visible area of whatever is being
@@ -86,7 +86,7 @@ scrolled (such as the number of visible items of a
 .Xr tlist 3
 widget or the amount nodes in the visible area of a
 .Xr map 3 ) .
-.Fn scrollbar_get_bar_size
+.Fn AG_ScrollbarGetBarSize
 returns the current size of the scrollbar in
 .Fa sizep .
 .Sh BINDINGS

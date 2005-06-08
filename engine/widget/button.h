@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.30 2004/09/12 05:51:44 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.31 2005/01/30 05:39:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -8,43 +8,43 @@
 
 #include "begin_code.h"
 
-enum button_justify {
-	BUTTON_LEFT,
-	BUTTON_CENTER,
-	BUTTON_RIGHT
+enum ag_button_justify {
+	AG_BUTTON_LEFT,
+	AG_BUTTON_CENTER,
+	AG_BUTTON_RIGHT
 };
 
-struct button {
-	struct widget wid;
+typedef struct ag_button {
+	struct ag_widget wid;
 	int state;			/* Default state binding */
-	enum button_justify justify;	/* Label justification */
+	enum ag_button_justify justify;	/* Label justification */
 	int flags;
-#define BUTTON_INSENSITIVE	0x01	/* Not responsive */
-#define BUTTON_STICKY		0x02	/* Toggle state */
-#define BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
-#define BUTTON_REPEAT		0x08	/* Send multiple button-pushed events */
+#define AG_BUTTON_INSENSITIVE	0x01	/* Not responsive */
+#define AG_BUTTON_STICKY	0x02	/* Toggle state */
+#define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
+#define AG_BUTTON_REPEAT	0x08	/* Send multiple button-pushed events */
 	int padding;			/* Padding in pixels */
-	struct timeout delay_to;	/* Delay for triggering repeat mode */
-	struct timeout repeat_to;	/* Timeout for repeat mode */
-};
+	AG_Timeout delay_to;		/* Delay for triggering repeat mode */
+	AG_Timeout repeat_to;		/* Timeout for repeat mode */
+} AG_Button;
 
 __BEGIN_DECLS
-struct button	*button_new(void *, const char *);
+AG_Button	*AG_ButtonNew(void *, const char *);
 
-void	 button_init(struct button *, const char *);
-void	 button_destroy(void *);
-void	 button_draw(void *);
-void	 button_scale(void *, int, int);
+void	 AG_ButtonInit(AG_Button *, const char *);
+void	 AG_ButtonDestroy(void *);
+void	 AG_ButtonDraw(void *);
+void	 AG_ButtonScale(void *, int, int);
 
-void	 button_enable(struct button *);
-void	 button_disable(struct button *);
-void	 button_set_padding(struct button *, int);
-void	 button_set_focusable(struct button *, int);
-void	 button_set_sticky(struct button *, int);
-void	 button_set_justify(struct button *, enum button_justify);
-void	 button_set_label(struct button *, SDL_Surface *);
-void	 button_set_repeat(struct button *, int);
-void	 button_printf(struct button *, const char *, ...)
+void	 AG_ButtonEnable(AG_Button *);
+void	 AG_ButtonDisable(AG_Button *);
+void	 AG_ButtonSetPadding(AG_Button *, int);
+void	 AG_ButtonSetFocusable(AG_Button *, int);
+void	 AG_ButtonSetSticky(AG_Button *, int);
+void	 AG_ButtonSetJustification(AG_Button *, enum ag_button_justify);
+void	 AG_ButtonSetSurface(AG_Button *, SDL_Surface *);
+void	 AG_ButtonSetRepeatMode(AG_Button *, int);
+void	 AG_ButtonPrintf(AG_Button *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
 __END_DECLS

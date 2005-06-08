@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.h,v 1.7 2004/05/31 07:25:24 vedge Exp $	*/
+/*	$Csoft: vg_block.h,v 1.8 2005/06/04 04:48:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_BLOCK_H_
@@ -10,36 +10,34 @@
 
 #define VG_BLOCK_NAME_MAX 128
 
-struct vg_block {
+typedef struct vg_block {
 	char name[VG_BLOCK_NAME_MAX];
 	int flags;
 #define VG_BLOCK_NOSAVE	0x01		/* Don't save with drawing */
-	struct vg_vertex pos;		/* Position in vg */
-	struct vg_vertex origin;	/* Internal block origin */
+	VG_Vtx pos;			/* Position in vg */
+	VG_Vtx origin;			/* Block origin */
 	double theta;			/* Angle of rotation */
 	int selected;
 	TAILQ_HEAD(,vg_element) vges;
 	TAILQ_ENTRY(vg_block) vgbs;
-};
+} VG_Block;
 
 __BEGIN_DECLS
-struct vg_block	  *vg_begin_block(struct vg *, const char *, int);
-__inline__ void	   vg_select_block(struct vg *, struct vg_block *);
-__inline__ void	   vg_end_block(struct vg *);
-struct vg_block	  *vg_get_block(struct vg *, const char *);
-void		   vg_move_block(struct vg *, struct vg_block *,
-		                 double, double, int);
-__inline__ void	   vg_block_theta(struct vg *, struct vg_block *, double);
-void		   vg_rotate_block(struct vg *, struct vg_block *, double);
-void		   vg_clear_block(struct vg *, struct vg_block *);
-void		   vg_destroy_block(struct vg *, struct vg_block *);
-void		   vg_block_offset(struct vg *, struct vg_vertex *);
-struct window	  *vg_block_editor(struct vg *);
-void		   vg_block_extent(struct vg *, struct vg_block *,
-	                           struct vg_rect *);
-__inline__ void	   vg_abs2rel(struct vg *, const struct vg_vertex *, double *,
-			      double *);
-__inline__ void	   vg_rel2abs(struct vg *, double, double, struct vg_vertex *);
+VG_Block	  *VG_BeginBlock(struct vg *, const char *, int);
+__inline__ void	   VG_SelectBlock(struct vg *, VG_Block *);
+__inline__ void	   VG_EndBlock(struct vg *);
+VG_Block	  *VG_GetBlock(struct vg *, const char *);
+void		   VG_MoveBlock(struct vg *, VG_Block *, double, double, int);
+__inline__ void	   VG_BlockTheta(struct vg *, VG_Block *, double);
+void		   VG_RotateBlock(struct vg *, VG_Block *, double);
+void		   VG_ClearBlock(struct vg *, VG_Block *);
+void		   VG_DestroyBlock(struct vg *, VG_Block *);
+void		   VG_BlockOffset(struct vg *, VG_Vtx *);
+AG_Window	  *VG_BlockEditor(struct vg *);
+void		   VG_BlockExtent(struct vg *, VG_Block *, VG_Rect *);
+__inline__ void	   VG_Abs2Rel(struct vg *, const VG_Vtx *, double *,
+		              double *);
+__inline__ void	   VG_Rel2Abs(struct vg *, double, double, VG_Vtx *);
 __END_DECLS
 
 #include "close_code.h"

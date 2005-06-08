@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.h,v 1.3 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg_snap.h,v 1.4 2004/10/06 04:56:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_SNAP_H_
@@ -21,15 +21,16 @@ enum vg_snap_mode {
 };
 
 __BEGIN_DECLS
-void		vg_snap_to(struct vg *, double *, double *);
-__inline__ void	vg_snap_mode(struct vg *, enum vg_snap_mode);
-__inline__ void	vg_draw_grid(struct vg *);
-struct toolbar *vg_snap_toolbar(void *, struct vg *, enum toolbar_type);
+void		 VG_SnapPoint(struct vg *, double *, double *);
+__inline__ void	 VG_SetSnapMode(struct vg *, enum vg_snap_mode);
+__inline__ void	 VG_DrawGrid(struct vg *);
+AG_Toolbar	*VG_SnapToolbar(void *, struct vg *, enum ag_toolbar_type);
 
 #ifdef EDITION
-struct AGMenu;
-struct AGMenuItem;
-void	vg_reg_snap_menu(struct AGMenu *, struct AGMenuItem *, struct vg *);
+struct ag_menu;
+struct ag_menu_item;
+
+void VG_SnapMenu(struct ag_menu *, struct ag_menu_item *, struct vg *);
 #endif
 __END_DECLS
 

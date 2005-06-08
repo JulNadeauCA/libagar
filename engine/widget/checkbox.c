@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.52 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.53 2005/05/13 09:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,22 +33,23 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/label.h>
 
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 
-static struct widget_ops checkbox_ops = {
+static AG_WidgetOps checkbox_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	checkbox_draw,
-	checkbox_scale
+	AG_CheckboxDraw,
+	AG_CheckboxScale
 };
 
 #define XSPACING 6
@@ -56,74 +57,74 @@ static struct widget_ops checkbox_ops = {
 static void checkbox_mousebutton(int , union evarg *);
 static void checkbox_keydown(int , union evarg *);
 
-struct checkbox *
-checkbox_new(void *parent, const char *fmt, ...)
+AG_Checkbox *
+AG_CheckboxNew(void *parent, const char *fmt, ...)
 {
-	char caption[CHECKBOX_CAPTION_MAX];
-	struct checkbox *cb;
+	char caption[AG_LABEL_MAX];
+	AG_Checkbox *cb;
 	va_list ap;
 
 	va_start(ap, fmt);
 	vsnprintf(caption, sizeof(caption), fmt, ap);
 	va_end(ap);
 
-	cb = Malloc(sizeof(struct checkbox), M_OBJECT);
-	checkbox_init(cb, caption);
-	object_attach(parent, cb);
+	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
+	AG_CheckboxInit(cb, caption);
+	AG_ObjectAttach(parent, cb);
 	return (cb);
 }
 
 void
-checkbox_init(struct checkbox *cbox, char *caption)
+AG_CheckboxInit(AG_Checkbox *cbox, char *caption)
 {
-	widget_init(cbox, "checkbox", &checkbox_ops, WIDGET_FOCUSABLE);
-	widget_bind(cbox, "state", WIDGET_BOOL, &cbox->state);
+	AG_WidgetInit(cbox, "checkbox", &checkbox_ops, AG_WIDGET_FOCUSABLE);
+	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;
-	cbox->label_su = text_render(NULL, -1, COLOR(CHECKBOX_TXT_COLOR),
+	cbox->label_su = AG_TextRender(NULL, -1, AG_COLOR(CHECKBOX_TXT_COLOR),
 	    caption);
-	cbox->label_id = widget_map_surface(cbox, cbox->label_su);
+	cbox->label_id = AG_WidgetMapSurface(cbox, cbox->label_su);
 	
-	event_new(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
-	event_new(cbox, "window-keydown", checkbox_keydown, NULL);
+	AG_SetEvent(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
+	AG_SetEvent(cbox, "window-keydown", checkbox_keydown, NULL);
 }
 
 void
-checkbox_draw(void *p)
+AG_CheckboxDraw(void *p)
 {
-	struct checkbox *cbox = p;
+	AG_Checkbox *cbox = p;
 
-	primitives.box(cbox,
+	agPrim.box(cbox,
 	    0, 0,
-	    WIDGET(cbox)->h, WIDGET(cbox)->h,
-	    widget_get_bool(cbox, "state") ? -1 : 1,
-	    COLOR(CHECKBOX_COLOR));
+	    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
+	    AG_WidgetBool(cbox, "state") ? -1 : 1,
+	    AG_COLOR(CHECKBOX_COLOR));
 
-	widget_blit_surface(cbox, cbox->label_id, WIDGET(cbox)->h+XSPACING, 0);
+	AG_WidgetBlitSurface(cbox, cbox->label_id, AGWIDGET(cbox)->h+XSPACING, 0);
 }
 
 static void
 checkbox_mousebutton(int argc, union evarg *argv)
 {
-	struct checkbox *cbox = argv[0].p;
+	AG_Checkbox *cbox = argv[0].p;
 	int button = argv[1].i;
 
-	widget_focus(cbox);
+	AG_WidgetFocus(cbox);
 
 	if (button == SDL_BUTTON(1))
-		checkbox_toggle(cbox);
+		AG_CheckboxToggle(cbox);
 }
 
 static void
 checkbox_keydown(int argc, union evarg *argv)
 {
-	struct checkbox *cbox = argv[0].p;
+	AG_Checkbox *cbox = argv[0].p;
 	SDLKey key = argv[1].i;
 
 	switch (key) {
 	case SDLK_RETURN:
 	case SDLK_SPACE:
-		checkbox_toggle(cbox);
+		AG_CheckboxToggle(cbox);
 		break;
 	default:
 		break;
@@ -131,27 +132,27 @@ checkbox_keydown(int argc, union evarg *argv)
 }
 
 void
-checkbox_scale(void *p, int rw, int rh)
+AG_CheckboxScale(void *p, int rw, int rh)
 {
-	struct checkbox *cb = p;
+	AG_Checkbox *cb = p;
 
 	if (rh == -1)
-		WIDGET(cb)->h = cb->label_su->h;
+		AGWIDGET(cb)->h = cb->label_su->h;
 	if (rw == -1)
-		WIDGET(cb)->w = WIDGET(cb)->h + XSPACING + cb->label_su->w;
+		AGWIDGET(cb)->w = AGWIDGET(cb)->h + XSPACING + cb->label_su->w;
 }
 
 /* Toggle the checkbox state. */
 void
-checkbox_toggle(struct checkbox *cbox)
+AG_CheckboxToggle(AG_Checkbox *cbox)
 {
-	struct widget_binding *stateb;
+	AG_WidgetBinding *stateb;
 	int *state;
 
-	stateb = widget_get_binding(cbox, "state", &state);
+	stateb = AG_WidgetGetBinding(cbox, "state", &state);
 	*state = !(*state);
-	event_post(NULL, cbox, "checkbox-changed", "%i", *state);
-	widget_binding_modified(stateb);
-	widget_binding_unlock(stateb);
+	AG_PostEvent(NULL, cbox, "checkbox-changed", "%i", *state);
+	AG_WidgetBindingChanged(stateb);
+	AG_WidgetUnlockBinding(stateb);
 }
 

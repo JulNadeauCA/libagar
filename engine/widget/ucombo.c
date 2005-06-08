@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.12 2005/03/05 12:15:10 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.13 2005/05/24 08:15:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,82 +35,82 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-static struct widget_ops ucombo_ops = {
+static AG_WidgetOps ucombo_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		ucombo_destroy,
+		AG_UComboDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
 	NULL,			/* draw */
-	ucombo_scale
+	AG_UComboScale
 };
 
-struct ucombo *
-ucombo_new(void *parent)
+AG_UCombo *
+AG_UComboNew(void *parent)
 {
-	struct ucombo *com;
+	AG_UCombo *com;
 
-	com = Malloc(sizeof(struct ucombo), M_OBJECT);
-	ucombo_init(com);
-	object_attach(parent, com);
+	com = Malloc(sizeof(AG_UCombo), M_OBJECT);
+	AG_UComboInit(com);
+	AG_ObjectAttach(parent, com);
 	return (com);
 }
 
 static void
-ucombo_collapse(struct ucombo *com)
+ucombo_collapse(AG_UCombo *com)
 {
-	struct widget_binding *stateb;
+	AG_WidgetBinding *stateb;
 	int *state;
 
 	if (com->panel == NULL)
 		return;
 
-	com->saved_w = WIDGET(com->panel)->w;
-	com->saved_h = WIDGET(com->panel)->h;
-	window_hide(com->panel);
-	object_detach(com->list);
-	view_detach(com->panel);
+	com->saved_w = AGWIDGET(com->panel)->w;
+	com->saved_h = AGWIDGET(com->panel)->h;
+	AG_WindowHide(com->panel);
+	AG_ObjectDetach(com->list);
+	AG_ViewDetach(com->panel);
 	com->panel = NULL;
 	
-	stateb = widget_get_binding(com->button, "state", &state);
+	stateb = AG_WidgetGetBinding(com->button, "state", &state);
 	*state = 0;
-	widget_binding_modified(stateb);
-	widget_binding_unlock(stateb);
+	AG_WidgetBindingChanged(stateb);
+	AG_WidgetUnlockBinding(stateb);
 }
 
 static void
 ucombo_expand(int argc, union evarg *argv)
 {
-	struct ucombo *com = argv[1].p;
+	AG_UCombo *com = argv[1].p;
 	int expand = argv[2].i;
-	struct widget *pan;
+	AG_Widget *pan;
 
 	if (expand) {
-		com->panel = window_new(WINDOW_NO_TITLEBAR|
-		                        WINDOW_NO_DECORATIONS, NULL);
-		pan = WIDGET(com->panel);
+		com->panel = AG_WindowNew(AG_WINDOW_NO_TITLEBAR|
+		                        AG_WINDOW_NO_DECORATIONS, NULL);
+		pan = AGWIDGET(com->panel);
 
-		object_attach(com->panel, com->list);
+		AG_ObjectAttach(com->panel, com->list);
 	
-		pan->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
-		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		pan->x = WIDGET(com)->cx;
-		pan->y = WIDGET(com)->cy;
+		pan->w = com->saved_w > 0 ? com->saved_w : AGWIDGET(com)->w*4;
+		pan->h = com->saved_h > 0 ? com->saved_h : AGWIDGET(com)->h*5;
+		pan->x = AGWIDGET(com)->cx;
+		pan->y = AGWIDGET(com)->cy;
 
 		/* XXX redundant check */
-		if (pan->x+pan->w > view->w)
-			pan->w = view->w - pan->x;
-		if (pan->y+pan->h > view->h)
-			pan->h = view->h - pan->y;
+		if (pan->x+pan->w > agView->w)
+			pan->w = agView->w - pan->x;
+		if (pan->y+pan->h > agView->h)
+			pan->h = agView->h - pan->y;
 		
-		tlist_prescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
-		WIDGET_SCALE(com->list, -1, -1);
-		WIDGET_SCALE(pan, -1, -1);
-		WINDOW_UPDATE(pan);
-		window_show(com->panel);
+		AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
+		AGWIDGET_SCALE(com->list, -1, -1);
+		AGWIDGET_SCALE(pan, -1, -1);
+		AG_WINDOW_UPDATE(pan);
+		AG_WindowShow(com->panel);
 	} else {
 		ucombo_collapse(com);
 	}
@@ -120,14 +120,14 @@ ucombo_expand(int argc, union evarg *argv)
 static void
 ucombo_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct ucombo *com = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_UCombo *com = argv[1].p;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((it = tlist_selected_item(tl)) != NULL) {
+	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
-		event_post(NULL, com, "ucombo-selected", "%p", it);
+		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
 	}
 	pthread_mutex_unlock(&tl->lock);
 
@@ -135,52 +135,52 @@ ucombo_selected(int argc, union evarg *argv)
 }
 
 void
-ucombo_init(struct ucombo *com)
+AG_UComboInit(AG_UCombo *com)
 {
-	widget_init(com, "ucombo", &ucombo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
-	    WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetInit(com, "ucombo", &ucombo_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
 	com->panel = NULL;
 	com->saved_h = 0;
 
-	com->button = button_new(com, "...");
-	button_set_sticky(com->button, 1);
-	button_set_padding(com->button, 1);
-	event_new(com->button, "button-pushed", ucombo_expand, "%p", com);
+	com->button = AG_ButtonNew(com, "...");
+	AG_ButtonSetSticky(com->button, 1);
+	AG_ButtonSetPadding(com->button, 1);
+	AG_SetEvent(com->button, "button-pushed", ucombo_expand, "%p", com);
 	
-	com->list = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(com->list, 0);
-	event_new(com->list, "tlist-changed", ucombo_selected, "%p", com);
+	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(com->list, 0);
+	AG_SetEvent(com->list, "tlist-changed", ucombo_selected, "%p", com);
 }
 
 void
-ucombo_destroy(void *p)
+AG_UComboDestroy(void *p)
 {
-	struct ucombo *com = p;
+	AG_UCombo *com = p;
 
 	if (com->panel != NULL) {
-		window_hide(com->panel);
-		object_detach(com->list);
-		view_detach(com->panel);
+		AG_WindowHide(com->panel);
+		AG_ObjectDetach(com->list);
+		AG_ViewDetach(com->panel);
 	}
-	object_destroy(com->list);
+	AG_ObjectDestroy(com->list);
 	Free(com->list, M_OBJECT);
-	widget_destroy(com);
+	AG_WidgetDestroy(com);
 }
 
 void
-ucombo_scale(void *p, int w, int h)
+AG_UComboScale(void *p, int w, int h)
 {
-	struct ucombo *com = p;
+	AG_UCombo *com = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(com->button, -1, -1);
-		WIDGET(com)->w = WIDGET(com->button)->w;
-		WIDGET(com)->h = WIDGET(com->button)->h;
+		AGWIDGET_SCALE(com->button, -1, -1);
+		AGWIDGET(com)->w = AGWIDGET(com->button)->w;
+		AGWIDGET(com)->h = AGWIDGET(com->button)->h;
 		return;
 	}
 	
-	widget_scale(com->button, w, h);
-	WIDGET(com->button)->x = 0;
-	WIDGET(com->button)->y = 0;
+	AG_WidgetScale(com->button, w, h);
+	AGWIDGET(com->button)->x = 0;
+	AGWIDGET(com->button)->y = 0;
 }
 

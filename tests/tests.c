@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.3 2005/05/29 05:48:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -193,10 +193,10 @@ tests_window(void)
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
 		btn = button_new(bo, "Run tests");
-		event_new(btn, "button-pushed", run_tests, "%p", tv);
+		AG_SetEvent(btn, "button-pushed", run_tests, "%p", tv);
 
 		btn = button_new(bo, "Parameters");
-		event_new(btn, "button-pushed", test_params, "%p", tv);
+		AG_SetEvent(btn, "button-pushed", test_params, "%p", tv);
 	}
 
 	window_show(win);
@@ -212,11 +212,9 @@ main(int argc, char *argv[])
 	char *s;
 
 	if (engine_preinit("agar-tests") == -1) {
-		fprintf(stderr, "%s\n", error_get());
+		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	engine_set_gfxmode(GFX_ENGINE_GUI);
 
 	while ((c = getopt(argc, argv, "?vfFegGw:h:t:r:T:")) != -1) {
 		extern char *optarg;
@@ -267,17 +265,17 @@ main(int argc, char *argv[])
 	}
 
 	if (engine_init() == -1) {
-		fprintf(stderr, "%s\n", error_get());
+		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
 
 	tests_window();
 
 	event_loop();
-	engine_destroy();
+	AG_Quit();
 	return (0);
 fail:
-	engine_destroy();
+	AG_Quit();
 	return (1);
 }
 

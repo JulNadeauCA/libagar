@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.11 2005/06/01 09:06:56 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.12 2005/06/07 02:42:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -34,11 +34,11 @@
 #include "vg_primitive.h"
 
 void
-vg_put_pixel(struct vg *vg, int x, int y, Uint32 c)
+VG_PutPixel(VG *vg, int x, int y, Uint32 c)
 {
 	Uint8 *d;
 
-	if (CLIPPED_PIXEL(vg->su, x, y))
+	if (AG_CLIPPED_PIXEL(vg->su, x, y))
 		return;
 
 	d = (Uint8 *)vg->su->pixels + y*vg->su->pitch + (x<<2);
@@ -47,7 +47,7 @@ vg_put_pixel(struct vg *vg, int x, int y, Uint32 c)
 
 /* Render a circle using a modified Bresenham line algorithm. */
 void
-vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
+VG_CirclePrimitive(VG *vg, int rx, int ry, int radius, Uint32 color)
 {
 	SDL_Surface *su = vg->su;
 	int v = 2*radius - 1;
@@ -55,10 +55,10 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
 	int x = 0, y = radius;
 
 	while (x < y) {
-		vg_put_pixel(vg, rx+x, ry+y, color);
-		vg_put_pixel(vg, rx+x, ry-y, color);
-		vg_put_pixel(vg, rx-x, ry+y, color);
-		vg_put_pixel(vg, rx-x, ry-y, color);
+		VG_PutPixel(vg, rx+x, ry+y, color);
+		VG_PutPixel(vg, rx+x, ry-y, color);
+		VG_PutPixel(vg, rx-x, ry+y, color);
+		VG_PutPixel(vg, rx-x, ry-y, color);
 
 		e += u;
 		u += 2;
@@ -69,13 +69,13 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
 		}
 		x++;
 		
-		vg_put_pixel(vg, rx+y, ry+x, color);
-		vg_put_pixel(vg, rx+y, ry-x, color);
-		vg_put_pixel(vg, rx-y, ry+x, color);
-		vg_put_pixel(vg, rx-y, ry-x, color);
+		VG_PutPixel(vg, rx+y, ry+x, color);
+		VG_PutPixel(vg, rx+y, ry-x, color);
+		VG_PutPixel(vg, rx-y, ry+x, color);
+		VG_PutPixel(vg, rx-y, ry-x, color);
 	}
-	vg_put_pixel(vg, rx-radius, ry, color);
-	vg_put_pixel(vg, rx+radius, ry, color);
+	VG_PutPixel(vg, rx-radius, ry, color);
+	VG_PutPixel(vg, rx+radius, ry, color);
 }
 
 /*
@@ -83,7 +83,7 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
  * given in degrees. It is assumed that a2 > a1.
  */
 void
-vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
+VG_ArcPrimitive(VG *vg, int cx, int cy, int w, int h, int a1, int a2,
     Uint32 color)
 {
 	extern int vg_cos_tbl[];
@@ -102,7 +102,7 @@ vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
 		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + cx; 
 		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + cy;
 		if (a != a1) {
-			vg_line_primitive(vg, px, py, x, y, color);
+			VG_LinePrimitive(vg, px, py, x, y, color);
 		}
 		px = x;
 		py = y;
@@ -111,7 +111,7 @@ vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
 
 /* Draw a horizontal line segment. */
 void
-vg_hline_primitive(struct vg *vg, int x1, int x2, int y, Uint32 c)
+VG_HLinePrimitive(VG *vg, int x1, int x2, int y, Uint32 c)
 {
 	SDL_Surface *su = vg->su;
 	int x, xtmp;
@@ -137,7 +137,7 @@ vg_hline_primitive(struct vg *vg, int x1, int x2, int y, Uint32 c)
  * presented by Foley & Van Dam [1990].
  */
 void
-vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
+VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	SDL_Surface *su = vg->su;
 	int dx, dy;
@@ -164,7 +164,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 			ydir = 1;
 			xend = x2;
 		}
-		vg_put_pixel(vg, x, y, color);
+		VG_PutPixel(vg, x, y, color);
 
 		if (((y2-y1)*ydir) > 0) {
 			while (x < xend) {
@@ -175,7 +175,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 					y++;
 					d += inc2;
 				}
-				vg_put_pixel(vg, x, y, color);
+				VG_PutPixel(vg, x, y, color);
 			}
 		} else {
 			while (x < xend) {
@@ -186,7 +186,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 					y--;
 					d += inc2;
 				}
-				vg_put_pixel(vg, x, y, color);
+				VG_PutPixel(vg, x, y, color);
 			}
 		}		
 	} else {
@@ -204,7 +204,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 			yend = y2;
 			xdir = 1;
 		}
-		vg_put_pixel(vg, x, y, color);
+		VG_PutPixel(vg, x, y, color);
 
 		if (((x2-x1)*xdir) > 0) {
 			while (y < yend) {
@@ -215,7 +215,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 					x++;
 					d += inc2;
 				}
-				vg_put_pixel(vg, x, y, color);
+				VG_PutPixel(vg, x, y, color);
 			}
 		} else {
 			while (y < yend) {
@@ -226,7 +226,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 					x--;
 					d += inc2;
 				}
-				vg_put_pixel(vg, x, y, color);
+				VG_PutPixel(vg, x, y, color);
 			}
 		}
 	}
@@ -234,7 +234,7 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 
 /* Render an anti-aliased line. */
 void
-vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
+VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
     double y2p, int thick, Uint32 color)
 {
 	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
@@ -274,10 +274,10 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
-		    (Uint8)(lum1*255), ALPHA_OVERLAY);
-		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
-		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
+		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
+		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 
 		yf = yend+grad;
 
@@ -293,10 +293,10 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
 
-		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
-		    (Uint8)(lum1*255), ALPHA_OVERLAY);
-		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
-		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
+		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
+		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 
 		/* Main loop */
 		for (x = (ix1+1); x < ix2; x++) {
@@ -307,18 +307,24 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 				focus = (1.0 - fabs((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
-				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
-				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
-				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+1,
-				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
+				    r, g, b, (Uint8)(lum1*255),
+				    AG_ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+1,
+				    r, g, b, (Uint8)(lum2*255),
+				    AG_ALPHA_OVERLAY);
 			} else {
-				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf-thick+1,
-				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
-				BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf+thick-1,
-				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, x,
+				    (int)yf-thick+1,
+				    r, g, b, (Uint8)(lum1*255),
+				    AG_ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, x,
+				    (int)yf+thick-1,
+				    r, g, b, (Uint8)(lum2*255),
+				    AG_ALPHA_OVERLAY);
 				for (yoffs = -thick+2; yoffs < thick-1;
 				     yoffs++) {
-					PUT_PIXEL2_CLIPPED(vg->su, x,
+					AG_PUT_PIXEL2_CLIPPED(vg->su, x,
 					    (int)yf+yoffs, color);
 				}
 			}
@@ -346,10 +352,10 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		lum1 = finvfrac(yend)*ygap;
 		lum2 = ffrac(yend)*ygap;
-		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
-		    (Uint8)(lum1*255), ALPHA_OVERLAY);
-		BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
-		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
+		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
+		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 		
 		xf = xend + grad;
 
@@ -364,10 +370,10 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
-		    (Uint8)(lum1*255), ALPHA_OVERLAY);
-		BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
-		    (Uint8)(lum2*255), ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
+		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
+		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
+		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 
 		/* Main loop */
 		for (y = (iy1+1); y < iy2; y++) {
@@ -378,18 +384,24 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 				focus = (1.0 - fabs((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
-				BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,
-				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
-				BLEND_RGBA2_CLIPPED(vg->su, (int)xf+1, y,
-				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,
+				    r, g, b, (Uint8)(lum1*255),
+				    AG_ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su, (int)xf+1, y,
+				    r, g, b, (Uint8)(lum2*255),
+				    AG_ALPHA_OVERLAY);
 			} else {
-				BLEND_RGBA2_CLIPPED(vg->su, (int)xf-thick+1, y,
-				    r, g, b, (Uint8)(lum1*255), ALPHA_OVERLAY);
-				BLEND_RGBA2_CLIPPED(vg->su, (int)xf+thick-1, y,
-				    r, g, b, (Uint8)(lum2*255), ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su,
+				    (int)xf-thick+1, y,
+				    r, g, b, (Uint8)(lum1*255),
+				    AG_ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(vg->su,
+				    (int)xf+thick-1, y,
+				    r, g, b, (Uint8)(lum2*255),
+				    AG_ALPHA_OVERLAY);
 				for (yoffs = -thick+2; yoffs < thick-1;
 				     yoffs++) {
-					PUT_PIXEL2_CLIPPED(vg->su,
+					AG_PUT_PIXEL2_CLIPPED(vg->su,
 					    (int)xf+yoffs, y, color);
 				}
 			}
@@ -400,10 +412,10 @@ vg_wuline_primitive(struct vg *vg, double x1p, double y1p, double x2p,
 }
 
 void
-vg_rect_primitive(struct vg *vg, int x, int y, int w, int h, Uint32 color)
+VG_RectPrimitive(VG *vg, int x, int y, int w, int h, Uint32 color)
 {
-	vg_line_primitive(vg, x, y, x+w, y, color);
-	vg_line_primitive(vg, x, y, x, y+h, color);
-	vg_line_primitive(vg, x, y+h, x+w, y+h, color);
-	vg_line_primitive(vg, x+w, y, x+w, y+h, color);
+	VG_LinePrimitive(vg, x, y, x+w, y, color);
+	VG_LinePrimitive(vg, x, y, x, y+h, color);
+	VG_LinePrimitive(vg, x, y+h, x+w, y+h, color);
+	VG_LinePrimitive(vg, x+w, y, x+w, y+h, color);
 }

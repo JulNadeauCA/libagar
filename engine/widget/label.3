@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.27 2005/03/11 08:56:32 vedge Exp $
+.\"	$Csoft: label.3,v 1.28 2005/05/26 06:43:28 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,59 +43,59 @@ The
 widget displays single-line or multi-line text.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct label *"
-.Fn label_new "void *parent" "enum label_type type" "const char *fmt" "..."
+.Ft "AG_Label *"
+.Fn AG_LabelNew "void *parent" "enum ag_label_type type" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn label_static "void *parent" "const char *text"
+.Fn AG_LabelStatic "void *parent" "const char *text"
 .Pp
 .Ft "void"
-.Fn label_staticf "void *parent" "const char *fmt" "..."
+.Fn AG_LabelStaticF "void *parent" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn label_init "struct label *label" "enum label_type type" "const char *text"
+.Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "const char *text"
 .nr nS 0
 .Pp
 The
-.Fn label_new
+.Fn AG_LabelNew
 function allocates, initializes and attaches a
 .Nm
 widget.
 .Fa type
 is one of:
 .Bd -literal
-enum label_type {
-	LABEL_STATIC,		/* Static text */
-	LABEL_POLLED,		/* Polling (thread unsafe) */
-	LABEL_POLLED_MT		/* Polling (thread safe) */
+enum ag_label_type {
+	AG_LABEL_STATIC,		/* Static text */
+	AG_LABEL_POLLED,		/* Polling (thread unsafe) */
+	AG_LABEL_POLLED_MT		/* Polling (thread safe) */
 };
 .Ed
 .Pp
 The functions
-.Fn label_static
+.Fn AG_LabelStatic
 and
-.Fn label_staticf
+.Fn AG_LabelStaticF
 are alternate constructors optimized for static labels.
 .Pp
 For
-.Dv LABEL_STATIC
+.Dv AG_LABEL_STATIC
 labels,
 .Fa fmt
 is a
 .Xr printf 3
 style format string.
 For labels of type
-.Dv LABEL_POLLED ,
+.Dv AG_LABEL_POLLED ,
 .Fa fmt
 is a format string and the subsequent arguments are pointers to the polled
 values.
 For
-.Dv LABEL_POLLED_MT ,
+.Dv AG_LABEL_POLLED_MT ,
 the first argument following
 .Fa fmt
 should be a
@@ -136,29 +136,29 @@ SDL_Rect *
 .Sh LABELS
 .nr nS 1
 .Ft void
-.Fn label_printf "struct label *label" "const char *fmt" "..."
+.Fn AG_LabelPrintf "AG_Label *label" "const char *fmt" "..."
 .Pp
 .Ft void
-.Fn label_set_surface "struct label *label" "SDL_Surface *su"
+.Fn AG_LabelSetSurface "AG_Label *label" "SDL_Surface *su"
 .Pp
 .Ft void
-.Fn label_prescale "struct label *label" "const char *text"
+.Fn AG_LabelPrescale "AG_Label *label" "const char *text"
 .nr nS 0
 .Pp
 The
-.Fn label_printf
+.Fn AG_LabelPrintf
 function sets the label to a string of text (for
-.Dv LABEL_STATIC
+.Dv AG_LABEL_STATIC
 labels only).
 .Pp
 The
-.Fn label_set_surface
+.Fn AG_LabelSetSurface
 function uses a copy of the given surface as the label.
 .Pp
 The
-.Fn label_prescale
+.Fn AG_LabelPrescale
 function arranges for a
-.Dv LABEL_POLLED
+.Dv AG_LABEL_POLLED
 type label to be large enough to hold a given string of text.
 .Sh EVENTS
 The
@@ -169,10 +169,10 @@ widget neither reacts to nor generates any event.
 The following code snippet creates a window containing a static label:
 .Bd -literal
 {
-	struct window *win;
+	AG_Window *win;
 
-	win = window_new(0, NULL);
-	label_new(win, "Foo");
+	win = AG_WindowNew(0, NULL);
+	AG_LabelNew(win, "Foo");
 }
 .Ed
 .Sh TROUBLETONS

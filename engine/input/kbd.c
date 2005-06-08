@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.11 2005/02/08 15:48:09 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.12 2005/04/14 06:19:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,38 +31,28 @@
 
 #include <engine/map/map.h>
 
-static int	kbd_match(const void *, const SDL_Event *);
-static void	kbd_event(void *, const SDL_Event *);
+int agKbdUnicode = 1;				/* Unicode translation */
+int agKbdDelay = 250;				/* Key repeat delay */
+int agKbdRepeat = 35;				/* Key repeat interval */
 
-const struct input_driver kbd_driver = {
-	N_("Keyboard"),
-	NULL,
-	kbd_match,
-	kbd_event
-};
-
-int kbd_unitrans = 1;				/* Unicode translation */
-int kbd_delay = 250;				/* Key repeat delay */
-int kbd_repeat = 35;				/* Key repeat interval */
-
-struct kbd *
-kbd_new(int index)
+AG_Keyboard *
+AG_KeyboardNew(int index)
 {
-	char name[INPUT_NAME_MAX];
-	struct kbd *kbd;
+	char name[AG_INPUT_NAME_MAX];
+	AG_Keyboard *kbd;
 
-	kbd = Malloc(sizeof(struct kbd), M_INPUT);
+	kbd = Malloc(sizeof(AG_Keyboard), M_INPUT);
 	kbd->index = index;
 	snprintf(name, sizeof(name), "kbd%d", index);
-	input_register(kbd, INPUT_KEYBOARD, name, &kbd_driver);
-	SDL_EnableUNICODE(kbd_unitrans);
+	AG_InputSet(kbd, AG_INPUT_KEYBOARD, name, &agKeyboardOps);
+	SDL_EnableUNICODE(agKbdUnicode);
 	return (kbd);
 }
 
-int
-kbd_match(const void *p, const SDL_Event *ev)
+static int
+match(const void *p, const SDL_Event *ev)
 {
-	const struct kbd *kbd = p;
+	const AG_Keyboard *kbd = p;
 
 	switch (ev->type) {
 	case SDL_KEYUP:
@@ -75,54 +65,16 @@ kbd_match(const void *p, const SDL_Event *ev)
 	return (0);
 }
 
-void
-kbd_event(void *p, const SDL_Event *ev)
+static void
+proc_event(void *p, const SDL_Event *ev)
 {
-#if 0
-	struct input *in = p;
-	int set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
-
-	/* XXX map, etc */
-	switch (ev->key.keysym.sym) {
-	case SDLK_UP:
-		if (in->pos->y > 1) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_N);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_N);
-			}
-		}
-		break;
-	case SDLK_DOWN:
-		if (in->pos->y < in->pos->map->maph - 2) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_S);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_S);
-			}
-		}
-		break;
-	case SDLK_LEFT:
-		if (in->pos->x > 1) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_W);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_W);
-			}
-		}
-		break;
-	case SDLK_RIGHT:
-		if (in->pos->x < in->pos->map->mapw - 2) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_E);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_E);
-			}
-		}
-		break;
-	default:
-		break;
-	}
-#endif
+	/* TODO */
 }
+
+const AG_InputOps agKeyboardOps = {
+	N_("Keyboard"),
+	NULL,
+	match,
+	proc_event
+};
 

@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.84 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.85 2005/05/26 06:43:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,45 +35,45 @@
 #include <stdarg.h>
 #include <errno.h>
 
-const struct widget_ops label_ops = {
+const AG_WidgetOps label_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		label_destroy,
+		AG_LabelDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	label_draw,
-	label_scale
+	AG_LabelDraw,
+	AG_LabelScale
 };
 
-struct label *
-label_new(void *parent, enum label_type type, const char *fmt, ...)
+AG_Label *
+AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 {
-	char buf[LABEL_MAX];
-	struct label *label;
+	char buf[AG_LABEL_MAX];
+	AG_Label *label;
 	va_list ap;
 	const char *p;
 	
-	label = Malloc(sizeof(struct label), M_OBJECT);
+	label = Malloc(sizeof(AG_Label), M_OBJECT);
 
 	va_start(ap, fmt);
 	switch (type) {
-	case LABEL_STATIC:
+	case AG_LABEL_STATIC:
 		vsnprintf(buf, sizeof(buf), fmt, ap);
-		label_init(label, LABEL_STATIC, buf);
+		AG_LabelInit(label, AG_LABEL_STATIC, buf);
 		break;
-	case LABEL_POLLED:
-		label_init(label, LABEL_POLLED, fmt);
+	case AG_LABEL_POLLED:
+		AG_LabelInit(label, AG_LABEL_POLLED, fmt);
 		label->poll.lock = NULL;
 		break;
-	case LABEL_POLLED_MT:
-		label_init(label, LABEL_POLLED_MT, fmt);
+	case AG_LABEL_POLLED_MT:
+		AG_LabelInit(label, AG_LABEL_POLLED_MT, fmt);
 		label->poll.lock = va_arg(ap, pthread_mutex_t *);
 		break;
 	}
-	if (type == LABEL_POLLED || type == LABEL_POLLED_MT) {
+	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
 		for (p = fmt; *p != '\0'; p++) {
 			if (*p == '%' && *(p+1) != '\0') {
 				switch (*(p+1)) {
@@ -84,7 +84,7 @@ label_new(void *parent, enum label_type type, const char *fmt, ...)
 					break;
 				default:
 					if (label->poll.nptrs+1 <
-					    LABEL_MAX_POLLPTRS) {
+					    AG_LABEL_MAX_POLLPTRS) {
 						label->poll.ptrs
 						    [label->poll.nptrs++] =
 						    va_arg(ap, void *);
@@ -96,178 +96,181 @@ label_new(void *parent, enum label_type type, const char *fmt, ...)
 	}
 	va_end(ap);
 
-	object_attach(parent, label);
+	AG_ObjectAttach(parent, label);
 	return (label);
 }
 
 /* Alternate constructor for static labels. */
 void
-label_static(void *parent, const char *text)
+AG_LabelStatic(void *parent, const char *text)
 {
-	struct label *label;
+	AG_Label *label;
 	
-	label = Malloc(sizeof(struct label), M_OBJECT);
-	label_init(label, LABEL_STATIC, text);
-	object_attach(parent, label);
+	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	AG_LabelInit(label, AG_LABEL_STATIC, text);
+	AG_ObjectAttach(parent, label);
 }
 
 /* Alternate constructor for static labels. */
 void
-label_staticf(void *parent, const char *fmt, ...)
+AG_LabelStaticF(void *parent, const char *fmt, ...)
 {
-	char buf[LABEL_MAX];
-	struct label *label;
+	char buf[AG_LABEL_MAX];
+	AG_Label *label;
 	va_list ap;
 	
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 
-	label = Malloc(sizeof(struct label), M_OBJECT);
-	label_init(label, LABEL_STATIC, buf);
-	object_attach(parent, label);
+	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	AG_LabelInit(label, AG_LABEL_STATIC, buf);
+	AG_ObjectAttach(parent, label);
 }
 
 void
-label_scale(void *p, int rw, int rh)
+AG_LabelScale(void *p, int rw, int rh)
 {
-	struct label *lab = p;
+	AG_Label *lab = p;
 
 	switch (lab->type) {
-	case LABEL_STATIC:
+	case AG_LABEL_STATIC:
 		pthread_mutex_lock(&lab->lock);
 		if (rw == -1 && rh == -1 && lab->surface != -1) {
-			WIDGET(lab)->w = WIDGET_SURFACE(lab,lab->surface)->w;
-			WIDGET(lab)->h = WIDGET_SURFACE(lab,lab->surface)->h;
+			AGWIDGET(lab)->w =
+			    AGWIDGET_SURFACE(lab,lab->surface)->w;
+			AGWIDGET(lab)->h =
+			    AGWIDGET_SURFACE(lab,lab->surface)->h;
 		}
 		pthread_mutex_unlock(&lab->lock);
 		break;
-	case LABEL_POLLED:
-	case LABEL_POLLED_MT:
+	case AG_LABEL_POLLED:
+	case AG_LABEL_POLLED_MT:
 		if (rh == -1 && rh == -1) {
-			WIDGET(lab)->w = lab->prew;
-			WIDGET(lab)->h = lab->preh;
+			AGWIDGET(lab)->w = lab->prew;
+			AGWIDGET(lab)->h = lab->preh;
 		}
 		break;
 	}
 }
 
 void
-label_init(struct label *label, enum label_type type, const char *s)
+AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 {
-	widget_init(label, "label", &label_ops, 0);
+	AG_WidgetInit(label, "label", &label_ops, 0);
 	label->type = type;
 
 	switch (type) {
-	case LABEL_STATIC:
-		label->surface = (s==NULL) ? -1 : widget_map_surface(label,
-		    text_render(NULL, -1, COLOR(TEXT_COLOR), s));
+	case AG_LABEL_STATIC:
+		label->surface = (s==NULL) ? -1 : AG_WidgetMapSurface(label,
+		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s));
 		pthread_mutex_init(&label->lock, NULL);
 		break;
-	case LABEL_POLLED:
-	case LABEL_POLLED_MT:
-		label_prescale(label, "XXXXXXXXXXXXXXXXX");
-		WIDGET(label)->flags |= WIDGET_WFILL;
+	case AG_LABEL_POLLED:
+	case AG_LABEL_POLLED_MT:
+		AG_LabelPrescale(label, "XXXXXXXXXXXXXXXXX");
+		AGWIDGET(label)->flags |= AG_WIDGET_WFILL;
 		label->surface = -1;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
-		memset(label->poll.ptrs, 0, sizeof(void *)*LABEL_MAX_POLLPTRS);
+		memset(label->poll.ptrs, 0,
+		    sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
 		label->poll.nptrs = 0;
 		break;
 	}
 }
 
 void
-label_prescale(struct label *lab, const char *text)
+AG_LabelPrescale(AG_Label *lab, const char *text)
 {
-	text_prescale(text, &lab->prew, &lab->preh);
+	AG_TextPrescale(text, &lab->prew, &lab->preh);
 }
 
 void
-label_set_surface(struct label *label, SDL_Surface *su)
+AG_LabelSetSurface(AG_Label *label, SDL_Surface *su)
 {
 #ifdef DEBUG
-	if (label->type != LABEL_STATIC)
+	if (label->type != AG_LABEL_STATIC)
 		fatal("label is not static");
 #endif
 	pthread_mutex_lock(&label->lock);
-	widget_replace_surface(label, 0, su);
+	AG_WidgetReplaceSurface(label, 0, su);
 	pthread_mutex_unlock(&label->lock);
 }
 
 void
-label_printf(struct label *label, const char *fmt, ...)
+AG_LabelPrintf(AG_Label *label, const char *fmt, ...)
 {
-	char s[LABEL_MAX];
+	char s[AG_LABEL_MAX];
 	va_list args;
 
 #ifdef DEBUG
-	if (label->type != LABEL_STATIC)
+	if (label->type != AG_LABEL_STATIC)
 		fatal("label is not static");
 #endif
 	va_start(args, fmt);
 	vsnprintf(s, sizeof(s), fmt, args);
 	va_end(args);
 	
-	label_set_surface(label, (s[0]=='\0') ? NULL :
-	    text_render(NULL, -1, COLOR(TEXT_COLOR), s));
+	AG_LabelSetSurface(label, (s[0]=='\0') ? NULL :
+	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s));
 }
 
 #define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
 
 static void
-label_uint8(struct label *label, char *s, size_t len, int ri)
+label_uint8(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%u", LABEL_ARG(Uint8));
 }
 
 static void
-label_sint8(struct label *label, char *s, size_t len, int ri)
+label_sint8(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%d", LABEL_ARG(Sint8));
 }
 
 static void
-label_uint16(struct label *label, char *s, size_t len, int ri)
+label_uint16(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%u", LABEL_ARG(Uint16));
 }
 
 static void
-label_sint16(struct label *label, char *s, size_t len, int ri)
+label_sint16(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%d", LABEL_ARG(Sint16));
 }
 
 static void
-label_uint32(struct label *label, char *s, size_t len, int ri)
+label_uint32(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%u", LABEL_ARG(Uint32));
 }
 
 static void
-label_sint32(struct label *label, char *s, size_t len, int ri)
+label_sint32(AG_Label *label, char *s, size_t len, int ri)
 {
 	snprintf(s, len, "%d", LABEL_ARG(Sint32));
 }
 
 static void
-label_obj(struct label *label, char *s, size_t len, int ri)
+label_obj(AG_Label *label, char *s, size_t len, int ri)
 {
-	struct object *ob = LABEL_ARG(struct object *);
+	AG_Object *ob = LABEL_ARG(AG_Object *);
 
 	snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
 }
 
 static void
-label_objt(struct label *label, char *s, size_t len, int ri)
+label_objt(AG_Label *label, char *s, size_t len, int ri)
 {
-	struct object *ob = LABEL_ARG(struct object *);
+	AG_Object *ob = LABEL_ARG(AG_Object *);
 
 	snprintf(s, len, "%s", ob->type);
 }
 
 static void
-label_wxh(struct label *label, char *s, size_t len, int ri)
+label_wxh(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
 
@@ -275,7 +278,7 @@ label_wxh(struct label *label, char *s, size_t len, int ri)
 }
 
 static void
-label_xy(struct label *label, char *s, size_t len, int ri)
+label_xy(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
 
@@ -283,7 +286,7 @@ label_xy(struct label *label, char *s, size_t len, int ri)
 }
 
 static void
-label_rect(struct label *label, char *s, size_t len, int ri)
+label_rect(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
 
@@ -291,7 +294,7 @@ label_rect(struct label *label, char *s, size_t len, int ri)
 }
 
 static void
-label_int_bool(struct label *label, char *s, size_t len, int ri)
+label_int_bool(AG_Label *label, char *s, size_t len, int ri)
 {
 	int *flag = &LABEL_ARG(int);
 
@@ -301,7 +304,7 @@ label_int_bool(struct label *label, char *s, size_t len, int ri)
 static const struct {
 	char	 *fmt;
 	size_t	  fmt_len;
-	void	(*func)(struct label *, char *, size_t, int);
+	void	(*func)(AG_Label *, char *, size_t, int);
 } fmts[] = {
 	{ "u8", sizeof("u8"),		label_uint8 },
 	{ "s8", sizeof("s8"),		label_sint8 },
@@ -320,9 +323,9 @@ static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 /* Display a polled label. */
 static void
-label_draw_polled(struct label *label)
+AG_LabelDrawPolled(AG_Label *label)
 {
-	char s[LABEL_MAX];
+	char s[AG_LABEL_MAX];
 	char s2[32];
 	SDL_Surface *ts;
 	char *fmtp;
@@ -426,42 +429,42 @@ label_draw_polled(struct label *label)
 		}
 	}
 
-	/* TODO use widget_update_surface */
-	ts = text_render(NULL, -1, COLOR(TEXT_COLOR), s);
-	widget_blit(label, ts, 0, 0);
+	/* TODO use AG_WidgetUpdateSurface */
+	ts = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s);
+	AG_WidgetBlit(label, ts, 0, 0);
 	SDL_FreeSurface(ts);
 }
 
 void
-label_draw(void *p)
+AG_LabelDraw(void *p)
 {
-	struct label *label = p;
+	AG_Label *label = p;
 	
 	switch (label->type) {
-	case LABEL_STATIC:
+	case AG_LABEL_STATIC:
 		pthread_mutex_lock(&label->lock);
-		widget_blit_surface(label, label->surface, 0, 0);
+		AG_WidgetBlitSurface(label, label->surface, 0, 0);
 		pthread_mutex_unlock(&label->lock);
 		break;
-	case LABEL_POLLED:
-		label_draw_polled(label);
+	case AG_LABEL_POLLED:
+		AG_LabelDrawPolled(label);
 		break;
-	case LABEL_POLLED_MT:
+	case AG_LABEL_POLLED_MT:
 		pthread_mutex_lock(label->poll.lock);
-		label_draw_polled(label);
+		AG_LabelDrawPolled(label);
 		pthread_mutex_unlock(label->poll.lock);
 		break;
 	}
 }
 
 void
-label_destroy(void *p)
+AG_LabelDestroy(void *p)
 {
-	struct label *label = p;
+	AG_Label *label = p;
 
-	if (label->type == LABEL_STATIC) {
+	if (label->type == AG_LABEL_STATIC) {
 		pthread_mutex_destroy(&label->lock);
 	}
-	widget_destroy(label);
+	AG_WidgetDestroy(label);
 }
 

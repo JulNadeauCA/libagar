@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.29 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.30 2005/06/01 08:48:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,44 +34,44 @@
 #include <config/astronomical_units.h>
 #include <config/historical_units.h>
 
-const struct unit *unit_groups[] = {
-	identity_unit,
-	length_units,
-	video_units,
-	area_units,
-	volume_units,
-	speed_units,
-	mass_units,
-	time_units,
-	current_units,
-	temperature_units,
-	substance_amt_units,
-	light_units,
-	power_units,
-	emf_units,
-	resistance_units,
-	resistance_Tcoeff1_units,
-	resistance_Tcoeff2_units,
-	capacitance_units,
-	inductance_units,
-	frequency_units,
-	pressure_units,
-	met_units,
+const AG_Unit *agUnitGroups[] = {
+	agIdentityUnit,
+	agLengthUnits,
+	agVideoUnits,
+	agAreaUnits,
+	agVolumeUnits,
+	agSpeedUnits,
+	agMassUnits,
+	agTimeUnits,
+	agCurrentUnits,
+	agTemperatureUnits,
+	agSubstanceAmountUnits,
+	agLightUnits,
+	agPowerUnits,
+	agEMFUnits,
+	agResistanceUnits,
+	agResistanceTC1Units,
+	agResistanceTC2Units,
+	agCapacitanceUnits,
+	agInductanceUnits,
+	agFrequencyUnits,
+	agPressureUnits,
+	agMetabolicExpenditureUnits,
 };
-const int nunit_groups = sizeof(unit_groups) / sizeof(unit_groups[0]);
+const int agnUnitGroups = sizeof(agUnitGroups) / sizeof(agUnitGroups[0]);
 
 /*
  * Return the unit in the given group with a matching key.
  * If key=NULL, return the base unit.
  */
-const struct unit *
-unit_find(const char *key)
+const AG_Unit *
+AG_FindUnit(const char *key)
 {
 	int i;
 
-	for (i = 0; i < nunit_groups; i++) {
-		const struct unit *group = unit_groups[i];
-		const struct unit *unit;
+	for (i = 0; i < agnUnitGroups; i++) {
+		const AG_Unit *group = agUnitGroups[i];
+		const AG_Unit *unit;
 
 		for (unit = &group[0]; unit->key != NULL; unit++) {
 			if (key == NULL) {
@@ -88,10 +88,10 @@ unit_find(const char *key)
 }
 
 /* Return the unit which yields the number with the least figures. */
-const struct unit *
-unit_best(const struct unit ugroup[], double n)
+const AG_Unit *
+AG_BestUnit(const AG_Unit ugroup[], double n)
 {
-	const struct unit *unit, *bestunit = NULL;
+	const AG_Unit *unit, *bestunit = NULL;
 	double smallest = HUGE_VAL;
 	double diff;
 
@@ -121,51 +121,51 @@ defunit:
 
 /* Format a number using the unit most suited to its magnitude. */
 int
-unit_format(double n, const struct unit ugroup[], char *buf, size_t len)
+AG_UnitFormat(double n, const AG_Unit ugroup[], char *buf, size_t len)
 {
-	const struct unit *ubest;
+	const AG_Unit *ubest;
 
-	ubest = unit_best(ugroup, n);
-	return (snprintf(buf, len, "%g%s", base2unit(n, ubest),
+	ubest = AG_BestUnit(ugroup, n);
+	return (snprintf(buf, len, "%g%s", AG_Base2Unit(n, ubest),
 	    ubest->abbr[0] != '\0' ? ubest->abbr : ubest->key));
 }
 
 /* Return the abbreviation associated with the given unit. */
 const char *
-unit_abbr(const struct unit *unit)
+AG_UnitAbbr(const AG_Unit *unit)
 {
 	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
 }
 
 /* Convert from n in given unit to base unit. */
 double
-unit2base(double n, const struct unit *unit)
+AG_Unit2Base(double n, const AG_Unit *unit)
 {
 	return (unit->func != NULL ? unit->func(n, 1) : n*unit->divider);
 }
 
 /* Convert from n in base unit to given unit. */
 double
-base2unit(double n, const struct unit *unit)
+AG_Base2Unit(double n, const AG_Unit *unit)
 {
 	return (unit->func != NULL ? unit->func(n, 0) : n/unit->divider);
 }
 
 /* Convert n from one unit system to another. */
 double
-unit2unit(double n, const struct unit *ufrom, const struct unit *uto)
+AG_Unit2Unit(double n, const AG_Unit *ufrom, const AG_Unit *uto)
 {
-	return (base2unit(unit2base(n, ufrom), uto));
+	return (AG_Base2Unit(AG_Unit2Base(n, ufrom), uto));
 }
 
 /* Default unit (identity) */
-const struct unit identity_unit[] = {
+const AG_Unit agIdentityUnit[] = {
 	{ "identity", "", "",	1.0, NULL },
 	{ NULL,	NULL, NULL,	0, NULL }
 };
 
 /* Units of length/distance */
-const struct unit length_units[] = {
+const AG_Unit agLengthUnits[] = {
 	{ "Ang", "\xc3\x85", N_("\xc3\x85ngstroms"), 1e-10, NULL },
 	{ "um", "\xc2\xb5", N_("Microns"),	1e-6, NULL },
 	{ "mil", "", N_("Mils"),		25e-6, NULL },
@@ -202,16 +202,16 @@ const struct unit length_units[] = {
 
 /* Units of length/distance on a raster display. */
 /* TODO resolution-specific functions */
-const struct unit video_units[] = {
+const AG_Unit agVideoUnits[] = {
 	{ "px", "", N_("Pixels"),		1.0, NULL },
-	{ "tsz", "", N_("Agar tiles"),		TILESZ, NULL },
+	{ "tsz", "", N_("Agar tiles"),		AGTILESZ, NULL },
 	{ "kpx", "", N_("Kilopixels"),		1e3, NULL },
 	{ "Mpx", "", N_("Megapixels"),		1e6, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }
 };
 
 /* Units of area (SI derived) */
-const struct unit area_units[] = {
+const AG_Unit agAreaUnits[] = {
 	{ "um^2", "\xc2\xb5\xc2\xb2", N_("Square micrometers"),	1e-6, NULL },
 	{ "mm^2", "mm\xc2\xb2",	N_("Square millimeters"),	1e-3, NULL },
 	{ "cm^2", "cm\xc2\xb2",	N_("Square centimeters"),	1e-2, NULL },
@@ -225,7 +225,7 @@ const struct unit area_units[] = {
 };
 
 /* Units of volume (SI derived) */
-const struct unit volume_units[] = {
+const AG_Unit agVolumeUnits[] = {
 	{ "um^3", "\xc2\xb5m\xc2\xb3", N_("Cubic micrometers"),	1e-6, NULL },
 	{ "mm^3", "mm\xc2\xb3",	N_("Cubic millimeters"),	1e-3, NULL },
 	{ "cm^3", "cm\xc2\xb3",	N_("Cubic centimeters"),	1e-2, NULL },
@@ -239,7 +239,7 @@ const struct unit volume_units[] = {
 };
 
 /* Units of speed/velocity (SI derived) */
-const struct unit speed_units[] = {
+const AG_Unit agSpeedUnits[] = {
 	{ "um/s", "\xc2\xb5m/s", N_("Micrometers per second"),	1e-6, NULL },
 	{ "mm/s", "", N_("Millimeters per second"),		1e-3, NULL },
 	{ "cm/s", "", N_("Centimeters per second"),		1e-2, NULL },
@@ -253,7 +253,7 @@ const struct unit speed_units[] = {
 };
 
 /* Units of weight */
-const struct unit mass_units[] = {
+const AG_Unit agMassUnits[] = {
 	{ "ug", "\xc2\xb5g", N_("Micrograms"),	1e-6, NULL },
 	{ "mg", "", N_("Milligrams"),		1e-3, NULL },
 	{ "cg", "", N_("Centigrams"),		1e-2, NULL },
@@ -285,7 +285,7 @@ const struct unit mass_units[] = {
 };
 
 /* Units of time */
-const struct unit time_units[] = {
+const AG_Unit agTimeUnits[] = {
 	{ "ns", "", N_("Nanoseconds"),			1e-9, NULL },
 	{ "us", "\xc2\xb5s", N_("Microseconds"),	1e-6, NULL },
 	{ "ms", "", N_("Milliseconds"),			1e-3, NULL },
@@ -301,7 +301,7 @@ const struct unit time_units[] = {
 };
 
 /* Units of electrical current */
-const struct unit current_units[] = {
+const AG_Unit agCurrentUnits[] = {
 	{ "pA", "", N_("Picoamperes"),			1e-12, NULL },
 	{ "nA", "", N_("Nanoamperes"),			1e-9, NULL },
 	{ "uA", "\xc2\xb5\x41", N_("Microamperes"),	1e-6, NULL },
@@ -312,12 +312,12 @@ const struct unit current_units[] = {
 	{ NULL, NULL, NULL,				0, NULL }
 };
 
-const struct unit temperature_units[] = {
-	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),   0, unit_celsius },
-	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"), 0, unit_fahrenheit },
+const AG_Unit agTemperatureUnits[] = {
+	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),   0, AG_UnitCelsius },
+	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"), 0, AG_UnitFahrenheit },
 #ifdef HISTORICAL_UNITS
-	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),  0, unit_rankine },
-	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),  0, unit_reaumur },
+	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),  0, AG_UnitRankine },
+	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),  0, AG_UnitReaumur },
 #endif
 	{ "uk", "\xc2\xb5k", "Microkelvins",			1e-6, NULL },
 	{ "mk", "", "Millikelvins",				1e-3, NULL },
@@ -328,7 +328,7 @@ const struct unit temperature_units[] = {
 };
 
 /* Units of substance amount */
-const struct unit substance_amt_units[] = {
+const AG_Unit agSubstanceAmountUnits[] = {
 	{ "pmol", "", "Picomoles",			1e-12, NULL },
 	{ "umol", "\xc2\xb5mol", "Micromoles",		1e-6, NULL },
 	{ "mmol", "", "Millimoles",			1e-3, NULL },
@@ -339,7 +339,7 @@ const struct unit substance_amt_units[] = {
 };
 
 /* Units of light measurement */
-const struct unit light_units[] = {
+const AG_Unit agLightUnits[] = {
 	{ "ucd", "\xc2\xb5\x63\x64", "Microcandelas",		1e-6, NULL },
 	{ "mcd", "", "Millicandelas",				1e-3, NULL },
 	{ "cd", "", "Candelas",					1.0, NULL },
@@ -349,7 +349,7 @@ const struct unit light_units[] = {
 };
 
 /* Units of power */
-const struct unit power_units[] = {
+const AG_Unit agPowerUnits[] = {
 	{ "uW", "\xc2\xb5W", "Microwatts",	1e-6, NULL },
 	{ "mW", "", "Milliwatts",		1e-3, NULL },
 	{ "BTU/h", "", "BTU/hr",		0.292875, NULL },
@@ -365,7 +365,7 @@ const struct unit power_units[] = {
 };
 
 /* Units of electromotive force */
-const struct unit emf_units[] = {
+const AG_Unit agEMFUnits[] = {
 	{ "uV", "\xc2\xb5V", "Microvolts",	1e-6, NULL },
 	{ "mV", "", "Millivolts",		1e-3, NULL },
 	{ "V", "", "Volts",			1.0, NULL },
@@ -375,7 +375,7 @@ const struct unit emf_units[] = {
 };
 
 /* Units of electrical resistance */
-const struct unit resistance_units[] = {
+const AG_Unit agResistanceUnits[] = {
 	{ "uohms", "\xc2\xb5\xce\xa9", "Microohms",	1e-6, NULL },
 	{ "mohms", "m\xce\xa9", "Milliohms",		1e-3, NULL },
 	{ "ohms", "\xce\xa9", "Ohms",			1.0, NULL },
@@ -385,7 +385,7 @@ const struct unit resistance_units[] = {
 };
 
 /* Units of first order temperature coefficients of resistance. */
-const struct unit resistance_Tcoeff1_units[] = {
+const AG_Unit agResistanceTC1Units[] = {
 	{ "mohms/degC", "m\xce\xa9/\xc2\xb0\x43", "Milliohms per \xc2\xb0\x43",
 	  1e-3, NULL},
 	{ "ohms/degC", "\xce\xa9/\xc2\xb0\x43", "Ohms per\xc2\xb0\x43",
@@ -394,7 +394,7 @@ const struct unit resistance_Tcoeff1_units[] = {
 };
 
 /* Units of second order temperature coefficients of resistance. */
-const struct unit resistance_Tcoeff2_units[] = {
+const AG_Unit agResistanceTC2Units[] = {
 	{ "mohms/degC^2", "m\xce\xa9/\xc2\xb0\x43\xc2\xb2",
 	  "Milliohms per \xc2\xb0\x43\xc2\xb2",
 	  1e-3, NULL},
@@ -405,7 +405,7 @@ const struct unit resistance_Tcoeff2_units[] = {
 };
 
 /* Units of electrical capacitance */
-const struct unit capacitance_units[] = {
+const AG_Unit agCapacitanceUnits[] = {
 	{ "pF", "", "Picofarads",			1e-12, NULL },
 	{ "nF", "", "Nanofarads",			1e-9, NULL },
 	{ "uF", "\xc2\xb5\x46",	"Microfarads",		1e-6, NULL },
@@ -416,7 +416,7 @@ const struct unit capacitance_units[] = {
 };
 
 /* Units of electrical inductance */
-const struct unit inductance_units[] = {
+const AG_Unit agInductanceUnits[] = {
 	{ "uH", "\xc2\xb5\x48",	"Microhenries",		1e-6, NULL },
 	{ "mH", "", "Millihenries",			1e-3, NULL },
 	{ "H", "", "Henries",				1.0, NULL },
@@ -425,7 +425,7 @@ const struct unit inductance_units[] = {
 };
 
 /* Units of frequency */
-const struct unit frequency_units[] = {
+const AG_Unit agFrequencyUnits[] = {
 	{ "uHz", "\xc2\xb5Hz","Microhertz",	1e-6, NULL },
 	{ "mHz", "", "Millihertz",		1e-3, NULL },
 	{ "Hz", "", "Hertz",			1.0, NULL },
@@ -436,7 +436,7 @@ const struct unit frequency_units[] = {
 };
 
 /* Units of pressure and stress */
-const struct unit pressure_units[] = {
+const AG_Unit agPressureUnits[] = {
 	{ "Pa", "", "Pascals",					1.0, NULL },
 	{ "Mba", "", "Millibars",				1e2, NULL },
 	{ "kPa", "", "Kilopascals",				1e3, NULL },
@@ -458,7 +458,7 @@ const struct unit pressure_units[] = {
 };
 
 /* Units of metabolic cost (ie. physical activity) */
-const struct unit met_units[] = {
+const AG_Unit agMetabolicExpenditureUnits[] = {
 	{ "MET", "", N_("Metabolic equivalent"),		1.0, NULL },
 	{ "MESS", "", N_("Attending church"),			2.5, NULL },
 	{ "Kcal/min", "", N_("Kilokalories per minute"),	1.0, NULL },

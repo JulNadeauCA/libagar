@@ -1,24 +1,26 @@
-/*	$Csoft: nodemask.h,v 1.4 2005/02/06 07:06:21 vedge Exp $	*/
+/*	$Csoft: nodemask.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_NODEMASK_H_
 #define _AGAR_NODEMASK_H_
 #include "begin_code.h"
 
-enum nodemask_type {
-	NODEMASK_BITMAP,		/* Bitmap (pixel-perfect at 1:1) */
-	NODEMASK_POLYGON,		/* Simple polygon */
-	NODEMASK_RECTANGLE		/* Rectangular region */
+struct ag_map;
+
+enum ag_nodemask_type {
+	AG_NODEMASK_BITMAP,		/* Bitmap (pixel-perfect at 1:1) */
+	AG_NODEMASK_POLYGON,		/* Simple polygon */
+	AG_NODEMASK_RECTANGLE		/* Rectangular region */
 };
 
-TAILQ_HEAD(nodemaskq, nodemask);
+TAILQ_HEAD(ag_nodemaskq, ag_nodemask);
 
-struct nodemask {
-	enum nodemask_type type;
+typedef struct ag_nodemask {
+	enum ag_nodemask_type type;
 	int scale;
 	union {
 		struct {
-			struct object *obj;
+			AG_Object *obj;
 			Uint32 offs;
 		} bitmap;
 		struct {
@@ -26,24 +28,24 @@ struct nodemask {
 			Uint32 nvertices;
 		} poly;
 	} params;
-	TAILQ_ENTRY(nodemask) masks;
 #define nm_bitmap	params.bitmap
 #define nm_poly		params.poly
-};
+	TAILQ_ENTRY(ag_nodemask) masks;
+} AG_NodeMask;
 
 __BEGIN_DECLS
-struct nodemask	*nodemask_new(enum nodemask_type);
+AG_NodeMask	*AG_NodeMaskNew(enum ag_nodemask_type);
 
-void	 nodemask_init(struct nodemask *, enum nodemask_type);
-int	 nodemask_load(struct map *, struct netbuf *, struct nodemask *);
-void	 nodemask_save(struct map *, struct netbuf *, const struct nodemask *);
-void	 nodemask_destroy(struct map *, struct nodemask *);
-void	 nodemask_copy(const struct nodemask *, struct map *,
-	               struct nodemask *);
+void	 AG_NodeMaskInit(AG_NodeMask *, enum ag_nodemask_type);
+int	 AG_NodeMaskLoad(struct ag_map *, AG_Netbuf *, AG_NodeMask *);
+void	 AG_NodeMaskSave(struct ag_map *, AG_Netbuf *, const AG_NodeMask *);
+void	 AG_NodeMaskDestroy(struct ag_map *, AG_NodeMask *);
+void	 AG_NodeMaskCopy(const AG_NodeMask *, struct ag_map *,
+	               AG_NodeMask *);
 
-void	 nodemask_bitmap(struct map *, struct nodemask *, void *, Uint32);
-void	 nodemask_vertex(struct nodemask *, Uint32, Uint32);
-int	 nodemask_intersect(const struct nodemask *, const struct nodemask *);
+void	 AG_NodeMaskBitmap(struct ag_map *, AG_NodeMask *, void *, Uint32);
+void	 AG_NodeMaskVertex(AG_NodeMask *, Uint32, Uint32);
+int	 AG_NodeMaskIntersect(const AG_NodeMask *, const AG_NodeMask *);
 __END_DECLS
 
 #include "close_code.h"

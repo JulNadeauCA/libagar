@@ -1,74 +1,74 @@
-/*	$Csoft: feature.h,v 1.8 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: feature.h,v 1.9 2005/03/05 12:13:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FEATURE_H_
 #define _AGAR_RG_FEATURE_H_
 #include "begin_code.h"
 
-#define FEATURE_NAME_MAX 32
-#define FEATURE_TYPE_MAX 32
+#define RG_FEATURE_NAME_MAX 32
+#define RG_FEATURE_TYPE_MAX 32
 
-struct tileview;
+struct rg_tileview;
+struct ag_menu_item;
 
-struct feature_ops {
+typedef struct rg_feature_ops {
 	const char *type;
 	size_t len;
 	const char *desc;
 	int flags;
 #define FEATURE_AUTOREDRAW	0x01	/* Redraw tile periodically on edit */
 
-	void (*init)(void *, struct tileset *, int);
-	int  (*load)(void *, struct netbuf *);
-	void (*save)(void *, struct netbuf *);
+	void (*init)(void *, struct rg_tileset *, int);
+	int  (*load)(void *, AG_Netbuf *);
+	void (*save)(void *, AG_Netbuf *);
 	void (*destroy)(void *);
-	void (*apply)(void *, struct tile *, int, int);
-	void (*menu)(void *, struct AGMenuItem *);
-	struct toolbar *(*toolbar)(void *, struct tileview *);
-	struct window *(*edit)(void *, struct tileview *);
-};
+	void (*apply)(void *, RG_Tile *, int, int);
+	void (*menu)(void *, struct ag_menu_item *);
+	AG_Toolbar *(*toolbar)(void *, struct rg_tileview *);
+	AG_Window *(*edit)(void *, struct rg_tileview *);
+} RG_FeatureOps;
 
-struct feature_sketch {
-	struct sketch *sk;
+typedef struct rg_feature_sketch {
+	struct rg_sketch *sk;
 	int x, y;
 	int visible;
-	TAILQ_ENTRY(feature_sketch) sketches;
-};
+	TAILQ_ENTRY(rg_feature_sketch) sketches;
+} RG_FeatureSketch;
 
-struct feature_pixmap {
-	struct pixmap *px;
+typedef struct rg_feature_pixmap {
+	struct rg_pixmap *px;
 	int x, y;
 	int visible;
-	TAILQ_ENTRY(feature_pixmap) pixmaps;
-};
+	TAILQ_ENTRY(rg_feature_pixmap) pixmaps;
+} RG_FeaturePixmap;
 
-struct feature {
-	char name[FEATURE_NAME_MAX];
-	const struct feature_ops *ops;
-	struct tileset *ts;
+typedef struct rg_feature {
+	char name[RG_FEATURE_NAME_MAX];
+	const RG_FeatureOps *ops;
+	struct rg_tileset *ts;
 	int flags;
 	u_int nrefs;
+	TAILQ_HEAD(,rg_feature_sketch) sketches;
+	TAILQ_HEAD(,rg_feature_pixmap) pixmaps;
+	TAILQ_ENTRY(rg_feature) features;
+} RG_Feature;
 
-	TAILQ_HEAD(,feature_sketch) sketches;
-	TAILQ_HEAD(,feature_pixmap) pixmaps;
-	TAILQ_ENTRY(feature) features;
-};
-
-#define FEATURE(f) ((struct feature *)(f))
+#define RG_FEATURE(f) ((RG_Feature *)(f))
 
 __BEGIN_DECLS
-void	feature_init(void *, struct tileset *, int, const struct feature_ops *);
-void	feature_destroy(struct feature *);
-int	feature_load(void *, struct netbuf *);
-void	feature_save(void *, struct netbuf *);
+void	AG_FeatureInit(void *, struct rg_tileset *, int, const RG_FeatureOps *);
+void	AG_FeatureDestroy(RG_Feature *);
+int	RG_FeatureLoad(void *, AG_Netbuf *);
+void	RG_FeatureSave(void *, AG_Netbuf *);
 
-struct feature_sketch *feature_insert_sketch(struct feature *, struct sketch *);
-void		       feature_remove_sketch(struct feature *, struct sketch *);
+RG_FeatureSketch *RG_FeatureAddSketch(RG_Feature *, struct rg_sketch *);
+void		  RG_FeatureDelSketch(RG_Feature *, struct rg_sketch *);
 
-struct feature_pixmap *feature_insert_pixmap(struct feature *, struct pixmap *);
-void		       feature_remove_pixmap(struct feature *, struct pixmap *);
+RG_FeaturePixmap *RG_FeatureAddPixmap(RG_Feature *, struct rg_pixmap *);
+void		  RG_FeatureDelPixmap(RG_Feature *, struct rg_pixmap *);
 
-void	feature_open_menu(struct tileview *, int, int);
-void	feature_close_menu(struct tileview *);
+void	RG_FeatureOpenMenu(struct rg_tileview *, int, int);
+void	RG_FeatureCloseMenu(struct rg_tileview *);
 __END_DECLS
 
 #include "close_code.h"
