@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.32 2005/06/05 20:37:11 twingy Exp $	*/
+/*	$Csoft: tableview.c,v 1.33 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -290,7 +290,6 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
         }
 
 	if (valid) {
-		AG_WidgetFocus(tv);
 		tv->column[ind].mousedown = 1;
 	}
 	pthread_mutex_unlock(&tv->lock);
