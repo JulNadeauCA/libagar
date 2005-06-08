@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.28 2005/05/16 00:40:26 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.29 2005/05/27 03:54:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -43,8 +43,7 @@ struct gfx_animcl {
 
 enum gfx_snap_mode {
 	GFX_SNAP_NOT,
-	GFX_SNAP_TO_GRID,
-	GFX_SNAP_TO_CENTER
+	GFX_SNAP_TO_GRID
 };
 
 struct sprite {
