@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.5 2005/05/24 08:15:08 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.6 2005/05/29 00:27:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -96,8 +96,10 @@ init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 	noderef_init(r, NODEREF_SPRITE);
 	noderef_set_sprite(r, m, t->ts, t->sprite);
 	r->layer = m->cur_layer;
-	r->r_gfx.xcenter = -spr->xOrig;
-	r->r_gfx.ycenter = -spr->yOrig;
+	r->r_gfx.xcenter = 0;
+	r->r_gfx.ycenter = 0;
+	r->r_gfx.xorigin = spr->xOrig;
+	r->r_gfx.yorigin = spr->yOrig;
 
 	switch (stamp_snap_mode) {
 	case GFX_SNAP_NOT:
@@ -105,10 +107,6 @@ init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 		r->r_gfx.ycenter += mv->cyoffs*TILESZ/mv->tilesz;
 		break;
 	case GFX_SNAP_TO_GRID:
-		break;
-	case GFX_SNAP_TO_CENTER:
-		r->r_gfx.xcenter += TILESZ/2;
-		r->r_gfx.ycenter += TILESZ/2;
 		break;
 	}
 

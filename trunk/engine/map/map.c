@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.10 2005/05/31 04:03:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.11 2005/06/07 08:18:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	6, 1
+	7, 0
 };
 
 const struct object_ops map_ops = {
@@ -109,6 +109,8 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->r_gfx.ycenter = 0;
 	r->r_gfx.xmotion = 0;
 	r->r_gfx.ymotion = 0;
+	r->r_gfx.xorigin = 0;
+	r->r_gfx.yorigin = 0;
 	r->r_gfx.edge = 0;
 
 	switch (type) {
@@ -641,6 +643,8 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
 		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
+		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
+		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		break;
 	case NODEREF_ANIM:
 		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs,
@@ -649,6 +653,8 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
 		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
+		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
+		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		break;
 	case NODEREF_WARP:
 		dr = node_add_warp(dm, dn, sr->r_warp.map, sr->r_warp.x,
@@ -812,6 +818,11 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	Uint8 flags;
 	Uint8 layer;
 	Sint8 friction;
+	Sint16 xcenter, ycenter;
+	Sint16 xmotion, ymotion;
+	Sint16 xorigin, yorigin;
+	Uint32 ref, offs;
+	struct object *pobj;
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
@@ -824,14 +835,14 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	switch (type) {
 	case NODEREF_SPRITE:
 		{
-			Uint32 ref, offs;
-			Sint16 xcenter, ycenter;
-			struct object *pobj;
-
 			ref = read_uint32(buf);
 			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
+			xmotion = read_sint16(buf);
+			ymotion = read_sint16(buf);
+			xorigin = read_sint16(buf);
+			yorigin = read_sint16(buf);
 
 			if ((pobj = object_find_dep(m, ref)) == NULL) {
 				error_set(_("Cannot resolve object: %u."), ref);
@@ -847,14 +858,17 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 		break;
 	case NODEREF_ANIM:
 		{
-			Uint32 ref, offs, aflags;
-			Sint16 xcenter, ycenter;
+			Uint32 aflags;
 			struct object *pobj;
 
 			ref = read_uint32(buf);
 			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
+			xmotion = read_sint16(buf);
+			ymotion = read_sint16(buf);
+			xorigin = read_sint16(buf);
+			yorigin = read_sint16(buf);
 			aflags = read_uint32(buf);
 			
 			if ((pobj = object_find_dep(m, ref)) == NULL) {
@@ -1076,12 +1090,20 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		write_uint32(buf, r->r_sprite.offs);
 		write_sint16(buf, r->r_gfx.xcenter);
 		write_sint16(buf, r->r_gfx.ycenter);
+		write_sint16(buf, r->r_gfx.xmotion);
+		write_sint16(buf, r->r_gfx.ymotion);
+		write_sint16(buf, r->r_gfx.xorigin);
+		write_sint16(buf, r->r_gfx.yorigin);
 		break;
 	case NODEREF_ANIM:
 		write_uint32(buf, object_dep_index(m, r->r_anim.obj));
 		write_uint32(buf, r->r_anim.offs);
 		write_sint16(buf, r->r_gfx.xcenter);
 		write_sint16(buf, r->r_gfx.ycenter);
+		write_sint16(buf, r->r_gfx.xmotion);
+		write_sint16(buf, r->r_gfx.ymotion);
+		write_sint16(buf, r->r_gfx.xorigin);
+		write_sint16(buf, r->r_gfx.yorigin);
 		write_uint32(buf, r->r_anim.flags);
 		break;
 	case NODEREF_WARP:
@@ -1537,16 +1559,20 @@ draw:
 	if (!view->opengl) {
 		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
 			int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
-			         r->r_gfx.xmotion*tilesz/TILESZ;
+			         r->r_gfx.xmotion*tilesz/TILESZ -
+				 r->r_gfx.xorigin*tilesz/TILESZ;
 			int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
-			         r->r_gfx.ymotion*tilesz/TILESZ;
+			         r->r_gfx.ymotion*tilesz/TILESZ -
+				 r->r_gfx.yorigin*tilesz/TILESZ;
 	
 			blit_scaled(m, su, dx, dy, tilesz);
 		} else {
 			SDL_Rect rd;
 	
-			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
-			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
+			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
+			    r->r_gfx.xorigin;
+			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
+			    r->r_gfx.yorigin;
 			SDL_BlitSurface(su, NULL, view->v, &rd);
 		}
 	} else {
@@ -1561,14 +1587,18 @@ draw:
 		
 		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
 			rd.x = rx + r->r_gfx.xcenter*tilesz/TILESZ +
-			    r->r_gfx.xmotion*tilesz/TILESZ;
+			    r->r_gfx.xmotion*tilesz/TILESZ -
+			    r->r_gfx.xorigin*tilesz/TILESZ;
 			rd.y = ry + r->r_gfx.ycenter*tilesz/TILESZ +
-			    r->r_gfx.ymotion*tilesz/TILESZ;
+			    r->r_gfx.ymotion*tilesz/TILESZ -
+			    r->r_gfx.yorigin*tilesz/TILESZ;
 			rd.w = su->w*tilesz/TILESZ;
 			rd.h = su->h*tilesz/TILESZ;
 		} else {
-			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
-			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
+			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
+			    r->r_gfx.xorigin*tilesz/TILESZ;
+			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
+			    r->r_gfx.yorigin*tilesz/TILESZ;
 			rd.w = su->w;
 			rd.h = su->h;
 		}

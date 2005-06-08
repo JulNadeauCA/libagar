@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.3 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,8 +47,32 @@ const int ntransforms;
 struct transform *
 transform_rotate(struct noderef *r, int angle)
 {
-	Uint32 theta = (Uint32)angle;
+	Uint32 angles = (Uint32)angle;
 	struct transform *tr;
+	SDL_Surface *su;
+	float rad, theta;
+
+	switch (r->type) {
+	case NODEREF_SPRITE:
+		su = SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
+		break;
+	case NODEREF_ANIM:
+		su = GFX_ANIM_FRAME(r, ANIM(r->r_anim.obj,r->r_anim.offs));
+		break;
+	default:
+		return (NULL);
+	}
+
+	rad = hypotf(
+	    r->r_gfx.xorigin - su->w/2,
+	    r->r_gfx.yorigin - su->h/2);
+	theta = atan2f(
+	    r->r_gfx.yorigin - su->w/2,
+	    r->r_gfx.xorigin - su->h/2);
+
+	theta += ((float)angle/360.0)*(2.0*M_PI);
+	r->r_gfx.xorigin = rad*cosf(theta) + su->w/2;
+	r->r_gfx.yorigin = rad*sinf(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
 		if (tr->type == TRANSFORM_ROTATE) {
@@ -64,10 +88,10 @@ transform_rotate(struct noderef *r, int angle)
 		return (NULL);
 	}
 	if (tr == NULL) {
-		tr = transform_new(TRANSFORM_ROTATE, 1, &theta);
+		tr = transform_new(TRANSFORM_ROTATE, 1, &angles);
 		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
 	} else {
-		tr->args[0] = theta;
+		tr->args[0] = angles;
 	}
 	return (tr);
 }
@@ -246,7 +270,7 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 		for (y = 0; y < sOrig->h; y++) {
 			for (x = 0; x < sOrig->w; x++) {
 				PUT_PIXEL2(sNew, y, x,
-				    GET_PIXEL2(sOrig, x, sOrig->h-1-y));
+				    GET_PIXEL2(sOrig, x, sOrig->h-y-1));
 			}
 		}
 		break;
@@ -262,7 +286,7 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 		for (y = 0; y < sOrig->h; y++) {
 			for (x = 0; x < sOrig->w; x++) {
 				PUT_PIXEL2(sNew, y, x,
-				    GET_PIXEL2(sOrig, sOrig->w-x, y));
+				    GET_PIXEL2(sOrig, sOrig->w-x-1, y));
 			}
 		}
 		break;
