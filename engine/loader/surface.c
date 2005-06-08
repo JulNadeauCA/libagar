@@ -1,4 +1,4 @@
-/*	$Csoft: surface.c,v 1.2 2005/02/14 06:40:19 vedge Exp $	*/
+/*	$Csoft: surface.c,v 1.3 2005/04/18 03:25:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 	write_uint32(buf, su->format->Amask);
 	write_uint8(buf, su->format->alpha);
 	write_uint32(buf, su->format->colorkey);
-	
+#if 0
 	dprintf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
 	    su->format->BitsPerPixel,
 	    (su->flags & SDL_SRCALPHA) ? " alpha" : "",
@@ -76,7 +76,7 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 	    su->format->Gmask, su->format->Bmask, su->format->Amask);
 	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
 	    su->format->alpha);
-
+#endif
 	if (su->format->BitsPerPixel == 8) {
 		int i;
 
@@ -162,7 +162,7 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 	    Rmask, Gmask, Bmask, Amask);
 	su->format->alpha = read_uint8(buf);
 	su->format->colorkey = read_uint32(buf);
-	
+#if 0	
 	dprintf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
 	    grayscale ? " grayscale" : "",
 	    (flags & SDL_SRCALPHA) ? " alpha" : "",
@@ -170,7 +170,7 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 	dprintf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
 	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
 	    su->format->alpha);
-
+#endif
 	if (depth == 8) {
 		SDL_Color *colors;
 		Uint32 ncolors;

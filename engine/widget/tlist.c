@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.122 2005/05/24 08:15:11 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.123 2005/05/29 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -838,11 +838,8 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 					break;
 			}
 			if (tp != NULL) {
-				dprintf("popup (%s)\n", tp->iclass);
 				show_popup(tl, tp);
 				goto out;
-			} else {
-				dprintf("no popup for %s class\n", ti->class);
 			}
 		}
 		break;
@@ -1044,9 +1041,6 @@ show_popup(struct tlist *tl, struct tlist_popup *tp)
 {
 	struct AGMenu *m = tp->menu;
 	int x, y;
-
-	dprintf("popup %s (item `%s' menu %p)\n", tp->iclass, tp->item->text,
-	    m);
 
 #if 0
 	if (widget_parent_window(tl) == NULL)
