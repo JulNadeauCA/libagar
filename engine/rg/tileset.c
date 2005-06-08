@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.40 2005/06/07 03:05:23 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.41 2005/06/07 06:49:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -816,6 +816,7 @@ tryname2:
 	tile_init(t, ts, ins_tile_name);
 	t->sprite = gfx_insert_sprite(gfx, NULL);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
+	sprite_set_origin(&gfx->sprites[t->sprite], ins_tile_w/2, ins_tile_h/2);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	if (gfx->nsprites > ts->max_sprites) {
