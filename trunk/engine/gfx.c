@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.46 2005/04/21 04:45:44 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.47 2005/04/21 06:38:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,7 +59,6 @@ pthread_mutex_t gfxq_lock;
 const char *gfx_snap_names[] = {
 	N_("Free positioning"),
 	N_("Snap to grid"),
-	N_("Snap to center"),
 	NULL
 };
 
