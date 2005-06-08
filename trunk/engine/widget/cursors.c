@@ -1,4 +1,4 @@
-/*	$Csoft: cursors.c,v 1.2 2005/02/27 06:52:02 vedge Exp $	*/
+/*	$Csoft: cursors.c,v 1.3 2005/03/03 10:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
 
-SDL_Cursor *cursors[LAST_CURSOR];
+SDL_Cursor *agCursors[AG_LAST_CURSOR];
 
 static SDL_Cursor *
 create_cursor(char *xpm[], int xHot, int yHot)
@@ -77,18 +77,18 @@ create_cursor(char *xpm[], int xHot, int yHot)
 }
 
 void
-cursors_init(void)
+AG_CursorsInit(void)
 {
-	cursors[FILL_CURSOR] = create_cursor(fill_xpm, 23, 25);
-	cursors[ERASE_CURSOR] = create_cursor(erase_xpm, 10, 20);
-	cursors[PICK_CURSOR] = create_cursor(pick_xpm, 8, 22);
+	agCursors[AG_FILL_CURSOR] = create_cursor(fill_xpm, 23, 25);
+	agCursors[AG_ERASE_CURSOR] = create_cursor(erase_xpm, 10, 20);
+	agCursors[AG_PICK_CURSOR] = create_cursor(pick_xpm, 8, 22);
 }
 
 void
-cursors_destroy(void)
+AG_CursorsDestroy(void)
 {
 	int i;
 
-	for (i = 0; i < LAST_CURSOR; i++)
-		SDL_FreeCursor(cursors[i]);
+	for (i = 0; i < AG_LAST_CURSOR; i++)
+		SDL_FreeCursor(agCursors[i]);
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.23 2005/05/11 09:59:33 vedge Exp $
+.\"	$Csoft: text.3,v 1.24 2005/05/11 15:16:00 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,28 +44,28 @@ interface uses an underlying font engine (such as FreeType) to render text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn text_parse_fontspec "const char *fontspec"
+.Fn AG_TextParseFontSpec "const char *fontspec"
 .Pp
 .Ft int
-.Fn text_init "enum text_engine te"
+.Fn AG_TextInit "enum text_engine te"
 .Pp
 .Ft void
-.Fn text_destroy "void"
+.Fn AG_TextDestroy "void"
 .nr nS 0
 .Pp
 The
-.Fn text_parse_fontspec
+.Fn AG_TextParseFontSpec
 function parses a font specification of the form
 .Sq face,size,style
 (valid separators include
 .Sq :,./ )
 and assigns the default font.
 This function is typically called prior to
-.Fn text_init ,
+.Fn AG_TextInit ,
 to parse font specifications on the command line.
 .Pp
 The
-.Fn text_init
+.Fn AG_TextInit
 function initializes the text subsystem using the given font engine:
 .Bd -literal
 enum text_engine {
@@ -75,9 +75,9 @@ enum text_engine {
 };
 .Ed
 .Pp
-.Fn text_init
+.Fn AG_TextInit
 selects the default font style by looking at the following
-.Xr config 3
+.Xr AG_Config 3
 settings:
 .Bl -tag -width "font-engine.default-style "
 .It Va font-engine.default-font
@@ -93,7 +93,7 @@ this is the name of the font bitmap file.
 In both cases, the file should reside in one of the directories specified in
 the
 .Va font-path
-.Xr config 3
+.Xr AG_Config 3
 setting.
 .It Va font-engine.default-size
 The default font size in points.
@@ -103,7 +103,7 @@ The meaning of these flags is specific to the font engine being used.
 .El
 .Pp
 The
-.Fn text_destroy
+.Fn AG_TextDestroy
 function frees all resources allocated by the font engine.
 .Sh FONT INFORMATION
 .nr nS 1
@@ -132,27 +132,27 @@ returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn text_render_unicode "const char *font_name, int font_size, Uint32 color" "const Uint32 *ucs"
+.Fn AG_TextRenderUnicode "const char *font_name, int font_size, Uint32 color" "const Uint32 *ucs"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render "const char *font_name, int font_size, Uint32 color" "const char *text"
+.Fn AG_TextRender "const char *font_name, int font_size, Uint32 color" "const char *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render_glyph "const char *font_name, int font_size, Uint32 color" "Uint32 uch"
+.Fn AG_TextRenderGlyph "const char *font_name, int font_size, Uint32 color" "Uint32 uch"
 .Pp
 .Ft "void"
-.Fn text_prescale_unicode "const Uint32 *ucs" "int *w" "int *h"
+.Fn AG_TextPrescaleUnicode "const Uint32 *ucs" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn text_prescale "const char *text" "int *w" "int *h"
+.Fn AG_TextPrescale "const char *text" "int *w" "int *h"
 .nr nS 0
 .Pp
 The
-.Fn text_render
+.Fn AG_TextRender
 function renders UTF-8 text to a newly allocated surface.
-.Fn text_render_unicode
+.Fn AG_TextRenderUnicode
 renders UCS-4 text to a newly allocated surface.
-.Fn text_render_glyph
+.Fn AG_TextRenderGlyph
 renders an UCS-4 encoded Unicode character onto a new surface.
 A
 .Fa font_name
@@ -161,44 +161,44 @@ argument of NULL or a
 argument of -1 indicates that the defaults should be used.
 .Pp
 The
-.Fn text_prescale
+.Fn AG_TextPrescale
 and
-.Fn text_prescale_unicode
+.Fn AG_TextPrescaleUnicode
 functions return the expected surface dimensions for the given text.
 .Sh MESSAGES AND USER INPUT
 .nr nS 1
 .Ft "void"
-.Fn text_msg "enum text_msg_title title" "const char *format" "..."
+.Fn AG_TextMsg "enum ag_text_msg_title title" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn text_tmsg "enum text_msg_title title" "Uint32 expire" "const char *format" "..."
+.Fn AG_TextTmsg "enum ag_text_msg_title title" "Uint32 expire" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn text_prompt_float "enum text_float_type type" "double *fp" "double min" "double max" "const struct unit *unit" "const char *format" "..."
+.Fn AG_TextPromptFloat "enum text_float_type type" "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
 .nr nS 0
 .Pp
 The
-.Fn text_msg
+.Fn AG_TextMsg
 function displays a text message window containing the given
 .Xr printf 3
 formatted string, and an
 .Sq OK
 button.
 The
-.Fn text_tmsg
+.Fn AG_TextTmsg
 variant displays the message for a period of time given in milliseconds.
 .Fa title
 is one of the following:
 .Bd -literal
-enum text_msg_title {
-	MSG_ERROR,
-	MSG_WARNING,
-	MSG_INFO
+enum ag_text_msg_title {
+	AG_MSG_ERROR,
+	AG_MSG_WARNING,
+	AG_MSG_INFO
 };
 .Ed
 .Pp
 The
-.Fn text_prompt_float
+.Fn AG_TextPromptFloat
 function displays a window prompting the user to enter a floating-point
 value.
 The
@@ -216,15 +216,15 @@ is NULL, the argument indicates the unit system to use (as in
 Something more sophisticated is needed to deal with unpredictable text surface
 dimensions.
 Currently,
-.Fn text_prescale
+.Fn AG_TextPrescale
 is used prior to allocating fixed-size surfaces, but this is troublesome to
 maintain with translations.
 .Pp
-.Fn text_render_glyph
+.Fn AG_TextRenderGlyph
 does not work.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr config 3 ,
+.Xr AG_Config 3 ,
 .Xr button 3 ,
 .Xr combo 3 ,
 .Xr label 3 ,

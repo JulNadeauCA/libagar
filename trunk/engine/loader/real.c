@@ -1,4 +1,4 @@
-/*	$Csoft: real.c,v 1.4 2004/01/03 04:25:08 vedge Exp $	*/
+/*	$Csoft: real.c,v 1.5 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,44 +35,44 @@
 #include <engine/loader/real.h>
 
 float
-read_float(struct netbuf *buf)
+AG_ReadFloat(AG_Netbuf *buf)
 {
 	float f;
 
-	netbuf_read(&f, sizeof(f), 1, buf);
+	AG_NetbufRead(&f, sizeof(f), 1, buf);
 	return (f);
 }
 
 void
-write_float(struct netbuf *buf, float f)
+AG_WriteFloat(AG_Netbuf *buf, float f)
 {
-	netbuf_write(&f, sizeof(f), 1, buf);
+	AG_NetbufWrite(&f, sizeof(f), 1, buf);
 }
 
 void
-pwrite_float(struct netbuf *buf, float f, off_t offs)
+AG_PwriteFloat(AG_Netbuf *buf, float f, off_t offs)
 {
-	netbuf_pwrite(&f, sizeof(f), 1, offs, buf);
+	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
 }
 
 double
-read_double(struct netbuf *buf)
+AG_ReadDouble(AG_Netbuf *buf)
 {
 	double f;
 
-	netbuf_read(&f, sizeof(f), 1, buf);
+	AG_NetbufRead(&f, sizeof(f), 1, buf);
 	return (f);
 }
 
 void
-write_double(struct netbuf *buf, double f)
+AG_WriteDouble(AG_Netbuf *buf, double f)
 {
-	netbuf_write(&f, sizeof(f), 1, buf);
+	AG_NetbufWrite(&f, sizeof(f), 1, buf);
 }
 
 void
-pwrite_double(struct netbuf *buf, double f, off_t offs)
+AG_PwriteDouble(AG_Netbuf *buf, double f, off_t offs)
 {
-	netbuf_pwrite(&f, sizeof(f), 1, offs, buf);
+	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
 }
 

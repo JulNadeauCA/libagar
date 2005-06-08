@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.h,v 1.3 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg_ortho.h,v 1.1 2004/04/27 11:43:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_ORTHO_H_
@@ -14,9 +14,10 @@ enum vg_ortho_mode {
 };
 
 __BEGIN_DECLS
-void		vg_ortho_restrict(struct vg *, double *, double *);
-__inline__ void	vg_ortho_mode(struct vg *, enum vg_ortho_mode);
-struct toolbar *vg_ortho_toolbar(void *, struct vg *, enum toolbar_type);
+void		VG_RestrictOrtho(struct vg *, double *, double *);
+__inline__ void	VG_OrthoRestrictMode(struct vg *, enum vg_ortho_mode);
+AG_Toolbar     *VG_OrthoRestrictToolbar(void *, struct vg *,
+		                        enum ag_toolbar_type);
 __END_DECLS
 
 #include "close_code.h"

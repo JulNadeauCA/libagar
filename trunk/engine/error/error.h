@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.9 2004/04/18 02:18:21 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.10 2004/06/18 03:11:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_ERROR_H_
@@ -52,17 +52,17 @@
 		abort();						\
 	} while (0)
 #else
-#define fatal error_fatal
+#define fatal AG_FatalError
 #endif
 
-#define Malloc(len, t)		error_malloc((len), (t))
-#define Realloc(p, len)		error_realloc((p), (len))
+#define Malloc(len, t)		AG_Malloc((len), (t))
+#define Realloc(p, len)		AG_Realloc((p), (len))
 #ifdef DEBUG
-#define Free(p, t)		error_free((p), (t))
+#define Free(p, t)		AG_Free((p), (t))
 #else
 #define Free(p, t)		if ((p) != NULL) free((p))
 #endif
-#define Strdup(s)		error_strdup(s)
+#define Strdup(s)		AG_Strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
 	if (vasprintf((msg), (fmt), (args)) == -1) 		\
@@ -75,33 +75,33 @@
 #include "begin_code.h"
 
 #ifdef DEBUG
-extern int engine_debug;
+extern int agDebugLvl;
 #endif
 
 __BEGIN_DECLS
-void		 error_init(void);
-void		 error_destroy(void);
-__inline__ char	*error_strdup(const char *);
-const char	*error_get(void);
-void		 error_set(const char *, ...)
+void		 AG_InitError(void);
+void		 AG_DestroyError(void);
+__inline__ char	*AG_Strdup(const char *);
+const char	*AG_GetError(void);
+void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 error_fatal(const char *, ...)
+void		 AG_FatalError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 error_dprintf(const char *, ...)
+void		 AG_DebugPrintf(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 error_dprintf_nop(const char *, ...)
+void		 AG_DebugPrintfNop(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 error_debug(int, const char *, ...)
+void		 AG_Debug(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
-void		 error_debug_nop(int, const char *, ...)
+void		 AG_DebugNop(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
-void		 error_debug_n(int, const char *, ...)
+void		 AG_DebugN(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
 __END_DECLS
@@ -119,18 +119,18 @@ __END_DECLS
 	fprintf(stderr, fmt, ##args)
 
 # define debug(mask, fmt, args...)				\
-	if (engine_debug & (mask)) 				\
+	if (agDebugLvl & (mask)) 				\
 		printf("%s: " fmt , __FUNCTION__ , ##args)
 
 # define debug_n(mask, fmt, args...)				\
-	if (engine_debug & (mask))				\
+	if (agDebugLvl & (mask))				\
 		fprintf(stderr, fmt, ##args)
 
 #else
-# define dprintf	error_dprintf
-# define deprintf	error_dprintf
-# define debug		error_debug
-# define debug_n	error_debug_n
+# define dprintf	AG_DebugPrintf
+# define deprintf	AG_DebugPrintf
+# define debug		AG_Debug
+# define debug_n	AG_DebugN
 #endif /* __GNUC__ */
 
 #else /* !DEBUG */
@@ -141,10 +141,10 @@ __END_DECLS
 # define debug(level, arg...)	((void)0)
 # define debug_n(level, arg...)	((void)0)
 #else
-# define dprintf	error_dprintf_nop
-# define deprintf	error_dprintf_nop
-# define debug		error_debug_nop
-# define debug_n	error_debug_nop
+# define dprintf	AG_DebugPrintfNop
+# define deprintf	AG_DebugPrintfNop
+# define debug		AG_DebugNop
+# define debug_n	AG_DebugNop
 #endif /* __GNUC__ */
 
 #endif	/* DEBUG */

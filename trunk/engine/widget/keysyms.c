@@ -1,9 +1,9 @@
-/*	$Csoft: keysyms.c,v 1.1 2005/02/02 09:28:23 vedge Exp $	*/
+/*	$Csoft: keysyms.c,v 1.2 2005/02/03 02:15:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
 
-const char *keysyms[] = {
+const char *agKeySyms[] = {
 	NULL,	
 	NULL,
 	NULL,
@@ -330,5 +330,5 @@ const char *keysyms[] = {
 	NULL
 };
 
-const int nkeysyms = sizeof(keysyms)/sizeof(keysyms[0]);
+const int agnKeySyms = sizeof(agKeySyms)/sizeof(agKeySyms[0]);
 

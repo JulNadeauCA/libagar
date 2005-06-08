@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.9 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.10 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include "vg_primitive.h"
 
 static void
-snap_to_grid(struct vg *vg, double *x, double *y)
+snap_to_grid(VG *vg, double *x, double *y)
 {
 	double gx, gy;
 	double xoff, yoff;
@@ -81,10 +81,10 @@ snap_to_grid(struct vg *vg, double *x, double *y)
 }
 
 static void
-snap_to_endpoint(struct vg *vg, double *x, double *y)
+snap_to_endpoint(VG *vg, double *x, double *y)
 {
-	struct vg_element *vge;
-	struct vg_vertex *vtx;
+	VG_Element *vge;
+	VG_Vtx *vtx;
 	int i;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
@@ -103,7 +103,7 @@ snap_to_endpoint(struct vg *vg, double *x, double *y)
 }
 
 void
-vg_snap_to(struct vg *vg, double *x, double *y)
+VG_SnapPoint(VG *vg, double *x, double *y)
 {
 	switch (vg->snap_mode) {
 	case VG_NEAREST_INTEGER:
@@ -124,22 +124,22 @@ vg_snap_to(struct vg *vg, double *x, double *y)
 }
 
 void
-vg_snap_mode(struct vg *vg, enum vg_snap_mode mode)
+VG_SetSnapMode(VG *vg, enum vg_snap_mode mode)
 {
 	vg->snap_mode = mode;
 }
 
 void
-vg_draw_grid(struct vg *vg)
+VG_DrawGrid(VG *vg)
 {
 	int x, y;
 	int rlen;
 
-	vg_rlength(vg, vg->grid_gap, &rlen);
+	VG_RLength(vg, vg->grid_gap, &rlen);
 
 	for (y = 0; y < vg->su->h; y += rlen) {
 		for (x = 0; x < vg->su->w; x += rlen) {
-			vg_put_pixel(vg, x, y, vg->grid_color);
+			VG_PutPixel(vg, x, y, vg->grid_color);
 		}
 	}
 }
@@ -147,85 +147,85 @@ vg_draw_grid(struct vg *vg)
 static void
 snap_to(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
-	struct toolbar *tbar = argv[1].p;
-	struct vg *vg = argv[2].p;
+	AG_Button *bu = argv[0].p;
+	AG_Toolbar *tbar = argv[1].p;
+	VG *vg = argv[2].p;
 	int snap_mode = argv[3].i;
 
-	toolbar_select_unique(tbar, bu);
-	vg_snap_mode(vg, snap_mode);
+	AG_ToolbarSelectUnique(tbar, bu);
+	VG_SetSnapMode(vg, snap_mode);
 }
 
 static void
 snap_to_m(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
+	VG *vg = argv[1].p;
 	int snap_mode = argv[2].i;
 
-	vg_snap_mode(vg, snap_mode);
+	VG_SetSnapMode(vg, snap_mode);
 }
 
-struct toolbar *
-vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
+AG_Toolbar *
+VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 {
-	struct toolbar *snbar;
-	struct button *bu;
+	AG_Toolbar *snbar;
+	AG_Button *bu;
 
-	snbar = toolbar_new(parent, ttype, 1, TOOLBAR_HOMOGENOUS);
-	toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS);
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
-	toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_RINT_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
-	bu = toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
+	bu = AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_GRID_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
-	widget_set_int(bu, "state", 1);
-	toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_ICON), 1, 0,
+	AG_WidgetSetInt(bu, "state", 1);
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_ENDPOINT_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
-	toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_D_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_ENDPOINT_D_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
 
-	toolbar_add_button(snbar, 0, ICON(SNAP_CLOSEST_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_CLOSEST_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
-	toolbar_add_button(snbar, 0, ICON(SNAP_CENTERPT_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_CENTERPT_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
-	toolbar_add_button(snbar, 0, ICON(SNAP_MIDDLEPT_ICON), 1, 0,
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_MIDDLEPT_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
-	toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_AUTO_ICON),
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_INTSECT_AUTO_ICON),
 	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
 	    VG_INTERSECTIONS_AUTO);
-	toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_MANUAL_ICON),
+	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_INTSECT_MANUAL_ICON),
 	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
 	    VG_INTERSECTIONS_MANUAL);
 	return (snbar);
 }
 
 void
-vg_reg_snap_menu(struct AGMenu *m, struct AGMenuItem *mi, struct vg *vg)
+VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG *vg)
 {
-	menu_action(mi, _("Free positioning"), SNAP_FREE_ICON,
+	AG_MenuAction(mi, _("Free positioning"), SNAP_FREE_ICON,
 	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
-	menu_action(mi, _("Grid"), SNAP_GRID_ICON,
+	AG_MenuAction(mi, _("Grid"), SNAP_GRID_ICON,
 	    snap_to_m, "%p,%i", vg, VG_GRID);
-	menu_action(mi, _("Nearest integer"), SNAP_RINT_ICON,
+	AG_MenuAction(mi, _("Nearest integer"), SNAP_RINT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
 	
-	menu_separator(mi);
+	AG_MenuSeparator(mi);
 
-	menu_action(mi, _("Endpoint"), SNAP_ENDPOINT_ICON,
+	AG_MenuAction(mi, _("Endpoint"), SNAP_ENDPOINT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
-	menu_action(mi, _("Distance from endpoint"), SNAP_ENDPOINT_D_ICON,
+	AG_MenuAction(mi, _("Distance from endpoint"), SNAP_ENDPOINT_D_ICON,
 	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
-	menu_action(mi, _("Closest point"), SNAP_CLOSEST_ICON,
+	AG_MenuAction(mi, _("Closest point"), SNAP_CLOSEST_ICON,
 	    snap_to_m, "%p,%i", vg, VG_CLOSEST_POINT);
-	menu_action(mi, _("Center point"), SNAP_CENTERPT_ICON,
+	AG_MenuAction(mi, _("Center point"), SNAP_CENTERPT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_CENTER_POINT);
-	menu_action(mi, _("Middle point"), SNAP_MIDDLEPT_ICON,
+	AG_MenuAction(mi, _("Middle point"), SNAP_MIDDLEPT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_MIDDLE_POINT);
 
-	menu_separator(mi);
+	AG_MenuSeparator(mi);
 
-	menu_action(mi, _("Intersections (auto)"), SNAP_INTSECT_AUTO_ICON,
+	AG_MenuAction(mi, _("Intersections (auto)"), SNAP_INTSECT_AUTO_ICON,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_AUTO);
-	menu_action(mi, _("Intersections (manual)"),SNAP_INTSECT_MANUAL_ICON,
+	AG_MenuAction(mi, _("Intersections (manual)"),SNAP_INTSECT_MANUAL_ICON,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_MANUAL);
 }

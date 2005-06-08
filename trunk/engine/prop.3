@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.14 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: prop.3,v 1.15 2005/03/11 08:59:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,90 +41,89 @@
 The agar
 .Nm
 interface operates on a generic property table associated with an
-.Xr object 3
-structure.
+.Xr AG_Object 3 .
 Generic properties can store the following types:
 .Pp
 .Bd -literal
-enum prop_type {
-	PROP_UINT,
-	PROP_INT,
-	PROP_UINT8,
-	PROP_SINT8,
-	PROP_UINT16,
-	PROP_SINT16,
-	PROP_UINT32,
-	PROP_SINT32,
-	PROP_UINT64,		/* Unused */
-	PROP_SINT64,		/* Unused */
-	PROP_FLOAT,		/* IEEE 754 encoding */
-	PROP_DOUBLE,		/* IEEE 754 encoding */
-	PROP_LONG_DOUBLE,	/* Unused */
-	PROP_STRING,
-	PROP_POINTER,		/* Not persistent */
-	PROP_BOOL,
-	PROP_ANY
+enum ag_prop_type {
+	AG_PROP_UINT,
+	AG_PROP_INT,
+	AG_PROP_UINT8,
+	AG_PROP_SINT8,
+	AG_PROP_UINT16,
+	AG_PROP_SINT16,
+	AG_PROP_UINT32,
+	AG_PROP_SINT32,
+	AG_PROP_UINT64,		/* Unused */
+	AG_PROP_SINT64,		/* Unused */
+	AG_PROP_FLOAT,		/* IEEE 754 encoding */
+	AG_PROP_DOUBLE,		/* IEEE 754 encoding */
+	AG_PROP_LONG_DOUBLE,	/* Unused */
+	AG_PROP_STRING,
+	AG_PROP_POINTER,		/* Not persistent */
+	AG_PROP_BOOL,
+	AG_PROP_ANY
 } type;
 .Ed
 .Sh READING PROPERTIES
 .nr nS 1
-.Ft "struct prop *"
-.Fn prop_get "void *obj" "const char *key" "enum prop_type type" "void *dst"
+.Ft "AG_Prop *"
+.Fn AG_Prop "void *obj" "const char *key" "enum ag_prop_type type" "void *dst"
 .Pp
-.Ft "struct prop *"
-.Fn prop_copy "const struct prop *prop"
-.Pp
-.Ft void
-.Fn prop_lock "void *obj"
+.Ft "AG_Prop *"
+.Fn AG_CopyProp "const AG_Prop *prop"
 .Pp
 .Ft void
-.Fn prop_unlock "void *obj"
+.Fn AG_LockProps "void *obj"
+.Pp
+.Ft void
+.Fn AG_UnlockProps "void *obj"
 .Pp
 .Ft int
-.Fn prop_get_bool "void *obj" "const char *key"
+.Fn AG_Bool "void *obj" "const char *key"
 .Pp
 .Ft "u_int"
-.Fn prop_get_uint "void *obj" "const char *key"
+.Fn AG_Uint "void *obj" "const char *key"
 .Pp
 .Ft int
-.Fn prop_get_int "void *obj" "const char *key"
+.Fn AG_Int "void *obj" "const char *key"
 .Pp
 .Ft Uint8
-.Fn prop_get_uint8 "void *obj" "const char *key"
+.Fn AG_Uint8 "void *obj" "const char *key"
 .Pp
 .Ft Sint8
-.Fn prop_get_sint8 "void *obj" "const char *key"
+.Fn AG_Sint8 "void *obj" "const char *key"
 .Pp
 .Ft Uint16
-.Fn prop_get_uint16 "void *obj" "const char *key"
+.Fn AG_Uint16 "void *obj" "const char *key"
 .Pp
 .Ft Sint16
-.Fn prop_get_sint16 "void *obj" "const char *key"
+.Fn AG_Sint16 "void *obj" "const char *key"
 .Pp
 .Ft Uint32
-.Fn prop_get_uint32 "void *obj" "const char *key"
+.Fn AG_Uint32 "void *obj" "const char *key"
 .Pp
 .Ft Sint32
-.Fn prop_get_sint32 "void *obj" "const char *key"
+.Fn AG_Sint32 "void *obj" "const char *key"
 .Pp
 .Ft float
-.Fn prop_get_float "void *obj" "const char *key"
+.Fn AG_Float "void *obj" "const char *key"
 .Pp
 .Ft double
-.Fn prop_get_double "void *obj" "const char *key"
+.Fn AG_Double "void *obj" "const char *key"
 .Pp
 .Ft "char *"
-.Fn prop_get_string "void *obj" "const char *key"
+.Fn AG_String "void *obj" "const char *key"
 .Pp
 .Ft size_t
-.Fn prop_copy_string "void *obj" "const char *key" "char *dst" "size_t dst_size"
+.Fn AG_StringCopy "void *obj" "const char *key" "char *dst" "size_t dst_size"
 .Pp
 .Ft "void *"
-.Fn prop_get_pointer "void *obj" "const char *key"
+.Fn AG_Pointer "void *obj" "const char *key"
 .Pp
 .nr nS 0
 The
-.Fn prop_get
+.Fn AG_Prop
 function searches for a property of type
 .Fa type
 named
@@ -133,21 +132,21 @@ and writes its value to
 .Fa dst ,
 which should point to a variable of the specific data type associated with the
 property.
-.Fa prop_get
+.Fa AG_Prop
 returns a pointer to the related
 .Nm
 structure, or NULL if no property matches
 .Fa key .
 .Pp
 The
-.Fn prop_copy
+.Fn AG_CopyProp
 function returns a copy of
 .Fa prop .
 .Pp
 The
-.Fn prop_lock
+.Fn AG_LockProps
 and
-.Fn prop_unlock
+.Fn AG_UnlockProps
 functions acquire/release the recursive mutex which is associated with an
 object's properties.
 .Pp
@@ -156,9 +155,9 @@ The other data access functions look for a property named
 and return the associated value, raising a fatal condition if there is no
 match.
 .Pp
-.Fn prop_get_string
+.Fn AG_String
 returns a copy of the string.
-.Fn prop_copy_string
+.Fn AG_StringCopy
 copies up to
 .Fa dst_size
 - 1 characters from the value of a string property to
@@ -166,54 +165,54 @@ copies up to
 NUL-terminating the result.
 .Sh WRITING PROPERTIES
 .nr nS 1
-.Ft "struct prop *"
-.Fn prop_set "void *obj" "const char *name" "enum prop_type type" "..."
+.Ft "AG_Prop *"
+.Fn AG_SetProp "void *obj" "const char *name" "enum ag_prop_type type" "..."
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_bool "void *obj" "const char *key" "int value"
+.Ft "AG_Prop *"
+.Fn AG_SetBool "void *obj" "const char *key" "int value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_uint "void *obj" "const char *key" "u_int value"
+.Ft "AG_Prop *"
+.Fn AG_SetUint "void *obj" "const char *key" "u_int value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_int "void *obj" "const char *key" "int value"
+.Ft "AG_Prop *"
+.Fn AG_SetInt "void *obj" "const char *key" "int value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_uint8 "void *obj" "const char *key" "Uint8 value"
+.Ft "AG_Prop *"
+.Fn AG_SetUint8 "void *obj" "const char *key" "Uint8 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_sint8 "void *obj" "const char *key" "Sint8 value"
+.Ft "AG_Prop *"
+.Fn AG_SetSint8 "void *obj" "const char *key" "Sint8 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_uint16 "void *obj" "const char *key" "Uint16 value"
+.Ft "AG_Prop *"
+.Fn AG_SetUint16 "void *obj" "const char *key" "Uint16 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_sint16 "void *obj" "const char *key" "Sint16 value"
+.Ft "AG_Prop *"
+.Fn AG_SetSint16 "void *obj" "const char *key" "Sint16 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_uint32 "void *obj" "const char *key" "Uint32 value"
+.Ft "AG_Prop *"
+.Fn AG_SetUint32 "void *obj" "const char *key" "Uint32 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_sint32 "void *obj" "const char *key" "Sint32 value"
+.Ft "AG_Prop *"
+.Fn AG_SetSint32 "void *obj" "const char *key" "Sint32 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_sint32 "void *obj" "const char *key" "Sint32 value"
+.Ft "AG_Prop *"
+.Fn AG_SetSint32 "void *obj" "const char *key" "Sint32 value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_float "void *obj" "const char *key" "float value"
+.Ft "AG_Prop *"
+.Fn AG_SetFloat "void *obj" "const char *key" "float value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_double "void *obj" "const char *key" "double value"
+.Ft "AG_Prop *"
+.Fn AG_SetDouble "void *obj" "const char *key" "double value"
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_string "void *obj" "const char *key" "const char *fmt" "..."
+.Ft "AG_Prop *"
+.Fn AG_SetString "void *obj" "const char *key" "const char *fmt" "..."
 .Pp
-.Ft "struct prop *"
-.Fn prop_set_pointer "void *obj" "const char *key" "void *ptr"
+.Ft "AG_Prop *"
+.Fn AG_SetPointer "void *obj" "const char *key" "void *ptr"
 .Pp
 .nr nS 0
 The
-.Fn prop_set
+.Fn AG_SetProp
 function searches for a property of type
 .Fa type
 named
@@ -235,23 +234,23 @@ does not match an existing property, a new one is created.
 .Sh SAVING/LOADING
 .nr nS 1
 .Ft int
-.Fn prop_load "void *obj" "struct netbuf *buf"
+.Fn AG_PropLoad "void *obj" "AG_Netbuf *buf"
 .Pp
 .Ft int
-.Fn prop_save "void *obj" "struct netbuf *buf"
+.Fn AG_PropSave "void *obj" "AG_Netbuf *buf"
 .Pp
 .nr nS 0
 The
-.Fn prop_load
+.Fn AG_PropLoad
 function loads an object's property table in machine-independent format from
 .Fa fd ,
 and
-.Fn prop_save
+.Fn AG_PropSave
 saves an object's property table in machine-independent format to
 .Fa fd .
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr object 3
+.Xr AG_Object 3
 .Sh HISTORY
 The
 .Nm

@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.13 2004/08/26 06:18:20 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.14 2005/06/01 08:48:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/historical_units.h>
@@ -7,60 +7,59 @@
 #define _AGAR_WIDGET_UNITS_H_
 #include "begin_code.h"
 
-struct unit {
-	char	 *key;		/* Key */
-	char	 *abbr;		/* Symbol */
-	char	 *name;		/* Long name */
-	double	  divider;	/* Base unit divider (for linear conv) */
-	double	(*func)(double, int);	/* For nonlinear conversions */
-};
+typedef struct {
+	char *key;		/* Key */
+	char *abbr;		/* Symbol */
+	char *name;		/* Long name */
+	double divider;		/* Base unit divider (for linear conv) */
+	double (*func)(double, int);	/* For nonlinear conversions */
+} AG_Unit;
 
 __BEGIN_DECLS
-const struct unit *unit_find(const char *);
-__inline__ double  unit2base(double, const struct unit *);
-double		   base2unit(double, const struct unit *);
-__inline__ double  unit2unit(double, const struct unit *, const struct unit *);
+const AG_Unit	  *AG_FindUnit(const char *);
+__inline__ double  AG_Unit2Base(double, const AG_Unit *);
+double		   AG_Base2Unit(double, const AG_Unit *);
+__inline__ double  AG_Unit2Unit(double, const AG_Unit *, const AG_Unit *);
+const AG_Unit	  *AG_BestUnit(const AG_Unit[], double);
+const char	  *AG_UnitAbbr(const AG_Unit *);
+__inline__ int	   AG_UnitFormat(double, const AG_Unit[], char *, size_t);
 
-const struct unit *unit_best(const struct unit[], double);
-const char	  *unit_abbr(const struct unit *);
-__inline__ int	   unit_format(double, const struct unit[], char *, size_t);
-
-double	unit_fahrenheit(double, int);
-double	unit_celsius(double, int);
+double	AG_UnitFahrenheit(double, int);
+double	AG_UnitCelsius(double, int);
 #ifdef HISTORICAL_UNITS
-double	unit_rankine(double, int);
-double	unit_reaumur(double, int);
+double	AG_UnitRankine(double, int);
+double	AG_UnitReaumur(double, int);
 #endif
 
-#define	unit2basef(n, u) ((float)unit2base((float)(n), (u)))
-#define	base2unitf(n, u) ((float)base2unit((float)(n), (u)))
-#define	unit2unitf(n, u1, u2) ((float)unit2unit((float)(n), (u1), (u2)))
+#define	AG_Unit2Basef(n, u) ((float)AG_Unit2Base((float)(n), (u)))
+#define	AG_Base2Unitf(n, u) ((float)AG_Base2Unit((float)(n), (u)))
+#define	AG_Unit2Unitf(n, u1, u2) ((float)AG_Unit2Unit((float)(n), (u1), (u2)))
 
-extern const struct unit *unit_groups[];
-extern const int nunit_groups;
+extern const AG_Unit *agUnitGroups[];
+extern const int agnUnitGroups;
 
-extern const struct unit identity_unit[];
-extern const struct unit length_units[];
-extern const struct unit video_units[];
-extern const struct unit area_units[];
-extern const struct unit volume_units[];
-extern const struct unit speed_units[];
-extern const struct unit mass_units[];
-extern const struct unit time_units[];
-extern const struct unit current_units[];
-extern const struct unit temperature_units[];
-extern const struct unit substance_amt_units[];
-extern const struct unit light_units[];
-extern const struct unit power_units[];
-extern const struct unit emf_units[];
-extern const struct unit resistance_units[];
-extern const struct unit resistance_Tcoeff1_units[];
-extern const struct unit resistance_Tcoeff2_units[];
-extern const struct unit capacitance_units[];
-extern const struct unit inductance_units[];
-extern const struct unit frequency_units[];
-extern const struct unit pressure_units[];
-extern const struct unit met_units[];
+extern const AG_Unit agIdentityUnit[];
+extern const AG_Unit agLengthUnits[];
+extern const AG_Unit agVideoUnits[];
+extern const AG_Unit agAreaUnits[];
+extern const AG_Unit agVolumeUnits[];
+extern const AG_Unit agSpeedUnits[];
+extern const AG_Unit agMassUnits[];
+extern const AG_Unit agTimeUnits[];
+extern const AG_Unit agCurrentUnits[];
+extern const AG_Unit agTemperatureUnits[];
+extern const AG_Unit agSubstanceAmountUnits[];
+extern const AG_Unit agLightUnits[];
+extern const AG_Unit agPowerUnits[];
+extern const AG_Unit agEMFUnits[];
+extern const AG_Unit agResistanceUnits[];
+extern const AG_Unit agResistanceTC1Units[];
+extern const AG_Unit agResistanceTC2Units[];
+extern const AG_Unit agCapacitanceUnits[];
+extern const AG_Unit agInductanceUnits[];
+extern const AG_Unit agFrequencyUnits[];
+extern const AG_Unit agPressureUnits[];
+extern const AG_Unit agMetabolicExpenditureUnits[];
 __END_DECLS
 
 #include "close_code.h"

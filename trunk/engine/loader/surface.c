@@ -1,4 +1,4 @@
-/*	$Csoft: surface.c,v 1.3 2005/04/18 03:25:32 vedge Exp $	*/
+/*	$Csoft: surface.c,v 1.4 2005/06/08 05:46:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -33,7 +33,7 @@
 #include "surface.h"
 #include "version.h"
 
-const struct version surface_ver = {
+const AG_Version surface_ver = {
 	"agar surface",
 	0, 0
 };
@@ -47,26 +47,26 @@ enum {
 };
 
 void
-write_surface(struct netbuf *buf, SDL_Surface *su)
+AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
 {
 	Uint8 *src;
 	int x, y;
 
-	version_write(buf, &surface_ver);
-	write_uint32(buf, RAW_ENCODING);
+	AG_WriteVersion(buf, &surface_ver);
+	AG_WriteUint32(buf, RAW_ENCODING);
 
-	write_uint32(buf, su->flags &
+	AG_WriteUint32(buf, su->flags &
 	    (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL));
-	write_uint16(buf, su->w);
-	write_uint16(buf, su->h);
-	write_uint8(buf, su->format->BitsPerPixel);
-	write_uint8(buf, 0);				/* TODO grayscale */
-	write_uint32(buf, su->format->Rmask);
-	write_uint32(buf, su->format->Gmask);
-	write_uint32(buf, su->format->Bmask);
-	write_uint32(buf, su->format->Amask);
-	write_uint8(buf, su->format->alpha);
-	write_uint32(buf, su->format->colorkey);
+	AG_WriteUint16(buf, su->w);
+	AG_WriteUint16(buf, su->h);
+	AG_WriteUint8(buf, su->format->BitsPerPixel);
+	AG_WriteUint8(buf, 0);				/* TODO grayscale */
+	AG_WriteUint32(buf, su->format->Rmask);
+	AG_WriteUint32(buf, su->format->Gmask);
+	AG_WriteUint32(buf, su->format->Bmask);
+	AG_WriteUint32(buf, su->format->Amask);
+	AG_WriteUint8(buf, su->format->alpha);
+	AG_WriteUint32(buf, su->format->colorkey);
 #if 0
 	dprintf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
 	    su->format->BitsPerPixel,
@@ -80,11 +80,11 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 	if (su->format->BitsPerPixel == 8) {
 		int i;
 
-		write_uint32(buf, su->format->palette->ncolors);
+		AG_WriteUint32(buf, su->format->palette->ncolors);
 		for (i = 0; i < su->format->palette->ncolors; i++) {
-			write_uint8(buf, su->format->palette->colors[i].r);
-			write_uint8(buf, su->format->palette->colors[i].g);
-			write_uint8(buf, su->format->palette->colors[i].b);
+			AG_WriteUint8(buf, su->format->palette->colors[i].r);
+			AG_WriteUint8(buf, su->format->palette->colors[i].g);
+			AG_WriteUint8(buf, su->format->palette->colors[i].b);
 		}
 	}
 
@@ -96,27 +96,27 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-				write_uint32(buf, *(Uint32 *)src);
+				AG_WriteUint32(buf, *(Uint32 *)src);
 				break;
 			case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				write_uint32(buf,
+				AG_WriteUint32(buf,
 				    (src[0] << 16) +
 				    (src[1] << 8) +
 				     src[2]);
 #else
-				write_uint32(buf,
+				AG_WriteUint32(buf,
 				    (src[2] << 16) +
 				    (src[1] << 8) +
 				     src[0]);
 #endif
 				break;
 			case 2:
-				write_uint16(buf, *(Uint16 *)src);
+				AG_WriteUint16(buf, *(Uint16 *)src);
 				break;
 			case 1:
 				/* XXX do one big write */
-				write_uint8(buf, *src);
+				AG_WriteUint8(buf, *src);
 				break;
 			}
 			src += su->format->BytesPerPixel;
@@ -127,7 +127,7 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 }
 
 SDL_Surface *
-read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
+AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 {
 	SDL_Surface *su;
 	Uint32 encoding;
@@ -139,29 +139,29 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 	int i;
 	int x, y;
 
-	if (version_read(buf, &surface_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &surface_ver, NULL) != 0)
 		return (NULL);
 
-	encoding = read_uint32(buf);
+	encoding = AG_ReadUint32(buf);
 	if (encoding != RAW_ENCODING) {
-		error_set("unsupported encoding");
+		AG_SetError("unsupported encoding");
 		return (NULL);
 	}
 
-	flags = read_uint32(buf);
-	w = read_uint16(buf);
-	h = read_uint16(buf);
-	depth = read_uint8(buf);
-	grayscale = read_uint8(buf);
-	Rmask = read_uint32(buf);
-	Gmask = read_uint32(buf);
-	Bmask = read_uint32(buf);
-	Amask = read_uint32(buf);
+	flags = AG_ReadUint32(buf);
+	w = AG_ReadUint16(buf);
+	h = AG_ReadUint16(buf);
+	depth = AG_ReadUint8(buf);
+	grayscale = AG_ReadUint8(buf);
+	Rmask = AG_ReadUint32(buf);
+	Gmask = AG_ReadUint32(buf);
+	Bmask = AG_ReadUint32(buf);
+	Amask = AG_ReadUint32(buf);
 
 	su = SDL_CreateRGBSurface(flags|SDL_SWSURFACE, w, h, depth,
 	    Rmask, Gmask, Bmask, Amask);
-	su->format->alpha = read_uint8(buf);
-	su->format->colorkey = read_uint32(buf);
+	su->format->alpha = AG_ReadUint8(buf);
+	su->format->colorkey = AG_ReadUint32(buf);
 #if 0	
 	dprintf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
 	    grayscale ? " grayscale" : "",
@@ -175,7 +175,7 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 		SDL_Color *colors;
 		Uint32 ncolors;
 
-		ncolors = read_uint32(buf);
+		ncolors = AG_ReadUint32(buf);
 		colors = Malloc(ncolors*sizeof(SDL_Color), 0);
 
 		if (grayscale) {
@@ -186,9 +186,9 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 			}
 		} else {
 			for (i = 0; i < ncolors; i++) {
-				colors[i].r = read_uint8(buf);
-				colors[i].g = read_uint8(buf);
-				colors[i].b = read_uint8(buf);
+				colors[i].r = AG_ReadUint8(buf);
+				colors[i].g = AG_ReadUint8(buf);
+				colors[i].b = AG_ReadUint8(buf);
 			}
 		}
 		SDL_SetPalette(su, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, ncolors);
@@ -203,11 +203,11 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-				*(Uint32 *)dst = read_uint32(buf);
+				*(Uint32 *)dst = AG_ReadUint32(buf);
 				break;
 			case 3:
 				{
-					Uint32 c = read_uint32(buf);
+					Uint32 c = AG_ReadUint32(buf);
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 					dst[0] = (c >> 16) & 0xff;
 					dst[1] = (c >> 8) & 0xff;
@@ -220,11 +220,11 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 				}
 				break;
 			case 2:
-				*(Uint16 *)dst = read_uint16(buf);
+				*(Uint16 *)dst = AG_ReadUint16(buf);
 				break;
 			case 1:
 				/* XXX do one big read */
-				*dst = read_uint8(buf);
+				*dst = AG_ReadUint8(buf);
 				break;
 			}
 			dst += su->format->BytesPerPixel;

@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.11 2004/08/22 12:08:16 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.12 2005/02/18 11:16:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -8,46 +8,46 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/ucombo.h>
+#include <engine/widget/units.h>
 
 #include "begin_code.h"
 
-struct fspinbutton {
-	struct widget wid;
+typedef struct ag_fspinbutton {
+	struct ag_widget wid;
 
 	pthread_mutex_t	lock;
 	double value;			/* Default value binding */
 	double min, max;		/* Default range bindings */
 	double inc;			/* Increment for buttons */
 	char format[32];		/* Printing format */
-	const struct unit *unit;	/* Conversion unit in use */
+	const AG_Unit *unit;		/* Conversion unit in use */
 	int writeable;			/* 0 = read-only */
-
-	struct textbox *input;
-	struct ucombo *units;
-	struct button *incbu;
-	struct button *decbu;
-};
+	AG_Textbox *input;
+	AG_UCombo *units;
+	AG_Button *incbu;
+	AG_Button *decbu;
+} AG_FSpinbutton;
 
 __BEGIN_DECLS
-struct fspinbutton *fspinbutton_new(void *, const char *, const char *, ...)
-		       FORMAT_ATTRIBUTE(printf, 3, 4)
-		       NONNULL_ATTRIBUTE(3);
+AG_FSpinbutton *AG_FSpinbuttonNew(void *, const char *, const char *, ...)
+		                  FORMAT_ATTRIBUTE(printf, 3, 4)
+		                  NONNULL_ATTRIBUTE(3);
 
-void	fspinbutton_init(struct fspinbutton *, const char *, const char *);
-void	fspinbutton_destroy(void *);
-void	fspinbutton_prescale(struct fspinbutton *, const char *);
-void	fspinbutton_scale(void *, int, int);
-void	fspinbutton_draw(void *);
+void	AG_FSpinbuttonInit(AG_FSpinbutton *, const char *, const char *);
+void	AG_FSpinbuttonDestroy(void *);
+void	AG_FSpinbuttonPrescale(AG_FSpinbutton *, const char *);
+void	AG_FSpinbuttonScale(void *, int, int);
+void	AG_FSpinbuttonDraw(void *);
 
-void	fspinbutton_set_value(struct fspinbutton *, double);
-void	fspinbutton_add_value(struct fspinbutton *, double);
-void	fspinbutton_set_min(struct fspinbutton *, double);
-void	fspinbutton_set_max(struct fspinbutton *, double);
-void	fspinbutton_set_range(struct fspinbutton *, double, double);
-void	fspinbutton_set_increment(struct fspinbutton *, double);
-void	fspinbutton_select_unit(struct fspinbutton *, const char *);
-void	fspinbutton_set_precision(struct fspinbutton *, const char *, int);
-void	fspinbutton_set_writeable(struct fspinbutton *, int);
+void	AG_FSpinbuttonSetValue(AG_FSpinbutton *, double);
+void	AG_FSpinbuttonAddValue(AG_FSpinbutton *, double);
+void	AG_FSpinbuttonSetMin(AG_FSpinbutton *, double);
+void	AG_FSpinbuttonSetMax(AG_FSpinbutton *, double);
+void	AG_FSpinbuttonSetRange(AG_FSpinbutton *, double, double);
+void	AG_FSpinbuttonSetIncrement(AG_FSpinbutton *, double);
+void	AG_FSpinbuttonSelectUnit(AG_FSpinbutton *, const char *);
+void	AG_FSpinbuttonSetPrecision(AG_FSpinbutton *, const char *, int);
+void	AG_FSpinbuttonSetWriteable(AG_FSpinbutton *, int);
 __END_DECLS
 
 #include "close_code.h"

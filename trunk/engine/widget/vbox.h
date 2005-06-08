@@ -1,4 +1,4 @@
-/*	$Csoft: vbox.h,v 1.1 2003/06/06 02:59:06 vedge Exp $	*/
+/*	$Csoft: vbox.h,v 1.2 2003/06/10 06:58:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_VBOX_H_
@@ -6,18 +6,18 @@
 
 #include <engine/widget/box.h>
 
-struct vbox {
-	struct box box;
-};
+typedef struct ag_vbox {
+	struct ag_box box;
+} AG_VBox;
 
-#define VBOX_HOMOGENOUS	BOX_HOMOGENOUS
-#define VBOX_WFILL	BOX_WFILL
-#define VBOX_HFILL	BOX_HFILL
+#define AG_VBOX_HOMOGENOUS	AG_BOX_HOMOGENOUS
+#define AG_VBOX_WFILL		AG_BOX_WFILL
+#define AG_VBOX_HFILL		AG_BOX_HFILL
 
-#define vbox_new(p, fl)	(struct vbox *)box_new((p), BOX_VERT, (fl))
-#define vbox_init(b, fl) box_init((struct box *)(b), BOX_VERT, (fl))
-#define vbox_set_homogenous(b, fl) box_set_homogenous((struct box *)(b), (fl))
-#define vbox_set_padding(b, pad) box_set_padding((struct box *)(b), (pad))
-#define vbox_set_spacing(b, sp) box_set_spacing((struct box *)(b), (sp))
+#define AG_VBoxNew(p, fl) (AG_VBox *)AG_BoxNew((p), AG_BOX_VERT, (fl))
+#define AG_VBoxInit(b, fl) AG_BoxInit((AG_Box *)(b), AG_BOX_VERT, (fl))
+#define AG_VBoxSetHomogenous(b, fl) AG_BoxSetHomogenous((AG_Box *)(b), (fl))
+#define AG_VBoxSetPadding(b, pad) AG_BoxSetPadding((AG_Box *)(b), (pad))
+#define AG_VBoxSetSpacing(b, sp) AG_BoxSetSpacing((AG_Box *)(b), (sp))
 
 #endif /* _AGAR_WIDGET_VBOX_H_ */

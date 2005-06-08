@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.40 2005/02/07 13:47:08 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.41 2005/05/12 07:51:38 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,23 +42,23 @@
 #include <engine/widget/keycodes.h>
 
 #ifdef UTF8
-static int key_del_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_end_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_kill_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_right_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_char_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_del_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_end_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_kill_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_right_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_char_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
 #else
-static int key_del_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_end_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_kill_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_right_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_char_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_del_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_end_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_kill_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_right_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_char_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
 #endif
 
-static int key_home(struct textbox *, SDLKey, int, const char *, Uint32);
-static int key_left(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_home(AG_Textbox *, SDLKey, int, const char *, Uint32);
+static int key_left(AG_Textbox *, SDLKey, int, const char *, Uint32);
 
-const struct keycode keycodes[] = {
+const struct ag_keycode agKeyCodes[] = {
 	{ SDLK_HOME,		0,		key_home,	NULL, 1 },
 	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL, 1 },
 	{ SDLK_LEFT,		0,		key_left,	NULL, 1 },
@@ -224,12 +224,12 @@ key_apply_mod(Uint32 key, int kmod)
 
 /* Perform simple input composition. */
 static int
-key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
+key_compose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
 {
-	extern int text_composition;
+	extern int agTextComposition;
 	int i;
 
-	if (!text_composition) {
+	if (!agTextComposition) {
 		ins[0] = key;
 		return (1);
 	}
@@ -267,22 +267,22 @@ key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
 
 /* Insert an Unicode character. */
 static int
-key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
+key_char_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod,
     const char *arg, Uint32 uch)
 {
-	extern int kbd_unitrans;			/* input/kbd.c */
-	struct widget_binding *stringb;
+	extern int agKbdUnicode;			/* input/kbd.c */
+	AG_WidgetBinding *stringb;
 	size_t len;
 	Uint32 *ucs;
 	char *utf8;
 	Uint32 ins[2];
 	int i, nins;
 
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	len = ucs4_len(ucs);
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	len = AG_UCS4Len(ucs);
 
-	if (kbd_unitrans) {
+	if (agKbdUnicode) {
 		if (uch == 0) {
 			goto skip;
 		}
@@ -299,7 +299,7 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 
 	if (tbox->pos == len) {
 		/* Append to the end of string */
-		if (kbd_unitrans) {
+		if (agKbdUnicode) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++) {
 					ucs[len+i] = ins[i];
@@ -318,7 +318,7 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 		
 		/* Insert at the cursor position in the string. */
 		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
-		if (kbd_unitrans) {
+		if (agKbdUnicode) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++) {
 					ucs[tbox->pos+i] = ins[i];
@@ -337,10 +337,10 @@ key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
 out:
 	ucs[len+nins] = '\0';
 	tbox->pos += nins;
-	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
 skip:
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
 	return (1);
 }
@@ -349,10 +349,10 @@ skip:
 
 /* Insert an ASCII character. */
 static int
-key_char_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_char_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 unicode)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	size_t len;
 	Uint32 *ucs;
 	char *s;
@@ -362,7 +362,7 @@ key_char_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	if (keysym == 0 || !isascii(keysym))
 		return (0);
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
 	c = (char)key_apply_mod((Uint32)keysym, keymod);
 
@@ -381,8 +381,8 @@ out:
 	s[len+1] = '\0';
 	tbox->pos++;
 skip:
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (1);
 }
 
@@ -391,18 +391,18 @@ skip:
 #ifdef UTF8
 
 static int
-key_del_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_del_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 unicode)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	size_t len;
 	Uint32 *ucs;
 	char *utf8;
 	int i;
 
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	len = ucs4_len(ucs);
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	len = AG_UCS4Len(ucs);
 
 	if (tbox->pos == 0 || len == 0)
 		goto out;
@@ -421,10 +421,10 @@ key_del_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		if ((tbox->offs -= 4) < 1)
 			tbox->offs = 0;
 	}
-	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
 out:
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
 	return (1);
 }
@@ -433,16 +433,16 @@ out:
 
 /* Destroy the ASCII character before the cursor. */
 static int
-key_del_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_del_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 unicode)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	size_t len;
 	char *s;
 	int pos = tbox->pos;
 	int i;
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
 
 	if (len == 0)
@@ -468,15 +468,15 @@ key_del_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 			tbox->offs = 0;
 	}
 out:
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (1);
 }
 #endif /* UTF8 */
 
 /* Move the cursor to the start of the string. */
 static int
-key_home(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_home(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	if (tbox->offs > 0) {
@@ -489,18 +489,18 @@ key_home(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 #ifdef UTF8
 /* Move the cursor to the end of the UTF-8 string. */
 static int
-key_end_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_end_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	Uint32 *ucs;
 	char *utf8;
 	
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	tbox->pos = ucs4_len(ucs);
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	tbox->pos = AG_UCS4Len(ucs);
 	tbox->offs = 0;
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
 	return (0);
 }
@@ -509,16 +509,16 @@ key_end_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 /* Move the cursor to the end of the ASCII string. */
 static int
-key_end_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_end_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *s;
 	
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	tbox->pos = strlen(s);
 	tbox->offs = 0;
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (0);
 }
 #endif /* UTF8 */
@@ -527,21 +527,21 @@ key_end_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 /* Kill the text after the cursor. */
 /* XXX save to a kill buffer, etc */
 static int
-key_kill_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_kill_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	Uint32 *ucs;
 	char *utf8;
 
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
 
 	ucs[tbox->pos] = '\0';
 
-	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
 	return (0);
 }
@@ -549,23 +549,23 @@ key_kill_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 /* Kill the text after the cursor. */
 /* XXX save to a kill buffer, etc */
 static int
-key_kill_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_kill_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *s;
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	s[tbox->pos] = '\0';
-	widget_binding_modified(stringb);
-	widget_binding_unlock(stringb);
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (0);
 }
 #endif
 
 /* Move the cursor to the left. */
 static int
-key_left(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_left(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	if (--tbox->pos < 1) {
@@ -581,21 +581,21 @@ key_left(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 #ifdef UTF8
 /* Move the cursor to the right. */
 static int
-key_right_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+key_right_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	Uint32 *ucs;
 	char *utf8;
 
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
 
-	if (tbox->pos < ucs4_len(ucs)) {
+	if (tbox->pos < AG_UCS4Len(ucs)) {
 		tbox->pos++;
 	}
 
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
 	return (1);
 }
@@ -604,18 +604,18 @@ key_right_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 /* Move the cursor to the right. */
 static int
-key_right_ascii(struct textbox *tbox, SDLKey keysym, int keymod,
+key_right_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod,
     const char *arg, Uint32 uch)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *s;
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 
 	if (tbox->pos < strlen(s))
 		tbox->pos++;
 
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (1);
 }
 

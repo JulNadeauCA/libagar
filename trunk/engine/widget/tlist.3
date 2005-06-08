@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.46 2005/05/11 09:59:33 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.47 2005/05/24 08:15:11 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,33 +45,33 @@ Individual items are typically associated with user-supplied pointers.
 Single or multiple selections of items are possible.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct tlist *"
-.Fn tlist_new "void *parent" "int flags"
+.Ft "AG_Tlist *"
+.Fn AG_TlistNew "void *parent" "int flags"
 .Pp
 .Ft void
-.Fn tlist_init "struct tlist *tlist" "int flags"
+.Fn AG_TlistInit "AG_Tlist *tlist" "int flags"
 .Pp
 .Ft void
-.Fn tlist_set_item_height "struct tlist *tl" "int item_height"
+.Fn AG_TlistSetItemHeight "AG_Tlist *tl" "int item_height"
 .Pp
 .Ft void
-.Fn tlist_set_icon "struct tlist *tl, struct tlist_item *item" "SDL_Surface *icon"
+.Fn AG_TlistSetIcon "AG_Tlist *tl, AG_TlistItem *item" "SDL_Surface *icon"
 .Pp
 .Ft void
-.Fn tlist_prescale "struct tlist *tl" "const char *text" "int nitems"
+.Fn AG_TlistPrescale "AG_Tlist *tl" "const char *text" "int nitems"
 .nr nS 0
 .Pp
 The
-.Fn tlist_new
+.Fn AG_TlistNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn tlist_init
+.Fn AG_TlistInit
 initializes a
 .Nm
 widget.
@@ -80,51 +80,51 @@ The
 may include:
 .Pp
 .Bd -literal
-#define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
-#define TLIST_MULTITOGGLE	0x02  /* Multiple toggle selections */
-#define TLIST_POLL		0x04  /* Generate tlist-poll events */
-#define TLIST_TREE		0x10  /* Arrange the items in a tree */
+#define AG_TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
+#define AG_TLIST_MULTITOGGLE	0x02  /* Multiple toggle selections */
+#define AG_TLIST_POLL		0x04  /* Generate tlist-poll events */
+#define AG_TLIST_TREE		0x10  /* Arrange the items in a tree */
 .Ed
 .Pp
 If the
-.Dv TLIST_MULTI
+.Dv AG_TLIST_MULTI
 flag is set, selecting an item while holding the
 .Dv KMOD_CTRL
 key will not cause other currently selected item
 to be deselected.
 If the flag
-.Dv TLIST_MULTITOGGLE
+.Dv AG_TLIST_MULTITOGGLE
 is set in addition to
-.Dv TLIST_MULTI ,
+.Dv AG_TLIST_MULTI ,
 this behavior is achieved without having to hold
 .Dv KMOD_CTRL .
 .Pp
 The
-.Dv TLIST_POLL
+.Dv AG_TLIST_POLL
 flag causes the posting of a
 .Sq tlist-poll
 event every time the widget is redrawn.
 Typically, the
 .Sq tlist-poll
 event handler clears the list with
-.Fn tlist_clear_items ,
+.Fn AG_TlistClear ,
 inserts the items with
-.Fn tlist_insert
+.Fn AG_TlistAdd
 and restores the previous selections using
-.Fn tlist_restore_selections .
+.Fn AG_TlistRestore .
 .Pp
 The
-.Dv TLIST_TREE
+.Dv AG_TLIST_TREE
 option indicates that a tree is to be displayed.
 .Pp
 The
-.Fn tlist_set_item_height
+.Fn AG_TlistSetItemHeight
 function sets the height of all items to
 .Fa item_height
 pixels .
 .Pp
 The
-.Fn tlist_set_icon
+.Fn AG_TlistSetIcon
 function updates the icon shown with
 .Fa item ,
 scaled to
@@ -133,71 +133,71 @@ by
 .Fa h
 pixels.
 .Pp
-.Fn tlist_prescale
+.Fn AG_TlistPrescale
 requests sufficient height to display
 .Fa nitems
 items at once, and sufficient width to display an item containing
 .Fa text .
 .Sh MANIPULATING ITEMS
 .nr nS 1
-.Ft "struct tlist_item *"
-.Fn tlist_insert "struct tlist *tl" "SDL_Surface *iconsrc" "const char *format" "..."
+.Ft "AG_TlistItem *"
+.Fn AG_TlistAdd "AG_Tlist *tl" "SDL_Surface *iconsrc" "const char *format" "..."
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_insert_item "struct tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistAddPtr "AG_Tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
-.Fn tlist_insert_item_head "struct tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
-.Pp
-.Ft "void"
-.Fn tlist_remove_item "struct tlist *tlist" "struct tlist_item *item"
+.Fn AG_TlistAddPtrHead "AG_Tlist *tlist, SDL_Surface *iconsrc" "const char *text" "const void *p1"
 .Pp
 .Ft "void"
-.Fn tlist_clear_items "struct tlist *tlist"
+.Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn tlist_restore_selections "struct tlist *tlist"
+.Fn AG_TlistClear "AG_Tlist *tlist"
 .Pp
 .Ft "void"
-.Fn tlist_select "struct tlist *tlist" "struct tlist_item *item"
+.Fn AG_TlistRestore "AG_Tlist *tlist"
 .Pp
 .Ft "void"
-.Fn tlist_select_all "struct tlist *tlist"
+.Fn AG_TlistSelect "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn tlist_unselect "struct tlist *tlist" "struct tlist_item *item"
+.Fn AG_TlistSelectAll "AG_Tlist *tlist"
 .Pp
 .Ft "void"
-.Fn tlist_unselect_all "struct tlist *tlist"
+.Fn AG_TlistDeselect "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_select_pointer "struct tlist *tlist" "void *ptr"
+.Ft "void"
+.Fn AG_TlistDeselectAll "AG_Tlist *tlist"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_select_text "struct tlist *tlist" "const char *text"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistSelectPtr "AG_Tlist *tlist" "void *ptr"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_find_index "struct tlist *tlist" "int index"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistSelectText "AG_Tlist *tlist" "const char *text"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_selected_item "struct tlist *tlist"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistFindByIndex "AG_Tlist *tlist" "int index"
+.Pp
+.Ft "AG_TlistItem *"
+.Fn AG_TlistSelectedItem "AG_Tlist *tlist"
 .Pp
 .Ft "int"
-.Fn tlist_find_pointer "struct tlist *tlist" "void **p"
+.Fn AG_TlistFindPtr "AG_Tlist *tlist" "void **p"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_find_text "struct tlist *tlist" "const char *text"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistFindText "AG_Tlist *tlist" "const char *text"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_first_item "struct tlist *tlist"
+.Ft "AG_TlistItem *"
+.Fn AG_TlistFirstItem "AG_Tlist *tlist"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_item_last "struct tlist *tlist"
+.Ft "AG_TlistItem *"
+.Fn tlist_item_last "AG_Tlist *tlist"
 .nr nS 0
 .Pp
 The
-.Fn tlist_insert
+.Fn AG_TlistAdd
 function (and its alternate interface
-.Fn tlist_insert_item )
+.Fn AG_TlistAddPtr )
 are used to insert a new item in the list.
 .Pp
 The
@@ -212,77 +212,77 @@ The
 argument is a user-defined pointer associated with the item.
 .Pp
 The
-.Fn tlist_insert_item_head
+.Fn AG_TlistAddPtrHead
 varient inserts the item at the head of the list instead of the tail.
 .Pp
 The
-.Fn tlist_remove_item
+.Fn AG_TlistDel
 function detaches and frees
 .Fa item
 from its parent
 .Nm tlist .
 .Pp
 The
-.Fn tlist_clear_items
+.Fn AG_TlistClear
 function removes all items attached to
 .Fa tlist ,
 but remembers the selected items.
-.Fn tlist_restore_selections
+.Fn AG_TlistRestore
 compares each item against the previous selections and restores
 the
 .Va selected
 flag accordingly.
 .Pp
 The
-.Fn tlist_select
+.Fn AG_TlistSelect
 and
-.Fn tlist_unselect
+.Fn AG_TlistDeselect
 functions manipulate the selected flag on
 .Fa item .
 Unless the
-.Dv TLIST_MULTI
+.Dv AG_TLIST_MULTI
 flag is set,
-.Fn tlist_select
+.Fn AG_TlistSelect
 clears the selection flag on all other items.
 The
-.Fn tlist_select_all
+.Fn AG_TlistSelectAll
 and
-.Fn tlist_unselect_all
+.Fn AG_TlistDeselectAll
 functions sets/unsets the selection on all items attached to
 .Fa tlist .
 .Pp
 The
-.Fn tlist_select_pointer
+.Fn AG_TlistSelectPtr
 function selects and returns the first item with a user pointer value
 matching
 .Fa ptr .
 Similarly,
-.Fn tlist_select_text
+.Fn AG_TlistSelectText
 selects and returns the first item with a text field equal to
 .Fa text .
 Both of these functions invoke
 .Sq tlist-poll
 if the
-.Dv TLIST_POLL
+.Dv AG_TLIST_POLL
 option is set.
 .Pp
 The
-.Fn tlist_find_index
+.Fn AG_TlistFindByIndex
 function returns the item at
 .Fa index ,
 or NULL if there is no such item.
 The
-.Fn tlist_selected_item
+.Fn AG_TlistSelectedItem
 function returns the first selected item, or
 .Dv NULL
 if there are none.
-.Fn tlist_find_pointer
+.Fn AG_TlistFindPtr
 is a variant that copies the user pointer associated with the first
 selected item into
 .Fa p ,
 returning 0 on success or -1 if there is no item selected.
 The
-.Fn tlist_find_text
+.Fn AG_TlistFindText
 function searches
 .Fa tlist
 for an item containing the
@@ -290,21 +290,21 @@ for an item containing the
 string and returns NULL if there is no such item.
 .Pp
 The
-.Fn tlist_first_item
+.Fn AG_TlistFirstItem
 and
-.Fn tlist_last_item
+.Fn AG_TlistLastItem
 functions return the first and last items on the list.
 .Pp
 The caller must ensure that the
 .Nm
 is locked prior to invoking
-.Fn tlist_find_index ,
-.Fn tlist_selected_item ,
-.Fn tlist_find_pointer ,
-.Fn tlist_find_text ,
-.Fn tlist_first_item
+.Fn AG_TlistFindByIndex ,
+.Fn AG_TlistSelectedItem ,
+.Fn AG_TlistFindPtr ,
+.Fn AG_TlistFindText ,
+.Fn AG_TlistFirstItem
 or
-.Fn tlist_last_item .
+.Fn AG_TlistLastItem .
 .Sh EVENTS
 The
 .Nm
@@ -325,18 +325,18 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
-.It Fn tlist-changed "struct tlist_item *item" "int state"
+.It Fn tlist-changed "AG_TlistItem *item" "int state"
 .Fa item
 was selected or unselected.
-.It Fn tlist-selected "struct tlist_item *item"
+.It Fn tlist-selected "AG_TlistItem *item"
 .Fa item
 was selected.
-.It Fn tlist-dblclick "struct tlist_item *item"
+.It Fn tlist-dblclick "AG_TlistItem *item"
 The user just double-clicked
 .Fa item .
 .It Fn tlist-poll "void"
 The
-.Dv TLIST_POLL
+.Dv AG_TLIST_POLL
 flag is set and the widget is about to be drawn or an event is being
 processed.
 .El
@@ -351,9 +351,9 @@ The
 .Va p1
 (user pointer) value of the selected item, or NULL if there is no selection.
 The value of this binding is undefined if the
-.Dv TLIST_MULTI
+.Dv AG_TLIST_MULTI
 or
-.Dv TLIST_MULTITOGGLE
+.Dv AG_TLIST_MULTITOGGLE
 flags are in use.
 .El
 .Sh TROUBLETONS
@@ -364,13 +364,13 @@ width.
 Polled mode handling is inefficient since selections must be saved and restored
 each polling cycle.
 .Pp
-.Dv TLIST_TREE
+.Dv AG_TLIST_TREE
 is a cheap and bletcherous hack.
 .Pp
 The
-.Fn tlist_insert_item
+.Fn AG_TlistAddPtr
 function should probably be renamed
-.Fn tlist_insert
+.Fn AG_TlistAdd
 and take a
 .Xr printf 3
 format string.

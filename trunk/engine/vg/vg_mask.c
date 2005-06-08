@@ -1,4 +1,4 @@
-/*	$Csoft: vg_mask.c,v 1.5 2005/05/21 03:32:55 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.6 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -32,7 +32,7 @@
 #include "vg_primitive.h"
 
 static void
-init(struct vg *vg, struct vg_element *vge)
+init(VG *vg, VG_Element *vge)
 {
 	vge->vg_mask.scale = 1.0;
 	vge->vg_mask.visible = 0;
@@ -40,7 +40,7 @@ init(struct vg *vg, struct vg_element *vge)
 }
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
 	int x1, y1, x2, y2;
 	int x0, y0;
@@ -53,44 +53,44 @@ render(struct vg *vg, struct vg_element *vge)
 		/* TODO particle */
 		return;
 	}
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
+	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
 	x0 = x1;
 	y0 = y1;
 	for (i = 1; i < vge->nvtx; i++) {
-		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
-		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+		VG_Rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
+		VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 		x1 = x2;
 		y1 = y2;
 	}
-	vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
+	VG_LinePrimitive(vg, x0, y0, x1, y1, vge->color);
 }
 
 void
-vg_mask_scale(struct vg *vg, float scale)
+VG_MaskScale(VG *vg, float scale)
 {
 	vg->cur_vge->vg_mask.scale = scale;
 }
 
 void
-vg_mask_visible(struct vg *vg, int vis)
+VG_MaskIsVisible(VG *vg, int vis)
 {
 	vg->cur_vge->vg_mask.visible = vis;
 }
 
 void
-vg_mask_pointer(struct vg *vg, void *p)
+VG_MaskPtr(VG *vg, void *p)
 {
 	vg->cur_vge->vg_mask.p = p;
 }
 
 void
-vg_mask_mousebutton(struct vg *vg, void (*func)(void *, Uint8), void *p)
+VG_MaskMouseButton(VG *vg, void (*func)(void *, Uint8), void *p)
 {
 	vg->cur_vge->vg_mask.mousebutton = func;
 	vg->cur_vge->vg_mask.p = p;
 }
 
-const struct vg_element_ops vg_mask_ops = {
+const VG_ElementOps vgMaskOps = {
 	N_("Polygonal mask"),
 	-1,
 	init,

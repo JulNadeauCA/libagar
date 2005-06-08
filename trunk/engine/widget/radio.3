@@ -1,4 +1,4 @@
-.\"	$Csoft: radio.3,v 1.14 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: radio.3,v 1.15 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,25 +43,25 @@ The
 widget implements a group of radio buttons.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft struct radio *
-.Fn radio_new "void *parent" "const char *items[]"
+.Ft AG_Radio *
+.Fn AG_RadioNew "void *parent" "const char *items[]"
 .Pp
 .Ft void
-.Fn radio_init "struct radio *radio" "const char *items[]"
+.Fn AG_RadioInit "AG_Radio *radio" "const char *items[]"
 .nr nS 0
 .Pp
 The
-.Fn radio_new
+.Fn AG_RadioNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn radio_init
+.Fn AG_RadioInit
 function initializes a
 .Nm
 group.

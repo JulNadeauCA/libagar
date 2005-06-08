@@ -1,4 +1,4 @@
-.\"	$Csoft: input.3,v 1.5 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: input.3,v 1.6 2005/05/11 09:59:30 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,52 +40,43 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-structure is used internally by the
-.Xr event 3
-and
-.Xr object 3
-subsystems to represent input devices bound to
-.Xr object 3
-positions, allowing players to control characters, for instance.
+system provides a generic low-level interface to input devices, such as
+keyboards, mouses and joysticks.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn input_register "void *p, enum input_type type, const char *name" "const struct input_driver *drv"
+.Fn AG_InputSet "void *p, enum ag_input_type type, const char *name" "const AG_InputOps *ops"
 .Pp
 .Ft "void"
-.Fn input_deregister "void *p"
+.Fn AG_InputRemove "void *p"
 .Pp
-.Ft "struct input *"
-.Fn input_find "const char *name"
+.Ft "AG_Input *"
+.Fn AG_InputFind "const char *name"
 .Pp
 .Ft "void"
-.Fn input_destroy "void"
+.Fn AG_InputDestroy "void"
 .Pp
 .nr nS 0
 The
-.Fn input_register
+.Fn AG_InputSet
 function initializes and a attaches a new input device of the given type.
-.Fa name
-is used to reference the input device in
-.Xr object 3
-saves.
 .Pp
 The
-.Fn input_deregister
+.Fn AG_InputRemove
 function destroys the given input device.
 .Pp
 The
-.Fn input_find
+.Fn AG_InputFind
 function looks for the named input device and returns a pointer to it,
 or NULL if there is no such device attached.
 .Pp
 The
-.Fn input_destroy
+.Fn AG_InputDestroy
 function frees all currently attached input devices.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
-.Xr object 3
+.Xr AG_Object 3
 .Sh HISTORY
 The
 .Nm

@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.9 2005/01/30 05:23:31 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.10 2005/02/08 15:56:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -30,14 +30,11 @@
 
 #include "timeout.h"
 
-struct objectq timeout_objq = TAILQ_HEAD_INITIALIZER(timeout_objq);
-struct timeoutq insq = SLIST_HEAD_INITIALIZER(insq);
-struct timeoutq remq = SLIST_HEAD_INITIALIZER(remq);
-pthread_mutex_t timeout_lock;
+struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
 
 /* Initialize a timeout structure. */
 void
-timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
+AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
     int flags)
 {
 	to->fn = fn;
@@ -50,15 +47,15 @@ timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
 /* Schedule the timeout to occur in dt ticks. */
 /* XXX O(n), use a timing wheel instead */
 void
-timeout_schedule(void *p, struct timeout *to, Uint32 dt, int replace)
+AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 {
-	struct object *ob = p;
-	struct timeout *to2;
+	AG_Object *ob = p;
+	AG_Timeout *to2;
 	Uint32 t = SDL_GetTicks()+dt;
 	int was_empty;
 
 	if (ob == NULL)
-		ob = world;
+		ob = agWorld;
 
 	pthread_mutex_lock(&ob->lock);
 	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
@@ -83,9 +80,9 @@ timeout_schedule(void *p, struct timeout *to, Uint32 dt, int replace)
 	to->ival = dt;
 	to->flags = 0;
 	if (was_empty) {
-		pthread_mutex_lock(&timeout_lock);
-		TAILQ_INSERT_TAIL(&timeout_objq, ob, tobjs);
-		pthread_mutex_unlock(&timeout_lock);
+		AG_LockTiming();
+		TAILQ_INSERT_TAIL(&agTimeoutObjQ, ob, tobjs);
+		AG_UnlockTiming();
 	}
 	pthread_mutex_unlock(&ob->lock);
 }
@@ -95,16 +92,16 @@ timeout_schedule(void *p, struct timeout *to, Uint32 dt, int replace)
  * The object and timeout queue must be locked.
  */
 int
-timeout_scheduled(void *p, struct timeout *to)
+AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
 {
-	struct object *ob = p;
-	struct object *tob;
-	struct timeout *oto;
+	AG_Object *ob = p;
+	AG_Object *tob;
+	AG_Timeout *oto;
 
 	if (ob == NULL)
-		ob = world;
+		ob = agWorld;
 
-	TAILQ_FOREACH(tob, &timeout_objq, tobjs) {
+	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
 		CIRCLEQ_FOREACH(oto, &tob->timeouts, timeouts) {
 			if (oto == to)
 				return (1);
@@ -115,20 +112,20 @@ timeout_scheduled(void *p, struct timeout *to)
 
 /* Cancel the given timeout if it is scheduled for execution. */
 void
-timeout_del(void *p, struct timeout *to)
+AG_DelTimeout(void *p, AG_Timeout *to)
 {
-	struct object *ob = p, *tob;
-	struct timeout *oto;
+	AG_Object *ob = p, *tob;
+	AG_Timeout *oto;
 	
 	if (ob == NULL)
-		ob = world;
+		ob = agWorld;
 	
-	lock_timeout(ob);
+	AG_LockTimeouts(ob);
 	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
 		if (oto == to) {
 			CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
 			if (CIRCLEQ_EMPTY(&ob->timeouts)) {
-				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+				TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 			}
 			break;
 		}
@@ -136,43 +133,43 @@ timeout_del(void *p, struct timeout *to)
 	if (oto == NULL) {
 		dprintf("%s: %p is not scheduled\n", ob->name, to);
 	}
-	unlock_timeout(ob);
+	AG_UnlockTimeouts(ob);
 }
 
 void
-lock_timeout(void *p)
+AG_LockTimeouts(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
 	if (ob == NULL) {
-		ob = world;
+		ob = agWorld;
 	}
-	object_lock(ob);
-	pthread_mutex_lock(&timeout_lock);
+	AG_ObjectLock(ob);
+	AG_LockTiming();
 }
 
 void
-unlock_timeout(void *p)
+AG_UnlockTimeouts(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
 	if (ob == NULL) {
-		ob = world;
+		ob = agWorld;
 	}
-	pthread_mutex_unlock(&timeout_lock);
-	object_unlock(ob);
+	AG_UnlockTiming();
+	AG_ObjectUnlock(ob);
 }
 
 void
-timeout_process(Uint32 t)
+AG_ProcessTimeout(Uint32 t)
 {
-	struct timeout *to;
-	struct object *ob;
+	AG_Timeout *to;
+	AG_Object *ob;
 	Uint32 rv;
 
-	pthread_mutex_lock(&timeout_lock);
-	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
-		object_lock(ob);
+	AG_LockTiming();
+	TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
+		AG_ObjectLock(ob);
 		/*
 		 * Loop comparing the timestamp of the first element with
 		 * the current time for as long as the timestamp is in
@@ -184,20 +181,20 @@ pop:
 			if ((int)(to->ticks - t) <= 0) {
 				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
 				if (CIRCLEQ_EMPTY(&ob->timeouts)) {
-					TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+					TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 				}
 				to->running++;
 				rv = to->fn(ob, to->ival, to->arg);
 				to->running = 0;
 				if (rv > 0) {
 					to->ival = rv;
-					timeout_add(ob, to, rv);
+					AG_AddTimeout(ob, to, rv);
 				}
 				goto pop;
 			}
 		}
-		object_unlock(ob);
+		AG_ObjectUnlock(ob);
 	}
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	SDL_Delay(1);
 }

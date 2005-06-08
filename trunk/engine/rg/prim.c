@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.9 2005/05/20 05:54:44 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.10 2005/05/30 01:29:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -33,7 +33,7 @@
 
 /* Obtain the hue/saturation/value of a given RGB triplet. */
 void
-prim_rgb2hsv(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
+RG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 {
 	float vR, vG, vB;
 	float vMin, vMax, deltaMax;
@@ -73,7 +73,7 @@ prim_rgb2hsv(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 
 /* Convert hue/saturation/value to RGB. */
 void
-prim_hsv2rgb(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
+RG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 {
 	float var[3];
 	float vR, vG, vB, hv;
@@ -131,7 +131,7 @@ prim_hsv2rgb(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 }
 
 void
-prim_color_rgb(struct tile *t, Uint8 r, Uint8 g, Uint8 b)
+RG_ColorRGB(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b)
 {
 	t->c.r = r;
 	t->c.g = g;
@@ -140,7 +140,7 @@ prim_color_rgb(struct tile *t, Uint8 r, Uint8 g, Uint8 b)
 }
 
 void
-prim_color_rgba(struct tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+RG_ColorRGBA(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	t->c.r = r;
 	t->c.g = g;
@@ -149,21 +149,21 @@ prim_color_rgba(struct tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 }
 
 void
-prim_color_hsv(struct tile *t, float h, float s, float v)
+RG_ColorHSV(RG_Tile *t, float h, float s, float v)
 {
-	prim_hsv2rgb(h, s, v, &t->c.r, &t->c.g, &t->c.b);
+	RG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = SDL_MapRGB(t->su->format, t->c.r, t->c.g, t->c.b);
 }
 
 void
-prim_color_hsva(struct tile *t, float h, float s, float v, Uint8 a)
+RG_ColorHSVA(RG_Tile *t, float h, float s, float v, Uint8 a)
 {
-	prim_hsv2rgb(h, s, v, &t->c.r, &t->c.g, &t->c.b);
+	RG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = SDL_MapRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
 }
 
 void
-prim_color_u32(struct tile *t, Uint32 pc)
+RG_ColorUint32(RG_Tile *t, Uint32 pc)
 {
 	SDL_GetRGB(pc, t->su->format,
 	    &t->c.r,
@@ -173,7 +173,7 @@ prim_color_u32(struct tile *t, Uint32 pc)
 }
 
 void
-prim_put_pixel(SDL_Surface *su, int x, int y, Uint32 pc)
+RG_PutPixel(SDL_Surface *su, int x, int y, Uint32 pc)
 {
 	Uint8 *dst;
 	    
@@ -189,7 +189,7 @@ prim_put_pixel(SDL_Surface *su, int x, int y, Uint32 pc)
 
 /* Blend the pixel at t:[x,y] with the given RGBA value. */
 void
-prim_blend_rgb(SDL_Surface *su, int x, int y, enum prim_blend_mode mode,
+RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
     Uint8 sR, Uint8 sG, Uint8 sB, Uint8 sA)
 {
 	Uint8 dR, dG, dB, dA;
@@ -208,7 +208,7 @@ prim_blend_rgb(SDL_Surface *su, int x, int y, enum prim_blend_mode mode,
 		SDL_GetRGBA(*(Uint32 *)pDst, su->format, &dR, &dG, &dB, &dA);
 
 		switch (mode) {
-		case PRIM_OVERLAY_ALPHA:
+		case RG_PRIM_OVERLAY_ALPHA:
 			alpha = dA + sA;
 			if (alpha > 255) {
 				alpha = 255;
@@ -219,21 +219,21 @@ prim_blend_rgb(SDL_Surface *su, int x, int y, enum prim_blend_mode mode,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)alpha);
 			break;
-		case PRIM_AVERAGE_ALPHA:
+		case RG_PRIM_AVERAGE_ALPHA:
 			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)((dA*sA)/2));
 			break;
-		case PRIM_SRC_ALPHA:
+		case RG_PRIM_SRC_ALPHA:
 			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)(sA));
 			break;
-		case PRIM_DST_ALPHA:
+		case RG_PRIM_DST_ALPHA:
 			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
@@ -251,7 +251,7 @@ prim_blend_rgb(SDL_Surface *su, int x, int y, enum prim_blend_mode mode,
  * as presented by Foley & Van Dam [1990].
  */
 void
-prim_line(struct tile *t, int x1, int y1, int x2, int y2)
+RG_Line(RG_Tile *t, int x1, int y1, int x2, int y2)
 {
 	SDL_Surface *su = t->su;
 	int dx, dy;
@@ -278,7 +278,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 			ydir = 1;
 			xend = x2;
 		}
-		prim_put_pixel(t->su, x, y, t->pc);
+		RG_PutPixel(t->su, x, y, t->pc);
 
 		if (((y2-y1)*ydir) > 0) {
 			while (x < xend) {
@@ -289,7 +289,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 					y++;
 					d += inc2;
 				}
-				prim_put_pixel(t->su, x, y, t->pc);
+				RG_PutPixel(t->su, x, y, t->pc);
 			}
 		} else {
 			while (x < xend) {
@@ -300,7 +300,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 					y--;
 					d += inc2;
 				}
-				prim_put_pixel(t->su, x, y, t->pc);
+				RG_PutPixel(t->su, x, y, t->pc);
 			}
 		}		
 	} else {
@@ -318,7 +318,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 			yend = y2;
 			xdir = 1;
 		}
-		prim_put_pixel(t->su, x, y, t->pc);
+		RG_PutPixel(t->su, x, y, t->pc);
 
 		if (((x2-x1)*xdir) > 0) {
 			while (y < yend) {
@@ -329,7 +329,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 					x++;
 					d += inc2;
 				}
-				prim_put_pixel(t->su, x, y, t->pc);
+				RG_PutPixel(t->su, x, y, t->pc);
 			}
 		} else {
 			while (y < yend) {
@@ -340,7 +340,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 					x--;
 					d += inc2;
 				}
-				prim_put_pixel(t->su, x, y, t->pc);
+				RG_PutPixel(t->su, x, y, t->pc);
 			}
 		}
 	}
@@ -348,7 +348,7 @@ prim_line(struct tile *t, int x1, int y1, int x2, int y2)
 
 /* Draw a horizontal line segment. */
 void
-prim_hline(struct tile *t, int x1, int x2, int y, Uint32 c)
+RG_HLine(RG_Tile *t, int x1, int x2, int y, Uint32 c)
 {
 	int x, xtmp;
 	Uint8 *pDst, *pEnd;
@@ -369,7 +369,7 @@ prim_hline(struct tile *t, int x1, int x2, int y, Uint32 c)
 }
 
 void
-prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
+RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 {
 	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
 	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
@@ -406,9 +406,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		prim_blend_rgb(t->su, ix1, iy1, PRIM_OVERLAY_ALPHA, r, g, b,
+		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum1*255));
-		prim_blend_rgb(t->su, ix1, iy1+1, PRIM_OVERLAY_ALPHA, r, g, b,
+		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum2*255));
 
 		yf = yend+grad;
@@ -424,9 +424,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		prim_blend_rgb(t->su, ix2, iy2, PRIM_OVERLAY_ALPHA, r, g, b,
+		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum1*255));
-		prim_blend_rgb(t->su, ix2, iy2+1, PRIM_OVERLAY_ALPHA, r, g, b,
+		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum2*255));
 
 		/* Main loop */
@@ -439,9 +439,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 			lum1 += 0.3*focus;
 			lum2 += 0.3*focus;
 
-			prim_blend_rgb(t->su, x, (int)yf, PRIM_OVERLAY_ALPHA,
+			RG_BlendRGB(t->su, x, (int)yf, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum1*255));
-			prim_blend_rgb(t->su, x, (int)yf+1, PRIM_OVERLAY_ALPHA,
+			RG_BlendRGB(t->su, x, (int)yf+1, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum2*255));
 
 			yf = yf + grad;
@@ -468,9 +468,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		prim_blend_rgb(t->su, ix1, iy1, PRIM_OVERLAY_ALPHA,
+		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum1*255));
-		prim_blend_rgb(t->su, ix1, iy1+1, PRIM_OVERLAY_ALPHA,
+		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum2*255));
 		
 		xf = xend + grad;
@@ -486,9 +486,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 
 		lum1 = finvfrac(yend)*xgap;
 		lum2 = ffrac(yend)*xgap;
-		prim_blend_rgb(t->su, ix2, iy2, PRIM_OVERLAY_ALPHA,
+		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum1*255));
-		prim_blend_rgb(t->su, ix2, iy2+1, PRIM_OVERLAY_ALPHA,
+		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum2*255));
 
 		/* Main loop */
@@ -500,9 +500,9 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 			focus = (1.0 - fabs(lum1-lum2));
 			lum1 + 0.3*focus;
 			lum2 + 0.3*focus;
-			prim_blend_rgb(t->su, (int)xf, y, PRIM_OVERLAY_ALPHA,
+			RG_BlendRGB(t->su, (int)xf, y, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum1*255));
-			prim_blend_rgb(t->su, (int)xf+1, y, PRIM_OVERLAY_ALPHA,
+			RG_BlendRGB(t->su, (int)xf+1, y, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum2*255));
 
 			xf = xf + grad;
@@ -511,21 +511,21 @@ prim_wuline(struct tile *t, double x1p, double y1p, double x2p, double y2p)
 }
 
 void
-prim_circle2(struct tile *t, int wx, int wy, int radius)
+RG_Circle2(RG_Tile *t, int wx, int wy, int radius)
 {
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
 
 	while (x < y) {
-		prim_put_pixel(t->su, wx+x, wy+y, t->pc);
-		prim_put_pixel(t->su, wx+x+1, wy+y, t->pc);
-		prim_put_pixel(t->su, wx+x, wy-y, t->pc);
-		prim_put_pixel(t->su, wx+x+1, wy-y, t->pc);
-		prim_put_pixel(t->su, wx-x, wy+y, t->pc);
-		prim_put_pixel(t->su, wx-x-1, wy+y, t->pc);
-		prim_put_pixel(t->su, wx-x, wy-y, t->pc);
-		prim_put_pixel(t->su, wx-x-1, wy-y, t->pc);
+		RG_PutPixel(t->su, wx+x, wy+y, t->pc);
+		RG_PutPixel(t->su, wx+x+1, wy+y, t->pc);
+		RG_PutPixel(t->su, wx+x, wy-y, t->pc);
+		RG_PutPixel(t->su, wx+x+1, wy-y, t->pc);
+		RG_PutPixel(t->su, wx-x, wy+y, t->pc);
+		RG_PutPixel(t->su, wx-x-1, wy+y, t->pc);
+		RG_PutPixel(t->su, wx-x, wy-y, t->pc);
+		RG_PutPixel(t->su, wx-x-1, wy-y, t->pc);
 
 		e += u;
 		u += 2;
@@ -536,15 +536,15 @@ prim_circle2(struct tile *t, int wx, int wy, int radius)
 		}
 		x++;
 		
-		prim_put_pixel(t->su, wx+y, wy+x, t->pc);
-		prim_put_pixel(t->su, wx+y+1, wy+x, t->pc);
-		prim_put_pixel(t->su, wx+y, wy-x, t->pc);
-		prim_put_pixel(t->su, wx+y+1, wy-x, t->pc);
-		prim_put_pixel(t->su, wx-y, wy+x, t->pc);
-		prim_put_pixel(t->su, wx-y-1, wy+x, t->pc);
-		prim_put_pixel(t->su, wx-y, wy-x, t->pc);
-		prim_put_pixel(t->su, wx-y-1, wy-x, t->pc);
+		RG_PutPixel(t->su, wx+y, wy+x, t->pc);
+		RG_PutPixel(t->su, wx+y+1, wy+x, t->pc);
+		RG_PutPixel(t->su, wx+y, wy-x, t->pc);
+		RG_PutPixel(t->su, wx+y+1, wy-x, t->pc);
+		RG_PutPixel(t->su, wx-y, wy+x, t->pc);
+		RG_PutPixel(t->su, wx-y-1, wy+x, t->pc);
+		RG_PutPixel(t->su, wx-y, wy-x, t->pc);
+		RG_PutPixel(t->su, wx-y-1, wy-x, t->pc);
 	}
-	prim_put_pixel(t->su, wx-radius, wy, t->pc);
-	prim_put_pixel(t->su, wx+radius, wy, t->pc);
+	RG_PutPixel(t->su, wx-radius, wy, t->pc);
+	RG_PutPixel(t->su, wx+radius, wy, t->pc);
 }

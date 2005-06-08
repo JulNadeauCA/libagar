@@ -1,4 +1,4 @@
-/*	$Csoft: color.c,v 1.2 2004/04/30 12:25:42 vedge Exp $	*/
+/*	$Csoft: color.c,v 1.3 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -33,25 +33,25 @@
 #include "color.h"
 
 void
-write_color(struct netbuf *buf, SDL_PixelFormat *pixfmt, Uint32 color)
+AG_WriteColor(AG_Netbuf *buf, SDL_PixelFormat *pixfmt, Uint32 color)
 {
 	Uint8 r, g, b, a;
 
 	SDL_GetRGBA(color, pixfmt, &r, &g, &b, &a);
-	write_uint8(buf, r);
-	write_uint8(buf, g);
-	write_uint8(buf, b);
-	write_uint8(buf, a);
+	AG_WriteUint8(buf, r);
+	AG_WriteUint8(buf, g);
+	AG_WriteUint8(buf, b);
+	AG_WriteUint8(buf, a);
 }
 
 Uint32
-read_color(struct netbuf *buf, SDL_PixelFormat *pixfmt)
+AG_ReadColor(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 {
 	Uint8 r, g, b, a;
 
-	r = read_uint8(buf);
-	g = read_uint8(buf);
-	b = read_uint8(buf);
-	a = read_uint8(buf);
+	r = AG_ReadUint8(buf);
+	g = AG_ReadUint8(buf);
+	b = AG_ReadUint8(buf);
+	a = AG_ReadUint8(buf);
 	return (SDL_MapRGBA(pixfmt, r, g, b, a));
 }

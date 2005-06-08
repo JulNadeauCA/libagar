@@ -1,4 +1,4 @@
-/*	$Csoft: radio.h,v 1.12 2005/02/19 06:52:10 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.13 2005/05/13 09:21:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
@@ -8,24 +8,23 @@
 
 #include "begin_code.h"
 
-struct radio {
-	struct widget	 wid;
-	int		 value;		/* Default value binding */
-
-	int		*labels;	/* Label surface IDs */
-	const char	**items;
-	int		 nitems;
-	int		 selitem;	/* Index of selected item */
-	int		 max_w;		/* Width of widest label */
-	int		 oversel;	/* Overlapping selection */
-};
+typedef struct ag_radio {
+	struct ag_widget wid;
+	int value;		/* Default value binding */
+	int *labels;		/* Label surface IDs */
+	const char **items;
+	int nitems;
+	int selitem;		/* Index of selected item */
+	int max_w;		/* Width of widest label */
+	int oversel;		/* Overlapping selection */
+} AG_Radio;
 
 __BEGIN_DECLS
-struct radio	*radio_new(void *, const char *[]);
-void		 radio_init(struct radio *, const char *[]);
-void	 	 radio_draw(void *);
-void	 	 radio_scale(void *, int, int);
-void		 radio_destroy(void *);
+AG_Radio *AG_RadioNew(void *, const char *[]);
+void	  AG_RadioInit(AG_Radio *, const char *[]);
+void	  AG_RadioDraw(void *);
+void	  AG_RadioScale(void *, int, int);
+void	  AG_RadioDestroy(void *);
 __END_DECLS
 
 #include "close_code.h"

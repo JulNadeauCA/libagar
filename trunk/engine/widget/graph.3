@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.22 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: graph.3,v 1.23 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,24 +43,24 @@ The
 widget implements a scrollable graph display.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct graph *"
-.Fn graph_new "void *parent, const char *caption, enum graph_type type" "int flags" "graph_val_t yrange"
+.Ft "AG_Graph *"
+.Fn AG_GraphNew "void *parent, const char *caption, enum ag_graph_type type" "int flags" "AG_GraphValue yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph, const char *caption" "enum graph_type type, int flags, graph_val_t yrange"
+.Fn AG_GraphInit "AG_Graph *graph, const char *caption" "enum ag_graph_type type, int flags, AG_GraphValue yrange"
 .nr nS 0
 .Pp
 The
-.Fn graph_new
+.Fn AG_GraphNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn graph_init
+.Fn AG_GraphInit
 initializes a
 .Nm
 widget.
@@ -75,9 +75,9 @@ The
 .Fa type
 argument is one of:
 .Bd -literal
-enum graph_type {
-	GRAPH_POINTS,   /* Dots */
-	GRAPH_LINES     /* Lines */
+enum ag_graph_type {
+	AG_GRAPH_POINTS,   /* Dots */
+	AG_GRAPH_LINES     /* Lines */
 } type;
 .Ed
 .Pp
@@ -85,20 +85,20 @@ The
 .Fa flags
 may include:
 .Bd -literal
-#define GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
-#define GRAPH_ORIGIN  0x02   /* Visible origin */
+#define AG_GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
+#define AG_GRAPH_ORIGIN  0x02   /* Visible origin */
 .Ed
 .Sh PLOTTING
 .nr nS 1
-.Ft "struct graph_item *"
-.Fn graph_add_item "struct graph *graph, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
+.Ft "AG_GraphItem *"
+.Fn AG_GraphAddItem "AG_Graph *graph, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
 .Pp
 .Ft void
-.Fn graph_plot "struct graph_item *item" "graph_val_t val"
+.Fn AG_GraphPlot "AG_GraphItem *item" "AG_GraphValue val"
 .nr nS 0
 .Pp
 The
-.Fn graph_add_item
+.Fn AG_GraphAddItem
 function inserts a new item into
 .Fa graph .
 If the length of
@@ -115,7 +115,7 @@ triplet composes a color to visually identify the item.
 is the maximum number of points (if 0, the maximum is implicitely 0xffffffff-1).
 .Pp
 The
-.Fn graph_plot
+.Fn AG_GraphPlot
 function adds a value
 .Fa val
 to the graph item

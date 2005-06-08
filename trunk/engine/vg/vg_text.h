@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.h,v 1.6 2004/05/28 22:31:58 vedge Exp $	*/
+/*	$Csoft: vg_text.h,v 1.7 2005/06/04 04:48:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_TEXT_H_
@@ -18,10 +18,10 @@ struct vg_text_args {
 };
 
 __BEGIN_DECLS
-void	vg_text_align(struct vg *, enum vg_alignment);
-void	vg_text_angle(struct vg *, double);
-void	vg_printf(struct vg *, const char *, ...);
-void	vg_pprintf(struct vg *, const char *, ...);
+void	VG_TextAlignment(struct vg *, enum vg_alignment);
+void	VG_TextAngle(struct vg *, double);
+void	VG_Printf(struct vg *, const char *, ...);
+void	VG_PrintfP(struct vg *, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

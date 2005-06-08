@@ -1,4 +1,4 @@
-/*	$Csoft: joy.c,v 1.7 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: joy.c,v 1.8 2005/04/14 06:19:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,26 +29,13 @@
 #include <engine/engine.h>
 #include <engine/input.h>
 
-#include <engine/map/map.h>
-
-static void	joy_close(void *);
-static int	joy_match(const void *, const SDL_Event *);
-static void	joy_event(void *, const SDL_Event *);
-
-const struct input_driver joy_driver = {
-	N_("Joystick"),
-	joy_close,
-	joy_match,
-	joy_event
-};
-
-struct joy *
-joy_new(int index)
+AG_Joystick *
+AG_JoystickNew(int index)
 {
-	char name[INPUT_NAME_MAX];
-	struct joy *joy;
+	char name[AG_INPUT_NAME_MAX];
+	AG_Joystick *joy;
 
-	joy = Malloc(sizeof(struct joy), M_INPUT);
+	joy = Malloc(sizeof(AG_Joystick), M_INPUT);
 	joy->index = index;
 	snprintf(name, sizeof(name), "joy%d", index);
 
@@ -56,26 +43,25 @@ joy_new(int index)
 		goto fail;
 
 	SDL_JoystickEventState(SDL_ENABLE);
-
-	input_register(joy, INPUT_JOY, name, &joy_driver);
+	AG_InputSet(joy, AG_INPUT_JOY, name, &agJoystickOps);
 	return (joy);
 fail:
-	free(joy);
+	Free(joy, M_INPUT);
 	return (NULL);
 }
 
-void
-joy_close(void *p)
+static void
+close(void *p)
 {
-	struct joy *joy = p;
+	AG_Joystick *joy = p;
 
 	SDL_JoystickClose(joy->joy);
 }
 
 static int
-joy_match(const void *p, const SDL_Event *ev)
+match(const void *p, const SDL_Event *ev)
 {
-	const struct joy *joy = p;
+	const AG_Joystick *joy = p;
 
 	switch (ev->type) {
 	case SDL_JOYAXISMOTION:
@@ -104,41 +90,15 @@ joy_match(const void *p, const SDL_Event *ev)
 }
 
 static void
-joy_event(void *p, const SDL_Event *ev)
+proc_event(void *p, const SDL_Event *ev)
 {
-#if 0
-	struct input *in = p;
-	static int lastdir = 0;
-
-	/* XXX map ... */
-	switch (ev->jaxis.axis) {
-	case 0:	/* X */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_W;
-			lastdir &= ~(DIR_E);
-			mapdir_set(&in->pos->dir, DIR_W);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_E;
-			lastdir &= ~(DIR_W);
-			mapdir_set(&in->pos->dir, DIR_E);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	case 1:	/* Y */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_N;
-			lastdir &= ~(DIR_S);
-			mapdir_set(&in->pos->dir, DIR_N);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_S;
-			lastdir &= ~(DIR_N);
-			mapdir_set(&in->pos->dir, DIR_S);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	}
-#endif
+	/* TODO */
 }
+
+const AG_InputOps agJoystickOps = {
+	N_("Joystick"),
+	close,
+	match,
+	proc_event
+};
 

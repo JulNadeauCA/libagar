@@ -1,4 +1,4 @@
-/*	$Csoft: animview.c,v 1.2 2005/05/29 15:09:57 vedge Exp $	*/
+/*	$Csoft: animview.c,v 1.3 2005/05/29 15:10:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,79 +31,79 @@
 
 #include "animview.h"
 
-const struct widget_ops animview_ops = {
+const AG_WidgetOps animview_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	animview_draw,
-	animview_scale
+	RG_AnimviewDraw,
+	RG_AnimviewScale
 };
 
-struct animview *
-animview_new(void *parent)
+RG_Animview *
+RG_AnimviewNew(void *parent)
 {
-	struct animview *av;
+	RG_Animview *av;
 
-	av = Malloc(sizeof(struct animview), M_OBJECT);
-	animview_init(av);
-	object_attach(parent, av);
+	av = Malloc(sizeof(RG_Animview), M_OBJECT);
+	RG_AnimviewInit(av);
+	AG_ObjectAttach(parent, av);
 	return (av);
 }
 
 static void
 do_play(int argc, union evarg *argv)
 {
-	struct animview *av = argv[1].p;
+	RG_Animview *av = argv[1].p;
 
-	timeout_replace(av, &av->timer, 1);
-	button_disable(av->btns.play);
-	button_enable(av->btns.pause);
-	button_enable(av->btns.stop);
+	AG_ReplaceTimeout(av, &av->timer, 1);
+	AG_ButtonDisable(av->btns.play);
+	AG_ButtonEnable(av->btns.pause);
+	AG_ButtonEnable(av->btns.stop);
 }
 
 static void
 do_pause(int argc, union evarg *argv)
 {
-	struct animview *av = argv[1].p;
+	RG_Animview *av = argv[1].p;
 	
-	timeout_del(av, &av->timer);
-	button_enable(av->btns.play);
-	button_disable(av->btns.pause);
-	button_disable(av->btns.stop);
+	AG_DelTimeout(av, &av->timer);
+	AG_ButtonEnable(av->btns.play);
+	AG_ButtonDisable(av->btns.pause);
+	AG_ButtonDisable(av->btns.stop);
 }
 
 static void
 do_stop(int argc, union evarg *argv)
 {
-	struct animview *av = argv[1].p;
+	RG_Animview *av = argv[1].p;
 	
-	timeout_del(av, &av->timer);
+	AG_DelTimeout(av, &av->timer);
 	av->frame = 0;
 	
-	button_enable(av->btns.play);
-	button_disable(av->btns.pause);
-	button_disable(av->btns.stop);
+	AG_ButtonEnable(av->btns.play);
+	AG_ButtonDisable(av->btns.pause);
+	AG_ButtonDisable(av->btns.stop);
 }
 
 static Uint32
 tick(void *p, Uint32 ival, void *arg)
 {
-	struct animview *av = p;
+	RG_Animview *av = p;
 
 	if (av->anim->nframes == 0)
 		return (0);
 
 	if (++av->frame < av->anim->nframes) {
-		struct anim_frame *fr = &av->anim->frames[av->frame];
+		RG_AnimFrame *fr = &av->anim->frames[av->frame];
 
 		return (fr->delay > 0 ? fr->delay*100/av->speed : 1);
 	} else {
-		struct anim_frame *fr = &av->anim->frames[0];
+		RG_AnimFrame *fr = &av->anim->frames[0];
 
 		av->frame = 0;
 		return (fr->delay > 0 ? fr->delay*100/av->speed: 1);
@@ -111,10 +111,10 @@ tick(void *p, Uint32 ival, void *arg)
 }
 
 static void
-close_menu(struct animview *av)
+close_menu(RG_Animview *av)
 {
-	menu_collapse(av->menu, av->menu_item);
-	object_destroy(av->menu);
+	AG_MenuCollapse(av->menu, av->menu_item);
+	AG_ObjectDestroy(av->menu);
 	Free(av->menu, M_OBJECT);
 	av->menu = NULL;
 	av->menu_win = NULL;
@@ -124,74 +124,75 @@ close_menu(struct animview *av)
 static void
 set_speed(int argc, union evarg *argv)
 {
-	struct animview *av = argv[1].p;
+	RG_Animview *av = argv[1].p;
 	u_int factor = argv[2].i;
 
 	av->speed = factor;
 }
 
 static void
-open_menu(struct animview *av, int x, int y)
+open_menu(RG_Animview *av, int x, int y)
 {
 	if (av->menu != NULL)
 		close_menu(av);
 	
-	av->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	menu_init(av->menu);
-	av->menu_item = av->menu->sel_item = menu_add_item(av->menu, NULL);
+	av->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(av->menu);
+	av->menu_item = av->menu->sel_item = AG_MenuAddItem(av->menu, NULL);
 	{
-		struct AGMenuItem *m_speed;
+		AG_MenuItem *m_speed;
 
-		menu_action(av->menu_item, _("Play"), ANIM_PLAY_ICON,
+		AG_MenuAction(av->menu_item, _("Play"), ANIM_PLAY_ICON,
 		    do_play, "%p", av);
-		menu_action(av->menu_item, _("Pause"), ANIM_PAUSE_ICON,
+		AG_MenuAction(av->menu_item, _("Pause"), ANIM_PAUSE_ICON,
 		    do_pause, "%p", av);
-		menu_action(av->menu_item, _("Stop"), ANIM_STOP_ICON,
+		AG_MenuAction(av->menu_item, _("Stop"), ANIM_STOP_ICON,
 		    do_stop, "%p", av);
 
-		menu_separator(av->menu_item);
-		m_speed = menu_action(av->menu_item, _("Playback speed"),
+		AG_MenuSeparator(av->menu_item);
+		m_speed = AG_MenuAction(av->menu_item, _("Playback speed"),
 		    -1, NULL, NULL);
 		{
-			menu_action(m_speed, _("Quadruple"), -1,
+			AG_MenuAction(m_speed, _("Quadruple"), -1,
 			    set_speed, "%p, %i", av, 400);
-			menu_action(m_speed, _("Triple"), -1,
+			AG_MenuAction(m_speed, _("Triple"), -1,
 			    set_speed, "%p, %i", av, 300);
-			menu_action(m_speed, _("Double"), -1,
+			AG_MenuAction(m_speed, _("Double"), -1,
 			    set_speed, "%p, %i", av, 200);
-			menu_action(m_speed, _("Normal"), -1,
+			AG_MenuAction(m_speed, _("Normal"), -1,
 			    set_speed, "%p, %i", av, 100);
-			menu_action(m_speed, _("Half"), -1,
+			AG_MenuAction(m_speed, _("Half"), -1,
 			    set_speed, "%p, %i", av, 50);
-			menu_action(m_speed, _("One third"), -1,
+			AG_MenuAction(m_speed, _("One third"), -1,
 			    set_speed, "%p, %i", av, 33);
-			menu_action(m_speed, _("One quarter"), -1,
+			AG_MenuAction(m_speed, _("One quarter"), -1,
 			    set_speed, "%p, %i", av, 25);
 		}
 	}
 
-	av->menu_win = menu_expand(av->menu, av->menu_item, x, y);
+	av->menu_win = AG_MenuExpand(av->menu, av->menu_item, x, y);
 }
 
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
-	struct animview *av = argv[0].p;
+	RG_Animview *av = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 
 	if (button == SDL_BUTTON_RIGHT &&
-	    y < WIDGET(av)->h - WIDGET(av->btns.play)->h) {
-		open_menu(av, WIDGET(av)->cx+x, WIDGET(av)->cy+y);
+	    y < AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h) {
+		open_menu(av, AGWIDGET(av)->cx+x, AGWIDGET(av)->cy+y);
 	}
 }
 
 void
-animview_init(struct animview *av)
+RG_AnimviewInit(RG_Animview *av)
 {
-	widget_init(av, "animview", &animview_ops, 0);
-	WIDGET(av)->flags |= WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL;
+	AG_WidgetInit(av, "animview", &animview_ops, 0);
+	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
+			       AG_WIDGET_HFILL;
 	av->pre_w = 64;
 	av->pre_h = 64;
 	av->ranim.x = 0;
@@ -201,90 +202,91 @@ animview_init(struct animview *av)
 	av->speed = 100;
 	av->menu = NULL;
 	av->menu_win = NULL;
-	timeout_set(&av->timer, tick, av, 0);
+	AG_SetTimeout(&av->timer, tick, av, 0);
 	
-	av->btns.play = button_new(av, NULL);
-	button_set_label(av->btns.play, ICON(ANIM_PLAY_ICON));
-	event_new(av->btns.play, "button-pushed", do_play, "%p", av);
+	av->btns.play = AG_ButtonNew(av, NULL);
+	AG_ButtonSetSurface(av->btns.play, AGICON(ANIM_PLAY_ICON));
+	AG_SetEvent(av->btns.play, "button-pushed", do_play, "%p", av);
 	
-	av->btns.pause = button_new(av, NULL);
-	button_set_label(av->btns.pause, ICON(ANIM_PAUSE_ICON));
-	event_new(av->btns.pause, "button-pushed", do_pause, "%p", av);
+	av->btns.pause = AG_ButtonNew(av, NULL);
+	AG_ButtonSetSurface(av->btns.pause, AGICON(ANIM_PAUSE_ICON));
+	AG_SetEvent(av->btns.pause, "button-pushed", do_pause, "%p", av);
 	
-	av->btns.stop = button_new(av, NULL);
-	button_set_label(av->btns.stop, ICON(ANIM_STOP_ICON));
-	event_new(av->btns.stop, "button-pushed", do_stop, "%p", av);
+	av->btns.stop = AG_ButtonNew(av, NULL);
+	AG_ButtonSetSurface(av->btns.stop, AGICON(ANIM_STOP_ICON));
+	AG_SetEvent(av->btns.stop, "button-pushed", do_stop, "%p", av);
 	
-	button_enable(av->btns.play);
-	button_disable(av->btns.pause);
-	button_disable(av->btns.stop);
+	AG_ButtonEnable(av->btns.play);
+	AG_ButtonDisable(av->btns.pause);
+	AG_ButtonDisable(av->btns.stop);
 	
-	event_new(av, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(av, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
 void
-animview_prescale(struct animview *av, int w, int h)
+RG_AnimviewPrescale(RG_Animview *av, int w, int h)
 {
 	av->pre_w = w;
 	av->pre_h = h;
 }
 
 void
-animview_scale(void *p, int rw, int rh)
+RG_AnimviewScale(void *p, int rw, int rh)
 {
-	struct animview *av = p;
+	RG_Animview *av = p;
 	int bw, bh;
 	
 	if (rw == -1 && rh == -1) {
-		WIDGET_SCALE(av->btns.play, -1, -1);
-		WIDGET_SCALE(av->btns.pause, -1, -1);
-		WIDGET_SCALE(av->btns.stop, -1, -1);
+		AGWIDGET_SCALE(av->btns.play, -1, -1);
+		AGWIDGET_SCALE(av->btns.pause, -1, -1);
+		AGWIDGET_SCALE(av->btns.stop, -1, -1);
 
-		WIDGET(av)->w = MAX(av->pre_w, WIDGET(av->btns.play)->w*3);
-		WIDGET(av)->h = av->pre_h + WIDGET(av->btns.play)->h;
+		AGWIDGET(av)->w = MAX(av->pre_w, AGWIDGET(av->btns.play)->w*3);
+		AGWIDGET(av)->h = av->pre_h + AGWIDGET(av->btns.play)->h;
 		return;
 	}
 	bw = rw/3;
-	bh = WIDGET(av->btns.play)->h;
+	bh = AGWIDGET(av->btns.play)->h;
 
-	WIDGET(av->btns.play)->x = 0;
-	WIDGET(av->btns.play)->y = rh - bh;
-	WIDGET(av->btns.play)->w = bw;
+	AGWIDGET(av->btns.play)->x = 0;
+	AGWIDGET(av->btns.play)->y = rh - bh;
+	AGWIDGET(av->btns.play)->w = bw;
 
-	WIDGET(av->btns.pause)->x = bw;
-	WIDGET(av->btns.pause)->y = rh - bh;
-	WIDGET(av->btns.pause)->w = bw;
+	AGWIDGET(av->btns.pause)->x = bw;
+	AGWIDGET(av->btns.pause)->y = rh - bh;
+	AGWIDGET(av->btns.pause)->w = bw;
 	
-	WIDGET(av->btns.stop)->x = bw*2;
-	WIDGET(av->btns.stop)->y = rh - bh;
-	WIDGET(av->btns.stop)->w = bw;
+	AGWIDGET(av->btns.stop)->x = bw*2;
+	AGWIDGET(av->btns.stop)->y = rh - bh;
+	AGWIDGET(av->btns.stop)->w = bw;
 
 	av->ranim.x = rw/2 - av->ranim.w/2;
 	av->ranim.y = (rh - bh)/2 - av->ranim.h/2;
 }
 
 void
-animview_draw(void *p)
+RG_AnimviewDraw(void *p)
 {
-	struct animview *av = p;
-	struct anim_frame *fr;
+	RG_Animview *av = p;
+	RG_AnimFrame *fr;
 
 	if (av->anim == NULL || av->anim->nframes < 1) {
 		return;
 	}
 	fr = &av->anim->frames[av->frame];
 	if (fr->su != NULL)
-		widget_blit(av, fr->su, av->ranim.x, av->ranim.y);
+		AG_WidgetBlit(av, fr->su, av->ranim.x, av->ranim.y);
 }
 
 void
-animview_set_animation(struct animview *av, struct animation *anim)
+RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 {
-	timeout_del(av, &av->timer);
+	AG_DelTimeout(av, &av->timer);
 	av->anim = anim;
 	av->frame = 0;
-	av->ranim.x = WIDGET(av)->w/2 - anim->w/2;
-	av->ranim.y = (WIDGET(av)->h - WIDGET(av->btns.play)->h)/2 - anim->h/2;
+	av->ranim.x = AGWIDGET(av)->w/2 - anim->w/2;
+	av->ranim.y = (AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h)/2 -
+	    anim->h/2;
 	av->ranim.w = anim->w;
 	av->ranim.h = anim->h;
 }

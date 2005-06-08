@@ -1,4 +1,4 @@
-/*	$Csoft: vg_math.c,v 1.6 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg_math.c,v 1.7 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -32,21 +32,21 @@
 
 /* Convert radians to degrees. */
 double
-vg_rad2deg(double theta)
+VG_Rad2Deg(double theta)
 {
     return (theta/(2.0*M_PI)*360.0);
 }
 
 /* Convert degrees to radians. */
 double
-vg_deg2rad(double theta)
+VG_Deg2Rad(double theta)
 {
     return ((theta/360.0)*(2.0*M_PI));
 }
 
 /* Convert Cartesian to polar coordinates. */
 void
-vg_car2pol(struct vg *vg, double x, double y, double *rho, double *theta)
+VG_Car2Pol(VG *vg, double x, double y, double *rho, double *theta)
 {
 	*rho = hypot(x, y);
 	*theta = atan2(y, x);
@@ -54,7 +54,7 @@ vg_car2pol(struct vg *vg, double x, double y, double *rho, double *theta)
 
 /* Convert polar to Cartesian coordinates. */
 void
-vg_pol2car(struct vg *vg, double r, double theta, double *x, double *y)
+VG_Pol2Car(VG *vg, double r, double theta, double *x, double *y)
 {
 	*x = r*cos(theta);
 	*y = r*sin(theta);

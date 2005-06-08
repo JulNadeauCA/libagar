@@ -1,4 +1,4 @@
-.\"	$Csoft: units.3,v 1.6 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: units.3,v 1.7 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -55,46 +55,46 @@ Units are arranged in unit groups, and Agar's
 .Pa engine/widget/units.c
 defines the groups:
 .Pp
-.Bl -tag -compact -width "substance_amt_units "
-.It length_units
+.Bl -tag -compact -width "agSubstanceAmountUnits "
+.It agLengthUnits
 Units of length/distance
-.It area_units
+.It agAreaUnits
 Units of area
-.It volume_units
+.It agVolumeUnits
 Units of volume
-.It speed_units
+.It agSpeedUnits
 Units of speed or velocity
-.It mass_units
+.It agMassUnits
 Units of weight
-.It time_units
+.It agTimeUnits
 Units of time
-.It current_units
+.It agCurrentUnits
 Units of electrical current
-.It temperature_units
+.It agTemperatureUnits
 Units of temperature
-.It substance_amt_units
+.It agSubstanceAmountUnits
 Units of substance amount
-.It light_units
+.It agLightUnits
 Units of light measurement
-.It power_units
+.It agPowerUnits
 Units of power
-.It emf_units
+.It agEMFUnits
 Units of electromotive force
-.It resistance_units
+.It agResistanceUnits
 Units of electrical resistance
-.It resistance_Tcoeff1_units
+.It agResistanceTC1Units
 Units of first-order temperature coefficients
-.It resistance_Tcoeff2_units
+.It agResistanceTC2Units
 Units of second-order temperature coefficients
-.It capacitance_units
+.It agCapacitanceUnits
 Units of electrical capacitance
-.It inductance_units
+.It agInductanceUnits
 Units of electrical inductance
-.It frequency_units
+.It agFrequencyUnits
 Units of frequency
-.It pressure_units
+.It agPressureUnits
 Units of pressure and stress
-.It met_units
+.It agMetabolicExpenditureUnits
 Units of metabolic expenditure
 (somewhat humorous)
 .El
@@ -107,54 +107,54 @@ If
 is defined, historical units of weight and measure are included as well.
 .Sh INTERFACE
 .nr nS 1
-.Ft "const struct unit *"
-.Fn unit_find "const char *key"
+.Ft "const AG_Unit *"
+.Fn AG_FindUnit "const char *key"
 .Pp
-.Ft "const struct unit *"
-.Fn unit_best "const struct unit *unit_group" "double n"
+.Ft "const AG_Unit *"
+.Fn AG_BestUnit "const AG_Unit *unit_group" "double n"
 .Pp
 .Ft "char *"
-.Fn unit_format "double n" "const struct unit unit_group[]"
+.Fn AG_UnitFormat "double n" "const AG_Unit unit_group[]"
 .Pp
 .Ft "const char *"
-.Fn unit_abbr "const struct unit *unit"
+.Fn AG_UnitAbbr "const AG_Unit *unit"
 .Pp
 .Ft "double"
-.Fn unit2base "double n" "const struct unit *unit"
+.Fn AG_Unit2Base "double n" "const AG_Unit *unit"
 .Pp
 .Ft "double"
-.Fn base2unit "double n" "const struct unit *unit"
+.Fn AG_Base2Unit "double n" "const AG_Unit *unit"
 .Pp
 .Ft "double"
-.Fn unit2unit "double n" "const struct unit *unit_from" "const struct unit *unit_to"
+.Fn AG_Unit2Unit "double n" "const AG_Unit *unit_from" "const AG_Unit *unit_to"
 .nr nS 0
 .Pp
 The
-.Fn unit_find
+.Fn AG_FindUnit
 function searches the unit database for a unit matching the given
 .Fa key ,
 and returns a pointer to the unit on success or NULL if none was found.
 .Pp
 The
-.Fn unit_best
+.Fn AG_BestUnit
 function returns the unit expected to yield the least number of
 non-significant figures when formatting the given number
 .Fa n .
-.Fn unit_format
+.Fn AG_UnitFormat
 formats the given number
 .Fa n
 using the best unit in
 .Fa unit_group .
 .Pp
-.Fn unit_abbr
+.Fn AG_UnitAbbr
 returns the abbreviation string associated with the given unit.
 .Pp
 The
-.Fn unit2base
+.Fn AG_Unit2Base
 function converts from
 .Fa n
 in specified units to the equivalent number of base units.
-.Fn base2unit
+.Fn AG_Base2Unit
 converts
 .Fa n
 base units to the equivalent number of specified units.
@@ -164,23 +164,23 @@ The following code fragment prints the equivalent milliseconds for a given
 number of seconds:
 .Bd -literal -offset indent
 printf("%f seconds = %f milliseconds", n,
-    base2unit(n, unit_find("ms")));
+    AG_Base2Unit(n, AG_FindUnit("ms")));
 .Ed
 .Pp
 The following code fragment prints the equivalent of 27 degrees Celsius,
 in kilo Kelvins:
 .Bd -literal -offset indent
-const struct unit *degC = unit_find("degC");
-const struct unit *kk = unit_find("kk");
+const AG_Unit *degC = AG_FindUnit("degC");
+const AG_Unit *kk = AG_FindUnit("kk");
 
-printf("27C = %fkk", unit2unit(27.0, degC, kk));
+printf("27C = %fkk", AG_Unit2Unit(27.0, degC, kk));
 .Ed
 .Pp
 This code fragment displays the value of
 .Va r
 using the resistance unit most suitable to its magnitude.
 .Bd -literal -offset indent
-printf("Resistance = %s", unit_format(r, resistance_units));
+printf("Resistance = %s", AG_UnitFormat(r, agResistanceUnits));
 .Ed
 .Sh SEE ALSO
 .Xr agar 3 ,

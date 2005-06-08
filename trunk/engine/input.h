@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.17 2003/09/07 04:15:05 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.18 2004/02/20 04:20:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_INPUT_H_
@@ -6,44 +6,39 @@
 
 #include "begin_code.h"
 
-#define INPUT_NAME_MAX	16
+#define AG_INPUT_NAME_MAX	16
 
-struct position;
-
-enum input_type {
-	INPUT_KEYBOARD,		/* Keyboard device */
-	INPUT_JOY,		/* Joystick device */
-	INPUT_MOUSE		/* Mouse device */
+enum ag_input_type {
+	AG_INPUT_KEYBOARD,		/* Keyboard device */
+	AG_INPUT_JOY,			/* Joystick device */
+	AG_INPUT_MOUSE			/* Mouse device */
 };
 
 /* Driver for a specific type of input device. */
-struct input_driver {
-	char	*name;						/* Identifier */
-	void	(*in_close)(void *);				/* Clean up */
-	int	(*in_match)(const void *, const SDL_Event *);	/* Map event */
-	void	(*in_event)(void *, const SDL_Event *);		/* Proc event */
-};
+typedef struct ag_input_ops {
+	char	*name;
+	void	(*in_close)(void *);
+	int	(*in_match)(const void *, const SDL_Event *);
+	void	(*in_event)(void *, const SDL_Event *);
+} AG_InputOps;
 
-SLIST_HEAD(input_devq, input);
+SLIST_HEAD(ag_input_devq, ag_input);
 
-/* Input device associated with a map position. */
-struct input {
-	char		name[INPUT_NAME_MAX];	/* Device identifier */
-	enum input_type	type;			/* Type of device */
-
-	const struct input_driver *drv;		/* Input driver */
-	struct position		  *pos;		/* Position to control */
-
-	SLIST_ENTRY(input) inputs;
-};
+/* Input device mapping. */
+typedef struct ag_input {
+	char name[AG_INPUT_NAME_MAX];		/* Device identifier */
+	enum ag_input_type type;		/* Type of device */
+	const AG_InputOps *ops;			/* Generic operations */
+	SLIST_ENTRY(ag_input) inputs;
+} AG_Input;
 
 __BEGIN_DECLS
-void	 input_register(void *, enum input_type, const char *,
-	                const struct input_driver *);
-void	 input_deregister(void *);
-void	 input_destroy(void);
-void	 input_event(enum input_type, const SDL_Event *);
-void	*input_find(const char *);
+void	 AG_InputSet(void *, enum ag_input_type, const char *,
+	             const AG_InputOps *);
+void	 AG_InputRemove(void *);
+void	 AG_InputDestroy(void);
+void	 AG_InputEvent(enum ag_input_type, const SDL_Event *);
+void	*AG_InputFind(const char *);
 __END_DECLS
 
 #include "close_code.h"

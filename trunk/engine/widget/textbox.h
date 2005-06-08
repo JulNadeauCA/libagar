@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.40 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.41 2005/05/24 08:14:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -8,21 +8,21 @@
 
 #include "begin_code.h"
 
-#define TEXTBOX_STRING_MAX 1024
+#define AG_TEXTBOX_STRING_MAX 1024
 
-struct textbox {
-	struct widget wid;
+typedef struct ag_textbox {
+	struct ag_widget wid;
 	
-	char string[TEXTBOX_STRING_MAX]; /* Default string binding */
+	char string[AG_TEXTBOX_STRING_MAX];	/* Default string binding */
 
-	SDL_Surface *label_su;		/* Label surface (left) */
-	int	     label_id;
+	SDL_Surface *label_su;			/* Label surface */
+	int	     label_id;			/* Label surface mapping */
 
 	u_int flags;
-#define TEXTBOX_WRITEABLE	0x01	/* Writeable */
-#define TEXTBOX_BLINK_ON	0x02	/* Cursor blink state (internal) */
-#define TEXTBOX_PASSWORD	0x04	/* Password (hidden) input */
-#define TEXTBOX_ABANDON_FOCUS	0x08	/* Abandon focus on return */
+#define AG_TEXTBOX_WRITEABLE	 0x01	/* Allow focus/text input */
+#define AG_TEXTBOX_BLINK_ON	 0x02	/* Cursor blink state (internal) */
+#define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */
+#define AG_TEXTBOX_ABANDON_FOCUS 0x08	/* Abandon focus on return */
 
 	int prew, preh;			/* Prescale */
 	int xpadding, ypadding;		/* Text padding */
@@ -33,34 +33,33 @@ struct textbox {
 	int sel_x1, sel_x2;		/* Selection points */
 	int sel_edit;			/* Point being edited */
 
-	struct timeout delay_to;	/* Pre-repeat delay timer */
-	struct timeout repeat_to;	/* Repeat timer */
-	struct timeout cblink_to;	/* Cursor blink timer */
+	AG_Timeout delay_to;		/* Pre-repeat delay timer */
+	AG_Timeout repeat_to;		/* Repeat timer */
+	AG_Timeout cblink_to;		/* Cursor blink timer */
+
 	struct {
 		SDLKey key;
 		SDLMod mod;
 		Uint32 unicode;
 	} repeat;
-};
+} AG_Textbox;
 
 __BEGIN_DECLS
-struct textbox	*textbox_new(void *, const char *);
+AG_Textbox *AG_TextboxNew(void *, const char *);
 
-void	 textbox_init(struct textbox *, const char *);
-void	 textbox_destroy(void *);
-void	 textbox_draw(void *);
-void	 textbox_prescale(struct textbox *, const char *);
-void	 textbox_scale(void *, int, int);
+void	 AG_TextboxInit(AG_Textbox *, const char *);
+void	 AG_TextboxDestroy(void *);
+void	 AG_TextboxDraw(void *);
+void	 AG_TextboxPrescale(AG_Textbox *, const char *);
+void	 AG_TextboxScale(void *, int, int);
 
-void	 textbox_shown(int, union evarg *);
-void	 textbox_hidden(int, union evarg *);
-void	 textbox_printf(struct textbox *, const char *, ...);
-char	*textbox_string(struct textbox *);
-size_t	 textbox_copy_string(struct textbox *, char *, size_t)
-	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
-int	 textbox_int(struct textbox *);
-void	 textbox_set_writeable(struct textbox *, int);
-void	 textbox_set_password(struct textbox *, int);
+void	 AG_TextboxPrintf(AG_Textbox *, const char *, ...);
+char	*AG_TextboxDupString(AG_Textbox *);
+size_t	 AG_TextboxCopyString(AG_Textbox *, char *, size_t)
+	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
+int	 AG_TextboxInt(AG_Textbox *);
+void	 AG_TextboxSetWriteable(AG_Textbox *, int);
+void	 AG_TextboxSetPassword(AG_Textbox *, int);
 __END_DECLS
 
 #include "close_code.h"

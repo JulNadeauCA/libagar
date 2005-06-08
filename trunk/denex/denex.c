@@ -1,4 +1,4 @@
-/*	$Csoft: denex.c,v 1.4 2004/03/18 21:27:46 vedge Exp $	*/
+/*	$Csoft: denex.c,v 1.5 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -64,10 +64,10 @@ main(int argc, char *argv[])
 {
 	extern char *optarg;
 	extern int optind;
-	struct den *den;
+	AG_Den *den;
 	int c, i;
 
-	error_init();
+	AG_InitError();
 
 	while ((c = getopt(argc, argv, "?qio:")) != -1) {
 		switch (c) {
@@ -95,9 +95,9 @@ main(int argc, char *argv[])
 		goto fail;
 	}
 
-	den = den_open(argv[0], DEN_READ);
+	den = AG_DenOpen(argv[0], AG_DEN_READ);
 	if (den == NULL) {
-		fprintf(stderr, "opening %s: %s\n", argv[0], error_get());
+		fprintf(stderr, "opening %s: %s\n", argv[0], AG_GetError());
 		goto fail;
 	}
 
@@ -123,7 +123,7 @@ main(int argc, char *argv[])
 
 	for (i = 0; i < den->nmembers; i++) {
 		char *buf;
-		struct den_member *memb = &den->members[i];
+		AG_DenMember *memb = &den->members[i];
 		FILE *f;
 		size_t i, len, rv;
 
@@ -144,8 +144,8 @@ main(int argc, char *argv[])
 		}
 		
 		buf = Malloc(memb->size, 0);
-		netbuf_seek(den->buf, memb->offs, SEEK_SET);
-		rv = netbuf_eread(buf, 1, memb->size, den->buf);
+		AG_NetbufSeek(den->buf, memb->offs, SEEK_SET);
+		rv = AG_NetbufReadE(buf, 1, memb->size, den->buf);
 		if (rv > 0) {
 			if (fwrite(buf, rv, 1, f) < 1) {
 				fprintf(stderr, "%s: write error\n",
@@ -157,11 +157,11 @@ main(int argc, char *argv[])
 		Free(buf, 0);
 	}
 out:
-	den_close(den);
-	error_destroy();
+	AG_DenClose(den);
+	AG_DestroyError();
 	return (0);
 fail:
-	error_destroy();
+	AG_DestroyError();
 	return (1);
 }
 

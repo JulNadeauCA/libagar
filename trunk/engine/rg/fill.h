@@ -1,4 +1,4 @@
-/*	$Csoft: fill.h,v 1.4 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.5 2005/03/06 10:40:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FILL_H_
@@ -8,8 +8,8 @@
 
 #include "begin_code.h"
 
-struct fill {
-	struct feature ft;
+struct rg_fill_feature {
+	RG_Feature ft;
 
 	enum fill_type {
 		FILL_SOLID,
@@ -39,13 +39,13 @@ struct fill {
 };
 
 __BEGIN_DECLS
-void		 fill_init(void *, struct tileset *, int);
-int		 fill_load(void *, struct netbuf *);
-void		 fill_save(void *, struct netbuf *);
-void		 fill_apply(void *, struct tile *, int, int);
-void		 fill_menu(void *, struct AGMenuItem *);
-struct window	*fill_edit(void *, struct tileview *);
-struct toolbar	*fill_toolbar(void *, struct tileview *);
+void		 RG_FillInit(void *, RG_Tileset *, int);
+int		 RG_FillLoad(void *, AG_Netbuf *);
+void		 RG_FillSave(void *, AG_Netbuf *);
+void		 RG_FillApply(void *, RG_Tile *, int, int);
+void		 RG_FillMenu(void *, AG_MenuItem *);
+AG_Window	*RG_FillEdit(void *, RG_Tileview *);
+AG_Toolbar	*RG_FillToolbar(void *, RG_Tileview *);
 __END_DECLS
 
 #include "close_code.h"

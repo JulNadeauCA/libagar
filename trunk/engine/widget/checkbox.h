@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.h,v 1.16 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.17 2005/05/13 09:21:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CHECKBOX_H_
@@ -8,23 +8,19 @@
 
 #include "begin_code.h"
 
-#define CHECKBOX_CAPTION_MAX	64
-
-struct checkbox {
-	struct widget wid;
-
-	int		 state;		/* 1=pressed, 0=released */
-	SDL_Surface	*label_su;	/* Text label */
-	int		 label_id;
-};
+typedef struct ag_checkbox {
+	struct ag_widget wid;
+	int state;
+	SDL_Surface *label_su;
+	int label_id;
+} AG_Checkbox;
 
 __BEGIN_DECLS
-struct checkbox	*checkbox_new(void *, const char *, ...);
-void		 checkbox_init(struct checkbox *, char *);
-void		 checkbox_scale(void *, int, int);
-void		 checkbox_destroy(void *);
-void		 checkbox_draw(void *);
-void		 checkbox_toggle(struct checkbox *);
+AG_Checkbox	*AG_CheckboxNew(void *, const char *, ...);
+void		 AG_CheckboxInit(AG_Checkbox *, char *);
+void		 AG_CheckboxScale(void *, int, int);
+void		 AG_CheckboxDraw(void *);
+void		 AG_CheckboxToggle(AG_Checkbox *);
 __END_DECLS
 
 #include "close_code.h"

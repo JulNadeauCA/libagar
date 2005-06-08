@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.43 2005/05/14 10:05:13 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.44 2005/05/24 08:15:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,29 +40,28 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
-#include <engine/widget/palette.h>
 #include <engine/widget/spinbutton.h>
 
 #include "monitor.h"
 
 static void
-poll_windows_do(struct tlist *tl, struct window *win, int depth)
+poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
 {
-	char text[TLIST_LABEL_MAX];
-	struct window *subwin;
-	struct tlist_item *it;
+	char text[AG_TLIST_LABEL_MAX];
+	AG_Window *subwin;
+	AG_TlistItem *it;
 
 	if (strcmp(win->caption, "win-popup") == 0)
 		return;
 
 	strlcpy(text, win->caption, sizeof(text));
-	if (strcmp(OBJECT(win)->name, "win-generic") != 0) {
+	if (strcmp(AGOBJECT(win)->name, "win-generic") != 0) {
 		strlcat(text, " (", sizeof(text));
-		strlcat(text, OBJECT(win)->name, sizeof(text));
+		strlcat(text, AGOBJECT(win)->name, sizeof(text));
 		strlcat(text, ")", sizeof(text));
 	}
 
-	it = tlist_insert_item(tl, NULL, text, win);
+	it = AG_TlistAddPtr(tl, NULL, text, win);
 	it->depth = depth;
 	it->class = "window";
 
@@ -73,117 +72,117 @@ poll_windows_do(struct tlist *tl, struct window *win, int depth)
 static void
 poll_windows(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct window *win;
+	AG_Tlist *tl = argv[0].p;
+	AG_Window *win;
 
-	tlist_clear_items(tl);
-	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
+	AG_TlistClear(tl);
+	pthread_mutex_lock(&agView->lock);
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
 		poll_windows_do(tl, win, 0);
 	}
-	pthread_mutex_unlock(&view->lock);
-	tlist_restore_selections(tl);
+	pthread_mutex_unlock(&agView->lock);
+	AG_TlistRestore(tl);
 }
 
 static void
 show_window(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
-	struct window *win;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
+	AG_Window *win;
 
-	if ((it = tlist_selected_item(tl)) == NULL)
+	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
 	win = it->p1;
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 static void
 hide_window(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
-	struct window *win;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
+	AG_Window *win;
 
-	if ((it = tlist_selected_item(tl)) == NULL)
+	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
 	win = it->p1;
-	window_hide(win);
+	AG_WindowHide(win);
 }
 
 /* Display widget information. */
 static void
 examine_widget(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct tlist_item *it;
-	struct widget *wid;
-	struct window *win;
-	struct vbox *vb;
+	AG_Tlist *tl = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_TlistItem *it;
+	AG_Widget *wid;
+	AG_Window *win;
+	AG_VBox *vb;
 
-	if ((it = tlist_selected_item(tl)) == NULL) {
+	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
 		return;
 	}
 	wid = it->p1;
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Widget info: %s"), OBJECT(wid)->name);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Widget info: %s"), AGOBJECT(wid)->name);
 	
-	vb = vbox_new(win, VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		struct label *lab;
+		AG_Label *lab;
 
-		label_new(vb, LABEL_STATIC, _("Name: \"%s\""),
-		    OBJECT(wid)->name);
-		label_new(vb, LABEL_STATIC, _("Type: %s"), wid->type);
-		label_new(vb, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
-		    &wid->flags);
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("Name: \"%s\""),
+		    AGOBJECT(wid)->name);
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("Type: %s"), wid->type);
+		AG_LabelNew(vb, AG_LABEL_POLLED_MT, _("Flags: 0x%x"),
+		    &pwin->lock, &wid->flags);
 
-		lab = label_new(vb, LABEL_POLLED_MT,
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("Geometry: %dx%d at %d,%d"), &pwin->lock,
 		    &wid->w, &wid->h, &wid->x, &wid->y);
-		label_prescale(lab,
+		AG_LabelPrescale(lab,
 		    _("Geometry: 0000x0000 at 0000x0000"));
 		
-		lab = label_new(vb, LABEL_POLLED_MT,
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("View geometry: %d,%d -> %d,%d"), &pwin->lock,
 		    &wid->cx, &wid->cy, &wid->cx2, &wid->cy2);
-		label_prescale(lab,
+		AG_LabelPrescale(lab,
 		    _("View geometry: 0000x0000 -> 0000x0000"));
 	}
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 static void
-poll_widgets_do(struct widget *wid, struct tlist *widtl, int depth)
+poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
 {
-	char text[TLIST_LABEL_MAX];
-	struct tlist_item *it;
+	char text[AG_TLIST_LABEL_MAX];
+	AG_TlistItem *it;
 
-	strlcpy(text, OBJECT(wid)->name, sizeof(text));
+	strlcpy(text, AGOBJECT(wid)->name, sizeof(text));
 	if (strcmp(wid->type, "window") == 0) {
-		struct window *win = (struct window *)wid;
+		AG_Window *win = (AG_Window *)wid;
 
 		strlcat(text, " (", sizeof(text));
 		strlcat(text, win->caption, sizeof(text));
 		strlcat(text, ")", sizeof(text));
 	}
-	it = tlist_insert_item(widtl, NULL, text, wid);
+	it = AG_TlistAddPtr(widtl, NULL, text, wid);
 	it->depth = depth;
 	it->class = "widget";
 	
-	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
-		it->flags |= TLIST_HAS_CHILDREN;
+	if (!TAILQ_EMPTY(&AGOBJECT(wid)->children)) {
+		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
 
-	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_children(widtl, it)) {
-		struct widget *cwid;
+	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
+	    AG_TlistVisibleChildren(widtl, it)) {
+		AG_Widget *cwid;
 
-		OBJECT_FOREACH_CHILD(cwid, wid, widget)
+		AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 			poll_widgets_do(cwid, widtl, depth+1);
 	}
 }
@@ -191,116 +190,117 @@ poll_widgets_do(struct widget *wid, struct tlist *widtl, int depth)
 static void
 poll_widgets(int argc, union evarg *argv)
 {
-	struct tlist *widtl = argv[0].p;
-	struct window *win = argv[1].p;
+	AG_Tlist *widtl = argv[0].p;
+	AG_Window *win = argv[1].p;
 	
-	tlist_clear_items(widtl);
-	lock_linkage();
+	AG_TlistClear(widtl);
+	AG_LockLinkage();
 	pthread_mutex_lock(&win->lock);
 
-	poll_widgets_do(WIDGET(win), widtl, 0);
+	poll_widgets_do(AGWIDGET(win), widtl, 0);
 
 	pthread_mutex_unlock(&win->lock);
-	unlock_linkage();
-	tlist_restore_selections(widtl);
+	AG_UnlockLinkage();
+	AG_TlistRestore(widtl);
 }
 
 static void
 scale_window(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	AG_Window *win = argv[1].p;
 
-	window_scale(win, -1, -1);
-	window_scale(win, WIDGET(win)->w, WIDGET(win)->h);
-	WINDOW_UPDATE(win);
+	AG_WindowScale(win, -1, -1);
+	AG_WindowScale(win, AGWIDGET(win)->w, AGWIDGET(win)->h);
+	AG_WINDOW_UPDATE(win);
 }
 
 static void
 examine_window(int argc, union evarg *argv)
 {
-	struct tlist *wintl = argv[1].p;
-	struct tlist_item *it;
-	struct window *pwin, *win;
-	struct tlist *tl;
-	struct AGMenuItem *mi;
-	struct spinbutton *sb;
+	AG_Tlist *wintl = argv[1].p;
+	AG_TlistItem *it;
+	AG_Window *pwin, *win;
+	AG_Tlist *tl;
+	AG_MenuItem *mi;
+	AG_Spinbutton *sb;
 
-	if ((it = tlist_selected_item(wintl)) == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected."));
+	if ((it = AG_TlistSelectedItem(wintl)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, _("No window is selected."));
 		return;
 	}
 	pwin = it->p1;
 
-	if ((win = window_new(WINDOW_DETACH, "monitor-win-%s",
-	    OBJECT(pwin)->name)) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "monitor-win-%s",
+	    AGOBJECT(pwin)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, "%s", OBJECT(pwin)->name);
+	AG_WindowSetCaption(win, "%s", AGOBJECT(pwin)->name);
 
-	label_new(win, LABEL_STATIC, "Name: \"%s\"", OBJECT(pwin)->name);
-	label_new(win, LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
+	AG_LabelNew(win, AG_LABEL_STATIC, "Name: \"%s\"", AGOBJECT(pwin)->name);
+	AG_LabelNew(win, AG_LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
 	    &pwin->flags);
 
-	sb = spinbutton_new(win, _("Widget spacing: "));
-	widget_bind(sb, "value", WIDGET_INT, &pwin->spacing);
-	spinbutton_set_min(sb, 0);
-	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	sb = AG_SpinbuttonNew(win, _("Widget spacing: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->spacing);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = spinbutton_new(win, _("Top padding: "));
-	widget_bind(sb, "value", WIDGET_INT, &pwin->ypadding_top);
-	spinbutton_set_min(sb, 0);
-	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	sb = AG_SpinbuttonNew(win, _("Top padding: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_top);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = spinbutton_new(win, _("Bottom padding: "));
-	widget_bind(sb, "value", WIDGET_INT, &pwin->ypadding_bot);
-	spinbutton_set_min(sb, 0);
-	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	sb = AG_SpinbuttonNew(win, _("Bottom padding: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_bot);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = spinbutton_new(win, _("Horizontal padding: "));
-	widget_bind(sb, "value", WIDGET_INT, &pwin->xpadding);
-	spinbutton_set_min(sb, 0);
-	event_new(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	sb = AG_SpinbuttonNew(win, _("Horizontal padding: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->xpadding);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 
-	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
-	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);
-	event_new(tl, "tlist-dblclick", examine_widget, "%p,%p", tl, pwin);
+	tl = AG_TlistNew(win, AG_TLIST_TREE|AG_TLIST_POLL);
+	AG_SetEvent(tl, "tlist-poll", poll_widgets, "%p", pwin);
+	AG_SetEvent(tl, "tlist-dblclick", examine_widget, "%p,%p", tl, pwin);
 
-	mi = tlist_set_popup(tl, "widget");
+	mi = AG_TlistSetPopup(tl, "widget");
 	{
-		menu_action(mi, _("Display informations..."), -1,
+		AG_MenuAction(mi, _("Display informations..."), -1,
 		    examine_widget, "%p,%p", tl, pwin);
 	}
-	window_show(win);
+	AG_WindowShow(win);
 }
 
-struct window *
-widget_debug_window(void)
+AG_Window *
+AG_DebugWidgetBrowser(void)
 {
-	struct window *win;
-	struct tlist *tl;
-	struct AGMenuItem *it;
+	AG_Window *win;
+	AG_Tlist *tl;
+	AG_MenuItem *it;
 
-	if ((win = window_new(WINDOW_DETACH, "monitor-window-stack"))
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "monitor-window-stack"))
 	    == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Window stack"));
+	AG_WindowSetCaption(win, _("Window stack"));
 
-	tl = tlist_new(win, TLIST_POLL);
-	event_new(tl, "tlist-poll", poll_windows, NULL);
-	event_new(tl, "tlist-dblclick", examine_window, "%p", tl);
+	tl = AG_TlistNew(win, AG_TLIST_POLL);
+	AG_SetEvent(tl, "tlist-poll", poll_windows, NULL);
+	AG_SetEvent(tl, "tlist-dblclick", examine_window, "%p", tl);
 
-	it = tlist_set_popup(tl, "window");
+	it = AG_TlistSetPopup(tl, "window");
 	{
-		menu_action(it, _("Display informations..."), -1,
+		AG_MenuAction(it, _("Display informations..."), -1,
 		    examine_window, "%p", tl);
-		menu_separator(it);
-		menu_action(it, _("Show this window"), -1,
+		AG_MenuSeparator(it);
+		AG_MenuAction(it, _("Show this window"), -1,
 		    show_window, "%p", tl);
-		menu_action(it, _("Hide this window"), -1,
+		AG_MenuAction(it, _("Hide this window"), -1,
 		    hide_window, "%p", tl);
 	}
-	window_set_geometry(win, view->w/4, view->h/3, view->w/2, view->h/4);
+	AG_WindowSetGeometry(win, agView->w/4, agView->h/3, agView->w/2,
+	    agView->h/4);
 	return (win);
 }
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: box.3,v 1.7 2005/01/08 03:35:55 vedge Exp $
+.\"	$Csoft: box.3,v 1.8 2005/03/09 06:39:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,45 +43,45 @@ The
 widget packs its children horizontally or vertically.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct box *"
-.Fn box_new "void *parent" "enum box_type type" "int flags"
+.Ft "AG_Box *"
+.Fn AG_BoxNew "void *parent" "enum ag_box_type type" "int flags"
 .Pp
 .Ft "void"
-.Fn box_init "struct box *box" "enum box_type type" "int flags"
+.Fn AG_BoxInit "AG_Box *box" "enum ag_box_type type" "int flags"
 .Pp
 .Ft void
-.Fn box_set_homogenous "struct box *box" "int homogenous"
+.Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
 .Pp
 .Ft void
-.Fn box_set_padding "struct box *box" "int padding"
+.Fn AG_BoxSetPadding "AG_Box *box" "int padding"
 .Pp
 .Ft void
-.Fn box_set_spacing "struct box *box" "int spacing"
+.Fn AG_BoxSetSpacing "AG_Box *box" "int spacing"
 .Pp
 .Ft void
-.Fn box_set_depth "struct box *box" "int depth"
+.Fn AG_BoxSetDepth "AG_Box *box" "int depth"
 .nr nS 0
 .Pp
 The
-.Fn box_new
+.Fn AG_BoxNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn box_init
+.Fn AG_BoxInit
 initializes a
 .Nm
 widget.
 .Fa type
 defines whether child widgets are packed horizontally:
 .Bd -literal
-enum box_type {
-	BOX_HORIZ,
-	BOX_VERT
+enum ag_box_type {
+	AG_BOX_HORIZ,
+	AG_BOX_VERT
 };
 .Ed
 .Pp
@@ -89,32 +89,32 @@ Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define BOX_HOMOGENOUS  0x01    /* Divide space evenly */
-#define BOX_WFILL       0x02    /* Fill container's remaining width */
-#define BOX_HFILL       0x04    /* Fill container's remaining height */
-#define BOX_FRAME	0x08	/* Display a frame */
+#define AG_BOX_HOMOGENOUS  0x01    /* Divide space evenly */
+#define AG_BOX_WFILL       0x02    /* Fill container's remaining width */
+#define AG_BOX_HFILL       0x04    /* Fill container's remaining height */
+#define AG_BOX_FRAME	0x08	/* Display a frame */
 .Ed
 .Pp
 The
-.Fn box_set_homogenous
+.Fn AG_BoxSetHomogenous
 function sets/clears the
-.Dv BOX_HOMOGENOUS
+.Dv AG_BOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
 .Pp
 The
-.Fn box_set_padding
+.Fn AG_BoxSetPadding
 function sets the padding around the group of child widgets to
 .Fa padding
 pixels.
-.Fn box_set_spacing
+.Fn AG_BoxSetSpacing
 sets the spacing between individual child widgets to
 .Fa spacing
 pixels.
 .Pp
 Assuming that the
-.Dv BOX_FRAME
+.Dv AG_BOX_FRAME
 flag was given,
-.Fn box_set_depth
+.Fn AG_BoxSetDepth
 sets the depth of the frame.
 .Sh EVENTS
 The

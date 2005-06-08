@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.9 2005/01/30 05:23:31 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.10 2005/05/11 09:59:30 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -65,33 +65,33 @@ The
 interface uses
 .Nm
 internally to implement timing-related events (registered using
-.Fn event_schedule ) .
+.Fn AG_SchedEvent ) .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn timeout_set "struct timeout *to" "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
+.Fn AG_SetTimeout "AG_Timeout *to" "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
 .Pp
 .Ft "void"
-.Fn timeout_add "void *obj" "struct timeout *to" "Uint32 ival"
+.Fn AG_AddTimeout "void *obj" "AG_Timeout *to" "Uint32 ival"
 .Pp
 .Ft "void"
-.Fn timeout_replace "void *obj" "struct timeout *to" "Uint32 ival"
+.Fn AG_ReplaceTimeout "void *obj" "AG_Timeout *to" "Uint32 ival"
 .Pp
 .Ft "void"
-.Fn timeout_del "void *obj" "struct timeout *to"
+.Fn AG_DelTimeout "void *obj" "AG_Timeout *to"
 .Pp
 .Ft "int"
-.Fn timeout_scheduled "void *obj" "struct timeout *to"
+.Fn AG_TimeoutIsScheduled "void *obj" "AG_Timeout *to"
 .Pp
 .Ft "void"
-.Fn lock_timeout "void *obj"
+.Fn AG_LockTimeouts "void *obj"
 .Pp
 .Ft "void"
-.Fn unlock_timeout "void *obj"
+.Fn AG_UnlockTimeouts "void *obj"
 .nr nS 0
 .Pp
 The
-.Fn timeout_set
+.Fn AG_SetTimeout
 function initializes a pre-allocated
 .Nm
 structure using the specified callback function and argument.
@@ -101,28 +101,28 @@ The
 may contain:
 .Pp
 .Bd -literal
-#define TIMEOUT_DETACHABLE	0x01  /* Don't cancel in object_detach() */
-#define TIMEOUT_LOADABLE	0x02  /* Don't cancel in object_load() */
+#define AG_TIMEOUT_DETACHABLE	0x01  /* Don't cancel in AG_ObjectDetach() */
+#define AG_TIMEOUT_LOADABLE	0x02  /* Don't cancel in AG_ObjectLoad() */
 .Ed
 .Pp
 Flags
-.Dv TIMEOUT_DETACHABLE
+.Dv AG_TIMEOUT_DETACHABLE
 and
-.Dv TIMEOUT_LOADABLE
+.Dv AG_TIMEOUT_LOADABLE
 indicate that
-.Fn object_detach
+.Fn AG_ObjectDetach
 and
-.Fn object_load ,
+.Fn AG_ObjectLoad ,
 respectively, should not cancel scheduled executions of this timeout.
 .Pp
 The
-.Fn timeout_add
+.Fn AG_AddTimeout
 function schedules the previously specified callback function for execution in
 t+ival ticks.
 The
 .Fa obj
 argument specifies the
-.Xr object 3
+.Xr AG_Object 3
 which is responsible for the scheduling and execution of the given callback
 function.
 .Pp
@@ -146,76 +146,76 @@ The
 interface remains consistent across different timing schemes.
 .Pp
 The
-.Fn timeout_replace
+.Fn AG_ReplaceTimeout
 function is a variant of
-.Fn timeout_add
+.Fn AG_AddTimeout
 which invokes
-.Fn timeout_del
+.Fn AG_DelTimeout
 implicitly, prior to scheduling the event.
 .Pp
 The
-.Fn timeout_del
+.Fn AG_DelTimeout
 function removes the given timeout from the queue if it is currently scheduled
 for execution.
 .Fn timeout_exists
 returns 1 if the given timeout is currently in the queue.
 .Pp
 Both
-.Fn timeout_add
+.Fn AG_AddTimeout
 and
-.Fn timeout_del
+.Fn AG_DelTimeout
 may be invoked safely from callback functions, but it is more efficient to use
 the callback's return value for rescheduling or cancelling timeouts.
 .Pp
 The
-.Fn timeout_scheduled
+.Fn AG_TimeoutIsScheduled
 function returns 1 if the given timeout is scheduled for execution, otherwise
 it returns 0.
 .Pp
 The
 .Nm
 interface is thread-safe, but it is important to use
-.Fn lock_timeout
+.Fn AG_LockTimeouts
 and
-.Fn unlock_timeout
+.Fn AG_UnlockTimeouts
 in constructions such as:
 .Bd -literal
-lock_timeout(obj);
-if (timeout_scheduled(obj, &timeout)) {
-	timeout_del(obj, &timeout);
+AG_LockTimeouts(obj);
+if (AG_TimeoutIsScheduled(obj, &timeout)) {
+	AG_DelTimeout(obj, &timeout);
 }
-unlock_timeout(obj);
+AG_UnlockTimeouts(obj);
 .Ed
 .Sh CANCELLATION
 Whenever an
-.Xr object 3
+.Xr AG_Object 3
 controlling timeouts is about to be detached,
-.Fn object_detach
+.Fn AG_ObjectDetach
 cancels any scheduled timeout.
 This behavior can be avoided by setting the
-.Dv TIMEOUT_DETACHABLE
+.Dv AG_TIMEOUT_DETACHABLE
 flag.
 .Pp
 The
-.Fn object_load
+.Fn AG_ObjectLoad
 function also cancels scheduled timeouts, unless the
-.Dv TIMEOUT_LOADABLE
+.Dv AG_TIMEOUT_LOADABLE
 flag is given.
 .Pp
-.Fn object_destroy
+.Fn AG_ObjectDestroy
 always cancels every scheduled timeout.
 .Pp
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
 .Sh TROUBLETONS
 The flags
-.Dv TIMEOUT_DETACHABLE
-.Dv TIMEOUT_LOADABLE
+.Dv AG_TIMEOUT_DETACHABLE
+.Dv AG_TIMEOUT_LOADABLE
 have confusing names.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
-.Xr object 3 ,
+.Xr AG_Object 3 ,
 .Xr SDL_GetTicks 3
 .Rs
 .%T "Hashed and Hierarchical Timing Wheels: Efficient Data Structures for Implementing a Timer Facility"

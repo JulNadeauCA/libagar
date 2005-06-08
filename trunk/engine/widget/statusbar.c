@@ -1,4 +1,4 @@
-/*	$Csoft: statusbar.c,v 1.1 2004/03/30 15:50:44 vedge Exp $	*/
+/*	$Csoft: statusbar.c,v 1.2 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,70 +35,70 @@
 #include <string.h>
 #include <errno.h>
 
-static struct widget_ops statusbar_ops = {
+static AG_WidgetOps statusbar_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
 	NULL,
-	box_scale
+	AG_BoxScale
 };
 
-struct statusbar *
-statusbar_new(void *parent)
+AG_Statusbar *
+AG_StatusbarNew(void *parent)
 {
-	struct statusbar *sbar;
+	AG_Statusbar *sbar;
 
-	sbar = Malloc(sizeof(struct statusbar), M_OBJECT);
-	statusbar_init(sbar);
-	object_attach(parent, sbar);
+	sbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
+	AG_StatusbarInit(sbar);
+	AG_ObjectAttach(parent, sbar);
 	return (sbar);
 }
 
 void
-statusbar_init(struct statusbar *sbar)
+AG_StatusbarInit(AG_Statusbar *sbar)
 {
-	box_init(&sbar->box, BOX_VERT, BOX_WFILL);
-	box_set_padding(&sbar->box, 2);
-	box_set_spacing(&sbar->box, 1);
-	object_set_ops(sbar, &statusbar_ops);
+	AG_BoxInit(&sbar->box, AG_BOX_VERT, AG_BOX_WFILL);
+	AG_BoxSetPadding(&sbar->box, 2);
+	AG_BoxSetSpacing(&sbar->box, 1);
+	AG_ObjectSetOps(sbar, &statusbar_ops);
 	sbar->nlabels = 0;
 }
 
-struct label *
-statusbar_add_label(struct statusbar *sbar, enum label_type type,
+AG_Label *
+AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
     const char *fmt, ...)
 {
-	struct label *lab;
+	AG_Label *lab;
 	va_list ap;
 	const char *p;
 
 #ifdef DEBUG
-	if (sbar->nlabels+1 >= STATUSBAR_MAX_LABELS)
+	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		fatal("too many labels");
 #endif
-	sbar->labels[sbar->nlabels] = Malloc(sizeof(struct label), M_OBJECT);
+	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label), M_OBJECT);
 	lab = sbar->labels[sbar->nlabels];
 
-	if (type == LABEL_STATIC) {
-		char buf[LABEL_MAX];
+	if (type == AG_LABEL_STATIC) {
+		char buf[AG_LABEL_MAX];
 
 		va_start(ap, fmt);
 		vsnprintf(buf, sizeof(buf), fmt, ap);
 		va_end(ap);
 
-		label_init(lab, LABEL_STATIC, buf);
+		AG_LabelInit(lab, AG_LABEL_STATIC, buf);
 	} else {
-		label_init(lab, LABEL_POLLED, fmt);
+		AG_LabelInit(lab, AG_LABEL_POLLED, fmt);
 	}
 
-	if (type == LABEL_POLLED || type == LABEL_POLLED_MT) {
+	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
 		va_start(ap, fmt);
-		lab->poll.lock = (type == LABEL_POLLED_MT) ?
+		lab->poll.lock = (type == AG_LABEL_POLLED_MT) ?
 		                 va_arg(ap, pthread_mutex_t *) : NULL;
 		for (p = fmt; *p != '\0'; p++) {
 			if (*p == '%' && *(p+1) != '\0') {
@@ -110,7 +110,7 @@ statusbar_add_label(struct statusbar *sbar, enum label_type type,
 					break;
 				default:
 					if (lab->poll.nptrs+1 <
-					    LABEL_MAX_POLLPTRS) {
+					    AG_LABEL_MAX_POLLPTRS) {
 						lab->poll.ptrs
 						    [lab->poll.nptrs++] =
 						    va_arg(ap, void *);
@@ -121,7 +121,7 @@ statusbar_add_label(struct statusbar *sbar, enum label_type type,
 		}
 		va_end(ap);
 	}
-	object_attach(&sbar->box, lab);
+	AG_ObjectAttach(&sbar->box, lab);
 	return (sbar->labels[sbar->nlabels++]);
 }
 

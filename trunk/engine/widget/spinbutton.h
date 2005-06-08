@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.8 2004/03/25 09:00:33 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.9 2004/03/26 04:57:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -10,37 +10,35 @@
 
 #include "begin_code.h"
 
-struct spinbutton {
-	struct widget wid;
-
+typedef struct ag_spinbutton {
+	struct ag_widget wid;
 	int value;			/* Default value binding */
 	int min, max;			/* Default range bindings */
 	pthread_mutex_t lock;
 	int incr;			/* Increment for buttons */
 	int writeable;			/* 0 = read-only */
-
-	struct textbox *input;
-	struct button *incbu;
-	struct button *decbu;
-};
+	AG_Textbox *input;
+	AG_Button *incbu;
+	AG_Button *decbu;
+} AG_Spinbutton;
 
 __BEGIN_DECLS
-struct spinbutton	*spinbutton_new(void *, const char *, ...)
-		 	     FORMAT_ATTRIBUTE(printf, 2, 3)
-			     NONNULL_ATTRIBUTE(2);
+AG_Spinbutton *AG_SpinbuttonNew(void *, const char *, ...)
+		 	        FORMAT_ATTRIBUTE(printf, 2, 3)
+			        NONNULL_ATTRIBUTE(2);
 
-void	spinbutton_init(struct spinbutton *, const char *);
-void	spinbutton_destroy(void *);
-void	spinbutton_scale(void *, int, int);
-void	spinbutton_draw(void *);
+void	AG_SpinbuttonInit(AG_Spinbutton *, const char *);
+void	AG_SpinbuttonDestroy(void *);
+void	AG_SpinbuttonScale(void *, int, int);
+void	AG_SpinbuttonDraw(void *);
 
-void	spinbutton_add_value(struct spinbutton *, int);
-void	spinbutton_set_value(struct spinbutton *, ...);
-void	spinbutton_set_min(struct spinbutton *, int);
-void	spinbutton_set_max(struct spinbutton *, int);
-void	spinbutton_set_range(struct spinbutton *, int, int);
-void	spinbutton_set_increment(struct spinbutton *, int);
-void	spinbutton_set_writeable(struct spinbutton *, int);
+void	AG_SpinbuttonAddValue(AG_Spinbutton *, int);
+void	AG_SpinbuttonSetValue(AG_Spinbutton *, ...);
+void	AG_SpinbuttonSetMin(AG_Spinbutton *, int);
+void	AG_SpinbuttonSetMax(AG_Spinbutton *, int);
+void	AG_SpinbuttonSetRange(AG_Spinbutton *, int, int);
+void	AG_SpinbuttonSetIncrement(AG_Spinbutton *, int);
+void	AG_SpinbuttonSetWriteable(AG_Spinbutton *, int);
 __END_DECLS
 
 #include "close_code.h"

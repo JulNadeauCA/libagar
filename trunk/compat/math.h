@@ -1,4 +1,4 @@
-/*	$Csoft: math.h,v 1.4 2005/05/18 09:07:48 vedge Exp $	*/
+/*	$Csoft: math.h,v 1.5 2005/05/19 03:47:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_math.h>
@@ -9,7 +9,7 @@
 #ifdef sgi
 /*
  * Irix's <math.h> defines an 'enum version' which conflicts with the
- * 'struct version' of <engine/version.h>.
+ * 'AG_Version' of <engine/version.h>.
  */
 #undef _SGIAPI
 #endif
