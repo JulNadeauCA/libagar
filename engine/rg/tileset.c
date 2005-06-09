@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.41 2005/06/07 06:49:25 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.42 2005/06/08 06:24:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -977,7 +977,6 @@ insert_tile_dlg(int argc, union evarg *argv)
 	tb = textbox_new(win, _("Name:"));
 	widget_bind(tb, "string", WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
-	widget_focus(tb);
 
 	msb = mspinbutton_new(win, "x", _("Size:"));
 	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);
