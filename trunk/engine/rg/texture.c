@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.3 2005/05/28 08:40:20 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.4 2005/06/07 03:05:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -186,10 +186,14 @@ texture_edit(struct texture *tex)
 	struct notebook *nb;
 	struct notebook_tab *ntab;
 	struct radio *rad;
+	struct textbox *tb;
 	
 	win = window_new(0, NULL);
 	window_set_caption(win, "%s", tex->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+
+	tb = textbox_new(win, _("Name: "));
+	widget_bind(tb, "string", WIDGET_STRING, tex->name, sizeof(tex->name));
 
 	com = combo_new(win, COMBO_POLL, _("Tileset: "));
 	event_new(com->list, "tlist-poll", poll_tilesets, NULL);

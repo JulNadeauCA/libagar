@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.56 2005/06/07 06:49:25 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.57 2005/06/07 06:52:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/separator.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -1364,12 +1365,17 @@ tile_infos(int argc, union evarg *argv)
 	struct checkbox *ckey_cb, *alpha_cb;
 	struct spinbutton *alpha_sb;
 	struct radio *rad;
+	struct textbox *tb;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 		         WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("Resize tile `%s'"), t->name);
 
-	msb = mspinbutton_new(win, "x", _("Geometry:"));
+	tb = textbox_new(win, _("Name: "));
+	widget_bind(tb, "string", WIDGET_STRING, t->name, sizeof(t->name));
+	widget_focus(tb);
+
+	msb = mspinbutton_new(win, "x", _("Size: "));
 	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
 	widget_set_int(msb, "xvalue", t->su->w);
 	widget_set_int(msb, "yvalue", t->su->h);
@@ -1378,11 +1384,15 @@ tile_infos(int argc, union evarg *argv)
 	spinbutton_set_range(alpha_sb, 0, 255);
 	widget_set_int(alpha_sb, "value", t->su->format->alpha);
 	
+	separator_new(win, SEPARATOR_HORIZ);
+	
 	ckey_cb = checkbox_new(win, _("Colorkeying"));
 	widget_set_int(ckey_cb, "state", t->flags & TILE_SRCCOLORKEY);
 
 	alpha_cb = checkbox_new(win, _("Source alpha"));
 	widget_set_int(alpha_cb, "state", t->flags & TILE_SRCALPHA);
+	
+	separator_new(win, SEPARATOR_HORIZ);
 
 	label_static(win, _("Snapping mode: "));
 	rad = radio_new(win, gfx_snap_names);
