@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.99 2005/05/25 08:20:29 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.100 2005/05/29 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -225,6 +225,10 @@ textbox_draw(void *p)
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
+
+	if (WIDGET(tbox)->w < tbox->label_su->w + (tbox->xpadding<<1) ||
+	    WIDGET(tbox)->h < tbox->label_su->h + (tbox->ypadding<<1)) 
+		return;
 
 	if (tbox->label_id >= 0) {
 		widget_blit_surface(tbox, tbox->label_id,
