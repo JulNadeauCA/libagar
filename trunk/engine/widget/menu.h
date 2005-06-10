@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.7 2005/05/23 03:24:31 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.8 2005/05/31 01:32:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -16,13 +16,16 @@ struct AGMenuItem {
 	const char *text;		/* Item label */
 	int label;			/* Label surface name */
 	int icon;			/* Icon name */
+	int state;			/* State (for dynamic items) */
+
 	SDLKey key_equiv;		/* Key shortcut */
 	SDLMod key_mod;
 	int x, y;			/* Position in parent view */
 	struct AGMenuItem *subitems;	/* Child items */
 	u_int		  nsubitems;
 	
-	struct event *onclick;		/* Event to raise on selection */
+	struct event *onclick;		/* Raised on click */
+	struct event *poll;		/* Raised before the item is drawn */
 
 	enum menu_binding {
 		MENU_NO_BINDING,
@@ -76,6 +79,12 @@ void		   menu_free_subitems(struct AGMenuItem *);
 
 struct window *menu_expand(struct AGMenu *, struct AGMenuItem *, int, int);
 void   	       menu_collapse(struct AGMenu *, struct AGMenuItem *);
+
+struct AGMenuItem *menu_dynamic(struct AGMenuItem *, int,
+		                void (*)(int, union evarg *),
+				const char *, ...);
+__inline__ void menu_set_icon(struct AGMenuItem *, SDL_Surface *);
+__inline__ void menu_set_label(struct AGMenuItem *, const char *);
 
 struct AGMenuItem *menu_action(struct AGMenuItem *,
 		               const char *, int,

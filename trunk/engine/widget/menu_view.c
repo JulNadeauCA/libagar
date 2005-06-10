@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.20 2005/05/24 05:06:17 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.21 2005/05/29 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -313,15 +313,22 @@ menu_view_draw(void *p)
 			    m->itemh,
 			    COLOR(MENU_SEL_COLOR));
 		}
+		
+		if (subitem->poll != NULL)
+			event_post(NULL, m, subitem->poll->name, "%p", subitem);
 
 		if (subitem->icon != -1) {
 			SDL_Surface *iconsu = WIDGET_SURFACE(m,subitem->icon);
 			int dy = VERT_ALIGNED(m, iconsu->h);
+			int state;
 
 			widget_blit_from(mview, m, subitem->icon, NULL,
 			    x+(m->itemh/2 - iconsu->w/2), y+dy+2);
 
-			if (get_option(subitem)) {
+			state = (subitem->state != -1) ? subitem->state :
+			    get_option(subitem);
+
+			if (state) {
 				Uint8 c[4];
 
 				SDL_GetRGB(COLOR(MENU_OPTION_COLOR), vfmt,
