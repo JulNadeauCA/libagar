@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.2 2005/04/21 04:45:29 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.3 2005/04/21 07:51:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -41,7 +41,6 @@ struct mapview {
 
 	struct {			/* Mouse scrolling state */
 		int scrolling;
-		int centering;
 		int x, y;
 	} mouse;
 	struct {			/* Temporary mouse selection */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.8 2005/05/08 11:13:48 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.9 2005/05/16 00:41:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -312,7 +312,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->preh = 4;
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
-	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
 	mv->map = m;
@@ -527,7 +526,10 @@ mapview_draw(void *p)
 	GLenum blend_dfactor;
 	GLfloat texenvmode;
 #endif
-	
+
+	if (WIDGET(mv)->w < TILESZ || WIDGET(mv)->h < TILESZ)
+		return;
+
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
 
@@ -675,10 +677,9 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	mv->zoom = zoom;
 	mv->tilesz = zoom*TILESZ/100;
 	mv->pxsz = zoom/100;
-	if (mv->tilesz > MAP_MAX_TILESZ)
-		mv->tilesz = MAP_MAX_TILESZ;
-	if (mv->pxsz < 1)
-		mv->pxsz = 1;
+
+	if (mv->tilesz > MAP_MAX_TILESZ) { mv->tilesz = MAP_MAX_TILESZ; }
+	if (mv->pxsz < 1) { mv->pxsz = 1; }
 
 	mv->mw = WIDGET(mv)->w/mv->tilesz + 1;
 	mv->mh = WIDGET(mv)->h/mv->tilesz + 1;
@@ -687,7 +688,7 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	mv->wfit = (mv->map->mapw*mv->tilesz <= WIDGET(mv)->w);
 	mv->hfit = (mv->map->maph*mv->tilesz <= WIDGET(mv)->h);
 
-	dxy = (old_tilesz - mv->tilesz)/2;
+	dxy = (old_tilesz - mv->tilesz)*2;
 	mv->xoffs += dxy;
 	mv->yoffs += dxy;
 
@@ -734,11 +735,6 @@ mouse_motion(int argc, union evarg *argv)
 		}
 	}
 	pthread_mutex_unlock(&mv->map->lock);
-
-	if (!mv->mouse.centering) {
-		mv->mouse.x = x;
-		mv->mouse.y = y;
-	}
 }
 
 static void
@@ -891,11 +887,6 @@ mouse_buttonup(int argc, union evarg *argv)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
-#if 0
-		mv->flags &= ~(MAPVIEW_NO_CURSOR);
-		mv->mouse.centering = 0;
-		break;
-#endif
 	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling = 0;
 		break;
