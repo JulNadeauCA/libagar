@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.57 2005/06/07 06:52:00 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.58 2005/06/09 02:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -47,6 +47,7 @@
 #include <engine/widget/separator.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/separator.h>
+#include <engine/widget/hpane.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -1644,12 +1645,15 @@ struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
 	struct window *win;
-	struct box *box;
+	struct box *box, *box1, *box2;
 	struct AGMenu *me;
 	struct AGMenuItem *mi;
 	struct tileview *tv;
 	struct tlist *tl_feats;
 	struct toolbar *tbar;
+	struct button *btn;
+	struct hpane *pane;
+	struct hpane_div *div;
 
 	if ((win = window_new(WINDOW_DETACH, "tile-%s:%s",
 	    OBJECT(ts)->name, t->name)) == NULL) {
@@ -1761,38 +1765,29 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 
-	box = tv->tel_box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
-	box_set_padding(box, 0);
-	box_set_spacing(box, 0);
+	pane = hpane_new(win, HPANE_HFILL|HPANE_WFILL);
+	div = hpane_add_div(pane,
+	    BOX_VERT, BOX_HFILL,
+	    BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
-		struct box *fbox;
-		struct button *fbu;
-
-		fbox = box_new(box, BOX_VERT, BOX_HFILL);
-		box_set_padding(fbox, 0);
-		box_set_spacing(fbox, 0);
-		{
-			object_attach(fbox, tl_feats);
+		object_attach(div->box1, tl_feats);
+		WIDGET(tl_feats)->flags |= WIDGET_WFILL;
 	
-			fbu = button_new(fbox, _("Edit"));
-			WIDGET(fbu)->flags |= WIDGET_WFILL;
-			button_set_sticky(fbu, 1);
-			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
+		btn = button_new(div->box1, _("Edit"));
+		WIDGET(btn)->flags |= WIDGET_WFILL;
+		button_set_sticky(btn, 1);
+		widget_bind(btn, "state", WIDGET_INT, &tv->edit_mode);
+		event_new(btn, "button-pushed", edit_element, "%p,%p,%p",
+		    tv, tl_feats,  win);
+		event_new(tl_feats, "tlist-dblclick", edit_element, "%p,%p,%p",
+		    tv, tl_feats, win);
 
-			event_new(fbu, "button-pushed", edit_element,
-			    "%p,%p,%p", tv, tl_feats, win);
-			event_new(tl_feats, "tlist-dblclick", edit_element,
-			    "%p,%p,%p", tv, tl_feats, win);
-		}
-		
-		fbox = box_new(box, BOX_VERT, BOX_WFILL|BOX_HFILL);
-		box_set_padding(fbox, 0);
-		box_set_spacing(fbox, 0);
-		{
-			object_attach(fbox, tbar);
-			object_attach(fbox, tv);
-			widget_focus(tv);
-		}
+		object_attach(div->box2, tbar);
+
+		tv->tel_box = box_new(div->box2, BOX_HORIZ,
+		    BOX_WFILL|BOX_HFILL);
+		object_attach(tv->tel_box, tv);
+		widget_focus(tv);
 	}
 
 	/* Set the tile edition mode. */
