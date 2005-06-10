@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.43 2005/06/05 03:56:30 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.44 2005/06/05 09:38:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -980,19 +980,10 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	widget_replace_surface(tv, 0, tv->scaled);
 
 	if (adj_offs) {
-		int dx, dy;
-		if (z2 >= 100) {
-			dx = (t->su->w*pxsz1 - t->su->w*tv->pxsz)/2;
-			dy = (t->su->h*pxsz1 - t->su->h*tv->pxsz)/2;
-		} else {
-			dx = (t->su->w*z1 - t->su->w*z2)/100/2;
-			dy = (t->su->h*z1 - t->su->h*z2)/100/2;
-		}
-		tv->xoffs += dx;
-		tv->yoffs += dy;
+		tv->xoffs += (t->su->w*pxsz1 - t->su->w*tv->pxsz)/2;
+		tv->yoffs += (t->su->h*pxsz1 - t->su->h*tv->pxsz)/2;
 		clamp_offsets(tv);
 	}
-
 	t->flags |= TILE_DIRTY;
 }
 
