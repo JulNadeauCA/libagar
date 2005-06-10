@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.18 2005/05/23 03:24:31 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.19 2005/05/31 01:32:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -305,13 +305,59 @@ add_subitem(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->label = (text != NULL) ?
 	    widget_map_surface(m, text_render(NULL, -1, COLOR(MENU_TXT_COLOR),
 	    text)) : -1;
+	mi->state = -1;
 	return (mi);
+}
+
+void
+menu_set_icon(struct AGMenuItem *mi, SDL_Surface *icon)
+{
+	if (mi->icon == -1) {
+		mi->icon = (icon != NULL) ?
+		    widget_map_surface(mi->pmenu, view_copy_surface(icon)) : -1;
+	} else {
+		widget_replace_surface(mi->pmenu, mi->icon,
+		    icon != NULL ? view_copy_surface(icon) : NULL);
+	}
+}
+
+void
+menu_set_label(struct AGMenuItem *mi, const char *text)
+{
+	if (mi->label == -1) {
+		mi->label = (text != NULL) ?
+		    widget_map_surface(mi->pmenu,
+		       text_render(NULL, -1, COLOR(MENU_TXT_COLOR), text)) : -1;
+	} else {
+		widget_replace_surface(mi->pmenu, mi->label,
+		    text_render(NULL, -1, COLOR(MENU_TXT_COLOR), text));
+	}
 }
 
 struct AGMenuItem *
 menu_separator(struct AGMenuItem *pitem)
 {
 	return (add_subitem(pitem, NULL, NULL, 0, 0));
+}
+
+struct AGMenuItem *
+menu_dynamic(struct AGMenuItem *pitem, int nicon,
+    void (*poll_fn)(int, union evarg *), const char *fmt, ...)
+{
+	struct AGMenu *m = pitem->pmenu;
+	struct AGMenuItem *mi;
+	va_list ap;
+
+	mi = add_subitem(pitem, NULL, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
+	mi->poll = event_new(m, NULL, poll_fn, NULL);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG(ap, *fmt, mi->poll);
+		}
+		va_end(ap);
+	}
+	return (mi);
 }
 
 struct AGMenuItem *

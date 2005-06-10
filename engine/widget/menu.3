@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.25 2005/01/30 05:39:11 vedge Exp $
+.\"	$Csoft: menu.3,v 1.1 2005/05/30 04:43:58 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -116,13 +116,22 @@ destroys all subitems associated with
 .Sh ACTION ITEMS
 .nr nS 1
 .Ft "struct AGMenuItem *"
-.Fn menu_action "struct AGMenuItem *" "const char *text" "int icon" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.Fn menu_action "struct AGMenuItem *" "const char *text" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
 .Ft "struct AGMenuItem *"
-.Fn menu_action_kb "struct AGMenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.Fn menu_action_kb "struct AGMenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
 .Ft "struct AGMenuItem *"
-.Fn menu_tool "struct AGMenuItem *" "struct toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int argc, union evarg *argv)" "const char *fmt, ..."
+.Fn menu_tool "struct AGMenuItem *" "struct toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
+.Pp
+.Ft "struct AGMenuItem *"
+.Fn menu_dynamic "struct AGMenuItem *" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
+.Pp
+.Ft "void"
+.Fn menu_set_icon "struct AGMenuItem *" "SDL_Surface *su"
+.Pp
+.Ft "void"
+.Fn menu_set_label "struct AGMenuItem *" "const char *label"
 .nr nS 0
 .Pp
 The
@@ -152,6 +161,34 @@ The
 variant automatically inserts an item into the given
 .Fa toolbar
 as well.
+.Pp
+The
+.Fn menu_dynamic
+function creates a dynamic menu item.
+The specified event handler routine will be invoked every time the menu item
+is rendered.
+A pointer to the
+.Ft AGMenu
+is passed as the 0th argument, and a pointer to the
+.Ft AGMenuItem
+is passed as the last argument.
+The function is allowed to modify its
+.Va state ,
+and
+.Va onclick
+members directly.
+The label may be modified using
+.Fn menu_set_label ,
+and the icon using
+.Fn menu_set_icon .
+If
+.Va state
+is 0 or 1, it defines the current state for boolean items (unless it is -1,
+it overrides any boolean/flag binding).
+The
+.Va onclick
+member is a pointer to the event handler to invoke when the user selects the
+item.
 .Sh BOOLEAN AND BITMASK ITEMS
 .nr nS 1
 .Ft "struct AGMenuItem *"
