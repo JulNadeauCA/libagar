@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.6 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.7 2005/03/05 12:14:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@ static struct widget_ops toolbar_ops = {
 		NULL			/* edit */
 	},
 	NULL,
-	box_scale
+	toolbar_scale
 };
 
 struct toolbar *
@@ -75,7 +75,7 @@ toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows, int flags)
 		box_init(&tbar->box, BOX_HORIZ, BOX_HFILL);
 		break;
 	}
-	box_set_padding(&tbar->box, 2);
+	box_set_padding(&tbar->box, 1);
 	box_set_spacing(&tbar->box, 1);
 	object_set_ops(tbar, &toolbar_ops);
 
@@ -155,3 +155,41 @@ toolbar_select_unique(struct toolbar *tbar, struct button *ubu)
 	}
 }
 
+void
+toolbar_scale(void *p, int w, int h)
+{
+	struct box *bo = p;
+	struct widget *wid;
+	int x = bo->padding;
+	int y = bo->padding;
+
+	if (w == -1 && h == -1) {
+		int maxw = 0, maxh = 0;
+		int dw, dh;
+
+		WIDGET(bo)->w = bo->padding*2 - bo->spacing;
+		WIDGET(bo)->h = bo->padding*2;
+
+		/* Reserve enough space to hold widgets and spacing/padding. */
+		OBJECT_FOREACH_CHILD(wid, bo, widget) {
+			WIDGET_OPS(wid)->scale(wid, -1, -1);
+			if (wid->w > maxw) maxw = wid->w;
+			if (wid->h > maxh) maxh = wid->h;
+
+			if ((dh = maxh + bo->padding*2) > WIDGET(bo)->h) {
+				WIDGET(bo)->h = dh;
+			}
+			WIDGET(bo)->w += wid->w + bo->spacing;
+		}
+		WIDGET(bo)->w -= bo->spacing;
+		return;
+	}
+
+	OBJECT_FOREACH_CHILD(wid, bo, widget) {
+		wid->x = x;
+		wid->y = y;
+
+		x += wid->w + bo->spacing;
+		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+	}
+}
