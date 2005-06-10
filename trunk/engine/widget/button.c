@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.90 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.91 2005/05/13 03:41:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -136,8 +136,7 @@ button_draw(void *p)
 	int x = 0, y = 0;
 	int pressed;
 	
-	if (WIDGET(bu)->w < bu->padding*2 ||
-	    WIDGET(bu)->h < bu->padding*2)
+	if (WIDGET(bu)->w < 8 || WIDGET(bu)->h < 8)
 		return;
 
 	pressed = widget_get_bool(bu, "state");
