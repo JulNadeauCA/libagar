@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.3 2005/05/24 08:15:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -276,10 +276,6 @@ layedit_init(struct tool *t)
 	{
 		struct button *bu;
 
-		bu = button_new(hb, _("Pop"));
-		event_new(bu, "button-pushed", pop_layer, "%p, %i", m, 0);
-		bu = button_new(hb, _("Destructive Pop"));
-		event_new(bu, "button-pushed", pop_layer, "%p, %i", m, 1);
 		bu = button_new(hb, _("Edit"));
 		event_new(bu, "button-pushed", edit_layer, "%p, %p", m, tl);
 		bu = button_new(hb, _("Show/hide"));

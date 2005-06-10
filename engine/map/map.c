@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.11 2005/06/07 08:18:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.12 2005/06/08 06:28:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 
 #include <engine/config.h>
 #include <engine/view.h>
+
 #include <engine/map/map.h>
 
 #ifdef EDITION
@@ -56,6 +57,7 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/separator.h>
+#include <engine/widget/hpane.h>
 #endif
 
 #include <string.h>
@@ -1728,10 +1730,15 @@ edit_properties(int argc, union evarg *argv)
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 	
-		msb = mspinbutton_new(bo, "x", _("Display offset: "));
+		msb = mspinbutton_new(bo, "x", _("Display offset (view): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
-		mspinbutton_set_range(msb, 1, MAP_MAX_TILESZ);
+		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
+		
+		msb = mspinbutton_new(bo, "x", _("Display offset (map): "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->ssx);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->ssy);
+		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
 	
 		msb = mspinbutton_new(bo, "x", _("Display area: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
@@ -1765,8 +1772,6 @@ edit_properties(int argc, union evarg *argv)
 		    &mv->cxrel, &mv->cyrel);
 		label_new(win, LABEL_POLLED, _("Mouse scrolling: %[ibool]"),
 		    &mv->mouse.scrolling);
-		label_new(win, LABEL_POLLED, _("Mouse centering: %[ibool]"),
-		    &mv->mouse.centering);
 		label_new(win, LABEL_POLLED,
 		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
 		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
@@ -1926,13 +1931,96 @@ poll_layers(int argc, union evarg *argv)
 	for (i = 0; i < m->nlayers; i++) {
 		struct map_layer *lay = &m->layers[i];
 
-		it = tlist_insert(tl, NULL, "%s%s%s",
+		it = tlist_insert(tl, ICON(LAYER_EDITOR_ICON), "%s%s%s",
 		    (i == m->cur_layer) ? "[*] " : "", lay->name,
 		    lay->visible ? "" : _(" (hidden)"));
 		it->p1 = lay;
 		it->class = "layer";
 	}
 	tlist_restore_selections(tl);
+}
+
+static void
+mask_layer(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct map_layer *lay = it->p1;
+
+	lay->visible = !lay->visible;
+}
+
+static void
+select_layer(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct map *m = argv[1].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	int nlayer;
+
+	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+		if (&m->layers[nlayer] == (struct map_layer *)it->p1) {
+			m->cur_layer = nlayer;
+			break;
+		}
+	}
+}
+
+static void
+clear_layer(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct map_layer *lay = it->p1;
+	int x, y;
+	int nlayer;
+
+	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+		if (&m->layers[nlayer] == lay)
+			break;
+	}
+	if (nlayer == m->nlayers)
+		return;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *r, *nr;
+
+			for (r = TAILQ_FIRST(&node->nrefs);
+			     r != TAILQ_END(&node->nrefs);
+			     r = nr) {
+				nr = TAILQ_NEXT(r, nrefs);
+				if (r->layer != nlayer)
+					continue;
+
+				TAILQ_REMOVE(&node->nrefs, r, nrefs);
+				noderef_destroy(m, r);
+				Free(r, M_MAP_NODEREF);
+			}
+		}
+	}
+}
+
+static void
+mask_layer_menu(int argc, union evarg *argv)
+{
+	struct AGMenu *menu = argv[0].p;
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	struct AGMenuItem *item = argv[argc-1].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct map_layer *lay = it->p1;
+
+	menu_set_label(item, lay->visible ? _("Hide layer") : _("Show layer"));
+	item->state = lay->visible;
+
+	if (item->onclick == NULL) {
+		item->onclick = event_new(menu, NULL, mask_layer,
+		    "%p,%p", tl, m);
+	}
 }
 
 struct window *
@@ -1946,11 +2034,13 @@ map_edit(void *p)
 	struct window *win;
 	struct toolbar *toolbar;
 	struct statusbar *statbar;
-	struct combo *laysel;
+	struct combo *com;
 	struct mapview *mv;
 	struct AGMenu *menu;
 	struct AGMenuItem *pitem;
 	struct box *box_h, *box_v;
+	struct hpane *pane;
+	struct hpane_div *div;
 	int flags = 0;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
@@ -1962,7 +2052,7 @@ map_edit(void *p)
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
 	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(toolbar, TOOLBAR_HORIZ, 1, 0);
+	toolbar_init(toolbar, TOOLBAR_VERT, 1, 0);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
@@ -1999,26 +2089,23 @@ map_edit(void *p)
 	{
 		extern int mapview_bg, mapview_bg_moving;
 
-		menu_action(pitem, _("New view"), NEW_VIEW_ICON,
+		menu_action(pitem, _("Create new view..."), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
 
 		menu_separator(pitem);
 
-		menu_int_flags(pitem, _("Display grid"), GRID_ICON,
+		menu_int_flags(pitem, _("Show grid"), GRID_ICON,
 		    &mv->flags, MAPVIEW_GRID, 0);
-		menu_int_flags(pitem, _("Display node properties"), PROPS_ICON,
+		menu_int_flags(pitem, _("Show node attributes"), PROPS_ICON,
 		    &mv->flags, MAPVIEW_PROPS, 0);
-		menu_int_flags(pitem, _("Cursor"), SELECT_TOOL_ICON,
+		menu_int_flags(pitem, _("Show cursor"), SELECT_TOOL_ICON,
 		    &mv->flags, MAPVIEW_NO_CURSOR, 1);
 		
-		menu_int_bool(pitem, _("Tiled background"), GRID_ICON,
+		menu_int_bool(pitem, _("Show background tiles"), GRID_ICON,
 		    &mapview_bg, 0);
-		menu_int_bool(pitem, _("Moving background"), GRID_ICON,
+		menu_int_bool(pitem, _("Moving background tiles"), GRID_ICON,
 		    &mapview_bg_moving, 0);
-#ifdef DEBUG
-		menu_int_flags(pitem, _("Clipped edges"), GRID_ICON,
-		    &WIDGET(mv)->flags, WIDGET_CLIPPING, 1);
-#endif		
+
 		menu_separator(pitem);
 
 		menu_action(pitem, _("Zoom settings..."), MAGNIFIER_CURSORBMP,
@@ -2069,17 +2156,16 @@ map_edit(void *p)
 		    mapview_reg_tool(mv, &invert_tool, m, 1));
 	}
 	
-	object_attach(win, toolbar);
-	separator_new(win, SEPARATOR_HORIZ);
-
-	box_h = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+	pane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);
+	div = hpane_add_div(pane,
+	    BOX_VERT, BOX_HFILL,
+	    BOX_HORIZ, BOX_WFILL|BOX_HFILL);
 	{
 		struct notebook *nb;
 		struct notebook_tab *ntab;
 		struct tlist *tl;
 	
-		nb = notebook_new(box_h, NOTEBOOK_HFILL);
-
+		nb = notebook_new(div->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
 		ntab = notebook_add_tab(nb, _("Artwork"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
@@ -2088,7 +2174,6 @@ map_edit(void *p)
 			mv->art_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
-
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
@@ -2096,35 +2181,47 @@ map_edit(void *p)
 			mv->objs_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
-		
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
-			tl = tlist_new(ntab, TLIST_POLL);
-			event_new(tl, "tlist-poll", poll_layers, "%p", m);
-			mv->layers_tl = tl;
-			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
-		}
-		
-		box_v = box_new(box_h, BOX_VERT, BOX_WFILL|BOX_HFILL);
-		{
-			laysel = combo_new(box_v, COMBO_POLL, _("Layer:"));
-			event_new(laysel->list, "tlist-poll", layedit_poll,
+			struct AGMenuItem *mi;
+#if 0	
+			com = combo_new(ntab, COMBO_POLL, _("Layer:"));
+			event_new(com->list, "tlist-poll", layedit_poll,
 			    "%p", m);
-			event_new(laysel, "combo-selected",
+			event_new(com, "combo-selected",
 			    mapview_selected_layer, "%p", mv);
-			combo_select_pointer(laysel, &m->layers[m->cur_layer]);
-			object_attach(box_v, mv);
-			WIDGET(laysel)->flags &= ~(WIDGET_FOCUSABLE);
-			WIDGET(laysel->list)->flags &= ~(WIDGET_FOCUSABLE);
+			combo_select_pointer(com, &m->layers[m->cur_layer]);
+#endif
+			mv->layers_tl = tlist_new(ntab, TLIST_POLL);
+			tlist_set_item_height(mv->layers_tl, TILESZ);
+			event_new(mv->layers_tl, "tlist-poll", poll_layers,
+			    "%p", m);
+			event_new(mv->layers_tl, "tlist-dblclick", select_layer,
+			    "%p", m);
+
+			mi = tlist_set_popup(mv->layers_tl, "layer");
+			{
+				menu_dynamic(mi, LAYER_EDITOR_ICON,
+				    mask_layer_menu, "%p", mv->layers_tl, m);
+			
+				menu_separator(mi);
+			
+				menu_action(mi, _("Clear layer elements"),
+				    ERASER_TOOL_ICON, clear_layer,
+				    "%p,%p", mv->layers_tl, m); 
+			}
 		}
+
+		object_attach(div->box2, mv);
+		object_attach(div->box2, toolbar);
 	}
 
 	object_attach(win, statbar);
 
 	window_scale(win, -1, -1);
 	window_set_geometry(win,
-	    view->w/4, view->h/4,
-	    view->w/2, view->h/2);
+	    view->w/6, view->h/6,
+	    2*view->w/3, 2*view->h/3);
 
 	widget_replace_surface(mv->status, mv->status->surface,
 	    text_render(NULL, -1, COLOR(TEXT_COLOR), _("Select a tool.")));
