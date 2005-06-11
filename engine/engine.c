@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.154 2005/05/08 03:49:17 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.155 2005/05/13 09:16:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -53,10 +53,6 @@
 
 #ifdef NETWORK
 #include <engine/rcs.h>
-#endif
-
-#ifdef DEBUG
-#include <engine/monitor/monitor.h>
 #endif
 
 #include <engine/widget/widget.h>
@@ -240,14 +236,12 @@ engine_init(void)
 
 	config_window(config);
 
-#ifdef DEBUG
-	if (engine_debug > 0) {
-		monitor_init();
-	}
-# if defined(HAVE_LIBQNET) && defined(THREADS)
-	if (server_mode)
+#if defined(DEBUG) && defined(HAVE_LIBQNET) && defined(THREADS)
+	if (server_mode) {
+		extern int server_start(void);
+
 		server_start();
-# endif
+	}
 #endif
 	return (0);
 }

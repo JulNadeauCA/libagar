@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.66 2005/05/12 02:39:21 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.67 2005/06/07 03:08:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,62 +39,49 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/tableview.h>
+#include <engine/widget/menu.h>
 
 #include "monitor.h"
 
 static const struct tool_ent {
-	char		    *name;
-	struct window	*(*window_func)(void);
+	char	      *name;
+	struct window *(*fn)(void);
 } tool_ents[] = {
 	{ N_("Refresh rate"), event_fps_window },
 #if defined(THREADS) && defined(HAVE_JPEG)
-	{ N_("Screenshot"), screenshot_window },
+	{ N_("Upload screenshot"), screenshot_window },
 #endif
 #if defined(THREADS) && defined(HAVE_LIBQNET)
-	{ N_("Server"), server_window },
+	{ N_("Server mode"), server_window },
 #endif
 	{ N_("Leak detection"), leak_window },
 	{ N_("Resident graphics"), gfx_debug_window },
 	{ N_("Running timers"), timeouts_window },
-	{ N_("Unicode conversion"), uniconv_window },
-	{ N_("Viewport"), view_params_window },
-	{ N_("Widgets"), widget_debug_window },
+	{ N_("Unicode browser"), uniconv_window },
+	{ N_("Display settings"), view_params_window },
+	{ N_("Widget browser"), widget_debug_window },
 };
 
 static void
 selected_tool(int argc, union evarg *argv)
 {
-	struct tableview_row *row = argv[1].p;
-	struct window *(*win_func)(void) =
-	    tool_ents[tableview_row_getID(row)].window_func;
+	const struct tool_ent *ent = argv[1].p;
 	struct window *win;
 
-	if ((win = (win_func)()) != NULL)
+	if ((win = (ent->fn)()) != NULL)
 		window_show(win);
 }
 
 void
-monitor_init(void)
+monitor_menu(struct AGMenuItem *mi)
 {
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
-	struct tableview *tv;
-	struct window *win;
 	int i;
 
-	if ((win = window_new(WINDOW_NO_HRESIZE, "monitor-toolbar")) == NULL) {
-			return;
+	for (i = 0; i < ntool_ents; i++) {
+		menu_action(mi, _(tool_ents[i].name), -1,
+		    selected_tool, "%p", &tool_ents[i]);
 	}
-	window_set_caption(win, _("Debug monitor"));
-	window_set_position(win, WINDOW_LOWER_LEFT, 0);
-
-	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
-	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
-	tableview_col_add(tv, 0, 0, NULL, NULL);
-	
-	event_new(tv, "tableview-dblclick", selected_tool, NULL);
-
-	for (i = 0; i < ntool_ents; i++)
-		tableview_row_add(tv, 0, NULL, NULL, i, 0, tool_ents[i].name);
 }
 
 #endif	/* DEBUG */
