@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.66 2005/02/03 05:00:27 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2005/04/14 06:19:40 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -9,7 +9,7 @@ LIB=		map
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SRCS=	eraser.c fill.c flip.c invert.c layedit.c magnifier.c map.c mapedit.c \
+SRCS=	eraser.c fill.c flip.c invert.c magnifier.c map.c mapedit.c \
 	mapview.c mediasel.c merge.c nodemask.c propedit.c \
 	resize.c rootmap.c select.c shift.c stamp.c tool.c transform.c
 MAN3=	map.3 mapview.3 rootmap.3
