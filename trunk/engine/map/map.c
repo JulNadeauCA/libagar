@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.12 2005/06/08 06:28:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.13 2005/06/10 06:12:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #ifdef EDITION
 #include <engine/map/mapedit.h>
 #include <engine/map/mapview.h>
-#include <engine/map/layedit.h>
 
 #include <engine/rg/tileset.h>
 
@@ -856,6 +855,10 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			(*r)->friction = friction;
 			(*r)->r_gfx.xcenter = xcenter;
 			(*r)->r_gfx.ycenter = ycenter;
+			(*r)->r_gfx.xmotion = xmotion;
+			(*r)->r_gfx.ymotion = ymotion;
+			(*r)->r_gfx.xorigin = xorigin;
+			(*r)->r_gfx.yorigin = yorigin;
 		}
 		break;
 	case NODEREF_ANIM:
@@ -883,6 +886,10 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			(*r)->friction = friction;
 			(*r)->r_gfx.xcenter = xcenter;
 			(*r)->r_gfx.ycenter = ycenter;
+			(*r)->r_gfx.xmotion = xmotion;
+			(*r)->r_gfx.ymotion = ymotion;
+			(*r)->r_gfx.xorigin = xorigin;
+			(*r)->r_gfx.yorigin = yorigin;
 		}
 		break;
 	case NODEREF_WARP:
@@ -1557,7 +1564,6 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 	}
 
 draw:
-
 	if (!view->opengl) {
 		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
 			int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
@@ -1566,11 +1572,11 @@ draw:
 			int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
 			         r->r_gfx.ymotion*tilesz/TILESZ -
 				 r->r_gfx.yorigin*tilesz/TILESZ;
-	
+
 			blit_scaled(m, su, dx, dy, tilesz);
 		} else {
 			SDL_Rect rd;
-	
+
 			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
 			    r->r_gfx.xorigin;
 			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
@@ -1725,17 +1731,17 @@ edit_properties(int argc, union evarg *argv)
 		msb->yvalue = m->maph;
 		event_new(msb, "mspinbutton-changed", resize_map, "%p", m);
 	
-		msb = mspinbutton_new(bo, "x", _("Node offset: "));
+		msb = mspinbutton_new(bo, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 	
-		msb = mspinbutton_new(bo, "x", _("Display offset (view): "));
+		msb = mspinbutton_new(bo, ",", _("Display offset (view): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
 		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
 		
-		msb = mspinbutton_new(bo, "x", _("Display offset (map): "));
+		msb = mspinbutton_new(bo, ",", _("Display offset (map): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->ssx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->ssy);
 		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
@@ -1783,7 +1789,7 @@ edit_properties(int argc, union evarg *argv)
 
 	bo = box_new(win, BOX_VERT, 0);
 	{
-		msb = mspinbutton_new(win, "x", _("Origin position: "));
+		msb = mspinbutton_new(win, ",", _("Origin position: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &m->origin.x);
 		widget_bind(msb, "yvalue", WIDGET_INT, &m->origin.y);
 		mspinbutton_set_range(msb, 0, MAP_MAX_WIDTH);
@@ -1968,21 +1974,32 @@ select_layer(int argc, union evarg *argv)
 }
 
 static void
-clear_layer(int argc, union evarg *argv)
+delete_layer(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct map *m = argv[2].p;
 	struct tlist_item *it = tlist_selected_item(tl);
 	struct map_layer *lay = it->p1;
-	int x, y;
-	int nlayer;
-
+	int i, x, y, nlayer;
+	
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
 		if (&m->layers[nlayer] == lay)
 			break;
 	}
-	if (nlayer == m->nlayers)
+	if (nlayer == m->nlayers) {
 		return;
+	}
+	if (--m->nlayers < 1) {
+		m->nlayers = 1;
+		return;
+	}
+	if (m->cur_layer <= m->nlayers) {
+		m->cur_layer = m->nlayers-1;
+	}
+	for (i = nlayer; i <= m->nlayers; i++) {
+		memcpy(&m->layers[i], &m->layers[i+1],
+		    sizeof(struct map_layer));
+	}
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -1993,15 +2010,68 @@ clear_layer(int argc, union evarg *argv)
 			     r != TAILQ_END(&node->nrefs);
 			     r = nr) {
 				nr = TAILQ_NEXT(r, nrefs);
-				if (r->layer != nlayer)
-					continue;
-
-				TAILQ_REMOVE(&node->nrefs, r, nrefs);
-				noderef_destroy(m, r);
-				Free(r, M_MAP_NODEREF);
+				if (r->layer == nlayer) {
+					TAILQ_REMOVE(&node->nrefs, r, nrefs);
+					noderef_destroy(m, r);
+					Free(r, M_MAP_NODEREF);
+				} else if (r->layer > nlayer) {
+					r->layer--;
+				}
 			}
 		}
 	}
+}
+
+static void
+move_layer(int argc, union evarg *argv)
+{
+	char tmp[MAP_LAYER_NAME_MAX];
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	int movedown = argv[3].i;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct map_layer *lay1 = it->p1, *lay2;
+	int x, y;
+	int l1, l2;
+
+	for (l1 = 0; l1 < m->nlayers; l1++) {
+		if (&m->layers[l1] == lay1)
+			break;
+	}
+	if (l1 == m->nlayers)
+		return;
+
+	if (movedown) {
+		l2 = l1+1;
+		if (l2 >= m->nlayers) return;
+	} else {
+		l2 = l1-1;
+		if (l2 < 0) return;
+	}
+
+	lay1 = &m->layers[l1];
+	lay2 = &m->layers[l2];
+
+	strlcpy(tmp, lay1->name, sizeof(tmp));
+	strlcpy(lay1->name, lay2->name, sizeof(lay1->name));
+	strlcpy(lay2->name, tmp, sizeof(lay2->name));
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *r;
+
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if (r->layer == l1) {
+					r->layer = l2;
+				} else if (r->layer == l2) {
+					r->layer = l1;
+				}
+			}
+		}
+	}
+
+	tlist_select_pointer(tl, lay2);
 }
 
 static void
@@ -2023,10 +2093,26 @@ mask_layer_menu(int argc, union evarg *argv)
 	}
 }
 
+static void
+push_layer(int argc, union evarg *argv)
+{
+	char name[MAP_LAYER_NAME_MAX];
+	struct map *m = argv[1].p;
+	struct textbox *tb = argv[2].p;
+	
+	textbox_copy_string(tb, name, sizeof(name));
+
+	if (map_push_layer(m, name) != 0) {
+		text_msg(MSG_ERROR, "%s", error_get());
+	} else {
+		textbox_printf(tb, NULL);
+	}
+}
+
 struct window *
 map_edit(void *p)
 {
-	extern const struct tool mediasel_tool, layedit_tool;
+	extern const struct tool mediasel_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
 	    resize_tool, propedit_tool, select_tool, shift_tool, merge_tool,
 	    fill_tool, flip_tool, invert_tool;
@@ -2113,13 +2199,6 @@ map_edit(void *p)
 		    mapview_reg_tool(mv, &magnifier_tool, m, 0));
 	}
 	
-	pitem = menu_add_item(menu, _("Layers"));
-	{
-		menu_action(pitem, _("Edit layers"), MAGNIFIER_TOOL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &layedit_tool, m, 0));
-	}
-
 	pitem = menu_add_item(menu, _("Tools"));
 	{
 		menu_action(pitem, _("Select"), SELECT_TOOL_ICON,
@@ -2184,14 +2263,8 @@ map_edit(void *p)
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			struct AGMenuItem *mi;
-#if 0	
-			com = combo_new(ntab, COMBO_POLL, _("Layer:"));
-			event_new(com->list, "tlist-poll", layedit_poll,
-			    "%p", m);
-			event_new(com, "combo-selected",
-			    mapview_selected_layer, "%p", mv);
-			combo_select_pointer(com, &m->layers[m->cur_layer]);
-#endif
+			struct box *hb;
+
 			mv->layers_tl = tlist_new(ntab, TLIST_POLL);
 			tlist_set_item_height(mv->layers_tl, TILESZ);
 			event_new(mv->layers_tl, "tlist-poll", poll_layers,
@@ -2204,11 +2277,34 @@ map_edit(void *p)
 				menu_dynamic(mi, LAYER_EDITOR_ICON,
 				    mask_layer_menu, "%p", mv->layers_tl, m);
 			
-				menu_separator(mi);
-			
-				menu_action(mi, _("Clear layer elements"),
-				    ERASER_TOOL_ICON, clear_layer,
+				menu_action(mi, _("Delete layer"),
+				    ERASER_TOOL_ICON, delete_layer,
 				    "%p,%p", mv->layers_tl, m); 
+				
+				menu_separator(mi);
+				
+				menu_action_kb(mi, _("Move layer up"),
+				    OBJMOVEUP_ICON, SDLK_u, KMOD_SHIFT,
+				    move_layer, "%p,%p,%i", mv->layers_tl,
+				    m, 0); 
+				menu_action_kb(mi, _("Move layer down"),
+				    OBJMOVEDOWN_ICON, SDLK_d, KMOD_SHIFT,
+				    move_layer, "%p,%p,%i", mv->layers_tl,
+				    m, 1); 
+			}
+
+			hb = box_new(ntab, BOX_HORIZ, BOX_WFILL);
+			{
+				struct textbox *tb;
+				struct button *bu;
+
+				tb = textbox_new(hb, _("New layer: "));
+				event_new(tb, "textbox-return", push_layer,
+				    "%p, %p", m, tb);
+
+				bu = button_new(hb, _("Push"));
+				event_new(bu, "button-pushed", push_layer,
+				    "%p, %p", m, tb);
 			}
 		}
 

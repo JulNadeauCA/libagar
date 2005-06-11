@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.9 2005/05/16 00:41:05 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.10 2005/06/10 06:12:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -468,7 +468,7 @@ draw_cursor(struct mapview *mv)
 		}
 		return;
 	}
-	
+
 	rd.x = mv->mouse.x*mv->tilesz + (mv->xoffs+mv->map->ssx);
 	rd.y = mv->mouse.y*mv->tilesz + (mv->yoffs+mv->map->ssy);
 
@@ -706,7 +706,6 @@ mouse_motion(int argc, union evarg *argv)
 	int state = argv[5].i;
 
 	pthread_mutex_lock(&mv->map->lock);
-
 	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
@@ -734,6 +733,9 @@ mouse_motion(int argc, union evarg *argv)
 			    xrel, yrel, state);
 		}
 	}
+
+	mv->mouse.x = x;
+	mv->mouse.y = y;
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
