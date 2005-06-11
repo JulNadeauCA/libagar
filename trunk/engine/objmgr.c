@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.25 2005/05/24 08:15:07 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.26 2005/05/29 00:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,6 +49,8 @@
 #include <engine/widget/separator.h>
 #include <engine/widget/file_dlg.h>
 #include <engine/widget/notebook.h>
+
+#include <engine/monitor/monitor.h>
 
 #ifdef NETWORK
 #include <engine/rcs.h>
@@ -761,7 +763,12 @@ objmgr_window(void)
 		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_IMPORT);
 	}
-#endif
+#endif /* NETWORK */
+
+#ifdef DEBUG
+	mi = menu_add_item(me, _("Debug"));
+	monitor_menu(mi);
+#endif /* DEBUG */
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
