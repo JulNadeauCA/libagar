@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.19 2005/05/31 01:32:54 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.20 2005/06/10 05:42:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -295,6 +295,7 @@ add_subitem(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->key_equiv = key_equiv;
 	mi->key_mod = key_mod;
 	mi->onclick = NULL;
+	mi->poll = NULL;
 	mi->bind_type = MENU_NO_BINDING;
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
