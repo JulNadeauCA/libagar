@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.29 2004/06/04 19:59:26 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.30 2005/05/23 03:25:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -73,7 +73,7 @@ __END_DECLS
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
 } while (0)
 #define EVENT_INSERT_ARG2(eev1, eev2, ap, member, type) do {	\
-	type _ev_val = va_arg((ap), (type));			\
+	type _ev_val = va_arg((ap), type);			\
 	(eev1)->argv[(eev1)->argc++].member = _ev_val;		\
 	(eev2)->argv[(eev2)->argc++].member = _ev_val;		\
 } while (0)
