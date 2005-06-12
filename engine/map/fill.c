@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -26,11 +26,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/arc4random.h>
+
 #include <engine/engine.h>
 
 #ifdef MAP
 
+#include <engine/rg/tileset.h>
+
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/tlist.h>
 
 #include "map.h"
 #include "mapedit.h"
@@ -57,24 +63,32 @@ const struct tool fill_tool = {
 };
 
 static enum fill_mode {
-	FILL_PATTERN,			/* Pattern fill */
-	FILL_CLEAR			/* Erase whole layer */
-} mode = FILL_PATTERN;
+	FILL_FROM_CLIPBRD,
+	FILL_FROM_ART,
+	FILL_CLEAR
+} mode = FILL_FROM_ART;
+
+static int randomize_angle = 0;
 
 static void
 fill_init(struct tool *t)
 {
 	static const char *mode_items[] = {
-		N_("Pattern fill"),
+		N_("Clipboard pattern"),
+		N_("Source artwork"),
 		N_("Clear"),
 		NULL
 	};
 	struct window *win;
 	struct radio *rad;
+	struct checkbox *cb;
 
 	win = tool_window(t, "mapedit-tool-fill");
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
+
+	cb = checkbox_new(win, _("Randomize angle"));
+	widget_bind(cb, "state", WIDGET_BOOL, &randomize_angle);
 }
 
 static void
@@ -85,36 +99,101 @@ fill_effect(struct tool *t, struct node *n)
 	struct map *copybuf = &mapedit.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = m->mapw, dh = m->maph;
-	int x, y;
-
-	if (mode == FILL_PATTERN &&
-	    (copybuf->mapw == 0 || copybuf->maph == 0)) {
-	    	text_msg(MSG_ERROR, _("The copy/paste buffer is empty."));
-		return;
-	}
+	int x, y, angle = 0, i = 0;
+	struct tlist_item *it;
+	struct tile *tile;
+	struct sprite *spr;
+	Uint32 rand = 0;
+	Uint8 byte = 0;
 
 	mapview_get_selection(mv, &dx, &dy, &dw, &dh);
 
-	for (y = dy; y < dy+dh; y++) {
-		for (x = dx; x < dx+dw; x++) {
-			struct node *dn = &m->map[y][x];
-			struct noderef *r;
-
-			node_clear(m, dn, m->cur_layer);
-
-			if (mode == FILL_PATTERN) {
+	switch (mode) {
+	case FILL_FROM_CLIPBRD:
+		if (copybuf->mapw == 0 || copybuf->maph == 0) {
+			text_msg(MSG_ERROR, _("The clipboard is empty."));
+			return;
+		}
+		for (y = dy; y < dy+dh; y++) {
+			for (x = dx; x < dx+dw; x++) {
 				struct node *sn = &copybuf->map[sy][sx];
+				struct node *dn = &m->map[y][x];
+				struct noderef *r;
 
-				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
+				node_clear(m, dn, m->cur_layer);
+				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					node_copy_ref(r, m, dn, m->cur_layer);
+				}
 				if (++sx >= copybuf->mapw)
 					sx = 0;
 			}
 		}
-		if (mode == FILL_PATTERN) {
-			if (++sy >= copybuf->maph)
-				sy = 0;
+		if (++sy >= copybuf->maph) {
+			sy = 0;
 		}
+		break;
+	case FILL_FROM_ART:
+		if (mv->art_tl == NULL ||
+		    (it = tlist_selected_item(mv->art_tl)) == NULL ||
+		    strcmp(it->class, "tile") != 0) {
+			break;
+		}
+		tile = it->p1;
+		spr = &SPRITE(tile->ts, tile->sprite);
+		for (y = dy; y < dy+dh; y++) {
+			for (x = dx; x < dx+dw; x++) {
+				struct node *n = &m->map[y][x];
+				struct noderef *r;
+
+				node_clear(m, n, m->cur_layer);
+				r = Malloc(sizeof(struct noderef),
+				    M_MAP_NODEREF);
+				noderef_init(r, NODEREF_SPRITE);
+				noderef_set_sprite(r, m, tile->ts,
+				    tile->sprite);
+				noderef_set_layer(r, m->cur_layer);
+				r->r_gfx.xorigin = spr->xOrig;
+				r->r_gfx.yorigin = spr->yOrig;
+				r->r_gfx.xcenter = TILESZ/2;
+				r->r_gfx.ycenter = TILESZ/2;
+				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
+	
+				if (randomize_angle) {
+					switch (i++) {
+					case 0:
+						rand = arc4random();
+						byte = (rand&0xff000000) >> 24;
+						break;
+					case 1:
+						byte = (rand&0x00ff0000) >> 16;
+						break;
+					case 2:
+						byte = (rand&0x0000ff00) >> 8;
+						break;
+					case 3:
+						byte = (rand&0x000000ff);
+						i = 0;
+						break;
+					}
+					if (byte < 60) {
+						transform_rotate(r, 0);
+					} else if (byte < 120) {
+						transform_rotate(r, 90);
+					} else if (byte < 180) {
+						transform_rotate(r, 180);
+					} else if (byte < 240) {
+						transform_rotate(r, 270);
+					}
+				}
+			}
+		}
+		break;
+	case FILL_CLEAR:
+		for (y = dy; y < dy+dh; y++) {
+			for (x = dx; x < dx+dw; x++)
+				node_clear(m, &m->map[y][x], m->cur_layer);
+		}
+		break;
 	}
 }
 
