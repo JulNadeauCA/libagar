@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.13 2005/06/10 06:12:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.14 2005/06/11 11:19:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	7, 0
+	8, 0
 };
 
 const struct object_ops map_ops = {
@@ -173,6 +173,13 @@ noderef_set_friction(struct noderef *r, int coeff)
 	r->friction = (Sint8)coeff;
 }
 
+/* Set the layer attribute of a noderef. */
+void
+noderef_set_layer(struct noderef *r, int layer)
+{
+	r->layer = layer;
+}
+
 void
 noderef_destroy(struct map *m, struct noderef *r)
 {
@@ -261,13 +268,20 @@ map_free_nodes(struct map *m)
 	pthread_mutex_unlock(&m->lock);
 }
 
-/* Reinitialize the layer array to the default. */
 static void
 map_free_layers(struct map *m)
 {
 	m->layers = Realloc(m->layers, 1*sizeof(struct map_layer));
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
+}
+
+static void
+map_free_cameras(struct map *m)
+{
+	m->cameras = Realloc(m->cameras , 1*sizeof(struct map_camera));
+	m->ncameras = 1;
+	map_init_camera(&m->cameras[0], _("Camera 0"));
 }
 
 /* Resize a map, initializing new nodes and destroying any excess ones. */
@@ -315,11 +329,8 @@ map_resize(struct map *m, u_int w, u_int h)
 		}
 	}
 
-	/* Make sure the origin remains inside the map. */
-	if (m->origin.x >= w)
-		m->origin.x = w-1;
-	if (m->origin.y >= h)
-		m->origin.y = h-1;
+	if (m->origin.x >= w) { m->origin.x = w-1; }
+	if (m->origin.y >= h) { m->origin.y = h-1; }
 
 	pthread_mutex_unlock(&m->lock);
 	object_destroy(&tm);
@@ -367,6 +378,16 @@ map_init_layer(struct map_layer *lay, const char *name)
 }
 
 void
+map_init_camera(struct map_camera *cam, const char *name)
+{
+	strlcpy(cam->name, name, sizeof(cam->name));
+	cam->x = 0;
+	cam->y = 0;
+	cam->flags = 0;
+	cam->alignment = MAP_CENTER;
+}
+
+void
 map_init(void *obj, const char *name)
 {
 	struct map *m = obj;
@@ -384,15 +405,19 @@ map_init(void *obj, const char *name)
 	m->ssx = 0;
 	m->ssy = 0;
 	m->cur_layer = 0;
-
 	m->layers = Malloc(sizeof(struct map_layer), M_MAP);
 	m->nlayers = 1;
-	map_init_layer(&m->layers[0], _("Layer 0"));
+	m->cameras = Malloc(sizeof(struct map_camera), M_MAP);
+	m->ncameras = 1;
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
+	
+	map_init_layer(&m->layers[0], _("Layer 0"));
+	map_init_camera(&m->cameras[0], _("Camera 0"));
 
 #ifdef EDITION
 	if (mapedition) {
-		extern int mapedit_def_mapw, mapedit_def_maph;
+		extern int mapedit_def_mapw;
+		extern int mapedit_def_maph;
 
 		map_alloc_nodes(m, mapedit_def_mapw, mapedit_def_maph);
 	}
@@ -1036,12 +1061,12 @@ map_load(void *ob, struct netbuf *buf)
 	m->ssy = (int)read_sint16(buf);
 	
 	/* Read the layer information. */
-	if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
-		error_set(_("Too many map layers."));
+	if ((m->nlayers = (u_int)read_uint32(buf)) > MAP_MAX_LAYERS) {
+		error_set(_("Too many layers."));
 		goto fail;
 	}
 	if (m->nlayers < 1) {
-		error_set(_("Missing layer zero."));
+		error_set(_("Missing zeroth layer."));
 		goto fail;
 	}
 	m->layers = Realloc(m->layers, m->nlayers*sizeof(struct map_layer));
@@ -1056,6 +1081,26 @@ map_load(void *ob, struct netbuf *buf)
 	}
 	m->cur_layer = (int)read_uint8(buf);
 	m->origin.layer = (int)read_uint8(buf);
+	
+	/* Read the camera information. */
+	if ((m->ncameras = (u_int)read_uint32(buf)) > MAP_MAX_CAMERAS) {
+		error_set(_("Too many cameras."));
+		goto fail;
+	}
+	if (m->ncameras < 1) {
+		error_set(_("Missing zeroth camera."));
+		goto fail;
+	}
+	m->cameras = Realloc(m->cameras, m->ncameras*sizeof(struct map_camera));
+	for (i = 0; i < m->ncameras; i++) {
+		struct map_camera *cam = &m->cameras[i];
+
+		copy_string(cam->name, buf, sizeof(cam->name));
+		cam->flags = (int)read_uint32(buf);
+		cam->x = (int)read_sint32(buf);
+		cam->y = (int)read_sint32(buf);
+		cam->alignment = (enum map_camera_alignment)read_uint8(buf);
+	}
 
 	/* Allocate and load the nodes. */
 	if (map_alloc_nodes(m, m->mapw, m->maph) == -1) {
@@ -1193,7 +1238,7 @@ map_save(void *p, struct netbuf *buf)
 	write_sint16(buf, (Sint16)m->ssy);
 
 	/* Write the layer information. */
-	write_uint32(buf, m->nlayers);
+	write_uint32(buf, (Uint32)m->nlayers);
 	for (i = 0; i < m->nlayers; i++) {
 		struct map_layer *lay = &m->layers[i];
 
@@ -1205,6 +1250,18 @@ map_save(void *p, struct netbuf *buf)
 	}
 	write_uint8(buf, m->cur_layer);
 	write_uint8(buf, m->origin.layer);
+	
+	/* Write the camera information. */
+	write_uint32(buf, (Uint32)m->ncameras);
+	for (i = 0; i < m->ncameras; i++) {
+		struct map_camera *cam = &m->cameras[i];
+
+		write_string(buf, cam->name);
+		write_uint32(buf, (Uint32)cam->flags);
+		write_sint32(buf, (Sint32)cam->x);
+		write_sint32(buf, (Sint32)cam->y);
+		write_uint8(buf, (Uint8)cam->alignment);
+	}
 
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
@@ -1651,35 +1708,6 @@ create_view(int argc, union evarg *argv)
 }
 
 static void
-revert_map(int argc, union evarg *argv)
-{
-	struct map *m = argv[1].p;
-
-	if (object_load(m) == 0) {
-		text_tmsg(MSG_INFO, 1000,
-		    _("Map `%s' reverted successfully."),
-		    OBJECT(m)->name);
-	} else {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->name,
-		    error_get());
-	}
-}
-
-static void
-save_map(int argc, union evarg *argv)
-{
-	struct map *m = argv[1].p;
-
-	if (object_save(m) == 0) {
-		text_tmsg(MSG_INFO, 1250, _("Map `%s' saved successfully."),
-		    OBJECT(m)->name);
-	} else {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->name,
-		    error_get());
-	}
-}
-
-static void
 switch_tool(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
@@ -1734,13 +1762,19 @@ edit_properties(int argc, union evarg *argv)
 		msb = mspinbutton_new(bo, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
-		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+		mspinbutton_set_range(msb, -MAP_MAX_WIDTH/2, MAP_MAX_WIDTH/2);
+	
+		/* XXX unsafe */
+		msb = mspinbutton_new(bo, ",", _("Camera position: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->cameras[0].x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->cameras[0].y);
 	
 		msb = mspinbutton_new(bo, ",", _("Display offset (view): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
 		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
 		
+		/* XXX unsafe */
 		msb = mspinbutton_new(bo, ",", _("Display offset (map): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->ssx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->ssy);
@@ -1750,12 +1784,6 @@ edit_properties(int argc, union evarg *argv)
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
-		
-		label_new(bo, LABEL_POLLED, _("Fit w=%[ibool] h=%[ibool]"),
-		    &mv->wfit, &mv->hfit);
-		
-		label_new(bo, LABEL_POLLED, _("Modulo w=%i h=%i"),
-		    &mv->wmod, &mv->hmod);
 	}
 
 	bo = box_new(win, BOX_VERT, 0);
@@ -2109,6 +2137,14 @@ push_layer(int argc, union evarg *argv)
 	}
 }
 
+static void
+close_map(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	event_post(NULL, win, "window-close", NULL);
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -2147,28 +2183,32 @@ map_edit(void *p)
 	mapview_prescale(mv, 2, 2);
 
 	menu = menu_new(win);
-	pitem = menu_add_item(menu, _("Map"));
+	pitem = menu_add_item(menu, _("File"));
 	{
-		menu_action(pitem, _("Save"), OBJSAVE_ICON, save_map, "%p", m);
-		menu_action(pitem, _("Revert"), OBJLOAD_ICON, revert_map,
-		    "%p", m);
-
-		menu_separator(pitem);
-
-		menu_action(pitem, _("Properties..."), SETTINGS_ICON,
-		    edit_properties, "%p, %p", mv, win);
 		menu_action(pitem, _("Import media..."), MEDIASEL_ICON,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &mediasel_tool, m, 0));
 		
 		menu_separator(pitem);
 
-		menu_int_flags_mp(pitem, _("Editable"), EDIT_ICON,
+		menu_int_flags_mp(pitem, _("Writeable"), EDIT_ICON,
 		    &OBJECT(m)->flags, OBJECT_READONLY, 1,
 		    &OBJECT(m)->lock);
 		menu_int_flags_mp(pitem, _("Indestructible"), TRASH_ICON,
 		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE, 0,
 		    &OBJECT(m)->lock);
+		
+		menu_separator(pitem);
+		
+		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
+		    SDLK_w, KMOD_CTRL,
+		    close_map, "%p", win);
+	}
+	
+	pitem = menu_add_item(menu, _("Edit"));
+	{
+		menu_action(pitem, _("Map settings..."), SETTINGS_ICON,
+		    edit_properties, "%p, %p", mv, win);
 	}
 
 	pitem = menu_add_item(menu, _("View"));
