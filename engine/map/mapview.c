@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.10 2005/06/10 06:12:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.11 2005/06/11 11:19:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,9 +74,9 @@ int	mapview_bg_sqsize = 8;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
 static void lost_focus(int, union evarg *);
-static void mouse_motion(int, union evarg *);
-static void mouse_buttondown(int, union evarg *);
-static void mouse_buttonup(int, union evarg *);
+static void mousemotion(int, union evarg *);
+static void mousebuttondown(int, union evarg *);
+static void mousebuttonup(int, union evarg *);
 static void key_up(int, union evarg *);
 static void key_down(int, union evarg *);
 static void begin_selection(struct mapview *);
@@ -302,19 +302,16 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	object_wire_gfx(mv, "/engine/map/pixmaps/pixmaps");
 
 	mv->flags = (flags | MAPVIEW_CENTER);
+	mv->map = m;
+	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
-	mv->wfit = 0;
-	mv->hfit = 0;
-	mv->wmod = 0;
-	mv->hmod = 0;
 	mv->prew = 4;
 	mv->preh = 4;
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-	mv->map = m;
 	mv->dblclicked = 0;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
@@ -355,9 +352,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "widget-hidden", lost_focus, NULL);
 	event_new(mv, "window-keyup", key_up, NULL);
 	event_new(mv, "window-keydown", key_down, NULL);
-	event_new(mv, "window-mousemotion", mouse_motion, NULL);
-	event_new(mv, "window-mousebuttondown", mouse_buttondown, NULL);
-	event_new(mv, "window-mousebuttonup", mouse_buttonup, NULL);
+	event_new(mv, "window-mousemotion", mousemotion, NULL);
+	event_new(mv, "window-mousebuttondown", mousebuttondown, NULL);
+	event_new(mv, "window-mousebuttonup", mousebuttonup, NULL);
 	event_new(mv, "detached", mapview_detached, NULL);
 	event_new(mv, "dblclick-expire", dblclick_expired, NULL);
 }
@@ -368,6 +365,31 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
  */
 static __inline__ void
 get_node_coords(struct mapview *mv, int *x, int *y)
+{
+	*x -= (mv->xoffs + mv->map->ssx);
+	*y -= (mv->yoffs + mv->map->ssy);
+	
+	mv->cxoffs = *x % mv->tilesz;
+	mv->cyoffs = *y % mv->tilesz;
+
+	*x = ((*x) - mv->cxoffs)/mv->tilesz;
+	*y = ((*y) - mv->cyoffs)/mv->tilesz;
+
+	mv->cx = mv->mx + *x;
+	mv->cy = mv->my + *y;
+
+	if (mv->cx < 0 || mv->cx >= mv->map->mapw || mv->cxoffs < 0)
+		mv->cx = -1;
+	if (mv->cy < 0 || mv->cy >= mv->map->maph || mv->cyoffs < 0)
+		mv->cy = -1;
+}
+
+/*
+ * Obtain absolute coordinates from widget coordinates.
+ * The map must be locked.
+ */
+static __inline__ void
+get_abs_coords(struct mapview *mv, int *x, int *y)
 {
 	*x -= (mv->xoffs + mv->map->ssx);
 	*y -= (mv->yoffs + mv->map->ssy);
@@ -566,13 +588,11 @@ draw_layer:
 		goto next_layer;
 	}
 	for (my = mv->my, ry = mv->yoffs+mv->map->ssy;
-//	     ((my - mv->my - TILEOUT) < mv->mh) &&
-	     (my < m->maph);
+	     ((my - mv->my) <= mv->mh) && (my < m->maph);
 	     my++, ry += mv->tilesz) {
 
 		for (mx = mv->mx, rx = mv->xoffs+mv->map->ssx;
-//	     	     ((mx - mv->mx - TILEOUT) < mv->mw) &&
-		     (mx < m->mapw);
+	     	     ((mx - mv->mx) <= mv->mw) && (mx < m->mapw);
 		     mx++, rx += mv->tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
@@ -662,18 +682,84 @@ out:
 	pthread_mutex_unlock(&m->lock);
 }
 
+/*
+ * Recalculate the offsets to be used by the rendering routine based on
+ * the current camera coordinates. 
+ */
+void
+mapview_update_camera(struct mapview *mv)
+{
+	struct map_camera *cam;
+	int xcam, ycam;
+
+	pthread_mutex_lock(&mv->map->lock);
+
+	cam = &mv->map->cameras[mv->cam];
+	xcam = cam->x;
+	ycam = cam->y;
+
+	switch (cam->alignment) {
+	case MAP_CENTER:
+		xcam -= WIDGET(mv)->w/2;
+		ycam -= WIDGET(mv)->h/2;
+		break;
+	case MAP_LOWER_CENTER:
+		xcam -= WIDGET(mv)->w/2;
+		ycam -= WIDGET(mv)->h;
+		break;
+	case MAP_UPPER_CENTER:
+		xcam -= WIDGET(mv)->w/2;
+		break;
+	case MAP_UPPER_LEFT:
+		break;
+	case MAP_MIDDLE_LEFT:
+		ycam -= WIDGET(mv)->h/2;
+		break;
+	case MAP_LOWER_LEFT:
+		ycam -= WIDGET(mv)->h;
+		break;
+	case MAP_UPPER_RIGHT:
+		xcam -= WIDGET(mv)->w;
+		break;
+	case MAP_MIDDLE_RIGHT:
+		xcam -= WIDGET(mv)->w;
+		ycam -= WIDGET(mv)->h/2;
+		break;
+	case MAP_LOWER_RIGHT:
+		xcam -= WIDGET(mv)->w;
+		ycam -= WIDGET(mv)->h;
+		break;
+	}
+	pthread_mutex_unlock(&mv->map->lock);
+
+	mv->mx = xcam / mv->tilesz;
+	if (mv->mx < 0) {
+		mv->mx = 0;
+		mv->xoffs = -xcam;
+	} else {
+		mv->xoffs = -(xcam % mv->tilesz);
+	}
+	
+	mv->my = ycam / mv->tilesz;
+	if (mv->my < 0) {
+		mv->my = 0;
+		mv->yoffs = -ycam;
+	} else {
+		mv->yoffs = -(ycam % mv->tilesz);
+	}
+}
+
 void
 mapview_set_scale(struct mapview *mv, u_int zoom)
 {
 	extern int magnifier_zoom_toval;
 	int old_tilesz = mv->tilesz;
-	int dxy;
+	int x, y;
 
-	if (zoom < ZOOM_MIN)
-		zoom = ZOOM_MIN;
-	if (zoom > ZOOM_MAX)
-		zoom = ZOOM_MAX;
-
+	if (zoom < ZOOM_MIN) { zoom = ZOOM_MIN; }
+	else if (zoom > ZOOM_MAX) { zoom = ZOOM_MAX; }
+	
+	magnifier_zoom_toval = zoom;
 	mv->zoom = zoom;
 	mv->tilesz = zoom*TILESZ/100;
 	mv->pxsz = zoom/100;
@@ -683,20 +769,18 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 
 	mv->mw = WIDGET(mv)->w/mv->tilesz + 1;
 	mv->mh = WIDGET(mv)->h/mv->tilesz + 1;
-	mv->wmod = mv->mw - WIDGET(mv)->w % mv->tilesz;
-	mv->hmod = mv->mh - WIDGET(mv)->h % mv->tilesz;
-	mv->wfit = (mv->map->mapw*mv->tilesz <= WIDGET(mv)->w);
-	mv->hfit = (mv->map->maph*mv->tilesz <= WIDGET(mv)->h);
 
-	dxy = (old_tilesz - mv->tilesz)*2;
-	mv->xoffs += dxy;
-	mv->yoffs += dxy;
+	SDL_GetMouseState(&x, &y);
+	x -= WIDGET(mv)->cx;
+	y -= WIDGET(mv)->cy;
 
-	magnifier_zoom_toval = zoom;
+	mv->map->cameras[mv->cam].x -= (old_tilesz - mv->tilesz)*4;
+	mv->map->cameras[mv->cam].y -= (old_tilesz - mv->tilesz)*4;
+	mapview_update_camera(mv);
 }
 
 static void
-mouse_motion(int argc, union evarg *argv)
+mousemotion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int x = argv[1].i;
@@ -711,8 +795,9 @@ mouse_motion(int argc, union evarg *argv)
 	mv->cyrel = y - mv->mouse.y;
 
 	if (mv->mouse.scrolling) {
-		mv->xoffs += xrel;
-		mv->yoffs += yrel;
+		mv->map->cameras[mv->cam].x -= xrel;
+		mv->map->cameras[mv->cam].y -= yrel;
+		mapview_update_camera(mv);
 	} else if (mv->msel.set) {
 		mv->msel.xoffs += x - mv->mouse.x;
 		mv->msel.yoffs += y - mv->mouse.y;
@@ -740,7 +825,7 @@ mouse_motion(int argc, union evarg *argv)
 }
 
 static void
-mouse_buttondown(int argc, union evarg *argv)
+mousebuttondown(int argc, union evarg *argv)
 {
 	extern int magnifier_zoom_inc;
 	struct mapview *mv = argv[0].p;
@@ -839,7 +924,7 @@ out:
 }
 
 static void
-mouse_buttonup(int argc, union evarg *argv)
+mousebuttonup(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	struct map *m = mv->map;
@@ -968,6 +1053,8 @@ key_up(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 	struct tool *tool;
+	
+	pthread_mutex_lock(&mv->map->lock);
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
@@ -992,6 +1079,16 @@ key_up(int argc, union evarg *argv)
 	    mv->curtool != NULL &&
 	    mv->curtool->keyup != NULL)
 		mv->curtool->keyup(mv->curtool, keysym, keymod);
+	
+	pthread_mutex_unlock(&mv->map->lock);
+}
+
+static __inline__ void
+center_to_origin(struct mapview *mv)
+{
+	mv->map->cameras[mv->cam].x = mv->map->origin.x*mv->tilesz;
+	mv->map->cameras[mv->cam].y = mv->map->origin.y*mv->tilesz;
+	mapview_update_camera(mv);
 }
 
 static void
@@ -1001,6 +1098,8 @@ key_down(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 	struct tool *tool;
+	
+	pthread_mutex_lock(&mv->map->lock);
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
@@ -1024,7 +1123,7 @@ key_down(int argc, union evarg *argv)
 	/* XXX configurable */
 	switch (keysym) {
 	case SDLK_o:
-		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
+		center_to_origin(mv);
 		break;
 	case SDLK_p:
 		if (keymod & KMOD_SHIFT) {
@@ -1045,6 +1144,8 @@ key_down(int argc, union evarg *argv)
 	    mv->curtool != NULL &&
 	    mv->curtool->keydown != NULL)
 		mv->curtool->keydown(mv->curtool, keysym, keymod);
+	
+	pthread_mutex_unlock(&mv->map->lock);
 }
 
 void
@@ -1061,8 +1162,8 @@ mapview_scale(void *p, int rw, int rh)
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_set_scale(mv, mv->zoom);
 	if (mv->flags & MAPVIEW_CENTER) {
-		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
 		mv->flags &= ~(MAPVIEW_CENTER);
+		center_to_origin(mv);
 	}
 	pthread_mutex_unlock(&mv->map->lock);
 }
@@ -1073,28 +1174,6 @@ lost_focus(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 
 	event_cancel(mv, "dblclick-expire");
-}
-
-void
-mapview_center(struct mapview *mv, int x, int y)
-{
-	/* XXX */
-	mv->mx = x - mv->mw/2;
-	mv->my = y - mv->mh/2;
-	if (mv->mx < 0)
-		mv->mx = 0;
-	if (mv->my < 0)
-		mv->my = 0;
-
-	pthread_mutex_lock(&mv->map->lock);
-	if (mv->mx >= mv->map->mapw - mv->mw)
-		mv->mx = mv->map->mapw - mv->mw;
-	if (mv->my >= mv->map->maph - mv->mh)
-		mv->my = mv->map->maph - mv->mh;
-
-	mv->xoffs = 0;
-	mv->yoffs = 0;
-	pthread_mutex_unlock(&mv->map->lock);
 }
 
 /* Set the coordinates and geometry of the selection rectangle. */

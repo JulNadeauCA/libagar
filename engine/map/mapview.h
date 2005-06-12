@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.3 2005/04/21 07:51:59 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.4 2005/06/10 06:12:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -54,20 +54,21 @@ struct mapview {
 		int w, h;
 	} esel;
 
-	u_int	zoom;			/* Zoom factor (%) */
-	int	tilesz;			/* Display tile size (pixels) */
-	int	pxsz;			/* Scaled pixel size (pixels) */
+	u_int zoom;			/* Zoom factor (%) */
+	int tilesz;			/* Display tile size (pixels) */
+	int pxsz;			/* Scaled pixel size (pixels) */
 	
-	struct map	*map;		/* Map to display/edit */
-	int	 	 mx, my;	/* Display offset (nodes) */
-	int		 xoffs, yoffs;	/* Display offset (pixels) */
-	u_int	 	 mw, mh;	/* Display size (nodes) */
-	int		 wfit, hfit;	/* Dimension fits into display? */
-	int		 wmod, hmod;	/* Remainders */
-	int		 cx, cy;	/* Cursor position (nodes) */
-	int		 cxoffs, cyoffs; /* Cursor offset (pixels) */
-	int		 cxrel, cyrel;	/* Displacement from last position */
-	int		 dblclicked;
+	struct map *map;		/* Map to display */
+	int cam;			/* Name of map camera to use */
+
+	int mx, my;			/* Display offset (nodes) */
+	int xoffs, yoffs;		/* Display offset (pixels) */
+	u_int mw, mh;			/* Display size (nodes) */
+
+	int cx, cy;			/* Cursor position (nodes) */
+	int cxoffs, cyoffs;		/* Cursor offset (pixels) */
+	int cxrel, cyrel;		/* Displacement from last position */
+	int dblclicked;			/* Double click flag */
 
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */
@@ -131,6 +132,7 @@ void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 void	 mapview_reg_draw_cb(struct mapview *,
 	                     void (*)(struct mapview *, void *), void *);
+void	 mapview_update_camera(struct mapview *);
 
 #ifdef EDITION
 struct tool	*mapview_reg_tool(struct mapview *, const struct tool *,

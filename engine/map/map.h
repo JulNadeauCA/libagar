@@ -1,18 +1,19 @@
-/*	$Csoft: map.h,v 1.3 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.4 2005/06/08 06:28:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
 #define _AGAR_MAP_H_
 
 #define TILESZ	32			/* Default tile size in pixels */
-#define TILEOUT	2			/* Number of border tiles to clip */
 
 #define MAP_MIN_TILESZ		7
 #define MAP_MAX_TILESZ		16384	/* For soft-scrolling */
 #define MAP_MAX_WIDTH		32767
 #define MAP_MAX_HEIGHT		32767
 #define MAP_MAX_LAYERS		256
+#define MAP_MAX_CAMERAS		256
 #define MAP_LAYER_NAME_MAX	128
+#define MAP_CAMERA_NAME_MAX	128
 #define NODE_MAX_NODEREFS	32767
 #define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_MASKS	16384
@@ -46,7 +47,8 @@ enum noderef_edge {
 
 struct noderef {
 	enum noderef_type type;		/* Type of element */
-	Uint8	flags;
+	
+	Uint8 flags;
 #define NODEREF_WALK	0x01		/* Surface is walkable */
 #define NODEREF_CLIMB	0x02		/* Surface is climbable */
 #define NODEREF_SLIP	0x04		/* Surface is slippery */
@@ -55,14 +57,14 @@ struct noderef {
 #define NODEREF_NOSAVE	0x20		/* Non persistent */
 #define NODEREF_NOSCALE	0x40		/* Don't scale pixmaps (ie. vg) */
 
-	Sint8	friction;		/* Coefficient of friction (if n>0),
-					   or acceleration (if n<0) */
-	Uint8	layer;			/* Associated layer# */
+	Sint8 friction;		/* Coefficient of acceleration or friction */
+	Uint8 layer;		/* Associated layer */
+
 	struct {
-		Sint16	xcenter, ycenter;	/* Centering offsets */
-		Sint16	xmotion, ymotion;	/* Motion offsets */
-		Sint16	xorigin, yorigin;	/* Origin point */
-		Uint8	edge;			/* Edge type (for edition) */
+		Sint16 xcenter, ycenter;	/* Centering offsets */
+		Sint16 xmotion, ymotion;	/* Motion offsets */
+		Sint16 xorigin, yorigin;	/* Origin point */
+		Uint8 edge;			/* Edge type (for edition) */
 	} r_gfx;
 	union {
 		struct {
@@ -103,32 +105,52 @@ struct node {
 };
 
 struct map_layer {
-	char	 name[MAP_LAYER_NAME_MAX];	/* Identifier */
-	int	 visible;			/* Layer is visible? */
-	Sint16	 xinc, yinc;			/* Rendering direction */
-	Uint8	 alpha;				/* Transparency */
+	char name[MAP_LAYER_NAME_MAX];
+	int visible;				/* Show/hide flag */
+	Sint16 xinc, yinc;			/* Rendering direction */
+	Uint8 alpha;				/* Transparency value */
+};
+
+enum map_camera_alignment {
+	MAP_UPPER_LEFT,
+	MAP_MIDDLE_LEFT,
+	MAP_LOWER_LEFT,
+	MAP_UPPER_RIGHT,
+	MAP_MIDDLE_RIGHT,
+	MAP_LOWER_RIGHT,
+	MAP_CENTER,
+	MAP_LOWER_CENTER,
+	MAP_UPPER_CENTER
+};
+
+struct map_camera {
+	char name[MAP_CAMERA_NAME_MAX];
+	int flags;
+	int x, y;				/* Position of camera */
+	enum map_camera_alignment alignment;	/* View alignment */
 };
 
 struct map {
 	struct space space;
 
-	pthread_mutex_t	  lock;
-	u_int		  mapw, maph;	/* Map geometry */
-	u_int		  zoom;		/* Zoom (%) */
-	int		  ssx, ssy;	/* Soft scrolling offsets */
-	u_int		  tilesz;	/* Tile size */
-	int		  cur_layer;	/* Layer being edited */
-	
+	pthread_mutex_t lock;
+	u_int mapw, maph;		/* Map geometry */
+	u_int zoom;			/* Zoom (%) */
+	int ssx, ssy;			/* Soft scrolling offsets */
+	u_int tilesz;			/* Tile size */
+	int cur_layer;			/* Layer being edited */
 	struct {
-		int	  x, y;		/* Origin coordinates */
-		int	  layer;	/* Default sprite layer */
+		int x, y;		/* Origin coordinates */
+		int layer;		/* Default sprite layer */
 	} origin;
-
-	struct node	**map;		/* Arrays of nodes */
-	int		  redraw;	/* Redraw (for tile-based mode) */
+	struct node **map;		/* Arrays of nodes */
+	int redraw;			/* Redraw (for tile-based mode) */
 
 	struct map_layer *layers;	/* Layer descriptions */
-	Uint32		 nlayers;
+	u_int		 nlayers;
+
+	struct map_camera *cameras;	/* Views */
+	u_int		  ncameras;
 };
 
 __BEGIN_DECLS
@@ -150,11 +172,14 @@ void	 map_set_zoom(struct map *, u_int);
 int	 map_push_layer(struct map *, const char *);
 void	 map_pop_layer(struct map *);
 void	 map_init_layer(struct map_layer *, const char *);
+void	 map_init_camera(struct map_camera *, const char *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);
 __inline__ void	 noderef_set_motion(struct noderef *, int, int);
 __inline__ void	 noderef_set_friction(struct noderef *, int);
+__inline__ void	 noderef_set_layer(struct noderef *, int);
+
 void	 	 noderef_destroy(struct map *, struct noderef *);
 int		 noderef_load(struct map *, struct netbuf *, struct node *,
 			      struct noderef **);
