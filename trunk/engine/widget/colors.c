@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.13 2005/06/06 07:17:01 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.14 2005/06/10 02:05:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -101,7 +101,7 @@ const char *colors_names[] = {
 	N_("HSV Palette bar #1"),
 	N_("HSV Palette bar #2"),
 	N_("Pane"),
-	N_("Pane (moving)")
+	N_("Pane (little circle)")
 };
 
 void
@@ -172,7 +172,7 @@ colors_init(void)
 	colors[HSVPAL_BAR1_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
 	colors[HSVPAL_BAR2_COLOR] = SDL_MapRGBA(vfmt, 240, 240, 240, 0);
 	colors[PANE_COLOR] = SDL_MapRGBA(vfmt, 100, 100, 100, 0);
-	colors[PANE_MOVING_COLOR] = SDL_MapRGBA(vfmt, 150, 150, 150, 0);
+	colors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(vfmt, 170, 170, 170, 0);
 
 	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
 	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);

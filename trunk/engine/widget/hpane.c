@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.1 2005/06/10 02:02:47 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.2 2005/06/13 05:59:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -175,16 +175,14 @@ hpane_draw(void *p)
 	struct widget *wid;
 	struct hpane_div *div;
 	Uint32 c;
+	int y = WIDGET(pa)->h >> 1;
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		if (div->moving) {
-			c = COLOR(PANE_MOVING_COLOR);
-		} else {
-			c = COLOR(PANE_COLOR);
-		}
-		primitives.vline(pa, div->x-1, 0, WIDGET(pa)->h, c);
-		primitives.vline(pa, div->x+0, 0, WIDGET(pa)->h, c);
-		primitives.vline(pa, div->x+1, 0, WIDGET(pa)->h, c);
+		primitives.box(pa, div->x-3, 0, 7, WIDGET(pa)->h,
+		    div->moving ? -1 : 1, COLOR(PANE_COLOR));
+		widget_put_pixel(pa, div->x, y, COLOR(PANE_CIRCLE_COLOR));
+		widget_put_pixel(pa, div->x, y - 5, COLOR(PANE_CIRCLE_COLOR));
+		widget_put_pixel(pa, div->x, y + 5, COLOR(PANE_CIRCLE_COLOR));
 	}
 }
 

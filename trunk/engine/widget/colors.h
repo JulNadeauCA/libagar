@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.3 2005/05/31 04:01:18 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.4 2005/06/10 02:05:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -71,7 +71,7 @@ enum {
 	HSVPAL_BAR1_COLOR,
 	HSVPAL_BAR2_COLOR,
 	PANE_COLOR,
-	PANE_MOVING_COLOR,
+	PANE_CIRCLE_COLOR,
 	LAST_COLOR
 };
 
