@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.4 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.5 2005/05/26 06:43:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -74,7 +74,10 @@ mousebuttondown(int argc, union evarg *argv)
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 			SDL_Surface *label = WIDGET_SURFACE(nb,tab->label);
-	
+
+			if (tx+label->w+SPACING*2 > WIDGET(nb)->w)
+				break;
+
 			if (x >= tx && x < tx+(label->w + SPACING*2)) {
 				notebook_select_tab(nb, tab);
 				break;
@@ -134,6 +137,10 @@ notebook_draw(void *p)
 		box.y = y;
 		box.w = WIDGET_SURFACE(nb,tab->label)->w + SPACING*2;
 		box.h = nb->bar_h - SPACING;
+
+		if (box.x+box.w > WIDGET(nb)->w)
+			break;
+
 		primitives.box_chamfered(nb, &box,
 		    nb->sel_tab==tab ? -1 : 1, nb->tab_rad,
 		    nb->sel_tab==tab ?
@@ -195,7 +202,7 @@ notebook_add_tab(struct notebook *nb, const char *label, enum box_type btype)
 	tab = Malloc(sizeof(struct notebook_tab), M_OBJECT);
 	box_init((struct box *)tab, btype, BOX_WFILL|BOX_HFILL);
 	tab->label = widget_map_surface(nb,
-	    text_render(NULL, -1, COLOR(NOTEBOOK_TXT_COLOR), label));
+	    text_render(NULL, 9, COLOR(NOTEBOOK_TXT_COLOR), label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	if (TAILQ_FIRST(&nb->tabs) == tab) {
 		notebook_select_tab(nb, tab);
