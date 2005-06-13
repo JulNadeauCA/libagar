@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.5 2005/05/26 06:43:12 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.1 2005/06/10 02:02:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -69,6 +69,12 @@ hpane_add_div(struct hpane *pa, enum box_type b1type, int b1flags,
 	div->x = 0;
 	div->box1 = box_new(pa, b1type, b1flags);
 	div->box2 = box_new(pa, b2type, b2flags);
+
+	box_set_padding(div->box1, 0);
+	box_set_padding(div->box2, 0);
+	box_set_spacing(div->box1, 0);
+	box_set_spacing(div->box2, 0);
+
 	TAILQ_INSERT_TAIL(&pa->divs, div, divs);
 	return (div);
 }
@@ -129,7 +135,7 @@ mousemotion(int argc, union evarg *argv)
 		}
 	}
 	TAILQ_FOREACH(div, &pa->divs, divs)
-		div->x = WIDGET(div->box2)->x;
+		div->x = WIDGET(div->box2)->x - 5;
 }
 
 static void
@@ -151,6 +157,8 @@ hpane_init(struct hpane *pa, int flags)
 	if (flags & HPANE_HFILL) boxflags |= BOX_HFILL;
 
 	box_init(&pa->box, BOX_HORIZ, boxflags);
+	box_set_padding(&pa->box, 0);
+	box_set_spacing(&pa->box, 0);
 	WIDGET(pa)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 	object_set_ops(pa, &hpane_ops);
 	TAILQ_INIT(&pa->divs);
@@ -185,8 +193,24 @@ hpane_scale(void *p, int w, int h)
 {
 	struct hpane *pa = p;
 	struct hpane_div *div;
+	struct widget *wid;
+
+	OBJECT_FOREACH_CHILD(wid, pa, widget)
+		WIDGET_OPS(wid)->scale(wid, w, h);
 
 	box_scale(pa, w, h);
-	TAILQ_FOREACH(div, &pa->divs, divs)
-		div->x = WIDGET(div->box2)->x;
+
+	TAILQ_FOREACH(div, &pa->divs, divs) {
+		WIDGET(div->box1)->w -= 5;
+		WIDGET(div->box2)->x += 5;
+		WIDGET(div->box2)->w -= 5;
+		WIDGET_OPS(div->box1)->scale(div->box1,
+		    WIDGET(div->box1)->w,
+		    WIDGET(div->box1)->h);
+		WIDGET_OPS(div->box2)->scale(div->box2,
+		    WIDGET(div->box2)->w,
+		    WIDGET(div->box2)->h);
+
+		div->x = WIDGET(div->box2)->x - 5;
+	}
 }
