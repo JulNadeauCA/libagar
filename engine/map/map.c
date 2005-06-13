@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.14 2005/06/11 11:19:29 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.15 2005/06/12 15:10:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/notebook.h>
-#include <engine/widget/separator.h>
+#include <engine/widget/scrollbar.h>
 #include <engine/widget/hpane.h>
 #endif
 
@@ -1722,8 +1722,10 @@ resize_map(int argc, union evarg *argv)
 {
 	struct mspinbutton *msb = argv[0].p;
 	struct map *m = argv[1].p;
+	struct mapview *mv = argv[2].p;
 
 	map_resize(m, msb->xvalue, msb->yvalue);
+	event_post(NULL, mv, "map-resized", NULL);
 }
 
 static void
@@ -1757,7 +1759,8 @@ edit_properties(int argc, union evarg *argv)
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
-		event_new(msb, "mspinbutton-changed", resize_map, "%p", m);
+		event_new(msb, "mspinbutton-changed", resize_map, "%p,%p",
+		    m, mv);
 	
 		msb = mspinbutton_new(bo, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
@@ -2156,6 +2159,7 @@ map_edit(void *p)
 	struct window *win;
 	struct toolbar *toolbar;
 	struct statusbar *statbar;
+	struct scrollbar *hbar, *vbar;
 	struct combo *com;
 	struct mapview *mv;
 	struct AGMenu *menu;
@@ -2303,7 +2307,6 @@ map_edit(void *p)
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			struct AGMenuItem *mi;
-			struct box *hb;
 
 			mv->layers_tl = tlist_new(ntab, TLIST_POLL);
 			tlist_set_item_height(mv->layers_tl, TILESZ);
@@ -2333,25 +2336,31 @@ map_edit(void *p)
 				    m, 1); 
 			}
 
-			hb = box_new(ntab, BOX_HORIZ, BOX_WFILL);
+			box_h = box_new(ntab, BOX_HORIZ, BOX_WFILL);
 			{
 				struct textbox *tb;
 				struct button *bu;
 
-				tb = textbox_new(hb, _("New layer: "));
+				tb = textbox_new(box_h, _("New layer: "));
 				event_new(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 
-				bu = button_new(hb, _("Push"));
+				bu = button_new(box_h, _("Push"));
 				event_new(bu, "button-pushed", push_layer,
 				    "%p, %p", m, tb);
 			}
 		}
 
-		object_attach(div->box2, mv);
+		vbar = scrollbar_new(div->box2, SCROLLBAR_VERT);
+		box_v = box_new(div->box2, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		{
+			object_attach(box_v, mv);
+			hbar = scrollbar_new(box_v, SCROLLBAR_HORIZ);
+		}
 		object_attach(div->box2, toolbar);
 	}
 
+	mapview_set_scrollbars(mv, hbar, vbar);
 	object_attach(win, statbar);
 
 	window_scale(win, -1, -1);

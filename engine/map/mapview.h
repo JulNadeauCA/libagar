@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.4 2005/06/10 06:12:00 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.5 2005/06/12 15:10:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -13,6 +13,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/toolbar.h>
 #include <engine/widget/statusbar.h>
+#include <engine/widget/scrollbar.h>
 #include <engine/widget/label.h>
 
 #include "begin_code.h"
@@ -77,6 +78,8 @@ struct mapview {
 	struct tlist *objs_tl;		/* Optional object list */
 	struct tlist *layers_tl;	/* Optional layer list */
 
+	struct scrollbar *vbar, *hbar;	/* Scrollbars (or NULL) */
+
 	struct tool *curtool;			/* Selected tool */
 	TAILQ_HEAD(, tool) tools;		/* Map edition tools */
 	SLIST_HEAD(, mapview_draw_cb) draw_cbs;	/* Post-draw callbacks */
@@ -114,6 +117,8 @@ enum mapview_prop_labels {
 
 struct node;
 
+#define MAPVIEW_CAM(mv) (mv)->map->cameras[(mv)->cam]
+
 __BEGIN_DECLS
 struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,
 		             struct statusbar *);
@@ -133,6 +138,8 @@ int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 void	 mapview_reg_draw_cb(struct mapview *,
 	                     void (*)(struct mapview *, void *), void *);
 void	 mapview_update_camera(struct mapview *);
+void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
+		                struct scrollbar *);
 
 #ifdef EDITION
 struct tool	*mapview_reg_tool(struct mapview *, const struct tool *,

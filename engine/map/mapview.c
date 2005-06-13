@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.11 2005/06/11 11:19:29 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.12 2005/06/12 15:10:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -293,6 +293,23 @@ dblclick_expired(int argc, union evarg *argv)
 	mv->dblclicked = 0;
 }
 
+static void
+scrolled_bar(int argc, union evarg *argv)
+{
+	struct scrollbar *sb = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	mapview_update_camera(mv);
+}
+
+static void
+map_resized(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+
+	mapview_update_camera(mv);
+}
+
 void
 mapview_init(struct mapview *mv, struct map *m, int flags,
     struct toolbar *toolbar, struct statusbar *statbar)
@@ -323,7 +340,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->curtool = NULL;
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
-
+	
 	mv->cx = -1;
 	mv->cy = -1;
 	mv->cxrel = 0;
@@ -357,6 +374,32 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "window-mousebuttonup", mousebuttonup, NULL);
 	event_new(mv, "detached", mapview_detached, NULL);
 	event_new(mv, "dblclick-expire", dblclick_expired, NULL);
+	event_new(mv, "map-resized", map_resized, NULL);
+}
+
+void
+mapview_set_scrollbars(struct mapview *mv, struct scrollbar *hbar,
+    struct scrollbar *vbar)
+{
+	mv->hbar = hbar;
+	mv->vbar = vbar;
+
+	if (hbar != NULL) {
+		WIDGET(hbar)->flags &= ~(WIDGET_FOCUSABLE);
+		WIDGET(hbar)->flags |= WIDGET_UNFOCUSED_MOTION;
+		widget_bind(mv->hbar, "value", WIDGET_INT,
+		    &mv->map->cameras[mv->cam].x);
+		event_new(mv->hbar, "scrollbar-changed", scrolled_bar, "%p",
+		    mv);
+	}
+	if (vbar != NULL) {
+		WIDGET(vbar)->flags &= ~(WIDGET_FOCUSABLE);
+		WIDGET(vbar)->flags |= WIDGET_UNFOCUSED_MOTION;
+		widget_bind(mv->vbar, "value", WIDGET_INT,
+		    &mv->map->cameras[mv->cam].y);
+		event_new(mv->vbar, "scrollbar-changed", scrolled_bar, "%p",
+		    mv);
+	}
 }
 
 /*
@@ -697,6 +740,18 @@ mapview_update_camera(struct mapview *mv)
 	cam = &mv->map->cameras[mv->cam];
 	xcam = cam->x;
 	ycam = cam->y;
+	
+	if (cam->x < 0) {
+		cam->x = 0;
+	} else if (cam->x >= mv->map->mapw*mv->tilesz) { 
+		cam->x = mv->map->mapw*mv->tilesz - 1;
+	}
+	if (cam->y < 0) {
+		cam->y = 0;
+	} else if (cam->y >= mv->map->maph*mv->tilesz) { 
+		cam->y = mv->map->maph*mv->tilesz - 1;
+	}
+
 
 	switch (cam->alignment) {
 	case MAP_CENTER:
@@ -730,6 +785,7 @@ mapview_update_camera(struct mapview *mv)
 		ycam -= WIDGET(mv)->h;
 		break;
 	}
+
 	pthread_mutex_unlock(&mv->map->lock);
 
 	mv->mx = xcam / mv->tilesz;
@@ -747,6 +803,17 @@ mapview_update_camera(struct mapview *mv)
 	} else {
 		mv->yoffs = -(ycam % mv->tilesz);
 	}
+	
+	if (mv->hbar != NULL) {
+		widget_set_int(mv->hbar, "min", 0);
+		widget_set_int(mv->hbar, "max", mv->map->mapw*mv->tilesz);
+		scrollbar_set_bar_size(mv->hbar, 20);
+	}
+	if (mv->vbar != NULL) {
+		widget_set_int(mv->vbar, "min", 0);
+		widget_set_int(mv->vbar, "max", mv->map->maph*mv->tilesz);
+		scrollbar_set_bar_size(mv->vbar, 20);
+	}
 }
 
 void
@@ -755,6 +822,9 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	extern int magnifier_zoom_toval;
 	int old_tilesz = mv->tilesz;
 	int x, y;
+	int old_pixw = mv->map->mapw*mv->tilesz;
+	int old_pixh = mv->map->maph*mv->tilesz;
+	int pixw, pixh;
 
 	if (zoom < ZOOM_MIN) { zoom = ZOOM_MIN; }
 	else if (zoom > ZOOM_MAX) { zoom = ZOOM_MAX; }
@@ -774,8 +844,12 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	x -= WIDGET(mv)->cx;
 	y -= WIDGET(mv)->cy;
 
-	mv->map->cameras[mv->cam].x -= (old_tilesz - mv->tilesz)*4;
-	mv->map->cameras[mv->cam].y -= (old_tilesz - mv->tilesz)*4;
+	pixw = mv->map->mapw*mv->tilesz;
+	pixh = mv->map->maph*mv->tilesz;
+
+//	MAPVIEW_CAM(mv).x = MAPVIEW_CAM(mv).x * pixw / old_pixw;
+//	MAPVIEW_CAM(mv).y = MAPVIEW_CAM(mv).y * pixh / old_pixw;
+
 	mapview_update_camera(mv);
 }
 
@@ -838,14 +912,15 @@ mousebuttondown(int argc, union evarg *argv)
 	widget_focus(mv);
 
 	switch (button) {
-	case SDL_BUTTON_RIGHT:
+	case SDL_BUTTON_MIDDLE:
+		/* TODO menu */
 		if ((mv->flags & MAPVIEW_EDIT) == 0 ||
 		    mv->curtool == NULL) {
 		    	mv->mouse.scrolling++;
 			break;
 		}
 		break;
-	case SDL_BUTTON_MIDDLE:
+	case SDL_BUTTON_RIGHT:
 		mv->mouse.scrolling++;
 		return;
 	case SDL_BUTTON_WHEELDOWN:
@@ -1156,9 +1231,32 @@ mapview_scale(void *p, int rw, int rh)
 	if (rw == -1 && rh == -1) {
 		WIDGET(mv)->w = mv->prew*TILESZ;
 		WIDGET(mv)->h = mv->preh*TILESZ;
+		if (mv->hbar != NULL) {
+			WIDGET_OPS(mv->hbar)->scale(mv->hbar, -1, -1);
+		}
+		if (mv->vbar != NULL) {
+			WIDGET_OPS(mv->vbar)->scale(mv->vbar, -1, -1);
+		}
 		return;
 	}
 
+	if (mv->hbar != NULL) {
+		WIDGET(mv->hbar)->x = 0;
+		WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->button_size;
+		WIDGET(mv->hbar)->w = WIDGET(mv)->w;
+		WIDGET(mv->hbar)->h = mv->hbar->button_size;
+		widget_scale(mv->hbar, WIDGET(mv->hbar)->w,
+		   WIDGET(mv->hbar)->h);
+	}
+	if (mv->vbar != NULL) {
+		WIDGET(mv->vbar)->x = 0;
+		WIDGET(mv->vbar)->y = 0;
+		WIDGET(mv->vbar)->w = mv->vbar->button_size;
+		WIDGET(mv->vbar)->h = WIDGET(mv)->h;
+		widget_scale(mv->vbar, WIDGET(mv->vbar)->w,
+		    WIDGET(mv->vbar)->h);
+	}
+	
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_set_scale(mv, mv->zoom);
 	if (mv->flags & MAPVIEW_CENTER) {
