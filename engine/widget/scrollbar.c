@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.45 2005/04/19 01:54:46 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.46 2005/04/19 02:21:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -201,8 +201,9 @@ scrollbar_scale(void *p, int rw, int rh)
 
 	switch (sb->type) {
 	case SCROLLBAR_HORIZ:
-		if (rw == -1)
+		if (rw == -1) {
 			WIDGET(sb)->w = sb->button_size*4;
+		}
 		if (rh == -1) {
 			WIDGET(sb)->h = sb->button_size;
 		} else {
