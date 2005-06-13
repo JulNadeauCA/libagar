@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -66,6 +66,8 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 	if ((state & SDL_BUTTON(1)) == 0)
 		return;
 
+	mv->flags |= MAPVIEW_GRID;
+
 	if (xrel < 0 && --w < 1) {
 		w = 1;
 	} else if (xrel > 0 && ++w > MAP_MAX_WIDTH) {
@@ -93,6 +95,7 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 	if (w != m->mapw || h != m->maph) {
 		mv->esel.set = 0;
 		map_resize(m, w, h);
+		event_post(NULL, mv, "map-resized", NULL);
 	}
 }
 
