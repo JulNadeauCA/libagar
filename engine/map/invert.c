@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,34 +35,13 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void invert_init(struct tool *);
-static void invert_effect(struct tool *, struct node *);
-
-const struct tool invert_tool = {
-	N_("Color Inversion"),
-	N_("Invert the color of a tile."),
-	INVERT_TOOL_ICON,
-	INVERT_TOOL_ICON,
-	invert_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	invert_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
 static void
 invert_init(struct tool *t)
 {
 	tool_push_status(t, _("Specify the tile to invert."));
 }
 
-static void
+static int
 invert_effect(struct tool *t, struct node *n)
 {
 	struct map *m = t->mv->map;
@@ -91,6 +70,25 @@ invert_effect(struct tool *t, struct node *n)
 		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
 		break;
 	}
+	return (1);
 }
+
+const struct tool invert_tool = {
+	N_("Color Inversion"),
+	N_("Invert the color of a tile."),
+	INVERT_TOOL_ICON,
+	INVERT_TOOL_ICON,
+	invert_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	invert_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

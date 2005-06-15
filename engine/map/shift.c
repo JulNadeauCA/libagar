@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.3 2005/05/08 11:09:21 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.4 2005/05/08 11:13:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,28 +39,6 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void shift_init(struct tool *);
-static void shift_mousemotion(struct tool *, int, int, int, int, int, int,
-                              int, int, int);
-
-const struct tool shift_tool = {
-	N_("Shift tool"),
-	N_("Displace a tile with the mouse."),
-	SHIFT_TOOL_ICON,
-	-1,
-	shift_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	shift_mousemotion,
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
 static enum shift_mode {
 	SHIFT_HIGHEST,			/* Highest reference */
 	SHIFT_ALL			/* All references on layer */
@@ -94,7 +72,7 @@ shift_init(struct tool *t)
 	}
 }
 
-void
+static int
 shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
     int yo, int xorel, int yorel, int b)
 {
@@ -110,11 +88,11 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= m->mapw ||
 		    sely < 0 || sely >= m->maph)
-			return;
+			return (1);
 	}
 
 	if ((mouse_get_state(NULL, NULL) & SDL_BUTTON(1)) == 0)
-		return;
+		return (1);
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
@@ -134,6 +112,25 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 			}
 		}
 	}
+	return (1);
 }
+
+const struct tool shift_tool = {
+	N_("Shift tool"),
+	N_("Displace a tile with the mouse."),
+	SHIFT_TOOL_ICON,
+	-1,
+	shift_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	shift_mousemotion,
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

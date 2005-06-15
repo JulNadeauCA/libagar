@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.4 2005/06/08 06:28:32 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.5 2005/06/12 15:10:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -49,13 +49,14 @@ struct noderef {
 	enum noderef_type type;		/* Type of element */
 	
 	Uint8 flags;
-#define NODEREF_WALK	0x01		/* Surface is walkable */
-#define NODEREF_CLIMB	0x02		/* Surface is climbable */
-#define NODEREF_SLIP	0x04		/* Surface is slippery */
-#define NODEREF_BIO	0x08		/* Contact induces Poison */
-#define NODEREF_REGEN	0x10		/* Contact induces Regen */
-#define NODEREF_NOSAVE	0x20		/* Non persistent */
-#define NODEREF_NOSCALE	0x40		/* Don't scale pixmaps (ie. vg) */
+#define NODEREF_WALK		0x01		/* Surface is walkable */
+#define NODEREF_CLIMB		0x02		/* Surface is climbable */
+#define NODEREF_SLIP		0x04		/* Surface is slippery */
+#define NODEREF_BIO		0x08		/* Contact induces Poison */
+#define NODEREF_REGEN		0x10		/* Contact induces Regen */
+#define NODEREF_NOSAVE		0x20		/* Non persistent */
+#define NODEREF_MOUSEOVER	0x40		/* Mouse overlap (for editor) */
+#define NODEREF_SELECTED	0x80		/* Selection (for editor) */
 
 	Sint8 friction;		/* Coefficient of acceleration or friction */
 	Uint8 layer;		/* Associated layer */
@@ -207,6 +208,7 @@ void		 node_movedown_ref(struct node *, struct noderef *);
 void		 node_movetail_ref(struct node *, struct noderef *);
 void		 node_movehead_ref(struct node *, struct noderef *);
 void		 node_remove_ref(struct map *, struct node *, struct noderef *);
+void		 node_swap_layers(struct map *, struct node *, int, int);
 
 struct noderef	*node_add_sprite(struct map *, struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32,

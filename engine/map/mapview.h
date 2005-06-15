@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.5 2005/06/12 15:10:31 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.6 2005/06/13 07:24:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -45,12 +45,14 @@ struct mapview {
 		int x, y;
 	} mouse;
 	struct {			/* Temporary mouse selection */
-		int set;
+		int set;		/* Selection is set */
 		int x, y;
 		int xoffs, yoffs;
 	} msel;
 	struct {			/* Effective map selection */
-		int set;
+		int set;		/* Selection is set */
+		int moving;		/* Nodes are being displaced */
+		struct map map;		/* Temporary copy of the nodes */
 		int x, y;
 		int w, h;
 	} esel;

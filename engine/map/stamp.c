@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.7 2005/06/08 06:28:32 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.8 2005/06/08 06:33:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ static int replace = 1;
 static int angle = 0;
 
 static void
-init(struct tool *t)
+stamp_init(struct tool *t)
 {
 	static const char *source_items[] = {
 		N_("Artwork"),
@@ -115,7 +115,7 @@ init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 	transform_rotate(r, angle);
 }
 
-static void
+static int
 stamp_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
@@ -159,6 +159,7 @@ stamp_effect(struct tool *t, struct node *n)
 			TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 		}
 	}
+	return (1);
 }
 
 static int
@@ -220,11 +221,13 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 	return (rv);
 }
 
-static void
+static int
 stamp_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 {
-	if (b == SDL_BUTTON_RIGHT)
+	if (b == SDL_BUTTON_MIDDLE)
 		angle = (angle + 90) % 360;
+	
+	return (1);
 }
 
 const struct tool stamp_tool = {
@@ -232,7 +235,7 @@ const struct tool stamp_tool = {
 	N_("Insert the contents of the copy/paste buffer."),
 	STAMP_TOOL_ICON,
 	-1,
-	init,
+	stamp_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */

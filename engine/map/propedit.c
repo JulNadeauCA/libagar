@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,30 +39,9 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void propedit_init(struct tool *);
-static void propedit_effect(struct tool *, struct node *);
-
 static void set_node_mode(int, union evarg *);
 static void toggle_node_flag(int, union evarg *);
 static void toggle_origin(int, union evarg *);
-
-const struct tool propedit_tool = {
-	N_("Property editor"),
-	N_("Alter the properties of node references."),
-	PROPEDIT_ICON,
-	-1,	
-	propedit_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	propedit_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
 
 static Uint32 node_mode = 0;
 static Uint32 node_flags = 0;
@@ -289,7 +268,7 @@ set_edge(struct map *m, struct node *node, Uint32 edge)
 	}
 }
 
-static void
+static int
 propedit_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
@@ -344,6 +323,25 @@ propedit_effect(struct tool *t, struct node *n)
 			r->flags &= ~(NODEREF_WALK);
 		}
 	}
+	return (1);
 }
+
+const struct tool propedit_tool = {
+	N_("Property editor"),
+	N_("Alter the properties of node references."),
+	PROPEDIT_ICON,
+	-1,	
+	propedit_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	propedit_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

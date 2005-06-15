@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.5 2004/12/28 01:47:16 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -17,20 +17,20 @@ struct tool {
 	int icon;
 	int cursor_index;			/* Static cursor (or -1) */
 
-	void (*init)(struct tool *t);
-	void (*destroy)(struct tool *t);
-	int  (*load)(struct tool *t, struct netbuf *b);
-	int  (*save)(struct tool *t, struct netbuf *b);
-	int  (*cursor)(struct tool *t, SDL_Rect *r);
-	void (*effect)(struct tool *t, struct node *n);
-	void (*mousemotion)(struct tool *t, int x, int y, int xrel, int yrel,
-	                    int xo, int yo, int xorel, int yorel, int b);
-	void (*mousebuttondown)(struct tool *t, int x, int y, int xoff,
-	                        int yoff, int b);
-	void (*mousebuttonup)(struct tool *t, int x, int y, int xoff, int yoff,
-	                      int b);
-	void (*keydown)(struct tool *t, int ksym, int kmod);
-	void (*keyup)(struct tool *t, int ksym, int kmod);
+	void (*init)(struct tool *);
+	void (*destroy)(struct tool *);
+	int (*load)(struct tool *, struct netbuf *);
+	int (*save)(struct tool *, struct netbuf *);
+	int (*cursor)(struct tool *, SDL_Rect *);
+	int (*effect)(struct tool *, struct node *);
+	int (*mousemotion)(struct tool *, int x, int y, int xrel, int yrel,
+	                   int xo, int yo, int xorel, int yorel, int b);
+	int (*mousebuttondown)(struct tool *, int x, int y, int xoff,
+	                       int yoff, int b);
+	int (*mousebuttonup)(struct tool *, int x, int y, int xoff, int yoff,
+	                     int b);
+	void (*keydown)(struct tool *, int ksym, int kmod);
+	void (*keyup)(struct tool *, int ksym, int kmod);
 	
 	char *status[TOOL_STATUS_MAX];		/* Status message stack */
 	int nstatus;
