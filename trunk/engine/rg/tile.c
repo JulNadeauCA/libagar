@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.58 2005/06/09 02:14:05 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.59 2005/06/10 02:06:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1281,7 +1281,11 @@ edit_element(int argc, union evarg *argv)
 		}
 	}
 	close_element(tv);
-	open_element(tv, tel, pwin);
+	if (tel == NULL) {
+		text_msg(MSG_ERROR, _("No tile element is selected."));
+	} else {
+		open_element(tv, tel, pwin);
+	}
 }
 
 static void
