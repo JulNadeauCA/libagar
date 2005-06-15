@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,8 +33,29 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void eraser_init(struct tool *);
-static void eraser_effect(struct tool *, struct node *);
+static void
+eraser_init(struct tool *t)
+{
+	tool_push_status(t, _("Specify the tile to delete."));
+}
+
+static int
+eraser_effect(struct tool *t, struct node *n)
+{
+	struct map *m = t->mv->map;
+	struct noderef *nref;
+	
+	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
+		if (nref->layer != m->cur_layer)
+			continue;
+
+		TAILQ_REMOVE(&n->nrefs, nref, nrefs);
+		noderef_destroy(m, nref);
+		Free(nref, M_MAP_NODEREF);
+		break;
+	}
+	return (1);
+}
 
 const struct tool eraser_tool = {
 	N_("Eraser"),
@@ -54,27 +75,5 @@ const struct tool eraser_tool = {
 	NULL			/* keyup */
 };
 
-static void
-eraser_init(struct tool *t)
-{
-	tool_push_status(t, _("Specify the tile to delete."));
-}
-
-static void
-eraser_effect(struct tool *t, struct node *n)
-{
-	struct map *m = t->mv->map;
-	struct noderef *nref;
-	
-	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
-		if (nref->layer != m->cur_layer)
-			continue;
-
-		TAILQ_REMOVE(&n->nrefs, nref, nrefs);
-		noderef_destroy(m, nref);
-		Free(nref, M_MAP_NODEREF);
-		break;
-	}
-}
 
 #endif /* MAP */

@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,26 +33,6 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void select_init(struct tool *);
-
-const struct tool select_tool = {
-	N_("Selection"),
-	N_("Select a rectangle of nodes."),
-	SELECT_TOOL_ICON,
-	SELECT_CURSORBMP,
-	select_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
 /* Copy the selection to the copy buffer. */
 static void
 select_copy(struct tool *t, int state)
@@ -70,8 +50,9 @@ select_copy(struct tool *t, int state)
 	dprintf("copy [%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
 	    mv->esel.h);
 
-	if (copybuf->map != NULL)
+	if (copybuf->map != NULL) {
 		map_free_nodes(copybuf);
+	}
 	if (map_alloc_nodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
 		return;
@@ -172,5 +153,23 @@ select_init(struct tool *t)
 	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut, 1);
 	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
+
+const struct tool select_tool = {
+	N_("Selection"),
+	N_("Select a rectangle of nodes."),
+	SELECT_TOOL_ICON,
+	SELECT_CURSORBMP,
+	select_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

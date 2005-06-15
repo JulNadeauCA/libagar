@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.2 2005/04/16 05:52:27 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.3 2005/05/08 02:10:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -111,7 +111,7 @@ flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 }
 #else
 
-static void
+static int
 flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 {
 	struct mapview *mv = t->mv;
@@ -126,7 +126,7 @@ flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= m->mapw ||
 		    sely < 0 || sely >= m->maph)
-			return;
+			return (0);
 	}
 
 	for (y = sely; y < sely+h; y++) {
@@ -146,6 +146,7 @@ flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 			}
 		}
 	}
+	return (1);
 }
 
 #endif

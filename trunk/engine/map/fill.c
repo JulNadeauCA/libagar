@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.3 2005/06/12 07:40:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,27 +41,6 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void fill_init(struct tool *);
-static void fill_effect(struct tool *, struct node *);
-
-const struct tool fill_tool = {
-	N_("Clear/Fill"),
-	N_("Clear or fill the whole layer/selection."),
-	FILL_TOOL_ICON,
-	FILL_CURSORBMP,
-	fill_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	fill_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
 static enum fill_mode {
 	FILL_FROM_CLIPBRD,
 	FILL_FROM_ART,
@@ -91,7 +70,7 @@ fill_init(struct tool *t)
 	widget_bind(cb, "state", WIDGET_BOOL, &randomize_angle);
 }
 
-static void
+static int
 fill_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
@@ -112,7 +91,7 @@ fill_effect(struct tool *t, struct node *n)
 	case FILL_FROM_CLIPBRD:
 		if (copybuf->mapw == 0 || copybuf->maph == 0) {
 			text_msg(MSG_ERROR, _("The clipboard is empty."));
-			return;
+			return (1);
 		}
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
@@ -195,6 +174,25 @@ fill_effect(struct tool *t, struct node *n)
 		}
 		break;
 	}
+	return (1);
 }
+
+const struct tool fill_tool = {
+	N_("Clear/Fill"),
+	N_("Clear or fill the whole layer/selection."),
+	FILL_TOOL_ICON,
+	FILL_CURSORBMP,
+	fill_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	fill_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

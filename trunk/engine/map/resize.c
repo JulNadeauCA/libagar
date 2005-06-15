@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.3 2005/06/13 07:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,28 +33,7 @@
 #include "map.h"
 #include "mapedit.h"
 
-static void resize_mousemotion(struct tool *, int, int, int, int, int, int,
-                               int, int, int);
-
-const struct tool resize_tool = {
-	N_("Resize tool"),
-	N_("Resize the node array."),
-	RESIZE_TOOL_ICON,
-	-1,
-	NULL,			/* init */
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	resize_mousemotion,
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
-static void
+static int
 resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
     int yo, int xorel, int yorel, int state)
 {
@@ -64,7 +43,7 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 	int h = m->maph;
 
 	if ((state & SDL_BUTTON(1)) == 0)
-		return;
+		return (1);
 
 	mv->flags |= MAPVIEW_GRID;
 
@@ -97,6 +76,25 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 		map_resize(m, w, h);
 		event_post(NULL, mv, "map-resized", NULL);
 	}
+	return (1);
 }
+
+const struct tool resize_tool = {
+	N_("Resize tool"),
+	N_("Resize the node array."),
+	RESIZE_TOOL_ICON,
+	-1,
+	NULL,			/* init */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	resize_mousemotion,
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

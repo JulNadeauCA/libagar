@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,27 +41,6 @@
 
 #include "map.h"
 #include "mapedit.h"
-
-static void position_tool_init(struct tool *);
-static void position_tool_effect(struct tool *, struct node *);
-
-const struct tool position_tool = {
-	N_("Position"),
-	N_("Assign unique object positions."),
-	POSITION_TOOL_ICON,
-	-1,
-	position_tool_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	position_tool_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
 
 static int center_view = 0;		/* Center view around? */
 static int pass_through = 0;		/* Ignore node movement restrictions */
@@ -194,7 +173,7 @@ position_tool_init(struct tool *t)
 	}
 }
 
-static void
+static int
 position_tool_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
@@ -203,26 +182,43 @@ position_tool_effect(struct tool *t, struct node *n)
 
 	if (ob == NULL) {
 		text_msg(MSG_ERROR, _("No object selected."));
-		return;
+		return (1);
 	}
 	if (projmap == NULL) {
 		text_msg(MSG_ERROR, _("No projection map was selected."));
-		return;
+		return (1);
 	}
 	if (position_set(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer)
 	    == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
-		return;
+		return (1);
 	}
 	position_set_projmap(ob, projmap);
 	position_set_input(ob, input_dev);
 	position_set_velvec(ob, direction, velocity);
 
 	ob->pos->flags = 0;
-	if (center_view)
-		ob->pos->flags |= POSITION_CENTER_VIEW;
-	if (pass_through)
-		ob->pos->flags |= POSITION_PASS_THROUGH;
+	if (center_view) { ob->pos->flags |= POSITION_CENTER_VIEW; }
+	if (pass_through) { ob->pos->flags |= POSITION_PASS_THROUGH; }
+	return (0);
 }
+
+const struct tool position_tool = {
+	N_("Position"),
+	N_("Assign unique object positions."),
+	POSITION_TOOL_ICON,
+	-1,
+	position_tool_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	position_tool_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP */

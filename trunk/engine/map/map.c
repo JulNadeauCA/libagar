@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.15 2005/06/12 15:10:31 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.16 2005/06/13 07:24:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -749,6 +749,20 @@ node_clear(struct map *m, struct node *node, int layer)
 	pthread_mutex_unlock(&m->lock);
 }
 
+/* Move all references from a layer to another. */
+void
+node_swap_layers(struct map *m, struct node *node, int layer1, int layer2)
+{
+	struct noderef *r;
+
+	pthread_mutex_lock(&m->lock);
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer == layer1)
+			r->layer = layer2;
+	}
+	pthread_mutex_unlock(&m->lock);
+}
+
 /*
  * Move a noderef to the upper layer.
  * The map containing the node must be locked.
@@ -814,6 +828,8 @@ map_reinit(void *p)
 		map_free_nodes(m);
 	if (m->layers != NULL)
 		map_free_layers(m);
+	if (m->cameras != NULL)
+		map_free_cameras(m);
 	
 	space_reinit(m);
 }
@@ -827,6 +843,7 @@ map_destroy(void *p)
 	pthread_mutex_destroy(&m->lock);
 #endif
 	Free(m->layers, M_MAP);
+	Free(m->cameras, M_MAP);
 
 	space_destroy(m);
 }
@@ -1622,7 +1639,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 
 draw:
 	if (!view->opengl) {
-		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
+		if (tilesz != TILESZ) {
 			int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
 			         r->r_gfx.xmotion*tilesz/TILESZ -
 				 r->r_gfx.xorigin*tilesz/TILESZ;
@@ -1650,7 +1667,7 @@ draw:
 		texcoord[2] = (GLfloat)su->w / powof2(su->w);
 		texcoord[3] = (GLfloat)su->h / powof2(su->h);
 		
-		if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
+		if (tilesz != TILESZ) {
 			rd.x = rx + r->r_gfx.xcenter*tilesz/TILESZ +
 			    r->r_gfx.xmotion*tilesz/TILESZ -
 			    r->r_gfx.xorigin*tilesz/TILESZ;

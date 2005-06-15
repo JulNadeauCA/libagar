@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.2 2005/05/11 09:59:32 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.3 2005/06/12 15:10:31 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -250,19 +250,22 @@ widget reacts to the following events:
 .Bl -tag -width 25n
 .It widget-lostfocus
 Stop any zooming in progress.
-.It window-mousebuttondown
-The right mouse button enables scrolling.
-The left mouse button invokes the current tool, if
-.Dv MAPVIEW_EDIT
-is set.
-.It window-mousebuttonup
-Stop scrolling or terminate a selection.
+.It window-mousebutton*
+Forward the mouse button event to the active tool, if any.
+If the active tool's handler routine returns != 1, the list of mouse bindings
+is searched and matches are invoked, regardless of whether the given tool is
+active or not.
+Unless the mouse binding entry has the
+.Va override
+flag set, default actions apply.
+.Pp
+The default actions include selection of node elements (left click), popup
+menu (middle click), panning (right click) and zooming (wheel up/down).
 .It window-mousemotion
-If the right mouse button is held, pan the view.
-If a mouse selection is in progress, adjust the position relative to
+Scroll the view if panning is in progress.
+If a rectangular selection is in progress, adjust the position relative to
 the selection origin.
-In edition mode, call current tool if the left mouse button is held,
-or adjust the centering if the middle mouse button is held.
+In edition mode, call current tool if the left mouse button is held.
 .It window-keydown
 The default key bindings are:
 .Bl -tag -width "SDLK_EQUALS " -compact

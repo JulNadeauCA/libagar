@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.3 2005/05/24 08:15:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,37 +50,12 @@ const struct version merge_ver = {
 	6, 0
 };
 
-static void merge_init(struct tool *);
-static void merge_destroy(struct tool *);
-static int merge_load(struct tool *, struct netbuf *);
-static int merge_save(struct tool *, struct netbuf *);
-static int merge_cursor(struct tool *, SDL_Rect *);
-static void merge_effect(struct tool *, struct node *);
-
 static void merge_create_brush(int, union evarg *);
 static void merge_edit_brush(int, union evarg *);
 static void merge_remove_brush(int, union evarg *);
 static void merge_interpolate(struct map *, struct node *,
 	                      struct noderef *, struct map *, struct node *,
 			      struct noderef *);
-
-const struct tool merge_tool = {
-	N_("Merge tool"),
-	N_("Apply patterns, interpolating edge tiles."),
-	MERGE_TOOL_ICON,
-	-1,
-	merge_init,
-	merge_destroy,
-	merge_load,
-	merge_save,
-	merge_cursor,
-	merge_effect,
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
 
 static TAILQ_HEAD(, object) brushes = TAILQ_HEAD_INITIALIZER(brushes);
 static struct tlist *brushes_tl;
@@ -322,7 +297,7 @@ merge_interpolate(struct map *sm, struct node *sn, struct noderef *sr,
 	}
 }
 
-static void
+static int
 merge_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
@@ -331,7 +306,7 @@ merge_effect(struct tool *t, struct node *n)
 	
 	/* Avoid circular references. XXX ugly */
 	if (strncmp(OBJECT(m)->name, "brush(", 6) == 0)
-		return;
+		return (1);
 	
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
 		struct map *sm;
@@ -360,6 +335,7 @@ merge_effect(struct tool *t, struct node *n)
 			}
 		}
 	}
+	return (1);
 }
 
 static int
@@ -453,4 +429,23 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 	}
 	return (rv);
 }
+
+const struct tool merge_tool = {
+	N_("Merge tool"),
+	N_("Apply patterns, interpolating edge tiles."),
+	MERGE_TOOL_ICON,
+	-1,
+	merge_init,
+	merge_destroy,
+	merge_load,
+	merge_save,
+	merge_cursor,
+	merge_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+
 #endif /* MAP */

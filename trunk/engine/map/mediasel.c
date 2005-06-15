@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.2 2005/04/18 03:38:34 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.3 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -49,32 +49,13 @@
 #include <string.h>
 #include <unistd.h>
 
-static void mediasel_scan_dens(struct combo *, const char *, const char *);
-static void mediasel_refresh(struct map *, int, struct combo *);
-static void mediasel_init(struct tool *);
-
-const struct tool mediasel_tool = {
-	N_("Media selector"),
-	N_("Import graphics or audio into the map."),
-	MEDIASEL_ICON,
-	-1,
-	mediasel_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
 enum {
 	MEDIASEL_GFX,
 	MEDIASEL_AUDIO
 };
+
+static void mediasel_scan_dens(struct combo *, const char *, const char *);
+static void mediasel_refresh(struct map *, int, struct combo *);
 
 static void
 refresh_media(int argc, union evarg *argv)
@@ -555,5 +536,23 @@ mediasel_init(struct tool *t)
 		}
 	}
 }
+
+const struct tool mediasel_tool = {
+	N_("Media selector"),
+	N_("Import graphics or audio into the map."),
+	MEDIASEL_ICON,
+	-1,
+	mediasel_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 #endif /* MAP and EDITION */
