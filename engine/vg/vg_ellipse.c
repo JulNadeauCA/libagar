@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.14 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.15 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -117,7 +117,7 @@ ellipse_tool_init(struct tool *t)
 	tool_push_status(t, _("Specify the ellipse's center point."));
 }
 
-static void
+static int
 ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -146,9 +146,10 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
 	vg->redraw++;
+	return (1);
 }
 
-static void
+static int
 ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -177,11 +178,11 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		}
 		goto finish;
 	}
-	return;
 finish:
 	cur_ellipse = NULL;
 	seq = 0;
 	tool_pop_status(t);
+	return (1);
 }
 
 struct tool vg_ellipse_tool = {

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.22 2005/06/05 02:51:25 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.23 2005/06/07 02:42:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -395,7 +395,7 @@ line_tool_init(struct tool *t)
 	cur_vtx = NULL;
 }
 
-static void
+static int
 line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -411,9 +411,10 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 		cur_vtx->y = y;
 		vg->redraw++;
 	}
+	return (1);
 }
 
-static void
+static int
 line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -479,12 +480,13 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	default:
 		break;
 	}
-	return;
+	return (1);
 finish:
 	cur_line = NULL;
 	cur_vtx = NULL;
 	seq = 0;
 	tool_pop_status(t);
+	return (1);
 }
 
 struct tool vg_line_tool = {
