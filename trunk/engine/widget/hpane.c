@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.2 2005/06/13 05:59:50 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.3 2005/06/13 06:19:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ mousebuttondown(int argc, union evarg *argv)
 	struct hpane_div *div;
 	
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		if (x > div->x-2 && x < div->x+2) {
+		if (x > div->x-4 && x < div->x+4) {
 			div->moving = 1;
 		} else {
 			div->moving = 0;
