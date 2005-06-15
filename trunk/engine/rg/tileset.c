@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.42 2005/06/08 06:24:55 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.43 2005/06/09 02:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ tileset_init(void *obj, const char *name)
 	 * Tilesets must be resident for the tiles to show up in the source
 	 * artwork list of the map editor.
 	 */
-	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT;
+	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD;
 
 	pthread_mutex_init(&ts->lock, &recursive_mutexattr);
 	TAILQ_INIT(&ts->tiles);
