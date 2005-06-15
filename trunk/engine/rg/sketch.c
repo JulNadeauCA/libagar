@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.21 2005/06/07 02:49:05 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.22 2005/06/07 06:49:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -593,74 +593,6 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 				}
 			}
 			vg->redraw++;
-		}
-	}
-}
-
-/* Evaluate the intersection between two rectangles. */
-int
-vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
-    struct vg_rect *ixion)
-{
-	double r1xmin, r1xmax, r1ymin, r1ymax;
-	double r2xmin, r2xmax, r2ymin, r2ymax;
-	double ixw, ixh;
-
-	r1xmin = r1->x;
-	r1ymin = r1->y;
-	r1xmax = r1->x+r1->w;
-	r1ymax = r1->y+r1->h;
-
-	r2xmin = r2->x;
-	r2ymin = r2->y;
-	r2xmax = r2->x+r2->w;
-	r2ymax = r2->y+r2->h;
-
-	if (r2xmin > r1xmin)
-		r1xmin = r2xmin;
-	if (r2ymin > r1ymin)
-		r1ymin = r2ymin;
-
-	if (r2xmax < r1xmax)
-		r1xmax = r2xmax;
-	if (r2ymax < r1ymax)
-		r1ymax = r2ymax;
-	
-	ixw = r1xmax - (r1xmin > 0 ? r1xmax-r1xmin : 0);
-	ixh = r1ymax - (r1ymin > 0 ? r1ymax-r1ymin : 0);
-	if (ixion != NULL) {
-		ixion->x = r1xmin;
-		ixion->y = r1ymin;
-		ixion->w = ixw;
-		ixion->h = ixh;
-	}
-	return (ixw > 0 && ixh > 0);
-}
-
-/*
- * Rasterize an element as well as other overlapping elements.
- * The vg must be locked.
- */
-void
-vg_rasterize_element(struct vg *vg, struct vg_element *vge)
-{
-	struct vg_element *ovge;
-	struct vg_rect r1, r2;
-
-	if (!vge->drawn) {
-		vge->ops->draw(vg, vge);
-		vge->drawn = 1;
-	}
-	if (vge->ops->bbox != NULL) {
-		vge->ops->bbox(vg, vge, &r1);
-		TAILQ_FOREACH(ovge, &vg->vges, vges) {
-			if (ovge->drawn || ovge == vge ||
-			    ovge->ops->bbox == NULL) {
-				continue;
-			}
-			ovge->ops->bbox(vg, ovge, &r2);
-			if (vg_rcollision(vg, &r1, &r2, NULL))
-				vg_rasterize_element(vg, ovge);
 		}
 	}
 }
