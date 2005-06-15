@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.19 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.20 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ circle_tool_init(struct tool *t)
 	cur_radius = NULL;
 }
 
-static void
+static int
 circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -135,9 +135,10 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	}
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
+	return (1);
 }
 
-static void
+static int
 circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -165,12 +166,12 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		}
 		goto finish;
 	}
-	return;
 finish:
 	cur_circle = NULL;
 	cur_radius = NULL;
 	seq = 0;
 	tool_pop_status(t);
+	return (1);
 }
 
 struct tool vg_circle_tool = {

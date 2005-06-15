@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.17 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.18 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ point_tool_init(struct tool *t)
 	tool_push_status(t, _("Specify the point location."));
 }
 
-static void
+static int
 point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -108,9 +108,10 @@ point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vg->origin[1].x,
 	    &vg->origin[1].y);
 	vg->redraw++;
+	return (1);
 }
 
-static void
+static int
 point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -121,6 +122,7 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 	vg_vertex2(vg, vx, vy);
 	vg_end_element(vg);
+	return (1);
 }
 
 struct tool vg_point_tool = {

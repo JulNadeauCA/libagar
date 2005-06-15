@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.15 2005/06/04 04:48:45 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.16 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -465,7 +465,7 @@ text_tool_init(struct tool *t)
 	tool_push_status(t, _("Specify the position of the text."));
 }
 
-static void
+static int
 text_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -486,9 +486,10 @@ text_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	}
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
+	return (1);
 }
 
-static void
+static int
 text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -512,11 +513,12 @@ text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		}
 		goto finish;
 	}
-	return;
+	return (1);
 finish:
 	cur_text = NULL;
 	cur_vtx = NULL;
 	tool_pop_status(t);
+	return (1);
 }
 
 struct tool vg_text_tool = {

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.11 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.12 2005/04/14 06:19:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -153,7 +153,7 @@ origin_tool_init(struct tool *t)
 	tool_push_status(t, _("Specify origin point."));
 }
 
-static void
+static int
 origin_mousebuttondown(struct tool *t, int tx, int ty, int txoff,
     int tyoff, int b)
 {
@@ -165,9 +165,10 @@ origin_mousebuttondown(struct tool *t, int tx, int ty, int txoff,
 		vg_origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}
+	return (1);
 }
 
-static void
+static int
 origin_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -179,6 +180,7 @@ origin_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 		vg_origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}
+	return (1);
 }
 
 struct tool vg_origin_tool = {

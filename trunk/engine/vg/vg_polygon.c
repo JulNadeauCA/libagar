@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.2 2005/06/04 04:48:45 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.3 2005/06/05 02:51:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ init_tool(struct tool *t)
 	cur_vtx = NULL;
 }
 
-static void
+static int
 line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
     int txoff, int tyoff, int txorel, int tyorel, int b)
 {
@@ -201,9 +201,10 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 		cur_vtx->y = y;
 		vg->redraw++;
 	}
+	return (1);
 }
 
-static void
+static int
 line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
     int b)
 {
@@ -239,11 +240,13 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg->redraw++;
 		}
 	}
+	return (1);
 finish:
 	cur_polygon = NULL;
 	cur_vtx = NULL;
 	seq = 0;
 	tool_pop_status(t);
+	return (1);
 }
 
 struct tool vg_polygon_tool = {
