@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.56 2005/06/07 06:50:26 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.57 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -354,6 +354,8 @@ vg_update_fragments(struct vg *vg)
 			}
 		}
 	}
+	vg->map->origin.x = vg->map->mapw>>1;
+	vg->map->origin.y = vg->map->maph>>1;
 }
 
 /*
@@ -592,9 +594,15 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 
 			color_save = vge->color;
 			SDL_GetRGB(vge->color, vg->fmt, &r, &g, &b);
-			r = MIN(r+50,255);
-			g = MIN(g+50,255);
-			b = MIN(b+50,255);
+			if (r > 200 && g > 200 && b > 200) {
+				r = 0;
+				g = 255;
+				b = 0;
+			} else {
+				r = MIN(r+50,255);
+				g = MIN(g+50,255);
+				b = MIN(b+50,255);
+			}
 			vge->color = SDL_MapRGB(vg->fmt, r, g, b);
 		}
 
