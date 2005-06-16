@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.43 2005/06/09 02:14:05 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.44 2005/06/15 07:07:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -146,10 +146,6 @@ tileset_reinit(void *obj)
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
 		nsk = TAILQ_NEXT(sk, sketches);
-#ifdef DEBUG
-		if (sk->nrefs > 0)
-			dprintf("sketch %s nrefs > 0\n", sk->name);
-#endif
 		sketch_destroy(sk);
 		Free(sk, M_RG);
 	}
@@ -232,7 +228,6 @@ tileset_load(void *obj, struct netbuf *buf)
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->sketches, sk, sketches);
-		dprintf("%s: added sketch `%s'\n", OBJECT(ts)->name, sk->name);
 	}
 
 	/* Load the pixmaps. */
@@ -247,7 +242,6 @@ tileset_load(void *obj, struct netbuf *buf)
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
-		dprintf("%s: added pixmap `%s'\n", OBJECT(ts)->name, px->name);
 	}
 
 	/* Load the features. */
