@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.3 2005/06/12 07:40:31 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -68,6 +68,8 @@ fill_init(struct tool *t)
 
 	cb = checkbox_new(win, _("Randomize angle"));
 	widget_bind(cb, "state", WIDGET_BOOL, &randomize_angle);
+	
+	tool_push_status(t, _("Click on the origin of the fill."));
 }
 
 static int
@@ -180,8 +182,8 @@ fill_effect(struct tool *t, struct node *n)
 const struct tool fill_tool = {
 	N_("Clear/Fill"),
 	N_("Clear or fill the whole layer/selection."),
-	FILL_TOOL_ICON,
-	FILL_CURSORBMP,
+	FILL_TOOL_ICON, FILL_CURSORBMP,
+	0,
 	fill_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.4 2005/05/08 11:13:48 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.5 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -118,8 +118,8 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 const struct tool shift_tool = {
 	N_("Shift tool"),
 	N_("Displace a tile with the mouse."),
-	SHIFT_TOOL_ICON,
-	-1,
+	SHIFT_TOOL_ICON, -1,
+	TOOL_HIDDEN,
 	shift_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

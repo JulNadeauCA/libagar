@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.3 2005/06/13 07:24:38 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -82,8 +82,8 @@ resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
 const struct tool resize_tool = {
 	N_("Resize tool"),
 	N_("Resize the node array."),
-	RESIZE_TOOL_ICON,
-	-1,
+	RESIZE_TOOL_ICON, -1,
+	0,
 	NULL,			/* init */
 	NULL,			/* destroy */
 	NULL,			/* load */

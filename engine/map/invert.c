@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.2 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -76,8 +76,8 @@ invert_effect(struct tool *t, struct node *n)
 const struct tool invert_tool = {
 	N_("Color Inversion"),
 	N_("Invert the color of a tile."),
-	INVERT_TOOL_ICON,
-	INVERT_TOOL_ICON,
+	INVERT_TOOL_ICON, INVERT_TOOL_ICON,
+	0,
 	invert_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

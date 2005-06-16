@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.2 2005/06/15 05:24:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -15,7 +15,9 @@ struct tool {
 	const char *name;
 	const char *desc;
 	int icon;
-	int cursor_index;			/* Static cursor (or -1) */
+	int cursor_index;		/* Static cursor (or -1) */
+	int flags;
+#define TOOL_HIDDEN	0x01		/* Don't include in toolbars/menus */
 
 	void (*init)(struct tool *);
 	void (*destroy)(struct tool *);

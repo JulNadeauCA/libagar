@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.7 2005/04/21 07:42:54 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.8 2005/05/23 01:30:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -229,14 +229,14 @@ drawing_edit(void *obj)
 			mapview_prescale(mv, 10, 8);
 			mapview_reg_draw_cb(mv, rasterize_drawing, vg);
 
-			mapview_reg_tool(mv, &vg_scale_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_grid_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_origin_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_point_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_line_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_circle_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_ellipse_tool, vg, 1);
-			mapview_reg_tool(mv, &vg_text_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_scale_tool, vg);
+			mapview_reg_tool(mv, &vg_grid_tool, vg);
+			mapview_reg_tool(mv, &vg_origin_tool, vg);
+			mapview_reg_tool(mv, &vg_point_tool, vg);
+			mapview_reg_tool(mv, &vg_line_tool, vg);
+			mapview_reg_tool(mv, &vg_circle_tool, vg);
+			mapview_reg_tool(mv, &vg_ellipse_tool, vg);
+			mapview_reg_tool(mv, &vg_text_tool, vg);
 		}
 	}
 

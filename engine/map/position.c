@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -206,8 +206,8 @@ position_tool_effect(struct tool *t, struct node *n)
 const struct tool position_tool = {
 	N_("Position"),
 	N_("Assign unique object positions."),
-	POSITION_TOOL_ICON,
-	-1,
+	POSITION_TOOL_ICON, -1,
+	TOOL_HIDDEN,
 	position_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

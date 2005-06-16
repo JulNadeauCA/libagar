@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.3 2005/05/24 08:15:08 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -432,9 +432,9 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 
 const struct tool merge_tool = {
 	N_("Merge tool"),
-	N_("Apply patterns, interpolating edge tiles."),
-	MERGE_TOOL_ICON,
-	-1,
+	N_("Merge node patterns."),
+	MERGE_TOOL_ICON, -1,
+	0,
 	merge_init,
 	merge_destroy,
 	merge_load,

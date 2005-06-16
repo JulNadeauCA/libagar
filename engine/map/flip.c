@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.3 2005/05/08 02:10:03 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -160,8 +160,8 @@ flip_cursor(struct tool *t, SDL_Rect *rd)
 const struct tool flip_tool = {
 	N_("Flip Tile"),
 	N_("Apply a flip/mirror transformation on a tile."),
-	FLIP_TOOL_ICON,
-	FLIP_TOOL_ICON,
+	FLIP_TOOL_ICON, FLIP_TOOL_ICON,
+	0,
 	flip_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
