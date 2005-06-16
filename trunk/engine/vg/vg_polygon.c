@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.3 2005/06/05 02:51:25 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.4 2005/06/15 05:25:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -252,8 +252,8 @@ finish:
 struct tool vg_polygon_tool = {
 	N_("Polygon"),
 	N_("Draw filled polygons."),
-	RG_POLYGON_ICON,
-	-1,
+	RG_POLYGON_ICON, -1,
+	0,
 	init_tool,
 	NULL,			/* destroy */
 	NULL,			/* load */

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.23 2005/06/07 02:42:29 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.24 2005/06/15 05:25:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -492,8 +492,8 @@ finish:
 struct tool vg_line_tool = {
 	N_("Lines and polylines"),
 	N_("Draw line segments, strips and loops."),
-	VGLINES_ICON,
-	-1,
+	VGLINES_ICON, -1,
+	0,
 	line_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

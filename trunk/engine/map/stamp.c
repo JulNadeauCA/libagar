@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.9 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.10 2005/06/16 03:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -234,8 +234,8 @@ stamp_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 const struct tool stamp_tool = {
 	N_("Stamp"),
 	N_("Insert the contents of the copy/paste buffer."),
-	STAMP_TOOL_ICON,
-	-1,
+	STAMP_TOOL_ICON, -1,
+	0,
 	stamp_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

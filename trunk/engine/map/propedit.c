@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -219,6 +219,8 @@ propedit_init(struct tool *t)
 			    "%i", props[i].flag);
 		}
 	}
+	
+	tool_push_status(t, _("Select one or more tiles."));
 }
 
 static void
@@ -329,8 +331,8 @@ propedit_effect(struct tool *t, struct node *n)
 const struct tool propedit_tool = {
 	N_("Property editor"),
 	N_("Alter the properties of node references."),
-	PROPEDIT_ICON,
-	-1,	
+	PROPEDIT_ICON, -1,
+	0,
 	propedit_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

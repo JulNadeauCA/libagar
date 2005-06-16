@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.3 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -540,8 +540,8 @@ mediasel_init(struct tool *t)
 const struct tool mediasel_tool = {
 	N_("Media selector"),
 	N_("Import graphics or audio into the map."),
-	MEDIASEL_ICON,
-	-1,
+	MEDIASEL_ICON, -1,
+	TOOL_HIDDEN,
 	mediasel_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.16 2005/06/13 07:24:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.17 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2208,7 +2208,7 @@ map_edit(void *p)
 	{
 		menu_action(pitem, _("Import media..."), MEDIASEL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &mediasel_tool, m, 0));
+		    mapview_reg_tool(mv, &mediasel_tool, m));
 		
 		menu_separator(pitem);
 
@@ -2257,43 +2257,43 @@ map_edit(void *p)
 
 		menu_action(pitem, _("Zoom settings..."), MAGNIFIER_CURSORBMP,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &magnifier_tool, m, 0));
+		    mapview_reg_tool(mv, &magnifier_tool, m));
 	}
 	
 	pitem = menu_add_item(menu, _("Tools"));
 	{
 		menu_action(pitem, _("Select"), SELECT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &select_tool, m, 1));
+		    mapview_reg_tool(mv, &select_tool, m));
 		menu_action(pitem, _("Stamp"), STAMP_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &stamp_tool, m, 1));
+		    mapview_reg_tool(mv, &stamp_tool, m));
 		menu_action(pitem, _("Eraser"), ERASER_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &eraser_tool, m, 1));
+		    mapview_reg_tool(mv, &eraser_tool, m));
 		menu_action(pitem, _("Resize"), RESIZE_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &resize_tool, m, 1));
+		    mapview_reg_tool(mv, &resize_tool, m));
 
 		menu_action_kb(pitem, _("Fill region"), FILL_TOOL_ICON,
 		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &fill_tool, m, 1));
+		    mapview_reg_tool(mv, &fill_tool, m));
 		menu_action(pitem, _("Apply texture"), MERGE_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &merge_tool, m, 1));
+		    mapview_reg_tool(mv, &merge_tool, m));
 		
 		menu_action(pitem, _("Entity properties"), PROPEDIT_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &propedit_tool, m, 01));
+		    mapview_reg_tool(mv, &propedit_tool, m));
 		menu_action(pitem, _("Displace sprite"), SHIFT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &shift_tool, m, 1));
+		    mapview_reg_tool(mv, &shift_tool, m));
 		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &flip_tool, m, 1));
+		    mapview_reg_tool(mv, &flip_tool, m));
 		menu_action(pitem, _("Invert sprite"), INVERT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &invert_tool, m, 1));
+		    mapview_reg_tool(mv, &invert_tool, m));
 	}
 	
 	pane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);

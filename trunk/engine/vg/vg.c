@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.55 2005/06/07 02:01:50 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.56 2005/06/07 06:50:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1646,8 +1646,8 @@ init_grid_tool(struct tool *t)
 struct tool vg_scale_tool = {
 	N_("Scale drawing"),
 	N_("Zoom in and out on the drawing."),
-	MAGNIFIER_TOOL_ICON,
-	-1,
+	MAGNIFIER_TOOL_ICON, -1,
+	TOOL_HIDDEN,
 	init_scale_tool,
 	NULL,			/* destroy */
 	NULL,			/* load */
@@ -1664,8 +1664,8 @@ struct tool vg_scale_tool = {
 struct tool vg_grid_tool = {
 	N_("Grid"),
 	N_("Toggle the grid."),
-	SNAP_GRID_ICON,
-	-1,
+	SNAP_GRID_ICON, -1,
+	TOOL_HIDDEN,
 	init_grid_tool,
 	NULL,			/* destroy */
 	NULL,			/* load */

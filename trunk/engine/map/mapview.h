@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.7 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.8 2005/06/16 02:54:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -143,15 +143,13 @@ void	 mapview_reg_draw_cb(struct mapview *,
 void	 mapview_update_camera(struct mapview *);
 void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
 		                struct scrollbar *);
+void	 mapview_status(struct mapview *, const char *, ...);
 
 #ifdef EDITION
-struct tool	*mapview_reg_tool(struct mapview *, const struct tool *,
-		                  void *, int);
-void	 	 mapview_select_tool(struct mapview *, struct tool *, void *);
-void		 mapview_selected_layer(int, union evarg *);
+struct tool *mapview_reg_tool(struct mapview *, const struct tool *, void *);
+void mapview_select_tool(struct mapview *, struct tool *, void *);
+void mapview_selected_layer(int, union evarg *);
 #endif
-
-void	 mapview_status(struct mapview *, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

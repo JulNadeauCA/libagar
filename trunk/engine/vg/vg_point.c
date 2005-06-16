@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.18 2005/06/05 02:51:25 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.19 2005/06/15 05:25:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -128,8 +128,8 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 struct tool vg_point_tool = {
 	N_("Point"),
 	N_("Trace an individual point."),
-	VGPOINTS_ICON,
-	-1,
+	VGPOINTS_ICON, -1,
+	0,
 	point_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
