@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,10 +32,162 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "select.h"
+
+/* Begin a rectangular selection of nodes. */
+void
+select_begin_nodesel(struct mapview *mv)
+{
+	mv->esel.set = 0;
+	mv->msel.set = 1;
+	mv->msel.x = mv->cx;
+	mv->msel.y = mv->cy;
+	mv->msel.xoffs = 1;
+	mv->msel.yoffs = 1;
+}
+
+/* Apply the temporary rectangular selection. */
+void
+select_end_nodesel(struct mapview *mv)
+{
+	int excess;
+
+	mv->esel.x = mv->msel.x;
+	mv->esel.y = mv->msel.y;
+	mv->esel.w = mv->msel.xoffs;
+	mv->esel.h = mv->msel.yoffs;
+
+	if (mv->msel.xoffs < 0) {
+		mv->esel.x += mv->msel.xoffs;
+		mv->esel.w = -mv->msel.xoffs;
+	}
+	if (mv->msel.yoffs < 0) {
+		mv->esel.y += mv->msel.yoffs;
+		mv->esel.h = -mv->msel.yoffs;
+	}
+
+	if ((excess = (mv->esel.x + mv->esel.w) - mv->map->mapw) > 0) {
+		if (excess < mv->esel.w)
+			mv->esel.w -= excess;
+	}
+	if ((excess = (mv->esel.y + mv->esel.h) - mv->map->maph) > 0) {
+		if (excess < mv->esel.h)
+			mv->esel.h -= excess;
+	}
+
+	if (mv->esel.x < 0) {
+		mv->esel.w += mv->esel.x;
+		mv->esel.x = 0;
+	}
+	if (mv->esel.y < 0) {
+		mv->esel.h += mv->esel.y;
+		mv->esel.y = 0;
+	}
+
+	mv->esel.set = 1;
+
+	mapview_status(mv, _("Selected area %d,%d (%dx%d)"),
+	    mv->esel.x, mv->esel.y, mv->esel.w, mv->esel.h);
+}
+
+/* Begin displacement of the node selection. */
+void
+select_begin_nodemove(struct mapview *mv)
+{
+	struct map *mSrc = mv->map;
+	struct map *mTmp = &mv->esel.map;
+	int x, y;
+
+	map_init(mTmp, "");
+
+	if (map_alloc_nodes(mTmp, mv->esel.w, mv->esel.h) == -1)
+		goto fail;
+
+	if (map_push_layer(mSrc, _("(Floating selection)")) == -1)
+		goto fail;
+
+	for (y = 0; y < mv->esel.h; y++) {
+		for (x = 0; x < mv->esel.w; x++) {
+			struct node *nSrc = &mSrc->map[mv->esel.y+y]
+			                              [mv->esel.x+x];
+			struct node *nTmp = &mTmp->map[y][x];
+
+			node_copy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
+			node_swap_layers(mSrc, nSrc, mSrc->cur_layer,
+			    mSrc->nlayers-1);
+		}
+	}
+	
+	mv->esel.moving = 1;
+	return;
+fail:
+	map_destroy(mTmp);
+}
+
+void
+select_update_nodemove(struct mapview *mv, int xRel, int yRel)
+{
+	struct map *mDst = mv->map;
+	struct map *mTmp = &mv->esel.map;
+	int x, y;
+
+	if (mv->esel.x+xRel < 0 || mv->esel.x+mv->esel.w+xRel > mDst->mapw)
+		xRel = 0;
+	if (mv->esel.y+yRel < 0 || mv->esel.y+mv->esel.h+yRel > mDst->maph)
+		yRel = 0;
+	
+	for (y = 0; y < mv->esel.h; y++) {
+		for (x = 0; x < mv->esel.w; x++) {
+			node_clear(mDst,
+			    &mDst->map[mv->esel.y+y][mv->esel.x+x],
+			    mDst->nlayers-1);
+		}
+	}
+
+	for (y = 0; y < mv->esel.h; y++) {
+		for (x = 0; x < mv->esel.w; x++) {
+			struct node *nTmp = &mTmp->map[y][x];
+			struct node *nDst = &mDst->map[mv->esel.y+y+yRel]
+			                              [mv->esel.x+x+xRel];
+	
+			node_copy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
+		}
+	}
+	
+	mv->esel.x += xRel;
+	mv->esel.y += yRel;
+}
+
+void
+select_end_nodemove(struct mapview *mv)
+{
+	struct map *mDst = mv->map;
+	struct map *mTmp = &mv->esel.map;
+	int x, y;
+
+	for (y = 0; y < mv->esel.h; y++) {
+		for (x = 0; x < mv->esel.w; x++) {
+			struct node *node = &mDst->map[mv->esel.y+y]
+			                              [mv->esel.x+x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				if (nref->layer == mDst->nlayers-1)
+					nref->layer = mDst->cur_layer;
+			}
+		}
+	}
+	
+	map_pop_layer(mDst);
+	
+	map_reinit(mTmp);
+	map_destroy(mTmp);
+	mv->esel.moving = 0;
+}
 
 /* Copy the selection to the copy buffer. */
-static void
-select_copy(struct tool *t, int state)
+void
+select_copy_nodes(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
@@ -70,8 +222,8 @@ select_copy(struct tool *t, int state)
 	}
 }
 
-static void
-select_paste(struct tool *t, int state)
+void
+select_paste_nodes(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
@@ -110,8 +262,8 @@ select_paste(struct tool *t, int state)
 	}
 }
 
-static void
-select_kill(struct tool *t, int state)
+void
+select_kill_nodes(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -132,8 +284,8 @@ select_kill(struct tool *t, int state)
 	}
 }
 
-static void
-select_cut(struct tool *t, int state)
+void
+select_cut_nodes(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
@@ -141,24 +293,24 @@ select_cut(struct tool *t, int state)
 		text_msg(MSG_ERROR, _("There is no selection to cut."));
 		return;
 	}
-	select_copy(t, 1);
-	select_kill(t, 1);
+	select_copy_nodes(t, 1);
+	select_kill_nodes(t, 1);
 }
 
 static void
 select_init(struct tool *t)
 {
-	tool_bind_key(t, KMOD_CTRL, SDLK_c, select_copy, 0);
-	tool_bind_key(t, KMOD_CTRL, SDLK_v, select_paste, 1);
-	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut, 1);
-	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_c, select_copy_nodes, 0);
+	tool_bind_key(t, KMOD_CTRL, SDLK_v, select_paste_nodes, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut_nodes, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill_nodes, 1);
 }
 
 const struct tool select_tool = {
-	N_("Selection"),
-	N_("Select a rectangle of nodes."),
-	SELECT_TOOL_ICON,
-	SELECT_CURSORBMP,
+	N_("Node selection"),
+	N_("Select and manipulate nodes."),
+	SELECT_TOOL_ICON, SELECT_CURSORBMP,
+	TOOL_HIDDEN,
 	select_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
