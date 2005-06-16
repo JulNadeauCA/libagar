@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.254 2005/06/06 04:05:47 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.255 2005/06/06 04:16:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1056,6 +1056,12 @@ void
 window_generic_hide(int argc, union evarg *argv)
 {
 	window_hide(argv[1].p);
+}
+
+void
+window_generic_close(int argc, union evarg *argv)
+{
+	event_post(NULL, argv[1].p, "window-close", NULL);
 }
 
 void
