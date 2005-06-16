@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.10 2005/06/16 03:28:06 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.11 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -103,8 +103,8 @@ init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 
 	switch (stamp_snap_mode) {
 	case GFX_SNAP_NOT:
-		r->r_gfx.xcenter += mv->cxoffs*TILESZ/mv->tilesz;
-		r->r_gfx.ycenter += mv->cyoffs*TILESZ/mv->tilesz;
+		r->r_gfx.xcenter += mv->cxoffs*TILESZ/MV_TILESZ(mv);
+		r->r_gfx.ycenter += mv->cyoffs*TILESZ/MV_TILESZ(mv);
 		break;
 	case GFX_SNAP_TO_GRID:
 		r->r_gfx.xcenter += TILESZ/2;
@@ -181,17 +181,17 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 		}
 		for (sy = 0, dy = rd->y;
 		     sy < copybuf->maph;
-		     sy++, dy += mv->tilesz) {
+		     sy++, dy += MV_TILESZ(mv)) {
 			for (sx = 0, dx = rd->x;
 			     sx < copybuf->mapw;
-			     sx++, dx += mv->tilesz) {
+			     sx++, dx += MV_TILESZ(mv)) {
 				struct node *sn = &copybuf->map[sy][sx];
 	
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					noderef_draw(m, r,
 					    WIDGET(mv)->cx+dx,
 					    WIDGET(mv)->cy+dy,
-					    mv->tilesz);
+					    mv->cam);
 					rv = 0;
 				}
 				if (mv->flags & MAPVIEW_PROPS)
@@ -213,7 +213,7 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 			noderef_draw(m, &rtmp,
 			    WIDGET(mv)->cx + rd->x,
 			    WIDGET(mv)->cy + rd->y,
-			    mv->tilesz);
+			    mv->cam);
 			noderef_destroy(m, &rtmp);
 			rv = 0;
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.5 2005/06/12 15:10:31 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.6 2005/06/15 05:24:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -129,6 +129,8 @@ struct map_camera {
 	int flags;
 	int x, y;				/* Position of camera */
 	enum map_camera_alignment alignment;	/* View alignment */
+	u_int zoom;				/* Zoom (%) */
+	int tilesz;				/* Tile size */
 };
 
 struct map {
@@ -136,9 +138,6 @@ struct map {
 
 	pthread_mutex_t lock;
 	u_int mapw, maph;		/* Map geometry */
-	u_int zoom;			/* Zoom (%) */
-	int ssx, ssy;			/* Soft scrolling offsets */
-	u_int tilesz;			/* Tile size */
 	int cur_layer;			/* Layer being edited */
 	struct {
 		int x, y;		/* Origin coordinates */
@@ -169,11 +168,12 @@ struct window	*map_edit(void *);
 int	 map_alloc_nodes(struct map *, u_int, u_int);
 void	 map_free_nodes(struct map *);
 int	 map_resize(struct map *, u_int, u_int);
-void	 map_set_zoom(struct map *, u_int);
+void	 map_set_zoom(struct map *, int, u_int);
 int	 map_push_layer(struct map *, const char *);
 void	 map_pop_layer(struct map *);
 void	 map_init_layer(struct map_layer *, const char *);
 void	 map_init_camera(struct map_camera *, const char *);
+int	 map_add_camera(struct map *, const char *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);

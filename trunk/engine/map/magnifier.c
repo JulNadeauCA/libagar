@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.3 2005/06/16 02:54:40 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.4 2005/06/16 05:20:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@ int magnifier_zoom_inc = 8;
 static void
 update_status(struct mapview *mv)
 {
-	mapview_status(mv, _("%d%% zoom"), mv->zoom);
+	mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
 }
 
 static void
@@ -71,7 +71,7 @@ zoom_in(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc, 1);
+	mapview_set_scale(mv, MV_ZOOM(mv) + magnifier_zoom_inc, 1);
 	update_status(mv);
 }
 
@@ -80,7 +80,7 @@ zoom_out(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc, 1);
+	mapview_set_scale(mv, MV_ZOOM(mv) - magnifier_zoom_inc, 1);
 	update_status(mv);
 }
 

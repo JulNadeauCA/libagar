@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.5 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -407,17 +407,17 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 		sm = it->p1;
 		for (sy = 0, dy = rd->y;
 		     sy < sm->maph;
-		     sy++, dy += mv->tilesz) {
+		     sy++, dy += MV_TILESZ(mv)) {
 			for (sx = 0, dx = rd->x;
 			     sx < sm->mapw;
-			     sx++, dx += mv->tilesz) {
+			     sx++, dx += MV_TILESZ(mv)) {
 				struct node *sn = &sm->map[sy][sx];
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					noderef_draw(mv->map, r,
 					    WIDGET(mv)->cx + dx,
 					    WIDGET(mv)->cy + dy,
-					    mv->tilesz);
+					    mv->cam);
 					rv = 0;
 				}
 				if (mv->flags & MAPVIEW_PROPS) {

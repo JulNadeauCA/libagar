@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.8 2005/06/16 02:54:40 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.9 2005/06/16 05:20:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -35,6 +35,7 @@ struct mapview {
 #define MAPVIEW_NO_CURSOR	0x10	/* Disable the cursor */
 #define MAPVIEW_NO_BMPZOOM	0x20	/* Disable bitmap scaling */
 #define MAPVIEW_NO_BG		0x40	/* Disable background tiles */ 
+#define MAPVIEW_NO_NODESEL	0x80	/* Disable node selections */
 
 	int prop_bg;			/* Background attributes style */
 	int prop_style;			/* Foreground attributes style */
@@ -57,13 +58,8 @@ struct mapview {
 		int w, h;
 	} esel;
 
-	u_int zoom;			/* Zoom factor (%) */
-	int tilesz;			/* Display tile size (pixels) */
-	int pxsz;			/* Scaled pixel size (pixels) */
-	
 	struct map *map;		/* Map to display */
 	int cam;			/* Name of map camera to use */
-
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */
 	u_int mw, mh;			/* Display size (nodes) */
@@ -120,7 +116,9 @@ enum mapview_prop_labels {
 
 struct node;
 
-#define MAPVIEW_CAM(mv) (mv)->map->cameras[(mv)->cam]
+#define MV_CAM(mv) (mv)->map->cameras[(mv)->cam]
+#define MV_ZOOM(mv) MV_CAM(mv).zoom
+#define MV_TILESZ(mv) MV_CAM(mv).tilesz
 
 __BEGIN_DECLS
 struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,

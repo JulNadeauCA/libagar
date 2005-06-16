@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.2 2005/05/11 09:59:32 vedge Exp $
+.\"	$Csoft: map.3,v 1.3 2005/06/12 15:10:31 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -117,7 +117,7 @@ A per-element layer attribute also defines the attributed layer.
 .Fn map_adjust "struct map *map" "int x" "int y"
 .Pp
 .Ft void
-.Fn map_set_zoom "struct map *map" "u_int factor"
+.Fn map_set_zoom "struct map *map" "int camera" "u_int factor"
 .nr nS 0
 .Pp
 .Fn map_init
@@ -159,7 +159,7 @@ returns 0 on sucess or -1 on failure.
 .Pp
 The
 .Fn map_set_zoom
-function sets the zoom factor for a map.
+function sets the zoom factor for a given map view.
 Geometric entities are displayed to this scale.
 .Pp
 .Sh NODE INITIALIZATION
