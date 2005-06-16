@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.6 2005/06/13 07:24:37 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.7 2005/06/15 05:24:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -71,6 +71,7 @@ struct mapview {
 	int cx, cy;			/* Cursor position (nodes) */
 	int cxoffs, cyoffs;		/* Cursor offset (pixels) */
 	int cxrel, cyrel;		/* Displacement from last position */
+	int cxabs, cyabs;		/* Absolute cursor position (pixels) */
 	int dblclicked;			/* Double click flag */
 
 	struct toolbar *toolbar;	/* Optional toolbar */
@@ -134,7 +135,7 @@ void	 mapview_prescale(struct mapview *, int, int);
 void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
 	                    int);
 void	 mapview_center(struct mapview *, int, int);
-void	 mapview_set_scale(struct mapview *, u_int);
+void	 mapview_set_scale(struct mapview *, u_int, int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 void	 mapview_reg_draw_cb(struct mapview *,

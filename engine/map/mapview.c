@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.13 2005/06/13 07:24:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.14 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -345,6 +345,10 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->cy = -1;
 	mv->cxrel = 0;
 	mv->cyrel = 0;
+	mv->cxoffs = 0;
+	mv->cyoffs = 0;
+	mv->cxabs = 0;
+	mv->cyabs = 0;
 	mv->msel.set = 0;
 	mv->msel.x = 0;
 	mv->msel.y = 0;
@@ -410,6 +414,8 @@ get_node_coords(struct mapview *mv, int *x, int *y)
 {
 	*x -= (mv->xoffs + mv->map->ssx);
 	*y -= (mv->yoffs + mv->map->ssy);
+	mv->cxabs = *x;
+	mv->cyabs = *y;
 	
 	mv->cxoffs = *x % mv->tilesz;
 	mv->cyoffs = *y % mv->tilesz;
@@ -816,7 +822,7 @@ mapview_update_camera(struct mapview *mv)
 }
 
 void
-mapview_set_scale(struct mapview *mv, u_int zoom)
+mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 {
 	extern int magnifier_zoom_toval;
 	int old_tilesz = mv->tilesz;
@@ -846,9 +852,10 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	pixw = mv->map->mapw*mv->tilesz;
 	pixh = mv->map->maph*mv->tilesz;
 
-//	MAPVIEW_CAM(mv).x = MAPVIEW_CAM(mv).x * pixw / old_pixw;
-//	MAPVIEW_CAM(mv).y = MAPVIEW_CAM(mv).y * pixh / old_pixw;
-
+	if (adj_offs) {
+		MAPVIEW_CAM(mv).x = MAPVIEW_CAM(mv).x * pixw / old_pixw;
+		MAPVIEW_CAM(mv).y = MAPVIEW_CAM(mv).y * pixh / old_pixh;
+	}
 	mapview_update_camera(mv);
 }
 
@@ -968,7 +975,6 @@ mousemotion(int argc, union evarg *argv)
 	} else if (mv->msel.set) {
 		mv->msel.xoffs += mv->cxrel;
 		mv->msel.yoffs += mv->cyrel;
-		dprintf("rel +%d,%d -> %d,%d\n", mv->cxrel, mv->cyrel, mv->msel.xoffs, mv->msel.yoffs);
 	} else if (mv->esel.set && mv->esel.moving) {
 		move_selection(mv, mv->cxrel, mv->cyrel);
 	} else if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
@@ -1081,14 +1087,14 @@ mousebuttondown(int argc, union evarg *argv)
 		goto out;
 	case SDL_BUTTON_WHEELDOWN:
 		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
-			mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
-			mapview_status(mv, _("%d%% magnification"), mv->zoom);
+			mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc, 1);
+			mapview_status(mv, _("%d%% zoom"), mv->zoom);
 		}
 		break;
 	case SDL_BUTTON_WHEELUP:
 		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
-			mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
-			mapview_status(mv, _("%d%% magnification"), mv->zoom);
+			mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc, 1);
+			mapview_status(mv, _("%d%% zoom"), mv->zoom);
 		}
 		break;
 	}
@@ -1375,7 +1381,7 @@ mapview_scale(void *p, int rw, int rh)
 	}
 	
 	pthread_mutex_lock(&mv->map->lock);
-	mapview_set_scale(mv, mv->zoom);
+	mapview_set_scale(mv, mv->zoom, 0);
 	if (mv->flags & MAPVIEW_CENTER) {
 		mv->flags &= ~(MAPVIEW_CENTER);
 		center_to_origin(mv);
