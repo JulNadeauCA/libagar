@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.10 2005/05/12 06:58:34 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.11 2005/05/14 10:05:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -518,9 +518,19 @@ rcs_update(struct object *ob)
 	rcs_set_working_rev(ob, repo_rev);
 	text_tmsg(MSG_INFO, 1000, "%s: r#%u -> r#%u (%lu bytes)", ob->name,
 	    working_rev, repo_rev, (unsigned long)res->argv_len[0]);
-	
 	response_free(res);
 	rcs_disconnect();
+
+	/*
+	 * Load the generic part of the object since the object manager
+	 * only does a page-in.
+	 */
+	if (object_load(ob) == -1 ||
+	    object_save(ob) == -1) {
+		error_set("%s: %s", ob->name, error_get());
+		return (-1);
+	}
+
 	return (0);
 fail_res:
 	response_free(res);
@@ -701,6 +711,7 @@ rcs_checkout(const char *path)
 			object_destroy(obj);
 			goto fail;
 		}
+		object_unlink_datafiles(obj);
 		if (object_save(obj) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", name, error_get());
 		}
