@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.8 2005/06/08 06:33:12 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.9 2005/06/15 05:24:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -224,10 +224,11 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 static int
 stamp_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 {
-	if (b == SDL_BUTTON_MIDDLE)
+	if (b == SDL_BUTTON_MIDDLE) {
 		angle = (angle + 90) % 360;
-	
-	return (1);
+		return (1);
+	}
+	return (0);
 }
 
 const struct tool stamp_tool = {
