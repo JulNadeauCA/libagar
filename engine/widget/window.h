@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.89 2005/04/02 04:30:26 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.90 2005/04/04 01:05:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -106,6 +106,7 @@ void	 window_clamp(struct window *);
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
 void	 window_generic_show(int, union evarg *);
+void	 window_generic_close(int, union evarg *);
 
 int	 window_surrounded(struct window *);
 __END_DECLS

@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.46 2005/03/11 05:13:23 vedge Exp $
+.\"	$Csoft: window.3,v 1.47 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -257,17 +257,25 @@ inverts the visibility state of
 .Pp
 .Ft void
 .Fn window_generic_show "int argc" "union evarg *argv"
+.Pp
+.Ft void
+.Fn window_generic_close "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
 .Fn window_generic_detach
-event handler detaches the window given as the first argument, freeing all
-associated resources.
+event handler detaches the given window, freeing associated resources.
 .Fn window_generic_hide
-hides the window given as the first argument, if it is currently
-visible.
+hides the given window, if it is currently visible.
 .Fn window_generic_show
-shows the window given as the first argument.
+invokes
+.Fn window_show
+on the given window.
+.Fn window_generic_close
+sends an
+.Sq window-close
+event to the given window.
+A pointer to the window is passed as argument 1 to those event handlers.
 .Pp
 The
 .Fn window_set_closure
