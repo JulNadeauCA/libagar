@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.46 2005/04/19 02:21:40 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.47 2005/06/13 05:59:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -230,6 +230,10 @@ scrollbar_draw(void *p)
 	int value, min, max;
 	int w, h, x, y;
 	int maxcoord;
+
+	if (WIDGET(sb)->w < sb->button_size ||
+	    WIDGET(sb)->w < sb->button_size)
+		return;
 
 	value = widget_get_int(sb, "value");
 	min = widget_get_int(sb, "min");
