@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.17 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.18 2005/06/16 05:20:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	8, 0
+	9, 0
 };
 
 const struct object_ops map_ops = {
@@ -343,12 +343,14 @@ fail:
 
 /* Set the display scaling factor. */
 void
-map_set_zoom(struct map *m, u_int zoom)
+map_set_zoom(struct map *m, int ncam, u_int zoom)
 {
+	struct map_camera *cam = &m->cameras[ncam];
+
 	pthread_mutex_lock(&m->lock);
-	m->zoom = zoom;
-	if ((m->tilesz = m->zoom*TILESZ/100) > MAP_MAX_TILESZ) {
-		m->tilesz = MAP_MAX_TILESZ;
+	cam->zoom = zoom;
+	if ((cam->tilesz = cam->zoom*TILESZ/100) > MAP_MAX_TILESZ) {
+		cam->tilesz = MAP_MAX_TILESZ;
 	}
 	pthread_mutex_unlock(&m->lock);
 }
@@ -385,6 +387,17 @@ map_init_camera(struct map_camera *cam, const char *name)
 	cam->y = 0;
 	cam->flags = 0;
 	cam->alignment = MAP_CENTER;
+	cam->zoom = 100;
+	cam->tilesz = TILESZ;
+}
+
+int
+map_add_camera(struct map *m, const char *name)
+{
+	m->cameras = Realloc(m->cameras,
+	    (m->ncameras+1)*sizeof(struct map_camera));
+	map_init_camera(&m->cameras[m->ncameras], name);
+	return (m->ncameras++);
 }
 
 void
@@ -400,10 +413,6 @@ map_init(void *obj, const char *name)
 	m->origin.y = 0;
 	m->origin.layer = 0;
 	m->map = NULL;
-	m->tilesz = TILESZ;
-	m->zoom = 100;
-	m->ssx = 0;
-	m->ssy = 0;
 	m->cur_layer = 0;
 	m->layers = Malloc(sizeof(struct map_layer), M_MAP);
 	m->nlayers = 1;
@@ -1046,7 +1055,7 @@ int
 map_load(void *ob, struct netbuf *buf)
 {
 	struct map *m = ob;
-	Uint32 w, h, origin_x, origin_y, tilesz;
+	Uint32 w, h, origin_x, origin_y;
 	int i, x, y;
 	
 	if (version_read(buf, &map_ver, NULL) != 0)
@@ -1060,22 +1069,15 @@ map_load(void *ob, struct netbuf *buf)
 	h = read_uint32(buf);
 	origin_x = read_uint32(buf);
 	origin_y = read_uint32(buf);
-	tilesz = read_uint32(buf);
-	read_uint32(buf);
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
-	    tilesz > MAP_MAX_TILESZ ||
 	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT) {
 		error_set(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (u_int)w;
 	m->maph = (u_int)h;
-	m->tilesz = (u_int)tilesz;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
-	m->zoom = (u_int)read_uint16(buf);
-	m->ssx = (int)read_sint16(buf);
-	m->ssy = (int)read_sint16(buf);
 	
 	/* Read the layer information. */
 	if ((m->nlayers = (u_int)read_uint32(buf)) > MAP_MAX_LAYERS) {
@@ -1117,6 +1119,8 @@ map_load(void *ob, struct netbuf *buf)
 		cam->x = (int)read_sint32(buf);
 		cam->y = (int)read_sint32(buf);
 		cam->alignment = (enum map_camera_alignment)read_uint8(buf);
+		cam->zoom = (u_int)read_uint16(buf);
+		cam->tilesz = (u_int)read_uint16(buf);
 	}
 
 	/* Allocate and load the nodes. */
@@ -1248,11 +1252,6 @@ map_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)m->maph);
 	write_uint32(buf, (Uint32)m->origin.x);
 	write_uint32(buf, (Uint32)m->origin.y);
-	write_uint32(buf, (Uint32)m->tilesz);
-	write_uint32(buf, (Uint32)m->tilesz);
-	write_uint16(buf, (Uint16)m->zoom);
-	write_sint16(buf, (Sint16)m->ssx);
-	write_sint16(buf, (Sint16)m->ssy);
 
 	/* Write the layer information. */
 	write_uint32(buf, (Uint32)m->nlayers);
@@ -1278,6 +1277,8 @@ map_save(void *p, struct netbuf *buf)
 		write_sint32(buf, (Sint32)cam->x);
 		write_sint32(buf, (Sint32)cam->y);
 		write_uint8(buf, (Uint8)cam->alignment);
+		write_uint16(buf, (Uint16)cam->zoom);
+		write_uint16(buf, (Uint16)cam->tilesz);
 	}
 
 	/* Write the nodes. */
@@ -1293,11 +1294,12 @@ map_save(void *p, struct netbuf *buf)
 /* Render surface s, scaled to rx,ry pixels. */
 /* XXX efficient with shrinking but inefficient with growing. */
 static void
-blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
+blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int cam)
 {
 	int x, y, sx, sy;
 	Uint8 r1, g1, b1, a1;
 	Uint32 c;
+	int tilesz = m->cameras[cam].tilesz;
 	u_int wDst = (u_int)(s->w*tilesz/TILESZ);
 	u_int hDst = (u_int)(s->h*tilesz/TILESZ);
 	int same_fmt = view_same_pixel_fmt(s, view->v);
@@ -1583,16 +1585,17 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
  * The map must be locked.
  */
 void
-noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
+noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 {
 #if defined(DEBUG) || defined(EDITION)
 	int freesu = 0;
 #endif
-	SDL_Surface *su;
 #ifdef HAVE_OPENGL
 	u_int texture;
 	GLfloat texcoord[4];
 #endif
+	SDL_Surface *su;
+	int tilesz = m->cameras[cam].tilesz;
 
 	switch (r->type) {
 	case NODEREF_SPRITE:
@@ -1647,7 +1650,7 @@ draw:
 			         r->r_gfx.ymotion*tilesz/TILESZ -
 				 r->r_gfx.yorigin*tilesz/TILESZ;
 
-			blit_scaled(m, su, dx, dy, tilesz);
+			blit_scaled(m, su, dx, dy, cam);
 		} else {
 			SDL_Rect rd;
 
@@ -1778,6 +1781,11 @@ edit_properties(int argc, union evarg *argv)
 		msb->yvalue = m->maph;
 		event_new(msb, "mspinbutton-changed", resize_map, "%p,%p",
 		    m, mv);
+		
+		msb = mspinbutton_new(bo, ",", _("Origin: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->origin.x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->origin.y);
+		mspinbutton_set_range(msb, -MAP_MAX_WIDTH/2, MAP_MAX_WIDTH/2);
 	
 		msb = mspinbutton_new(bo, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
@@ -1786,20 +1794,20 @@ edit_properties(int argc, union evarg *argv)
 	
 		/* XXX unsafe */
 		msb = mspinbutton_new(bo, ",", _("Camera position: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->cameras[0].x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->cameras[0].y);
+		widget_bind(msb, "xvalue", WIDGET_INT, &MV_CAM(mv).x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &MV_CAM(mv).y);
+		
+		sb = spinbutton_new(bo, _("Zoom factor: "));
+		widget_bind(sb, "value", WIDGET_INT, &MV_CAM(mv).zoom);
+		
+		sb = spinbutton_new(bo, _("Tile size: "));
+		widget_bind(sb, "value", WIDGET_INT, &MV_TILESZ(mv));
 	
 		msb = mspinbutton_new(bo, ",", _("Display offset (view): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
 		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
 		
-		/* XXX unsafe */
-		msb = mspinbutton_new(bo, ",", _("Display offset (map): "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->ssx);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->ssy);
-		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
-	
 		msb = mspinbutton_new(bo, "x", _("Display area: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
@@ -1808,13 +1816,8 @@ edit_properties(int argc, union evarg *argv)
 
 	bo = box_new(win, BOX_VERT, 0);
 	{
-		label_new(bo, LABEL_POLLED_MT,
-		    _("Zoom factor: %i%% (map=%i%%)"), &m->lock,
-		    &mv->zoom, &m->zoom);
-		label_new(bo, LABEL_POLLED_MT,
-		    _("Tile size : %ux%u (map=%ux%u)"), &m->lock,
-		    &mv->tilesz, &mv->tilesz, &m->tilesz, &m->tilesz);
-		label_new(bo, LABEL_POLLED_MT, _("Edited layer: %i"), &m->lock,
+		label_new(bo, LABEL_POLLED, _("Camera: %i"), &mv->cam);
+		label_new(bo, LABEL_POLLED_MT, _("Current layer: %i"), &m->lock,
 		    &m->cur_layer);
 	}
 
@@ -2157,14 +2160,6 @@ push_layer(int argc, union evarg *argv)
 	}
 }
 
-static void
-close_map(int argc, union evarg *argv)
-{
-	struct window *win = argv[1].p;
-
-	event_post(NULL, win, "window-close", NULL);
-}
-
 struct window *
 map_edit(void *p)
 {
@@ -2192,14 +2187,11 @@ map_edit(void *p)
 	win = window_new(0, NULL);
 	window_set_caption(win, "%s", OBJECT(m)->name);
 
-	mv = Malloc(sizeof(struct mapview), M_WIDGET);
-
 	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
 	toolbar_init(toolbar, TOOLBAR_VERT, 1, 0);
-
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
-
+	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 	mapview_init(mv, m, flags, toolbar, statbar);
 	mapview_prescale(mv, 2, 2);
 
@@ -2223,7 +2215,7 @@ map_edit(void *p)
 		
 		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
-		    close_map, "%p", win);
+		    window_generic_close, "%p", win);
 	}
 	
 	pitem = menu_add_item(menu, _("Edit"));
@@ -2236,7 +2228,7 @@ map_edit(void *p)
 	{
 		extern int mapview_bg, mapview_bg_moving;
 
-		menu_action(pitem, _("Create new view..."), NEW_VIEW_ICON,
+		menu_action(pitem, _("Create view..."), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
 
 		menu_separator(pitem);

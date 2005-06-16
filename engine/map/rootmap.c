@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.1 2005/04/14 06:20:45 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,6 +60,7 @@ rootmap_animate(void)
 	struct noderef *nref;
 	int mx, my, rx, ry;
 	int layer = 0;
+	int tilesz = m->cameras[0].tilesz;
 
 #ifdef DEBUG
 	/* XXX */
@@ -73,20 +74,20 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->tilesz;		/* Downward */
+	for (my = rm->y, ry = rm->sy - tilesz;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->tilesz) {
+	     my++, ry += tilesz) {
 
-		for (mx = rm->x, rx = rm->sx - m->tilesz; 	/* Forward */
+		for (mx = rm->x, rx = rm->sx - tilesz; 	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->tilesz) {
+		     mx++, rx += tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type != NODEREF_ANIM ||
 				    nref->layer != layer) {
 					continue;
 				}
-				noderef_draw(m, nref, rx, ry, m->tilesz);
+				noderef_draw(m, nref, rx, ry, 0);
 			}
 		}
 	}
@@ -108,24 +109,24 @@ rootmap_draw(void)
 	struct noderef *nref;
 	int mx, my, rx, ry;
 	int layer = 0;
+	int tilesz = m->cameras[0].tilesz;
 
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->tilesz;		/* Downward */
+	for (my = rm->y, ry = rm->sy - tilesz;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->tilesz) {
+	     my++, ry += tilesz) {
 
-		for (mx = rm->x, rx = rm->sx - m->tilesz;	/* Forward */
+		for (mx = rm->x, rx = rm->sx - tilesz;	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->tilesz) {
+		     mx++, rx += tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_SPRITE &&
 				    nref->layer == layer) {
-					noderef_draw(m, nref, rx, ry,
-					    m->tilesz);
+					noderef_draw(m, nref, rx, ry, 0);
 				}
 			}
 		}

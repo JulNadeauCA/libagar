@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.4 2005/06/15 05:24:38 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.5 2005/06/16 02:54:40 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -90,6 +90,9 @@ may include:
 #define MAPVIEW_PROPS	  0x04	/* Display node properties */
 #define MAPVIEW_CENTER	  0x08	/* Request initial centering */
 #define MAPVIEW_NO_CURSOR 0x10	/* Disable the cursor */
+#define MAPVIEW_NO_BMPZOOM 0x20	/* Disable bitmap scaling */
+#define MAPVIEW_NO_BG	   0x40	/* Disable background tiles */ 
+#define MAPVIEW_NO_NODESEL 0x80	/* Disable node selections */
 .Ed
 .Pp
 If
