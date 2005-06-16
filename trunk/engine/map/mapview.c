@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.16 2005/06/16 05:19:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.17 2005/06/16 16:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -525,6 +525,14 @@ defcurs:
 	    COLOR(MAPVIEW_CURSOR_COLOR));
 }
 
+static __inline__ void
+center_to_origin(struct mapview *mv)
+{
+	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv);
+	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv);
+	mapview_update_camera(mv);
+}
+
 void
 mapview_draw(void *p)
 {
@@ -552,6 +560,11 @@ mapview_draw(void *p)
 
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
+	
+	if (mv->flags & MAPVIEW_CENTER) {
+		mv->flags &= ~(MAPVIEW_CENTER);
+		center_to_origin(mv);
+	}
 
 	if (mapview_bg &&
 	    (mv->flags & MAPVIEW_NO_BG) == 0) {
@@ -1093,14 +1106,6 @@ key_up(int argc, union evarg *argv)
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
-static __inline__ void
-center_to_origin(struct mapview *mv)
-{
-	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv);
-	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv);
-	mapview_update_camera(mv);
-}
-
 static void
 key_down(int argc, union evarg *argv)
 {
@@ -1194,10 +1199,6 @@ mapview_scale(void *p, int rw, int rh)
 	
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_set_scale(mv, MV_ZOOM(mv), 0);
-	if (mv->flags & MAPVIEW_CENTER) {
-		mv->flags &= ~(MAPVIEW_CENTER);
-		center_to_origin(mv);
-	}
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
