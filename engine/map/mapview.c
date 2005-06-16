@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.14 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.15 2005/06/16 02:54:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 
 #include "map.h"
 #include "mapview.h"
+#include "select.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -79,8 +80,6 @@ static void mousebuttondown(int, union evarg *);
 static void mousebuttonup(int, union evarg *);
 static void key_up(int, union evarg *);
 static void key_down(int, union evarg *);
-static void begin_selection(struct mapview *);
-static void effect_selection(struct mapview *);
 
 static __inline__ int
 selbounded(struct mapview *mv, int x, int y)
@@ -192,8 +191,7 @@ update_tooltips(int argc, union evarg *argv)
 #endif
 
 struct tool *
-mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p,
-    int in_toolbar)
+mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 {
 	struct tool *ntool;
 
@@ -202,7 +200,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p,
 	ntool->p = p;
 	tool_init(ntool, mv);
 
-	if (in_toolbar && mv->toolbar != NULL) {
+	if (((tool->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
 		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
 
 		ntool->trigger = toolbar_add_button(mv->toolbar,
@@ -860,100 +858,6 @@ mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 }
 
 static void
-begin_selection_move(struct mapview *mv)
-{
-	struct map *mSrc = mv->map;
-	struct map *mTmp = &mv->esel.map;
-	int x, y;
-
-	map_init(mTmp, "");
-
-	if (map_alloc_nodes(mTmp, mv->esel.w, mv->esel.h) == -1)
-		goto fail;
-
-	if (map_push_layer(mSrc, _("(Floating selection)")) == -1)
-		goto fail;
-
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			struct node *nSrc = &mSrc->map[mv->esel.y+y]
-			                              [mv->esel.x+x];
-			struct node *nTmp = &mTmp->map[y][x];
-
-			node_copy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
-			node_swap_layers(mSrc, nSrc, mSrc->cur_layer,
-			    mSrc->nlayers-1);
-		}
-	}
-	
-	mv->esel.moving = 1;
-	return;
-fail:
-	map_destroy(mTmp);
-}
-
-static void
-end_selection_move(struct mapview *mv)
-{
-	struct map *mDst = mv->map;
-	struct map *mTmp = &mv->esel.map;
-	int x, y;
-
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			struct node *node = &mDst->map[mv->esel.y+y]
-			                              [mv->esel.x+x];
-			struct noderef *nref;
-
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer == mDst->nlayers-1)
-					nref->layer = mDst->cur_layer;
-			}
-		}
-	}
-	
-	map_pop_layer(mDst);
-	
-	map_reinit(mTmp);
-	map_destroy(mTmp);
-	mv->esel.moving = 0;
-}
-
-static void
-move_selection(struct mapview *mv, int xRel, int yRel)
-{
-	struct map *mDst = mv->map;
-	struct map *mTmp = &mv->esel.map;
-	int x, y;
-
-	if (mv->esel.x+xRel < 0 || mv->esel.x+mv->esel.w+xRel > mDst->mapw)
-		xRel = 0;
-	if (mv->esel.y+yRel < 0 || mv->esel.y+mv->esel.h+yRel > mDst->maph)
-		yRel = 0;
-	
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			node_clear(mDst,
-			    &mDst->map[mv->esel.y+y][mv->esel.x+x],
-			    mDst->nlayers-1);
-		}
-	}
-
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			struct node *nTmp = &mTmp->map[y][x];
-			struct node *nDst = &mDst->map[mv->esel.y+y+yRel]
-			                              [mv->esel.x+x+xRel];
-	
-			node_copy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
-		}
-	}
-	
-	mv->esel.x += xRel;
-	mv->esel.y += yRel;
-}
-
-static void
 mousemotion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
@@ -976,7 +880,7 @@ mousemotion(int argc, union evarg *argv)
 		mv->msel.xoffs += mv->cxrel;
 		mv->msel.yoffs += mv->cyrel;
 	} else if (mv->esel.set && mv->esel.moving) {
-		move_selection(mv, mv->cxrel, mv->cyrel);
+		select_update_nodemove(mv, mv->cxrel, mv->cyrel);
 	} else if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
 		if (mv->curtool->effect != NULL &&
 		    state & SDL_BUTTON(1) &&
@@ -1060,14 +964,14 @@ mousebuttondown(int argc, union evarg *argv)
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (selecting(mv)) {
-			begin_selection(mv);
+			select_begin_nodesel(mv);
 			goto out;
 		} else if (mv->esel.set) {
 			if (mv->cx >= mv->esel.x &&
 			    mv->cy >= mv->esel.y &&
 			    mv->cx < mv->esel.x+mv->esel.w &&
 			    mv->cy < mv->esel.y+mv->esel.h) {
-				begin_selection_move(mv);
+				select_begin_nodemove(mv);
 			} else {
 				mv->esel.set = 0;
 			}
@@ -1158,7 +1062,7 @@ mousebuttonup(int argc, union evarg *argv)
 	} else {
 		mv->mouse.scrolling = 0;
 		if (mv->esel.set && mv->esel.moving) {
-			end_selection_move(mv);
+			select_end_nodemove(mv);
 		}
 		goto out;
 	}
@@ -1172,10 +1076,10 @@ mousebuttonup(int argc, union evarg *argv)
 			mv->msel.set = 0;
 		} else {
 			if (mv->msel.set) {
-				effect_selection(mv);
+				select_end_nodesel(mv);
 				mv->msel.set = 0;
 			} else if (mv->esel.set && mv->esel.moving) {
-				end_selection_move(mv);
+				select_end_nodemove(mv);
 			}
 		}
 		break;
@@ -1186,62 +1090,6 @@ mousebuttonup(int argc, union evarg *argv)
 	}
 out:
 	pthread_mutex_unlock(&m->lock);
-}
-
-/* Begin a rectangular selection. */
-static void
-begin_selection(struct mapview *mv)
-{
-	mv->esel.set = 0;
-	mv->msel.set = 1;
-	mv->msel.x = mv->cx;
-	mv->msel.y = mv->cy;
-	mv->msel.xoffs = 1;
-	mv->msel.yoffs = 1;
-}
-
-/* Effect a rectangular selection. */
-static void
-effect_selection(struct mapview *mv)
-{
-	int excess;
-
-	mv->esel.x = mv->msel.x;
-	mv->esel.y = mv->msel.y;
-	mv->esel.w = mv->msel.xoffs;
-	mv->esel.h = mv->msel.yoffs;
-
-	if (mv->msel.xoffs < 0) {
-		mv->esel.x += mv->msel.xoffs;
-		mv->esel.w = -mv->msel.xoffs;
-	}
-	if (mv->msel.yoffs < 0) {
-		mv->esel.y += mv->msel.yoffs;
-		mv->esel.h = -mv->msel.yoffs;
-	}
-
-	if ((excess = (mv->esel.x + mv->esel.w) - mv->map->mapw) > 0) {
-		if (excess < mv->esel.w)
-			mv->esel.w -= excess;
-	}
-	if ((excess = (mv->esel.y + mv->esel.h) - mv->map->maph) > 0) {
-		if (excess < mv->esel.h)
-			mv->esel.h -= excess;
-	}
-
-	if (mv->esel.x < 0) {
-		mv->esel.w += mv->esel.x;
-		mv->esel.x = 0;
-	}
-	if (mv->esel.y < 0) {
-		mv->esel.h += mv->esel.y;
-		mv->esel.y = 0;
-	}
-
-	mv->esel.set = 1;
-
-	mapview_status(mv, _("Selected area %d,%d (%dx%d)"),
-	    mv->esel.x, mv->esel.y, mv->esel.w, mv->esel.h);
 }
 
 static void
