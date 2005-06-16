@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.33 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.34 2005/05/31 04:00:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -166,10 +166,6 @@ pixmap_destroy(struct pixmap *px)
 	struct pixmap_brush *br, *nbr;
 	int i;
 
-#ifdef DEBUG
-	if (px->nrefs > 0)
-		dprintf("%s has %d references\n", px->name, px->nrefs);
-#endif
 	if (px->su != NULL)
 		SDL_FreeSurface(px->su);
 
