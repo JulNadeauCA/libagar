@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.26 2005/05/29 00:27:46 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.27 2005/06/11 11:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -205,10 +205,12 @@ close_obj_data(int argc, union evarg *argv)
 }
 
 void
-objmgr_open_data(struct object *ob)
+objmgr_open_data(void *p)
 {
+	struct object *ob = p;
 	struct objent *oent;
-	
+	struct window *win;
+
 	TAILQ_FOREACH(oent, &dobjs, objs) {
 		if (oent->obj == ob)
 			break;
@@ -218,6 +220,9 @@ objmgr_open_data(struct object *ob)
 		view->focus_win = oent->win;
 		return;
 	}
+	
+	if (ob->ops->edit == NULL)
+		return;
 
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
 		printf("%s: %s\n", ob->name, error_get());
@@ -225,15 +230,22 @@ objmgr_open_data(struct object *ob)
 	}
 	object_add_dep(&mapedit.pseudo, ob);
 
+	win = ob->ops->edit(ob);
+	if (win == NULL) {
+		object_page_out(ob, OBJECT_DATA);
+		object_del_dep(&mapedit.pseudo, ob);
+		return;
+	}
+	
 	event_post(NULL, ob, "edit-open", NULL);
 	
 	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
-	oent->win = ob->ops->edit(ob);
+	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
-	window_show(oent->win);
+	window_show(win);
 
-	event_new(oent->win, "window-close", close_obj_data, "%p", oent);
+	event_new(win, "window-close", close_obj_data, "%p", oent);
 
 	/* TODO */
 	world_changed = 1;
@@ -1039,3 +1051,16 @@ objmgr_reopen(struct object *obj)
 	}
 }
 
+void
+objmgr_close_data(void *p)
+{
+	struct object *obj = p;
+	struct objent *oent;
+
+	TAILQ_FOREACH(oent, &dobjs, objs) {
+		if (oent->obj != obj) {
+			continue;
+		}
+		event_post(NULL, oent->win, "window-close", NULL);
+	}
+}
