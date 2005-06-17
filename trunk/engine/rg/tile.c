@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.59 2005/06/10 02:06:57 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.60 2005/06/15 06:30:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1637,14 +1637,6 @@ feature_menus(struct tileview *tv, struct tlist *tl, struct window *win)
 	}
 }
 
-static void
-close_tile(int argc, union evarg *argv)
-{
-	struct window *win = argv[1].p;
-
-	event_post(NULL, win, "window-close", NULL);
-}
-
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1708,7 +1700,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 		menu_action_kb(mi, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
-		    close_tile, "%p", win);
+		    window_generic_close, "%p", win);
 	}
 	
 	mi = menu_add_item(me, _("Edit"));
