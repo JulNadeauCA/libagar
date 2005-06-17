@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.57 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.58 2005/06/16 16:27:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -522,7 +522,7 @@ vg_draw_bboxes(struct vg *vg)
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
 		vg_rlength(vg, bbox.w, &w);
 		vg_rlength(vg, bbox.h, &h);
-		vg_rect_primitive(vg, x, y, w, h, vg->grid_color);
+		vg_rect_primitive(vg, x-1, y-1, w+2, h+2, vg->grid_color);
 	}
 	
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
@@ -532,7 +532,7 @@ vg_draw_bboxes(struct vg *vg)
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
 		vg_rlength(vg, bbox.w, &w);
 		vg_rlength(vg, bbox.h, &h);
-		vg_rect_primitive(vg, x, y, w, h, ext_color);
+		vg_rect_primitive(vg, x-1, y-1, w+2, h+2, ext_color);
 	}
 }
 #endif /* DEBUG */
@@ -786,7 +786,7 @@ vg_rlength(struct vg *vg, double len, int *rlen)
 	*rlen = (int)(len*vg->scale*TILESZ);
 }
 
-static __inline__ struct vg_vertex *
+struct vg_vertex *
 vg_alloc_vertex(struct vg_element *vge)
 {
 	if (vge->vtx == NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.24 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.25 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -132,12 +132,12 @@ vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 static void
 extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
-	double xmin = 0, xmax = 0;
-	double ymin = 0, ymax = 0;
+	double xmin, xmax;
+	double ymin, ymax;
 	int i;
 
-	xmin = vge->vtx[0].x;
-	ymin = vge->vtx[0].y;
+	xmin = xmax = vge->vtx[0].x;
+	ymin = ymax = vge->vtx[0].y;
 	for (i = 0; i < vge->nvtx; i++) {
 		if (vge->vtx[i].x < xmin)
 			xmin = vge->vtx[i].x;
@@ -203,7 +203,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 				if (rho <= closest) {
 					closest = rho;
 				} else {
-					break;
+//					break;
 				}
 			}
 		} else {
@@ -219,7 +219,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 				if (rho <= closest) {
 					closest = rho;
 				} else {
-					break;
+//					break;
 				}
 			}
 		}		
@@ -254,7 +254,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 				if (rho <= closest) {
 					closest = rho;
 				} else {
-					break;
+//					break;
 				}
 			}
 		} else {
@@ -270,7 +270,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 				if (rho <= closest) {
 					closest = rho;
 				} else {
-					break;
+//					break;
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.13 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.14 2005/06/04 04:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -158,14 +158,10 @@ vg_block_extent(struct vg *vg, struct vg_block *vgb, struct vg_rect *ext)
 
 		vge->ops->bbox(vg, vge, &r);
 
-		if (r.x < xmin)
-			xmin = r.x;
-		if (r.y < ymin)
-			ymin = r.y;
-		if (r.x+r.w > xmax)
-			xmax = r.x+r.w;
-		if (r.y+r.h > ymax)
-			ymax = r.y+r.h;
+		if (r.x < xmin) { xmin = r.x; }
+		if (r.y < ymin) { ymin = r.y; }
+		if (r.x+r.w > xmax) { xmax = r.x+r.w; }
+		if (r.y+r.h > ymax) { ymax = r.y+r.h; }
 	}
 	ext->x = xmin;
 	ext->y = ymin;
