@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.9 2005/06/16 05:20:02 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.10 2005/06/16 16:04:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -80,6 +80,8 @@ struct mapview {
 	struct scrollbar *vbar, *hbar;	/* Scrollbars (or NULL) */
 
 	struct tool *curtool;			/* Selected tool */
+	struct tool *deftool;			/* Default tool if any */
+
 	TAILQ_HEAD(, tool) tools;		/* Map edition tools */
 	SLIST_HEAD(, mapview_draw_cb) draw_cbs;	/* Post-draw callbacks */
 };
@@ -145,6 +147,7 @@ void	 mapview_status(struct mapview *, const char *, ...);
 
 #ifdef EDITION
 struct tool *mapview_reg_tool(struct mapview *, const struct tool *, void *);
+void mapview_set_default_tool(struct mapview *, struct tool *);
 void mapview_select_tool(struct mapview *, struct tool *, void *);
 void mapview_selected_layer(int, union evarg *);
 #endif

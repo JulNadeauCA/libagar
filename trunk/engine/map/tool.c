@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.3 2005/06/07 04:50:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -112,8 +112,8 @@ tool_window(void *p, const char *name)
 }
 
 void
-tool_bind_mousebutton(void *p, int button, int override,
-    void (*func)(struct tool *, int), int edit)
+tool_bind_mousebutton(void *p, int button,
+    int (*func)(struct tool *, int, int, int, int, void *), void *arg)
 {
 	struct tool *tool = p;
 	struct tool_mbinding *mb;
@@ -121,14 +121,14 @@ tool_bind_mousebutton(void *p, int button, int override,
 	mb = Malloc(sizeof(struct tool_mbinding), M_MAPEDIT);
 	mb->button = button;
 	mb->func = func;
-	mb->edit = edit;
-	mb->override = override;
+	mb->edit = 0;
+	mb->arg = arg;
 	SLIST_INSERT_HEAD(&tool->mbindings, mb, mbindings);
 }
 
 void
 tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
-    void (*func)(struct tool *, int), int edit)
+    int (*func)(struct tool *, SDLKey, int, void *), void *arg)
 {
 	struct tool *tool = p;
 	struct tool_kbinding *kb;
@@ -137,7 +137,8 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
-	kb->edit = edit;
+	kb->edit = 0;
+	kb->arg = arg;
 	SLIST_INSERT_HEAD(&tool->kbindings, kb, kbindings);
 }
 

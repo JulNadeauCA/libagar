@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.2 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.3 2005/06/16 05:20:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -31,8 +31,8 @@ struct tool {
 	                       int yoff, int b);
 	int (*mousebuttonup)(struct tool *, int x, int y, int xoff, int yoff,
 	                     int b);
-	void (*keydown)(struct tool *, int ksym, int kmod);
-	void (*keyup)(struct tool *, int ksym, int kmod);
+	int (*keydown)(struct tool *, int ksym, int kmod);
+	int (*keyup)(struct tool *, int ksym, int kmod);
 	
 	char *status[TOOL_STATUS_MAX];		/* Status message stack */
 	int nstatus;
@@ -52,16 +52,17 @@ struct tool {
 struct tool_kbinding {
 	SDLMod mod;
 	SDLKey key;
-	int edit;				/* Require edition mode */
-	void (*func)(struct tool *, int);
+	int edit;
+	int (*func)(struct tool *, SDLKey k, int s, void *);
+	void *arg;
 	SLIST_ENTRY(tool_kbinding) kbindings;
 };
 
 struct tool_mbinding {
 	int button;
-	int edit;				/* Require edition mode */
-	int override;				/* Override defaults */
-	void (*func)(struct tool *, int);
+	int edit;
+	int (*func)(struct tool *, int b, int s, int x, int y, void *);
+	void *arg;
 	SLIST_ENTRY(tool_mbinding) mbindings;
 };
 
@@ -69,14 +70,17 @@ __BEGIN_DECLS
 void		 tool_init(struct tool *, struct mapview *);
 void		 tool_destroy(struct tool *);
 struct window	*tool_window(void *, const char *);
-void		 tool_bind_key(void *, SDLMod, SDLKey,
-		               void (*)(struct tool *, int), int);
-void		 tool_bind_mousebutton(void *, int, int,
-		                       void (*)(struct tool *, int), int);
-void		 tool_unbind_key(void *, SDLMod, SDLKey);
-void		 tool_push_status(struct tool *, const char *, ...);
-void		 tool_pop_status(struct tool *);
-void		 tool_update_status(struct tool *);
+
+void tool_bind_key(void *, SDLMod, SDLKey,
+		   int (*)(struct tool *, SDLKey, int, void *), void *);
+void tool_bind_mousebutton(void *, int,
+			   int (*)(struct tool *, int, int, int, int, void *),
+			   void *);
+void tool_unbind_key(void *, SDLMod, SDLKey);
+
+void tool_push_status(struct tool *, const char *, ...);
+void tool_pop_status(struct tool *);
+void tool_update_status(struct tool *);
 __END_DECLS
 
 #include "close_code.h"

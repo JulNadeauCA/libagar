@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.5 2005/06/16 02:54:40 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.6 2005/06/16 16:04:17 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -159,7 +159,10 @@ and
 .Sh EXTENSIONS
 .nr nS 1
 .Ft void
-.Fn mapview_reg_tool "struct mapview *mv" "const struct tool *toolspec"
+.Fn mapview_reg_tool "struct mapview *mv" "const struct tool *toolspec" "void *arg"
+.Pp
+.Ft void
+.Fn mapview_set_default_tool "struct mapview *mv" "struct tool *tool"
 .Pp
 .Ft void
 .Fn mapview_reg_draw_cb "struct mapview *mv" "void (*f)(struct mapview *mv, void *p)"
@@ -189,15 +192,15 @@ struct tool {
 	int  (*save)(struct tool *t, struct netbuf *b);
 	int  (*cursor)(struct tool *t, SDL_Rect *r);
 	void (*effect)(struct tool *t, struct node *n);
-	void (*mousemotion)(struct tool *t, int x, int y, int xrel,
-	                    int yrel, int xo, int yo, int xorel,
-			    int yorel, int button_state);
-	void (*mousebuttondown)(struct tool *t, int x, int y, int xoff,
-	                        int yoff, int button);
-	void (*mousebuttonup)(struct tool *t, int x, int y, int xoff,
-	                      int yoff, int button);
-	void (*keydown)(struct tool *t, int ksym, int kmod);
-	void (*keyup)(struct tool *t, int ksym, int kmod);
+	int (*mousemotion)(struct tool *t, int x, int y, int xrel,
+	                  int yrel, int xo, int yo, int xorel,
+			  int yorel, int button_state);
+	int (*mousebuttondown)(struct tool *t, int x, int y, int xoff,
+	                       int yoff, int button);
+	int (*mousebuttonup)(struct tool *t, int x, int y, int xoff,
+	                     int yoff, int button);
+	int (*keydown)(struct tool *t, int ksym, int kmod);
+	int (*keyup)(struct tool *t, int ksym, int kmod);
 };
 .Ed
 .Pp
@@ -236,6 +239,13 @@ manipulations) will generally use the lower-level
 and
 .Fn keyup
 operations.
+If any of these functions return a value of 1, the given event will not be
+forwarded to the mouse/keyboard tool bindings and default operations.
+.Pp
+The
+.Fn mapview_set_default_tool
+function configures a default tool which will receive all events that have
+not been processed by the active tool or a mouse event binding.
 .Pp
 The
 .Fn mapview_reg_draw_cb

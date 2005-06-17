@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.8 2005/05/23 01:30:02 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.9 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -182,7 +182,6 @@ struct window *
 drawing_edit(void *obj)
 {
 	extern const struct tool vg_scale_tool;
-	extern const struct tool vg_grid_tool;
 	extern const struct tool vg_origin_tool;
 	extern const struct tool vg_point_tool;
 	extern const struct tool vg_line_tool;
@@ -230,7 +229,6 @@ drawing_edit(void *obj)
 			mapview_reg_draw_cb(mv, rasterize_drawing, vg);
 
 			mapview_reg_tool(mv, &vg_scale_tool, vg);
-			mapview_reg_tool(mv, &vg_grid_tool, vg);
 			mapview_reg_tool(mv, &vg_origin_tool, vg);
 			mapview_reg_tool(mv, &vg_point_tool, vg);
 			mapview_reg_tool(mv, &vg_line_tool, vg);

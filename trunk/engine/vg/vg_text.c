@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.18 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.19 2005/06/17 04:33:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -461,8 +461,6 @@ text_tool_init(struct tool *t)
 	tlist_insert_item(com->list, ICON(VGBR_ICON), _("Bottom/right"), "BR");
 	event_new(com, "combo-selected", select_alignment, "%p", t);
 	combo_select(com, it);
-
-	tool_push_status(t, _("Specify the position of the text."));
 }
 
 static int
@@ -517,7 +515,6 @@ text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 finish:
 	cur_text = NULL;
 	cur_vtx = NULL;
-	tool_pop_status(t);
 	return (1);
 }
 

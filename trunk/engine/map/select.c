@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.4 2005/06/16 05:19:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -186,8 +186,8 @@ select_end_nodemove(struct mapview *mv)
 }
 
 /* Copy the selection to the copy buffer. */
-void
-select_copy_nodes(struct tool *t, int state)
+int
+select_copy_nodes(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
@@ -196,18 +196,14 @@ select_copy_nodes(struct tool *t, int state)
 
 	if (!mv->esel.set) {
 		text_msg(MSG_ERROR, _("There is no selection to copy."));
-		return;
+		return (0);
 	}
-
-	dprintf("copy [%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
-	    mv->esel.h);
-
 	if (copybuf->map != NULL) {
 		map_free_nodes(copybuf);
 	}
 	if (map_alloc_nodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
-		return;
+		return (0);
 	}
 
 	for (sy = mv->esel.y, dy = 0;
@@ -220,10 +216,11 @@ select_copy_nodes(struct tool *t, int state)
 			    &copybuf->map[dy][dx], 0);
 		}
 	}
+	return (1);
 }
 
-void
-select_paste_nodes(struct tool *t, int state)
+int
+select_paste_nodes(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
@@ -232,7 +229,7 @@ select_paste_nodes(struct tool *t, int state)
 	
 	if (copybuf->map == NULL) {
 		text_msg(MSG_ERROR, _("The copy buffer is empty!"));
-		return;
+		return (0);
 	}
 
 	if (mv->esel.set) {
@@ -260,10 +257,11 @@ select_paste_nodes(struct tool *t, int state)
 			    m, &m->map[dy][dx], m->cur_layer);
 		}
 	}
+	return (1);
 }
 
-void
-select_kill_nodes(struct tool *t, int state)
+int
+select_kill_nodes(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -271,7 +269,7 @@ select_kill_nodes(struct tool *t, int state)
 
 	if (!mv->esel.set) {
 		text_msg(MSG_ERROR, _("There is no selection to kill."));
-		return;
+		return (0);
 	}
 	
 	dprintf("[%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
@@ -282,28 +280,30 @@ select_kill_nodes(struct tool *t, int state)
 			node_clear(m, &m->map[y][x], m->cur_layer);
 		}
 	}
+	return (1);
 }
 
-void
-select_cut_nodes(struct tool *t, int state)
+int
+select_cut_nodes(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 
 	if (!mv->esel.set) {
 		text_msg(MSG_ERROR, _("There is no selection to cut."));
-		return;
+		return (0);
 	}
-	select_copy_nodes(t, 1);
-	select_kill_nodes(t, 1);
+	select_copy_nodes(t, 0, 1, NULL);
+	select_kill_nodes(t, 0, 1, NULL);
+	return (1);
 }
 
 static void
 select_init(struct tool *t)
 {
-	tool_bind_key(t, KMOD_CTRL, SDLK_c, select_copy_nodes, 0);
-	tool_bind_key(t, KMOD_CTRL, SDLK_v, select_paste_nodes, 1);
-	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut_nodes, 1);
-	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill_nodes, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_c, select_copy_nodes, NULL);
+	tool_bind_key(t, KMOD_CTRL, SDLK_v, select_paste_nodes, NULL);
+	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut_nodes, NULL);
+	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill_nodes, NULL);
 }
 
 const struct tool select_tool = {

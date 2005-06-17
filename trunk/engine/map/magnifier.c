@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.4 2005/06/16 05:20:01 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.5 2005/06/16 16:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -57,31 +57,34 @@ zoom_to_value(int argc, union evarg *argv)
 	update_status(mv);
 }
 
-static void
-zoom_100pct(struct tool *t, int state)
+static int
+zoom1(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 
 	mapview_set_scale(mv, 100, 1);
 	update_status(mv);
+	return (1);
 }
 
-static void
-zoom_in(struct tool *t, int state)
+static int
+zoom_in(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 
 	mapview_set_scale(mv, MV_ZOOM(mv) + magnifier_zoom_inc, 1);
 	update_status(mv);
+	return (1);
 }
 
-static void
-zoom_out(struct tool *t, int state)
+static int
+zoom_out(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct mapview *mv = t->mv;
 
 	mapview_set_scale(mv, MV_ZOOM(mv) - magnifier_zoom_inc, 1);
 	update_status(mv);
+	return (1);
 }
 
 static void
@@ -105,10 +108,10 @@ magnifier_init(struct tool *t)
 	widget_bind(sbu, "value", WIDGET_INT, &magnifier_zoom_inc);
 	spinbutton_set_min(sbu, 1);
 	
-	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_100pct, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_100pct, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom1, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom1, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, NULL);
 }
 
 const struct tool magnifier_tool = {
