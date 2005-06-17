@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.35 2005/06/06 07:17:52 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.36 2005/06/07 06:50:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -290,6 +290,7 @@ __inline__ void	 vg_vtxcoords2i(struct vg *, struct vg_vertex *, int *, int *);
 __inline__ void  vg_rlength(struct vg *, double, int *);
 void		 vg_vlength(struct vg *, int, double *);
 struct vg_vertex *vg_pop_vertex(struct vg *);
+__inline__ struct vg_vertex *vg_alloc_vertex(struct vg_element *);
 
 struct vg_layer *vg_push_layer(struct vg *, const char *);
 __inline__ void	 vg_pop_layer(struct vg *);

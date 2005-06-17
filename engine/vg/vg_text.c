@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.17 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.18 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -156,181 +156,181 @@ static const struct {
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+align_text(struct vg *vg, struct vg_element *vge, Sint16 *x, Sint16 *y)
 {
-	SDL_Rect rd;
-	SDL_Surface *su;
-	int x, y;
+	SDL_Surface *su = vge->vg_text.su;
+	int vx, vy;
 	
-	if (vge->vg_text.nptrs > 0) {
-		char s[VG_TEXT_MAX];
-		char s2[32];
-		SDL_Surface *ts;
-		char *fmtp;
-		int i, ri = 0;
+	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
 
-		s[0] = '\0';
-		s2[0] = '\0';
+	switch (vge->vg_text.align) {
+	case VG_ALIGN_TL:
+		*x = (Sint16)vx;
+		*y = (Sint16)vy;
+		break;
+	case VG_ALIGN_TC:
+		*x = (Sint16)vx - su->w/2;
+		*y = (Sint16)vy;
+		break;
+	case VG_ALIGN_TR:
+		*x = (Sint16)vx - su->w;
+		*y = (Sint16)vy;
+		break;
+	case VG_ALIGN_ML:
+		*x = (Sint16)vx;
+		*y = (Sint16)vy - su->h/2;
+		break;
+	case VG_ALIGN_MC:
+		*x = (Sint16)vx - su->w/2;
+		*y = (Sint16)vy - su->h/2;
+		break;
+	case VG_ALIGN_MR:
+		*x = (Sint16)vx - su->w;
+		*y = (Sint16)vy - su->h/2;
+		break;
+	case VG_ALIGN_BL:
+		*x = (Sint16)vx;
+		*y = (Sint16)vy - su->h;
+		break;
+	case VG_ALIGN_BC:
+		*x = (Sint16)vx - su->w/2;
+		*y = (Sint16)vy - su->h;
+		break;
+	case VG_ALIGN_BR:
+		*x = (Sint16)vx - su->w;
+		*y = (Sint16)vy - su->h;
+		break;
+	default:
+		break;
+	}
+}
 
-		for (fmtp = vge->vg_text.text; *fmtp != '\0'; fmtp++) {
-			if (*fmtp == '%' && *(fmtp+1) != '\0') {
-				switch (*(fmtp+1)) {
-				case 'd':
-				case 'i':
-					snprintf(s2, sizeof(s2), "%d",
-					    TEXT_ARG(int));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'o':
-					snprintf(s2, sizeof(s2), "%o",
-					    TEXT_ARG(unsigned int));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'u':
-					snprintf(s2, sizeof(s2), "%u",
-					    TEXT_ARG(unsigned int));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'x':
-					snprintf(s2, sizeof(s2), "%x",
-					    TEXT_ARG(unsigned int));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'X':
-					snprintf(s2, sizeof(s2), "%X",
-					    TEXT_ARG(unsigned int));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'c':
-					s2[0] = TEXT_ARG(char);
-					s2[1] = '\0';
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 's':
-					strlcat(s, &TEXT_ARG(char), sizeof(s));
-					ri++;
-					break;
-				case 'p':
-					snprintf(s2, sizeof(s2), "%p",
-					    TEXT_ARG(void *));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case 'f':
-					snprintf(s2, sizeof(s2), "%.2f",
-					    TEXT_ARG(double));
-					strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				case '[':
-					for (i = 0; i < nfmts; i++) {
-						if (strncmp(fmts[i].fmt, fmtp+2,
-						    fmts[i].fmt_len-1) != 0) {
-							continue;
-						}
-						fmtp += fmts[i].fmt_len;
-						fmts[i].func(s2, sizeof(s2),
-						    ri);
-						strlcat(s, s2, sizeof(s));
-						ri++;
-						break;
-					}
-					break;
-				case '%':
-					s2[0] = '%';
-					s2[1] = '\0';
-					strlcat(s, s2, sizeof(s));
-					break;
-				}
-				fmtp++;
-			} else {
-				s2[0] = *fmtp;
-				s2[1] = '\0';
-				strlcat(s, s2, sizeof(s));
-			}
-		}
-		if (vge->vg_text.su != NULL) {
-			SDL_FreeSurface(vge->vg_text.su);
-		}
-		vge->vg_text.su = text_render(NULL, -1, vge->color, s);
-	} else {
+static void
+render_label(struct vg *vg, struct vg_element *vge)
+{
+	char s[VG_TEXT_MAX];
+	char s2[32];
+	SDL_Surface *ts;
+	char *fmtp;
+	int i, ri = 0;
+
+	if (vge->vg_text.nptrs == 0) {
 		if (vge->vg_text.su == NULL) {
 			vge->vg_text.su = text_render(
 			    vge->text_st.face[0] != '\0' ? vge->text_st.face :
 			    NULL, vge->text_st.size, vge->color,
 			    vge->vg_text.text);
 		}
+		return;
 	}
-	su = vge->vg_text.su;
-#ifdef DEBUG
-	if (vge->nvtx < 1)
-		fatal("nvtx < 1");
-#endif
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
-	switch (vge->vg_text.align) {
-	case VG_ALIGN_TL:
-		rd.x = (Sint16)x;
-		rd.y = (Sint16)y;
-		break;
-	case VG_ALIGN_TC:
-		rd.x = (Sint16)x - su->w/2;
-		rd.y = (Sint16)y;
-		break;
-	case VG_ALIGN_TR:
-		rd.x = (Sint16)x - su->w;
-		rd.y = (Sint16)y;
-		break;
-	case VG_ALIGN_ML:
-		rd.x = (Sint16)x;
-		rd.y = (Sint16)y - su->h/2;
-		break;
-	case VG_ALIGN_MC:
-		rd.x = (Sint16)x - su->w/2;
-		rd.y = (Sint16)y - su->h/2;
-		break;
-	case VG_ALIGN_MR:
-		rd.x = (Sint16)x - su->w;
-		rd.y = (Sint16)y - su->h/2;
-		break;
-	case VG_ALIGN_BL:
-		rd.x = (Sint16)x;
-		rd.y = (Sint16)y - su->h;
-		break;
-	case VG_ALIGN_BC:
-		rd.x = (Sint16)x - su->w/2;
-		rd.y = (Sint16)y - su->h;
-		break;
-	case VG_ALIGN_BR:
-		rd.x = (Sint16)x - su->w;
-		rd.y = (Sint16)y - su->h;
-		break;
-	default:
-		break;
+
+	s[0] = '\0';
+	s2[0] = '\0';
+
+	for (fmtp = vge->vg_text.text; *fmtp != '\0'; fmtp++) {
+		if (*fmtp == '%' && *(fmtp+1) != '\0') {
+			switch (*(fmtp+1)) {
+			case 'd':
+			case 'i':
+				snprintf(s2, sizeof(s2), "%d", TEXT_ARG(int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'o':
+				snprintf(s2, sizeof(s2), "%o", TEXT_ARG(u_int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'u':
+				snprintf(s2, sizeof(s2), "%u", TEXT_ARG(u_int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'x':
+				snprintf(s2, sizeof(s2), "%x", TEXT_ARG(u_int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'X':
+				snprintf(s2, sizeof(s2), "%X", TEXT_ARG(u_int));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'c':
+				s2[0] = TEXT_ARG(char);
+				s2[1] = '\0';
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 's':
+				strlcat(s, &TEXT_ARG(char), sizeof(s));
+				ri++;
+				break;
+			case 'p':
+				snprintf(s2, sizeof(s2), "%p",
+				    TEXT_ARG(void *));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'f':
+				snprintf(s2, sizeof(s2), "%.2f",
+				    TEXT_ARG(double));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case '[':
+				for (i = 0; i < nfmts; i++) {
+					if (strncmp(fmts[i].fmt, fmtp+2,
+					    fmts[i].fmt_len-1) != 0) {
+						continue;
+					}
+					fmtp += fmts[i].fmt_len;
+					fmts[i].func(s2, sizeof(s2), ri);
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				}
+				break;
+			case '%':
+				s2[0] = '%';
+				s2[1] = '\0';
+				strlcat(s, s2, sizeof(s));
+				break;
+			}
+			fmtp++;
+		} else {
+			s2[0] = *fmtp;
+			s2[1] = '\0';
+			strlcat(s, s2, sizeof(s));
+		}
 	}
-	SDL_BlitSurface(su, NULL, vg->su, &rd);
+	if (vge->vg_text.su != NULL) {
+		SDL_FreeSurface(vge->vg_text.su);
+	}
+	vge->vg_text.su = text_render(NULL, -1, vge->color, s);
+}
+
+static void
+render(struct vg *vg, struct vg_element *vge)
+{
+	SDL_Rect rd;
+	
+	render_label(vg, vge);
+	align_text(vg, vge, &rd.x, &rd.y);
+	SDL_BlitSurface(vge->vg_text.su, NULL, vg->su, &rd);
 }
 
 static void
 extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
-	if (vge->nvtx < 1)
-		return;
+	Sint16 rx, ry;
 
-	if (vge->vg_text.su != NULL) {
-		vg_vlength(vg, (int)vge->vg_text.su->w, &r->w);
-		vg_vlength(vg, (int)vge->vg_text.su->h, &r->h);
-	} else {
-		r->x = 0;
-		r->y = 0;
-		r->w = 0;
-		r->h = 0;
-	}
+	render_label(vg, vge);
+	align_text(vg, vge, &rx, &ry);
+	r->x = VG_VECXF(vg,rx);
+	r->y = VG_VECYF(vg,ry);
+	r->w = VG_VECLENF(vg,vge->vg_text.su->w);
+	r->h = VG_VECLENF(vg,vge->vg_text.su->h);
 }
 
 static float
