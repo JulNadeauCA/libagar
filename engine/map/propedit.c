@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.4 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -101,70 +101,58 @@ propedit_clear_flag(struct mapview *mv, Uint32 flag)
 	}
 }
 
-static void
-propedit_edge_nw(struct tool *t, int state)
+static int
+propedit_edge(struct tool *t, SDLKey key, int state, void *arg)
 {
-	propedit_set_edge(t->mv, NODEREF_EDGE_NW);
+	if (!state)
+		return (0);
+
+	switch (key) {
+	case SDLK_KP7:
+		propedit_set_edge(t->mv, NODEREF_EDGE_NW);
+		break;
+	case SDLK_KP8:
+		propedit_set_edge(t->mv, NODEREF_EDGE_N);
+		break;
+	case SDLK_KP9:
+		propedit_set_edge(t->mv, NODEREF_EDGE_NE);
+		break;
+	case SDLK_KP4:
+		propedit_set_edge(t->mv, NODEREF_EDGE_W);
+		break;
+	case SDLK_KP5:
+		propedit_set_edge(t->mv, 0);
+		break;
+	case SDLK_KP6:
+		propedit_set_edge(t->mv, NODEREF_EDGE_E);
+		break;
+	case SDLK_KP1:
+		propedit_set_edge(t->mv, NODEREF_EDGE_SW);
+		break;
+	case SDLK_KP2:
+		propedit_set_edge(t->mv, NODEREF_EDGE_S);
+		break;
+	case SDLK_KP3:
+		propedit_set_edge(t->mv, NODEREF_EDGE_SE);
+		break;
+	default:
+		break;
+	}
+	return (1);
 }
 
-static void
-propedit_edge_n(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_N);
-}
-
-static void
-propedit_edge_ne(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_NE);
-}
-
-static void
-propedit_edge_w(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_W);
-}
-
-static void
-propedit_no_edge(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, 0);
-}
-
-static void
-propedit_edge_e(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_E);
-}
-
-static void
-propedit_edge_sw(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_SW);
-}
-
-static void
-propedit_edge_s(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_S);
-}
-
-static void
-propedit_edge_se(struct tool *t, int state)
-{
-	propedit_set_edge(t->mv, NODEREF_EDGE_SE);
-}
-
-static void
-propedit_flag_walk(struct tool *t, int state)
+static int
+propedit_flag_walk(struct tool *t, SDLKey key, int state, void *arg)
 {
 	propedit_set_flag(t->mv, NODEREF_WALK);
+	return (1);
 }
 
-static void
-propedit_flag_blk(struct tool *t, int state)
+static int
+propedit_flag_blk(struct tool *t, SDLKey key, int state, void *arg)
 {
 	propedit_clear_flag(t->mv, NODEREF_WALK);
+	return (1);
 }
 
 static void
@@ -173,17 +161,18 @@ propedit_init(struct tool *t)
 	struct window *win;
 	struct vbox *vb;
 
-	tool_bind_key(t, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
-	tool_bind_key(t, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP7, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP8, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP9, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP4, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP5, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP6, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP1, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP2, propedit_edge, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP3, propedit_edge, NULL);
+
+	tool_bind_key(t, KMOD_NONE, SDLK_w, propedit_flag_walk, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_b, propedit_flag_blk, NULL);
 
 	win = tool_window(t, "mapedit-tool-propedit");
 

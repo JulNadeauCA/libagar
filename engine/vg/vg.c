@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.58 2005/06/16 16:27:11 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.59 2005/06/17 04:33:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1398,9 +1398,6 @@ fail:
 }
 
 #ifdef EDITION
-
-static struct timeout zoom_in_to, zoom_out_to;
-
 void
 vg_geo_changed(int argc, union evarg *argv)
 {
@@ -1485,26 +1482,23 @@ vg_layer_selector(void *parent, struct vg *vg)
 static void
 zoom_status(struct tool *t, struct vg *vg)
 {
-	mapview_status(t->mv, _("Scaling factor: %.2f, grid: %.2f"),
-	    vg->scale, vg->grid_gap);
+	mapview_status(t->mv, _("Scale 1:%.2f%%"), vg->scale);
 }
 
-static Uint32
-zoom_in_tick(void *p, Uint32 ival, void *arg)
+static int
+zoom_in(struct tool *t, int button, int state, int x, int y, void *arg)
 {
-	struct tool *t = arg;
 	struct vg *vg = t->p;
 
 	vg->scale += 0.125;
 	vg_scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
-	return (ival);
+	return (1);
 }
 
-static Uint32
-zoom_out_tick(void *p, Uint32 ival, void *arg)
+static int
+zoom_out(struct tool *t, int button, int state, int x, int y, void *arg)
 {
-	struct tool *t = arg;
 	struct vg *vg = t->p;
 
 	vg->scale -= 0.125;
@@ -1513,70 +1507,24 @@ zoom_out_tick(void *p, Uint32 ival, void *arg)
 	}
 	vg_scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
-	return (ival);
+	return (1);
 }
 
-static void
-zoom_in(struct tool *t, int state)
-{
-	struct vg *vg = t->p;
-
-	if (state) {
-		if (SDL_GetModState() & KMOD_CTRL) {
-			return;
-		}
-		zoom_in_tick(NULL, 0, t);
-#if 0
-		timeout_add(NULL, &zoom_in_to, 80);
-#endif
-	} else {
-#if 0
-		lock_timeout(NULL);
-		if (timeout_scheduled(NULL, &zoom_in_to)) {
-			timeout_del(NULL, &zoom_in_to);
-		}
-		unlock_timeout(NULL);
-#endif
-	}
-}
-
-static void
-zoom_out(struct tool *t, int state)
-{
-	struct vg *vg = t->p;
-
-	if (state) {
-		if (SDL_GetModState() & KMOD_CTRL) {
-			return;
-		}
-		zoom_out_tick(NULL, 0, t);
-#if 0
-		timeout_add(NULL, &zoom_out_to, 80);
-#endif
-	} else {
-#if 0
-		lock_timeout(NULL);
-		if (timeout_scheduled(NULL, &zoom_out_to)) {
-			timeout_del(NULL, &zoom_out_to);
-		}
-		unlock_timeout(NULL);
-#endif
-	}
-}
-
-static void
-zoom_ident(struct tool *t, int state)
+static int
+zoom_ident(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct vg *vg = t->p;
 
 	if (state) {
 		vg_scale(vg, vg->w, vg->h, 1.0);
 		zoom_status(t, vg);
+		return (1);
 	}
+	return (0);
 }
 
-static void
-toggle_grid(struct tool *t, int state)
+static int
+toggle_grid(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct vg *vg = t->p;
 
@@ -1586,11 +1534,13 @@ toggle_grid(struct tool *t, int state)
 		} else {
 			vg->flags |= VG_VISGRID;
 		}
+		return (1);
 	}
+	return (0);
 }
 
-static void
-toggle_bboxes(struct tool *t, int state)
+static int
+toggle_bboxes(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct vg *vg = t->p;
 
@@ -1600,22 +1550,26 @@ toggle_bboxes(struct tool *t, int state)
 		} else {
 			vg->flags |= VG_VISBBOXES;
 		}
+		return (1);
 	}
+	return (0);
 }
 
-static void
-expand_grid(struct tool *t, int state)
+static int
+expand_grid(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct vg *vg = t->p;
 
 	if (state) {
 		vg->grid_gap += 0.25;
 		zoom_status(t, vg);
+		return (1);
 	}
+	return (0);
 }
 
-static void
-contract_grid(struct tool *t, int state)
+static int
+contract_grid(struct tool *t, SDLKey key, int state, void *arg)
 {
 	struct vg *vg = t->p;
 
@@ -1625,30 +1579,23 @@ contract_grid(struct tool *t, int state)
 			vg->grid_gap = 0.25;
 		}
 		zoom_status(t, vg);
+		return (1);
 	}
+	return (0);
 }
 
 static void
 init_scale_tool(struct tool *t)
 {
-	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, 0);
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELDOWN, 1, zoom_out, 0);
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, 1, zoom_in, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_g, toggle_grid, NULL);
+	tool_bind_key(t, KMOD_NONE, SDLK_b, toggle_bboxes, NULL);
+	tool_bind_key(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, NULL);
+	tool_bind_key(t, KMOD_CTRL, SDLK_MINUS, contract_grid, NULL);
 
-	timeout_set(&zoom_in_to, zoom_in_tick, t, 0);
-	timeout_set(&zoom_out_to, zoom_out_tick, t, 0);
-}
-
-static void
-init_grid_tool(struct tool *t)
-{
-	tool_bind_key(t, KMOD_NONE, SDLK_g, toggle_grid, 0);
-	tool_bind_key(t, KMOD_NONE, SDLK_b, toggle_bboxes, 0);
-	tool_bind_key(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, 0);
-	tool_bind_key(t, KMOD_CTRL, SDLK_MINUS, contract_grid, 0);
+	tool_bind_mousebutton(t, SDL_BUTTON_WHEELDOWN, zoom_out, NULL);
+	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, zoom_in, NULL);
 }
 
 struct tool vg_scale_tool = {
@@ -1657,24 +1604,6 @@ struct tool vg_scale_tool = {
 	MAGNIFIER_TOOL_ICON, -1,
 	TOOL_HIDDEN,
 	init_scale_tool,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-
-struct tool vg_grid_tool = {
-	N_("Grid"),
-	N_("Toggle the grid."),
-	SNAP_GRID_ICON, -1,
-	TOOL_HIDDEN,
-	init_grid_tool,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */

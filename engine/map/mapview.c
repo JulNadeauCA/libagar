@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.17 2005/06/16 16:04:17 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.18 2005/06/16 16:26:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -197,6 +197,12 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 }
 
 void
+mapview_set_default_tool(struct mapview *mv, struct tool *tool)
+{
+	mv->deftool = tool;
+}
+
+void
 mapview_reg_draw_cb(struct mapview *mv,
     void (*draw_func)(struct mapview *, void *), void *p)
 {
@@ -316,6 +322,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->objs_tl = NULL;
 	mv->layers_tl = NULL;
 	mv->curtool = NULL;
+	mv->deftool = NULL;
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
 	
@@ -845,6 +852,31 @@ mousemotion(int argc, union evarg *argv)
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 
+	if ((mv->flags & MAPVIEW_EDIT) && mv->curtool != NULL) {
+		if (mv->curtool->effect != NULL &&
+		    state & SDL_BUTTON(1) &&
+		    mv->cx != -1 && mv->cy != -1 &&
+		    (x != mv->mouse.x || y != mv->mouse.y) &&
+		    (inside_nodesel(mv, mv->cx, mv->cy))) {
+			if (mv->curtool->effect(mv->curtool,
+			    &mv->map->map[mv->cy][mv->cx]) == 1)
+				goto out;
+		}
+		if (mv->curtool->mousemotion != NULL &&
+		    mv->curtool->mousemotion(mv->curtool,
+		      mv->cx, mv->cy, mv->cxrel, mv->cyrel,
+		      mv->cxoffs, mv->cyoffs, xrel, yrel, state) == 1) {
+			goto out;
+		}
+		if (mv->deftool != NULL &&
+		    mv->deftool->mousemotion != NULL &&
+		    mv->deftool->mousemotion(mv->deftool,
+		      mv->cx, mv->cy, mv->cxrel, mv->cyrel,
+		      mv->cxoffs, mv->cyoffs, xrel, yrel, state) == 1) {
+			goto out;
+		}
+	}
+	
 	if (mv->mouse.scrolling) {
 		MV_CAM(mv).x -= xrel;
 		MV_CAM(mv).y -= yrel;
@@ -854,24 +886,8 @@ mousemotion(int argc, union evarg *argv)
 		mv->msel.yoffs += mv->cyrel;
 	} else if (mv->esel.set && mv->esel.moving) {
 		select_update_nodemove(mv, mv->cxrel, mv->cyrel);
-	} else if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
-		if (mv->curtool->effect != NULL &&
-		    state & SDL_BUTTON(1) &&
-		    mv->cx != -1 && mv->cy != -1 &&
-		    (x != mv->mouse.x || y != mv->mouse.y) &&
-		    (inside_nodesel(mv, mv->cx, mv->cy))) {
-			mv->curtool->effect(mv->curtool,
-			    &mv->map->map[mv->cy][mv->cx]);
-		}
-		if (mv->curtool->mousemotion != NULL) {
-			mv->curtool->mousemotion(mv->curtool,
-			    mv->cx, mv->cy,
-			    mv->cxrel, mv->cyrel,
-			    mv->cxoffs, mv->cyoffs,
-			    xrel, yrel, state);
-		}
 	}
-
+out:
 	mv->mouse.x = x;
 	mv->mouse.y = y;
 	pthread_mutex_unlock(&mv->map->lock);
@@ -895,20 +911,21 @@ mousebuttondown(int argc, union evarg *argv)
 	mv->mouse.x = x;
 	mv->mouse.y = y;
 
-	if (mv->cx >= 0 && mv->cy >= 0) {
-		/* Active tool has precedence. */
-		if ((mv->flags & MAPVIEW_EDIT) && (mv->curtool != NULL)) {
-			if (button == 1 && mv->curtool->effect != NULL &&
+	if ((mv->flags & MAPVIEW_EDIT) && (mv->cx >= 0 && mv->cy >= 0)) {
+		if (mv->curtool != NULL) {
+			if (button == SDL_BUTTON_LEFT &&
+			    mv->curtool->effect != NULL &&
 			    inside_nodesel(mv, mv->cx, mv->cy)) {
 				if (mv->curtool->effect(mv->curtool,
-				    &m->map[mv->cy][mv->cx]) == 1)
+				    &m->map[mv->cy][mv->cx]) == 1) {
 					goto out;
+				}
 			}
-			if (mv->curtool->mousebuttondown != NULL) {
-				if (mv->curtool->mousebuttondown(mv->curtool,
-				    mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-				    button) == 1)
-					goto out;
+			if (mv->curtool->mousebuttondown != NULL &&
+			    mv->curtool->mousebuttondown(mv->curtool,
+			      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
+			      button) == 1) {
+				goto out;
 			}
 		}
 
@@ -921,19 +938,27 @@ mousebuttondown(int argc, union evarg *argv)
 					continue;
 				}
 				if (mbinding->edit &&
-				   (((mv->flags & MAPVIEW_EDIT) == 0) ||
-				    ((OBJECT(m)->flags & OBJECT_READONLY)))) {
+				   (OBJECT(m)->flags & OBJECT_READONLY)) {
 					continue;
 				}
 				tool->mv = mv;
-				mbinding->func(tool, 1);
-				if (mbinding->override)
+				if (mbinding->func(tool, button, 1,
+				    mv->cx*MV_TILESZ(mv)+mv->cxoffs,
+				    mv->cy*MV_TILESZ(mv)+mv->cyoffs,
+				    mbinding->arg) == 1)
 					goto out;
 			}
 		}
+
+		if (mv->deftool != NULL &&
+		    mv->deftool->mousebuttondown != NULL &&
+		    mv->deftool->mousebuttondown(mv->deftool,
+		      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
+		      button) == 1) {
+			goto out;
+		}
 	}
 
-	/* If the event has not been processed, default actions apply. */
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (mv->esel.set) {
@@ -1006,18 +1031,16 @@ mousebuttonup(int argc, union evarg *argv)
 	pthread_mutex_lock(&m->lock);
 	get_node_coords(mv, &x, &y);
 
-	if (mv->cx >= 0 && mv->cy >= 0) {
-		/* Active tool has precedence. */
-		if ((mv->flags & MAPVIEW_EDIT) && (mv->curtool != NULL)) {
-			if (mv->curtool->mousebuttonup != NULL) {
-				if (mv->curtool->mousebuttonup(mv->curtool,
-				    mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-				    button) == 1)
-					goto out;
+	if ((mv->flags & MAPVIEW_EDIT) && (mv->cx >= 0 && mv->cy >= 0)) {
+		if (mv->curtool != NULL) {
+			if (mv->curtool->mousebuttonup != NULL &&
+			    mv->curtool->mousebuttonup(mv->curtool,
+			      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
+			      button) == 1) {
+				goto out;
 			}
 		}
 		
-		/* Mouse bindings allow inactive tools to bind mouse events. */
 		TAILQ_FOREACH(tool, &mv->tools, tools) {
 			struct tool_mbinding *mbinding;
 
@@ -1026,15 +1049,22 @@ mousebuttonup(int argc, union evarg *argv)
 					continue;
 				}
 				if (mbinding->edit &&
-				   (((mv->flags & MAPVIEW_EDIT) == 0) ||
-				    ((OBJECT(m)->flags & OBJECT_READONLY)))) {
+				    (OBJECT(m)->flags & OBJECT_READONLY)) {
 					continue;
 				}
 				tool->mv = mv;
-				mbinding->func(tool, 0);
-				if (mbinding->override)
+				if (mbinding->func(tool, button, 0, x, y,
+				    mbinding->arg) == 1)
 					goto out;
 			}
+		}
+		
+		if (mv->deftool != NULL &&
+		    mv->deftool->mousebuttonup != NULL &&
+		    mv->deftool->mousebuttonup(mv->deftool,
+		      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
+		      button) == 1) {
+			goto out;
 		}
 	} else {
 		mv->mouse.scrolling = 0;
@@ -1044,7 +1074,6 @@ mousebuttonup(int argc, union evarg *argv)
 		goto out;
 	}
 
-	/* If the event has not been processed, default actions apply. */
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (mv->msel.set &&
@@ -1078,7 +1107,13 @@ key_up(int argc, union evarg *argv)
 	struct tool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
-
+	
+	if (mv->flags & MAPVIEW_EDIT &&
+	    mv->curtool != NULL &&
+	    mv->curtool->keyup != NULL &&
+	    mv->curtool->keyup(mv->curtool, keysym, keymod) == 1)
+		goto out;
+	
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
 
@@ -1093,16 +1128,13 @@ key_up(int argc, union evarg *argv)
 					continue;
 				}
 				tool->mv = mv;
-				kbinding->func(tool, 0);
+				if (kbinding->func(tool, keysym, 0,
+				    kbinding->arg) == 1)
+					goto out;
 			}
 		}
 	}
-
-	if (mv->flags & MAPVIEW_EDIT &&
-	    mv->curtool != NULL &&
-	    mv->curtool->keyup != NULL)
-		mv->curtool->keyup(mv->curtool, keysym, keymod);
-	
+out:
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
@@ -1115,6 +1147,12 @@ key_down(int argc, union evarg *argv)
 	struct tool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
+	
+	if (mv->flags & MAPVIEW_EDIT &&
+	    mv->curtool != NULL &&
+	    mv->curtool->keydown != NULL &&
+	    mv->curtool->keydown(mv->curtool, keysym, keymod) == 1)
+		goto out;
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
@@ -1130,12 +1168,13 @@ key_down(int argc, union evarg *argv)
 					continue;
 				}
 				tool->mv = mv;
-				kbinding->func(tool, 1);
+				if (kbinding->func(tool, keysym, 1,
+				    kbinding->arg) == 1)
+					goto out;
 			}
 		}
 	}
 
-	/* XXX configurable */
 	switch (keysym) {
 	case SDLK_o:
 		center_to_origin(mv);
@@ -1153,13 +1192,22 @@ key_down(int argc, union evarg *argv)
 			}
 		}
 		break;
+	case SDLK_g:
+		if (mv->flags & MAPVIEW_GRID) {
+			mv->flags &= ~(MAPVIEW_GRID);
+		} else {
+			mv->flags |= MAPVIEW_GRID;
+		}
+		break;
+	case SDLK_b:
+		if (mv->flags & MAPVIEW_NO_BG) {
+			mv->flags &= ~(MAPVIEW_NO_BG);
+		} else {
+			mv->flags |= MAPVIEW_NO_BG;
+		}
+		break;
 	}
-	
-	if (mv->flags & MAPVIEW_EDIT &&
-	    mv->curtool != NULL &&
-	    mv->curtool->keydown != NULL)
-		mv->curtool->keydown(mv->curtool, keysym, keymod);
-	
+out:	
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
