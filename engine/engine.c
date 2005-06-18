@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.155 2005/05/13 09:16:32 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.156 2005/06/11 11:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@
 
 #ifdef MAP
 #include <engine/map/map.h>
-#include <engine/map/rootmap.h>
 #endif
 
 #ifdef EDITION

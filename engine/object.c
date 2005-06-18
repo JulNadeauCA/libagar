@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.212 2005/05/12 07:26:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.213 2005/05/29 00:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,6 @@
 #include <engine/objmgr.h>
 
 #include <engine/map/map.h>
-#include <engine/map/rootmap.h>
 
 #ifdef EDITION
 #include <engine/widget/window.h>
