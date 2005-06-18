@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.255 2005/06/06 04:16:28 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.256 2005/06/16 15:58:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,7 +31,6 @@
 #include <engine/view.h>
 
 #include <engine/map/map.h>
-#include <engine/map/rootmap.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/widget.h>
@@ -387,9 +386,6 @@ hidden(int argc, union evarg *argv)
 				    WIDGET(win)->w, WIDGET(win)->h);
 			}
 			break;
-		case GFX_ENGINE_TILEBASED:
-			rootmap_redraw();
-			break;
 		}
 	}
 
@@ -554,9 +550,6 @@ move_window(struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Update the background. */
 	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		rootmap_redraw();
-		break;
 	case GFX_ENGINE_GUI:
 		newpos.x = WIDGET(win)->x;
 		newpos.y = WIDGET(win)->y;
@@ -925,9 +918,6 @@ window_set_geometry(struct window *win, int x, int y, int w, int h)
 				SDL_UpdateRects(view->v, 1, &rfill2);
 			}
 		}
-		break;
-	case GFX_ENGINE_TILEBASED:
-		rootmap_redraw();
 		break;
 	}
 }

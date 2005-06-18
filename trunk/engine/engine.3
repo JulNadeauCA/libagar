@@ -1,4 +1,4 @@
-.\"	$Csoft: engine.3,v 1.4 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: engine.3,v 1.5 2005/02/08 15:46:53 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -90,8 +90,7 @@ a window displacement or resizing.
 Available graphic modes include:
 .Bd -literal
 enum gfx_engine {
-	GFX_ENGINE_GUI,		/* Direct video/OpenGL, solid background */
-	GFX_ENGINE_TILEBASED	/* Direct video/OpenGL, map background */
+	GFX_ENGINE_GUI		/* Direct video/OpenGL, solid background */
 };
 .Ed
 .Pp
@@ -103,23 +102,6 @@ When windows are moved or resized under this mode, Agar uses
 (or
 .Xr glRecti 3
 in OpenGL mode) to redraw parts of the background that need updating.
-.Pp
-The
-.Dv GFX_ENGINE_TILEBASED
-mode assumes that the background is the rendering of a
-.Xr map 3 .
-Therefore, it uses the
-.Fn draw
-operation of the map being displayed for redrawing the background.
-A map must be always visible under this mode, even if it is empty.
-Setting the background map to NULL causes the application to exit.
-.Pp
-The
-.Dv GFX_ENGINE_TILEBASED
-mode is preferable for applications such as 2D games, since it also optimizes
-the way animations are processed.
-The default mode is
-.Dv GFX_ENGINE_GUI .
 .Sh INCLUDE FILES
 The
 .Pa Aq compat/*.h

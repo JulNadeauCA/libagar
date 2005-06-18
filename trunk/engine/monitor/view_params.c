@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.23 2005/03/03 10:52:24 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.24 2005/04/14 06:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,9 +63,6 @@ view_params_window(void)
 		case GFX_ENGINE_GUI:
 			engine = _("GUI");
 			break;
-		case GFX_ENGINE_TILEBASED:
-			engine = _("Tile-based");
-			break;
 		}
 		label_new(vb, LABEL_STATIC, _("Graphic engine: %s %s"), engine,
 		    view->opengl ? "(OpenGL)" : "");
@@ -94,18 +91,6 @@ view_params_window(void)
 		lab = label_new(vb, LABEL_POLLED_MT,
 		    _("Refresh rate (nominal): %d"),
 		    &view->lock, &view->refresh.rnom);
-
-		if (view->rootmap != NULL) {
-			struct viewmap *rm = view->rootmap;
-		
-			label_new(vb, LABEL_POLLED_MT, _("Map: %[obj]"),
-			    &view->lock, &rm->map);
-			label_new(vb, LABEL_STATIC, _("Map geometry: %dx%d"),
-			    rm->w, rm->h);
-			label_new(vb, LABEL_POLLED_MT,
-			    _("Map offset: %d,%d (soft %d,%d)"), &view->lock,
-			    &rm->x, &rm->y, &rm->sx, &rm->sy);
-		}
 	}
 	return (win);
 }

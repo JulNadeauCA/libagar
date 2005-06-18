@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.202 2005/05/08 11:09:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.203 2005/05/18 03:50:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,6 @@
 #include <engine/timeout.h>
 
 #include <engine/map/map.h>
-#include <engine/map/rootmap.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/menu.h>
@@ -223,22 +222,6 @@ event_loop(void)
 			if (view->opengl)
 				glClear(GL_COLOR_BUFFER_BIT);
 #endif
-
-			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-				if (view->rootmap->map == NULL) {
-					dprintf("NULL map, exiting\n");
-					pthread_mutex_unlock(&view->lock);
-					break;
-				}
-				pthread_mutex_lock(&view->rootmap->map->lock);
-				rootmap_animate();
-				if (view->rootmap->map->redraw != 0) {
-					view->rootmap->map->redraw = 0;
-					rootmap_draw();
-				}
-				pthread_mutex_unlock(&view->rootmap->map->lock);
-				view_update(0, 0, 0, 0);
-			}
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				if (!win->visible)
 					continue;
@@ -436,10 +419,6 @@ event_dispatch(SDL_Event *ev)
 #endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
-		if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-			view->rootmap->map = NULL;	/* Stop synchronously */
-			break;
-		}
 		pthread_mutex_unlock(&view->lock);
 		engine_destroy();
 		/* NOTREACHED */

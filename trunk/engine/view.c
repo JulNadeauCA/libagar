@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.184 2005/05/19 06:33:21 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.185 2005/05/27 03:45:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,6 @@
 #include <engine/prop.h>
 
 #ifdef MAP
-#include <engine/map/rootmap.h>
 #include <engine/map/map.h>
 #endif
 
@@ -86,7 +85,6 @@ view_init(enum gfx_engine ge)
 
 	view = Malloc(sizeof(struct viewport), M_VIEW);
 	view->gfx_engine = ge;
-	view->rootmap = NULL;
 	view->winop = VIEW_WINOP_NONE;
 	view->ndirty = 0;
 	view->maxdirty = 4;
@@ -114,13 +112,6 @@ view_init(enum gfx_engine ge)
 		screenflags |= SDL_HWPALETTE;
 
 	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		dprintf("direct video / tile-based\n");
-		view->w -= view->w % TILESZ;
-		view->h -= view->h % TILESZ;
-		view->rootmap = Malloc(sizeof(struct viewmap), M_VIEW);
-		rootmap_init(view->rootmap, view->w/TILESZ, view->h/TILESZ);
-		break;
 	case GFX_ENGINE_GUI:
 		dprintf("direct video / gui\n");
 		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
@@ -273,9 +264,6 @@ view_videoexpose(void)
 {
 	struct window *win;
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
-		rootmap_redraw();
-
 	TAILQ_FOREACH(win, &view->windows, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (win->visible) {
@@ -305,7 +293,6 @@ view_destroy(void)
 		Free(win, M_OBJECT);
 	}
 
-	Free(view->rootmap, M_VIEW);
 	Free(view->dirty, M_VIEW);
 	pthread_mutex_destroy(&view->lock);
 	Free(view, M_VIEW);

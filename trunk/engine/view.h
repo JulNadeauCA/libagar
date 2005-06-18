@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.99 2005/05/19 06:33:21 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.100 2005/05/27 03:45:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -10,23 +10,11 @@
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
 
-struct viewmap {
-	int  w, h;			/* View geometry in nodes */
-
-	/* Shares viewport->lock. */
-	struct map	 *map;		/* Currently visible map */
-	int		  x, y;		/* Offset in map */
-	Sint16		  sx, sy;	/* Soft scroll offset */
-	SDL_Rect	**maprects;	/* Destination rectangles for drawing
-					   nodes (optimization) */
-};
-
 TAILQ_HEAD(windowq, window);
 
 struct viewport {
 	enum gfx_engine  gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
-	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	int		 w, h;		/* Display geometry */
 	int		 depth;		/* Depth in bpp */
 	int		 opengl;	/* OpenGL rendering? (if available) */
