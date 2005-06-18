@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.22 2005/06/07 06:49:25 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.23 2005/06/15 06:54:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -235,7 +235,7 @@ sketch_edit(struct tileview *tv, struct tile_element *tel)
 
 		fsb = fspinbutton_new(ntab, NULL, _("Scale: "));
 		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_sketch.scale);
-		fspinbutton_set_min(fsb, 1.0);
+		fspinbutton_set_min(fsb, 0.0001);
 		fspinbutton_set_increment(fsb, 0.1);
 		event_new(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
 		    tv, tel);
