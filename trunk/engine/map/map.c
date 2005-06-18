@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.18 2005/06/16 05:20:01 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.19 2005/06/16 16:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1716,14 +1716,23 @@ draw:
 static void
 create_view(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
+	struct mapview *omv = argv[1].p;
 	struct window *pwin = argv[2].p;
+	struct map *map = omv->map;
+	struct mapview *mv;
 	struct window *win;
 
 	win = window_new(0, NULL);
-	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
-	mapview_new(win, mv->map, 0, NULL, NULL);
+	window_set_caption(win, _("View: %s"), OBJECT(map)->name);
+	
+	mv = mapview_new(win, map, 0, NULL, NULL);
+	mv->cam = map_add_camera(map, _("View"));
+	mapview_prescale(mv, 2, 2);
+	widget_focus(mv);
+	
 	window_attach(pwin, win);
+	window_scale(win, -1, -1);
+	window_set_geometry(win, 0, 0, view->w/4, view->h/4);
 	window_show(win);
 }
 
