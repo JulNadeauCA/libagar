@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.19 2005/06/16 16:04:17 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.20 2005/06/18 04:35:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1361,7 +1361,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 	if (TAILQ_EMPTY(&r->transforms)) {
 		*pSu = spr->su;
 #ifdef HAVE_OPENGL
-		*pTexture = spr->texture;
+		if (pTexture != NULL) { *pTexture = spr->texture; }
 #endif
 		return;
 	}
@@ -1390,7 +1390,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 		csp->last_drawn = SDL_GetTicks();
 		*pSu = csp->su;
 #ifdef HAVE_OPENGL
-		*pTexture = csp->texture;
+		if (pTexture != NULL) { *pTexture = csp->texture; }
 #endif
 		return;
 	} else {
@@ -1444,7 +1444,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 		} else {
 			csp->texture = 0;
 		}
-		*pTexture = csp->texture;
+		if (pTexture != NULL) { *pTexture = csp->texture; }
 #endif
 		*pSu = csp->su;
 		return;
@@ -1466,7 +1466,7 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 	if (TAILQ_EMPTY(&r->transforms)) {
 		*pSurface = GFX_ANIM_FRAME(r, oanim);
 #ifdef HAVE_OPENGL
-		*pTexture = GFX_ANIM_TEXTURE(r, oanim);
+		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,oanim); }
 #endif
 		return;
 	}
@@ -1496,7 +1496,8 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 		canim->last_drawn = SDL_GetTicks();
 		*pSurface = GFX_ANIM_FRAME(r, canim->anim);
 #ifdef HAVE_OPENGL
-		*pTexture = GFX_ANIM_TEXTURE(r, canim->anim);
+		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,
+		                        canim->anim); }
 #endif
 		return;
 	} else {
@@ -1574,10 +1575,101 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 		SLIST_INSERT_HEAD(&animcl->anims, ncanim, anims);
 		*pSurface = GFX_ANIM_FRAME(r, nanim);
 #ifdef HAVE_OPENGL
-		*pTexture = GFX_ANIM_TEXTURE(r, nanim);
+		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,nanim); }
 #endif
 		return;
 	}
+}
+
+static struct noderef *
+locate_noderef(struct map *m, int x, int y, int xoffs, int yoffs)
+{
+	struct node *node = &m->map[y][x];
+	struct noderef *nref;
+	SDL_Rect rExt;
+
+	if (x+xoffs < 0 || x+xoffs >= m->mapw ||
+	    y+yoffs < 0 || y+yoffs >= m->maph)
+		return (NULL);
+
+	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+		if (nref->layer != m->cur_layer) {
+			continue;
+		}
+		switch (nref->type) {
+		case NODEREF_SPRITE:
+			return (nref);
+		default:
+			break;
+		}
+	}
+	return (NULL);
+}
+
+struct noderef *
+noderef_locate(struct map *m, int x, int y, int ncam)
+{
+	struct map_camera *cam = &m->cameras[ncam];
+	int mx = x/cam->tilesz;
+	int my = y/cam->tilesz;
+	int xoffs = x%cam->tilesz;
+	int yoffs = y%cam->tilesz;
+	struct node *n;
+	struct noderef *r;
+
+	if (mx < 0 || my < 0 || mx >= m->mapw || mx >= m->maph)
+		return (NULL);
+
+	if ((r = locate_noderef(m, mx, my, 0, -1)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, 0, 0)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, 0, +1)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, -1, -1)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, -1, 0)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, -1, 1)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, 1, -1)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, 1, 0)) != NULL) { return (r); }
+	if ((r = locate_noderef(m, mx, my, 1, 1)) != NULL) { return (r); }
+
+	return (NULL);
+}
+
+/*
+ * Return the dimensions of a graphical noderef, and coordinates relative to
+ * the origin of the the node.
+ */
+int
+noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
+{
+	int tilesz = m->cameras[cam].tilesz;
+	SDL_Surface *su;
+	
+	switch (r->type) {
+	case NODEREF_SPRITE:
+		draw_sprite(r, &su, NULL);
+		break;
+	case NODEREF_ANIM:
+		draw_anim(r, &su, NULL);
+		break;
+	default:
+		return (-1);
+	}
+
+	if (tilesz != TILESZ) {
+		rd->x = r->r_gfx.xcenter*tilesz/TILESZ +
+		        r->r_gfx.xmotion*tilesz/TILESZ -
+			r->r_gfx.xorigin*tilesz/TILESZ;
+		rd->y = r->r_gfx.ycenter*tilesz/TILESZ +
+		        r->r_gfx.ymotion*tilesz/TILESZ -
+			r->r_gfx.yorigin*tilesz/TILESZ;
+		rd->w = su->w*tilesz/TILESZ;
+		rd->h = su->h*tilesz/TILESZ;
+	} else {
+		rd->x = r->r_gfx.xcenter + r->r_gfx.xmotion - r->r_gfx.xorigin;
+		rd->y = r->r_gfx.ycenter + r->r_gfx.ymotion - r->r_gfx.yorigin;
+		rd->w = su->w;
+		rd->h = su->h;
+	}
+	return (0);
 }
 
 /*

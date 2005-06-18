@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.19 2005/06/17 08:37:50 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.20 2005/06/18 04:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -307,6 +307,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
+	mv->mouse.xmap = 0;
+	mv->mouse.ymap = 0;
 	mv->dblclicked = 0;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
@@ -549,6 +551,7 @@ mapview_draw(void *p)
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
+	SDL_Rect rExtent;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLenum blend_sfactor;
@@ -606,13 +609,27 @@ draw_layer:
 		for (mx = mv->mx, rx = mv->xoffs;
 	     	     ((mx - mv->mx) <= mv->mw) && (mx < m->mapw);
 		     mx++, rx += MV_TILESZ(mv)) {
+
 			node = &m->map[my][mx];
+
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer == layer) {
-					noderef_draw(m, nref,
-					    WIDGET(mv)->cx + rx,
-					    WIDGET(mv)->cy + ry,
-					    mv->cam);
+				if (nref->layer != layer)
+					continue;
+
+				noderef_draw(m, nref,
+				    WIDGET(mv)->cx + rx,
+				    WIDGET(mv)->cy + ry,
+				    mv->cam);
+
+				if ((nref->flags & NODEREF_SELECTED) &&
+				    noderef_extent(m, nref, &rExtent, mv->cam)
+				    == 0) {
+					primitives.rect_outlined(mv,
+					    rx + rExtent.x - 1,
+					    ry + rExtent.y - 1,
+					    rExtent.w + 1,
+					    rExtent.h + 1,
+					    COLOR(MAPVIEW_RSEL_COLOR));
 				}
 			}
 
@@ -884,6 +901,8 @@ mousemotion(int argc, union evarg *argv)
 out:
 	mv->mouse.x = x;
 	mv->mouse.y = y;
+	mv->mouse.xmap = x*MV_TILESZ(mv) + mv->xoffs;
+	mv->mouse.ymap = y*MV_TILESZ(mv) + mv->yoffs;
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
@@ -904,6 +923,8 @@ mousebuttondown(int argc, union evarg *argv)
 	get_node_coords(mv, &x, &y);
 	mv->mouse.x = x;
 	mv->mouse.y = y;
+	mv->mouse.xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
+	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
 
 	if ((mv->flags & MAPVIEW_EDIT) && (mv->cx >= 0 && mv->cy >= 0)) {
 		if (mv->curtool != NULL) {
@@ -937,8 +958,7 @@ mousebuttondown(int argc, union evarg *argv)
 				}
 				tool->mv = mv;
 				if (mbinding->func(tool, button, 1,
-				    mv->cx*MV_TILESZ(mv)+mv->cxoffs,
-				    mv->cy*MV_TILESZ(mv)+mv->cyoffs,
+				    mv->mouse.xmap, mv->mouse.ymap,
 				    mbinding->arg) == 1)
 					goto out;
 			}
@@ -966,9 +986,21 @@ mousebuttondown(int argc, union evarg *argv)
 			}
 			goto out;
 		} else {
-			if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
-				select_begin_nodesel(mv);
-				goto out;
+			struct noderef *r;
+
+			if ((r = noderef_locate(m, mv->mouse.xmap,
+			    mv->mouse.ymap, mv->cam)) != NULL) {
+				if (r->flags & NODEREF_SELECTED) {
+					r->flags &= ~(NODEREF_SELECTED);
+				} else {
+					r->flags |= NODEREF_SELECTED;
+				}
+			}
+			if (SDL_GetModState() & KMOD_CTRL) {
+				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
+					select_begin_nodesel(mv);
+					goto out;
+				}
 			}
 		}
 		break;

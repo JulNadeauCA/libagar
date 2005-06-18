@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.10 2005/06/16 16:04:17 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.11 2005/06/17 08:37:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -42,8 +42,9 @@ struct mapview {
 	int prew, preh;			/* Prescaling (nodes) */
 
 	struct {			/* Mouse scrolling state */
-		int scrolling;
-		int x, y;
+		int scrolling;		/* Scrolling is in progress */
+		int x, y;		/* Current node coordinates */
+		int xmap, ymap;		/* Current map coordinates */
 	} mouse;
 	struct {			/* Temporary mouse selection */
 		int set;		/* Selection is set */
