@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.6 2005/01/30 05:39:11 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.7 2005/03/11 08:56:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -311,14 +311,47 @@ mspinbutton_draw(void *p)
 {
 	struct mspinbutton *sbu = p;
 	struct widget_binding *xvalueb, *yvalueb;
-	int *xvalue, *yvalue;
+	void *xvalue, *yvalue;
 
 	if (WIDGET(sbu->input)->flags & WIDGET_FOCUSED)
 		return;
 
 	xvalueb = widget_get_binding(sbu, "xvalue", &xvalue);
 	yvalueb = widget_get_binding(sbu, "yvalue", &yvalue);
-	textbox_printf(sbu->input, "%d%s%d", *xvalue, sbu->sep, *yvalue);
+	switch (xvalueb->vtype) {
+	case WIDGET_INT:
+		textbox_printf(sbu->input, "%d%s%d",
+		    *(int *)xvalue, sbu->sep, *(int *)yvalue);
+		break;
+	case WIDGET_UINT:
+		textbox_printf(sbu->input, "%u%s%u",
+		    *(u_int *)xvalue, sbu->sep, *(u_int *)yvalue);
+		break;
+	case WIDGET_UINT8:
+		textbox_printf(sbu->input, "%u%s%u",
+		    *(Uint8 *)xvalue, sbu->sep, *(Uint8 *)yvalue);
+		break;
+	case WIDGET_SINT8:
+		textbox_printf(sbu->input, "%d%s%d",
+		    *(Sint8 *)xvalue, sbu->sep, *(Sint8 *)yvalue);
+		break;
+	case WIDGET_UINT16:
+		textbox_printf(sbu->input, "%u%s%u",
+		    *(Uint16 *)xvalue, sbu->sep, *(Uint16 *)yvalue);
+		break;
+	case WIDGET_SINT16:
+		textbox_printf(sbu->input, "%d%s%d",
+		    *(Sint16 *)xvalue, sbu->sep, *(Sint16 *)yvalue);
+		break;
+	case WIDGET_UINT32:
+		textbox_printf(sbu->input, "%u%s%u",
+		    *(Uint32 *)xvalue, sbu->sep, *(Uint32 *)yvalue);
+		break;
+	case WIDGET_SINT32:
+		textbox_printf(sbu->input, "%d%s%d",
+		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
+		break;
+	}
 	widget_binding_unlock(xvalueb);
 	widget_binding_unlock(yvalueb);
 }
