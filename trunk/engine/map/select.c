@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.4 2005/06/16 05:19:32 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.5 2005/06/17 08:37:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -156,6 +156,45 @@ select_update_nodemove(struct mapview *mv, int xRel, int yRel)
 	
 	mv->esel.x += xRel;
 	mv->esel.y += yRel;
+}
+
+void
+select_update_refmove(struct mapview *mv, int xRel, int yRel)
+{
+	struct map *m = mv->map;
+	struct noderef *r;
+	int nx, ny;
+	int tilesz = MV_TILESZ(mv);
+
+	for (ny = mv->my;
+	     (ny - mv->my) <= mv->mh && ny < m->maph;
+	     ny++) {
+		for (nx = mv->mx;
+		     (nx - mv->mx) <= mv->mw && nx < m->mapw;
+		     nx++) {
+			struct node *node = &m->map[ny][nx];
+
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if ((r->flags & NODEREF_SELECTED) == 0) {
+					continue;
+				}
+				r->r_gfx.xcenter += xRel;
+				r->r_gfx.ycenter += yRel;
+
+				if (xRel > 0 && r->r_gfx.xcenter > TILESZ) {
+					r->r_gfx.xcenter = TILESZ;
+				} else if (xRel<0 && r->r_gfx.xcenter < 0) {
+					r->r_gfx.xcenter = 0;
+				}
+				
+				if (yRel > 0 && r->r_gfx.ycenter > TILESZ) {
+					r->r_gfx.ycenter = TILESZ;
+				} else if (yRel < 0 && r->r_gfx.ycenter < 0) {
+					r->r_gfx.ycenter = 0;
+				}
+			}
+		}
+	}
 }
 
 void

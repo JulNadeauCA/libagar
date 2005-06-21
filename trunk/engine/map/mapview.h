@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.11 2005/06/17 08:37:50 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.12 2005/06/18 16:37:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -48,16 +48,19 @@ struct mapview {
 	} mouse;
 	struct {			/* Temporary mouse selection */
 		int set;		/* Selection is set */
-		int x, y;
-		int xoffs, yoffs;
+		int x, y;		/* Origin of rectangle */
+		int xoffs, yoffs;	/* Displacement from origin */
 	} msel;
 	struct {			/* Effective map selection */
 		int set;		/* Selection is set */
 		int moving;		/* Nodes are being displaced */
 		struct map map;		/* Temporary copy of the nodes */
-		int x, y;
-		int w, h;
+		int x, y;		/* Origin of the rectangle */
+		int w, h;		/* Dimensions of the rectangle */
 	} esel;
+	struct {			/* Noderef selection */
+		int moving;		/* Noderefs are being displaced */
+	} rsel;
 
 	struct map *map;		/* Map to display */
 	int cam;			/* Name of map camera to use */
@@ -67,8 +70,7 @@ struct mapview {
 
 	int cx, cy;			/* Cursor position (nodes) */
 	int cxoffs, cyoffs;		/* Cursor offset (pixels) */
-	int cxrel, cyrel;		/* Displacement from last position */
-	int cxabs, cyabs;		/* Absolute cursor position (pixels) */
+	int cxrel, cyrel;		/* Relative displacement (nodes) */
 	int dblclicked;			/* Double click flag */
 
 	struct toolbar *toolbar;	/* Optional toolbar */

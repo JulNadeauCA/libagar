@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.21 2005/06/18 16:37:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.22 2005/06/21 03:54:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1588,7 +1588,7 @@ locate_noderef(struct map *m, struct node *node, int xoffs, int yoffs,
 	SDL_Rect rExt;
 	struct noderef *r;
 
-	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+	TAILQ_FOREACH_REVERSE(r, &node->nrefs, nrefs, noderefq) {
 		if (r->layer != m->cur_layer) {
 			continue;
 		}
@@ -1665,13 +1665,13 @@ noderef_locate(struct map *m, int xMap, int yMap, int ncam)
 	}
 	if (x-1 >= 0 && y+1 < m->maph) {
 		if ((r = locate_noderef(m, &m->map[y+1][x-1], xoffs, yoffs,
-		    -cam->tilesz, +cam->tilesz, ncam)) != NULL) {
+		    +cam->tilesz, -cam->tilesz, ncam)) != NULL) {
 			return (r);
 		}
 	}
 	if (x+1 < m->mapw && y-1 >= 0) {
 		if ((r = locate_noderef(m, &m->map[y-1][x+1], xoffs, yoffs,
-		    +cam->tilesz, -cam->tilesz, ncam)) != NULL) {
+		    -cam->tilesz, +cam->tilesz, ncam)) != NULL) {
 			return (r);
 		}
 	}
@@ -2306,6 +2306,59 @@ push_layer(int argc, union evarg *argv)
 	}
 }
 
+static void
+edit_noderef(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	int button = argv[1].i;
+	int x = argv[2].i;
+	int y = argv[3].i;
+	int xoffs = argv[4].i;
+	int yoffs = argv[5].i;
+	struct noderef *r;
+	struct window *pwin, *win;
+	struct spinbutton *sb;
+	struct mspinbutton *msb;
+
+	if ((r = noderef_locate(mv->map, mv->mouse.xmap, mv->mouse.ymap,
+	    mv->cam)) == NULL) {
+		return;
+	}
+
+	win = window_new(0, NULL);
+	window_set_caption(win, _("Node reference"));
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 1);
+
+	label_staticf(win, _("Type: %s"),
+	    (r->type == NODEREF_SPRITE) ? _("Sprite") :
+	    (r->type == NODEREF_ANIM) ? _("Animation") :
+	    (r->type == NODEREF_WARP) ? _("Warp point") :
+	    (r->type == NODEREF_GOBJ) ? _("Geometrical object") : "?");
+
+	sb = spinbutton_new(win, _("Friction: "));
+	widget_bind(sb, "value", WIDGET_SINT8, &r->friction);
+	
+	sb = spinbutton_new(win, _("Layer: "));
+	widget_bind(sb, "value", WIDGET_UINT8, &r->layer);
+	
+	msb = mspinbutton_new(win, ",", _("Centering: "));
+	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xcenter);
+	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.ycenter);
+	
+	msb = mspinbutton_new(win, ",", _("Motion: "));
+	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xmotion);
+	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.ymotion);
+	
+	msb = mspinbutton_new(win, ",", _("Origin: "));
+	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xorigin);
+	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.yorigin);
+
+	if ((pwin = widget_parent_window(mv)) != NULL) {
+		window_attach(pwin, win);
+	}
+	window_show(win);
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -2337,9 +2390,11 @@ map_edit(void *p)
 	toolbar_init(toolbar, TOOLBAR_VERT, 1, 0);
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
+	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 	mapview_init(mv, m, flags, toolbar, statbar);
 	mapview_prescale(mv, 2, 2);
+	event_new(mv, "mapview-dblclick", edit_noderef, NULL);
 
 	menu = menu_new(win);
 	pitem = menu_add_item(menu, _("File"));

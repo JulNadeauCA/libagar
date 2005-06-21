@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.20 2005/06/18 04:25:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.21 2005/06/18 16:37:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -328,8 +328,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->cyrel = 0;
 	mv->cxoffs = 0;
 	mv->cyoffs = 0;
-	mv->cxabs = 0;
-	mv->cyabs = 0;
+	mv->xoffs = 0;
+	mv->yoffs = 0;
+	
 	mv->msel.set = 0;
 	mv->msel.x = 0;
 	mv->msel.y = 0;
@@ -341,8 +342,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->esel.y = 0;
 	mv->esel.w = 0;
 	mv->esel.h = 0;
-	mv->xoffs = 0;
-	mv->yoffs = 0;
+	mv->rsel.moving = 0;
 	
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->origin.x;
@@ -393,8 +393,6 @@ get_node_coords(struct mapview *mv, int *x, int *y)
 {
 	*x -= mv->xoffs;
 	*y -= mv->yoffs;
-	mv->cxabs = *x;
-	mv->cyabs = *y;
 	mv->cxoffs = *x % MV_TILESZ(mv);
 	mv->cyoffs = *y % MV_TILESZ(mv);
 
@@ -897,6 +895,8 @@ mousemotion(int argc, union evarg *argv)
 		mv->msel.yoffs += mv->cyrel;
 	} else if (mv->esel.set && mv->esel.moving) {
 		select_update_nodemove(mv, mv->cxrel, mv->cyrel);
+	} else if (mv->rsel.moving) {
+		select_update_refmove(mv, xrel, yrel);
 	}
 out:
 	mv->mouse.x = x;
@@ -987,21 +987,48 @@ mousebuttondown(int argc, union evarg *argv)
 			goto out;
 		} else {
 			struct noderef *r;
-
+			int nx, ny;
+			
+			if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+				for (ny = 0; ny < m->maph; ny++) {
+					for (nx = 0; nx < m->mapw; nx++) {
+						struct node *node =
+						    &m->map[ny][nx];
+						
+						TAILQ_FOREACH(r, &node->nrefs,
+						    nrefs) {
+							r->flags &=
+							    ~(NODEREF_SELECTED);
+						}
+					}
+				}
+			}
 			if ((r = noderef_locate(m, mv->mouse.xmap,
 			    mv->mouse.ymap, mv->cam)) != NULL) {
 				if (r->flags & NODEREF_SELECTED) {
 					r->flags &= ~(NODEREF_SELECTED);
 				} else {
 					r->flags |= NODEREF_SELECTED;
+					mv->rsel.moving = 1;
 				}
 			}
-			if (SDL_GetModState() & KMOD_CTRL) {
+			if (SDL_GetModState() & KMOD_SHIFT) {
 				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
 					select_begin_nodesel(mv);
 					goto out;
 				}
 			}
+		}
+		if (mv->dblclicked) {
+			event_cancel(mv, "dblclick-expire");
+			event_post(NULL, mv, "mapview-dblclick",
+			    "%i, %i, %i, %i, %i", button, x, y,
+			    mv->cxoffs, mv->cyoffs);
+			mv->dblclicked = 0;
+		} else {
+			mv->dblclicked++;
+			event_schedule(NULL, mv, mouse_dblclick_delay,
+			    "dblclick-expire", NULL);
 		}
 		break;
 	case SDL_BUTTON_MIDDLE:
@@ -1029,16 +1056,6 @@ mousebuttondown(int argc, union evarg *argv)
 			mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
 		}
 		break;
-	}
-	if (mv->dblclicked) {
-		event_cancel(mv, "dblclick-expire");
-		event_post(NULL, mv, "mapview-dblclick", "%i, %i, %i, %i, %i",
-		    button, x, y, mv->cxoffs, mv->cyoffs);
-		mv->dblclicked = 0;
-	} else {
-		mv->dblclicked++;
-		event_schedule(NULL, mv, mouse_dblclick_delay,
-		    "dblclick-expire", NULL);
 	}
 out:
 	pthread_mutex_unlock(&m->lock);
@@ -1097,6 +1114,7 @@ mousebuttonup(int argc, union evarg *argv)
 		if (mv->esel.set && mv->esel.moving) {
 			select_end_nodemove(mv);
 		}
+		mv->rsel.moving = 0;
 		goto out;
 	}
 
@@ -1114,6 +1132,7 @@ mousebuttonup(int argc, union evarg *argv)
 				select_end_nodemove(mv);
 			}
 		}
+		mv->rsel.moving = 0;
 		break;
 	case SDL_BUTTON_RIGHT:
 	case SDL_BUTTON_MIDDLE:

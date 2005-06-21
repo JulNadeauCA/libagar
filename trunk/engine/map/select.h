@@ -1,4 +1,4 @@
-/*	$Csoft: select.h,v 1.1 2005/06/16 05:19:32 vedge Exp $	*/
+/*	$Csoft: select.h,v 1.2 2005/06/17 08:37:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_SELECT_H_
@@ -10,6 +10,8 @@ void select_end_nodesel(struct mapview *);
 void select_begin_nodemove(struct mapview *);
 void select_update_nodemove(struct mapview *, int, int);
 void select_end_nodemove(struct mapview *);
+
+void select_update_refmove(struct mapview *, int, int);
 
 int select_copy_nodes(struct tool *, SDLKey, int, void *);
 int select_paste_nodes(struct tool *, SDLKey, int, void *);
