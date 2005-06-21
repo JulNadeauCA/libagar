@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.20 2005/06/18 04:35:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.21 2005/06/18 16:37:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1582,23 +1582,24 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 }
 
 static struct noderef *
-locate_noderef(struct map *m, int x, int y, int xoffs, int yoffs)
+locate_noderef(struct map *m, struct node *node, int xoffs, int yoffs,
+    int xd, int yd, int ncam)
 {
-	struct node *node = &m->map[y][x];
-	struct noderef *nref;
 	SDL_Rect rExt;
+	struct noderef *r;
 
-	if (x+xoffs < 0 || x+xoffs >= m->mapw ||
-	    y+yoffs < 0 || y+yoffs >= m->maph)
-		return (NULL);
-
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		if (nref->layer != m->cur_layer) {
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != m->cur_layer) {
 			continue;
 		}
-		switch (nref->type) {
+		switch (r->type) {
 		case NODEREF_SPRITE:
-			return (nref);
+			if (noderef_extent(m, r, &rExt, ncam) == 0 &&
+			    xoffs+xd >= rExt.x && xoffs+xd < rExt.x+rExt.w &&
+			    yoffs+yd >= rExt.y && yoffs+yd < rExt.y+rExt.h) {
+				return (r);
+			}
+			break;
 		default:
 			break;
 		}
@@ -1607,29 +1608,73 @@ locate_noderef(struct map *m, int x, int y, int xoffs, int yoffs)
 }
 
 struct noderef *
-noderef_locate(struct map *m, int x, int y, int ncam)
+noderef_locate(struct map *m, int xMap, int yMap, int ncam)
 {
 	struct map_camera *cam = &m->cameras[ncam];
-	int mx = x/cam->tilesz;
-	int my = y/cam->tilesz;
-	int xoffs = x%cam->tilesz;
-	int yoffs = y%cam->tilesz;
-	struct node *n;
+	int x = xMap/cam->tilesz;
+	int y = yMap/cam->tilesz;
+	int xoffs = xMap%cam->tilesz;
+	int yoffs = yMap%cam->tilesz;
 	struct noderef *r;
 
-	if (mx < 0 || my < 0 || mx >= m->mapw || mx >= m->maph)
+	if (x < 0 || y < 0 || x >= m->mapw || x >= m->maph) {
 		return (NULL);
+	}
+	if ((r = locate_noderef(m, &m->map[y][x], xoffs, yoffs, 0, 0, ncam))
+	    != NULL) {
+		return (r);
+	}
 
-	if ((r = locate_noderef(m, mx, my, 0, -1)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, 0, 0)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, 0, +1)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, -1, -1)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, -1, 0)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, -1, 1)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, 1, -1)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, 1, 0)) != NULL) { return (r); }
-	if ((r = locate_noderef(m, mx, my, 1, 1)) != NULL) { return (r); }
+	if (y+1 < m->maph) {
+		if ((r = locate_noderef(m, &m->map[y+1][x], xoffs, yoffs,
+		    0, -cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (y-1 >= 0) {
+		if ((r = locate_noderef(m, &m->map[y-1][x], xoffs, yoffs,
+		    0, +cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (x+1 < m->mapw) {
+		if ((r = locate_noderef(m, &m->map[y][x+1], xoffs, yoffs,
+		    -cam->tilesz, 0, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (x-1 >= 0) {
+		if ((r = locate_noderef(m, &m->map[y][x-1], xoffs, yoffs,
+		    +cam->tilesz, 0, ncam)) != NULL) {
+			return (r);
+		}
+	}
 
+	/* Check diagonal nodes. */
+	if (x+1 < m->mapw && y+1 < m->maph) {
+		if ((r = locate_noderef(m, &m->map[y+1][x+1], xoffs, yoffs,
+		    -cam->tilesz, -cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (x-1 >= 0 && y-1 >= 0) {
+		if ((r = locate_noderef(m, &m->map[y-1][x-1], xoffs, yoffs,
+		    +cam->tilesz, +cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (x-1 >= 0 && y+1 < m->maph) {
+		if ((r = locate_noderef(m, &m->map[y+1][x-1], xoffs, yoffs,
+		    -cam->tilesz, +cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
+	if (x+1 < m->mapw && y-1 >= 0) {
+		if ((r = locate_noderef(m, &m->map[y-1][x+1], xoffs, yoffs,
+		    +cam->tilesz, -cam->tilesz, ncam)) != NULL) {
+			return (r);
+		}
+	}
 	return (NULL);
 }
 
