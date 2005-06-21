@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.45 2005/05/16 07:15:06 vedge Exp $
+.\"	$Csoft: agar.3,v 1.46 2005/06/18 04:25:18 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,7 +42,7 @@ library is a highly portable graphical toolkit and application framework. This
 manual documents the programming interfaces offered by the Agar subsystems.
 .Pp
 .Sh CORE AGAR LIBRARY
-.Bl -tag -width "position "
+.Bl -tag -width "position " -compact
 .It Xr engine 3
 Global engine initialization routines.
 .It Xr event 3
@@ -52,27 +52,26 @@ Graphic resource management.
 .It Xr input 3
 Input device management.
 .It Xr object 3
-Implements object linkage, memory management, persistence, dependencies and
-events.
+Object linkage, memory management, persistence, dependencies and events.
 .It Xr prop 3
 Generic runtime properties for objects.
 .It Xr view 3
 Interface to the graphics display.
 .El
 .Sh MAP LIBRARY
-.Bl -tag -width "map "
+.Bl -tag -width "mapview(3) " -compact
 .It Xr map 3
-Two-dimensional, multilayer maps suitable to overhead and platform games.
+2D maps suitable to overhead and platform games.
 .It Xr mapview 3
 Display and edition of 2D maps.
 .El
 .Sh RASTER GRAPHICS LIBRARY
-.Bl -tag -width "tileview "
+.Bl -tag -width "tileview(3) " -compact
 .It Xr tileview 3
 Tile display and edition.
 .El
 .Sh USER INTERFACE RELATED
-.Bl -tag -width "map "
+.Bl -tag -width "window(3) " -compact
 .It Xr text 3
 High-level interface to font engine (ie. FreeType).
 .It Xr units 3
@@ -83,12 +82,11 @@ Generic widget interface.
 Basic window widget; interface to built-in window manager.
 .El
 .Sh STANDARD WIDGETS
-.Bl -tag -width "map "
+.Bl -tag -width "fspinbutton(3) " -compact
 .It Xr bitmap 3
 Displays a single pixmap.
 .It Xr box 3
-Container which packs widgets either horizontally or vertically.
-.Xr box 3 .
+Horizontal/vertical widget container.
 .It Xr button 3
 Generic push-button widget (boolean bindings).
 .It Xr checkbox 3
@@ -96,13 +94,18 @@ Generic checkbox widget (boolean bindings).
 .It Xr combo 3
 Text input/drop-down menu widget.
 .It Xr fspinbutton 3
-Spinbutton widget with built-in unit conversion (floating-point bindings).
+Spinbutton with unit conversion (floating point bindings).
 .It Xr graph 3
 Plot a set of integral values.
 .It Xr hbox 3
 Alternate interface to
+.Xr box 3 .
+.It Xr hsvpal 3
+Hue/saturation/value color picker widget.
 .It Xr label 3
-Display a string of text (static or individual polled values).
+Display a string of text (static or polled).
+.It Xr mfspinbutton 3
+Spinbutton widget for tuples.
 .It Xr mgraph 3
 Plot real-valued functions.
 .It Xr palette 3
