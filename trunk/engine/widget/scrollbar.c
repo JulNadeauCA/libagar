@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.47 2005/06/13 05:59:38 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.48 2005/06/16 15:58:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -142,11 +142,15 @@ static void
 scrollbar_mousebuttondown(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
+	int button = argv[1].i;
 	int coord = (sb->type == SCROLLBAR_HORIZ) ?
 		argv[2].i : argv[3].i;
 	int totalsize = (sb->type == SCROLLBAR_HORIZ) ?
 		WIDGET(sb)->w : WIDGET(sb)->h;
 	int min, value, max, nvalue;
+
+	if (button != SDL_BUTTON_LEFT)
+		return;
 
 	min = widget_get_int(sb, "min");
 	max = widget_get_int(sb, "max");
