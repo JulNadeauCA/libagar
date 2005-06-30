@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.25 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.26 2005/06/17 04:33:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -396,13 +396,13 @@ line_tool_init(struct tool *t)
 }
 
 static int
-line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+line_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int btn)
 {
 	struct vg *vg = t->p;
 	double x, y;
 	
-	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg_map2vec(vg, xmap, ymap, &x, &y);
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
 
@@ -415,18 +415,17 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 }
 
 static int
-line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
-    int b)
+line_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double vx, vy;
 
 	switch (mode) {
 	case MODE_SEGMENTS:
-		if (b == 1) {
+		if (btn == 1) {
 			if (seq++ == 0) {
 				cur_line = vg_begin_element(vg, VG_LINES);
-				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+				vg_map2vec(vg, xmap, ymap, &vx, &vy);
 				vg_vertex2(vg, vx, vy);
 				cur_vtx = vg_vertex2(vg, vx, vy);
 
@@ -444,7 +443,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		break;
 	case MODE_STRIP:
 	case MODE_LOOP:
-		if (b == 1) {
+		if (btn == 1) {
 			if (seq++ == 0) {
 #ifdef DEBUG
 				if (vg->cur_block != NULL)
@@ -453,12 +452,12 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 				cur_line = vg_begin_element(vg,
 				    mode == MODE_STRIP ? VG_LINE_STRIP :
 							 VG_LINE_LOOP);
-				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+				vg_map2vec(vg, xmap, ymap, &vx, &vy);
 				vg_vertex2(vg, vx, vy);
 			} else {
 				tool_pop_status(t);
 			}
-			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_map2vec(vg, xmap, ymap, &vx, &vy);
 			cur_vtx = vg_vertex2(vg, vx, vy);
 			vg->redraw++;
 

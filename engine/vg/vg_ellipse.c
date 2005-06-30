@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.16 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.17 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -118,13 +118,13 @@ ellipse_tool_init(struct tool *t)
 }
 
 static int
-ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+ellipse_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int b)
 {
 	struct vg *vg = t->p;
 	double x, y;
 	
-	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg_map2vec(vg, xmap, ymap, &x, &y);
 
 	if (cur_ellipse != NULL) {
 		if (seq == 1) {
@@ -150,18 +150,17 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 }
 
 static int
-ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
-    int b)
+ellipse_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	switch (b) {
+	switch (btn) {
 	case 1:
 		switch (seq++) {
 		case 0:
 			cur_ellipse = vg_begin_element(vg, VG_ELLIPSE);
-			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_map2vec(vg, xmap, ymap, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			vg_end_element(vg);
 

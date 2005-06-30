@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.13 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.14 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -154,14 +154,13 @@ origin_tool_init(struct tool *t)
 }
 
 static int
-origin_mousebuttondown(struct tool *t, int tx, int ty, int txoff,
-    int tyoff, int b)
+origin_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double x, y;
 
-	if (b == 1) {
-		vg_avcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	if (btn == 1) {
+		vg_map2veca(vg, xmap, ymap, &x, &y);
 		vg_origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}
@@ -169,14 +168,14 @@ origin_mousebuttondown(struct tool *t, int tx, int ty, int txoff,
 }
 
 static int
-origin_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+origin_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int btn)
 {
 	struct vg *vg = t->p;
 	double x, y;
 
-	if (b & SDL_BUTTON(1)) {
-		vg_avcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	if (btn & SDL_BUTTON(1)) {
+		vg_map2veca(vg, xmap, ymap, &x, &y);
 		vg_origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}

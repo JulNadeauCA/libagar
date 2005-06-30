@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.5 2005/06/16 05:20:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
 #else
 
 static int
-flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
+flip_mousebuttondown(struct tool *t, int xmap, int ymap, int b)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
