@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.4 2005/06/16 05:20:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,10 +33,34 @@
 #include "map.h"
 #include "mapedit.h"
 
+static int
+delete_noderefs(struct tool *t, SDLKey key, int state, void *arg)
+{
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
+	int x, y;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				if (nref->layer != m->cur_layer) {
+					continue;
+				}
+				if (nref->flags & NODEREF_SELECTED)
+					node_remove_ref(m, node, nref);
+			}
+		}
+	}
+	return (0);
+}
+
 static void
 eraser_init(struct tool *t)
 {
-	tool_push_status(t, _("Specify the tile to delete."));
+	tool_bind_key(t, 0, SDLK_DELETE, delete_noderefs, NULL);
 }
 
 static int
