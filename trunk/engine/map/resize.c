@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.5 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,8 +34,7 @@
 #include "mapedit.h"
 
 static int
-resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
-    int yo, int xorel, int yorel, int state)
+resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int state)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;

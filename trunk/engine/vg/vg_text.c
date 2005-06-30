@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.19 2005/06/17 04:33:49 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.20 2005/06/17 08:37:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -464,13 +464,13 @@ text_tool_init(struct tool *t)
 }
 
 static int
-text_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+text_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int btn)
 {
 	struct vg *vg = t->p;
 	double x, y;
 	
-	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg_map2vec(vg, xmap, ymap, &x, &y);
 	if (cur_vtx != NULL) {
 		cur_vtx->x = x;
 		cur_vtx->y = y;
@@ -488,17 +488,16 @@ text_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 }
 
 static int
-text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
-    int b)
+text_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	switch (b) {
+	switch (btn) {
 	case 1:
 		cur_text = vg_begin_element(vg, VG_TEXT);
 		vg_printf(vg, "%s", cur_string);
-		vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+		vg_map2vec(vg, xmap, ymap, &vx, &vy);
 		cur_vtx = vg_vertex2(vg, vx, vy);
 		vg_text_align(vg, cur_align);
 		vg_end_element(vg);

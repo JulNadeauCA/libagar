@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.21 2005/06/18 16:37:19 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.22 2005/06/21 08:09:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -860,6 +860,8 @@ mousemotion(int argc, union evarg *argv)
 	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
+	mv->mouse.xmap = x*MV_TILESZ(mv) + mv->xoffs;
+	mv->mouse.ymap = y*MV_TILESZ(mv) + mv->yoffs;
 
 	if ((mv->flags & MAPVIEW_EDIT) && mv->curtool != NULL) {
 		if (mv->curtool->effect != NULL &&
@@ -873,15 +875,15 @@ mousemotion(int argc, union evarg *argv)
 		}
 		if (mv->curtool->mousemotion != NULL &&
 		    mv->curtool->mousemotion(mv->curtool,
-		      mv->cx, mv->cy, mv->cxrel, mv->cyrel,
-		      mv->cxoffs, mv->cyoffs, xrel, yrel, state) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap,
+		      xrel, yrel, state) == 1) {
 			goto out;
 		}
 		if (mv->deftool != NULL &&
 		    mv->deftool->mousemotion != NULL &&
 		    mv->deftool->mousemotion(mv->deftool,
-		      mv->cx, mv->cy, mv->cxrel, mv->cyrel,
-		      mv->cxoffs, mv->cyoffs, xrel, yrel, state) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap,
+		      xrel, yrel, state) == 1) {
 			goto out;
 		}
 	}
@@ -901,8 +903,6 @@ mousemotion(int argc, union evarg *argv)
 out:
 	mv->mouse.x = x;
 	mv->mouse.y = y;
-	mv->mouse.xmap = x*MV_TILESZ(mv) + mv->xoffs;
-	mv->mouse.ymap = y*MV_TILESZ(mv) + mv->yoffs;
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
@@ -938,8 +938,7 @@ mousebuttondown(int argc, union evarg *argv)
 			}
 			if (mv->curtool->mousebuttondown != NULL &&
 			    mv->curtool->mousebuttondown(mv->curtool,
-			      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-			      button) == 1) {
+			      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 				goto out;
 			}
 		}
@@ -967,8 +966,7 @@ mousebuttondown(int argc, union evarg *argv)
 		if (mv->deftool != NULL &&
 		    mv->deftool->mousebuttondown != NULL &&
 		    mv->deftool->mousebuttondown(mv->deftool,
-		      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-		      button) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 			goto out;
 		}
 	}
@@ -1078,8 +1076,7 @@ mousebuttonup(int argc, union evarg *argv)
 		if (mv->curtool != NULL) {
 			if (mv->curtool->mousebuttonup != NULL &&
 			    mv->curtool->mousebuttonup(mv->curtool,
-			      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-			      button) == 1) {
+			      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 				goto out;
 			}
 		}
@@ -1105,8 +1102,7 @@ mousebuttonup(int argc, union evarg *argv)
 		if (mv->deftool != NULL &&
 		    mv->deftool->mousebuttonup != NULL &&
 		    mv->deftool->mousebuttonup(mv->deftool,
-		      mv->cx, mv->cy, mv->cxoffs, mv->cyoffs,
-		      button) == 1) {
+		      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 			goto out;
 		}
 	} else {

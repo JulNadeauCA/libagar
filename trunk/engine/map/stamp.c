@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.11 2005/06/16 05:20:02 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.12 2005/06/16 16:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -222,9 +222,9 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 }
 
 static int
-stamp_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
+stamp_mousebuttondown(struct tool *t, int x, int y, int btn)
 {
-	if (b == SDL_BUTTON_MIDDLE) {
+	if (btn == SDL_BUTTON_MIDDLE) {
 		angle = (angle + 90) % 360;
 		return (1);
 	}

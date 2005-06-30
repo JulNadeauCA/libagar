@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.5 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.6 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,9 +72,10 @@ shift_init(struct tool *t)
 	}
 }
 
+#if 0
 static int
-shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
-    int yo, int xorel, int yorel, int b)
+shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel,
+    int b)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
@@ -114,6 +115,7 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 	}
 	return (1);
 }
+#endif
 
 const struct tool shift_tool = {
 	N_("Shift tool"),
@@ -126,7 +128,11 @@ const struct tool shift_tool = {
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+#if 0
 	shift_mousemotion,
+#else
+	NULL,
+#endif
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */

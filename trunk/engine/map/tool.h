@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.3 2005/06/16 05:20:02 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.4 2005/06/17 08:37:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -26,11 +26,9 @@ struct tool {
 	int (*cursor)(struct tool *, SDL_Rect *);
 	int (*effect)(struct tool *, struct node *);
 	int (*mousemotion)(struct tool *, int x, int y, int xrel, int yrel,
-	                   int xo, int yo, int xorel, int yorel, int b);
-	int (*mousebuttondown)(struct tool *, int x, int y, int xoff,
-	                       int yoff, int b);
-	int (*mousebuttonup)(struct tool *, int x, int y, int xoff, int yoff,
-	                     int b);
+	                   int btn);
+	int (*mousebuttondown)(struct tool *, int x, int y, int btn);
+	int (*mousebuttonup)(struct tool *, int x, int y, int btn);
 	int (*keydown)(struct tool *, int ksym, int kmod);
 	int (*keyup)(struct tool *, int ksym, int kmod);
 	

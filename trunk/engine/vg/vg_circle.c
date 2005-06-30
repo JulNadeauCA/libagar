@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.21 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.22 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -114,13 +114,13 @@ circle_tool_init(struct tool *t)
 }
 
 static int
-circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+circle_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int b)
 {
 	struct vg *vg = t->p;
 	double x, y;
 	
-	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg_map2vec(vg, xmap, ymap, &x, &y);
 
 	if (cur_radius != NULL) {
 		cur_radius->x = x;
@@ -139,17 +139,16 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 }
 
 static int
-circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
-    int b)
+circle_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	switch (b) {
+	switch (btn) {
 	case 1:
 		if (seq++ == 0) {
 			cur_circle = vg_begin_element(vg, VG_CIRCLE);
-			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_map2vec(vg, xmap, ymap, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			cur_radius = vg_vertex2(vg, vx, vy);
 			vg_end_element(vg);

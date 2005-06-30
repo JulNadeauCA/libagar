@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.4 2005/06/15 05:25:00 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.5 2005/06/16 05:20:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -186,13 +186,13 @@ init_tool(struct tool *t)
 }
 
 static int
-line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
-    int txoff, int tyoff, int txorel, int tyorel, int b)
+polygon_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+    int btn)
 {
 	struct vg *vg = t->p;
 	double x, y;
 	
-	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg_map2vec(vg, xmap, ymap, &x, &y);
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
 
@@ -205,25 +205,24 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 }
 
 static int
-line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
-    int b)
+polygon_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 {
 	struct vg *vg = t->p;
 	double vx, vy;
 
-	if (b == 1) {
+	if (btn == SDL_BUTTON_LEFT) {
 		if (seq++ == 0) {
 #ifdef DEBUG
 			if (vg->cur_block != NULL)
 				fatal("block");
 #endif
 			cur_polygon = vg_begin_element(vg, VG_POLYGON);
-			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_map2vec(vg, xmap, ymap, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 		} else {
 			tool_pop_status(t);
 		}
-		vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+		vg_map2vec(vg, xmap, ymap, &vx, &vy);
 		cur_vtx = vg_vertex2(vg, vx, vy);
 		vg->redraw++;
 
@@ -260,8 +259,8 @@ struct tool vg_polygon_tool = {
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	line_mousemotion,
-	line_mousebuttondown,
+	polygon_mousemotion,
+	polygon_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
 	NULL			/* keyup */
