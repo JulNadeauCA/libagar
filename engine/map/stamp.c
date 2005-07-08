@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.12 2005/06/16 16:04:17 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.13 2005/06/30 06:26:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/primitive.h>
 
 #include "map.h"
 #include "mapedit.h"
@@ -210,6 +211,9 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 			struct transform *trans;
 
 			init_tile_noderef(mv, &rtmp, tile);
+			primitives.rect_outlined(mv, rd->x+1, rd->y+1,
+			    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
+			    COLOR(MAPVIEW_GRID_COLOR));
 			noderef_draw(m, &rtmp,
 			    WIDGET(mv)->cx + rd->x,
 			    WIDGET(mv)->cy + rd->y,
