@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.60 2005/06/15 06:30:35 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.61 2005/06/17 04:34:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1354,6 +1354,11 @@ resize_tile(int argc, union evarg *argv)
 	    (Uint8)widget_get_int(alpha_sb, "value"));
 	tileview_set_zoom(tv, 100, 0);
 	view_detach(dlg_w);
+
+	if (tv->state == TILEVIEW_TILE_EDIT) {
+		tileview_set_int(tv->tv_tile.geo_ctrl, 2, w);
+		tileview_set_int(tv->tv_tile.geo_ctrl, 3, h);
+	}
 }
 
 static void
