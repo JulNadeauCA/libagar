@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.22 2005/06/21 03:54:01 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.23 2005/06/21 08:09:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1706,13 +1706,14 @@ noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
 		rd->y = r->r_gfx.ycenter*tilesz/TILESZ +
 		        r->r_gfx.ymotion*tilesz/TILESZ -
 			r->r_gfx.yorigin*tilesz/TILESZ;
-		rd->w = su->w*tilesz/TILESZ;
-		rd->h = su->h*tilesz/TILESZ;
+
+		rd->w = su!=NULL ? su->w*tilesz/TILESZ : NULL;
+		rd->h = su!=NULL ? su->h*tilesz/TILESZ : NULL;
 	} else {
 		rd->x = r->r_gfx.xcenter + r->r_gfx.xmotion - r->r_gfx.xorigin;
 		rd->y = r->r_gfx.ycenter + r->r_gfx.ymotion - r->r_gfx.yorigin;
-		rd->w = su->w;
-		rd->h = su->h;
+		rd->w = su!=NULL ? su->w : NULL;
+		rd->h = su!=NULL ? su->h : NULL;
 	}
 	return (0);
 }
@@ -1725,6 +1726,7 @@ void
 noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 {
 #if defined(DEBUG) || defined(EDITION)
+	char num[16];
 	int freesu = 0;
 #endif
 #ifdef HAVE_OPENGL
@@ -1737,10 +1739,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 	switch (r->type) {
 	case NODEREF_SPRITE:
 #if defined(DEBUG) || defined(EDITION)
-		if (r->r_sprite.obj->gfx == NULL ||
-		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
-			char num[16];
-
+		if (BAD_SPRITE(r->r_sprite.obj,r->r_sprite.offs)) {
 			snprintf(num, sizeof(num), "(s%u)", r->r_sprite.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
@@ -1758,8 +1757,6 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 #if defined(DEBUG) || defined(EDITION)
 		if (r->r_anim.obj->gfx == NULL ||
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
-			char num[16];
-
 			snprintf(num, sizeof(num), "(a%u)", r->r_anim.offs);
 			su = text_render(NULL, -1,
 			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
