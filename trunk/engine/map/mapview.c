@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.22 2005/06/21 08:09:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.23 2005/06/30 06:26:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -984,10 +984,18 @@ mousebuttondown(int argc, union evarg *argv)
 			}
 			goto out;
 		} else {
+			SDLMod mod = SDL_GetModState();
 			struct noderef *r;
 			int nx, ny;
 			
-			if ((SDL_GetModState() & KMOD_CTRL) == 0) {
+			if (mod & KMOD_SHIFT) {
+				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
+					select_begin_nodesel(mv);
+					goto out;
+				}
+			}
+			if ((mod & KMOD_CTRL) == 0) {
+				/* XXX too expensive */
 				for (ny = 0; ny < m->maph; ny++) {
 					for (nx = 0; nx < m->mapw; nx++) {
 						struct node *node =
@@ -1008,12 +1016,6 @@ mousebuttondown(int argc, union evarg *argv)
 				} else {
 					r->flags |= NODEREF_SELECTED;
 					mv->rsel.moving = 1;
-				}
-			}
-			if (SDL_GetModState() & KMOD_SHIFT) {
-				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
-					select_begin_nodesel(mv);
-					goto out;
 				}
 			}
 		}
