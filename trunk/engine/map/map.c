@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.23 2005/06/21 08:09:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.24 2005/07/08 06:52:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1687,7 +1687,10 @@ noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
 {
 	int tilesz = m->cameras[cam].tilesz;
 	SDL_Surface *su;
-	
+
+	if (BAD_SPRITE(r->r_sprite.obj, r->r_sprite.offs))
+		return (-1);
+
 	switch (r->type) {
 	case NODEREF_SPRITE:
 		draw_sprite(r, &su, NULL);
@@ -1707,13 +1710,13 @@ noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
 		        r->r_gfx.ymotion*tilesz/TILESZ -
 			r->r_gfx.yorigin*tilesz/TILESZ;
 
-		rd->w = su!=NULL ? su->w*tilesz/TILESZ : NULL;
-		rd->h = su!=NULL ? su->h*tilesz/TILESZ : NULL;
+		rd->w = su->w*tilesz/TILESZ;
+		rd->h = su->h*tilesz/TILESZ;
 	} else {
 		rd->x = r->r_gfx.xcenter + r->r_gfx.xmotion - r->r_gfx.xorigin;
 		rd->y = r->r_gfx.ycenter + r->r_gfx.ymotion - r->r_gfx.yorigin;
-		rd->w = su!=NULL ? su->w : NULL;
-		rd->h = su!=NULL ? su->h : NULL;
+		rd->w = su->w;
+		rd->h = su->h;
 	}
 	return (0);
 }
