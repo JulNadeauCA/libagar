@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.7 2005/03/11 08:56:32 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.8 2005/06/21 10:26:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -165,6 +165,28 @@ mspinbutton_return(int argc, union evarg *argv)
 }
 
 static void
+mspinbutton_textchg(int argc, union evarg *argv)
+{
+	char text[TEXTBOX_STRING_MAX];
+	struct mspinbutton *sbu = argv[1].p;
+	struct widget_binding *stringb;
+	char *tp = &text[0], *s;
+
+	stringb = widget_get_binding(sbu->input, "string", &s);
+	strlcpy(text, s, sizeof(text));
+
+	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+		mspinbutton_set_value(sbu, "xvalue", atoi(s));
+	}
+	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+		mspinbutton_set_value(sbu, "yvalue", atoi(s));
+	}
+	widget_binding_unlock(stringb);
+
+	event_post(NULL, sbu, "mspinbutton-changed", NULL);
+}
+
+static void
 mspinbutton_up(int argc, union evarg *argv)
 {
 	struct mspinbutton *sbu = argv[1].p;
@@ -225,6 +247,8 @@ mspinbutton_init(struct mspinbutton *sbu, const char *sep, const char *label)
 	
 	sbu->input = textbox_new(sbu, label);
 	event_new(sbu->input, "textbox-return", mspinbutton_return, "%p", sbu);
+	event_new(sbu->input, "textbox-postchg", mspinbutton_textchg, "%p",
+	    sbu);
 
 	sbu->xdecbu = button_new(sbu, "-");
 	button_set_padding(sbu->xdecbu, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.6 2005/01/23 11:48:04 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.7 2005/01/30 05:39:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -122,10 +122,11 @@ mfspinbutton_keydown(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_return(int argc, union evarg *argv)
+mfspinbutton_changed(int argc, union evarg *argv)
 {
 	char text[TEXTBOX_STRING_MAX];
 	struct mfspinbutton *fsu = argv[1].p;
+	int unfocus = argv[2].i;
 	struct widget_binding *stringb;
 	char *tp = &text[0], *s;
 
@@ -143,7 +144,9 @@ mfspinbutton_return(int argc, union evarg *argv)
 	widget_binding_unlock(stringb);
 
 	event_post(NULL, fsu, "mfspinbutton-return", NULL);
-	WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
+
+	if (unfocus)
+		WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -296,7 +299,10 @@ mfspinbutton_init(struct mfspinbutton *fsu, const char *unit,
 
 	event_new(fsu, "widget-bound", mfspinbutton_bound, NULL);
 	event_new(fsu, "window-keydown", mfspinbutton_keydown, NULL);
-	event_new(fsu->input, "textbox-return", mfspinbutton_return, "%p", fsu);
+	event_new(fsu->input, "textbox-return", mfspinbutton_changed,
+	    "%p,%i", fsu, 1);
+	event_new(fsu->input, "textbox-changed", mfspinbutton_changed,
+	    "%p,%i", fsu, 0);
 }
 
 void
