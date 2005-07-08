@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.29 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.30 2005/05/31 03:22:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -126,9 +126,10 @@ key_pressed(int argc, union evarg *argv)
 }
 
 static void
-return_pressed(int argc, union evarg *argv)
+changed(int argc, union evarg *argv)
 {
 	struct fspinbutton *fsu = argv[1].p;
+	int unfocus = argv[2].i;
 	struct widget_binding *stringb;
 	char *s;
 
@@ -137,7 +138,9 @@ return_pressed(int argc, union evarg *argv)
 	widget_binding_unlock(stringb);
 
 	event_post(NULL, fsu, "fspinbutton-return", NULL);
-	WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
+
+	if (unfocus)
+		WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -252,7 +255,8 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 
 	event_new(fsu, "widget-bound", binding_changed, NULL);
 	event_new(fsu, "window-keydown", key_pressed, NULL);
-	event_new(fsu->input, "textbox-return", return_pressed, "%p", fsu);
+	event_new(fsu->input, "textbox-return", changed, "%p,%i", fsu, 1);
+	event_new(fsu->input, "textbox-changed", changed, "%p,%i", fsu, 0);
 	event_new(fsu->incbu, "button-pushed", increment_pressed, "%p", fsu);
 	event_new(fsu->decbu, "button-pushed", decrement_pressed, "%p", fsu);
 }
