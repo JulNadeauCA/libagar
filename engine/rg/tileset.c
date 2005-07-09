@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.44 2005/06/15 07:07:18 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.45 2005/06/16 02:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -808,15 +808,16 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ts, ins_tile_name);
-	t->sprite = gfx_insert_sprite(gfx, NULL);
+	t->sprites[0] = gfx_insert_sprite(gfx, NULL);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
-	sprite_set_origin(&gfx->sprites[t->sprite], ins_tile_w/2, ins_tile_h/2);
+	sprite_set_origin(&gfx->sprites[t->sprites[0]],
+	    ins_tile_w/2, ins_tile_h/2);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	if (gfx->nsprites > ts->max_sprites) {
 		ts->max_sprites = gfx->nsprites;
 	}
-	SPRITE(t->ts,t->sprite).snap_mode = ins_snap_mode;
+	SPRITE(t->ts,t->sprites[0]).snap_mode = ins_snap_mode;
 
 	ins_tile_name[0] = '\0';
 	view_detach(pwin);
@@ -1180,33 +1181,6 @@ edit_textures(int argc, union evarg *argv)
 }
 
 static void
-export_pixmap(int argc, union evarg *argv)
-{
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_art = argv[2].p;
-	
-	text_msg(MSG_ERROR, "Todo");
-}
-
-static void
-export_anim(int argc, union evarg *argv)
-{
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_anims = argv[2].p;
-	
-	text_msg(MSG_ERROR, "Todo");
-}
-
-static void
-export_sketch(int argc, union evarg *argv)
-{
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_art = argv[2].p;
-	
-	text_msg(MSG_ERROR, "Todo");
-}
-
-static void
 delete_pixmap(int argc, union evarg *argv)
 {
 	struct tileset *ts = argv[1].p;
@@ -1399,20 +1373,12 @@ tileset_edit(void *p)
 			
 			menu_action(mi, _("Duplicate pixmap"), OBJDUP_ICON,
 			    duplicate_pixmap, "%p,%p", ts, tl_art);
-			
-			menu_action(mi, _("Export to image file..."),
-			    OBJSAVE_ICON,
-			    export_pixmap, "%p,%p", ts, tl_art);
 		}
 
 		mi = tlist_set_popup(tl_art, "sketch");
 		{
 			menu_action(mi, _("Delete sketch"), TRASH_ICON,
 			    delete_sketch, "%p,%p", ts, tl_art);
-			
-			menu_action(mi, _("Export to vector file..."),
-			    OBJSAVE_ICON,
-			    export_sketch, "%p,%p", ts, tl_art);
 		}
 	}
 	
@@ -1455,9 +1421,6 @@ tileset_edit(void *p)
 			    edit_anims, "%p,%p,%p", ts, tl_anims, win);
 			menu_action(mi, _("Delete animation"), TRASH_ICON,
 			    delete_anim, "%p,%p", ts, tl_anims);
-			menu_action(mi, _("Export to animation file..."),
-			    OBJSAVE_ICON,
-			    export_anim, "%p,%p", ts, tl_anims);
 		}
 		
 		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);

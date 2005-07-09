@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.61 2005/06/17 04:34:04 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.62 2005/07/08 06:50:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+#include <engine/config.h>
 
 #include <engine/map/map.h>
 
@@ -48,6 +49,7 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/hpane.h>
+#include <engine/widget/file_dlg.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -120,8 +122,10 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->su = NULL;
 	t->ts = ts;
 	t->nrefs = 0;
-	t->sprite = 0;
 	t->blend_fn = blend_overlay_alpha;
+	t->sprites = Malloc(sizeof(Uint32), M_RG);
+	t->sprites[0] = 0;
+	t->nsprites = 1;
 	TAILQ_INIT(&t->elements);
 }
 
@@ -143,7 +147,11 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	t->su->format->alpha = alpha;
-	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
+
+	if (t->flags & TILE_SUBDIVIDE) {
+	} else {
+		sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
+	}
 }
 
 void
@@ -151,7 +159,7 @@ tile_generate(struct tile *t)
 {
 	struct tile_element *tel;
 	struct tile_pixmap *tpx;
-	u_int i;
+	int i;
 
 	/* TODO check for opaque fill features/pixmaps first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
@@ -189,7 +197,8 @@ tile_generate(struct tile *t)
 		}
 	}
 
-	sprite_update(&SPRITE(t->ts,t->sprite));
+	for (i = 0; i < t->nsprites; i++)
+		sprite_update(&SPRITE(t->ts,t->sprites[i]));
 }
 
 static __inline__ void
@@ -376,10 +385,10 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_surface(buf, t->su);
-	write_uint32(buf, t->sprite);
-	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).xOrig);
-	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprite).yOrig);
-	write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprite).snap_mode);
+	write_uint32(buf, t->sprites[0]);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[0]).xOrig);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[0]).yOrig);
+	write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprites[0]).snap_mode);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -432,11 +441,11 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
-	t->sprite = read_uint32(buf);
-	sprite_set_surface(&SPRITE(ts,t->sprite), t->su);
-	SPRITE(ts,t->sprite).xOrig = (int)read_sint16(buf);
-	SPRITE(ts,t->sprite).yOrig = (int)read_sint16(buf);
-	SPRITE(ts,t->sprite).snap_mode = (int)read_uint8(buf);
+	t->sprites[0] = read_uint32(buf);
+	sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
+	SPRITE(ts,t->sprites[0]).xOrig = (int)read_sint16(buf);
+	SPRITE(ts,t->sprites[0]).yOrig = (int)read_sint16(buf);
+	SPRITE(ts,t->sprites[0]).snap_mode = (int)read_uint8(buf);
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -543,7 +552,12 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 void
 tile_destroy(struct tile *t)
 {
-	sprite_destroy(&SPRITE(t->ts,t->sprite));
+	int i;
+	
+	for (i = 0; i < t->nsprites; i++) {
+		sprite_destroy(&SPRITE(t->ts,t->sprites[i]));
+	}
+	Free(t->sprites, M_RG);
 	t->su = NULL;
 }
 
@@ -569,6 +583,7 @@ static void
 close_element(struct tileview *tv)
 {
 	struct tileview_ctrl *ctrl, *nctrl;
+	struct tile *t = tv->tile;
 
 	for (ctrl = TAILQ_FIRST(&tv->ctrls);
 	     ctrl != TAILQ_END(&tv->ctrls);
@@ -616,15 +631,15 @@ close_element(struct tileview *tv)
 
 	tv->tv_tile.geo_ctrl = tileview_insert_ctrl(tv, TILEVIEW_RDIMENSIONS,
 	    "%i,%i,%u,%u", 0, 0,
-	    (u_int)tv->tile->su->w,
-	    (u_int)tv->tile->su->h);
+	    (u_int)t->su->w,
+	    (u_int)t->su->h);
 	tv->tv_tile.geo_ctrl->buttonup = event_new(tv, NULL, geo_ctrl_buttonup,
 	    "%p", tv->tv_tile.geo_ctrl);
 
 	tv->tv_tile.orig_ctrl = tileview_insert_ctrl(tv, TILEVIEW_POINT,
 	    "%*i,%*i",
-	    &SPRITE(tv->ts,tv->tile->sprite).xOrig,
-	    &SPRITE(tv->ts,tv->tile->sprite).yOrig);
+	    &SPRITE(tv->ts,t->sprites[0]).xOrig,
+	    &SPRITE(tv->ts,t->sprites[0]).yOrig);
 	tv->tv_tile.orig_ctrl->cIna.r = 0;
 	tv->tv_tile.orig_ctrl->cIna.g = 255;
 	tv->tv_tile.orig_ctrl->cIna.b = 0;
@@ -859,6 +874,65 @@ tryname:
 			break;
 		}
 	}
+}
+
+static void
+import_image(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	char *path = argv[4].s;
+	struct pixmap *px;
+	u_int pixno = 0;
+	struct pixmap *opx;
+	SDL_Surface *bmp;
+
+	if ((bmp = SDL_LoadBMP(path)) == NULL) {
+		text_msg(MSG_ERROR, "%s: %s", path, error_get());
+		return;
+	}
+
+	px = Malloc(sizeof(struct pixmap), M_RG);
+	pixmap_init(px, tv->ts, 0);
+tryname:
+	snprintf(px->name, sizeof(px->name), "pixmap #%u", pixno);
+	TAILQ_FOREACH(opx, &tv->ts->pixmaps, pixmaps) {
+		if (strcmp(opx->name, px->name) == 0)
+			break;
+	}
+	if (opx != NULL) {
+		pixno++;
+		goto tryname;
+	}
+
+	px->su = SDL_ConvertSurface(bmp, tv->ts->fmt, 0);
+	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
+
+	tile_add_pixmap(tv->tile, NULL, px, 0, 0);
+	view_detach(pwin);
+
+	SDL_FreeSurface(bmp);
+}
+
+static void
+import_image_dlg(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tile *t = tv->tile;
+	struct AGFileDlg *dlg;
+	struct window *win;
+
+	win = window_new(0, NULL);
+	window_set_caption(win, _("Import %s from..."), t->name);
+	dlg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), NULL);
+	event_new(dlg, "file-validated", import_image, "%p,%p,%p", tv, win,
+	    tl_feats);
+	event_new(dlg, "file-cancelled", window_generic_detach, "%p", win);
+	window_attach(pwin, win);
+	window_show(win);
 }
 
 static void
@@ -1407,11 +1481,12 @@ tile_infos(int argc, union evarg *argv)
 	label_static(win, _("Snapping mode: "));
 	rad = radio_new(win, gfx_snap_names);
 	widget_bind(rad, "value", WIDGET_INT,
-	    &SPRITE(t->ts,t->sprite).snap_mode);
+	    &SPRITE(t->ts,t->sprites[0]).snap_mode);
 
 	separator_new(win, SEPARATOR_HORIZ);
 	
-	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"), &t->sprite);
+	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"),
+	    &t->sprites[0]);
 	
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
@@ -1538,6 +1613,41 @@ regenerate_tile(int argc, union evarg *argv)
 	struct tile *t = tv->tile;
 
 	t->flags |= TILE_DIRTY;
+}
+
+static void
+export_image(int argc, union evarg *argv)
+{
+	struct tile *t = argv[1].p;
+	struct window *win = argv[2].p;
+	char *path = argv[3].s;
+
+	if (SDL_SaveBMP(t->su, path) == -1)
+		text_msg(MSG_ERROR, "%s: %s", path, SDL_GetError());
+
+	view_detach(win);
+}
+
+static void
+export_image_dlg(int argc, union evarg *argv)
+{
+	char path[FILENAME_MAX];
+	struct window *pwin = argv[1].p;
+	struct tileview *tv = argv[2].p;
+	struct tile *t = tv->tile;
+	struct AGFileDlg *dlg;
+	struct window *win;
+
+	strlcpy(path, t->name, sizeof(path));
+	strlcat(path, ".bmp", sizeof(path));
+
+	win = window_new(0, NULL);
+	window_set_caption(win, _("Export %s to..."), t->name);
+	dlg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), path);
+	event_new(dlg, "file-validated", export_image, "%p,%p", t, win);
+	event_new(dlg, "file-cancelled", window_generic_detach, "%p", win);
+	window_attach(pwin, win);
+	window_show(win);
 }
 
 static void
@@ -1691,10 +1801,8 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	mi = menu_add_item(me, ("Tile"));
 	{
-		menu_action(mi, _("Import from image file..."), OBJSAVE_ICON,
-		    NULL, NULL);
 		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
-		    NULL, NULL);
+		    export_image_dlg, "%p,%p", win, tv);
 		
 		menu_separator(mi);
 		
@@ -1753,6 +1861,9 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    RG_PIXMAP_ATTACH_ICON,
 		    0, 0,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
+		menu_tool(mi, tbar, _("Import pixmap from file..."),
+		    RG_PIXMAP_ICON, 0, 0,
+		    import_image_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 	
 	mi = menu_add_item(me, _("Sketches"));
