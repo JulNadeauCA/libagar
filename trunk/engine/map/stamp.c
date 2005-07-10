@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.13 2005/06/30 06:26:21 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.14 2005/07/08 06:52:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -91,11 +91,11 @@ static void
 init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
 {
 	struct map *m = mv->map;
-	struct sprite *spr = &SPRITE(t->ts,t->sprite);
+	struct sprite *spr = &SPRITE(t->ts,t->sprites[0]);
 	int sm;
 
 	noderef_init(r, NODEREF_SPRITE);
-	noderef_set_sprite(r, m, t->ts, t->sprite);
+	noderef_set_sprite(r, m, t->ts, t->sprites[0]);
 	r->layer = m->cur_layer;
 	r->r_gfx.xcenter = 0;
 	r->r_gfx.ycenter = 0;

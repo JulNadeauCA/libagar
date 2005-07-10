@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.24 2005/07/08 06:52:55 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.25 2005/07/08 07:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2101,7 +2101,7 @@ selected_art(int argc, union evarg *argv)
 	if (it->p1 != NULL &&
 	    strcmp(it->class, "tile") == 0) {
 		struct tile *t = it->p1;
-		struct sprite *spr = &SPRITE(t->ts,t->sprite);
+		struct sprite *spr = &SPRITE(t->ts,t->sprites[0]);
 	
 		stamp_snap_mode = spr->snap_mode;
 	}
@@ -2363,8 +2363,9 @@ struct window *
 map_edit(void *p)
 {
 	extern const struct tool mediasel_tool;
+	extern const struct tool nodesel_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
-	    resize_tool, propedit_tool, select_tool, shift_tool, merge_tool,
+	    resize_tool, propedit_tool, shift_tool, merge_tool,
 	    fill_tool, flip_tool, invert_tool;
 	struct map *m = p;
 	struct window *win;
@@ -2455,9 +2456,9 @@ map_edit(void *p)
 	
 	pitem = menu_add_item(menu, _("Tools"));
 	{
-		menu_action(pitem, _("Select"), SELECT_TOOL_ICON,
+		menu_action(pitem, _("Node selection"), SELECT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &select_tool, m));
+		    mapview_reg_tool(mv, &nodesel_tool, m));
 		menu_action(pitem, _("Stamp"), STAMP_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &stamp_tool, m));
