@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.62 2005/07/08 06:50:36 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.63 2005/07/09 06:55:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -148,10 +148,8 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	}
 	t->su->format->alpha = alpha;
 
-	if (t->flags & TILE_SUBDIVIDE) {
-	} else {
-		sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
-	}
+	/* TODO subdivide */
+	sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
 }
 
 void
@@ -381,14 +379,19 @@ tile_save(struct tile *t, struct netbuf *buf)
 	Uint32 nelements = 0;
 	off_t nelements_offs;
 	struct tile_element *tel;
+	int i;
 
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_surface(buf, t->su);
-	write_uint32(buf, t->sprites[0]);
-	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[0]).xOrig);
-	write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[0]).yOrig);
-	write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprites[0]).snap_mode);
+	
+	write_uint32(buf, (Uint32)t->nsprites);
+	for (i = 0; i < t->nsprites; i++) {
+		write_uint32(buf, t->sprites[i]);
+		write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[i]).xOrig);
+		write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[i]).yOrig);
+		write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprites[i]).snap_mode);
+	}
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -441,11 +444,16 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
-	t->sprites[0] = read_uint32(buf);
-	sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
-	SPRITE(ts,t->sprites[0]).xOrig = (int)read_sint16(buf);
-	SPRITE(ts,t->sprites[0]).yOrig = (int)read_sint16(buf);
-	SPRITE(ts,t->sprites[0]).snap_mode = (int)read_uint8(buf);
+
+	t->nsprites = (u_int)read_uint32(buf);
+	t->sprites = Realloc(t->sprites, t->nsprites*sizeof(Uint32));
+	for (i = 0; i < t->nsprites; i++) {
+		t->sprites[i] = read_uint32(buf);
+		sprite_set_surface(&SPRITE(ts,t->sprites[i]), t->su);
+		SPRITE(ts,t->sprites[i]).xOrig = (int)read_sint16(buf);
+		SPRITE(ts,t->sprites[i]).yOrig = (int)read_sint16(buf);
+		SPRITE(ts,t->sprites[i]).snap_mode = (int)read_uint8(buf);
+	}
 
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
@@ -640,6 +648,7 @@ close_element(struct tileview *tv)
 	    "%*i,%*i",
 	    &SPRITE(tv->ts,t->sprites[0]).xOrig,
 	    &SPRITE(tv->ts,t->sprites[0]).yOrig);
+
 	tv->tv_tile.orig_ctrl->cIna.r = 0;
 	tv->tv_tile.orig_ctrl->cIna.g = 255;
 	tv->tv_tile.orig_ctrl->cIna.b = 0;
