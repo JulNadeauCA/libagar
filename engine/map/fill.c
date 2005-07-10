@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.4 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.5 2005/06/16 05:20:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ fill_effect(struct tool *t, struct node *n)
 			break;
 		}
 		tile = it->p1;
-		spr = &SPRITE(tile->ts, tile->sprite);
+		spr = &SPRITE(tile->ts, tile->sprites[0]);
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
 				struct node *n = &m->map[y][x];
@@ -131,7 +131,7 @@ fill_effect(struct tool *t, struct node *n)
 				    M_MAP_NODEREF);
 				noderef_init(r, NODEREF_SPRITE);
 				noderef_set_sprite(r, m, tile->ts,
-				    tile->sprite);
+				    tile->sprites[0]);
 				noderef_set_layer(r, m->cur_layer);
 				r->r_gfx.xorigin = spr->xOrig;
 				r->r_gfx.yorigin = spr->yOrig;

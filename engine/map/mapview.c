@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.23 2005/06/30 06:26:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.24 2005/07/08 05:50:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,7 +44,8 @@
 
 #include "map.h"
 #include "mapview.h"
-#include "select.h"
+#include "nodesel.h"
+#include "refsel.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -896,9 +897,9 @@ mousemotion(int argc, union evarg *argv)
 		mv->msel.xoffs += mv->cxrel;
 		mv->msel.yoffs += mv->cyrel;
 	} else if (mv->esel.set && mv->esel.moving) {
-		select_update_nodemove(mv, mv->cxrel, mv->cyrel);
+		nodesel_update_move(mv, mv->cxrel, mv->cyrel);
 	} else if (mv->rsel.moving) {
-		select_update_refmove(mv, xrel, yrel);
+		refsel_update(mv, xrel, yrel);
 	}
 out:
 	mv->mouse.x = x;
@@ -978,7 +979,7 @@ mousebuttondown(int argc, union evarg *argv)
 			    mv->cy >= mv->esel.y &&
 			    mv->cx < mv->esel.x+mv->esel.w &&
 			    mv->cy < mv->esel.y+mv->esel.h) {
-				select_begin_nodemove(mv);
+				nodesel_begin_move(mv);
 			} else {
 				mv->esel.set = 0;
 			}
@@ -990,7 +991,7 @@ mousebuttondown(int argc, union evarg *argv)
 			
 			if (mod & KMOD_SHIFT) {
 				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
-					select_begin_nodesel(mv);
+					nodesel_begin(mv);
 					goto out;
 				}
 			}
@@ -1110,7 +1111,7 @@ mousebuttonup(int argc, union evarg *argv)
 	} else {
 		mv->mouse.scrolling = 0;
 		if (mv->esel.set && mv->esel.moving) {
-			select_end_nodemove(mv);
+			nodesel_end_move(mv);
 		}
 		mv->rsel.moving = 0;
 		goto out;
@@ -1124,10 +1125,10 @@ mousebuttonup(int argc, union evarg *argv)
 			mv->msel.set = 0;
 		} else {
 			if (mv->msel.set) {
-				select_end_nodesel(mv);
+				nodesel_end(mv);
 				mv->msel.set = 0;
 			} else if (mv->esel.set && mv->esel.moving) {
-				select_end_nodemove(mv);
+				nodesel_end_move(mv);
 			}
 		}
 		mv->rsel.moving = 0;
