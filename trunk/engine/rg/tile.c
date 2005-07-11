@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.64 2005/07/10 15:41:15 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.65 2005/07/11 05:43:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -195,7 +195,7 @@ tile_generate(struct tile *t)
 		}
 	}
 
-	/* TODO subdivide */
+	/* TODO update the surface fragments */
 	for (i = 0; i < t->nsprites; i++)
 		sprite_update(&SPRITE(t->ts,t->sprites[i]));
 }
