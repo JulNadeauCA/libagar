@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.46 2005/07/09 06:55:09 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.47 2005/07/10 15:41:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -296,6 +296,11 @@ tileset_load(void *obj, struct netbuf *buf)
 			Free(t, M_RG);
 			goto fail;
 		}
+
+		/* Allocate the surface fragments. */
+		tile_scale(ts, t, t->su->w, t->su->h, t->flags,
+		    t->su->format->alpha);
+		    
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
 
