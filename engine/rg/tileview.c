@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.44 2005/06/05 09:38:48 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.45 2005/06/10 05:43:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1554,6 +1554,10 @@ tileview_draw(void *p)
 		glEnable(GL_BLEND);
 #endif
 	tileview_color4i(tv, 255, 255, 255, 128);
+	if (tv->state != TILEVIEW_TILE_EDIT &&
+	   (tv->flags & TILEVIEW_NO_EXTENT) == 0) {
+		tileview_rect2o(tv, 0, 0, t->su->w, t->su->h);
+	}
 	tileview_pixel2i(tv, tv->xms, tv->yms);
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 		draw_control(tv, ctrl);
@@ -1683,4 +1687,6 @@ tileview_generic_menu(struct tileview *tv, struct AGMenuItem *mi)
 	    &tv->flags, TILEVIEW_HIDE_CONTROLS, 1);
 	menu_int_flags(mi, _("Show tiling"), SNAP_GRID_ICON,
 	    &tv->flags, TILEVIEW_NO_TILING, 1);
+	menu_int_flags(mi, _("Show tile extent"), RG_CONTROLS_ICON,
+	    &tv->flags, TILEVIEW_NO_EXTENT, 1);
 }
