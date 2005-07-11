@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.63 2005/07/09 06:55:08 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.64 2005/07/10 15:41:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -148,7 +148,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	}
 	t->su->format->alpha = alpha;
 
-	/* TODO subdivide */
+	/* TODO allocate sprites */
 	sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
 }
 
@@ -195,6 +195,7 @@ tile_generate(struct tile *t)
 		}
 	}
 
+	/* TODO subdivide */
 	for (i = 0; i < t->nsprites; i++)
 		sprite_update(&SPRITE(t->ts,t->sprites[i]));
 }
