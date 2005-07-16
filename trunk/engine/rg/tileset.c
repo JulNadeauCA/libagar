@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.47 2005/07/10 15:41:15 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.48 2005/07/11 06:07:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@
 
 const struct version tileset_ver = {
 	"agar tileset",
-	3, 0
+	4, 0
 };
 
 const struct object_ops tileset_ops = {
@@ -79,12 +79,7 @@ tileset_init(void *obj, const char *name)
 	struct tileset *ts = obj;
 
 	object_init(ts, "tileset", name, &tileset_ops);
-	gfx_alloc_pvt(ts, "tiles");
-
-	/*
-	 * Tilesets must be resident for the tiles to show up in the source
-	 * artwork list of the map editor.
-	 */
+	gfx_new(ts);
 	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD;
 
 	pthread_mutex_init(&ts->lock, &recursive_mutexattr);
@@ -97,19 +92,9 @@ tileset_init(void *obj, const char *name)
 
 	ts->icon = SDL_CreateRGBSurface(
 	    SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY,
-	    32, 32, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
- 	    0xff000000,
-	    0x00ff0000,
-	    0x0000ff00,
-	    0x000000ff
-#else
-	    0x000000ff,
-	    0x0000ff00,
-	    0x00ff0000,
-	    0xff000000
-#endif
-	);
+	    32, 32, sfmt->BitsPerPixel,
+	    sfmt->Rmask, sfmt->Gmask, sfmt->Bmask, sfmt->Amask);
+
 	if (ts->icon == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
@@ -141,6 +126,7 @@ tileset_reinit(void *obj)
 
 	ts->max_sprites = 0;
 	gfx_alloc_sprites(OBJECT(ts)->gfx, 0);
+	gfx_alloc_anims(OBJECT(ts)->gfx, 0);
 
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
@@ -208,12 +194,13 @@ tileset_load(void *obj, struct netbuf *buf)
 
 	if (version_read(buf, &tileset_ver, &ver) != 0)
 		return (-1);
-
+	
 	pthread_mutex_lock(&ts->lock);
 	ts->flags = read_uint32(buf);
 	ts->max_sprites = read_uint32(buf);
+	dprintf("max sprites = %d\n", ts->max_sprites);
 
-	/* Resize the sprite array. */
+	/* Resize the graphics array. */
 	gfx_alloc_sprites(gfx, ts->max_sprites);
 
 	/* Load the vectorial sketches. */
@@ -284,14 +271,17 @@ tileset_load(void *obj, struct netbuf *buf)
 	
 	/* Load the tiles. */
 	ntiles = read_uint32(buf);
+	dprintf("%u tiles\n", ntiles);
 	for (i = 0; i < ntiles; i++) {
+		struct map *cMap;
 		char name[TILE_NAME_MAX];
 		struct tile *t;
 		
 		t = Malloc(sizeof(struct tile), M_RG);
 		copy_string(name, buf, sizeof(name));
 		tile_init(t, ts, name);
-		if (tile_load(ts, t, buf) == -1) {
+
+		if (tile_load(t, buf) == -1) {
 			tile_destroy(t);
 			Free(t, M_RG);
 			goto fail;
@@ -300,7 +290,8 @@ tileset_load(void *obj, struct netbuf *buf)
 		/* Allocate the surface fragments. */
 		tile_scale(ts, t, t->su->w, t->su->h, t->flags,
 		    t->su->format->alpha);
-		    
+		tile_generate(t);
+		
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
 
@@ -356,9 +347,8 @@ tileset_load(void *obj, struct netbuf *buf)
 					break;
 				}
 			}
-			if (ppx == NULL) {
+			if (ppx == NULL)
 				fatal("%s: bad pixmap ref", pbr->px_name);
-			}
 		}
 	}
 	pthread_mutex_unlock(&ts->lock);
@@ -389,6 +379,7 @@ tileset_save(void *obj, struct netbuf *buf)
 
 	write_uint32(buf, ts->flags);
 	write_uint32(buf, ts->max_sprites);
+	dprintf("max sprites = %d\n", ts->max_sprites);
 
 	/* Save the vectorial sketches. */
 	nsketches_offs = netbuf_tell(buf);
@@ -436,6 +427,7 @@ tileset_save(void *obj, struct netbuf *buf)
 		ntiles++;
 	}
 	pwrite_uint32(buf, ntiles, ntiles_offs);
+	dprintf("saved %u tiles\n", ntiles);
 	
 	/* Save the animation information. */
 	nanims_offs = netbuf_tell(buf);
@@ -813,16 +805,10 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ts, ins_tile_name);
-	t->sprites[0] = gfx_insert_sprite(gfx, NULL);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
-	sprite_set_origin(&gfx->sprites[t->sprites[0]],
-	    ins_tile_w/2, ins_tile_h/2);
+	sprite_set_origin(&gfx->sprites[t->s], ins_tile_w/2, ins_tile_h/2);
+	SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
-
-	if (gfx->nsprites > ts->max_sprites) {
-		ts->max_sprites = gfx->nsprites;
-	}
-	SPRITE(t->ts,t->sprites[0]).snap_mode = ins_snap_mode;
 
 	ins_tile_name[0] = '\0';
 	view_detach(pwin);
@@ -977,6 +963,7 @@ insert_tile_dlg(int argc, union evarg *argv)
 	tb = textbox_new(win, _("Name:"));
 	widget_bind(tb, "string", WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
+	widget_focus(tb);
 
 	msb = mspinbutton_new(win, "x", _("Size:"));
 	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);

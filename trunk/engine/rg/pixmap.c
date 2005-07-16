@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.34 2005/05/31 04:00:11 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.35 2005/06/16 02:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -898,8 +898,14 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_f]) {
+		enum pixmap_blend_mode bmode_save = px->blend_mode;
+
+		if (keystate[SDLK_r] || keystate[SDLK_e]) {
+			px->blend_mode = PIXMAP_NO_BLENDING;
+		}
 		pixmap_begin_undoblk(px);
 		pixmap_fill(tv, tel, x, y);
+		px->blend_mode = bmode_save;
 	} else if (keystate[SDLK_c]) {
 		pixmap_pick(tv, tel, x, y);
 	} else {
