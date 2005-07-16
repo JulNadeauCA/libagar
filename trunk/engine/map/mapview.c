@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.24 2005/07/08 05:50:46 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.25 2005/07/10 15:41:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -295,7 +295,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
-	object_wire_gfx(mv, "/engine/map/pixmaps/pixmaps");
+	gfx_wire(mv, "/engine/map/pixmaps/pixmaps");
 
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->map = m;

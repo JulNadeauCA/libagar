@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.25 2005/07/08 07:25:10 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.26 2005/07/10 15:41:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	9, 0
+	10, 0
 };
 
 const struct object_ops map_ops = {
@@ -118,12 +118,14 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	case NODEREF_SPRITE:
 		r->r_sprite.obj = NULL;
 		r->r_sprite.offs = 0;
+		r->r_sprite.rs.x = 0;
+		r->r_sprite.rs.y = 0;
+		r->r_sprite.rs.w = 0;
+		r->r_sprite.rs.h = 0;
 		break;
 	case NODEREF_ANIM:
 		r->r_anim.obj = NULL;
 		r->r_anim.offs = 0;
-		r->r_anim.flags = 0;
-		r->r_anim.frame = 0;
 		break;
 	case NODEREF_WARP:
 		r->r_warp.map = NULL;
@@ -204,7 +206,7 @@ noderef_destroy(struct map *m, struct noderef *r)
 		noderef_set_sprite(r, m, NULL, 0);
 		break;
 	case NODEREF_ANIM:
-		noderef_set_anim(r, m, NULL, 0, 0);
+		noderef_set_anim(r, m, NULL, 0);
 		break;
 	case NODEREF_WARP:
 		Free(r->r_warp.map, 0);
@@ -466,30 +468,25 @@ map_pop_layer(struct map *m)
 void
 noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 {
-	if (r->r_sprite.obj != NULL) {
-		extern int objmgr_exiting;
+	struct sprite *spr = SPRITE(r->r_sprite.obj,r->r_sprite.offs);
 
-		if (r->r_sprite.obj->gfx != NULL &&
-		    r->r_sprite.obj->gfx->type == GFX_PRIVATE &&
-		    !objmgr_exiting) {
-			object_page_out(r->r_sprite.obj, OBJECT_DATA);
-		}
+	if (r->r_sprite.obj != NULL) {
 		object_del_dep(map, r->r_sprite.obj);
 		object_page_out(r->r_sprite.obj, OBJECT_GFX);
 	}
 
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1) {
+		if (object_page_in(pobj, OBJECT_GFX) == -1)
 			fatal("paging gfx: %s", error_get());
-		}
-		if (OBJECT(pobj)->gfx->type == GFX_PRIVATE &&
-		    object_page_in(pobj, OBJECT_DATA) == -1)
-			fatal("paging data: %s", error_get());
 	}
 
 	r->r_sprite.obj = pobj;
 	r->r_sprite.offs = offs;
+	r->r_sprite.rs.x = 0;
+	r->r_sprite.rs.y = 0;
+	r->r_sprite.rs.w = spr->su->w;
+	r->r_sprite.rs.h = spr->su->h;
 }
 
 /*
@@ -510,17 +507,9 @@ node_add_sprite(struct map *map, struct node *node, void *p, Uint32 offs)
 }
 
 void
-noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs,
-    Uint8 flags)
+noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 {
 	if (r->r_anim.obj != NULL) {
-		extern int objmgr_exiting;
-
-		if (r->r_anim.obj->gfx != NULL &&
-		    r->r_anim.obj->gfx->type == GFX_PRIVATE &&
-		    !objmgr_exiting) {
-			object_page_out(r->r_anim.obj, OBJECT_DATA);
-		}
 		object_del_dep(map, r->r_anim.obj);
 		object_page_out(r->r_anim.obj, OBJECT_GFX);
 	}
@@ -533,8 +522,6 @@ noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs,
 
 	r->r_anim.obj = pobj;
 	r->r_anim.offs = offs;
-	r->r_anim.flags = flags;
-	r->r_anim.frame = 0;
 }
 
 /*
@@ -542,14 +529,13 @@ noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs,
  * The map must be locked.
  */
 struct noderef *
-node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
-    Uint8 flags)
+node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs)
 {
 	struct noderef *r;
 
 	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_ANIM);
-	noderef_set_anim(r, map, pobj, offs, flags);
+	noderef_set_anim(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
 }
@@ -682,8 +668,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		break;
 	case NODEREF_ANIM:
-		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs,
-		    sr->r_anim.flags);
+		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
 		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
@@ -870,11 +855,8 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	Uint8 flags;
 	Uint8 layer;
 	Sint8 friction;
-	Sint16 xcenter, ycenter;
-	Sint16 xmotion, ymotion;
-	Sint16 xorigin, yorigin;
 	Uint32 ref, offs;
-	struct object *pobj;
+	void *pobj;
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
@@ -887,60 +869,48 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	switch (type) {
 	case NODEREF_SPRITE:
 		{
+			SDL_Rect rs;
+
 			ref = read_uint32(buf);
 			offs = read_uint32(buf);
-			xcenter = read_sint16(buf);
-			ycenter = read_sint16(buf);
-			xmotion = read_sint16(buf);
-			ymotion = read_sint16(buf);
-			xorigin = read_sint16(buf);
-			yorigin = read_sint16(buf);
 
-			if ((pobj = object_find_dep(m, ref)) == NULL) {
-				error_set(_("Cannot resolve object: %u."), ref);
+			if (object_find_dep(m, ref, &pobj) == -1) {
 				return (-1);
 			}
 			*r = node_add_sprite(m, node, pobj, offs);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
 			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = xcenter;
-			(*r)->r_gfx.ycenter = ycenter;
-			(*r)->r_gfx.xmotion = xmotion;
-			(*r)->r_gfx.ymotion = ymotion;
-			(*r)->r_gfx.xorigin = xorigin;
-			(*r)->r_gfx.yorigin = yorigin;
+			(*r)->r_gfx.xcenter = read_sint16(buf);
+			(*r)->r_gfx.ycenter = read_sint16(buf);
+			(*r)->r_gfx.xmotion = read_sint16(buf);
+			(*r)->r_gfx.ymotion = read_sint16(buf);
+			(*r)->r_gfx.xorigin = read_sint16(buf);
+			(*r)->r_gfx.yorigin = read_sint16(buf);
+			(*r)->r_sprite.rs.x = read_sint16(buf);
+			(*r)->r_sprite.rs.y = read_sint16(buf);
+			(*r)->r_sprite.rs.w = read_uint16(buf);
+			(*r)->r_sprite.rs.h = read_uint16(buf);
 		}
 		break;
 	case NODEREF_ANIM:
 		{
-			Uint32 aflags;
-			struct object *pobj;
-
 			ref = read_uint32(buf);
 			offs = read_uint32(buf);
-			xcenter = read_sint16(buf);
-			ycenter = read_sint16(buf);
-			xmotion = read_sint16(buf);
-			ymotion = read_sint16(buf);
-			xorigin = read_sint16(buf);
-			yorigin = read_sint16(buf);
-			aflags = read_uint32(buf);
 			
-			if ((pobj = object_find_dep(m, ref)) == NULL) {
-				error_set(_("Cannot resolve object: %u."), ref);
+			if (object_find_dep(m, ref, &pobj) == -1) {
 				return (-1);
 			}
-			*r = node_add_anim(m, node, pobj, offs, aflags);
+			*r = node_add_anim(m, node, pobj, offs);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
 			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = xcenter;
-			(*r)->r_gfx.ycenter = ycenter;
-			(*r)->r_gfx.xmotion = xmotion;
-			(*r)->r_gfx.ymotion = ymotion;
-			(*r)->r_gfx.xorigin = xorigin;
-			(*r)->r_gfx.yorigin = yorigin;
+			(*r)->r_gfx.xcenter = read_sint16(buf);
+			(*r)->r_gfx.ycenter = read_sint16(buf);
+			(*r)->r_gfx.xmotion = read_sint16(buf);
+			(*r)->r_gfx.ymotion = read_sint16(buf);
+			(*r)->r_gfx.xorigin = read_sint16(buf);
+			(*r)->r_gfx.yorigin = read_sint16(buf);
 		}
 		break;
 	case NODEREF_WARP:
@@ -970,15 +940,11 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 		break;
 	case NODEREF_GOBJ:
 		{
-			struct object *gobj;
-			Uint32 gobj_id;
-			
-			gobj_id = read_uint32(buf);
-			if ((gobj = object_find_dep(m, gobj_id)) == NULL) {
-				error_set("No such gobject: %u.", gobj_id);
+			offs = read_uint32(buf);
+			if (object_find_dep(m, offs, &pobj) == -1) {
 				return (-1);
 			}
-			*r = node_add_gobj(m, node, gobj);
+			*r = node_add_gobj(m, node, pobj);
 			(*r)->r_gobj.flags = read_uint32(buf);
 		}
 		break;
@@ -1169,6 +1135,10 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		write_sint16(buf, r->r_gfx.ymotion);
 		write_sint16(buf, r->r_gfx.xorigin);
 		write_sint16(buf, r->r_gfx.yorigin);
+		write_sint16(buf, r->r_sprite.rs.x);
+		write_sint16(buf, r->r_sprite.rs.y);
+		write_uint16(buf, r->r_sprite.rs.w);
+		write_uint16(buf, r->r_sprite.rs.h);
 		break;
 	case NODEREF_ANIM:
 		write_uint32(buf, object_dep_index(m, r->r_anim.obj));
@@ -1179,7 +1149,6 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		write_sint16(buf, r->r_gfx.ymotion);
 		write_sint16(buf, r->r_gfx.xorigin);
 		write_sint16(buf, r->r_gfx.yorigin);
-		write_uint32(buf, r->r_anim.flags);
 		break;
 	case NODEREF_WARP:
 		write_string(buf, r->r_warp.map);
@@ -1294,14 +1263,17 @@ map_save(void *p, struct netbuf *buf)
 /* Render surface s, scaled to rx,ry pixels. */
 /* XXX efficient with shrinking but inefficient with growing. */
 static void
-blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int cam)
+blit_scaled(struct map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
+    int cam)
 {
 	int x, y, sx, sy;
 	Uint8 r1, g1, b1, a1;
 	Uint32 c;
 	int tilesz = m->cameras[cam].tilesz;
-	u_int wDst = (u_int)(s->w*tilesz/TILESZ);
-	u_int hDst = (u_int)(s->h*tilesz/TILESZ);
+	int xSrc = (u_int)(rs->x*tilesz/TILESZ);
+	int ySrc = (u_int)(rs->y*tilesz/TILESZ);
+	u_int wSrc = (u_int)(rs->w*tilesz/TILESZ);
+	u_int hSrc = (u_int)(rs->h*tilesz/TILESZ);
 	int same_fmt = view_same_pixel_fmt(s, view->v);
 
 	if (SDL_MUSTLOCK(s)) {
@@ -1309,11 +1281,11 @@ blit_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int cam)
 	}
 	SDL_LockSurface(view->v);
 	
-	for (y = 0; y < hDst; y++) {
+	for (y = ySrc; y < hSrc; y++) {
 		if ((sy = y*TILESZ/tilesz) >= s->h)
 			break;
 
-		for (x = 0; x < wDst; x++) {
+		for (x = xSrc; x < wSrc; x++) {
 			if ((sx = x*TILESZ/tilesz) >= s->w)
 				break;
 		
@@ -1459,7 +1431,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 static void
 draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 {
-	struct gfx_anim *oanim = ANIM(r->r_anim.obj, r->r_anim.offs);
+	struct gfx_anim *oanim = &ANIM(r->r_anim.obj, r->r_anim.offs);
 	struct gfx_cached_anim *canim;
 	struct gfx_animcl *animcl;
 
@@ -1787,7 +1759,7 @@ draw:
 			         r->r_gfx.ymotion*tilesz/TILESZ -
 				 r->r_gfx.yorigin*tilesz/TILESZ;
 
-			blit_scaled(m, su, dx, dy, cam);
+			blit_scaled(m, su, &r->r_sprite.rs, dx, dy, cam);
 		} else {
 			SDL_Rect rd;
 
@@ -1795,7 +1767,7 @@ draw:
 			    r->r_gfx.xorigin;
 			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
 			    r->r_gfx.yorigin;
-			SDL_BlitSurface(su, NULL, view->v, &rd);
+			SDL_BlitSurface(su, &r->r_sprite.rs, view->v, &rd);
 		}
 	} else {
 #ifdef HAVE_OPENGL
@@ -2101,9 +2073,8 @@ selected_art(int argc, union evarg *argv)
 	if (it->p1 != NULL &&
 	    strcmp(it->class, "tile") == 0) {
 		struct tile *t = it->p1;
-		struct sprite *spr = &SPRITE(t->ts,t->sprites[0]);
 	
-		stamp_snap_mode = spr->snap_mode;
+		stamp_snap_mode = SPRITE(t->ts,t->s).snap_mode;
 	}
 
 }
@@ -2362,7 +2333,6 @@ edit_noderef(int argc, union evarg *argv)
 struct window *
 map_edit(void *p)
 {
-	extern const struct tool mediasel_tool;
 	extern const struct tool nodesel_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
 	    resize_tool, propedit_tool, shift_tool, merge_tool,
@@ -2400,12 +2370,6 @@ map_edit(void *p)
 	menu = menu_new(win);
 	pitem = menu_add_item(menu, _("File"));
 	{
-		menu_action(pitem, _("Import media..."), MEDIASEL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &mediasel_tool, m));
-		
-		menu_separator(pitem);
-
 		menu_int_flags_mp(pitem, _("Writeable"), EDIT_ICON,
 		    &OBJECT(m)->flags, OBJECT_READONLY, 1,
 		    &OBJECT(m)->lock);

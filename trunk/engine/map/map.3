@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.3 2005/06/12 15:10:31 vedge Exp $
+.\"	$Csoft: map.3,v 1.4 2005/06/16 16:04:17 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -209,7 +209,7 @@ saves a node to
 .Fn noderef_set_sprite "struct noderef *r" "struct map *m" "void *object" "Uint32 offset"
 .Pp
 .Ft void
-.Fn noderef_set_anim "struct noderef *r" "struct map *m" "void *object" "Uint32 offset" "Uint8 flags"
+.Fn noderef_set_anim "struct noderef *r" "struct map *m" "void *object" "Uint32 offset"
 .Pp
 .Ft void
 .Fn noderef_set_layer "struct noderef *r" "int layer"
@@ -287,7 +287,7 @@ returns 0 on success or -1 on failure.
 .Fn node_add_sprite "struct map *map, struct node *node, const void *obj" "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct map *map, struct node *node, const void *obj" "Uint32 index, Uint32 flags"
+.Fn node_add_anim "struct map *map, struct node *node, const void *obj" "Uint32 index"
 .Pp
 .Ft "struct noderef *"
 .Fn node_add_warp "struct map *map, struct node *dst_node" "const char *new_map, int x, int y, Uint8 dir"

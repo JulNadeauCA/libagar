@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.3 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.4 2005/06/08 06:28:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ transform_rotate(struct noderef *r, int angle)
 		su = SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
 		break;
 	case NODEREF_ANIM:
-		su = GFX_ANIM_FRAME(r, ANIM(r->r_anim.obj,r->r_anim.offs));
+		su = GFX_ANIM_FRAME(r, &ANIM(r->r_anim.obj,r->r_anim.offs));
 		break;
 	default:
 		return (NULL);

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.7 2005/06/16 16:04:17 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.8 2005/06/18 16:37:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -71,14 +71,11 @@ struct noderef {
 		struct {
 			struct object *obj;	/* Gfx object */
 			Uint32 offs;		/* Sprite index */
+			SDL_Rect rs;		/* Source rectangle */
 		} sprite;
 		struct {
 			struct object *obj;	/* Gfx object */
 			Uint32 offs;		/* Anim index */
-			Uint8 flags;
-#define NODEREF_SHD_FRAME 0x01			/* Use shared frame# */
-#define NODEREF_PVT_FRAME 0x02			/* Use private frame# */
-			Uint32 frame;		/* Private frame# */
 		} anim;
 		struct {
 			char *map;		/* Map identifier */
@@ -191,7 +188,7 @@ __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int, int);
 __inline__ void	 noderef_set_sprite(struct noderef *, struct map *, void *,
 		                    Uint32);
 __inline__ void	 noderef_set_anim(struct noderef *, struct map *, void *,
-		                  Uint32, Uint8);
+		                  Uint32);
 struct noderef  *noderef_locate(struct map *, int, int, int);
 
 __inline__ void	 node_init(struct node *);
@@ -214,8 +211,7 @@ void		 node_remove_ref(struct map *, struct node *, struct noderef *);
 void		 node_swap_layers(struct map *, struct node *, int, int);
 
 struct noderef	*node_add_sprite(struct map *, struct node *, void *, Uint32);
-struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32,
-		               Uint8);
+struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32);
 struct noderef	*node_add_warp(struct map *, struct node *, const char *, int,
 		               int, Uint8);
 struct noderef	*node_add_gobj(struct map *, struct node *, void *);
