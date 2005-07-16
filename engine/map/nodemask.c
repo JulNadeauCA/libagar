@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -87,8 +87,8 @@ int
 nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
 {
 	struct object *obj;
-	struct object *pobj;
 	Uint32 i, objref, offs;
+	void *pobj;
 
 	mask->type = read_uint8(buf);
 	mask->scale = (int)read_sint16(buf);
@@ -97,8 +97,7 @@ nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
 	case NODEMASK_BITMAP:
 		objref = read_uint32(buf);
 		offs = read_uint32(buf);
-		if ((pobj = object_find_dep(m, objref)) == NULL) {
-			error_set(_("Cannot resolve object: %u."), objref);
+		if (object_find_dep(m, objref, &pobj) == -1) {
 			return (-1);
 		}
 		nodemask_bitmap(m, mask, pobj, offs);
