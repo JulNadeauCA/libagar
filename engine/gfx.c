@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.47 2005/04/21 06:38:10 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.48 2005/06/08 06:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
+#include <engine/loader/surface.h>
 
 #ifdef DEBUG
 #include <engine/widget/window.h>
@@ -45,17 +46,12 @@
 #include <stdarg.h>
 
 enum {
-	NANIMS_INIT =	1,
-	NANIMS_GROW =	4,
 	FRAMES_INIT =	2,
 	FRAMES_GROW =	8,
 	NSUBMAPS_INIT =	1,
 	NSUBMAPS_GROW =	4
 };
 
-struct gfxq gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
-pthread_mutex_t gfxq_lock;
-	
 const char *gfx_snap_names[] = {
 	N_("Free positioning"),
 	N_("Snap to grid"),
@@ -63,8 +59,10 @@ const char *gfx_snap_names[] = {
 };
 
 void
-sprite_init(struct sprite *spr)
+sprite_init(struct gfx *gfx, Uint32 s)
 {
+	struct sprite *spr = &gfx->sprites[s];
+
 	spr->su = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
@@ -103,8 +101,10 @@ sprite_free_transforms(struct sprite *spr)
 }
 
 void
-sprite_destroy(struct sprite *spr)
+sprite_destroy(struct gfx *gfx, Uint32 s)
 {
+	struct sprite *spr = &gfx->sprites[s];
+
 	if (spr->su != NULL) {
 		SDL_FreeSurface(spr->su);
 		spr->su = NULL;
@@ -129,9 +129,11 @@ sprite_destroy(struct sprite *spr)
  * destroy the transform cache. The previous surface is freed if any.
  */
 void
-sprite_set_surface(struct sprite *spr, SDL_Surface *su)
+sprite_set_surface(struct gfx *gfx, Uint32 s, SDL_Surface *su)
 {
-	sprite_destroy(spr);
+	struct sprite *spr = &gfx->sprites[s];
+
+	sprite_destroy(gfx, s);
 	spr->su = su;
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
@@ -179,7 +181,7 @@ gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++)
-		sprite_destroy(&gfx->sprites[i]);
+		sprite_destroy(gfx, i);
 
 	if (n > 0) {
 		gfx->sprites = Realloc(gfx->sprites, n*sizeof(struct sprite));
@@ -190,7 +192,28 @@ gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
 	gfx->nsprites = n;
 
 	for (i = 0; i < n; i++)
-		sprite_init(&gfx->sprites[i]);
+		sprite_init(gfx, i);
+}
+
+/* Allocate space for n new animations and initialize them. */
+void
+gfx_alloc_anims(struct gfx *gfx, Uint32 n)
+{
+	Uint32 i;
+
+	for (i = 0; i < gfx->nanims; i++)
+		anim_destroy(gfx, i);
+
+	if (n > 0) {
+		gfx->anims = Realloc(gfx->anims, n*sizeof(struct gfx_anim));
+	} else {
+		Free(gfx->anims, M_GFX);
+		gfx->anims = NULL;
+	}
+	gfx->nanims = n;
+
+	for (i = 0; i < n; i++)
+		anim_init(gfx, i);
 }
 
 /* Allocate and initialize a new sprite at the end of the array. */
@@ -201,9 +224,8 @@ gfx_insert_sprite(struct gfx *gfx, SDL_Surface *su)
 	
 	gfx->sprites = Realloc(gfx->sprites, (gfx->nsprites+1) *
 	                                     sizeof(struct sprite));
-	spr = &gfx->sprites[gfx->nsprites];
-	sprite_init(spr);
-	sprite_set_surface(spr, su);
+	sprite_init(gfx, gfx->nsprites);
+	sprite_set_surface(gfx, gfx->nsprites, su);
 	return (gfx->nsprites++);
 }
 
@@ -330,123 +352,35 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	return (fragmap);
 }
 
-/* Disable garbage collection. */
-void
-gfx_wire(struct gfx *gfx)
-{
-	pthread_mutex_lock(&gfx->used_lock);
-	gfx->used = GFX_MAX_USED;
-	pthread_mutex_unlock(&gfx->used_lock);
-}
-
-/* Decrement the shared reference count. */
-void
-gfx_unused(struct gfx *gfx)
-{
-	pthread_mutex_lock(&gfx->used_lock);
-	if (gfx->used != GFX_MAX_USED &&
-	    --gfx->used == 0) {
-		pthread_mutex_unlock(&gfx->used_lock);
-		gfx_destroy(gfx);
-		return;
-	}
-	pthread_mutex_unlock(&gfx->used_lock);
-}
-
-/* Allocate a private gfx structure for a given object. */
+/* Allocate a gfx structure for a given object. */
 struct gfx *
-gfx_alloc_pvt(void *p, const char *name)
+gfx_new(void *p)
 {
 	struct object *ob = p;
 	struct gfx *gfx;
 	
 	gfx = Malloc(sizeof(struct gfx), M_GFX);
-	gfx_init(gfx, GFX_PRIVATE, name);
+	gfx_init(gfx);
+
 	pthread_mutex_lock(&ob->lock);
-	if (ob->gfx != NULL) {
-		gfx_unused(ob->gfx);
-	}
-	Free(ob->gfx_name, 0);
-	ob->gfx_name = NULL;
 	ob->gfx = gfx;
-	ob->gfx_used = 1;
 	pthread_mutex_unlock(&ob->lock);
+
 	return (gfx);
 }
 
 void
-gfx_init(struct gfx *gfx, int type, const char *name)
+gfx_init(struct gfx *gfx)
 {
-	gfx->name = name != NULL ? Strdup(name) : NULL;
-	gfx->type = type;
 	gfx->sprites = NULL;
 	gfx->nsprites = 0;
 	gfx->anims = NULL;
 	gfx->canims = NULL;
 	gfx->nanims = 0;
-	gfx->maxanims = 0;
 	gfx->submaps = NULL;
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
 	gfx->used = 1;
-	pthread_mutex_init(&gfx->used_lock, NULL);
-}
-
-/*
- * Return a pointer to the named graphics package.
- * If the package is resident, increment the shared reference count.
- * Otherwise, load the package from disk.
- */
-struct gfx *
-gfx_fetch_shd(const char *name)
-{
-	char path[MAXPATHLEN];
-	struct gfx *gfx = NULL;
-	struct den *den;
-	Uint32 i;
-
-	pthread_mutex_lock(&gfxq_lock);
-
-	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
-		if (strcmp(gfx->name, name) == 0)
-			break;
-	}
-	if (gfx != NULL) {
-		if (++gfx->used > GFX_MAX_USED) {
-			gfx->used = GFX_MAX_USED;
-		}
-		goto out;
-	}
-
-	if (config_search_file("den-path", name, "den", path, sizeof(path))
-	    == -1)
-		goto fail;
-
-	gfx = Malloc(sizeof(struct gfx), M_GFX);
-	gfx_init(gfx, GFX_SHARED, name);
-
-	if ((den = den_open(path, DEN_READ)) == NULL) {
-		goto fail;
-	}
-	for (i = 0; i < den->nmembers; i++) {
-		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1) {
-			den_close(den);
-			goto fail;
-		}
-	}
-	den_close(den);
-	TAILQ_INSERT_HEAD(&gfxq, gfx, gfxs);			/* Cache */
-out:
-	pthread_mutex_unlock(&gfxq_lock);
-	return (gfx);
-fail:
-	pthread_mutex_unlock(&gfxq_lock);
-	if (gfx != NULL) {
-		pthread_mutex_destroy(&gfx->used_lock);
-		Free(gfx->name, 0);
-		Free(gfx, M_GFX);
-	}
-	return (NULL);
 }
 
 static void
@@ -458,11 +392,10 @@ destroy_anim(struct gfx_anim *anim)
 		SDL_FreeSurface(anim->frames[i]);
 	}
 	Free(anim->frames, M_GFX);
-	Free(anim, M_GFX);
 }
 
-static void
-gfx_free_anim(struct gfx *gfx, Uint32 name)
+void
+anim_destroy(struct gfx *gfx, Uint32 name)
 {
 	struct gfx_animcl *animcl = &gfx->canims[name];
 	struct gfx_cached_anim *canim, *ncanim;
@@ -483,10 +416,7 @@ gfx_free_anim(struct gfx *gfx, Uint32 name)
 	}
 	SLIST_INIT(&animcl->anims);
 
-	if (gfx->anims[name] != NULL) {
-		destroy_anim(gfx->anims[name]);
-		gfx->anims[name] = NULL;
-	}
+	destroy_anim(&gfx->anims[name]);
 }
 
 /* Release a graphics package that is no longer in use. */
@@ -495,17 +425,11 @@ gfx_destroy(struct gfx *gfx)
 {
 	Uint32 i;
 
-	if (gfx->type == GFX_SHARED) {
-		pthread_mutex_lock(&gfxq_lock);
-		TAILQ_REMOVE(&gfxq, gfx, gfxs);
-		pthread_mutex_unlock(&gfxq_lock);
-	}
-
 	for (i = 0; i < gfx->nsprites; i++) {
-		sprite_destroy(&gfx->sprites[i]);
+		sprite_destroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nanims; i++) {
-		gfx_free_anim(gfx, i);
+		anim_destroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
@@ -515,9 +439,7 @@ gfx_destroy(struct gfx *gfx)
 	Free(gfx->sprites, M_GFX);
 	Free(gfx->anims, M_GFX);
 	Free(gfx->canims, M_GFX);
-	Free(gfx->name, 0);
 	Free(gfx->submaps, M_GFX);
-	pthread_mutex_destroy(&gfx->used_lock);
 	Free(gfx, M_GFX);
 }
 
@@ -556,171 +478,170 @@ gfx_insert_submap(struct gfx *gfx, struct map *m)
 	return (gfx->nsubmaps++);
 }
 
-/* Allocate a new animation. */
-struct gfx_anim *
-gfx_insert_anim(struct gfx *gfx)
+void
+anim_init(struct gfx *gfx, Uint32 i)
 {
-	struct gfx_anim *anim;
-	struct gfx_animcl *animcl;
+	struct gfx_anim *anim = &gfx->anims[i];
+	struct gfx_animcl *animcl = &gfx->canims[i];
 
-	anim = Malloc(sizeof(struct gfx_anim), M_GFX);
 	anim->frames = NULL;
 	anim->maxframes = 0;
 	anim->frame = 0;
 	anim->nframes = 0;
-
-	if (gfx->anims == NULL) {
-		gfx->anims = Malloc(NANIMS_INIT*sizeof(struct anim *), M_GFX);
-		gfx->canims = Malloc(NANIMS_INIT*sizeof(struct gfx_animcl),
-		    M_GFX);
-		gfx->maxanims = NANIMS_INIT;
-		gfx->nanims = 0;
-	} else if (gfx->nanims >= gfx->maxanims) {
-		gfx->maxanims += NANIMS_GROW;
-		gfx->anims = Realloc(gfx->anims,
-		    gfx->maxanims*sizeof(struct gfx_anim *));
-		gfx->canims = Realloc(gfx->canims,
-		    gfx->maxanims*sizeof(struct gfx_animcl));
-	}
-	gfx->anims[gfx->nanims] = anim;
-	animcl = &gfx->canims[gfx->nanims];
 	SLIST_INIT(&animcl->anims);
-	gfx->nanims++;
-	return (anim);
 }
 
-#ifdef DEBUG
-static void
-poll_gfx(int argc, union evarg *argv)
+/* Allocate a new animation. */
+Uint32
+gfx_insert_anim(struct gfx *gfx)
 {
-	struct tlist *tl = argv[0].p;
+	gfx->anims = Realloc(gfx->anims, (gfx->nanims+1) * 
+	                                 sizeof(struct gfx_anim));
+	gfx->canims = Realloc(gfx->canims, (gfx->nanims+1) *
+                                           sizeof(struct gfx_animcl));
+	anim_init(gfx, gfx->nanims);
+	return (gfx->nanims++);
+}
+
+/* Load static graphics from a den archive. Used for widgets and such. */
+int
+gfx_wire(void *p, const char *name)
+{
+	char path[MAXPATHLEN];
+	struct object *ob = p;
 	struct gfx *gfx;
+	struct den *den;
+	Uint32 i;
 
-	tlist_clear_items(tl);
-	pthread_mutex_lock(&gfxq_lock);
-
-	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
-		char label[TLIST_LABEL_MAX];
-		struct tlist_item *it;
-		Uint32 i;
-
-		snprintf(label, sizeof(label), "%s (%lu refs)\n%ds/%da/%dm\n",
-		    gfx->name,
-		    (gfx->used != GFX_MAX_USED) ? (unsigned long)gfx->used : 0,
-		    gfx->nsprites,
-		    gfx->nanims, gfx->nsubmaps);
-		it = tlist_insert_item(tl, NULL, label, gfx);
-		it->depth = 0;
-
-		if (gfx->nsprites > 0 || gfx->nanims > 0 || gfx->nsubmaps > 0)
-			it->flags |= TLIST_HAS_CHILDREN;
-
-		if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    tlist_visible_children(tl, it)) {
-			for (i = 0; i < gfx->nsprites; i++) {
-				struct sprite *spr = &gfx->sprites[i];
-				SDL_Surface *su = spr->su;
-				struct tlist_item *it;
-				struct gfx_cached_sprite *csp;
-
-				if (su != NULL) {
-					snprintf(label, sizeof(label),
-					    "%ux%ux%u (%d bytes%s)",
-					    su->w, su->h,
-					    su->format->BitsPerPixel,
-					    (int)su->w*su->h*
-					    su->format->BytesPerPixel,
-					    (su->flags&SDL_SRCALPHA) ?
-					    ", alpha":
-					    (su->flags&SDL_SRCCOLORKEY) ?
-					    ", ckey":
-					    "");
-				} else {
-					strlcpy(label, _("(null)"),
-					    sizeof(label));
-				}
-
-				it = tlist_insert_item(tl, su, label, spr);
-				it->depth = 1;
-
-				if (!SLIST_EMPTY(&spr->csprites)) {
-					it->flags |= TLIST_HAS_CHILDREN;
-				}
-				if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    		    tlist_visible_children(tl, it)) {
-					SLIST_FOREACH(csp, &spr->csprites,
-					    sprites) {
-						struct tlist_item *it;
-
-						snprintf(label, sizeof(label),
-						    "%u ticks\n",
-						    csp->last_drawn);
-						transform_print(
-						    &csp->transforms,
-						    label, sizeof(label));
-
-						it = tlist_insert_item(tl,
-						    csp->su, label, csp);
-						it->depth = 2;
-					}
-				}
-			}
-			for (i = 0; i < gfx->nanims; i++) {
-				struct gfx_anim *anim = gfx->anims[i];
-				struct gfx_animcl *acl = &gfx->canims[i];
-				struct gfx_cached_anim *can;
-				struct tlist_item *it;
-
-				snprintf(label, sizeof(label), "frame %u/%u",
-				    anim->frame, anim->nframes);
-
-				it = tlist_insert_item(tl, NULL, label,
-				    gfx->anims[i]);
-				it->depth = 1;
-
-				if (!SLIST_EMPTY(&acl->anims)) {
-					it->flags |= TLIST_HAS_CHILDREN;
-				}
-				if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    		    tlist_visible_children(tl, it)) {
-					SLIST_FOREACH(can, &acl->anims, anims) {
-						struct tlist_item *it;
-
-						snprintf(label, sizeof(label),
-						    "%u ticks\n",
-						    can->last_drawn);
-						transform_print(
-						    &can->transforms,
-						    label, sizeof(label));
-
-						it = tlist_insert_item(tl, NULL,
-						    label, can);
-						it->depth = 2;
-					}
-				}
-			}
+	if (config_search_file("den-path", name, "den", path, sizeof(path))
+	    == -1 ||
+	    (den = den_open(path, DEN_READ)) == NULL)
+		return (-1);
+	
+	gfx = gfx_new(ob);
+	gfx->used = GFX_MAX_USED;
+	for (i = 0; i < den->nmembers; i++) {
+		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1) {
+			den_close(den);
+			gfx_destroy(gfx);
+			ob->gfx = NULL;
+			return (-1);
 		}
 	}
-
-	pthread_mutex_unlock(&gfxq_lock);
-	tlist_restore_selections(tl);
+	den_close(den);
+	return (0);
 }
 
-struct window *
-gfx_debug_window(void)
+int
+gfx_load(struct object *ob)
 {
-	struct window *win;
-	struct tlist *tl;
-
-	if ((win = window_new(WINDOW_DETACH, "gfx-debug")) == NULL) {
-		return (NULL);
+	extern const struct version object_ver;
+	struct gfx *gfx = ob->gfx;
+	char path[MAXPATHLEN];
+	struct netbuf *buf;
+	off_t gfx_offs;
+	Uint32 i, j;
+	
+	if (object_copy_filename(ob, path, sizeof(path)) == -1) {
+		return (-1);
 	}
-	window_set_caption(win, _("Resident graphics"));
+	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
+		error_set("%s: %s", path, error_get());
+		return (-1);
+	}
+	
+	if (version_read(buf, &object_ver, NULL) == -1)
+		goto fail;
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
-	tlist_set_item_height(tl, TILESZ);
-	event_new(tl, "tlist-poll", poll_gfx, NULL);
+	read_uint32(buf);				/* Skip data offs */
+	gfx_offs = (off_t)read_uint32(buf);
+	netbuf_seek(buf, gfx_offs, SEEK_SET);
 
-	return (win);
+	if (read_uint8(buf) == 0) {
+		dprintf("%s: no gfx\n", ob->name);
+		goto out;
+	}
+
+	read_uint32(buf);				/* Pad: flags */
+
+	gfx_alloc_sprites(gfx, read_uint32(buf));
+	dprintf("%s: %d sprites\n", ob->name, gfx->nsprites);
+	for (i = 0; i < gfx->nsprites; i++) {
+		struct sprite *spr = &gfx->sprites[i];
+
+		if (read_uint8(buf)) {
+			spr->su = read_surface(buf, sfmt);
+		} else {
+			spr->su = NULL;
+		}
+		spr->xOrig = (int)read_sint32(buf);
+		spr->yOrig = (int)read_sint32(buf);
+		spr->snap_mode = (enum gfx_snap_mode)read_uint8(buf);
+	}
+
+	gfx_alloc_anims(gfx, read_uint32(buf));
+	dprintf("%s: %d anims\n", ob->name, gfx->nanims);
+	for (i = 0; i < gfx->nanims; i++) {
+		struct gfx_anim *anim = &gfx->anims[i];
+
+		anim->frame = read_uint32(buf);
+		anim->nframes = read_uint32(buf);
+		anim->frames = Realloc(anim->frames, anim->nframes *
+				                     sizeof(SDL_Surface *));
+		for (j = 0; j < anim->nframes; j++)
+			anim->frames[j] = read_surface(buf, vfmt);
+	}
+
+out:
+	netbuf_close(buf);
+	return (0);
+fail:
+	netbuf_close(buf);
+	return (-1);
 }
-#endif /* DEBUG */
+
+int
+gfx_save(struct object *ob, struct netbuf *buf)
+{
+#if 0
+	struct gfx *gfx = ob->gfx;
+	Uint32 i, j;
+
+	if (gfx == NULL) {
+		dprintf("%s: saving NULL gfx\n", ob->name);
+		write_uint8(buf, 0);
+		return (0);
+	}
+	write_uint32(buf, 0);				/* Pad: flags */
+
+	dprintf("%s: saving %d sprites\n", ob->name, gfx->nsprites);
+	write_uint32(buf, gfx->nsprites);
+	for (i = 0; i < gfx->nsprites; i++) {
+		struct sprite *spr = &gfx->sprites[i];
+
+		if (spr->su != NULL) {
+			write_uint8(buf, 1);
+			write_surface(buf, spr->su);
+		} else {
+			write_uint8(buf, 0);
+		}
+		write_sint32(buf, (Sint32)spr->xOrig);
+		write_sint32(buf, (Sint32)spr->yOrig);
+		write_uint8(buf, (Uint8)spr->snap_mode);
+	}
+
+	dprintf("%s: saving %d anims\n", ob->name, gfx->nsprites);
+	write_uint32(buf, gfx->nanims);
+	for (i = 0; i < gfx->nanims; i++) {
+		struct gfx_anim *anim = &gfx->anims[i];
+
+		write_uint32(buf, anim->frame);
+		write_uint32(buf, anim->nframes);
+		for (j = 0; j < anim->nframes; j++)
+			write_surface(buf, anim->frames[j]);
+	}
+#else
+	write_uint8(buf, 0);
+#endif
+	return (0);
+}

@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.17 2005/02/11 02:29:23 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.18 2005/04/14 06:19:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,7 +41,7 @@
 static SDL_Surface	*xcf_convert_layer(struct netbuf *, Uint32,
 			     struct xcf_header *, struct xcf_layer *);
 static int		 xcf_insert_surface(struct gfx *, SDL_Surface *,
-			     const char *, struct gfx_anim **);
+			     const char *);
 static Uint8		*xcf_read_tile(struct xcf_header *, struct netbuf *,
 			    Uint32, int, int, int);
 static void		 xcf_read_property(struct netbuf *, struct xcf_prop *);
@@ -507,24 +507,8 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 }
 
 static int
-xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
-    struct gfx_anim **anim)
+xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name)
 {
-	if (strstr(name, "(anim)") != NULL) {
-		*anim = gfx_insert_anim(gfx);
-	} else {
-		if (*anim != NULL && name[0] == '+') {
-			gfx_insert_anim_frame(*anim, su);
-		} else {
-			*anim = NULL;
-			if ((su->h > TILESZ || su->w > TILESZ) &&
-			    strstr(name, "(frag)") != NULL) {
-				gfx_insert_fragments(gfx, su);
-			} else {
-		   		gfx_insert_sprite(gfx, su);
-			}
-		}
-	}
 	return (0);
 }
 
@@ -536,7 +520,6 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	int i, offsets;
 	Uint32 offset;
 	struct xcf_prop prop;
-	struct gfx_anim *curanim = NULL;
 
 	netbuf_seek(buf, xcf_offs, SEEK_SET);
 
@@ -652,10 +635,11 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 			Free(head, M_LOADER);
 			return (-1);
 		}
-		if (xcf_insert_surface(gfx, su, layer->name, &curanim) == -1) {
-			Free(layer->name, 0);
-			Free(layer, M_LOADER);
-			goto fail;
+		if ((su->h > TILESZ || su->w > TILESZ) &&
+		    strstr(layer->name, "(frag)") != NULL) {
+			gfx_insert_fragments(gfx, su);
+		} else {
+			gfx_insert_sprite(gfx, su);
 		}
 		Free(layer->name, 0);
 		Free(layer, M_LOADER);

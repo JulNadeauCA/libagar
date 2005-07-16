@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.30 2005/06/08 06:25:10 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.31 2005/07/08 06:52:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -16,7 +16,7 @@ struct gfx_anim {
 #endif
 	Uint32 nframes;
 	Uint32 maxframes;
-	Uint32 frame;		/* Shared frame# */
+	Uint32 frame;			/* Current frame# */
 };
 
 struct gfx_cached_sprite {
@@ -58,29 +58,19 @@ struct sprite {
 };
 
 struct gfx {
-	char *name;
-	enum gfx_type {
-		GFX_SHARED,			/* Managed, shared graphics */
-		GFX_PRIVATE			/* Object-managed graphics */
-	} type;
+	struct sprite *sprites;		/* Images */
+	Uint32	      nsprites;
 
-	struct sprite	  *sprites;		/* Images */
-	Uint32		  nsprites;
+	struct gfx_anim	   *anims;	/* Animations */
+	struct gfx_animcl *canims;	/* Anim transform cache */
+	Uint32		   nanims;
 
-	struct gfx_anim		 **anims;	/* Animations */
-	struct gfx_animcl	 *canims;	/* Anim transform cache */
-	Uint32			  nanims;
-	Uint32			maxanims;
+	struct map **submaps;		/* Maps */
+	Uint32	    nsubmaps;
+	Uint32	  maxsubmaps;
 
-	struct map	 **submaps;		/* Generated maps */
-	Uint32		  nsubmaps;
-	Uint32		maxsubmaps;
-
-	pthread_mutex_t	 used_lock;
-	Uint32		 used;			/* Reference count */
-#define GFX_MAX_USED	 (0xffffffff-1)		/* Maximum #references */
-
-	TAILQ_ENTRY(gfx) gfxs;			/* Art pool */
+	Uint32 used;			/* Reference count */
+#define GFX_MAX_USED	 (0xffffffff-1)	/* Maximum number of references */
 };
 
 #define SPRITE(ob, i)		((struct object *)(ob))->gfx->sprites[(i)]
@@ -93,41 +83,33 @@ struct gfx {
 #define BAD_ANIM(ob, i)		((ob)->gfx == NULL || \
 				 (i) >= (ob)->gfx->nanims || \
 				 ANIM((ob),(i)).nframes == 0)
-#define GFX_ANIM_FRAME(r, an) \
-    (an)->frames[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
-                 (r)->r_anim.frame : an->frame]
-#define GFX_ANIM_TEXTURE(r, an) \
-    (an)->textures[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
-                   (r)->r_anim.frame : an->frame]
+#define GFX_ANIM_FRAME(r, an)	(an)->frames[(an)->frame]
+#define GFX_ANIM_TEXTURE(r, an) (an)->textures[(an)->frame]
 
-TAILQ_HEAD(gfxq, gfx);
-extern struct gfxq gfxq;
-extern pthread_mutex_t gfxq_lock;
 extern const char *gfx_snap_names[];
 
 __BEGIN_DECLS
-struct gfx	*gfx_alloc_pvt(void *, const char *);
-struct gfx	*gfx_fetch_shd(const char *);
-void		 gfx_init(struct gfx *, int, const char *);
+struct gfx	*gfx_new(void *);
+void		 gfx_init(struct gfx *);
 void		 gfx_destroy(struct gfx *);
-void		 gfx_unused(struct gfx *);
-void		 gfx_wire(struct gfx *);
 int		 gfx_transparent(SDL_Surface *);
+int		 gfx_wire(void *, const char *);
+int		 gfx_load(struct object *);
+int		 gfx_save(struct object *, struct netbuf *);
 
 void		 gfx_alloc_sprites(struct gfx *, Uint32);
+void		 gfx_alloc_anims(struct gfx *, Uint32);
 Uint32		 gfx_insert_sprite(struct gfx *, SDL_Surface *);
 struct map	*gfx_insert_fragments(struct gfx *, SDL_Surface *);
 Uint32		 gfx_insert_submap(struct gfx *, struct map *);
-struct gfx_anim	*gfx_insert_anim(struct gfx *);
+Uint32		 gfx_insert_anim(struct gfx *);
 Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
 
-#ifdef DEBUG
-struct window	*gfx_debug_window(void);
-#endif
-
-void		 sprite_init(struct sprite *);
-void		 sprite_destroy(struct sprite *);
-__inline__ void	 sprite_set_surface(struct sprite *, SDL_Surface *);
+void		 sprite_init(struct gfx *, Uint32);
+void		 sprite_destroy(struct gfx *, Uint32);
+void		 anim_init(struct gfx *, Uint32);
+void		 anim_destroy(struct gfx *, Uint32);
+__inline__ void	 sprite_set_surface(struct gfx *, Uint32, SDL_Surface *);
 __inline__ void	 sprite_set_origin(struct sprite *, int, int);
 __inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
 __inline__ void	 sprite_update(struct sprite *);

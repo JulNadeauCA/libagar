@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.14 2004/06/18 03:11:24 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.15 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,9 +42,6 @@ enum {
 static TAILQ_HEAD(, audio) audioq = TAILQ_HEAD_INITIALIZER(audioq);
 pthread_mutex_t		   audioq_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void	audio_destroy(struct audio *);
-static void	audio_destroy_sample(struct sample *);
-
 /* Insert a new sample. */
 Uint32
 audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
@@ -74,23 +71,7 @@ audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
 void
 audio_wire(struct audio *audio)
 {
-	pthread_mutex_lock(&audio->used_lock);
 	audio->used = AUDIO_MAX_USED;
-	pthread_mutex_unlock(&audio->used_lock);
-}
-
-/* Decrement the reference count. */
-void
-audio_unused(struct audio *audio)
-{
-	pthread_mutex_lock(&audio->used_lock);
-	if (audio->used != AUDIO_MAX_USED &&		/* Remain resident? */
-	    --audio->used == 0) {
-		pthread_mutex_unlock(&audio->used_lock);
-		audio_destroy(audio);
-		return;
-	}
-	pthread_mutex_unlock(&audio->used_lock);
 }
 
 /*
@@ -128,7 +109,6 @@ audio_fetch(const char *name)
 	audio->nsamples = 0;
 	audio->maxsamples = 0;
 	audio->used = 1;
-	pthread_mutex_init(&audio->used_lock, NULL);
 
 	if ((den = den_open(path, DEN_READ)) == NULL)
 		goto fail;
@@ -151,7 +131,6 @@ out:
 fail:
 	pthread_mutex_unlock(&audioq_lock);
 	if (audio != NULL) {
-		pthread_mutex_destroy(&audio->used_lock);
 		Free(audio->name, 0);
 		Free(audio, M_AUDIO);
 	}
@@ -159,7 +138,7 @@ fail:
 }
 
 /* Release an audio package that is no longer in use. */
-static void
+void
 audio_destroy(struct audio *audio)
 {
 	Uint32 i;
@@ -169,18 +148,11 @@ audio_destroy(struct audio *audio)
 	pthread_mutex_unlock(&audioq_lock);
 
 	for (i = 0; i < audio->nsamples; i++)
-		audio_destroy_sample(&audio->samples[i]);
+		Free(audio->samples[i].data, M_AUDIO);
 
-	pthread_mutex_destroy(&audio->used_lock);
 	Free(audio->name, 0);
 	Free(audio->samples, M_AUDIO);
 	Free(audio, M_AUDIO);
-}
-
-static void
-audio_destroy_sample(struct sample *samp)
-{
-	Free(samp->data, M_AUDIO);
 }
 
 #ifdef DEBUG

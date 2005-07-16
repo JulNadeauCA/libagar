@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.60 2005/06/17 08:37:52 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.61 2005/06/30 06:26:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ vg_new(void *p, int flags)
 	vg_init(vg, flags);
 	if (ob != NULL) {
 		vg->pobj = ob;
-		gfx_alloc_pvt(ob, "vg");
+		gfx_new(ob);
 		vg->map = map_new(ob, "raster");
 		OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|
 					  OBJECT_INDESTRUCTIBLE;
@@ -286,11 +286,18 @@ vg_update_fragments(struct vg *vg)
 	int x, y;
 	int mx, my;
 	SDL_Rect sd, rd;
+	Uint32 saflags = vg->su->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+	Uint32 scflags = vg->su->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+	Uint8 salpha = vg->su->format->alpha;
+	Uint32 scolorkey = vg->su->format->colorkey;
 
 	rd.x = 0;
 	rd.y = 0;
 	sd.w = TILESZ;
 	sd.h = TILESZ;
+	
+	SDL_SetAlpha(vg->su, 0, 0);
+	SDL_SetColorKey(vg->su, 0, 0);
 	
 	for (y = 0, my = 0;
 	     y < vg->su->h && my < vg->map->maph;
@@ -300,21 +307,14 @@ vg_update_fragments(struct vg *vg)
 		     x += TILESZ, mx++) {
 			struct node *n = &vg->map->map[my][mx];
 			SDL_Surface *fragsu = NULL;
-			Uint32 saflags, scflags, scolorkey;
-			Uint8 salpha;
 			int fw, fh;
-
-			saflags = vg->su->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
-			scflags = vg->su->flags&(SDL_SRCCOLORKEY|SDL_RLEACCEL);
-			salpha = vg->su->format->alpha;
-			scolorkey = vg->su->format->colorkey;
 
 			fw = vg->su->w-x < TILESZ ? vg->su->w-x : TILESZ;
 			fh = vg->su->h-y < TILESZ ? vg->su->h-y : TILESZ;
-
+#ifdef DEBUG
 			if (fw <= 0 || fh <= 0)
 				fatal("fragment too small");
-
+#endif
 			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 				if (r->type == NODEREF_SPRITE &&
 				    r->layer == vg->map->cur_layer &&
@@ -339,11 +339,7 @@ vg_update_fragments(struct vg *vg)
 			sd.x = x;
 			sd.y = y;
 
-			SDL_SetAlpha(vg->su, 0, 0);
-			SDL_SetColorKey(vg->su, 0, 0);
 			SDL_BlitSurface(vg->su, &sd, fragsu, &rd);
-			SDL_SetAlpha(vg->su, saflags, salpha);
-			SDL_SetColorKey(vg->su, scflags, scolorkey);
 
 			if (r == NULL) {
 				Uint32 sp;
@@ -356,6 +352,9 @@ vg_update_fragments(struct vg *vg)
 	}
 	vg->map->origin.x = vg->map->mapw>>1;
 	vg->map->origin.y = vg->map->maph>>1;
+
+	SDL_SetAlpha(vg->su, saflags, salpha);
+	SDL_SetColorKey(vg->su, scflags, scolorkey);
 }
 
 /*
@@ -369,7 +368,7 @@ vg_destroy_fragments(struct vg *vg)
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++) {
-		sprite_destroy(&gfx->sprites[i]);
+		sprite_destroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);

@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.27 2005/06/11 11:10:36 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.28 2005/06/17 05:44:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -161,7 +161,7 @@ void
 objmgr_open_generic(struct object *ob)
 {
 	struct objent *oent;
-	
+
 	TAILQ_FOREACH(oent, &gobjs, objs) {
 		if (oent->obj == ob)
 			break;
@@ -197,6 +197,7 @@ close_obj_data(int argc, union evarg *argv)
 	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
+	object_page_out(oent->obj, OBJECT_GFX);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
 
@@ -225,14 +226,16 @@ objmgr_open_data(void *p)
 		return;
 
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		printf("%s: %s\n", ob->name, error_get());
+		printf("%s data: %s\n", ob->name, error_get());
 		return;
 	}
+	object_page_in(ob, OBJECT_GFX);
 	object_add_dep(&mapedit.pseudo, ob);
 
 	win = ob->ops->edit(ob);
 	if (win == NULL) {
 		object_page_out(ob, OBJECT_DATA);
+		object_page_out(ob, OBJECT_GFX);
 		object_del_dep(&mapedit.pseudo, ob);
 		return;
 	}

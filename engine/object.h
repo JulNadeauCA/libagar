@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.121 2005/05/01 00:52:50 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.122 2005/05/08 02:10:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -57,21 +57,16 @@ struct object {
 #define OBJECT_WAS_RESIDENT	0x080	/* Used internally by object_load() */
 #define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
 #define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
-#define OBJECT_EDIT_RESIDENT	0x400	/* Remain resident (for editor) */
-#define OBJECT_DETACHED_SAVE	0x800	/* Don't include in parent save */
+#define OBJECT_DETACHED_SAVE	0x400	/* Don't include in parent save */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
 				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
-				 OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT)
+				 OBJECT_REOPEN_ONLOAD)
 #define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT|\
-				 OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT)
+				 OBJECT_REOPEN_ONLOAD)
 
 	pthread_mutex_t	 lock;
 	struct gfx	*gfx;		/* Associated graphics package */
-	char		*gfx_name;	/* Shared graphics reference */
-	Uint32		 gfx_used;	/* Referenced graphics */
 	struct audio	*audio;		/* Associated audio package */
-	char		*audio_name;	/* Shared audio reference */
-	Uint32		 audio_used;	/* Referenced audio */
 	Uint32		 data_used;	/* Referenced object derivate data */
 
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
@@ -142,13 +137,13 @@ size_t	 object_copy_checksum(const void *, enum object_checksum_alg, char *);
 int	 object_copy_digest(const void *, size_t *, char *);
 
 void		*object_find(const char *);
+void		*object_findf(const char *, ...);
 __inline__ void	*object_root(const void *);
 __inline__ void *object_find_parent(void *, const char *, const char *);
 int		 object_in_use(const void *);
 void		 object_set_type(void *, const char *);
 void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
-void		 object_wire_gfx(void *, const char *);
 
 __inline__ SDL_Surface	*object_icon(void *);
 
@@ -180,7 +175,7 @@ void	 object_detach(void *);
 void	 object_move(void *, void *);
 
 struct object_dep	 *object_add_dep(void *, void *);
-__inline__ struct object *object_find_dep(const void *, Uint32);
+__inline__ int		  object_find_dep(const void *, Uint32, void **);
 Uint32			  object_dep_index(const void *, const void *);
 void			  object_del_dep(void *, const void *);
 

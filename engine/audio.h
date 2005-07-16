@@ -1,4 +1,4 @@
-/*	$Csoft: audio.h,v 1.8 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: audio.h,v 1.9 2004/03/02 08:58:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -15,8 +15,7 @@ struct audio {
 	Uint32		  nsamples;
 	Uint32		maxsamples;
 
-	pthread_mutex_t	 used_lock;
-	Uint32		 used;		/* Reference count */
+	Uint32 used;			/* Reference count */
 #define AUDIO_MAX_USED	 (0xffffffff-1)	
 
 	TAILQ_ENTRY(audio) audios;
@@ -30,7 +29,7 @@ struct audio {
 
 __BEGIN_DECLS
 struct audio	*audio_fetch(const char *);
-void		 audio_unused(struct audio *);
+void		 audio_destroy(struct audio *);
 void		 audio_wire(struct audio *);
 
 Uint32	 audio_insert_sample(struct audio *, SDL_AudioSpec *, Uint8 *, size_t);
