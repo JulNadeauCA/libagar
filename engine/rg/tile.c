@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.65 2005/07/11 05:43:00 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.66 2005/07/11 06:07:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -29,8 +29,10 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
+#include <engine/objmgr.h>
 
 #include <engine/map/map.h>
+#include <engine/map/mapview.h>
 
 #include <engine/loader/surface.h>
 
@@ -123,9 +125,7 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->ts = ts;
 	t->nrefs = 0;
 	t->blend_fn = blend_overlay_alpha;
-	t->sprites = Malloc(sizeof(Uint32), M_RG);
-	t->sprites[0] = 0;
-	t->nsprites = 1;
+	t->s = -1;
 	TAILQ_INIT(&t->elements);
 }
 
@@ -134,11 +134,15 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
     Uint8 alpha)
 {
 	Uint32 sflags = SDL_SWSURFACE;
+	int wNodes = w/TILESZ;
+	int hNodes = h/TILESZ;
+	int x, y, s;
+
+	if (w%TILESZ > 0) wNodes++;
+	if (h%TILESZ > 0) hNodes++;
 
 	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
-
-	/* Previous surface will be freed by sprite_set_surface(). */
 
 	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
@@ -148,8 +152,14 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	}
 	t->su->format->alpha = alpha;
 
-	/* TODO allocate sprites */
-	sprite_set_surface(&SPRITE(ts,t->sprites[0]), t->su);
+	if (t->s == -1) {
+		t->s = gfx_insert_sprite(OBJECT(ts)->gfx, t->su);
+		if (t->s >= ts->max_sprites)
+			ts->max_sprites = t->s+1;
+	} else {
+		/* Will free previous surface if any. */
+		sprite_set_surface(OBJECT(ts)->gfx, t->s, t->su);
+	}
 }
 
 void
@@ -157,7 +167,7 @@ tile_generate(struct tile *t)
 {
 	struct tile_element *tel;
 	struct tile_pixmap *tpx;
-	int i;
+	SDL_Rect rd, sd;
 
 	/* TODO check for opaque fill features/pixmaps first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
@@ -194,10 +204,7 @@ tile_generate(struct tile *t)
 			break;
 		}
 	}
-
-	/* TODO update the surface fragments */
-	for (i = 0; i < t->nsprites; i++)
-		sprite_update(&SPRITE(t->ts,t->sprites[i]));
+	sprite_update(&SPRITE(t->ts,t->s));
 }
 
 static __inline__ void
@@ -380,19 +387,18 @@ tile_save(struct tile *t, struct netbuf *buf)
 	Uint32 nelements = 0;
 	off_t nelements_offs;
 	struct tile_element *tel;
-	int i;
+	int i, x, y;
 
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_surface(buf, t->su);
 	
-	write_uint32(buf, (Uint32)t->nsprites);
-	for (i = 0; i < t->nsprites; i++) {
-		write_uint32(buf, t->sprites[i]);
-		write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[i]).xOrig);
-		write_sint16(buf, (Sint16)SPRITE(t->ts,t->sprites[i]).yOrig);
-		write_uint8(buf, (Uint8)SPRITE(t->ts,t->sprites[i]).snap_mode);
-	}
+	write_uint32(buf, 1);				/* Pad: nsprites */
+	dprintf("saving s: %d\n", t->s);
+	write_sint32(buf, t->s);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->s).xOrig);
+	write_sint16(buf, (Sint16)SPRITE(t->ts,t->s).yOrig);
+	write_uint8(buf, (Uint8)SPRITE(t->ts,t->s).snap_mode);
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -438,24 +444,31 @@ tile_save(struct tile *t, struct netbuf *buf)
 }
 
 int
-tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
+tile_load(struct tile *t, struct netbuf *buf)
 {
+	struct tileset *ts = t->ts;
+	struct gfx *gfx = OBJECT(ts)->gfx;
+	struct sprite *spr;
 	Uint32 i, nelements;
+	Sint32 s;
 	Uint8 flags;
+	int x, y;
 	
 	t->flags = read_uint8(buf);
 	t->su = read_surface(buf, ts->fmt);
 
-	t->nsprites = (u_int)read_uint32(buf);
-	t->sprites = Realloc(t->sprites, t->nsprites*sizeof(Uint32));
-	for (i = 0; i < t->nsprites; i++) {
-		t->sprites[i] = read_uint32(buf);
-		sprite_set_surface(&SPRITE(ts,t->sprites[i]), t->su);
-		SPRITE(ts,t->sprites[i]).xOrig = (int)read_sint16(buf);
-		SPRITE(ts,t->sprites[i]).yOrig = (int)read_sint16(buf);
-		SPRITE(ts,t->sprites[i]).snap_mode = (int)read_uint8(buf);
+	read_uint32(buf);				/* Pad: nsprites */
+	s = read_sint32(buf);
+	if (s < 0 || (s >= gfx->nsprites)) {
+		error_set("Bogus sprite index: %d", s);
+		return (-1);
 	}
-
+	spr = &gfx->sprites[s];
+	spr->xOrig = (int)read_sint16(buf);
+	spr->yOrig = (int)read_sint16(buf);
+	spr->snap_mode = (int)read_uint8(buf);
+	t->s = s;
+	
 	nelements = read_uint32(buf);
 	dprintf("%s: %u elements\n", t->name, nelements);
 	for (i = 0; i < nelements; i++) {
@@ -561,12 +574,13 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 void
 tile_destroy(struct tile *t)
 {
+	struct object *map;
 	int i;
-	
-	for (i = 0; i < t->nsprites; i++) {
-		sprite_destroy(&SPRITE(t->ts,t->sprites[i]));
+
+	if (t->s >= 0) {
+		sprite_destroy(OBJECT(t->ts)->gfx, t->s);
+		t->s = -1;
 	}
-	Free(t->sprites, M_RG);
 	t->su = NULL;
 }
 
@@ -647,8 +661,8 @@ close_element(struct tileview *tv)
 
 	tv->tv_tile.orig_ctrl = tileview_insert_ctrl(tv, TILEVIEW_POINT,
 	    "%*i,%*i",
-	    &SPRITE(tv->ts,t->sprites[0]).xOrig,
-	    &SPRITE(tv->ts,t->sprites[0]).yOrig);
+	    &SPRITE(tv->ts,t->s).xOrig,
+	    &SPRITE(tv->ts,t->s).yOrig);
 
 	tv->tv_tile.orig_ctrl->cIna.r = 0;
 	tv->tv_tile.orig_ctrl->cIna.g = 255;
@@ -1460,6 +1474,7 @@ tile_infos(int argc, union evarg *argv)
 	struct spinbutton *alpha_sb;
 	struct radio *rad;
 	struct textbox *tb;
+	int i;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 		         WINDOW_NO_MINIMIZE, NULL);
@@ -1490,13 +1505,11 @@ tile_infos(int argc, union evarg *argv)
 
 	label_static(win, _("Snapping mode: "));
 	rad = radio_new(win, gfx_snap_names);
-	widget_bind(rad, "value", WIDGET_INT,
-	    &SPRITE(t->ts,t->sprites[0]).snap_mode);
+	widget_bind(rad, "value", WIDGET_INT, &SPRITE(t->ts,t->s).snap_mode);
 
 	separator_new(win, SEPARATOR_HORIZ);
-	
-	label_new(win, LABEL_POLLED, _("Maps to sprite: %[u32]"),
-	    &t->sprites[0]);
+
+	label_staticf(win, _("Maps to sprite: #%u."), t->s);
 	
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
@@ -1786,6 +1799,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
 	tileview_init(tv, ts, 0);
 	tileview_set_tile(tv, t);
+	tile_scale(ts, t, t->su->w, t->su->h, t->flags, t->su->format->alpha);
 	{
 		extern struct tileview_sketch_tool_ops sketch_line_ops;
 		extern struct tileview_sketch_tool_ops sketch_polygon_ops;
@@ -1809,14 +1823,14 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
 	toolbar_init(tbar, TOOLBAR_HORIZ, 1, 0);
 
-	mi = menu_add_item(me, ("Tile"));
+	mi = menu_add_item(me, ("File"));
 	{
 		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
 		    export_image_dlg, "%p,%p", win, tv);
 		
 		menu_separator(mi);
 		
-		menu_action(mi, _("Redraw/regenerate tile"), RG_PIXMAP_ICON,
+		menu_action(mi, _("Regenerate tile"), RG_PIXMAP_ICON,
 		    regenerate_tile, "%p", tv);
 
 		menu_separator(mi);
@@ -1871,6 +1885,9 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    RG_PIXMAP_ATTACH_ICON,
 		    0, 0,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
+
+		menu_separator(mi);
+
 		menu_tool(mi, tbar, _("Import pixmap from file..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    import_image_dlg, "%p,%p,%p", tv, win, tl_feats);

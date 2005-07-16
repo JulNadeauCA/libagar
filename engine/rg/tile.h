@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.20 2005/07/09 06:55:09 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.21 2005/07/10 15:41:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -49,9 +49,7 @@ struct tile {
 	char name[TILE_NAME_MAX];
 	struct tileset *ts;
 	SDL_Surface *su;
-
-	Uint32 *sprites;		/* Generated tile fragment indexes */
-	u_int  nsprites;
+	Sint32 s;			/* Index into gfx array */
 
 	Uint8 flags;
 #define TILE_SRCCOLORKEY 0x01		/* Colorkey source */
@@ -85,7 +83,7 @@ void		tile_generate(struct tile *);
 struct window  *tile_edit(struct tileset *, struct tile *);
 void		tile_destroy(struct tile *);
 void		tile_save(struct tile *, struct netbuf *);
-int		tile_load(struct tileset *, struct tile *, struct netbuf *);
+int		tile_load(struct tile *, struct netbuf *);
 void		tile_open_menu(struct tileview *, int, int);
 void		tile_close_menu(struct tileview *);
 

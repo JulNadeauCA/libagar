@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.45 2005/06/10 05:43:17 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.46 2005/07/11 05:43:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1556,7 +1556,7 @@ tileview_draw(void *p)
 	tileview_color4i(tv, 255, 255, 255, 128);
 	if (tv->state != TILEVIEW_TILE_EDIT &&
 	   (tv->flags & TILEVIEW_NO_EXTENT) == 0) {
-		tileview_rect2o(tv, 0, 0, t->su->w, t->su->h);
+		tileview_rect2o(tv, 0, 0, t->su->w-1, t->su->h-1);
 	}
 	tileview_pixel2i(tv, tv->xms, tv->yms);
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
