@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.21 2005/05/29 05:49:59 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.22 2005/06/10 05:42:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -272,7 +272,7 @@ menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 
 	widget_init(mview, "AGMenuView", &menu_view_ops,
 	    WIDGET_UNFOCUSED_MOTION|WIDGET_UNFOCUSED_BUTTONUP);
-	object_wire_gfx(mview, "/engine/widget/pixmaps");
+	gfx_wire(mview, "/engine/widget/pixmaps");
 
 	mview->panel = panel;
 	mview->pmenu = pmenu;

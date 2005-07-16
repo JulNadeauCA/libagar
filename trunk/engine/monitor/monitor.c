@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.67 2005/06/07 03:08:47 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.68 2005/06/11 11:10:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,7 +55,6 @@ static const struct tool_ent {
 	{ N_("Server mode"), server_window },
 #endif
 	{ N_("Leak detection"), leak_window },
-	{ N_("Resident graphics"), gfx_debug_window },
 	{ N_("Running timers"), timeouts_window },
 	{ N_("Unicode browser"), uniconv_window },
 	{ N_("Display settings"), view_params_window },

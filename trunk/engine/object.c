@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.213 2005/05/29 00:27:46 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.214 2005/06/18 04:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@
 
 #include <sys/stat.h>
 
+#include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -66,7 +67,7 @@
 
 const struct version object_ver = {
 	"agar object",
-	5, 0
+	6, 0
 };
 
 const struct object_ops object_ops = {
@@ -89,8 +90,10 @@ int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
 #endif
 
+extern int mapedition;
+
 int object_ignore_dataerrs = 0;    /* Don't fail on a data load failure. */
-int object_ignore_unkobjs = 0; /* Don't fail on unknown object types. */
+int object_ignore_unkobjs = 0;	   /* Don't fail on unknown object types. */
 
 /* Allocate, initialize and attach a generic object. */
 struct object *
@@ -130,11 +133,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 
 	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 	ob->gfx = NULL;
-	ob->gfx_name = NULL;
-	ob->gfx_used = 0;
 	ob->audio = NULL;
-	ob->audio_name = NULL;
-	ob->audio_used = 0;
 	ob->data_used = 0;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
@@ -159,6 +158,10 @@ object_free_data(void *p)
 			ob->flags &= ~(OBJECT_PRESERVE_DEPS);
 		}
 		ob->flags &= ~(OBJECT_DATA_RESIDENT);
+	}
+	if (ob->gfx != NULL) {
+		gfx_alloc_sprites(ob->gfx, 0);
+		gfx_alloc_anims(ob->gfx, 0);
 	}
 }
 
@@ -453,6 +456,31 @@ object_find(const char *name)
 	return (rv);
 }
 
+/* Search for the named object (absolute path). */
+void *
+object_findf(const char *fmt, ...)
+{
+	char path[OBJECT_PATH_MAX];
+	void *rv;
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsnprintf(path, sizeof(path), fmt, ap);
+	va_end(ap);
+#ifdef DEBUG
+	if (path[0] != '/')
+		fatal("not an absolute path: `%s'", path);
+#endif
+	lock_linkage();
+	rv = object_find_child(world, &path[1]);
+	unlock_linkage();
+
+	if (rv == NULL) {
+		error_set(_("The object `%s' does not exist."), path);
+	}
+	return (rv);
+}
+
 /* Clear the dependency table. */
 void
 object_free_deps(struct object *ob)
@@ -600,10 +628,7 @@ object_destroy(void *p)
 
 	debug(DEBUG_GC, "destroy %s (parent=%p)\n", ob->name, ob->parent);
 
-	/* Cancel every scheduled timeout event. */
 	object_cancel_timeouts(ob, 0);
-
-	/* Destroy the descendants recursively. */
 	object_free_children(ob);
 	
 	if (ob->ops->reinit != NULL) {
@@ -619,14 +644,9 @@ object_destroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 
-	Free(ob->gfx_name, 0);
-	Free(ob->audio_name, 0);
-	if (ob->gfx != NULL) {
-		gfx_unused(ob->gfx);
-	}
-	if (ob->audio != NULL) {
-		audio_unused(ob->audio);
-	}
+	if (ob->gfx != NULL)	gfx_destroy(ob->gfx);
+	if (ob->audio != NULL)	audio_destroy(ob->audio);
+
 	object_free_props(ob);
 	object_free_events(ob);
 	pthread_mutex_destroy(&ob->lock);
@@ -700,7 +720,7 @@ object_copy_dirname(const void *p, char *path, size_t path_len)
 	return (-1);
 }
 
-/* Page in or increment reference counts on media/data. */
+/* Bring specific resources associated with an object in memory. */
 int
 object_page_in(void *p, enum object_page_item item)
 {
@@ -709,28 +729,26 @@ object_page_in(void *p, enum object_page_item item)
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
+#if 0
 		if (ob->gfx == NULL) {
-			if (ob->gfx_name != NULL &&
-			   (ob->gfx = gfx_fetch_shd(ob->gfx_name)) == NULL) {
+			gfx_new(ob);
+			if (gfx_load(ob) == -1)
 				goto fail;
-			}
-			ob->gfx_used = 1;
 		} else {
-			if (++ob->gfx_used > OBJECT_DEP_MAX)
-				ob->gfx_used = OBJECT_DEP_MAX;
+			if (++ob->gfx->used > GFX_MAX_USED)
+				ob->gfx->used = GFX_MAX_USED;
 		}
+#else
+		if (ob->gfx == NULL) {
+			gfx_new(ob);
+		} else {
+			if (++ob->gfx->used > GFX_MAX_USED)
+				ob->gfx->used = GFX_MAX_USED;
+		}
+#endif
 		break;
 	case OBJECT_AUDIO:
-		if (ob->audio == NULL) {
-			if (ob->audio_name != NULL &&
-			   (ob->audio = audio_fetch(ob->audio_name)) == NULL) {
-				goto fail;
-			}
-			ob->audio_used = 1;
-		} else {
-			if (++ob->audio_used > OBJECT_DEP_MAX)
-				ob->audio_used = OBJECT_DEP_MAX;
-		}
+		/* TODO */
 		break;
 	case OBJECT_DATA:
 		if (ob->flags & OBJECT_NON_PERSISTENT) {
@@ -760,7 +778,7 @@ fail:
 	return (-1);
 }
 
-/* Page out or decrement reference counts on media/data. */
+/* Remove specific object resources from memory / save to network format. */
 int
 object_page_out(void *p, enum object_page_item item)
 {
@@ -769,28 +787,22 @@ object_page_out(void *p, enum object_page_item item)
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-#ifdef DEBUG
-		if (ob->gfx_used == 0)
-			fatal("neg gfx ref count");
+		if (ob->gfx != NULL && ob->gfx->used != GFX_MAX_USED) {
+			if (--ob->gfx->used == 0) {
+#if 0
+				/* TODO track changes */
+				if (mapedition) {
+					if (object_save(ob) == -1)
+						goto fail;
+				}
 #endif
-		if (ob->gfx != NULL &&
-		    ob->gfx_used != OBJECT_DEP_MAX &&
-		    --ob->gfx_used == 0) {
-			gfx_unused(ob->gfx);
-			ob->gfx = NULL;
+				gfx_alloc_sprites(ob->gfx, 0);
+				gfx_alloc_anims(ob->gfx, 0);
+			}
 		}
 		break; 
 	case OBJECT_AUDIO:
-#ifdef DEBUG
-		if (ob->audio_used == 0)
-			fatal("neg audio ref count");
-#endif
-		if (ob->audio != NULL &&
-		    ob->audio_used != OBJECT_DEP_MAX &&
-		    --ob->audio_used == 0) {
-			audio_unused(ob->audio);
-			ob->audio = NULL;
-		}
+		/* TODO */
 		break;
 	case OBJECT_DATA:
 		if (ob->flags & OBJECT_NON_PERSISTENT)
@@ -801,16 +813,10 @@ object_page_out(void *p, enum object_page_item item)
 #endif
 		if (ob->data_used != OBJECT_DEP_MAX &&
 		    --ob->data_used == 0) {
-		    	extern int mapedition;
-
-			if (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT)) {
-				ob->data_used = 1;
-			} else {
-				if (object_save(ob) == -1) {
-					goto fail;
-				}
-				object_free_data(ob);
+			if (object_save(ob) == -1) {
+				goto fail;
 			}
+			object_free_data(ob);
 		}
 		break;
 	}
@@ -905,17 +911,14 @@ object_resolve_deps(void *p)
 
 /*
  * Reload the data of an object and its children which are currently resident
- * (or have the special OBJECT_EDIT_RESIDENT flag set). The object and linkage
- * must be locked.
+ * The object and linkage must be locked.
  */
 int
 object_reload_data(void *p)
 {
 	struct object *ob = p, *cob;
-	extern int mapedition;
 
-	if ((ob->flags & OBJECT_WAS_RESIDENT) ||
-	    (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT))) {
+	if (ob->flags & OBJECT_WAS_RESIDENT) {
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(ob) == -1) {
 			if (object_ignore_dataerrs) {
@@ -956,7 +959,7 @@ object_load_generic(void *p)
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
 		return (-1);
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
-		error_set("%s: %s", path, strerror(errno));
+		error_set("%s: %s", path, error_get());
 		return (-1);
 	}
 	if (version_read(buf, &object_ver, NULL) == -1)
@@ -974,7 +977,8 @@ object_load_generic(void *p)
 	}
 	object_free_deps(ob);
 
-	/* Skip the data offset. */
+	/* Skip the data and gfx offsets. */
+	read_uint32(buf);
 	read_uint32(buf);
 
 	/* Read and verify the generic object flags. */
@@ -982,7 +986,8 @@ object_load_generic(void *p)
 	flags = (int)read_uint32(buf);
 	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT|
 	    OBJECT_WAS_RESIDENT)) {
-		error_set(_("The `%s' save has inconsistent flags."), ob->name);
+		error_set("%s: inconsistent flags (0x%08x)", ob->name,
+		    flags);
 		goto fail;
 	}
 	ob->flags = flags | (flags_save & OBJECT_WAS_RESIDENT);
@@ -1003,52 +1008,6 @@ object_load_generic(void *p)
 	/* Decode the generic properties. */
 	if (prop_load(ob, buf) == -1)
 		goto fail;
-
-	read_uint32(buf);				/* Pad (was position) */
-
-	/* Decode shared gfx reference and resolve if graphics are resident. */
-	if ((mname = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
-		Free(ob->gfx_name, 0);
-		ob->gfx_name = mname;
-		if (ob->gfx != NULL) {
-			gfx_unused(ob->gfx);
-			if ((ob->gfx = gfx_fetch_shd(ob->gfx_name)) == NULL) {
-				Free(ob->gfx_name, 0);
-				ob->gfx_name = NULL;
-				goto fail;
-			}
-		}
-	} else {
-		if (ob->gfx_name != NULL) {
-			Free(ob->gfx_name, 0);
-			if (ob->gfx != NULL) {
-				gfx_unused(ob->gfx);
-				ob->gfx = NULL;
-			}
-		}
-	}
-
-	/* Decode shared audio reference and resolve if audio is resident. */
-	if ((mname = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
-		Free(ob->audio_name, 0);
-		ob->audio_name = mname;
-		if (ob->audio != NULL) {
-			audio_unused(ob->audio);
-			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
-				Free(ob->audio_name, 0);
-				ob->audio_name = NULL;
-				goto fail;
-			}
-		}
-	} else {
-		if (ob->audio_name != NULL) {
-			Free(ob->audio_name, 0);
-			if (ob->audio != NULL) {
-				audio_unused(ob->audio);
-				ob->audio = NULL;
-			}
-		}
-	}
 
 	/*
 	 * Load the generic part of the child objects.
@@ -1185,7 +1144,7 @@ object_load_data(void *p)
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
 		return (-1);
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
-		error_set("%s: %s", path, strerror(errno));
+		error_set("%s: %s", path, error_get());
 		return (-1);
 	}
 	debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
@@ -1194,7 +1153,9 @@ object_load_data(void *p)
 		goto fail;
 	
 	data_offs = (off_t)read_uint32(buf);
+	read_uint32(buf);				/* Skip gfx offs */
 	netbuf_seek(buf, data_offs, SEEK_SET);
+
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1)
 		goto fail;
@@ -1219,7 +1180,7 @@ object_save(void *p)
 	struct stat sta;
 	struct netbuf *buf;
 	struct object *child;
-	off_t count_offs, data_offs;
+	off_t count_offs, data_offs, gfx_offs;
 	Uint32 count;
 	struct object_dep *dep;
 	int was_resident;
@@ -1274,6 +1235,9 @@ object_save(void *p)
 
 	data_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
+	gfx_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+
 	write_uint32(buf, (Uint32)(ob->flags & OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
@@ -1293,12 +1257,6 @@ object_save(void *p)
 	if (prop_save(ob, buf) == -1)
 		goto fail;
 	
-	write_uint32(buf, 0);				/* Pad (was position) */
-
-	/* Encode the media references. */
-	write_string(buf, ob->gfx_name);
-	write_string(buf, ob->audio_name);
-	
 	/* Save the child objects. */
 	count_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -1316,11 +1274,16 @@ object_save(void *p)
 		count++;
 	}
 	pwrite_uint32(buf, count, count_offs);
-	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
 
-	/* Save the object derivate data. */
+	/* Save the object data. */
+	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
 	if (ob->ops->save != NULL &&
 	    ob->ops->save(ob, buf) == -1)
+		goto fail;
+
+	/* Save the object graphics. */
+	pwrite_uint32(buf, netbuf_tell(buf), gfx_offs);
+	if (gfx_save(ob, buf) == -1)
 		goto fail;
 
 	netbuf_flush(buf);
@@ -1373,20 +1336,6 @@ object_set_ops(void *p, const void *ops)
 	OBJECT(p)->ops = ops;
 }
 
-/* Associate shared graphics and prevent any pageout. */
-void
-object_wire_gfx(void *p, const char *key)
-{
-	struct object *ob = p;
-
-	Free(ob->gfx_name, 0);
-	ob->gfx_name = Strdup(key);
-	if ((ob->gfx = gfx_fetch_shd(key)) == NULL) {
-		fatal("%s: %s", key, error_get());
-	}
-	gfx_wire(ob->gfx);
-}
-
 /* Add a new dependency or increment the reference count on one. */
 struct object_dep *
 object_add_dep(void *p, void *depobj)
@@ -1417,24 +1366,41 @@ object_add_dep(void *p, void *depobj)
 	return (dep);
 }
 
-/* Return the dependency at the given index (ie. for load routines). */
-struct object *
-object_find_dep(const void *p, Uint32 ind)
+/* Resolve a given dependency. */
+int
+object_find_dep(const void *p, Uint32 ind, void **objp)
 {
 	const struct object *ob = p;
 	struct object_dep *dep;
 	Uint32 i;
 
-	for (dep = TAILQ_FIRST(&ob->deps), i = 0;
+	if (ind == 0) {
+		*objp = NULL;
+		return (0);
+	} else if (ind == 1) {
+		*objp = (void *)ob;
+		return (0);
+	}
+
+	for (dep = TAILQ_FIRST(&ob->deps), i = 2;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), i++) {
 		if (i == ind)
 			break;
 	}
-	return (dep != NULL ? dep->obj : NULL);
+	if (dep != NULL) {
+		*objp = dep->obj;
+		return (0);
+	}
+
+	error_set(_("Unable to resolve dependency %s:%u."), ob->name, ind);
+	return (-1);
 }
 
-/* Return the index of a dependency (ie. for save routines). */
+/*
+ * Encode an object dependency. The values 0 and 1 are reserved, 0 is a
+ * NULL value and 1 is the parent object itself.
+ */
 Uint32
 object_dep_index(const void *p, const void *depobjp)
 {
@@ -1443,7 +1409,12 @@ object_dep_index(const void *p, const void *depobjp)
 	struct object_dep *dep;
 	Uint32 i;
 
-	for (dep = TAILQ_FIRST(&ob->deps), i = 0;
+	if (depobjp == NULL) {
+		return (0);
+	} else if (p == depobjp) {
+		return (1);
+	}
+	for (dep = TAILQ_FIRST(&ob->deps), i = 2;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), i++) {
 		if (dep->obj == depobj)
@@ -1770,7 +1741,7 @@ poll_gfx(int argc, union evarg *argv)
 	struct gfx *gfx = ob->gfx;
 	struct tlist_item *it;
 	Uint32 i;
-	
+
 	if (gfx == NULL)
 		return;
 	
@@ -1850,23 +1821,28 @@ refresh_checksums(int argc, union evarg *argv)
 	struct textbox *tb_sha1 = argv[3].p;
 	struct textbox *tb_rmd160 = argv[4].p;
 
+	dprintf("%s: getting md5...\n", ob->name);
 	if (object_copy_checksum(ob, OBJECT_MD5, checksum) > 0) {
 		textbox_printf(tb_md5,  "%s", checksum);
 	} else {
 		textbox_printf(tb_md5,  "(%s)", error_get());
 	}
 	
+	dprintf("%s: getting sha1...\n", ob->name);
 	if (object_copy_checksum(ob, OBJECT_SHA1, checksum) > 0) {
 		textbox_printf(tb_sha1,  "%s", checksum);
 	} else {
 		textbox_printf(tb_sha1,  "(%s)", error_get());
 	}
 	
+	dprintf("%s: getting rmd160...\n", ob->name);
 	if (object_copy_checksum(ob, OBJECT_RMD160, checksum) > 0) {
 		textbox_printf(tb_rmd160,  "%s", checksum);
 	} else {
 		textbox_printf(tb_rmd160,  "(%s)", error_get());
 	}
+
+	dprintf("checksums done\n");
 }
 
 #ifdef NETWORK
@@ -1938,7 +1914,7 @@ object_edit(void *p)
 		separator_new(ntab, SEPARATOR_HORIZ);
 	
 		label_new(ntab, LABEL_STATIC, _("Type: %s"), ob->type);
-		label_new(ntab, LABEL_POLLED, _("Flags : 0x%x"), &ob->flags);
+		label_new(ntab, LABEL_POLLED, _("Flags: 0x%x"), &ob->flags);
 		label_new(ntab, LABEL_POLLED_MT, _("Parent: %[obj]"),
 		    &linkage_lock, &ob->parent);
 
@@ -1946,10 +1922,6 @@ object_edit(void *p)
 
 		label_new(ntab, LABEL_POLLED, _("Data references: %[u32]"),
 		    &ob->data_used);
-		label_new(ntab, LABEL_POLLED, _("Graphic references: %[u32]"),
-		    &ob->gfx_used);
-		label_new(ntab, LABEL_POLLED, _("Audio references: %[u32]"),
-		    &ob->audio_used);
 		
 		separator_new(ntab, SEPARATOR_HORIZ);
 
@@ -1989,9 +1961,11 @@ object_edit(void *p)
 		WIDGET(btn)->flags |= WIDGET_WFILL;
 		event_new(btn, "button-pushed", refresh_rcs_status, "%p,%p,%p",
 		    ob, lb_status, tl);
-		event_post(NULL, btn, "button-pushed", NULL);
+
+		if (rcs)
+			event_post(NULL, btn, "button-pushed", NULL);
 	}
-#endif
+#endif /* NETWORK */
 
 	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
 	{

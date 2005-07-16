@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.156 2005/06/11 11:10:36 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.157 2005/06/18 04:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -113,7 +113,6 @@ engine_preinit(const char *name)
 	pthread_mutexattr_settype(&recursive_mutexattr,
 	    PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
-	pthread_mutex_init(&gfxq_lock, &recursive_mutexattr);
 	pthread_mutex_init(&timeout_lock, &recursive_mutexattr);
 #endif
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
@@ -135,14 +134,6 @@ engine_preinit(const char *name)
 		char accel[2048];
 		char unaccel[2048];
 		size_t size = 2048;
-
-		printf(_("Video device is %dbpp "
-		         "(ckey=%d, alpha=%d)\n"),
-		    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
-		    vinfo->vfmt->alpha);
-		printf(_("Video mask is 0x%08x,0x%08x,0x%08x\n"),
-		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
-		    vinfo->vfmt->Bmask);
 
 		vfmt = vinfo->vfmt;
 
@@ -198,7 +189,6 @@ engine_preinit(const char *name)
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
-	printf("\n");
 	return (0);
 }
 
@@ -231,7 +221,7 @@ engine_init(void)
 	cursors_init();
 
 	object_init(&engine_icons, "object", "icons", NULL);
-	object_wire_gfx(&engine_icons, "/engine/icons/icons");
+	gfx_wire(&engine_icons, "/engine/icons/icons");
 
 	config_window(config);
 
@@ -281,7 +271,6 @@ engine_destroy(void)
 	object_destroy(config);
 	Free(config, M_OBJECT);
 
-	pthread_mutex_destroy(&gfxq_lock);
 	pthread_mutex_destroy(&timeout_lock);
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.185 2005/05/27 03:45:25 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.186 2005/06/18 04:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@
 /* Read-only as long as the engine is running. */
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
+SDL_PixelFormat *sfmt = NULL;
 const SDL_VideoInfo *vinfo;
 int view_screenshot_quality = 75;
 
@@ -113,7 +114,6 @@ view_init(enum gfx_engine ge)
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_GUI:
-		dprintf("direct video / gui\n");
 		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
 		break;
 	default:
@@ -147,11 +147,29 @@ view_init(enum gfx_engine ge)
 		    view->depth, SDL_GetError());
 		goto fail;
 	}
+	view->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+ 	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
+#else
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0xff000000
+#endif
+	);
+	if (view->stmpl == NULL) {
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
 	vfmt = view->v->format;
-	printf(_("Video display is %dbpp "
-	         "(ckey=0x%x, alpha=0x%04x)\n"),
-	    vfmt->BitsPerPixel, vfmt->colorkey,
-	    vfmt->alpha);
+	sfmt = view->stmpl->format;
+	printf(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
+	     vfmt->BitsPerPixel, vfmt->Rmask, vfmt->Gmask, vfmt->Bmask);
+	printf(_("Reference surface is %dbpp (%08x,%08x,%08x,%08x)\n"),
+	     sfmt->BitsPerPixel, sfmt->Rmask, sfmt->Gmask, sfmt->Bmask,
+	     sfmt->Amask);
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
@@ -172,9 +190,6 @@ view_init(enum gfx_engine ge)
 		prop_set_int(config, "view.gl.alpha_size", alpha);
 		prop_set_int(config, "view.gl.buffer_size", bsize);
 
-		dprintf("gl depth=%d size=(%d,%d,%d,%d) bsize=%d\n", depth,
-		    red, green, blue, alpha, bsize);
-	
 		glViewport(0, 0, view->w, view->h);
 		glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
 
@@ -273,10 +288,8 @@ view_videoexpose(void)
 	}
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
-		dprintf("swapping gl buffers\n");
+	if (view->opengl)
 		SDL_GL_SwapBuffers();
-	}
 #endif
 }
 

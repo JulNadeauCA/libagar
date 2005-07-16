@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.73 2005/05/11 10:14:06 vedge Exp $
+.\"	$Csoft: object.3,v 1.74 2005/05/12 07:26:05 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -318,8 +318,8 @@ acquire and release the world's linkage lock, respectively.
 .Ft "void"
 .Fn object_del_dep "void *obj" "void *depobj"
 .Pp
-.Ft "struct object *"
-.Fn object_find_dep "const void *obj" "Uint32 ind"
+.Ft "int"
+.Fn object_find_dep "const void *obj" "Uint32 ind" "struct object **objp"
 .Pp
 .Ft "Uint32"
 .Fn object_dep_index "const void *obj" "const void *depobj"
@@ -343,11 +343,13 @@ removing it if it reaches 0.
 .Pp
 The
 .Fn object_find_dep
-function returns the object of the dependency at the given index, for purposes
-of decoding object references in network format.
+function resolves the given object dependency.
 .Fn object_dep_index
-returns the index of a dependency, for purposes of encoding object references
-in network format.
+encodes an object dependency in network format.
+.Pp
+Encoded dependencies are integers which are either indexes into the object's
+dependency table, or the special values 0 (NULL reference) and 1 (self
+dependency).
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"

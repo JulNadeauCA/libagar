@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.203 2005/05/18 03:50:42 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.204 2005/06/18 04:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -248,30 +248,6 @@ event_loop(void)
 				view->ndirty = 0;
 			}
 			pthread_mutex_unlock(&view->lock);
-
-			/* Update the shared animation frame numbers. */
-			/* XXX use a flag to avoid overhead with 0 anims  */
-			pthread_mutex_lock(&gfxq_lock);
-			TAILQ_FOREACH(gfx, &gfxq, gfxs) {
-				Uint32 i;
-
-				for (i = 0; i < gfx->nanims; i++) {
-					struct gfx_anim *anim = gfx->anims[i];
-					struct gfx_cached_anim *can;
-					struct gfx_animcl *acl =
-					    &gfx->canims[i];
-
-					SLIST_FOREACH(can, &acl->anims, anims) {
-						if (++can->anim->frame >=
-						    can->anim->nframes)
-							can->anim->frame = 0;
-						
-					}
-					if (++anim->frame >= anim->nframes)
-						anim->frame = 0;
-				}
-			}
-			pthread_mutex_unlock(&gfxq_lock);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();

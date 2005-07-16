@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.100 2005/05/27 03:45:25 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.101 2005/06/18 04:25:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -15,6 +15,8 @@ TAILQ_HEAD(windowq, window);
 struct viewport {
 	enum gfx_engine  gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
+	SDL_Surface	*stmpl;		/* Reference surface */
+
 	int		 w, h;		/* Display geometry */
 	int		 depth;		/* Depth in bpp */
 	int		 opengl;	/* OpenGL rendering? (if available) */
@@ -22,6 +24,7 @@ struct viewport {
 		int	 r;		/* Estimated refresh rate in ms */
 		int	 rnom;		/* Nominal FPS (expressed as 1000/n) */
 	} refresh;
+
 	SDL_Rect *dirty;		/* Video rectangles to update */
 	u_int	 ndirty;
 	u_int  maxdirty;
@@ -193,6 +196,7 @@ case 4:					\
 
 extern struct viewport *view;
 extern SDL_PixelFormat *vfmt;
+extern SDL_PixelFormat *sfmt;
 extern const SDL_VideoInfo *vinfo;
 extern const char *view_blend_func_txt[];
 
