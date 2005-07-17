@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.26 2005/07/10 15:41:57 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.27 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -468,8 +468,6 @@ map_pop_layer(struct map *m)
 void
 noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 {
-	struct sprite *spr = SPRITE(r->r_sprite.obj,r->r_sprite.offs);
-
 	if (r->r_sprite.obj != NULL) {
 		object_del_dep(map, r->r_sprite.obj);
 		object_page_out(r->r_sprite.obj, OBJECT_GFX);
@@ -485,8 +483,16 @@ noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 	r->r_sprite.offs = offs;
 	r->r_sprite.rs.x = 0;
 	r->r_sprite.rs.y = 0;
-	r->r_sprite.rs.w = spr->su->w;
-	r->r_sprite.rs.h = spr->su->h;
+
+	if (pobj != NULL && !BAD_SPRITE(pobj,offs)) {
+		struct sprite *spr = &SPRITE(pobj,offs);
+
+		r->r_sprite.rs.w = spr->su->w;
+		r->r_sprite.rs.h = spr->su->h;
+	} else {
+		r->r_sprite.rs.w = 0;
+		r->r_sprite.rs.h = 0;
+	}
 }
 
 /*
@@ -2349,7 +2355,7 @@ map_edit(void *p)
 	struct box *box_h, *box_v;
 	struct hpane *pane;
 	struct hpane_div *div;
-	int flags = 0;
+	int flags = MAPVIEW_GRID;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
