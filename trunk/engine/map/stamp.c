@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.15 2005/07/10 15:41:57 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.16 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -121,6 +121,7 @@ stamp_effect(struct tool *t, struct node *n)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
+	struct noderef *r;
 
 	if (source == STAMP_SRC_COPYBUF) {
 		struct map *copybuf = &mapedit.copybuf;
@@ -171,7 +172,9 @@ stamp_effect(struct tool *t, struct node *n)
 				}
 			}
 #else
-			node_add_sprite(m, n, t->ts, t->s);
+			r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
+			init_tile_noderef(mv, r, t);
+			TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 #endif
 		}
 	}
