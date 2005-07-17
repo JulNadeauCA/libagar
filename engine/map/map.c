@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.27 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.28 2005/07/17 03:40:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -431,6 +431,8 @@ map_init(void *obj, const char *name)
 		extern int mapedit_def_maph;
 
 		map_alloc_nodes(m, mapedit_def_mapw, mapedit_def_maph);
+		m->origin.x = mapedit_def_mapw/2;
+		m->origin.y = mapedit_def_maph/2;
 	}
 #endif
 }
