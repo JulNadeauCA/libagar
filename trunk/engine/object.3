@@ -526,8 +526,8 @@ config setting).
 .Pp
 The
 .Fn object_page_in
-function fetches either object data or shared media.
-If the data is already resident, the reference count is incremented.
+function is used to fetch resources specific to an object.
+If the resource is already resident, the reference count is incremented.
 The
 .Fa item
 argument may be one of:
@@ -541,7 +541,9 @@ enum object_page_item {
 .Pp
 The
 .Fn object_page_out
-function decrements the reference count on shared media or object data.
+function decrements the reference count on the given resource.
+If the reference count reaches 0, the resource is saved to persistent media
+and released.
 .Pp
 These functions return 0 on success or -1 if an error occured.
 .Sh EVENTS
