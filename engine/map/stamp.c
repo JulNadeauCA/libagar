@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.16 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.17 2005/07/17 03:40:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -146,36 +146,37 @@ stamp_effect(struct tool *t, struct node *n)
 		}
 	} else {
 		struct tlist_item *it;
+		struct tile *t;
+		SDL_Surface *su;
+		int sx, sy, dx, dy;
 
-		if (mv->art_tl != NULL &&
-		    (it = tlist_selected_item(mv->art_tl)) != 0 &&
-		    strcmp(it->class, "tile") == 0) {
-			struct tile *t = it->p1;
-			int sx, sy, dx, dy;
-#if 0
-			for (sy = 0, dy = mv->cy;
-			     sy < t->map->maph && dy < m->maph;
-			     sy++, dy++) {
-				for (sx = 0, dx = mv->cx;
-				     sx < t->map->mapw && dx < m->mapw;
-				     sx++, dx++) {
-					struct node *sn = &t->map->map[sy][sx];
-					struct node *dn = &m->map[dy][dx];
-					struct noderef *r;
+		if (mv->art_tl == NULL ||
+		    (it = tlist_selected_item(mv->art_tl)) == 0 ||
+		    strcmp(it->class, "tile") != 0) {
+			return (1);
+		}
+		t = it->p1;
+		su = t->su;
 
-					if (replace) {
-						node_clear(m, dn, m->cur_layer);
-					}
-					TAILQ_FOREACH(r, &sn->nrefs, nrefs)
-						node_copy_ref(r, m, dn,
-						    m->cur_layer);
-				}
+		for (sy = 0, dy = mv->cy;
+		     sy < su->h && dy < m->maph;
+		     sy += TILESZ, dy++) {
+			for (sx = 0, dx = mv->cx;
+			     sx < su->w && dx < m->mapw;
+			     sx += TILESZ, dx++) {
+				struct node *dn = &m->map[dy][dx];
+			
+				r = Malloc(sizeof(struct noderef),
+				    M_MAP_NODEREF);
+				init_tile_noderef(mv, r, t);
+				r->r_gfx.rs.x = sx;
+				r->r_gfx.rs.y = sy;
+				/* XXX may be smaller */
+				r->r_gfx.rs.w = TILESZ;
+				r->r_gfx.rs.h = TILESZ;
+			
+				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 			}
-#else
-			r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
-			init_tile_noderef(mv, r, t);
-			TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
-#endif
 		}
 	}
 	return (1);
