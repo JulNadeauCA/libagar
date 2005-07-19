@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.66 2005/07/11 06:07:48 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.67 2005/07/16 16:00:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -127,6 +127,7 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->blend_fn = blend_overlay_alpha;
 	t->s = -1;
 	TAILQ_INIT(&t->elements);
+	OBJECT(ts)->gfx->used++;
 }
 
 void
@@ -154,12 +155,14 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 
 	if (t->s == -1) {
 		t->s = gfx_insert_sprite(OBJECT(ts)->gfx, t->su);
-		if (t->s >= ts->max_sprites)
+		if (t->s >= ts->max_sprites) {
 			ts->max_sprites = t->s+1;
+		}
 	} else {
 		/* Will free previous surface if any. */
 		sprite_set_surface(OBJECT(ts)->gfx, t->s, t->su);
 	}
+	sprite_set_name(OBJECT(ts)->gfx, t->s, t->name);
 }
 
 void
@@ -578,7 +581,10 @@ tile_destroy(struct tile *t)
 	int i;
 
 	if (t->s >= 0) {
+#if 0
 		sprite_destroy(OBJECT(t->ts)->gfx, t->s);
+#endif
+		OBJECT(t->ts)->gfx->used--;
 		t->s = -1;
 	}
 	t->su = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.214 2005/06/18 04:25:18 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.215 2005/07/16 16:07:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -159,10 +159,12 @@ object_free_data(void *p)
 		}
 		ob->flags &= ~(OBJECT_DATA_RESIDENT);
 	}
+#if 0
 	if (ob->gfx != NULL) {
 		gfx_alloc_sprites(ob->gfx, 0);
 		gfx_alloc_anims(ob->gfx, 0);
 	}
+#endif
 }
 
 /* Recursive function to construct absolute object names. */
@@ -644,8 +646,14 @@ object_destroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 
-	if (ob->gfx != NULL)	gfx_destroy(ob->gfx);
-	if (ob->audio != NULL)	audio_destroy(ob->audio);
+	if (ob->gfx != NULL) {
+		gfx_destroy(ob->gfx);
+		ob->gfx = NULL;
+	}
+	if (ob->audio != NULL) {
+		audio_destroy(ob->audio);
+		ob->audio = NULL;
+	}
 
 	object_free_props(ob);
 	object_free_events(ob);
@@ -727,29 +735,23 @@ object_page_in(void *p, enum object_page_item item)
 	struct object *ob = p;
 
 	pthread_mutex_lock(&ob->lock);
+
 	switch (item) {
 	case OBJECT_GFX:
-#if 0
 		if (ob->gfx == NULL) {
-			gfx_new(ob);
-			if (gfx_load(ob) == -1)
-				goto fail;
-		} else {
-			if (++ob->gfx->used > GFX_MAX_USED)
-				ob->gfx->used = GFX_MAX_USED;
+			ob->gfx = gfx_new(ob);
 		}
-#else
-		if (ob->gfx == NULL) {
-			gfx_new(ob);
-		} else {
-			if (++ob->gfx->used > GFX_MAX_USED)
-				ob->gfx->used = GFX_MAX_USED;
+		dprintf("%s: gfx page in (used=%d)\n", ob->name,
+		    ob->gfx->used);
+		if (ob->gfx->used == 0 &&
+		    gfx_load(ob) == -1) {
+			goto fail;
 		}
-#endif
+		if (++ob->gfx->used > GFX_MAX_USED) {
+			ob->gfx->used = GFX_MAX_USED;
+		}
 		break;
 	case OBJECT_AUDIO:
-		/* TODO */
-		break;
 	case OBJECT_DATA:
 		if (ob->flags & OBJECT_NON_PERSISTENT) {
 			goto out;
@@ -785,25 +787,21 @@ object_page_out(void *p, enum object_page_item item)
 	struct object *ob = p;
 	
 	pthread_mutex_lock(&ob->lock);
+	
 	switch (item) {
 	case OBJECT_GFX:
 		if (ob->gfx != NULL && ob->gfx->used != GFX_MAX_USED) {
 			if (--ob->gfx->used == 0) {
-#if 0
-				/* TODO track changes */
-				if (mapedition) {
-					if (object_save(ob) == -1)
-						goto fail;
-				}
-#endif
 				gfx_alloc_sprites(ob->gfx, 0);
 				gfx_alloc_anims(ob->gfx, 0);
+				/* TODO save the gfx part */
 			}
+			dprintf("%s: gfx page out (used=%d)\n", ob->name,
+			    ob->gfx->used);
 		}
 		break; 
 	case OBJECT_AUDIO:
-		/* TODO */
-		break;
+		break; 
 	case OBJECT_DATA:
 		if (ob->flags & OBJECT_NON_PERSISTENT)
 			goto done;
@@ -1746,6 +1744,7 @@ poll_gfx(int argc, union evarg *argv)
 		return;
 	
 	tlist_clear_items(tl);
+	tlist_insert(tl, NULL, "(%u references)", gfx->used);
 	for (i = 0; i < gfx->nsprites; i++) {
 		struct sprite *spr = &gfx->sprites[i];
 		SDL_Surface *su = spr->su;

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.33 2005/07/17 03:39:47 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.34 2005/07/19 02:22:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -46,18 +46,25 @@ enum gfx_snap_mode {
 	GFX_SNAP_TO_GRID
 };
 
+#define SPRITE_NAME_MAX 24
+
 struct sprite {
-	SDL_Surface *su;			/* Sprite surface */
+	char name[SPRITE_NAME_MAX];
+	struct gfx *pgfx;
+	Uint32 index;
+	SDL_Surface *su;
 	int xOrig, yOrig;			/* Origin point */
 	enum gfx_snap_mode snap_mode;		/* Preferred snapping mode */
 #ifdef HAVE_OPENGL
-	GLuint texture;				/* Cached OpenGL texture */
-	GLfloat texcoords[4];			/* Texture coordinates. */
+	GLuint texture;
+	GLfloat texcoords[4];
 #endif
 	SLIST_HEAD(,gfx_cached_sprite) csprites; /* Transform cache */
 };
 
 struct gfx {
+	void *pobj;
+
 	struct sprite *sprites;		/* Images */
 	Uint32	      nsprites;
 
@@ -109,6 +116,7 @@ void		 sprite_init(struct gfx *, Uint32);
 void		 sprite_destroy(struct gfx *, Uint32);
 void		 anim_init(struct gfx *, Uint32);
 void		 anim_destroy(struct gfx *, Uint32);
+__inline__ void	 sprite_set_name(struct gfx *, Uint32, const char *);
 __inline__ void	 sprite_set_surface(struct gfx *, Uint32, SDL_Surface *);
 __inline__ void	 sprite_set_origin(struct sprite *, int, int);
 __inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);

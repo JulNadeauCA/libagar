@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.48 2005/07/11 06:07:48 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.49 2005/07/16 16:00:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -79,7 +79,8 @@ tileset_init(void *obj, const char *name)
 	struct tileset *ts = obj;
 
 	object_init(ts, "tileset", name, &tileset_ops);
-	gfx_new(ts);
+	OBJECT(ts)->gfx = gfx_new(ts);
+	OBJECT(ts)->gfx->used = 0;
 	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD;
 
 	pthread_mutex_init(&ts->lock, &recursive_mutexattr);
@@ -124,9 +125,11 @@ tileset_reinit(void *obj)
 		Free(t, M_RG);
 	}
 
+#if 0
 	ts->max_sprites = 0;
 	gfx_alloc_sprites(OBJECT(ts)->gfx, 0);
 	gfx_alloc_anims(OBJECT(ts)->gfx, 0);
+#endif
 
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
@@ -198,7 +201,6 @@ tileset_load(void *obj, struct netbuf *buf)
 	pthread_mutex_lock(&ts->lock);
 	ts->flags = read_uint32(buf);
 	ts->max_sprites = read_uint32(buf);
-	dprintf("max sprites = %d\n", ts->max_sprites);
 
 	/* Resize the graphics array. */
 	gfx_alloc_sprites(gfx, ts->max_sprites);
