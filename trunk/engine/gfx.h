@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.32 2005/07/16 16:07:27 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.33 2005/07/17 03:39:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -81,7 +81,7 @@ struct gfx {
 				 SPRITE((ob),(i)).su == NULL)
 
 #define BAD_ANIM(ob, i)		(OBJECT(ob)->gfx == NULL || \
-				 (i) >= (ob)->gfx->nanims || \
+				 (i) >= OBJECT(ob)->gfx->nanims || \
 				 ANIM((ob),(i)).nframes == 0)
 #define GFX_ANIM_FRAME(r, an)	(an)->frames[(an)->frame]
 #define GFX_ANIM_TEXTURE(r, an) (an)->textures[(an)->frame]
