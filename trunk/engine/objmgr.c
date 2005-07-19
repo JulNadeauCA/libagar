@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.28 2005/06/17 05:44:43 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.29 2005/07/16 16:07:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -197,7 +197,6 @@ close_obj_data(int argc, union evarg *argv)
 	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
-	object_page_out(oent->obj, OBJECT_GFX);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
 
@@ -229,13 +228,11 @@ objmgr_open_data(void *p)
 		printf("%s data: %s\n", ob->name, error_get());
 		return;
 	}
-	object_page_in(ob, OBJECT_GFX);
 	object_add_dep(&mapedit.pseudo, ob);
 
 	win = ob->ops->edit(ob);
 	if (win == NULL) {
 		object_page_out(ob, OBJECT_DATA);
-		object_page_out(ob, OBJECT_GFX);
 		object_del_dep(&mapedit.pseudo, ob);
 		return;
 	}
@@ -810,19 +807,19 @@ objmgr_window(void)
 			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
 
 #ifdef NETWORK
-			menu_separator(mi);
-			
-			menu_action(mi, _("Commit to repository"),
-			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
-			    OBJEDIT_RCS_COMMIT);
+			if (rcs) {
+				menu_action(mi, _("Commit to repository"),
+				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_COMMIT);
 
-			menu_action(mi, _("Update from repository"),
-			    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
-			    OBJEDIT_RCS_UPDATE);
+				menu_action(mi, _("Update from repository"),
+				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_UPDATE);
 			
-			menu_action(mi, _("Import to repository"),
-			    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
-			    OBJEDIT_RCS_IMPORT);
+				menu_action(mi, _("Import to repository"),
+				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_IMPORT);
+			}
 #endif
 
 			menu_separator(mi);
