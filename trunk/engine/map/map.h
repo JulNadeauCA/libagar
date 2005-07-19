@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.8 2005/06/18 16:37:19 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.9 2005/07/16 15:55:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -65,13 +65,13 @@ struct noderef {
 		Sint16 xcenter, ycenter;	/* Centering offsets */
 		Sint16 xmotion, ymotion;	/* Motion offsets */
 		Sint16 xorigin, yorigin;	/* Origin point */
+		SDL_Rect rs;			/* Source rectangle */
 		Uint8 edge;			/* Edge type (for edition) */
 	} r_gfx;
 	union {
 		struct {
 			struct object *obj;	/* Gfx object */
 			Uint32 offs;		/* Sprite index */
-			SDL_Rect rs;		/* Source rectangle */
 		} sprite;
 		struct {
 			struct object *obj;	/* Gfx object */
