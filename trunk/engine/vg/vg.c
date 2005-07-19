@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.61 2005/06/30 06:26:22 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.62 2005/07/16 16:07:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -91,8 +91,10 @@ vg_new(void *p, int flags)
 	vg = Malloc(sizeof(struct vg), M_VG);
 	vg_init(vg, flags);
 	if (ob != NULL) {
+		ob->gfx = gfx_new(ob);
+		ob->gfx->used = 1;
+
 		vg->pobj = ob;
-		gfx_new(ob);
 		vg->map = map_new(ob, "raster");
 		OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|
 					  OBJECT_INDESTRUCTIBLE;

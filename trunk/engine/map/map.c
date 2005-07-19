@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.29 2005/07/17 04:56:46 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.30 2005/07/19 02:23:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,8 +38,6 @@
 #ifdef EDITION
 #include <engine/map/mapedit.h>
 #include <engine/map/mapview.h>
-
-#include <engine/rg/tileset.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -2002,10 +2000,10 @@ find_art(struct tlist *tl, struct object *pob)
 	struct tlist_item *it;
 
 	if (OBJECT_TYPE(pob, "tileset")) {
-		struct tileset *ts = (struct tileset *)pob;
+		struct object *ts = (struct object *)pob;
 		struct tlist_item *sit;
-		struct tile *t;
 		struct animation *anim;
+		int i;
 
 		it = tlist_insert(tl, object_icon(ts), "%s%s", pob->name,
 		    (pob->flags&OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
@@ -2015,30 +2013,24 @@ find_art(struct tlist *tl, struct object *pob)
 		
 		pthread_mutex_lock(&ts->lock);
 		
-		if (!TAILQ_EMPTY(&ts->tiles) ||
-		    !TAILQ_EMPTY(&ts->animations))
+		if (ts->gfx != NULL &&
+		    (ts->gfx->nsprites > 0 ||
+		     ts->gfx->nanims > 0))
 			it->flags |= TLIST_HAS_CHILDREN;
 
 		if (it->flags & TLIST_HAS_CHILDREN &&
 		    tlist_visible_children(tl, it)) {
-			TAILQ_FOREACH(t, &ts->tiles, tiles) {
-				sit = tlist_insert(tl, t->su, "%s (%ux%u)",
-				    t->name, t->su->w, t->su->h);
+			for (i = 0; i < ts->gfx->nsprites; i++) {
+				struct sprite *spr = &SPRITE(ts,i);
+				
+				sit = tlist_insert(tl, spr->su, "%s (%ux%u)",
+				    spr->name, spr->su->w, spr->su->h);
 				sit->depth = 1;
 				sit->class = "tile";
-				sit->p1 = t;
-			}
-			TAILQ_FOREACH(anim, &ts->animations, animations) {
-				sit = tlist_insert(tl,
-				    anim->nframes>0 ? anim->frames[0].su : NULL,
-				    "%s (%ux%u*%u)",
-				    anim->name, anim->w, anim->h,
-				    anim->nframes);
-				sit->depth = 1;
-				sit->class = "anim";
-				sit->p1 = anim;
+				sit->p1 = spr;
 			}
 		}
+
 		pthread_mutex_unlock(&ts->lock);
 	}
 
@@ -2096,9 +2088,9 @@ selected_art(int argc, union evarg *argv)
 
 	if (it->p1 != NULL &&
 	    strcmp(it->class, "tile") == 0) {
-		struct tile *t = it->p1;
+		struct sprite *spr = it->p1;
 	
-		stamp_snap_mode = SPRITE(t->ts,t->s).snap_mode;
+		stamp_snap_mode = SPRITE(spr->pgfx->pobj,spr->index).snap_mode;
 	}
 
 }

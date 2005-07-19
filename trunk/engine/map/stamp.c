@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.17 2005/07/17 03:40:11 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.18 2005/07/19 02:23:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -88,14 +88,13 @@ stamp_init(struct tool *t)
 }
 
 static void
-init_tile_noderef(struct mapview *mv, struct noderef *r, struct tile *t)
+init_gfx_ref(struct mapview *mv, struct noderef *r, struct sprite *spr)
 {
 	struct map *m = mv->map;
-	struct sprite *spr = &SPRITE(t->ts,t->s);
 	int sm;
 
 	noderef_init(r, NODEREF_SPRITE);
-	noderef_set_sprite(r, m, t->ts, t->s);
+	noderef_set_sprite(r, m, spr->pgfx->pobj, spr->index);
 	r->layer = m->cur_layer;
 	r->r_gfx.xcenter = 0;
 	r->r_gfx.ycenter = 0;
@@ -146,7 +145,7 @@ stamp_effect(struct tool *t, struct node *n)
 		}
 	} else {
 		struct tlist_item *it;
-		struct tile *t;
+		struct sprite *spr;
 		SDL_Surface *su;
 		int sx, sy, dx, dy;
 
@@ -155,8 +154,8 @@ stamp_effect(struct tool *t, struct node *n)
 		    strcmp(it->class, "tile") != 0) {
 			return (1);
 		}
-		t = it->p1;
-		su = t->su;
+		spr = it->p1;
+		su = spr->su;
 
 		for (sy = 0, dy = mv->cy;
 		     sy < su->h && dy < m->maph;
@@ -168,7 +167,7 @@ stamp_effect(struct tool *t, struct node *n)
 			
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
-				init_tile_noderef(mv, r, t);
+				init_gfx_ref(mv, r, spr);
 				r->r_gfx.rs.x = sx;
 				r->r_gfx.rs.y = sy;
 				/* XXX may be smaller */
@@ -222,14 +221,14 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 	} else if (mv->art_tl != NULL &&
 	   (it = tlist_selected_item(mv->art_tl)) != NULL &&
 	   strcmp(it->class, "tile") == 0) {
-		struct tile *tile = it->p1;
+		struct sprite *spr = it->p1;
 		int dx, dy;
 
-		if (tile->su != NULL) {
+		if (spr->su != NULL) {
 			struct noderef rtmp;
 			struct transform *trans;
 
-			init_tile_noderef(mv, &rtmp, tile);
+			init_gfx_ref(mv, &rtmp, spr);
 			primitives.rect_outlined(mv, rd->x+1, rd->y+1,
 			    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
 			    COLOR(MAPVIEW_GRID_COLOR));

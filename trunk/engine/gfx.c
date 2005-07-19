@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.48 2005/06/08 06:25:10 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.49 2005/07/16 16:07:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,6 +63,9 @@ sprite_init(struct gfx *gfx, Uint32 s)
 {
 	struct sprite *spr = &gfx->sprites[s];
 
+	spr->name[0] = '\0';
+	spr->pgfx = gfx;
+	spr->index = s;
 	spr->su = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
@@ -122,6 +125,14 @@ sprite_destroy(struct gfx *gfx, Uint32 s)
 	}
 #endif
 	sprite_free_transforms(spr);
+}
+
+void
+sprite_set_name(struct gfx *gfx, Uint32 s, const char *name)
+{
+	struct sprite *spr = &gfx->sprites[s];
+
+	strlcpy(spr->name, name, sizeof(spr->name));
 }
 
 /*
@@ -354,24 +365,20 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 
 /* Allocate a gfx structure for a given object. */
 struct gfx *
-gfx_new(void *p)
+gfx_new(void *pobj)
 {
-	struct object *ob = p;
 	struct gfx *gfx;
 	
 	gfx = Malloc(sizeof(struct gfx), M_GFX);
 	gfx_init(gfx);
-
-	pthread_mutex_lock(&ob->lock);
-	ob->gfx = gfx;
-	pthread_mutex_unlock(&ob->lock);
-
+	gfx->pobj = pobj;
 	return (gfx);
 }
 
 void
 gfx_init(struct gfx *gfx)
 {
+	gfx->pobj = NULL;
 	gfx->sprites = NULL;
 	gfx->nsprites = 0;
 	gfx->anims = NULL;
@@ -380,7 +387,7 @@ gfx_init(struct gfx *gfx)
 	gfx->submaps = NULL;
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
-	gfx->used = 1;
+	gfx->used = 0;
 }
 
 static void
@@ -509,7 +516,6 @@ gfx_wire(void *p, const char *name)
 {
 	char path[MAXPATHLEN];
 	struct object *ob = p;
-	struct gfx *gfx;
 	struct den *den;
 	Uint32 i;
 
@@ -518,12 +524,12 @@ gfx_wire(void *p, const char *name)
 	    (den = den_open(path, DEN_READ)) == NULL)
 		return (-1);
 	
-	gfx = gfx_new(ob);
-	gfx->used = GFX_MAX_USED;
+	ob->gfx = gfx_new(ob);
+	ob->gfx->used = GFX_MAX_USED;
 	for (i = 0; i < den->nmembers; i++) {
-		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1) {
+		if (xcf_load(den->buf, den->members[i].offs, ob->gfx) == -1) {
 			den_close(den);
-			gfx_destroy(gfx);
+			gfx_destroy(ob->gfx);
 			ob->gfx = NULL;
 			return (-1);
 		}
@@ -569,6 +575,7 @@ gfx_load(struct object *ob)
 	for (i = 0; i < gfx->nsprites; i++) {
 		struct sprite *spr = &gfx->sprites[i];
 
+		copy_string(spr->name, buf, sizeof(spr->name));
 		if (read_uint8(buf)) {
 			spr->su = read_surface(buf, sfmt);
 		} else {
@@ -603,15 +610,16 @@ fail:
 int
 gfx_save(struct object *ob, struct netbuf *buf)
 {
-#if 0
 	struct gfx *gfx = ob->gfx;
 	Uint32 i, j;
 
 	if (gfx == NULL) {
-		dprintf("%s: saving NULL gfx\n", ob->name);
 		write_uint8(buf, 0);
 		return (0);
+	} else {
+		write_uint8(buf, 1);
 	}
+
 	write_uint32(buf, 0);				/* Pad: flags */
 
 	dprintf("%s: saving %d sprites\n", ob->name, gfx->nsprites);
@@ -619,6 +627,7 @@ gfx_save(struct object *ob, struct netbuf *buf)
 	for (i = 0; i < gfx->nsprites; i++) {
 		struct sprite *spr = &gfx->sprites[i];
 
+		write_string(buf, spr->name);
 		if (spr->su != NULL) {
 			write_uint8(buf, 1);
 			write_surface(buf, spr->su);
@@ -640,8 +649,5 @@ gfx_save(struct object *ob, struct netbuf *buf)
 		for (j = 0; j < anim->nframes; j++)
 			write_surface(buf, anim->frames[j]);
 	}
-#else
-	write_uint8(buf, 0);
-#endif
 	return (0);
 }

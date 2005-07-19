@@ -1,4 +1,4 @@
-.\"	$Csoft: gfx.3,v 1.3 2005/04/21 06:38:10 vedge Exp $
+.\"	$Csoft: gfx.3,v 1.4 2005/07/16 16:07:27 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,10 +44,8 @@ interface manages the storage of graphical information, such as images and
 animations.
 The
 .Fn gfx_new
-function is used to initialize the
+function is used to allocate and initialize a
 .Va gfx
-member of the
-.Xr object 3
 structure.
 The
 .Nm
@@ -81,10 +79,9 @@ specific elements quickly.
 .Pp
 The
 .Fn gfx_new
-function allocates/initializes a
+function allocates and/initializes a
 .Nm
-structure and associates it to the given object.
-It also sets the reference count to 1.
+structure.
 .Pp
 The
 .Fn gfx_unused
