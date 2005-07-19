@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.30 2005/07/19 03:56:46 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.31 2005/07/19 03:57:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -763,8 +763,6 @@ objmgr_window(void)
 #ifdef NETWORK
 	mi = menu_add_item(me, _("Repository"));
 	{
-		menu_separator(mi);
-
 		menu_action(mi, _("Commit object"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_COMMIT);
