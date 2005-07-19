@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.74 2005/05/12 07:26:05 vedge Exp $
+.\"	$Csoft: object.3,v 1.75 2005/07/16 16:07:27 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -432,50 +432,6 @@ for the given object and its children.
 Dependencies with a reference count of zero only occur in objects that have the
 .Dv OBJECT_PRESERVE_DEPS
 flag set.
-.Sh SHARED MEDIA
-.Pp
-Data that is shared between multiple objects (such as graphics or audio) is
-referred to as "shared media".
-Agar uses a two-level reference count scheme to perform efficient garbage
-collection of this data, and allow object-specific media overrides.
-.Pp
-The
-.Fn object_page_in
-and
-.Fn object_page_out
-functions increment and decrement reference counts that are part of the
-.Nm
-structure.
-A transition of 0->1 on such an object-specific reference count causes
-the shared media reference count to be increased (if its reference count
-goes 0->1, the media is actually read from disk).
-Conversely, a transition of 1->0 on object-specific reference counts cause
-the shared media reference count to be decreased (if it goes 1->0, the media
-is freed from memory).
-.Pp
-Once media has been made available through
-.Fn object_page_in ,
-the
-.Va gfx
-(for
-.Dv OBJECT_GFX )
-or
-.Va audio
-(for
-.Dv OBJECT_AUDIO )
-member of the
-.Nm
-structure becomes accessible.
-.Pp
-Sprites, animations and generated maps are accessed directly through
-.Va gfx .
-Audio samples are accessed directly through
-.Va audio .
-See
-.Xr gfx 3
-and
-.Xr audio 3
-for more information.
 .Sh ARCHIVING AND PAGING
 .nr nS 1
 .Ft "int"
@@ -577,9 +533,9 @@ The
 argument may be one of:
 .Bd -literal
 enum object_page_item {
-	OBJECT_GFX,		/* Shared graphics */
-	OBJECT_AUDIO,		/* Shared audio */
-	OBJECT_DATA		/* Object derivate data */
+	OBJECT_GFX,		/* Graphics */
+	OBJECT_AUDIO,		/* Audio */
+	OBJECT_DATA		/* Object data */
 };
 .Ed
 .Pp
