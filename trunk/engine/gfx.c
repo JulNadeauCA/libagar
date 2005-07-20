@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.49 2005/07/16 16:07:27 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.50 2005/07/19 04:24:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -535,6 +535,28 @@ gfx_wire(void *p, const char *name)
 		}
 	}
 	den_close(den);
+	return (0);
+}
+
+void
+gfx_used(void *p)
+{
+	struct object *ob = p;
+
+	if (ob->gfx != NULL && ob->gfx->used != GFX_MAX_USED)
+		ob->gfx->used++;
+}
+
+int
+gfx_unused(void *p)
+{
+	struct object *ob = p;
+	
+	if (ob->gfx != NULL && --ob->gfx->used == 0) {
+		gfx_alloc_sprites(ob->gfx, 0);
+		gfx_alloc_anims(ob->gfx, 0);
+		return (1);
+	}
 	return (0);
 }
 
