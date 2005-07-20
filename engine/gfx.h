@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.34 2005/07/19 02:22:11 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.35 2005/07/19 04:24:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -103,6 +103,8 @@ int		 gfx_transparent(SDL_Surface *);
 int		 gfx_wire(void *, const char *);
 int		 gfx_load(struct object *);
 int		 gfx_save(struct object *, struct netbuf *);
+void		 gfx_used(void *);
+int		 gfx_unused(void *);
 
 void		 gfx_alloc_sprites(struct gfx *, Uint32);
 void		 gfx_alloc_anims(struct gfx *, Uint32);

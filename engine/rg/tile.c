@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.67 2005/07/16 16:00:42 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.68 2005/07/19 04:24:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -127,7 +127,7 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->blend_fn = blend_overlay_alpha;
 	t->s = -1;
 	TAILQ_INIT(&t->elements);
-	OBJECT(ts)->gfx->used++;
+	gfx_used(ts);
 }
 
 void
@@ -584,7 +584,7 @@ tile_destroy(struct tile *t)
 #if 0
 		sprite_destroy(OBJECT(t->ts)->gfx, t->s);
 #endif
-		OBJECT(t->ts)->gfx->used--;
+		gfx_unused(t->ts);
 		t->s = -1;
 	}
 	t->su = NULL;
