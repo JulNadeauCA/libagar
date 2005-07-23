@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.30 2005/07/19 02:23:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.31 2005/07/19 04:24:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,7 +33,8 @@
 #include <engine/config.h>
 #include <engine/view.h>
 
-#include <engine/map/map.h>
+#include "map.h"
+#include "tools.h"
 
 #ifdef EDITION
 #include <engine/map/mapedit.h>
@@ -217,6 +218,65 @@ noderef_destroy(struct map *m, struct noderef *r)
 		}
 		break;
 	default:
+		break;
+	}
+}
+
+void
+noderef_attr_color(u_int flag, int state, Uint8 *c)
+{
+	switch (flag) {
+	case NODEREF_BLOCK:
+		if (state) {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 255;
+			c[2] = 0;
+			c[3] = 32;
+		}
+		break;
+	case NODEREF_CLIMBABLE:
+		if (state) {
+			c[0] = 255;
+			c[1] = 255;
+			c[2] = 0;
+			c[3] = 64;
+		} else {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 32;
+		}
+		break;
+	case NODEREF_SLIPPERY:
+		if (state) {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 255;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 0;
+		}
+		break;
+	case NODEREF_JUMPABLE:
+		if (state) {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 255;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 0;
+		}
 		break;
 	}
 }
@@ -881,7 +941,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 
 	/* Read the type of reference, flags and the layer#. */
 	type = (enum noderef_type)read_uint32(buf);
-	flags = (Uint8)read_uint32(buf);
+	flags = (u_int)read_uint32(buf);
 	layer = read_uint8(buf);
 	friction = read_sint8(buf);
 
@@ -2361,10 +2421,6 @@ noderef_edit(int argc, union evarg *argv)
 struct window *
 map_edit(void *p)
 {
-	extern const struct tool nodesel_tool;
-	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
-	    resize_tool, propedit_tool, shift_tool, merge_tool,
-	    fill_tool, flip_tool, invert_tool;
 	struct map *m = p;
 	struct window *win;
 	struct toolbar *toolbar;
@@ -2377,7 +2433,7 @@ map_edit(void *p)
 	struct box *box_h, *box_v;
 	struct hpane *pane;
 	struct hpane_div *div;
-	int flags = MAPVIEW_GRID;
+	int flags = MAPVIEW_GRID|MAPVIEW_NO_BG;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
@@ -2431,55 +2487,40 @@ map_edit(void *p)
 		    &mv->flags, MAPVIEW_GRID, 0);
 		menu_int_flags(pitem, _("Show node attributes"), PROPS_ICON,
 		    &mv->flags, MAPVIEW_PROPS, 0);
-		menu_int_flags(pitem, _("Show cursor"), SELECT_TOOL_ICON,
+		menu_int_flags(pitem, _("Show cursor"), -1,
 		    &mv->flags, MAPVIEW_NO_CURSOR, 1);
 		
 		menu_int_bool(pitem, _("Show background tiles"), GRID_ICON,
 		    &mapview_bg, 0);
 		menu_int_bool(pitem, _("Moving background tiles"), GRID_ICON,
 		    &mapview_bg_moving, 0);
-
-		menu_separator(pitem);
-
-		menu_action(pitem, _("Zoom settings..."), MAGNIFIER_CURSORBMP,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &magnifier_tool, m));
 	}
 	
 	pitem = menu_add_item(menu, _("Tools"));
 	{
-		menu_action(pitem, _("Node selection"), SELECT_TOOL_ICON,
+		menu_action(pitem, _("Select node"), SELECT_NODE_ICON,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &nodesel_tool, m));
+		
+		menu_action(pitem, _("Select node element"), SELECT_REF_ICON,
+		    switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &refsel_tool, m));
+		
+		menu_action_kb(pitem, _("Fill"), FILL_TOOL_ICON,
+		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &fill_tool, m));
+
+#if 0
 		menu_action(pitem, _("Stamp"), STAMP_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &stamp_tool, m));
-		menu_action(pitem, _("Eraser"), ERASER_TOOL_ICON,
-		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &eraser_tool, m));
-		menu_action(pitem, _("Resize"), RESIZE_TOOL_ICON,
-		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &resize_tool, m));
-
-		menu_action_kb(pitem, _("Fill region"), FILL_TOOL_ICON,
-		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &fill_tool, m));
-		menu_action(pitem, _("Apply texture"), MERGE_TOOL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &merge_tool, m));
-		
-		menu_action(pitem, _("Entity properties"), PROPEDIT_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &propedit_tool, m));
-		menu_action(pitem, _("Displace sprite"), SHIFT_TOOL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &shift_tool, m));
 		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &flip_tool, m));
 		menu_action(pitem, _("Invert sprite"), INVERT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &invert_tool, m));
+#endif
 	}
 	
 	pane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);

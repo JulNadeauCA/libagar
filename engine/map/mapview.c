@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.25 2005/07/10 15:41:57 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.26 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@
 #include "mapview.h"
 #include "nodesel.h"
 #include "refsel.h"
+#include "tools.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -74,6 +75,8 @@ int	mapview_bg = 1;			/* Background tiles enable */
 int	mapview_bg_moving = 1;		/* Background tiles moving */
 int	mapview_bg_sqsize = 8;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
+int	mapview_zoom_inc = 8;
+
 
 static void lost_focus(int, union evarg *);
 static void mousemotion(int, union evarg *);
@@ -92,6 +95,46 @@ mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar,
 	mapview_init(mv, m, flags, toolbar, statbar);
 	object_attach(parent, mv);
 	return (mv);
+}
+
+void
+mapview_pixel2i(struct mapview *mv, int x, int y)
+{
+	Uint8 r, g, b;
+	int dx = WIDGET(mv)->cx + x;
+	int dy = WIDGET(mv)->cy + y;
+
+	if (mv->col.a < 255) {
+		BLEND_RGBA2_CLIPPED(view->v, dx, dy,
+		    mv->col.r, mv->col.g, mv->col.b, mv->col.a,
+		    ALPHA_OVERLAY);
+	} else {
+		VIEW_PUT_PIXEL2_CLIPPED(dx, dy, mv->col.pixval);
+	}
+}
+
+void
+mapview_hline(struct mapview *mv, int x1, int x2, int y)
+{
+	int x;
+
+	/* TODO opengl */
+	if (!view->opengl) {
+		for (x = x1; x < x2; x++)
+			mapview_pixel2i(mv, x, y);
+	}
+}
+
+void
+mapview_vline(struct mapview *mv, int x, int y1, int y2)
+{
+	int y;
+
+	/* TODO opengl */
+	if (!view->opengl) {
+		for (y = y1; y < y2; y++)
+			mapview_pixel2i(mv, x, y);
+	}
 }
 
 #ifdef EDITION
@@ -173,6 +216,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 	ntool = Malloc(sizeof(struct tool), M_MAPEDIT);
 	memcpy(ntool, tool, sizeof(struct tool));
 	ntool->p = p;
+	ntool->orig = tool;
 	tool_init(ntool, mv);
 
 	if (((tool->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
@@ -344,6 +388,12 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->esel.w = 0;
 	mv->esel.h = 0;
 	mv->rsel.moving = 0;
+
+	mv->col.r = 255;
+	mv->col.g = 255;
+	mv->col.b = 255;
+	mv->col.a = 64;
+	mv->col.pixval = SDL_MapRGB(vfmt, 255, 255, 255);
 	
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->origin.x;
@@ -415,15 +465,6 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
     int mx, int my)
 {
 	const struct {
-		Uint32	flag;
-		Uint32	sprite;
-	} flags[] = {
-		{ NODEREF_WALK,		MAPVIEW_WALK },
-		{ NODEREF_CLIMB,	MAPVIEW_CLIMB },
-		{ NODEREF_BIO,		MAPVIEW_BIO },
-		{ NODEREF_REGEN,	MAPVIEW_REGEN }
-	};
-	const struct {
 		Uint32	edge;
 		Uint32	sprite;
 	} edges[] = {
@@ -436,7 +477,6 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 		{ NODEREF_EDGE_SW,	MAPVIEW_EDGE_SW },
 		{ NODEREF_EDGE_SE,	MAPVIEW_EDGE_SE }
 	};
-	const int nflags = sizeof(flags) / sizeof(flags[0]);
 	const int nedges = sizeof(edges) / sizeof(edges[0]);
 	struct noderef *r;
 	int i;
@@ -453,12 +493,11 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 		if (r->layer != mv->map->cur_layer) {
 			continue;
 		}
-		for (i = 0; i < nflags; i++) {
-			if ((r->flags & flags[i].flag) == 0) {
-				continue;
-			}
-			widget_blit(mv, SPRITE(mv,flags[i].sprite).su, x, y);
-			x += (SPRITE(mv,flags[i].sprite).su)->w;
+		if (r->flags & NODEREF_BLOCK) {
+			Uint8 c[4] = { 255,40,40,64 };
+
+			primitives.rect_blended(mv, x, y,
+			    MV_TILESZ(mv), MV_TILESZ(mv), c, ALPHA_OVERLAY);
 		}
 		for (i = 0; i < nedges; i++) {
 			if (r->r_gfx.edge != edges[i].edge) {
@@ -551,6 +590,7 @@ mapview_draw(void *p)
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 	SDL_Rect rExtent;
+	int grid_drawn = 0;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLenum blend_sfactor;
@@ -632,18 +672,26 @@ draw_layer:
 				}
 			}
 
+	
+			if (!grid_drawn &&
+			    (mv->flags & MAPVIEW_GRID) &&
+			    MV_ZOOM(mv) >= ZOOM_GRID_MIN) {
+				mapview_hline(mv,
+				    rx, rx+MV_TILESZ(mv),
+				    ry);
+				mapview_hline(mv,
+				    rx, rx+MV_TILESZ(mv),
+				    ry+MV_TILESZ(mv));
+				mapview_vline(mv,
+				    rx,
+				    ry, ry+MV_TILESZ(mv));
+				mapview_vline(mv,
+				    rx + MV_TILESZ(mv),
+				    ry, ry+MV_TILESZ(mv));
+			}
 			if ((mv->flags & MAPVIEW_PROPS) &&
 			    MV_ZOOM(mv) >= ZOOM_PROPS_MIN) {
 				mapview_draw_props(mv, node, rx, ry, mx, my);
-			}
-			if ((mv->flags & MAPVIEW_GRID) &&
-			    MV_ZOOM(mv) >= ZOOM_GRID_MIN) {
-				/* XXX overdraw */
-				primitives.rect_outlined(mv,
-				    rx, ry,
-				    MV_TILESZ(mv) + 1,
-				    MV_TILESZ(mv) + 1,
-				    COLOR(MAPVIEW_GRID_COLOR));
 			}
 #ifdef EDITION
 			if (!mapedition)
@@ -668,6 +716,7 @@ draw_layer:
 #endif /* EDITION */
 		}
 	}
+	grid_drawn = 1;
 next_layer:
 	if (++layer < m->nlayers)
 		goto draw_layer;			/* Draw next layer */
@@ -802,7 +851,6 @@ mapview_update_camera(struct mapview *mv)
 void
 mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 {
-	extern int magnifier_zoom_toval;
 	int old_tilesz = MV_TILESZ(mv);
 	int x, y;
 	int old_pixw = mv->map->mapw*MV_TILESZ(mv);
@@ -812,8 +860,6 @@ mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 	if (zoom < ZOOM_MIN) { zoom = ZOOM_MIN; }
 	else if (zoom > ZOOM_MAX) { zoom = ZOOM_MAX; }
 	
-	magnifier_zoom_toval = zoom;
-
 	MV_ZOOM(mv) = zoom;
 	MV_TILESZ(mv) = zoom*TILESZ/100;
 
@@ -910,7 +956,6 @@ out:
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
-	extern int magnifier_zoom_inc;
 	struct mapview *mv = argv[0].p;
 	struct map *m = mv->map;
 	int button = argv[1].i;
@@ -989,11 +1034,10 @@ mousebuttondown(int argc, union evarg *argv)
 			struct noderef *r;
 			int nx, ny;
 			
-			if (mod & KMOD_SHIFT) {
-				if ((mv->flags & MAPVIEW_NO_NODESEL) == 0) {
-					nodesel_begin(mv);
-					goto out;
-				}
+			if (MV_TOOL(mv, &nodesel_tool) &&
+			    (mv->flags & MAPVIEW_NO_NODESEL) == 0) {
+				nodesel_begin(mv);
+				goto out;
 			}
 			if ((mod & KMOD_CTRL) == 0) {
 				/* XXX too expensive */
@@ -1045,14 +1089,14 @@ mousebuttondown(int argc, union evarg *argv)
 		goto out;
 	case SDL_BUTTON_WHEELDOWN:
 		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
-			mapview_set_scale(mv, MV_ZOOM(mv)-magnifier_zoom_inc,
+			mapview_set_scale(mv, MV_ZOOM(mv) - mapview_zoom_inc,
 			    1);
 			mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
 		}
 		break;
 	case SDL_BUTTON_WHEELUP:
 		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
-			mapview_set_scale(mv, MV_ZOOM(mv)+magnifier_zoom_inc,
+			mapview_set_scale(mv, MV_ZOOM(mv) + mapview_zoom_inc,
 			    1);
 			mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
 		}

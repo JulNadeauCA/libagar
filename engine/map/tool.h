@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.4 2005/06/17 08:37:50 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.5 2005/06/30 06:26:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -37,13 +37,11 @@ struct tool {
 	struct mapview *mv;			/* Associated mapview */
 	void *p;				/* User-supplied pointer */
 	SDL_Surface *cursor_su;			/* Static cursor surface */
-
 	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
 	SLIST_HEAD(,tool_mbinding) mbindings;	/* Mouse button bindings */
-
 	struct window *win;
 	struct button *trigger;
-
+	const struct tool *orig;
 	TAILQ_ENTRY(tool) tools;
 };
 

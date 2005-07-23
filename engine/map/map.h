@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.9 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.10 2005/07/19 02:23:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -48,18 +48,17 @@ enum noderef_edge {
 struct noderef {
 	enum noderef_type type;		/* Type of element */
 	
-	Uint8 flags;
-#define NODEREF_WALK		0x01		/* Surface is walkable */
-#define NODEREF_CLIMB		0x02		/* Surface is climbable */
-#define NODEREF_SLIP		0x04		/* Surface is slippery */
-#define NODEREF_BIO		0x08		/* Contact induces Poison */
-#define NODEREF_REGEN		0x10		/* Contact induces Regen */
-#define NODEREF_NOSAVE		0x20		/* Non persistent */
-#define NODEREF_MOUSEOVER	0x40		/* Mouse overlap (for editor) */
-#define NODEREF_SELECTED	0x80		/* Selection (for editor) */
+	u_int flags;
+#define NODEREF_BLOCK		0x001	/* Tile block */
+#define NODEREF_CLIMBABLE	0x002	/* Surface is climbable */
+#define NODEREF_SLIPPERY	0x004	/* Surface is slippery */
+#define NODEREF_JUMPABLE	0x008	/* Element is jumpable */
+#define NODEREF_NOSAVE		0x100	/* Non persistent */
+#define NODEREF_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
+#define NODEREF_SELECTED	0x400	/* Selection (for editor) */
 
-	Sint8 friction;		/* Coefficient of acceleration or friction */
-	Uint8 layer;		/* Associated layer */
+	Sint8 friction;			/* Coefficient of friction */
+	Uint8 layer;			/* Associated layer */
 
 	struct {
 		Sint16 xcenter, ycenter;	/* Centering offsets */
@@ -190,6 +189,7 @@ __inline__ void	 noderef_set_sprite(struct noderef *, struct map *, void *,
 __inline__ void	 noderef_set_anim(struct noderef *, struct map *, void *,
 		                  Uint32);
 struct noderef  *noderef_locate(struct map *, int, int, int);
+void		 noderef_attr_color(u_int, int, Uint8 *);
 
 __inline__ void	 node_init(struct node *);
 int		 node_load(struct map *, struct netbuf *, struct node *);
