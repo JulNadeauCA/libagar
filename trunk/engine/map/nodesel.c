@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.6 2005/06/21 08:09:07 vedge Exp $	*/
+/*	$Csoft: nodesel.c,v 1.1 2005/07/10 15:42:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -309,8 +309,8 @@ nodesel_init(struct tool *t)
 const struct tool nodesel_tool = {
 	N_("Node selection"),
 	N_("Select and manipulate nodes."),
-	SELECT_TOOL_ICON, SELECT_CURSORBMP,
-	TOOL_HIDDEN,
+	SELECT_NODE_ICON, 0,
+	0,
 	nodesel_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

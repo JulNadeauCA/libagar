@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: refsel.c,v 1.1 2005/07/10 15:41:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -81,8 +81,8 @@ refsel_init(struct tool *t)
 const struct tool refsel_tool = {
 	N_("Reference selection"),
 	N_("Select and manipulate node references."),
-	SELECT_TOOL_ICON, SELECT_CURSORBMP,
-	TOOL_HIDDEN,
+	SELECT_REF_ICON, 0,
+	0,
 	refsel_init,
 	NULL,			/* destroy */
 	NULL,			/* load */

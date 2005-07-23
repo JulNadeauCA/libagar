@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.12 2005/06/18 16:37:19 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.13 2005/06/21 08:09:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -41,6 +41,10 @@ struct mapview {
 	int prop_style;			/* Foreground attributes style */
 	int prew, preh;			/* Prescaling (nodes) */
 
+	struct {
+		Uint8 r, g, b, a;	/* Current color (for primitives) */
+		Uint32 pixval;
+	} col;
 	struct {			/* Mouse scrolling state */
 		int scrolling;		/* Scrolling is in progress */
 		int x, y;		/* Current node coordinates */
@@ -124,12 +128,17 @@ struct node;
 #define MV_CAM(mv) (mv)->map->cameras[(mv)->cam]
 #define MV_ZOOM(mv) MV_CAM(mv).zoom
 #define MV_TILESZ(mv) MV_CAM(mv).tilesz
+#define MV_TOOL(mv,p) ((mv)->curtool != NULL && (mv)->curtool->orig == (p))
 
 __BEGIN_DECLS
 struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,
 		             struct statusbar *);
 void	 	 mapview_init(struct mapview *, struct map *, int,
 		              struct toolbar *, struct statusbar *);
+
+__inline__ void mapview_pixel2i(struct mapview *, int, int);
+__inline__ void mapview_hline(struct mapview *, int, int, int);
+__inline__ void mapview_vline(struct mapview *, int, int, int);
 
 void	 mapview_destroy(void *);
 void	 mapview_draw(void *);

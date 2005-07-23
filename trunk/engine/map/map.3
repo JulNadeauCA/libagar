@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.4 2005/06/16 16:04:17 vedge Exp $
+.\"	$Csoft: map.3,v 1.5 2005/07/16 15:55:34 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -34,20 +34,20 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm map
-.Nd agar layered 2D space
+.Nd agar 2D multi-level maps
 .Sh SYNOPSIS
 .Fd #include <engine/map/map.h>
 .Sh DESCRIPTION
 The
 .Nm
-object implements a multilayered 2D
+interface implements a 2D
 .Xr space 3
-which is partitioned into fixed-size nodes.
+which is partitioned into fixed-size nodes arranged into multiple planes.
 The
 .Nm
 space is suitable for 2D overhead, isometric and platform graphics.
-Each nodes contains a stack of elements (such as references to sprites and
-tiles).
+Each nodes contains a stack of elements (such as references to sprites
+and tiles).
 .Pp
 In a game scenario, for instance, the rendering of a scene might be achieved by
 blitting the graphical references in the vicinity, while the audio system is

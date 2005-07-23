@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.6 2005/07/10 15:41:57 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.7 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -82,7 +82,6 @@ fill_effect(struct tool *t, struct node *n)
 	int dw = m->mapw, dh = m->maph;
 	int x, y, angle = 0, i = 0;
 	struct tlist_item *it;
-	struct tile *tile;
 	struct sprite *spr;
 	Uint32 rand = 0;
 	Uint8 byte = 0;
@@ -119,8 +118,8 @@ fill_effect(struct tool *t, struct node *n)
 		    strcmp(it->class, "tile") != 0) {
 			break;
 		}
-		tile = it->p1;
-		spr = &SPRITE(tile->ts,tile->s);
+		spr = it->p1;
+		
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
 				struct node *n = &m->map[y][x];
@@ -130,7 +129,8 @@ fill_effect(struct tool *t, struct node *n)
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
 				noderef_init(r, NODEREF_SPRITE);
-				noderef_set_sprite(r, m, tile->ts, tile->s);
+				noderef_set_sprite(r, m, spr->pgfx->pobj,
+				    spr->index);
 				noderef_set_layer(r, m->cur_layer);
 				r->r_gfx.xorigin = spr->xOrig;
 				r->r_gfx.yorigin = spr->yOrig;
