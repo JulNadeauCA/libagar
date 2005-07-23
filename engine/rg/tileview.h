@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.27 2005/06/05 09:38:48 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.28 2005/07/11 05:43:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -121,7 +121,8 @@ enum tileview_state {
 	TILEVIEW_TILE_EDIT,	/* Default edition mode */
 	TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
 	TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
-	TILEVIEW_PIXMAP_EDIT	/* A pixmap is being edited inline */
+	TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
+	TILEVIEW_ATTRIB_EDIT	/* Node attributes are being edited */
 };
 
 struct tileview {
@@ -141,12 +142,15 @@ struct tileview {
 #define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
 #define TILEVIEW_HIDE_CONTROLS	0x02	/* Hide the current controls */
 #define TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
-#define TILEVIEW_NO_EXTENT	0x08	/* Hide the tile extent rectangle */
+#define TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
+#define TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
+#define TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */
 
-	int edit_mode;
+	int edit_attr;			/* Attribute being edited */
+	int edit_mode;			/* Element is being edited */
 	enum tileview_state state;
 	struct box *tel_box;		/* Element-specific toolbar container */
 	struct toolbar *tel_tbar;	/* Element-specific toolbar */
@@ -193,11 +197,15 @@ struct tileview {
 			struct tileview_ctrl *geo_ctrl;
 			struct tileview_ctrl *orig_ctrl;
 		} tile;
+		struct {
+			int nx, ny;
+		} attrs;
 	} sargs;
 #define tv_feature sargs.feature
 #define tv_sketch  sargs.sketch
 #define tv_pixmap  sargs.pixmap
 #define tv_tile	   sargs.tile
+#define tv_attrs   sargs.attrs
 
 	struct {
 		Uint8 r, g, b, a;		/* Current color */
@@ -234,6 +242,8 @@ void tileview_pixel2i(struct tileview *, int, int);
 void tileview_rect2(struct tileview *, int, int, int, int);
 void tileview_rect2o(struct tileview *, int, int, int, int);
 void tileview_circle2o(struct tileview *, int, int, int);
+void tileview_hline(struct tileview *, int, int, int);
+void tileview_vline(struct tileview *, int, int, int);
 
 __inline__ void tileview_scaled_pixel(struct tileview *, int, int, Uint8,
 		                      Uint8, Uint8);

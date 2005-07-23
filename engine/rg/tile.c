@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.68 2005/07/19 04:24:15 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.69 2005/07/20 02:34:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -126,6 +126,9 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->nrefs = 0;
 	t->blend_fn = blend_overlay_alpha;
 	t->s = -1;
+	t->attrs = NULL;
+	t->nw = 0;
+	t->nh = 0;
 	TAILQ_INIT(&t->elements);
 	gfx_used(ts);
 }
@@ -135,12 +138,32 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
     Uint8 alpha)
 {
 	Uint32 sflags = SDL_SWSURFACE;
-	int wNodes = w/TILESZ;
-	int hNodes = h/TILESZ;
-	int x, y, s;
+	int x, y;
+	int nw, nh;
+	u_int *sattrs;
 
-	if (w%TILESZ > 0) wNodes++;
-	if (h%TILESZ > 0) hNodes++;
+	if (t->nw > 0 && t->nh > 0) {
+		sattrs = Malloc(t->nw*t->nh*sizeof(u_int), M_RG);
+		memcpy(sattrs, t->attrs, t->nw*t->nh*sizeof(u_int));
+	} else {
+		sattrs = NULL;
+	}
+
+	nw = w/TILESZ;
+	nh = h/TILESZ;
+	if (nw%TILESZ > 0) nw++;
+	if (nh%TILESZ > 0) nh++;
+
+	t->attrs = Realloc(t->attrs, nw*nh*sizeof(u_int));
+	memset(t->attrs, 0, nw*nh*sizeof(u_int));
+	if (sattrs != NULL) {
+		for (y = 0; y < t->nh; y++) {
+			for (x = 0; x < t->nw; x++)
+				t->attrs[y*nw + x] = sattrs[y*t->nw + x];
+		}
+	}
+	t->nw = nw;
+	t->nh = nh;
 
 	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
@@ -397,11 +420,17 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_surface(buf, t->su);
 	
 	write_uint32(buf, 1);				/* Pad: nsprites */
-	dprintf("saving s: %d\n", t->s);
 	write_sint32(buf, t->s);
 	write_sint16(buf, (Sint16)SPRITE(t->ts,t->s).xOrig);
 	write_sint16(buf, (Sint16)SPRITE(t->ts,t->s).yOrig);
 	write_uint8(buf, (Uint8)SPRITE(t->ts,t->s).snap_mode);
+
+	write_uint32(buf, (Uint32)t->nw);
+	write_uint32(buf, (Uint32)t->nh);
+	for (y = 0; y < t->nh; y++) {
+		for (x = 0; x < t->nw; x++)
+			write_uint32(buf, (Uint32)t->attrs[y*t->nw + x]);
+	}
 
 	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -471,9 +500,16 @@ tile_load(struct tile *t, struct netbuf *buf)
 	spr->yOrig = (int)read_sint16(buf);
 	spr->snap_mode = (int)read_uint8(buf);
 	t->s = s;
-	
+
+	t->nw = (u_int)read_uint32(buf);
+	t->nh = (u_int)read_uint32(buf);
+	t->attrs = Realloc(t->attrs, t->nw*t->nh*sizeof(u_int));
+	for (y = 0; y < t->nh; y++) {
+		for (x = 0; x < t->nw; x++)
+			t->attrs[y*t->nw + x] = (u_int)read_uint32(buf);
+	}
+
 	nelements = read_uint32(buf);
-	dprintf("%s: %u elements\n", t->name, nelements);
 	for (i = 0; i < nelements; i++) {
 		char name[TILE_ELEMENT_NAME_MAX];
 		enum tile_element_type type;
@@ -494,8 +530,6 @@ tile_load(struct tile *t, struct netbuf *buf)
 				copy_string(feat_name, buf, sizeof(feat_name));
 				x = read_sint32(buf);
 				y = read_sint32(buf);
-				dprintf("%s: feat %s at %d,%d\n", t->name,
-				    feat_name, x, y);
 				TAILQ_FOREACH(ft, &ts->features, features) {
 					if (strcmp(ft->name, feat_name) == 0)
 						break;
@@ -523,8 +557,6 @@ tile_load(struct tile *t, struct netbuf *buf)
 				y = read_sint32(buf);
 				alpha = (int)read_uint8(buf);
 
-				dprintf("%s: pix %s at %d,%d (a=%u)\n", t->name,
-				    pix_name, x, y, alpha);
 				TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 					if (strcmp(px->name, pix_name) == 0)
 						break;
@@ -551,8 +583,6 @@ tile_load(struct tile *t, struct netbuf *buf)
 				y = read_sint32(buf);
 				alpha = (int)read_uint8(buf);
 
-				dprintf("%s: sk %s at %d,%d (a=%u)\n", t->name,
-				    sk_name, x, y, alpha);
 				TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 					if (strcmp(sk->name, sk_name) == 0)
 						break;
@@ -586,6 +616,9 @@ tile_destroy(struct tile *t)
 #endif
 		gfx_unused(t->ts);
 		t->s = -1;
+		t->nw = 0;
+		t->nh = 0;
+		Free(t->attrs, 0);
 	}
 	t->su = NULL;
 }
@@ -622,6 +655,10 @@ close_element(struct tileview *tv)
 	}
 
 	switch (tv->state) {
+	case TILEVIEW_TILE_EDIT:
+		tv->tv_tile.geo_ctrl = NULL;
+		tv->tv_tile.orig_ctrl = NULL;
+		break;
 	case TILEVIEW_FEATURE_EDIT:
 		if (tv->tv_feature.ft->ops->flags & FEATURE_AUTOREDRAW) {
 			tileview_set_autoredraw(tv, 0, 0);
@@ -746,13 +783,6 @@ static void
 open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
 {
-	if (tv->state == TILEVIEW_TILE_EDIT) {
-		tileview_remove_ctrl(tv, tv->tv_tile.geo_ctrl);
-		tileview_remove_ctrl(tv, tv->tv_tile.orig_ctrl);
-		tv->tv_tile.geo_ctrl = NULL;
-		tv->tv_tile.orig_ctrl = NULL;
-	}
-
 	switch (tel->type) {
 	case TILE_FEATURE:
 		{
@@ -1614,6 +1644,8 @@ tile_undo(int argc, union evarg *argv)
 	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_undo(tv, tv->tv_pixmap.tel);
 		break;
+	case TILEVIEW_ATTRIB_EDIT:
+		break;
 	}
 }
 
@@ -1631,6 +1663,8 @@ tile_redo(int argc, union evarg *argv)
 		break;
 	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_redo(tv, tv->tv_pixmap.tel);
+		break;
+	case TILEVIEW_ATTRIB_EDIT:
 		break;
 	}
 }
@@ -1781,6 +1815,19 @@ feature_menus(struct tileview *tv, struct tlist *tl, struct window *win)
 	}
 }
 
+static void
+edit_attrib(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *win = argv[2].p;
+	int attr = argv[3].i;
+
+	close_element(tv);
+	tv->state = TILEVIEW_ATTRIB_EDIT;
+	tv->edit_mode = 1;
+	tv->edit_attr = attr;
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1848,6 +1895,26 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	mi = menu_add_item(me, _("Edit"));
 	{
+		struct AGMenuItem *m_attrs;
+
+		m_attrs = menu_action(mi, _("Tile attributes"), -1,
+		    NULL, NULL);
+
+		menu_tool(m_attrs, tbar, _("Walkability"),
+		    WALKABILITY_ICON, 0, 0,
+		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_BLOCK);
+		menu_tool(m_attrs, tbar, _("Climbability"),
+		    CLIMBABILITY_ICON, 0, 0,
+		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_CLIMBABLE);
+		menu_tool(m_attrs, tbar, _("Jumpability"),
+		    JUMPABILITY_ICON, 0, 0,
+		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_JUMPABLE);
+		menu_tool(m_attrs, tbar, _("Slippage"),
+		    SLIPPAGE_ICON, 0, 0,
+		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_SLIPPERY);
+
+		menu_separator(mi);
+		
 		menu_action_kb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
 		    tile_undo, "%p", tv);
 		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
@@ -1884,30 +1951,33 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	mi = menu_add_item(me, _("Pixmaps"));
 	{
-		menu_tool(mi, tbar, _("Create new pixmap..."), RG_PIXMAP_ICON,
+		menu_tool(mi, tbar, _("Create pixmap"), RG_PIXMAP_ICON,
 		    0, 0,
 		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
-		menu_tool(mi, tbar, _("Attach pixmap..."),
-		    RG_PIXMAP_ATTACH_ICON,
-		    0, 0,
-		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
-
+		
 		menu_separator(mi);
 
-		menu_tool(mi, tbar, _("Import pixmap from file..."),
+		menu_action(mi, _("Attach existing pixmap..."),
+		    RG_PIXMAP_ATTACH_ICON,
+		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
+
+		menu_tool(mi, tbar, _("Import from image file..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    import_image_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 	
 	mi = menu_add_item(me, _("Sketches"));
 	{
-		menu_tool(mi, tbar, _("Create new sketch..."), RG_SKETCH_ICON,
+		menu_tool(mi, tbar, _("Create sketch..."), RG_SKETCH_ICON,
 		    0, 0,
 		    create_sketch, "%p,%p,%p", tv, win, tl_feats);
-		menu_tool(mi, tbar, _("Attach sketch..."),
+		
+		menu_separator(mi);
+
+		menu_action(mi, _("Attach sketch..."),
 		    RG_SKETCH_ATTACH_ICON,
-		    0, 0,
 		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
+		/* TODO import */
 	}
 
 	pane = hpane_new(win, HPANE_HFILL|HPANE_WFILL);

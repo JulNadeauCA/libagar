@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.46 2005/07/11 05:43:00 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.47 2005/07/16 16:00:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -216,6 +216,30 @@ sketch_coincident(struct tile_element *tel, int x, int y)
 }
 
 static void
+toggle_attrib(struct tileview *tv, int sx, int sy)
+{
+	struct tile *t = tv->tile;
+	int nx = sx/TILESZ;
+	int ny = sy/TILESZ;
+	int *a;
+
+	if (nx < 0 || nx >= t->nw ||
+	    ny < 0 || ny >= t->nh ||
+	    (tv->tv_attrs.nx == nx && tv->tv_attrs.ny == ny))
+		return;
+
+	a = &t->attrs[ny*t->nw + nx];
+	if (*a & tv->edit_attr) {
+		*a &= ~(tv->edit_attr);
+	} else {
+		*a |= tv->edit_attr;
+	}
+
+	tv->tv_attrs.nx = nx;
+	tv->tv_attrs.ny = ny;
+}
+
+static void
 mousebuttondown(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
@@ -331,6 +355,16 @@ mousebuttondown(int argc, union evarg *argv)
 			tv->scrolling++;
 		}
 		break;
+	case TILEVIEW_ATTRIB_EDIT:
+		if (button == SDL_BUTTON_RIGHT) {
+			tv->scrolling++;
+		} else if (button ==  SDL_BUTTON_LEFT) {
+			tv->flags |= TILEVIEW_SET_ATTRIBS;
+			tv->tv_attrs.nx = -1;
+			tv->tv_attrs.ny = -1;
+			toggle_attrib(tv, sx, sy);
+		}
+		break;
 	}
 
 	if (button == SDL_BUTTON_MIDDLE &&
@@ -404,6 +438,9 @@ mousebuttonup(int argc, union evarg *argv)
 					sketch_mousebuttonup(tv, tel, vx, vy,
 					    button);
 				}
+				break;
+			case TILEVIEW_ATTRIB_EDIT:
+				tv->flags &= ~(TILEVIEW_SET_ATTRIBS);
 				break;
 			default:
 				break;
@@ -676,6 +713,11 @@ mousemotion(int argc, union evarg *argv)
 				    vx/TILESZ, vy/TILESZ,
 				    vxrel/TILESZ, vyrel/TILESZ,
 				    state);
+			}
+			break;
+		case TILEVIEW_ATTRIB_EDIT:
+			if (tv->flags & TILEVIEW_SET_ATTRIBS) {
+				toggle_attrib(tv, sx, sy);
 			}
 			break;
 		default:
@@ -1202,6 +1244,28 @@ tileview_circle2o(struct tileview *tv, int x0, int y0, int r)
 }
 
 void
+tileview_vline(struct tileview *tv, int x, int y1, int y2)
+{
+	int y;
+
+	/* TODO opengl */
+
+	for (y = y1; y < y2; y++)
+		tileview_pixel2i(tv, x, y);
+}
+
+void
+tileview_hline(struct tileview *tv, int x1, int x2, int y)
+{
+	int x;
+
+	/* TODO opengl */
+
+	for (x = x1; x < x2; x++)
+		tileview_pixel2i(tv, x, y);
+}
+
+void
 tileview_rect2o(struct tileview *tv, int x, int y, int w, int h)
 {
 	if (!view->opengl) {
@@ -1482,11 +1546,13 @@ tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint8 r, Uint8 g,
 void
 tileview_draw(void *p)
 {
+	char status[64];
 	struct tileview *tv = p;
 	struct tile *t = tv->tile;
 	struct tileview_ctrl *ctrl;
 	SDL_Rect rsrc, rdst, rtiling;
 	int dxoffs, dyoffs;
+	int x, y, n;
 
 	if (t == NULL)
 		return;
@@ -1553,12 +1619,83 @@ tileview_draw(void *p)
 	if (view->opengl)
 		glEnable(GL_BLEND);
 #endif
+	tileview_color4i(tv, 255, 255, 255, 32);
+	if ((tv->flags & TILEVIEW_NO_GRID) == 0) {
+		for (y = 0; y < t->su->h; y += TILESZ)
+			tileview_hline(tv, 0, t->su->w, y);
+		for (x = 0; x < t->su->w; x += TILESZ)
+			tileview_vline(tv, x, 0, t->su->h);
+	}
+
 	tileview_color4i(tv, 255, 255, 255, 128);
 	if (tv->state != TILEVIEW_TILE_EDIT &&
 	   (tv->flags & TILEVIEW_NO_EXTENT) == 0) {
 		tileview_rect2o(tv, 0, 0, t->su->w-1, t->su->h-1);
 	}
 	tileview_pixel2i(tv, tv->xms, tv->yms);
+
+	/* XXX inefficient */
+	switch (tv->state) {
+	case TILEVIEW_ATTRIB_EDIT:
+		{
+			int tsz = TILESZ*tv->pxsz;
+			int tw = t->su->w*tv->pxsz;
+			int th = t->su->h*tv->pxsz;
+		
+			n = 0;
+			for (y = 0; y < th; y += tsz) {
+				for (x = 0; x < tw; x += tsz) {
+					Uint8 c[4];
+					int w = tsz;
+					int h = tsz;
+					int d;
+
+					noderef_attr_color(tv->edit_attr,
+					    (t->attrs[n] & tv->edit_attr), c);
+
+					if ((d = (tsz - (tw - x))) > 0) {
+						w -= d;
+					}
+					if ((d = (tsz - (th - y))) > 0) {
+						h -= d;
+					}
+					primitives.rect_blended(tv,
+					    tv->xoffs+x,
+					    tv->yoffs+y,
+					    w, h, c, ALPHA_OVERLAY);
+
+					n++;
+				}
+			}
+			
+			strlcpy(status, _("Editing tile attributes"),
+			    sizeof(status));
+			draw_status_text(tv, status);
+		}
+		break;
+	case TILEVIEW_FEATURE_EDIT:
+		strlcpy(status, _("Editing feature: "), sizeof(status));
+		strlcat(status, tv->tv_feature.ft->name, sizeof(status));
+		draw_status_text(tv, status);
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		strlcpy(status, _("Editing sketch: "), sizeof(status));
+		strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
+		draw_status_text(tv, status);
+		break;
+	case TILEVIEW_PIXMAP_EDIT:
+		strlcpy(status, _("Editing pixmap: "), sizeof(status));
+		strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
+		if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND) {
+			strlcat(status, _(" (free hand)"), sizeof(status));
+			break;
+		}
+		draw_status_text(tv, status);
+		break;
+	default:
+		break;
+	}
+	
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 		draw_control(tv, ctrl);
 	}
@@ -1566,40 +1703,6 @@ tileview_draw(void *p)
 	if (view->opengl)
 		glDisable(GL_BLEND);
 #endif
-
-	if (tv->edit_mode) {
-		char status[64];
-
-		switch (tv->state) {
-		case TILEVIEW_FEATURE_EDIT:
-			strlcpy(status, _("Editing feature: "), sizeof(status));
-			strlcat(status, tv->tv_feature.ft->name,
-			    sizeof(status));
-			draw_status_text(tv, status);
-			break;
-		case TILEVIEW_SKETCH_EDIT:
-			strlcpy(status, _("Editing sketch: "), sizeof(status));
-			strlcat(status, tv->tv_sketch.sk->name,
-			    sizeof(status));
-			draw_status_text(tv, status);
-			break;
-		case TILEVIEW_PIXMAP_EDIT:
-			strlcpy(status, _("Editing pixmap: "), sizeof(status));
-			strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
-			switch (tv->tv_pixmap.state) {
-			case TILEVIEW_PIXMAP_IDLE:
-				break;
-			case TILEVIEW_PIXMAP_FREEHAND:
-				strlcat(status, _(" (free hand)"),
-				    sizeof(status));
-				break;
-			}
-			draw_status_text(tv, status);
-			break;
-		default:
-			break;
-		}
-	}
 }
 
 void
@@ -1683,10 +1786,12 @@ tileview_unselect_tool(struct tileview *tv)
 void
 tileview_generic_menu(struct tileview *tv, struct AGMenuItem *mi)
 {
-	menu_int_flags(mi, _("Show controls"), RG_CONTROLS_ICON,
-	    &tv->flags, TILEVIEW_HIDE_CONTROLS, 1);
-	menu_int_flags(mi, _("Show tiling"), SNAP_GRID_ICON,
-	    &tv->flags, TILEVIEW_NO_TILING, 1);
+	menu_int_flags(mi, _("Show tile grid"), RG_CONTROLS_ICON,
+	    &tv->flags, TILEVIEW_NO_GRID, 1);
 	menu_int_flags(mi, _("Show tile extent"), RG_CONTROLS_ICON,
 	    &tv->flags, TILEVIEW_NO_EXTENT, 1);
+	menu_int_flags(mi, _("Show controls"), RG_CONTROLS_ICON,
+	    &tv->flags, TILEVIEW_HIDE_CONTROLS, 1);
+	menu_int_flags(mi, _("Show background"), SNAP_GRID_ICON,
+	    &tv->flags, TILEVIEW_NO_TILING, 1);
 }
