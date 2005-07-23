@@ -1,4 +1,4 @@
-/*	$Csoft: pixelops.c,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
+/*	$Csoft: pixelops.c,v 1.3 2005/05/24 08:19:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -30,7 +30,9 @@ destroy_view(void)
 static void
 test_view_putpixel(void)
 {
-	VIEW_PUT_PIXEL(view->v->pixels, 1);
+	Uint8 *p = view->v->pixels;
+
+	VIEW_PUT_PIXEL(p, 1);
 }
 
 static void
