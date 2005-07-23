@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.72 2005/05/21 05:52:50 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.73 2005/05/29 05:49:59 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -719,15 +719,38 @@ rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
 
 /* Render an alpha blended rectangle. */
 static void
-rect_blended(void *p, int x1, int y1, int w, int h, Uint8 c[4],
+rect_blended(void *p, int x1, int y1, int pw, int ph, Uint8 c[4],
     enum view_blend_func func)
 {
 	struct widget *wid = p;
-	Uint8 *pView = (Uint8 *)view->v->pixels +
+	Uint8 *pView;
+	int x, y, yinc, d;
+	int w = pw;
+	int h = ph;
+
+	if (x1 < 0) {
+		if (x1+w >= 0) {
+			w += x1;
+			x1 = 0;
+		} else {
+			return;
+		}
+	}
+	if (y1 < 0) {
+		if (y1+h >= 0) {
+			h += y1;
+			y1 = 0;
+		} else {
+			return;
+		}
+	}
+	if ((d = (wid->cx+x1+w - wid->cx2)) > 0) { w -= d; }
+	if ((d = (wid->cy+y1+h - wid->cy2)) > 0) { h -= d; }
+
+	pView = (Uint8 *)view->v->pixels +
 	    (wid->cy+y1)*view->v->pitch +
 	    (wid->cx+x1)*view->v->format->BytesPerPixel;
-	int yinc = view->v->pitch - w*view->v->format->BytesPerPixel;
-	int x, y;
+	yinc = view->v->pitch - w*view->v->format->BytesPerPixel;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
