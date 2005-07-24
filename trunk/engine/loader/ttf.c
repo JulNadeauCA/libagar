@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.13 2005/02/11 02:29:24 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.14 2005/05/10 12:25:54 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -34,6 +34,7 @@
 #ifdef HAVE_FREETYPE
 
 #include <engine/engine.h>
+#include <engine/view.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -621,6 +622,17 @@ ttf_render_text_solid(struct ttf_font *font, const char *utf8, SDL_Color fg)
 	return (textsu);
 }
 
+static __inline__ SDL_Surface *
+get_symbol(Uint32 ch)
+{
+	switch (ch) {
+	case 'L': return (ICON(LEFT_BUTTON_SYMBOL));
+	case 'M': return (ICON(MID_BUTTON_SYMBOL));
+	case 'R': return (ICON(RIGHT_BUTTON_SYMBOL));
+	default: return (NULL);
+	}
+}
+
 /* Render UCS-4 text to a new surface. */
 SDL_Surface *
 ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
@@ -664,9 +676,37 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
 
 	/* Load and render each character. */
 	xstart = 0;
-	for (ch = ucs; *ch; ch++) {
+	for (ch = ucs; *ch != '\0'; ch++) {
 		FT_Bitmap *current = NULL;
 
+		if (*ch == '$' && ch[1] == '(' && ch[2] != '\0' &&
+		    ch[3] == ')') {	
+			SDL_Surface *sym;
+
+			if ((sym = get_symbol(ch[2])) == NULL)
+				continue;
+
+			for (row = 0; row < sym->h; row++) {
+				dst = (Uint8 *)textsu->pixels +
+				    (row)*textsu->pitch +
+				    (xstart+2);
+				src = (Uint8 *)sym->pixels +
+				    row*sym->pitch;
+
+				for (col = 0; col < sym->w; col++) {
+					Uint32 pixel = GET_PIXEL(sym, src);
+
+					if (pixel != sym->format->colorkey) {
+						*dst = 1;
+					}
+					src += sym->format->BytesPerPixel;
+					dst++;
+				}
+			}
+			xstart += sym->w + 4;
+			ch += 3;
+			continue;
+		}
 		if (ttf_find_glyph(font, *ch,
 		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 		    	goto fail1;
@@ -678,7 +718,7 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
 		if ((ch == ucs) && (glyph->minx < 0))
 			xstart -= glyph->minx;
 
-		for (row = 0; row < current->rows; ++row) {
+		for (row = 0; row < current->rows; row++) {
 			/*
 			 * Work around bug seen with FreeType 9.3.3 that
 			 * occurs inconsistently with MALLOC_OPTIONS=AFGJ
