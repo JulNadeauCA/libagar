@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.3 2005/06/15 05:24:38 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.4 2005/06/16 05:20:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -204,8 +204,8 @@ position_tool_effect(struct tool *t, struct node *n)
 }
 
 const struct tool position_tool = {
-	N_("Position"),
-	N_("Assign unique object positions."),
+	"position",
+	N_("Set Object Position"),
 	POSITION_TOOL_ICON, -1,
 	TOOL_HIDDEN,
 	position_tool_init,
@@ -218,7 +218,8 @@ const struct tool position_tool = {
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL			/* keyup */
+	NULL,			/* keyup */
+	NULL			/* pane */
 };
 
 #endif /* MAP */
