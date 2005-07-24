@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.215 2005/07/16 16:07:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.216 2005/07/19 04:24:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -741,8 +741,6 @@ object_page_in(void *p, enum object_page_item item)
 		if (ob->gfx == NULL) {
 			ob->gfx = gfx_new(ob);
 		}
-		dprintf("%s: gfx page in (used=%d)\n", ob->name,
-		    ob->gfx->used);
 		if (ob->gfx->used == 0 &&
 		    gfx_load(ob) == -1) {
 			goto fail;
@@ -796,8 +794,6 @@ object_page_out(void *p, enum object_page_item item)
 				gfx_alloc_anims(ob->gfx, 0);
 				/* TODO save the gfx part */
 			}
-			dprintf("%s: gfx page out (used=%d)\n", ob->name,
-			    ob->gfx->used);
 		}
 		break; 
 	case OBJECT_AUDIO:

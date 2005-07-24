@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.6 2005/06/30 06:26:21 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.7 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ flip_init(struct tool *t)
 	cb = checkbox_new(win, _("Flip entire selection"));
 	widget_bind(cb, "state", WIDGET_INT, &multi_ind);
 	
-	tool_push_status(t, _("Specify entity/selection (L=mirror, R=flip)."));
+	tool_push_status(t, _("Select element and use $(L)=Mirror, $(R)=Flip"));
 }
 
 static void

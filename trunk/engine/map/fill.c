@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.8 2005/07/23 17:54:19 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.9 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ fill_init(struct tool *t)
 	cb = checkbox_new(win, _("Randomize angle"));
 	widget_bind(cb, "state", WIDGET_BOOL, &randomize_angle);
 	
-	tool_push_status(t, _("Click on the origin of the fill."));
+	tool_push_status(t, _("Select a node and fill with $(L)."));
 }
 
 static int

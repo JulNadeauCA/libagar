@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.32 2005/07/23 17:54:19 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.33 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2639,7 +2639,7 @@ map_edit(void *p)
 
 	widget_replace_surface(mv->status, mv->status->surface,
 	    text_render(NULL, -1, COLOR(TEXT_COLOR),
-	    _("Select a tool or an element to insert.")));
+	    _("Select a tool or double-click on an element to insert.")));
 	widget_focus(mv);
 	return (win);
 }
