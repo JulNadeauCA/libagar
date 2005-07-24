@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.5 2005/06/30 06:26:21 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.6 2005/07/23 17:54:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -31,6 +31,7 @@ struct tool {
 	int (*mousebuttonup)(struct tool *, int x, int y, int btn);
 	int (*keydown)(struct tool *, int ksym, int kmod);
 	int (*keyup)(struct tool *, int ksym, int kmod);
+	void (*edit_pane)(struct tool *, void *);
 	
 	char *status[TOOL_STATUS_MAX];		/* Status message stack */
 	int nstatus;
@@ -40,6 +41,7 @@ struct tool {
 	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
 	SLIST_HEAD(,tool_mbinding) mbindings;	/* Mouse button bindings */
 	struct window *win;
+	struct widget *pane;
 	struct button *trigger;
 	const struct tool *orig;
 	TAILQ_ENTRY(tool) tools;

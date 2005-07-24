@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.7 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.8 2005/07/23 17:54:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -179,8 +179,8 @@ fill_effect(struct tool *t, struct node *n)
 }
 
 const struct tool fill_tool = {
-	N_("Clear/Fill"),
-	N_("Clear or fill the whole layer/selection."),
+	"fill",
+	_("Clear/Fill Layer"),
 	FILL_TOOL_ICON, FILL_CURSORBMP,
 	0,
 	fill_init,
@@ -193,7 +193,8 @@ const struct tool fill_tool = {
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL			/* keyup */
+	NULL,			/* keyup */
+	NULL			/* pane */
 };
 
 #endif /* MAP */

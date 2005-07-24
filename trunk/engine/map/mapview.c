@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.26 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.27 2005/07/23 17:54:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -151,6 +151,16 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		if (mv->curtool->win != NULL) {
 			window_hide(mv->curtool->win);
 		}
+		if (mv->curtool->pane != NULL) {
+			struct widget *wt;
+
+			OBJECT_FOREACH_CHILD(wt, mv->curtool->pane, widget) {
+				object_detach(wt);
+				object_destroy(wt);
+				Free(wt, M_OBJECT);
+			}
+			WINDOW_UPDATE(widget_parent_window(mv->curtool->pane));
+		}
 		mv->curtool->mv = NULL;
 
 		widget_replace_surface(mv->status, mv->status->surface,
@@ -169,6 +179,10 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		if (ntool->win != NULL) {
 			window_show(ntool->win);
 		}
+		if (ntool->pane != NULL) {
+			ntool->edit_pane(ntool, ntool->pane);
+			WINDOW_UPDATE(widget_parent_window(ntool->pane));
+		}
 		tool_update_status(ntool);
 	}
 
@@ -176,6 +190,18 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		view->focus_win = pwin;
 		widget_focus(mv);
 	}
+}
+
+struct tool *
+mapview_find_tool(struct mapview *mv, const char *name)
+{
+	struct tool *tool;
+
+	TAILQ_FOREACH(tool, &mv->tools, tools) {
+		if (strcmp(tool->name, name) == 0)
+			return (tool);
+	}
+	return (NULL);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.3 2005/06/07 04:50:21 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.4 2005/06/17 08:37:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@ void
 tool_init(struct tool *tool, struct mapview *mv)
 {
 	tool->win = NULL;
+	tool->pane = NULL;
 	tool->cursor_su = NULL;
 	tool->trigger = NULL;
 	tool->mv = mv;
@@ -66,7 +67,18 @@ tool_destroy(struct tool *tool)
 	
 	if (tool->win != NULL)
 		view_detach(tool->win);
+	
+	if (tool->pane != NULL) {
+		struct widget *wt;
 
+		OBJECT_FOREACH_CHILD(wt, tool->pane, widget) {
+			object_detach(wt);
+			object_destroy(wt);
+			Free(wt, M_OBJECT);
+		}
+		WINDOW_UPDATE(widget_parent_window(tool->pane));
+	}
+	
 	for (i = 0; i < tool->nstatus; i++)
 		Free(tool->status[i], 0);
 
@@ -105,7 +117,7 @@ tool_window(void *p, const char *name)
 	struct window *win;
 
 	win = tool->win = window_new(0, NULL);
-	window_set_caption(win, _(tool->name));
+	window_set_caption(win, _(tool->desc));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	event_new(win, "window-close", close_tool_window, "%p", tool);
 	return (win);
