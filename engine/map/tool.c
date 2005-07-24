@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.4 2005/06/17 08:37:50 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.5 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -103,11 +103,7 @@ close_tool_window(int argc, union evarg *argv)
 {
 	struct tool *tool = argv[1].p;
 
-	if (tool->trigger != NULL) {
-		widget_set_int(tool->trigger, "state", 0);
-	}
-	tool->mv->curtool = NULL;
-	window_hide(tool->win);
+	mapview_select_tool(tool->mv, NULL, NULL);
 }
 
 struct window *
