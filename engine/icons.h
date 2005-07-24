@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.21 2005/05/24 05:34:30 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.22 2005/07/23 17:51:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -140,6 +140,11 @@ enum {
 	ANIM_FORWARD_ICON,
 	ANIM_REWIND_F_ICON,
 	ANIM_FORWARD_F_ICON,
+
+	/* symbols.xcf */
+	LEFT_BUTTON_SYMBOL,
+	MID_BUTTON_SYMBOL,
+	RIGHT_BUTTON_SYMBOL
 };
 
 extern struct object engine_icons;			/* engine.c */
