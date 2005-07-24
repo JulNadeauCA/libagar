@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.22 2005/07/23 17:51:29 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.23 2005/07/24 05:29:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -144,7 +144,8 @@ enum {
 	/* symbols.xcf */
 	LEFT_BUTTON_SYMBOL,
 	MID_BUTTON_SYMBOL,
-	RIGHT_BUTTON_SYMBOL
+	RIGHT_BUTTON_SYMBOL,
+	CTRL_SYMBOL
 };
 
 extern struct object engine_icons;			/* engine.c */

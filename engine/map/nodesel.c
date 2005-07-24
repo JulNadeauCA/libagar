@@ -1,4 +1,4 @@
-/*	$Csoft: nodesel.c,v 1.2 2005/07/23 17:54:20 vedge Exp $	*/
+/*	$Csoft: nodesel.c,v 1.3 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -304,6 +304,10 @@ nodesel_init(struct tool *t)
 	tool_bind_key(t, KMOD_CTRL, SDLK_v, nodesel_paste, NULL);
 	tool_bind_key(t, KMOD_CTRL, SDLK_x, nodesel_cut, NULL);
 	tool_bind_key(t, KMOD_CTRL, SDLK_k, nodesel_kill, NULL);
+	
+	tool_push_status(t,
+	    _("Select a rectangle of nodes with $(L). Drag to displace node "
+	       "elements."));
 }
 
 const struct tool nodesel_tool = {

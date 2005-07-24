@@ -1,4 +1,4 @@
-/*	$Csoft: refsel.c,v 1.2 2005/07/23 17:54:20 vedge Exp $	*/
+/*	$Csoft: refsel.c,v 1.3 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -76,6 +76,9 @@ refsel_update(struct mapview *mv, int xRel, int yRel)
 static void
 refsel_init(struct tool *t)
 {
+	tool_push_status(t,
+	    _("Select an element with $(L). Hold $(C) to select "
+	      "multiple elements."));
 }
 
 const struct tool refsel_tool = {

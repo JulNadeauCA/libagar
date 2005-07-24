@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.4 2005/06/16 05:20:01 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.5 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 static void
 invert_init(struct tool *t)
 {
-	tool_push_status(t, _("Specify the tile to invert."));
+	tool_push_status(t, _("Specify element and $(L) to invert."));
 }
 
 static int

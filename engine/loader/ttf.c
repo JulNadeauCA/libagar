@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.14 2005/05/10 12:25:54 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.15 2005/07/24 05:29:51 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -629,6 +629,7 @@ get_symbol(Uint32 ch)
 	case 'L': return (ICON(LEFT_BUTTON_SYMBOL));
 	case 'M': return (ICON(MID_BUTTON_SYMBOL));
 	case 'R': return (ICON(RIGHT_BUTTON_SYMBOL));
+	case 'C': return (ICON(CTRL_SYMBOL));
 	default: return (NULL);
 	}
 }
