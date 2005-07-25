@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.34 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.35 2005/07/25 03:49:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -450,6 +450,7 @@ map_init_camera(struct map_camera *cam, const char *name)
 	cam->alignment = MAP_CENTER;
 	cam->zoom = 100;
 	cam->tilesz = TILESZ;
+	cam->pixsz = 1;
 }
 
 int
@@ -746,6 +747,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
+		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
 	case NODEREF_ANIM:
 		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs);
@@ -755,6 +757,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
+		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
 	case NODEREF_WARP:
 		dr = node_add_warp(dm, dn, sr->r_warp.map, sr->r_warp.x,
@@ -1171,6 +1174,7 @@ map_load(void *ob, struct netbuf *buf)
 		cam->alignment = (enum map_camera_alignment)read_uint8(buf);
 		cam->zoom = (u_int)read_uint16(buf);
 		cam->tilesz = (u_int)read_uint16(buf);
+		cam->pixsz = cam->tilesz/TILESZ;
 	}
 
 	/* Allocate and load the nodes. */

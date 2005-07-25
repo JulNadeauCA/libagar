@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.15 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.16 2005/07/25 03:49:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -56,6 +56,7 @@ struct mapview {
 		int scrolling;		/* Scrolling is in progress */
 		int x, y;		/* Current node coordinates */
 		int xmap, ymap;		/* Current map coordinates */
+		int xmap_rel, ymap_rel;	/* Relative map coordinates */
 	} mouse;
 	struct {			/* Temporary mouse selection */
 		int set;		/* Selection is set */
@@ -135,6 +136,7 @@ struct node;
 #define MV_CAM(mv) (mv)->map->cameras[(mv)->cam]
 #define MV_ZOOM(mv) MV_CAM(mv).zoom
 #define MV_TILESZ(mv) MV_CAM(mv).tilesz
+#define MV_PIXSZ(mv) MV_CAM(mv).pixsz
 #define MV_TOOL(mv,p) ((mv)->curtool != NULL && (mv)->curtool->orig == (p))
 
 __BEGIN_DECLS

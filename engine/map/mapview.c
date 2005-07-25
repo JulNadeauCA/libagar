@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.29 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.30 2005/07/25 03:49:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -377,11 +377,15 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mh = 0;
 	mv->prew = 4;
 	mv->preh = 4;
+	
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
 	mv->mouse.xmap = 0;
 	mv->mouse.ymap = 0;
+	mv->mouse.xmap_rel = 0;
+	mv->mouse.ymap_rel = 0;
+
 	mv->dblclicked = 0;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
@@ -848,6 +852,7 @@ mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 	
 	MV_ZOOM(mv) = zoom;
 	MV_TILESZ(mv) = zoom*TILESZ/100;
+	MV_PIXSZ(mv) = MV_TILESZ(mv)/TILESZ;
 
 	if (MV_TILESZ(mv) > MAP_MAX_TILESZ)
 		MV_TILESZ(mv) = MAP_MAX_TILESZ;
@@ -913,14 +918,19 @@ mousemotion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	int state = argv[5].i;
+	int xmap, ymap;
 
 	pthread_mutex_lock(&mv->map->lock);
 	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
-	mv->mouse.xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
-	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
-	
+	xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
+	ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
+	mv->mouse.xmap_rel += xmap - mv->mouse.xmap;
+	mv->mouse.ymap_rel += ymap - mv->mouse.ymap;
+	mv->mouse.xmap = xmap;
+	mv->mouse.ymap = ymap;
+
 	if (mv->flags & MAPVIEW_EDIT) {
 		if (state & SDL_BUTTON(1) &&
 		    mv->cx != -1 && mv->cy != -1 &&
@@ -962,7 +972,14 @@ mousemotion(int argc, union evarg *argv)
 	} else if (mv->esel.set && mv->esel.moving) {
 		nodesel_update_move(mv, mv->cxrel, mv->cyrel);
 	} else if (mv->rsel.moving) {
-		refsel_update(mv, xrel, yrel);
+		if (abs(mv->mouse.xmap_rel) > MV_PIXSZ(mv)) {
+			refsel_update(mv, mv->mouse.xmap_rel < 0 ? -1 : 1, 0);
+			mv->mouse.xmap_rel = 0;
+		}
+		if (abs(mv->mouse.ymap_rel) > MV_PIXSZ(mv)) {
+			refsel_update(mv, 0, mv->mouse.ymap_rel < 0 ? -1 : 1);
+			mv->mouse.ymap_rel = 0;
+		}
 	}
 out:
 	mv->mouse.x = x;
@@ -988,6 +1005,8 @@ mousebuttondown(int argc, union evarg *argv)
 	mv->mouse.y = y;
 	mv->mouse.xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
 	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
+	mv->mouse.xmap_rel = 0;
+	mv->mouse.ymap_rel = 0;
 
 	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
