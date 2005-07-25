@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.28 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.29 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -250,7 +250,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
 
 		ntool->trigger = toolbar_add_button(mv->toolbar,
-		    mv->toolbar->nrows-1, icon, 1, 0, sel_tool,
+		    0, icon, 1, 0, sel_tool,
 		    "%p, %p, %p", mv, ntool, p);
 #if 0
 		event_new(ntool->trigger, "button-mouseoverlap",
@@ -369,13 +369,14 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	gfx_wire(mv, "/engine/map/pixmaps/pixmaps");
 
 	mv->flags = (flags | MAPVIEW_CENTER);
+	mv->mode = MAPVIEW_NORMAL;
+	mv->edit_attr = 0;
 	mv->map = m;
 	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
 	mv->prew = 4;
 	mv->preh = 4;
-	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
@@ -484,56 +485,6 @@ get_node_coords(struct mapview *mv, int *x, int *y)
 		mv->cx = -1;
 	if (mv->cy < 0 || mv->cy >= mv->map->maph || mv->cyoffs < 0)
 		mv->cy = -1;
-}
-
-/* Draw the node property icons. */
-void
-mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
-    int mx, int my)
-{
-	const struct {
-		Uint32	edge;
-		Uint32	sprite;
-	} edges[] = {
-		{ NODEREF_EDGE_E,	MAPVIEW_EDGE_E },
-		{ NODEREF_EDGE_N,	MAPVIEW_EDGE_N },
-		{ NODEREF_EDGE_S,	MAPVIEW_EDGE_S },
-		{ NODEREF_EDGE_W,	MAPVIEW_EDGE_W },
-		{ NODEREF_EDGE_NW,	MAPVIEW_EDGE_NW },
-		{ NODEREF_EDGE_NE,	MAPVIEW_EDGE_NE },
-		{ NODEREF_EDGE_SW,	MAPVIEW_EDGE_SW },
-		{ NODEREF_EDGE_SE,	MAPVIEW_EDGE_SE }
-	};
-	const int nedges = sizeof(edges) / sizeof(edges[0]);
-	struct noderef *r;
-	int i;
-
-	if (mv->prop_style > 0)
-		widget_blit(mv, ICON(mv->prop_style), x, y);
-
-	if (mx == mv->map->origin.x && my == mv->map->origin.y) {
-		widget_blit(mv, SPRITE(mv,MAPVIEW_ORIGIN).su, x, y);
-		x += (SPRITE(mv,MAPVIEW_ORIGIN).su)->w;
-	}
-
-	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		if (r->layer != mv->map->cur_layer) {
-			continue;
-		}
-		if (r->flags & NODEREF_BLOCK) {
-			Uint8 c[4] = { 255,40,40,64 };
-
-			primitives.rect_blended(mv, x, y,
-			    MV_TILESZ(mv), MV_TILESZ(mv), c, ALPHA_OVERLAY);
-		}
-		for (i = 0; i < nedges; i++) {
-			if (r->r_gfx.edge != edges[i].edge) {
-				continue;
-			}
-			widget_blit(mv, SPRITE(mv,edges[i].sprite).su, x, y);
-			x += (SPRITE(mv,edges[i].sprite).su)->w;
-		}
-	}
 }
 
 static void
@@ -686,6 +637,18 @@ draw_layer:
 				    WIDGET(mv)->cx + rx,
 				    WIDGET(mv)->cy + ry,
 				    mv->cam);
+			
+				if ((nref->layer == m->cur_layer) &&
+				    (mv->mode == MAPVIEW_EDIT_ATTRS ||
+				     mv->flags & MAPVIEW_PROPS)) {
+					Uint8 c[4];
+
+					noderef_attr_color(mv->edit_attr,
+					    (nref->flags & mv->edit_attr), c);
+					primitives.rect_blended(mv, rx, ry,
+					    MV_TILESZ(mv), MV_TILESZ(mv), c,
+					    ALPHA_OVERLAY);
+				}
 
 				if ((nref->flags & NODEREF_SELECTED) &&
 				    noderef_extent(m, nref, &rExtent, mv->cam)
@@ -699,7 +662,7 @@ draw_layer:
 				}
 			}
 
-	
+			/* XXX overdraw */
 			if (!grid_drawn &&
 			    (mv->flags & MAPVIEW_GRID) &&
 			    MV_ZOOM(mv) >= ZOOM_GRID_MIN) {
@@ -715,10 +678,6 @@ draw_layer:
 				mapview_vline(mv,
 				    rx + MV_TILESZ(mv),
 				    ry, ry+MV_TILESZ(mv));
-			}
-			if ((mv->flags & MAPVIEW_PROPS) &&
-			    MV_ZOOM(mv) >= ZOOM_PROPS_MIN) {
-				mapview_draw_props(mv, node, rx, ry, mx, my);
 			}
 #ifdef EDITION
 			if (!mapedition)
@@ -764,7 +723,7 @@ next_layer:
 	}
 
 	/* Draw the cursor for the current tool. */
-	if ((mv->flags & MAPVIEW_EDIT) &&
+	if ((mv->flags & MAPVIEW_EDIT) && (mv->mode == MAPVIEW_NORMAL) &&
 	    (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
 	    (mv->cx != -1 && mv->cy != -1)) {
 		draw_cursor(mv);
@@ -921,6 +880,31 @@ inside_nodesel(struct mapview *mv, int x, int y)
 }
 
 static void
+toggle_attrib(struct mapview *mv)
+{
+	struct noderef *r;
+	struct node *node;
+
+	if (mv->attr_x == mv->cx && mv->attr_y == mv->cy)
+		return;
+
+	node = &mv->map->map[mv->cy][mv->cx];
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != mv->map->cur_layer) {
+			continue;
+		}
+		if (r->flags & mv->edit_attr) {
+			r->flags &= ~(mv->edit_attr);
+		} else {
+			r->flags |= mv->edit_attr;
+		}
+	}
+
+	mv->attr_x = mv->cx;
+	mv->attr_y = mv->cy;
+}
+
+static void
 mousemotion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
@@ -934,20 +918,26 @@ mousemotion(int argc, union evarg *argv)
 	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
-	mv->mouse.xmap = x*MV_TILESZ(mv) + mv->xoffs;
-	mv->mouse.ymap = y*MV_TILESZ(mv) + mv->yoffs;
-
-	if ((mv->flags & MAPVIEW_EDIT) && mv->curtool != NULL) {
-		if (mv->curtool->effect != NULL &&
-		    state & SDL_BUTTON(1) &&
+	mv->mouse.xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
+	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
+	
+	if (mv->flags & MAPVIEW_EDIT) {
+		if (state & SDL_BUTTON(1) &&
 		    mv->cx != -1 && mv->cy != -1 &&
 		    (x != mv->mouse.x || y != mv->mouse.y) &&
 		    (inside_nodesel(mv, mv->cx, mv->cy))) {
-			if (mv->curtool->effect(mv->curtool,
+			if (mv->flags & MAPVIEW_SET_ATTRS) {
+				toggle_attrib(mv);
+				goto out;
+			}
+			if (mv->curtool != NULL &&
+			    mv->curtool->effect != NULL &&
+			    mv->curtool->effect(mv->curtool,
 			    &mv->map->map[mv->cy][mv->cx]) == 1)
 				goto out;
 		}
-		if (mv->curtool->mousemotion != NULL &&
+		if (mv->curtool != NULL &&
+		    mv->curtool->mousemotion != NULL &&
 		    mv->curtool->mousemotion(mv->curtool,
 		      mv->mouse.xmap, mv->mouse.ymap,
 		      xrel, yrel, state) == 1) {
@@ -999,7 +989,16 @@ mousebuttondown(int argc, union evarg *argv)
 	mv->mouse.xmap = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
 	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
 
-	if ((mv->flags & MAPVIEW_EDIT) && (mv->cx >= 0 && mv->cy >= 0)) {
+	if ((mv->flags & MAPVIEW_EDIT) &&
+	    (mv->cx >= 0 && mv->cy >= 0)) {
+		if (mv->mode == MAPVIEW_EDIT_ATTRS &&
+		    button == SDL_BUTTON_LEFT) {
+			mv->flags |= MAPVIEW_SET_ATTRS;
+			mv->attr_x = -1;
+			mv->attr_y = -1;
+			toggle_attrib(mv);
+			goto out;
+		}
 		if (mv->curtool != NULL) {
 			if (button == SDL_BUTTON_LEFT &&
 			    mv->curtool->effect != NULL &&
@@ -1146,7 +1145,10 @@ mousebuttonup(int argc, union evarg *argv)
 	pthread_mutex_lock(&m->lock);
 	get_node_coords(mv, &x, &y);
 
-	if ((mv->flags & MAPVIEW_EDIT) && (mv->cx >= 0 && mv->cy >= 0)) {
+	mv->flags &= ~(MAPVIEW_SET_ATTRS);
+
+	if ((mv->flags & MAPVIEW_EDIT) &&
+	    (mv->cx >= 0 && mv->cy >= 0)) {
 		if (mv->curtool != NULL) {
 			if (mv->curtool->mousebuttonup != NULL &&
 			    mv->curtool->mousebuttonup(mv->curtool,
@@ -1295,16 +1297,10 @@ key_down(int argc, union evarg *argv)
 		center_to_origin(mv);
 		break;
 	case SDLK_p:
-		if (keymod & KMOD_SHIFT) {
-			if (++mv->prop_style == MAPVIEW_FRAMES_END) {
-				mv->prop_style = 0;
-			}
+		if (mv->flags & MAPVIEW_PROPS) {
+			mv->flags &= ~(MAPVIEW_PROPS);
 		} else {
-			if (mv->flags & MAPVIEW_PROPS) {
-				mv->flags &= ~(MAPVIEW_PROPS);
-			} else {
-				mv->flags |= MAPVIEW_PROPS;
-			}
+			mv->flags |= MAPVIEW_PROPS;
 		}
 		break;
 	case SDLK_g:
@@ -1319,6 +1315,38 @@ key_down(int argc, union evarg *argv)
 			mv->flags &= ~(MAPVIEW_NO_BG);
 		} else {
 			mv->flags |= MAPVIEW_NO_BG;
+		}
+		break;
+	case SDLK_w:
+		if (mv->mode == MAPVIEW_NORMAL) {
+			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mv->edit_attr = NODEREF_BLOCK;
+		} else {
+			mv->mode = MAPVIEW_NORMAL;
+		}
+		break;
+	case SDLK_c:
+		if (mv->mode == MAPVIEW_NORMAL) {
+			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mv->edit_attr = NODEREF_CLIMBABLE;
+		} else {
+			mv->mode = MAPVIEW_NORMAL;
+		}
+		break;
+	case SDLK_s:
+		if (mv->mode == MAPVIEW_NORMAL) {
+			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mv->edit_attr = NODEREF_SLIPPERY;
+		} else {
+			mv->mode = MAPVIEW_NORMAL;
+		}
+		break;
+	case SDLK_j:
+		if (mv->mode == MAPVIEW_NORMAL) {
+			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mv->edit_attr = NODEREF_JUMPABLE;
+		} else {
+			mv->mode = MAPVIEW_NORMAL;
 		}
 		break;
 	}

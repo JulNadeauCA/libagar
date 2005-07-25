@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.14 2005/07/23 17:54:20 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.15 2005/07/24 06:55:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -28,17 +28,24 @@ struct mapview {
 	struct widget wid;
 
 	int flags;
-#define MAPVIEW_EDIT		0x01	/* Mouse/keyboard edition */
-#define MAPVIEW_GRID		0x02	/* Display the grid */
-#define MAPVIEW_PROPS		0x04	/* Display node properties */
-#define MAPVIEW_CENTER		0x08	/* Request initial centering */
-#define MAPVIEW_NO_CURSOR	0x10	/* Disable the cursor */
-#define MAPVIEW_NO_BMPZOOM	0x20	/* Disable bitmap scaling */
-#define MAPVIEW_NO_BG		0x40	/* Disable background tiles */ 
-#define MAPVIEW_NO_NODESEL	0x80	/* Disable node selections */
+#define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
+#define MAPVIEW_GRID		0x002	/* Display the grid */
+#define MAPVIEW_PROPS		0x004	/* Display node properties */
+#define MAPVIEW_CENTER		0x008	/* Request initial centering */
+#define MAPVIEW_NO_CURSOR	0x010	/* Disable the cursor */
+#define MAPVIEW_NO_BMPZOOM	0x020	/* Disable bitmap scaling */
+#define MAPVIEW_NO_BG		0x040	/* Disable background tiles */ 
+#define MAPVIEW_NO_NODESEL	0x080	/* Disable node selections */
+#define MAPVIEW_SET_ATTRS	0x100	/* Setting node attributes */
 
-	int prop_bg;			/* Background attributes style */
-	int prop_style;			/* Foreground attributes style */
+	enum mapview_mode {
+		MAPVIEW_NORMAL,		/* Default edition mode */
+		MAPVIEW_EDIT_ATTRS	/* Editing node attributes */
+	} mode;
+
+	int edit_attr;			/* Attribute being edited */
+	int attr_x, attr_y;
+
 	int prew, preh;			/* Prescaling (nodes) */
 
 	struct {
@@ -144,8 +151,6 @@ void	 mapview_destroy(void *);
 void	 mapview_draw(void *);
 void	 mapview_scale(void *, int, int);
 void	 mapview_prescale(struct mapview *, int, int);
-void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
-	                    int);
 void	 mapview_center(struct mapview *, int, int);
 void	 mapview_set_scale(struct mapview *, u_int, int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);

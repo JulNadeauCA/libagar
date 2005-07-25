@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.19 2005/07/19 04:24:14 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.1 2005/07/24 06:55:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -176,6 +176,9 @@ insert_effect(struct tool *t, struct node *n)
 				r->r_gfx.rs.w = TILESZ;
 				r->r_gfx.rs.h = TILESZ;
 			
+				if (replace) {
+					node_clear(m, dn, m->cur_layer);
+				}
 				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 			}
 		}
@@ -215,9 +218,6 @@ insert_cursor(struct tool *t, SDL_Rect *rd)
 					    mv->cam);
 					rv = 0;
 				}
-				if (mv->flags & MAPVIEW_PROPS)
-					mapview_draw_props(mv, sn, dx, dy,
-					    -1, -1);
 			}
 		}
 	} else if (mv->art_tl != NULL &&

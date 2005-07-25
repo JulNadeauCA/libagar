@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.33 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.34 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2440,6 +2440,23 @@ noderef_edit(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static void
+edit_prop_mode(int argc, union evarg *argv)
+{
+	struct button *btn = argv[0].p;
+	struct mapview *mv = argv[1].p;
+	int flag = argv[2].i;
+	int state = argv[3].i;
+
+	if (state == 1) {
+		toolbar_select_unique(mv->toolbar, btn);
+		mv->mode = MAPVIEW_EDIT_ATTRS;
+		mv->edit_attr = flag;
+	} else {
+		mv->mode = MAPVIEW_NORMAL;
+	}
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -2465,7 +2482,7 @@ map_edit(void *p)
 	window_set_caption(win, "%s", OBJECT(m)->name);
 
 	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(toolbar, TOOLBAR_VERT, 1, 0);
+	toolbar_init(toolbar, TOOLBAR_VERT, 2, 0);
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
 	
@@ -2628,6 +2645,15 @@ map_edit(void *p)
 		}
 		object_attach(div->box2, toolbar);
 	}
+
+	toolbar_add_button(toolbar, 1, ICON(WALKABILITY_ICON), 1, 0,
+	    edit_prop_mode, "%p,%i", mv, NODEREF_BLOCK);
+	toolbar_add_button(toolbar, 1, ICON(CLIMBABILITY_ICON), 1, 0,
+	    edit_prop_mode, "%p,%i", mv, NODEREF_CLIMBABLE);
+	toolbar_add_button(toolbar, 1, ICON(JUMPABILITY_ICON), 1, 0,
+	    edit_prop_mode, "%p,%i", mv, NODEREF_JUMPABLE);
+	toolbar_add_button(toolbar, 1, ICON(SLIPPAGE_ICON), 1, 0,
+	    edit_prop_mode, "%p,%i", mv, NODEREF_SLIPPERY);
 
 	mapview_set_scrollbars(mv, hbar, vbar);
 	object_attach(win, statbar);
