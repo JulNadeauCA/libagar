@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.10 2005/07/19 02:23:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.11 2005/07/23 17:54:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -127,6 +127,7 @@ struct map_camera {
 	enum map_camera_alignment alignment;	/* View alignment */
 	u_int zoom;				/* Zoom (%) */
 	int tilesz;				/* Tile size */
+	int pixsz;				/* Scaled pixel size */
 };
 
 struct map {
