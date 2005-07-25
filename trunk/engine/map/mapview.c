@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.30 2005/07/25 03:49:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.31 2005/07/25 10:14:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1312,6 +1312,9 @@ key_down(int argc, union evarg *argv)
 	}
 
 	switch (keysym) {
+	case SDLK_DELETE:
+		refsel_delete(mv);
+		break;
 	case SDLK_o:
 		center_to_origin(mv);
 		break;
