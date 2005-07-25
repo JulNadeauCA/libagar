@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.1 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.2 2005/07/25 03:49:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -166,15 +166,16 @@ insert_effect(struct tool *t, struct node *n)
 			     sx < su->w && dx < m->mapw;
 			     sx += TILESZ, dx++) {
 				struct node *dn = &m->map[dy][dx];
+				int dx = su->w - sx;
+				int dy = su->h - sy;
 			
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
 				init_gfx_ref(mv, r, spr);
 				r->r_gfx.rs.x = sx;
 				r->r_gfx.rs.y = sy;
-				/* XXX may be smaller */
-				r->r_gfx.rs.w = TILESZ;
-				r->r_gfx.rs.h = TILESZ;
+				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
+				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
 			
 				if (replace) {
 					node_clear(m, dn, m->cur_layer);
