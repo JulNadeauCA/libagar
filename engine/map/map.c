@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.35 2005/07/25 03:49:34 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.36 2005/07/25 10:14:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2145,6 +2145,7 @@ static void
 select_art(int argc, union evarg *argv)
 {
 	extern enum gfx_snap_mode insert_snap_mode;
+	extern int insert_replace_mode;
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
@@ -2157,6 +2158,7 @@ select_art(int argc, union evarg *argv)
 		struct sprite *spr = it->p1;
 	
 		insert_snap_mode = SPRITE(spr->pgfx->pobj,spr->index).snap_mode;
+		insert_replace_mode = (insert_snap_mode == GFX_SNAP_TO_GRID);
 
 		if ((t = mapview_find_tool(mv, "insert")) != NULL) {
 			if (mv->curtool != NULL) {
