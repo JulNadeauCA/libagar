@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.2 2005/07/25 03:49:34 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.3 2005/07/25 10:43:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -48,8 +48,8 @@ static enum {
 } source = STAMP_SRC_ARTWORK;
 
 enum gfx_snap_mode insert_snap_mode = GFX_SNAP_NOT;
+int insert_replace_mode = 1;
 
-static int replace = 1;
 static int angle = 0;
 
 static void
@@ -74,7 +74,7 @@ insert_pane(struct tool *t, void *con)
 	widget_bind(rad, "value", WIDGET_INT, &insert_snap_mode);
 
 	cb = checkbox_new(con, _("Replace mode"));
-	widget_bind(cb, "state", WIDGET_INT, &replace);
+	widget_bind(cb, "state", WIDGET_INT, &insert_replace_mode);
 
 	sb = spinbutton_new(con, _("Rotation: "));
 	widget_bind(sb, "value", WIDGET_INT, &angle);
@@ -138,7 +138,7 @@ insert_effect(struct tool *t, struct node *n)
 				struct node *dn = &m->map[dy][dx];
 				struct noderef *r;
 
-				if (replace) {
+				if (insert_replace_mode) {
 					node_clear(m, dn, m->cur_layer);
 				}
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
@@ -177,7 +177,7 @@ insert_effect(struct tool *t, struct node *n)
 				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
 				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
 			
-				if (replace) {
+				if (insert_replace_mode) {
 					node_clear(m, dn, m->cur_layer);
 				}
 				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
