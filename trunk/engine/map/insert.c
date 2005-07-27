@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.3 2005/07/25 10:43:50 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.4 2005/07/26 02:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -150,6 +150,7 @@ insert_effect(struct tool *t, struct node *n)
 		struct sprite *spr;
 		SDL_Surface *su;
 		int sx, sy, dx, dy;
+		int n = 0;
 
 		if (mv->art_tl == NULL ||
 		    (it = tlist_selected_item(mv->art_tl)) == 0 ||
@@ -176,6 +177,7 @@ insert_effect(struct tool *t, struct node *n)
 				r->r_gfx.rs.y = sy;
 				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
 				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
+				r->flags |= spr->attrs[n++];
 			
 				if (insert_replace_mode) {
 					node_clear(m, dn, m->cur_layer);

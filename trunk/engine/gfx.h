@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.35 2005/07/19 04:24:13 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.36 2005/07/20 02:33:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -54,7 +54,8 @@ struct sprite {
 	Uint32 index;
 	SDL_Surface *su;
 	int xOrig, yOrig;			/* Origin point */
-	enum gfx_snap_mode snap_mode;		/* Preferred snapping mode */
+	enum gfx_snap_mode snap_mode;		/* Default snapping mode */
+	u_int *attrs;				/* Default node attributes */
 #ifdef HAVE_OPENGL
 	GLuint texture;
 	GLfloat texcoords[4];
@@ -123,6 +124,7 @@ __inline__ void	 sprite_set_surface(struct gfx *, Uint32, SDL_Surface *);
 __inline__ void	 sprite_set_origin(struct sprite *, int, int);
 __inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
 __inline__ void	 sprite_update(struct sprite *);
+__inline__ void	 sprite_get_nattrs(struct sprite *, u_int *, u_int *);
 __END_DECLS
 
 #include "close_code.h"
