@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.50 2005/07/19 04:24:13 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.51 2005/07/20 02:33:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -67,6 +67,7 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->pgfx = gfx;
 	spr->index = s;
 	spr->su = NULL;
+	spr->attrs = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
 	spr->snap_mode = GFX_SNAP_NOT;
@@ -79,6 +80,20 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->texcoords[2] = 0.0f;
 	spr->texcoords[3] = 0.0f;
 #endif
+}
+
+void
+sprite_get_nattrs(struct sprite *spr, u_int *w, u_int *h)
+{
+	if (spr->su != NULL) {
+		*w = spr->su->w/TILESZ;
+		*h = spr->su->h/TILESZ;
+		if ((*w)%TILESZ > 0) (*w)++;
+		if ((*h)%TILESZ > 0) (*h)++;
+	} else {
+		*w = 0;
+		*h = 0;
+	}
 }
 
 static __inline__ void
@@ -111,6 +126,10 @@ sprite_destroy(struct gfx *gfx, Uint32 s)
 	if (spr->su != NULL) {
 		SDL_FreeSurface(spr->su);
 		spr->su = NULL;
+	}
+	if (spr->attrs != NULL) {
+		Free(spr->attrs, M_RG);
+		spr->attrs = NULL;
 	}
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
@@ -606,6 +625,23 @@ gfx_load(struct object *ob)
 		spr->xOrig = (int)read_sint32(buf);
 		spr->yOrig = (int)read_sint32(buf);
 		spr->snap_mode = (enum gfx_snap_mode)read_uint8(buf);
+
+		if (read_uint8(buf)) {
+			u_int nw, nh;
+			int x, y;
+
+			sprite_get_nattrs(spr, &nw, &nh);
+			dprintf("%s: %d,%d attributes\n", ob->name, nw, nh);
+			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(u_int));
+			for (y = 0; y < nh; y++) {
+				for (x = 0; x < nw; x++)
+					spr->attrs[y*nw + x] =
+					    (u_int)read_uint32(buf);
+			}
+		} else {
+			Free(spr->attrs, M_RG);
+			spr->attrs = NULL;
+		}
 	}
 
 	gfx_alloc_anims(gfx, read_uint32(buf));
@@ -659,6 +695,21 @@ gfx_save(struct object *ob, struct netbuf *buf)
 		write_sint32(buf, (Sint32)spr->xOrig);
 		write_sint32(buf, (Sint32)spr->yOrig);
 		write_uint8(buf, (Uint8)spr->snap_mode);
+
+		if (spr->attrs != NULL) {
+			int x, y;
+			u_int nw, nh;
+
+			write_uint8(buf, 1);
+			sprite_get_nattrs(spr, &nw, &nh);
+			for (y = 0; y < nh; y++) {
+				for (x = 0; x < nw; x++)
+					write_uint32(buf,
+					    (Uint32)spr->attrs[y*nw + x]);
+			}
+		} else {
+			write_uint8(buf, 0);
+		}
 	}
 
 	dprintf("%s: saving %d anims\n", ob->name, gfx->nsprites);

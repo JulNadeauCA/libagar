@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.22 2005/07/16 16:00:42 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.23 2005/07/23 17:51:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -77,6 +77,8 @@ struct tile {
 };
 
 struct tileview;
+
+#define TILE_ATTRS(t) (SPRITE((t)->ts,(t)->s).attrs)
 
 __BEGIN_DECLS
 void	 	tile_init(struct tile *, struct tileset *, const char *);

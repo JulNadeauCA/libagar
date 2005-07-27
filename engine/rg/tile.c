@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.69 2005/07/20 02:34:06 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.70 2005/07/23 17:51:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -182,10 +182,17 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 			ts->max_sprites = t->s+1;
 		}
 	} else {
-		/* Will free previous surface if any. */
 		sprite_set_surface(OBJECT(ts)->gfx, t->s, t->su);
 	}
 	sprite_set_name(OBJECT(ts)->gfx, t->s, t->name);
+
+	/* Initialize the gfx attributes. */
+	Free(TILE_ATTRS(t), M_RG);
+	TILE_ATTRS(t) = Malloc(t->nw*t->nh*sizeof(u_int), M_RG);
+	for (y = 0; y < t->nh; y++) {
+		for (x = 0; x < t->nw; x++)
+			TILE_ATTRS(t)[y*t->nw + x] = t->attrs[y*t->nw + x];
+	}
 }
 
 void
@@ -194,6 +201,7 @@ tile_generate(struct tile *t)
 	struct tile_element *tel;
 	struct tile_pixmap *tpx;
 	SDL_Rect rd, sd;
+	struct sprite *spr;
 
 	/* TODO check for opaque fill features/pixmaps first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
@@ -230,7 +238,10 @@ tile_generate(struct tile *t)
 			break;
 		}
 	}
-	sprite_update(&SPRITE(t->ts,t->s));
+
+	spr = &SPRITE(t->ts,t->s);
+	sprite_update(spr);
+	memcpy(spr->attrs, t->attrs, t->nw*t->nh*sizeof(u_int));
 }
 
 static __inline__ void

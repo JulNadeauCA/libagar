@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.47 2005/07/16 16:00:42 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.48 2005/07/23 17:51:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -237,6 +237,8 @@ toggle_attrib(struct tileview *tv, int sx, int sy)
 
 	tv->tv_attrs.nx = nx;
 	tv->tv_attrs.ny = ny;
+
+	t->flags |= TILE_DIRTY;
 }
 
 static void
