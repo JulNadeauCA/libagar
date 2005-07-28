@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.31 2005/07/25 10:14:24 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.32 2005/07/25 10:44:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -153,13 +153,17 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		}
 		if (mv->curtool->pane != NULL) {
 			struct widget *wt;
+			struct window *pwin;
 
 			OBJECT_FOREACH_CHILD(wt, mv->curtool->pane, widget) {
 				object_detach(wt);
 				object_destroy(wt);
 				Free(wt, M_OBJECT);
 			}
-			WINDOW_UPDATE(widget_parent_window(mv->curtool->pane));
+			if ((pwin = widget_parent_window(mv->curtool->pane))
+			    != NULL) {
+				WINDOW_UPDATE(pwin);
+			}
 		}
 		mv->curtool->mv = NULL;
 
@@ -181,8 +185,13 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 			window_show(ntool->win);
 		}
 		if (ntool->pane != NULL) {
+			struct window *pwin;
+
 			ntool->edit_pane(ntool, ntool->pane);
-			WINDOW_UPDATE(widget_parent_window(ntool->pane));
+			if ((pwin = widget_parent_window(mv->curtool->pane))
+			    != NULL) {
+				WINDOW_UPDATE(pwin);
+			}
 		}
 		tool_update_status(ntool);
 	}
