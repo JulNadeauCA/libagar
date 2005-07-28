@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.70 2005/07/23 17:51:05 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.71 2005/07/27 06:34:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -794,6 +794,13 @@ static void
 open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
 {
+	if (tv->state == TILEVIEW_TILE_EDIT) {
+		tileview_remove_ctrl(tv, tv->tv_tile.geo_ctrl);
+		tileview_remove_ctrl(tv, tv->tv_tile.orig_ctrl);
+		tv->tv_tile.geo_ctrl = NULL;
+		tv->tv_tile.orig_ctrl = NULL;
+	}
+
 	switch (tel->type) {
 	case TILE_FEATURE:
 		{
