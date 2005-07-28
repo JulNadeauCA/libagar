@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.71 2005/07/27 06:34:46 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.72 2005/07/28 03:33:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1298,13 +1298,63 @@ poll_feats(int argc, union evarg *argv)
 	struct window *win = argv[3].p;
 	struct tileview *tv = argv[4].p;
 	struct tile_element *tel;
+	struct tlist_item *it;
+	static char attr_names[6];			/* XXX tlist hack */
 
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
+	
+	it = tlist_insert(tl, NULL, _("Attributes"));
+	it->class = "attributes";
+	it->depth = 0;
+	it->flags |= TLIST_HAS_CHILDREN;
+	it->p1 = &attr_names[0];
+
+	if (tlist_visible_children(tl, it)) {
+#if 0
+		it = tlist_insert(tl, ICON(LAYER_EDITOR_ICON),
+		    _("%sLayers"),
+		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
+		     tv->edit_attr == NODEREF_WALK) ? "* " : "");
+		it->class = "walkable-attrs";
+		it->depth = 1;
+		it->p1 = &attr_names[1];
+#endif
+		it = tlist_insert(tl, ICON(WALKABILITY_ICON),
+		    _("%sWalkable"),
+		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
+		     tv->edit_attr == NODEREF_BLOCK) ? "* " : "");
+		it->class = "walkable-attrs";
+		it->depth = 1;
+		it->p1 = &attr_names[2];
+		
+		it = tlist_insert(tl, ICON(CLIMBABILITY_ICON),
+		    _("%sClimbable"),
+		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
+		     tv->edit_attr == NODEREF_CLIMBABLE) ? "* " : "");
+		it->class = "climbable-attrs";
+		it->depth = 1;
+		it->p1 = &attr_names[3];
+		
+		it = tlist_insert(tl, ICON(JUMPABILITY_ICON),
+		    _("%sJumpable"),
+		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
+		     tv->edit_attr == NODEREF_JUMPABLE) ? "* " : "");
+		it->class = "jumpable-attrs";
+		it->depth = 1;
+		it->p1 = &attr_names[4];
+		
+		it = tlist_insert(tl, ICON(SLIPPAGE_ICON),
+		    _("%sSlippery"),
+		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
+		     tv->edit_attr == NODEREF_SLIPPERY) ? "* " : "");
+		it->class = "slippery-attrs";
+		it->depth = 1;
+		it->p1 = &attr_names[5];
+	}
 
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		char label[TLIST_LABEL_MAX];
-		struct tlist_item *it;
 
 		if (tel->type == TILE_FEATURE) {
 			struct feature *ft = tel->tel_feature.ft;
@@ -1405,38 +1455,41 @@ edit_element(int argc, union evarg *argv)
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
 	struct tlist_item *it;
-	struct tile_element *tel = NULL;
 	
 	if (strcmp(sndr->type, "button") == 0 && !tv->edit_mode) {
 		close_element(tv);
 		return;
 	}
 	
-	if ((it = tlist_selected_item(tl)) != NULL) {
-		if (strcmp(it->class, "feature") == 0 ||
-		    strcmp(it->class, "pixmap") == 0 ||
-		    strcmp(it->class, "sketch") == 0) {
-			tel = it->p1;
-		} else if (tv->state == TILEVIEW_SKETCH_EDIT &&
-		           strcmp(it->class, "sketch-element") == 0) {
-			struct vg_element *vge = (struct vg_element *)it->p1;
-			struct window *win;
-
-			win = sketch_select(tv, tv->tv_sketch.tel, vge);
-			if (win != NULL) {
-				window_attach(pwin, win);
-				window_show(win);
-			}
-			return;
-		} else {
-			return;
-		}
-	}
 	close_element(tv);
-	if (tel == NULL) {
-		text_msg(MSG_ERROR, _("No tile element is selected."));
-	} else {
-		open_element(tv, tel, pwin);
+	
+	if ((it = tlist_selected_item(tl)) == NULL)
+		return;
+
+	if (strcmp(it->class, "feature") == 0 ||
+	    strcmp(it->class, "pixmap") == 0 ||
+	    strcmp(it->class, "sketch") == 0) {
+		struct tile_element *tel = it->p1;
+
+		if (tel != NULL) {
+			open_element(tv, tel, pwin);
+		}
+	} else if (strcmp(it->class, "walkable-attrs") == 0) {
+		tv->state = TILEVIEW_ATTRIB_EDIT;
+		tv->edit_mode = 1;
+		tv->edit_attr = NODEREF_BLOCK;
+	} else if (strcmp(it->class, "climbable-attrs") == 0) {
+		tv->state = TILEVIEW_ATTRIB_EDIT;
+		tv->edit_mode = 1;
+		tv->edit_attr = NODEREF_CLIMBABLE;
+	} else if (strcmp(it->class, "jumpable-attrs") == 0) {
+		tv->state = TILEVIEW_ATTRIB_EDIT;
+		tv->edit_mode = 1;
+		tv->edit_attr = NODEREF_JUMPABLE;
+	} else if (strcmp(it->class, "slippery-attrs") == 0) {
+		tv->state = TILEVIEW_ATTRIB_EDIT;
+		tv->edit_mode = 1;
+		tv->edit_attr = NODEREF_SLIPPERY;
 	}
 }
 
@@ -1913,26 +1966,6 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	mi = menu_add_item(me, _("Edit"));
 	{
-		struct AGMenuItem *m_attrs;
-
-		m_attrs = menu_action(mi, _("Tile attributes"), -1,
-		    NULL, NULL);
-
-		menu_tool(m_attrs, tbar, _("Walkability"),
-		    WALKABILITY_ICON, 0, 0,
-		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_BLOCK);
-		menu_tool(m_attrs, tbar, _("Climbability"),
-		    CLIMBABILITY_ICON, 0, 0,
-		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_CLIMBABLE);
-		menu_tool(m_attrs, tbar, _("Jumpability"),
-		    JUMPABILITY_ICON, 0, 0,
-		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_JUMPABLE);
-		menu_tool(m_attrs, tbar, _("Slippage"),
-		    SLIPPAGE_ICON, 0, 0,
-		    edit_attrib, "%p,%p,%i", tv, win, NODEREF_SLIPPERY);
-
-		menu_separator(mi);
-		
 		menu_action_kb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
 		    tile_undo, "%p", tv);
 		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
@@ -2011,7 +2044,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 		button_set_sticky(btn, 1);
 		widget_bind(btn, "state", WIDGET_INT, &tv->edit_mode);
 		event_new(btn, "button-pushed", edit_element, "%p,%p,%p",
-		    tv, tl_feats,  win);
+		    tv, tl_feats, win);
 		event_new(tl_feats, "tlist-dblclick", edit_element, "%p,%p,%p",
 		    tv, tl_feats, win);
 
