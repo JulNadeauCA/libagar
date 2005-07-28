@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.36 2005/07/25 10:14:24 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.37 2005/07/26 02:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2086,7 +2086,10 @@ find_art(struct tlist *tl, struct object *pob)
 		    tlist_visible_children(tl, it)) {
 			for (i = 0; i < ts->gfx->nsprites; i++) {
 				struct sprite *spr = &SPRITE(ts,i);
-				
+			
+				if (spr->su == NULL)
+					continue;
+			
 				sit = tlist_insert(tl, spr->su, "%s (%ux%u)",
 				    spr->name, spr->su->w, spr->su->h);
 				sit->depth = 1;
