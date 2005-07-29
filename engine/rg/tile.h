@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.23 2005/07/23 17:51:05 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.24 2005/07/27 06:34:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -52,6 +52,7 @@ struct tile {
 	Sint32 s;			/* Index into gfx array */
 
 	u_int *attrs;			/* Node attributes */
+	int *layers;			/* Node layer offsets */
 	u_int nw, nh;			/* Node dimensions */
 
 	Uint8 flags;
@@ -78,7 +79,10 @@ struct tile {
 
 struct tileview;
 
+#define TILE_ATTR2(t,x,y) (t)->attrs[(y)*(t)->nw + (x)]
+#define TILE_LAYER2(t,x,y) (t)->layers[(y)*(t)->nw + (x)]
 #define TILE_ATTRS(t) (SPRITE((t)->ts,(t)->s).attrs)
+#define TILE_LAYERS(t) (SPRITE((t)->ts,(t)->s).layers)
 
 __BEGIN_DECLS
 void	 	tile_init(struct tile *, struct tileset *, const char *);

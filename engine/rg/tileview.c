@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.48 2005/07/23 17:51:05 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.49 2005/07/27 06:34:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -221,14 +221,14 @@ toggle_attrib(struct tileview *tv, int sx, int sy)
 	struct tile *t = tv->tile;
 	int nx = sx/TILESZ;
 	int ny = sy/TILESZ;
-	int *a;
-
+	u_int *a;
+	
 	if (nx < 0 || nx >= t->nw ||
 	    ny < 0 || ny >= t->nh ||
 	    (tv->tv_attrs.nx == nx && tv->tv_attrs.ny == ny))
 		return;
 
-	a = &t->attrs[ny*t->nw + nx];
+	a = &TILE_ATTR2(t,nx,ny);
 	if (*a & tv->edit_attr) {
 		*a &= ~(tv->edit_attr);
 	} else {
@@ -237,6 +237,24 @@ toggle_attrib(struct tileview *tv, int sx, int sy)
 
 	tv->tv_attrs.nx = nx;
 	tv->tv_attrs.ny = ny;
+
+	t->flags |= TILE_DIRTY;
+}
+
+static void
+increment_layer(struct tileview *tv, int sx, int sy, int inc)
+{
+	struct tile *t = tv->tile;
+	int nx = sx/TILESZ;
+	int ny = sy/TILESZ;
+	int *a;
+
+	if (nx < 0 || nx >= t->nw ||
+	    ny < 0 || ny >= t->nh)
+		return;
+
+	a = &TILE_LAYER2(t,nx,ny);
+	(*a) += inc;
 
 	t->flags |= TILE_DIRTY;
 }
@@ -365,6 +383,14 @@ mousebuttondown(int argc, union evarg *argv)
 			tv->tv_attrs.nx = -1;
 			tv->tv_attrs.ny = -1;
 			toggle_attrib(tv, sx, sy);
+		}
+		break;
+	case TILEVIEW_LAYERS_EDIT:
+		if (button == SDL_BUTTON_LEFT) {
+			increment_layer(tv, sx, sy, +1);
+		} else if (button == SDL_BUTTON_RIGHT) {
+			increment_layer(tv, sx, sy, -1);
+			tv->scrolling++;
 		}
 		break;
 	}
@@ -1643,17 +1669,23 @@ tileview_draw(void *p)
 			int tsz = TILESZ*tv->pxsz;
 			int tw = t->su->w*tv->pxsz;
 			int th = t->su->h*tv->pxsz;
+			int nx, ny;
 		
 			n = 0;
-			for (y = 0; y < th; y += tsz) {
-				for (x = 0; x < tw; x += tsz) {
+			for (y = 0, ny = 0;
+			     y < th;
+			     y += tsz, ny++) {
+				for (x = 0, nx = 0;
+				     x < tw;
+				     x += tsz, nx++) {
 					Uint8 c[4];
 					int w = tsz;
 					int h = tsz;
 					int d;
 
 					noderef_attr_color(tv->edit_attr,
-					    (t->attrs[n] & tv->edit_attr), c);
+					    (TILE_ATTR2(t,nx,ny) &
+					     tv->edit_attr), c);
 
 					if ((d = (tsz - (tw - x))) > 0) {
 						w -= d;
@@ -1665,12 +1697,52 @@ tileview_draw(void *p)
 					    tv->xoffs+x,
 					    tv->yoffs+y,
 					    w, h, c, ALPHA_OVERLAY);
-
+	
 					n++;
 				}
 			}
 			
-			strlcpy(status, _("Editing tile attributes"),
+			strlcpy(status, _("Editing node attributes"),
+			    sizeof(status));
+			draw_status_text(tv, status);
+		}
+		break;
+	case TILEVIEW_LAYERS_EDIT:
+		{
+			int tsz = TILESZ*tv->pxsz;
+			int tw = t->su->w*tv->pxsz;
+			int th = t->su->h*tv->pxsz;
+			char text[16];
+			int nx, ny;
+
+			n = 0;
+			for (y = 0, ny = 0;
+			     y < th;
+			     y += tsz, ny++) {
+				for (x = 0, nx = 0;
+				     x < tw;
+				     x += tsz, nx++) {
+					SDL_Surface *tsu;
+					int l = TILE_LAYER2(t,nx,ny);
+					Uint8 c[4] = { 255, 255, 255, 128 };
+
+					snprintf(text, sizeof(text), "%s%d",
+					    (l > 0) ? "+" : "", l);
+					tsu = text_render(NULL, 8,
+					    COLOR(BG_COLOR), text);
+					primitives.rect_blended(tv,
+					    tv->xoffs+x,
+					    tv->yoffs+y,
+					    tsu->w, tsu->h, c, ALPHA_OVERLAY);
+					widget_blit(tv, tsu,
+					    tv->xoffs+x,
+					    tv->yoffs+y);
+					
+					SDL_FreeSurface(tsu);
+				}
+			}
+			
+			strlcpy(status, _("Editing node layers"),
 			    sizeof(status));
 			draw_status_text(tv, status);
 		}

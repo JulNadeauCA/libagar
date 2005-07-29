@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.36 2005/07/20 02:33:38 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.37 2005/07/27 06:34:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -56,6 +56,7 @@ struct sprite {
 	int xOrig, yOrig;			/* Origin point */
 	enum gfx_snap_mode snap_mode;		/* Default snapping mode */
 	u_int *attrs;				/* Default node attributes */
+	int *layers;				/* Node layer offsets */
 #ifdef HAVE_OPENGL
 	GLuint texture;
 	GLfloat texcoords[4];
