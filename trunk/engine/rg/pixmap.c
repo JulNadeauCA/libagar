@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.35 2005/06/16 02:27:42 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.36 2005/07/16 16:00:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -343,8 +343,8 @@ insert_brush_dlg(int argc, union evarg *argv)
 	struct radio *rad_types;
 	struct checkbox *cb_oneshot;
 	static const char *types[] = {
-		_("Monochromatic"),
-		_("Source RGB"),
+		N_("Monochromatic"),
+		N_("Source RGB"),
 		NULL
 	};
 
