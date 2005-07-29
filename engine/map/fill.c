@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.9 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.10 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -180,7 +180,7 @@ fill_effect(struct tool *t, struct node *n)
 
 const struct tool fill_tool = {
 	"fill",
-	_("Clear/Fill Layer"),
+	N_("Clear/Fill Layer"),
 	FILL_TOOL_ICON, FILL_CURSORBMP,
 	0,
 	fill_init,
