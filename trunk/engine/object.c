@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.216 2005/07/19 04:24:13 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.217 2005/07/24 08:04:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@
 
 const struct version object_ver = {
 	"agar object",
-	6, 0
+	7, 0
 };
 
 const struct object_ops object_ops = {
