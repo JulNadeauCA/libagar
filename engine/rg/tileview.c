@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.49 2005/07/27 06:34:46 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.50 2005/07/29 03:13:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1728,7 +1728,7 @@ tileview_draw(void *p)
 
 					snprintf(text, sizeof(text), "%s%d",
 					    (l > 0) ? "+" : "", l);
-					tsu = text_render(NULL, 8,
+					tsu = text_render(NULL, 9,
 					    COLOR(BG_COLOR), text);
 					primitives.rect_blended(tv,
 					    tv->xoffs+x,
