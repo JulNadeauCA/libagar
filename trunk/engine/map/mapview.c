@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.32 2005/07/25 10:44:23 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.33 2005/07/28 03:33:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -576,12 +576,11 @@ mapview_draw(void *p)
 	struct map *m = mv->map;
 	struct node *node;
 	struct noderef *nref;
-	int mx, my, rx, ry;
+	int mx, my, rx = 0, ry = 0;
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 	SDL_Rect rExtent;
-	int grid_drawn = 0;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLenum blend_sfactor;
@@ -600,8 +599,7 @@ mapview_draw(void *p)
 		center_to_origin(mv);
 	}
 
-	if (mapview_bg &&
-	    (mv->flags & MAPVIEW_NO_BG) == 0) {
+	if (mapview_bg && (mv->flags & MAPVIEW_NO_BG) == 0) {
 		SDL_Rect rtiling;
 
 		rtiling.x = 0;
@@ -674,24 +672,6 @@ draw_layer:
 					    COLOR(MAPVIEW_RSEL_COLOR));
 				}
 			}
-
-			/* XXX overdraw */
-			if (!grid_drawn &&
-			    (mv->flags & MAPVIEW_GRID) &&
-			    MV_ZOOM(mv) >= ZOOM_GRID_MIN) {
-				mapview_hline(mv,
-				    rx, rx+MV_TILESZ(mv),
-				    ry);
-				mapview_hline(mv,
-				    rx, rx+MV_TILESZ(mv),
-				    ry+MV_TILESZ(mv));
-				mapview_vline(mv,
-				    rx,
-				    ry, ry+MV_TILESZ(mv));
-				mapview_vline(mv,
-				    rx + MV_TILESZ(mv),
-				    ry, ry+MV_TILESZ(mv));
-			}
 #ifdef EDITION
 			if (!mapedition)
 				continue;
@@ -715,12 +695,22 @@ draw_layer:
 #endif /* EDITION */
 		}
 	}
-	grid_drawn = 1;
 next_layer:
 	if (++layer < m->nlayers)
 		goto draw_layer;			/* Draw next layer */
 
 #ifdef EDITION
+	/* Draw the node grid. */
+	if (mv->flags & MAPVIEW_GRID) {
+		int rx2 = rx;
+
+		for (; ry >= mv->yoffs; ry -= MV_TILESZ(mv)) {
+			mapview_hline(mv, mv->xoffs, rx2, ry);
+			for (; rx >= mv->xoffs; rx -= MV_TILESZ(mv))
+				mapview_vline(mv, rx, mv->yoffs, ry);
+		}
+	}
+
 	/* Indicate the selection. */
 	if (esel_x != -1) {
 		primitives.rect_outlined(mv,
@@ -1321,6 +1311,13 @@ key_down(int argc, union evarg *argv)
 	}
 
 	switch (keysym) {
+	case SDLK_1:
+	case SDLK_0:
+		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
+			mapview_set_scale(mv, 100, 1);
+			mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
+		}
+		break;
 	case SDLK_DELETE:
 		refsel_delete(mv);
 		break;
