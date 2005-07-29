@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.50 2005/07/19 04:24:15 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.51 2005/07/23 17:51:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@
 
 const struct version tileset_ver = {
 	"agar tileset",
-	5, 0
+	6, 0
 };
 
 const struct object_ops tileset_ops = {

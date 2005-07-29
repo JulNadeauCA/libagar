@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.72 2005/07/28 03:33:33 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.73 2005/07/28 03:57:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -127,6 +127,7 @@ tile_init(struct tile *t, struct tileset *ts, const char *name)
 	t->blend_fn = blend_overlay_alpha;
 	t->s = -1;
 	t->attrs = NULL;
+	t->layers = NULL;
 	t->nw = 0;
 	t->nh = 0;
 	TAILQ_INIT(&t->elements);
@@ -140,28 +141,42 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	Uint32 sflags = SDL_SWSURFACE;
 	int x, y;
 	int nw, nh;
-	u_int *sattrs;
+	u_int *sattrs, *slayers;
 
 	if (t->nw > 0 && t->nh > 0) {
 		sattrs = Malloc(t->nw*t->nh*sizeof(u_int), M_RG);
 		memcpy(sattrs, t->attrs, t->nw*t->nh*sizeof(u_int));
+		
+		slayers = Malloc(t->nw*t->nh*sizeof(int), M_RG);
+		memcpy(slayers, t->layers, t->nw*t->nh*sizeof(int));
 	} else {
 		sattrs = NULL;
+		slayers = NULL;
 	}
 
-	nw = w/TILESZ;
-	nh = h/TILESZ;
-	if (nw%TILESZ > 0) nw++;
-	if (nh%TILESZ > 0) nh++;
+	nw = w/TILESZ + 1;
+	nh = h/TILESZ + 1;
+//	if (nw%TILESZ > 0) nw++;
+//	if (nh%TILESZ > 0) nh++;
 
 	t->attrs = Realloc(t->attrs, nw*nh*sizeof(u_int));
+	t->layers = Realloc(t->layers , nw*nh*sizeof(int));
 	memset(t->attrs, 0, nw*nh*sizeof(u_int));
+	memset(t->layers, 0, nw*nh*sizeof(int));
+
 	if (sattrs != NULL) {
 		for (y = 0; y < t->nh; y++) {
 			for (x = 0; x < t->nw; x++)
 				t->attrs[y*nw + x] = sattrs[y*t->nw + x];
 		}
 	}
+	if (slayers != NULL) {
+		for (y = 0; y < t->nh; y++) {
+			for (x = 0; x < t->nw; x++)
+				t->layers[y*nw + x] = slayers[y*t->nw + x];
+		}
+	}
+	
 	t->nw = nw;
 	t->nh = nh;
 
@@ -192,6 +207,12 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	for (y = 0; y < t->nh; y++) {
 		for (x = 0; x < t->nw; x++)
 			TILE_ATTRS(t)[y*t->nw + x] = t->attrs[y*t->nw + x];
+	}
+	Free(TILE_LAYERS(t), M_RG);
+	TILE_LAYERS(t) = Malloc(t->nw*t->nh*sizeof(int), M_RG);
+	for (y = 0; y < t->nh; y++) {
+		for (x = 0; x < t->nw; x++)
+			TILE_LAYERS(t)[y*t->nw + x] = t->layers[y*t->nw + x];
 	}
 }
 
@@ -242,6 +263,7 @@ tile_generate(struct tile *t)
 	spr = &SPRITE(t->ts,t->s);
 	sprite_update(spr);
 	memcpy(spr->attrs, t->attrs, t->nw*t->nh*sizeof(u_int));
+	memcpy(spr->layers, t->layers, t->nw*t->nh*sizeof(int));
 }
 
 static __inline__ void
@@ -439,8 +461,10 @@ tile_save(struct tile *t, struct netbuf *buf)
 	write_uint32(buf, (Uint32)t->nw);
 	write_uint32(buf, (Uint32)t->nh);
 	for (y = 0; y < t->nh; y++) {
-		for (x = 0; x < t->nw; x++)
+		for (x = 0; x < t->nw; x++) {
 			write_uint32(buf, (Uint32)t->attrs[y*t->nw + x]);
+			write_sint32(buf, (Sint32)t->layers[y*t->nw + x]);
+		}
 	}
 
 	nelements_offs = netbuf_tell(buf);
@@ -515,9 +539,12 @@ tile_load(struct tile *t, struct netbuf *buf)
 	t->nw = (u_int)read_uint32(buf);
 	t->nh = (u_int)read_uint32(buf);
 	t->attrs = Realloc(t->attrs, t->nw*t->nh*sizeof(u_int));
+	t->layers = Realloc(t->layers, t->nw*t->nh*sizeof(int));
 	for (y = 0; y < t->nh; y++) {
-		for (x = 0; x < t->nw; x++)
+		for (x = 0; x < t->nw; x++) {
 			t->attrs[y*t->nw + x] = (u_int)read_uint32(buf);
+			t->layers[y*t->nw + x] = (int)read_sint32(buf);
+		}
 	}
 
 	nelements = read_uint32(buf);
@@ -630,6 +657,7 @@ tile_destroy(struct tile *t)
 		t->nw = 0;
 		t->nh = 0;
 		Free(t->attrs, 0);
+		Free(t->layers, 0);
 	}
 	t->su = NULL;
 }
@@ -1311,15 +1339,12 @@ poll_feats(int argc, union evarg *argv)
 	it->p1 = &attr_names[0];
 
 	if (tlist_visible_children(tl, it)) {
-#if 0
-		it = tlist_insert(tl, ICON(LAYER_EDITOR_ICON),
-		    _("%sLayers"),
-		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == NODEREF_WALK) ? "* " : "");
-		it->class = "walkable-attrs";
+		it = tlist_insert(tl, ICON(LAYER_EDITOR_ICON), _("%sLayers"),
+		    (tv->state==TILEVIEW_LAYERS_EDIT) ? "* " : "");
+		it->class = "layers";
 		it->depth = 1;
 		it->p1 = &attr_names[1];
-#endif
+		
 		it = tlist_insert(tl, ICON(WALKABILITY_ICON),
 		    _("%sWalkable"),
 		    (tv->state==TILEVIEW_ATTRIB_EDIT &&
@@ -1490,6 +1515,9 @@ edit_element(int argc, union evarg *argv)
 		tv->state = TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
 		tv->edit_attr = NODEREF_SLIPPERY;
+	} else if (strcmp(it->class, "layers") == 0) {
+		tv->state = TILEVIEW_LAYERS_EDIT;
+		tv->edit_mode = 1;
 	}
 }
 
@@ -1706,16 +1734,10 @@ tile_undo(int argc, union evarg *argv)
 	struct tileview *tv = argv[1].p;
 
 	switch (tv->state) {
-	case TILEVIEW_TILE_EDIT:
-		break;
-	case TILEVIEW_FEATURE_EDIT:
-		break;
-	case TILEVIEW_SKETCH_EDIT:
-		break;
 	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_undo(tv, tv->tv_pixmap.tel);
 		break;
-	case TILEVIEW_ATTRIB_EDIT:
+	default:
 		break;
 	}
 }
@@ -1726,16 +1748,10 @@ tile_redo(int argc, union evarg *argv)
 	struct tileview *tv = argv[1].p;
 
 	switch (tv->state) {
-	case TILEVIEW_TILE_EDIT:
-		break;
-	case TILEVIEW_FEATURE_EDIT:
-		break;
-	case TILEVIEW_SKETCH_EDIT:
-		break;
 	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_redo(tv, tv->tv_pixmap.tel);
 		break;
-	case TILEVIEW_ATTRIB_EDIT:
+	default:
 		break;
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.51 2005/07/20 02:33:38 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.52 2005/07/27 06:34:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -68,6 +68,7 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->index = s;
 	spr->su = NULL;
 	spr->attrs = NULL;
+	spr->layers = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
 	spr->snap_mode = GFX_SNAP_NOT;
@@ -130,6 +131,10 @@ sprite_destroy(struct gfx *gfx, Uint32 s)
 	if (spr->attrs != NULL) {
 		Free(spr->attrs, M_RG);
 		spr->attrs = NULL;
+	}
+	if (spr->layers != NULL) {
+		Free(spr->layers, M_RG);
+		spr->layers = NULL;
 	}
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
@@ -633,14 +638,19 @@ gfx_load(struct object *ob)
 			sprite_get_nattrs(spr, &nw, &nh);
 			dprintf("%s: %d,%d attributes\n", ob->name, nw, nh);
 			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(u_int));
+			spr->layers = Realloc(spr->layers, nw*nh*sizeof(int));
 			for (y = 0; y < nh; y++) {
-				for (x = 0; x < nw; x++)
+				for (x = 0; x < nw; x++) {
 					spr->attrs[y*nw + x] =
 					    (u_int)read_uint32(buf);
+					spr->layers[y*nw + x] =
+					    (int)read_sint32(buf);
+				}
 			}
 		} else {
 			Free(spr->attrs, M_RG);
-			spr->attrs = NULL;
+			Free(spr->layers, M_RG);
+			spr->layers = NULL;
 		}
 	}
 
@@ -696,16 +706,19 @@ gfx_save(struct object *ob, struct netbuf *buf)
 		write_sint32(buf, (Sint32)spr->yOrig);
 		write_uint8(buf, (Uint8)spr->snap_mode);
 
-		if (spr->attrs != NULL) {
+		if (spr->attrs != NULL && spr->layers != NULL) {
 			int x, y;
 			u_int nw, nh;
 
 			write_uint8(buf, 1);
 			sprite_get_nattrs(spr, &nw, &nh);
 			for (y = 0; y < nh; y++) {
-				for (x = 0; x < nw; x++)
+				for (x = 0; x < nw; x++) {
 					write_uint32(buf,
 					    (Uint32)spr->attrs[y*nw + x]);
+					write_sint32(buf,
+					    (Sint32)spr->layers[y*nw + x]);
+				}
 			}
 		} else {
 			write_uint8(buf, 0);

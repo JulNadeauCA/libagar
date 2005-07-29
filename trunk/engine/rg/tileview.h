@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.28 2005/07/11 05:43:00 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.29 2005/07/23 17:51:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -122,7 +122,8 @@ enum tileview_state {
 	TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
 	TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
 	TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
-	TILEVIEW_ATTRIB_EDIT	/* Node attributes are being edited */
+	TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
+	TILEVIEW_LAYERS_EDIT	/* Node layers are being edited */
 };
 
 struct tileview {
