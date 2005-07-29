@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.3 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: sketch_line.c,v 1.4 2005/03/06 06:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -137,8 +137,8 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 
 struct tileview_sketch_tool_ops sketch_line_ops = {
 	{
-		_("Lines"),
-		_("Line segments, strips and loops."),
+		N_("Lines"),
+		N_("Line segments, strips and loops."),
 		sizeof(struct line_tool),
 		TILEVIEW_SKETCH_TOOL,
 		VGLINES_ICON, -1,

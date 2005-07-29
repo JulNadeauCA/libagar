@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_polygon.c,v 1.1 2005/06/01 09:08:45 vedge Exp $	*/
+/*	$Csoft: sketch_polygon.c,v 1.2 2005/06/07 06:49:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -246,8 +246,8 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 
 struct tileview_sketch_tool_ops sketch_polygon_ops = {
 	{
-		_("Polygon"),
-		_("Sketch filled polygons."),
+		N_("Polygon"),
+		N_("Sketch filled polygons."),
 		sizeof(struct polygon_tool),
 		TILEVIEW_SKETCH_TOOL,
 		RG_POLYGON_ICON, -1,
