@@ -1,10 +1,10 @@
-/*	$Csoft: map.h,v 1.11 2005/07/23 17:54:19 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.12 2005/07/25 10:14:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
 #define _AGAR_MAP_H_
 
-#define TILESZ	32			/* Default tile size in pixels */
+#define TILESZ	16			/* Default tile size in pixels */
 
 #define MAP_MIN_TILESZ		7
 #define MAP_MAX_TILESZ		16384	/* For soft-scrolling */
