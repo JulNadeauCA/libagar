@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_circle.c,v 1.1 2005/03/05 12:08:08 vedge Exp $	*/
+/*	$Csoft: sketch_circle.c,v 1.2 2005/03/06 06:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -113,8 +113,8 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 
 struct tileview_sketch_tool_ops sketch_circle_ops = {
 	{
-		_("Circle"),
-		_("Draw circles."),
+		N_("Circle"),
+		N_("Draw circles."),
 		sizeof(struct circle_tool),
 		TILEVIEW_SKETCH_TOOL,
 		VGCIRCLES_ICON, -1,
