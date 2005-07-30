@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ const struct object_ops mapedit_pseudo_ops = {
 	mapedit_settings	/* edit */
 };
 
-extern int mapview_bg, mapview_bg_moving, mapview_bg_sqsize;
+extern int mapview_bg_moving, mapview_bg_sqsize;
 extern int mapview_sel_bounded;
 
 struct mapedit mapedit;
@@ -121,7 +121,7 @@ mapedit_destroy(void *p)
 void
 mapedit_save(struct netbuf *buf)
 {
-	write_uint8(buf, (Uint8)mapview_bg);
+	write_uint8(buf, 0);				/* Pad: mapview_bg */
 	write_uint8(buf, (Uint8)mapview_bg_moving);
 	write_uint16(buf, (Uint16)mapview_bg_sqsize);
 	write_uint8(buf, (Uint8)mapview_sel_bounded);
@@ -135,7 +135,7 @@ mapedit_save(struct netbuf *buf)
 void
 mapedit_load(struct netbuf *buf)
 {
-	mapview_bg = (int)read_uint8(buf);
+	read_uint8(buf);				/* Pad: mapview_bg */
 	mapview_bg_moving = (int)read_uint8(buf);
 	mapview_bg_sqsize = (int)read_uint16(buf);
 	mapview_sel_bounded = (int)read_uint8(buf);
@@ -161,9 +161,6 @@ mapedit_settings(void *p)
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	box_set_spacing(bo, 5);
 	{
-		cb = checkbox_new(bo, _("Enable background tiling"));
-		widget_bind(cb, "state", WIDGET_INT, &mapview_bg);
-
 		cb = checkbox_new(bo, _("Moving tiles"));
 		widget_bind(cb, "state", WIDGET_INT, &mapview_bg_moving);
 

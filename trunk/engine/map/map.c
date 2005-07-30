@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.37 2005/07/26 02:45:49 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.38 2005/07/28 03:33:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 
 #include <engine/config.h>
 #include <engine/view.h>
+#include <engine/objmgr.h>
 
 #include "map.h"
 #include "tools.h"
@@ -2452,18 +2453,37 @@ noderef_edit(int argc, union evarg *argv)
 static void
 edit_prop_mode(int argc, union evarg *argv)
 {
-	struct button *btn = argv[0].p;
 	struct mapview *mv = argv[1].p;
 	int flag = argv[2].i;
-	int state = argv[3].i;
 
-	if (state == 1) {
-		toolbar_select_unique(mv->toolbar, btn);
+	if (flag != 0) {
 		mv->mode = MAPVIEW_EDIT_ATTRS;
 		mv->edit_attr = flag;
 	} else {
 		mv->mode = MAPVIEW_NORMAL;
 	}
+}
+
+static void
+undo(int argc, union evarg *argv)
+{
+	mapview_undo((struct mapview *)argv[1].p);
+}
+
+static void
+redo(int argc, union evarg *argv)
+{
+	mapview_redo((struct mapview *)argv[1].p);
+}
+
+static void
+center_to_origin(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+
+	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv);
+	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv);
+	mapview_update_camera(mv);
 }
 
 struct window *
@@ -2503,13 +2523,8 @@ map_edit(void *p)
 	menu = menu_new(win);
 	pitem = menu_add_item(menu, _("File"));
 	{
-		menu_int_flags_mp(pitem, _("Writeable"), EDIT_ICON,
-		    &OBJECT(m)->flags, OBJECT_READONLY, 1,
-		    &OBJECT(m)->lock);
-		menu_int_flags_mp(pitem, _("Indestructible"), TRASH_ICON,
-		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE, 0,
-		    &OBJECT(m)->lock);
-		
+		objmgr_generic_menu(pitem, m);
+	
 		menu_separator(pitem);
 		
 		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
@@ -2519,29 +2534,47 @@ map_edit(void *p)
 	
 	pitem = menu_add_item(menu, _("Edit"));
 	{
+		menu_action(pitem, _("Undo"), -1, undo, "%p", mv);
+		menu_action(pitem, _("Redo"), -1, redo, "%p", mv);
+
+		menu_separator(pitem);
+
 		menu_action(pitem, _("Map settings..."), SETTINGS_ICON,
-		    edit_properties, "%p, %p", mv, win);
+		    edit_properties, "%p,%p", mv, win);
+	}
+	
+	pitem = menu_add_item(menu, _("Attributes"));
+	{
+		menu_action(pitem, _("None"), -1,
+		    edit_prop_mode, "%p,%i", mv, 0);
+
+		menu_action(pitem, _("Walkability"), WALKABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, NODEREF_BLOCK);
+		menu_action(pitem, _("Climbability"), CLIMBABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, NODEREF_CLIMBABLE);
+		menu_action(pitem, _("Jumpability"), JUMPABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, NODEREF_JUMPABLE);
+		menu_action(pitem, _("Slippery"), SLIPPAGE_ICON,
+		    edit_prop_mode, "%p,%i", mv, NODEREF_SLIPPERY);
 	}
 
 	pitem = menu_add_item(menu, _("View"));
 	{
-		extern int mapview_bg, mapview_bg_moving;
+		extern int mapview_bg_moving;
 
 		menu_action(pitem, _("Create view..."), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
+		
+		menu_action(pitem, _("Center around origin"), VGORIGIN_ICON,
+		    center_to_origin, "%p", mv);
 
 		menu_separator(pitem);
 
 		menu_int_flags(pitem, _("Show grid"), GRID_ICON,
 		    &mv->flags, MAPVIEW_GRID, 0);
-		menu_int_flags(pitem, _("Show node attributes"), PROPS_ICON,
-		    &mv->flags, MAPVIEW_PROPS, 0);
-		menu_int_flags(pitem, _("Show cursor"), -1,
-		    &mv->flags, MAPVIEW_NO_CURSOR, 1);
-		
-		menu_int_bool(pitem, _("Show background tiles"), GRID_ICON,
-		    &mapview_bg, 0);
-		menu_int_bool(pitem, _("Moving background tiles"), GRID_ICON,
+		menu_int_flags(pitem, _("Show background"), GRID_ICON,
+		    &mv->flags, MAPVIEW_NO_BG, 1);
+		menu_int_bool(pitem, _("Animate background"), GRID_ICON,
 		    &mapview_bg_moving, 0);
 	}
 	
@@ -2602,6 +2635,8 @@ map_edit(void *p)
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			struct AGMenuItem *mi;
+			struct textbox *tb;
+			struct button *bu;
 
 			mv->layers_tl = tlist_new(ntab, TLIST_POLL);
 			tlist_set_item_height(mv->layers_tl, TILESZ);
@@ -2633,17 +2668,14 @@ map_edit(void *p)
 
 			box_h = box_new(ntab, BOX_HORIZ, BOX_WFILL);
 			{
-				struct textbox *tb;
-				struct button *bu;
-
-				tb = textbox_new(box_h, _("New layer: "));
+				tb = textbox_new(box_h, _("Name: "));
 				event_new(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
-
-				bu = button_new(box_h, _("Push"));
-				event_new(bu, "button-pushed", push_layer,
-				    "%p, %p", m, tb);
 			}
+			bu = button_new(ntab, _("Push"));
+			WIDGET(bu)->flags |= WIDGET_WFILL;
+			event_new(bu, "button-pushed", push_layer,
+			    "%p, %p", m, tb);
 		}
 
 		vbar = scrollbar_new(div->box2, SCROLLBAR_VERT);
@@ -2654,15 +2686,6 @@ map_edit(void *p)
 		}
 		object_attach(div->box2, toolbar);
 	}
-
-	toolbar_add_button(toolbar, 1, ICON(WALKABILITY_ICON), 1, 0,
-	    edit_prop_mode, "%p,%i", mv, NODEREF_BLOCK);
-	toolbar_add_button(toolbar, 1, ICON(CLIMBABILITY_ICON), 1, 0,
-	    edit_prop_mode, "%p,%i", mv, NODEREF_CLIMBABLE);
-	toolbar_add_button(toolbar, 1, ICON(JUMPABILITY_ICON), 1, 0,
-	    edit_prop_mode, "%p,%i", mv, NODEREF_JUMPABLE);
-	toolbar_add_button(toolbar, 1, ICON(SLIPPAGE_ICON), 1, 0,
-	    edit_prop_mode, "%p,%i", mv, NODEREF_SLIPPERY);
 
 	mapview_set_scrollbars(mv, hbar, vbar);
 	object_attach(win, statbar);
