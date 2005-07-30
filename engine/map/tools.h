@@ -1,10 +1,10 @@
-/*	$Csoft: tools.h,v 1.1 2005/07/23 17:54:20 vedge Exp $	*/
+/*	$Csoft: tools.h,v 1.2 2005/07/24 06:49:53 vedge Exp $	*/
 /*	Public domain	*/
 
-extern const struct tool nodesel_tool;
-extern const struct tool refsel_tool;
-extern const struct tool fill_tool;
-extern const struct tool insert_tool;
-extern const struct tool flip_tool;
-extern const struct tool invert_tool;
+extern const struct tool_ops nodesel_ops;
+extern const struct tool_ops refsel_ops;
+extern const struct tool_ops fill_tool_ops;
+extern const struct tool_ops insert_ops;
+extern const struct tool_ops flip_ops;
+extern const struct tool_ops invert_ops;
 

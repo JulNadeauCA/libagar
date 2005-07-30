@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.7 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.8 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,26 +35,21 @@
 #include "map.h"
 #include "mapedit.h"
 
-static int multi_ind = 0;		/* Apply to tiles individually */
+static int multi_ind = 0;
 
 static void
-flip_init(struct tool *t)
+flip_init(void *p)
 {
-	static const char *mode_items[] = {
-		N_("Horizontal"),
-		N_("Vertical"),
-		NULL
-	};
-	struct window *win;
-	struct radio *rad;
+	tool_push_status(p, _("Select element and use $(L)=Mirror, $(R)=Flip"));
+}
+
+static void
+flip_pane(void *p, void *con)
+{
 	struct checkbox *cb;
 
-	win = tool_window(t, "mapedit-tool-flip");
-
-	cb = checkbox_new(win, _("Flip entire selection"));
+	cb = checkbox_new(con, _("Flip entire selection"));
 	widget_bind(cb, "state", WIDGET_INT, &multi_ind);
-	
-	tool_push_status(t, _("Select element and use $(L)=Mirror, $(R)=Flip"));
 }
 
 static void
@@ -75,45 +70,10 @@ toggle_transform(struct noderef *nref, int type)
 	TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
 }
 
-#if 0
-static void
-flip_mousebuttondown(struct tool *t, int mx, int my, int xoff, int yoff, int b)
-{
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
-	int selx = mv->mx + mv->mouse.x;
-	int sely = mv->my + mv->mouse.y;
-	int w = 1;
-	int h = 1;
-	int x, y;
-	int mode = (b == SDL_BUTTON_LEFT) ? TRANSFORM_HFLIP : TRANSFORM_VFLIP;
-
-	if (!multi_ind ||
-	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
-		if (selx < 0 || selx >= m->mapw ||
-		    sely < 0 || sely >= m->maph)
-			return;
-	}
-
-	for (y = sely; y < sely+h; y++) {
-		for (x = selx; x < selx+w; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *nref;
-
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != m->cur_layer)
-					continue;
-
-				toggle_transform(nref, mode);
-			}
-		}
-	}
-}
-#else
-
 static int
-flip_mousebuttondown(struct tool *t, int xmap, int ymap, int b)
+flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 {
+	struct tool *t = p;
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;
@@ -149,31 +109,23 @@ flip_mousebuttondown(struct tool *t, int xmap, int ymap, int b)
 	return (1);
 }
 
-#endif
-
-static int
-flip_cursor(struct tool *t, SDL_Rect *rd)
-{
-	return (-1);
-}
-
-const struct tool flip_tool = {
-	"flip",
-	N_("Flip/mirror transform"),
-	FLIP_TOOL_ICON, FLIP_TOOL_ICON,
+const struct tool_ops flip_ops = {
+	"Flip", N_("Flip/mirror node element"),
+	FLIP_TOOL_ICON,
+	sizeof(struct tool),
 	0,
 	flip_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	flip_cursor,
+	flip_pane,
+	NULL,			/* edit */
+	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	NULL,			/* mousemotion */
 	flip_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL,			/* keyup */
-	NULL			/* pane */
+	NULL			/* keyup */
 };
 
 #endif /* MAP */

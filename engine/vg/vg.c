@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.62 2005/07/16 16:07:32 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.63 2005/07/19 04:24:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1612,7 +1612,7 @@ contract_grid(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static void
-init_scale_tool(struct tool *t)
+init_scale_tool(void *t)
 {
 	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, NULL);
 	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, NULL);
@@ -1625,17 +1625,18 @@ init_scale_tool(struct tool *t)
 	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, zoom_in, NULL);
 }
 
-struct tool vg_scale_tool = {
-	N_("Scale drawing"),
-	N_("Zoom in and out on the drawing."),
-	MAGNIFIER_TOOL_ICON, -1,
+const struct tool_ops vg_scale_tool = {
+	N_("Scale drawing"), N_("Zoom in and out on the drawing."),
+	MAGNIFIER_TOOL_ICON,
+	sizeof(struct tool),
 	TOOL_HIDDEN,
 	init_scale_tool,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
@@ -1649,11 +1650,14 @@ static void
 select_tool(int argc, union evarg *argv)
 {
 	struct vg *vg = argv[1].p;
-	struct tool *tool = argv[2].p;
+	char *name = argv[2].s;
 	struct mapview *mv = argv[3].p;
-
-	mapview_select_tool(mv, tool, vg);
-	widget_focus(mv);
+	struct tool *t;
+	
+	if ((t = mapview_find_tool(mv, name)) != NULL) {
+		mapview_select_tool(mv, t, vg);
+		widget_focus(mv);
+	}
 }
 
 static void
@@ -1670,10 +1674,10 @@ void
 vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
     struct mapview *mv)
 {
-	extern struct tool vg_origin_tool;
-	extern struct tool vg_line_tool;
-	extern struct tool vg_circle_tool;
-	extern struct tool vg_text_tool;
+	extern const struct tool_ops vg_origin_tool;
+	extern const struct tool_ops vg_line_tool;
+	extern const struct tool_ops vg_circle_tool;
+	extern const struct tool_ops vg_text_tool;
 	struct AGMenuItem *mi_snap;
 	
 	mi_snap = menu_action(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
@@ -1682,12 +1686,12 @@ vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
 	menu_action(pitem, _("Show blocks"), VGBLOCK_ICON,
 	    show_blocks, "%p", vg);
 	menu_action(pitem, _("Move origin"), vg_origin_tool.icon,
-	    select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
+	    select_tool, "%p,%s,%p", vg, "Origin", mv);
 	menu_action(pitem, _("Line strip"), vg_line_tool.icon,
-	    select_tool, "%p,%p,%p", vg, &vg_line_tool, mv);
+	    select_tool, "%p,%s,%p", vg, "Lines", mv);
 	menu_action(pitem, _("Circle"), vg_circle_tool.icon,
-	    select_tool, "%p,%p,%p", vg, &vg_circle_tool, mv);
+	    select_tool, "%p,%s,%p", vg, "Circles", mv);
 	menu_action(pitem, _("Text"), vg_text_tool.icon,
-	    select_tool, "%p,%p,%p", vg, &vg_text_tool, mv);
+	    select_tool, "%p,%s,%p", vg, "Text", mv);
 }
 #endif /* EDITION */

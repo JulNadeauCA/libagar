@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.17 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.18 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -110,7 +110,7 @@ static struct vg_element *cur_ellipse;
 static int seq;
 
 static void
-ellipse_tool_init(struct tool *t)
+ellipse_tool_init(void *t)
 {
 	seq = 0;
 	cur_ellipse = NULL;
@@ -118,10 +118,9 @@ ellipse_tool_init(struct tool *t)
 }
 
 static int
-ellipse_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
-    int b)
+ellipse_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(p)->p;
 	double x, y;
 	
 	vg_map2vec(vg, xmap, ymap, &x, &y);
@@ -150,9 +149,9 @@ ellipse_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-ellipse_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+ellipse_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
@@ -184,17 +183,18 @@ finish:
 	return (1);
 }
 
-struct tool vg_ellipse_tool = {
-	N_("Ellipses"),
-	N_("Draw ellipses."),
-	VGCIRCLES_ICON, -1,
+const struct tool_ops vg_ellipse_tool = {
+	N_("Ellipses"), N_("Draw ellipses."),
+	VGCIRCLES_ICON,
+	sizeof(struct tool),
 	0,
 	ellipse_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	ellipse_mousemotion,
 	ellipse_mousebuttondown,
 	NULL,			/* mousebuttonup */

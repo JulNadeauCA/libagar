@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.4 2005/07/26 02:45:49 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.5 2005/07/27 06:34:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,48 +42,73 @@
 #include "map.h"
 #include "mapedit.h"
 
-static enum {
-	STAMP_SRC_ARTWORK,	/* From artwork list */
-	STAMP_SRC_COPYBUF	/* From copy/paste buffer */
-} source = STAMP_SRC_ARTWORK;
-
-enum gfx_snap_mode insert_snap_mode = GFX_SNAP_NOT;
-int insert_replace_mode = 1;
-
-static int angle = 0;
+struct insert_tool {
+	struct tool tool;
+	enum {
+		INSERT_SRC_ARTWORK,		/* From artwork list */
+		INSERT_SRC_COPYBUF		/* From copy/paste buffer */
+	} source;
+	enum gfx_snap_mode snap_mode;
+	int replace_mode;
+	int angle;
+};
 
 static void
-insert_pane(struct tool *t, void *con)
+insert_init(void *p)
 {
+	struct insert_tool *ins = p;
+
+	ins->source = INSERT_SRC_ARTWORK;
+	ins->snap_mode = GFX_SNAP_NOT;
+	ins->replace_mode = 0;
+	ins->angle = 0;
+
+	tool_push_status(ins,
+	    _("Select position on map ($(L)=Insert, $(M)=Rotate)"));
+}
+
+static void
+insert_pane(void *p, void *con)
+{
+	struct insert_tool *ins = p;
+	struct mapview *mv = TOOL(ins)->mv;
+#if 0
 	static const char *source_items[] = {
 		N_("Artwork"),
 		N_("Map buffer"),
 		NULL
 	};
+#endif
 	struct radio *rad;
 	struct checkbox *cb;
 	struct spinbutton *sb;
 	struct combo *com;
-
-	label_new(con, LABEL_STATIC, _("Source: "));
+	struct tlist_item *it;
+	
+	if ((it = tlist_selected_item(mv->art_tl)) != NULL) {
+		label_new(con, LABEL_STATIC, _("Source: %s"), it->text);
+	}
+#if 0
 	rad = radio_new(con, source_items);
 	widget_bind(rad, "value", WIDGET_INT, &source);
+#endif
 	
 	label_new(con, LABEL_STATIC, _("Snap to: "));
 	rad = radio_new(con, gfx_snap_names);
-	widget_bind(rad, "value", WIDGET_INT, &insert_snap_mode);
+	widget_bind(rad, "value", WIDGET_INT, &ins->snap_mode);
 
 	cb = checkbox_new(con, _("Replace mode"));
-	widget_bind(cb, "state", WIDGET_INT, &insert_replace_mode);
+	widget_bind(cb, "state", WIDGET_INT, &ins->replace_mode);
 
 	sb = spinbutton_new(con, _("Rotation: "));
-	widget_bind(sb, "value", WIDGET_INT, &angle);
+	widget_bind(sb, "value", WIDGET_INT, &ins->angle);
 	spinbutton_set_range(sb, 0, 360);
 	spinbutton_set_increment(sb, 90);
 }
 
 static void
-init_gfx_ref(struct mapview *mv, struct noderef *r, struct sprite *spr)
+init_gfx_ref(struct insert_tool *ins, struct mapview *mv, struct noderef *r,
+    struct sprite *spr)
 {
 	struct map *m = mv->map;
 	int sm;
@@ -96,7 +121,7 @@ init_gfx_ref(struct mapview *mv, struct noderef *r, struct sprite *spr)
 	r->r_gfx.xorigin = spr->xOrig;
 	r->r_gfx.yorigin = spr->yOrig;
 
-	switch (insert_snap_mode) {
+	switch (ins->snap_mode) {
 	case GFX_SNAP_NOT:
 		r->r_gfx.xcenter += mv->cxoffs*TILESZ/MV_TILESZ(mv);
 		r->r_gfx.ycenter += mv->cyoffs*TILESZ/MV_TILESZ(mv);
@@ -107,24 +132,18 @@ init_gfx_ref(struct mapview *mv, struct noderef *r, struct sprite *spr)
 		break;
 	}
 
-	transform_rotate(r, angle);
-}
-
-static void
-insert_init(struct tool *t)
-{
-	tool_push_status(t,
-	    _("Select position on map ($(L)=Insert, $(M)=Rotate)"));
+	transform_rotate(r, ins->angle);
 }
 
 static int
-insert_effect(struct tool *t, struct node *n)
+insert_effect(void *p, struct node *n)
 {
-	struct mapview *mv = t->mv;
+	struct insert_tool *ins = p;
+	struct mapview *mv = TOOL(ins)->mv;
 	struct map *m = mv->map;
 	struct noderef *r;
 
-	if (source == STAMP_SRC_COPYBUF) {
+	if (ins->source == INSERT_SRC_COPYBUF) {
 		struct map *copybuf = &mapedit.copybuf;
 		int sx, sy, dx, dy;
 
@@ -138,7 +157,7 @@ insert_effect(struct tool *t, struct node *n)
 				struct node *dn = &m->map[dy][dx];
 				struct noderef *r;
 
-				if (insert_replace_mode) {
+				if (ins->replace_mode) {
 					node_clear(m, dn, m->cur_layer);
 				}
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
@@ -172,14 +191,14 @@ insert_effect(struct tool *t, struct node *n)
 			
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
-				init_gfx_ref(mv, r, spr);
+				init_gfx_ref(ins, mv, r, spr);
 				r->r_gfx.rs.x = sx;
 				r->r_gfx.rs.y = sy;
 				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
 				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
 				r->flags |= spr->attrs[n++];
 			
-				if (insert_replace_mode) {
+				if (ins->replace_mode) {
 					node_clear(m, dn, m->cur_layer);
 				}
 				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
@@ -190,14 +209,15 @@ insert_effect(struct tool *t, struct node *n)
 }
 
 static int
-insert_cursor(struct tool *t, SDL_Rect *rd)
+insert_cursor(void *p, SDL_Rect *rd)
 {
-	struct mapview *mv = t->mv;
+	struct insert_tool *ins = p;
+	struct mapview *mv = TOOL(ins)->mv;
 	struct map *m = mv->map;
 	struct tlist_item *it;
 	int rv = -1;
 
-	if (source == STAMP_SRC_COPYBUF) {
+	if (ins->source == INSERT_SRC_COPYBUF) {
 		struct map *copybuf = &mapedit.copybuf;
 		struct noderef *r;
 		int sx, sy, dx, dy;
@@ -233,7 +253,7 @@ insert_cursor(struct tool *t, SDL_Rect *rd)
 			struct noderef rtmp;
 			struct transform *trans;
 
-			init_gfx_ref(mv, &rtmp, spr);
+			init_gfx_ref(ins, mv, &rtmp, spr);
 			primitives.rect_outlined(mv, rd->x+1, rd->y+1,
 			    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
 			    COLOR(MAPVIEW_GRID_COLOR));
@@ -249,32 +269,34 @@ insert_cursor(struct tool *t, SDL_Rect *rd)
 }
 
 static int
-insert_mousebuttondown(struct tool *t, int x, int y, int btn)
+insert_mousebuttondown(void *p, int x, int y, int btn)
 {
+	struct insert_tool *ins = p;
+
 	if (btn == SDL_BUTTON_MIDDLE) {
-		angle = (angle + 90) % 360;
+		ins->angle = (ins->angle + 90) % 360;
 		return (1);
 	}
 	return (0);
 }
 
-const struct tool insert_tool = {
-	"insert",
-	N_("Insert map element."),
-	STAMP_TOOL_ICON, -1,
+const struct tool_ops insert_ops = {
+	"Insert", N_("Insert node element"),
+	STAMP_TOOL_ICON,
+	sizeof(struct insert_tool),
 	TOOL_HIDDEN,
 	insert_init,
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,				/* destroy */
+	insert_pane,
+	NULL,				/* edit */
 	insert_cursor,
 	insert_effect,
-	NULL,			/* mousemotion */
+
+	NULL,				/* mousemotion */
 	insert_mousebuttondown,
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL,			/* keyup */
-	insert_pane
+	NULL,				/* mousebuttonup */
+	NULL,				/* keydown */
+	NULL				/* keyup */
 };
 
 #endif /* MAP */

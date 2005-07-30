@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.10 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.11 2005/07/29 06:25:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,41 +41,52 @@
 #include "map.h"
 #include "mapedit.h"
 
-static enum fill_mode {
-	FILL_FROM_CLIPBRD,
-	FILL_FROM_ART,
-	FILL_CLEAR
-} mode = FILL_FROM_ART;
-
-static int randomize_angle = 0;
+struct fill_tool {
+	struct tool tool;
+	enum fill_mode {
+		FILL_FROM_CLIPBRD,
+		FILL_FROM_ART,
+		FILL_CLEAR
+	} mode;
+	int randomize_angle;
+};
 
 static void
-fill_init(struct tool *t)
+fill_init(void *p)
 {
+	struct fill_tool *fi = p;
+
+	fi->mode = FILL_FROM_ART;
+	fi->randomize_angle = 0;
+	
+	tool_push_status(fi, _("Select a node and fill with $(L)."));
+}
+
+static void
+fill_pane(void *p, void *con)
+{
+	struct fill_tool *fi = p;
 	static const char *mode_items[] = {
 		N_("Clipboard pattern"),
 		N_("Source artwork"),
 		N_("Clear"),
 		NULL
 	};
-	struct window *win;
 	struct radio *rad;
 	struct checkbox *cb;
 
-	win = tool_window(t, "mapedit-tool-fill");
-	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &mode);
+	rad = radio_new(con, mode_items);
+	widget_bind(rad, "value", WIDGET_INT, &fi->mode);
 
-	cb = checkbox_new(win, _("Randomize angle"));
-	widget_bind(cb, "state", WIDGET_BOOL, &randomize_angle);
-	
-	tool_push_status(t, _("Select a node and fill with $(L)."));
+	cb = checkbox_new(con, _("Randomize angle"));
+	widget_bind(cb, "state", WIDGET_BOOL, &fi->randomize_angle);
 }
 
 static int
-fill_effect(struct tool *t, struct node *n)
+fill_effect(void *p, struct node *n)
 {
-	struct mapview *mv = t->mv;
+	struct fill_tool *fi = p;
+	struct mapview *mv = TOOL(fi)->mv;
 	struct map *m = mv->map;
 	struct map *copybuf = &mapedit.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
@@ -88,7 +99,7 @@ fill_effect(struct tool *t, struct node *n)
 
 	mapview_get_selection(mv, &dx, &dy, &dw, &dh);
 
-	switch (mode) {
+	switch (fi->mode) {
 	case FILL_FROM_CLIPBRD:
 		if (copybuf->mapw == 0 || copybuf->maph == 0) {
 			text_msg(MSG_ERROR, _("The clipboard is empty."));
@@ -138,7 +149,7 @@ fill_effect(struct tool *t, struct node *n)
 				r->r_gfx.ycenter = TILESZ/2;
 				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 	
-				if (randomize_angle) {
+				if (fi->randomize_angle) {
 					switch (i++) {
 					case 0:
 						rand = arc4random();
@@ -178,23 +189,23 @@ fill_effect(struct tool *t, struct node *n)
 	return (1);
 }
 
-const struct tool fill_tool = {
-	"fill",
-	N_("Clear/Fill Layer"),
-	FILL_TOOL_ICON, FILL_CURSORBMP,
+const struct tool_ops fill_tool_ops = {
+	"Fill", N_("Clear/fill layer"),
+	FILL_TOOL_ICON,
+	sizeof(struct fill_tool),
 	0,
 	fill_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	fill_pane,
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	fill_effect,
+	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
 	NULL,			/* keyup */
-	NULL			/* pane */
 };
 
 #endif /* MAP */

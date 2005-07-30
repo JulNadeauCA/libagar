@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.34 2005/07/29 06:25:06 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.35 2005/07/30 01:43:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -194,10 +194,10 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		if (ntool->win != NULL) {
 			window_show(ntool->win);
 		}
-		if (ntool->pane != NULL) {
+		if (ntool->pane != NULL && ntool->ops->edit_pane != NULL) {
 			struct window *pwin;
 
-			ntool->edit_pane(ntool, ntool->pane);
+			ntool->ops->edit_pane(ntool, ntool->pane);
 			if ((pwin = widget_parent_window(mv->curtool->pane))
 			    != NULL) {
 				WINDOW_UPDATE(pwin);
@@ -218,7 +218,7 @@ mapview_find_tool(struct mapview *mv, const char *name)
 	struct tool *tool;
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
-		if (strcmp(tool->name, name) == 0)
+		if (strcmp(tool->ops->name, name) == 0)
 			return (tool);
 	}
 	return (NULL);
@@ -255,30 +255,30 @@ update_tooltips(int argc, union evarg *argv)
 #endif
 
 struct tool *
-mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
+mapview_reg_tool(struct mapview *mv, const struct tool_ops *ops, void *p)
 {
-	struct tool *ntool;
+	struct tool *t;
 
-	ntool = Malloc(sizeof(struct tool), M_MAPEDIT);
-	memcpy(ntool, tool, sizeof(struct tool));
-	ntool->p = p;
-	ntool->orig = tool;
-	tool_init(ntool, mv);
+	t = Malloc(ops->len, M_MAPEDIT);
+	t->ops = ops;
+	t->mv = mv;
+	t->p = p;
+	tool_init(t);
 
-	if (((tool->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
-		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
+	if (((ops->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
+		SDL_Surface *icon = ops->icon >= 0 ? ICON(ops->icon) : NULL;
 
-		ntool->trigger = toolbar_add_button(mv->toolbar,
+		t->trigger = toolbar_add_button(mv->toolbar,
 		    0, icon, 1, 0, sel_tool,
-		    "%p, %p, %p", mv, ntool, p);
+		    "%p, %p, %p", mv, t, p);
 #if 0
-		event_new(ntool->trigger, "button-mouseoverlap",
-		    update_tooltips, "%p, %p", mv, ntool);
+		event_new(t->trigger, "button-mouseoverlap",
+		    update_tooltips, "%p, %p", mv, t);
 #endif
 	}
 
-	TAILQ_INSERT_TAIL(&mv->tools, ntool, tools);
-	return (ntool);
+	TAILQ_INSERT_TAIL(&mv->tools, t, tools);
+	return (t);
 }
 
 void
@@ -537,19 +537,9 @@ draw_cursor(struct mapview *mv)
 	if (mv->curtool == NULL)
 		return;
 
-	if (mv->curtool->cursor_su != NULL) {
-		rd.x += WIDGET(mv)->cx;
-		rd.y += WIDGET(mv)->cy;
-		/* XXX opengl */
-		if (!view->opengl) {
-			SDL_BlitSurface(mv->curtool->cursor_su, NULL,
-			    view->v, &rd);
-		}
-	} else {
-		if (mv->curtool->cursor != NULL) {
-			if (mv->curtool->cursor(mv->curtool, &rd) == -1)
-				goto defcurs;
-		}
+	if (mv->curtool->ops->cursor != NULL) {
+		if (mv->curtool->ops->cursor(mv->curtool, &rd) == -1)
+			goto defcurs;
 	}
 	return;
 defcurs:
@@ -949,21 +939,21 @@ mousemotion(int argc, union evarg *argv)
 				goto out;
 			}
 			if (mv->curtool != NULL &&
-			    mv->curtool->effect != NULL &&
-			    mv->curtool->effect(mv->curtool,
+			    mv->curtool->ops->effect != NULL &&
+			    mv->curtool->ops->effect(mv->curtool,
 			    &mv->map->map[mv->cy][mv->cx]) == 1)
 				goto out;
 		}
 		if (mv->curtool != NULL &&
-		    mv->curtool->mousemotion != NULL &&
-		    mv->curtool->mousemotion(mv->curtool,
+		    mv->curtool->ops->mousemotion != NULL &&
+		    mv->curtool->ops->mousemotion(mv->curtool,
 		      mv->mouse.xmap, mv->mouse.ymap,
 		      xrel, yrel, state) == 1) {
 			goto out;
 		}
 		if (mv->deftool != NULL &&
-		    mv->deftool->mousemotion != NULL &&
-		    mv->deftool->mousemotion(mv->deftool,
+		    mv->deftool->ops->mousemotion != NULL &&
+		    mv->deftool->ops->mousemotion(mv->deftool,
 		      mv->mouse.xmap, mv->mouse.ymap,
 		      xrel, yrel, state) == 1) {
 			goto out;
@@ -1028,15 +1018,15 @@ mousebuttondown(int argc, union evarg *argv)
 		}
 		if (mv->curtool != NULL) {
 			if (button == SDL_BUTTON_LEFT &&
-			    mv->curtool->effect != NULL &&
+			    mv->curtool->ops->effect != NULL &&
 			    inside_nodesel(mv, mv->cx, mv->cy)) {
-				if (mv->curtool->effect(mv->curtool,
+				if (mv->curtool->ops->effect(mv->curtool,
 				    &m->map[mv->cy][mv->cx]) == 1) {
 					goto out;
 				}
 			}
-			if (mv->curtool->mousebuttondown != NULL &&
-			    mv->curtool->mousebuttondown(mv->curtool,
+			if (mv->curtool->ops->mousebuttondown != NULL &&
+			    mv->curtool->ops->mousebuttondown(mv->curtool,
 			      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 				goto out;
 			}
@@ -1063,8 +1053,8 @@ mousebuttondown(int argc, union evarg *argv)
 		}
 
 		if (mv->deftool != NULL &&
-		    mv->deftool->mousebuttondown != NULL &&
-		    mv->deftool->mousebuttondown(mv->deftool,
+		    mv->deftool->ops->mousebuttondown != NULL &&
+		    mv->deftool->ops->mousebuttondown(mv->deftool,
 		      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 			goto out;
 		}
@@ -1087,7 +1077,8 @@ mousebuttondown(int argc, union evarg *argv)
 			struct noderef *r;
 			int nx, ny;
 			
-			if (MV_TOOL(mv, &nodesel_tool) &&
+			if (mv->curtool != NULL &&
+			    mv->curtool->ops == &nodesel_ops &&
 			    (mv->flags & MAPVIEW_NO_NODESEL) == 0) {
 				nodesel_begin(mv);
 				goto out;
@@ -1177,8 +1168,8 @@ mousebuttonup(int argc, union evarg *argv)
 	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
 		if (mv->curtool != NULL) {
-			if (mv->curtool->mousebuttonup != NULL &&
-			    mv->curtool->mousebuttonup(mv->curtool,
+			if (mv->curtool->ops->mousebuttonup != NULL &&
+			    mv->curtool->ops->mousebuttonup(mv->curtool,
 			      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 				goto out;
 			}
@@ -1203,8 +1194,8 @@ mousebuttonup(int argc, union evarg *argv)
 		}
 		
 		if (mv->deftool != NULL &&
-		    mv->deftool->mousebuttonup != NULL &&
-		    mv->deftool->mousebuttonup(mv->deftool,
+		    mv->deftool->ops->mousebuttonup != NULL &&
+		    mv->deftool->ops->mousebuttonup(mv->deftool,
 		      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 			goto out;
 		}
@@ -1254,8 +1245,8 @@ key_up(int argc, union evarg *argv)
 	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
-	    mv->curtool->keyup != NULL &&
-	    mv->curtool->keyup(mv->curtool, keysym, keymod) == 1)
+	    mv->curtool->ops->keyup != NULL &&
+	    mv->curtool->ops->keyup(mv->curtool, keysym, keymod) == 1)
 		goto out;
 	
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
@@ -1294,8 +1285,8 @@ key_down(int argc, union evarg *argv)
 	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
-	    mv->curtool->keydown != NULL &&
-	    mv->curtool->keydown(mv->curtool, keysym, keymod) == 1)
+	    mv->curtool->ops->keydown != NULL &&
+	    mv->curtool->ops->keydown(mv->curtool, keysym, keymod) == 1)
 		goto out;
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {

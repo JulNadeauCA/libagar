@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.38 2005/07/28 03:33:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.39 2005/07/30 01:43:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2148,43 +2148,36 @@ poll_art(int argc, union evarg *argv)
 static void
 select_art(int argc, union evarg *argv)
 {
-	extern enum gfx_snap_mode insert_snap_mode;
-	extern int insert_replace_mode;
-	struct tlist *tl = argv[0].p;
+//	extern int insert_snap_mode, insert_replace_mode;
 	struct mapview *mv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
+	int state = argv[3].i;
 	struct tool *t;
 
-	if ((it = tlist_selected_item(tl)) == NULL || it->p1 == NULL)
-		return;
-
-	if (strcmp(it->class, "tile") == 0) {
-		struct sprite *spr = it->p1;
-	
-		insert_snap_mode = SPRITE(spr->pgfx->pobj,spr->index).snap_mode;
-		insert_replace_mode = (insert_snap_mode == GFX_SNAP_TO_GRID);
-
-		if ((t = mapview_find_tool(mv, "insert")) != NULL) {
-			if (mv->curtool != NULL) {
-				mapview_select_tool(mv, NULL, NULL);
-			}
-			mapview_select_tool(mv, t, mv->map);
-			widget_focus(mv);
-		}
+	if (state == 0) {
+		if (mv->curtool != NULL &&
+		    mv->curtool->ops == &insert_ops)
+		    	mapview_select_tool(mv, NULL, NULL);
 	} else {
-		mapview_select_tool(mv, NULL, NULL);
+		if (strcmp(it->class, "tile") == 0) {
+			struct sprite *spr = it->p1;
+	
+//			insert_snap_mode =
+//			    SPRITE(spr->pgfx->pobj,spr->index).snap_mode;
+//			insert_replace_mode =
+//			    (insert_snap_mode == GFX_SNAP_TO_GRID);
+
+			if ((t = mapview_find_tool(mv, "Insert")) != NULL) {
+				if (mv->curtool != NULL) {
+					mapview_select_tool(mv, NULL, NULL);
+				}
+				mapview_select_tool(mv, t, mv->map);
+				widget_focus(mv);
+			}
+		} else {
+			mapview_select_tool(mv, NULL, NULL);
+		}
 	}
-}
-
-static void
-change_art(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[0].p;
-	int state = argv[2].i;
-
-	if (state == 0 && mv->curtool != NULL &&
-	    strcmp(mv->curtool->name, "insert") == 0)
-		mapview_select_tool(mv, NULL, NULL);
 }
 
 static void
@@ -2582,23 +2575,23 @@ map_edit(void *p)
 	{
 		menu_action(pitem, _("Select node"), SELECT_NODE_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &nodesel_tool, m));
+		    mapview_reg_tool(mv, &nodesel_ops, m));
 		
 		menu_action(pitem, _("Select node element"), SELECT_REF_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &refsel_tool, m));
+		    mapview_reg_tool(mv, &refsel_ops, m));
 		
 		menu_action_kb(pitem, _("Fill"), FILL_TOOL_ICON,
 		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &fill_tool, m));
+		    mapview_reg_tool(mv, &fill_tool_ops, m));
 	
 		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &flip_tool, m));
+		    mapview_reg_tool(mv, &flip_ops, m));
 
 		menu_action(pitem, _("Invert sprite color"), INVERT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &invert_tool, m));
+		    mapview_reg_tool(mv, &invert_ops, m));
 	}
 	
 	pane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);
@@ -2616,13 +2609,12 @@ map_edit(void *p)
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
 			event_new(tl, "tlist-poll", poll_art, "%p", world);
-			event_new(tl, "tlist-dblclick", select_art, "%p", mv);
-			event_new(tl, "tlist-changed", change_art, "%p", mv);
+			event_new(tl, "tlist-changed", select_art, "%p", mv);
 			mv->art_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		
 			tool_box = box_new(ntab, BOX_VERT, BOX_WFILL);
-			ins_tool = mapview_reg_tool(mv, &insert_tool, m);
+			ins_tool = mapview_reg_tool(mv, &insert_ops, m);
 			ins_tool->pane = (void *)tool_box;
 		}
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);

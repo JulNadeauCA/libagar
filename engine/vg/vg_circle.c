@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.22 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.23 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -105,19 +105,18 @@ static struct vg_vertex *cur_radius;
 static int seq;
 
 static void
-circle_tool_init(struct tool *t)
+circle_tool_init(void *p)
 {
-	tool_push_status(t, _("Specify the circle's center point."));
+	tool_push_status(p, _("Specify the circle's center point."));
 	seq = 0;
 	cur_circle = NULL;
 	cur_radius = NULL;
 }
 
 static int
-circle_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
-    int b)
+circle_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(p)->p;
 	double x, y;
 	
 	vg_map2vec(vg, xmap, ymap, &x, &y);
@@ -139,9 +138,9 @@ circle_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-circle_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+circle_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
@@ -173,17 +172,18 @@ finish:
 	return (1);
 }
 
-struct tool vg_circle_tool = {
-	N_("Circle"),
-	N_("Draw circles."),
-	VGCIRCLES_ICON, -1,
+const struct tool_ops vg_circle_tool = {
+	"Circles", N_("Draw circles."),
+	VGCIRCLES_ICON,
+	sizeof(struct tool),
 	0,
 	circle_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	circle_mousemotion,
 	circle_mousebuttondown,
 	NULL,			/* mousebuttonup */

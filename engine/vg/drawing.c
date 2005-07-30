@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.9 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.10 2005/06/17 08:37:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -181,13 +181,13 @@ rasterize_drawing(struct mapview *mv, void *p)
 struct window *
 drawing_edit(void *obj)
 {
-	extern const struct tool vg_scale_tool;
-	extern const struct tool vg_origin_tool;
-	extern const struct tool vg_point_tool;
-	extern const struct tool vg_line_tool;
-	extern const struct tool vg_circle_tool;
-	extern const struct tool vg_ellipse_tool;
-	extern const struct tool vg_text_tool;
+	extern const struct tool_ops vg_scale_tool;
+	extern const struct tool_ops vg_origin_tool;
+	extern const struct tool_ops vg_point_tool;
+	extern const struct tool_ops vg_line_tool;
+	extern const struct tool_ops vg_circle_tool;
+	extern const struct tool_ops vg_ellipse_tool;
+	extern const struct tool_ops vg_text_tool;
 	struct drawing *dwg = obj;
 	struct vg *vg = dwg->vg;
 	struct window *win;

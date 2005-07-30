@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.26 2005/06/17 04:33:49 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.27 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -335,7 +335,7 @@ vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 }
 
 const struct vg_element_ops vg_lines_ops = {
-	N_("Line segments"),
+	N_("Line"),
 	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
@@ -374,7 +374,16 @@ static struct vg_element *cur_line;
 static struct vg_vertex *cur_vtx;
 
 static void
-line_tool_init(struct tool *t)
+line_tool_init(void *t)
+{
+	tool_push_status(t, _("Specify first point."));
+	seq = 0;
+	cur_line = NULL;
+	cur_vtx = NULL;
+}
+
+static void
+line_tool_pane(void *t, void *con)
 {
 	static const char *mode_items[] = {
 		N_("Line segments"),
@@ -382,24 +391,17 @@ line_tool_init(struct tool *t)
 		N_("Line loop"),
 		NULL
 	};
-	struct window *win;
 	struct radio *rad;
 
-	win = tool_window(t, "vg-tool-line");
-	rad = radio_new(win, mode_items);
+	rad = radio_new(con, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
-	
-	tool_push_status(t, _("Specify first point."));
-	seq = 0;
-	cur_line = NULL;
-	cur_vtx = NULL;
 }
 
 static int
-line_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+line_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double x, y;
 	
 	vg_map2vec(vg, xmap, ymap, &x, &y);
@@ -415,9 +417,9 @@ line_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-line_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+line_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (mode) {
@@ -488,17 +490,18 @@ finish:
 	return (1);
 }
 
-struct tool vg_line_tool = {
-	N_("Lines and polylines"),
-	N_("Draw line segments, strips and loops."),
-	VGLINES_ICON, -1,
+const struct tool_ops vg_line_tool = {
+	"Lines", N_("Line segments, strips and loops."),
+	VGLINES_ICON,
+	sizeof(struct tool),
 	0,
 	line_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	line_tool_pane,
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	line_mousemotion,
 	line_mousebuttondown,
 	NULL,			/* mousebuttonup */

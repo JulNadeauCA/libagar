@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.5 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.6 2005/07/24 08:04:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -43,19 +43,17 @@
 #include <stdarg.h>
 
 void
-tool_init(struct tool *tool, struct mapview *mv)
+tool_init(struct tool *t)
 {
-	tool->win = NULL;
-	tool->pane = NULL;
-	tool->cursor_su = NULL;
-	tool->trigger = NULL;
-	tool->mv = mv;
-	tool->nstatus = 0;
-	SLIST_INIT(&tool->kbindings);
-	SLIST_INIT(&tool->mbindings);
+	t->nstatus = 0;
+	t->win = NULL;
+	t->pane = NULL;
+	t->trigger = NULL;
+	SLIST_INIT(&t->kbindings);
+	SLIST_INIT(&t->mbindings);
 
-	if (tool->init != NULL)
-		tool->init(tool);
+	if (t->ops->init != NULL)
+		t->ops->init(t);
 }
 
 void
@@ -94,8 +92,8 @@ tool_destroy(struct tool *tool)
 		nmbinding = SLIST_NEXT(mbinding, mbindings);
 		Free(mbinding, M_MAPEDIT);
 	}
-	if (tool->destroy != NULL)
-		tool->destroy(tool);
+	if (tool->ops->destroy != NULL)
+		tool->ops->destroy(tool);
 }
 
 static void
@@ -113,7 +111,7 @@ tool_window(void *p, const char *name)
 	struct window *win;
 
 	win = tool->win = window_new(0, NULL);
-	window_set_caption(win, _(tool->desc));
+	window_set_caption(win, _(tool->ops->desc));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	event_new(win, "window-close", close_tool_window, "%p", tool);
 	return (win);
@@ -168,8 +166,10 @@ tool_unbind_key(void *p, SDLMod keymod, SDLKey keysym)
 }
 
 void
-tool_update_status(struct tool *t)
+tool_update_status(void *p)
 {
+	struct tool *t = p;
+
 	if (t->nstatus > 0 && t->mv->status != NULL) {
 		widget_replace_surface(t->mv->status, t->mv->status->surface,
 		    text_render(NULL, -1, COLOR(TEXT_COLOR),
@@ -178,8 +178,9 @@ tool_update_status(struct tool *t)
 }
 
 void
-tool_push_status(struct tool *t, const char *fmt, ...)
+tool_push_status(void *p, const char *fmt, ...)
 {
+	struct tool *t = p;
 	va_list ap;
 
 	if (t->nstatus+1 >= TOOL_STATUS_MAX)
@@ -192,8 +193,10 @@ tool_push_status(struct tool *t, const char *fmt, ...)
 }
 
 void
-tool_pop_status(struct tool *t)
+tool_pop_status(void *p)
 {
+	struct tool *t = p;
+
 	if (t->nstatus == 1)
 		return;
 
