@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.19 2005/05/31 04:03:13 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.20 2005/05/31 11:14:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -249,6 +249,23 @@ close_menu(struct hsvpal *pal)
 }
 
 static void
+show_rgb(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+	Uint8 r, g, b;
+	float h, s, v;
+	
+	h = widget_get_float(pal, "hue");
+	s = widget_get_float(pal, "saturation");
+	v = widget_get_float(pal, "value");
+
+	prim_hsv2rgb(h, s, v, &r, &g, &b);
+
+	text_msg(MSG_INFO, "%.2f,%.2f,%.2f -> %u,%u,%u", h, s, v, r, g, b);
+}
+
+#if 0
+static void
 edit_values(int argc, union evarg *argv)
 {
 	struct hsvpal *pal = argv[1].p;
@@ -317,6 +334,7 @@ edit_values(int argc, union evarg *argv)
 	window_attach(pwin, win);
 	window_show(win);
 }
+#endif
 
 static void
 complementary(int argc, union evarg *argv)
@@ -361,11 +379,14 @@ open_menu(struct hsvpal *pal)
 
 	pal->menu_item = menu_add_item(pal->menu, NULL);
 	{
+#if 0
 		menu_action(pal->menu_item, _("Edit numerically"), -1,
 		    edit_values, "%p", pal);
 
 		menu_separator(pal->menu_item);
-
+#endif
+		menu_action(pal->menu_item, _("Show RGB value"), -1,
+		    show_rgb, "%p", pal);
 		menu_action(pal->menu_item, _("Complementary color"), -1,
 		    complementary, "%p", pal);
 		menu_action(pal->menu_item, _("Invert saturation"), -1,
