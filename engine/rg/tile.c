@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.73 2005/07/28 03:57:57 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.74 2005/07/29 03:13:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1757,15 +1757,6 @@ tile_redo(int argc, union evarg *argv)
 }
 
 static void
-regenerate_tile(int argc, union evarg *argv)
-{
-	struct tileview *tv = argv[1].p;
-	struct tile *t = tv->tile;
-
-	t->flags |= TILE_DIRTY;
-}
-
-static void
 export_image(int argc, union evarg *argv)
 {
 	struct tile *t = argv[1].p;
@@ -1965,16 +1956,13 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	mi = menu_add_item(me, ("File"));
 	{
+		objmgr_generic_menu(mi, ts);
+	
 		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
 		    export_image_dlg, "%p,%p", win, tv);
 		
 		menu_separator(mi);
 		
-		menu_action(mi, _("Regenerate tile"), RG_PIXMAP_ICON,
-		    regenerate_tile, "%p", tv);
-
-		menu_separator(mi);
-
 		menu_action_kb(mi, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    window_generic_close, "%p", win);

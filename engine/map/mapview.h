@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.16 2005/07/25 03:49:34 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.17 2005/07/25 10:14:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -30,13 +30,12 @@ struct mapview {
 	int flags;
 #define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_GRID		0x002	/* Display the grid */
-#define MAPVIEW_PROPS		0x004	/* Display node properties */
-#define MAPVIEW_CENTER		0x008	/* Request initial centering */
-#define MAPVIEW_NO_CURSOR	0x010	/* Disable the cursor */
-#define MAPVIEW_NO_BMPZOOM	0x020	/* Disable bitmap scaling */
-#define MAPVIEW_NO_BG		0x040	/* Disable background tiles */ 
-#define MAPVIEW_NO_NODESEL	0x080	/* Disable node selections */
-#define MAPVIEW_SET_ATTRS	0x100	/* Setting node attributes */
+#define MAPVIEW_CENTER		0x004	/* Request initial centering */
+#define MAPVIEW_NO_CURSOR	0x008	/* Disable the cursor */
+#define MAPVIEW_NO_BMPZOOM	0x010	/* Disable bitmap scaling */
+#define MAPVIEW_NO_BG		0x020	/* Disable background tiles */ 
+#define MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
+#define MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
 
 	enum mapview_mode {
 		MAPVIEW_NORMAL,		/* Default edition mode */
@@ -165,6 +164,8 @@ void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
 void	 mapview_status(struct mapview *, const char *, ...);
 
 #ifdef EDITION
+void mapview_undo(struct mapview *);
+void mapview_redo(struct mapview *);
 struct tool *mapview_reg_tool(struct mapview *, const struct tool *, void *);
 __inline__ struct tool *mapview_find_tool(struct mapview *, const char *);
 void mapview_set_default_tool(struct mapview *, struct tool *);

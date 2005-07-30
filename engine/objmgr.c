@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.31 2005/07/19 03:57:14 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.32 2005/07/19 04:02:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -289,6 +289,27 @@ export_object(int argc, union evarg *argv)
 		object_free_data(ob);
 }
 
+void
+objmgr_save_to(void *p)
+{
+	struct object *ob = p;
+	char path[FILENAME_MAX];
+	struct window *win;
+	struct AGFileDlg *fdg;
+
+	strlcpy(path, ob->name, sizeof(path));
+	strlcat(path, ".", sizeof(path));
+	strlcat(path, ob->type, sizeof(path));
+
+	win = window_new(0, NULL);
+	window_set_caption(win, _("Save %s to..."), ob->name);
+	fdg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), path);
+	event_new(fdg, "file-validated", export_object, "%p,%p", ob, win);
+	event_new(fdg, "file-cancelled", window_generic_detach, "%p", win);
+
+	window_show(win);
+}
+
 static void
 obj_op(int argc, union evarg *argv)
 {
@@ -346,25 +367,7 @@ obj_op(int argc, union evarg *argv)
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				char path[FILENAME_MAX];
-				struct window *win;
-				struct AGFileDlg *fdg;
-
-				strlcpy(path, ob->name, sizeof(path));
-				strlcat(path, ".", sizeof(path));
-				strlcat(path, ob->type, sizeof(path));
-
-				win = window_new(0, NULL);
-				window_set_caption(win, _("Export %s to..."),
-				    ob->name);
-				fdg = file_dlg_new(win, 0,
-				    prop_get_string(config, "save-path"), path);
-				event_new(fdg, "file-validated",
-				    export_object, "%p,%p", ob, win);
-				event_new(fdg, "file-cancelled",
-				    window_generic_detach, "%p", win);
-
-				window_show(win);
+				objmgr_save_to(ob);
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -483,6 +486,35 @@ obj_op(int argc, union evarg *argv)
 #endif /* NETWORK */
 		}
 	}
+}
+
+static void
+generic_save(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+
+	if (object_save(ob) == -1) {
+		text_msg(MSG_ERROR, _("Save failed: %s: %s"), ob->name,
+		    error_get());
+	} else {
+		text_tmsg(MSG_INFO, 1000, _("Object `%s' saved successfully."),
+		    ob->name);
+	}
+}
+
+static void
+generic_save_to(int argc, union evarg *argv)
+{
+	objmgr_save_to(argv[1].p);
+}
+
+void
+objmgr_generic_menu(void *menup, void *obj)
+{
+	struct AGMenuItem *pitem = menup;
+
+	menu_action(pitem, _("Save"), -1, generic_save, "%p", obj);
+	menu_action(pitem, _("Save to..."), -1, generic_save_to, "%p", obj);
 }
 
 /* Display the object tree. */
@@ -803,7 +835,7 @@ objmgr_window(void)
 			    "%p, %i", objs_tl, OBJEDIT_LOAD);
 			menu_action(mi, _("Save"), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_SAVE);
-			menu_action(mi, _("Export to..."), OBJSAVE_ICON, obj_op,
+			menu_action(mi, _("Save to..."), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
 
 #ifdef NETWORK

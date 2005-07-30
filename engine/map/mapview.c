@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.33 2005/07/28 03:33:58 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.34 2005/07/29 06:25:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -138,6 +138,16 @@ mapview_vline(struct mapview *mv, int x, int y1, int y2)
 }
 
 #ifdef EDITION
+
+void
+mapview_undo(struct mapview *mv)
+{
+}
+
+void
+mapview_redo(struct mapview *mv)
+{
+}
 
 void
 mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
@@ -599,7 +609,7 @@ mapview_draw(void *p)
 		center_to_origin(mv);
 	}
 
-	if (mapview_bg && (mv->flags & MAPVIEW_NO_BG) == 0) {
+	if ((mv->flags & MAPVIEW_NO_BG) == 0) {
 		SDL_Rect rtiling;
 
 		rtiling.x = 0;
@@ -650,8 +660,7 @@ draw_layer:
 				    mv->cam);
 			
 				if ((nref->layer == m->cur_layer) &&
-				    (mv->mode == MAPVIEW_EDIT_ATTRS ||
-				     mv->flags & MAPVIEW_PROPS)) {
+				    (mv->mode == MAPVIEW_EDIT_ATTRS)) {
 					Uint8 c[4];
 
 					noderef_attr_color(mv->edit_attr,
@@ -1323,13 +1332,6 @@ key_down(int argc, union evarg *argv)
 		break;
 	case SDLK_o:
 		center_to_origin(mv);
-		break;
-	case SDLK_p:
-		if (mv->flags & MAPVIEW_PROPS) {
-			mv->flags &= ~(MAPVIEW_PROPS);
-		} else {
-			mv->flags |= MAPVIEW_PROPS;
-		}
 		break;
 	case SDLK_g:
 		if (mv->flags & MAPVIEW_GRID) {
