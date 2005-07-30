@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.22 2005/06/10 05:42:56 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.23 2005/07/16 16:07:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -333,7 +333,7 @@ menu_view_draw(void *p)
 
 				SDL_GetRGB(COLOR(MENU_OPTION_COLOR), vfmt,
 				    &c[0], &c[1], &c[2]);
-				c[3] = 128;
+				c[3] = 64;
 				primitives.frame(mview, x, y+2,
 				    m->itemh, m->itemh-2,
 				    COLOR(MENU_OPTION_COLOR));
