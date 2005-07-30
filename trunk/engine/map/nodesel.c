@@ -1,4 +1,4 @@
-/*	$Csoft: nodesel.c,v 1.3 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: nodesel.c,v 1.4 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -298,35 +298,35 @@ nodesel_cut(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static void
-nodesel_init(struct tool *t)
+nodesel_init(void *p)
 {
-	tool_bind_key(t, KMOD_CTRL, SDLK_c, nodesel_copy, NULL);
-	tool_bind_key(t, KMOD_CTRL, SDLK_v, nodesel_paste, NULL);
-	tool_bind_key(t, KMOD_CTRL, SDLK_x, nodesel_cut, NULL);
-	tool_bind_key(t, KMOD_CTRL, SDLK_k, nodesel_kill, NULL);
+	tool_bind_key(p, KMOD_CTRL, SDLK_c, nodesel_copy, NULL);
+	tool_bind_key(p, KMOD_CTRL, SDLK_v, nodesel_paste, NULL);
+	tool_bind_key(p, KMOD_CTRL, SDLK_x, nodesel_cut, NULL);
+	tool_bind_key(p, KMOD_CTRL, SDLK_k, nodesel_kill, NULL);
 	
-	tool_push_status(t,
+	tool_push_status(p,
 	    _("Select a rectangle of nodes with $(L). Drag to displace node "
 	       "elements."));
 }
 
-const struct tool nodesel_tool = {
-	"nodesel",
-	N_("Select node(s)"),
-	SELECT_NODE_ICON, 0,
+const struct tool_ops nodesel_ops = {
+	"Nodesel", N_("Select node(s)"),
+	SELECT_NODE_ICON,
+	sizeof(struct tool),
 	0,
 	nodesel_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL,			/* keyup */
-	NULL			/* pane */
+	NULL			/* keyup */
 };
 
 #endif /* MAP */

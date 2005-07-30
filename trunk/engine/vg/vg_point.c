@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.20 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.21 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -94,16 +94,16 @@ const struct vg_element_ops vg_points_ops = {
 
 #ifdef EDITION
 static void
-point_tool_init(struct tool *t)
+point_tool_init(void *t)
 {
 	tool_push_status(t, _("Specify the point location."));
 }
 
 static int
-point_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+point_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	
 	vg_map2vec(vg, xmap, ymap, &vg->origin[1].x, &vg->origin[1].y);
 	vg->redraw++;
@@ -111,9 +111,9 @@ point_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-point_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+point_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	vg_begin_element(vg, VG_POINTS);
@@ -123,17 +123,18 @@ point_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 	return (1);
 }
 
-struct tool vg_point_tool = {
-	N_("Point"),
-	N_("Trace an individual point."),
-	VGPOINTS_ICON, -1,
+const struct tool_ops vg_point_tool = {
+	N_("Point"), N_("Trace an individual point."),
+	VGPOINTS_ICON,
+	sizeof(struct tool),
 	0,
 	point_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	point_mousemotion,
 	point_mousebuttondown,
 	NULL,			/* mousebuttonup */

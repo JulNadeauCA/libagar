@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.5 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.6 2005/07/24 08:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,15 +36,15 @@
 #include "mapedit.h"
 
 static void
-invert_init(struct tool *t)
+invert_init(void *p)
 {
-	tool_push_status(t, _("Specify element and $(L) to invert."));
+	tool_push_status(p, _("Specify element and $(L) to invert."));
 }
 
 static int
-invert_effect(struct tool *t, struct node *n)
+invert_effect(void *p, struct node *n)
 {
-	struct map *m = t->mv->map;
+	struct map *m = TOOL(p)->mv->map;
 	struct noderef *nref;
 	struct transform *trans;
 	
@@ -73,23 +73,23 @@ invert_effect(struct tool *t, struct node *n)
 	return (1);
 }
 
-const struct tool invert_tool = {
-	"invert",
-	N_("Invert sprite color"),
-	INVERT_TOOL_ICON, INVERT_TOOL_ICON,
+const struct tool_ops invert_ops = {
+	"Invert", N_("Invert sprite color"),
+	INVERT_TOOL_ICON,
+	sizeof(struct tool),
 	0,
 	invert_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	invert_effect,
+	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL,			/* keyup */
-	NULL			/* pane */
+	NULL			/* keyup */
 };
 
 #endif /* MAP */

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.14 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.15 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -140,23 +140,25 @@ vg_draw_origin(struct vg *vg)
 static int norigin = 0;
 
 static void
-origin_tool_init(struct tool *t)
+origin_tool_init(void *t)
 {
-	struct window *win;
-	struct spinbutton *sbu;
-
-	win = tool_window(t, "vg-tool-origin");
-	sbu = spinbutton_new(win, _("Origin#: "));
-	widget_bind(sbu, "value", WIDGET_INT, &norigin);
-	spinbutton_set_range(sbu, 0, VG_NORIGINS-1);
-
 	tool_push_status(t, _("Specify origin point."));
 }
 
-static int
-origin_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+static void
+origin_tool_pane(void *t, void *con)
 {
-	struct vg *vg = t->p;
+	struct spinbutton *sbu;
+
+	sbu = spinbutton_new(con, _("Origin#: "));
+	widget_bind(sbu, "value", WIDGET_INT, &norigin);
+	spinbutton_set_range(sbu, 0, VG_NORIGINS-1);
+}
+
+static int
+origin_mousebuttondown(void *t, int xmap, int ymap, int btn)
+{
+	struct vg *vg = TOOL(t)->p;
 	double x, y;
 
 	if (btn == 1) {
@@ -168,10 +170,10 @@ origin_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
 }
 
 static int
-origin_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+origin_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double x, y;
 
 	if (btn & SDL_BUTTON(1)) {
@@ -182,17 +184,18 @@ origin_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 	return (1);
 }
 
-struct tool vg_origin_tool = {
-	N_("Origin"),
-	N_("Displace the origin point."),
-	VGORIGIN_ICON, -1,
+const struct tool_ops vg_origin_tool = {
+	"Origin", N_("Displace the origin point."),
+	VGORIGIN_ICON,
+	sizeof(struct tool),
 	0,
 	origin_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+	
 	origin_mousemotion,
 	origin_mousebuttondown,
 	NULL,			/* mousebuttonup */

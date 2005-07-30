@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.5 2005/06/16 05:20:03 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.6 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -175,10 +175,8 @@ static struct vg_element *cur_polygon;
 static struct vg_vertex *cur_vtx;
 
 static void
-init_tool(struct tool *t)
+init_tool(void *t)
 {
-	struct radio *rad;
-
 	tool_push_status(t, _("Specify first point."));
 	seq = 0;
 	cur_polygon = NULL;
@@ -186,10 +184,10 @@ init_tool(struct tool *t)
 }
 
 static int
-polygon_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
+polygon_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double x, y;
 	
 	vg_map2vec(vg, xmap, ymap, &x, &y);
@@ -205,9 +203,9 @@ polygon_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-polygon_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+polygon_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	if (btn == SDL_BUTTON_LEFT) {
@@ -248,17 +246,18 @@ finish:
 	return (1);
 }
 
-struct tool vg_polygon_tool = {
-	N_("Polygon"),
-	N_("Draw filled polygons."),
-	RG_POLYGON_ICON, -1,
+const struct tool_ops vg_polygon_tool = {
+	"Polygon", N_("Draw filled polygons."),
+	RG_POLYGON_ICON,
+	sizeof(struct tool),
 	0,
 	init_tool,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	polygon_mousemotion,
 	polygon_mousebuttondown,
 	NULL,			/* mousebuttonup */

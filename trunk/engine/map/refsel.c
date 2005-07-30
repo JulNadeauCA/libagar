@@ -1,4 +1,4 @@
-/*	$Csoft: refsel.c,v 1.4 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: refsel.c,v 1.5 2005/07/25 10:44:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -99,30 +99,30 @@ refsel_delete(struct mapview *mv)
 }
 
 static void
-refsel_init(struct tool *t)
+refsel_init(void *p)
 {
-	tool_push_status(t,
+	tool_push_status(p,
 	    _("Select an element with $(L). Hold $(C) to select "
 	      "multiple elements."));
 }
 
-const struct tool refsel_tool = {
-	"refsel",
-	N_("Select Node Elements"),
-	SELECT_REF_ICON, 0,
+const struct tool_ops refsel_ops = {
+	"Refsel", N_("Select Node Elements"),
+	SELECT_REF_ICON,
+	sizeof(struct tool),
 	0,
 	refsel_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
-	NULL,			/* keyup */
-	NULL			/* pane */
+	NULL			/* keyup */
 };
 
 #endif /* MAP */

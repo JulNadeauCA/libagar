@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.17 2005/07/25 10:14:24 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.18 2005/07/30 01:43:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -136,7 +136,6 @@ struct node;
 #define MV_ZOOM(mv) MV_CAM(mv).zoom
 #define MV_TILESZ(mv) MV_CAM(mv).tilesz
 #define MV_PIXSZ(mv) MV_CAM(mv).pixsz
-#define MV_TOOL(mv,p) ((mv)->curtool != NULL && (mv)->curtool->orig == (p))
 
 __BEGIN_DECLS
 struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,
@@ -166,7 +165,8 @@ void	 mapview_status(struct mapview *, const char *, ...);
 #ifdef EDITION
 void mapview_undo(struct mapview *);
 void mapview_redo(struct mapview *);
-struct tool *mapview_reg_tool(struct mapview *, const struct tool *, void *);
+struct tool *mapview_reg_tool(struct mapview *, const struct tool_ops *,
+                              void *);
 __inline__ struct tool *mapview_find_tool(struct mapview *, const char *);
 void mapview_set_default_tool(struct mapview *, struct tool *);
 void mapview_select_tool(struct mapview *, struct tool *, void *);

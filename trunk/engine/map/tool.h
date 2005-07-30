@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.6 2005/07/23 17:54:20 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.7 2005/07/24 06:55:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -11,39 +11,41 @@ struct mapview;
 struct tool_kbinding;
 struct tool_mbinding;
 
-struct tool {
+struct tool_ops {
 	const char *name;
 	const char *desc;
 	int icon;
-	int cursor_index;		/* Static cursor (or -1) */
+
+	size_t len;
 	int flags;
 #define TOOL_HIDDEN	0x01		/* Don't include in toolbars/menus */
 
-	void (*init)(struct tool *);
-	void (*destroy)(struct tool *);
-	int (*load)(struct tool *, struct netbuf *);
-	int (*save)(struct tool *, struct netbuf *);
-	int (*cursor)(struct tool *, SDL_Rect *);
-	int (*effect)(struct tool *, struct node *);
-	int (*mousemotion)(struct tool *, int x, int y, int xrel, int yrel,
-	                   int btn);
-	int (*mousebuttondown)(struct tool *, int x, int y, int btn);
-	int (*mousebuttonup)(struct tool *, int x, int y, int btn);
-	int (*keydown)(struct tool *, int ksym, int kmod);
-	int (*keyup)(struct tool *, int ksym, int kmod);
-	void (*edit_pane)(struct tool *, void *);
-	
+	void (*init)(void *);
+	void (*destroy)(void *);
+	void (*edit_pane)(void *, void *);
+	void (*edit)(void *);
+	int (*cursor)(void *, SDL_Rect *);
+	int (*effect)(void *, struct node *);
+	int (*mousemotion)(void *, int x, int y, int xrel, int yrel, int btn);
+	int (*mousebuttondown)(void *, int x, int y, int btn);
+	int (*mousebuttonup)(void *, int x, int y, int btn);
+	int (*keydown)(void *, int ksym, int kmod);
+	int (*keyup)(void *, int ksym, int kmod);
+};
+
+struct tool {
+	const struct tool_ops *ops;
+
+	struct mapview *mv;			/* Associated view */
+	void *p;				/* User-supplied pointer */
 	char *status[TOOL_STATUS_MAX];		/* Status message stack */
 	int nstatus;
-	struct mapview *mv;			/* Associated mapview */
-	void *p;				/* User-supplied pointer */
-	SDL_Surface *cursor_su;			/* Static cursor surface */
+	struct window *win;			/* Edition window (if any) */
+	struct widget *pane;			/* Edition pane (if any) */
+	struct button *trigger;			/* Trigger button (XXX) */
+
 	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
 	SLIST_HEAD(,tool_mbinding) mbindings;	/* Mouse button bindings */
-	struct window *win;
-	struct widget *pane;
-	struct button *trigger;
-	const struct tool *orig;
 	TAILQ_ENTRY(tool) tools;
 };
 
@@ -64,8 +66,10 @@ struct tool_mbinding {
 	SLIST_ENTRY(tool_mbinding) mbindings;
 };
 
+#define TOOL(t) ((struct tool *)(t))
+
 __BEGIN_DECLS
-void		 tool_init(struct tool *, struct mapview *);
+void		 tool_init(struct tool *);
 void		 tool_destroy(struct tool *);
 struct window	*tool_window(void *, const char *);
 
@@ -76,9 +80,9 @@ void tool_bind_mousebutton(void *, int,
 			   void *);
 void tool_unbind_key(void *, SDLMod, SDLKey);
 
-void tool_push_status(struct tool *, const char *, ...);
-void tool_pop_status(struct tool *);
-void tool_update_status(struct tool *);
+void tool_push_status(void *, const char *, ...);
+void tool_pop_status(void *);
+void tool_update_status(void *);
 __END_DECLS
 
 #include "close_code.h"

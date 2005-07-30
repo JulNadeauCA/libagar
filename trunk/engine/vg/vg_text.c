@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.20 2005/06/17 08:37:52 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.21 2005/06/30 06:26:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -431,25 +431,27 @@ string_changed(int argc, union evarg *argv)
 }
 
 static void
-text_tool_init(struct tool *t)
+text_tool_init(void *t)
 {
-	struct window *win;
-	struct combo *com;
-	struct textbox *tb;
-	struct tlist_item *it;
-	
 	cur_text = NULL;
 	cur_vtx = NULL;
 	cur_align = VG_ALIGN_TL;
 	cur_string[0] = '\0';
+}
+
+static void
+text_tool_pane(void *t, void *con)
+{
+	struct combo *com;
+	struct textbox *tb;
+	struct tlist_item *it;
 	
-	win = tool_window(t, "vg-tool-text");
-	tb = textbox_new(win, _("Text: "));
+	tb = textbox_new(con, _("Text: "));
 	widget_bind(tb, "string", WIDGET_STRING, cur_string,
 	    sizeof(cur_string));
 	event_new(tb, "textbox-postchg", string_changed, "%p", t);
 
-	com = combo_new(win, 0, _("Alignment: "));
+	com = combo_new(con, 0, _("Alignment: "));
 	it = tlist_insert_item(com->list, ICON(VGTL_ICON), _("Top/left"), "TL");
 	tlist_insert_item(com->list, ICON(VGTC_ICON), _("Top/center"), "TC");
 	tlist_insert_item(com->list, ICON(VGTR_ICON), _("Top/right"), "TR");
@@ -464,10 +466,9 @@ text_tool_init(struct tool *t)
 }
 
 static int
-text_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
-    int btn)
+text_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double x, y;
 	
 	vg_map2vec(vg, xmap, ymap, &x, &y);
@@ -488,9 +489,9 @@ text_mousemotion(struct tool *t, int xmap, int ymap, int xrel, int yrel,
 }
 
 static int
-text_mousebuttondown(struct tool *t, int xmap, int ymap, int btn)
+text_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = t->p;
+	struct vg *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
@@ -517,17 +518,18 @@ finish:
 	return (1);
 }
 
-struct tool vg_text_tool = {
-	N_("Text"),
-	N_("Insert text labels."),
-	VGTEXT_ICON, -1,
+const struct tool_ops vg_text_tool = {
+	"Text", N_("Insert text labels."),
+	VGTEXT_ICON,
+	sizeof(struct tool),
 	0,
 	text_tool_init,
 	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
+	NULL,			/* pane */
+	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
+
 	text_mousemotion,
 	text_mousebuttondown,
 	NULL,			/* mousebuttonup */
