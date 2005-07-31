@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.5 2005/07/27 06:34:45 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.6 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -188,6 +188,7 @@ insert_effect(void *p, struct node *n)
 				struct node *dn = &m->map[dy][dx];
 				int dx = su->w - sx;
 				int dy = su->h - sy;
+				int nlayer;
 			
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
@@ -196,12 +197,21 @@ insert_effect(void *p, struct node *n)
 				r->r_gfx.rs.y = sy;
 				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
 				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
-				r->flags |= spr->attrs[n++];
-			
+				r->flags |= spr->attrs[n];
+				nlayer = m->cur_layer + spr->layers[n];
+				if (nlayer < 0) {
+					nlayer = 0;
+				}
+				if (nlayer >= m->nlayers) {
+					map_push_layer(m, "");
+				}
+				r->layer = nlayer;
+
 				if (ins->replace_mode) {
 					node_clear(m, dn, m->cur_layer);
 				}
 				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
+				n++;
 			}
 		}
 	}
