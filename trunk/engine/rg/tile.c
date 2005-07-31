@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.74 2005/07/29 03:13:56 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.75 2005/07/30 01:43:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -156,9 +156,6 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 
 	nw = w/TILESZ + 1;
 	nh = h/TILESZ + 1;
-//	if (nw%TILESZ > 0) nw++;
-//	if (nh%TILESZ > 0) nh++;
-
 	t->attrs = Realloc(t->attrs, nw*nh*sizeof(u_int));
 	t->layers = Realloc(t->layers , nw*nh*sizeof(int));
 	memset(t->attrs, 0, nw*nh*sizeof(u_int));
@@ -180,16 +177,14 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 	t->nw = nw;
 	t->nh = nh;
 
-	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 	if (flags & TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
+	if (flags & TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
 
 	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
-	if (t->su == NULL) {
+	if (t->su == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-	}
-	t->su->format->alpha = alpha;
 
 	if (t->s == -1) {
 		t->s = gfx_insert_sprite(OBJECT(ts)->gfx, t->su);
@@ -223,6 +218,8 @@ tile_generate(struct tile *t)
 	struct tile_pixmap *tpx;
 	SDL_Rect rd, sd;
 	struct sprite *spr;
+	
+	SDL_SetAlpha(t->su, SDL_SRCALPHA, t->ts->fmt->alpha);
 
 	/* TODO check for opaque fill features/pixmaps first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
@@ -258,6 +255,36 @@ tile_generate(struct tile *t)
 			sketch_render(t, tel);
 			break;
 		}
+	}
+
+	if ((t->flags & TILE_SRCALPHA) == 0 &&
+	    (t->flags & TILE_SRCCOLORKEY)) {
+		SDL_Surface *su = t->su;
+		u_int i, size = su->w*su->h;
+		Uint8 *p = su->pixels;
+		Uint8 r, g, b, a;
+
+		SDL_LockSurface(su);
+		for (i = 0; i < size; i++) {
+			SDL_GetRGBA(GET_PIXEL(su,p), su->format,
+			    &r, &g, &b, &a);
+			if (a == 0) {
+				PUT_PIXEL(su, p, su->format->colorkey);
+			} else {
+				PUT_PIXEL(su, p,
+				    SDL_MapRGBA(su->format, r, g, b, a));
+			}
+			p += su->format->BytesPerPixel;
+		}
+		SDL_UnlockSurface(su);
+		
+		SDL_SetAlpha(t->su, 0, 0);
+		SDL_SetColorKey(t->su, SDL_SRCCOLORKEY, t->ts->fmt->colorkey);
+	} else if ((t->flags & (TILE_SRCCOLORKEY|TILE_SRCALPHA)) == 0) {
+		SDL_SetAlpha(t->su, 0, 0);
+		SDL_SetColorKey(t->su, 0, 0);
+	} else {
+		SDL_SetColorKey(t->su, SDL_SRCCOLORKEY, t->ts->fmt->colorkey);
 	}
 
 	spr = &SPRITE(t->ts,t->s);
