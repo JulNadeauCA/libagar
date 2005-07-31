@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.51 2005/07/23 17:51:05 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.52 2005/07/29 03:13:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -744,10 +744,10 @@ poll_tiles(int argc, union evarg *argv)
 static char ins_tile_name[TILE_NAME_MAX];
 static char ins_texture_name[TEXTURE_NAME_MAX];
 static char ins_anim_name[TILE_NAME_MAX];
-static int ins_tile_w = 32;
-static int ins_tile_h = 32;
-static int ins_alpha = 1;
-static int ins_colorkey = 0;
+static int ins_tile_w = TILESZ;
+static int ins_tile_h = TILESZ;
+static int ins_alpha = 0;
+static int ins_colorkey = 1;
 static enum gfx_snap_mode ins_snap_mode = GFX_SNAP_NOT;
 
 static void
