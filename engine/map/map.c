@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.39 2005/07/30 01:43:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.40 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2292,6 +2292,39 @@ delete_layer(int argc, union evarg *argv)
 }
 
 static void
+clear_layer(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct map_layer *lay = it->p1;
+	int i, x, y, nlayer;
+	
+	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
+		if (&m->layers[nlayer] == lay)
+			break;
+	}
+	
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *r, *nr;
+
+			for (r = TAILQ_FIRST(&node->nrefs);
+			     r != TAILQ_END(&node->nrefs);
+			     r = nr) {
+				nr = TAILQ_NEXT(r, nrefs);
+				if (r->layer == nlayer) {
+					TAILQ_REMOVE(&node->nrefs, r, nrefs);
+					noderef_destroy(m, r);
+					Free(r, M_MAP_NODEREF);
+				}
+			}
+		}
+	}
+}
+
+static void
 move_layer(int argc, union evarg *argv)
 {
 	char tmp[MAP_LAYER_NAME_MAX];
@@ -2644,6 +2677,10 @@ map_edit(void *p)
 			
 				menu_action(mi, _("Delete layer"),
 				    ERASER_TOOL_ICON, delete_layer,
+				    "%p,%p", mv->layers_tl, m); 
+				
+				menu_action(mi, _("Clear layer"),
+				    ERASER_TOOL_ICON, clear_layer,
 				    "%p,%p", mv->layers_tl, m); 
 				
 				menu_separator(mi);
