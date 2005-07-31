@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.35 2005/07/30 01:43:13 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.36 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -443,7 +443,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->col.r = 255;
 	mv->col.g = 255;
 	mv->col.b = 255;
-	mv->col.a = 64;
+	mv->col.a = 32;
 	mv->col.pixval = SDL_MapRGB(vfmt, 255, 255, 255);
 	
 	pthread_mutex_lock(&m->lock);
