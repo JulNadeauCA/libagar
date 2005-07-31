@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.6 2005/07/24 08:04:05 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.7 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -67,6 +67,7 @@ tool_destroy(struct tool *tool)
 		view_detach(tool->win);
 	
 	if (tool->pane != NULL) {
+		struct window *pwin;
 		struct widget *wt;
 
 		OBJECT_FOREACH_CHILD(wt, tool->pane, widget) {
@@ -74,7 +75,8 @@ tool_destroy(struct tool *tool)
 			object_destroy(wt);
 			Free(wt, M_OBJECT);
 		}
-		WINDOW_UPDATE(widget_parent_window(tool->pane));
+		if ((pwin = widget_parent_window(tool->pane)) != NULL)
+			WINDOW_UPDATE(pwin);
 	}
 	
 	for (i = 0; i < tool->nstatus; i++)
