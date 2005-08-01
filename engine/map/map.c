@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.40 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.41 2005/07/31 03:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2602,6 +2602,10 @@ map_edit(void *p)
 		    &mv->flags, MAPVIEW_NO_BG, 1);
 		menu_int_bool(pitem, _("Animate background"), GRID_ICON,
 		    &mapview_bg_moving, 0);
+#ifdef DEBUG
+		menu_int_flags(pitem, _("Show element offsets"), GRID_ICON,
+		    &mv->flags, MAPVIEW_SHOW_OFFSETS, 0);
+#endif
 	}
 	
 	pitem = menu_add_item(menu, _("Tools"));
