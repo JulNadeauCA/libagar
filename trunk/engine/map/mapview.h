@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.18 2005/07/30 01:43:13 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.19 2005/07/30 05:01:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -36,6 +36,7 @@ struct mapview {
 #define MAPVIEW_NO_BG		0x020	/* Disable background tiles */ 
 #define MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
 #define MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
+#define MAPVIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
 
 	enum mapview_mode {
 		MAPVIEW_NORMAL,		/* Default edition mode */

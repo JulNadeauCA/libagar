@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.36 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.37 2005/07/31 03:23:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -648,7 +648,20 @@ draw_layer:
 				    WIDGET(mv)->cx + rx,
 				    WIDGET(mv)->cy + ry,
 				    mv->cam);
-			
+
+#ifdef DEBUG
+				if (mv->flags & MAPVIEW_SHOW_OFFSETS) {
+					primitives.line(mv, rx, ry,
+					    (rx+nref->r_gfx.xcenter +
+					     nref->r_gfx.xmotion -
+					     nref->r_gfx.xorigin),
+					    (ry+nref->r_gfx.ycenter +
+					     nref->r_gfx.ymotion -
+					     nref->r_gfx.yorigin),
+					     COLOR(MAPVIEW_RSEL_COLOR));
+				}
+#endif /* DEBUG */
+
 				if ((nref->layer == m->cur_layer) &&
 				    (mv->mode == MAPVIEW_EDIT_ATTRS)) {
 					Uint8 c[4];

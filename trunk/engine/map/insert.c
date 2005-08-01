@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.6 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.7 2005/07/31 03:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -118,8 +118,6 @@ init_gfx_ref(struct insert_tool *ins, struct mapview *mv, struct noderef *r,
 	r->layer = m->cur_layer;
 	r->r_gfx.xcenter = 0;
 	r->r_gfx.ycenter = 0;
-	r->r_gfx.xorigin = spr->xOrig;
-	r->r_gfx.yorigin = spr->yOrig;
 
 	switch (ins->snap_mode) {
 	case GFX_SNAP_NOT:
@@ -169,6 +167,7 @@ insert_effect(void *p, struct node *n)
 		struct sprite *spr;
 		SDL_Surface *su;
 		int sx, sy, dx, dy;
+		int dx0, dy0, xorig, yorig;
 		int n = 0;
 
 		if (mv->art_tl == NULL ||
@@ -179,10 +178,15 @@ insert_effect(void *p, struct node *n)
 		spr = it->p1;
 		su = spr->su;
 
-		for (sy = 0, dy = mv->cy;
+		dx0 = mv->cx - spr->xOrig/TILESZ;
+		dy0 = mv->cy - spr->yOrig/TILESZ;
+		xorig = spr->xOrig%TILESZ;
+		yorig = spr->yOrig%TILESZ;
+
+		for (sy = 0, dy = dy0;
 		     sy < su->h && dy < m->maph;
 		     sy += TILESZ, dy++) {
-			for (sx = 0, dx = mv->cx;
+			for (sx = 0, dx = dx0;
 			     sx < su->w && dx < m->mapw;
 			     sx += TILESZ, dx++) {
 				struct node *dn = &m->map[dy][dx];
@@ -197,7 +201,10 @@ insert_effect(void *p, struct node *n)
 				r->r_gfx.rs.y = sy;
 				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
 				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
+				r->r_gfx.xorigin = xorig;
+				r->r_gfx.yorigin = yorig;
 				r->flags |= spr->attrs[n];
+
 				nlayer = m->cur_layer + spr->layers[n];
 				if (nlayer < 0) {
 					nlayer = 0;
@@ -264,6 +271,8 @@ insert_cursor(void *p, SDL_Rect *rd)
 			struct transform *trans;
 
 			init_gfx_ref(ins, mv, &rtmp, spr);
+			rtmp.r_gfx.xorigin = spr->xOrig;
+			rtmp.r_gfx.yorigin = spr->yOrig;
 			primitives.rect_outlined(mv, rd->x+1, rd->y+1,
 			    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
 			    COLOR(MAPVIEW_GRID_COLOR));
