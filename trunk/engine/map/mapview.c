@@ -581,6 +581,7 @@ mapview_draw(void *p)
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 	SDL_Rect rExtent;
+	int xoffs, yoffs;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLenum blend_sfactor;
@@ -624,17 +625,21 @@ mapview_draw(void *p)
 	}
 #endif
 	pthread_mutex_lock(&m->lock);
+
+	xoffs = mv->xoffs - MV_TILESZ(mv);
+	yoffs = mv->yoffs - MV_TILESZ(mv);
+
 	if (m->map == NULL)
 		goto out;
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = mv->my, ry = mv->yoffs;
+	for (my = mv->my, ry = yoffs;
 	     ((my - mv->my) <= mv->mh) && (my < m->maph);
 	     my++, ry += MV_TILESZ(mv)) {
 
-		for (mx = mv->mx, rx = mv->xoffs;
+		for (mx = mv->mx, rx = xoffs;
 	     	     ((mx - mv->mx) <= mv->mw) && (mx < m->mapw);
 		     mx++, rx += MV_TILESZ(mv)) {
 
@@ -883,8 +888,8 @@ mapview_set_scale(struct mapview *mv, u_int zoom, int adj_offs)
 	if (MV_TILESZ(mv) > MAP_MAX_TILESZ)
 		MV_TILESZ(mv) = MAP_MAX_TILESZ;
 
-	mv->mw = WIDGET(mv)->w/MV_TILESZ(mv) + 1;
-	mv->mh = WIDGET(mv)->h/MV_TILESZ(mv) + 1;
+	mv->mw = WIDGET(mv)->w/MV_TILESZ(mv) + 2;
+	mv->mh = WIDGET(mv)->h/MV_TILESZ(mv) + 2;
 
 	SDL_GetMouseState(&x, &y);
 	x -= WIDGET(mv)->cx;
