@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.19 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.20 2005/08/01 03:20:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -37,10 +37,12 @@ struct mapview {
 #define MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
 #define MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
 #define MAPVIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
+#define MAPVIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
 
 	enum mapview_mode {
 		MAPVIEW_NORMAL,		/* Default edition mode */
-		MAPVIEW_EDIT_ATTRS	/* Editing node attributes */
+		MAPVIEW_EDIT_ATTRS,	/* Editing node attributes */
+		MAPVIEW_MOVE_ORIGIN	/* Moving origin node */
 	} mode;
 
 	int edit_attr;			/* Attribute being edited */
@@ -162,6 +164,7 @@ void	 mapview_update_camera(struct mapview *);
 void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
 		                struct scrollbar *);
 void	 mapview_status(struct mapview *, const char *, ...);
+void	 mapview_set_mode(struct mapview *, enum mapview_mode);
 
 #ifdef EDITION
 void mapview_undo(struct mapview *);

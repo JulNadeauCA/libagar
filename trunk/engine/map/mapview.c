@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.37 2005/07/31 03:23:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.38 2005/08/01 03:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -661,7 +661,6 @@ draw_layer:
 					     COLOR(MAPVIEW_RSEL_COLOR));
 				}
 #endif /* DEBUG */
-
 				if ((nref->layer == m->cur_layer) &&
 				    (mv->mode == MAPVIEW_EDIT_ATTRS)) {
 					Uint8 c[4];
@@ -687,8 +686,25 @@ draw_layer:
 #ifdef EDITION
 			if (!mapedition)
 				continue;
-
-			/* Indicate the mouse/effective selections. */
+				
+			if ((mv->flags & MAPVIEW_SHOW_ORIGIN) &&
+			    (mx == m->origin.x && my == m->origin.y)) {
+				int t2 = MV_TILESZ(mv)/2;
+			
+				primitives.circle(mv,
+				    rx+t2,
+				    ry+t2,
+				    t2,
+				    COLOR(MAPVIEW_ORIGIN_COLOR));
+				primitives.line(mv,
+				    rx+t2, ry,
+				    rx+t2, ry+MV_TILESZ(mv),
+				    COLOR(MAPVIEW_ORIGIN_COLOR));
+				primitives.line(mv,
+				    rx, ry+t2,
+				    rx+MV_TILESZ(mv), ry+t2,
+				    COLOR(MAPVIEW_ORIGIN_COLOR));
+			}
 			if (mv->msel.set &&
 			    mv->msel.x == mx && mv->msel.y == my) {
 				msel_x = rx + 1;
@@ -696,7 +712,6 @@ draw_layer:
 				msel_w = mv->msel.xoffs*MV_TILESZ(mv) - 2;
 				msel_h = mv->msel.yoffs*MV_TILESZ(mv) - 2;
 			}
-			
 			if (mv->esel.set &&
 			    mv->esel.x == mx && mv->esel.y == my) {
 				esel_x = rx;
@@ -951,6 +966,12 @@ mousemotion(int argc, union evarg *argv)
 				toggle_attrib(mv);
 				goto out;
 			}
+			if (mv->mode == MAPVIEW_MOVE_ORIGIN) {
+				mv->map->origin.x = mv->cx;
+				mv->map->origin.y = mv->cy;
+				mv->map->origin.layer = mv->map->cur_layer;
+				goto out;
+			}
 			if (mv->curtool != NULL &&
 			    mv->curtool->ops->effect != NULL &&
 			    mv->curtool->ops->effect(mv->curtool,
@@ -998,6 +1019,12 @@ out:
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
+void
+mapview_set_mode(struct mapview *mv, enum mapview_mode mode)
+{
+	mv->mode = mode;
+}
+
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
@@ -1027,6 +1054,13 @@ mousebuttondown(int argc, union evarg *argv)
 			mv->attr_x = -1;
 			mv->attr_y = -1;
 			toggle_attrib(mv);
+			goto out;
+		}
+		if (mv->flags & MAPVIEW_SHOW_ORIGIN &&
+		    button == SDL_BUTTON_LEFT &&
+		    mv->cx == m->origin.x &&
+		    mv->cy == m->origin.y) {
+			mapview_set_mode(mv, MAPVIEW_MOVE_ORIGIN);
 			goto out;
 		}
 		if (mv->curtool != NULL) {
@@ -1180,6 +1214,9 @@ mousebuttonup(int argc, union evarg *argv)
 
 	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
+	    	if (mv->mode == MAPVIEW_MOVE_ORIGIN) {
+			mapview_set_mode(mv, MAPVIEW_NORMAL);
+		}
 		if (mv->curtool != NULL) {
 			if (mv->curtool->ops->mousebuttonup != NULL &&
 			    mv->curtool->ops->mousebuttonup(mv->curtool,
@@ -1353,34 +1390,34 @@ key_down(int argc, union evarg *argv)
 		break;
 	case SDLK_w:
 		if (mv->mode == MAPVIEW_NORMAL) {
-			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_BLOCK;
 		} else {
-			mv->mode = MAPVIEW_NORMAL;
+			mapview_set_mode(mv, MAPVIEW_NORMAL);
 		}
 		break;
 	case SDLK_c:
 		if (mv->mode == MAPVIEW_NORMAL) {
-			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_CLIMBABLE;
 		} else {
-			mv->mode = MAPVIEW_NORMAL;
+			mapview_set_mode(mv, MAPVIEW_NORMAL);
 		}
 		break;
 	case SDLK_s:
 		if (mv->mode == MAPVIEW_NORMAL) {
-			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_SLIPPERY;
 		} else {
-			mv->mode = MAPVIEW_NORMAL;
+			mapview_set_mode(mv, MAPVIEW_NORMAL);
 		}
 		break;
 	case SDLK_j:
 		if (mv->mode == MAPVIEW_NORMAL) {
-			mv->mode = MAPVIEW_EDIT_ATTRS;
+			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_JUMPABLE;
 		} else {
-			mv->mode = MAPVIEW_NORMAL;
+			mapview_set_mode(mv, MAPVIEW_NORMAL);
 		}
 		break;
 	}

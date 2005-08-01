@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.41 2005/07/31 03:25:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.42 2005/08/01 03:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1987,11 +1987,6 @@ edit_properties(int argc, union evarg *argv)
 		event_new(msb, "mspinbutton-changed", resize_map, "%p,%p",
 		    m, mv);
 		
-		msb = mspinbutton_new(bo, ",", _("Origin: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->map->origin.x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->map->origin.y);
-		mspinbutton_set_range(msb, -MAP_MAX_WIDTH/2, MAP_MAX_WIDTH/2);
-	
 		msb = mspinbutton_new(bo, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
@@ -2030,10 +2025,6 @@ edit_properties(int argc, union evarg *argv)
 	{
 		label_new(win, LABEL_POLLED, _("Cursor position: %ix%i"),
 		    &mv->cx, &mv->cy);
-		label_new(win, LABEL_POLLED, _("Cursor delta: %ix%i"),
-		    &mv->cxrel, &mv->cyrel);
-		label_new(win, LABEL_POLLED, _("Mouse scrolling: %[ibool]"),
-		    &mv->mouse.scrolling);
 		label_new(win, LABEL_POLLED,
 		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
 		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
@@ -2528,7 +2519,7 @@ map_edit(void *p)
 	struct hpane *pane;
 	struct hpane_div *div;
 	struct tool *ins_tool;
-	int flags = MAPVIEW_GRID|MAPVIEW_NO_BG;
+	int flags = MAPVIEW_GRID|MAPVIEW_NO_BG|MAPVIEW_SHOW_ORIGIN;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
@@ -2602,6 +2593,8 @@ map_edit(void *p)
 		    &mv->flags, MAPVIEW_NO_BG, 1);
 		menu_int_bool(pitem, _("Animate background"), GRID_ICON,
 		    &mapview_bg_moving, 0);
+		menu_int_flags(pitem, _("Show map origin"), VGORIGIN_ICON,
+		    &mv->flags, MAPVIEW_SHOW_ORIGIN, 0);
 #ifdef DEBUG
 		menu_int_flags(pitem, _("Show element offsets"), GRID_ICON,
 		    &mv->flags, MAPVIEW_SHOW_OFFSETS, 0);
