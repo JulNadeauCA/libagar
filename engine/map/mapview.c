@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.38 2005/08/01 03:20:51 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.40 2005/08/01 11:42:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -581,7 +581,6 @@ mapview_draw(void *p)
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 	SDL_Rect rExtent;
-	int xoffs, yoffs;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLenum blend_sfactor;
@@ -626,20 +625,17 @@ mapview_draw(void *p)
 #endif
 	pthread_mutex_lock(&m->lock);
 
-	xoffs = mv->xoffs - MV_TILESZ(mv);
-	yoffs = mv->yoffs - MV_TILESZ(mv);
-
 	if (m->map == NULL)
 		goto out;
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = mv->my, ry = yoffs;
+	for (my = mv->my, ry = mv->yoffs;
 	     ((my - mv->my) <= mv->mh) && (my < m->maph);
 	     my++, ry += MV_TILESZ(mv)) {
 
-		for (mx = mv->mx, rx = xoffs;
+		for (mx = mv->mx, rx = mv->xoffs;
 	     	     ((mx - mv->mx) <= mv->mw) && (mx < m->mapw);
 		     mx++, rx += MV_TILESZ(mv)) {
 
@@ -843,17 +839,17 @@ mapview_update_camera(struct mapview *mv)
 	mv->mx = xcam / MV_TILESZ(mv);
 	if (mv->mx < 0) {
 		mv->mx = 0;
-		mv->xoffs = -xcam;
+		mv->xoffs = -xcam - MV_TILESZ(mv);
 	} else {
-		mv->xoffs = -(xcam % MV_TILESZ(mv));
+		mv->xoffs = -(xcam % MV_TILESZ(mv)) - MV_TILESZ(mv);
 	}
 	
 	mv->my = ycam / MV_TILESZ(mv);
 	if (mv->my < 0) {
 		mv->my = 0;
-		mv->yoffs = -ycam;
+		mv->yoffs = -ycam - MV_TILESZ(mv);
 	} else {
-		mv->yoffs = -(ycam % MV_TILESZ(mv));
+		mv->yoffs = -(ycam % MV_TILESZ(mv)) - MV_TILESZ(mv);
 	}
 	pthread_mutex_unlock(&mv->map->lock);
 
