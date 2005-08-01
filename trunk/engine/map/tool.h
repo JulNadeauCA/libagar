@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.7 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.8 2005/07/30 05:01:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -81,6 +81,7 @@ void tool_bind_mousebutton(void *, int,
 void tool_unbind_key(void *, SDLMod, SDLKey);
 
 void tool_push_status(void *, const char *, ...);
+void tool_set_status(void *, const char *, ...);
 void tool_pop_status(void *);
 void tool_update_status(void *);
 __END_DECLS
