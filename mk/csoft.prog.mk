@@ -214,7 +214,7 @@ cleandir-prog:
 	rm -f core *.core
 
 install-prog:
-	@if [ -e "${BINDIR}" ]; then \
+	@if [ ! -e "${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG_DIR} ${BINDIR}; \
 	fi
