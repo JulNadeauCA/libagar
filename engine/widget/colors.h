@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.5 2005/06/13 06:19:30 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.6 2005/06/18 16:37:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -73,6 +73,7 @@ enum {
 	PANE_COLOR,
 	PANE_CIRCLE_COLOR,
 	MAPVIEW_RSEL_COLOR,
+	MAPVIEW_ORIGIN_COLOR,
 	LAST_COLOR
 };
 
