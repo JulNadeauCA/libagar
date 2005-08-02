@@ -1,9 +1,10 @@
-/*	$Csoft: arc4random.h,v 1.1 2004/02/26 09:19:37 vedge Exp $	*/
+/*	$Csoft: arc4random.h,v 1.2 2004/04/21 00:15:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_arc4random.h>
 
 #ifndef HAVE_ARC4RANDOM
+#include <SDL/SDL_types.h>
 #include <sys/types.h>
 Uint32	arc4random(void);
 void	arc4random_stir(void);
