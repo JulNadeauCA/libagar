@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.18 2005/07/29 06:25:08 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.19 2005/07/30 01:45:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -102,7 +102,8 @@ const char *colors_names[] = {
 	N_("HSV Palette bar #2"),
 	N_("Pane"),
 	N_("Pane (circles)"),
-	N_("Mapview noderef selection")
+	N_("Mapview noderef selection"),
+	N_("Mapview origin point"),
 };
 
 void
@@ -175,6 +176,7 @@ colors_init(void)
 	colors[PANE_COLOR] = SDL_MapRGBA(vfmt, 100, 100, 100, 0);
 	colors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(vfmt, 170, 170, 170, 0);
 	colors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(vfmt, 60, 250, 60);
+	colors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(vfmt, 150, 150, 0);
 
 	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
 	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);
