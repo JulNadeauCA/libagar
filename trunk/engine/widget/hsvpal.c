@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.20 2005/05/31 11:14:53 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.21 2005/07/30 01:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,8 @@ const struct widget_ops hsvpal_ops = {
 	hsvpal_draw,
 	hsvpal_scale
 };
+
+static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 
 static void render_palette(struct hsvpal *);
 
@@ -343,6 +345,31 @@ complementary(int argc, union evarg *argv)
 	float hue = widget_get_float(pal, "hue");
 
 	widget_set_float(pal, "hue", ((int)hue+180) % 359);
+	update_pixel_from_hsva(pal);
+	pal->flags |= HSVPAL_DIRTY;
+}
+
+static void
+copy_color(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+	
+	cH = widget_get_float(pal, "hue");
+	cS = widget_get_float(pal, "saturation");
+	cV = widget_get_float(pal, "value");
+	cA = widget_get_float(pal, "alpha");
+}
+
+static void
+paste_color(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[1].p;
+
+	widget_set_float(pal, "hue", cH);
+	widget_set_float(pal, "saturation", cS);
+	widget_set_float(pal, "value", cV);
+	widget_set_float(pal, "alpha", cA);
+	update_pixel_from_hsva(pal);
 	pal->flags |= HSVPAL_DIRTY;
 }
 
@@ -353,6 +380,7 @@ invert_saturation(int argc, union evarg *argv)
 
 	widget_set_float(pal, "saturation",
 	    1.0 - widget_get_float(pal, "saturation"));
+	update_pixel_from_hsva(pal);
 	pal->flags |= HSVPAL_DIRTY;
 }
 
@@ -363,6 +391,7 @@ invert_value(int argc, union evarg *argv)
 
 	widget_set_float(pal, "value",
 	    1.0 - widget_get_float(pal, "value"));
+	update_pixel_from_hsva(pal);
 	pal->flags |= HSVPAL_DIRTY;
 }
 
@@ -383,8 +412,12 @@ open_menu(struct hsvpal *pal)
 		menu_action(pal->menu_item, _("Edit numerically"), -1,
 		    edit_values, "%p", pal);
 
-		menu_separator(pal->menu_item);
 #endif
+		menu_action(pal->menu_item, _("Copy"), -1,
+		    copy_color, "%p", pal);
+		menu_action(pal->menu_item, _("Paste"), -1,
+		    paste_color, "%p", pal);
+		menu_separator(pal->menu_item);
 		menu_action(pal->menu_item, _("Show RGB value"), -1,
 		    show_rgb, "%p", pal);
 		menu_action(pal->menu_item, _("Complementary color"), -1,
