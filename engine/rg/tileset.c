@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.52 2005/07/29 03:13:56 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.53 2005/07/31 03:16:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1269,11 +1269,16 @@ duplicate_pixmap(int argc, union evarg *argv)
 	if ((it = tlist_selected_item(tl_art)) != NULL) {
 		struct pixmap *px1 = it->p1;
 		struct pixmap *px2;
+		int ncopy = 0;
 
 		px2 = Malloc(sizeof(struct pixmap), M_RG);
 		pixmap_init(px2, ts, 0);
-		strlcpy(px2->name, _("Copy of "), sizeof(px2->name));
-		strlcat(px2->name, px1->name, sizeof(px2->name));
+tryname:
+		snprintf(px2->name, sizeof(px2->name),
+		    _("Copy #%d of %s"), ncopy++, px1->name);
+		if (tileset_find_pixmap(ts, px2->name) != NULL)
+			goto tryname;
+
 		pixmap_scale(px2, px1->su->w, px1->su->h, 0, 0);
 		TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
 
