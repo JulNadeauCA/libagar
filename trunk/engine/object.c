@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.217 2005/07/24 08:04:16 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.218 2005/07/29 03:14:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -207,10 +207,11 @@ object_copy_name(const void *obj, char *path, size_t path_len)
 
 	path[0] = '/';
 	path[1] = '\0';
-	strlcat(path, ob->name, path_len);
+	if (ob != world)
+		strlcat(path, ob->name, path_len);
 
 	lock_linkage();
-	if (ob->parent != world && ob->parent != NULL) {
+	if (ob != world && ob->parent != world && ob->parent != NULL) {
 		rv = object_name_search(ob->parent, path, path_len);
 	}
 	unlock_linkage();
@@ -448,6 +449,9 @@ object_find(const char *name)
 	if (name[0] != '/')
 		fatal("not an absolute path: `%s'", name);
 #endif
+	if (name[0] == '/' && name[1] == '\0')
+		return (world);
+	
 	lock_linkage();
 	rv = object_find_child(world, &name[1]);
 	unlock_linkage();
@@ -1705,6 +1709,7 @@ object_copy_digest(const void *ob, size_t *len, char *digest)
 static void
 poll_deps(int argc, union evarg *argv)
 {
+	char path[OBJECT_PATH_MAX];
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct object_dep *dep;
@@ -1713,13 +1718,13 @@ poll_deps(int argc, union evarg *argv)
 	lock_linkage();
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		char label[TLIST_LABEL_MAX];
-
+		
+		object_copy_name(dep->obj, path, sizeof(path));
 		if (dep->count == OBJECT_DEP_MAX) {
-			snprintf(label, sizeof(label), "%s (perm)",
-			    dep->obj->name);
+			snprintf(label, sizeof(label), "%s (wired)", path);
 		} else {
-			snprintf(label, sizeof(label), "%s (%u)",
-			    dep->obj->name, dep->count);
+			snprintf(label, sizeof(label), "%s (%u)", path,
+			    dep->count);
 		}
 		tlist_insert_item(tl, object_icon(dep->obj), label, dep);
 	}
