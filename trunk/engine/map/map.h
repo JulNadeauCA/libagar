@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.12 2005/07/25 10:14:24 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.13 2005/07/29 06:24:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -21,7 +21,6 @@
 #include <engine/space/space.h>
 #include <engine/map/transform.h>
 #include <engine/map/nodemask.h>
-#include <engine/gobject.h>
 
 #include "begin_code.h"
 
