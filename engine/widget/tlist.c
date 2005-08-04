@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.125 2005/06/10 02:02:22 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.126 2005/08/04 06:07:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -274,7 +274,6 @@ tlist_draw(void *p)
 
 	pthread_mutex_lock(&tl->lock);
 	if (tl->flags & TLIST_POLL) {
-		event_post(NULL, tl, "tlist-poll", NULL);
 		event_post(NULL, tl, "tlist-poll", NULL);
 	}
 	offset = widget_get_int(tl->sbar, "value");
@@ -614,7 +613,6 @@ tlist_select_pointer(struct tlist *tl, void *p)
 	pthread_mutex_lock(&tl->lock);
 	if (tl->flags & TLIST_POLL) {
 		event_post(NULL, tl, "tlist-poll", NULL);
-		event_post(NULL, tl, "tlist-poll", NULL);
 	}
 	if ((tl->flags & TLIST_MULTI) == 0) {
 		tlist_unselect_all(tl);
@@ -637,7 +635,6 @@ tlist_select_text(struct tlist *tl, const char *text)
 
 	pthread_mutex_lock(&tl->lock);
 	if (tl->flags & TLIST_POLL) {
-		event_post(NULL, tl, "tlist-poll", NULL);
 		event_post(NULL, tl, "tlist-poll", NULL);
 	}
 	if ((tl->flags & TLIST_MULTI) == 0) {
