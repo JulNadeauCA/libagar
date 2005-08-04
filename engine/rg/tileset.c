@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.53 2005/07/31 03:16:38 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.54 2005/08/03 04:30:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -381,7 +381,6 @@ tileset_save(void *obj, struct netbuf *buf)
 
 	write_uint32(buf, ts->flags);
 	write_uint32(buf, ts->max_sprites);
-	dprintf("max sprites = %d\n", ts->max_sprites);
 
 	/* Save the vectorial sketches. */
 	nsketches_offs = netbuf_tell(buf);
