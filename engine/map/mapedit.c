@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.3 2005/07/30 01:43:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -68,10 +68,10 @@ extern int mapview_sel_bounded;
 struct mapedit mapedit;
 
 int mapedition = 0;			/* Start up in edition mode */
-int mapedit_def_mapw = 8;		/* Default map geometry */
-int mapedit_def_maph = 8;
-int mapedit_def_brsw = 8;		/* Default brush geometry */
-int mapedit_def_brsh = 8;
+int mapedit_def_mapw = 9;		/* Default map geometry */
+int mapedit_def_maph = 9;
+int mapedit_def_brsw = 9;		/* Default brush geometry */
+int mapedit_def_brsh = 9;
 
 void
 mapedit_init(void)
