@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.33 2005/07/30 01:43:12 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.34 2005/07/30 02:01:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -100,8 +100,16 @@ create_obj(int argc, union evarg *argv)
 	if (name[0] == '\0') {
 		u_int nameno = 0;
 		struct object *ch;
+		char tname[OBJECT_TYPE_MAX], *s;
+	
+		if ((s = strrchr(t->type, '.')) != NULL && s[1] != '\0') {
+			strlcpy(tname, &s[1], sizeof(tname));
+		} else {
+			strlcpy(tname, t->type, sizeof(tname));
+		}
+		tname[0] = (char)toupper(tname[0]);
 tryname:
-		snprintf(name, sizeof(name), "%s #%d", t->type, nameno);
+		snprintf(name, sizeof(name), "%s #%d", tname, nameno);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
 			if (strcmp(ch->name, name) == 0)
 				break;
