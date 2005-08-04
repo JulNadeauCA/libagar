@@ -1,4 +1,4 @@
-/*	$Csoft: objsel.c,v 1.25 2005/05/24 08:12:48 vedge Exp $	*/
+/*	$Csoft: objsel.c,v 1.1 2005/08/04 06:35:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -146,16 +146,11 @@ bound(int argc, union evarg *argv)
 	struct objsel *os = argv[0].p;
 	struct widget_binding *b = argv[1].p;
 
-	dprintf("bound %s\n", b->name);
-
 	if (strcmp(b->name, "object") == 0) {
 		void **object = b->p1;
 	
-		if (*object != NULL) {
-			dprintf("sel object %s\n", OBJECT(*object)->name);
-			if (combo_select_pointer(&os->com, *object) == NULL)
-				dprintf("NULL sel!\n");
-		}
+		if (*object != NULL)
+			combo_select_pointer(&os->com, *object);
 	}
 }
 
