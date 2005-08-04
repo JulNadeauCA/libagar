@@ -1,4 +1,4 @@
-/*	$Csoft: objsel.c,v 1.1 2005/08/04 06:35:23 vedge Exp $	*/
+/*	$Csoft: objsel.c,v 1.2 2005/08/04 07:22:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -84,8 +84,7 @@ find_objs(struct objsel *os, struct tlist *tl, struct object *pob, int depth)
 		if (object_root(pob) == pob)
 			it->flags |= TLIST_VISIBLE_CHILDREN;
 	}
-	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_children(tl, it)) {
+	if ((it->flags & TLIST_HAS_CHILDREN)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			find_objs(os, tl, cob, depth+1);
 	}
@@ -149,8 +148,10 @@ bound(int argc, union evarg *argv)
 	if (strcmp(b->name, "object") == 0) {
 		void **object = b->p1;
 	
-		if (*object != NULL)
+		if (*object != NULL) {
+			dprintf("sel %s\n", OBJECT(*object)->name);
 			combo_select_pointer(&os->com, *object);
+		}
 	}
 }
 
