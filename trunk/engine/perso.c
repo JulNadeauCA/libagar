@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.47 2005/05/01 00:16:30 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.48 2005/05/29 00:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,15 +30,14 @@
 
 #include <engine/map/map.h>
 
-#include <engine/vg/vg.h>
-#include <engine/vg/drawing.h>
-
 #include <engine/widget/window.h>
 #include <engine/widget/hbox.h>
 #include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/objsel.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/notebook.h>
+#include <engine/widget/separator.h>
 
 #include <errno.h>
 #include <stdarg.h>
@@ -48,48 +47,64 @@
 
 const struct version perso_ver = {
 	"agar personage",
-	2, 0
+	3, 0
 };
 
 const struct gobject_ops perso_ops = {
 	{
 		perso_init,
-		gobject_reinit,
+		perso_reinit,
 		perso_destroy,
 		perso_load,
 		perso_save,
 		perso_edit
 	},
-	perso_specify
+	perso_specify,
+	perso_update
 };
 
 struct perso *
 perso_new(void *parent, const char *name)
 {
-	struct perso *pers;
+	struct perso *ps;
 
-	pers = Malloc(sizeof(struct perso), M_OBJECT);
-	perso_init(pers, name);
-	object_attach(parent, pers);
-	return (pers);
+	ps = Malloc(sizeof(struct perso), M_OBJECT);
+	perso_init(ps, name);
+	object_attach(parent, ps);
+	return (ps);
 }
 
 void
 perso_init(void *obj, const char *name)
 {
-	struct perso *pers = obj;
+	struct perso *ps= obj;
 
-	gobject_init(pers, "perso", name, &perso_ops);
-	pthread_mutex_init(&pers->lock, NULL);
-	pers->name[0] = '\0';
-	pers->flags = 0;
-	pers->level = 0;
-	pers->exp = 0;
-	pers->age = 0;
-	pers->seed = 0;			/* TODO arc4random */
-	pers->hp = pers->maxhp = 1;
-	pers->mp = pers->maxmp = 0;
-	pers->nzuars = 0;
+	gobject_init(ps, "perso", name, &perso_ops);
+	pthread_mutex_init(&ps->lock, NULL);
+	ps->tileset = NULL;
+	ps->name[0] = '\0';
+	ps->flags = 0;
+	ps->level = 0;
+	ps->exp = 0;
+	ps->age = 0;
+	ps->seed = 0;			/* TODO arc4random */
+	ps->hp = ps->maxhp = 1;
+	ps->mp = ps->maxmp = 0;
+	ps->nzuars = 0;
+}
+
+void
+perso_reinit(void *obj)
+{
+	struct perso *ps = obj;
+
+	gobject_reinit(obj);
+
+	if (ps->tileset != NULL) {
+		object_page_out(ps->tileset, OBJECT_GFX);
+		object_del_dep(ps, ps->tileset);
+		ps->tileset = NULL;
+	}
 }
 
 void
@@ -101,157 +116,185 @@ perso_destroy(void *obj)
 int
 perso_load(void *obj, struct netbuf *buf)
 {
-	struct perso *perso = obj;
+	struct perso *ps = obj;
+	void *tileset;
+	Uint32 name;
 
 	if (version_read(buf, &perso_ver, NULL) != 0)
 		return (-1);
 	
-	if (gobject_load(perso, buf) == -1)
+	if (gobject_load(ps, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&perso->lock);
-	copy_string(perso->name, buf, sizeof(perso->name));
-	perso->flags = read_uint32(buf);
-	perso->level = read_sint32(buf);
-	perso->exp = read_uint32(buf);
-	perso->age = (int)read_uint32(buf);
-	perso->seed = read_uint32(buf);
-	perso->maxhp = (int)read_uint32(buf);
-	perso->hp = (int)read_uint32(buf);
-	perso->maxmp = (int)read_uint32(buf);
-	perso->mp = (int)read_uint32(buf);
-	perso->nzuars = (u_int)read_uint32(buf);
-	pthread_mutex_unlock(&perso->lock);
+	pthread_mutex_lock(&ps->lock);
+	copy_string(ps->name, buf, sizeof(ps->name));
+	ps->flags = read_uint32(buf);
+	name = read_uint32(buf);
+
+	if (name != 0) {
+		dprintf("loading tileset (%d)\n", name);
+		if (object_find_dep(ps, name, &ps->tileset) == -1) {
+			dprintf("error loading tileset %d: %s\n", name,
+			    error_get());
+			goto fail;
+		}
+		object_add_dep(ps, ps->tileset);
+		object_page_in(ps->tileset, OBJECT_GFX);
+	} else {
+		dprintf("loading tileset (none)\n");
+	}
+
+	ps->level = read_sint32(buf);
+	ps->exp = read_uint32(buf);
+	ps->age = (int)read_uint32(buf);
+	ps->seed = read_uint32(buf);
+	ps->maxhp = (int)read_uint32(buf);
+	ps->hp = (int)read_uint32(buf);
+	ps->maxmp = (int)read_uint32(buf);
+	ps->mp = (int)read_uint32(buf);
+	ps->nzuars = (u_int)read_uint32(buf);
+
+	pthread_mutex_unlock(&ps->lock);
 	return (0);
+fail:
+	pthread_mutex_unlock(&ps->lock);
+	return (-1);
 }
 
 int
 perso_save(void *obj, struct netbuf *buf)
 {
-	struct perso *perso = obj;
+	struct perso *ps = obj;
 
 	version_write(buf, &perso_ver);
 	
-	if (gobject_save(perso, buf) == -1)
+	if (gobject_save(ps, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&perso->lock);
-	write_string(buf, perso->name);
-	write_uint32(buf, perso->flags);
-	write_sint32(buf, perso->level);
-	write_uint32(buf, perso->exp);
-	write_uint32(buf, perso->age);
-	write_uint32(buf, perso->seed);
-	write_uint32(buf, (Uint32)perso->maxhp);
-	write_uint32(buf, (Uint32)perso->hp);
-	write_uint32(buf, (Uint32)perso->maxmp);
-	write_uint32(buf, (Uint32)perso->mp);
-	write_uint32(buf, (Uint32)perso->nzuars);
-	pthread_mutex_unlock(&perso->lock);
+	pthread_mutex_lock(&ps->lock);
+	write_string(buf, ps->name);
+	write_uint32(buf, ps->flags);
+	write_uint32(buf, object_dep_index(ps, ps->tileset));
+
+	write_sint32(buf, ps->level);
+	write_uint32(buf, ps->exp);
+	write_uint32(buf, ps->age);
+	write_uint32(buf, ps->seed);
+	write_uint32(buf, (Uint32)ps->maxhp);
+	write_uint32(buf, (Uint32)ps->hp);
+	write_uint32(buf, (Uint32)ps->maxmp);
+	write_uint32(buf, (Uint32)ps->mp);
+	write_uint32(buf, (Uint32)ps->nzuars);
+	pthread_mutex_unlock(&ps->lock);
 	return (0);
 }
 
 struct window *
 perso_edit(void *obj)
 {
-	struct perso *pers = obj;
+	struct perso *ps = obj;
 	struct window *win;
 	struct notebook *nb;
 	struct notebook_tab *ntab;
 	struct vbox *vb;
 
 	win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, _("Character \"%s\""), OBJECT(pers)->name);
+	window_set_caption(win, _("Character \"%s\""), OBJECT(ps)->name);
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Stats"), BOX_VERT);
+	ntab = notebook_add_tab(nb, _("Informations"), BOX_VERT);
 	{
 		struct textbox *tb;
 		struct spinbutton *sbu;
 		struct hbox *hb;
+		struct objsel *os;
 
 		tb = textbox_new(ntab, _("Name: "));
-		widget_bind(tb, "string", WIDGET_STRING, pers->name,
-		    sizeof(pers->name));
+		widget_bind(tb, "string", WIDGET_STRING, ps->name,
+		    sizeof(ps->name));
+
+		os = objsel_new(ntab, OBJSEL_PAGE_GFX, ps, world,
+		    _("Tileset: "));
+		objsel_mask_type(os, "tileset");
+		widget_bind(os, "object", WIDGET_POINTER, &ps->tileset);
+		objsel_select(os, ps->tileset);
+
+		separator_new(ntab, SEPARATOR_HORIZ);
 
 		sbu = spinbutton_new(ntab, _("Level: "));
-		widget_bind(sbu, "value", WIDGET_SINT32, &pers->level);
+		widget_bind(sbu, "value", WIDGET_SINT32, &ps->level);
 
 		sbu = spinbutton_new(ntab, _("Experience: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &pers->exp);
+		widget_bind(sbu, "value", WIDGET_UINT32, &ps->exp);
 
 		sbu = spinbutton_new(ntab, _("Zuars: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &pers->nzuars);
+		widget_bind(sbu, "value", WIDGET_UINT32, &ps->nzuars);
 
 		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("HP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &pers->hp);
+			widget_bind(sbu, "value", WIDGET_INT, &ps->hp);
 			
 			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &pers->maxhp);
+			widget_bind(sbu, "value", WIDGET_INT, &ps->maxhp);
 		}
 		
 		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("MP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &pers->mp);
+			widget_bind(sbu, "value", WIDGET_INT, &ps->mp);
 			
 			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &pers->maxmp);
+			widget_bind(sbu, "value", WIDGET_INT, &ps->maxmp);
 		}
-	}
-	
-	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
-	{
-		
 	}
 	return (win);
 }
 
-int
-perso_specify(void *obj, void *space, void *arg)
+void
+perso_specify(void *obj, void *space, ...)
 {
-	struct perso *pers = obj;
+	struct perso *ps = obj;
+	va_list ap;
 	
-	dprintf("%s: specify (%s space)\n", OBJECT(pers)->name,
-	    OBJECT(space)->name);
+	va_start(ap, space);
 
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
-		struct map *sm = arg;
-
+		int x = va_arg(ap, int);
+		int y = va_arg(ap, int);
+		int l = va_arg(ap, int);
 		
-
-		return (0);
-	}
-	else if (OBJECT_TYPE(space, "drawing")) {
-		struct drawing *dwg = space;
-		struct vg *vg = dwg->vg;
-
-		vg_begin_element(vg, VG_TEXT);
-		vg_vertex2(vg, 0.500, 0.500);
-		vg_text_align(vg, VG_ALIGN_MC);
-		vg_printf(vg, "Perso %s", OBJECT(pers)->name);
-		vg_end_element(vg);
-
-		vg_begin_element(vg, VG_LINES);
-		vg_vertex2(vg, 0.000, 0.000);
-		vg_vertex2(vg, 0.200, 0.000);
-		vg_vertex2(vg, 0.800, 0.000);
-		vg_vertex2(vg, 1.000, 0.000);
-		vg_end_element(vg);
+		dprintf("%s: -> %s (%d,%d,%d)\n", OBJECT(ps)->name,
+		    OBJECT(space)->name, x, y, l);
+	
+		
 	}
 #ifdef HAVE_OPENGL
 	else if (OBJECT_TYPE(space, "scene")) {
+		double x = va_arg(ap, double);
+		double y = va_arg(ap, double);
+		double z = va_arg(ap, double);
+
+		glPushMatrix();
+		glTranslated(x, y, z);
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(-3, +3, 0);
 		glVertex3f(-3, -3, 0);
 		glVertex3f(+3, -3, 0);
 		glVertex3f(+3, +3, 0);
 		glEnd();
-		return (0);
+		glPopMatrix();
 	}
 #endif
-	return (-1);
+	va_end(ap);
+}
+
+void
+perso_update(void *obj, void *space)
+{
+	struct perso *ps= obj;
+	
+	dprintf("%s: update (%s space)\n", OBJECT(ps)->name,
+	    OBJECT(space)->name);
 }
