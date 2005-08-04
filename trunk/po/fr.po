@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.35 2004/05/14 19:12:11 vedge Exp $
+# $Csoft: fr.po,v 1.36 2005/07/29 06:23:19 vedge Exp $
 #
 # Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -584,7 +584,7 @@ msgstr "L'objet «%s» est inexistant."
 
 #, c-format
 msgid "The %s%s/%s.%s file is not in load-path."
-msgstr "Fichier %s/%s.%s inexistant dans le chemin de chargement."
+msgstr "Fichier %s%s/%s.%s inexistant dans le chemin de chargement."
 
 #, c-format
 msgid "The %s directory is not in load-path."
