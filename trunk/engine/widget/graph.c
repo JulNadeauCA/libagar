@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.52 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.53 2005/05/29 05:49:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -164,9 +164,8 @@ graph_scale(void *p, int w, int h)
 	struct graph *gra = p;
 
 	if (w == -1 && h == -1) {
-		/* XXX more sensible default */
-		WIDGET(gra)->w = 150;
-		WIDGET(gra)->h = 100;
+		WIDGET(gra)->w = 100;
+		WIDGET(gra)->h = 80;
 	}
 }
 
