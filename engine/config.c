@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.148 2005/05/24 08:15:07 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.149 2005/05/29 00:27:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -77,7 +77,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	7, 1
+	8, 0
 };
 
 const struct object_ops config_ops = {
@@ -94,7 +94,7 @@ extern int text_rightleft;
 extern int text_tab_width;
 extern int window_freescale;
 extern int kbd_unitrans;
-extern int event_idle;
+extern int event_idlemin;
 extern int server_mode;
 extern int view_screenshot_quality;
 
@@ -248,9 +248,7 @@ config_init(struct config *con)
 int
 config_load(void *p, struct netbuf *buf)
 {
-	struct version rv;
-
-	if (version_read(buf, &config_ver, &rv) != 0)
+	if (version_read(buf, &config_ver, NULL) != 0)
 		return (-1);
 	
 #ifdef DEBUG
@@ -259,7 +257,7 @@ config_load(void *p, struct netbuf *buf)
 	read_uint8(buf);
 #endif
 	server_mode = read_uint8(buf);
-	event_idle = (int)read_uint8(buf);
+	event_idlemin = (int)read_uint8(buf);
 	window_freescale = read_uint8(buf);
 	text_composition = read_uint8(buf);
 	text_rightleft = read_uint8(buf);
@@ -272,9 +270,7 @@ config_load(void *p, struct netbuf *buf)
 	view_screenshot_quality = (int)read_uint8(buf);
 	text_tab_width = (int)read_uint16(buf);
 
-	if (rv.minor >= 1) {
-		rcs = (int)read_uint8(buf);
-	}
+	rcs = (int)read_uint8(buf);
 	copy_string(rcs_hostname, buf, sizeof(rcs_hostname));
 	rcs_port = (u_int)read_uint16(buf);
 	copy_string(rcs_username, buf, sizeof(rcs_username));
@@ -296,7 +292,7 @@ config_save(void *p, struct netbuf *buf)
 	write_uint8(buf, 0);
 #endif
 	write_uint8(buf, server_mode);
-	write_uint8(buf, (Uint8)event_idle);
+	write_uint8(buf, (Uint8)event_idlemin);
 	write_uint8(buf, (Uint8)window_freescale);
 	write_uint8(buf, (Uint8)text_composition);
 	write_uint8(buf, (Uint8)text_rightleft);
@@ -396,9 +392,11 @@ config_window(struct config *con)
 		spinbutton_set_min(sbu, 1);
 		spinbutton_set_max(sbu, 100);
 	
-		cbox = checkbox_new(tab, _("Idle when possible"));
-		widget_bind(cbox, "state", WIDGET_INT, &event_idle);
-	
+		sbu = spinbutton_new(tab, _("Idling threshold (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &event_idlemin);
+		spinbutton_set_min(sbu, 0);
+		spinbutton_set_max(sbu, 255);
+		
 		cbox = checkbox_new(tab, _("Unrestricted window resize"));
 		widget_bind(cbox, "state", WIDGET_INT, &window_freescale);
 	}

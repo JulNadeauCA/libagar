@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.204 2005/06/18 04:25:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.205 2005/07/16 16:07:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -70,9 +70,8 @@ static struct graph *fps_graph;
 static struct graph_item *fps_refresh, *fps_events, *fps_idle;
 #endif	/* DEBUG */
 
-int	event_idle = 1;		/* Delay at full frame rate */
-int	event_idletime = -1;	/* Approximate SDL_Delay() granularity */
-int	event_idlemin = 15;	/* Minimum refresh rate to begin idling */
+int	event_idlemin = 20;	/* Idling threshold */
+int	event_idleavg = 0;	/* Measured SDL_Delay() granularity */
 
 static void event_propagate(void *, struct event *);
 static void event_hotkey(SDL_Event *);
@@ -162,7 +161,7 @@ update_fps_counter(void)
 
 	graph_plot(fps_refresh, view->refresh.r);
 	graph_plot(fps_events, event_count * 30 / 10);
-	graph_plot(fps_idle, event_idletime);
+	graph_plot(fps_idle, event_idleavg);
 	graph_scroll(fps_graph, 1);
 
 	if (++einc == 1) {
@@ -181,7 +180,7 @@ init_fps_counter(void)
 	fps_label = label_new(fps_win, LABEL_POLLED,
 	    "%dms (nom %dms), %d evnt, %dms idle",
 	    &view->refresh.r, &view->refresh.rnom, &event_count,
-	    &event_idletime);
+	    &event_idleavg);
 	label_prescale(fps_label, "___ms (nom ___ms), __ evnt, __ms idle");
 
 	fps_graph = graph_new(fps_win, _("Refresh rate"), GRAPH_LINES,
@@ -265,14 +264,16 @@ event_loop(void)
 #endif
 		} else if (TAILQ_FIRST(&timeout_objq) != NULL) {      /* Safe */
 			timeout_process(Tr2);
-		} else if (event_idle && event_idlemin < view->refresh.r) {
-			if (Tr2-Tr1 < view->refresh.rnom-event_idletime) {
-				SDL_Delay(1);
-			}
-			event_idletime = SDL_GetTicks() - Tr2;
+		} else if (view->refresh.r > event_idlemin) {
+			SDL_Delay(view->refresh.r - event_idlemin);
+#ifdef DEBUG
+			event_idleavg = SDL_GetTicks() - Tr2;
 		} else {
-			event_idletime = 0;
+			event_idleavg = 0;
 		}
+#else
+		}
+#endif
 	}
 }
 
