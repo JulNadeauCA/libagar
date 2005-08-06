@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.218 2005/07/29 03:14:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.219 2005/08/04 06:35:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1752,8 +1752,8 @@ poll_gfx(int argc, union evarg *argv)
 		struct gfx_cached_sprite *csp;
 
 		if (su != NULL) {
-			it = tlist_insert(tl, su, "%u. %ux%ux%u (%s)",
-			    i, su->w, su->h, su->format->BitsPerPixel,
+			it = tlist_insert(tl, su, "%u. %s - %ux%ux%u (%s)", i,
+			    spr->name, su->w, su->h, su->format->BitsPerPixel,
 			    gfx_snap_names[spr->snap_mode]);
 		} else {
 			it = tlist_insert(tl, su, "%u. (null)", i);
