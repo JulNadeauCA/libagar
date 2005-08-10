@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.219 2005/08/04 06:35:01 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.220 2005/08/06 07:32:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1400,7 +1400,7 @@ object_find_dep(const void *p, Uint32 ind, void **objp)
  * NULL value and 1 is the parent object itself.
  */
 Uint32
-object_dep_index(const void *p, const void *depobjp)
+object_encode_name(const void *p, const void *depobjp)
 {
 	const struct object *ob = p;
 	const struct object *depobj = depobjp;

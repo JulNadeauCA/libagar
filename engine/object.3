@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.75 2005/07/16 16:07:27 vedge Exp $
+.\"	$Csoft: object.3,v 1.77 2005/07/19 02:37:32 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -322,7 +322,7 @@ acquire and release the world's linkage lock, respectively.
 .Fn object_find_dep "const void *obj" "Uint32 ind" "struct object **objp"
 .Pp
 .Ft "Uint32"
-.Fn object_dep_index "const void *obj" "const void *depobj"
+.Fn object_encode_name "const void *obj" "const void *depobj"
 .nr nS 0
 .Pp
 The
@@ -344,8 +344,8 @@ removing it if it reaches 0.
 The
 .Fn object_find_dep
 function resolves the given object dependency.
-.Fn object_dep_index
-encodes an object dependency in network format.
+.Fn object_encode_name
+encodes an object reference in network format.
 .Pp
 Encoded dependencies are integers which are either indexes into the object's
 dependency table, or the special values 0 (NULL reference) and 1 (self
