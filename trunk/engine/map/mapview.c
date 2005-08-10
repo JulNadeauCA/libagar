@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.40 2005/08/01 11:42:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.41 2005/08/01 11:44:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -410,7 +410,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->statusbar = statbar;
 	mv->status = (statbar != NULL) ?
 	             statusbar_add_label(statbar, LABEL_STATIC, "...") : NULL;
-	mv->art_tl = NULL;
+	mv->lib_tl = NULL;
 	mv->objs_tl = NULL;
 	mv->layers_tl = NULL;
 	mv->curtool = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.20 2005/08/01 03:20:51 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.21 2005/08/01 04:56:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -90,8 +90,8 @@ struct mapview {
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */
 	struct label *status;		/* Optional status label */
-	struct tlist *art_tl;		/* Optional artwork list */
-	struct tlist *objs_tl;		/* Optional object list */
+	struct tlist *lib_tl;		/* Optional library list */
+	struct tlist *objs_tl;		/* Optional library list */
 	struct tlist *layers_tl;	/* Optional layer list */
 
 	struct scrollbar *vbar, *hbar;	/* Scrollbars (or NULL) */

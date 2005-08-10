@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.11 2005/07/29 06:25:41 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.12 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -124,8 +124,8 @@ fill_effect(void *p, struct node *n)
 		}
 		break;
 	case FILL_FROM_ART:
-		if (mv->art_tl == NULL ||
-		    (it = tlist_selected_item(mv->art_tl)) == NULL ||
+		if (mv->lib_tl == NULL ||
+		    (it = tlist_selected_item(mv->lib_tl)) == NULL ||
 		    strcmp(it->class, "tile") != 0) {
 			break;
 		}

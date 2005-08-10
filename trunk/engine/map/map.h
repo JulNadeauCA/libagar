@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.13 2005/07/29 06:24:43 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.14 2005/08/04 06:35:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -58,6 +58,7 @@ struct noderef {
 
 	Sint8 friction;			/* Coefficient of friction */
 	Uint8 layer;			/* Associated layer */
+	void *p;			/* User pointer (non-persistent) */
 
 	struct {
 		Sint16 xcenter, ycenter;	/* Centering offsets */

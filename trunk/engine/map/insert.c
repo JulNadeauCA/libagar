@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.7 2005/07/31 03:25:07 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.8 2005/08/01 03:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,17 +41,7 @@
 
 #include "map.h"
 #include "mapedit.h"
-
-struct insert_tool {
-	struct tool tool;
-	enum {
-		INSERT_SRC_ARTWORK,		/* From artwork list */
-		INSERT_SRC_COPYBUF		/* From copy/paste buffer */
-	} source;
-	enum gfx_snap_mode snap_mode;
-	int replace_mode;
-	int angle;
-};
+#include "insert.h"
 
 static void
 insert_init(void *p)
@@ -85,8 +75,8 @@ insert_pane(void *p, void *con)
 	struct combo *com;
 	struct tlist_item *it;
 	
-	if ((it = tlist_selected_item(mv->art_tl)) != NULL) {
-		label_new(con, LABEL_STATIC, _("Source: %s"), it->text);
+	if ((it = tlist_selected_item(mv->lib_tl)) != NULL) {
+		label_new(con, LABEL_STATIC, _("Tile: %s"), it->text);
 	}
 #if 0
 	rad = radio_new(con, source_items);
@@ -170,8 +160,8 @@ insert_effect(void *p, struct node *n)
 		int dx0, dy0, xorig, yorig;
 		int n = 0;
 
-		if (mv->art_tl == NULL ||
-		    (it = tlist_selected_item(mv->art_tl)) == 0 ||
+		if (mv->lib_tl == NULL ||
+		    (it = tlist_selected_item(mv->lib_tl)) == 0 ||
 		    strcmp(it->class, "tile") != 0) {
 			return (1);
 		}
@@ -260,8 +250,8 @@ insert_cursor(void *p, SDL_Rect *rd)
 				}
 			}
 		}
-	} else if (mv->art_tl != NULL &&
-	   (it = tlist_selected_item(mv->art_tl)) != NULL &&
+	} else if (mv->lib_tl != NULL &&
+	   (it = tlist_selected_item(mv->lib_tl)) != NULL &&
 	   strcmp(it->class, "tile") == 0) {
 		struct sprite *spr = it->p1;
 		int dx, dy;
@@ -299,6 +289,31 @@ insert_mousebuttondown(void *p, int x, int y, int btn)
 	return (0);
 }
 
+static int
+insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
+{
+	struct insert_tool *ins = p;
+	struct mapview *mv = TOOL(ins)->mv;
+	int nx = x/MV_TILESZ(mv);
+	int ny = y/MV_TILESZ(mv);
+	struct tlist_item *it;
+	struct object *ob;
+
+	if (nx == mv->mouse.x && ny == mv->mouse.y)
+		return (0);
+
+	if ((it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	    mv->cx == -1 || mv->cy == -1) {
+		return (1);
+	}
+	if (strcmp(it->class, "tile") == 0) {
+		tool_set_status(ins,
+		    _("Insert %s tile at [%d,%d] with $(L) ($(M)=Rotate)."),
+		    it->text, mv->cx, mv->cy);
+	}
+	return (0);
+}
+
 const struct tool_ops insert_ops = {
 	"Insert", N_("Insert node element"),
 	STAMP_TOOL_ICON,
@@ -311,7 +326,7 @@ const struct tool_ops insert_ops = {
 	insert_cursor,
 	insert_effect,
 
-	NULL,				/* mousemotion */
+	insert_mousemotion,
 	insert_mousebuttondown,
 	NULL,				/* mousebuttonup */
 	NULL,				/* keydown */

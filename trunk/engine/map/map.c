@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.42 2005/08/01 03:20:51 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.43 2005/08/01 04:56:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,9 +33,12 @@
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/objmgr.h>
+#include <engine/gobject.h>
 
 #include "map.h"
 #include "tools.h"
+#include "tool.h"
+#include "insert.h"
 
 #ifdef EDITION
 #include <engine/map/mapedit.h>
@@ -107,6 +110,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->flags = 0;
 	r->layer = 0;
 	r->friction = 0;
+	r->p = NULL;
 	r->r_gfx.xcenter = 0;
 	r->r_gfx.ycenter = 0;
 	r->r_gfx.xmotion = 0;
@@ -901,6 +905,8 @@ void
 map_reinit(void *p)
 {
 	struct map *m = p;
+
+	space_reinit(m);
 	
 	if (m->map != NULL)
 		map_free_nodes(m);
@@ -908,8 +914,6 @@ map_reinit(void *p)
 		map_free_layers(m);
 	if (m->cameras != NULL)
 		map_free_cameras(m);
-	
-	space_reinit(m);
 }
 
 void
@@ -1111,6 +1115,7 @@ map_load(void *ob, struct netbuf *buf)
 	struct map *m = ob;
 	Uint32 w, h, origin_x, origin_y;
 	int i, x, y;
+	struct gobject *go;
 	
 	if (version_read(buf, &map_ver, NULL) != 0)
 		return (-1);
@@ -1188,6 +1193,16 @@ map_load(void *ob, struct netbuf *buf)
 				goto fail;
 		}
 	}
+
+	/* Attach the geometric objects. */
+	TAILQ_FOREACH(go, &SPACE(m)->gobjs, gobjs) {
+		dprintf("%s: %s at %d,%d,%d\n", OBJECT(m)->name,
+		     OBJECT(go)->name, go->g_map.x, go->g_map.y, go->g_map.l0);
+		if (space_attach(m, go) == -1)
+			fprintf(stderr, "%s (%s): %s\n", OBJECT(m)->name,
+			    OBJECT(go)->name, error_get());
+	}
+
 	pthread_mutex_unlock(&m->lock);
 	return (0);
 fail:
@@ -1216,11 +1231,11 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 	/* Save the reference. */
 	switch (r->type) {
 	case NODEREF_SPRITE:
-		write_uint32(buf, object_dep_index(m, r->r_sprite.obj));
+		write_uint32(buf, object_encode_name(m, r->r_sprite.obj));
 		write_uint32(buf, r->r_sprite.offs);
 		break;
 	case NODEREF_ANIM:
-		write_uint32(buf, object_dep_index(m, r->r_anim.obj));
+		write_uint32(buf, object_encode_name(m, r->r_anim.obj));
 		write_uint32(buf, r->r_anim.offs);
 		break;
 	case NODEREF_WARP:
@@ -1230,7 +1245,7 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		write_uint8(buf, r->r_warp.dir);
 		break;
 	case NODEREF_GOBJ:
-		write_uint32(buf, object_dep_index(m, r->r_gobj.p));
+		write_uint32(buf, object_encode_name(m, r->r_gobj.p));
 		write_uint32(buf, r->r_gobj.flags);
 		break;
 	default:
@@ -1292,6 +1307,7 @@ int
 map_save(void *p, struct netbuf *buf)
 {
 	struct map *m = p;
+	struct gobject *go;
 	int i, x, y;
 	
 	version_write(buf, &map_ver);
@@ -1300,6 +1316,10 @@ map_save(void *p, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&m->lock);
+	
+	/* Detach all geometric objects for the save. */
+	TAILQ_FOREACH(go, &SPACE(m)->gobjs, gobjs)
+		space_detach(m, go);
 
 	/* Write the map header. */
 	write_uint32(buf, (Uint32)m->mapw);
@@ -1341,6 +1361,11 @@ map_save(void *p, struct netbuf *buf)
 			node_save(m, buf, &m->map[y][x]);
 		}
 	}
+	
+	/* Reattach geometric objects. */
+	TAILQ_FOREACH(go, &SPACE(m)->gobjs, gobjs)
+		space_attach(m, go);
+
 	pthread_mutex_unlock(&m->lock);
 	return (0);
 }
@@ -2050,10 +2075,15 @@ edit_properties(int argc, union evarg *argv)
 }
 
 static void
-find_art(struct tlist *tl, struct object *pob)
+find_objs(struct tlist *tl, struct object *pob, int depth)
 {
 	struct object *cob;
 	struct tlist_item *it;
+	
+	it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
+	    (pob->flags & OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
+	it->p1 = pob;
+	it->depth = depth;
 
 	if (OBJECT_TYPE(pob, "tileset")) {
 		struct object *ts = (struct object *)pob;
@@ -2061,12 +2091,8 @@ find_art(struct tlist *tl, struct object *pob)
 		struct animation *anim;
 		int i;
 
-		it = tlist_insert(tl, object_icon(ts), "%s%s", pob->name,
-		    (pob->flags&OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
-		it->p1 = pob;
-		it->depth = 0;
 		it->class = "tileset";
-		
+
 		pthread_mutex_lock(&ts->lock);
 		
 		if (ts->gfx != NULL &&
@@ -2084,31 +2110,16 @@ find_art(struct tlist *tl, struct object *pob)
 			
 				sit = tlist_insert(tl, spr->su, "%s (%ux%u)",
 				    spr->name, spr->su->w, spr->su->h);
-				sit->depth = 1;
+				sit->depth = depth+1;
 				sit->class = "tile";
 				sit->p1 = spr;
 			}
 		}
 
 		pthread_mutex_unlock(&ts->lock);
+	} else {
+		it->class = "object";
 	}
-
-	TAILQ_FOREACH(cob, &pob->children, cobjs)
-		find_art(tl, cob);
-}
-
-static void
-find_objs(struct tlist *tl, struct object *pob, int depth)
-{
-	struct object *cob;
-	struct tlist_item *it;
-	SDL_Surface *icon;
-
-	it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
-	    (pob->flags & OBJECT_DATA_RESIDENT) ? " (resident)" : "");
-	it->depth = depth;
-	it->class = "object";
-	it->p1 = pob;
 
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
@@ -2123,7 +2134,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 }
 
 static void
-poll_art(int argc, union evarg *argv)
+poll_libs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *pob = argv[1].p;
@@ -2131,15 +2142,14 @@ poll_art(int argc, union evarg *argv)
 
 	tlist_clear_items(tl);
 	lock_linkage();
-	find_art(tl, pob);
+	find_objs(tl, pob, 0);
 	unlock_linkage();
 	tlist_restore_selections(tl);
 }
 
 static void
-select_art(int argc, union evarg *argv)
+select_lib(int argc, union evarg *argv)
 {
-//	extern int insert_snap_mode, insert_replace_mode;
 	struct mapview *mv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
 	int state = argv[3].i;
@@ -2147,18 +2157,31 @@ select_art(int argc, union evarg *argv)
 
 	if (state == 0) {
 		if (mv->curtool != NULL &&
-		    mv->curtool->ops == &insert_ops)
+		    (mv->curtool->ops == &insert_ops ||
+		     mv->curtool->ops == &ginsert_ops))
 		    	mapview_select_tool(mv, NULL, NULL);
 	} else {
 		if (strcmp(it->class, "tile") == 0) {
 			struct sprite *spr = it->p1;
 	
-//			insert_snap_mode =
-//			    SPRITE(spr->pgfx->pobj,spr->index).snap_mode;
-//			insert_replace_mode =
-//			    (insert_snap_mode == GFX_SNAP_TO_GRID);
-
 			if ((t = mapview_find_tool(mv, "Insert")) != NULL) {
+				struct insert_tool *ins =
+				    (struct insert_tool *)t;
+
+				ins->snap_mode = SPRITE(spr->pgfx->pobj,
+				                        spr->index).snap_mode;
+				ins->replace_mode = (ins->snap_mode ==
+				                     GFX_SNAP_TO_GRID);
+
+				if (mv->curtool != NULL) {
+					mapview_select_tool(mv, NULL, NULL);
+				}
+				mapview_select_tool(mv, t, mv->map);
+				widget_focus(mv);
+			}
+		} else if (strcmp(it->class, "object") == 0 &&
+		    OBJECT_SUBCLASS(it->p1, "gobject.")) {
+			if ((t = mapview_find_tool(mv, "Ginsert")) != NULL) {
 				if (mv->curtool != NULL) {
 					mapview_select_tool(mv, NULL, NULL);
 				}
@@ -2175,13 +2198,18 @@ static void
 poll_objs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct object *pob = argv[1].p;
+	struct mapview *mv = argv[1].p;
+	struct map *m = mv->map;
 	struct tlist_item *it;
+	struct gobject *go;
 
 	tlist_clear_items(tl);
-	lock_linkage();
-	find_objs(tl, pob, 0);
-	unlock_linkage();
+	TAILQ_FOREACH(go, &SPACE(m)->gobjs, gobjs) {
+		it = tlist_insert(tl, object_icon(go), "%s [%d,%d %d-%d]",
+		    OBJECT(go)->name, go->g_map.x, go->g_map.y,
+		    go->g_map.l0, go->g_map.l1);
+		it->p1 = go;
+	}
 	tlist_restore_selections(tl);
 }
 
@@ -2518,7 +2546,7 @@ map_edit(void *p)
 	struct box *box_h, *box_v;
 	struct hpane *pane;
 	struct hpane_div *div;
-	struct tool *ins_tool;
+	struct tool *tool;
 	int flags = MAPVIEW_GRID|MAPVIEW_NO_BG|MAPVIEW_SHOW_ORIGIN;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
@@ -2541,9 +2569,9 @@ map_edit(void *p)
 	pitem = menu_add_item(menu, _("File"));
 	{
 		objmgr_generic_menu(pitem, m);
-	
 		menu_separator(pitem);
-		
+		space_generic_menu(pitem, m);
+		menu_separator(pitem);
 		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    window_generic_close, "%p", win);
@@ -2635,25 +2663,32 @@ map_edit(void *p)
 		struct box *tool_box;
 	
 		nb = notebook_new(div->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
-		ntab = notebook_add_tab(nb, _("Artwork"), BOX_VERT);
+		ntab = notebook_add_tab(nb, _("Library"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-			event_new(tl, "tlist-poll", poll_art, "%p", world);
-			event_new(tl, "tlist-changed", select_art, "%p", mv);
-			mv->art_tl = tl;
+			event_new(tl, "tlist-poll", poll_libs, "%p", world);
+			event_new(tl, "tlist-changed", select_lib, "%p", mv);
+			mv->lib_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		
 			tool_box = box_new(ntab, BOX_VERT, BOX_WFILL);
-			ins_tool = mapview_reg_tool(mv, &insert_ops, m);
-			ins_tool->pane = (void *)tool_box;
+			{
+				tool = mapview_reg_tool(mv, &insert_ops, m);
+				tool->pane = (void *)tool_box;
+				
+				tool = mapview_reg_tool(mv, &ginsert_ops, m);
+				tool->pane = (void *)tool_box;
+			}
 		}
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-			event_new(tl, "tlist-poll", poll_objs, "%p", world);
+			event_new(tl, "tlist-poll", poll_objs, "%p", mv);
+//			event_new(tl, "tlist-changed", select_obj, "%p", mv);
 			mv->objs_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
+		
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			struct AGMenuItem *mi;
