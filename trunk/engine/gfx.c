@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.52 2005/07/27 06:34:43 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.53 2005/07/29 03:13:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -117,6 +117,23 @@ sprite_free_transforms(struct sprite *spr)
 		Free(csprite, M_GFX);
 	}
 	SLIST_INIT(&spr->csprites);
+}
+
+int
+sprite_find(struct gfx *gfx, const char *name, Uint32 *offs)
+{
+	Uint32 i;
+
+	for (i = 0; i < gfx->nsprites; i++) {
+		struct sprite *spr = &gfx->sprites[i];
+
+		if (strcmp(spr->name, name) == 0) {
+			*offs = i;
+			return (1);
+		}
+	}
+	error_set(_("No such sprite: \"%s\""), name);
+	return (0);
 }
 
 void

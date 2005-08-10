@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.37 2005/07/27 06:34:43 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.38 2005/07/29 03:13:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -117,6 +117,7 @@ Uint32		 gfx_insert_anim(struct gfx *);
 Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
 
 void		 sprite_init(struct gfx *, Uint32);
+__inline__ int	 sprite_find(struct gfx *, const char *, Uint32 *);
 void		 sprite_destroy(struct gfx *, Uint32);
 void		 anim_init(struct gfx *, Uint32);
 void		 anim_destroy(struct gfx *, Uint32);
