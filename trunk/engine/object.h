@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.123 2005/07/16 16:07:28 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.124 2005/08/06 07:33:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -177,8 +177,8 @@ void	 object_move(void *, void *);
 
 struct object_dep	 *object_add_dep(void *, void *);
 __inline__ int		  object_find_dep(const void *, Uint32, void **);
-Uint32			  object_dep_index(const void *, const void *);
 void			  object_del_dep(void *, const void *);
+Uint32			  object_encode_name(const void *, const void *);
 
 #ifdef EDITION
 struct window	*object_edit(void *);
