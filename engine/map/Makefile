@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.6 2005/07/23 17:54:19 vedge Exp $
+#	$Csoft: Makefile,v 1.7 2005/07/24 06:55:57 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,7 +10,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 
 SRCS=	fill.c flip.c invert.c map.c mapedit.c mapview.c nodemask.c \
-	nodesel.c refsel.c tool.c transform.c insert.c
+	nodesel.c refsel.c tool.c transform.c insert.c ginsert.c
 MAN3=	map.3 mapview.3
 
 CFLAGS+=${SDL_CFLAGS}

@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.2 2005/05/08 02:10:04 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.3 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -126,7 +126,7 @@ nodemask_save(struct map *m, struct netbuf *buf, const struct nodemask *mask)
 
 	switch (mask->type) {
 	case NODEMASK_BITMAP:
-		write_uint32(buf, object_dep_index(m, mask->nm_bitmap.obj));
+		write_uint32(buf, object_encode_name(m, mask->nm_bitmap.obj));
 		write_uint32(buf, mask->nm_bitmap.offs);
 		break;
 	case NODEMASK_POLYGON:
