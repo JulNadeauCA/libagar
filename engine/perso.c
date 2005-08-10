@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.48 2005/05/29 00:27:46 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.49 2005/08/04 07:36:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,7 +59,8 @@ const struct gobject_ops perso_ops = {
 		perso_save,
 		perso_edit
 	},
-	perso_specify,
+	perso_map,
+	NULL,		/* unmap */
 	perso_update
 };
 
@@ -174,7 +175,7 @@ perso_save(void *obj, struct netbuf *buf)
 	pthread_mutex_lock(&ps->lock);
 	write_string(buf, ps->name);
 	write_uint32(buf, ps->flags);
-	write_uint32(buf, object_dep_index(ps, ps->tileset));
+	write_uint32(buf, object_encode_name(ps, ps->tileset));
 
 	write_sint32(buf, ps->level);
 	write_uint32(buf, ps->exp);
@@ -248,53 +249,44 @@ perso_edit(void *obj)
 			widget_bind(sbu, "value", WIDGET_INT, &ps->maxmp);
 		}
 	}
+	ntab = notebook_add_tab(nb, _("Position"), BOX_VERT);
+	gobject_edit(GOBJECT(ps), ntab);
 	return (win);
 }
 
 void
-perso_specify(void *obj, void *space, ...)
+perso_map(void *obj, void *space)
 {
 	struct perso *ps = obj;
-	va_list ap;
-	
-	va_start(ap, space);
+
+	dprintf("%s: mapping into %s\n", OBJECT(ps)->name, OBJECT(space)->name);
 
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
-		int x = va_arg(ap, int);
-		int y = va_arg(ap, int);
-		int l = va_arg(ap, int);
 		
-		dprintf("%s: -> %s (%d,%d,%d)\n", OBJECT(ps)->name,
-		    OBJECT(space)->name, x, y, l);
-	
-		
+		if (go_map_sprite(ps, m, 0, 0, 0, ps->tileset, "Idle-S")
+		    == NULL) {
+			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
+			    OBJECT(space)->name, error_get());
+		}
 	}
 #ifdef HAVE_OPENGL
 	else if (OBJECT_TYPE(space, "scene")) {
-		double x = va_arg(ap, double);
-		double y = va_arg(ap, double);
-		double z = va_arg(ap, double);
-
-		glPushMatrix();
-		glTranslated(x, y, z);
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(-3, +3, 0);
 		glVertex3f(-3, -3, 0);
 		glVertex3f(+3, -3, 0);
 		glVertex3f(+3, +3, 0);
 		glEnd();
-		glPopMatrix();
 	}
 #endif
-	va_end(ap);
 }
 
 void
-perso_update(void *obj, void *space)
+perso_update(void *space, void *obj)
 {
-	struct perso *ps= obj;
+	struct perso *ps = obj;
 	
-	dprintf("%s: update (%s space)\n", OBJECT(ps)->name,
+	dprintf("%s: update (space=%s)\n", OBJECT(ps)->name,
 	    OBJECT(space)->name);
 }
