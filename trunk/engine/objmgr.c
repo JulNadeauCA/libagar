@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.34 2005/07/30 02:01:30 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.35 2005/08/04 07:10:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -205,6 +205,7 @@ close_obj_data(int argc, union evarg *argv)
 	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
+	object_page_out(oent->obj, OBJECT_GFX);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
 
@@ -234,6 +235,11 @@ objmgr_open_data(void *p)
 
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
 		printf("%s data: %s\n", ob->name, error_get());
+		return;
+	}
+	if (object_page_in(ob, OBJECT_GFX) == -1) {
+		printf("%s gfx: %s\n", ob->name, error_get());
+		object_page_out(ob, OBJECT_DATA);
 		return;
 	}
 	object_add_dep(&mapedit.pseudo, ob);
