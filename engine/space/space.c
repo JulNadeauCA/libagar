@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.1 2005/05/01 00:46:08 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.2 2005/08/10 06:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -132,8 +132,6 @@ space_attach(void *sp_obj, void *obj)
 
 	pthread_mutex_lock(&go->lock);
 	
-	dprintf("%s to %s\n", OBJECT(obj)->name, OBJECT(sp_obj)->name);
-
 	if (object_page_in(go, OBJECT_DATA) == -1) {
 		pthread_mutex_unlock(&go->lock);
 		return (-1);
@@ -178,7 +176,7 @@ space_detach(void *sp_obj, void *obj)
 {
 	struct gobject *go = obj;
 	struct space *space = sp_obj;
-	
+
 	pthread_mutex_lock(&go->lock);
 
 	if (OBJECT_TYPE(space, "map")) {
