@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.220 2005/08/06 07:32:40 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.221 2005/08/10 06:07:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -811,8 +811,12 @@ object_page_out(void *p, enum object_page_item item)
 #endif
 		if (ob->data_used != OBJECT_DEP_MAX &&
 		    --ob->data_used == 0) {
-			if (object_save(ob) == -1) {
-				goto fail;
+			extern int objmgr_exiting;
+
+			if (!objmgr_exiting) {
+				if (object_save(ob) == -1) {
+					goto fail;
+				}
 			}
 			object_free_data(ob);
 		}
@@ -1187,7 +1191,10 @@ object_save(void *p)
 	pthread_mutex_lock(&ob->lock);
 	debug(DEBUG_STATE, "saving %s\n", ob->name);
 
+	dprintf("save %s\n", ob->name);
+
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
+		dprintf("save %s: non persistent\n", ob->name);
 		error_set(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
