@@ -1,4 +1,4 @@
-/*	$Csoft: ginsert.c,v 1.8 2005/08/01 03:20:51 vedge Exp $	*/
+/*	$Csoft: ginsert.c,v 1.1 2005/08/10 06:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -139,8 +139,9 @@ ginsert_effect(void *p, struct node *n)
 	}
 
 	if (go->parent != NULL) {
-		space_detach(go->parent, go);
+		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
 		TAILQ_REMOVE(&SPACE(go->parent)->gobjs, go, gobjs);
+		space_detach(go->parent, go);
 	}
 	go->g_map.x = mv->cx;
 	go->g_map.y = mv->cy;
