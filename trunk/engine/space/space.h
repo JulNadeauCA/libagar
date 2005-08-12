@@ -1,4 +1,4 @@
-/*	$Csoft: space.h,v 1.1 2005/05/01 00:46:08 vedge Exp $	*/
+/*	$Csoft: space.h,v 1.2 2005/08/10 06:59:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PHYS_SPACE_H_
@@ -66,9 +66,6 @@ int		  space_load(void *, struct netbuf *);
 int		  space_save(void *, struct netbuf *);
 int		  space_attach(void *, void *);
 void		  space_detach(void *, void *);
-#ifdef EDITION
-void		  space_generic_menu(void *, void *);
-#endif
 __END_DECLS
 
 #include "close_code.h"

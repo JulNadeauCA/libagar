@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.2 2005/08/10 06:59:26 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.3 2005/08/11 05:56:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -216,29 +216,3 @@ out:
 	pthread_mutex_unlock(&go->lock);
 }
 
-#ifdef EDITION
-static void
-detach_all_gobjs(int argc, union evarg *argv)
-{
-	struct space *sp = argv[1].p;
-	struct gobject *go;
-
-	TAILQ_FOREACH(go, &sp->gobjs, gobjs) {
-		space_detach(sp, go);
-	}
-	TAILQ_INIT(&sp->gobjs);
-}
-
-void
-space_generic_menu(void *menup, void *space)
-{
-	struct AGMenuItem *pitem = menup;
-	struct AGMenuItem *it;
-
-	it = menu_action(pitem, _("Space"), -1, NULL, NULL);
-	{
-		menu_action(it, _("Detach all objects"), -1,
-		    detach_all_gobjs, "%p", space);
-	}
-}
-#endif /* EDITION */
