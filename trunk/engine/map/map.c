@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.43 2005/08/01 04:56:46 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.44 2005/08/10 06:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2195,7 +2195,7 @@ select_lib(int argc, union evarg *argv)
 }
 
 static void
-poll_objs(int argc, union evarg *argv)
+poll_gobjs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -2209,6 +2209,7 @@ poll_objs(int argc, union evarg *argv)
 		    OBJECT(go)->name, go->g_map.x, go->g_map.y,
 		    go->g_map.l0, go->g_map.l1);
 		it->p1 = go;
+		it->class = "gobject";
 	}
 	tlist_restore_selections(tl);
 }
@@ -2531,6 +2532,22 @@ center_to_origin(int argc, union evarg *argv)
 	mapview_update_camera(mv);
 }
 
+static void
+detach_gobject(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct map *m = argv[2].p;
+	struct tlist_item *it;
+
+	if ((it = tlist_selected_item(tl)) != NULL &&
+	     strcmp(it->class, "gobject") == 0) {
+		struct gobject *go = it->p1;
+	
+		TAILQ_REMOVE(&SPACE(m)->gobjs, go, gobjs);
+		space_detach(m, go);
+	}
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -2569,8 +2586,6 @@ map_edit(void *p)
 	pitem = menu_add_item(menu, _("File"));
 	{
 		objmgr_generic_menu(pitem, m);
-		menu_separator(pitem);
-		space_generic_menu(pitem, m);
 		menu_separator(pitem);
 		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
@@ -2661,6 +2676,7 @@ map_edit(void *p)
 		struct notebook_tab *ntab;
 		struct tlist *tl;
 		struct box *tool_box;
+		struct AGMenuItem *mi;
 	
 		nb = notebook_new(div->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
 		ntab = notebook_add_tab(nb, _("Library"), BOX_VERT);
@@ -2683,15 +2699,21 @@ map_edit(void *p)
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-			event_new(tl, "tlist-poll", poll_objs, "%p", mv);
+			event_new(tl, "tlist-poll", poll_gobjs, "%p", mv);
 //			event_new(tl, "tlist-changed", select_obj, "%p", mv);
 			mv->objs_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
+			
+			mi = tlist_set_popup(mv->objs_tl, "gobject");
+			{
+				menu_action(mi, _("Detach object"),
+				    ERASER_TOOL_ICON, detach_gobject,
+				    "%p,%p", mv->objs_tl, m); 
+			}
 		}
 		
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
-			struct AGMenuItem *mi;
 			struct textbox *tb;
 			struct button *bu;
 
