@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.206 2005/08/06 07:08:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.207 2005/08/06 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -293,6 +293,7 @@ unminimize_window(int argc, union evarg *argv)
 static void
 event_dispatch(SDL_Event *ev)
 {
+	extern int objmgr_exiting;
 	struct window *win;
 
 	pthread_mutex_lock(&view->lock);
@@ -385,7 +386,6 @@ event_dispatch(SDL_Event *ev)
 #ifdef EDITION
 		{
 			extern int world_changed;
-			extern int objmgr_exiting;
 
 			if (!objmgr_exiting && world_changed) {
 				objmgr_exiting = 1;
@@ -397,6 +397,7 @@ event_dispatch(SDL_Event *ev)
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
 		pthread_mutex_unlock(&view->lock);
+		objmgr_exiting = 1;
 		engine_destroy();
 		/* NOTREACHED */
 		break;
