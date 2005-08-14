@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.h,v 1.3 2005/08/04 07:36:30 vedge Exp $	*/
+/*	$Csoft: gobject.h,v 1.4 2005/08/10 06:53:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_GOBJECT_H_
@@ -53,11 +53,10 @@ int		 gobject_load(void *, struct netbuf *);
 int		 gobject_save(void *, struct netbuf *);
 void		 gobject_update(void *);
 
-struct noderef *go_map_sprite(void *, struct map *, int, int, int, void *,
-                              const char *);
+int go_map_sprite(void *, struct map *, int, int, int, void *, const char *);
 
 #ifdef EDITION
-void		 gobject_edit(struct gobject *, void *);
+void gobject_edit(struct gobject *, void *);
 #endif /* EDITION */
 __END_DECLS
 
