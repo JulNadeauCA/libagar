@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.3 2005/08/04 07:36:30 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.4 2005/08/10 06:53:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -168,41 +168,76 @@ gobject_update(void *obj)
 {
 }
 
-struct noderef *
-go_map_sprite(void *obj, struct map *m, int x0, int y0, int l0,
+int
+go_map_sprite(void *obj, struct map *m, int x0, int y0, int L0,
     void *gfx_obj, const char *name)
 {
 	struct gobject *go = obj;
 	struct gfx *gfx;
-	struct noderef *r;
 	Uint32 offs;
+	struct sprite *spr;
 	int x = go->g_map.x + x0;
 	int y = go->g_map.y + y0;
-	int l = go->g_map.l0 + l0;
-	struct node *node = &m->map[y][x];
+	int l0 = go->g_map.l0 + L0, l;
+	int sx, sy, dx, dy;
+	int dx0, dy0, xorig, yorig;
+	SDL_Surface *su;
+	int n = 0;
 
 	if (gfx_obj == NULL || (gfx = OBJECT(gfx_obj)->gfx) == NULL) {
 		error_set("NULL gfx");
-		return (NULL);
+		return (-1);
 	}
 	if (!sprite_find(gfx, name, &offs)) {
-		return (NULL);
+		return (-1);
 	}
-	while (l >= m->nlayers) {
-		if (map_push_layer(m, "") == -1)
-			return (NULL);
-	}
+	spr = &gfx->sprites[offs];
+	su = spr->su;
+	dx0 = x - spr->xOrig/TILESZ;
+	dy0 = y - spr->yOrig/TILESZ;
+	xorig = spr->xOrig%TILESZ;
+	yorig = spr->yOrig%TILESZ;
 
-	r = node_add_sprite(m, node, gfx_obj, offs);
-	r->p = obj;
-	r->layer = l;
-
-	if (x < go->g_map.x0) { go->g_map.x0 = x; }
-	else if (x > go->g_map.x1) { go->g_map.x1 = x; }
-	if (y < go->g_map.y0) { go->g_map.y0 = y; }
-	else if (y > go->g_map.y1) { go->g_map.y1 = y; }
+	for (sy = 0, dy = dy0;
+	     sy < su->h && dy < m->maph;
+	     sy += TILESZ, dy++) {
+		for (sx = 0, dx = dx0;
+		     sx < su->w && dx < m->mapw;
+		     sx += TILESZ, dx++) {
+			struct node *dn = &m->map[dy][dx];
+			struct noderef *r;
 	
-	return (r);
+			r = node_add_sprite(m, dn, gfx_obj, offs);
+			r->p = obj;
+			r->r_gfx.rs.x = sx;
+			r->r_gfx.rs.y = sy;
+			r->r_gfx.rs.w = TILESZ;
+			r->r_gfx.rs.h = TILESZ;
+			r->r_gfx.xorigin = xorig;
+			r->r_gfx.yorigin = yorig;
+			r->flags |= spr->attrs[n];
+
+			l = l0 + spr->layers[n];
+			if (l < 0) {
+				l = 0;
+			} else {
+				while (m->nlayers <= l) {
+					map_push_layer(m, "");
+				}
+			}
+			r->layer = l;
+	
+			if (dx < go->g_map.x0) { go->g_map.x0 = dx; }
+			else if (dx > go->g_map.x1) { go->g_map.x1 = dx; }
+			if (dy < go->g_map.y0) { go->g_map.y0 = dy; }
+			else if (dy > go->g_map.y1) { go->g_map.y1 = dy; }
+			if (l < go->g_map.l0) { go->g_map.l0 = l; }
+			else if (l > go->g_map.l1) { go->g_map.l1 = l; }
+
+			n++;
+		}
+	}
+	return (0);
 }
 
 #ifdef EDITION
