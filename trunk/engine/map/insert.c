@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.8 2005/08/01 03:20:51 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.9 2005/08/10 06:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -198,9 +198,10 @@ insert_effect(void *p, struct node *n)
 				nlayer = m->cur_layer + spr->layers[n];
 				if (nlayer < 0) {
 					nlayer = 0;
-				}
-				if (nlayer >= m->nlayers) {
-					map_push_layer(m, "");
+				} else {
+					if (nlayer >= m->nlayers) {
+						map_push_layer(m, "");
+					}
 				}
 				r->layer = nlayer;
 
