@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.222 2005/08/11 05:56:41 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.223 2005/08/15 02:27:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1191,6 +1191,21 @@ fail:
 	return (-1);
 }
 
+static void
+backup_object(void *p, const char *orig)
+{
+	char path[MAXPATHLEN];
+	struct stat sb;
+
+	if (stat(orig, &sb) == 0) {
+		strlcpy(path, orig, sizeof(path));
+		strlcat(path, ".bak", sizeof(path));
+		if (rename(orig, path) == -1) {
+			fprintf(stderr, "%s: %s\n", path, strerror(errno));
+		}
+	}
+}
+
 /* Save the state of an object and its children. */
 int
 object_save(void *p)
@@ -1207,15 +1222,12 @@ object_save(void *p)
 	Uint32 count;
 	struct object_dep *dep;
 	int was_resident;
-	
+
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
 	debug(DEBUG_STATE, "saving %s\n", ob->name);
 
-	dprintf("save %s\n", ob->name);
-
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
-		dprintf("save %s: non persistent\n", ob->name);
 		error_set(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
@@ -1253,6 +1265,8 @@ object_save(void *p)
 	strlcat(save_file, ob->name, sizeof(save_file));
 	strlcat(save_file, ".", sizeof(save_file));
 	strlcat(save_file, ob->type, sizeof(save_file));
+
+	backup_object(ob, save_file);
 
 	if ((buf = netbuf_open(save_file, "wb", NETBUF_BIG_ENDIAN)) == NULL)
 		goto fail_reinit;
@@ -1463,8 +1477,11 @@ object_del_dep(void *p, const void *depobj)
 		if (dep->obj == depobj)
 			break;
 	}
-	if (dep == NULL)
-		fatal("%s: no such dep", OBJECT(depobj)->name);
+	if (dep == NULL) {
+		dprintf("%s: no such dep: %s\n", ob->name,
+		    OBJECT(depobj)->name);
+		return;
+	}
 
 	if (dep->count == OBJECT_DEP_MAX)			/* Wired */
 		return;
