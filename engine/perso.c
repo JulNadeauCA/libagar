@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.51 2005/08/14 01:03:14 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.52 2005/08/15 02:27:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -261,7 +261,7 @@ perso_map(void *obj, void *space)
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
 
-		if (go_map_sprite(ps, m, 0, -1, 0, ps->tileset, "Idle-S")
+		if (go_map_sprite(ps, m, 0, 0, 0, ps->tileset, "Idle-S")
 		    == -1) {
 			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
 			    OBJECT(space)->name, error_get());
