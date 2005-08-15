@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.4 2005/08/10 06:53:56 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.5 2005/08/14 01:03:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -55,6 +55,7 @@ gobject_init(void *obj, const char *type, const char *name,
 	strlcat(tname, type, sizeof(tname));
 
 	object_init(go, tname, name, ops);
+	object_remain(go, OBJECT_REMAIN_DATA);
 	pthread_mutex_init(&go->lock, &recursive_mutexattr);
 	go->type = GOBJECT_NONE;
 	go->flags = 0;
@@ -85,6 +86,7 @@ gobject_load(void *obj, struct netbuf *buf)
 
 	pthread_mutex_lock(&go->lock);
 
+#if 0
 	if (go->parent != NULL) {
 		dprintf("reattaching %s to %s\n", OBJECT(go)->name,
 		    OBJECT(go->parent)->name);
@@ -94,7 +96,8 @@ gobject_load(void *obj, struct netbuf *buf)
 	} else {
 		space = NULL;
 	}
-	
+#endif
+
 	go->type = (enum gobject_type)read_uint32(buf);
 	go->flags = (int)read_uint32(buf) & GOBJECT_SAVED_FLAGS;
 	switch (go->type) {
@@ -119,13 +122,14 @@ gobject_load(void *obj, struct netbuf *buf)
 	default:
 		break;
 	}
-
+#if 0
 	if (space != NULL) {
 		space_attach(space, go);
 		dprintf("reattached %s to %s\n", OBJECT(go)->name,
 		    OBJECT(go->parent)->name);
 		pthread_mutex_unlock(&space->lock);
 	}
+#endif
 	pthread_mutex_unlock(&go->lock);
 	return (0);
 }
@@ -169,15 +173,15 @@ gobject_update(void *obj)
 }
 
 int
-go_map_sprite(void *obj, struct map *m, int x0, int y0, int L0,
+go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
     void *gfx_obj, const char *name)
 {
 	struct gobject *go = obj;
 	struct gfx *gfx;
 	Uint32 offs;
 	struct sprite *spr;
-	int x = go->g_map.x + x0;
-	int y = go->g_map.y + y0;
+	int x = go->g_map.x + X0;
+	int y = go->g_map.y + Y0;
 	int l0 = go->g_map.l0 + L0, l;
 	int sx, sy, dx, dy;
 	int dx0, dy0, xorig, yorig;

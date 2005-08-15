@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.3 2005/08/11 05:56:43 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.4 2005/08/12 06:09:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -132,11 +132,6 @@ space_attach(void *sp_obj, void *obj)
 
 	pthread_mutex_lock(&go->lock);
 	
-	if (object_page_in(go, OBJECT_DATA) == -1) {
-		pthread_mutex_unlock(&go->lock);
-		return (-1);
-	}
-	
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = (struct map *)space;
 		
@@ -147,9 +142,6 @@ space_attach(void *sp_obj, void *obj)
 			goto fail;
 		}
 
-		if (object_page_in(go, OBJECT_GFX) == -1) {
-			goto fail;
-		}
 		object_add_dep(m, go);
 
 		go->type = GOBJECT_MAP;
@@ -166,7 +158,6 @@ space_attach(void *sp_obj, void *obj)
 	pthread_mutex_unlock(&go->lock);
 	return (0);
 fail:
-	object_page_out(go, OBJECT_DATA);
 	pthread_mutex_unlock(&go->lock);
 	return (-1);
 }
@@ -206,8 +197,6 @@ space_detach(void *sp_obj, void *obj)
 			}
 		}
 		object_del_dep(space, go);
-		object_page_out(go, OBJECT_DATA);
-		object_page_out(go, OBJECT_GFX);
 	}
 
 	go->type = GOBJECT_NONE;

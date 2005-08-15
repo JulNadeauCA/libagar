@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.50 2005/08/10 06:53:59 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.51 2005/08/14 01:03:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -133,16 +133,13 @@ perso_load(void *obj, struct netbuf *buf)
 	name = read_uint32(buf);
 
 	if (name != 0) {
-		dprintf("loading tileset (%d)\n", name);
 		if (object_find_dep(ps, name, &ps->tileset) == -1) {
-			dprintf("error loading tileset %d: %s\n", name,
-			    error_get());
 			goto fail;
 		}
-		object_add_dep(ps, ps->tileset);
-		object_page_in(ps->tileset, OBJECT_GFX);
-	} else {
-		dprintf("loading tileset (none)\n");
+		if (ps->tileset != NULL) {
+			object_add_dep(ps, ps->tileset);
+			object_page_in(ps->tileset, OBJECT_GFX);
+		}
 	}
 
 	ps->level = read_sint32(buf);
@@ -264,7 +261,7 @@ perso_map(void *obj, void *space)
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
 
-		if (go_map_sprite(ps, m, 0, 0, 0, ps->tileset, "Idle-S")
+		if (go_map_sprite(ps, m, 0, -1, 0, ps->tileset, "Idle-S")
 		    == -1) {
 			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
 			    OBJECT(space)->name, error_get());
