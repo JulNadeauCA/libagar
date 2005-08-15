@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.4 2005/08/12 06:09:11 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.5 2005/08/15 02:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -115,6 +115,8 @@ space_save(void *obj, struct netbuf *buf)
 	ngobjs_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(gobj, &sp->gobjs, gobjs) {
+		dprintf("gobject: %s (%s)\n", OBJECT(gobj)->name,
+		    OBJECT(gobj)->type);
 		write_uint32(buf, object_encode_name(sp, gobj));
 		ngobjs++;
 	}
