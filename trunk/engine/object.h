@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.124 2005/08/06 07:33:59 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.125 2005/08/10 06:07:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -57,12 +57,15 @@ struct object {
 #define OBJECT_WAS_RESIDENT	0x080	/* Used internally by object_load() */
 #define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
 #define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
-#define OBJECT_DETACHED_SAVE	0x400	/* Don't include in parent save */
+#define OBJECT_REMAIN_DATA	0x400	/* Keep data resident */
+#define OBJECT_REMAIN_GFX	0x800	/* Keep graphics resident */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
 				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
-				 OBJECT_REOPEN_ONLOAD)
+				 OBJECT_REOPEN_ONLOAD|OBJECT_REMAIN_DATA|\
+				 OBJECT_REMAIN_GFX)
 #define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT|\
-				 OBJECT_REOPEN_ONLOAD)
+				 OBJECT_REOPEN_ONLOAD|OBJECT_REMAIN_DATA|\
+				 OBJECT_REMAIN_GFX)
 
 	pthread_mutex_t	 lock;
 	struct gfx	*gfx;		/* Associated graphics package */
@@ -127,6 +130,7 @@ __BEGIN_DECLS
 struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
 void		 object_free_data(void *);
+void		 object_remain(void *, int);
 
 int	 object_copy_name(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);

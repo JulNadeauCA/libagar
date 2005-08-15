@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.77 2005/07/19 02:37:32 vedge Exp $
+.\"	$Csoft: object.3,v 1.78 2005/08/10 06:07:02 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -184,14 +184,16 @@ The following public
 .Nm
 flags are defined:
 .Bd -literal
-#define OBJECT_RELOAD_PROPS   0x01 /* Don't free props before load */
-#define OBJECT_NON_PERSISTENT 0x02 /* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE 0x04 /* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT  0x08 /* Object data is resident (RO) */
-#define OBJECT_PRESERVE_DEPS  0x10 /* Don't remove dep if count=0 */
-#define OBJECT_STATIC         0x20 /* Don't free() after detach */
-#define OBJECT_READONLY       0x40 /* Disallow edition (advisory) */
+#define OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
+#define OBJECT_NON_PERSISTENT 0x002 /* Never include in saves */
+#define OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
+#define OBJECT_DATA_RESIDENT  0x008 /* Object data is resident (RO) */
+#define OBJECT_PRESERVE_DEPS  0x010 /* Don't remove dep if count=0 */
+#define OBJECT_STATIC         0x020 /* Don't free() after detach */
+#define OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
 #define OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
+#define OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
+#define OBJECT_REMAIN_GFX     0x800 /* Keep graphics resident */
 .Ed
 .Pp
 The

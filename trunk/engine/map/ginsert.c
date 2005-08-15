@@ -1,4 +1,4 @@
-/*	$Csoft: ginsert.c,v 1.1 2005/08/10 06:59:23 vedge Exp $	*/
+/*	$Csoft: ginsert.c,v 1.2 2005/08/11 05:56:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -133,11 +133,6 @@ ginsert_effect(void *p, struct node *n)
 	}
 	go = it->p1;
 
-	if (object_page_in(go, OBJECT_DATA) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(go)->name, error_get());
-		return (1);
-	}
-
 	if (go->parent != NULL) {
 		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
 		TAILQ_REMOVE(&SPACE(go->parent)->gobjs, go, gobjs);
@@ -154,8 +149,6 @@ ginsert_effect(void *p, struct node *n)
 	} else {
 		TAILQ_INSERT_TAIL(&SPACE(go->parent)->gobjs, go, gobjs);
 	}
-
-	object_page_out(go, OBJECT_DATA);
 	return (1);
 }
 

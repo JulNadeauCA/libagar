@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.221 2005/08/10 06:07:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.222 2005/08/11 05:56:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -140,6 +140,27 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	CIRCLEQ_INIT(&ob->timeouts);
+}
+
+void
+object_remain(void *p, int flags)
+{
+	struct object *ob = p;
+
+	if (flags & OBJECT_REMAIN_DATA) {
+		ob->flags |= (OBJECT_REMAIN_DATA|OBJECT_DATA_RESIDENT);
+		ob->data_used = OBJECT_DEP_MAX;
+	} else {
+		ob->flags &= ~OBJECT_REMAIN_DATA;
+	}
+	if (flags & OBJECT_REMAIN_GFX) {
+		ob->flags |= OBJECT_REMAIN_GFX;
+		if (ob->gfx != NULL) {
+			ob->gfx->used = GFX_MAX_USED;
+		}
+	} else {
+		ob->flags &= ~OBJECT_REMAIN_GFX;
+	}
 }
 
 /*
@@ -920,7 +941,7 @@ object_reload_data(void *p)
 {
 	struct object *ob = p, *cob;
 
-	if (ob->flags & OBJECT_WAS_RESIDENT) {
+	if (ob->flags & (OBJECT_WAS_RESIDENT|OBJECT_REMAIN_DATA)) {
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(ob) == -1) {
 			if (object_ignore_dataerrs) {
@@ -1267,8 +1288,7 @@ object_save(void *p)
 	write_uint32(buf, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (child->flags & (OBJECT_NON_PERSISTENT|
-		                    OBJECT_DETACHED_SAVE)) {
+		if (child->flags & OBJECT_NON_PERSISTENT) {
 			continue;
 		}
 		write_string(buf, child->name);

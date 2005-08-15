@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.44 2005/08/10 06:59:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.45 2005/08/12 06:09:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -219,7 +219,6 @@ noderef_destroy(struct map *m, struct noderef *r)
 	case NODEREF_GOBJ:
 		if (r->r_gobj.p != NULL) {
 			object_del_dep(m, r->r_gobj.p);
-			object_page_out(r->r_gobj.p, OBJECT_GFX);
 		}
 		break;
 	default:
@@ -655,11 +654,8 @@ node_add_gobj(struct map *map, struct node *node, void *gobj)
 {
 	struct noderef *r;
 
-	if (gobj != NULL) {
+	if (gobj != NULL)
 		object_add_dep(map, gobj);
-		if (object_page_in(gobj, OBJECT_GFX) == -1)
-			fatal("page gobj: %s", error_get());
-	}
 
 	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_GOBJ);
