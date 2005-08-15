@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.5 2005/08/14 01:03:14 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.6 2005/08/15 02:27:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -219,6 +219,8 @@ go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
 			r->r_gfx.rs.h = TILESZ;
 			r->r_gfx.xorigin = xorig;
 			r->r_gfx.yorigin = yorig;
+			r->r_gfx.xcenter = TILESZ/2;
+			r->r_gfx.ycenter = TILESZ/2;
 			r->flags |= spr->attrs[n];
 
 			l = l0 + spr->layers[n];
