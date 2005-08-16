@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.6 2005/08/15 02:27:25 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.7 2005/08/15 03:52:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -57,9 +57,17 @@ gobject_init(void *obj, const char *type, const char *name,
 	object_init(go, tname, name, ops);
 	object_remain(go, OBJECT_REMAIN_DATA);
 	pthread_mutex_init(&go->lock, &recursive_mutexattr);
-	go->type = GOBJECT_NONE;
 	go->flags = 0;
 	go->parent = NULL;
+	go->type = GOBJECT_MAP;
+	go->g_map.x = 0;
+	go->g_map.y = 0;
+	go->g_map.l0 = 0;
+	go->g_map.l1 = 0;
+	go->g_map.x0 = 0;
+	go->g_map.y0 = 0;
+	go->g_map.x1 = 0;
+	go->g_map.y1 = 0;
 }
 
 void
