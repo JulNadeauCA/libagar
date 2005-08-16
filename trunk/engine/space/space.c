@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.5 2005/08/15 02:27:28 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.6 2005/08/15 03:52:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -200,8 +200,6 @@ space_detach(void *sp_obj, void *obj)
 		}
 		object_del_dep(space, go);
 	}
-
-	go->type = GOBJECT_NONE;
 	go->parent = NULL;
 out:
 	pthread_mutex_unlock(&go->lock);
