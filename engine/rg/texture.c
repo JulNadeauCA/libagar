@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.4 2005/06/07 03:05:23 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.5 2005/06/09 02:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -102,20 +102,30 @@ texture_find(struct tileset *ts, const char *texname)
 }
 
 static void
+find_tilesets(struct tlist *tl, struct object *pob, int depth)
+{
+	struct object *cob;
+	struct tlist_item *it;
+	
+	if (OBJECT_TYPE(pob, "tileset")) {
+		it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
+		    (pob->flags & OBJECT_DATA_RESIDENT) ?
+		    _(" (resident)") : "");
+		it->p1 = pob;
+	}
+	TAILQ_FOREACH(cob, &pob->children, cobjs)
+		find_tilesets(tl, cob, depth+1);
+}
+
+static void
 poll_tilesets(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct tileset *ts;
+	struct tlist_item *it;
 
 	tlist_clear_items(tl);
 	lock_linkage();
-	OBJECT_FOREACH_CHILD(ts, world, tileset) {
-		if (!OBJECT_TYPE(ts, "tileset"))
-			continue;
-		
-		tlist_insert_item(tl, ICON(TILESET_ICON),
-		    OBJECT(ts)->name, ts);
-	}
+	find_tilesets(tl, world, 0);
 	unlock_linkage();
 	tlist_restore_selections(tl);
 }
