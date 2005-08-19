@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.223 2005/08/15 02:27:25 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.224 2005/08/15 03:52:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -613,12 +613,13 @@ object_free_events(struct object *ob)
 
 /* Cancel any scheduled timeout(3) event associated with the object. */
 void
-object_cancel_timeouts(struct object *ob, int flags)
+object_cancel_timeouts(void *p, int flags)
 {
+	struct object *ob = p, *tob;
 	extern pthread_mutex_t timeout_lock;
 	extern struct objectq timeout_objq;
 	struct event *ev;
-	struct timeout *to, *nto;
+	struct timeout *to;
 
 	pthread_mutex_lock(&timeout_lock);
 	pthread_mutex_lock(&ob->lock);
@@ -626,16 +627,15 @@ object_cancel_timeouts(struct object *ob, int flags)
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags) == 0) {
-			dprintf("%s: cancelling scheduled `%s' ev\n", ob->name,
+			dprintf("%s: cancelling scheduled `%s'\n", ob->name,
 			    ev->name);
 			timeout_del(ob, &ev->timeout);
 			ev->flags &= ~(EVENT_SCHEDULED);
 		}
 	}
-	CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
-		dprintf("%s: cancelling scheduled timeout (%d tick, ival %d)\n",
-		    ob->name, to->ticks, to->ival);
-		TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+	TAILQ_FOREACH(tob, &timeout_objq, tobjs) {
+		if (tob == ob)
+			TAILQ_REMOVE(&timeout_objq, ob, tobjs);
 	}
 	CIRCLEQ_INIT(&ob->timeouts);
 
