@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.3 2005/06/13 06:19:30 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.4 2005/06/15 03:36:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -91,6 +91,7 @@ mousebuttondown(int argc, union evarg *argv)
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (x > div->x-4 && x < div->x+4) {
 			div->moving = 1;
+			WIDGET(pa)->flags |= WIDGET_UNFOCUSED_MOTION;
 		} else {
 			div->moving = 0;
 		}
@@ -146,6 +147,8 @@ mousebuttonup(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(div, &pa->divs, divs)
 		div->moving = 0;
+	
+	WIDGET(pa)->flags &= ~WIDGET_UNFOCUSED_MOTION;
 }
 
 void
