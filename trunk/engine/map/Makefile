@@ -1,9 +1,7 @@
-#	$Csoft: Makefile,v 1.7 2005/07/24 06:55:57 vedge Exp $
+#	$Csoft: Makefile,v 1.8 2005/08/10 06:59:23 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
-
-SUBDIR=	pixmaps
 
 LIB=		map
 LIB_SHARED=	Yes
