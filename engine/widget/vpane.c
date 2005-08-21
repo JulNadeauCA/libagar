@@ -1,4 +1,4 @@
-/*	$Csoft: vpane.c,v 1.4 2005/06/15 03:36:51 vedge Exp $	*/
+/*	$Csoft: vpane.c,v 1.1 2005/08/21 07:09:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -107,8 +107,6 @@ mousemotion(int argc, union evarg *argv)
 	int rx = argv[3].i;
 	int ry = argv[4].i;
 	
-	dprintf("mot %d,%d\n", rx, ry);
-
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
 			struct widget *w1 = WIDGET(div->box1);
