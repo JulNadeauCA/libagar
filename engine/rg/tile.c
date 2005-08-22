@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.75 2005/07/30 01:43:14 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.76 2005/07/31 03:16:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -120,6 +120,7 @@ void
 tile_init(struct tile *t, struct tileset *ts, const char *name)
 {
 	strlcpy(t->name, name, sizeof(t->name));
+	t->clname[0] = '\0';
 	t->flags = 0;
 	t->su = NULL;
 	t->ts = ts;
@@ -195,6 +196,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 		sprite_set_surface(OBJECT(ts)->gfx, t->s, t->su);
 	}
 	sprite_set_name(OBJECT(ts)->gfx, t->s, t->name);
+	sprite_set_class(OBJECT(ts)->gfx, t->s, t->clname);
 
 	/* Initialize the gfx attributes. */
 	Free(TILE_ATTRS(t), M_RG);
@@ -1645,6 +1647,9 @@ tile_infos(int argc, union evarg *argv)
 	tb = textbox_new(win, _("Name: "));
 	widget_bind(tb, "string", WIDGET_STRING, t->name, sizeof(t->name));
 	widget_focus(tb);
+
+	tb = textbox_new(win, _("Class: "));
+	widget_bind(tb, "string", WIDGET_STRING, t->clname, sizeof(t->clname));
 
 	msb = mspinbutton_new(win, "x", _("Size: "));
 	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);

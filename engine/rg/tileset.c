@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.54 2005/08/03 04:30:23 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.55 2005/08/04 13:29:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 #include <engine/widget/menu.h>
 #include <engine/widget/notebook.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/combo.h>
 
 #include "tileset.h"
 
@@ -48,7 +49,7 @@
 
 const struct version tileset_ver = {
 	"agar tileset",
-	6, 0
+	7, 0
 };
 
 const struct object_ops tileset_ops = {
@@ -199,6 +200,7 @@ tileset_load(void *obj, struct netbuf *buf)
 		return (-1);
 	
 	pthread_mutex_lock(&ts->lock);
+	copy_string(ts->template, buf, sizeof(ts->template));
 	ts->flags = read_uint32(buf);
 	ts->max_sprites = read_uint32(buf);
 
@@ -379,6 +381,7 @@ tileset_save(void *obj, struct netbuf *buf)
 
 	pthread_mutex_lock(&ts->lock);
 
+	write_string(buf, ts->template);
 	write_uint32(buf, ts->flags);
 	write_uint32(buf, ts->max_sprites);
 
@@ -741,6 +744,7 @@ poll_tiles(int argc, union evarg *argv)
 }
 
 static char ins_tile_name[TILE_NAME_MAX];
+static char ins_tile_class[TILE_CLASS_MAX];
 static char ins_texture_name[TEXTURE_NAME_MAX];
 static char ins_anim_name[TILE_NAME_MAX];
 static int ins_tile_w = TILESZ;
@@ -806,9 +810,35 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ts, ins_tile_name);
-	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags, SDL_ALPHA_OPAQUE);
-	sprite_set_origin(&gfx->sprites[t->s], ins_tile_w/2, ins_tile_h/2);
-	SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
+	if (strcmp(ts->template, "Perso") == 0) {
+		tile_scale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
+		sprite_set_origin(&gfx->sprites[t->s], 8, 31);
+		SPRITE(t->ts,t->s).snap_mode = GFX_SNAP_TO_GRID;
+		TILE_LAYER2(t,0,0) = +2;
+		TILE_LAYER2(t,0,1) = +1;
+		TILE_ATTR2(t,0,1) = NODEREF_BLOCK;
+	} else if (strcmp(ts->template, "Terrain") == 0) {
+		tile_scale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
+		sprite_set_origin(&gfx->sprites[t->s], 24, 24);
+		SPRITE(t->ts,t->s).snap_mode = GFX_SNAP_TO_GRID;
+		TILE_ATTR2(t,0,0) = NODEREF_BLOCK;
+		TILE_ATTR2(t,1,0) = NODEREF_BLOCK;
+		TILE_ATTR2(t,2,0) = NODEREF_BLOCK;
+		TILE_ATTR2(t,3,0) = NODEREF_BLOCK;
+		TILE_ATTR2(t,0,1) = NODEREF_BLOCK;
+		TILE_ATTR2(t,0,2) = NODEREF_BLOCK;
+		TILE_ATTR2(t,0,3) = NODEREF_BLOCK;
+		TILE_ATTR2(t,3,1) = NODEREF_BLOCK;
+		TILE_ATTR2(t,3,2) = NODEREF_BLOCK;
+		TILE_ATTR2(t,3,3) = NODEREF_BLOCK;
+		TILE_ATTR2(t,1,3) = NODEREF_BLOCK;
+		TILE_ATTR2(t,2,3) = NODEREF_BLOCK;
+	} else {
+		tile_scale(ts, t, ins_tile_w, ins_tile_h, flags,
+		    SDL_ALPHA_OPAQUE);
+		sprite_set_origin(&gfx->sprites[t->s], t->su->w/2, t->su->h/2);
+		SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
+	}
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	ins_tile_name[0] = '\0';
@@ -956,17 +986,26 @@ insert_tile_dlg(int argc, union evarg *argv)
 	struct mspinbutton *msb;
 	struct checkbox *cb;
 	struct radio *rad;
+	struct combo *com;
 
 	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
 	                 WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("Create new tile"));
 	
-	tb = textbox_new(win, _("Name:"));
+	tb = textbox_new(win, _("Name: "));
 	widget_bind(tb, "string", WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
 	widget_focus(tb);
 
-	msb = mspinbutton_new(win, "x", _("Size:"));
+	com = combo_new(win, COMBO_ANY_TEXT, _("Class: "));
+	widget_bind(com->tbox, "string", WIDGET_STRING, ins_tile_class,
+	    sizeof(ins_tile_class));
+	if (strcmp(ts->template, "Terrain") == 0) {
+		tlist_insert(com->list, NULL, "Ground");
+		tlist_insert(com->list, NULL, "Rock");
+	}
+
+	msb = mspinbutton_new(win, "x", _("Size: "));
 	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);
 	widget_bind(msb, "yvalue", WIDGET_INT, &ins_tile_h);
 	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
@@ -1293,6 +1332,48 @@ tryname:
 	}
 }
 
+static void
+select_template(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+
+	tileset_reinit(ts);
+
+	if (strcmp(ts->template, "Perso") == 0) {
+		const char *tiles[] = {
+			"Idle-N",
+			"Idle-S",
+			"Idle-W",
+			"Idle-E"
+		};
+		const char *anims[] = {
+			"Walk-N",
+			"Walk-S",
+			"Walk-W",
+			"Walk-E"
+		};
+		const int ntiles = sizeof(tiles)/sizeof(tiles[0]);
+		const int nanims = sizeof(anims)/sizeof(anims[0]);
+		struct tile *t;
+		struct animation *a;
+		int i;
+
+		for (i = 0; i < ntiles; i++) {
+			t = Malloc(sizeof(struct tile), M_RG);
+			tile_init(t, ts, tiles[i]);
+			tile_scale(ts, t, 16, 32, TILE_SRCCOLORKEY,
+			    SDL_ALPHA_OPAQUE);
+			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
+		}
+		for (i = 0; i < nanims; i++) {
+			a = Malloc(sizeof(struct animation), M_RG);
+			animation_init(a, ts, anims[i], ANIMATION_SRCCOLORKEY);
+			animation_scale(a, 16, 32);
+			TAILQ_INSERT_TAIL(&ts->animations, a, animations);
+		}
+	}
+}
+
 struct window *
 tileset_edit(void *p)
 {
@@ -1307,6 +1388,7 @@ tileset_edit(void *p)
 	struct button *bu;
 	struct notebook *nb;
 	struct notebook_tab *ntab;
+	struct combo *com;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
@@ -1328,7 +1410,14 @@ tileset_edit(void *p)
 	tl_anims = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_anims, TLIST_POLL);
 	event_new(tl_anims, "tlist-poll", poll_anims, "%p", ts);
-	
+
+	com = combo_new(win, 0, _("Template: "));
+	widget_bind(com->tbox, "string", WIDGET_STRING, &ts->template,
+	    sizeof(ts->template));
+	tlist_insert(com->list, NULL, "Perso");
+	tlist_insert(com->list, NULL, "Terrain");
+	event_new(com, "combo-selected", select_template, "%p", ts);
+
 	mi = tlist_set_popup(tl_tiles, "tile");
 	{
 		menu_action(mi, _("Edit tile..."), OBJEDIT_ICON,

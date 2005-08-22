@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.38 2005/07/29 03:13:54 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.39 2005/08/10 06:06:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -47,9 +47,11 @@ enum gfx_snap_mode {
 };
 
 #define SPRITE_NAME_MAX 24
+#define SPRITE_CLASS_MAX 16
 
 struct sprite {
 	char name[SPRITE_NAME_MAX];
+	char clname[SPRITE_CLASS_MAX];
 	struct gfx *pgfx;
 	Uint32 index;
 	SDL_Surface *su;
@@ -122,6 +124,7 @@ void		 sprite_destroy(struct gfx *, Uint32);
 void		 anim_init(struct gfx *, Uint32);
 void		 anim_destroy(struct gfx *, Uint32);
 __inline__ void	 sprite_set_name(struct gfx *, Uint32, const char *);
+__inline__ void	 sprite_set_class(struct gfx *, Uint32, const char *);
 __inline__ void	 sprite_set_surface(struct gfx *, Uint32, SDL_Surface *);
 __inline__ void	 sprite_set_origin(struct sprite *, int, int);
 __inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
