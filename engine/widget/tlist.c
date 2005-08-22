@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.126 2005/08/04 06:07:09 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.127 2005/08/04 07:36:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -459,6 +459,11 @@ tlist_compare_strings(const struct tlist_item *it1,
 int
 tlist_compare_ptrs(const struct tlist_item *it1, const struct tlist_item *it2)
 {
+	if (it1->argc != it2->argc ||
+	   (it1->argc > 0 &&
+	    memcmp(it1->argv, it2->argv, it1->argc*sizeof(union evarg)) != 0)) {
+		return (0);
+	}
 	return (it1->p1 == it2->p1);
 }
 
@@ -541,6 +546,7 @@ allocate_item(struct tlist *tl, SDL_Surface *iconsrc)
 	it->flags = 0;
 	it->icon = -1;
 	it->label = -1;
+	it->argc = 0;
 	tlist_set_icon(tl, it, iconsrc);
 	return (it);
 }
@@ -588,6 +594,56 @@ tlist_insert(struct tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 
 	insert_item(tl, it, 0);
 	return (it);
+}
+
+void
+tlist_set_args(struct tlist_item *it, const char *fmt, ...)
+{
+	va_list ap;
+	const char *s = fmt;
+
+	va_start(ap, fmt);
+	while (*s != '\0') {
+		switch (*s) {
+		case 'i':
+		case 'o':
+		case 'u':
+		case 'x':
+		case 'X':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].i = va_arg(ap, int);
+			break;
+		case 'D':
+		case 'O':
+		case 'U':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].li = va_arg(ap, long int);
+			break;
+		case 'e':
+		case 'E':
+		case 'f':
+		case 'g':
+		case 'G':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].f = va_arg(ap, double);
+			break;
+		case 'c':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].c = va_arg(ap, int);
+			break;
+		case 's':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].s = va_arg(ap, char *);
+			break;
+		case 'p':
+			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+			it->argv[it->argc++].p = va_arg(ap, void *);
+			break;
+		default:
+			break;
+		}
+	}
+	va_end(ap);
 }
 
 struct tlist_item *
