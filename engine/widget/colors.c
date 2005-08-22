@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.20 2005/08/02 01:10:33 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.21 2005/08/22 02:08:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -163,8 +163,8 @@ colors_init(void)
 	colors[TLIST_SEL_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
 	colors[MAPVIEW_GRID_COLOR] = SDL_MapRGB(vfmt, 200, 200, 200);
 	colors[MAPVIEW_CURSOR_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);	/* U */
-	colors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 75, 75, 75);	/* U */
+	colors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);	/* U */
+	colors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);	/* U */
 	colors[MAPVIEW_MSEL_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
 	colors[MAPVIEW_ESEL_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
 	colors[TILEVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 140, 140, 140);
