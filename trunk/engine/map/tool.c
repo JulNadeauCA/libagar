@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.8 2005/07/31 03:16:46 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.9 2005/08/01 04:09:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ tool_push_status(void *p, const char *fmt, ...)
 	struct tool *t = p;
 	va_list ap;
 
-	if (t->nstatus+1 >= TOOL_STATUS_MAX)
+	if (t->mv->status == NULL || t->nstatus+1 >= TOOL_STATUS_MAX)
 		return;
 
 	va_start(ap, fmt);
@@ -200,6 +200,9 @@ tool_set_status(void *p, const char *fmt, ...)
 	struct tool *t = p;
 	va_list ap;
 
+	if (t->mv->status == NULL)
+		return;
+
 	va_start(ap, fmt);
 	Vasprintf(&t->status[t->nstatus-1], fmt, ap);
 	va_end(ap);
@@ -212,7 +215,7 @@ tool_pop_status(void *p)
 {
 	struct tool *t = p;
 
-	if (t->nstatus == 1)
+	if (t->mv->status == NULL || t->nstatus == 1)
 		return;
 
 	Free(t->status[--t->nstatus], 0);
