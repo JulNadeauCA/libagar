@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.53 2005/07/29 03:13:54 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.54 2005/08/10 06:06:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -174,6 +174,14 @@ sprite_set_name(struct gfx *gfx, Uint32 s, const char *name)
 	struct sprite *spr = &gfx->sprites[s];
 
 	strlcpy(spr->name, name, sizeof(spr->name));
+}
+
+void
+sprite_set_class(struct gfx *gfx, Uint32 s, const char *name)
+{
+	struct sprite *spr = &gfx->sprites[s];
+
+	strlcpy(spr->clname, name, sizeof(spr->clname));
 }
 
 /*

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.9 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.10 2005/06/07 03:05:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -23,9 +23,12 @@ struct texture;
 
 #include "begin_code.h"
 
+#define TILESET_TEMPLATE_MAX 24
+
 struct tileset {
 	struct object obj;
 	pthread_mutex_t	lock;
+	char template[TILESET_TEMPLATE_MAX];
 	SDL_PixelFormat *fmt;
 	SDL_Surface *icon;
 	int flags;

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.24 2005/07/27 06:34:46 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.25 2005/07/29 03:13:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -6,6 +6,7 @@
 #include "begin_code.h"
 
 #define TILE_NAME_MAX 32
+#define TILE_CLASS_MAX 16
 #define TILE_ELEMENT_NAME_MAX 32
 #define TILE_SIZE_MIN 2
 #define TILE_SIZE_MAX 1024
@@ -47,6 +48,7 @@ TAILQ_HEAD(tile_elementq, tile_element);
 
 struct tile {
 	char name[TILE_NAME_MAX];
+	char clname[TILE_CLASS_MAX];
 	struct tileset *ts;
 	SDL_Surface *su;
 	Sint32 s;			/* Index into gfx array */
