@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.20 2005/05/24 03:01:08 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.21 2005/08/04 06:36:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,15 +49,16 @@ typesw_init(void)
 
 	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
 
-	typesw_register("object", sizeof(struct object), &object_ops, OBJ_ICON);
+	typesw_register("object", sizeof(struct object), &object_ops,
+	    OBJ_ICON);
 #if 0
 	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
 	    DRAWING_ICON);
 #endif
-	typesw_register("map", sizeof(struct map), &map_ops, MAP_ICON);
+	typesw_register("map", sizeof(struct map), &map_ops,
+	    MAP_ICON);
 	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
 	    TILESET_ICON);
-	
 	typesw_register("gobject.perso", sizeof(struct perso), &perso_ops,
 	    PERSO_ICON);
 }
