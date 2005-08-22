@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.19 2005/07/30 01:45:22 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.20 2005/08/02 01:10:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -104,6 +104,7 @@ const char *colors_names[] = {
 	N_("Pane (circles)"),
 	N_("Mapview noderef selection"),
 	N_("Mapview origin point"),
+	N_("Focus"),
 };
 
 void
@@ -177,6 +178,7 @@ colors_init(void)
 	colors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(vfmt, 170, 170, 170, 0);
 	colors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(vfmt, 60, 250, 60);
 	colors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(vfmt, 150, 150, 0);
+	colors[FOCUS_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
 
 	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
 	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);
