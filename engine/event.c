@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.207 2005/08/06 07:19:45 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.208 2005/08/12 06:09:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -487,11 +487,14 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	timeout_set(&ev->timeout, event_timeout, ev, 0);
 
 	if (fmt != NULL) {
+		const char *s = fmt;
 		va_list ap;
 
-		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-			EVENT_PUSH_ARG(ap, *fmt, ev);
+		va_start(ap, fmt);
+		while (*s != '\0') {
+			EVENT_PUSH_ARG(ap, *s, ev);
 			ev->argc_base++;
+			s++;
 		}
 		va_end(ap);
 	}
