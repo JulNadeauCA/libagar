@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.48 2005/05/21 05:54:24 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.49 2005/05/24 08:15:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -10,6 +10,7 @@
 #include "begin_code.h"
 
 #define TLIST_LABEL_MAX	96
+#define TLIST_ARGS_MAX 8
 
 struct tlist_popup {
 	const char *iclass;		/* Apply to items of this class */
@@ -20,18 +21,18 @@ struct tlist_popup {
 };
 
 struct tlist_item {
-	int	selected;		/* Effective selection */
-
+	int		 selected;		/* Effective selection */
 	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
 	int		 icon;			/* Cached icon surface */
 	void		*p1;			/* User-supplied pointer */
 	const char	*class;			/* User-supplied class */
 	char		 text[TLIST_LABEL_MAX];	/* Label text */
 	int		 label;			/* Cached label surface */
-
-
-	Uint8	 depth;				/* Depth in tree */
-	Uint8	 flags;
+	union evarg	 argv[TLIST_ARGS_MAX];	/* Item arguments */
+	int		 argc;
+	
+	Uint8		 depth;			/* Depth in tree */
+	Uint8		 flags;
 #define TLIST_VISIBLE_CHILDREN	0x01		/* Child items visible (tree) */
 #define TLIST_HAS_CHILDREN	0x02		/* Child items exist (tree) */
 	
@@ -88,6 +89,7 @@ void		 tlist_set_item_height(struct tlist *, int);
 __inline__ void	 tlist_set_icon(struct tlist *, struct tlist_item *,
 	                        SDL_Surface *);
 __inline__ int	 tlist_visible_children(struct tlist *, struct tlist_item *);
+void		 tlist_set_args(struct tlist_item *, const char *, ...);
 
 void			 tlist_remove_item(struct tlist *, struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
