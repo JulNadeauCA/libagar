@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.54 2005/08/10 06:06:26 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.55 2005/08/22 02:10:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->layers = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
-	spr->snap_mode = GFX_SNAP_NOT;
+	spr->snap_mode = GFX_SNAP_TO_GRID;
 	SLIST_INIT(&spr->csprites);
 
 #ifdef HAVE_OPENGL
