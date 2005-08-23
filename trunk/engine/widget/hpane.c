@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.4 2005/06/15 03:36:51 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.5 2005/08/21 07:09:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -199,7 +199,7 @@ hpane_scale(void *p, int w, int h)
 	OBJECT_FOREACH_CHILD(wid, pa, widget)
 		WIDGET_OPS(wid)->scale(wid, w, h);
 
-	box_scale(pa, w, h);
+	box_scale(pa, w > 8 ? w-8 : w, h);
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		WIDGET(div->box1)->w -= 5;
