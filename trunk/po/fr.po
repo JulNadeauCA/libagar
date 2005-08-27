@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.36 2005/07/29 06:23:19 vedge Exp $
+# $Csoft: fr.po,v 1.37 2005/08/04 07:22:33 vedge Exp $
 #
 # Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -400,7 +400,7 @@ msgid "RCS is currently disabled."
 msgstr "Le mode RCS n'est pas actif."
 
 msgid "Object manager"
-msgstr "Gestionnaires d'objets"
+msgstr "Gestionnaire d'objets"
 
 msgid "File"
 msgstr "Fichier"
