@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.35 2005/08/04 07:10:17 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.36 2005/08/10 06:53:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -128,6 +128,8 @@ tryname:
 	}
 	object_attach(pobj, nobj);
 	object_unlink_datafiles(nobj);
+
+	event_post(NULL, nobj, "edit-create", NULL);
 	
 	if (edit_on_create &&
 	    t->ops->edit != NULL)
@@ -649,7 +651,9 @@ create_obj_dlg(int argc, union evarg *argv)
 		tb = textbox_new(bo, _("Name: "));
 		widget_focus(tb);
 	}
-	
+
+	separator_new(win, SEPARATOR_HORIZ);
+
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	box_set_padding(bo, 0);
 	box_set_spacing(bo, 0);
@@ -730,7 +734,6 @@ objmgr_window(void)
 	struct window *win;
 	struct vbox *vb;
 	struct textbox *name_tb;
-	struct combo *types_com;
 	struct tlist *objs_tl;
 	struct AGMenu *me;
 	struct AGMenuItem *mi, *mi_objs;
