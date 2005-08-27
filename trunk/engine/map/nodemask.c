@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.3 2005/07/16 15:55:34 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.4 2005/08/10 06:59:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -172,9 +172,12 @@ nodemask_copy(const struct nodemask *smask, struct map *m,
 void
 nodemask_bitmap(struct map *m, struct nodemask *mask, void *pobj, Uint32 offs)
 {
-	dprintf("%s:%u\n", OBJECT(pobj)->name, offs);
-	object_add_dep(m, pobj);
-	object_page_in(pobj, OBJECT_GFX);
+	if (m != NULL && pobj != NULL) {
+		object_add_dep(m, pobj);
+	}
+	if (pobj != NULL) {
+		object_page_in(pobj, OBJECT_GFX);
+	}
 	mask->nm_bitmap.obj = pobj;
 	mask->nm_bitmap.offs = offs;
 }

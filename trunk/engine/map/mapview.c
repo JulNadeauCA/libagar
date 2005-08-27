@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.41 2005/08/01 11:44:23 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.42 2005/08/10 06:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -137,17 +137,17 @@ mapview_vline(struct mapview *mv, int x, int y1, int y2)
 	}
 }
 
+void
+mapview_control(struct mapview *mv, const char *slot, void *obj)
+{
+#ifdef DEBUG
+	if (!OBJECT_SUBCLASS(obj, "gobject."))
+		fatal("%s: not controllable", OBJECT(obj)->name);
+#endif
+	mv->gobj = (struct gobject *)obj;
+}
+
 #ifdef EDITION
-
-void
-mapview_undo(struct mapview *mv)
-{
-}
-
-void
-mapview_redo(struct mapview *mv)
-{
-}
 
 void
 mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
@@ -327,6 +327,7 @@ mapview_destroy(void *p)
 {
 	struct mapview *mv = p;
 	struct mapview_draw_cb *dcb, *ndcb;
+	int i;
 
 	for (dcb = SLIST_FIRST(&mv->draw_cbs);
 	     dcb != SLIST_END(&mv->draw_cbs);
@@ -385,12 +386,12 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
-	gfx_wire(mv, "/engine/map/pixmaps/pixmaps");
 
 	mv->flags = (flags | MAPVIEW_CENTER);
-	mv->mode = MAPVIEW_NORMAL;
+	mv->mode = MAPVIEW_EDITION;
 	mv->edit_attr = 0;
 	mv->map = m;
+	mv->gobj = NULL;
 	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
@@ -406,6 +407,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mouse.ymap_rel = 0;
 
 	mv->dblclicked = 0;
+	mv->hbar = NULL;
+	mv->vbar = NULL;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
 	mv->status = (statbar != NULL) ?
@@ -445,7 +448,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->col.b = 255;
 	mv->col.a = 32;
 	mv->col.pixval = SDL_MapRGB(vfmt, 255, 255, 255);
-	
+
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->origin.x;
 	mv->my = m->origin.y;
@@ -560,8 +563,8 @@ defcurs:
 static __inline__ void
 center_to_origin(struct mapview *mv)
 {
-	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv);
-	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv);
+	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
+	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
 	mapview_update_camera(mv);
 }
 
@@ -590,6 +593,11 @@ mapview_draw(void *p)
 
 	if (WIDGET(mv)->w < TILESZ || WIDGET(mv)->h < TILESZ)
 		return;
+
+	if (WIDGET(mv)->flags & WIDGET_FOCUSED)
+		primitives.rect_outlined(mv, 0, 0,
+		    WIDGET(mv)->w, WIDGET(mv)->h,
+		    COLOR(FOCUS_COLOR));
 
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
@@ -754,7 +762,7 @@ next_layer:
 	}
 
 	/* Draw the cursor for the current tool. */
-	if ((mv->flags & MAPVIEW_EDIT) && (mv->mode == MAPVIEW_NORMAL) &&
+	if ((mv->flags & MAPVIEW_EDIT) && (mv->mode == MAPVIEW_EDITION) &&
 	    (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
 	    (mv->cx != -1 && mv->cy != -1)) {
 		draw_cursor(mv);
@@ -791,13 +799,13 @@ mapview_update_camera(struct mapview *mv)
 	
 	if (cam->x < 0) {
 		cam->x = 0;
-	} else if (cam->x >= mv->map->mapw*MV_TILESZ(mv)) { 
-		cam->x = mv->map->mapw*MV_TILESZ(mv) - 1;
+	} else if (cam->x > mv->map->mapw*MV_TILESZ(mv)) { 
+		cam->x = mv->map->mapw*MV_TILESZ(mv);
 	}
 	if (cam->y < 0) {
 		cam->y = 0;
-	} else if (cam->y >= mv->map->maph*MV_TILESZ(mv)) { 
-		cam->y = mv->map->maph*MV_TILESZ(mv) - 1;
+	} else if (cam->y > mv->map->maph*MV_TILESZ(mv)) { 
+		cam->y = mv->map->maph*MV_TILESZ(mv);
 	}
 
 	xcam = cam->x;
@@ -835,7 +843,7 @@ mapview_update_camera(struct mapview *mv)
 		ycam -= WIDGET(mv)->h;
 		break;
 	}
-
+	
 	mv->mx = xcam / MV_TILESZ(mv);
 	if (mv->mx < 0) {
 		mv->mx = 0;
@@ -920,6 +928,9 @@ toggle_attrib(struct mapview *mv)
 	if (mv->attr_x == mv->cx && mv->attr_y == mv->cy)
 		return;
 
+	mapmod_begin(mv->map);
+	mapmod_nodechg(mv->map, mv->cx, mv->cy);
+
 	node = &mv->map->map[mv->cy][mv->cx];
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 		if (r->layer != mv->map->cur_layer) {
@@ -931,6 +942,8 @@ toggle_attrib(struct mapview *mv)
 			r->flags |= mv->edit_attr;
 		}
 	}
+
+	mapmod_end(mv->map);
 
 	mv->attr_x = mv->cx;
 	mv->attr_y = mv->cy;
@@ -946,6 +959,7 @@ mousemotion(int argc, union evarg *argv)
 	int yrel = argv[4].i;
 	int state = argv[5].i;
 	int xmap, ymap;
+	int rv;
 
 	pthread_mutex_lock(&mv->map->lock);
 	get_node_coords(mv, &x, &y);
@@ -967,7 +981,7 @@ mousemotion(int argc, union evarg *argv)
 				toggle_attrib(mv);
 				goto out;
 			}
-			if (mv->mode == MAPVIEW_MOVE_ORIGIN) {
+			if (mv->mode == MAPVIEW_EDIT_ORIGIN) {
 				mv->map->origin.x = mv->cx;
 				mv->map->origin.y = mv->cy;
 				mv->map->origin.layer = mv->map->cur_layer;
@@ -975,9 +989,11 @@ mousemotion(int argc, union evarg *argv)
 			}
 			if (mv->curtool != NULL &&
 			    mv->curtool->ops->effect != NULL &&
-			    mv->curtool->ops->effect(mv->curtool,
-			    &mv->map->map[mv->cy][mv->cx]) == 1)
+			    (rv = mv->curtool->ops->effect(mv->curtool,
+			     &mv->map->map[mv->cy][mv->cx])) != -1) {
+				mv->map->nmods += rv;
 				goto out;
+			}
 		}
 		if (mv->curtool != NULL &&
 		    mv->curtool->ops->mousemotion != NULL &&
@@ -1035,6 +1051,7 @@ mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tool *tool;
+	int rv;
 	
 	widget_focus(mv);
 	
@@ -1046,6 +1063,12 @@ mousebuttondown(int argc, union evarg *argv)
 	mv->mouse.ymap = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
 	mv->mouse.xmap_rel = 0;
 	mv->mouse.ymap_rel = 0;
+	
+	if (mv->gobj != NULL &&
+	    GOBJECT_OPS(mv->gobj)->mousebuttondown != NULL &&
+	    GOBJECT_OPS(mv->gobj)->mousebuttondown(mv->gobj,
+	      mv->mouse.xmap, mv->mouse.ymap, button) == -1)
+		goto out;
 
 	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
@@ -1061,22 +1084,23 @@ mousebuttondown(int argc, union evarg *argv)
 		    button == SDL_BUTTON_LEFT &&
 		    mv->cx == m->origin.x &&
 		    mv->cy == m->origin.y) {
-			mapview_set_mode(mv, MAPVIEW_MOVE_ORIGIN);
+			mapview_set_mode(mv, MAPVIEW_EDIT_ORIGIN);
 			goto out;
 		}
 		if (mv->curtool != NULL) {
-			if (button == SDL_BUTTON_LEFT &&
-			    mv->curtool->ops->effect != NULL &&
-			    inside_nodesel(mv, mv->cx, mv->cy)) {
-				if (mv->curtool->ops->effect(mv->curtool,
-				    &m->map[mv->cy][mv->cx]) == 1) {
-					goto out;
-				}
-			}
 			if (mv->curtool->ops->mousebuttondown != NULL &&
 			    mv->curtool->ops->mousebuttondown(mv->curtool,
 			      mv->mouse.xmap, mv->mouse.ymap, button) == 1) {
 				goto out;
+			}
+			if (button == SDL_BUTTON_LEFT &&
+			    mv->curtool->ops->effect != NULL &&
+			    inside_nodesel(mv, mv->cx, mv->cy)) {
+				if ((rv = mv->curtool->ops->effect(mv->curtool,
+				     &m->map[mv->cy][mv->cx])) != -1) {
+					mv->map->nmods = rv;
+					goto out;
+				}
 			}
 		}
 
@@ -1146,7 +1170,9 @@ mousebuttondown(int argc, union evarg *argv)
 					}
 				}
 			}
-			if ((r = noderef_locate(m, mv->mouse.xmap,
+			if (mv->curtool != NULL &&
+			    mv->curtool->ops == &refsel_ops &&
+			    (r = noderef_locate(m, mv->mouse.xmap,
 			    mv->mouse.ymap, mv->cam)) != NULL) {
 				if (r->flags & NODEREF_SELECTED) {
 					r->flags &= ~(NODEREF_SELECTED);
@@ -1212,11 +1238,20 @@ mousebuttonup(int argc, union evarg *argv)
 	get_node_coords(mv, &x, &y);
 
 	mv->flags &= ~(MAPVIEW_SET_ATTRS);
+	
+	if (mv->gobj != NULL &&
+	    GOBJECT_OPS(mv->gobj)->mousebuttonup != NULL) {
+		x = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
+		y = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
+		if (GOBJECT_OPS(mv->gobj)->mousebuttonup(mv->gobj, x, y,
+		    button) == -1)
+			goto out;
+	}
 
 	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
-	    	if (mv->mode == MAPVIEW_MOVE_ORIGIN) {
-			mapview_set_mode(mv, MAPVIEW_NORMAL);
+	    	if (mv->mode == MAPVIEW_EDIT_ORIGIN) {
+			mapview_set_mode(mv, MAPVIEW_EDITION);
 		}
 		if (mv->curtool != NULL) {
 			if (mv->curtool->ops->mousebuttonup != NULL &&
@@ -1293,6 +1328,13 @@ key_up(int argc, union evarg *argv)
 	struct tool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
+
+	if (mv->gobj != NULL &&
+	    GOBJECT_OPS(mv->gobj)->keyup != NULL) {
+		if (GOBJECT_OPS(mv->gobj)->keyup(mv->gobj, keysym, keymod)
+		    == -1)
+			goto out;
+	}
 	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
@@ -1333,6 +1375,13 @@ key_down(int argc, union evarg *argv)
 	struct tool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
+
+	if (mv->gobj != NULL &&
+	    GOBJECT_OPS(mv->gobj)->keydown != NULL) {
+		if (GOBJECT_OPS(mv->gobj)->keydown(mv->gobj, keysym, keymod)
+		    == -1)
+			goto out;
+	}
 	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
@@ -1362,15 +1411,22 @@ key_down(int argc, union evarg *argv)
 	}
 
 	switch (keysym) {
+	case SDLK_z:
+		if (keymod & KMOD_CTRL) {
+			map_undo(mv->map);
+		}
+		break;
+	case SDLK_r:
+		if (keymod & KMOD_CTRL) {
+			map_redo(mv->map);
+		}
+		break;
 	case SDLK_1:
 	case SDLK_0:
 		if ((mv->flags & MAPVIEW_NO_BMPZOOM) == 0) {
 			mapview_set_scale(mv, 100, 1);
 			mapview_status(mv, _("%d%% zoom"), MV_ZOOM(mv));
 		}
-		break;
-	case SDLK_DELETE:
-		refsel_delete(mv);
 		break;
 	case SDLK_o:
 		center_to_origin(mv);
@@ -1390,35 +1446,35 @@ key_down(int argc, union evarg *argv)
 		}
 		break;
 	case SDLK_w:
-		if (mv->mode == MAPVIEW_NORMAL) {
+		if (mv->mode == MAPVIEW_EDITION) {
 			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_BLOCK;
 		} else {
-			mapview_set_mode(mv, MAPVIEW_NORMAL);
+			mapview_set_mode(mv, MAPVIEW_EDITION);
 		}
 		break;
 	case SDLK_c:
-		if (mv->mode == MAPVIEW_NORMAL) {
+		if (mv->mode == MAPVIEW_EDITION) {
 			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_CLIMBABLE;
 		} else {
-			mapview_set_mode(mv, MAPVIEW_NORMAL);
+			mapview_set_mode(mv, MAPVIEW_EDITION);
 		}
 		break;
 	case SDLK_s:
-		if (mv->mode == MAPVIEW_NORMAL) {
+		if (mv->mode == MAPVIEW_EDITION) {
 			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_SLIPPERY;
 		} else {
-			mapview_set_mode(mv, MAPVIEW_NORMAL);
+			mapview_set_mode(mv, MAPVIEW_EDITION);
 		}
 		break;
 	case SDLK_j:
-		if (mv->mode == MAPVIEW_NORMAL) {
+		if (mv->mode == MAPVIEW_EDITION) {
 			mapview_set_mode(mv, MAPVIEW_EDIT_ATTRS);
 			mv->edit_attr = NODEREF_JUMPABLE;
 		} else {
-			mapview_set_mode(mv, MAPVIEW_NORMAL);
+			mapview_set_mode(mv, MAPVIEW_EDITION);
 		}
 		break;
 	}
@@ -1471,6 +1527,8 @@ lost_focus(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 
 	event_cancel(mv, "dblclick-expire");
+	if (mv->gobj != NULL)
+		object_cancel_timeouts(mv->gobj, 0);
 }
 
 /* Set the coordinates and geometry of the selection rectangle. */

@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.12 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.13 2005/08/10 06:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ struct fill_tool {
 };
 
 static void
-fill_init(void *p)
+init(void *p)
 {
 	struct fill_tool *fi = p;
 
@@ -63,7 +63,7 @@ fill_init(void *p)
 }
 
 static void
-fill_pane(void *p, void *con)
+pane(void *p, void *con)
 {
 	struct fill_tool *fi = p;
 	static const char *mode_items[] = {
@@ -83,7 +83,7 @@ fill_pane(void *p, void *con)
 }
 
 static int
-fill_effect(void *p, struct node *n)
+effect(void *p, struct node *n)
 {
 	struct fill_tool *fi = p;
 	struct mapview *mv = TOOL(fi)->mv;
@@ -98,6 +98,7 @@ fill_effect(void *p, struct node *n)
 	Uint8 byte = 0;
 
 	mapview_get_selection(mv, &dx, &dy, &dw, &dh);
+	mapmod_begin(m);
 
 	switch (fi->mode) {
 	case FILL_FROM_CLIPBRD:
@@ -111,6 +112,7 @@ fill_effect(void *p, struct node *n)
 				struct node *dn = &m->map[y][x];
 				struct noderef *r;
 
+				mapmod_nodechg(m, x, y);
 				node_clear(m, dn, m->cur_layer);
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					node_copy_ref(r, m, dn, m->cur_layer);
@@ -136,6 +138,7 @@ fill_effect(void *p, struct node *n)
 				struct node *n = &m->map[y][x];
 				struct noderef *r;
 
+				mapmod_nodechg(m, x, y);
 				node_clear(m, n, m->cur_layer);
 				r = Malloc(sizeof(struct noderef),
 				    M_MAP_NODEREF);
@@ -181,11 +184,14 @@ fill_effect(void *p, struct node *n)
 		break;
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {
-			for (x = dx; x < dx+dw; x++)
+			for (x = dx; x < dx+dw; x++) {
+				mapmod_nodechg(m, x, y);
 				node_clear(m, &m->map[y][x], m->cur_layer);
+			}
 		}
 		break;
 	}
+	mapmod_end(m);
 	return (1);
 }
 
@@ -194,12 +200,12 @@ const struct tool_ops fill_tool_ops = {
 	FILL_TOOL_ICON,
 	sizeof(struct fill_tool),
 	0,
-	fill_init,
+	init,
 	NULL,			/* destroy */
-	fill_pane,
+	pane,
 	NULL,			/* edit */
 	NULL,			/* cursor */
-	fill_effect,
+	effect,
 	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */

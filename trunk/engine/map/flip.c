@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.8 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.9 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #ifdef MAP
 
 #include <engine/widget/checkbox.h>
+#include <engine/widget/primitive.h>
 
 #include "map.h"
 #include "mapedit.h"
@@ -89,11 +90,15 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 			return (0);
 	}
 
+	mapmod_begin(m);
+
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
 			struct node *node = &m->map[y][x];
 			struct noderef *nref;
 
+			mapmod_nodechg(m, x, y);
+			
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer != m->cur_layer)
 					continue;
@@ -106,6 +111,18 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 			}
 		}
 	}
+
+	mapmod_end(m);
+	return (1);
+}
+
+static int
+flip_cursor(void *p, SDL_Rect *rd)
+{
+	Uint8 c[4] = { 255, 255, 0, 64 };
+
+	primitives.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	    c, ALPHA_OVERLAY);
 	return (1);
 }
 
@@ -118,7 +135,7 @@ const struct tool_ops flip_ops = {
 	NULL,			/* destroy */
 	flip_pane,
 	NULL,			/* edit */
-	NULL,			/* cursor */
+	flip_cursor,
 	NULL,			/* effect */
 
 	NULL,			/* mousemotion */

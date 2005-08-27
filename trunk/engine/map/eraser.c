@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.5 2005/06/30 06:06:02 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.7 2005/08/22 02:11:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -84,25 +84,51 @@ eraser_pane(void *p, void *con)
 }
 
 static int
+mousebuttondown(void *p, int x, int y, int btn)
+{
+	mapmod_begin(TOOL(p)->mv->map);
+	return (0);
+}
+
+static int
+mousebuttonup(void *p, int x, int y, int btn)
+{
+	struct tool *t = p;
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
+
+	if (m->nmods == 0) {
+		mapmod_cancel(m);
+	}
+	mapmod_end(m);
+	return (0);
+}
+
+static int
 eraser_effect(void *p, struct node *n)
 {
 	struct tool *t = p;
-	struct map *m = t->mv->map;
-	struct noderef *nref;
-	
-	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
+	struct noderef *r;
+	int nmods = 0;
+
+	mapmod_nodechg(m, mv->cx, mv->cy);
+
+	TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 		if (!all_layers &&
-		    nref->layer != m->cur_layer)
+		    r->layer != m->cur_layer)
 			continue;
 
-		TAILQ_REMOVE(&n->nrefs, nref, nrefs);
-		noderef_destroy(m, nref);
-		Free(nref, M_MAP_NODEREF);
+		TAILQ_REMOVE(&n->nrefs, r, nrefs);
+		noderef_destroy(m, r);
+		Free(r, M_MAP_NODEREF);
+		nmods++;
 
 		if (!erase_all)
 			break;
 	}
-	return (1);
+	return (nmods);
 }
 
 static int
@@ -128,8 +154,8 @@ const struct tool_ops eraser_ops = {
 	eraser_effect,
 
 	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
+	mousebuttondown,
+	mousebuttonup,
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };

@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.9 2005/08/10 06:59:23 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.10 2005/08/14 01:02:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,76 +38,41 @@
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/separator.h>
+#include <engine/widget/notebook.h>
 
 #include "map.h"
 #include "mapedit.h"
 #include "insert.h"
+#include "tools.h"
 
 static void
 insert_init(void *p)
 {
 	struct insert_tool *ins = p;
 
-	ins->source = INSERT_SRC_ARTWORK;
 	ins->snap_mode = GFX_SNAP_NOT;
 	ins->replace_mode = 0;
 	ins->angle = 0;
+	map_init(&ins->mTmp, "tmp");
+	ins->mvTmp = NULL;
 
 	tool_push_status(ins,
 	    _("Select position on map ($(L)=Insert, $(M)=Rotate)"));
 }
 
 static void
-insert_pane(void *p, void *con)
+insert_destroy(void *p)
 {
 	struct insert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-#if 0
-	static const char *source_items[] = {
-		N_("Artwork"),
-		N_("Map buffer"),
-		NULL
-	};
-#endif
-	struct radio *rad;
-	struct checkbox *cb;
-	struct spinbutton *sb;
-	struct combo *com;
-	struct tlist_item *it;
-	
-	if ((it = tlist_selected_item(mv->lib_tl)) != NULL) {
-		label_new(con, LABEL_STATIC, _("Tile: %s"), it->text);
-	}
-#if 0
-	rad = radio_new(con, source_items);
-	widget_bind(rad, "value", WIDGET_INT, &source);
-#endif
-	
-	label_new(con, LABEL_STATIC, _("Snap to: "));
-	rad = radio_new(con, gfx_snap_names);
-	widget_bind(rad, "value", WIDGET_INT, &ins->snap_mode);
 
-	cb = checkbox_new(con, _("Replace mode"));
-	widget_bind(cb, "state", WIDGET_INT, &ins->replace_mode);
-
-	sb = spinbutton_new(con, _("Rotation: "));
-	widget_bind(sb, "value", WIDGET_INT, &ins->angle);
-	spinbutton_set_range(sb, 0, 360);
-	spinbutton_set_increment(sb, 90);
+	map_destroy(&ins->mTmp);
 }
 
 static void
-init_gfx_ref(struct insert_tool *ins, struct mapview *mv, struct noderef *r,
-    struct sprite *spr)
+snap_sprite(struct insert_tool *ins, struct noderef *r, struct sprite *spr)
 {
-	struct map *m = mv->map;
-	int sm;
-
-	noderef_init(r, NODEREF_SPRITE);
-	noderef_set_sprite(r, m, spr->pgfx->pobj, spr->index);
-	r->layer = m->cur_layer;
-	r->r_gfx.xcenter = 0;
-	r->r_gfx.ycenter = 0;
+	struct mapview *mv = TOOL(ins)->mv;
 
 	switch (ins->snap_mode) {
 	case GFX_SNAP_NOT:
@@ -115,104 +80,206 @@ init_gfx_ref(struct insert_tool *ins, struct mapview *mv, struct noderef *r,
 		r->r_gfx.ycenter += mv->cyoffs*TILESZ/MV_TILESZ(mv);
 		break;
 	case GFX_SNAP_TO_GRID:
-		r->r_gfx.xcenter += TILESZ/2;
-		r->r_gfx.ycenter += TILESZ/2;
+		if (spr->su->w%3 == 0) { r->r_gfx.xcenter += TILESZ/2; }
+		if (spr->su->h%3 == 0) { r->r_gfx.ycenter += TILESZ/2; }
 		break;
 	}
 
-	transform_rotate(r, ins->angle);
+}
+
+static void
+generate_map(struct insert_tool *ins, struct sprite *spr)
+{
+	int sy, sx, dx, dy;
+	int xorig, yorig;
+	int sw = spr->su->w/TILESZ;
+	int sh = spr->su->h/TILESZ;
+	int nw, nh;
+
+	if (spr->su->w%TILESZ > 0) sw++;
+	if (spr->su->h%TILESZ > 0) sh++;
+
+	map_alloc_nodes(&ins->mTmp, sw, sh);
+	ins->mTmp.origin.x = spr->xOrig/TILESZ;
+	ins->mTmp.origin.y = spr->yOrig/TILESZ;
+	xorig = spr->xOrig%TILESZ;
+	yorig = spr->yOrig%TILESZ;
+	for (sy = 0, dy = 0;
+	     sy < spr->su->h;
+	     sy += TILESZ, dy++) {
+		for (sx = 0, dx = 0;
+		     sx < spr->su->w;
+		     sx += TILESZ, dx++) {
+			struct node *dn;
+			struct noderef *r;
+			int dw, dh, nlayer;
+
+			if (dx >= ins->mTmp.mapw ||
+			    dy >= ins->mTmp.maph)
+				continue;
+
+			dn = &ins->mTmp.map[dy][dx];
+			dw = spr->su->w - sx;
+			dh = spr->su->h - sy;
+
+			r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
+			noderef_init(r, NODEREF_SPRITE);
+			noderef_set_sprite(r, &ins->mTmp, spr->pgfx->pobj,
+			    spr->index);
+
+			r->r_gfx.rs.x = sx;
+			r->r_gfx.rs.y = sy;
+			r->r_gfx.rs.w = (dw >= TILESZ) ? TILESZ : dw;
+			r->r_gfx.rs.h = (dh >= TILESZ) ? TILESZ : dh;
+			r->r_gfx.xorigin = xorig;
+			r->r_gfx.yorigin = yorig;
+			r->flags |= SPRITE_ATTR2(spr,dx,dy);
+
+			if (spr->su->w%3 == 0)
+				r->r_gfx.xcenter += TILESZ/2;
+			if (spr->su->h%3 == 0)
+				r->r_gfx.ycenter += TILESZ/2;
+
+			nlayer = SPRITE_LAYER2(spr,dx,dy);
+			if (nlayer < 0) {
+				nlayer = 0;
+			} else {
+				if (nlayer >= ins->mTmp.nlayers)
+					map_push_layer(&ins->mTmp, "");
+			}
+			r->layer = nlayer;
+			
+			/* XXX also need to rotate the whole map */
+			transform_rotate(r, ins->angle);
+
+			TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
+		}
+	}
+}
+
+static void
+insert_pane(void *p, void *con)
+{
+	struct insert_tool *ins = p;
+	struct radio *rad;
+	struct checkbox *cb;
+	struct spinbutton *sb;
+	struct combo *com;
+	struct tlist_item *it;
+	struct mapview *mvMain = TOOL(ins)->mv;
+	struct mapview *mv;
+	struct sprite *spr;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
+
+	if ((it = tlist_selected_item(mvMain->lib_tl)) == NULL ||
+	     strcmp(it->class, "tile") != 0) {
+		return;
+	}
+	spr = it->p1;
+	
+	nb = notebook_new(con, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
+	ntab = notebook_add_tab(nb, _("Tiles"), BOX_VERT);
+	mv = ins->mvTmp = mapview_new(ntab, &ins->mTmp,
+	    MAPVIEW_EDIT|MAPVIEW_GRID, NULL, NULL);
+	mapview_prescale(mv, 7, 7);
+	mapview_select_tool(mv,
+	    mapview_reg_tool(mv, &nodesel_ops, &ins->mTmp),
+	    &ins->mTmp);
+	generate_map(ins, spr);
+	
+	ntab = notebook_add_tab(nb, _("Settings"), BOX_VERT);
+	{
+		label_new(ntab, LABEL_STATIC, _("Snap to: "));
+		rad = radio_new(ntab, gfx_snap_names);
+		widget_bind(rad, "value", WIDGET_INT, &ins->snap_mode);
+
+		cb = checkbox_new(ntab, _("Replace mode"));
+		widget_bind(cb, "state", WIDGET_INT, &ins->replace_mode);
+
+		sb = spinbutton_new(ntab, _("Rotation: "));
+		widget_bind(sb, "value", WIDGET_INT, &ins->angle);
+		spinbutton_set_range(sb, 0, 360);
+		spinbutton_set_increment(sb, 90);
+	}
 }
 
 static int
-insert_effect(void *p, struct node *n)
+insert_effect(void *p, struct node *node)
 {
 	struct insert_tool *ins = p;
 	struct mapview *mv = TOOL(ins)->mv;
-	struct map *m = mv->map;
-	struct noderef *r;
+	struct map *mSrc = &ins->mTmp;
+	struct map *mDst = mv->map;
+	int sx, sy, sx0, sy0, sx1, sy1;
+	int dx, dy, dx0, dy0;
+	int l;
+	struct tlist_item *it;
+	struct sprite *spr;
+	
+	if (mv->lib_tl == NULL ||
+	    (it = tlist_selected_item(mv->lib_tl)) == 0 ||
+	    strcmp(it->class, "tile") != 0) {
+		return (1);
+	}
+	spr = it->p1;
 
-	if (ins->source == INSERT_SRC_COPYBUF) {
-		struct map *copybuf = &mapedit.copybuf;
-		int sx, sy, dx, dy;
-
-		for (sy = 0, dy = mv->cy;
-		     sy < copybuf->maph && dy < m->maph;
-		     sy++, dy++) {
-			for (sx = 0, dx = mv->cx;
-			     sx < copybuf->mapw && dx < m->mapw;
-			     sx++, dx++) {
-				struct node *sn = &copybuf->map[sy][sx];
-				struct node *dn = &m->map[dy][dx];
-				struct noderef *r;
-
-				if (ins->replace_mode) {
-					node_clear(m, dn, m->cur_layer);
-				}
-				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
-					node_copy_ref(r, m, dn, m->cur_layer);
-			}
-		}
+	if (ins->mvTmp->esel.set) {
+		sx0 = ins->mvTmp->esel.x;
+		sy0 = ins->mvTmp->esel.y;
+		sx1 = sx0 + ins->mvTmp->esel.w - 1;
+		sy1 = sy0 + ins->mvTmp->esel.h - 1;
+		dx0 = mv->cx;
+		dy0 = mv->cy;
 	} else {
-		struct tlist_item *it;
-		struct sprite *spr;
-		SDL_Surface *su;
-		int sx, sy, dx, dy;
-		int dx0, dy0, xorig, yorig;
-		int n = 0;
+		sx0 = 0;
+		sy0 = 0;
+		sx1 = mSrc->mapw-1;
+		sy1 = mSrc->maph-1;
+		dx0 = mv->cx - mSrc->origin.x;
+		dy0 = mv->cy - mSrc->origin.y;
+	}
 
-		if (mv->lib_tl == NULL ||
-		    (it = tlist_selected_item(mv->lib_tl)) == 0 ||
-		    strcmp(it->class, "tile") != 0) {
-			return (1);
-		}
-		spr = it->p1;
-		su = spr->su;
+	mapmod_begin(mDst);
+	for (sy = sy0, dy = dy0;
+	     sy <= sy1 && dy < mDst->maph;
+	     sy++, dy++) {
+		for (sx = sx0, dx = dx0;
+		     sx <= sx1 && dx < mDst->mapw;
+		     sx++, dx++) {
+			struct node *sn, *dn;
+			struct noderef *r1, *r2;
 
-		dx0 = mv->cx - spr->xOrig/TILESZ;
-		dy0 = mv->cy - spr->yOrig/TILESZ;
-		xorig = spr->xOrig%TILESZ;
-		yorig = spr->yOrig%TILESZ;
-
-		for (sy = 0, dy = dy0;
-		     sy < su->h && dy < m->maph;
-		     sy += TILESZ, dy++) {
-			for (sx = 0, dx = dx0;
-			     sx < su->w && dx < m->mapw;
-			     sx += TILESZ, dx++) {
-				struct node *dn = &m->map[dy][dx];
-				int dx = su->w - sx;
-				int dy = su->h - sy;
-				int nlayer;
+			if (dx < 0 || dx >= mDst->mapw ||
+			    dy < 0 || dy >= mDst->maph) {
+				continue;
+			}
+			sn = &mSrc->map[sy][sx]; 
+			dn = &mDst->map[dy][dx];
 			
-				r = Malloc(sizeof(struct noderef),
-				    M_MAP_NODEREF);
-				init_gfx_ref(ins, mv, r, spr);
-				r->r_gfx.rs.x = sx;
-				r->r_gfx.rs.y = sy;
-				r->r_gfx.rs.w = (dx >= TILESZ) ? TILESZ : dx;
-				r->r_gfx.rs.h = (dy >= TILESZ) ? TILESZ : dy;
-				r->r_gfx.xorigin = xorig;
-				r->r_gfx.yorigin = yorig;
-				r->flags |= spr->attrs[n];
+			mapmod_nodechg(mDst, dx, dy);
 
-				nlayer = m->cur_layer + spr->layers[n];
-				if (nlayer < 0) {
-					nlayer = 0;
-				} else {
-					if (nlayer >= m->nlayers) {
-						map_push_layer(m, "");
-					}
+			if (ins->replace_mode) {
+				node_clear(mDst, dn, mDst->cur_layer);
+			}
+			TAILQ_FOREACH(r1, &sn->nrefs, nrefs) {
+				r2 = node_copy_ref(r1, mDst, dn, -1);
+				r2->layer += mDst->cur_layer;
+				while (r2->layer >= mDst->nlayers) {
+					if (map_push_layer(mDst, "") == 0)
+						mapmod_layeradd(mDst,
+						    mDst->nlayers - 1);
 				}
-				r->layer = nlayer;
-
-				if (ins->replace_mode) {
-					node_clear(m, dn, m->cur_layer);
+				if (ins->snap_mode == GFX_SNAP_NOT) {
+					r2->r_gfx.xcenter +=
+					    mv->cxoffs*TILESZ/MV_TILESZ(mv);
+					r2->r_gfx.ycenter +=
+					    mv->cyoffs*TILESZ/MV_TILESZ(mv);
 				}
-				TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
-				n++;
 			}
 		}
 	}
+	mapmod_end(mDst);
 	return (1);
 }
 
@@ -221,61 +288,55 @@ insert_cursor(void *p, SDL_Rect *rd)
 {
 	struct insert_tool *ins = p;
 	struct mapview *mv = TOOL(ins)->mv;
-	struct map *m = mv->map;
+	struct map *mSrc = &ins->mTmp;
 	struct tlist_item *it;
-	int rv = -1;
+	struct sprite *spr;
+	int sx0, sy0, sx1, sy1;
+	int dx0, dy0, dx1, dy1;
+	int dx, dy, sx, sy;
 
-	if (ins->source == INSERT_SRC_COPYBUF) {
-		struct map *copybuf = &mapedit.copybuf;
-		struct noderef *r;
-		int sx, sy, dx, dy;
+	if (mv->lib_tl == NULL ||
+	   (it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	   strcmp(it->class, "tile") != 0 ||
+	   (spr = it->p1) == NULL || spr->su == NULL) {
+		return (-1);
+	}
+
+	if (ins->snap_mode == GFX_SNAP_NOT) {
+		primitives.rect_outlined(mv, rd->x+1, rd->y+1,
+		    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
+		    COLOR(MAPVIEW_GRID_COLOR));
+	}
 	
-		/* Avoid circular references when viewing the copy buffer. */
-		if (mv->map == copybuf) {
-			return (-1);
-		}
-		for (sy = 0, dy = rd->y;
-		     sy < copybuf->maph;
-		     sy++, dy += MV_TILESZ(mv)) {
-			for (sx = 0, dx = rd->x;
-			     sx < copybuf->mapw;
-			     sx++, dx += MV_TILESZ(mv)) {
-				struct node *sn = &copybuf->map[sy][sx];
-	
-				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
-					noderef_draw(m, r,
-					    WIDGET(mv)->cx+dx,
-					    WIDGET(mv)->cy+dy,
-					    mv->cam);
-					rv = 0;
-				}
-			}
-		}
-	} else if (mv->lib_tl != NULL &&
-	   (it = tlist_selected_item(mv->lib_tl)) != NULL &&
-	   strcmp(it->class, "tile") == 0) {
-		struct sprite *spr = it->p1;
-		int dx, dy;
+	if (ins->mvTmp->esel.set) {
+		sx0 = ins->mvTmp->esel.x;
+		sy0 = ins->mvTmp->esel.y;
+		sx1 = sx0 + ins->mvTmp->esel.w - 1;
+		sy1 = sy0 + ins->mvTmp->esel.h - 1;
+		dx0 = WIDGET(mv)->cx + rd->x;
+		dy0 = WIDGET(mv)->cy + rd->y;
+	} else {
+		sx0 = 0;
+		sy0 = 0;
+		sx1 = mSrc->mapw-1;
+		sy1 = mSrc->maph-1;
+		dx0 = WIDGET(mv)->cx + rd->x - mSrc->origin.x*MV_TILESZ(mv);
+		dy0 = WIDGET(mv)->cy + rd->y - mSrc->origin.y*MV_TILESZ(mv);
+	}
+	if (ins->snap_mode == GFX_SNAP_NOT) {
+		dx0 += mv->cxoffs*TILESZ/MV_TILESZ(mv);
+		dy0 += mv->cyoffs*TILESZ/MV_TILESZ(mv);
+	}
+	for (sy = sy0, dy = dy0; sy <= sy1; sy++, dy += MV_TILESZ(mv)) {
+		for (sx = sx0, dx = dx0; sx <= sx1; sx++, dx += MV_TILESZ(mv)) {
+			struct node *sn = &mSrc->map[sy][sx];
+			struct noderef *r;
 
-		if (spr->su != NULL) {
-			struct noderef rtmp;
-			struct transform *trans;
-
-			init_gfx_ref(ins, mv, &rtmp, spr);
-			rtmp.r_gfx.xorigin = spr->xOrig;
-			rtmp.r_gfx.yorigin = spr->yOrig;
-			primitives.rect_outlined(mv, rd->x+1, rd->y+1,
-			    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
-			    COLOR(MAPVIEW_GRID_COLOR));
-			noderef_draw(m, &rtmp,
-			    WIDGET(mv)->cx + rd->x,
-			    WIDGET(mv)->cy + rd->y,
-			    mv->cam);
-			noderef_destroy(m, &rtmp);
-			rv = 0;
+			TAILQ_FOREACH(r, &sn->nrefs, nrefs)
+				noderef_draw(mv->map, r, dx, dy, mv->cam);
 		}
 	}
-	return (rv);
+	return (0);
 }
 
 static int
@@ -309,7 +370,7 @@ insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 	}
 	if (strcmp(it->class, "tile") == 0) {
 		tool_set_status(ins,
-		    _("Insert %s tile at [%d,%d] with $(L) ($(M)=Rotate)."),
+		    _("Insert %s tile at [%d,%d] ($(L)=Confirm, $(M)=Rotate)."),
 		    it->text, mv->cx, mv->cy);
 	}
 	return (0);
@@ -321,7 +382,7 @@ const struct tool_ops insert_ops = {
 	sizeof(struct insert_tool),
 	TOOL_HIDDEN,
 	insert_init,
-	NULL,				/* destroy */
+	insert_destroy,
 	insert_pane,
 	NULL,				/* edit */
 	insert_cursor,
