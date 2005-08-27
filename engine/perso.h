@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.18 2005/08/04 07:36:30 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.19 2005/08/10 06:53:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -17,13 +17,14 @@ struct perso {
 	void		*tileset;		/* Graphics source */
 	char		 name[PERSO_NAME_MAX];	/* Name set by user */
 	Uint32		 flags;
-	Uint32		 seed;			/* Random seed */
-	Sint32		 level;			/* Current level */
-	Uint32		 exp;			/* Experience */
-	int		 age;			/* Age */
-	int		 maxhp, maxmp;		/* Maximum HP/MP */
-	int		 hp, mp;		/* Effective HP/MP */
-	Uint32		 nzuars;		/* Money */
+	Uint32		 seed;		/* Random seed */
+	Sint32		 level;		/* Current level */
+	Uint32		 exp;		/* Experience */
+	int		 age;		/* Age */
+	int		 maxhp, maxmp;	/* Maximum HP/MP */
+	int		 hp, mp;	/* Effective HP/MP */
+	Uint32		 nzuars;	/* Money */
+	struct timeout	 move_to;	/* Movement timer */
 };
 
 #define PERSO(ob)	((struct perso *)(ob))
@@ -34,6 +35,7 @@ void		 perso_init(void *, const char *);
 void		 perso_reinit(void *);
 void		 perso_destroy(void *);
 struct window	*perso_edit(void *);
+void		 perso_args(void *);
 int		 perso_load(void *, struct netbuf *);
 int		 perso_save(void *, struct netbuf *);
 void		 perso_map(void *, void *);
