@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.6 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.7 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,27 +30,55 @@
 
 #ifdef MAP
 
-#include <engine/widget/radio.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/primitive.h>
 
 #include "map.h"
 #include "mapedit.h"
 
 static void
-invert_init(void *p)
+init(void *p)
 {
 	tool_push_status(p, _("Specify element and $(L) to invert."));
 }
 
 static int
-invert_effect(void *p, struct node *n)
+mousebuttondown(void *p, int x, int y, int btn)
 {
-	struct map *m = TOOL(p)->mv->map;
+	mapmod_begin(TOOL(p)->mv->map);
+	return (0);
+}
+
+static int
+mousebuttonup(void *p, int x, int y, int btn)
+{
+	struct tool *t = p;
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
+
+	if (m->nmods == 0) {
+		mapmod_cancel(m);
+	}
+	mapmod_end(m);
+	return (0);
+}
+
+static int
+effect(void *p, struct node *n)
+{
+	struct mapview *mv = TOOL(p)->mv;
+	struct map *m = mv->map;
 	struct noderef *nref;
 	struct transform *trans;
-	
+	int nmods = 0;
+
+	mapmod_nodechg(m, mv->cx, mv->cy);
+
 	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		if (nref->layer != m->cur_layer)
 			continue;
+		
+		nmods++;
 
 		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
 			if (trans->type == TRANSFORM_INVERT) {
@@ -70,6 +98,16 @@ invert_effect(void *p, struct node *n)
 		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
 		break;
 	}
+	return (nmods);
+}
+
+static int
+cursor(void *p, SDL_Rect *rd)
+{
+	Uint8 c[4] = { 255, 255, 255, 64 };
+
+	primitives.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	    c, ALPHA_OVERLAY);
 	return (1);
 }
 
@@ -78,16 +116,16 @@ const struct tool_ops invert_ops = {
 	INVERT_TOOL_ICON,
 	sizeof(struct tool),
 	0,
-	invert_init,
+	init,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */
-	NULL,			/* cursor */
-	invert_effect,
+	cursor,
+	effect,
 	
 	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
+	mousebuttondown,
+	mousebuttonup,
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };

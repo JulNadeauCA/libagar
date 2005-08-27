@@ -1,4 +1,4 @@
-/*	$Csoft: nodesel.c,v 1.4 2005/07/24 08:04:17 vedge Exp $	*/
+/*	$Csoft: nodesel.c,v 1.5 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ nodesel_begin_move(struct mapview *mv)
 {
 	struct map *mSrc = mv->map;
 	struct map *mTmp = &mv->esel.map;
-	int x, y;
+	int sx, sy, x, y;
 
 	map_init(mTmp, "");
 
@@ -106,11 +106,18 @@ nodesel_begin_move(struct mapview *mv)
 	if (map_push_layer(mSrc, _("(Floating selection)")) == -1)
 		goto fail;
 
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			struct node *nSrc = &mSrc->map[mv->esel.y+y]
-			                              [mv->esel.x+x];
+	mapmod_begin(mSrc);
+
+	for (y = 0, sy = mv->esel.y;
+	     y < mv->esel.h;
+	     y++, sy++) {
+		for (x = 0, sx = mv->esel.x;
+		     x < mv->esel.w;
+		     x++, sx++) {
+			struct node *nSrc = &mSrc->map[sy][sx];
 			struct node *nTmp = &mTmp->map[y][x];
+
+			mapmod_nodechg(mSrc, sx, sy);
 
 			node_copy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
 			node_swap_layers(mSrc, nSrc, mSrc->cur_layer,
@@ -129,27 +136,33 @@ nodesel_update_move(struct mapview *mv, int xRel, int yRel)
 {
 	struct map *mDst = mv->map;
 	struct map *mTmp = &mv->esel.map;
-	int x, y;
+	int x, y, dx, dy;
 
 	if (mv->esel.x+xRel < 0 || mv->esel.x+mv->esel.w+xRel > mDst->mapw)
 		xRel = 0;
 	if (mv->esel.y+yRel < 0 || mv->esel.y+mv->esel.h+yRel > mDst->maph)
 		yRel = 0;
 	
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			node_clear(mDst,
-			    &mDst->map[mv->esel.y+y][mv->esel.x+x],
-			    mDst->nlayers-1);
+	for (y = 0, dy = mv->esel.y;
+	     y < mv->esel.h;
+	     y++, dy++) {
+		for (x = 0, dx = mv->esel.x;
+		     x < mv->esel.w;
+		     x++) {
+			node_clear(mDst, &mDst->map[dy][dx], mDst->nlayers-1);
 		}
 	}
 
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
+	for (y = 0, dy = mv->esel.y+yRel;
+	     y < mv->esel.h;
+	     y++, dy++) {
+		for (x = 0, dx = mv->esel.x+xRel;
+		     x < mv->esel.w;
+		     x++, dx++) {
 			struct node *nTmp = &mTmp->map[y][x];
-			struct node *nDst = &mDst->map[mv->esel.y+y+yRel]
-			                              [mv->esel.x+x+xRel];
+			struct node *nDst = &mDst->map[dy][dx];
 	
+			mapmod_nodechg(mDst, dx, dy);
 			node_copy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
 		}
 	}
@@ -163,12 +176,15 @@ nodesel_end_move(struct mapview *mv)
 {
 	struct map *mDst = mv->map;
 	struct map *mTmp = &mv->esel.map;
-	int x, y;
+	int dx, dy, x, y;
 
-	for (y = 0; y < mv->esel.h; y++) {
-		for (x = 0; x < mv->esel.w; x++) {
-			struct node *node = &mDst->map[mv->esel.y+y]
-			                              [mv->esel.x+x];
+	for (y = 0, dy = mv->esel.y;
+	     y < mv->esel.h;
+	     y++, dy++) {
+		for (x = 0, dx = mv->esel.x;
+		     x < mv->esel.w;
+		     x++, dx++) {
+			struct node *node = &mDst->map[dy][dx];
 			struct noderef *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
@@ -177,8 +193,9 @@ nodesel_end_move(struct mapview *mv)
 			}
 		}
 	}
-	
+
 	map_pop_layer(mDst);
+	mapmod_end(mDst);
 	
 	map_reinit(mTmp);
 	map_destroy(mTmp);
@@ -267,10 +284,8 @@ nodesel_kill(struct tool *t, SDLKey key, int state, void *arg)
 	struct map *m = mv->map;
 	int x, y;
 
-	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to kill."));
+	if (!mv->esel.set)
 		return (0);
-	}
 	
 	dprintf("[%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
 	    mv->esel.h);
@@ -304,6 +319,7 @@ nodesel_init(void *p)
 	tool_bind_key(p, KMOD_CTRL, SDLK_v, nodesel_paste, NULL);
 	tool_bind_key(p, KMOD_CTRL, SDLK_x, nodesel_cut, NULL);
 	tool_bind_key(p, KMOD_CTRL, SDLK_k, nodesel_kill, NULL);
+	tool_bind_key(p, 0, SDLK_DELETE, nodesel_kill, NULL);
 	
 	tool_push_status(p,
 	    _("Select a rectangle of nodes with $(L). Drag to displace node "

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.14 2005/08/04 06:35:45 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.15 2005/08/10 06:59:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -130,10 +130,37 @@ struct map_camera {
 	int pixsz;				/* Scaled pixel size */
 };
 
+struct mapmod {
+	enum {
+		MAPMOD_NODECHG,
+		MAPMOD_LAYERADD,
+		MAPMOD_LAYERDEL
+	} type;
+	union {
+		struct {
+			struct node node;
+			int x, y;
+		} nodechg;
+		struct {
+			int nlayer;
+		} layermod;
+	} data;
+#define mm_nodechg data.nodechg
+#define mm_layeradd data.layermod
+#define mm_layerdel data.layermod
+};
+
+struct mapmod_blk {
+	struct mapmod *mods;
+	u_int nmods;
+	u_char cancel;
+};
+
 struct map {
 	struct space space;
 
 	pthread_mutex_t lock;
+
 	u_int mapw, maph;		/* Map geometry */
 	int cur_layer;			/* Layer being edited */
 	struct {
@@ -144,10 +171,15 @@ struct map {
 	int redraw;			/* Redraw (for tile-based mode) */
 
 	struct map_layer *layers;	/* Layer descriptions */
-	u_int		 nlayers;
+	u_int nlayers;
 
 	struct map_camera *cameras;	/* Views */
-	u_int		  ncameras;
+	u_int ncameras;
+
+	struct mapmod_blk *blks;	/* Saved modifications */
+	u_int nblks;
+	u_int curblk;
+	u_int nmods;
 };
 
 __BEGIN_DECLS
@@ -170,7 +202,16 @@ int	 map_push_layer(struct map *, const char *);
 void	 map_pop_layer(struct map *);
 void	 map_init_layer(struct map_layer *, const char *);
 void	 map_init_camera(struct map_camera *, const char *);
+void	 map_init_modblks(struct map *);
 int	 map_add_camera(struct map *, const char *);
+
+void	 mapmod_begin(struct map *);
+void	 mapmod_end(struct map *);
+void	 mapmod_cancel(struct map *);
+void	 mapmod_nodechg(struct map *, int, int);
+void	 mapmod_layeradd(struct map *, int);
+void	 map_undo(struct map *);
+void	 map_redo(struct map *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);

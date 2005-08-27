@@ -1,4 +1,4 @@
-/*	$Csoft: refsel.c,v 1.5 2005/07/25 10:44:24 vedge Exp $	*/
+/*	$Csoft: refsel.c,v 1.6 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -68,31 +68,6 @@ refsel_update(struct mapview *mv, int xRel, int yRel)
 				} else if (yRel < 0 && r->r_gfx.ycenter < 0) {
 					r->r_gfx.ycenter = 0;
 				}
-			}
-		}
-	}
-}
-
-void
-refsel_delete(struct mapview *mv)
-{
-	struct map *m = mv->map;
-	struct node *n;
-	struct noderef *r, *nr;
-	int x, y;
-
-	for (y = 0; y < m->maph; y++) {
-		for (x = 0; x < m->mapw; x++) {
-			n = &m->map[y][x];
-			for (r = TAILQ_FIRST(&n->nrefs);
-			     r != TAILQ_END(&n->nrefs);
-			     r = nr) {
-				nr = TAILQ_NEXT(r, nrefs);
-				if (r->layer != m->cur_layer ||
-				    (r->flags & NODEREF_SELECTED) == 0) {
-					continue;
-				}
-				node_remove_ref(m, n, r);
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.45 2005/08/12 06:09:48 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.46 2005/08/15 02:27:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,6 +60,7 @@
 #include <engine/widget/notebook.h>
 #include <engine/widget/scrollbar.h>
 #include <engine/widget/hpane.h>
+#include <engine/widget/vpane.h>
 #include <engine/widget/separator.h>
 #endif
 
@@ -82,6 +83,9 @@ const struct object_ops map_ops = {
 };
 
 int map_smooth_scaling = 0;
+
+static void init_mapmod_blk(struct mapmod_blk *);
+static void free_mapmod_blk(struct map *, struct mapmod_blk *);
 
 void
 node_init(struct node *node)
@@ -467,6 +471,17 @@ map_add_camera(struct map *m, const char *name)
 }
 
 void
+map_init_modblks(struct map *m)
+{
+	m->blks = Malloc(sizeof(struct mapmod_blk), M_MAP);
+	m->nblks = 1;
+	init_mapmod_blk(&m->blks[0]);
+	m->curblk = 0;
+	m->nmods = 0;
+	mapmod_begin(m);
+}
+
+void
 map_init(void *obj, const char *name)
 {
 	struct map *m = obj;
@@ -488,6 +503,7 @@ map_init(void *obj, const char *name)
 	
 	map_init_layer(&m->layers[0], _("Layer 0"));
 	map_init_camera(&m->cameras[0], _("Camera 0"));
+	map_init_modblks(m);
 
 #ifdef EDITION
 	if (mapedition) {
@@ -538,7 +554,6 @@ noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 		object_del_dep(map, r->r_sprite.obj);
 		object_page_out(r->r_sprite.obj, OBJECT_GFX);
 	}
-
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
 		if (object_page_in(pobj, OBJECT_GFX) == -1)
@@ -585,7 +600,6 @@ noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 		object_del_dep(map, r->r_anim.obj);
 		object_page_out(r->r_anim.obj, OBJECT_GFX);
 	}
-
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
 		if (object_page_in(pobj, OBJECT_GFX) == -1)
@@ -816,7 +830,8 @@ node_clear(struct map *m, struct node *node, int layer)
 	     r != TAILQ_END(&node->nrefs);
 	     r = nr) {
 		nr = TAILQ_NEXT(r, nrefs);
-		if (r->layer != layer) {
+		if (layer != -1 &&
+		    layer != r->layer) {
 			continue;
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
@@ -901,6 +916,7 @@ void
 map_reinit(void *p)
 {
 	struct map *m = p;
+	int i;
 
 	space_reinit(m);
 	
@@ -910,6 +926,12 @@ map_reinit(void *p)
 		map_free_layers(m);
 	if (m->cameras != NULL)
 		map_free_cameras(m);
+	
+	for (i = 0; i < m->nblks; i++) {
+		free_mapmod_blk(m, &m->blks[i]);
+	}
+	Free(m->blks, M_MAP);
+	map_init_modblks(m);
 }
 
 void
@@ -1928,6 +1950,145 @@ draw:
 #endif
 }
 
+static void
+init_mapmod_blk(struct mapmod_blk *blk)
+{
+	blk->mods = Malloc(sizeof(struct mapmod), M_RG);
+	blk->nmods = 0;
+	blk->cancel = 0;
+}
+
+static void
+free_mapmod_blk(struct map *m, struct mapmod_blk *blk)
+{
+	int i;
+
+	for (i = 0; i < blk->nmods; i++) {
+		struct mapmod *mm = &blk->mods[i];
+		struct noderef *r, *nr;
+	
+		switch (mm->type) {
+		case MAPMOD_NODECHG:
+			node_destroy(m, &mm->mm_nodechg.node);
+			break;
+		default:
+			break;
+		}
+	}
+	Free(blk->mods, M_RG);
+}
+
+/* Create a new undo block at the current level. */
+void
+mapmod_begin(struct map *m)
+{
+	struct mapmod_blk *blk;
+
+	/* Destroy blocks at upper levels. */
+	while (m->nblks > m->curblk+1)
+		free_mapmod_blk(m, &m->blks[--m->nblks]);
+
+	m->blks = Realloc(m->blks, (++m->nblks)*sizeof(struct mapmod));
+	m->curblk++;
+		
+	blk = &m->blks[m->curblk];
+	init_mapmod_blk(&m->blks[m->curblk]);
+}
+
+void
+mapmod_cancel(struct map *m)
+{
+	struct mapmod_blk *blk = &m->blks[m->curblk];
+
+	blk->cancel = 1;
+}
+
+void
+mapmod_end(struct map *m)
+{
+	struct mapmod_blk *blk = &m->blks[m->curblk];
+	
+	if (blk->nmods == 0 || blk->cancel == 1) {
+		free_mapmod_blk(m, blk);
+		m->nblks--;
+		m->curblk--;
+	}
+}
+
+void
+map_undo(struct map *m)
+{
+	struct mapmod_blk *blk = &m->blks[m->curblk];
+	int i;
+
+	if (m->curblk-1 <= 0)
+		return;
+
+	for (i = 0; i < blk->nmods; i++) {
+		struct mapmod *mm = &blk->mods[i];
+
+		switch (mm->type) {
+		case MAPMOD_NODECHG:
+			{
+				struct node *n = &m->map[mm->mm_nodechg.y]
+				                        [mm->mm_nodechg.x];
+				struct noderef *r;
+				
+				node_clear(m, n, -1);
+				TAILQ_FOREACH(r, &mm->mm_nodechg.node.nrefs,
+				    nrefs) {
+					node_copy_ref(r, m, n, -1);
+				}
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	free_mapmod_blk(m, blk);
+	m->nblks--;
+	m->curblk--;
+}
+
+void
+map_redo(struct map *m)
+{
+	/* TODO */
+}
+
+void
+mapmod_nodechg(struct map *m, int x, int y)
+{
+	struct node *node = &m->map[y][x];
+	struct mapmod_blk *blk = &m->blks[m->nblks-1];
+	struct mapmod *mm;
+	struct noderef *sr;
+	int i;
+
+	for (i = 0; i < blk->nmods; i++) {
+		mm = &blk->mods[i];
+		if (mm->type == MAPMOD_NODECHG &&
+		    mm->mm_nodechg.x == x &&
+		    mm->mm_nodechg.y == y)
+			return;
+	}
+
+	blk->mods = Realloc(blk->mods, (blk->nmods+1)*sizeof(struct mapmod));
+	mm = &blk->mods[blk->nmods++];
+	mm->type = MAPMOD_NODECHG;
+	mm->mm_nodechg.x = x;
+	mm->mm_nodechg.y = y;
+	node_init(&mm->mm_nodechg.node);
+
+	TAILQ_FOREACH(sr, &node->nrefs, nrefs)
+		node_copy_ref(sr, m, &mm->mm_nodechg.node, -1);
+}
+
+void
+mapmod_layeradd(struct map *m, int l)
+{
+}
+
 #ifdef EDITION
 
 static void
@@ -1975,6 +2136,44 @@ resize_map(int argc, union evarg *argv)
 }
 
 static void
+poll_undo(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct map *m = argv[1].p;
+	int i, j;
+
+	tlist_clear_items(tl);
+	for (i = 0; i < m->nblks; i++) {
+		struct mapmod_blk *blk = &m->blks[i];
+		struct tlist_item *it;
+
+		it = tlist_insert(tl, NULL, "%sBlock %d (%d mods)",
+		    i==m->curblk ? "*" : "", i, blk->nmods);
+		it->depth = 0;
+		for (j = 0; j < blk->nmods; j++) {
+			struct mapmod *mod = &blk->mods[j];
+			
+			switch (mod->type) {
+			case MAPMOD_NODECHG:
+				it = tlist_insert(tl, NULL, "Nodechg (%d,%d)",
+				    mod->mm_nodechg.x, mod->mm_nodechg.y);
+				break;
+			case MAPMOD_LAYERADD:
+				it = tlist_insert(tl, NULL, "Layeradd (%d)",
+				    mod->mm_layeradd.nlayer);
+				break;
+			case MAPMOD_LAYERDEL:
+				it = tlist_insert(tl, NULL, "Layerdel (%d)",
+				    mod->mm_layerdel.nlayer);
+				break;
+			}
+			it->depth = 1;
+		}
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
 edit_properties(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
@@ -1985,6 +2184,8 @@ edit_properties(int argc, union evarg *argv)
 	struct mspinbutton *msb;
 	struct spinbutton *sb;
 	struct checkbox *cbox;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 
 	if ((win = window_new(WINDOW_NO_RESIZE, "map-props-%s",
 	    OBJECT(m)->name)) == NULL) {
@@ -1992,78 +2193,83 @@ edit_properties(int argc, union evarg *argv)
 	}
 	window_set_caption(win, _("Properties of \"%s\""), OBJECT(m)->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	
-	bo = box_new(win, BOX_VERT, 0);
-	{
-		cbox = checkbox_new(bo, _("Smooth scaling"));
-		widget_bind(cbox, "state", WIDGET_INT, &map_smooth_scaling);
-	}
 
-	bo = box_new(win, BOX_VERT, 0);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Map settings"), BOX_VERT);
 	{
-		msb = mspinbutton_new(bo, "x", _("Map size: "));
+		msb = mspinbutton_new(ntab, "x", _("Map size: "));
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
 		event_new(msb, "mspinbutton-changed", resize_map, "%p,%p",
 		    m, mv);
 		
-		msb = mspinbutton_new(bo, ",", _("Node offset: "));
+		msb = mspinbutton_new(ntab, ",", _("Origin position: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &m->origin.x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &m->origin.y);
+		mspinbutton_set_range(msb, 0, MAP_MAX_WIDTH);
+
+		sb = spinbutton_new(ntab, _("Origin layer: "));
+		widget_bind(sb, "value", WIDGET_INT, &m->origin.layer);
+	}
+
+	ntab = notebook_add_tab(nb, _("View"), BOX_VERT);
+	{
+		msb = mspinbutton_new(ntab, ",", _("Node offset: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
 		mspinbutton_set_range(msb, -MAP_MAX_WIDTH/2, MAP_MAX_WIDTH/2);
 	
 		/* XXX unsafe */
-		msb = mspinbutton_new(bo, ",", _("Camera position: "));
+		msb = mspinbutton_new(ntab, ",", _("Camera position: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &MV_CAM(mv).x);
 		widget_bind(msb, "yvalue", WIDGET_INT, &MV_CAM(mv).y);
 		
-		sb = spinbutton_new(bo, _("Zoom factor: "));
+		sb = spinbutton_new(ntab, _("Zoom factor: "));
 		widget_bind(sb, "value", WIDGET_INT, &MV_CAM(mv).zoom);
 		
-		sb = spinbutton_new(bo, _("Tile size: "));
+		sb = spinbutton_new(ntab, _("Tile size: "));
 		widget_bind(sb, "value", WIDGET_INT, &MV_TILESZ(mv));
 	
-		msb = mspinbutton_new(bo, ",", _("Display offset (view): "));
+		msb = mspinbutton_new(ntab, ",", _("Display offset (view): "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
 		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
 		
-		msb = mspinbutton_new(bo, "x", _("Display area: "));
+		msb = mspinbutton_new(ntab, "x", _("Display area: "));
 		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
-	}
+		
+		separator_new(ntab, SEPARATOR_HORIZ);
 
-	bo = box_new(win, BOX_VERT, 0);
-	{
-		label_new(bo, LABEL_POLLED, _("Camera: %i"), &mv->cam);
-		label_new(bo, LABEL_POLLED_MT, _("Current layer: %i"), &m->lock,
-		    &m->cur_layer);
-	}
+		cbox = checkbox_new(ntab, _("Smooth scaling"));
+		widget_bind(cbox, "state", WIDGET_INT, &map_smooth_scaling);
+		
+		separator_new(ntab, SEPARATOR_HORIZ);
+		
+		label_new(ntab, LABEL_POLLED, _("Camera: %i"), &mv->cam);
+		label_new(ntab, LABEL_POLLED_MT, _("Current layer: %i"),
+		    &m->lock, &m->cur_layer);
 
-	bo = box_new(win, BOX_VERT, 0);
-	{
-		label_new(win, LABEL_POLLED, _("Cursor position: %ix%i"),
+		label_new(ntab, LABEL_POLLED, _("Cursor position: %ix%i"),
 		    &mv->cx, &mv->cy);
-		label_new(win, LABEL_POLLED,
+		label_new(ntab, LABEL_POLLED,
 		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
 		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
-		label_new(win, LABEL_POLLED,
+		label_new(ntab, LABEL_POLLED,
 		    _("Effective selection: %[ibool] (%ix%i at %i,%i)"),
 		    &mv->esel.set,
 		    &mv->esel.w, &mv->esel.h, &mv->esel.x, &mv->esel.y);
 	}
 
-	bo = box_new(win, BOX_VERT, 0);
+	ntab = notebook_add_tab(nb, _("Undo"), BOX_VERT);
 	{
-		msb = mspinbutton_new(win, ",", _("Origin position: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &m->origin.x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &m->origin.y);
-		mspinbutton_set_range(msb, 0, MAP_MAX_WIDTH);
+		struct tlist *tl;
 
-		sb = spinbutton_new(win, _("Origin layer: "));
-		widget_bind(sb, "value", WIDGET_INT, &m->origin.layer);
+		tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
+		WIDGET(tl)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		event_new(tl, "tlist-poll", poll_undo, "%p", mv->map);
 	}
 
 	window_attach(pwin, win);
@@ -2083,7 +2289,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 
 	if (OBJECT_TYPE(pob, "tileset")) {
 		struct object *ts = (struct object *)pob;
-		struct tlist_item *sit;
+		struct tlist_item *sit, *fit;
 		struct animation *anim;
 		int i;
 
@@ -2093,17 +2299,18 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 		
 		if (ts->gfx != NULL &&
 		    (ts->gfx->nsprites > 0 ||
-		     ts->gfx->nanims > 0))
+		     ts->gfx->nanims > 0)) {
 			it->flags |= TLIST_HAS_CHILDREN;
-
-		if (it->flags & TLIST_HAS_CHILDREN &&
+		}
+		if ((it->flags & TLIST_HAS_CHILDREN) &&
 		    tlist_visible_children(tl, it)) {
 			for (i = 0; i < ts->gfx->nsprites; i++) {
 				struct sprite *spr = &SPRITE(ts,i);
+				int x, y;
 			
-				if (spr->su == NULL)
+				if (spr->su == NULL) {
 					continue;
-			
+				}
 				sit = tlist_insert(tl, spr->su, "%s (%ux%u)",
 				    spr->name, spr->su->w, spr->su->h);
 				sit->depth = depth+1;
@@ -2111,7 +2318,6 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 				sit->p1 = spr;
 			}
 		}
-
 		pthread_mutex_unlock(&ts->lock);
 	} else {
 		it->class = "object";
@@ -2502,20 +2708,20 @@ edit_prop_mode(int argc, union evarg *argv)
 		mv->mode = MAPVIEW_EDIT_ATTRS;
 		mv->edit_attr = flag;
 	} else {
-		mv->mode = MAPVIEW_NORMAL;
+		mv->mode = MAPVIEW_EDIT;
 	}
 }
 
 static void
 undo(int argc, union evarg *argv)
 {
-	mapview_undo((struct mapview *)argv[1].p);
+	map_undo((struct map *)argv[1].p);
 }
 
 static void
 redo(int argc, union evarg *argv)
 {
-	mapview_redo((struct mapview *)argv[1].p);
+	map_redo((struct map *)argv[1].p);
 }
 
 static void
@@ -2523,8 +2729,8 @@ center_to_origin(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv);
-	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv);
+	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
+	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
 	mapview_update_camera(mv);
 }
 
@@ -2544,6 +2750,21 @@ detach_gobject(int argc, union evarg *argv)
 	}
 }
 
+static void
+control_gobject(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct mapview *mv = argv[2].p;
+	struct tlist_item *it;
+
+	if ((it = tlist_selected_item(tl)) != NULL &&
+	     strcmp(it->class, "gobject") == 0) {
+		struct gobject *go = it->p1;
+	
+		mapview_control(mv, _("Player 1"), go);
+	}
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -2557,10 +2778,12 @@ map_edit(void *p)
 	struct AGMenu *menu;
 	struct AGMenuItem *pitem;
 	struct box *box_h, *box_v;
-	struct hpane *pane;
-	struct hpane_div *div;
+	struct hpane *hpane;
+	struct hpane_div *hdiv;
+	struct vpane *vpane;
+	struct vpane_div *vdiv;
 	struct tool *tool;
-	int flags = MAPVIEW_GRID|MAPVIEW_NO_BG|MAPVIEW_SHOW_ORIGIN;
+	int flags = MAPVIEW_GRID;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
@@ -2590,8 +2813,8 @@ map_edit(void *p)
 	
 	pitem = menu_add_item(menu, _("Edit"));
 	{
-		menu_action(pitem, _("Undo"), -1, undo, "%p", mv);
-		menu_action(pitem, _("Redo"), -1, redo, "%p", mv);
+		menu_action(pitem, _("Undo"), -1, undo, "%p", m);
+		menu_action(pitem, _("Redo"), -1, redo, "%p", m);
 
 		menu_separator(pitem);
 
@@ -2640,41 +2863,22 @@ map_edit(void *p)
 #endif
 	}
 	
-	pitem = menu_add_item(menu, _("Tools"));
-	{
-		menu_action(pitem, _("Select node"), SELECT_NODE_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &nodesel_ops, m));
-		
-		menu_action(pitem, _("Select node element"), SELECT_REF_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &refsel_ops, m));
-		
-		menu_action_kb(pitem, _("Fill"), FILL_TOOL_ICON,
-		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &fill_tool_ops, m));
-	
-		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &flip_ops, m));
-
-		menu_action(pitem, _("Invert sprite color"), INVERT_TOOL_ICON,
-		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &invert_ops, m));
-	}
-	
-	pane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);
-	div = hpane_add_div(pane,
-	    BOX_VERT, BOX_HFILL,
-	    BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+	hpane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);
+	hdiv = hpane_add_div(hpane,
+	    BOX_VERT,  BOX_HFILL,
+	    BOX_HORIZ, BOX_HFILL|BOX_WFILL);
 	{
 		struct notebook *nb;
 		struct notebook_tab *ntab;
 		struct tlist *tl;
-		struct box *tool_box;
 		struct AGMenuItem *mi;
-	
-		nb = notebook_new(div->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
+
+		vpane = vpane_new(hdiv->box1, VPANE_WFILL|VPANE_HFILL);
+		vdiv = vpane_add_div(vpane,
+		    BOX_VERT, BOX_WFILL|BOX_HFILL,
+		    BOX_VERT, BOX_WFILL);
+
+		nb = notebook_new(vdiv->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
 		ntab = notebook_add_tab(nb, _("Library"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
@@ -2682,15 +2886,6 @@ map_edit(void *p)
 			event_new(tl, "tlist-changed", select_lib, "%p", mv);
 			mv->lib_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
-		
-			tool_box = box_new(ntab, BOX_VERT, BOX_WFILL);
-			{
-				tool = mapview_reg_tool(mv, &insert_ops, m);
-				tool->pane = (void *)tool_box;
-				
-				tool = mapview_reg_tool(mv, &ginsert_ops, m);
-				tool->pane = (void *)tool_box;
-			}
 		}
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
@@ -2702,12 +2897,15 @@ map_edit(void *p)
 			
 			mi = tlist_set_popup(mv->objs_tl, "gobject");
 			{
+				menu_action(mi, _("Control object"),
+				    OBJ_ICON, control_gobject,
+				    "%p,%p", mv->objs_tl, mv); 
+
 				menu_action(mi, _("Detach object"),
 				    ERASER_TOOL_ICON, detach_gobject,
 				    "%p,%p", mv->objs_tl, m); 
 			}
 		}
-		
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			struct textbox *tb;
@@ -2756,15 +2954,42 @@ map_edit(void *p)
 			event_new(bu, "button-pushed", push_layer,
 			    "%p, %p", m, tb);
 		}
-
-		vbar = scrollbar_new(div->box2, SCROLLBAR_VERT);
-		box_v = box_new(div->box2, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		
+		separator_new(hdiv->box1, SEPARATOR_HORIZ);
+		
+		vbar = scrollbar_new(hdiv->box2, SCROLLBAR_VERT);
+		box_v = box_new(hdiv->box2, BOX_VERT, BOX_WFILL|BOX_HFILL);
 		{
 			object_attach(box_v, mv);
 			hbar = scrollbar_new(box_v, SCROLLBAR_HORIZ);
 		}
-		object_attach(div->box2, toolbar);
+		object_attach(hdiv->box2, toolbar);
 	}
+
+	pitem = menu_add_item(menu, _("Tools"));
+	{
+		const struct tool_ops *ops[] = {
+			&nodesel_ops,
+			&refsel_ops,
+			&fill_tool_ops,
+			&eraser_ops,
+			&flip_ops,
+			&invert_ops,
+			&insert_ops,
+			&ginsert_ops
+		};
+		const int nops = sizeof(ops) / sizeof(ops[0]);
+		struct tool *t;
+		int i;
+
+		for (i = 0; i < nops; i++) {
+			t = mapview_reg_tool(mv, ops[i], m);
+			t->pane = (void *)vdiv->box2;
+			menu_action(pitem, _(ops[i]->desc), ops[i]->icon,
+			    switch_tool, "%p, %p", mv, t);
+		}
+	}
+	
 
 	mapview_set_scrollbars(mv, hbar, vbar);
 	object_attach(win, statbar);

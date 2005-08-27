@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.21 2005/08/01 04:56:46 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.22 2005/08/10 06:59:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -7,6 +7,8 @@
 #include <engine/map/map.h>
 #include <engine/map/mapedit.h>
 #include <engine/map/tool.h>
+
+#include <engine/gobject.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -40,9 +42,10 @@ struct mapview {
 #define MAPVIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
 
 	enum mapview_mode {
-		MAPVIEW_NORMAL,		/* Default edition mode */
+		MAPVIEW_EDITION,	/* Default edition mode */
 		MAPVIEW_EDIT_ATTRS,	/* Editing node attributes */
-		MAPVIEW_MOVE_ORIGIN	/* Moving origin node */
+		MAPVIEW_EDIT_ORIGIN,	/* Moving origin node */
+		MAPVIEW_PLAY		/* Playing mode */
 	} mode;
 
 	int edit_attr;			/* Attribute being edited */
@@ -77,6 +80,7 @@ struct mapview {
 	} rsel;
 
 	struct map *map;		/* Map to display */
+	struct gobject *gobj;		/* Geometric object being controlled */
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */
@@ -165,10 +169,9 @@ void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
 		                struct scrollbar *);
 void	 mapview_status(struct mapview *, const char *, ...);
 void	 mapview_set_mode(struct mapview *, enum mapview_mode);
+void	 mapview_control(struct mapview *, const char *, void *);
 
 #ifdef EDITION
-void mapview_undo(struct mapview *);
-void mapview_redo(struct mapview *);
 struct tool *mapview_reg_tool(struct mapview *, const struct tool_ops *,
                               void *);
 __inline__ struct tool *mapview_find_tool(struct mapview *, const char *);
