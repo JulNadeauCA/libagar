@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.52 2005/08/15 02:27:25 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.53 2005/08/15 03:52:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,6 +50,9 @@ const struct version perso_ver = {
 	3, 0
 };
 
+static int perso_keydown(void *, int, int);
+static int perso_keyup(void *, int, int);
+
 const struct gobject_ops perso_ops = {
 	{
 		perso_init,
@@ -61,8 +64,19 @@ const struct gobject_ops perso_ops = {
 	},
 	perso_map,
 	NULL,		/* unmap */
-	perso_update
+	perso_update,
+	perso_keydown,
+	perso_keyup,
+	NULL,		/* mousemotion */
+	NULL,		/* mousebuttondown */
+	NULL,		/* mousebuttonup */
+	NULL,		/* joyaxis */
+	NULL,		/* joyball */
+	NULL,		/* joyhat */
+	NULL		/* joybutton */
 };
+
+static void *perso_tileset = NULL;
 
 struct perso *
 perso_new(void *parent, const char *name)
@@ -75,13 +89,33 @@ perso_new(void *parent, const char *name)
 	return (ps);
 }
 
+static Uint32
+perso_move(void *obj, Uint32 ival, void *arg)
+{
+	struct gobject *go = obj;
+	struct perso *ps = obj;
+	int xo = 0, yo = 0;
+
+	switch (go->g_map.da) {
+	case 0:	  xo = -go->g_map.dv; break;
+	case 90:  yo = -go->g_map.dv; break;
+	case 180: xo = +go->g_map.dv; break;
+	case 270: yo = +go->g_map.dv; break;
+	}
+
+	if ((xo != 0 || yo != 0) &&
+	    go_walkable(ps, xo, yo)) {
+		go_move_sprite(ps, xo, yo);
+	}
+	return (ival);
+}
+
 void
 perso_init(void *obj, const char *name)
 {
-	struct perso *ps= obj;
+	struct perso *ps = obj;
 
 	gobject_init(ps, "perso", name, &perso_ops);
-	pthread_mutex_init(&ps->lock, NULL);
 	ps->tileset = NULL;
 	ps->name[0] = '\0';
 	ps->flags = 0;
@@ -92,15 +126,19 @@ perso_init(void *obj, const char *name)
 	ps->hp = ps->maxhp = 1;
 	ps->mp = ps->maxmp = 0;
 	ps->nzuars = 0;
+	pthread_mutex_init(&ps->lock, NULL);
+	timeout_set(&ps->move_to, perso_move, NULL, 0);
 }
 
 void
 perso_reinit(void *obj)
 {
 	struct perso *ps = obj;
+	
+	timeout_del(ps, &ps->move_to);
 
 	gobject_reinit(obj);
-
+	
 	if (ps->tileset != NULL) {
 		object_page_out(ps->tileset, OBJECT_GFX);
 		object_del_dep(ps, ps->tileset);
@@ -261,8 +299,7 @@ perso_map(void *obj, void *space)
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
 
-		if (go_map_sprite(ps, m, 0, 0, 0, ps->tileset, "Idle-S")
-		    == -1) {
+		if (go_map_sprite(ps, 0, 0, 0, ps->tileset, "Idle-S") == -1) {
 			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
 			    OBJECT(space)->name, error_get());
 		}
@@ -286,4 +323,65 @@ perso_update(void *space, void *obj)
 	
 	dprintf("%s: update (space=%s)\n", OBJECT(ps)->name,
 	    OBJECT(space)->name);
+}
+
+int
+perso_keydown(void *p, int ks, int km)
+{
+	struct gobject *go = p;
+	struct perso *ps = p;
+
+	switch (ks) {
+	case SDLK_LEFT:
+		go->g_map.da = 0;
+		go->g_map.dv = 1;
+		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-W");
+		break;
+	case SDLK_UP:
+		go->g_map.da = 90;
+		go->g_map.dv = 1;
+		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-N");
+		break;
+	case SDLK_RIGHT:
+		go->g_map.da = 180;
+		go->g_map.dv = 1;
+		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-E");
+		break;
+	case SDLK_DOWN:
+		go->g_map.da = 270;
+		go->g_map.dv = 1;
+		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-S");
+		break;
+	}
+	if (go->g_map.dv > 0) {
+		timeout_add(p, &ps->move_to, 10);
+	}
+	return (0);
+}
+
+int
+perso_keyup(void *p, int ks, int km)
+{
+	struct perso *ps = p;
+	struct gobject *go = p;
+
+	switch (ks) {
+	case SDLK_LEFT:
+		if (go->g_map.da == 0) { goto stop; }
+		break;
+	case SDLK_UP:
+		if (go->g_map.da == 90) { goto stop; }
+		break;
+	case SDLK_RIGHT:
+		if (go->g_map.da == 180) { goto stop; }
+		break;
+	case SDLK_DOWN:
+		if (go->g_map.da == 270) { goto stop; }
+		break;
+	}
+	return (0);
+stop:
+	timeout_del(ps, &ps->move_to);
+	go->g_map.dv = 0;
+	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.6 2005/08/15 03:52:40 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.7 2005/08/16 02:03:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -133,6 +133,8 @@ space_attach(void *sp_obj, void *obj)
 	struct gobject *go = obj;
 
 	pthread_mutex_lock(&go->lock);
+		
+	object_add_dep(space, go);
 	
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = (struct map *)space;
@@ -144,9 +146,8 @@ space_attach(void *sp_obj, void *obj)
 			goto fail;
 		}
 
-		object_add_dep(m, go);
-
 		go->type = GOBJECT_MAP;
+		go->parent = space;
 		go->g_map.x0 = go->g_map.x;
 		go->g_map.y0 = go->g_map.y;
 		go->g_map.x1 = go->g_map.x;
@@ -154,9 +155,10 @@ space_attach(void *sp_obj, void *obj)
 	
 		if (GOBJECT_OPS(go)->map != NULL)
 			GOBJECT_OPS(go)->map(go, m);
+	} else {
+		go->type = GOBJECT_NONE;
+		go->parent = NULL;
 	}
-
-	go->parent = space;
 	pthread_mutex_unlock(&go->lock);
 	return (0);
 fail:
@@ -172,34 +174,12 @@ space_detach(void *sp_obj, void *obj)
 
 	pthread_mutex_lock(&go->lock);
 
+	object_cancel_timeouts(go, 0);		/* XXX hook? */
+
 	if (OBJECT_TYPE(space, "map")) {
-		struct map *m = (struct map *)space;
-		int x, y;
-
-		for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
-			for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
-				struct node *node;
-				struct noderef *r, *nr;
-		
-				if (x < 0 || x >= m->mapw ||
-				    y < 0 || y >= m->maph) {
-					continue;
-				}
-				node = &m->map[y][x];
-
-				for (r = TAILQ_FIRST(&node->nrefs);
-				     r != TAILQ_END(&node->nrefs);
-				     r = nr) {
-					nr = TAILQ_NEXT(r, nrefs);
-					if (r->p == go &&
-					    r->layer >= go->g_map.l0 &&
-					    r->layer <= go->g_map.l1)
-						node_remove_ref(m, node, r);
-				}
-			}
-		}
-		object_del_dep(space, go);
+		go_unmap_sprite(go);
 	}
+	object_del_dep(space, go);
 	go->parent = NULL;
 out:
 	pthread_mutex_unlock(&go->lock);

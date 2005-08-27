@@ -1,4 +1,4 @@
-/*	$Csoft: gobject.c,v 1.7 2005/08/15 03:52:25 vedge Exp $	*/
+/*	$Csoft: gobject.c,v 1.8 2005/08/16 02:03:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -68,6 +68,8 @@ gobject_init(void *obj, const char *type, const char *name,
 	go->g_map.y0 = 0;
 	go->g_map.x1 = 0;
 	go->g_map.y1 = 0;
+	go->g_map.xmot = 0;
+	go->g_map.ymot = 0;
 }
 
 void
@@ -181,10 +183,156 @@ gobject_update(void *obj)
 }
 
 int
-go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
-    void *gfx_obj, const char *name)
+go_walkable(void *p, int xo, int yo)
+{
+	struct gobject *go = p;
+	struct map *m = go->parent;
+	int dx0 = go->g_map.x0 + xo;
+	int dy0 = go->g_map.y0 + yo;
+	int dx1 = go->g_map.x1 + xo;
+	int dy1 = go->g_map.y1 + yo;
+	struct node *n;
+	int x, y;
+
+	if (dx0 < 0 || dy0 < 0 || dx0 >= m->mapw || dy0 >= m->maph ||
+	    dx1 < 0 || dy1 < 0 || dx1 >= m->mapw || dy1 >= m->maph)
+		return (0);
+
+	for (y = dy0; y < dy1; y++) {
+		for (x = dx0; x < dx1; x++) {
+			struct node *n = &m->map[y][x];
+			struct noderef *r;
+
+			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
+				if (r->p != go &&
+				    r->layer >= go->g_map.l0 &&
+				    r->layer <= go->g_map.l1 &&
+				    r->flags & NODEREF_BLOCK) {
+					dprintf("%s: blocked\n",
+					    OBJECT(go)->name);
+					return (0);
+				}
+			}
+		}
+	}
+	return (1);
+}
+
+static void
+move_nodes(struct gobject *go, int xo, int yo)
+{
+	struct map *m = go->parent;
+	int x, y;
+
+	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
+		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
+			struct node *n1 = &m->map[y][x];
+			struct node *n2 = &m->map[y+yo][x+xo];
+			struct noderef *r, *nr;
+
+			for (r = TAILQ_FIRST(&n1->nrefs);
+			     r != TAILQ_END(&n1->nrefs);
+			     r = nr) {
+				nr = TAILQ_NEXT(r, nrefs);
+				if (r->p == go &&
+				    r->layer >= go->g_map.l0 &&
+				    r->layer <= go->g_map.l1) {
+					TAILQ_REMOVE(&n1->nrefs, r, nrefs);
+					TAILQ_INSERT_TAIL(&n2->nrefs, r, nrefs);
+					r->r_gfx.xmotion = go->g_map.xmot;
+					r->r_gfx.ymotion = go->g_map.ymot;
+					break;
+				}
+			}
+		}
+	}
+	go->g_map.x += xo;
+	go->g_map.y += yo;
+	go->g_map.x0 += xo;
+	go->g_map.y0 += yo;
+	go->g_map.x1 += xo;
+	go->g_map.y1 += yo;
+}
+
+void
+go_move_sprite(void *obj, int xo, int yo)
 {
 	struct gobject *go = obj;
+	struct map *m = go->parent;
+	int x, y;
+
+	pthread_mutex_lock(&go->lock);
+
+	go->g_map.xmot += xo;
+	go->g_map.ymot += yo;
+
+	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
+		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *r, *nr;
+		
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if (r->p != go ||
+				    r->layer < go->g_map.l0 ||
+				    r->layer > go->g_map.l1) {
+					continue;
+				}
+
+				r->r_gfx.xmotion = go->g_map.xmot;
+				r->r_gfx.ymotion = go->g_map.ymot;
+					
+				switch (go->g_map.da) {
+				case 0:
+					if (go->g_map.xmot < -TILESZ/2) {
+						go->g_map.xmot = +TILESZ/2;
+						move_nodes(go, -1, 0);
+						goto out;
+					}
+					break;
+				case 90:
+					if (go->g_map.ymot < -TILESZ/2) {
+						go->g_map.ymot = +TILESZ/2;
+						move_nodes(go, 0, -1);
+						goto out;
+					}
+					break;
+				case 180:
+					if (go->g_map.xmot > +TILESZ/2) {
+						go->g_map.xmot = -TILESZ/2;
+						move_nodes(go, +1, 0);
+						goto out;
+					}
+					break;
+				case 270:
+					if (go->g_map.ymot > +TILESZ/2) {
+						go->g_map.ymot = -TILESZ/2;
+						move_nodes(go, 0, +1);
+						goto out;
+					}
+					break;
+				}
+			}
+		}
+	}
+out:
+	pthread_mutex_unlock(&go->lock);
+}
+
+int
+go_set_sprite(void *obj, int x, int y, int l0, void *gfx_obj, const char *name)
+{
+	struct gobject *go = obj;
+
+	go_unmap_sprite(go);
+	return (go_map_sprite(go, x, y, l0, gfx_obj, name));
+}
+
+int
+go_map_sprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
+    const char *name)
+{
+	struct gobject *go = obj;
+	struct map *m = go->parent;
 	struct gfx *gfx;
 	Uint32 offs;
 	struct sprite *spr;
@@ -211,14 +359,20 @@ go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
 	yorig = spr->yOrig%TILESZ;
 
 	for (sy = 0, dy = dy0;
-	     sy < su->h && dy < m->maph;
+	     sy < su->h;
 	     sy += TILESZ, dy++) {
 		for (sx = 0, dx = dx0;
-		     sx < su->w && dx < m->mapw;
+		     sx < su->w;
 		     sx += TILESZ, dx++) {
-			struct node *dn = &m->map[dy][dx];
+			struct node *dn;
 			struct noderef *r;
-	
+
+			if (dx < 0 || dx >= m->mapw ||
+			    dy < 0 || dy >= m->maph) {
+				goto out;
+			}
+			dn = &m->map[dy][dx];
+
 			r = node_add_sprite(m, dn, gfx_obj, offs);
 			r->p = obj;
 			r->r_gfx.rs.x = sx;
@@ -229,7 +383,10 @@ go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
 			r->r_gfx.yorigin = yorig;
 			r->r_gfx.xcenter = TILESZ/2;
 			r->r_gfx.ycenter = TILESZ/2;
+			r->r_gfx.xmotion = go->g_map.xmot;
+			r->r_gfx.ymotion = go->g_map.ymot;
 			r->flags |= spr->attrs[n];
+			r->flags |= NODEREF_NOSAVE;
 
 			l = l0 + spr->layers[n];
 			if (l < 0) {
@@ -247,11 +404,39 @@ go_map_sprite(void *obj, struct map *m, int X0, int Y0, int L0,
 			else if (dy > go->g_map.y1) { go->g_map.y1 = dy; }
 			if (l < go->g_map.l0) { go->g_map.l0 = l; }
 			else if (l > go->g_map.l1) { go->g_map.l1 = l; }
-
+out:
 			n++;
 		}
 	}
 	return (0);
+}
+
+void
+go_unmap_sprite(void *obj)
+{
+	struct gobject *go = obj;
+	struct map *m = go->parent;
+	int x, y;
+
+	if (m == NULL)
+		return;
+
+	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
+		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *r, *nr;
+		
+			for (r = TAILQ_FIRST(&node->nrefs);
+			     r != TAILQ_END(&node->nrefs);
+			     r = nr) {
+				nr = TAILQ_NEXT(r, nrefs);
+				if (r->p == go &&
+				    r->layer >= go->g_map.l0 &&
+				    r->layer <= go->g_map.l1)
+					node_remove_ref(m, node, r);
+			}
+		}
+	}
 }
 
 #ifdef EDITION
@@ -266,5 +451,9 @@ gobject_edit(struct gobject *go, void *cont)
 	    &go->g_map.x, &go->g_map.y);
 	label_new(cont, LABEL_POLLED, _("Map extent: [%d,%d]-[%d,%d]"),
 	    &go->g_map.x0, &go->g_map.y0, &go->g_map.x1, &go->g_map.y1);
+	label_new(cont, LABEL_POLLED, _("Map offset: [%d,%d]"),
+	    &go->g_map.xmot, &go->g_map.ymot);
+	label_new(cont, LABEL_POLLED, _("Direction: %d(%d)"),
+	    &go->g_map.da, &go->g_map.dv);
 }
 #endif /* EDITION */
