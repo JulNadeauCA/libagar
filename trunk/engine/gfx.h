@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.39 2005/08/10 06:06:26 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.40 2005/08/22 02:10:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
@@ -97,6 +97,11 @@ struct gfx {
 #define GFX_ANIM_FRAME(r, an)	(an)->frames[(an)->frame]
 #define GFX_ANIM_TEXTURE(r, an) (an)->textures[(an)->frame]
 
+#define SPRITE_ATTR2(s,x,y) (s)->attrs[(y)*sprite_wtiles(s) + (x)]
+#define SPRITE_LAYER2(s,x,y) (s)->layers[(y)*sprite_wtiles(s) + (x)]
+#define SPRITE_ATTRS(s) (SPRITE((s)->ts,(s)->s).attrs)
+#define SPRITE_LAYERS(s) (SPRITE((s)->ts,(s)->s).layers)
+
 extern const char *gfx_snap_names[];
 
 __BEGIN_DECLS
@@ -130,6 +135,7 @@ __inline__ void	 sprite_set_origin(struct sprite *, int, int);
 __inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
 __inline__ void	 sprite_update(struct sprite *);
 __inline__ void	 sprite_get_nattrs(struct sprite *, u_int *, u_int *);
+__inline__ u_int sprite_wtiles(struct sprite *);
 __END_DECLS
 
 #include "close_code.h"

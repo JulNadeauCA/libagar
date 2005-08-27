@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.55 2005/08/22 02:10:38 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.56 2005/08/22 02:40:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -81,6 +81,19 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->texcoords[2] = 0.0f;
 	spr->texcoords[3] = 0.0f;
 #endif
+}
+
+u_int
+sprite_wtiles(struct sprite *spr)
+{
+	int w;
+
+	if (spr->su == NULL) {
+		return (0);
+	}
+	w = spr->su->w/TILESZ;
+	if (w%TILESZ > 0) { w++; }
+	return (w);
 }
 
 void
