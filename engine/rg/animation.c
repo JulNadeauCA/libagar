@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.3 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.4 2005/08/29 02:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -355,26 +355,26 @@ poll_insns(int argc, union evarg *argv)
 
 		switch (insn->type) {
 		case ANIM_TILE:
-			it = tlist_insert(tl,
-			    insn->t != NULL ? insn->t->su : NULL,
-			    _("[%04u] Tile <%s>"), insn->delay,
+			it = tlist_insert(tl, NULL, _("[%04u] Tile <%s>"),
+			    insn->delay,
 			    insn->t != NULL ? insn->t->name : "(null)");
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it,
+			    insn->t != NULL ? insn->t->su : NULL);
 			break;
 		case ANIM_DISPX:
-			it = tlist_insert(tl,
-			    insn->px != NULL ? insn->px->su : NULL,
-			    _("[%04u] Displace <%s>"), insn->delay,
+			it = tlist_insert(tl, NULL, _("[%04u] Displace <%s>"),
+			    insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)");
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it,
+			    insn->px != NULL ? insn->px->su : NULL);
 			break;
 		case ANIM_ROTPX:
-			it = tlist_insert(tl,
-			    insn->px != NULL ? insn->px->su : NULL,
+			it = tlist_insert(tl, NULL,
 			    _("[%04u] Rotate <%s> %u\xc2\xb0"), insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)",
 			    insn->in_rotPx.theta);
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it,
+			    insn->px != NULL ? insn->px->su : NULL);
 			break;
 		default:
 			it = tlist_insert(tl, NULL, "[%04u] %s",
@@ -403,11 +403,11 @@ poll_frames(int argc, union evarg *argv)
 		struct anim_frame *fr = &ani->frames[i];
 		struct tlist_item *it;
 		
-		it = tlist_insert(tl, fr->su, _("Frame %ux%u, %ums"),
+		it = tlist_insert(tl, NULL, _("Frame %ux%u, %ums"),
 		    fr->su->w, fr->su->h, fr->delay);
 		it->p1 = fr;
 		it->class = "frame";
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, fr->su);
 	}
 	pthread_mutex_unlock(&ts->lock);
 	tlist_restore_selections(tl);
@@ -425,12 +425,12 @@ poll_tiles(int argc, union evarg *argv)
 	pthread_mutex_lock(&ts->lock);
 
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		it = tlist_insert(tl, t->su, "%s (%ux%u)%s%s", t->name,
+		it = tlist_insert(tl, NULL, "%s (%ux%u)%s%s", t->name,
 		    t->su->w, t->su->h,
 		    (t->su->flags & SDL_SRCALPHA) ? " alpha" : "",
 		    (t->su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
 		it->p1 = t;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, t->su);
 	}
 
 	pthread_mutex_unlock(&ts->lock);

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.56 2005/08/22 02:10:39 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.57 2005/08/29 02:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -583,19 +583,19 @@ poll_graphics(int argc, union evarg *argv)
 	pthread_mutex_lock(&ts->lock);
 
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		it = tlist_insert(tl, px->su, "%s (%ux%u) [#%u]",
+		it = tlist_insert(tl, NULL, "%s (%ux%u) [#%u]",
 		    px->name, px->su->w, px->su->h, px->nrefs);
 		it->p1 = px;
 		it->class = "pixmap";
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, px->su);
 	}
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
-		it = tlist_insert(tl, sk->vg->su,
+		it = tlist_insert(tl, NULL,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
 		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
 		it->class = "sketch";
 		it->p1 = sk;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, sk->vg->su);
 	}
 
 	pthread_mutex_unlock(&ts->lock);
@@ -618,9 +618,9 @@ poll_textures(int argc, union evarg *argv)
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
 		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, t->su, "%s (<%s> %ux%u)",
+			it = tlist_insert(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it, t->su);
 		} else {
 			it = tlist_insert(tl, NULL, "%s (<%s:%s>?)",
 			    tex->name, tex->tileset, tex->tile);
@@ -666,12 +666,12 @@ poll_tiles(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		it = tlist_insert(tl, t->su, "%s (%ux%u)", t->name,
+		it = tlist_insert(tl, NULL, "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
 		it->depth = 0;
 		it->class = "tile";
 		it->p1 = t;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, t->su);
 
 		if (!TAILQ_EMPTY(&t->elements)) {
 			it->flags |= TLIST_HAS_CHILDREN;
@@ -715,7 +715,7 @@ poll_tiles(int argc, union evarg *argv)
 				{
 					struct pixmap *px = tel->tel_pixmap.px;
 
-					it = tlist_insert(tl, px->su,
+					it = tlist_insert(tl, NULL,
 					    "%s (%ux%u)%s", px->name,
 					    tel->tel_pixmap.px->su->w,
 					    tel->tel_pixmap.px->su->h,
@@ -723,7 +723,7 @@ poll_tiles(int argc, union evarg *argv)
 					it->depth = 1;
 					it->class = "tile-pixmap";
 					it->p1 = tel;
-					it->flags |= TLIST_DYNICON;
+					tlist_set_icon(tl, it, px->su);
 				}
 				break;
 			case TILE_SKETCH:

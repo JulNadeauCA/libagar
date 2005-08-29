@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.4 2005/05/24 08:39:16 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.5 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -118,10 +118,10 @@ poll_sketches(int argc, union evarg *argv)
 		if (tel->type != TILE_SKETCH) {
 			continue;
 		}
-		it = tlist_insert(tl, tel->tel_sketch.sk->vg->su, "%s",
-		    tel->name);
+		it = tlist_insert(tl, NULL, "%s", tel->name);
 		it->p1 = tel;
 		it->class = "tile-sketch";
+		tlist_set_icon(tl, it, tel->tel_sketch.sk->vg->su);
 	}
 	pthread_mutex_unlock(&ts->lock);
 	tlist_restore_selections(tl);

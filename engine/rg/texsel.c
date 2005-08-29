@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.c,v 1.2 2005/06/07 03:05:23 vedge Exp $	*/
+/*	$Csoft: texsel.c,v 1.3 2005/08/29 02:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -58,11 +58,11 @@ poll_textures(int argc, union evarg *argv)
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
 		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, t->su, "%s (<%s> %ux%u)",
+			it = tlist_insert(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
 			it->class = "texture";
 			it->p1 = tex;
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it, t->su);
 		}
 	}
 	tlist_restore_selections(tl);

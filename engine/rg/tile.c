@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.77 2005/08/22 02:10:39 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.78 2005/08/29 02:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1179,10 +1179,10 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 	TAILQ_FOREACH(px, &tv->ts->pixmaps, pixmaps) {
 		struct tlist_item *it;
 
-		it = tlist_insert(tl, px->su, "%s (%ux%u)", px->name,
+		it = tlist_insert(tl, NULL, "%s (%ux%u)", px->name,
 		    px->su->w, px->su->h);
 		it->p1 = px;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, px->su);
 	}
 	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
@@ -1263,11 +1263,11 @@ attach_sketch_dlg(int argc, union evarg *argv)
 	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
 		struct tlist_item *it;
 
-		it = tlist_insert(tl, sk->vg->su, "%s (%ux%u, %.0f%%)",
+		it = tlist_insert(tl, NULL, "%s (%ux%u, %.0f%%)",
 		    sk->name, sk->vg->su->w, sk->vg->su->h,
 		    sk->vg->scale*100.0);
 		it->p1 = sk;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, sk->vg->su);
 	}
 	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
@@ -1457,7 +1457,7 @@ poll_feats(int argc, union evarg *argv)
 		} else if (tel->type == TILE_PIXMAP) {
 			struct pixmap *px = tel->tel_pixmap.px;
 
-			it = tlist_insert(tl, px->su, "%s%s%s",
+			it = tlist_insert(tl, NULL, "%s%s%s",
 			    (tv->state==TILEVIEW_PIXMAP_EDIT &&
 			     tv->tv_pixmap.px == px) ? "* ": "",
 			    tel->name,
@@ -1465,13 +1465,13 @@ poll_feats(int argc, union evarg *argv)
 			it->class = "pixmap";
 			it->p1 = tel;
 			it->depth = 0;
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it, px->su);
 		} else if (tel->type == TILE_SKETCH) {
 			struct sketch *sk = tel->tel_sketch.sk;
 			struct vg *vg = sk->vg;
 			struct vg_element *vge;
 
-			it = tlist_insert(tl, sk->vg->su, "%s%s%s",
+			it = tlist_insert(tl, NULL, "%s%s%s",
 			    (tv->state==TILEVIEW_SKETCH_EDIT &&
 			     tv->tv_sketch.sk == sk) ? "* ": "",
 			    tel->name,
@@ -1479,7 +1479,7 @@ poll_feats(int argc, union evarg *argv)
 			it->class = "sketch";
 			it->p1 = tel;
 			it->depth = 0;
-			it->flags |= TLIST_DYNICON;
+			tlist_set_icon(tl, it, sk->vg->su);
 
 			if (!TAILQ_EMPTY(&vg->vges)) {
 				it->flags |= TLIST_HAS_CHILDREN;
