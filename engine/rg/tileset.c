@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.55 2005/08/04 13:29:50 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.56 2005/08/22 02:10:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -587,6 +587,7 @@ poll_graphics(int argc, union evarg *argv)
 		    px->name, px->su->w, px->su->h, px->nrefs);
 		it->p1 = px;
 		it->class = "pixmap";
+		it->flags |= TLIST_DYNICON;
 	}
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		it = tlist_insert(tl, sk->vg->su,
@@ -594,6 +595,7 @@ poll_graphics(int argc, union evarg *argv)
 		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
 		it->class = "sketch";
 		it->p1 = sk;
+		it->flags |= TLIST_DYNICON;
 	}
 
 	pthread_mutex_unlock(&ts->lock);
@@ -618,6 +620,7 @@ poll_textures(int argc, union evarg *argv)
 		     != NULL) {
 			it = tlist_insert(tl, t->su, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
+			it->flags |= TLIST_DYNICON;
 		} else {
 			it = tlist_insert(tl, NULL, "%s (<%s:%s>?)",
 			    tex->name, tex->tileset, tex->tile);
@@ -668,6 +671,7 @@ poll_tiles(int argc, union evarg *argv)
 		it->depth = 0;
 		it->class = "tile";
 		it->p1 = t;
+		it->flags |= TLIST_DYNICON;
 
 		if (!TAILQ_EMPTY(&t->elements)) {
 			it->flags |= TLIST_HAS_CHILDREN;
@@ -719,6 +723,7 @@ poll_tiles(int argc, union evarg *argv)
 					it->depth = 1;
 					it->class = "tile-pixmap";
 					it->p1 = tel;
+					it->flags |= TLIST_DYNICON;
 				}
 				break;
 			case TILE_SKETCH:

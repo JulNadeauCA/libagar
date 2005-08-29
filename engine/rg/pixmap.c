@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.36 2005/07/16 16:00:42 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.37 2005/07/29 06:31:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -247,6 +247,7 @@ poll_brushes(int argc, union evarg *argv)
 		    (br->type == PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
 		it->class = "brush";
 		it->p1 = br;
+		it->flags |= TLIST_DYNICON;
 	}
 	tlist_restore_selections(tl);
 }
@@ -281,6 +282,7 @@ poll_pixmaps(int argc, union evarg *argv)
 		    px->name, px->nrefs);
 		it->class = "pixmap";
 		it->p1 = px;
+		it->flags |= TLIST_DYNICON;
 	}
 	tlist_restore_selections(tl);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.2 2005/05/24 08:15:10 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.3 2005/05/26 06:46:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -359,12 +359,14 @@ poll_insns(int argc, union evarg *argv)
 			    insn->t != NULL ? insn->t->su : NULL,
 			    _("[%04u] Tile <%s>"), insn->delay,
 			    insn->t != NULL ? insn->t->name : "(null)");
+			it->flags |= TLIST_DYNICON;
 			break;
 		case ANIM_DISPX:
 			it = tlist_insert(tl,
 			    insn->px != NULL ? insn->px->su : NULL,
 			    _("[%04u] Displace <%s>"), insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)");
+			it->flags |= TLIST_DYNICON;
 			break;
 		case ANIM_ROTPX:
 			it = tlist_insert(tl,
@@ -372,6 +374,7 @@ poll_insns(int argc, union evarg *argv)
 			    _("[%04u] Rotate <%s> %u\xc2\xb0"), insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)",
 			    insn->in_rotPx.theta);
+			it->flags |= TLIST_DYNICON;
 			break;
 		default:
 			it = tlist_insert(tl, NULL, "[%04u] %s",
@@ -404,6 +407,7 @@ poll_frames(int argc, union evarg *argv)
 		    fr->su->w, fr->su->h, fr->delay);
 		it->p1 = fr;
 		it->class = "frame";
+		it->flags |= TLIST_DYNICON;
 	}
 	pthread_mutex_unlock(&ts->lock);
 	tlist_restore_selections(tl);
@@ -426,6 +430,7 @@ poll_tiles(int argc, union evarg *argv)
 		    (t->su->flags & SDL_SRCALPHA) ? " alpha" : "",
 		    (t->su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
 		it->p1 = t;
+		it->flags |= TLIST_DYNICON;
 	}
 
 	pthread_mutex_unlock(&ts->lock);
