@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.11 2005/08/27 04:34:05 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.12 2005/08/29 04:53:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -89,7 +89,6 @@ static void
 generate_map(struct insert_tool *ins, struct sprite *spr)
 {
 	int sy, sx, dx, dy;
-	int xorig, yorig;
 	int sw = spr->su->w/TILESZ;
 	int sh = spr->su->h/TILESZ;
 	int nw, nh;
@@ -100,8 +99,6 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 	map_alloc_nodes(&ins->mTmp, sw, sh);
 	ins->mTmp.origin.x = spr->xOrig/TILESZ;
 	ins->mTmp.origin.y = spr->yOrig/TILESZ;
-	xorig = spr->xOrig%TILESZ;
-	yorig = spr->yOrig%TILESZ;
 	for (sy = 0, dy = 0;
 	     sy < spr->su->h;
 	     sy += TILESZ, dy++) {
@@ -129,8 +126,6 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 			r->r_gfx.rs.y = dy*TILESZ;
 			r->r_gfx.rs.w = (dw >= TILESZ) ? TILESZ : dw;
 			r->r_gfx.rs.h = (dh >= TILESZ) ? TILESZ : dh;
-			r->r_gfx.xorigin = xorig;
-			r->r_gfx.yorigin = yorig;
 			r->flags |= SPRITE_ATTR2(spr,dx,dy);
 
 			nlayer = SPRITE_LAYER2(spr,dx,dy);
