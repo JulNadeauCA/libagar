@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.10 2005/08/14 01:02:31 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.11 2005/08/27 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -79,9 +79,7 @@ snap_sprite(struct insert_tool *ins, struct noderef *r, struct sprite *spr)
 		r->r_gfx.xcenter += mv->cxoffs*TILESZ/MV_TILESZ(mv);
 		r->r_gfx.ycenter += mv->cyoffs*TILESZ/MV_TILESZ(mv);
 		break;
-	case GFX_SNAP_TO_GRID:
-		if (spr->su->w%3 == 0) { r->r_gfx.xcenter += TILESZ/2; }
-		if (spr->su->h%3 == 0) { r->r_gfx.ycenter += TILESZ/2; }
+	default:
 		break;
 	}
 
@@ -127,18 +125,13 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 			noderef_set_sprite(r, &ins->mTmp, spr->pgfx->pobj,
 			    spr->index);
 
-			r->r_gfx.rs.x = sx;
-			r->r_gfx.rs.y = sy;
+			r->r_gfx.rs.x = dx*TILESZ;
+			r->r_gfx.rs.y = dy*TILESZ;
 			r->r_gfx.rs.w = (dw >= TILESZ) ? TILESZ : dw;
 			r->r_gfx.rs.h = (dh >= TILESZ) ? TILESZ : dh;
 			r->r_gfx.xorigin = xorig;
 			r->r_gfx.yorigin = yorig;
 			r->flags |= SPRITE_ATTR2(spr,dx,dy);
-
-			if (spr->su->w%3 == 0)
-				r->r_gfx.xcenter += TILESZ/2;
-			if (spr->su->h%3 == 0)
-				r->r_gfx.ycenter += TILESZ/2;
 
 			nlayer = SPRITE_LAYER2(spr,dx,dy);
 			if (nlayer < 0) {
@@ -150,7 +143,7 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 			r->layer = nlayer;
 			
 			/* XXX also need to rotate the whole map */
-			transform_rotate(r, ins->angle);
+	//		transform_rotate(r, ins->angle);
 
 			TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 		}
