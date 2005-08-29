@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.49 2005/05/24 08:15:11 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.50 2005/08/22 02:09:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -35,7 +35,8 @@ struct tlist_item {
 	Uint8		 flags;
 #define TLIST_VISIBLE_CHILDREN	0x01		/* Child items visible (tree) */
 #define TLIST_HAS_CHILDREN	0x02		/* Child items exist (tree) */
-	
+#define TLIST_DYNICON		0x04		/* Use a copy of iconsrc */
+
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
 	TAILQ_ENTRY(tlist_item) selitems;	/* Saved selection hack */
 };
