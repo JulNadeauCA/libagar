@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.37 2005/07/29 06:31:15 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.38 2005/08/29 02:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -241,13 +241,13 @@ poll_brushes(int argc, union evarg *argv)
 	it->class = "brush";
 	it->p1 = NULL;
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
-		it = tlist_insert(tl, br->px->su, "%s%s %s%s",
+		it = tlist_insert(tl, NULL, "%s%s %s%s",
 		    (br == px->curbrush) ? "*" : "", br->name,
 		    (br->flags & PIXMAP_BRUSH_ONESHOT) ? _("one-shot ") : "",
 		    (br->type == PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
 		it->class = "brush";
 		it->p1 = br;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, br->px->su);
 	}
 	tlist_restore_selections(tl);
 }
@@ -278,11 +278,11 @@ poll_pixmaps(int argc, union evarg *argv)
 
 	tlist_clear_items(tl);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		it = tlist_insert(tl, px->su, "%s (%u refs)",
-		    px->name, px->nrefs);
+		it = tlist_insert(tl, NULL, "%s (%u refs)", px->name,
+		    px->nrefs);
 		it->class = "pixmap";
 		it->p1 = px;
-		it->flags |= TLIST_DYNICON;
+		tlist_set_icon(tl, it, px->su);
 	}
 	tlist_restore_selections(tl);
 }
