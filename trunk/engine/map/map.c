@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.46 2005/08/15 02:27:27 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.47 2005/08/27 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2311,11 +2311,12 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 				if (spr->su == NULL) {
 					continue;
 				}
-				sit = tlist_insert(tl, spr->su, "%s (%ux%u)",
+				sit = tlist_insert(tl, NULL, "%s (%ux%u)",
 				    spr->name, spr->su->w, spr->su->h);
 				sit->depth = depth+1;
 				sit->class = "tile";
 				sit->p1 = spr;
+				tlist_set_icon(tl, sit, spr->su);
 			}
 		}
 		pthread_mutex_unlock(&ts->lock);
