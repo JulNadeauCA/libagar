@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.76 2005/07/31 03:16:38 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.77 2005/08/22 02:10:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1182,6 +1182,7 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 		it = tlist_insert(tl, px->su, "%s (%ux%u)", px->name,
 		    px->su->w, px->su->h);
 		it->p1 = px;
+		it->flags |= TLIST_DYNICON;
 	}
 	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
@@ -1266,6 +1267,7 @@ attach_sketch_dlg(int argc, union evarg *argv)
 		    sk->name, sk->vg->su->w, sk->vg->su->h,
 		    sk->vg->scale*100.0);
 		it->p1 = sk;
+		it->flags |= TLIST_DYNICON;
 	}
 	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
@@ -1463,6 +1465,7 @@ poll_feats(int argc, union evarg *argv)
 			it->class = "pixmap";
 			it->p1 = tel;
 			it->depth = 0;
+			it->flags |= TLIST_DYNICON;
 		} else if (tel->type == TILE_SKETCH) {
 			struct sketch *sk = tel->tel_sketch.sk;
 			struct vg *vg = sk->vg;
@@ -1476,6 +1479,7 @@ poll_feats(int argc, union evarg *argv)
 			it->class = "sketch";
 			it->p1 = tel;
 			it->depth = 0;
+			it->flags |= TLIST_DYNICON;
 
 			if (!TAILQ_EMPTY(&vg->vges)) {
 				it->flags |= TLIST_HAS_CHILDREN;

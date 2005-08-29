@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.c,v 1.1 2005/05/28 08:39:35 vedge Exp $	*/
+/*	$Csoft: texsel.c,v 1.2 2005/06/07 03:05:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -62,6 +62,7 @@ poll_textures(int argc, union evarg *argv)
 			    tex->name, t->name, t->su->w, t->su->h);
 			it->class = "texture";
 			it->p1 = tex;
+			it->flags |= TLIST_DYNICON;
 		}
 	}
 	tlist_restore_selections(tl);

@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.5 2005/06/09 02:14:05 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.6 2005/08/17 02:13:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -137,13 +137,16 @@ poll_src_tiles(int argc, union evarg *argv)
 	struct texture *tex = argv[1].p;
 	struct tileset *ts;
 	struct tile *t;
+	struct tlist_item *it;
 
 	tlist_clear_items(tl);
 	if (tex->tileset[0] != '\0' &&
 	    (ts = object_find(tex->tileset)) != NULL &&
 	    OBJECT_TYPE(ts, "tileset")) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
-			tlist_insert_item(tl, t->su, t->name, t);
+			it = tlist_insert(tl, t->su, t->name);
+			it->flags |= TLIST_DYNICON;
+			it->p1 = t;
 		}
 	}
 	tlist_restore_selections(tl);
