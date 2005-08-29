@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.127 2005/08/04 07:36:05 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.128 2005/08/22 02:09:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,6 +63,7 @@ static void free_item(struct tlist *, struct tlist_item *);
 static void select_item(struct tlist *, struct tlist_item *);
 static void unselect_item(struct tlist *, struct tlist_item *);
 static void show_popup(struct tlist *, struct tlist_popup *);
+static void set_icon(struct tlist *, struct tlist_item *, SDL_Surface *);
 
 struct tlist *
 tlist_new(void *parent, int flags)
@@ -388,8 +389,12 @@ tlist_adjust_scrollbar(struct tlist *tl)
 static void
 free_item(struct tlist *tl, struct tlist_item *it)
 {
-	if (it->label != -1)
+	if (it->label != -1) {
 		widget_unmap_surface(tl, it->label);
+	}
+	if (it->flags & TLIST_DYNICON && it->iconsrc != NULL) {
+		SDL_FreeSurface(it->iconsrc);
+	}
 	if (it->icon != -1)
 		widget_unmap_surface(tl, it->icon);
 
@@ -547,7 +552,7 @@ allocate_item(struct tlist *tl, SDL_Surface *iconsrc)
 	it->icon = -1;
 	it->label = -1;
 	it->argc = 0;
-	tlist_set_icon(tl, it, iconsrc);
+	set_icon(tl, it, iconsrc);
 	return (it);
 }
 
@@ -1066,15 +1071,33 @@ tlist_set_item_height(struct tlist *tl, int ih)
 }
 
 /* Update the icon associated with an item. */
-void
-tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
+static void
+set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
 {
-	it->iconsrc = iconsrc;
+	if (it->flags & TLIST_DYNICON) {
+		if (it->iconsrc != NULL) {
+			SDL_FreeSurface(it->iconsrc);
+		}
+		if (iconsrc != NULL) {
+			it->iconsrc = view_copy_surface(iconsrc);
+		} else {
+			it->iconsrc = NULL;
+		}
+	} else {
+		it->iconsrc = iconsrc;
+	}
 
 	if (it->icon != -1) {
 		widget_unmap_surface(tl, it->icon);
 		it->icon = -1;
 	}
+}
+
+void
+tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
+{
+	it->flags |= TLIST_DYNICON;
+	set_icon(tl, it, iconsrc);
 }
 
 /* Create a new popup menu for items of the given class. */
