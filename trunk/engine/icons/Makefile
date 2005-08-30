@@ -1,10 +1,9 @@
-#	$Csoft: Makefile,v 1.6 2005/03/20 06:42:30 vedge Exp $
+#	$Csoft: Makefile,v 1.7 2005/07/24 05:29:53 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 XCF=	map-edition.xcf \
-	map-cursors.xcf \
 	object-editor.xcf \
 	objects.xcf \
 	vg.xcf \
