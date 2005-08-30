@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.38 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.39 2005/08/29 03:29:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -400,6 +400,49 @@ insert_brush_dlg(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static void
+flip_pixmap(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct pixmap *px = argv[2].p;
+	size_t totsize = px->su->h*px->su->pitch;
+	Uint8 *row, *buf;
+	Uint8 *fb = px->su->pixels;
+	int y;
+
+	buf = Malloc(totsize, M_RG);
+	memcpy(buf, fb, totsize);
+	row = buf + totsize - px->su->pitch;
+	for (y = 0; y < px->su->h; y++) {
+		memcpy(fb, row, px->su->pitch);
+		row -= px->su->pitch;
+		fb += px->su->pitch;
+	}
+	Free(buf, M_RG);
+}
+
+static void
+mirror_pixmap(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct pixmap *px = argv[2].p;
+	Uint8 *row, *rowp;
+	Uint8 *fb = px->su->pixels;
+	int x, y;
+
+	row = Malloc(px->su->pitch, M_RG);
+	for (y = 0; y < px->su->h; y++) {
+		memcpy(row, fb, px->su->pitch);
+		rowp = row + px->su->pitch - px->su->format->BytesPerPixel;
+		for (x = 0; x < px->su->w; x++) {
+			PUT_PIXEL(px->su, fb, GET_PIXEL(px->su, rowp));
+			fb += px->su->format->BytesPerPixel;
+			rowp -= px->su->format->BytesPerPixel;
+		}
+	}
+	Free(row, M_RG);
+}
+
 struct window *
 pixmap_edit(struct tileview *tv, struct tile_element *tel)
 {
@@ -486,7 +529,11 @@ pixmap_toolbar(struct tileview *tv, struct tile_element *tel)
 	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
 	toolbar_add_button(tbar, 0, ICON(STAMP_TOOL_ICON), 0, 0,
 	    insert_brush_dlg, "%p,%p,%p", tv, px, widget_parent_window(tv));
-	
+	toolbar_add_button(tbar, 0, ICON(FLIP_TOOL_ICON), 0, 0,
+	    flip_pixmap, "%p,%p", tv, px);
+	toolbar_add_button(tbar, 0, ICON(MIRROR_TOOL_ICON), 0, 0,
+	    mirror_pixmap, "%p,%p", tv, px);
+
 	return (tbar);
 }
 
