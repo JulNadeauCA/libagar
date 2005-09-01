@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.23 2005/07/16 16:07:33 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.24 2005/07/30 01:45:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -349,7 +349,7 @@ menu_view_draw(void *p)
 
 			widget_blit_from(mview, m, subitem->label, NULL,
 			    x, y+VERT_ALIGNED(m, lbl->h));
-			x += lbl->w + mview->hspace*2;
+			x += lbl->w + mview->hspace;
 		} else {
 			int dy = m->itemh/2 - 1;
 			int dx = WIDGET(mview)->w - mview->hspace - 1;
