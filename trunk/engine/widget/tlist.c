@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.128 2005/08/22 02:09:28 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.129 2005/08/29 03:13:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -647,6 +647,7 @@ tlist_set_args(struct tlist_item *it, const char *fmt, ...)
 		default:
 			break;
 		}
+		s++;
 	}
 	va_end(ap);
 }
