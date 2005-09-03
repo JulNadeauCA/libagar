@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.22 2005/05/27 03:45:04 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.23 2005/07/08 04:36:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -138,7 +138,6 @@ static void
 spinbutton_changed(int argc, union evarg *argv)
 {
 	struct spinbutton *sbu = argv[1].p;
-	int unfocus = argv[2].i;
 	struct widget_binding *stringb;
 	char *s;
 
@@ -146,9 +145,17 @@ spinbutton_changed(int argc, union evarg *argv)
 	spinbutton_set_value(sbu, atoi(s));
 	widget_binding_unlock(stringb);
 
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
+}
+
+static void
+spinbutton_return(int argc, union evarg *argv)
+{
+	struct spinbutton *sbu = argv[1].p;
+	struct widget_binding *stringb;
+
 	event_post(NULL, sbu, "spinbutton-return", NULL);
-	if (unfocus)
-		WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
+	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -203,10 +210,8 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	button_set_padding(sbu->decbu, 0);
 	button_set_repeat(sbu->decbu, 1);
 	
-	event_new(sbu->input, "textbox-return", spinbutton_changed,
-	    "%p,%i", sbu, 1);
-	event_new(sbu->input, "textbox-postchg", spinbutton_changed,
-	    "%p,%i", sbu, 0);
+	event_new(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
+	event_new(sbu->input, "textbox-postchg", spinbutton_changed, "%p", sbu);
 	event_new(sbu->incbu, "button-pushed", spinbutton_inc, "%p", sbu);
 	event_new(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
 }
