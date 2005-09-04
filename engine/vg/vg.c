@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.63 2005/07/19 04:24:16 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.64 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -695,8 +695,8 @@ vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
 void
 vg_map2vec(struct vg *vg, int rx, int ry, double *vx, double *vy)
 {
-	*vx = (double)rx/vg->scale/TILESZ + vg->origin[0].x;
-	*vy = (double)ry/vg->scale/TILESZ + vg->origin[0].y;
+	*vx = (double)rx/vg->scale/TILESZ - vg->origin[0].x;
+	*vy = (double)ry/vg->scale/TILESZ - vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		vg_snap_to(vg, vx, vy);
