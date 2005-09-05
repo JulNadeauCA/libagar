@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.224 2005/08/15 03:52:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.225 2005/08/19 07:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1655,7 +1655,10 @@ object_icon(void *p)
 {
 	struct object *obj = p;
 	int i;
-		 
+	
+	if (obj == NULL) {
+		return (NULL);
+	}
 	for (i = 0; i < ntypesw; i++) {
 		if (strcmp(typesw[i].type, obj->type) == 0)
 			return (typesw[i].icon >= 0 ? ICON(typesw[i].icon) :
@@ -1762,8 +1765,12 @@ poll_deps(int argc, union evarg *argv)
 	lock_linkage();
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		char label[TLIST_LABEL_MAX];
-		
-		object_copy_name(dep->obj, path, sizeof(path));
+	
+		if (dep->obj != NULL) {
+			object_copy_name(dep->obj, path, sizeof(path));
+		} else {
+			strlcpy(path, "(NULL)", sizeof(path));
+		}
 		if (dep->count == OBJECT_DEP_MAX) {
 			snprintf(label, sizeof(label), "%s (wired)", path);
 		} else {
