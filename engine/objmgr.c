@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.36 2005/08/10 06:53:58 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.37 2005/08/27 04:36:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -133,7 +133,7 @@ tryname:
 	
 	if (edit_on_create &&
 	    t->ops->edit != NULL)
-		objmgr_open_data(nobj);
+		objmgr_open_data(nobj, 1);
 }
 
 enum {
@@ -216,7 +216,7 @@ close_obj_data(int argc, union evarg *argv)
 }
 
 void
-objmgr_open_data(void *p)
+objmgr_open_data(void *p, int new)
 {
 	struct object *ob = p;
 	struct objent *oent;
@@ -236,13 +236,20 @@ objmgr_open_data(void *p)
 		return;
 
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		printf("%s data: %s\n", ob->name, error_get());
+		text_msg(MSG_ERROR, "%s/data: %s", ob->name, error_get());
 		return;
 	}
 	if (object_page_in(ob, OBJECT_GFX) == -1) {
-		printf("%s gfx: %s\n", ob->name, error_get());
-		object_page_out(ob, OBJECT_DATA);
-		return;
+		if (new) {
+			object_page_out(ob, OBJECT_DATA);
+			object_page_in(ob, OBJECT_DATA);
+			object_page_in(ob, OBJECT_GFX);
+		} else {
+			text_msg(MSG_ERROR, "%s/gfx: %s", ob->name,
+			    error_get());
+			object_page_out(ob, OBJECT_DATA);
+			return;
+		}
 	}
 	object_add_dep(&mapedit.pseudo, ob);
 
@@ -342,7 +349,7 @@ obj_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				objmgr_open_data(ob);
+				objmgr_open_data(ob, 0);
 			} else {
 				text_tmsg(MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
