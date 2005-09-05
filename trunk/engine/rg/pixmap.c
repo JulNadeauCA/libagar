@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.39 2005/08/29 03:29:05 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.40 2005/08/30 02:04:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -892,6 +892,38 @@ fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
 }
 
 static void
+randfill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
+    Uint32 cOrig, Uint32 cFill, Uint32 *bit, Uint32 *r)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *pDst;
+	Uint32 cDst;
+	int flag;
+
+	cDst = pixmap_source_pixel(tv, tel, x, y);
+	if (cDst != cOrig)
+		return;
+
+	if (*bit == 0) {
+		*r = arc4random();
+	}
+	flag = ((*r) & (2<<(*bit))) >> ((*bit)+1);
+	if (++(*bit) > 30) { (*bit) = 0; }
+
+	if (pixmap_put_pixel(tv, tel, x, y, flag ? cFill : cOrig, 1) == 1)
+		return;
+
+	if (x-1 >= 0)
+		randfill_ortho(tv, tel, x-1, y, cOrig, cFill, bit, r);
+	if (y-1 >= 0)
+		randfill_ortho(tv, tel, x, y-1, cOrig, cFill, bit, r);
+	if (x+1 < px->su->w)
+		randfill_ortho(tv, tel, x+1, y, cOrig, cFill, bit, r);
+	if (y+1 < px->su->h)
+		randfill_ortho(tv, tel, x, y+1, cOrig, cFill, bit, r);
+}
+
+static void
 pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
@@ -911,6 +943,31 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	fill_ortho(tv, tel, x, y, cOrig, cFill);
+	tv->tile->flags |= TILE_DIRTY;
+}
+
+static void
+pixmap_randfill(struct tileview *tv, struct tile_element *tel, int x, int y)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 r, g, b, a = (Uint8)(px->a*255);
+	Uint8 *keystate;
+	Uint32 cOrig, cFill;
+	Uint32 rand;
+	Uint32 bit = 0;
+
+	cOrig = pixmap_source_pixel(tv, tel, x, y);
+	keystate = SDL_GetKeyState(NULL);
+	if (keystate[SDLK_e]) {
+		r = 0;
+		g = 0;
+		b = 0;
+		a = 0;
+	} else {
+		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+	}
+	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
+	randfill_ortho(tv, tel, x, y, cOrig, cFill, &bit, &rand);
 	tv->tile->flags |= TILE_DIRTY;
 }
 
@@ -953,7 +1010,11 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 			px->blend_mode = PIXMAP_NO_BLENDING;
 		}
 		pixmap_begin_undoblk(px);
-		pixmap_fill(tv, tel, x, y);
+		if (keystate[SDLK_r]) {
+			pixmap_randfill(tv, tel, x, y);
+		} else {
+			pixmap_fill(tv, tel, x, y);
+		}
 		px->blend_mode = bmode_save;
 	} else if (keystate[SDLK_c]) {
 		pixmap_pick(tv, tel, x, y);
