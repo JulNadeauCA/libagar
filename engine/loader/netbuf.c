@@ -1,4 +1,4 @@
-/*	$Csoft: netbuf.c,v 1.4 2004/04/18 02:18:47 vedge Exp $	*/
+/*	$Csoft: netbuf.c,v 1.5 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@ netbuf_open(const char *path, const char *mode, enum netbuf_endian byte_order)
 
 	buf = Malloc(sizeof(struct netbuf), 0);
 	buf->byte_order = byte_order;
+	buf->path = Strdup(path);
 	if ((buf->file = fopen(path, mode)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
 		goto fail;
@@ -57,6 +58,7 @@ void
 netbuf_close(struct netbuf *buf)
 {
 	fclose(buf->file);
+	Free(buf->path, 0);
 	Free(buf, 0);
 }
 
