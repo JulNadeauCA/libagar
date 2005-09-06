@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.9 2004/05/01 00:17:26 vedge Exp $
+#	$Csoft: Makefile,v 1.10 2005/01/23 11:55:20 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -8,7 +8,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	Yes
 
 SRCS=	color.c den.c integral.c netbuf.c real.c string.c surface.c ttf.c \
-	version.c vertex.c xcf.c
+	tmp.c version.c vertex.c xcf.c
 
 MAN3=	version.3
 MAN5=	xcf.5 den.5
