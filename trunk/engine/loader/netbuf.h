@@ -1,4 +1,4 @@
-/*	$Csoft: netbuf.h,v 1.1 2003/06/21 06:50:20 vedge Exp $	*/
+/*	$Csoft: netbuf.h,v 1.2 2004/04/18 02:18:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_NETBUF_H_
@@ -11,6 +11,7 @@ enum netbuf_endian {
 } endian;
 
 struct netbuf {
+	char		  *path;
 	enum netbuf_endian byte_order;
 	int		   fd;
 	FILE		  *file;
