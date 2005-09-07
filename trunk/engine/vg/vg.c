@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.64 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.65 2005/09/04 06:21:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1509,7 +1509,7 @@ vg_layer_selector(void *parent, struct vg *vg)
 static void
 zoom_status(struct tool *t, struct vg *vg)
 {
-	mapview_status(t->mv, _("Scale 1:%.2f%%"), vg->scale);
+	mapview_status(t->mv, _("Scale %.0f%%"), vg->scale*100.0);
 }
 
 static int
