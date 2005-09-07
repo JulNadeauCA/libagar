@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.78 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.79 2005/08/29 03:29:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -188,10 +188,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, u_int flags,
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 
 	if (t->s == -1) {
-		t->s = gfx_insert_sprite(OBJECT(ts)->gfx, t->su);
-		if (t->s >= ts->max_sprites) {
-			ts->max_sprites = t->s+1;
-		}
+		t->s = tileset_insert_sprite(ts, t->su);
 	} else {
 		sprite_set_surface(OBJECT(ts)->gfx, t->s, t->su);
 	}
@@ -555,6 +552,7 @@ tile_load(struct tile *t, struct netbuf *buf)
 
 	read_uint32(buf);				/* Pad: nsprites */
 	s = read_sint32(buf);
+	dprintf("%s: sprite index = %d\n", t->name, s);
 	if (s < 0 || (s >= gfx->nsprites)) {
 		error_set("Bogus sprite index: %d", s);
 		return (-1);
