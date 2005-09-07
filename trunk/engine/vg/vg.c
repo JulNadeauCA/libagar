@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.65 2005/09/04 06:21:02 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.66 2005/09/07 02:36:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@
 
 const struct version vg_ver = {
 	"agar vg",
-	3, 0
+	4, 0
 };
 
 extern const struct vg_element_ops vg_points_ops;
@@ -381,6 +381,20 @@ vg_destroy_fragments(struct vg *vg)
 
 	if (vg->map != NULL)
 		map_free_nodes(vg->map);
+}
+
+/* Set the default scale factor. */
+void
+vg_default_scale(struct vg *vg, double scale)
+{
+	vg->default_scale = scale;
+}
+
+/* Set the default scale factor. */
+void
+vg_grid_gap(struct vg *vg, double gap)
+{
+	vg->grid_gap = gap;
 }
 
 /* Adjust the vg bounding box and scaling factor. */
@@ -1051,6 +1065,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	write_double(buf, vg->w);
 	write_double(buf, vg->h);
 	write_double(buf, vg->scale);
+	write_double(buf, vg->default_scale);
 	write_color(buf, vg->fmt, vg->fill_color);
 	write_color(buf, vg->fmt, vg->grid_color);
 	write_color(buf, vg->fmt, vg->selection_color);
@@ -1209,6 +1224,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->w = read_double(buf);
 	vg->h = read_double(buf);
 	vg->scale = read_double(buf);
+	vg->default_scale = read_double(buf);
 	vg->fill_color = read_color(buf, vg->fmt);
 	vg->grid_color = read_color(buf, vg->fmt);
 	vg->selection_color = read_color(buf, vg->fmt);
@@ -1543,7 +1559,7 @@ zoom_ident(struct tool *t, SDLKey key, int state, void *arg)
 	struct vg *vg = t->p;
 
 	if (state) {
-		vg_scale(vg, vg->w, vg->h, 1.0);
+		vg_scale(vg, vg->w, vg->h, vg->default_scale);
 		zoom_status(t, vg);
 		return (1);
 	}
