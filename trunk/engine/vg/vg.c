@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.66 2005/09/07 02:36:14 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.67 2005/09/07 03:00:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -706,7 +706,7 @@ vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
 		vg_ortho_restrict(vg, vx, vy);
 }
 
-void
+int
 vg_map2vec(struct vg *vg, int rx, int ry, double *vx, double *vy)
 {
 	*vx = (double)rx/vg->scale/TILESZ - vg->origin[0].x;
@@ -716,13 +716,15 @@ vg_map2vec(struct vg *vg, int rx, int ry, double *vx, double *vy)
 		vg_snap_to(vg, vx, vy);
 	if (vg->ortho_mode != VG_NO_ORTHO)
 		vg_ortho_restrict(vg, vx, vy);
+	
+	return ((rx < 0 || ry < 0) ? -1 : 0);
 }
 
 /*
  * Translate map coordinates to absolute vg coordinates.
  * The vg must be locked.
  */
-void
+int
 vg_map2veca(struct vg *vg, int rx, int ry, double *vx, double *vy)
 {
 	*vx = (double)rx/vg->scale/TILESZ;
@@ -730,6 +732,8 @@ vg_map2veca(struct vg *vg, int rx, int ry, double *vx, double *vy)
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		vg_snap_to(vg, vx, vy);
+
+	return ((rx < 0 || ry < 0) ? -1 : 0);
 }
 
 /*

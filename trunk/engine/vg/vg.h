@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.38 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.39 2005/09/07 03:00:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -279,8 +279,8 @@ void		 vg_rasterize_element(struct vg *, struct vg_element *);
 __inline__ void	 vg_update_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
 
-__inline__ void	 vg_map2vec(struct vg *, int, int, double *, double *);
-__inline__ void	 vg_map2veca(struct vg *, int, int, double *, double *);
+__inline__ int	 vg_map2vec(struct vg *, int, int, double *, double *);
+__inline__ int	 vg_map2veca(struct vg *, int, int, double *, double *);
 __inline__ void	 vg_vcoords2(struct vg *, int, int, int, int, double *,
                              double *);
 __inline__ void	 vg_avcoords2(struct vg *, int, int, int, int, double *,
