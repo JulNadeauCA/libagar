@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.57 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.58 2005/08/29 03:29:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -30,6 +30,8 @@
 #include <engine/view.h>
 
 #include <engine/map/map.h>
+
+#include <engine/loader/tmp.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -191,12 +193,11 @@ tileset_load(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
 	struct gfx *gfx = OBJECT(ts)->gfx;
-	struct version ver;
 	struct pixmap *px;
 	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations, ntextures;
 	Uint32 i;
 
-	if (version_read(buf, &tileset_ver, &ver) != 0)
+	if (version_read(buf, &tileset_ver, NULL) != 0)
 		return (-1);
 	
 	pthread_mutex_lock(&ts->lock);
@@ -1148,6 +1149,106 @@ delete_tiles(int argc, union evarg *argv)
 	pthread_mutex_unlock(&ts->lock);
 }
 
+int
+tileset_insert_sprite(struct tileset *ts, SDL_Surface *su)
+{
+	int s;
+
+	s = gfx_insert_sprite(OBJECT(ts)->gfx, su);
+	if (s >= ts->max_sprites) {
+		ts->max_sprites = s+1;
+	}
+	return (s);
+}
+
+static void
+dup_tile(struct tileset *ts, struct tile *t1)
+{
+	char name[TILE_NAME_MAX];
+	struct tile *t2;
+	struct tile_element *e1, *e2;
+	int x, y;
+	int ncopy = 0;
+
+	t2 = Malloc(sizeof(struct tile), M_RG);
+tryname1:
+	snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
+	if (tileset_find_tile(ts, name) != NULL) {
+		goto tryname1;
+	}
+	tile_init(t2, ts, name);
+	tile_scale(ts, t2, t1->su->w, t1->su->h, t1->flags,
+	    t1->su->format->alpha);
+	strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
+	for (y = 0; y < t1->nh; y++) {
+		for (x = 0; x < t1->nw; x++) {
+			t2->attrs[y*t1->nw+x] = t1->attrs[y*t1->nw+x];
+			t2->layers[y*t1->nw+x] = t1->layers[y*t1->nw+x];
+		}
+	}
+	SPRITE(ts,t2->s).xOrig = SPRITE(ts,t1->s).xOrig;
+	SPRITE(ts,t2->s).yOrig = SPRITE(ts,t1->s).yOrig;
+	SPRITE(ts,t2->s).snap_mode = SPRITE(ts,t1->s).snap_mode;
+	
+	TAILQ_FOREACH(e1, &t1->elements, elements) {
+		struct tile_element *e2;
+		struct pixmap *px1, *px2;
+
+		ncopy = 0;
+		switch (e1->type) {
+		case TILE_PIXMAP:
+			px1 = e1->tel_pixmap.px;
+			px2 = Malloc(sizeof(struct pixmap), M_RG);
+			pixmap_init(px2, ts, 0);
+tryname2:
+			snprintf(px2->name, sizeof(px2->name),
+			    _("Copy #%d of %s"), ncopy++, px1->name);
+			if (tileset_find_pixmap(ts, px2->name) != NULL) {
+				goto tryname2;
+			}
+			pixmap_scale(px2, px1->su->w, px1->su->h, 0, 0);
+			SDL_LockSurface(px1->su);
+			SDL_LockSurface(px2->su);
+			memcpy((Uint8 *)px2->su->pixels,
+			    (Uint8 *)px1->su->pixels,
+			    px1->su->h*px1->su->pitch +
+			    px1->su->w*px1->su->format->BytesPerPixel);
+			SDL_UnlockSurface(px2->su);
+			SDL_UnlockSurface(px1->su);
+
+			e2 = tile_add_pixmap(t2, e1->name, px2,
+			    e1->tel_pixmap.x, e1->tel_pixmap.y);
+			e2->visible = e1->visible;
+			TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
+			break;
+		default:
+			break;
+		}
+	}
+
+	tile_generate(t2);
+	TAILQ_INSERT_TAIL(&ts->tiles, t2, tiles);
+}
+
+static void
+dup_tiles(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&ts->lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		struct tile *t = it->p1;
+
+		if (!it->selected) {
+			continue;
+		}
+		dup_tile(ts, t);
+	}
+	pthread_mutex_unlock(&ts->lock);
+}
+
 static void
 edit_tiles(int argc, union evarg *argv)
 {
@@ -1317,8 +1418,8 @@ duplicate_pixmap(int argc, union evarg *argv)
 		px2 = Malloc(sizeof(struct pixmap), M_RG);
 		pixmap_init(px2, ts, 0);
 tryname:
-		snprintf(px2->name, sizeof(px2->name),
-		    _("Copy #%d of %s"), ncopy++, px1->name);
+		snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
+		    ncopy++, px1->name);
 		if (tileset_find_pixmap(ts, px2->name) != NULL)
 			goto tryname;
 
@@ -1425,9 +1526,14 @@ tileset_edit(void *p)
 
 	mi = tlist_set_popup(tl_tiles, "tile");
 	{
-		menu_action(mi, _("Edit tile..."), OBJEDIT_ICON,
+		menu_action(mi, _("Edit tiles..."), OBJEDIT_ICON,
 		    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
-		menu_action(mi, _("Delete tile"), TRASH_ICON,
+		menu_separator(mi);
+		menu_action(mi, _("Duplicate tiles"),
+		    OBJDUP_ICON,
+		    dup_tiles, "%p,%p", ts, tl_tiles);
+		menu_separator(mi);
+		menu_action(mi, _("Delete tiles"), TRASH_ICON,
 		    delete_tiles, "%p,%p", tl_tiles, ts);
 	}
 

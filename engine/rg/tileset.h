@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.10 2005/06/07 03:05:23 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.11 2005/08/22 02:10:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -51,6 +51,8 @@ void		  tileset_destroy(void *);
 int		  tileset_load(void *, struct netbuf *);
 int		  tileset_save(void *, struct netbuf *);
 struct window	 *tileset_edit(void *);
+
+__inline__ int tileset_insert_sprite(struct tileset *, SDL_Surface *);
 
 __inline__ struct tile	 *tileset_find_tile(struct tileset *, const char *);
 __inline__ struct sketch *tileset_find_sketch(struct tileset *, const char *);
