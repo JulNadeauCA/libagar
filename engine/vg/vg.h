@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.37 2005/06/17 04:33:49 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.38 2005/06/30 06:26:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -209,6 +209,7 @@ struct vg {
 	int redraw;			/* Global redraw */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
+	double default_scale;		/* Default scaling factor */
 	double grid_gap;		/* Grid size */
 
 	Uint32 fill_color;		/* Background color */
@@ -271,6 +272,8 @@ void		 vg_save(struct vg *, struct netbuf *);
 int		 vg_load(struct vg *, struct netbuf *);
 
 void		 vg_scale(struct vg *, double, double, double);
+__inline__ void	 vg_default_scale(struct vg *, double);
+__inline__ void	 vg_grid_gap(struct vg *, double);
 void		 vg_rasterize(struct vg *);
 void		 vg_rasterize_element(struct vg *, struct vg_element *);
 __inline__ void	 vg_update_fragments(struct vg *);
