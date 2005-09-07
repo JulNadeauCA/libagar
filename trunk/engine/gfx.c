@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.56 2005/08/22 02:40:55 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.57 2005/08/27 04:35:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -647,10 +647,8 @@ gfx_load(struct object *ob)
 	gfx_offs = (off_t)read_uint32(buf);
 	netbuf_seek(buf, gfx_offs, SEEK_SET);
 
-	if (read_uint8(buf) == 0) {
-		dprintf("%s: no gfx\n", ob->name);
+	if (read_uint8(buf) == 0)
 		goto out;
-	}
 
 	read_uint32(buf);				/* Pad: flags */
 
