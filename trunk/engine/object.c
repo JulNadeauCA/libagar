@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.226 2005/09/05 10:05:06 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.227 2005/09/08 10:08:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -146,7 +146,7 @@ int
 object_subclass(struct object *ob, const char *clname, size_t size)
 {
 	return (strncmp(ob->type, clname, size) == 0 &&
-	        ob->type[size] == '.' || ob->type[size] == '\0');
+	        (ob->type[size] == '.' || ob->type[size] == '\0'));
 }
 
 void
