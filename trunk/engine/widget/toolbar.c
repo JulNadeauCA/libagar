@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.7 2005/03/05 12:14:30 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.8 2005/06/10 02:02:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/separator.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -131,6 +132,13 @@ toolbar_add_button(struct toolbar *tbar, int row, SDL_Surface *icon,
 		va_end(ap);
 	}
 	return (bu);
+}
+
+void
+toolbar_add_separator(struct toolbar *tbar, int nrow)
+{
+	separator_new(tbar->rows[nrow], tbar->type == TOOLBAR_HORIZ ?
+	    SEPARATOR_HORIZ : SEPARATOR_VERT);
 }
 
 void
