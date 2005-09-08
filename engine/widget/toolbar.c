@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.8 2005/06/10 02:02:01 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.9 2005/09/08 08:18:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -138,7 +138,7 @@ void
 toolbar_add_separator(struct toolbar *tbar, int nrow)
 {
 	separator_new(tbar->rows[nrow], tbar->type == TOOLBAR_HORIZ ?
-	    SEPARATOR_HORIZ : SEPARATOR_VERT);
+	    SEPARATOR_VERT : SEPARATOR_HORIZ);
 }
 
 void
