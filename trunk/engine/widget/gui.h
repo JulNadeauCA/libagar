@@ -1,8 +1,8 @@
-/*	$Csoft$	*/
+/*	$Csoft: everything.h,v 1.1 2005/03/06 03:49:05 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_EVERYTHING_H_
-#define _AGAR_WIDGET_EVERYTHING_H_
+#ifndef _AGAR_WIDGET_GUI_H_
+#define _AGAR_WIDGET_GUI_H_
 
 #include <engine/widget/bitmap.h>
 #include <engine/widget/box.h>
@@ -33,4 +33,4 @@
 #include <engine/widget/ucombo.h>
 #include <engine/widget/vbox.h>
 
-#endif /* _AGAR_WIDGET_EVERYTHING_H_ */
+#endif /* _AGAR_WIDGET_GUI_H_ */
