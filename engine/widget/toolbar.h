@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.4 2004/08/26 06:25:10 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.5 2005/03/05 12:14:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -40,6 +40,7 @@ void	 	 toolbar_destroy(void *);
 struct button	*toolbar_add_button(struct toolbar *, int, SDL_Surface *, int,
 		                    int, void (*)(int, union evarg *),
 				    const char *, ...);
+void		 toolbar_add_separator(struct toolbar *, int);
 void		 toolbar_select_unique(struct toolbar *, struct button *);
 __END_DECLS
 
