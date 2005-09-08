@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.43 2005/08/27 04:34:06 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.44 2005/08/30 02:04:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -141,7 +141,7 @@ void
 mapview_control(struct mapview *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG
-	if (!OBJECT_SUBCLASS(obj, "gobject."))
+	if (!OBJECT_SUBCLASS(obj, "gobject"))
 		fatal("%s: not controllable", OBJECT(obj)->name);
 #endif
 	mv->gobj = (struct gobject *)obj;

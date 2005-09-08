@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.47 2005/08/27 04:34:05 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.48 2005/08/29 03:31:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2383,7 +2383,7 @@ select_lib(int argc, union evarg *argv)
 				widget_focus(mv);
 			}
 		} else if (strcmp(it->class, "object") == 0 &&
-		    OBJECT_SUBCLASS(it->p1, "gobject.")) {
+		    OBJECT_SUBCLASS(it->p1, "gobject")) {
 			if ((t = mapview_find_tool(mv, "Ginsert")) != NULL) {
 				if (mv->curtool != NULL) {
 					mapview_select_tool(mv, NULL, NULL);
