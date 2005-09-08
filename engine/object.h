@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.126 2005/08/15 02:27:25 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.127 2005/08/19 07:15:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -111,7 +111,7 @@ enum object_checksum_alg {
 
 #define OBJECT(ob)		((struct object *)(ob))
 #define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type,(t))==0)
-#define OBJECT_SUBCLASS(ob, t)	(strncmp(OBJECT(ob)->type,(t),sizeof(t)-1)==0)
+#define OBJECT_SUBCLASS(ob, t)	object_subclass(OBJECT(ob), t, sizeof(t)-1)
 
 #define OBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&OBJECT(ob)->children);	\
@@ -151,6 +151,7 @@ void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
 
 __inline__ SDL_Surface	*object_icon(void *);
+__inline__ int 		 object_subclass(struct object *, const char *, size_t);
 
 void	 object_move_up(void *);
 void	 object_move_down(void *);
