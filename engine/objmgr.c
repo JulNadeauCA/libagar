@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.37 2005/08/27 04:36:30 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.38 2005/09/05 05:02:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -746,7 +746,6 @@ objmgr_window(void)
 	struct AGMenuItem *mi, *mi_objs;
 	struct notebook *nb;
 	struct notebook_tab *ntab;
-	struct toolbar *tbar;
 
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
@@ -760,9 +759,6 @@ objmgr_window(void)
 	    OBJEDIT_EDIT_DATA);
 
 	me = menu_new(win);
-
-	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1, 0);
-	
 	mi = menu_add_item(me, _("File"));
 	{
 		int i;
@@ -775,7 +771,7 @@ objmgr_window(void)
 
 			strlcpy(label, t->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
-			menu_tool(mi_objs, tbar, label, t->icon, 0, 0,
+			menu_action(mi_objs, label, t->icon,
 			    create_obj_dlg, "%p,%p", t, win);
 		}
 
@@ -898,28 +894,6 @@ objmgr_window(void)
 			menu_action(mi, _("Destroy"), TRASH_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 		}
-#if 0
-		toolbar_add_button(tbar, 0, ICON(OBJEDIT_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-		toolbar_add_button(tbar, 0, ICON(OBJGENEDIT_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
-
-		toolbar_add_button(tbar, 0, ICON(OBJLOAD_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_LOAD);
-		toolbar_add_button(tbar, 0, ICON(OBJSAVE_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_SAVE);
-
-		toolbar_add_button(tbar, 0, ICON(OBJDUP_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
-		toolbar_add_button(tbar, 0, ICON(OBJMOVEUP_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_UP);
-		toolbar_add_button(tbar, 0, ICON(OBJMOVEDOWN_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_DOWN);
-		toolbar_add_button(tbar, 0, ICON(OBJREINIT_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
-		toolbar_add_button(tbar, 0, ICON(TRASH_ICON), 0, 0,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
-#endif
 	}
 
 #ifdef NETWORK
