@@ -1,4 +1,4 @@
-/*	$Csoft: everything.h,v 1.1 2005/03/06 03:49:05 vedge Exp $	*/
+/*	$Csoft: gui.h,v 1.1 2005/09/08 09:29:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GUI_H_
@@ -12,6 +12,7 @@
 #include <engine/widget/fspinbutton.h>
 #include <engine/widget/graph.h>
 #include <engine/widget/hbox.h>
+#include <engine/widget/hpane.h>
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/keycodes.h>
 #include <engine/widget/label.h>
@@ -19,6 +20,7 @@
 #include <engine/widget/mfspinbutton.h>
 #include <engine/widget/mgraph.h>
 #include <engine/widget/mspinbutton.h>
+#include <engine/widget/notebook.h>
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/scrollbar.h>
@@ -32,5 +34,6 @@
 #include <engine/widget/toolbar.h>
 #include <engine/widget/ucombo.h>
 #include <engine/widget/vbox.h>
+#include <engine/widget/vpane.h>
 
 #endif /* _AGAR_WIDGET_GUI_H_ */
