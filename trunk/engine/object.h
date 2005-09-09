@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.127 2005/08/19 07:15:39 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.128 2005/09/08 10:08:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -37,6 +37,13 @@ struct object_dep {
 	Uint32		 count;		/* Reference count */
 #define OBJECT_DEP_MAX	(0xffffffff-2)	/* If reached, stay resident */
 	TAILQ_ENTRY(object_dep) deps;
+};
+
+/* Structure returned by object_get_classinfo(). */
+struct object_classinfo {
+	char **classes;
+	struct object_type **types;
+	u_int nclasses;
 };
 
 TAILQ_HEAD(objectq, object);
@@ -151,7 +158,10 @@ void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
 
 __inline__ SDL_Surface	*object_icon(void *);
-__inline__ int 		 object_subclass(struct object *, const char *, size_t);
+
+__inline__ int object_subclass(struct object *, const char *, size_t);
+void	       object_get_classinfo(const char *, struct object_classinfo *);
+void	       object_free_classinfo(struct object_classinfo *);
 
 void	 object_move_up(void *);
 void	 object_move_down(void *);
