@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.227 2005/09/08 10:08:36 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.228 2005/09/08 14:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -147,6 +147,49 @@ object_subclass(struct object *ob, const char *clname, size_t size)
 {
 	return (strncmp(ob->type, clname, size) == 0 &&
 	        (ob->type[size] == '.' || ob->type[size] == '\0'));
+}
+
+void
+object_get_classinfo(const char *type, struct object_classinfo *cli)
+{
+	char tpp[OBJECT_TYPE_MAX], *tp = &tpp[0];
+	char tn[OBJECT_TYPE_MAX];
+	char *s;
+	u_int i;
+
+	strlcpy(tpp, type, sizeof(tpp));
+	tn[0] = '\0';
+
+	cli->classes = Malloc(sizeof(char *), M_OBJECT);
+	cli->types = Malloc(sizeof(struct object_type *), M_OBJECT);
+	cli->nclasses = 0;
+
+	while ((s = strsep(&tp, ".")) != NULL) {
+		if (tn[0] != '\0') {
+			strlcat(tn, ".", sizeof(tn));
+		}
+		strlcat(tn, s, sizeof(tn));
+
+		cli->classes = Realloc(cli->classes,
+		    (cli->nclasses+1)*sizeof(char *));
+		cli->types = Realloc(cli->types,
+		    (cli->nclasses+1)*sizeof(struct object_type *));
+		cli->classes[cli->nclasses] = Strdup(s);
+		cli->types[cli->nclasses] = typesw_find(tn);
+		cli->nclasses++;
+	}
+}
+
+void
+object_free_classinfo(struct object_classinfo *cli)
+{
+	u_int i;
+
+	for (i = 0; i < cli->nclasses; i++) {
+		Free(cli->classes[i], 0);
+	}
+	Free(cli->classes, M_OBJECT);
+	Free(cli->types, M_OBJECT);
 }
 
 void

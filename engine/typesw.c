@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.21 2005/08/04 06:36:01 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.22 2005/08/22 02:11:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -84,3 +84,14 @@ typesw_register(const char *type, size_t size, const struct object_ops *ops,
 	ntype->icon = icon;
 }
 
+struct object_type *
+typesw_find(const char *type)
+{
+	int i;
+
+	for (i = 0; i < ntypesw; i++) {
+		if (strcmp(typesw[i].type, type) == 0)
+			return (&typesw[i]);
+	}
+	return (NULL);
+}
