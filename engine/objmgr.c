@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.38 2005/09/05 05:02:15 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.39 2005/09/08 09:50:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -749,7 +749,7 @@ objmgr_window(void)
 
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
-	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	window_set_position(win, WINDOW_UPPER_LEFT, 0);
 	
 	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
