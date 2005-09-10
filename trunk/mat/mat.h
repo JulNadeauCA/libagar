@@ -1,12 +1,11 @@
-/*	$Csoft: mat.h,v 1.3 2004/08/24 07:44:47 vedge Exp $	*/
+/*	$Csoft: mat.h,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_MAT_H_
 #define _MAT_MAT_H_
 
 struct mat;
-struct vec;
-struct veci;
+typedef struct mat mat_t;
 
 #include <mat/vec.h>
 #include <mat/veci.h>
@@ -20,29 +19,37 @@ struct veci;
 #endif
 
 struct mat {
-	int m, n;			/* Rows and columns */
-	double **mat;			/* Matrix elements */
+	u_int m, n;		/* Rows (m) and columns (n) */
+	double **mat;		/* Matrix elements ([m][n] order) */
 };
 
 __BEGIN_DECLS
-struct mat	*mat_new(int, int);
-__inline__ void	 mat_free(struct mat *);
-void		 mat_alloc_elements(struct mat *, int, int);
-void		 mat_free_elements(struct mat *);
-__inline__ void	 mat_resize(struct mat *, int, int);
-void		 mat_set(struct mat *, double);
-void		 mat_copy(const struct mat *, struct mat *);
-void		 mat_sum(const struct mat *, struct mat *);
-void		 mat_mul(const struct mat *, const struct mat *, struct mat *);
-void		 mat_entmul(const struct mat *, const struct mat *,
-		            struct mat *);
+mat_t		*mat_new(u_int, u_int);
+__inline__ void	 mat_free(mat_t *);
+void		 mat_alloc_elements(mat_t *, u_int, u_int);
+void		 mat_free_elements(mat_t *);
+__inline__ void	 mat_resize(mat_t *, u_int, u_int);
+void		 mat_set(mat_t *, double);
+void		 mat_copy(const mat_t *, mat_t *);
+void		 mat_sum(const mat_t *, mat_t *);
+mat_t		*mat_dsum(const mat_t *, const mat_t *);
+void		 mat_mul(const mat_t *, const mat_t *, mat_t *);
+void		 mat_hmul(const mat_t *, const mat_t *, mat_t *);
 
-void		 mat_set_identity(struct mat *);
-__inline__ int	 mat_is_square(struct mat *);
-int		 mat_is_identity(struct mat *);
+void		 mat_set_identity(mat_t *);
+__inline__ int	 mat_is_square(mat_t *);
+int		 mat_is_identity(mat_t *);
+int		 mat_is_zero(mat_t *);
+int		 mat_is_L(const mat_t *);
+int		 mat_is_L_strict(const mat_t *);
+int		 mat_is_L_normed(const mat_t *);
+int		 mat_is_U(const mat_t *);
+int		 mat_is_U_strict(const mat_t *);
+int		 mat_is_U_normed(const mat_t *);
+#define		 mat_is_diagonal(M) (mat_is_Ltri(M) && mat_is_Utri(M))
 
 #ifdef DEBUG
-void		 mat_print(const struct mat *);
+void		 mat_print(const mat_t *);
 void		 mat_test(void);
 #endif
 __END_DECLS

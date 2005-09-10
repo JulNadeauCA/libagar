@@ -1,25 +1,23 @@
-/*	$Csoft: vec.h,v 1.3 2004/08/24 07:44:47 vedge Exp $	*/
+/*	$Csoft: vec.h,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_VEC_H_
 #define _MAT_VEC_H_
 #include "begin_code.h"
 
-struct vec {
-	int n;				/* Vector size */
-	double *vec;			/* Vector data */
-};
+typedef struct mat vec_t;
 
 __BEGIN_DECLS
-struct vec	*vec_new(int);
-__inline__ void	 vec_resize(struct vec *, int);
-__inline__ void	 vec_set(struct vec *, double);
-__inline__ void	 vec_copy(const struct vec *, struct vec *);
-__inline__ void	 vec_free(struct vec *);
-__inline__ void	 vec_add(const struct vec *, struct vec *);
-__inline__ void	 vec_mul(const struct vec *, struct vec *);
+vec_t		*vec_new(int);
+__inline__ void	 vec_resize(vec_t *, int);
+#define		 vec_resize(v,m) mat_resize((v),(m),1)
+#define		 vec_set(v,val) mat_set((v),(val))
+__inline__ void	 vec_copy(const vec_t *, vec_t *);
+#define		 vec_free(v) mat_free(v)
+__inline__ void	 vec_add(const vec_t *, vec_t *);
+__inline__ void	 vec_mul(const vec_t *, vec_t *);
 #ifdef DEBUG
-void		 vec_print(const struct vec *);
+void		 vec_print(const vec_t *);
 #endif
 __END_DECLS
 

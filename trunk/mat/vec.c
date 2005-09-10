@@ -1,4 +1,4 @@
-/*	$Csoft: vec.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: vec.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -31,89 +31,57 @@
 #include "mat.h"
 
 #define assert_same_length(A, B) \
-	if ((A)->n != (B)->n) \
+	if (((A)->m != (B)->m) || ((A)->n != 1) || ((B)->n != 1)) \
 		fatal("different vector length")
 
-struct vec *
-vec_new(int n)
+vec_t *
+vec_new(int m)
 {
-	struct vec *v;
+	vec_t *v;
 
-	v = Malloc(sizeof(struct vec), M_MATH);
-	v->vec = NULL;
-	vec_resize(v, n);
+	v = Malloc(sizeof(vec_t), M_MATH);
+	mat_alloc_elements(v, m, 1);
 	return (v);
 }
 
 void
-vec_resize(struct vec *v, int n)
+vec_copy(const vec_t *v1, vec_t *v2)
 {
-	if (v->vec == NULL) {
-		v->vec = Malloc((n+1)*sizeof(double), M_MATH);
-	} else {
-		v->vec = Realloc(v->vec, (n+1)*sizeof(double));
-	}
-	v->n = n;
+	assert_same_length(v1, v2);
+	mat_copy(v1, v2);
 }
 
 void
-vec_set(struct vec *v, double val)
+vec_add(const vec_t *v1, vec_t *v2)
 {
-	int i;
-
-	for (i = 1; i <= v->n; i++)
-		v->vec[i] = val;
-}
-
-void
-vec_copy(const struct vec *v1, struct vec *v2)
-{
-	int i;
+	u_int m;
 
 	assert_same_length(v1, v2);
 
-	for (i = 1; i <= v1->n; i++)
-		v2->vec[i] = v1->vec[i];
+	for (m = 1; m <= v1->m; m++)
+		v2->mat[m][0] = v1->mat[m][0] + v2->mat[m][0];
 }
 
 void
-vec_free(struct vec *v)
+vec_mul(const vec_t *v1, vec_t *v2)
 {
-	Free(v->vec, M_MATH);
-	Free(v, M_MATH);
-}
-
-void
-vec_add(const struct vec *v1, struct vec *v2)
-{
-	int i;
+	u_int m;
 
 	assert_same_length(v1, v2);
 
-	for (i = 1; i <= v1->n; i++)
-		v2->vec[i] = v1->vec[i]+v2->vec[i];
-}
-
-void
-vec_mul(const struct vec *v1, struct vec *v2)
-{
-	int i;
-
-	assert_same_length(v1, v2);
-
-	for (i = 1; i <= v1->n; i++)
-		v2->vec[i] = v1->vec[i]*v2->vec[i];
+	for (m = 1; m <= v1->m; m++)
+		v2->mat[m][0] = v1->mat[m][0] * v2->mat[m][0];
 }
 
 #ifdef DEBUG
 void
-vec_print(const struct vec *v)
+vec_print(const vec_t *v)
 {
-	int i;
+	int m;
 
 	fputs(" ----\n", stdout);
-	for (i = 1; i <= v->n; i++) {
-		printf("| %4d: %f\n", i, v->vec[i]);
+	for (m = 1; m <= v->m; m++) {
+		printf("| %4d: %f\n", m, v->mat[m][0]);
 	}
 	fputs(" ----\n", stdout);
 }
