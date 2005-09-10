@@ -1,4 +1,4 @@
-/*	$Csoft: veci.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: veci.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -34,19 +34,19 @@
 	if ((A)->n != (B)->n) \
 		fatal("different vector length")
 
-struct veci *
+veci_t *
 veci_new(int n)
 {
-	struct veci *veci;
+	veci_t *veci;
 
-	veci = Malloc(sizeof(struct veci), M_MATH);
+	veci = Malloc(sizeof(veci_t), M_MATH);
 	veci->vec = Malloc((n+1)*sizeof(int), M_MATH);
 	veci->n = n;
 	return (veci);
 }
 
 void
-veci_set(struct veci *v, int val)
+veci_set(veci_t *v, int val)
 {
 	int i;
 
@@ -55,7 +55,7 @@ veci_set(struct veci *v, int val)
 }
 
 void
-veci_copy(const struct veci *v1, struct veci *v2)
+veci_copy(const veci_t *v1, veci_t *v2)
 {
 	int i;
 
@@ -65,14 +65,14 @@ veci_copy(const struct veci *v1, struct veci *v2)
 }
 
 void
-veci_free(struct veci *v)
+veci_free(veci_t *v)
 {
 	Free(v->vec, M_MATH);
 	Free(v, M_MATH);
 }
 
 void
-veci_add(const struct veci *v1, struct veci *v2)
+veci_add(const veci_t *v1, veci_t *v2)
 {
 	int i;
 
@@ -83,7 +83,7 @@ veci_add(const struct veci *v1, struct veci *v2)
 
 #ifdef DEBUG
 void
-veci_print(const struct veci *v)
+veci_print(const veci_t *v)
 {
 	int i;
 

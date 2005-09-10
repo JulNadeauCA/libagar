@@ -1,4 +1,4 @@
-/*	$Csoft: lu.c,v 1.4 2004/10/29 02:03:55 vedge Exp $	*/
+/*	$Csoft: lu.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -13,13 +13,13 @@
  * turned out to be even or odd.
  */
 int
-mat_lu_decompose(struct mat *A, struct veci *ivec, double *d)
+mat_lu_decompose(mat_t *A, veci_t *ivec, double *d)
 {
 	double big;
 	double sum, dum;
 	int i, j, k;
 	int imax = 0;
-	struct vec *vs;
+	vec_t *vs;
 
 	if (!mat_is_square(A)) {
 		error_set("not a square matrix");
@@ -42,7 +42,7 @@ mat_lu_decompose(struct mat *A, struct veci *ivec, double *d)
 			error_set("singular matrix");
 			goto fail;
 		}
-		vs->vec[i] = 1.0/big;
+		vs->mat[i][0] = 1.0/big;
 	}
 
 	/* Solve the set of equations using Crout's algorithm. */
@@ -62,7 +62,7 @@ mat_lu_decompose(struct mat *A, struct veci *ivec, double *d)
 				sum -= A->mat[i][k]*A->mat[k][j];
 			}
 			A->mat[i][j] = sum;
-			dum = vs->vec[i]*fabs(sum);
+			dum = vs->mat[i][0]*fabs(sum);
 			if (dum >= big) {
 				big = dum;
 				imax = i;
@@ -77,7 +77,7 @@ mat_lu_decompose(struct mat *A, struct veci *ivec, double *d)
 				A->mat[j][k] = dum;
 			}
 			*d = -(*d);
-			vs->vec[imax] = vs->vec[j];
+			vs->mat[imax][0] = vs->mat[j][0];
 		}
 		ivec->vec[j] = imax;
 		if (A->mat[j][j] == 0.0)
@@ -103,7 +103,7 @@ fail:
  * vector ivec is the permutation information returned by mat_lu_decompose().
  */
 void
-mat_lu_backsubst(const struct mat *A, const struct veci *ivec, struct vec *b)
+mat_lu_backsubst(const mat_t *A, const veci_t *ivec, vec_t *b)
 {
 	double sum;
 	int i, ip, j;
@@ -111,24 +111,24 @@ mat_lu_backsubst(const struct mat *A, const struct veci *ivec, struct vec *b)
 
 	for (i = 1; i <= A->n; i++) {
 		ip = ivec->vec[i];
-		sum = b->vec[ip];
-		b->vec[ip] = b->vec[i];
+		sum = b->mat[ip][0];
+		b->mat[ip][0] = b->mat[i][0];
 		if (ii) {
 			for (j = ii; j <= i-1; j++) {
-				sum -= A->mat[i][j]*b->vec[j];
+				sum -= A->mat[i][j] * b->mat[j][0];
 			}
 		} else if (sum) {
 			ii = i;
 		}
-		b->vec[i] = sum;
+		b->mat[i][0] = sum;
 	}
 
 	for (i = A->n; i >= 1; i--) {
-		sum = b->vec[i];
+		sum = b->mat[i][0];
 		for (j = i+1; j <= A->n; j++) {
-			sum -= A->mat[i][j]*b->vec[j];
+			sum -= A->mat[i][j] * b->mat[j][0];
 		}
-		b->vec[i] = sum/A->mat[i][i];
+		b->mat[i][0] = sum/A->mat[i][i];
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: gaussj.c,v 1.2 2004/10/29 02:03:55 vedge Exp $	*/
+/*	$Csoft: gaussj.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -15,9 +15,9 @@
  * are returned in B.
  */
 void
-mat_gaussj(struct mat *A, struct mat *B)
+mat_gaussj(mat_t *A, mat_t *B)
 {
-	struct veci *vicol, *virow, *vipiv;
+	veci_t *vicol, *virow, *vipiv;
 	int icol = 0, irow = 0;
 	int i, j, k, l, m;
 	double big, dum, pivinv, tmp;

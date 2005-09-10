@@ -1,4 +1,4 @@
-/*	$Csoft: lu.h,v 1.2 2004/08/26 06:28:22 vedge Exp $	*/
+/*	$Csoft: lu.h,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_LU_H_
@@ -6,9 +6,8 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-int	mat_lu_decompose(struct mat *, struct veci *, double *);
-void	mat_lu_backsubst(const struct mat *, const struct veci *,
-	                 struct vec *);
+int	mat_lu_decompose(mat_t *, veci_t *, double *);
+void	mat_lu_backsubst(const mat_t *, const veci_t *, vec_t *);
 __END_DECLS
 
 #include "close_code.h"

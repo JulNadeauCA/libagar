@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,20 +35,20 @@
 	    fatal("matrix A = %dx%d, B = %dx%d", (A)->m, (A)->n, (B)->m, (B)->n)
 
 /* Allocate a new, uninitialized matrix of m rows by n columns. */
-struct mat *
-mat_new(int m, int n)
+mat_t *
+mat_new(u_int m, u_int n)
 {
-	struct mat *M;
+	mat_t *M;
 
-	M = Malloc(sizeof(struct mat), M_MATH);
+	M = Malloc(sizeof(mat_t), M_MATH);
 	mat_alloc_elements(M, m, n);
 	return (M);
 }
 
 void
-mat_alloc_elements(struct mat *M, int m, int n)
+mat_alloc_elements(mat_t *M, u_int m, u_int n)
 {
-	int i;
+	u_int i;
 
 	if (m != 0 && n != 0) {
 		M->mat = Malloc((m+1)*sizeof(double), M_MATH);
@@ -64,7 +64,7 @@ mat_alloc_elements(struct mat *M, int m, int n)
 
 /* Resize a matrix, leaving any new element uninitialized. */
 void
-mat_resize(struct mat *M, int m, int n)
+mat_resize(mat_t *M, u_int m, u_int n)
 {
 	mat_free_elements(M);
 	mat_alloc_elements(M, m, n);
@@ -72,9 +72,9 @@ mat_resize(struct mat *M, int m, int n)
 
 /* Initialize all elements of a matrix to v. */
 void
-mat_set(struct mat *M, double v)
+mat_set(mat_t *M, double v)
 {
-	int m, n;
+	u_int m, n;
 
 	for (m = 1; m <= M->m; m++)
 		for (n = 1; n <= M->n; n++)
@@ -83,9 +83,9 @@ mat_set(struct mat *M, double v)
 
 /* Assign the identity matrix. */
 void
-mat_set_identity(struct mat *M)
+mat_set_identity(mat_t *M)
 {
-	int m, n;
+	u_int m, n;
 
 	if (!mat_is_square(M))
 		fatal("not a square matrix");
@@ -97,9 +97,9 @@ mat_set_identity(struct mat *M)
 
 /* Evaluate whether M is the identity matrix. */
 int
-mat_is_identity(struct mat *M)
+mat_is_identity(mat_t *M)
 {
-	int m, n;
+	u_int m, n;
 
 	if (!mat_is_square(M))
 		return (0);
@@ -118,11 +118,122 @@ mat_is_identity(struct mat *M)
 	return (1);
 }
 
+/* Evaluate whether M is a lower-triangular matrix. */
+int
+mat_is_L(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		for (n = m+1; n <= M->n; n++) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is a normed lower-triangular matrix. */
+int
+mat_is_L_normed(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		if (M->mat[m][m] != 1.0) {
+			return (0);
+		}
+		for (n = m+1; n <= M->n; n++) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is a strictly lower-triangular matrix. */
+int
+mat_is_L_strict(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		for (n = m; n <= M->n; n++) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is an upper-triangular matrix. */
+int
+mat_is_U(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		for (n = m-1; n >= 1; n--) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is a normed upper-triangular matrix. */
+int
+mat_is_U_normed(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		if (M->mat[m][m] != 1.0) {
+			return (0);
+		}
+		for (n = m-1; n >= 1; n--) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is a strictly upper-triangular matrix. */
+int
+mat_is_U_strict(const mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		for (n = m; n >= 1; n--) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether M is the zero matrix. */
+int
+mat_is_zero(mat_t *M)
+{
+	u_int m, n;
+
+	for (m = 1; m <= M->m; m++) {
+		for (n = 1; n <= M->n; n++) {
+			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
 /* Copy the elements of matrix A to matrix B. */
 void
-mat_copy(const struct mat *A, struct mat *B)
+mat_copy(const mat_t *A, mat_t *B)
 {
-	int n, m;
+	u_int n, m;
 	
 	assert_same_dimensions(A, B);
 
@@ -133,15 +244,37 @@ mat_copy(const struct mat *A, struct mat *B)
 
 /* Add the individual elements of two m-by-n matrices. */
 void
-mat_sum(const struct mat *A, struct mat *B)
+mat_sum(const mat_t *A, mat_t *B)
 {
-	int n, m;
+	u_int n, m;
 	
 	assert_same_dimensions(A, B);
 
 	for (m = 1; m <= A->m; m++)
 		for (n = 1; n <= A->n; n++)
 			B->mat[m][n] = A->mat[m][n] + B->mat[m][n];
+}
+
+/* Compute the direct sum of two matrices. */
+mat_t *
+mat_dsum(const mat_t *A, const mat_t *B)
+{
+	mat_t *P;
+	u_int m, n;
+
+	P = mat_new(A->m+B->m, A->n+B->n);
+	for (m = 1; m <= P->m; m++) {
+		for (n = 1; n <= P->n; n++) {
+			if (m <= A->m && n <= A->n) {
+				P->mat[m][n] = A->mat[m][n];
+			} else if (m > A->m && n > A->n) {
+				P->mat[m][n] = B->mat[m - A->m][n - A->n];
+			} else {
+				P->mat[m][n] = 0.0;
+			}
+		}
+	}
+	return (P);
 }
 
 /*
@@ -152,9 +285,9 @@ mat_sum(const struct mat *A, struct mat *B)
  * from O(n^3) to O(n^2.376).
  */
 void
-mat_mul(const struct mat *A, const struct mat *B, struct mat *C)
+mat_mul(const mat_t *A, const mat_t *B, mat_t *C)
 {
-	int i, j, k;
+	u_int i, j, k;
 
 	if (A->n != B->m)
 		fatal("A = %d columns, B = %d rows", A->n, B->m);
@@ -173,11 +306,11 @@ mat_mul(const struct mat *A, const struct mat *B, struct mat *C)
 	}
 }
 
-/* Calculate the Hadamard product of m*n matrices A*B into C. */
+/* Calculate the Hadamard (entrywise) product of m*n matrices A*B into C. */
 void
-mat_entmul(const struct mat *A, const struct mat *B, struct mat *C)
+mat_hmul(const mat_t *A, const mat_t *B, mat_t *C)
 {
-	int i, j;
+	u_int i, j;
 
 	assert_same_dimensions(A, B);
 	assert_same_dimensions(B, C);
@@ -188,7 +321,7 @@ mat_entmul(const struct mat *A, const struct mat *B, struct mat *C)
 }
 
 void
-mat_free_elements(struct mat *M)
+mat_free_elements(mat_t *M)
 {
 	int m;
 
@@ -199,7 +332,7 @@ mat_free_elements(struct mat *M)
 }
 
 void
-mat_free(struct mat *M)
+mat_free(mat_t *M)
 {
 	mat_free_elements(M);
 	Free(M, M_MATH);
@@ -207,14 +340,14 @@ mat_free(struct mat *M)
 
 /* Evaluate the squareness of a matrix. */
 int
-mat_is_square(struct mat *M)
+mat_is_square(mat_t *M)
 {
 	return (M->m == M->n);
 }
 
 #ifdef DEBUG
 void
-mat_print(const struct mat *M)
+mat_print(const mat_t *M)
 {
 	int m, n;
 
@@ -235,9 +368,9 @@ mat_print(const struct mat *M)
 void
 mat_test(void)
 {
-	struct mat *A;
-	struct vec *c;
-	struct veci *iv;
+	mat_t *A;
+	vec_t *c;
+	veci_t *iv;
 	int i, j;
 	double d;
 
@@ -249,8 +382,8 @@ mat_test(void)
 	printf("A: \n"); mat_print(A);
 
 	c = vec_new(2);
-	c->vec[1] = 7.0;
-	c->vec[2] = 18.0;
+	c->mat[1][0] = 7.0;
+	c->mat[2][0] = 18.0;
 
 	iv = veci_new(2);
 	mat_lu_decompose(A, iv, &d);
