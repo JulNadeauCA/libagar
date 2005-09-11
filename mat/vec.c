@@ -1,4 +1,4 @@
-/*	$Csoft: vec.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: vec.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,12 +35,12 @@
 		fatal("different vector length")
 
 vec_t *
-vec_new(int m)
+vec_new(u_int n)
 {
 	vec_t *v;
 
 	v = Malloc(sizeof(vec_t), M_MATH);
-	mat_alloc_elements(v, m, 1);
+	mat_alloc_elements(v, n, 1);
 	return (v);
 }
 
@@ -51,26 +51,17 @@ vec_copy(const vec_t *v1, vec_t *v2)
 	mat_copy(v1, v2);
 }
 
-void
-vec_add(const vec_t *v1, vec_t *v2)
+/* Return the length of a vector in R^n space. */
+double
+vec_len(const vec_t *a)
 {
-	u_int m;
+	double sum = 0.0;
+	u_int n;
 
-	assert_same_length(v1, v2);
-
-	for (m = 1; m <= v1->m; m++)
-		v2->mat[m][0] = v1->mat[m][0] + v2->mat[m][0];
-}
-
-void
-vec_mul(const vec_t *v1, vec_t *v2)
-{
-	u_int m;
-
-	assert_same_length(v1, v2);
-
-	for (m = 1; m <= v1->m; m++)
-		v2->mat[m][0] = v1->mat[m][0] * v2->mat[m][0];
+	for (n = 1; n <= a->m; n++) {
+		sum += pow(fabs(a->mat[n][0]), 2);
+	}
+	return (sqrt(sum));
 }
 
 #ifdef DEBUG
