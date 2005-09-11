@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.47 2004/11/23 02:37:49 vedge Exp $
+#	$Csoft: Makefile,v 1.48 2005/02/03 11:22:11 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -36,7 +36,7 @@ cleandir-config:
 
 release: cleandir
 	sh mk/dist.sh
-	sh mk/agar-cvs.sh
+	#sh mk/agar-cvs.sh
 
 fastclean:
 	find . -type f -and \( -name \*.o -or -name \*.lo -or \
