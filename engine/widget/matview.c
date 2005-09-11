@@ -1,4 +1,4 @@
-/*	$Csoft: matview.c,v 1.25 2005/05/24 08:12:48 vedge Exp $	*/
+/*	$Csoft: matview.c,v 1.1 2005/09/11 02:33:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -110,6 +110,9 @@ matview_init(struct matview *mv, struct mat *mat, u_int flags)
 	mv->xoffs = 0;
 	mv->yoffs = 0;
 	mv->scale = 4;
+	mv->pre_m = mat->m;
+	mv->pre_n = mat->n;
+	mv->numfmt = "%g";
 	
 	widget_bind(mv->hbar, "value", WIDGET_INT, &mv->xoffs);
 	widget_bind(mv->vbar, "value", WIDGET_INT, &mv->yoffs);
@@ -124,15 +127,29 @@ matview_init(struct matview *mv, struct mat *mat, u_int flags)
 }
 
 void
+matview_set_numfmt(struct matview *mv, const char *fmt)
+{
+	mv->numfmt = fmt;
+}
+
+void
+matview_prescale(struct matview *mv, const char *text, u_int m, u_int n)
+{
+	mv->pre_m = m;
+	mv->pre_n = n;
+	text_prescale(text, &mv->ent_w, &mv->ent_h);
+}
+
+void
 matview_scale(void *p, int w, int h)
 {
 	struct matview *mv = p;
 
 	if (w == -1 && h == -1) {
-		w = text_font_height*(mv->mat->n + mv->hspace) + mv->hspace*2 +
-		    30;
-		h = text_font_height*(mv->mat->m + mv->vspace) + mv->vspace*2 +
-		    30;
+		WIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
+		    mv->hspace*2;
+		WIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
+		    mv->vspace*2;
 		return;
 	}
 
@@ -174,7 +191,7 @@ matview_draw_numerical(void *p)
 				primitives.box(mv, x, y,
 				    mv->ent_w, mv->ent_h, -1,
 				    COLOR(FRAME_COLOR));
-				snprintf(text, sizeof(text), "%g",
+				snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
 			su = text_render(NULL, -1, COLOR(TEXT_COLOR), text);
