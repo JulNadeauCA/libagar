@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.4 2005/09/11 07:33:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -79,6 +79,63 @@ mat_set(mat_t *M, double v)
 	for (m = 1; m <= M->m; m++)
 		for (n = 1; n <= M->n; n++)
 			M->mat[m][n] = v;
+}
+
+/* Compose supermatrix A from submatrices [G;B]. */
+void
+mat_compose21(mat_t *A, const mat_t *G, const mat_t *B)
+{
+	u_int m, n;
+
+	for (m = 1; m <= G->m; m++) {
+		for (n = 1; n <= G->n; n++)
+			A->mat[m][n] = G->mat[m][n];
+	}
+	for (m = 1; m <= B->m; m++) {
+		for (n = 1; n <= B->n; n++)
+			A->mat[G->m+m][n] = B->mat[m][n];
+	}
+}
+
+/* Compose supermatrix A from submatrices [G,B]. */
+void
+mat_compose12(mat_t *A, const mat_t *G, const mat_t *B)
+{
+	u_int m, n;
+
+	for (m = 1; m <= G->m; m++) {
+		for (n = 1; n <= G->n; n++)
+			A->mat[m][n] = G->mat[m][n];
+	}
+	for (m = 1; m <= B->m; m++) {
+		for (n = 1; n <= B->n; n++)
+			A->mat[m][G->n+n] = B->mat[m][n];
+	}
+}
+
+/* Compose supermatrix A from submatrices [G,B;C,D]. */
+void
+mat_compose22(mat_t *A, const mat_t *G, const mat_t *B, const mat_t *C,
+    const mat_t *D)
+{
+	u_int m, n;
+
+	for (m = 1; m <= G->m; m++) {
+		for (n = 1; n <= G->n; n++)
+			A->mat[m][n] = G->mat[m][n];
+	}
+	for (m = 1; m <= B->m; m++) {
+		for (n = 1; n <= B->n; n++)
+			A->mat[m][G->n+n] = B->mat[m][n];
+	}
+	for (m = 1; m <= C->m; m++) {
+		for (n = 1; n <= C->n; n++)
+			A->mat[G->m+m][n] = C->mat[m][n];
+	}
+	for (m = 1; m <= D->m; m++) {
+		for (n = 1; n <= D->n; n++)
+			A->mat[G->m+m][G->n+n] = D->mat[m][n];
+	}
 }
 
 /* Assign the identity matrix. */
@@ -239,7 +296,7 @@ mat_is_symmetric(const mat_t *A)
 		return (0);
 	
 	for (m = 1; m <= A->m; m++) {
-		for (n = m+1; n <= A->n; n++) {
+		for (n = 1; n <= A->n; n++) {
 			if (A->mat[m][n] != A->mat[n][m])
 				return (0);
 		}
