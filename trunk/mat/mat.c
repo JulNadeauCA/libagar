@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ mat_set_identity(mat_t *M)
 
 /* Evaluate whether M is the identity matrix. */
 int
-mat_is_identity(mat_t *M)
+mat_is_ident(const mat_t *M)
 {
 	u_int m, n;
 
@@ -216,13 +216,31 @@ mat_is_U_strict(const mat_t *M)
 
 /* Evaluate whether M is the zero matrix. */
 int
-mat_is_zero(mat_t *M)
+mat_is_zero(const mat_t *M)
 {
 	u_int m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = 1; n <= M->n; n++) {
 			if (M->mat[m][n] != 0.0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+/* Evaluate whether A is a symmetric matrix. */
+int
+mat_is_symmetric(const mat_t *A)
+{
+	u_int m, n;
+
+	if (!mat_is_square(A))
+		return (0);
+	
+	for (m = 1; m <= A->m; m++) {
+		for (n = m+1; n <= A->n; n++) {
+			if (A->mat[m][n] != A->mat[n][m])
 				return (0);
 		}
 	}
@@ -275,6 +293,38 @@ mat_dsum(const mat_t *A, const mat_t *B)
 		}
 	}
 	return (P);
+}
+
+/* Return the transpose of [A]. */
+mat_t *
+mat_transpose(const mat_t *A)
+{
+	mat_t *B;
+	u_int m, n;
+
+	/* TODO optimize by block copying the rows */
+	B = mat_new(A->n, A->m);
+	for (m = 1; m <= A->m; m++) {
+		for (n = 1; n <= A->n; n++)
+			B->mat[n][m] = A->mat[m][n];
+	}
+	return (B);
+}
+
+/* Return the trace of [A]. */
+double
+mat_trace(const mat_t *A)
+{
+	double sum = 0.0;
+	u_int n;
+
+	if (!mat_is_square(A))
+		fatal("not a square matrix");
+
+	for (n = 1; n <= A->n; n++) {
+		sum += A->mat[n][n];
+	}
+	return (sum);
 }
 
 /*
@@ -340,7 +390,7 @@ mat_free(mat_t *M)
 
 /* Evaluate the squareness of a matrix. */
 int
-mat_is_square(mat_t *M)
+mat_is_square(const mat_t *M)
 {
 	return (M->m == M->n);
 }

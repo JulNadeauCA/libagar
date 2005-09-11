@@ -1,4 +1,4 @@
-/*	$Csoft: mat.h,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: mat.h,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_MAT_H_
@@ -35,11 +35,14 @@ void		 mat_sum(const mat_t *, mat_t *);
 mat_t		*mat_dsum(const mat_t *, const mat_t *);
 void		 mat_mul(const mat_t *, const mat_t *, mat_t *);
 void		 mat_hmul(const mat_t *, const mat_t *, mat_t *);
+mat_t		*mat_transpose(const mat_t *);
+double		 mat_trace(const mat_t *);
 
 void		 mat_set_identity(mat_t *);
-__inline__ int	 mat_is_square(mat_t *);
-int		 mat_is_identity(mat_t *);
-int		 mat_is_zero(mat_t *);
+
+__inline__ int	 mat_is_square(const mat_t *);
+int		 mat_is_ident(const mat_t *);
+int		 mat_is_zero(const mat_t *);
 int		 mat_is_L(const mat_t *);
 int		 mat_is_L_strict(const mat_t *);
 int		 mat_is_L_normed(const mat_t *);
@@ -47,6 +50,7 @@ int		 mat_is_U(const mat_t *);
 int		 mat_is_U_strict(const mat_t *);
 int		 mat_is_U_normed(const mat_t *);
 #define		 mat_is_diagonal(M) (mat_is_Ltri(M) && mat_is_Utri(M))
+int		 mat_is_symmetric(const mat_t *);
 
 #ifdef DEBUG
 void		 mat_print(const mat_t *);
