@@ -1,4 +1,4 @@
-/*	$Csoft: mat.h,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
+/*	$Csoft: mat.h,v 1.3 2005/09/11 07:33:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_MAT_H_
@@ -49,7 +49,7 @@ int		 mat_is_L_normed(const mat_t *);
 int		 mat_is_U(const mat_t *);
 int		 mat_is_U_strict(const mat_t *);
 int		 mat_is_U_normed(const mat_t *);
-#define		 mat_is_diagonal(M) (mat_is_Ltri(M) && mat_is_Utri(M))
+#define		 mat_is_diagonal(M) (mat_is_L(M) && mat_is_U(M))
 int		 mat_is_symmetric(const mat_t *);
 
 #ifdef DEBUG
