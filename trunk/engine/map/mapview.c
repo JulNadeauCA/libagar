@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.44 2005/08/30 02:04:28 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.45 2005/09/08 10:09:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -588,8 +588,8 @@ mapview_draw(void *p)
 	SDL_Rect rExtent;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
-	GLenum blend_sfactor;
-	GLenum blend_dfactor;
+	GLint blend_sfactor;
+	GLint blend_dfactor;
 	GLfloat texenvmode;
 #endif
 
