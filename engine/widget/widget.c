@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.112 2005/05/21 05:53:30 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.113 2005/05/31 01:31:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -876,7 +876,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		GLfloat texcoord[4];
 		int alpha = (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY));
 		GLboolean blend_sv;
-		GLenum blend_sfactor, blend_dfactor;
+		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
 
 		texture = view_surface_texture(srcsu, texcoord);
@@ -953,7 +953,7 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		GLfloat *texcoord;
 		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
 		GLboolean blend_sv;
-		GLenum blend_sfactor, blend_dfactor;
+		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
 
 		if (rs == NULL) {

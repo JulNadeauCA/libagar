@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.256 2005/06/16 15:58:44 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.257 2005/06/18 04:25:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -494,7 +494,7 @@ cycle_focus(struct window *win, int reverse)
 	struct widget **widgets;
 	struct widget *olfocus;
 	u_int nwidgets = 0;
-	int i = 0;
+	u_int i = 0;
 
 	if ((olfocus = widget_find_focus(win)) == NULL) {
 		dprintf("no focus!\n");
@@ -535,12 +535,10 @@ move_window(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
 
-	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		oldpos.x = WIDGET(win)->x;
-		oldpos.y = WIDGET(win)->y;
-		oldpos.w = WIDGET(win)->w;
-		oldpos.h = WIDGET(win)->h;
-	}
+	oldpos.x = WIDGET(win)->x;
+	oldpos.y = WIDGET(win)->y;
+	oldpos.w = WIDGET(win)->w;
+	oldpos.h = WIDGET(win)->h;
 
 	WIDGET(win)->x += motion->xrel;
 	WIDGET(win)->y += motion->yrel;
@@ -549,47 +547,43 @@ move_window(struct window *win, SDL_MouseMotionEvent *motion)
 	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	/* Update the background. */
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		newpos.x = WIDGET(win)->x;
-		newpos.y = WIDGET(win)->y;
-		newpos.w = WIDGET(win)->w;
-		newpos.h = WIDGET(win)->h;
-		rfill1.w = 0;
-		rfill2.w = 0;
-		if (newpos.x > oldpos.x) {		/* Right */
-			rfill1.x = oldpos.x;
-			rfill1.y = oldpos.y;
-			rfill1.w = newpos.x - oldpos.x;
-			rfill1.h = newpos.h;
-		} else if (newpos.x < oldpos.x) {	/* Left */
-			rfill1.x = newpos.x + newpos.w;
-			rfill1.y = newpos.y;
-			rfill1.w = oldpos.x - newpos.x;
-			rfill1.h = oldpos.h;
+	newpos.x = WIDGET(win)->x;
+	newpos.y = WIDGET(win)->y;
+	newpos.w = WIDGET(win)->w;
+	newpos.h = WIDGET(win)->h;
+	rfill1.w = 0;
+	rfill2.w = 0;
+	if (newpos.x > oldpos.x) {		/* Right */
+		rfill1.x = oldpos.x;
+		rfill1.y = oldpos.y;
+		rfill1.w = newpos.x - oldpos.x;
+		rfill1.h = newpos.h;
+	} else if (newpos.x < oldpos.x) {	/* Left */
+		rfill1.x = newpos.x + newpos.w;
+		rfill1.y = newpos.y;
+		rfill1.w = oldpos.x - newpos.x;
+		rfill1.h = oldpos.h;
+	}
+	if (newpos.y > oldpos.y) {		/* Downward */
+		rfill2.x = oldpos.x;
+		rfill2.y = oldpos.y;
+		rfill2.w = newpos.w;
+		rfill2.h = newpos.y - oldpos.y;
+	} else if (newpos.y < oldpos.y) {	/* Upward */
+		rfill2.x = oldpos.x;
+		rfill2.y = newpos.y + newpos.h;
+		rfill2.w = oldpos.w;
+		rfill2.h = oldpos.y - newpos.y;
+	}
+	if (!view->opengl) {
+		if (rfill1.w > 0) {
+			SDL_FillRect(view->v, &rfill1, COLOR(BG_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill1);
 		}
-		if (newpos.y > oldpos.y) {		/* Downward */
-			rfill2.x = oldpos.x;
-			rfill2.y = oldpos.y;
-			rfill2.w = newpos.w;
-			rfill2.h = newpos.y - oldpos.y;
-		} else if (newpos.y < oldpos.y) {	/* Upward */
-			rfill2.x = oldpos.x;
-			rfill2.y = newpos.y + newpos.h;
-			rfill2.w = oldpos.w;
-			rfill2.h = oldpos.y - newpos.y;
+		if (rfill2.w > 0) {
+			SDL_FillRect(view->v, &rfill2, COLOR(BG_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill2);
 		}
-		if (!view->opengl) {
-			if (rfill1.w > 0) {
-				SDL_FillRect(view->v, &rfill1, COLOR(BG_COLOR));
-				SDL_UpdateRects(view->v, 1, &rfill1);
-			}
-			if (rfill2.w > 0) {
-				SDL_FillRect(view->v, &rfill2, COLOR(BG_COLOR));
-				SDL_UpdateRects(view->v, 1, &rfill2);
-			}
-		}
-		break;
 	}
 }
 

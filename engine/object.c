@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.228 2005/09/08 14:56:49 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.229 2005/09/09 02:11:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1723,7 +1723,7 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 {
 	const struct object *ob = p;
 	char save_path[MAXPATHLEN];
-	char buf[BUFSIZ];
+	u_char buf[BUFSIZ];
 	FILE *f;
 	off_t offs;
 	size_t totlen = 0;
