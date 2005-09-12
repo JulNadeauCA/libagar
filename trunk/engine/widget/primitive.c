@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.73 2005/05/29 05:49:59 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.74 2005/07/23 17:54:49 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -874,7 +874,7 @@ line_blended_opengl(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
 	int x2 = wid->cx + px2;
 	int y2 = wid->cy + py2;
 	GLboolean blend_save;
-	GLenum sfac_save, dfac_save;
+	GLint sfac_save, dfac_save;
 	
 	if (c[3] < 255) {
 		glGetBooleanv(GL_BLEND, &blend_save);
@@ -988,7 +988,7 @@ rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
 	int x2 = x1+w;
 	int y2 = y1+h;
 	GLboolean blend_save;
-	GLenum sfac_save, dfac_save;
+	GLint sfac_save, dfac_save;
 
 	if (wid->flags & WIDGET_CLIPPING) {
 		if (x1 > wid->cx+wid->w ||
