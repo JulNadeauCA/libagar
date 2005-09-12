@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.48 2005/08/29 03:31:05 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.49 2005/09/08 10:09:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1821,7 +1821,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 	int freesu = 0;
 #endif
 #ifdef HAVE_OPENGL
-	u_int texture;
+	u_int texture = 0;
 	GLfloat texcoord[4];
 #endif
 	SDL_Surface *su;
