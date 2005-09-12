@@ -1,4 +1,4 @@
-/*	$Csoft: veci.h,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: veci.h,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_VECI_H_
@@ -13,7 +13,7 @@ struct veci {
 typedef struct veci veci_t;
 
 __BEGIN_DECLS
-veci_t		*veci_new(int);
+veci_t		*veci_new(u_int);
 __inline__ void	 veci_set(veci_t *, int);
 __inline__ void	 veci_copy(const veci_t *, veci_t *);
 __inline__ void	 veci_free(veci_t *);

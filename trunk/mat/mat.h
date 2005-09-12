@@ -1,4 +1,4 @@
-/*	$Csoft: mat.h,v 1.4 2005/09/11 07:35:05 vedge Exp $	*/
+/*	$Csoft: mat.h,v 1.5 2005/09/11 18:32:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _MAT_MAT_H_
@@ -35,7 +35,7 @@ void		 mat_sum(const mat_t *, mat_t *);
 mat_t		*mat_dsum(const mat_t *, const mat_t *);
 void		 mat_mul(const mat_t *, const mat_t *, mat_t *);
 void		 mat_hmul(const mat_t *, const mat_t *, mat_t *);
-mat_t		*mat_transpose(const mat_t *);
+mat_t		*mat_transpose(const mat_t *, mat_t *);
 double		 mat_trace(const mat_t *);
 
 void		 mat_compose21(mat_t *, const mat_t *, const mat_t *);
