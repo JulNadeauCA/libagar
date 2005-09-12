@@ -1,4 +1,4 @@
-/*	$Csoft: veci.c,v 1.2 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: veci.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 		fatal("different vector length")
 
 veci_t *
-veci_new(int n)
+veci_new(u_int n)
 {
 	veci_t *veci;
 

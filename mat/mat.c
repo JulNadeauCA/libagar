@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.4 2005/09/11 07:33:00 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.5 2005/09/11 18:32:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -352,20 +352,29 @@ mat_dsum(const mat_t *A, const mat_t *B)
 	return (P);
 }
 
-/* Return the transpose of [A]. */
+/* Return the transpose of [A] into [At]. */
 mat_t *
-mat_transpose(const mat_t *A)
+mat_transpose(const mat_t *A, mat_t *At)
 {
-	mat_t *B;
 	u_int m, n;
+	mat_t *T;
 
+	if (At != NULL) {
+#ifdef DEBUG
+		if (At->m != A->n || At->n != A->m)
+			fatal("matrix has incorrect dimensions");
+#endif
+		T = At;
+	} else {
+		T = mat_new(A->n, A->m);
+	}
+	
 	/* TODO optimize by block copying the rows */
-	B = mat_new(A->n, A->m);
 	for (m = 1; m <= A->m; m++) {
 		for (n = 1; n <= A->n; n++)
-			B->mat[n][m] = A->mat[m][n];
+			T->mat[n][m] = A->mat[m][n];
 	}
-	return (B);
+	return (T);
 }
 
 /* Return the trace of [A]. */
