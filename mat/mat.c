@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.5 2005/09/11 18:32:06 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.6 2005/09/12 10:06:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -317,6 +317,20 @@ mat_copy(const mat_t *A, mat_t *B)
 			B->mat[m][n] = A->mat[m][n];
 }
 
+mat_t *
+mat_dup(const mat_t *A)
+{
+	mat_t *B;
+	u_int m, n;
+
+	B = mat_new(A->m, A->n);
+	for (m = 1; m <= A->m; m++) {
+		for (n = 1; n <= A->n; n++)
+			B->mat[m][n] = A->mat[m][n];
+	}
+	return (B);
+}
+
 /* Add the individual elements of two m-by-n matrices. */
 void
 mat_sum(const mat_t *A, mat_t *B)
@@ -502,7 +516,7 @@ mat_test(void)
 	c->mat[2][0] = 18.0;
 
 	iv = veci_new(2);
-	mat_lu_decompose(A, iv, &d);
+	mat_lu_decompose(A, A, iv, &d);
 	printf("A (LU-decomposed):\n"); mat_print(A);
 
 	mat_lu_backsubst(A, iv, c);
