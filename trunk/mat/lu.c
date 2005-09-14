@@ -1,4 +1,4 @@
-/*	$Csoft: lu.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
+/*	$Csoft: lu.c,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -12,20 +12,28 @@
  * and d is set to 1 or -1 depending on whether the number of interchanges
  * turned out to be even or odd.
  */
-int
-mat_lu_decompose(mat_t *A, veci_t *ivec, double *d)
+mat_t *
+mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 {
 	double big;
 	double sum, dum;
 	int i, j, k;
 	int imax = 0;
 	vec_t *vs;
+	mat_t *A, *Adup = NULL;
 
-	if (!mat_is_square(A)) {
+	if (!mat_is_square(pA)) {
 		error_set("not a square matrix");
-		return (-1);
+		return (NULL);
 	}
-
+	if (dA != NULL) {
+		mat_copy(pA, dA);
+		A = dA;
+		Adup = NULL;
+	} else {
+		A = mat_dup(pA);
+		Adup = A;
+	}
 	vs = vec_new(A->n);
 	*d = 1.0;
 
@@ -91,10 +99,13 @@ mat_lu_decompose(mat_t *A, veci_t *ivec, double *d)
 		}
 	}
 	vec_free(vs);
-	return (0);
+	return (A);
 fail:
+	if (Adup != NULL) {
+		mat_free(Adup);
+	}
 	vec_free(vs);
-	return (-1);
+	return (NULL);
 }
 
 /*
