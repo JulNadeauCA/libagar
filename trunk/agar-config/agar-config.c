@@ -1,4 +1,4 @@
-/*	$Csoft: agar-config.c,v 1.15 2005/05/01 00:11:53 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.16 2005/05/01 00:58:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
 #include <config/localedir.h>
+#include <config/network.h>
 
 #include <config/have_smpeg.h>
 #include <config/have_x11.h>
@@ -120,7 +121,7 @@ main(int argc, char *argv[])
 #ifdef JPEG_CFLAGS
 			printf("%s ", JPEG_CFLAGS);
 #endif
-#ifdef LIBQNET_CFLAGS
+#if defined(LIBQNET_CFLAGS) && defined(NETWORK)
 			printf("%s ", LIBQNET_CFLAGS);
 #endif
 			printf("\n");
@@ -153,7 +154,7 @@ main(int argc, char *argv[])
 #ifdef JPEG_LIBS
 			printf("%s ", JPEG_LIBS);
 #endif
-#ifdef LIBQNET_LIBS
+#if defined(LIBQNET_LIBS) && defined(NETWORK)
 			printf("%s ", LIBQNET_LIBS);
 #endif
 			printf("\n");
