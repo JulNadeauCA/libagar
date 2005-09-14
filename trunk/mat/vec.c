@@ -1,4 +1,4 @@
-/*	$Csoft: vec.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
+/*	$Csoft: vec.c,v 1.4 2005/09/11 18:31:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -32,7 +32,8 @@
 
 #define assert_same_length(A, B) \
 	if (((A)->m != (B)->m) || ((A)->n != 1) || ((B)->n != 1)) \
-		fatal("different vector length")
+		fatal("different vector length (v1=%u, v2=%u)", \
+		    (A)->m, (B)->m);
 
 vec_t *
 vec_new(u_int n)
@@ -72,7 +73,7 @@ vec_print(const vec_t *v)
 
 	fputs(" ----\n", stdout);
 	for (m = 1; m <= v->m; m++) {
-		printf("| %4d: %f\n", m, v->mat[m][0]);
+		printf("| %4d: %f\n", m, v->mat[m][1]);
 	}
 	fputs(" ----\n", stdout);
 }
