@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.50 2005/07/29 03:13:56 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.51 2005/07/29 06:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1595,7 +1595,7 @@ tileview_draw(void *p)
 		/* Multiple tileviews may be rendering the same sketch. */
 		sk->vg->redraw = nredraw;
 	}
-	if (t->flags & TILE_DIRTY) {
+	if (t->flags & TILE_DIRTY || tv->flags & TILEVIEW_READONLY) {
 		t->flags &= ~TILE_DIRTY;
 		tile_generate(t);
 		view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.29 2005/07/23 17:51:05 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.30 2005/07/29 03:13:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -146,6 +146,7 @@ struct tileview {
 #define TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
 #define TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
 #define TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
+#define TILEVIEW_READONLY	0x40
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */

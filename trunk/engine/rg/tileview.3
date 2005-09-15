@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.2 2005/05/11 09:59:32 vedge Exp $
+.\"	$Csoft: tileview.3,v 1.1 2005/05/16 07:13:53 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -79,6 +79,12 @@ The
 may include:
 .Bd -literal
 #define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
+#define TILEVIEW_HIDE_CONTROLS	0x02	/* Hide the current controls */
+#define TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
+#define TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
+#define TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
+#define TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
+#define TILEVIEW_READONLY	0x40
 .Ed
 .Pp
 The

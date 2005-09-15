@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.79 2005/08/29 03:29:06 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.80 2005/09/07 02:28:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1940,6 +1940,26 @@ edit_attrib(int argc, union evarg *argv)
 	tv->edit_attr = attr;
 }
 
+static void
+create_view(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	struct window *pwin = argv[3].p;
+	struct window *win;
+	struct tileview *tv;
+
+	if ((win = window_new(0, NULL)) == NULL) {
+		return;
+	}
+	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
+	window_set_position(win, WINDOW_UPPER_CENTER, 0);
+	tv = tileview_new(win, ts, TILEVIEW_READONLY);
+	tileview_set_tile(tv, t);
+	window_attach(pwin, win);
+	window_show(win);
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -2037,7 +2057,13 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    SDLK_r, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 	}
-	
+
+	mi = menu_add_item(me, _("View"));
+	{
+		menu_action(mi, _("Create view..."), NEW_VIEW_ICON,
+		    create_view, "%p,%p,%p", tv->ts, tv->tile, win);
+	}
+
 	mi = menu_add_item(me, _("Pixmaps"));
 	{
 		menu_tool(mi, tbar, _("Create pixmap"), RG_PIXMAP_ICON,
