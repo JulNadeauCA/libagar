@@ -1,4 +1,4 @@
-/*	$Csoft: mat.c,v 1.6 2005/09/12 10:06:42 vedge Exp $	*/
+/*	$Csoft: mat.c,v 1.7 2005/09/14 01:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -498,7 +498,7 @@ mat_print(const mat_t *M)
 void
 mat_test(void)
 {
-	mat_t *A;
+	mat_t *A, *Alu;
 	vec_t *c;
 	veci_t *iv;
 	int i, j;
@@ -512,16 +512,19 @@ mat_test(void)
 	printf("A: \n"); mat_print(A);
 
 	c = vec_new(2);
-	c->mat[1][0] = 7.0;
-	c->mat[2][0] = 18.0;
+	c->mat[1][1] = 7.0;
+	c->mat[2][1] = 18.0;
 
 	iv = veci_new(2);
-	mat_lu_decompose(A, A, iv, &d);
-	printf("A (LU-decomposed):\n"); mat_print(A);
-
-	mat_lu_backsubst(A, iv, c);
+	if ((Alu = mat_lu_decompose(A, NULL, iv, &d)) == NULL) {
+		printf("singular matrix!\n");
+		goto out;
+	}
+	printf("A (LU-decomposed):\n"); mat_print(Alu);
+	mat_lu_backsubst(Alu, iv, c);
 	printf("Solution vector:\n"); vec_print(c);
-
+	mat_free(Alu);
+out:
 	mat_free(A);
 	vec_free(c);
 	veci_free(iv);

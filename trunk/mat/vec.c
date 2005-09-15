@@ -1,4 +1,4 @@
-/*	$Csoft: vec.c,v 1.4 2005/09/11 18:31:53 vedge Exp $	*/
+/*	$Csoft: vec.c,v 1.5 2005/09/14 01:48:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ vec_len(const vec_t *a)
 	u_int n;
 
 	for (n = 1; n <= a->m; n++) {
-		sum += pow(fabs(a->mat[n][0]), 2);
+		sum += pow(fabs(a->mat[n][1]), 2);
 	}
 	return (sqrt(sum));
 }
