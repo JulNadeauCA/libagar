@@ -1,4 +1,4 @@
-/*	$Csoft: lu.c,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
+/*	$Csoft: lu.c,v 1.3 2005/09/14 01:58:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -50,7 +50,7 @@ mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 			error_set("singular matrix");
 			goto fail;
 		}
-		vs->mat[i][0] = 1.0/big;
+		vs->mat[i][1] = 1.0/big;
 	}
 
 	/* Solve the set of equations using Crout's algorithm. */
@@ -70,7 +70,7 @@ mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 				sum -= A->mat[i][k]*A->mat[k][j];
 			}
 			A->mat[i][j] = sum;
-			dum = vs->mat[i][0]*fabs(sum);
+			dum = vs->mat[i][1]*fabs(sum);
 			if (dum >= big) {
 				big = dum;
 				imax = i;
@@ -85,7 +85,7 @@ mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 				A->mat[j][k] = dum;
 			}
 			*d = -(*d);
-			vs->mat[imax][0] = vs->mat[j][0];
+			vs->mat[imax][1] = vs->mat[j][1];
 		}
 		ivec->vec[j] = imax;
 		if (A->mat[j][j] == 0.0)
@@ -122,24 +122,24 @@ mat_lu_backsubst(const mat_t *A, const veci_t *ivec, vec_t *b)
 
 	for (i = 1; i <= A->n; i++) {
 		ip = ivec->vec[i];
-		sum = b->mat[ip][0];
-		b->mat[ip][0] = b->mat[i][0];
+		sum = b->mat[ip][1];
+		b->mat[ip][1] = b->mat[i][1];
 		if (ii) {
 			for (j = ii; j <= i-1; j++) {
-				sum -= A->mat[i][j] * b->mat[j][0];
+				sum -= A->mat[i][j] * b->mat[j][1];
 			}
 		} else if (sum) {
 			ii = i;
 		}
-		b->mat[i][0] = sum;
+		b->mat[i][1] = sum;
 	}
 
 	for (i = A->n; i >= 1; i--) {
-		sum = b->mat[i][0];
+		sum = b->mat[i][1];
 		for (j = i+1; j <= A->n; j++) {
-			sum -= A->mat[i][j] * b->mat[j][0];
+			sum -= A->mat[i][j] * b->mat[j][1];
 		}
-		b->mat[i][0] = sum/A->mat[i][i];
+		b->mat[i][1] = sum/A->mat[i][i];
 	}
 }
 
