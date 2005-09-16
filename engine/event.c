@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.208 2005/08/12 06:09:38 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.209 2005/08/22 02:11:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -86,36 +86,6 @@ static void
 event_hotkey(SDL_Event *ev)
 {
 	switch (ev->key.keysym.sym) {
-#ifdef DEBUG
-	case SDLK_r:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			SDL_Event vexp;
-
-			vexp.type = SDL_VIDEOEXPOSE;
-			SDL_PushEvent(&vexp);
-		}
-		break;
-	case SDLK_F2:
-		if (object_save(world) == -1) {
-			text_msg(MSG_ERROR, "saving world: %s", error_get());
-		}
-		break;
-	case SDLK_F4:
-		if (object_load(world) == -1) {
-			text_msg(MSG_ERROR, "loading world: %s", error_get());
-		}
-		break;
-	case SDLK_F6:
-		window_show(fps_win);
-		break;
-#endif /* DEBUG */
-	case SDLK_F1:
-		if (!config->settings->visible) {
-			window_show(config->settings);
-		} else {
-			window_focus(config->settings);
-		}
-		break;
 	case SDLK_F8:
 		{
 			char path[MAXPATHLEN];
