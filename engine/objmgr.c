@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.41 2005/09/17 05:28:22 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.42 2005/09/17 07:35:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -144,6 +144,7 @@ enum {
 	OBJEDIT_EDIT_GENERIC,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
+	OBJEDIT_SAVE_ALL,
 	OBJEDIT_EXPORT,
 	OBJEDIT_REINIT,
 	OBJEDIT_DESTROY,
@@ -151,8 +152,11 @@ enum {
 	OBJEDIT_MOVE_DOWN,
 	OBJEDIT_DUP,
 	OBJEDIT_RCS_UPDATE,
+	OBJEDIT_RCS_UPDATE_ALL,
 	OBJEDIT_RCS_COMMIT,
-	OBJEDIT_RCS_IMPORT
+	OBJEDIT_RCS_COMMIT_ALL,
+	OBJEDIT_RCS_IMPORT,
+	OBJEDIT_RCS_IMPORT_ALL
 };
 
 static void
@@ -274,40 +278,45 @@ objmgr_open_data(void *p, int new)
 	if (ob->ops->edit == NULL)
 		return;
 
-	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		text_msg(MSG_ERROR, "%s/data: %s", ob->name, error_get());
-		return;
+	if ((ob->flags & OBJECT_NON_PERSISTENT) == 0) {
+		if (ob->data_used == 0 &&
+		    object_load_data(ob) == -1) {
+			dprintf("%s: new object\n", ob->name);
+			ob->flags |= OBJECT_DATA_RESIDENT;
+
+			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
+				return;
+			}
+		}
+		if (++ob->data_used > OBJECT_DEP_MAX)
+			ob->data_used = OBJECT_DEP_MAX;
 	}
 	if (object_page_in(ob, OBJECT_GFX) == -1) {
-		if (new) {
-			object_page_out(ob, OBJECT_DATA);
-			object_page_in(ob, OBJECT_DATA);
-			object_page_in(ob, OBJECT_GFX);
-		} else {
-			text_msg(MSG_ERROR, "%s/gfx: %s", ob->name,
-			    error_get());
-			object_page_out(ob, OBJECT_DATA);
-			return;
-		}
+		text_msg(MSG_ERROR, "%s (gfx): %s", ob->name, error_get());
+		goto fail_data;
 	}
 	object_add_dep(&mapedit.pseudo, ob);
 
-	win = ob->ops->edit(ob);
-	if (win == NULL) {
-		object_page_out(ob, OBJECT_DATA);
-		object_del_dep(&mapedit.pseudo, ob);
-		return;
+	if ((win = ob->ops->edit(ob)) == NULL) {
+		goto fail_gfx;
 	}
-	
 	event_post(NULL, ob, "edit-open", NULL);
 	
 	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
-	window_show(win);
-
 	event_new(win, "window-close", close_object_dlg, "%p", oent);
+	window_show(win);
+	return;
+fail_gfx:
+	object_del_dep(&mapedit.pseudo, ob);
+	object_page_out(ob, OBJECT_GFX);
+fail_data:
+	object_page_out(ob, OBJECT_DATA);
+	return;
 }
 
 static void
@@ -332,7 +341,7 @@ export_object(int argc, union evarg *argv)
 	prop_set_string(config, "save-path", "%s", path);
 	ob->save_pfx = NULL;
 
-	if (object_save(ob) == -1) {
+	if (object_save_all(ob) == -1) {
 		text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
 	} else {
 		text_tmsg(MSG_INFO, 1000,
@@ -401,13 +410,17 @@ obj_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_SAVE:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				error_set(
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-				break;
-			}
 			if (object_save(ob) == -1) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
+			} else {
+				text_tmsg(MSG_INFO, 1000,
+				    _("Object `%s' was saved successfully."),
+				    ob->name);
+			}
+			break;
+		case OBJEDIT_SAVE_ALL:
+			if (object_save_all(ob) == -1) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 			} else {
@@ -480,44 +493,26 @@ obj_op(int argc, union evarg *argv)
 			break;
 #ifdef NETWORK
 		case OBJEDIT_RCS_IMPORT:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				text_msg(MSG_ERROR,
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-				break;
+			if (object_save(ob) == -1 ||
+			    rcs_import(ob) == -1) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
 			}
-			if (object_save(ob) == -1) {
-				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
-				    ob->name, error_get());
-				break;
-			}
-			if (rcs_import(ob) == -1) {
-				text_msg(MSG_ERROR, "%s", error_get());
-			}
+			break;
+		case OBJEDIT_RCS_IMPORT_ALL:
+			rcs_import_all(ob);
 			break;
 		case OBJEDIT_RCS_COMMIT:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				text_msg(MSG_ERROR,
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-				break;
-			}
-			if (object_save(ob) == -1) {
-				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
-				    ob->name, error_get());
-				break;
-			}
-			if (rcs_commit(ob) == -1) {
-				text_msg(MSG_ERROR, "%s", error_get());
+			if (object_save(ob) == -1 ||
+			    rcs_commit(ob) == -1) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
 			}
 			break;
+		case OBJEDIT_RCS_COMMIT_ALL:
+			rcs_commit_all(ob);
+			break;
 		case OBJEDIT_RCS_UPDATE:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				text_msg(MSG_ERROR,
-				    _("The `%s' object is non-persistent."),
-				    ob->name);
-				break;
-			}
 			if (object_save(ob) == -1) {
 				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
 				    ob->name, error_get());
@@ -531,6 +526,9 @@ obj_op(int argc, union evarg *argv)
 			} else {
 				text_msg(MSG_ERROR, "%s", error_get());
 			}
+			break;
+		case OBJEDIT_RCS_UPDATE_ALL:
+			rcs_update_all(ob);
 			break;
 #endif /* NETWORK */
 		}
@@ -841,17 +839,32 @@ objmgr_window(void)
 #ifdef NETWORK
 	mi = menu_add_item(me, _("Repository"));
 	{
-		menu_action(mi, _("Commit object"),
+		menu_action(mi, _("Commit"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_COMMIT);
 
-		menu_action(mi, _("Update object"),
+		menu_action(mi, _("Update"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_UPDATE);
-			
-		menu_action(mi, _("Import object"),
+
+		menu_action(mi, _("Import"),
 		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_IMPORT);
+
+		menu_separator(mi);
+
+		menu_action(mi, _("Commit all"),
+		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_COMMIT_ALL);
+
+		menu_action(mi, _("Update all"),
+		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_UPDATE_ALL);
+			
+		
+		menu_action(mi, _("Import all"),
+		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
 
@@ -863,7 +876,7 @@ objmgr_window(void)
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
 	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
 	{
-		struct AGMenuItem *mi;
+		struct AGMenuItem *mi, *mi2;
 
 		object_attach(ntab, objs_tl);
 
@@ -881,27 +894,45 @@ objmgr_window(void)
 			    "%p, %i", objs_tl, OBJEDIT_LOAD);
 			menu_action(mi, _("Save"), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_SAVE);
+			menu_action(mi, _("Save all"), OBJSAVE_ICON, obj_op,
+			    "%p, %i", objs_tl, OBJEDIT_SAVE_ALL);
 			menu_action(mi, _("Save to..."), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
 
 #ifdef NETWORK
 			if (rcs) {
 				menu_separator(mi);
+			
+				mi2 = menu_action(mi, _("Repository"),
+				    OBJLOAD_ICON, NULL, NULL);
 
-				menu_action(mi, _("Commit to repository"),
+				menu_action(mi2, _("Commit"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_COMMIT);
-
-				menu_action(mi, _("Update from repository"),
+				
+				menu_action(mi2, _("Update"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_UPDATE);
-			
-				menu_action(mi, _("Import to repository"),
+				
+				menu_action(mi2, _("Import"),
 				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_IMPORT);
-			}
-#endif
+		
+				menu_separator(mi2);
+				
+				menu_action(mi2, _("Commit all"),
+				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_COMMIT_ALL);
 
+				menu_action(mi2, _("Update all"),
+				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_UPDATE_ALL);
+			
+				menu_action(mi2, _("Import all"),
+				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJEDIT_RCS_IMPORT_ALL);
+			}
+#endif /* NETWORK */
 			menu_separator(mi);
 			
 			menu_action(mi, _("Duplicate"), OBJDUP_ICON,
@@ -958,59 +989,21 @@ objmgr_init(void)
 }
 
 static void
-save_changes(int argc, union evarg *argv)
+objmgr_quit(int argc, union evarg *argv)
 {
-	struct window *dlg_win = widget_parent_window(argv[0].p);
-	struct object *obj = argv[1].p;
-	int then_exit = argv[2].i;
-	
-	if (object_save(obj) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", obj->name, error_get());
-		return;
-	}
+	SDL_Event nev;
 
-	dprintf("saved `%s'\n", obj->name);
-
-	if (then_exit) {
-		SDL_Event nev;
-
-		objmgr_exiting = 0;
-		nev.type = SDL_USEREVENT;
-		SDL_PushEvent(&nev);
-	} else {
-		text_tmsg(MSG_INFO, 500, _("Object `%s' saved successfully."),
-		    obj->name);
-	}
+	objmgr_exiting = 0;
+	nev.type = SDL_USEREVENT;
+	SDL_PushEvent(&nev);
 }
 
 static void
-discard_changes(int argc, union evarg *argv)
-{
-	struct window *dlg_win = widget_parent_window(argv[0].p);
-	struct object *obj = argv[1].p;
-	int then_exit = argv[2].i;
-
-	if (then_exit) {
-		SDL_Event nev;
-
-		objmgr_exiting = 0;
-		nev.type = SDL_USEREVENT;
-		SDL_PushEvent(&nev);
-	} else {
-		text_tmsg(MSG_INFO, 500, _("Ignoring modifications to `%s'."),
-		    obj->name);
-	}
-}
-
-static void
-cancel_exit(int argc, union evarg *argv)
+objmgr_quit_cancel(int argc, union evarg *argv)
 {
 	struct window *win = argv[1].p;
-	int then_exit = argv[2].i;
 
-	if (then_exit) {
-		objmgr_exiting = 0;
-	}
+	objmgr_exiting = 0;
 	view_detach(win);
 }
 
@@ -1019,7 +1012,7 @@ cancel_exit(int argc, union evarg *argv)
  * an object and optionally exit afterwards.
  */
 void
-objmgr_changed_dlg(void *obj, int then_exit)
+objmgr_quit_dlg(void *obj)
 {
 	struct window *win;
 	struct box *bo;
@@ -1030,36 +1023,23 @@ objmgr_changed_dlg(void *obj, int then_exit)
 			      == NULL) {
 		return;
 	}
-	window_set_caption(win, _("Save changes?"));
+	window_set_caption(win, _("Exit application?"));
 	window_set_position(win, WINDOW_CENTER, 0);
 
-	label_new(win, LABEL_STATIC, _("Save changes to %s?"),
-	    OBJECT(obj)->name);
+	label_new(win, LABEL_STATIC,
+	    _("Some objects have been modified.\n"
+	      "Exit application?"));
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
 	box_set_spacing(bo, 0);
 	box_set_padding(bo, 0);
 	{
-		b = button_new(bo, _("Save"));
-		event_new(b, "button-pushed", save_changes, "%p,%i", obj,
-		    then_exit);
-		widget_focus(b);
+		b = button_new(bo, _("Quit"));
+		event_new(b, "button-pushed", objmgr_quit, NULL);
 
-		b = button_new(bo, _("Discard"));
-		event_new(b, "button-pushed", discard_changes, "%p,%i", obj,
-		    then_exit);
-	}
-
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
-	box_set_spacing(bo, 0);
-	box_set_padding(bo, 0);
-	{
 		b = button_new(bo, _("Cancel"));
-		event_new(b, "button-pushed", cancel_exit, "%p,%i", win,
-		    then_exit);
-		WIDGET(b)->flags |= WIDGET_WFILL;
+		event_new(b, "button-pushed", objmgr_quit_cancel, "%p", win);
 	}
-
 	window_show(win);
 }
 

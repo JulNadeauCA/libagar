@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.11 2005/05/14 10:05:54 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.12 2005/06/16 02:26:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -536,6 +536,75 @@ fail_res:
 	response_free(res);
 fail:
 	rcs_disconnect();
+	return (-1);
+}
+
+int
+rcs_import_all(struct object *obj)
+{
+	struct object *cobj;
+
+	lock_linkage();
+	if (rcs_import(obj) == -1) {
+		goto fail;
+	}
+	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
+		if (cobj->flags & OBJECT_NON_PERSISTENT) {
+			continue;
+		}
+		if (rcs_import_all(cobj) == -1)
+			goto fail;
+	}
+	unlock_linkage();
+	return (0);
+fail:
+	unlock_linkage();
+	return (-1);
+}
+
+int
+rcs_update_all(struct object *obj)
+{
+	struct object *cobj;
+
+	lock_linkage();
+	if (rcs_update(obj) == -1) {
+		goto fail;
+	}
+	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
+		if (cobj->flags & OBJECT_NON_PERSISTENT) {
+			continue;
+		}
+		if (rcs_update_all(cobj) == -1)
+			goto fail;
+	}
+	unlock_linkage();
+	return (0);
+fail:
+	unlock_linkage();
+	return (-1);
+}
+
+int
+rcs_commit_all(struct object *obj)
+{
+	struct object *cobj;
+
+	lock_linkage();
+	if (rcs_commit(obj) == -1) {
+		goto fail;
+	}
+	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
+		if (cobj->flags & OBJECT_NON_PERSISTENT) {
+			continue;
+		}
+		if (rcs_commit_all(cobj) == -1)
+			goto fail;
+	}
+	unlock_linkage();
+	return (0);
+fail:
+	unlock_linkage();
 	return (-1);
 }
 

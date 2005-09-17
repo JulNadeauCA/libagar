@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.232 2005/09/17 05:54:38 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.233 2005/09/17 07:35:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -885,9 +885,8 @@ object_page_out(void *p, enum object_page_item item)
 			extern int objmgr_exiting;
 
 			if (!objmgr_exiting) {
-				if (object_save(ob) == -1) {
+				if (object_save(ob) == -1)
 					goto fail;
-				}
 			}
 			object_free_data(ob);
 		}
@@ -1256,6 +1255,30 @@ backup_object(void *p, const char *orig)
 
 /* Save the state of an object and its children. */
 int
+object_save_all(void *p)
+{
+	struct object *obj = p, *cobj;
+
+	lock_linkage();
+	if (object_save(obj) == -1) {
+		goto fail;
+	}
+	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
+		if (cobj->flags & OBJECT_NON_PERSISTENT) {
+			continue;
+		}
+		if (object_save_all(cobj) == -1)
+			goto fail;
+	}
+	unlock_linkage();
+	return (0);
+fail:
+	unlock_linkage();
+	return (-1);
+}
+
+/* Save the state of an object. */
+int
 object_save(void *p)
 {
 	char save_path[MAXPATHLEN];
@@ -1346,7 +1369,7 @@ object_save(void *p)
 	if (prop_save(ob, buf) == -1)
 		goto fail;
 	
-	/* Save the child objects. */
+	/* Save the list of child objects. */
 	count_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	count = 0;
@@ -1356,9 +1379,6 @@ object_save(void *p)
 		}
 		write_string(buf, child->name);
 		write_string(buf, child->type);
-		if (object_save(child) == -1) {
-			goto fail;
-		}
 		count++;
 	}
 	pwrite_uint32(buf, count, count_offs);
