@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.40 2005/09/09 04:26:33 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.41 2005/09/17 05:28:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -76,6 +76,9 @@ static struct timeout repo_timeout;
 #endif
 
 int objmgr_exiting = 0;
+#ifdef DEBUG
+int objmgr_hexdiff = 0;
+#endif
 
 static void
 create_obj(int argc, union evarg *argv)

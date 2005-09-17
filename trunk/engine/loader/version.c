@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.12 2005/05/31 04:00:40 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.13 2005/09/17 04:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -82,7 +82,7 @@ version_write(struct netbuf *buf, const struct version *ver)
 {
 	char nbuf[VERSION_NAME_MAX];
 
-	memset(nbuf, '\0', sizeof(nbuf));
+	memset(nbuf, '!', sizeof(nbuf));
 	strlcpy(nbuf, ver->name, sizeof(nbuf));
 	netbuf_write(nbuf, sizeof(nbuf), 1, buf);
 	write_uint32(buf, ver->major);

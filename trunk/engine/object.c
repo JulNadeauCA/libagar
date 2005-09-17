@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.231 2005/09/17 04:49:12 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.232 2005/09/17 05:54:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1273,7 +1273,6 @@ object_save(void *p)
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
-	debug(DEBUG_STATE, "saving %s\n", ob->name);
 
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
 		error_set(_("The `%s' object is non-persistent."), ob->name);
@@ -1313,6 +1312,8 @@ object_save(void *p)
 	strlcat(save_file, ob->name, sizeof(save_file));
 	strlcat(save_file, ".", sizeof(save_file));
 	strlcat(save_file, ob->type, sizeof(save_file));
+
+	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, save_file);
 
 	backup_object(ob, save_file);
 
@@ -1617,6 +1618,20 @@ rename:
 }
 
 /*
+ * Change the save prefix of an object and its children.
+ * The linkage must be locked.
+ */
+void
+object_set_savepfx(void *p, char *path)
+{
+	struct object *ob = p, *cob;
+
+	ob->save_pfx = path;
+	TAILQ_FOREACH(cob, &ob->children, cobjs)
+		object_set_savepfx(cob, path);
+}
+
+/*
  * Remove the data files of an object and its children.
  * The linkage must be locked.
  */
@@ -1809,12 +1824,15 @@ object_changed(void *p)
 	struct object *ob = p;
 	char *pfx_save = ob->save_pfx;
 	int rv;
+#ifdef DEBUG
+	extern int objmgr_hexdiff;
+#endif
 	
 	if (object_copy_checksum(ob, OBJECT_SHA1, save_sha1) == 0)
 		return (1);
 
 	pfx_save = ob->save_pfx;
-	ob->save_pfx = "/.tmp";
+	object_set_savepfx(ob, "/.tmp");
 	if (object_save(ob) == -1) {
 		fprintf(stderr, "save %s: %s\n", ob->name, error_get());
 		goto fail;
@@ -1824,12 +1842,35 @@ object_changed(void *p)
 		goto fail;
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
+
+#ifdef DEBUG
+	if (rv == 1 && objmgr_hexdiff) {
+		char path[MAXPATHLEN];
+		char tmp[MAXPATHLEN];
+		char cmd[1024];
+
+		prop_copy_string(config, "save-path", tmp, sizeof(tmp));
+		strlcat(tmp, "/.tmp/hexdiff", sizeof(tmp));
+
+		object_copy_filename(ob, path, sizeof(path));
+		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'>%s", path, tmp);
+		system(cmd);
+		
+		object_set_savepfx(ob, pfx_save);
+		object_copy_filename(ob, path, sizeof(path));
+		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'|diff -u - %s",
+		    path, tmp);
+		system(cmd);
+		object_set_savepfx(ob, "/.tmp");
+	}
+#endif /* DEBUG */
+
 	object_unlink_datafiles(ob);
-	ob->save_pfx = pfx_save;
+	object_set_savepfx(ob, pfx_save);
 	return (rv);
 fail:
 	object_unlink_datafiles(ob);
-	ob->save_pfx = pfx_save;
+	object_set_savepfx(ob, pfx_save);
 	return (-1);
 }
 
