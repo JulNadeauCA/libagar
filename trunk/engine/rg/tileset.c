@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.58 2005/08/29 03:29:06 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.59 2005/09/07 02:28:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -105,6 +105,7 @@ tileset_init(void *obj, const char *name)
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
 	ts->max_sprites = 0;
+	ts->template[0] = '\0';
 }
 
 void
