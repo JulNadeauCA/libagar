@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.68 2005/06/11 11:10:38 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.69 2005/07/16 16:07:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,6 +74,7 @@ selected_tool(int argc, union evarg *argv)
 void
 monitor_menu(struct AGMenuItem *mi)
 {
+	extern int objmgr_hexdiff;
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	int i;
 
@@ -81,6 +82,9 @@ monitor_menu(struct AGMenuItem *mi)
 		menu_action(mi, _(tool_ents[i].name), -1,
 		    selected_tool, "%p", &tool_ents[i]);
 	}
+	menu_separator(mi);
+	menu_int_bool(mi, _("Datafile hex diffs"), OBJ_ICON,
+	    &objmgr_hexdiff, 0);
 }
 
 #endif	/* DEBUG */
