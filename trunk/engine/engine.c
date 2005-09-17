@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.158 2005/07/16 16:07:27 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.159 2005/09/17 05:28:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -186,7 +186,6 @@ engine_preinit(const char *name)
 	object_load(config);
 
 	world = object_new(NULL, "world");
-	world->save_pfx = NULL;
 	inited++;
 	return (0);
 }
