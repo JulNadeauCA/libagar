@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.257 2005/06/18 04:25:25 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.258 2005/09/12 10:07:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1055,16 +1055,25 @@ window_scale(void *p, int w, int h)
 	struct widget *wid;
 	int totfixed = 0;
 	int x = win->xpadding, dx;
-	int y = 0, dy;
+	int y, dy;
 	int nwidgets = 0;
 
 	pthread_mutex_lock(&win->lock);
+
+	if ((win->flags & WINDOW_NO_TITLEBAR) &&
+	    (win->flags & WINDOW_NO_DECORATIONS) == 0) {
+		y = win->ypadding_top + win->spacing;
+	} else {
+		y = 0;
+	}
 
 	if (w == -1 && h == -1) {
 		int maxw = 0;
 
 		WIDGET(win)->w = win->xpadding*2;
 		WIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
+		if (win->flags & WINDOW_NO_TITLEBAR)
+			WIDGET(win)->h += win->spacing;
 
 		OBJECT_FOREACH_CHILD(wid, win, widget) {
 			wid->x = x;

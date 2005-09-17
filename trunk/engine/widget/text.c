@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.103 2005/05/13 09:21:05 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.104 2005/09/17 05:00:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -517,6 +517,7 @@ text_prompt_options(struct button **bOpts, u_int nbOpts, const char *fmt, ...)
 	win = window_new(WINDOW_MODAL|WINDOW_NO_RESIZE|WINDOW_NO_TITLEBAR,
 	    NULL);
 	window_set_position(win, WINDOW_CENTER, 0);
+	window_set_spacing(win, 8);
 
 	label_static(win, text);
 
