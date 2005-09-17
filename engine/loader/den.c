@@ -1,4 +1,4 @@
-/*	$Csoft: den.c,v 1.6 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: den.c,v 1.7 2005/02/11 02:29:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,13 +65,14 @@ den_read_header(struct den *den)
 	den->keywords = read_string(den->buf);
 
 	den->nmembers = read_uint32(den->buf);
-	den->members = Malloc(den->nmembers*sizeof(struct den_member), M_LOADER);
+	den->members = Malloc(den->nmembers*sizeof(struct den_member),
+	    M_LOADER);
 
 	for (i = 0; i < den->nmembers; i++) {
 		struct den_member *memb = &den->members[i];
 
-		copy_string(memb->name, den->buf, sizeof(memb->name));
-		copy_string(memb->lang, den->buf, sizeof(memb->lang));
+		copy_nulstring(memb->name, den->buf, sizeof(memb->name));
+		copy_nulstring(memb->lang, den->buf, sizeof(memb->lang));
 		den->members[i].offs = (off_t)read_uint32(den->buf);
 		den->members[i].size = (size_t)read_uint32(den->buf);
 	}
@@ -98,8 +99,8 @@ den_write_header(struct den *den, int nmemb)
 	for (i = 0; i < den->nmembers; i++) {
 		struct den_member *memb = &den->members[i];
 
-		memset(memb->name, 'B', sizeof(memb->name));
-		memset(memb->lang, 'o', sizeof(memb->lang));
+		memset(memb->name, '\0', sizeof(memb->name));
+		memset(memb->lang, '\0', sizeof(memb->lang));
 	}
 
 	write_uint32(den->buf, den->nmembers);

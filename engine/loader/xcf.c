@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.18 2005/04/14 06:19:39 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.19 2005/07/16 16:07:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -145,7 +145,7 @@ xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 		prop->data.tattoo_state = read_uint32(buf);
 		break;
 	case PROP_PARASITE:					/* Parasite */
-		prop->data.parasite.name = read_string(buf);
+		prop->data.parasite.name = read_nulstring(buf);
 		prop->data.parasite.flags = read_uint32(buf);
 		prop->data.parasite.size = read_uint32(buf);
 		prop->data.parasite.data = Malloc(prop->data.parasite.size,
@@ -601,7 +601,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		layer->w = read_uint32(buf);
 		layer->h = read_uint32(buf);
 		layer->layer_type = read_uint32(buf);
-		layer->name = read_string(buf);
+		layer->name = read_nulstring(buf);
 
 		debug(DEBUG_LAYER_NAMES, "Layer `%s': %ux%u\n", layer->name,
 		    layer->w, layer->h);
