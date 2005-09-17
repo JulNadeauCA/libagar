@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.15 2005/08/10 06:59:23 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.16 2005/08/27 04:34:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -160,6 +160,10 @@ struct map {
 	struct space space;
 
 	pthread_mutex_t lock;
+	u_int flags;
+#define MAP_SAVE_CAMERAPOS	0x01	/* Save the camera positions */
+#define MAP_SAVE_CAMERAZOOM	0x02	/* Save the camera zoom factors */
+#define MAP_SAVED_FLAGS		(MAP_SAVE_CAMERAPOS|MAP_SAVE_CAMERAZOOM)
 
 	u_int mapw, maph;		/* Map geometry */
 	int cur_layer;			/* Layer being edited */
