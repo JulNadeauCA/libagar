@@ -1,4 +1,4 @@
-/*	$Csoft: version.h,v 1.9 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VERSION_H_
@@ -11,8 +11,8 @@ struct version {
 	Uint32	 minor;
 };
 
-#define VERSION_USER_MAX	128
-#define VERSION_HOST_MAX	256
+#define VERSION_NAME_MAX	48
+#define VERSION_MAX		(VERSION_NAME_MAX+8)
 
 __BEGIN_DECLS
 int	version_read(struct netbuf *, const struct version *, struct version *);
