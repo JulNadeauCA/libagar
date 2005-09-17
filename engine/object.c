@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.230 2005/09/12 10:07:34 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.231 2005/09/17 04:49:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1824,23 +1824,6 @@ object_changed(void *p)
 		goto fail;
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
-#ifdef DEBUG
-	if (rv == 1) {
-		char cmd[1024];
-		char path[MAXPATHLEN];
-
-		object_copy_filename(ob, path, sizeof(path));
-		snprintf(cmd, sizeof(cmd), "hexdump -C '%s' > /tmp/foo", path);
-		system(cmd);
-		
-		ob->save_pfx = pfx_save;
-		object_copy_filename(ob, path, sizeof(path));
-		snprintf(cmd, sizeof(cmd), "hexdump -C '%s' | diff -u /tmp/foo -",
-		    path);
-		system(cmd);
-		ob->save_pfx = "/.tmp";
-	}
-#endif
 	object_unlink_datafiles(ob);
 	ob->save_pfx = pfx_save;
 	return (rv);
