@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.95 2005/05/08 02:10:02 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.96 2005/06/18 04:25:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -144,7 +144,6 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 extern const char *progname;		/* engine.c */
 extern struct object *world;		/* engine.c */
 extern pthread_mutex_t linkage_lock;	/* engine.c */
-extern int world_changed;		/* engine.c */
 
 enum gfx_engine {
 	GFX_ENGINE_GUI		/* Direct video/OpenGL, solid background */
