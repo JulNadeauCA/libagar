@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.102 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.103 2005/05/13 09:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
+#include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/bitmap.h>
 #include <engine/widget/button.h>
@@ -497,6 +498,34 @@ text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
 
 	timeout_set(&text_timeout, expire_tmsg, win, TIMEOUT_LOADABLE);
 	timeout_add(NULL, &text_timeout, expire);
+}
+
+/* Prompt the user with a choice of options. */
+struct window *
+text_prompt_options(struct button **bOpts, u_int nbOpts, const char *fmt, ...)
+{
+	char text[LABEL_MAX];
+	struct window *win;
+	struct box *bo;
+	va_list ap;
+	u_int i;
+
+	va_start(ap, fmt);
+	vsnprintf(text, sizeof(text), fmt, ap);
+	va_end(ap);
+
+	win = window_new(WINDOW_MODAL|WINDOW_NO_RESIZE|WINDOW_NO_TITLEBAR,
+	    NULL);
+	window_set_position(win, WINDOW_CENTER, 0);
+
+	label_static(win, text);
+
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	for (i = 0; i < nbOpts; i++) {
+		bOpts[i] = button_new(bo, "XXXXXXXXXXX");
+	}
+	window_show(win);
+	return (win);
 }
 
 /* Prompt the user for a floating-point value. */
