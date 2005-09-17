@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.229 2005/09/09 02:11:47 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.230 2005/09/12 10:07:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1250,9 +1250,7 @@ backup_object(void *p, const char *orig)
 	if (stat(orig, &sb) == 0) {
 		strlcpy(path, orig, sizeof(path));
 		strlcat(path, ".bak", sizeof(path));
-		if (rename(orig, path) == -1) {
-			fprintf(stderr, "%s: %s\n", path, strerror(errno));
-		}
+		rename(orig, path);
 	}
 }
 
@@ -1801,6 +1799,57 @@ object_copy_digest(const void *ob, size_t *len, char *digest)
 	return (0);
 }
 
+/* Check whether the given object has changed since last saved. */
+int
+object_changed(void *p)
+{
+	char save_sha1[SHA1_DIGEST_STRING_LENGTH];
+	char tmp_sha1[SHA1_DIGEST_STRING_LENGTH];
+	struct stat sb;
+	struct object *ob = p;
+	char *pfx_save = ob->save_pfx;
+	int rv;
+	
+	if (object_copy_checksum(ob, OBJECT_SHA1, save_sha1) == 0)
+		return (1);
+
+	pfx_save = ob->save_pfx;
+	ob->save_pfx = "/.tmp";
+	if (object_save(ob) == -1) {
+		fprintf(stderr, "save %s: %s\n", ob->name, error_get());
+		goto fail;
+	}
+	if (object_copy_checksum(ob, OBJECT_SHA1, tmp_sha1) == -1) {
+		fprintf(stderr, "md5 %s: %s\n", ob->name, error_get());
+		goto fail;
+	}
+	rv = (strcmp(save_sha1, tmp_sha1) != 0);
+#ifdef DEBUG
+	if (rv == 1) {
+		char cmd[1024];
+		char path[MAXPATHLEN];
+
+		object_copy_filename(ob, path, sizeof(path));
+		snprintf(cmd, sizeof(cmd), "hexdump -C '%s' > /tmp/foo", path);
+		system(cmd);
+		
+		ob->save_pfx = pfx_save;
+		object_copy_filename(ob, path, sizeof(path));
+		snprintf(cmd, sizeof(cmd), "hexdump -C '%s' | diff -u /tmp/foo -",
+		    path);
+		system(cmd);
+		ob->save_pfx = "/.tmp";
+	}
+#endif
+	object_unlink_datafiles(ob);
+	ob->save_pfx = pfx_save;
+	return (rv);
+fail:
+	object_unlink_datafiles(ob);
+	ob->save_pfx = pfx_save;
+	return (-1);
+}
+
 #ifdef EDITION
 
 static void
@@ -2018,6 +2067,8 @@ object_edit(void *p)
 		label_new(ntab, LABEL_POLLED, _("Flags: 0x%x"), &ob->flags);
 		label_new(ntab, LABEL_POLLED_MT, _("Parent: %[obj]"),
 		    &linkage_lock, &ob->parent);
+		label_new(ntab, LABEL_STATIC, _("Save prefix: %s"),
+		    ob->save_pfx != NULL ? ob->save_pfx : "/");
 
 		separator_new(ntab, SEPARATOR_HORIZ);
 
