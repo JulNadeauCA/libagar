@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.78 2005/08/10 06:07:02 vedge Exp $
+.\"	$Csoft: object.3,v 1.79 2005/08/15 02:27:25 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -443,6 +443,9 @@ flag set.
 .Fn object_save "const void *obj"
 .Pp
 .Ft "int"
+.Fn object_save_all "const void *obj"
+.Pp
+.Ft "int"
 .Fn object_page_in "void *obj" "enum object_page_item item"
 .Pp
 .Ft "int"
@@ -525,6 +528,9 @@ function creates an archive of the given object in the save
 directory (the
 .Sq save-path
 config setting).
+The
+.Fn object_save_all
+variant also saves child objects.
 .Pp
 The
 .Fn object_page_in

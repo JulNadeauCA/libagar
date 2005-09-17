@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.130 2005/09/17 04:49:31 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.131 2005/09/17 07:35:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -181,6 +181,8 @@ void 	 object_cancel_timeouts(void *, int);
 int	 object_page_in(void *, enum object_page_item);
 int	 object_page_out(void *, enum object_page_item);
 int	 object_save(void *);
+int	 object_save_all(void *);
+
 int	 object_load(void *);
 int	 object_load_generic(void *);
 int	 object_reload_data(void *);
