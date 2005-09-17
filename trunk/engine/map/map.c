@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.50 2005/09/12 09:52:03 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.51 2005/09/17 08:06:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1195,12 +1195,26 @@ map_load(void *ob, struct netbuf *buf)
 
 		copy_string(cam->name, buf, sizeof(cam->name));
 		cam->flags = (int)read_uint32(buf);
-		cam->x = (int)read_sint32(buf);
-		cam->y = (int)read_sint32(buf);
+		if (i > 0 || m->flags & MAP_SAVE_CAM0POS) {
+			cam->x = (int)read_sint32(buf);
+			cam->y = (int)read_sint32(buf);
+		}
 		cam->alignment = (enum map_camera_alignment)read_uint8(buf);
-		cam->zoom = (u_int)read_uint16(buf);
-		cam->tilesz = (u_int)read_uint16(buf);
-		cam->pixsz = cam->tilesz/TILESZ;
+		
+		if (i > 0 || m->flags & MAP_SAVE_CAM0ZOOM) {
+			cam->zoom = (u_int)read_uint16(buf);
+			cam->tilesz = (u_int)read_uint16(buf);
+			cam->pixsz = cam->tilesz/TILESZ;
+		} else {
+			cam->zoom = 100;
+			cam->tilesz = TILESZ;
+			cam->pixsz = 1;
+		}
+
+		if (i == 0 && (m->flags & MAP_SAVE_CAM0POS) == 0) {
+			cam->x = m->origin.x*cam->tilesz - cam->tilesz/2;
+			cam->y = m->origin.y*cam->tilesz - cam->tilesz/2;
+		}
 	}
 
 	/* Allocate and load the nodes. */
@@ -1371,20 +1385,14 @@ map_save(void *p, struct netbuf *buf)
 
 		write_string(buf, cam->name);
 		write_uint32(buf, (Uint32)cam->flags);
-		if (m->flags & MAP_SAVE_CAMERAPOS) {
+		if (i == 0 && (m->flags & MAP_SAVE_CAM0POS)) {
 			write_sint32(buf, (Sint32)cam->x);
 			write_sint32(buf, (Sint32)cam->y);
-		} else {
-			write_sint32(buf, 0);
-			write_sint32(buf, 0);
 		}
 		write_uint8(buf, (Uint8)cam->alignment);
-		if (m->flags & MAP_SAVE_CAMERAZOOM) {
+		if (i == 0 && (m->flags & MAP_SAVE_CAM0ZOOM)) {
 			write_uint16(buf, (Uint16)cam->zoom);
 			write_uint16(buf, (Uint16)cam->tilesz);
-		} else {
-			write_uint16(buf, 0);
-			write_uint16(buf, 0);
 		}
 	}
 
