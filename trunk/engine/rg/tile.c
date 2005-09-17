@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.80 2005/09/07 02:28:15 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.81 2005/09/15 17:21:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -475,7 +475,7 @@ tile_save(struct tile *t, struct netbuf *buf)
 	int i, x, y;
 
 	write_string(buf, t->name);
-	write_uint8(buf, t->flags);
+	write_uint8(buf, t->flags & ~TILE_DIRTY);
 	write_surface(buf, t->su);
 	
 	write_uint32(buf, 1);				/* Pad: nsprites */
