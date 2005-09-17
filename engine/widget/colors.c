@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.21 2005/08/22 02:08:17 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.22 2005/08/22 02:20:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -213,7 +213,7 @@ colors_save(struct netbuf *buf)
 		write_color(buf, vfmt, colors[i]);
 	}
 	write_uint32(buf, (Uint32)colors_border_size);
-	for (i = 0; i < LAST_COLOR; i++) {
+	for (i = 0; i < colors_border_size; i++) {
 		write_color(buf, vfmt, colors_border[i]);
 	}
 }
