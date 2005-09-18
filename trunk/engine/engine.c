@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.159 2005/09/17 05:28:22 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.160 2005/09/17 05:54:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,7 +28,6 @@
 
 #include <config/have_x11.h>
 #include <config/have_setlocale.h>
-#include <config/have_libqnet.h>
 #include <config/localedir.h>
 #include <config/version.h>
 #include <config/network.h>
@@ -223,7 +222,7 @@ engine_init(void)
 
 	config_window(config);
 
-#if defined(DEBUG) && defined(HAVE_LIBQNET) && defined(THREADS)
+#if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 	if (server_mode) {
 		extern int server_start(void);
 

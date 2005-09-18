@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.8 2005/05/24 08:15:09 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.9 2005/09/18 04:07:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -28,7 +28,7 @@
 
 #include <engine/engine.h>
 #include <config/have_jpeg.h>
-#include <config/have_libqnet.h>
+#include <config/network.h>
 
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 
