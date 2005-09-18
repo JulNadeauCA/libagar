@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.42 2005/09/17 07:35:28 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.43 2005/09/17 15:22:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1018,17 +1018,16 @@ objmgr_quit_dlg(void *obj)
 	struct box *bo;
 	struct button *b;
 
-	if ((win = window_new(WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|WINDOW_MODAL|
-			      WINDOW_NO_RESIZE, "objmgr-changed-dlg"))
-			      == NULL) {
+	if ((win = window_new(WINDOW_MODAL|WINDOW_NO_TITLEBAR|WINDOW_NO_RESIZE,
+	    "objmgr-changed-dlg")) == NULL) {
 		return;
 	}
 	window_set_caption(win, _("Exit application?"));
 	window_set_position(win, WINDOW_CENTER, 0);
+	window_set_spacing(win, 8);
 
 	label_new(win, LABEL_STATIC,
-	    _("Some objects have been modified.\n"
-	      "Exit application?"));
+	    _("Some objects have been modified. Exit application?"));
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
 	box_set_spacing(bo, 0);
@@ -1039,6 +1038,7 @@ objmgr_quit_dlg(void *obj)
 
 		b = button_new(bo, _("Cancel"));
 		event_new(b, "button-pushed", objmgr_quit_cancel, "%p", win);
+		widget_focus(b);
 	}
 	window_show(win);
 }
