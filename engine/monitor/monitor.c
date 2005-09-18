@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.70 2005/09/17 07:35:31 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.71 2005/09/18 04:07:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,7 +28,7 @@
 
 #include <engine/engine.h>
 #include <config/have_jpeg.h>
-#include <config/have_libqnet.h>
+#include <config/network.h>
 
 #ifdef DEBUG
 
