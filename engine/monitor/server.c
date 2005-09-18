@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.7 2005/05/18 03:16:53 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.8 2005/05/24 08:15:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -30,7 +30,7 @@
 #include <config/have_jpeg.h>
 #include <config/have_libqnet.h>
 
-#if defined(DEBUG) && defined(HAVE_LIBQNET) && defined(THREADS)
+#if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 
 #include <engine/view.h>
 #include <engine/config.h>
@@ -398,4 +398,4 @@ server_window(void)
 	object_attach(win, tl);
 	return (win);
 }
-#endif	/* DEBUG and LIBQNET and THREADS */
+#endif	/* DEBUG and NETWORK and THREADS */

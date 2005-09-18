@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.69 2005/07/16 16:07:31 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.70 2005/09/17 07:35:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@ static const struct tool_ent {
 #if defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Upload screenshot"), screenshot_window },
 #endif
-#if defined(THREADS) && defined(HAVE_LIBQNET)
+#if defined(THREADS) && defined(NETWORK)
 	{ N_("Server mode"), server_window },
 #endif
 	{ N_("Leak detection"), leak_window },
