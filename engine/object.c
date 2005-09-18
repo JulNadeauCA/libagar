@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.233 2005/09/17 07:35:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.234 2005/09/17 15:22:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1834,20 +1834,40 @@ object_copy_digest(const void *ob, size_t *len, char *digest)
 	return (0);
 }
 
+/* Check whether the given object or any of its children has changed. */
+int
+object_changed_all(void *p)
+{
+	struct object *ob = p, *cob;
+
+	if (object_changed(ob) == 1) {
+		dprintf("%s: modified\n", ob->name);
+		return (1);
+	}
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
+		if (object_changed_all(cob) == 1)
+			return (1);
+	}
+	return (0);
+}
+
 /* Check whether the given object has changed since last saved. */
 int
 object_changed(void *p)
 {
 	char save_sha1[SHA1_DIGEST_STRING_LENGTH];
 	char tmp_sha1[SHA1_DIGEST_STRING_LENGTH];
-	struct stat sb;
 	struct object *ob = p;
-	char *pfx_save = ob->save_pfx;
+	char *pfx_save;
 	int rv;
 #ifdef DEBUG
 	extern int objmgr_hexdiff;
 #endif
-	
+
+	if ((ob->flags & OBJECT_NON_PERSISTENT) ||
+	    (ob->flags & OBJECT_DATA_RESIDENT) == 0) {
+		return (0);
+	}
 	if (object_copy_checksum(ob, OBJECT_SHA1, save_sha1) == 0)
 		return (1);
 
