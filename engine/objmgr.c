@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.43 2005/09/17 15:22:23 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.44 2005/09/18 03:54:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -281,10 +281,16 @@ objmgr_open_data(void *p, int new)
 	if ((ob->flags & OBJECT_NON_PERSISTENT) == 0) {
 		if (ob->data_used == 0 &&
 		    object_load_data(ob) == -1) {
-			dprintf("%s: new object\n", ob->name);
-			ob->flags |= OBJECT_DATA_RESIDENT;
+			if (new) {
+				dprintf("%s: new object\n", ob->name);
+				ob->flags |= OBJECT_DATA_RESIDENT;
 
-			if (object_save(ob) == -1) {
+				if (object_save(ob) == -1) {
+					text_msg(MSG_ERROR, "%s: %s", ob->name,
+					    error_get());
+					return;
+				}
+			} else {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 				return;
