@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.67 2005/09/07 03:00:24 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.68 2005/09/07 04:23:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1237,8 +1237,8 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
-	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w,
-	    vg->h, vg->scale);
+	dprintf("%s: bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
+	    vg->scale);
 	vg_scale(vg, vg->w, vg->h, vg->scale);
 
 	/* Read the origin points. */
@@ -1255,19 +1255,16 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		vg->origin_radius[i] = read_float(buf);
 		vg->origin_color[i] = read_color(buf, vg->fmt);
 	}
-	dprintf("%d origin vertices\n", vg->norigin);
 
 	/* Read the layer information. */
 	if ((nlayers = read_uint32(buf)) < 1) {
-		error_set("nlayers < 1");
+		error_set("missing vg layer 0");
 		goto fail;
 	}
 	vg->layers = Realloc(vg->layers, nlayers*sizeof(struct vg_layer));
 	for (i = 0; i < nlayers; i++) {
 		struct vg_layer *layer = &vg->layers[i];
 
-		dprintf("layer %d: name `%s' vis %d\n", i, layer->name,
-		    layer->visible);
 		copy_string(layer->name, buf, sizeof(layer->name));
 		layer->visible = (int)read_uint8(buf);
 		layer->color = read_color(buf, vg->fmt);
@@ -1278,7 +1275,6 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	/* Read the block information. */
 	vg_destroy_blocks(vg);
 	nblocks = read_uint32(buf);
-	dprintf("%u blocks\n", nblocks);
 	for (i = 0; i < nblocks; i++) {
 		struct vg_block *vgb;
 
@@ -1295,7 +1291,6 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	/* Read the global style information. */
 	vg_destroy_styles(vg);
 	nstyles = read_uint32(buf);
-	dprintf("%u styles\n", nstyles);
 	for (i = 0; i < nstyles; i++) {
 		char sname[VG_STYLE_NAME_MAX];
 		enum vg_style_type type;
@@ -1332,17 +1327,16 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	/* Read the vg elements. */
 	vg_destroy_elements(vg);
 	nelements = read_uint32(buf);
-	dprintf("%u elements\n", nelements);
 	for (i = 0; i < nelements; i++) {
+		char block_id[VG_BLOCK_NAME_MAX];
 		enum vg_element_type type;
 		struct vg_element *vge;
 		struct vg_block *block;
-		char *block_id;
 		Uint32 nlayer;
 		int j;
 	
 		type = (enum vg_element_type)read_uint32(buf);
-		block_id = read_string_len(buf, VG_BLOCK_NAME_MAX);
+		copy_string(block_id, buf, sizeof(block_id));
 		nlayer = (int)read_uint32(buf);
 
 		vge = vg_begin_element(vg, type);
@@ -1373,14 +1367,13 @@ vg_load(struct vg *vg, struct netbuf *buf)
 			read_vertex(buf, &vge->vtx[j]);
 
 		/* Associate the element with a block if necessary. */
-		if (block_id != NULL) {
+		if (block_id[0] != '\0') {
 			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
 				if (strcmp(block->name, block_id) == 0)
 					break;
 			}
-			Free(block_id, 0);
 			if (block == NULL) {
-				error_set("unexisting block");
+				error_set("unexisting vg block: %s", block_id);
 				goto fail;
 			}
 		} else {
