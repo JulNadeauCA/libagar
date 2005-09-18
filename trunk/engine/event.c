@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.211 2005/09/17 05:28:22 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.212 2005/09/17 15:22:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -357,7 +357,7 @@ event_dispatch(SDL_Event *ev)
 		{
 			extern int mapedition;
 
-			if (mapedition) {
+			if (mapedition && object_changed_all(world)) {
 				objmgr_exiting = 1;
 				objmgr_quit_dlg(world);
 				break;
