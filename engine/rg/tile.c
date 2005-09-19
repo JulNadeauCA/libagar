@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.82 2005/09/17 04:05:06 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.83 2005/09/19 13:48:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1036,7 +1036,7 @@ import_xcf(int argc, union evarg *argv)
 	}
 
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
-		struct sprite *spr = &SPRITE(&tmpObj,0);
+		struct sprite *spr = &SPRITE(&tmpObj,i);
 
 		px = Malloc(sizeof(struct pixmap), M_RG);
 		pixmap_init(px, tv->ts, 0);
