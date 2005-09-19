@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.130 2005/09/02 07:02:30 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.131 2005/09/19 03:12:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -880,6 +880,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		select_item(tl, ti);
 
 		/* Handle double clicks. */
+		/* XXX compare the args as well as p1 */
 		if (tl->dblclicked != NULL && tl->dblclicked == ti->p1) {
 			event_cancel(tl, "dblclick-expire");
 			event_post(NULL, tl, "tlist-dblclick", "%p", ti->p1);

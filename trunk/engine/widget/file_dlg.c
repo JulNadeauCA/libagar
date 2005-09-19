@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.7 2005/09/19 05:25:23 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.8 2005/09/19 07:26:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -113,14 +113,14 @@ update_listing(struct AGFileDlg *fdg)
 		it = tlist_insert(fdg->tlDirs, ICON(DIRECTORY_ICON),
 		    "%s", dirs[i]);
 		it->class = "dir";
-		it->p1 = dent;
+		it->p1 = (void *)i;
 		Free(dirs[i], M_WIDGET);
 	}
 	for (i = 0; i < nfiles; i++) {
 		it = tlist_insert(fdg->tlFiles, ICON(FILE_ICON),
 		    "%s", files[i]);
 		it->class = "file";
-		it->p1 = dent;
+		it->p1 = (void *)i;
 		Free(files[i], M_WIDGET);
 	}
 	Free(dirs, M_WIDGET);
