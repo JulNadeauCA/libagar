@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.94 2005/05/21 05:53:30 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.95 2005/05/31 01:31:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -67,14 +67,15 @@ struct widget {
 
 	char	 type[WIDGET_TYPE_MAX];
 	int	 flags;
-#define WIDGET_FOCUSABLE	  0x01	/* Can grab focus */
-#define WIDGET_FOCUSED		  0x02	/* Holds focus (optimization) */
-#define WIDGET_UNFOCUSED_MOTION	  0x04	/* Unfocused mousemotion events */
-#define WIDGET_UNFOCUSED_BUTTONUP 0x08	/* Unfocused mousebuttonup events */
-#define WIDGET_CLIPPING		  0x10	/* Enable clipping */
-#define WIDGET_WFILL		  0x20	/* Expand to fill available width */
-#define WIDGET_HFILL		  0x40	/* Expand to fill available height */
-#define WIDGET_EXCEDENT		  0x80	/* Used internally for scale */
+#define WIDGET_FOCUSABLE	    0x001 /* Can grab focus */
+#define WIDGET_FOCUSED		    0x002 /* Holds focus (optimization) */
+#define WIDGET_UNFOCUSED_MOTION	    0x004 /* Unfocused mousemotion events */
+#define WIDGET_UNFOCUSED_BUTTONUP   0x008 /* Unfocused mousebuttonup events */
+#define WIDGET_UNFOCUSED_BUTTONDOWN 0x010 /* Unfocused mousebuttondown events */
+#define WIDGET_CLIPPING		    0x020 /* Automatic clipping */
+#define WIDGET_WFILL		    0x040 /* Expand to fill available width */
+#define WIDGET_HFILL		    0x080 /* Expand to fill available height */
+#define WIDGET_EXCEDENT		    0x100 /* Used internally for scaling */
 
 	int	 cx, cy;		/* Coordinates in view (upper left) */
 	int	 cx2, cy2;		/* Coordinates in view (lower right) */

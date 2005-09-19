@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.90 2005/04/04 01:05:42 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.91 2005/06/16 15:58:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -76,8 +76,6 @@ struct window	*window_new(int, const char *, ...)
 		    FORMAT_ATTRIBUTE(printf, 2, 3);
 
 void	 window_init(void *, const char *, int);
-int	 window_load(void *, struct netbuf *);
-int	 window_save(void *, struct netbuf *);
 void	 window_destroy(void *);
 void	 window_draw(void *);
 void	 window_scale(void *, int, int);
