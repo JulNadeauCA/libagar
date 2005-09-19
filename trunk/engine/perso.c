@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.53 2005/08/15 03:52:35 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.54 2005/08/27 04:39:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -225,7 +225,7 @@ perso_save(void *obj, struct netbuf *buf)
 	return (0);
 }
 
-struct window *
+void *
 perso_edit(void *obj)
 {
 	struct perso *ps = obj;

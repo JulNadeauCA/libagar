@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.234 2005/09/17 15:22:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.235 2005/09/18 03:38:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2099,7 +2099,7 @@ refresh_rcs_status(int argc, union evarg *argv)
 
 #endif /* NETWORK */
 
-struct window *
+void *
 object_edit(void *p)
 {
 	struct object *ob = p;

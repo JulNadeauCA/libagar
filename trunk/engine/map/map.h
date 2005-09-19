@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.17 2005/09/17 08:06:42 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.18 2005/09/17 13:40:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -193,10 +193,7 @@ void		 map_reinit(void *);
 int		 map_load(void *, struct netbuf *);
 int		 map_save(void *, struct netbuf *);
 void		 map_destroy(void *);
-
-#ifdef EDITION
-struct window	*map_edit(void *);
-#endif
+void		*map_edit(void *);
 
 int	 map_alloc_nodes(struct map *, u_int, u_int);
 void	 map_free_nodes(struct map *);

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.59 2005/09/07 02:28:15 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.60 2005/09/17 05:45:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1481,7 +1481,7 @@ select_template(int argc, union evarg *argv)
 	}
 }
 
-struct window *
+void *
 tileset_edit(void *p)
 {
 	struct tileset *ts = p;

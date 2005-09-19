@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.11 2005/08/22 02:10:39 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.12 2005/09/07 02:28:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -44,13 +44,13 @@ struct tileset {
 #define TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
 
 __BEGIN_DECLS
-struct tileset	 *tileset_new(void *, const char *);
-void		  tileset_init(void *, const char *);
-void		  tileset_reinit(void *);
-void		  tileset_destroy(void *);
-int		  tileset_load(void *, struct netbuf *);
-int		  tileset_save(void *, struct netbuf *);
-struct window	 *tileset_edit(void *);
+struct tileset	*tileset_new(void *, const char *);
+void		 tileset_init(void *, const char *);
+void		 tileset_reinit(void *);
+void		 tileset_destroy(void *);
+int		 tileset_load(void *, struct netbuf *);
+int		 tileset_save(void *, struct netbuf *);
+void		*tileset_edit(void *);
 
 __inline__ int tileset_insert_sprite(struct tileset *, SDL_Surface *);
 
