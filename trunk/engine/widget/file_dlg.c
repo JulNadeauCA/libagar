@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.4 2005/05/24 08:15:11 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.5 2005/09/19 02:36:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -62,6 +62,15 @@ file_dlg_new(void *parent, int flags, const char *cwd, const char *file)
 	return (fdg);
 }
 
+static int
+compare_filenames(const void *p1, const void *p2)
+{
+	const struct dirent *d1 = *(const void **)p1;
+	const struct dirent *d2 = *(const void **)p2;
+
+	return (strcoll(d1->d_name, d2->d_name));
+}
+
 static void
 update_listing(struct AGFileDlg *fdg)
 {
@@ -69,37 +78,59 @@ update_listing(struct AGFileDlg *fdg)
 	struct dirent *dent;
 	struct stat sb;
 	DIR *dir;
+	struct dirent **dirs, **files;
+	size_t i, ndirs = 0, nfiles = 0;
 
 	if ((dir = opendir(".")) == NULL) {
 		text_msg(MSG_ERROR, ".: %s", strerror(errno));
 		return;
 	}
 	
+	dirs = Malloc(sizeof(struct dirent *), M_WIDGET);
+	files = Malloc(sizeof(struct dirent *), M_WIDGET);
+	
 	pthread_mutex_lock(&fdg->tl_dirs->lock);
 	pthread_mutex_lock(&fdg->tl_files->lock);
-	tlist_clear_items(fdg->tl_dirs);
-	tlist_clear_items(fdg->tl_files);
+
 	while ((dent = readdir(dir)) != NULL) {
 		stat(dent->d_name, &sb);
-
 		if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
-			it = tlist_insert(fdg->tl_dirs, NULL, "%s",
-			    dent->d_name);
-			it->class = "dir";
-			it->p1 = dent;
+			dirs = Realloc(dirs, (ndirs + 1) *
+			                     sizeof(struct dirent *));
+			dirs[ndirs++] = dent;
 		} else {
-			it = tlist_insert(fdg->tl_files, NULL, "%s",
-			    dent->d_name);
-			it->class = "file";
-			it->p1 = dent;
+			files = Realloc(files, (nfiles + 1) *
+					       sizeof(struct dirent *));
+			files[nfiles++] = dent;
 		}
+	}
+	qsort(&dirs[0], ndirs, sizeof(struct dirent *), compare_filenames);
+	qsort(&files[0], nfiles, sizeof(struct dirent *), compare_filenames);
+
+	tlist_clear_items(fdg->tl_dirs);
+	tlist_clear_items(fdg->tl_files);
+	for (i = 0; i < ndirs; i++) {
+		struct dirent *dent = dirs[i];
+
+		it = tlist_insert(fdg->tl_dirs, NULL, "%s", dent->d_name);
+		it->class = "dir";
+		it->p1 = dent;
+	}
+	for (i = 0; i < nfiles; i++) {
+		struct dirent *dent = files[i];
+
+		it = tlist_insert(fdg->tl_files, NULL, "%s", dent->d_name);
+		it->class = "file";
+		it->p1 = dent;
 	}
 	tlist_restore_selections(fdg->tl_dirs);
 	tlist_restore_selections(fdg->tl_files);
+
 	pthread_mutex_unlock(&fdg->tl_files->lock);
 	pthread_mutex_unlock(&fdg->tl_dirs->lock);
-	
 	closedir(dir);
+	Free(dirs, M_WIDGET);
+	Free(files, M_WIDGET);
 }
 
 static void
@@ -200,6 +231,7 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 
 	fdg->tl_dirs = tlist_new(fdg, 0);
 	fdg->tl_files = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
+
 	fdg->tb_file = textbox_new(fdg, _("File: "));
 	if (file != NULL)
 		textbox_printf(fdg->tb_file, "%s", file);
@@ -271,15 +303,15 @@ file_dlg_scale(void *p, int w, int h)
 	WIDGET(fdg->tl_files)->y = 0;
 
 	WIDGET(fdg->tb_file)->x = 0;
-	WIDGET(fdg->tb_file)->y = WIDGET(fdg->tl_files)->h;
+	WIDGET(fdg->tb_file)->y = WIDGET(fdg->tl_files)->h+2;
 	
 	WIDGET(fdg->btn_ok)->x = 0;
 	WIDGET(fdg->btn_ok)->y = WIDGET(fdg->tl_dirs)->h +
-				 WIDGET(fdg->tb_file)->h;
+				 WIDGET(fdg->tb_file)->h+4;
 
 	WIDGET(fdg->btn_cancel)->x = w/2;
 	WIDGET(fdg->btn_cancel)->y = WIDGET(fdg->tl_files)->h +
-			 	     WIDGET(fdg->tb_file)->h;
+			 	     WIDGET(fdg->tb_file)->h+4;
 	
 	WIDGET(fdg)->w = w;
 	WIDGET(fdg)->h = h;
