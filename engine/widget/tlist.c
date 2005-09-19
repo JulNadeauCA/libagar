@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.129 2005/08/29 03:13:41 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.130 2005/09/02 07:02:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -64,6 +64,7 @@ static void select_item(struct tlist *, struct tlist_item *);
 static void unselect_item(struct tlist *, struct tlist_item *);
 static void show_popup(struct tlist *, struct tlist_popup *);
 static void set_icon(struct tlist *, struct tlist_item *, SDL_Surface *);
+static void update_scrollbar(struct tlist *);
 
 struct tlist *
 tlist_new(void *parent, int flags)
@@ -256,6 +257,8 @@ tlist_scale(void *p, int w, int h)
 	widget_scale(tl->sbar,
 	    tl->sbar->button_size,
 	    WIDGET(tl)->h);
+	
+	update_scrollbar(tl);
 }
 
 void
@@ -347,8 +350,8 @@ tlist_draw(void *p)
 }
 
 /* Adjust the scrollbar offset according to the number of visible items. */
-static __inline__ void
-tlist_adjust_scrollbar(struct tlist *tl)
+static void
+update_scrollbar(struct tlist *tl)
 {
 	struct widget_binding *maxb, *offsetb;
 	int *max, *offset;
@@ -513,7 +516,7 @@ tlist_restore_selections(struct tlist *tl)
 	}
 	TAILQ_INIT(&tl->selitems);
 
-	tlist_adjust_scrollbar(tl);
+	update_scrollbar(tl);
 }
 
 /*
@@ -963,7 +966,7 @@ tlist_scrolled(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 
-	tlist_adjust_scrollbar(tl);
+	update_scrollbar(tl);
 }
 
 /*
