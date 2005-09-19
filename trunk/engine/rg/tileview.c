@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.51 2005/07/29 06:25:07 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.52 2005/09/15 17:21:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1595,12 +1595,19 @@ tileview_draw(void *p)
 		/* Multiple tileviews may be rendering the same sketch. */
 		sk->vg->redraw = nredraw;
 	}
-	if (t->flags & TILE_DIRTY || tv->flags & TILEVIEW_READONLY) {
-		t->flags &= ~TILE_DIRTY;
+	if (tv->flags & TILEVIEW_READONLY) {
 		tile_generate(t);
 		view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,
 		    &tv->scaled);
 		widget_update_surface(tv, 0);
+	} else {
+		if (t->flags & TILE_DIRTY) {
+			t->flags &= ~TILE_DIRTY;
+			tile_generate(t);
+			view_scale_surface(t->su, tv->scaled->w, tv->scaled->h,
+			    &tv->scaled);
+			widget_update_surface(tv, 0);
+		}
 	}
 	rtiling.x = 0;
 	rtiling.y = 0;
