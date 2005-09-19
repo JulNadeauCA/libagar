@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.83 2005/09/19 13:48:21 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.84 2005/09/19 14:03:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1015,13 +1015,12 @@ import_xcf(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct tlist *tl_feats = argv[2].p;
-	char *path = argv[3].s;
-	struct pixmap *px;
-	u_int pixno = 0;
-	struct pixmap *opx;
-	SDL_Surface *xcf;
+	int into_pixmaps = argv[3].i;
+	char *path = argv[4].s;
+	struct tileset *ts = tv->ts;
 	struct netbuf *buf;
 	struct object tmpObj;
+	u_int pixno = 0;
 	u_int i;
 
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
@@ -1037,23 +1036,64 @@ import_xcf(int argc, union evarg *argv)
 
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
 		struct sprite *spr = &SPRITE(&tmpObj,i);
+		struct pixmap *px, *opx;
+		struct tile *t, *ot;
 
-		px = Malloc(sizeof(struct pixmap), M_RG);
-		pixmap_init(px, tv->ts, 0);
-tryname:
-		snprintf(px->name, sizeof(px->name), "%s #%u",
-		    (spr->name[0] != '\0') ? spr->name : "pixmap", pixno);
-		TAILQ_FOREACH(opx, &tv->ts->pixmaps, pixmaps) {
-			if (strcmp(opx->name, px->name) == 0)
-				break;
+		if (into_pixmaps) {
+			px = Malloc(sizeof(struct pixmap), M_RG);
+			pixmap_init(px, ts, 0);
+tryname1:
+			snprintf(px->name, sizeof(px->name), "%s (%u)",
+			    (spr->name[0] != '\0') ? spr->name : "Pixmap",
+			    pixno);
+			TAILQ_FOREACH(opx, &ts->pixmaps, pixmaps) {
+				if (strcmp(opx->name, px->name) == 0)
+					break;
+			}
+			if (opx != NULL) {
+				pixno++;
+				goto tryname1;
+			}
+			px->su = SDL_ConvertSurface(spr->su, ts->fmt, 0);
+			TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
+			tile_add_pixmap(tv->tile, NULL, px, 0, 0);
+		} else {
+			t = Malloc(sizeof(struct tile), M_RG);
+			tile_init(t, ts, "");
+tryname2:
+			snprintf(t->name, sizeof(t->name), "%s (%u)",
+			    (spr->name[0] != '\0') ? spr->name : "Tile",
+			    pixno);
+			TAILQ_FOREACH(ot, &ts->tiles, tiles) {
+				if (strcmp(ot->name, t->name) == 0)
+					break;
+			}
+			if (ot != NULL) {
+				pixno++;
+				goto tryname2;
+			}
+			px = Malloc(sizeof(struct pixmap), M_RG);
+			pixmap_init(px, ts, 0);
+tryname3:
+			snprintf(px->name, sizeof(px->name), "%s (%u)",
+			    (spr->name[0] != '\0') ? spr->name : "Pixmap",
+			    pixno);
+			TAILQ_FOREACH(opx, &ts->pixmaps, pixmaps) {
+				if (strcmp(opx->name, px->name) == 0)
+					break;
+			}
+			if (opx != NULL) {
+				pixno++;
+				goto tryname1;
+			}
+			px->su = SDL_ConvertSurface(spr->su, ts->fmt, 0);
+			tile_add_pixmap(t, NULL, px, 0, 0);
+			tile_scale(ts, t, px->su->w, px->su->h,
+			    TILE_SRCALPHA|TILE_SRCCOLORKEY, 255);
+			tile_generate(t);
+			TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
+			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 		}
-		if (opx != NULL) {
-			pixno++;
-			goto tryname;
-		}
-		px->su = SDL_ConvertSurface(spr->su, tv->ts->fmt, 0);
-		TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
-		tile_add_pixmap(tv->tile, NULL, px, 0, 0);
 	}
 
 	netbuf_close(buf);
@@ -1070,7 +1110,8 @@ import_bmp(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct tlist *tl_feats = argv[2].p;
-	char *path = argv[3].s;
+	int into_pixmaps = argv[3].i;
+	char *path = argv[4].s;
 	struct pixmap *px;
 	u_int pixno = 0;
 	struct pixmap *opx;
@@ -1103,11 +1144,12 @@ tryname:
 }
 
 static void
-import_image_dlg(int argc, union evarg *argv)
+import_images(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
 	struct tlist *tl_feats = argv[3].p;
+	int into_pixmaps = argv[4].i;
 	struct tile *t = tv->tile;
 	struct AGFileDlg *dlg;
 	struct window *win;
@@ -1115,10 +1157,10 @@ import_image_dlg(int argc, union evarg *argv)
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Import %s from..."), t->name);
 	dlg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), NULL);
-	file_dlg_type(dlg, _("Gimp XCF"), "*.xcf", import_xcf, "%p,%p", tv,
-	    tl_feats);
-	file_dlg_type(dlg, _("PC bitmap"), "*.bmp", import_bmp, "%p,%p", tv,
-	    tl_feats);
+	file_dlg_type(dlg, _("Gimp XCF"), "*.xcf", import_xcf, "%p,%p,%i", tv,
+	    tl_feats, into_pixmaps);
+	file_dlg_type(dlg, _("PC bitmap"), "*.bmp", import_bmp, "%p,%p,%i", tv,
+	    tl_feats, into_pixmaps);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -2069,6 +2111,14 @@ tile_edit(struct tileset *ts, struct tile *t)
 		objmgr_generic_menu(mi, ts);
 		
 		menu_separator(mi);
+		
+		menu_tool(mi, tbar, _("Import images into pixmaps..."),
+		    RG_PIXMAP_ICON, 0, 0,
+		    import_images, "%p,%p,%p,%i", tv, win, tl_feats, 1);
+		
+		menu_tool(mi, tbar, _("Import images into tiles..."),
+		    RG_PIXMAP_ICON, 0, 0,
+		    import_images, "%p,%p,%p,%i", tv, win, tl_feats, 0);
 	
 		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
 		    export_image_dlg, "%p,%p", win, tv);
@@ -2131,12 +2181,6 @@ tile_edit(struct tileset *ts, struct tile *t)
 		menu_action(mi, _("Attach existing pixmap..."),
 		    RG_PIXMAP_ATTACH_ICON,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
-		
-		menu_separator(mi);
-
-		menu_tool(mi, tbar, _("Import from image file..."),
-		    RG_PIXMAP_ICON, 0, 0,
-		    import_image_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 	
 	mi = menu_add_item(me, _("Sketches"));
