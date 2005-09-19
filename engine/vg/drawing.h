@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.h,v 1.3 2004/05/13 02:50:29 vedge Exp $	*/
+/*	$Csoft: drawing.h,v 1.1 2004/11/24 05:34:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_DRAWING_H_
@@ -14,12 +14,12 @@ struct drawing {
 };
 
 __BEGIN_DECLS
-void		 drawing_init(void *, const char *);
-void		 drawing_reinit(void *);
-void		 drawing_destroy(void *);
-struct window	*drawing_edit(void *);
-int		 drawing_load(void *, struct netbuf *);
-int		 drawing_save(void *, struct netbuf *);
+void	 drawing_init(void *, const char *);
+void	 drawing_reinit(void *);
+void	 drawing_destroy(void *);
+void	*drawing_edit(void *);
+int	 drawing_load(void *, struct netbuf *);
+int	 drawing_save(void *, struct netbuf *);
 __END_DECLS
 
 #include "close_code.h"

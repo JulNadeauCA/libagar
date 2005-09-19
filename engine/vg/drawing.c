@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.10 2005/06/17 08:37:52 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.11 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -178,7 +178,7 @@ rasterize_drawing(struct mapview *mv, void *p)
 	vg_rasterize(vg);
 }
 
-struct window *
+void *
 drawing_edit(void *obj)
 {
 	extern const struct tool_ops vg_scale_tool;

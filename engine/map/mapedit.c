@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.3 2005/07/30 01:43:13 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.4 2005/08/04 13:29:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -146,7 +146,7 @@ mapedit_load(struct netbuf *buf)
 	mapedit_def_brsh = (int)read_uint16(buf);
 }
 
-struct window *
+void *
 mapedit_settings(void *p)
 {
 	struct window *win;

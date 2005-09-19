@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.51 2005/09/17 08:06:42 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.52 2005/09/17 13:40:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -79,6 +79,8 @@ const struct object_ops map_ops = {
 	map_save,
 #ifdef EDITION
 	map_edit
+#else
+	NULL
 #endif
 };
 
@@ -2787,7 +2789,7 @@ control_gobject(int argc, union evarg *argv)
 	}
 }
 
-struct window *
+void *
 map_edit(void *p)
 {
 	struct map *m = p;

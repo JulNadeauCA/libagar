@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.79 2005/08/15 02:27:25 vedge Exp $
+.\"	$Csoft: object.3,v 1.80 2005/09/17 15:22:23 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -127,7 +127,7 @@ struct object_ops {
 	void (*destroy)(void *obj);			/* Release */
 	int  (*load)(void *obj, struct netbuf *buf);	/* Load data */
 	int  (*save)(void *obj, struct netbuf *buf);	/* Save data */
-	struct window *(*edit)(void *obj);		/* Edit data */
+	void *(*edit)(void *obj);			/* Edit data */
 };
 .Ed
 .Pp
@@ -175,10 +175,15 @@ object data (for example, the
 .Xr map 3
 object creates a
 .Xr mapview 3
-widget in edit mode), and returning it.
+widget in edit mode).
 If other windows are to be created as part of this object's edition process,
 they should be attached to the main edition window using
 .Xr window_attach 3 .
+The
+.Fn edit
+operation can also return other types of widgets, such as a
+.Xr box 3
+container.
 .Pp
 The following public
 .Nm

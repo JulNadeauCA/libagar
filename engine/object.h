@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.132 2005/09/17 15:22:23 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.133 2005/09/18 03:38:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -27,7 +27,7 @@ struct object_ops {
 	void	(*destroy)(void *);			/* Free resources */
 	int	(*load)(void *, struct netbuf *);	/* Load from network */
 	int	(*save)(void *, struct netbuf *);	/* Save to network */
-	struct window *(*edit)(void *);			/* Edit object */
+	void   *(*edit)(void *);			/* Edit object */
 };
 
 /* Dependency with respect to another object. */
@@ -201,7 +201,7 @@ void			  object_del_dep(void *, const void *);
 Uint32			  object_encode_name(const void *, const void *);
 
 #ifdef EDITION
-struct window	*object_edit(void *);
+void	*object_edit(void *);
 #endif
 __END_DECLS
 
