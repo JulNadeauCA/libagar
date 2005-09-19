@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.52 2005/09/17 13:40:33 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.53 2005/09/19 01:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2224,7 +2224,7 @@ edit_properties(int argc, union evarg *argv)
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
-		event_new(msb, "mspinbutton-changed", resize_map, "%p,%p",
+		event_new(msb, "mspinbutton-return", resize_map, "%p,%p",
 		    m, mv);
 		
 		msb = mspinbutton_new(ntab, ",", _("Origin position: "));
