@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.5 2005/09/19 02:36:02 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.6 2005/09/19 03:04:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -89,8 +89,8 @@ update_listing(struct AGFileDlg *fdg)
 	dirs = Malloc(sizeof(struct dirent *), M_WIDGET);
 	files = Malloc(sizeof(struct dirent *), M_WIDGET);
 	
-	pthread_mutex_lock(&fdg->tl_dirs->lock);
-	pthread_mutex_lock(&fdg->tl_files->lock);
+	pthread_mutex_lock(&fdg->tlDirs->lock);
+	pthread_mutex_lock(&fdg->tlFiles->lock);
 
 	while ((dent = readdir(dir)) != NULL) {
 		stat(dent->d_name, &sb);
@@ -107,27 +107,27 @@ update_listing(struct AGFileDlg *fdg)
 	qsort(&dirs[0], ndirs, sizeof(struct dirent *), compare_filenames);
 	qsort(&files[0], nfiles, sizeof(struct dirent *), compare_filenames);
 
-	tlist_clear_items(fdg->tl_dirs);
-	tlist_clear_items(fdg->tl_files);
+	tlist_clear_items(fdg->tlDirs);
+	tlist_clear_items(fdg->tlFiles);
 	for (i = 0; i < ndirs; i++) {
 		struct dirent *dent = dirs[i];
 
-		it = tlist_insert(fdg->tl_dirs, NULL, "%s", dent->d_name);
+		it = tlist_insert(fdg->tlDirs, NULL, "%s", dent->d_name);
 		it->class = "dir";
 		it->p1 = dent;
 	}
 	for (i = 0; i < nfiles; i++) {
 		struct dirent *dent = files[i];
 
-		it = tlist_insert(fdg->tl_files, NULL, "%s", dent->d_name);
+		it = tlist_insert(fdg->tlFiles, NULL, "%s", dent->d_name);
 		it->class = "file";
 		it->p1 = dent;
 	}
-	tlist_restore_selections(fdg->tl_dirs);
-	tlist_restore_selections(fdg->tl_files);
+	tlist_restore_selections(fdg->tlDirs);
+	tlist_restore_selections(fdg->tlFiles);
 
-	pthread_mutex_unlock(&fdg->tl_files->lock);
-	pthread_mutex_unlock(&fdg->tl_dirs->lock);
+	pthread_mutex_unlock(&fdg->tlFiles->lock);
+	pthread_mutex_unlock(&fdg->tlDirs->lock);
 	closedir(dir);
 	Free(dirs, M_WIDGET);
 	Free(files, M_WIDGET);
@@ -154,6 +154,23 @@ select_dir(int argc, union evarg *argv)
 }
 
 static void
+process_file(struct AGFileDlg *fdg, const char *file)
+{
+	struct window *pwin = widget_parent_window(fdg);
+	struct tlist_item *it;
+
+	if ((fdg->flags & FILEDLG_NOCLOSE) == 0)
+		view_detach(pwin);
+
+	if ((it = tlist_selected_item(fdg->comTypes->list)) != NULL) {
+		struct AGFileType *ft = it->p1;
+
+		if (ft->action != NULL)
+			event_post(NULL, fdg, ft->action->name, "%s", file);
+	}
+}
+
+static void
 select_file(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -162,7 +179,7 @@ select_file(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&tl->lock);
 	if ((ti = tlist_selected_item(tl)) != NULL) {
-		textbox_printf(fdg->tb_file, "%s", ti->text);
+		textbox_printf(fdg->tbFile, "%s", ti->text);
 		event_post(NULL, fdg, "file-selected", "%s/%s",
 		    fdg->cwd, ti->text);
 	}
@@ -178,8 +195,9 @@ select_and_validate_file(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&tl->lock);
 	if ((ti = tlist_selected_item(tl)) != NULL) {
-		textbox_printf(fdg->tb_file, "%s", ti->text);
+		textbox_printf(fdg->tbFile, "%s", ti->text);
 		event_post(NULL, fdg, "file-validated", "%s", ti->text);
+		process_file(fdg, ti->text);
 	}
 	pthread_mutex_unlock(&tl->lock);
 }
@@ -189,17 +207,21 @@ validate_file(int argc, union evarg *argv)
 {
 	char file[MAXPATHLEN];
 	struct AGFileDlg *fdg = argv[1].p;
+	struct AGFileType *ft;
 
-	textbox_copy_string(fdg->tb_file, file, sizeof(file));
+	textbox_copy_string(fdg->tbFile, file, sizeof(file));
 	event_post(NULL, fdg, "file-validated", "%s", file);
+	process_file(fdg, file);
 }
 
 static void
 do_cancel(int argc, union evarg *argv)
 {
 	struct AGFileDlg *fdg = argv[1].p;
-
-	event_post(NULL, fdg, "file-cancelled", NULL);
+	struct window *pwin = widget_parent_window(fdg);
+	
+	if ((fdg->flags & FILEDLG_NOCLOSE) == 0)
+		view_detach(pwin);
 }
 
 static void
@@ -208,7 +230,7 @@ file_dlg_shown(int argc, union evarg *argv)
 	struct AGFileDlg *fdg = argv[0].p;
 
 	widget_scale(fdg, WIDGET(fdg)->w, WIDGET(fdg)->h);
-	widget_focus(fdg->tb_file);
+	widget_focus(fdg->tbFile);
 	update_listing(fdg);
 }
 
@@ -217,9 +239,7 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
     const char *file)
 {
 	widget_init(fdg, "file-dlg", &file_dlg_ops, WIDGET_WFILL|WIDGET_HFILL);
-	    
 	fdg->flags = flags;
-
 	if (cwd != NULL) {
 		strlcpy(fdg->cwd, cwd, sizeof(fdg->cwd));
 	} else {
@@ -228,36 +248,49 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 			fdg->cwd[1] = '\0';
 		}
 	}
+	TAILQ_INIT(&fdg->types);
 
-	fdg->tl_dirs = tlist_new(fdg, 0);
-	fdg->tl_files = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
+	fdg->tlDirs = tlist_new(fdg, 0);
+	fdg->tlFiles = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
+	fdg->tbFile = textbox_new(fdg, _("File: "));
+	if (file != NULL) {
+		textbox_printf(fdg->tbFile, "%s", file);
+	}
+	fdg->comTypes = combo_new(fdg, 0, _("Type: "));
+	tlist_prescale(fdg->tlDirs, "XXXXXXXXXXXXXX", 8);
+	tlist_prescale(fdg->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 
-	fdg->tb_file = textbox_new(fdg, _("File: "));
-	if (file != NULL)
-		textbox_printf(fdg->tb_file, "%s", file);
-
-	tlist_prescale(fdg->tl_dirs, "XXXXXXXXXXXXXX", 8);
-	tlist_prescale(fdg->tl_files, "XXXXXXXXXXXXXXXXXX", 8);
-
-	fdg->btn_ok = button_new(fdg, _("OK"));
-	fdg->btn_cancel = button_new(fdg, _("Cancel"));
+	fdg->btnOk = button_new(fdg, _("OK"));
+	fdg->btnCancel = button_new(fdg, _("Cancel"));
 
 	event_new(fdg, "widget-shown", file_dlg_shown, NULL);
-	event_new(fdg->tl_dirs, "tlist-dblclick", select_dir, "%p", fdg);
-	event_new(fdg->tl_files, "tlist-selected", select_file, "%p", fdg);
-	event_new(fdg->tl_files, "tlist-dblclick", select_and_validate_file,
+	event_new(fdg->tlDirs, "tlist-dblclick", select_dir, "%p", fdg);
+	event_new(fdg->tlFiles, "tlist-selected", select_file, "%p", fdg);
+	event_new(fdg->tlFiles, "tlist-dblclick", select_and_validate_file,
 	    "%p", fdg);
 
-	event_new(fdg->tb_file, "textbox-return", validate_file, "%p", fdg);
-	event_new(fdg->btn_ok, "button-pushed", validate_file, "%p", fdg);
-	event_new(fdg->btn_cancel, "button-pushed", do_cancel, "%p", fdg);
+	event_new(fdg->tbFile, "textbox-return", validate_file, "%p", fdg);
+	event_new(fdg->btnOk, "button-pushed", validate_file, "%p", fdg);
+	event_new(fdg->btnCancel, "button-pushed", do_cancel, "%p", fdg);
 }
 
 void
 file_dlg_destroy(void *p)
 {
 	struct AGFileDlg *fdg = p;
+	struct AGFileType *ft, *ft2;
+	u_int i;
 
+	for (ft = TAILQ_FIRST(&fdg->types);
+	     ft != TAILQ_END(&fdg->types);
+	     ft = ft2) {
+		ft2 = TAILQ_NEXT(ft, types);
+		for (i = 0; i < ft->nexts; i++) {
+			Free(ft->exts[i], M_WIDGET);
+		}
+		Free(ft->exts, M_WIDGET);
+		Free(ft, M_WIDGET);
+	}
 	widget_destroy(fdg);
 }
 
@@ -265,56 +298,100 @@ void
 file_dlg_scale(void *p, int w, int h)
 {
 	struct AGFileDlg *fdg = p;
-	int btn_h;
+	int btn_h, y = 0;
 	
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(fdg->tl_dirs, -1, -1);
-		WIDGET_SCALE(fdg->tl_files, -1, -1);
-		WIDGET_SCALE(fdg->tb_file, -1, -1);
-		WIDGET_SCALE(fdg->btn_ok, -1, -1);
-		WIDGET_SCALE(fdg->btn_cancel, -1, -1);
+		WIDGET_SCALE(fdg->tlDirs, -1, -1);
+		WIDGET_SCALE(fdg->tlFiles, -1, -1);
+		WIDGET_SCALE(fdg->tbFile, -1, -1);
+		WIDGET_SCALE(fdg->comTypes, -1, -1);
+		WIDGET_SCALE(fdg->btnOk, -1, -1);
+		WIDGET_SCALE(fdg->btnCancel, -1, -1);
 	
-		WIDGET(fdg)->w = WIDGET(fdg->tl_dirs)->w +
-		                 WIDGET(fdg->tl_files)->w;
-		WIDGET(fdg)->h = MAX(WIDGET(fdg->tl_dirs)->h,
-				     WIDGET(fdg->tl_files)->h) +
-				 WIDGET(fdg->tb_file)->h +
-				 MAX(WIDGET(fdg->btn_ok)->h,
-				     WIDGET(fdg->btn_cancel)->h);
+		WIDGET(fdg)->w = WIDGET(fdg->tlDirs)->w +
+		                 WIDGET(fdg->tlFiles)->w;
+		WIDGET(fdg)->h = MAX(WIDGET(fdg->tlDirs)->h,
+				     WIDGET(fdg->tlFiles)->h)+1 +
+				 WIDGET(fdg->tbFile)->h+1 +
+				 WIDGET(fdg->comTypes)->h+1 +
+				 MAX(WIDGET(fdg->btnOk)->h,
+				     WIDGET(fdg->btnCancel)->h)+2;
 		return;
 	}
 
-	btn_h = MAX(WIDGET(fdg->btn_ok)->h, WIDGET(fdg->btn_cancel)->h);
+	btn_h = MAX(WIDGET(fdg->btnOk)->h, WIDGET(fdg->btnCancel)->h);
 
-	widget_scale(fdg->tl_dirs,
-	    WIDGET(fdg->tl_dirs)->w,
-	    h - WIDGET(fdg->tb_file)->h - btn_h);
-	widget_scale(fdg->tl_files,
-	    w - WIDGET(fdg->tl_dirs)->w,
-	    h - WIDGET(fdg->tb_file)->h - btn_h);
+	widget_scale(fdg->tlDirs,
+	    WIDGET(fdg->tlDirs)->w,
+	    h - WIDGET(fdg->tbFile)->h - WIDGET(fdg->comTypes)->h - btn_h);
+	widget_scale(fdg->tlFiles,
+	    w - WIDGET(fdg->tlDirs)->w,
+	    h - WIDGET(fdg->tbFile)->h - WIDGET(fdg->comTypes)->h - btn_h);
 	    
-	widget_scale(fdg->tb_file, w, WIDGET(fdg->tb_file)->h);
-	widget_scale(fdg->btn_ok, w/2, WIDGET(fdg->tb_file)->h);
-	widget_scale(fdg->btn_cancel, w/2, WIDGET(fdg->tb_file)->h);
+	widget_scale(fdg->tbFile, w, WIDGET(fdg->tbFile)->h);
+	widget_scale(fdg->comTypes, w, WIDGET(fdg->comTypes)->h);
+	widget_scale(fdg->btnOk, w/2, WIDGET(fdg->tbFile)->h);
+	widget_scale(fdg->btnCancel, w/2, WIDGET(fdg->tbFile)->h);
 	
-	WIDGET(fdg->tl_dirs)->x = 0;
-	WIDGET(fdg->tl_dirs)->y = 0;
-	WIDGET(fdg->tl_files)->x = WIDGET(fdg->tl_dirs)->w;
-	WIDGET(fdg->tl_files)->y = 0;
+	WIDGET(fdg->tlDirs)->x = 0;
+	WIDGET(fdg->tlDirs)->y = 0;
+	WIDGET(fdg->tlFiles)->x = WIDGET(fdg->tlDirs)->w;
+	WIDGET(fdg->tlFiles)->y = 0;
+	y += WIDGET(fdg->tlFiles)->h + 1;
 
-	WIDGET(fdg->tb_file)->x = 0;
-	WIDGET(fdg->tb_file)->y = WIDGET(fdg->tl_files)->h+2;
+	WIDGET(fdg->tbFile)->x = 0;
+	WIDGET(fdg->tbFile)->y = y;
+	y += WIDGET(fdg->tbFile)->h + 1;
+
+	WIDGET(fdg->comTypes)->x = 0;
+	WIDGET(fdg->comTypes)->y = y;
+	y += WIDGET(fdg->comTypes)->h + 1;
 	
-	WIDGET(fdg->btn_ok)->x = 0;
-	WIDGET(fdg->btn_ok)->y = WIDGET(fdg->tl_dirs)->h +
-				 WIDGET(fdg->tb_file)->h+4;
+	WIDGET(fdg->btnOk)->x = 0;
+	WIDGET(fdg->btnOk)->y = y;
 
-	WIDGET(fdg->btn_cancel)->x = w/2;
-	WIDGET(fdg->btn_cancel)->y = WIDGET(fdg->tl_files)->h +
-			 	     WIDGET(fdg->tb_file)->h+4;
+	WIDGET(fdg->btnCancel)->x = w/2;
+	WIDGET(fdg->btnCancel)->y = y;
 	
 	WIDGET(fdg)->w = w;
 	WIDGET(fdg)->h = h;
 }
 
+struct AGFileType *
+file_dlg_type(struct AGFileDlg *fdg, const char *descr, const char *exts,
+    void (*fn)(int, union evarg *), const char *fmt, ...)
+{
+	struct AGFileType *ft;
+	char *dexts, *ds, *ext;
+	va_list ap;
+	struct tlist_item *it;
 
+	ft = Malloc(sizeof(struct AGFileType), M_WIDGET);
+	ft->descr = descr;
+	ft->exts = Malloc(sizeof(char *), M_WIDGET);
+	ft->nexts = 0;
+
+	ds = dexts = Strdup(exts);
+	while ((ext = strsep(&ds, ",;")) != NULL) {
+		ft->exts = Realloc(ft->exts, (ft->nexts+1)*sizeof(char *));
+		ft->exts[ft->nexts++] = Strdup(ext);
+	}
+	Free(dexts, M_WIDGET);
+
+	ft->action = event_new(fdg, NULL, fn, NULL);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG(ap, *fmt, ft->action);
+		}
+		va_end(ap);
+	}
+
+	it = tlist_insert(fdg->comTypes->list, NULL, "%s (%s)", descr, exts);
+	it->p1 = ft;
+	if (TAILQ_EMPTY(&fdg->types))
+		combo_select_pointer(fdg->comTypes, ft);
+
+	TAILQ_INSERT_TAIL(&fdg->types, ft, types);
+	return (ft);
+}
