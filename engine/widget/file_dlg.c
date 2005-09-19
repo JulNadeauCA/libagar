@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.3 2005/04/18 04:21:04 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.4 2005/05/24 08:15:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -171,6 +171,16 @@ do_cancel(int argc, union evarg *argv)
 	event_post(NULL, fdg, "file-cancelled", NULL);
 }
 
+static void
+file_dlg_shown(int argc, union evarg *argv)
+{
+	struct AGFileDlg *fdg = argv[0].p;
+
+	widget_scale(fdg, WIDGET(fdg)->w, WIDGET(fdg)->h);
+	widget_focus(fdg->tb_file);
+	update_listing(fdg);
+}
+
 void
 file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
     const char *file)
@@ -191,7 +201,6 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	fdg->tl_dirs = tlist_new(fdg, 0);
 	fdg->tl_files = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
 	fdg->tb_file = textbox_new(fdg, _("File: "));
-	widget_focus(fdg->tb_file);
 	if (file != NULL)
 		textbox_printf(fdg->tb_file, "%s", file);
 
@@ -201,6 +210,7 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	fdg->btn_ok = button_new(fdg, _("OK"));
 	fdg->btn_cancel = button_new(fdg, _("Cancel"));
 
+	event_new(fdg, "widget-shown", file_dlg_shown, NULL);
 	event_new(fdg->tl_dirs, "tlist-dblclick", select_dir, "%p", fdg);
 	event_new(fdg->tl_files, "tlist-selected", select_file, "%p", fdg);
 	event_new(fdg->tl_files, "tlist-dblclick", select_and_validate_file,
@@ -209,8 +219,6 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	event_new(fdg->tb_file, "textbox-return", validate_file, "%p", fdg);
 	event_new(fdg->btn_ok, "button-pushed", validate_file, "%p", fdg);
 	event_new(fdg->btn_cancel, "button-pushed", do_cancel, "%p", fdg);
-
-	update_listing(fdg);
 }
 
 void
@@ -261,6 +269,7 @@ file_dlg_scale(void *p, int w, int h)
 	WIDGET(fdg->tl_dirs)->y = 0;
 	WIDGET(fdg->tl_files)->x = WIDGET(fdg->tl_dirs)->w;
 	WIDGET(fdg->tl_files)->y = 0;
+
 	WIDGET(fdg->tb_file)->x = 0;
 	WIDGET(fdg->tb_file)->y = WIDGET(fdg->tl_files)->h;
 	
