@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.113 2005/05/31 01:31:42 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.114 2005/09/12 10:07:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1331,17 +1331,14 @@ widget_mousebuttondown(struct window *win, struct widget *wid, int button,
 {
 	struct widget *cwid;
 
-	/* Widgets cannot overlap. */
-	if (!widget_area(wid, x, y))
-		return (0);
-
 	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
 		if (widget_mousebuttondown(win, cwid, button, x, y))
 			return (1);
 	}
-	return (event_post(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
-	    button, x-wid->cx, y-wid->cy));
+	return (widget_area(wid, x, y) &&
+	        event_post(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
+		    button, x-wid->cx, y-wid->cy));
 }
 
 /* Search for a focused widget inside a window. */

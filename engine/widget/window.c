@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.258 2005/09/12 10:07:35 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.259 2005/09/17 05:54:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,18 +40,13 @@
 #include <stdarg.h>
 #include <errno.h>
 
-const struct version window_ver = {
-	"agar window",
-	3, 0
-};
-
 const struct widget_ops window_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
 		window_destroy,
-		window_load,
-		window_save,
+		NULL,			/* load */
+		NULL,			/* save */
 		NULL			/* edit */
 	},
 	window_draw,
@@ -74,15 +69,6 @@ static void hidden(int, union evarg *);
 static void apply_alignment(struct window *);
 static void move_window(struct window *, SDL_MouseMotionEvent *);
 static void resize_window(int, struct window *, SDL_MouseMotionEvent *);
-
-#ifdef DEBUG
-#define DEBUG_STATE		0x01
-#define DEBUG_RESIZE		0x02
-#define DEBUG_RESIZE_GEO	0x04
-
-int	window_debug = 0;
-#define	engine_debug window_debug
-#endif
 
 pthread_mutex_t	window_lock = PTHREAD_MUTEX_INITIALIZER;
 int		window_xoffs = 0;
@@ -975,51 +961,6 @@ resize_window(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	if (y < 0) y = 0;
 #endif
 	window_set_geometry(win, x, y, w, h);
-}
-
-int
-window_load(void *p, struct netbuf *buf)
-{
-	struct window *win = p;
-	int view_w, view_h;
-	struct version ver;
-
-	if (version_read(buf, &window_ver, &ver) != 0)
-		return (-1);
-
-	win->flags = (int)read_uint32(buf);
-	view_w = (int)read_uint16(buf);
-	view_h = (int)read_uint16(buf);
-	WIDGET(win)->x = (int)read_sint16(buf) * view->v->w / view_w;
-	WIDGET(win)->y = (int)read_sint16(buf) * view->v->h / view_h;
-	WIDGET(win)->w = (int)read_uint16(buf) * view->v->w / view_w;
-	WIDGET(win)->h = (int)read_uint16(buf) * view->v->h / view_h;
-
-	/* Adjust to the minimum cosmetic size. */
-	if (WIDGET(win)->w < win->minw)
-		WIDGET(win)->w = win->minw;
-	if (WIDGET(win)->h < win->minh)
-		WIDGET(win)->w = win->minh;
-
-	/* Effect the possible changes in geometry. */
-	WINDOW_UPDATE(win);
-	return (0);
-}
-
-int
-window_save(void *p, struct netbuf *buf)
-{
-	struct window *win = p;
-
-	version_write(buf, &window_ver);
-	write_uint32(buf, (Uint32)win->flags);
-	write_uint16(buf, view->v->w);
-	write_uint16(buf, view->v->h);
-	write_sint16(buf, (Sint16)WIDGET(win)->x);
-	write_sint16(buf, (Sint16)WIDGET(win)->y);
-	write_uint16(buf, (Uint16)WIDGET(win)->w);
-	write_uint16(buf, (Uint16)WIDGET(win)->h);
-	return (0);
 }
 
 void
