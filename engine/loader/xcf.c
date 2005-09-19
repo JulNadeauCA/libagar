@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.19 2005/07/16 16:07:29 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.20 2005/09/17 04:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -593,6 +593,8 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	for (i = offsets; i > 0; i--) {
 		struct xcf_layer *layer;
 		struct xcf_prop prop;
+		struct sprite *spr;
+		Uint32 sname;
 		SDL_Surface *su;
 
 		netbuf_seek(buf, xcf_offs + head->layer_offstable[i-1],
@@ -635,12 +637,11 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 			Free(head, M_LOADER);
 			return (-1);
 		}
-		if ((su->h > TILESZ || su->w > TILESZ) &&
-		    strstr(layer->name, "(frag)") != NULL) {
-			gfx_insert_fragments(gfx, su);
-		} else {
-			gfx_insert_sprite(gfx, su);
-		}
+
+		sname = gfx_insert_sprite(gfx, su);
+		spr = &gfx->sprites[sname];
+		strlcpy(spr->name, layer->name, sizeof(spr->name));
+
 		Free(layer->name, 0);
 		Free(layer, M_LOADER);
 	}
