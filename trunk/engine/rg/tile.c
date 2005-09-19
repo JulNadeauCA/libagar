@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.81 2005/09/15 17:21:25 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.82 2005/09/17 04:05:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/map/mapview.h>
 
 #include <engine/loader/surface.h>
+#include <engine/loader/xcf.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -1010,12 +1011,66 @@ tryname:
 }
 
 static void
-import_image(int argc, union evarg *argv)
+import_xcf(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct tlist *tl_feats = argv[3].p;
-	char *path = argv[4].s;
+	struct tlist *tl_feats = argv[2].p;
+	char *path = argv[3].s;
+	struct pixmap *px;
+	u_int pixno = 0;
+	struct pixmap *opx;
+	SDL_Surface *xcf;
+	struct netbuf *buf;
+	struct object tmpObj;
+	u_int i;
+
+	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
+		text_msg(MSG_ERROR, "%s: %s", path, error_get());
+		return;
+	}
+
+	object_init(&tmpObj, "object", "tmp", NULL);
+	tmpObj.gfx = gfx_new(&tmpObj);
+	if (xcf_load(buf, 0, tmpObj.gfx) == -1) {
+		goto fail;
+	}
+
+	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
+		struct sprite *spr = &SPRITE(&tmpObj,0);
+
+		px = Malloc(sizeof(struct pixmap), M_RG);
+		pixmap_init(px, tv->ts, 0);
+tryname:
+		snprintf(px->name, sizeof(px->name), "%s #%u",
+		    (spr->name[0] != '\0') ? spr->name : "pixmap", pixno);
+		TAILQ_FOREACH(opx, &tv->ts->pixmaps, pixmaps) {
+			if (strcmp(opx->name, px->name) == 0)
+				break;
+		}
+		if (opx != NULL) {
+			pixno++;
+			goto tryname;
+		}
+		px->su = SDL_ConvertSurface(spr->su, tv->ts->fmt, 0);
+		TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
+		tile_add_pixmap(tv->tile, NULL, px, 0, 0);
+	}
+
+	netbuf_close(buf);
+	object_destroy(&tmpObj);
+	return;
+fail:
+	text_msg(MSG_ERROR, "%s", error_get());
+	netbuf_close(buf);
+	object_destroy(&tmpObj);
+}
+
+static void
+import_bmp(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tlist *tl_feats = argv[2].p;
+	char *path = argv[3].s;
 	struct pixmap *px;
 	u_int pixno = 0;
 	struct pixmap *opx;
@@ -1043,7 +1098,6 @@ tryname:
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
 
 	tile_add_pixmap(tv->tile, NULL, px, 0, 0);
-	view_detach(pwin);
 
 	SDL_FreeSurface(bmp);
 }
@@ -1061,9 +1115,10 @@ import_image_dlg(int argc, union evarg *argv)
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Import %s from..."), t->name);
 	dlg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), NULL);
-	event_new(dlg, "file-validated", import_image, "%p,%p,%p", tv, win,
+	file_dlg_type(dlg, _("Gimp XCF"), "*.xcf", import_xcf, "%p,%p", tv,
 	    tl_feats);
-	event_new(dlg, "file-cancelled", window_generic_detach, "%p", win);
+	file_dlg_type(dlg, _("PC bitmap"), "*.bmp", import_bmp, "%p,%p", tv,
+	    tl_feats);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -1791,16 +1846,17 @@ tile_redo(int argc, union evarg *argv)
 }
 
 static void
-export_image(int argc, union evarg *argv)
+export_bmp(int argc, union evarg *argv)
 {
 	struct tile *t = argv[1].p;
-	struct window *win = argv[2].p;
-	char *path = argv[3].s;
+	char *path = argv[2].s;
 
-	if (SDL_SaveBMP(t->su, path) == -1)
+	if (SDL_SaveBMP(t->su, path) == -1) {
 		text_msg(MSG_ERROR, "%s: %s", path, SDL_GetError());
-
-	view_detach(win);
+	} else {
+		text_tmsg(MSG_INFO, 1000,
+		    _("%s successfully exported to %s"), t->name, path);
+	}
 }
 
 static void
@@ -1818,9 +1874,9 @@ export_image_dlg(int argc, union evarg *argv)
 
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Export %s to..."), t->name);
+	
 	dlg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), path);
-	event_new(dlg, "file-validated", export_image, "%p,%p", t, win);
-	event_new(dlg, "file-cancelled", window_generic_detach, "%p", win);
+	file_dlg_type(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -2011,6 +2067,8 @@ tile_edit(struct tileset *ts, struct tile *t)
 	mi = menu_add_item(me, ("File"));
 	{
 		objmgr_generic_menu(mi, ts);
+		
+		menu_separator(mi);
 	
 		menu_action(mi, _("Export to image file..."), OBJSAVE_ICON,
 		    export_image_dlg, "%p,%p", win, tv);
@@ -2070,11 +2128,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    0, 0,
 		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
 		
-		menu_separator(mi);
-
 		menu_action(mi, _("Attach existing pixmap..."),
 		    RG_PIXMAP_ATTACH_ICON,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
+		
+		menu_separator(mi);
 
 		menu_tool(mi, tbar, _("Import from image file..."),
 		    RG_PIXMAP_ICON, 0, 0,
@@ -2087,11 +2145,10 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    0, 0,
 		    create_sketch, "%p,%p,%p", tv, win, tl_feats);
 		
-		menu_separator(mi);
-
 		menu_action(mi, _("Attach sketch..."),
 		    RG_SKETCH_ATTACH_ICON,
 		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
+
 		/* TODO import */
 	}
 
