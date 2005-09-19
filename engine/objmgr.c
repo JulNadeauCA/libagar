@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.44 2005/09/18 03:54:32 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.45 2005/09/18 05:40:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -566,8 +566,10 @@ objmgr_generic_menu(void *menup, void *obj)
 {
 	struct AGMenuItem *pitem = menup;
 
-	menu_action(pitem, _("Save"), -1, generic_save, "%p", obj);
-	menu_action(pitem, _("Save to..."), -1, generic_save_to, "%p", obj);
+	menu_action(pitem, _("Save"), OBJSAVE_ICON,
+	    generic_save, "%p", obj);
+	menu_action(pitem, _("Save to..."), OBJSAVE_ICON,
+	    generic_save_to, "%p", obj);
 }
 
 /* Display the object tree. */
