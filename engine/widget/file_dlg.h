@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.h,v 1.2 2005/03/27 03:50:13 vedge Exp $	*/
+/*	$Csoft: file_dlg.h,v 1.3 2005/09/19 05:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
@@ -10,6 +10,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/hpane.h>
 
 #include "begin_code.h"
 
@@ -28,6 +29,8 @@ struct AGFileDlg {
 #define FILEDLG_NOCLOSE	0x02		/* Never close the parent window */
 
 	char cwd[MAXPATHLEN];		/* Current working directory */
+	struct hpane *hPane;
+	struct hpane_div *hDiv;
 	struct tlist *tlDirs;		/* List of directories */
 	struct tlist *tlFiles;		/* List of files */
 	struct textbox *tbFile;		/* Filename input */

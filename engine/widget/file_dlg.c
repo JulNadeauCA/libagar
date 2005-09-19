@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.6 2005/09/19 03:04:44 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.7 2005/09/19 05:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -65,10 +65,10 @@ file_dlg_new(void *parent, int flags, const char *cwd, const char *file)
 static int
 compare_filenames(const void *p1, const void *p2)
 {
-	const struct dirent *d1 = *(const void **)p1;
-	const struct dirent *d2 = *(const void **)p2;
+	const char *s1 = *(const void **)p1;
+	const char *s2 = *(const void **)p2;
 
-	return (strcoll(d1->d_name, d2->d_name));
+	return (strcoll(s1, s2));
 }
 
 static void
@@ -78,7 +78,7 @@ update_listing(struct AGFileDlg *fdg)
 	struct dirent *dent;
 	struct stat sb;
 	DIR *dir;
-	struct dirent **dirs, **files;
+	char **dirs, **files;
 	size_t i, ndirs = 0, nfiles = 0;
 
 	if ((dir = opendir(".")) == NULL) {
@@ -86,51 +86,51 @@ update_listing(struct AGFileDlg *fdg)
 		return;
 	}
 	
-	dirs = Malloc(sizeof(struct dirent *), M_WIDGET);
-	files = Malloc(sizeof(struct dirent *), M_WIDGET);
+	dirs = Malloc(sizeof(char *), M_WIDGET);
+	files = Malloc(sizeof(char *), M_WIDGET);
 	
 	pthread_mutex_lock(&fdg->tlDirs->lock);
 	pthread_mutex_lock(&fdg->tlFiles->lock);
 
 	while ((dent = readdir(dir)) != NULL) {
-		stat(dent->d_name, &sb);
+		if (stat(dent->d_name, &sb) == -1) {
+			continue;
+		}
 		if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
-			dirs = Realloc(dirs, (ndirs + 1) *
-			                     sizeof(struct dirent *));
-			dirs[ndirs++] = dent;
+			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
+			dirs[ndirs++] = Strdup(dent->d_name);
 		} else {
-			files = Realloc(files, (nfiles + 1) *
-					       sizeof(struct dirent *));
-			files[nfiles++] = dent;
+			files = Realloc(files, (nfiles + 1) * sizeof(char *));
+			files[nfiles++] = Strdup(dent->d_name);
 		}
 	}
-	qsort(&dirs[0], ndirs, sizeof(struct dirent *), compare_filenames);
-	qsort(&files[0], nfiles, sizeof(struct dirent *), compare_filenames);
+	qsort(dirs, ndirs, sizeof(char *), compare_filenames);
+	qsort(files, nfiles, sizeof(char *), compare_filenames);
 
 	tlist_clear_items(fdg->tlDirs);
 	tlist_clear_items(fdg->tlFiles);
 	for (i = 0; i < ndirs; i++) {
-		struct dirent *dent = dirs[i];
-
-		it = tlist_insert(fdg->tlDirs, NULL, "%s", dent->d_name);
+		it = tlist_insert(fdg->tlDirs, ICON(DIRECTORY_ICON),
+		    "%s", dirs[i]);
 		it->class = "dir";
 		it->p1 = dent;
+		Free(dirs[i], M_WIDGET);
 	}
 	for (i = 0; i < nfiles; i++) {
-		struct dirent *dent = files[i];
-
-		it = tlist_insert(fdg->tlFiles, NULL, "%s", dent->d_name);
+		it = tlist_insert(fdg->tlFiles, ICON(FILE_ICON),
+		    "%s", files[i]);
 		it->class = "file";
 		it->p1 = dent;
+		Free(files[i], M_WIDGET);
 	}
+	Free(dirs, M_WIDGET);
+	Free(files, M_WIDGET);
 	tlist_restore_selections(fdg->tlDirs);
 	tlist_restore_selections(fdg->tlFiles);
-
+	
 	pthread_mutex_unlock(&fdg->tlFiles->lock);
 	pthread_mutex_unlock(&fdg->tlDirs->lock);
 	closedir(dir);
-	Free(dirs, M_WIDGET);
-	Free(files, M_WIDGET);
 }
 
 static void
@@ -215,6 +215,33 @@ validate_file(int argc, union evarg *argv)
 }
 
 static void
+enter_file(int argc, union evarg *argv)
+{
+	char file[MAXPATHLEN];
+	struct AGFileDlg *fdg = argv[1].p;
+	struct AGFileType *ft;
+	struct stat sb;
+
+	textbox_copy_string(fdg->tbFile, file, sizeof(file));
+	if (stat(file, &sb) == -1) {
+		goto fail;
+	}
+	if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
+		if (chdir(file) == 0) {
+			update_listing(fdg);
+		} else {
+			goto fail;
+		}
+	} else {
+		event_post(NULL, fdg, "file-validated", "%s", file);
+		process_file(fdg, file);
+	}
+	return;
+fail:
+	text_msg(MSG_ERROR, "%s: %s", file, strerror(errno));
+}
+
+static void
 do_cancel(int argc, union evarg *argv)
 {
 	struct AGFileDlg *fdg = argv[1].p;
@@ -250,8 +277,16 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	}
 	TAILQ_INIT(&fdg->types);
 
-	fdg->tlDirs = tlist_new(fdg, 0);
-	fdg->tlFiles = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
+	fdg->hPane = hpane_new(fdg, HPANE_WFILL|HPANE_HFILL);
+	fdg->hDiv = hpane_add_div(fdg->hPane,
+	    BOX_VERT, BOX_HFILL,
+	    BOX_VERT, BOX_HFILL|BOX_WFILL);
+	{
+		fdg->tlDirs = tlist_new(fdg->hDiv->box1, 0);
+		fdg->tlFiles = tlist_new(fdg->hDiv->box2,
+		    (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
+	}
+
 	fdg->tbFile = textbox_new(fdg, _("File: "));
 	if (file != NULL) {
 		textbox_printf(fdg->tbFile, "%s", file);
@@ -269,7 +304,7 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
 	event_new(fdg->tlFiles, "tlist-dblclick", select_and_validate_file,
 	    "%p", fdg);
 
-	event_new(fdg->tbFile, "textbox-return", validate_file, "%p", fdg);
+	event_new(fdg->tbFile, "textbox-return", enter_file, "%p", fdg);
 	event_new(fdg->btnOk, "button-pushed", validate_file, "%p", fdg);
 	event_new(fdg->btnCancel, "button-pushed", do_cancel, "%p", fdg);
 }
@@ -301,17 +336,14 @@ file_dlg_scale(void *p, int w, int h)
 	int btn_h, y = 0;
 	
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(fdg->tlDirs, -1, -1);
-		WIDGET_SCALE(fdg->tlFiles, -1, -1);
+		WIDGET_SCALE(fdg->hPane, -1, -1);
 		WIDGET_SCALE(fdg->tbFile, -1, -1);
 		WIDGET_SCALE(fdg->comTypes, -1, -1);
 		WIDGET_SCALE(fdg->btnOk, -1, -1);
 		WIDGET_SCALE(fdg->btnCancel, -1, -1);
 	
-		WIDGET(fdg)->w = WIDGET(fdg->tlDirs)->w +
-		                 WIDGET(fdg->tlFiles)->w;
-		WIDGET(fdg)->h = MAX(WIDGET(fdg->tlDirs)->h,
-				     WIDGET(fdg->tlFiles)->h)+1 +
+		WIDGET(fdg)->w = WIDGET(fdg->hPane)->w;
+		WIDGET(fdg)->h = WIDGET(fdg->hPane)->h +
 				 WIDGET(fdg->tbFile)->h+1 +
 				 WIDGET(fdg->comTypes)->h+1 +
 				 MAX(WIDGET(fdg->btnOk)->h,
@@ -320,24 +352,23 @@ file_dlg_scale(void *p, int w, int h)
 	}
 
 	btn_h = MAX(WIDGET(fdg->btnOk)->h, WIDGET(fdg->btnCancel)->h);
+	
+	widget_scale(fdg->hPane,
+	    w,
+	    h - WIDGET(fdg->tbFile)->h - WIDGET(fdg->comTypes)->h - btn_h);
 
-	widget_scale(fdg->tlDirs,
-	    WIDGET(fdg->tlDirs)->w,
-	    h - WIDGET(fdg->tbFile)->h - WIDGET(fdg->comTypes)->h - btn_h);
-	widget_scale(fdg->tlFiles,
-	    w - WIDGET(fdg->tlDirs)->w,
-	    h - WIDGET(fdg->tbFile)->h - WIDGET(fdg->comTypes)->h - btn_h);
-	    
 	widget_scale(fdg->tbFile, w, WIDGET(fdg->tbFile)->h);
 	widget_scale(fdg->comTypes, w, WIDGET(fdg->comTypes)->h);
 	widget_scale(fdg->btnOk, w/2, WIDGET(fdg->tbFile)->h);
 	widget_scale(fdg->btnCancel, w/2, WIDGET(fdg->tbFile)->h);
 	
-	WIDGET(fdg->tlDirs)->x = 0;
-	WIDGET(fdg->tlDirs)->y = 0;
-	WIDGET(fdg->tlFiles)->x = WIDGET(fdg->tlDirs)->w;
-	WIDGET(fdg->tlFiles)->y = 0;
-	y += WIDGET(fdg->tlFiles)->h + 1;
+	WIDGET(fdg->hPane)->x = 0;
+	WIDGET(fdg->hPane)->y = 0;
+	WIDGET(fdg->hPane)->w = w;
+	WIDGET(fdg->hPane)->h = h - WIDGET(fdg->tbFile)->h -
+	    WIDGET(fdg->comTypes)->h - btn_h - 2;
+	widget_scale(fdg->hPane, WIDGET(fdg->hPane)->w, WIDGET(fdg->hPane)->h);
+	y += WIDGET(fdg->hPane)->h + 1;
 
 	WIDGET(fdg->tbFile)->x = 0;
 	WIDGET(fdg->tbFile)->y = y;
