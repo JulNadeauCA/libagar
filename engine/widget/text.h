@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.41 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.42 2005/09/17 05:00:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -67,9 +67,11 @@ void text_prompt_float(double *, double, double, const char *,
 		       const char *, ...)
 		       FORMAT_ATTRIBUTE(printf, 5, 6)
 		       NONNULL_ATTRIBUTE(5);
-void text_prompt_string(char **, size_t, const char *, ...)
-		        FORMAT_ATTRIBUTE(printf, 3, 4)
-		        NONNULL_ATTRIBUTE(3);
+void text_edit_string(char **, size_t, const char *, ...)
+		      FORMAT_ATTRIBUTE(printf, 3, 4)
+		      NONNULL_ATTRIBUTE(3);
+void text_prompt_string(const char *, void (*)(int, union evarg *),
+		        const char *, ...);
 
 struct text_glyph *text_render_glyph(const char *, int, Uint32, Uint32);
 void		   text_unused_glyph(struct text_glyph *);
