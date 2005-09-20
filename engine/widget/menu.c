@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.21 2005/06/11 01:48:30 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.22 2005/07/19 03:55:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -410,20 +410,27 @@ menu_tool(struct AGMenuItem *pitem, struct toolbar *tbar,
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 	struct button *bu;
-	struct event *bu_ev;
+	struct event *ev;
 	va_list ap;
+	const char *fmtp;
 	
 	bu = button_new(tbar->rows[0], NULL);
 	button_set_label(bu, ICON(icon));
 	button_set_focusable(bu, 0);
 
 	mi = add_subitem(pitem, text, ICON(icon), key_equiv, key_mod);
+	
 	mi->onclick = event_new(m, NULL, fn, NULL);
-	bu_ev = event_new(bu, "button-pushed", fn, NULL);
+	ev = event_new(bu, "button-pushed", fn, NULL);
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			EVENT_PUSH_ARG2(ap, *fmt, mi->onclick, bu_ev);
+		for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
+			EVENT_PUSH_ARG(ap, *fmtp, mi->onclick);
+		}
+		va_end(ap);
+		va_start(ap, fmt);
+		for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
+			EVENT_PUSH_ARG(ap, *fmtp, ev);
 		}
 		va_end(ap);
 	}
