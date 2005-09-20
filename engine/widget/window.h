@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.91 2005/06/16 15:58:44 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.92 2005/09/19 13:27:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -100,13 +100,16 @@ void	 window_resize(struct window *);
 void	 window_focus(struct window *);
 void	 window_remove_titlebar(struct window *);
 void	 window_clamp(struct window *);
+int	 window_surrounded(struct window *);
 
+/* Generic event handlers */
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
 void	 window_generic_show(int, union evarg *);
 void	 window_generic_close(int, union evarg *);
-
-int	 window_surrounded(struct window *);
+#define  WINDETACH(win)	window_generic_detach, "%p", (win)
+#define  WINHIDE(win)	window_generic_hide, "%p", (win)
+#define  WINCLOSE(win)	window_generic_close, "%p", (win)
 __END_DECLS
 
 #include "close_code.h"
