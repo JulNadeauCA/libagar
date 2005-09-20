@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.53 2005/09/19 01:25:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.54 2005/09/19 02:18:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2789,6 +2789,63 @@ control_gobject(int argc, union evarg *argv)
 	}
 }
 
+static void
+remove_tileset_refs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct mapview *mv = argv[2].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct object *ts = it->p1;
+	struct map *m = mv->map;
+	u_int x, y;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *n = &m->map[y][x];
+			struct noderef *r, *r2;
+
+			for (r = TAILQ_FIRST(&n->nrefs);
+			     r != TAILQ_END(&n->nrefs);
+			     r = r2) {
+				r2 = TAILQ_NEXT(r, nrefs);
+				if ((r->type == NODEREF_SPRITE &&
+				     r->r_sprite.obj == ts) ||
+				    (r->type == NODEREF_ANIM &&
+				     r->r_anim.obj == ts))
+					node_remove_ref(m, n, r);
+			}
+		}
+	}
+}
+
+static void
+remove_tile_refs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct mapview *mv = argv[2].p;
+	struct tlist_item *it = tlist_selected_item(tl);
+	struct sprite *spr = it->p1;
+	struct map *m = mv->map;
+	u_int x, y;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *n = &m->map[y][x];
+			struct noderef *r, *r2;
+
+			for (r = TAILQ_FIRST(&n->nrefs);
+			     r != TAILQ_END(&n->nrefs);
+			     r = r2) {
+				r2 = TAILQ_NEXT(r, nrefs);
+				if ((r->type == NODEREF_SPRITE &&
+				     r->r_sprite.obj == spr->pgfx->pobj &&
+				     r->r_sprite.offs == spr->index))
+					node_remove_ref(m, n, r);
+			}
+		}
+	}
+}
+
 void *
 map_edit(void *p)
 {
@@ -2910,6 +2967,22 @@ map_edit(void *p)
 			event_new(tl, "tlist-changed", select_lib, "%p", mv);
 			mv->lib_tl = tl;
 			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
+
+			mi = tlist_set_popup(mv->lib_tl, "tileset");
+			{
+				menu_action(mi, _("Remove all references to"),
+				    TRASH_ICON,
+				    remove_tileset_refs, "%p,%p", mv->lib_tl,
+				    mv); 
+			}
+			
+			mi = tlist_set_popup(mv->lib_tl, "tile");
+			{
+				menu_action(mi, _("Remove all references to"),
+				    TRASH_ICON,
+				    remove_tile_refs, "%p,%p", mv->lib_tl, mv); 
+			}
+
 		}
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
