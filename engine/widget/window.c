@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.259 2005/09/17 05:54:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.260 2005/09/19 13:27:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -117,18 +117,16 @@ window_new(int flags, const char *fmt, ...)
 
 		win = Malloc(sizeof(struct window), M_OBJECT);
 		window_init(win, name, flags);
-		event_new(win, "window-close", window_generic_hide, "%p", win);
+		event_new(win, "window-close", WINHIDE(win));
 	} else {
 		win = Malloc(sizeof(struct window), M_OBJECT);
 		window_init(win, NULL, flags);
-		event_new(win, "window-close", window_generic_detach, "%p",
-		    win);
+		event_new(win, "window-close", WINDETACH(win));
 	}
 	if (flags & WINDOW_HIDE) {
-		event_new(win, "window-close", window_generic_hide, "%p", win);
+		event_new(win, "window-close", WINHIDE(win));
 	} else if (flags & WINDOW_DETACH) {
-		event_new(win, "window-close", window_generic_detach, "%p",
-		    win);
+		event_new(win, "window-close", WINDETACH(win));
 	}
 	
 	view_attach(win);
@@ -1122,11 +1120,10 @@ window_set_closure(struct window *win, int mode)
 {
 	switch (mode) {
 	case WINDOW_HIDE:
-		event_new(win, "window-close", window_generic_hide, "%p", win);
+		event_new(win, "window-close", WINHIDE(win));
 		break;
 	case WINDOW_DETACH:
-		event_new(win, "window-close", window_generic_detach, "%p",
-		    win);
+		event_new(win, "window-close", WINDETACH(win));
 		break;
 	default:
 		event_remove(win, "window-close");
