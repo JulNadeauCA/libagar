@@ -1,42 +1,53 @@
-/*	$Csoft: event.h,v 1.30 2005/05/23 03:25:21 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.31 2005/06/11 12:05:45 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/floating_point.h>
-
 #include "begin_code.h"
+
+#define EVENT_ARGS_MAX	16
+#define EVENT_NAME_MAX	31
+
+enum evarg_type {
+	EVARG_POINTER,
+	EVARG_STRING,
+	EVARG_CHAR,
+	EVARG_UCHAR,
+	EVARG_INT,
+	EVARG_UINT,
+	EVARG_LONG,
+	EVARG_ULONG,
+	EVARG_FLOAT,
+	EVARG_DOUBLE,
+	EVARG_LAST
+};
 
 typedef union evarg {
 	void	*p;
 	char	*s;
 	int	 i;
-	char	 c;
 	long int li;
-#ifdef FLOATING_POINT
 	double	 f;
-#endif
 } *evargs;
 
-#define EVENT_ARGS_MAX		16
-#define EVENT_NAME_MAX		32
-#define EVENTSEQ_NAME_MAX	16
-
 struct event {
-	char	name[EVENT_NAME_MAX];		/* Event type */
-	int	flags;
+	char	name[EVENT_NAME_MAX];
+	u_int	flags;
 #define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
-#define EVENT_PROPAGATE	0x02	/* Propagate event to descendents */
+#define EVENT_PROPAGATE	0x02	/* Propagate event to object descendents */
 #define EVENT_SCHEDULED	0x04	/* Timing-dependent (read-only flag) */
 
 	void		(*handler)(int, union evarg *);
-	union evarg	 argv[EVENT_ARGS_MAX];
 	int		 argc, argc_base;
+	union evarg	 argv[EVENT_ARGS_MAX];	/* Argument data vector */
+	Uint8		 argt[EVENT_ARGS_MAX];	/* Argument types */
+	struct timeout	 timeout;		/* Timer for scheduled events */
 
-	struct timeout	 timeout;	/* Timeout (for scheduled events) */
 	TAILQ_ENTRY(event) events;
 };
 
 __BEGIN_DECLS
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
+		           const char *, ...);
+struct event	*event_add(void *, const char *, void (*)(int, union evarg *),
 		           const char *, ...);
 void		 event_remove(void *, const char *);
 void		 event_loop(void);
@@ -53,108 +64,77 @@ struct window	*event_fps_window(void);
 __END_DECLS
 
 #ifdef DEBUG
-#define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
+
+#define EVENT_INSERT_ARG(eev, ap, tname, member, type) do {	\
 	if ((eev)->argc >= EVENT_ARGS_MAX-1) {			\
 		fatal("excess evargs");				\
 	}							\
-	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
+	(eev)->argv[(eev)->argc].member = va_arg((ap), type);	\
+	(eev)->argt[(eev)->argc] = (tname);			\
+	(eev)->argc++;						\
 } while (0)
-#define EVENT_INSERT_ARG2(eev1, eev2, ap, member, type) do {	\
-	type _ev_val = va_arg((ap), type);			\
-	if ((eev1)->argc >= EVENT_ARGS_MAX-1 ||			\
-	    (eev2)->argc >= EVENT_ARGS_MAX-1) {			\
+#define EVENT_INSERT_VAL(eev, tname, member, val) do {		\
+	if ((eev)->argc >= EVENT_ARGS_MAX-1) {			\
 		fatal("excess evargs");				\
 	}							\
-	(eev1)->argv[(eev1)->argc++].member = _ev_val;		\
-	(eev2)->argv[(eev2)->argc++].member = _ev_val;		\
+	(eev)->argv[(eev)->argc].member = (val);		\
+	(eev)->argt[(eev)->argc] = (tname);			\
+	(eev)->argc++;						\
 } while (0)
-#else
-#define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
-	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
+
+#else /* !DEBUG */
+
+#define EVENT_INSERT_ARG(eev, ap, tname, member, type) do {	\
+	(eev)->argv[(eev)->argc].member = va_arg((ap), type);	\
+	(eev)->argt[(eev)->argc] = (tname);			\
+	(eev)->argc++;						\
 } while (0)
-#define EVENT_INSERT_ARG2(eev1, eev2, ap, member, type) do {	\
-	type _ev_val = va_arg((ap), type);			\
-	(eev1)->argv[(eev1)->argc++].member = _ev_val;		\
-	(eev2)->argv[(eev2)->argc++].member = _ev_val;		\
+#define EVENT_INSERT_VAL(eev, tname, member, val) do {		\
+	(eev)->argv[(eev)->argc].member = (val);		\
+	(eev)->argt[(eev)->argc] = (tname);			\
+	(eev)->argc++;						\
 } while (0)
+
 #endif /* DEBUG */
 
-#define EVENT_PUSH_ARG(ap, fmt, eev)				\
-	switch ((fmt)) {					\
-	case 'i':						\
-	case 'o':						\
-	case 'u':						\
-	case 'x':						\
-	case 'X':						\
-		EVENT_INSERT_ARG((eev), (ap), i, int);		\
-		break;						\
-	case 'D':						\
-	case 'O':						\
-	case 'U':						\
-		EVENT_INSERT_ARG((eev), (ap), li, long int);	\
-		break;						\
-	case 'e':						\
-	case 'E':						\
-	case 'f':						\
-	case 'g':						\
-	case 'G':						\
-		EVENT_INSERT_ARG((eev), (ap), f, double);	\
-		break;						\
-	case 'c':						\
-		EVENT_INSERT_ARG((eev), (ap), c, int);		\
-		break;						\
-	case 's':						\
-		EVENT_INSERT_ARG((eev), (ap), s, char *);	\
-		break;						\
-	case 'p':						\
-		EVENT_INSERT_ARG((eev), (ap), p, void *);	\
-		break;						\
-	case ' ':						\
-	case ',':						\
-	case ';':						\
-	case '%':						\
-		break;						\
-	default:						\
-		fatal("bad evarg spec");			\
-	}
-
-#define EVENT_PUSH_ARG2(ap, fmt, eev1, eev2)			\
-	switch ((fmt)) {					\
-	case 'i':						\
-	case 'o':						\
-	case 'u':						\
-	case 'x':						\
-	case 'X':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), i, int); \
-		break;						\
-	case 'D':						\
-	case 'O':						\
-	case 'U':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), li, long int); \
-		break;						\
-	case 'e':						\
-	case 'E':						\
-	case 'f':						\
-	case 'g':						\
-	case 'G':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), f, double); \
-		break;						\
-	case 'c':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), c, int); \
-		break;						\
-	case 's':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), s, char *); \
-		break;						\
-	case 'p':						\
-		EVENT_INSERT_ARG2((eev1), (eev2), (ap), p, void *); \
-		break;						\
-	case ' ':						\
-	case ',':						\
-	case ';':						\
-	case '%':						\
-		break;						\
-	default:						\
-		fatal("bad evarg spec");			\
+#define EVENT_PUSH_ARG(ap, fmt, eev)					\
+	switch (fmt) {							\
+	case 'p':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_POINTER, p, void *); \
+		break;							\
+	case 'i':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_INT, i, int);	\
+		break;							\
+	case 'u':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_UINT, i, int);	\
+		break;							\
+	case 'f':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_FLOAT, f, double);	\
+		break;							\
+	case 'd':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_DOUBLE, f, double);	\
+		break;							\
+	case 's':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_STRING, s, char *);	\
+		break;							\
+	case 'c':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_UCHAR, i, int);	\
+		break;							\
+	case 'C':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_CHAR, i, int);	\
+		break;							\
+	case 'U':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_ULONG, li, long int); \
+		break;							\
+	case 'D':							\
+		EVENT_INSERT_ARG((eev), (ap), EVARG_LONG, li, long int); \
+		break;							\
+	case ' ':							\
+	case ',':							\
+	case '%':							\
+		break;							\
+	default:							\
+		fatal("bad evarg spec");				\
 	}
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.46 2005/09/19 13:48:31 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.47 2005/09/20 01:57:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -250,8 +250,7 @@ close_object_dlg(int argc, union evarg *argv)
 			    close_object_cb, "%p,%p,%i", win, oent, 0);
 
 			button_printf(bOpts[2], _("Cancel"));
-			event_new(bOpts[2], "button-pushed",
-			    window_generic_detach, "%p", wDlg);
+			event_new(bOpts[2], "button-pushed", WINDETACH(wDlg));
 		}
 	} else {
 		close_object(oent, win, 1);
@@ -378,7 +377,7 @@ objmgr_save_to(void *p)
 	window_set_caption(win, _("Save %s to..."), ob->name);
 	fdg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), path);
 	event_new(fdg, "file-validated", export_object, "%p,%p", ob, win);
-	event_new(fdg, "file-cancelled", window_generic_detach, "%p", win);
+	event_new(fdg, "file-cancelled", WINDETACH(win));
 
 	window_show(win);
 }
@@ -723,8 +722,7 @@ create_obj_dlg(int argc, union evarg *argv)
 		    tb, pobj_tl, win);
 		
 		btn = button_new(bo, _("Cancel"));
-		event_new(btn, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(btn, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);
@@ -762,6 +760,62 @@ update_from_repo(int argc, union evarg *argv)
 		if (rcs_checkout(it->text) == -1)
 			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
 	}
+}
+
+static void
+delete_from_repo(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (!it->selected)
+			continue;
+
+		if (rcs_delete(it->text) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
+		} else {
+			text_tmsg(MSG_INFO, 500,
+			    _("Object %s removed from repository."), it->text);
+		}
+	}
+	if (rcs_connect() == 0) {
+		rcs_list(tl);
+		rcs_disconnect();
+	}
+}
+
+static void
+rename_repo(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	char *from = argv[2].s;
+	char *to = argv[3].s;
+
+	if (rcs_rename(from, to) == -1) {
+		text_msg(MSG_ERROR, "%s: %s", from, error_get());
+	} else {
+		text_tmsg(MSG_INFO, 1000, _("Object %s renamed to %s."),
+		    from, to);
+	}
+	if (rcs_connect() == 0) {
+		rcs_list(tl);
+		rcs_disconnect();
+	}
+}
+
+static void
+rename_repo_dlg(int argc, union evarg *argv)
+{
+	char prompt[LABEL_MAX];
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	
+	if ((it = tlist_selected_item(tl)) == NULL)
+		return;
+	
+	snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
+	text_prompt_string(prompt, rename_repo, "%p,%s", tl, it->text);
 }
 
 #endif /* NETWORK */
@@ -821,9 +875,9 @@ objmgr_window(void)
 	
 	mi = menu_add_item(me, _("Edit"));
 	{
-		menu_action(mi, _("Edit object..."), OBJEDIT_ICON,
+		menu_action(mi, _("Edit object data..."), OBJEDIT_ICON,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-		menu_action(mi, _("Edit object information..."),
+		menu_action(mi, _("Edit generic information..."),
 		    OBJGENEDIT_ICON,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
 		
@@ -974,6 +1028,12 @@ objmgr_window(void)
 		{
 			menu_action(pop, _("Update from repository"),
 			    OBJLOAD_ICON, update_from_repo, "%p", tl);
+			
+			menu_action(pop, _("Delete from repository"),
+			    TRASH_ICON, delete_from_repo, "%p", tl);
+			
+			menu_action(pop, _("Rename"),
+			    -1, rename_repo_dlg, "%p", tl);
 		}
 
 		btn = button_new(ntab, _("Refresh listing"));

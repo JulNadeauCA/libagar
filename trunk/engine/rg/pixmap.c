@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.40 2005/08/30 02:04:09 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.41 2005/09/05 03:24:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -392,8 +392,7 @@ insert_brush_dlg(int argc, union evarg *argv)
 		        cb_oneshot, win);
 	
 		bu = button_new(bo, _("Cancel"));
-		event_new(bu, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(bu, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);

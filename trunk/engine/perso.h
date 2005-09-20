@@ -1,17 +1,17 @@
-/*	$Csoft: perso.h,v 1.20 2005/08/27 04:39:59 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.21 2005/09/19 01:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
 #define _AGAR_PERSO_H_
 
-#include <engine/gobject.h>
+#include <engine/actor.h>
 
 #include "begin_code.h"
 
 #define PERSO_NAME_MAX	256
 
 struct perso {
-	struct gobject obj;
+	struct actor obj;
 
 	pthread_mutex_t	 lock;
 	void		*tileset;		/* Graphics source */

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.60 2005/09/17 05:45:36 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.61 2005/09/19 01:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1034,8 +1034,7 @@ insert_tile_dlg(int argc, union evarg *argv)
 		event_new(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
 		
 		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(btn, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);
@@ -1070,8 +1069,7 @@ insert_texture_dlg(int argc, union evarg *argv)
 		    win, pwin, ts);
 	
 		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(btn, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);
@@ -1117,8 +1115,7 @@ insert_anim_dlg(int argc, union evarg *argv)
 		event_new(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
 		
 		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(btn, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);

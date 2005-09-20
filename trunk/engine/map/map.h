@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.18 2005/09/17 13:40:33 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.19 2005/09/19 01:25:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -27,8 +27,7 @@
 enum noderef_type {
 	NODEREF_SPRITE,			/* Reference to a sprite */
 	NODEREF_ANIM,			/* Reference to an animation */
-	NODEREF_WARP,			/* Reference to another location */
-	NODEREF_GOBJ			/* Reference to a geometric object */
+	NODEREF_WARP			/* Reference to another location */
 };
 
 enum noderef_edge {
@@ -81,10 +80,6 @@ struct noderef {
 			int x, y;		/* Origin override */
 			Uint8 dir;		/* Default direction */
 		} warp;
-		struct {
-			void *p;		/* Geometric object */
-			Uint32 flags;
-		} gobj;
 	} nref;
 	struct transformq transforms;		/* Transformations to apply */
 	struct nodemaskq masks;			/* Collision detection masks */
@@ -92,7 +87,6 @@ struct noderef {
 #define r_sprite	nref.sprite
 #define r_anim		nref.anim
 #define r_warp		nref.warp
-#define r_gobj		nref.gobj
 };
 
 TAILQ_HEAD(noderefq, noderef);
@@ -257,7 +251,6 @@ struct noderef	*node_add_sprite(struct map *, struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32);
 struct noderef	*node_add_warp(struct map *, struct node *, const char *, int,
 		               int, Uint8);
-struct noderef	*node_add_gobj(struct map *, struct node *, void *);
 __END_DECLS
 
 #include "close_code.h"

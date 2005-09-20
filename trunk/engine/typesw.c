@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.22 2005/08/22 02:11:33 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.23 2005/09/09 02:11:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@ typesw_init(void)
 	    MAP_ICON);
 	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
 	    TILESET_ICON);
-	typesw_register("gobject.perso", sizeof(struct perso), &perso_ops,
+	typesw_register("actor.perso", sizeof(struct perso), &perso_ops,
 	    PERSO_ICON);
 }
 

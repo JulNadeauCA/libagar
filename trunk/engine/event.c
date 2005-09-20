@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.213 2005/09/18 03:38:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.214 2005/09/18 03:54:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -79,6 +79,19 @@ static void event_dispatch(SDL_Event *);
 #ifdef THREADS
 static void *event_async(void *);
 #endif
+
+const char *evarg_type_names[] = {
+	"pointer",
+	"string",
+	"char",
+	"u_char",
+	"int",
+	"u_int",
+	"long",
+	"u_long",
+	"float",
+	"double"
+};
 
 extern pthread_mutex_t timeout_lock;
 
@@ -444,14 +457,63 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		} else {
 			static Uint32 nevent = 0;
 
+			/* XXX thread unsafe */
 			snprintf(ev->name, sizeof(ev->name), "@anon%u",
 			    nevent++);
 		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	}
-	memset(ev->argv, 0, sizeof(union evarg)*EVENT_ARGS_MAX);
 	ev->flags = 0;
 	ev->argv[0].p = ob;
+	ev->argt[0] = EVARG_POINTER;
+	ev->argc = 1;
+	ev->argc_base = 1;
+	ev->handler = handler;
+	timeout_set(&ev->timeout, event_timeout, ev, 0);
+
+	if (fmt != NULL) {
+		const char *s = fmt;
+		va_list ap;
+
+		va_start(ap, fmt);
+		while (*s != '\0') {
+			EVENT_PUSH_ARG(ap, *s, ev);
+			ev->argc_base++;
+			s++;
+		}
+		va_end(ap);
+	}
+	pthread_mutex_unlock(&ob->lock);
+	return (ev);
+}
+
+/*
+ * Register an additional event handler function for events of the
+ * given type.
+ */
+struct event *
+event_add(void *p, const char *name, void (*handler)(int, union evarg *),
+    const char *fmt, ...)
+{
+	struct object *ob = p;
+	struct event *ev;
+
+	pthread_mutex_lock(&ob->lock);
+
+	ev = Malloc(sizeof(struct event), M_EVENT);
+	if (name != NULL) {
+		strlcpy(ev->name, name, sizeof(ev->name));
+	} else {
+		static Uint32 nevent2 = 0;
+
+		/* XXX thread unsafe */
+		snprintf(ev->name, sizeof(ev->name), "@anon%u", nevent2++);
+	}
+	TAILQ_INSERT_TAIL(&ob->events, ev, events);
+
+	ev->flags = 0;
+	ev->argv[0].p = ob;
+	ev->argt[0] = EVARG_POINTER;
 	ev->argc = 1;
 	ev->argc_base = 1;
 	ev->handler = handler;

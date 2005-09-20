@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.54 2005/08/27 04:39:59 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.55 2005/09/19 01:25:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ const struct version perso_ver = {
 static int perso_keydown(void *, int, int);
 static int perso_keyup(void *, int, int);
 
-const struct gobject_ops perso_ops = {
+const struct actor_ops perso_ops = {
 	{
 		perso_init,
 		perso_reinit,
@@ -89,10 +89,46 @@ perso_new(void *parent, const char *name)
 	return (ps);
 }
 
+static int
+can_walk_to(void *p, int xo, int yo)
+{
+	struct actor *go = p;
+	struct map *m = go->parent;
+	int dx0 = go->g_map.x0 + xo;
+	int dy0 = go->g_map.y0 + yo;
+	int dx1 = go->g_map.x1 + xo;
+	int dy1 = go->g_map.y1 + yo;
+	struct node *n;
+	int x, y;
+
+	if (dx0 < 0 || dy0 < 0 || dx0 >= m->mapw || dy0 >= m->maph ||
+	    dx1 < 0 || dy1 < 0 || dx1 >= m->mapw || dy1 >= m->maph)
+		return (0);
+
+	for (y = dy0; y < dy1; y++) {
+		for (x = dx0; x < dx1; x++) {
+			struct node *n = &m->map[y][x];
+			struct noderef *r;
+
+			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
+				if (r->p != go &&
+				    r->layer >= go->g_map.l0 &&
+				    r->layer <= go->g_map.l1 &&
+				    r->flags & NODEREF_BLOCK) {
+					dprintf("%s: blocked\n",
+					    OBJECT(go)->name);
+					return (0);
+				}
+			}
+		}
+	}
+	return (1);
+}
+
 static Uint32
 perso_move(void *obj, Uint32 ival, void *arg)
 {
-	struct gobject *go = obj;
+	struct actor *go = obj;
 	struct perso *ps = obj;
 	int xo = 0, yo = 0;
 
@@ -104,8 +140,8 @@ perso_move(void *obj, Uint32 ival, void *arg)
 	}
 
 	if ((xo != 0 || yo != 0) &&
-	    go_walkable(ps, xo, yo)) {
-		go_move_sprite(ps, xo, yo);
+	    can_walk_to(ps, xo, yo)) {
+		actor_move_sprite(ps, xo, yo);
 	}
 	return (ival);
 }
@@ -115,7 +151,7 @@ perso_init(void *obj, const char *name)
 {
 	struct perso *ps = obj;
 
-	gobject_init(ps, "perso", name, &perso_ops);
+	actor_init(ps, "perso", name, &perso_ops);
 	ps->tileset = NULL;
 	ps->name[0] = '\0';
 	ps->flags = 0;
@@ -137,7 +173,7 @@ perso_reinit(void *obj)
 	
 	timeout_del(ps, &ps->move_to);
 
-	gobject_reinit(obj);
+	actor_reinit(obj);
 	
 	if (ps->tileset != NULL) {
 		object_page_out(ps->tileset, OBJECT_GFX);
@@ -149,7 +185,7 @@ perso_reinit(void *obj)
 void
 perso_destroy(void *obj)
 {
-	gobject_destroy(obj);
+	actor_destroy(obj);
 }
 
 int
@@ -162,7 +198,7 @@ perso_load(void *obj, struct netbuf *buf)
 	if (version_read(buf, &perso_ver, NULL) != 0)
 		return (-1);
 	
-	if (gobject_load(ps, buf) == -1)
+	if (actor_load(ps, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&ps->lock);
@@ -204,7 +240,7 @@ perso_save(void *obj, struct netbuf *buf)
 
 	version_write(buf, &perso_ver);
 	
-	if (gobject_save(ps, buf) == -1)
+	if (actor_save(ps, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&ps->lock);
@@ -285,7 +321,7 @@ perso_edit(void *obj)
 		}
 	}
 	ntab = notebook_add_tab(nb, _("Position"), BOX_VERT);
-	gobject_edit(GOBJECT(ps), ntab);
+	actor_edit(ACTOR(ps), ntab);
 	return (win);
 }
 
@@ -299,7 +335,8 @@ perso_map(void *obj, void *space)
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = space;
 
-		if (go_map_sprite(ps, 0, 0, 0, ps->tileset, "Idle-S") == -1) {
+		if (actor_map_sprite(ps, 0, 0, 0, ps->tileset, "Idle-S")
+		    == -1) {
 			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
 			    OBJECT(space)->name, error_get());
 		}
@@ -328,29 +365,29 @@ perso_update(void *space, void *obj)
 int
 perso_keydown(void *p, int ks, int km)
 {
-	struct gobject *go = p;
+	struct actor *go = p;
 	struct perso *ps = p;
 
 	switch (ks) {
 	case SDLK_LEFT:
 		go->g_map.da = 0;
 		go->g_map.dv = 1;
-		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-W");
+		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-W");
 		break;
 	case SDLK_UP:
 		go->g_map.da = 90;
 		go->g_map.dv = 1;
-		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-N");
+		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-N");
 		break;
 	case SDLK_RIGHT:
 		go->g_map.da = 180;
 		go->g_map.dv = 1;
-		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-E");
+		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-E");
 		break;
 	case SDLK_DOWN:
 		go->g_map.da = 270;
 		go->g_map.dv = 1;
-		go_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-S");
+		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-S");
 		break;
 	}
 	if (go->g_map.dv > 0) {
@@ -363,7 +400,7 @@ int
 perso_keyup(void *p, int ks, int km)
 {
 	struct perso *ps = p;
-	struct gobject *go = p;
+	struct actor *go = p;
 
 	switch (ks) {
 	case SDLK_LEFT:
