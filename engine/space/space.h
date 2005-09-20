@@ -1,8 +1,8 @@
-/*	$Csoft: space.h,v 1.2 2005/08/10 06:59:26 vedge Exp $	*/
+/*	$Csoft: space.h,v 1.3 2005/08/12 06:09:11 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_PHYS_SPACE_H_
-#define _AGAR_PHYS_SPACE_H_
+#ifndef _AGAR_SPACE_SPACE_H_
+#define _AGAR_SPACE_SPACE_H_
 #include "begin_code.h"
 
 struct coords {
@@ -52,7 +52,7 @@ struct quaternion {
 struct space {
 	struct object obj;
 	pthread_mutex_t	lock;
-	TAILQ_HEAD(, gobject) gobjs;
+	TAILQ_HEAD(, actor) actors;
 };
 
 #define SPACE(ob) ((struct space *)(ob))
@@ -69,4 +69,4 @@ void		  space_detach(void *, void *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_PHYS_SPACE_H_ */
+#endif	/* _AGAR_SPACE_SPACE_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.22 2005/08/10 06:59:24 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.23 2005/08/27 04:34:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -8,7 +8,7 @@
 #include <engine/map/mapedit.h>
 #include <engine/map/tool.h>
 
-#include <engine/gobject.h>
+#include <engine/actor.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -80,7 +80,7 @@ struct mapview {
 	} rsel;
 
 	struct map *map;		/* Map to display */
-	struct gobject *gobj;		/* Geometric object being controlled */
+	struct actor *actor;		/* Actor being controlled */
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */

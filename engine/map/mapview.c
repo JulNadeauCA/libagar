@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.45 2005/09/08 10:09:09 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.46 2005/09/12 09:52:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -141,10 +141,10 @@ void
 mapview_control(struct mapview *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG
-	if (!OBJECT_SUBCLASS(obj, "gobject"))
+	if (!OBJECT_SUBCLASS(obj, "actor"))
 		fatal("%s: not controllable", OBJECT(obj)->name);
 #endif
-	mv->gobj = (struct gobject *)obj;
+	mv->actor = (struct actor *)obj;
 }
 
 #ifdef EDITION
@@ -391,7 +391,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mode = MAPVIEW_EDITION;
 	mv->edit_attr = 0;
 	mv->map = m;
-	mv->gobj = NULL;
+	mv->actor = NULL;
 	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
@@ -1066,9 +1066,9 @@ mousebuttondown(int argc, union evarg *argv)
 	mv->mouse.xmap_rel = 0;
 	mv->mouse.ymap_rel = 0;
 	
-	if (mv->gobj != NULL &&
-	    GOBJECT_OPS(mv->gobj)->mousebuttondown != NULL &&
-	    GOBJECT_OPS(mv->gobj)->mousebuttondown(mv->gobj,
+	if (mv->actor != NULL &&
+	    ACTOR_OPS(mv->actor)->mousebuttondown != NULL &&
+	    ACTOR_OPS(mv->actor)->mousebuttondown(mv->actor,
 	      mv->mouse.xmap, mv->mouse.ymap, button) == -1)
 		goto out;
 
@@ -1241,11 +1241,11 @@ mousebuttonup(int argc, union evarg *argv)
 
 	mv->flags &= ~(MAPVIEW_SET_ATTRS);
 	
-	if (mv->gobj != NULL &&
-	    GOBJECT_OPS(mv->gobj)->mousebuttonup != NULL) {
+	if (mv->actor != NULL &&
+	    ACTOR_OPS(mv->actor)->mousebuttonup != NULL) {
 		x = mv->cx*MV_TILESZ(mv) + mv->cxoffs;
 		y = mv->cy*MV_TILESZ(mv) + mv->cyoffs;
-		if (GOBJECT_OPS(mv->gobj)->mousebuttonup(mv->gobj, x, y,
+		if (ACTOR_OPS(mv->actor)->mousebuttonup(mv->actor, x, y,
 		    button) == -1)
 			goto out;
 	}
@@ -1331,9 +1331,9 @@ key_up(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&mv->map->lock);
 
-	if (mv->gobj != NULL &&
-	    GOBJECT_OPS(mv->gobj)->keyup != NULL) {
-		if (GOBJECT_OPS(mv->gobj)->keyup(mv->gobj, keysym, keymod)
+	if (mv->actor != NULL &&
+	    ACTOR_OPS(mv->actor)->keyup != NULL) {
+		if (ACTOR_OPS(mv->actor)->keyup(mv->actor, keysym, keymod)
 		    == -1)
 			goto out;
 	}
@@ -1378,9 +1378,9 @@ key_down(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&mv->map->lock);
 
-	if (mv->gobj != NULL &&
-	    GOBJECT_OPS(mv->gobj)->keydown != NULL) {
-		if (GOBJECT_OPS(mv->gobj)->keydown(mv->gobj, keysym, keymod)
+	if (mv->actor != NULL &&
+	    ACTOR_OPS(mv->actor)->keydown != NULL) {
+		if (ACTOR_OPS(mv->actor)->keydown(mv->actor, keysym, keymod)
 		    == -1)
 			goto out;
 	}
@@ -1529,8 +1529,8 @@ lost_focus(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 
 	event_cancel(mv, "dblclick-expire");
-	if (mv->gobj != NULL)
-		object_cancel_timeouts(mv->gobj, 0);
+	if (mv->actor != NULL)
+		object_cancel_timeouts(mv->actor, 0);
 }
 
 /* Set the coordinates and geometry of the selection rectangle. */

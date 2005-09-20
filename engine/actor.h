@@ -1,14 +1,14 @@
-/*	$Csoft: gobject.h,v 1.5 2005/08/14 01:03:14 vedge Exp $	*/
+/*	$Csoft: actor.h,v 1.6 2005/08/27 04:39:59 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_GOBJECT_H_
-#define _AGAR_GOBJECT_H_
+#ifndef _AGAR_ACTOR_H_
+#define _AGAR_ACTOR_H_
 
 #include <engine/map/map.h>
 
 #include "begin_code.h"
 
-struct gobject_ops {
+struct actor_ops {
 	struct object_ops ops;
 	void (*map)(void *, void *);
 	void (*unmap)(void *, void *);
@@ -24,16 +24,16 @@ struct gobject_ops {
 	void (*joybutton)(void *, int dev, int button, int state);
 };
 
-struct gobject {
+struct actor {
 	struct object obj;
 	pthread_mutex_t lock;
 	int flags;
-#define GOBJECT_SAVED_FLAGS	0x00
+#define ACTOR_SAVED_FLAGS	0x00
 	void *parent;			/* Parent object (NULL=unset) */
-	enum gobject_type {
-		GOBJECT_NONE,
-		GOBJECT_MAP,
-		GOBJECT_SCENE
+	enum actor_type {
+		ACTOR_NONE,
+		ACTOR_MAP,
+		ACTOR_SCENE
 	} type;
 	union {
 		struct {
@@ -49,31 +49,26 @@ struct gobject {
 	} data;
 #define g_map data.map
 #define g_scene data.scene
-	TAILQ_ENTRY(gobject) gobjs;
+	TAILQ_ENTRY(actor) actors;
 };
 
-#define GOBJECT(ob) ((struct gobject *)(ob))
-#define GOBJECT_OPS(ob) ((const struct gobject_ops *)OBJECT(ob)->ops)
+#define ACTOR(ob) ((struct actor *)(ob))
+#define ACTOR_OPS(ob) ((const struct actor_ops *)OBJECT(ob)->ops)
 
 __BEGIN_DECLS
-void		 gobject_init(void *, const char *, const char *,
-		              const struct gobject_ops *);
-void		 gobject_reinit(void *);
-void		 gobject_destroy(void *);
-int		 gobject_load(void *, struct netbuf *);
-int		 gobject_save(void *, struct netbuf *);
-void		 gobject_update(void *);
+void actor_init(void *, const char *, const char *, const struct actor_ops *);
+void actor_reinit(void *);
+void actor_destroy(void *);
+int  actor_load(void *, struct netbuf *);
+int  actor_save(void *, struct netbuf *);
+void actor_edit(struct actor *, void *);
+void actor_update(void *);
 
-int go_map_sprite(void *, int, int, int, void *, const char *);
-void go_unmap_sprite(void *);
-__inline__ int go_set_sprite(void *, int, int, int, void *, const char *);
-void go_move_sprite(void *, int, int);
-int go_walkable(void *, int, int);
-
-#ifdef EDITION
-void gobject_edit(struct gobject *, void *);
-#endif /* EDITION */
+int  actor_map_sprite(void *, int, int, int, void *, const char *);
+void actor_unmap_sprite(void *);
+void actor_move_sprite(void *, int, int);
+__inline__ int actor_set_sprite(void *, int, int, int, void *, const char *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_GOBJECT_H_ */
+#endif	/* _AGAR_ACTOR_H_ */

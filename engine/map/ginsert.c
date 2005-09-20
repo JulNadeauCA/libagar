@@ -1,4 +1,4 @@
-/*	$Csoft: ginsert.c,v 1.2 2005/08/11 05:56:13 vedge Exp $	*/
+/*	$Csoft: ginsert.c,v 1.3 2005/08/15 02:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,7 @@
  */
 
 #include <engine/engine.h>
-#include <engine/gobject.h>
+#include <engine/actor.h>
 
 #ifdef MAP
 
@@ -124,7 +124,7 @@ ginsert_effect(void *p, struct node *n)
 	struct mapview *mv = TOOL(ins)->mv;
 	struct map *m = mv->map;
 	struct tlist_item *it;
-	struct gobject *go;
+	struct actor *go;
 
 	if ((it = tlist_selected_item(mv->lib_tl)) == NULL ||
 	    strcmp(it->class, "object") != 0 ||
@@ -135,7 +135,7 @@ ginsert_effect(void *p, struct node *n)
 
 	if (go->parent != NULL) {
 		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
-		TAILQ_REMOVE(&SPACE(go->parent)->gobjs, go, gobjs);
+		TAILQ_REMOVE(&SPACE(go->parent)->actors, go, actors);
 		space_detach(go->parent, go);
 	}
 	go->g_map.x = mv->cx;
@@ -147,7 +147,7 @@ ginsert_effect(void *p, struct node *n)
 		text_tmsg(MSG_ERROR, 1000, "%s: %s", OBJECT(go)->name,
 		    error_get());
 	} else {
-		TAILQ_INSERT_TAIL(&SPACE(go->parent)->gobjs, go, gobjs);
+		TAILQ_INSERT_TAIL(&SPACE(go->parent)->actors, go, actors);
 	}
 	return (1);
 }

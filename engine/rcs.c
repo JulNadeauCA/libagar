@@ -1,4 +1,4 @@
-/*	$Csoft: rcs.c,v 1.12 2005/06/16 02:26:29 vedge Exp $	*/
+/*	$Csoft: rcs.c,v 1.13 2005/09/17 15:22:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -698,6 +698,47 @@ rcs_list(struct tlist *tl)
 out:
 	tlist_restore_selections(tl);
 	response_free(res);
+	return (0);
+}
+
+int
+rcs_delete(const char *path)
+{
+	struct response *res;
+
+	if (rcs_connect() == -1)
+		return (-1);
+	
+	res = client_query(&rcs_client, "rcs-delete\n"
+				        "object-path=%s\n", path);
+	if (res == NULL) {
+		error_set("%s", qerror_get());
+		rcs_disconnect();
+		return (-1);
+	}
+	response_free(res);
+	rcs_disconnect();
+	return (0);
+}
+
+int
+rcs_rename(const char *from, const char *to)
+{
+	struct response *res;
+
+	if (rcs_connect() == -1)
+		return (-1);
+	
+	res = client_query(&rcs_client, "rcs-rename\n"
+				        "from-path=%s\n"
+					"to-path=%s\n", from, to);
+	if (res == NULL) {
+		error_set("%s", qerror_get());
+		rcs_disconnect();
+		return (-1);
+	}
+	response_free(res);
+	rcs_disconnect();
 	return (0);
 }
 

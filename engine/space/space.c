@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.7 2005/08/16 02:03:34 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.8 2005/08/27 04:40:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,7 @@
  */
 
 #include <engine/engine.h>
-#include <engine/gobject.h>
+#include <engine/actor.h>
 
 #include <engine/map/map.h>
 
@@ -52,20 +52,20 @@ space_init(void *obj, const char *type, const char *name, const void *ops)
 
 	object_init(sp, type, name, ops);
 	pthread_mutex_init(&sp->lock, &recursive_mutexattr);
-	TAILQ_INIT(&sp->gobjs);
+	TAILQ_INIT(&sp->actors);
 }
 
 void
 space_reinit(void *obj)
 {
 	struct space *sp = obj;
-	struct gobject *go;
+	struct actor *ac;
 	
 	pthread_mutex_lock(&sp->lock);
-	TAILQ_FOREACH(go, &sp->gobjs, gobjs) {
-		space_detach(sp, go);
+	TAILQ_FOREACH(ac, &sp->actors, actors) {
+		space_detach(sp, ac);
 	}
-	TAILQ_INIT(&sp->gobjs);
+	TAILQ_INIT(&sp->actors);
 	pthread_mutex_unlock(&sp->lock);
 }
 
@@ -79,20 +79,20 @@ int
 space_load(void *obj, struct netbuf *buf)
 {
 	struct space *sp = obj;
-	Uint32 i, ngobjs, name;
-	void *gobj;
+	Uint32 i, nactors, name;
+	void *actor;
 
 	if (version_read(buf, &space_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&sp->lock);
-	ngobjs = read_uint32(buf);
-	for (i = 0; i < ngobjs; i++) {
+	nactors = read_uint32(buf);
+	for (i = 0; i < nactors; i++) {
 		name = read_uint32(buf);
-		if (object_find_dep(sp, name, &gobj) == -1) {
+		if (object_find_dep(sp, name, &actor) == -1) {
 			goto fail;
 		}
-		TAILQ_INSERT_TAIL(&sp->gobjs, GOBJECT(gobj), gobjs);
+		TAILQ_INSERT_TAIL(&sp->actors, ACTOR(actor), actors);
 	}
 	pthread_mutex_unlock(&sp->lock);
 	return (0);
@@ -105,83 +105,83 @@ int
 space_save(void *obj, struct netbuf *buf)
 {
 	struct space *sp = obj;
-	struct gobject *gobj;
-	off_t ngobjs_offs;
-	Uint32 ngobjs = 0;
+	struct actor *actor;
+	off_t nactors_offs;
+	Uint32 nactors = 0;
 
 	version_write(buf, &space_ver);
 
 	pthread_mutex_lock(&sp->lock);
-	ngobjs_offs = netbuf_tell(buf);
+	nactors_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
-	TAILQ_FOREACH(gobj, &sp->gobjs, gobjs) {
-		dprintf("gobject: %s (%s)\n", OBJECT(gobj)->name,
-		    OBJECT(gobj)->type);
-		write_uint32(buf, object_encode_name(sp, gobj));
-		ngobjs++;
+	TAILQ_FOREACH(actor, &sp->actors, actors) {
+		dprintf("actor: %s (%s)\n", OBJECT(actor)->name,
+		    OBJECT(actor)->type);
+		write_uint32(buf, object_encode_name(sp, actor));
+		nactors++;
 	}
-	pwrite_uint32(buf, ngobjs, ngobjs_offs);
+	pwrite_uint32(buf, nactors, nactors_offs);
 	pthread_mutex_unlock(&sp->lock);
 	return (0);
 }
 
-/* Map a geometric object into a space. */
+/* Map an actor into a space. */
 int
 space_attach(void *sp_obj, void *obj)
 {
 	struct space *space = sp_obj;
-	struct gobject *go = obj;
+	struct actor *ac = obj;
 
-	pthread_mutex_lock(&go->lock);
+	pthread_mutex_lock(&ac->lock);
 		
-	object_add_dep(space, go);
+	object_add_dep(space, ac);
 	
 	if (OBJECT_TYPE(space, "map")) {
 		struct map *m = (struct map *)space;
 		
-		if (go->g_map.x < 0 || go->g_map.x >= m->mapw ||
-		    go->g_map.y < 0 || go->g_map.y >= m->maph)  {
+		if (ac->g_map.x < 0 || ac->g_map.x >= m->mapw ||
+		    ac->g_map.y < 0 || ac->g_map.y >= m->maph)  {
 			error_set(_("Illegal coordinates: %s:%d,%d"),
-			    OBJECT(m)->name, go->g_map.x, go->g_map.y);
+			    OBJECT(m)->name, ac->g_map.x, ac->g_map.y);
 			goto fail;
 		}
 
-		go->type = GOBJECT_MAP;
-		go->parent = space;
-		go->g_map.x0 = go->g_map.x;
-		go->g_map.y0 = go->g_map.y;
-		go->g_map.x1 = go->g_map.x;
-		go->g_map.y1 = go->g_map.y;
+		ac->type = ACTOR_MAP;
+		ac->parent = space;
+		ac->g_map.x0 = ac->g_map.x;
+		ac->g_map.y0 = ac->g_map.y;
+		ac->g_map.x1 = ac->g_map.x;
+		ac->g_map.y1 = ac->g_map.y;
 	
-		if (GOBJECT_OPS(go)->map != NULL)
-			GOBJECT_OPS(go)->map(go, m);
+		if (ACTOR_OPS(ac)->map != NULL)
+			ACTOR_OPS(ac)->map(ac, m);
 	} else {
-		go->type = GOBJECT_NONE;
-		go->parent = NULL;
+		ac->type = ACTOR_NONE;
+		ac->parent = NULL;
 	}
-	pthread_mutex_unlock(&go->lock);
+	pthread_mutex_unlock(&ac->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&go->lock);
+	pthread_mutex_unlock(&ac->lock);
 	return (-1);
 }
 
 void
 space_detach(void *sp_obj, void *obj)
 {
-	struct gobject *go = obj;
+	struct actor *ac = obj;
 	struct space *space = sp_obj;
 
-	pthread_mutex_lock(&go->lock);
+	pthread_mutex_lock(&ac->lock);
 
-	object_cancel_timeouts(go, 0);		/* XXX hook? */
+	object_cancel_timeouts(ac, 0);		/* XXX hook? */
 
 	if (OBJECT_TYPE(space, "map")) {
-		go_unmap_sprite(go);
+		actor_unmap_sprite(ac);
 	}
-	object_del_dep(space, go);
-	go->parent = NULL;
+	object_del_dep(space, ac);
+	ac->parent = NULL;
 out:
-	pthread_mutex_unlock(&go->lock);
+	pthread_mutex_unlock(&ac->lock);
 }
 

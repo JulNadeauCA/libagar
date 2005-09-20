@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.26 2005/01/05 04:44:03 vedge Exp $
+.\"	$Csoft: event.3,v 1.27 2005/05/11 09:59:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,13 +40,15 @@
 .Sh DESCRIPTION
 Once an Agar
 .Xr object 3
-has registered an event handler function for a specific type of event
-(using the
+has registered one or more event handlers for a specific type of
+event (using the
 .Fn event_new
+or
+.Fn event_add
 function), a call to
 .Fn event_post
 for this type of event will trigger the execution of the event handler
-function.
+functions, in the same order as they were registered.
 It is also possible to delay the execution of the event handler by a given
 number of
 .Sq ticks
@@ -272,6 +274,61 @@ receiver's descendants prior to the execution of the receiver's event handler.
 is a read-only flag that is set only if an event of this type has been
 previously scheduled for execution by
 .Fn event_schedule .
+.Sh ARGUMENT MANIPULATION
+.Pp
+In some cases it is desirable for functions to accept a list of event handler
+arguments like
+.Fn event_new ,
+and possibly manipulate its entries directly.
+For example, the
+.Fn menu_action
+function of the
+.Xr menu 3
+widget accepts a pointer to an event handler function, followed by an
+.Fn event_new
+style format string and a variable list of arguments.
+The following macros provide an interface for manipulating event handler
+arguments directly.
+.nr nS 1
+.Ft void
+.Fn EVENT_INSERT_ARG "struct event *ev, va_list ap, MEMBER, TYPE"
+.Pp
+.Ft void
+.Fn EVENT_INSERT_VAL "struct event *ev, MEMBER, VALUE"
+.Pp
+.Ft void
+.Fn EVENT_PUSH_ARG "va_list ap, char fmt_char, struct event *ev"
+.nr nS 0
+.Pp
+The
+.Fn EVENT_INSERT_ARG
+macro inserts an argument at the end of the argument vector for
+.Fa ev .
+The value to assign is obtained from
+.Xr va_arg 3
+using the given
+.Fa TYPE
+argument.
+.Fa MEMBER
+is the name of the
+.Fa "union evarg"
+member (for example "s" for a string).
+.Pp
+The
+.Fn EVENT_INSERT_VAL
+macro also inserts an argument at the end of the argument vector, but
+.Fa VALUE
+is directly assigned to the given
+.Fa MEMBER .
+.Pp
+The
+.Fn EVENT_PUSH_ARG
+function inserts a new argument onto the argument vector.
+The type is obtained from the
+.Fa fmt_char
+argument which is a character from an
+.Fn event_new
+style format string.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr object 3 ,

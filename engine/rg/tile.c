@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.84 2005/09/19 14:03:51 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.85 2005/09/19 15:46:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1289,8 +1289,7 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 		    tv, pwin, win, tl_feats, tl);
 	
 		bu = button_new(bo, _("Cancel"));
-		event_new(bu, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(bu, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);
@@ -1374,8 +1373,7 @@ attach_sketch_dlg(int argc, union evarg *argv)
 		    tv, pwin, win, tl_feats, tl);
 	
 		bu = button_new(bo, _("Cancel"));
-		event_new(bu, "button-pushed", window_generic_detach, "%p",
-		    win);
+		event_new(bu, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);
@@ -1785,7 +1783,7 @@ tile_infos(int argc, union evarg *argv)
 		    alpha_sb);
 
 		b = button_new(box, _("Cancel"));
-		event_new(b, "button-pushed", window_generic_detach, "%p", win);
+		event_new(b, "button-pushed", WINDETACH(win));
 	}
 
 	window_attach(pwin, win);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.235 2005/09/18 03:38:19 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.236 2005/09/19 01:25:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2012,6 +2012,76 @@ poll_props(int argc, union evarg *argv)
 }
 
 static void
+poll_events(int argc, union evarg *argv)
+{
+	extern const char *evarg_type_names[];
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct event *ev;
+	
+	tlist_clear_items(tl);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		char args[TLIST_LABEL_MAX], arg[16];
+		u_int i;
+
+		args[0] = '(';
+		args[1] = '\0';
+		for (i = 1; i < ev->argc; i++) {
+			switch (ev->argt[i]) {
+			case EVARG_POINTER:
+				snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
+				break;
+			case EVARG_STRING:
+				snprintf(arg, sizeof(arg), "\"%s\"",
+				    ev->argv[i].s);
+				break;
+			case EVARG_UCHAR:
+			case EVARG_CHAR:
+				snprintf(arg, sizeof(arg), "'%c'",
+				    (u_char)ev->argv[i].i);
+				break;
+			case EVARG_INT:
+				snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
+				break;
+			case EVARG_UINT:
+				snprintf(arg, sizeof(arg), "%u",
+				    (u_int)ev->argv[i].i);
+				break;
+			case EVARG_LONG:
+				snprintf(arg, sizeof(arg), "%li",
+				    ev->argv[i].li);
+				break;
+			case EVARG_ULONG:
+				snprintf(arg, sizeof(arg), "%li",
+				    (u_long)ev->argv[i].li);
+				break;
+			case EVARG_FLOAT:
+				snprintf(arg, sizeof(arg), "<%g>",
+				    ev->argv[i].f);
+				break;
+			case EVARG_DOUBLE:
+				snprintf(arg, sizeof(arg), "<%g>",
+				    ev->argv[i].f);
+				break;
+			}
+			strlcat(args, arg, sizeof(args));
+			if (i < ev->argc-1) {
+				strlcat(args, ", ", sizeof(args));
+			} else {
+				strlcat(args, ")", sizeof(args));
+			}
+		}
+
+		tlist_insert(tl, NULL, "%s%s%s %s", ev,
+		    (ev->flags & EVENT_ASYNC) ? " <async>" : "",
+		    (ev->flags & EVENT_PROPAGATE) ? " <propagate>" : "",
+		    args);
+
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
 rename_object(int argc, union evarg *argv)
 {
 	struct widget_binding *stringb;
@@ -2193,15 +2263,19 @@ object_edit(void *p)
 	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
 		tlist_set_item_height(tl, TILESZ);
 		event_new(tl, "tlist-poll", poll_gfx, "%p", ob);
+	}
+	
+	ntab = notebook_add_tab(nb, _("Events"), BOX_VERT);
+	{
+		tl = tlist_new(ntab, TLIST_POLL);
+		event_new(tl, "tlist-poll", poll_events, "%p", ob);
 	}
 	
 	ntab = notebook_add_tab(nb, _("Properties"), BOX_VERT);
 	{
 		tl = tlist_new(ntab, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
 		event_new(tl, "tlist-poll", poll_props, "%p", ob);
 	}
 	return (win);
