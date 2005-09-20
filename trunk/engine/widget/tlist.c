@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.131 2005/09/19 03:12:17 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.132 2005/09/19 13:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -613,39 +613,26 @@ tlist_set_args(struct tlist_item *it, const char *fmt, ...)
 	va_start(ap, fmt);
 	while (*s != '\0') {
 		switch (*s) {
+		case 'p':
+			it->argv[it->argc++].p = va_arg(ap, void *);
+			break;
+		case 's':
+			it->argv[it->argc++].s = va_arg(ap, char *);
+			break;
 		case 'i':
-		case 'o':
 		case 'u':
-		case 'x':
-		case 'X':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
 			it->argv[it->argc++].i = va_arg(ap, int);
 			break;
 		case 'D':
-		case 'O':
 		case 'U':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
 			it->argv[it->argc++].li = va_arg(ap, long int);
 			break;
-		case 'e':
-		case 'E':
 		case 'f':
-		case 'g':
-		case 'G':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
+		case 'd':
 			it->argv[it->argc++].f = va_arg(ap, double);
 			break;
 		case 'c':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
-			it->argv[it->argc++].c = va_arg(ap, int);
-			break;
-		case 's':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
-			it->argv[it->argc++].s = va_arg(ap, char *);
-			break;
-		case 'p':
-			memset(&it->argv[it->argc], 0, sizeof(union evarg));
-			it->argv[it->argc++].p = va_arg(ap, void *);
+			it->argv[it->argc++].i = va_arg(ap, int);
 			break;
 		default:
 			break;
