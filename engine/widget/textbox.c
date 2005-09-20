@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.100 2005/05/29 05:49:59 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.101 2005/06/10 05:42:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -195,9 +195,11 @@ textbox_init(struct textbox *tbox, const char *label)
 		tbox->label_id = widget_map_surface(tbox, tbox->label_su);
 	
 		tbox->prew += tbox->label_su->w;
-		tbox->preh += tbox->label_su->h;
+		tbox->preh += MAX(tbox->label_su->h, text_font_height);
 	} else {
+		tbox->label_su = NULL;
 		tbox->label_id = -1;
+		tbox->preh += text_font_height;
 	}
 	
 	timeout_set(&tbox->repeat_to, repeat_expire, NULL, 0);
@@ -226,13 +228,17 @@ textbox_draw(void *p)
 	Uint32 *ucs;
 #endif
 
-	if (WIDGET(tbox)->w < tbox->label_su->w + (tbox->xpadding<<1) ||
-	    WIDGET(tbox)->h < tbox->label_su->h + (tbox->ypadding<<1)) 
-		return;
-
 	if (tbox->label_id >= 0) {
+		if (WIDGET(tbox)->w < tbox->label_su->w + (tbox->xpadding<<1) ||
+		    WIDGET(tbox)->h < tbox->label_su->h + (tbox->ypadding<<1)) 
+			return;
+
 		widget_blit_surface(tbox, tbox->label_id,
 		    0, WIDGET(tbox)->h/2 - tbox->label_su->h/2);
+	} else {
+		if (WIDGET(tbox)->w < (tbox->xpadding<<1) ||
+		    WIDGET(tbox)->h < (tbox->ypadding<<1)) 
+			return;
 	}
 
 	font = text_fetch_font(
