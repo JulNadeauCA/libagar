@@ -1,10 +1,10 @@
-/*	$Csoft: test.h,v 1.1 2005/05/10 12:22:07 vedge Exp $	*/
+/*	$Csoft: test.h,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/map/map.h>
-#include <engine/widget/everything.h>
+#include <engine/widget/gui.h>
 
 struct testfn_ops {
 	char *name;
