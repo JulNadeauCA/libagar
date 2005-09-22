@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.52 2005/09/15 17:21:25 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.53 2005/09/19 02:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -331,10 +331,10 @@ mousebuttondown(int argc, union evarg *argv)
 	switch (tv->state) {
 	case TILEVIEW_PIXMAP_EDIT:
 		if (pixmap_coincident(tel, sx, sy)) {
-			pixmap_mousebuttondown(tv, tel,
-			    sx - tel->tel_pixmap.x,
-			    sy - tel->tel_pixmap.y,
-			    button);
+			tv->tv_pixmap.xorig = sx - tel->tel_pixmap.x;
+			tv->tv_pixmap.yorig = sy - tel->tel_pixmap.y;
+			pixmap_mousebuttondown(tv, tel, tv->tv_pixmap.xorig,
+			    tv->tv_pixmap.yorig, button);
 			return;
 		} else {
 			if (button == SDL_BUTTON_RIGHT)
@@ -1765,13 +1765,15 @@ tileview_draw(void *p)
 		draw_status_text(tv, status);
 		break;
 	case TILEVIEW_PIXMAP_EDIT:
-		strlcpy(status, _("Editing pixmap: "), sizeof(status));
-		strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
-		if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND) {
-			strlcat(status, _(" (free hand)"), sizeof(status));
-			break;
+		{
+			extern const char *pixmap_state_names[];
+
+			strlcpy(status, _("Editing pixmap: "), sizeof(status));
+			strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
+			strlcat(status, pixmap_state_names[tv->tv_pixmap.state],
+			    sizeof(status));
+			draw_status_text(tv, status);
 		}
-		draw_status_text(tv, status);
 		break;
 	default:
 		break;

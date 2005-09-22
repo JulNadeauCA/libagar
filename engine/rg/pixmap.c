@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.41 2005/09/05 03:24:34 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.42 2005/09/20 13:46:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -52,6 +52,13 @@
 
 static SDL_Cursor *saved_cursor = NULL;
 int pixmap_source = 1;
+const char *pixmap_state_names[] = {
+	"",
+	" (free-hand)",
+	" (vertical)",
+	" (horizontal)",
+	" (diagonal)"
+};
 
 void
 pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
@@ -1018,7 +1025,15 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	} else if (keystate[SDLK_c]) {
 		pixmap_pick(tv, tel, x, y);
 	} else {
-		tv->tv_pixmap.state = TILEVIEW_PIXMAP_FREEHAND;
+		if (keystate[SDLK_h]) {
+			tv->tv_pixmap.state = TVPIXMAP_HORIZONTAL;
+		} else if (keystate[SDLK_v]) {
+			tv->tv_pixmap.state = TVPIXMAP_VERTICAL;
+		} else if (keystate[SDLK_d]) {
+			tv->tv_pixmap.state = TVPIXMAP_DIAGONAL;
+		} else {
+			tv->tv_pixmap.state = TVPIXMAP_FREEHAND;
+		}
 		pixmap_begin_undoblk(px);
 		pixmap_apply(tv, tel, x, y);
 	}
@@ -1029,7 +1044,7 @@ pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
     int y, int button)
 {
 	if (button == SDL_BUTTON_LEFT) {
-		tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
+		tv->tv_pixmap.state = TVPIXMAP_IDLE;
 		tv->tile->flags |= TILE_DIRTY;
 	}
 }
@@ -1075,11 +1090,47 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
+	int d;
 
-	if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND) {
+	switch (tv->tv_pixmap.state) {
+	case TVPIXMAP_FREEHAND:
 		pixmap_apply(tv, tel, x, y);
 		return;
+	case TVPIXMAP_VERTICAL:
+		pixmap_apply(tv, tel, tv->tv_pixmap.xorig, y);
+		return;
+	case TVPIXMAP_HORIZONTAL:
+		pixmap_apply(tv, tel, x, tv->tv_pixmap.yorig);
+		return;
+	case TVPIXMAP_DIAGONAL:
+		if (y < tv->tv_pixmap.yorig) {
+			d = tv->tv_pixmap.xorig - x;
+			if (x < tv->tv_pixmap.xorig) {
+				pixmap_apply(tv, tel,
+				    tv->tv_pixmap.xorig - d,
+				    tv->tv_pixmap.yorig - d);
+			} else {
+				pixmap_apply(tv, tel,
+				    tv->tv_pixmap.xorig + d,
+				    tv->tv_pixmap.yorig - d);
+			}
+		} else {
+			d = tv->tv_pixmap.yorig - y;
+			if (y < tv->tv_pixmap.yorig) {
+				pixmap_apply(tv, tel,
+				    tv->tv_pixmap.xorig - d,
+				    tv->tv_pixmap.yorig - d);
+			} else {
+				pixmap_apply(tv, tel,
+				    tv->tv_pixmap.xorig - d,
+				    tv->tv_pixmap.yorig + d);
+			}
+		}
+		return;
+	default:
+		break;
 	}
+
 	if (state == SDL_BUTTON_LEFT) {
 		Uint8 *keystate = SDL_GetKeyState(NULL);
 
