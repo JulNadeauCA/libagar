@@ -1090,7 +1090,7 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	int d;
+	int d, x2, y2;
 
 	switch (tv->tv_pixmap.state) {
 	case TVPIXMAP_FREEHAND:
@@ -1106,26 +1106,23 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 		if (y < tv->tv_pixmap.yorig) {
 			d = tv->tv_pixmap.xorig - x;
 			if (x < tv->tv_pixmap.xorig) {
-				pixmap_apply(tv, tel,
-				    tv->tv_pixmap.xorig - d,
-				    tv->tv_pixmap.yorig - d);
+				x2 = tv->tv_pixmap.xorig - d;
+				y2 = tv->tv_pixmap.yorig - d;
 			} else {
-				pixmap_apply(tv, tel,
-				    tv->tv_pixmap.xorig + d,
-				    tv->tv_pixmap.yorig - d);
+				x2 = tv->tv_pixmap.xorig - d;
+				y2 = tv->tv_pixmap.yorig + d;
 			}
 		} else {
-			d = tv->tv_pixmap.yorig - y;
-			if (y < tv->tv_pixmap.yorig) {
-				pixmap_apply(tv, tel,
-				    tv->tv_pixmap.xorig - d,
-				    tv->tv_pixmap.yorig - d);
+			d = tv->tv_pixmap.xorig - x;
+			if (x < tv->tv_pixmap.xorig) {
+				x2 = tv->tv_pixmap.xorig - d;
+				y2 = tv->tv_pixmap.yorig + d;
 			} else {
-				pixmap_apply(tv, tel,
-				    tv->tv_pixmap.xorig - d,
-				    tv->tv_pixmap.yorig + d);
+				x2 = tv->tv_pixmap.xorig - d;
+				y2 = tv->tv_pixmap.yorig - d;
 			}
 		}
+		pixmap_apply(tv, tel, x2, y2);
 		return;
 	default:
 		break;
