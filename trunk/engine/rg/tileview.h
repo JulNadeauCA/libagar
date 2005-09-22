@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.30 2005/07/29 03:13:56 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.31 2005/09/15 17:21:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -163,44 +163,47 @@ struct tileview {
 
 	union {
 		struct {
-			struct tile_element *tel;
-			struct feature *ft;   
-			struct window *win;
-
-			struct AGMenu *menu;
-			struct AGMenuItem *menu_item;
-			struct window *menu_win;
+			struct tile_element *tel;	/* Feature element */
+			struct feature *ft;  
+			struct window *win;		/* Settings */
+			struct AGMenu *menu;		/* Popup menu */
+			struct AGMenuItem *menu_item;	/* Popup menu item */
+			struct window *menu_win;	/* Popup menu window */
 		} feature;
 		struct {
-			struct tile_element *tel;
+			struct tile_element *tel;	/* Sketch element */
 			struct sketch *sk;
-			struct window *win;
-			struct tileview_ctrl *ctrl;
-
-			struct AGMenu *menu;
-			struct AGMenuItem *menu_item;
-			struct window *menu_win;
+			struct window *win;		/* Settings */
+			struct tileview_ctrl *ctrl;	/* Extent control */
+			struct AGMenu *menu;		/* Popup menu */
+			struct AGMenuItem *menu_item;	/* Popup menu item */
+			struct window *menu_win;	/* Popup menu window */
 		} sketch;
 		struct {
-			struct tile_element *tel;
+			struct tile_element *tel;	/* Pixmap element */
 			struct pixmap *px;
-			struct window *win;
-			struct tileview_ctrl *ctrl;
+			struct window *win;		/* Settings */
+			struct tileview_ctrl *ctrl;	/* Extent control */
 			enum {
-				TILEVIEW_PIXMAP_IDLE,
-				TILEVIEW_PIXMAP_FREEHAND
+				TVPIXMAP_IDLE,
+				TVPIXMAP_FREEHAND,
+				TVPIXMAP_ORTHOGONAL,
+				TVPIXMAP_VERTICAL,
+				TVPIXMAP_HORIZONTAL,
+				TVPIXMAP_DIAGONAL
 			} state;
-
-			struct AGMenu *menu;
-			struct AGMenuItem *menu_item;
-			struct window *menu_win;
+			struct AGMenu *menu;		/* Popup menu */
+			struct AGMenuItem *menu_item;	/* Popup menu item */
+			struct window *menu_win;	/* Popup menu window */
+			int xorig, yorig;		/* Reference point
+							   for restrictions */
 		} pixmap;
 		struct {
-			struct tileview_ctrl *geo_ctrl;
-			struct tileview_ctrl *orig_ctrl;
+			struct tileview_ctrl *geo_ctrl;	 /* Geometry control */
+			struct tileview_ctrl *orig_ctrl; /* Origin control */
 		} tile;
 		struct {
-			int nx, ny;
+			int nx, ny;			/* Current position */
 		} attrs;
 	} sargs;
 #define tv_feature sargs.feature
