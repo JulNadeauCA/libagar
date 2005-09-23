@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.24 2005/03/17 03:10:26 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.25 2005/05/24 08:12:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -233,6 +233,11 @@ combo_init(struct combo *com, const char *label, int flags)
 	com->button = button_new(com, " ... ");
 	button_set_sticky(com->button, 1);
 	button_set_padding(com->button, 1);
+
+	if ((flags & COMBO_ANY_TEXT) == 0) {
+		com->tbox->flags &= ~(TEXTBOX_WRITEABLE);
+		WIDGET(com->tbox)->flags &= ~(WIDGET_FOCUSABLE);
+	}
 
 	com->list = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(com->list, 0);
