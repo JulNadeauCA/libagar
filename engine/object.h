@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.134 2005/09/19 01:25:16 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.135 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -25,8 +25,8 @@ typedef struct ag_object_ops {
 	void	(*init)(void *, const char *);		/* Initialize */
 	void	(*reinit)(void *);			/* Reinitialize */
 	void	(*destroy)(void *);			/* Free resources */
-	int	(*load)(void *, AG_Netbuf *);	/* Load from network */
-	int	(*save)(void *, AG_Netbuf *);	/* Save to network */
+	int	(*load)(void *, AG_Netbuf *);		/* Load from network */
+	int	(*save)(void *, AG_Netbuf *);		/* Save to network */
 	void   *(*edit)(void *);			/* Edit object */
 } AG_ObjectOps;
 

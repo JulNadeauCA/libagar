@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.69 2005/09/18 05:46:23 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.70 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1691,7 +1691,7 @@ VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
 	extern const AG_MaptoolOps vgOriginTool;
 	extern const AG_MaptoolOps vg_line_tool;
 	extern const AG_MaptoolOps vg_circle_tool;
-	extern const AG_MaptoolOps vg_text_tool;
+	extern const AG_MaptoolOps vgTextTool;
 	AG_MenuItem *mi_snap;
 	
 	mi_snap = AG_MenuAction(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
@@ -1705,7 +1705,7 @@ VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
 	    select_tool, "%p,%s,%p", vg, "Lines", mv);
 	AG_MenuAction(pitem, _("Circle"), vg_circle_tool.icon,
 	    select_tool, "%p,%s,%p", vg, "Circles", mv);
-	AG_MenuAction(pitem, _("Text"), vg_text_tool.icon,
+	AG_MenuAction(pitem, _("Text"), vgTextTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Text", mv);
 }
 #endif /* EDITION */

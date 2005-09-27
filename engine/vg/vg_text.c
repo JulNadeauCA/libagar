@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.22 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.23 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -518,7 +518,7 @@ finish:
 	return (1);
 }
 
-const AG_MaptoolOps vg_text_tool = {
+const AG_MaptoolOps vgTextTool = {
 	"Text", N_("Insert text labels."),
 	VGTEXT_ICON,
 	sizeof(AG_Maptool),
