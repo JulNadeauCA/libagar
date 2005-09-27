@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.15 2005/07/24 05:29:51 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.16 2005/07/24 08:04:17 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -55,38 +55,38 @@
 
 static FT_Library library;
 
-static void ttf_flush_cache(struct ttf_font *);
-static void ttf_flush_glyph(struct ttf_glyph *);
-static int ttf_load_glyph(struct ttf_font *, Uint32, struct ttf_glyph *, int);
+static void ttf_flush_cache(AG_TTFFont *);
+static void ttf_flush_glyph(AG_TTFGlyph *);
+static int ttf_load_glyph(AG_TTFFont *, Uint32, AG_TTFGlyph *, int);
 
 int
-ttf_init(void)
+AG_TTFInit(void)
 {
 	if (FT_Init_FreeType(&library) != 0) {
-		error_set(_("Font engine initialization failed."));
+		AG_SetError(_("Font engine initialization failed."));
 		return (-1);
 	}
 	return (0);
 }
 
 void
-ttf_destroy(void)
+AG_TTFDestroy(void)
 {
 	FT_Done_FreeType(library);
 }
 
-struct ttf_font *
-ttf_open_font(const char *file, int ptsize)
+AG_TTFFont *
+AG_TTFOpenFont(const char *file, int ptsize)
 {
-	struct ttf_font *font;
+	AG_TTFFont *font;
 	FT_Face face;
 	FT_Fixed scale;
 
-	font = Malloc(sizeof(struct ttf_font), M_LOADER);
-	memset(font, 0, sizeof(struct ttf_font));
+	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
+	memset(font, 0, sizeof(AG_TTFFont));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
-		error_set(_("Cannot find font face: `%s'."), file);
+		AG_SetError(_("Cannot find font face: `%s'."), file);
 		goto fail1;
 	}
 	face = font->face;
@@ -95,7 +95,7 @@ ttf_open_font(const char *file, int ptsize)
 	if (FT_IS_SCALABLE(face)) {
 	  	/* Set the character size and use default DPI (72). */
 	  	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0)) {
-			error_set(_("Failed to set font size."));
+			AG_SetError(_("Failed to set font size."));
 			goto fail2;
 		}
 		/* Get the scalable font metrics for this font */
@@ -155,14 +155,14 @@ ttf_open_font(const char *file, int ptsize)
 	font->glyph_italics *= font->height;
 	return (font);
 fail2:
-	ttf_close_font(font);
+	AG_TTFCloseFont(font);
 fail1:
 	Free(font, M_LOADER);
 	return (NULL);
 }
 
 void
-ttf_close_font(struct ttf_font *font)
+AG_TTFCloseFont(AG_TTFFont *font)
 {
 	ttf_flush_cache(font);
 	FT_Done_Face(font->face);
@@ -170,7 +170,7 @@ ttf_close_font(struct ttf_font *font)
 }
 
 static void
-ttf_flush_glyph(struct ttf_glyph *glyph)
+ttf_flush_glyph(AG_TTFGlyph *glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
@@ -186,7 +186,7 @@ ttf_flush_glyph(struct ttf_glyph *glyph)
 }
 	
 static void
-ttf_flush_cache(struct ttf_font *font)
+ttf_flush_cache(AG_TTFFont *font)
 {
 	int i, size = sizeof(font->cache) / sizeof(font->cache[0]);
 
@@ -199,7 +199,7 @@ ttf_flush_cache(struct ttf_font *font)
 }
 
 static int
-ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
+ttf_load_glyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
     int want)
 {
 	FT_Face face;
@@ -213,7 +213,7 @@ ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
 		cached->index = FT_Get_Char_Index(face, ch);
 	}
 	if (FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT) != 0) {
-		error_set(_("Failed to load the TTF glyph."));
+		AG_SetError(_("Failed to load the TTF glyph."));
 		return (-1);
 	}
 
@@ -285,13 +285,13 @@ ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
 		/* Render the glyph. */
 		if (mono) {
 			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
-				error_set(_("Cannot render mono glyph."));
+				AG_SetError(_("Cannot render mono glyph."));
 				return (-1);
 			}
 		} else {
 			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
 			    != 0) {
-				error_set(_("Cannot render normal glyph."));
+				AG_SetError(_("Cannot render normal glyph."));
 				return (-1);
 			}
 		}
@@ -441,7 +441,7 @@ ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
 }
 
 int
-ttf_find_glyph(struct ttf_font *font, Uint32 ch, int want)
+AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
 {
 	int retval = 0;
 
@@ -460,52 +460,52 @@ ttf_find_glyph(struct ttf_font *font, Uint32 ch, int want)
 }
 
 int
-ttf_font_height(struct ttf_font *font)
+AG_TTFHeight(AG_TTFFont *font)
 {
 	return (font->height);
 }
 
 int
-ttf_font_ascent(struct ttf_font *font)
+AG_TTFAscent(AG_TTFFont *font)
 {
        return (font->ascent);
 }
 
 int
-ttf_font_descent(struct ttf_font *font)
+AG_TTFDescent(AG_TTFFont *font)
 {
 	return (font->descent);
 }
 
 int
-ttf_font_line_skip(struct ttf_font *font)
+AG_TTFLineSkip(AG_TTFFont *font)
 {
 	return (font->lineskip);
 }
 
 int
-ttf_font_face_fixed_width(struct ttf_font *font)
+AG_TTFFaceFixedWidth(AG_TTFFont *font)
 {
 	return (FT_IS_FIXED_WIDTH(font->face));
 }
 
 char *
-ttf_font_face_family(struct ttf_font *font)
+AG_TTFFaceFamily(AG_TTFFont *font)
 {
 	return (font->face->family_name);
 }
 
 char *
-ttf_font_face_style(struct ttf_font *font)
+AG_TTFFaceStyle(AG_TTFFont *font)
 {
 	return (font->face->style_name);
 }
 
 int
-ttf_glyph_metrics(struct ttf_font *font, Uint32 ch, int *minx, int *maxx,
+AG_TTFGlyphMetrics(AG_TTFFont *font, Uint32 ch, int *minx, int *maxx,
     int *miny, int *maxy, int *advance)
 {
-	if (ttf_find_glyph(font, ch, TTF_CACHED_METRICS) != 0) {
+	if (AG_TTFFindGlyph(font, ch, TTF_CACHED_METRICS) != 0) {
 		return (-1);
 	}
 	if (minx != NULL)
@@ -524,22 +524,22 @@ ttf_glyph_metrics(struct ttf_font *font, Uint32 ch, int *minx, int *maxx,
 
 /* Predict the size of rendered UTF-8 text. */
 int
-ttf_size_text(struct ttf_font *font, const char *utf8, int *w, int *h)
+AG_TTFSizeText(AG_TTFFont *font, const char *utf8, int *w, int *h)
 {
 	Uint32 *ucs;
 	int status;
 
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	status = ttf_size_unicode(font, ucs, w, h);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	status = AG_TTFSizeUnicode(font, ucs, w, h);
 	free(ucs);
 	return (status);
 }
 
 /* Predict the size of rendered UCS-4 text. */
 int
-ttf_size_unicode(struct ttf_font *font, const Uint32 *ucs, int *w, int *h)
+AG_TTFSizeUnicode(AG_TTFFont *font, const Uint32 *ucs, int *w, int *h)
 {
-	struct ttf_glyph *glyph;
+	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
 	int status;
 	int x, z;
@@ -553,7 +553,7 @@ ttf_size_unicode(struct ttf_font *font, const Uint32 *ucs, int *w, int *h)
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = ucs; *ch != '\0'; ch++) {
-		if (ttf_find_glyph(font, *ch, TTF_CACHED_METRICS) != 0) {
+		if (AG_TTFFindGlyph(font, *ch, TTF_CACHED_METRICS) != 0) {
 			return (-1);
 		}
 		glyph = font->current;
@@ -611,13 +611,13 @@ ttf_size_unicode(struct ttf_font *font, const Uint32 *ucs, int *w, int *h)
 
 /* Render UTF-8 text to a new surface. */
 SDL_Surface *
-ttf_render_text_solid(struct ttf_font *font, const char *utf8, SDL_Color fg)
+AG_TTFRenderTextSolid(AG_TTFFont *font, const char *utf8, SDL_Color fg)
 {
 	SDL_Surface *textsu;
 	Uint32 *ucs;
 
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	textsu = ttf_render_unicode_solid(font, ucs, NULL, fg);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	textsu = AG_TTFRenderUnicodeSolid(font, ucs, NULL, fg);
 	free(ucs);
 	return (textsu);
 }
@@ -626,20 +626,20 @@ static __inline__ SDL_Surface *
 get_symbol(Uint32 ch)
 {
 	switch (ch) {
-	case 'L': return (ICON(LEFT_BUTTON_SYMBOL));
-	case 'M': return (ICON(MID_BUTTON_SYMBOL));
-	case 'R': return (ICON(RIGHT_BUTTON_SYMBOL));
-	case 'C': return (ICON(CTRL_SYMBOL));
+	case 'L': return (AGICON(LEFT_BUTTON_SYMBOL));
+	case 'M': return (AGICON(MID_BUTTON_SYMBOL));
+	case 'R': return (AGICON(RIGHT_BUTTON_SYMBOL));
+	case 'C': return (AGICON(CTRL_SYMBOL));
 	default: return (NULL);
 	}
 }
 
 /* Render UCS-4 text to a new surface. */
 SDL_Surface *
-ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
+AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
     SDL_Color *cBg, SDL_Color cFg)
 {
-	struct ttf_glyph *glyph;
+	AG_TTFGlyph *glyph;
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
 	const Uint32 *ch;
@@ -648,14 +648,14 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
 	int w, h;
 	int xstart;
 
-	if ((ttf_size_unicode(font, ucs, &w, NULL) < 0) || w== 0) {
-		error_set(_("The text has zero width."));
+	if ((AG_TTFSizeUnicode(font, ucs, &w, NULL) < 0) || w== 0) {
+		AG_SetError(_("The text has zero width."));
 		return (NULL);
 	}
 	h = font->height;
 	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
 	if (textsu == NULL) {
-		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
 	}
 
@@ -695,7 +695,7 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
 				    row*sym->pitch;
 
 				for (col = 0; col < sym->w; col++) {
-					Uint32 pixel = GET_PIXEL(sym, src);
+					Uint32 pixel = AG_GET_PIXEL(sym, src);
 
 					if (pixel != sym->format->colorkey) {
 						*dst = 1;
@@ -708,7 +708,7 @@ ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs,
 			ch += 3;
 			continue;
 		}
-		if (ttf_find_glyph(font, *ch,
+		if (AG_TTFFindGlyph(font, *ch,
 		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 		    	goto fail1;
 		}
@@ -763,14 +763,14 @@ fail1:
 }
 
 void
-ttf_set_font_style(struct ttf_font *font, int style)
+AG_TTFSetFontStyle(AG_TTFFont *font, int style)
 {
 	font->style = style;
 	ttf_flush_cache(font);
 }
 
 int
-ttf_get_font_style(struct ttf_font *font)
+AG_TTFGetFontStyle(AG_TTFFont *font)
 {
 	return (font->style);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.4 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.5 2005/08/29 03:29:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ static const char *insn_names[] = {
 };
 
 void
-animation_init(struct animation *ani, struct tileset *ts, const char *name,
+RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name,
     int flags)
 {
 	strlcpy(ani->name, name, sizeof(ani->name));
@@ -66,16 +66,16 @@ animation_init(struct animation *ani, struct tileset *ts, const char *name,
 	ani->tileset = ts;
 	ani->nrefs = 0;
 
-	ani->insns = Malloc(sizeof(struct anim_insn), M_RG);
+	ani->insns = Malloc(sizeof(RG_AnimInsn), M_RG);
 	ani->ninsns = 0;
-	ani->frames = Malloc(sizeof(struct anim_frame), M_RG);
+	ani->frames = Malloc(sizeof(RG_AnimFrame), M_RG);
 	ani->nframes = 0;
 
 	ani->gframe = 0;
 }
 
 void
-animation_scale(struct animation *ani, u_int w, u_int h)
+RG_AnimScale(RG_Anim *ani, u_int w, u_int h)
 {
 	ani->w = w;
 	ani->h = h;
@@ -84,12 +84,12 @@ animation_scale(struct animation *ani, u_int w, u_int h)
 }
 
 u_int
-anim_insert_insn(struct animation *ani, enum anim_insn_type type)
+RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 {
-	struct anim_insn *insn;
+	RG_AnimInsn *insn;
 
 	ani->insns = Realloc(ani->insns,
-	    (ani->ninsns+1)*sizeof(struct anim_insn));
+	    (ani->ninsns+1)*sizeof(RG_AnimInsn));
 	insn = &ani->insns[ani->ninsns];
 	insn->type = type;
 	insn->t = NULL;
@@ -98,14 +98,14 @@ anim_insert_insn(struct animation *ani, enum anim_insn_type type)
 	insn->delay = 100;
 
 	switch (type) {
-	case ANIM_TILE:
+	case RG_ANIM_TILE:
 		insn->in_tile.alpha = SDL_ALPHA_OPAQUE;
 		break;
-	case ANIM_DISPX:
+	case RG_ANIM_DISPX:
 		insn->in_disPx.dx = 0;
 		insn->in_disPx.dy = 0;
 		break;
-	case ANIM_ROTPX:
+	case RG_ANIM_ROTPX:
 		insn->in_rotPx.x = 0;
 		insn->in_rotPx.y = 0;
 		insn->in_rotPx.theta = 0;
@@ -117,7 +117,7 @@ anim_insert_insn(struct animation *ani, enum anim_insn_type type)
 }
 
 static void
-destroy_insn(struct anim_insn *insn)
+destroy_insn(RG_AnimInsn *insn)
 {
 	if (insn->t != NULL)	insn->t->nrefs--;
 	if (insn->px != NULL)	insn->px->nrefs--;
@@ -125,26 +125,26 @@ destroy_insn(struct anim_insn *insn)
 }
 
 void
-anim_remove_insn(struct animation *ani, u_int insn)
+RG_AnimRemoveInsn(RG_Anim *ani, u_int insn)
 {
 	destroy_insn(&ani->insns[insn]);
 	if (insn+1 < ani->ninsns)
 		memmove(&ani->insns[insn], &ani->insns[insn+1],
-		    (--ani->ninsns)*sizeof(struct anim_insn));
+		    (--ani->ninsns)*sizeof(RG_AnimInsn));
 }
 
 u_int
-anim_insert_frame(struct animation *ani)
+RG_AnimInsertFrame(RG_Anim *ani)
 {
-	struct tileset *ts = ani->tileset;
+	RG_Tileset *ts = ani->tileset;
 	Uint32 sflags = SDL_SWSURFACE;
-	struct anim_frame *fr;
+	RG_AnimFrame *fr;
 	
 	if (ani->flags & ANIMATION_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
 	if (ani->flags & ANIMATION_SRCALPHA)	sflags |= SDL_SRCALPHA;
 
 	ani->frames = Realloc(ani->frames,
-	    (ani->nframes+1)*sizeof(struct anim_frame));
+	    (ani->nframes+1)*sizeof(RG_AnimFrame));
 	fr = &ani->frames[ani->nframes];
 	fr->su = SDL_CreateRGBSurface(sflags, ani->w, ani->h,
 	    ts->fmt->BitsPerPixel,
@@ -161,22 +161,22 @@ anim_insert_frame(struct animation *ani)
 }
 
 static void
-destroy_frame(struct anim_frame *fr)
+destroy_frame(RG_AnimFrame *fr)
 {
 	SDL_FreeSurface(fr->su);
 }
 
 void
-anim_remove_frame(struct animation *ani, u_int frame)
+RG_AnimRemoveFrame(RG_Anim *ani, u_int frame)
 {
 	destroy_frame(&ani->frames[frame]);
 	if (frame+1 < ani->nframes)
 		memmove(&ani->frames[frame], &ani->frames[frame+1],
-		    (--ani->nframes)*sizeof(struct anim_frame));
+		    (--ani->nframes)*sizeof(RG_AnimFrame));
 }
 
 static void
-destroy_frames(struct animation *ani)
+destroy_frames(RG_Anim *ani)
 {
 	u_int i;
 	
@@ -187,7 +187,7 @@ destroy_frames(struct animation *ani)
 }
 
 void
-animation_destroy(struct animation *ani)
+RG_AnimDestroy(RG_Anim *ani)
 {
 	u_int i;
 
@@ -201,117 +201,117 @@ animation_destroy(struct animation *ani)
 }
 
 int
-animation_load(struct animation *ani, struct netbuf *buf)
+RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 {
-	struct tileset *ts = ani->tileset;
+	RG_Tileset *ts = ani->tileset;
 	Uint32 i, ninsns;
 	
-	ani->w = read_uint16(buf);
-	ani->h = read_uint16(buf);
+	ani->w = AG_ReadUint16(buf);
+	ani->h = AG_ReadUint16(buf);
 
-	ninsns = read_uint32(buf);
+	ninsns = AG_ReadUint32(buf);
 	for (i = 0; i < ninsns; i++) {
-		char name[TILESET_NAME_MAX];
-		enum anim_insn_type type;
-		struct anim_insn *insn;
+		char name[RG_TILESET_NAME_MAX];
+		enum rg_anim_insn_type type;
+		RG_AnimInsn *insn;
 		
-		type = (enum anim_insn_type)read_uint16(buf);
-		insn = &ani->insns[anim_insert_insn(ani, type)];
-		insn->delay = (u_int)read_uint32(buf);
+		type = (enum rg_anim_insn_type)AG_ReadUint16(buf);
+		insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
+		insn->delay = (u_int)AG_ReadUint32(buf);
 
 		switch (type) {
-		case ANIM_TILE:
-			copy_string(name, buf, sizeof(name));
-			insn->t = tileset_find_tile(ts, name);
-			insn->in_tile.alpha = (u_int)read_uint8(buf);
+		case RG_ANIM_TILE:
+			AG_CopyString(name, buf, sizeof(name));
+			insn->t = RG_TilesetFindTile(ts, name);
+			insn->in_tile.alpha = (u_int)AG_ReadUint8(buf);
 			break;
-		case ANIM_DISPX:
-			copy_string(name, buf, sizeof(name));
-			insn->px = tileset_find_pixmap(ts, name);
-			insn->in_disPx.dx = (int)read_sint16(buf);
-			insn->in_disPx.dy = (int)read_sint16(buf);
+		case RG_ANIM_DISPX:
+			AG_CopyString(name, buf, sizeof(name));
+			insn->px = RG_TilesetFindPixmap(ts, name);
+			insn->in_disPx.dx = (int)AG_ReadSint16(buf);
+			insn->in_disPx.dy = (int)AG_ReadSint16(buf);
 			break;
-		case ANIM_ROTPX:
-			copy_string(name, buf, sizeof(name));
-			insn->px = tileset_find_pixmap(ts, name);
-			insn->in_rotPx.x = (u_int)read_uint16(buf);
-			insn->in_rotPx.y = (u_int)read_uint16(buf);
-			insn->in_rotPx.theta = (int)read_uint8(buf);
+		case RG_ANIM_ROTPX:
+			AG_CopyString(name, buf, sizeof(name));
+			insn->px = RG_TilesetFindPixmap(ts, name);
+			insn->in_rotPx.x = (u_int)AG_ReadUint16(buf);
+			insn->in_rotPx.y = (u_int)AG_ReadUint16(buf);
+			insn->in_rotPx.theta = (int)AG_ReadUint8(buf);
 			break;
 		}
 	}
 
-	ani->nframes = (u_int)read_uint32(buf);
+	ani->nframes = (u_int)AG_ReadUint32(buf);
 	ani->frames = Realloc(ani->frames,
-	    ani->nframes*sizeof(struct anim_frame));
+	    ani->nframes*sizeof(RG_AnimFrame));
 	for (i = 0; i < ani->nframes; i++) {
-		struct anim_frame *fr = &ani->frames[i];
+		RG_AnimFrame *fr = &ani->frames[i];
 
 		fr->name = i;
-		fr->su = read_surface(buf, ts->fmt);
-		fr->delay = (u_int)read_uint32(buf);
+		fr->su = AG_ReadSurface(buf, ts->fmt);
+		fr->delay = (u_int)AG_ReadUint32(buf);
 	}
 	return (0);
 }
 
 void
-animation_save(struct animation *ani, struct netbuf *buf)
+RG_AnimSave(RG_Anim *ani, AG_Netbuf *buf)
 {
 	u_int i;
 	
-	write_uint16(buf, ani->w);
-	write_uint16(buf, ani->h);
+	AG_WriteUint16(buf, ani->w);
+	AG_WriteUint16(buf, ani->h);
 	
-	write_uint32(buf, ani->ninsns);
+	AG_WriteUint32(buf, ani->ninsns);
 	for (i = 0; i < ani->ninsns; i++) {
-		struct anim_insn *insn = &ani->insns[i];
+		RG_AnimInsn *insn = &ani->insns[i];
 		
-		write_uint16(buf, (Uint16)insn->type);
-		write_uint32(buf, (Uint32)insn->delay);
+		AG_WriteUint16(buf, (Uint16)insn->type);
+		AG_WriteUint32(buf, (Uint32)insn->delay);
 		switch (insn->type) {
-		case ANIM_TILE:
-			write_string(buf, insn->t->name);
-			write_uint8(buf, (Uint8)insn->in_tile.alpha);
+		case RG_ANIM_TILE:
+			AG_WriteString(buf, insn->t->name);
+			AG_WriteUint8(buf, (Uint8)insn->in_tile.alpha);
 			break;
-		case ANIM_DISPX:
-			write_string(buf, insn->px->name);
-			write_sint16(buf, (Sint16)insn->in_disPx.dx);
-			write_sint16(buf, (Sint16)insn->in_disPx.dy);
+		case RG_ANIM_DISPX:
+			AG_WriteString(buf, insn->px->name);
+			AG_WriteSint16(buf, (Sint16)insn->in_disPx.dx);
+			AG_WriteSint16(buf, (Sint16)insn->in_disPx.dy);
 			break;
-		case ANIM_ROTPX:
-			write_string(buf, insn->px->name);
-			write_uint16(buf, (Uint16)insn->in_rotPx.x);
-			write_uint16(buf, (Uint16)insn->in_rotPx.y);
-			write_uint8(buf, (Uint8)insn->in_rotPx.theta);
+		case RG_ANIM_ROTPX:
+			AG_WriteString(buf, insn->px->name);
+			AG_WriteUint16(buf, (Uint16)insn->in_rotPx.x);
+			AG_WriteUint16(buf, (Uint16)insn->in_rotPx.y);
+			AG_WriteUint8(buf, (Uint8)insn->in_rotPx.theta);
 			break;
 		}
 	}
 
-	write_uint32(buf, ani->nframes);
+	AG_WriteUint32(buf, ani->nframes);
 	for (i = 0; i < ani->nframes; i++) {
-		struct anim_frame *fr = &ani->frames[i];
+		RG_AnimFrame *fr = &ani->frames[i];
 
-		write_surface(buf, fr->su);
-		write_uint32(buf, (Uint32)fr->delay);
+		AG_WriteSurface(buf, fr->su);
+		AG_WriteUint32(buf, (Uint32)fr->delay);
 	}
 }
 
 void
-animation_generate(struct animation *ani)
+RG_AnimGenerate(RG_Anim *ani)
 {
 	u_int i;
 
 	destroy_frames(ani);
 
 	for (i = 0; i < ani->ninsns; i++) {
-		struct anim_insn *insn = &ani->insns[i];
-		struct anim_frame *fr;
+		RG_AnimInsn *insn = &ani->insns[i];
+		RG_AnimFrame *fr;
 
 		switch (insn->type) {
-		case ANIM_TILE:
+		case RG_ANIM_TILE:
 			if (insn->t != NULL && insn->t->su != NULL) {
-				fr = &ani->frames[anim_insert_frame(ani)];
-				view_scale_surface(insn->t->su, ani->w, ani->h,
+				fr = &ani->frames[RG_AnimInsertFrame(ani)];
+				AG_ScaleSurface(insn->t->su, ani->w, ani->h,
 				    &fr->su);
 				fr->delay = insn->delay;
 			}
@@ -327,57 +327,57 @@ animation_generate(struct animation *ani)
 static void
 close_animation(int argc, union evarg *argv)
 {
-	struct window *win = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct animation *ani = argv[2].p;
+	AG_Window *win = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	RG_Anim *ani = argv[2].p;
 	
 	pthread_mutex_lock(&ts->lock);
 	ani->nrefs--;
 	pthread_mutex_unlock(&ts->lock);
 
-	view_detach(win);
+	AG_ViewDetach(win);
 }
 
 static void
 poll_insns(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct animation *ani = argv[1].p;
-	struct tileset *ts = ani->tileset;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Anim *ani = argv[1].p;
+	RG_Tileset *ts = ani->tileset;
+	AG_TlistItem *it;
 	u_int i;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 
 	for (i = 0; i < ani->ninsns; i++) {
-		struct anim_insn *insn = &ani->insns[i];
+		RG_AnimInsn *insn = &ani->insns[i];
 
 		switch (insn->type) {
-		case ANIM_TILE:
-			it = tlist_insert(tl, NULL, _("[%04u] Tile <%s>"),
+		case RG_ANIM_TILE:
+			it = AG_TlistAdd(tl, NULL, _("[%04u] Tile <%s>"),
 			    insn->delay,
 			    insn->t != NULL ? insn->t->name : "(null)");
-			tlist_set_icon(tl, it,
+			AG_TlistSetIcon(tl, it,
 			    insn->t != NULL ? insn->t->su : NULL);
 			break;
-		case ANIM_DISPX:
-			it = tlist_insert(tl, NULL, _("[%04u] Displace <%s>"),
+		case RG_ANIM_DISPX:
+			it = AG_TlistAdd(tl, NULL, _("[%04u] Displace <%s>"),
 			    insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)");
-			tlist_set_icon(tl, it,
+			AG_TlistSetIcon(tl, it,
 			    insn->px != NULL ? insn->px->su : NULL);
 			break;
-		case ANIM_ROTPX:
-			it = tlist_insert(tl, NULL,
+		case RG_ANIM_ROTPX:
+			it = AG_TlistAdd(tl, NULL,
 			    _("[%04u] Rotate <%s> %u\xc2\xb0"), insn->delay,
 			    insn->px != NULL ? insn->px->name : "(null)",
 			    insn->in_rotPx.theta);
-			tlist_set_icon(tl, it,
+			AG_TlistSetIcon(tl, it,
 			    insn->px != NULL ? insn->px->su : NULL);
 			break;
 		default:
-			it = tlist_insert(tl, NULL, "[%04u] %s",
+			it = AG_TlistAdd(tl, NULL, "[%04u] %s",
 			    _(insn_names[insn->type]), insn->delay);
 			break;
 		}
@@ -386,310 +386,313 @@ poll_insns(int argc, union evarg *argv)
 	}
 
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_frames(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct animation *ani = argv[1].p;
-	struct tileset *ts = ani->tileset;
+	AG_Tlist *tl = argv[0].p;
+	RG_Anim *ani = argv[1].p;
+	RG_Tileset *ts = ani->tileset;
 	u_int i;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 	for (i = 0; i < ani->nframes; i++) {
-		struct anim_frame *fr = &ani->frames[i];
-		struct tlist_item *it;
+		RG_AnimFrame *fr = &ani->frames[i];
+		AG_TlistItem *it;
 		
-		it = tlist_insert(tl, NULL, _("Frame %ux%u, %ums"),
+		it = AG_TlistAdd(tl, NULL, _("Frame %ux%u, %ums"),
 		    fr->su->w, fr->su->h, fr->delay);
 		it->p1 = fr;
 		it->class = "frame";
-		tlist_set_icon(tl, it, fr->su);
+		AG_TlistSetIcon(tl, it, fr->su);
 	}
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_tiles(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct tlist_item *it;
-	struct tile *t;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	AG_TlistItem *it;
+	RG_Tile *t;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		it = tlist_insert(tl, NULL, "%s (%ux%u)%s%s", t->name,
+		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)%s%s", t->name,
 		    t->su->w, t->su->h,
 		    (t->su->flags & SDL_SRCALPHA) ? " alpha" : "",
 		    (t->su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
 		it->p1 = t;
-		tlist_set_icon(tl, it, t->su);
+		AG_TlistSetIcon(tl, it, t->su);
 	}
 
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 select_insn_tile(int argc, union evarg *argv)
 {
-	struct animation *ani = argv[1].p;
-	struct anim_insn *insn = argv[2].p;
-	struct tileview *tv = argv[3].p;
-	struct tlist_item *it = argv[4].p;
+	RG_Anim *ani = argv[1].p;
+	RG_AnimInsn *insn = argv[2].p;
+	RG_Tileview *tv = argv[3].p;
+	AG_TlistItem *it = argv[4].p;
 
 	if (it != NULL) {
-		insn->t = (struct tile *)it->p1;
-		tileview_set_tile(tv, insn->t);
+		insn->t = (RG_Tile *)it->p1;
+		RG_TileviewSetTile(tv, insn->t);
 	}
 }
 
 static void
-open_insn(struct animation *ani, struct anim_insn *insn, struct box *box)
+open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 {
-	struct widget *child;
-	struct spinbutton *sb;
-	struct mspinbutton *msb;
-	struct checkbox *cb;
-	struct combo *com;
-	struct tileview *tv;
+	AG_Widget *child;
+	AG_Spinbutton *sb;
+	AG_MSpinbutton *msb;
+	AG_Checkbox *cb;
+	AG_Combo *com;
+	RG_Tileview *tv;
 
-	OBJECT_FOREACH_CHILD(child, box, widget) {
-		object_detach(child);
-		object_destroy(child);
+	AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+		AG_ObjectDetach(child);
+		AG_ObjectDestroy(child);
 		Free(child, M_OBJECT);
 	}
 
 	switch (insn->type) {
-	case ANIM_TILE:
-		tv = Malloc(sizeof(struct tileview), M_OBJECT);
-		tileview_init(tv, ani->tileset, 0);
+	case RG_ANIM_TILE:
+		tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
+		RG_TileviewInit(tv, ani->tileset, 0);
 
-		com = combo_new(box, COMBO_POLL, _("Tile: "));
-		event_new(com, "combo-selected", select_insn_tile,
+		com = AG_ComboNew(box, AG_COMBO_POLL, _("Tile: "));
+		AG_SetEvent(com, "combo-selected", select_insn_tile,
 		    "%p,%p,%p", ani, insn, tv);
-		event_new(com->list, "tlist-poll", poll_tiles,
+		AG_SetEvent(com->list, "tlist-poll", poll_tiles,
 		    "%p", ani->tileset);
 		if (insn->t != NULL) {
-			tileview_set_tile(tv, insn->t);
-			combo_select_pointer(com, insn->t);
+			RG_TileviewSetTile(tv, insn->t);
+			AG_ComboSelectPointer(com, insn->t);
 		}
 
-		label_new(box, LABEL_STATIC, _("Preview:"));
-		object_attach(box, tv);
+		AG_LabelNew(box, AG_LABEL_STATIC, _("Preview:"));
+		AG_ObjectAttach(box, tv);
 		
-		sb = spinbutton_new(box, _("Alpha: "));
-		widget_bind(sb, "value", WIDGET_UINT, &insn->in_tile.alpha);
-		spinbutton_set_min(sb, 0);
-		spinbutton_set_max(sb, 255);
+		sb = AG_SpinbuttonNew(box, _("Alpha: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT,
+		    &insn->in_tile.alpha);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SpinbuttonSetMax(sb, 255);
 		break;
-	case ANIM_DISPX:
-		msb = mspinbutton_new(box, ",", _("Displacement: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &insn->in_disPx.dx);
-		widget_bind(msb, "yvalue", WIDGET_INT, &insn->in_disPx.dy);
+	case RG_ANIM_DISPX:
+		msb = AG_MSpinbuttonNew(box, ",", _("Displacement: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &insn->in_disPx.dx);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &insn->in_disPx.dy);
 		break;
-	case ANIM_ROTPX:
-		msb = mspinbutton_new(box, ",", _("Center of rotation: "));
-		widget_bind(msb, "xvalue", WIDGET_UINT, &insn->in_rotPx.x);
-		widget_bind(msb, "yvalue", WIDGET_UINT, &insn->in_rotPx.y);
+	case RG_ANIM_ROTPX:
+		msb = AG_MSpinbuttonNew(box, ",", _("Center of rotation: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
 		
-		sb = spinbutton_new(box, _("Angle of rotation: "));
-		widget_bind(sb, "value", WIDGET_INT, &insn->in_rotPx.theta);
+		sb = AG_SpinbuttonNew(box, _("Angle of rotation: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
+		    &insn->in_rotPx.theta);
 		break;
 	default:
 		break;
 	}
 
-	sb = spinbutton_new(box, _("Delay (ms): "));
-	widget_bind(sb, "value", WIDGET_UINT, &insn->delay);
-	spinbutton_set_min(sb, 0);
-	spinbutton_set_increment(sb, 50);
+	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &insn->delay);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SpinbuttonSetIncrement(sb, 50);
 
-	WINDOW_UPDATE(widget_parent_window(box));
+	AG_WINDOW_UPDATE(AG_WidgetParentWindow(box));
 }
 
 static void
-open_frame(struct animation *ani, struct anim_frame *fr, struct box *box)
+open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
-	struct widget *child;
-	struct spinbutton *sb;
-	struct bitmap *bmp;
+	AG_Widget *child;
+	AG_Spinbutton *sb;
+	AG_Bitmap *bmp;
 
-	OBJECT_FOREACH_CHILD(child, box, widget) {
-		object_detach(child);
-		object_destroy(child);
+	AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+		AG_ObjectDetach(child);
+		AG_ObjectDestroy(child);
 		Free(child, M_OBJECT);
 	}
 	
 	ani->gframe = fr->name;
 
-	bmp = bitmap_new(box);
-	bitmap_set_surface(bmp, view_copy_surface(fr->su));
+	bmp = AG_BitmapNew(box);
+	AG_BitmapSetSurface(bmp, AG_DupSurface(fr->su));
 	
-	sb = spinbutton_new(box, _("Delay (ms): "));
-	widget_bind(sb, "value", WIDGET_UINT, &fr->delay);
-	spinbutton_set_min(sb, 0);
-	spinbutton_set_increment(sb, 50);
+	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SpinbuttonSetIncrement(sb, 50);
 
-	WINDOW_UPDATE(widget_parent_window(box));
+	AG_WINDOW_UPDATE(AG_WidgetParentWindow(box));
 }
 
 static void
 select_insn(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct animation *ani = argv[1].p;
-	struct box *box = argv[2].p;
-	struct tlist_item *it, *eit;
+	AG_Tlist *tl = argv[0].p;
+	RG_Anim *ani = argv[1].p;
+	AG_Box *box = argv[2].p;
+	AG_TlistItem *it, *eit;
 
-	if ((it = tlist_selected_item(tl)) == NULL)
+	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
-	open_insn(ani, (struct anim_insn *)it->p1, box);
+	open_insn(ani, (RG_AnimInsn *)it->p1, box);
 }
 
 static void
 select_frame(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct animation *ani = argv[1].p;
-	struct box *box = argv[2].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Anim *ani = argv[1].p;
+	AG_Box *box = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl)) == NULL)
+	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
-	open_frame(ani, (struct anim_frame *)it->p1, box);
+	open_frame(ani, (RG_AnimFrame *)it->p1, box);
 }
 
 static void
 insert_insn(int argc, union evarg *argv)
 {
-	struct animation *ani = argv[1].p;
-	enum anim_insn_type type = (enum anim_insn_type)argv[2].i;
-	struct box *box = argv[3].p;
-	struct tlist *tl = argv[4].p;
-	struct tlist_item *it;
-	struct anim_insn *insn;
+	RG_Anim *ani = argv[1].p;
+	enum rg_anim_insn_type type = (enum rg_anim_insn_type)argv[2].i;
+	AG_Box *box = argv[3].p;
+	AG_Tlist *tl = argv[4].p;
+	AG_TlistItem *it;
+	RG_AnimInsn *insn;
 	
-	insn = &ani->insns[anim_insert_insn(ani, type)];
+	insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
 	open_insn(ani, insn, box);
-	tlist_select_pointer(tl, insn);
+	AG_TlistSelectPtr(tl, insn);
 }
 
 static void
 recompile_anim(int argc, union evarg *argv)
 {
-	struct animation *ani = argv[1].p;
+	RG_Anim *ani = argv[1].p;
 	
-	animation_generate(ani);
+	RG_AnimGenerate(ani);
 }
 
 static void
 preview_anim(int argc, union evarg *argv)
 {
-	struct animation *ani = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct window *win;
-	struct animview *av;
+	RG_Anim *ani = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Window *win;
+	RG_Animview *av;
 
-	if ((win = window_new(WINDOW_DETACH, "anim-prev-%s:%s",
-	    OBJECT(ani->tileset)->name, ani->name)) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "anim-prev-%s:%s",
+	    AGOBJECT(ani->tileset)->name, ani->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, "%s", ani->name);
-	window_set_position(win, WINDOW_UPPER_CENTER, 1);
-	window_attach(pwin, win);
+	AG_WindowSetCaption(win, "%s", ani->name);
+	AG_WindowSetPosition(win, AG_WINDOW_UPPER_CENTER, 1);
+	AG_WindowAttach(pwin, win);
 
-	av = animview_new(win);
-	animview_set_animation(av, ani);
-	separator_new(win, SEPARATOR_HORIZ);
-	label_new(win, LABEL_POLLED, " %u/%u", &av->frame, &ani->nframes);
+	av = RG_AnimviewNew(win);
+	RG_AnimviewSetAnimation(av, ani);
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
+	AG_LabelNew(win, AG_LABEL_POLLED, " %u/%u", &av->frame, &ani->nframes);
 
-	window_show(win);
+	AG_WindowShow(win);
 }
 
-struct window *
-animation_edit(struct animation *ani)
+AG_Window *
+RG_AnimEdit(RG_Anim *ani)
 {
-	struct tileset *ts = ani->tileset;
-	struct window *win;
-	struct box *box_h, *box_v, *box_data;
-	struct textbox *tb;
-	struct tlist *tl;
-	struct button *btn;
-	struct notebook *nb;
-	struct notebook_tab *nt;
-	struct AGMenu *me;
-	struct AGMenuItem *mi;
+	RG_Tileset *ts = ani->tileset;
+	AG_Window *win;
+	AG_Box *box_h, *box_v, *box_data;
+	AG_Textbox *tb;
+	AG_Tlist *tl;
+	AG_Button *btn;
+	AG_Notebook *nb;
+	AG_NotebookTab *nt;
+	AG_Menu *me;
+	AG_MenuItem *mi;
 	int i;
 
-	if ((win = window_new(WINDOW_DETACH, "animation-%s:%s",
-	    OBJECT(ts)->name, ani->name)) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "animation-%s:%s",
+	    AGOBJECT(ts)->name, ani->name)) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Animation: %s"), ani->name);
-	event_new(win, "window-close", close_animation, "%p,%p", ts, ani);
+	AG_WindowSetCaption(win, _("Animation: %s"), ani->name);
+	AG_SetEvent(win, "window-close", close_animation, "%p,%p", ts, ani);
 	
-	me = menu_new(win);
+	me = AG_MenuNew(win);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	nt = notebook_add_tab(nb, _("Instructions"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nt = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
 	{
-		box_h = box_new(nt, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
 		{
-			box_v = box_new(box_h, BOX_VERT, BOX_HFILL);
-			tl = tlist_new(box_v, TLIST_POLL);
-			event_new(tl, "tlist-poll", poll_insns, "%p", ani);
+			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
+			tl = AG_TlistNew(box_v, AG_TLIST_POLL);
+			AG_SetEvent(tl, "tlist-poll", poll_insns, "%p", ani);
 
-			box_data = box_new(box_h, BOX_VERT,
-			    BOX_WFILL|BOX_HFILL);
-			event_new(tl, "tlist-dblclick", select_insn, "%p,%p",
+			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
+			    AG_BOX_WFILL|AG_BOX_HFILL);
+			AG_SetEvent(tl, "tlist-dblclick", select_insn, "%p,%p",
 			    ani, box_data);
 		}
 
-		mi = menu_add_item(me, _("Instructions"));
-		for (i = 0; i < ANIM_LAST; i++)
-			menu_action(mi, _(insn_names[i]), -1, insert_insn,
+		mi = AG_MenuAddItem(me, _("Instructions"));
+		for (i = 0; i < RG_ANIM_LAST; i++)
+			AG_MenuAction(mi, _(insn_names[i]), -1, insert_insn,
 			    "%p,%i,%p,%p", ani, i, box_data, tl);
 	}
 	
-	nt = notebook_add_tab(nb, _("Frames"), BOX_VERT);
+	nt = AG_NotebookAddTab(nb, _("Frames"), AG_BOX_VERT);
 	{
-		box_h = box_new(nt, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
 		{
-			box_v = box_new(box_h, BOX_VERT, BOX_HFILL);
-			tl = tlist_new(box_v, TLIST_POLL);
-			event_new(tl, "tlist-poll", poll_frames, "%p", ani);
+			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
+			tl = AG_TlistNew(box_v, AG_TLIST_POLL);
+			AG_SetEvent(tl, "tlist-poll", poll_frames, "%p", ani);
 
-			box_data = box_new(box_h, BOX_VERT,
-			    BOX_WFILL|BOX_HFILL);
-			event_new(tl, "tlist-dblclick", select_frame, "%p,%p",
+			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
+			    AG_BOX_WFILL|AG_BOX_HFILL);
+			AG_SetEvent(tl, "tlist-dblclick", select_frame, "%p,%p",
 			    ani, box_data);
 		}
 	}
 	
-	mi = menu_add_item(me, _("Animation"));
+	mi = AG_MenuAddItem(me, _("Animation"));
 	{
-		menu_action(mi, _("Recompile"), -1, recompile_anim, "%p", ani);
-		menu_separator(mi);
-		menu_action(mi, _("Preview..."), -1, preview_anim, "%p,%p",
-		    ani, win);
+		AG_MenuAction(mi, _("Recompile"), -1, recompile_anim,
+		    "%p", ani);
+		AG_MenuSeparator(mi);
+		AG_MenuAction(mi, _("Preview..."), -1, preview_anim,
+		    "%p,%p", ani, win);
 	}
 	
-	window_scale(win, -1, -1);
-	window_set_geometry(win,
-	    view->w/4, view->h/4,
-	    view->w/2, view->h/2);
+	AG_WindowScale(win, -1, -1);
+	AG_WindowSetGeometry(win,
+	    agView->w/4, agView->h/4,
+	    agView->w/2, agView->h/2);
 
-	animation_generate(ani);
+	RG_AnimGenerate(ani);
 	ani->nrefs++;
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.23 2005/09/09 02:11:47 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.24 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,64 +34,58 @@
 
 #include <engine/map/map.h>
 #include <engine/map/mapedit.h>
-#include <engine/vg/drawing.h>
 #include <engine/rg/tileset.h>
 
-struct object_type *typesw = NULL;
-int ntypesw = 0;
+AG_ObjectType *agTypes = NULL;
+int agnTypes = 0;
 
 /* Initialize the type switch and register the built-in types. */
 void
-typesw_init(void)
+AG_InitTypeSw(void)
 {
-	extern const struct object_ops object_ops, map_ops,
-	    perso_ops, drawing_ops, tileset_ops;
+	extern const AG_ObjectOps agObjectOps, agMapOps, agPersoOps;
+	extern const AG_ObjectOps rgTilesetOps;
 
-	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
+	agTypes = Malloc(sizeof(AG_ObjectType), M_TYPESW);
+	agnTypes = 0;
 
-	typesw_register("object", sizeof(struct object), &object_ops,
-	    OBJ_ICON);
-#if 0
-	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
-	    DRAWING_ICON);
-#endif
-	typesw_register("map", sizeof(struct map), &map_ops,
-	    MAP_ICON);
-	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
+	AG_RegisterType("object", sizeof(AG_Object), &agObjectOps, OBJ_ICON);
+	AG_RegisterType("map", sizeof(AG_Map), &agMapOps, MAP_ICON);
+	AG_RegisterType("tileset", sizeof(RG_Tileset), &rgTilesetOps,
 	    TILESET_ICON);
-	typesw_register("actor.perso", sizeof(struct perso), &perso_ops,
+	AG_RegisterType("actor.perso", sizeof(AG_Perso), &agPersoOps,
 	    PERSO_ICON);
 }
 
 void
-typesw_destroy(void)
+AG_DestroyTypeSw(void)
 {
-	Free(typesw, M_TYPESW);
+	Free(agTypes, M_TYPESW);
 }
 
 /* Register an object type. */
 void
-typesw_register(const char *type, size_t size, const struct object_ops *ops,
+AG_RegisterType(const char *type, size_t size, const AG_ObjectOps *ops,
     int icon)
 {
-	struct object_type *ntype;
+	AG_ObjectType *ntype;
 
-	typesw = Realloc(typesw, (ntypesw+1)*sizeof(struct object_type));
-	ntype = &typesw[ntypesw++];
+	agTypes = Realloc(agTypes, (agnTypes+1)*sizeof(AG_ObjectType));
+	ntype = &agTypes[agnTypes++];
 	strlcpy(ntype->type, type, sizeof(ntype->type));
 	ntype->size = size;
 	ntype->ops = ops;
 	ntype->icon = icon;
 }
 
-struct object_type *
-typesw_find(const char *type)
+AG_ObjectType *
+AG_FindType(const char *type)
 {
 	int i;
 
-	for (i = 0; i < ntypesw; i++) {
-		if (strcmp(typesw[i].type, type) == 0)
-			return (&typesw[i]);
+	for (i = 0; i < agnTypes; i++) {
+		if (strcmp(agTypes[i].type, type) == 0)
+			return (&agTypes[i]);
 	}
 	return (NULL);
 }

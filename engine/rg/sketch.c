@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.23 2005/06/15 06:54:10 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.24 2005/06/18 03:46:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@
 #include "texsel.h"
 
 void
-sketch_init(struct sketch *sk, struct tileset *ts, int flags)
+RG_SketchInit(RG_Sketch *sk, RG_Tileset *ts, int flags)
 {
 	sk->name[0] = '\0';
 	sk->flags = flags;
@@ -56,39 +56,39 @@ sketch_init(struct sketch *sk, struct tileset *ts, int flags)
 	sk->v = 0.0;
 	sk->a = 1.0;
 
-	sk->vg = Malloc(sizeof(struct vg), M_VG);
-	vg_init(sk->vg, VG_ANTIALIAS|VG_ALPHA);
+	sk->vg = Malloc(sizeof(VG), M_VG);
+	VG_Init(sk->vg, VG_ANTIALIAS|VG_ALPHA);
 
-	sk->ublks = Malloc(sizeof(struct sketch_undoblk), M_RG);
+	sk->ublks = Malloc(sizeof(struct rg_sketch_undoblk), M_RG);
 	sk->nublks = 1;
 	sk->curblk = 0;
-	sketch_begin_undoblk(sk);
-	sk->ublks[0].mods = Malloc(sizeof(struct sketch_mod), M_RG);
+	RG_SketchBeginUndoBlk(sk);
+	sk->ublks[0].mods = Malloc(sizeof(struct rg_sketch_mod), M_RG);
 	sk->ublks[0].nmods = 0;
 }
 
 void
-sketch_scale(struct sketch *sk, int w, int h, float scale, int x, int y)
+RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 {
-	struct vg *vg = sk->vg;
-	struct vg_element *vge;
-	double xoffs = (float)x/(float)TILESZ/scale;
-	double yoffs = (float)y/(float)TILESZ/scale;
+	VG *vg = sk->vg;
+	VG_Element *vge;
+	double xoffs = (float)x/(float)AGTILESZ/scale;
+	double yoffs = (float)y/(float)AGTILESZ/scale;
 	Uint32 i;
 	double vw, vh;
 
 	if (w == -1) {
 		vw = vg->w;
 	} else {
-		vw = (float)w/(float)TILESZ/scale;
+		vw = (float)w/(float)AGTILESZ/scale;
 	}
 	if (h == -1) {
 		vh = vg->h;
 	} else {
-		vh = (float)h/(float)TILESZ/scale;
+		vh = (float)h/(float)AGTILESZ/scale;
 	}
 
-	vg_scale(vg, vw, vh, scale);
+	VG_Scale(vg, vw, vh, scale);
 	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < vge->nvtx; i++) {
@@ -100,11 +100,11 @@ sketch_scale(struct sketch *sk, int w, int h, float scale, int x, int y)
 }
 
 void
-sketch_destroy(struct sketch *sk)
+RG_SketchDestroy(RG_Sketch *sk)
 {
 	int i;
 
-	vg_destroy(sk->vg);
+	VG_Destroy(sk->vg);
 
 	for (i = 0; i < sk->nublks; i++) {
 		Free(sk->ublks[i].mods, M_RG);
@@ -113,49 +113,49 @@ sketch_destroy(struct sketch *sk)
 }
 
 int
-sketch_load(struct sketch *sk, struct netbuf *buf)
+RG_SketchLoad(RG_Sketch *sk, AG_Netbuf *buf)
 {
 	int vgflags;
 	
-	copy_string(sk->name, buf, sizeof(sk->name));
-	sk->flags = (int)read_uint32(buf);
-	vgflags = (int)read_uint32(buf);
+	AG_CopyString(sk->name, buf, sizeof(sk->name));
+	sk->flags = (int)AG_ReadUint32(buf);
+	vgflags = (int)AG_ReadUint32(buf);
 
-	sk->vg = vg_new(NULL, vgflags);
-	if (vg_load(sk->vg, buf) == -1) {
-		vg_destroy(sk->vg);
+	sk->vg = VG_New(NULL, vgflags);
+	if (VG_Load(sk->vg, buf) == -1) {
+		VG_Destroy(sk->vg);
 		Free(sk->vg, M_VG);
 		return (-1);
 	}
 	sk->vg->redraw++;
-	vg_rasterize(sk->vg);
+	VG_Rasterize(sk->vg);
 	return (0);
 }
 
 void
-sketch_save(struct sketch *sk, struct netbuf *buf)
+RG_SketchSave(RG_Sketch *sk, AG_Netbuf *buf)
 {
-	write_string(buf, sk->name);
-	write_uint32(buf, (Uint32)sk->flags);
-	write_uint32(buf, (Uint32)sk->vg->flags);
-	vg_save(sk->vg, buf);
+	AG_WriteString(buf, sk->name);
+	AG_WriteUint32(buf, (Uint32)sk->flags);
+	AG_WriteUint32(buf, (Uint32)sk->vg->flags);
+	VG_Save(sk->vg, buf);
 }
 
 void
-sketch_render(struct tile *t, struct tile_element *tel)
+RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct vg_element *vge;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	VG_Element *vge;
 	SDL_Rect rd;
 
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
 	
 	if (vg->flags & VG_VISGRID)
-		vg_draw_grid(vg);
+		VG_DrawGrid(vg);
 #ifdef DEBUG
 	if (vg->flags & VG_VISBBOXES)
-		vg_draw_bboxes(vg);
+		VG_DrawExtents(vg);
 #endif
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
@@ -163,17 +163,17 @@ sketch_render(struct tile *t, struct tile_element *tel)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
 		case VG_POLYGON:
-			sketch_polygon_render(t, vg, vge);
+			RG_SketchDrawPolygon(t, vg, vge);
 			vge->drawn = 1;
 			break;
 		default:
-			vg_rasterize_element(vg, vge);
+			VG_RasterizeElement(vg, vge);
 			break;
 		}
 	}
 	
 	if (vg->flags & VG_VISORIGIN)
-		vg_draw_origin(vg);
+		VG_DrawOrigin(vg);
 	
 	rd.x = tel->tel_sketch.x;
 	rd.y = tel->tel_sketch.y;
@@ -185,70 +185,73 @@ sketch_render(struct tile *t, struct tile_element *tel)
 static void
 update_sketch(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
-	struct tile_element *tel = argv[2].p;
-	struct sketch *sk = tel->tel_sketch.sk;
+	RG_Tileview *tv = argv[1].p;
+	RG_TileElement *tel = argv[2].p;
+	RG_Sketch *sk = tel->tel_sketch.sk;
 
-	sketch_scale(sk, -1, -1, tel->tel_sketch.scale, 0, 0);
+	RG_SketchScale(sk, -1, -1, tel->tel_sketch.scale, 0, 0);
 
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
-struct window *
-sketch_edit(struct tileview *tv, struct tile_element *tel)
+AG_Window *
+RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct window *win;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	struct combo *com;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	AG_Window *win;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_Combo *com;
 	
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Sketch %s"), sk->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Sketch %s"), sk->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	com = vg_layer_selector(win, vg);
+	com = VG_NewLayerSelector(win, vg);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
-		struct hsvpal *pal;
-		struct fspinbutton *fsb;
-		struct box *hb;
+		AG_HSVPal *pal;
+		AG_FSpinbutton *fsb;
+		AG_Box *hb;
 
-		pal = hsvpal_new(ntab);
-		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		widget_bind(pal, "pixel-format", WIDGET_POINTER, &tv->ts->fmt);
-		widget_bind(pal, "hue", WIDGET_FLOAT, &sk->h);
-		widget_bind(pal, "saturation", WIDGET_FLOAT, &sk->s);
-		widget_bind(pal, "value", WIDGET_FLOAT, &sk->v);
-		widget_bind(pal, "alpha", WIDGET_FLOAT, &sk->a);
+		pal = AG_HSVPalNew(ntab);
+		AGWIDGET(pal)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
+		    &tv->ts->fmt);
+		AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &sk->h);
+		AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &sk->s);
+		AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &sk->v);
+		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &sk->a);
 	}
-	ntab = notebook_add_tab(nb, _("Texture"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Texture"), AG_BOX_VERT);
 
-	ntab = notebook_add_tab(nb, _("Settings"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
-		struct fspinbutton *fsb;
-		struct spinbutton *sb;
-		struct mspinbutton *msb;
+		AG_FSpinbutton *fsb;
+		AG_Spinbutton *sb;
+		AG_MSpinbutton *msb;
 
-		fsb = fspinbutton_new(ntab, NULL, _("Scale: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_sketch.scale);
-		fspinbutton_set_min(fsb, 0.0001);
-		fspinbutton_set_increment(fsb, 0.1);
-		event_new(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		fsb = AG_FSpinbuttonNew(ntab, NULL, _("Scale: "));
+		AG_WidgetBind(fsb, "value", AG_WIDGET_FLOAT,
+		    &tel->tel_sketch.scale);
+		AG_FSpinbuttonSetMin(fsb, 0.0001);
+		AG_FSpinbuttonSetIncrement(fsb, 0.1);
+		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
 		    tv, tel);
 		
-		msb = mspinbutton_new(ntab, ",", _("Coordinates: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &tel->tel_sketch.x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &tel->tel_sketch.y);
-		event_new(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		msb = AG_MSpinbuttonNew(ntab, ",", _("Coordinates: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &tel->tel_sketch.x);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &tel->tel_sketch.y);
+		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
 		    tv, tel);
 		
-		sb = spinbutton_new(ntab, _("Overall alpha: "));
-		spinbutton_set_range(sb, 0, 255);
-		widget_bind(sb, "value", WIDGET_INT, &tel->tel_sketch.alpha);
+		sb = AG_SpinbuttonNew(ntab, _("Overall alpha: "));
+		AG_SpinbuttonSetRange(sb, 0, 255);
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
+		    &tel->tel_sketch.alpha);
 	}
 
 	return (win);
@@ -257,61 +260,62 @@ sketch_edit(struct tileview *tv, struct tile_element *tel)
 static void
 poll_styles(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct vg *vg = argv[1].p;
-	struct vg_style *vgs;
+	AG_Tlist *tl = argv[0].p;
+	VG *vg = argv[1].p;
+	VG_Style *vgs;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&vg->lock);
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
-		tlist_insert_item(tl, NULL, vgs->name, vgs);
+		AG_TlistAddPtr(tl, NULL, vgs->name, vgs);
 	}
 	pthread_mutex_unlock(&vg->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
-struct window *
-sketch_edit_element(struct tileview *tv, struct tile_element *tel,
-    struct vg_element *vge)
+AG_Window *
+RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
+    VG_Element *vge)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct window *win;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	const struct vg_element_ops *ops;
-	struct radio *rad;
-	struct spinbutton *sb;
-	struct combo *com;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	AG_Window *win;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	const VG_ElementOps *ops;
+	AG_Radio *rad;
+	AG_Spinbutton *sb;
+	AG_Combo *com;
 	
-	if ((win = window_new(0, "%s-%p-%p", sk->name, tel, vge)) == NULL) {
+	if ((win = AG_WindowNew(0, "%s-%p-%p", sk->name, tel, vge)) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Sketch element (%s)"), sk->name);
-	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
+	AG_WindowSetCaption(win, _("Sketch element (%s)"), sk->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
 
-	ops = vg_element_types[vge->type];
-	label_staticf(win, _("Element type: %s"), ops->name);
-	label_new(win, LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
+	ops = vgElementTypes[vge->type];
+	AG_LabelStaticF(win, _("Element type: %s"), ops->name);
+	AG_LabelNew(win, AG_LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
 	
-	sb = spinbutton_new(win, _("Layer: "));
-	widget_bind(sb, "value", WIDGET_INT, &vge->layer);
-	spinbutton_set_min(sb, 0);
+	sb = AG_SpinbuttonNew(win, _("Layer: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
+	AG_SpinbuttonSetMin(sb, 0);
 
-	com = combo_new(win, COMBO_POLL, _("Style: "));
-	event_new(com->list, "tlist-poll", poll_styles, "%p", vg);
+	com = AG_ComboNew(win, AG_COMBO_POLL, _("Style: "));
+	AG_SetEvent(com->list, "tlist-poll", poll_styles, "%p", vg);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
-		struct hsvpal *pal;
+		AG_HSVPal *pal;
 
-		pal = hsvpal_new(ntab);
-		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		widget_bind(pal, "pixel-format", WIDGET_POINTER, &sk->vg->fmt);
-		widget_bind(pal, "pixel", WIDGET_UINT32, &vge->color);
+		pal = AG_HSVPalNew(ntab);
+		AGWIDGET(pal)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
+		    &sk->vg->fmt);
+		AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &vge->color);
 	}
-	ntab = notebook_add_tab(nb, _("Line style"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Line style"), AG_BOX_VERT);
 	{
 		const char *line_styles[] = {
 			N_("Continuous"),
@@ -326,26 +330,29 @@ sketch_edit_element(struct tileview *tv, struct tile_element *tel,
 			NULL
 		};
 	
-		label_static(ntab, _("Line style: "));
-		rad = radio_new(ntab, line_styles);
-		widget_bind(rad, "value", WIDGET_INT, &vge->line_st.style);
+		AG_LabelStatic(ntab, _("Line style: "));
+		rad = AG_RadioNew(ntab, line_styles);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
 		
-		label_static(ntab, _("Endpoint style: "));
-		rad = radio_new(ntab, endpoint_styles);
-		widget_bind(rad, "value", WIDGET_INT,
+		AG_LabelStatic(ntab, _("Endpoint style: "));
+		rad = AG_RadioNew(ntab, endpoint_styles);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
 
-		sb = spinbutton_new(ntab, _("Stipple pattern: "));
-		widget_bind(sb, "value", WIDGET_UINT16, &vge->line_st.stipple);
+		sb = AG_SpinbuttonNew(ntab, _("Stipple pattern: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT16,
+		    &vge->line_st.stipple);
 		
-		sb = spinbutton_new(ntab, _("Thickness: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.thickness);
-		spinbutton_set_min(sb, 1);
+		sb = AG_SpinbuttonNew(ntab, _("Thickness: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
+		    &vge->line_st.thickness);
+		AG_SpinbuttonSetMin(sb, 1);
 		
-		sb = spinbutton_new(ntab, _("Miter length: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &vge->line_st.miter_len);
+		sb = AG_SpinbuttonNew(ntab, _("Miter length: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
+		    &vge->line_st.miter_len);
 	}
-	ntab = notebook_add_tab(nb, _("Filling style"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Filling style"), AG_BOX_VERT);
 	{
 		const char *fill_styles[] = {
 			N_("None"),
@@ -353,16 +360,16 @@ sketch_edit_element(struct tileview *tv, struct tile_element *tel,
 			N_("Textured"),
 			NULL
 		};
-		struct texsel *texsel;
+		RG_TextureSelector *texsel;
 
-		label_static(ntab, _("Filling style: "));
-		rad = radio_new(ntab, fill_styles);
-		widget_bind(rad, "value", WIDGET_INT, &vge->fill_st.style);
+		AG_LabelStatic(ntab, _("Filling style: "));
+		rad = AG_RadioNew(ntab, fill_styles);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
 			
-		label_static(ntab, _("Texture: "));
-		texsel = texsel_new(ntab, tv->ts, 0);
-		WIDGET(texsel)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		widget_bind(texsel, "texture-name", WIDGET_STRING,
+		AG_LabelStatic(ntab, _("Texture: "));
+		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
+		AGWIDGET(texsel)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,
 		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
 	}
 
@@ -370,9 +377,9 @@ sketch_edit_element(struct tileview *tv, struct tile_element *tel,
 }
 
 void
-sketch_begin_undoblk(struct sketch *sk)
+RG_SketchBeginUndoBlk(RG_Sketch *sk)
 {
-	struct sketch_undoblk *ublk;
+	struct rg_sketch_undoblk *ublk;
 
 	while (sk->nublks > sk->curblk+1) {
 		ublk = &sk->ublks[sk->nublks-1];
@@ -381,35 +388,35 @@ sketch_begin_undoblk(struct sketch *sk)
 	}
 
 	sk->ublks = Realloc(sk->ublks, ++sk->nublks *
-	                    sizeof(struct pixmap_mod));
+	                    sizeof(struct rg_pixmap_mod));
 	sk->curblk++;
 
 	ublk = &sk->ublks[sk->curblk];
-	ublk->mods = Malloc(sizeof(struct pixmap_mod), M_RG);
+	ublk->mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
 	ublk->nmods = 0;
 }
 
 void
-sketch_undo(struct tileview *tv, struct tile_element *tel)
+RG_SketchUndo(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct sketch_undoblk *ublk = &sk->ublks[sk->curblk];
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	struct rg_sketch_undoblk *ublk = &sk->ublks[sk->curblk];
 	int i;
 
 	if (sk->curblk-1 <= 0)
 		return;
 
 	for (i = 0; i < ublk->nmods; i++) {
-		struct sketch_mod *mod = &ublk->mods[i];
+		struct rg_sketch_mod *mod = &ublk->mods[i];
 
 		dprintf("undo mod %p\n", mod);
 	}
 	sk->curblk--;
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 void
-sketch_redo(struct tileview *tv, struct tile_element *tel)
+RG_SketchRedo(RG_Tileview *tv, RG_TileElement *tel)
 {
 	/* TODO */
 }
@@ -417,7 +424,7 @@ sketch_redo(struct tileview *tv, struct tile_element *tel)
 static void
 redraw_sketch(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
+	VG *vg = argv[1].p;
 
 	vg->redraw++;
 }
@@ -425,8 +432,8 @@ redraw_sketch(int argc, union evarg *argv)
 static void
 update_circle_radius(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
-	struct vg_element *vge = argv[2].p;
+	VG *vg = argv[1].p;
+	VG_Element *vge = argv[2].p;
 
 	vge->vg_circle.radius = sqrt(
 	    pow(vge->vtx[1].x - vge->vtx[0].x, 2) +
@@ -436,20 +443,20 @@ update_circle_radius(int argc, union evarg *argv)
 static void
 update_circle_vertex(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
-	struct vg_element *vge = argv[2].p;
+	VG *vg = argv[1].p;
+	VG_Element *vge = argv[2].p;
 
 	vge->vtx[1].x = vge->vtx[0].x + vge->vg_circle.radius;
 	vge->vtx[1].y = vge->vtx[0].y;
 }
 
-struct window *
-sketch_select(struct tileview *tv, struct tile_element *tel,
-    struct vg_element *vge)
+AG_Window *
+RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
+    VG_Element *vge)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct tileview_ctrl *ctrl;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	RG_TileviewCtrl *ctrl;
 	u_int i;
 
 	vge->selected = 1;
@@ -460,52 +467,52 @@ sketch_select(struct tileview *tv, struct tile_element *tel,
 	case VG_LINE_LOOP:
 	case VG_POLYGON:
 		for (i = 0; i < vge->nvtx; i++) {
-			ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX,
+			ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_VERTEX,
 			    "%*d,%*d", &vge->vtx[i].x, &vge->vtx[i].y);
 			ctrl->vg = vg;
 			ctrl->vge = vge;
-			ctrl->buttonup = event_new(tv, NULL, redraw_sketch,
+			ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch,
 			    "%p", vg);
 		}
 		break;
 	case VG_CIRCLE:
-		ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX, "%*d,%*d",
+		ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_VERTEX, "%*d,%*d",
 		    &vge->vtx[0].x, &vge->vtx[0].y);
 		ctrl->vg = vg;
 		ctrl->vge = vge;
-		ctrl->buttonup = event_new(tv, NULL, redraw_sketch, "%p", vg);
-		ctrl->motion = event_new(tv, NULL, update_circle_vertex,
+		ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_vertex,
 		    "%p,%p", vg, vge);
 		
-		ctrl = tileview_insert_ctrl(tv, TILEVIEW_VERTEX, "%*d,%*d",
+		ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_VERTEX, "%*d,%*d",
 		    &vge->vtx[1].x, &vge->vtx[1].y);
 		ctrl->vg = vg;
 		ctrl->vge = vge;
-		ctrl->buttonup = event_new(tv, NULL, redraw_sketch, "%p", vg);
-		ctrl->motion = event_new(tv, NULL, update_circle_radius,
+		ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_radius,
 		    "%p,%p", vg, vge);
 		break;
 	default:
 		break;
 	}
-	return (sketch_edit_element(tv, tel, vge));
+	return (RG_SketchEditElement(tv, tel, vge));
 }
 
 void
-sketch_unselect(struct tileview *tv, struct tile_element *tel,
-    struct vg_element *vge)
+RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
+    VG_Element *vge)
 {
-	char name[OBJECT_NAME_MAX];
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct tileview_ctrl *ctrl, *nctrl;
-	struct window *win;
+	char name[AG_OBJECT_NAME_MAX];
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	RG_TileviewCtrl *ctrl, *nctrl;
+	AG_Window *win;
 
-	TAILQ_FOREACH(win, &view->windows, windows) {
+	TAILQ_FOREACH(win, &agView->windows, windows) {
 		snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
 		    vge);
-		if (strcmp(name, OBJECT(win)->name) == 0) {
-			view_detach(win);
+		if (strcmp(name, AGOBJECT(win)->name) == 0) {
+			AG_ViewDetach(win);
 			break;
 		}
 	}
@@ -515,24 +522,24 @@ sketch_unselect(struct tileview *tv, struct tile_element *tel,
 	     ctrl = nctrl) {
 		nctrl = TAILQ_NEXT(ctrl, ctrls);
 		if (ctrl->vg == vg && ctrl->vge == vge)
-			tileview_remove_ctrl(tv, ctrl);
+			RG_TileviewDelCtrl(tv, ctrl);
 	}
 
 	vge->selected = 0;
 }
 
 void
-sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
+RG_SketchMouseButtonDown(RG_Tileview *tv, RG_TileElement *tel,
     double x, double y, int button)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
 
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
-		mouse_get_state(&x, &y);
-		sketch_open_menu(tv, x, y);
+		AG_MouseGetState(&x, &y);
+		RG_SketchOpenMenu(tv, x, y);
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {
 		if (tv->cur_tool == NULL ||
@@ -544,8 +551,8 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->mousebuttondown != NULL) {
 			ops->mousebuttondown(tv->cur_tool, sk, x, y, button);
@@ -554,9 +561,9 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	}
 
 	{
-		struct vg_element *vge;
+		VG_Element *vge;
 		float idx, closest_idx = FLT_MAX;
-		struct vg_element *closest_vge = NULL;
+		VG_Element *closest_vge = NULL;
 
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			if (vge->ops->intsect != NULL) {
@@ -571,25 +578,25 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		}
 		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
 			if (closest_vge->selected) {
-				sketch_unselect(tv, tel, closest_vge);
+				RG_SketchUnselect(tv, tel, closest_vge);
 			} else {
-				struct window *pwin = widget_parent_window(tv);
-				struct window *win;
+				AG_Window *pwin = AG_WidgetParentWindow(tv);
+				AG_Window *win;
 
 				if ((SDL_GetModState() & KMOD_CTRL) == 0) {
 					TAILQ_FOREACH(vge, &vg->vges, vges) {
 						if (vge->selected)
-							sketch_unselect(tv,
+							RG_SketchUnselect(tv,
 							    tel, vge);
 					}
 				}
 
-				win = sketch_select(tv, tel, closest_vge);
+				win = RG_SketchSelect(tv, tel, closest_vge);
 				if (win != NULL) {
-					window_attach(pwin, win);
-					window_show(win);
-					view->focus_win = pwin;
-					widget_focus(tv);
+					AG_WindowAttach(pwin, win);
+					AG_WindowShow(win);
+					agView->focus_win = pwin;
+					AG_WidgetFocus(tv);
 				}
 			}
 			vg->redraw++;
@@ -598,13 +605,13 @@ sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 }
 
 void
-sketch_mousebuttonup(struct tileview *tv, struct tile_element *tel,
+RG_SketchMouseButtonUp(RG_Tileview *tv, RG_TileElement *tel,
     double x, double y, int button)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->mousebuttonup != NULL)
 			ops->mousebuttonup(tv->cur_tool, tel->tel_sketch.sk,
@@ -613,13 +620,13 @@ sketch_mousebuttonup(struct tileview *tv, struct tile_element *tel,
 }
 
 void
-sketch_mousemotion(struct tileview *tv, struct tile_element *tel,
+RG_SketchMouseMotion(RG_Tileview *tv, RG_TileElement *tel,
     double x, double y, double xrel, double yrel, int state)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->mousemotion != NULL) {
 			ops->mousemotion(tv->cur_tool, tel->tel_sketch.sk,
@@ -629,10 +636,10 @@ sketch_mousemotion(struct tileview *tv, struct tile_element *tel,
 	}
 
 	{
-		struct sketch *sk = tel->tel_sketch.sk;
-		struct vg *vg = sk->vg;
+		RG_Sketch *sk = tel->tel_sketch.sk;
+		VG *vg = sk->vg;
 		float idx, closest_idx = FLT_MAX;
-		struct vg_element *vge, *closest_vge = NULL;
+		VG_Element *vge, *closest_vge = NULL;
 
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			vge->mouseover = 0;
@@ -654,12 +661,12 @@ sketch_mousemotion(struct tileview *tv, struct tile_element *tel,
 }
 
 int
-sketch_mousewheel(struct tileview *tv, struct tile_element *tel, int which)
+RG_SketchMouseWheel(RG_Tileview *tv, RG_TileElement *tel, int which)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->mousewheel != NULL)
 			return (ops->mousewheel(tv->cur_tool,
@@ -669,17 +676,17 @@ sketch_mousewheel(struct tileview *tv, struct tile_element *tel, int which)
 }
 
 void
-sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
+RG_SketchKeyDown(RG_Tileview *tv, RG_TileElement *tel, int keysym,
     int keymod)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	struct vg_element *vge, *nvge;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	VG *vg = sk->vg;
+	VG_Element *vge, *nvge;
 
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->keydown != NULL) {
 			ops->keydown(tv->cur_tool, sk, keysym, keymod);
@@ -693,8 +700,8 @@ sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
 		     vge = nvge) {
 		     	nvge = TAILQ_NEXT(vge, vges);
 			if (vge->selected) {
-				sketch_unselect(tv, tel, vge);
-				vg_destroy_element(vg, vge);
+				RG_SketchUnselect(tv, tel, vge);
+				VG_DestroyElement(vg, vge);
 				vg->redraw++;
 			}
 		}
@@ -703,15 +710,15 @@ sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
 }
 
 void
-sketch_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
+RG_SketchKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
     int keymod)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
+	RG_Sketch *sk = tel->tel_sketch.sk;
 
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
-		const struct tileview_sketch_tool_ops *ops =
-		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		const RG_TileviewSketchToolOps *ops =
+		    (const RG_TileviewSketchToolOps *)tv->cur_tool->ops;
 		
 		if (ops->keyup != NULL) {
 			ops->keyup(tv->cur_tool, sk, keysym, keymod);
@@ -723,81 +730,81 @@ sketch_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
 static void
 select_tool(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
-	struct tileview_tool *tvt = argv[2].p;
+	RG_Tileview *tv = argv[1].p;
+	RG_TileviewTool *tvt = argv[2].p;
 
-	tileview_select_tool(tv, tvt);
+	RG_TileviewSelectTool(tv, tvt);
 }
 
 static void
 select_tool_tbar(int argc, union evarg *argv)
 {
-	struct button *btn = argv[0].p;
-	struct toolbar *tbar = argv[1].p;
-	struct tileview *tv = argv[2].p;
-	struct tileview_tool *tvt = argv[3].p;
+	AG_Button *btn = argv[0].p;
+	AG_Toolbar *tbar = argv[1].p;
+	RG_Tileview *tv = argv[2].p;
+	RG_TileviewTool *tvt = argv[3].p;
 
-	toolbar_select_unique(tbar, btn);
+	AG_ToolbarSelectUnique(tbar, btn);
 	if (tv->cur_tool == tvt) {
-		tileview_unselect_tool(tv);
+		RG_TileviewUnselectTool(tv);
 	} else {
-		tileview_select_tool(tv, tvt);
+		RG_TileviewSelectTool(tv, tvt);
 	}
 }
 
 void
-sketch_open_menu(struct tileview *tv, int x, int y)
+RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	struct sketch *sk = tv->tv_sketch.sk;
-	struct AGMenu *me;
-	struct AGMenuItem *mi;
+	RG_Sketch *sk = tv->tv_sketch.sk;
+	AG_Menu *me;
+	AG_MenuItem *mi;
 	
 	if (tv->tv_sketch.menu != NULL)
-		sketch_close_menu(tv);
+		RG_SketchCloseMenu(tv);
 
-	me = tv->tv_sketch.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	menu_init(me);
+	me = tv->tv_sketch.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(me);
 
-	mi = tv->tv_sketch.menu_item = menu_add_item(me, NULL);
+	mi = tv->tv_sketch.menu_item = AG_MenuAddItem(me, NULL);
 	{
-		struct tileview_tool *tvt;
-		struct AGMenuItem *m_tool;
+		RG_TileviewTool *tvt;
+		AG_MenuItem *m_tool;
 
-		m_tool = menu_action(mi, _("Tools"), OBJEDIT_ICON,
+		m_tool = AG_MenuAction(mi, _("Tools"), OBJEDIT_ICON,
 		    NULL, NULL);
 		TAILQ_FOREACH(tvt, &tv->tools, tools) {
 			if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 				continue;
 			}
-			menu_action(m_tool, _(tvt->ops->name), tvt->ops->icon,
+			AG_MenuAction(m_tool, _(tvt->ops->name), tvt->ops->icon,
 			    select_tool, "%p,%p", tv, tvt);
 		}
 
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 	
-		menu_int_flags(mi, _("Show sketch origin"), VGORIGIN_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch origin"), VGORIGIN_ICON,
 		    &sk->vg->flags, VG_VISORIGIN, 0);
-		menu_int_flags(mi, _("Show sketch grid"), SNAP_GRID_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch grid"), SNAP_GRID_ICON,
 		    &sk->vg->flags, VG_VISGRID, 0);
-		menu_int_flags(mi, _("Show sketch extents"), VGBLOCK_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch extents"), VGBLOCK_ICON,
 		    &sk->vg->flags, VG_VISBBOXES, 0);
 
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 		
-		tileview_generic_menu(tv, mi);
+		RG_TileviewGenericMenu(tv, mi);
 	}
 	tv->tv_sketch.menu->sel_item = mi;
-	tv->tv_sketch.menu_win = menu_expand(me, mi, x, y);
+	tv->tv_sketch.menu_win = AG_MenuExpand(me, mi, x, y);
 }
 
 void
-sketch_close_menu(struct tileview *tv)
+RG_SketchCloseMenu(RG_Tileview *tv)
 {
-	struct AGMenu *me = tv->tv_sketch.menu;
-	struct AGMenuItem *mi = tv->tv_sketch.menu_item;
+	AG_Menu *me = tv->tv_sketch.menu;
+	AG_MenuItem *mi = tv->tv_sketch.menu_item;
 
-	menu_collapse(me, mi);
-	object_destroy(me);
+	AG_MenuCollapse(me, mi);
+	AG_ObjectDestroy(me);
 	Free(me, M_OBJECT);
 
 	tv->tv_sketch.menu = NULL;
@@ -805,20 +812,20 @@ sketch_close_menu(struct tileview *tv)
 	tv->tv_sketch.menu_win = NULL;
 }
 
-struct toolbar *
-sketch_toolbar(struct tileview *tv, struct tile_element *tel)
+AG_Toolbar *
+RG_SketchToolbar(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct toolbar *tbar;
-	struct tileview_tool *tvt;
+	RG_Sketch *sk = tel->tel_sketch.sk;
+	AG_Toolbar *tbar;
+	RG_TileviewTool *tvt;
 
-	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
+	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
 	TAILQ_FOREACH(tvt, &tv->tools, tools) {
 		if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 			continue;
 		}
-		toolbar_add_button(tbar, 0, tvt->ops->icon >= 0 ?
-		    ICON(tvt->ops->icon) : NULL, 1, 0,
+		AG_ToolbarAddButton(tbar, 0, tvt->ops->icon >= 0 ?
+		    AGICON(tvt->ops->icon) : NULL, 1, 0,
 		    select_tool_tbar, "%p,%p,%p", tbar, tv, tvt);
 	}
 	return (tbar);

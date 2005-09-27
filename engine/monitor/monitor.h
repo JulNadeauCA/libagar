@@ -1,24 +1,24 @@
-/*	$Csoft: monitor.h,v 1.27 2005/01/27 05:46:24 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.28 2005/06/11 11:10:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MONITOR_MONITOR_H_
 #define _AGAR_MONITOR_MONITOR_H_
 #include "begin_code.h"
 
-struct AGMenuItem;
+struct ag_menu_item;
 
 __BEGIN_DECLS
-void monitor_menu(struct AGMenuItem *);
-void monitor_destroy(void);
+void AG_MonitorMenu(struct ag_menu_item *);
+void AG_MonitorDestroy(void);
 
-struct window *widget_debug_window(void);
-struct window *view_params_window(void);
-struct window *screenshot_window(void);
-struct window *uniconv_window(void);
-struct window *leak_window(void);
-struct window *timeouts_window(void);
-struct window *server_window(void);
-int	       server_start(void);
+AG_Window *AG_DebugWidgetBrowser(void);
+AG_Window *AG_DebugViewSettings(void);
+AG_Window *AG_DebugScreenshot(void);
+AG_Window *AG_DebugUnicodeBrowser(void);
+AG_Window *AG_DebugLeakDetector(void);
+AG_Window *AG_DebugTimeoutList(void);
+AG_Window *AG_DebugServerWindow(void);
+int	   AG_DebugServerStart(void);
 __END_DECLS
 
 #include "close_code.h"

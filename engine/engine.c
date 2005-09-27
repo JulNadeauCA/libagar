@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.161 2005/09/18 04:08:22 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.162 2005/09/18 05:13:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,30 +72,22 @@
 #endif
 
 #ifdef THREADS
-pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
+pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 #endif
 
-const char *progname = "untitled";
-struct config *config;
-struct object *world;
-pthread_mutex_t linkage_lock;
-struct object engine_icons;
-void (*engine_atexit_func)(void) = NULL;
-extern pthread_mutex_t timeout_lock;
+const char *agProgName = "";
+AG_Config *agConfig;
+AG_Object *agWorld;
+AG_Object agIconMgr;
+void (*agAtexitFunc)(void) = NULL;
+pthread_mutex_t agLinkageLock;
+pthread_mutex_t agTimingLock;
+int agServerMode = 0;
 
-enum gfx_engine gfx_mode = GFX_ENGINE_GUI;
-int server_mode = 0;
-
-/* Initialize the Agar engine. */
 int
-engine_preinit(const char *name)
+AG_InitCore(const char *progname, u_int flags)
 {
-	static int inited = 0;
-	
-	if (inited) {
-		error_set("The engine is already initialized.");
-		return (-1);
-	}
+	agProgName = progname;
 
 #ifdef HAVE_SETLOCALE
 	setlocale(LC_ALL, "");
@@ -104,44 +96,58 @@ engine_preinit(const char *name)
 	bindtextdomain("agar", LOCALEDIR);
 	textdomain("agar");
 #endif
-	error_init();
+
+	AG_InitError();
 
 #ifdef THREADS
-	pthread_mutexattr_init(&recursive_mutexattr);
-	pthread_mutexattr_settype(&recursive_mutexattr,
+	pthread_mutexattr_init(&agRecursiveMutexAttr);
+	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
-	pthread_mutex_init(&timeout_lock, &recursive_mutexattr);
+	pthread_mutex_init(&agLinkageLock, &agRecursiveMutexAttr);
+	pthread_mutex_init(&agTimingLock, &agRecursiveMutexAttr);
 #endif
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
-		error_set("SDL_Init: %s", SDL_GetError());
+		AG_SetError("SDL_Init: %s", SDL_GetError());
 		return (-1);
 	}
+
+	AG_InitTypeSw();
+	
+	agConfig = Malloc(sizeof(AG_Config), M_OBJECT);
+	AG_ConfigInit(agConfig);
+	AG_ObjectLoad(agConfig);
+
+	agWorld = AG_ObjectNew(NULL, "world");
+	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);
+	return (0);
+}
+
+int
+AG_InitVideo(int w, int h, int bpp, u_int flags)
+{
 #ifdef HAVE_X11
-	setenv("SDL_VIDEO_X11_WMCLASS", name, 1);
+	setenv("SDL_VIDEO_X11_WMCLASS", agProgName, 1);
 #endif
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-		error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
+		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
 		return (-1);
 	}
-	SDL_WM_SetCaption(name, name);
-	progname = name;
+	SDL_WM_SetCaption(agProgName, agProgName);
 
-	vinfo = SDL_GetVideoInfo();
-	if (vinfo != NULL) {
+	if ((agVideoInfo = SDL_GetVideoInfo()) != NULL) {
 		char accel[2048];
 		char unaccel[2048];
 		size_t size = 2048;
 
-		vfmt = vinfo->vfmt;
+		agVideoFmt = agVideoInfo->vfmt;
 
-		if (vinfo->wm_available) {
+		if (agVideoInfo->wm_available) {
 			printf(_("Window manager is available.\n"));
 		} else {
 			printf(_("Window manager is unavailable.\n"));
 		}
 			
-		if (vinfo->hw_available) {
+		if (agVideoInfo->hw_available) {
 			printf(_("Hardware surfaces are available.\n"));
 		} else {
 			printf(_("Hardware surfaces are unavailable.\n"));
@@ -150,20 +156,19 @@ engine_preinit(const char *name)
 		accel[0] = '\0';
 		unaccel[0] = '\0';
 
-		strlcat(vinfo->blit_hw ? accel : unaccel,
+		strlcat(agVideoInfo->blit_hw ? accel : unaccel,
 		    _("\tSDL hardware blits\n"), size);
-		strlcat(vinfo->blit_hw_CC ? accel : unaccel,
+		strlcat(agVideoInfo->blit_hw_CC ? accel : unaccel,
 		    _("\tSDL hardware->hardware colorkey blits\n"), size);
-		strlcat(vinfo->blit_hw_A ? accel : unaccel,
+		strlcat(agVideoInfo->blit_hw_A ? accel : unaccel,
 		    _("\tSDL hardware->hardware alpha blits\n"), size);
-		
-		strlcat(vinfo->blit_sw ? accel : unaccel,
+		strlcat(agVideoInfo->blit_sw ? accel : unaccel,
 		    _("\tSDL software->hardware blits\n"), size);
-		strlcat(vinfo->blit_sw_CC ? accel : unaccel,
+		strlcat(agVideoInfo->blit_sw_CC ? accel : unaccel,
 		    _("\tSDL software->hardware colorkey blits\n"), size);
-		strlcat(vinfo->blit_sw_A ? accel : unaccel,
+		strlcat(agVideoInfo->blit_sw_A ? accel : unaccel,
 		    _("\tSDL software->hardware alpha blits\n"), size);
-		strlcat(vinfo->blit_fill ? accel : unaccel,
+		strlcat(agVideoInfo->blit_fill ? accel : unaccel,
 		    _("\tSDL color fills\n"), size);
 
 		if (accel[0] != '\0')
@@ -174,70 +179,67 @@ engine_preinit(const char *name)
 		printf("\n");
 	}
 
-	typesw_init();
-	colors_init();
-#ifdef NETWORK
-	rcs_init();
-#endif
-
-	config = Malloc(sizeof(struct config), M_OBJECT);
-	config_init(config);
-	object_load(config);
-
-	world = object_new(NULL, "world");
-	object_remain(world, OBJECT_REMAIN_DATA);
-	inited++;
+	if (AG_ViewInit(w, h, bpp, flags) == -1 || AG_TextInit() == -1) {
+		return (-1);
+	}
+	AG_ColorsInit();
+	AG_InitPrimitives();
+	AG_CursorsInit();
+	
+	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
+	AG_WireGfx(&agIconMgr, "/engine/icons/icons");
 	return (0);
 }
 
-void
-engine_set_gfxmode(enum gfx_engine mode)
+int
+AG_InitConfigWin(u_int flags)
 {
-	gfx_mode  = mode;
+	AG_ConfigWindow(agConfig, flags);
+	return (0);
 }
 
 /* Initialize graphics and input devices. */
 int
-engine_init(void)
+AG_InitInput(u_int flags)
 {
 	int i, njoys;
-	
-	if (view_init(gfx_mode) == -1 || text_init() == -1)
-		return (-1);
-	
-	kbd_new(0);
-	mouse_new(0);
 
-	if (prop_get_bool(config, "input.joysticks") &&
-	    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
-		njoys = SDL_NumJoysticks();
-		for (i = 0; i < njoys; i++)
-			joy_new(i);
+	if (flags & AG_INPUT_KBDMOUSE) {
+		AG_KeyboardNew(0);
+		AG_MouseNew(0);
 	}
+	if (flags & AG_INPUT_JOYSTICKS) {
+		if (AG_Bool(agConfig, "input.joysticks") &&
+		    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+			njoys = SDL_NumJoysticks();
+			for (i = 0; i < njoys; i++)
+				AG_JoystickNew(i);
+		}
+	}
+	return (0);
+}
 
-	primitives_init();
-	cursors_init();
-
-	object_init(&engine_icons, "object", "icons", NULL);
-	gfx_wire(&engine_icons, "/engine/icons/icons");
-
-	config_window(config);
-
+int
+AG_InitNetwork(u_int flags)
+{
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
-	if (server_mode) {
-		extern int server_start(void);
-
-		server_start();
+	if ((flags & AG_NETWORK_SERVERMODE) && agServerMode) {
+		extern int AG_DebugServerStart(void);
+		AG_DebugServerStart();
 	}
+#endif
+#if defined(NETWORK)
+	if (flags & AG_NETWORK_RCS)
+		AG_RcsInit();
 #endif
 	return (0);
 }
 
-/* Register a function to invoke in engine_destroy(). */
+/* Register a function to invoke in AG_Quit(). */
 void
-engine_atexit(void (*func)(void))
+AG_AtExitFunc(void (*func)(void))
 {
-	engine_atexit_func = func;
+	agAtexitFunc = func;
 }
 
 /*
@@ -245,49 +247,36 @@ engine_atexit(void (*func)(void))
  * Only one thread must be running.
  */
 void
-engine_destroy(void)
+AG_Quit(void)
 {
-	if (engine_atexit_func != NULL)
-		engine_atexit_func();
+	if (agAtexitFunc != NULL)
+		agAtexitFunc();
 
 #if defined(MAP) && defined(EDITION)
-	if (mapedition)
-		object_save(&mapedit);
+	if (agEditMode)
+		AG_ObjectSave(&agMapEditor);
 #endif
 #ifdef NETWORK
-	rcs_destroy();
+	AG_RcsDestroy();
 #endif
 
-	object_destroy(world);
-	text_destroy();
-	view_destroy();
-	input_destroy();
+	AG_ObjectDestroy(agWorld);
+	AG_TextDestroy();
+	AG_ViewDestroy();
+	AG_InputDestroy();
 	
-	colors_destroy();
-	cursors_destroy();
+	AG_ColorsDestroy();
+	AG_CursorsDestroy();
 
-	object_destroy(config);
-	Free(config, M_OBJECT);
+	AG_ObjectDestroy(agConfig);
+	Free(agConfig, M_OBJECT);
 
-	pthread_mutex_destroy(&timeout_lock);
-#if 0
-	pthread_mutex_destroy(&linkage_lock);	/* XXX */
-#endif
-	error_destroy();
-	typesw_destroy();
+/*	pthread_mutex_destroy(&agLinkageLock); */
+	pthread_mutex_destroy(&agTimingLock);
+
+	AG_DestroyError();
+	AG_DestroyTypeSw();
 	SDL_Quit();
 	exit(0);
-}
-
-void
-lock_linkage(void)
-{
-	pthread_mutex_lock(&linkage_lock);
-}
-
-void
-unlock_linkage(void)
-{
-	pthread_mutex_unlock(&linkage_lock);
 }
 

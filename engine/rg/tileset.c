@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.61 2005/09/19 01:25:19 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.62 2005/09/20 13:46:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -49,44 +49,44 @@
 
 #include <ctype.h>
 
-const struct version tileset_ver = {
+const AG_Version rgTilesetVer = {
 	"agar tileset",
 	7, 0
 };
 
-const struct object_ops tileset_ops = {
-	tileset_init,
-	tileset_reinit,
-	tileset_destroy,
-	tileset_load,
-	tileset_save,
+const AG_ObjectOps rgTilesetOps = {
+	RG_TilesetInit,
+	RG_TilesetReinit,
+	RG_TilesetDestroy,
+	RG_TilesetLoad,
+	RG_TilesetSave,
 #ifdef EDITION
-	tileset_edit
+	RG_TilesetEdit
 #else
 	NULL
 #endif
 };
 
-extern const struct feature_ops fill_ops;
-extern const struct feature_ops sketchproj_ops;
+extern const RG_FeatureOps rgFillOps;
+extern const RG_FeatureOps rgSketchProjOps;
 
-const struct feature_ops *feature_tbl[] = {
-	&fill_ops,
-	&sketchproj_ops,
+const RG_FeatureOps *feature_tbl[] = {
+	&rgFillOps,
+	&rgSketchProjOps,
 	NULL
 };
 
 void
-tileset_init(void *obj, const char *name)
+RG_TilesetInit(void *obj, const char *name)
 {
-	struct tileset *ts = obj;
+	RG_Tileset *ts = obj;
 
-	object_init(ts, "tileset", name, &tileset_ops);
-	OBJECT(ts)->gfx = gfx_new(ts);
-	OBJECT(ts)->gfx->used = 0;
-	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD;
+	AG_ObjectInit(ts, "tileset", name, &rgTilesetOps);
+	AGOBJECT(ts)->gfx = AG_GfxNew(ts);
+	AGOBJECT(ts)->gfx->used = 0;
+	AGOBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 
-	pthread_mutex_init(&ts->lock, &recursive_mutexattr);
+	pthread_mutex_init(&ts->lock, &agRecursiveMutexAttr);
 	TAILQ_INIT(&ts->tiles);
 	TAILQ_INIT(&ts->sketches);
 	TAILQ_INIT(&ts->pixmaps);
@@ -96,8 +96,11 @@ tileset_init(void *obj, const char *name)
 
 	ts->icon = SDL_CreateRGBSurface(
 	    SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY,
-	    32, 32, sfmt->BitsPerPixel,
-	    sfmt->Rmask, sfmt->Gmask, sfmt->Bmask, sfmt->Amask);
+	    32, 32, agSurfaceFmt->BitsPerPixel,
+	    agSurfaceFmt->Rmask,
+	    agSurfaceFmt->Gmask,
+	    agSurfaceFmt->Bmask,
+	    agSurfaceFmt->Amask);
 
 	if (ts->icon == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
@@ -109,15 +112,15 @@ tileset_init(void *obj, const char *name)
 }
 
 void
-tileset_reinit(void *obj)
+RG_TilesetReinit(void *obj)
 {
-	struct tileset *ts = obj;
-	struct tile *t, *nt;
-	struct sketch *sk, *nsk;
-	struct pixmap *px, *npx;
-	struct feature *ft, *nft;
-	struct animation *ani, *nani;
-	struct texture *tex, *ntex;
+	RG_Tileset *ts = obj;
+	RG_Tile *t, *nt;
+	RG_Sketch *sk, *nsk;
+	RG_Pixmap *px, *npx;
+	RG_Feature *ft, *nft;
+	RG_Anim *ani, *nani;
+	RG_Texture *tex, *ntex;
 
 	pthread_mutex_lock(&ts->lock);
 	
@@ -125,49 +128,49 @@ tileset_reinit(void *obj)
 	     t != TAILQ_END(&ts->tiles);
 	     t = nt) {
 		nt = TAILQ_NEXT(t, tiles);
-		tile_destroy(t);
+		RG_TileDestroy(t);
 		Free(t, M_RG);
 	}
 
 #if 0
 	ts->max_sprites = 0;
-	gfx_alloc_sprites(OBJECT(ts)->gfx, 0);
-	gfx_alloc_anims(OBJECT(ts)->gfx, 0);
+	AG_GfxAllocSprites(AGOBJECT(ts)->gfx, 0);
+	AG_GfxAllocAnims(AGOBJECT(ts)->gfx, 0);
 #endif
 
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
 		nsk = TAILQ_NEXT(sk, sketches);
-		sketch_destroy(sk);
+		RG_SketchDestroy(sk);
 		Free(sk, M_RG);
 	}
 	for (px = TAILQ_FIRST(&ts->pixmaps);
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
 		npx = TAILQ_NEXT(px, pixmaps);
-		pixmap_destroy(px);
+		RG_PixmapDestroy(px);
 		Free(px, M_RG);
 	}
 	for (ft = TAILQ_FIRST(&ts->features);
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
 		nft = TAILQ_NEXT(ft, features);
-		feature_destroy(ft);
+		AG_FeatureDestroy(ft);
 		Free(ft, M_RG);
 	}
 	for (ani = TAILQ_FIRST(&ts->animations);
 	     ani != TAILQ_END(&ts->animations);
 	     ani = nani) {
 		nani = TAILQ_NEXT(ani, animations);
-		animation_destroy(ani);
+		RG_AnimDestroy(ani);
 		Free(ani, M_RG);
 	}
 	for (tex = TAILQ_FIRST(&ts->textures);
 	     tex != TAILQ_END(&ts->textures);
 	     tex = ntex) {
 		ntex = TAILQ_NEXT(tex, textures);
-		texture_destroy(tex);
+		RG_TextureDestroy(tex);
 		Free(tex, M_RG);
 	}
 	
@@ -181,42 +184,42 @@ tileset_reinit(void *obj)
 }
 
 void
-tileset_destroy(void *obj)
+RG_TilesetDestroy(void *obj)
 {
-	struct tileset *ts = obj;
+	RG_Tileset *ts = obj;
 
 	pthread_mutex_destroy(&ts->lock);
 	SDL_FreeSurface(ts->icon);
 }
 
 int
-tileset_load(void *obj, struct netbuf *buf)
+RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 {
-	struct tileset *ts = obj;
-	struct gfx *gfx = OBJECT(ts)->gfx;
-	struct pixmap *px;
+	RG_Tileset *ts = obj;
+	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
+	RG_Pixmap *px;
 	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations, ntextures;
 	Uint32 i;
 
-	if (version_read(buf, &tileset_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &rgTilesetVer, NULL) != 0)
 		return (-1);
 	
 	pthread_mutex_lock(&ts->lock);
-	copy_string(ts->template, buf, sizeof(ts->template));
-	ts->flags = read_uint32(buf);
-	ts->max_sprites = read_uint32(buf);
+	AG_CopyString(ts->template, buf, sizeof(ts->template));
+	ts->flags = AG_ReadUint32(buf);
+	ts->max_sprites = AG_ReadUint32(buf);
 
 	/* Resize the graphics array. */
-	gfx_alloc_sprites(gfx, ts->max_sprites);
+	AG_GfxAllocSprites(gfx, ts->max_sprites);
 
 	/* Load the vectorial sketches. */
-	nsketches = read_uint32(buf);
+	nsketches = AG_ReadUint32(buf);
 	for (i = 0; i < nsketches; i++) {
-		struct sketch *sk;
+		RG_Sketch *sk;
 
-		sk = Malloc(sizeof(struct sketch), M_RG);
-		sketch_init(sk, ts, 0);
-		if (sketch_load(sk, buf) == -1) {
+		sk = Malloc(sizeof(RG_Sketch), M_RG);
+		RG_SketchInit(sk, ts, 0);
+		if (RG_SketchLoad(sk, buf) == -1) {
 			Free(sk, M_RG);
 			goto fail;
 		}
@@ -224,13 +227,13 @@ tileset_load(void *obj, struct netbuf *buf)
 	}
 
 	/* Load the pixmaps. */
-	npixmaps = read_uint32(buf);
+	npixmaps = AG_ReadUint32(buf);
 	for (i = 0; i < npixmaps; i++) {
-		struct pixmap *px;
+		RG_Pixmap *px;
 
-		px = Malloc(sizeof(struct pixmap), M_RG);
-		pixmap_init(px, ts, 0);
-		if (pixmap_load(px, buf) == -1) {
+		px = Malloc(sizeof(RG_Pixmap), M_RG);
+		RG_PixmapInit(px, ts, 0);
+		if (RG_PixmapLoad(px, buf) == -1) {
 			Free(px, M_RG);
 			goto fail;
 		}
@@ -238,19 +241,19 @@ tileset_load(void *obj, struct netbuf *buf)
 	}
 
 	/* Load the features. */
-	nfeatures = read_uint32(buf);
+	nfeatures = AG_ReadUint32(buf);
 	for (i = 0; i < nfeatures; i++) {
-		const struct feature_ops **ftops;
-		char name[FEATURE_NAME_MAX];
-		char type[FEATURE_TYPE_MAX];
+		const RG_FeatureOps **ftops;
+		char name[RG_FEATURE_NAME_MAX];
+		char type[RG_FEATURE_TYPE_MAX];
 		size_t len;
-		struct feature *ft;
+		RG_Feature *ft;
 		int flags;
 		
-		copy_string(name, buf, sizeof(name));
-		copy_string(type, buf, sizeof(type));
-		flags = (int)read_uint32(buf);
-		len = (size_t)read_uint32(buf);
+		AG_CopyString(name, buf, sizeof(name));
+		AG_CopyString(type, buf, sizeof(type));
+		flags = (int)AG_ReadUint32(buf);
+		len = (size_t)AG_ReadUint32(buf);
 
 		for (ftops = &feature_tbl[0]; *ftops != NULL; ftops++) {
 			if (strcmp((*ftops)->type, type) == 0)
@@ -260,15 +263,15 @@ tileset_load(void *obj, struct netbuf *buf)
 			dprintf("%s: unimplemented feature: %s; "
 			        "skipping %lu bytes.\n", name, type,
 				(u_long)len);
-			netbuf_seek(buf, len-4, SEEK_CUR);
+			AG_NetbufSeek(buf, len-4, SEEK_CUR);
 			continue;
 		}
 
 		ft = Malloc((*ftops)->len, M_RG);
 		ft->ops = *ftops;
 		ft->ops->init(ft, ts, flags);
-		if (feature_load(ft, buf) == -1) {
-			feature_destroy(ft);
+		if (RG_FeatureLoad(ft, buf) == -1) {
+			AG_FeatureDestroy(ft);
 			Free(ft, M_RG);
 			goto fail;
 		}
@@ -276,44 +279,44 @@ tileset_load(void *obj, struct netbuf *buf)
 	}
 	
 	/* Load the tiles. */
-	ntiles = read_uint32(buf);
+	ntiles = AG_ReadUint32(buf);
 	dprintf("%u tiles\n", ntiles);
 	for (i = 0; i < ntiles; i++) {
-		struct map *cMap;
-		char name[TILE_NAME_MAX];
-		struct tile *t;
+		AG_Map *cMap;
+		char name[RG_TILE_NAME_MAX];
+		RG_Tile *t;
 		
-		t = Malloc(sizeof(struct tile), M_RG);
-		copy_string(name, buf, sizeof(name));
-		tile_init(t, ts, name);
+		t = Malloc(sizeof(RG_Tile), M_RG);
+		AG_CopyString(name, buf, sizeof(name));
+		RG_TileInit(t, ts, name);
 
-		if (tile_load(t, buf) == -1) {
-			tile_destroy(t);
+		if (RG_TileLoad(t, buf) == -1) {
+			RG_TileDestroy(t);
 			Free(t, M_RG);
 			goto fail;
 		}
 
 		/* Allocate the surface fragments. */
-		tile_scale(ts, t, t->su->w, t->su->h, t->flags,
+		RG_TileScale(ts, t, t->su->w, t->su->h, t->flags,
 		    t->su->format->alpha);
-		tile_generate(t);
+		RG_TileGenerate(t);
 		
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
 
 	/* Load the animation information. */
-	nanimations = read_uint32(buf);
+	nanimations = AG_ReadUint32(buf);
 	for (i = 0; i < nanimations; i++) {
-		char name[ANIMATION_NAME_MAX];
-		struct animation *ani;
+		char name[RG_ANIMATION_NAME_MAX];
+		RG_Anim *ani;
 		int flags;
 		
-		ani = Malloc(sizeof(struct animation), M_RG);
-		copy_string(name, buf, sizeof(name));
-		flags = (int)read_uint32(buf);
-		animation_init(ani, ts, name, flags);
-		if (animation_load(ani, buf) == -1) {
-			animation_destroy(ani);
+		ani = Malloc(sizeof(RG_Anim), M_RG);
+		AG_CopyString(name, buf, sizeof(name));
+		flags = (int)AG_ReadUint32(buf);
+		RG_AnimInit(ani, ts, name, flags);
+		if (RG_AnimLoad(ani, buf) == -1) {
+			RG_AnimDestroy(ani);
 			Free(ani, M_RG);
 			goto fail;
 		}
@@ -321,16 +324,16 @@ tileset_load(void *obj, struct netbuf *buf)
 	}
 	
 	/* Load the textures. */
-	ntextures = read_uint32(buf);
+	ntextures = AG_ReadUint32(buf);
 	for (i = 0; i < ntextures; i++) {
-		char name[TEXTURE_NAME_MAX];
-		struct texture *tex;
+		char name[RG_TEXTURE_NAME_MAX];
+		RG_Texture *tex;
 		
-		tex = Malloc(sizeof(struct texture), M_RG);
-		copy_string(name, buf, sizeof(name));
-		texture_init(tex, ts, name);
-		if (texture_load(tex, buf) == -1) {
-			texture_destroy(tex);
+		tex = Malloc(sizeof(RG_Texture), M_RG);
+		AG_CopyString(name, buf, sizeof(name));
+		RG_TextureInit(tex, ts, name);
+		if (RG_TextureLoad(tex, buf) == -1) {
+			RG_TextureDestroy(tex);
 			Free(tex, M_RG);
 			goto fail;
 		}
@@ -339,8 +342,8 @@ tileset_load(void *obj, struct netbuf *buf)
 
 	/* Resolve the pixmap brush references. */
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		struct pixmap_brush *pbr;
-		struct pixmap *ppx;
+		struct rg_pixmap_brush *pbr;
+		RG_Pixmap *ppx;
 
 		TAILQ_FOREACH(pbr, &px->brushes, brushes) {
 			if (pbr->px != NULL) {
@@ -365,158 +368,159 @@ fail:
 }
 
 int
-tileset_save(void *obj, struct netbuf *buf)
+RG_TilesetSave(void *obj, AG_Netbuf *buf)
 {
-	struct tileset *ts = obj;
+	RG_Tileset *ts = obj;
 	Uint32 nsketches = 0, npixmaps = 0, ntiles = 0, nfeatures = 0,
 	       nanims = 0, ntextures = 0;
 	off_t nsketches_offs, npixmaps_offs, ntiles_offs, nfeatures_offs,
 	      nanims_offs, ntextures_offs;
-	struct sketch *sk;
-	struct pixmap *px;
-	struct animation *ani;
-	struct tile *t;
-	struct feature *ft;
-	struct texture *tex;
+	RG_Sketch *sk;
+	RG_Pixmap *px;
+	RG_Anim *ani;
+	RG_Tile *t;
+	RG_Feature *ft;
+	RG_Texture *tex;
 
-	version_write(buf, &tileset_ver);
+	AG_WriteVersion(buf, &rgTilesetVer);
 
 	pthread_mutex_lock(&ts->lock);
 
-	write_string(buf, ts->template);
-	write_uint32(buf, ts->flags);
-	write_uint32(buf, ts->max_sprites);
+	AG_WriteString(buf, ts->template);
+	AG_WriteUint32(buf, ts->flags);
+	AG_WriteUint32(buf, ts->max_sprites);
 
 	/* Save the vectorial sketches. */
-	nsketches_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nsketches_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
-		sketch_save(sk, buf);
+		RG_SketchSave(sk, buf);
 		nsketches++;
 	}
-	pwrite_uint32(buf, nsketches, nsketches_offs);
+	AG_PwriteUint32(buf, nsketches, nsketches_offs);
 
 	/* Save the pixmaps. */
-	npixmaps_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	npixmaps_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		pixmap_save(px, buf);
+		RG_PixmapSave(px, buf);
 		npixmaps++;
 	}
-	pwrite_uint32(buf, npixmaps, npixmaps_offs);
+	AG_PwriteUint32(buf, npixmaps, npixmaps_offs);
 
 	/* Save the features. */
-	nfeatures_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nfeatures_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ft, &ts->features, features) {
 		off_t ftsize_offs;
 
-		write_string(buf, ft->name);
-		write_string(buf, ft->ops->type);
-		write_uint32(buf, ft->flags);
+		AG_WriteString(buf, ft->name);
+		AG_WriteString(buf, ft->ops->type);
+		AG_WriteUint32(buf, ft->flags);
 
 		/* Encode the size to allow skipping unimplemented features. */
-		ftsize_offs = netbuf_tell(buf);
-		write_uint32(buf, 0);
-		feature_save(ft, buf);
-		pwrite_uint32(buf, netbuf_tell(buf) - ftsize_offs, ftsize_offs);
+		ftsize_offs = AG_NetbufTell(buf);
+		AG_WriteUint32(buf, 0);
+		RG_FeatureSave(ft, buf);
+		AG_PwriteUint32(buf, AG_NetbufTell(buf) - ftsize_offs,
+		    ftsize_offs);
 
 		nfeatures++;
 	}
-	pwrite_uint32(buf, nfeatures, nfeatures_offs);
+	AG_PwriteUint32(buf, nfeatures, nfeatures_offs);
 	
 	/* Save the tiles. */
-	ntiles_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	ntiles_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		tile_save(t, buf);
+		RG_TileSave(t, buf);
 		ntiles++;
 	}
-	pwrite_uint32(buf, ntiles, ntiles_offs);
+	AG_PwriteUint32(buf, ntiles, ntiles_offs);
 	dprintf("saved %u tiles\n", ntiles);
 	
 	/* Save the animation information. */
-	nanims_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nanims_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
-		write_string(buf, ani->name);
-		write_uint32(buf, (Uint32)ani->flags);
-		animation_save(ani, buf);
+		AG_WriteString(buf, ani->name);
+		AG_WriteUint32(buf, (Uint32)ani->flags);
+		RG_AnimSave(ani, buf);
 		nanims++;
 	}
-	pwrite_uint32(buf, nanims, nanims_offs);
+	AG_PwriteUint32(buf, nanims, nanims_offs);
 	
 	/* Save the textures . */
-	ntextures_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	ntextures_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
-		write_string(buf, tex->name);
-		texture_save(tex, buf);
+		AG_WriteString(buf, tex->name);
+		RG_TextureSave(tex, buf);
 		ntextures++;
 	}
-	pwrite_uint32(buf, ntextures, ntextures_offs);
+	AG_PwriteUint32(buf, ntextures, ntextures_offs);
 	
 	pthread_mutex_unlock(&ts->lock);
 	return (0);
 }
 
-struct tile *
-tileset_find_tile(struct tileset *ts, const char *name)
+RG_Tile *
+RG_TilesetFindTile(RG_Tileset *ts, const char *name)
 {
-	struct tile *t;
+	RG_Tile *t;
 
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		if (strcmp(t->name, name) == 0)
 			break;
 	}
 	if (t == NULL) {
-		error_set("%s: unexisting tile", name);
+		AG_SetError("%s: unexisting tile", name);
 	}
 	return (t);
 }
 
-struct sketch *
-tileset_find_sketch(struct tileset *ts, const char *name)
+RG_Sketch *
+RG_TilesetFindSketch(RG_Tileset *ts, const char *name)
 {
-	struct sketch *sk;
+	RG_Sketch *sk;
 
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		if (strcmp(sk->name, name) == 0)
 			break;
 	}
 	if (sk == NULL) {
-		error_set("%s: unexisting sketch", name);
+		AG_SetError("%s: unexisting sketch", name);
 	}
 	return (sk);
 }
 
-struct pixmap *
-tileset_find_pixmap(struct tileset *ts, const char *name)
+RG_Pixmap *
+RG_TilesetFindPixmap(RG_Tileset *ts, const char *name)
 {
-	struct pixmap *px;
+	RG_Pixmap *px;
 
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		if (strcmp(px->name, name) == 0)
 			break;
 	}
 	if (px == NULL) {
-		error_set("%s: unexisting pixmap", name);
+		AG_SetError("%s: unexisting pixmap", name);
 	}
 	return (px);
 }
 
-struct pixmap *
-tileset_resolve_pixmap(const char *tsname, const char *pxname)
+RG_Pixmap *
+RG_TilesetResvPixmap(const char *tsname, const char *pxname)
 {
-	struct pixmap *px;
-	struct tileset *ts;
+	RG_Pixmap *px;
+	RG_Tileset *ts;
 
-	if ((ts = object_find(tsname)) == NULL) {
-		error_set("%s: no such tileset", tsname);
+	if ((ts = AG_ObjectFind(tsname)) == NULL) {
+		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!OBJECT_TYPE(ts, "tileset")) {
-		error_set("%s: not a tileset", tsname);
+	if (!AGOBJECT_TYPE(ts, "tileset")) {
+		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}
 
@@ -525,23 +529,23 @@ tileset_resolve_pixmap(const char *tsname, const char *pxname)
 			break;
 	}
 	if (px == NULL) {
-		error_set("%s has no `%s' pixmap", tsname, pxname);
+		AG_SetError("%s has no `%s' pixmap", tsname, pxname);
 	}
 	return (px);
 }
 
-struct tile *
-tileset_resolve_tile(const char *tsname, const char *tname)
+RG_Tile *
+RG_TilesetResvTile(const char *tsname, const char *tname)
 {
-	struct tileset *ts;
-	struct tile *t;
+	RG_Tileset *ts;
+	RG_Tile *t;
 
-	if ((ts = object_find(tsname)) == NULL) {
-		error_set("%s: no such tileset", tsname);
+	if ((ts = AG_ObjectFind(tsname)) == NULL) {
+		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!OBJECT_TYPE(ts, "tileset")) {
-		error_set("%s: not a tileset", tsname);
+	if (!AGOBJECT_TYPE(ts, "tileset")) {
+		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}
 
@@ -550,22 +554,22 @@ tileset_resolve_tile(const char *tsname, const char *tname)
 			break;
 	}
 	if (t == NULL) {
-		error_set("%s has no `%s' tile", tsname, tname);
+		AG_SetError("%s has no `%s' tile", tsname, tname);
 	}
 	return (t);
 }
 
-struct animation *
-tileset_find_animation(struct tileset *ts, const char *name)
+RG_Anim *
+RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 {
-	struct animation *ani;
+	RG_Anim *ani;
 
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
 		if (strcmp(ani->name, name) == 0)
 			break;
 	}
 	if (ani == NULL) {
-		error_set("%s: unexisting animation", name);
+		AG_SetError("%s: unexisting animation", name);
 	}
 	return (ani);
 }
@@ -575,121 +579,121 @@ tileset_find_animation(struct tileset *ts, const char *name)
 static void
 poll_graphics(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct pixmap *px;
-	struct sketch *sk;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	RG_Pixmap *px;
+	RG_Sketch *sk;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		it = tlist_insert(tl, NULL, "%s (%ux%u) [#%u]",
+		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]",
 		    px->name, px->su->w, px->su->h, px->nrefs);
 		it->p1 = px;
 		it->class = "pixmap";
-		tlist_set_icon(tl, it, px->su);
+		AG_TlistSetIcon(tl, it, px->su);
 	}
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
-		it = tlist_insert(tl, NULL,
+		it = AG_TlistAdd(tl, NULL,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
 		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
 		it->class = "sketch";
 		it->p1 = sk;
-		tlist_set_icon(tl, it, sk->vg->su);
+		AG_TlistSetIcon(tl, it, sk->vg->su);
 	}
 
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_textures(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct texture *tex;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	RG_Texture *tex;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
-		struct tile *t;
+		RG_Tile *t;
 
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
-		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
+		    (t = RG_TilesetResvTile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, NULL, "%s (<%s> %ux%u)",
+			it = AG_TlistAdd(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
-			tlist_set_icon(tl, it, t->su);
+			AG_TlistSetIcon(tl, it, t->su);
 		} else {
-			it = tlist_insert(tl, NULL, "%s (<%s:%s>?)",
+			it = AG_TlistAdd(tl, NULL, "%s (<%s:%s>?)",
 			    tex->name, tex->tileset, tex->tile);
 		}
 		it->class = "texture";
 		it->p1 = tex;
 	}
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_anims(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct animation *ani;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	RG_Anim *ani;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
-		it = tlist_insert(tl, NULL, "%s (%ux%u) [#%u]", ani->name,
+		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]", ani->name,
 		    ani->w, ani->h, ani->nrefs);
 		it->p1 = ani;
 		it->class = "anim";
 	}
 	
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_tiles(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct tile *t;
-	struct tlist_item *it;
-	struct tile_element *tel;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	RG_Tile *t;
+	AG_TlistItem *it;
+	RG_TileElement *tel;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		it = tlist_insert(tl, NULL, "%s (%ux%u)", t->name,
+		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
 		it->depth = 0;
 		it->class = "tile";
 		it->p1 = t;
-		tlist_set_icon(tl, it, t->su);
+		AG_TlistSetIcon(tl, it, t->su);
 
 		if (!TAILQ_EMPTY(&t->elements)) {
-			it->flags |= TLIST_HAS_CHILDREN;
-			if (!tlist_visible_children(tl, it))
+			it->flags |= AG_TLIST_HAS_CHILDREN;
+			if (!AG_TlistVisibleChildren(tl, it))
 				continue;
 		}
 	
 		TAILQ_FOREACH(tel, &t->elements, elements) {
 			switch (tel->type) {
-			case TILE_FEATURE:
+			case RG_TILE_FEATURE:
 				{
-					struct feature *ft =
+					RG_Feature *ft =
 					    tel->tel_feature.ft;
-					struct feature_sketch *fts;
+					RG_FeatureSketch *fts;
 
-					it = tlist_insert(tl, ICON(OBJ_ICON),
+					it = AG_TlistAdd(tl, AGICON(OBJ_ICON),
 					    "%s [%d,%d] %s", ft->name,
 					    tel->tel_feature.x,
 					    tel->tel_feature.y,
@@ -700,8 +704,8 @@ poll_tiles(int argc, union evarg *argv)
 
 					TAILQ_FOREACH(fts, &ft->sketches,
 					    sketches) {
-						it = tlist_insert(tl,
-						    ICON(DRAWING_ICON),
+						it = AG_TlistAdd(tl,
+						    AGICON(DRAWING_ICON),
 						    "%s [at %d,%d]%s",
 						    fts->sk->name,
 						    fts->x, fts->y,
@@ -713,11 +717,11 @@ poll_tiles(int argc, union evarg *argv)
 					}
 				}
 				break;
-			case TILE_PIXMAP:
+			case RG_TILE_PIXMAP:
 				{
-					struct pixmap *px = tel->tel_pixmap.px;
+					RG_Pixmap *px = tel->tel_pixmap.px;
 
-					it = tlist_insert(tl, NULL,
+					it = AG_TlistAdd(tl, NULL,
 					    "%s (%ux%u)%s", px->name,
 					    tel->tel_pixmap.px->su->w,
 					    tel->tel_pixmap.px->su->h,
@@ -725,15 +729,15 @@ poll_tiles(int argc, union evarg *argv)
 					it->depth = 1;
 					it->class = "tile-pixmap";
 					it->p1 = tel;
-					tlist_set_icon(tl, it, px->su);
+					AG_TlistSetIcon(tl, it, px->su);
 				}
 				break;
-			case TILE_SKETCH:
+			case RG_TILE_SKETCH:
 				{
-					struct sketch *sk = tel->tel_sketch.sk;
+					RG_Sketch *sk = tel->tel_sketch.sk;
 
-					it = tlist_insert(tl,
-					    ICON(DRAWING_ICON),
+					it = AG_TlistAdd(tl,
+					    AGICON(DRAWING_ICON),
 					    "%s (%ux%u)%s", sk->name,
 					    tel->tel_sketch.sk->vg->su->w,
 					    tel->tel_sketch.sk->vg->su->h,
@@ -746,31 +750,31 @@ poll_tiles(int argc, union evarg *argv)
 			}
 		}
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 	pthread_mutex_unlock(&ts->lock);
 }
 
-static char ins_tile_name[TILE_NAME_MAX];
-static char ins_tile_class[TILE_CLASS_MAX];
-static char ins_texture_name[TEXTURE_NAME_MAX];
-static char ins_anim_name[TILE_NAME_MAX];
-static int ins_tile_w = TILESZ;
-static int ins_tile_h = TILESZ;
+static char ins_tile_name[RG_TILE_NAME_MAX];
+static char ins_tile_class[RG_TILE_CLASS_MAX];
+static char ins_texture_name[RG_TEXTURE_NAME_MAX];
+static char ins_anim_name[RG_TILE_NAME_MAX];
+static int ins_tile_w = AGTILESZ;
+static int ins_tile_h = AGTILESZ;
 static int ins_alpha = 0;
 static int ins_colorkey = 1;
-static enum gfx_snap_mode ins_snap_mode = GFX_SNAP_NOT;
+static enum ag_gfx_snap_mode ins_snap_mode = AG_GFX_SNAP_NOT;
 
 static void
 insert_tile(int argc, union evarg *argv)
 {
-	struct window *pwin = argv[1].p;
-	struct tileset *ts = argv[2].p;
-	struct gfx *gfx = OBJECT(ts)->gfx;
-	struct tile *t;
+	AG_Window *pwin = argv[1].p;
+	RG_Tileset *ts = argv[2].p;
+	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
+	RG_Tile *t;
 	u_int flags = 0;
 
-	if (ins_alpha)		flags |= TILE_SRCALPHA;
-	if (ins_colorkey)	flags |= TILE_SRCCOLORKEY;
+	if (ins_alpha)		flags |= RG_TILE_SRCALPHA;
+	if (ins_colorkey)	flags |= RG_TILE_SRCCOLORKEY;
 
 	if (ins_tile_name[0] == '\0') {
 		u_int nameno = 0;
@@ -815,51 +819,51 @@ tryname2:
 		}
 	}
 
-	t = Malloc(sizeof(struct tile), M_RG);
-	tile_init(t, ts, ins_tile_name);
+	t = Malloc(sizeof(RG_Tile), M_RG);
+	RG_TileInit(t, ts, ins_tile_name);
 	if (strcmp(ts->template, "Perso") == 0) {
-		tile_scale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
-		sprite_set_origin(&gfx->sprites[t->s], 8, 31);
-		SPRITE(t->ts,t->s).snap_mode = GFX_SNAP_TO_GRID;
-		TILE_LAYER2(t,0,0) = +2;
-		TILE_LAYER2(t,0,1) = +1;
-		TILE_ATTR2(t,0,1) = NODEREF_BLOCK;
+		RG_TileScale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
+		AG_SpriteSetOrigin(&gfx->sprites[t->s], 8, 31);
+		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
+		RG_TILE_LAYER2(t,0,0) = +2;
+		RG_TILE_LAYER2(t,0,1) = +1;
+		RG_TILE_ATTR2(t,0,1) = AG_NITEM_BLOCK;
 	} else if (strcmp(ts->template, "Terrain") == 0) {
-		tile_scale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
-		sprite_set_origin(&gfx->sprites[t->s], 24, 24);
-		SPRITE(t->ts,t->s).snap_mode = GFX_SNAP_TO_GRID;
-		TILE_ATTR2(t,0,0) = NODEREF_BLOCK;
-		TILE_ATTR2(t,1,0) = NODEREF_BLOCK;
-		TILE_ATTR2(t,2,0) = NODEREF_BLOCK;
-		TILE_ATTR2(t,3,0) = NODEREF_BLOCK;
-		TILE_ATTR2(t,0,1) = NODEREF_BLOCK;
-		TILE_ATTR2(t,0,2) = NODEREF_BLOCK;
-		TILE_ATTR2(t,0,3) = NODEREF_BLOCK;
-		TILE_ATTR2(t,3,1) = NODEREF_BLOCK;
-		TILE_ATTR2(t,3,2) = NODEREF_BLOCK;
-		TILE_ATTR2(t,3,3) = NODEREF_BLOCK;
-		TILE_ATTR2(t,1,3) = NODEREF_BLOCK;
-		TILE_ATTR2(t,2,3) = NODEREF_BLOCK;
+		RG_TileScale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
+		AG_SpriteSetOrigin(&gfx->sprites[t->s], 24, 24);
+		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
+		RG_TILE_ATTR2(t,0,0) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,1,0) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,2,0) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,0) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,1) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,2) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,3) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,1) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,2) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,3) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,1,3) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,2,3) = AG_NITEM_BLOCK;
 	} else {
-		tile_scale(ts, t, ins_tile_w, ins_tile_h, flags,
+		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags,
 		    SDL_ALPHA_OPAQUE);
-		sprite_set_origin(&gfx->sprites[t->s], t->su->w/2, t->su->h/2);
-		SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
+		AG_SpriteSetOrigin(&gfx->sprites[t->s], t->su->w/2, t->su->h/2);
+		AG_SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
 	}
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	ins_tile_name[0] = '\0';
-	view_detach(pwin);
+	AG_ViewDetach(pwin);
 }
 
 static void
 insert_texture(int argc, union evarg *argv)
 {
-	struct window *dlgwin = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct tileset *ts = argv[3].p;
-	struct window *win;
-	struct texture *tex;
+	AG_Window *dlgwin = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	RG_Tileset *ts = argv[3].p;
+	AG_Window *win;
+	RG_Texture *tex;
 	u_int flags = 0;
 
 	if (ins_texture_name[0] == '\0') {
@@ -905,25 +909,25 @@ tryname2:
 		}
 	}
 
-	tex = Malloc(sizeof(struct texture), M_RG);
-	texture_init(tex, ts, ins_texture_name);
+	tex = Malloc(sizeof(RG_Texture), M_RG);
+	RG_TextureInit(tex, ts, ins_texture_name);
 	TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
 	
 	ins_texture_name[0] = '\0';
-	view_detach(dlgwin);
+	AG_ViewDetach(dlgwin);
 	
-	if ((win = texture_edit(tex)) != NULL) {
-		window_attach(pwin, win);
-		window_show(win);
+	if ((win = RG_TextureEdit(tex)) != NULL) {
+		AG_WindowAttach(pwin, win);
+		AG_WindowShow(win);
 	}
 }
 
 static void
 insert_anim(int argc, union evarg *argv)
 {
-	struct window *pwin = argv[1].p;
-	struct tileset *ts = argv[2].p;
-	struct animation *ani;
+	AG_Window *pwin = argv[1].p;
+	RG_Tileset *ts = argv[2].p;
+	RG_Anim *ani;
 	int flags = 0;
 
 	if (ins_alpha)		flags |= ANIMATION_SRCALPHA;
@@ -972,172 +976,176 @@ tryname2:
 		}
 	}
 
-	ani = Malloc(sizeof(struct animation), M_RG);
-	animation_init(ani, ts, ins_anim_name, flags);
-	animation_scale(ani, ins_tile_w, ins_tile_h);
+	ani = Malloc(sizeof(RG_Anim), M_RG);
+	RG_AnimInit(ani, ts, ins_anim_name, flags);
+	RG_AnimScale(ani, ins_tile_w, ins_tile_h);
 	TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
 
 	ins_anim_name[0] = '\0';
-	view_detach(pwin);
+	AG_ViewDetach(pwin);
 }
 
 static void
 insert_tile_dlg(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct window *win;
-	struct box *btnbox;
-	struct button *btn;
-	struct textbox *tb;
-	struct mspinbutton *msb;
-	struct checkbox *cb;
-	struct radio *rad;
-	struct combo *com;
+	RG_Tileset *ts = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Window *win;
+	AG_Box *btnbox;
+	AG_Button *btn;
+	AG_Textbox *tb;
+	AG_MSpinbutton *msb;
+	AG_Checkbox *cb;
+	AG_Radio *rad;
+	AG_Combo *com;
 
-	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
-	                 WINDOW_NO_MINIMIZE, NULL);
-	window_set_caption(win, _("Create new tile"));
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
+	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	AG_WindowSetCaption(win, _("Create new tile"));
 	
-	tb = textbox_new(win, _("Name: "));
-	widget_bind(tb, "string", WIDGET_STRING, ins_tile_name,
+	tb = AG_TextboxNew(win, _("Name: "));
+	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
-	widget_focus(tb);
+	AG_WidgetFocus(tb);
 
-	com = combo_new(win, COMBO_ANY_TEXT, _("Class: "));
-	widget_bind(com->tbox, "string", WIDGET_STRING, ins_tile_class,
+	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT, _("Class: "));
+	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
 	    sizeof(ins_tile_class));
 	if (strcmp(ts->template, "Terrain") == 0) {
-		tlist_insert(com->list, NULL, "Ground");
-		tlist_insert(com->list, NULL, "Rock");
+		AG_TlistAdd(com->list, NULL, "Ground");
+		AG_TlistAdd(com->list, NULL, "Rock");
 	}
 
-	msb = mspinbutton_new(win, "x", _("Size: "));
-	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);
-	widget_bind(msb, "yvalue", WIDGET_INT, &ins_tile_h);
-	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
+	msb = AG_MSpinbuttonNew(win, "x", _("Size: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
+	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = checkbox_new(win, _("Alpha blending"));
-	widget_bind(cb, "state", WIDGET_INT, &ins_alpha);
+	cb = AG_CheckboxNew(win, _("Alpha blending"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
 	
-	cb = checkbox_new(win, _("Colorkeying"));
-	widget_bind(cb, "state", WIDGET_INT, &ins_colorkey);
+	cb = AG_CheckboxNew(win, _("Colorkeying"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
-	label_static(win, _("Snapping mode: "));
-	rad = radio_new(win, gfx_snap_names);
-	widget_bind(rad, "value", WIDGET_INT, &ins_snap_mode);
+	AG_LabelStatic(win, _("Snapping mode: "));
+	rad = AG_RadioNew(win, agGfxSnapNames);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
 
-	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = button_new(btnbox, "OK");
-		event_new(btn, "button-pushed", insert_tile, "%p,%p", win, ts);
-		event_new(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
+		btn = AG_ButtonNew(btnbox, "OK");
+		AG_SetEvent(btn, "button-pushed", insert_tile, "%p,%p",
+		    win, ts);
+		AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p",
+		    win, ts);
 		
-		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", WINDETACH(win));
+		btn = AG_ButtonNew(btnbox, "Cancel");
+		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
 insert_texture_dlg(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct window *win;
-	struct box *btnbox;
-	struct button *btn;
-	struct textbox *tb;
+	RG_Tileset *ts = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Window *win;
+	AG_Box *btnbox;
+	AG_Button *btn;
+	AG_Textbox *tb;
 
-	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
-	                 WINDOW_NO_MINIMIZE, NULL);
-	window_set_caption(win, _("Create a new texture"));
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
+	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	AG_WindowSetCaption(win, _("Create a new texture"));
 	
-	tb = textbox_new(win, _("Name:"));
-	widget_bind(tb, "string", WIDGET_STRING, ins_texture_name,
+	tb = AG_TextboxNew(win, _("Name:"));
+	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
 	    sizeof(ins_texture_name));
-	widget_focus(tb);
+	AG_WidgetFocus(tb);
 
-	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = button_new(btnbox, "OK");
-		event_new(btn, "button-pushed", insert_texture, "%p,%p,%p",
+		btn = AG_ButtonNew(btnbox, "OK");
+		AG_SetEvent(btn, "button-pushed", insert_texture, "%p,%p,%p",
 		    win, pwin, ts);
-		event_new(tb, "textbox-return", insert_texture, "%p,%p,%p",
+		AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p",
 		    win, pwin, ts);
 	
-		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", WINDETACH(win));
+		btn = AG_ButtonNew(btnbox, "Cancel");
+		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
 insert_anim_dlg(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct window *win;
-	struct box *btnbox;
-	struct button *btn;
-	struct textbox *tb;
-	struct mspinbutton *msb;
-	struct checkbox *cb;
+	RG_Tileset *ts = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Window *win;
+	AG_Box *btnbox;
+	AG_Button *btn;
+	AG_Textbox *tb;
+	AG_MSpinbutton *msb;
+	AG_Checkbox *cb;
 
-	win = window_new(WINDOW_MODAL|WINDOW_DETACH|WINDOW_NO_RESIZE|
-	                 WINDOW_NO_MINIMIZE, NULL);
-	window_set_caption(win, _("Create new animation"));
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
+	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	AG_WindowSetCaption(win, _("Create new animation"));
 	
-	tb = textbox_new(win, _("Name:"));
-	widget_bind(tb, "string", WIDGET_STRING, ins_anim_name,
+	tb = AG_TextboxNew(win, _("Name:"));
+	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
 	    sizeof(ins_anim_name));
-	widget_focus(tb);
+	AG_WidgetFocus(tb);
 
-	msb = mspinbutton_new(win, "x", _("Size:"));
-	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);
-	widget_bind(msb, "yvalue", WIDGET_INT, &ins_tile_h);
-	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
+	msb = AG_MSpinbuttonNew(win, "x", _("Size:"));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
+	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = checkbox_new(win, _("Alpha blending"));
-	widget_bind(cb, "state", WIDGET_INT, &ins_alpha);
+	cb = AG_CheckboxNew(win, _("Alpha blending"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
 	
-	cb = checkbox_new(win, _("Colorkey"));
-	widget_bind(cb, "state", WIDGET_INT, &ins_colorkey);
+	cb = AG_CheckboxNew(win, _("Colorkey"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 
-	btnbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = button_new(btnbox, "OK");
-		event_new(btn, "button-pushed", insert_anim, "%p,%p", win, ts);
-		event_new(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
+		btn = AG_ButtonNew(btnbox, "OK");
+		AG_SetEvent(btn, "button-pushed", insert_anim,
+		    "%p,%p", win, ts);
+		AG_SetEvent(tb, "textbox-return", insert_anim,
+		    "%p,%p", win, ts);
 		
-		btn = button_new(btnbox, "Cancel");
-		event_new(btn, "button-pushed", WINDETACH(win));
+		btn = AG_ButtonNew(btnbox, "Cancel");
+		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
 delete_tiles(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tileset *ts = argv[2].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	RG_Tileset *ts = argv[2].p;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct tile *t = it->p1;
+		RG_Tile *t = it->p1;
 
 		if (!it->selected) {
 			continue;
 		}
 		if (t->nrefs > 0) {
-			text_msg(MSG_ERROR, _("The tile `%s' is in use."),
+			AG_TextMsg(AG_MSG_ERROR, _("The tile `%s' is in use."),
 			    t->name);
 			continue;
 		}
@@ -1148,11 +1156,11 @@ delete_tiles(int argc, union evarg *argv)
 }
 
 int
-tileset_insert_sprite(struct tileset *ts, SDL_Surface *su)
+RG_TilesetInsertSprite(RG_Tileset *ts, SDL_Surface *su)
 {
 	int s;
 
-	s = gfx_insert_sprite(OBJECT(ts)->gfx, su);
+	s = AG_GfxAddSprite(AGOBJECT(ts)->gfx, su);
 	if (s >= ts->max_sprites) {
 		ts->max_sprites = s+1;
 	}
@@ -1160,22 +1168,22 @@ tileset_insert_sprite(struct tileset *ts, SDL_Surface *su)
 }
 
 static void
-dup_tile(struct tileset *ts, struct tile *t1)
+dup_tile(RG_Tileset *ts, RG_Tile *t1)
 {
-	char name[TILE_NAME_MAX];
-	struct tile *t2;
-	struct tile_element *e1, *e2;
+	char name[RG_TILE_NAME_MAX];
+	RG_Tile *t2;
+	RG_TileElement *e1, *e2;
 	int x, y;
 	int ncopy = 0;
 
-	t2 = Malloc(sizeof(struct tile), M_RG);
+	t2 = Malloc(sizeof(RG_Tile), M_RG);
 tryname1:
 	snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
-	if (tileset_find_tile(ts, name) != NULL) {
+	if (RG_TilesetFindTile(ts, name) != NULL) {
 		goto tryname1;
 	}
-	tile_init(t2, ts, name);
-	tile_scale(ts, t2, t1->su->w, t1->su->h, t1->flags,
+	RG_TileInit(t2, ts, name);
+	RG_TileScale(ts, t2, t1->su->w, t1->su->h, t1->flags,
 	    t1->su->format->alpha);
 	strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
 	for (y = 0; y < t1->nh; y++) {
@@ -1184,27 +1192,27 @@ tryname1:
 			t2->layers[y*t1->nw+x] = t1->layers[y*t1->nw+x];
 		}
 	}
-	SPRITE(ts,t2->s).xOrig = SPRITE(ts,t1->s).xOrig;
-	SPRITE(ts,t2->s).yOrig = SPRITE(ts,t1->s).yOrig;
-	SPRITE(ts,t2->s).snap_mode = SPRITE(ts,t1->s).snap_mode;
+	AG_SPRITE(ts,t2->s).xOrig = AG_SPRITE(ts,t1->s).xOrig;
+	AG_SPRITE(ts,t2->s).yOrig = AG_SPRITE(ts,t1->s).yOrig;
+	AG_SPRITE(ts,t2->s).snap_mode = AG_SPRITE(ts,t1->s).snap_mode;
 	
 	TAILQ_FOREACH(e1, &t1->elements, elements) {
-		struct tile_element *e2;
-		struct pixmap *px1, *px2;
+		RG_TileElement *e2;
+		RG_Pixmap *px1, *px2;
 
 		ncopy = 0;
 		switch (e1->type) {
-		case TILE_PIXMAP:
+		case RG_TILE_PIXMAP:
 			px1 = e1->tel_pixmap.px;
-			px2 = Malloc(sizeof(struct pixmap), M_RG);
-			pixmap_init(px2, ts, 0);
+			px2 = Malloc(sizeof(RG_Pixmap), M_RG);
+			RG_PixmapInit(px2, ts, 0);
 tryname2:
 			snprintf(px2->name, sizeof(px2->name),
 			    _("Copy #%d of %s"), ncopy++, px1->name);
-			if (tileset_find_pixmap(ts, px2->name) != NULL) {
+			if (RG_TilesetFindPixmap(ts, px2->name) != NULL) {
 				goto tryname2;
 			}
-			pixmap_scale(px2, px1->su->w, px1->su->h, 0, 0);
+			RG_PixmapScale(px2, px1->su->w, px1->su->h, 0, 0);
 			SDL_LockSurface(px1->su);
 			SDL_LockSurface(px2->su);
 			memcpy((Uint8 *)px2->su->pixels,
@@ -1214,7 +1222,7 @@ tryname2:
 			SDL_UnlockSurface(px2->su);
 			SDL_UnlockSurface(px1->su);
 
-			e2 = tile_add_pixmap(t2, e1->name, px2,
+			e2 = RG_TileAddPixmap(t2, e1->name, px2,
 			    e1->tel_pixmap.x, e1->tel_pixmap.y);
 			e2->visible = e1->visible;
 			TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
@@ -1224,20 +1232,20 @@ tryname2:
 		}
 	}
 
-	tile_generate(t2);
+	RG_TileGenerate(t2);
 	TAILQ_INSERT_TAIL(&ts->tiles, t2, tiles);
 }
 
 static void
 dup_tiles(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct tile *t = it->p1;
+		RG_Tile *t = it->p1;
 
 		if (!it->selected) {
 			continue;
@@ -1250,11 +1258,11 @@ dup_tiles(int argc, union evarg *argv)
 static void
 edit_tiles(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct window *pwin = argv[3].p;
-	struct window *win;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_Window *pwin = argv[3].p;
+	AG_Window *win;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -1262,9 +1270,9 @@ edit_tiles(int argc, union evarg *argv)
 		    strcmp(it->class, "tile") != 0) {
 			continue;
 		}
-		if ((win = tile_edit(ts, (struct tile *)it->p1)) != NULL) {
-			window_attach(pwin, win);
-			window_show(win);
+		if ((win = RG_TileEdit(ts, (RG_Tile *)it->p1)) != NULL) {
+			AG_WindowAttach(pwin, win);
+			AG_WindowShow(win);
 		}
 	}
 	pthread_mutex_unlock(&ts->lock);
@@ -1273,11 +1281,11 @@ edit_tiles(int argc, union evarg *argv)
 static void
 edit_anims(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct window *pwin = argv[3].p;
-	struct window *win;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_Window *pwin = argv[3].p;
+	AG_Window *win;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -1285,10 +1293,10 @@ edit_anims(int argc, union evarg *argv)
 		    strcmp(it->class, "anim") != 0) {
 			continue;
 		}
-		if ((win = animation_edit((struct animation *)it->p1))
+		if ((win = RG_AnimEdit((RG_Anim *)it->p1))
 		    != NULL) {
-			window_attach(pwin, win);
-			window_show(win);
+			AG_WindowAttach(pwin, win);
+			AG_WindowShow(win);
 		}
 	}
 	pthread_mutex_unlock(&ts->lock);
@@ -1297,20 +1305,20 @@ edit_anims(int argc, union evarg *argv)
 static void
 edit_textures(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct window *pwin = argv[3].p;
-	struct window *win;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_Window *pwin = argv[3].p;
+	AG_Window *win;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
 			continue;
 		}
-		if ((win = texture_edit((struct texture *)it->p1)) != NULL) {
-			window_attach(pwin, win);
-			window_show(win);
+		if ((win = RG_TextureEdit((RG_Texture *)it->p1)) != NULL) {
+			AG_WindowAttach(pwin, win);
+			AG_WindowShow(win);
 		}
 	}
 	pthread_mutex_unlock(&ts->lock);
@@ -1319,21 +1327,21 @@ edit_textures(int argc, union evarg *argv)
 static void
 delete_pixmap(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_art = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl_art = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl_art)) != NULL) {
-		struct pixmap *px = it->p1;
+	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
+		RG_Pixmap *px = it->p1;
 	
 		if (px->nrefs > 0) {
-			text_msg(MSG_ERROR,
+			AG_TextMsg(AG_MSG_ERROR,
 			    _("The pixmap \"%s\" is currently in use."),
 			    px->name);
 			return;
 		}
 		TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
-		pixmap_destroy(px);
+		RG_PixmapDestroy(px);
 		Free(px, M_RG);
 	}
 }
@@ -1341,21 +1349,21 @@ delete_pixmap(int argc, union evarg *argv)
 static void
 delete_anim(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_anims = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl_anims = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl_anims)) != NULL) {
-		struct animation *ani = it->p1;
+	if ((it = AG_TlistSelectedItem(tl_anims)) != NULL) {
+		RG_Anim *ani = it->p1;
 	
 		if (ani->nrefs > 0) {
-			text_msg(MSG_ERROR,
+			AG_TextMsg(AG_MSG_ERROR,
 			    _("The animation \"%s\" is currently in use."),
 			    ani->name);
 			return;
 		}
 		TAILQ_REMOVE(&ts->animations, ani, animations);
-		animation_destroy(ani);
+		RG_AnimDestroy(ani);
 		Free(ani, M_RG);
 	}
 }
@@ -1363,21 +1371,21 @@ delete_anim(int argc, union evarg *argv)
 static void
 delete_sketch(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_art = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl_art = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl_art)) != NULL) {
-		struct sketch *sk = it->p1;
+	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
+		RG_Sketch *sk = it->p1;
 	
 		if (sk->nrefs > 0) {
-			text_msg(MSG_ERROR,
+			AG_TextMsg(AG_MSG_ERROR,
 			    _("The sketch \"%s\" is currently in use."),
 			    sk->name);
 			return;
 		}
 		TAILQ_REMOVE(&ts->sketches, sk, sketches);
-		sketch_destroy(sk);
+		RG_SketchDestroy(sk);
 		Free(sk, M_RG);
 	}
 }
@@ -1385,18 +1393,18 @@ delete_sketch(int argc, union evarg *argv)
 static void
 delete_textures(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_textures = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl_textures = argv[2].p;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl_textures->items, items) {
-		struct texture *tex = it->p1;
+		RG_Texture *tex = it->p1;
 
 		if (!it->selected)
 			continue;
 
 		TAILQ_REMOVE(&ts->textures, tex, textures);
-		texture_destroy(tex);
+		RG_TextureDestroy(tex);
 		Free(tex, M_RG);
 	}
 }
@@ -1404,24 +1412,24 @@ delete_textures(int argc, union evarg *argv)
 static void
 duplicate_pixmap(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tlist *tl_art = argv[2].p;
-	struct tlist_item *it;
+	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl_art = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl_art)) != NULL) {
-		struct pixmap *px1 = it->p1;
-		struct pixmap *px2;
+	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
+		RG_Pixmap *px1 = it->p1;
+		RG_Pixmap *px2;
 		int ncopy = 0;
 
-		px2 = Malloc(sizeof(struct pixmap), M_RG);
-		pixmap_init(px2, ts, 0);
+		px2 = Malloc(sizeof(RG_Pixmap), M_RG);
+		RG_PixmapInit(px2, ts, 0);
 tryname:
 		snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
 		    ncopy++, px1->name);
-		if (tileset_find_pixmap(ts, px2->name) != NULL)
+		if (RG_TilesetFindPixmap(ts, px2->name) != NULL)
 			goto tryname;
 
-		pixmap_scale(px2, px1->su->w, px1->su->h, 0, 0);
+		RG_PixmapScale(px2, px1->su->w, px1->su->h, 0, 0);
 		TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
 
 		SDL_LockSurface(px1->su);
@@ -1439,9 +1447,9 @@ tryname:
 static void
 select_template(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
+	RG_Tileset *ts = argv[1].p;
 
-	tileset_reinit(ts);
+	RG_TilesetReinit(ts);
 
 	if (strcmp(ts->template, "Perso") == 0) {
 		const char *tiles[] = {
@@ -1458,181 +1466,184 @@ select_template(int argc, union evarg *argv)
 		};
 		const int ntiles = sizeof(tiles)/sizeof(tiles[0]);
 		const int nanims = sizeof(anims)/sizeof(anims[0]);
-		struct tile *t;
-		struct animation *a;
+		RG_Tile *t;
+		RG_Anim *a;
 		int i;
 
 		for (i = 0; i < ntiles; i++) {
-			t = Malloc(sizeof(struct tile), M_RG);
-			tile_init(t, ts, tiles[i]);
-			tile_scale(ts, t, 16, 32, TILE_SRCCOLORKEY,
+			t = Malloc(sizeof(RG_Tile), M_RG);
+			RG_TileInit(t, ts, tiles[i]);
+			RG_TileScale(ts, t, 16, 32, RG_TILE_SRCCOLORKEY,
 			    SDL_ALPHA_OPAQUE);
 			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 		}
 		for (i = 0; i < nanims; i++) {
-			a = Malloc(sizeof(struct animation), M_RG);
-			animation_init(a, ts, anims[i], ANIMATION_SRCCOLORKEY);
-			animation_scale(a, 16, 32);
+			a = Malloc(sizeof(RG_Anim), M_RG);
+			RG_AnimInit(a, ts, anims[i], ANIMATION_SRCCOLORKEY);
+			RG_AnimScale(a, 16, 32);
 			TAILQ_INSERT_TAIL(&ts->animations, a, animations);
 		}
 	}
 }
 
 void *
-tileset_edit(void *p)
+RG_TilesetEdit(void *p)
 {
-	struct tileset *ts = p;
-	struct window *win;
-	struct tlist *tl_tiles, *tl_art, *tl_anims, *tl_textures;
-	struct box *box, *hbox, *bbox;
-	struct textbox *tb;
-	struct mspinbutton *msb;
-	struct AGMenu *m;
-	struct AGMenuItem *mi;
-	struct button *bu;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	struct combo *com;
+	RG_Tileset *ts = p;
+	AG_Window *win;
+	AG_Tlist *tl_tiles, *tl_art, *tl_anims, *tl_textures;
+	AG_Box *box, *hbox, *bbox;
+	AG_Textbox *tb;
+	AG_MSpinbutton *msb;
+	AG_Menu *m;
+	AG_MenuItem *mi;
+	AG_Button *bu;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_Combo *com;
 
-	win = window_new(WINDOW_DETACH, NULL);
-	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
-	window_set_position(win, WINDOW_LOWER_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	AG_WindowSetCaption(win, _("Tile set: %s"), AGOBJECT(ts)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 
-	tl_tiles = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl_tiles, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-	tlist_prescale(tl_tiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
-	event_new(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
+	tl_tiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_tiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
+	AG_TlistPrescale(tl_tiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
+	AG_SetEvent(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
 	
-	tl_art = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl_art, TLIST_POLL);
-	event_new(tl_art, "tlist-poll", poll_graphics, "%p", ts);
+	tl_art = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_art, AG_TLIST_POLL);
+	AG_SetEvent(tl_art, "tlist-poll", poll_graphics, "%p", ts);
 	
-	tl_textures = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl_textures, TLIST_POLL);
-	event_new(tl_textures, "tlist-poll", poll_textures, "%p", ts);
+	tl_textures = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_textures, AG_TLIST_POLL);
+	AG_SetEvent(tl_textures, "tlist-poll", poll_textures, "%p", ts);
 
-	tl_anims = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl_anims, TLIST_POLL);
-	event_new(tl_anims, "tlist-poll", poll_anims, "%p", ts);
+	tl_anims = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_anims, AG_TLIST_POLL);
+	AG_SetEvent(tl_anims, "tlist-poll", poll_anims, "%p", ts);
 
-	com = combo_new(win, 0, _("Template: "));
-	widget_bind(com->tbox, "string", WIDGET_STRING, &ts->template,
+	com = AG_ComboNew(win, 0, _("Template: "));
+	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->template,
 	    sizeof(ts->template));
-	tlist_insert(com->list, NULL, "Perso");
-	tlist_insert(com->list, NULL, "Terrain");
-	event_new(com, "combo-selected", select_template, "%p", ts);
+	AG_TlistAdd(com->list, NULL, "Perso");
+	AG_TlistAdd(com->list, NULL, "Terrain");
+	AG_SetEvent(com, "combo-selected", select_template, "%p", ts);
 
-	mi = tlist_set_popup(tl_tiles, "tile");
+	mi = AG_TlistSetPopup(tl_tiles, "tile");
 	{
-		menu_action(mi, _("Edit tiles..."), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit tiles..."), OBJEDIT_ICON,
 		    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
-		menu_separator(mi);
-		menu_action(mi, _("Duplicate tiles"),
+		AG_MenuSeparator(mi);
+		AG_MenuAction(mi, _("Duplicate tiles"),
 		    OBJDUP_ICON,
 		    dup_tiles, "%p,%p", ts, tl_tiles);
-		menu_separator(mi);
-		menu_action(mi, _("Delete tiles"), TRASH_ICON,
+		AG_MenuSeparator(mi);
+		AG_MenuAction(mi, _("Delete tiles"), TRASH_ICON,
 		    delete_tiles, "%p,%p", tl_tiles, ts);
 	}
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Tiles"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	{
-		object_attach(ntab, tl_tiles);
+		AG_ObjectAttach(ntab, tl_tiles);
 
-		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
+		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = button_new(bbox, _("Insert"));
-			event_new(bu, "button-pushed", insert_tile_dlg,
+			bu = AG_ButtonNew(bbox, _("Insert"));
+			AG_SetEvent(bu, "button-pushed", insert_tile_dlg,
 			    "%p,%p", ts, win);
 
-			bu = button_new(bbox, _("Edit"));
-			event_new(bu, "button-pushed", edit_tiles,
+			bu = AG_ButtonNew(bbox, _("Edit"));
+			AG_SetEvent(bu, "button-pushed", edit_tiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
-			event_new(tl_tiles, "tlist-dblclick",
+			AG_SetEvent(tl_tiles, "tlist-dblclick",
 			    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
 
-			bu = button_new(bbox, _("Delete"));
-			event_new(bu, "button-pushed", delete_tiles,
+			bu = AG_ButtonNew(bbox, _("Delete"));
+			AG_SetEvent(bu, "button-pushed", delete_tiles,
 			    "%p,%p", tl_tiles, ts);
 		}
 	}
 
-	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
-		object_attach(ntab, tl_art);
+		AG_ObjectAttach(ntab, tl_art);
 	
-		mi = tlist_set_popup(tl_art, "pixmap");
+		mi = AG_TlistSetPopup(tl_art, "pixmap");
 		{
-			menu_action(mi, _("Delete pixmap"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete pixmap"), TRASH_ICON,
 			    delete_pixmap, "%p,%p", ts, tl_art);
 			
-			menu_action(mi, _("Duplicate pixmap"), OBJDUP_ICON,
+			AG_MenuAction(mi, _("Duplicate pixmap"), OBJDUP_ICON,
 			    duplicate_pixmap, "%p,%p", ts, tl_art);
 		}
 
-		mi = tlist_set_popup(tl_art, "sketch");
+		mi = AG_TlistSetPopup(tl_art, "sketch");
 		{
-			menu_action(mi, _("Delete sketch"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete sketch"), TRASH_ICON,
 			    delete_sketch, "%p,%p", ts, tl_art);
 		}
 	}
 	
-	ntab = notebook_add_tab(nb, _("Textures"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Textures"), AG_BOX_VERT);
 	{
-		object_attach(ntab, tl_textures);
+		AG_ObjectAttach(ntab, tl_textures);
 	
-		mi = tlist_set_popup(tl_textures, "texture");
+		mi = AG_TlistSetPopup(tl_textures, "texture");
 		{
-			menu_action(mi, _("Delete texture"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete texture"), TRASH_ICON,
 			    delete_textures, "%p,%p", ts, tl_textures);
 		}
 		
-		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
+		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = button_new(bbox, _("Insert"));
-			event_new(bu, "button-pushed", insert_texture_dlg,
+			bu = AG_ButtonNew(bbox, _("Insert"));
+			AG_SetEvent(bu, "button-pushed", insert_texture_dlg,
 			    "%p,%p", ts, win);
 
-			bu = button_new(bbox, _("Edit"));
-			event_new(bu, "button-pushed", edit_textures,
+			bu = AG_ButtonNew(bbox, _("Edit"));
+			AG_SetEvent(bu, "button-pushed", edit_textures,
 			    "%p,%p,%p", ts, tl_textures, win);
 
-			bu = button_new(bbox, _("Delete"));
-			event_new(bu, "button-pushed", delete_textures,
+			bu = AG_ButtonNew(bbox, _("Delete"));
+			AG_SetEvent(bu, "button-pushed", delete_textures,
 			    "%p,%p", ts, tl_textures);
 		}
 		
-		event_new(tl_textures, "tlist-dblclick", edit_textures,
+		AG_SetEvent(tl_textures, "tlist-dblclick", edit_textures,
 		    "%p,%p,%p", ts, tl_textures, win);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Animations"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Animations"), AG_BOX_VERT);
 	{
-		object_attach(ntab, tl_anims);
+		AG_ObjectAttach(ntab, tl_anims);
 		
-		mi = tlist_set_popup(tl_anims, "anim");
+		mi = AG_TlistSetPopup(tl_anims, "anim");
 		{
-			menu_action(mi, _("Edit animation"), EDIT_ICON,
+			AG_MenuAction(mi, _("Edit animation"), EDIT_ICON,
 			    edit_anims, "%p,%p,%p", ts, tl_anims, win);
-			menu_action(mi, _("Delete animation"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete animation"), TRASH_ICON,
 			    delete_anim, "%p,%p", ts, tl_anims);
 		}
 		
-		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
+		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = button_new(bbox, _("Insert"));
-			event_new(bu, "button-pushed", insert_anim_dlg, "%p,%p",
-			    ts, win);
+			bu = AG_ButtonNew(bbox, _("Insert"));
+			AG_SetEvent(bu, "button-pushed", insert_anim_dlg,
+			    "%p,%p", ts, win);
 
-			bu = button_new(bbox, _("Edit"));
-			event_new(bu, "button-pushed", edit_anims,
+			bu = AG_ButtonNew(bbox, _("Edit"));
+			AG_SetEvent(bu, "button-pushed", edit_anims,
 			    "%p,%p,%p", ts, tl_anims, win);
-			event_new(tl_anims, "tlist-dblclick", edit_anims,
+			AG_SetEvent(tl_anims, "tlist-dblclick", edit_anims,
 			    "%p,%p,%p", ts, tl_anims, win);
 
-			bu = button_new(bbox, _("Delete"));
-			event_new(bu, "button-pushed", delete_anim, "%p,%p",
+			bu = AG_ButtonNew(bbox, _("Delete"));
+			AG_SetEvent(bu, "button-pushed", delete_anim, "%p,%p",
 			    ts, tl_anims);
 		}
 	}

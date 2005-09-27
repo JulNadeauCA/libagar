@@ -1,12 +1,12 @@
-/*	$Csoft: tools.h,v 1.4 2005/08/10 06:59:24 vedge Exp $	*/
+/*	$Csoft: tools.h,v 1.5 2005/08/22 02:11:50 vedge Exp $	*/
 /*	Public domain	*/
 
-extern const struct tool_ops nodesel_ops;
-extern const struct tool_ops refsel_ops;
-extern const struct tool_ops fill_tool_ops;
-extern const struct tool_ops insert_ops;
-extern const struct tool_ops ginsert_ops;
-extern const struct tool_ops flip_ops;
-extern const struct tool_ops invert_ops;
-extern const struct tool_ops eraser_ops;
+extern const AG_MaptoolOps agMapNodeselOps;
+extern const AG_MaptoolOps agMapRefselOps;
+extern const AG_MaptoolOps agMapFillOps;
+extern const AG_MaptoolOps agMapInsertOps;
+extern const AG_MaptoolOps agMapGInsertOps;
+extern const AG_MaptoolOps agMapFlipOps;
+extern const AG_MaptoolOps agMapInvertOps;
+extern const AG_MaptoolOps agMapEraserOps;
 

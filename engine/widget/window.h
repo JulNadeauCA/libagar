@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.92 2005/09/19 13:27:32 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.93 2005/09/20 10:22:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -9,48 +9,48 @@
 
 #include "begin_code.h"
 
-enum window_alignment {
-	WINDOW_UPPER_LEFT,
-	WINDOW_MIDDLE_LEFT,
-	WINDOW_LOWER_LEFT,
-	WINDOW_UPPER_RIGHT,
-	WINDOW_MIDDLE_RIGHT,
-	WINDOW_LOWER_RIGHT,
-	WINDOW_CENTER,
-	WINDOW_LOWER_CENTER,
-	WINDOW_UPPER_CENTER
+enum ag_window_alignment {
+	AG_WINDOW_UPPER_LEFT,
+	AG_WINDOW_MIDDLE_LEFT,
+	AG_WINDOW_LOWER_LEFT,
+	AG_WINDOW_UPPER_RIGHT,
+	AG_WINDOW_MIDDLE_RIGHT,
+	AG_WINDOW_LOWER_RIGHT,
+	AG_WINDOW_CENTER,
+	AG_WINDOW_LOWER_CENTER,
+	AG_WINDOW_UPPER_CENTER
 };
 
-struct widget;
+struct ag_widget;
 
-struct window {
-	struct widget wid;
+typedef struct ag_window {
+	struct ag_widget wid;
 
 	int flags;
-#define WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
+#define AG_WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
 				 	   (for named windows only) */
-#define WINDOW_CASCADE		0x0002	/* Increment position slightly */
-#define WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
-#define WINDOW_NO_DECORATIONS	0x0008	/* Disable the window borders */
-#define WINDOW_HIDE		0x0010	/* Hide on window-close */
-#define WINDOW_DETACH		0x0020	/* Detach on window-close */
-#define WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
-#define WINDOW_ICONIFIED	0x0080	/* Window is minimized */
-#define WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
-#define WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
-#define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
-#define WINDOW_NO_CLOSE		0x0400	/* Disable close button */
-#define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
-#define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
-#define WINDOW_MODAL		0x2000	/* Modal window behavior */
-#define WINDOW_INHIBIT_FOCUS	0x4000	/* Prevent widgets from gaining focus */
+#define AG_WINDOW_CASCADE	0x0002	/* Increment position slightly */
+#define AG_WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
+#define AG_WINDOW_NO_DECORATIONS 0x0008	/* Disable the window borders */
+#define AG_WINDOW_HIDE		0x0010	/* Hide on window-close */
+#define AG_WINDOW_DETACH	0x0020	/* Detach on window-close */
+#define AG_WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
+#define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized */
+#define AG_WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
+#define AG_WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
+#define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
+#define AG_WINDOW_NO_CLOSE	0x0400	/* Disable close button */
+#define AG_WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
+#define AG_WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
+#define AG_WINDOW_MODAL		0x2000	/* Modal window behavior */
+#define AG_WINDOW_INHIBIT_FOCUS	0x4000	/* Prevent widgets from gaining focus */
 
 	char caption[128];
 	int visible;				/* Window is visible */
 
 	pthread_mutex_t lock;
-	struct titlebar	*tbar;			/* Titlebar (if any) */
-	enum window_alignment alignment;	/* Initial position */
+	AG_Titlebar *tbar;			/* Titlebar (if any) */
+	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
 	int xpadding;				/* Window padding (px) */
 	int ypadding_top, ypadding_bot;
@@ -58,58 +58,60 @@ struct window {
 	int savx, savy;				/* Saved coordinates (px) */
 	int savw, savh;				/* Saved geometry (px) */
 	
-	TAILQ_HEAD(,window) subwins;		/* Sub-windows */
-	TAILQ_ENTRY(window) windows;		/* Active window list */
-	TAILQ_ENTRY(window) swins;		/* Sub-window list */
-	TAILQ_ENTRY(window) detach;		/* Zombie window list */
-};
+	TAILQ_HEAD(,ag_window) subwins;		/* Sub-windows */
+	TAILQ_ENTRY(ag_window) windows;		/* Active window list */
+	TAILQ_ENTRY(ag_window) swins;		/* Sub-window list */
+	TAILQ_ENTRY(ag_window) detach;		/* Zombie window list */
+} AG_Window;
 
-#define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
-#define WINDOW_UPDATE(win) \
+#define AG_WINDOW_FOCUSED(w) (TAILQ_LAST(&agView->windows, ag_windowq) == (w))
+#define AG_WINDOW_UPDATE(win) \
 	do { \
-		WIDGET_OPS(win)->scale((win), WIDGET(win)->w, WIDGET(win)->h); \
-		widget_update_coords((win), WIDGET(win)->x, WIDGET(win)->y); \
+		AGWIDGET_OPS(win)->scale((win), AGWIDGET(win)->w, \
+		    AGWIDGET(win)->h); \
+		AG_WidgetUpdateCoords((win), AGWIDGET(win)->x, \
+		    AGWIDGET(win)->y); \
 	} while (/*CONSTCOND*/0)
 
 __BEGIN_DECLS
-struct window	*window_new(int, const char *, ...)
-		    FORMAT_ATTRIBUTE(printf, 2, 3);
+AG_Window *AG_WindowNew(int, const char *, ...)
+			FORMAT_ATTRIBUTE(printf, 2, 3);
 
-void	 window_init(void *, const char *, int);
-void	 window_destroy(void *);
-void	 window_draw(void *);
-void	 window_scale(void *, int, int);
+void	 AG_WindowInit(void *, const char *, int);
+void	 AG_WindowDestroy(void *);
+void	 AG_WindowDraw(void *);
+void	 AG_WindowScale(void *, int, int);
 
-void	 window_set_caption(struct window *, const char *, ...)
-	     FORMAT_ATTRIBUTE(printf, 2, 3)
-	     NONNULL_ATTRIBUTE(2);
-void	 window_set_spacing(struct window *, int);
-void	 window_set_padding(struct window *, int, int, int);
-void	 window_set_position(struct window *, enum window_alignment, int);
-void	 window_set_closure(struct window *, int);
-void	 window_set_style(struct window *, const struct style *);
-void	 window_set_geometry(struct window *, int, int, int, int);
+void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
+			     FORMAT_ATTRIBUTE(printf, 2, 3)
+			     NONNULL_ATTRIBUTE(2);
+void	 AG_WindowSetSpacing(AG_Window *, int);
+void	 AG_WindowSetPadding(AG_Window *, int, int, int);
+void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
+void	 AG_WindowSetCloseAction(AG_Window *, int);
+void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
+void	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
 
-void	 window_attach(struct window *, struct window *);
-void	 window_detach(struct window *, struct window *);
-void	 window_show(struct window *);
-void	 window_hide(struct window *);
-int	 window_toggle_visibility(struct window *);
-int	 window_event(SDL_Event *);
-void	 window_resize(struct window *);
-void	 window_focus(struct window *);
-void	 window_remove_titlebar(struct window *);
-void	 window_clamp(struct window *);
-int	 window_surrounded(struct window *);
+void	 AG_WindowAttach(AG_Window *, AG_Window *);
+void	 AG_WindowDetach(AG_Window *, AG_Window *);
+void	 AG_WindowShow(AG_Window *);
+void	 AG_WindowHide(AG_Window *);
+int	 AG_WindowToggleVisibility(AG_Window *);
+int	 AG_WindowEvent(SDL_Event *);
+void	 AG_WindowResize(AG_Window *);
+void	 AG_WindowFocus(AG_Window *);
+void	 AG_WindowClamp(AG_Window *);
+int	 AG_WindowIsSurrounded(AG_Window *);
 
 /* Generic event handlers */
-void	 window_generic_detach(int, union evarg *);
-void	 window_generic_hide(int, union evarg *);
-void	 window_generic_show(int, union evarg *);
-void	 window_generic_close(int, union evarg *);
-#define  WINDETACH(win)	window_generic_detach, "%p", (win)
-#define  WINHIDE(win)	window_generic_hide, "%p", (win)
-#define  WINCLOSE(win)	window_generic_close, "%p", (win)
+void	 AG_WindowDetachGenEv(int, union evarg *);
+void	 AG_WindowHideGenEv(int, union evarg *);
+void	 AG_WindowShowGenEv(int, union evarg *);
+void	 AG_WindowCloseGenEv(int, union evarg *);
+
+#define AGWINDETACH(win)	AG_WindowDetachGenEv, "%p", (win)
+#define AGWINHIDE(win)		AG_WindowHideGenEv, "%p", (win)
+#define AGWINCLOSE(win)		AG_WindowCloseGenEv, "%p", (win)
 __END_DECLS
 
 #include "close_code.h"

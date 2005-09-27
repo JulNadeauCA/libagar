@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.214 2005/09/18 03:54:32 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.215 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,27 +60,27 @@
 #define DEBUG_PROPAGATION	0x100
 #define DEBUG_SCHED		0x200
 
-int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC;
-#define	engine_debug event_debug
-int	event_count = 0;
+int	agEventDebugLvl = DEBUG_UNDERRUNS|DEBUG_ASYNC;
+#define	agDebugLvl agEventDebugLvl
 
-static struct window *fps_win;
-static struct label *fps_label;
-static struct graph *fps_graph;
-static struct graph_item *fps_refresh, *fps_events, *fps_idle;
+int	agEventAvg = 0;		/* Number of events in last frame */
+int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
+
+AG_Window *agFPSWindow;
+static AG_Graph *agFPSGraph;
+static AG_GraphItem *agFPSRefreshItem, *agFPSEventsItem, *agFPSIdlingItem;
 #endif	/* DEBUG */
 
-int	event_idlemin = 20;	/* Idling threshold */
-int	event_idleavg = 0;	/* Measured SDL_Delay() granularity */
+int agIdleThresh = 20;					/* Idling threshold */
 
-static void event_propagate(void *, struct event *);
+static void relay_event(void *, AG_Event *);
 static void event_hotkey(SDL_Event *);
 static void event_dispatch(SDL_Event *);
 #ifdef THREADS
 static void *event_async(void *);
 #endif
 
-const char *evarg_type_names[] = {
+const char *agEvArgTypeNames[] = {
 	"pointer",
 	"string",
 	"char",
@@ -93,8 +93,6 @@ const char *evarg_type_names[] = {
 	"double"
 };
 
-extern pthread_mutex_t timeout_lock;
-
 static void
 event_hotkey(SDL_Event *ev)
 {
@@ -103,9 +101,9 @@ event_hotkey(SDL_Event *ev)
 		{
 			char path[MAXPATHLEN];
 	
-			view_capture(view->v, path);
-			text_tmsg(MSG_INFO, 1000, _("Screenshot saved to %s."),
-			    path);
+			AG_DumpSurface(agView->v, path);
+			AG_TextTmsg(AG_MSG_INFO, 1000,
+			    _("Screenshot saved to %s."), path);
 		}
 
 		break;
@@ -129,130 +127,127 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
-struct window *
-event_fps_window(void)
-{
-	window_show(fps_win);
-	return (fps_win);
-}
-
 /* XXX remove this once the graph widget implements polling. */
 static __inline__ void
-update_fps_counter(void)
+update_fpsgraph(void)
 {
 	static int einc = 0;
 
-	graph_plot(fps_refresh, view->refresh.r);
-	graph_plot(fps_events, event_count * 30 / 10);
-	graph_plot(fps_idle, event_idleavg);
-	graph_scroll(fps_graph, 1);
+	AG_GraphPlot(agFPSRefreshItem, agView->refresh.r);
+	AG_GraphPlot(agFPSEventsItem, agEventAvg * 30 / 10);
+	AG_GraphPlot(agFPSIdlingItem, agIdleAvg);
+	AG_GraphScroll(agFPSGraph, 1);
 
 	if (++einc == 1) {
-		event_count = 0;
+		agEventAvg = 0;
 		einc = 0;
 	}
 }
 
 static void
-init_fps_counter(void)
+init_fpsgraph(void)
 {
-	fps_win = window_new(0, "fps-counter");
-	window_set_caption(fps_win, _("Refresh rate"));
-	window_set_position(fps_win, WINDOW_LOWER_CENTER, 0);
+	AG_Label *label;
 
-	fps_label = label_new(fps_win, LABEL_POLLED,
+	agFPSWindow = AG_WindowNew(0, "event-fps-counter");
+	AG_WindowSetCaption(agFPSWindow, _("Refresh rate"));
+	AG_WindowSetPosition(agFPSWindow, AG_WINDOW_LOWER_CENTER, 0);
+
+	label = AG_LabelNew(agFPSWindow, AG_LABEL_POLLED,
 	    "%dms (nom %dms), %d evnt, %dms idle",
-	    &view->refresh.r, &view->refresh.rnom, &event_count,
-	    &event_idleavg);
-	label_prescale(fps_label, "___ms (nom ___ms), __ evnt, __ms idle");
+	    &agView->refresh.r, &agView->refresh.rnom, &agEventAvg,
+	    &agIdleAvg);
+	AG_LabelPrescale(label, "XXXms (nom XXXms), XX evnt, XXXms idle");
 
-	fps_graph = graph_new(fps_win, _("Refresh rate"), GRAPH_LINES,
-	    GRAPH_ORIGIN, 100);
+	agFPSGraph = AG_GraphNew(agFPSWindow, _("Refresh rate"), AG_GRAPH_LINES,
+	    AG_GRAPH_ORIGIN, 100);
 	/* XXX use polling */
 
-	fps_refresh = graph_add_item(fps_graph, "refresh", 0, 160, 0, 99);
-	fps_events = graph_add_item(fps_graph, "event", 0, 0, 180, 99);
-	fps_idle = graph_add_item(fps_graph, "idle", 180, 180, 180, 99);
+	agFPSRefreshItem = AG_GraphAddItem(agFPSGraph, "refresh", 0, 160, 0,
+	    99);
+	agFPSEventsItem = AG_GraphAddItem(agFPSGraph, "event", 0, 0, 180, 99);
+	agFPSIdlingItem = AG_GraphAddItem(agFPSGraph, "idle", 180, 180, 180,
+	    99);
 }
 #endif /* DEBUG */
 
 /*
- * Loop executing timing-related tasks and processing events.
- * Video updates have priority, followed by timers and events.
- * If the effective refresh rate allows it, idle as well.
+ * Try to ensure a fixed frame rate, and idle as much as possible.
+ * TODO provide MD hooks for finer idling.
  */
 void
-event_loop(void)
+AG_EventLoop_FixedFPS(void)
 {
-	extern struct objectq timeout_objq;
+	extern struct ag_objectq agTimeoutObjQ;
 	SDL_Event ev;
-	struct window *win;
-	struct gfx *gfx;
+	AG_Window *win;
+	AG_Gfx *gfx;
 	Uint32 Tr1, Tr2 = 0;
 
 #ifdef DEBUG
-	init_fps_counter();
+	init_fpsgraph();
 #endif
 	Tr1 = SDL_GetTicks();
 	for (;;) {
 		Tr2 = SDL_GetTicks();
-		if (Tr2-Tr1 >= view->refresh.rnom) {
-			pthread_mutex_lock(&view->lock);
-			view->ndirty = 0;
+		if (Tr2-Tr1 >= agView->refresh.rnom) {
+			pthread_mutex_lock(&agView->lock);
+			agView->ndirty = 0;
 
 #if defined(DEBUG) && defined(HAVE_OPENGL)
-			if (view->opengl)
+			if (agView->opengl)
 				glClear(GL_COLOR_BUFFER_BIT);
 #endif
-			TAILQ_FOREACH(win, &view->windows, windows) {
+			TAILQ_FOREACH(win, &agView->windows, windows) {
 				if (!win->visible)
 					continue;
 
 				pthread_mutex_lock(&win->lock);
-				widget_draw(win);
+				AG_WidgetDraw(win);
 				pthread_mutex_unlock(&win->lock);
 
-				view_update(
-				    WIDGET(win)->x, WIDGET(win)->y,
-				    WIDGET(win)->w, WIDGET(win)->h);
+				AG_UpdateRectQ(
+				    AGWIDGET(win)->x, AGWIDGET(win)->y,
+				    AGWIDGET(win)->w, AGWIDGET(win)->h);
 			}
 
-			if (view->ndirty > 0) {
+			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
-				if (view->opengl) {
+				if (agView->opengl) {
 					SDL_GL_SwapBuffers();
 				} else
 #endif
 				{
-					SDL_UpdateRects(view->v, view->ndirty,
-					    view->dirty);
+					SDL_UpdateRects(agView->v,
+					    agView->ndirty,
+					    agView->dirty);
 				}
-				view->ndirty = 0;
+				agView->ndirty = 0;
 			}
-			pthread_mutex_unlock(&view->lock);
+			pthread_mutex_unlock(&agView->lock);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
-			view->refresh.r = view->refresh.rnom - (Tr1-Tr2);
+			agView->refresh.r = agView->refresh.rnom - (Tr1-Tr2);
 #ifdef DEBUG
-			if (fps_win->visible)
-				update_fps_counter();
+			if (agFPSWindow->visible)
+				update_fpsgraph();
 #endif
-			if (view->refresh.r < 1)
-				view->refresh.r = 1;
+			if (agView->refresh.r < 1)
+				agView->refresh.r = 1;
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
 #ifdef DEBUG
-			event_count++;
+			agEventAvg++;
 #endif
-		} else if (TAILQ_FIRST(&timeout_objq) != NULL) {      /* Safe */
-			timeout_process(Tr2);
-		} else if (view->refresh.r > event_idlemin) {
-			SDL_Delay(view->refresh.r - event_idlemin);
+		} else if (TAILQ_FIRST(&agTimeoutObjQ) != NULL) {      /* Safe */
+			AG_ProcessTimeout(Tr2);
+		} else if (agView->refresh.r > agIdleThresh) {
+			SDL_Delay(agView->refresh.r - agIdleThresh);
 #ifdef DEBUG
-			event_idleavg = SDL_GetTicks() - Tr2;
+			agIdleAvg = SDL_GetTicks() - Tr2;
 		} else {
-			event_idleavg = 0;
+			agIdleAvg = 0;
 		}
 #else
 		}
@@ -263,40 +258,40 @@ event_loop(void)
 static void
 unminimize_window(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	AG_Window *win = argv[1].p;
 
 	if (!win->visible) {
-		window_show(win);
-		win->flags &= ~(WINDOW_ICONIFIED);
+		AG_WindowShow(win);
+		win->flags &= ~(AG_WINDOW_ICONIFIED);
 	} else {
-		window_focus(win);
+		AG_WindowFocus(win);
 	}
 }
 
 static void
 event_dispatch(SDL_Event *ev)
 {
-	extern int objmgr_exiting;
-	struct window *win;
+	extern int agObjMgrExiting;
+	AG_Window *win;
 
-	pthread_mutex_lock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
 
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
-		view_resize(ev->resize.w, ev->resize.h);
+		AG_ResizeDisplay(ev->resize.w, ev->resize.h);
 		break;
 	case SDL_VIDEOEXPOSE:
-		view_videoexpose();
+		AG_ViewVideoExpose();
 		break;
 	case SDL_MOUSEMOTION:
 #if defined(__APPLE__) && defined(HAVE_OPENGL)
-		if (view->opengl) {
-			ev->motion.y = view->h - ev->motion.y;
+		if (agView->opengl) {
+			ev->motion.y = agView->h - ev->motion.y;
 			ev->motion.yrel = -ev->motion.yrel;
 		}
 #endif
-		if (!TAILQ_EMPTY(&view->windows)) {
-			window_event(ev);
+		if (!TAILQ_EMPTY(&agView->windows)) {
+			AG_WindowEvent(ev);
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
@@ -305,36 +300,37 @@ event_dispatch(SDL_Event *ev)
 			int rv = 1;
 
 #if defined(__APPLE__) && defined(HAVE_OPENGL)
-			if (view->opengl)
-				ev->button.y = view->h - ev->button.y;
+			if (agView->opengl)
+				ev->button.y = agView->h - ev->button.y;
 #endif
-			if (!TAILQ_EMPTY(&view->windows)) {
-				rv = window_event(ev);
+			if (!TAILQ_EMPTY(&agView->windows)) {
+				rv = AG_WindowEvent(ev);
 			}
 			if (rv == 0 && ev->type == SDL_MOUSEBUTTONDOWN &&
 			    (ev->button.button == SDL_BUTTON_MIDDLE ||
 			     ev->button.button == SDL_BUTTON_RIGHT)) {
-				struct AGMenu *me;
-				struct AGMenuItem *mi;
-				struct window *win;
+				AG_Menu *me;
+				AG_MenuItem *mi;
+				AG_Window *win;
 				int x, y;
 
-				me = Malloc(sizeof(struct AGMenu), M_OBJECT);
-				menu_init(me);
-				mi = me->sel_item = menu_add_item(me, NULL);
+				me = Malloc(sizeof(AG_Menu), M_OBJECT);
+				AG_MenuInit(me);
+				mi = me->sel_item = AG_MenuAddItem(me, NULL);
 
-				TAILQ_FOREACH_REVERSE(win, &view->windows,
-				    windows, windowq) {
+				TAILQ_FOREACH_REVERSE(win, &agView->windows,
+				    windows, ag_windowq) {
 					if (strcmp(win->caption, "win-popup")
 					    == 0) {
 						continue;
 					}
-					menu_action(mi, win->caption, OBJ_ICON,
+					AG_MenuAction(mi, win->caption,
+					    OBJ_ICON,
 					    unminimize_window, "%p", win);
 				}
 				
-				mouse_get_state(&x, &y);
-				menu_expand(me, mi, x+4, y+4);
+				AG_MouseGetState(&x, &y);
+				AG_MenuExpand(me, mi, x+4, y+4);
 			}
 		}
 		break;
@@ -345,7 +341,7 @@ event_dispatch(SDL_Event *ev)
 		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
 		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
-		input_event(INPUT_JOY, ev);
+		AG_InputEvent(AG_INPUT_JOY, ev);
 		break;
 	case SDL_KEYDOWN:
 		event_hotkey(ev);
@@ -358,39 +354,39 @@ event_dispatch(SDL_Event *ev)
 		{
 			int rv = 0;
 
-			if (!TAILQ_EMPTY(&view->windows)) {
-				rv = window_event(ev);
+			if (!TAILQ_EMPTY(&agView->windows)) {
+				rv = AG_WindowEvent(ev);
 			}
 			if (rv == 0)
-				input_event(INPUT_KEYBOARD, ev);
+				AG_InputEvent(AG_INPUT_KEYBOARD, ev);
 		}
 		break;
 	case SDL_QUIT:
 #ifdef EDITION
 		{
-			extern int mapedition;
+			extern int agEditMode;
 
-			if (!objmgr_exiting && mapedition &&
-			    object_changed_all(world)) {
-				objmgr_exiting = 1;
-				objmgr_quit_dlg(world);
+			if (!agObjMgrExiting && agEditMode &&
+			    AG_ObjectChangedAll(agWorld)) {
+				agObjMgrExiting = 1;
+				AG_ObjMgrQuitDlg(agWorld);
 				break;
 			}
 		}
 #endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
-		pthread_mutex_unlock(&view->lock);
-		objmgr_exiting = 1;
-		engine_destroy();
+		pthread_mutex_unlock(&agView->lock);
+		agObjMgrExiting = 1;
+		AG_Quit();
 		/* NOTREACHED */
 		break;
 	}
 out:
 	/* Perform deferred window garbage collection. */
-	view_detach_queued();
+	AG_ViewDetachQueued();
 
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_unlock(&agView->lock);
 }
 
 /*
@@ -400,25 +396,25 @@ out:
 static Uint32
 event_timeout(void *p, Uint32 ival, void *arg)
 {
-	struct object *ob = p;
-	struct event *ev = arg;
+	AG_Object *ob = p;
+	AG_Event *ev = arg;
 	va_list ap;
 	
 	debug(DEBUG_SCHED, "%s: timeout `%s' (ival=%u)\n", ob->name,
 	    ev->name, ival);
-	ev->flags &= ~(EVENT_SCHEDULED);
+	ev->flags &= ~(AG_EVENT_SCHEDULED);
 
 	/* Propagate event to children. */
-	if (ev->flags & EVENT_PROPAGATE) {
-		struct object *cobj;
+	if (ev->flags & AG_EVENT_PROPAGATE) {
+		AG_Object *cobj;
 			
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (timeout)\n",
 		    ob->name, ev->name);
-		lock_linkage();
-		OBJECT_FOREACH_CHILD(cobj, ob, object) {
-			event_propagate(cobj, ev);
+		AG_LockLinkage();
+		AGOBJECT_FOREACH_CHILD(cobj, ob, ag_object) {
+			relay_event(cobj, ev);
 		}
-		unlock_linkage();
+		AG_UnlockLinkage();
 	}
 
 	/* Invoke the event handler function. */
@@ -433,12 +429,12 @@ event_timeout(void *p, Uint32 ival, void *arg)
  * If another event handler is registered for events of the same type,
  * replace it.
  */
-struct event *
-event_new(void *p, const char *name, void (*handler)(int, union evarg *),
+AG_Event *
+AG_SetEvent(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 
 	pthread_mutex_lock(&ob->lock);
 	if (name != NULL) {
@@ -451,7 +447,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	}
 
 	if (ev == NULL) {
-		ev = Malloc(sizeof(struct event), M_EVENT);
+		ev = Malloc(sizeof(AG_Event), M_EVENT);
 		if (name != NULL) {
 			strlcpy(ev->name, name, sizeof(ev->name));
 		} else {
@@ -465,11 +461,11 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	}
 	ev->flags = 0;
 	ev->argv[0].p = ob;
-	ev->argt[0] = EVARG_POINTER;
+	ev->argt[0] = AG_EVARG_POINTER;
 	ev->argc = 1;
 	ev->argc_base = 1;
 	ev->handler = handler;
-	timeout_set(&ev->timeout, event_timeout, ev, 0);
+	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
 
 	if (fmt != NULL) {
 		const char *s = fmt;
@@ -477,7 +473,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 
 		va_start(ap, fmt);
 		while (*s != '\0') {
-			EVENT_PUSH_ARG(ap, *s, ev);
+			AG_EVENT_PUSH_ARG(ap, *s, ev);
 			ev->argc_base++;
 			s++;
 		}
@@ -491,16 +487,16 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
  * Register an additional event handler function for events of the
  * given type.
  */
-struct event *
-event_add(void *p, const char *name, void (*handler)(int, union evarg *),
+AG_Event *
+AG_AddEvent(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 
 	pthread_mutex_lock(&ob->lock);
 
-	ev = Malloc(sizeof(struct event), M_EVENT);
+	ev = Malloc(sizeof(AG_Event), M_EVENT);
 	if (name != NULL) {
 		strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
@@ -513,11 +509,11 @@ event_add(void *p, const char *name, void (*handler)(int, union evarg *),
 
 	ev->flags = 0;
 	ev->argv[0].p = ob;
-	ev->argt[0] = EVARG_POINTER;
+	ev->argt[0] = AG_EVARG_POINTER;
 	ev->argc = 1;
 	ev->argc_base = 1;
 	ev->handler = handler;
-	timeout_set(&ev->timeout, event_timeout, ev, 0);
+	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
 
 	if (fmt != NULL) {
 		const char *s = fmt;
@@ -525,7 +521,7 @@ event_add(void *p, const char *name, void (*handler)(int, union evarg *),
 
 		va_start(ap, fmt);
 		while (*s != '\0') {
-			EVENT_PUSH_ARG(ap, *s, ev);
+			AG_EVENT_PUSH_ARG(ap, *s, ev);
 			ev->argc_base++;
 			s++;
 		}
@@ -537,10 +533,10 @@ event_add(void *p, const char *name, void (*handler)(int, union evarg *),
 
 /* Remove the named event handler and cancel any scheduled execution. */
 void
-event_remove(void *p, const char *name)
+AG_UnsetEvent(void *p, const char *name)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 
 	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
@@ -550,9 +546,9 @@ event_remove(void *p, const char *name)
 	if (ev == NULL) {
 		goto out;
 	}
-	if (ev->flags & EVENT_SCHEDULED) {
+	if (ev->flags & AG_EVENT_SCHEDULED) {
 		/* XXX concurrent */
-		timeout_del(ob, &ev->timeout);
+		AG_DelTimeout(ob, &ev->timeout);
 	}
 	TAILQ_REMOVE(&ob->events, ev, events);
 	Free(ev, M_EVENT);
@@ -562,14 +558,14 @@ out:
 
 /* Forward an event to an object's descendents. */
 static void
-event_propagate(void *p, struct event *ev)
+relay_event(void *p, AG_Event *ev)
 {
-	struct object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 
-	OBJECT_FOREACH_CHILD(cob, ob, object)
-		event_propagate(cob, ev);
+	AGOBJECT_FOREACH_CHILD(cob, ob, ag_object)
+		relay_event(cob, ev);
 
-	event_forward(ob, ev->name, ev->argc, ev->argv);
+	AG_ForwardEvent(ob, ev->name, ev->argc, ev->argv);
 }
 
 #ifdef THREADS
@@ -577,20 +573,20 @@ event_propagate(void *p, struct event *ev)
 static void *
 event_async(void *p)
 {
-	struct event *eev = p;
-	struct object *rcvr = eev->argv[0].p;
+	AG_Event *eev = p;
+	AG_Object *rcvr = eev->argv[0].p;
 
 	/* Propagate event to children. */
-	if (eev->flags & EVENT_PROPAGATE) {
-		struct object *cobj;
+	if (eev->flags & AG_EVENT_PROPAGATE) {
+		AG_Object *cobj;
 
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (async)\n",
 		    rcvr->name, eev->name);
-		lock_linkage();
-		OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
-			event_propagate(cobj, eev);
+		AG_LockLinkage();
+		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
+			relay_event(cobj, eev);
 		}
-		unlock_linkage();
+		AG_UnlockLinkage();
 	}
 
 	/* Invoke the event handler function. */
@@ -614,11 +610,11 @@ event_async(void *p)
  * of the object should not be modified while in event context (XXX)
  */
 int
-event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
+AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 {
-	struct object *sndr = sp;
-	struct object *rcvr = rp;
-	struct event *ev;
+	AG_Object *sndr = sp;
+	AG_Object *rcvr = rp;
+	AG_Event *ev;
 
 	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
 	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
@@ -632,19 +628,19 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		goto fail;
 
 #ifdef THREADS
-	if (ev->flags & EVENT_ASYNC) {
+	if (ev->flags & AG_EVENT_ASYNC) {
 		pthread_t th;
 		va_list ap;
-		struct event *nev;
+		AG_Event *nev;
 
 		/* Construct the argument vector. */
 		/* TODO allocate from a pool */
-		nev = Malloc(sizeof(struct event), M_EVENT);
-		memcpy(nev, ev, sizeof(struct event));
+		nev = Malloc(sizeof(AG_Event), M_EVENT);
+		memcpy(nev, ev, sizeof(AG_Event));
 		if (fmt != NULL) {
 			va_start(ap, fmt);
 			for (; *fmt != '\0'; fmt++) {
-				EVENT_PUSH_ARG(ap, *fmt, nev);
+				AG_EVENT_PUSH_ARG(ap, *fmt, nev);
 			}
 			va_end(ap);
 		}
@@ -655,31 +651,31 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	} else
 #endif /* THREADS */
 	{
-		struct event tmpev;
+		AG_Event tmpev;
 		va_list ap;
 
 		/* Construct the argument vector. */
-		memcpy(&tmpev, ev, sizeof(struct event));
+		memcpy(&tmpev, ev, sizeof(AG_Event));
 		if (fmt != NULL) {
 			va_start(ap, fmt);
 			for (; *fmt != '\0'; fmt++) {
-				EVENT_PUSH_ARG(ap, *fmt, &tmpev);
+				AG_EVENT_PUSH_ARG(ap, *fmt, &tmpev);
 			}
 			va_end(ap);
 		}
 		tmpev.argv[tmpev.argc].p = sndr;
 
 		/* Propagate event to children. */
-		if (tmpev.flags & EVENT_PROPAGATE) {
-			struct object *cobj;
+		if (tmpev.flags & AG_EVENT_PROPAGATE) {
+			AG_Object *cobj;
 			
 			debug(DEBUG_PROPAGATION, "%s: propagate %s (post)\n",
 			    rcvr->name, evname);
-			lock_linkage();
-			OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
-				event_propagate(cobj, &tmpev);
+			AG_LockLinkage();
+			AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
+				relay_event(cobj, &tmpev);
 			}
-			unlock_linkage();
+			AG_UnlockLinkage();
 		}
 
 		/* Invoke the event handler function. */
@@ -704,18 +700,18 @@ fail:
  * multiple executions of the same event handler are not possible.
  */
 int
-event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
+AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
     const char *fmt, ...)
 {
-	struct object *sndr = sp;
-	struct object *rcvr = rp;
-	struct event *ev;
+	AG_Object *sndr = sp;
+	AG_Object *rcvr = rp;
+	AG_Event *ev;
 	va_list ap;
 	
 	debug(DEBUG_SCHED, "%s: sched `%s' (in %u ticks)\n", rcvr->name,
 	    evname, ticks);
 
-	pthread_mutex_lock(&timeout_lock);
+	AG_LockTiming();
 	pthread_mutex_lock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) == 0)
@@ -724,9 +720,9 @@ event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
 	if (ev == NULL) {
 		goto fail;
 	}
-	if (ev->flags & EVENT_SCHEDULED) {
+	if (ev->flags & AG_EVENT_SCHEDULED) {
 		debug(DEBUG_SCHED, "%s: resched `%s'\n", rcvr->name, evname);
-		timeout_del(rcvr, &ev->timeout);
+		AG_DelTimeout(rcvr, &ev->timeout);
 	}
 
 	/* Construct the argument vector. */
@@ -734,34 +730,34 @@ event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		for (; *fmt != '\0'; fmt++) {
-			EVENT_PUSH_ARG(ap, *fmt, ev);
+			AG_EVENT_PUSH_ARG(ap, *fmt, ev);
 		}
 		va_end(ap);
 	}
 	ev->argv[ev->argc].p = sndr;
-	ev->flags |= EVENT_SCHEDULED;
+	ev->flags |= AG_EVENT_SCHEDULED;
 
-	timeout_add(rcvr, &ev->timeout, ticks);
+	AG_AddTimeout(rcvr, &ev->timeout, ticks);
 
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	pthread_mutex_unlock(&rcvr->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	pthread_mutex_unlock(&rcvr->lock);
 	return (-1);
 }
 
 int
-event_resched(void *p, const char *evname, Uint32 ticks)
+AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 
 	debug(DEBUG_SCHED, "%s: resched `%s' (%u ticks)\n", ob->name, evname,
 	    ticks);
 
-	pthread_mutex_lock(&timeout_lock);
+	AG_LockTiming();
 	pthread_mutex_lock(&ob->lock);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
@@ -771,30 +767,30 @@ event_resched(void *p, const char *evname, Uint32 ticks)
 	if (ev == NULL) {
 		goto fail;
 	}
-	if (ev->flags & EVENT_SCHEDULED) {
-		timeout_del(ob, &ev->timeout);
+	if (ev->flags & AG_EVENT_SCHEDULED) {
+		AG_DelTimeout(ob, &ev->timeout);
 	}
-	ev->flags |= EVENT_SCHEDULED;
-	timeout_add(ob, &ev->timeout, ticks);
+	ev->flags |= AG_EVENT_SCHEDULED;
+	AG_AddTimeout(ob, &ev->timeout, ticks);
 
 	pthread_mutex_unlock(&ob->lock);
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	return (0);
 fail:
 	pthread_mutex_unlock(&ob->lock);
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	return (-1);
 }
 
 /* Cancel any future execution of the given event. */
 int
-event_cancel(void *p, const char *evname)
+AG_CancelEvent(void *p, const char *evname)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 	int rv = 0;
 
-	pthread_mutex_lock(&timeout_lock);
+	AG_LockTiming();
 	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, evname) == 0)
@@ -803,29 +799,29 @@ event_cancel(void *p, const char *evname)
 	if (ev == NULL) {
 		goto fail;
 	}
-	if (ev->flags & EVENT_SCHEDULED) {
+	if (ev->flags & AG_EVENT_SCHEDULED) {
 		debug(DEBUG_SCHED, "%s: cancelled timeout %s (cancel)\n",
 		    ob->name, evname);
-		timeout_del(ob, &ev->timeout);
+		AG_DelTimeout(ob, &ev->timeout);
 		rv++;
-		ev->flags &= ~(EVENT_SCHEDULED);
+		ev->flags &= ~(AG_EVENT_SCHEDULED);
 	}
 	/* XXX concurrent */
 	pthread_mutex_unlock(&ob->lock);
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	return (rv);
 fail:
 	pthread_mutex_unlock(&ob->lock);
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 	return (-1);
 }
 
 /* Immediately execute the given event handler. */
 void
-event_execute(void *p, const char *evname)
+AG_ExecEvent(void *p, const char *evname)
 {
-	struct object *ob = p;
-	struct event *ev;
+	AG_Object *ob = p;
+	AG_Event *ev;
 
 	pthread_mutex_lock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
@@ -843,11 +839,11 @@ event_execute(void *p, const char *evname)
  */
 /* XXX substitute the sender ptr? */
 void
-event_forward(void *rp, const char *evname, int argc, union evarg *argv)
+AG_ForwardEvent(void *rp, const char *evname, int argc, union evarg *argv)
 {
-	union evarg nargv[EVENT_ARGS_MAX];
-	struct object *rcvr = rp;
-	struct event *ev;
+	union evarg nargv[AG_EVENT_ARGS_MAX];
+	AG_Object *rcvr = rp;
+	AG_Event *ev;
 
 	debug(DEBUG_EVENTS, "%s event to %s\n", evname, rcvr->name);
 
@@ -862,18 +858,18 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 		goto out;
 
 	/* Propagate event to children. */
-	if (ev->flags & EVENT_PROPAGATE) {
-		struct object *cobj;
+	if (ev->flags & AG_EVENT_PROPAGATE) {
+		AG_Object *cobj;
 
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
 		    rcvr->name, evname);
-		lock_linkage();
-		OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
-			event_propagate(cobj, ev);
+		AG_LockLinkage();
+		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
+			relay_event(cobj, ev);
 		}
-		unlock_linkage();
+		AG_UnlockLinkage();
 	}
-	/* XXX EVENT_ASYNC.. */
+	/* XXX AG_EVENT_ASYNC.. */
 	if (ev->handler != NULL)
 		ev->handler(argc, nargv);
 out:

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.48 2005/06/16 15:58:34 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.49 2005/06/21 04:31:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,214 +34,214 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-const struct widget_ops scrollbar_ops = {
+const AG_WidgetOps scrollbar_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	scrollbar_draw,
-	scrollbar_scale
+	AG_ScrollbarDraw,
+	AG_ScrollbarScale
 };
 
-enum button_which {
-	BUTTON_NONE,
-	BUTTON_UP,
-	BUTTON_DOWN,
-	BUTTON_SCROLL
+enum ag_button_which {
+	AG_BUTTON_NONE,
+	AG_BUTTON_UP,
+	AG_BUTTON_DOWN,
+	AG_BUTTON_SCROLL
 };
 
 static void scrollbar_mousebuttonup(int, union evarg *);
 static void scrollbar_mousebuttondown(int, union evarg *);
 static void scrollbar_mousemotion(int, union evarg *);
 
-struct scrollbar *
-scrollbar_new(void *parent, enum scrollbar_type type)
+AG_Scrollbar *
+AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type)
 {
-	struct scrollbar *sb;
+	AG_Scrollbar *sb;
 
-	sb = Malloc(sizeof(struct scrollbar), M_WIDGET);
-	scrollbar_init(sb, type);
-	object_attach(parent, sb);
+	sb = Malloc(sizeof(AG_Scrollbar), M_WIDGET);
+	AG_ScrollbarInit(sb, type);
+	AG_ObjectAttach(parent, sb);
 	return (sb);
 }
 
 void
-scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
+AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type)
 {
-	widget_init(sb, "scrollbar", &scrollbar_ops,
-		WIDGET_FOCUSABLE|WIDGET_UNFOCUSED_BUTTONUP);
-	widget_bind(sb, "value", WIDGET_INT, &sb->value);
-	widget_bind(sb, "min", WIDGET_INT, &sb->min);
-	widget_bind(sb, "max", WIDGET_INT, &sb->max);
+	AG_WidgetInit(sb, "scrollbar", &scrollbar_ops,
+		AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &sb->value);
+	AG_WidgetBind(sb, "min", AG_WIDGET_INT, &sb->min);
+	AG_WidgetBind(sb, "max", AG_WIDGET_INT, &sb->max);
 
 	sb->value = 0;
 	sb->min = 0;
 	sb->max = 0;
 	sb->type = type;
-	sb->curbutton = BUTTON_NONE;
+	sb->curbutton = AG_BUTTON_NONE;
 	sb->bar_size = 30;
-	sb->button_size = text_font_height;
+	sb->button_size = agTextFontHeight;
 
-	event_new(sb, "window-mousebuttondown", scrollbar_mousebuttondown,
+	AG_SetEvent(sb, "window-mousebuttondown", scrollbar_mousebuttondown,
 		NULL);
-	event_new(sb, "window-mousebuttonup", scrollbar_mousebuttonup, NULL);
-	event_new(sb, "window-mousemotion", scrollbar_mousemotion, NULL);
+	AG_SetEvent(sb, "window-mousebuttonup", scrollbar_mousebuttonup, NULL);
+	AG_SetEvent(sb, "window-mousemotion", scrollbar_mousemotion, NULL);
 }
 
 static void
 scrollbar_mousebuttonup(int argc, union evarg *argv)
 {
-	struct scrollbar *sb = argv[0].p;
+	AG_Scrollbar *sb = argv[0].p;
 
-	sb->curbutton = BUTTON_NONE;
+	sb->curbutton = AG_BUTTON_NONE;
 }
 
 /* Clicked or dragged mouse to coord, so adjust value */
 static void
-scrollbar_mouse_select(struct scrollbar *sb, int coord, int totalsize)
+scrollbar_mouse_select(AG_Scrollbar *sb, int coord, int totalsize)
 {
 	const int scrolling_area = totalsize - (sb->button_size*2);
 	int min, max;
 
-	if (sb->curbutton != BUTTON_SCROLL)
+	if (sb->curbutton != AG_BUTTON_SCROLL)
 		return;
 	if (sb->bar_size == -1)
 		return;
 		
-	min = widget_get_int(sb, "min");
-	max = widget_get_int(sb, "max");
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max");
 	
 	if (max < min)
 		return;
 	
 	/* mouse below min */
 	if (coord <= sb->button_size) {
-		widget_set_int(sb, "value", min);
+		AG_WidgetSetInt(sb, "value", min);
 	}
 	/* mouse above max */
 	else if (coord >= sb->button_size + scrolling_area) {
-		widget_set_int(sb, "value", max);
+		AG_WidgetSetInt(sb, "value", max);
 	}
 	/* mouse between */
 	else {
 		int ncoord = coord - sb->button_size;
 
-		widget_set_int(sb, "value", ncoord*(max-min+1)/scrolling_area);
+		AG_WidgetSetInt(sb, "value", ncoord*(max-min+1)/scrolling_area);
 	}
 	
 	/* generate an event */
-	event_post(NULL, sb, "scrollbar-changed", "%i",
-		widget_get_int(sb, "value"));
+	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i",
+		AG_WidgetInt(sb, "value"));
 }
 
 static void
 scrollbar_mousebuttondown(int argc, union evarg *argv)
 {
-	struct scrollbar *sb = argv[0].p;
+	AG_Scrollbar *sb = argv[0].p;
 	int button = argv[1].i;
-	int coord = (sb->type == SCROLLBAR_HORIZ) ?
+	int coord = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		argv[2].i : argv[3].i;
-	int totalsize = (sb->type == SCROLLBAR_HORIZ) ?
-		WIDGET(sb)->w : WIDGET(sb)->h;
+	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
+		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
 	int min, value, max, nvalue;
 
 	if (button != SDL_BUTTON_LEFT)
 		return;
 
-	min = widget_get_int(sb, "min");
-	max = widget_get_int(sb, "max");
-	value = widget_get_int(sb, "value");
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max");
+	value = AG_WidgetInt(sb, "value");
 
 	if (max < min)
 		return;
 	
-	widget_focus(sb);
+	AG_WidgetFocus(sb);
 	
 	/* click on the up button */
 	if (coord <= sb->button_size) {
-		sb->curbutton = BUTTON_UP;
+		sb->curbutton = AG_BUTTON_UP;
 		if (value > min) 
-			widget_set_int(sb, "value", value - 1);
+			AG_WidgetSetInt(sb, "value", value - 1);
 	}
 	/* click on the down button */
 	else if (coord >= totalsize - sb->button_size) {
-		sb->curbutton = BUTTON_DOWN;
+		sb->curbutton = AG_BUTTON_DOWN;
 		if (value < max)
-			widget_set_int(sb, "value", value + 1);
+			AG_WidgetSetInt(sb, "value", value + 1);
 	}
 	/* click in between */
 	else {
-		sb->curbutton = BUTTON_SCROLL;
+		sb->curbutton = AG_BUTTON_SCROLL;
 		scrollbar_mouse_select(sb, coord, totalsize);
 	}
 	
 	/* generate an event if value changed */
-	if (value != (nvalue = widget_get_int(sb, "value")))
-		event_post(NULL, sb, "scrollbar-changed", "%i", nvalue);
+	if (value != (nvalue = AG_WidgetInt(sb, "value")))
+		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nvalue);
 }
 
 static void
 scrollbar_mousemotion(int argc, union evarg *argv)
 {
-	struct scrollbar *sb = argv[0].p;
-	int coord = (sb->type == SCROLLBAR_HORIZ) ?
+	AG_Scrollbar *sb = argv[0].p;
+	int coord = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		argv[1].i : argv[2].i;
 	int state = argv[5].i;
-	int totalsize = (sb->type == SCROLLBAR_HORIZ) ?
-		WIDGET(sb)->w : WIDGET(sb)->h;
+	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
+		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
 
 	if (state & SDL_BUTTON_LMASK)
 		scrollbar_mouse_select(sb, coord, totalsize);
 }
 
 void
-scrollbar_scale(void *p, int rw, int rh)
+AG_ScrollbarScale(void *p, int rw, int rh)
 {
-	struct scrollbar *sb = p;
+	AG_Scrollbar *sb = p;
 
 	switch (sb->type) {
-	case SCROLLBAR_HORIZ:
+	case AG_SCROLLBAR_HORIZ:
 		if (rw == -1) {
-			WIDGET(sb)->w = sb->button_size*4;
+			AGWIDGET(sb)->w = sb->button_size*4;
 		}
 		if (rh == -1) {
-			WIDGET(sb)->h = sb->button_size;
+			AGWIDGET(sb)->h = sb->button_size;
 		} else {
-			sb->button_size = WIDGET(sb)->h;	/* Square */
+			sb->button_size = AGWIDGET(sb)->h;	/* Square */
 		}
 		break;
-	case SCROLLBAR_VERT:
+	case AG_SCROLLBAR_VERT:
 		if (rw == -1) {
-			WIDGET(sb)->w = sb->button_size;
+			AGWIDGET(sb)->w = sb->button_size;
 		} else {
-			sb->button_size = WIDGET(sb)->w;	/* Square */
+			sb->button_size = AGWIDGET(sb)->w;	/* Square */
 		}
 		if (rh == -1) {
-			WIDGET(sb)->h = sb->button_size*4;
+			AGWIDGET(sb)->h = sb->button_size*4;
 		}
 		break;
 	}
 }
 
 void
-scrollbar_draw(void *p)
+AG_ScrollbarDraw(void *p)
 {
-	struct scrollbar *sb = p;
+	AG_Scrollbar *sb = p;
 	int value, min, max;
 	int w, h, x, y;
 	int maxcoord;
 
-	if (WIDGET(sb)->w < sb->button_size ||
-	    WIDGET(sb)->w < sb->button_size)
+	if (AGWIDGET(sb)->w < sb->button_size ||
+	    AGWIDGET(sb)->w < sb->button_size)
 		return;
 
-	value = widget_get_int(sb, "value");
-	min = widget_get_int(sb, "min");
-	max = widget_get_int(sb, "max");
+	value = AG_WidgetInt(sb, "value");
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max");
 	
 	if (max < min || max == 0)
 		return;
@@ -254,90 +254,90 @@ scrollbar_draw(void *p)
 	}
 #endif
 
-	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
-	    COLOR(SCROLLBAR_COLOR));
+	agPrim.box(sb, 0, 0, AGWIDGET(sb)->w, AGWIDGET(sb)->h, -1,
+	    AG_COLOR(SCROLLBAR_COLOR));
 
 	switch (sb->type) {
-	case SCROLLBAR_VERT:
-		if (WIDGET(sb)->h < sb->button_size*2 + 6) {
+	case AG_SCROLLBAR_VERT:
+		if (AGWIDGET(sb)->h < sb->button_size*2 + 6) {
 			return;
 		}
-		maxcoord = WIDGET(sb)->h - sb->button_size * 2 - sb->bar_size;
+		maxcoord = AGWIDGET(sb)->h - sb->button_size * 2 - sb->bar_size;
 		
 		/* Draw the up and down buttons. */
-		primitives.box(sb,
+		agPrim.box(sb,
 		    0, 0,
 		    sb->button_size, sb->button_size,
-		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
-		primitives.box(sb,
-		    0, WIDGET(sb)->h - sb->button_size,
+		    (sb->curbutton == AG_BUTTON_UP) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+		agPrim.box(sb,
+		    0, AGWIDGET(sb)->h - sb->button_size,
 		    sb->button_size,
 		    sb->button_size,
-		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
+		    (sb->curbutton == AG_BUTTON_DOWN) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 		
 		/* Calculate disabled bar */
 		if (sb->bar_size == -1) {
 			y = 0;
-			h = WIDGET(sb)->h - sb->button_size*2;
+			h = AGWIDGET(sb)->h - sb->button_size*2;
 		}
 		/* Calculate active bar */
 		else {
 			y = value * maxcoord / (max-min);
 			h = sb->bar_size;
 			if (sb->button_size + y + h >
-			    WIDGET(sb)->h - sb->button_size)
-				y = WIDGET(sb)->h - sb->button_size*2 - h;
+			    AGWIDGET(sb)->h - sb->button_size)
+				y = AGWIDGET(sb)->h - sb->button_size*2 - h;
 		}
 		/* Draw bar */
-		primitives.box(sb,
+		agPrim.box(sb,
 		    0, sb->button_size + y,
 		    sb->button_size,
 		    h,
-		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
+		    (sb->curbutton == AG_BUTTON_SCROLL) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 		break;
-	case SCROLLBAR_HORIZ:
-		if (WIDGET(sb)->w < sb->button_size*2 + 6) {
+	case AG_SCROLLBAR_HORIZ:
+		if (AGWIDGET(sb)->w < sb->button_size*2 + 6) {
 			return;
 		}
-		maxcoord = WIDGET(sb)->w - sb->button_size*2 - sb->bar_size;
+		maxcoord = AGWIDGET(sb)->w - sb->button_size*2 - sb->bar_size;
 
 		/* Draw the up and down buttons */
-		primitives.box(sb,
+		agPrim.box(sb,
 		    0, 0,
 		    sb->button_size, sb->button_size,
-		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
-		primitives.box(sb,
-		    WIDGET(sb)->w - sb->button_size, 0,
+		    (sb->curbutton == AG_BUTTON_UP) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+		agPrim.box(sb,
+		    AGWIDGET(sb)->w - sb->button_size, 0,
 		    sb->button_size, sb->button_size,
-		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
+		    (sb->curbutton == AG_BUTTON_DOWN) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 		
 		/* Calculate disabled bar */
 		if (sb->bar_size == -1) {
 			x = 0;
-			w = WIDGET(sb)->w - sb->button_size*2;
+			w = AGWIDGET(sb)->w - sb->button_size*2;
 		}
 		/* Calculate active bar */
 		else {
 			x = value * maxcoord / (max-min);
 			w = sb->bar_size;
 			if (sb->button_size + x + w >
-			    WIDGET(sb)->w - sb->button_size)
-				x = WIDGET(sb)->w - sb->button_size*2 - w;
+			    AGWIDGET(sb)->w - sb->button_size)
+				x = AGWIDGET(sb)->w - sb->button_size*2 - w;
 		}
 		
 		/* Draw bar */
-		primitives.box(sb,
+		agPrim.box(sb,
 		    sb->button_size + x,
 		    0,
 		    w,
 		    sb->button_size,
-		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    COLOR(SCROLLBAR_BTN_COLOR));
+		    (sb->curbutton == AG_BUTTON_SCROLL) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 		break;
 	}
 #if 0
@@ -347,8 +347,8 @@ scrollbar_draw(void *p)
 
 		snprintf(label, sizeof(label), "%d\n%d\n%d\n",
 		    value, min, max);
-		txt = text_render(NULL, -1, COLOR(TEXT_COLOR), label);
-		widget_blit(sb, txt, 0, 0);
+		txt = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), label);
+		AG_WidgetBlit(sb, txt, 0, 0);
 		SDL_FreeSurface(txt);
 		    
 	}
@@ -356,13 +356,13 @@ scrollbar_draw(void *p)
 }
 
 void
-scrollbar_set_bar_size(struct scrollbar *sb, int bsize)
+AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)
 {
 	sb->bar_size = (bsize > 10 || bsize == -1) ? bsize : 10;
 }
 
 void
-scrollbar_get_bar_size(struct scrollbar *sb, int *bsize)
+AG_ScrollbarGetBarSize(AG_Scrollbar *sb, int *bsize)
 {
 	*bsize = sb->bar_size;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tmp.c,v 1.1 2005/09/06 04:13:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,33 +38,33 @@
 
 #include "tmp.h"
 
-struct netbuf *
-tmp_open(const char *name)
+AG_Netbuf *
+AG_TmpOpen(const char *name)
 {
 	char savedir[MAXPATHLEN];
 	char path[MAXPATHLEN];
 	struct stat sb;
-	struct netbuf *buf;
+	AG_Netbuf *buf;
 
 	/* XXX import mkstemp() eventually */
-	prop_copy_string(config, "save-path", savedir, sizeof(savedir));
+	AG_StringCopy(agConfig, "save-path", savedir, sizeof(savedir));
 	strlcat(savedir, "/.tmp", sizeof(savedir));
 	if (stat(savedir, &sb) == -1 && Mkdir(savedir) == -1) {
-		error_set("%s: %s", savedir, strerror(errno));
+		AG_SetError("%s: %s", savedir, strerror(errno));
 		return (NULL);
 	}
 	snprintf(path, sizeof(path), "%s/%s%u", savedir, name, arc4random());
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	return (netbuf_open(path, "w+", NETBUF_BIG_ENDIAN));
+	return (AG_NetbufOpen(path, "w+", AG_NETBUF_BIG_ENDIAN));
 #else
-	return (netbuf_open(path, "w+", NETBUF_LITTLE_ENDIAN));
+	return (AG_NetbufOpen(path, "w+", AG_NETBUF_LITTLE_ENDIAN));
 #endif
 }
 
 void
-tmp_close(struct netbuf *buf)
+AG_TmpClose(AG_Netbuf *buf)
 {
 	unlink(buf->path);
-	netbuf_close(buf);
+	AG_NetbufClose(buf);
 }

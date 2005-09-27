@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.80 2005/09/17 15:22:23 vedge Exp $
+.\"	$Csoft: AG_Object.3,v 1.81 2005/09/19 01:25:16 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -26,13 +26,13 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd March 17, 2002
-.Dt OBJECT 3
+.Dt AG_OBJECT 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm object
-.Nd agar object interface
+.Nm AG_Object
+.Nd agar object system
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/object.h>
@@ -48,7 +48,7 @@ Memory management
 .It
 Object archiving (persistence)
 .It
-Interdependencies between objects
+Interdependencies between multiple objects
 .It
 Object linkage
 .It
@@ -59,56 +59,56 @@ Event processing and scheduling
 .Pp
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
-.Ft "struct object *"
-.Fn object_new "void *parent" "const char *name"
+.Ft "AG_Object *"
+.Fn AG_ObjectNew "void *parent" "const char *name"
 .Pp
 .Ft "void"
-.Fn object_init "void *obj" "const char *type" "const char *name" "const void *ops"
+.Fn AG_ObjectInit "void *obj" "const char *type" "const char *name" "const void *ops"
 .Pp
 .Ft "void"
-.Fn object_attach "void *new_parent" "void *obj"
+.Fn AG_ObjectAttach "void *new_parent" "void *obj"
 .Pp
 .Ft "void"
-.Fn object_attach_path "const char *parent_path" "void *child"
+.Fn AG_ObjectAttachPath "const char *parent_path" "void *child"
 .Pp
 .Ft "void"
-.Fn object_detach "void *obj"
+.Fn AG_ObjectDetach "void *obj"
 .Pp
 .Ft "void"
-.Fn object_move "void *obj" "void *new_parent"
+.Fn AG_ObjectMove "void *obj" "void *new_parent"
 .Pp
 .Ft "void *"
-.Fn object_root "const void *obj"
+.Fn AG_ObjectRoot "const void *obj"
 .Pp
 .Ft "void *"
-.Fn object_find_parent "const void *obj" "const char *name" "const char *type"
+.Fn AG_ObjectFindParent "const void *obj" "const char *name" "const char *type"
 .Pp
 .Ft "int"
-.Fn object_copy_name "const void *obj" "char *pathbuf" "size_t pathbuf_len"
+.Fn AG_ObjectCopyName "const void *obj" "char *pathbuf" "size_t pathbuf_len"
 .Pp
 .Ft "void"
-.Fn lock_linkage "void"
+.Fn AG_LockLinkage "void"
 .Pp
 .Ft "void"
-.Fn unlock_linkage "void"
+.Fn AG_UnlockLinkage "void"
 .nr nS 0
 .Pp
 The
-.Fn object_new
-function allocates and initializes a new, generic object and attaches it to
+.Fn AG_ObjectNew
+function allocates and initializes a new, generic AG_Object and attaches it to
 .Fa parent
 if not NULL.
 .Pp
 The
-.Fn object_init
-function initializes an object structure.
+.Fn AG_ObjectInit
+function initializes an AG_Object structure.
 .Fa name
 and
 .Fa type
 are truncated if they exceed
-.Dv OBJECT_NAME_MAX
+.Dv AG_OBJECT_NAME_MAX
 and
-.Dv OBJECT_TYPE_MAX
+.Dv AG_OBJECT_TYPE_MAX
 in length, respectively.
 Instances of
 .Sq /
@@ -121,14 +121,14 @@ If
 .Fa ops
 is not NULL, it should point to the following structure:
 .Bd -literal
-struct object_ops {
+typedef struct ag_object_ops {
 	void (*init)(void *obj, const char *name);	/* Initialize */
 	void (*reinit)(void *obj);			/* Free data */
 	void (*destroy)(void *obj);			/* Release */
-	int  (*load)(void *obj, struct netbuf *buf);	/* Load data */
-	int  (*save)(void *obj, struct netbuf *buf);	/* Save data */
+	int  (*load)(void *obj, AG_Netbuf *buf);	/* Load data */
+	int  (*save)(void *obj, AG_Netbuf *buf);	/* Save data */
 	void *(*edit)(void *obj);			/* Edit data */
-};
+} AG_ObjectOps;
 .Ed
 .Pp
 The
@@ -137,31 +137,31 @@ operation initializes an
 .Nm
 instance.
 .Fn reinit
-is reponsible for releasing data dynamically allocated by the object (eg.
+is reponsible for releasing data dynamically allocated by the AG_Object (eg.
 .Xr map 3
 nodes).
 .Fn reinit
-is invoked prior to rereading an object's data from disk, as part of an
-.Dv OBJECT_DATA
+is invoked prior to rereading an AG_Object's data from disk, as part of an
+.Dv AG_OBJECT_DATA
 page out operation.
 .Pp
 The
 .Fn destroy
-operation releases all data allocated by the object, including data allocated
+operation releases all data allocated by the AG_Object, including data allocated
 from
 .Fn init .
 The
 .Fn destroy
 operation is invoked from
-.Fn object_destroy .
-It must not free the object structure, and it does not need to bother about
-placing the object data back into a consistent state.
+.Fn AG_ObjectDestroy .
+It must not free the AG_Object structure, and it does not need to bother about
+placing the AG_Object data back into a consistent state.
 .Pp
 The
 .Fn load
 and
 .Fn save
-operations are responsible for archiving any persistent object data
+operations are responsible for archiving any persistent AG_Object data
 (see the
 .Em ARCHIVING AND PAGING
 section for more information).
@@ -170,15 +170,15 @@ If the compile-time option
 .Dv EDITION
 is defined, the
 .Fn edit
-operation is responsible for creating a new edition window for the
-object data (for example, the
+operation is responsible for creating a new edition window for the object's
+dynamic data (for example, the
 .Xr map 3
 object creates a
 .Xr mapview 3
 widget in edit mode).
-If other windows are to be created as part of this object's edition process,
+If other windows are to be created as part of this instance's edition process,
 they should be attached to the main edition window using
-.Xr window_attach 3 .
+.Xr AG_WindowAttach 3 .
 The
 .Fn edit
 operation can also return other types of widgets, such as a
@@ -189,70 +189,69 @@ The following public
 .Nm
 flags are defined:
 .Bd -literal
-#define OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
-#define OBJECT_NON_PERSISTENT 0x002 /* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT  0x008 /* Object data is resident (RO) */
-#define OBJECT_PRESERVE_DEPS  0x010 /* Don't remove dep if count=0 */
-#define OBJECT_STATIC         0x020 /* Don't free() after detach */
-#define OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
-#define OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
-#define OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
-#define OBJECT_REMAIN_GFX     0x800 /* Keep graphics resident */
+#define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
+#define AG_OBJECT_NON_PERSISTENT 0x002 /* Never include in saves */
+#define AG_OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
+#define AG_OBJECT_DATA_RESIDENT  0x008 /* Object data is resident (RO) */
+#define AG_OBJECT_PRESERVE_DEPS  0x010 /* Don't remove dep if count=0 */
+#define AG_OBJECT_STATIC         0x020 /* Don't free() after detach */
+#define AG_OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
+#define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
+#define AG_OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
+#define AG_OBJECT_REMAIN_GFX     0x800 /* Keep graphics resident */
 .Ed
 .Pp
 The
-.Dv OBJECT_RELOAD_PROPS
+.Dv AG_OBJECT_RELOAD_PROPS
 flag prevents the
 .Xr prop 3
 table from being cleared as part of a load operation.
-.Dv OBJECT_NON_PERSISTENT
-prevents the object and its descendents from being archived.
+.Dv AG_OBJECT_NON_PERSISTENT
+prevents this instance and its children from being archived.
 If this flag is set,
-.Fn object_page_in
+.Fn AG_ObjectPageIn
 and
-.Fn object_page_out
+.Fn AG_ObjectPageOut
 with an argument of
-.Dv OBJECT_DATA
+.Dv AG_OBJECT_DATA
 become no-ops.
 .Pp
 The
-.Dv OBJECT_INDESTRUCTIBLE
-flag advises the object editor not to destroy this object.
-.Dv OBJECT_READONLY
+.Dv AG_OBJECT_INDESTRUCTIBLE
+flag advises the object editor not to destroy this object instance.
+.Dv AG_OBJECT_READONLY
 advises the object-specific
 .Va edit
-operation that this object should not be edited.
+operation that this instance should not be edited.
 .Pp
 The
-.Dv OBJECT_REOPEN_ONLOAD
+.Dv AG_OBJECT_REOPEN_ONLOAD
 flag causes the object's edition window
 (as returned by the object's
 .Sq edit
 operation) and all sub-windows to be automatically destroyed and re-opened
 by
-.Fn object_load ,
+.Fn AG_ObjectLoad ,
 such that the editor does not need to worry about referencing dynamically
 allocated object substructures that are freed by the load routine.
 .Pp
 The
-.Dv OBJECT_DATA_RESIDENT
+.Dv AG_OBJECT_DATA_RESIDENT
 flag is set by the
 .Nm
-system to indicate that the object's data currently resides in memory.
+system to indicate that the instance's dynamic data is resident.
 .Pp
 The
-.Fn object_attach
+.Fn AG_ObjectAttach
 and
-.Fn object_detach
-functions respectively link and unlink a child object against a parent
-project.
+.Fn AG_ObjectDetach
+functions respectively link and unlink an object instance against another.
 Prior to detaching the object,
-.Fn object_detach
+.Fn AG_ObjectDetach
 cancels scheduled
 .Xr timeout 3
 events (that do not have the
-.Dv TIMEOUT_DETACHABLE
+.Dv AG_TIMEOUT_DETACHABLE
 flag set).
 These operations raise
 .Fn attached
@@ -261,13 +260,13 @@ and
 events.
 .Pp
 The
-.Fn object_attach_path
+.Fn AG_ObjectAttachPath
 function is a variant of
-.Fn object_attach
-which looks up the parent object using
+.Fn AG_ObjectAttach
+which looks up the parent using
 .Fa parent_path .
 .Pp
-.Fn object_move
+.Fn AG_ObjectMove
 moves
 .Fa child
 from
@@ -281,150 +280,150 @@ and
 .Fn moved
 events in order.
 Unlike
-.Fn object_detach ,
-.Fn object_move
+.Fn AG_ObjectDetach ,
+.Fn AG_ObjectMove
 does not cancel scheduled timeout events.
 .Pp
 The
-.Fn object_root
-function traverses the object's ancestry and return a pointer to the root
-object.
-.Fn object_find_parent
-traverse the ancestry until a parent object matches the non-NULL
+.Fn AG_ObjectRoot
+function traverses the given object's ancestry and return a pointer to the root
+item.
+.Fn AG_ObjectFindParent
+traverse the ancestry until a parent item matches the non-NULL
 .Fa name
 and
 .Fa type
 arguments.
-The object linkage must remain locked throughout the execution of both
-.Fn object_root
+The global object linkage must remain locked throughout the execution of both
+.Fn AG_ObjectRoot
 and
-.Fn object_find_parent .
+.Fn AG_ObjectFindParent .
 .Pp
 The
-.Fn object_copy_name
-function copies an object's absolute pathname to a fixed-size buffer, and
-returns 0 on success and -1 if an error occured, such as the buffer being
-too small to hold the full pathname and the terminating NUL.
+.Fn AG_ObjectCopyName
+function copies the absolute pathname of an object instance to a fixed-size
+buffer, returning 0 on success and -1 on failure.
 .Pp
 Since
-.Fn object_copy_name
-must traverse the tree backwards, and an object may move from one parent
-to another, the root object provides a lock to protect its linkage.
-.Fn lock_linkage
+.Fn AG_ObjectCopyName
+must perform an inverse traversal of the tree, and an object instance may
+move from one parent to another, the root provides a lock to protect its
+linkage.
+.Fn AG_LockLinkage
 and
-.Fn unlock_linkage
+.Fn AG_UnlockLinkage
 acquire and release the world's linkage lock, respectively.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
-.Fn object_in_use "const void *obj"
+.Fn AG_ObjectInUse "const void *obj"
 .Pp
-.Ft "struct object_dep *"
-.Fn object_add_dep "void *obj" "void *depobj"
+.Ft "AG_ObjectDep *"
+.Fn AG_ObjectAddDep "void *obj" "void *depobj"
 .Pp
 .Ft "void"
-.Fn object_del_dep "void *obj" "void *depobj"
+.Fn AG_ObjectDelDep "void *obj" "void *depobj"
 .Pp
 .Ft "int"
-.Fn object_find_dep "const void *obj" "Uint32 ind" "struct object **objp"
+.Fn AG_ObjectFindDep "const void *obj" "Uint32 ind" "AG_Object **objp"
 .Pp
 .Ft "Uint32"
-.Fn object_encode_name "const void *obj" "const void *depobj"
+.Fn AG_ObjectEncodeName "const void *obj" "const void *depobj"
 .nr nS 0
 .Pp
 The
-.Fn object_in_use
-function returns 1 if the given object
-.Fa obj
-is used by another object (the two objects must be sharing the same root).
+.Fn AG_ObjectInUse
+function returns 1 if the given object is being referenced by another object
+instance (which is sharing the same root).
 .Pp
 The
-.Fn object_add_dep
+.Fn AG_ObjectAddDep
 function either creates a new dependency upon
 .Fa depobj ,
 or increment the reference count if one exists.
-.Fn object_del_dep
+.Fn AG_ObjectDelDep
 decrements the reference count upon
 .Fa depobj ,
 removing it if it reaches 0.
 .Pp
 The
-.Fn object_find_dep
-function resolves the given object dependency.
-.Fn object_encode_name
-encodes an object reference in network format.
+.Fn AG_ObjectFindDep
+function resolves the given dependency.
+.Fn AG_ObjectEncodeName
+serializes an object reference.
 .Pp
-Encoded dependencies are integers which are either indexes into the object's
+Serialized dependencies are integers which are either indexes into the object's
 dependency table, or the special values 0 (NULL reference) and 1 (self
-dependency).
+reference).
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
-.Fn object_destroy "void *obj"
+.Fn AG_ObjectDestroy "void *obj"
 .Pp
 .Ft void
-.Fn object_free_data "void *obj"
+.Fn AG_ObjectFreeData "void *obj"
 .Pp
 .Ft "void"
-.Fn object_free_events "struct object *obj"
+.Fn AG_ObjectFreeEvents "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn object_free_props "struct object *obj"
+.Fn AG_ObjectFreeProps "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn object_free_deps "struct object *obj"
+.Fn AG_ObjectFreeDeps "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn object_free_children "struct object *obj"
+.Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn object_free_zerodeps "struct object *obj"
+.Fn AG_ObjectFreeZerodeps "AG_Object *obj"
 .nr nS 0
 .Pp
 The
-.Fn object_destroy
-function is called to free all resources reserved by the given object, including
-its children (assuming that they are not currently in use).
-.Fn object_destroy
+.Fn AG_ObjectDestroy
+function is called to free all resources reserved by the given object instance,
+including its children (assuming that they are not currently in use).
+.Fn AG_ObjectDestroy
 also cancels any
 .Xr timeout 3
 event scheduled for future execution.
 To permit static allocation,
-.Fn object_destroy
+.Fn AG_ObjectDestroy
 does not invoke
 .Xr free 3
-on the object structure.
+on the AG_Object structure.
 .Pp
 Internally,
-.Fn object_destroy
+.Fn AG_ObjectDestroy
 invokes
-.Fn object_free_events ,
-.Fn object_free_props ,
-.Fn object_free_deps
+.Fn AG_ObjectFreeEvents ,
+.Fn AG_ObjectFreeProps ,
+.Fn AG_ObjectFreeDeps
 and
-.Fn object_free_children ,
+.Fn AG_ObjectFreeChildren ,
 but these functions may be called directly in order to destroy and reinitialize
-the event handler list, the property table and the child objects, respectively.
+the event handler list, the property table and the child instances,
+respectively.
 .Pp
 In addition to reinitializing the event handler table,
-.Fn object_free_events
+.Fn AG_ObjectFreeEvents
 also cancels scheduled events.
 .Pp
-.Fn object_free_children
+.Fn AG_ObjectFreeChildren
 invokes
 .Xr free 3
-on the object's children (except those with the
-.Dv OBJECT_STATIC
+on an object's children (except those with the
+.Dv AG_OBJECT_STATIC
 flag set), assuming that none of them are in use.
 .Pp
 The
-.Fn object_free_data
+.Fn AG_ObjectFreeData
 function invokes the
 .Va reinit
 operation of
 .Fa obj
-(if there is one) in order to free object data, and clears the
-.Dv OBJECT_DATA_RESIDENT
+(if there is one) in order to free dynamic data, and clears the
+.Dv AG_OBJECT_DATA_RESIDENT
 flag.
 The
 .Va reinit
@@ -433,42 +432,41 @@ operation of
 for example, frees the contents of all nodes of the map.
 .Pp
 The
-.Fn object_free_zerodeps
+.Fn AG_ObjectFreeZerodeps
 function clears any dependency table entry that has a reference count of zero
 for the given object and its children.
 Dependencies with a reference count of zero only occur in objects that have the
-.Dv OBJECT_PRESERVE_DEPS
+.Dv AG_OBJECT_PRESERVE_DEPS
 flag set.
 .Sh ARCHIVING AND PAGING
 .nr nS 1
 .Ft "int"
-.Fn object_load "void *obj"
+.Fn AG_ObjectLoad "void *obj"
 .Pp
 .Ft "int"
-.Fn object_save "const void *obj"
+.Fn AG_ObjectSave "const void *obj"
 .Pp
 .Ft "int"
-.Fn object_save_all "const void *obj"
+.Fn AG_ObjectSaveAll "const void *obj"
 .Pp
 .Ft "int"
-.Fn object_page_in "void *obj" "enum object_page_item item"
+.Fn AG_ObjectPageIn "void *obj" "enum ag_object_page_item item"
 .Pp
 .Ft "int"
-.Fn object_page_out "void *obj" "enum object_page_item item"
+.Fn AG_ObjectPageOut "void *obj" "enum ag_object_page_item item"
 .nr nS 0
 .Pp
 These functions implement archiving of objects (also known as
 "serialization" or "flattening" in object-oriented terminology).
-Persistent object information such as size, dependencies and
-position in the hierarchy are encoded in a machine-independent
-format.
+Persistent information such as size, dependencies and position in the
+hierarchy are encoded in a machine-independent format.
 .Pp
 The
 .Fn load
 and
 .Fn save
 functions of the generic operation vector are responsible for
-archiving of data specific to the object's type.
+archiving of data specific to the type of object at hand.
 Except for direct subclasses of
 .Nm ,
 .Fn load
@@ -481,20 +479,20 @@ and
 routines of their superclass.
 .Pp
 The
-.Fn object_load
-function loads the state of an object and its descendants from
+.Fn AG_ObjectLoad
+function loads the state of an object instance and its descendants from
 an archive.
 The first file found in the search path (the colon-separated
 .Sq load-path
 config setting) is used.
-.Fn object_load
+.Fn AG_ObjectLoad
 performs the following operations, in order:
 .Bl -enum
 .It
 Cancel scheduled
 .Xr timeout 3
 events (that don't have the
-.Dv TIMEOUT_LOADABLE
+.Dv AG_TIMEOUT_LOADABLE
 flag set).
 .It
 Load the generic part (the
@@ -503,57 +501,53 @@ class) of
 .Fa obj
 and its descendants.
 Archived siblings found in the data file are each compared against the
-currently attached objects.
+currently attached object instances.
 If a match is found, the
 .Va reinit
 op is called.
-If there is no currently attached object matching an archived one,
-it is dynamically allocated and initialized using the type switch (the
-.Va typesw[]
+If there is no resident instance matching an archived object, one is
+dynamically allocated and initialized using the type switch (the
+.Va agTypes[]
 array).
-If a currently attached object has no archived counterpart, it is
-destroyed (as long as it is not currently in use).
+If a resident instance has no archived counterpart, it is destroyed (as
+long as it is not currently in use).
 .It
 Resolve the dependencies of
 .Fa obj
 and its children, so encoded object references may be decoded in the
 following step.
 .It
-Reload the data of
-.Fa obj
-and its descendants, if currently resident (as a result of a previous
-.Fn object_page_in
-invocation), decoding object references (which are encoded as indexes into the
-dependency table).
+If the object or any of its children has resident dynamic data, it is
+reloaded.
 .El
 .Pp
 The
-.Fn object_save
-function creates an archive of the given object in the save
+.Fn AG_ObjectSave
+function creates an archive of the given AG_Object in the save
 directory (the
 .Sq save-path
 config setting).
 The
-.Fn object_save_all
+.Fn AG_ObjectSaveAll
 variant also saves child objects.
 .Pp
 The
-.Fn object_page_in
-function is used to fetch resources specific to an object.
+.Fn AG_ObjectPageIn
+function is used to fetch resources specific to an object instance.
 If the resource is already resident, the reference count is incremented.
 The
 .Fa item
 argument may be one of:
 .Bd -literal
-enum object_page_item {
-	OBJECT_GFX,		/* Graphics */
-	OBJECT_AUDIO,		/* Audio */
-	OBJECT_DATA		/* Object data */
+enum ag_object_page_item {
+	AG_OBJECT_GFX,		/* Graphics */
+	AG_OBJECT_AUDIO,	/* Audio data */
+	AG_OBJECT_DATA		/* Object data */
 };
 .Ed
 .Pp
 The
-.Fn object_page_out
+.Fn AG_ObjectPageOut
 function decrements the reference count on the given resource.
 If the reference count reaches 0, the resource is saved to persistent media
 and released.
@@ -566,36 +560,34 @@ mechanism generates the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn attached "void"
-The object has been attached to a parent object.
+The object has been attached to another.
 This event originates from the parent object.
 The linkage lock is held during the execution of the event handler.
 .It Fn detached "void"
-The object has been detached from its parent object.
+The object has been detached from its parent.
 The linkage lock is held during the execution of the event handler.
-This event originates from the parent object.
+This event originates from the parent.
 .It Fn child-attached "void"
 Same as
 .Fn attached ,
-except that the event is sent from the child object to the parent.
+except that the event is sent from the child to the parent.
 .It Fn child-detached "void"
 Same as
 .Fn detached ,
-except that the event is sent from the child object to the parent.
+except that the event is sent from the child to the parent.
 .It Fn moved "void *new_parent"
 The object has been moved from its current parent to
 .Fa new_parent .
 The linkage lock is held during the execution of the event handler.
-This event originates from the current parent object.
+This event originates from the previous parent.
 .It Fn renamed "void"
-The object's name has just been modified.
+The object's name has changed.
 .El
-.Sh TROUBLETONS
-If the maximum number of references (0xffffffff-2) is reached, the object
-remains resident and the reference count is no longer incremented or
-decremented.
-.Pp
-Code should be careful not to rely on an object's absolute path being constant,
-since it is possible to move objects between different parents.
+.Sh NOTES
+If the maximum number of references,
+.Dv AG_OBJECT_DEP_MAX ,
+is reached, the object instance remains resident and the reference count
+is no longer incremented or decremented.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,

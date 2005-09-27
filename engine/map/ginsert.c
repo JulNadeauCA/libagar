@@ -1,4 +1,4 @@
-/*	$Csoft: ginsert.c,v 1.3 2005/08/15 02:27:26 vedge Exp $	*/
+/*	$Csoft: ginsert.c,v 1.4 2005/09/20 13:46:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,13 +38,14 @@
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/combo.h>
 
 #include "map.h"
 #include "mapedit.h"
 
 struct ginsert_tool {
-	struct tool tool;
-	enum gfx_snap_mode snap_mode;
+	AG_Maptool tool;
+	enum ag_gfx_snap_mode snap_mode;
 	int replace_mode;
 };
 
@@ -53,56 +54,56 @@ ginsert_init(void *p)
 {
 	struct ginsert_tool *ins = p;
 
-	ins->snap_mode = GFX_SNAP_NOT;
+	ins->snap_mode = AG_GFX_SNAP_NOT;
 	ins->replace_mode = 0;
 
-	tool_push_status(ins, _("Select position on map ($(L)=Insert)"));
+	AG_MaptoolPushStatus(ins, _("Select position on map ($(L)=Insert)"));
 }
 
 static void
 ginsert_pane(void *p, void *con)
 {
 	struct ginsert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	struct radio *rad;
-	struct checkbox *cb;
-	struct combo *com;
-	struct tlist_item *it;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	AG_Radio *rad;
+	AG_Checkbox *cb;
+	AG_Combo *com;
+	AG_TlistItem *it;
 	
-	if ((it = tlist_selected_item(mv->lib_tl)) != NULL) {
-		label_new(con, LABEL_STATIC, _("Object: %s (%s)"),
-		    OBJECT(it->p1)->name, OBJECT(it->p1)->type);
+	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {
+		AG_LabelNew(con, AG_LABEL_STATIC, _("Object: %s (%s)"),
+		    AGOBJECT(it->p1)->name, AGOBJECT(it->p1)->type);
 	}
 	
-	label_new(con, LABEL_STATIC, _("Snap to: "));
-	rad = radio_new(con, gfx_snap_names);
-	widget_bind(rad, "value", WIDGET_INT, &ins->snap_mode);
+	AG_LabelNew(con, AG_LABEL_STATIC, _("Snap to: "));
+	rad = AG_RadioNew(con, agGfxSnapNames);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
-	cb = checkbox_new(con, _("Replace mode"));
-	widget_bind(cb, "state", WIDGET_INT, &ins->replace_mode);
+	cb = AG_CheckboxNew(con, _("Replace mode"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
 }
 
 static int
 ginsert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 {
 	struct ginsert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	int nx = x/MV_TILESZ(mv);
-	int ny = y/MV_TILESZ(mv);
-	struct tlist_item *it;
-	struct object *ob;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	int nx = x/AGMTILESZ(mv);
+	int ny = y/AGMTILESZ(mv);
+	AG_TlistItem *it;
+	AG_Object *ob;
 
 	if (nx == mv->mouse.x && ny == mv->mouse.y)
 		return (0);
 
-	if ((it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	if ((it = AG_TlistSelectedItem(mv->lib_tl)) == NULL ||
 	    strcmp(it->class, "object") != 0 ||
 	    mv->cx == -1 || mv->cy == -1) {
 		return (1);
 	}
 	ob = it->p1;
 
-	tool_set_status(ins, _("Move object %s at [%d,%d] with $(L)."),
+	AG_MaptoolSetStatus(ins, _("Move object %s at [%d,%d] with $(L)."),
 	    ob->name, mv->cx, mv->cy);
 	return (0);
 }
@@ -111,22 +112,22 @@ static int
 ginsert_cursor(void *p, SDL_Rect *rd)
 {
 	struct ginsert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	struct map *m = mv->map;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	AG_Map *m = mv->map;
 
 	return (-1);
 }
 
 static int
-ginsert_effect(void *p, struct node *n)
+ginsert_effect(void *p, AG_Node *n)
 {
 	struct ginsert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	struct map *m = mv->map;
-	struct tlist_item *it;
-	struct actor *go;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	AG_Map *m = mv->map;
+	AG_TlistItem *it;
+	AG_Actor *go;
 
-	if ((it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	if ((it = AG_TlistSelectedItem(mv->lib_tl)) == NULL ||
 	    strcmp(it->class, "object") != 0 ||
 	    mv->cx == -1 || mv->cy == -1) {
 		return (1);
@@ -134,25 +135,25 @@ ginsert_effect(void *p, struct node *n)
 	go = it->p1;
 
 	if (go->parent != NULL) {
-		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
-		TAILQ_REMOVE(&SPACE(go->parent)->actors, go, actors);
-		space_detach(go->parent, go);
+		dprintf("detaching from %s\n", AGOBJECT(go->parent)->name);
+		TAILQ_REMOVE(&AG_SPACE(go->parent)->actors, go, actors);
+		AG_SpaceDetach(go->parent, go);
 	}
 	go->g_map.x = mv->cx;
 	go->g_map.y = mv->cy;
 	go->g_map.l0 = m->cur_layer;
 	go->g_map.l1 = m->cur_layer;
 	
-	if (space_attach(m, go) == -1) {
-		text_tmsg(MSG_ERROR, 1000, "%s: %s", OBJECT(go)->name,
-		    error_get());
+	if (AG_SpaceAttach(m, go) == -1) {
+		AG_TextTmsg(AG_MSG_ERROR, 1000, "%s: %s", AGOBJECT(go)->name,
+		    AG_GetError());
 	} else {
-		TAILQ_INSERT_TAIL(&SPACE(go->parent)->actors, go, actors);
+		TAILQ_INSERT_TAIL(&AG_SPACE(go->parent)->actors, go, actors);
 	}
 	return (1);
 }
 
-const struct tool_ops ginsert_ops = {
+const AG_MaptoolOps agMapGInsertOps = {
 	"Ginsert", N_("Insert geometrical object"),
 	STAMP_TOOL_ICON,
 	sizeof(struct ginsert_tool),

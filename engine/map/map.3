@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.6 2005/07/23 17:54:19 vedge Exp $
+.\"	$Csoft: map.3,v 1.7 2005/09/20 13:46:31 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -55,21 +55,21 @@ playing samples from nearby audio elements.
 .Pp
 Four types of references are currently defined:
 .Pp
-.Bl -tag -width "NODEREF_SPRITE " -compact
-.It NODEREF_SPRITE
+.Bl -tag -width "AG_NITEM_SPRITE " -compact
+.It AG_NITEM_SPRITE
 Pointer to a static image of arbitrary size.
 Visible elements of this type are drawn only when the
 .Va redraw
 flag of the parent map is set.
-.It NODEREF_ANIM
+.It AG_NITEM_ANIM
 Pointer to an animation of arbitrary size.
 Visible elements of this type are redrawn every
 .Va n
 milliseconds (possibly by another thread on a multiprocessor system).
-.It NODEREF_WARP
+.It AG_NITEM_WARP
 Pointer to a node residing another map.
-Geometrical objects coming in contact with this type of element are
-transported to coordinates
+Actors coming in contact with this type of element are transported to
+coordinates
 .Va x ,
 .Va y ,
 .Va z
@@ -94,162 +94,162 @@ A per-element layer attribute also defines the attributed layer.
 .Pp
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr space 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn map_init "void *obj" "const char *name"
+.Fn AG_MapInit "void *obj" "const char *name"
 .Pp
-.Ft "struct map *"
-.Fn map_new "void *parent" "const char *name"
-.Pp
-.Ft int
-.Fn map_alloc_nodes "struct map *map" "u_int w" "u_int h"
-.Pp
-.Ft void
-.Fn map_free_nodes "struct map *map"
+.Ft "AG_Map *"
+.Fn AG_MapNew "void *parent" "const char *name"
 .Pp
 .Ft int
-.Fn map_adjust "struct map *map" "int x" "int y"
+.Fn AG_MapAllocNodes "AG_Map *map" "u_int w" "u_int h"
 .Pp
 .Ft void
-.Fn map_set_zoom "struct map *map" "int camera" "u_int factor"
+.Fn AG_MapFreeNodes "AG_Map *map"
+.Pp
+.Ft int
+.Fn map_adjust "AG_Map *map" "int x" "int y"
+.Pp
+.Ft void
+.Fn AG_MapSetZoom "AG_Map *map" "int camera" "u_int factor"
 .nr nS 0
 .Pp
-.Fn map_init
+.Fn AG_MapInit
 initializes
 .Fa obj
 as a
 .Nm
 identified by the string
 .Fa name .
-.Fn map_new
+.Fn AG_MapNew
 allocates, initializes and attaches a new map to
 .Fa parent ,
 unless the latter is a NULL pointer.
 .Pp
 The
-.Fn map_alloc_nodes
+.Fn AG_MapAllocNodes
 function allocates
 .Fa w
 x
 .Fa h
 nodes, assuming that no node is currently allocated.
-.Fn map_alloc_nodes
+.Fn AG_MapAllocNodes
 returns 0 on success or -1 on failure.
 The maximum allowable geometry is defined by
-.Dv MAP_MAX_WIDTH
+.Dv AG_MAP_MAXWIDTH
 and
-.Dv MAP_MAX_HEIGHT .
+.Dv AG_MAP_MAXHEIGHT .
 The
-.Fn map_free_nodes
+.Fn AG_MapFreeNodes
 function releases the nodes allocated by
 .Fa map .
 .Pp
 The
-.Fn map_resize
+.Fn AG_MapResize
 function reallocates the nodes arrays, initializing the new nodes and
 freeing the excess ones.
-.Fn map_resize
+.Fn AG_MapResize
 returns 0 on sucess or -1 on failure.
 .Pp
 The
-.Fn map_set_zoom
+.Fn AG_MapSetZoom
 function sets the zoom factor for a given map view.
-Geometric entities are displayed to this scale.
+Actors are displayed to this scale.
 .Pp
 .Sh NODE INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn node_init "struct node *node"
+.Fn AG_NodeInit "AG_Node *node"
 .Pp
 .Ft int
-.Fn node_load "struct map *map" "struct netbuf *buf" "struct node *node"
+.Fn AG_NodeLoad "AG_Map *map" "AG_Netbuf *buf" "AG_Node *node"
 .Pp
 .Ft void
-.Fn node_save "const struct map *map, struct netbuf *buf" "const struct node *node"
+.Fn AG_NodeSave "const AG_Map *map, AG_Netbuf *buf" "const AG_Node *node"
 .Pp
 .Ft void
-.Fn node_destroy "struct map *map" "struct node *node"
+.Fn AG_NodeDestroy "AG_Map *map" "AG_Node *node"
 .nr nS 0
 .Pp
 The
-.Fn node_init
+.Fn AG_NodeInit
 function initializes a node.
 The
-.Fn node_destroy
+.Fn AG_NodeDestroy
 function frees resources allocated by a node (such as the reference stack).
 To reinitialize a node, this function must be followed by
-.Fn node_init .
+.Fn AG_NodeInit .
 .Pp
 The
-.Fn node_load
+.Fn AG_NodeLoad
 function loads a node from
 .Fa buf ,
 returning 0 on success or -1 on failure.
-.Fn node_save
+.Fn AG_NodeSave
 saves a node to
 .Fa buf .
 .Sh NODE REFERENCES
 .nr nS 1
 .Ft void
-.Fn noderef_init "struct noderef *r"
+.Fn AG_NitemInit "AG_Nitem *r"
 .Pp
 .Ft void
-.Fn noderef_set_center "struct noderef *r" "int xcenter" "int ycenter"
+.Fn AG_NitemSetCenter "AG_Nitem *r" "int xcenter" "int ycenter"
 .Pp
 .Ft void
-.Fn noderef_set_motion "struct noderef *r" "int xmotion" "int ymotion"
+.Fn AG_NitemSetMotion "AG_Nitem *r" "int xmotion" "int ymotion"
 .Pp
 .Ft void
-.Fn noderef_set_sprite "struct noderef *r" "struct map *m" "void *object" "Uint32 offset"
+.Fn AG_NitemSetSprite "AG_Nitem *r" "AG_Map *m" "void *object" "Uint32 offset"
 .Pp
 .Ft void
-.Fn noderef_set_anim "struct noderef *r" "struct map *m" "void *object" "Uint32 offset"
+.Fn AG_NitemSetAnim "AG_Nitem *r" "AG_Map *m" "void *object" "Uint32 offset"
 .Pp
 .Ft void
-.Fn noderef_set_layer "struct noderef *r" "int layer"
+.Fn AG_NitemSetLayer "AG_Nitem *r" "int layer"
 .Pp
 .Ft void
-.Fn noderef_destroy "struct map *map" "struct noderef *r"
+.Fn AG_NitemDestroy "AG_Map *map" "AG_Nitem *r"
 .Pp
 .Ft int
-.Fn noderef_load "struct map *map, struct netbuf *buf, struct node *node" "struct noderef **r"
+.Fn AG_NitemLoad "AG_Map *map, AG_Netbuf *buf, AG_Node *node" "AG_Nitem **r"
 .Pp
 .Ft void
-.Fn noderef_save "const struct map *map, struct netbuf *buf" "const struct noderef *r"
+.Fn AG_NitemSave "const AG_Map *map, AG_Netbuf *buf" "const AG_Nitem *r"
 .nr nS 0
 .Pp
 The
-.Fn noderef_init
+.Fn AG_NitemInit
 function initializes a node element structure.
 .Pp
 The
-.Fn noderef_set_center
+.Fn AG_NitemSetCenter
 function sets the centering offset of a graphical element.
-.Fn noderef_set_motion
+.Fn AG_NitemSetMotion
 sets the motion offset of a graphical element.
 .Pp
 The functions
-.Fn noderef_set_sprite
+.Fn AG_NitemSetSprite
 and
-.Fn noderef_set_anim
+.Fn AG_NitemSetAnim
 associate a new sprite or animation to the element
 .Fa r
 (of type
-.Dv NODEREF_SPRITE
+.Dv AG_NITEM_SPRITE
 or
-.Dv NODEREF_ANIM ) .
+.Dv AG_NITEM_ANIM ) .
 Unless
 .Fa object
 is NULL, a dependency of type
-.Dv OBJECT_GFX
+.Dv AG_OBJECT_GFX
 is generated by the operation.
 .Pp
 The
-.Fn noderef_set_layer
+.Fn AG_NitemSetLayer
 function associates the graphical element
 .Fa r
 with the given layer.
@@ -257,42 +257,42 @@ The layer does not need to exist; the element will not be visible if that
 is the case.
 .Pp
 The
-.Fn noderef_destroy
+.Fn AG_NitemDestroy
 function frees the resources reserved by a node element.
 It must be followed by
-.Fa noderef_init
+.Fa AG_NitemInit
 to reinitialize the node element structure.
 .Pp
 The
-.Fn noderef_load
+.Fn AG_NitemLoad
 and
-.Fn noderef_save
+.Fn AG_NitemSave
 functions are used to decode and encode an element, respectively.
-.Fn noderef_load
+.Fn AG_NitemLoad
 returns 0 on success or -1 on failure.
 .Sh NODE MANIPULATIONS
 .nr nS 1
 .Ft void
-.Fn node_move_ref "struct map *src_map, struct node *src_node" "struct noderef *src_r, struct map *dst_map" "struct node *dst_node, int dst_layer"
+.Fn AG_NodeMoveItem "AG_Map *src_map, AG_Node *src_node" "AG_Nitem *src_r, AG_Map *dst_map" "AG_Node *dst_node, int dst_layer"
 .Pp
-.Ft "struct noderef *"
-.Fn node_copy_ref "const struct noderef *src_r, struct map *dst_map" "struct node *dst_node, int dst_layer"
+.Ft "AG_Nitem *"
+.Fn AG_NodeCopyItem "const AG_Nitem *src_r, AG_Map *dst_map" "AG_Node *dst_node, int dst_layer"
 .Pp
 .Ft void
-.Fn node_remove_ref "struct map *map, struct node *node, struct noderef *r"
+.Fn AG_NodeDelItem "AG_Map *map, AG_Node *node, AG_Nitem *r"
 .Pp
-.Ft "struct noderef *"
-.Fn node_add_sprite "struct map *map, struct node *node, const void *obj" "Uint32 index"
+.Ft "AG_Nitem *"
+.Fn AG_NodeAddSprite "AG_Map *map, AG_Node *node, const void *obj" "Uint32 index"
 .Pp
-.Ft "struct noderef *"
-.Fn node_add_anim "struct map *map, struct node *node, const void *obj" "Uint32 index"
+.Ft "AG_Nitem *"
+.Fn AG_NodeAddAnim "AG_Map *map, AG_Node *node, const void *obj" "Uint32 index"
 .Pp
-.Ft "struct noderef *"
-.Fn node_add_warp "struct map *map, struct node *dst_node" "const char *new_map, int x, int y, Uint8 dir"
+.Ft "AG_Nitem *"
+.Fn AG_NodeAddWarpPoint "AG_Map *map, AG_Node *dst_node" "const char *new_map, int x, int y, Uint8 dir"
 .nr nS 0
 .Pp
 The
-.Fn node_move_ref
+.Fn AG_NodeMoveItem
 function moves
 .Fa src_r
 from
@@ -305,7 +305,7 @@ The element is associated with the layer
 unless it is -1.
 .Pp
 The
-.Fn node_copy_ref
+.Fn AG_NodeCopyItem
 function inserts a copy of
 .Fa src_r
 on top of
@@ -315,32 +315,32 @@ and associate with
 (unless it is -1).
 .Pp
 The
-.Fn node_remove_ref
+.Fn AG_NodeDelItem
 function detaches and destroys the given node element.
 .Pp
 The
 .Fn node_add_*
 functions create new node elements.
 .Pp
-.Bl -tag -width "node_add_sprite() "
-.It Fn node_add_sprite
+.Bl -tag -width "AG_NodeAddSprite() "
+.It Fn AG_NodeAddSprite
 Creates a graphical element consisting of a single pointer to a
 .Xr SDL_Surface 3 .
 Since graphics are managed by Agar objects, the reference is actually a
 pointer to an object and an index into this object's
 .Va gfx->sprites[]
 array.
-.It Fn node_add_anim
+.It Fn AG_NodeAddAnim
 Creates a graphical element consisting of a series of frames.
 The animation reference consists of a pointer to an object and an index into
 this object's
 .Va gfx->anims[]
 array.
-.It Fn node_add_warp
+.It Fn AG_NodeAddWarpPoint
 Creates a warp point, where
 .Fa new_map
 is the pathname of the destination map (as returned by
-.Fn object_copy_name ) ,
+.Fn AG_ObjectCopyName ) ,
 and the
 .Fa x ,
 .Fa y
@@ -353,17 +353,17 @@ destination map.
 The node operation functions should probably use a state variable instead of
 arguments for the layer number.
 .Pp
-.Dv NODEREF_WARP
+.Dv AG_NITEM_WARP
 could probably be replaced by a "warp" object.
 .Pp
 The
-.Dv NODEREF_REGEN
+.Dv NITEM_REGEN
 and
-.Dv NODEREF_BIO
+.Dv NITEM_BIO
 flags could be replaced by a special type of reference for such attributes.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr object 3
+.Xr AG_Object 3
 .Sh HISTORY
 The
 .Nm

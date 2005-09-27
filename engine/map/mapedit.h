@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.1 2005/04/14 06:19:40 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.2 2005/09/19 01:25:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_MAPEDIT_H_
@@ -11,21 +11,21 @@
 
 #include "begin_code.h"
 
-struct mapedit {
-	struct object obj;
-	struct map copybuf;		/* Copy/paste buffer */
-	struct object pseudo;		/* Pseudo-object (for depkeeping) */
-};
+typedef struct ag_mapeditor {
+	AG_Object obj;
+	AG_Map copybuf;		/* Copy/paste buffer */
+	AG_Object pseudo;		/* Pseudo-object (for depkeeping) */
+} AG_MapEditor;
 
-extern struct mapedit mapedit;
-extern int mapedition;
+extern AG_MapEditor agMapEditor;
+extern int agEditMode;
 
 __BEGIN_DECLS
-void	 mapedit_init(void);
-void	 mapedit_destroy(void *);
-void	 mapedit_load(struct netbuf *);
-void	 mapedit_save(struct netbuf *);
-void	*mapedit_settings(void *);
+void	 AG_MapEditorInit(void);
+void	 AG_MapEditorDestroy(void *);
+void	 AG_MapEditorLoad(AG_Netbuf *);
+void	 AG_MapEditorSave(AG_Netbuf *);
+void	*AG_MapEditorConfig(void *);
 __END_DECLS
 
 #include "close_code.h"

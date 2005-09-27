@@ -1,4 +1,4 @@
-/*	$Csoft: nodesel.c,v 1.5 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: nodesel.c,v 1.6 2005/08/27 04:34:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 
 /* Begin a rectangular selection of nodes. */
 void
-nodesel_begin(struct mapview *mv)
+AG_NodeselBegin(AG_Mapview *mv)
 {
 	mv->esel.set = 0;
 	mv->msel.set = 1;
@@ -48,7 +48,7 @@ nodesel_begin(struct mapview *mv)
 
 /* Apply the temporary rectangular selection. */
 void
-nodesel_end(struct mapview *mv)
+AG_NodeselEnd(AG_Mapview *mv)
 {
 	int excess;
 
@@ -86,27 +86,27 @@ nodesel_end(struct mapview *mv)
 
 	mv->esel.set = 1;
 
-	mapview_status(mv, _("Selected area %d,%d (%dx%d)"),
+	AG_MapviewStatus(mv, _("Selected area %d,%d (%dx%d)"),
 	    mv->esel.x, mv->esel.y, mv->esel.w, mv->esel.h);
 }
 
 /* Begin displacement of the node selection. */
 void
-nodesel_begin_move(struct mapview *mv)
+AG_NodeselBeginMove(AG_Mapview *mv)
 {
-	struct map *mSrc = mv->map;
-	struct map *mTmp = &mv->esel.map;
+	AG_Map *mSrc = mv->map;
+	AG_Map *mTmp = &mv->esel.map;
 	int sx, sy, x, y;
 
-	map_init(mTmp, "");
+	AG_MapInit(mTmp, "");
 
-	if (map_alloc_nodes(mTmp, mv->esel.w, mv->esel.h) == -1)
+	if (AG_MapAllocNodes(mTmp, mv->esel.w, mv->esel.h) == -1)
 		goto fail;
 
-	if (map_push_layer(mSrc, _("(Floating selection)")) == -1)
+	if (AG_MapPushLayer(mSrc, _("(Floating selection)")) == -1)
 		goto fail;
 
-	mapmod_begin(mSrc);
+	AG_MapmodBegin(mSrc);
 
 	for (y = 0, sy = mv->esel.y;
 	     y < mv->esel.h;
@@ -114,13 +114,13 @@ nodesel_begin_move(struct mapview *mv)
 		for (x = 0, sx = mv->esel.x;
 		     x < mv->esel.w;
 		     x++, sx++) {
-			struct node *nSrc = &mSrc->map[sy][sx];
-			struct node *nTmp = &mTmp->map[y][x];
+			AG_Node *nSrc = &mSrc->map[sy][sx];
+			AG_Node *nTmp = &mTmp->map[y][x];
 
-			mapmod_nodechg(mSrc, sx, sy);
+			AG_MapmodNodeChg(mSrc, sx, sy);
 
-			node_copy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
-			node_swap_layers(mSrc, nSrc, mSrc->cur_layer,
+			AG_NodeCopy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
+			AG_NodeSwapLayers(mSrc, nSrc, mSrc->cur_layer,
 			    mSrc->nlayers-1);
 		}
 	}
@@ -132,10 +132,10 @@ fail:
 }
 
 void
-nodesel_update_move(struct mapview *mv, int xRel, int yRel)
+AG_NodeselUpdateMove(AG_Mapview *mv, int xRel, int yRel)
 {
-	struct map *mDst = mv->map;
-	struct map *mTmp = &mv->esel.map;
+	AG_Map *mDst = mv->map;
+	AG_Map *mTmp = &mv->esel.map;
 	int x, y, dx, dy;
 
 	if (mv->esel.x+xRel < 0 || mv->esel.x+mv->esel.w+xRel > mDst->mapw)
@@ -149,7 +149,8 @@ nodesel_update_move(struct mapview *mv, int xRel, int yRel)
 		for (x = 0, dx = mv->esel.x;
 		     x < mv->esel.w;
 		     x++) {
-			node_clear(mDst, &mDst->map[dy][dx], mDst->nlayers-1);
+			AG_NodeRemoveAll(mDst, &mDst->map[dy][dx],
+			    mDst->nlayers-1);
 		}
 	}
 
@@ -159,11 +160,11 @@ nodesel_update_move(struct mapview *mv, int xRel, int yRel)
 		for (x = 0, dx = mv->esel.x+xRel;
 		     x < mv->esel.w;
 		     x++, dx++) {
-			struct node *nTmp = &mTmp->map[y][x];
-			struct node *nDst = &mDst->map[dy][dx];
+			AG_Node *nTmp = &mTmp->map[y][x];
+			AG_Node *nDst = &mDst->map[dy][dx];
 	
-			mapmod_nodechg(mDst, dx, dy);
-			node_copy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
+			AG_MapmodNodeChg(mDst, dx, dy);
+			AG_NodeCopy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
 		}
 	}
 	
@@ -172,10 +173,10 @@ nodesel_update_move(struct mapview *mv, int xRel, int yRel)
 }
 
 void
-nodesel_end_move(struct mapview *mv)
+AG_NodeselEndMove(AG_Mapview *mv)
 {
-	struct map *mDst = mv->map;
-	struct map *mTmp = &mv->esel.map;
+	AG_Map *mDst = mv->map;
+	AG_Map *mTmp = &mv->esel.map;
 	int dx, dy, x, y;
 
 	for (y = 0, dy = mv->esel.y;
@@ -184,8 +185,8 @@ nodesel_end_move(struct mapview *mv)
 		for (x = 0, dx = mv->esel.x;
 		     x < mv->esel.w;
 		     x++, dx++) {
-			struct node *node = &mDst->map[dy][dx];
-			struct noderef *nref;
+			AG_Node *node = &mDst->map[dy][dx];
+			AG_Nitem *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer == mDst->nlayers-1)
@@ -194,32 +195,32 @@ nodesel_end_move(struct mapview *mv)
 		}
 	}
 
-	map_pop_layer(mDst);
-	mapmod_end(mDst);
+	AG_MapPopLayer(mDst);
+	AG_MapmodEnd(mDst);
 	
-	map_reinit(mTmp);
+	AG_MapReinit(mTmp);
 	map_destroy(mTmp);
 	mv->esel.moving = 0;
 }
 
 /* Copy the selection to the copy buffer. */
 int
-nodesel_copy(struct tool *t, SDLKey key, int state, void *arg)
+AG_NodeselCopy(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct mapview *mv = t->mv;
-	struct map *copybuf = &mapedit.copybuf;
-	struct map *m = mv->map;
+	AG_Mapview *mv = t->mv;
+	AG_Map *copybuf = &agMapEditor.copybuf;
+	AG_Map *m = mv->map;
 	int sx, sy, dx, dy;
 
 	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to copy."));
+		AG_TextMsg(AG_MSG_ERROR, _("There is no selection to copy."));
 		return (0);
 	}
 	if (copybuf->map != NULL) {
-		map_free_nodes(copybuf);
+		AG_MapFreeNodes(copybuf);
 	}
-	if (map_alloc_nodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
-		text_msg(MSG_ERROR, "%s", error_get());
+	if (AG_MapAllocNodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		return (0);
 	}
 
@@ -229,7 +230,7 @@ nodesel_copy(struct tool *t, SDLKey key, int state, void *arg)
 		for (sx = mv->esel.x, dx = 0;
 		     sx < mv->esel.x + mv->esel.w;
 		     sx++, dx++) {
-			node_copy(m, &m->map[sy][sx], m->cur_layer, copybuf,
+			AG_NodeCopy(m, &m->map[sy][sx], m->cur_layer, copybuf,
 			    &copybuf->map[dy][dx], 0);
 		}
 	}
@@ -237,15 +238,15 @@ nodesel_copy(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 int
-nodesel_paste(struct tool *t, SDLKey key, int state, void *arg)
+AG_NodeselPaste(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct mapview *mv = t->mv;
-	struct map *copybuf = &mapedit.copybuf;
-	struct map *m = mv->map;
+	AG_Mapview *mv = t->mv;
+	AG_Map *copybuf = &agMapEditor.copybuf;
+	AG_Map *m = mv->map;
 	int sx, sy, dx, dy;
 	
 	if (copybuf->map == NULL) {
-		text_msg(MSG_ERROR, _("The copy buffer is empty!"));
+		AG_TextMsg(AG_MSG_ERROR, _("The copy buffer is empty!"));
 		return (0);
 	}
 
@@ -270,7 +271,7 @@ nodesel_paste(struct tool *t, SDLKey key, int state, void *arg)
 		for (sx = 0, dx = mv->esel.x;
 		     sx < copybuf->mapw && dx < m->mapw;
 		     sx++, dx++) {
-			node_copy(copybuf, &copybuf->map[sy][sx], 0,
+			AG_NodeCopy(copybuf, &copybuf->map[sy][sx], 0,
 			    m, &m->map[dy][dx], m->cur_layer);
 		}
 	}
@@ -278,10 +279,10 @@ nodesel_paste(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 int
-nodesel_kill(struct tool *t, SDLKey key, int state, void *arg)
+AG_NodeselKill(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
 	int x, y;
 
 	if (!mv->esel.set)
@@ -292,44 +293,44 @@ nodesel_kill(struct tool *t, SDLKey key, int state, void *arg)
 
 	for (y = mv->esel.y; y < mv->esel.y + mv->esel.h; y++) {
 		for (x = mv->esel.x; x < mv->esel.x + mv->esel.w; x++) {
-			node_clear(m, &m->map[y][x], m->cur_layer);
+			AG_NodeRemoveAll(m, &m->map[y][x], m->cur_layer);
 		}
 	}
 	return (1);
 }
 
 int
-nodesel_cut(struct tool *t, SDLKey key, int state, void *arg)
+AG_NodeselCut(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct mapview *mv = t->mv;
+	AG_Mapview *mv = t->mv;
 
 	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to cut."));
+		AG_TextMsg(AG_MSG_ERROR, _("There is no selection to cut."));
 		return (0);
 	}
-	nodesel_copy(t, 0, 1, NULL);
-	nodesel_kill(t, 0, 1, NULL);
+	AG_NodeselCopy(t, 0, 1, NULL);
+	AG_NodeselKill(t, 0, 1, NULL);
 	return (1);
 }
 
 static void
 nodesel_init(void *p)
 {
-	tool_bind_key(p, KMOD_CTRL, SDLK_c, nodesel_copy, NULL);
-	tool_bind_key(p, KMOD_CTRL, SDLK_v, nodesel_paste, NULL);
-	tool_bind_key(p, KMOD_CTRL, SDLK_x, nodesel_cut, NULL);
-	tool_bind_key(p, KMOD_CTRL, SDLK_k, nodesel_kill, NULL);
-	tool_bind_key(p, 0, SDLK_DELETE, nodesel_kill, NULL);
+	AG_MaptoolBindKey(p, KMOD_CTRL, SDLK_c, AG_NodeselCopy, NULL);
+	AG_MaptoolBindKey(p, KMOD_CTRL, SDLK_v, AG_NodeselPaste, NULL);
+	AG_MaptoolBindKey(p, KMOD_CTRL, SDLK_x, AG_NodeselCut, NULL);
+	AG_MaptoolBindKey(p, KMOD_CTRL, SDLK_k, AG_NodeselKill, NULL);
+	AG_MaptoolBindKey(p, 0, SDLK_DELETE, AG_NodeselKill, NULL);
 	
-	tool_push_status(p,
+	AG_MaptoolPushStatus(p,
 	    _("Select a rectangle of nodes with $(L). Drag to displace node "
 	       "elements."));
 }
 
-const struct tool_ops nodesel_ops = {
+const AG_MaptoolOps agMapNodeselOps = {
 	"Nodesel", N_("Select node(s)"),
 	SELECT_NODE_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	nodesel_init,
 	NULL,			/* destroy */

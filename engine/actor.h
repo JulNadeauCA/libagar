@@ -1,4 +1,4 @@
-/*	$Csoft: actor.h,v 1.6 2005/08/27 04:39:59 vedge Exp $	*/
+/*	$Csoft: actor.h,v 1.1 2005/09/20 13:46:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ACTOR_H_
@@ -8,8 +8,8 @@
 
 #include "begin_code.h"
 
-struct actor_ops {
-	struct object_ops ops;
+typedef struct ag_actor_ops {
+	struct ag_object_ops ops;
 	void (*map)(void *, void *);
 	void (*unmap)(void *, void *);
 	void (*update)(void *, void *);
@@ -22,18 +22,18 @@ struct actor_ops {
 	void (*joyball)(void *, int dev, int ball, int xrel, int yrel);
 	void (*joyhat)(void *, int dev, int hat, int value);
 	void (*joybutton)(void *, int dev, int button, int state);
-};
+} AG_ActorOps;
 
-struct actor {
-	struct object obj;
+typedef struct ag_actor {
+	struct ag_object obj;
 	pthread_mutex_t lock;
 	int flags;
-#define ACTOR_SAVED_FLAGS	0x00
+#define AG_ACTOR_SAVED_FLAGS	0x00
 	void *parent;			/* Parent object (NULL=unset) */
-	enum actor_type {
-		ACTOR_NONE,
-		ACTOR_MAP,
-		ACTOR_SCENE
+	enum ag_actor_type {
+		AG_ACTOR_NONE,
+		AG_ACTOR_MAP,
+		AG_ACTOR_SCENE
 	} type;
 	union {
 		struct {
@@ -49,25 +49,25 @@ struct actor {
 	} data;
 #define g_map data.map
 #define g_scene data.scene
-	TAILQ_ENTRY(actor) actors;
-};
+	TAILQ_ENTRY(ag_actor) actors;
+} AG_Actor;
 
-#define ACTOR(ob) ((struct actor *)(ob))
-#define ACTOR_OPS(ob) ((const struct actor_ops *)OBJECT(ob)->ops)
+#define AGACTOR(ob) ((AG_Actor *)(ob))
+#define AGACTOR_OPS(ob) ((AG_ActorOps *)AGOBJECT(ob)->ops)
 
 __BEGIN_DECLS
-void actor_init(void *, const char *, const char *, const struct actor_ops *);
-void actor_reinit(void *);
-void actor_destroy(void *);
-int  actor_load(void *, struct netbuf *);
-int  actor_save(void *, struct netbuf *);
-void actor_edit(struct actor *, void *);
-void actor_update(void *);
+void	AG_ActorInit(void *, const char *, const char *, const AG_ActorOps *);
+void	AG_ActorReinit(void *);
+void	AG_ActorDestroy(void *);
+int	AG_ActorLoad(void *, AG_Netbuf *);
+int	AG_ActorSave(void *, AG_Netbuf *);
+void	AG_ActorEdit(AG_Actor *, void *);
+void	AG_ActorUpdate(void *);
 
-int  actor_map_sprite(void *, int, int, int, void *, const char *);
-void actor_unmap_sprite(void *);
-void actor_move_sprite(void *, int, int);
-__inline__ int actor_set_sprite(void *, int, int, int, void *, const char *);
+int	AG_ActorMapSprite(void *, int, int, int, void *, const char *);
+void	AG_ActorUnmapSprite(void *);
+void	AG_ActorMoveSprite(void *, int, int);
+__inline__ int AG_ActorSetSprite(void *, int, int, int, void *, const char *);
 __END_DECLS
 
 #include "close_code.h"

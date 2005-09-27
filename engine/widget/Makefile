@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.86 2005/08/21 07:09:39 vedge Exp $
+#	$Csoft: Makefile,v 1.87 2005/09/11 02:33:45 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -12,13 +12,13 @@ LIB_STATIC=	No
 
 SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	textbox.c keycodes.c keysyms.c primitive.c radio.c graph.c bitmap.c \
-	tlist.c scrollbar.c palette.c spinbutton.c titlebar.c toolbar.c \
-	fspinbutton.c combo.c ucombo.c units.c nlunits.c mgraph.c hsvpal.c \
+	tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
+	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
 	tableview.c separator.c colors.c cursors.c notebook.c \
 	animview.c file_dlg.c hpane.c vpane.c objsel.c matview.c
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 textbox.3 \
-	window.3 bitmap.3 scrollbar.3 tlist.3 palette.3 text.3 box.3 \
+	window.3 bitmap.3 scrollbar.3 tlist.3 text.3 box.3 \
 	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3 spinbutton.3 units.3 \
 	hsvpal.3 menu.3
 

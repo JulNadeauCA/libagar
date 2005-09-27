@@ -1,4 +1,4 @@
-/*	$Csoft: insert.c,v 1.12 2005/08/29 04:53:27 vedge Exp $	*/
+/*	$Csoft: insert.c,v 1.13 2005/08/29 05:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/separator.h>
 #include <engine/widget/notebook.h>
+#include <engine/widget/combo.h>
 
 #include "map.h"
 #include "mapedit.h"
@@ -49,35 +50,35 @@
 static void
 insert_init(void *p)
 {
-	struct insert_tool *ins = p;
+	struct ag_map_insert_tool *ins = p;
 
-	ins->snap_mode = GFX_SNAP_NOT;
+	ins->snap_mode = AG_GFX_SNAP_NOT;
 	ins->replace_mode = 0;
 	ins->angle = 0;
-	map_init(&ins->mTmp, "tmp");
+	AG_MapInit(&ins->mTmp, "tmp");
 	ins->mvTmp = NULL;
 
-	tool_push_status(ins,
+	AG_MaptoolPushStatus(ins,
 	    _("Select position on map ($(L)=Insert, $(M)=Rotate)"));
 }
 
 static void
 insert_destroy(void *p)
 {
-	struct insert_tool *ins = p;
+	struct ag_map_insert_tool *ins = p;
 
 	map_destroy(&ins->mTmp);
 }
 
 static void
-snap_sprite(struct insert_tool *ins, struct noderef *r, struct sprite *spr)
+snap_sprite(struct ag_map_insert_tool *ins, AG_Nitem *r, AG_Sprite *spr)
 {
-	struct mapview *mv = TOOL(ins)->mv;
+	AG_Mapview *mv = TOOL(ins)->mv;
 
 	switch (ins->snap_mode) {
-	case GFX_SNAP_NOT:
-		r->r_gfx.xcenter += mv->cxoffs*TILESZ/MV_TILESZ(mv);
-		r->r_gfx.ycenter += mv->cyoffs*TILESZ/MV_TILESZ(mv);
+	case AG_GFX_SNAP_NOT:
+		r->r_gfx.xcenter += mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
+		r->r_gfx.ycenter += mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
 		break;
 	default:
 		break;
@@ -86,27 +87,27 @@ snap_sprite(struct insert_tool *ins, struct noderef *r, struct sprite *spr)
 }
 
 static void
-generate_map(struct insert_tool *ins, struct sprite *spr)
+generate_map(struct ag_map_insert_tool *ins, AG_Sprite *spr)
 {
 	int sy, sx, dx, dy;
-	int sw = spr->su->w/TILESZ;
-	int sh = spr->su->h/TILESZ;
+	int sw = spr->su->w/AGTILESZ;
+	int sh = spr->su->h/AGTILESZ;
 	int nw, nh;
 
-	if (spr->su->w%TILESZ > 0) sw++;
-	if (spr->su->h%TILESZ > 0) sh++;
+	if (spr->su->w%AGTILESZ > 0) sw++;
+	if (spr->su->h%AGTILESZ > 0) sh++;
 
-	map_alloc_nodes(&ins->mTmp, sw, sh);
-	ins->mTmp.origin.x = spr->xOrig/TILESZ;
-	ins->mTmp.origin.y = spr->yOrig/TILESZ;
+	AG_MapAllocNodes(&ins->mTmp, sw, sh);
+	ins->mTmp.origin.x = spr->xOrig/AGTILESZ;
+	ins->mTmp.origin.y = spr->yOrig/AGTILESZ;
 	for (sy = 0, dy = 0;
 	     sy < spr->su->h;
-	     sy += TILESZ, dy++) {
+	     sy += AGTILESZ, dy++) {
 		for (sx = 0, dx = 0;
 		     sx < spr->su->w;
-		     sx += TILESZ, dx++) {
-			struct node *dn;
-			struct noderef *r;
+		     sx += AGTILESZ, dx++) {
+			AG_Node *dn;
+			AG_Nitem *r;
 			int dw, dh, nlayer;
 
 			if (dx >= ins->mTmp.mapw ||
@@ -117,28 +118,28 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 			dw = spr->su->w - sx;
 			dh = spr->su->h - sy;
 
-			r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
-			noderef_init(r, NODEREF_SPRITE);
-			noderef_set_sprite(r, &ins->mTmp, spr->pgfx->pobj,
+			r = Malloc(sizeof(AG_Nitem), M_MAP_NITEM);
+			AG_NitemInit(r, AG_NITEM_SPRITE);
+			AG_NitemSetSprite(r, &ins->mTmp, spr->pgfx->pobj,
 			    spr->index);
 
-			r->r_gfx.rs.x = dx*TILESZ;
-			r->r_gfx.rs.y = dy*TILESZ;
-			r->r_gfx.rs.w = (dw >= TILESZ) ? TILESZ : dw;
-			r->r_gfx.rs.h = (dh >= TILESZ) ? TILESZ : dh;
-			r->flags |= SPRITE_ATTR2(spr,dx,dy);
+			r->r_gfx.rs.x = dx*AGTILESZ;
+			r->r_gfx.rs.y = dy*AGTILESZ;
+			r->r_gfx.rs.w = (dw >= AGTILESZ) ? AGTILESZ : dw;
+			r->r_gfx.rs.h = (dh >= AGTILESZ) ? AGTILESZ : dh;
+			r->flags |= AG_SPRITE_ATTR2(spr,dx,dy);
 
-			nlayer = SPRITE_LAYER2(spr,dx,dy);
+			nlayer = AG_SPRITE_LAYER2(spr,dx,dy);
 			if (nlayer < 0) {
 				nlayer = 0;
 			} else {
 				if (nlayer >= ins->mTmp.nlayers)
-					map_push_layer(&ins->mTmp, "");
+					AG_MapPushLayer(&ins->mTmp, "");
 			}
 			r->layer = nlayer;
 			
 			/* XXX also need to rotate the whole map */
-	//		transform_rotate(r, ins->angle);
+	//		AG_TransformRotate(r, ins->angle);
 
 			TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 		}
@@ -148,65 +149,65 @@ generate_map(struct insert_tool *ins, struct sprite *spr)
 static void
 insert_pane(void *p, void *con)
 {
-	struct insert_tool *ins = p;
-	struct radio *rad;
-	struct checkbox *cb;
-	struct spinbutton *sb;
-	struct combo *com;
-	struct tlist_item *it;
-	struct mapview *mvMain = TOOL(ins)->mv;
-	struct mapview *mv;
-	struct sprite *spr;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
+	struct ag_map_insert_tool *ins = p;
+	AG_Radio *rad;
+	AG_Checkbox *cb;
+	AG_Spinbutton *sb;
+	AG_Combo *com;
+	AG_TlistItem *it;
+	AG_Mapview *mvMain = TOOL(ins)->mv;
+	AG_Mapview *mv;
+	AG_Sprite *spr;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
 
-	if ((it = tlist_selected_item(mvMain->lib_tl)) == NULL ||
+	if ((it = AG_TlistSelectedItem(mvMain->lib_tl)) == NULL ||
 	     strcmp(it->class, "tile") != 0) {
 		return;
 	}
 	spr = it->p1;
 	
-	nb = notebook_new(con, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
-	ntab = notebook_add_tab(nb, _("Tiles"), BOX_VERT);
-	mv = ins->mvTmp = mapview_new(ntab, &ins->mTmp,
-	    MAPVIEW_EDIT|MAPVIEW_GRID, NULL, NULL);
-	mapview_prescale(mv, 7, 7);
-	mapview_select_tool(mv,
-	    mapview_reg_tool(mv, &nodesel_ops, &ins->mTmp),
+	nb = AG_NotebookNew(con, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_WFILL);
+	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
+	mv = ins->mvTmp = AG_MapviewNew(ntab, &ins->mTmp,
+	    AG_MAPVIEW_EDIT|AG_MAPVIEW_GRID, NULL, NULL);
+	AG_MapviewPrescale(mv, 7, 7);
+	AG_MapviewSelectTool(mv,
+	    AG_MapviewRegTool(mv, &agMapNodeselOps, &ins->mTmp),
 	    &ins->mTmp);
 	generate_map(ins, spr);
 	
-	ntab = notebook_add_tab(nb, _("Settings"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
-		label_new(ntab, LABEL_STATIC, _("Snap to: "));
-		rad = radio_new(ntab, gfx_snap_names);
-		widget_bind(rad, "value", WIDGET_INT, &ins->snap_mode);
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
+		rad = AG_RadioNew(ntab, agGfxSnapNames);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
-		cb = checkbox_new(ntab, _("Replace mode"));
-		widget_bind(cb, "state", WIDGET_INT, &ins->replace_mode);
+		cb = AG_CheckboxNew(ntab, _("Replace mode"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
 
-		sb = spinbutton_new(ntab, _("Rotation: "));
-		widget_bind(sb, "value", WIDGET_INT, &ins->angle);
-		spinbutton_set_range(sb, 0, 360);
-		spinbutton_set_increment(sb, 90);
+		sb = AG_SpinbuttonNew(ntab, _("Rotation: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ins->angle);
+		AG_SpinbuttonSetRange(sb, 0, 360);
+		AG_SpinbuttonSetIncrement(sb, 90);
 	}
 }
 
 static int
-insert_effect(void *p, struct node *node)
+insert_effect(void *p, AG_Node *node)
 {
-	struct insert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	struct map *mSrc = &ins->mTmp;
-	struct map *mDst = mv->map;
+	struct ag_map_insert_tool *ins = p;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	AG_Map *mSrc = &ins->mTmp;
+	AG_Map *mDst = mv->map;
 	int sx, sy, sx0, sy0, sx1, sy1;
 	int dx, dy, dx0, dy0;
 	int l;
-	struct tlist_item *it;
-	struct sprite *spr;
+	AG_TlistItem *it;
+	AG_Sprite *spr;
 	
 	if (mv->lib_tl == NULL ||
-	    (it = tlist_selected_item(mv->lib_tl)) == 0 ||
+	    (it = AG_TlistSelectedItem(mv->lib_tl)) == 0 ||
 	    strcmp(it->class, "tile") != 0) {
 		return (1);
 	}
@@ -228,15 +229,15 @@ insert_effect(void *p, struct node *node)
 		dy0 = mv->cy - mSrc->origin.y;
 	}
 
-	mapmod_begin(mDst);
+	AG_MapmodBegin(mDst);
 	for (sy = sy0, dy = dy0;
 	     sy <= sy1 && dy < mDst->maph;
 	     sy++, dy++) {
 		for (sx = sx0, dx = dx0;
 		     sx <= sx1 && dx < mDst->mapw;
 		     sx++, dx++) {
-			struct node *sn, *dn;
-			struct noderef *r1, *r2;
+			AG_Node *sn, *dn;
+			AG_Nitem *r1, *r2;
 
 			if (dx < 0 || dx >= mDst->mapw ||
 			    dy < 0 || dy >= mDst->maph) {
@@ -245,55 +246,55 @@ insert_effect(void *p, struct node *node)
 			sn = &mSrc->map[sy][sx]; 
 			dn = &mDst->map[dy][dx];
 			
-			mapmod_nodechg(mDst, dx, dy);
+			AG_MapmodNodeChg(mDst, dx, dy);
 
 			if (ins->replace_mode) {
-				node_clear(mDst, dn, mDst->cur_layer);
+				AG_NodeRemoveAll(mDst, dn, mDst->cur_layer);
 			}
 			TAILQ_FOREACH(r1, &sn->nrefs, nrefs) {
-				r2 = node_copy_ref(r1, mDst, dn, -1);
+				r2 = AG_NodeCopyItem(r1, mDst, dn, -1);
 				r2->layer += mDst->cur_layer;
 				while (r2->layer >= mDst->nlayers) {
-					if (map_push_layer(mDst, "") == 0)
-						mapmod_layeradd(mDst,
+					if (AG_MapPushLayer(mDst, "") == 0)
+						AG_MapmodLayerAdd(mDst,
 						    mDst->nlayers - 1);
 				}
-				if (ins->snap_mode == GFX_SNAP_NOT) {
+				if (ins->snap_mode == AG_GFX_SNAP_NOT) {
 					r2->r_gfx.xcenter +=
-					    mv->cxoffs*TILESZ/MV_TILESZ(mv);
+					    mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
 					r2->r_gfx.ycenter +=
-					    mv->cyoffs*TILESZ/MV_TILESZ(mv);
+					    mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
 				}
 			}
 		}
 	}
-	mapmod_end(mDst);
+	AG_MapmodEnd(mDst);
 	return (1);
 }
 
 static int
 insert_cursor(void *p, SDL_Rect *rd)
 {
-	struct insert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	struct map *mSrc = &ins->mTmp;
-	struct tlist_item *it;
-	struct sprite *spr;
+	struct ag_map_insert_tool *ins = p;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	AG_Map *mSrc = &ins->mTmp;
+	AG_TlistItem *it;
+	AG_Sprite *spr;
 	int sx0, sy0, sx1, sy1;
 	int dx0, dy0, dx1, dy1;
 	int dx, dy, sx, sy;
 
 	if (mv->lib_tl == NULL ||
-	   (it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	   (it = AG_TlistSelectedItem(mv->lib_tl)) == NULL ||
 	   strcmp(it->class, "tile") != 0 ||
 	   (spr = it->p1) == NULL || spr->su == NULL) {
 		return (-1);
 	}
 
-	if (ins->snap_mode == GFX_SNAP_NOT) {
-		primitives.rect_outlined(mv, rd->x+1, rd->y+1,
-		    MV_TILESZ(mv)-1, MV_TILESZ(mv)-1,
-		    COLOR(MAPVIEW_GRID_COLOR));
+	if (ins->snap_mode == AG_GFX_SNAP_NOT) {
+		agPrim.rect_outlined(mv, rd->x+1, rd->y+1,
+		    AGMTILESZ(mv)-1, AGMTILESZ(mv)-1,
+		    AG_COLOR(MAPVIEW_GRID_COLOR));
 	}
 	
 	if (ins->mvTmp->esel.set) {
@@ -301,27 +302,27 @@ insert_cursor(void *p, SDL_Rect *rd)
 		sy0 = ins->mvTmp->esel.y;
 		sx1 = sx0 + ins->mvTmp->esel.w - 1;
 		sy1 = sy0 + ins->mvTmp->esel.h - 1;
-		dx0 = WIDGET(mv)->cx + rd->x;
-		dy0 = WIDGET(mv)->cy + rd->y;
+		dx0 = AGWIDGET(mv)->cx + rd->x;
+		dy0 = AGWIDGET(mv)->cy + rd->y;
 	} else {
 		sx0 = 0;
 		sy0 = 0;
 		sx1 = mSrc->mapw-1;
 		sy1 = mSrc->maph-1;
-		dx0 = WIDGET(mv)->cx + rd->x - mSrc->origin.x*MV_TILESZ(mv);
-		dy0 = WIDGET(mv)->cy + rd->y - mSrc->origin.y*MV_TILESZ(mv);
+		dx0 = AGWIDGET(mv)->cx + rd->x - mSrc->origin.x*AGMTILESZ(mv);
+		dy0 = AGWIDGET(mv)->cy + rd->y - mSrc->origin.y*AGMTILESZ(mv);
 	}
-	if (ins->snap_mode == GFX_SNAP_NOT) {
-		dx0 += mv->cxoffs*TILESZ/MV_TILESZ(mv);
-		dy0 += mv->cyoffs*TILESZ/MV_TILESZ(mv);
+	if (ins->snap_mode == AG_GFX_SNAP_NOT) {
+		dx0 += mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
+		dy0 += mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
 	}
-	for (sy = sy0, dy = dy0; sy <= sy1; sy++, dy += MV_TILESZ(mv)) {
-		for (sx = sx0, dx = dx0; sx <= sx1; sx++, dx += MV_TILESZ(mv)) {
-			struct node *sn = &mSrc->map[sy][sx];
-			struct noderef *r;
+	for (sy = sy0, dy = dy0; sy <= sy1; sy++, dy += AGMTILESZ(mv)) {
+		for (sx = sx0, dx = dx0; sx <= sx1; sx++, dx += AGMTILESZ(mv)) {
+			AG_Node *sn = &mSrc->map[sy][sx];
+			AG_Nitem *r;
 
 			TAILQ_FOREACH(r, &sn->nrefs, nrefs)
-				noderef_draw(mv->map, r, dx, dy, mv->cam);
+				AG_NitemDraw(mv->map, r, dx, dy, mv->cam);
 		}
 	}
 	return (0);
@@ -330,7 +331,7 @@ insert_cursor(void *p, SDL_Rect *rd)
 static int
 insert_mousebuttondown(void *p, int x, int y, int btn)
 {
-	struct insert_tool *ins = p;
+	struct ag_map_insert_tool *ins = p;
 
 	if (btn == SDL_BUTTON_MIDDLE) {
 		ins->angle = (ins->angle + 90) % 360;
@@ -342,32 +343,32 @@ insert_mousebuttondown(void *p, int x, int y, int btn)
 static int
 insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 {
-	struct insert_tool *ins = p;
-	struct mapview *mv = TOOL(ins)->mv;
-	int nx = x/MV_TILESZ(mv);
-	int ny = y/MV_TILESZ(mv);
-	struct tlist_item *it;
-	struct object *ob;
+	struct ag_map_insert_tool *ins = p;
+	AG_Mapview *mv = TOOL(ins)->mv;
+	int nx = x/AGMTILESZ(mv);
+	int ny = y/AGMTILESZ(mv);
+	AG_TlistItem *it;
+	AG_Object *ob;
 
 	if (nx == mv->mouse.x && ny == mv->mouse.y)
 		return (0);
 
-	if ((it = tlist_selected_item(mv->lib_tl)) == NULL ||
+	if ((it = AG_TlistSelectedItem(mv->lib_tl)) == NULL ||
 	    mv->cx == -1 || mv->cy == -1) {
 		return (1);
 	}
 	if (strcmp(it->class, "tile") == 0) {
-		tool_set_status(ins,
+		AG_MaptoolSetStatus(ins,
 		    _("Insert %s tile at [%d,%d] ($(L)=Confirm, $(M)=Rotate)."),
 		    it->text, mv->cx, mv->cy);
 	}
 	return (0);
 }
 
-const struct tool_ops insert_ops = {
+const AG_MaptoolOps agMapInsertOps = {
 	"Insert", N_("Insert node element"),
 	STAMP_TOOL_ICON,
-	sizeof(struct insert_tool),
+	sizeof(struct ag_map_insert_tool),
 	TOOL_HIDDEN,
 	insert_init,
 	insert_destroy,

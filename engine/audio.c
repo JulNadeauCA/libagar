@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.15 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.16 2005/07/16 16:07:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,25 +39,25 @@ enum {
 	NSAMPLES_GROW =	4
 };
 
-static TAILQ_HEAD(, audio) audioq = TAILQ_HEAD_INITIALIZER(audioq);
-pthread_mutex_t		   audioq_lock = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, ag_audio) ag_audioq = TAILQ_HEAD_INITIALIZER(ag_audioq);
+pthread_mutex_t		      ag_audioq_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* Insert a new sample. */
 Uint32
-audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
+AG_AudioInsertSample(AG_Audio *audio, SDL_AudioSpec *spec, Uint8 *data,
     size_t size)
 {
-	struct sample *nsamp;
+	AG_AudioSample *nsamp;
 
 	if (audio->samples == NULL) {
-		audio->samples = Malloc(
-		    NSAMPLES_INIT*sizeof(struct sample), M_AUDIO);
+		audio->samples = Malloc(NSAMPLES_INIT*sizeof(AG_AudioSample),
+		    M_AUDIO);
 		audio->maxsamples = NSAMPLES_INIT;
 		audio->nsamples = 0;
 	} else if (audio->nsamples+1 > audio->maxsamples) {
 		audio->maxsamples += NSAMPLES_GROW;
-		audio->samples = Realloc(audio->samples, audio->maxsamples *
-		                                         sizeof(struct sample));
+		audio->samples = Realloc(audio->samples,
+		    audio->maxsamples*sizeof(AG_AudioSample));
 	}
 
 	nsamp = &audio->samples[audio->nsamples];
@@ -69,9 +69,9 @@ audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
 
 /* Disable garbage collection. */
 void
-audio_wire(struct audio *audio)
+AG_AudioWire(AG_Audio *audio)
 {
-	audio->used = AUDIO_MAX_USED;
+	audio->used = AG_AUDIO_MAX_USED;
 }
 
 /*
@@ -79,57 +79,56 @@ audio_wire(struct audio *audio)
  * If the package is resident, increment the reference count.
  * Otherwise, load the package from disk.
  */
-struct audio *
-audio_fetch(const char *name)
+AG_Audio *
+AG_AudioFetch(const char *name)
 {
 	char path[MAXPATHLEN];
-	struct audio *audio = NULL;
-	struct den *den;
+	AG_Audio *audio;
+	AG_Den *den;
 
-	pthread_mutex_lock(&audioq_lock);
+	pthread_mutex_lock(&ag_audioq_lock);
 
-	TAILQ_FOREACH(audio, &audioq, audios) {
+	TAILQ_FOREACH(audio, &ag_audioq, audios) {
 		if (strcmp(audio->name, name) == 0)
 			break;
 	}
 	if (audio != NULL) {
-		if (++audio->used > AUDIO_MAX_USED) {
-			audio->used = AUDIO_MAX_USED;
+		if (++audio->used > AG_AUDIO_MAX_USED) {
+			audio->used = AG_AUDIO_MAX_USED;
 		}
 		goto out;
 	}
 
-	if (config_search_file("load-path", name, "den", path, sizeof(path))
-	    == -1)
+	if (AG_ConfigFile("load-path", name, "den", path, sizeof(path)) == -1)
 		goto fail;
 
-	audio = Malloc(sizeof(struct audio), M_AUDIO);
+	audio = Malloc(sizeof(AG_Audio), M_AUDIO);
 	audio->name = Strdup(name);
 	audio->samples = NULL;
 	audio->nsamples = 0;
 	audio->maxsamples = 0;
 	audio->used = 1;
 
-	if ((den = den_open(path, DEN_READ)) == NULL)
+	if ((den = AG_DenOpen(path, AG_DEN_READ)) == NULL)
 		goto fail;
 #if 0
 	for (i = 0; i < den->nmembers; i++) {
 		if (wav_load(den->buf, den->members[i].offs, audio) == -1)
-			fatal("loading wav #%d: %s", i, error_get());
+			fatal("loading wav #%d: %s", i, AG_GetError());
 	}
 	for (i = 0; i < den->nmembers; i++) {
 		if (ogg_load(den->buf, den->members[i].offs, audio) == -1)
-			fatal("loading ogg #%d: %s", i, error_get());
+			fatal("loading ogg #%d: %s", i, AG_GetError());
 	}
 #endif
-	den_close(den);
+	AG_DenClose(den);
 
-	TAILQ_INSERT_HEAD(&audioq, audio, audios);
+	TAILQ_INSERT_HEAD(&ag_audioq, audio, audios);
 out:
-	pthread_mutex_unlock(&audioq_lock);
+	pthread_mutex_unlock(&ag_audioq_lock);
 	return (audio);
 fail:
-	pthread_mutex_unlock(&audioq_lock);
+	pthread_mutex_unlock(&ag_audioq_lock);
 	if (audio != NULL) {
 		Free(audio->name, 0);
 		Free(audio, M_AUDIO);
@@ -139,13 +138,13 @@ fail:
 
 /* Release an audio package that is no longer in use. */
 void
-audio_destroy(struct audio *audio)
+AG_AudioDestroy(AG_Audio *audio)
 {
 	Uint32 i;
 
-	pthread_mutex_lock(&audioq_lock);
-	TAILQ_REMOVE(&audioq, audio, audios);
-	pthread_mutex_unlock(&audioq_lock);
+	pthread_mutex_lock(&ag_audioq_lock);
+	TAILQ_REMOVE(&ag_audioq, audio, audios);
+	pthread_mutex_unlock(&ag_audioq_lock);
 
 	for (i = 0; i < audio->nsamples; i++)
 		Free(audio->samples[i].data, M_AUDIO);
@@ -155,14 +154,3 @@ audio_destroy(struct audio *audio)
 	Free(audio, M_AUDIO);
 }
 
-#ifdef DEBUG
-struct sample *
-audio_get_sample(struct object *ob, Uint32 i)
-{
-	if (ob->audio == NULL)
-		fatal("no audio in %s", ob->name);
-	if (i > ob->audio->nsamples)
-		fatal("no sample at %s:%d", ob->name, i);
-	return (&ob->audio->samples[i]);
-}
-#endif /* DEBUG */

@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.22 2005/08/22 02:20:52 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.23 2005/09/17 07:34:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,11 +31,11 @@
 
 #include "colors.h"
 
-Uint32 colors[LAST_COLOR];
-Uint32 colors_border[7];
-int colors_border_size = 7;
+Uint32 agColors[LAST_COLOR];
+Uint32 agColorsBorder[7];
+int    agColorsBorderSize = 7;
 
-const char *colors_names[] = {
+const char *agColorNames[] = {
 	N_("Background"),
 	N_("Frame"),
 	N_("Text"),
@@ -108,117 +108,117 @@ const char *colors_names[] = {
 };
 
 void
-colors_init(void)
+AG_ColorsInit(void)
 {
-	colors[BG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
-	colors[FRAME_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[TEXT_COLOR] = SDL_MapRGB(vfmt, 250, 250, 250);
-	colors[WINDOW_BG_COLOR] = SDL_MapRGB(vfmt, 45, 45, 45);
-	colors[WINDOW_HI_COLOR] = SDL_MapRGB(vfmt, 90, 90, 85);
-	colors[WINDOW_LO_COLOR] = SDL_MapRGB(vfmt, 36, 36, 36);
-	colors[TITLEBAR_FOCUSED_COLOR] = SDL_MapRGB(vfmt, 40, 50, 60);
-	colors[TITLEBAR_UNFOCUSED_COLOR] = SDL_MapRGB(vfmt, 35, 35, 35);
-	colors[TITLEBAR_CAPTION_COLOR] = colors[TEXT_COLOR];
-	colors[BUTTON_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[BUTTON_TXT_COLOR] = SDL_MapRGB(vfmt, 240, 240, 240);
-	colors[BUTTON_DIS_COLOR] = SDL_MapRGB(vfmt, 110, 110, 110);
-	colors[CHECKBOX_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[CHECKBOX_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[GRAPH_BG_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);
-	colors[GRAPH_XAXIS_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);
-	colors[HSVPAL_CIRCLE_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
-	colors[HSVPAL_TILE1_COLOR] = SDL_MapRGB(vfmt, 140, 140, 140);
-	colors[HSVPAL_TILE2_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
-	colors[MENU_UNSEL_COLOR] = SDL_MapRGB(vfmt, 70, 70, 70);
-	colors[MENU_SEL_COLOR] = SDL_MapRGB(vfmt, 40, 40, 110);
-	colors[MENU_OPTION_COLOR] = SDL_MapRGB(vfmt, 223, 207, 128);
-	colors[MENU_TXT_COLOR] = SDL_MapRGB(vfmt, 230, 230, 230);
-	colors[MENU_SEP1_COLOR] = SDL_MapRGB(vfmt, 60, 60, 60);
-	colors[MENU_SEP2_COLOR] = SDL_MapRGB(vfmt, 120, 120, 120);
-	colors[NOTEBOOK_BG_COLOR] = SDL_MapRGB(vfmt, 60, 60, 60);
-	colors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(vfmt, 70, 70, 70);
-	colors[NOTEBOOK_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[RADIO_SEL_COLOR] = SDL_MapRGB(vfmt, 210, 210, 210);
-	colors[RADIO_OVER_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[RADIO_HI_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
-	colors[RADIO_LO_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
-	colors[RADIO_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[SCROLLBAR_COLOR] = SDL_MapRGB(vfmt, 120, 120, 120);
-	colors[SCROLLBAR_BTN_COLOR] = colors[BUTTON_COLOR];
-	colors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[SEPARATOR_LINE2_COLOR] = SDL_MapRGB(vfmt, 25, 25, 25);
-	colors[TABLEVIEW_COLOR] = colors[FRAME_COLOR];
-	colors[TABLEVIEW_HEAD_COLOR] = colors[FRAME_COLOR];
-	colors[TABLEVIEW_HTXT_COLOR] = colors[TEXT_COLOR];
-	colors[TABLEVIEW_CTXT_COLOR] = colors[TEXT_COLOR];
-	colors[TABLEVIEW_LINE_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);
-	colors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
-	colors[TEXTBOX_RW_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[TEXTBOX_RO_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[TEXTBOX_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(vfmt, 251, 255, 197);
-	colors[TLIST_TXT_COLOR] = colors[TEXT_COLOR];
-	colors[TLIST_BG_COLOR] = colors[FRAME_COLOR];
-	colors[TLIST_LINE_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);
-	colors[TLIST_SEL_COLOR] = SDL_MapRGB(vfmt, 50, 50, 120);
-	colors[MAPVIEW_GRID_COLOR] = SDL_MapRGB(vfmt, 200, 200, 200);
-	colors[MAPVIEW_CURSOR_COLOR] = SDL_MapRGB(vfmt, 100, 100, 100);
-	colors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 50, 50, 50);	/* U */
-	colors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 40, 40, 40);	/* U */
-	colors[MAPVIEW_MSEL_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
-	colors[MAPVIEW_ESEL_COLOR] = SDL_MapRGB(vfmt, 180, 180, 180);
-	colors[TILEVIEW_TILE1_COLOR] = SDL_MapRGB(vfmt, 140, 140, 140);
-	colors[TILEVIEW_TILE2_COLOR] = SDL_MapRGB(vfmt, 80, 80, 80);
-	colors[TILEVIEW_TEXTBG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
-	colors[TILEVIEW_TEXT_COLOR] = SDL_MapRGB(vfmt, 240, 240, 240);
-	colors[TRANSPARENT_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
-	colors[HSVPAL_BAR1_COLOR] = SDL_MapRGBA(vfmt, 0, 0, 0, 0);
-	colors[HSVPAL_BAR2_COLOR] = SDL_MapRGBA(vfmt, 240, 240, 240, 0);
-	colors[PANE_COLOR] = SDL_MapRGBA(vfmt, 100, 100, 100, 0);
-	colors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(vfmt, 170, 170, 170, 0);
-	colors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(vfmt, 60, 250, 60);
-	colors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(vfmt, 150, 150, 0);
-	colors[FOCUS_COLOR] = SDL_MapRGB(vfmt, 150, 150, 150);
+	agColors[BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	agColors[FRAME_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[TEXT_COLOR] = SDL_MapRGB(agVideoFmt, 250, 250, 250);
+	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 45, 45, 45);
+	agColors[WINDOW_HI_COLOR] = SDL_MapRGB(agVideoFmt, 90, 90, 85);
+	agColors[WINDOW_LO_COLOR] = SDL_MapRGB(agVideoFmt, 36, 36, 36);
+	agColors[TITLEBAR_FOCUSED_COLOR] = SDL_MapRGB(agVideoFmt, 40, 50, 60);
+	agColors[TITLEBAR_UNFOCUSED_COLOR] = SDL_MapRGB(agVideoFmt, 35, 35, 35);
+	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
+	agColors[BUTTON_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[BUTTON_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 240, 240, 240);
+	agColors[BUTTON_DIS_COLOR] = SDL_MapRGB(agVideoFmt, 110, 110, 110);
+	agColors[CHECKBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[CHECKBOX_TXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[GRAPH_BG_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
+	agColors[GRAPH_XAXIS_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
+	agColors[HSVPAL_CIRCLE_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	agColors[HSVPAL_TILE1_COLOR] = SDL_MapRGB(agVideoFmt, 140, 140, 140);
+	agColors[HSVPAL_TILE2_COLOR] = SDL_MapRGB(agVideoFmt, 80, 80, 80);
+	agColors[MENU_UNSEL_COLOR] = SDL_MapRGB(agVideoFmt, 70, 70, 70);
+	agColors[MENU_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 40, 40, 110);
+	agColors[MENU_OPTION_COLOR] = SDL_MapRGB(agVideoFmt, 223, 207, 128);
+	agColors[MENU_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 230, 230, 230);
+	agColors[MENU_SEP1_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
+	agColors[MENU_SEP2_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
+	agColors[NOTEBOOK_BG_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
+	agColors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 70, 70, 70);
+	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[RADIO_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 210, 210, 210);
+	agColors[RADIO_OVER_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[RADIO_HI_COLOR] = SDL_MapRGB(agVideoFmt, 180, 180, 180);
+	agColors[RADIO_LO_COLOR] = SDL_MapRGB(agVideoFmt, 80, 80, 80);
+	agColors[RADIO_TXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[SCROLLBAR_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
+	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];
+	agColors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[SEPARATOR_LINE2_COLOR] = SDL_MapRGB(agVideoFmt, 25, 25, 25);
+	agColors[TABLEVIEW_COLOR] = agColors[FRAME_COLOR];
+	agColors[TABLEVIEW_HEAD_COLOR] = agColors[FRAME_COLOR];
+	agColors[TABLEVIEW_HTXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[TABLEVIEW_CTXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[TABLEVIEW_LINE_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
+	agColors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
+	agColors[TEXTBOX_RW_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[TEXTBOX_RO_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[TEXTBOX_TXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 251, 255, 197);
+	agColors[TLIST_TXT_COLOR] = agColors[TEXT_COLOR];
+	agColors[TLIST_BG_COLOR] = agColors[FRAME_COLOR];
+	agColors[TLIST_LINE_COLOR] = SDL_MapRGB(agVideoFmt, 40, 40, 40);
+	agColors[TLIST_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
+	agColors[MAPVIEW_GRID_COLOR] = SDL_MapRGB(agVideoFmt, 200, 200, 200);
+	agColors[MAPVIEW_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[MAPVIEW_TILE1_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
+	agColors[MAPVIEW_TILE2_COLOR] = SDL_MapRGB(agVideoFmt, 40, 40, 40);
+	agColors[MAPVIEW_MSEL_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 150);
+	agColors[MAPVIEW_ESEL_COLOR] = SDL_MapRGB(agVideoFmt, 180, 180, 180);
+	agColors[TILEVIEW_TILE1_COLOR] = SDL_MapRGB(agVideoFmt, 140, 140, 140);
+	agColors[TILEVIEW_TILE2_COLOR] = SDL_MapRGB(agVideoFmt, 80, 80, 80);
+	agColors[TILEVIEW_TEXTBG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	agColors[TILEVIEW_TEXT_COLOR] = SDL_MapRGB(agVideoFmt, 240, 240, 240);
+	agColors[TRANSPARENT_COLOR] = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
+	agColors[HSVPAL_BAR1_COLOR] = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
+	agColors[HSVPAL_BAR2_COLOR] = SDL_MapRGBA(agVideoFmt, 240, 240, 240, 0);
+	agColors[PANE_COLOR] = SDL_MapRGBA(agVideoFmt, 100, 100, 100, 0);
+	agColors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(agVideoFmt, 170, 170, 170, 0);
+	agColors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(agVideoFmt, 60, 250, 60);
+	agColors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 0);
+	agColors[FOCUS_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 150);
 
-	colors_border[0] = SDL_MapRGB(vfmt, 92, 92, 92);
-	colors_border[1] = SDL_MapRGB(vfmt, 80, 80, 75);
-	colors_border[2] = SDL_MapRGB(vfmt, 85, 85, 80);
-	colors_border[3] = SDL_MapRGB(vfmt, 100, 100, 95);
-	colors_border[4] = SDL_MapRGB(vfmt, 85, 85, 80);
-	colors_border[5] = SDL_MapRGB(vfmt, 80, 80, 75);
-	colors_border[6] = SDL_MapRGB(vfmt, 0, 255, 0);
+	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
+	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);
+	agColorsBorder[2] = SDL_MapRGB(agVideoFmt, 85, 85, 80);
+	agColorsBorder[3] = SDL_MapRGB(agVideoFmt, 100, 100, 95);
+	agColorsBorder[4] = SDL_MapRGB(agVideoFmt, 85, 85, 80);
+	agColorsBorder[5] = SDL_MapRGB(agVideoFmt, 80, 80, 75);
+	agColorsBorder[6] = SDL_MapRGB(agVideoFmt, 0, 255, 0);
 }
 
 void
-colors_load(struct netbuf *buf)
+AG_ColorsLoad(AG_Netbuf *buf)
 {
 	int i, ncolors;
 
-	ncolors = (int)read_uint32(buf);
+	ncolors = (int)AG_ReadUint32(buf);
 	for (i = 0; i < ncolors; i++)
-		colors[i] = read_color(buf, vfmt);
+		agColors[i] = AG_ReadColor(buf, agVideoFmt);
 
-	ncolors = (int)read_uint32(buf);
+	ncolors = (int)AG_ReadUint32(buf);
 	for (i = 0; i < ncolors; i++)
-		colors_border[i] = read_color(buf, vfmt);
+		agColorsBorder[i] = AG_ReadColor(buf, agVideoFmt);
 }
 
 void
-colors_save(struct netbuf *buf)
+AG_ColorsSave(AG_Netbuf *buf)
 {
 	int i;
 
-	write_uint32(buf, LAST_COLOR);
+	AG_WriteUint32(buf, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {
-		write_color(buf, vfmt, colors[i]);
+		AG_WriteColor(buf, agVideoFmt, agColors[i]);
 	}
-	write_uint32(buf, (Uint32)colors_border_size);
-	for (i = 0; i < colors_border_size; i++) {
-		write_color(buf, vfmt, colors_border[i]);
+	AG_WriteUint32(buf, (Uint32)agColorsBorderSize);
+	for (i = 0; i < agColorsBorderSize; i++) {
+		AG_WriteColor(buf, agVideoFmt, agColorsBorder[i]);
 	}
 }
 
 void
-colors_destroy(void)
+AG_ColorsDestroy(void)
 {
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: engine.3,v 1.5 2005/02/08 15:46:53 vedge Exp $
+.\"	$Csoft: engine.3,v 1.6 2005/06/18 04:25:18 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -49,9 +49,6 @@ mode, the font engine and the attachment of input devices.
 .Ft "int"
 .Fn engine_preinit "const char *progname"
 .Pp
-.Ft "void"
-.Fn engine_set_gfxmode "enum gfx_engine mode"
-.Pp
 .Ft "int"
 .Fn engine_init "void"
 .nr nS 0
@@ -78,30 +75,6 @@ and
 .Fn engine_preinit ,
 several parameters may be set, such as the font engine, the font directory,
 the default font and the graphic mode to use.
-.Pp
-The
-.Fn engine_set_gfxmode
-selects the graphic mode.
-The graphic mode is mostly a hint to the Agar GUI which tells it how to
-optimize certain GUI operations depending on your expected use of the
-frame buffer outside of the GUI (ie. in the background).
-This setting defines, for instance, the way the background is redrawn after
-a window displacement or resizing.
-Available graphic modes include:
-.Bd -literal
-enum gfx_engine {
-	GFX_ENGINE_GUI		/* Direct video/OpenGL, solid background */
-};
-.Ed
-.Pp
-The
-.Dv GFX_ENGINE_GUI
-mode asserts that the background is a solid color.
-When windows are moved or resized under this mode, Agar uses
-.Xr SDL_FillRect 3
-(or
-.Xr glRecti 3
-in OpenGL mode) to redraw parts of the background that need updating.
 .Sh INCLUDE FILES
 The
 .Pa Aq compat/*.h
@@ -145,7 +118,7 @@ For
 .Xr strsep 3 .
 .It Pa Aq engine/loader/netbuf.h
 For the
-.Ft struct netbuf
+.Ft AG_Netbuf
 definition, required by load/save function prototypes.
 .It Pa Aq engine/loader/integral.h
 For saving integers.
@@ -159,7 +132,7 @@ For versioning.
 Generic error handling.
 .It Pa Aq engine/object.h
 Generic
-.Xr object 3
+.Xr AG_Object 3
 types and operations.
 .It Pa Aq engine/event.h
 For the
@@ -169,7 +142,7 @@ definition and generic
 handling.
 .El
 .Sh SEE ALSO
-.Xr object 3 ,
+.Xr AG_Object 3 ,
 .Xr input 3 ,
 .Xr map 3 ,
 .Xr view 3 ,

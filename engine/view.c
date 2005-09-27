@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.186 2005/06/18 04:25:18 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.187 2005/07/16 16:07:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -56,13 +56,13 @@
 #endif
 
 /* Read-only as long as the engine is running. */
-struct viewport *view = NULL;
-SDL_PixelFormat *vfmt = NULL;
-SDL_PixelFormat *sfmt = NULL;
-const SDL_VideoInfo *vinfo;
-int view_screenshot_quality = 75;
+AG_Display *agView = NULL;
+SDL_PixelFormat *agVideoFmt = NULL;
+SDL_PixelFormat *agSurfaceFmt = NULL;
+const SDL_VideoInfo *agVideoInfo;
+int agScreenshotQuality = 75;
 
-const char *view_blend_func_txt[] = {
+const char *agBlendFuncNames[] = {
 	N_("Overlay"),
 	N_("Source"),
 	N_("Destination"),
@@ -74,55 +74,55 @@ const char *view_blend_func_txt[] = {
 };
 
 int
-view_init(enum gfx_engine ge)
+AG_ViewInit(int w, int h, int bpp, u_int flags)
 {
-	int screenflags = SDL_SWSURFACE;
+	Uint32 screenflags = 0;
 	int depth;
 
-	if (view != NULL) {
-		error_set(_("The viewport is already initialized."));
-		return (-1);
+	if (flags & AG_VIDEO_HWSURFACE) {
+		screenflags |= SDL_HWSURFACE;
+	} else {
+		screenflags |= SDL_SWSURFACE;
 	}
+	if (flags & AG_VIDEO_RESIZABLE) { screenflags |= SDL_RESIZABLE; }
+	if (flags & AG_VIDEO_ASYNCBLIT) { screenflags |= SDL_ASYNCBLIT; }
+	if (flags & AG_VIDEO_ANYFORMAT) { screenflags |= SDL_ANYFORMAT; }
+	if (flags & AG_VIDEO_HWPALETTE) { screenflags |= SDL_HWPALETTE; }
+	if (flags & AG_VIDEO_DOUBLEBUF) { screenflags |= SDL_DOUBLEBUF; }
+	if (flags & AG_VIDEO_FULLSCREEN) { screenflags |= SDL_FULLSCREEN; }
+	if (flags & AG_VIDEO_RESIZABLE) { screenflags |= SDL_RESIZABLE; }
+	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
 
-	view = Malloc(sizeof(struct viewport), M_VIEW);
-	view->gfx_engine = ge;
-	view->winop = VIEW_WINOP_NONE;
-	view->ndirty = 0;
-	view->maxdirty = 4;
-	view->dirty = Malloc(view->maxdirty * sizeof(SDL_Rect), M_VIEW);
-	view->opengl = 0;
-	view->modal_win = NULL;
-	view->wop_win = NULL;
-	view->focus_win = NULL;
-	TAILQ_INIT(&view->windows);
-	TAILQ_INIT(&view->detach);
-	pthread_mutex_init(&view->lock, &recursive_mutexattr);
+	agView = Malloc(sizeof(AG_Display), M_VIEW);
+	agView->winop = AG_WINOP_NONE;
+	agView->ndirty = 0;
+	agView->maxdirty = 4;
+	agView->dirty = Malloc(agView->maxdirty * sizeof(SDL_Rect), M_VIEW);
+	agView->opengl = 0;
+	agView->modal_win = NULL;
+	agView->wop_win = NULL;
+	agView->focus_win = NULL;
+	TAILQ_INIT(&agView->windows);
+	TAILQ_INIT(&agView->detach);
+	pthread_mutex_init(&agView->lock, &agRecursiveMutexAttr);
 
-	depth = prop_get_uint8(config, "view.depth");
-	view->w = prop_get_uint16(config, "view.w");
-	view->h = prop_get_uint16(config, "view.h");
-	dprintf("setting mode %ux%ux%u\n", view->w, view->h, depth);
+	depth = AG_Uint8(agConfig, "view.depth");
+	agView->w = AG_Uint16(agConfig, "view.w");
+	agView->h = AG_Uint16(agConfig, "view.h");
+	dprintf("setting mode %ux%ux%u\n", agView->w, agView->h, depth);
 
-	if (prop_get_bool(config, "view.full-screen"))
+	if (AG_Bool(agConfig, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
-	if (prop_get_bool(config, "view.async-blits"))
+	if (AG_Bool(agConfig, "view.async-blits"))
 		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
-	view->depth = SDL_VideoModeOK(view->w, view->h, depth, screenflags);
-	if (view->depth == 8)
+	agView->depth = SDL_VideoModeOK(agView->w, agView->h, depth,
+	    screenflags);
+	if (agView->depth == 8)
 		screenflags |= SDL_HWPALETTE;
 
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
-		break;
-	default:
-		error_set(_("Unsupported graphic mode."));
-		goto fail;
-	}
-
 #ifdef HAVE_OPENGL
-	if (prop_get_bool(config, "view.opengl")) {
+	if (AG_Bool(agConfig, "view.opengl")) {
 		screenflags |= SDL_OPENGL;
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -130,24 +130,24 @@ view_init(enum gfx_engine ge)
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		
-		view->opengl = 1;
+		agView->opengl = 1;
 	}
 #endif
 
-	if (view->w < prop_get_uint16(config, "view.min-w") ||
-	    view->h < prop_get_uint16(config, "view.min-h")) {
-		error_set(_("The resolution is too small."));
+	if (agView->w < AG_Uint16(agConfig, "view.min-w") ||
+	    agView->h < AG_Uint16(agConfig, "view.min-h")) {
+		AG_SetError(_("The resolution is too small."));
 		goto fail;
 	}
 
 	/* Set the video mode. */
-	view->v = SDL_SetVideoMode(view->w, view->h, 0, screenflags);
-	if (view->v == NULL) {
-		error_set(_("Setting %dx%dx%d mode: %s"), view->w, view->h,
-		    view->depth, SDL_GetError());
+	agView->v = SDL_SetVideoMode(agView->w, agView->h, 0, screenflags);
+	if (agView->v == NULL) {
+		AG_SetError(_("Setting %dx%dx%d mode: %s"), agView->w, agView->h,
+		    agView->depth, SDL_GetError());
 		goto fail;
 	}
-	view->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
  	    0xff000000,
 	    0x00ff0000,
@@ -160,19 +160,23 @@ view_init(enum gfx_engine ge)
 	    0xff000000
 #endif
 	);
-	if (view->stmpl == NULL) {
+	if (agView->stmpl == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
-	vfmt = view->v->format;
-	sfmt = view->stmpl->format;
+	agVideoFmt = agView->v->format;
+	agSurfaceFmt = agView->stmpl->format;
 	printf(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
-	     vfmt->BitsPerPixel, vfmt->Rmask, vfmt->Gmask, vfmt->Bmask);
+	     agVideoFmt->BitsPerPixel, agVideoFmt->Rmask, agVideoFmt->Gmask,
+	     agVideoFmt->Bmask);
 	printf(_("Reference surface is %dbpp (%08x,%08x,%08x,%08x)\n"),
-	     sfmt->BitsPerPixel, sfmt->Rmask, sfmt->Gmask, sfmt->Bmask,
-	     sfmt->Amask);
+	     agSurfaceFmt->BitsPerPixel,
+	     agSurfaceFmt->Rmask,
+	     agSurfaceFmt->Gmask,
+	     agSurfaceFmt->Bmask,
+	     agSurfaceFmt->Amask);
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		int red, blue, green, alpha, depth, bsize;
 		Uint8 bR, bG, bB;
 
@@ -183,17 +187,17 @@ view_init(enum gfx_engine ge)
 		SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
 		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
 
-		prop_set_int(config, "view.gl.depth", depth);
-		prop_set_int(config, "view.gl.red_size", red);
-		prop_set_int(config, "view.gl.green_size", green);
-		prop_set_int(config, "view.gl.blue_size", blue);
-		prop_set_int(config, "view.gl.alpha_size", alpha);
-		prop_set_int(config, "view.gl.buffer_size", bsize);
+		AG_SetInt(agConfig, "view.gl.depth", depth);
+		AG_SetInt(agConfig, "view.gl.red_size", red);
+		AG_SetInt(agConfig, "view.gl.green_size", green);
+		AG_SetInt(agConfig, "view.gl.blue_size", blue);
+		AG_SetInt(agConfig, "view.gl.alpha_size", alpha);
+		AG_SetInt(agConfig, "view.gl.buffer_size", bsize);
 
-		glViewport(0, 0, view->w, view->h);
-		glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
+		glViewport(0, 0, agView->w, agView->h);
+		glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
 
-		SDL_GetRGB(COLOR(BG_COLOR), vfmt, &bR, &bG, &bB);
+		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
 		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
@@ -206,33 +210,33 @@ view_init(enum gfx_engine ge)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_FillRect(view->v, NULL, COLOR(BG_COLOR));
-		SDL_UpdateRect(view->v, 0, 0, view->v->w, view->v->h);
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, agView->v->w, agView->v->h);
 	}
 
-	prop_set_uint16(config, "view.w", view->w);
-	prop_set_uint16(config, "view.h", view->h);
+	AG_SetUint16(agConfig, "view.w", agView->w);
+	AG_SetUint16(agConfig, "view.h", agView->h);
 
-	if (view_set_refresh(prop_get_uint8(config, "view.fps")) == -1) {
-		fprintf(stderr, "%s\n", error_get());
+	if (AG_SetRefreshRate(AG_Uint8(agConfig, "view.fps")) == -1) {
+		fprintf(stderr, "%s\n", AG_GetError());
 		goto fail;
 	}
 	return (0);
 fail:
-	pthread_mutex_destroy(&view->lock);
-	Free(view, M_VIEW);
-	view = NULL;
+	pthread_mutex_destroy(&agView->lock);
+	Free(agView, M_VIEW);
+	agView = NULL;
 	return (-1);
 }
 
 int
-view_resize(int w, int h)
+AG_ResizeDisplay(int w, int h)
 {
-	Uint32 flags = view->v->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|
+	Uint32 flags = agView->v->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|
 	                                 SDL_HWSURFACE|SDL_ASYNCBLIT|
 					 SDL_HWPALETTE|SDL_RESIZABLE|
 					 SDL_OPENGL);
-	struct window *win;
+	AG_Window *win;
 	SDL_Surface *su;
 	int ow, oh;
 
@@ -240,110 +244,110 @@ view_resize(int w, int h)
 	 * Set initial coordinates of windows that might have not been
 	 * scaled yet.
 	 */
-	TAILQ_FOREACH(win, &view->windows, windows) {
+	TAILQ_FOREACH(win, &agView->windows, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (!win->visible) {
-			WINDOW_UPDATE(win);
+			AG_WINDOW_UPDATE(win);
 		}
 		pthread_mutex_unlock(&win->lock);
 	}
 
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
-		error_set("resize to %ux%u: %s", w, h, SDL_GetError());
+		AG_SetError("resize to %ux%u: %s", w, h, SDL_GetError());
 		return (-1);
 	}
-	ow = view->w;
-	oh = view->h;
+	ow = agView->w;
+	oh = agView->h;
 
-	view->v = su;
-	view->w = w;
-	view->h = h;
-	prop_set_uint16(config, "view.w", w);
-	prop_set_uint16(config, "view.h", h);
+	agView->v = su;
+	agView->w = w;
+	agView->h = h;
+	AG_SetUint16(agConfig, "view.w", w);
+	AG_SetUint16(agConfig, "view.h", h);
 
-	TAILQ_FOREACH(win, &view->windows, windows) {
+	TAILQ_FOREACH(win, &agView->windows, windows) {
 		pthread_mutex_lock(&win->lock);
-		WIDGET(win)->x = WIDGET(win)->x*w/ow;
-		WIDGET(win)->y = WIDGET(win)->y*h/oh;
-		WIDGET(win)->w = WIDGET(win)->w*w/ow;
-		WIDGET(win)->h = WIDGET(win)->h*h/oh;
-		WINDOW_UPDATE(win);
+		AGWIDGET(win)->x = AGWIDGET(win)->x*w/ow;
+		AGWIDGET(win)->y = AGWIDGET(win)->y*h/oh;
+		AGWIDGET(win)->w = AGWIDGET(win)->w*w/ow;
+		AGWIDGET(win)->h = AGWIDGET(win)->h*h/oh;
+		AG_WINDOW_UPDATE(win);
 		pthread_mutex_unlock(&win->lock);
 	}
 	return (0);
 }
 
 void
-view_videoexpose(void)
+AG_ViewVideoExpose(void)
 {
-	struct window *win;
+	AG_Window *win;
 
-	TAILQ_FOREACH(win, &view->windows, windows) {
+	TAILQ_FOREACH(win, &agView->windows, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (win->visible) {
-			widget_draw(win);
+			AG_WidgetDraw(win);
 		}
 		pthread_mutex_unlock(&win->lock);
 	}
 
 #ifdef HAVE_OPENGL
-	if (view->opengl)
+	if (agView->opengl)
 		SDL_GL_SwapBuffers();
 #endif
 }
 
 void
-view_destroy(void)
+AG_ViewDestroy(void)
 {
-	struct window *win, *nwin;
+	AG_Window *win, *nwin;
 
-	for (win = TAILQ_FIRST(&view->windows);
-	     win != TAILQ_END(&view->windows);
+	for (win = TAILQ_FIRST(&agView->windows);
+	     win != TAILQ_END(&agView->windows);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
-		object_destroy(win);
+		AG_ObjectDestroy(win);
 		Free(win, M_OBJECT);
 	}
 
-	Free(view->dirty, M_VIEW);
-	pthread_mutex_destroy(&view->lock);
-	Free(view, M_VIEW);
-	view = NULL;
+	Free(agView->dirty, M_VIEW);
+	pthread_mutex_destroy(&agView->lock);
+	Free(agView, M_VIEW);
+	agView = NULL;
 }
 
 /* Return the named window or NULL if there is no such window. */
-struct window *
-view_window_exists(const char *name)
+AG_Window *
+AG_FindWindow(const char *name)
 {
-	struct window *win;
+	AG_Window *win;
 
-	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH(win, &view->windows, windows) {
-		if (strcmp(OBJECT(win)->name, name) == 0)
+	pthread_mutex_lock(&agView->lock);
+	TAILQ_FOREACH(win, &agView->windows, windows) {
+		if (strcmp(AGOBJECT(win)->name, name) == 0)
 			break;
 	}
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_unlock(&agView->lock);
 	return (win);
 }
 
 /* Attach a window to a view. */
 void
-view_attach(void *child)
+AG_ViewAttach(void *child)
 {
-	struct window *win = child;
+	AG_Window *win = child;
 	
-	pthread_mutex_lock(&view->lock);
-	view->focus_win = NULL;
-	TAILQ_INSERT_TAIL(&view->windows, win, windows);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	agView->focus_win = NULL;
+	TAILQ_INSERT_TAIL(&agView->windows, win, windows);
+	pthread_mutex_unlock(&agView->lock);
 }
 
 static void
-detach_window(struct window *win)
+detach_window(AG_Window *win)
 {
-	struct window *subwin, *nsubwin;
-	struct window *owin;
+	AG_Window *subwin, *nsubwin;
+	AG_Window *owin;
 
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
@@ -353,12 +357,12 @@ detach_window(struct window *win)
 	}
 	TAILQ_INIT(&win->subwins);
 	
-	window_hide(win);
-	event_post(view, win, "detached", NULL);
-	TAILQ_REMOVE(&view->windows, win, windows);
-	TAILQ_INSERT_TAIL(&view->detach, win, detach);
+	AG_WindowHide(win);
+	AG_PostEvent(agView, win, "detached", NULL);
+	TAILQ_REMOVE(&agView->windows, win, windows);
+	TAILQ_INSERT_TAIL(&agView->detach, win, detach);
 
-	TAILQ_FOREACH(owin, &view->windows, windows) {
+	TAILQ_FOREACH(owin, &agView->windows, windows) {
 		TAILQ_FOREACH(subwin, &owin->subwins, swins) {
 			if (subwin == win)
 				break;
@@ -370,16 +374,16 @@ detach_window(struct window *win)
 
 /* Place a window and its children on the detachment queue. */
 void
-view_detach(struct window *win)
+AG_ViewDetach(AG_Window *win)
 {
-	pthread_mutex_lock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
 	detach_window(win);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_unlock(&agView->lock);
 }
 
 /* Return the 32-bit form of the pixel at the given location. */
 Uint32
-view_get_pixel(SDL_Surface *s, Uint8 *pSrc)
+AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
 {
 	switch (s->format->BytesPerPixel) {
 	case 4:
@@ -401,7 +405,7 @@ view_get_pixel(SDL_Surface *s, Uint8 *pSrc)
 }
 
 void
-view_put_pixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
+AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 {
 	switch (s->format->BytesPerPixel) {
 	case 4:
@@ -429,30 +433,30 @@ view_put_pixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 
 /* Release the windows on the detachment queue. */
 void
-view_detach_queued(void)
+AG_ViewDetachQueued(void)
 {
-	struct window *win, *nwin;
+	AG_Window *win, *nwin;
 
-	for (win = TAILQ_FIRST(&view->detach);
-	     win != TAILQ_END(&view->detach);
+	for (win = TAILQ_FIRST(&agView->detach);
+	     win != TAILQ_END(&agView->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
-		object_destroy(win);
+		AG_ObjectDestroy(win);
 		Free(win, M_OBJECT);
 	}
-	TAILQ_INIT(&view->detach);
+	TAILQ_INIT(&agView->detach);
 }
 
 /* Return a newly allocated surface containing a copy of ss. */
 SDL_Surface *
-view_copy_surface(SDL_Surface *ss)
+AG_DupSurface(SDL_Surface *ss)
 {
 	SDL_Surface *rs;
 
 	rs = SDL_ConvertSurface(ss, ss->format, SDL_SWSURFACE |
 	    (ss->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL)));
 	if (rs == NULL) {
-		error_set("SDL_ConvertSurface: %s", SDL_GetError());
+		AG_SetError("SDL_ConvertSurface: %s", SDL_GetError());
 		return (NULL);
 	}
 	rs->format->alpha = ss->format->alpha;
@@ -461,7 +465,7 @@ view_copy_surface(SDL_Surface *ss)
 }
 
 int
-view_same_pixel_fmt(SDL_Surface *s1, SDL_Surface *s2)
+AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
 {
 	return (s1->format->BytesPerPixel == s2->format->BytesPerPixel &&
 	        s1->format->Rmask == s2->format->Rmask &&
@@ -476,7 +480,7 @@ view_same_pixel_fmt(SDL_Surface *s1, SDL_Surface *s2)
  * The source surface must not be locked by the calling thread.
  */
 void
-view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
+AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 {
 	Uint8 r1, g1, b1, a1;
 	Uint8 *pDst;
@@ -499,7 +503,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 		(*ds)->format->colorkey = ss->format->colorkey;
 		same_fmt = 1;
 	} else {
-		//same_fmt = view_same_pixel_fmt(*ds, ss);
+		//same_fmt = AG_SamePixelFmt(*ds, ss);
 		same_fmt = 0;
 	}
 
@@ -529,7 +533,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 			Uint8 *pSrc = (Uint8 *)ss->pixels +
 			    (y*ss->h/(*ds)->h)*ss->pitch +
 			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
-			Uint32 cSrc = GET_PIXEL(ss, pSrc);
+			Uint32 cSrc = AG_GET_PIXEL(ss, pSrc);
 			Uint32 cDst;
 
 			if (same_fmt) {
@@ -540,7 +544,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 				cDst = SDL_MapRGBA((*ds)->format,
 				    r1, g1, b1, a1);
 			}
-			PUT_PIXEL((*ds), pDst, cDst);
+			AG_PUT_PIXEL((*ds), pDst, cDst);
 			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
@@ -553,7 +557,7 @@ out:
 
 /* Set the alpha value of all pixels in a surface where a != 0. */
 void
-view_pixels_alpha(SDL_Surface *su, Uint8 alpha)
+AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 {
 	int x, y;
 
@@ -571,7 +575,7 @@ view_pixels_alpha(SDL_Surface *su, Uint8 alpha)
 			if (a != 0)
 				a = alpha;
 
-			PUT_PIXEL(su, dst,
+			AG_PUT_PIXEL(su, dst,
 			    SDL_MapRGBA(su->format, r, g, b, a));
 		}
 	}
@@ -580,26 +584,26 @@ view_pixels_alpha(SDL_Surface *su, Uint8 alpha)
 }
 
 int
-view_set_refresh(int ms)
+AG_SetRefreshRate(int ms)
 {
 	int fps = 1000/ms;
 
 	dprintf("%d fps\n", fps);
 	if (fps < 4 || fps > 240) {
-		error_set(_("The refresh rate is out of range."));
+		AG_SetError(_("The refresh rate is out of range."));
 		return (-1);
 	}
-	pthread_mutex_lock(&view->lock);
-	view->refresh.r = 0;
-	view->refresh.rnom = fps;
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	agView->refresh.r = 0;
+	agView->refresh.rnom = fps;
+	pthread_mutex_unlock(&agView->lock);
 	return (0);
 }
 
 #ifdef HAVE_OPENGL
 
 void
-view_update_texture(SDL_Surface *sourcesu, int texture)
+AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 {
 	SDL_Surface *texsu;
 	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
@@ -641,7 +645,7 @@ view_update_texture(SDL_Surface *sourcesu, int texture)
 }
 
 GLuint
-view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
+AG_SurfaceTexture(SDL_Surface *sourcesu, GLfloat *texcoord)
 {
 	SDL_Surface *texsu;
 	GLuint texture;
@@ -696,15 +700,17 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 }
 
 SDL_Surface *
-view_gl_capture(void)
+AG_CaptureGLView(void)
 {
 	Uint8 *pixels, *tmp;
 	SDL_Surface *su;
 
-	pixels = Malloc(view->w*view->h*3, M_RG);
-	glReadPixels(0, 0, view->w, view->h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-	view_flip_lines(pixels, view->h, view->w*3);
-	su = SDL_CreateRGBSurfaceFrom(pixels, view->w, view->h, 24, view->w*3,
+	pixels = Malloc(agView->w*agView->h*3, M_RG);
+	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
+	    pixels);
+	AG_FlipSurface(pixels, agView->h, agView->w*3);
+	su = SDL_CreateRGBSurfaceFrom(pixels, agView->w, agView->h, 24,
+	    agView->w*3,
 	    0x000000ff,
 	    0x0000ff00,
 	    0x00ff0000,
@@ -720,35 +726,35 @@ view_gl_capture(void)
  * Clipping is not done; the destination surface must be locked.
  */
 void
-view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
-    Uint8 sA, enum view_blend_func func)
+AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
+    Uint8 sA, enum ag_blend_func func)
 {
 	Uint32 cDst;
 	Uint8 dR, dG, dB, dA;
 	int alpha = (int)dA;
 
-	cDst = GET_PIXEL(s, pDst);
+	cDst = AG_GET_PIXEL(s, pDst);
 	if ((s->flags & SDL_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
-	 	PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format, sR, sG, sB, sA));
+	 	AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format, sR, sG, sB, sA));
 	} else {
 		SDL_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
 		switch (func) {
-		case ALPHA_OVERLAY:
+		case AG_ALPHA_OVERLAY:
 			alpha = dA+sA;
 			break;
-		case ALPHA_SRC:
+		case AG_ALPHA_SRC:
 			alpha = sA;
 			break;
-		case ALPHA_MEAN:
+		case AG_ALPHA_MEAN:
 			alpha = (dA+sA)/2;
 			break;
-		case ALPHA_SOURCE_MINUS_DST:
+		case AG_ALPHA_SOURCE_MINUS_DST:
 			alpha = sA-dA;
 			break;
-		case ALPHA_DST_MINUS_SOURCE:
+		case AG_ALPHA_DST_MINUS_SOURCE:
 			alpha = dA-sA;
 			break;
-		case ALPHA_PYTHAGOREAN:
+		case AG_ALPHA_PYTHAGOREAN:
 			alpha = (int)sqrtf((dA*dA)+(sA*sA));
 			break;
 		default:
@@ -759,7 +765,7 @@ view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 		} else if (alpha > 255) {
 			alpha = 255;
 		}
-		PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
+		AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
 		    (((sR - dR) * sA) >> 8) + dR,
 		    (((sG - dG) * sA) >> 8) + dG,
 		    (((sB - dB) * sA) >> 8) + dB,
@@ -769,7 +775,7 @@ view_blend_rgba(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 
 /* Dump a surface to a JPEG image. */
 void
-view_capture(SDL_Surface *pSu, char *path_save)
+AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 {
 #ifdef HAVE_JPEG
 	SDL_Surface *su;
@@ -783,34 +789,35 @@ view_capture(SDL_Surface *pSu, char *path_save)
 	JSAMPROW row[1];
 	int x;
 
-	if (prop_copy_string(config, "save-path", path, sizeof(path)) >=
-	    sizeof(path))
+	if (AG_StringCopy(agConfig, "save-path", path, sizeof(path))
+	    >= sizeof(path)) {
 		goto toobig;
+	}
 	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
 		goto toobig;
 	if (Mkdir(path) == -1 && errno != EEXIST) {
-		text_msg(MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
 	}
 
-	if (!view->opengl || pSu != view->v) {
+	if (!agView->opengl || pSu != agView->v) {
 		su = pSu;
 	} else {
 #ifdef HAVE_OPENGL
-		su = view_gl_capture();
+		su = AG_CaptureGLView();
 #endif
 	}
 
 	for (;;) {
 		char file[MAXPATHLEN];
 
-		snprintf(file, sizeof(file), "%s/%s%u.jpg", path, progname,
+		snprintf(file, sizeof(file), "%s/%s%u.jpg", path, agProgName,
 		    seq++);
 		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
 			if (errno == EEXIST) {
 				continue;
 			} else {
-				text_msg(MSG_ERROR, "open %s: %s", file,
+				AG_TextMsg(AG_MSG_ERROR, "open %s: %s", file,
 				    strerror(errno));
 				goto out;
 			}
@@ -821,7 +828,7 @@ view_capture(SDL_Surface *pSu, char *path_save)
 		strlcpy(path_save, path, MAXPATHLEN);
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
-		text_msg(MSG_ERROR, "fdopen: %s", strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "fdopen: %s", strerror(errno));
 		return;
 	}
 
@@ -835,7 +842,7 @@ view_capture(SDL_Surface *pSu, char *path_save)
 	jcomp.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, view_screenshot_quality, TRUE);
+	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
 	jcopybuf = Malloc(su->w*3, M_VIEW);
@@ -847,8 +854,9 @@ view_capture(SDL_Surface *pSu, char *path_save)
 		Uint8 *pDst = jcopybuf;
 		Uint8 r, g, b;
 
-		for (x = view->w; x > 0; x--) {
-			SDL_GetRGB(GET_PIXEL(su, pSrc), su->format, &r, &g, &b);
+		for (x = agView->w; x > 0; x--) {
+			SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
+			    &r, &g, &b);
 			*pDst++ = r;
 			*pDst++ = g;
 			*pDst++ = b;
@@ -865,57 +873,43 @@ view_capture(SDL_Surface *pSu, char *path_save)
 	Free(jcopybuf, M_VIEW);
 out:
 #ifdef HAVE_OPENGL
-	if (view->opengl && su != pSu)
+	if (agView->opengl && su != pSu)
 		SDL_FreeSurface(su);
 #endif
 	return;
 toobig:
-	text_msg(MSG_ERROR, _("Path is too big."));
+	AG_TextMsg(AG_MSG_ERROR, _("Path is too big."));
 #else
-	text_msg(MSG_ERROR, _("Screenshot feature requires libjpeg"));
+	AG_TextMsg(AG_MSG_ERROR, _("Screenshot feature requires libjpeg"));
 #endif
 }
 
 /* Queue a video update. */
 void
-view_update(int x, int y, int w, int h)
+AG_UpdateRectQ(int x, int y, int w, int h)
 {
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
-		view->ndirty = 1;
+	if (agView->opengl) {
+		agView->ndirty = 1;
 	} else
 #endif
 	{
-		if (view->ndirty+1 > view->maxdirty) {
-			view->maxdirty *= 2;
-			view->dirty = Realloc(view->dirty, view->maxdirty *
-			                                   sizeof(SDL_Rect));
+		if (agView->ndirty+1 > agView->maxdirty) {
+			agView->maxdirty *= 2;
+			agView->dirty = Realloc(agView->dirty,
+			    agView->maxdirty * sizeof(SDL_Rect));
 		}
-		view->dirty[view->ndirty].x = x;
-		view->dirty[view->ndirty].y = y;
-		view->dirty[view->ndirty].w = w;
-		view->dirty[view->ndirty].h = h;
-		view->ndirty++;
+		agView->dirty[agView->ndirty].x = x;
+		agView->dirty[agView->ndirty].y = y;
+		agView->dirty[agView->ndirty].w = w;
+		agView->dirty[agView->ndirty].h = h;
+		agView->ndirty++;
 	}
-}
-
-/* Parse a command-line refresh rate specification. */
-void
-view_parse_fpsspec(const char *fpsspec)
-{
-	int fps;
-
-	fps = atoi(fpsspec);
-	if (fps < 4 || fps > 240) {
-		fprintf(stderr, _("Unreasonable refresh rate; ignoring\n"));
-		return;
-	}
-	prop_set_uint8(config, "view.fps", fps);
 }
 
 /* Flip the lines of a frame buffer; useful with glReadPixels(). */
 void
-view_flip_lines(Uint8 *src, int h, int pitch)
+AG_FlipSurface(Uint8 *src, int h, int pitch)
 {
 	Uint8 *tmp = Malloc(pitch, M_RG);
 	int h2 = h >> 1;

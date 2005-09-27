@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.4 2005/03/06 06:30:36 vedge Exp $	*/
+/*	$Csoft: sketch_line.c,v 1.5 2005/07/29 06:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,13 +39,13 @@
 #include "tileview.h"
 
 struct line_tool {
-	struct tileview_tool tool;
+	RG_TileviewTool tool;
 	enum {
 		BEGIN_LINE,
 		CONTINUE_LINE
 	} seq;
-	struct vg_element *cur_line;
-	struct vg_vertex *cur_vtx;
+	VG_Element *cur_line;
+	VG_Vtx *cur_vtx;
 	int mode;
 };
 
@@ -60,7 +60,7 @@ init(void *p)
 	lt->seq = BEGIN_LINE;
 }
 
-static struct window *
+static AG_Window *
 edit(void *p)
 {
 	struct line_tool *lt = p;
@@ -70,63 +70,63 @@ edit(void *p)
 		N_("Line loop"),
 		NULL
 	};
-	struct window *win;
-	struct radio *rad;
+	AG_Window *win;
+	AG_Radio *rad;
 
-	win = window_new(0, NULL);
-	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &lt->mode);
+	win = AG_WindowNew(0, NULL);
+	rad = AG_RadioNew(win, mode_items);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &lt->mode);
 	return (win);
 }
 
 static void
-mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
+mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 {
 	struct line_tool *lt = p;
-	struct vg *vg = sk->vg;
-	struct tileview *tv = TILEVIEW_TOOL(lt)->tv;
+	VG *vg = sk->vg;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(lt)->tv;
 	Uint8 r, g, b;
 
 	switch (lt->seq) {
 	case BEGIN_LINE:
 		if (button == SDL_BUTTON_LEFT) {
-			lt->cur_line = vg_begin_element(vg,
+			lt->cur_line = VG_Begin(vg,
 			    lt->mode == 1 ? VG_LINE_STRIP :
 			    lt->mode == 2 ? VG_LINE_LOOP :
 			    VG_LINES);
-			vg_vertex2(vg, x, y);
-			lt->cur_vtx = vg_vertex2(vg, x, y);
+			VG_Vertex2(vg, x, y);
+			lt->cur_vtx = VG_Vertex2(vg, x, y);
 			lt->seq = CONTINUE_LINE;
-			tv->flags |= TILEVIEW_NO_SCROLLING;
+			tv->flags |= RG_TILEVIEW_NO_SCROLLING;
 	
-			prim_hsv2rgb(sk->h, sk->s, sk->v, &r, &g, &b);
-			vg_color4(vg, r, g, b, (int)(sk->a*255.0));
+			RG_HSV2RGB(sk->h, sk->s, sk->v, &r, &g, &b);
+			VG_Color4(vg, r, g, b, (int)(sk->a*255.0));
 		}
 		break;
 	case CONTINUE_LINE:
 		if (button == SDL_BUTTON_LEFT) {
-			lt->cur_vtx = vg_vertex2(vg, x, y);
+			lt->cur_vtx = VG_Vertex2(vg, x, y);
 		} else {
 			if (lt->cur_line->nvtx <= 2) {
-				vg_destroy_element(vg, lt->cur_line);
+				VG_DestroyElement(vg, lt->cur_line);
 			} else {
-				vg_pop_vertex(vg);
+				VG_PopVertex(vg);
 			}
 			lt->cur_vtx = NULL;
 			lt->cur_line = NULL;
 			lt->seq = BEGIN_LINE;
-			tv->flags &= ~TILEVIEW_NO_SCROLLING;
+			tv->flags &= ~RG_TILEVIEW_NO_SCROLLING;
 		}
 		break;
 	}
 }
 
 static void
-mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
+mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct line_tool *lt = p;
-	struct tileview *tv = TILEVIEW_TOOL(lt)->tv;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(lt)->tv;
 
 	if (lt->cur_line != NULL) {
 		lt->cur_vtx->x = x;
@@ -135,7 +135,7 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 	}
 }
 
-struct tileview_sketch_tool_ops sketch_line_ops = {
+RG_TileviewSketchToolOps sketch_line_ops = {
 	{
 		N_("Lines"),
 		N_("Line segments, strips and loops."),

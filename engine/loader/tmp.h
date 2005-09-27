@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tmp.h,v 1.1 2005/09/06 04:13:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_TMP_H_
@@ -6,8 +6,8 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-struct netbuf *tmp_open(const char *);
-void	       tmp_close(struct netbuf *);
+AG_Netbuf *AG_TmpOpen(const char *);
+void       AG_TmpClose(AG_Netbuf *);
 __END_DECLS
 
 #include "close_code.h"

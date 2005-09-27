@@ -1,17 +1,17 @@
-/*	$Csoft: tool.h,v 1.8 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.9 2005/08/01 04:09:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
 #define _AGAR_MAPEDIT_TOOL_H_
 #include "begin_code.h"
 
-#define TOOL_STATUS_MAX	8
+#define AG_MAPTOOL_STATUS_MAX	8
 
-struct mapview;
-struct tool_kbinding;
-struct tool_mbinding;
+struct ag_mapview;
+struct ag_maptool_keybinding;
+struct ag_maptool_mousebinding;
 
-struct tool_ops {
+typedef struct ag_maptool_ops {
 	const char *name;
 	const char *desc;
 	int icon;
@@ -25,65 +25,64 @@ struct tool_ops {
 	void (*edit_pane)(void *, void *);
 	void (*edit)(void *);
 	int (*cursor)(void *, SDL_Rect *);
-	int (*effect)(void *, struct node *);
+	int (*effect)(void *, AG_Node *);
 	int (*mousemotion)(void *, int x, int y, int xrel, int yrel, int btn);
 	int (*mousebuttondown)(void *, int x, int y, int btn);
 	int (*mousebuttonup)(void *, int x, int y, int btn);
 	int (*keydown)(void *, int ksym, int kmod);
 	int (*keyup)(void *, int ksym, int kmod);
-};
+} AG_MaptoolOps;
 
-struct tool {
-	const struct tool_ops *ops;
-
-	struct mapview *mv;			/* Associated view */
+typedef struct ag_maptool {
+	const AG_MaptoolOps *ops;
+	struct ag_mapview *mv;			/* Associated view */
 	void *p;				/* User-supplied pointer */
-	char *status[TOOL_STATUS_MAX];		/* Status message stack */
+	char *status[AG_MAPTOOL_STATUS_MAX];	/* Status message stack */
 	int nstatus;
-	struct window *win;			/* Edition window (if any) */
-	struct widget *pane;			/* Edition pane (if any) */
-	struct button *trigger;			/* Trigger button (XXX) */
+	AG_Window *win;		/* Edition window (if any) */
+	AG_Widget *pane;		/* Edition pane (if any) */
+	AG_Button *trigger;		/* Trigger button (XXX) */
 
-	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
-	SLIST_HEAD(,tool_mbinding) mbindings;	/* Mouse button bindings */
-	TAILQ_ENTRY(tool) tools;
-};
+	SLIST_HEAD(,ag_maptool_keybinding) kbindings;
+	SLIST_HEAD(,ag_maptool_mousebinding) mbindings;
+	TAILQ_ENTRY(ag_maptool) tools;
+} AG_Maptool;
 
-struct tool_kbinding {
+typedef struct ag_maptool_keybinding {
 	SDLMod mod;
 	SDLKey key;
 	int edit;
-	int (*func)(struct tool *, SDLKey k, int s, void *);
+	int (*func)(AG_Maptool *, SDLKey k, int s, void *);
 	void *arg;
-	SLIST_ENTRY(tool_kbinding) kbindings;
-};
+	SLIST_ENTRY(ag_maptool_keybinding) kbindings;
+} AG_MaptoolKeyBinding;
 
-struct tool_mbinding {
+typedef struct ag_maptool_mousebinding {
 	int button;
 	int edit;
-	int (*func)(struct tool *, int b, int s, int x, int y, void *);
+	int (*func)(AG_Maptool *, int b, int s, int x, int y, void *);
 	void *arg;
-	SLIST_ENTRY(tool_mbinding) mbindings;
-};
+	SLIST_ENTRY(ag_maptool_mousebinding) mbindings;
+} AG_MaptoolMouseBinding;
 
-#define TOOL(t) ((struct tool *)(t))
+#define TOOL(t) ((AG_Maptool *)(t))
 
 __BEGIN_DECLS
-void		 tool_init(struct tool *);
-void		 tool_destroy(struct tool *);
-struct window	*tool_window(void *, const char *);
+void		 AG_MaptoolInit(AG_Maptool *);
+void		 AG_MaptoolDestroy(AG_Maptool *);
+AG_Window	*AG_MaptoolWindow(void *, const char *);
 
-void tool_bind_key(void *, SDLMod, SDLKey,
-		   int (*)(struct tool *, SDLKey, int, void *), void *);
-void tool_bind_mousebutton(void *, int,
-			   int (*)(struct tool *, int, int, int, int, void *),
+void AG_MaptoolBindKey(void *, SDLMod, SDLKey,
+		   int (*)(AG_Maptool *, SDLKey, int, void *), void *);
+void AG_MaptoolBindMouseButton(void *, int,
+			   int (*)(AG_Maptool *, int, int, int, int, void *),
 			   void *);
-void tool_unbind_key(void *, SDLMod, SDLKey);
+void AG_MaptoolUnbindKey(void *, SDLMod, SDLKey);
 
-void tool_push_status(void *, const char *, ...);
-void tool_set_status(void *, const char *, ...);
-void tool_pop_status(void *);
-void tool_update_status(void *);
+void AG_MaptoolPushStatus(void *, const char *, ...);
+void AG_MaptoolSetStatus(void *, const char *, ...);
+void AG_MaptoolPopStatus(void *);
+void AG_MaptoolUpdateStatus(void *);
 __END_DECLS
 
 #include "close_code.h"

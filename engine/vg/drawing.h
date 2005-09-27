@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.h,v 1.1 2004/11/24 05:34:56 vedge Exp $	*/
+/*	$Csoft: drawing.h,v 1.2 2005/09/19 01:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_DRAWING_H_
@@ -8,18 +8,18 @@
 
 #include "begin_code.h"
 
-struct drawing {
-	struct object obj;
-	struct vg *vg;
-};
+typedef struct ag_drawing {
+	struct ag_object obj;
+	VG *vg;
+} AG_Drawing;
 
 __BEGIN_DECLS
-void	 drawing_init(void *, const char *);
-void	 drawing_reinit(void *);
-void	 drawing_destroy(void *);
-void	*drawing_edit(void *);
-int	 drawing_load(void *, struct netbuf *);
-int	 drawing_save(void *, struct netbuf *);
+void	 AG_DrawingInit(void *, const char *);
+void	 AG_DrawingReinit(void *);
+void	 AG_DrawingDestroy(void *);
+void	*AG_DrawingEdit(void *);
+int	 AG_DrawingLoad(void *, AG_Netbuf *);
+int	 AG_DrawingSave(void *, AG_Netbuf *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.18 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.19 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 #include "vg_math.h"
 
 static void
-init(struct vg *vg, struct vg_element *vge)
+init(VG *vg, VG_Element *vge)
 {
 	vge->vg_arc.w = 1;
 	vge->vg_arc.h = 1;
@@ -47,31 +47,40 @@ init(struct vg *vg, struct vg_element *vge)
 }
 
 void
-vg_ellipse_diameter2(struct vg *vg, double w, double h)
+VG_EllipseExtent(VG *vg, double w, double h)
 {
-	struct vg_element *vge = vg->cur_vge;
+	VG_Element *vge = vg->cur_vge;
 
 	vge->vg_arc.w = w;
 	vge->vg_arc.h = h;
 }
 
+void
+VG_EllipseArc(VG *vg, double s, double e)
+{
+	VG_Element *vge = vg->cur_vge;
+
+	vge->vg_arc.s = s;
+	vge->vg_arc.e = e;
+}
+
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
 	int x, y;
 	int w, h;
 	int s, e;
 
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
-	vg_rlength(vg, vge->vg_arc.w, &w);
-	vg_rlength(vg, vge->vg_arc.h, &h);
-	vg_rlength(vg, vge->vg_arc.s, &s);
-	vg_rlength(vg, vge->vg_arc.e, &e);
-	vg_arc_primitive(vg, x, y, w, h, s, e, vge->color);
+	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	VG_RLength(vg, vge->vg_arc.w, &w);
+	VG_RLength(vg, vge->vg_arc.h, &h);
+	VG_RLength(vg, vge->vg_arc.s, &s);
+	VG_RLength(vg, vge->vg_arc.e, &e);
+	VG_ArcPrimitive(vg, x, y, w, h, s, e, vge->color);
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
@@ -80,12 +89,12 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 }
 
 static float
-intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, double x, double y)
 {
 	return (FLT_MAX);
 }
 
-const struct vg_element_ops vg_ellipse_ops = {
+const VG_ElementOps vgEllipseOps = {
 	N_("Ellipse"),
 	VGCIRCLES_ICON,
 	init,
@@ -95,7 +104,7 @@ const struct vg_element_ops vg_ellipse_ops = {
 	intsect
 };
 
-const struct vg_element_ops vg_arc_ops = {
+const VG_ElementOps vgArcOps = {
 	N_("Arc"),
 	VGCIRCLES_ICON,
 	init,
@@ -106,24 +115,24 @@ const struct vg_element_ops vg_arc_ops = {
 };
 
 #ifdef EDITION
-static struct vg_element *cur_ellipse;
+static VG_Element *cur_ellipse;
 static int seq;
 
 static void
-ellipse_tool_init(void *t)
+ellipse_AG_MaptoolInit(void *t)
 {
 	seq = 0;
 	cur_ellipse = NULL;
-	tool_push_status(t, _("Specify the ellipse's center point."));
+	AG_MaptoolPushStatus(t, _("Specify the ellipse's center point."));
 }
 
 static int
 ellipse_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 {
-	struct vg *vg = TOOL(p)->p;
+	VG *vg = TOOL(p)->p;
 	double x, y;
 	
-	vg_map2vec(vg, xmap, ymap, &x, &y);
+	VG_Map2Vec(vg, xmap, ymap, &x, &y);
 
 	if (cur_ellipse != NULL) {
 		if (seq == 1) {
@@ -151,20 +160,21 @@ ellipse_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 static int
 ellipse_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
 	case 1:
 		switch (seq++) {
 		case 0:
-			cur_ellipse = vg_begin_element(vg, VG_ELLIPSE);
-			vg_map2vec(vg, xmap, ymap, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
-			vg_end_element(vg);
+			cur_ellipse = VG_Begin(vg, VG_ELLIPSE);
+			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+			VG_Vertex2(vg, vx, vy);
+			VG_End(vg);
 
-			tool_push_status(t, _("Specify the ellipse's geometry "
-			                      "or [undo ellipse]."));
+			AG_MaptoolPushStatus(t,
+			    _("Specify the ellipse's geometry or "
+			      "[undo ellipse]."));
 			break;
 		default:
 			goto finish;
@@ -172,23 +182,23 @@ ellipse_mousebuttondown(void *t, int xmap, int ymap, int btn)
 		break;
 	default:
 		if (cur_ellipse != NULL) {
-			vg_destroy_element(vg, cur_ellipse);
+			VG_DestroyElement(vg, cur_ellipse);
 		}
 		goto finish;
 	}
 finish:
 	cur_ellipse = NULL;
 	seq = 0;
-	tool_pop_status(t);
+	AG_MaptoolPopStatus(t);
 	return (1);
 }
 
-const struct tool_ops vg_ellipse_tool = {
+const AG_MaptoolOps vg_ellipse_tool = {
 	N_("Ellipses"), N_("Draw ellipses."),
 	VGCIRCLES_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	ellipse_tool_init,
+	ellipse_AG_MaptoolInit,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

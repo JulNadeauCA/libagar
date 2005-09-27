@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.91 2005/05/13 03:41:01 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.92 2005/06/10 02:05:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-const struct widget_ops button_ops = {
+const AG_WidgetOps button_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -46,8 +46,8 @@ const struct widget_ops button_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	button_draw,
-	button_scale
+	AG_ButtonDraw,
+	AG_ButtonScale
 };
 
 static void button_mousemotion(int, union evarg *);
@@ -56,236 +56,236 @@ static void button_mousebuttondown(int, union evarg *);
 static void button_keyup(int, union evarg *);
 static void button_keydown(int, union evarg *);
 
-struct button *
-button_new(void *parent, const char *caption)
+AG_Button *
+AG_ButtonNew(void *parent, const char *caption)
 {
-	struct button *button;
+	AG_Button *button;
 
-	button = Malloc(sizeof(struct button), M_OBJECT);
-	button_init(button, caption);
-	object_attach(parent, button);
+	button = Malloc(sizeof(AG_Button), M_OBJECT);
+	AG_ButtonInit(button, caption);
+	AG_ObjectAttach(parent, button);
 	return (button);
 }
 
 static Uint32
 repeat_expire(void *obj, Uint32 ival, void *arg)
 {
-	event_post(NULL, obj, "button-pushed", "%i", 1);
-	return (mouse_spin_ival);
+	AG_PostEvent(NULL, obj, "button-pushed", "%i", 1);
+	return (agMouseSpinIval);
 }
 
 static Uint32
 delay_expire(void *obj, Uint32 ival, void *arg)
 {
-	struct button *bu = obj;
+	AG_Button *bu = obj;
 
-	timeout_replace(bu, &bu->repeat_to, mouse_spin_ival);
+	AG_ReplaceTimeout(bu, &bu->repeat_to, agMouseSpinIval);
 	return (0);
 }
 
 void
-button_init(struct button *bu, const char *caption)
+AG_ButtonInit(AG_Button *bu, const char *caption)
 {
 	SDL_Surface *label;
 
-	widget_init(bu, "button", &button_ops, WIDGET_FOCUSABLE |
-	    WIDGET_UNFOCUSED_MOTION);
-	widget_bind(bu, "state", WIDGET_BOOL, &bu->state);
+	AG_WidgetInit(bu, "button", &button_ops, AG_WIDGET_FOCUSABLE |
+	    AG_WIDGET_UNFOCUSED_MOTION);
+	AG_WidgetBind(bu, "state", AG_WIDGET_BOOL, &bu->state);
 	
 	label = (caption == NULL) ? NULL :
-	    text_render(NULL, -1, COLOR(BUTTON_TXT_COLOR), caption);
-	widget_map_surface(bu, label);
+	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), caption);
+	AG_WidgetMapSurface(bu, label);
 
 	bu->flags = 0;
 	bu->state = 0;
-	bu->justify = BUTTON_CENTER;
+	bu->justify = AG_BUTTON_CENTER;
 	bu->padding = 4;
 
-	timeout_set(&bu->repeat_to, repeat_expire, NULL, 0);
-	timeout_set(&bu->delay_to, delay_expire, NULL, 0);
+	AG_SetTimeout(&bu->repeat_to, repeat_expire, NULL, 0);
+	AG_SetTimeout(&bu->delay_to, delay_expire, NULL, 0);
 
-	event_new(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
-	event_new(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
-	event_new(bu, "window-mousemotion", button_mousemotion, NULL);
-	event_new(bu, "window-keyup", button_keyup, NULL);
-	event_new(bu, "window-keydown", button_keydown, NULL);
+	AG_SetEvent(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
+	AG_SetEvent(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
+	AG_SetEvent(bu, "window-mousemotion", button_mousemotion, NULL);
+	AG_SetEvent(bu, "window-keyup", button_keyup, NULL);
+	AG_SetEvent(bu, "window-keydown", button_keydown, NULL);
 }
 
 void
-button_scale(void *p, int w, int h)
+AG_ButtonScale(void *p, int w, int h)
 {
-	struct button *bu = p;
-	SDL_Surface *label = WIDGET_SURFACE(bu,0);
+	AG_Button *bu = p;
+	SDL_Surface *label = AGWIDGET_SURFACE(bu,0);
 
 	if (w == -1 && h == -1) {
 		if (label != NULL) {
-			WIDGET(bu)->w = label->w + bu->padding*2;
-			WIDGET(bu)->h = label->h + bu->padding*2;
+			AGWIDGET(bu)->w = label->w + bu->padding*2;
+			AGWIDGET(bu)->h = label->h + bu->padding*2;
 		} else {
-			WIDGET(bu)->w = 1;
-			WIDGET(bu)->h = 1;
+			AGWIDGET(bu)->w = 1;
+			AGWIDGET(bu)->h = 1;
 		}
 	}
 }
 
 void
-button_draw(void *p)
+AG_ButtonDraw(void *p)
 {
-	struct button *bu = p;
-	SDL_Surface *label = WIDGET_SURFACE(bu,0);
+	AG_Button *bu = p;
+	SDL_Surface *label = AGWIDGET_SURFACE(bu,0);
 	int x = 0, y = 0;
 	int pressed;
 	
-	if (WIDGET(bu)->w < 8 || WIDGET(bu)->h < 8)
+	if (AGWIDGET(bu)->w < 8 || AGWIDGET(bu)->h < 8)
 		return;
 
-	pressed = widget_get_bool(bu, "state");
-	if (bu->flags & BUTTON_INSENSITIVE) {
-		primitives.box(bu,
+	pressed = AG_WidgetBool(bu, "state");
+	if (bu->flags & AG_BUTTON_INSENSITIVE) {
+		agPrim.box(bu,
 		    0, 0,
-		    WIDGET(bu)->w, WIDGET(bu)->h,
+		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
 		    -1,
-		    COLOR(BUTTON_DIS_COLOR));
+		    AG_COLOR(BUTTON_DIS_COLOR));
 	} else {
-		primitives.box(bu,
+		agPrim.box(bu,
 		    0, 0,
-		    WIDGET(bu)->w, WIDGET(bu)->h,
+		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
 		    pressed ? -1 : 1,
-		    COLOR(BUTTON_COLOR));
+		    AG_COLOR(BUTTON_COLOR));
 	}
 
 	if (label != NULL) {
 		switch (bu->justify) {
-		case BUTTON_LEFT:
+		case AG_BUTTON_LEFT:
 			x = bu->padding;
 			break;
-		case BUTTON_CENTER:
-			x = WIDGET(bu)->w/2 - label->w/2;
+		case AG_BUTTON_CENTER:
+			x = AGWIDGET(bu)->w/2 - label->w/2;
 			break;
-		case BUTTON_RIGHT:
-			x = WIDGET(bu)->w - label->w - bu->padding;
+		case AG_BUTTON_RIGHT:
+			x = AGWIDGET(bu)->w - label->w - bu->padding;
 			break;
 		}
-		y = ((WIDGET(bu)->h - label->h)/2) - 1;		/* Middle */
+		y = ((AGWIDGET(bu)->h - label->h)/2) - 1;	/* Middle */
 
 		if (pressed) {
 			x++;
 			y++;
 		}
-		widget_blit_surface(bu, 0, x, y);
+		AG_WidgetBlitSurface(bu, 0, x, y);
 	}
 }
 
 static void
 button_mousemotion(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
-	struct widget_binding *stateb;
+	AG_Button *bu = argv[0].p;
+	AG_WidgetBinding *stateb;
 	int x = argv[1].i;
 	int y = argv[2].i;
 	int *pressed;
 
-	if (bu->flags & BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;
 
-	stateb = widget_get_binding(bu, "state", &pressed);
-	if (!widget_relative_area(bu, x, y)) {
-		if ((bu->flags & BUTTON_STICKY) == 0
+	stateb = AG_WidgetGetBinding(bu, "state", &pressed);
+	if (!AG_WidgetRelativeArea(bu, x, y)) {
+		if ((bu->flags & AG_BUTTON_STICKY) == 0
 		    && *pressed == 1) {
 			*pressed = 0;
-			widget_binding_modified(stateb);
+			AG_WidgetBindingChanged(stateb);
 		}
-		if (bu->flags & BUTTON_MOUSEOVER) {
-			bu->flags &= ~(BUTTON_MOUSEOVER);
-			event_post(NULL, bu, "button-mouseoverlap", "%i", 0);
+		if (bu->flags & AG_BUTTON_MOUSEOVER) {
+			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
+			AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 0);
 		}
 	} else {
-		bu->flags |= BUTTON_MOUSEOVER;
-		event_post(NULL, bu, "button-mouseoverlap", "%i", 1);
+		bu->flags |= AG_BUTTON_MOUSEOVER;
+		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
 	}
-	widget_binding_unlock(stateb);
+	AG_WidgetUnlockBinding(stateb);
 }
 
 static void
 button_mousebuttondown(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
+	AG_Button *bu = argv[0].p;
 	int button = argv[1].i;
-	struct widget_binding *stateb;
+	AG_WidgetBinding *stateb;
 	int *pushed;
 	
-	if (bu->flags & BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;
 
-	widget_focus(bu);
+	AG_WidgetFocus(bu);
 
 	if (button != SDL_BUTTON_LEFT)
 		return;
 	
-	stateb = widget_get_binding(bu, "state", &pushed);
-	if (!(bu->flags & BUTTON_STICKY)) {
+	stateb = AG_WidgetGetBinding(bu, "state", &pushed);
+	if (!(bu->flags & AG_BUTTON_STICKY)) {
 		*pushed = 1;
 	} else {
 		*pushed = !(*pushed);
-		event_post(NULL, bu, "button-pushed", "%i", *pushed);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", *pushed);
 	}
-	widget_binding_modified(stateb);
-	widget_binding_unlock(stateb);
+	AG_WidgetBindingChanged(stateb);
+	AG_WidgetUnlockBinding(stateb);
 
-	if (bu->flags & BUTTON_REPEAT) {
-		timeout_del(bu, &bu->repeat_to);
-		timeout_replace(bu, &bu->delay_to, mouse_spin_delay);
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_ReplaceTimeout(bu, &bu->delay_to, agMouseSpinDelay);
 	}
 }
 
 static void
 button_mousebuttonup(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
+	AG_Button *bu = argv[0].p;
 	int button = argv[1].i;
-	struct widget_binding *stateb;
+	AG_WidgetBinding *stateb;
 	int *pushed;
 	int x = argv[2].i;
 	int y = argv[3].i;
 		
-	if (bu->flags & BUTTON_REPEAT) {
-		timeout_del(bu, &bu->repeat_to);
-		timeout_del(bu, &bu->delay_to);
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_DelTimeout(bu, &bu->delay_to);
 	}
 	
-	if ((bu->flags & BUTTON_INSENSITIVE) ||
+	if ((bu->flags & AG_BUTTON_INSENSITIVE) ||
 	    x < 0 || y < 0 ||
-	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
+	    x > AGWIDGET(bu)->w || y > AGWIDGET(bu)->h) {
 		return;
 	}
 	
-	stateb = widget_get_binding(bu, "state", &pushed);
+	stateb = AG_WidgetGetBinding(bu, "state", &pushed);
 	if (*pushed &&
 	    button == SDL_BUTTON_LEFT &&
-	    !(bu->flags & BUTTON_STICKY)) {
+	    !(bu->flags & AG_BUTTON_STICKY)) {
 	    	*pushed = 0;
-		event_post(NULL, bu, "button-pushed", "%i", *pushed);
-		widget_binding_modified(stateb);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", *pushed);
+		AG_WidgetBindingChanged(stateb);
 	}
-	widget_binding_unlock(stateb);
+	AG_WidgetUnlockBinding(stateb);
 }
 
 static void
 button_keydown(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
+	AG_Button *bu = argv[0].p;
 	int keysym = argv[1].i;
 	
-	if (bu->flags & BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(bu, "state", 1);
-		event_post(NULL, bu, "button-pushed", "%i", 1);
+		AG_WidgetSetBool(bu, "state", 1);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
 
-		if (bu->flags & BUTTON_REPEAT) {
-			timeout_del(bu, &bu->repeat_to);
-			timeout_replace(bu, &bu->delay_to, 800);
+		if (bu->flags & AG_BUTTON_REPEAT) {
+			AG_DelTimeout(bu, &bu->repeat_to);
+			AG_ReplaceTimeout(bu, &bu->delay_to, 800);
 		}
 	}
 }
@@ -293,98 +293,98 @@ button_keydown(int argc, union evarg *argv)
 static void
 button_keyup(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
+	AG_Button *bu = argv[0].p;
 	int keysym = argv[1].i;
 	
-	if (bu->flags & BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;
 	
-	if (bu->flags & BUTTON_REPEAT) {
-		timeout_del(bu, &bu->delay_to);
-		timeout_del(bu, &bu->repeat_to);
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->delay_to);
+		AG_DelTimeout(bu, &bu->repeat_to);
 	}
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(bu, "state", 0);
-		event_post(NULL, bu, "button-pushed", "%i", 0);
+		AG_WidgetSetBool(bu, "state", 0);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 	}
 }
 
 void
-button_enable(struct button *bu)
+AG_ButtonEnable(AG_Button *bu)
 {
-	bu->flags &= ~(BUTTON_INSENSITIVE);
+	bu->flags &= ~(AG_BUTTON_INSENSITIVE);
 }
 
 void
-button_disable(struct button *bu)
+AG_ButtonDisable(AG_Button *bu)
 {
-	bu->flags |= (BUTTON_INSENSITIVE);
+	bu->flags |= (AG_BUTTON_INSENSITIVE);
 }
 
 void
-button_set_padding(struct button *bu, int padding)
+AG_ButtonSetPadding(AG_Button *bu, int padding)
 {
 	bu->padding = padding;
 }
 
 void
-button_set_focusable(struct button *bu, int focusable)
+AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 {
 	if (focusable) {
-		WIDGET(bu)->flags |= WIDGET_FOCUSABLE;
-		WIDGET(bu)->flags &= ~(WIDGET_UNFOCUSED_BUTTONUP);
+		AGWIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
+		AGWIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
 	} else {
-		WIDGET(bu)->flags &= ~(WIDGET_FOCUSABLE);
-		WIDGET(bu)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
+		AGWIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		AGWIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 	}
 }
 
 void
-button_set_sticky(struct button *bu, int sticky)
+AG_ButtonSetSticky(AG_Button *bu, int sticky)
 {
 	if (sticky) {
-		bu->flags |= (BUTTON_STICKY);
+		bu->flags |= (AG_BUTTON_STICKY);
 	} else {
-		bu->flags &= ~(BUTTON_STICKY);
+		bu->flags &= ~(AG_BUTTON_STICKY);
 	}
 }
 
 void
-button_set_justify(struct button *bu, enum button_justify jus)
+AG_ButtonSetJustification(AG_Button *bu, enum ag_button_justify jus)
 {
 	bu->justify = jus;
 }
 
 void
-button_set_label(struct button *bu, SDL_Surface *su)
+AG_ButtonSetSurface(AG_Button *bu, SDL_Surface *su)
 {
-	widget_replace_surface(bu, 0, su);
+	AG_WidgetReplaceSurface(bu, 0, su);
 }
 
 void
-button_set_repeat(struct button *bu, int repeat)
+AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 {
 	if (repeat) {
-		bu->flags |= (BUTTON_REPEAT);
+		bu->flags |= (AG_BUTTON_REPEAT);
 	} else {
-		timeout_del(bu, &bu->repeat_to);
-		timeout_del(bu, &bu->delay_to);
-		bu->flags &= ~(BUTTON_REPEAT);
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_DelTimeout(bu, &bu->delay_to);
+		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
 }
 
 void
-button_printf(struct button *bu, const char *fmt, ...)
+AG_ButtonPrintf(AG_Button *bu, const char *fmt, ...)
 {
-	char buf[LABEL_MAX];
+	char buf[AG_LABEL_MAX];
 	va_list args;
 
 	va_start(args, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	widget_replace_surface(bu, 0,
-	    text_render(NULL, -1, COLOR(BUTTON_TXT_COLOR), buf));
+	AG_WidgetReplaceSurface(bu, 0,
+	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), buf));
 }
 

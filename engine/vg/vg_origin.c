@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.15 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.16 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,24 +41,24 @@
 #include "vg_primitive.h"
 
 void
-vg_origin2(struct vg *vg, int o, double ox, double oy)
+VG_Origin2(VG *vg, int o, double ox, double oy)
 {
-	vg_origin3(vg, o, ox, oy, 0);
+	VG_Origin3(vg, o, ox, oy, 0);
 }
 
 void
-vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
+VG_Origin3(VG *vg, int o, double ox, double oy, double oz)
 {
-	struct vg_element *vge;
-	struct vg_block *vgb;
-	struct vg_vertex *vtx;
+	VG_Element *vge;
+	VG_Block *vgb;
+	VG_Vtx *vtx;
 	int i;
 
 	if (o == 0) {
 		if (vg->cur_block != NULL) {
 			TAILQ_FOREACH(vge, &vg->cur_block->vges, vgbmbs) {
 				for (i = 0; i < vge->nvtx; i++) {
-					struct vg_vertex *vtx = &vge->vtx[i];
+					VG_Vtx *vtx = &vge->vtx[i];
 
 					vtx->x -= ox - vg->origin[0].x;
 					vtx->y -= oy - vg->origin[0].y;
@@ -73,7 +73,7 @@ vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			for (i = 0; i < vge->nvtx; i++) {
-				struct vg_vertex *vtx = &vge->vtx[i];
+				VG_Vtx *vtx = &vge->vtx[i];
 
 				vtx->x -= ox - vg->origin[0].x;
 				vtx->y -= oy - vg->origin[0].y;
@@ -101,37 +101,37 @@ vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 }
 
 void
-vg_origin_color(struct vg *vg, int o, int r, int g, int b)
+VG_OriginColor(VG *vg, int o, int r, int g, int b)
 {
 	vg->origin_color[o] = SDL_MapRGB(vg->fmt, r, g, b);
 }
 
 void
-vg_origin_radius(struct vg *vg, int o, float r)
+VG_OriginRadius(VG *vg, int o, float r)
 {
 	vg->origin_radius[o] = r;
 }
 
 void
-vg_draw_origin(struct vg *vg)
+VG_DrawOrigin(VG *vg)
 {
 	int rx, ry, radius;
 	int o;
 
 	for (o = 0; o < vg->norigin; o++) {
 		if (o == 0) {
-			vg_arcoords2(vg, vg->origin[o].x, vg->origin[o].y,
+			VG_AbsRcoords2(vg, vg->origin[o].x, vg->origin[o].y,
 			    &rx, &ry);
 		} else {
-			vg_rcoords2(vg, vg->origin[o].x, vg->origin[o].y,
+			VG_Rcoords2(vg, vg->origin[o].x, vg->origin[o].y,
 			    &rx, &ry);
 		}
-		vg_rlength(vg, vg->origin_radius[o], &radius);
-		vg_circle_primitive(vg, rx, ry, radius,
+		VG_RLength(vg, vg->origin_radius[o], &radius);
+		VG_CirclePrimitive(vg, rx, ry, radius,
 		    vg->origin_color[o]);
-		vg_line_primitive(vg, rx, ry, rx+radius, ry,
+		VG_LinePrimitive(vg, rx, ry, rx+radius, ry,
 		    vg->origin_color[o]);
-		vg_line_primitive(vg, rx, ry, rx, ry+radius,
+		VG_LinePrimitive(vg, rx, ry, rx, ry+radius,
 		    vg->origin_color[o]);
 	}
 }
@@ -140,30 +140,30 @@ vg_draw_origin(struct vg *vg)
 static int norigin = 0;
 
 static void
-origin_tool_init(void *t)
+origin_AG_MaptoolInit(void *t)
 {
-	tool_push_status(t, _("Specify origin point."));
+	AG_MaptoolPushStatus(t, _("Specify origin point."));
 }
 
 static void
 origin_tool_pane(void *t, void *con)
 {
-	struct spinbutton *sbu;
+	AG_Spinbutton *sbu;
 
-	sbu = spinbutton_new(con, _("Origin#: "));
-	widget_bind(sbu, "value", WIDGET_INT, &norigin);
-	spinbutton_set_range(sbu, 0, VG_NORIGINS-1);
+	sbu = AG_SpinbuttonNew(con, _("Origin#: "));
+	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &norigin);
+	AG_SpinbuttonSetRange(sbu, 0, VG_NORIGINS-1);
 }
 
 static int
 origin_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double x, y;
 
 	if (btn == 1) {
-		vg_map2veca(vg, xmap, ymap, &x, &y);
-		vg_origin2(vg, norigin, x, y);
+		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
+		VG_Origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}
 	return (1);
@@ -173,23 +173,23 @@ static int
 origin_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double x, y;
 
 	if (btn & SDL_BUTTON(1)) {
-		vg_map2veca(vg, xmap, ymap, &x, &y);
-		vg_origin2(vg, norigin, x, y);
+		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
+		VG_Origin2(vg, norigin, x, y);
 		vg->redraw++;
 	}
 	return (1);
 }
 
-const struct tool_ops vg_origin_tool = {
+const AG_MaptoolOps vgOriginTool = {
 	"Origin", N_("Displace the origin point."),
 	VGORIGIN_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	origin_tool_init,
+	origin_AG_MaptoolInit,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

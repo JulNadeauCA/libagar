@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.236 2005/09/19 01:25:16 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.237 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,12 +65,12 @@
 #include <string.h>
 #include <unistd.h>
 
-const struct version object_ver = {
+const AG_Version ag_object_ver = {
 	"agar object",
 	7, 0
 };
 
-const struct object_ops object_ops = {
+const AG_ObjectOps agObjectOps = {
 	NULL,	/* init */
 	NULL,	/* reinit */
 	NULL,	/* destroy */
@@ -86,35 +86,35 @@ const struct object_ops object_ops = {
 #define DEBUG_LINKAGE	0x10
 #define DEBUG_GC	0x20
 
-int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
-#define engine_debug object_debug
+int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
+#define agDebugLvl agObjectDebugLvl
 #endif
 
-extern int mapedition;
+extern int agEditMode;
 
-int object_ignore_dataerrs = 0;    /* Don't fail on a data load failure. */
-int object_ignore_unkobjs = 0;	   /* Don't fail on unknown object types. */
+int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
+int agObjectIgnoreUnknownObjs = 0;   /* Don't fail on unknown object types. */
 
 /* Allocate, initialize and attach a generic object. */
-struct object *
-object_new(void *parent, const char *name)
+AG_Object *
+AG_ObjectNew(void *parent, const char *name)
 {
-	struct object *ob;
+	AG_Object *ob;
 
-	ob = Malloc(sizeof(struct object), M_OBJECT);
-	object_init(ob, "object", name, NULL);
+	ob = Malloc(sizeof(AG_Object), M_OBJECT);
+	AG_ObjectInit(ob, "object", name, NULL);
 
 	if (parent != NULL) {
-		object_attach(parent, ob);
+		AG_ObjectAttach(parent, ob);
 	}
 	return (ob);
 }
 
 /* Initialize a generic object structure. */
 void
-object_init(void *p, const char *type, const char *name, const void *opsp)
+AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	char *c;
 
 	strlcpy(ob->type, type, sizeof(ob->type));
@@ -127,11 +127,11 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	}
 
 	ob->save_pfx = "/world";
-	ob->ops = (opsp != NULL) ? opsp : &object_ops;
+	ob->ops = (opsp != NULL) ? opsp : &agObjectOps;
 	ob->parent = NULL;
 	ob->flags = 0;
 
-	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
+	pthread_mutex_init(&ob->lock, &agRecursiveMutexAttr);
 	ob->gfx = NULL;
 	ob->audio = NULL;
 	ob->data_used = 0;
@@ -143,17 +143,17 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 }
 
 int
-object_subclass(struct object *ob, const char *clname, size_t size)
+AG_ObjectSubclass(AG_Object *ob, const char *clname, size_t size)
 {
 	return (strncmp(ob->type, clname, size) == 0 &&
 	        (ob->type[size] == '.' || ob->type[size] == '\0'));
 }
 
 void
-object_get_classinfo(const char *type, struct object_classinfo *cli)
+AG_ObjectGetClassInfo(const char *type, AG_ObjectClassInfo *cli)
 {
-	char tpp[OBJECT_TYPE_MAX], *tp = &tpp[0];
-	char tn[OBJECT_TYPE_MAX];
+	char tpp[AG_OBJECT_TYPE_MAX], *tp = &tpp[0];
+	char tn[AG_OBJECT_TYPE_MAX];
 	char *s;
 	u_int i;
 
@@ -161,7 +161,7 @@ object_get_classinfo(const char *type, struct object_classinfo *cli)
 	tn[0] = '\0';
 
 	cli->classes = Malloc(sizeof(char *), M_OBJECT);
-	cli->types = Malloc(sizeof(struct object_type *), M_OBJECT);
+	cli->types = Malloc(sizeof(AG_ObjectType *), M_OBJECT);
 	cli->nclasses = 0;
 
 	while ((s = strsep(&tp, ".")) != NULL) {
@@ -173,15 +173,15 @@ object_get_classinfo(const char *type, struct object_classinfo *cli)
 		cli->classes = Realloc(cli->classes,
 		    (cli->nclasses+1)*sizeof(char *));
 		cli->types = Realloc(cli->types,
-		    (cli->nclasses+1)*sizeof(struct object_type *));
+		    (cli->nclasses+1)*sizeof(AG_ObjectType *));
 		cli->classes[cli->nclasses] = Strdup(s);
-		cli->types[cli->nclasses] = typesw_find(tn);
+		cli->types[cli->nclasses] = AG_FindType(tn);
 		cli->nclasses++;
 	}
 }
 
 void
-object_free_classinfo(struct object_classinfo *cli)
+AG_ObjectFreeClassinfo(AG_ObjectClassInfo *cli)
 {
 	u_int i;
 
@@ -193,23 +193,23 @@ object_free_classinfo(struct object_classinfo *cli)
 }
 
 void
-object_remain(void *p, int flags)
+AG_ObjectRemain(void *p, int flags)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
-	if (flags & OBJECT_REMAIN_DATA) {
-		ob->flags |= (OBJECT_REMAIN_DATA|OBJECT_DATA_RESIDENT);
-		ob->data_used = OBJECT_DEP_MAX;
+	if (flags & AG_OBJECT_REMAIN_DATA) {
+		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_DATA_RESIDENT);
+		ob->data_used = AG_OBJECT_DEP_MAX;
 	} else {
-		ob->flags &= ~OBJECT_REMAIN_DATA;
+		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
 	}
-	if (flags & OBJECT_REMAIN_GFX) {
-		ob->flags |= OBJECT_REMAIN_GFX;
+	if (flags & AG_OBJECT_REMAIN_GFX) {
+		ob->flags |= AG_OBJECT_REMAIN_GFX;
 		if (ob->gfx != NULL) {
-			ob->gfx->used = GFX_MAX_USED;
+			ob->gfx->used = AG_GFX_MAX_USED;
 		}
 	} else {
-		ob->flags &= ~OBJECT_REMAIN_GFX;
+		ob->flags &= ~AG_OBJECT_REMAIN_GFX;
 	}
 }
 
@@ -218,31 +218,31 @@ object_remain(void *p, int flags)
  * the dependencies (which are assumed to then have a reference count of 0).
  */
 void
-object_free_data(void *p)
+AG_ObjectFreeData(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
-	if (ob->flags & OBJECT_DATA_RESIDENT) {
+	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
 		if (ob->ops->reinit != NULL) {
-			ob->flags |= OBJECT_PRESERVE_DEPS;
+			ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 			ob->ops->reinit(ob);
-			ob->flags &= ~(OBJECT_PRESERVE_DEPS);
+			ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
 		}
-		ob->flags &= ~(OBJECT_DATA_RESIDENT);
+		ob->flags &= ~(AG_OBJECT_DATA_RESIDENT);
 	}
 #if 0
 	if (ob->gfx != NULL) {
-		gfx_alloc_sprites(ob->gfx, 0);
-		gfx_alloc_anims(ob->gfx, 0);
+		AG_GfxAllocSprites(ob->gfx, 0);
+		AG_GfxAllocAnims(ob->gfx, 0);
 	}
 #endif
 }
 
 /* Recursive function to construct absolute object names. */
 static int
-object_name_search(const void *obj, char *path, size_t path_len)
+AG_ObjectNameSearch(const void *obj, char *path, size_t path_len)
 {
-	const struct object *ob = obj;
+	const AG_Object *ob = obj;
 	size_t name_len, cur_len;
 	int rv = 0;
 
@@ -250,7 +250,7 @@ object_name_search(const void *obj, char *path, size_t path_len)
 	name_len = strlen(ob->name)+1;
 	
 	if (sizeof("/")+name_len+sizeof("/")+cur_len >= path_len) {
-		error_set(_("The path exceeds >= %lu bytes."),
+		AG_SetError(_("The path exceeds >= %lu bytes."),
 		    (unsigned long)path_len);
 		return (-1);
 	}
@@ -260,8 +260,8 @@ object_name_search(const void *obj, char *path, size_t path_len)
 	path[0] = '/';
 	memcpy(&path[1], ob->name, name_len-1);	    /* Omit the NUL */
 
-	if (ob->parent != world && ob->parent != NULL)
-		rv = object_name_search(ob->parent, path, path_len);
+	if (ob->parent != agWorld && ob->parent != NULL)
+		rv = AG_ObjectNameSearch(ob->parent, path, path_len);
 
 	return (rv);
 }
@@ -271,21 +271,21 @@ object_name_search(const void *obj, char *path, size_t path_len)
  * The buffer size must be >2 bytes.
  */
 int
-object_copy_name(const void *obj, char *path, size_t path_len)
+AG_ObjectCopyName(const void *obj, char *path, size_t path_len)
 {
-	const struct object *ob = obj;
+	const AG_Object *ob = obj;
 	int rv = 0;
 
 	path[0] = '/';
 	path[1] = '\0';
-	if (ob != world)
+	if (ob != agWorld)
 		strlcat(path, ob->name, path_len);
 
-	lock_linkage();
-	if (ob != world && ob->parent != world && ob->parent != NULL) {
-		rv = object_name_search(ob->parent, path, path_len);
+	AG_LockLinkage();
+	if (ob != agWorld && ob->parent != agWorld && ob->parent != NULL) {
+		rv = AG_ObjectNameSearch(ob->parent, path, path_len);
 	}
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (rv);
 }
 
@@ -294,9 +294,9 @@ object_copy_name(const void *obj, char *path, size_t path_len)
  * The linkage must be locked.
  */
 void *
-object_root(const void *p)
+AG_ObjectRoot(const void *p)
 {
-	const struct object *ob = p;
+	const AG_Object *ob = p;
 
 	while (ob != NULL) {
 		if (ob->parent == NULL) {
@@ -312,12 +312,12 @@ object_root(const void *p)
  * The linkage must be locked.
  */
 void *
-object_find_parent(void *obj, const char *name, const char *type)
+AG_ObjectFindParent(void *obj, const char *name, const char *type)
 {
-	struct object *ob = obj;
+	AG_Object *ob = obj;
 
 	while (ob != NULL) {
-		struct object *po = ob->parent;
+		AG_Object *po = ob->parent;
 
 		if (po == NULL) {
 			return (NULL);
@@ -338,14 +338,14 @@ object_find_parent(void *obj, const char *name, const char *type)
 static int
 find_depended(const void *p, const void *robj)
 {
-	const struct object *ob = p, *cob;
-	struct object_dep *dep;
+	const AG_Object *ob = p, *cob;
+	AG_ObjectDep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == robj &&
 		    robj != ob) {
-			error_set(_("The `%s' object is used by `%s'."),
-			    OBJECT(robj)->name, ob->name);
+			AG_SetError(_("The `%s' object is used by `%s'."),
+			    AGOBJECT(robj)->name, ob->name);
 			return (1);
 		}
 	}
@@ -361,17 +361,17 @@ find_depended(const void *p, const void *robj)
  * The linkage must be locked.
  */
 int
-object_in_use(const void *p)
+AG_ObjectInUse(const void *p)
 {
-	const struct object *ob = p, *cob;
-	struct object *root;
+	const AG_Object *ob = p, *cob;
+	AG_Object *root;
 
-	root = object_root(ob);
+	root = AG_ObjectRoot(ob);
 	if (find_depended(root, ob))
 		return (1);
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_in_use(cob))
+		if (AG_ObjectInUse(cob))
 			return (1);
 	}
 	return (0);
@@ -379,114 +379,114 @@ object_in_use(const void *p)
 
 /* Move an object to a different parent. */
 void
-object_move(void *childp, void *newparentp)
+AG_ObjectMove(void *childp, void *newparentp)
 {
-	struct object *child = childp;
-	struct object *oparent = child->parent;
-	struct object *nparent = newparentp;
+	AG_Object *child = childp;
+	AG_Object *oparent = child->parent;
+	AG_Object *nparent = newparentp;
 
-	lock_linkage();
+	AG_LockLinkage();
 
 	TAILQ_REMOVE(&oparent->children, child, cobjs);
 	child->parent = NULL;
-	event_post(oparent, child, "detached", NULL);
+	AG_PostEvent(oparent, child, "detached", NULL);
 
 	TAILQ_INSERT_TAIL(&nparent->children, child, cobjs);
 	child->parent = nparent;
-	event_post(nparent, child, "attached", NULL);
-	event_post(oparent, child, "moved", "%p", nparent);
+	AG_PostEvent(nparent, child, "attached", NULL);
+	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
 	debug(DEBUG_LINKAGE, "%s: %s -> %s\n", child->name, oparent->name,
 	    nparent->name);
 
-	unlock_linkage();
+	AG_UnlockLinkage();
 }
 
 /* Attach a child object to some parent object. */
 void
-object_attach(void *parentp, void *childp)
+AG_ObjectAttach(void *parentp, void *childp)
 {
-	struct object *parent = parentp;
-	struct object *child = childp;
+	AG_Object *parent = parentp;
+	AG_Object *child = childp;
 
-	lock_linkage();
+	AG_LockLinkage();
 	TAILQ_INSERT_TAIL(&parent->children, child, cobjs);
 	child->parent = parent;
-	event_post(parent, child, "attached", NULL);
-	event_post(child, parent, "child-attached", NULL);
+	AG_PostEvent(parent, child, "attached", NULL);
+	AG_PostEvent(child, parent, "child-attached", NULL);
 	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
-	unlock_linkage();
+	AG_UnlockLinkage();
 }
 
 /* Attach a child object to some parent object according to a path. */
 int
-object_attach_path(const char *path, void *child)
+AG_ObjectAttachPath(const char *path, void *child)
 {
 	char ppath[MAXPATHLEN];
 	void *parent;
 	char *p;
 
 	if (strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
-		error_set("path too big");
+		AG_SetError("path too big");
 		goto fail;
 	}
 	if ((p = strrchr(ppath, '/')) != NULL) {
 		*p = '\0';
 	} else {
-		error_set("not an absolute path: `%s'", path);
+		AG_SetError("not an absolute path: `%s'", path);
 		goto fail;
 	}
 
-	lock_linkage();
+	AG_LockLinkage();
 	if (ppath[0] == '\0') {
-		object_attach(world, child);
+		AG_ObjectAttach(agWorld, child);
 	} else {
-		if ((parent = object_find(ppath)) == NULL) {
-			error_set("%s: cannot attach to `%s': %s",
-			    OBJECT(child)->name, ppath, error_get());
+		if ((parent = AG_ObjectFind(ppath)) == NULL) {
+			AG_SetError("%s: cannot attach to `%s': %s",
+			    AGOBJECT(child)->name, ppath, AG_GetError());
 			goto fail;
 		}
-		object_attach(parent, child);
+		AG_ObjectAttach(parent, child);
 	}
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (0);
 fail:
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (-1);
 }
 
 /* Detach a child object from its parent. */
 void
-object_detach(void *childp)
+AG_ObjectDetach(void *childp)
 {
-	struct object *child = childp;
-	struct object *parent = child->parent;
+	AG_Object *child = childp;
+	AG_Object *parent = child->parent;
 
-	lock_linkage();
+	AG_LockLinkage();
 	pthread_mutex_lock(&child->lock);
 
 	/* Cancel scheduled non-detachable timeouts. */
-	object_cancel_timeouts(child, TIMEOUT_DETACHABLE);
+	AG_ObjectCancelTimeouts(child, AG_TIMEOUT_DETACHABLE);
 
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
-	event_post(parent, child, "detached", NULL);
-	event_post(child, parent, "child-detached", NULL);
+	AG_PostEvent(parent, child, "detached", NULL);
+	AG_PostEvent(child, parent, "child-detached", NULL);
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
 
 	pthread_mutex_unlock(&child->lock);
-	unlock_linkage();
+	AG_UnlockLinkage();
 }
 
 /* Traverse the object tree using a pathname. */
 static void *
-object_find_child(const struct object *parent, const char *name)
+AG_ObjectFindChild(const AG_Object *parent, const char *name)
 {
-	char node_name[OBJECT_PATH_MAX];
+	char node_name[AG_OBJECT_PATH_MAX];
 	void *rv;
 	char *s;
-	struct object *child;
+	AG_Object *child;
 
 	strlcpy(node_name, name, sizeof(node_name));
 
@@ -498,7 +498,7 @@ object_find_child(const struct object *parent, const char *name)
 			continue;
 
 		if ((s = strchr(name, '/')) != NULL) {
-			rv = object_find_child(child, &s[1]);
+			rv = AG_ObjectFindChild(child, &s[1]);
 			if (rv != NULL) {
 				return (rv);
 			} else {
@@ -512,7 +512,7 @@ object_find_child(const struct object *parent, const char *name)
 
 /* Search for the named object (absolute path). */
 void *
-object_find(const char *name)
+AG_ObjectFind(const char *name)
 {
 	void *rv;
 
@@ -521,23 +521,23 @@ object_find(const char *name)
 		fatal("not an absolute path: `%s'", name);
 #endif
 	if (name[0] == '/' && name[1] == '\0')
-		return (world);
+		return (agWorld);
 	
-	lock_linkage();
-	rv = object_find_child(world, &name[1]);
-	unlock_linkage();
+	AG_LockLinkage();
+	rv = AG_ObjectFindChild(agWorld, &name[1]);
+	AG_UnlockLinkage();
 
 	if (rv == NULL) {
-		error_set(_("The object `%s' does not exist."), name);
+		AG_SetError(_("The object `%s' does not exist."), name);
 	}
 	return (rv);
 }
 
 /* Search for the named object (absolute path). */
 void *
-object_findf(const char *fmt, ...)
+AG_ObjectFindF(const char *fmt, ...)
 {
-	char path[OBJECT_PATH_MAX];
+	char path[AG_OBJECT_PATH_MAX];
 	void *rv;
 	va_list ap;
 
@@ -548,21 +548,21 @@ object_findf(const char *fmt, ...)
 	if (path[0] != '/')
 		fatal("not an absolute path: `%s'", path);
 #endif
-	lock_linkage();
-	rv = object_find_child(world, &path[1]);
-	unlock_linkage();
+	AG_LockLinkage();
+	rv = AG_ObjectFindChild(agWorld, &path[1]);
+	AG_UnlockLinkage();
 
 	if (rv == NULL) {
-		error_set(_("The object `%s' does not exist."), path);
+		AG_SetError(_("The object `%s' does not exist."), path);
 	}
 	return (rv);
 }
 
 /* Clear the dependency table. */
 void
-object_free_deps(struct object *ob)
+AG_ObjectFreeDeps(AG_Object *ob)
 {
-	struct object_dep *dep, *ndep;
+	AG_ObjectDep *dep, *ndep;
 
 	for (dep = TAILQ_FIRST(&ob->deps);
 	     dep != TAILQ_END(&ob->deps);
@@ -578,10 +578,10 @@ object_free_deps(struct object *ob)
  * count of zero (as used by the load process to resolve object references).
  */
 void
-object_free_zerodeps(struct object *ob)
+AG_ObjectFreeZerodeps(AG_Object *ob)
 {
-	struct object *cob;
-	struct object_dep *dep, *ndep;
+	AG_Object *cob;
+	AG_ObjectDep *dep, *ndep;
 
 	for (dep = TAILQ_FIRST(&ob->deps);
 	     dep != TAILQ_END(&ob->deps);
@@ -593,7 +593,7 @@ object_free_zerodeps(struct object *ob)
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
-		object_free_zerodeps(cob);
+		AG_ObjectFreeZerodeps(cob);
 }
 
 /*
@@ -601,9 +601,9 @@ object_free_zerodeps(struct object *ob)
  * are currently in use.
  */
 void
-object_free_children(struct object *pob)
+AG_ObjectFreeChildren(AG_Object *pob)
 {
-	struct object *cob, *ncob;
+	AG_Object *cob, *ncob;
 
 	pthread_mutex_lock(&pob->lock);
 	for (cob = TAILQ_FIRST(&pob->children);
@@ -611,8 +611,8 @@ object_free_children(struct object *pob)
 	     cob = ncob) {
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
-		object_destroy(cob);
-		if ((cob->flags & OBJECT_STATIC) == 0)
+		AG_ObjectDestroy(cob);
+		if ((cob->flags & AG_OBJECT_STATIC) == 0)
 			Free(cob, M_OBJECT);
 	}
 	TAILQ_INIT(&pob->children);
@@ -621,16 +621,16 @@ object_free_children(struct object *pob)
 
 /* Clear an object's property table. */
 void
-object_free_props(struct object *ob)
+AG_ObjectFreeProps(AG_Object *ob)
 {
-	struct prop *prop, *nextprop;
+	AG_Prop *prop, *nextprop;
 
 	pthread_mutex_lock(&ob->lock);
 	for (prop = TAILQ_FIRST(&ob->props);
 	     prop != TAILQ_END(&ob->props);
 	     prop = nextprop) {
 		nextprop = TAILQ_NEXT(prop, props);
-		prop_destroy(prop);
+		AG_PropDestroy(prop);
 		Free(prop, M_PROP);
 	}
 	TAILQ_INIT(&ob->props);
@@ -642,9 +642,9 @@ object_free_props(struct object *ob)
  * any scheduled execution.
  */
 void
-object_free_events(struct object *ob)
+AG_ObjectFreeEvents(AG_Object *ob)
 {
-	struct event *eev, *neev;
+	AG_Event *eev, *neev;
 
 	pthread_mutex_lock(&ob->lock);
 	for (eev = TAILQ_FIRST(&ob->events);
@@ -652,8 +652,8 @@ object_free_events(struct object *ob)
 	     eev = neev) {
 		neev = TAILQ_NEXT(eev, events);
 	
-		if (eev->flags & EVENT_SCHEDULED) {
-			event_cancel(ob, eev->name);
+		if (eev->flags & AG_EVENT_SCHEDULED) {
+			AG_CancelEvent(ob, eev->name);
 		}
 		Free(eev, M_EVENT);
 	}
@@ -663,34 +663,33 @@ object_free_events(struct object *ob)
 
 /* Cancel any scheduled timeout(3) event associated with the object. */
 void
-object_cancel_timeouts(void *p, int flags)
+AG_ObjectCancelTimeouts(void *p, int flags)
 {
-	struct object *ob = p, *tob;
-	extern pthread_mutex_t timeout_lock;
-	extern struct objectq timeout_objq;
-	struct event *ev;
-	struct timeout *to;
+	AG_Object *ob = p, *tob;
+	extern struct ag_objectq agTimeoutObjQ;
+	AG_Event *ev;
+	AG_Timeout *to;
 
-	pthread_mutex_lock(&timeout_lock);
+	AG_LockTiming();
 	pthread_mutex_lock(&ob->lock);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if ((ev->flags & EVENT_SCHEDULED) &&
+		if ((ev->flags & AG_EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags) == 0) {
 			dprintf("%s: cancelling scheduled `%s'\n", ob->name,
 			    ev->name);
-			timeout_del(ob, &ev->timeout);
-			ev->flags &= ~(EVENT_SCHEDULED);
+			AG_DelTimeout(ob, &ev->timeout);
+			ev->flags &= ~(AG_EVENT_SCHEDULED);
 		}
 	}
-	TAILQ_FOREACH(tob, &timeout_objq, tobjs) {
+	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
 		if (tob == ob)
-			TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+			TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 	}
 	CIRCLEQ_INIT(&ob->timeouts);
 
 	pthread_mutex_unlock(&ob->lock);
-	pthread_mutex_unlock(&timeout_lock);
+	AG_UnlockTiming();
 }
 
 /*
@@ -698,15 +697,15 @@ object_cancel_timeouts(void *p, int flags)
  * that none of them is currently in use.
  */
 void
-object_destroy(void *p)
+AG_ObjectDestroy(void *p)
 {
-	struct object *ob = p;
-	struct object_dep *dep, *ndep;
+	AG_Object *ob = p;
+	AG_ObjectDep *dep, *ndep;
 
 	debug(DEBUG_GC, "destroy %s (parent=%p)\n", ob->name, ob->parent);
 
-	object_cancel_timeouts(ob, 0);
-	object_free_children(ob);
+	AG_ObjectCancelTimeouts(ob, 0);
+	AG_ObjectFreeChildren(ob);
 	
 	if (ob->ops->reinit != NULL) {
 		ob->ops->reinit(ob);
@@ -722,32 +721,32 @@ object_destroy(void *p)
 		ob->ops->destroy(ob);
 
 	if (ob->gfx != NULL) {
-		gfx_destroy(ob->gfx);
+		AG_GfxDestroy(ob->gfx);
 		ob->gfx = NULL;
 	}
 	if (ob->audio != NULL) {
-		audio_destroy(ob->audio);
+		AG_AudioDestroy(ob->audio);
 		ob->audio = NULL;
 	}
 
-	object_free_props(ob);
-	object_free_events(ob);
+	AG_ObjectFreeProps(ob);
+	AG_ObjectFreeEvents(ob);
 	pthread_mutex_destroy(&ob->lock);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
 /* XXX modifies buffer even on failure */
 int
-object_copy_filename(const void *p, char *path, size_t path_len)
+AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 {
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
-	char obj_name[OBJECT_PATH_MAX];
-	const struct object *ob = p;
+	char obj_name[AG_OBJECT_PATH_MAX];
+	const AG_Object *ob = p;
 	struct stat sta;
 	char *dir;
 
-	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
-	object_copy_name(ob, obj_name, sizeof(obj_name));
+	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
+	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
 	for (dir = strsep(&loadpathp, ":");
 	     dir != NULL;
@@ -765,7 +764,7 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 		if (stat(path, &sta) == 0)
 			return (0);
 	}
-	error_set(_("The %s%s/%s.%s file is not in load-path."),
+	AG_SetError(_("The %s%s/%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
 	    obj_name, ob->name, ob->type);
 	return (-1);
@@ -773,16 +772,16 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 
 /* Copy the full pathname of an object's data dir to a fixed-size buffer. */
 int
-object_copy_dirname(const void *p, char *path, size_t path_len)
+AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 {
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
-	char obj_name[OBJECT_PATH_MAX];
-	const struct object *ob = p;
+	char obj_name[AG_OBJECT_PATH_MAX];
+	const AG_Object *ob = p;
 	struct stat sta;
 	char *dir;
 
-	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
-	object_copy_name(ob, obj_name, sizeof(obj_name));
+	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
+	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
 	for (dir = strsep(&loadpathp, ":");
 	     dir != NULL;
@@ -799,50 +798,50 @@ object_copy_dirname(const void *p, char *path, size_t path_len)
 			return (0);
 		}
 	}
-	error_set(_("The %s directory is not in load-path."), obj_name);
+	AG_SetError(_("The %s directory is not in load-path."), obj_name);
 	return (-1);
 }
 
 /* Bring specific resources associated with an object in memory. */
 int
-object_page_in(void *p, enum object_page_item item)
+AG_ObjectPageIn(void *p, enum ag_object_page_item item)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
 	pthread_mutex_lock(&ob->lock);
 
 	switch (item) {
-	case OBJECT_GFX:
+	case AG_OBJECT_GFX:
 		if (ob->gfx == NULL) {
-			ob->gfx = gfx_new(ob);
+			ob->gfx = AG_GfxNew(ob);
 		}
 		if (ob->gfx->used == 0 &&
-		    gfx_load(ob) == -1) {
+		    AG_GfxLoad(ob) == -1) {
 			goto fail;
 		}
-		if (++ob->gfx->used > GFX_MAX_USED) {
-			ob->gfx->used = GFX_MAX_USED;
+		if (++ob->gfx->used > AG_GFX_MAX_USED) {
+			ob->gfx->used = AG_GFX_MAX_USED;
 		}
 		break;
-	case OBJECT_AUDIO:
-	case OBJECT_DATA:
-		if (ob->flags & OBJECT_NON_PERSISTENT) {
+	case AG_OBJECT_AUDIO:
+	case AG_OBJECT_DATA:
+		if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
 			goto out;
 		}
 		if (ob->data_used == 0) {
-			if (object_load_data(ob) == -1) {
+			if (AG_ObjectLoadData(ob) == -1) {
 				/*
 				 * Assume that this failure means the data has
 				 * never been saved before.
 				 * XXX
 				 */
-				printf("%s: %s\n", ob->name, error_get());
-				ob->flags |= OBJECT_DATA_RESIDENT;
+				printf("%s: %s\n", ob->name, AG_GetError());
+				ob->flags |= AG_OBJECT_DATA_RESIDENT;
 			}
 		}
 out:
-		if (++ob->data_used > OBJECT_DEP_MAX) {
-			ob->data_used = OBJECT_DEP_MAX;
+		if (++ob->data_used > AG_OBJECT_DEP_MAX) {
+			ob->data_used = AG_OBJECT_DEP_MAX;
 		}
 		break;
 	}
@@ -855,40 +854,40 @@ fail:
 
 /* Remove specific object resources from memory / save to network format. */
 int
-object_page_out(void *p, enum object_page_item item)
+AG_ObjectPageOut(void *p, enum ag_object_page_item item)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	
 	pthread_mutex_lock(&ob->lock);
 	
 	switch (item) {
-	case OBJECT_GFX:
-		if (ob->gfx != NULL && ob->gfx->used != GFX_MAX_USED) {
+	case AG_OBJECT_GFX:
+		if (ob->gfx != NULL && ob->gfx->used != AG_GFX_MAX_USED) {
 			if (--ob->gfx->used == 0) {
-				gfx_alloc_sprites(ob->gfx, 0);
-				gfx_alloc_anims(ob->gfx, 0);
+				AG_GfxAllocSprites(ob->gfx, 0);
+				AG_GfxAllocAnims(ob->gfx, 0);
 				/* TODO save the gfx part */
 			}
 		}
 		break; 
-	case OBJECT_AUDIO:
+	case AG_OBJECT_AUDIO:
 		break; 
-	case OBJECT_DATA:
-		if (ob->flags & OBJECT_NON_PERSISTENT)
+	case AG_OBJECT_DATA:
+		if (ob->flags & AG_OBJECT_NON_PERSISTENT)
 			goto done;
 #ifdef DEBUG
 		if (ob->data_used == 0)
 			fatal("neg data ref count");
 #endif
-		if (ob->data_used != OBJECT_DEP_MAX &&
+		if (ob->data_used != AG_OBJECT_DEP_MAX &&
 		    --ob->data_used == 0) {
-			extern int objmgr_exiting;
+			extern int agObjMgrExiting;
 
-			if (!objmgr_exiting) {
-				if (object_save(ob) == -1)
+			if (!agObjMgrExiting) {
+				if (AG_ObjectSave(ob) == -1)
 					goto fail;
 			}
-			object_free_data(ob);
+			AG_ObjectFreeData(ob);
 		}
 		break;
 	}
@@ -901,45 +900,45 @@ fail:
 }
 
 int
-object_load(void *p)
+AG_ObjectLoad(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
-	lock_linkage();
+	AG_LockLinkage();
 	pthread_mutex_lock(&ob->lock);
 	
 	/* Cancel scheduled non-loadable timeouts. */
-	object_cancel_timeouts(ob, TIMEOUT_LOADABLE);
+	AG_ObjectCancelTimeouts(ob, AG_TIMEOUT_LOADABLE);
 	
-	if (ob->flags & OBJECT_NON_PERSISTENT) {
-		error_set(_("The `%s' object is non-persistent."), ob->name);
+	if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail;
 	}
 
  	/* Load the generic part of the object and its children. */
-	if (object_load_generic(ob) == -1)
+	if (AG_ObjectLoadGeneric(ob) == -1)
 		goto fail;
 
 	/*
 	 * Resolve the dependency tables now that the generic object tree
 	 * is in a consistent state.
 	 */
-	if (object_resolve_deps(ob) == -1)
+	if (AG_ObjectResolveDeps(ob) == -1)
 		goto fail;
 
 	/*
 	 * Reload the data of the object and its children (if resident),
 	 * now that the dependency tables are resolved.
 	 */
-	if (object_reload_data(ob) == -1)
+	if (AG_ObjectReloadData(ob) == -1)
 		goto fail;
 
 	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (0);
 fail:
 	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (-1);
 }
 
@@ -948,10 +947,10 @@ fail:
  * The object linkage must be locked.
  */
 int
-object_resolve_deps(void *p)
+AG_ObjectResolveDeps(void *p)
 {
-	struct object *ob = p, *cob;
-	struct object_dep *dep;
+	AG_Object *ob = p, *cob;
+	AG_ObjectDep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		debug_n(DEBUG_DEPRESV, "%s: depends on %s...", ob->name,
@@ -960,9 +959,9 @@ object_resolve_deps(void *p)
 			debug_n(DEBUG_DEPRESV, "already resolved\n");
 			continue;
 		}
-		if ((dep->obj = object_find(dep->path)) == NULL) {
+		if ((dep->obj = AG_ObjectFind(dep->path)) == NULL) {
 			debug_n(DEBUG_DEPRESV, "unexisting\n");
-			error_set(_("%s: Cannot resolve dependency `%s'"),
+			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			return (-1);
 		}
@@ -972,10 +971,10 @@ object_resolve_deps(void *p)
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (cob->flags & OBJECT_NON_PERSISTENT) {
+		if (cob->flags & AG_OBJECT_NON_PERSISTENT) {
 			continue;
 		}
-		if (object_resolve_deps(cob) == -1)
+		if (AG_ObjectResolveDeps(cob) == -1)
 			return (-1);
 	}
 	return (0);
@@ -986,26 +985,26 @@ object_resolve_deps(void *p)
  * The object and linkage must be locked.
  */
 int
-object_reload_data(void *p)
+AG_ObjectReloadData(void *p)
 {
-	struct object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 
-	if (ob->flags & (OBJECT_WAS_RESIDENT|OBJECT_REMAIN_DATA)) {
-		ob->flags &= ~(OBJECT_WAS_RESIDENT);
-		if (object_load_data(ob) == -1) {
-			if (object_ignore_dataerrs) {
-				text_msg(MSG_ERROR, _("%s: %s (ignored)"),
-				    ob->name, error_get());
+	if (ob->flags & (AG_OBJECT_WAS_RESIDENT|AG_OBJECT_REMAIN_DATA)) {
+		ob->flags &= ~(AG_OBJECT_WAS_RESIDENT);
+		if (AG_ObjectLoadData(ob) == -1) {
+			if (agObjectIgnoreDataErrors) {
+				AG_TextMsg(AG_MSG_ERROR, _("%s: %s (ignored)"),
+				    ob->name, AG_GetError());
 			} else {
 				return (-1);
 			}
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_reload_data(cob) == -1) {
-			if (object_ignore_dataerrs) {
-				text_msg(MSG_ERROR, _("%s: %s (ignored)"),
-				    cob->name, error_get());
+		if (AG_ObjectReloadData(cob) == -1) {
+			if (agObjectIgnoreDataErrors) {
+				AG_TextMsg(AG_MSG_ERROR, _("%s: %s (ignored)"),
+				    cob->name, AG_GetError());
 			} else {
 				return (-1);
 			}
@@ -1019,58 +1018,58 @@ object_reload_data(void *p)
  * The object and linkage must be locked.
  */
 int
-object_load_generic(void *p)
+AG_ObjectLoadGeneric(void *p)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p;
-	struct netbuf *buf;
+	AG_Object *ob = p;
+	AG_Netbuf *buf;
 	Uint32 count, i;
 	int ti, flags, flags_save;
 	char *mname;
 
-	if (object_copy_filename(ob, path, sizeof(path)) == -1)
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
 		return (-1);
-	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
-		error_set("%s: %s", path, error_get());
+	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	if (version_read(buf, &object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
 		goto fail;
 	
 	debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
 	
 	/*
 	 * Must free the resident data in order to clear the dependencies.
-	 * Sets the OBJECT_WAS_RESIDENT flag to be used at data load stage.
+	 * Sets the AG_OBJECT_WAS_RESIDENT flag to be used at data load stage.
 	 */
-	if (ob->flags & OBJECT_DATA_RESIDENT) {
-		ob->flags |= OBJECT_WAS_RESIDENT;
-		object_free_data(ob);
+	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
+		ob->flags |= AG_OBJECT_WAS_RESIDENT;
+		AG_ObjectFreeData(ob);
 	}
-	object_free_deps(ob);
+	AG_ObjectFreeDeps(ob);
 
 	/* Skip the data and gfx offsets. */
-	read_uint32(buf);
-	read_uint32(buf);
+	AG_ReadUint32(buf);
+	AG_ReadUint32(buf);
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
-	flags = (int)read_uint32(buf);
-	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT|
-	    OBJECT_WAS_RESIDENT)) {
-		error_set("%s: inconsistent flags (0x%08x)", ob->name,
+	flags = (int)AG_ReadUint32(buf);
+	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_DATA_RESIDENT|
+	    AG_OBJECT_WAS_RESIDENT)) {
+		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
 		    flags);
 		goto fail;
 	}
-	ob->flags = flags | (flags_save & OBJECT_WAS_RESIDENT);
+	ob->flags = flags | (flags_save & AG_OBJECT_WAS_RESIDENT);
 
 	/* Decode the saved dependencies (to be resolved later). */
-	count = read_uint32(buf);
+	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
-		struct object_dep *dep;
+		AG_ObjectDep *dep;
 
-		dep = Malloc(sizeof(struct object_dep), M_DEP);
-		dep->path = read_string(buf);
+		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
+		dep->path = AG_ReadString(buf);
 		dep->obj = NULL;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
@@ -1078,7 +1077,7 @@ object_load_generic(void *p)
 	}
 
 	/* Decode the generic properties. */
-	if (prop_load(ob, buf) == -1)
+	if (AG_PropLoad(ob, buf) == -1)
 		goto fail;
 
 	/*
@@ -1091,16 +1090,16 @@ object_load_generic(void *p)
 	 *
 	 * XXX ensure that there are no duplicate names.
 	 */
-	count = read_uint32(buf);
+	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
-		char cname[OBJECT_NAME_MAX];
-		char ctype[OBJECT_TYPE_MAX];
-		struct object *eob, *child;
+		char cname[AG_OBJECT_NAME_MAX];
+		char ctype[AG_OBJECT_TYPE_MAX];
+		AG_Object *eob, *child;
 
-		copy_string(cname, buf, sizeof(cname));
-		copy_string(ctype, buf, sizeof(ctype));
+		AG_CopyString(cname, buf, sizeof(cname));
+		AG_CopyString(ctype, buf, sizeof(ctype));
 
-		OBJECT_FOREACH_CHILD(eob, ob, object) {
+		AGOBJECT_FOREACH_CHILD(eob, ob, ag_object) {
 			if (strcmp(eob->name, cname) == 0) 
 				break;
 		}
@@ -1110,23 +1109,23 @@ object_load_generic(void *p)
 				fatal("existing object of different type");
 			}
 			/* XXX ignore */
-			if (eob->flags & OBJECT_NON_PERSISTENT) {
+			if (eob->flags & AG_OBJECT_NON_PERSISTENT) {
 				fatal("existing non-persistent object");
 			}
-			if (object_load_generic(eob) == -1) {
+			if (AG_ObjectLoadGeneric(eob) == -1) {
 				goto fail;
 			}
 		} else {
-		 	for (ti = 0; ti < ntypesw; ti++) {
-				if (strcmp(typesw[ti].type, ctype) == 0)
+		 	for (ti = 0; ti < agnTypes; ti++) {
+				if (strcmp(agTypes[ti].type, ctype) == 0)
 					break;
 			}
-			if (ti == ntypesw) {
-				error_set(_("%s: unknown object type: `%s'"),
+			if (ti == agnTypes) {
+				AG_SetError(_("%s: unknown object type: `%s'"),
 				    ob->name, ctype);
-				if (object_ignore_unkobjs) {
-					text_msg(MSG_ERROR, _("%s (ignored)"),
-					    error_get());
+				if (agObjectIgnoreUnknownObjs) {
+					AG_TextMsg(AG_MSG_ERROR,
+					    _("%s (ignored)"), AG_GetError());
 					continue;
 				} else {
 					goto fail;
@@ -1134,15 +1133,15 @@ object_load_generic(void *p)
 				goto fail;
 			}
 
-			child = Malloc(typesw[ti].size, M_OBJECT);
-			if (typesw[ti].ops->init != NULL) {
-				typesw[ti].ops->init(child, cname);
+			child = Malloc(agTypes[ti].size, M_OBJECT);
+			if (agTypes[ti].ops->init != NULL) {
+				agTypes[ti].ops->init(child, cname);
 			} else {
-				object_init(child, ctype, cname,
-				    typesw[ti].ops);
+				AG_ObjectInit(child, ctype, cname,
+				    agTypes[ti].ops);
 			}
-			object_attach(ob, child);
-			if (object_load_generic(child) == -1) {
+			AG_ObjectAttach(ob, child);
+			if (AG_ObjectLoadGeneric(child) == -1) {
 				goto fail;
 			}
 		}
@@ -1151,49 +1150,49 @@ object_load_generic(void *p)
 		 * Destroy any attached object without a match in the
 		 * save (that is not currently in use).
 		 */
-		OBJECT_FOREACH_CHILD(eob, ob, object) {
-			if (eob->flags & OBJECT_IN_SAVE) {
+		AGOBJECT_FOREACH_CHILD(eob, ob, ag_object) {
+			if (eob->flags & AG_OBJECT_IN_SAVE) {
 				continue;
 			}
-			if (!object_in_use(eob)) {
+			if (!AG_ObjectInUse(eob)) {
 				dprintf("%s: not in save; destroying\n",
 				    eob->name);
-				object_detach(eob);
-				object_unlink_datafiles(eob);
-				object_destroy(eob);
-				if ((eob->flags & OBJECT_STATIC) == 0)
+				AG_ObjectDetach(eob);
+				AG_ObjectUnlinkDatafiles(eob);
+				AG_ObjectDestroy(eob);
+				if ((eob->flags & AG_OBJECT_STATIC) == 0)
 					Free(eob, M_OBJECT);
 			} else {
 				/* XXX */
 				dprintf("%s: not in save; detaching\n",
-				    OBJECT(eob)->name);
-				text_msg(MSG_ERROR,
+				    AGOBJECT(eob)->name);
+				AG_TextMsg(AG_MSG_ERROR,
 				    _("Detaching `%s' (not in save)."),
 				    eob->name);
-				object_detach(eob);
+				AG_ObjectDetach(eob);
 			}
 		}
 #endif
 	}
 
-	netbuf_close(buf);
-	if (ob->flags & OBJECT_REOPEN_ONLOAD) {
-		objmgr_reopen(ob);
+	AG_NetbufClose(buf);
+	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
+		AG_ObjMgrReopen(ob);
 	}
 	return (0);
 fail:
-	object_free_data(ob);
-	object_free_deps(ob);
-	netbuf_close(buf);
-	if (ob->flags & OBJECT_REOPEN_ONLOAD) {
-		objmgr_reopen(ob);
+	AG_ObjectFreeData(ob);
+	AG_ObjectFreeDeps(ob);
+	AG_NetbufClose(buf);
+	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
+		AG_ObjMgrReopen(ob);
 	}
 	return (-1);
 }
 
 /*
  * Load object data. Called as part of a page in operation, for reading
- * data when saving a non-resident object, and from object_load() for
+ * data when saving a non-resident object, and from AG_ObjectLoad() for
  * reloading data of resident objects.
  *
  * The object must be locked.
@@ -1202,41 +1201,41 @@ fail:
  * XXX encode some sort of key?
  */
 int
-object_load_data(void *p)
+AG_ObjectLoadData(void *p)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p;
-	struct netbuf *buf;
+	AG_Object *ob = p;
+	AG_Netbuf *buf;
 	off_t data_offs;
 
-	if (ob->flags & OBJECT_DATA_RESIDENT) {
-		error_set(_("The data of `%s' is already resident."), ob->name);
+	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
+		AG_SetError(_("The data of `%s' is already resident."), ob->name);
 		return (-1);
 	}
-	if (object_copy_filename(ob, path, sizeof(path)) == -1)
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
 		return (-1);
-	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
-		error_set("%s: %s", path, error_get());
+	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
 	debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
 
-	if (version_read(buf, &object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
 		goto fail;
 	
-	data_offs = (off_t)read_uint32(buf);
-	read_uint32(buf);				/* Skip gfx offs */
-	netbuf_seek(buf, data_offs, SEEK_SET);
+	data_offs = (off_t)AG_ReadUint32(buf);
+	AG_ReadUint32(buf);				/* Skip gfx offs */
+	AG_NetbufSeek(buf, data_offs, SEEK_SET);
 
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1)
 		goto fail;
 
-	ob->flags |= OBJECT_DATA_RESIDENT;
-	netbuf_close(buf);
+	ob->flags |= AG_OBJECT_DATA_RESIDENT;
+	AG_NetbufClose(buf);
 	return (0);
 fail:
-	netbuf_close(buf);
+	AG_NetbufClose(buf);
 	return (-1);
 }
 
@@ -1255,57 +1254,57 @@ backup_object(void *p, const char *orig)
 
 /* Save the state of an object and its children. */
 int
-object_save_all(void *p)
+AG_ObjectSaveAll(void *p)
 {
-	struct object *obj = p, *cobj;
+	AG_Object *obj = p, *cobj;
 
-	lock_linkage();
-	if (object_save(obj) == -1) {
+	AG_LockLinkage();
+	if (AG_ObjectSave(obj) == -1) {
 		goto fail;
 	}
 	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
-		if (cobj->flags & OBJECT_NON_PERSISTENT) {
+		if (cobj->flags & AG_OBJECT_NON_PERSISTENT) {
 			continue;
 		}
-		if (object_save_all(cobj) == -1)
+		if (AG_ObjectSaveAll(cobj) == -1)
 			goto fail;
 	}
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (0);
 fail:
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (-1);
 }
 
 /* Save the state of an object. */
 int
-object_save(void *p)
+AG_ObjectSave(void *p)
 {
 	char save_path[MAXPATHLEN];
 	char save_dir[MAXPATHLEN];
 	char save_file[MAXPATHLEN];
-	char obj_name[OBJECT_PATH_MAX];
-	struct object *ob = p;
+	char obj_name[AG_OBJECT_PATH_MAX];
+	AG_Object *ob = p;
 	struct stat sta;
-	struct netbuf *buf;
-	struct object *child;
+	AG_Netbuf *buf;
+	AG_Object *child;
 	off_t count_offs, data_offs, gfx_offs;
 	Uint32 count;
-	struct object_dep *dep;
+	AG_ObjectDep *dep;
 	int was_resident;
 
-	lock_linkage();
+	AG_LockLinkage();
 	pthread_mutex_lock(&ob->lock);
 
-	if (ob->flags & OBJECT_NON_PERSISTENT) {
-		error_set(_("The `%s' object is non-persistent."), ob->name);
+	if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
-	was_resident = ob->flags & OBJECT_DATA_RESIDENT;
-	object_copy_name(ob, obj_name, sizeof(obj_name));
+	was_resident = ob->flags & AG_OBJECT_DATA_RESIDENT;
+	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 	
 	/* Create the save directory. */
-	prop_copy_string(config, "save-path", save_path, sizeof(save_path));
+	AG_StringCopy(agConfig, "save-path", save_path, sizeof(save_path));
 	strlcpy(save_dir, save_path, sizeof(save_dir));
 	if (ob->save_pfx != NULL) {
 		strlcat(save_dir, ob->save_pfx, sizeof(save_dir));
@@ -1313,20 +1312,20 @@ object_save(void *p)
 	strlcat(save_dir, obj_name, sizeof(save_dir));
 	if (stat(save_dir, &sta) == -1 &&
 	    mkpath(save_dir) == -1) {
-		error_set("mkpath %s: %s", save_dir, strerror(errno));
+		AG_SetError("mkpath %s: %s", save_dir, strerror(errno));
 		goto fail_lock;
 	}
 
 	/* Page in the data unless it is already resident. */
 	if (!was_resident) {
-		if (object_load_data(ob) == -1) {
+		if (AG_ObjectLoadData(ob) == -1) {
 			/*
 			 * Assume that this failure means the data has never
 			 * been saved before.
 			 * XXX
 			 */
-			dprintf("%s: %s\n", ob->name, error_get());
-			ob->flags |= OBJECT_DATA_RESIDENT;
+			dprintf("%s: %s\n", ob->name, AG_GetError());
+			ob->flags |= AG_OBJECT_DATA_RESIDENT;
 		}
 	}
 
@@ -1340,93 +1339,93 @@ object_save(void *p)
 
 	backup_object(ob, save_file);
 
-	if ((buf = netbuf_open(save_file, "wb", NETBUF_BIG_ENDIAN)) == NULL)
+	if ((buf = AG_NetbufOpen(save_file, "wb", AG_NETBUF_BIG_ENDIAN)) == NULL)
 		goto fail_reinit;
 
-	version_write(buf, &object_ver);
+	AG_WriteVersion(buf, &ag_object_ver);
 
-	data_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
-	gfx_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	data_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
+	gfx_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 
-	write_uint32(buf, (Uint32)(ob->flags & OBJECT_SAVED_FLAGS));
+	AG_WriteUint32(buf, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
-	count_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	count_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), count++) {
-		char dep_name[OBJECT_PATH_MAX];
+		char dep_name[AG_OBJECT_PATH_MAX];
 		
-		object_copy_name(dep->obj, dep_name, sizeof(dep_name));
-		write_string(buf, dep_name);
+		AG_ObjectCopyName(dep->obj, dep_name, sizeof(dep_name));
+		AG_WriteString(buf, dep_name);
 	}
-	pwrite_uint32(buf, count, count_offs);
+	AG_PwriteUint32(buf, count, count_offs);
 
 	/* Encode the generic properties. */
-	if (prop_save(ob, buf) == -1)
+	if (AG_PropSave(ob, buf) == -1)
 		goto fail;
 	
 	/* Save the list of child objects. */
-	count_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	count_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (child->flags & OBJECT_NON_PERSISTENT) {
+		if (child->flags & AG_OBJECT_NON_PERSISTENT) {
 			continue;
 		}
-		write_string(buf, child->name);
-		write_string(buf, child->type);
+		AG_WriteString(buf, child->name);
+		AG_WriteString(buf, child->type);
 		count++;
 	}
-	pwrite_uint32(buf, count, count_offs);
+	AG_PwriteUint32(buf, count, count_offs);
 
 	/* Save the object data. */
-	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
+	AG_PwriteUint32(buf, AG_NetbufTell(buf), data_offs);
 	if (ob->ops->save != NULL &&
 	    ob->ops->save(ob, buf) == -1)
 		goto fail;
 
 	/* Save the object graphics. */
-	pwrite_uint32(buf, netbuf_tell(buf), gfx_offs);
-	if (gfx_save(ob, buf) == -1)
+	AG_PwriteUint32(buf, AG_NetbufTell(buf), gfx_offs);
+	if (AG_GfxSave(ob, buf) == -1)
 		goto fail;
 
-	netbuf_flush(buf);
-	netbuf_close(buf);
+	AG_NetbufFlush(buf);
+	AG_NetbufClose(buf);
 	if (!was_resident) {
-		object_free_data(ob);
+		AG_ObjectFreeData(ob);
 	}
 	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (0);
 fail:
-	netbuf_close(buf);
+	AG_NetbufClose(buf);
 fail_reinit:
 	if (!was_resident)
-		object_free_data(ob);
+		AG_ObjectFreeData(ob);
 fail_lock:
 	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (-1);
 }
 
 /* Override an object's type; thread unsafe. */
 void
-object_set_type(void *p, const char *type)
+AG_ObjectSetType(void *p, const char *type)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
 	strlcpy(ob->type, type, sizeof(ob->type));
 }
 
 /* Override an object's name; thread unsafe. */
 void
-object_set_name(void *p, const char *name)
+AG_ObjectSetName(void *p, const char *name)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	char *c;
 
 	strlcpy(ob->name, name, sizeof(ob->name));
@@ -1439,17 +1438,17 @@ object_set_name(void *p, const char *name)
 
 /* Override an object's ops; thread unsafe. */
 void
-object_set_ops(void *p, const void *ops)
+AG_ObjectSetOps(void *p, const void *ops)
 {
-	OBJECT(p)->ops = ops;
+	AGOBJECT(p)->ops = ops;
 }
 
 /* Add a new dependency or increment the reference count on one. */
-struct object_dep *
-object_add_dep(void *p, void *depobj)
+AG_ObjectDep *
+AG_ObjectAddDep(void *p, void *depobj)
 {
-	struct object *ob = p;
-	struct object_dep *dep;
+	AG_Object *ob = p;
+	AG_ObjectDep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
@@ -1457,16 +1456,16 @@ object_add_dep(void *p, void *depobj)
 	}
 	if (dep != NULL) {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    OBJECT(depobj)->name, dep->count);
-		if (++dep->count > OBJECT_DEP_MAX) {
+		    AGOBJECT(depobj)->name, dep->count);
+		if (++dep->count > AG_OBJECT_DEP_MAX) {
 			fprintf(stderr, "%s: wiring %s dep (too many refs)\n",
-			    ob->name, OBJECT(depobj)->name);
-			dep->count = OBJECT_DEP_MAX;
+			    ob->name, AGOBJECT(depobj)->name);
+			dep->count = AG_OBJECT_DEP_MAX;
 		}
 	} else {
 		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
-		    OBJECT(depobj)->name);
-		dep = Malloc(sizeof(struct object_dep), M_DEP);
+		    AGOBJECT(depobj)->name);
+		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
 		dep->obj = depobj;
 		dep->count = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
@@ -1476,10 +1475,10 @@ object_add_dep(void *p, void *depobj)
 
 /* Resolve a given dependency. */
 int
-object_find_dep(const void *p, Uint32 ind, void **objp)
+AG_ObjectFindDep(const void *p, Uint32 ind, void **objp)
 {
-	const struct object *ob = p;
-	struct object_dep *dep;
+	const AG_Object *ob = p;
+	AG_ObjectDep *dep;
 	Uint32 i;
 
 	if (ind == 0) {
@@ -1501,7 +1500,7 @@ object_find_dep(const void *p, Uint32 ind, void **objp)
 		return (0);
 	}
 
-	error_set(_("Unable to resolve dependency %s:%u."), ob->name, ind);
+	AG_SetError(_("Unable to resolve dependency %s:%u."), ob->name, ind);
 	return (-1);
 }
 
@@ -1510,11 +1509,11 @@ object_find_dep(const void *p, Uint32 ind, void **objp)
  * NULL value and 1 is the parent object itself.
  */
 Uint32
-object_encode_name(const void *p, const void *depobjp)
+AG_ObjectEncodeName(const void *p, const void *depobjp)
 {
-	const struct object *ob = p;
-	const struct object *depobj = depobjp;
-	struct object_dep *dep;
+	const AG_Object *ob = p;
+	const AG_Object *depobj = depobjp;
+	AG_ObjectDep *dep;
 	Uint32 i;
 
 	if (depobjp == NULL) {
@@ -1537,10 +1536,10 @@ object_encode_name(const void *p, const void *depobjp)
  * reference count reaches 0.
  */
 void
-object_del_dep(void *p, const void *depobj)
+AG_ObjectDelDep(void *p, const void *depobj)
 {
-	struct object *ob = p;
-	struct object_dep *dep;
+	AG_Object *ob = p;
+	AG_ObjectDep *dep;
 	
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
@@ -1548,17 +1547,17 @@ object_del_dep(void *p, const void *depobj)
 	}
 	if (dep == NULL) {
 		dprintf("%s: no such dep: %s\n", ob->name,
-		    OBJECT(depobj)->name);
+		    AGOBJECT(depobj)->name);
 		return;
 	}
 
-	if (dep->count == OBJECT_DEP_MAX)			/* Wired */
+	if (dep->count == AG_OBJECT_DEP_MAX)			/* Wired */
 		return;
 
 	if ((dep->count-1) == 0) {
-		if ((ob->flags & OBJECT_PRESERVE_DEPS) == 0) {
+		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
 			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
-			    OBJECT(depobj)->name);
+			    AGOBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
 			Free(dep, M_DEP);
 		} else {
@@ -1568,33 +1567,33 @@ object_del_dep(void *p, const void *depobj)
 		fatal("neg ref count");
 	} else {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    OBJECT(depobj)->name, dep->count);
+		    AGOBJECT(depobj)->name, dep->count);
 		dep->count--;
 	}
 }
 
 /* Move an object towards the head of its parent's children list. */
 void
-object_move_up(void *p)
+AG_ObjectMoveUp(void *p)
 {
-	struct object *ob = p, *prev;
-	struct object *parent = ob->parent;
+	AG_Object *ob = p, *prev;
+	AG_Object *parent = ob->parent;
 
 	if (parent == NULL || ob == TAILQ_FIRST(&parent->children))
 		return;
 
-	prev = TAILQ_PREV(ob, objectq, cobjs);
+	prev = TAILQ_PREV(ob, ag_objectq, cobjs);
 	TAILQ_REMOVE(&parent->children, ob, cobjs);
 	TAILQ_INSERT_BEFORE(prev, ob, cobjs);
 }
 
 /* Move an object towards the tail of its parent's children list. */
 void
-object_move_down(void *p)
+AG_ObjectMoveDown(void *p)
 {
-	struct object *ob = p;
-	struct object *parent = ob->parent;
-	struct object *next = TAILQ_NEXT(ob, cobjs);
+	AG_Object *ob = p;
+	AG_Object *parent = ob->parent;
+	AG_Object *next = TAILQ_NEXT(ob, cobjs);
 
 	if (parent == NULL || next == NULL)
 		return;
@@ -1605,11 +1604,11 @@ object_move_down(void *p)
 
 /* Make sure that an object's name is unique. */
 static void
-object_rename_unique(struct object *obj)
+AG_ObjectRenameUnique(AG_Object *obj)
 {
-	struct object *oob, *oparent = obj->parent;
-	char basename[OBJECT_NAME_MAX];
-	char newname[OBJECT_NAME_MAX];
+	AG_Object *oob, *oparent = obj->parent;
+	char basename[AG_OBJECT_NAME_MAX];
+	char newname[AG_OBJECT_NAME_MAX];
 	size_t len, i;
 	char *c, *num;
 	u_int n = 0;
@@ -1642,13 +1641,13 @@ rename:
  * The linkage must be locked.
  */
 void
-object_set_savepfx(void *p, char *path)
+AG_ObjectSetSavePfx(void *p, char *path)
 {
-	struct object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 
 	ob->save_pfx = path;
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
-		object_set_savepfx(cob, path);
+		AG_ObjectSetSavePfx(cob, path);
 }
 
 /*
@@ -1656,36 +1655,36 @@ object_set_savepfx(void *p, char *path)
  * The linkage must be locked.
  */
 void
-object_unlink_datafiles(void *p)
+AG_ObjectUnlinkDatafiles(void *p)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 
-	if (object_copy_filename(ob, path, sizeof(path)) == 0)
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == 0)
 		unlink(path);
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
-		object_unlink_datafiles(cob);
+		AG_ObjectUnlinkDatafiles(cob);
 
-	if (object_copy_dirname(ob, path, sizeof(path)) == 0)
+	if (AG_ObjectCopyDirname(ob, path, sizeof(path)) == 0)
 		rmdir(path);
 }
 
 /* Duplicate an object and its children. */
 /* XXX EXPERIMENTAL */
 void *
-object_duplicate(void *p)
+AG_ObjectDuplicate(void *p)
 {
-	char oname[OBJECT_NAME_MAX];
-	struct object *ob = p;
-	struct object *dob;
-	struct object_type *t;
+	char oname[AG_OBJECT_NAME_MAX];
+	AG_Object *ob = p;
+	AG_Object *dob;
+	AG_ObjectType *t;
 
-	for (t = &typesw[0]; t < &typesw[ntypesw]; t++)
+	for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++)
 		if (strcmp(ob->type, t->type) == 0)
 			break;
 #ifdef DEBUG
-	if (t == &typesw[ntypesw])
+	if (t == &agTypes[agnTypes])
 		fatal("unrecognized object type");
 #endif
 	dob = Malloc(t->size, M_OBJECT);
@@ -1696,29 +1695,29 @@ object_duplicate(void *p)
 	if (t->ops->init != NULL) {
 		t->ops->init(dob, ob->name);
 	} else {
-		object_init(dob, ob->type, ob->name, t->ops);
+		AG_ObjectInit(dob, ob->type, ob->name, t->ops);
 	}
 
-	if (object_page_in(ob, OBJECT_DATA) == -1)
+	if (AG_ObjectPageIn(ob, AG_OBJECT_DATA) == -1)
 		goto fail;
 
 	/* Change the name and attach to the same parent as the original. */
-	object_attach(ob->parent, dob);
-	object_rename_unique(dob);
-	dob->flags = (ob->flags & OBJECT_DUPED_FLAGS);
+	AG_ObjectAttach(ob->parent, dob);
+	AG_ObjectRenameUnique(dob);
+	dob->flags = (ob->flags & AG_OBJECT_DUPED_FLAGS);
 
 	/* Save the state of the original object using the new name. */
 	strlcpy(oname, ob->name, sizeof(oname));
 	strlcpy(ob->name, dob->name, sizeof(ob->name));
-	if (object_save(ob) == -1) {
-		object_page_out(ob, OBJECT_DATA);
+	if (AG_ObjectSave(ob) == -1) {
+		AG_ObjectPageOut(ob, AG_OBJECT_DATA);
 		goto fail;
 	}
 
-	if (object_page_out(ob, OBJECT_DATA) == -1)
+	if (AG_ObjectPageOut(ob, AG_OBJECT_DATA) == -1)
 		goto fail;
 
-	if (object_load(dob) == -1)
+	if (AG_ObjectLoad(dob) == -1)
 		goto fail;
 
 	strlcpy(ob->name, oname, sizeof(ob->name));
@@ -1727,24 +1726,24 @@ object_duplicate(void *p)
 fail:
 	strlcpy(ob->name, oname, sizeof(ob->name));
 	pthread_mutex_unlock(&ob->lock);
-	object_destroy(dob);
+	AG_ObjectDestroy(dob);
 	Free(dob, M_OBJECT);
 	return (NULL);
 }
 
 /* Return the icon associated with this object type, if any. */
 SDL_Surface *
-object_icon(void *p)
+AG_ObjectIcon(void *p)
 {
-	struct object *obj = p;
+	AG_Object *obj = p;
 	int i;
 	
 	if (obj == NULL) {
 		return (NULL);
 	}
-	for (i = 0; i < ntypesw; i++) {
-		if (strcmp(typesw[i].type, obj->type) == 0)
-			return (typesw[i].icon >= 0 ? ICON(typesw[i].icon) :
+	for (i = 0; i < agnTypes; i++) {
+		if (strcmp(agTypes[i].type, obj->type) == 0)
+			return (agTypes[i].icon >= 0 ? AGICON(agTypes[i].icon) :
 			    NULL);
 	}
 	return (NULL);
@@ -1752,9 +1751,10 @@ object_icon(void *p)
 
 /* Return a cryptographic digest for an object's last saved state. */
 size_t
-object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
+AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
+    char *digest)
 {
-	const struct object *ob = p;
+	const AG_Object *ob = p;
 	char save_path[MAXPATHLEN];
 	u_char buf[BUFSIZ];
 	FILE *f;
@@ -1762,17 +1762,17 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 	size_t totlen = 0;
 	size_t rv;
 	
-	if (object_copy_filename(ob, save_path, sizeof(save_path)) == -1) {
+	if (AG_ObjectCopyFilename(ob, save_path, sizeof(save_path)) == -1) {
 		return (0);
 	}
 	/* TODO locking */
 	if ((f = fopen(save_path, "r")) == NULL) {
-		error_set("%s: %s", save_path, strerror(errno));
+		AG_SetError("%s: %s", save_path, strerror(errno));
 		return (0);
 	}
 
 	switch (alg) {
-	case OBJECT_MD5:
+	case AG_OBJECT_MD5:
 		{
 			MD5_CTX ctx;
 
@@ -1784,7 +1784,7 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 			MD5End(&ctx, digest);
 		}
 		break;
-	case OBJECT_SHA1:
+	case AG_OBJECT_SHA1:
 		{
 			SHA1_CTX ctx;
 
@@ -1796,7 +1796,7 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 			SHA1End(&ctx, digest);
 		}
 		break;
-	case OBJECT_RMD160:
+	case AG_OBJECT_RMD160:
 		{
 			RMD160_CTX ctx;
 
@@ -1815,20 +1815,20 @@ object_copy_checksum(const void *p, enum object_checksum_alg alg, char *digest)
 }
 
 int
-object_copy_digest(const void *ob, size_t *len, char *digest)
+AG_ObjectCopyDigest(const void *ob, size_t *len, char *digest)
 {
 	char md5[MD5_DIGEST_STRING_LENGTH];
 	char sha1[SHA1_DIGEST_STRING_LENGTH];
 	char rmd160[RMD160_DIGEST_STRING_LENGTH];
 
-	if ((*len = object_copy_checksum(ob, OBJECT_MD5, md5)) == 0 ||
-	    object_copy_checksum(ob, OBJECT_SHA1, sha1) == 0 ||
-	    object_copy_checksum(ob, OBJECT_RMD160, rmd160) == 0) {
+	if ((*len = AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, md5)) == 0 ||
+	    AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, sha1) == 0 ||
+	    AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, rmd160) == 0) {
 		return (-1);
 	}
-	if (snprintf(digest, OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
-	    md5, sha1, rmd160) >= OBJECT_DIGEST_MAX) {
-		error_set("Digest is too big.");
+	if (snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
+	    md5, sha1, rmd160) >= AG_OBJECT_DIGEST_MAX) {
+		AG_SetError("Digest is too big.");
 		return (-1);
 	}
 	return (0);
@@ -1836,16 +1836,16 @@ object_copy_digest(const void *ob, size_t *len, char *digest)
 
 /* Check whether the given object or any of its children has changed. */
 int
-object_changed_all(void *p)
+AG_ObjectChangedAll(void *p)
 {
-	struct object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 
-	if (object_changed(ob) == 1) {
+	if (AG_ObjectChanged(ob) == 1) {
 		dprintf("%s: modified\n", ob->name);
 		return (1);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_changed_all(cob) == 1)
+		if (AG_ObjectChangedAll(cob) == 1)
 			return (1);
 	}
 	return (0);
@@ -1853,64 +1853,64 @@ object_changed_all(void *p)
 
 /* Check whether the given object has changed since last saved. */
 int
-object_changed(void *p)
+AG_ObjectChanged(void *p)
 {
 	char save_sha1[SHA1_DIGEST_STRING_LENGTH];
 	char tmp_sha1[SHA1_DIGEST_STRING_LENGTH];
-	struct object *ob = p;
+	AG_Object *ob = p;
 	char *pfx_save;
 	int rv;
 #ifdef DEBUG
-	extern int objmgr_hexdiff;
+	extern int agObjMgrHexDiff;
 #endif
 
-	if ((ob->flags & OBJECT_NON_PERSISTENT) ||
-	    (ob->flags & OBJECT_DATA_RESIDENT) == 0) {
+	if ((ob->flags & AG_OBJECT_NON_PERSISTENT) ||
+	    (ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
 		return (0);
 	}
-	if (object_copy_checksum(ob, OBJECT_SHA1, save_sha1) == 0)
+	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, save_sha1) == 0)
 		return (1);
 
 	pfx_save = ob->save_pfx;
-	object_set_savepfx(ob, "/.tmp");
-	if (object_save(ob) == -1) {
-		fprintf(stderr, "save %s: %s\n", ob->name, error_get());
+	AG_ObjectSetSavePfx(ob, "/.tmp");
+	if (AG_ObjectSave(ob) == -1) {
+		fprintf(stderr, "save %s: %s\n", ob->name, AG_GetError());
 		goto fail;
 	}
-	if (object_copy_checksum(ob, OBJECT_SHA1, tmp_sha1) == -1) {
-		fprintf(stderr, "md5 %s: %s\n", ob->name, error_get());
+	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, tmp_sha1) == -1) {
+		fprintf(stderr, "md5 %s: %s\n", ob->name, AG_GetError());
 		goto fail;
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
 
 #ifdef DEBUG
-	if (rv == 1 && objmgr_hexdiff) {
+	if (rv == 1 && agObjMgrHexDiff) {
 		char path[MAXPATHLEN];
 		char tmp[MAXPATHLEN];
 		char cmd[1024];
 
-		prop_copy_string(config, "save-path", tmp, sizeof(tmp));
+		AG_StringCopy(agConfig, "save-path", tmp, sizeof(tmp));
 		strlcat(tmp, "/.tmp/hexdiff", sizeof(tmp));
 
-		object_copy_filename(ob, path, sizeof(path));
+		AG_ObjectCopyFilename(ob, path, sizeof(path));
 		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'>%s", path, tmp);
 		system(cmd);
 		
-		object_set_savepfx(ob, pfx_save);
-		object_copy_filename(ob, path, sizeof(path));
+		AG_ObjectSetSavePfx(ob, pfx_save);
+		AG_ObjectCopyFilename(ob, path, sizeof(path));
 		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'|diff -u - %s",
 		    path, tmp);
 		system(cmd);
-		object_set_savepfx(ob, "/.tmp");
+		AG_ObjectSetSavePfx(ob, "/.tmp");
 	}
 #endif /* DEBUG */
 
-	object_unlink_datafiles(ob);
-	object_set_savepfx(ob, pfx_save);
+	AG_ObjectUnlinkDatafiles(ob);
+	AG_ObjectSetSavePfx(ob, pfx_save);
 	return (rv);
 fail:
-	object_unlink_datafiles(ob);
-	object_set_savepfx(ob, pfx_save);
+	AG_ObjectUnlinkDatafiles(ob);
+	AG_ObjectSetSavePfx(ob, pfx_save);
 	return (-1);
 }
 
@@ -1919,147 +1919,147 @@ fail:
 static void
 poll_deps(int argc, union evarg *argv)
 {
-	char path[OBJECT_PATH_MAX];
-	struct tlist *tl = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct object_dep *dep;
+	char path[AG_OBJECT_PATH_MAX];
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *ob = argv[1].p;
+	AG_ObjectDep *dep;
 
-	tlist_clear_items(tl);
-	lock_linkage();
+	AG_TlistClear(tl);
+	AG_LockLinkage();
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		char label[TLIST_LABEL_MAX];
+		char label[AG_TLIST_LABEL_MAX];
 	
 		if (dep->obj != NULL) {
-			object_copy_name(dep->obj, path, sizeof(path));
+			AG_ObjectCopyName(dep->obj, path, sizeof(path));
 		} else {
 			strlcpy(path, "(NULL)", sizeof(path));
 		}
-		if (dep->count == OBJECT_DEP_MAX) {
+		if (dep->count == AG_OBJECT_DEP_MAX) {
 			snprintf(label, sizeof(label), "%s (wired)", path);
 		} else {
 			snprintf(label, sizeof(label), "%s (%u)", path,
 			    dep->count);
 		}
-		tlist_insert_item(tl, object_icon(dep->obj), label, dep);
+		AG_TlistAddPtr(tl, AG_ObjectIcon(dep->obj), label, dep);
 	}
-	unlock_linkage();
-	tlist_restore_selections(tl);
+	AG_UnlockLinkage();
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_gfx(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct gfx *gfx = ob->gfx;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *ob = argv[1].p;
+	AG_Gfx *gfx = ob->gfx;
+	AG_TlistItem *it;
 	Uint32 i;
 
 	if (gfx == NULL)
 		return;
 	
-	tlist_clear_items(tl);
-	tlist_insert(tl, NULL, "(%u references)", gfx->used);
+	AG_TlistClear(tl);
+	AG_TlistAdd(tl, NULL, "(%u references)", gfx->used);
 	for (i = 0; i < gfx->nsprites; i++) {
-		struct sprite *spr = &gfx->sprites[i];
+		AG_Sprite *spr = &gfx->sprites[i];
 		SDL_Surface *su = spr->su;
-		struct gfx_cached_sprite *csp;
+		AG_CachedSprite *csp;
 
 		if (su != NULL) {
-			it = tlist_insert(tl, su, "%u. %s - %ux%ux%u (%s)", i,
+			it = AG_TlistAdd(tl, su, "%u. %s - %ux%ux%u (%s)", i,
 			    spr->name, su->w, su->h, su->format->BitsPerPixel,
-			    gfx_snap_names[spr->snap_mode]);
+			    agGfxSnapNames[spr->snap_mode]);
 		} else {
-			it = tlist_insert(tl, su, "%u. (null)", i);
+			it = AG_TlistAdd(tl, su, "%u. (null)", i);
 		}
 		it->p1 = spr;
 		it->depth = 0;
 
 		if (!SLIST_EMPTY(&spr->csprites)) {
-			it->flags |= TLIST_HAS_CHILDREN;
+			it->flags |= AG_TLIST_HAS_CHILDREN;
 		}
 		SLIST_FOREACH(csp, &spr->csprites, sprites) {
-			char label[TLIST_LABEL_MAX];
-			struct tlist_item *it;
+			char label[AG_TLIST_LABEL_MAX];
+			AG_TlistItem *it;
 
 			snprintf(label, sizeof(label), "%u ticks\n",
 			    csp->last_drawn);
-			transform_print(&csp->transforms, label,
+			AG_TransformPrint(&csp->transforms, label,
 			    sizeof(label));
 
-			it = tlist_insert_item(tl, csp->su, label, csp);
+			it = AG_TlistAddPtr(tl, csp->su, label, csp);
 			it->depth = 1;
 		}
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_props(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct prop *prop;
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *ob = argv[1].p;
+	AG_Prop *prop;
 	
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		char val[TLIST_LABEL_MAX];
+		char val[AG_TLIST_LABEL_MAX];
 
-		prop_print_value(val, sizeof(val), prop);
-		tlist_insert(tl, NULL, "%s = %s", prop->key, val);
+		AG_PropPrint(val, sizeof(val), prop);
+		AG_TlistAdd(tl, NULL, "%s = %s", prop->key, val);
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_events(int argc, union evarg *argv)
 {
 	extern const char *evarg_type_names[];
-	struct tlist *tl = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct event *ev;
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *ob = argv[1].p;
+	AG_Event *ev;
 	
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		char args[TLIST_LABEL_MAX], arg[16];
+		char args[AG_TLIST_LABEL_MAX], arg[16];
 		u_int i;
 
 		args[0] = '(';
 		args[1] = '\0';
 		for (i = 1; i < ev->argc; i++) {
 			switch (ev->argt[i]) {
-			case EVARG_POINTER:
+			case AG_EVARG_POINTER:
 				snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
 				break;
-			case EVARG_STRING:
+			case AG_EVARG_STRING:
 				snprintf(arg, sizeof(arg), "\"%s\"",
 				    ev->argv[i].s);
 				break;
-			case EVARG_UCHAR:
-			case EVARG_CHAR:
+			case AG_EVARG_UCHAR:
+			case AG_EVARG_CHAR:
 				snprintf(arg, sizeof(arg), "'%c'",
 				    (u_char)ev->argv[i].i);
 				break;
-			case EVARG_INT:
+			case AG_EVARG_INT:
 				snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
 				break;
-			case EVARG_UINT:
+			case AG_EVARG_UINT:
 				snprintf(arg, sizeof(arg), "%u",
 				    (u_int)ev->argv[i].i);
 				break;
-			case EVARG_LONG:
+			case AG_EVARG_LONG:
 				snprintf(arg, sizeof(arg), "%li",
 				    ev->argv[i].li);
 				break;
-			case EVARG_ULONG:
+			case AG_EVARG_ULONG:
 				snprintf(arg, sizeof(arg), "%li",
 				    (u_long)ev->argv[i].li);
 				break;
-			case EVARG_FLOAT:
+			case AG_EVARG_FLOAT:
 				snprintf(arg, sizeof(arg), "<%g>",
 				    ev->argv[i].f);
 				break;
-			case EVARG_DOUBLE:
+			case AG_EVARG_DOUBLE:
 				snprintf(arg, sizeof(arg), "<%g>",
 				    ev->argv[i].f);
 				break;
@@ -2072,211 +2072,205 @@ poll_events(int argc, union evarg *argv)
 			}
 		}
 
-		tlist_insert(tl, NULL, "%s%s%s %s", ev,
-		    (ev->flags & EVENT_ASYNC) ? " <async>" : "",
-		    (ev->flags & EVENT_PROPAGATE) ? " <propagate>" : "",
+		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev,
+		    (ev->flags & AG_EVENT_ASYNC) ? " <async>" : "",
+		    (ev->flags & AG_EVENT_PROPAGATE) ? " <propagate>" : "",
 		    args);
 
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 rename_object(int argc, union evarg *argv)
 {
-	struct widget_binding *stringb;
-	struct textbox *tb = argv[0].p;
-	struct object *ob = argv[1].p;
+	AG_WidgetBinding *stringb;
+	AG_Textbox *tb = argv[0].p;
+	AG_Object *ob = argv[1].p;
 
-	object_page_in(ob, OBJECT_DATA);
-	object_unlink_datafiles(ob);
+	AG_ObjectPageIn(ob, AG_OBJECT_DATA);
+	AG_ObjectUnlinkDatafiles(ob);
 	strlcpy(ob->name, tb->string, sizeof(ob->name));
-	object_page_out(ob, OBJECT_DATA);
+	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
 
-	event_post(NULL, ob, "renamed", NULL);
+	AG_PostEvent(NULL, ob, "renamed", NULL);
 }
 
 static void
 refresh_checksums(int argc, union evarg *argv)
 {
 	char checksum[128];
-	struct object *ob = argv[1].p;
-	struct textbox *tb_md5 = argv[2].p;
-	struct textbox *tb_sha1 = argv[3].p;
-	struct textbox *tb_rmd160 = argv[4].p;
+	AG_Object *ob = argv[1].p;
+	AG_Textbox *tb_md5 = argv[2].p;
+	AG_Textbox *tb_sha1 = argv[3].p;
+	AG_Textbox *tb_rmd160 = argv[4].p;
 
-	dprintf("%s: getting md5...\n", ob->name);
-	if (object_copy_checksum(ob, OBJECT_MD5, checksum) > 0) {
-		textbox_printf(tb_md5,  "%s", checksum);
+	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, checksum) > 0) {
+		AG_TextboxPrintf(tb_md5,  "%s", checksum);
 	} else {
-		textbox_printf(tb_md5,  "(%s)", error_get());
+		AG_TextboxPrintf(tb_md5,  "(%s)", AG_GetError());
 	}
-	
-	dprintf("%s: getting sha1...\n", ob->name);
-	if (object_copy_checksum(ob, OBJECT_SHA1, checksum) > 0) {
-		textbox_printf(tb_sha1,  "%s", checksum);
+	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, checksum) > 0) {
+		AG_TextboxPrintf(tb_sha1,  "%s", checksum);
 	} else {
-		textbox_printf(tb_sha1,  "(%s)", error_get());
+		AG_TextboxPrintf(tb_sha1,  "(%s)", AG_GetError());
 	}
-	
-	dprintf("%s: getting rmd160...\n", ob->name);
-	if (object_copy_checksum(ob, OBJECT_RMD160, checksum) > 0) {
-		textbox_printf(tb_rmd160,  "%s", checksum);
+	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, checksum) > 0) {
+		AG_TextboxPrintf(tb_rmd160,  "%s", checksum);
 	} else {
-		textbox_printf(tb_rmd160,  "(%s)", error_get());
+		AG_TextboxPrintf(tb_rmd160,  "(%s)", AG_GetError());
 	}
-
-	dprintf("checksums done\n");
 }
 
 #ifdef NETWORK
 static void
 refresh_rcs_status(int argc, union evarg *argv)
 {
-	char objdir[OBJECT_PATH_MAX];
-	char digest[OBJECT_DIGEST_MAX];
-	struct object *ob = argv[1].p;
-	struct label *lb_status = argv[2].p;
-	struct tlist *tl = argv[3].p;
-	extern const char *rcs_status_strings[];
-	enum rcs_status status;
+	char objdir[AG_OBJECT_PATH_MAX];
+	char digest[AG_OBJECT_DIGEST_MAX];
+	AG_Object *ob = argv[1].p;
+	AG_Label *lb_status = argv[2].p;
+	AG_Tlist *tl = argv[3].p;
+	extern const char *agRcsStatusStrings[];
+	enum ag_rcs_status status;
 	size_t len;
 	u_int working_rev, repo_rev;
 
-	if (object_copy_name(ob, objdir, sizeof(objdir)) == -1 ||
-	    object_copy_digest(ob, &len, digest) == -1) {
+	if (AG_ObjectCopyName(ob, objdir, sizeof(objdir)) == -1 ||
+	    AG_ObjectCopyDigest(ob, &len, digest) == -1) {
 		return;
 	}
-	if (rcs_connect() == -1) {
+	if (AG_RcsConnect() == -1) {
 		return;
 	}
-	status = rcs_status(ob, objdir, digest, NULL, NULL, &repo_rev,
+	status = AG_RcsStatus(ob, objdir, digest, NULL, NULL, &repo_rev,
 	    &working_rev);
-	label_printf(lb_status,
+	AG_LabelPrintf(lb_status,
 	    _("RCS status: %s\n"
 	      "Working revision: #%u\n"
 	      "Repository revision: #%u\n"),
-	    rcs_status_strings[status],
-	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? working_rev : 0,
-	    (status != RCS_UNKNOWN && status != RCS_ERROR) ? repo_rev: 0);
+	    agRcsStatusStrings[status],
+	    (status != AG_RCS_UNKNOWN && status != AG_RCS_ERROR) ? working_rev : 0,
+	    (status != AG_RCS_UNKNOWN && status != AG_RCS_ERROR) ? repo_rev: 0);
 
-	tlist_clear_items(tl);
-	rcs_log(objdir, tl);
-	tlist_restore_selections(tl);
+	AG_TlistClear(tl);
+	AG_RcsLog(objdir, tl);
+	AG_TlistRestore(tl);
 
-	rcs_disconnect();
+	AG_RcsDisconnect();
 }
 
 #endif /* NETWORK */
 
 void *
-object_edit(void *p)
+AG_ObjectEdit(void *p)
 {
-	struct object *ob = p;
-	struct window *win;
-	struct textbox *tbox;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	struct tlist *tl;
-	struct button *btn;
-	struct box *box;
+	AG_Object *ob = p;
+	AG_Window *win;
+	AG_Textbox *tbox;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_Tlist *tl;
+	AG_Button *btn;
+	AG_Box *box;
 
-	win = window_new(WINDOW_DETACH, NULL);
-	window_set_caption(win, _("Object %s"), ob->name);
-	window_set_position(win, WINDOW_UPPER_RIGHT, 1);
+	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	AG_WindowSetCaption(win, _("Object %s"), ob->name);
+	AG_WindowSetPosition(win, AG_WINDOW_UPPER_RIGHT, 1);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Infos"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Infos"), AG_BOX_VERT);
 	{
-		char path[OBJECT_PATH_MAX];
-		struct textbox *tb_md5, *tb_sha1, *tb_rmd160;
+		char path[AG_OBJECT_PATH_MAX];
+		AG_Textbox *tb_md5, *tb_sha1, *tb_rmd160;
 
-		tbox = textbox_new(ntab, _("Name: "));
-		textbox_printf(tbox, ob->name);
-		event_new(tbox, "textbox-return", rename_object, "%p", ob);
+		tbox = AG_TextboxNew(ntab, _("Name: "));
+		AG_TextboxPrintf(tbox, ob->name);
+		AG_SetEvent(tbox, "textbox-return", rename_object, "%p", ob);
 		
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		label_new(ntab, LABEL_STATIC, _("Type: %s"), ob->type);
-		label_new(ntab, LABEL_POLLED, _("Flags: 0x%x"), &ob->flags);
-		label_new(ntab, LABEL_POLLED_MT, _("Parent: %[obj]"),
-		    &linkage_lock, &ob->parent);
-		label_new(ntab, LABEL_STATIC, _("Save prefix: %s"),
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Type: %s"), ob->type);
+		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Flags: 0x%x"), &ob->flags);
+		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Parent: %[obj]"),
+		    &agLinkageLock, &ob->parent);
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Save prefix: %s"),
 		    ob->save_pfx != NULL ? ob->save_pfx : "/");
 
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		label_new(ntab, LABEL_POLLED, _("Data references: %[u32]"),
+		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Data references: %[u32]"),
 		    &ob->data_used);
 		
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		tb_md5 = textbox_new(ntab, "MD5: ");
-		textbox_prescale(tb_md5, "888888888888888888888888888888888");
-		tb_md5->flags &= ~(TEXTBOX_WRITEABLE);
+		tb_md5 = AG_TextboxNew(ntab, "MD5: ");
+		AG_TextboxPrescale(tb_md5, "888888888888888888888888888888888");
+		tb_md5->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
-		tb_sha1 = textbox_new(ntab, "SHA1: ");
-		textbox_prescale(tb_sha1, "8888888888888888888888888");
-		tb_sha1->flags &= ~(TEXTBOX_WRITEABLE);
+		tb_sha1 = AG_TextboxNew(ntab, "SHA1: ");
+		AG_TextboxPrescale(tb_sha1, "8888888888888888888888888");
+		tb_sha1->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
-		tb_rmd160 = textbox_new(ntab, "RMD160: ");
-		textbox_prescale(tb_rmd160, "88888888888888888888888");
-		tb_rmd160->flags &= ~(TEXTBOX_WRITEABLE);
+		tb_rmd160 = AG_TextboxNew(ntab, "RMD160: ");
+		AG_TextboxPrescale(tb_rmd160, "88888888888888888888888");
+		tb_rmd160->flags &= ~(AG_TEXTBOX_WRITEABLE);
 
-		box = box_new(ntab, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
+					            AG_BOX_WFILL);
 		{
-			btn = button_new(box, _("Refresh checksums"));
-			event_new(btn, "button-pushed", refresh_checksums,
+			btn = AG_ButtonNew(box, _("Refresh checksums"));
+			AG_SetEvent(btn, "button-pushed", refresh_checksums,
 			    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
-			event_post(NULL, btn, "button-pushed", NULL);
+			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 		}
 	}
 
 #ifdef NETWORK
-	ntab = notebook_add_tab(nb, _("RCS"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
-		struct label *lb_status;
-		struct tlist *tl;
+		AG_Label *lb_status;
+		AG_Tlist *tl;
 
-		lb_status = label_new(ntab, LABEL_STATIC, "...");
+		lb_status = AG_LabelNew(ntab, AG_LABEL_STATIC, "...");
 
-		label_new(ntab, LABEL_STATIC, _("Revision history:"));
-		tl = tlist_new(ntab, 0);
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Revision history:"));
+		tl = AG_TlistNew(ntab, 0);
 
-		btn = button_new(ntab, _("Refresh RCS status"));
-		WIDGET(btn)->flags |= WIDGET_WFILL;
-		event_new(btn, "button-pushed", refresh_rcs_status, "%p,%p,%p",
-		    ob, lb_status, tl);
+		btn = AG_ButtonNew(ntab, _("Refresh RCS status"));
+		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
+		AG_SetEvent(btn, "button-pushed", refresh_rcs_status,
+		    "%p,%p,%p", ob, lb_status, tl);
 
-		if (rcs)
-			event_post(NULL, btn, "button-pushed", NULL);
+		if (agRcsMode)
+			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
 #endif /* NETWORK */
 
-	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Deps"), AG_BOX_VERT);
 	{
-		tl = tlist_new(ntab, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
-		event_new(tl, "tlist-poll", poll_deps, "%p", ob);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		AG_TlistPrescale(tl, "XXXXXXXXXXXX", 6);
+		AG_SetEvent(tl, "tlist-poll", poll_deps, "%p", ob);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Graphics"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
-		tl = tlist_new(ntab, TLIST_POLL);
-		tlist_set_item_height(tl, TILESZ);
-		event_new(tl, "tlist-poll", poll_gfx, "%p", ob);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_SetEvent(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Events"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Events"), AG_BOX_VERT);
 	{
-		tl = tlist_new(ntab, TLIST_POLL);
-		event_new(tl, "tlist-poll", poll_events, "%p", ob);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		AG_SetEvent(tl, "tlist-poll", poll_events, "%p", ob);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Properties"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Properties"), AG_BOX_VERT);
 	{
-		tl = tlist_new(ntab, TLIST_POLL);
-		event_new(tl, "tlist-poll", poll_props, "%p", ob);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		AG_SetEvent(tl, "tlist-poll", poll_props, "%p", ob);
 	}
 	return (win);
 }

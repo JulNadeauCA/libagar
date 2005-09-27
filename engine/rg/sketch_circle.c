@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_circle.c,v 1.2 2005/03/06 06:30:36 vedge Exp $	*/
+/*	$Csoft: sketch_circle.c,v 1.3 2005/07/29 06:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,13 +39,13 @@
 #include "tileview.h"
 
 struct circle_tool {
-	struct tileview_tool tool;
+	RG_TileviewTool tool;
 	enum {
 		BEGIN_CIRCLE,
 		SET_RADIUS
 	} seq;
-	struct vg_element *cur_circle;
-	struct vg_vertex *cur_radius;
+	VG_Element *cur_circle;
+	VG_Vtx *cur_radius;
 };
 
 static void
@@ -59,44 +59,44 @@ init(void *p)
 }
 
 static void
-mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
+mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 {
 	struct circle_tool *ct = p;
-	struct vg *vg = sk->vg;
-	struct tileview *tv = TILEVIEW_TOOL(ct)->tv;
+	VG *vg = sk->vg;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(ct)->tv;
 	Uint8 r, g, b;
 
 	switch (ct->seq) {
 	case BEGIN_CIRCLE:
 		if (button == SDL_BUTTON_LEFT) {
-			ct->cur_circle = vg_begin_element(vg, VG_CIRCLE);
-			vg_vertex2(vg, x, y);
-			ct->cur_radius = vg_vertex2(vg, x, y);
+			ct->cur_circle = VG_Begin(vg, VG_CIRCLE);
+			VG_Vertex2(vg, x, y);
+			ct->cur_radius = VG_Vertex2(vg, x, y);
 			ct->seq = SET_RADIUS;
-			tv->flags |= TILEVIEW_NO_SCROLLING;
+			tv->flags |= RG_TILEVIEW_NO_SCROLLING;
 	
-			prim_hsv2rgb(sk->h, sk->s, sk->v, &r, &g, &b);
-			vg_color4(vg, r, g, b, (int)(sk->a*255.0));
+			RG_HSV2RGB(sk->h, sk->s, sk->v, &r, &g, &b);
+			VG_Color4(vg, r, g, b, (int)(sk->a*255.0));
 		}
 		break;
 	case SET_RADIUS:
 		if (button == SDL_BUTTON_RIGHT) {
-			vg_destroy_element(vg, ct->cur_circle);
+			VG_DestroyElement(vg, ct->cur_circle);
 		}
 		ct->cur_radius = NULL;
 		ct->cur_circle = NULL;
 		ct->seq = BEGIN_CIRCLE;
-		tv->flags &= ~TILEVIEW_NO_SCROLLING;
+		tv->flags &= ~RG_TILEVIEW_NO_SCROLLING;
 		break;
 	}
 }
 
 static void
-mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
+mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct circle_tool *ct = p;
-	struct tileview *tv = TILEVIEW_TOOL(ct)->tv;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(ct)->tv;
 
 	if (ct->cur_circle != NULL) {
 		ct->cur_radius->x = x;
@@ -111,7 +111,7 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 	sk->vg->redraw++;
 }
 
-struct tileview_sketch_tool_ops sketch_circle_ops = {
+RG_TileviewSketchToolOps sketch_circle_ops = {
 	{
 		N_("Circle"),
 		N_("Draw circles."),

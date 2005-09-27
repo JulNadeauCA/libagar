@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.7 2005/08/02 01:10:33 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.8 2005/08/22 02:08:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -78,18 +78,18 @@ enum {
 	LAST_COLOR
 };
 
-extern Uint32 colors[LAST_COLOR];
-extern Uint32 colors_border[];
-extern int colors_border_size;
-extern const char *colors_names[];
+extern Uint32 agColors[LAST_COLOR];
+extern Uint32 agColorsBorder[];
+extern int agColorsBorderSize;
+extern const char *agColorNames[];
 
-#define COLOR(idx) colors[idx]
+#define AG_COLOR(idx) agColors[idx]
 
 __BEGIN_DECLS
-void colors_init(void);
-void colors_destroy(void);
-void colors_load(struct netbuf *);
-void colors_save(struct netbuf *);
+void AG_ColorsInit(void);
+void AG_ColorsDestroy(void);
+void AG_ColorsLoad(AG_Netbuf *);
+void AG_ColorsSave(AG_Netbuf *);
 __END_DECLS
 
 #include "close_code.h"

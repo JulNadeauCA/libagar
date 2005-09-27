@@ -1,4 +1,4 @@
-/*	$Csoft: den.c,v 1.7 2005/02/11 02:29:24 vedge Exp $	*/
+/*	$Csoft: den.c,v 1.8 2005/09/17 04:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -45,128 +45,128 @@
 #include <engine/loader/string.h>
 #include <engine/loader/den.h>
 
-const struct version den_ver = {
+const AG_Version den_ver = {
 	"agar den",
 	0, 0
 };
 
 /* Read a den header and its mappings. */
 static int
-den_read_header(struct den *den)
+den_read_header(AG_Den *den)
 {
 	Uint32 i;
 
-	copy_string(den->hint, den->buf, sizeof(den->hint));
-	copy_string(den->name, den->buf, sizeof(den->name));
+	AG_CopyString(den->hint, den->buf, sizeof(den->hint));
+	AG_CopyString(den->name, den->buf, sizeof(den->name));
 
-	den->author = read_string(den->buf);
-	den->copyright = read_string(den->buf);
-	den->descr = read_string(den->buf);
-	den->keywords = read_string(den->buf);
+	den->author = AG_ReadString(den->buf);
+	den->copyright = AG_ReadString(den->buf);
+	den->descr = AG_ReadString(den->buf);
+	den->keywords = AG_ReadString(den->buf);
 
-	den->nmembers = read_uint32(den->buf);
-	den->members = Malloc(den->nmembers*sizeof(struct den_member),
+	den->nmembers = AG_ReadUint32(den->buf);
+	den->members = Malloc(den->nmembers*sizeof(AG_DenMember),
 	    M_LOADER);
 
 	for (i = 0; i < den->nmembers; i++) {
-		struct den_member *memb = &den->members[i];
+		AG_DenMember *memb = &den->members[i];
 
-		copy_nulstring(memb->name, den->buf, sizeof(memb->name));
-		copy_nulstring(memb->lang, den->buf, sizeof(memb->lang));
-		den->members[i].offs = (off_t)read_uint32(den->buf);
-		den->members[i].size = (size_t)read_uint32(den->buf);
+		AG_CopyNulString(memb->name, den->buf, sizeof(memb->name));
+		AG_CopyNulString(memb->lang, den->buf, sizeof(memb->lang));
+		den->members[i].offs = (off_t)AG_ReadUint32(den->buf);
+		den->members[i].size = (size_t)AG_ReadUint32(den->buf);
 	}
 	return (0);
 }
 
 /* Write a den header and skip the mapping table. */
 void
-den_write_header(struct den *den, int nmemb)
+AG_DenWriteHeader(AG_Den *den, int nmemb)
 {
 	Uint32 i;
 
-	write_string(den->buf, den->hint);
-	write_string(den->buf, den->name);
+	AG_WriteString(den->buf, den->hint);
+	AG_WriteString(den->buf, den->name);
 
-	write_string(den->buf, den->author);
-	write_string(den->buf, den->copyright);
-	write_string(den->buf, den->descr);
-	write_string(den->buf, den->keywords);
+	AG_WriteString(den->buf, den->author);
+	AG_WriteString(den->buf, den->copyright);
+	AG_WriteString(den->buf, den->descr);
+	AG_WriteString(den->buf, den->keywords);
 
 	/* Initialize the mapping table. */
-	den->members = Malloc(nmemb*sizeof(struct den_member), M_LOADER);
+	den->members = Malloc(nmemb*sizeof(AG_DenMember), M_LOADER);
 	den->nmembers = (Uint32)nmemb;
 	for (i = 0; i < den->nmembers; i++) {
-		struct den_member *memb = &den->members[i];
+		AG_DenMember *memb = &den->members[i];
 
 		memset(memb->name, '\0', sizeof(memb->name));
 		memset(memb->lang, '\0', sizeof(memb->lang));
 	}
 
-	write_uint32(den->buf, den->nmembers);
+	AG_WriteUint32(den->buf, den->nmembers);
 	
 	/* Skip the mappings. */
-	den->mapoffs = netbuf_tell(den->buf);
-	netbuf_seek(den->buf, den->nmembers*DEN_MAPPING_SIZE, SEEK_CUR);
+	den->mapoffs = AG_NetbufTell(den->buf);
+	AG_NetbufSeek(den->buf, den->nmembers*AG_DEN_MAPPING_SIZE, SEEK_CUR);
 }
 
 /* Write the den mappings. */
 void
-den_write_mappings(struct den *den)
+AG_DenWriteMappings(AG_Den *den)
 {
 	Uint32 i;
 
-	netbuf_seek(den->buf, den->mapoffs, SEEK_SET);
+	AG_NetbufSeek(den->buf, den->mapoffs, SEEK_SET);
 
 	for (i = 0; i < den->nmembers; i++) {
-		struct den_member *memb = &den->members[i];
+		AG_DenMember *memb = &den->members[i];
 
-		write_uint32(den->buf, (Uint32)sizeof(memb->name));
-		netbuf_write(memb->name, sizeof(memb->name), 1, den->buf);
-		write_uint32(den->buf, (Uint32)sizeof(memb->lang));
-		netbuf_write(memb->lang, sizeof(memb->lang), 1, den->buf);
+		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->name));
+		AG_NetbufWrite(memb->name, sizeof(memb->name), 1, den->buf);
+		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->lang));
+		AG_NetbufWrite(memb->lang, sizeof(memb->lang), 1, den->buf);
 
-		write_uint32(den->buf, (Uint32)memb->offs);
-		write_uint32(den->buf, (Uint32)memb->size);
+		AG_WriteUint32(den->buf, (Uint32)memb->offs);
+		AG_WriteUint32(den->buf, (Uint32)memb->size);
 	}
 }
 
 /* Open a den archive; load the header as well in read mode. */
-struct den *
-den_open(const char *path, enum den_open_mode mode)
+AG_Den *
+AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 {
-	struct den *den;
+	AG_Den *den;
 
-	den = Malloc(sizeof(struct den), M_LOADER);
-	den->buf = netbuf_open(path, (mode == DEN_READ) ? "rb" : "wb",
-	    NETBUF_BIG_ENDIAN);
+	den = Malloc(sizeof(AG_Den), M_LOADER);
+	den->buf = AG_NetbufOpen(path, (mode == AG_DEN_READ) ? "rb" : "wb",
+	    AG_NETBUF_BIG_ENDIAN);
 	if (den->buf == NULL) {
 		Free(den, M_LOADER);
 		return (NULL);
 	}
 
 	switch (mode) {
-	case DEN_READ:
-		if (version_read(den->buf, &den_ver, NULL) == -1 ||
+	case AG_DEN_READ:
+		if (AG_ReadVersion(den->buf, &den_ver, NULL) == -1 ||
 		    den_read_header(den) == -1) {
 			goto fail;
 		}
 		break;
-	case DEN_WRITE:
-		version_write(den->buf, &den_ver);
+	case AG_DEN_WRITE:
+		AG_WriteVersion(den->buf, &den_ver);
 		break;
 	}
 	return (den);
 fail:
-	netbuf_close(den->buf);
+	AG_NetbufClose(den->buf);
 	Free(den, M_LOADER);
 	return (NULL);
 }
 
 void
-den_close(struct den *den)
+AG_DenClose(AG_Den *den)
 {
-	netbuf_close(den->buf);
+	AG_NetbufClose(den->buf);
 
 	Free(den->author, 0);
 	Free(den->copyright, 0);
@@ -178,32 +178,32 @@ den_close(struct den *den)
 
 /* Import the contents of a file in a den archive. */
 int
-den_import_file(struct den *den, int ind, const char *name, const char *lang,
+AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
     const char *infile)
 {
 	char buf[8192];
-	struct den_member *memb;
+	AG_DenMember *memb;
 	FILE *f;
 	size_t size, rrv;
 	off_t offs;
 	
-	offs = netbuf_tell(den->buf);
+	offs = AG_NetbufTell(den->buf);
 	size = 0;
 
 	if ((f = fopen(infile, "rb")) == NULL) {
-		error_set("%s: %s", infile, strerror(errno));
+		AG_SetError("%s: %s", infile, strerror(errno));
 		return (-1);
 	}
 	for (;;) {
 		rrv = fread(buf, 1, sizeof(buf), f);
 		size += rrv;
 
-		netbuf_write(buf, rrv, 1, den->buf);
+		AG_NetbufWrite(buf, rrv, 1, den->buf);
 		if (rrv < sizeof(buf)) {
 			if (feof(f)) {
 				break;
 			} else {
-				error_set("%s: read error", infile);
+				AG_SetError("%s: read error", infile);
 				return (-1);
 			}
 		}

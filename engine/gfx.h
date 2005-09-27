@@ -1,14 +1,15 @@
-/*	$Csoft: gfx.h,v 1.40 2005/08/22 02:10:38 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.41 2005/08/27 04:35:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/map/transform.h>
 
 #include "begin_code.h"
 
-struct object;
-struct noderef;
+struct ag_map;
+struct ag_object;
+struct ag_gfx;
 
-struct gfx_anim {
+typedef struct ag_anim {
 	SDL_Surface **frames;
 #ifdef HAVE_OPENGL
 	GLuint *textures;
@@ -17,125 +18,125 @@ struct gfx_anim {
 	Uint32 nframes;
 	Uint32 maxframes;
 	Uint32 frame;			/* Current frame# */
-};
+} AG_Anim;
 
-struct gfx_cached_sprite {
+typedef struct ag_cached_sprite {
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
 	GLuint texture;
 	GLfloat texcoords[4];
 #endif
 	Uint32 last_drawn;			/* Time last draw occured */
-	struct transformq transforms;		/* Applied transforms */
-	SLIST_ENTRY(gfx_cached_sprite) sprites;
-};
+	struct ag_transformq transforms;	/* Applied transforms */
+	SLIST_ENTRY(ag_cached_sprite) sprites;
+} AG_CachedSprite;
 
-struct gfx_cached_anim {
-	struct gfx_anim	*anim;			/* Modified anim */
+typedef struct ag_cached_anim {
+	struct ag_anim *anim;			/* Modified anim */
 	Uint32 last_drawn;			/* Time last draw occured */
-	struct transformq transforms;		/* Applied transforms */
-	SLIST_ENTRY(gfx_cached_anim) anims;
+	struct ag_transformq transforms;	/* Applied transforms */
+	SLIST_ENTRY(ag_cached_anim) anims;
+} AG_CachedAnim;
+
+typedef struct ag_anim_cache {
+	SLIST_HEAD(,ag_cached_anim) anims;
+} AG_AnimCache;
+
+enum ag_gfx_snap_mode {
+	AG_GFX_SNAP_NOT,
+	AG_GFX_SNAP_TO_GRID
 };
 
-struct gfx_animcl {
-	SLIST_HEAD(,gfx_cached_anim)	anims;
-};
+#define AG_SPRITE_NAME_MAX 24
+#define AG_SPRITE_CLASS_MAX 16
 
-enum gfx_snap_mode {
-	GFX_SNAP_NOT,
-	GFX_SNAP_TO_GRID
-};
-
-#define SPRITE_NAME_MAX 24
-#define SPRITE_CLASS_MAX 16
-
-struct sprite {
-	char name[SPRITE_NAME_MAX];
-	char clname[SPRITE_CLASS_MAX];
-	struct gfx *pgfx;
+typedef struct ag_sprite {
+	char name[AG_SPRITE_NAME_MAX];
+	char clname[AG_SPRITE_CLASS_MAX];
+	struct ag_gfx *pgfx;
 	Uint32 index;
 	SDL_Surface *su;
 	int xOrig, yOrig;			/* Origin point */
-	enum gfx_snap_mode snap_mode;		/* Default snapping mode */
+	enum ag_gfx_snap_mode snap_mode; 	/* Default snapping mode */
 	u_int *attrs;				/* Default node attributes */
 	int *layers;				/* Node layer offsets */
 #ifdef HAVE_OPENGL
 	GLuint texture;
 	GLfloat texcoords[4];
 #endif
-	SLIST_HEAD(,gfx_cached_sprite) csprites; /* Transform cache */
-};
+	SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
+} AG_Sprite;
 
-struct gfx {
+typedef struct ag_gfx {
 	void *pobj;
 
-	struct sprite *sprites;		/* Images */
-	Uint32	      nsprites;
+	AG_Sprite *sprites;		/* Images */
+	Uint32    nsprites;
 
-	struct gfx_anim	   *anims;	/* Animations */
-	struct gfx_animcl *canims;	/* Anim transform cache */
-	Uint32		   nanims;
+	AG_Anim	      *anims;		/* Animations */
+	AG_AnimCache *canims;		/* Anim transform cache. XXX move */
+	Uint32	      nanims;
 
-	struct map **submaps;		/* Maps */
-	Uint32	    nsubmaps;
-	Uint32	  maxsubmaps;
+	struct ag_map **submaps;		/* Generated maps */
+	Uint32	       nsubmaps;
+	Uint32	     maxsubmaps;
 
 	Uint32 used;			/* Reference count */
-#define GFX_MAX_USED	 (0xffffffff-1)	/* Maximum number of references */
-};
+#define AG_GFX_MAX_USED	 (0xffffffff-1)	/* Maximum number of references */
+} AG_Gfx;
 
-#define SPRITE(ob, i)		((struct object *)(ob))->gfx->sprites[(i)]
-#define ANIM(ob, i)		((struct object *)(ob))->gfx->anims[(i)]
+#define AG_SPRITE(ob, i)	AGOBJECT(ob)->gfx->sprites[(i)]
+#define AG_ANIM(ob, i)		AGOBJECT(ob)->gfx->anims[(i)]
 
-#define BAD_SPRITE(ob, i)	(OBJECT(ob)->gfx == NULL || \
-				 (i) >= OBJECT(ob)->gfx->nsprites || \
-				 SPRITE((ob),(i)).su == NULL)
+#define AG_BAD_SPRITE(ob, i)	(AGOBJECT(ob)->gfx == NULL || \
+				 (i) >= AGOBJECT(ob)->gfx->nsprites || \
+				 AG_SPRITE((ob),(i)).su == NULL)
 
-#define BAD_ANIM(ob, i)		(OBJECT(ob)->gfx == NULL || \
-				 (i) >= OBJECT(ob)->gfx->nanims || \
-				 ANIM((ob),(i)).nframes == 0)
-#define GFX_ANIM_FRAME(r, an)	(an)->frames[(an)->frame]
-#define GFX_ANIM_TEXTURE(r, an) (an)->textures[(an)->frame]
+#define AG_BAD_ANIM(ob, i)	(AGOBJECT(ob)->gfx == NULL || \
+				 (i) >= AGOBJECT(ob)->gfx->nanims || \
+				 AG_ANIM((ob),(i)).nframes == 0)
+#define AG_ANIM_FRAME(r, an)	(an)->frames[(an)->frame]
+#define AG_ANIM_TEXTURE(r, an) (an)->textures[(an)->frame]
 
-#define SPRITE_ATTR2(s,x,y) (s)->attrs[(y)*sprite_wtiles(s) + (x)]
-#define SPRITE_LAYER2(s,x,y) (s)->layers[(y)*sprite_wtiles(s) + (x)]
-#define SPRITE_ATTRS(s) (SPRITE((s)->ts,(s)->s).attrs)
-#define SPRITE_LAYERS(s) (SPRITE((s)->ts,(s)->s).layers)
+#define AG_SPRITE_ATTR2(s,x,y) (s)->attrs[(y)*AG_SpriteGetWtiles(s) + (x)]
+#define AG_SPRITE_LAYER2(s,x,y) (s)->layers[(y)*AG_SpriteGetWtiles(s) + (x)]
+#define AG_SPRITE_ATTRS(s) (AG_SPRITE((s)->ts,(s)->s).attrs)
+#define AG_SPRITE_LAYERS(s) (AG_SPRITE((s)->ts,(s)->s).layers)
 
-extern const char *gfx_snap_names[];
+extern const char *agGfxSnapNames[];
 
 __BEGIN_DECLS
-struct gfx	*gfx_new(void *);
-void		 gfx_init(struct gfx *);
-void		 gfx_destroy(struct gfx *);
-int		 gfx_transparent(SDL_Surface *);
-int		 gfx_wire(void *, const char *);
-int		 gfx_load(struct object *);
-int		 gfx_save(struct object *, struct netbuf *);
-void		 gfx_used(void *);
-int		 gfx_unused(void *);
+AG_Gfx	*AG_GfxNew(void *);
+void	 AG_GfxInit(AG_Gfx *);
+void	 AG_GfxDestroy(AG_Gfx *);
+int	 AG_HasTransparency(SDL_Surface *);
+int	 AG_WireGfx(void *, const char *);
+int	 AG_GfxLoad(struct ag_object *);
+int	 AG_GfxSave(struct ag_object *, AG_Netbuf *);
+void	 AG_GfxUsed(void *);
+int	 AG_GfxUnused(void *);
 
-void		 gfx_alloc_sprites(struct gfx *, Uint32);
-void		 gfx_alloc_anims(struct gfx *, Uint32);
-Uint32		 gfx_insert_sprite(struct gfx *, SDL_Surface *);
-struct map	*gfx_insert_fragments(struct gfx *, SDL_Surface *);
-Uint32		 gfx_insert_submap(struct gfx *, struct map *);
-Uint32		 gfx_insert_anim(struct gfx *);
-Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
+void		 AG_GfxAllocSprites(AG_Gfx *, Uint32);
+void		 AG_GfxAllocAnims(AG_Gfx *, Uint32);
+Uint32		 AG_GfxAddSprite(AG_Gfx *, SDL_Surface *);
+struct ag_map	*AG_GfxAddFragments(AG_Gfx *, SDL_Surface *);
+Uint32		 AG_GfxAddSubmap(AG_Gfx *, struct ag_map *);
+Uint32		 AG_GfxAddAnim(AG_Gfx *);
+Uint32		 AG_GfxAddAnimFrame(AG_Anim *, SDL_Surface *);
 
-void		 sprite_init(struct gfx *, Uint32);
-__inline__ int	 sprite_find(struct gfx *, const char *, Uint32 *);
-void		 sprite_destroy(struct gfx *, Uint32);
-void		 anim_init(struct gfx *, Uint32);
-void		 anim_destroy(struct gfx *, Uint32);
-__inline__ void	 sprite_set_name(struct gfx *, Uint32, const char *);
-__inline__ void	 sprite_set_class(struct gfx *, Uint32, const char *);
-__inline__ void	 sprite_set_surface(struct gfx *, Uint32, SDL_Surface *);
-__inline__ void	 sprite_set_origin(struct sprite *, int, int);
-__inline__ void	 sprite_set_snap_mode(struct sprite *, enum gfx_snap_mode);
-__inline__ void	 sprite_update(struct sprite *);
-__inline__ void	 sprite_get_nattrs(struct sprite *, u_int *, u_int *);
-__inline__ u_int sprite_wtiles(struct sprite *);
+void		 AG_SpriteInit(AG_Gfx *, Uint32);
+__inline__ int	 AG_SpriteFind(AG_Gfx *, const char *, Uint32 *);
+void		 AG_SpriteDestroy(AG_Gfx *, Uint32);
+void		 AG_AnimInit(AG_Gfx *, Uint32);
+void		 AG_AnimDestroy(AG_Gfx *, Uint32);
+__inline__ void	 AG_SpriteSetName(AG_Gfx *, Uint32, const char *);
+__inline__ void	 AG_SpriteSetClass(AG_Gfx *, Uint32, const char *);
+__inline__ void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, SDL_Surface *);
+__inline__ void	 AG_SpriteSetOrigin(AG_Sprite *, int, int);
+__inline__ void	 AG_SpriteSetSnapMode(AG_Sprite *, enum ag_gfx_snap_mode);
+__inline__ void	 AG_SpriteUpdate(AG_Sprite *);
+__inline__ void	 AG_SpriteGetNodeAttrs(AG_Sprite *, u_int *, u_int *);
+__inline__ u_int AG_SpriteGetWtiles(AG_Sprite *);
 __END_DECLS
 
 #include "close_code.h"

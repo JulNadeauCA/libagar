@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.25 2005/08/30 02:04:20 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.26 2005/09/19 07:13:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -144,8 +144,8 @@ enum {
 	CTRL_SYMBOL
 };
 
-extern struct object engine_icons;			/* engine.c */
-#define ICON(n)	((n >= 0) ? SPRITE(&engine_icons,(n)).su : NULL)
+extern AG_Object agIconMgr;					/* engine.c */
+#define AGICON(n) ((n >= 0) ? AG_SPRITE(&agIconMgr,(n)).su : NULL)
 
 #include "close_code.h"
 #endif	/* _AGAR_ICONS_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.7 2005/08/22 02:11:50 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.8 2005/08/27 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,24 +40,24 @@ static int erase_all = 0;
 static int all_layers = 0;
 
 static int
-delete_noderefs(struct tool *t, SDLKey key, int state, void *arg)
+delete_noderefs(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
 	int x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r;
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 				if (r->layer != m->cur_layer ||
-				    r->flags & NODEREF_NOSAVE) {
+				    r->flags & AG_NITEM_NOSAVE) {
 					continue;
 				}
-				if (r->flags & NODEREF_SELECTED)
-					node_remove_ref(m, node, r);
+				if (r->flags & AG_NITEM_SELECTED)
+					AG_NodeDelItem(m, node, r);
 			}
 		}
 	}
@@ -67,53 +67,54 @@ delete_noderefs(struct tool *t, SDLKey key, int state, void *arg)
 static void
 eraser_init(void *p)
 {
-	tool_bind_key(p, 0, SDLK_DELETE, delete_noderefs, NULL);
-	tool_push_status(p, _("Select a node element and use $(L) to delete."));
+	AG_MaptoolBindKey(p, 0, SDLK_DELETE, delete_noderefs, NULL);
+	AG_MaptoolPushStatus(p,
+	    _("Select a node element and use $(L) to delete."));
 }
 
 static void
 eraser_pane(void *p, void *con)
 {
-	struct checkbox *cb;
+	AG_Checkbox *cb;
 
-	cb = checkbox_new(con, _("Erase all elements"));
-	widget_bind(cb, "state", WIDGET_INT, &erase_all);
+	cb = AG_CheckboxNew(con, _("Erase all elements"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &erase_all);
 	
-	cb = checkbox_new(con, _("Apply to all layers"));
-	widget_bind(cb, "state", WIDGET_INT, &all_layers);
+	cb = AG_CheckboxNew(con, _("Apply to all layers"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &all_layers);
 }
 
 static int
 mousebuttondown(void *p, int x, int y, int btn)
 {
-	mapmod_begin(TOOL(p)->mv->map);
+	AG_MapmodBegin(TOOL(p)->mv->map);
 	return (0);
 }
 
 static int
 mousebuttonup(void *p, int x, int y, int btn)
 {
-	struct tool *t = p;
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
+	AG_Maptool *t = p;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
 
 	if (m->nmods == 0) {
-		mapmod_cancel(m);
+		AG_MapmodCancel(m);
 	}
-	mapmod_end(m);
+	AG_MapmodEnd(m);
 	return (0);
 }
 
 static int
-eraser_effect(void *p, struct node *n)
+eraser_effect(void *p, AG_Node *n)
 {
-	struct tool *t = p;
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
-	struct noderef *r;
+	AG_Maptool *t = p;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
+	AG_Nitem *r;
 	int nmods = 0;
 
-	mapmod_nodechg(m, mv->cx, mv->cy);
+	AG_MapmodNodeChg(m, mv->cx, mv->cy);
 
 	TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 		if (!all_layers &&
@@ -121,8 +122,8 @@ eraser_effect(void *p, struct node *n)
 			continue;
 
 		TAILQ_REMOVE(&n->nrefs, r, nrefs);
-		noderef_destroy(m, r);
-		Free(r, M_MAP_NODEREF);
+		AG_NitemDestroy(m, r);
+		Free(r, M_MAP_NITEM);
 		nmods++;
 
 		if (!erase_all)
@@ -136,15 +137,15 @@ eraser_cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 0, 0, 64 };
 
-	primitives.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
-	    c, ALPHA_OVERLAY);
+	agPrim.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	    c, AG_ALPHA_OVERLAY);
 	return (1);
 }
 
-const struct tool_ops eraser_ops = {
+const AG_MaptoolOps agMapEraserOps = {
 	"Eraser", N_("Remove node elements."),
 	ERASER_TOOL_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	eraser_init,
 	NULL,			/* destroy */
@@ -159,6 +160,5 @@ const struct tool_ops eraser_ops = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
-
 
 #endif /* MAP */

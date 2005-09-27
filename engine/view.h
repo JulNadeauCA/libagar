@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.101 2005/06/18 04:25:18 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.102 2005/07/16 16:07:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -10,60 +10,60 @@
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
 
-TAILQ_HEAD(windowq, window);
+struct ag_window;
+TAILQ_HEAD(ag_windowq, ag_window);
 
-struct viewport {
-	enum gfx_engine  gfx_engine;	/* Rendering method */
-	SDL_Surface	*v;		/* Video surface */
-	SDL_Surface	*stmpl;		/* Reference surface */
+typedef struct ag_display {
+	SDL_Surface *v;			/* Video surface */
+	SDL_Surface *stmpl;		/* Reference surface */
 
-	int		 w, h;		/* Display geometry */
-	int		 depth;		/* Depth in bpp */
-	int		 opengl;	/* OpenGL rendering? (if available) */
+	int w, h;			/* Display geometry */
+	int depth;			/* Depth in bpp */
+	int opengl;			/* OpenGL rendering? (if available) */
 	struct {
-		int	 r;		/* Estimated refresh rate in ms */
-		int	 rnom;		/* Nominal FPS (expressed as 1000/n) */
+		int r;			/* Estimated refresh rate in ms */
+		int rnom;		/* Nominal FPS (expressed as 1000/n) */
 	} refresh;
 
 	SDL_Rect *dirty;		/* Video rectangles to update */
 	u_int	 ndirty;
 	u_int  maxdirty;
 
-	pthread_mutex_t	 lock;
-	struct windowq	 windows;	/* Windows in view */
-	struct windowq	 detach;	/* Windows to free */
-	struct window	*focus_win;	/* Give focus to this window,
-					   when event processing is done. */
-	struct window	*wop_win;	/* Window being moved/resized/etc. */
-	struct window	*modal_win;	/* Modal window (or NULL). */
+	pthread_mutex_t	lock;
+	struct ag_windowq windows;	/* Windows in view */
+	struct ag_windowq detach;	/* Windows to free */
+	struct ag_window *focus_win;	/* Give focus to this window,
+					   when event processing is done */
+	struct ag_window *wop_win;	/* Window being moved/resized/etc */
+	struct ag_window *modal_win;	/* Modal window (or NULL) */
 
 	enum {
-		VIEW_WINOP_NONE,
-		VIEW_WINOP_MOVE,		/* Window movement */
-		VIEW_WINOP_LRESIZE,		/* Window resize */
-		VIEW_WINOP_RRESIZE,
-		VIEW_WINOP_HRESIZE
+		AG_WINOP_NONE,
+		AG_WINOP_MOVE,			/* Window movement */
+		AG_WINOP_LRESIZE,		/* Window resize */
+		AG_WINOP_RRESIZE,
+		AG_WINOP_HRESIZE
 	} winop;
-};
+} AG_Display;
 
-/* Alpha functions for view_blend_rgba(). */
-enum view_blend_func {
-	ALPHA_OVERLAY,			/* dA = sA+dA */
-	ALPHA_SRC,			/* dA = sA */
-	ALPHA_DST,			/* dA = dA */
-	ALPHA_MEAN,			/* dA = (sA+dA)/2 */
-	ALPHA_SOURCE_MINUS_DST,		/* dA = (sA-dA) */
-	ALPHA_DST_MINUS_SOURCE,		/* dA = (dA-sA) */
-	ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
+/* Alpha functions for AG_BlendPixelRGBA(). */
+enum ag_blend_func {
+	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
+	AG_ALPHA_SRC,			/* dA = sA */
+	AG_ALPHA_DST,			/* dA = dA */
+	AG_ALPHA_MEAN,			/* dA = (sA+dA)/2 */
+	AG_ALPHA_SOURCE_MINUS_DST,	/* dA = (sA-dA) */
+	AG_ALPHA_DST_MINUS_SOURCE,	/* dA = (dA-sA) */
+	AG_ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
 };
 
 /* Determine whether a pixel must be clipped or not. */
-#define CLIPPED_PIXEL(s, ax, ay)			\
+#define AG_CLIPPED_PIXEL(s, ax, ay)			\
 	((ax) < (s)->clip_rect.x ||			\
 	 (ax) >= (s)->clip_rect.x+(s)->clip_rect.w ||	\
 	 (ay) < (s)->clip_rect.y ||			\
 	 (ay) >= (s)->clip_rect.y+(s)->clip_rect.h)
-#define NONCLIPPED_PIXEL(s, ax, ay)			\
+#define AG_NONCLIPPED_PIXEL(s, ax, ay)			\
 	((ax) >= (s)->clip_rect.x &&			\
 	 (ax) < (s)->clip_rect.x+(s)->clip_rect.w &&	\
 	 (ay) >= (s)->clip_rect.y &&			\
@@ -74,31 +74,31 @@ enum view_blend_func {
  */
 
 #ifdef VIEW_8BPP
-# define _VIEW_PUTPIXEL_8(dst, c)	\
+# define _AG_VIEW_PUTPIXEL_8(dst, c)	\
 case 1:					\
 	*(dst) = (c);			\
 	break;
 #else
-# define _VIEW_PUTPIXEL_8(dst, c)
+# define _AG_VIEW_PUTPIXEL_8(dst, c)
 #endif
 #ifdef VIEW_16BPP
-# define _VIEW_PUTPIXEL_16(dst, c)	\
+# define _AG_VIEW_PUTPIXEL_16(dst, c)	\
 case 2:					\
 	*(Uint16 *)(dst) = (c);		\
 	break;
 #else
-# define _VIEW_PUTPIXEL_16(dst, c)
+# define _AG_VIEW_PUTPIXEL_16(dst, c)
 #endif
 #ifdef VIEW_24BPP
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#  define _VIEW_PUTPIXEL_24(dst, c)	\
+#  define _AG_VIEW_PUTPIXEL_24(dst, c)	\
 case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
 	(dst)[2] =  (c) & 0xff;		\
 	break;
 # else
-#  define _VIEW_PUTPIXEL_24(dst, c)	\
+#  define _AG_VIEW_PUTPIXEL_24(dst, c)	\
 case 3:					\
 	(dst)[0] =  (c) & 0xff;		\
 	(dst)[1] = ((c)>>8) & 0xff;	\
@@ -106,44 +106,44 @@ case 3:					\
 	break;
 # endif
 #else
-# define _VIEW_PUTPIXEL_24(dst, c)
+# define _AG_VIEW_PUTPIXEL_24(dst, c)
 #endif
 #ifdef VIEW_32BPP
-# define _VIEW_PUTPIXEL_32(dst, c)	\
+# define _AG_VIEW_PUTPIXEL_32(dst, c)	\
 case 4:					\
 	*(Uint32 *)(dst) = (c);		\
 	break;
 #else
-# define _VIEW_PUTPIXEL_32(dst, c)
+# define _AG_VIEW_PUTPIXEL_32(dst, c)
 #endif
 
-#define VIEW_PUT_PIXEL(p, c) do {					\
-	switch (vfmt->BytesPerPixel) {					\
-		_VIEW_PUTPIXEL_8((p),  (c))				\
-		_VIEW_PUTPIXEL_16((p), (c))				\
-		_VIEW_PUTPIXEL_24((p), (c))				\
-		_VIEW_PUTPIXEL_32((p), (c))				\
+#define AG_VIEW_PUT_PIXEL(p, c) do {					\
+	switch (agVideoFmt->BytesPerPixel) {				\
+		_AG_VIEW_PUTPIXEL_8((p),  (c))				\
+		_AG_VIEW_PUTPIXEL_16((p), (c))				\
+		_AG_VIEW_PUTPIXEL_24((p), (c))				\
+		_AG_VIEW_PUTPIXEL_32((p), (c))				\
 	}								\
 } while (0)
-#define VIEW_PUT_PIXEL2(vx, vy, c) do {					\
-	Uint8 *_view_dst = (Uint8 *)view->v->pixels +			\
-	    (vy)*view->v->pitch + (vx)*vfmt->BytesPerPixel;		\
-	switch (vfmt->BytesPerPixel) {					\
-		_VIEW_PUTPIXEL_8(_view_dst,  (c))			\
-		_VIEW_PUTPIXEL_16(_view_dst, (c))			\
-		_VIEW_PUTPIXEL_24(_view_dst, (c))			\
-		_VIEW_PUTPIXEL_32(_view_dst, (c))			\
+#define AG_VIEW_PUT_PIXEL2(vx, vy, c) do {				\
+	Uint8 *_view_dst = (Uint8 *)agView->v->pixels +			\
+	    (vy)*agView->v->pitch + (vx)*agVideoFmt->BytesPerPixel;	 \
+	switch (agVideoFmt->BytesPerPixel) {				 \
+		_AG_VIEW_PUTPIXEL_8(_view_dst,  (c))			\
+		_AG_VIEW_PUTPIXEL_16(_view_dst, (c))			\
+		_AG_VIEW_PUTPIXEL_24(_view_dst, (c))			\
+		_AG_VIEW_PUTPIXEL_32(_view_dst, (c))			\
 	}								\
 } while (0)
-#define VIEW_PUT_PIXEL2_CLIPPED(vx, vy, c) do {				\
-	if (NONCLIPPED_PIXEL(view->v, (vx), (vy))) {			\
-		Uint8 *_view_dst = (Uint8 *)view->v->pixels +		\
-		    (vy)*view->v->pitch + (vx)*vfmt->BytesPerPixel;	\
-		switch (vfmt->BytesPerPixel) {				\
-			_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
-			_VIEW_PUTPIXEL_16(_view_dst, (c))		\
-			_VIEW_PUTPIXEL_24(_view_dst, (c))		\
-			_VIEW_PUTPIXEL_32(_view_dst, (c))		\
+#define AG_VIEW_PUT_PIXEL2_CLIPPED(vx, vy, c) do {			\
+	if (AG_NONCLIPPED_PIXEL(agView->v, (vx), (vy))) {		\
+		Uint8 *_view_dst = (Uint8 *)agView->v->pixels +		\
+		    (vy)*agView->v->pitch + (vx)*agVideoFmt->BytesPerPixel; \
+		switch (agVideoFmt->BytesPerPixel) {			 \
+			_AG_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
+			_AG_VIEW_PUTPIXEL_16(_view_dst, (c))		\
+			_AG_VIEW_PUTPIXEL_24(_view_dst, (c))		\
+			_AG_VIEW_PUTPIXEL_32(_view_dst, (c))		\
 		}							\
 	}								\
 } while (0)
@@ -152,21 +152,21 @@ case 4:					\
  * Generic putpixel/getpixel macros.
  */
 
-#define GET_PIXEL(s, p) view_get_pixel((s),(p))
-#define GET_PIXEL2(s, x, y)						\
-	view_get_pixel((s),(Uint8 *)(s)->pixels + (y)*(s)->pitch +	\
+#define AG_GET_PIXEL(s, p) AG_GetPixel((s),(p))
+#define AG_GET_PIXEL2(s, x, y)						\
+	AG_GetPixel((s),(Uint8 *)(s)->pixels + (y)*(s)->pitch +	\
 	    (x)*(s)->format->BytesPerPixel)
 
-#define PUT_PIXEL(s, p, c) view_put_pixel((s),(p),(c))
-#define PUT_PIXEL2(s, x, y, c) do {					\
-	view_put_pixel((s),						\
+#define AG_PUT_PIXEL(s, p, c) AG_PutPixel((s),(p),(c))
+#define AG_PUT_PIXEL2(s, x, y, c) do {					\
+	AG_PutPixel((s),						\
 	    (Uint8 *)(s)->pixels + (y)*(s)->pitch +			\
 	    (x)*(s)->format->BytesPerPixel,				\
 	    (c));							\
 } while (0)
-#define PUT_PIXEL2_CLIPPED(s, x, y, c) do {				\
-	if (NONCLIPPED_PIXEL((s), (x), (y))) {				\
-		view_put_pixel((s),					\
+#define AG_PUT_PIXEL2_CLIPPED(s, x, y, c) do {				\
+	if (AG_NONCLIPPED_PIXEL((s), (x), (y))) {			\
+		AG_PutPixel((s),					\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
 		    (c));						\
@@ -177,63 +177,61 @@ case 4:					\
  * Generic alpha blending macros.
  */
 
-#define BLEND_RGBA(s, p, r, g, b, a, m) \
-	view_blend_rgba((s),(p),(r),(g),(b),(a),(m))
-#define BLEND_RGBA2(s, x, y, r, g, b, a, m) do {			\
-	view_blend_rgba((s),						\
+#define AG_BLEND_RGBA(s, p, r, g, b, a, m) \
+	AG_BlendPixelRGBA((s),(p),(r),(g),(b),(a),(m))
+#define AG_BLEND_RGBA2(s, x, y, r, g, b, a, m) do {			\
+	AG_BlendPixelRGBA((s),						\
 	    (Uint8 *)(s)->pixels + (y)*(s)->pitch +			\
 	    (x)*(s)->format->BytesPerPixel,				\
 	    (r),(g),(b),(a),(m));					\
 } while (0)
-#define BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, m) do {		\
-	if (NONCLIPPED_PIXEL((s), (x), (y))) {				\
-		view_blend_rgba((s),					\
+#define AG_BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, m) do {		\
+	if (AG_NONCLIPPED_PIXEL((s), (x), (y))) {			\
+		AG_BlendPixelRGBA((s),					\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
 		    (r),(g),(b),(a),(m));				\
 	}								\
 } while (0)
 
-extern struct viewport *view;
-extern SDL_PixelFormat *vfmt;
-extern SDL_PixelFormat *sfmt;
-extern const SDL_VideoInfo *vinfo;
-extern const char *view_blend_func_txt[];
+extern AG_Display *agView;
+extern SDL_PixelFormat *agVideoFmt;
+extern SDL_PixelFormat *agSurfaceFmt;
+extern const SDL_VideoInfo *agVideoInfo;
+extern const char *agBlendFuncNames[];
 
 __BEGIN_DECLS
-int		 view_init(enum gfx_engine);
-int		 view_resize(int, int);
-void		 view_videoexpose(void);
-void		 view_attach(void *);
-void		 view_detach(struct window *);
-__inline__ void	 view_detach_queued(void);
-void		 view_destroy(void);
-int		 view_set_refresh(int);
-struct window	*view_window_exists(const char *);
-void		 view_parse_fpsspec(const char *);
+int		 AG_ViewInit(int, int, int, u_int);
+int		 AG_ResizeDisplay(int, int);
+void		 AG_ViewVideoExpose(void);
+void		 AG_ViewAttach(void *);
+void		 AG_ViewDetach(struct ag_window *);
+__inline__ void	 AG_ViewDetachQueued(void);
+void		 AG_ViewDestroy(void);
+int		 AG_SetRefreshRate(int);
+struct ag_window *AG_FindWindow(const char *);
 
-__inline__ SDL_Surface	*view_surface(Uint32, int, int);
-__inline__ SDL_Surface	*view_copy_surface(SDL_Surface *);
-void			 view_scale_surface(SDL_Surface *, Uint16, Uint16,
-			                    SDL_Surface **);
-void			 view_pixels_alpha(SDL_Surface *, Uint8);
-void			 view_capture(SDL_Surface *, char *);
-__inline__ void		 view_update(int, int, int, int);
+__inline__ SDL_Surface	*AG_DupSurface(SDL_Surface *);
+void			 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16,
+			                 SDL_Surface **);
+void			 AG_SetAlphaPixels(SDL_Surface *, Uint8);
+void			 AG_DumpSurface(SDL_Surface *, char *);
+__inline__ void		 AG_UpdateRectQ(int, int, int, int);
 
 #ifdef HAVE_OPENGL
-GLuint			 view_surface_texture(SDL_Surface *, GLfloat *);
-void			 view_update_texture(SDL_Surface *, int);
-SDL_Surface		*view_gl_capture(void);
+GLuint		 AG_SurfaceTexture(SDL_Surface *, GLfloat *);
+void		 AG_UpdateTexture(SDL_Surface *, int);
+SDL_Surface	*AG_CaptureGLView(void);
 #endif
 
-__inline__ int	  view_same_pixel_fmt(SDL_Surface *, SDL_Surface *);
-__inline__ Uint32 view_get_pixel(SDL_Surface *, Uint8 *);
-__inline__ void	  view_put_pixel(SDL_Surface *, Uint8 *, Uint32);
-__inline__ void	  view_blend_rgba(SDL_Surface *, Uint8 *,
-		                  Uint8, Uint8, Uint8, Uint8,
-				  enum view_blend_func);
+__inline__ int	  AG_SamePixelFmt(SDL_Surface *, SDL_Surface *);
+__inline__ Uint32 AG_GetPixel(SDL_Surface *, Uint8 *);
+__inline__ void	  AG_PutPixel(SDL_Surface *, Uint8 *, Uint32);
+__inline__ void	  AG_BlendPixelRGBA(SDL_Surface *, Uint8 *,
+		                    Uint8, Uint8, Uint8, Uint8,
+			  	    enum ag_blend_func);
 
-__inline__ void view_flip_lines(Uint8 *, int, int);
+__inline__ void AG_FlipSurface(Uint8 *, int, int);
 __END_DECLS
 
 #include "close_code.h"

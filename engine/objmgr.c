@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.47 2005/09/20 01:57:44 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.48 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -62,8 +62,8 @@
 #include "objmgr.h"
 
 struct objent {
-	struct object *obj;
-	struct window *win;
+	AG_Object *obj;
+	AG_Window *win;
 	TAILQ_ENTRY(objent) objs;
 };
 static TAILQ_HEAD(,objent) dobjs;
@@ -72,38 +72,38 @@ static int edit_on_create = 1;
 static void *current_pobj = NULL;
 
 #ifdef NETWORK
-static struct timeout repo_timeout;
+static AG_Timeout repo_timeout;
 #endif
 
-int objmgr_exiting = 0;
+int agObjMgrExiting = 0;
 #ifdef DEBUG
-int objmgr_hexdiff = 0;
+int agObjMgrHexDiff = 0;
 #endif
 
 static void
 create_obj(int argc, union evarg *argv)
 {
-	char name[OBJECT_NAME_MAX];
-	struct object_type *t = argv[1].p;
-	struct textbox *name_tb = argv[2].p;
-	struct tlist *objs_tl = argv[3].p;
-	struct window *dlg_win = argv[4].p;
-	struct tlist_item *it;
-	struct object *pobj;
+	char name[AG_OBJECT_NAME_MAX];
+	AG_ObjectType *t = argv[1].p;
+	AG_Textbox *name_tb = argv[2].p;
+	AG_Tlist *objs_tl = argv[3].p;
+	AG_Window *dlg_win = argv[4].p;
+	AG_TlistItem *it;
+	AG_Object *pobj;
 	void *nobj;
 
-	if ((it = tlist_selected_item(objs_tl)) != NULL) {
+	if ((it = AG_TlistSelectedItem(objs_tl)) != NULL) {
 		pobj = it->p1;
 	} else {
-		pobj = world;
+		pobj = agWorld;
 	}
-	textbox_copy_string(name_tb, name, sizeof(name));
-	view_detach(dlg_win);
+	AG_TextboxCopyString(name_tb, name, sizeof(name));
+	AG_ViewDetach(dlg_win);
 
 	if (name[0] == '\0') {
 		u_int nameno = 0;
-		struct object *ch;
-		char tname[OBJECT_TYPE_MAX], *s;
+		AG_Object *ch;
+		char tname[AG_OBJECT_TYPE_MAX], *s;
 	
 		if ((s = strrchr(t->type, '.')) != NULL && s[1] != '\0') {
 			strlcpy(tname, &s[1], sizeof(tname));
@@ -127,16 +127,16 @@ tryname:
 	if (t->ops->init != NULL) {
 		t->ops->init(nobj, name);
 	} else {
-		object_init(nobj, t->type, name, NULL);
+		AG_ObjectInit(nobj, t->type, name, NULL);
 	}
-	object_attach(pobj, nobj);
-	object_unlink_datafiles(nobj);
+	AG_ObjectAttach(pobj, nobj);
+	AG_ObjectUnlinkDatafiles(nobj);
 
-	event_post(NULL, nobj, "edit-create", NULL);
+	AG_PostEvent(NULL, nobj, "edit-create", NULL);
 	
 	if (edit_on_create &&
 	    t->ops->edit != NULL)
-		objmgr_open_data(nobj, 1);
+		AG_ObjMgrOpenData(nobj, 1);
 }
 
 enum {
@@ -162,17 +162,17 @@ enum {
 static void
 close_obj_generic(int argc, union evarg *argv)
 {
-	struct window *win = argv[0].p;
+	AG_Window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
 
-	view_detach(win);
+	AG_ViewDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
-	object_del_dep(&mapedit.pseudo, oent->obj);
+	AG_ObjectDelDep(&agMapEditor.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
 }
 
 void
-objmgr_open_generic(struct object *ob)
+AG_ObjMgrOpenGeneric(AG_Object *ob)
 {
 	struct objent *oent;
 
@@ -181,45 +181,45 @@ objmgr_open_generic(struct object *ob)
 			break;
 	}
 	if (oent != NULL) {
-		window_show(oent->win);
-		view->focus_win = oent->win;
+		AG_WindowShow(oent->win);
+		agView->focus_win = oent->win;
 		return;
 	}
 	
-	object_add_dep(&mapedit.pseudo, ob);
+	AG_ObjectAddDep(&agMapEditor.pseudo, ob);
 	
 	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
-	oent->win = object_edit(ob);
+	oent->win = AG_ObjectEdit(ob);
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
-	window_show(oent->win);
+	AG_WindowShow(oent->win);
 
-	event_new(oent->win, "window-close", close_obj_generic, "%p", oent);
+	AG_SetEvent(oent->win, "window-close", close_obj_generic, "%p", oent);
 }
 
 static void
-close_object(struct objent *oent, struct window *win, int save)
+close_object(struct objent *oent, AG_Window *win, int save)
 {
-	window_hide(win);
-	event_post(NULL, oent->obj, "edit-close", NULL);
-	view_detach(win);
+	AG_WindowHide(win);
+	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
+	AG_ViewDetach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 
 	if (!save) {
-		objmgr_exiting = 1;
+		agObjMgrExiting = 1;
 	}
-	object_page_out(oent->obj, OBJECT_DATA);
-	object_page_out(oent->obj, OBJECT_GFX);
+	AG_ObjectPageOut(oent->obj, AG_OBJECT_DATA);
+	AG_ObjectPageOut(oent->obj, AG_OBJECT_GFX);
 
-	objmgr_exiting = 0;
-	object_del_dep(&mapedit.pseudo, oent->obj);
+	agObjMgrExiting = 0;
+	AG_ObjectDelDep(&agMapEditor.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
 }
 
 static void
 close_object_cb(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	AG_Window *win = argv[1].p;
 	struct objent *oent = argv[2].p;
 	int save = argv[3].i;
 
@@ -229,28 +229,29 @@ close_object_cb(int argc, union evarg *argv)
 static void
 close_object_dlg(int argc, union evarg *argv)
 {
-	struct window *win = argv[0].p;
+	AG_Window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
 
-	if (object_changed(oent->obj)) {
-		struct button *bOpts[3];
-		struct window *wDlg;
+	if (AG_ObjectChanged(oent->obj)) {
+		AG_Button *bOpts[3];
+		AG_Window *wDlg;
 
-		wDlg = text_prompt_options(bOpts, 3, _("Save changes to %s?"),
-		    OBJECT(oent->obj)->name);
-		window_attach(win, wDlg);
+		wDlg = AG_TextPromptOptions(bOpts, 3, _("Save changes to %s?"),
+		    AGOBJECT(oent->obj)->name);
+		AG_WindowAttach(win, wDlg);
 		{
-			button_printf(bOpts[0], _("Save"));
-			event_new(bOpts[0], "button-pushed",
+			AG_ButtonPrintf(bOpts[0], _("Save"));
+			AG_SetEvent(bOpts[0], "button-pushed",
 			    close_object_cb, "%p,%p,%i", win, oent, 1);
-			widget_focus(bOpts[0]);
+			AG_WidgetFocus(bOpts[0]);
 
-			button_printf(bOpts[1], _("Discard"));
-			event_new(bOpts[1], "button-pushed",
+			AG_ButtonPrintf(bOpts[1], _("Discard"));
+			AG_SetEvent(bOpts[1], "button-pushed",
 			    close_object_cb, "%p,%p,%i", win, oent, 0);
 
-			button_printf(bOpts[2], _("Cancel"));
-			event_new(bOpts[2], "button-pushed", WINDETACH(wDlg));
+			AG_ButtonPrintf(bOpts[2], _("Cancel"));
+			AG_SetEvent(bOpts[2], "button-pushed",
+			    AGWINDETACH(wDlg));
 		}
 	} else {
 		close_object(oent, win, 1);
@@ -258,69 +259,69 @@ close_object_dlg(int argc, union evarg *argv)
 }
 
 void
-objmgr_open_data(void *p, int new)
+AG_ObjMgrOpenData(void *p, int new)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	struct objent *oent;
-	struct window *win;
+	AG_Window *win;
 
 	TAILQ_FOREACH(oent, &dobjs, objs) {
 		if (oent->obj == ob)
 			break;
 	}
 	if (oent != NULL) {
-		window_show(oent->win);
-		view->focus_win = oent->win;
+		AG_WindowShow(oent->win);
+		agView->focus_win = oent->win;
 		return;
 	}
 	
 	if (ob->ops->edit == NULL)
 		return;
 
-	if ((ob->flags & OBJECT_NON_PERSISTENT) == 0) {
+	if ((ob->flags & AG_OBJECT_NON_PERSISTENT) == 0) {
 		if (ob->data_used == 0 &&
-		   (object_load(ob) == -1 || object_load_data(ob) == -1)) {
+		   (AG_ObjectLoad(ob) == -1 || AG_ObjectLoadData(ob) == -1)) {
 			if (new) {
 				dprintf("%s: new object\n", ob->name);
-				ob->flags |= OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_DATA_RESIDENT;
 
-				if (object_save(ob) == -1) {
-					text_msg(MSG_ERROR, "%s: %s", ob->name,
-					    error_get());
+				if (AG_ObjectSave(ob) == -1) {
+					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
+					    ob->name, AG_GetError());
 					return;
 				}
 			} else {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 				return;
 			}
 		}
-		if (++ob->data_used > OBJECT_DEP_MAX)
-			ob->data_used = OBJECT_DEP_MAX;
+		if (++ob->data_used > AG_OBJECT_DEP_MAX)
+			ob->data_used = AG_OBJECT_DEP_MAX;
 	}
-	if (object_page_in(ob, OBJECT_GFX) == -1) {
-		text_msg(MSG_ERROR, "%s (gfx): %s", ob->name, error_get());
+	if (AG_ObjectPageIn(ob, AG_OBJECT_GFX) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s (gfx): %s", ob->name, AG_GetError());
 		goto fail_data;
 	}
-	object_add_dep(&mapedit.pseudo, ob);
+	AG_ObjectAddDep(&agMapEditor.pseudo, ob);
 
 	if ((win = ob->ops->edit(ob)) == NULL) {
 		goto fail_gfx;
 	}
-	event_post(NULL, ob, "edit-open", NULL);
+	AG_PostEvent(NULL, ob, "edit-open", NULL);
 	
 	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
-	event_new(win, "window-close", close_object_dlg, "%p", oent);
-	window_show(win);
+	AG_SetEvent(win, "window-close", close_object_dlg, "%p", oent);
+	AG_WindowShow(win);
 	return;
 fail_gfx:
-	object_del_dep(&mapedit.pseudo, ob);
-	object_page_out(ob, OBJECT_GFX);
+	AG_ObjectDelDep(&agMapEditor.pseudo, ob);
+	AG_ObjectPageOut(ob, AG_OBJECT_GFX);
 fail_data:
-	object_page_out(ob, OBJECT_DATA);
+	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
 	return;
 }
 
@@ -328,69 +329,70 @@ static void
 export_object(int argc, union evarg *argv)
 {
 	char save_path[MAXPATHLEN];
-	struct object *ob = argv[1].p;
-	struct window *win = argv[2].p;
+	AG_Object *ob = argv[1].p;
+	AG_Window *win = argv[2].p;
 	char *path = argv[3].s;
 	char *pfx_save = ob->save_pfx;
 	int paged_in = 0;
 
-	if ((ob->flags & OBJECT_DATA_RESIDENT) == 0) {
-		if (object_load_data(ob) == -1) {
+	if ((ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
+		if (AG_ObjectLoadData(ob) == -1) {
 			/* XXX hack */
-			ob->flags |= OBJECT_DATA_RESIDENT;
+			ob->flags |= AG_OBJECT_DATA_RESIDENT;
 		}
 		paged_in = 1;
 	}
 
-	prop_copy_string(config, "save-path", save_path, sizeof(save_path));
-	prop_set_string(config, "save-path", "%s", path);
+	AG_StringCopy(agConfig, "save-path", save_path, sizeof(save_path));
+	AG_SetString(agConfig, "save-path", "%s", path);
 	ob->save_pfx = NULL;
 
-	if (object_save_all(ob) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
+	if (AG_ObjectSaveAll(ob) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
 	} else {
-		text_tmsg(MSG_INFO, 1000,
+		AG_TextTmsg(AG_MSG_INFO, 1000,
 		    _("Object `%s' was exported successfully."), ob->name);
 	}
 
-	prop_set_string(config, "save-path", "%s", save_path);
+	AG_SetString(agConfig, "save-path", "%s", save_path);
 	ob->save_pfx = pfx_save;
-	view_detach(win);
+	AG_ViewDetach(win);
 	
 	if (paged_in)
-		object_free_data(ob);
+		AG_ObjectFreeData(ob);
 }
 
 void
-objmgr_save_to(void *p)
+AG_ObjMgrSaveTo(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	char path[FILENAME_MAX];
-	struct window *win;
-	struct AGFileDlg *fdg;
+	AG_Window *win;
+	AG_FileDlg *fdg;
 
 	strlcpy(path, ob->name, sizeof(path));
 	strlcat(path, ".", sizeof(path));
 	strlcat(path, ob->type, sizeof(path));
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Save %s to..."), ob->name);
-	fdg = file_dlg_new(win, 0, prop_get_string(config, "save-path"), path);
-	event_new(fdg, "file-validated", export_object, "%p,%p", ob, win);
-	event_new(fdg, "file-cancelled", WINDETACH(win));
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
+	fdg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
+	    path);
+	AG_SetEvent(fdg, "file-validated", export_object, "%p,%p", ob, win);
+	AG_SetEvent(fdg, "file-cancelled", AGWINDETACH(win));
 
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 static void
 obj_op(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
 	int op = argv[2].i;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct object *ob = it->p1;
+		AG_Object *ob = it->p1;
 
 		if (!it->selected)
 			continue;
@@ -398,76 +400,76 @@ obj_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				objmgr_open_data(ob, 0);
+				AG_ObjMgrOpenData(ob, 0);
 			} else {
-				text_tmsg(MSG_ERROR, 750,
+				AG_TextTmsg(AG_MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
 				    ob->name);
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
-			objmgr_open_generic(ob);
+			AG_ObjMgrOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
-			if (object_load(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectLoad(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 			}
 			break;
 		case OBJEDIT_SAVE:
-			if (object_save(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectSave(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 			} else {
-				text_tmsg(MSG_INFO, 1000,
+				AG_TextTmsg(AG_MSG_INFO, 1000,
 				    _("Object `%s' was saved successfully."),
 				    ob->name);
 			}
 			break;
 		case OBJEDIT_SAVE_ALL:
-			if (object_save_all(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectSaveAll(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 			} else {
-				text_tmsg(MSG_INFO, 1000,
+				AG_TextTmsg(AG_MSG_INFO, 1000,
 				    _("Object `%s' was saved successfully."),
 				    ob->name);
 			}
 			break;
 		case OBJEDIT_EXPORT:
-			if (ob->flags & OBJECT_NON_PERSISTENT) {
-				error_set(
+			if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+				AG_SetError(
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				objmgr_save_to(ob);
+				AG_ObjMgrSaveTo(ob);
 			}
 			break;
 		case OBJEDIT_DUP:
 			{
-				struct object *dob;
+				AG_Object *dob;
 
-				if (ob == world ||
-				    ob->flags & OBJECT_NON_PERSISTENT) {
-					text_msg(MSG_ERROR,
+				if (ob == agWorld ||
+				    ob->flags & AG_OBJECT_NON_PERSISTENT) {
+					AG_TextMsg(AG_MSG_ERROR,
 					    _("%s: cannot duplicate."),
 					    ob->name);
 					break;
 				}
-				if ((dob = object_duplicate(ob)) == NULL) {
-					text_msg(MSG_ERROR, "%s: %s", ob->name,
-					    error_get());
+				if ((dob = AG_ObjectDuplicate(ob)) == NULL) {
+					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
+					    ob->name, AG_GetError());
 				}
 			}
 			break;
 		case OBJEDIT_MOVE_UP:
-			object_move_up(ob);
+			AG_ObjectMoveUp(ob);
 			break;
 		case OBJEDIT_MOVE_DOWN:
-			object_move_down(ob);
+			AG_ObjectMoveDown(ob);
 			break;
 		case OBJEDIT_REINIT:
-			if (it->p1 == world) {
+			if (it->p1 == agWorld) {
 				continue;
 			}
 			if (ob->ops->reinit != NULL) {
@@ -475,65 +477,66 @@ obj_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_DESTROY:
-			if (it->p1 == world) {
+			if (it->p1 == agWorld) {
 				continue;
 			}
-			if (object_in_use(ob)) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectInUse(ob)) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 				continue;
 			}
-			if (ob->flags & OBJECT_INDESTRUCTIBLE) {
-				text_msg(MSG_ERROR,
+			if (ob->flags & AG_OBJECT_INDESTRUCTIBLE) {
+				AG_TextMsg(AG_MSG_ERROR,
 				    _("The `%s' object is indestructible."),
 				    ob->name);
 				continue;
 			}
-			object_detach(ob);
-			object_unlink_datafiles(ob);
-			object_destroy(ob);
-			if ((ob->flags & OBJECT_STATIC) == 0) {
+			AG_ObjectDetach(ob);
+			AG_ObjectUnlinkDatafiles(ob);
+			AG_ObjectDestroy(ob);
+			if ((ob->flags & AG_OBJECT_STATIC) == 0) {
 				Free(ob, M_OBJECT);
 			}
 			break;
 #ifdef NETWORK
 		case OBJEDIT_RCS_IMPORT:
-			if (object_save(ob) == -1 ||
-			    rcs_import(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectSave(ob) == -1 ||
+			    AG_RcsImport(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 			}
 			break;
 		case OBJEDIT_RCS_IMPORT_ALL:
-			rcs_import_all(ob);
+			AG_RcsImportAll(ob);
 			break;
 		case OBJEDIT_RCS_COMMIT:
-			if (object_save(ob) == -1 ||
-			    rcs_commit(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
+			if (AG_ObjectSave(ob) == -1 ||
+			    AG_RcsCommit(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
+				    AG_GetError());
 			}
 			break;
 		case OBJEDIT_RCS_COMMIT_ALL:
-			rcs_commit_all(ob);
+			AG_RcsCommitAll(ob);
 			break;
 		case OBJEDIT_RCS_UPDATE:
-			if (object_save(ob) == -1) {
-				text_msg(MSG_ERROR, _("Save failed: %s: %s"),
-				    ob->name, error_get());
+			if (AG_ObjectSave(ob) == -1) {
+				AG_TextMsg(AG_MSG_ERROR,
+				    _("Save failed: %s: %s"), ob->name,
+				    AG_GetError());
 				break;
 			}
-			if (rcs_update(ob) == 0) {
-				if (object_load(ob) == -1) {
-					text_msg(MSG_ERROR, "%s: %s",
-					    ob->name, error_get());
+			if (AG_RcsUpdate(ob) == 0) {
+				if (AG_ObjectLoad(ob) == -1) {
+					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
+					    ob->name, AG_GetError());
 				}
 			} else {
-				text_msg(MSG_ERROR, "%s", error_get());
+				AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 			}
 			break;
 		case OBJEDIT_RCS_UPDATE_ALL:
-			rcs_update_all(ob);
+			AG_RcsUpdateAll(ob);
 			break;
 #endif /* NETWORK */
 		}
@@ -543,58 +546,58 @@ obj_op(int argc, union evarg *argv)
 static void
 generic_save(int argc, union evarg *argv)
 {
-	struct object *ob = argv[1].p;
+	AG_Object *ob = argv[1].p;
 
-	if (object_save(ob) == -1) {
-		text_msg(MSG_ERROR, _("Save failed: %s: %s"), ob->name,
-		    error_get());
+	if (AG_ObjectSave(ob) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
+		    AG_GetError());
 	} else {
-		text_tmsg(MSG_INFO, 1000, _("Object `%s' saved successfully."),
-		    ob->name);
+		AG_TextTmsg(AG_MSG_INFO, 1000,
+		    _("Object `%s' saved successfully."), ob->name);
 	}
 }
 
 static void
 generic_save_to(int argc, union evarg *argv)
 {
-	objmgr_save_to(argv[1].p);
+	AG_ObjMgrSaveTo(argv[1].p);
 }
 
 void
-objmgr_generic_menu(void *menup, void *obj)
+AG_ObjMgrGenericMenu(void *menup, void *obj)
 {
-	struct AGMenuItem *pitem = menup;
+	AG_MenuItem *pitem = menup;
 
-	menu_action(pitem, _("Save"), OBJSAVE_ICON,
+	AG_MenuAction(pitem, _("Save"), OBJSAVE_ICON,
 	    generic_save, "%p", obj);
-	menu_action(pitem, _("Save to..."), OBJSAVE_ICON,
+	AG_MenuAction(pitem, _("Save to..."), OBJSAVE_ICON,
 	    generic_save_to, "%p", obj);
 }
 
 /* Display the object tree. */
-static struct tlist_item *
-find_objs(struct tlist *tl, struct object *pob, int depth)
+static AG_TlistItem *
+find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 {
-	char label[TLIST_LABEL_MAX];
-	struct object *cob;
-	struct tlist_item *it;
+	char label[AG_TLIST_LABEL_MAX];
+	AG_Object *cob;
+	AG_TlistItem *it;
 	SDL_Surface *icon;
 
 	strlcpy(label, pob->name, sizeof(label));
-	if (pob->flags & OBJECT_DATA_RESIDENT) {
+	if (pob->flags & AG_OBJECT_DATA_RESIDENT) {
 		strlcat(label, _(" (resident)"), sizeof(label));
 	}
-	it = tlist_insert_item(tl, object_icon(pob), label, pob);
+	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);
 	it->depth = depth;
 	it->class = "object";
 
 	if (!TAILQ_EMPTY(&pob->children)) {
-		it->flags |= TLIST_HAS_CHILDREN;
-		if (object_root(pob) == pob)
-			it->flags |= TLIST_VISIBLE_CHILDREN;
+		it->flags |= AG_TLIST_HAS_CHILDREN;
+		if (AG_ObjectRoot(pob) == pob)
+			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
 	}
-	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_children(tl, it)) {
+	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
+	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			find_objs(tl, cob, depth+1);
 	}
@@ -605,47 +608,48 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 static void
 poll_objs(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct object *pob = argv[1].p;
-	struct object *dob = argv[2].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *pob = argv[1].p;
+	AG_Object *dob = argv[2].p;
+	AG_TlistItem *it;
 
-	lock_linkage();
-	tlist_clear_items(tl);
+	AG_LockLinkage();
+	AG_TlistClear(tl);
 	find_objs(tl, pob, 0);
-	tlist_restore_selections(tl);
-	unlock_linkage();
+	AG_TlistRestore(tl);
+	AG_UnlockLinkage();
 
-	if (tlist_selected_item(tl) == NULL) {
+	if (AG_TlistSelectedItem(tl) == NULL) {
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->p1 == dob)
 				break;
 		}
 		if (it != NULL)
-			tlist_select(tl, it);
+			AG_TlistSelect(tl, it);
 	}
 }
 
 static void
 load_object(int argc, union evarg *argv)
 {
-	struct object *o = argv[1].p;
+	AG_Object *o = argv[1].p;
 
-	if (object_load(o) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", OBJECT(o)->name, error_get());
+	if (AG_ObjectLoad(o) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", AGOBJECT(o)->name,
+		    AG_GetError());
 	}
 }
 
 static void
 save_object(int argc, union evarg *argv)
 {
-	struct object *ob = argv[1].p;
+	AG_Object *ob = argv[1].p;
 
-	if (object_save(ob) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
+	if (AG_ObjectSave(ob) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
 	} else {
-		text_tmsg(MSG_INFO, 1000, _("Object `%s' saved successfully."),
-		    ob->name);
+		AG_TextTmsg(AG_MSG_INFO, 1000,
+		    _("Object `%s' saved successfully."), ob->name);
 	}
 }
 
@@ -659,74 +663,75 @@ exit_program(int argc, union evarg *argv)
 }
 
 static void
-show_preferences(int argc, union evarg *argv)
+show_config_win(int argc, union evarg *argv)
 {
-	if (!config->settings->visible) {
-		window_show(config->settings);
+	if (!agConfig->window->visible) {
+		AG_WindowShow(agConfig->window);
 	} else {
-		window_focus(config->settings);
+		AG_WindowFocus(agConfig->window);
 	}
 }
 
 static void
 create_obj_dlg(int argc, union evarg *argv)
 {
-	struct window *win;
-	struct object_type *t = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct tlist *pobj_tl;
-	struct box *bo;
-	struct textbox *tb;
-	struct checkbox *cb;
+	AG_Window *win;
+	AG_ObjectType *t = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Tlist *pobj_tl;
+	AG_Box *bo;
+	AG_Textbox *tb;
+	AG_Checkbox *cb;
 
-	win = window_new(WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE, NULL);
-	window_set_caption(win, _("New %s object"), t->type);
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_NO_CLOSE|AG_WINDOW_NO_MINIMIZE, NULL);
+	AG_WindowSetCaption(win, _("New %s object"), t->type);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		label_new(bo, LABEL_STATIC, _("Type: %s"), t->type);
-		tb = textbox_new(bo, _("Name: "));
-		widget_focus(tb);
+		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->type);
+		tb = AG_TextboxNew(bo, _("Name: "));
+		AG_WidgetFocus(tb);
 	}
 
-	separator_new(win, SEPARATOR_HORIZ);
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_padding(bo, 0);
-	box_set_spacing(bo, 0);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	AG_BoxSetPadding(bo, 0);
+	AG_BoxSetSpacing(bo, 0);
 	{
-		label_new(bo, LABEL_STATIC, _("Parent object:"));
+		AG_LabelNew(bo, AG_LABEL_STATIC, _("Parent object:"));
 
-		pobj_tl = tlist_new(bo, TLIST_POLL|TLIST_TREE);
-		tlist_prescale(pobj_tl, "XXXXXXXXXXXXXXXXXXX", 5);
-		widget_bind(pobj_tl, "selected", WIDGET_POINTER, &current_pobj);
-		event_new(pobj_tl, "tlist-poll", poll_objs, "%p,%p", world,
+		pobj_tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_TREE);
+		AG_TlistPrescale(pobj_tl, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_WidgetBind(pobj_tl, "selected", AG_WIDGET_POINTER,
+		    &current_pobj);
+		AG_SetEvent(pobj_tl, "tlist-poll", poll_objs, "%p,%p", agWorld,
 		    current_pobj);
 	}
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		cb = checkbox_new(win, _("Edit now"));
-		widget_bind(cb, "state", WIDGET_INT, &edit_on_create);
+		cb = AG_CheckboxNew(win, _("Edit now"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &edit_on_create);
 	}
 
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		struct button *btn;
+		AG_Button *btn;
 	
-		btn = button_new(bo, _("OK"));
-		event_new(tb, "textbox-return", create_obj, "%p,%p,%p,%p", t,
+		btn = AG_ButtonNew(bo, _("OK"));
+		AG_SetEvent(tb, "textbox-return", create_obj, "%p,%p,%p,%p", t,
 		    tb, pobj_tl, win);
-		event_new(btn, "button-pushed", create_obj, "%p,%p,%p,%p", t,
+		AG_SetEvent(btn, "button-pushed", create_obj, "%p,%p,%p,%p", t,
 		    tb, pobj_tl, win);
 		
-		btn = button_new(bo, _("Cancel"));
-		event_new(btn, "button-pushed", WINDETACH(win));
+		btn = AG_ButtonNew(bo, _("Cancel"));
+		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 #ifdef NETWORK
@@ -734,323 +739,328 @@ create_obj_dlg(int argc, union evarg *argv)
 static void
 update_repo_listing(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
+	AG_Tlist *tl = argv[1].p;
 
-	if (!rcs) {
-		text_msg(MSG_ERROR, _("RCS is currently disabled."));
+	if (!agRcsMode) {
+		AG_TextMsg(AG_MSG_ERROR, _("RCS is currently disabled."));
 		return;
 	}
-	if (rcs_connect() == -1 ||
-	    rcs_list(tl) == -1) {
-		text_msg(MSG_ERROR, "%s", error_get());
+	if (AG_RcsConnect() == -1 ||
+	    AG_RcsList(tl) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
-	rcs_disconnect();
+	AG_RcsDisconnect();
 }
 
 static void
 update_from_repo(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected)
 			continue;
 
-		if (rcs_checkout(it->text) == -1)
-			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
+		if (AG_RcsCheckout(it->text) == -1) {
+			AG_TextMsg(AG_MSG_ERROR, "%s: %s", it->text,
+			    AG_GetError());
+		}
 	}
 }
 
 static void
 delete_from_repo(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected)
 			continue;
 
-		if (rcs_delete(it->text) == -1) {
-			text_msg(MSG_ERROR, "%s: %s", it->text, error_get());
+		if (AG_RcsDelete(it->text) == -1) {
+			AG_TextMsg(AG_MSG_ERROR, "%s: %s", it->text,
+			    AG_GetError());
 		} else {
-			text_tmsg(MSG_INFO, 500,
+			AG_TextTmsg(AG_MSG_INFO, 500,
 			    _("Object %s removed from repository."), it->text);
 		}
 	}
-	if (rcs_connect() == 0) {
-		rcs_list(tl);
-		rcs_disconnect();
+	if (AG_RcsConnect() == 0) {
+		AG_RcsList(tl);
+		AG_RcsDisconnect();
 	}
 }
 
 static void
 rename_repo(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
+	AG_Tlist *tl = argv[1].p;
 	char *from = argv[2].s;
 	char *to = argv[3].s;
 
-	if (rcs_rename(from, to) == -1) {
-		text_msg(MSG_ERROR, "%s: %s", from, error_get());
+	if (AG_RcsRename(from, to) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", from, AG_GetError());
 	} else {
-		text_tmsg(MSG_INFO, 1000, _("Object %s renamed to %s."),
+		AG_TextTmsg(AG_MSG_INFO, 1000, _("Object %s renamed to %s."),
 		    from, to);
 	}
-	if (rcs_connect() == 0) {
-		rcs_list(tl);
-		rcs_disconnect();
+	if (AG_RcsConnect() == 0) {
+		AG_RcsList(tl);
+		AG_RcsDisconnect();
 	}
 }
 
 static void
 rename_repo_dlg(int argc, union evarg *argv)
 {
-	char prompt[LABEL_MAX];
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
+	char prompt[AG_LABEL_MAX];
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
 	
-	if ((it = tlist_selected_item(tl)) == NULL)
+	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 	
 	snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
-	text_prompt_string(prompt, rename_repo, "%p,%s", tl, it->text);
+	AG_TextPromptString(prompt, rename_repo, "%p,%s", tl, it->text);
 }
 
 #endif /* NETWORK */
 
 /* Create the object editor window. */
-struct window *
-objmgr_window(void)
+AG_Window *
+AG_ObjMgrWindow(void)
 {
-	struct window *win;
-	struct vbox *vb;
-	struct textbox *name_tb;
-	struct tlist *objs_tl;
-	struct AGMenu *me;
-	struct AGMenuItem *mi, *mi_objs;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_Textbox *name_tb;
+	AG_Tlist *objs_tl;
+	AG_Menu *me;
+	AG_MenuItem *mi, *mi_objs;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
 
-	win = window_new(0, "objmgr");
-	window_set_caption(win, _("Object manager"));
-	window_set_position(win, WINDOW_UPPER_LEFT, 0);
+	win = AG_WindowNew(0, "objmgr");
+	AG_WindowSetCaption(win, _("Object manager"));
+	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
-	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
-	event_new(objs_tl, "tlist-poll", poll_objs, "%p,%p", world, NULL);
-	event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
+	objs_tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(objs_tl, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
+	AG_TlistPrescale(objs_tl, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
+	AG_SetEvent(objs_tl, "tlist-poll", poll_objs, "%p,%p", agWorld, NULL);
+	AG_SetEvent(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
 
-	me = menu_new(win);
-	mi = menu_add_item(me, _("File"));
+	me = AG_MenuNew(win);
+	mi = AG_MenuAddItem(me, _("File"));
 	{
 		int i;
 
-		mi_objs = menu_action(mi, _("New object"), OBJCREATE_ICON,
+		mi_objs = AG_MenuAction(mi, _("New object"), OBJCREATE_ICON,
 		    NULL, NULL);
-		for (i = ntypesw-1; i >= 0; i--) {
+		for (i = agnTypes-1; i >= 0; i--) {
 			char label[32];
-			struct object_type *t = &typesw[i];
+			AG_ObjectType *t = &agTypes[i];
 
 			strlcpy(label, t->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
-			menu_action(mi_objs, label, t->icon,
+			AG_MenuAction(mi_objs, label, t->icon,
 			    create_obj_dlg, "%p,%p", t, win);
 		}
 
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 
-		menu_action(mi, _("Load full state"), OBJLOAD_ICON,
-		    load_object, "%p", world);
-		menu_action(mi, _("Save full state"), OBJSAVE_ICON,
-		    save_object, "%p", world);
+		AG_MenuAction(mi, _("Load full state"), OBJLOAD_ICON,
+		    load_object, "%p", agWorld);
+		AG_MenuAction(mi, _("Save full state"), OBJSAVE_ICON,
+		    save_object, "%p", agWorld);
 		
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 		
-		menu_action(mi, _("Exit"), -1, exit_program, NULL);
+		AG_MenuAction(mi, _("Exit"), -1, exit_program, NULL);
 	}
 	
-	mi = menu_add_item(me, _("Edit"));
+	mi = AG_MenuAddItem(me, _("Edit"));
 	{
-		menu_action(mi, _("Edit object data..."), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit object data..."), OBJEDIT_ICON,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-		menu_action(mi, _("Edit generic information..."),
+		AG_MenuAction(mi, _("Edit generic information..."),
 		    OBJGENEDIT_ICON,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
 		
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 			
-		menu_action(mi, _("Duplicate"), OBJDUP_ICON,
+		AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
-		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_MOVE_UP);
-		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_MOVE_DOWN);
-	
-		menu_separator(mi);
 
-		menu_action(mi, _("Preferences..."), -1, show_preferences,
-		    NULL);
+		if (agConfig->window != NULL) {
+			AG_MenuSeparator(mi);
+			AG_MenuAction(mi, _("Preferences..."), -1,
+			    show_config_win, NULL);
+		}
 	}
 
 #ifdef NETWORK
-	mi = menu_add_item(me, _("Repository"));
+	mi = AG_MenuAddItem(me, _("Repository"));
 	{
-		menu_action(mi, _("Commit"),
+		AG_MenuAction(mi, _("Commit"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_COMMIT);
 
-		menu_action(mi, _("Update"),
+		AG_MenuAction(mi, _("Update"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_UPDATE);
 
-		menu_action(mi, _("Import"),
+		AG_MenuAction(mi, _("Import"),
 		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_IMPORT);
 
-		menu_separator(mi);
+		AG_MenuSeparator(mi);
 
-		menu_action(mi, _("Commit all"),
+		AG_MenuAction(mi, _("Commit all"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_COMMIT_ALL);
 
-		menu_action(mi, _("Update all"),
+		AG_MenuAction(mi, _("Update all"),
 		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_UPDATE_ALL);
 			
 		
-		menu_action(mi, _("Import all"),
+		AG_MenuAction(mi, _("Import all"),
 		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
 
 #ifdef DEBUG
-	mi = menu_add_item(me, _("Debug"));
-	monitor_menu(mi);
+	mi = AG_MenuAddItem(me, _("Debug"));
+	AG_MonitorMenu(mi);
 #endif /* DEBUG */
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Working copy"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
 	{
-		struct AGMenuItem *mi, *mi2;
+		AG_MenuItem *mi, *mi2;
 
-		object_attach(ntab, objs_tl);
+		AG_ObjectAttach(ntab, objs_tl);
 
-		mi = tlist_set_popup(objs_tl, "object");
+		mi = AG_TlistSetPopup(objs_tl, "object");
 		{
-			menu_action(mi, _("Edit object..."), OBJEDIT_ICON,
+			AG_MenuAction(mi, _("Edit object..."), OBJEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-			menu_action(mi, _("Edit object information..."),
+			AG_MenuAction(mi, _("Edit object information..."),
 			    OBJGENEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
 
-			menu_separator(mi);
+			AG_MenuSeparator(mi);
 			
-			menu_action(mi, _("Load"), OBJLOAD_ICON, obj_op,
+			AG_MenuAction(mi, _("Load"), OBJLOAD_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_LOAD);
-			menu_action(mi, _("Save"), OBJSAVE_ICON, obj_op,
+			AG_MenuAction(mi, _("Save"), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_SAVE);
-			menu_action(mi, _("Save all"), OBJSAVE_ICON, obj_op,
+			AG_MenuAction(mi, _("Save all"), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_SAVE_ALL);
-			menu_action(mi, _("Save to..."), OBJSAVE_ICON, obj_op,
+			AG_MenuAction(mi, _("Save to..."), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
 
 #ifdef NETWORK
-			if (rcs) {
-				menu_separator(mi);
+			if (agRcsMode) {
+				AG_MenuSeparator(mi);
 			
-				mi2 = menu_action(mi, _("Repository"),
+				mi2 = AG_MenuAction(mi, _("Repository"),
 				    OBJLOAD_ICON, NULL, NULL);
 
-				menu_action(mi2, _("Commit"),
+				AG_MenuAction(mi2, _("Commit"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_COMMIT);
 				
-				menu_action(mi2, _("Update"),
+				AG_MenuAction(mi2, _("Update"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_UPDATE);
 				
-				menu_action(mi2, _("Import"),
+				AG_MenuAction(mi2, _("Import"),
 				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_IMPORT);
 		
-				menu_separator(mi2);
+				AG_MenuSeparator(mi2);
 				
-				menu_action(mi2, _("Commit all"),
+				AG_MenuAction(mi2, _("Commit all"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_COMMIT_ALL);
 
-				menu_action(mi2, _("Update all"),
+				AG_MenuAction(mi2, _("Update all"),
 				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_UPDATE_ALL);
 			
-				menu_action(mi2, _("Import all"),
+				AG_MenuAction(mi2, _("Import all"),
 				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
 				    OBJEDIT_RCS_IMPORT_ALL);
 			}
 #endif /* NETWORK */
-			menu_separator(mi);
+			AG_MenuSeparator(mi);
 			
-			menu_action(mi, _("Duplicate"), OBJDUP_ICON,
+			AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
-			menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+			AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
 			    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
 			    OBJEDIT_MOVE_UP);
-			menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+			AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 			    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
 			    OBJEDIT_MOVE_DOWN);
 			
-			menu_separator(mi);
+			AG_MenuSeparator(mi);
 			
-			menu_action(mi, _("Reinitialize"), OBJREINIT_ICON,
+			AG_MenuAction(mi, _("Reinitialize"), OBJREINIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
-			menu_action(mi, _("Destroy"), TRASH_ICON,
+			AG_MenuAction(mi, _("Destroy"), TRASH_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 		}
 	}
 
 #ifdef NETWORK
-	ntab = notebook_add_tab(nb, _("Repository"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Repository"), AG_BOX_VERT);
 	{
-		struct tlist *tl;
-		struct button *btn;
-		struct AGMenuItem *pop;
+		AG_Tlist *tl;
+		AG_Button *btn;
+		AG_MenuItem *pop;
 
-		tl = tlist_new(ntab, TLIST_MULTI|TLIST_TREE);
-		tlist_set_compare_fn(tl, tlist_compare_strings);
-		pop = tlist_set_popup(tl, "object");
+		tl = AG_TlistNew(ntab, AG_TLIST_MULTI|AG_TLIST_TREE);
+		AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
+		pop = AG_TlistSetPopup(tl, "object");
 		{
-			menu_action(pop, _("Update from repository"),
+			AG_MenuAction(pop, _("Update from repository"),
 			    OBJLOAD_ICON, update_from_repo, "%p", tl);
 			
-			menu_action(pop, _("Delete from repository"),
+			AG_MenuAction(pop, _("Delete from repository"),
 			    TRASH_ICON, delete_from_repo, "%p", tl);
 			
-			menu_action(pop, _("Rename"),
+			AG_MenuAction(pop, _("Rename"),
 			    -1, rename_repo_dlg, "%p", tl);
 		}
 
-		btn = button_new(ntab, _("Refresh listing"));
-		WIDGET(btn)->flags |= WIDGET_WFILL;
-		event_new(btn, "button-pushed", update_repo_listing, "%p", tl);
+		btn = AG_ButtonNew(ntab, _("Refresh listing"));
+		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
+		AG_SetEvent(btn, "button-pushed", update_repo_listing, "%p",
+		    tl);
 
-		if (rcs)
-			event_post(NULL, btn, "button-pushed", NULL);
+		if (agRcsMode)
+			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
 #endif /* NETWORK */
 	
-	window_show(win);
+	AG_WindowShow(win);
 	return (win);
 }
 
 void
-objmgr_init(void)
+AG_ObjMgrInit(void)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
@@ -1061,7 +1071,7 @@ objmgr_quit(int argc, union evarg *argv)
 {
 	SDL_Event nev;
 
-	objmgr_exiting = 0;
+	agObjMgrExiting = 0;
 	nev.type = SDL_USEREVENT;
 	SDL_PushEvent(&nev);
 }
@@ -1069,10 +1079,10 @@ objmgr_quit(int argc, union evarg *argv)
 static void
 objmgr_quit_cancel(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	AG_Window *win = argv[1].p;
 
-	objmgr_exiting = 0;
-	view_detach(win);
+	agObjMgrExiting = 0;
+	AG_ViewDetach(win);
 }
 
 /*
@@ -1080,39 +1090,39 @@ objmgr_quit_cancel(int argc, union evarg *argv)
  * an object and optionally exit afterwards.
  */
 void
-objmgr_quit_dlg(void *obj)
+AG_ObjMgrQuitDlg(void *obj)
 {
-	struct window *win;
-	struct box *bo;
-	struct button *b;
+	AG_Window *win;
+	AG_Box *bo;
+	AG_Button *b;
 
-	if ((win = window_new(WINDOW_MODAL|WINDOW_NO_TITLEBAR|WINDOW_NO_RESIZE,
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_TITLEBAR|AG_WINDOW_NO_RESIZE,
 	    "objmgr-changed-dlg")) == NULL) {
 		return;
 	}
-	window_set_caption(win, _("Exit application?"));
-	window_set_position(win, WINDOW_CENTER, 0);
-	window_set_spacing(win, 8);
+	AG_WindowSetCaption(win, _("Exit application?"));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowSetSpacing(win, 8);
 
-	label_new(win, LABEL_STATIC,
+	AG_LabelNew(win, AG_LABEL_STATIC,
 	    _("Some objects have been modified. Exit application?"));
 
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
-	box_set_spacing(bo, 0);
-	box_set_padding(bo, 0);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_WFILL);
+	AG_BoxSetSpacing(bo, 0);
+	AG_BoxSetPadding(bo, 0);
 	{
-		b = button_new(bo, _("Quit"));
-		event_new(b, "button-pushed", objmgr_quit, NULL);
+		b = AG_ButtonNew(bo, _("Quit"));
+		AG_SetEvent(b, "button-pushed", objmgr_quit, NULL);
 
-		b = button_new(bo, _("Cancel"));
-		event_new(b, "button-pushed", objmgr_quit_cancel, "%p", win);
-		widget_focus(b);
+		b = AG_ButtonNew(bo, _("Cancel"));
+		AG_SetEvent(b, "button-pushed", objmgr_quit_cancel, "%p", win);
+		AG_WidgetFocus(b);
 	}
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 void
-objmgr_destroy(void)
+AG_ObjMgrDestroy(void)
 {
 	struct objent *oent, *noent;
 
@@ -1132,11 +1142,11 @@ objmgr_destroy(void)
 
 /*
  * Close and reopen all edition windows associated with an object, if there
- * are any. This is called automatically from object_load() for objects with
- * the flag OBJECT_REOPEN_ONLOAD.
+ * are any. This is called automatically from AG_ObjectLoad() for objects with
+ * the flag AG_OBJECT_REOPEN_ONLOAD.
  */
 void
-objmgr_reopen(struct object *obj)
+AG_ObjMgrReopen(AG_Object *obj)
 {
 	struct objent *oent;
 
@@ -1144,29 +1154,29 @@ objmgr_reopen(struct object *obj)
 		if (oent->obj == obj) {
 			dprintf("reopening %s\n", obj->name);
 
-			window_hide(oent->win);
-			event_post(NULL, oent->obj, "edit-close", NULL);
-			view_detach(oent->win);
+			AG_WindowHide(oent->win);
+			AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
+			AG_ViewDetach(oent->win);
 
-			event_post(NULL, oent->obj, "edit-open", NULL);
+			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
 			oent->win = obj->ops->edit(obj);
-			window_show(oent->win);
-			event_new(oent->win, "window-close", close_object_dlg,
+			AG_WindowShow(oent->win);
+			AG_SetEvent(oent->win, "window-close", close_object_dlg,
 			    "%p", oent);
 		}
 	}
 }
 
 void
-objmgr_close_data(void *p)
+AG_ObjMgrCloseData(void *p)
 {
-	struct object *obj = p;
+	AG_Object *obj = p;
 	struct objent *oent;
 
 	TAILQ_FOREACH(oent, &dobjs, objs) {
 		if (oent->obj != obj) {
 			continue;
 		}
-		event_post(NULL, oent->win, "window-close", NULL);
+		AG_PostEvent(NULL, oent->win, "window-close", NULL);
 	}
 }

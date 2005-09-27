@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.55 2005/09/20 03:50:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.56 2005/09/20 13:46:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,9 +36,10 @@
 #include <engine/actor.h>
 
 #include "map.h"
-#include "tools.h"
 #include "tool.h"
 #include "insert.h"
+
+#include "tools.h"
 
 #ifdef EDITION
 #include <engine/map/mapedit.h>
@@ -66,14 +67,14 @@
 
 #include <string.h>
 
-const struct version map_ver = {
+const AG_Version map_ver = {
 	"agar map",
 	11, 0
 };
 
-const struct object_ops map_ops = {
-	map_init,
-	map_reinit,
+const AG_ObjectOps agMapOps = {
+	AG_MapInit,
+	AG_MapReinit,
 	map_destroy,
 	map_load,
 	map_save,
@@ -84,33 +85,33 @@ const struct object_ops map_ops = {
 #endif
 };
 
-int map_smooth_scaling = 0;
+int agMapSmoothScaling = 0;
 
-static void init_mapmod_blk(struct mapmod_blk *);
-static void free_mapmod_blk(struct map *, struct mapmod_blk *);
+static void init_mapmod_blk(AG_MapModBlk *);
+static void free_mapmod_blk(AG_Map *, AG_MapModBlk *);
 
 void
-node_init(struct node *node)
+AG_NodeInit(AG_Node *node)
 {
 	TAILQ_INIT(&node->nrefs);
 }
 
 void
-node_destroy(struct map *m, struct node *node)
+AG_NodeDestroy(AG_Map *m, AG_Node *node)
 {
-	struct noderef *r, *nr;
+	AG_Nitem *r, *nr;
 
 	for (r = TAILQ_FIRST(&node->nrefs);
 	     r != TAILQ_END(&node->nrefs);
 	     r = nr) {
 		nr = TAILQ_NEXT(r, nrefs);
-		noderef_destroy(m, r);
-		Free(r, M_MAP_NODEREF);
+		AG_NitemDestroy(m, r);
+		Free(r, M_MAP_NITEM);
 	}
 }
 
 void
-noderef_init(struct noderef *r, enum noderef_type type)
+AG_NitemInit(AG_Nitem *r, enum ag_nitem_type type)
 {
 	r->type = type;
 	r->flags = 0;
@@ -123,10 +124,9 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->r_gfx.ymotion = 0;
 	r->r_gfx.xorigin = 0;
 	r->r_gfx.yorigin = 0;
-	r->r_gfx.edge = 0;
 
 	switch (type) {
-	case NODEREF_SPRITE:
+	case AG_NITEM_SPRITE:
 		r->r_sprite.obj = NULL;
 		r->r_sprite.offs = 0;
 		r->r_gfx.rs.x = 0;
@@ -134,11 +134,11 @@ noderef_init(struct noderef *r, enum noderef_type type)
 		r->r_gfx.rs.w = 0;
 		r->r_gfx.rs.h = 0;
 		break;
-	case NODEREF_ANIM:
+	case AG_NITEM_ANIM:
 		r->r_anim.obj = NULL;
 		r->r_anim.offs = 0;
 		break;
-	case NODEREF_WARP:
+	case AG_NITEM_WARP:
 		r->r_warp.map = NULL;
 		r->r_warp.x = 0;
 		r->r_warp.y = 0;
@@ -155,7 +155,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
  * The parent map, if any, must be locked.
  */
 void
-noderef_set_center(struct noderef *r, int xcenter, int ycenter)
+AG_NitemSetCenter(AG_Nitem *r, int xcenter, int ycenter)
 {
 	r->r_gfx.xcenter = (Sint16)xcenter;
 	r->r_gfx.ycenter = (Sint16)ycenter;
@@ -166,7 +166,7 @@ noderef_set_center(struct noderef *r, int xcenter, int ycenter)
  * The parent map, if any, must be locked.
  */
 void
-noderef_set_motion(struct noderef *r, int xmotion, int ymotion)
+AG_NitemSetMotion(AG_Nitem *r, int xmotion, int ymotion)
 {
 	r->r_gfx.xmotion = (Sint16)xmotion;
 	r->r_gfx.ymotion = (Sint16)ymotion;
@@ -177,45 +177,45 @@ noderef_set_motion(struct noderef *r, int xmotion, int ymotion)
  * The parent map, if any, must be locked.
  */
 void
-noderef_set_friction(struct noderef *r, int coeff)
+AG_NitemSetFriction(AG_Nitem *r, int coeff)
 {
 	r->friction = (Sint8)coeff;
 }
 
 /* Set the layer attribute of a noderef. */
 void
-noderef_set_layer(struct noderef *r, int layer)
+AG_NitemSetLayer(AG_Nitem *r, int layer)
 {
 	r->layer = layer;
 }
 
 void
-noderef_destroy(struct map *m, struct noderef *r)
+AG_NitemDestroy(AG_Map *m, AG_Nitem *r)
 {
-	struct transform *trans, *ntrans;
-	struct nodemask *mask, *nmask;
+	AG_Transform *trans, *ntrans;
+	AG_NodeMask *mask, *nmask;
 
 	for (trans = TAILQ_FIRST(&r->transforms);
 	     trans != TAILQ_END(&r->transforms);
 	     trans = ntrans) {
 		ntrans = TAILQ_NEXT(trans, transforms);
-		transform_destroy(trans);
+		AG_TransformDestroy(trans);
 	}
 	for (mask = TAILQ_FIRST(&r->masks);
 	     mask != TAILQ_END(&r->masks);
 	     mask = nmask) {
 		nmask = TAILQ_NEXT(mask, masks);
-		nodemask_destroy(m, mask);
+		AG_NodeMaskDestroy(m, mask);
 	}
 
 	switch (r->type) {
-	case NODEREF_SPRITE:
-		noderef_set_sprite(r, m, NULL, 0);
+	case AG_NITEM_SPRITE:
+		AG_NitemSetSprite(r, m, NULL, 0);
 		break;
-	case NODEREF_ANIM:
-		noderef_set_anim(r, m, NULL, 0);
+	case AG_NITEM_ANIM:
+		AG_NitemSetAnim(r, m, NULL, 0);
 		break;
-	case NODEREF_WARP:
+	case AG_NITEM_WARP:
 		Free(r->r_warp.map, 0);
 		break;
 	default:
@@ -224,10 +224,10 @@ noderef_destroy(struct map *m, struct noderef *r)
 }
 
 void
-noderef_attr_color(u_int flag, int state, Uint8 *c)
+AG_NitemAttrColor(u_int flag, int state, Uint8 *c)
 {
 	switch (flag) {
-	case NODEREF_BLOCK:
+	case AG_NITEM_BLOCK:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;
@@ -240,7 +240,7 @@ noderef_attr_color(u_int flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case NODEREF_CLIMBABLE:
+	case AG_NITEM_CLIMBABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 255;
@@ -253,7 +253,7 @@ noderef_attr_color(u_int flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case NODEREF_SLIPPERY:
+	case AG_NITEM_SLIPPERY:
 		if (state) {
 			c[0] = 0;
 			c[1] = 0;
@@ -266,7 +266,7 @@ noderef_attr_color(u_int flag, int state, Uint8 *c)
 			c[3] = 0;
 		}
 		break;
-	case NODEREF_JUMPABLE:
+	case AG_NITEM_JUMPABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;
@@ -284,24 +284,24 @@ noderef_attr_color(u_int flag, int state, Uint8 *c)
 
 /* Allocate and initialize the node map. */
 int
-map_alloc_nodes(struct map *m, u_int w, u_int h)
+AG_MapAllocNodes(AG_Map *m, u_int w, u_int h)
 {
 	int x, y;
 	
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set(_("%ux%u nodes exceed %ux%u."), w, h, MAP_MAX_WIDTH,
-		    MAP_MAX_HEIGHT);
+	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
+		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h, AG_MAP_MAXWIDTH,
+		    AG_MAP_MAXHEIGHT);
 		return (-1);
 	}
 
 	pthread_mutex_lock(&m->lock);
 	m->mapw = w;
 	m->maph = h;
-	m->map = Malloc(h * sizeof(struct node *), M_MAP);
+	m->map = Malloc(h * sizeof(AG_Node *), M_MAP);
 	for (y = 0; y < h; y++) {
-		m->map[y] = Malloc(w * sizeof(struct node), M_MAP);
+		m->map[y] = Malloc(w * sizeof(AG_Node), M_MAP);
 		for (x = 0; x < w; x++) {
-			node_init(&m->map[y][x]);
+			AG_NodeInit(&m->map[y][x]);
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
@@ -310,17 +310,17 @@ map_alloc_nodes(struct map *m, u_int w, u_int h)
 
 /* Release the node map. */
 void
-map_free_nodes(struct map *m)
+AG_MapFreeNodes(AG_Map *m)
 {
 	int x, y;
-	struct node *node;
+	AG_Node *node;
 
 	pthread_mutex_lock(&m->lock);
 	if (m->map != NULL) {
 		for (y = 0; y < m->maph; y++) {
 			for (x = 0; x < m->mapw; x++) {
 				node = &m->map[y][x];
-				node_destroy(m, node);
+				AG_NodeDestroy(m, node);
 			}
 			Free(m->map[y], M_MAP);
 		}
@@ -331,39 +331,39 @@ map_free_nodes(struct map *m)
 }
 
 static void
-map_free_layers(struct map *m)
+map_free_layers(AG_Map *m)
 {
-	m->layers = Realloc(m->layers, 1*sizeof(struct map_layer));
+	m->layers = Realloc(m->layers, 1*sizeof(AG_MapLayer));
 	m->nlayers = 1;
-	map_init_layer(&m->layers[0], _("Layer 0"));
+	AG_MapInitLayer(&m->layers[0], _("Layer 0"));
 }
 
 static void
-map_free_cameras(struct map *m)
+map_free_cameras(AG_Map *m)
 {
-	m->cameras = Realloc(m->cameras , 1*sizeof(struct map_camera));
+	m->cameras = Realloc(m->cameras , 1*sizeof(AG_MapCamera));
 	m->ncameras = 1;
-	map_init_camera(&m->cameras[0], _("Camera 0"));
+	AG_MapInitCamera(&m->cameras[0], _("Camera 0"));
 }
 
 /* Resize a map, initializing new nodes and destroying any excess ones. */
 int
-map_resize(struct map *m, u_int w, u_int h)
+AG_MapResize(AG_Map *m, u_int w, u_int h)
 {
-	struct map tm;
+	AG_Map tm;
 	int x, y;
 
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set(_("%ux%u nodes exceed %ux%u."), w, h, MAP_MAX_WIDTH,
-		    MAP_MAX_HEIGHT);
+	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
+		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h, AG_MAP_MAXWIDTH,
+		    AG_MAP_MAXHEIGHT);
 		return (-1);
 	}
 
 	pthread_mutex_lock(&m->lock);
 
 	/* Save the nodes to a temporary map, to preserve dependencies. */
-	map_init(&tm, "t");
-	if (map_alloc_nodes(&tm, m->mapw, m->maph) == -1) {
+	AG_MapInit(&tm, "t");
+	if (AG_MapAllocNodes(&tm, m->mapw, m->maph) == -1) {
 		goto fail;
 	}
 	for (y = 0;
@@ -372,13 +372,14 @@ map_resize(struct map *m, u_int w, u_int h)
 		for (x = 0;
 		     x < m->mapw && x < w;
 		     x++) {
-			node_copy(m, &m->map[y][x], -1, &tm, &tm.map[y][x], -1);
+			AG_NodeCopy(m, &m->map[y][x], -1, &tm, &tm.map[y][x],
+			    -1);
 		}
 	}
 
 	/* Resize the map, restore the original nodes. */
-	map_free_nodes(m);
-	if (map_alloc_nodes(m, w, h) == -1) {
+	AG_MapFreeNodes(m);
+	if (AG_MapAllocNodes(m, w, h) == -1) {
 		goto fail;
 	}
 	for (y = 0;
@@ -387,7 +388,8 @@ map_resize(struct map *m, u_int w, u_int h)
 		for (x = 0;
 		     x < tm.mapw && x < m->mapw;
 		     x++) {
-			node_copy(&tm, &tm.map[y][x], -1, m, &m->map[y][x], -1);
+			AG_NodeCopy(&tm, &tm.map[y][x], -1, m, &m->map[y][x],
+			    -1);
 		}
 	}
 
@@ -395,44 +397,44 @@ map_resize(struct map *m, u_int w, u_int h)
 	if (m->origin.y >= h) { m->origin.y = h-1; }
 
 	pthread_mutex_unlock(&m->lock);
-	object_destroy(&tm);
+	AG_ObjectDestroy(&tm);
 	return (0);
 fail:
 	pthread_mutex_unlock(&m->lock);
-	object_destroy(&tm);
+	AG_ObjectDestroy(&tm);
 	return (-1);
 }
 
 /* Set the display scaling factor. */
 void
-map_set_zoom(struct map *m, int ncam, u_int zoom)
+AG_MapSetZoom(AG_Map *m, int ncam, u_int zoom)
 {
-	struct map_camera *cam = &m->cameras[ncam];
+	AG_MapCamera *cam = &m->cameras[ncam];
 
 	pthread_mutex_lock(&m->lock);
 	cam->zoom = zoom;
-	if ((cam->tilesz = cam->zoom*TILESZ/100) > MAP_MAX_TILESZ) {
-		cam->tilesz = MAP_MAX_TILESZ;
+	if ((cam->tilesz = cam->zoom*AGTILESZ/100) > AG_MAX_TILESZ) {
+		cam->tilesz = AG_MAX_TILESZ;
 	}
 	pthread_mutex_unlock(&m->lock);
 }
 
-struct map *
-map_new(void *parent, const char *name)
+AG_Map *
+AG_MapNew(void *parent, const char *name)
 {
-	struct map *m;
+	AG_Map *m;
 
-	m = Malloc(sizeof(struct map), M_OBJECT);
-	map_init(m, name);
+	m = Malloc(sizeof(AG_Map), M_OBJECT);
+	AG_MapInit(m, name);
 
 	if (parent != NULL)
-		object_attach(parent, m);
+		AG_ObjectAttach(parent, m);
 
 	return (m);
 }
 
 void
-map_init_layer(struct map_layer *lay, const char *name)
+AG_MapInitLayer(AG_MapLayer *lay, const char *name)
 {
 	strlcpy(lay->name, name, sizeof(lay->name));
 	lay->visible = 1;
@@ -442,44 +444,44 @@ map_init_layer(struct map_layer *lay, const char *name)
 }
 
 void
-map_init_camera(struct map_camera *cam, const char *name)
+AG_MapInitCamera(AG_MapCamera *cam, const char *name)
 {
 	strlcpy(cam->name, name, sizeof(cam->name));
 	cam->x = 0;
 	cam->y = 0;
 	cam->flags = 0;
-	cam->alignment = MAP_CENTER;
+	cam->alignment = AG_MAP_CENTER;
 	cam->zoom = 100;
-	cam->tilesz = TILESZ;
+	cam->tilesz = AGTILESZ;
 	cam->pixsz = 1;
 }
 
 int
-map_add_camera(struct map *m, const char *name)
+AG_MapAddCamera(AG_Map *m, const char *name)
 {
 	m->cameras = Realloc(m->cameras,
-	    (m->ncameras+1)*sizeof(struct map_camera));
-	map_init_camera(&m->cameras[m->ncameras], name);
+	    (m->ncameras+1)*sizeof(AG_MapCamera));
+	AG_MapInitCamera(&m->cameras[m->ncameras], name);
 	return (m->ncameras++);
 }
 
 void
-map_init_modblks(struct map *m)
+AG_MapInitModBlks(AG_Map *m)
 {
-	m->blks = Malloc(sizeof(struct mapmod_blk), M_MAP);
+	m->blks = Malloc(sizeof(AG_MapModBlk), M_MAP);
 	m->nblks = 1;
 	init_mapmod_blk(&m->blks[0]);
 	m->curblk = 0;
 	m->nmods = 0;
-	mapmod_begin(m);
+	AG_MapmodBegin(m);
 }
 
 void
-map_init(void *obj, const char *name)
+AG_MapInit(void *obj, const char *name)
 {
-	struct map *m = obj;
+	AG_Map *m = obj;
 
-	space_init(m, "map", name, &map_ops);
+	AG_SpaceInit(m, "map", name, &agMapOps);
 	m->flags = 0;
 	m->redraw = 0;
 	m->mapw = 0;
@@ -489,33 +491,33 @@ map_init(void *obj, const char *name)
 	m->origin.layer = 0;
 	m->map = NULL;
 	m->cur_layer = 0;
-	m->layers = Malloc(sizeof(struct map_layer), M_MAP);
+	m->layers = Malloc(sizeof(AG_MapLayer), M_MAP);
 	m->nlayers = 1;
-	m->cameras = Malloc(sizeof(struct map_camera), M_MAP);
+	m->cameras = Malloc(sizeof(AG_MapCamera), M_MAP);
 	m->ncameras = 1;
-	pthread_mutex_init(&m->lock, &recursive_mutexattr);
+	pthread_mutex_init(&m->lock, &agRecursiveMutexAttr);
 	
-	map_init_layer(&m->layers[0], _("Layer 0"));
-	map_init_camera(&m->cameras[0], _("Camera 0"));
-	map_init_modblks(m);
+	AG_MapInitLayer(&m->layers[0], _("Layer 0"));
+	AG_MapInitCamera(&m->cameras[0], _("Camera 0"));
+	AG_MapInitModBlks(m);
 
 #ifdef EDITION
-	if (mapedition) {
-		extern int mapedit_def_mapw;
-		extern int mapedit_def_maph;
+	if (agEditMode) {
+		extern int agMapDefaultWidth;
+		extern int agMapDefaultHeight;
 
-		map_alloc_nodes(m, mapedit_def_mapw, mapedit_def_maph);
-		m->origin.x = mapedit_def_mapw/2;
-		m->origin.y = mapedit_def_maph/2;
+		AG_MapAllocNodes(m, agMapDefaultWidth, agMapDefaultHeight);
+		m->origin.x = agMapDefaultWidth/2;
+		m->origin.y = agMapDefaultHeight/2;
 	}
 #endif
 }
 
 /* Create a new layer. */
 int
-map_push_layer(struct map *m, const char *name)
+AG_MapPushLayer(AG_Map *m, const char *name)
 {
-	char layname[MAP_LAYER_NAME_MAX];
+	char layname[AG_MAP_MAXLAYERNAME];
 
 	if (name[0] == '\0') {
 		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
@@ -523,35 +525,35 @@ map_push_layer(struct map *m, const char *name)
 		strlcpy(layname, name, sizeof(layname));
 	}
 
-	if (m->nlayers+1 > MAP_MAX_LAYERS) {
-		error_set(_("Too many layers."));
+	if (m->nlayers+1 > AG_MAP_MAXLAYERS) {
+		AG_SetError(_("Too many layers."));
 		return (-1);
 	}
-	m->layers = Realloc(m->layers, (m->nlayers+1)*sizeof(struct map_layer));
-	map_init_layer(&m->layers[m->nlayers], layname);
+	m->layers = Realloc(m->layers, (m->nlayers+1)*sizeof(AG_MapLayer));
+	AG_MapInitLayer(&m->layers[m->nlayers], layname);
 	m->nlayers++;
 	return (0);
 }
 
 /* Remove the last layer. */
 void
-map_pop_layer(struct map *m)
+AG_MapPopLayer(AG_Map *m)
 {
 	if (--m->nlayers < 1)
 		m->nlayers = 1;
 }
 
 void
-noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
+AG_NitemSetSprite(AG_Nitem *r, AG_Map *map, void *pobj, Uint32 offs)
 {
 	if (r->r_sprite.obj != NULL) {
-		object_del_dep(map, r->r_sprite.obj);
-		object_page_out(r->r_sprite.obj, OBJECT_GFX);
+		AG_ObjectDelDep(map, r->r_sprite.obj);
+		AG_ObjectPageOut(r->r_sprite.obj, AG_OBJECT_GFX);
 	}
 	if (pobj != NULL) {
-		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1)
-			fatal("paging gfx: %s", error_get());
+		AG_ObjectAddDep(map, pobj);
+		if (AG_ObjectPageIn(pobj, AG_OBJECT_GFX) == -1)
+			fatal("paging gfx: %s", AG_GetError());
 	}
 
 	r->r_sprite.obj = pobj;
@@ -559,8 +561,8 @@ noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 	r->r_gfx.rs.x = 0;
 	r->r_gfx.rs.y = 0;
 
-	if (pobj != NULL && !BAD_SPRITE(pobj,offs)) {
-		struct sprite *spr = &SPRITE(pobj,offs);
+	if (pobj != NULL && !AG_BAD_SPRITE(pobj,offs)) {
+		AG_Sprite *spr = &AG_SPRITE(pobj,offs);
 
 		r->r_gfx.rs.w = spr->su->w;
 		r->r_gfx.rs.h = spr->su->h;
@@ -574,30 +576,30 @@ noderef_set_sprite(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
  * Insert a reference to a sprite at pobj:offs.
  * The map must be locked.
  */
-struct noderef *
-node_add_sprite(struct map *map, struct node *node, void *p, Uint32 offs)
+AG_Nitem *
+AG_NodeAddSprite(AG_Map *map, AG_Node *node, void *p, Uint32 offs)
 {
-	struct object *pobj = p;
-	struct noderef *r;
+	AG_Object *pobj = p;
+	AG_Nitem *r;
 
-	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
-	noderef_init(r, NODEREF_SPRITE);
-	noderef_set_sprite(r, map, pobj, offs);
+	r = Malloc(sizeof(AG_Nitem), M_MAP_NITEM);
+	AG_NitemInit(r, AG_NITEM_SPRITE);
+	AG_NitemSetSprite(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
 }
 
 void
-noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
+AG_NitemSetAnim(AG_Nitem *r, AG_Map *map, void *pobj, Uint32 offs)
 {
 	if (r->r_anim.obj != NULL) {
-		object_del_dep(map, r->r_anim.obj);
-		object_page_out(r->r_anim.obj, OBJECT_GFX);
+		AG_ObjectDelDep(map, r->r_anim.obj);
+		AG_ObjectPageOut(r->r_anim.obj, AG_OBJECT_GFX);
 	}
 	if (pobj != NULL) {
-		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1)
-			fatal("paging gfx: %s", error_get());
+		AG_ObjectAddDep(map, pobj);
+		if (AG_ObjectPageIn(pobj, AG_OBJECT_GFX) == -1)
+			fatal("paging gfx: %s", AG_GetError());
 	}
 
 	r->r_anim.obj = pobj;
@@ -607,8 +609,8 @@ noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
 	r->r_gfx.rs.w = 0;
 	r->r_gfx.rs.h = 0;
 
-	if (pobj != NULL && !BAD_ANIM(pobj,offs)) {
-		struct gfx_anim *anim = &ANIM(pobj,offs);
+	if (pobj != NULL && !AG_BAD_ANIM(pobj,offs)) {
+		AG_Anim *anim = &AG_ANIM(pobj,offs);
 
 		if (anim->nframes >= 1) {			/* XXX */
 			r->r_gfx.rs.w = anim->frames[0]->w;
@@ -621,14 +623,14 @@ noderef_set_anim(struct noderef *r, struct map *map, void *pobj, Uint32 offs)
  * Insert a reference to an animation.
  * The map must be locked.
  */
-struct noderef *
-node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs)
+AG_Nitem *
+AG_NodeAddAnim(AG_Map *map, AG_Node *node, void *pobj, Uint32 offs)
 {
-	struct noderef *r;
+	AG_Nitem *r;
 
-	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
-	noderef_init(r, NODEREF_ANIM);
-	noderef_set_anim(r, map, pobj, offs);
+	r = Malloc(sizeof(AG_Nitem), M_MAP_NITEM);
+	AG_NitemInit(r, AG_NITEM_ANIM);
+	AG_NitemSetAnim(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
 }
@@ -637,14 +639,14 @@ node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs)
  * Insert a reference to a location on another map.
  * The map must be locked.
  */
-struct noderef *
-node_add_warp(struct map *map, struct node *node, const char *mapname,
+AG_Nitem *
+AG_NodeAddWarpPoint(AG_Map *map, AG_Node *node, const char *mapname,
     int x, int y, Uint8 dir)
 {
-	struct noderef *r;
+	AG_Nitem *r;
 
-	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
-	noderef_init(r, NODEREF_WARP);
+	r = Malloc(sizeof(AG_Nitem), M_MAP_NITEM);
+	AG_NitemInit(r, AG_NITEM_WARP);
 	r->r_warp.map = Strdup(mapname);
 	r->r_warp.x = x;
 	r->r_warp.y = y;
@@ -658,8 +660,8 @@ node_add_warp(struct map *map, struct node *node, const char *mapname,
  * specified layer.
  */
 void
-node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
-    struct map *dm, struct node *dn, int dlayer)
+AG_NodeMoveItem(AG_Map *sm, AG_Node *sn, AG_Nitem *r,
+    AG_Map *dm, AG_Node *dn, int dlayer)
 {
 	pthread_mutex_lock(&sm->lock);
 	pthread_mutex_lock(&dm->lock);
@@ -671,13 +673,13 @@ node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
 		r->layer = dlayer;
 
 	switch (r->type) {
-	case NODEREF_SPRITE:
-		object_del_dep(sm, r->r_sprite.obj);
-		object_add_dep(dm, r->r_sprite.obj);
+	case AG_NITEM_SPRITE:
+		AG_ObjectDelDep(sm, r->r_sprite.obj);
+		AG_ObjectAddDep(dm, r->r_sprite.obj);
 		break;
-	case NODEREF_ANIM:
-		object_del_dep(sm, r->r_anim.obj);
-		object_add_dep(dm, r->r_anim.obj);
+	case AG_NITEM_ANIM:
+		AG_ObjectDelDep(sm, r->r_anim.obj);
+		AG_ObjectAddDep(dm, r->r_anim.obj);
 		break;
 	default:
 		break;
@@ -693,10 +695,10 @@ node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
  * the copy with dlayer (or the original layer, if dlayer is -1).
  */
 void
-node_copy(struct map *sm, struct node *sn, int slayer,
-    struct map *dm, struct node *dn, int dlayer)
+AG_NodeCopy(AG_Map *sm, AG_Node *sn, int slayer,
+    AG_Map *dm, AG_Node *dn, int dlayer)
 {
-	struct noderef *sr;
+	AG_Nitem *sr;
 
 	pthread_mutex_lock(&sm->lock);
 	pthread_mutex_lock(&dm->lock);
@@ -706,7 +708,7 @@ node_copy(struct map *sm, struct node *sn, int slayer,
 		    sr->layer != slayer) {
 			continue;
 		}
-		node_copy_ref(sr, dm, dn, dlayer);
+		AG_NodeCopyItem(sr, dm, dn, dlayer);
 	}
 	
 	pthread_mutex_unlock(&dm->lock);
@@ -717,18 +719,18 @@ node_copy(struct map *sm, struct node *sn, int slayer,
  * Copy a node reference from one node to another.
  * Both the source and destination maps must be locked.
  */
-struct noderef *
-node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
+AG_Nitem *
+AG_NodeCopyItem(const AG_Nitem *sr, AG_Map *dm, AG_Node *dn,
     int dlayer)
 {
-	struct transform *trans;
-	struct nodemask *mask;
-	struct noderef *dr = NULL;
+	AG_Transform *trans;
+	AG_NodeMask *mask;
+	AG_Nitem *dr = NULL;
 
 	/* Allocate a new noderef with the same data. */
 	switch (sr->type) {
-	case NODEREF_SPRITE:
-		dr = node_add_sprite(dm, dn, sr->r_sprite.obj,
+	case AG_NITEM_SPRITE:
+		dr = AG_NodeAddSprite(dm, dn, sr->r_sprite.obj,
 		    sr->r_sprite.offs);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
@@ -738,8 +740,8 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
-	case NODEREF_ANIM:
-		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs);
+	case AG_NITEM_ANIM:
+		dr = AG_NodeAddAnim(dm, dn, sr->r_anim.obj, sr->r_anim.offs);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
 		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
@@ -748,8 +750,8 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
-	case NODEREF_WARP:
-		dr = node_add_warp(dm, dn, sr->r_warp.map, sr->r_warp.x,
+	case AG_NITEM_WARP:
+		dr = AG_NodeAddWarpPoint(dm, dn, sr->r_warp.map, sr->r_warp.x,
 		    sr->r_warp.y, sr->r_warp.dir);
 		break;
 	}
@@ -759,20 +761,21 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 
 	/* Inherit the transformations. */
 	TAILQ_FOREACH(trans, &sr->transforms, transforms) {
-		struct transform *ntrans;
+		AG_Transform *ntrans;
 
-		ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
-		transform_init(ntrans, trans->type, trans->nargs, trans->args);
+		ntrans = Malloc(sizeof(AG_Transform), M_NODEXFORM);
+		AG_TransformInit(ntrans, trans->type, trans->nargs,
+		    trans->args);
 		TAILQ_INSERT_TAIL(&dr->transforms, ntrans, transforms);
 	}
 	
 	/* Inherit the node masks. */
 	TAILQ_FOREACH(mask, &sr->masks, masks) {
-		struct nodemask *nmask;
+		AG_NodeMask *nmask;
 
-		nmask = Malloc(sizeof(struct nodemask), M_NODEMASK);
-		nodemask_init(nmask, mask->type);
-		nodemask_copy(mask, dm, nmask);
+		nmask = Malloc(sizeof(AG_NodeMask), M_NODEMASK);
+		AG_NodeMaskInit(nmask, mask->type);
+		AG_NodeMaskCopy(mask, dm, nmask);
 		TAILQ_INSERT_TAIL(&dr->masks, nmask, masks);
 	}
 	return (dr);
@@ -780,20 +783,20 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 
 /* Remove a noderef from a node and free it. */
 void
-node_remove_ref(struct map *m, struct node *node, struct noderef *r)
+AG_NodeDelItem(AG_Map *m, AG_Node *node, AG_Nitem *r)
 {
 	pthread_mutex_lock(&m->lock);
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
-	noderef_destroy(m, r);
-	Free(r, M_MAP_NODEREF);
+	AG_NitemDestroy(m, r);
+	Free(r, M_MAP_NITEM);
 	pthread_mutex_unlock(&m->lock);
 }
 
 /* Remove all references associated with the given layer. */
 void
-node_clear(struct map *m, struct node *node, int layer)
+AG_NodeRemoveAll(AG_Map *m, AG_Node *node, int layer)
 {
-	struct noderef *r, *nr;
+	AG_Nitem *r, *nr;
 
 	pthread_mutex_lock(&m->lock);
 
@@ -806,8 +809,8 @@ node_clear(struct map *m, struct node *node, int layer)
 			continue;
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
-		noderef_destroy(m, r);
-		Free(r, M_MAP_NODEREF);
+		AG_NitemDestroy(m, r);
+		Free(r, M_MAP_NITEM);
 	}
 
 	pthread_mutex_unlock(&m->lock);
@@ -815,9 +818,9 @@ node_clear(struct map *m, struct node *node, int layer)
 
 /* Move all references from a layer to another. */
 void
-node_swap_layers(struct map *m, struct node *node, int layer1, int layer2)
+AG_NodeSwapLayers(AG_Map *m, AG_Node *node, int layer1, int layer2)
 {
-	struct noderef *r;
+	AG_Nitem *r;
 
 	pthread_mutex_lock(&m->lock);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
@@ -832,9 +835,9 @@ node_swap_layers(struct map *m, struct node *node, int layer1, int layer2)
  * The map containing the node must be locked.
  */
 void
-node_moveup_ref(struct node *node, struct noderef *r)
+AG_NodeMoveItemUp(AG_Node *node, AG_Nitem *r)
 {
-	struct noderef *next = TAILQ_NEXT(r, nrefs);
+	AG_Nitem *next = TAILQ_NEXT(r, nrefs);
 
 	if (next != NULL) {
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
@@ -847,9 +850,9 @@ node_moveup_ref(struct node *node, struct noderef *r)
  * The map containing the node must be locked.
  */
 void
-node_movedown_ref(struct node *node, struct noderef *r)
+AG_NodeMoveItemDown(AG_Node *node, AG_Nitem *r)
 {
-	struct noderef *prev = TAILQ_PREV(r, noderefq, nrefs);
+	AG_Nitem *prev = TAILQ_PREV(r, ag_nitemq, nrefs);
 
 	if (prev != NULL) {
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
@@ -862,9 +865,9 @@ node_movedown_ref(struct node *node, struct noderef *r)
  * The map containing the node must be locked.
  */
 void
-node_movetail_ref(struct node *node, struct noderef *r)
+AG_NodeMoveItemToTail(AG_Node *node, AG_Nitem *r)
 {
-	if (r != TAILQ_LAST(&node->nrefs, noderefq)) {
+	if (r != TAILQ_LAST(&node->nrefs, ag_nitemq)) {
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
 		TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	}
@@ -875,7 +878,7 @@ node_movetail_ref(struct node *node, struct noderef *r)
  * The map containing the node must be locked.
  */
 void
-node_movehead_ref(struct node *node, struct noderef *r)
+AG_NodeMoveItemToHead(AG_Node *node, AG_Nitem *r)
 {
 	if (r != TAILQ_FIRST(&node->nrefs)) {
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
@@ -884,15 +887,15 @@ node_movehead_ref(struct node *node, struct noderef *r)
 }
 
 void
-map_reinit(void *p)
+AG_MapReinit(void *p)
 {
-	struct map *m = p;
+	AG_Map *m = p;
 	int i;
 
-	space_reinit(m);
+	AG_SpaceReinit(m);
 	
 	if (m->map != NULL)
-		map_free_nodes(m);
+		AG_MapFreeNodes(m);
 	if (m->layers != NULL)
 		map_free_layers(m);
 	if (m->cameras != NULL)
@@ -902,13 +905,13 @@ map_reinit(void *p)
 		free_mapmod_blk(m, &m->blks[i]);
 	}
 	Free(m->blks, M_MAP);
-	map_init_modblks(m);
+	AG_MapInitModBlks(m);
 }
 
 void
 map_destroy(void *p)
 {
-	struct map *m = p;
+	AG_Map *m = p;
 
 #ifdef THREADS
 	pthread_mutex_destroy(&m->lock);
@@ -916,7 +919,7 @@ map_destroy(void *p)
 	Free(m->layers, M_MAP);
 	Free(m->cameras, M_MAP);
 
-	space_destroy(m);
+	AG_SpaceDestroy(m);
 }
 
 /*
@@ -924,10 +927,10 @@ map_destroy(void *p)
  * The map must be locked.
  */
 int
-noderef_load(struct map *m, struct netbuf *buf, struct node *node,
-    struct noderef **r)
+AG_NitemLoad(AG_Map *m, AG_Netbuf *buf, AG_Node *node,
+    AG_Nitem **r)
 {
-	enum noderef_type type;
+	enum ag_nitem_type type;
 	Uint32 ntrans = 0, nmasks = 0;
 	Uint8 flags;
 	Uint8 layer;
@@ -937,104 +940,104 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
-	type = (enum noderef_type)read_uint32(buf);
-	flags = (u_int)read_uint32(buf);
-	layer = read_uint8(buf);
-	friction = read_sint8(buf);
+	type = (enum ag_nitem_type)AG_ReadUint32(buf);
+	flags = (u_int)AG_ReadUint32(buf);
+	layer = AG_ReadUint8(buf);
+	friction = AG_ReadSint8(buf);
 
 	/* Read the reference data. */
 	switch (type) {
-	case NODEREF_SPRITE:
+	case AG_NITEM_SPRITE:
 		{
 			SDL_Rect rs;
 
-			ref = read_uint32(buf);
-			offs = read_uint32(buf);
+			ref = AG_ReadUint32(buf);
+			offs = AG_ReadUint32(buf);
 
-			if (object_find_dep(m, ref, &pobj) == -1) {
+			if (AG_ObjectFindDep(m, ref, &pobj) == -1) {
 				return (-1);
 			}
-			*r = node_add_sprite(m, node, pobj, offs);
+			*r = AG_NodeAddSprite(m, node, pobj, offs);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
 			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = read_sint16(buf);
-			(*r)->r_gfx.ycenter = read_sint16(buf);
-			(*r)->r_gfx.xmotion = read_sint16(buf);
-			(*r)->r_gfx.ymotion = read_sint16(buf);
-			(*r)->r_gfx.xorigin = read_sint16(buf);
-			(*r)->r_gfx.yorigin = read_sint16(buf);
-			(*r)->r_gfx.rs.x = read_sint16(buf);
-			(*r)->r_gfx.rs.y = read_sint16(buf);
-			(*r)->r_gfx.rs.w = read_uint16(buf);
-			(*r)->r_gfx.rs.h = read_uint16(buf);
+			(*r)->r_gfx.xcenter = AG_ReadSint16(buf);
+			(*r)->r_gfx.ycenter = AG_ReadSint16(buf);
+			(*r)->r_gfx.xmotion = AG_ReadSint16(buf);
+			(*r)->r_gfx.ymotion = AG_ReadSint16(buf);
+			(*r)->r_gfx.xorigin = AG_ReadSint16(buf);
+			(*r)->r_gfx.yorigin = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.x = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.y = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.w = AG_ReadUint16(buf);
+			(*r)->r_gfx.rs.h = AG_ReadUint16(buf);
 		}
 		break;
-	case NODEREF_ANIM:
+	case AG_NITEM_ANIM:
 		{
-			ref = read_uint32(buf);
-			offs = read_uint32(buf);
+			ref = AG_ReadUint32(buf);
+			offs = AG_ReadUint32(buf);
 			
-			if (object_find_dep(m, ref, &pobj) == -1) {
+			if (AG_ObjectFindDep(m, ref, &pobj) == -1) {
 				return (-1);
 			}
-			*r = node_add_anim(m, node, pobj, offs);
+			*r = AG_NodeAddAnim(m, node, pobj, offs);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
 			(*r)->friction = friction;
-			(*r)->r_gfx.xcenter = read_sint16(buf);
-			(*r)->r_gfx.ycenter = read_sint16(buf);
-			(*r)->r_gfx.xmotion = read_sint16(buf);
-			(*r)->r_gfx.ymotion = read_sint16(buf);
-			(*r)->r_gfx.xorigin = read_sint16(buf);
-			(*r)->r_gfx.yorigin = read_sint16(buf);
-			(*r)->r_gfx.rs.x = read_sint16(buf);
-			(*r)->r_gfx.rs.y = read_sint16(buf);
-			(*r)->r_gfx.rs.w = read_uint16(buf);
-			(*r)->r_gfx.rs.h = read_uint16(buf);
+			(*r)->r_gfx.xcenter = AG_ReadSint16(buf);
+			(*r)->r_gfx.ycenter = AG_ReadSint16(buf);
+			(*r)->r_gfx.xmotion = AG_ReadSint16(buf);
+			(*r)->r_gfx.ymotion = AG_ReadSint16(buf);
+			(*r)->r_gfx.xorigin = AG_ReadSint16(buf);
+			(*r)->r_gfx.yorigin = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.x = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.y = AG_ReadSint16(buf);
+			(*r)->r_gfx.rs.w = AG_ReadUint16(buf);
+			(*r)->r_gfx.rs.h = AG_ReadUint16(buf);
 		}
 		break;
-	case NODEREF_WARP:
+	case AG_NITEM_WARP:
 		{
-			char map_id[OBJECT_NAME_MAX];
+			char map_id[AG_OBJECT_NAME_MAX];
 			Uint32 ox, oy;
 			Uint8 dir;
 
-			if (copy_string(map_id, buf, sizeof(map_id)) >=
+			if (AG_CopyString(map_id, buf, sizeof(map_id)) >=
 			    sizeof(map_id)) {
-				error_set(_("Warp map name is too big."));
+				AG_SetError(_("Warp map name is too big."));
 				return (-1);
 			}
-			ox = (int)read_uint32(buf);
-			oy = (int)read_uint32(buf);
-			if (ox < 0 || ox > MAP_MAX_WIDTH || 
-			    ox < 0 || oy > MAP_MAX_HEIGHT) {
-				error_set(_("Invalid warp coordinates."));
+			ox = (int)AG_ReadUint32(buf);
+			oy = (int)AG_ReadUint32(buf);
+			if (ox < 0 || ox > AG_MAP_MAXWIDTH || 
+			    ox < 0 || oy > AG_MAP_MAXHEIGHT) {
+				AG_SetError(_("Invalid warp coordinates."));
 				return (-1);
 			}
-			dir = read_uint8(buf);
-			*r = node_add_warp(m, node, map_id, ox, oy, dir);
+			dir = AG_ReadUint8(buf);
+			*r = AG_NodeAddWarpPoint(m, node, map_id, ox, oy, dir);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
 			(*r)->friction = friction;
 		}
 		break;
 	default:
-		error_set(_("Unknown type of noderef."));
+		AG_SetError(_("Unknown type of noderef."));
 		return (-1);
 	}
 
 	/* Read the transforms. */
-	if ((ntrans = read_uint32(buf)) > NODEREF_MAX_TRANSFORMS) {
-		error_set(_("Too many transforms."));
+	if ((ntrans = AG_ReadUint32(buf)) > AG_NITEM_MAXTRANSFORMS) {
+		AG_SetError(_("Too many transforms."));
 		goto fail;
 	}
 	for (i = 0; i < ntrans; i++) {
-		struct transform *trans;
+		AG_Transform *trans;
 
-		trans = Malloc(sizeof(struct transform), M_NODEXFORM);
-		transform_init(trans, 0, 0, NULL);
-		if (transform_load(buf, trans) == -1) {
+		trans = Malloc(sizeof(AG_Transform), M_NODEXFORM);
+		AG_TransformInit(trans, 0, 0, NULL);
+		if (AG_TransformLoad(buf, trans) == -1) {
 			Free(trans, M_NODEXFORM);
 			goto fail;
 		}
@@ -1042,16 +1045,16 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	}
 	
 	/* Read the node masks. */
-	if ((nmasks = read_uint32(buf)) > NODEREF_MAX_MASKS) {
-		error_set(_("Too many node masks."));
+	if ((nmasks = AG_ReadUint32(buf)) > AG_NITEM_MAXMASKS) {
+		AG_SetError(_("Too many node masks."));
 		goto fail;
 	}
 	for (i = 0; i < nmasks; i++) {
-		struct nodemask *mask;
+		AG_NodeMask *mask;
 
-		mask = Malloc(sizeof(struct nodemask), M_NODEMASK);
-		nodemask_init(mask, 0);
-		if (nodemask_load(m, buf, mask) == -1) {
+		mask = Malloc(sizeof(AG_NodeMask), M_NODEMASK);
+		AG_NodeMaskInit(mask, 0);
+		if (AG_NodeMaskLoad(m, buf, mask) == -1) {
 			Free(mask, M_NODEMASK);
 			goto fail;
 		}
@@ -1060,28 +1063,28 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	return (0);
 fail:
 	if (*r != NULL) {
-		noderef_destroy(m, *r);
-		Free(*r, M_MAP_NODEREF);
+		AG_NitemDestroy(m, *r);
+		Free(*r, M_MAP_NITEM);
 		*r = NULL;
 	}
 	return (-1);
 }
 
 int
-node_load(struct map *m, struct netbuf *buf, struct node *node)
+AG_NodeLoad(AG_Map *m, AG_Netbuf *buf, AG_Node *node)
 {
 	Uint32 nrefs;
-	struct noderef *r;
+	AG_Nitem *r;
 	int i;
 	
-	if ((nrefs = read_uint32(buf)) > NODE_MAX_NODEREFS) {
-		error_set(_("Too many noderefs."));
+	if ((nrefs = AG_ReadUint32(buf)) > AG_NODE_MAXITEMS) {
+		AG_SetError(_("Too many noderefs."));
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
-		if (noderef_load(m, buf, node, &r) == -1) {
-			node_destroy(m, node);
-			node_init(node);
+		if (AG_NitemLoad(m, buf, node, &r) == -1) {
+			AG_NodeDestroy(m, node);
+			AG_NodeInit(node);
 			return (-1);
 		}
 	}
@@ -1089,28 +1092,28 @@ node_load(struct map *m, struct netbuf *buf, struct node *node)
 }
 
 int
-map_load(void *ob, struct netbuf *buf)
+map_load(void *ob, AG_Netbuf *buf)
 {
-	struct map *m = ob;
+	AG_Map *m = ob;
 	Uint32 w, h, origin_x, origin_y;
 	int i, x, y;
-	struct actor *ac;
+	AG_Actor *ac;
 	
-	if (version_read(buf, &map_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &map_ver, NULL) != 0)
 		return (-1);
 
-	if (space_load(m, buf) == -1)
+	if (AG_SpaceLoad(m, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&m->lock);
-	m->flags = (u_int)read_uint32(buf) & MAP_SAVED_FLAGS;
-	w = read_uint32(buf);
-	h = read_uint32(buf);
-	origin_x = read_uint32(buf);
-	origin_y = read_uint32(buf);
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
-	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT) {
-		error_set(_("Invalid map geometry."));
+	m->flags = (u_int)AG_ReadUint32(buf) & AG_MAP_SAVED_FLAGS;
+	w = AG_ReadUint32(buf);
+	h = AG_ReadUint32(buf);
+	origin_x = AG_ReadUint32(buf);
+	origin_y = AG_ReadUint32(buf);
+	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT ||
+	    origin_x > AG_MAP_MAXWIDTH || origin_y > AG_MAP_MAXHEIGHT) {
+		AG_SetError(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (u_int)w;
@@ -1119,82 +1122,84 @@ map_load(void *ob, struct netbuf *buf)
 	m->origin.y = (int)origin_y;
 	
 	/* Read the layer information. */
-	if ((m->nlayers = (u_int)read_uint32(buf)) > MAP_MAX_LAYERS) {
-		error_set(_("Too many layers."));
+	if ((m->nlayers = (u_int)AG_ReadUint32(buf)) > AG_MAP_MAXLAYERS) {
+		AG_SetError(_("Too many layers."));
 		goto fail;
 	}
 	if (m->nlayers < 1) {
-		error_set(_("Missing zeroth layer."));
+		AG_SetError(_("Missing zeroth layer."));
 		goto fail;
 	}
-	m->layers = Realloc(m->layers, m->nlayers*sizeof(struct map_layer));
+	m->layers = Realloc(m->layers, m->nlayers*sizeof(AG_MapLayer));
 	for (i = 0; i < m->nlayers; i++) {
-		struct map_layer *lay = &m->layers[i];
+		AG_MapLayer *lay = &m->layers[i];
 
-		copy_string(lay->name, buf, sizeof(lay->name));
-		lay->visible = (int)read_uint8(buf);
-		lay->xinc = read_sint16(buf);
-		lay->yinc = read_sint16(buf);
-		lay->alpha = read_uint8(buf);
+		AG_CopyString(lay->name, buf, sizeof(lay->name));
+		lay->visible = (int)AG_ReadUint8(buf);
+		lay->xinc = AG_ReadSint16(buf);
+		lay->yinc = AG_ReadSint16(buf);
+		lay->alpha = AG_ReadUint8(buf);
 	}
-	m->cur_layer = (int)read_uint8(buf);
-	m->origin.layer = (int)read_uint8(buf);
+	m->cur_layer = (int)AG_ReadUint8(buf);
+	m->origin.layer = (int)AG_ReadUint8(buf);
 	
 	/* Read the camera information. */
-	if ((m->ncameras = (u_int)read_uint32(buf)) > MAP_MAX_CAMERAS) {
-		error_set(_("Too many cameras."));
+	if ((m->ncameras = (u_int)AG_ReadUint32(buf)) > AG_MAP_MAXCAMERAS) {
+		AG_SetError(_("Too many cameras."));
 		goto fail;
 	}
 	if (m->ncameras < 1) {
-		error_set(_("Missing zeroth camera."));
+		AG_SetError(_("Missing zeroth camera."));
 		goto fail;
 	}
-	m->cameras = Realloc(m->cameras, m->ncameras*sizeof(struct map_camera));
+	m->cameras = Realloc(m->cameras, m->ncameras*sizeof(AG_MapCamera));
 	for (i = 0; i < m->ncameras; i++) {
-		struct map_camera *cam = &m->cameras[i];
+		AG_MapCamera *cam = &m->cameras[i];
 
-		copy_string(cam->name, buf, sizeof(cam->name));
-		cam->flags = (int)read_uint32(buf);
-		if (i > 0 || m->flags & MAP_SAVE_CAM0POS) {
-			cam->x = (int)read_sint32(buf);
-			cam->y = (int)read_sint32(buf);
+		AG_CopyString(cam->name, buf, sizeof(cam->name));
+		cam->flags = (int)AG_ReadUint32(buf);
+		if (i > 0 || m->flags & AG_MAP_SAVE_CAM0POS) {
+			cam->x = (int)AG_ReadSint32(buf);
+			cam->y = (int)AG_ReadSint32(buf);
 		}
-		cam->alignment = (enum map_camera_alignment)read_uint8(buf);
+		cam->alignment =
+		    (enum ag_map_camera_alignment)AG_ReadUint8(buf);
 		
-		if (i > 0 || m->flags & MAP_SAVE_CAM0ZOOM) {
-			cam->zoom = (u_int)read_uint16(buf);
-			cam->tilesz = (u_int)read_uint16(buf);
-			cam->pixsz = cam->tilesz/TILESZ;
+		if (i > 0 || m->flags & AG_MAP_SAVE_CAM0ZOOM) {
+			cam->zoom = (u_int)AG_ReadUint16(buf);
+			cam->tilesz = (u_int)AG_ReadUint16(buf);
+			cam->pixsz = cam->tilesz/AGTILESZ;
 		} else {
 			cam->zoom = 100;
-			cam->tilesz = TILESZ;
+			cam->tilesz = AGTILESZ;
 			cam->pixsz = 1;
 		}
 
-		if (i == 0 && (m->flags & MAP_SAVE_CAM0POS) == 0) {
+		if (i == 0 && (m->flags & AG_MAP_SAVE_CAM0POS) == 0) {
 			cam->x = m->origin.x*cam->tilesz - cam->tilesz/2;
 			cam->y = m->origin.y*cam->tilesz - cam->tilesz/2;
 		}
 	}
 
 	/* Allocate and load the nodes. */
-	if (map_alloc_nodes(m, m->mapw, m->maph) == -1) {
+	if (AG_MapAllocNodes(m, m->mapw, m->maph) == -1) {
 		goto fail;
 	}
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			if (node_load(m, buf, &m->map[y][x]) == -1)
+			if (AG_NodeLoad(m, buf, &m->map[y][x]) == -1)
 				goto fail;
 		}
 	}
 
 	/* Attach the geometric objects. */
-	TAILQ_FOREACH(ac, &SPACE(m)->actors, actors) {
-		dprintf("%s: %s at %d,%d,%d\n", OBJECT(m)->name,
-		     OBJECT(ac)->name, ac->g_map.x, ac->g_map.y, ac->g_map.l0);
-		if (space_attach(m, ac) == -1)
-			fprintf(stderr, "%s (%s): %s\n", OBJECT(m)->name,
-			    OBJECT(ac)->name, error_get());
+	TAILQ_FOREACH(ac, &AG_SPACE(m)->actors, actors) {
+		dprintf("%s: %s at %d,%d,%d\n", AGOBJECT(m)->name,
+		     AGOBJECT(ac)->name, ac->g_map.x, ac->g_map.y,
+		     ac->g_map.l0);
+		if (AG_SpaceAttach(m, ac) == -1)
+			fprintf(stderr, "%s (%s): %s\n", AGOBJECT(m)->name,
+			    AGOBJECT(ac)->name, AG_GetError());
 	}
 
 	pthread_mutex_unlock(&m->lock);
@@ -1209,100 +1214,100 @@ fail:
  * The noderef's parent map must be locked.
  */
 void
-noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
+AG_NitemSave(AG_Map *m, AG_Netbuf *buf, AG_Nitem *r)
 {
 	off_t ntrans_offs, nmasks_offs;
 	Uint32 ntrans = 0, nmasks = 0;
-	struct transform *trans;
-	struct nodemask *mask;
+	AG_Transform *trans;
+	AG_NodeMask *mask;
 
 	/* Save the type of reference, flags and layer information. */
-	write_uint32(buf, (Uint32)r->type);
-	write_uint32(buf, (Uint32)r->flags);
-	write_uint8(buf, r->layer);
-	write_sint8(buf, r->friction);
+	AG_WriteUint32(buf, (Uint32)r->type);
+	AG_WriteUint32(buf, (Uint32)r->flags);
+	AG_WriteUint8(buf, r->layer);
+	AG_WriteSint8(buf, r->friction);
 
 	/* Save the reference. */
 	switch (r->type) {
-	case NODEREF_SPRITE:
-		write_uint32(buf, object_encode_name(m, r->r_sprite.obj));
-		write_uint32(buf, r->r_sprite.offs);
+	case AG_NITEM_SPRITE:
+		AG_WriteUint32(buf, AG_ObjectEncodeName(m, r->r_sprite.obj));
+		AG_WriteUint32(buf, r->r_sprite.offs);
 		break;
-	case NODEREF_ANIM:
-		write_uint32(buf, object_encode_name(m, r->r_anim.obj));
-		write_uint32(buf, r->r_anim.offs);
+	case AG_NITEM_ANIM:
+		AG_WriteUint32(buf, AG_ObjectEncodeName(m, r->r_anim.obj));
+		AG_WriteUint32(buf, r->r_anim.offs);
 		break;
-	case NODEREF_WARP:
-		write_string(buf, r->r_warp.map);
-		write_uint32(buf, (Uint32)r->r_warp.x);
-		write_uint32(buf, (Uint32)r->r_warp.y);
-		write_uint8(buf, r->r_warp.dir);
+	case AG_NITEM_WARP:
+		AG_WriteString(buf, r->r_warp.map);
+		AG_WriteUint32(buf, (Uint32)r->r_warp.x);
+		AG_WriteUint32(buf, (Uint32)r->r_warp.y);
+		AG_WriteUint8(buf, r->r_warp.dir);
 		break;
 	default:
 		dprintf("not saving %d node\n", r->type);
 		break;
 	}
-	if (r->type == NODEREF_SPRITE || r->type == NODEREF_ANIM) {
-		write_sint16(buf, r->r_gfx.xcenter);
-		write_sint16(buf, r->r_gfx.ycenter);
-		write_sint16(buf, r->r_gfx.xmotion);
-		write_sint16(buf, r->r_gfx.ymotion);
-		write_sint16(buf, r->r_gfx.xorigin);
-		write_sint16(buf, r->r_gfx.yorigin);
-		write_sint16(buf, r->r_gfx.rs.x);
-		write_sint16(buf, r->r_gfx.rs.y);
-		write_uint16(buf, r->r_gfx.rs.w);
-		write_uint16(buf, r->r_gfx.rs.h);
+	if (r->type == AG_NITEM_SPRITE || r->type == AG_NITEM_ANIM) {
+		AG_WriteSint16(buf, r->r_gfx.xcenter);
+		AG_WriteSint16(buf, r->r_gfx.ycenter);
+		AG_WriteSint16(buf, r->r_gfx.xmotion);
+		AG_WriteSint16(buf, r->r_gfx.ymotion);
+		AG_WriteSint16(buf, r->r_gfx.xorigin);
+		AG_WriteSint16(buf, r->r_gfx.yorigin);
+		AG_WriteSint16(buf, r->r_gfx.rs.x);
+		AG_WriteSint16(buf, r->r_gfx.rs.y);
+		AG_WriteUint16(buf, r->r_gfx.rs.w);
+		AG_WriteUint16(buf, r->r_gfx.rs.h);
 	}
 
 	/* Save the transforms. */
-	ntrans_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	ntrans_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(trans, &r->transforms, transforms) {
-		transform_save(buf, trans);
+		AG_TransformSave(buf, trans);
 		ntrans++;
 	}
-	pwrite_uint32(buf, ntrans, ntrans_offs);
+	AG_PwriteUint32(buf, ntrans, ntrans_offs);
 	
 	/* Save the masks. */
-	nmasks_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nmasks_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(mask, &r->masks, masks) {
-		nodemask_save(m, buf, mask);
+		AG_NodeMaskSave(m, buf, mask);
 		nmasks++;
 	}
-	pwrite_uint32(buf, nmasks, nmasks_offs);
+	AG_PwriteUint32(buf, nmasks, nmasks_offs);
 }
 
 void
-node_save(struct map *m, struct netbuf *buf, struct node *node)
+AG_NodeSave(AG_Map *m, AG_Netbuf *buf, AG_Node *node)
 {
-	struct noderef *r;
+	AG_Nitem *r;
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
 
-	nrefs_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nrefs_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		if (r->flags & NODEREF_NOSAVE) {
+		if (r->flags & AG_NITEM_NOSAVE) {
 			continue;
 		}
-		noderef_save(m, buf, r);
+		AG_NitemSave(m, buf, r);
 		nrefs++;
 	}
-	pwrite_uint32(buf, nrefs, nrefs_offs);
+	AG_PwriteUint32(buf, nrefs, nrefs_offs);
 }
 
 int
-map_save(void *p, struct netbuf *buf)
+map_save(void *p, AG_Netbuf *buf)
 {
-	struct map *m = p;
-	struct actor *go;
+	AG_Map *m = p;
+	AG_Actor *go;
 	int i, x, y;
 	
-	version_write(buf, &map_ver);
+	AG_WriteVersion(buf, &map_ver);
 	
-	if (space_save(m, buf) == -1)
+	if (AG_SpaceSave(m, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&m->lock);
@@ -1311,55 +1316,55 @@ map_save(void *p, struct netbuf *buf)
 	 * Detach all geometric objects since we don't want to save any
 	 * map elements generated by them.
 	 */
-	TAILQ_FOREACH(go, &SPACE(m)->actors, actors)
-		space_detach(m, go);
+	TAILQ_FOREACH(go, &AG_SPACE(m)->actors, actors)
+		AG_SpaceDetach(m, go);
 
-	write_uint32(buf, (Uint32)(m->flags & MAP_SAVED_FLAGS));
-	write_uint32(buf, (Uint32)m->mapw);
-	write_uint32(buf, (Uint32)m->maph);
-	write_uint32(buf, (Uint32)m->origin.x);
-	write_uint32(buf, (Uint32)m->origin.y);
+	AG_WriteUint32(buf, (Uint32)(m->flags & AG_MAP_SAVED_FLAGS));
+	AG_WriteUint32(buf, (Uint32)m->mapw);
+	AG_WriteUint32(buf, (Uint32)m->maph);
+	AG_WriteUint32(buf, (Uint32)m->origin.x);
+	AG_WriteUint32(buf, (Uint32)m->origin.y);
 
 	/* Write the layer information. */
-	write_uint32(buf, (Uint32)m->nlayers);
+	AG_WriteUint32(buf, (Uint32)m->nlayers);
 	for (i = 0; i < m->nlayers; i++) {
-		struct map_layer *lay = &m->layers[i];
+		AG_MapLayer *lay = &m->layers[i];
 
-		write_string(buf, lay->name);
-		write_uint8(buf, (Uint8)lay->visible);
-		write_sint16(buf, lay->xinc);
-		write_sint16(buf, lay->yinc);
-		write_uint8(buf, lay->alpha);
+		AG_WriteString(buf, lay->name);
+		AG_WriteUint8(buf, (Uint8)lay->visible);
+		AG_WriteSint16(buf, lay->xinc);
+		AG_WriteSint16(buf, lay->yinc);
+		AG_WriteUint8(buf, lay->alpha);
 	}
-	write_uint8(buf, m->cur_layer);
-	write_uint8(buf, m->origin.layer);
+	AG_WriteUint8(buf, m->cur_layer);
+	AG_WriteUint8(buf, m->origin.layer);
 	
 	/* Write the camera information. */
-	write_uint32(buf, (Uint32)m->ncameras);
+	AG_WriteUint32(buf, (Uint32)m->ncameras);
 	for (i = 0; i < m->ncameras; i++) {
-		struct map_camera *cam = &m->cameras[i];
+		AG_MapCamera *cam = &m->cameras[i];
 
-		write_string(buf, cam->name);
-		write_uint32(buf, (Uint32)cam->flags);
-		if (i == 0 && (m->flags & MAP_SAVE_CAM0POS)) {
-			write_sint32(buf, (Sint32)cam->x);
-			write_sint32(buf, (Sint32)cam->y);
+		AG_WriteString(buf, cam->name);
+		AG_WriteUint32(buf, (Uint32)cam->flags);
+		if (i == 0 && (m->flags & AG_MAP_SAVE_CAM0POS)) {
+			AG_WriteSint32(buf, (Sint32)cam->x);
+			AG_WriteSint32(buf, (Sint32)cam->y);
 		}
-		write_uint8(buf, (Uint8)cam->alignment);
-		if (i == 0 && (m->flags & MAP_SAVE_CAM0ZOOM)) {
-			write_uint16(buf, (Uint16)cam->zoom);
-			write_uint16(buf, (Uint16)cam->tilesz);
+		AG_WriteUint8(buf, (Uint8)cam->alignment);
+		if (i == 0 && (m->flags & AG_MAP_SAVE_CAM0ZOOM)) {
+			AG_WriteUint16(buf, (Uint16)cam->zoom);
+			AG_WriteUint16(buf, (Uint16)cam->tilesz);
 		}
 	}
 
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++)
-			node_save(m, buf, &m->map[y][x]);
+			AG_NodeSave(m, buf, &m->map[y][x]);
 	}
 	
-	TAILQ_FOREACH(go, &SPACE(m)->actors, actors) {
-		space_attach(m, go);
+	TAILQ_FOREACH(go, &AG_SPACE(m)->actors, actors) {
+		AG_SpaceAttach(m, go);
 	}
 	pthread_mutex_unlock(&m->lock);
 	return (0);
@@ -1368,33 +1373,33 @@ map_save(void *p, struct netbuf *buf)
 /* Render surface s, scaled to rx,ry pixels. */
 /* XXX efficient with shrinking but inefficient with growing. */
 static void
-blit_scaled(struct map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
+blit_scaled(AG_Map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
     int cam)
 {
 	int x, y, sx, sy;
 	Uint8 r1, g1, b1, a1;
 	Uint32 c;
 	int tilesz = m->cameras[cam].tilesz;
-	int xSrc = (u_int)(rs->x*tilesz/TILESZ);
-	int ySrc = (u_int)(rs->y*tilesz/TILESZ);
-	u_int wSrc = (u_int)(rs->w*tilesz/TILESZ);
-	u_int hSrc = (u_int)(rs->h*tilesz/TILESZ);
-	int same_fmt = view_same_pixel_fmt(s, view->v);
+	int xSrc = (u_int)(rs->x*tilesz/AGTILESZ);
+	int ySrc = (u_int)(rs->y*tilesz/AGTILESZ);
+	u_int wSrc = (u_int)(rs->w*tilesz/AGTILESZ);
+	u_int hSrc = (u_int)(rs->h*tilesz/AGTILESZ);
+	int same_fmt = AG_SamePixelFmt(s, agView->v);
 
 	if (SDL_MUSTLOCK(s)) {
 		SDL_LockSurface(s);
 	}
-	SDL_LockSurface(view->v);
+	SDL_LockSurface(agView->v);
 	
 	for (y = 0; y < hSrc; y++) {
-		if ((sy = (y+ySrc)*TILESZ/tilesz) >= s->h)
+		if ((sy = (y+ySrc)*AGTILESZ/tilesz) >= s->h)
 			break;
 
 		for (x = 0; x < wSrc; x++) {
-			if ((sx = (x+xSrc)*TILESZ/tilesz) >= s->w)
+			if ((sx = (x+xSrc)*AGTILESZ/tilesz) >= s->w)
 				break;
 		
-			c = GET_PIXEL(s, (Uint8 *)s->pixels +
+			c = AG_GET_PIXEL(s, (Uint8 *)s->pixels +
 			    sy*s->pitch +
 			    sx*s->format->BytesPerPixel);
 			
@@ -1404,16 +1409,17 @@ blit_scaled(struct map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
 		
 			if (s->flags & SDL_SRCALPHA) {
 				SDL_GetRGBA(c, s->format, &r1, &g1, &b1, &a1);
-				BLEND_RGBA2_CLIPPED(view->v, rx+x, ry+y,
-				    r1, g1, b1, a1, ALPHA_OVERLAY);
+				AG_BLEND_RGBA2_CLIPPED(agView->v, rx+x, ry+y,
+				    r1, g1, b1, a1, AG_ALPHA_OVERLAY);
 			} else {
 				if (same_fmt) {
-					VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y, c);
+					AG_VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
+					    c);
 				} else {
 					SDL_GetRGB(c, s->format,
 					    &r1, &g1, &b1);
-					VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
-					    SDL_MapRGB(vfmt, r1, g1, b1));
+					AG_VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
+					    SDL_MapRGB(agVideoFmt, r1, g1, b1));
 				}
 			}
 		}
@@ -1421,7 +1427,7 @@ blit_scaled(struct map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
 	if (SDL_MUSTLOCK(s)) {
 		SDL_UnlockSurface(s);
 	}
-	SDL_UnlockSurface(view->v);
+	SDL_UnlockSurface(agView->v);
 }
 					
 /*
@@ -1430,10 +1436,10 @@ blit_scaled(struct map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
  * entry in the sprite transformation cache, or allocate a new one.
  */
 static __inline__ void
-draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
+draw_sprite(AG_Nitem *r, SDL_Surface **pSu, u_int *pTexture)
 {
-	struct sprite *spr = &SPRITE(r->r_sprite.obj,r->r_sprite.offs);
-	struct gfx_cached_sprite *csp;
+	AG_Sprite *spr = &AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs);
+	AG_CachedSprite *csp;
 
 	if (TAILQ_EMPTY(&r->transforms)) {
 		*pSu = spr->su;
@@ -1448,7 +1454,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 	 * in the same order.
 	 */
 	SLIST_FOREACH(csp, &spr->csprites, sprites) {
-		struct transform *tr1, *tr2;
+		AG_Transform *tr1, *tr2;
 				
 		for (tr1 = TAILQ_FIRST(&r->transforms),
 		     tr2 = TAILQ_FIRST(&csp->transforms);
@@ -1456,7 +1462,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 		     tr2 != TAILQ_END(&csp->transforms);
 		     tr1 = TAILQ_NEXT(tr1, transforms),
 		     tr2 = TAILQ_NEXT(tr2, transforms)) {
-			if (!transform_compare(tr1, tr2))
+			if (!AG_TransformCompare(tr1, tr2))
 				break;
 		}
 		if (tr1 == TAILQ_END(&r->transforms) &&
@@ -1471,7 +1477,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 #endif
 		return;
 	} else {
-		struct transform *tr;
+		AG_Transform *tr;
 		SDL_Surface *sOrig = spr->su;
 		SDL_Surface *su;
 		Uint32 saflags = sOrig->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
@@ -1489,7 +1495,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 		if (su == NULL)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		
-		csp = Malloc(sizeof(struct gfx_cached_sprite), M_GFX);
+		csp = Malloc(sizeof(AG_CachedSprite), M_GFX);
 		csp->last_drawn = SDL_GetTicks();
 		TAILQ_INIT(&csp->transforms);
 
@@ -1501,7 +1507,7 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 
 		TAILQ_FOREACH(tr, &r->transforms, transforms) {
 			SDL_Surface *sNew;
-			struct transform *trNew;
+			AG_Transform *trNew;
 
 			sNew = tr->func(su, tr->nargs, tr->args);
 			if (su != sNew) {
@@ -1509,15 +1515,15 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
 				su = sNew;
 			}
 
-			trNew = Malloc(sizeof(struct transform), M_NODEXFORM);
-			transform_init(trNew, tr->type, tr->nargs, tr->args);
+			trNew = Malloc(sizeof(AG_Transform), M_NODEXFORM);
+			AG_TransformInit(trNew, tr->type, tr->nargs, tr->args);
 			TAILQ_INSERT_TAIL(&csp->transforms, trNew, transforms);
 		}
 		SLIST_INSERT_HEAD(&spr->csprites, csp, sprites);
 		csp->su = su;
 #ifdef HAVE_OPENGL
-		if (view->opengl) {
-			csp->texture = view_surface_texture(su, csp->texcoords);
+		if (agView->opengl) {
+			csp->texture = AG_SurfaceTexture(su, csp->texcoords);
 		} else {
 			csp->texture = 0;
 		}
@@ -1534,16 +1540,16 @@ draw_sprite(struct noderef *r, SDL_Surface **pSu, u_int *pTexture)
  * entry in the anim transformation cache, or allocate a new one.
  */
 static void
-draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
+draw_anim(AG_Nitem *r, SDL_Surface **pSurface, u_int *pTexture)
 {
-	struct gfx_anim *oanim = &ANIM(r->r_anim.obj, r->r_anim.offs);
-	struct gfx_cached_anim *canim;
-	struct gfx_animcl *animcl;
+	AG_Anim *oanim = &AG_ANIM(r->r_anim.obj, r->r_anim.offs);
+	AG_CachedAnim *canim;
+	AG_AnimCache *animcl;
 
 	if (TAILQ_EMPTY(&r->transforms)) {
-		*pSurface = GFX_ANIM_FRAME(r, oanim);
+		*pSurface = AG_ANIM_FRAME(r, oanim);
 #ifdef HAVE_OPENGL
-		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,oanim); }
+		if (pTexture != NULL) { *pTexture = AG_ANIM_TEXTURE(r,oanim); }
 #endif
 		return;
 	}
@@ -1554,7 +1560,7 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 	 */
 	animcl = &r->r_anim.obj->gfx->canims[r->r_anim.offs];
 	SLIST_FOREACH(canim, &animcl->anims, anims) {
-		struct transform *tr1, *tr2;
+		AG_Transform *tr1, *tr2;
 				
 		for (tr1 = TAILQ_FIRST(&r->transforms),
 		     tr2 = TAILQ_FIRST(&canim->transforms);
@@ -1562,7 +1568,7 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 		     tr2 != TAILQ_END(&canim->transforms);
 		     tr1 = TAILQ_NEXT(tr1, transforms),
 		     tr2 = TAILQ_NEXT(tr2, transforms)) {
-			if (!transform_compare(tr1, tr2))
+			if (!AG_TransformCompare(tr1, tr2))
 				break;
 		}
 		if (tr1 == TAILQ_END(&r->transforms) &&
@@ -1571,23 +1577,24 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 	}
 	if (canim != NULL) {
 		canim->last_drawn = SDL_GetTicks();
-		*pSurface = GFX_ANIM_FRAME(r, canim->anim);
+		*pSurface = AG_ANIM_FRAME(r, canim->anim);
 #ifdef HAVE_OPENGL
-		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,
-		                        canim->anim); }
+		if (pTexture != NULL) {
+			*pTexture = AG_ANIM_TEXTURE(r, canim->anim);
+		}
 #endif
 		return;
 	} else {
-		struct transform *trans, *ntrans;
-		struct gfx_anim *nanim;
-		struct gfx_cached_anim *ncanim;
+		AG_Transform *trans, *ntrans;
+		AG_Anim *nanim;
+		AG_CachedAnim *ncanim;
 		Uint32 i;
 		
-		ncanim = Malloc(sizeof(struct gfx_cached_anim), M_GFX);
+		ncanim = Malloc(sizeof(AG_CachedAnim), M_GFX);
 		ncanim->last_drawn = SDL_GetTicks();
 		TAILQ_INIT(&ncanim->transforms);
 
-		nanim = ncanim->anim = Malloc(sizeof(struct gfx_anim), M_GFX);
+		nanim = ncanim->anim = Malloc(sizeof(AG_Anim), M_GFX);
 		nanim->frames = Malloc(oanim->nframes*sizeof(SDL_Surface *),
 		    M_GFX);
 #ifdef HAVE_OPENGL
@@ -1636,42 +1643,44 @@ draw_anim(struct noderef *r, SDL_Surface **pSurface, u_int *pTexture)
 			}
 			nanim->frames[i] = sFrame;
 #ifdef HAVE_OPENGL
-			if (view->opengl) {
+			if (agView->opengl) {
 				nanim->textures[i] =
-				    view_surface_texture(sFrame, NULL);
+				    AG_SurfaceTexture(sFrame, NULL);
 			}
 #endif
 		}
 		TAILQ_FOREACH(trans, &r->transforms, transforms) {
-			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
-			transform_init(ntrans, trans->type, trans->nargs,
+			ntrans = Malloc(sizeof(AG_Transform), M_NODEXFORM);
+			AG_TransformInit(ntrans, trans->type, trans->nargs,
 			    trans->args);
 			TAILQ_INSERT_TAIL(&ncanim->transforms, ntrans,
 			    transforms);
 		}
 		SLIST_INSERT_HEAD(&animcl->anims, ncanim, anims);
-		*pSurface = GFX_ANIM_FRAME(r, nanim);
+		*pSurface = AG_ANIM_FRAME(r, nanim);
 #ifdef HAVE_OPENGL
-		if (pTexture != NULL) { *pTexture = GFX_ANIM_TEXTURE(r,nanim); }
+		if (pTexture != NULL) {
+			*pTexture = AG_ANIM_TEXTURE(r,nanim);
+		}
 #endif
 		return;
 	}
 }
 
-static struct noderef *
-locate_noderef(struct map *m, struct node *node, int xoffs, int yoffs,
+static AG_Nitem *
+locate_noderef(AG_Map *m, AG_Node *node, int xoffs, int yoffs,
     int xd, int yd, int ncam)
 {
 	SDL_Rect rExt;
-	struct noderef *r;
+	AG_Nitem *r;
 
-	TAILQ_FOREACH_REVERSE(r, &node->nrefs, nrefs, noderefq) {
+	TAILQ_FOREACH_REVERSE(r, &node->nrefs, nrefs, ag_nitemq) {
 		if (r->layer != m->cur_layer) {
 			continue;
 		}
 		switch (r->type) {
-		case NODEREF_SPRITE:
-			if (noderef_extent(m, r, &rExt, ncam) == 0 &&
+		case AG_NITEM_SPRITE:
+			if (AG_NitemExtent(m, r, &rExt, ncam) == 0 &&
 			    xoffs+xd >= rExt.x && xoffs+xd < rExt.x+rExt.w &&
 			    yoffs+yd >= rExt.y && yoffs+yd < rExt.y+rExt.h) {
 				return (r);
@@ -1684,15 +1693,15 @@ locate_noderef(struct map *m, struct node *node, int xoffs, int yoffs,
 	return (NULL);
 }
 
-struct noderef *
-noderef_locate(struct map *m, int xMap, int yMap, int ncam)
+AG_Nitem *
+AG_NitemLocate(AG_Map *m, int xMap, int yMap, int ncam)
 {
-	struct map_camera *cam = &m->cameras[ncam];
+	AG_MapCamera *cam = &m->cameras[ncam];
 	int x = xMap/cam->tilesz;
 	int y = yMap/cam->tilesz;
 	int xoffs = xMap%cam->tilesz;
 	int yoffs = yMap%cam->tilesz;
-	struct noderef *r;
+	AG_Nitem *r;
 
 	if (x < 0 || y < 0 || x >= m->mapw || x >= m->maph) {
 		return (NULL);
@@ -1760,23 +1769,23 @@ noderef_locate(struct map *m, int xMap, int yMap, int ncam)
  * the origin of the the node.
  */
 int
-noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
+AG_NitemExtent(AG_Map *m, AG_Nitem *r, SDL_Rect *rd, int cam)
 {
 	int tilesz = m->cameras[cam].tilesz;
 
-	if (BAD_SPRITE(r->r_sprite.obj, r->r_sprite.offs))
+	if (AG_BAD_SPRITE(r->r_sprite.obj, r->r_sprite.offs))
 		return (-1);
 
-	if (tilesz != TILESZ) {
-		rd->x = r->r_gfx.xcenter*tilesz/TILESZ +
-		        r->r_gfx.xmotion*tilesz/TILESZ -
-			r->r_gfx.xorigin*tilesz/TILESZ;
-		rd->y = r->r_gfx.ycenter*tilesz/TILESZ +
-		        r->r_gfx.ymotion*tilesz/TILESZ -
-			r->r_gfx.yorigin*tilesz/TILESZ;
+	if (tilesz != AGTILESZ) {
+		rd->x = r->r_gfx.xcenter*tilesz/AGTILESZ +
+		        r->r_gfx.xmotion*tilesz/AGTILESZ -
+			r->r_gfx.xorigin*tilesz/AGTILESZ;
+		rd->y = r->r_gfx.ycenter*tilesz/AGTILESZ +
+		        r->r_gfx.ymotion*tilesz/AGTILESZ -
+			r->r_gfx.yorigin*tilesz/AGTILESZ;
 
-		rd->w = r->r_gfx.rs.w*tilesz/TILESZ;
-		rd->h = r->r_gfx.rs.h*tilesz/TILESZ;
+		rd->w = r->r_gfx.rs.w*tilesz/AGTILESZ;
+		rd->h = r->r_gfx.rs.h*tilesz/AGTILESZ;
 	} else {
 		rd->x = r->r_gfx.xcenter + r->r_gfx.xmotion - r->r_gfx.xorigin;
 		rd->y = r->r_gfx.ycenter + r->r_gfx.ymotion - r->r_gfx.yorigin;
@@ -1791,7 +1800,7 @@ noderef_extent(struct map *m, struct noderef *r, SDL_Rect *rd, int cam)
  * The map must be locked.
  */
 void
-noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
+AG_NitemDraw(AG_Map *m, AG_Nitem *r, int rx, int ry, int cam)
 {
 #if defined(DEBUG) || defined(EDITION)
 	char num[16];
@@ -1805,12 +1814,12 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 	int tilesz = m->cameras[cam].tilesz;
 
 	switch (r->type) {
-	case NODEREF_SPRITE:
+	case AG_NITEM_SPRITE:
 #if defined(DEBUG) || defined(EDITION)
-		if (BAD_SPRITE(r->r_sprite.obj,r->r_sprite.offs)) {
+		if (AG_BAD_SPRITE(r->r_sprite.obj,r->r_sprite.offs)) {
 			snprintf(num, sizeof(num), "(s%u)", r->r_sprite.offs);
-			su = text_render(NULL, -1,
-			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
+			su = AG_TextRender(NULL, -1,
+			    SDL_MapRGBA(agVideoFmt, 250, 250, 50, 150), num);
 			freesu++;
 			goto draw;
 		}
@@ -1821,13 +1830,13 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 		draw_sprite(r, &su, NULL);
 #endif
 		break;
-	case NODEREF_ANIM:
+	case AG_NITEM_ANIM:
 #if defined(DEBUG) || defined(EDITION)
 		if (r->r_anim.obj->gfx == NULL ||
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
 			snprintf(num, sizeof(num), "(a%u)", r->r_anim.offs);
-			su = text_render(NULL, -1,
-			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
+			su = AG_TextRender(NULL, -1,
+			    SDL_MapRGBA(agVideoFmt, 250, 250, 50, 150), num);
 			freesu++;
 			goto draw;
 		}
@@ -1843,14 +1852,14 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int cam)
 	}
 
 draw:
-	if (!view->opengl) {
-		if (tilesz != TILESZ) {
-			int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
-			         r->r_gfx.xmotion*tilesz/TILESZ -
-				 r->r_gfx.xorigin*tilesz/TILESZ;
-			int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
-			         r->r_gfx.ymotion*tilesz/TILESZ -
-				 r->r_gfx.yorigin*tilesz/TILESZ;
+	if (!agView->opengl) {
+		if (tilesz != AGTILESZ) {
+			int dx = rx + r->r_gfx.xcenter*tilesz/AGTILESZ +
+			         r->r_gfx.xmotion*tilesz/AGTILESZ -
+				 r->r_gfx.xorigin*tilesz/AGTILESZ;
+			int dy = ry + r->r_gfx.ycenter*tilesz/AGTILESZ +
+			         r->r_gfx.ymotion*tilesz/AGTILESZ -
+				 r->r_gfx.yorigin*tilesz/AGTILESZ;
 
 			blit_scaled(m, su, &r->r_gfx.rs, dx, dy, cam);
 		} else {
@@ -1862,9 +1871,10 @@ draw:
 			    r->r_gfx.yorigin;
 
 			if (freesu) {
-				SDL_BlitSurface(su, NULL, view->v, &rd);
+				SDL_BlitSurface(su, NULL, agView->v, &rd);
 			} else {
-				SDL_BlitSurface(su, &r->r_gfx.rs, view->v, &rd);
+				SDL_BlitSurface(su, &r->r_gfx.rs, agView->v,
+				    &rd);
 			}
 		}
 	} else {
@@ -1886,20 +1896,20 @@ draw:
 			                       powof2(r->r_gfx.rs.h);
 		}
 		
-		if (tilesz != TILESZ) {
-			rd.x = rx + r->r_gfx.xcenter*tilesz/TILESZ +
-			    r->r_gfx.xmotion*tilesz/TILESZ -
-			    r->r_gfx.xorigin*tilesz/TILESZ;
-			rd.y = ry + r->r_gfx.ycenter*tilesz/TILESZ +
-			    r->r_gfx.ymotion*tilesz/TILESZ -
-			    r->r_gfx.yorigin*tilesz/TILESZ;
-			rd.w = su->w*tilesz/TILESZ;
-			rd.h = su->h*tilesz/TILESZ;
+		if (tilesz != AGTILESZ) {
+			rd.x = rx + r->r_gfx.xcenter*tilesz/AGTILESZ +
+			    r->r_gfx.xmotion*tilesz/AGTILESZ -
+			    r->r_gfx.xorigin*tilesz/AGTILESZ;
+			rd.y = ry + r->r_gfx.ycenter*tilesz/AGTILESZ +
+			    r->r_gfx.ymotion*tilesz/AGTILESZ -
+			    r->r_gfx.yorigin*tilesz/AGTILESZ;
+			rd.w = su->w*tilesz/AGTILESZ;
+			rd.h = su->h*tilesz/AGTILESZ;
 		} else {
 			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
-			    r->r_gfx.xorigin*tilesz/TILESZ;
+			    r->r_gfx.xorigin*tilesz/AGTILESZ;
 			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
-			    r->r_gfx.yorigin*tilesz/TILESZ;
+			    r->r_gfx.yorigin*tilesz/AGTILESZ;
 			rd.w = su->w;
 			rd.h = su->h;
 		}
@@ -1928,25 +1938,25 @@ draw:
 }
 
 static void
-init_mapmod_blk(struct mapmod_blk *blk)
+init_mapmod_blk(AG_MapModBlk *blk)
 {
-	blk->mods = Malloc(sizeof(struct mapmod), M_RG);
+	blk->mods = Malloc(sizeof(AG_MapMod), M_RG);
 	blk->nmods = 0;
 	blk->cancel = 0;
 }
 
 static void
-free_mapmod_blk(struct map *m, struct mapmod_blk *blk)
+free_mapmod_blk(AG_Map *m, AG_MapModBlk *blk)
 {
 	int i;
 
 	for (i = 0; i < blk->nmods; i++) {
-		struct mapmod *mm = &blk->mods[i];
-		struct noderef *r, *nr;
+		AG_MapMod *mm = &blk->mods[i];
+		AG_Nitem *r, *nr;
 	
 		switch (mm->type) {
-		case MAPMOD_NODECHG:
-			node_destroy(m, &mm->mm_nodechg.node);
+		case AG_MAPMOD_NODECHG:
+			AG_NodeDestroy(m, &mm->mm_nodechg.node);
 			break;
 		default:
 			break;
@@ -1957,15 +1967,15 @@ free_mapmod_blk(struct map *m, struct mapmod_blk *blk)
 
 /* Create a new undo block at the current level. */
 void
-mapmod_begin(struct map *m)
+AG_MapmodBegin(AG_Map *m)
 {
-	struct mapmod_blk *blk;
+	AG_MapModBlk *blk;
 
 	/* Destroy blocks at upper levels. */
 	while (m->nblks > m->curblk+1)
 		free_mapmod_blk(m, &m->blks[--m->nblks]);
 
-	m->blks = Realloc(m->blks, (++m->nblks)*sizeof(struct mapmod));
+	m->blks = Realloc(m->blks, (++m->nblks)*sizeof(AG_MapMod));
 	m->curblk++;
 		
 	blk = &m->blks[m->curblk];
@@ -1973,17 +1983,17 @@ mapmod_begin(struct map *m)
 }
 
 void
-mapmod_cancel(struct map *m)
+AG_MapmodCancel(AG_Map *m)
 {
-	struct mapmod_blk *blk = &m->blks[m->curblk];
+	AG_MapModBlk *blk = &m->blks[m->curblk];
 
 	blk->cancel = 1;
 }
 
 void
-mapmod_end(struct map *m)
+AG_MapmodEnd(AG_Map *m)
 {
-	struct mapmod_blk *blk = &m->blks[m->curblk];
+	AG_MapModBlk *blk = &m->blks[m->curblk];
 	
 	if (blk->nmods == 0 || blk->cancel == 1) {
 		free_mapmod_blk(m, blk);
@@ -1993,28 +2003,28 @@ mapmod_end(struct map *m)
 }
 
 void
-map_undo(struct map *m)
+map_undo(AG_Map *m)
 {
-	struct mapmod_blk *blk = &m->blks[m->curblk];
+	AG_MapModBlk *blk = &m->blks[m->curblk];
 	int i;
 
 	if (m->curblk-1 <= 0)
 		return;
 
 	for (i = 0; i < blk->nmods; i++) {
-		struct mapmod *mm = &blk->mods[i];
+		AG_MapMod *mm = &blk->mods[i];
 
 		switch (mm->type) {
-		case MAPMOD_NODECHG:
+		case AG_MAPMOD_NODECHG:
 			{
-				struct node *n = &m->map[mm->mm_nodechg.y]
+				AG_Node *n = &m->map[mm->mm_nodechg.y]
 				                        [mm->mm_nodechg.x];
-				struct noderef *r;
+				AG_Nitem *r;
 				
-				node_clear(m, n, -1);
+				AG_NodeRemoveAll(m, n, -1);
 				TAILQ_FOREACH(r, &mm->mm_nodechg.node.nrefs,
 				    nrefs) {
-					node_copy_ref(r, m, n, -1);
+					AG_NodeCopyItem(r, m, n, -1);
 				}
 			}
 			break;
@@ -2028,41 +2038,41 @@ map_undo(struct map *m)
 }
 
 void
-map_redo(struct map *m)
+map_redo(AG_Map *m)
 {
 	/* TODO */
 }
 
 void
-mapmod_nodechg(struct map *m, int x, int y)
+AG_MapmodNodeChg(AG_Map *m, int x, int y)
 {
-	struct node *node = &m->map[y][x];
-	struct mapmod_blk *blk = &m->blks[m->nblks-1];
-	struct mapmod *mm;
-	struct noderef *sr;
+	AG_Node *node = &m->map[y][x];
+	AG_MapModBlk *blk = &m->blks[m->nblks-1];
+	AG_MapMod *mm;
+	AG_Nitem *sr;
 	int i;
 
 	for (i = 0; i < blk->nmods; i++) {
 		mm = &blk->mods[i];
-		if (mm->type == MAPMOD_NODECHG &&
+		if (mm->type == AG_MAPMOD_NODECHG &&
 		    mm->mm_nodechg.x == x &&
 		    mm->mm_nodechg.y == y)
 			return;
 	}
 
-	blk->mods = Realloc(blk->mods, (blk->nmods+1)*sizeof(struct mapmod));
+	blk->mods = Realloc(blk->mods, (blk->nmods+1)*sizeof(AG_MapMod));
 	mm = &blk->mods[blk->nmods++];
-	mm->type = MAPMOD_NODECHG;
+	mm->type = AG_MAPMOD_NODECHG;
 	mm->mm_nodechg.x = x;
 	mm->mm_nodechg.y = y;
-	node_init(&mm->mm_nodechg.node);
+	AG_NodeInit(&mm->mm_nodechg.node);
 
 	TAILQ_FOREACH(sr, &node->nrefs, nrefs)
-		node_copy_ref(sr, m, &mm->mm_nodechg.node, -1);
+		AG_NodeCopyItem(sr, m, &mm->mm_nodechg.node, -1);
 }
 
 void
-mapmod_layeradd(struct map *m, int l)
+AG_MapmodLayerAdd(AG_Map *m, int l)
 {
 }
 
@@ -2071,203 +2081,205 @@ mapmod_layeradd(struct map *m, int l)
 static void
 create_view(int argc, union evarg *argv)
 {
-	struct mapview *omv = argv[1].p;
-	struct window *pwin = argv[2].p;
-	struct map *map = omv->map;
-	struct mapview *mv;
-	struct window *win;
+	AG_Mapview *omv = argv[1].p;
+	AG_Window *pwin = argv[2].p;
+	AG_Map *map = omv->map;
+	AG_Mapview *mv;
+	AG_Window *win;
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("View: %s"), OBJECT(map)->name);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("View: %s"), AGOBJECT(map)->name);
 	
-	mv = mapview_new(win, map, 0, NULL, NULL);
-	mv->cam = map_add_camera(map, _("View"));
-	mapview_prescale(mv, 2, 2);
-	widget_focus(mv);
+	mv = AG_MapviewNew(win, map, 0, NULL, NULL);
+	mv->cam = AG_MapAddCamera(map, _("View"));
+	AG_MapviewPrescale(mv, 2, 2);
+	AG_WidgetFocus(mv);
 	
-	window_attach(pwin, win);
-	window_scale(win, -1, -1);
-	window_set_geometry(win, 0, 0, view->w/4, view->h/4);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowScale(win, -1, -1);
+	AG_WindowSetGeometry(win, 0, 0, agView->w/4, agView->h/4);
+	AG_WindowShow(win);
 }
 
 static void
 switch_tool(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct tool *ntool = argv[2].p;
+	AG_Mapview *mv = argv[1].p;
+	AG_Maptool *ntool = argv[2].p;
 
-	mapview_select_tool(mv, ntool, mv->map);
-	widget_focus(mv);
+	AG_MapviewSelectTool(mv, ntool, mv->map);
+	AG_WidgetFocus(mv);
 }
 
 static void
 resize_map(int argc, union evarg *argv)
 {
-	struct mspinbutton *msb = argv[0].p;
-	struct map *m = argv[1].p;
-	struct mapview *mv = argv[2].p;
+	AG_MSpinbutton *msb = argv[0].p;
+	AG_Map *m = argv[1].p;
+	AG_Mapview *mv = argv[2].p;
 
-	map_resize(m, msb->xvalue, msb->yvalue);
-	event_post(NULL, mv, "map-resized", NULL);
+	AG_MapResize(m, msb->xvalue, msb->yvalue);
+	AG_PostEvent(NULL, mv, "map-resized", NULL);
 }
 
 static void
 poll_undo(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct map *m = argv[1].p;
+	AG_Tlist *tl = argv[0].p;
+	AG_Map *m = argv[1].p;
 	int i, j;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	for (i = 0; i < m->nblks; i++) {
-		struct mapmod_blk *blk = &m->blks[i];
-		struct tlist_item *it;
+		AG_MapModBlk *blk = &m->blks[i];
+		AG_TlistItem *it;
 
-		it = tlist_insert(tl, NULL, "%sBlock %d (%d mods)",
+		it = AG_TlistAdd(tl, NULL, "%sBlock %d (%d mods)",
 		    i==m->curblk ? "*" : "", i, blk->nmods);
 		it->depth = 0;
 		for (j = 0; j < blk->nmods; j++) {
-			struct mapmod *mod = &blk->mods[j];
+			AG_MapMod *mod = &blk->mods[j];
 			
 			switch (mod->type) {
-			case MAPMOD_NODECHG:
-				it = tlist_insert(tl, NULL, "Nodechg (%d,%d)",
+			case AG_MAPMOD_NODECHG:
+				it = AG_TlistAdd(tl, NULL, "Nodechg (%d,%d)",
 				    mod->mm_nodechg.x, mod->mm_nodechg.y);
 				break;
-			case MAPMOD_LAYERADD:
-				it = tlist_insert(tl, NULL, "Layeradd (%d)",
+			case AG_MAPMOD_LAYERADD:
+				it = AG_TlistAdd(tl, NULL, "Layeradd (%d)",
 				    mod->mm_layeradd.nlayer);
 				break;
-			case MAPMOD_LAYERDEL:
-				it = tlist_insert(tl, NULL, "Layerdel (%d)",
+			case AG_MAPMOD_LAYERDEL:
+				it = AG_TlistAdd(tl, NULL, "Layerdel (%d)",
 				    mod->mm_layerdel.nlayer);
 				break;
 			}
 			it->depth = 1;
 		}
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 edit_properties(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct map *m = mv->map;
-	struct window *pwin = argv[2].p;
-	struct window *win;
-	struct box *bo;
-	struct mspinbutton *msb;
-	struct spinbutton *sb;
-	struct checkbox *cbox;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
+	AG_Mapview *mv = argv[1].p;
+	AG_Map *m = mv->map;
+	AG_Window *pwin = argv[2].p;
+	AG_Window *win;
+	AG_Box *bo;
+	AG_MSpinbutton *msb;
+	AG_Spinbutton *sb;
+	AG_Checkbox *cbox;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
 
-	if ((win = window_new(WINDOW_NO_RESIZE, "map-props-%s",
-	    OBJECT(m)->name)) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_NO_RESIZE, "map-props-%s",
+	    AGOBJECT(m)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, _("Properties of \"%s\""), OBJECT(m)->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	AG_WindowSetCaption(win, _("Properties of \"%s\""), AGOBJECT(m)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Map settings"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Map settings"), AG_BOX_VERT);
 	{
-		msb = mspinbutton_new(ntab, "x", _("Map size: "));
-		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+		msb = AG_MSpinbuttonNew(ntab, "x", _("Map size: "));
+		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
-		event_new(msb, "mspinbutton-return", resize_map, "%p,%p",
+		AG_SetEvent(msb, "mspinbutton-return", resize_map, "%p,%p",
 		    m, mv);
 		
-		msb = mspinbutton_new(ntab, ",", _("Origin position: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &m->origin.x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &m->origin.y);
-		mspinbutton_set_range(msb, 0, MAP_MAX_WIDTH);
+		msb = AG_MSpinbuttonNew(ntab, ",", _("Origin position: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &m->origin.x);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &m->origin.y);
+		AG_MSpinbuttonSetRange(msb, 0, AG_MAP_MAXWIDTH);
 
-		sb = spinbutton_new(ntab, _("Origin layer: "));
-		widget_bind(sb, "value", WIDGET_INT, &m->origin.layer);
+		sb = AG_SpinbuttonNew(ntab, _("Origin layer: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &m->origin.layer);
 	}
 
-	ntab = notebook_add_tab(nb, _("View"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("View"), AG_BOX_VERT);
 	{
-		msb = mspinbutton_new(ntab, ",", _("Node offset: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
-		mspinbutton_set_range(msb, -MAP_MAX_WIDTH/2, MAP_MAX_WIDTH/2);
+		msb = AG_MSpinbuttonNew(ntab, ",", _("Node offset: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mx);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->my);
+		AG_MSpinbuttonSetRange(msb,
+		   -AG_MAP_MAXWIDTH/2, AG_MAP_MAXWIDTH/2);
 	
 		/* XXX unsafe */
-		msb = mspinbutton_new(ntab, ",", _("Camera position: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &MV_CAM(mv).x);
-		widget_bind(msb, "yvalue", WIDGET_INT, &MV_CAM(mv).y);
+		msb = AG_MSpinbuttonNew(ntab, ",", _("Camera position: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &AGMCAM(mv).x);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &AGMCAM(mv).y);
 		
-		sb = spinbutton_new(ntab, _("Zoom factor: "));
-		widget_bind(sb, "value", WIDGET_INT, &MV_CAM(mv).zoom);
+		sb = AG_SpinbuttonNew(ntab, _("Zoom factor: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMCAM(mv).zoom);
 		
-		sb = spinbutton_new(ntab, _("Tile size: "));
-		widget_bind(sb, "value", WIDGET_INT, &MV_TILESZ(mv));
+		sb = AG_SpinbuttonNew(ntab, _("Tile size: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMTILESZ(mv));
 	
-		msb = mspinbutton_new(ntab, ",", _("Display offset (view): "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->xoffs);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->yoffs);
-		mspinbutton_set_range(msb, -MAP_MAX_TILESZ, MAP_MAX_TILESZ);
+		msb = AG_MSpinbuttonNew(ntab, ",",
+		    _("Display offset (view): "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->xoffs);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->yoffs);
+		AG_MSpinbuttonSetRange(msb, -AG_MAX_TILESZ, AG_MAX_TILESZ);
 		
-		msb = mspinbutton_new(ntab, "x", _("Display area: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
-		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+		msb = AG_MSpinbuttonNew(ntab, "x", _("Display area: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mw);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->mh);
+		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
 		
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		cbox = checkbox_new(ntab, _("Smooth scaling"));
-		widget_bind(cbox, "state", WIDGET_INT, &map_smooth_scaling);
+		cbox = AG_CheckboxNew(ntab, _("Smooth scaling"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT,
+		    &agMapSmoothScaling);
 		
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		
-		label_new(ntab, LABEL_POLLED, _("Camera: %i"), &mv->cam);
-		label_new(ntab, LABEL_POLLED_MT, _("Current layer: %i"),
+		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Camera: %i"), &mv->cam);
+		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Current layer: %i"),
 		    &m->lock, &m->cur_layer);
 
-		label_new(ntab, LABEL_POLLED, _("Cursor position: %ix%i"),
+		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Cursor position: %ix%i"),
 		    &mv->cx, &mv->cy);
-		label_new(ntab, LABEL_POLLED,
+		AG_LabelNew(ntab, AG_LABEL_POLLED,
 		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
 		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
-		label_new(ntab, LABEL_POLLED,
+		AG_LabelNew(ntab, AG_LABEL_POLLED,
 		    _("Effective selection: %[ibool] (%ix%i at %i,%i)"),
 		    &mv->esel.set,
 		    &mv->esel.w, &mv->esel.h, &mv->esel.x, &mv->esel.y);
 	}
 
-	ntab = notebook_add_tab(nb, _("Undo"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Undo"), AG_BOX_VERT);
 	{
-		struct tlist *tl;
+		AG_Tlist *tl;
 
-		tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-		WIDGET(tl)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		event_new(tl, "tlist-poll", poll_undo, "%p", mv->map);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+		AGWIDGET(tl)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_SetEvent(tl, "tlist-poll", poll_undo, "%p", mv->map);
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
-find_objs(struct tlist *tl, struct object *pob, int depth)
+find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 {
-	struct object *cob;
-	struct tlist_item *it;
+	AG_Object *cob;
+	AG_TlistItem *it;
 	
-	it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
-	    (pob->flags & OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
+	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
+	    (pob->flags & AG_OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
 	it->p1 = pob;
 	it->depth = depth;
 
-	if (OBJECT_TYPE(pob, "tileset")) {
-		struct object *ts = (struct object *)pob;
-		struct tlist_item *sit, *fit;
-		struct animation *anim;
+	if (AGOBJECT_TYPE(pob, "tileset")) {
+		AG_Object *ts = (AG_Object *)pob;
+		AG_TlistItem *sit, *fit;
 		int i;
 
 		it->class = "tileset";
@@ -2277,23 +2289,23 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 		if (ts->gfx != NULL &&
 		    (ts->gfx->nsprites > 0 ||
 		     ts->gfx->nanims > 0)) {
-			it->flags |= TLIST_HAS_CHILDREN;
+			it->flags |= AG_TLIST_HAS_CHILDREN;
 		}
-		if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    tlist_visible_children(tl, it)) {
+		if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
+		    AG_TlistVisibleChildren(tl, it)) {
 			for (i = 0; i < ts->gfx->nsprites; i++) {
-				struct sprite *spr = &SPRITE(ts,i);
+				AG_Sprite *spr = &AG_SPRITE(ts,i);
 				int x, y;
 			
 				if (spr->su == NULL) {
 					continue;
 				}
-				sit = tlist_insert(tl, NULL, "%s (%ux%u)",
+				sit = AG_TlistAdd(tl, NULL, "%s (%ux%u)",
 				    spr->name, spr->su->w, spr->su->h);
 				sit->depth = depth+1;
 				sit->class = "tile";
 				sit->p1 = spr;
-				tlist_set_icon(tl, sit, spr->su);
+				AG_TlistSetIcon(tl, sit, spr->su);
 			}
 		}
 		pthread_mutex_unlock(&ts->lock);
@@ -2302,12 +2314,12 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	}
 
 	if (!TAILQ_EMPTY(&pob->children)) {
-		it->flags |= TLIST_HAS_CHILDREN;
-		if (object_root(pob) == pob)
-			it->flags |= TLIST_VISIBLE_CHILDREN;
+		it->flags |= AG_TLIST_HAS_CHILDREN;
+		if (AG_ObjectRoot(pob) == pob)
+			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
 	}
-	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_children(tl, it)) {
+	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
+	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			find_objs(tl, cob, depth+1);
 	}
@@ -2316,60 +2328,60 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 static void
 poll_libs(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct object *pob = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_Object *pob = argv[1].p;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
-	lock_linkage();
+	AG_TlistClear(tl);
+	AG_LockLinkage();
 	find_objs(tl, pob, 0);
-	unlock_linkage();
-	tlist_restore_selections(tl);
+	AG_UnlockLinkage();
+	AG_TlistRestore(tl);
 }
 
 static void
 select_lib(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	AG_Mapview *mv = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
 	int state = argv[3].i;
-	struct tool *t;
+	AG_Maptool *t;
 
 	if (state == 0) {
 		if (mv->curtool != NULL &&
-		    (mv->curtool->ops == &insert_ops ||
-		     mv->curtool->ops == &ginsert_ops))
-		    	mapview_select_tool(mv, NULL, NULL);
+		    (mv->curtool->ops == &agMapInsertOps ||
+		     mv->curtool->ops == &agMapGInsertOps))
+		    	AG_MapviewSelectTool(mv, NULL, NULL);
 	} else {
 		if (strcmp(it->class, "tile") == 0) {
-			struct sprite *spr = it->p1;
+			AG_Sprite *spr = it->p1;
 	
-			if ((t = mapview_find_tool(mv, "Insert")) != NULL) {
-				struct insert_tool *ins =
-				    (struct insert_tool *)t;
+			if ((t = AG_MapviewFindTool(mv, "Insert")) != NULL) {
+				struct ag_map_insert_tool *ins =
+				    (struct ag_map_insert_tool*)t;
 
-				ins->snap_mode = SPRITE(spr->pgfx->pobj,
+				ins->snap_mode = AG_SPRITE(spr->pgfx->pobj,
 				                        spr->index).snap_mode;
 				ins->replace_mode = (ins->snap_mode ==
-				                     GFX_SNAP_TO_GRID);
+				                     AG_GFX_SNAP_TO_GRID);
 
 				if (mv->curtool != NULL) {
-					mapview_select_tool(mv, NULL, NULL);
+					AG_MapviewSelectTool(mv, NULL, NULL);
 				}
-				mapview_select_tool(mv, t, mv->map);
-				widget_focus(mv);
+				AG_MapviewSelectTool(mv, t, mv->map);
+				AG_WidgetFocus(mv);
 			}
 		} else if (strcmp(it->class, "object") == 0 &&
-		    OBJECT_SUBCLASS(it->p1, "actor")) {
-			if ((t = mapview_find_tool(mv, "Ginsert")) != NULL) {
+		    AGOBJECT_SUBCLASS(it->p1, "actor")) {
+			if ((t = AG_MapviewFindTool(mv, "Ginsert")) != NULL) {
 				if (mv->curtool != NULL) {
-					mapview_select_tool(mv, NULL, NULL);
+					AG_MapviewSelectTool(mv, NULL, NULL);
 				}
-				mapview_select_tool(mv, t, mv->map);
-				widget_focus(mv);
+				AG_MapviewSelectTool(mv, t, mv->map);
+				AG_WidgetFocus(mv);
 			}
 		} else {
-			mapview_select_tool(mv, NULL, NULL);
+			AG_MapviewSelectTool(mv, NULL, NULL);
 		}
 	}
 }
@@ -2377,51 +2389,51 @@ select_lib(int argc, union evarg *argv)
 static void
 poll_actors(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct mapview *mv = argv[1].p;
-	struct map *m = mv->map;
-	struct tlist_item *it;
-	struct actor *go;
+	AG_Tlist *tl = argv[0].p;
+	AG_Mapview *mv = argv[1].p;
+	AG_Map *m = mv->map;
+	AG_TlistItem *it;
+	AG_Actor *go;
 
-	tlist_clear_items(tl);
-	TAILQ_FOREACH(go, &SPACE(m)->actors, actors) {
-		it = tlist_insert(tl, object_icon(go), "%s [%d,%d %d-%d]",
-		    OBJECT(go)->name, go->g_map.x, go->g_map.y,
+	AG_TlistClear(tl);
+	TAILQ_FOREACH(go, &AG_SPACE(m)->actors, actors) {
+		it = AG_TlistAdd(tl, AG_ObjectIcon(go), "%s [%d,%d %d-%d]",
+		    AGOBJECT(go)->name, go->g_map.x, go->g_map.y,
 		    go->g_map.l0, go->g_map.l1);
 		it->p1 = go;
 		it->class = "actor";
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_layers(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct map *m = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_Map *m = argv[1].p;
+	AG_TlistItem *it;
 	int i;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	for (i = 0; i < m->nlayers; i++) {
-		struct map_layer *lay = &m->layers[i];
+		AG_MapLayer *lay = &m->layers[i];
 
-		it = tlist_insert(tl, ICON(LAYER_EDITOR_ICON), "%s%s%s",
+		it = AG_TlistAdd(tl, AGICON(LAYER_EDITOR_ICON), "%s%s%s",
 		    (i == m->cur_layer) ? "[*] " : "", lay->name,
 		    lay->visible ? "" : _(" (hidden)"));
 		it->p1 = lay;
 		it->class = "layer";
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 mask_layer(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct map_layer *lay = it->p1;
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_MapLayer *lay = it->p1;
 
 	lay->visible = !lay->visible;
 }
@@ -2429,13 +2441,13 @@ mask_layer(int argc, union evarg *argv)
 static void
 select_layer(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct map *m = argv[1].p;
-	struct tlist_item *it = tlist_selected_item(tl);
+	AG_Tlist *tl = argv[0].p;
+	AG_Map *m = argv[1].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	int nlayer;
 
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
-		if (&m->layers[nlayer] == (struct map_layer *)it->p1) {
+		if (&m->layers[nlayer] == (AG_MapLayer *)it->p1) {
 			m->cur_layer = nlayer;
 			break;
 		}
@@ -2445,10 +2457,10 @@ select_layer(int argc, union evarg *argv)
 static void
 delete_layer(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct map_layer *lay = it->p1;
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_MapLayer *lay = it->p1;
 	int i, x, y, nlayer;
 	
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
@@ -2467,13 +2479,13 @@ delete_layer(int argc, union evarg *argv)
 	}
 	for (i = nlayer; i <= m->nlayers; i++) {
 		memcpy(&m->layers[i], &m->layers[i+1],
-		    sizeof(struct map_layer));
+		    sizeof(AG_MapLayer));
 	}
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r, *nr;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r, *nr;
 
 			for (r = TAILQ_FIRST(&node->nrefs);
 			     r != TAILQ_END(&node->nrefs);
@@ -2481,8 +2493,8 @@ delete_layer(int argc, union evarg *argv)
 				nr = TAILQ_NEXT(r, nrefs);
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
-					noderef_destroy(m, r);
-					Free(r, M_MAP_NODEREF);
+					AG_NitemDestroy(m, r);
+					Free(r, M_MAP_NITEM);
 				} else if (r->layer > nlayer) {
 					r->layer--;
 				}
@@ -2494,10 +2506,10 @@ delete_layer(int argc, union evarg *argv)
 static void
 clear_layer(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct map_layer *lay = it->p1;
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_MapLayer *lay = it->p1;
 	int i, x, y, nlayer;
 	
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
@@ -2507,8 +2519,8 @@ clear_layer(int argc, union evarg *argv)
 	
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r, *nr;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r, *nr;
 
 			for (r = TAILQ_FIRST(&node->nrefs);
 			     r != TAILQ_END(&node->nrefs);
@@ -2516,8 +2528,8 @@ clear_layer(int argc, union evarg *argv)
 				nr = TAILQ_NEXT(r, nrefs);
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
-					noderef_destroy(m, r);
-					Free(r, M_MAP_NODEREF);
+					AG_NitemDestroy(m, r);
+					Free(r, M_MAP_NITEM);
 				}
 			}
 		}
@@ -2527,12 +2539,12 @@ clear_layer(int argc, union evarg *argv)
 static void
 move_layer(int argc, union evarg *argv)
 {
-	char tmp[MAP_LAYER_NAME_MAX];
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
+	char tmp[AG_MAP_MAXLAYERNAME];
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
 	int movedown = argv[3].i;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct map_layer *lay1 = it->p1, *lay2;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_MapLayer *lay1 = it->p1, *lay2;
 	int x, y;
 	int l1, l2;
 
@@ -2560,8 +2572,8 @@ move_layer(int argc, union evarg *argv)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r;
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 				if (r->layer == l1) {
@@ -2573,24 +2585,24 @@ move_layer(int argc, union evarg *argv)
 		}
 	}
 
-	tlist_select_pointer(tl, lay2);
+	AG_TlistSelectPtr(tl, lay2);
 }
 
 static void
 mask_layer_menu(int argc, union evarg *argv)
 {
-	struct AGMenu *menu = argv[0].p;
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
-	struct AGMenuItem *item = argv[argc-1].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct map_layer *lay = it->p1;
+	AG_Menu *menu = argv[0].p;
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
+	AG_MenuItem *item = argv[argc-1].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_MapLayer *lay = it->p1;
 
-	menu_set_label(item, lay->visible ? _("Hide layer") : _("Show layer"));
+	AG_MenuSetLabel(item, lay->visible ? _("Hide layer") : _("Show layer"));
 	item->state = lay->visible;
 
 	if (item->onclick == NULL) {
-		item->onclick = event_new(menu, NULL, mask_layer,
+		item->onclick = AG_SetEvent(menu, NULL, mask_layer,
 		    "%p,%p", tl, m);
 	}
 }
@@ -2598,174 +2610,174 @@ mask_layer_menu(int argc, union evarg *argv)
 static void
 push_layer(int argc, union evarg *argv)
 {
-	char name[MAP_LAYER_NAME_MAX];
-	struct map *m = argv[1].p;
-	struct textbox *tb = argv[2].p;
+	char name[AG_MAP_MAXLAYERNAME];
+	AG_Map *m = argv[1].p;
+	AG_Textbox *tb = argv[2].p;
 	
-	textbox_copy_string(tb, name, sizeof(name));
+	AG_TextboxCopyString(tb, name, sizeof(name));
 
-	if (map_push_layer(m, name) != 0) {
-		text_msg(MSG_ERROR, "%s", error_get());
+	if (AG_MapPushLayer(m, name) != 0) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	} else {
-		textbox_printf(tb, NULL);
+		AG_TextboxPrintf(tb, NULL);
 	}
 }
 
 static void
 noderef_edit(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[0].p;
+	AG_Mapview *mv = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int xoffs = argv[4].i;
 	int yoffs = argv[5].i;
-	struct noderef *r;
-	struct window *pwin, *win;
-	struct spinbutton *sb;
-	struct mspinbutton *msb;
+	AG_Nitem *r;
+	AG_Window *pwin, *win;
+	AG_Spinbutton *sb;
+	AG_MSpinbutton *msb;
 
-	if ((r = noderef_locate(mv->map, mv->mouse.xmap, mv->mouse.ymap,
+	if ((r = AG_NitemLocate(mv->map, mv->mouse.xmap, mv->mouse.ymap,
 	    mv->cam)) == NULL) {
 		return;
 	}
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Node reference"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 1);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Node reference"));
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
-	label_staticf(win, _("Type: %s"),
-	    (r->type == NODEREF_SPRITE) ? _("Sprite") :
-	    (r->type == NODEREF_ANIM) ? _("Animation") :
-	    (r->type == NODEREF_WARP) ? _("Warp point") : "?");
+	AG_LabelStaticF(win, _("Type: %s"),
+	    (r->type == AG_NITEM_SPRITE) ? _("Sprite") :
+	    (r->type == AG_NITEM_ANIM) ? _("Animation") :
+	    (r->type == AG_NITEM_WARP) ? _("Warp point") : "?");
 
-	msb = mspinbutton_new(win, ",", _("Centering: "));
-	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xcenter);
-	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.ycenter);
+	msb = AG_MSpinbuttonNew(win, ",", _("Centering: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xcenter);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ycenter);
 	
-	msb = mspinbutton_new(win, ",", _("Motion: "));
-	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xmotion);
-	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.ymotion);
+	msb = AG_MSpinbuttonNew(win, ",", _("Motion: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xmotion);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ymotion);
 	
-	msb = mspinbutton_new(win, ",", _("Origin: "));
-	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.xorigin);
-	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.yorigin);
+	msb = AG_MSpinbuttonNew(win, ",", _("Origin: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xorigin);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.yorigin);
 	
-	separator_new(win, SEPARATOR_HORIZ);
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	msb = mspinbutton_new(win, ",", _("Source coords: "));
-	widget_bind(msb, "xvalue", WIDGET_SINT16, &r->r_gfx.rs.x);
-	widget_bind(msb, "yvalue", WIDGET_SINT16, &r->r_gfx.rs.y);
+	msb = AG_MSpinbuttonNew(win, ",", _("Source coords: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.x);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.y);
 	
-	msb = mspinbutton_new(win, "x", _("Source dims: "));
-	widget_bind(msb, "xvalue", WIDGET_UINT16, &r->r_gfx.rs.w);
-	widget_bind(msb, "yvalue", WIDGET_UINT16, &r->r_gfx.rs.h);
+	msb = AG_MSpinbuttonNew(win, "x", _("Source dims: "));
+	AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.w);
+	AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.h);
 
-	separator_new(win, SEPARATOR_HORIZ);
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	sb = spinbutton_new(win, _("Layer: "));
-	widget_bind(sb, "value", WIDGET_UINT8, &r->layer);
+	sb = AG_SpinbuttonNew(win, _("Layer: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &r->layer);
 
-	sb = spinbutton_new(win, _("Friction: "));
-	widget_bind(sb, "value", WIDGET_SINT8, &r->friction);
+	sb = AG_SpinbuttonNew(win, _("Friction: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_SINT8, &r->friction);
 
-	if ((pwin = widget_parent_window(mv)) != NULL) {
-		window_attach(pwin, win);
+	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {
+		AG_WindowAttach(pwin, win);
 	}
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 static void
 edit_prop_mode(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
+	AG_Mapview *mv = argv[1].p;
 	int flag = argv[2].i;
 
 	if (flag != 0) {
-		mv->mode = MAPVIEW_EDIT_ATTRS;
+		mv->mode = AG_MAPVIEW_EDIT_ATTRS;
 		mv->edit_attr = flag;
 	} else {
-		mv->mode = MAPVIEW_EDIT;
+		mv->mode = AG_MAPVIEW_EDIT;
 	}
 }
 
 static void
 undo(int argc, union evarg *argv)
 {
-	map_undo((struct map *)argv[1].p);
+	map_undo((AG_Map *)argv[1].p);
 }
 
 static void
 redo(int argc, union evarg *argv)
 {
-	map_redo((struct map *)argv[1].p);
+	map_redo((AG_Map *)argv[1].p);
 }
 
 static void
 center_to_origin(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
+	AG_Mapview *mv = argv[1].p;
 
-	MV_CAM(mv).x = mv->map->origin.x*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
-	MV_CAM(mv).y = mv->map->origin.y*MV_TILESZ(mv) - MV_TILESZ(mv)/2;
-	mapview_update_camera(mv);
+	AGMCAM(mv).x = mv->map->origin.x*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
+	AGMCAM(mv).y = mv->map->origin.y*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
+	AG_MapviewUpdateCamera(mv);
 }
 
 static void
 detach_actor(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct map *m = argv[2].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	AG_Map *m = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl)) != NULL &&
+	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
 	     strcmp(it->class, "actor") == 0) {
-		struct actor *go = it->p1;
+		AG_Actor *go = it->p1;
 	
-		TAILQ_REMOVE(&SPACE(m)->actors, go, actors);
-		space_detach(m, go);
+		TAILQ_REMOVE(&AG_SPACE(m)->actors, go, actors);
+		AG_SpaceDetach(m, go);
 	}
 }
 
 static void
 control_actor(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct mapview *mv = argv[2].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[1].p;
+	AG_Mapview *mv = argv[2].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl)) != NULL &&
+	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
 	     strcmp(it->class, "actor") == 0) {
-		struct actor *go = it->p1;
+		AG_Actor *go = it->p1;
 	
-		mapview_control(mv, _("Player 1"), go);
+		AG_MapviewControl(mv, _("Player 1"), go);
 	}
 }
 
 static void
 remove_tileset_refs(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct mapview *mv = argv[2].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct object *ts = it->p1;
-	struct map *m = mv->map;
+	AG_Tlist *tl = argv[1].p;
+	AG_Mapview *mv = argv[2].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_Object *ts = it->p1;
+	AG_Map *m = mv->map;
 	u_int x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *n = &m->map[y][x];
-			struct noderef *r, *r2;
+			AG_Node *n = &m->map[y][x];
+			AG_Nitem *r, *r2;
 
 			for (r = TAILQ_FIRST(&n->nrefs);
 			     r != TAILQ_END(&n->nrefs);
 			     r = r2) {
 				r2 = TAILQ_NEXT(r, nrefs);
-				if ((r->type == NODEREF_SPRITE &&
+				if ((r->type == AG_NITEM_SPRITE &&
 				     r->r_sprite.obj == ts) ||
-				    (r->type == NODEREF_ANIM &&
+				    (r->type == AG_NITEM_ANIM &&
 				     r->r_anim.obj == ts))
-					node_remove_ref(m, n, r);
+					AG_NodeDelItem(m, n, r);
 			}
 		}
 	}
@@ -2774,26 +2786,26 @@ remove_tileset_refs(int argc, union evarg *argv)
 static void
 remove_tile_refs(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct mapview *mv = argv[2].p;
-	struct tlist_item *it = tlist_selected_item(tl);
-	struct sprite *spr = it->p1;
-	struct map *m = mv->map;
+	AG_Tlist *tl = argv[1].p;
+	AG_Mapview *mv = argv[2].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_Sprite *spr = it->p1;
+	AG_Map *m = mv->map;
 	u_int x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *n = &m->map[y][x];
-			struct noderef *r, *r2;
+			AG_Node *n = &m->map[y][x];
+			AG_Nitem *r, *r2;
 
 			for (r = TAILQ_FIRST(&n->nrefs);
 			     r != TAILQ_END(&n->nrefs);
 			     r = r2) {
 				r2 = TAILQ_NEXT(r, nrefs);
-				if ((r->type == NODEREF_SPRITE &&
+				if ((r->type == AG_NITEM_SPRITE &&
 				     r->r_sprite.obj == spr->pgfx->pobj &&
 				     r->r_sprite.offs == spr->index))
-					node_remove_ref(m, n, r);
+					AG_NodeDelItem(m, n, r);
 			}
 		}
 	}
@@ -2802,257 +2814,258 @@ remove_tile_refs(int argc, union evarg *argv)
 void *
 map_edit(void *p)
 {
-	struct map *m = p;
-	struct window *win;
-	struct toolbar *toolbar;
-	struct statusbar *statbar;
-	struct scrollbar *hbar, *vbar;
-	struct combo *com;
-	struct mapview *mv;
-	struct AGMenu *menu;
-	struct AGMenuItem *pitem;
-	struct box *box_h, *box_v;
-	struct hpane *hpane;
-	struct hpane_div *hdiv;
-	struct vpane *vpane;
-	struct vpane_div *vdiv;
-	struct tool *tool;
-	int flags = MAPVIEW_GRID;
+	AG_Map *m = p;
+	AG_Window *win;
+	AG_Toolbar *toolbar;
+	AG_Statusbar *statbar;
+	AG_Scrollbar *hbar, *vbar;
+	AG_Combo *com;
+	AG_Mapview *mv;
+	AG_Menu *menu;
+	AG_MenuItem *pitem;
+	AG_Box *box_h, *box_v;
+	AG_HPane *hpane;
+	AG_HPaneDiv *hdiv;
+	AG_VPane *vpane;
+	AG_VPaneDiv *vdiv;
+	AG_Maptool *tool;
+	int flags = AG_MAPVIEW_GRID;
 
-	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
-		flags |= MAPVIEW_EDIT;
+	if ((AGOBJECT(m)->flags & AG_OBJECT_READONLY) == 0)
+		flags |= AG_MAPVIEW_EDIT;
 	
-	win = window_new(0, NULL);
-	window_set_caption(win, "%s", OBJECT(m)->name);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, "%s", AGOBJECT(m)->name);
 
-	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(toolbar, TOOLBAR_VERT, 2, 0);
-	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
-	statusbar_init(statbar);
+	toolbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	AG_ToolbarInit(toolbar, AG_TOOLBAR_VERT, 2, 0);
+	statbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
+	AG_StatusbarInit(statbar);
 	
-	mv = Malloc(sizeof(struct mapview), M_WIDGET);
-	mapview_init(mv, m, flags, toolbar, statbar);
-	mapview_prescale(mv, 2, 2);
-	event_new(mv, "mapview-dblclick", noderef_edit, NULL);
+	mv = Malloc(sizeof(AG_Mapview), M_WIDGET);
+	AG_MapviewInit(mv, m, flags, toolbar, statbar);
+	AG_MapviewPrescale(mv, 2, 2);
+	AG_SetEvent(mv, "mapview-dblclick", noderef_edit, NULL);
 	
-	menu = menu_new(win);
-	pitem = menu_add_item(menu, _("File"));
+	menu = AG_MenuNew(win);
+	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		objmgr_generic_menu(pitem, m);
-		menu_separator(pitem);
-		menu_action_kb(pitem, _("Close document"), CLOSE_ICON,
+		AG_ObjMgrGenericMenu(pitem, m);
+		AG_MenuSeparator(pitem);
+		AG_MenuActionKb(pitem, _("Close document"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
-		    window_generic_close, "%p", win);
+		    AG_WindowCloseGenEv, "%p", win);
 	}
 	
-	pitem = menu_add_item(menu, _("Edit"));
+	pitem = AG_MenuAddItem(menu, _("Edit"));
 	{
-		menu_action(pitem, _("Undo"), -1, undo, "%p", m);
-		menu_action(pitem, _("Redo"), -1, redo, "%p", m);
+		AG_MenuAction(pitem, _("Undo"), -1, undo, "%p", m);
+		AG_MenuAction(pitem, _("Redo"), -1, redo, "%p", m);
 
-		menu_separator(pitem);
+		AG_MenuSeparator(pitem);
 
-		menu_action(pitem, _("Map settings..."), SETTINGS_ICON,
+		AG_MenuAction(pitem, _("Map settings..."), SETTINGS_ICON,
 		    edit_properties, "%p,%p", mv, win);
 	}
 	
-	pitem = menu_add_item(menu, _("Attributes"));
+	pitem = AG_MenuAddItem(menu, _("Attributes"));
 	{
-		menu_action(pitem, _("None"), -1,
+		AG_MenuAction(pitem, _("None"), -1,
 		    edit_prop_mode, "%p,%i", mv, 0);
 
-		menu_action(pitem, _("Walkability"), WALKABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, NODEREF_BLOCK);
-		menu_action(pitem, _("Climbability"), CLIMBABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, NODEREF_CLIMBABLE);
-		menu_action(pitem, _("Jumpability"), JUMPABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, NODEREF_JUMPABLE);
-		menu_action(pitem, _("Slippery"), SLIPPAGE_ICON,
-		    edit_prop_mode, "%p,%i", mv, NODEREF_SLIPPERY);
+		AG_MenuAction(pitem, _("Walkability"), WALKABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, AG_NITEM_BLOCK);
+		AG_MenuAction(pitem, _("Climbability"), CLIMBABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, AG_NITEM_CLIMBABLE);
+		AG_MenuAction(pitem, _("Jumpability"), JUMPABILITY_ICON,
+		    edit_prop_mode, "%p,%i", mv, AG_NITEM_JUMPABLE);
+		AG_MenuAction(pitem, _("Slippery"), SLIPPAGE_ICON,
+		    edit_prop_mode, "%p,%i", mv, AG_NITEM_SLIPPERY);
 	}
 
-	pitem = menu_add_item(menu, _("View"));
+	pitem = AG_MenuAddItem(menu, _("View"));
 	{
-		extern int mapview_bg_moving;
+		extern int agMapviewAnimatedBg;
 
-		menu_action(pitem, _("Create view..."), NEW_VIEW_ICON,
+		AG_MenuAction(pitem, _("Create view..."), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
 		
-		menu_action(pitem, _("Center around origin"), VGORIGIN_ICON,
+		AG_MenuAction(pitem, _("Center around origin"), VGORIGIN_ICON,
 		    center_to_origin, "%p", mv);
 
-		menu_separator(pitem);
+		AG_MenuSeparator(pitem);
 
-		menu_int_flags(pitem, _("Show grid"), GRID_ICON,
-		    &mv->flags, MAPVIEW_GRID, 0);
-		menu_int_flags(pitem, _("Show background"), GRID_ICON,
-		    &mv->flags, MAPVIEW_NO_BG, 1);
-		menu_int_bool(pitem, _("Animate background"), GRID_ICON,
-		    &mapview_bg_moving, 0);
-		menu_int_flags(pitem, _("Show map origin"), VGORIGIN_ICON,
-		    &mv->flags, MAPVIEW_SHOW_ORIGIN, 0);
+		AG_MenuIntFlags(pitem, _("Show grid"), GRID_ICON,
+		    &mv->flags, AG_MAPVIEW_GRID, 0);
+		AG_MenuIntFlags(pitem, _("Show background"), GRID_ICON,
+		    &mv->flags, AG_MAPVIEW_NO_BG, 1);
+		AG_MenuIntBool(pitem, _("Animate background"), GRID_ICON,
+		    &agMapviewAnimatedBg, 0);
+		AG_MenuIntFlags(pitem, _("Show map origin"), VGORIGIN_ICON,
+		    &mv->flags, AG_MAPVIEW_SHOW_ORIGIN, 0);
 #ifdef DEBUG
-		menu_int_flags(pitem, _("Show element offsets"), GRID_ICON,
-		    &mv->flags, MAPVIEW_SHOW_OFFSETS, 0);
+		AG_MenuIntFlags(pitem, _("Show element offsets"), GRID_ICON,
+		    &mv->flags, AG_MAPVIEW_SHOW_OFFSETS, 0);
 #endif
 	}
 	
-	hpane = hpane_new(win, HPANE_WFILL|HPANE_HFILL);
-	hdiv = hpane_add_div(hpane,
-	    BOX_VERT,  BOX_HFILL,
-	    BOX_HORIZ, BOX_HFILL|BOX_WFILL);
+	hpane = AG_HPaneNew(win, AG_HPANE_WFILL|AG_HPANE_HFILL);
+	hdiv = AG_HPaneAddDiv(hpane,
+	    AG_BOX_VERT,  AG_BOX_HFILL,
+	    AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_WFILL);
 	{
-		struct notebook *nb;
-		struct notebook_tab *ntab;
-		struct tlist *tl;
-		struct AGMenuItem *mi;
+		AG_Notebook *nb;
+		AG_NotebookTab *ntab;
+		AG_Tlist *tl;
+		AG_MenuItem *mi;
 
-		vpane = vpane_new(hdiv->box1, VPANE_WFILL|VPANE_HFILL);
-		vdiv = vpane_add_div(vpane,
-		    BOX_VERT, BOX_WFILL|BOX_HFILL,
-		    BOX_VERT, BOX_WFILL);
+		vpane = AG_VPaneNew(hdiv->box1, AG_VPANE_WFILL|AG_VPANE_HFILL);
+		vdiv = AG_VPaneAddDiv(vpane,
+		    AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL,
+		    AG_BOX_VERT, AG_BOX_WFILL);
 
-		nb = notebook_new(vdiv->box1, NOTEBOOK_HFILL|NOTEBOOK_WFILL);
-		ntab = notebook_add_tab(nb, _("Library"), BOX_VERT);
+		nb = AG_NotebookNew(vdiv->box1, AG_NOTEBOOK_HFILL|
+					        AG_NOTEBOOK_WFILL);
+		ntab = AG_NotebookAddTab(nb, _("Library"), AG_BOX_VERT);
 		{
-			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-			event_new(tl, "tlist-poll", poll_libs, "%p", world);
-			event_new(tl, "tlist-changed", select_lib, "%p", mv);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+			AG_SetEvent(tl, "tlist-poll", poll_libs, "%p", agWorld);
+			AG_SetEvent(tl, "tlist-changed", select_lib, "%p", mv);
 			mv->lib_tl = tl;
-			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
+			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 
-			mi = tlist_set_popup(mv->lib_tl, "tileset");
+			mi = AG_TlistSetPopup(mv->lib_tl, "tileset");
 			{
-				menu_action(mi, _("Remove all references to"),
+				AG_MenuAction(mi, _("Remove all references to"),
 				    TRASH_ICON,
 				    remove_tileset_refs, "%p,%p", mv->lib_tl,
 				    mv); 
 			}
 			
-			mi = tlist_set_popup(mv->lib_tl, "tile");
+			mi = AG_TlistSetPopup(mv->lib_tl, "tile");
 			{
-				menu_action(mi, _("Remove all references to"),
+				AG_MenuAction(mi, _("Remove all references to"),
 				    TRASH_ICON,
 				    remove_tile_refs, "%p,%p", mv->lib_tl, mv); 
 			}
 
 		}
-		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, _("Objects"), AG_BOX_VERT);
 		{
-			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
-			event_new(tl, "tlist-poll", poll_actors, "%p", mv);
-//			event_new(tl, "tlist-changed", select_obj, "%p", mv);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+			AG_SetEvent(tl, "tlist-poll", poll_actors, "%p", mv);
+//			AG_SetEvent(tl, "tlist-changed", select_obj, "%p", mv);
 			mv->objs_tl = tl;
-			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
+			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 			
-			mi = tlist_set_popup(mv->objs_tl, "actor");
+			mi = AG_TlistSetPopup(mv->objs_tl, "actor");
 			{
-				menu_action(mi, _("Control actor"),
+				AG_MenuAction(mi, _("Control actor"),
 				    OBJ_ICON, control_actor,
 				    "%p,%p", mv->objs_tl, mv); 
 
-				menu_action(mi, _("Detach actor"),
+				AG_MenuAction(mi, _("Detach actor"),
 				    ERASER_TOOL_ICON, detach_actor,
 				    "%p,%p", mv->objs_tl, m); 
 			}
 		}
-		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, _("Layers"), AG_BOX_VERT);
 		{
-			struct textbox *tb;
-			struct button *bu;
+			AG_Textbox *tb;
+			AG_Button *bu;
 
-			mv->layers_tl = tlist_new(ntab, TLIST_POLL);
-			tlist_set_item_height(mv->layers_tl, TILESZ);
-			event_new(mv->layers_tl, "tlist-poll", poll_layers,
+			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+			AG_TlistSetItemHeight(mv->layers_tl, AGTILESZ);
+			AG_SetEvent(mv->layers_tl, "tlist-poll", poll_layers,
 			    "%p", m);
-			event_new(mv->layers_tl, "tlist-dblclick", select_layer,
-			    "%p", m);
+			AG_SetEvent(mv->layers_tl, "tlist-dblclick",
+			    select_layer, "%p", m);
 
-			mi = tlist_set_popup(mv->layers_tl, "layer");
+			mi = AG_TlistSetPopup(mv->layers_tl, "layer");
 			{
-				menu_dynamic(mi, LAYER_EDITOR_ICON,
+				AG_MenuDynamic(mi, LAYER_EDITOR_ICON,
 				    mask_layer_menu, "%p", mv->layers_tl, m);
 			
-				menu_action(mi, _("Delete layer"),
+				AG_MenuAction(mi, _("Delete layer"),
 				    ERASER_TOOL_ICON, delete_layer,
 				    "%p,%p", mv->layers_tl, m); 
 				
-				menu_action(mi, _("Clear layer"),
+				AG_MenuAction(mi, _("Clear layer"),
 				    ERASER_TOOL_ICON, clear_layer,
 				    "%p,%p", mv->layers_tl, m); 
 				
-				menu_separator(mi);
+				AG_MenuSeparator(mi);
 				
-				menu_action_kb(mi, _("Move layer up"),
+				AG_MenuActionKb(mi, _("Move layer up"),
 				    OBJMOVEUP_ICON, SDLK_u, KMOD_SHIFT,
 				    move_layer, "%p,%p,%i", mv->layers_tl,
 				    m, 0); 
-				menu_action_kb(mi, _("Move layer down"),
+				AG_MenuActionKb(mi, _("Move layer down"),
 				    OBJMOVEDOWN_ICON, SDLK_d, KMOD_SHIFT,
 				    move_layer, "%p,%p,%i", mv->layers_tl,
 				    m, 1); 
 			}
 
-			box_h = box_new(ntab, BOX_HORIZ, BOX_WFILL);
+			box_h = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_WFILL);
 			{
-				tb = textbox_new(box_h, _("Name: "));
-				event_new(tb, "textbox-return", push_layer,
+				tb = AG_TextboxNew(box_h, _("Name: "));
+				AG_SetEvent(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 			}
-			bu = button_new(ntab, _("Push"));
-			WIDGET(bu)->flags |= WIDGET_WFILL;
-			event_new(bu, "button-pushed", push_layer,
+			bu = AG_ButtonNew(ntab, _("Push"));
+			AGWIDGET(bu)->flags |= AG_WIDGET_WFILL;
+			AG_SetEvent(bu, "button-pushed", push_layer,
 			    "%p, %p", m, tb);
 		}
 		
-		separator_new(hdiv->box1, SEPARATOR_HORIZ);
+		AG_SeparatorNew(hdiv->box1, AG_SEPARATOR_HORIZ);
 		
-		vbar = scrollbar_new(hdiv->box2, SCROLLBAR_VERT);
-		box_v = box_new(hdiv->box2, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		vbar = AG_ScrollbarNew(hdiv->box2, AG_SCROLLBAR_VERT);
+		box_v = AG_BoxNew(hdiv->box2, AG_BOX_VERT, AG_BOX_WFILL|
+		                                           AG_BOX_HFILL);
 		{
-			object_attach(box_v, mv);
-			hbar = scrollbar_new(box_v, SCROLLBAR_HORIZ);
+			AG_ObjectAttach(box_v, mv);
+			hbar = AG_ScrollbarNew(box_v, AG_SCROLLBAR_HORIZ);
 		}
-		object_attach(hdiv->box2, toolbar);
+		AG_ObjectAttach(hdiv->box2, toolbar);
 	}
 
-	pitem = menu_add_item(menu, _("Tools"));
+	pitem = AG_MenuAddItem(menu, _("Tools"));
 	{
-		const struct tool_ops *ops[] = {
-			&nodesel_ops,
-			&refsel_ops,
-			&fill_tool_ops,
-			&eraser_ops,
-			&flip_ops,
-			&invert_ops,
-			&insert_ops,
-			&ginsert_ops
+		const AG_MaptoolOps *ops[] = {
+			&agMapNodeselOps,
+			&agMapRefselOps,
+			&agMapFillOps,
+			&agMapEraserOps,
+			&agMapFlipOps,
+			&agMapInvertOps,
+			&agMapInsertOps,
+			&agMapGInsertOps
 		};
 		const int nops = sizeof(ops) / sizeof(ops[0]);
-		struct tool *t;
+		AG_Maptool *t;
 		int i;
 
 		for (i = 0; i < nops; i++) {
-			t = mapview_reg_tool(mv, ops[i], m);
+			t = AG_MapviewRegTool(mv, ops[i], m);
 			t->pane = (void *)vdiv->box2;
-			menu_action(pitem, _(ops[i]->desc), ops[i]->icon,
+			AG_MenuAction(pitem, _(ops[i]->desc), ops[i]->icon,
 			    switch_tool, "%p, %p", mv, t);
 		}
 	}
 	
+	AG_MapviewUseScrollbars(mv, hbar, vbar);
+	AG_ObjectAttach(win, statbar);
 
-	mapview_set_scrollbars(mv, hbar, vbar);
-	object_attach(win, statbar);
+	AG_WindowScale(win, -1, -1);
+	AG_WindowSetGeometry(win,
+	    agView->w/6, agView->h/6,
+	    2*agView->w/3, 2*agView->h/3);
 
-	window_scale(win, -1, -1);
-	window_set_geometry(win,
-	    view->w/6, view->h/6,
-	    2*view->w/3, 2*view->h/3);
-
-	widget_replace_surface(mv->status, mv->status->surface,
-	    text_render(NULL, -1, COLOR(TEXT_COLOR),
+	AG_WidgetReplaceSurface(mv->status, mv->status->surface,
+	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
 	    _("Select a tool or double-click on an element to insert.")));
-	widget_focus(mv);
+	AG_WidgetFocus(mv);
 	return (win);
 }
 #endif /* EDITION */

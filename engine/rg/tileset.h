@@ -1,16 +1,16 @@
-/*	$Csoft: tileset.h,v 1.12 2005/09/07 02:28:15 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.13 2005/09/19 01:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
 #define _AGAR_RG_TILESET_H_
 
-struct tileset;
-struct tile;
-struct sketch;
-struct pixmap;
-struct feature;
-struct animation;
-struct texture;
+struct rg_tileset;
+struct rg_tile;
+struct rg_sketch;
+struct rg_pixmap;
+struct rg_feature;
+struct rg_anim;
+struct rg_texture;
 
 #include <engine/vg/vg.h>
 #include <engine/rg/tile.h>
@@ -25,42 +25,41 @@ struct texture;
 
 #define TILESET_TEMPLATE_MAX 24
 
-struct tileset {
-	struct object obj;
+typedef struct rg_tileset {
+	struct ag_object obj;
 	pthread_mutex_t	lock;
 	char template[TILESET_TEMPLATE_MAX];
 	SDL_PixelFormat *fmt;
 	SDL_Surface *icon;
 	int flags;
 	Uint32 max_sprites;
-	TAILQ_HEAD(, tile) tiles;
-	TAILQ_HEAD(, sketch) sketches;
-	TAILQ_HEAD(, pixmap) pixmaps;
-	TAILQ_HEAD(, feature) features;
-	TAILQ_HEAD(, animation) animations;
-	TAILQ_HEAD(, texture) textures;
-};
+	TAILQ_HEAD(, rg_tile) tiles;
+	TAILQ_HEAD(, rg_sketch) sketches;
+	TAILQ_HEAD(, rg_pixmap) pixmaps;
+	TAILQ_HEAD(, rg_feature) features;
+	TAILQ_HEAD(, rg_anim) animations;
+	TAILQ_HEAD(, rg_texture) textures;
+} RG_Tileset;
 
-#define TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
+#define RG_TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
 
 __BEGIN_DECLS
-struct tileset	*tileset_new(void *, const char *);
-void		 tileset_init(void *, const char *);
-void		 tileset_reinit(void *);
-void		 tileset_destroy(void *);
-int		 tileset_load(void *, struct netbuf *);
-int		 tileset_save(void *, struct netbuf *);
-void		*tileset_edit(void *);
+void		 RG_TilesetInit(void *, const char *);
+void		 RG_TilesetReinit(void *);
+void		 RG_TilesetDestroy(void *);
+int		 RG_TilesetLoad(void *, AG_Netbuf *);
+int		 RG_TilesetSave(void *, AG_Netbuf *);
+void		*RG_TilesetEdit(void *);
 
-__inline__ int tileset_insert_sprite(struct tileset *, SDL_Surface *);
+__inline__ int RG_TilesetInsertSprite(RG_Tileset *, SDL_Surface *);
 
-__inline__ struct tile	 *tileset_find_tile(struct tileset *, const char *);
-__inline__ struct sketch *tileset_find_sketch(struct tileset *, const char *);
-__inline__ struct pixmap *tileset_find_pixmap(struct tileset *, const char *);
-__inline__ struct animation *tileset_find_animation(struct tileset *,
+__inline__ RG_Tile	 *RG_TilesetFindTile(RG_Tileset *, const char *);
+__inline__ RG_Sketch *RG_TilesetFindSketch(RG_Tileset *, const char *);
+__inline__ RG_Pixmap *RG_TilesetFindPixmap(RG_Tileset *, const char *);
+__inline__ RG_Anim *RG_TilesetFindAnim(RG_Tileset *,
 		                                    const char *);
-struct pixmap *tileset_resolve_pixmap(const char *, const char *);
-struct tile *tileset_resolve_tile(const char *, const char *);
+RG_Pixmap *RG_TilesetResvPixmap(const char *, const char *);
+RG_Tile *RG_TilesetResvTile(const char *, const char *);
 __END_DECLS
 
 #include "close_code.h"

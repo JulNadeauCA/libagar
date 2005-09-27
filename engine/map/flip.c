@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.9 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.10 2005/08/27 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,22 +41,23 @@ static int multi_ind = 0;
 static void
 flip_init(void *p)
 {
-	tool_push_status(p, _("Select element and use $(L)=Mirror, $(R)=Flip"));
+	AG_MaptoolPushStatus(p,
+	    _("Select element and use $(L)=Mirror, $(R)=Flip"));
 }
 
 static void
 flip_pane(void *p, void *con)
 {
-	struct checkbox *cb;
+	AG_Checkbox *cb;
 
-	cb = checkbox_new(con, _("Flip entire selection"));
-	widget_bind(cb, "state", WIDGET_INT, &multi_ind);
+	cb = AG_CheckboxNew(con, _("Flip entire selection"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &multi_ind);
 }
 
 static void
-toggle_transform(struct noderef *nref, int type)
+toggle_transform(AG_Nitem *nref, int type)
 {
-	struct transform *trans;
+	AG_Transform *trans;
 
 	TAILQ_FOREACH(trans, &nref->transforms, transforms) {
 		if (trans->type == type) {
@@ -64,8 +65,8 @@ toggle_transform(struct noderef *nref, int type)
 			return;
 		}
 	}
-	if ((trans = transform_new(type, 0, NULL)) == NULL) {
-		text_msg(MSG_ERROR, "%s", error_get());
+	if ((trans = AG_TransformNew(type, 0, NULL)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		return;
 	}
 	TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
@@ -74,9 +75,9 @@ toggle_transform(struct noderef *nref, int type)
 static int
 flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 {
-	struct tool *t = p;
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
+	AG_Maptool *t = p;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;
 	int sely = mv->my + mv->mouse.y;
 	int w = 1;
@@ -84,35 +85,37 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 	int x, y;
 
 	if (!multi_ind ||
-	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
+	    AG_MapviewGetSelection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= m->mapw ||
 		    sely < 0 || sely >= m->maph)
 			return (0);
 	}
 
-	mapmod_begin(m);
+	AG_MapmodBegin(m);
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *nref;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *nref;
 
-			mapmod_nodechg(m, x, y);
+			AG_MapmodNodeChg(m, x, y);
 			
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer != m->cur_layer)
 					continue;
 
 				if (b == SDL_BUTTON_LEFT) {
-					toggle_transform(nref, TRANSFORM_HFLIP);
+					toggle_transform(nref,
+					    AG_TRANSFORM_MIRROR);
 				} else if (b == SDL_BUTTON_RIGHT) {
-					toggle_transform(nref, TRANSFORM_VFLIP);
+					toggle_transform(nref,
+					    AG_TRANSFORM_FLIP);
 				}
 			}
 		}
 	}
 
-	mapmod_end(m);
+	AG_MapmodEnd(m);
 	return (1);
 }
 
@@ -121,15 +124,15 @@ flip_cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 0, 64 };
 
-	primitives.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
-	    c, ALPHA_OVERLAY);
+	agPrim.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	    c, AG_ALPHA_OVERLAY);
 	return (1);
 }
 
-const struct tool_ops flip_ops = {
+const AG_MaptoolOps agMapFlipOps = {
 	"Flip", N_("Flip/mirror node element"),
 	FLIP_TOOL_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	flip_init,
 	NULL,			/* destroy */

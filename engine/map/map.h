@@ -1,22 +1,21 @@
-/*	$Csoft: map.h,v 1.19 2005/09/19 01:25:18 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.20 2005/09/20 13:46:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
 #define _AGAR_MAP_H_
 
-#define TILESZ	16			/* Default tile size in pixels */
+#define AGTILESZ 16			/* Default tile size in pixels */
 
-#define MAP_MIN_TILESZ		7
-#define MAP_MAX_TILESZ		16384	/* For soft-scrolling */
-#define MAP_MAX_WIDTH		32767
-#define MAP_MAX_HEIGHT		32767
-#define MAP_MAX_LAYERS		256
-#define MAP_MAX_CAMERAS		256
-#define MAP_LAYER_NAME_MAX	128
-#define MAP_CAMERA_NAME_MAX	128
-#define NODE_MAX_NODEREFS	32767
-#define NODEREF_MAX_TRANSFORMS	16384
-#define NODEREF_MAX_MASKS	16384
+#define AG_MAX_TILESZ		16384
+#define AG_MAP_MAXWIDTH		32767
+#define AG_MAP_MAXHEIGHT	32767
+#define AG_MAP_MAXLAYERS	256
+#define AG_MAP_MAXCAMERAS	256
+#define AG_MAP_MAXLAYERNAME	128
+#define AG_MAP_MAXCAMERANAME	128
+#define AG_NODE_MAXITEMS	32767
+#define AG_NITEM_MAXTRANSFORMS 16384
+#define AG_NITEM_MAXMASKS	16384
 
 #include <engine/space/space.h>
 #include <engine/map/transform.h>
@@ -24,36 +23,23 @@
 
 #include "begin_code.h"
 
-enum noderef_type {
-	NODEREF_SPRITE,			/* Reference to a sprite */
-	NODEREF_ANIM,			/* Reference to an animation */
-	NODEREF_WARP			/* Reference to another location */
+enum ag_nitem_type {
+	AG_NITEM_SPRITE,		/* Reference to a sprite */
+	AG_NITEM_ANIM,		/* Reference to an animation */
+	AG_NITEM_WARP		/* Reference to another location */
 };
 
-enum noderef_edge {
-	NODEREF_EDGE_NONE,
-	NODEREF_EDGE_NW,
-	NODEREF_EDGE_N,
-	NODEREF_EDGE_NE,
-	NODEREF_EDGE_W,
-	NODEREF_EDGE_FILL,
-	NODEREF_EDGE_E,
-	NODEREF_EDGE_SW,
-	NODEREF_EDGE_S,
-	NODEREF_EDGE_SE
-};
-
-struct noderef {
-	enum noderef_type type;		/* Type of element */
+typedef struct ag_nitem {
+	enum ag_nitem_type type;	/* Type of element */
 	
 	u_int flags;
-#define NODEREF_BLOCK		0x001	/* Tile block */
-#define NODEREF_CLIMBABLE	0x002	/* Surface is climbable */
-#define NODEREF_SLIPPERY	0x004	/* Surface is slippery */
-#define NODEREF_JUMPABLE	0x008	/* Element is jumpable */
-#define NODEREF_NOSAVE		0x100	/* Non persistent */
-#define NODEREF_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
-#define NODEREF_SELECTED	0x400	/* Selection (for editor) */
+#define AG_NITEM_BLOCK	0x001	/* Tile block */
+#define AG_NITEM_CLIMBABLE	0x002	/* Surface is climbable */
+#define AG_NITEM_SLIPPERY	0x004	/* Surface is slippery */
+#define AG_NITEM_JUMPABLE	0x008	/* Element is jumpable */
+#define AG_NITEM_NOSAVE	0x100	/* Non persistent */
+#define AG_NITEM_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
+#define AG_NITEM_SELECTED	0x400	/* Selection (for editor) */
 
 	Sint8 friction;			/* Coefficient of friction */
 	Uint8 layer;			/* Associated layer */
@@ -64,15 +50,14 @@ struct noderef {
 		Sint16 xmotion, ymotion;	/* Motion offsets */
 		Sint16 xorigin, yorigin;	/* Origin point */
 		SDL_Rect rs;			/* Source rectangle */
-		Uint8 edge;			/* Edge type (for edition) */
 	} r_gfx;
 	union {
 		struct {
-			struct object *obj;	/* Gfx object */
+			AG_Object *obj;		/* Gfx object */
 			Uint32 offs;		/* Sprite index */
 		} sprite;
 		struct {
-			struct object *obj;	/* Gfx object */
+			AG_Object *obj;		/* Gfx object */
 			Uint32 offs;		/* Anim index */
 		} anim;
 		struct {
@@ -81,58 +66,58 @@ struct noderef {
 			Uint8 dir;		/* Default direction */
 		} warp;
 	} nref;
-	struct transformq transforms;		/* Transformations to apply */
-	struct nodemaskq masks;			/* Collision detection masks */
-	TAILQ_ENTRY(noderef) nrefs;		/* Node's reference stack */
+	struct ag_transformq transforms;	/* Transformations to apply */
+	struct ag_nodemaskq masks;		/* Collision detection masks */
+	TAILQ_ENTRY(ag_nitem) nrefs;		/* Node's reference stack */
 #define r_sprite	nref.sprite
 #define r_anim		nref.anim
 #define r_warp		nref.warp
-};
+} AG_Nitem;
 
-TAILQ_HEAD(noderefq, noderef);
+TAILQ_HEAD(ag_nitemq, ag_nitem);
 
-struct node {
-	struct noderefq	 nrefs;			/* Items on this node */
-};
+typedef struct ag_node {
+	struct ag_nitemq nrefs;		/* Items on this node */
+} AG_Node;
 
-struct map_layer {
-	char name[MAP_LAYER_NAME_MAX];
+typedef struct ag_map_layer {
+	char name[AG_MAP_MAXLAYERNAME];
 	int visible;				/* Show/hide flag */
 	Sint16 xinc, yinc;			/* Rendering direction */
 	Uint8 alpha;				/* Transparency value */
+} AG_MapLayer;
+
+enum ag_map_camera_alignment {
+	AG_MAP_UPPER_LEFT,
+	AG_MAP_MIDDLE_LEFT,
+	AG_MAP_LOWER_LEFT,
+	AG_MAP_UPPER_RIGHT,
+	AG_MAP_MIDDLE_RIGHT,
+	AG_MAP_LOWER_RIGHT,
+	AG_MAP_CENTER,
+	AG_MAP_LOWER_CENTER,
+	AG_MAP_UPPER_CENTER
 };
 
-enum map_camera_alignment {
-	MAP_UPPER_LEFT,
-	MAP_MIDDLE_LEFT,
-	MAP_LOWER_LEFT,
-	MAP_UPPER_RIGHT,
-	MAP_MIDDLE_RIGHT,
-	MAP_LOWER_RIGHT,
-	MAP_CENTER,
-	MAP_LOWER_CENTER,
-	MAP_UPPER_CENTER
-};
-
-struct map_camera {
-	char name[MAP_CAMERA_NAME_MAX];
+typedef struct ag_map_camera {
+	char name[AG_MAP_MAXCAMERANAME];
 	int flags;
 	int x, y;				/* Position of camera */
-	enum map_camera_alignment alignment;	/* View alignment */
+	enum ag_map_camera_alignment alignment;	/* View alignment */
 	u_int zoom;				/* Zoom (%) */
 	int tilesz;				/* Tile size */
 	int pixsz;				/* Scaled pixel size */
-};
+} AG_MapCamera;
 
-struct mapmod {
+typedef struct ag_mapmod {
 	enum {
-		MAPMOD_NODECHG,
-		MAPMOD_LAYERADD,
-		MAPMOD_LAYERDEL
+		AG_MAPMOD_NODECHG,
+		AG_MAPMOD_LAYERADD,
+		AG_MAPMOD_LAYERDEL
 	} type;
 	union {
 		struct {
-			struct node node;
+			AG_Node node;
 			int x, y;
 		} nodechg;
 		struct {
@@ -142,22 +127,22 @@ struct mapmod {
 #define mm_nodechg data.nodechg
 #define mm_layeradd data.layermod
 #define mm_layerdel data.layermod
-};
+} AG_MapMod;
 
-struct mapmod_blk {
-	struct mapmod *mods;
+typedef struct ag_mapmodblk {
+	AG_MapMod *mods;
 	u_int nmods;
 	u_char cancel;
-};
+} AG_MapModBlk;
 
-struct map {
-	struct space space;
+typedef struct ag_map {
+	AG_Space space;
 
 	pthread_mutex_t lock;
 	u_int flags;
-#define MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
-#define MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */
-#define MAP_SAVED_FLAGS		(MAP_SAVE_CAM0POS|MAP_SAVE_CAM0ZOOM)
+#define AG_MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
+#define AG_MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */
+#define AG_MAP_SAVED_FLAGS	(AG_MAP_SAVE_CAM0POS|AG_MAP_SAVE_CAM0ZOOM)
 
 	u_int mapw, maph;		/* Map geometry */
 	int cur_layer;			/* Layer being edited */
@@ -165,92 +150,85 @@ struct map {
 		int x, y;		/* Origin coordinates */
 		int layer;		/* Default sprite layer */
 	} origin;
-	struct node **map;		/* Arrays of nodes */
+	AG_Node **map;			/* Arrays of nodes */
 	int redraw;			/* Redraw (for tile-based mode) */
-
-	struct map_layer *layers;	/* Layer descriptions */
+	AG_MapLayer *layers;		/* Layer descriptions */
 	u_int nlayers;
-
-	struct map_camera *cameras;	/* Views */
+	AG_MapCamera *cameras;		/* Views */
 	u_int ncameras;
-
-	struct mapmod_blk *blks;	/* Saved modifications */
+	AG_MapModBlk *blks;		/* Saved modifications */
 	u_int nblks;
 	u_int curblk;
 	u_int nmods;
-};
+} AG_Map;
 
 __BEGIN_DECLS
-struct map	*map_new(void *, const char *);
-void		 map_init(void *, const char *);
-void		 map_reinit(void *);
-int		 map_load(void *, struct netbuf *);
-int		 map_save(void *, struct netbuf *);
-void		 map_destroy(void *);
-void		*map_edit(void *);
+AG_Map	*AG_MapNew(void *, const char *);
+void	 AG_MapInit(void *, const char *);
+void	 AG_MapReinit(void *);
+int	 map_load(void *, AG_Netbuf *);
+int	 map_save(void *, AG_Netbuf *);
+void	 map_destroy(void *);
+void	*map_edit(void *);
 
-int	 map_alloc_nodes(struct map *, u_int, u_int);
-void	 map_free_nodes(struct map *);
-int	 map_resize(struct map *, u_int, u_int);
-void	 map_set_zoom(struct map *, int, u_int);
-int	 map_push_layer(struct map *, const char *);
-void	 map_pop_layer(struct map *);
-void	 map_init_layer(struct map_layer *, const char *);
-void	 map_init_camera(struct map_camera *, const char *);
-void	 map_init_modblks(struct map *);
-int	 map_add_camera(struct map *, const char *);
+int	 AG_MapAllocNodes(AG_Map *, u_int, u_int);
+void	 AG_MapFreeNodes(AG_Map *);
+int	 AG_MapResize(AG_Map *, u_int, u_int);
+void	 AG_MapSetZoom(AG_Map *, int, u_int);
+int	 AG_MapPushLayer(AG_Map *, const char *);
+void	 AG_MapPopLayer(AG_Map *);
+void	 AG_MapInitLayer(AG_MapLayer *, const char *);
+void	 AG_MapInitCamera(AG_MapCamera *, const char *);
+void	 AG_MapInitModBlks(AG_Map *);
+int	 AG_MapAddCamera(AG_Map *, const char *);
 
-void	 mapmod_begin(struct map *);
-void	 mapmod_end(struct map *);
-void	 mapmod_cancel(struct map *);
-void	 mapmod_nodechg(struct map *, int, int);
-void	 mapmod_layeradd(struct map *, int);
-void	 map_undo(struct map *);
-void	 map_redo(struct map *);
+void	 AG_MapmodBegin(AG_Map *);
+void	 AG_MapmodEnd(AG_Map *);
+void	 AG_MapmodCancel(AG_Map *);
+void	 AG_MapmodNodeChg(AG_Map *, int, int);
+void	 AG_MapmodLayerAdd(AG_Map *, int);
+void	 map_undo(AG_Map *);
+void	 map_redo(AG_Map *);
 
-void		 noderef_init(struct noderef *, enum noderef_type);
-__inline__ void	 noderef_set_center(struct noderef *, int, int);
-__inline__ void	 noderef_set_motion(struct noderef *, int, int);
-__inline__ void	 noderef_set_friction(struct noderef *, int);
-__inline__ void	 noderef_set_layer(struct noderef *, int);
+void		 AG_NitemInit(AG_Nitem *, enum ag_nitem_type);
+__inline__ void	 AG_NitemSetCenter(AG_Nitem *, int, int);
+__inline__ void	 AG_NitemSetMotion(AG_Nitem *, int, int);
+__inline__ void	 AG_NitemSetFriction(AG_Nitem *, int);
+__inline__ void	 AG_NitemSetLayer(AG_Nitem *, int);
 
-void	 	 noderef_destroy(struct map *, struct noderef *);
-int		 noderef_load(struct map *, struct netbuf *, struct node *,
-			      struct noderef **);
-void	 	 noderef_save(struct map *, struct netbuf *, struct noderef *);
-__inline__ int	 noderef_extent(struct map *, struct noderef *, SDL_Rect *,
-		                int);
-__inline__ void	 noderef_draw(struct map *, struct noderef *, int, int, int);
-__inline__ void	 noderef_set_sprite(struct noderef *, struct map *, void *,
-		                    Uint32);
-__inline__ void	 noderef_set_anim(struct noderef *, struct map *, void *,
-		                  Uint32);
-struct noderef  *noderef_locate(struct map *, int, int, int);
-void		 noderef_attr_color(u_int, int, Uint8 *);
+void	 	 AG_NitemDestroy(AG_Map *, AG_Nitem *);
+int		 AG_NitemLoad(AG_Map *, AG_Netbuf *, AG_Node *,
+			      AG_Nitem **);
+void	 	 AG_NitemSave(AG_Map *, AG_Netbuf *, AG_Nitem *);
+__inline__ int	 AG_NitemExtent(AG_Map *, AG_Nitem *, SDL_Rect *, int);
+__inline__ void	 AG_NitemDraw(AG_Map *, AG_Nitem *, int, int, int);
+__inline__ void	 AG_NitemSetSprite(AG_Nitem *, AG_Map *, void *, Uint32);
+__inline__ void	 AG_NitemSetAnim(AG_Nitem *, AG_Map *, void *, Uint32);
+AG_Nitem	*AG_NitemLocate(AG_Map *, int, int, int);
+void		 AG_NitemAttrColor(u_int, int, Uint8 *);
 
-__inline__ void	 node_init(struct node *);
-int		 node_load(struct map *, struct netbuf *, struct node *);
-void		 node_save(struct map *, struct netbuf *, struct node *);
-void		 node_destroy(struct map *, struct node *);
-void		 node_clear(struct map *, struct node *, int);
+__inline__ void	 AG_NodeInit(AG_Node *);
+int		 AG_NodeLoad(AG_Map *, AG_Netbuf *, AG_Node *);
+void		 AG_NodeSave(AG_Map *, AG_Netbuf *, AG_Node *);
+void		 AG_NodeDestroy(AG_Map *, AG_Node *);
+void		 AG_NodeRemoveAll(AG_Map *, AG_Node *, int);
 
-__inline__ void	 node_copy(struct map *, struct node *, int,
-		           struct map *, struct node *, int);
-void		 node_move_ref(struct map *, struct node *, struct noderef *,
-		               struct map *, struct node *, int);
-struct noderef	*node_copy_ref(const struct noderef *, struct map *,
-		               struct node *, int);
-void		 node_moveup_ref(struct node *, struct noderef *);
-void		 node_movedown_ref(struct node *, struct noderef *);
-void		 node_movetail_ref(struct node *, struct noderef *);
-void		 node_movehead_ref(struct node *, struct noderef *);
-void		 node_remove_ref(struct map *, struct node *, struct noderef *);
-void		 node_swap_layers(struct map *, struct node *, int, int);
+__inline__ void	 AG_NodeCopy(AG_Map *, AG_Node *, int, AG_Map *, AG_Node *,
+		             int);
+void		 AG_NodeMoveItem(AG_Map *, AG_Node *, AG_Nitem *, AG_Map *,
+		                 AG_Node *, int);
+AG_Nitem	*AG_NodeCopyItem(const AG_Nitem *, AG_Map *, AG_Node *, int);
+void		 AG_NodeMoveItemUp(AG_Node *, AG_Nitem *);
+void		 AG_NodeMoveItemDown(AG_Node *, AG_Nitem *);
+void		 AG_NodeMoveItemToTail(AG_Node *, AG_Nitem *);
+void		 AG_NodeMoveItemToHead(AG_Node *, AG_Nitem *);
+void		 AG_NodeDelItem(AG_Map *, AG_Node *, AG_Nitem *);
+void		 AG_NodeSwapLayers(AG_Map *, AG_Node *, int, int);
 
-struct noderef	*node_add_sprite(struct map *, struct node *, void *, Uint32);
-struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32);
-struct noderef	*node_add_warp(struct map *, struct node *, const char *, int,
-		               int, Uint8);
+AG_Nitem	*AG_NodeAddSprite(AG_Map *, AG_Node *, void *, Uint32);
+AG_Nitem	*AG_NodeAddAnim(AG_Map *, AG_Node *, void *, Uint32);
+AG_Nitem	*AG_NodeAddWarpPoint(AG_Map *, AG_Node *, const char *, int,
+		                     int, Uint8);
 __END_DECLS
 
 #include "close_code.h"

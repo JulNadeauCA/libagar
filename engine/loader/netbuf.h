@@ -1,36 +1,36 @@
-/*	$Csoft: netbuf.h,v 1.3 2005/09/06 04:13:16 vedge Exp $	*/
+/*	$Csoft: netbuf.h,v 1.4 2005/09/17 04:48:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_NETBUF_H_
 #define _AGAR_LOADER_NETBUF_H_
 #include "begin_code.h"
 
-enum netbuf_endian {
-	NETBUF_BIG_ENDIAN,
-	NETBUF_LITTLE_ENDIAN
+enum ag_netbuf_endian {
+	AG_NETBUF_BIG_ENDIAN,
+	AG_NETBUF_LITTLE_ENDIAN
 } endian;
 
-struct netbuf {
-	char		  *path;
-	enum netbuf_endian byte_order;
-	int		   fd;
-	FILE		  *file;
-};
+typedef struct ag_netbuf {
+	char *path;
+	enum ag_netbuf_endian byte_order;
+	int fd;
+	FILE *file;
+} AG_Netbuf;
 
 __BEGIN_DECLS
-struct netbuf	*netbuf_open(const char *, const char *, enum netbuf_endian);
-void		 netbuf_close(struct netbuf *);
+AG_Netbuf *AG_NetbufOpen(const char *, const char *, enum ag_netbuf_endian);
+void	   AG_NetbufClose(AG_Netbuf *);
 
-void	 		netbuf_pwrite(const void *, size_t, size_t, off_t,
-			              struct netbuf *);
-__inline__ void		netbuf_read(void *, size_t, size_t, struct netbuf *);
-__inline__ void		netbuf_flush(struct netbuf *);
-__inline__ void		netbuf_write(const void *, size_t, size_t,
-		                     struct netbuf *);
-__inline__ ssize_t	netbuf_eread(void *, size_t, size_t, struct netbuf *);
-__inline__ off_t	netbuf_tell(struct netbuf *);
-__inline__ void		netbuf_seek(struct netbuf *, off_t, int);
-__inline__ void		netbuf_flush(struct netbuf *);
+void	 		AG_NetbufPwrite(const void *, size_t, size_t, off_t,
+			                AG_Netbuf *);
+__inline__ void		AG_NetbufRead(void *, size_t, size_t, AG_Netbuf *);
+__inline__ void		AG_NetbufFlush(AG_Netbuf *);
+__inline__ void		AG_NetbufWrite(const void *, size_t, size_t,
+		                       AG_Netbuf *);
+__inline__ ssize_t	AG_NetbufReadE(void *, size_t, size_t, AG_Netbuf *);
+__inline__ off_t	AG_NetbufTell(AG_Netbuf *);
+__inline__ void		AG_NetbufSeek(AG_Netbuf *, off_t, int);
+__inline__ void		AG_NetbufFlush(AG_Netbuf *);
 __END_DECLS
 
 #include "close_code.h"

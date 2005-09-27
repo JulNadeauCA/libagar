@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.24 2005/04/14 06:19:43 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.25 2005/06/18 04:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,55 +42,51 @@
 
 #include "monitor.h"
 
-struct window *
-view_params_window(void)
+AG_Window *
+AG_DebugViewSettings(void)
 {
-	struct window *win;
-	struct vbox *vb;
-	struct label *lab;
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_Label *lab;
 
-	if ((win = window_new(WINDOW_DETACH|WINDOW_NO_RESIZE,
+	if ((win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE,
 	    "monitor-view-params")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, _("Viewport"));
+	AG_WindowSetCaption(win, _("Viewport"));
 	
-	vb = vbox_new(win, 0);
+	vb = AG_VBoxNew(win, 0);
 	{
-		char *engine = "";
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("OpenGL mode: %s"),
+		    agView->opengl ? _("yes") : _("no"));
 
-		switch (view->gfx_engine) {
-		case GFX_ENGINE_GUI:
-			engine = _("GUI");
-			break;
-		}
-		label_new(vb, LABEL_STATIC, _("Graphic engine: %s %s"), engine,
-		    view->opengl ? "(OpenGL)" : "");
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, "%dx%d", &agView->lock,
+		    &agView->w, &agView->h);
+		AG_LabelPrescale(lab, "0000x0000x00");
 
-		lab = label_new(vb, LABEL_POLLED_MT, "%dx%d", &view->lock,
-		    &view->w, &view->h);
-		label_prescale(lab, "0000x0000x00");
-
-		label_new(vb, LABEL_STATIC, _("Depth: %dbpp"),
-		    vinfo->vfmt->BitsPerPixel);
-		label_new(vb, LABEL_STATIC,
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("Depth: %dbpp"),
+		    agVideoInfo->vfmt->BitsPerPixel);
+		AG_LabelNew(vb, AG_LABEL_STATIC,
 		    _("Video masks: %08x,%08x,%08x"),
-		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask);
-		label_new(vb, LABEL_STATIC, _("Color key: %d"),
-		    vinfo->vfmt->colorkey);
-		label_new(vb, LABEL_STATIC, _("Alpha: %d"), vinfo->vfmt->alpha);
+		    agVideoInfo->vfmt->Rmask,
+		    agVideoInfo->vfmt->Gmask,
+		    agVideoInfo->vfmt->Bmask);
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("Color key: %d"),
+		    agVideoInfo->vfmt->colorkey);
+		AG_LabelNew(vb, AG_LABEL_STATIC, _("Alpha: %d"),
+		    agVideoInfo->vfmt->alpha);
 
-		lab = label_new(vb, LABEL_POLLED_MT, _("Window op: %d (%p)"),
-		    &view->lock, &view->winop, &view->wop_win);
-		label_prescale(lab,
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, _("Window op: %d (%p)"),
+		    &agView->lock, &agView->winop, &agView->wop_win);
+		AG_LabelPrescale(lab,
 		    _("Window op: 000 (0x00000000)"));
 		
-		lab = label_new(vb, LABEL_POLLED_MT,
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("Refresh rate (effective): %d"),
-		    &view->lock, &view->refresh.r);
-		lab = label_new(vb, LABEL_POLLED_MT,
+		    &agView->lock, &agView->refresh.r);
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("Refresh rate (nominal): %d"),
-		    &view->lock, &view->refresh.rnom);
+		    &agView->lock, &agView->refresh.rnom);
 	}
 	return (win);
 }

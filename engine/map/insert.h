@@ -1,18 +1,18 @@
-/*	$Csoft: insert.h,v 1.1 2005/08/10 07:03:11 vedge Exp $	*/
+/*	$Csoft: insert.h,v 1.2 2005/08/27 04:34:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
 
-struct mapview;
-struct tool;
+struct ag_mapview;
+struct ag_maptool;
 
-struct insert_tool {
-	struct tool tool;
-	enum gfx_snap_mode snap_mode;
+struct ag_map_insert_tool {
+	struct ag_maptool tool;
+	enum ag_gfx_snap_mode snap_mode;
 	int replace_mode;
 	int angle;
-	struct map mTmp;
-	struct mapview *mvTmp;
+	struct ag_map mTmp;
+	struct ag_mapview *mvTmp;
 };
 
 #include "close_code.h"

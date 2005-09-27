@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.9 2005/08/01 04:09:13 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.10 2005/08/22 02:14:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include <stdarg.h>
 
 void
-tool_init(struct tool *t)
+AG_MaptoolInit(AG_Maptool *t)
 {
 	t->nstatus = 0;
 	t->win = NULL;
@@ -57,26 +57,26 @@ tool_init(struct tool *t)
 }
 
 void
-tool_destroy(struct tool *tool)
+AG_MaptoolDestroy(AG_Maptool *tool)
 {
-	struct tool_kbinding *kbinding, *nkbinding;
-	struct tool_mbinding *mbinding, *nmbinding;
+	AG_MaptoolKeyBinding *kbinding, *nkbinding;
+	AG_MaptoolMouseBinding *mbinding, *nmbinding;
 	int i;
 	
 	if (tool->win != NULL)
-		view_detach(tool->win);
+		AG_ViewDetach(tool->win);
 	
 	if (tool->pane != NULL) {
-		struct window *pwin;
-		struct widget *wt;
+		AG_Window *pwin;
+		AG_Widget *wt;
 
-		OBJECT_FOREACH_CHILD(wt, tool->pane, widget) {
-			object_detach(wt);
-			object_destroy(wt);
+		AGOBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
+			AG_ObjectDetach(wt);
+			AG_ObjectDestroy(wt);
 			Free(wt, M_OBJECT);
 		}
-		if ((pwin = widget_parent_window(tool->pane)) != NULL)
-			WINDOW_UPDATE(pwin);
+		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
+			AG_WINDOW_UPDATE(pwin);
 	}
 	
 	for (i = 0; i < tool->nstatus; i++)
@@ -99,34 +99,34 @@ tool_destroy(struct tool *tool)
 }
 
 static void
-close_tool_window(int argc, union evarg *argv)
+close_AG_MaptoolWindow(int argc, union evarg *argv)
 {
-	struct tool *tool = argv[1].p;
+	AG_Maptool *tool = argv[1].p;
 
-	mapview_select_tool(tool->mv, NULL, NULL);
+	AG_MapviewSelectTool(tool->mv, NULL, NULL);
 }
 
-struct window *
-tool_window(void *p, const char *name)
+AG_Window *
+AG_MaptoolWindow(void *p, const char *name)
 {
-	struct tool *tool = p;
-	struct window *win;
+	AG_Maptool *tool = p;
+	AG_Window *win;
 
-	win = tool->win = window_new(0, NULL);
-	window_set_caption(win, _(tool->ops->desc));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", close_tool_window, "%p", tool);
+	win = tool->win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _(tool->ops->desc));
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
+	AG_SetEvent(win, "window-close", close_AG_MaptoolWindow, "%p", tool);
 	return (win);
 }
 
 void
-tool_bind_mousebutton(void *p, int button,
-    int (*func)(struct tool *, int, int, int, int, void *), void *arg)
+AG_MaptoolBindMouseButton(void *p, int button,
+    int (*func)(AG_Maptool *, int, int, int, int, void *), void *arg)
 {
-	struct tool *tool = p;
-	struct tool_mbinding *mb;
+	AG_Maptool *tool = p;
+	AG_MaptoolMouseBinding *mb;
 	
-	mb = Malloc(sizeof(struct tool_mbinding), M_MAPEDIT);
+	mb = Malloc(sizeof(AG_MaptoolMouseBinding), M_MAPEDIT);
 	mb->button = button;
 	mb->func = func;
 	mb->edit = 0;
@@ -135,13 +135,13 @@ tool_bind_mousebutton(void *p, int button,
 }
 
 void
-tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
-    int (*func)(struct tool *, SDLKey, int, void *), void *arg)
+AG_MaptoolBindKey(void *p, SDLMod keymod, SDLKey keysym,
+    int (*func)(AG_Maptool *, SDLKey, int, void *), void *arg)
 {
-	struct tool *tool = p;
-	struct tool_kbinding *kb;
+	AG_Maptool *tool = p;
+	AG_MaptoolKeyBinding *kb;
 
-	kb = Malloc(sizeof(struct tool_kbinding), M_MAPEDIT);
+	kb = Malloc(sizeof(AG_MaptoolKeyBinding), M_MAPEDIT);
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
@@ -151,10 +151,10 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 }
 
 void
-tool_unbind_key(void *p, SDLMod keymod, SDLKey keysym)
+AG_MaptoolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 {
-	struct tool *tool = p;
-	struct tool_kbinding *kb;
+	AG_Maptool *tool = p;
+	AG_MaptoolKeyBinding *kb;
 
 	SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
 		if (kb->mod == keymod &&
@@ -162,42 +162,43 @@ tool_unbind_key(void *p, SDLMod keymod, SDLKey keysym)
 			break;
 	}
 	if (kb != NULL) {
-		SLIST_REMOVE(&tool->kbindings, kb, tool_kbinding, kbindings);
+		SLIST_REMOVE(&tool->kbindings, kb, ag_maptool_keybinding,
+		    kbindings);
 		Free(kb, M_MAPEDIT);
 	}
 }
 
 void
-tool_update_status(void *p)
+AG_MaptoolUpdateStatus(void *p)
 {
-	struct tool *t = p;
+	AG_Maptool *t = p;
 
 	if (t->nstatus > 0 && t->mv->status != NULL) {
-		widget_replace_surface(t->mv->status, t->mv->status->surface,
-		    text_render(NULL, -1, COLOR(TEXT_COLOR),
+		AG_WidgetReplaceSurface(t->mv->status, t->mv->status->surface,
+		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
 		    t->status[t->nstatus-1]));
 	}
 }
 
 void
-tool_push_status(void *p, const char *fmt, ...)
+AG_MaptoolPushStatus(void *p, const char *fmt, ...)
 {
-	struct tool *t = p;
+	AG_Maptool *t = p;
 	va_list ap;
 
-	if (t->mv->status == NULL || t->nstatus+1 >= TOOL_STATUS_MAX)
+	if (t->mv->status == NULL || t->nstatus+1 >= AG_MAPTOOL_STATUS_MAX)
 		return;
 
 	va_start(ap, fmt);
 	Vasprintf(&t->status[t->nstatus++], fmt, ap);
 	va_end(ap);
-	tool_update_status(t);
+	AG_MaptoolUpdateStatus(t);
 }
 
 void
-tool_set_status(void *p, const char *fmt, ...)
+AG_MaptoolSetStatus(void *p, const char *fmt, ...)
 {
-	struct tool *t = p;
+	AG_Maptool *t = p;
 	va_list ap;
 
 	if (t->mv->status == NULL)
@@ -207,19 +208,19 @@ tool_set_status(void *p, const char *fmt, ...)
 	Vasprintf(&t->status[t->nstatus-1], fmt, ap);
 	va_end(ap);
 
-	tool_update_status(t);
+	AG_MaptoolUpdateStatus(t);
 }
 
 void
-tool_pop_status(void *p)
+AG_MaptoolPopStatus(void *p)
 {
-	struct tool *t = p;
+	AG_Maptool *t = p;
 
 	if (t->mv->status == NULL || t->nstatus == 1)
 		return;
 
 	Free(t->status[--t->nstatus], 0);
-	tool_update_status(t);
+	AG_MaptoolUpdateStatus(t);
 }
 
 #endif /* MAP */

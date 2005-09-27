@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.53 2005/05/29 05:49:59 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.54 2005/08/06 07:19:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,22 +36,22 @@
 
 #include "graph.h"
 
-const struct version graph_ver = {
+const AG_Version graph_ver = {
 	"agar graph",
 	2, 0
 };
 
-const struct widget_ops graph_ops = {
+const AG_WidgetOps graph_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		graph_destroy,
+		AG_GraphDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	graph_draw,
-	graph_scale
+	AG_GraphDraw,
+	AG_GraphScale
 };
 
 enum {
@@ -64,24 +64,24 @@ static void	graph_mousemotion(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
 
-struct graph *
-graph_new(void *parent, const char *caption, enum graph_type type, int flags,
-    graph_val_t yrange)
+AG_Graph *
+AG_GraphNew(void *parent, const char *caption, enum ag_graph_type type, int flags,
+    AG_GraphValue yrange)
 {
-	struct graph *graph;
+	AG_Graph *graph;
 
-	graph = Malloc(sizeof(struct graph), M_OBJECT);
-	graph_init(graph, caption, type, flags, yrange);
-	object_attach(parent, graph);
+	graph = Malloc(sizeof(AG_Graph), M_OBJECT);
+	AG_GraphInit(graph, caption, type, flags, yrange);
+	AG_ObjectAttach(parent, graph);
 	return (graph);
 }
 
 void
-graph_init(struct graph *graph, const char *caption, enum graph_type type,
-    int flags, graph_val_t yrange)
+AG_GraphInit(AG_Graph *graph, const char *caption, enum ag_graph_type type,
+    int flags, AG_GraphValue yrange)
 {
-	widget_init(graph, "graph", &graph_ops,
-	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_HFILL);
+	AG_WidgetInit(graph, "graph", &graph_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL);
 
 	strlcpy(graph->caption, caption, sizeof(graph->caption));
 	graph->type = type;
@@ -92,16 +92,16 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
-	event_new(graph, "window-mousemotion", graph_mousemotion, NULL);
-	event_new(graph, "window-keydown", graph_key, NULL);
-	event_new(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
-	event_new(graph, "window-mousebuttondown", graph_focus, NULL);
+	AG_SetEvent(graph, "window-mousemotion", graph_mousemotion, NULL);
+	AG_SetEvent(graph, "window-keydown", graph_key, NULL);
+	AG_SetEvent(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
+	AG_SetEvent(graph, "window-mousebuttondown", graph_focus, NULL);
 }
 
 static void
 graph_key(int argc, union evarg *argv)
 {
-	struct graph *gra = argv[0].p;
+	AG_Graph *gra = argv[0].p;
 	SDLKey key = (SDLKey)argv[1].p;
 
 	switch (key) {
@@ -123,7 +123,7 @@ graph_key(int argc, union evarg *argv)
 static void
 graph_mousemotion(int argc, union evarg *argv)
 {
-	struct graph *gra = argv[0].p;
+	AG_Graph *gra = argv[0].p;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	int state = argv[5].i;
@@ -137,61 +137,61 @@ graph_mousemotion(int argc, union evarg *argv)
 	gra->origin_y += yrel;
 	if (gra->origin_y < 0)
 		gra->origin_y = 0;
-	if (gra->origin_y > WIDGET(gra)->h)
-		gra->origin_y = WIDGET(gra)->h;
+	if (gra->origin_y > AGWIDGET(gra)->h)
+		gra->origin_y = AGWIDGET(gra)->h;
 }
 
 static void
 graph_resume_scroll(int argc, union evarg *argv)
 {
-	struct graph *gra = argv[0].p;
+	AG_Graph *gra = argv[0].p;
 
-	gra->flags |= GRAPH_SCROLL;
+	gra->flags |= AG_GRAPH_SCROLL;
 }
 
 static void
 graph_focus(int argc, union evarg *argv)
 {
-	struct graph *gra = argv[0].p;
+	AG_Graph *gra = argv[0].p;
 
-	gra->flags &= ~(GRAPH_SCROLL);
-	widget_focus(gra);
+	gra->flags &= ~(AG_GRAPH_SCROLL);
+	AG_WidgetFocus(gra);
 }
 
 void
-graph_scale(void *p, int w, int h)
+AG_GraphScale(void *p, int w, int h)
 {
-	struct graph *gra = p;
+	AG_Graph *gra = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(gra)->w = 100;
-		WIDGET(gra)->h = 80;
+		AGWIDGET(gra)->w = 100;
+		AGWIDGET(gra)->h = 80;
 	}
 }
 
 void
-graph_draw(void *p)
+AG_GraphDraw(void *p)
 {
-	struct graph *gra = p;
-	struct graph_item *gi;
+	AG_Graph *gra = p;
+	AG_GraphItem *gi;
 	int x, y, ox = 0, oy;
 	Uint32 i, origin_y;
-	graph_val_t oval;
+	AG_GraphValue oval;
 
-	origin_y = WIDGET(gra)->h * gra->origin_y / 100;
+	origin_y = AGWIDGET(gra)->h * gra->origin_y / 100;
 
-	primitives.box(gra,
+	agPrim.box(gra,
 	    0, 0,
-	    WIDGET(gra)->w, WIDGET(gra)->h,
+	    AGWIDGET(gra)->w, AGWIDGET(gra)->h,
 	    0,
-	    COLOR(GRAPH_BG_COLOR));
+	    AG_COLOR(GRAPH_BG_COLOR));
 
-	if (gra->flags & GRAPH_ORIGIN) {
-		primitives.hline(gra,
+	if (gra->flags & AG_GRAPH_ORIGIN) {
+		agPrim.hline(gra,
 		    0,
-		    WIDGET(gra)->w-1,
+		    AGWIDGET(gra)->w-1,
 		    origin_y + 1,
-		    COLOR(GRAPH_XAXIS_COLOR));
+		    AG_COLOR(GRAPH_XAXIS_COLOR));
 	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
@@ -199,13 +199,13 @@ graph_draw(void *p)
 			continue;
 
 		for (x = 2, ox = 0, i = gra->xoffs;
-		     ++i < gi->nvals && x < WIDGET(gra)->w;
+		     ++i < gi->nvals && x < AGWIDGET(gra)->w;
 		     ox = x, x += 2) {
 
-			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
+			oval = gi->vals[i] * AGWIDGET(gra)->h / gra->yrange;
 			y = origin_y - oval;
 			if (i > 1) {
-				oval = gi->vals[i-1] * WIDGET(gra)->h /
+				oval = gi->vals[i-1] * AGWIDGET(gra)->h /
 				    gra->yrange;
 				oy = origin_y - oval;
 			} else {
@@ -216,18 +216,18 @@ graph_draw(void *p)
 				y = 0;
 			if (oy < 0)
 				oy = 0;
-			if (y > WIDGET(gra)->h)
-				y = WIDGET(gra)->h;
-			if (oy > WIDGET(gra)->h)
-				oy = WIDGET(gra)->h;
+			if (y > AGWIDGET(gra)->h)
+				y = AGWIDGET(gra)->h;
+			if (oy > AGWIDGET(gra)->h)
+				oy = AGWIDGET(gra)->h;
 
 			switch (gra->type) {
-			case GRAPH_POINTS:
-				widget_put_pixel(gra, x, y, gi->color);
+			case AG_GRAPH_POINTS:
+				AG_WidgetPutPixel(gra, x, y, gi->color);
 				break;
-			case GRAPH_LINES:
+			case AG_GRAPH_LINES:
 				{
-					primitives.line(gra,
+					agPrim.line(gra,
 					    ox, oy,
 					    x, y,
 					    gi->color);
@@ -238,16 +238,16 @@ graph_draw(void *p)
 	}
 }
 
-struct graph_item *
-graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b,
+AG_GraphItem *
+AG_GraphAddItem(AG_Graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b,
     Uint32 limit)
 {
-	struct graph_item *gi;
+	AG_GraphItem *gi;
 
- 	gi = Malloc(sizeof(struct graph_item), M_WIDGET);
+ 	gi = Malloc(sizeof(AG_GraphItem), M_WIDGET);
 	strlcpy(gi->name, name, sizeof(gi->name));
-	gi->color = SDL_MapRGB(vfmt, r, g, b);
-	gi->vals = Malloc(NITEMS_INIT * sizeof(graph_val_t), M_WIDGET);
+	gi->color = SDL_MapRGB(agVideoFmt, r, g, b);
+	gi->vals = Malloc(NITEMS_INIT * sizeof(AG_GraphValue), M_WIDGET);
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
 	gi->graph = gra;
@@ -257,17 +257,17 @@ graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b,
 }
 
 void
-graph_plot(struct graph_item *gi, graph_val_t val)
+AG_GraphPlot(AG_GraphItem *gi, AG_GraphValue val)
 {
 	gi->vals[gi->nvals] = val;
 
 	if (gi->nvals+1 >= gi->limit) {
-		memmove(gi->vals, gi->vals+1, gi->nvals*sizeof(graph_val_t));
-		gi->graph->flags &= ~(GRAPH_SCROLL);
+		memmove(gi->vals, gi->vals+1, gi->nvals*sizeof(AG_GraphValue));
+		gi->graph->flags &= ~(AG_GRAPH_SCROLL);
 	} else {
 		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
-			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t));
+			    (gi->maxvals+NITEMS_GROW) * sizeof(AG_GraphValue));
 			gi->maxvals += NITEMS_GROW;
 		}
 		gi->nvals++;
@@ -275,16 +275,16 @@ graph_plot(struct graph_item *gi, graph_val_t val)
 }
 
 void
-graph_scroll(struct graph *gra, int i)
+AG_GraphScroll(AG_Graph *gra, int i)
 {
-	if (gra->flags & GRAPH_SCROLL)
+	if (gra->flags & AG_GRAPH_SCROLL)
 		gra->xoffs += i;
 }
 
 void
-graph_free_items(struct graph *gra)
+AG_GraphFreeItems(AG_Graph *gra)
 {
-	struct graph_item *git, *nextgit;
+	AG_GraphItem *git, *nextgit;
 	
 	for (git = TAILQ_FIRST(&gra->items);
 	     git != TAILQ_END(&gra->items);
@@ -297,10 +297,10 @@ graph_free_items(struct graph *gra)
 }
 
 void
-graph_destroy(void *p)
+AG_GraphDestroy(void *p)
 {
-	struct graph *gra = p;
+	AG_Graph *gra = p;
 
-	graph_free_items(gra);
-	widget_destroy(gra);
+	AG_GraphFreeItems(gra);
+	AG_WidgetDestroy(gra);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: netbuf.c,v 1.5 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: netbuf.c,v 1.6 2005/09/06 04:13:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,16 +36,16 @@
 
 #include <engine/loader/netbuf.h>
 
-struct netbuf *
-netbuf_open(const char *path, const char *mode, enum netbuf_endian byte_order)
+AG_Netbuf *
+AG_NetbufOpen(const char *path, const char *mode, enum ag_netbuf_endian byte_order)
 {
-	struct netbuf *buf;
+	AG_Netbuf *buf;
 
-	buf = Malloc(sizeof(struct netbuf), 0);
+	buf = Malloc(sizeof(AG_Netbuf), 0);
 	buf->byte_order = byte_order;
 	buf->path = Strdup(path);
 	if ((buf->file = fopen(path, mode)) == NULL) {
-		error_set("%s: %s", path, strerror(errno));
+		AG_SetError("%s: %s", path, strerror(errno));
 		goto fail;
 	}
 	return (buf);
@@ -55,7 +55,7 @@ fail:
 }
 
 void
-netbuf_close(struct netbuf *buf)
+AG_NetbufClose(AG_Netbuf *buf)
 {
 	fclose(buf->file);
 	Free(buf->path, 0);
@@ -63,7 +63,7 @@ netbuf_close(struct netbuf *buf)
 }
 
 void
-netbuf_read(void *ptr, size_t size, size_t nmemb, struct netbuf *buf)
+AG_NetbufRead(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 {
 	if (fread(ptr, size, nmemb, buf->file) < nmemb) {
 		if (feof(buf->file)) {
@@ -75,13 +75,13 @@ netbuf_read(void *ptr, size_t size, size_t nmemb, struct netbuf *buf)
 }
 
 __inline__ ssize_t
-netbuf_eread(void *ptr, size_t size, size_t nmemb, struct netbuf *buf)
+AG_NetbufReadE(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 {
 	return (fread(ptr, size, nmemb, buf->file));
 }
 
 void
-netbuf_write(const void *ptr, size_t size, size_t nmemb, struct netbuf *buf)
+AG_NetbufWrite(const void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 {
 	size_t rv;
 
@@ -95,8 +95,8 @@ netbuf_write(const void *ptr, size_t size, size_t nmemb, struct netbuf *buf)
 }
 
 void
-netbuf_pwrite(const void *ptr, size_t size, size_t nmemb, off_t offs,
-    struct netbuf *buf)
+AG_NetbufPwrite(const void *ptr, size_t size, size_t nmemb, off_t offs,
+    AG_Netbuf *buf)
 {
 	long oldoffs;
 
@@ -118,20 +118,20 @@ netbuf_pwrite(const void *ptr, size_t size, size_t nmemb, off_t offs,
 }
 
 off_t
-netbuf_tell(struct netbuf *buf)
+AG_NetbufTell(AG_Netbuf *buf)
 {
 	return (ftell(buf->file));
 }
 
 void
-netbuf_seek(struct netbuf *buf, off_t offs, int whence)
+AG_NetbufSeek(AG_Netbuf *buf, off_t offs, int whence)
 {
 	if (fseek(buf->file, (long)offs, whence) == -1)
 		fatal("seek fail");
 }
 
 void
-netbuf_flush(struct netbuf *buf)
+AG_NetbufFlush(AG_Netbuf *buf)
 {
 	fflush(buf->file);
 }

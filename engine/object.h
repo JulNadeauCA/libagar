@@ -1,13 +1,13 @@
-/*	$Csoft: object.h,v 1.133 2005/09/18 03:38:19 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.134 2005/09/19 01:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
-#define OBJECT_TYPE_MAX	32
-#define OBJECT_NAME_MAX	128
-#define OBJECT_PATH_MAX	1024
-#define OBJECT_DIGEST_MAX 170
+#define AG_OBJECT_TYPE_MAX	32
+#define AG_OBJECT_NAME_MAX	128
+#define AG_OBJECT_PATH_MAX	1024
+#define AG_OBJECT_DIGEST_MAX 170
 
 #include <engine/timeout.h>
 #include <engine/prop.h>
@@ -16,95 +16,100 @@
 
 #include "begin_code.h"
 
-struct map;
-struct input;
-struct event;
+struct ag_map;
+struct ag_input;
+struct ag_event;
 
 /* Generic object operation vector */
-struct object_ops {
+typedef struct ag_object_ops {
 	void	(*init)(void *, const char *);		/* Initialize */
 	void	(*reinit)(void *);			/* Reinitialize */
 	void	(*destroy)(void *);			/* Free resources */
-	int	(*load)(void *, struct netbuf *);	/* Load from network */
-	int	(*save)(void *, struct netbuf *);	/* Save to network */
+	int	(*load)(void *, AG_Netbuf *);	/* Load from network */
+	int	(*save)(void *, AG_Netbuf *);	/* Save to network */
 	void   *(*edit)(void *);			/* Edit object */
-};
+} AG_ObjectOps;
 
 /* Dependency with respect to another object. */
-struct object_dep {
-	char		*path;		/* Unresolved object path */
-	struct object	*obj;		/* Resolved object */
-	Uint32		 count;		/* Reference count */
-#define OBJECT_DEP_MAX	(0xffffffff-2)	/* If reached, stay resident */
-	TAILQ_ENTRY(object_dep) deps;
-};
+typedef struct ag_object_dep {
+	char		 *path;		/* Unresolved object path */
+	struct ag_object *obj;		/* Resolved object */
+	Uint32		  count;	/* Reference count */
+#define AG_OBJECT_DEP_MAX (0xffffffff-2) /* If reached, stay resident */
+	TAILQ_ENTRY(ag_object_dep) deps;
+} AG_ObjectDep;
 
 /* Structure returned by object_get_classinfo(). */
-struct object_classinfo {
+typedef struct ag_object_classinfo {
 	char **classes;
-	struct object_type **types;
+	struct ag_object_type **types;
 	u_int nclasses;
-};
+} AG_ObjectClassInfo;
 
-TAILQ_HEAD(objectq, object);
+TAILQ_HEAD(ag_objectq, ag_object);
 
-struct object {
-	char	 type[OBJECT_TYPE_MAX];		/* Type of object */
-	char	 name[OBJECT_NAME_MAX];		/* Identifier */
-	char	*save_pfx;			/* Save dir prefix */
-	const struct object_ops *ops;		/* Generic operation vector */
-	int	 flags;
-#define OBJECT_RELOAD_PROPS	0x001	/* Don't free props before load */
-#define OBJECT_NON_PERSISTENT	0x002	/* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE	0x004	/* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT	0x008	/* Object data is resident */
-#define OBJECT_PRESERVE_DEPS	0x010	/* Preserve cnt=0 dependencies */
-#define OBJECT_STATIC		0x020	/* Don't free() after detach */
-#define OBJECT_READONLY		0x040	/* Disallow edition (advisory) */
-#define OBJECT_WAS_RESIDENT	0x080	/* Used internally by object_load() */
-#define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
-#define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
-#define OBJECT_REMAIN_DATA	0x400	/* Keep data resident */
-#define OBJECT_REMAIN_GFX	0x800	/* Keep graphics resident */
-#define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
-				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
-				 OBJECT_REOPEN_ONLOAD|OBJECT_REMAIN_DATA|\
-				 OBJECT_REMAIN_GFX)
-#define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT|\
-				 OBJECT_REOPEN_ONLOAD|OBJECT_REMAIN_DATA|\
-				 OBJECT_REMAIN_GFX)
+typedef struct ag_object {
+	char type[AG_OBJECT_TYPE_MAX];	/* Type of object */
+	char name[AG_OBJECT_NAME_MAX];	/* Identifier */
+	char *save_pfx;			/* Save dir prefix */
+	const AG_ObjectOps *ops;	/* Generic operations */
+	int flags;
+#define AG_OBJECT_RELOAD_PROPS	 0x001	/* Don't free props before load */
+#define AG_OBJECT_NON_PERSISTENT 0x002	/* Never include in saves */
+#define AG_OBJECT_INDESTRUCTIBLE 0x004	/* Not destructible (advisory) */
+#define AG_OBJECT_DATA_RESIDENT	 0x008	/* Dynamic data is resident */
+#define AG_OBJECT_PRESERVE_DEPS	 0x010	/* Preserve cnt=0 dependencies */
+#define AG_OBJECT_STATIC	 0x020	/* Don't free() after detach */
+#define AG_OBJECT_READONLY	 0x040	/* Disallow edition (advisory) */
+#define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by AG_ObjectLoad() */
+#define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by AG_ObjectLoad() */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Close and reopen editor on load */
+#define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep dynamic data resident */
+#define AG_OBJECT_REMAIN_GFX	 0x800	/* Keep graphics resident */
+#define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
+ 				 AG_OBJECT_INDESTRUCTIBLE|\
+				 AG_OBJECT_PRESERVE_DEPS|\
+				 AG_OBJECT_READONLY|\
+				 AG_OBJECT_REOPEN_ONLOAD|\
+				 AG_OBJECT_REMAIN_DATA|\
+				 AG_OBJECT_REMAIN_GFX)
+#define AG_OBJECT_DUPED_FLAGS	(AG_OBJECT_SAVED_FLAGS|\
+				 AG_OBJECT_NON_PERSISTENT|\
+				 AG_OBJECT_REOPEN_ONLOAD|\
+				 AG_OBJECT_REMAIN_DATA|\
+				 AG_OBJECT_REMAIN_GFX)
 
-	pthread_mutex_t	 lock;
-	struct gfx	*gfx;		/* Associated graphics package */
-	struct audio	*audio;		/* Associated audio package */
-	Uint32		 data_used;	/* Referenced object derivate data */
+	pthread_mutex_t lock;
+	AG_Gfx	 *gfx;			/* Associated graphics package */
+	AG_Audio *audio;		/* Associated audio package */
+	Uint32	  data_used;		/* Dynamic data is in use */
 
-	TAILQ_HEAD(,event)	 events;	/* Event handlers */
-	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
-	CIRCLEQ_HEAD(,timeout)	 timeouts;	/* Scheduled function calls */
+	TAILQ_HEAD(,ag_event)	 events;	/* Event handlers */
+	TAILQ_HEAD(,ag_prop)	 props;		/* Generic properties */
+	CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Scheduled function calls */
 
 	/* Uses linkage_lock */
-	TAILQ_HEAD(,object_dep)	 deps;		/* Object dependencies */
-	struct objectq		 children;	/* Child objects */
-	void			*parent;	/* Parent object */
+	TAILQ_HEAD(,ag_object_dep) deps;	/* Object dependencies */
+	struct ag_objectq children;		/* Child objects */
+	void *parent;				/* Parent object */
 
-	TAILQ_ENTRY(object) cobjs;	/* Entry in child object queue */
-	TAILQ_ENTRY(object) tobjs;	/* Entry in timed object queue */
+	TAILQ_ENTRY(ag_object) cobjs;	/* Entry in child object queue */
+	TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timed object queue */
+} AG_Object;
+
+enum ag_object_page_item {
+	AG_OBJECT_GFX,		/* Shared graphics */
+	AG_OBJECT_AUDIO,	/* Shared audio samples */
+	AG_OBJECT_DATA		/* Dynamic data */
 };
 
-enum object_page_item {
-	OBJECT_GFX,		/* Shared graphics */
-	OBJECT_AUDIO,		/* Shared audio samples */
-	OBJECT_DATA		/* Object data */
+enum ag_object_checksum_alg {
+	AG_OBJECT_MD5,
+	AG_OBJECT_SHA1,
+	AG_OBJECT_RMD160
 };
 
-enum object_checksum_alg {
-	OBJECT_MD5,
-	OBJECT_SHA1,
-	OBJECT_RMD160
-};
-
-#define OBJECT_INITIALIZER(ob, type, name, ops) {		\
+#define AGOBJECT_INITIALIZER(ob, type, name, ops) {		\
 		(type), (name), "/world", (ops), 0,		\
 		PTHREAD_MUTEX_INITIALIZER,			\
 		NULL, NULL, NULL, 0, NULL, NULL, 0, 0, NULL,	\
@@ -116,92 +121,95 @@ enum object_checksum_alg {
 		NULL						\
 	}
 
-#define OBJECT(ob)		((struct object *)(ob))
-#define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type,(t))==0)
-#define OBJECT_SUBCLASS(ob, t)	object_subclass(OBJECT(ob), t, sizeof(t)-1)
+#define AGOBJECT(ob)		 ((struct ag_object *)(ob))
+#define AGOBJECT_TYPE(ob, t)	 (strcmp(AGOBJECT(ob)->type,(t))==0)
+#define AGOBJECT_SUBCLASS(ob, t) AG_ObjectSubclass(AGOBJECT(ob), t, \
+				  sizeof(t)-1)
 
-#define OBJECT_FOREACH_CHILD(var, ob, type)				\
-	for((var) = (struct type *)TAILQ_FIRST(&OBJECT(ob)->children);	\
-	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->children);	\
-	    (var) = (struct type *)TAILQ_NEXT(OBJECT(var), cobjs))
+#define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
+	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
+	    (var) != (struct type *)TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct type *)TAILQ_NEXT(AGOBJECT(var), cobjs))
 
-#define OBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
-	for((var) = (struct type *)TAILQ_LAST(&OBJECT(ob)->children, objectq);\
-	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->children);	\
-	    (var) = (struct type *)TAILQ_PREV(OBJECT(var), objectq, cobjs))
+#define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
+	for((var) = (struct type *)TAILQ_LAST(&AGOBJECT(ob)->children, \
+	    ag_objectq); \
+	    (var) != (struct type *)TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct type *)TAILQ_PREV(AGOBJECT(var), ag_objectq, \
+	    cobjs))
 
-#define object_lock(ob) pthread_mutex_lock(&(ob)->lock)
-#define object_unlock(ob) pthread_mutex_unlock(&(ob)->lock)
+#define AG_ObjectLock(ob) pthread_mutex_lock(&(ob)->lock)
+#define AG_ObjectUnlock(ob) pthread_mutex_unlock(&(ob)->lock)
 
 __BEGIN_DECLS
-struct object	*object_new(void *, const char *);
-void		 object_init(void *, const char *, const char *, const void *);
-void		 object_free_data(void *);
-void		 object_remain(void *, int);
+AG_Object *AG_ObjectNew(void *, const char *);
+void	   AG_ObjectAttach(void *, void *);
+int	   AG_ObjectAttachPath(const char *, void *);
+void	   AG_ObjectDetach(void *);
+void	   AG_ObjectMove(void *, void *);
 
-int	 object_copy_name(const void *, char *, size_t)
+void	 AG_ObjectInit(void *, const char *, const char *, const void *);
+void	 AG_ObjectFreeData(void *);
+void	 AG_ObjectRemain(void *, int);
+int	 AG_ObjectCopyName(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
-int	 object_copy_dirname(const void *, char *, size_t)
+int	 AG_ObjectCopyDirname(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
-int	 object_copy_filename(const void *, char *, size_t)
+int	 AG_ObjectCopyFilename(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
-size_t	 object_copy_checksum(const void *, enum object_checksum_alg, char *);
-int	 object_copy_digest(const void *, size_t *, char *);
-int	 object_changed(void *);
-int	 object_changed_all(void *);
+size_t	 AG_ObjectCopyChecksum(const void *, enum ag_object_checksum_alg,
+	                       char *);
+int	 AG_ObjectCopyDigest(const void *, size_t *, char *);
+int	 AG_ObjectChanged(void *);
+int	 AG_ObjectChangedAll(void *);
 
-void		*object_find(const char *);
-void		*object_findf(const char *, ...);
-__inline__ void	*object_root(const void *);
-__inline__ void *object_find_parent(void *, const char *, const char *);
-int		 object_in_use(const void *);
-void		 object_set_type(void *, const char *);
-void		 object_set_name(void *, const char *);
-void		 object_set_ops(void *, const void *);
+void		*AG_ObjectFind(const char *);
+void		*AG_ObjectFindF(const char *, ...);
+__inline__ void	*AG_ObjectRoot(const void *);
+__inline__ void *AG_ObjectFindParent(void *, const char *, const char *);
+int		 AG_ObjectInUse(const void *);
+void		 AG_ObjectSetType(void *, const char *);
+void		 AG_ObjectSetName(void *, const char *);
+void		 AG_ObjectSetOps(void *, const void *);
 
-__inline__ SDL_Surface	*object_icon(void *);
+__inline__ SDL_Surface	*AG_ObjectIcon(void *);
 
-__inline__ int object_subclass(struct object *, const char *, size_t);
-void	       object_get_classinfo(const char *, struct object_classinfo *);
-void	       object_free_classinfo(struct object_classinfo *);
+__inline__ int AG_ObjectSubclass(AG_Object *, const char *, size_t);
+void	       AG_ObjectGetClassInfo(const char *, AG_ObjectClassInfo *);
+void	       AG_ObjectFreeClassinfo(AG_ObjectClassInfo *);
 
-void	 object_move_up(void *);
-void	 object_move_down(void *);
-void	*object_duplicate(void *);
-void	 object_destroy(void *);
-void	 object_unlink_datafiles(void *);
-void	 object_set_savepfx(void *, char *);
+void	 AG_ObjectMoveUp(void *);
+void	 AG_ObjectMoveDown(void *);
+void	*AG_ObjectDuplicate(void *);
+void	 AG_ObjectDestroy(void *);
+void	 AG_ObjectUnlinkDatafiles(void *);
+void	 AG_ObjectSetSavePfx(void *, char *);
 
-void	 object_free_children(struct object *);
-void	 object_free_props(struct object *);
-void 	 object_free_events(struct object *);
-void	 object_free_deps(struct object *);
-void	 object_free_zerodeps(struct object *);
-void 	 object_cancel_timeouts(void *, int);
+void	 AG_ObjectFreeChildren(AG_Object *);
+void	 AG_ObjectFreeProps(AG_Object *);
+void 	 AG_ObjectFreeEvents(AG_Object *);
+void	 AG_ObjectFreeDeps(AG_Object *);
+void	 AG_ObjectFreeZerodeps(AG_Object *);
+void 	 AG_ObjectCancelTimeouts(void *, int);
 
-int	 object_page_in(void *, enum object_page_item);
-int	 object_page_out(void *, enum object_page_item);
-int	 object_save(void *);
-int	 object_save_all(void *);
+int	 AG_ObjectPageIn(void *, enum ag_object_page_item);
+int	 AG_ObjectPageOut(void *, enum ag_object_page_item);
+int	 AG_ObjectSave(void *);
+int	 AG_ObjectSaveAll(void *);
 
-int	 object_load(void *);
-int	 object_load_generic(void *);
-int	 object_reload_data(void *);
-int	 object_resolve_deps(void *);
-int	 object_load_data(void *);
+int	 AG_ObjectLoad(void *);
+int	 AG_ObjectLoadGeneric(void *);
+int	 AG_ObjectReloadData(void *);
+int	 AG_ObjectResolveDeps(void *);
+int	 AG_ObjectLoadData(void *);
 
-void	 object_attach(void *, void *);
-int	 object_attach_path(const char *, void *);
-void	 object_detach(void *);
-void	 object_move(void *, void *);
-
-struct object_dep	 *object_add_dep(void *, void *);
-__inline__ int		  object_find_dep(const void *, Uint32, void **);
-void			  object_del_dep(void *, const void *);
-Uint32			  object_encode_name(const void *, const void *);
+AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
+__inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
+void		 AG_ObjectDelDep(void *, const void *);
+Uint32		 AG_ObjectEncodeName(const void *, const void *);
 
 #ifdef EDITION
-void	*object_edit(void *);
+void	*AG_ObjectEdit(void *);
 #endif
 __END_DECLS
 

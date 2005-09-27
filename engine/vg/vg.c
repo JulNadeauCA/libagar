@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.68 2005/09/07 04:23:41 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.69 2005/09/18 05:46:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -45,65 +45,65 @@
 
 #include <engine/loader/vertex.h>
 
-const struct version vg_ver = {
+const AG_Version vgVer = {
 	"agar vg",
 	4, 0
 };
 
-extern const struct vg_element_ops vg_points_ops;
-extern const struct vg_element_ops vg_lines_ops;
-extern const struct vg_element_ops vg_line_strip_ops;
-extern const struct vg_element_ops vg_line_loop_ops;
-extern const struct vg_element_ops vg_circle_ops;
-extern const struct vg_element_ops vg_arc_ops;
-extern const struct vg_element_ops vg_ellipse_ops;
-extern const struct vg_element_ops vg_text_ops;
-extern const struct vg_element_ops vg_mask_ops;
-extern const struct vg_element_ops vg_polygon_ops;
+extern const VG_ElementOps vgPointsOps;
+extern const VG_ElementOps vgLinesOps;
+extern const VG_ElementOps vgLineStripOps;
+extern const VG_ElementOps vgLineLoopOps;
+extern const VG_ElementOps vgCircleOps;
+extern const VG_ElementOps vgArcOps;
+extern const VG_ElementOps vgEllipseOps;
+extern const VG_ElementOps vgTextOps;
+extern const VG_ElementOps vgMaskOps;
+extern const VG_ElementOps vgPolygonOps;
 
-const struct vg_element_ops *vg_element_types[] = {
-	&vg_points_ops,
-	&vg_lines_ops,
-	&vg_line_strip_ops,
-	&vg_line_loop_ops,
+const VG_ElementOps *vgElementTypes[] = {
+	&vgPointsOps,
+	&vgLinesOps,
+	&vgLineStripOps,
+	&vgLineLoopOps,
 	NULL,			/* triangles */
 	NULL,			/* triangle strip */
 	NULL,			/* triangle fan */
 	NULL,			/* quads */
 	NULL,			/* quad strip */
-	&vg_polygon_ops,
-	&vg_circle_ops,
-	&vg_arc_ops,
-	&vg_ellipse_ops,
+	&vgPolygonOps,
+	&vgCircleOps,
+	&vgArcOps,
+	&vgEllipseOps,
 	NULL,			/* Bezier curve */
 	NULL,			/* Bezigon */
-	&vg_text_ops,
-	&vg_mask_ops,
+	&vgTextOps,
+	&vgMaskOps,
 };
 
-struct vg *
-vg_new(void *p, int flags)
+VG *
+VG_New(void *p, int flags)
 {
-	char path[OBJECT_PATH_MAX];
-	struct object *ob = p;
-	struct vg *vg;
+	char path[AG_OBJECT_PATH_MAX];
+	AG_Object *ob = p;
+	VG *vg;
 	
-	vg = Malloc(sizeof(struct vg), M_VG);
-	vg_init(vg, flags);
+	vg = Malloc(sizeof(VG), M_VG);
+	VG_Init(vg, flags);
 	if (ob != NULL) {
-		ob->gfx = gfx_new(ob);
+		ob->gfx = AG_GfxNew(ob);
 		ob->gfx->used = 1;
 
 		vg->pobj = ob;
-		vg->map = map_new(ob, "raster");
-		OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|
-					  OBJECT_INDESTRUCTIBLE;
+		vg->map = AG_MapNew(ob, "raster");
+		AGOBJECT(vg->map)->flags |= AG_OBJECT_NON_PERSISTENT|
+					     AG_OBJECT_INDESTRUCTIBLE;
 	}
 	return (vg);
 }
 
 void
-vg_init(struct vg *vg, int flags)
+VG_Init(VG *vg, int flags)
 {
 	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i, x, y;
@@ -140,23 +140,23 @@ vg_init(struct vg *vg, int flags)
 	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
 	vg->mouseover_color = SDL_MapRGB(vg->fmt, 200, 200, 0);
 	vg->grid_gap = 0.25;
-	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
+	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
 	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS, M_VG);
 	vg->pobj = NULL;
 	vg->map = NULL;
-	vg->layers = Malloc(sizeof(struct vg_layer), M_VG);
+	vg->layers = Malloc(sizeof(VG_Layer), M_VG);
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
-	vg_push_layer(vg, _("Layer 0"));
+	VG_PushLayer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
 	vg->ortho_mode = VG_NO_ORTHO;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
-	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
+	pthread_mutex_init(&vg->lock, &agRecursiveMutexAttr);
 
 	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
@@ -179,7 +179,7 @@ vg_init(struct vg *vg, int flags)
 }
 
 void
-vg_free_element(struct vg *vg, struct vg_element *vge)
+VG_FreeElement(VG *vg, VG_Element *vge)
 {
 	if (vge->ops->destroy != NULL) {
 		vge->ops->destroy(vg, vge);
@@ -189,23 +189,23 @@ vg_free_element(struct vg *vg, struct vg_element *vge)
 }
 
 static void
-vg_destroy_elements(struct vg *vg)
+VG_DestroyElements(VG *vg)
 {
-	struct vg_element *vge, *nvge;
+	VG_Element *vge, *nvge;
 	
 	for (vge = TAILQ_FIRST(&vg->vges);
 	     vge != TAILQ_END(&vg->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vges);
-		vg_free_element(vg, vge);
+		VG_FreeElement(vg, vge);
 	}
 	TAILQ_INIT(&vg->vges);
 }
 
 static void
-vg_destroy_blocks(struct vg *vg)
+VG_DestroyBlocks(VG *vg)
 {
-	struct vg_block *vgb, *nvgb;
+	VG_Block *vgb, *nvgb;
 
 	for (vgb = TAILQ_FIRST(&vg->blocks);
 	     vgb != TAILQ_END(&vg->blocks);
@@ -217,9 +217,9 @@ vg_destroy_blocks(struct vg *vg)
 }
 
 static void
-vg_destroy_styles(struct vg *vg)
+VG_DestroyStyles(VG *vg)
 {
-	struct vg_style *st, *nst;
+	VG_Style *st, *nst;
 
 	for (st = TAILQ_FIRST(&vg->styles);
 	     st != TAILQ_END(&vg->styles);
@@ -231,17 +231,17 @@ vg_destroy_styles(struct vg *vg)
 }
 
 void
-vg_reinit(struct vg *vg)
+VG_Reinit(VG *vg)
 {
-	vg_destroy_blocks(vg);
-	vg_destroy_elements(vg);
-	vg_destroy_styles(vg);
+	VG_DestroyBlocks(vg);
+	VG_DestroyElements(vg);
+	VG_DestroyStyles(vg);
 }
 
 void
-vg_destroy(struct vg *vg)
+VG_Destroy(VG *vg)
 {
-	struct object *ob = vg->pobj;
+	AG_Object *ob = vg->pobj;
 	int y;
 
 	Free(vg->origin, M_VG);
@@ -249,21 +249,21 @@ vg_destroy(struct vg *vg)
 	Free(vg->origin_color, M_VG);
 
 	if (ob != NULL && ob->gfx != NULL) {
-		gfx_destroy(ob->gfx);
+		AG_GfxDestroy(ob->gfx);
 		ob->gfx = NULL;
 	}
 	Free(vg->layers, M_VG);
 
-	vg_destroy_blocks(vg);
-	vg_destroy_elements(vg);
-	vg_destroy_styles(vg);
+	VG_DestroyBlocks(vg);
+	VG_DestroyElements(vg);
+	VG_DestroyStyles(vg);
 	pthread_mutex_destroy(&vg->lock);
 
 	Free(vg->ints, M_VG);
 }
 
 void
-vg_destroy_element(struct vg *vg, struct vg_element *vge)
+VG_DestroyElement(VG *vg, VG_Element *vge)
 {
 	if (vge->block != NULL)
 		TAILQ_REMOVE(&vge->block->vges, vge, vgbmbs);
@@ -272,7 +272,7 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 		vg->cur_vge = NULL;
 
 	TAILQ_REMOVE(&vg->vges, vge, vges);
-	vg_free_element(vg, vge);
+	VG_FreeElement(vg, vge);
 	vg->redraw++;
 }
 
@@ -281,10 +281,10 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
  * The vg must be tied to an object.
  */
 void
-vg_update_fragments(struct vg *vg)
+VG_UpdateFragments(VG *vg)
 {
-	struct object *pobj = vg->pobj;
-	struct noderef *r;
+	AG_Object *pobj = vg->pobj;
+	AG_Nitem *r;
 	int x, y;
 	int mx, my;
 	SDL_Rect sd, rd;
@@ -295,33 +295,33 @@ vg_update_fragments(struct vg *vg)
 
 	rd.x = 0;
 	rd.y = 0;
-	sd.w = TILESZ;
-	sd.h = TILESZ;
+	sd.w = AGTILESZ;
+	sd.h = AGTILESZ;
 	
 	SDL_SetAlpha(vg->su, 0, 0);
 	SDL_SetColorKey(vg->su, 0, 0);
 	
 	for (y = 0, my = 0;
 	     y < vg->su->h && my < vg->map->maph;
-	     y += TILESZ, my++) {
+	     y += AGTILESZ, my++) {
 		for (x = 0, mx = 0;
 		     x < vg->su->w && mx < vg->map->mapw;
-		     x += TILESZ, mx++) {
-			struct node *n = &vg->map->map[my][mx];
+		     x += AGTILESZ, mx++) {
+			AG_Node *n = &vg->map->map[my][mx];
 			SDL_Surface *fragsu = NULL;
 			int fw, fh;
 
-			fw = vg->su->w-x < TILESZ ? vg->su->w-x : TILESZ;
-			fh = vg->su->h-y < TILESZ ? vg->su->h-y : TILESZ;
+			fw = vg->su->w-x < AGTILESZ ? vg->su->w-x : AGTILESZ;
+			fh = vg->su->h-y < AGTILESZ ? vg->su->h-y : AGTILESZ;
 #ifdef DEBUG
 			if (fw <= 0 || fh <= 0)
 				fatal("fragment too small");
 #endif
 			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
-				if (r->type == NODEREF_SPRITE &&
+				if (r->type == AG_NITEM_SPRITE &&
 				    r->layer == vg->map->cur_layer &&
 				    r->r_sprite.obj == pobj) {
-					fragsu = SPRITE(pobj,
+					fragsu = AG_SPRITE(pobj,
 					                r->r_sprite.offs).su;
 					break;
 				}
@@ -346,9 +346,10 @@ vg_update_fragments(struct vg *vg)
 			if (r == NULL) {
 				Uint32 sp;
 
-				sp = gfx_insert_sprite(pobj->gfx, fragsu);
-				SPRITE(pobj,sp).snap_mode = GFX_SNAP_TO_GRID;
-				node_add_sprite(vg->map, n, pobj, sp);
+				sp = AG_GfxAddSprite(pobj->gfx, fragsu);
+				AG_SPRITE(pobj,sp).snap_mode =
+				    AG_GFX_SNAP_TO_GRID;
+				AG_NodeAddSprite(vg->map, n, pobj, sp);
 			}
 		}
 	}
@@ -364,45 +365,45 @@ vg_update_fragments(struct vg *vg)
  * The vg must be tied to an object.
  */
 void
-vg_destroy_fragments(struct vg *vg)
+VG_FreeFragments(VG *vg)
 {
-	struct gfx *gfx = vg->pobj->gfx;
+	AG_Gfx *gfx = vg->pobj->gfx;
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++) {
-		sprite_destroy(gfx, i);
+		AG_SpriteDestroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
-		object_destroy(gfx->submaps[i]);
+		AG_ObjectDestroy(gfx->submaps[i]);
 		Free(gfx->submaps[i], M_OBJECT);
 	}
 	gfx->nsprites = 0;
 	gfx->nsubmaps = 0;
 
 	if (vg->map != NULL)
-		map_free_nodes(vg->map);
+		AG_MapFreeNodes(vg->map);
 }
 
 /* Set the default scale factor. */
 void
-vg_default_scale(struct vg *vg, double scale)
+VG_DefaultScale(VG *vg, double scale)
 {
 	vg->default_scale = scale;
 }
 
 /* Set the default scale factor. */
 void
-vg_grid_gap(struct vg *vg, double gap)
+VG_SetGridGap(VG *vg, double gap)
 {
 	vg->grid_gap = gap;
 }
 
 /* Adjust the vg bounding box and scaling factor. */
 void
-vg_scale(struct vg *vg, double w, double h, double scale)
+VG_Scale(VG *vg, double w, double h, double scale)
 {
-	int pw = (int)(w*scale*TILESZ);
-	int ph = (int)(h*scale*TILESZ);
+	int pw = (int)(w*scale*AGTILESZ);
+	int ph = (int)(h*scale*AGTILESZ);
 	int mw, mh, y;
 	Uint32 Rmask = vg->fmt->Rmask;
 	Uint32 Gmask = vg->fmt->Gmask;
@@ -433,11 +434,11 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 
 	/* Resize the fragment map. */
 	if (vg->pobj != NULL) {
-		vg_destroy_fragments(vg);
-		mw = vg->su->w/TILESZ+1;
-		mh = vg->su->h/TILESZ+1;
-		if (map_alloc_nodes(vg->map, mw, mh) == -1)
-			fatal("%s", error_get());
+		VG_FreeFragments(vg);
+		mw = vg->su->w/AGTILESZ+1;
+		mh = vg->su->h/AGTILESZ+1;
+		if (AG_MapAllocNodes(vg->map, mw, mh) == -1)
+			fatal("%s", AG_GetError());
 	}
 	vg->redraw++;
 }
@@ -446,13 +447,13 @@ vg_scale(struct vg *vg, double w, double h, double scale)
  * Allocate the given type of element and begin its parametrization.
  * If a block is selected, associate the element with it.
  */
-struct vg_element *
-vg_begin_element(struct vg *vg, enum vg_element_type eltype)
+VG_Element *
+VG_Begin(VG *vg, enum vg_element_type eltype)
 {
-	struct vg_element *vge;
+	VG_Element *vge;
 	int i;
 
-	vge = Malloc(sizeof(struct vg_element), M_VG);
+	vge = Malloc(sizeof(VG_Element), M_VG);
 	vge->flags = 0;
 	vge->type = eltype;
 	vge->style = NULL;
@@ -488,7 +489,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 		vge->block = NULL;
 	}
 
-	vge->ops = vg_element_types[eltype];
+	vge->ops = vgElementTypes[eltype];
 	if (vge->ops->init != NULL)
 		vge->ops->init(vg, vge);
 
@@ -503,7 +504,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
  * The vg must be locked.
  */
 void
-vg_end_element(struct vg *vg)
+VG_End(VG *vg)
 {
 	vg->cur_vge = NULL;
 }
@@ -513,18 +514,18 @@ vg_end_element(struct vg *vg)
  * The vg must be locked.
  */
 void
-vg_select_element(struct vg *vg, struct vg_element *vge)
+VG_Select(VG *vg, VG_Element *vge)
 {
 	vg->cur_vge = vge;
 }
 
 #ifdef DEBUG
 void
-vg_draw_bboxes(struct vg *vg)
+VG_DrawExtents(VG *vg)
 {
-	struct vg_rect bbox;
-	struct vg_element *vge;
-	struct vg_block *vgb;
+	VG_Rect bbox;
+	VG_Element *vge;
+	VG_Block *vgb;
 	int x, y, w, h;
 	int i;
 
@@ -534,28 +535,28 @@ vg_draw_bboxes(struct vg *vg)
 		} else {
 			continue;
 		}
-		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
-		vg_rlength(vg, bbox.w, &w);
-		vg_rlength(vg, bbox.h, &h);
-		vg_rect_primitive(vg, x-1, y-1, w+2, h+2, vg->grid_color);
+		VG_Rcoords2(vg, bbox.x, bbox.y, &x, &y);
+		VG_RLength(vg, bbox.w, &w);
+		VG_RLength(vg, bbox.h, &h);
+		VG_RectPrimitive(vg, x-1, y-1, w+2, h+2, vg->grid_color);
 	}
 	
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		Uint32 ext_color = SDL_MapRGB(vg->fmt, 0, 250, 0);
 
-		vg_block_extent(vg, vgb, &bbox);
-		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
-		vg_rlength(vg, bbox.w, &w);
-		vg_rlength(vg, bbox.h, &h);
-		vg_rect_primitive(vg, x-1, y-1, w+2, h+2, ext_color);
+		VG_BlockExtent(vg, vgb, &bbox);
+		VG_Rcoords2(vg, bbox.x, bbox.y, &x, &y);
+		VG_RLength(vg, bbox.w, &w);
+		VG_RLength(vg, bbox.h, &h);
+		VG_RectPrimitive(vg, x-1, y-1, w+2, h+2, ext_color);
 	}
 }
 #endif /* DEBUG */
 
 /* Evaluate the intersection between two rectangles. */
 int
-vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
-    struct vg_rect *ixion)
+VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2,
+    VG_Rect *ixion)
 {
 	double r1xmin, r1xmax, r1ymin, r1ymax;
 	double r2xmin, r2xmax, r2ymin, r2ymax;
@@ -597,10 +598,10 @@ vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
  * The vg must be locked.
  */
 void
-vg_rasterize_element(struct vg *vg, struct vg_element *vge)
+VG_RasterizeElement(VG *vg, VG_Element *vge)
 {
-	struct vg_element *ovge;
-	struct vg_rect r1, r2;
+	VG_Element *ovge;
+	VG_Rect r1, r2;
 	Uint32 color_save = 0;			/* XXX -Wuninitialized */
 
 	if (!vge->drawn) {
@@ -635,18 +636,18 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 				continue;
 			}
 			ovge->ops->bbox(vg, ovge, &r2);
-			if (vg_rcollision(vg, &r1, &r2, NULL))
-				vg_rasterize_element(vg, ovge);
+			if (VG_Rintersect(vg, &r1, &r2, NULL))
+				VG_RasterizeElement(vg, ovge);
 		}
 	}
 }
 
 /* Rasterize elements marked dirty and update the affected tiles. */
 void
-vg_rasterize(struct vg *vg)
+VG_Rasterize(VG *vg)
 {
-	struct vg_element *vge;
-	struct vg_block *vgb;
+	VG_Element *vge;
+	VG_Block *vgb;
 	int i;
 
 	pthread_mutex_lock(&vg->lock);
@@ -654,23 +655,23 @@ vg_rasterize(struct vg *vg)
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
 
 	if (vg->flags & VG_VISGRID)
-		vg_draw_grid(vg);
+		VG_DrawGrid(vg);
 #ifdef DEBUG
 	if (vg->flags & VG_VISBBOXES)
-		vg_draw_bboxes(vg);
+		VG_DrawExtents(vg);
 #endif
 	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		vg_rasterize_element(vg, vge);
+		VG_RasterizeElement(vg, vge);
 	}
 	if (vg->flags & VG_VISORIGIN)
-		vg_draw_origin(vg);
+		VG_DrawOrigin(vg);
 
 	if (vg->pobj != NULL)
-		vg_update_fragments(vg);
+		VG_UpdateFragments(vg);
 
 	vg->redraw = 0;
 	pthread_mutex_unlock(&vg->lock);
@@ -681,9 +682,9 @@ vg_rasterize(struct vg *vg)
  * The vg must be locked.
  */
 void
-vg_vlength(struct vg *vg, int len, double *vlen)
+VG_VLength(VG *vg, int len, double *vlen)
 {
-	*vlen = (double)(len/vg->scale/TILESZ);
+	*vlen = (double)(len/vg->scale/AGTILESZ);
 }
 
 /*
@@ -692,30 +693,30 @@ vg_vlength(struct vg *vg, int len, double *vlen)
  * The vg must be locked.
  */
 void
-vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
+VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ -
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/AGTILESZ -
 	    vg->origin[0].x;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ -
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/AGTILESZ -
 	    vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
-		vg_snap_to(vg, vx, vy);
+		VG_SnapPoint(vg, vx, vy);
 	if (vg->ortho_mode != VG_NO_ORTHO)
-		vg_ortho_restrict(vg, vx, vy);
+		VG_RestrictOrtho(vg, vx, vy);
 }
 
 int
-vg_map2vec(struct vg *vg, int rx, int ry, double *vx, double *vy)
+VG_Map2Vec(VG *vg, int rx, int ry, double *vx, double *vy)
 {
-	*vx = (double)rx/vg->scale/TILESZ - vg->origin[0].x;
-	*vy = (double)ry/vg->scale/TILESZ - vg->origin[0].y;
+	*vx = (double)rx/vg->scale/AGTILESZ - vg->origin[0].x;
+	*vy = (double)ry/vg->scale/AGTILESZ - vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
-		vg_snap_to(vg, vx, vy);
+		VG_SnapPoint(vg, vx, vy);
 	if (vg->ortho_mode != VG_NO_ORTHO)
-		vg_ortho_restrict(vg, vx, vy);
+		VG_RestrictOrtho(vg, vx, vy);
 	
 	return ((rx < 0 || ry < 0) ? -1 : 0);
 }
@@ -725,13 +726,13 @@ vg_map2vec(struct vg *vg, int rx, int ry, double *vx, double *vy)
  * The vg must be locked.
  */
 int
-vg_map2veca(struct vg *vg, int rx, int ry, double *vx, double *vy)
+VG_Map2VecAbs(VG *vg, int rx, int ry, double *vx, double *vy)
 {
-	*vx = (double)rx/vg->scale/TILESZ;
-	*vy = (double)ry/vg->scale/TILESZ;
+	*vx = (double)rx/vg->scale/AGTILESZ;
+	*vy = (double)ry/vg->scale/AGTILESZ;
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
-		vg_snap_to(vg, vx, vy);
+		VG_SnapPoint(vg, vx, vy);
 
 	return ((rx < 0 || ry < 0) ? -1 : 0);
 }
@@ -741,14 +742,14 @@ vg_map2veca(struct vg *vg, int rx, int ry, double *vx, double *vy)
  * The vg must be locked.
  */
 void
-vg_avcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
+VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ;
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/AGTILESZ;
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/AGTILESZ;
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
-		vg_snap_to(vg, vx, vy);
+		VG_SnapPoint(vg, vx, vy);
 }
 
 /*
@@ -756,12 +757,12 @@ vg_avcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
  * The vg must be locked.
  */
 void
-vg_rcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
+VG_Rcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 {
-	*rx = (int)(vx*vg->scale*TILESZ) +
-	      (int)(vg->origin[0].x*vg->scale*TILESZ);
-	*ry = (int)(vy*vg->scale*TILESZ) +
-	      (int)(vg->origin[0].y*vg->scale*TILESZ);
+	*rx = (int)(vx*vg->scale*AGTILESZ) +
+	      (int)(vg->origin[0].x*vg->scale*AGTILESZ);
+	*ry = (int)(vy*vg->scale*AGTILESZ) +
+	      (int)(vg->origin[0].y*vg->scale*AGTILESZ);
 }
 
 /*
@@ -769,10 +770,10 @@ vg_rcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
+VG_AbsRcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 {
-	*rx = (int)(vx*vg->scale*TILESZ);
-	*ry = (int)(vy*vg->scale*TILESZ);
+	*rx = (int)(vx*vg->scale*AGTILESZ);
+	*ry = (int)(vy*vg->scale*AGTILESZ);
 }
 
 /*
@@ -780,12 +781,12 @@ vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-vg_rcoords2d(struct vg *vg, double vx, double vy, double *rx, double *ry)
+VG_Rcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 {
-	*rx = vx*vg->scale*TILESZ +
-	      vg->origin[0].x*vg->scale*TILESZ;
-	*ry = vy*vg->scale*TILESZ +
-	      vg->origin[0].y*vg->scale*TILESZ;
+	*rx = vx*vg->scale*AGTILESZ +
+	      vg->origin[0].x*vg->scale*AGTILESZ;
+	*ry = vy*vg->scale*AGTILESZ +
+	      vg->origin[0].y*vg->scale*AGTILESZ;
 }
 
 /*
@@ -793,7 +794,7 @@ vg_rcoords2d(struct vg *vg, double vx, double vy, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-vg_vtxcoords2d(struct vg *vg, struct vg_vertex *vtx, double *rx, double *ry)
+VG_VtxCoords2d(VG *vg, VG_Vtx *vtx, double *rx, double *ry)
 {
 	if (rx != NULL)	*rx = VG_RASXF(vg,vtx->x);
 	if (ry != NULL)	*ry = VG_RASYF(vg,vtx->y);
@@ -804,7 +805,7 @@ vg_vtxcoords2d(struct vg *vg, struct vg_vertex *vtx, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-vg_vtxcoords2i(struct vg *vg, struct vg_vertex *vtx, int *rx, int *ry)
+VG_VtxCoords2i(VG *vg, VG_Vtx *vtx, int *rx, int *ry)
 {
 	if (rx != NULL)	*rx = VG_RASX(vg,vtx->x);
 	if (ry != NULL) *ry = VG_RASY(vg,vtx->y);
@@ -815,10 +816,10 @@ vg_vtxcoords2i(struct vg *vg, struct vg_vertex *vtx, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-vg_arcoords2d(struct vg *vg, double vx, double vy, double *rx, double *ry)
+VG_AbsRcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 {
-	*rx = vx*vg->scale*TILESZ;
-	*ry = vy*vg->scale*TILESZ;
+	*rx = vx*vg->scale*AGTILESZ;
+	*ry = vy*vg->scale*AGTILESZ;
 }
 
 /*
@@ -826,28 +827,27 @@ vg_arcoords2d(struct vg *vg, double vx, double vy, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-vg_rlength(struct vg *vg, double len, int *rlen)
+VG_RLength(VG *vg, double len, int *rlen)
 {
-	*rlen = (int)(len*vg->scale*TILESZ);
+	*rlen = (int)(len*vg->scale*AGTILESZ);
 }
 
-struct vg_vertex *
-vg_alloc_vertex(struct vg_element *vge)
+VG_Vtx *
+VG_AllocVertex(VG_Element *vge)
 {
 	if (vge->vtx == NULL) {
-		vge->vtx = Malloc(sizeof(struct vg_vertex), M_VG);
+		vge->vtx = Malloc(sizeof(VG_Vtx), M_VG);
 	} else {
-		vge->vtx = Realloc(vge->vtx, (vge->nvtx+1) *
-		                             sizeof(struct vg_vertex));
+		vge->vtx = Realloc(vge->vtx, (vge->nvtx+1)*sizeof(VG_Vtx));
 	}
 	return (&vge->vtx[vge->nvtx++]);
 }
 
 /* Pop the highest vertex off the vertex array. */
-struct vg_vertex *
-vg_pop_vertex(struct vg *vg)
+VG_Vtx *
+VG_PopVertex(VG *vg)
 {
-	struct vg_element *vge = vg->cur_vge;
+	VG_Element *vge = vg->cur_vge;
 
 	if (vge->vtx == NULL)
 		return (NULL);
@@ -855,83 +855,83 @@ vg_pop_vertex(struct vg *vg)
 	if (vge->nvtx-1 < 0)
 		fatal("neg nvtx");
 #endif
-	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex));
+	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(VG_Vtx));
 	vg->redraw++;
 	return (vge->nvtx > 0 ? &vge->vtx[vge->nvtx-1] : NULL);
 }
 
 /* Push a 2D vertex onto the vertex array. */
-struct vg_vertex *
-vg_vertex2(struct vg *vg, double x, double y)
+VG_Vtx *
+VG_Vertex2(VG *vg, double x, double y)
 {
-	struct vg_vertex *vtx;
+	VG_Vtx *vtx;
 
-	vtx = vg_alloc_vertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = 0;
 	vtx->w = 1.0;
-	vg_block_offset(vg, vtx);
+	VG_BlockOffset(vg, vtx);
 	vg->redraw++;
 	return (vtx);
 }
 
 /* Push a 3D vertex onto the vertex array. */
-struct vg_vertex *
-vg_vertex3(struct vg *vg, double x, double y, double z)
+VG_Vtx *
+VG_Vertex3(VG *vg, double x, double y, double z)
 {
-	struct vg_vertex *vtx;
+	VG_Vtx *vtx;
 
-	vtx = vg_alloc_vertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = z;
 	vtx->w = 1.0;
-	vg_block_offset(vg, vtx);
+	VG_BlockOffset(vg, vtx);
 	vg->redraw++;
 	return (vtx);
 }
 
 /* Push a homogenized 3D vertex onto the vertex array. */
-struct vg_vertex *
-vg_vertex4(struct vg *vg, double x, double y, double z, double w)
+VG_Vtx *
+VG_Vertex4(VG *vg, double x, double y, double z, double w)
 {
-	struct vg_vertex *vtx;
+	VG_Vtx *vtx;
 
-	vtx = vg_alloc_vertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
 	vtx->z = z;
 	vtx->w = w;
-	vg_block_offset(vg, vtx);
+	VG_BlockOffset(vg, vtx);
 	vg->redraw++;
 	return (vtx);
 }
 
 /* Push a series of vertices onto the vertex array. */
 void
-vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, u_int nsvtx)
+VG_VertexV(VG *vg, const VG_Vtx *svtx, u_int nsvtx)
 {
-	struct vg_element *vge = vg->cur_vge;
+	VG_Element *vge = vg->cur_vge;
 	u_int i;
 	
 	for (i = 0; i < nsvtx; i++) {
-		struct vg_vertex *vtx;
+		VG_Vtx *vtx;
 
-		vtx = vg_alloc_vertex(vge);
-		memcpy(vtx, &svtx[i], sizeof(struct vg_vertex));
-		vg_block_offset(vg, vtx);
+		vtx = VG_AllocVertex(vge);
+		memcpy(vtx, &svtx[i], sizeof(VG_Vtx));
+		VG_BlockOffset(vg, vtx);
 	}
 	vg->redraw++;
 }
 
 /* Create a new global style. */
-struct vg_style *
-vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
+VG_Style *
+VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 {
-	struct vg_style *vgs;
+	VG_Style *vgs;
 
-	vgs = Malloc(sizeof(struct vg_style), M_VG);
+	vgs = Malloc(sizeof(VG_Style), M_VG);
 	strlcpy(vgs->name, name, sizeof(vgs->name));
 	vgs->type = type;
 	vgs->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
@@ -960,10 +960,10 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 
 /* Associate the given style with the current element. */
 int
-vg_style(struct vg *vg, const char *name)
+VG_SetStyle(VG *vg, const char *name)
 {
-	struct vg_element *vge = vg->cur_vge;
-	struct vg_style *st;
+	VG_Element *vge = vg->cur_vge;
+	VG_Style *st;
 
 	TAILQ_FOREACH(st, &vg->styles, styles) {
 		if (strcmp(st->name, name) == 0)
@@ -975,15 +975,15 @@ vg_style(struct vg *vg, const char *name)
 	switch (st->type) {
 	case VG_LINE_STYLE:
 		memcpy(&vge->line_st, &st->vg_line_st,
-		    sizeof(struct vg_line_style));
+		    sizeof(VG_LineStyle));
 		break;
 	case VG_TEXT_STYLE:
 		memcpy(&vge->text_st, &st->vg_text_st,
-		    sizeof(struct vg_text_style));
+		    sizeof(VG_TextStyle));
 		break;
 	case VG_FILL_STYLE:
 		memcpy(&vge->fill_st, &st->vg_fill_st,
-		    sizeof(struct vg_fill_style));
+		    sizeof(VG_FillingStyle));
 		break;
 	}
 	return (0);
@@ -991,14 +991,14 @@ vg_style(struct vg *vg, const char *name)
 
 /* Specify the layer# to associate with the current element. */
 void
-vg_layer(struct vg *vg, int layer)
+VG_SetLayer(VG *vg, int layer)
 {
 	vg->cur_vge->layer = layer;
 }
 
 /* Specify the color of the current element (format-specific). */
 void
-vg_color(struct vg *vg, Uint32 color)
+VG_Color(VG *vg, Uint32 color)
 {
 	vg->cur_vge->color = color;
 	vg->redraw++;
@@ -1006,7 +1006,7 @@ vg_color(struct vg *vg, Uint32 color)
 
 /* Specify the color of the current element (RGB triplet). */
 void
-vg_color3(struct vg *vg, int r, int g, int b)
+VG_Color3(VG *vg, int r, int g, int b)
 {
 	vg->cur_vge->color = SDL_MapRGB(vg->fmt, r, g, b);
 	vg->redraw++;
@@ -1014,20 +1014,20 @@ vg_color3(struct vg *vg, int r, int g, int b)
 
 /* Specify the color of the current element (RGB triplet + alpha). */
 void
-vg_color4(struct vg *vg, int r, int g, int b, int a)
+VG_Color4(VG *vg, int r, int g, int b, int a)
 {
 	vg->cur_vge->color = SDL_MapRGBA(vg->fmt, r, g, b, a);
 	vg->redraw++;
 }
 
 /* Push a new layer onto the layer stack. */
-struct vg_layer *
-vg_push_layer(struct vg *vg, const char *name)
+VG_Layer *
+VG_PushLayer(VG *vg, const char *name)
 {
-	struct vg_layer *vgl;
+	VG_Layer *vgl;
 
 	vg->layers = Realloc(vg->layers, (vg->nlayers+1) *
-	                                 sizeof(struct vg_layer));
+	                                 sizeof(VG_Layer));
 	vgl = &vg->layers[vg->nlayers];
 	vg->nlayers++;
 
@@ -1042,7 +1042,7 @@ vg_push_layer(struct vg *vg, const char *name)
 
 /* Pop the highest layer off the layer stack. */
 void
-vg_pop_layer(struct vg *vg)
+VG_PopLayer(VG *vg)
 {
 	if (--vg->nlayers < 1)
 		vg->nlayers = 1;
@@ -1051,320 +1051,321 @@ vg_pop_layer(struct vg *vg)
 }
 
 void
-vg_save(struct vg *vg, struct netbuf *buf)
+VG_Save(VG *vg, AG_Netbuf *buf)
 {
 	off_t nblocks_offs, nvges_offs, nstyles_offs;
 	Uint32 nblocks = 0, nvges = 0, nstyles = 0;
-	struct vg_block *vgb;
-	struct vg_style *vgs;
-	struct vg_element *vge;
+	VG_Block *vgb;
+	VG_Style *vgs;
+	VG_Element *vge;
 	int i;
 
-	version_write(buf, &vg_ver);
+	AG_WriteVersion(buf, &vgVer);
 
 	pthread_mutex_lock(&vg->lock);
 
-	write_string(buf, vg->name);
-	write_uint32(buf, (Uint32)vg->flags);
-	write_double(buf, vg->w);
-	write_double(buf, vg->h);
-	write_double(buf, vg->scale);
-	write_double(buf, vg->default_scale);
-	write_color(buf, vg->fmt, vg->fill_color);
-	write_color(buf, vg->fmt, vg->grid_color);
-	write_color(buf, vg->fmt, vg->selection_color);
-	write_color(buf, vg->fmt, vg->mouseover_color);
-	write_double(buf, vg->grid_gap);
-	write_uint32(buf, (Uint32)vg->cur_layer);
+	AG_WriteString(buf, vg->name);
+	AG_WriteUint32(buf, (Uint32)vg->flags);
+	AG_WriteDouble(buf, vg->w);
+	AG_WriteDouble(buf, vg->h);
+	AG_WriteDouble(buf, vg->scale);
+	AG_WriteDouble(buf, vg->default_scale);
+	AG_WriteColor(buf, vg->fmt, vg->fill_color);
+	AG_WriteColor(buf, vg->fmt, vg->grid_color);
+	AG_WriteColor(buf, vg->fmt, vg->selection_color);
+	AG_WriteColor(buf, vg->fmt, vg->mouseover_color);
+	AG_WriteDouble(buf, vg->grid_gap);
+	AG_WriteUint32(buf, (Uint32)vg->cur_layer);
 
 	/* Save the origin points. */
-	write_uint32(buf, vg->norigin);
+	AG_WriteUint32(buf, vg->norigin);
 	for (i = 0; i < vg->norigin; i++) {
-		write_vertex(buf, &vg->origin[i]);
-		write_float(buf, vg->origin_radius[i]);
-		write_color(buf, vg->fmt, vg->origin_color[i]);
+		AG_WriteVertex(buf, &vg->origin[i]);
+		AG_WriteFloat(buf, vg->origin_radius[i]);
+		AG_WriteColor(buf, vg->fmt, vg->origin_color[i]);
 	}
 
 	/* Save the layer information. */
-	write_uint32(buf, vg->nlayers);
+	AG_WriteUint32(buf, vg->nlayers);
 	for (i = 0; i < vg->nlayers; i++) {
-		struct vg_layer *layer = &vg->layers[i];
+		VG_Layer *layer = &vg->layers[i];
 
-		write_string(buf, layer->name);
-		write_uint8(buf, (Uint8)layer->visible);
-		write_color(buf, vg->fmt, layer->color);
-		write_uint8(buf, layer->alpha);
+		AG_WriteString(buf, layer->name);
+		AG_WriteUint8(buf, (Uint8)layer->visible);
+		AG_WriteColor(buf, vg->fmt, layer->color);
+		AG_WriteUint8(buf, layer->alpha);
 	}
 
 	/* Save the block information. */
-	nblocks_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nblocks_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		if (vgb->flags & VG_BLOCK_NOSAVE)
 			continue;
 
-		write_string(buf, vgb->name);
-		write_uint32(buf, (Uint32)vgb->flags);
-		write_vertex(buf, &vgb->pos);
-		write_vertex(buf, &vgb->origin);
-		write_double(buf, vgb->theta);
+		AG_WriteString(buf, vgb->name);
+		AG_WriteUint32(buf, (Uint32)vgb->flags);
+		AG_WriteVertex(buf, &vgb->pos);
+		AG_WriteVertex(buf, &vgb->origin);
+		AG_WriteDouble(buf, vgb->theta);
 		nblocks++;
 	}
-	pwrite_uint32(buf, nblocks, nblocks_offs);
+	AG_PwriteUint32(buf, nblocks, nblocks_offs);
 
 	/* Save the global style information. */
-	nstyles_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nstyles_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
-		write_string(buf, vgs->name);
-		write_uint8(buf, (Uint8)vgs->type);
-		write_color(buf, vg->fmt, vgs->color);
+		AG_WriteString(buf, vgs->name);
+		AG_WriteUint8(buf, (Uint8)vgs->type);
+		AG_WriteColor(buf, vg->fmt, vgs->color);
 
 		switch (vgs->type) {
 		case VG_LINE_STYLE:
-			write_uint8(buf, (Uint8)vgs->vg_line_st.style);
-			write_uint8(buf, (Uint8)vgs->vg_line_st.endpoint_style);
-			write_uint16(buf, vgs->vg_line_st.stipple);
-			write_uint8(buf, vgs->vg_line_st.thickness);
-			write_uint8(buf, vgs->vg_line_st.miter_len);
+			AG_WriteUint8(buf, (Uint8)vgs->vg_line_st.style);
+			AG_WriteUint8(buf, (Uint8)vgs->vg_line_st.endpoint_style);
+			AG_WriteUint16(buf, vgs->vg_line_st.stipple);
+			AG_WriteUint8(buf, vgs->vg_line_st.thickness);
+			AG_WriteUint8(buf, vgs->vg_line_st.miter_len);
 			break;
 		case VG_FILL_STYLE:
-			write_uint8(buf, (Uint8)vgs->vg_fill_st.style);
-			write_string(buf, vgs->vg_fill_st.texture);
-			write_uint8(buf, vgs->vg_fill_st.texture_alpha);
+			AG_WriteUint8(buf, (Uint8)vgs->vg_fill_st.style);
+			AG_WriteString(buf, vgs->vg_fill_st.texture);
+			AG_WriteUint8(buf, vgs->vg_fill_st.texture_alpha);
 			break;
 		case VG_TEXT_STYLE:
-			write_string(buf, vgs->vg_text_st.face);
-			write_uint8(buf, (Uint8)vgs->vg_text_st.size);
-			write_uint32(buf, (Uint32)vgs->vg_text_st.flags);
+			AG_WriteString(buf, vgs->vg_text_st.face);
+			AG_WriteUint8(buf, (Uint8)vgs->vg_text_st.size);
+			AG_WriteUint32(buf, (Uint32)vgs->vg_text_st.flags);
 			break;
 		}
 		nstyles++;
 	}
-	pwrite_uint32(buf, nstyles, nstyles_offs);
+	AG_PwriteUint32(buf, nstyles, nstyles_offs);
 
 	/* Save the vg elements. */
-	nvges_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nvges_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		if (vge->flags & VG_ELEMENT_NOSAVE)
 			continue;
 
-		write_uint32(buf, (Uint32)vge->type);
-		write_string(buf, vge->block != NULL ? vge->block->name : NULL);
-		write_uint32(buf, (Uint32)vge->layer);
-		write_color(buf, vg->fmt, vge->color);
+		AG_WriteUint32(buf, (Uint32)vge->type);
+		AG_WriteString(buf, vge->block != NULL ? vge->block->name : NULL);
+		AG_WriteUint32(buf, (Uint32)vge->layer);
+		AG_WriteColor(buf, vg->fmt, vge->color);
 
 		/* Save the line style information. */
-		write_uint8(buf, (Uint8)vge->line_st.style);
-		write_uint8(buf, (Uint8)vge->line_st.endpoint_style);
-		write_uint16(buf, vge->line_st.stipple);
-		write_uint8(buf, vge->line_st.thickness);
-		write_uint8(buf, vge->line_st.miter_len);
+		AG_WriteUint8(buf, (Uint8)vge->line_st.style);
+		AG_WriteUint8(buf, (Uint8)vge->line_st.endpoint_style);
+		AG_WriteUint16(buf, vge->line_st.stipple);
+		AG_WriteUint8(buf, vge->line_st.thickness);
+		AG_WriteUint8(buf, vge->line_st.miter_len);
 
 		/* Save the filling style information. */
-		write_uint8(buf, (Uint8)vge->fill_st.style);
-		write_string(buf, vge->fill_st.texture);
-		write_uint8(buf, vge->fill_st.texture_alpha);
+		AG_WriteUint8(buf, (Uint8)vge->fill_st.style);
+		AG_WriteString(buf, vge->fill_st.texture);
+		AG_WriteUint8(buf, vge->fill_st.texture_alpha);
 		
 		/* Save the text style information. */
-		write_string(buf, vge->text_st.face);
-		write_uint8(buf, (Uint8)vge->text_st.size);
-		write_uint32(buf, (Uint32)vge->text_st.flags);
+		AG_WriteString(buf, vge->text_st.face);
+		AG_WriteUint8(buf, (Uint8)vge->text_st.size);
+		AG_WriteUint32(buf, (Uint32)vge->text_st.flags);
 
 		/* Save the vertices. */
-		write_uint32(buf, (Uint32)vge->nvtx);
+		AG_WriteUint32(buf, (Uint32)vge->nvtx);
 		for (i = 0; i < vge->nvtx; i++)
-			write_vertex(buf, &vge->vtx[i]);
+			AG_WriteVertex(buf, &vge->vtx[i]);
 
 		/* Save element specific data. */
 		switch (vge->type) {
 		case VG_CIRCLE:
-			write_double(buf, vge->vg_circle.radius);
+			AG_WriteDouble(buf, vge->vg_circle.radius);
 			break;
 		case VG_ARC:
 		case VG_ELLIPSE:
-			write_double(buf, vge->vg_arc.w);
-			write_double(buf, vge->vg_arc.h);
-			write_double(buf, vge->vg_arc.s);
-			write_double(buf, vge->vg_arc.e);
+			AG_WriteDouble(buf, vge->vg_arc.w);
+			AG_WriteDouble(buf, vge->vg_arc.h);
+			AG_WriteDouble(buf, vge->vg_arc.s);
+			AG_WriteDouble(buf, vge->vg_arc.e);
 			break;
 		case VG_TEXT:
 			if (vge->vg_text.su != NULL) {
 				SDL_FreeSurface(vge->vg_text.su);
 				vge->vg_text.su = NULL;
 			}
-			write_string(buf, vge->vg_text.text);
-			write_double(buf, vge->vg_text.angle);
-			write_uint8(buf, (Uint8)vge->vg_text.align);
+			AG_WriteString(buf, vge->vg_text.text);
+			AG_WriteDouble(buf, vge->vg_text.angle);
+			AG_WriteUint8(buf, (Uint8)vge->vg_text.align);
 			break;
 		case VG_MASK:
-			write_float(buf, vge->vg_mask.scale);
-			write_uint8(buf, (Uint8)vge->vg_mask.visible);
-			write_string(buf, NULL);		       /* Pad */
+			AG_WriteFloat(buf, vge->vg_mask.scale);
+			AG_WriteUint8(buf, (Uint8)vge->vg_mask.visible);
+			AG_WriteString(buf, NULL);		       /* Pad */
 			break;
 		default:
 			break;
 		}
 		nvges++;
 	}
-	pwrite_uint32(buf, nvges, nvges_offs);
+	AG_PwriteUint32(buf, nvges, nvges_offs);
 
 	pthread_mutex_unlock(&vg->lock);
 }
 
 int
-vg_load(struct vg *vg, struct netbuf *buf)
+VG_Load(VG *vg, AG_Netbuf *buf)
 {
 	Uint32 norigin, nlayers, nstyles, nelements, nblocks;
 	Uint32 i;
 
-	if (version_read(buf, &vg_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &vgVer, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&vg->lock);
-	copy_string(vg->name, buf, sizeof(vg->name));
-	vg->flags = read_uint32(buf);
-	vg->w = read_double(buf);
-	vg->h = read_double(buf);
-	vg->scale = read_double(buf);
-	vg->default_scale = read_double(buf);
-	vg->fill_color = read_color(buf, vg->fmt);
-	vg->grid_color = read_color(buf, vg->fmt);
-	vg->selection_color = read_color(buf, vg->fmt);
-	vg->mouseover_color = read_color(buf, vg->fmt);
-	vg->grid_gap = read_double(buf);
-	vg->cur_layer = (int)read_uint32(buf);
+	AG_CopyString(vg->name, buf, sizeof(vg->name));
+	vg->flags = AG_ReadUint32(buf);
+	vg->w = AG_ReadDouble(buf);
+	vg->h = AG_ReadDouble(buf);
+	vg->scale = AG_ReadDouble(buf);
+	vg->default_scale = AG_ReadDouble(buf);
+	vg->fill_color = AG_ReadColor(buf, vg->fmt);
+	vg->grid_color = AG_ReadColor(buf, vg->fmt);
+	vg->selection_color = AG_ReadColor(buf, vg->fmt);
+	vg->mouseover_color = AG_ReadColor(buf, vg->fmt);
+	vg->grid_gap = AG_ReadDouble(buf);
+	vg->cur_layer = (int)AG_ReadUint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
 	dprintf("%s: bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
 	    vg->scale);
-	vg_scale(vg, vg->w, vg->h, vg->scale);
+	VG_Scale(vg, vg->w, vg->h, vg->scale);
 
 	/* Read the origin points. */
-	if ((norigin = read_uint32(buf)) < 1) {
-		error_set("norigin < 1");
+	if ((norigin = AG_ReadUint32(buf)) < 1) {
+		AG_SetError("norigin < 1");
 		goto fail;
 	}
-	vg->origin = Realloc(vg->origin, norigin*sizeof(struct vg_vertex));
+	vg->origin = Realloc(vg->origin, norigin*sizeof(VG_Vtx));
 	vg->origin_radius = Realloc(vg->origin_radius, norigin*sizeof(float));
 	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32));
 	vg->norigin = norigin;
 	for (i = 0; i < vg->norigin; i++) {
-		read_vertex(buf, &vg->origin[i]);
-		vg->origin_radius[i] = read_float(buf);
-		vg->origin_color[i] = read_color(buf, vg->fmt);
+		AG_ReadVertex(buf, &vg->origin[i]);
+		vg->origin_radius[i] = AG_ReadFloat(buf);
+		vg->origin_color[i] = AG_ReadColor(buf, vg->fmt);
 	}
 
 	/* Read the layer information. */
-	if ((nlayers = read_uint32(buf)) < 1) {
-		error_set("missing vg layer 0");
+	if ((nlayers = AG_ReadUint32(buf)) < 1) {
+		AG_SetError("missing vg layer 0");
 		goto fail;
 	}
-	vg->layers = Realloc(vg->layers, nlayers*sizeof(struct vg_layer));
+	vg->layers = Realloc(vg->layers, nlayers*sizeof(VG_Layer));
 	for (i = 0; i < nlayers; i++) {
-		struct vg_layer *layer = &vg->layers[i];
+		VG_Layer *layer = &vg->layers[i];
 
-		copy_string(layer->name, buf, sizeof(layer->name));
-		layer->visible = (int)read_uint8(buf);
-		layer->color = read_color(buf, vg->fmt);
-		layer->alpha = read_uint8(buf);
+		AG_CopyString(layer->name, buf, sizeof(layer->name));
+		layer->visible = (int)AG_ReadUint8(buf);
+		layer->color = AG_ReadColor(buf, vg->fmt);
+		layer->alpha = AG_ReadUint8(buf);
 	}
 	vg->nlayers = nlayers;
 
 	/* Read the block information. */
-	vg_destroy_blocks(vg);
-	nblocks = read_uint32(buf);
+	VG_DestroyBlocks(vg);
+	nblocks = AG_ReadUint32(buf);
 	for (i = 0; i < nblocks; i++) {
-		struct vg_block *vgb;
+		VG_Block *vgb;
 
-		vgb = Malloc(sizeof(struct vg_block), M_VG);
-		copy_string(vgb->name, buf, sizeof(vgb->name));
-		vgb->flags = (int)read_uint32(buf);
-		read_vertex(buf, &vgb->pos);
-		read_vertex(buf, &vgb->origin);
-		vgb->theta = read_double(buf);
+		vgb = Malloc(sizeof(VG_Block), M_VG);
+		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
+		vgb->flags = (int)AG_ReadUint32(buf);
+		AG_ReadVertex(buf, &vgb->pos);
+		AG_ReadVertex(buf, &vgb->origin);
+		vgb->theta = AG_ReadDouble(buf);
 		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
 
 	/* Read the global style information. */
-	vg_destroy_styles(vg);
-	nstyles = read_uint32(buf);
+	VG_DestroyStyles(vg);
+	nstyles = AG_ReadUint32(buf);
 	for (i = 0; i < nstyles; i++) {
 		char sname[VG_STYLE_NAME_MAX];
 		enum vg_style_type type;
-		struct vg_style *vgs;
+		VG_Style *vgs;
 
-		copy_string(sname, buf, sizeof(sname));
-		type = (enum vg_style_type)read_uint8(buf);
-		vgs = vg_create_style(vg, type, sname);
-		vgs->color = read_color(buf, vg->fmt);
+		AG_CopyString(sname, buf, sizeof(sname));
+		type = (enum vg_style_type)AG_ReadUint8(buf);
+		vgs = VG_CreateStyle(vg, type, sname);
+		vgs->color = AG_ReadColor(buf, vg->fmt);
 
 		switch (type) {
 		case VG_LINE_STYLE:
-			vgs->vg_line_st.style = read_uint8(buf);
-			vgs->vg_line_st.endpoint_style = read_uint8(buf);
-			vgs->vg_line_st.stipple = read_uint16(buf);
-			vgs->vg_line_st.thickness = read_uint8(buf);
-			vgs->vg_line_st.miter_len = read_uint8(buf);
+			vgs->vg_line_st.style = AG_ReadUint8(buf);
+			vgs->vg_line_st.endpoint_style = AG_ReadUint8(buf);
+			vgs->vg_line_st.stipple = AG_ReadUint16(buf);
+			vgs->vg_line_st.thickness = AG_ReadUint8(buf);
+			vgs->vg_line_st.miter_len = AG_ReadUint8(buf);
 			break;
 		case VG_FILL_STYLE:
-			vgs->vg_fill_st.style = read_uint8(buf);
-			copy_string(vgs->vg_fill_st.texture, buf,
+			vgs->vg_fill_st.style = AG_ReadUint8(buf);
+			AG_CopyString(vgs->vg_fill_st.texture, buf,
 			    sizeof(vgs->vg_fill_st.texture));
-			vgs->vg_fill_st.texture_alpha = read_uint8(buf);
+			vgs->vg_fill_st.texture_alpha = AG_ReadUint8(buf);
 			break;
 		case VG_TEXT_STYLE:
-			copy_string(vgs->vg_text_st.face, buf,
+			AG_CopyString(vgs->vg_text_st.face, buf,
 			    sizeof(vgs->vg_text_st.face));
-			vgs->vg_text_st.size = (int)read_uint8(buf);
-			vgs->vg_text_st.flags = (int)read_uint32(buf);
+			vgs->vg_text_st.size = (int)AG_ReadUint8(buf);
+			vgs->vg_text_st.flags = (int)AG_ReadUint32(buf);
 			break;
 		}
 	}
 
 	/* Read the vg elements. */
-	vg_destroy_elements(vg);
-	nelements = read_uint32(buf);
+	VG_DestroyElements(vg);
+	nelements = AG_ReadUint32(buf);
 	for (i = 0; i < nelements; i++) {
 		char block_id[VG_BLOCK_NAME_MAX];
 		enum vg_element_type type;
-		struct vg_element *vge;
-		struct vg_block *block;
+		VG_Element *vge;
+		VG_Block *block;
 		Uint32 nlayer;
 		int j;
 	
-		type = (enum vg_element_type)read_uint32(buf);
-		copy_string(block_id, buf, sizeof(block_id));
-		nlayer = (int)read_uint32(buf);
+		type = (enum vg_element_type)AG_ReadUint32(buf);
+		AG_CopyString(block_id, buf, sizeof(block_id));
+		nlayer = (int)AG_ReadUint32(buf);
 
-		vge = vg_begin_element(vg, type);
-		vge->color = read_color(buf, vg->fmt);
+		vge = VG_Begin(vg, type);
+		vge->color = AG_ReadColor(buf, vg->fmt);
 
 		/* Load the line style information. */
-		vge->line_st.style = read_uint8(buf);
-		vge->line_st.endpoint_style = read_uint8(buf);
-		vge->line_st.stipple = read_uint16(buf);
-		vge->line_st.thickness = read_uint8(buf);
-		vge->line_st.miter_len = read_uint8(buf);
+		vge->line_st.style = AG_ReadUint8(buf);
+		vge->line_st.endpoint_style = AG_ReadUint8(buf);
+		vge->line_st.stipple = AG_ReadUint16(buf);
+		vge->line_st.thickness = AG_ReadUint8(buf);
+		vge->line_st.miter_len = AG_ReadUint8(buf);
 
 		/* Load the filling style information. */
-		vge->fill_st.style = read_uint8(buf);
-		copy_string(vge->fill_st.texture, buf,
+		vge->fill_st.style = AG_ReadUint8(buf);
+		AG_CopyString(vge->fill_st.texture, buf,
 		    sizeof(vge->fill_st.texture));
-		vge->fill_st.texture_alpha = read_uint8(buf);
+		vge->fill_st.texture_alpha = AG_ReadUint8(buf);
 
 		/* Load the text style information. */
-		copy_string(vge->text_st.face, buf, sizeof(vge->text_st.face));
-		vge->text_st.size = (int)read_uint8(buf);
-		vge->text_st.flags = (int)read_uint32(buf);
+		AG_CopyString(vge->text_st.face, buf,
+		    sizeof(vge->text_st.face));
+		vge->text_st.size = (int)AG_ReadUint8(buf);
+		vge->text_st.flags = (int)AG_ReadUint32(buf);
 
 		/* Load the vertices. */
-		vge->nvtx = (u_int)read_uint32(buf);
-		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
+		vge->nvtx = (u_int)AG_ReadUint32(buf);
+		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx), M_VG);
 		for (j = 0; j < vge->nvtx; j++)
-			read_vertex(buf, &vge->vtx[j]);
+			AG_ReadVertex(buf, &vge->vtx[j]);
 
 		/* Associate the element with a block if necessary. */
 		if (block_id[0] != '\0') {
@@ -1373,7 +1374,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 					break;
 			}
 			if (block == NULL) {
-				error_set("unexisting vg block: %s", block_id);
+				AG_SetError("unexisting vg block: %s", block_id);
 				goto fail;
 			}
 		} else {
@@ -1388,44 +1389,44 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		switch (vge->type) {
 		case VG_CIRCLE:
 			if (vge->nvtx < 1) {
-				error_set("circle nvtx < 1");
-				vg_destroy_element(vg, vge);
+				AG_SetError("circle nvtx < 1");
+				VG_DestroyElement(vg, vge);
 				goto fail;
 			}
-			vge->vg_circle.radius = read_double(buf);
+			vge->vg_circle.radius = AG_ReadDouble(buf);
 			break;
 		case VG_ARC:
 		case VG_ELLIPSE:
 			if (vge->nvtx < 1) {
-				error_set("arc nvtx < 1");
-				vg_destroy_element(vg, vge);
+				AG_SetError("arc nvtx < 1");
+				VG_DestroyElement(vg, vge);
 				goto fail;
 			}
-			vge->vg_arc.w = read_double(buf);
-			vge->vg_arc.h = read_double(buf);
-			vge->vg_arc.s = read_double(buf);
-			vge->vg_arc.e = read_double(buf);
+			vge->vg_arc.w = AG_ReadDouble(buf);
+			vge->vg_arc.h = AG_ReadDouble(buf);
+			vge->vg_arc.s = AG_ReadDouble(buf);
+			vge->vg_arc.e = AG_ReadDouble(buf);
 			break;
 		case VG_TEXT:
 			if (vge->nvtx < 1) {
-				error_set("text nvtx < 1");
-				vg_destroy_element(vg, vge);
+				AG_SetError("text nvtx < 1");
+				VG_DestroyElement(vg, vge);
 				goto fail;
 			}
-			copy_string(vge->vg_text.text, buf,
+			AG_CopyString(vge->vg_text.text, buf,
 			    sizeof(vge->vg_text.text));
-			vge->vg_text.angle = read_double(buf);
-			vge->vg_text.align = read_uint8(buf);
+			vge->vg_text.angle = AG_ReadDouble(buf);
+			vge->vg_text.align = AG_ReadUint8(buf);
 			break;
 		case VG_MASK:
-			vge->vg_mask.scale = read_float(buf);
-			vge->vg_mask.visible = (int)read_uint8(buf);
-			read_string(buf);			       /* Pad */
+			vge->vg_mask.scale = AG_ReadFloat(buf);
+			vge->vg_mask.visible = (int)AG_ReadUint8(buf);
+			AG_ReadString(buf);			       /* Pad */
 			break;
 		default:
 			break;
 		}
-		vg_end_element(vg);
+		VG_End(vg);
 	}
 
 	vg->redraw = 1;
@@ -1439,18 +1440,18 @@ fail:
 
 #ifdef EDITION
 void
-vg_geo_changed(int argc, union evarg *argv)
+VG_GeoChangedEv(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
+	VG *vg = argv[1].p;
 
-	vg_scale(vg, vg->w, vg->h, vg->scale);
+	VG_Scale(vg, vg->w, vg->h, vg->scale);
 	vg->redraw = 1;
 }
 
 void
-vg_changed(int argc, union evarg *argv)
+VG_ChangedEv(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
+	VG *vg = argv[1].p;
 
 	vg->redraw = 1;
 }
@@ -1458,14 +1459,14 @@ vg_changed(int argc, union evarg *argv)
 static void
 poll_layers(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct vg *vg = argv[1].p;
+	AG_Tlist *tl = argv[0].p;
+	VG *vg = argv[1].p;
 	int i;
 	
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	for (i = 0; i < vg->nlayers; i++) {
-		struct vg_layer *layer = &vg->layers[i];
-		char label[TLIST_LABEL_MAX];
+		VG_Layer *layer = &vg->layers[i];
+		char label[AG_TLIST_LABEL_MAX];
 
 		if (layer->visible) {
 			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
@@ -1476,9 +1477,9 @@ poll_layers(int argc, union evarg *argv)
 			    layer->name,
 			    (i == vg->cur_layer) ? _(", editing") : "");
 		}
-		tlist_insert_item(tl, NULL, label, layer);
+		AG_TlistAddPtr(tl, NULL, label, layer);
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 
 	/* XXX load/save hack */
 	if (vg->cur_layer >= vg->nlayers)
@@ -1488,75 +1489,75 @@ poll_layers(int argc, union evarg *argv)
 static void
 select_layer(int argc, union evarg *argv)
 {
-	struct combo *com = argv[0].p;
-	struct vg *vg = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	AG_Combo *com = argv[0].p;
+	VG *vg = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
 	int i = 0;
 
 	TAILQ_FOREACH(it, &com->list->items, items) {
 		if (it->selected) {
-			struct vg_layer *lay = it->p1;
+			VG_Layer *lay = it->p1;
 
 			vg->cur_layer = i;
-			textbox_printf(com->tbox, "%d. %s", i, lay->name);
+			AG_TextboxPrintf(com->tbox, "%d. %s", i, lay->name);
 			return;
 		}
 		i++;
 	}
-	text_msg(MSG_ERROR, _("No layer is selected."));
+	AG_TextMsg(AG_MSG_ERROR, _("No layer is selected."));
 }
 
-struct combo *
-vg_layer_selector(void *parent, struct vg *vg)
+AG_Combo *
+VG_NewLayerSelector(void *parent, VG *vg)
 {
-	struct combo *com;
+	AG_Combo *com;
 
-	com = combo_new(parent, COMBO_POLL, _("Layer:"));
-	textbox_printf(com->tbox, "%d. %s", vg->cur_layer,
+	com = AG_ComboNew(parent, AG_COMBO_POLL, _("Layer:"));
+	AG_TextboxPrintf(com->tbox, "%d. %s", vg->cur_layer,
 	    vg->layers[vg->cur_layer].name);
-	event_new(com->list, "tlist-poll", poll_layers, "%p", vg);
-	event_new(com, "combo-selected", select_layer, "%p", vg);
+	AG_SetEvent(com->list, "tlist-poll", poll_layers, "%p", vg);
+	AG_SetEvent(com, "combo-selected", select_layer, "%p", vg);
 	return (com);
 }
 
 static void
-zoom_status(struct tool *t, struct vg *vg)
+zoom_status(AG_Maptool *t, VG *vg)
 {
-	mapview_status(t->mv, _("Scale %.0f%%"), vg->scale*100.0);
+	AG_MapviewStatus(t->mv, _("Scale %.0f%%"), vg->scale*100.0);
 }
 
 static int
-zoom_in(struct tool *t, int button, int state, int x, int y, void *arg)
+zoom_in(AG_Maptool *t, int button, int state, int x, int y, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	vg->scale += 0.125;
-	vg_scale(vg, vg->w, vg->h, vg->scale);
+	VG_Scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
 	return (1);
 }
 
 static int
-zoom_out(struct tool *t, int button, int state, int x, int y, void *arg)
+zoom_out(AG_Maptool *t, int button, int state, int x, int y, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	vg->scale -= 0.125;
 	if (vg->scale < 0.125) {
 		vg->scale = 0.125;
 	}
-	vg_scale(vg, vg->w, vg->h, vg->scale);
+	VG_Scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
 	return (1);
 }
 
 static int
-zoom_ident(struct tool *t, SDLKey key, int state, void *arg)
+zoom_ident(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	if (state) {
-		vg_scale(vg, vg->w, vg->h, vg->default_scale);
+		VG_Scale(vg, vg->w, vg->h, vg->default_scale);
 		zoom_status(t, vg);
 		return (1);
 	}
@@ -1564,9 +1565,9 @@ zoom_ident(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static int
-toggle_grid(struct tool *t, SDLKey key, int state, void *arg)
+toggle_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	if (state) {
 		if (vg->flags & VG_VISGRID) {
@@ -1580,9 +1581,9 @@ toggle_grid(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static int
-toggle_bboxes(struct tool *t, SDLKey key, int state, void *arg)
+toggle_bboxes(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	if (state) {
 		if (vg->flags & VG_VISBBOXES) {
@@ -1596,9 +1597,9 @@ toggle_bboxes(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static int
-expand_grid(struct tool *t, SDLKey key, int state, void *arg)
+expand_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	if (state) {
 		vg->grid_gap += 0.25;
@@ -1609,9 +1610,9 @@ expand_grid(struct tool *t, SDLKey key, int state, void *arg)
 }
 
 static int
-contract_grid(struct tool *t, SDLKey key, int state, void *arg)
+contract_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
 {
-	struct vg *vg = t->p;
+	VG *vg = t->p;
 
 	if (state) {
 		vg->grid_gap -= 0.25;
@@ -1627,21 +1628,21 @@ contract_grid(struct tool *t, SDLKey key, int state, void *arg)
 static void
 init_scale_tool(void *t)
 {
-	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, NULL);
-	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, NULL);
-	tool_bind_key(t, KMOD_NONE, SDLK_g, toggle_grid, NULL);
-	tool_bind_key(t, KMOD_NONE, SDLK_b, toggle_bboxes, NULL);
-	tool_bind_key(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, NULL);
-	tool_bind_key(t, KMOD_CTRL, SDLK_MINUS, contract_grid, NULL);
+	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_0, zoom_ident, NULL);
+	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_1, zoom_ident, NULL);
+	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_g, toggle_grid, NULL);
+	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_b, toggle_bboxes, NULL);
+	AG_MaptoolBindKey(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, NULL);
+	AG_MaptoolBindKey(t, KMOD_CTRL, SDLK_MINUS, contract_grid, NULL);
 
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELDOWN, zoom_out, NULL);
-	tool_bind_mousebutton(t, SDL_BUTTON_WHEELUP, zoom_in, NULL);
+	AG_MaptoolBindMouseButton(t, SDL_BUTTON_WHEELDOWN, zoom_out, NULL);
+	AG_MaptoolBindMouseButton(t, SDL_BUTTON_WHEELUP, zoom_in, NULL);
 }
 
-const struct tool_ops vg_scale_tool = {
+const AG_MaptoolOps vgScaleTool = {
 	N_("Scale drawing"), N_("Zoom in and out on the drawing."),
 	MAGNIFIER_TOOL_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	TOOL_HIDDEN,
 	init_scale_tool,
 	NULL,			/* destroy */
@@ -1662,49 +1663,49 @@ const struct tool_ops vg_scale_tool = {
 static void
 select_tool(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
+	VG *vg = argv[1].p;
 	char *name = argv[2].s;
-	struct mapview *mv = argv[3].p;
-	struct tool *t;
+	AG_Mapview *mv = argv[3].p;
+	AG_Maptool *t;
 	
-	if ((t = mapview_find_tool(mv, name)) != NULL) {
-		mapview_select_tool(mv, t, vg);
-		widget_focus(mv);
+	if ((t = AG_MapviewFindTool(mv, name)) != NULL) {
+		AG_MapviewSelectTool(mv, t, vg);
+		AG_WidgetFocus(mv);
 	}
 }
 
 static void
 show_blocks(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
-	struct window *win;
+	VG *vg = argv[1].p;
+	AG_Window *win;
 
-	win = vg_block_editor(vg);
-	window_show(win);
+	win = VG_BlockEditor(vg);
+	AG_WindowShow(win);
 }
 
 void
-vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
-    struct mapview *mv)
+VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
+    struct ag_mapview *mv)
 {
-	extern const struct tool_ops vg_origin_tool;
-	extern const struct tool_ops vg_line_tool;
-	extern const struct tool_ops vg_circle_tool;
-	extern const struct tool_ops vg_text_tool;
-	struct AGMenuItem *mi_snap;
+	extern const AG_MaptoolOps vgOriginTool;
+	extern const AG_MaptoolOps vg_line_tool;
+	extern const AG_MaptoolOps vg_circle_tool;
+	extern const AG_MaptoolOps vg_text_tool;
+	AG_MenuItem *mi_snap;
 	
-	mi_snap = menu_action(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
-	vg_reg_snap_menu(m, mi_snap, vg);
+	mi_snap = AG_MenuAction(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
+	VG_SnapMenu(m, mi_snap, vg);
 
-	menu_action(pitem, _("Show blocks"), VGBLOCK_ICON,
+	AG_MenuAction(pitem, _("Show blocks"), VGBLOCK_ICON,
 	    show_blocks, "%p", vg);
-	menu_action(pitem, _("Move origin"), vg_origin_tool.icon,
+	AG_MenuAction(pitem, _("Move origin"), vgOriginTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Origin", mv);
-	menu_action(pitem, _("Line strip"), vg_line_tool.icon,
+	AG_MenuAction(pitem, _("Line strip"), vg_line_tool.icon,
 	    select_tool, "%p,%s,%p", vg, "Lines", mv);
-	menu_action(pitem, _("Circle"), vg_circle_tool.icon,
+	AG_MenuAction(pitem, _("Circle"), vg_circle_tool.icon,
 	    select_tool, "%p,%s,%p", vg, "Circles", mv);
-	menu_action(pitem, _("Text"), vg_text_tool.icon,
+	AG_MenuAction(pitem, _("Text"), vg_text_tool.icon,
 	    select_tool, "%p,%s,%p", vg, "Text", mv);
 }
 #endif /* EDITION */

@@ -1,21 +1,21 @@
-/*	$Csoft: select.h,v 1.3 2005/06/21 08:09:07 vedge Exp $	*/
+/*	$Csoft: nodesel.h,v 1.1 2005/07/10 15:42:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_NODESEL_H_
 #define _AGAR_MAP_NODESEL_H_
 
 __BEGIN_DECLS
-void nodesel_begin(struct mapview *);
-void nodesel_end(struct mapview *);
+void AG_NodeselBegin(AG_Mapview *);
+void AG_NodeselEnd(AG_Mapview *);
 
-void nodesel_begin_move(struct mapview *);
-void nodesel_update_move(struct mapview *, int, int);
-void nodesel_end_move(struct mapview *);
+void AG_NodeselBeginMove(AG_Mapview *);
+void AG_NodeselUpdateMove(AG_Mapview *, int, int);
+void AG_NodeselEndMove(AG_Mapview *);
 
-int nodesel_copy(struct tool *, SDLKey, int, void *);
-int nodesel_paste(struct tool *, SDLKey, int, void *);
-int nodesel_cut(struct tool *, SDLKey, int, void *);
-int nodesel_kill(struct tool *, SDLKey, int, void *);
+int AG_NodeselCopy(AG_Maptool *, SDLKey, int, void *);
+int AG_NodeselPaste(AG_Maptool *, SDLKey, int, void *);
+int AG_NodeselCut(AG_Maptool *, SDLKey, int, void *);
+int AG_NodeselKill(AG_Maptool *, SDLKey, int, void *);
 __END_DECLS
 
 #endif /* _AGAR_MAP_NODESEL_H_ */

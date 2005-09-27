@@ -1,6 +1,6 @@
-/*	$Csoft: refsel.h,v 1.2 2005/07/25 10:44:24 vedge Exp $	*/
+/*	$Csoft: refsel.h,v 1.3 2005/08/27 04:34:06 vedge Exp $	*/
 /*	Public domain	*/
 
 __BEGIN_DECLS
-void refsel_update(struct mapview *, int, int);
+void refsel_update(AG_Mapview *, int, int);
 __END_DECLS

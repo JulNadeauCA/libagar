@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.9 2005/09/18 04:07:00 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.10 2005/09/18 04:08:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ struct client {
 	const char *name;
 	const char *hostname;
 	const char *version;
-	struct window *win;
+	AG_Window *win;
 	int sock;
 	TAILQ_ENTRY(client) clients;
 };
@@ -80,32 +80,32 @@ void start_server(int, union evarg *);
 static void
 my_exit(void)
 {
-	object_save(world);
+	AG_ObjectSave(agWorld);
 }
 
 static void
 poll_clients(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_TlistItem *it;
 	struct client *cl;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	TAILQ_FOREACH(cl, &clients, clients) {
-		it = tlist_insert(tl, NULL, "%s (%s): %s", cl->name,
+		it = AG_TlistAdd(tl, NULL, "%s (%s): %s", cl->name,
 		    cl->hostname, cl->version);
 		it->p1 = cl;
 		it->class = "client";
 		
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 disconnect_client(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it = tlist_selected_item(tl);
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	struct client *cl;
 
 	if (it == NULL) {
@@ -132,7 +132,7 @@ auth_password(void *p)
 static void
 handle_error(void)
 {
-	printf("1 %s\n", error_get());
+	printf("1 %s\n", AG_GetError());
 }
 
 static int
@@ -172,11 +172,11 @@ cmd_surface(struct command *cmd, void *pSu)
 	FILE *ftmp;
 	int fd;
 
-	if (!view->opengl || pSu != view->v) {
+	if (!agView->opengl || pSu != agView->v) {
 		su = pSu;
 	} else {
 #ifdef HAVE_OPENGL
-		su = view_gl_capture();
+		su = AG_CaptureGLView();
 #endif
 	}
 
@@ -195,11 +195,11 @@ cmd_surface(struct command *cmd, void *pSu)
 
 	strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
 	if ((fd = mkstemp(tmp)) == -1) {
-		error_set("mkstemp %s: %s", tmp, strerror(errno));
+		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
 		return (-1);
 	}
 	if ((ftmp = fdopen(fd, "r+")) == NULL) {
-		error_set("fdopen %s: %s", tmp, strerror(errno));
+		AG_SetError("fdopen %s: %s", tmp, strerror(errno));
 		return (-1);
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
@@ -220,8 +220,8 @@ cmd_surface(struct command *cmd, void *pSu)
 			Uint8 *pDst = jcopybuf;
 			Uint8 r, g, b;
 
-			for (x = view->w; x > 0; x--) {
-				SDL_GetRGB(GET_PIXEL(su, pSrc), su->format,
+			for (x = agView->w; x > 0; x--) {
+				SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
 				    &r, &g, &b);
 				*pDst++ = r;
 				*pDst++ = g;
@@ -237,7 +237,7 @@ cmd_surface(struct command *cmd, void *pSu)
 		SDL_UnlockSurface(su);
 	}
 #ifdef HAVE_OPENGL
-	if (view->opengl && su != pSu)
+	if (agView->opengl && su != pSu)
 		SDL_FreeSurface(su);
 #endif
 
@@ -262,7 +262,7 @@ cmd_surface(struct command *cmd, void *pSu)
 	jpeg_destroy_compress(&jcomp);
 	return (0);
 #else /* !HAVE_JPEG */
-	error_set("libjpeg is not available");
+	AG_SetError("libjpeg is not available");
 	return (-1);
 #endif /* HAVE_JPEG */
 }
@@ -270,34 +270,33 @@ cmd_surface(struct command *cmd, void *pSu)
 static int
 cmd_view_fmt(struct command *cmd, void *p)
 {
-	pthread_mutex_lock(&view->lock);
-	printf("0 %d:%s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
-	    view->gfx_engine,
-	    view->opengl ? "gl" : "",
-	    view->w, view->h, vinfo->vfmt->BitsPerPixel,
-	    vinfo->vfmt->Rmask,
-	    vinfo->vfmt->Gmask,
-	    vinfo->vfmt->Bmask,
-	    vinfo->vfmt->Amask,
-	    vinfo->vfmt->colorkey,
-	    vinfo->vfmt->alpha);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
+	    agView->opengl ? "gl" : "",
+	    agView->w, agView->h, agVideoInfo->vfmt->BitsPerPixel,
+	    agVideoInfo->vfmt->Rmask,
+	    agVideoInfo->vfmt->Gmask,
+	    agVideoInfo->vfmt->Bmask,
+	    agVideoInfo->vfmt->Amask,
+	    agVideoInfo->vfmt->colorkey,
+	    agVideoInfo->vfmt->alpha);
+	pthread_mutex_unlock(&agView->lock);
 	return (0);
 }
 
 static int
 cmd_refresh(struct command *cmd, void *p)
 {
-	pthread_mutex_lock(&view->lock);
-	printf("0 %d:%d\n", view->refresh.r, view->refresh.rnom);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	printf("0 %d:%d\n", agView->refresh.r, agView->refresh.rnom);
+	pthread_mutex_unlock(&agView->lock);
 	return (0);
 }
 
 static void
-find_objs(struct command *cmd, struct object *pob, int depth)
+find_objs(struct command *cmd, AG_Object *pob, int depth)
 {
-	struct object *cob;
+	AG_Object *cob;
 
 	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->type,
 	    pob->flags, pob->data_used);
@@ -310,22 +309,22 @@ find_objs(struct command *cmd, struct object *pob, int depth)
 static int
 cmd_world(struct command *cmd, void *p)
 {
-	lock_linkage();
+	AG_LockLinkage();
 	fputs("0 ", stdout);
-	find_objs(cmd, world, 0);
+	find_objs(cmd, agWorld, 0);
 	fputc('\n', stdout);
-	unlock_linkage();
+	AG_UnlockLinkage();
 	return (0);
 }
 
 static void *
 loop_server(void *p)
 {
-	text_tmsg(MSG_INFO, 1000, _("Now listening on %s:%s..."),
+	AG_TextTmsg(AG_MSG_INFO, 1000, _("Now listening on %s:%s..."),
 	    serv_host == NULL ? "*" : serv_host, serv_port);
 
 	if (server_listen("agar", VERSION, serv_host, serv_port) == -1) {
-		text_msg(MSG_ERROR, _("Server error (%s:%s): %s"), serv_host,
+		AG_TextMsg(AG_MSG_ERROR, _("Server error (%s:%s): %s"), serv_host,
 		    serv_port, strerror(errno));
 	}
 	return (NULL);
@@ -338,7 +337,7 @@ init_server(void)
 	server_regerr(handle_error);
 
 	server_regcmd("version", cmd_version, NULL);
-	server_regcmd("screen", cmd_surface, view->v);
+	server_regcmd("screen", cmd_surface, agView->v);
 	server_regcmd("view-fmt", cmd_view_fmt, NULL);
 	server_regcmd("refresh", cmd_refresh, NULL);
 	server_regcmd("world", cmd_world, NULL);
@@ -347,7 +346,7 @@ init_server(void)
 }
 
 int
-server_start(void)
+AG_DebugServerStart(void)
 {
 	int rv;
 
@@ -356,7 +355,7 @@ server_start(void)
 		init_server();
 	}
 	if ((rv = pthread_create(&serv_th, NULL, loop_server, NULL)) != 0) {
-		text_msg(MSG_ERROR, "pthread_create: %s", strerror(rv));
+		AG_TextMsg(AG_MSG_ERROR, "pthread_create: %s", strerror(rv));
 		return (-1);
 	}
 	return (0);
@@ -365,7 +364,7 @@ server_start(void)
 void
 start_server(int argc, union evarg *argv)
 {
-	server_start();
+	AG_DebugServerStart();
 }
 
 static void
@@ -373,29 +372,29 @@ stop_server(int argc, union evarg *argv)
 {
 }
 
-struct window *
-server_window(void)
+AG_Window *
+AG_DebugServerWindow(void)
 {
-	struct window *win;
-	struct AGMenu *me;
-	struct AGMenuItem *mi;
-	struct tlist *tl;
-	struct box *bo;
+	AG_Window *win;
+	AG_Menu *me;
+	AG_MenuItem *mi;
+	AG_Tlist *tl;
+	AG_Box *bo;
 	
-	win = window_new(WINDOW_NO_CLOSE, NULL);
-	window_set_caption(win, _("Agar clients"));
-	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	win = AG_WindowNew(AG_WINDOW_NO_CLOSE, NULL);
+	AG_WindowSetCaption(win, _("Agar clients"));
+	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
-	tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl, TLIST_POLL);
-	event_new(tl, "tlist-poll", poll_clients, NULL);
+	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl, AG_TLIST_POLL);
+	AG_SetEvent(tl, "tlist-poll", poll_clients, NULL);
 	
-	me = menu_new(win);
-	mi = menu_add_item(me, _("Server"));
-	menu_action(mi, _("Start server"), -1, start_server, "%p", tl);
-	menu_action(mi, _("Stop server"), -1, stop_server, "%p", tl);
+	me = AG_MenuNew(win);
+	mi = AG_MenuAddItem(me, _("Server"));
+	AG_MenuAction(mi, _("Start server"), -1, start_server, "%p", tl);
+	AG_MenuAction(mi, _("Stop server"), -1, stop_server, "%p", tl);
 
-	object_attach(win, tl);
+	AG_ObjectAttach(win, tl);
 	return (win);
 }
 #endif	/* DEBUG and NETWORK and THREADS */

@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.4 2005/08/10 06:59:24 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.5 2005/08/27 04:34:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -36,29 +36,29 @@
 
 #include <string.h>
 
-struct nodemask *
-nodemask_new(enum nodemask_type type)
+AG_NodeMask *
+AG_NodeMaskNew(enum ag_nodemask_type type)
 {
-	struct nodemask *mask;
+	AG_NodeMask *mask;
 
-	mask = Malloc(sizeof(struct nodemask), M_NODEMASK);
-	nodemask_init(mask, type);
+	mask = Malloc(sizeof(AG_NodeMask), M_NODEMASK);
+	AG_NodeMaskInit(mask, type);
 	return (mask);
 }
 
 void
-nodemask_init(struct nodemask *mask, enum nodemask_type type)
+AG_NodeMaskInit(AG_NodeMask *mask, enum ag_nodemask_type type)
 {
 	mask->type = type;
 	mask->scale = 1;
 
 	switch (type) {
-	case NODEMASK_BITMAP:
+	case AG_NODEMASK_BITMAP:
 		mask->nm_bitmap.obj = NULL;
 		mask->nm_bitmap.offs = 0;
 		break;
-	case NODEMASK_POLYGON:
-	case NODEMASK_RECTANGLE:
+	case AG_NODEMASK_POLYGON:
+	case AG_NODEMASK_RECTANGLE:
 		mask->nm_poly.vertices = NULL;
 		mask->nm_poly.nvertices = 0;
 		break;
@@ -66,17 +66,17 @@ nodemask_init(struct nodemask *mask, enum nodemask_type type)
 }
 
 void
-nodemask_destroy(struct map *m, struct nodemask *mask)
+AG_NodeMaskDestroy(AG_Map *m, AG_NodeMask *mask)
 {
 	switch (mask->type) {
-	case NODEMASK_BITMAP:
+	case AG_NODEMASK_BITMAP:
 		if (mask->nm_bitmap.obj != NULL) {
-			object_del_dep(m, mask->nm_bitmap.obj);
-			object_page_out(mask->nm_bitmap.obj, OBJECT_GFX);
+			AG_ObjectDelDep(m, mask->nm_bitmap.obj);
+			AG_ObjectPageOut(mask->nm_bitmap.obj, AG_OBJECT_GFX);
 		}
 		break;
-	case NODEMASK_RECTANGLE:
-	case NODEMASK_POLYGON:
+	case AG_NODEMASK_RECTANGLE:
+	case AG_NODEMASK_POLYGON:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
 		break;
 	}
@@ -84,32 +84,32 @@ nodemask_destroy(struct map *m, struct nodemask *mask)
 }
 
 int
-nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
+AG_NodeMaskLoad(AG_Map *m, AG_Netbuf *buf, AG_NodeMask *mask)
 {
-	struct object *obj;
+	AG_Object *obj;
 	Uint32 i, objref, offs;
 	void *pobj;
 
-	mask->type = read_uint8(buf);
-	mask->scale = (int)read_sint16(buf);
+	mask->type = AG_ReadUint8(buf);
+	mask->scale = (int)AG_ReadSint16(buf);
 
 	switch (mask->type) {
-	case NODEMASK_BITMAP:
-		objref = read_uint32(buf);
-		offs = read_uint32(buf);
-		if (object_find_dep(m, objref, &pobj) == -1) {
+	case AG_NODEMASK_BITMAP:
+		objref = AG_ReadUint32(buf);
+		offs = AG_ReadUint32(buf);
+		if (AG_ObjectFindDep(m, objref, &pobj) == -1) {
 			return (-1);
 		}
-		nodemask_bitmap(m, mask, pobj, offs);
+		AG_NodeMaskBitmap(m, mask, pobj, offs);
 		break;
-	case NODEMASK_POLYGON:
-	case NODEMASK_RECTANGLE:
+	case AG_NODEMASK_POLYGON:
+	case AG_NODEMASK_RECTANGLE:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
-		mask->nm_poly.nvertices = read_uint32(buf);
+		mask->nm_poly.nvertices = AG_ReadUint32(buf);
 		mask->nm_poly.vertices = Malloc(mask->nm_poly.nvertices *
 		    sizeof(int), M_NODEMASK);
 		for (i = 0; i < mask->nm_poly.nvertices; i++) {
-			mask->nm_poly.vertices[i] = read_uint32(buf);
+			mask->nm_poly.vertices[i] = AG_ReadUint32(buf);
 		}
 		break;
 	}
@@ -117,42 +117,43 @@ nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
 }
 
 void
-nodemask_save(struct map *m, struct netbuf *buf, const struct nodemask *mask)
+AG_NodeMaskSave(AG_Map *m, AG_Netbuf *buf, const AG_NodeMask *mask)
 {
 	Uint32 i;
 
-	write_uint8(buf, mask->type);
-	write_sint16(buf, (Sint16)mask->scale);
+	AG_WriteUint8(buf, mask->type);
+	AG_WriteSint16(buf, (Sint16)mask->scale);
 
 	switch (mask->type) {
-	case NODEMASK_BITMAP:
-		write_uint32(buf, object_encode_name(m, mask->nm_bitmap.obj));
-		write_uint32(buf, mask->nm_bitmap.offs);
+	case AG_NODEMASK_BITMAP:
+		AG_WriteUint32(buf, AG_ObjectEncodeName(m,
+		    mask->nm_bitmap.obj));
+		AG_WriteUint32(buf, mask->nm_bitmap.offs);
 		break;
-	case NODEMASK_POLYGON:
-	case NODEMASK_RECTANGLE:
-		write_uint32(buf, mask->nm_poly.nvertices);
+	case AG_NODEMASK_POLYGON:
+	case AG_NODEMASK_RECTANGLE:
+		AG_WriteUint32(buf, mask->nm_poly.nvertices);
 		for (i = 0; i < mask->nm_poly.nvertices; i++) {
-			write_uint32(buf, mask->nm_poly.vertices[i]);
+			AG_WriteUint32(buf, mask->nm_poly.vertices[i]);
 		}
 		break;
 	}
 }
 
 void
-nodemask_copy(const struct nodemask *smask, struct map *m,
-    struct nodemask *dmask)
+AG_NodeMaskCopy(const AG_NodeMask *smask, AG_Map *m,
+    AG_NodeMask *dmask)
 {
 	dmask->type = smask->type;
 	dmask->scale = smask->scale;
 
 	switch (smask->type) {
-	case NODEMASK_BITMAP:
-		nodemask_bitmap(m, dmask, smask->nm_bitmap.obj,
+	case AG_NODEMASK_BITMAP:
+		AG_NodeMaskBitmap(m, dmask, smask->nm_bitmap.obj,
 		    smask->nm_bitmap.offs);
 		break;
-	case NODEMASK_POLYGON:
-	case NODEMASK_RECTANGLE:
+	case AG_NODEMASK_POLYGON:
+	case AG_NODEMASK_RECTANGLE:
 		Free(dmask->nm_poly.vertices, M_NODEMASK);
 		if (smask->nm_poly.vertices != NULL) {
 			dmask->nm_poly.nvertices = smask->nm_poly.nvertices;
@@ -170,20 +171,20 @@ nodemask_copy(const struct nodemask *smask, struct map *m,
 }
 
 void
-nodemask_bitmap(struct map *m, struct nodemask *mask, void *pobj, Uint32 offs)
+AG_NodeMaskBitmap(AG_Map *m, AG_NodeMask *mask, void *pobj, Uint32 offs)
 {
 	if (m != NULL && pobj != NULL) {
-		object_add_dep(m, pobj);
+		AG_ObjectAddDep(m, pobj);
 	}
 	if (pobj != NULL) {
-		object_page_in(pobj, OBJECT_GFX);
+		AG_ObjectPageIn(pobj, AG_OBJECT_GFX);
 	}
 	mask->nm_bitmap.obj = pobj;
 	mask->nm_bitmap.offs = offs;
 }
 
 void
-nodemask_vertex(struct nodemask *mask, Uint32 x, Uint32 y)
+AG_NodeMaskVertex(AG_NodeMask *mask, Uint32 x, Uint32 y)
 {
 	dprintf("%u,%u\n", x, y);
 
@@ -200,7 +201,7 @@ nodemask_vertex(struct nodemask *mask, Uint32 x, Uint32 y)
 }
 
 int
-nodemask_intersect(const struct nodemask *m1, const struct nodemask *m2)
+AG_NodeMaskIntersect(const AG_NodeMask *m1, const AG_NodeMask *m2)
 {
 	/* TODO */
 	return (0);

@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.24 2005/04/18 03:38:39 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.25 2005/07/16 16:07:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,181 +36,182 @@
 
 #include "titlebar.h"
 
-const struct widget_ops titlebar_ops = {
+const AG_WidgetOps titlebar_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	titlebar_draw,
-	box_scale
+	AG_TitlebarDraw,
+	AG_BoxScale
 };
 
 static void titlebar_mousebuttondown(int, union evarg *);
 static void titlebar_mousebuttonup(int, union evarg *);
 
-struct titlebar *
-titlebar_new(void *parent, int flags)
+AG_Titlebar *
+AG_TitlebarNew(void *parent, int flags)
 {
-	struct titlebar *tbar;
+	AG_Titlebar *tbar;
 
-	tbar = Malloc(sizeof(struct titlebar), M_OBJECT);
-	titlebar_init(tbar, flags);
-	object_attach(parent, tbar);
-	tbar->win = (struct window *)parent;
+	tbar = Malloc(sizeof(AG_Titlebar), M_OBJECT);
+	AG_TitlebarInit(tbar, flags);
+	AG_ObjectAttach(parent, tbar);
+	tbar->win = (AG_Window *)parent;
 	return (tbar);
 }
 
 static void
 maximize_window(int argc, union evarg *argv)
 {
-	struct titlebar *tbar = argv[1].p;
-	struct window *win = tbar->win;
+	AG_Titlebar *tbar = argv[1].p;
+	AG_Window *win = tbar->win;
 
-	if (win->flags & WINDOW_MAXIMIZED) {
-		window_set_geometry(win, win->savx, win->savy, win->savw,
+	if (win->flags & AG_WINDOW_MAXIMIZED) {
+		AG_WindowSetGeometry(win, win->savx, win->savy, win->savw,
 		    win->savh);
-		win->flags &= ~(WINDOW_MAXIMIZED);
-		if (!view->opengl) {
-			SDL_FillRect(view->v, NULL, COLOR(BG_COLOR));
-			SDL_UpdateRect(view->v, 0, 0, view->v->w, view->v->h);
+		win->flags &= ~(AG_WINDOW_MAXIMIZED);
+		if (!agView->opengl) {
+			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+			SDL_UpdateRect(agView->v, 0, 0, agView->v->w,
+			    agView->v->h);
 		}
 	} else {
-		win->savx = WIDGET(win)->x;
-		win->savy = WIDGET(win)->y;
-		win->savw = WIDGET(win)->w;
-		win->savh = WIDGET(win)->h;
-		window_set_geometry(win, 0, 0, view->w, view->h);
-		win->flags |= WINDOW_MAXIMIZED;
+		win->savx = AGWIDGET(win)->x;
+		win->savy = AGWIDGET(win)->y;
+		win->savw = AGWIDGET(win)->w;
+		win->savh = AGWIDGET(win)->h;
+		AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h);
+		win->flags |= AG_WINDOW_MAXIMIZED;
 	}
 }
 
 static void
 minimize_window(int argc, union evarg *argv)
 {
-	struct titlebar *tbar = argv[1].p;
-	struct window *win = tbar->win;
+	AG_Titlebar *tbar = argv[1].p;
+	AG_Window *win = tbar->win;
 
-	win->flags |= WINDOW_ICONIFIED;
-	window_hide(win);
+	win->flags |= AG_WINDOW_ICONIFIED;
+	AG_WindowHide(win);
 }
 
 static void
 close_window(int argc, union evarg *argv)
 {
-	struct titlebar *tbar = argv[1].p;
+	AG_Titlebar *tbar = argv[1].p;
 
-	event_post(NULL, tbar->win, "window-close", NULL);
+	AG_PostEvent(NULL, tbar->win, "window-close", NULL);
 }
 
 void
-titlebar_init(struct titlebar *tbar, int flags)
+AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
-	box_init(&tbar->hb, BOX_HORIZ, BOX_WFILL);
-	object_set_ops(tbar, &titlebar_ops);
-	gfx_wire(tbar, "/engine/widget/pixmaps");
+	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_WFILL);
+	AG_ObjectSetOps(tbar, &titlebar_ops);
+	AG_WireGfx(tbar, "/engine/widget/pixmaps");
 
-	box_set_padding(&tbar->hb, 5);
-	box_set_spacing(&tbar->hb, 0);
+	AG_BoxSetPadding(&tbar->hb, 5);
+	AG_BoxSetSpacing(&tbar->hb, 0);
 
-	widget_set_type(tbar, "titlebar");
-	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
+	AG_WidgetSetType(tbar, "titlebar");
+	AGWIDGET(tbar)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	tbar->flags = flags;
 	tbar->pressed = 0;
 	tbar->win = NULL;
-	tbar->label = label_new(tbar, LABEL_STATIC, _("Untitled"));
-	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
+	tbar->label = AG_LabelNew(tbar, AG_LABEL_STATIC, _("Untitled"));
+	AGWIDGET(tbar->label)->flags |= AG_WIDGET_WFILL;
 	
-	if ((flags & TITLEBAR_NO_MAXIMIZE) == 0) {
-		tbar->maximize_btn = button_new(tbar, NULL);
-		button_set_focusable(tbar->maximize_btn, 0);
-		button_set_label(tbar->maximize_btn,
-		    SPRITE(tbar,TITLEBAR_MAXIMIZE_ICON).su);
-		button_set_padding(tbar->maximize_btn, 1);
-		event_new(tbar->maximize_btn, "button-pushed", maximize_window,
-		    "%p", tbar);
+	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
+		tbar->maximize_btn = AG_ButtonNew(tbar, NULL);
+		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
+		AG_ButtonSetSurface(tbar->maximize_btn,
+		    AG_SPRITE(tbar,AG_TITLEBAR_MAXIMIZE_ICON).su);
+		AG_ButtonSetPadding(tbar->maximize_btn, 1);
+		AG_SetEvent(tbar->maximize_btn, "button-pushed",
+		    maximize_window, "%p", tbar);
 	} else {
 		tbar->maximize_btn = NULL;
 	}
 
-	if ((flags & TITLEBAR_NO_MINIMIZE) == 0) {
-		tbar->minimize_btn = button_new(tbar, NULL);
-		button_set_focusable(tbar->minimize_btn, 0);
-		button_set_label(tbar->minimize_btn,
-		    SPRITE(tbar,TITLEBAR_MINIMIZE_ICON).su);
-		button_set_padding(tbar->minimize_btn, 1);
-		event_new(tbar->minimize_btn, "button-pushed", minimize_window,
-		    "%p", tbar);
+	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
+		tbar->minimize_btn = AG_ButtonNew(tbar, NULL);
+		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
+		AG_ButtonSetSurface(tbar->minimize_btn,
+		    AG_SPRITE(tbar,AG_TITLEBAR_MINIMIZE_ICON).su);
+		AG_ButtonSetPadding(tbar->minimize_btn, 1);
+		AG_SetEvent(tbar->minimize_btn, "button-pushed",
+		    minimize_window, "%p", tbar);
 	} else {
 		tbar->minimize_btn = NULL;
 	}
 
-	if ((flags & TITLEBAR_NO_CLOSE) == 0) {
-		tbar->close_btn = button_new(tbar, NULL);
-		button_set_focusable(tbar->close_btn, 0);
-		button_set_label(tbar->close_btn,
-		    SPRITE(tbar,TITLEBAR_CLOSE_ICON).su);
-		button_set_padding(tbar->close_btn, 1);
-		event_new(tbar->close_btn, "button-pushed", close_window,
+	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
+		tbar->close_btn = AG_ButtonNew(tbar, NULL);
+		AG_ButtonSetFocusable(tbar->close_btn, 0);
+		AG_ButtonSetSurface(tbar->close_btn,
+		    AG_SPRITE(tbar,AG_TITLEBAR_CLOSE_ICON).su);
+		AG_ButtonSetPadding(tbar->close_btn, 1);
+		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);
 	} else {
 		tbar->close_btn = NULL;
 	}
 
-	event_new(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
+	AG_SetEvent(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
 	    NULL);
-	event_new(tbar, "window-mousebuttonup", titlebar_mousebuttonup, NULL);
+	AG_SetEvent(tbar, "window-mousebuttonup", titlebar_mousebuttonup, NULL);
 }
 
 void
-titlebar_draw(void *p)
+AG_TitlebarDraw(void *p)
 {
-	struct titlebar *tbar = p;
+	AG_Titlebar *tbar = p;
 
-	primitives.box(tbar,
+	agPrim.box(tbar,
 	    0,
 	    0,
-	    WIDGET(tbar)->w,
-	    WIDGET(tbar)->h,
+	    AGWIDGET(tbar)->w,
+	    AGWIDGET(tbar)->h,
 	    tbar->pressed ? -1 : 1,
-	    WINDOW_FOCUSED(tbar->win) ? COLOR(TITLEBAR_FOCUSED_COLOR) :
-	                                COLOR(TITLEBAR_UNFOCUSED_COLOR));
+	    AG_WINDOW_FOCUSED(tbar->win) ? AG_COLOR(TITLEBAR_FOCUSED_COLOR) :
+	                                AG_COLOR(TITLEBAR_UNFOCUSED_COLOR));
 }
 
 static void
 titlebar_mousebuttondown(int argc, union evarg *argv)
 {
-	struct titlebar *tbar = argv[0].p;
+	AG_Titlebar *tbar = argv[0].p;
 
 	tbar->pressed = 1;
 
-	pthread_mutex_lock(&view->lock);
-	view->winop = VIEW_WINOP_MOVE;
-	view->focus_win = tbar->win;
-	view->wop_win = tbar->win;
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	agView->winop = AG_WINOP_MOVE;
+	agView->focus_win = tbar->win;
+	agView->wop_win = tbar->win;
+	pthread_mutex_unlock(&agView->lock);
 }
 
 static void
 titlebar_mousebuttonup(int argc, union evarg *argv)
 {
-	struct titlebar *tbar = argv[0].p;
+	AG_Titlebar *tbar = argv[0].p;
 	
 	tbar->pressed = 0;
 	
-	pthread_mutex_lock(&view->lock);
-	view->winop = VIEW_WINOP_NONE;
-	view->wop_win = NULL;
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&agView->lock);
+	agView->winop = AG_WINOP_NONE;
+	agView->wop_win = NULL;
+	pthread_mutex_unlock(&agView->lock);
 }
 
 void
-titlebar_set_caption(struct titlebar *tbar, const char *caption)
+AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 {
-	label_set_surface(tbar->label, (caption == NULL) ? NULL :
-	    text_render(NULL, -1, COLOR(TITLEBAR_CAPTION_COLOR), caption));
+	AG_LabelSetSurface(tbar->label, (caption == NULL) ? NULL :
+	    AG_TextRender(NULL, -1, AG_COLOR(TITLEBAR_CAPTION_COLOR), caption));
 }

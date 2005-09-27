@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.71 2005/09/18 04:07:00 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.72 2005/09/18 04:08:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -43,48 +43,57 @@
 
 #include "monitor.h"
 
-static const struct tool_ent {
+static AG_Window *
+show_fps(void)
+{
+	extern AG_Window *agFPSWindow;
+
+	AG_WindowShow(agFPSWindow);
+	return (agFPSWindow);
+}
+
+static const struct ag_maptool_ent {
 	char	      *name;
-	struct window *(*fn)(void);
+	AG_Window *(*fn)(void);
 } tool_ents[] = {
-	{ N_("Refresh rate"), event_fps_window },
+	{ N_("Refresh rate"), show_fps },
 #if defined(THREADS) && defined(HAVE_JPEG)
-	{ N_("Upload screenshot"), screenshot_window },
+	{ N_("Upload screenshot"), AG_DebugScreenshot },
 #endif
 #if defined(THREADS) && defined(NETWORK)
-	{ N_("Server mode"), server_window },
+	{ N_("Debug server"), AG_DebugServerWindow },
 #endif
-	{ N_("Leak detection"), leak_window },
-	{ N_("Running timers"), timeouts_window },
-	{ N_("Unicode browser"), uniconv_window },
-	{ N_("Display settings"), view_params_window },
-	{ N_("Widget browser"), widget_debug_window },
+	{ N_("Leak detection"), AG_DebugLeakDetector },
+	{ N_("Running timers"), AG_DebugTimeoutList },
+	{ N_("Unicode browser"), AG_DebugUnicodeBrowser },
+	{ N_("Display settings"), AG_DebugViewSettings },
+	{ N_("Widget browser"), AG_DebugWidgetBrowser },
 };
 
 static void
 selected_tool(int argc, union evarg *argv)
 {
-	const struct tool_ent *ent = argv[1].p;
-	struct window *win;
+	const struct ag_maptool_ent *ent = argv[1].p;
+	AG_Window *win;
 
 	if ((win = (ent->fn)()) != NULL)
-		window_show(win);
+		AG_WindowShow(win);
 }
 
 void
-monitor_menu(struct AGMenuItem *mi)
+AG_MonitorMenu(AG_MenuItem *mi)
 {
-	extern int objmgr_hexdiff;
+	extern int agObjMgrHexDiff;
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	int i;
 
 	for (i = 0; i < ntool_ents; i++) {
-		menu_action(mi, _(tool_ents[i].name), -1,
+		AG_MenuAction(mi, _(tool_ents[i].name), -1,
 		    selected_tool, "%p", &tool_ents[i]);
 	}
-	menu_separator(mi);
-	menu_int_bool(mi, _("Datafile hex diffs"), OBJ_ICON,
-	    &objmgr_hexdiff, 0);
+	AG_MenuSeparator(mi);
+	AG_MenuIntBool(mi, _("Datafile hex diffs"), OBJ_ICON,
+	    &agObjMgrHexDiff, 0);
 }
 
 #endif	/* DEBUG */

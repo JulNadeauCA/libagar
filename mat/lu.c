@@ -1,4 +1,4 @@
-/*	$Csoft: lu.c,v 1.3 2005/09/14 01:58:31 vedge Exp $	*/
+/*	$Csoft: lu.c,v 1.4 2005/09/15 02:22:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -23,7 +23,7 @@ mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 	mat_t *A, *Adup = NULL;
 
 	if (!mat_is_square(pA)) {
-		error_set("not a square matrix");
+		AG_SetError("not a square matrix");
 		return (NULL);
 	}
 	if (dA != NULL) {
@@ -47,7 +47,7 @@ mat_lu_decompose(const mat_t *pA, mat_t *dA, veci_t *ivec, double *d)
 				big = a;
 		}
 		if (big == 0.0) {
-			error_set("singular matrix");
+			AG_SetError("singular matrix");
 			goto fail;
 		}
 		vs->mat[i][1] = 1.0/big;

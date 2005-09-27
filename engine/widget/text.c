@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.105 2005/09/17 05:54:24 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.106 2005/09/20 10:22:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,43 +50,41 @@
 #include <stdarg.h>
 #include <errno.h>
 
-int text_composition = 1;		/* Built-in input composition */
-int text_rightleft = 0;			/* Right-to-left text display */
-int text_font_height = 0;		/* Default font height (px) */
-int text_font_ascent = 0;		/* Default font ascent (px) */
-int text_font_descent = 0;		/* Default font descent (px) */
-int text_font_line_skip = 0;		/* Default font line skip (px) */
-int text_tab_width = 40;		/* Tab width (px) */
-int text_blink_rate = 250;		/* Cursor blink rate (ms) */
+int agTextComposition = 1;		/* Built-in input composition */
+int agTextBidi = 0;			/* Bidirectionnal text display */
+int agTextFontHeight = 0;		/* Default font height (px) */
+int agTextFontAscent = 0;		/* Default font ascent (px) */
+int agTextFontDescent = 0;		/* Default font descent (px) */
+int agTextFontLineSkip = 0;		/* Default font line skip (px) */
+int agTextTabWidth = 40;		/* Tab width (px) */
+int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
 
 #define GLYPH_NBUCKETS 1024
 
-static const char *text_msg_titles[] = {
+static const char *agTextMsgTitles[] = {
 	N_("Error"),
 	N_("Warning"),
 	N_("Information")
 };
 
-pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
-static struct text_font *default_font = NULL;		/* Default font */
-static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
-    SLIST_HEAD_INITIALIZER(&text_fonts);
+pthread_mutex_t agTextLock = PTHREAD_MUTEX_INITIALIZER;
+static SLIST_HEAD(ag_fontq, ag_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
+AG_Font *agDefaultFont = NULL;
 
 static struct {
-	SLIST_HEAD(, text_glyph) glyphs;
-} glyph_cache[GLYPH_NBUCKETS+1];
+	SLIST_HEAD(, ag_glyph) glyphs;
+} agGlyphCache[GLYPH_NBUCKETS+1];
 
-static struct timeout text_timeout;		/* Timer for text_tmsg() */
+static AG_Timeout text_timeout;		/* Timer for AG_TextTmsg() */
 
-
-struct text_font *
-text_fetch_font(const char *name, int size, int style)
+AG_Font *
+AG_FetchFont(const char *name, int size, int style)
 {
 	char path[MAXPATHLEN];
-	struct text_font *font;
+	AG_Font *font;
 	
-	pthread_mutex_lock(&text_lock);
-	SLIST_FOREACH(font, &text_fonts, fonts) {
+	pthread_mutex_lock(&agTextLock);
+	SLIST_FOREACH(font, &fonts, fonts) {
 		if (font->size == size &&
 		    font->style == style &&
 		    strcmp(font->name, name) == 0)
@@ -95,96 +93,95 @@ text_fetch_font(const char *name, int size, int style)
 	if (font != NULL)
 		goto out;
 
-	if (config_search_file("font-path", name, NULL, path, sizeof(path))
-	    == -1)
-		fatal("%s", error_get());
+	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
+		fatal("%s", AG_GetError());
 	
-	font = Malloc(sizeof(struct text_font), M_TEXT);
+	font = Malloc(sizeof(AG_Font), M_TEXT);
 	strlcpy(font->name, name, sizeof(font->name));
 	font->size = size;
 	font->style = style;
 
 #ifdef HAVE_FREETYPE
 	dprintf("%s (%d pts)\n", path, size);
-	if ((font->p = ttf_open_font(path, size)) == NULL) {
-		fatal("%s: %s", path, error_get());
+	if ((font->p = AG_TTFOpenFont(path, size)) == NULL) {
+		fatal("%s: %s", path, AG_GetError());
 	}
-	ttf_set_font_style(font->p, style);
+	AG_TTFSetFontStyle(font->p, style);
 #else
 	/* TODO */
 #endif
 
-	SLIST_INSERT_HEAD(&text_fonts, font, fonts);
+	SLIST_INSERT_HEAD(&fonts, font, fonts);
 out:
-	pthread_mutex_unlock(&text_lock);
+	pthread_mutex_unlock(&agTextLock);
 	return (font);
 }
 
 static Uint32
 expire_tmsg(void *obj, Uint32 ival, void *arg)
 {
-	struct window *win = arg;
+	AG_Window *win = arg;
 
-	view_detach(win);
+	AG_ViewDetach(win);
 	return (0);
 }
 
 /* Initialize the font engine and configure the default font. */
 int
-text_init(void)
+AG_TextInit(void)
 {
 	int i;
 
-	if (prop_get_bool(config, "font-engine") == 0)
+	if (AG_Bool(agConfig, "font-engine") == 0)
 		return (0);
 
 #ifdef HAVE_FREETYPE
-	if (ttf_init() == -1) {
-		error_set("ttf_init: %s", SDL_GetError());
+	if (AG_TTFInit() == -1) {
+		AG_SetError("AG_TTFInit: %s", SDL_GetError());
 		return (-1);
 	}
-	default_font = text_fetch_font(
-	    prop_get_string(config, "font-engine.default-font"),
-	    prop_get_int(config, "font-engine.default-size"),
-	    prop_get_int(config, "font-engine.default-style"));
-	text_font_height = ttf_font_height(default_font->p);
-	text_font_ascent = ttf_font_ascent(default_font->p);
-	text_font_descent = ttf_font_descent(default_font->p);
-	text_font_line_skip = ttf_font_line_skip(default_font->p);
+	agDefaultFont = AG_FetchFont(
+	    AG_String(agConfig, "font-engine.default-font"),
+	    AG_Int(agConfig, "font-engine.default-size"),
+	    AG_Int(agConfig, "font-engine.default-style"));
+	agTextFontHeight = AG_TTFHeight(agDefaultFont->p);
+	agTextFontAscent = AG_TTFAscent(agDefaultFont->p);
+	agTextFontDescent = AG_TTFDescent(agDefaultFont->p);
+	agTextFontLineSkip = AG_TTFLineSkip(agDefaultFont->p);
 #endif
 
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
-		SLIST_INIT(&glyph_cache[i].glyphs);
+		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
 	return (0);
 }
 
 static void
-free_glyph(struct text_glyph *gl)
+free_glyph(AG_Glyph *gl)
 {
 	SDL_FreeSurface(gl->su);
 #ifdef HAVE_OPENGL
-	if (view->opengl)
+	if (agView->opengl)
 		glDeleteTextures(1, &gl->texture);
 #endif
 	Free(gl, M_TEXT);
 }
 
 void
-text_destroy(void)
+AG_TextDestroy(void)
 {
-	struct text_font *fon, *nextfon;
+	AG_Font *fon, *nextfon;
 #ifdef DEBUG
 	int maxbucketsz = 0;
 #endif
 	int i;
 	
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
-		struct text_glyph *gl, *ngl;
+		AG_Glyph *gl, *ngl;
 		int bucketsz = 0;
 
-		for (gl = SLIST_FIRST(&glyph_cache[i].glyphs);
-		     gl != SLIST_END(&glyph_cache[i].glyphs);
+		for (gl = SLIST_FIRST(&agGlyphCache[i].glyphs);
+		     gl != SLIST_END(&agGlyphCache[i].glyphs);
 		     gl = ngl) {
 			ngl = SLIST_NEXT(gl, glyphs);
 			free_glyph(gl);
@@ -192,25 +189,24 @@ text_destroy(void)
 			bucketsz++;
 #endif
 		}
-		SLIST_INIT(&glyph_cache[i].glyphs);
+		SLIST_INIT(&agGlyphCache[i].glyphs);
 #ifdef DEBUG
 		if (bucketsz > maxbucketsz)
 			maxbucketsz = bucketsz;
 #endif
 	}
-	dprintf("max glyph bucket size: %d\n", maxbucketsz);
 	
-	for (fon = SLIST_FIRST(&text_fonts);
-	     fon != SLIST_END(&text_fonts);
+	for (fon = SLIST_FIRST(&fonts);
+	     fon != SLIST_END(&fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
 #ifdef HAVE_FREETYPE
-		ttf_close_font(fon->p);
+		AG_TTFCloseFont(fon->p);
 #endif
 		Free(fon, M_TEXT);
 	}
 #ifdef HAVE_FREETYPE
-	ttf_destroy();
+	AG_TTFDestroy();
 #endif
 }
 
@@ -221,15 +217,15 @@ hash_glyph(Uint32 ch)
 }
 
 /* Lookup/insert a glyph in the glyph cache. */
-struct text_glyph *
-text_render_glyph(const char *fontname, int fontsize, Uint32 color,
+AG_Glyph *
+AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
     Uint32 ch)
 {
-	struct text_glyph *gl;
+	AG_Glyph *gl;
 	u_int h;
 
 	h = hash_glyph(ch);
-	SLIST_FOREACH(gl, &glyph_cache[h].glyphs, glyphs) {
+	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
 		if (fontsize == gl->fontsize &&
 		    color == gl->color &&
 		    ((fontname == NULL && gl->fontname[0] == '\0') ||
@@ -241,7 +237,7 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color,
 		Uint32 ucs[2];
 		SDL_Color c;
 
-		gl = Malloc(sizeof(struct text_glyph), M_TEXT);
+		gl = Malloc(sizeof(AG_Glyph), M_TEXT);
 		if (fontname == NULL) {
 			gl->fontname[0] = '\0';
 		} else {
@@ -251,14 +247,14 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color,
 		gl->color = color;
 		gl->ch = ch;
 
-		SDL_GetRGB(color, vfmt, &c.r, &c.g, &c.b);
+		SDL_GetRGB(color, agVideoFmt, &c.r, &c.g, &c.b);
 		ucs[0] = ch;
 		ucs[1] = '\0';
-		gl->su = text_render_unicode(fontname, fontsize, c, ucs);
-		gl->texture = view_surface_texture(gl->su, gl->texcoord);
+		gl->su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
+		gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
 	
 		gl->nrefs = 1;
-		SLIST_INSERT_HEAD(&glyph_cache[h].glyphs, gl, glyphs);
+		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
 	} else {
 		gl->nrefs++;
 	}
@@ -266,13 +262,13 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color,
 }
 
 void
-text_unused_glyph(struct text_glyph *gl)
+AG_TextUnusedGlyph(AG_Glyph *gl)
 {
 	if (--gl->nrefs == 0) {
 		u_int h;
 
 		h = hash_glyph(gl->ch);
-		SLIST_REMOVE(&glyph_cache[h].glyphs, gl, text_glyph, glyphs);
+		SLIST_REMOVE(&agGlyphCache[h].glyphs, gl, ag_glyph, glyphs);
 		free_glyph(gl);
 	}
 }
@@ -280,15 +276,15 @@ text_unused_glyph(struct text_glyph *gl)
 /* Render UTF-8 text onto a newly allocated transparent surface. */
 /* XXX use state variables for font spec */
 SDL_Surface *
-text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
+AG_TextRender(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
 	SDL_Color c;
 	Uint32 *ucs;
 	SDL_Surface *su;
 
-	ucs = unicode_import(UNICODE_FROM_UTF8, text);
-	SDL_GetRGB(color, vfmt, &c.r, &c.g, &c.b);
-	su = text_render_unicode(fontname, fontsize, c, ucs);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	SDL_GetRGB(color, agVideoFmt, &c.r, &c.g, &c.b);
+	su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
 	free(ucs);
 	return (su);
 }
@@ -297,12 +293,12 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 
 /* Render (possibly multi-line) UCS-4 text onto a newly allocated surface. */
 SDL_Surface *
-text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
+AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
 	SDL_Rect rd;
 	SDL_Surface *su;
-	struct text_font *font;
+	AG_Font *font;
 	Uint32 *ucs, *ucsd, *ucsp;
 	int nlines, maxw, font_h;
 	Uint8 r, g, b, a;
@@ -317,23 +313,23 @@ text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
 		return (su);
 	}
 
-	font = text_fetch_font(fontname != NULL ? fontname :
-	    prop_get_string(config, "font-engine.default-font"),
+	font = AG_FetchFont(fontname != NULL ? fontname :
+	    AG_String(agConfig, "font-engine.default-font"),
 	    fontsize >= 0 ? fontsize :
-	    prop_get_int(config, "font-engine.default-size"), 0);
-	font_h = ttf_font_height(font->p);
+	    AG_Int(agConfig, "font-engine.default-size"), 0);
+	font_h = AG_TTFHeight(font->p);
 
 	/* Find out the line count. */
-	ucsd = ucs = ucs4_dup(text);
+	ucsd = ucs = AG_UCS4Dup(text);
 	for (ucsp = ucs, nlines = 0; *ucsp != '\0'; ucsp++) {
 		if (*ucsp == '\n')
 			nlines++;
 	}
 
 	if (nlines == 0) {					/* One line */
-		su = ttf_render_unicode_solid(font->p, ucs, NULL, cFg);
+		su = AG_TTFRenderUnicodeSolid(font->p, ucs, NULL, cFg);
 		if (su == NULL) {
-			fatal("ttf_render_text_solid: %s", error_get());
+			fatal("AG_TTFRenderTextSolid: %s", AG_GetError());
 		}
 	} else {						/* Multiline */
 		SDL_Surface **lines;
@@ -344,18 +340,18 @@ text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
 		/*
 		 * Render the text to an array of surfaces, since we cannot
 		 * predict the width of the final surface.
-		 * XXX move to ttf_render_unicode_solid().
+		 * XXX move to AG_TTFRenderUnicodeSolid().
 		 */
-		lineskip = ttf_font_line_skip(font->p);
+		lineskip = AG_TTFLineSkip(font->p);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines, M_TEXT);
 		for (i = 0, maxw = 0;
-		    (ucsp = ucs4_sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
+		    (ucsp = AG_UCS4Sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
 		    i++) {
-			lines[i] = ttf_render_unicode_solid(font->p, ucsp,
+			lines[i] = AG_TTFRenderUnicodeSolid(font->p, ucsp,
 			    NULL, cFg);
 			if (lines[i] == NULL) {
-				fatal("ttf_render_unicode_solid: %s",
-				    error_get());
+				fatal("AG_TTFRenderUnicodeSolid: %s",
+				    AG_GetError());
 			}
 			if (lines[i]->w > maxw)
 				maxw = lines[i]->w;	/* Grow width */
@@ -369,8 +365,8 @@ text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
 		/* Generate the final surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE, maxw,
 		    lineskip*(nlines+1),
-		    vfmt->BitsPerPixel,
-		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
+		    agVideoFmt->BitsPerPixel,
+		    agVideoFmt->Rmask, agVideoFmt->Gmask, agVideoFmt->Bmask, 0);
 		if (su == NULL)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 
@@ -397,7 +393,7 @@ text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
 #else /* !HAVE_FREETYPE */
 
 SDL_Surface *
-text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
+AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
 	/* TODO bitmap version */
@@ -408,7 +404,7 @@ text_render_unicode(const char *fontname, int fontsize, SDL_Color cFg,
 
 /* Return the expected size of an Unicode text element. */
 void
-text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
+AG_TextPrescaleUnicode(const Uint32 *ucs, int *w, int *h)
 {
 	SDL_Surface *su;
 	SDL_Color c;
@@ -418,7 +414,7 @@ text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
 	c.b = 0;
 
 	/* XXX get the bounding box instead */
-	su = text_render_unicode(NULL, -1, c, ucs);
+	su = AG_TextRenderUnicode(NULL, -1, c, ucs);
 	if (w != NULL)
 		*w = (int)su->w;
 	if (h != NULL)
@@ -428,85 +424,87 @@ text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
 
 /* Return the expected surface size for a UTF-8 string. */
 void
-text_prescale(const char *text, int *w, int *h)
+AG_TextPrescale(const char *text, int *w, int *h)
 {
 	Uint32 *ucs;
 
-	ucs = unicode_import(UNICODE_FROM_UTF8, text);
-	text_prescale_unicode(ucs, w, h);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	AG_TextPrescaleUnicode(ucs, w, h);
 	free(ucs);
 }
 
 /* Display a message. */
 void
-text_msg(enum text_msg_title title, const char *format, ...)
+AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 {
-	char msg[LABEL_MAX];
-	struct window *win;
-	struct vbox *vb;
-	struct button *bu;
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_Button *bu;
 	va_list args;
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
-	window_set_caption(win, "%s", _(text_msg_titles[title]));
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_NO_RESIZE|AG_WINDOW_NO_CLOSE|
+	    AG_WINDOW_NO_MINIMIZE|AG_WINDOW_NO_MAXIMIZE|
+	    AG_WINDOW_NO_DECORATIONS, NULL);
+	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = vbox_new(win, 0);
-	label_new(vb, LABEL_STATIC, msg);
+	vb = AG_VBoxNew(win, 0);
+	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 
-	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
-	bu = button_new(vb, _("Ok"));
-	event_new(bu, "button-pushed", WINDETACH(win));
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
+	bu = AG_ButtonNew(vb, _("Ok"));
+	AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
 
-	widget_focus(bu);
-	window_show(win);
+	AG_WidgetFocus(bu);
+	AG_WindowShow(win);
 }
 
 /* Display a message for a given period of time. */
 void
-text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
+AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format, ...)
 {
-	char msg[LABEL_MAX];
-	struct window *win;
-	struct vbox *vb;
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
 	va_list args;
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
-	window_set_caption(win, "%s", _(text_msg_titles[title]));
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_NO_RESIZE|AG_WINDOW_NO_CLOSE|
+	    AG_WINDOW_NO_MINIMIZE|AG_WINDOW_NO_MAXIMIZE|
+	    AG_WINDOW_NO_DECORATIONS, NULL);
+	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = vbox_new(win, 0);
-	label_new(vb, LABEL_STATIC, msg);
-	window_show(win);
+	vb = AG_VBoxNew(win, 0);
+	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
+	AG_WindowShow(win);
 
-	lock_timeout(NULL);
-	if (timeout_scheduled(NULL, &text_timeout)) {
-		view_detach((struct window *)text_timeout.arg);
-		timeout_del(NULL, &text_timeout);
+	AG_LockTimeouts(NULL);
+	if (AG_TimeoutIsScheduled(NULL, &text_timeout)) {
+		AG_ViewDetach((AG_Window *)text_timeout.arg);
+		AG_DelTimeout(NULL, &text_timeout);
 	}
-	unlock_timeout(NULL);
+	AG_UnlockTimeouts(NULL);
 
-	timeout_set(&text_timeout, expire_tmsg, win, TIMEOUT_LOADABLE);
-	timeout_add(NULL, &text_timeout, expire);
+	AG_SetTimeout(&text_timeout, expire_tmsg, win, AG_TIMEOUT_LOADABLE);
+	AG_AddTimeout(NULL, &text_timeout, expire);
 }
 
 /* Prompt the user with a choice of options. */
-struct window *
-text_prompt_options(struct button **bOpts, u_int nbOpts, const char *fmt, ...)
+AG_Window *
+AG_TextPromptOptions(AG_Button **bOpts, u_int nbOpts, const char *fmt, ...)
 {
-	char text[LABEL_MAX];
-	struct window *win;
-	struct box *bo;
+	char text[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_Box *bo;
 	va_list ap;
 	u_int i;
 
@@ -514,161 +512,161 @@ text_prompt_options(struct button **bOpts, u_int nbOpts, const char *fmt, ...)
 	vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	win = window_new(WINDOW_MODAL|WINDOW_NO_RESIZE|WINDOW_NO_TITLEBAR,
-	    NULL);
-	window_set_position(win, WINDOW_CENTER, 0);
-	window_set_spacing(win, 8);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_RESIZE|
+	    AG_WINDOW_NO_TITLEBAR, NULL);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowSetSpacing(win, 8);
 
-	label_static(win, text);
+	AG_LabelStatic(win, text);
 
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	for (i = 0; i < nbOpts; i++) {
-		bOpts[i] = button_new(bo, "XXXXXXXXXXX");
+		bOpts[i] = AG_ButtonNew(bo, "XXXXXXXXXXX");
 	}
-	window_show(win);
+	AG_WindowShow(win);
 	return (win);
 }
 
 /* Prompt the user for a floating-point value. */
 void
-text_prompt_float(double *fp, double min, double max, const char *unit,
+AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
     const char *format, ...)
 {
-	char msg[LABEL_MAX];
-	struct window *win;
-	struct vbox *vb;
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
 	va_list args;
-	struct button *button;
-	struct fspinbutton *fsb;
+	AG_Button *button;
+	AG_FSpinbutton *fsb;
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(WINDOW_MODAL|WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, "%s", _("Enter real number"));
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE, NULL);
+	AG_WindowSetCaption(win, "%s", _("Enter real number"));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = vbox_new(win, VBOX_WFILL);
-	label_new(vb, LABEL_STATIC, msg);
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 	
-	vb = vbox_new(win, VBOX_WFILL);
-	fsb = fspinbutton_new(vb, unit, _("Number: "));
-	WIDGET(fsb)->flags |= WIDGET_WFILL;
-	widget_bind(fsb, "value", WIDGET_DOUBLE, fp);
-	fspinbutton_set_range(fsb, min, max);
-	event_new(fsb, "fspinbutton-return", WINDETACH(win));
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	fsb = AG_FSpinbuttonNew(vb, unit, _("Number: "));
+	AGWIDGET(fsb)->flags |= AG_WIDGET_WFILL;
+	AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, fp);
+	AG_FSpinbuttonSetRange(fsb, min, max);
+	AG_SetEvent(fsb, "fspinbutton-return", AGWINDETACH(win));
 	
-	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
-	button = button_new(vb, _("Ok"));
-	event_new(button, "button-pushed", WINDETACH(win));
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
+	button = AG_ButtonNew(vb, _("Ok"));
+	AG_SetEvent(button, "button-pushed", AGWINDETACH(win));
 
 	/* TODO test type */
 
-	window_show(win);
-	widget_focus(fsb->input);
+	AG_WindowShow(win);
+	AG_WidgetFocus(fsb->input);
 }
 
 /* Create a dialog to edit a string value. */
 void
-text_edit_string(char **sp, size_t len, const char *msgfmt, ...)
+AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 {
-	char msg[LABEL_MAX];
-	struct window *win;
-	struct vbox *vb;
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
 	va_list args;
-	struct button *button;
-	struct textbox *tb;
+	AG_Button *button;
+	AG_Textbox *tb;
 
 	va_start(args, msgfmt);
 	vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
-	win = window_new(WINDOW_MODAL|WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, "%s", _("Edit string"));
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE, NULL);
+	AG_WindowSetCaption(win, "%s", _("Edit string"));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	vb = vbox_new(win, VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		label_new(vb, LABEL_STATIC, msg);
+		AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 	}
 	
-	vb = vbox_new(win, VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		tb = textbox_new(vb, NULL);
-		WIDGET(tb)->flags |= WIDGET_WFILL;
-		widget_bind(tb, "string", WIDGET_STRING, sp, len);
-		event_new(tb, "textbox-return", WINDETACH(win));
+		tb = AG_TextboxNew(vb, NULL);
+		AGWIDGET(tb)->flags |= AG_WIDGET_WFILL;
+		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, sp, len);
+		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
 
-	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
 	{
-		button = button_new(vb, _("Ok"));
-		event_new(button, "button-pushed", WINDETACH(win));
+		button = AG_ButtonNew(vb, _("Ok"));
+		AG_SetEvent(button, "button-pushed", AGWINDETACH(win));
 	}
-	window_show(win);
-	widget_focus(tb);
+	AG_WindowShow(win);
+	AG_WidgetFocus(tb);
 }
 
 /* Prompt the user for a string. */
 void
-text_prompt_string(const char *prompt, void (*ok_fn)(int, union evarg *),
+AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
     const char *fmt, ...)
 {
-	struct window *win;
-	struct box *bo;
+	AG_Window *win;
+	AG_Box *bo;
 	va_list args;
-	struct button *btn;
-	struct textbox *tb;
-	struct event *ev;
+	AG_Button *btn;
+	AG_Textbox *tb;
+	AG_Event *ev;
 	const char *fmtp;
 	va_list ap;
 
-	win = window_new(WINDOW_MODAL|WINDOW_NO_VRESIZE|WINDOW_NO_TITLEBAR,
-	    NULL);
-	window_set_position(win, WINDOW_CENTER, 0);
-	window_set_spacing(win, 8);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE|
+	    AG_WINDOW_NO_TITLEBAR, NULL);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowSetSpacing(win, 8);
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
-	label_new(bo, LABEL_STATIC, prompt);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	AG_LabelNew(bo, AG_LABEL_STATIC, prompt);
 	
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		tb = textbox_new(bo, NULL);
-		WIDGET(tb)->flags |= WIDGET_WFILL;
-		widget_focus(tb);
+		tb = AG_TextboxNew(bo, NULL);
+		AGWIDGET(tb)->flags |= AG_WIDGET_WFILL;
+		AG_WidgetFocus(tb);
 
-		ev = event_new(tb, "textbox-return", ok_fn, NULL);
+		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		if (fmt != NULL) {
 			va_start(ap, fmt);
 			for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-				EVENT_PUSH_ARG(ap, *fmtp, ev);
+				AG_EVENT_PUSH_ARG(ap, *fmtp, ev);
 			}
 			va_end(ap);
 		}
-		EVENT_INSERT_VAL(ev, EVARG_STRING, s, &tb->string[0]);
-		event_add(tb, "textbox-return", WINDETACH(win));
+		AG_EVENT_INSERT_VAL(ev, AG_EVARG_STRING, s, &tb->string[0]);
+		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
 
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		btn = button_new(bo, _("Ok"));
-		ev = event_new(btn, "button-pushed", ok_fn, NULL);
+		btn = AG_ButtonNew(bo, _("Ok"));
+		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
 		if (fmt != NULL) {
 			va_start(ap, fmt);
 			for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-				EVENT_PUSH_ARG(ap, *fmtp, ev);
+				AG_EVENT_PUSH_ARG(ap, *fmtp, ev);
 			}
 			va_end(ap);
 		}
-		EVENT_INSERT_VAL(ev, EVARG_STRING, s, &tb->string[0]);
-		event_add(btn, "button-pushed", WINDETACH(win));
+		AG_EVENT_INSERT_VAL(ev, AG_EVARG_STRING, s, &tb->string[0]);
+		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
-		btn = button_new(bo, _("Cancel"));
-		event_new(btn, "button-pushed", WINDETACH(win));
+		btn = AG_ButtonNew(bo, _("Cancel"));
+		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 /*
@@ -676,20 +674,20 @@ text_prompt_string(const char *prompt, void (*ok_fn)(int, union evarg *),
  * The format is <face>,<size>,<style>.
  */
 void
-text_parse_fontspec(char *fontspec)
+AG_TextParseFontSpec(char *fontspec)
 {
 	char *s;
 
 	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		prop_set_string(config, "font-engine.default-font", s);
+		AG_SetString(agConfig, "font-engine.default-font", s);
 	}
 	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		prop_set_int(config, "font-engine.default-size", atoi(s));
+		AG_SetInt(agConfig, "font-engine.default-size", atoi(s));
 	}
 	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		prop_set_int(config, "font-engine.default-style", atoi(s));
+		AG_SetInt(agConfig, "font-engine.default-style", atoi(s));
 	}
 }
