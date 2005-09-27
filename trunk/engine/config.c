@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.150 2005/08/06 07:08:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.151 2005/09/27 00:25:16 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -194,7 +194,7 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetUint16(cfg, "view.min-w", 320);
 	AG_SetUint16(cfg, "view.min-h", 240);
 	AG_SetUint8(cfg, "view.depth", 32);
-	AG_SetUint8(cfg, "view.fps", 15);
+	AG_SetUint8(cfg, "view.fps", 60);
 	AG_SetBool(cfg, "input.joysticks", 1);
 
 	/* Set the save directory path and create it as needed. */
