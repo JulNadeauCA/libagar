@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.4 2005/08/04 13:29:38 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.5 2005/09/19 01:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,151 +44,159 @@
 #include "map.h"
 #include "mapedit.h"
 
-const struct object_ops mapedit_ops = {
+const AG_ObjectOps agMapEditorOps = {
 	NULL,				/* init */
 	NULL,				/* reinit */
-	mapedit_destroy,
+	AG_MapEditorDestroy,
 	NULL,				/* load */
 	NULL,				/* save */
 	NULL				/* edit */
 };
 
-const struct object_ops mapedit_pseudo_ops = {
+const AG_ObjectOps agMapEditorPseudoOps = {
 	NULL,			/* init */
 	NULL,			/* reinit */
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	mapedit_settings	/* edit */
+	AG_MapEditorConfig	/* edit */
 };
 
-extern int mapview_bg_moving, mapview_bg_sqsize;
-extern int mapview_sel_bounded;
+extern int agMapviewAnimatedBg, agMapviewBgTileSize;
+extern int agMapviewEditSelOnly;
 
-struct mapedit mapedit;
+AG_MapEditor agMapEditor;
 
-int mapedition = 0;			/* Start up in edition mode */
-int mapedit_def_mapw = 9;		/* Default map geometry */
-int mapedit_def_maph = 9;
-int mapedit_def_brsw = 9;		/* Default brush geometry */
-int mapedit_def_brsh = 9;
+int agEditMode = 0;			/* Start up in edition mode */
+int agMapDefaultWidth = 9;		/* Default map geometry */
+int agMapDefaultHeight = 9;
+int agMapDefaultBrushWidth = 9;		/* Default brush geometry */
+int agMapDefaultBrushHeight = 9;
 
 void
-mapedit_init(void)
+AG_MapEditorInit(void)
 {
-	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
-	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
-	OBJECT(&mapedit)->save_pfx = "/map-editor";
+	AG_ObjectInit(&agMapEditor, "object", "map-editor", &agMapEditorOps);
+	AGOBJECT(&agMapEditor)->flags |= (AG_OBJECT_RELOAD_PROPS|
+	                                   AG_OBJECT_STATIC);
+	AGOBJECT(&agMapEditor)->save_pfx = "/map-editor";
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	object_init(&mapedit.pseudo, "object", "map-editor",
-	    &mapedit_pseudo_ops);
-	OBJECT(&mapedit.pseudo)->flags |= (OBJECT_NON_PERSISTENT|OBJECT_STATIC|
-	                                   OBJECT_INDESTRUCTIBLE);
-	object_attach(world, &mapedit.pseudo);
+	AG_ObjectInit(&agMapEditor.pseudo, "object", "map-editor",
+	    &agMapEditorPseudoOps);
+	AGOBJECT(&agMapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
+				                  AG_OBJECT_STATIC|
+	                                          AG_OBJECT_INDESTRUCTIBLE);
+	AG_ObjectAttach(agWorld, &agMapEditor.pseudo);
 
 	/*
 	 * Allocate the copy/paste buffer.
-	 * Use OBJECT_READONLY to avoid circular reference in case a user
+	 * Use AG_OBJECT_READONLY to avoid circular reference in case a user
 	 * attempts to paste contents of the copy buffer into itself.
 	 */
-	map_init(&mapedit.copybuf, "copybuf");
-	OBJECT(&mapedit.copybuf)->flags |= (OBJECT_NON_PERSISTENT|OBJECT_STATIC|
-	                                    OBJECT_INDESTRUCTIBLE|
-					    OBJECT_READONLY);
-	object_attach(&mapedit.pseudo, &mapedit.copybuf);
+	AG_MapInit(&agMapEditor.copybuf, "copybuf");
+	AGOBJECT(&agMapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
+				               AG_OBJECT_STATIC|
+	                                       AG_OBJECT_INDESTRUCTIBLE|
+					       AG_OBJECT_READONLY);
+	AG_ObjectAttach(&agMapEditor.pseudo, &agMapEditor.copybuf);
 
-	mapedition = 1;
+	agEditMode = 1;
 
 	/* Initialize the default tunables. */
-	prop_set_uint32(&mapedit, "default-map-width", 12);
-	prop_set_uint32(&mapedit, "default-map-height", 8);
-	prop_set_uint32(&mapedit, "default-brush-width", 5);
-	prop_set_uint32(&mapedit, "default-brush-height", 5);
+	AG_SetUint32(&agMapEditor, "default-map-width", 12);
+	AG_SetUint32(&agMapEditor, "default-map-height", 8);
+	AG_SetUint32(&agMapEditor, "default-brush-width", 5);
+	AG_SetUint32(&agMapEditor, "default-brush-height", 5);
 
 	/* Initialize the object manager. */
-	objmgr_init();
-	window_show(objmgr_window());
+	AG_ObjMgrInit();
+	AG_WindowShow(AG_ObjMgrWindow());
 }
 
 void
-mapedit_destroy(void *p)
+AG_MapEditorDestroy(void *p)
 {
-	map_destroy(&mapedit.copybuf);
-	objmgr_destroy();
+	map_destroy(&agMapEditor.copybuf);
+	AG_ObjMgrDestroy();
 }
 
 void
-mapedit_save(struct netbuf *buf)
+AG_MapEditorSave(AG_Netbuf *buf)
 {
-	write_uint8(buf, 0);				/* Pad: mapview_bg */
-	write_uint8(buf, (Uint8)mapview_bg_moving);
-	write_uint16(buf, (Uint16)mapview_bg_sqsize);
-	write_uint8(buf, (Uint8)mapview_sel_bounded);
+	AG_WriteUint8(buf, 0);				/* Pad: agMapviewBg */
+	AG_WriteUint8(buf, (Uint8)agMapviewAnimatedBg);
+	AG_WriteUint16(buf, (Uint16)agMapviewBgTileSize);
+	AG_WriteUint8(buf, (Uint8)agMapviewEditSelOnly);
 
-	write_uint16(buf, (Uint16)mapedit_def_mapw);
-	write_uint16(buf, (Uint16)mapedit_def_maph);
-	write_uint16(buf, (Uint16)mapedit_def_brsw);
-	write_uint16(buf, (Uint16)mapedit_def_brsh);
+	AG_WriteUint16(buf, (Uint16)agMapDefaultWidth);
+	AG_WriteUint16(buf, (Uint16)agMapDefaultHeight);
+	AG_WriteUint16(buf, (Uint16)agMapDefaultBrushWidth);
+	AG_WriteUint16(buf, (Uint16)agMapDefaultBrushHeight);
 }
 
 void
-mapedit_load(struct netbuf *buf)
+AG_MapEditorLoad(AG_Netbuf *buf)
 {
-	read_uint8(buf);				/* Pad: mapview_bg */
-	mapview_bg_moving = (int)read_uint8(buf);
-	mapview_bg_sqsize = (int)read_uint16(buf);
-	mapview_sel_bounded = (int)read_uint8(buf);
+	AG_ReadUint8(buf);				/* Pad: agMapviewBg */
+	agMapviewAnimatedBg = (int)AG_ReadUint8(buf);
+	agMapviewBgTileSize = (int)AG_ReadUint16(buf);
+	agMapviewEditSelOnly = (int)AG_ReadUint8(buf);
 
-	mapedit_def_mapw = (int)read_uint16(buf);
-	mapedit_def_maph = (int)read_uint16(buf);
-	mapedit_def_brsw = (int)read_uint16(buf);
-	mapedit_def_brsh = (int)read_uint16(buf);
+	agMapDefaultWidth = (int)AG_ReadUint16(buf);
+	agMapDefaultHeight = (int)AG_ReadUint16(buf);
+	agMapDefaultBrushWidth = (int)AG_ReadUint16(buf);
+	agMapDefaultBrushHeight = (int)AG_ReadUint16(buf);
 }
 
 void *
-mapedit_settings(void *p)
+AG_MapEditorConfig(void *p)
 {
-	struct window *win;
-	struct checkbox *cb;
-	struct spinbutton *sb;
-	struct mspinbutton *msb;
-	struct box *bo;
+	AG_Window *win;
+	AG_Checkbox *cb;
+	AG_Spinbutton *sb;
+	AG_MSpinbutton *msb;
+	AG_Box *bo;
 
-	win = window_new(WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, _("Map editor settings"));
+	win = AG_WindowNew(AG_WINDOW_NO_VRESIZE, NULL);
+	AG_WindowSetCaption(win, _("Map editor settings"));
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
-	box_set_spacing(bo, 5);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	AG_BoxSetSpacing(bo, 5);
 	{
-		cb = checkbox_new(bo, _("Moving tiles"));
-		widget_bind(cb, "state", WIDGET_INT, &mapview_bg_moving);
+		cb = AG_CheckboxNew(bo, _("Moving tiles"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agMapviewAnimatedBg);
 
-		sb = spinbutton_new(bo, _("Tile size: "));
-		widget_bind(sb, "value", WIDGET_INT, &mapview_bg_sqsize);
-		spinbutton_set_min(sb, 2);
-		spinbutton_set_max(sb, 16384);
+		sb = AG_SpinbuttonNew(bo, _("Tile size: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &agMapviewBgTileSize);
+		AG_SpinbuttonSetMin(sb, 2);
+		AG_SpinbuttonSetMax(sb, 16384);
 	}
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		cb = checkbox_new(bo, _("Selection-bounded edition"));
-		widget_bind(cb, "state", WIDGET_INT, &mapview_sel_bounded);
+		cb = AG_CheckboxNew(bo, _("Selection-bounded edition"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT,
+		    &agMapviewEditSelOnly);
 	}
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		msb = mspinbutton_new(bo, "x", _("Default map geometry: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mapedit_def_mapw);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mapedit_def_maph);
-		mspinbutton_set_min(msb, 1);
-		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
+		msb = AG_MSpinbuttonNew(bo, "x", _("Default map geometry: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
+		    &agMapDefaultWidth);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
+		    &agMapDefaultHeight);
+		AG_MSpinbuttonSetMin(msb, 1);
+		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
 		
-		msb = mspinbutton_new(bo, "x", _("Default brush geometry: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, &mapedit_def_brsw);
-		widget_bind(msb, "yvalue", WIDGET_INT, &mapedit_def_brsh);
-		mspinbutton_set_min(msb, 1);
-		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
+		msb = AG_MSpinbuttonNew(bo, "x", _("Default brush geometry: "));
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
+		    &agMapDefaultBrushWidth);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
+		    &agMapDefaultBrushHeight);
+		AG_MSpinbuttonSetMin(msb, 1);
+		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
 	}
 	return (win);
 }

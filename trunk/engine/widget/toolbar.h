@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.5 2005/03/05 12:14:30 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.6 2005/09/08 08:18:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -10,38 +10,38 @@
 
 #include "begin_code.h"
 
-#define TOOLBAR_MAX_ROWS	8
+#define AG_TOOLBAR_MAX_ROWS	8
 
-enum toolbar_type {
-	TOOLBAR_HORIZ,
-	TOOLBAR_VERT
+enum ag_toolbar_type {
+	AG_TOOLBAR_HORIZ,
+	AG_TOOLBAR_VERT
 };
 
-struct toolbar_button {
+struct ag_toolbar_button {
 	int row;				/* Assigned row */
-	struct button *bu;
+	AG_Button *bu;
 };
 
-struct toolbar {
-	struct box box;
-	struct box *rows[TOOLBAR_MAX_ROWS];
-	struct toolbar_button *buttons;
-	enum toolbar_type type;
+typedef struct ag_toolbar {
+	struct ag_box box;
+	struct ag_box *rows[AG_TOOLBAR_MAX_ROWS];
+	struct ag_toolbar_button *buttons;
+	enum ag_toolbar_type type;
 	int nrows;
 	int flags;
-#define TOOLBAR_HOMOGENOUS	0x01
-};
+#define AG_TOOLBAR_HOMOGENOUS	0x01
+} AG_Toolbar;
 
 __BEGIN_DECLS
-struct toolbar	*toolbar_new(void *, enum toolbar_type, int, int);
-void		 toolbar_init(struct toolbar *, enum toolbar_type, int, int);
-void		 toolbar_scale(void *, int, int);
-void	 	 toolbar_destroy(void *);
-struct button	*toolbar_add_button(struct toolbar *, int, SDL_Surface *, int,
-		                    int, void (*)(int, union evarg *),
-				    const char *, ...);
-void		 toolbar_add_separator(struct toolbar *, int);
-void		 toolbar_select_unique(struct toolbar *, struct button *);
+AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, int);
+void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, int);
+void		 AG_ToolbarScale(void *, int, int);
+void	 	 AG_ToolbarDestroy(void *);
+AG_Button	*AG_ToolbarAddButton(AG_Toolbar *, int, SDL_Surface *, int,
+		                     int, void (*)(int, union evarg *),
+				     const char *, ...);
+void		 AG_ToolbarAddSeparator(AG_Toolbar *, int);
+void		 AG_ToolbarSelectUnique(AG_Toolbar *, AG_Button *);
 __END_DECLS
 
 #include "close_code.h"

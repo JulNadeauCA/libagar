@@ -1,11 +1,11 @@
-/*	$Csoft: space.h,v 1.3 2005/08/12 06:09:11 vedge Exp $	*/
+/*	$Csoft: space.h,v 1.4 2005/09/20 13:46:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SPACE_SPACE_H_
 #define _AGAR_SPACE_SPACE_H_
 #include "begin_code.h"
 
-struct coords {
+typedef struct ag_coord {
 	enum {
 		COORDS_CARTESIAN,
 		COORDS_SPHERICAL,
@@ -43,29 +43,29 @@ struct coords {
 #define c_cyl coords.cyl
 #define c_par coords.par
 #define c_map coords.map
-};
+} AG_Coord;
 
-struct quaternion {
+typedef struct ag_quaternion {
 	double x, y, z, w;
-};
+} AG_Quaternion;
 
-struct space {
-	struct object obj;
+typedef struct ag_space {
+	struct ag_object obj;
 	pthread_mutex_t	lock;
-	TAILQ_HEAD(, actor) actors;
-};
+	TAILQ_HEAD(, ag_actor) actors;
+} AG_Space;
 
-#define SPACE(ob) ((struct space *)(ob))
+#define AG_SPACE(ob) ((AG_Space *)(ob))
 
 __BEGIN_DECLS
-struct space	 *space_new(void *, const char *);
-void		  space_init(void *, const char *, const char *, const void *);
-void		  space_reinit(void *);
-void		  space_destroy(void *);
-int		  space_load(void *, struct netbuf *);
-int		  space_save(void *, struct netbuf *);
-int		  space_attach(void *, void *);
-void		  space_detach(void *, void *);
+AG_Space *AG_SpaceNew(void *, const char *);
+void	  AG_SpaceInit(void *, const char *, const char *, const void *);
+void	  AG_SpaceReinit(void *);
+void	  AG_SpaceDestroy(void *);
+int	  AG_SpaceLoad(void *, AG_Netbuf *);
+int	  AG_SpaceSave(void *, AG_Netbuf *);
+int	  AG_SpaceAttach(void *, void *);
+void	  AG_SpaceDetach(void *, void *);
 __END_DECLS
 
 #include "close_code.h"

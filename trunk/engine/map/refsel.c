@@ -1,4 +1,4 @@
-/*	$Csoft: refsel.c,v 1.6 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: refsel.c,v 1.7 2005/08/27 04:34:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -35,12 +35,12 @@
 #include "refsel.h"
 
 void
-refsel_update(struct mapview *mv, int xRel, int yRel)
+refsel_update(AG_Mapview *mv, int xRel, int yRel)
 {
-	struct map *m = mv->map;
-	struct noderef *r;
+	AG_Map *m = mv->map;
+	AG_Nitem *r;
 	int nx, ny;
-	int tilesz = MV_TILESZ(mv);
+	int tilesz = AGMTILESZ(mv);
 
 	for (ny = mv->my;
 	     (ny - mv->my) <= mv->mh && ny < m->maph;
@@ -48,23 +48,23 @@ refsel_update(struct mapview *mv, int xRel, int yRel)
 		for (nx = mv->mx;
 		     (nx - mv->mx) <= mv->mw && nx < m->mapw;
 		     nx++) {
-			struct node *node = &m->map[ny][nx];
+			AG_Node *node = &m->map[ny][nx];
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if ((r->flags & NODEREF_SELECTED) == 0) {
+				if ((r->flags & AG_NITEM_SELECTED) == 0) {
 					continue;
 				}
 				r->r_gfx.xcenter += xRel;
 				r->r_gfx.ycenter += yRel;
 
-				if (xRel > 0 && r->r_gfx.xcenter > TILESZ) {
-					r->r_gfx.xcenter = TILESZ;
+				if (xRel > 0 && r->r_gfx.xcenter > AGTILESZ) {
+					r->r_gfx.xcenter = AGTILESZ;
 				} else if (xRel<0 && r->r_gfx.xcenter < 0) {
 					r->r_gfx.xcenter = 0;
 				}
 				
-				if (yRel > 0 && r->r_gfx.ycenter > TILESZ) {
-					r->r_gfx.ycenter = TILESZ;
+				if (yRel > 0 && r->r_gfx.ycenter > AGTILESZ) {
+					r->r_gfx.ycenter = AGTILESZ;
 				} else if (yRel < 0 && r->r_gfx.ycenter < 0) {
 					r->r_gfx.ycenter = 0;
 				}
@@ -76,15 +76,15 @@ refsel_update(struct mapview *mv, int xRel, int yRel)
 static void
 refsel_init(void *p)
 {
-	tool_push_status(p,
+	AG_MaptoolPushStatus(p,
 	    _("Select an element with $(L). Hold $(C) to select "
 	      "multiple elements."));
 }
 
-const struct tool_ops refsel_ops = {
+const AG_MaptoolOps agMapRefselOps = {
 	"Refsel", N_("Select Node Elements"),
 	SELECT_REF_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	refsel_init,
 	NULL,			/* destroy */

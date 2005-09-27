@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.25 2005/05/24 08:12:48 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.26 2005/09/23 04:02:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,137 +39,137 @@
 #include <string.h>
 #include <errno.h>
 
-static struct widget_ops combo_ops = {
+static AG_WidgetOps combo_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		combo_destroy,
+		AG_ComboDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
 	NULL,			/* draw */
-	combo_scale
+	AG_ComboScale
 };
 
-struct combo *
-combo_new(void *parent, int flags, const char *fmt, ...)
+AG_Combo *
+AG_ComboNew(void *parent, int flags, const char *fmt, ...)
 {
-	char label[LABEL_MAX];
-	struct combo *com;
+	char label[AG_LABEL_MAX];
+	AG_Combo *com;
 	va_list ap;
 
 	va_start(ap, fmt);
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	com = Malloc(sizeof(struct combo), M_OBJECT);
-	combo_init(com, label, flags);
-	object_attach(parent, com);
+	com = Malloc(sizeof(AG_Combo), M_OBJECT);
+	AG_ComboInit(com, label, flags);
+	AG_ObjectAttach(parent, com);
 	return (com);
 }
 
 static void
-combo_collapse(struct combo *com)
+combo_collapse(AG_Combo *com)
 {
-	struct widget_binding *stateb;
+	AG_WidgetBinding *stateb;
 	int *state;
 
 	if (com->panel == NULL)
 		return;
 
-	com->saved_h = WIDGET(com->panel)->h;
-	window_hide(com->panel);
-	object_detach(com->list);
-	view_detach(com->panel);
+	com->saved_h = AGWIDGET(com->panel)->h;
+	AG_WindowHide(com->panel);
+	AG_ObjectDetach(com->list);
+	AG_ViewDetach(com->panel);
 	com->panel = NULL;
 	
-	stateb = widget_get_binding(com->button, "state", &state);
+	stateb = AG_WidgetGetBinding(com->button, "state", &state);
 	*state = 0;
-	widget_binding_modified(stateb);
-	widget_binding_unlock(stateb);
+	AG_WidgetBindingChanged(stateb);
+	AG_WidgetUnlockBinding(stateb);
 }
 
 static void
 combo_expand(int argc, union evarg *argv)
 {
-	struct combo *com = argv[1].p;
+	AG_Combo *com = argv[1].p;
 	int expand = argv[2].i;
 
 	if (expand) {						/* Expand */
-		struct widget *panel;
+		AG_Widget *panel;
 
-		com->panel = window_new(WINDOW_NO_TITLEBAR|
-				        WINDOW_NO_DECORATIONS, NULL);
-		panel = WIDGET(com->panel);
-		object_attach(com->panel, com->list);
+		com->panel = AG_WindowNew(AG_WINDOW_NO_TITLEBAR|
+				        AG_WINDOW_NO_DECORATIONS, NULL);
+		panel = AGWIDGET(com->panel);
+		AG_ObjectAttach(com->panel, com->list);
 
-		panel->w = WIDGET(com)->w - WIDGET(com->button)->w;
-		panel->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		panel->x = WIDGET(com)->cx;
-		panel->y = WIDGET(com)->cy;
+		panel->w = AGWIDGET(com)->w - AGWIDGET(com->button)->w;
+		panel->h = com->saved_h > 0 ? com->saved_h : AGWIDGET(com)->h*5;
+		panel->x = AGWIDGET(com)->cx;
+		panel->y = AGWIDGET(com)->cy;
 		
 		/* XXX redundant? */
-		if (panel->x+panel->w > view->w)
-			panel->w = view->w - panel->x;
-		if (panel->y+panel->h > view->h)
-			panel->h = view->h - panel->y;
+		if (panel->x+panel->w > agView->w)
+			panel->w = agView->w - panel->x;
+		if (panel->y+panel->h > agView->h)
+			panel->h = agView->h - panel->y;
 
-		WINDOW_UPDATE(panel);
-		window_show(com->panel);
+		AG_WINDOW_UPDATE(panel);
+		AG_WindowShow(com->panel);
 	} else {
 		combo_collapse(com);
 	}
 }
 
 /* Select a combo item based on its pointer. */
-struct tlist_item *
-combo_select_pointer(struct combo *com, void *p)
+AG_TlistItem *
+AG_ComboSelectPointer(AG_Combo *com, void *p)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&com->list->lock);
-	if ((it = tlist_select_pointer(com->list, p)) != NULL) {
-		textbox_printf(com->tbox, "%s", it->text);
+	if ((it = AG_TlistSelectPtr(com->list, p)) != NULL) {
+		AG_TextboxPrintf(com->tbox, "%s", it->text);
 	}
 	pthread_mutex_unlock(&com->list->lock);
 	return (it);
 }
 
 /* Select a combo item based on its text. */
-struct tlist_item *
-combo_select_text(struct combo *com, const char *text)
+AG_TlistItem *
+AG_ComboSelectText(AG_Combo *com, const char *text)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&com->list->lock);
-	if ((it = tlist_select_text(com->list, text)) != NULL) {
-		textbox_printf(com->tbox, "%s", it->text);
+	if ((it = AG_TlistSelectText(com->list, text)) != NULL) {
+		AG_TextboxPrintf(com->tbox, "%s", it->text);
 	}
 	pthread_mutex_unlock(&com->list->lock);
 	return (it);
 }
 
 void
-combo_select(struct combo *com, struct tlist_item *it)
+combo_select(AG_Combo *com, AG_TlistItem *it)
 {
 	pthread_mutex_lock(&com->list->lock);
-	textbox_printf(com->tbox, "%s", it->text);
-	tlist_select(com->list, it);
+	AG_TextboxPrintf(com->tbox, "%s", it->text);
+	AG_TlistSelect(com->list, it);
 	pthread_mutex_unlock(&com->list->lock);
 }
 
 static void
 combo_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct combo *com = argv[1].p;
-	struct tlist_item *ti;
+	AG_Tlist *tl = argv[0].p;
+	AG_Combo *com = argv[1].p;
+	AG_TlistItem *ti;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_selected_item(tl)) != NULL) {
-		textbox_printf(com->tbox, "%s", ti->text);
-		event_post(NULL, com, "combo-selected", "%p", ti);
+	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
+		AG_TextboxPrintf(com->tbox, "%s", ti->text);
+		AG_PostEvent(NULL, com, "combo-selected", "%p", ti);
 	}
 	pthread_mutex_unlock(&tl->lock);
 	combo_collapse(com);
@@ -178,29 +178,30 @@ combo_selected(int argc, union evarg *argv)
 static void
 combo_return(int argc, union evarg *argv)
 {
-	char text[TEXTBOX_STRING_MAX];
-	struct textbox *tbox = argv[0].p;
-	struct combo *com = argv[1].p;
+	char text[AG_TEXTBOX_STRING_MAX];
+	AG_Textbox *tbox = argv[0].p;
+	AG_Combo *com = argv[1].p;
 	
 	pthread_mutex_lock(&com->list->lock);
 
-	textbox_copy_string(tbox, text, sizeof(text));
+	AG_TextboxCopyString(tbox, text, sizeof(text));
 
-	if ((com->flags & COMBO_ANY_TEXT) == 0) {
-		struct tlist_item *it;
+	if ((com->flags & AG_COMBO_ANY_TEXT) == 0) {
+		AG_TlistItem *it;
 	
 		if (text[0] != '\0' &&
-		    (it = tlist_select_text(com->list, text)) != NULL) {
-			textbox_printf(com->tbox, "%s", it->text);
-			event_post(NULL, com, "combo-selected", "%p", it);
+		    (it = AG_TlistSelectText(com->list, text)) != NULL) {
+			AG_TextboxPrintf(com->tbox, "%s", it->text);
+			AG_PostEvent(NULL, com, "combo-selected", "%p", it);
 		} else {
-			tlist_unselect_all(com->list);
-			textbox_printf(com->tbox, "");
-			event_post(NULL, com, "combo-text-unknown", "%s", text);
+			AG_TlistDeselectAll(com->list);
+			AG_TextboxPrintf(com->tbox, "");
+			AG_PostEvent(NULL, com, "combo-text-unknown", "%s",
+			    text);
 		}
 	} else {
-		tlist_unselect_all(com->list);
-		event_post(NULL, com, "combo-text-entry", "%s", text);
+		AG_TlistDeselectAll(com->list);
+		AG_PostEvent(NULL, com, "combo-text-entry", "%s", text);
 	}
 
 	pthread_mutex_unlock(&com->list->lock);
@@ -210,91 +211,92 @@ combo_return(int argc, union evarg *argv)
 static void
 combo_mousebuttonup(int argc, union evarg *argv)
 {
-	struct combo *com = argv[0].p;
+	AG_Combo *com = argv[0].p;
 /*	int button = argv[1].i; */
-	int x = WIDGET(com)->cx + argv[2].i;
-	int y = WIDGET(com)->cy + argv[3].i;
+	int x = AGWIDGET(com)->cx + argv[2].i;
+	int y = AGWIDGET(com)->cy + argv[3].i;
 
-	if (com->panel != NULL && !widget_area(com->panel, x, y))
+	if (com->panel != NULL && !AG_WidgetArea(com->panel, x, y))
 		combo_collapse(com);
 }
 #endif
 
 void
-combo_init(struct combo *com, const char *label, int flags)
+AG_ComboInit(AG_Combo *com, const char *label, int flags)
 {
-	widget_init(com, "combo", &combo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
-	    WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetInit(com, "combo", &combo_ops, AG_WIDGET_FOCUSABLE|
+	                                        AG_WIDGET_WFILL|
+						AG_WIDGET_UNFOCUSED_BUTTONUP);
 	com->panel = NULL;
 	com->flags = flags;
 	com->saved_h = 0;
 
-	com->tbox = textbox_new(com, label);
-	com->button = button_new(com, " ... ");
-	button_set_sticky(com->button, 1);
-	button_set_padding(com->button, 1);
+	com->tbox = AG_TextboxNew(com, label);
+	com->button = AG_ButtonNew(com, " ... ");
+	AG_ButtonSetSticky(com->button, 1);
+	AG_ButtonSetPadding(com->button, 1);
 
-	if ((flags & COMBO_ANY_TEXT) == 0) {
-		com->tbox->flags &= ~(TEXTBOX_WRITEABLE);
-		WIDGET(com->tbox)->flags &= ~(WIDGET_FOCUSABLE);
+	if ((flags & AG_COMBO_ANY_TEXT) == 0) {
+		com->tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
+		AGWIDGET(com->tbox)->flags &= ~(AG_WIDGET_FOCUSABLE);
 	}
 
-	com->list = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(com->list, 0);
+	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(com->list, 0);
 	
-	if (flags & COMBO_TREE)	
-		com->list->flags |= TLIST_TREE;
-	if (flags & COMBO_POLL)
-		com->list->flags |= TLIST_POLL;
+	if (flags & AG_COMBO_TREE)	
+		com->list->flags |= AG_TLIST_TREE;
+	if (flags & AG_COMBO_POLL)
+		com->list->flags |= AG_TLIST_POLL;
 
-	event_new(com->button, "button-pushed", combo_expand, "%p", com);
-	event_new(com->list, "tlist-changed", combo_selected, "%p", com);
-	event_new(com->tbox, "textbox-return", combo_return, "%p", com);
+	AG_SetEvent(com->button, "button-pushed", combo_expand, "%p", com);
+	AG_SetEvent(com->list, "tlist-changed", combo_selected, "%p", com);
+	AG_SetEvent(com->tbox, "textbox-return", combo_return, "%p", com);
 #if 0
-	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
+	AG_SetEvent(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
 #endif
 }
 
 void
-combo_destroy(void *p)
+AG_ComboDestroy(void *p)
 {
-	struct combo *com = p;
+	AG_Combo *com = p;
 
 	if (com->panel != NULL) {
-		window_hide(com->panel);
-		object_detach(com->list);
-		view_detach(com->panel);
+		AG_WindowHide(com->panel);
+		AG_ObjectDetach(com->list);
+		AG_ViewDetach(com->panel);
 	}
-	object_destroy(com->list);
+	AG_ObjectDestroy(com->list);
 	Free(com->list, M_OBJECT);
-	widget_destroy(com);
+	AG_WidgetDestroy(com);
 }
 
 void
-combo_scale(void *p, int w, int h)
+AG_ComboScale(void *p, int w, int h)
 {
-	struct combo *com = p;
+	AG_Combo *com = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(com->tbox, -1, -1);
-		WIDGET(com)->w = WIDGET(com->tbox)->w;
-		WIDGET(com)->h = WIDGET(com->tbox)->h;
+		AGWIDGET_SCALE(com->tbox, -1, -1);
+		AGWIDGET(com)->w = AGWIDGET(com->tbox)->w;
+		AGWIDGET(com)->h = AGWIDGET(com->tbox)->h;
 
-		WIDGET_SCALE(com->button, -1, -1);
-		WIDGET(com)->w += WIDGET(com->button)->w;
-		if (WIDGET(com->button)->h > WIDGET(com)->h) {
-			WIDGET(com)->h = WIDGET(com->button)->h;
+		AGWIDGET_SCALE(com->button, -1, -1);
+		AGWIDGET(com)->w += AGWIDGET(com->button)->w;
+		if (AGWIDGET(com->button)->h > AGWIDGET(com)->h) {
+			AGWIDGET(com)->h = AGWIDGET(com->button)->h;
 		}
 		return;
 	}
 	
-	widget_scale(com->button, -1, -1);
-	widget_scale(com->tbox, w - WIDGET(com->button)->w - 1, h);
-	widget_scale(com->button, WIDGET(com->button)->w, h);
+	AG_WidgetScale(com->button, -1, -1);
+	AG_WidgetScale(com->tbox, w - AGWIDGET(com->button)->w - 1, h);
+	AG_WidgetScale(com->button, AGWIDGET(com->button)->w, h);
 
-	WIDGET(com->tbox)->x = 0;
-	WIDGET(com->tbox)->y = 0;
-	WIDGET(com->button)->x = w - WIDGET(com->button)->w - 1;
-	WIDGET(com->button)->y = 0;
+	AGWIDGET(com->tbox)->x = 0;
+	AGWIDGET(com->tbox)->y = 0;
+	AGWIDGET(com->button)->x = w - AGWIDGET(com->button)->w - 1;
+	AGWIDGET(com->button)->y = 0;
 }
 

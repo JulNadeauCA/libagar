@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.21 2005/09/19 01:25:16 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.22 2005/09/20 13:46:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -8,38 +8,41 @@
 
 #include "begin_code.h"
 
-#define PERSO_NAME_MAX	256
+#define AG_PERSO_NAME_MAX	256
 
-struct perso {
-	struct actor obj;
+typedef struct ag_perso {
+	struct ag_actor obj;
 
-	pthread_mutex_t	 lock;
-	void		*tileset;		/* Graphics source */
-	char		 name[PERSO_NAME_MAX];	/* Name set by user */
-	Uint32		 flags;
-	Uint32		 seed;		/* Random seed */
-	Sint32		 level;		/* Current level */
-	Uint32		 exp;		/* Experience */
-	int		 age;		/* Age */
-	int		 maxhp, maxmp;	/* Maximum HP/MP */
-	int		 hp, mp;	/* Effective HP/MP */
-	Uint32		 nzuars;	/* Money */
-	struct timeout	 move_to;	/* Movement timer */
-};
+	pthread_mutex_t	lock;
+	void *tileset;			/* Graphics source */
+	char  name[AG_PERSO_NAME_MAX];	/* Name set by user */
+	Uint32 flags;
+	Uint32 seed;			/* Random seed */
+	Sint32 level;			/* Current level */
+	Uint32 exp;			/* Experience */
+	int age;			/* Age */
+	int maxhp, maxmp;		/* Maximum HP/MP */
+	int hp, mp;			/* Effective HP/MP */
+	Uint32 nzuars;			/* Money */
+	AG_Timeout move_to;		/* Movement timer */
+} AG_Perso;
 
-#define PERSO(ob)	((struct perso *)(ob))
+#define AGPERSO(ob)	((AG_Perso *)(ob))
 
 __BEGIN_DECLS
-struct perso	*perso_new(void *, const char *);
-void		 perso_init(void *, const char *);
-void		 perso_reinit(void *);
-void		 perso_destroy(void *);
-void		*perso_edit(void *);
-void		 perso_args(void *);
-int		 perso_load(void *, struct netbuf *);
-int		 perso_save(void *, struct netbuf *);
-void		 perso_map(void *, void *);
-void		 perso_update(void *, void *);
+AG_Perso *AG_PersoNew(void *, const char *);
+void	  AG_PersoInit(void *, const char *);
+void	  AG_PersoReinit(void *);
+void	  AG_PersoDestroy(void *);
+void	 *AG_PersoEdit(void *);
+void	  AG_PersoArgs(void *);
+int	  AG_PersoLoad(void *, AG_Netbuf *);
+int	  AG_PersoSave(void *, AG_Netbuf *);
+void	  AG_PersoMap(void *, void *);
+void	  AG_PersoUpdate(void *, void *);
+int	  AG_PersoKeydown(void *, int, int);
+int	  AG_PersoKeyup(void *, int, int);
+int       AG_PersoCanWalkTo(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.6 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.7 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include "vg_primitive.h"
 
 static void
-init(struct vg *vg, struct vg_element *vge)
+init(VG *vg, VG_Element *vge)
 {
 	vge->vg_polygon.outline = 0;
 }
@@ -52,7 +52,7 @@ compare_ints(const void *p1, const void *p2)
 }
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
 	int i;
 	int x, y, x1, y1, x2, y2;
@@ -61,7 +61,7 @@ render(struct vg *vg, struct vg_element *vge)
 	int ints;
 
 	if (vge->nvtx < 3 || vge->vg_polygon.outline) {	/* Draw outline */
-		vg_draw_line_loop(vg, vge);
+		VG_DrawLineLoop(vg, vge);
 		return;
 	}
 	
@@ -129,13 +129,13 @@ render(struct vg *vg, struct vg_element *vge)
 			xb = vg->ints[i+1] - 1;
 			xb = (xb>>16) + ((xb&0x8000) >> 15);
 
-			vg_hline_primitive(vg, xa, xb, y, vge->color);
+			VG_HLinePrimitive(vg, xa, xb, y, vge->color);
 		}
 	}
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	double xmin = 0, xmax = 0;
 	double ymin = 0, ymax = 0;
@@ -159,25 +159,25 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 	r->h = ymax-ymin;
 }
 
-const struct vg_element_ops vg_polygon_ops = {
+const VG_ElementOps vgPolygonOps = {
 	N_("Polygon"),
 	RG_POLYGON_ICON,
 	init,
 	NULL,				/* destroy */
 	render,
 	extent,
-	vg_line_intsect
+	VG_LineIntersect
 };
 
 #ifdef EDITION
 static int seq;
-static struct vg_element *cur_polygon;
-static struct vg_vertex *cur_vtx;
+static VG_Element *cur_polygon;
+static VG_Vtx *cur_vtx;
 
 static void
 init_tool(void *t)
 {
-	tool_push_status(t, _("Specify first point."));
+	AG_MaptoolPushStatus(t, _("Specify first point."));
 	seq = 0;
 	cur_polygon = NULL;
 	cur_vtx = NULL;
@@ -187,10 +187,10 @@ static int
 polygon_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double x, y;
 	
-	vg_map2vec(vg, xmap, ymap, &x, &y);
+	VG_Map2Vec(vg, xmap, ymap, &x, &y);
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
 
@@ -205,7 +205,7 @@ polygon_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
 static int
 polygon_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
 	if (btn == SDL_BUTTON_LEFT) {
@@ -214,25 +214,25 @@ polygon_mousebuttondown(void *t, int xmap, int ymap, int btn)
 			if (vg->cur_block != NULL)
 				fatal("block");
 #endif
-			cur_polygon = vg_begin_element(vg, VG_POLYGON);
-			vg_map2vec(vg, xmap, ymap, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
+			cur_polygon = VG_Begin(vg, VG_POLYGON);
+			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+			VG_Vertex2(vg, vx, vy);
 		} else {
-			tool_pop_status(t);
+			AG_MaptoolPopStatus(t);
 		}
-		vg_map2vec(vg, xmap, ymap, &vx, &vy);
-		cur_vtx = vg_vertex2(vg, vx, vy);
+		VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+		cur_vtx = VG_Vertex2(vg, vx, vy);
 		vg->redraw++;
 
-		tool_push_status(t, _("Specify point %d or "
+		AG_MaptoolPushStatus(t, _("Specify point %d or "
 		                      "[close/undo vertex]."), seq+1);
 	} else {
 		if (cur_vtx != NULL) {
 			if (cur_polygon->nvtx <= 2) {
-				vg_destroy_element(vg, cur_polygon);
+				VG_DestroyElement(vg, cur_polygon);
 				cur_polygon = NULL;
 			} else {
-				vg_pop_vertex(vg);
+				VG_PopVertex(vg);
 			}
 			vg->redraw++;
 		}
@@ -242,14 +242,14 @@ finish:
 	cur_polygon = NULL;
 	cur_vtx = NULL;
 	seq = 0;
-	tool_pop_status(t);
+	AG_MaptoolPopStatus(t);
 	return (1);
 }
 
-const struct tool_ops vg_polygon_tool = {
+const AG_MaptoolOps vg_polygon_tool = {
 	"Polygon", N_("Draw filled polygons."),
 	RG_POLYGON_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	init_tool,
 	NULL,			/* destroy */

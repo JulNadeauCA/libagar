@@ -1,4 +1,4 @@
-.\"	$Csoft: gfx.3,v 1.4 2005/07/16 16:07:27 vedge Exp $
+.\"	$Csoft: gfx.3,v 1.5 2005/07/19 04:24:13 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,7 +43,7 @@ The Agar
 interface manages the storage of graphical information, such as images and
 animations.
 The
-.Fn gfx_new
+.Fn AG_GfxNew
 function is used to allocate and initialize a
 .Va gfx
 structure.
@@ -58,47 +58,47 @@ array of its associated
 .Va gfx
 structure.
 .Pp
-It is possible to use an object's graphics without having to load the
-object's entire data into memory.
+It is possible to use an object's graphics without having to load its
+dynamic data into memory.
 Graphical information is saved in such a way that it is possible to load
 specific elements quickly.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct gfx *"
-.Fn gfx_new "void *object"
+.Ft "AG_Gfx *"
+.Fn AG_GfxNew "void *object"
 .Pp
 .Ft void
-.Fn gfx_init "struct gfx *gfx"
+.Fn AG_GfxInit "AG_Gfx *gfx"
 .Pp
 .Ft void
-.Fn gfx_unused "struct gfx *gfx"
+.Fn AG_GfxUnused "AG_Gfx *gfx"
 .Pp
 .Ft void
-.Fn gfx_destroy "struct gfx *gfx"
+.Fn AG_GfxDestroy "AG_Gfx *gfx"
 .nr nS 0
 .Pp
 The
-.Fn gfx_new
+.Fn AG_GfxNew
 function allocates and/initializes a
 .Nm
 structure.
 .Pp
 The
-.Fn gfx_unused
+.Fn AG_GfxUnused
 function decrements the reference count and destroys the given
 .Nm
 using
-.Fn gfx_destroy
+.Fn AG_GfxDestroy
 if it reaches 0.
 .Sh STATIC CONTENT
 .nr nS 1
-.Ft "struct gfx *"
-.Fn gfx_wire "void *object" "const char *den_filename"
+.Ft "AG_Gfx *"
+.Fn AG_WireGfx "void *object" "const char *den_filename"
 .Pp
 .nr nS 0
 .Pp
 The
-.Fn gfx_wire
+.Fn AG_WireGfx
 function permanently wires graphics from the given
 .Xr den 5
 archive file into memory.
@@ -109,86 +109,82 @@ It is useful for pixmaps used by widgets, for instance.
 .Sh IMAGES/ANIMATIONS
 .nr nS 1
 .Ft void
-.Fn gfx_alloc_sprites "struct gfx *gfx" "Uint32 n"
+.Fn AG_GfxAllocSprites "AG_Gfx *gfx" "Uint32 n"
 .Pp
 .Ft "Uint32"
-.Fn gfx_insert_sprite "struct gfx *gfx" "SDL_Surface *surface"
+.Fn AG_GfxAddSprite "AG_Gfx *gfx" "SDL_Surface *surface"
 .Pp
-.Ft "struct map *"
-.Fn gfx_insert_fragments "struct gfx *gfx" "SDL_Surface *surface"
-.Pp
-.Ft "void"
-.Fn sprite_set_surface "struct sprite *sprite" "SDL_Surface *su"
+.Ft "AG_Map *"
+.Fn AG_GfxAddFragments "AG_Gfx *gfx" "SDL_Surface *surface"
 .Pp
 .Ft "void"
-.Fn sprite_set_snap_mode "struct sprite *sprite" "enum gfx_snap_mode snap_mode"
+.Fn AG_SpriteSetSurface "AG_Sprite *sprite" "SDL_Surface *su"
 .Pp
 .Ft "void"
-.Fn sprite_set_origin "struct sprite *sprite" "int x" "int y"
+.Fn AG_SpriteSetSnapMode "AG_Sprite *sprite" "enum ag_gfx_snap_mode snap_mode"
 .Pp
-.Ft "struct gfx_anim *"
-.Fn gfx_insert_anim "struct gfx *gfx"
+.Ft "void"
+.Fn AG_SpriteSetOrigin "AG_Sprite *sprite" "int x" "int y"
+.Pp
+.Ft "AG_Gfx_anim *"
+.Fn AG_GfxAddAnim "AG_Gfx *gfx"
 .Pp
 .Ft "Uint32"
-.Fn gfx_insert_anim_frame "struct gfx_anim *anim" "SDL_Surface *surface"
-.Pp
-.Ft "Uint32"
-.Fn gfx_insert_submap "struct gfx *gfx" "struct map *map"
+.Fn AG_GfxAddSubmap "AG_Gfx *gfx" "AG_Map *map"
 .nr nS 0
 .Pp
 The
-.Fn gfx_alloc_sprites
+.Fn AG_GfxAllocSprites
 function allocates
 .Fa n
 sprite entries and initializes them to NULL.
 The
-.Fn gfx_insert_sprite
+.Fn AG_GfxAddSprite
 function allocates a new sprite and attributes the given surface to it.
-.Fn gfx_insert_fragments
+.Fn AG_GfxAddFragments
 breaks a surface into square fragments of size
-.Dv TILESZ .
+.Dv AGTILESZ .
 Those fragments are inserted into the sprites array, and a
 .Xr map 3
 containing the fragments in order is generated.
 .Pp
 The
-.Fn sprite_set_surface
+.Fn AG_SpriteSetSurface
 function changes the surface associated with the given sprite (automatically
 freeing the previous surface if there was any).
 .Pp
 The
-.Fn sprite_set_snap_mode
+.Fn AG_SpriteSetSnapMode
 function changes the default snapping mode for the sprite.
 Acceptable arguments include:
 .Bd -literal
-enum gfx_snap_mode {
-	GFX_SNAP_NOT,
-	GFX_SNAP_TO_GRID,
-	GFX_SNAP_TO_CENTER
+enum ag_gfx_snap_mode {
+	AG_GFX_SNAP_NOT,
+	AG_GFX_SNAP_TO_GRID,
+	AG_GFX_SNAP_TO_CENTER
 };
 .Ed
 .Pp
 The
-.Fn sprite_set_origin
+.Fn AG_SpriteSetOrigin
 function selects a different origin point for the given sprite.
 .Pp
 The
-.Fn gfx_insert_anim
+.Fn AG_GfxAddAnim
 function allocates a new animation structure.
-.Fn gfx_insert_anim_frame
-puts the given surface on the frame list.
+The frames must be allocated manually.
 .Pp
 The
-.Fn gfx_insert_submap
+.Fn AG_GfxAddSubmap
 function inserts a new map into the given
 .Nm
 structure's array of maps.
 This function is typically used for maps which are generated (for example by
-.Fn gfx_insert_fragments ) .
+.Fn AG_GfxAddFragments ) .
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr map 3
-.Xr object 3
+.Xr map 3 ,
+.Xr AG_Object 3 ,
 .Xr SDL_Surface 3
 .Sh HISTORY
 The

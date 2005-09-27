@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.5 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.6 2005/08/29 03:29:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -44,158 +44,159 @@
 #include "tileview.h"
 #include "sketchproj.h"
 
-const struct version sketchproj_ver = {
+const AG_Version rgSketchProjVer = {
 	"agar rg sketch projection feature",
 	0, 0
 };
 
-const struct feature_ops sketchproj_ops = {
+const RG_FeatureOps rgSketchProjOps = {
 	"sketchproj",
-	sizeof(struct sketchproj),
+	sizeof(struct rg_sketchproj),
 	N_("Sketch projection."),
 	FEATURE_AUTOREDRAW,
-	sketchproj_init,
-	sketchproj_load,
-	sketchproj_save,
+	RG_SketchProjInit,
+	RG_SketchProjLoad,
+	RG_SketchProjSave,
 	NULL,		/* destroy */
-	sketchproj_apply,
+	RG_SketchProjApply,
 	NULL,
 	NULL,
-	sketchproj_edit
+	RG_SketchProjEdit
 };
 
 void
-sketchproj_init(void *p, struct tileset *ts, int flags)
+RG_SketchProjInit(void *p, RG_Tileset *ts, int flags)
 {
-	struct sketchproj *sproj = p;
+	struct rg_sketchproj *sproj = p;
 
-	feature_init(sproj, ts, flags, &sketchproj_ops);
+	AG_FeatureInit(sproj, ts, flags, &rgSketchProjOps);
 	sproj->alpha = 255;
 	sproj->color = SDL_MapRGB(ts->fmt, 0, 0, 0);
 	sproj->sketch[0] = '\0';
 }
 
 int
-sketchproj_load(void *p, struct netbuf *buf)
+RG_SketchProjLoad(void *p, AG_Netbuf *buf)
 {
-	struct sketchproj *sproj = p;
-	struct tileset *ts = FEATURE(sproj)->ts;
+	struct rg_sketchproj *sproj = p;
+	RG_Tileset *ts = RG_FEATURE(sproj)->ts;
 
-	if (version_read(buf, &sketchproj_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, &rgSketchProjVer, NULL) == -1)
 		return (-1);
 
-	copy_string(sproj->sketch, buf, sizeof(sproj->sketch));
-	sproj->alpha = read_uint8(buf);
-	sproj->color = read_color(buf, ts->fmt);
+	AG_CopyString(sproj->sketch, buf, sizeof(sproj->sketch));
+	sproj->alpha = AG_ReadUint8(buf);
+	sproj->color = AG_ReadColor(buf, ts->fmt);
 	return (0);
 }
 
 void
-sketchproj_save(void *p, struct netbuf *buf)
+RG_SketchProjSave(void *p, AG_Netbuf *buf)
 {
-	struct sketchproj *sproj = p;
-	struct tileset *ts = FEATURE(sproj)->ts;
+	struct rg_sketchproj *sproj = p;
+	RG_Tileset *ts = RG_FEATURE(sproj)->ts;
 
-	version_write(buf, &sketchproj_ver);
+	AG_WriteVersion(buf, &rgSketchProjVer);
 
-	write_string(buf, sproj->sketch);
-	write_uint8(buf, sproj->alpha);
-	write_color(buf, ts->fmt, sproj->color);
+	AG_WriteString(buf, sproj->sketch);
+	AG_WriteUint8(buf, sproj->alpha);
+	AG_WriteColor(buf, ts->fmt, sproj->color);
 }
 
 static void
 poll_sketches(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tile *t = argv[1].p;
-	struct tileset *ts = t->ts;
-	struct tile_element *tel;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tile *t = argv[1].p;
+	RG_Tileset *ts = t->ts;
+	RG_TileElement *tel;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(tel, &t->elements, elements) {
-		if (tel->type != TILE_SKETCH) {
+		if (tel->type != RG_TILE_SKETCH) {
 			continue;
 		}
-		it = tlist_insert(tl, NULL, "%s", tel->name);
+		it = AG_TlistAdd(tl, NULL, "%s", tel->name);
 		it->p1 = tel;
 		it->class = "tile-sketch";
-		tlist_set_icon(tl, it, tel->tel_sketch.sk->vg->su);
+		AG_TlistSetIcon(tl, it, tel->tel_sketch.sk->vg->su);
 	}
 	pthread_mutex_unlock(&ts->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 select_sketch(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct sketchproj *sproj = argv[1].p;
-	struct tile *t = argv[2].p;
-	struct tlist_item *it = argv[3].p;
+	AG_Tlist *tl = argv[0].p;
+	struct rg_sketchproj *sproj = argv[1].p;
+	RG_Tile *t = argv[2].p;
+	AG_TlistItem *it = argv[3].p;
 
 	strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }
 
-struct window *
-sketchproj_edit(void *p, struct tileview *tv)
+AG_Window *
+RG_SketchProjEdit(void *p, RG_Tileview *tv)
 {
-	struct sketchproj *sproj = p;
-	struct window *win;
-	struct box *box;
-	struct combo *com;
+	struct rg_sketchproj *sproj = p;
+	AG_Window *win;
+	AG_Box *box;
+	AG_Combo *com;
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Polygon"));
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Polygon"));
 
-	com = combo_new(win, COMBO_POLL, _("Sketch: "));
-	event_new(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
-	event_new(com, "combo-selected", select_sketch, "%p,%p", sproj,
+	com = AG_ComboNew(win, AG_COMBO_POLL, _("Sketch: "));
+	AG_SetEvent(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
+	AG_SetEvent(com, "combo-selected", select_sketch, "%p,%p", sproj,
 	    tv->tile);
-	combo_select_text(com, sproj->sketch);
+	AG_ComboSelectText(com, sproj->sketch);
 
-	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
 	{
-		struct hsvpal *hsv1, *hsv2;
-		struct spinbutton *sb;
-		struct notebook *nb;
-		struct notebook_tab *ntab;
-		struct box *hb;
+		AG_HSVPal *hsv1, *hsv2;
+		AG_Spinbutton *sb;
+		AG_Notebook *nb;
+		AG_NotebookTab *ntab;
+		AG_Box *hb;
 
-		nb = notebook_new(box, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-		ntab = notebook_add_tab(nb, _("Color"), BOX_VERT);
+		nb = AG_NotebookNew(box, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+		ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 		{
-			hsv1 = hsvpal_new(ntab);
-			WIDGET(hsv1)->flags |= WIDGET_WFILL|
-			                       WIDGET_HFILL;
-			widget_bind(hsv1, "pixel-format", WIDGET_POINTER,
+			hsv1 = AG_HSVPalNew(ntab);
+			AGWIDGET(hsv1)->flags |= AG_WIDGET_WFILL|
+			                       AG_WIDGET_HFILL;
+			AG_WidgetBind(hsv1, "pixel-format", AG_WIDGET_POINTER,
 			    &tv->ts->fmt);
-			widget_bind(hsv1, "pixel", WIDGET_UINT32,
+			AG_WidgetBind(hsv1, "pixel", AG_WIDGET_UINT32,
 			    &sproj->color);
 		}
 
-		sb = spinbutton_new(box, _("Overall alpha: "));
-		widget_bind(sb, "value", WIDGET_UINT8, &sproj->alpha);
-		spinbutton_set_range(sb, 0, 255);
-		spinbutton_set_increment(sb, 5);
+		sb = AG_SpinbuttonNew(box, _("Overall alpha: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &sproj->alpha);
+		AG_SpinbuttonSetRange(sb, 0, 255);
+		AG_SpinbuttonSetIncrement(sb, 5);
 	}
 	return (win);
 }
 
 void
-sketchproj_apply(void *p, struct tile *t, int fx, int fy)
+RG_SketchProjApply(void *p, RG_Tile *t, int fx, int fy)
 {
-	struct sketchproj *sproj = p;
+	struct rg_sketchproj *sproj = p;
 	SDL_Surface *sDst = t->su;
 	double x1, y1, x2, y2;
-	struct vg *vg;
-	struct vg_element *vge;
-	struct tile_element *ske;
-	struct sketch *sk;
+	VG *vg;
+	VG_Element *vge;
+	RG_TileElement *ske;
+	RG_Sketch *sk;
 	int i;
 
-	if ((ske = tile_find_element(t, TILE_SKETCH, sproj->sketch)) == NULL) {
+	if ((ske = RG_TileFindElement(t, RG_TILE_SKETCH, sproj->sketch))
+	    == NULL) {
 		return;
 	}
 	sk = ske->tel_sketch.sk;
@@ -204,11 +205,11 @@ sketchproj_apply(void *p, struct tile *t, int fx, int fy)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
 		case VG_LINE_STRIP:
-			vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
+			VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
 			for (i = 1; i < vge->nvtx; i++) {
-				vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-				prim_color_u32(t, sproj->color);
-				prim_wuline(t,
+				VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+				RG_ColorUint32(t, sproj->color);
+				RG_WuLine(t,
 				    ske->tel_sketch.x+x1,
 				    ske->tel_sketch.y+y1,
 				    ske->tel_sketch.x+x2,

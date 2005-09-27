@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.27 2005/05/11 09:59:30 vedge Exp $
+.\"	$Csoft: event.3,v 1.28 2005/09/20 13:46:29 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,22 +38,22 @@
 #include <engine/event.h>
 .Ed
 .Sh DESCRIPTION
-Once an Agar
-.Xr object 3
+Once an
+.Xr AG_Object 3
 has registered one or more event handlers for a specific type of
 event (using the
-.Fn event_new
+.Fn AG_SetEvent
 or
-.Fn event_add
+.Fn AG_AddEvent
 function), a call to
-.Fn event_post
+.Fn AG_PostEvent
 for this type of event will trigger the execution of the event handler
 functions, in the same order as they were registered.
 It is also possible to delay the execution of the event handler by a given
 number of
 .Sq ticks
 using
-.Fn event_schedule .
+.Fn AG_SchedEvent .
 .Pp
 The prototype for event handler functions looks like:
 .Pp
@@ -80,12 +80,10 @@ typedef union evarg {
 .Pp
 .Va argv[0]
 always points to the
-.Xr object 3
+.Xr AG_Object 3
 which is the receiver of the event.
 .Va argv[argc]
-always points to the
-.Xr object 3
-which is the sender of the event (or NULL).
+always points to the sender of the event (or NULL).
 .Pp
 The
 .Nm
@@ -98,7 +96,7 @@ Agar attempts to maintain a stable video refresh rate by periodically
 readjusting the delays.
 This allows animations to run at the same speed under different hardware.
 The nominal refresh rate is selected by
-.Xr view_set_refresh 3 ,
+.Xr AG_SetRefreshRate 3 ,
 usually at initialization time.
 If Agar considers that there is enough time left after the refresh cycle, it
 invokes 
@@ -123,30 +121,30 @@ are expired.
 .El
 .Sh EVENT PROCESSING
 .nr nS 1
-.Ft "struct event *"
-.Fn event_new "void *obj" "const char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Ft "AG_Event *"
+.Fn AG_SetEvent "void *obj" "const char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_remove "void *obj" "const char *event_name"
+.Fn AG_UnsetEvent "void *obj" "const char *event_name"
 .Pp
 .Ft "int"
-.Fn event_post "void *sndr" "void *rcvr" "const char *event_name" "const char *fmt" "..."
+.Fn AG_PostEvent "void *sndr" "void *rcvr" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn event_schedule "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
+.Fn AG_SchedEvent "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn event_resched "void *obj" "const char *event_name" "Uint32 ticks"
+.Fn AG_ReschedEvent "void *obj" "const char *event_name" "Uint32 ticks"
 .Pp
 .Ft "int"
-.Fn event_cancel "void *obj" "const char *event_name"
+.Fn AG_CancelEvent "void *obj" "const char *event_name"
 .Pp
 .Ft "void"
-.Fn event_forward "void *rcvr" "const char *event_name" "int argc" "union evarg *argv"
+.Fn AG_ForwardEvent "void *rcvr" "const char *event_name" "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
-.Fn event_new
+.Fn AG_SetEvent
 function registers a new event handler to service events of type
 .Fa name .
 If an event handler is already registered for the given event type, it
@@ -156,7 +154,7 @@ If
 .Fa name
 is NULL, the event handler is not assigned a type, but may be referenced
 by the pointer returned by
-.Fa event_new .
+.Fa AG_SetEvent .
 The
 .Fa handler
 argument specifies the event handler function.
@@ -168,14 +166,14 @@ insert into the argument vector starting at position 1.
 When the event handler function is invoked, it will be passed those
 arguments as well as any additional arguments inserted into the argument
 vector by
-.Fn event_post
+.Fn AG_PostEvent
 or
-.Fn event_schedule.
+.Fn AG_SchedEvent.
 .Pp
 The format string in
-.Fn event_post
+.Fn AG_PostEvent
 and
-.Fn event_schedule
+.Fn AG_SchedEvent
 accept the following sequences:
 .Pp
 .Bl -tag -compact -offset indent -width "diouxX "
@@ -200,52 +198,52 @@ Converted to
 .El
 .Pp
 The
-.Fn event_remove
+.Fn AG_UnsetEvent
 function removes the named event handler from the list.
 Any future execution of this event handler as scheduled by
-.Fn event_schedule
+.Fn AG_SchedEvent
 will be cancelled.
 If this event handler is currently being executed (in the case of a multi-threaded
 timing scheme), the function waits for its termination.
 .Pp
 The
-.Fn event_post
+.Fn AG_PostEvent
 function immediately executes the event handler function associated with the given
 event type, if there is any.
 .Fa fmt
 is a format string and the arguments following it are inserted into the argument
 vector passed to the event handler (following the arguments registered by
-.Fn event_new ) .
-.Fn event_post
+.Fn AG_SetEvent ) .
+.Fn AG_PostEvent
 returns 1 if an event handler was invoked, or 0 if there is no registered
 event handler for the given event type.
 .Pp
 The
-.Fn event_schedule
+.Fn AG_SchedEvent
 function is similar to
-.Fn event_post ,
+.Fn AG_PostEvent ,
 except that the event is scheduled to occur in the given number of ticks
 (the meaning of which is specific to the timing scheme).
 It is not possible to schedule the execution of the same event handler
 multiple times.
-.Fn event_schedule
+.Fn AG_SchedEvent
 returns 0 on success or -1 if no matching event handler was found.
 .Pp
 The
-.Fn event_resched
+.Fn AG_ReschedEvent
 function reschedules a previously scheduled event of the given name to
 execute in the given number of ticks, using the same argument vector.
-.Fn event_resched
+.Fn AG_ReschedEvent
 returns 0 on success or -1 if there was no matching event handler.
 .Pp
-.Fn event_cancel
+.Fn AG_CancelEvent
 cancels any future execution of a previously scheduled event.
 The function returns -1 if no matching event was found, 1 if a scheduled
 event was cancelled, or 0 if there was nothing to cancel.
 .Pp
 The
-.Fn event_forward
-function forwards the given event to object
+.Fn AG_ForwardEvent
+function relays the given event to object
 .Fa obj .
 This function is usually called from an event handler.
 .Sh EVENT FLAGS
@@ -254,54 +252,54 @@ Acceptable flags for the
 .Nm
 structure include:
 .Bd -literal
-#define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
-#define EVENT_PROPAGATE	0x02	/* Automatically forward to children */
-#define EVENT_SCHEDULED	0x04	/* Pending execution (read-only flag) */
+#define	AG_EVENT_ASYNC		0x01	/* Event handler runs in own thread */
+#define AG_EVENT_PROPAGATE	0x02	/* Automatically forward to children */
+#define AG_EVENT_SCHEDULED	0x04	/* Pending execution (read-only flag) */
 .Ed
 .Pp
-.Dv EVENT_ASYNC
+.Dv AG_EVENT_ASYNC
 arranges for the event handler to execute inside a separate thread.
 This flag is only available if Agar was compiled with the
 .Dv THREADS
 option.
 .Pp
 If the
-.Dv EVENT_PROPAGATE
+.Dv AG_EVENT_PROPAGATE
 flag is set, the event is automatically forwarded to every one of the
 receiver's descendants prior to the execution of the receiver's event handler.
 .Pp
-.Dv EVENT_SCHEDULED
+.Dv AG_EVENT_SCHEDULED
 is a read-only flag that is set only if an event of this type has been
 previously scheduled for execution by
-.Fn event_schedule .
+.Fn AG_SchedEvent .
 .Sh ARGUMENT MANIPULATION
 .Pp
 In some cases it is desirable for functions to accept a list of event handler
 arguments like
-.Fn event_new ,
+.Fn AG_SetEvent ,
 and possibly manipulate its entries directly.
 For example, the
-.Fn menu_action
+.Fn AG_MenuAction
 function of the
 .Xr menu 3
 widget accepts a pointer to an event handler function, followed by an
-.Fn event_new
+.Fn AG_SetEvent
 style format string and a variable list of arguments.
 The following macros provide an interface for manipulating event handler
 arguments directly.
 .nr nS 1
 .Ft void
-.Fn EVENT_INSERT_ARG "struct event *ev, va_list ap, MEMBER, TYPE"
+.Fn AG_EVENT_INSERT_ARG "AG_Event *ev, va_list ap, MEMBER, TYPE"
 .Pp
 .Ft void
-.Fn EVENT_INSERT_VAL "struct event *ev, MEMBER, VALUE"
+.Fn AG_EVENT_INSERT_VAL "AG_Event *ev, MEMBER, VALUE"
 .Pp
 .Ft void
-.Fn EVENT_PUSH_ARG "va_list ap, char fmt_char, struct event *ev"
+.Fn AG_EVENT_PUSH_ARG "va_list ap, char fmt_char, AG_Event *ev"
 .nr nS 0
 .Pp
 The
-.Fn EVENT_INSERT_ARG
+.Fn AG_EVENT_INSERT_ARG
 macro inserts an argument at the end of the argument vector for
 .Fa ev .
 The value to assign is obtained from
@@ -315,23 +313,23 @@ is the name of the
 member (for example "s" for a string).
 .Pp
 The
-.Fn EVENT_INSERT_VAL
+.Fn AG_EVENT_INSERT_VAL
 macro also inserts an argument at the end of the argument vector, but
 .Fa VALUE
 is directly assigned to the given
 .Fa MEMBER .
 .Pp
 The
-.Fn EVENT_PUSH_ARG
+.Fn AG_EVENT_PUSH_ARG
 function inserts a new argument onto the argument vector.
 The type is obtained from the
 .Fa fmt_char
 argument which is a character from an
-.Fn event_new
+.Fn AG_SetEvent
 style format string.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr object 3 ,
+.Xr AG_Object 3 ,
 .Xr timeout 3
 .Sh HISTORY
 The

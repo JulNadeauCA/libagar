@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.c,v 1.3 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: texsel.c,v 1.4 2005/08/29 03:29:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,82 +31,82 @@
 
 #include "texsel.h"
 
-struct texsel *
-texsel_new(void *parent, struct tileset *tset, int flags)
+RG_TextureSelector *
+RG_TextureSelectorNew(void *parent, RG_Tileset *tset, int flags)
 {
-	struct texsel *ts;
+	RG_TextureSelector *ts;
 
-	ts = Malloc(sizeof(struct texsel), M_OBJECT);
-	texsel_init(ts, tset, flags);
-	object_attach(parent, ts);
+	ts = Malloc(sizeof(RG_TextureSelector), M_OBJECT);
+	RG_TextureSelectorInit(ts, tset, flags);
+	AG_ObjectAttach(parent, ts);
 	return (ts);
 }
 
 static void
 poll_textures(int argc, union evarg *argv)
 {
-	struct texsel *ts = argv[0].p;
-	struct tlist *tl = (struct tlist *)ts;
-	struct texture *tex;
-	struct tlist_item *it;
+	RG_TextureSelector *ts = argv[0].p;
+	AG_Tlist *tl = (AG_Tlist *)ts;
+	RG_Texture *tex;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 
 	TAILQ_FOREACH(tex, &ts->tset->textures, textures) {
-		struct tile *t;
+		RG_Tile *t;
 
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
-		    (t = tileset_resolve_tile(tex->tileset, tex->tile))
+		    (t = RG_TilesetResvTile(tex->tileset, tex->tile))
 		     != NULL) {
-			it = tlist_insert(tl, NULL, "%s (<%s> %ux%u)",
+			it = AG_TlistAdd(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
 			it->class = "texture";
 			it->p1 = tex;
-			tlist_set_icon(tl, it, t->su);
+			AG_TlistSetIcon(tl, it, t->su);
 		}
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 select_texture(int argc, union evarg *argv)
 {
-	struct texsel *ts = argv[0].p;
-	struct tlist *tl = (struct tlist *)ts;
-	struct tlist_item *it;
-	struct texture *tex;
-	struct widget_binding *bTexname;
+	RG_TextureSelector *ts = argv[0].p;
+	AG_Tlist *tl = (AG_Tlist *)ts;
+	AG_TlistItem *it;
+	RG_Texture *tex;
+	AG_WidgetBinding *bTexname;
 	char *texname;
 
-	bTexname = widget_get_binding(ts, "texture-name", &texname);
-	if ((it = tlist_selected_item(tl)) != NULL) {
+	bTexname = AG_WidgetGetBinding(ts, "texture-name", &texname);
+	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		tex = it->p1;
 		strlcpy(texname, tex->name, bTexname->size);
 	}
-	widget_binding_unlock(bTexname);
+	AG_WidgetUnlockBinding(bTexname);
 }
 
 void
-texsel_init(struct texsel *ts, struct tileset *tset, int flags)
+RG_TextureSelectorInit(RG_TextureSelector *ts, RG_Tileset *tset, int flags)
 {
-	tlist_init(&ts->tl, TLIST_POLL);
-	tlist_set_item_height(&ts->tl, TILESZ);
-	event_new(&ts->tl, "tlist-poll", poll_textures, NULL);
-	event_new(&ts->tl, "tlist-selected", select_texture, NULL);
+	AG_TlistInit(&ts->tl, AG_TLIST_POLL);
+	AG_TlistSetItemHeight(&ts->tl, AGTILESZ);
+	AG_SetEvent(&ts->tl, "tlist-poll", poll_textures, NULL);
+	AG_SetEvent(&ts->tl, "tlist-selected", select_texture, NULL);
 	
 	ts->tset = tset;
 	ts->flags = flags;
 	ts->texname[0] = '\0';
 
-	widget_bind(ts, "texture-name", WIDGET_STRING, ts->texname,
+	AG_WidgetBind(ts, "texture-name", AG_WIDGET_STRING, ts->texname,
 	    sizeof(ts->texname));
 }
 
 void
-texsel_destroy(void *p)
+RG_TextureSelectorDestroy(void *p)
 {
-	struct texsel *ts = p;
+	RG_TextureSelector *ts = p;
 
-	tlist_destroy(ts);
+	AG_TlistDestroy(ts);
 }
 

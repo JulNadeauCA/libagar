@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.11 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.12 2005/09/19 01:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/fspinbutton.h>
 #include <engine/widget/mfspinbutton.h>
-#include <engine/widget/palette.h>
 #include <engine/widget/toolbar.h>
 #include <engine/widget/statusbar.h>
 #include <engine/widget/combo.h>
@@ -49,195 +48,198 @@
 
 #include "drawing.h"
 
-const struct version drawing_ver = {
+const AG_Version agDrawingVer = {
 	"agar drawing",
 	0, 0
 };
 
-const struct object_ops drawing_ops = {
-	drawing_init,
-	drawing_reinit,
-	drawing_destroy,
-	drawing_load,
-	drawing_save,
-	drawing_edit
+const AG_ObjectOps drawing_ops = {
+	AG_DrawingInit,
+	AG_DrawingReinit,
+	AG_DrawingDestroy,
+	AG_DrawingLoad,
+	AG_DrawingSave,
+	AG_DrawingEdit
 };
 
 void
-drawing_init(void *p, const char *name)
+AG_DrawingInit(void *p, const char *name)
 {
-	struct drawing *dwg = p;
+	AG_Drawing *dwg = p;
 
-	object_init(dwg, "drawing", name, &drawing_ops);
-	dwg->vg = vg_new(dwg, VG_RLEACCEL|VG_VISORIGIN|VG_VISGRID);
+	AG_ObjectInit(dwg, "drawing", name, &drawing_ops);
+	dwg->vg = VG_New(dwg, VG_RLEACCEL|VG_VISORIGIN|VG_VISGRID);
 	dwg->vg->fill_color = SDL_MapRGB(dwg->vg->fmt, 0, 0, 0);
-	vg_scale(dwg->vg, 8.5, 11, 1);
+	VG_Scale(dwg->vg, 8.5, 11, 1);
 }
 
 void
-drawing_reinit(void *p)
+AG_DrawingReinit(void *p)
 {
-	struct drawing *dwg = p;
+	AG_Drawing *dwg = p;
 
-	vg_reinit(dwg->vg);
+	VG_Reinit(dwg->vg);
 }
 
 void
-drawing_destroy(void *p)
+AG_DrawingDestroy(void *p)
 {
-	struct drawing *dwg= p;
+	AG_Drawing *dwg= p;
 
-	vg_destroy(dwg->vg);
+	VG_Destroy(dwg->vg);
 }
 
 int
-drawing_load(void *p, struct netbuf *buf)
+AG_DrawingLoad(void *p, AG_Netbuf *buf)
 {
-	struct drawing *dwg = p;
+	AG_Drawing *dwg = p;
 
-	if (version_read(buf, &drawing_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &agDrawingVer, NULL) != 0)
 		return (-1);
 
-	return (vg_load(dwg->vg, buf));
+	return (VG_Load(dwg->vg, buf));
 }
 
 int
-drawing_save(void *p, struct netbuf *buf)
+AG_DrawingSave(void *p, AG_Netbuf *buf)
 {
-	struct drawing *dwg = p;
+	AG_Drawing *dwg = p;
 
-	version_write(buf, &drawing_ver);
-	vg_save(dwg->vg, buf);
+	AG_WriteVersion(buf, &agDrawingVer);
+	VG_Save(dwg->vg, buf);
 	return (0);
 }
 
 static void
 drawing_settings(int argc, union evarg *argv)
 {
-	extern void vg_changed(int, union evarg *);
-	extern void vg_geo_changed(int, union evarg *);
-	struct window *pwin = argv[1].p;
-	struct drawing *dwg = argv[2].p;
-	struct vg *vg = dwg->vg;
-	struct window *win;
-	struct mfspinbutton *mfsu;
-	struct fspinbutton *fsu;
-	struct palette *pal;
+	extern void VG_ChangedEv(int, union evarg *);
+	extern void VG_GeoChangedEv(int, union evarg *);
+	AG_Window *pwin = argv[1].p;
+	AG_Drawing *dwg = argv[2].p;
+	VG *vg = dwg->vg;
+	AG_Window *win;
+	AG_MFSpinbutton *mfsu;
+	AG_FSpinbutton *fsu;
 	
-	if ((win = window_new(WINDOW_HIDE|WINDOW_NO_VRESIZE, "%s-settings",
-	    OBJECT(dwg)->name)) == NULL)
+	if ((win = AG_WindowNew(AG_WINDOW_HIDE|AG_WINDOW_NO_VRESIZE, "%s-settings",
+	    AGOBJECT(dwg)->name)) == NULL)
 		return;
 
-	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(dwg)->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	AG_WindowSetCaption(win, _("Parameters for \"%s\""),
+	    AGOBJECT(dwg)->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
-	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vg->w);
-	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vg->h);
-	mfspinbutton_set_min(mfsu, 1.0);
-	mfspinbutton_set_increment(mfsu, 0.1);
-	event_new(mfsu, "mfspinbutton-changed", vg_geo_changed, "%p", vg);
+	mfsu = AG_MFSpinbuttonNew(win, NULL, "x", _("Geometry: "));
+	AG_WidgetBind(mfsu, "xvalue", AG_WIDGET_DOUBLE, &vg->w);
+	AG_WidgetBind(mfsu, "yvalue", AG_WIDGET_DOUBLE, &vg->h);
+	AG_MFSpinbuttonSetMin(mfsu, 1.0);
+	AG_MFSpinbuttonSetIncrement(mfsu, 0.1);
+	AG_SetEvent(mfsu, "mfspinbutton-changed", VG_GeoChangedEv, "%p", vg);
 
-	fsu = fspinbutton_new(win, NULL, _("Grid interval: "));
-	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->grid_gap);
-	fspinbutton_set_min(fsu, 0.0625);
-	fspinbutton_set_increment(fsu, 0.0625);
-	event_new(fsu, "fspinbutton-changed", vg_changed, "%p", vg);
+	fsu = AG_FSpinbuttonNew(win, NULL, _("Grid interval: "));
+	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &vg->grid_gap);
+	AG_FSpinbuttonSetMin(fsu, 0.0625);
+	AG_FSpinbuttonSetIncrement(fsu, 0.0625);
+	AG_SetEvent(fsu, "fspinbutton-changed", VG_ChangedEv, "%p", vg);
 	
-	fsu = fspinbutton_new(win, NULL, _("Scaling factor: "));
-	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->scale);
-	fspinbutton_set_min(fsu, 0.1);
-	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", vg_geo_changed, "%p", vg);
-		
-	label_new(win, LABEL_STATIC, _("Background color: "));
-	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "pixel", WIDGET_UINT32, &vg->fill_color);
-	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vg->fmt);
-	event_new(pal, "palette-changed", vg_changed, "%p", vg);
-	
-	label_new(win, LABEL_STATIC, _("Grid color: "));
-	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "pixel", WIDGET_UINT32, &vg->grid_color);
-	widget_bind(pal, "pixel-format", WIDGET_POINTER, &vg->fmt);
-	event_new(pal, "palette-changed", vg_changed, "%p", vg);
+	fsu = AG_FSpinbuttonNew(win, NULL, _("Scaling factor: "));
+	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &vg->scale);
+	AG_FSpinbuttonSetMin(fsu, 0.1);
+	AG_FSpinbuttonSetIncrement(fsu, 0.1);
+	AG_SetEvent(fsu, "fspinbutton-changed", VG_GeoChangedEv, "%p", vg);
 
-	window_attach(pwin, win);
-	window_show(win);
+#if 0
+	AG_LabelNew(win, AG_LABEL_STATIC, _("Background color: "));
+	pal = palette_new(win, AG_PALETTE_RGB);
+	AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &vg->fill_color);
+	AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER, &vg->fmt);
+	AG_SetEvent(pal, "palette-changed", VG_ChangedEv, "%p", vg);
+	
+	AG_LabelNew(win, AG_LABEL_STATIC, _("Grid color: "));
+	pal = palette_new(win, AG_PALETTE_RGB);
+	AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &vg->grid_color);
+	AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER, &vg->fmt);
+	AG_SetEvent(pal, "palette-changed", VG_ChangedEv, "%p", vg);
+#endif
+
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
-rasterize_drawing(struct mapview *mv, void *p)
+rasterize_drawing(AG_Mapview *mv, void *p)
 {
-	struct vg *vg = p;
+	VG *vg = p;
 
 	if (vg->redraw) {
 		vg->redraw = 0;
 	}
 	vg->redraw++;
-	vg_rasterize(vg);
+	VG_Rasterize(vg);
 }
 
 void *
-drawing_edit(void *obj)
+AG_DrawingEdit(void *obj)
 {
-	extern const struct tool_ops vg_scale_tool;
-	extern const struct tool_ops vg_origin_tool;
-	extern const struct tool_ops vg_point_tool;
-	extern const struct tool_ops vg_line_tool;
-	extern const struct tool_ops vg_circle_tool;
-	extern const struct tool_ops vg_ellipse_tool;
-	extern const struct tool_ops vg_text_tool;
-	struct drawing *dwg = obj;
-	struct vg *vg = dwg->vg;
-	struct window *win;
-	struct box *bo;
-	struct toolbar *tbar;
-	struct statusbar *statbar;
+	extern const AG_MaptoolOps vgScaleTool;
+	extern const AG_MaptoolOps vgOriginTool;
+	extern const AG_MaptoolOps vg_point_tool;
+	extern const AG_MaptoolOps vg_line_tool;
+	extern const AG_MaptoolOps vg_circle_tool;
+	extern const AG_MaptoolOps vg_ellipse_tool;
+	extern const AG_MaptoolOps vg_text_tool;
+	AG_Drawing *dwg = obj;
+	VG *vg = dwg->vg;
+	AG_Window *win;
+	AG_Box *bo;
+	AG_Toolbar *tbar;
+	AG_Statusbar *statbar;
 
-	win = window_new(WINDOW_DETACH, NULL);
-	window_set_caption(win, _("Drawing: %s"), OBJECT(dwg)->name);
+	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	AG_WindowSetCaption(win, _("Drawing: %s"), AGOBJECT(dwg)->name);
 
-	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1, 0);
-	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,
+	tbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
+	AG_ToolbarAddButton(tbar, 0, AGICON(SETTINGS_ICON), 0, 0,
 	    drawing_settings, "%p, %p", win, dwg);
 
-	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
-	statusbar_init(statbar);
+	statbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
+	AG_StatusbarInit(statbar);
 
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
-	box_set_spacing(bo, 0);
-	box_set_padding(bo, 0);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
+	AG_BoxSetSpacing(bo, 0);
+	AG_BoxSetPadding(bo, 0);
 	{
-		struct toolbar *snbar;
-		struct button *bu;
+		AG_Toolbar *snbar;
+		AG_Button *bu;
 
-		snbar = vg_snap_toolbar(bo, vg, TOOLBAR_VERT);
+		snbar = VG_SnapToolbar(bo, vg, AG_TOOLBAR_VERT);
 
-		bo = box_new(bo, BOX_VERT, BOX_WFILL|BOX_HFILL);
-		box_set_spacing(bo, 0);
-		box_set_padding(bo, 0);
+		bo = AG_BoxNew(bo, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+		AG_BoxSetSpacing(bo, 0);
+		AG_BoxSetPadding(bo, 0);
 		{
-			struct combo *laysel;
-			struct mapview *mv;
+			AG_Combo *laysel;
+			AG_Mapview *mv;
 		
-			laysel = vg_layer_selector(bo, vg);
-			mv = mapview_new(bo, vg->map,
-			    MAPVIEW_EDIT|MAPVIEW_NO_BMPZOOM|MAPVIEW_NO_BG,
+			laysel = VG_NewLayerSelector(bo, vg);
+			mv = AG_MapviewNew(bo, vg->map,
+			    AG_MAPVIEW_EDIT|AG_MAPVIEW_NO_BMPSCALE|
+			    AG_MAPVIEW_NO_BG,
 			    tbar, statbar);
-			mapview_prescale(mv, 10, 8);
-			mapview_reg_draw_cb(mv, rasterize_drawing, vg);
+			AG_MapviewPrescale(mv, 10, 8);
+			AG_MapviewRegDrawCb(mv, rasterize_drawing, vg);
 
-			mapview_reg_tool(mv, &vg_scale_tool, vg);
-			mapview_reg_tool(mv, &vg_origin_tool, vg);
-			mapview_reg_tool(mv, &vg_point_tool, vg);
-			mapview_reg_tool(mv, &vg_line_tool, vg);
-			mapview_reg_tool(mv, &vg_circle_tool, vg);
-			mapview_reg_tool(mv, &vg_ellipse_tool, vg);
-			mapview_reg_tool(mv, &vg_text_tool, vg);
+			AG_MapviewRegTool(mv, &vgScaleTool, vg);
+			AG_MapviewRegTool(mv, &vgOriginTool, vg);
+			AG_MapviewRegTool(mv, &vg_point_tool, vg);
+			AG_MapviewRegTool(mv, &vg_line_tool, vg);
+			AG_MapviewRegTool(mv, &vg_circle_tool, vg);
+			AG_MapviewRegTool(mv, &vg_ellipse_tool, vg);
+			AG_MapviewRegTool(mv, &vg_text_tool, vg);
 		}
 	}
 
-	object_attach(win, statbar);
+	AG_ObjectAttach(win, statbar);
 	return (win);
 }

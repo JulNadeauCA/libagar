@@ -1,4 +1,4 @@
-/*	$Csoft: space.c,v 1.8 2005/08/27 04:40:00 vedge Exp $	*/
+/*	$Csoft: space.c,v 1.9 2005/09/20 13:46:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -40,59 +40,59 @@
 
 #include "space.h"
 
-const struct version space_ver = {
+const AG_Version agSpaceVer = {
 	"agar space",
 	1, 0
 };
 
 void
-space_init(void *obj, const char *type, const char *name, const void *ops)
+AG_SpaceInit(void *obj, const char *type, const char *name, const void *ops)
 {
-	struct space *sp = obj;
+	AG_Space *sp = obj;
 
-	object_init(sp, type, name, ops);
-	pthread_mutex_init(&sp->lock, &recursive_mutexattr);
+	AG_ObjectInit(sp, type, name, ops);
+	pthread_mutex_init(&sp->lock, &agRecursiveMutexAttr);
 	TAILQ_INIT(&sp->actors);
 }
 
 void
-space_reinit(void *obj)
+AG_SpaceReinit(void *obj)
 {
-	struct space *sp = obj;
-	struct actor *ac;
+	AG_Space *sp = obj;
+	AG_Actor *ac;
 	
 	pthread_mutex_lock(&sp->lock);
 	TAILQ_FOREACH(ac, &sp->actors, actors) {
-		space_detach(sp, ac);
+		AG_SpaceDetach(sp, ac);
 	}
 	TAILQ_INIT(&sp->actors);
 	pthread_mutex_unlock(&sp->lock);
 }
 
 void
-space_destroy(void *obj)
+AG_SpaceDestroy(void *obj)
 {
 	/* nothing yet */
 }
 
 int
-space_load(void *obj, struct netbuf *buf)
+AG_SpaceLoad(void *obj, AG_Netbuf *buf)
 {
-	struct space *sp = obj;
+	AG_Space *sp = obj;
 	Uint32 i, nactors, name;
 	void *actor;
 
-	if (version_read(buf, &space_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &agSpaceVer, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&sp->lock);
-	nactors = read_uint32(buf);
+	nactors = AG_ReadUint32(buf);
 	for (i = 0; i < nactors; i++) {
-		name = read_uint32(buf);
-		if (object_find_dep(sp, name, &actor) == -1) {
+		name = AG_ReadUint32(buf);
+		if (AG_ObjectFindDep(sp, name, &actor) == -1) {
 			goto fail;
 		}
-		TAILQ_INSERT_TAIL(&sp->actors, ACTOR(actor), actors);
+		TAILQ_INSERT_TAIL(&sp->actors, AGACTOR(actor), actors);
 	}
 	pthread_mutex_unlock(&sp->lock);
 	return (0);
@@ -102,61 +102,61 @@ fail:
 }
 
 int
-space_save(void *obj, struct netbuf *buf)
+AG_SpaceSave(void *obj, AG_Netbuf *buf)
 {
-	struct space *sp = obj;
-	struct actor *actor;
+	AG_Space *sp = obj;
+	AG_Actor *actor;
 	off_t nactors_offs;
 	Uint32 nactors = 0;
 
-	version_write(buf, &space_ver);
+	AG_WriteVersion(buf, &agSpaceVer);
 
 	pthread_mutex_lock(&sp->lock);
-	nactors_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nactors_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(actor, &sp->actors, actors) {
-		dprintf("actor: %s (%s)\n", OBJECT(actor)->name,
-		    OBJECT(actor)->type);
-		write_uint32(buf, object_encode_name(sp, actor));
+		dprintf("actor: %s (%s)\n", AGOBJECT(actor)->name,
+		    AGOBJECT(actor)->type);
+		AG_WriteUint32(buf, AG_ObjectEncodeName(sp, actor));
 		nactors++;
 	}
-	pwrite_uint32(buf, nactors, nactors_offs);
+	AG_PwriteUint32(buf, nactors, nactors_offs);
 	pthread_mutex_unlock(&sp->lock);
 	return (0);
 }
 
 /* Map an actor into a space. */
 int
-space_attach(void *sp_obj, void *obj)
+AG_SpaceAttach(void *sp_obj, void *obj)
 {
-	struct space *space = sp_obj;
-	struct actor *ac = obj;
+	AG_Space *space = sp_obj;
+	AG_Actor *ac = obj;
 
 	pthread_mutex_lock(&ac->lock);
 		
-	object_add_dep(space, ac);
+	AG_ObjectAddDep(space, ac);
 	
-	if (OBJECT_TYPE(space, "map")) {
-		struct map *m = (struct map *)space;
+	if (AGOBJECT_TYPE(space, "map")) {
+		AG_Map *m = (AG_Map *)space;
 		
 		if (ac->g_map.x < 0 || ac->g_map.x >= m->mapw ||
 		    ac->g_map.y < 0 || ac->g_map.y >= m->maph)  {
-			error_set(_("Illegal coordinates: %s:%d,%d"),
-			    OBJECT(m)->name, ac->g_map.x, ac->g_map.y);
+			AG_SetError(_("Illegal coordinates: %s:%d,%d"),
+			    AGOBJECT(m)->name, ac->g_map.x, ac->g_map.y);
 			goto fail;
 		}
 
-		ac->type = ACTOR_MAP;
+		ac->type = AG_ACTOR_MAP;
 		ac->parent = space;
 		ac->g_map.x0 = ac->g_map.x;
 		ac->g_map.y0 = ac->g_map.y;
 		ac->g_map.x1 = ac->g_map.x;
 		ac->g_map.y1 = ac->g_map.y;
 	
-		if (ACTOR_OPS(ac)->map != NULL)
-			ACTOR_OPS(ac)->map(ac, m);
+		if (AGACTOR_OPS(ac)->map != NULL)
+			AGACTOR_OPS(ac)->map(ac, m);
 	} else {
-		ac->type = ACTOR_NONE;
+		ac->type = AG_ACTOR_NONE;
 		ac->parent = NULL;
 	}
 	pthread_mutex_unlock(&ac->lock);
@@ -167,19 +167,19 @@ fail:
 }
 
 void
-space_detach(void *sp_obj, void *obj)
+AG_SpaceDetach(void *sp_obj, void *obj)
 {
-	struct actor *ac = obj;
-	struct space *space = sp_obj;
+	AG_Space *space = sp_obj;
+	AG_Actor *ac = obj;
 
 	pthread_mutex_lock(&ac->lock);
 
-	object_cancel_timeouts(ac, 0);		/* XXX hook? */
+	AG_ObjectCancelTimeouts(ac, 0);		/* XXX hook? */
 
-	if (OBJECT_TYPE(space, "map")) {
-		actor_unmap_sprite(ac);
+	if (AGOBJECT_TYPE(space, "map")) {
+		AG_ActorUnmapSprite(ac);
 	}
-	object_del_dep(space, ac);
+	AG_ObjectDelDep(space, ac);
 	ac->parent = NULL;
 out:
 	pthread_mutex_unlock(&ac->lock);

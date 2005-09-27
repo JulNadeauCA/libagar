@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.149 2005/05/29 00:27:46 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.150 2005/08/06 07:08:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -75,84 +75,84 @@
 #endif
 #include <unistd.h>
 
-const struct version config_ver = {
+const AG_Version agConfigVer = {
 	"agar config",
 	8, 0
 };
 
-const struct object_ops config_ops = {
+const AG_ObjectOps agConfigOps = {
 	NULL,
 	NULL,
 	NULL,
-	config_load,
-	config_save,
+	AG_ConfigLoad,
+	AG_ConfigSave,
 	NULL
 };
 
-extern int text_composition;
-extern int text_rightleft;
-extern int text_tab_width;
-extern int window_freescale;
-extern int kbd_unitrans;
-extern int event_idlemin;
-extern int server_mode;
-extern int view_screenshot_quality;
+extern int agTextComposition;
+extern int agTextBidi;
+extern int agTextTabWidth;
+extern int agWindowAnySize;
+extern int agKbdUnicode;
+extern int agIdleThresh;
+extern int agServerMode;
+extern int agScreenshotQuality;
 
 static void
-config_set_path(int argc, union evarg *argv)
+set_path(int argc, union evarg *argv)
 {
 	char path[MAXPATHLEN];
-	struct textbox *tbox = argv[0].p;
+	AG_Textbox *tbox = argv[0].p;
 	char *varname = argv[1].s;
 
-	textbox_copy_string(tbox, path, sizeof(path));
-	prop_set_string(config, varname, "%s", path);
-	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
+	AG_TextboxCopyString(tbox, path, sizeof(path));
+	AG_SetString(agConfig, varname, "%s", path);
+	AGWIDGET(tbox)->flags &= ~(AG_WIDGET_FOCUSED);
 }
 
 static void
-config_set_full_screen(int argc, union evarg *argv)
+set_full_screen(int argc, union evarg *argv)
 {
 	int enable = argv[1].i;
 	SDL_Event vexp;
 
-	if (view == NULL)
+	if (agView == NULL)
 		return;
 
-	if ((enable && (view->v->flags & SDL_FULLSCREEN) == 0) ||
-	   (!enable && (view->v->flags & SDL_FULLSCREEN))) {
-		SDL_WM_ToggleFullScreen(view->v);
+	if ((enable && (agView->v->flags & SDL_FULLSCREEN) == 0) ||
+	   (!enable && (agView->v->flags & SDL_FULLSCREEN))) {
+		SDL_WM_ToggleFullScreen(agView->v);
 		vexp.type = SDL_VIDEOEXPOSE;
 		SDL_PushEvent(&vexp);
 	}
 }
 
 static void
-config_set_opengl(int argc, union evarg *argv)
+set_opengl(int argc, union evarg *argv)
 {
 	int enable = argv[1].i;
 
 	if (enable)
-		text_msg(MSG_WARNING,
+		AG_TextMsg(AG_MSG_WARNING,
 		    _("Save the configuration and restart %s for OpenGL mode "
 		      "to take effect"),
-		    progname);
+		    agProgName);
 }
 
 static void
-config_set_async_blits(int argc, union evarg *argv)
+set_async_blits(int argc, union evarg *argv)
 {
 	int enable = argv[1].i;
 
 	if (enable)
-		text_msg(MSG_WARNING,
+		AG_TextMsg(AG_MSG_WARNING,
 		    _("Save the configuration and restart %s for async blits "
 		      "to take effect"),
-		    progname);
+		    agProgName);
 }
 
 static void
-config_set_unitrans(int argc, union evarg *argv)
+set_unitrans(int argc, union evarg *argv)
 {
 	int enable = argv[1].i;
 
@@ -166,180 +166,179 @@ config_set_unitrans(int argc, union evarg *argv)
 static void
 save_config(int argc, union evarg *argv)
 {
-	if (object_save(config) == -1)
-		text_msg(MSG_ERROR, "%s", error_get());
+	if (AG_ObjectSave(agConfig) == -1)
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 
-	text_tmsg(MSG_INFO, 750,
+	AG_TextTmsg(AG_MSG_INFO, 750,
 	    _("Configuration settings saved successfully."));
 }
 
 void
-config_init(struct config *con)
+AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[MAXPATHLEN];
 	struct passwd *pwd;
 	struct stat sta;
 
-	object_init(con, "object", "config", &config_ops);
-	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS|OBJECT_DATA_RESIDENT;
-	OBJECT(con)->save_pfx = NULL;
+	AG_ObjectInit(cfg, "object", "config", &agConfigOps);
+	AGOBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_DATA_RESIDENT;
+	AGOBJECT(cfg)->save_pfx = NULL;
+	cfg->window = NULL;
 
-	prop_set_bool(con, "initial-run", 1);
-	prop_set_bool(con, "view.full-screen", 0);
-	prop_set_bool(con, "view.async-blits", 0);
-	prop_set_bool(con, "view.opengl", 0);
-	prop_set_uint16(con, "view.w", 800);
-	prop_set_uint16(con, "view.h", 600);
-	prop_set_uint16(con, "view.min-w", 320);
-	prop_set_uint16(con, "view.min-h", 240);
-	prop_set_uint8(con, "view.depth", 32);
-	prop_set_uint8(con, "view.fps", 15);
-	prop_set_bool(con, "input.joysticks", 1);
+	AG_SetBool(cfg, "initial-run", 1);
+	AG_SetBool(cfg, "view.full-screen", 0);
+	AG_SetBool(cfg, "view.async-blits", 0);
+	AG_SetBool(cfg, "view.opengl", 0);
+	AG_SetUint16(cfg, "view.w", 800);
+	AG_SetUint16(cfg, "view.h", 600);
+	AG_SetUint16(cfg, "view.min-w", 320);
+	AG_SetUint16(cfg, "view.min-h", 240);
+	AG_SetUint8(cfg, "view.depth", 32);
+	AG_SetUint8(cfg, "view.fps", 15);
+	AG_SetBool(cfg, "input.joysticks", 1);
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	pwd = getpwuid(getuid());
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
 	strlcat(udatadir, "/.", sizeof(udatadir));
-	strlcat(udatadir, progname, sizeof(udatadir));
+	strlcat(udatadir, agProgName, sizeof(udatadir));
 #else
 	udatadir[0] = '.';
-	strlcpy(&udatadir[1], progname, sizeof(udatadir)-1);
+	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 #endif
 	if (stat(udatadir, &sta) != 0 &&
 	    Mkdir(udatadir) != 0) {
 		fatal("%s: %s", udatadir, strerror(errno));
 	}
-	prop_set_string(con, "save-path", "%s", udatadir);
+	AG_SetString(cfg, "save-path", "%s", udatadir);
 
-	prop_set_string(con, "den-path", "%s", SHAREDIR);
-	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
+	AG_SetString(cfg, "den-path", "%s", SHAREDIR);
+	AG_SetString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
 
 #if defined(__APPLE__)
-	prop_set_string(con, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
+	AG_SetString(cfg, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
 	                                  "/Library/Fonts:"
 					  "/System/Library/Fonts",
 					  udatadir, TTFDIR, pwd->pw_dir);
 #elif defined(WIN32)
-	prop_set_string(con, "font-path", "fonts:%s", TTFDIR);
+	AG_SetString(cfg, "font-path", "fonts:%s", TTFDIR);
 #else
-	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
+	AG_SetString(cfg, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 #endif
 
 #ifdef HAVE_FREETYPE
-	prop_set_bool(con, "font-engine", 1);
+	AG_SetBool(cfg, "font-engine", 1);
 # ifdef __APPLE__
-	prop_set_string(con, "font-engine.default-font", "Geneva.dfont");
-	prop_set_int(con, "font-engine.default-size", 12);
-	prop_set_int(con, "font-engine.default-style", 0);
+	AG_SetString(cfg, "font-engine.default-font", "Geneva.dfont");
+	AG_SetInt(cfg, "font-engine.default-size", 12);
+	AG_SetInt(cfg, "font-engine.default-style", 0);
 # else
-	prop_set_string(con, "font-engine.default-font", "Vera.ttf");
-	prop_set_int(con, "font-engine.default-size", 11);
-	prop_set_int(con, "font-engine.default-style", 0);
+	AG_SetString(cfg, "font-engine.default-font", "Vera.ttf");
+	AG_SetInt(cfg, "font-engine.default-size", 11);
+	AG_SetInt(cfg, "font-engine.default-style", 0);
 # endif
 #else
-	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "bitmap.xcf");
-	prop_set_int(con, "font-engine.default-size", -1);
-	prop_set_int(con, "font-engine.default-style", -1);
+	AG_SetBool(cfg, "font-engine", 1);
+	AG_SetString(cfg, "font-engine.default-font", "bitmap.xcf");
+	AG_SetInt(cfg, "font-engine.default-size", -1);
+	AG_SetInt(cfg, "font-engine.default-style", -1);
 #endif /* HAVE_FREETYPE */
 }
 
 int
-config_load(void *p, struct netbuf *buf)
+AG_ConfigLoad(void *p, AG_Netbuf *buf)
 {
-	if (version_read(buf, &config_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &agConfigVer, NULL) != 0)
 		return (-1);
 	
 #ifdef DEBUG
-	engine_debug = read_uint8(buf);
+	agDebugLvl = AG_ReadUint8(buf);
 #else
-	read_uint8(buf);
+	AG_ReadUint8(buf);
 #endif
-	server_mode = read_uint8(buf);
-	event_idlemin = (int)read_uint8(buf);
-	window_freescale = read_uint8(buf);
-	text_composition = read_uint8(buf);
-	text_rightleft = read_uint8(buf);
-	kbd_unitrans = read_uint8(buf);
-	kbd_delay = (int)read_uint32(buf);
-	kbd_repeat = (int)read_uint32(buf);
-	mouse_dblclick_delay = (int)read_uint32(buf);
-	mouse_spin_delay = (int)read_uint16(buf);
-	mouse_spin_ival = (int)read_uint16(buf);
-	view_screenshot_quality = (int)read_uint8(buf);
-	text_tab_width = (int)read_uint16(buf);
+	agServerMode = AG_ReadUint8(buf);
+	agIdleThresh = (int)AG_ReadUint8(buf);
+	agWindowAnySize = AG_ReadUint8(buf);
+	agTextComposition = AG_ReadUint8(buf);
+	agTextBidi = AG_ReadUint8(buf);
+	agKbdUnicode = AG_ReadUint8(buf);
+	agKbdDelay = (int)AG_ReadUint32(buf);
+	agKbdRepeat = (int)AG_ReadUint32(buf);
+	agMouseDblclickDelay = (int)AG_ReadUint32(buf);
+	agMouseSpinDelay = (int)AG_ReadUint16(buf);
+	agMouseSpinIval = (int)AG_ReadUint16(buf);
+	agScreenshotQuality = (int)AG_ReadUint8(buf);
+	agTextTabWidth = (int)AG_ReadUint16(buf);
 
-	rcs = (int)read_uint8(buf);
-	copy_string(rcs_hostname, buf, sizeof(rcs_hostname));
-	rcs_port = (u_int)read_uint16(buf);
-	copy_string(rcs_username, buf, sizeof(rcs_username));
-	copy_string(rcs_password, buf, sizeof(rcs_password));
+	agRcsMode = (int)AG_ReadUint8(buf);
+	AG_CopyString(agRcsHostname, buf, sizeof(agRcsHostname));
+	agRcsPort = (u_int)AG_ReadUint16(buf);
+	AG_CopyString(agRcsUsername, buf, sizeof(agRcsUsername));
+	AG_CopyString(agRcsPassword, buf, sizeof(agRcsPassword));
 
-	mapedit_load(buf);
-	colors_load(buf);
+	AG_MapEditorLoad(buf);
 	return (0);
 }
 
 int
-config_save(void *p, struct netbuf *buf)
+AG_ConfigSave(void *p, AG_Netbuf *buf)
 {
-	version_write(buf, &config_ver);
+	AG_WriteVersion(buf, &agConfigVer);
 
 #ifdef DEBUG
-	write_uint8(buf, (Uint8)engine_debug);
+	AG_WriteUint8(buf, (Uint8)agDebugLvl);
 #else
-	write_uint8(buf, 0);
+	AG_WriteUint8(buf, 0);
 #endif
-	write_uint8(buf, server_mode);
-	write_uint8(buf, (Uint8)event_idlemin);
-	write_uint8(buf, (Uint8)window_freescale);
-	write_uint8(buf, (Uint8)text_composition);
-	write_uint8(buf, (Uint8)text_rightleft);
-	write_uint8(buf, (Uint8)kbd_unitrans);
-	write_uint32(buf, (Uint32)kbd_delay);
-	write_uint32(buf, (Uint32)kbd_repeat);
-	write_uint32(buf, (Uint32)mouse_dblclick_delay);
-	write_uint16(buf, (Uint16)mouse_spin_delay);
-	write_uint16(buf, (Uint16)mouse_spin_ival);
-	write_uint8(buf, (Uint8)view_screenshot_quality);
-	write_uint16(buf, (Uint16)text_tab_width);
+	AG_WriteUint8(buf, agServerMode);
+	AG_WriteUint8(buf, (Uint8)agIdleThresh);
+	AG_WriteUint8(buf, (Uint8)agWindowAnySize);
+	AG_WriteUint8(buf, (Uint8)agTextComposition);
+	AG_WriteUint8(buf, (Uint8)agTextBidi);
+	AG_WriteUint8(buf, (Uint8)agKbdUnicode);
+	AG_WriteUint32(buf, (Uint32)agKbdDelay);
+	AG_WriteUint32(buf, (Uint32)agKbdRepeat);
+	AG_WriteUint32(buf, (Uint32)agMouseDblclickDelay);
+	AG_WriteUint16(buf, (Uint16)agMouseSpinDelay);
+	AG_WriteUint16(buf, (Uint16)agMouseSpinIval);
+	AG_WriteUint8(buf, (Uint8)agScreenshotQuality);
+	AG_WriteUint16(buf, (Uint16)agTextTabWidth);
 
-	write_uint8(buf, (Uint8)rcs);
-	write_string(buf, rcs_hostname);
-	write_uint16(buf, (Uint16)rcs_port);
-	write_string(buf, rcs_username);
-	write_string(buf, rcs_password);
+	AG_WriteUint8(buf, (Uint8)agRcsMode);
+	AG_WriteString(buf, agRcsHostname);
+	AG_WriteUint16(buf, (Uint16)agRcsPort);
+	AG_WriteString(buf, agRcsUsername);
+	AG_WriteString(buf, agRcsPassword);
 
-	mapedit_save(buf);
-	colors_save(buf);
+	AG_MapEditorSave(buf);
 	return (0);
 }
 
 static void
 selected_color(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct hsvpal *hsv = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	AG_Tlist *tl = argv[0].p;
+	AG_HSVPal *hsv = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
 	Uint32 *c = it->p1;
 
-	widget_bind(hsv, "pixel", WIDGET_UINT32, c);
+	AG_WidgetBind(hsv, "pixel", AG_WIDGET_UINT32, c);
 }
 
 static void
 updated_bg(int argc, union evarg *argv)
 {
-	struct hsvpal *hsv = argv[0].p;
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
+	AG_HSVPal *hsv = argv[0].p;
+	AG_Tlist *tl = argv[1].p;
+	AG_TlistItem *it;
 	Uint8 r, g, b;
 
-	if ((it = tlist_selected_item(tl)) != NULL &&
-	    it->p1 == &colors[BG_COLOR]) {
+	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
+	    it->p1 == &agColors[BG_COLOR]) {
 #ifdef HAVE_OPENGL
-		if (view->opengl) {
-			SDL_GetRGB(COLOR(BG_COLOR), vfmt, &r, &g, &b);
+		if (agView->opengl) {
+			SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
 		}
 #endif
@@ -347,217 +346,232 @@ updated_bg(int argc, union evarg *argv)
 }
 
 void
-config_window(struct config *con)
+AG_ConfigWindow(AG_Config *cfg, u_int flags)
 {
-	struct window *win;
-	struct vbox *vb;
-	struct hbox *hb;
-	struct button *button;
-	struct textbox *tbox;
-	struct checkbox *cbox;
-	struct notebook *nb;
-	struct notebook_tab *tab;
-	struct mspinbutton *msb;
-	struct spinbutton *sbu;
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_HBox *hb;
+	AG_Button *button;
+	AG_Textbox *tbox;
+	AG_Checkbox *cbox;
+	AG_Notebook *nb;
+	AG_NotebookTab *tab;
+	AG_MSpinbutton *msb;
+	AG_Spinbutton *sbu;
 
-	win = window_new(0, "config-engine-settings");
-	window_set_caption(win, _("Agar settings"));
+	win = AG_WindowNew(0, "config-engine-settings");
+	AG_WindowSetCaption(win, _("Agar settings"));
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	tab = notebook_add_tab(nb, _("Video"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
-		cbox = checkbox_new(tab, _("Full screen"));
-		widget_bind(cbox, "state", WIDGET_PROP, config,
-		    "view.full-screen");
-		event_new(cbox, "checkbox-changed", config_set_full_screen,
-		    NULL);
+		if (flags & AG_CONFIG_FULLSCREEN) {
+			cbox = AG_CheckboxNew(tab, _("Full screen"));
+			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
+			    "view.full-screen");
+			AG_SetEvent(cbox, "checkbox-changed", set_full_screen,
+			    NULL);
+		}
 
-		cbox = checkbox_new(tab, _("Asynchronous blits"));
-		widget_bind(cbox, "state", WIDGET_PROP, config,
+		cbox = AG_CheckboxNew(tab, _("Asynchronous blits"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 		    "view.async-blits");
-		event_new(cbox, "checkbox-changed", config_set_async_blits,
-		    NULL);
+		AG_SetEvent(cbox, "checkbox-changed", set_async_blits, NULL);
 
-		cbox = checkbox_new(tab, _("OpenGL mode"));
-		widget_bind(cbox, "state", WIDGET_PROP, config, "view.opengl");
-		event_new(cbox, "checkbox-changed", config_set_opengl, NULL);
+		if (flags & AG_CONFIG_GL) {
+			cbox = AG_CheckboxNew(tab, _("OpenGL mode"));
+			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
+			    "view.opengl");
+			AG_SetEvent(cbox, "checkbox-changed", set_opengl, NULL);
+		}
 	
-		msb = mspinbutton_new(tab, "x", _("Default resolution: "));
-		widget_bind(msb, "xvalue", WIDGET_UINT16, &view->w);
-		widget_bind(msb, "yvalue", WIDGET_UINT16, &view->h);
-		mspinbutton_set_range(msb, 320, 4096);
+		if (flags & AG_CONFIG_RESOLUTION) {
+			msb = AG_MSpinbuttonNew(tab, "x",
+			    _("Default resolution: "));
+			AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16,
+			    &agView->w);
+			AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16,
+			    &agView->h);
+			AG_MSpinbuttonSetRange(msb, 320, 4096);
+		}
 		
-		sbu = spinbutton_new(tab, _("Screenshot quality (%%): "));
-		widget_bind(sbu, "value", WIDGET_INT, &view_screenshot_quality);
-		spinbutton_set_min(sbu, 1);
-		spinbutton_set_max(sbu, 100);
+		sbu = AG_SpinbuttonNew(tab, _("Screenshot quality (%%): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
+		    &agScreenshotQuality);
+		AG_SpinbuttonSetMin(sbu, 1);
+		AG_SpinbuttonSetMax(sbu, 100);
 	
-		sbu = spinbutton_new(tab, _("Idling threshold (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &event_idlemin);
-		spinbutton_set_min(sbu, 0);
-		spinbutton_set_max(sbu, 255);
+		sbu = AG_SpinbuttonNew(tab, _("Idling threshold (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agIdleThresh);
+		AG_SpinbuttonSetMin(sbu, 0);
+		AG_SpinbuttonSetMax(sbu, 255);
 		
-		cbox = checkbox_new(tab, _("Unrestricted window resize"));
-		widget_bind(cbox, "state", WIDGET_INT, &window_freescale);
+		cbox = AG_CheckboxNew(tab, _("Unrestricted window resize"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agWindowAnySize);
 	}
 
-	tab = notebook_add_tab(nb, _("Input devices"), BOX_VERT);
+	tab = AG_NotebookAddTab(nb, _("Input devices"), AG_BOX_VERT);
 	{
-		cbox = checkbox_new(tab, _("Unicode keyboard translation"));
-		widget_bind(cbox, "state", WIDGET_INT, &kbd_unitrans);
-		event_new(cbox, "checkbox-changed", config_set_unitrans, NULL);
+		cbox = AG_CheckboxNew(tab, _("Unicode keyboard translation"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agKbdUnicode);
+		AG_SetEvent(cbox, "checkbox-changed", set_unitrans, NULL);
 
-		cbox = checkbox_new(tab, _("Input composition"));
-		widget_bind(cbox, "state", WIDGET_INT, &text_composition);
+		cbox = AG_CheckboxNew(tab, _("Input composition"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextComposition);
 
-		cbox = checkbox_new(tab,
+		cbox = AG_CheckboxNew(tab,
 		    _("Right->left (Arabic, Hebrew, ...)"));
-		widget_bind(cbox, "state", WIDGET_INT, &text_rightleft);
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextBidi);
 		
-		sbu = spinbutton_new(tab, _("Mouse double click delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_dblclick_delay);
-		spinbutton_set_min(sbu, 1);
+		sbu = AG_SpinbuttonNew(tab,
+		    _("Mouse double click delay (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
+		    &agMouseDblclickDelay);
+		AG_SpinbuttonSetMin(sbu, 1);
 		
-		sbu = spinbutton_new(tab, _("Mouse spin delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_delay);
-		spinbutton_set_min(sbu, 1);
+		sbu = AG_SpinbuttonNew(tab, _("Mouse spin delay (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinDelay);
+		AG_SpinbuttonSetMin(sbu, 1);
 
-		sbu = spinbutton_new(tab, _("Mouse spin interval (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_ival);
-		spinbutton_set_min(sbu, 1);
+		sbu = AG_SpinbuttonNew(tab, _("Mouse spin interval (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinIval);
+		AG_SpinbuttonSetMin(sbu, 1);
 
-		sbu = spinbutton_new(tab, _("Keyboard repeat delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
-		spinbutton_set_min(sbu, 1);
+		sbu = AG_SpinbuttonNew(tab, _("Keyboard repeat delay (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdDelay);
+		AG_SpinbuttonSetMin(sbu, 1);
 		
-		sbu = spinbutton_new(tab, _("Keyboard repeat interval (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
-		spinbutton_set_min(sbu, 1);
+		sbu = AG_SpinbuttonNew(tab,
+		    _("Keyboard repeat interval (ms): "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdRepeat);
+		AG_SpinbuttonSetMin(sbu, 1);
 	}
 
-	tab = notebook_add_tab(nb, _("Directories"), BOX_VERT);
-	{
+	if (flags & AG_CONFIG_DIRECTORIES) {
 		char path[MAXPATHLEN];
 
-		tbox = textbox_new(tab, _("Data save dir: "));
-		prop_copy_string(config, "save-path", path, sizeof(path));
-		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_set_path, "%s",
+		tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
+
+		tbox = AG_TextboxNew(tab, _("Data save dir: "));
+		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
+		AG_TextboxPrintf(tbox, "%s", path);
+		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "save-path");
 	
-		tbox = textbox_new(tab, _("Data load path: "));
-		prop_copy_string(config, "load-path", path, sizeof(path));
-		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_set_path, "%s",
+		tbox = AG_TextboxNew(tab, _("Data load path: "));
+		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
+		AG_TextboxPrintf(tbox, "%s", path);
+		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "load-path");
 	
-		tbox = textbox_new(tab, _("Font path: "));
-		prop_copy_string(config, "font-path", path, sizeof(path));
-		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_set_path, "%s",
+		tbox = AG_TextboxNew(tab, _("Font path: "));
+		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
+		AG_TextboxPrintf(tbox, "%s", path);
+		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "font-path");
 		
-		tbox = textbox_new(tab, _("Den path: "));
-		prop_copy_string(config, "den-path", path, sizeof(path));
-		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_set_path, "%s",
-		    "den-path");
+		tbox = AG_TextboxNew(tab, _("Den path: "));
+		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
+		AG_TextboxPrintf(tbox, "%s", path);
+		AG_SetEvent(tbox, "textbox-return", set_path, "%s", "den-path");
 	}
 	
-	tab = notebook_add_tab(nb, _("Colors"), BOX_HORIZ);
+	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_HORIZ);
 	{
-		struct hsvpal *hsv;
-		struct tlist *tl;
-		struct tlist_item *it;
+		AG_HSVPal *hsv;
+		AG_Tlist *tl;
+		AG_TlistItem *it;
 		int i;
 
-		tl = tlist_new(tab, 0);
-		WIDGET(tl)->flags &= ~WIDGET_WFILL;
+		tl = AG_TlistNew(tab, 0);
+		AGWIDGET(tl)->flags &= ~AG_WIDGET_WFILL;
 		for (i = 0; i < LAST_COLOR; i++) {
-			it = tlist_insert(tl, NULL, _(colors_names[i]));
-			it->p1 = &colors[i];
+			it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
+			it->p1 = &agColors[i];
 		}
-		for (i = 0; i < colors_border_size; i++) {
-			it = tlist_insert(tl, NULL, _("Window border #%i"),
+		for (i = 0; i < agColorsBorderSize; i++) {
+			it = AG_TlistAdd(tl, NULL, _("Window border #%i"),
 			    i);
-			it->p1 = &colors_border[i];
+			it->p1 = &agColorsBorder[i];
 		}
 
-		hsv = hsvpal_new(tab);
-		WIDGET(hsv)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		widget_bind(hsv, "pixel-format", WIDGET_POINTER, &vfmt);
-		event_new(hsv, "h-changed", updated_bg, "%p", tl);
-		event_new(hsv, "sv-changed", updated_bg, "%p", tl);
-		event_new(tl, "tlist-selected", selected_color, "%p", hsv);
+		hsv = AG_HSVPalNew(tab);
+		AGWIDGET(hsv)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
+		    &agVideoFmt);
+		AG_SetEvent(hsv, "h-changed", updated_bg, "%p", tl);
+		AG_SetEvent(hsv, "sv-changed", updated_bg, "%p", tl);
+		AG_SetEvent(tl, "tlist-selected", selected_color, "%p", hsv);
 	}
 
 #ifdef NETWORK
-	tab = notebook_add_tab(nb, _("RCS"), BOX_VERT);
+	tab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
-		struct textbox *tb;
-		struct spinbutton *sb;
-		struct box *box;
-		struct checkbox *cb;
+		AG_Textbox *tb;
+		AG_Spinbutton *sb;
+		AG_Box *box;
+		AG_Checkbox *cb;
 
-		cb = checkbox_new(tab, _("Enable RCS"));
-		widget_bind(cb, "state", WIDGET_INT, &rcs);
+		cb = AG_CheckboxNew(tab, _("Enable RCS"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
 
-		tb = textbox_new(tab, _("Server hostname: "));
-		widget_bind(tb, "string", WIDGET_STRING, rcs_hostname,
-		    sizeof(rcs_hostname));
+		tb = AG_TextboxNew(tab, _("Server hostname: "));
+		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
+		    sizeof(agRcsHostname));
 	
-		sb = spinbutton_new(tab, _("Server port: "));
-		widget_bind(sb, "value", WIDGET_UINT, &rcs_port);
+		sb = AG_SpinbuttonNew(tab, _("Server port: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &agRcsPort);
 
-		separator_new(tab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(tab, AG_SEPARATOR_HORIZ);
 
-		box = box_new(tab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_WFILL|
+				                   AG_BOX_HOMOGENOUS);
 		{
-			tb = textbox_new(box, _("Username: "));
-			widget_bind(tb, "string", WIDGET_STRING, rcs_username,
-			    sizeof(rcs_username));
+			tb = AG_TextboxNew(box, _("Username: "));
+			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
+			    agRcsUsername, sizeof(agRcsUsername));
 
-			tb = textbox_new(box, _("Password: "));
-			textbox_set_password(tb, 1);
-			widget_bind(tb, "string", WIDGET_STRING, rcs_password,
-			    sizeof(rcs_password));
+			tb = AG_TextboxNew(box, _("Password: "));
+			AG_TextboxSetPassword(tb, 1);
+			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
+			    agRcsPassword, sizeof(agRcsPassword));
 		}
 	}
 #endif /* NETWORK */
 
 #ifdef DEBUG
-	tab = notebook_add_tab(nb, _("Debug"), BOX_VERT);
+	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
-		cbox = checkbox_new(tab, _("Debugging"));
-		widget_bind(cbox, "state", WIDGET_INT, &engine_debug);
+		cbox = AG_CheckboxNew(tab, _("Debugging"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
 
-		cbox = checkbox_new(tab, _("Server mode"));
-		widget_bind(cbox, "state", WIDGET_INT, &server_mode);
+		cbox = AG_CheckboxNew(tab, _("Debug server mode"));
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agServerMode);
 	}
 #endif
 
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
-		button = button_new(hb, _("Close"));
-		event_new(button, "button-pushed", window_generic_hide, "%p",
+		button = AG_ButtonNew(hb, _("Close"));
+		AG_SetEvent(button, "button-pushed", AG_WindowHideGenEv, "%p",
 		    win);
 
-		button = button_new(hb, _("Save"));
-		event_new(button, "button-pushed", save_config, NULL);
+		button = AG_ButtonNew(hb, _("Save"));
+		AG_SetEvent(button, "button-pushed", save_config, NULL);
 	}
-	config->settings = win;
+	agConfig->window = win;
 }
 
 /* Copy the full pathname to a data file to a fixed-size buffer. */
 int
-config_search_file(const char *path_key, const char *name, const char *ext,
+AG_ConfigFile(const char *path_key, const char *name, const char *ext,
     char *path, size_t path_len)
 {
 	char file[MAXPATHLEN];
 	struct stat sta;
 	char *dir, *pathp = path;
 
-	prop_copy_string(config, path_key, path, path_len);
+	AG_StringCopy(agConfig, path_key, path, path_len);
 
 	for (dir = strsep(&pathp, ":");
 	     dir != NULL;
@@ -574,14 +588,14 @@ config_search_file(const char *path_key, const char *name, const char *ext,
 		}
 		if (stat(file, &sta) == 0) {
 			if (strlcpy(path, file, path_len) >= path_len) {
-				error_set(_("The search path is too big."));
+				AG_SetError(_("The search path is too big."));
 				return (-1);
 			}
 			return (0);
 		}
 	}
-	prop_copy_string(config, path_key, path, path_len);
-	error_set(_("Cannot find %s.%s (in <%s>:%s)."), name,
+	AG_StringCopy(agConfig, path_key, path, path_len);
+	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
 	    ext != NULL ? ext : "", path_key, path);
 	return (-1);
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.47 2005/05/11 09:59:33 vedge Exp $
+.\"	$Csoft: window.3,v 1.48 2005/06/16 15:58:44 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -54,7 +54,7 @@ The container behavior of a
 is much like a
 .Xr vbox 3 .
 Unless the
-.Dv WINDOW_NO_TITLEBAR
+.Dv AG_WINDOW_NO_TITLEBAR
 flag is set, a
 .Xr titlebar 3
 widget is attached to the window at creation time.
@@ -63,46 +63,46 @@ Initially, the window's widgets are queried for a default, minimum size, and
 the window is sized accordingly.
 After this initial sizing, widget containers may scale widgets to any size.
 .Sh INHERITANCE HIERARCHY
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct window *"
-.Fn window_new "int flags" "const char *name" "..."
+.Ft "AG_Window *"
+.Fn AG_WindowNew "int flags" "const char *name" "..."
 .Pp
 .Ft "void"
-.Fn window_init "struct window *win" "const char *name" "int flags"
+.Fn AG_WindowInit "AG_Window *win" "const char *name" "int flags"
 .Pp
 .Ft "void"
-.Fn window_set_caption "struct window *win" "const char *fmt" "..."
+.Fn AG_WindowSetCaption "AG_Window *win" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn window_set_closure "struct window *win" "int mode"
+.Fn AG_WindowSetCloseAction "AG_Window *win" "int mode"
 .Pp
 .Ft "void"
-.Fn window_set_padding "struct window *win" "int xpadding" "int ypadding_top" "int ypadding_bot"
+.Fn AG_WindowSetPadding "AG_Window *win" "int xpadding" "int ypadding_top" "int ypadding_bot"
 .Pp
 .Ft "void"
-.Fn window_set_spacing "struct window *win" "int spacing"
+.Fn AG_WindowSetSpacing "AG_Window *win" "int spacing"
 .Pp
 .Ft "void"
-.Fn window_set_position "struct window *win, enum window_alignment alignment" "int cascade"
+.Fn AG_WindowSetPosition "AG_Window *win, enum ag_window_alignment alignment" "int cascade"
 .Pp
 .Ft "void"
-.Fn window_set_geometry "struct window *win" "int x" "int y" "int w" "int h"
+.Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft void
-.Fn window_attach "struct window *win" "struct window *subwin"
+.Fn AG_WindowAttach "AG_Window *win" "AG_Window *subwin"
 .Pp
 .Ft void
-.Fn window_detach "struct window *win" "struct window *subwin"
+.Fn AG_WindowDetach "AG_Window *win" "AG_Window *subwin"
 .nr nS 0
 .Pp
 The
-.Fn window_new
+.Fn AG_WindowNew
 function allocates, initializes, and attaches a new window.
-.Fn window_init
+.Fn AG_WindowInit
 initializes a
 .Nm
 structure.
@@ -113,58 +113,58 @@ argument is NULL, an unnamed window is created;
 otherwise, a named window is created.
 .Pp
 If the name passed to
-.Fn window_new
+.Fn AG_WindowNew
 matches an existing window, the focus is placed on the existing
 window, no new window is created and the function returns NULL.
 .Pp
 Acceptable flags include:
 .Bd -literal
-#define WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
+#define AG_WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
 				 	   (for named windows only) */
-#define WINDOW_CASCADE		0x0002	/* Increment position slightly */
-#define WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
-#define WINDOW_NO_DECORATIONS	0x0008	/* Disable the window borders */
-#define WINDOW_HIDE		0x0010	/* Hide on window-close */
-#define WINDOW_DETACH		0x0020	/* Detach on window-close */
-#define WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
-#define WINDOW_ICONIFIED	0x0080	/* Window is minimized */
-#define WINDOW_NO_HRESIZE	0x0100	/* Don't resize horizontally */
-#define WINDOW_NO_VRESIZE	0x0200	/* Don't resize vertically */
-#define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
-#define WINDOW_NO_CLOSE_BTN	0x0400	/* Disable close button */
-#define WINDOW_NO_MINIMIZE_BTN	0x0800	/* Disable minimize button */
-#define WINDOW_NO_MAXIMIZE_BTN	0x1000	/* Disable maximize button */
+#define AG_WINDOW_CASCADE		0x0002	/* Increment position slightly */
+#define AG_WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
+#define AG_WINDOW_NO_DECORATIONS	0x0008	/* Disable the window borders */
+#define AG_WINDOW_HIDE		0x0010	/* Hide on window-close */
+#define AG_WINDOW_DETACH		0x0020	/* Detach on window-close */
+#define AG_WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
+#define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized */
+#define AG_WINDOW_NO_HRESIZE	0x0100	/* Don't resize horizontally */
+#define AG_WINDOW_NO_VRESIZE	0x0200	/* Don't resize vertically */
+#define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
+#define AG_WINDOW_NO_CLOSE_BTN	0x0400	/* Disable close button */
+#define AG_WINDOW_NO_MINIMIZE_BTN	0x0800	/* Disable minimize button */
+#define AG_WINDOW_NO_MAXIMIZE_BTN	0x1000	/* Disable maximize button */
 .Ed
 .Pp
 The
-.Fn window_set_caption
+.Fn AG_WindowSetCaption
 function sets the text displayed by the titlebar (if there is one).
 The string is truncated if its length exceeds
-.Dv LABEL_MAX
+.Dv AG_LABEL_MAX
 - 1 bytes.
 .Pp
 The
-.Fn window_set_closure
+.Fn AG_WindowSetCloseAction
 function changes the current
 .Sq window-close
 event handler to one of the predefined handlers:
 .Bd -literal
-#define WINDOW_HIDE	0x0010	/* Hide on window-close */
-#define WINDOW_DETACH	0x0020	/* Detach on window-close */
+#define AG_WINDOW_HIDE	0x0010	/* Hide on window-close */
+#define AG_WINDOW_DETACH	0x0020	/* Detach on window-close */
 .Ed
 .Pp
 The
-.Fn window_set_padding
+.Fn AG_WindowSetPadding
 function defines the space in pixels separating the widgets from the edges
 of the window.
 .Pp
 The
-.Fn window_set_spacing
+.Fn AG_WindowSetSpacing
 function defines the space separating the widgets from each other.
 The default is 2 pixels.
 .Pp
 Note that
-.fn window_set_spacing
+.fn AG_WindowSetSpacing
 only affects the widgets which are directly attached to the window.
 For widgets that are attached to container widgets, it is the container
 widgets that define spacing, as well as other aspects of widget
@@ -172,23 +172,23 @@ organization.
 For instance, the
 .Xr box 3
 container widget provides a
-.Fn box_set_spacing
+.Fn AG_BoxSetSpacing
 function .
 .Pp
 The
-.Fn window_set_position
+.Fn AG_WindowSetPosition
 function requests an initial window position, which may be one of:
 .Bd -literal
-enum window_alignment {
-	WINDOW_UPPER_LEFT,
-	WINDOW_MIDDLE_LEFT,
-	WINDOW_LOWER_LEFT,
-	WINDOW_UPPER_RIGHT,
-	WINDOW_MIDDLE_RIGHT,
-	WINDOW_LOWER_RIGHT,
-	WINDOW_CENTER,
-	WINDOW_LOWER_CENTER,
-	WINDOW_UPPER_CENTER
+enum ag_window_alignment {
+	AG_WINDOW_UPPER_LEFT,
+	AG_WINDOW_MIDDLE_LEFT,
+	AG_WINDOW_LOWER_LEFT,
+	AG_WINDOW_UPPER_RIGHT,
+	AG_WINDOW_MIDDLE_RIGHT,
+	AG_WINDOW_LOWER_RIGHT,
+	AG_WINDOW_CENTER,
+	AG_WINDOW_LOWER_CENTER,
+	AG_WINDOW_UPPER_CENTER
 };
 .Ed
 .Pp
@@ -198,14 +198,14 @@ argument is 1, the window position is slightly incremented or decremented at
 each call (depending on the preferred alignment).
 .Pp
 The
-.Fn window_set_geometry
+.Fn AG_WindowSetGeometry
 function allows manual modification of a window's position and size in terms
 of pixels.
 It should be invoked after the window's child widgets are created, otherwise
 no minimum geometry will be enforced when the window is later resized.
 .Pp
 Finally, the
-.Fn window_attach
+.Fn AG_WindowAttach
 function arranges for
 .Fa pwin
 to be the parent window of
@@ -215,10 +215,10 @@ such that
 is automatically destroyed when
 .Fa pwin
 is detached (through
-.Xr view_detach 3 ) .
+.Xr AG_ViewDetach 3 ) .
 .Pp
 The
-.Fn window_detach
+.Fn AG_WindowDetach
 function removes
 .Fa win
 from its parent window
@@ -226,59 +226,59 @@ from its parent window
 .Sh VISIBILITY
 .nr nS 1
 .Ft void
-.Fn window_show "struct window *win"
+.Fn AG_WindowShow "AG_Window *win"
 .Pp
 .Ft void
-.Fn window_hide "struct window *win"
+.Fn AG_WindowHide "AG_Window *win"
 .Pp
 .Ft int
-.Fn window_toggle_visibility "struct window *win"
+.Fn AG_WindowToggleVisibility "AG_Window *win"
 .nr nS 0
 .Pp
 The
-.Fn window_show
+.Fn AG_WindowShow
 function marks
 .Fa win
 as visible.
-.Fn window_hide
+.Fn AG_WindowHide
 marks
 .Fa win
 as invisible.
-.Fn window_toggle_visibility
+.Fn AG_WindowToggleVisibility
 inverts the visibility state of
 .Fa win .
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
-.Fn window_generic_detach "int argc" "union evarg *argv"
+.Fn AG_WindowDetachGenEv "int argc" "union evarg *argv"
 .Pp
 .Ft void
-.Fn window_generic_hide "int argc" "union evarg *argv"
+.Fn AG_WindowHideGenEv "int argc" "union evarg *argv"
 .Pp
 .Ft void
-.Fn window_generic_show "int argc" "union evarg *argv"
+.Fn AG_WindowShowGenEv "int argc" "union evarg *argv"
 .Pp
 .Ft void
-.Fn window_generic_close "int argc" "union evarg *argv"
+.Fn AG_WindowCloseGenEv "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
-.Fn window_generic_detach
+.Fn AG_WindowDetachGenEv
 event handler detaches the given window, freeing associated resources.
-.Fn window_generic_hide
+.Fn AG_WindowHideGenEv
 hides the given window, if it is currently visible.
-.Fn window_generic_show
+.Fn AG_WindowShowGenEv
 invokes
-.Fn window_show
+.Fn AG_WindowShow
 on the given window.
-.Fn window_generic_close
+.Fn AG_WindowCloseGenEv
 sends an
 .Sq window-close
 event to the given window.
 A pointer to the window is passed as argument 1 to those event handlers.
 .Pp
 The
-.Fn window_set_closure
+.Fn AG_WindowSetCloseAction
 function is an alternative to assigning these event handlers manually.
 .Sh EVENTS
 The
@@ -303,7 +303,7 @@ holds the present button state, as returned by
 .Xr SDL_GetMouseState 3 .
 Regardless of the mouse position, this event is posted to widgets that either
 hold focus inside the focused window, or have the
-.Dv WIDGET_UNFOCUSED_MOTION
+.Dv AG_WIDGET_UNFOCUSED_MOTION
 flag set.
 .It Fn window-mousebuttonup "int button" "int x" "int y"
 The mouse button indexed by

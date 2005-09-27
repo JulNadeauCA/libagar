@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.9 2005/09/08 08:18:57 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.10 2005/09/08 08:20:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -39,95 +39,95 @@
 #include <string.h>
 #include <errno.h>
 
-static struct widget_ops toolbar_ops = {
+static AG_WidgetOps toolbar_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
 	NULL,
-	toolbar_scale
+	AG_ToolbarScale
 };
 
-struct toolbar *
-toolbar_new(void *parent, enum toolbar_type type, int nrows, int flags)
+AG_Toolbar *
+AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nrows, int flags)
 {
-	struct toolbar *tbar;
+	AG_Toolbar *tbar;
 
-	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(tbar, type, nrows, flags);
-	object_attach(parent, tbar);
+	tbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	AG_ToolbarInit(tbar, type, nrows, flags);
+	AG_ObjectAttach(parent, tbar);
 	return (tbar);
 }
 
 void
-toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows, int flags)
+AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows, int flags)
 {
 	int i;
 	
 	switch (type) {
-	case TOOLBAR_HORIZ:
-		box_init(&tbar->box, BOX_VERT, BOX_WFILL);
+	case AG_TOOLBAR_HORIZ:
+		AG_BoxInit(&tbar->box, AG_BOX_VERT, AG_BOX_WFILL);
 		break;
-	case TOOLBAR_VERT:
-		box_init(&tbar->box, BOX_HORIZ, BOX_HFILL);
+	case AG_TOOLBAR_VERT:
+		AG_BoxInit(&tbar->box, AG_BOX_HORIZ, AG_BOX_HFILL);
 		break;
 	}
-	box_set_padding(&tbar->box, 1);
-	box_set_spacing(&tbar->box, 1);
-	object_set_ops(tbar, &toolbar_ops);
+	AG_BoxSetPadding(&tbar->box, 1);
+	AG_BoxSetSpacing(&tbar->box, 1);
+	AG_ObjectSetOps(tbar, &toolbar_ops);
 
 	tbar->type = type;
 	tbar->nrows = 0;
-	for (i = 0; i < nrows && i < TOOLBAR_MAX_ROWS; i++) {
+	for (i = 0; i < nrows && i < AG_TOOLBAR_MAX_ROWS; i++) {
 		int bflags = 0;
 
-		if (flags & TOOLBAR_HOMOGENOUS) {
-			bflags = BOX_HOMOGENOUS;
+		if (flags & AG_TOOLBAR_HOMOGENOUS) {
+			bflags = AG_BOX_HOMOGENOUS;
 		}
 		switch (type) {
-		case TOOLBAR_HORIZ:
-			tbar->rows[i] = box_new(&tbar->box, BOX_HORIZ,
-			    BOX_WFILL|bflags);
+		case AG_TOOLBAR_HORIZ:
+			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_HORIZ,
+			    AG_BOX_WFILL|bflags);
 			break;
-		case TOOLBAR_VERT:
-			tbar->rows[i] = box_new(&tbar->box, BOX_VERT, 
-			    BOX_HFILL|bflags);
+		case AG_TOOLBAR_VERT:
+			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_VERT, 
+			    AG_BOX_HFILL|bflags);
 			break;
 		}
-		box_set_padding(tbar->rows[i], 1);
-		box_set_spacing(tbar->rows[i], 1);
+		AG_BoxSetPadding(tbar->rows[i], 1);
+		AG_BoxSetSpacing(tbar->rows[i], 1);
 		tbar->nrows++;
 	}
 }
 
-struct button *
-toolbar_add_button(struct toolbar *tbar, int row, SDL_Surface *icon,
+AG_Button *
+AG_ToolbarAddButton(AG_Toolbar *tbar, int row, SDL_Surface *icon,
     int sticky, int def, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
-	struct button *bu;
-	struct event *ev;
+	AG_Button *bu;
+	AG_Event *ev;
 	va_list ap;
 
 #ifdef DEBUG
 	if (row < 0 || row > tbar->nrows)
 		fatal("no such row %d", row);
 #endif
-	bu = button_new(tbar->rows[row], NULL);
-	button_set_label(bu, icon);
-	button_set_focusable(bu, 0);
-	button_set_sticky(bu, sticky);
-	widget_set_bool(bu, "state", def);
+	bu = AG_ButtonNew(tbar->rows[row], NULL);
+	AG_ButtonSetSurface(bu, icon);
+	AG_ButtonSetFocusable(bu, 0);
+	AG_ButtonSetSticky(bu, sticky);
+	AG_WidgetSetBool(bu, "state", def);
 	
-	ev = event_new(bu, "button-pushed", handler, NULL);
+	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		for (; *fmt != '\0'; fmt++) {
-			EVENT_PUSH_ARG(ap, *fmt, ev);
+			AG_EVENT_PUSH_ARG(ap, *fmt, ev);
 		}
 		va_end(ap);
 	}
@@ -135,39 +135,39 @@ toolbar_add_button(struct toolbar *tbar, int row, SDL_Surface *icon,
 }
 
 void
-toolbar_add_separator(struct toolbar *tbar, int nrow)
+AG_ToolbarAddSeparator(AG_Toolbar *tbar, int nrow)
 {
-	separator_new(tbar->rows[nrow], tbar->type == TOOLBAR_HORIZ ?
-	    SEPARATOR_VERT : SEPARATOR_HORIZ);
+	AG_SeparatorNew(tbar->rows[nrow], tbar->type == AG_TOOLBAR_HORIZ ?
+	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
 }
 
 void
-toolbar_select_unique(struct toolbar *tbar, struct button *ubu)
+AG_ToolbarSelectUnique(AG_Toolbar *tbar, AG_Button *ubu)
 {
-	struct widget_binding *stateb;
-	struct button *bu;
+	AG_WidgetBinding *stateb;
+	AG_Button *bu;
 	int i;
 
 	for (i = 0; i < tbar->nrows; i++) {
-		OBJECT_FOREACH_CHILD(bu, tbar->rows[i], button) {
+		AGOBJECT_FOREACH_CHILD(bu, tbar->rows[i], ag_button) {
 			int *state;
 
 			if (bu == ubu) {
 				continue;
 			}
-			stateb = widget_get_binding(bu, "state", &state);
+			stateb = AG_WidgetGetBinding(bu, "state", &state);
 			*state = 0;
-			widget_binding_modified(stateb);
-			widget_binding_unlock(stateb);
+			AG_WidgetBindingChanged(stateb);
+			AG_WidgetUnlockBinding(stateb);
 		}
 	}
 }
 
 void
-toolbar_scale(void *p, int w, int h)
+AG_ToolbarScale(void *p, int w, int h)
 {
-	struct box *bo = p;
-	struct widget *wid;
+	AG_Box *bo = p;
+	AG_Widget *wid;
 	int x = bo->padding;
 	int y = bo->padding;
 
@@ -175,29 +175,29 @@ toolbar_scale(void *p, int w, int h)
 		int maxw = 0, maxh = 0;
 		int dw, dh;
 
-		WIDGET(bo)->w = bo->padding*2 - bo->spacing;
-		WIDGET(bo)->h = bo->padding*2;
+		AGWIDGET(bo)->w = bo->padding*2 - bo->spacing;
+		AGWIDGET(bo)->h = bo->padding*2;
 
 		/* Reserve enough space to hold widgets and spacing/padding. */
-		OBJECT_FOREACH_CHILD(wid, bo, widget) {
-			WIDGET_OPS(wid)->scale(wid, -1, -1);
+		AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+			AGWIDGET_OPS(wid)->scale(wid, -1, -1);
 			if (wid->w > maxw) maxw = wid->w;
 			if (wid->h > maxh) maxh = wid->h;
 
-			if ((dh = maxh + bo->padding*2) > WIDGET(bo)->h) {
-				WIDGET(bo)->h = dh;
+			if ((dh = maxh + bo->padding*2) > AGWIDGET(bo)->h) {
+				AGWIDGET(bo)->h = dh;
 			}
-			WIDGET(bo)->w += wid->w + bo->spacing;
+			AGWIDGET(bo)->w += wid->w + bo->spacing;
 		}
-		WIDGET(bo)->w -= bo->spacing;
+		AGWIDGET(bo)->w -= bo->spacing;
 		return;
 	}
 
-	OBJECT_FOREACH_CHILD(wid, bo, widget) {
+	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
 		wid->x = x;
 		wid->y = y;
 
 		x += wid->w + bo->spacing;
-		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 	}
 }

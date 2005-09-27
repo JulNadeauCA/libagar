@@ -1,25 +1,25 @@
-/*	$Csoft: typesw.h,v 1.3 2004/04/11 03:28:18 vedge Exp $	*/
+/*	$Csoft: typesw.h,v 1.4 2005/09/09 02:11:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TYPESW_H_
 #define _AGAR_TYPESW_H
 #include "begin_code.h"
 
-struct object_type {
-	char type[OBJECT_TYPE_MAX];
+typedef struct ag_object_type {
+	char type[AG_OBJECT_TYPE_MAX];
 	size_t size;
-	const struct object_ops *ops;
+	const AG_ObjectOps *ops;
 	int icon;
-};
+} AG_ObjectType;
 
-extern struct object_type *typesw;
-extern int ntypesw;
+extern AG_ObjectType *agTypes;
+extern int	     agnTypes;
 
 __BEGIN_DECLS
-void typesw_init(void);
-void typesw_destroy(void);
-void typesw_register(const char *, size_t, const struct object_ops *, int);
-__inline__ struct object_type *typesw_find(const char *);
+void AG_InitTypeSw(void);
+void AG_DestroyTypeSw(void);
+void AG_RegisterType(const char *, size_t, const AG_ObjectOps *, int);
+__inline__ AG_ObjectType *AG_FindType(const char *);
 __END_DECLS
 
 #include "close_code.h"

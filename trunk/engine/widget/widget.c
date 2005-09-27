@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.114 2005/09/12 10:07:35 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.115 2005/09/19 13:27:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-const struct version widget_ver = {
+const AG_Version widget_ver = {
 	"agar widget",
 	0, 0
 };
@@ -43,9 +43,9 @@ const struct version widget_ver = {
 static void
 inherit_style(int argc, union evarg *argv)
 {
-	struct widget *pwid = argv[0].p;
-	struct widget *wid = argv[argc].p;
-	const struct style *style = pwid->style;
+	AG_Widget *pwid = argv[0].p;
+	AG_Widget *wid = argv[argc].p;
+	const AG_WidgetStyleMod *style = pwid->style;
 
 	if (style == NULL)
 		return;
@@ -54,12 +54,12 @@ inherit_style(int argc, union evarg *argv)
 }
 
 void
-widget_init(void *p, const char *type, const void *wops, int flags)
+AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
-	object_init(wid, "widget", type, wops);
-	OBJECT(wid)->save_pfx = "/widgets";
+	AG_ObjectInit(wid, "widget", type, wops);
+	AGOBJECT(wid)->save_pfx = "/widgets";
 
 	strlcpy(wid->type, type, sizeof(wid->type));
 	wid->flags = flags;
@@ -71,7 +71,7 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->h = -1;
 	wid->style = NULL;
 	SLIST_INIT(&wid->bindings);
-	pthread_mutex_init(&wid->bindings_lock, &recursive_mutexattr);
+	pthread_mutex_init(&wid->bindings_lock, &agRecursiveMutexAttr);
 
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
@@ -84,19 +84,19 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	 * Arrange for immediate children to inherit the style settings
 	 * of the parent on attachment.
 	 */
-	event_new(wid, "child-attached", inherit_style, NULL);
+	AG_SetEvent(wid, "child-attached", inherit_style, NULL);
 }
 
 int
-widget_copy_binding(void *w1, const char *n1, void *w2, const char *n2)
+AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 {
-	struct widget_binding *b1, *b2;
+	AG_WidgetBinding *b1, *b2;
 
-	if ((b1 = widget_get_binding(w1, n1)) == NULL) {
+	if ((b1 = AG_WidgetGetBinding(w1, n1)) == NULL) {
 		return (-1);
 	}
-	if ((b2 = widget_get_binding(w2, n2)) == NULL) {
-		widget_binding_unlock(b1);
+	if ((b2 = AG_WidgetGetBinding(w2, n2)) == NULL) {
+		AG_WidgetUnlockBinding(b1);
 		return (-1);
 	}
 	b1->type = b2->type;
@@ -105,35 +105,35 @@ widget_copy_binding(void *w1, const char *n1, void *w2, const char *n2)
 	b1->p1 = b2->p1;
 	b1->p2 = b2->p2;
 	b1->size = b2->size;
-	widget_binding_unlock(b2);
-	widget_binding_unlock(b1);
+	AG_WidgetUnlockBinding(b2);
+	AG_WidgetUnlockBinding(b1);
 	return (0);
 }
 
 /* Bind a mutex-protected variable to a widget. */
-struct widget_binding *
-widget_bind_protected(void *widp, const char *name, pthread_mutex_t *mutex,
-    enum widget_binding_type type, ...)
+AG_WidgetBinding *
+AG_WidgetBindMp(void *widp, const char *name, pthread_mutex_t *mutex,
+    enum ag_widget_binding_type type, ...)
 {
-	struct widget *wid = widp;
-	struct widget_binding *b;
+	AG_Widget *wid = widp;
+	AG_WidgetBinding *b;
 	va_list ap;
 	
 	pthread_mutex_lock(&wid->bindings_lock);
 	va_start(ap, type);
 	switch (type) {
-	case WIDGET_PROP:
-		b = widget_bind(wid, name, type,
+	case AG_WIDGET_PROP:
+		b = AG_WidgetBind(wid, name, type,
 		    va_arg(ap, void *),
 		    va_arg(ap, char *));
 		break;
-	case WIDGET_STRING:
-		b = widget_bind(wid, name, type,
+	case AG_WIDGET_STRING:
+		b = AG_WidgetBind(wid, name, type,
 		    va_arg(ap, char *),
 		    va_arg(ap, size_t));
 		break;
 	default:
-		b = widget_bind(wid, name, type,
+		b = AG_WidgetBind(wid, name, type,
 		    va_arg(ap, void *));
 		break;
 	}
@@ -145,41 +145,41 @@ widget_bind_protected(void *widp, const char *name, pthread_mutex_t *mutex,
 
 /* Translate property types to widget types. */
 static int
-widget_vtype(struct widget_binding *binding)
+widget_vtype(AG_WidgetBinding *binding)
 {
-	struct prop *prop;
+	AG_Prop *prop;
 
 	switch (binding->type) {
-	case WIDGET_PROP:
-		if ((prop = prop_get(binding->p1, (char *)binding->p2, PROP_ANY,
-		    NULL)) == NULL) {
-			fatal("%s", error_get());
+	case AG_WIDGET_PROP:
+		if ((prop = AG_GetProp(binding->p1, (char *)binding->p2,
+		    AG_PROP_ANY, NULL)) == NULL) {
+			fatal("%s", AG_GetError());
 		}
 		switch (prop->type) {
-		case PROP_BOOL:
-			return (WIDGET_BOOL);
-		case PROP_INT:
-			return (WIDGET_INT);
-		case PROP_UINT8:
-			return (WIDGET_UINT8);
-		case PROP_SINT8:
-			return (WIDGET_SINT8);
-		case PROP_UINT16:
-			return (WIDGET_UINT16);
-		case PROP_SINT16:
-			return (WIDGET_SINT16);
-		case PROP_UINT32:
-			return (WIDGET_UINT32);
-		case PROP_SINT32:
-			return (WIDGET_SINT32);
-		case PROP_FLOAT:
-			return (WIDGET_FLOAT);
-		case PROP_DOUBLE:
-			return (WIDGET_DOUBLE);
-		case PROP_STRING:
-			return (WIDGET_STRING);
-		case PROP_POINTER:
-			return (WIDGET_POINTER);
+		case AG_PROP_BOOL:
+			return (AG_WIDGET_BOOL);
+		case AG_PROP_INT:
+			return (AG_WIDGET_INT);
+		case AG_PROP_UINT8:
+			return (AG_WIDGET_UINT8);
+		case AG_PROP_SINT8:
+			return (AG_WIDGET_SINT8);
+		case AG_PROP_UINT16:
+			return (AG_WIDGET_UINT16);
+		case AG_PROP_SINT16:
+			return (AG_WIDGET_SINT16);
+		case AG_PROP_UINT32:
+			return (AG_WIDGET_UINT32);
+		case AG_PROP_SINT32:
+			return (AG_WIDGET_SINT32);
+		case AG_PROP_FLOAT:
+			return (AG_WIDGET_FLOAT);
+		case AG_PROP_DOUBLE:
+			return (AG_WIDGET_DOUBLE);
+		case AG_PROP_STRING:
+			return (AG_WIDGET_STRING);
+		case AG_PROP_POINTER:
+			return (AG_WIDGET_POINTER);
 		default:
 			return (-1);
 		}
@@ -190,22 +190,22 @@ widget_vtype(struct widget_binding *binding)
 }
 
 /* Bind a variable to a widget. */
-struct widget_binding *
-widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
+AG_WidgetBinding *
+AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type, ...)
 {
-	struct widget *wid = widp;
-	struct widget_binding *binding;
+	AG_Widget *wid = widp;
+	AG_WidgetBinding *binding;
 	void *p1, *p2 = NULL;
 	size_t size = 0;
 	va_list ap;
 
 	va_start(ap, type);
 	switch (type) {
-	case WIDGET_PROP:
+	case AG_WIDGET_PROP:
 		p1 = va_arg(ap, void *);
 		p2 = va_arg(ap, char *);
 		break;
-	case WIDGET_STRING:
+	case AG_WIDGET_STRING:
 		p1 = va_arg(ap, char *);
 		size = va_arg(ap, size_t);
 		break;
@@ -224,13 +224,13 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 			binding->size = size;
 			binding->vtype = widget_vtype(binding);
 
-			event_post(NULL, wid, "widget-bound", "%p", binding);
+			AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 			pthread_mutex_unlock(&wid->bindings_lock);
 			return (binding);
 		}
 	}
 
-	binding = Malloc(sizeof(struct widget_binding), M_WIDGET);
+	binding = Malloc(sizeof(AG_WidgetBinding), M_WIDGET);
 	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
@@ -240,22 +240,22 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	binding->vtype = widget_vtype(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
-	event_post(NULL, wid, "widget-bound", "%p", binding);
+	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 	pthread_mutex_unlock(&wid->bindings_lock);
 	return (binding);
 }
 
 /*
  * Lookup a binding and copy its data to pointers passed as arguments.
- * The caller should invoke widget_binding_unlock() when done reading/writing
+ * The caller should invoke AG_WidgetUnlockBinding() when done reading/writing
  * the data.
  */
-struct widget_binding *
-widget_get_binding(void *widp, const char *name, ...)
+AG_WidgetBinding *
+AG_WidgetGetBinding(void *widp, const char *name, ...)
 {
-	struct widget *wid = widp;
-	struct widget_binding *binding;
-	struct prop *prop;
+	AG_Widget *wid = widp;
+	AG_WidgetBinding *binding;
+	AG_Prop *prop;
 	void **res;
 	va_list ap;
 
@@ -272,91 +272,91 @@ widget_get_binding(void *widp, const char *name, ...)
 			pthread_mutex_lock(binding->mutex);
 		}
 		switch (binding->type) {
-		case WIDGET_BOOL:
-		case WIDGET_INT:
+		case AG_WIDGET_BOOL:
+		case AG_WIDGET_INT:
 			*(int **)res = (int *)binding->p1;
 			break;
-		case WIDGET_UINT:
+		case AG_WIDGET_UINT:
 			*(u_int **)res = (u_int *)binding->p1;
 			break;
-		case WIDGET_UINT8:
+		case AG_WIDGET_UINT8:
 			*(Uint8 **)res = (Uint8 *)binding->p1;
 			break;
-		case WIDGET_SINT8:
+		case AG_WIDGET_SINT8:
 			*(Sint8 **)res = (Sint8 *)binding->p1;
 			break;
-		case WIDGET_UINT16:
+		case AG_WIDGET_UINT16:
 			*(Uint16 **)res = (Uint16 *)binding->p1;
 			break;
-		case WIDGET_SINT16:
+		case AG_WIDGET_SINT16:
 			*(Sint16 **)res = (Sint16 *)binding->p1;
 			break;
-		case WIDGET_UINT32:
+		case AG_WIDGET_UINT32:
 			*(Uint32 **)res = (Uint32 *)binding->p1;
 			break;
-		case WIDGET_SINT32:
+		case AG_WIDGET_SINT32:
 			*(Sint32 **)res = (Sint32 *)binding->p1;
 			break;
-		case WIDGET_FLOAT:
+		case AG_WIDGET_FLOAT:
 			*(float **)res = (float *)binding->p1;
 			break;
-		case WIDGET_DOUBLE:
+		case AG_WIDGET_DOUBLE:
 			*(double **)res = (double *)binding->p1;
 			break;
-		case WIDGET_STRING:
+		case AG_WIDGET_STRING:
 			*(char ***)res = (char **)binding->p1;
 			break;
-		case WIDGET_POINTER:
+		case AG_WIDGET_POINTER:
 			*(void ***)res = (void **)binding->p1;
 			break;
-		case WIDGET_PROP:			/* Convert */
-			if ((prop = prop_get(binding->p1, (char *)binding->p2,
-			    PROP_ANY, NULL)) == NULL) {
-				fatal("%s", error_get());
+		case AG_WIDGET_PROP:			/* Convert */
+			if ((prop = AG_GetProp(binding->p1,
+			    (char *)binding->p2, AG_PROP_ANY, NULL)) == NULL) {
+				fatal("%s", AG_GetError());
 			}
 			switch (prop->type) {
-			case PROP_BOOL:
-			case PROP_INT:
+			case AG_PROP_BOOL:
+			case AG_PROP_INT:
 				*(int **)res = (int *)&prop->data.i;
 				break;
-			case PROP_UINT8:
+			case AG_PROP_UINT8:
 				*(Uint8 **)res = (Uint8 *)&prop->data.u8;
 				break;
-			case PROP_SINT8:
+			case AG_PROP_SINT8:
 				*(Sint8 **)res = (Sint8 *)&prop->data.s8;
 				break;
-			case PROP_UINT16:
+			case AG_PROP_UINT16:
 				*(Uint16 **)res = (Uint16 *)&prop->data.u16;
 				break;
-			case PROP_SINT16:
+			case AG_PROP_SINT16:
 				*(Sint16 **)res = (Sint16 *)&prop->data.s16;
 				break;
-			case PROP_UINT32:
+			case AG_PROP_UINT32:
 				*(Uint32 **)res = (Uint32 *)&prop->data.u32;
 				break;
-			case PROP_SINT32:
+			case AG_PROP_SINT32:
 				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
 				break;
-			case PROP_FLOAT:
+			case AG_PROP_FLOAT:
 				*(float **)res = (float *)&prop->data.f;
 				break;
-			case PROP_DOUBLE:
+			case AG_PROP_DOUBLE:
 				*(double **)res = (double *)&prop->data.d;
 				break;
-			case PROP_STRING:
+			case AG_PROP_STRING:
 				*(char ***)res = (char **)&prop->data.s;
 				break;
-			case PROP_POINTER:
+			case AG_PROP_POINTER:
 				*(void ***)res = (void **)&prop->data.p;
 				break;
 			default:
-				error_set("Failed to translate property.");
+				AG_SetError("Failed to translate property.");
 				binding = NULL;
 				goto out;
 			}
 			break;
 		default:
-			error_set("Unknown type of widget binding.");
+			AG_SetError("Unknown type of widget binding.");
 			binding = NULL;
 			goto out;
 		}
@@ -366,358 +366,358 @@ out:
 	}
 	pthread_mutex_unlock(&wid->bindings_lock);
 
-	error_set("No such widget binding: `%s'.", name);
+	AG_SetError("No such widget binding: `%s'.", name);
 	return (NULL);
 }
 
 int
-widget_get_int(void *wid, const char *name)
+AG_WidgetInt(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	int *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 u_int
-widget_get_uint(void *wid, const char *name)
+AG_WidgetUint(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	u_int *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Uint8
-widget_get_uint8(void *wid, const char *name)
+AG_WidgetUint8(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Uint8 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Sint8
-widget_get_sint8(void *wid, const char *name)
+AG_WidgetSint8(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Sint8 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Uint16
-widget_get_uint16(void *wid, const char *name)
+AG_WidgetUint16(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Uint16 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Sint16
-widget_get_sint16(void *wid, const char *name)
+AG_WidgetSint16(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Sint16 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Uint32
-widget_get_uint32(void *wid, const char *name)
+AG_WidgetUint32(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Uint32 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 Sint32
-widget_get_sint32(void *wid, const char *name)
+AG_WidgetSint32(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	Sint32 *i, rv;
 
-	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *i;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 float
-widget_get_float(void *wid, const char *name)
+AG_WidgetFloat(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	float *f, rv;
 
-	if ((b = widget_get_binding(wid, name, &f)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &f)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *f;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 double
-widget_get_double(void *wid, const char *name)
+AG_WidgetDouble(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	double *d, rv;
 
-	if ((b = widget_get_binding(wid, name, &d)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &d)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *d;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 char *
-widget_get_string(void *wid, const char *name)
+AG_WidgetString(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	char *s, *sd;
 
-	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	sd = Strdup(s);
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (sd);
 }
 
 size_t
-widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
+AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	char *s;
 	size_t rv;
 
-	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = strlcpy(dst, s, dst_size);
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
 
 void *
-widget_get_pointer(void *wid, const char *name)
+AG_WidgetPointer(void *wid, const char *name)
 {
-	struct widget_binding *b;
+	AG_WidgetBinding *b;
 	void **p, *rv;
 
-	if ((b = widget_get_binding(wid, name, &p)) == NULL) {
-		fatal("%s", error_get());
+	if ((b = AG_WidgetGetBinding(wid, name, &p)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	rv = *p;
-	widget_binding_unlock(b);
+	AG_WidgetUnlockBinding(b);
 	return (p);
 }
 
 void
-widget_set_int(void *wid, const char *name, int ni)
+AG_WidgetSetInt(void *wid, const char *name, int ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	int *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_uint(void *wid, const char *name, u_int ni)
+AG_WidgetSetUint(void *wid, const char *name, u_int ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	u_int *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_uint8(void *wid, const char *name, Uint8 ni)
+AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Uint8 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_sint8(void *wid, const char *name, Sint8 ni)
+AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Sint8 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_uint16(void *wid, const char *name, Uint16 ni)
+AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Uint16 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_sint16(void *wid, const char *name, Sint16 ni)
+AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Sint16 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_uint32(void *wid, const char *name, Uint32 ni)
+AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Uint32 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_sint32(void *wid, const char *name, Sint32 ni)
+AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	Sint32 *i;
 
-	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*i = ni;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_float(void *wid, const char *name, float nf)
+AG_WidgetSetFloat(void *wid, const char *name, float nf)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	float *f;
 
-	if ((binding = widget_get_binding(wid, name, &f)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &f)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*f = nf;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_double(void *wid, const char *name, double nd)
+AG_WidgetSetDouble(void *wid, const char *name, double nd)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	double *d;
 
-	if ((binding = widget_get_binding(wid, name, &d)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &d)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*d = nd;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_string(void *wid, const char *name, const char *ns)
+AG_WidgetSetString(void *wid, const char *name, const char *ns)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	char *s;
 
-	if ((binding = widget_get_binding(wid, name, &s)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	strlcpy(s, ns, binding->size);
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_set_pointer(void *wid, const char *name, void *np)
+AG_WidgetSetPointer(void *wid, const char *name, void *np)
 {
-	struct widget_binding *binding;
+	AG_WidgetBinding *binding;
 	void **p;
 
-	if ((binding = widget_get_binding(wid, name, &p)) == NULL) {
-		fatal("%s", error_get());
+	if ((binding = AG_WidgetGetBinding(wid, name, &p)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	*p = np;
-	widget_binding_unlock(binding);
+	AG_WidgetUnlockBinding(binding);
 }
 
 void
-widget_binding_lock(struct widget_binding *bind)
+AG_WidgetLockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
 		pthread_mutex_lock(bind->mutex);
 }
 
 void
-widget_binding_unlock(struct widget_binding *bind)
+AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
 		pthread_mutex_unlock(bind->mutex);
@@ -728,15 +728,15 @@ widget_binding_unlock(struct widget_binding *bind)
  * manually. The property must be locked.
  */
 void
-widget_binding_modified(struct widget_binding *bind)
+AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 {
-	if (bind->type == WIDGET_PROP) {
-		struct object *pobj = bind->p1;
+	if (bind->type == AG_WIDGET_PROP) {
+		AG_Object *pobj = bind->p1;
 		char *name = (char *)bind->p2;
-		struct prop *prop;
+		AG_Prop *prop;
 
-		prop = prop_get(pobj, name, PROP_ANY, NULL);
-		event_post(NULL, pobj, "prop-modified", "%p", prop);
+		prop = AG_GetProp(pobj, name, AG_PROP_ANY, NULL);
+		AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
 	}
 }
 
@@ -746,9 +746,9 @@ widget_binding_modified(struct widget_binding *bind)
  * widget is destroyed.
  */
 int
-widget_map_surface(void *p, SDL_Surface *su)
+AG_WidgetMapSurface(void *p, SDL_Surface *su)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 	int i, idx = -1;
 
 	for (i = 0; i < wid->nsurfaces; i++) {
@@ -761,7 +761,7 @@ widget_map_surface(void *p, SDL_Surface *su)
 		wid->surfaces = Realloc(wid->surfaces,
 		    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
 #ifdef HAVE_OPENGL
-		if (view->opengl) {
+		if (agView->opengl) {
 			wid->textures = Realloc(wid->textures,
 			    (wid->nsurfaces+1)*sizeof(GLuint));
 			wid->texcoords = Realloc(wid->texcoords,
@@ -773,11 +773,11 @@ widget_map_surface(void *p, SDL_Surface *su)
 
 	wid->surfaces[idx] = su;
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		GLuint texname;
 	
 		texname = (su == NULL) ? 0 :
-		    view_surface_texture(su, &wid->texcoords[idx*4]);
+		    AG_SurfaceTexture(su, &wid->texcoords[idx*4]);
 		wid->textures[idx] = texname;
 	}
 #endif
@@ -789,50 +789,48 @@ widget_map_surface(void *p, SDL_Surface *su)
  * the matching texture in OpenGL mode.
  */
 void
-widget_replace_surface(void *p, int name, SDL_Surface *su)
+AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 	if (wid->surfaces[name] != NULL) {
 		SDL_FreeSurface(wid->surfaces[name]);
 	}
 	wid->surfaces[name] = su;
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		if (wid->textures[name] != 0) {
 			glDeleteTextures(1, &wid->textures[name]);
 		}
 		wid->textures[name] = (su == NULL) ? 0 :
-		    view_surface_texture(su, &wid->texcoords[name*4]);
+		    AG_SurfaceTexture(su, &wid->texcoords[name*4]);
 	}
 #endif
 }
 
 void
-widget_update_surface(void *p, int name)
+AG_WidgetUpdateSurface(void *p, int name)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
-		view_update_texture(wid->surfaces[name],
-		    wid->textures[name]);
-	}
+	if (agView->opengl)
+		AG_UpdateTexture(wid->surfaces[name], wid->textures[name]);
 #endif
 }
 
 void
-widget_destroy(void *p)
+AG_WidgetDestroy(void *p)
 {
-	struct widget *wid = p;
-	struct widget_binding *bind, *nbind;
+	AG_Widget *wid = p;
+	AG_WidgetBinding *bind, *nbind;
 	u_int i;
 
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL)
 			SDL_FreeSurface(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
-		if (view->opengl &&
+		if (agView->opengl &&
 		    wid->textures[i] != 0)
 			glDeleteTextures(1, &wid->textures[i]);
 #endif
@@ -840,7 +838,7 @@ widget_destroy(void *p)
 	Free(wid->surfaces, M_WIDGET);
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		Free(wid->textures, M_WIDGET);
 		Free(wid->texcoords, M_WIDGET);
 	}
@@ -860,9 +858,9 @@ widget_destroy(void *p)
  * relative to the widget; clipping is done.
  */
 void
-widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
+AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 	SDL_Rect rd;
 
 	rd.x = wid->cx + x;
@@ -871,7 +869,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 	rd.h = srcsu->h <= wid->h ? srcsu->h : wid->h;		/* Clip */
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		GLuint texture;
 		GLfloat texcoord[4];
 		int alpha = (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY));
@@ -879,7 +877,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
 
-		texture = view_surface_texture(srcsu, texcoord);
+		texture = AG_SurfaceTexture(srcsu, texcoord);
 
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -922,7 +920,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_BlitSurface(srcsu, NULL, view->v, &rd);
+		SDL_BlitSurface(srcsu, NULL, agView->v, &rd);
 	}
 }
 
@@ -931,10 +929,10 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
  * at coordinates relative to the widget; clipping is done.
  */
 void
-widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
+AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 {
-	struct widget *wid = p;
-	struct widget *srcwid = srcp;
+	AG_Widget *wid = p;
+	AG_Widget *srcwid = srcp;
 	SDL_Surface *su = srcwid->surfaces[name];
 	SDL_Rect rd;
 
@@ -947,7 +945,7 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 	rd.h = su->h <= wid->h ? su->h : wid->h;		/* Clip */
 
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		GLfloat tmptexcoord[4];
 		GLuint texture = srcwid->textures[name];
 		GLfloat *texcoord;
@@ -1009,106 +1007,106 @@ widget_blit_from(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_BlitSurface(su, rs, view->v, &rd);
+		SDL_BlitSurface(su, rs, agView->v, &rd);
 	}
 }
 
 /* Evaluate to true if a widget is holding focus (inside its parent). */
 int
-widget_holds_focus(void *p)
+AG_WidgetHoldsFocus(void *p)
 {
-	return (WIDGET(p)->flags & WIDGET_FOCUSED);
+	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
 }
 
-/* Clear the WIDGET_FOCUSED bit from a widget and its descendents. */
+/* Clear the AG_WIDGET_FOCUSED bit from a widget and its descendents. */
 void
-widget_unset_focus(void *p)
+AG_WidgetUnfocus(void *p)
 {
-	struct widget *wid = p, *cwid;
+	AG_Widget *wid = p, *cwid;
 
-	if (wid->flags & WIDGET_FOCUSED) {
-		wid->flags &= ~(WIDGET_FOCUSED);
-		event_post(NULL, wid, "widget-lostfocus", NULL);
+	if (wid->flags & AG_WIDGET_FOCUSED) {
+		wid->flags &= ~(AG_WIDGET_FOCUSED);
+		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
 	}
 
-	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_unset_focus(cwid);
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetUnfocus(cwid);
 }
 
 /* Find the parent window of a widget. */
-struct window *
-widget_parent_window(void *p)
+AG_Window *
+AG_WidgetParentWindow(void *p)
 {
-	struct widget *wid = p;
-	struct widget *pwid = wid;
+	AG_Widget *wid = p;
+	AG_Widget *pwid = wid;
 
-	if (OBJECT_TYPE(wid, "window"))
-		return ((struct window *)wid);
+	if (AGOBJECT_TYPE(wid, "window"))
+		return ((AG_Window *)wid);
 
-	while ((pwid = OBJECT(pwid)->parent) != NULL) {
-		if (OBJECT_TYPE(pwid, "window"))
+	while ((pwid = AGOBJECT(pwid)->parent) != NULL) {
+		if (AGOBJECT_TYPE(pwid, "window"))
 			break;
 	}
-	return ((struct window *)pwid);
+	return ((AG_Window *)pwid);
 }
 
 /* Move the focus over a widget (and its parents). */
 void
-widget_focus(void *p)
+AG_WidgetFocus(void *p)
 {
-	struct widget *wid = p, *pwid = wid;
-	struct window *pwin;
+	AG_Widget *wid = p, *pwid = wid;
+	AG_Window *pwin;
 
-	if ((wid->flags & WIDGET_FOCUSABLE) == 0)
+	if ((wid->flags & AG_WIDGET_FOCUSABLE) == 0)
 		return;
 
 	/* Remove focus from other widgets inside this window. */
-	pwin = widget_parent_window(wid);
+	pwin = AG_WidgetParentWindow(wid);
 	if (pwin != NULL) {
-		if (pwin->flags & WINDOW_INHIBIT_FOCUS) {
+		if (pwin->flags & AG_WINDOW_INHIBIT_FOCUS) {
 			return;
 		}
-		widget_unset_focus(pwin);
+		AG_WidgetUnfocus(pwin);
 	} else {
-		dprintf("%s: no parent window\n", OBJECT(wid)->name);
+		dprintf("%s: no parent window\n", AGOBJECT(wid)->name);
 	}
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (OBJECT_TYPE(pwid, "window"))
+		if (AGOBJECT_TYPE(pwid, "window"))
 			break;
 #if 0
-		if ((pwid->flags & WIDGET_FOCUSABLE) == 0) {
+		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
 			dprintf("parent (%s) is not focusable\n",
-			    OBJECT(pwid)->name);
+			    AGOBJECT(pwid)->name);
 			break;
 		}
 #endif
-		pwid->flags |= WIDGET_FOCUSED;
-		event_post(OBJECT(pwid)->parent, pwid, "widget-gainfocus",
+		pwid->flags |= AG_WIDGET_FOCUSED;
+		AG_PostEvent(AGOBJECT(pwid)->parent, pwid, "widget-gainfocus",
 		    NULL);
-	} while ((pwid = OBJECT(pwid)->parent) != NULL);
+	} while ((pwid = AGOBJECT(pwid)->parent) != NULL);
 }
 
 /* Evaluate whether a given widget is at least partially visible. */
 /* TODO optimize on a per window basis */
 static __inline__ int
-widget_completely_occulted(struct widget *wid)
+widget_completely_occulted(AG_Widget *wid)
 {
-	struct window *owin;
-	struct window *wwin;
+	AG_Window *owin;
+	AG_Window *wwin;
 
-	if ((wwin = object_find_parent(wid, NULL, "window")) == NULL ||
+	if ((wwin = AG_ObjectFindParent(wid, NULL, "window")) == NULL ||
 	    (owin = TAILQ_NEXT(wwin, windows)) == NULL) {
 		return (0);
 	}
-	for (; owin != TAILQ_END(&view->windows);
+	for (; owin != TAILQ_END(&agView->windows);
 	     owin = TAILQ_NEXT(owin, windows)) {
 		if (owin->visible &&
-		    wid->cx > WIDGET(owin)->x &&
-		    wid->cy > WIDGET(owin)->y &&
-		    wid->cx+wid->w < WIDGET(owin)->x+WIDGET(owin)->w &&
-		    wid->cy+wid->h < WIDGET(owin)->y+WIDGET(owin)->h) {
+		    wid->cx > AGWIDGET(owin)->x &&
+		    wid->cy > AGWIDGET(owin)->y &&
+		    wid->cx+wid->w < AGWIDGET(owin)->x+AGWIDGET(owin)->w &&
+		    wid->cy+wid->h < AGWIDGET(owin)->y+AGWIDGET(owin)->h) {
 			return (1);
 		}
 	}
@@ -1120,10 +1118,10 @@ widget_completely_occulted(struct widget *wid)
  * The view must be locked.
  */
 void
-widget_draw(void *p)
+AG_WidgetDraw(void *p)
 {
-	struct widget *wid = p;
-	struct widget *cwid;
+	AG_Widget *wid = p;
+	AG_Widget *cwid;
 #ifdef HAVE_OPENGL
 	GLdouble plane0sv[4];
 	GLdouble plane1sv[4];
@@ -1139,20 +1137,20 @@ widget_draw(void *p)
 #endif
 #endif /* HAVE_OPENGL */
 
-	if (WIDGET_OPS(wid)->draw != NULL &&
+	if (AGWIDGET_OPS(wid)->draw != NULL &&
 	    !widget_completely_occulted(wid)) {
 		SDL_Rect clip_save;
 
-		if (wid->flags & WIDGET_CLIPPING) {
-			if (!view->opengl) {
+		if (wid->flags & AG_WIDGET_CLIPPING) {
+			if (!agView->opengl) {
 				SDL_Rect clip;
 
 				clip.x = wid->cx;
 				clip.y = wid->cy;
 				clip.w = wid->w;
 				clip.h = wid->h;
-				SDL_GetClipRect(view->v, &clip_save);
-				SDL_SetClipRect(view->v, &clip);
+				SDL_GetClipRect(agView->v, &clip_save);
+				SDL_SetClipRect(agView->v, &clip);
 			} else {
 #ifdef HAVE_OPENGL
 				GLdouble eq0[4] = { 1, 0, 0, -wid->cx };
@@ -1183,11 +1181,11 @@ widget_draw(void *p)
 			}
 		}
 
-		WIDGET_OPS(wid)->draw(wid);
+		AGWIDGET_OPS(wid)->draw(wid);
 		
-		if (wid->flags & WIDGET_CLIPPING) {
-			if (!view->opengl) {
-				SDL_SetClipRect(view->v, &clip_save);
+		if (wid->flags & AG_WIDGET_CLIPPING) {
+			if (!agView->opengl) {
+				SDL_SetClipRect(agView->v, &clip_save);
 			} else {
 #ifdef HAVE_OPENGL
 				glClipPlane(GL_CLIP_PLANE0, plane0sv);
@@ -1220,19 +1218,19 @@ widget_draw(void *p)
 		}
 	}
 
-	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_draw(cwid);
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetDraw(cwid);
 }
 
 /* Set the geometry of a widget and invoke its scale operation. */
 void
-widget_scale(void *p, int w, int h)
+AG_WidgetScale(void *p, int w, int h)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 	wid->w = w;
 	wid->h = h;
-	WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+	AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 }
 
 /*
@@ -1240,11 +1238,11 @@ widget_scale(void *p, int w, int h)
  * The display surface must be locked; clipping is done.
  */
 void
-widget_put_pixel(void *p, int wx, int wy, Uint32 color)
+AG_WidgetPutPixel(void *p, int wx, int wy, Uint32 color)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
-	VIEW_PUT_PIXEL2_CLIPPED(wid->cx+wx, wid->cy+wy, color);
+	AG_VIEW_PUT_PIXEL2_CLIPPED(wid->cx+wx, wid->cy+wy, color);
 }
 
 /*
@@ -1252,20 +1250,20 @@ widget_put_pixel(void *p, int wx, int wy, Uint32 color)
  * The display surface must be locked; clipping is done.
  */
 void
-widget_blend_pixel(void *p, int wx, int wy, Uint8 c[4],
-    enum view_blend_func func)
+AG_WidgetBlendPixel(void *p, int wx, int wy, Uint8 c[4],
+    enum ag_blend_func func)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
-	BLEND_RGBA2_CLIPPED(view->v, wid->cx+wx, wid->cy+wy, c[0], c[1],
+	AG_BLEND_RGBA2_CLIPPED(agView->v, wid->cx+wx, wid->cy+wy, c[0], c[1],
 	    c[2], c[3], func);
 }
 
 /* Evaluate to true if absolute view coords x,y are inside the widget area. */
 int
-widget_area(void *p, int x, int y)
+AG_WidgetArea(void *p, int x, int y)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 	return (x > wid->cx &&
 	        y > wid->cy &&
@@ -1275,9 +1273,9 @@ widget_area(void *p, int x, int y)
 
 /* Evaluate to true if widget coords x,y are inside the widget area. */
 int
-widget_relative_area(void *p, int x, int y)
+AG_WidgetRelativeArea(void *p, int x, int y)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 	return (x >= 0 &&
 	        y >= 0 &&
@@ -1287,86 +1285,86 @@ widget_relative_area(void *p, int x, int y)
 
 /*
  * Post a mousemotion event to widgets that either hold focus or have the
- * WIDGET_UNFOCUSED_MOTION flag set.
+ * AG_WIDGET_UNFOCUSED_MOTION flag set.
  */
 void
-widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
+AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
     int xrel, int yrel, int state)
 {
-	struct widget *cwid;
+	AG_Widget *cwid;
 
-	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
-	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
-		event_post(NULL, wid, "window-mousemotion",
+	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetHoldsFocus(wid)) ||
+	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
+		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
 		    xrel, yrel, state);
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_mousemotion(win, cwid, x, y, xrel, yrel, state);
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetMouseMotion(win, cwid, x, y, xrel, yrel, state);
 }
 
 /*
  * Post a mousebuttonup event to widgets that either hold focus or have the
- * WIDGET_UNFOCUSED_BUTTONUP flag set.
+ * AG_WIDGET_UNFOCUSED_BUTTONUP flag set.
  */
 void
-widget_mousebuttonup(struct window *win, struct widget *wid, int button,
+AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
     int x, int y)
 {
-	struct widget *cwid;
+	AG_Widget *cwid;
 
-	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
-	    (wid->flags & WIDGET_UNFOCUSED_BUTTONUP)) {
-		event_post(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
+	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetHoldsFocus(wid)) ||
+	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
+		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_mousebuttonup(win, cwid, button, x, y);
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		AG_WidgetMouseButtonUp(win, cwid, button, x, y);
 }
 
 /* Process a mousebuttondown event. */
 int
-widget_mousebuttondown(struct window *win, struct widget *wid, int button,
+AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
     int x, int y)
 {
-	struct widget *cwid;
+	AG_Widget *cwid;
 
 	/* Search for a better match. */
-	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
-		if (widget_mousebuttondown(win, cwid, button, x, y))
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+		if (AG_WidgetMouseButtonDown(win, cwid, button, x, y))
 			return (1);
 	}
-	return (widget_area(wid, x, y) &&
-	        event_post(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
+	return (AG_WidgetArea(wid, x, y) &&
+	        AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy));
 }
 
 /* Search for a focused widget inside a window. */
-struct widget *
-widget_find_focus(void *p)
+AG_Widget *
+AG_WidgetFindFocused(void *p)
 {
-	struct widget *wid = p;
-	struct widget *cwid, *fwid;
+	AG_Widget *wid = p;
+	AG_Widget *cwid, *fwid;
 
-	if (!OBJECT_TYPE(wid, "window") &&
-	    (wid->flags & WIDGET_FOCUSED) == 0)
+	if (!AGOBJECT_TYPE(wid, "window") &&
+	    (wid->flags & AG_WIDGET_FOCUSED) == 0)
 		return (NULL);
 
 	/* Search for a better match. */
-	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
-		if ((fwid = widget_find_focus(cwid)) != NULL)
+	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+		if ((fwid = AG_WidgetFindFocused(cwid)) != NULL)
 			return (fwid);
 	}
 	return (wid);
 }
 
 void
-widget_set_type(void *p, const char *name)
+AG_WidgetSetType(void *p, const char *name)
 {
-	struct widget *wid = p;
+	AG_Widget *wid = p;
 
 	strlcpy(wid->type, name, sizeof(wid->type));
-	strlcpy(OBJECT(wid)->name, name, sizeof(OBJECT(wid)->name));
+	strlcpy(AGOBJECT(wid)->name, name, sizeof(AGOBJECT(wid)->name));
 }
 
 /*
@@ -1374,22 +1372,22 @@ widget_set_type(void *p, const char *name)
  * The view must be locked.
  */
 void
-widget_update_coords(void *parent, int x, int y)
+AG_WidgetUpdateCoords(void *parent, int x, int y)
 {
-	struct widget *pwid = parent, *cwid;
+	AG_Widget *pwid = parent, *cwid;
 
 	pwid->cx = x;
 	pwid->cy = y;
 	pwid->cx2 = x + pwid->w;
 	pwid->cy2 = y + pwid->h;
 
-	OBJECT_FOREACH_CHILD(cwid, pwid, widget)
-		widget_update_coords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
+	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
+		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
 }
 
 /* Parse a generic size specification. */
-enum widget_size_spec
-widget_parse_sizespec(const char *spec_text, int *w)
+enum ag_widget_sizespec
+AG_WidgetParseSizeSpec(const char *spec_text, int *w)
 {
 	char spec[256];
 	char *p;
@@ -1402,29 +1400,29 @@ widget_parse_sizespec(const char *spec_text, int *w)
 	case '%':
 		*p = '\0';
 		*w = (int)strtol(spec, NULL, 10);
-		return (WIDGET_PERCENT);
+		return (AG_WIDGET_PERCENT);
 	case '>':
 		if (spec[0] != '<') {
-			return (WIDGET_BAD_SPEC);
+			return (AG_WIDGET_BAD_SPEC);
 		}
 		*p = '\0';
-		text_prescale(&spec[1], w, NULL);
-		return (WIDGET_STRINGLEN);
+		AG_TextPrescale(&spec[1], w, NULL);
+		return (AG_WIDGET_STRINGLEN);
 	case 'x':
 		{
 			const char *ep;
 
 			if ((ep = strchr(spec, 'p')) == NULL) {
-				return (WIDGET_BAD_SPEC);
+				return (AG_WIDGET_BAD_SPEC);
 			}
 			ep = '\0';
 			*w = (int)strtol(ep, NULL, 10);
-			return (WIDGET_PIXELS);
+			return (AG_WIDGET_PIXELS);
 		}
 	default:
-		text_prescale(spec, w, NULL);
+		AG_TextPrescale(spec, w, NULL);
 		break;
 	}
-	return (WIDGET_BAD_SPEC);
+	return (AG_WIDGET_BAD_SPEC);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.95 2005/05/31 01:31:42 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.96 2005/09/19 13:27:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -12,183 +12,179 @@
 
 #include "begin_code.h"
 
-#define WIDGET_TYPE_MAX		32
-#define WIDGET_BINDING_NAME_MAX	16
+#define AG_WIDGET_TYPE_MAX		32
+#define AG_WIDGET_BINDING_NAME_MAX	16
 
-struct widget_ops {
-	const struct object_ops	obops;
+typedef struct ag_widget_ops {
+	const AG_ObjectOps ops;
 	void (*draw)(void *);
 	void (*scale)(void *, int, int);
 	void (*scale_default)(void *);
 	void (*scale_minimum)(void *);
 	int (*spacing)(void *, void *);
+} AG_WidgetOps;
+
+enum ag_widget_binding_type {
+	AG_WIDGET_NONE,
+	AG_WIDGET_BOOL,
+	AG_WIDGET_UINT,
+	AG_WIDGET_INT,
+	AG_WIDGET_UINT8,
+	AG_WIDGET_SINT8,
+	AG_WIDGET_UINT16,
+	AG_WIDGET_SINT16,
+	AG_WIDGET_UINT32,
+	AG_WIDGET_SINT32,
+	AG_WIDGET_FLOAT,
+	AG_WIDGET_DOUBLE,
+	AG_WIDGET_STRING,
+	AG_WIDGET_POINTER,
+	AG_WIDGET_PROP
 };
 
-enum widget_binding_type {
-	WIDGET_NONE,
-	WIDGET_BOOL,
-	WIDGET_UINT,
-	WIDGET_INT,
-	WIDGET_UINT8,
-	WIDGET_SINT8,
-	WIDGET_UINT16,
-	WIDGET_SINT16,
-	WIDGET_UINT32,
-	WIDGET_SINT32,
-	WIDGET_FLOAT,
-	WIDGET_DOUBLE,
-	WIDGET_STRING,
-	WIDGET_POINTER,
-	WIDGET_PROP
+enum ag_widget_sizespec {
+	AG_WIDGET_BAD_SPEC,
+	AG_WIDGET_PIXELS,			/* Pixel count */
+	AG_WIDGET_PERCENT,			/* % of available space */
+	AG_WIDGET_STRINGLEN,		/* Width of given string */
+	AG_WIDGET_FILL			/* Fill remaining space */
 };
 
-enum widget_size_spec {
-	WIDGET_BAD_SPEC,
-	WIDGET_PIXELS,			/* Pixel count */
-	WIDGET_PERCENT,			/* % of available space */
-	WIDGET_STRINGLEN,		/* Width of given string */
-	WIDGET_FILL			/* Fill remaining space */
-};
-
-struct widget_binding {
-	char	name[WIDGET_BINDING_NAME_MAX];
-	int	type;
-	int	vtype;
-
+typedef struct ag_widget_binding {
+	char name[AG_WIDGET_BINDING_NAME_MAX];
+	int type;
+	int vtype;
 	pthread_mutex_t	*mutex;	
-	void		*p1, *p2;
-	size_t		 size;
+	void *p1, *p2;
+	size_t size;
+	SLIST_ENTRY(ag_widget_binding) bindings;
+} AG_WidgetBinding;
 
-	SLIST_ENTRY(widget_binding) bindings;
-};
+typedef struct ag_widget {
+	struct ag_object obj;
 
-struct widget {
-	struct object obj;
+	char type[AG_WIDGET_TYPE_MAX];
+	int flags;
+#define AG_WIDGET_FOCUSABLE		0x001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x002 /* Holds focus (optimization) */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x004 /* All mousemotion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x008 /* All mousebuttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x010 /* All mousebuttondown events */
+#define AG_WIDGET_CLIPPING		0x020 /* Automatic clipping */
+#define AG_WIDGET_WFILL			0x040 /* Expand to fill width */
+#define AG_WIDGET_HFILL			0x080 /* Expand to fill height */
+#define AG_WIDGET_EXCEDENT		0x100 /* Used internally for scaling */
 
-	char	 type[WIDGET_TYPE_MAX];
-	int	 flags;
-#define WIDGET_FOCUSABLE	    0x001 /* Can grab focus */
-#define WIDGET_FOCUSED		    0x002 /* Holds focus (optimization) */
-#define WIDGET_UNFOCUSED_MOTION	    0x004 /* Unfocused mousemotion events */
-#define WIDGET_UNFOCUSED_BUTTONUP   0x008 /* Unfocused mousebuttonup events */
-#define WIDGET_UNFOCUSED_BUTTONDOWN 0x010 /* Unfocused mousebuttondown events */
-#define WIDGET_CLIPPING		    0x020 /* Automatic clipping */
-#define WIDGET_WFILL		    0x040 /* Expand to fill available width */
-#define WIDGET_HFILL		    0x080 /* Expand to fill available height */
-#define WIDGET_EXCEDENT		    0x100 /* Used internally for scaling */
-
-	int	 cx, cy;		/* Coordinates in view (upper left) */
-	int	 cx2, cy2;		/* Coordinates in view (lower right) */
-	int	 x, y;			/* Coordinates in container */
-	int	 w, h;			/* Allocated geometry */
-
-	const struct style *style;	/* Style properties (inherited from
-					   parent by default) */
-
-	SDL_Surface	**surfaces;	/* Registered surfaces */
-	u_int		 nsurfaces;
+	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
+	int x, y;			/* Coordinates in container */
+	int w, h;			/* Allocated geometry */
+	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
+	SDL_Surface **surfaces;		/* Registered surfaces */
+	u_int nsurfaces;
 #ifdef HAVE_OPENGL
-	GLuint		*textures;	/* Cached OpenGL textures */
-	GLfloat		*texcoords;	/* Cached texture coordinates */
+	GLuint *textures;		/* Cached OpenGL textures */
+	GLfloat	*texcoords;		/* Cached texture coordinates */
 #endif
-	pthread_mutex_t			 bindings_lock;
-	SLIST_HEAD(, widget_binding)	 bindings;
-};
+	pthread_mutex_t bindings_lock;
+	SLIST_HEAD(, ag_widget_binding) bindings;	/* Variable bindings */
+} AG_Widget;
 
-#define WIDGET(wi)		((struct widget *)(wi))
-#define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT(ob)->ops)
-#define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
-#define WIDGET_SURFACE(wi, ind)	WIDGET(wi)->surfaces[ind]
-#define WIDGET_TEXTURE(wi, ind)	WIDGET(wi)->textures[ind]
-#define WIDGET_TEXCOORD(wi, ind) WIDGET(wi)->texcoords[(ind)*4]
+#define AGWIDGET(wi)			((AG_Widget *)(wi))
+#define AGWIDGET_OPS(ob)		((AG_WidgetOps *)AGOBJECT(ob)->ops)
+#define AGWIDGET_SCALE(wi, w, h)	AGWIDGET_OPS(wi)->scale((wi), (w), (h))
+#define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
+#define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
+#define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
+
+struct ag_window;
 
 __BEGIN_DECLS
-extern int kbd_delay;
-extern int kbd_repeat;
-extern int mouse_dblclick_delay;
-extern int mouse_spin_delay;
-extern int mouse_spin_ival;
+extern int agKbdDelay;
+extern int agKbdRepeat;
+extern int agMouseDblclickDelay;
+extern int agMouseSpinDelay;
+extern int agMouseSpinIval;
 
-void	 widget_init(void *, const char *, const void *, int);
-void	 widget_destroy(void *);
-void	 widget_draw(void *);
-void	 widget_scale(void *, int, int);
+void	 AG_WidgetInit(void *, const char *, const void *, int);
+void	 AG_WidgetDestroy(void *);
+void	 AG_WidgetDraw(void *);
+void	 AG_WidgetScale(void *, int, int);
 
-#define widget_focused(w) ((w)->flags & WIDGET_FOCUSED)
+#define AG_WidgetIsFocused(w) ((w)->flags & AG_WIDGET_FOCUSED)
 
-void		 widget_set_type(void *, const char *);
-void		 widget_focus(void *);
-void		 widget_unset_focus(void *);
-struct widget	*widget_find_focus(void *);
-__inline__ int	 widget_holds_focus(void *);
-__inline__ int	 widget_relative_area(void *, int, int);
-__inline__ int	 widget_area(void *, int, int);
-void		 widget_update_coords(void *, int, int);
-struct window	*widget_parent_window(void *);
+void		 AG_WidgetSetType(void *, const char *);
+void		 AG_WidgetFocus(void *);
+void		 AG_WidgetUnfocus(void *);
+AG_Widget	*AG_WidgetFindFocused(void *);
+__inline__ int	 AG_WidgetHoldsFocus(void *);
+__inline__ int	 AG_WidgetRelativeArea(void *, int, int);
+__inline__ int	 AG_WidgetArea(void *, int, int);
+void		 AG_WidgetUpdateCoords(void *, int, int);
+struct ag_window *AG_WidgetParentWindow(void *);
 
-int		 widget_map_surface(void *, SDL_Surface *);
-__inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);
-__inline__ void	 widget_update_surface(void *, int);
+int		 AG_WidgetMapSurface(void *, SDL_Surface *);
+__inline__ void	 AG_WidgetReplaceSurface(void *, int, SDL_Surface *);
+__inline__ void	 AG_WidgetUpdateSurface(void *, int);
 
-void	 widget_blit(void *, SDL_Surface *, int, int);
-void	 widget_blit_from(void *, void *, int, SDL_Rect *, int, int);
+void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
+void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 
-#define widget_unmap_surface(w, n) widget_replace_surface((w),(n),NULL)
-#define	widget_blit_surface(p,n,x,y) widget_blit_from((p),(p),(n),NULL,(x),(y))
+#define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)
+#define	AG_WidgetBlitSurface(p,n,x,y) \
+    AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 
-__inline__ void widget_put_pixel(void *, int, int, Uint32);
-__inline__ void widget_blend_pixel(void *, int, int, Uint8 [4],
-		                   enum view_blend_func);
+__inline__ void AG_WidgetPutPixel(void *, int, int, Uint32);
+__inline__ void AG_WidgetBlendPixel(void *, int, int, Uint8 [4],
+		                    enum ag_blend_func);
 
-void  widget_mousemotion(struct window *, struct widget *, int, int, int, int,
-	                 int);
-void  widget_mousebuttonup(struct window *, struct widget *, int, int, int);
-int   widget_mousebuttondown(struct window *, struct widget *, int, int, int);
+void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int,
+	                   int, int);
+void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
+int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
 
-struct widget_binding	*widget_bind(void *, const char *,
-			             enum widget_binding_type, ...);
-struct widget_binding	*widget_bind_protected(void *, const char *,
-			                       pthread_mutex_t *,
-					       enum widget_binding_type, ...);
-struct widget_binding	*widget_get_binding(void *, const char *, ...);
-__inline__ void		 widget_binding_lock(struct widget_binding *);
-__inline__ void		 widget_binding_unlock(struct widget_binding *);
-__inline__ void		 widget_binding_modified(struct widget_binding *);
-__inline__ int		 widget_copy_binding(void *, const char *, void *,
-			                     const char *);
+AG_WidgetBinding *AG_WidgetBind(void *, const char *,
+	                        enum ag_widget_binding_type, ...);
+AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, pthread_mutex_t *,
+			          enum ag_widget_binding_type, ...);
+AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
+__inline__ void	  AG_WidgetLockBinding(AG_WidgetBinding *);
+__inline__ void	  AG_WidgetUnlockBinding(AG_WidgetBinding *);
+__inline__ void	  AG_WidgetBindingChanged(AG_WidgetBinding *);
+__inline__ int	  AG_WidgetCopyBinding(void *, const char *, void *,
+		                       const char *);
 
-__inline__ u_int	 widget_get_uint(void *, const char *);
-__inline__ int		 widget_get_int(void *, const char *);
-#define			 widget_get_bool widget_get_int
-__inline__ Uint8	 widget_get_uint8(void *, const char *);
-__inline__ Sint8	 widget_get_sint8(void *, const char *);
-__inline__ Uint16	 widget_get_uint16(void *, const char *);
-__inline__ Sint16	 widget_get_sint16(void *, const char *);
-__inline__ Uint32	 widget_get_uint32(void *, const char *);
-__inline__ Sint32	 widget_get_sint32(void *, const char *);
-__inline__ float	 widget_get_float(void *, const char *);
-__inline__ double	 widget_get_double(void *, const char *);
+__inline__ u_int	 AG_WidgetUint(void *, const char *);
+__inline__ int		 AG_WidgetInt(void *, const char *);
+#define			 AG_WidgetBool AG_WidgetInt
+__inline__ Uint8	 AG_WidgetUint8(void *, const char *);
+__inline__ Sint8	 AG_WidgetSint8(void *, const char *);
+__inline__ Uint16	 AG_WidgetUint16(void *, const char *);
+__inline__ Sint16	 AG_WidgetSint16(void *, const char *);
+__inline__ Uint32	 AG_WidgetUint32(void *, const char *);
+__inline__ Sint32	 AG_WidgetSint32(void *, const char *);
+__inline__ float	 AG_WidgetFloat(void *, const char *);
+__inline__ double	 AG_WidgetDouble(void *, const char *);
 
-__inline__ void	  *widget_get_pointer(void *, const char *);
-__inline__ char	  *widget_get_string(void *, const char *);
-__inline__ size_t  widget_copy_string(void *, const char *, char *, size_t)
+__inline__ void	  *AG_WidgetPointer(void *, const char *);
+__inline__ char	  *AG_WidgetString(void *, const char *);
+__inline__ size_t  AG_WidgetCopyString(void *, const char *, char *, size_t)
 		       BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
-__inline__ void	 widget_set_uint(void *, const char *, u_int);
-__inline__ void	 widget_set_int(void *, const char *, int);
-#define		 widget_set_bool widget_set_int
-__inline__ void	 widget_set_uint8(void *, const char *, Uint8);
-__inline__ void	 widget_set_sint8(void *, const char *, Sint8);
-__inline__ void	 widget_set_uint16(void *, const char *, Uint16);
-__inline__ void	 widget_set_sint16(void *, const char *, Sint16);
-__inline__ void	 widget_set_uint32(void *, const char *, Uint32);
-__inline__ void	 widget_set_sint32(void *, const char *, Sint32);
-__inline__ void	 widget_set_float(void *, const char *, float);
-__inline__ void	 widget_set_double(void *, const char *, double);
-__inline__ void	 widget_set_string(void *, const char *, const char *);
-__inline__ void	 widget_set_pointer(void *, const char *, void *);
+__inline__ void	 AG_WidgetSetUint(void *, const char *, u_int);
+__inline__ void	 AG_WidgetSetInt(void *, const char *, int);
+#define		 AG_WidgetSetBool AG_WidgetSetInt
+__inline__ void	 AG_WidgetSetUint8(void *, const char *, Uint8);
+__inline__ void	 AG_WidgetSetSint8(void *, const char *, Sint8);
+__inline__ void	 AG_WidgetSetUint16(void *, const char *, Uint16);
+__inline__ void	 AG_WidgetSetSint16(void *, const char *, Sint16);
+__inline__ void	 AG_WidgetSetUint32(void *, const char *, Uint32);
+__inline__ void	 AG_WidgetSetSint32(void *, const char *, Sint32);
+__inline__ void	 AG_WidgetSetFloat(void *, const char *, float);
+__inline__ void	 AG_WidgetSetDouble(void *, const char *, double);
+__inline__ void	 AG_WidgetSetString(void *, const char *, const char *);
+__inline__ void	 AG_WidgetSetPointer(void *, const char *, void *);
 
-enum widget_size_spec widget_parse_sizespec(const char *, int *);
+enum ag_widget_sizespec AG_WidgetParseSizeSpec(const char *, int *);
 __END_DECLS
 
 #include "close_code.h"

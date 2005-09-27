@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.6 2005/08/23 04:38:58 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.7 2005/09/19 06:54:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -34,46 +34,46 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static struct widget_ops hpane_ops = {
+static AG_WidgetOps hpane_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		box_destroy,
+		AG_BoxDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	hpane_draw,
-	hpane_scale
+	AG_HPaneDraw,
+	AG_HPaneScale
 };
 
-struct hpane *
-hpane_new(void *parent, int flags)
+AG_HPane *
+AG_HPaneNew(void *parent, int flags)
 {
-	struct hpane *pa;
+	AG_HPane *pa;
 
-	pa = Malloc(sizeof(struct hpane), M_OBJECT);
-	hpane_init(pa, flags);
-	object_attach(parent, pa);
+	pa = Malloc(sizeof(AG_HPane), M_OBJECT);
+	AG_HPaneInit(pa, flags);
+	AG_ObjectAttach(parent, pa);
 	return (pa);
 }
 
-struct hpane_div *
-hpane_add_div(struct hpane *pa, enum box_type b1type, int b1flags,
-    enum box_type b2type, int b2flags)
+AG_HPaneDiv *
+AG_HPaneAddDiv(AG_HPane *pa, enum ag_box_type b1type, int b1flags,
+    enum ag_box_type b2type, int b2flags)
 {
-	struct hpane_div *div;
+	AG_HPaneDiv *div;
 
-	div = Malloc(sizeof(struct hpane_div), M_WIDGET);
+	div = Malloc(sizeof(AG_HPaneDiv), M_WIDGET);
 	div->moving = 0;
 	div->x = 0;
-	div->box1 = box_new(pa, b1type, b1flags);
-	div->box2 = box_new(pa, b2type, b2flags);
+	div->box1 = AG_BoxNew(pa, b1type, b1flags);
+	div->box2 = AG_BoxNew(pa, b2type, b2flags);
 
-	box_set_padding(div->box1, 0);
-	box_set_padding(div->box2, 0);
-	box_set_spacing(div->box1, 0);
-	box_set_spacing(div->box2, 0);
+	AG_BoxSetPadding(div->box1, 0);
+	AG_BoxSetPadding(div->box2, 0);
+	AG_BoxSetSpacing(div->box1, 0);
+	AG_BoxSetSpacing(div->box2, 0);
 
 	TAILQ_INSERT_TAIL(&pa->divs, div, divs);
 	return (div);
@@ -82,16 +82,16 @@ hpane_add_div(struct hpane *pa, enum box_type b1type, int b1flags,
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
-	struct hpane *pa = argv[0].p;
+	AG_HPane *pa = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
-	struct hpane_div *div;
+	AG_HPaneDiv *div;
 	
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (x > div->x-4 && x < div->x+4) {
 			div->moving = 1;
-			WIDGET(pa)->flags |= WIDGET_UNFOCUSED_MOTION;
+			AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
 		} else {
 			div->moving = 0;
 		}
@@ -101,117 +101,117 @@ mousebuttondown(int argc, union evarg *argv)
 static void
 mousemotion(int argc, union evarg *argv)
 {
-	struct hpane *pa = argv[0].p;
-	struct window *pwin;
-	struct hpane_div *div;
+	AG_HPane *pa = argv[0].p;
+	AG_Window *pwin;
+	AG_HPaneDiv *div;
 	int rx = argv[3].i;
 	int ry = argv[4].i;
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
-			struct widget *w1 = WIDGET(div->box1);
-			struct widget *w2 = WIDGET(div->box2);
+			AG_Widget *w1 = AGWIDGET(div->box1);
+			AG_Widget *w2 = AGWIDGET(div->box2);
 
 			div->x += rx;
 			if (div->x < 8) {
 				div->x = 8;
 				break;
-			} else if (div->x > WIDGET(pa)->w-8) {
-				div->x = WIDGET(pa)->w-8;
+			} else if (div->x > AGWIDGET(pa)->w-8) {
+				div->x = AGWIDGET(pa)->w-8;
 				break;
 			}
 
 			w1->w += rx;
-			WIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
+			AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
 	
 			w2->x += rx;
 			w2->w -= rx;
-			WIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
+			AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
 
-			if ((pwin = widget_parent_window(pa)) != NULL) {
-				widget_update_coords(pwin, WIDGET(pwin)->x,
-				    WIDGET(pwin)->y);
+			if ((pwin = AG_WidgetParentWindow(pa)) != NULL) {
+				AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x,
+				    AGWIDGET(pwin)->y);
 			}
 			break;
 		}
 	}
 	TAILQ_FOREACH(div, &pa->divs, divs)
-		div->x = WIDGET(div->box2)->x - 5;
+		div->x = AGWIDGET(div->box2)->x - 5;
 }
 
 static void
 mousebuttonup(int argc, union evarg *argv)
 {
-	struct hpane *pa = argv[0].p;
-	struct hpane_div *div;
+	AG_HPane *pa = argv[0].p;
+	AG_HPaneDiv *div;
 
 	TAILQ_FOREACH(div, &pa->divs, divs)
 		div->moving = 0;
 	
-	WIDGET(pa)->flags &= ~WIDGET_UNFOCUSED_MOTION;
+	AGWIDGET(pa)->flags &= ~AG_WIDGET_UNFOCUSED_MOTION;
 }
 
 void
-hpane_init(struct hpane *pa, int flags)
+AG_HPaneInit(AG_HPane *pa, int flags)
 {
 	int boxflags = 0;
 
-	if (flags & HPANE_WFILL) boxflags |= BOX_WFILL;
-	if (flags & HPANE_HFILL) boxflags |= BOX_HFILL;
+	if (flags & AG_HPANE_WFILL) boxflags |= AG_BOX_WFILL;
+	if (flags & AG_HPANE_HFILL) boxflags |= AG_BOX_HFILL;
 
-	box_init(&pa->box, BOX_HORIZ, boxflags);
-	box_set_padding(&pa->box, 0);
-	box_set_spacing(&pa->box, 0);
-	WIDGET(pa)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
-	object_set_ops(pa, &hpane_ops);
+	AG_BoxInit(&pa->box, AG_BOX_HORIZ, boxflags);
+	AG_BoxSetPadding(&pa->box, 0);
+	AG_BoxSetSpacing(&pa->box, 0);
+	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	AG_ObjectSetOps(pa, &hpane_ops);
 	TAILQ_INIT(&pa->divs);
 
-	event_new(pa, "window-mousebuttondown", mousebuttondown, NULL);
-	event_new(pa, "window-mousebuttonup", mousebuttonup, NULL);
-	event_new(pa, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(pa, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(pa, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(pa, "window-mousemotion", mousemotion, NULL);
 }
 
 void
-hpane_draw(void *p)
+AG_HPaneDraw(void *p)
 {
-	struct hpane *pa = p;
-	struct widget *wid;
-	struct hpane_div *div;
+	AG_HPane *pa = p;
+	AG_Widget *wid;
+	AG_HPaneDiv *div;
 	Uint32 c;
-	int y = WIDGET(pa)->h >> 1;
+	int y = AGWIDGET(pa)->h >> 1;
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		primitives.box(pa, div->x-3, 0, 7, WIDGET(pa)->h,
-		    div->moving ? -1 : 1, COLOR(PANE_COLOR));
-		widget_put_pixel(pa, div->x, y, COLOR(PANE_CIRCLE_COLOR));
-		widget_put_pixel(pa, div->x, y - 5, COLOR(PANE_CIRCLE_COLOR));
-		widget_put_pixel(pa, div->x, y + 5, COLOR(PANE_CIRCLE_COLOR));
+		agPrim.box(pa, div->x-3, 0, 7, AGWIDGET(pa)->h,
+		    div->moving ? -1 : 1, AG_COLOR(PANE_COLOR));
+		AG_WidgetPutPixel(pa, div->x, y, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, div->x, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, div->x, y+5, AG_COLOR(PANE_CIRCLE_COLOR));
 	}
 }
 
 void
-hpane_scale(void *p, int w, int h)
+AG_HPaneScale(void *p, int w, int h)
 {
-	struct hpane *pa = p;
-	struct hpane_div *div;
-	struct widget *wid;
+	AG_HPane *pa = p;
+	AG_HPaneDiv *div;
+	AG_Widget *wid;
 
-	OBJECT_FOREACH_CHILD(wid, pa, widget)
-		WIDGET_OPS(wid)->scale(wid, w, h);
+	AGOBJECT_FOREACH_CHILD(wid, pa, ag_widget)
+		AGWIDGET_OPS(wid)->scale(wid, w, h);
 
-	box_scale(pa, w, h);
+	AG_BoxScale(pa, w, h);
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		WIDGET(div->box1)->w -= 5;
-		WIDGET(div->box2)->x += 5;
-		WIDGET(div->box2)->w -= 5;
-		WIDGET_OPS(div->box1)->scale(div->box1,
-		    WIDGET(div->box1)->w,
-		    WIDGET(div->box1)->h);
-		WIDGET_OPS(div->box2)->scale(div->box2,
-		    WIDGET(div->box2)->w,
-		    WIDGET(div->box2)->h);
+		AGWIDGET(div->box1)->w -= 5;
+		AGWIDGET(div->box2)->x += 5;
+		AGWIDGET(div->box2)->w -= 5;
+		AGWIDGET_OPS(div->box1)->scale(div->box1,
+		    AGWIDGET(div->box1)->w,
+		    AGWIDGET(div->box1)->h);
+		AGWIDGET_OPS(div->box2)->scale(div->box2,
+		    AGWIDGET(div->box2)->w,
+		    AGWIDGET(div->box2)->h);
 
-		div->x = WIDGET(div->box2)->x - 5;
+		div->x = AGWIDGET(div->box2)->x - 5;
 	}
 }

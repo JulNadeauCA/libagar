@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.101 2005/06/10 05:42:47 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.102 2005/09/20 06:12:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,17 +50,17 @@
 #include <stdarg.h>
 #include <errno.h>
 
-const struct widget_ops textbox_ops = {
+const AG_WidgetOps textbox_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		widget_destroy,
+		AG_WidgetDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	textbox_draw,
-	textbox_scale
+	AG_TextboxDraw,
+	AG_TextboxScale
 };
 
 static void mousebuttondown(int, union evarg *);
@@ -68,19 +68,19 @@ static void mousemotion(int, union evarg *);
 static void keydown(int, union evarg *);
 static void keyup(int, union evarg *);
 
-struct textbox *
-textbox_new(void *parent, const char *label)
+AG_Textbox *
+AG_TextboxNew(void *parent, const char *label)
 {
-	struct textbox *textbox;
+	AG_Textbox *textbox;
 
-	textbox = Malloc(sizeof(struct textbox), M_OBJECT);
-	textbox_init(textbox, label);
-	object_attach(parent, textbox);
+	textbox = Malloc(sizeof(AG_Textbox), M_OBJECT);
+	AG_TextboxInit(textbox, label);
+	AG_ObjectAttach(parent, textbox);
 	return (textbox);
 }
 
 static int
-process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
+process_key(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
 	int i;
 	int rv = 0;
@@ -89,7 +89,7 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		return (0);
 
 	for (i = 0;; i++) {
-		const struct keycode *kcode = &keycodes[i];
+		const struct ag_keycode *kcode = &agKeyCodes[i];
 		
 		if (kcode->key != SDLK_LAST &&
 		   (kcode->key != keysym || kcode->func == NULL))
@@ -100,10 +100,10 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		  	if (kcode->clr_compo) {
 				tb->compose = 0;
 			}
-			event_post(NULL, tb, "textbox-prechg", NULL);
+			AG_PostEvent(NULL, tb, "textbox-prechg", NULL);
 			rv = kcode->func(tb, keysym, keymod, kcode->arg,
 			    unicode);
-			event_post(NULL, tb, "textbox-postchg", NULL);
+			AG_PostEvent(NULL, tb, "textbox-postchg", NULL);
 			break;
 		}
 	}
@@ -113,35 +113,35 @@ process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 static Uint32
 repeat_expire(void *obj, Uint32 ival, void *arg)
 {
-	struct textbox *tb = obj;
+	AG_Textbox *tb = obj;
 
 	if (process_key(tb, tb->repeat.key, tb->repeat.mod,
 	    tb->repeat.unicode) == 0) {
 		return (0);
 	}
-	return (kbd_repeat);
+	return (agKbdRepeat);
 }
 
 static Uint32
 delay_expire(void *obj, Uint32 ival, void *arg)
 {
-	struct textbox *tb = obj;
+	AG_Textbox *tb = obj;
 
-	timeout_replace(tb, &tb->repeat_to, kbd_repeat);
-	timeout_del(tb, &tb->cblink_to);
-	tb->flags |= TEXTBOX_BLINK_ON;
+	AG_ReplaceTimeout(tb, &tb->repeat_to, agKbdRepeat);
+	AG_DelTimeout(tb, &tb->cblink_to);
+	tb->flags |= AG_TEXTBOX_BLINK_ON;
 	return (0);
 }
 
 static Uint32
 blink_expire(void *obj, Uint32 ival, void *arg)
 {
-	struct textbox *tb = obj;
+	AG_Textbox *tb = obj;
 
-	if (tb->flags & TEXTBOX_BLINK_ON) {
-		tb->flags &= ~(TEXTBOX_BLINK_ON);
+	if (tb->flags & AG_TEXTBOX_BLINK_ON) {
+		tb->flags &= ~(AG_TEXTBOX_BLINK_ON);
 	} else {
-		tb->flags |= TEXTBOX_BLINK_ON;
+		tb->flags |= AG_TEXTBOX_BLINK_ON;
 	}
 	return (ival);
 }
@@ -149,37 +149,37 @@ blink_expire(void *obj, Uint32 ival, void *arg)
 static void
 gained_focus(int argc, union evarg *argv)
 {
-	struct textbox *tb = argv[0].p;
+	AG_Textbox *tb = argv[0].p;
 
-	timeout_del(tb, &tb->delay_to);
-	timeout_del(tb, &tb->repeat_to);
-	timeout_replace(tb, &tb->cblink_to, text_blink_rate);
+	AG_DelTimeout(tb, &tb->delay_to);
+	AG_DelTimeout(tb, &tb->repeat_to);
+	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
 }
 
 static void
 lost_focus(int argc, union evarg *argv)
 {
-	struct textbox *tb = argv[0].p;
+	AG_Textbox *tb = argv[0].p;
 
-	lock_timeout(tb);
-	timeout_del(tb, &tb->delay_to);
-	timeout_del(tb, &tb->repeat_to);
-	timeout_del(tb, &tb->cblink_to);
-	unlock_timeout(tb);
+	AG_LockTimeouts(tb);
+	AG_DelTimeout(tb, &tb->delay_to);
+	AG_DelTimeout(tb, &tb->repeat_to);
+	AG_DelTimeout(tb, &tb->cblink_to);
+	AG_UnlockTimeouts(tb);
 }
 
 void
-textbox_init(struct textbox *tbox, const char *label)
+AG_TextboxInit(AG_Textbox *tbox, const char *label)
 {
-	widget_init(tbox, "textbox", &textbox_ops,
-	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(tbox, "string", WIDGET_STRING, tbox->string,
+	AG_WidgetInit(tbox, "textbox", &textbox_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 
 	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
-	tbox->flags = TEXTBOX_WRITEABLE|TEXTBOX_BLINK_ON;
+	tbox->flags = AG_TEXTBOX_WRITEABLE|AG_TEXTBOX_BLINK_ON;
 	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
 	tbox->pos = 0;
@@ -190,37 +190,37 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->compose = 0;
 
 	if (label != NULL) {
-		tbox->label_su = text_render(NULL, -1, COLOR(TEXTBOX_TXT_COLOR),
-		    (char *)label);
-		tbox->label_id = widget_map_surface(tbox, tbox->label_su);
+		tbox->label_su = AG_TextRender(NULL, -1,
+		    AG_COLOR(TEXTBOX_TXT_COLOR), (char *)label);
+		tbox->label_id = AG_WidgetMapSurface(tbox, tbox->label_su);
 	
 		tbox->prew += tbox->label_su->w;
-		tbox->preh += MAX(tbox->label_su->h, text_font_height);
+		tbox->preh += MAX(tbox->label_su->h, agTextFontHeight);
 	} else {
 		tbox->label_su = NULL;
 		tbox->label_id = -1;
-		tbox->preh += text_font_height;
+		tbox->preh += agTextFontHeight;
 	}
 	
-	timeout_set(&tbox->repeat_to, repeat_expire, NULL, 0);
-	timeout_set(&tbox->delay_to, delay_expire, NULL, 0);
-	timeout_set(&tbox->cblink_to, blink_expire, NULL, 0);
+	AG_SetTimeout(&tbox->repeat_to, repeat_expire, NULL, 0);
+	AG_SetTimeout(&tbox->delay_to, delay_expire, NULL, 0);
+	AG_SetTimeout(&tbox->cblink_to, blink_expire, NULL, 0);
 
-	event_new(tbox, "window-keydown", keydown, NULL);
-	event_new(tbox, "window-keyup", keyup, NULL);
-	event_new(tbox, "window-mousebuttondown", mousebuttondown, NULL);
-	event_new(tbox, "window-mousemotion", mousemotion, NULL);
-	event_new(tbox, "widget-gainfocus", gained_focus, NULL);
-	event_new(tbox, "widget-lostfocus", lost_focus, NULL);
-	event_new(tbox, "widget-hidden", lost_focus, NULL);
+	AG_SetEvent(tbox, "window-keydown", keydown, NULL);
+	AG_SetEvent(tbox, "window-keyup", keyup, NULL);
+	AG_SetEvent(tbox, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(tbox, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(tbox, "widget-gainfocus", gained_focus, NULL);
+	AG_SetEvent(tbox, "widget-lostfocus", lost_focus, NULL);
+	AG_SetEvent(tbox, "widget-hidden", lost_focus, NULL);
 }
 
 void
-textbox_draw(void *p)
+AG_TextboxDraw(void *p)
 {
-	struct textbox *tbox = p;
-	struct widget_binding *stringb;
-	struct text_font *font;
+	AG_Textbox *tbox = p;
+	AG_WidgetBinding *stringb;
+	AG_Font *font;
 	int i, x, y;
 	size_t len;
 	char *s;
@@ -229,27 +229,27 @@ textbox_draw(void *p)
 #endif
 
 	if (tbox->label_id >= 0) {
-		if (WIDGET(tbox)->w < tbox->label_su->w + (tbox->xpadding<<1) ||
-		    WIDGET(tbox)->h < tbox->label_su->h + (tbox->ypadding<<1)) 
+		if (AGWIDGET(tbox)->w < tbox->label_su->w+(tbox->xpadding<<1) ||
+		    AGWIDGET(tbox)->h < tbox->label_su->h+(tbox->ypadding<<1)) 
 			return;
 
-		widget_blit_surface(tbox, tbox->label_id,
-		    0, WIDGET(tbox)->h/2 - tbox->label_su->h/2);
+		AG_WidgetBlitSurface(tbox, tbox->label_id,
+		    0, AGWIDGET(tbox)->h/2 - tbox->label_su->h/2);
 	} else {
-		if (WIDGET(tbox)->w < (tbox->xpadding<<1) ||
-		    WIDGET(tbox)->h < (tbox->ypadding<<1)) 
+		if (AGWIDGET(tbox)->w < (tbox->xpadding<<1) ||
+		    AGWIDGET(tbox)->h < (tbox->ypadding<<1)) 
 			return;
 	}
 
-	font = text_fetch_font(
-	    prop_get_string(config, "font-engine.default-font"),
-	    prop_get_int(config, "font-engine.default-size"),
+	font = AG_FetchFont(
+	    AG_String(agConfig, "font-engine.default-font"),
+	    AG_Int(agConfig, "font-engine.default-size"),
 	    0);
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 #ifdef UTF8
-	ucs = unicode_import(UNICODE_FROM_UTF8, s);
-	len = ucs4_len(ucs);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s);
+	len = AG_UCS4Len(ucs);
 #else
 	len = strlen(s);
 #endif
@@ -257,23 +257,23 @@ textbox_draw(void *p)
 	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
 
-	primitives.box(tbox,
+	agPrim.box(tbox,
 	    x,
 	    0,
-	    WIDGET(tbox)->w - x - 1,
-	    WIDGET(tbox)->h,
-	    (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? -1 : 1,
-	    (tbox->flags & TEXTBOX_WRITEABLE) ? COLOR(TEXTBOX_RW_COLOR) :
-	                                        COLOR(TEXTBOX_RO_COLOR));
+	    AGWIDGET(tbox)->w - x - 1,
+	    AGWIDGET(tbox)->h,
+	    (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) ? -1 : 1,
+	    (tbox->flags & AG_TEXTBOX_WRITEABLE) ? AG_COLOR(TEXTBOX_RW_COLOR) :
+	                                        AG_COLOR(TEXTBOX_RO_COLOR));
 
 	x += tbox->xpadding;
-	if (WIDGET(tbox)->flags & WIDGET_FOCUSED) {
+	if (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) {
 		x++;
 		y++;
 	}
 
 #ifdef HAVE_OPENGL
-	if (view->opengl)  {
+	if (agView->opengl)  {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
@@ -282,7 +282,7 @@ textbox_draw(void *p)
 #endif
 
 	for (i = 0; i <= len; i++) {
-		struct text_glyph *gl;
+		AG_Glyph *gl;
 		int invert = 0;
 #ifdef UTF8
 		Uint32 c = ucs[i];
@@ -290,37 +290,37 @@ textbox_draw(void *p)
 		char c = s[i];
 #endif
 
-		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
-		    tbox->flags & TEXTBOX_BLINK_ON) {
+		if ((AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) &&
+		    tbox->flags & AG_TEXTBOX_BLINK_ON) {
 			if (i == tbox->pos) {
-				primitives.vline(tbox,
+				agPrim.vline(tbox,
 				    x,
 				    y + 1,
-				    y + text_font_height - 2,
-				    COLOR(TEXTBOX_CURSOR_COLOR));
+				    y + agTextFontHeight - 2,
+				    AG_COLOR(TEXTBOX_CURSOR_COLOR));
 			}
 		}
 		if (i == len)
 			break;
 
 		if (c == '\n') {
-			y += text_font_line_skip;
+			y += agTextFontLineSkip;
 			continue;
 		} else if (c == '\t') {
-			x += text_tab_width;
+			x += agTextTabWidth;
 			continue;
 		}
 
-		c = (tbox->flags & TEXTBOX_PASSWORD) ? '*' : c;
+		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
 
-		if (!view->opengl) {
+		if (!agView->opengl) {
 			FT_Bitmap *ftbmp;
-			struct ttf_font *ttf = font->p;
-			struct ttf_glyph *glyph;
+			AG_TTFFont *ttf = font->p;
+			AG_TTFGlyph *glyph;
 			int xglyph, yglyph;
 			Uint8 *src;
 
-			if (ttf_find_glyph(ttf, c,
+			if (AG_TTFFindGlyph(ttf, c,
 			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 				continue;
 			}
@@ -332,7 +332,7 @@ textbox_draw(void *p)
 				x -= glyph->minx;
 			}
 			if ((x + glyph->minx + ftbmp->width + glyph->advance)
-			    >= WIDGET(tbox)->w)
+			    >= AGWIDGET(tbox)->w)
 				continue;
 
 			for (yglyph = 0; yglyph < ftbmp->rows; yglyph++) {
@@ -346,10 +346,10 @@ textbox_draw(void *p)
 					   (!invert && !src[xglyph])) {
 						continue;
 					}
-					widget_put_pixel(tbox,
+					AG_WidgetPutPixel(tbox,
 					    x + glyph->minx + xglyph,
 					    y + glyph->yoffset + yglyph,
-					    COLOR(TEXTBOX_TXT_COLOR));
+					    AG_COLOR(TEXTBOX_TXT_COLOR));
 				}
 				src += ftbmp->pitch;
 			}
@@ -358,11 +358,11 @@ textbox_draw(void *p)
 #ifdef HAVE_OPENGL
 			int dx, dy;
 
-			dx = WIDGET(tbox)->cx + x;
-			dy = WIDGET(tbox)->cy + y;
+			dx = AGWIDGET(tbox)->cx + x;
+			dy = AGWIDGET(tbox)->cy + y;
 
-			gl = text_render_glyph(NULL, -1,
-			    COLOR(TEXTBOX_TXT_COLOR), c);
+			gl = AG_TextRenderGlyph(NULL, -1,
+			    AG_COLOR(TEXTBOX_TXT_COLOR), c);
 
 			glBindTexture(GL_TEXTURE_2D, gl->texture);
 			glBegin(GL_TRIANGLE_STRIP);
@@ -381,45 +381,45 @@ textbox_draw(void *p)
 			x += gl->su->w;
 #endif /* HAVE_OPENGL */
 		}
-		if (x >= WIDGET(tbox)->w - 1)
+		if (x >= AGWIDGET(tbox)->w - 1)
 			break;
 	}
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 
 #ifdef HAVE_OPENGL
-	if (view->opengl)
+	if (agView->opengl)
 		glDisable(GL_BLEND);
 #endif
 }
 
 void
-textbox_prescale(struct textbox *tbox, const char *text)
+AG_TextboxPrescale(AG_Textbox *tbox, const char *text)
 {
-	text_prescale(text, &tbox->prew, NULL);
+	AG_TextPrescale(text, &tbox->prew, NULL);
 	tbox->prew += (tbox->label_id >= 0) ? tbox->label_su->w : 0;
 	tbox->prew += tbox->xpadding*2;
 }
 
 void
-textbox_scale(void *p, int rw, int rh)
+AG_TextboxScale(void *p, int rw, int rh)
 {
-	struct textbox *tbox = p;
+	AG_Textbox *tbox = p;
 
 	if (rw == -1 && rh == -1) {
-		WIDGET(tbox)->w = tbox->prew;
-		WIDGET(tbox)->h = tbox->preh;
+		AGWIDGET(tbox)->w = tbox->prew;
+		AGWIDGET(tbox)->h = tbox->preh;
 	}
 }
 
 static void
 keydown(int argc, union evarg *argv)
 {
-	struct textbox *tbox = argv[0].p;
+	AG_Textbox *tbox = argv[0].p;
 	SDLKey keysym = (SDLKey)argv[1].i;
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
 
-	if ((tbox->flags & TEXTBOX_WRITEABLE) == 0)
+	if ((tbox->flags & AG_TEXTBOX_WRITEABLE) == 0)
 		return;
 
 	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
@@ -429,47 +429,47 @@ keydown(int argc, union evarg *argv)
 	tbox->repeat.key = keysym;
 	tbox->repeat.mod = keymod;
 	tbox->repeat.unicode = unicode;
-	tbox->flags |= TEXTBOX_BLINK_ON;
+	tbox->flags |= AG_TEXTBOX_BLINK_ON;
 
-	lock_timeout(tbox);
-	timeout_del(tbox, &tbox->repeat_to);
+	AG_LockTimeouts(tbox);
+	AG_DelTimeout(tbox, &tbox->repeat_to);
 	if (process_key(tbox, keysym, keymod, unicode) == 1) {
-		timeout_replace(tbox, &tbox->delay_to, kbd_delay);
+		AG_ReplaceTimeout(tbox, &tbox->delay_to, agKbdDelay);
 	} else {
-		timeout_del(tbox, &tbox->delay_to);
+		AG_DelTimeout(tbox, &tbox->delay_to);
 	}
-	unlock_timeout(tbox);
+	AG_UnlockTimeouts(tbox);
 }
 
 static void
 keyup(int argc, union evarg *argv)
 {
-	struct textbox *tb = argv[0].p;
+	AG_Textbox *tb = argv[0].p;
 	SDLKey keysym = (SDLKey)argv[1].i;
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
 
-	lock_timeout(tb);
-	timeout_del(tb, &tb->repeat_to);
-	timeout_del(tb, &tb->delay_to);
-	timeout_replace(tb, &tb->cblink_to, text_blink_rate);
-	unlock_timeout(tb);
+	AG_LockTimeouts(tb);
+	AG_DelTimeout(tb, &tb->repeat_to);
+	AG_DelTimeout(tb, &tb->delay_to);
+	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
+	AG_UnlockTimeouts(tb);
 	
 	if (keysym == SDLK_RETURN) {
-		if (tb->flags & TEXTBOX_ABANDON_FOCUS) {
-			widget_unset_focus(tb);
+		if (tb->flags & AG_TEXTBOX_ABANDON_FOCUS) {
+			AG_WidgetUnfocus(tb);
 		}
-		event_post(NULL, tb, "textbox-return", NULL);
+		AG_PostEvent(NULL, tb, "textbox-return", NULL);
 		return;
 	}
 }
 
 /* Map mouse coordinates to a position within the string. */
 static int
-cursor_position(struct textbox *tbox, int mx, int my, int *pos)
+cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 {
-	struct widget_binding *stringb;
-	struct text_font *font;
+	AG_WidgetBinding *stringb;
+	AG_Font *font;
 	int tstart = 0;
 	int i, x, y;
 	size_t len;
@@ -479,31 +479,31 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 	if (mx <= x) {
 		return (-1);
 	}
-	x += tbox->xpadding + (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? 1 : 0;
+	x += tbox->xpadding + (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) ? 1:0;
 	y = tbox->ypadding;
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
-	font = text_fetch_font(
-	    prop_get_string(config, "font-engine.default-font"),
-	    prop_get_int(config, "font-engine.default-size"), 0);
+	font = AG_FetchFont(
+	    AG_String(agConfig, "font-engine.default-font"),
+	    AG_Int(agConfig, "font-engine.default-size"), 0);
 
 	for (i = tstart; i < len; i++) {
 		if (s[i] == '\n') {
-			y += text_font_line_skip;
+			y += agTextFontLineSkip;
 			continue;
 		} else if (s[i] == '\t') {
-			x += text_tab_width;
+			x += agTextTabWidth;
 			continue;
 		}
 
 		{
 			Uint32 ch = (Uint32)s[i];
-			struct ttf_font *ttf = font->p;
+			AG_TTFFont *ttf = font->p;
 			FT_Bitmap *ftbmp;
-			struct ttf_glyph *glyph;
+			AG_TTFGlyph *glyph;
 
-			if (ttf_find_glyph(ttf, ch,
+			if (AG_TTFFindGlyph(ttf, ch,
 			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 				continue;
 			}
@@ -513,7 +513,7 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 			if (i == 0 && glyph->minx < 0)
 				x -= glyph->minx;
 			if ((x + glyph->minx+ftbmp->width)
-			    >= WIDGET(tbox)->w)
+			    >= AGWIDGET(tbox)->w)
 				continue;
 		
 			if (mx >= x &&
@@ -524,15 +524,15 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 			x += glyph->advance;
 		}
 	}
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (1);
 in:
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (0);
 }
 
 static void
-move_cursor(struct textbox *tbox, int mx, int my)
+move_cursor(AG_Textbox *tbox, int mx, int my)
 {
 	int rv;
 
@@ -540,26 +540,26 @@ move_cursor(struct textbox *tbox, int mx, int my)
 	if (rv == -1) {
 		tbox->pos = 0;
 	} else if (rv == 1) {
-		struct widget_binding *stringb;
+		AG_WidgetBinding *stringb;
 		char *s;
 		
-		stringb = widget_get_binding(tbox, "string", &s);
+		stringb = AG_WidgetGetBinding(tbox, "string", &s);
 		tbox->pos = strlen(s);
-		widget_binding_unlock(stringb);
+		AG_WidgetUnlockBinding(stringb);
 	}
 }
 
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
-	struct textbox *tbox = argv[0].p;
+	AG_Textbox *tbox = argv[0].p;
 	int btn = argv[1].i;
 	int mx = argv[2].i;
 	int my = argv[3].i;
 	int rv;
 
 	if (tbox->label_id < 0 || mx > tbox->label_su->w)
-		widget_focus(tbox);
+		AG_WidgetFocus(tbox);
 
 	if (btn == SDL_BUTTON_LEFT)
 		move_cursor(tbox, mx, my);
@@ -568,7 +568,7 @@ mousebuttondown(int argc, union evarg *argv)
 static void
 mousemotion(int argc, union evarg *argv)
 {
-	struct textbox *tbox = argv[0].p;
+	AG_Textbox *tbox = argv[0].p;
 	int mx = argv[1].i;
 	int my = argv[2].i;
 	int state = argv[5].i;
@@ -578,13 +578,13 @@ mousemotion(int argc, union evarg *argv)
 }
 
 void
-textbox_printf(struct textbox *tbox, const char *fmt, ...)
+AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	va_list args;
 	char *text;
 
-	stringb = widget_get_binding(tbox, "string", &text);
+	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
 		vsnprintf(text, stringb->size, fmt, args);
@@ -594,63 +594,63 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 		text[0] = '\0';
 		tbox->pos = 0;
 	}
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 }
 
 char *
-textbox_string(struct textbox *tbox)
+AG_TextboxDupString(AG_Textbox *tbox)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *s, *sd;
 
-	stringb = widget_get_binding(tbox, "string", &s);
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	sd = Strdup(s);
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (sd);
 }
 
 /* Copy text to a fixed-size buffer and always NUL-terminate. */
 size_t
-textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
+AG_TextboxCopyString(AG_Textbox *tbox, char *dst, size_t dst_size)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	size_t rv;
 	char *text;
 
-	stringb = widget_get_binding(tbox, "string", &text);
+	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	rv = strlcpy(dst, text, dst_size);
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (rv);
 }
 
 /* Perform trivial conversion from string to int. */
 int
-textbox_int(struct textbox *tbox)
+AG_TextboxInt(AG_Textbox *tbox)
 {
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *text;
 	int i;
 
-	stringb = widget_get_binding(tbox, "string", &text);
+	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	i = atoi(text);
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 	return (i);
 }
 
 void
-textbox_set_writeable(struct textbox *tbox, int wr)
+AG_TextboxSetWriteable(AG_Textbox *tbox, int wr)
 {
 	if (wr)
-		tbox->flags |= TEXTBOX_WRITEABLE;
+		tbox->flags |= AG_TEXTBOX_WRITEABLE;
 	else
-		tbox->flags &= ~(TEXTBOX_WRITEABLE);
+		tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
 }
 
 void
-textbox_set_password(struct textbox *tbox, int pw)
+AG_TextboxSetPassword(AG_Textbox *tbox, int pw)
 {
 	if (pw)
-		tbox->flags |= TEXTBOX_PASSWORD;
+		tbox->flags |= AG_TEXTBOX_PASSWORD;
 	else
-		tbox->flags &= ~(TEXTBOX_PASSWORD);
+		tbox->flags &= ~(AG_TEXTBOX_PASSWORD);
 }

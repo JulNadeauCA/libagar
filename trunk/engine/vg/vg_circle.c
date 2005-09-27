@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.23 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.24 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,35 +38,35 @@
 #include "vg_math.h"
 
 static void
-init(struct vg *vg, struct vg_element *vge)
+init(VG *vg, VG_Element *vge)
 {
 	vge->vg_circle.radius = 0.025;
 }
 
 void
-vg_circle_radius(struct vg *vg, double radius)
+VG_CircleRadius(VG *vg, double radius)
 {
 	vg->cur_vge->vg_circle.radius = radius;
 }
 
 void
-vg_circle_diameter(struct vg *vg, double diameter)
+VG_CircleDiameter(VG *vg, double diameter)
 {
 	vg->cur_vge->vg_circle.radius = diameter/2;
 }
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
 	int rx, ry, radius;
 
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
-	vg_rlength(vg, vge->vg_circle.radius, &radius);
-	vg_circle_primitive(vg, rx, ry, radius, vge->color);
+	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
+	VG_RLength(vg, vge->vg_circle.radius, &radius);
+	VG_CirclePrimitive(vg, rx, ry, radius, vge->color);
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
@@ -75,21 +75,21 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 }
 
 static float
-intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, double x, double y)
 {
 	double rho, theta;
-	struct vg_vertex *vtx;
+	VG_Vtx *vtx;
 
 	if (vge->nvtx < 1) {
 		return (FLT_MAX);
 	}
 	vtx = &vge->vtx[0];
-	vg_car2pol(vg, x - vtx->x, y - vtx->y, &rho, &theta);
+	VG_Car2Pol(vg, x - vtx->x, y - vtx->y, &rho, &theta);
 
 	return (fabsf(rho - vge->vg_circle.radius));
 }
 
-const struct vg_element_ops vg_circle_ops = {
+const VG_ElementOps vgCircleOps = {
 	N_("Circle"),
 	VGCIRCLES_ICON,
 	init,
@@ -100,14 +100,14 @@ const struct vg_element_ops vg_circle_ops = {
 };
 
 #ifdef EDITION
-static struct vg_element *cur_circle;
-static struct vg_vertex *cur_radius;
+static VG_Element *cur_circle;
+static VG_Vtx *cur_radius;
 static int seq;
 
 static void
-circle_tool_init(void *p)
+circle_AG_MaptoolInit(void *p)
 {
-	tool_push_status(p, _("Specify the circle's center point."));
+	AG_MaptoolPushStatus(p, _("Specify the circle's center point."));
 	seq = 0;
 	cur_circle = NULL;
 	cur_radius = NULL;
@@ -116,10 +116,10 @@ circle_tool_init(void *p)
 static int
 circle_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 {
-	struct vg *vg = TOOL(p)->p;
+	VG *vg = TOOL(p)->p;
 	double x, y;
 	
-	vg_map2vec(vg, xmap, ymap, &x, &y);
+	VG_Map2Vec(vg, xmap, ymap, &x, &y);
 
 	if (cur_radius != NULL) {
 		cur_radius->x = x;
@@ -140,19 +140,19 @@ circle_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
 static int
 circle_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
 	case 1:
 		if (seq++ == 0) {
-			cur_circle = vg_begin_element(vg, VG_CIRCLE);
-			vg_map2vec(vg, xmap, ymap, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
-			cur_radius = vg_vertex2(vg, vx, vy);
-			vg_end_element(vg);
+			cur_circle = VG_Begin(vg, VG_CIRCLE);
+			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+			VG_Vertex2(vg, vx, vy);
+			cur_radius = VG_Vertex2(vg, vx, vy);
+			VG_End(vg);
 
-			tool_push_status(t, _("Specify the circle's radius "
+			AG_MaptoolPushStatus(t, _("Specify the circle's radius "
 			                      "or [undo circle]."));
 		} else {
 			goto finish;
@@ -160,7 +160,7 @@ circle_mousebuttondown(void *t, int xmap, int ymap, int btn)
 		break;
 	default:
 		if (cur_circle != NULL) {
-			vg_destroy_element(vg, cur_circle);
+			VG_DestroyElement(vg, cur_circle);
 		}
 		goto finish;
 	}
@@ -168,16 +168,16 @@ finish:
 	cur_circle = NULL;
 	cur_radius = NULL;
 	seq = 0;
-	tool_pop_status(t);
+	AG_MaptoolPopStatus(t);
 	return (1);
 }
 
-const struct tool_ops vg_circle_tool = {
+const AG_MaptoolOps vg_circle_tool = {
 	"Circles", N_("Draw circles."),
 	VGCIRCLES_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	circle_tool_init,
+	circle_AG_MaptoolInit,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

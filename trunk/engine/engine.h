@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.96 2005/06/18 04:25:18 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.97 2005/09/17 05:28:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -102,7 +102,7 @@
 #endif
 
 #ifdef THREADS
-extern pthread_mutexattr_t	recursive_mutexattr;
+extern pthread_mutexattr_t agRecursiveMutexAttr;
 # ifdef _SGI_SOURCE
 #  undef PTHREAD_MUTEX_INITIALIZER
 #  define PTHREAD_MUTEX_INITIALIZER { { 0 } }
@@ -141,22 +141,46 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 
 #include "begin_code.h"
 
-extern const char *progname;		/* engine.c */
-extern struct object *world;		/* engine.c */
-extern pthread_mutex_t linkage_lock;	/* engine.c */
+extern const char *agProgName;		/* engine.c */
+extern AG_Object *agWorld;		/* engine.c */
+extern pthread_mutex_t agLinkageLock;	/* engine.c */
+extern pthread_mutex_t agTimingLock;	/* engine.c */
 
-enum gfx_engine {
-	GFX_ENGINE_GUI		/* Direct video/OpenGL, solid background */
-};
+#define AG_LockLinkage() pthread_mutex_lock(&agLinkageLock)
+#define AG_UnlockLinkage() pthread_mutex_unlock(&agLinkageLock)
+
+#define AG_LockTiming() pthread_mutex_lock(&agTimingLock)
+#define AG_UnlockTiming() pthread_mutex_unlock(&agTimingLock)
+
+#define AG_VIDEO_HWSURFACE	0x01
+#define AG_VIDEO_ASYNCBLIT	0x02
+#define AG_VIDEO_ANYFORMAT	0x04
+#define AG_VIDEO_HWPALETTE	0x08
+#define AG_VIDEO_DOUBLEBUF	0x10
+#define AG_VIDEO_FULLSCREEN	0x20
+#define AG_VIDEO_RESIZABLE	0x40
+#define AG_VIDEO_NOFRAME	0x80
+
+#define AG_INPUT_KBDMOUSE	0x01
+#define AG_INPUT_JOYSTICKS	0x02
+
+#define AG_NETWORK_SERVERMODE	0x01
+#define AG_NETWORK_RCS		0x02
+
+#define AG_CONFIG_FULLSCREEN	0x01
+#define AG_CONFIG_GL		0x02
+#define AG_CONFIG_RESOLUTION	0x04
+#define AG_CONFIG_DIRECTORIES	0x08
 
 __BEGIN_DECLS
-int		 engine_preinit(const char *);
-int		 engine_init(void);
-void		 engine_set_gfxmode(enum gfx_engine);
-void		 engine_atexit(void (*)(void));
-void		 engine_destroy(void);
-__inline__ void	 lock_linkage(void);
-__inline__ void	 unlock_linkage(void);
+int	 AG_InitCore(const char *, u_int);
+int	 AG_InitVideo(int, int, int, u_int);
+int	 AG_InitInput(u_int);
+int	 AG_InitNetwork(u_int);
+int	 AG_InitConfigWin(u_int);
+
+void	 AG_AtExitFunc(void (*)(void));
+void	 AG_Quit(void);
 __END_DECLS
 
 #include "close_code.h"

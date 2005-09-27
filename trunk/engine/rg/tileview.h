@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.31 2005/09/15 17:21:25 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.32 2005/09/22 02:30:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -14,29 +14,29 @@
 
 #include "begin_code.h"
 
-#define TILEVIEW_MIN_W	32
-#define TILEVIEW_MIN_H	32
+#define RG_TILEVIEW_MIN_W	32
+#define RG_TILEVIEW_MIN_H	32
 
-enum tileview_ctrl_type {
-	TILEVIEW_POINT,			/* Point (x,y) */
-	TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
-	TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
-	TILEVIEW_CIRCLE,		/* Circle (x,y,r) */
-	TILEVIEW_VERTEX,		/* Vg vertex (x,y) */
+enum rg_tileview_ctrl_type {
+	RG_TILEVIEW_POINT,			/* Point (x,y) */
+	RG_TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
+	RG_TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
+	RG_TILEVIEW_CIRCLE,		/* Circle (x,y,r) */
+	RG_TILEVIEW_VERTEX,		/* Vg vertex (x,y) */
 };
 
 enum tileview_val_type {
-	TILEVIEW_INT_VAL,
-	TILEVIEW_INT_PTR,
-	TILEVIEW_UINT_VAL,
-	TILEVIEW_UINT_PTR,
-	TILEVIEW_FLOAT_VAL,
-	TILEVIEW_FLOAT_PTR,
-	TILEVIEW_DOUBLE_VAL,
-	TILEVIEW_DOUBLE_PTR,
+	RG_TILEVIEW_INT_VAL,
+	RG_TILEVIEW_INT_PTR,
+	RG_TILEVIEW_UINT_VAL,
+	RG_TILEVIEW_UINT_PTR,
+	RG_TILEVIEW_FLOAT_VAL,
+	RG_TILEVIEW_FLOAT_PTR,
+	RG_TILEVIEW_DOUBLE_VAL,
+	RG_TILEVIEW_DOUBLE_PTR,
 };
 
-union tileview_val {
+union rg_tileview_val {
 	int i;
 	u_int ui;
 	float f;
@@ -44,36 +44,36 @@ union tileview_val {
 	void *p;
 };
 
-struct tileview_handle {
+struct rg_tileview_handle {
 	int x, y;		/* Cached tile coords (set by draw routine) */
 	int over;		/* Mouse overlap */
 	int enable;		/* Mouse selection */
 };
 
-struct tileview_ctrl {
-	enum tileview_ctrl_type type;
+typedef struct rg_tileview_ctrl {
+	enum rg_tileview_ctrl_type type;
 
 	SDL_Color c, cIna, cEna, cOver, cHigh, cLow;
 	Uint8	  a, aIna, aEna, aOver;
 
 	enum tileview_val_type	*valtypes;		/* Entry types */
-	union tileview_val	*vals;			/* Values/pointers */
+	union rg_tileview_val	*vals;			/* Values/pointers */
 	u_int			nvals;
-	struct tileview_handle	*handles;		/* User handles */
-	u_int			nhandles;
+	struct rg_tileview_handle *handles;		/* User handles */
+	u_int			  nhandles;
 
-	struct vg *vg;				/* For TILEVIEW_VERTEX */
-	struct vg_element *vge;
+	VG *vg;					/* For RG_TILEVIEW_VERTEX */
+	VG_Element *vge;
 
-	struct event *motion;
-	struct event *buttonup;
-	struct event *buttondown;
+	AG_Event *motion;
+	AG_Event *buttonup;
+	AG_Event *buttondown;
 	int xoffs, yoffs;
 
-	TAILQ_ENTRY(tileview_ctrl) ctrls;
-};
+	TAILQ_ENTRY(rg_tileview_ctrl) ctrls;
+} RG_TileviewCtrl;
 
-struct tileview_tool_ops {
+typedef struct rg_tileview_tool_ops {
 	const char *name;
 	const char *desc;
 	size_t len;
@@ -82,54 +82,54 @@ struct tileview_tool_ops {
 
 	void		(*init)(void *);
 	void		(*destroy)(void *);
-	struct window  *(*edit)(void *);
+	AG_Window  *(*edit)(void *);
 	void		(*selected)(void *);
 	void		(*unselected)(void *);
-};
+} RG_TileviewToolOps;
 
-struct tileview_bitmap_tool_ops {
-	struct tileview_tool_ops ops;
+typedef struct rg_tileview_bitmap_tool_ops {
+	struct rg_tileview_tool_ops ops;
 	void (*mousebuttondown)(void *, int, int, int);
 	void (*mousebuttonup)(void *, int, int, int);
 	void (*mousemotion)(void *, int, int, int, int);
-};
+} RG_TileviewBitmapToolOps;
 
-struct tileview_sketch_tool_ops {
-	struct tileview_tool_ops ops;
-	void (*mousebuttondown)(void *, struct sketch *, double, double, int);
-	void (*mousebuttonup)(void *, struct sketch *, double, double, int);
-	void (*mousemotion)(void *, struct sketch *, double, double, double,
-	    double);
-	int (*mousewheel)(void *, struct sketch *, int);
-	void (*keydown)(void *, struct sketch *, int, int);
-	void (*keyup)(void *, struct sketch *, int, int);
-};
+typedef struct rg_tileview_sketch_tool_ops {
+	struct rg_tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, RG_Sketch *, double, double, int);
+	void (*mousebuttonup)(void *, RG_Sketch *, double, double, int);
+	void (*mousemotion)(void *, RG_Sketch *, double, double, double,
+	                    double);
+	int (*mousewheel)(void *, RG_Sketch *, int);
+	void (*keydown)(void *, RG_Sketch *, int, int);
+	void (*keyup)(void *, RG_Sketch *, int, int);
+} RG_TileviewSketchToolOps;
 
-struct tileview_tool {
-	const struct tileview_tool_ops *ops;
-	struct tileview *tv;
+typedef struct rg_tileview_tool {
+	const RG_TileviewToolOps *ops;
+	struct rg_tileview *tv;
 	int flags;
 #define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
 #define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
 #define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
 #define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
-	struct window *win;
-	TAILQ_ENTRY(tileview_tool) tools;
+	AG_Window *win;
+	TAILQ_ENTRY(rg_tileview_tool) tools;
+} RG_TileviewTool;
+
+enum rg_tileview_state {
+	RG_TILEVIEW_TILE_EDIT,	/* Default edition mode */
+	RG_TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
+	RG_RG_TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
+	RG_TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
+	RG_TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
+	RG_TILEVIEW_LAYERS_EDIT	/* Node layers are being edited */
 };
 
-enum tileview_state {
-	TILEVIEW_TILE_EDIT,	/* Default edition mode */
-	TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
-	TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
-	TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
-	TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
-	TILEVIEW_LAYERS_EDIT	/* Node layers are being edited */
-};
-
-struct tileview {
-	struct widget wid;
-	struct tileset *ts;
-	struct tile *tile;
+typedef struct rg_tileview {
+	AG_Widget wid;
+	RG_Tileset *ts;
+	RG_Tile *tile;
 	int zoom;			/* Display zoom (%) */
 	int pxsz;			/* Scaled pixel size (pixels) */
 	int pxlen;			/* Scaled pixel size (bytes) */
@@ -140,67 +140,67 @@ struct tileview {
 	SDL_Surface *scaled;		/* Scaled surface */
 	int scrolling;
 	int flags;
-#define TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
-#define TILEVIEW_HIDE_CONTROLS	0x02	/* Hide the current controls */
-#define TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
-#define TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
-#define TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
-#define TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
-#define TILEVIEW_READONLY	0x40
+#define RG_TILEVIEW_NO_SCROLLING 0x01	/* Disable right click scrolling */
+#define RG_TILEVIEW_HIDE_CONTROLS 0x02	/* Hide the current controls */
+#define RG_TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
+#define RG_TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
+#define RG_TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
+#define RG_TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
+#define RG_TILEVIEW_READONLY	0x40
 
-	struct timeout zoom_to;		/* Zoom timeout */
-	struct timeout redraw_to;	/* Auto redraw timeout */
+	AG_Timeout zoom_to;		/* Zoom timeout */
+	AG_Timeout redraw_to;		/* Auto redraw timeout */
 
 	int edit_attr;			/* Attribute being edited */
 	int edit_mode;			/* Element is being edited */
-	enum tileview_state state;
-	struct box *tel_box;		/* Element-specific toolbar container */
-	struct toolbar *tel_tbar;	/* Element-specific toolbar */
+	enum rg_tileview_state state;
+	AG_Box *tel_box;		/* Element-specific toolbar container */
+	AG_Toolbar *tel_tbar;		/* Element-specific toolbar */
 	
-	struct AGMenu *menu;		/* Popup menu */
-	struct AGMenuItem *menu_item;
-	struct window *menu_win;
+	AG_Menu *menu;		/* Popup menu */
+	AG_MenuItem *menu_item;
+	AG_Window *menu_win;
 
 	union {
 		struct {
-			struct tile_element *tel;	/* Feature element */
-			struct feature *ft;  
-			struct window *win;		/* Settings */
-			struct AGMenu *menu;		/* Popup menu */
-			struct AGMenuItem *menu_item;	/* Popup menu item */
-			struct window *menu_win;	/* Popup menu window */
+			RG_TileElement *tel;	/* Feature element */
+			RG_Feature *ft;  
+			AG_Window *win;		/* Settings */
+			AG_Menu *menu;		/* Popup menu */
+			AG_MenuItem *menu_item;	/* Popup menu item */
+			AG_Window *menu_win;	/* Popup menu window */
 		} feature;
 		struct {
-			struct tile_element *tel;	/* Sketch element */
-			struct sketch *sk;
-			struct window *win;		/* Settings */
-			struct tileview_ctrl *ctrl;	/* Extent control */
-			struct AGMenu *menu;		/* Popup menu */
-			struct AGMenuItem *menu_item;	/* Popup menu item */
-			struct window *menu_win;	/* Popup menu window */
+			RG_TileElement *tel;	/* Sketch element */
+			RG_Sketch *sk;
+			AG_Window *win;		/* Settings */
+			RG_TileviewCtrl *ctrl;	/* Extent control */
+			AG_Menu *menu;		/* Popup menu */
+			AG_MenuItem *menu_item;	/* Popup menu item */
+			AG_Window *menu_win;	/* Popup menu window */
 		} sketch;
 		struct {
-			struct tile_element *tel;	/* Pixmap element */
-			struct pixmap *px;
-			struct window *win;		/* Settings */
-			struct tileview_ctrl *ctrl;	/* Extent control */
+			RG_TileElement *tel;	/* Pixmap element */
+			RG_Pixmap *px;
+			AG_Window *win;		/* Settings */
+			RG_TileviewCtrl *ctrl;	/* Extent control */
 			enum {
-				TVPIXMAP_IDLE,
-				TVPIXMAP_FREEHAND,
-				TVPIXMAP_ORTHOGONAL,
-				TVPIXMAP_VERTICAL,
-				TVPIXMAP_HORIZONTAL,
-				TVPIXMAP_DIAGONAL
+				RG_TVPIXMAP_IDLE,
+				RG_TVPIXMAP_FREEHAND,
+				RG_TVPIXMAP_ORTHOGONAL,
+				RG_TVPIXMAP_VERTICAL,
+				RG_TVPIXMAP_HORIZONTAL,
+				RG_TVPIXMAP_DIAGONAL
 			} state;
-			struct AGMenu *menu;		/* Popup menu */
-			struct AGMenuItem *menu_item;	/* Popup menu item */
-			struct window *menu_win;	/* Popup menu window */
+			AG_Menu *menu;		/* Popup menu */
+			AG_MenuItem *menu_item;	/* Popup menu item */
+			AG_Window *menu_win;	/* Popup menu window */
 			int xorig, yorig;		/* Reference point
 							   for restrictions */
 		} pixmap;
 		struct {
-			struct tileview_ctrl *geo_ctrl;	 /* Geometry control */
-			struct tileview_ctrl *orig_ctrl; /* Origin control */
+			RG_TileviewCtrl *geo_ctrl;	 /* Geometry control */
+			RG_TileviewCtrl *orig_ctrl; /* Origin control */
 		} tile;
 		struct {
 			int nx, ny;			/* Current position */
@@ -216,63 +216,63 @@ struct tileview {
 		Uint8 r, g, b, a;		/* Current color */
 		Uint32 pc;			/* (for binding controls) */
 	} c;
-	TAILQ_HEAD(,tileview_ctrl) ctrls;	/* Binding controls */
-	TAILQ_HEAD(,tileview_tool) tools;	/* Edition tools */
-	struct tileview_tool *cur_tool;		/* Current tool */
-};
+	TAILQ_HEAD(,rg_tileview_ctrl) ctrls;	/* Binding controls */
+	TAILQ_HEAD(,rg_tileview_tool) tools;	/* Edition tools */
+	RG_TileviewTool *cur_tool;		/* Current tool */
+} RG_Tileview;
 
-#define TILEVIEW_TOOL(p) ((struct tileview_tool *)p)
-#define TILEVIEW_SCALED_X(tv, x) (WIDGET(tv)->cx + (tv)->xoffs + (x)*(tv)->pxsz)
-#define TILEVIEW_SCALED_Y(tv, x) (WIDGET(tv)->cy + (tv)->yoffs + (y)*(tv)->pxsz)
+#define RG_TILEVIEW_TOOL(p) ((RG_TileviewTool *)p)
+#define RG_TILEVIEW_SCALED_X(tv, x) (AGWIDGET(tv)->cx + (tv)->xoffs + (x)*(tv)->pxsz)
+#define RG_TILEVIEW_SCALED_Y(tv, x) (AGWIDGET(tv)->cy + (tv)->yoffs + (y)*(tv)->pxsz)
 
 __BEGIN_DECLS
-struct tileview	*tileview_new(void *, struct tileset *, int);
-struct tileview_tool *tileview_reg_tool(struct tileview *, const void *);
+RG_Tileview	*RG_TileviewNew(void *, RG_Tileset *, int);
+RG_TileviewTool *RG_TileviewRegTool(RG_Tileview *, const void *);
 
-void tileview_init(struct tileview *, struct tileset *, int);
-void tileview_destroy(void *);
-void tileview_draw(void *);
-void tileview_scale(void *, int, int);
+void RG_TileviewInit(RG_Tileview *, RG_Tileset *, int);
+void RG_TileviewDestroy(void *);
+void RG_TileviewDraw(void *);
+void RG_TileviewScale(void *, int, int);
 
-void tileview_set_tile(struct tileview *, struct tile *);
-void tileview_set_zoom(struct tileview *, int, int);
-void tileview_set_autoredraw(struct tileview *, int, int);
+void RG_TileviewSetTile(RG_Tileview *, RG_Tile *);
+void RG_TileviewSetZoom(RG_Tileview *, int, int);
+void RG_TileviewSetAutoRefresh(RG_Tileview *, int, int);
 
-void tileview_color3i(struct tileview *, Uint8, Uint8, Uint8);
-void tileview_color4i(struct tileview *, Uint8, Uint8, Uint8, Uint8);
-void tileview_sdl_color(struct tileview *, SDL_Color *, Uint8);
-void tileview_alpha(struct tileview *, Uint8);
+void RG_TileviewColor3i(RG_Tileview *, Uint8, Uint8, Uint8);
+void RG_TileviewColor4i(RG_Tileview *, Uint8, Uint8, Uint8, Uint8);
+void RG_TileviewSDLColor(RG_Tileview *, SDL_Color *, Uint8);
+void RG_TileviewAlpha(RG_Tileview *, Uint8);
 
-void tileview_pixel2i(struct tileview *, int, int);
-void tileview_rect2(struct tileview *, int, int, int, int);
-void tileview_rect2o(struct tileview *, int, int, int, int);
-void tileview_circle2o(struct tileview *, int, int, int);
-void tileview_hline(struct tileview *, int, int, int);
-void tileview_vline(struct tileview *, int, int, int);
+void RG_TileviewPixel2i(RG_Tileview *, int, int);
+void RG_TileviewRect2(RG_Tileview *, int, int, int, int);
+void RG_TileviewRect2o(RG_Tileview *, int, int, int, int);
+void RG_TileviewCircle2o(RG_Tileview *, int, int, int);
+void RG_TileviewHLine(RG_Tileview *, int, int, int);
+void RG_TileviewVLine(RG_Tileview *, int, int, int);
 
-__inline__ void tileview_scaled_pixel(struct tileview *, int, int, Uint8,
+__inline__ void RG_TileviewScaledPixel(RG_Tileview *, int, int, Uint8,
 		                      Uint8, Uint8);
 
-struct tileview_ctrl *tileview_insert_ctrl(struct tileview *,
-			                   enum tileview_ctrl_type,
+RG_TileviewCtrl *RG_TileviewAddCtrl(RG_Tileview *,
+			                   enum rg_tileview_ctrl_type,
 					   const char *, ...);
-void		      tileview_remove_ctrl(struct tileview *,
-				           struct tileview_ctrl *);
+void		      RG_TileviewDelCtrl(RG_Tileview *,
+				           RG_TileviewCtrl *);
 
-__inline__ int	  tileview_int(struct tileview_ctrl *, int);
-__inline__ void	  tileview_set_int(struct tileview_ctrl *, int, int);
-__inline__ float  tileview_float(struct tileview_ctrl *, int);
-__inline__ void	  tileview_set_float(struct tileview_ctrl *, int, float);
-__inline__ double tileview_double(struct tileview_ctrl *, int);
-__inline__ void	  tileview_set_double(struct tileview_ctrl *, int, double);
+__inline__ int	  RG_TileviewInt(RG_TileviewCtrl *, int);
+__inline__ void	  RG_TileviewSetInt(RG_TileviewCtrl *, int, int);
+__inline__ float  RG_TileviewFloat(RG_TileviewCtrl *, int);
+__inline__ void	  RG_TileviewSetFloat(RG_TileviewCtrl *, int, float);
+__inline__ double RG_TileviewDouble(RG_TileviewCtrl *, int);
+__inline__ void	  RG_TileviewSetDouble(RG_TileviewCtrl *, int, double);
 
-#define tileview_uint(ctrl,nval)	(u_int)tileview_int((ctrl),(nval))
-#define tileview_set_uint(tv,nval,v)	tileview_set_int((tv),(nval),(u_int)(v))
+#define RG_TileviewUint(ctrl,nval)	(u_int)RG_TileviewInt((ctrl),(nval))
+#define RG_TileviewSetUint(tv,nval,v)	RG_TileviewSetInt((tv),(nval),(u_int)(v))
 
-void tileview_select_tool(struct tileview *, struct tileview_tool *);
-void tileview_unselect_tool(struct tileview *);
+void RG_TileviewSelectTool(RG_Tileview *, RG_TileviewTool *);
+void RG_TileviewUnselectTool(RG_Tileview *);
 
-void tileview_generic_menu(struct tileview *, struct AGMenuItem *);
+void RG_TileviewGenericMenu(RG_Tileview *, AG_MenuItem *);
 __END_DECLS
 
 #include "close_code.h"

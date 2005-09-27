@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.5 2005/05/26 06:43:12 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.6 2005/06/13 06:06:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -34,52 +34,52 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static struct widget_ops notebook_ops = {
+static AG_WidgetOps notebook_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		notebook_destroy,
+		AG_NotebookDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	notebook_draw,
-	notebook_scale
+	AG_NotebookDraw,
+	AG_NotebookScale
 };
 
 #define SPACING 8
 
-struct notebook *
-notebook_new(void *parent, int flags)
+AG_Notebook *
+AG_NotebookNew(void *parent, int flags)
 {
-	struct notebook *nb;
+	AG_Notebook *nb;
 
-	nb = Malloc(sizeof(struct notebook), M_OBJECT);
-	notebook_init(nb, flags);
-	object_attach(parent, nb);
+	nb = Malloc(sizeof(AG_Notebook), M_OBJECT);
+	AG_NotebookInit(nb, flags);
+	AG_ObjectAttach(parent, nb);
 	return (nb);
 }
 
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
-	struct notebook *nb = argv[0].p;
+	AG_Notebook *nb = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 
 	if (y <= nb->bar_h) {
-		struct notebook_tab *tab;
+		AG_NotebookTab *tab;
 		int tx = SPACING;
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			SDL_Surface *label = WIDGET_SURFACE(nb,tab->label);
+			SDL_Surface *label = AGWIDGET_SURFACE(nb,tab->label);
 
-			if (tx+label->w+SPACING*2 > WIDGET(nb)->w)
+			if (tx+label->w+SPACING*2 > AGWIDGET(nb)->w)
 				break;
 
 			if (x >= tx && x < tx+(label->w + SPACING*2)) {
-				notebook_select_tab(nb, tab);
+				AG_NotebookSelectTab(nb, tab);
 				break;
 			}
 			tx += label->w + SPACING*2;
@@ -88,161 +88,163 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 void
-notebook_init(struct notebook *nb, int flags)
+AG_NotebookInit(AG_Notebook *nb, int flags)
 {
-	widget_init(nb, "notebook", &notebook_ops, 0);
+	AG_WidgetInit(nb, "notebook", &notebook_ops, 0);
 
 	nb->flags = flags;
-	nb->tab_align = NOTEBOOK_TABS_TOP;
+	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
 	nb->sel_tab = NULL;
 	nb->bar_w = -1;
 	nb->bar_h = -1;
 	nb->cont_w = -1;
 	nb->cont_h = -1;
-	nb->tab_rad = (int)(text_font_height/1.5);
-	pthread_mutex_init(&nb->lock, &recursive_mutexattr);
+	nb->tab_rad = (int)(agTextFontHeight/1.5);
+	pthread_mutex_init(&nb->lock, &agRecursiveMutexAttr);
 	TAILQ_INIT(&nb->tabs);
 
-	if (flags & NOTEBOOK_WFILL)	WIDGET(nb)->flags |= WIDGET_WFILL;
-	if (flags & NOTEBOOK_HFILL)	WIDGET(nb)->flags |= WIDGET_HFILL;
+	if (flags & AG_NOTEBOOK_WFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_WFILL;
+	if (flags & AG_NOTEBOOK_HFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_HFILL;
 
-	event_new(nb, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(nb, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
 void
-notebook_destroy(void *p)
+AG_NotebookDestroy(void *p)
 {
-	struct notebook *nb = p;
+	AG_Notebook *nb = p;
 
 	pthread_mutex_destroy(&nb->lock);
 }
 
 void
-notebook_draw(void *p)
+AG_NotebookDraw(void *p)
 {
-	struct notebook *nb = p;
-	struct notebook_tab *tab;
+	AG_Notebook *nb = p;
+	AG_NotebookTab *tab;
 	int x = SPACING;
 	int y = SPACING;
 	SDL_Rect box;
 
-	primitives.rect_filled(nb,
+	agPrim.rect_filled(nb,
 	    0, nb->bar_h,
-	    WIDGET(nb)->w,
-	    WIDGET(nb)->h - nb->bar_h,
-	    COLOR(NOTEBOOK_SEL_COLOR));
+	    AGWIDGET(nb)->w,
+	    AGWIDGET(nb)->h - nb->bar_h,
+	    AG_COLOR(NOTEBOOK_SEL_COLOR));
 
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		box.x = x;
 		box.y = y;
-		box.w = WIDGET_SURFACE(nb,tab->label)->w + SPACING*2;
+		box.w = AGWIDGET_SURFACE(nb,tab->label)->w + SPACING*2;
 		box.h = nb->bar_h - SPACING;
 
-		if (box.x+box.w > WIDGET(nb)->w)
+		if (box.x+box.w > AGWIDGET(nb)->w)
 			break;
 
-		primitives.box_chamfered(nb, &box,
+		agPrim.box_chamfered(nb, &box,
 		    nb->sel_tab==tab ? -1 : 1, nb->tab_rad,
 		    nb->sel_tab==tab ?
-		    COLOR(NOTEBOOK_SEL_COLOR) :
-		    COLOR(NOTEBOOK_BG_COLOR));
+		    AG_COLOR(NOTEBOOK_SEL_COLOR) :
+		    AG_COLOR(NOTEBOOK_BG_COLOR));
 		
-		widget_blit_surface(nb, tab->label, x+SPACING, y+2);
+		AG_WidgetBlitSurface(nb, tab->label, x+SPACING, y+2);
 		x += box.w;
 	}
 }
 
 void
-notebook_scale(void *p, int w, int h)
+AG_NotebookScale(void *p, int w, int h)
 {
-	struct notebook *nb = p;
-	struct notebook_tab *tab;
+	AG_Notebook *nb = p;
+	AG_NotebookTab *tab;
 	
 	pthread_mutex_lock(&nb->lock);
 	if (w == -1 || h == -1) {
-		nb->bar_h = text_font_height + SPACING*2;
+		nb->bar_h = agTextFontHeight + SPACING*2;
 		nb->bar_w = SPACING*2;
 		nb->cont_w = 0;
 		nb->cont_h = 0;
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			WIDGET_OPS(tab)->scale(tab, -1, -1);
-			nb->cont_w = MAX(nb->cont_w,WIDGET(tab)->w);
-			nb->cont_h = MAX(nb->cont_h,WIDGET(tab)->h);
-			nb->bar_w += WIDGET_SURFACE(nb,tab->label)->w +
+			AGWIDGET_OPS(tab)->scale(tab, -1, -1);
+			nb->cont_w = MAX(nb->cont_w,AGWIDGET(tab)->w);
+			nb->cont_h = MAX(nb->cont_h,AGWIDGET(tab)->h);
+			nb->bar_w += AGWIDGET_SURFACE(nb,tab->label)->w +
 			    SPACING*2;
 		}
-		WIDGET(nb)->h = nb->cont_h + nb->bar_h;
-		WIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
+		AGWIDGET(nb)->h = nb->cont_h + nb->bar_h;
+		AGWIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
 	}
 	if ((tab = nb->sel_tab) != NULL) {
-		WIDGET(tab)->x = 0;
-		WIDGET(tab)->y = nb->bar_h;
-		if (nb->flags & NOTEBOOK_WFILL) nb->cont_w = WIDGET(nb)->w;
-		if (nb->flags & NOTEBOOK_HFILL) nb->cont_h = WIDGET(nb)->h;
-		WIDGET(tab)->w = nb->cont_w;
-		WIDGET(tab)->h = nb->cont_h - nb->bar_h;
-		WIDGET_OPS(tab)->scale(tab, WIDGET(tab)->w, WIDGET(tab)->h);
+		AGWIDGET(tab)->x = 0;
+		AGWIDGET(tab)->y = nb->bar_h;
+		if (nb->flags & AG_NOTEBOOK_WFILL) nb->cont_w = AGWIDGET(nb)->w;
+		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_h = AGWIDGET(nb)->h;
+		AGWIDGET(tab)->w = nb->cont_w;
+		AGWIDGET(tab)->h = nb->cont_h - nb->bar_h;
+		AGWIDGET_OPS(tab)->scale(tab,
+		    AGWIDGET(tab)->w,
+		    AGWIDGET(tab)->h);
 	}
 	pthread_mutex_unlock(&nb->lock);
 }
 
 void
-notebook_set_tab_alignment(struct notebook *nb, enum notebook_tab_alignment ta)
+AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 {
 	pthread_mutex_lock(&nb->lock);
 	nb->tab_align = ta;
 	pthread_mutex_unlock(&nb->lock);
 }
 
-struct notebook_tab *
-notebook_add_tab(struct notebook *nb, const char *label, enum box_type btype)
+AG_NotebookTab *
+AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 {
-	struct notebook_tab *tab;
+	AG_NotebookTab *tab;
 
-	tab = Malloc(sizeof(struct notebook_tab), M_OBJECT);
-	box_init((struct box *)tab, btype, BOX_WFILL|BOX_HFILL);
-	tab->label = widget_map_surface(nb,
-	    text_render(NULL, 9, COLOR(NOTEBOOK_TXT_COLOR), label));
+	tab = Malloc(sizeof(AG_NotebookTab), M_OBJECT);
+	AG_BoxInit((AG_Box *)tab, btype, AG_BOX_WFILL|AG_BOX_HFILL);
+	tab->label = AG_WidgetMapSurface(nb,
+	    AG_TextRender(NULL, 9, AG_COLOR(NOTEBOOK_TXT_COLOR), label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	if (TAILQ_FIRST(&nb->tabs) == tab) {
-		notebook_select_tab(nb, tab);
+		AG_NotebookSelectTab(nb, tab);
 	}
 	return (tab);
 }
 
 void
-notebook_del_tab(struct notebook *nb, struct notebook_tab *tab)
+AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
-	widget_unmap_surface(nb, tab->label);
-	object_destroy(tab);
+	AG_WidgetUnmapSurface(nb, tab->label);
+	AG_ObjectDestroy(tab);
 	Free(tab, M_OBJECT);
 }
 
 void
-notebook_select_tab(struct notebook *nb, struct notebook_tab *tab)
+AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
-	struct window *pwin = widget_parent_window(nb);
+	AG_Window *pwin = AG_WidgetParentWindow(nb);
 
 #ifdef DEBUG
 	if (pwin == NULL)
 		fatal("no window is attached");
 #endif
 	if (nb->sel_tab != NULL) {
-		object_detach(nb->sel_tab);
+		AG_ObjectDetach(nb->sel_tab);
 	}
 	if (tab == NULL) {
 		nb->sel_tab = NULL;
 		return;
 	}
-	object_attach(nb, tab);
+	AG_ObjectAttach(nb, tab);
 	nb->sel_tab = tab;
 
-	WIDGET_OPS(tab)->scale(tab, -1, -1);
-	WIDGET_OPS(tab)->scale(tab, WIDGET(tab)->w, WIDGET(tab)->h);
-	notebook_scale(nb, WIDGET(nb)->w, WIDGET(nb)->h);
-	widget_update_coords(pwin, WIDGET(pwin)->x, WIDGET(pwin)->y);
+	AGWIDGET_OPS(tab)->scale(tab, -1, -1);
+	AGWIDGET_OPS(tab)->scale(tab, AGWIDGET(tab)->w, AGWIDGET(tab)->h);
+	AG_NotebookScale(nb, AGWIDGET(nb)->w, AGWIDGET(nb)->h);
+	AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x, AGWIDGET(pwin)->y);
 #if 0
-	widget_focus(tab);
+	AG_WidgetFocus(tab);
 #endif
 }

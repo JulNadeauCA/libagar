@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.21 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.22 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -37,27 +37,27 @@
 #include "vg_primitive.h"
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
-	struct vg_vertex *vtx;
+	VG_Vtx *vtx;
 	int rx, ry;
 
 	if (vge->nvtx >= 1) {
 		vtx = &vge->vtx[0];
-		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
-		vg_put_pixel(vg, rx, ry-1, vge->color);
-		vg_put_pixel(vg, rx-1, ry, vge->color);
-		vg_put_pixel(vg, rx, ry, vge->color);
-		vg_put_pixel(vg, rx+0, ry, vge->color);
-		vg_put_pixel(vg, rx, ry+1, vge->color);
+		VG_Rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
+		VG_PutPixel(vg, rx, ry-1, vge->color);
+		VG_PutPixel(vg, rx-1, ry, vge->color);
+		VG_PutPixel(vg, rx, ry, vge->color);
+		VG_PutPixel(vg, rx+0, ry, vge->color);
+		VG_PutPixel(vg, rx, ry+1, vge->color);
 	}
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	if (vge->nvtx >= 1) {
-		struct vg_vertex *vtx = &vge->vtx[0];
+		VG_Vtx *vtx = &vge->vtx[0];
 		
 		r->x = vtx->x-1;
 		r->y = vtx->y-1;
@@ -72,17 +72,17 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 }
 
 static float
-intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, double x, double y)
 {
 	if (vge->nvtx >= 1) {
-		struct vg_vertex *vtx = &vge->vtx[0];
+		VG_Vtx *vtx = &vge->vtx[0];
 		return (vtx->x - x) + (vtx->y - y);
 	} else {
 		return (FLT_MAX);
 	}
 }
 
-const struct vg_element_ops vg_points_ops = {
+const VG_ElementOps vgPointsOps = {
 	N_("Point"),
 	VGPOINTS_ICON,
 	NULL,
@@ -94,18 +94,18 @@ const struct vg_element_ops vg_points_ops = {
 
 #ifdef EDITION
 static void
-point_tool_init(void *t)
+point_AG_MaptoolInit(void *t)
 {
-	tool_push_status(t, _("Specify the point location."));
+	AG_MaptoolPushStatus(t, _("Specify the point location."));
 }
 
 static int
 point_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	
-	vg_map2vec(vg, xmap, ymap, &vg->origin[1].x, &vg->origin[1].y);
+	VG_Map2Vec(vg, xmap, ymap, &vg->origin[1].x, &vg->origin[1].y);
 	vg->redraw++;
 	return (1);
 }
@@ -113,22 +113,22 @@ point_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
 static int
 point_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
-	vg_begin_element(vg, VG_POINTS);
-	vg_map2vec(vg, xmap, ymap, &vx, &vy);
-	vg_vertex2(vg, vx, vy);
-	vg_end_element(vg);
+	VG_Begin(vg, VG_POINTS);
+	VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+	VG_Vertex2(vg, vx, vy);
+	VG_End(vg);
 	return (1);
 }
 
-const struct tool_ops vg_point_tool = {
+const AG_MaptoolOps vg_point_tool = {
 	N_("Point"), N_("Trace an individual point."),
 	VGPOINTS_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	point_tool_init,
+	point_AG_MaptoolInit,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

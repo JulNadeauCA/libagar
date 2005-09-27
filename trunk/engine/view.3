@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.32 2005/05/19 06:33:21 vedge Exp $
+.\"	$Csoft: view.2,v 1.33 2005/06/18 04:25:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,62 +45,59 @@ It also implements a series of macros for basic pixel operations.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
-.Fn view_init "enum gfx_engine engine"
+.Fn AG_ViewInit "int w" "int h" "int bpp" "u_int flags"
 .Pp
 .Ft "void"
-.Fn view_destroy "void"
+.Fn AG_ViewDestroy "void"
 .Pp
 .Ft "int"
-.Fn view_set_refresh "int fps"
+.Fn AG_ViewSetRefreshRate "int fps"
 .nr nS 0
 .Pp
 The
 .Fn view_init
-function initializes the graphic engine, returning 0 on success and -1 on
-failure.
+function initializes the graphic display if there is one available,
+returning 0 on success and -1 on failure.
 If the
 .Sq view.opengl
 property is set,
 .Fn view_init
-will attempt to create an OpenGL rendering context.
-The
-.Fa engine
-argument is one of:
-.Bd -literal
-enum gfx_engine {
-	GFX_ENGINE_GUI         /* Direct/OpenGL, GUI */
-};
-.Ed
+will attempt to create an OpenGL rendering context, and the GUI will arrange
+for widgets to be rendered using OpenGL agPrim.
 .Pp
 The
-.Fn view_destroy 
+.Fn AG_ViewDestroy
 function frees resources allocated by the view structure.
 .Pp
 The
-.Fn view_set_refresh
-function sets the nominal refresh rate, given in frames per second.
+.Fn AG_SetRefreshRate
+function sets the nominal refresh rate, given in frames/second.
+The default
+.Fn event_loop
+will attempt to draw exactly that number of frames per second and then idle
+as much as possible.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn view_copy_surface "SDL_Surface *src"
+.Fn AG_DupSurface "SDL_Surface *src"
 .Pp
 .Ft "void"
-.Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height" "SDL_Surface **dst"
+.Fn AG_ScaleSurface "SDL_Surface *src" "Uint16 width" "Uint16 height" "SDL_Surface **dst"
 .Pp
 .Ft "int"
-.Fn view_same_pixel_fmt "SDL_Surface *s1" "SDL_Surface *s2"
+.Fn AG_SamePixelFmt "SDL_Surface *s1" "SDL_Surface *s2"
 .Pp
 .Ft "void"
-.Fn view_pixels_alpha "SDL_Surface *surface" "Uint8 alpha"
+.Fn AG_SetAlphaPixels "SDL_Surface *surface" "Uint8 alpha"
 .Pp
 .Ft "GLuint"
-.Fn view_surface_texture "SDL_Surface *src" "GLfloat *texcoord"
+.Fn AG_SurfaceTexture "SDL_Surface *src" "GLfloat *texcoord"
 .Pp
 .Ft "void"
-.Fn view_update "int x" "int y" "int w" "int h"
+.Fn AG_UpdateRectQ "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
-.Fn view_capture "SDL_Surface *su" "char *path_save"
+.Fn AG_DumpSurface "SDL_Surface *su" "char *path_save"
 .Pp
 .nr nS 0
 These functions operate on
@@ -108,12 +105,12 @@ These functions operate on
 structures.
 .Pp
 The
-.Fn view_copy_surface
+.Fn AG_DupSurface
 returns a newly allocated surface containing a copy of
 .Fa src .
 .Pp
 The
-.Fn view_scale_surface
+.Fn AG_ScaleSurface
 functions performs pixmap scaling of surface
 .Fa src
 to
@@ -126,7 +123,7 @@ If
 is NULL, a new surface is allocated.
 .Pp
 The
-.Fn view_same_pixel_fmt
+.Fn AG_SamePixelFmt
 function returns 1 if the surfaces
 .Fa s1
 and
@@ -134,18 +131,18 @@ and
 share the same depth, RGBA masks and colorkey.
 .Pp
 The
-.Fn view_pixels_alpha
+.Fn AG_SetAlphaPixels
 function changes the alpha value of all pixels except those with an
 alpha channel of 0, to
 .Fa alpha .
 .Pp
 If OpenGL support is available,
-.Fn view_surface_texture
+.Fn AG_SurfaceTexture
 creates an OpenGL texture from
 .Fa src
 .Pp
 The
-.Fn view_update
+.Fn AG_UpdateRectQ
 function queues the update of a video region.
 With direct video rendering mode, this adds a
 .Ft SDL_Rect
@@ -160,7 +157,7 @@ when the display is refreshed.
 is a no-op if OpenGL is enabled.
 .Pp
 The
-.Fn view_capture
+.Fn AG_DumpSurface
 function encode a JPEG image file from the contents of a surface.
 If the argument is not NULL, the name of the file is copied to
 .Fa path_save ,
@@ -170,81 +167,81 @@ bytes in size.
 .Sh PIXEL OPERATIONS
 .nr nS 1
 .Ft "void"
-.Fn CLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
+.Fn AG_CLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
 .Pp
 .Ft "void"
-.Fn UNCLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
+.Fn AG_UNCLIPPED_PIXEL "SDL_Surface *s" "int x" "int y"
 .Pp
 .Ft "Uint32"
-.Fn GET_PIXEL "SDL_Surface *s" "Uint8 *p"
+.Fn AG_GET_PIXEL "SDL_Surface *s" "Uint8 *p"
 .Pp
 .Ft "Uint32"
-.Fn GET_PIXEL2 "SDL_Surface *s" "int x" "int y"
+.Fn AG_GET_PIXEL2 "SDL_Surface *s" "int x" "int y"
 .Pp
 .Ft "void"
-.Fn PUT_PIXEL "SDL_Surface *s" "Uint8 *p" "Uint32 c"
+.Fn AG_PUT_PIXEL "SDL_Surface *s" "Uint8 *p" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn PUT_PIXEL2 "SDL_Surface *s" "int x" "int y" "Uint32 c"
+.Fn AG_PUT_PIXEL2 "SDL_Surface *s" "int x" "int y" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn PUT_PIXEL2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint32 c"
+.Fn AG_PUT_PIXEL2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA "SDL_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum view_blend_func func"
+.Fn AG_BLEND_RGBA "SDL_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA2 "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum view_blend_func func"
+.Fn AG_BLEND_RGBA2 "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
 .Pp
 .Ft "void"
-.Fn BLEND_RGBA2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha" "enum view_blend_func func"
+.Fn AG_BLEND_RGBA2_CLIPPED "SDL_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha" "enum ag_blend_func func"
 .Pp
 .Ft "void"
-.Fn VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"
+.Fn AG_VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn VIEW_PUT_PIXEL2 "int x" "int y" "Uint32 c"
+.Fn AG_VIEW_PUT_PIXEL2 "int x" "int y" "Uint32 c"
 .Pp
 .Ft "void"
-.Fn VIEW_PUT_PIXEL2_CLIPPED "int x" "int y" "Uint32 c"
+.Fn AG_VIEW_PUT_PIXEL2_CLIPPED "int x" "int y" "Uint32 c"
 .nr nS 0
 .Pp
 The macros
-.Fn CLIPPED_PIXEL
+.Fn AG_CLIPPED_PIXEL
 and
-.Fn UNCLIPPED_PIXEL
+.Fn AG_UNCLIPPED_PIXEL
 evaluate whether the pixel at the given coordinates resides inside or outside
 of the clipping rectangle of the given surface.
 .Pp
-.Fn GET_PIXEL
+.Fn AG_GET_PIXEL
 returns a 32-bit interpretation of the pixel at the given location
 .Fa p
 in the pixel data of the surface
 .Fa s .
 The
-.Fn GET_PIXEL2
+.Fn AG_GET_PIXEL2
 variant finds the location of the pixel in the surface from the coordinates
 .Fa x ,
 .Fa y .
 .Pp
-.Fn PUT_PIXEL
+.Fn AG_PUT_PIXEL
 and
-.Fn PUT_PIXEL2
+.Fn AG_PUT_PIXEL2
 write the color
 .Fa c
 to the pixel at the given location, without doing any clipping.
 The
-.Fn PUT_PIXEL2_CLIPPED
+.Fn AG_PUT_PIXEL2_CLIPPED
 variant ensures that the pixel is inside the clipping rectangle of the surface
 before writing to it.
 .Pp
 The
-.Fn BLEND_RGBA ,
-.Fn BLEND_RGBA2
+.Fn AG_BLEND_RGBA ,
+.Fn AG_BLEND_RGBA2
 and
-.Fn BLEND_RGBA2_CLIPPED
+.Fn AG_BLEND_RGBA2_CLIPPED
 macros operate in a manner similar to
-.Fn PUT_PIXEL* ,
+.Fn AG_PUT_PIXEL* ,
 except that the destination pixel is alpha-blended with the color described
 by the given RGB triplet, whose weight is defined by the
 .Fa alpha
@@ -253,57 +250,57 @@ The
 .Fa func
 argument may be one of:
 .Bd -literal
-enum view_blend_func {
-	ALPHA_OVERLAY,			/* dA = sA+dA */
-	ALPHA_SRC,			/* dA = sA */
-	ALPHA_DST,			/* dA = dA */
-	ALPHA_MEAN,			/* dA = (sA+dA)/2 */
-	ALPHA_SOURCE_MINUS_DST,		/* dA = (sA-dA) */
-	ALPHA_DST_MINUS_SOURCE,		/* dA = (dA-sA) */
-	ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
+enum ag_blend_func {
+	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
+	AG_ALPHA_SRC,			/* dA = sA */
+	AG_ALPHA_DST,			/* dA = dA */
+	AG_ALPHA_MEAN,			/* dA = (sA+dA)/2 */
+	AG_ALPHA_SOURCE_MINUS_DST,	/* dA = (sA-dA) */
+	AG_ALPHA_DST_MINUS_SOURCE,	/* dA = (dA-sA) */
+	AG_ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
 };
 .Ed
 .Pp
 The macros
-.Fn VIEW_PUT_PIXEL ,
-.Fn VIEW_PUT_PIXEL2
+.Fn AG_VIEW_PUT_PIXEL ,
+.Fn AG_VIEW_PUT_PIXEL2
 and
-.Fn VIEW_PUT_PIXEL2_CLIPPED
+.Fn AG_VIEW_PUT_PIXEL2_CLIPPED
 behave in a manner similar to
-.Fn PUT_PIXEL* ,
+.Fn AG_PUT_PIXEL* ,
 except that they are optimized for the display surface.
 For instance, support for specific display depths may have been disabled
 at compile-time.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
-.Fn view_attach "struct window *child"
+.Fn AG_ViewAttach "AG_Window *child"
 .Pp
 .Ft "void"
-.Fn view_detach "struct window *child"
+.Fn AG_ViewDetach "AG_Window *child"
 .Pp
 .Ft void
-.Fn view_detach_queued "void"
+.Fn AG_ViewDetachQueued "void"
 .Pp
-.Ft "struct window *"
-.Fn view_window_exists "char *name"
+.Ft "AG_Window *"
+.Fn AG_FindWindow "char *name"
 .nr nS 0
 .Pp
 The
-.Fn view_attach
+.Fn AG_ViewAttach
 function attaches the window pointed to by
 .Fa child
 to the view.
 The
-.Fn view_detach
+.Fn AG_ViewDetach
 function detaches the window pointed to by
 .Fa child
 from the view by adding it to the detach queue.
 The detachment will be performed later by
-.Fa view_detach_queued .
+.Fa AG_ViewDetachQueued .
 .Pp
 The
-.Fn view_window_exists
+.Fn AG_FindWindow
 functions looks for a window identified by
 .Fa name
 and return NULL if there is no such window.

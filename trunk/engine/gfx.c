@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.57 2005/08/27 04:35:51 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.58 2005/09/07 03:56:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -52,16 +52,16 @@ enum {
 	NSUBMAPS_GROW =	4
 };
 
-const char *gfx_snap_names[] = {
+const char *agGfxSnapNames[] = {
 	N_("Free positioning"),
 	N_("Snap to grid"),
 	NULL
 };
 
 void
-sprite_init(struct gfx *gfx, Uint32 s)
+AG_SpriteInit(AG_Gfx *gfx, Uint32 s)
 {
-	struct sprite *spr = &gfx->sprites[s];
+	AG_Sprite *spr = &gfx->sprites[s];
 
 	spr->name[0] = '\0';
 	spr->pgfx = gfx;
@@ -71,7 +71,7 @@ sprite_init(struct gfx *gfx, Uint32 s)
 	spr->layers = NULL;
 	spr->xOrig = 0;
 	spr->yOrig = 0;
-	spr->snap_mode = GFX_SNAP_TO_GRID;
+	spr->snap_mode = AG_GFX_SNAP_TO_GRID;
 	SLIST_INIT(&spr->csprites);
 
 #ifdef HAVE_OPENGL
@@ -84,26 +84,26 @@ sprite_init(struct gfx *gfx, Uint32 s)
 }
 
 u_int
-sprite_wtiles(struct sprite *spr)
+AG_SpriteGetWtiles(AG_Sprite *spr)
 {
 	int w;
 
 	if (spr->su == NULL) {
 		return (0);
 	}
-	w = spr->su->w/TILESZ;
-	if (w%TILESZ > 0) { w++; }
+	w = spr->su->w/AGTILESZ;
+	if (w%AGTILESZ > 0) { w++; }
 	return (w);
 }
 
 void
-sprite_get_nattrs(struct sprite *spr, u_int *w, u_int *h)
+AG_SpriteGetNodeAttrs(AG_Sprite *spr, u_int *w, u_int *h)
 {
 	if (spr->su != NULL) {
-		*w = spr->su->w/TILESZ;
-		*h = spr->su->h/TILESZ;
-		if ((*w)%TILESZ > 0) (*w)++;
-		if ((*h)%TILESZ > 0) (*h)++;
+		*w = spr->su->w/AGTILESZ;
+		*h = spr->su->h/AGTILESZ;
+		if ((*w)%AGTILESZ > 0) (*w)++;
+		if ((*h)%AGTILESZ > 0) (*h)++;
 	} else {
 		*w = 0;
 		*h = 0;
@@ -111,10 +111,10 @@ sprite_get_nattrs(struct sprite *spr, u_int *w, u_int *h)
 }
 
 static __inline__ void
-sprite_free_transforms(struct sprite *spr)
+sprite_free_transforms(AG_Sprite *spr)
 {
-	struct gfx_cached_sprite *csprite, *ncsprite;
-	struct transform *trans, *ntrans;
+	AG_CachedSprite *csprite, *ncsprite;
+	AG_Transform *trans, *ntrans;
 
 	for (csprite = SLIST_FIRST(&spr->csprites);
 	     csprite != SLIST_END(&spr->csprites);
@@ -124,7 +124,7 @@ sprite_free_transforms(struct sprite *spr)
 		     trans != TAILQ_END(&csprite->transforms);
 		     trans = ntrans) {
 			ntrans = TAILQ_NEXT(trans, transforms);
-			transform_destroy(trans);
+			AG_TransformDestroy(trans);
 		}
 		SDL_FreeSurface(csprite->su);
 		Free(csprite, M_GFX);
@@ -133,26 +133,26 @@ sprite_free_transforms(struct sprite *spr)
 }
 
 int
-sprite_find(struct gfx *gfx, const char *name, Uint32 *offs)
+AG_SpriteFind(AG_Gfx *gfx, const char *name, Uint32 *offs)
 {
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++) {
-		struct sprite *spr = &gfx->sprites[i];
+		AG_Sprite *spr = &gfx->sprites[i];
 
 		if (strcmp(spr->name, name) == 0) {
 			*offs = i;
 			return (1);
 		}
 	}
-	error_set(_("No such sprite: \"%s\""), name);
+	AG_SetError(_("No such sprite: \"%s\""), name);
 	return (0);
 }
 
 void
-sprite_destroy(struct gfx *gfx, Uint32 s)
+AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 {
-	struct sprite *spr = &gfx->sprites[s];
+	AG_Sprite *spr = &gfx->sprites[s];
 
 	if (spr->su != NULL) {
 		SDL_FreeSurface(spr->su);
@@ -167,7 +167,7 @@ sprite_destroy(struct gfx *gfx, Uint32 s)
 		spr->layers = NULL;
 	}
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		if (spr->texture != 0) {
 			glDeleteTextures(1, &spr->texture);
 			spr->texture = 0;
@@ -182,17 +182,17 @@ sprite_destroy(struct gfx *gfx, Uint32 s)
 }
 
 void
-sprite_set_name(struct gfx *gfx, Uint32 s, const char *name)
+AG_SpriteSetName(AG_Gfx *gfx, Uint32 s, const char *name)
 {
-	struct sprite *spr = &gfx->sprites[s];
+	AG_Sprite *spr = &gfx->sprites[s];
 
 	strlcpy(spr->name, name, sizeof(spr->name));
 }
 
 void
-sprite_set_class(struct gfx *gfx, Uint32 s, const char *name)
+AG_SpriteSetClass(AG_Gfx *gfx, Uint32 s, const char *name)
 {
-	struct sprite *spr = &gfx->sprites[s];
+	AG_Sprite *spr = &gfx->sprites[s];
 
 	strlcpy(spr->clname, name, sizeof(spr->clname));
 }
@@ -202,30 +202,30 @@ sprite_set_class(struct gfx *gfx, Uint32 s, const char *name)
  * destroy the transform cache. The previous surface is freed if any.
  */
 void
-sprite_set_surface(struct gfx *gfx, Uint32 s, SDL_Surface *su)
+AG_SpriteSetSurface(AG_Gfx *gfx, Uint32 s, SDL_Surface *su)
 {
-	struct sprite *spr = &gfx->sprites[s];
+	AG_Sprite *spr = &gfx->sprites[s];
 
-	sprite_destroy(gfx, s);
+	AG_SpriteDestroy(gfx, s);
 	spr->su = su;
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		spr->texture = (su != NULL) ?
-		               view_surface_texture(su, &spr->texcoords[0]) : 0;
+		               AG_SurfaceTexture(su, &spr->texcoords[0]) : 0;
 	}
 #endif
 }
 
 /* Set the snapping mode of a sprite entry. */
 void
-sprite_set_snap_mode(struct sprite *spr, enum gfx_snap_mode snap_mode)
+AG_SpriteSetSnapMode(AG_Sprite *spr, enum ag_gfx_snap_mode snap_mode)
 {
 	spr->snap_mode = snap_mode;
 }
 
 /* Set the origin point of a sprite. */
 void
-sprite_set_origin(struct sprite *spr, int x, int y)
+AG_SpriteSetOrigin(AG_Sprite *spr, int x, int y)
 {
 	spr->xOrig = x;
 	spr->yOrig = y;
@@ -233,31 +233,31 @@ sprite_set_origin(struct sprite *spr, int x, int y)
 
 /* Flush cached transforms and regenerate the texture of a sprite. */
 void
-sprite_update(struct sprite *spr)
+AG_SpriteUpdate(AG_Sprite *spr)
 {
 	sprite_free_transforms(spr);
 #ifdef HAVE_OPENGL
-	if (view->opengl) {
+	if (agView->opengl) {
 		if (spr->texture != 0) {
 			glDeleteTextures(1, &spr->texture);
 		}
 		spr->texture = (spr->su != NULL) ?
-		    view_surface_texture(spr->su, &spr->texcoords[0]) : 0;
+		    AG_SurfaceTexture(spr->su, &spr->texcoords[0]) : 0;
 	}
 #endif
 }
 
 /* Allocate space for n new sprites and initialize them. */
 void
-gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
+AG_GfxAllocSprites(AG_Gfx *gfx, Uint32 n)
 {
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++)
-		sprite_destroy(gfx, i);
+		AG_SpriteDestroy(gfx, i);
 
 	if (n > 0) {
-		gfx->sprites = Realloc(gfx->sprites, n*sizeof(struct sprite));
+		gfx->sprites = Realloc(gfx->sprites, n*sizeof(AG_Sprite));
 	} else {
 		Free(gfx->sprites, M_GFX);
 		gfx->sprites = NULL;
@@ -265,20 +265,20 @@ gfx_alloc_sprites(struct gfx *gfx, Uint32 n)
 	gfx->nsprites = n;
 
 	for (i = 0; i < n; i++)
-		sprite_init(gfx, i);
+		AG_SpriteInit(gfx, i);
 }
 
 /* Allocate space for n new animations and initialize them. */
 void
-gfx_alloc_anims(struct gfx *gfx, Uint32 n)
+AG_GfxAllocAnims(AG_Gfx *gfx, Uint32 n)
 {
 	Uint32 i;
 
 	for (i = 0; i < gfx->nanims; i++)
-		anim_destroy(gfx, i);
+		AG_AnimDestroy(gfx, i);
 
 	if (n > 0) {
-		gfx->anims = Realloc(gfx->anims, n*sizeof(struct gfx_anim));
+		gfx->anims = Realloc(gfx->anims, n*sizeof(AG_Anim));
 	} else {
 		Free(gfx->anims, M_GFX);
 		gfx->anims = NULL;
@@ -286,19 +286,19 @@ gfx_alloc_anims(struct gfx *gfx, Uint32 n)
 	gfx->nanims = n;
 
 	for (i = 0; i < n; i++)
-		anim_init(gfx, i);
+		AG_AnimInit(gfx, i);
 }
 
 /* Allocate and initialize a new sprite at the end of the array. */
 Uint32
-gfx_insert_sprite(struct gfx *gfx, SDL_Surface *su)
+AG_GfxAddSprite(AG_Gfx *gfx, SDL_Surface *su)
 {
-	struct sprite *spr;
+	AG_Sprite *spr;
 	
 	gfx->sprites = Realloc(gfx->sprites, (gfx->nsprites+1) *
-	                                     sizeof(struct sprite));
-	sprite_init(gfx, gfx->nsprites);
-	sprite_set_surface(gfx, gfx->nsprites, su);
+	                                     sizeof(AG_Sprite));
+	AG_SpriteInit(gfx, gfx->nsprites);
+	AG_SpriteSetSurface(gfx, gfx->nsprites, su);
 	return (gfx->nsprites++);
 }
 
@@ -307,7 +307,7 @@ gfx_insert_sprite(struct gfx *gfx, SDL_Surface *su)
  * return 1 if there are any.
  */
 int
-gfx_transparent(SDL_Surface *su)
+AG_HasTransparency(SDL_Surface *su)
 {
 	int x, y;
 	int rv = 0;
@@ -325,7 +325,7 @@ gfx_transparent(SDL_Surface *su)
 		for (x = 0; x < su->w; x++) {
 			Uint8 r, g, b, a;
 
-			SDL_GetRGBA(GET_PIXEL(su, pSrc), su->format,
+			SDL_GetRGBA(AG_GET_PIXEL(su, pSrc), su->format,
 			    &r, &g, &b, &a);
 
 			if (a != SDL_ALPHA_OPAQUE) {
@@ -344,30 +344,30 @@ out:
 }
 
 /* Break a surface into tile-sized fragments and generate a map. */
-struct map *
-gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
+AG_Map *
+AG_GfxAddFragments(AG_Gfx *gfx, SDL_Surface *sprite)
 {
-	char mapname[OBJECT_NAME_MAX];
+	char mapname[AG_OBJECT_NAME_MAX];
 	int x, y, mx, my;
 	u_int mw, mh;
 	SDL_Rect sd, rd;
-	struct map *fragmap;
+	AG_Map *fragmap;
 
-	sd.w = TILESZ;
-	sd.h = TILESZ;
+	sd.w = AGTILESZ;
+	sd.h = AGTILESZ;
 	rd.x = 0;
 	rd.y = 0;
-	mw = sprite->w/TILESZ + 1;
-	mh = sprite->h/TILESZ + 1;
+	mw = sprite->w/AGTILESZ + 1;
+	mh = sprite->h/AGTILESZ + 1;
 
-	fragmap = Malloc(sizeof(struct map), M_OBJECT);
+	fragmap = Malloc(sizeof(AG_Map), M_OBJECT);
 	snprintf(mapname, sizeof(mapname), "f%u", gfx->nsubmaps);
-	map_init(fragmap, mapname);
-	if (map_alloc_nodes(fragmap, mw, mh) == -1)
-		fatal("%s", error_get());
+	AG_MapInit(fragmap, mapname);
+	if (AG_MapAllocNodes(fragmap, mw, mh) == -1)
+		fatal("%s", AG_GetError());
 
-	for (y = 0, my = 0; y < sprite->h; y += TILESZ, my++) {
-		for (x = 0, mx = 0; x < sprite->w; x += TILESZ, mx++) {
+	for (y = 0, my = 0; y < sprite->h; y += AGTILESZ, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += AGTILESZ, mx++) {
 			SDL_Surface *su;
 			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
 			                                  SDL_RLEACCEL);
@@ -375,14 +375,14 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			                                   SDL_RLEACCEL);
 			Uint8 salpha = sprite->format->alpha;
 			Uint32 scolorkey = sprite->format->colorkey;
-			struct node *node = &fragmap->map[my][mx];
+			AG_Node *node = &fragmap->map[my][mx];
 			Uint32 nsprite;
-			int fw = TILESZ;
-			int fh = TILESZ;
+			int fw = AGTILESZ;
+			int fh = AGTILESZ;
 
-			if (sprite->w - x < TILESZ)
+			if (sprite->w - x < AGTILESZ)
 				fw = sprite->w - x;
-			if (sprite->h - y < TILESZ)
+			if (sprite->h - y < AGTILESZ)
 				fh = sprite->h - y;
 
 			/* Allocate a surface for the fragment. */
@@ -404,7 +404,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, su, &rd);
-			nsprite = gfx_insert_sprite(gfx, su);
+			nsprite = AG_GfxAddSprite(gfx, su);
 			SDL_SetAlpha(sprite, saflags, salpha);
 			SDL_SetColorKey(sprite, sckflags, scolorkey);
 
@@ -412,33 +412,33 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			 * Enable alpha blending if there are any pixels
 			 * with a non-opaque alpha channel on the surface.
 			 */
-			if (gfx_transparent(su))
+			if (AG_HasTransparency(su))
 				SDL_SetAlpha(su, SDL_SRCALPHA,
 				    su->format->alpha);
 
 			/* Map the sprite as a NULL reference. */
-			node_add_sprite(fragmap, node, NULL, nsprite);
+			AG_NodeAddSprite(fragmap, node, NULL, nsprite);
 		}
 	}
 
-	gfx_insert_submap(gfx, fragmap);
+	AG_GfxAddSubmap(gfx, fragmap);
 	return (fragmap);
 }
 
 /* Allocate a gfx structure for a given object. */
-struct gfx *
-gfx_new(void *pobj)
+AG_Gfx *
+AG_GfxNew(void *pobj)
 {
-	struct gfx *gfx;
+	AG_Gfx *gfx;
 	
-	gfx = Malloc(sizeof(struct gfx), M_GFX);
-	gfx_init(gfx);
+	gfx = Malloc(sizeof(AG_Gfx), M_GFX);
+	AG_GfxInit(gfx);
 	gfx->pobj = pobj;
 	return (gfx);
 }
 
 void
-gfx_init(struct gfx *gfx)
+AG_GfxInit(AG_Gfx *gfx)
 {
 	gfx->pobj = NULL;
 	gfx->sprites = NULL;
@@ -453,7 +453,7 @@ gfx_init(struct gfx *gfx)
 }
 
 static void
-destroy_anim(struct gfx_anim *anim)
+destroy_anim(AG_Anim *anim)
 {
 	Uint32 i;
 
@@ -464,11 +464,11 @@ destroy_anim(struct gfx_anim *anim)
 }
 
 void
-anim_destroy(struct gfx *gfx, Uint32 name)
+AG_AnimDestroy(AG_Gfx *gfx, Uint32 name)
 {
-	struct gfx_animcl *animcl = &gfx->canims[name];
-	struct gfx_cached_anim *canim, *ncanim;
-	struct transform *trans, *ntrans;
+	AG_AnimCache *animcl = &gfx->canims[name];
+	AG_CachedAnim *canim, *ncanim;
+	AG_Transform *trans, *ntrans;
 
 	for (canim = SLIST_FIRST(&animcl->anims);
 	     canim != SLIST_END(&animcl->anims);
@@ -478,7 +478,7 @@ anim_destroy(struct gfx *gfx, Uint32 name)
 		     trans != TAILQ_END(&canim->transforms);
 		     trans = ntrans) {
 			ntrans = TAILQ_NEXT(trans, transforms);
-			transform_destroy(trans);
+			AG_TransformDestroy(trans);
 		}
 		destroy_anim(canim->anim);
 		Free(canim, M_GFX);
@@ -490,18 +490,18 @@ anim_destroy(struct gfx *gfx, Uint32 name)
 
 /* Release a graphics package that is no longer in use. */
 void
-gfx_destroy(struct gfx *gfx)
+AG_GfxDestroy(AG_Gfx *gfx)
 {
 	Uint32 i;
 
 	for (i = 0; i < gfx->nsprites; i++) {
-		sprite_destroy(gfx, i);
+		AG_SpriteDestroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nanims; i++) {
-		anim_destroy(gfx, i);
+		AG_AnimDestroy(gfx, i);
 	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
-		object_destroy(gfx->submaps[i]);
+		AG_ObjectDestroy(gfx->submaps[i]);
 		Free(gfx->submaps[i], M_OBJECT);
 	}
 
@@ -514,7 +514,7 @@ gfx_destroy(struct gfx *gfx)
 
 /* Insert a frame into an animation. */
 Uint32
-gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
+AG_GfxAddAnimFrame(AG_Anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {
 		anim->frames = Malloc(FRAMES_INIT*sizeof(SDL_Surface *), M_GFX);
@@ -531,27 +531,27 @@ gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
 
 /* Allocate a new submap. */
 Uint32
-gfx_insert_submap(struct gfx *gfx, struct map *m)
+AG_GfxAddSubmap(AG_Gfx *gfx, AG_Map *m)
 {
 	if (gfx->submaps == NULL) {
 		gfx->maxsubmaps = NSUBMAPS_INIT;
-		gfx->submaps = Malloc(gfx->maxsubmaps*sizeof(struct map *),
+		gfx->submaps = Malloc(gfx->maxsubmaps*sizeof(AG_Map *),
 		    M_GFX);
 		gfx->nsubmaps = 0;
 	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {
 		gfx->maxsubmaps += NSUBMAPS_GROW;
 		gfx->submaps = Realloc(gfx->submaps,
-		    gfx->maxsubmaps*sizeof(struct map *));
+		    gfx->maxsubmaps*sizeof(AG_Map *));
 	}
 	gfx->submaps[gfx->nsubmaps] = m;
 	return (gfx->nsubmaps++);
 }
 
 void
-anim_init(struct gfx *gfx, Uint32 i)
+AG_AnimInit(AG_Gfx *gfx, Uint32 i)
 {
-	struct gfx_anim *anim = &gfx->anims[i];
-	struct gfx_animcl *animcl = &gfx->canims[i];
+	AG_Anim *anim = &gfx->anims[i];
+	AG_AnimCache *animcl = &gfx->canims[i];
 
 	anim->frames = NULL;
 	anim->maxframes = 0;
@@ -562,125 +562,123 @@ anim_init(struct gfx *gfx, Uint32 i)
 
 /* Allocate a new animation. */
 Uint32
-gfx_insert_anim(struct gfx *gfx)
+AG_GfxAddAnim(AG_Gfx *gfx)
 {
-	gfx->anims = Realloc(gfx->anims, (gfx->nanims+1) * 
-	                                 sizeof(struct gfx_anim));
+	gfx->anims = Realloc(gfx->anims, (gfx->nanims+1) *  sizeof(AG_Anim));
 	gfx->canims = Realloc(gfx->canims, (gfx->nanims+1) *
-                                           sizeof(struct gfx_animcl));
-	anim_init(gfx, gfx->nanims);
+                                           sizeof(AG_AnimCache));
+	AG_AnimInit(gfx, gfx->nanims);
 	return (gfx->nanims++);
 }
 
 /* Load static graphics from a den archive. Used for widgets and such. */
 int
-gfx_wire(void *p, const char *name)
+AG_WireGfx(void *p, const char *name)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p;
-	struct den *den;
+	AG_Object *ob = p;
+	AG_Den *den;
 	Uint32 i;
 
-	if (config_search_file("den-path", name, "den", path, sizeof(path))
-	    == -1 ||
-	    (den = den_open(path, DEN_READ)) == NULL)
+	if (AG_ConfigFile("den-path", name, "den", path, sizeof(path)) == -1 ||
+	    (den = AG_DenOpen(path, AG_DEN_READ)) == NULL)
 		return (-1);
 	
-	ob->gfx = gfx_new(ob);
-	ob->gfx->used = GFX_MAX_USED;
+	ob->gfx = AG_GfxNew(ob);
+	ob->gfx->used = AG_GFX_MAX_USED;
 	for (i = 0; i < den->nmembers; i++) {
-		if (xcf_load(den->buf, den->members[i].offs, ob->gfx) == -1) {
-			den_close(den);
-			gfx_destroy(ob->gfx);
+		if (AG_XCFLoad(den->buf, den->members[i].offs, ob->gfx) == -1) {
+			AG_DenClose(den);
+			AG_GfxDestroy(ob->gfx);
 			ob->gfx = NULL;
 			return (-1);
 		}
 	}
-	den_close(den);
+	AG_DenClose(den);
 	return (0);
 }
 
 void
-gfx_used(void *p)
+AG_GfxUsed(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 
-	if (ob->gfx != NULL && ob->gfx->used != GFX_MAX_USED)
+	if (ob->gfx != NULL && ob->gfx->used != AG_GFX_MAX_USED)
 		ob->gfx->used++;
 }
 
 int
-gfx_unused(void *p)
+AG_GfxUnused(void *p)
 {
-	struct object *ob = p;
+	AG_Object *ob = p;
 	
 	if (ob->gfx != NULL && --ob->gfx->used == 0) {
-		gfx_alloc_sprites(ob->gfx, 0);
-		gfx_alloc_anims(ob->gfx, 0);
+		AG_GfxAllocSprites(ob->gfx, 0);
+		AG_GfxAllocAnims(ob->gfx, 0);
 		return (1);
 	}
 	return (0);
 }
 
 int
-gfx_load(struct object *ob)
+AG_GfxLoad(AG_Object *ob)
 {
-	extern const struct version object_ver;
-	struct gfx *gfx = ob->gfx;
+	extern const AG_Version ag_object_ver;
+	AG_Gfx *gfx = ob->gfx;
 	char path[MAXPATHLEN];
-	struct netbuf *buf;
+	AG_Netbuf *buf;
 	off_t gfx_offs;
 	Uint32 i, j;
 	
-	if (object_copy_filename(ob, path, sizeof(path)) == -1) {
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
 		return (-1);
 	}
-	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
-		error_set("%s: %s", path, error_get());
+	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
 	
-	if (version_read(buf, &object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
 		goto fail;
 
-	read_uint32(buf);				/* Skip data offs */
-	gfx_offs = (off_t)read_uint32(buf);
-	netbuf_seek(buf, gfx_offs, SEEK_SET);
+	AG_ReadUint32(buf);				/* Skip data offs */
+	gfx_offs = (off_t)AG_ReadUint32(buf);
+	AG_NetbufSeek(buf, gfx_offs, SEEK_SET);
 
-	if (read_uint8(buf) == 0)
+	if (AG_ReadUint8(buf) == 0)
 		goto out;
 
-	read_uint32(buf);				/* Pad: flags */
+	AG_ReadUint32(buf);				/* Pad: flags */
 
-	gfx_alloc_sprites(gfx, read_uint32(buf));
+	AG_GfxAllocSprites(gfx, AG_ReadUint32(buf));
 	dprintf("%s: %d sprites\n", ob->name, gfx->nsprites);
 	for (i = 0; i < gfx->nsprites; i++) {
-		struct sprite *spr = &gfx->sprites[i];
+		AG_Sprite *spr = &gfx->sprites[i];
 
-		copy_string(spr->name, buf, sizeof(spr->name));
-		if (read_uint8(buf)) {
-			spr->su = read_surface(buf, sfmt);
+		AG_CopyString(spr->name, buf, sizeof(spr->name));
+		if (AG_ReadUint8(buf)) {
+			spr->su = AG_ReadSurface(buf, agSurfaceFmt);
 		} else {
 			spr->su = NULL;
 		}
-		spr->xOrig = (int)read_sint32(buf);
-		spr->yOrig = (int)read_sint32(buf);
-		spr->snap_mode = (enum gfx_snap_mode)read_uint8(buf);
+		spr->xOrig = (int)AG_ReadSint32(buf);
+		spr->yOrig = (int)AG_ReadSint32(buf);
+		spr->snap_mode = (enum ag_gfx_snap_mode)AG_ReadUint8(buf);
 
-		if (read_uint8(buf)) {
+		if (AG_ReadUint8(buf)) {
 			u_int nw, nh;
 			int x, y;
 
-			sprite_get_nattrs(spr, &nw, &nh);
+			AG_SpriteGetNodeAttrs(spr, &nw, &nh);
 			dprintf("%s: %d,%d attributes\n", ob->name, nw, nh);
 			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(u_int));
 			spr->layers = Realloc(spr->layers, nw*nh*sizeof(int));
 			for (y = 0; y < nh; y++) {
 				for (x = 0; x < nw; x++) {
 					spr->attrs[y*nw + x] =
-					    (u_int)read_uint32(buf);
+					    (u_int)AG_ReadUint32(buf);
 					spr->layers[y*nw + x] =
-					    (int)read_sint32(buf);
+					    (int)AG_ReadSint32(buf);
 				}
 			}
 		} else {
@@ -690,86 +688,86 @@ gfx_load(struct object *ob)
 		}
 	}
 
-	gfx_alloc_anims(gfx, read_uint32(buf));
+	AG_GfxAllocAnims(gfx, AG_ReadUint32(buf));
 	dprintf("%s: %d anims\n", ob->name, gfx->nanims);
 	for (i = 0; i < gfx->nanims; i++) {
-		struct gfx_anim *anim = &gfx->anims[i];
+		AG_Anim *anim = &gfx->anims[i];
 
-		anim->frame = read_uint32(buf);
-		anim->nframes = read_uint32(buf);
+		anim->frame = AG_ReadUint32(buf);
+		anim->nframes = AG_ReadUint32(buf);
 		anim->frames = Realloc(anim->frames, anim->nframes *
 				                     sizeof(SDL_Surface *));
 		for (j = 0; j < anim->nframes; j++)
-			anim->frames[j] = read_surface(buf, vfmt);
+			anim->frames[j] = AG_ReadSurface(buf, agVideoFmt);
 	}
 
 out:
-	netbuf_close(buf);
+	AG_NetbufClose(buf);
 	return (0);
 fail:
-	netbuf_close(buf);
+	AG_NetbufClose(buf);
 	return (-1);
 }
 
 int
-gfx_save(struct object *ob, struct netbuf *buf)
+AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 {
-	struct gfx *gfx = ob->gfx;
+	AG_Gfx *gfx = ob->gfx;
 	Uint32 i, j;
 
 	if (gfx == NULL) {
-		write_uint8(buf, 0);
+		AG_WriteUint8(buf, 0);
 		return (0);
 	} else {
-		write_uint8(buf, 1);
+		AG_WriteUint8(buf, 1);
 	}
 
-	write_uint32(buf, 0);				/* Pad: flags */
+	AG_WriteUint32(buf, 0);				/* Pad: flags */
 
 	dprintf("%s: saving %d sprites\n", ob->name, gfx->nsprites);
-	write_uint32(buf, gfx->nsprites);
+	AG_WriteUint32(buf, gfx->nsprites);
 	for (i = 0; i < gfx->nsprites; i++) {
-		struct sprite *spr = &gfx->sprites[i];
+		AG_Sprite *spr = &gfx->sprites[i];
 
-		write_string(buf, spr->name);
+		AG_WriteString(buf, spr->name);
 		if (spr->su != NULL) {
-			write_uint8(buf, 1);
-			write_surface(buf, spr->su);
+			AG_WriteUint8(buf, 1);
+			AG_WriteSurface(buf, spr->su);
 		} else {
-			write_uint8(buf, 0);
+			AG_WriteUint8(buf, 0);
 		}
-		write_sint32(buf, (Sint32)spr->xOrig);
-		write_sint32(buf, (Sint32)spr->yOrig);
-		write_uint8(buf, (Uint8)spr->snap_mode);
+		AG_WriteSint32(buf, (Sint32)spr->xOrig);
+		AG_WriteSint32(buf, (Sint32)spr->yOrig);
+		AG_WriteUint8(buf, (Uint8)spr->snap_mode);
 
 		if (spr->attrs != NULL && spr->layers != NULL) {
 			int x, y;
 			u_int nw, nh;
 
-			write_uint8(buf, 1);
-			sprite_get_nattrs(spr, &nw, &nh);
+			AG_WriteUint8(buf, 1);
+			AG_SpriteGetNodeAttrs(spr, &nw, &nh);
 			for (y = 0; y < nh; y++) {
 				for (x = 0; x < nw; x++) {
-					write_uint32(buf,
+					AG_WriteUint32(buf,
 					    (Uint32)spr->attrs[y*nw + x]);
-					write_sint32(buf,
+					AG_WriteSint32(buf,
 					    (Sint32)spr->layers[y*nw + x]);
 				}
 			}
 		} else {
-			write_uint8(buf, 0);
+			AG_WriteUint8(buf, 0);
 		}
 	}
 
 	dprintf("%s: saving %d anims\n", ob->name, gfx->nsprites);
-	write_uint32(buf, gfx->nanims);
+	AG_WriteUint32(buf, gfx->nanims);
 	for (i = 0; i < gfx->nanims; i++) {
-		struct gfx_anim *anim = &gfx->anims[i];
+		AG_Anim *anim = &gfx->anims[i];
 
-		write_uint32(buf, anim->frame);
-		write_uint32(buf, anim->nframes);
+		AG_WriteUint32(buf, anim->frame);
+		AG_WriteUint32(buf, anim->nframes);
 		for (j = 0; j < anim->nframes; j++)
-			write_surface(buf, anim->frames[j]);
+			AG_WriteSurface(buf, anim->frames[j]);
 	}
 	return (0);
 }

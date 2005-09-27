@@ -1,4 +1,4 @@
-/*	$Csoft: string.c,v 1.9 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: string.c,v 1.10 2005/09/17 04:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,21 +41,21 @@
 
 /* Allocate and read a length-encoded string. */
 char *
-read_string_len(struct netbuf *buf, size_t maxlen)
+AG_ReadStringLen(AG_Netbuf *buf, size_t maxlen)
 {
 	size_t len;
 	char *s;
 
-	if ((len = (size_t)read_uint32(buf))+1 >= maxlen) {
-		error_set("String overflow");
+	if ((len = (size_t)AG_ReadUint32(buf))+1 >= maxlen) {
+		AG_SetError("String overflow");
 		return (NULL);
 	}
 	if ((s = malloc(len+1)) == NULL) {
-		error_set("Out of memory for string");
+		AG_SetError("Out of memory for string");
 		return (NULL);
 	}
 	if (len > 0) {
-		netbuf_read(s, len, 1, buf);
+		AG_NetbufRead(s, len, 1, buf);
 	}
 	s[len] = '\0';
 	return (s);
@@ -63,39 +63,39 @@ read_string_len(struct netbuf *buf, size_t maxlen)
 
 /* Allocate and read a NUL-terminated, length-encoded string. */
 char *
-read_nulstring_len(struct netbuf *buf, size_t maxlen)
+AG_ReadNulStringLen(AG_Netbuf *buf, size_t maxlen)
 {
 	size_t len;
 	char *s;
 
-	if ((len = (size_t)read_uint32(buf)) >= maxlen) {
-		error_set("String overflow");
+	if ((len = (size_t)AG_ReadUint32(buf)) >= maxlen) {
+		AG_SetError("String overflow");
 		return (NULL);
 	}
 	if (len == 0) {
-		error_set("NULL string");
+		AG_SetError("NULL string");
 		return (NULL);
 	}
 	if ((s = malloc(len)) == NULL) {
-		error_set("Out of memory for string");
+		AG_SetError("Out of memory for string");
 		return (NULL);
 	}
-	netbuf_read(s, len, 1, buf);
+	AG_NetbufRead(s, len, 1, buf);
 	return (s);
 }
 
 /* Write a length-encoded string. */
 void
-write_string(struct netbuf *buf, const char *s)
+AG_WriteString(AG_Netbuf *buf, const char *s)
 {
 	size_t len;
 
 	if (s == NULL || s[0] == '\0') {
-		write_uint32(buf, 0);
+		AG_WriteUint32(buf, 0);
 	} else {
 		len = strlen(s);
-		write_uint32(buf, (Uint32)len);
-		netbuf_write(s, len, 1, buf);
+		AG_WriteUint32(buf, (Uint32)len);
+		AG_NetbufWrite(s, len, 1, buf);
 	}
 }
 
@@ -105,15 +105,15 @@ write_string(struct netbuf *buf, const char *s)
  * dst_size unlimited. The function NUL-terminates the string.
  */
 size_t
-copy_string(char *dst, struct netbuf *buf, size_t dst_size)
+AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
 {
 	size_t rv, len;
 	ssize_t rrv;
 
-	if ((len = (size_t)read_uint32(buf)) > (dst_size-1)) {
+	if ((len = (size_t)AG_ReadUint32(buf)) > (dst_size-1)) {
 #ifdef DEBUG
 		fprintf(stderr, "0x%x: %lub string truncated to fit %lub\n",
-		    (unsigned)netbuf_tell(buf), (unsigned long)len,
+		    (unsigned)AG_NetbufTell(buf), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif
 		rv = len+1;		/* Save the intended length */
@@ -144,15 +144,15 @@ copy_string(char *dst, struct netbuf *buf, size_t dst_size)
  * copied were dst_size unlimited.
  */
 size_t
-copy_nulstring(char *dst, struct netbuf *buf, size_t dst_size)
+AG_CopyNulString(char *dst, AG_Netbuf *buf, size_t dst_size)
 {
 	size_t rv, len;
 	ssize_t rrv;
 
-	if ((len = (size_t)read_uint32(buf)) > dst_size) {
+	if ((len = (size_t)AG_ReadUint32(buf)) > dst_size) {
 #ifdef DEBUG
 		fprintf(stderr, "0x%x: %lub string truncated to fit %lub\n",
-		    (unsigned)netbuf_tell(buf), (unsigned long)len,
+		    (unsigned)AG_NetbufTell(buf), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif
 		rv = len;		/* Save the intended length */

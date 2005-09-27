@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.23 2005/07/08 04:36:47 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.24 2005/09/03 14:19:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,74 +40,74 @@
 #include <errno.h>
 #include <limits.h>
 
-static struct widget_ops spinbutton_ops = {
+static AG_WidgetOps spinbutton_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		spinbutton_destroy,
+		AG_SpinbuttonDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	spinbutton_draw,
-	spinbutton_scale
+	AG_SpinbuttonDraw,
+	AG_SpinbuttonScale
 };
 
-struct spinbutton *
-spinbutton_new(void *parent, const char *fmt, ...)
+AG_Spinbutton *
+AG_SpinbuttonNew(void *parent, const char *fmt, ...)
 {
-	char label[LABEL_MAX];
-	struct spinbutton *sbu;
+	char label[AG_LABEL_MAX];
+	AG_Spinbutton *sbu;
 	va_list ap;
 
 	va_start(ap, fmt);
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	sbu = Malloc(sizeof(struct spinbutton), M_OBJECT);
-	spinbutton_init(sbu, label);
-	object_attach(parent, sbu);
+	sbu = Malloc(sizeof(AG_Spinbutton), M_OBJECT);
+	AG_SpinbuttonInit(sbu, label);
+	AG_ObjectAttach(parent, sbu);
 	return (sbu);
 }
 
 static void
 spinbutton_bound(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[0].p;
-	struct widget_binding *binding = argv[1].p;
+	AG_Spinbutton *sbu = argv[0].p;
+	AG_WidgetBinding *binding = argv[1].p;
 
 	if (strcmp(binding->name, "value") == 0) {
 		pthread_mutex_lock(&sbu->lock);
 		switch (binding->vtype) {
-		case WIDGET_INT:
+		case AG_WIDGET_INT:
 			sbu->min = INT_MIN+1;
 			sbu->max = INT_MAX-1;
 			break;
-		case WIDGET_UINT:
+		case AG_WIDGET_UINT:
 			sbu->min = 0;
 			sbu->max = UINT_MAX-1;
 			break;
-		case WIDGET_UINT8:
+		case AG_WIDGET_UINT8:
 			sbu->min = 0;
 			sbu->max = 0xffU;
 			break;
-		case WIDGET_SINT8:
+		case AG_WIDGET_SINT8:
 			sbu->min = -0x7f+1;
 			sbu->max =  0x7f-1;
 			break;
-		case WIDGET_UINT16:
+		case AG_WIDGET_UINT16:
 			sbu->min = 0;
 			sbu->max = 0xffffU;
 			break;
-		case WIDGET_SINT16:
+		case AG_WIDGET_SINT16:
 			sbu->min = -0x7fff+1;
 			sbu->max =  0x7fff-1;
 			break;
-		case WIDGET_UINT32:
+		case AG_WIDGET_UINT32:
 			sbu->min = 0;
 			sbu->max = 0xffffffffU;
 			break;
-		case WIDGET_SINT32:
+		case AG_WIDGET_SINT32:
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
 			break;
@@ -119,16 +119,16 @@ spinbutton_bound(int argc, union evarg *argv)
 static void
 spinbutton_keydown(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[0].p;
+	AG_Spinbutton *sbu = argv[0].p;
 	int keysym = argv[1].i;
 
 	pthread_mutex_lock(&sbu->lock);
 	switch (keysym) {
 	case SDLK_UP:
-		spinbutton_add_value(sbu, sbu->incr);
+		AG_SpinbuttonAddValue(sbu, sbu->incr);
 		break;
 	case SDLK_DOWN:
-		spinbutton_add_value(sbu, -sbu->incr);
+		AG_SpinbuttonAddValue(sbu, -sbu->incr);
 		break;
 	}
 	pthread_mutex_unlock(&sbu->lock);
@@ -137,59 +137,59 @@ spinbutton_keydown(int argc, union evarg *argv)
 static void
 spinbutton_changed(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[1].p;
-	struct widget_binding *stringb;
+	AG_Spinbutton *sbu = argv[1].p;
+	AG_WidgetBinding *stringb;
 	char *s;
 
-	stringb = widget_get_binding(sbu->input, "string", &s);
-	spinbutton_set_value(sbu, atoi(s));
-	widget_binding_unlock(stringb);
+	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
+	AG_SpinbuttonSetValue(sbu, atoi(s));
+	AG_WidgetUnlockBinding(stringb);
 
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
+	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 static void
 spinbutton_return(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[1].p;
-	struct widget_binding *stringb;
+	AG_Spinbutton *sbu = argv[1].p;
+	AG_WidgetBinding *stringb;
 
-	event_post(NULL, sbu, "spinbutton-return", NULL);
-	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
+	AG_PostEvent(NULL, sbu, "spinbutton-return", NULL);
+	AGWIDGET(sbu->input)->flags &= ~(AG_WIDGET_FOCUSED);
 }
 
 static void
 spinbutton_inc(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = argv[1].p;
 
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_add_value(sbu, sbu->incr);
+	AG_SpinbuttonAddValue(sbu, sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
+	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 static void
 spinbutton_dec(int argc, union evarg *argv)
 {
-	struct spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = argv[1].p;
 	
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_add_value(sbu, -sbu->incr);
+	AG_SpinbuttonAddValue(sbu, -sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
+	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 void
-spinbutton_init(struct spinbutton *sbu, const char *label)
+AG_SpinbuttonInit(AG_Spinbutton *sbu, const char *label)
 {
-	widget_init(sbu, "spinbutton", &spinbutton_ops,
-	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(sbu, "value", WIDGET_INT, &sbu->value);
-	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
-	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
+	AG_WidgetInit(sbu, "spinbutton", &spinbutton_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &sbu->value);
+	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);
+	AG_WidgetBind(sbu, "max", AG_WIDGET_INT, &sbu->max);
 
 	sbu->value = 0;
 	sbu->incr = 1;
@@ -197,158 +197,159 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	sbu->min = 0;
 	sbu->max = 0;
 	pthread_mutex_init(&sbu->lock, NULL);
-	sbu->input = textbox_new(sbu, label);
+	sbu->input = AG_TextboxNew(sbu, label);
 
-	event_new(sbu, "widget-bound", spinbutton_bound, NULL);
-	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
+	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
+	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);
 
-	sbu->incbu = button_new(sbu, "+");
-	button_set_padding(sbu->incbu, 0);
-	button_set_repeat(sbu->incbu, 1);
+	sbu->incbu = AG_ButtonNew(sbu, "+");
+	AG_ButtonSetPadding(sbu->incbu, 0);
+	AG_ButtonSetRepeatMode(sbu->incbu, 1);
 
-	sbu->decbu = button_new(sbu, "-");
-	button_set_padding(sbu->decbu, 0);
-	button_set_repeat(sbu->decbu, 1);
+	sbu->decbu = AG_ButtonNew(sbu, "-");
+	AG_ButtonSetPadding(sbu->decbu, 0);
+	AG_ButtonSetRepeatMode(sbu->decbu, 1);
 	
-	event_new(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
-	event_new(sbu->input, "textbox-postchg", spinbutton_changed, "%p", sbu);
-	event_new(sbu->incbu, "button-pushed", spinbutton_inc, "%p", sbu);
-	event_new(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
+	AG_SetEvent(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
+	AG_SetEvent(sbu->input, "textbox-postchg", spinbutton_changed, "%p",
+	    sbu);
+	AG_SetEvent(sbu->incbu, "button-pushed", spinbutton_inc, "%p", sbu);
+	AG_SetEvent(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
 }
 
 void
-spinbutton_destroy(void *p)
+AG_SpinbuttonDestroy(void *p)
 {
-	struct spinbutton *sbu = p;
+	AG_Spinbutton *sbu = p;
 
 	pthread_mutex_destroy(&sbu->lock);
-	widget_destroy(sbu);
+	AG_WidgetDestroy(sbu);
 }
 
 void
-spinbutton_scale(void *p, int w, int h)
+AG_SpinbuttonScale(void *p, int w, int h)
 {
-	struct spinbutton *sbu = p;
+	AG_Spinbutton *sbu = p;
 	int x = 0, y = 0;
 	int bw = 10;
 	int bh = h/2;
 
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(sbu->input, -1, -1);
-		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
-		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
-		WIDGET_SCALE(sbu->incbu, -1, -1);
-		WIDGET_SCALE(sbu->decbu, -1, -1);
-		WIDGET(sbu)->w += max(WIDGET(sbu->incbu)->w,
-		                      WIDGET(sbu->decbu)->w);
+		AGWIDGET_SCALE(sbu->input, -1, -1);
+		AGWIDGET(sbu)->w = AGWIDGET(sbu->input)->w;
+		AGWIDGET(sbu)->h = AGWIDGET(sbu->input)->h;
+		AGWIDGET_SCALE(sbu->incbu, -1, -1);
+		AGWIDGET_SCALE(sbu->decbu, -1, -1);
+		AGWIDGET(sbu)->w += max(AGWIDGET(sbu->incbu)->w,
+		                      AGWIDGET(sbu->decbu)->w);
 		return;
 	}
 
-	WIDGET(sbu->input)->x = x;
-	WIDGET(sbu->input)->y = y;
-	widget_scale(sbu->input, w - bw, h);
-	x += WIDGET(sbu->input)->w;
+	AGWIDGET(sbu->input)->x = x;
+	AGWIDGET(sbu->input)->y = y;
+	AG_WidgetScale(sbu->input, w - bw, h);
+	x += AGWIDGET(sbu->input)->w;
 
-	WIDGET(sbu->incbu)->x = x;
-	WIDGET(sbu->incbu)->y = y;
-	widget_scale(sbu->incbu, bw, bh);
+	AGWIDGET(sbu->incbu)->x = x;
+	AGWIDGET(sbu->incbu)->y = y;
+	AG_WidgetScale(sbu->incbu, bw, bh);
 	y += h/2;
 
-	WIDGET(sbu->decbu)->x = x;
-	WIDGET(sbu->decbu)->y = y;
-	widget_scale(sbu->decbu, bw, bh);
+	AGWIDGET(sbu->decbu)->x = x;
+	AGWIDGET(sbu->decbu)->y = y;
+	AG_WidgetScale(sbu->decbu, bw, bh);
 }
 
 void
-spinbutton_draw(void *p)
+AG_SpinbuttonDraw(void *p)
 {
-	struct spinbutton *sbu = p;
-	struct widget_binding *valueb;
+	AG_Spinbutton *sbu = p;
+	AG_WidgetBinding *valueb;
 	void *value;
 
-	if (WIDGET(sbu->input)->flags & WIDGET_FOCUSED)
+	if (AGWIDGET(sbu->input)->flags & AG_WIDGET_FOCUSED)
 		return;
 
-	valueb = widget_get_binding(sbu, "value", &value);
+	valueb = AG_WidgetGetBinding(sbu, "value", &value);
 	switch (valueb->type) {
-	case WIDGET_INT:
-		textbox_printf(sbu->input, "%d", *(int *)value);
+	case AG_WIDGET_INT:
+		AG_TextboxPrintf(sbu->input, "%d", *(int *)value);
 		break;
-	case WIDGET_UINT:
-		textbox_printf(sbu->input, "%u", *(u_int *)value);
+	case AG_WIDGET_UINT:
+		AG_TextboxPrintf(sbu->input, "%u", *(u_int *)value);
 		break;
-	case WIDGET_UINT8:
-		textbox_printf(sbu->input, "%u", *(Uint8 *)value);
+	case AG_WIDGET_UINT8:
+		AG_TextboxPrintf(sbu->input, "%u", *(Uint8 *)value);
 		break;
-	case WIDGET_SINT8:
-		textbox_printf(sbu->input, "%d", *(Sint8 *)value);
+	case AG_WIDGET_SINT8:
+		AG_TextboxPrintf(sbu->input, "%d", *(Sint8 *)value);
 		break;
-	case WIDGET_UINT16:
-		textbox_printf(sbu->input, "%u", *(Uint16 *)value);
+	case AG_WIDGET_UINT16:
+		AG_TextboxPrintf(sbu->input, "%u", *(Uint16 *)value);
 		break;
-	case WIDGET_SINT16:
-		textbox_printf(sbu->input, "%d", *(Sint16 *)value);
+	case AG_WIDGET_SINT16:
+		AG_TextboxPrintf(sbu->input, "%d", *(Sint16 *)value);
 		break;
-	case WIDGET_UINT32:
-		textbox_printf(sbu->input, "%u", *(Uint32 *)value);
+	case AG_WIDGET_UINT32:
+		AG_TextboxPrintf(sbu->input, "%u", *(Uint32 *)value);
 		break;
-	case WIDGET_SINT32:
-		textbox_printf(sbu->input, "%d", *(Sint32 *)value);
+	case AG_WIDGET_SINT32:
+		AG_TextboxPrintf(sbu->input, "%d", *(Sint32 *)value);
 		break;
 	default:
 		break;
 	}
-	widget_binding_unlock(valueb);
+	AG_WidgetUnlockBinding(valueb);
 }
 
 void
-spinbutton_add_value(struct spinbutton *sbu, int inc)
+AG_SpinbuttonAddValue(AG_Spinbutton *sbu, int inc)
 {
-	struct widget_binding *valueb, *minb, *maxb;
+	AG_WidgetBinding *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 
-	valueb = widget_get_binding(sbu, "value", &value);
-	minb = widget_get_binding(sbu, "min", &min);
-	maxb = widget_get_binding(sbu, "max", &max);
+	valueb = AG_WidgetGetBinding(sbu, "value", &value);
+	minb = AG_WidgetGetBinding(sbu, "min", &min);
+	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
 	switch (valueb->vtype) {
-	case WIDGET_INT:
+	case AG_WIDGET_INT:
 		*(int *)value = *(int *)value+inc < *min ? *min :
 		                *(int *)value+inc > *max ? *max :
 				*(int *)value+inc;
 		break;
-	case WIDGET_UINT:
+	case AG_WIDGET_UINT:
 		*(unsigned *)value = *(unsigned *)value+inc < *min ? *min :
 		                     *(unsigned *)value+inc > *max ? *max :
 			  	     *(unsigned *)value+inc;
 		break;
-	case WIDGET_UINT8:
+	case AG_WIDGET_UINT8:
 		*(Uint8 *)value = *(Uint8 *)value+inc < *min ? *min :
 		                  *(Uint8 *)value+inc > *max ? *max :
 			  	  *(Uint8 *)value+inc;
 		break;
-	case WIDGET_SINT8:
+	case AG_WIDGET_SINT8:
 		*(Sint8 *)value = *(Sint8 *)value+inc < *min ? *min :
 		                  *(Sint8 *)value+inc > *max ? *max :
 			  	  *(Sint8 *)value+inc;
 		break;
-	case WIDGET_UINT16:
+	case AG_WIDGET_UINT16:
 		*(Uint16 *)value = *(Uint16 *)value+inc < *min ? *min :
 		                   *(Uint16 *)value+inc > *max ? *max :
 			  	   *(Uint16 *)value+inc;
 		break;
-	case WIDGET_SINT16:
+	case AG_WIDGET_SINT16:
 		*(Sint16 *)value = *(Sint16 *)value+inc < *min ? *min :
 		                   *(Sint16 *)value+inc > *max ? *max :
 			  	   *(Sint16 *)value+inc;
 		break;
-	case WIDGET_UINT32:
+	case AG_WIDGET_UINT32:
 		*(Uint32 *)value = *(Uint32 *)value+inc < *min ? *min :
 		                   *(Uint32 *)value+inc > *max ? *max :
 			  	   *(Uint32 *)value+inc;
 		break;
-	case WIDGET_SINT32:
+	case AG_WIDGET_SINT32:
 		*(Sint32 *)value = *(Sint32 *)value+inc < *min ? *min :
 		                   *(Sint32 *)value+inc > *max ? *max :
 			  	   *(Sint32 *)value+inc;
@@ -357,29 +358,29 @@ spinbutton_add_value(struct spinbutton *sbu, int inc)
 		break;
 	}
 
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
-	widget_binding_modified(valueb);
+	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
+	AG_WidgetBindingChanged(valueb);
 
-	widget_binding_unlock(maxb);
-	widget_binding_unlock(minb);
-	widget_binding_unlock(valueb);
+	AG_WidgetUnlockBinding(maxb);
+	AG_WidgetUnlockBinding(minb);
+	AG_WidgetUnlockBinding(valueb);
 }
 
 void
-spinbutton_set_value(struct spinbutton *sbu, ...)
+AG_SpinbuttonSetValue(AG_Spinbutton *sbu, ...)
 {
-	struct widget_binding *valueb, *minb, *maxb;
+	AG_WidgetBinding *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 	va_list ap;
 
-	valueb = widget_get_binding(sbu, "value", &value);
-	minb = widget_get_binding(sbu, "min", &min);
-	maxb = widget_get_binding(sbu, "max", &max);
+	valueb = AG_WidgetGetBinding(sbu, "value", &value);
+	minb = AG_WidgetGetBinding(sbu, "min", &min);
+	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
 	va_start(ap, sbu);
 	switch (valueb->vtype) {
-	case WIDGET_INT:
+	case AG_WIDGET_INT:
 		{
 			int i = va_arg(ap, int);
 
@@ -388,7 +389,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					i;
 		}
 		break;
-	case WIDGET_UINT:
+	case AG_WIDGET_UINT:
 		{
 			unsigned i = va_arg(ap, unsigned int);
 
@@ -397,7 +398,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					     i;
 		}
 		break;
-	case WIDGET_UINT8:
+	case AG_WIDGET_UINT8:
 		{
 			Uint8 i = (Uint8)va_arg(ap, int);
 
@@ -406,7 +407,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					  i;
 		}
 		break;
-	case WIDGET_SINT8:
+	case AG_WIDGET_SINT8:
 		{
 			Sint8 i = (Sint8)va_arg(ap, int);
 
@@ -415,7 +416,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					  i;
 		}
 		break;
-	case WIDGET_UINT16:
+	case AG_WIDGET_UINT16:
 		{
 			Uint16 i = (Uint16)va_arg(ap, int);
 
@@ -424,7 +425,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					   i;
 		}
 		break;
-	case WIDGET_SINT16:
+	case AG_WIDGET_SINT16:
 		{
 			Sint16 i = (Sint16)va_arg(ap, int);
 
@@ -433,7 +434,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					   i;
 		}
 		break;
-	case WIDGET_UINT32:
+	case AG_WIDGET_UINT32:
 		{
 			Uint32 i = (Uint32)va_arg(ap, int);
 
@@ -442,7 +443,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 					   i;
 		}
 		break;
-	case WIDGET_SINT32:
+	case AG_WIDGET_SINT32:
 		{
 			Sint32 i = (Sint32)va_arg(ap, int);
 
@@ -456,56 +457,56 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 	}
 	va_end(ap);
 
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
-	widget_binding_modified(valueb);
+	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
+	AG_WidgetBindingChanged(valueb);
 
-	widget_binding_unlock(valueb);
-	widget_binding_unlock(minb);
-	widget_binding_unlock(maxb);
+	AG_WidgetUnlockBinding(valueb);
+	AG_WidgetUnlockBinding(minb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-spinbutton_set_min(struct spinbutton *sbu, int nmin)
+AG_SpinbuttonSetMin(AG_Spinbutton *sbu, int nmin)
 {
-	struct widget_binding *minb;
+	AG_WidgetBinding *minb;
 	int *min;
 
-	minb = widget_get_binding(sbu, "min", &min);
+	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	*min = nmin;
-	widget_binding_modified(minb);
-	widget_binding_unlock(minb);
+	AG_WidgetBindingChanged(minb);
+	AG_WidgetUnlockBinding(minb);
 }
 
 void
-spinbutton_set_max(struct spinbutton *sbu, int nmax)
+AG_SpinbuttonSetMax(AG_Spinbutton *sbu, int nmax)
 {
-	struct widget_binding *maxb;
+	AG_WidgetBinding *maxb;
 	int *max;
 
-	maxb = widget_get_binding(sbu, "max", &max);
+	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*max = nmax;
-	widget_binding_modified(maxb);
-	widget_binding_unlock(maxb);
+	AG_WidgetBindingChanged(maxb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-spinbutton_set_range(struct spinbutton *sbu, int nmin, int nmax)
+AG_SpinbuttonSetRange(AG_Spinbutton *sbu, int nmin, int nmax)
 {
-	struct widget_binding *minb, *maxb;
+	AG_WidgetBinding *minb, *maxb;
 	int *min, *max;
 
-	minb = widget_get_binding(sbu, "min", &min);
-	maxb = widget_get_binding(sbu, "max", &max);
+	minb = AG_WidgetGetBinding(sbu, "min", &min);
+	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*min = nmin;
 	*max = nmax;
-	widget_binding_modified(minb);
-	widget_binding_modified(maxb);
-	widget_binding_unlock(minb);
-	widget_binding_unlock(maxb);
+	AG_WidgetBindingChanged(minb);
+	AG_WidgetBindingChanged(maxb);
+	AG_WidgetUnlockBinding(minb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-spinbutton_set_increment(struct spinbutton *sbu, int incr)
+AG_SpinbuttonSetIncrement(AG_Spinbutton *sbu, int incr)
 {
 	pthread_mutex_lock(&sbu->lock);
 	sbu->incr = incr;
@@ -513,18 +514,18 @@ spinbutton_set_increment(struct spinbutton *sbu, int incr)
 }
 
 void
-spinbutton_set_writeable(struct spinbutton *sbu, int writeable)
+AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 {
 	pthread_mutex_lock(&sbu->lock);
 
 	sbu->writeable = writeable;
-	textbox_set_writeable(sbu->input, writeable);
+	AG_TextboxSetWriteable(sbu->input, writeable);
 	if (writeable) {
-		button_enable(sbu->incbu);
-		button_enable(sbu->decbu);
+		AG_ButtonEnable(sbu->incbu);
+		AG_ButtonEnable(sbu->decbu);
 	} else {
-		button_disable(sbu->incbu);
-		button_disable(sbu->decbu);
+		AG_ButtonDisable(sbu->incbu);
+		AG_ButtonDisable(sbu->decbu);
 	}
 	pthread_mutex_unlock(&sbu->lock);
 }

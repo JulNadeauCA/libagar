@@ -1,22 +1,22 @@
-/*	$Csoft: version.h,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.2 2005/09/17 04:48:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VERSION_H_
 #define _AGAR_VERSION_H_
 #include "begin_code.h"
 
-struct version {
+typedef struct ag_version {
 	char	*name;
 	Uint32	 major;
 	Uint32	 minor;
-};
+} AG_Version;
 
-#define VERSION_NAME_MAX	48
-#define VERSION_MAX		(VERSION_NAME_MAX+8)
+#define AG_VERSION_NAME_MAX	48
+#define AG_VERSION_MAX		(AG_VERSION_NAME_MAX+8)
 
 __BEGIN_DECLS
-int	version_read(struct netbuf *, const struct version *, struct version *);
-void	version_write(struct netbuf *, const struct version *);
+int	AG_ReadVersion(AG_Netbuf *, const AG_Version *, AG_Version *);
+void	AG_WriteVersion(AG_Netbuf *, const AG_Version *);
 __END_DECLS
 
 #include "close_code.h"

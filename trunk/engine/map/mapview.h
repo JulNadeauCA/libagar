@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.23 2005/08/27 04:34:06 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.24 2005/09/20 13:46:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -11,41 +11,41 @@
 #include <engine/actor.h>
 
 #include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/button.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/statusbar.h>
-#include <engine/widget/scrollbar.h>
-#include <engine/widget/label.h>
 
 #include "begin_code.h"
 
-struct mapview_draw_cb {
-	void (*func)(struct mapview *, void *);
-	void *p;
-	SLIST_ENTRY(mapview_draw_cb) draw_cbs;
-};
+struct ag_mapview;
+struct ag_toolbar;
+struct ag_label;
+struct ag_tlist;
+struct ag_scrollbar;
 
-struct mapview {
-	struct widget wid;
+typedef struct ag_mapview_draw_cb {
+	void (*func)(struct ag_mapview *, void *);
+	void *p;
+	SLIST_ENTRY(ag_mapview_draw_cb) draw_cbs;
+} AG_MapviewDrawCb;
+
+typedef struct ag_mapview {
+	AG_Widget wid;
 
 	int flags;
-#define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
-#define MAPVIEW_GRID		0x002	/* Display the grid */
-#define MAPVIEW_CENTER		0x004	/* Request initial centering */
-#define MAPVIEW_NO_CURSOR	0x008	/* Disable the cursor */
-#define MAPVIEW_NO_BMPZOOM	0x010	/* Disable bitmap scaling */
-#define MAPVIEW_NO_BG		0x020	/* Disable background tiles */ 
-#define MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
-#define MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
-#define MAPVIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
-#define MAPVIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
+#define AG_MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
+#define AG_MAPVIEW_GRID		0x002	/* Display the grid */
+#define AG_MAPVIEW_CENTER	0x004	/* Request initial centering */
+#define AG_MAPVIEW_NO_CURSOR	0x008	/* Disable the cursor */
+#define AG_MAPVIEW_NO_BMPSCALE	0x010	/* Disable bitmap scaling */
+#define AG_MAPVIEW_NO_BG	0x020	/* Disable background tiles */ 
+#define AG_MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
+#define AG_MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
+#define AG_MAPVIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
+#define AG_MAPVIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
 
-	enum mapview_mode {
-		MAPVIEW_EDITION,	/* Default edition mode */
-		MAPVIEW_EDIT_ATTRS,	/* Editing node attributes */
-		MAPVIEW_EDIT_ORIGIN,	/* Moving origin node */
-		MAPVIEW_PLAY		/* Playing mode */
+	enum ag_mapview_mode {
+		AG_MAPVIEW_EDITION,	/* Default edition mode */
+		AG_MAPVIEW_EDIT_ATTRS,	/* Editing node attributes */
+		AG_MAPVIEW_EDIT_ORIGIN,	/* Moving origin node */
+		AG_MAPVIEW_PLAY		/* Playing mode */
 	} mode;
 
 	int edit_attr;			/* Attribute being edited */
@@ -54,7 +54,7 @@ struct mapview {
 	int prew, preh;			/* Prescaling (nodes) */
 
 	struct {
-		Uint8 r, g, b, a;	/* Current color (for primitives) */
+		Uint8 r, g, b, a;	/* Current color (for agPrim) */
 		Uint32 pixval;
 	} col;
 	struct {			/* Mouse scrolling state */
@@ -71,7 +71,7 @@ struct mapview {
 	struct {			/* Effective map selection */
 		int set;		/* Selection is set */
 		int moving;		/* Nodes are being displaced */
-		struct map map;		/* Temporary copy of the nodes */
+		AG_Map map;		/* Temporary copy of the nodes */
 		int x, y;		/* Origin of the rectangle */
 		int w, h;		/* Dimensions of the rectangle */
 	} esel;
@@ -79,8 +79,8 @@ struct mapview {
 		int moving;		/* Noderefs are being displaced */
 	} rsel;
 
-	struct map *map;		/* Map to display */
-	struct actor *actor;		/* Actor being controlled */
+	AG_Map *map;		/* Map to display */
+	AG_Actor *actor;		/* Actor being controlled */
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */
@@ -91,93 +91,58 @@ struct mapview {
 	int cxrel, cyrel;		/* Relative displacement (nodes) */
 	int dblclicked;			/* Double click flag */
 
-	struct toolbar *toolbar;	/* Optional toolbar */
-	struct statusbar *statusbar;	/* Optional status bar */
-	struct label *status;		/* Optional status label */
-	struct tlist *lib_tl;		/* Optional library list */
-	struct tlist *objs_tl;		/* Optional library list */
-	struct tlist *layers_tl;	/* Optional layer list */
+	struct ag_toolbar *toolbar;	/* Optional toolbar */
+	struct ag_statusbar *statusbar;	/* Optional status bar */
+	struct ag_label *status;	/* Optional status label */
+	struct ag_tlist *lib_tl;	/* Optional library list */
+	struct ag_tlist *objs_tl;	/* Optional library list */
+	struct ag_tlist *layers_tl;	/* Optional layer list */
+	struct ag_scrollbar *vbar, *hbar; /* Optional scrollbars */
 
-	struct scrollbar *vbar, *hbar;	/* Scrollbars (or NULL) */
+	AG_Maptool *curtool;		/* Selected tool */
+	AG_Maptool *deftool;		/* Default tool if any */
 
-	struct tool *curtool;			/* Selected tool */
-	struct tool *deftool;			/* Default tool if any */
+	TAILQ_HEAD(, ag_maptool) tools;		    /* Map edition tools */
+	SLIST_HEAD(, ag_mapview_draw_cb) draw_cbs;  /* Post-draw callbacks */
+} AG_Mapview;
 
-	TAILQ_HEAD(, tool) tools;		/* Map edition tools */
-	SLIST_HEAD(, mapview_draw_cb) draw_cbs;	/* Post-draw callbacks */
-};
-
-enum mapview_prop_labels {
-	MAPVIEW_BASE,
-	MAPVIEW_FRAME_0,
-	MAPVIEW_FRAME_1,
-	MAPVIEW_FRAME_2,
-	MAPVIEW_FRAME_3,
-	MAPVIEW_FRAME_4,
-	MAPVIEW_FRAME_5,
-	MAPVIEW_FRAME_6,
-	MAPVIEW_FRAMES_END,
-	MAPVIEW_BLOCK,
-	MAPVIEW_ORIGIN,
-	MAPVIEW_WALK,
-	MAPVIEW_CLIMB,
-	MAPVIEW_SLIPPERY,
-	MAPVIEW_EDGE,
-	MAPVIEW_EDGE_N,
-	MAPVIEW_EDGE_S,
-	MAPVIEW_EDGE_W,
-	MAPVIEW_EDGE_E,
-	MAPVIEW_EDGE_NW,
-	MAPVIEW_EDGE_NE,
-	MAPVIEW_EDGE_SW,
-	MAPVIEW_EDGE_SE,
-	MAPVIEW_BIO,
-	MAPVIEW_REGEN,
-	MAPVIEW_SLOW,
-	MAPVIEW_HASTE
-};
-
-struct node;
-
-#define MV_CAM(mv) (mv)->map->cameras[(mv)->cam]
-#define MV_ZOOM(mv) MV_CAM(mv).zoom
-#define MV_TILESZ(mv) MV_CAM(mv).tilesz
-#define MV_PIXSZ(mv) MV_CAM(mv).pixsz
+#define AGMCAM(mv)	(mv)->map->cameras[(mv)->cam]
+#define AGMZOOM(mv)	AGMCAM(mv).zoom
+#define AGMTILESZ(mv)	AGMCAM(mv).tilesz
+#define AGMPIXSZ(mv)	AGMCAM(mv).pixsz
 
 __BEGIN_DECLS
-struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,
-		             struct statusbar *);
-void	 	 mapview_init(struct mapview *, struct map *, int,
-		              struct toolbar *, struct statusbar *);
+AG_Mapview	*AG_MapviewNew(void *, AG_Map *, int, struct ag_toolbar *,
+		               struct ag_statusbar *);
+void	 	 AG_MapviewInit(AG_Mapview *, AG_Map *, int,
+		              struct ag_toolbar *, struct ag_statusbar *);
 
-__inline__ void mapview_pixel2i(struct mapview *, int, int);
-__inline__ void mapview_hline(struct mapview *, int, int, int);
-__inline__ void mapview_vline(struct mapview *, int, int, int);
+__inline__ void AG_MapviewPixel2i(AG_Mapview *, int, int);
+__inline__ void AG_MapviewHLine(AG_Mapview *, int, int, int);
+__inline__ void AG_MapviewVLine(AG_Mapview *, int, int, int);
 
-void	 mapview_destroy(void *);
-void	 mapview_draw(void *);
-void	 mapview_scale(void *, int, int);
-void	 mapview_prescale(struct mapview *, int, int);
-void	 mapview_center(struct mapview *, int, int);
-void	 mapview_set_scale(struct mapview *, u_int, int);
-void	 mapview_set_selection(struct mapview *, int, int, int, int);
-int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
-void	 mapview_reg_draw_cb(struct mapview *,
-	                     void (*)(struct mapview *, void *), void *);
-void	 mapview_update_camera(struct mapview *);
-void	 mapview_set_scrollbars(struct mapview *, struct scrollbar *,
-		                struct scrollbar *);
-void	 mapview_status(struct mapview *, const char *, ...);
-void	 mapview_set_mode(struct mapview *, enum mapview_mode);
-void	 mapview_control(struct mapview *, const char *, void *);
+void	 AG_MapviewDestroy(void *);
+void	 AG_MapviewDraw(void *);
+void	 AG_MapviewScale(void *, int, int);
+void	 AG_MapviewPrescale(AG_Mapview *, int, int);
+void	 AG_MapviewCenter(AG_Mapview *, int, int);
+void	 AG_MapviewSetScale(AG_Mapview *, u_int, int);
+void	 AG_MapviewSetSelection(AG_Mapview *, int, int, int, int);
+int	 AG_MapviewGetSelection(AG_Mapview *, int *, int *, int *, int *);
+void	 AG_MapviewRegDrawCb(AG_Mapview *, void (*)(AG_Mapview *, void *),
+	                     void *);
+void	 AG_MapviewUpdateCamera(AG_Mapview *);
+void	 AG_MapviewUseScrollbars(AG_Mapview *, struct ag_scrollbar *,
+		                 struct ag_scrollbar *);
+void	 AG_MapviewStatus(AG_Mapview *, const char *, ...);
+void	 AG_MapviewSetMode(AG_Mapview *, enum ag_mapview_mode);
+void	 AG_MapviewControl(AG_Mapview *, const char *, void *);
 
 #ifdef EDITION
-struct tool *mapview_reg_tool(struct mapview *, const struct tool_ops *,
-                              void *);
-__inline__ struct tool *mapview_find_tool(struct mapview *, const char *);
-void mapview_set_default_tool(struct mapview *, struct tool *);
-void mapview_select_tool(struct mapview *, struct tool *, void *);
-void mapview_selected_layer(int, union evarg *);
+AG_Maptool *AG_MapviewRegTool(AG_Mapview *, const AG_MaptoolOps *, void *);
+AG_Maptool *AG_MapviewFindTool(AG_Mapview *, const char *);
+void AG_MapviewSetDefaultTool(AG_Mapview *, AG_Maptool *);
+void AG_MapviewSelectTool(AG_Mapview *, AG_Maptool *, void *);
 #endif
 __END_DECLS
 

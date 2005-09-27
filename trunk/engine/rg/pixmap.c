@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.42 2005/09/20 13:46:32 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.44 2005/09/22 04:24:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@ const char *pixmap_state_names[] = {
 };
 
 void
-pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
+RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 {
 	px->name[0] = '\0';
 	px->ts = ts;
@@ -70,7 +70,7 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->yorig = 0;
 	px->su = NULL;
 	px->nrefs = 0;
-	px->ublks = Malloc(sizeof(struct pixmap_undoblk), M_RG);
+	px->ublks = Malloc(sizeof(struct rg_pixmap_undoblk), M_RG);
 	px->nublks = 1;
 	px->curblk = 0;
 
@@ -79,21 +79,21 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->v = 1.0;
 	px->a = 1.0;
 	px->curbrush = NULL;
-	px->blend_mode = PIXMAP_OVERLAY_ALPHA;
+	px->blend_mode = RG_PIXMAP_OVERLAY_ALPHA;
 	TAILQ_INIT(&px->brushes);
 
-	pixmap_begin_undoblk(px);
-	px->ublks[0].mods = Malloc(sizeof(struct pixmap_mod), M_RG);
+	RG_PixmapBeginUndoBlk(px);
+	px->ublks[0].mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
 	px->ublks[0].nmods = 0;
 }
 
-struct pixmap_brush *
-pixmap_insert_brush(struct pixmap *px, enum pixmap_brush_type type,
-    struct pixmap *bpx)
+struct rg_pixmap_brush *
+RG_PixmapAddBrush(RG_Pixmap *px, enum pixmap_brush_type type,
+    RG_Pixmap *bpx)
 {
-	struct pixmap_brush *br;
+	struct rg_pixmap_brush *br;
 
-	br = Malloc(sizeof(struct pixmap_brush), M_RG);
+	br = Malloc(sizeof(struct rg_pixmap_brush), M_RG);
 	br->type = type;
 	br->name[0] = '\0';
 	br->flags = 0;
@@ -104,7 +104,7 @@ pixmap_insert_brush(struct pixmap *px, enum pixmap_brush_type type,
 }
 
 void
-pixmap_remove_brush(struct pixmap *px, struct pixmap_brush *br)
+RG_PixmapDelBrush(RG_Pixmap *px, struct rg_pixmap_brush *br)
 {
 	TAILQ_REMOVE(&px->brushes, br, brushes);
 	br->px->nrefs--;
@@ -112,28 +112,28 @@ pixmap_remove_brush(struct pixmap *px, struct pixmap_brush *br)
 }
 
 int
-pixmap_load(struct pixmap *px, struct netbuf *buf)
+RG_PixmapLoad(RG_Pixmap *px, AG_Netbuf *buf)
 {
 	Uint32 i, nbrushes;
 
-	copy_string(px->name, buf, sizeof(px->name));
-	px->flags = (int)read_uint32(buf);
-	px->xorig = (int)read_sint16(buf);
-	px->yorig = (int)read_sint16(buf);
-	if ((px->su = read_surface(buf, vfmt)) == NULL)
+	AG_CopyString(px->name, buf, sizeof(px->name));
+	px->flags = (int)AG_ReadUint32(buf);
+	px->xorig = (int)AG_ReadSint16(buf);
+	px->yorig = (int)AG_ReadSint16(buf);
+	if ((px->su = AG_ReadSurface(buf, agVideoFmt)) == NULL)
 		return (-1);
 
-	nbrushes = read_uint32(buf);
+	nbrushes = AG_ReadUint32(buf);
 	for (i = 0; i < nbrushes; i++) {
-		struct pixmap_brush *br;
+		struct rg_pixmap_brush *br;
 
-		br = Malloc(sizeof(struct pixmap_brush), M_RG);
-		copy_string(br->name, buf, sizeof(br->name));
-		br->type = (enum pixmap_brush_type)read_uint8(buf);
-		br->flags = (int)read_uint32(buf);
-		read_sint16(buf);			/* Pad: xorig */
-		read_sint16(buf);			/* Pad: yorig */
-		copy_string(br->px_name, buf, sizeof(br->px_name));
+		br = Malloc(sizeof(struct rg_pixmap_brush), M_RG);
+		AG_CopyString(br->name, buf, sizeof(br->name));
+		br->type = (enum pixmap_brush_type)AG_ReadUint8(buf);
+		br->flags = (int)AG_ReadUint32(buf);
+		AG_ReadSint16(buf);			/* Pad: xorig */
+		AG_ReadSint16(buf);			/* Pad: yorig */
+		AG_CopyString(br->px_name, buf, sizeof(br->px_name));
 		br->px = NULL;
 		TAILQ_INSERT_TAIL(&px->brushes, br, brushes);
 	}
@@ -141,36 +141,36 @@ pixmap_load(struct pixmap *px, struct netbuf *buf)
 }
 
 void
-pixmap_save(struct pixmap *px, struct netbuf *buf)
+RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
 {
 	Uint32 nbrushes = 0;
 	off_t nbrushes_offs;
-	struct pixmap_brush *br;
+	struct rg_pixmap_brush *br;
 
-	write_string(buf, px->name);
-	write_uint32(buf, (Uint32)px->flags);
-	write_sint16(buf, (Sint16)px->xorig);
-	write_sint16(buf, (Sint16)px->yorig);
-	write_surface(buf, px->su);
+	AG_WriteString(buf, px->name);
+	AG_WriteUint32(buf, (Uint32)px->flags);
+	AG_WriteSint16(buf, (Sint16)px->xorig);
+	AG_WriteSint16(buf, (Sint16)px->yorig);
+	AG_WriteSurface(buf, px->su);
 
-	nbrushes_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
+	nbrushes_offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
-		write_string(buf, br->name);
-		write_uint8(buf, (Uint8)br->type);
-		write_uint32(buf, (Uint32)br->flags);
-		write_sint16(buf, (Sint16)br->px->xorig);
-		write_sint16(buf, (Sint16)br->px->yorig);
-		write_string(buf, br->px->name);
+		AG_WriteString(buf, br->name);
+		AG_WriteUint8(buf, (Uint8)br->type);
+		AG_WriteUint32(buf, (Uint32)br->flags);
+		AG_WriteSint16(buf, (Sint16)br->px->xorig);
+		AG_WriteSint16(buf, (Sint16)br->px->yorig);
+		AG_WriteString(buf, br->px->name);
 		nbrushes++;
 	}
-	pwrite_uint32(buf, nbrushes, nbrushes_offs);
+	AG_PwriteUint32(buf, nbrushes, nbrushes_offs);
 }
 
 void
-pixmap_destroy(struct pixmap *px)
+RG_PixmapDestroy(RG_Pixmap *px)
 {
-	struct pixmap_brush *br, *nbr;
+	struct rg_pixmap_brush *br, *nbr;
 	int i;
 
 	if (px->su != NULL)
@@ -191,9 +191,9 @@ pixmap_destroy(struct pixmap *px)
 
 /* Resize a pixmap and copy the previous surface at the given offset. */
 void
-pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
+RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 {
-	struct tileset *ts = px->ts;
+	RG_Tileset *ts = px->ts;
 	SDL_Surface *nsu;
 
 	/* Create the new surface. */
@@ -230,44 +230,44 @@ pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 static void
 update_tv(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
+	RG_Tileview *tv = argv[1].p;
 	
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 static void
 poll_brushes(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct pixmap *px = argv[1].p;
-	struct pixmap_brush *br;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Pixmap *px = argv[1].p;
+	struct rg_pixmap_brush *br;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
-	it = tlist_insert(tl, NULL, _("(none)"));
+	AG_TlistClear(tl);
+	it = AG_TlistAdd(tl, NULL, _("(none)"));
 	it->class = "brush";
 	it->p1 = NULL;
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
-		it = tlist_insert(tl, NULL, "%s%s %s%s",
+		it = AG_TlistAdd(tl, NULL, "%s%s %s%s",
 		    (br == px->curbrush) ? "*" : "", br->name,
-		    (br->flags & PIXMAP_BRUSH_ONESHOT) ? _("one-shot ") : "",
-		    (br->type == PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
+		    (br->flags & RG_PIXMAP_BRUSH_ONESHOT) ? _("one-shot ") : "",
+		    (br->type == RG_PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
 		it->class = "brush";
 		it->p1 = br;
-		tlist_set_icon(tl, it, br->px->su);
+		AG_TlistSetIcon(tl, it, br->px->su);
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 select_brush(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct pixmap *px = argv[1].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Pixmap *px = argv[1].p;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl)) != NULL) {
-		struct pixmap_brush *br = it->p1;
+	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
+		struct rg_pixmap_brush *br = it->p1;
 
 		px->curbrush = (px->curbrush == br) ? NULL : br;
 	} else {
@@ -278,139 +278,139 @@ select_brush(int argc, union evarg *argv)
 static void
 poll_pixmaps(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tileset *ts = argv[1].p;
-	struct tlist_item *it;
-	struct pixmap *px;
+	AG_Tlist *tl = argv[0].p;
+	RG_Tileset *ts = argv[1].p;
+	AG_TlistItem *it;
+	RG_Pixmap *px;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		it = tlist_insert(tl, NULL, "%s (%u refs)", px->name,
+		it = AG_TlistAdd(tl, NULL, "%s (%u refs)", px->name,
 		    px->nrefs);
 		it->class = "pixmap";
 		it->p1 = px;
-		tlist_set_icon(tl, it, px->su);
+		AG_TlistSetIcon(tl, it, px->su);
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 insert_brush(int argc, union evarg *argv)
 {
-	struct pixmap *px = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct textbox *tb = argv[3].p;
-	struct radio *rad_types = argv[4].p;
-	struct checkbox *cb_oneshot = argv[5].p;
-	struct window *dlg_win = argv[6].p;
+	RG_Pixmap *px = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_Textbox *tb = argv[3].p;
+	AG_Radio *rad_types = argv[4].p;
+	AG_Checkbox *cb_oneshot = argv[5].p;
+	AG_Window *dlg_win = argv[6].p;
 	enum pixmap_brush_type btype;
-	struct pixmap *spx;
-	struct pixmap_brush *pbr;
-	struct tlist_item *it;
+	RG_Pixmap *spx;
+	struct rg_pixmap_brush *pbr;
+	AG_TlistItem *it;
 
-	if ((it = tlist_selected_item(tl)) == NULL) {
+	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
 		return;
 	}
 	spx = it->p1;
 
-	btype = (enum pixmap_brush_type)widget_get_int(rad_types, "value");
-	pbr = pixmap_insert_brush(px, btype, spx);
-	textbox_copy_string(tb, pbr->name, sizeof(pbr->name));
+	btype = (enum pixmap_brush_type)AG_WidgetInt(rad_types, "value");
+	pbr = RG_PixmapAddBrush(px, btype, spx);
+	AG_TextboxCopyString(tb, pbr->name, sizeof(pbr->name));
 	if (pbr->name[0] == '\0') {
 		strlcpy(pbr->name, spx->name, sizeof(pbr->name));
 	}
-	if (widget_get_int(cb_oneshot, "state")) {
-		pbr->flags |= PIXMAP_BRUSH_ONESHOT;
+	if (AG_WidgetInt(cb_oneshot, "state")) {
+		pbr->flags |= RG_PIXMAP_BRUSH_ONESHOT;
 	}
-	view_detach(dlg_win);
+	AG_ViewDetach(dlg_win);
 }
 
 static void
 update_bropts(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct textbox *tb_name = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct pixmap *spx;
+	AG_Tlist *tl = argv[0].p;
+	AG_Textbox *tb_name = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
+	RG_Pixmap *spx;
 
 	if (it != NULL) {
 		spx = it->p1;
-		textbox_printf(tb_name, "%s", spx->name);
+		AG_TextboxPrintf(tb_name, "%s", spx->name);
 	}
 }
 
 static void
 insert_brush_dlg(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
-	struct pixmap *px = argv[2].p;
-	struct window *win, *pwin = argv[3].p;
-	struct tlist *tl;
-	struct box *bo;
-	struct textbox *tb_name;
-	struct button *bu;
-	struct radio *rad_types;
-	struct checkbox *cb_oneshot;
+	RG_Tileview *tv = argv[1].p;
+	RG_Pixmap *px = argv[2].p;
+	AG_Window *win, *pwin = argv[3].p;
+	AG_Tlist *tl;
+	AG_Box *bo;
+	AG_Textbox *tb_name;
+	AG_Button *bu;
+	AG_Radio *rad_types;
+	AG_Checkbox *cb_oneshot;
 	static const char *types[] = {
 		N_("Monochromatic"),
 		N_("Source RGB"),
 		NULL
 	};
 
-	win = window_new(WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE, NULL);
-	window_set_caption(win, _("New %s brush"), px->name);
-	window_set_position(win, WINDOW_CENTER, 1);
+	win = AG_WindowNew(AG_WINDOW_NO_CLOSE|AG_WINDOW_NO_MINIMIZE, NULL);
+	AG_WindowSetCaption(win, _("New %s brush"), px->name);
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	tb_name = Malloc(sizeof(struct textbox), M_OBJECT);
-	textbox_init(tb_name, _("Name: "));
+	tb_name = Malloc(sizeof(AG_Textbox), M_OBJECT);
+	AG_TextboxInit(tb_name, _("Name: "));
 	
-	cb_oneshot = Malloc(sizeof(struct checkbox), M_OBJECT);
-	checkbox_init(cb_oneshot, _("One-shot"));
+	cb_oneshot = Malloc(sizeof(AG_Checkbox), M_OBJECT);
+	AG_CheckboxInit(cb_oneshot, _("One-shot"));
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_padding(bo, 0);
-	box_set_spacing(bo, 0);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	AG_BoxSetPadding(bo, 0);
+	AG_BoxSetSpacing(bo, 0);
 	{
-		label_new(bo, LABEL_STATIC, _("Source pixmap:"));
+		AG_LabelNew(bo, AG_LABEL_STATIC, _("Source pixmap:"));
 
-		tl = tlist_new(bo, TLIST_POLL);
-		tlist_set_item_height(tl, TILESZ);
-		tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
-		event_new(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
-		event_new(tl, "tlist-selected", update_bropts, "%p", tb_name);
-		widget_focus(tl);
+		tl = AG_TlistNew(bo, AG_TLIST_POLL);
+		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_SetEvent(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
+		AG_SetEvent(tl, "tlist-selected", update_bropts, "%p", tb_name);
+		AG_WidgetFocus(tl);
 	}
 	
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		rad_types = radio_new(bo, types);
-		widget_set_int(rad_types, "value", 0);
-		object_attach(bo, tb_name);
-		object_attach(bo, cb_oneshot);
+		rad_types = AG_RadioNew(bo, types);
+		AG_WidgetSetInt(rad_types, "value", 0);
+		AG_ObjectAttach(bo, tb_name);
+		AG_ObjectAttach(bo, cb_oneshot);
 	}
 
-	separator_new(win, SEPARATOR_HORIZ);
+	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		bu = button_new(bo, _("OK"));
-		event_new(bu, "button-pushed", insert_brush,
+		bu = AG_ButtonNew(bo, _("OK"));
+		AG_SetEvent(bu, "button-pushed", insert_brush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
 		        cb_oneshot, win);
 	
-		bu = button_new(bo, _("Cancel"));
-		event_new(bu, "button-pushed", WINDETACH(win));
+		bu = AG_ButtonNew(bo, _("Cancel"));
+		AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
 	}
 
-	window_attach(pwin, win);
-	window_show(win);
+	AG_WindowAttach(pwin, win);
+	AG_WindowShow(win);
 }
 
 static void
 flip_pixmap(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
-	struct pixmap *px = argv[2].p;
+	RG_Tileview *tv = argv[1].p;
+	RG_Pixmap *px = argv[2].p;
 	size_t totsize = px->su->h*px->su->pitch;
 	Uint8 *row, *buf;
 	Uint8 *fb = px->su->pixels;
@@ -430,8 +430,8 @@ flip_pixmap(int argc, union evarg *argv)
 static void
 mirror_pixmap(int argc, union evarg *argv)
 {
-	struct tileview *tv = argv[1].p;
-	struct pixmap *px = argv[2].p;
+	RG_Tileview *tv = argv[1].p;
+	RG_Pixmap *px = argv[2].p;
 	Uint8 *row, *rowp;
 	Uint8 *fb = px->su->pixels;
 	int x, y;
@@ -441,7 +441,7 @@ mirror_pixmap(int argc, union evarg *argv)
 		memcpy(row, fb, px->su->pitch);
 		rowp = row + px->su->pitch - px->su->format->BytesPerPixel;
 		for (x = 0; x < px->su->w; x++) {
-			PUT_PIXEL(px->su, fb, GET_PIXEL(px->su, rowp));
+			AG_PUT_PIXEL(px->su, fb, AG_GET_PIXEL(px->su, rowp));
 			fb += px->su->format->BytesPerPixel;
 			rowp -= px->su->format->BytesPerPixel;
 		}
@@ -449,60 +449,61 @@ mirror_pixmap(int argc, union evarg *argv)
 	Free(row, M_RG);
 }
 
-struct window *
-pixmap_edit(struct tileview *tv, struct tile_element *tel)
+AG_Window *
+RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
-	struct window *win;
-	struct mspinbutton *msb;
-	struct spinbutton *sb;
-	struct checkbox *cb;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
+	RG_Pixmap *px = tel->tel_pixmap.px;
+	AG_Window *win;
+	AG_MSpinbutton *msb;
+	AG_Spinbutton *sb;
+	AG_Checkbox *cb;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
 
-	win = window_new(0, NULL);
-	window_set_caption(win, _("Pixmap %s"), px->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, _("Pixmap %s"), px->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 
-	ntab = notebook_add_tab(nb, _("Colors"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
-		struct hsvpal *pal;
-		struct fspinbutton *fsb;
-		struct box *hb;
+		AG_HSVPal *pal;
+		AG_FSpinbutton *fsb;
+		AG_Box *hb;
 
-		pal = hsvpal_new(ntab);
-		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
-		widget_bind(pal, "pixel-format", WIDGET_POINTER, &tv->ts->fmt);
-		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
-		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
-		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
-		widget_bind(pal, "alpha", WIDGET_FLOAT, &px->a);
+		pal = AG_HSVPalNew(ntab);
+		AGWIDGET(pal)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
+		    &tv->ts->fmt);
+		AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &px->h);
+		AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &px->s);
+		AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &px->v);
+		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &px->a);
 	
-		separator_new(ntab, SEPARATOR_HORIZ);
-		cb = checkbox_new(ntab, _("Source pixmap only"));
-		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
+		cb = AG_CheckboxNew(ntab, _("Source pixmap only"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
 	}
 
-	ntab = notebook_add_tab(nb, _("Brushes"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Brushes"), AG_BOX_VERT);
 	{
-		struct button *bu;
-		struct tlist *tl;
+		AG_Button *bu;
+		AG_Tlist *tl;
 
-		tl = tlist_new(ntab, TLIST_POLL);
-		tlist_set_item_height(tl, TILESZ);
-		event_new(tl, "tlist-poll", poll_brushes, "%p", px);
-		event_new(tl, "tlist-dblclick", select_brush, "%p", px);
-		tlist_select_pointer(tl, px->curbrush);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_SetEvent(tl, "tlist-poll", poll_brushes, "%p", px);
+		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
+		AG_TlistSelectPtr(tl, px->curbrush);
 
-		bu = button_new(ntab, _("Create new brush"));
-		WIDGET(bu)->flags |= WIDGET_WFILL;
-		event_new(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
+		bu = AG_ButtonNew(ntab, _("Create new brush"));
+		AGWIDGET(bu)->flags |= AG_WIDGET_WFILL;
+		AG_SetEvent(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
 		    tv, px, win);
 	}
 	
-	ntab = notebook_add_tab(nb, _("Blending"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
 		static const char *blend_modes[] = {
 			N_("Overlay alpha"),
@@ -511,33 +512,33 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 			N_("Disable blending"),
 			NULL
 		};
-		struct radio *rad;
-		struct checkbox *cb;
+		AG_Radio *rad;
+		AG_Checkbox *cb;
 
-		label_new(ntab, LABEL_STATIC, _("Blending method:"));
-		rad = radio_new(ntab, blend_modes);
-		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Blending method:"));
+		rad = AG_RadioNew(ntab, blend_modes);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &px->blend_mode);
 
-		separator_new(ntab, SEPARATOR_HORIZ);
-		cb = checkbox_new(ntab, _("Source pixmap only"));
-		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
+		cb = AG_CheckboxNew(ntab, _("Source pixmap only"));
+		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
 	}
 
 	return (win);
 }
 
-struct toolbar *
-pixmap_toolbar(struct tileview *tv, struct tile_element *tel)
+AG_Toolbar *
+RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
-	struct toolbar *tbar;
+	RG_Pixmap *px = tel->tel_pixmap.px;
+	AG_Toolbar *tbar;
 
-	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
-	toolbar_add_button(tbar, 0, ICON(STAMP_TOOL_ICON), 0, 0,
-	    insert_brush_dlg, "%p,%p,%p", tv, px, widget_parent_window(tv));
-	toolbar_add_button(tbar, 0, ICON(FLIP_TOOL_ICON), 0, 0,
+	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
+	AG_ToolbarAddButton(tbar, 0, AGICON(STAMP_TOOL_ICON), 0, 0,
+	    insert_brush_dlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
+	AG_ToolbarAddButton(tbar, 0, AGICON(FLIP_TOOL_ICON), 0, 0,
 	    flip_pixmap, "%p,%p", tv, px);
-	toolbar_add_button(tbar, 0, ICON(MIRROR_TOOL_ICON), 0, 0,
+	AG_ToolbarAddButton(tbar, 0, AGICON(MIRROR_TOOL_ICON), 0, 0,
 	    mirror_pixmap, "%p,%p", tv, px);
 
 	return (tbar);
@@ -545,9 +546,9 @@ pixmap_toolbar(struct tileview *tv, struct tile_element *tel)
 
 /* Create a new undo block at the current level, destroying higher blocks. */
 void
-pixmap_begin_undoblk(struct pixmap *px)
+RG_PixmapBeginUndoBlk(RG_Pixmap *px)
 {
-	struct pixmap_undoblk *ublk;
+	struct rg_pixmap_undoblk *ublk;
 
 	while (px->nublks > px->curblk+1) {
 		ublk = &px->ublks[px->nublks-1];
@@ -556,19 +557,19 @@ pixmap_begin_undoblk(struct pixmap *px)
 	}
 
 	px->ublks = Realloc(px->ublks, ++px->nublks *
-	                    sizeof(struct pixmap_mod));
+	                    sizeof(struct rg_pixmap_mod));
 	px->curblk++;
 
 	ublk = &px->ublks[px->curblk];
-	ublk->mods = Malloc(sizeof(struct pixmap_mod), M_RG);
+	ublk->mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
 	ublk->nmods = 0;
 }
 
 void
-pixmap_undo(struct tileview *tv, struct tile_element *tel)
+RG_PixmapUndo(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
-	struct pixmap_undoblk *ublk = &px->ublks[px->curblk];
+	RG_Pixmap *px = tel->tel_pixmap.px;
+	struct rg_pixmap_undoblk *ublk = &px->ublks[px->curblk];
 	int i;
 
 	if (px->curblk-1 <= 0)
@@ -576,31 +577,31 @@ pixmap_undo(struct tileview *tv, struct tile_element *tel)
 
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_LockSurface(tv->scaled); }
 	for (i = 0; i < ublk->nmods; i++) {
-		struct pixmap_mod *mod = &ublk->mods[i];
+		struct rg_pixmap_mod *mod = &ublk->mods[i];
 
-		prim_put_pixel(px->su, mod->x, mod->y, mod->val);
+		RG_PutPixel(px->su, mod->x, mod->y, mod->val);
 	}
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_UnlockSurface(tv->scaled); }
 
 	px->curblk--;
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 void
-pixmap_redo(struct tileview *tv, struct tile_element *tel)
+RG_PixmapRedo(RG_Tileview *tv, RG_TileElement *tel)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	
 	dprintf("redo (curblk=%d )\n", px->curblk);
 }
 
 int
-pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
+RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 pixel, int once)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
-	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
-	struct pixmap_mod *mod;
+	RG_Pixmap *px = tel->tel_pixmap.px;
+	struct rg_pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
+	struct rg_pixmap_mod *mod;
 	Uint8 *pSrc;
 	Uint8 r, g, b;
 	u_int v = (pixel & px->su->format->Amask) >>
@@ -620,9 +621,9 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 			return (1);
 	} else {
 		ublk->mods = Realloc(ublk->mods, (ublk->nmods+1) *
-				                   sizeof(struct pixmap_mod));
+				                  sizeof(struct rg_pixmap_mod));
 		mod = &ublk->mods[ublk->nmods++];
-		mod->type = PIXMAP_PIXEL_REPLACE;
+		mod->type = RG_PIXMAP_PIXEL_REPLACE;
 		mod->x = (Uint16)x;
 		mod->y = (Uint16)y;
 	
@@ -639,48 +640,48 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 	SDL_GetRGBA(pixel, px->su->format, &r, &g, &b, &a);
 
 	switch (px->blend_mode) {
-	case PIXMAP_NO_BLENDING:
-		prim_put_pixel(px->su, x, y, pixel);
+	case RG_PIXMAP_NO_BLENDING:
+		RG_PutPixel(px->su, x, y, pixel);
 		if (a == 255) {
-			tileview_scaled_pixel(tv,
+			RG_TileviewScaledPixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
 			    r, g, b);
 		} else {
-			tv->tile->flags |= TILE_DIRTY;
+			tv->tile->flags |= RG_TILE_DIRTY;
 		}
 		break;
-	case PIXMAP_OVERLAY_ALPHA:
+	case RG_PIXMAP_OVERLAY_ALPHA:
 		if (a == 255) {
-			prim_put_pixel(px->su, x, y, pixel);
-			tileview_scaled_pixel(tv,
+			RG_PutPixel(px->su, x, y, pixel);
+			RG_TileviewScaledPixel(tv,
 			    tel->tel_pixmap.x + x,
 			    tel->tel_pixmap.y + y,
 			    r, g, b);
 		} else {
-			prim_blend_rgb(px->su, x, y, PRIM_OVERLAY_ALPHA,
+			RG_BlendRGB(px->su, x, y, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, a);
-			tv->tile->flags |= TILE_DIRTY;
+			tv->tile->flags |= RG_TILE_DIRTY;
 		}
 		break;
-	case PIXMAP_AVERAGE_ALPHA:
-		prim_blend_rgb(px->su, x, y, PRIM_AVERAGE_ALPHA, r, g, b, a);
-		tv->tile->flags |= TILE_DIRTY;
+	case RG_PIXMAP_AVERAGE_ALPHA:
+		RG_BlendRGB(px->su, x, y, RG_PRIM_AVERAGE_ALPHA, r, g, b, a);
+		tv->tile->flags |= RG_TILE_DIRTY;
 		break;
-	case PIXMAP_DEST_ALPHA:
-		prim_blend_rgb(px->su, x, y, PRIM_DST_ALPHA, r, g, b, a);
-		tv->tile->flags |= TILE_DIRTY;
+	case RG_PIXMAP_DEST_ALPHA:
+		RG_BlendRGB(px->su, x, y, RG_PRIM_DST_ALPHA, r, g, b, a);
+		tv->tile->flags |= RG_TILE_DIRTY;
 		break;
 	}
 	return (0);
 }
 
 void
-pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
+RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
     int x0, int y0, Uint32 specPx)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
-	struct pixmap_brush *br = px->curbrush;
+	RG_Pixmap *px = tel->tel_pixmap.px;
+	struct rg_pixmap_brush *br = px->curbrush;
 	SDL_Surface *brsu = br->px->su;
 	Uint8 *pBrush = brsu->pixels;
 	Uint8 r, g, b, specA;
@@ -722,10 +723,10 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 			}
 
 			switch (br->type) {
-			case PIXMAP_BRUSH_MONO:
+			case RG_PIXMAP_BRUSH_MONO:
 				SDL_GetRGB(specPx, brsu->format, &r, &g, &b);
 				break;
-			case PIXMAP_BRUSH_RGB:
+			case RG_PIXMAP_BRUSH_RGB:
 				SDL_GetRGB(brPx, brsu->format, &r, &g, &b);
 				break;
 			}
@@ -734,8 +735,8 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 
 			/* TODO use a specific mod type */
 			if (brA != 0)
-				pixmap_put_pixel(tv, tel, dx, dy, Px,
-				    br->flags & PIXMAP_BRUSH_ONESHOT);
+				RG_PixmapPutPixel(tv, tel, dx, dy, Px,
+				    br->flags & RG_PIXMAP_BRUSH_ONESHOT);
 		}
 	}
 	if (SDL_MUSTLOCK(brsu))
@@ -743,11 +744,11 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 }
 
 int
-pixmap_mousewheel(struct tileview *tv, struct tile_element *tel,
+RG_PixmapMouseWheel(RG_Tileview *tv, RG_TileElement *tel,
     int nwheel)
 {
 	Uint8 *keystate = SDL_GetKeyState(NULL);
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 
 	if (keystate[SDLK_h]) {
 		px->h += (nwheel == 0) ? -3 : 3;
@@ -777,14 +778,14 @@ pixmap_mousewheel(struct tileview *tv, struct tile_element *tel,
 }
 
 static __inline__ void
-pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
+pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b;
 	Uint8 a = (Uint8)(px->a*255);
 	Uint8 *keystate;
 	int erase_mode;
-	enum pixmap_blend_mode bmode_save = 0;
+	enum rg_pixmap_blend_mode bmode_save = 0;
 	enum pixmap_brush_type btype_save = 0;
 
 	keystate = SDL_GetKeyState(NULL);
@@ -796,21 +797,21 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 
 	if (erase_mode) {
 		bmode_save = px->blend_mode;
-		px->blend_mode = PIXMAP_NO_BLENDING;
+		px->blend_mode = RG_PIXMAP_NO_BLENDING;
 	}
 
 	if (px->curbrush != NULL) {
 		if (erase_mode) {
 			btype_save = px->curbrush->type;
-			px->curbrush->type = PIXMAP_BRUSH_MONO;
+			px->curbrush->type = RG_PIXMAP_BRUSH_MONO;
 		}
 
-		pixmap_apply_brush(tv, tel,
+		RG_PixmapApplyBrush(tv, tel,
 		    x - px->curbrush->px->xorig,
 		    y - px->curbrush->px->yorig,
 		    SDL_MapRGBA(px->su->format, r, g, b, a));
@@ -819,7 +820,7 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 			px->curbrush->type = btype_save;
 		}
 	} else {
-		pixmap_put_pixel(tv, tel, x, y,
+		RG_PixmapPutPixel(tv, tel, x, y,
 		    SDL_MapRGBA(px->su->format, r, g, b, a), 1);
 	}
 	
@@ -828,9 +829,9 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 }
 
 Uint32
-pixmap_source_pixel(struct tileview *tv, struct tile_element *tel, int x, int y)
+RG_PixmapSourcePixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *pSrc;
 	Uint32 cSrc;
 
@@ -853,10 +854,10 @@ pixmap_source_pixel(struct tileview *tv, struct tile_element *tel, int x, int y)
 }
 
 void
-pixmap_source_rgba(struct tileview *tv, struct tile_element *tel, int x, int y,
+RG_PixmapSourceRGBA(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *pSrc;
 
 	if (pixmap_source) {
@@ -877,18 +878,18 @@ pixmap_source_rgba(struct tileview *tv, struct tile_element *tel, int x, int y,
 }
 
 static void
-fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
+fill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *pDst;
 	Uint32 cDst;
 
-	cDst = pixmap_source_pixel(tv, tel, x, y);
+	cDst = RG_PixmapSourcePixel(tv, tel, x, y);
 	if (cDst != cOrig)
 		return;
 	
-	if (pixmap_put_pixel(tv, tel, x, y, cFill, 1) == 1)
+	if (RG_PixmapPutPixel(tv, tel, x, y, cFill, 1) == 1)
 		return;
 
 	if (x-1 >= 0)		fill_ortho(tv, tel, x-1, y, cOrig, cFill);
@@ -898,15 +899,15 @@ fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
 }
 
 static void
-randfill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
+randfill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill, Uint32 *bit, Uint32 *r)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *pDst;
 	Uint32 cDst;
 	int flag;
 
-	cDst = pixmap_source_pixel(tv, tel, x, y);
+	cDst = RG_PixmapSourcePixel(tv, tel, x, y);
 	if (cDst != cOrig)
 		return;
 
@@ -916,7 +917,7 @@ randfill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
 	flag = ((*r) & (2<<(*bit))) >> ((*bit)+1);
 	if (++(*bit) > 30) { (*bit) = 0; }
 
-	if (pixmap_put_pixel(tv, tel, x, y, flag ? cFill : cOrig, 1) == 1)
+	if (RG_PixmapPutPixel(tv, tel, x, y, flag ? cFill : cOrig, 1) == 1)
 		return;
 
 	if (x-1 >= 0)
@@ -930,14 +931,14 @@ randfill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
 }
 
 static void
-pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
+pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
 	Uint8 *keystate;
 	Uint32 cOrig, cFill;
 
-	cOrig = pixmap_source_pixel(tv, tel, x, y);
+	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_e]) {
 		r = 0;
@@ -945,24 +946,24 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	fill_ortho(tv, tel, x, y, cOrig, cFill);
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 static void
-pixmap_randfill(struct tileview *tv, struct tile_element *tel, int x, int y)
+pixmap_randfill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
 	Uint8 *keystate;
 	Uint32 cOrig, cFill;
 	Uint32 rand;
 	Uint32 bit = 0;
 
-	cOrig = pixmap_source_pixel(tv, tel, x, y);
+	cOrig = RG_PixmapSourcePixel(tv, tel, x, y);
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_e]) {
 		r = 0;
@@ -970,36 +971,36 @@ pixmap_randfill(struct tileview *tv, struct tile_element *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	randfill_ortho(tv, tel, x, y, cOrig, cFill, &bit, &rand);
-	tv->tile->flags |= TILE_DIRTY;
+	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 static void
-pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
+pixmap_pick(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a;
 
-	pixmap_source_rgba(tv, tel, x, y, &r, &g, &b, &a);
-	prim_rgb2hsv(r, g, b, &px->h, &px->s, &px->v);
+	RG_PixmapSourceRGBA(tv, tel, x, y, &r, &g, &b, &a);
+	RG_RGB2HSV(r, g, b, &px->h, &px->s, &px->v);
 	px->a = ((float)a)/255.0;
 }
 
 void
-pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
+RG_PixmapMousebuttonDown(RG_Tileview *tv, RG_TileElement *tel,
     int x, int y, int button)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *keystate;
 
 	if (button == SDL_BUTTON_MIDDLE) {
 		int x, y;
 
-		mouse_get_state(&x, &y);
-		pixmap_open_menu(tv, x, y);
+		AG_MouseGetState(&x, &y);
+		RG_PixmapOpenMenu(tv, x, y);
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {
 		tv->scrolling++;
@@ -1010,12 +1011,12 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_f]) {
-		enum pixmap_blend_mode bmode_save = px->blend_mode;
+		enum rg_pixmap_blend_mode bmode_save = px->blend_mode;
 
 		if (keystate[SDLK_r] || keystate[SDLK_e]) {
-			px->blend_mode = PIXMAP_NO_BLENDING;
+			px->blend_mode = RG_PIXMAP_NO_BLENDING;
 		}
-		pixmap_begin_undoblk(px);
+		RG_PixmapBeginUndoBlk(px);
 		if (keystate[SDLK_r]) {
 			pixmap_randfill(tv, tel, x, y);
 		} else {
@@ -1026,57 +1027,57 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		pixmap_pick(tv, tel, x, y);
 	} else {
 		if (keystate[SDLK_h]) {
-			tv->tv_pixmap.state = TVPIXMAP_HORIZONTAL;
+			tv->tv_pixmap.state = RG_TVPIXMAP_HORIZONTAL;
 		} else if (keystate[SDLK_v]) {
-			tv->tv_pixmap.state = TVPIXMAP_VERTICAL;
+			tv->tv_pixmap.state = RG_TVPIXMAP_VERTICAL;
 		} else if (keystate[SDLK_d]) {
-			tv->tv_pixmap.state = TVPIXMAP_DIAGONAL;
+			tv->tv_pixmap.state = RG_TVPIXMAP_DIAGONAL;
 		} else {
-			tv->tv_pixmap.state = TVPIXMAP_FREEHAND;
+			tv->tv_pixmap.state = RG_TVPIXMAP_FREEHAND;
 		}
-		pixmap_begin_undoblk(px);
+		RG_PixmapBeginUndoBlk(px);
 		pixmap_apply(tv, tel, x, y);
 	}
 }
 
 void
-pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
+RG_PixmapMousebuttonUp(RG_Tileview *tv, RG_TileElement *tel, int x,
     int y, int button)
 {
 	if (button == SDL_BUTTON_LEFT) {
-		tv->tv_pixmap.state = TVPIXMAP_IDLE;
-		tv->tile->flags |= TILE_DIRTY;
+		tv->tv_pixmap.state = RG_TVPIXMAP_IDLE;
+		tv->tile->flags |= RG_TILE_DIRTY;
 	}
 }
 
 void
-pixmap_keydown(struct tileview *tv, struct tile_element *tel,
+RG_PixmapKeyDown(RG_Tileview *tv, RG_TileElement *tel,
     int keysym, int keymod)
 {
 	switch (keysym) {
 	case SDLK_f:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(cursors[FILL_CURSOR]);
+			SDL_SetCursor(agCursors[AG_FILL_CURSOR]);
 		}
 		break;
 	case SDLK_e:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(cursors[ERASE_CURSOR]);
+			SDL_SetCursor(agCursors[AG_ERASE_CURSOR]);
 		}
 		break;
 	case SDLK_c:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(cursors[PICK_CURSOR]);
+			SDL_SetCursor(agCursors[AG_PICK_CURSOR]);
 		}
 		break;
 	}
 }
 
 void
-pixmap_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
+RG_PixmapKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
     int keymod)
 {
 	if (saved_cursor != NULL) {
@@ -1086,23 +1087,23 @@ pixmap_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
 }
 
 void
-pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
+RG_PixmapMouseMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
-	struct pixmap *px = tel->tel_pixmap.px;
+	RG_Pixmap *px = tel->tel_pixmap.px;
 	int d, x2, y2;
 
 	switch (tv->tv_pixmap.state) {
-	case TVPIXMAP_FREEHAND:
+	case RG_TVPIXMAP_FREEHAND:
 		pixmap_apply(tv, tel, x, y);
 		return;
-	case TVPIXMAP_VERTICAL:
+	case RG_TVPIXMAP_VERTICAL:
 		pixmap_apply(tv, tel, tv->tv_pixmap.xorig, y);
 		return;
-	case TVPIXMAP_HORIZONTAL:
+	case RG_TVPIXMAP_HORIZONTAL:
 		pixmap_apply(tv, tel, x, tv->tv_pixmap.yorig);
 		return;
-	case TVPIXMAP_DIAGONAL:
+	case RG_TVPIXMAP_DIAGONAL:
 		if (y < tv->tv_pixmap.yorig) {
 			d = tv->tv_pixmap.xorig - x;
 			if (x < tv->tv_pixmap.xorig) {
@@ -1137,34 +1138,34 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 }
 
 void
-pixmap_open_menu(struct tileview *tv, int x, int y)
+RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	struct pixmap *px = tv->tv_pixmap.px;
-	struct AGMenu *me;
-	struct AGMenuItem *mi;
+	RG_Pixmap *px = tv->tv_pixmap.px;
+	AG_Menu *me;
+	AG_MenuItem *mi;
 	
 	if (tv->tv_pixmap.menu != NULL)
-		pixmap_close_menu(tv);
+		RG_PixmapCloseMenu(tv);
 
-	me = tv->tv_pixmap.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	menu_init(me);
+	me = tv->tv_pixmap.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(me);
 
-	mi = tv->tv_pixmap.menu_item = menu_add_item(me, NULL);
+	mi = tv->tv_pixmap.menu_item = AG_MenuAddItem(me, NULL);
 	{
-		tileview_generic_menu(tv, mi);
+		RG_TileviewGenericMenu(tv, mi);
 	}
 	tv->tv_pixmap.menu->sel_item = mi;
-	tv->tv_pixmap.menu_win = menu_expand(me, mi, x, y);
+	tv->tv_pixmap.menu_win = AG_MenuExpand(me, mi, x, y);
 }
 
 void
-pixmap_close_menu(struct tileview *tv)
+RG_PixmapCloseMenu(RG_Tileview *tv)
 {
-	struct AGMenu *me = tv->tv_pixmap.menu;
-	struct AGMenuItem *mi = tv->tv_pixmap.menu_item;
+	AG_Menu *me = tv->tv_pixmap.menu;
+	AG_MenuItem *mi = tv->tv_pixmap.menu_item;
 
-	menu_collapse(me, mi);
-	object_destroy(me);
+	AG_MenuCollapse(me, mi);
+	AG_ObjectDestroy(me);
 	Free(me, M_OBJECT);
 
 	tv->tv_pixmap.menu = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.14 2005/06/04 04:48:44 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.15 2005/06/17 04:33:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -38,12 +38,12 @@
 #include "vg_primitive.h"
 
 /* Create a new block and select it for edition. */
-struct vg_block *
-vg_begin_block(struct vg *vg, const char *name, int flags)
+VG_Block *
+VG_BeginBlock(VG *vg, const char *name, int flags)
 {
-	struct vg_block *vgb;
+	VG_Block *vgb;
 
-	vgb = Malloc(sizeof(struct vg_block), M_VG);
+	vgb = Malloc(sizeof(VG_Block), M_VG);
 	strlcpy(vgb->name, name, sizeof(vgb->name));
 	vgb->flags = flags;
 	vgb->pos.x = 0;
@@ -62,23 +62,23 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 }
 
 void
-vg_select_block(struct vg *vg, struct vg_block *vgb)
+VG_SelectBlock(VG *vg, VG_Block *vgb)
 {
 	vg->cur_block = vgb;
 }
 
 /* Finish the current block. */
 void
-vg_end_block(struct vg *vg)
+VG_EndBlock(VG *vg)
 {
 	vg->cur_block = NULL;
 }
 
 /* Look up the named block. */
-struct vg_block *
-vg_get_block(struct vg *vg, const char *name)
+VG_Block *
+VG_GetBlock(VG *vg, const char *name)
 {
-	struct vg_block *vgb;
+	VG_Block *vgb;
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		if (strcmp(vgb->name, name) == 0)
@@ -89,10 +89,10 @@ vg_get_block(struct vg *vg, const char *name)
 
 /* Displace the elements associated with a block. */
 void
-vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
+VG_MoveBlock(VG *vg, VG_Block *vgb, double x, double y,
     int layer)
 {
-	struct vg_element *vge;
+	VG_Element *vge;
 	int i;
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
@@ -111,46 +111,46 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 
 /* Modify a block's angle of rotation. */
 void
-vg_block_theta(struct vg *vg, struct vg_block *vgb, double theta)
+VG_BlockTheta(VG *vg, VG_Block *vgb, double theta)
 {
 	vgb->theta = theta;
 }
 
 /* Apply a rotation transformation on a block. */
 void
-vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
+VG_RotateBlock(VG *vg, VG_Block *vgb, double theta)
 {
-	struct vg_block *block_save;
-	struct vg_element *vge;
+	VG_Block *block_save;
+	VG_Element *vge;
 	Uint32 i;
 
 	block_save = vg->cur_block;
-	vg_select_block(vg, vgb);
+	VG_SelectBlock(vg, vgb);
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
 		for (i = 0; i < vge->nvtx; i++) {
 			double r, theta;
 			double x, y;
 
-			vg_abs2rel(vg, &vge->vtx[i], &x, &y);
-			vg_car2pol(vg, x, y, &r, &theta);
+			VG_Abs2Rel(vg, &vge->vtx[i], &x, &y);
+			VG_Car2Pol(vg, x, y, &r, &theta);
 			theta += vgb->theta;
-			vg_pol2car(vg, r, theta, &x, &y);
-			vg_rel2abs(vg, x, y, &vge->vtx[i]);
+			VG_Pol2Car(vg, r, theta, &x, &y);
+			VG_Rel2Abs(vg, x, y, &vge->vtx[i]);
 		}
 	}
-	vg_select_block(vg, block_save);
+	VG_SelectBlock(vg, block_save);
 	vg->redraw++;
 }
 
 /* Calculate the collective extent of the elements in a block. */
 void
-vg_block_extent(struct vg *vg, struct vg_block *vgb, struct vg_rect *ext)
+VG_BlockExtent(VG *vg, VG_Block *vgb, VG_Rect *ext)
 {
 	double xmin = vgb->pos.x, xmax = vgb->pos.x;
 	double ymin = vgb->pos.y, ymax = vgb->pos.y;
-	struct vg_element *vge;
-	struct vg_rect r;
+	VG_Element *vge;
+	VG_Rect r;
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
 		if (vge->ops->bbox == NULL)
@@ -171,7 +171,7 @@ vg_block_extent(struct vg *vg, struct vg_block *vgb, struct vg_rect *ext)
 
 /* Convert absolute coordinates to block relative coordinates. */
 void
-vg_abs2rel(struct vg *vg, const struct vg_vertex *vtx, double *x, double *y)
+VG_Abs2Rel(VG *vg, const VG_Vtx *vtx, double *x, double *y)
 {
 	*x = vtx->x;
 	*y = vtx->y;
@@ -184,7 +184,7 @@ vg_abs2rel(struct vg *vg, const struct vg_vertex *vtx, double *x, double *y)
 
 /* Convert block relative coordinates to absolute coordinates. */
 void
-vg_rel2abs(struct vg *vg, double x, double y, struct vg_vertex *vtx)
+VG_Rel2Abs(VG *vg, double x, double y, VG_Vtx *vtx)
 {
 	vtx->x = x;
 	vtx->y = y;
@@ -197,16 +197,16 @@ vg_rel2abs(struct vg *vg, double x, double y, struct vg_vertex *vtx)
 
 /* Destroy a block as well as the elements associated with it. */
 void
-vg_destroy_block(struct vg *vg, struct vg_block *vgb)
+VG_DestroyBlock(VG *vg, VG_Block *vgb)
 {
-	struct vg_element *vge, *nvge;
+	VG_Element *vge, *nvge;
 
 	for (vge = TAILQ_FIRST(&vgb->vges);
 	     vge != TAILQ_END(&vgb->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vgbmbs);
 		TAILQ_REMOVE(&vg->vges, vge, vges);
-		vg_free_element(vg, vge);
+		VG_FreeElement(vg, vge);
 	}
 	TAILQ_REMOVE(&vg->blocks, vgb, vgbs);
 	Free(vgb, M_VG);
@@ -215,16 +215,16 @@ vg_destroy_block(struct vg *vg, struct vg_block *vgb)
 
 /* Destroy all elements associated with a block. */
 void
-vg_clear_block(struct vg *vg, struct vg_block *vgb)
+VG_ClearBlock(VG *vg, VG_Block *vgb)
 {
-	struct vg_element *vge, *nvge;
+	VG_Element *vge, *nvge;
 
 	for (vge = TAILQ_FIRST(&vgb->vges);
 	     vge != TAILQ_END(&vgb->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vgbmbs);
 		TAILQ_REMOVE(&vg->vges, vge, vges);
-		vg_free_element(vg, vge);
+		VG_FreeElement(vg, vge);
 	}
 	TAILQ_INIT(&vgb->vges);
 	vg->redraw = 1;
@@ -232,7 +232,7 @@ vg_clear_block(struct vg *vg, struct vg_block *vgb)
 
 /* Generate absolute vg coordinates for a vertex that's part of a block. */
 void
-vg_block_offset(struct vg *vg, struct vg_vertex *vtx)
+VG_BlockOffset(VG *vg, VG_Vtx *vtx)
 {
 	if (vg->cur_block != NULL) {
 		vtx->x += vg->cur_block->pos.x;
@@ -245,18 +245,18 @@ vg_block_offset(struct vg *vg, struct vg_vertex *vtx)
 static void
 destroy_block(int argc, union evarg *argv)
 {
-	struct vg *vg = argv[1].p;
-	struct tlist *tl = argv[2].p;
-	struct tlist_item *it;
+	VG *vg = argv[1].p;
+	AG_Tlist *tl = argv[2].p;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected)
 			continue;
 
-		if (it->iconsrc == ICON(VGBLOCK_ICON)) {
-			vg_destroy_block(vg, (struct vg_block *)it->p1);
-		} else if (it->iconsrc == ICON(DRAWING_ICON)) {
-			vg_destroy_element(vg, (struct vg_element *)it->p1);
+		if (it->iconsrc == AGICON(VGBLOCK_ICON)) {
+			VG_DestroyBlock(vg, (VG_Block *)it->p1);
+		} else if (it->iconsrc == AGICON(DRAWING_ICON)) {
+			VG_DestroyElement(vg, (VG_Element *)it->p1);
 		}
 	}
 }
@@ -264,62 +264,62 @@ destroy_block(int argc, union evarg *argv)
 static void
 poll_blocks(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct vg *vg = argv[1].p;
-	struct vg_block *vgb;
-	struct vg_element *vge;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	VG *vg = argv[1].p;
+	VG_Block *vgb;
+	VG_Element *vge;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	pthread_mutex_lock(&vg->lock);
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
-		struct vg_rect rext;
+		VG_Rect rext;
 
-		vg_block_extent(vg, vgb, &rext);
+		VG_BlockExtent(vg, vgb, &rext);
 		snprintf(name, sizeof(name),
 		    "%s (%.2f,%.2f; \xce\xb8=%.2f; ext=%.2f,%.2f %.2fx%.2f)",
 		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta,
 		    rext.x, rext.y, rext.w, rext.h);
-		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
+		it = AG_TlistAddPtr(tl, AGICON(VGBLOCK_ICON), name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
-			it = tlist_insert_item(tl, ICON(DRAWING_ICON),
+			it = AG_TlistAddPtr(tl, AGICON(DRAWING_ICON),
 			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		it = tlist_insert_item(tl, ICON(DRAWING_ICON),
+		it = AG_TlistAddPtr(tl, AGICON(DRAWING_ICON),
 		    _(vge->ops->name), vge);
 		it->depth = 1;
 	}
 
 	pthread_mutex_unlock(&vg->lock);
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
-struct window *
-vg_block_editor(struct vg *vg)
+AG_Window *
+VG_BlockEditor(VG *vg)
 {
-	struct window *win;
-	struct box *bo;
-	struct tlist *tl;
+	AG_Window *win;
+	AG_Box *bo;
+	AG_Tlist *tl;
 
-	win = window_new(WINDOW_HIDE, NULL);
-	window_set_caption(win, _("Blocks"));
-	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
+	win = AG_WindowNew(AG_WINDOW_HIDE, NULL);
+	AG_WindowSetCaption(win, _("Blocks"));
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
 	
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-	event_new(tl, "tlist-poll", poll_blocks, "%p", vg);
+	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
+	AG_SetEvent(tl, "tlist-poll", poll_blocks, "%p", vg);
 
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		struct button *bu;
+		AG_Button *bu;
 
-		bu = button_new(bo, _("Destroy"));
-		event_new(bu, "button-pushed", destroy_block, "%p,%p", vg, tl);
+		bu = AG_ButtonNew(bo, _("Destroy"));
+		AG_SetEvent(bu, "button-pushed", destroy_block, "%p,%p", vg, tl);
 	}
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.7 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.8 2005/08/27 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,40 +39,40 @@
 static void
 init(void *p)
 {
-	tool_push_status(p, _("Specify element and $(L) to invert."));
+	AG_MaptoolPushStatus(p, _("Specify element and $(L) to invert."));
 }
 
 static int
 mousebuttondown(void *p, int x, int y, int btn)
 {
-	mapmod_begin(TOOL(p)->mv->map);
+	AG_MapmodBegin(TOOL(p)->mv->map);
 	return (0);
 }
 
 static int
 mousebuttonup(void *p, int x, int y, int btn)
 {
-	struct tool *t = p;
-	struct mapview *mv = t->mv;
-	struct map *m = mv->map;
+	AG_Maptool *t = p;
+	AG_Mapview *mv = t->mv;
+	AG_Map *m = mv->map;
 
 	if (m->nmods == 0) {
-		mapmod_cancel(m);
+		AG_MapmodCancel(m);
 	}
-	mapmod_end(m);
+	AG_MapmodEnd(m);
 	return (0);
 }
 
 static int
-effect(void *p, struct node *n)
+effect(void *p, AG_Node *n)
 {
-	struct mapview *mv = TOOL(p)->mv;
-	struct map *m = mv->map;
-	struct noderef *nref;
-	struct transform *trans;
+	AG_Mapview *mv = TOOL(p)->mv;
+	AG_Map *m = mv->map;
+	AG_Nitem *nref;
+	AG_Transform *trans;
 	int nmods = 0;
 
-	mapmod_nodechg(m, mv->cx, mv->cy);
+	AG_MapmodNodeChg(m, mv->cx, mv->cy);
 
 	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		if (nref->layer != m->cur_layer)
@@ -81,7 +81,7 @@ effect(void *p, struct node *n)
 		nmods++;
 
 		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
-			if (trans->type == TRANSFORM_INVERT) {
+			if (trans->type == AG_TRANSFORM_RGB_INVERT) {
 				TAILQ_REMOVE(&nref->transforms, trans,
 				    transforms);
 				break;
@@ -90,9 +90,9 @@ effect(void *p, struct node *n)
 		if (trans != NULL)
 			continue;
 
-		if ((trans = transform_new(TRANSFORM_INVERT, 0, NULL))
+		if ((trans = AG_TransformNew(AG_TRANSFORM_RGB_INVERT, 0, NULL))
 		    == NULL) {
-			text_msg(MSG_ERROR, "%s", error_get());
+			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 			continue;
 		}
 		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
@@ -106,15 +106,15 @@ cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 255, 64 };
 
-	primitives.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
-	    c, ALPHA_OVERLAY);
+	agPrim.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	    c, AG_ALPHA_OVERLAY);
 	return (1);
 }
 
-const struct tool_ops invert_ops = {
+const AG_MaptoolOps agMapInvertOps = {
 	"Invert", N_("Invert sprite color"),
 	INVERT_TOOL_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
 	init,
 	NULL,			/* destroy */

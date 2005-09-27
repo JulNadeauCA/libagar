@@ -1,4 +1,4 @@
-/*	$Csoft: actor.c,v 1.9 2005/08/27 04:39:59 vedge Exp $	*/
+/*	$Csoft: actor.c,v 1.1 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,27 +39,27 @@
 
 #include "actor.h"
 
-const struct version actor_ver = {
+const AG_Version ag_actor_ver = {
 	"agar actor",
 	0, 0
 };
 
 void
-actor_init(void *obj, const char *type, const char *name,
-    const struct actor_ops *ops)
+AG_ActorInit(void *obj, const char *type, const char *name,
+    const AG_ActorOps *ops)
 {
-	char tname[OBJECT_TYPE_MAX];
-	struct actor *go = obj;
+	char tname[AG_OBJECT_TYPE_MAX];
+	AG_Actor *go = obj;
 
 	strlcpy(tname, "actor.", sizeof(tname));
 	strlcat(tname, type, sizeof(tname));
 
-	object_init(go, tname, name, ops);
-	object_remain(go, OBJECT_REMAIN_DATA);
-	pthread_mutex_init(&go->lock, &recursive_mutexattr);
+	AG_ObjectInit(go, tname, name, ops);
+	AG_ObjectRemain(go, AG_OBJECT_REMAIN_DATA);
+	pthread_mutex_init(&go->lock, &agRecursiveMutexAttr);
 	go->flags = 0;
 	go->parent = NULL;
-	go->type = ACTOR_MAP;
+	go->type = AG_ACTOR_MAP;
 	go->g_map.x = 0;
 	go->g_map.y = 0;
 	go->g_map.l0 = 0;
@@ -73,70 +73,70 @@ actor_init(void *obj, const char *type, const char *name,
 }
 
 void
-actor_reinit(void *obj)
+AG_ActorReinit(void *obj)
 {
 }
 
 void
-actor_destroy(void *obj)
+AG_ActorDestroy(void *obj)
 {
-	struct actor *go = obj;
+	AG_Actor *go = obj;
 
 	pthread_mutex_destroy(&go->lock);
 }
 
 int
-actor_load(void *obj, struct netbuf *buf)
+AG_ActorLoad(void *obj, AG_Netbuf *buf)
 {
-	struct actor *go = obj;
-	struct space *space;
+	AG_Actor *go = obj;
+	AG_Space *space;
 
-	if (version_read(buf, &actor_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &ag_actor_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&go->lock);
 
 #if 0
 	if (go->parent != NULL) {
-		dprintf("reattaching %s to %s\n", OBJECT(go)->name,
-		    OBJECT(go->parent)->name);
+		dprintf("reattaching %s to %s\n", AGOBJECT(go)->name,
+		    AGOBJECT(go->parent)->name);
 		space = go->parent;
 		pthread_mutex_lock(&space->lock);
-		space_detach(space, go);
+		AG_SpaceDetach(space, go);
 	} else {
 		space = NULL;
 	}
 #endif
 
-	go->type = (enum actor_type)read_uint32(buf);
-	go->flags = (int)read_uint32(buf) & ACTOR_SAVED_FLAGS;
+	go->type = (enum ag_actor_type)AG_ReadUint32(buf);
+	go->flags = (int)AG_ReadUint32(buf) & AG_ACTOR_SAVED_FLAGS;
 	switch (go->type) {
-	case ACTOR_MAP:
-		go->g_map.x = (int)read_uint32(buf);
-		go->g_map.y = (int)read_uint32(buf);
-		go->g_map.l0 = (int)read_uint8(buf);
-		go->g_map.l1 = (int)read_uint8(buf);
+	case AG_ACTOR_MAP:
+		go->g_map.x = (int)AG_ReadUint32(buf);
+		go->g_map.y = (int)AG_ReadUint32(buf);
+		go->g_map.l0 = (int)AG_ReadUint8(buf);
+		go->g_map.l1 = (int)AG_ReadUint8(buf);
 		go->g_map.x0 = go->g_map.x;
 		go->g_map.y0 = go->g_map.y;
 		go->g_map.x1 = go->g_map.x;
 		go->g_map.y1 = go->g_map.y;
 		break;
-	case ACTOR_SCENE:
-		go->g_scene.x = read_double(buf);
-		go->g_scene.y = read_double(buf);
-		go->g_scene.z = read_double(buf);
-		go->g_scene.dx = read_double(buf);
-		go->g_scene.dy = read_double(buf);
-		go->g_scene.dz = read_double(buf);
+	case AG_ACTOR_SCENE:
+		go->g_scene.x = AG_ReadDouble(buf);
+		go->g_scene.y = AG_ReadDouble(buf);
+		go->g_scene.z = AG_ReadDouble(buf);
+		go->g_scene.dx = AG_ReadDouble(buf);
+		go->g_scene.dy = AG_ReadDouble(buf);
+		go->g_scene.dz = AG_ReadDouble(buf);
 		break;
 	default:
 		break;
 	}
 #if 0
 	if (space != NULL) {
-		space_attach(space, go);
-		dprintf("reattached %s to %s\n", OBJECT(go)->name,
-		    OBJECT(go->parent)->name);
+		AG_SpaceAttach(space, go);
+		dprintf("reattached %s to %s\n", AGOBJECT(go)->name,
+		    AGOBJECT(go->parent)->name);
 		pthread_mutex_unlock(&space->lock);
 	}
 #endif
@@ -145,30 +145,30 @@ actor_load(void *obj, struct netbuf *buf)
 }
 
 int
-actor_save(void *obj, struct netbuf *buf)
+AG_ActorSave(void *obj, AG_Netbuf *buf)
 {
-	struct actor *go = obj;
+	AG_Actor *go = obj;
 
-	version_write(buf, &actor_ver);
+	AG_WriteVersion(buf, &ag_actor_ver);
 
 	pthread_mutex_lock(&go->lock);
-	write_uint32(buf, (Uint32)go->type);
-	write_uint32(buf, (Uint32)go->flags & ACTOR_SAVED_FLAGS);
+	AG_WriteUint32(buf, (Uint32)go->type);
+	AG_WriteUint32(buf, (Uint32)go->flags & AG_ACTOR_SAVED_FLAGS);
 
 	switch (go->type) {
-	case ACTOR_MAP:
-		write_uint32(buf, (Uint32)go->g_map.x);
-		write_uint32(buf, (Uint32)go->g_map.y);
-		write_uint8(buf, (Uint8)go->g_map.l0);
-		write_uint8(buf, (Uint8)go->g_map.l1);
+	case AG_ACTOR_MAP:
+		AG_WriteUint32(buf, (Uint32)go->g_map.x);
+		AG_WriteUint32(buf, (Uint32)go->g_map.y);
+		AG_WriteUint8(buf, (Uint8)go->g_map.l0);
+		AG_WriteUint8(buf, (Uint8)go->g_map.l1);
 		break;
-	case ACTOR_SCENE:
-		write_double(buf, go->g_scene.x);
-		write_double(buf, go->g_scene.y);
-		write_double(buf, go->g_scene.z);
-		write_double(buf, go->g_scene.dx);
-		write_double(buf, go->g_scene.dy);
-		write_double(buf, go->g_scene.dz);
+	case AG_ACTOR_SCENE:
+		AG_WriteDouble(buf, go->g_scene.x);
+		AG_WriteDouble(buf, go->g_scene.y);
+		AG_WriteDouble(buf, go->g_scene.z);
+		AG_WriteDouble(buf, go->g_scene.dx);
+		AG_WriteDouble(buf, go->g_scene.dy);
+		AG_WriteDouble(buf, go->g_scene.dz);
 		break;
 	default:
 		break;
@@ -178,21 +178,21 @@ actor_save(void *obj, struct netbuf *buf)
 }
 
 void
-actor_update(void *obj)
+AG_ActorUpdate(void *obj)
 {
 }
 
 static void
-move_nodes(struct actor *go, int xo, int yo)
+move_nodes(AG_Actor *go, int xo, int yo)
 {
-	struct map *m = go->parent;
+	AG_Map *m = go->parent;
 	int x, y;
 
 	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
 		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
-			struct node *n1 = &m->map[y][x];
-			struct node *n2 = &m->map[y+yo][x+xo];
-			struct noderef *r, *nr;
+			AG_Node *n1 = &m->map[y][x];
+			AG_Node *n2 = &m->map[y+yo][x+xo];
+			AG_Nitem *r, *nr;
 
 			for (r = TAILQ_FIRST(&n1->nrefs);
 			     r != TAILQ_END(&n1->nrefs);
@@ -219,10 +219,10 @@ move_nodes(struct actor *go, int xo, int yo)
 }
 
 void
-actor_move_sprite(void *obj, int xo, int yo)
+AG_ActorMoveSprite(void *obj, int xo, int yo)
 {
-	struct actor *go = obj;
-	struct map *m = go->parent;
+	AG_Actor *go = obj;
+	AG_Map *m = go->parent;
 	int x, y;
 
 	pthread_mutex_lock(&go->lock);
@@ -232,8 +232,8 @@ actor_move_sprite(void *obj, int xo, int yo)
 
 	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
 		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r, *nr;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r, *nr;
 		
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 				if (r->p != go ||
@@ -247,29 +247,29 @@ actor_move_sprite(void *obj, int xo, int yo)
 					
 				switch (go->g_map.da) {
 				case 0:
-					if (go->g_map.xmot < -TILESZ/2) {
-						go->g_map.xmot = +TILESZ/2;
+					if (go->g_map.xmot < -AGTILESZ/2) {
+						go->g_map.xmot = +AGTILESZ/2;
 						move_nodes(go, -1, 0);
 						goto out;
 					}
 					break;
 				case 90:
-					if (go->g_map.ymot < -TILESZ/2) {
-						go->g_map.ymot = +TILESZ/2;
+					if (go->g_map.ymot < -AGTILESZ/2) {
+						go->g_map.ymot = +AGTILESZ/2;
 						move_nodes(go, 0, -1);
 						goto out;
 					}
 					break;
 				case 180:
-					if (go->g_map.xmot > +TILESZ/2) {
-						go->g_map.xmot = -TILESZ/2;
+					if (go->g_map.xmot > +AGTILESZ/2) {
+						go->g_map.xmot = -AGTILESZ/2;
 						move_nodes(go, +1, 0);
 						goto out;
 					}
 					break;
 				case 270:
-					if (go->g_map.ymot > +TILESZ/2) {
-						go->g_map.ymot = -TILESZ/2;
+					if (go->g_map.ymot > +AGTILESZ/2) {
+						go->g_map.ymot = -AGTILESZ/2;
 						move_nodes(go, 0, +1);
 						goto out;
 					}
@@ -283,24 +283,24 @@ out:
 }
 
 int
-actor_set_sprite(void *obj, int x, int y, int l0, void *gfx_obj,
+AG_ActorSetSprite(void *obj, int x, int y, int l0, void *gfx_obj,
     const char *name)
 {
-	struct actor *go = obj;
+	AG_Actor *go = obj;
 
-	actor_unmap_sprite(go);
-	return (actor_map_sprite(go, x, y, l0, gfx_obj, name));
+	AG_ActorUnmapSprite(go);
+	return (AG_ActorMapSprite(go, x, y, l0, gfx_obj, name));
 }
 
 int
-actor_map_sprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
+AG_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
     const char *name)
 {
-	struct actor *go = obj;
-	struct map *m = go->parent;
-	struct gfx *gfx;
+	AG_Actor *go = obj;
+	AG_Map *m = go->parent;
+	AG_Gfx *gfx;
 	Uint32 offs;
-	struct sprite *spr;
+	AG_Sprite *spr;
 	int x = go->g_map.x + X0;
 	int y = go->g_map.y + Y0;
 	int l0 = go->g_map.l0 + L0, l;
@@ -309,28 +309,28 @@ actor_map_sprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 	SDL_Surface *su;
 	int n = 0;
 
-	if (gfx_obj == NULL || (gfx = OBJECT(gfx_obj)->gfx) == NULL) {
-		error_set("NULL gfx");
+	if (gfx_obj == NULL || (gfx = AGOBJECT(gfx_obj)->gfx) == NULL) {
+		AG_SetError("NULL gfx");
 		return (-1);
 	}
-	if (!sprite_find(gfx, name, &offs)) {
+	if (!AG_SpriteFind(gfx, name, &offs)) {
 		return (-1);
 	}
 	spr = &gfx->sprites[offs];
 	su = spr->su;
-	dx0 = x - spr->xOrig/TILESZ;
-	dy0 = y - spr->yOrig/TILESZ;
-	xorig = spr->xOrig%TILESZ;
-	yorig = spr->yOrig%TILESZ;
+	dx0 = x - spr->xOrig/AGTILESZ;
+	dy0 = y - spr->yOrig/AGTILESZ;
+	xorig = spr->xOrig%AGTILESZ;
+	yorig = spr->yOrig%AGTILESZ;
 
 	for (sy = 0, dy = dy0;
 	     sy < su->h;
-	     sy += TILESZ, dy++) {
+	     sy += AGTILESZ, dy++) {
 		for (sx = 0, dx = dx0;
 		     sx < su->w;
-		     sx += TILESZ, dx++) {
-			struct node *dn;
-			struct noderef *r;
+		     sx += AGTILESZ, dx++) {
+			AG_Node *dn;
+			AG_Nitem *r;
 
 			if (dx < 0 || dx >= m->mapw ||
 			    dy < 0 || dy >= m->maph) {
@@ -338,27 +338,27 @@ actor_map_sprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 			}
 			dn = &m->map[dy][dx];
 
-			r = node_add_sprite(m, dn, gfx_obj, offs);
+			r = AG_NodeAddSprite(m, dn, gfx_obj, offs);
 			r->p = obj;
 			r->r_gfx.rs.x = sx;
 			r->r_gfx.rs.y = sy;
-			r->r_gfx.rs.w = TILESZ;
-			r->r_gfx.rs.h = TILESZ;
+			r->r_gfx.rs.w = AGTILESZ;
+			r->r_gfx.rs.h = AGTILESZ;
 			r->r_gfx.xorigin = xorig;
 			r->r_gfx.yorigin = yorig;
-			r->r_gfx.xcenter = TILESZ/2;
-			r->r_gfx.ycenter = TILESZ/2;
+			r->r_gfx.xcenter = AGTILESZ/2;
+			r->r_gfx.ycenter = AGTILESZ/2;
 			r->r_gfx.xmotion = go->g_map.xmot;
 			r->r_gfx.ymotion = go->g_map.ymot;
 			r->flags |= spr->attrs[n];
-			r->flags |= NODEREF_NOSAVE;
+			r->flags |= AG_NITEM_NOSAVE;
 
 			l = l0 + spr->layers[n];
 			if (l < 0) {
 				l = 0;
 			} else {
 				while (m->nlayers <= l) {
-					map_push_layer(m, "");
+					AG_MapPushLayer(m, "");
 				}
 			}
 			r->layer = l;
@@ -377,10 +377,10 @@ out:
 }
 
 void
-actor_unmap_sprite(void *obj)
+AG_ActorUnmapSprite(void *obj)
 {
-	struct actor *go = obj;
-	struct map *m = go->parent;
+	AG_Actor *go = obj;
+	AG_Map *m = go->parent;
 	int x, y;
 
 	if (m == NULL)
@@ -388,8 +388,8 @@ actor_unmap_sprite(void *obj)
 
 	for (y = go->g_map.y0; y <= go->g_map.y1; y++) {
 		for (x = go->g_map.x0; x <= go->g_map.x1; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r, *nr;
+			AG_Node *node = &m->map[y][x];
+			AG_Nitem *r, *nr;
 		
 			for (r = TAILQ_FIRST(&node->nrefs);
 			     r != TAILQ_END(&node->nrefs);
@@ -398,7 +398,7 @@ actor_unmap_sprite(void *obj)
 				if (r->p == go &&
 				    r->layer >= go->g_map.l0 &&
 				    r->layer <= go->g_map.l1)
-					node_remove_ref(m, node, r);
+					AG_NodeDelItem(m, node, r);
 			}
 		}
 	}
@@ -406,19 +406,19 @@ actor_unmap_sprite(void *obj)
 
 #ifdef EDITION
 void
-actor_edit(struct actor *go, void *cont)
+AG_ActorEdit(AG_Actor *go, void *cont)
 {
-	label_new(cont, LABEL_POLLED, _("Type: %d"), &go->type);
-	label_new(cont, LABEL_POLLED, _("Flags: 0x%x"), &go->flags);
-	label_new(cont, LABEL_POLLED, _("Map layers: %d-%d"),
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Type: %d"), &go->type);
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Flags: 0x%x"), &go->flags);
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Map layers: %d-%d"),
 	    &go->g_map.l0, &go->g_map.l1);
-	label_new(cont, LABEL_POLLED, _("Map position: [%d,%d]"),
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Map position: [%d,%d]"),
 	    &go->g_map.x, &go->g_map.y);
-	label_new(cont, LABEL_POLLED, _("Map extent: [%d,%d]-[%d,%d]"),
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Map extent: [%d,%d]-[%d,%d]"),
 	    &go->g_map.x0, &go->g_map.y0, &go->g_map.x1, &go->g_map.y1);
-	label_new(cont, LABEL_POLLED, _("Map offset: [%d,%d]"),
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Map offset: [%d,%d]"),
 	    &go->g_map.xmot, &go->g_map.ymot);
-	label_new(cont, LABEL_POLLED, _("Direction: %d(%d)"),
+	AG_LabelNew(cont, AG_LABEL_POLLED, _("Direction: %d(%d)"),
 	    &go->g_map.da, &go->g_map.dv);
 }
 #endif /* EDITION */

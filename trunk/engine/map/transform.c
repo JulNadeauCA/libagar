@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.4 2005/06/08 06:28:32 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.5 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,27 +37,27 @@
 #include <string.h>
 #include <stdarg.h>
 
-const struct transform_ent transforms[];
-const int ntransforms;
+const struct ag_transform_ent agTransforms[];
+const int agnTransforms;
 
 /*
  * Add a new rotate transformation or update an existing one. If angle is 0,
  * any existing rotation is removed.
  */
-struct transform *
-transform_rotate(struct noderef *r, int angle)
+AG_Transform *
+AG_TransformRotate(struct ag_nitem *r, int angle)
 {
 	Uint32 angles = (Uint32)angle;
-	struct transform *tr;
+	AG_Transform *tr;
 	SDL_Surface *su;
 	float rad, theta;
 
 	switch (r->type) {
-	case NODEREF_SPRITE:
-		su = SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
+	case AG_NITEM_SPRITE:
+		su = AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
 		break;
-	case NODEREF_ANIM:
-		su = GFX_ANIM_FRAME(r, &ANIM(r->r_anim.obj,r->r_anim.offs));
+	case AG_NITEM_ANIM:
+		su = AG_ANIM_FRAME(r, &AG_ANIM(r->r_anim.obj,r->r_anim.offs));
 		break;
 	default:
 		return (NULL);
@@ -75,7 +75,7 @@ transform_rotate(struct noderef *r, int angle)
 	r->r_gfx.yorigin = rad*sinf(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
-		if (tr->type == TRANSFORM_ROTATE) {
+		if (tr->type == AG_TRANSFORM_ROTATE) {
 			if (angle == 0) {
 				TAILQ_REMOVE(&r->transforms, tr, transforms);
 				Free(tr, M_NODEXFORM);
@@ -88,7 +88,7 @@ transform_rotate(struct noderef *r, int angle)
 		return (NULL);
 	}
 	if (tr == NULL) {
-		tr = transform_new(TRANSFORM_ROTATE, 1, &angles);
+		tr = AG_TransformNew(AG_TRANSFORM_ROTATE, 1, &angles);
 		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
 	} else {
 		tr->args[0] = angles;
@@ -96,13 +96,13 @@ transform_rotate(struct noderef *r, int angle)
 	return (tr);
 }
 
-struct transform *
-transform_new(enum transform_type type, int nargs, Uint32 *args)
+AG_Transform *
+AG_TransformNew(enum ag_transform_type type, int nargs, Uint32 *args)
 {
-	struct transform *trans;
+	AG_Transform *trans;
 
-	trans = Malloc(sizeof(struct transform), M_NODEXFORM);
-	if (transform_init(trans, type, nargs, args) == -1) {
+	trans = Malloc(sizeof(AG_Transform), M_NODEXFORM);
+	if (AG_TransformInit(trans, type, nargs, args) == -1) {
 		Free(trans, M_NODEXFORM);
 		return (NULL);
 	}
@@ -110,17 +110,17 @@ transform_new(enum transform_type type, int nargs, Uint32 *args)
 }
 
 int
-transform_init(struct transform *trans, enum transform_type type,
+AG_TransformInit(AG_Transform *trans, enum ag_transform_type type,
     int nargs, Uint32 *args)
 {
 	int i;
 
-	if (nargs > TRANSFORM_MAX_ARGS) {
-		error_set(_("Too many transform args."));
+	if (nargs > AG_TRANSFORM_MAX_ARGS) {
+		AG_SetError(_("Too many transform args."));
 		return (-1);
 	}
 
-	memset(trans, 0, sizeof(struct transform));
+	memset(trans, 0, sizeof(AG_Transform));
 	trans->type = type;
 	trans->func = NULL;
 	trans->nargs = nargs;
@@ -131,9 +131,9 @@ transform_init(struct transform *trans, enum transform_type type,
 		trans->args = NULL;
 	}
 
-	for (i = 0; i < ntransforms; i++) {
-		if (transforms[i].type == type) {
-			trans->func = transforms[i].func;
+	for (i = 0; i < agnTransforms; i++) {
+		if (agTransforms[i].type == type) {
+			trans->func = agTransforms[i].func;
 			break;
 		}
 	}
@@ -141,14 +141,14 @@ transform_init(struct transform *trans, enum transform_type type,
 }
 
 void
-transform_destroy(struct transform *trans)
+AG_TransformDestroy(AG_Transform *trans)
 {
 	Free(trans->args, M_NODEXFORM);
 	Free(trans, M_NODEXFORM);
 }
 
 int
-transform_compare(const struct transform *tr1, const struct transform *tr2)
+AG_TransformCompare(const AG_Transform *tr1, const AG_Transform *tr2)
 {
 	return (tr1->type == tr2->type &&
 	        tr1->nargs == tr2->nargs &&
@@ -157,52 +157,52 @@ transform_compare(const struct transform *tr1, const struct transform *tr2)
 }
 
 int
-transform_load(struct netbuf *buf, struct transform *trans)
+AG_TransformLoad(AG_Netbuf *buf, AG_Transform *trans)
 {
 	int i;
 
-	trans->type = read_uint8(buf);
+	trans->type = AG_ReadUint8(buf);
 	trans->func = NULL;
-	trans->nargs = (int)read_uint8(buf);
-	if (trans->nargs > TRANSFORM_MAX_ARGS) {
-		error_set(_("Too many transform args."));
+	trans->nargs = (int)AG_ReadUint8(buf);
+	if (trans->nargs > AG_TRANSFORM_MAX_ARGS) {
+		AG_SetError(_("Too many transform args."));
 		return (-1);
 	}
 
 	Free(trans->args, M_NODEXFORM);
 	trans->args = Malloc(trans->nargs * sizeof(Uint32), M_NODEXFORM);
 	for (i = 0; i < trans->nargs; i++)
-		trans->args[i] = read_uint32(buf);
+		trans->args[i] = AG_ReadUint32(buf);
 
 	/* Look for a matching algorithm. */
-	for (i = 0; i < ntransforms; i++) {
-		if (transforms[i].type == trans->type) {
-			trans->func = transforms[i].func;
+	for (i = 0; i < agnTransforms; i++) {
+		if (agTransforms[i].type == trans->type) {
+			trans->func = agTransforms[i].func;
 			break;
 		}
 	}
 	if (trans->func == NULL) {
-		error_set(_("Unknown transform algorithm."));
+		AG_SetError(_("Unknown transform algorithm."));
 		return (-1);
 	}
 	return (0);
 }
 
 void
-transform_save(struct netbuf *buf, const struct transform *trans)
+AG_TransformSave(AG_Netbuf *buf, const AG_Transform *trans)
 {
 	int i;
 
-	write_uint8(buf, trans->type);
-	write_uint8(buf, trans->nargs);
+	AG_WriteUint8(buf, trans->type);
+	AG_WriteUint8(buf, trans->nargs);
 
 	for (i = 0; i < trans->nargs; i++)
-		write_uint32(buf, trans->args[i]);
+		AG_WriteUint32(buf, trans->args[i]);
 }
 
 /* Flip a surface horizontally. */
 static SDL_Surface *
-hflip(SDL_Surface *su, int argc, Uint32 *argv)
+mirror(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	Uint8 *row, *rowp;
 	Uint8 *fb = su->pixels;
@@ -213,7 +213,7 @@ hflip(SDL_Surface *su, int argc, Uint32 *argv)
 		memcpy(row, fb, su->pitch);
 		rowp = row + su->pitch - su->format->BytesPerPixel;
 		for (x = 0; x < su->w; x++) {
-			PUT_PIXEL(su, fb, GET_PIXEL(su, rowp));
+			AG_PUT_PIXEL(su, fb, AG_GET_PIXEL(su, rowp));
 			fb += su->format->BytesPerPixel;
 			rowp -= su->format->BytesPerPixel;
 		}
@@ -224,7 +224,7 @@ hflip(SDL_Surface *su, int argc, Uint32 *argv)
 
 /* Flip a surface vertically. */
 static SDL_Surface *
-vflip(SDL_Surface *su, int argc, Uint32 *argv)
+flip(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	size_t totsize = su->h*su->pitch;
 	Uint8 *row, *rowbuf;
@@ -269,24 +269,24 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 	case 90:
 		for (y = 0; y < sOrig->h; y++) {
 			for (x = 0; x < sOrig->w; x++) {
-				PUT_PIXEL2(sNew, y, x,
-				    GET_PIXEL2(sOrig, x, sOrig->h-y-1));
+				AG_PUT_PIXEL2(sNew, y, x,
+				    AG_GET_PIXEL2(sOrig, x, sOrig->h-y-1));
 			}
 		}
 		break;
 	case 180:
 		for (y = 0, yp = sOrig->h-1; y < sOrig->h; y++, yp--) {
 			for (x = 0, xp = sOrig->w-1; x < sOrig->w; x++, xp--) {
-				PUT_PIXEL2(sNew, x, y,
-				    GET_PIXEL2(sOrig, xp, yp));
+				AG_PUT_PIXEL2(sNew, x, y,
+				    AG_GET_PIXEL2(sOrig, xp, yp));
 			}
 		}
 		break;
 	case 270:
 		for (y = 0; y < sOrig->h; y++) {
 			for (x = 0; x < sOrig->w; x++) {
-				PUT_PIXEL2(sNew, y, x,
-				    GET_PIXEL2(sOrig, sOrig->w-x-1, y));
+				AG_PUT_PIXEL2(sNew, y, x,
+				    AG_GET_PIXEL2(sOrig, sOrig->w-x-1, y));
 			}
 		}
 		break;
@@ -296,21 +296,21 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 
 /* Print the transform chain. */
 void
-transform_print(const struct transformq *transq, char *buf, size_t buf_size)
+AG_TransformPrint(const struct ag_transformq *transq, char *buf, size_t buf_size)
 {
-	extern const struct transform_ent transforms[];
-	extern const int ntransforms;
-	struct transform *tr;
+	extern const struct ag_transform_ent agTransforms[];
+	extern const int agnTransforms;
+	AG_Transform *tr;
 	int i, j;
 
 	TAILQ_FOREACH(tr, transq, transforms) {
-		for (i = 0; i < ntransforms; i++) {
-			if (transforms[i].type == tr->type)
+		for (i = 0; i < agnTransforms; i++) {
+			if (agTransforms[i].type == tr->type)
 				break;
 		}
-		if (i < ntransforms) {
+		if (i < agnTransforms) {
 			strlcat(buf, "+", buf_size);
-			strlcat(buf, transforms[i].name, buf_size);
+			strlcat(buf, agTransforms[i].name, buf_size);
 			for (j = 0; j < tr->nargs; j++) {
 				char num[32];
 
@@ -326,7 +326,7 @@ transform_print(const struct transformq *transq, char *buf, size_t buf_size)
 
 /* Invert the colors of a surface. */
 static SDL_Surface *
-invert(SDL_Surface *su, int argc, Uint32 *argv)
+rgbinvert(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	size_t size = su->w*su->h;
 	Uint8 *p = su->pixels;
@@ -334,8 +334,8 @@ invert(SDL_Surface *su, int argc, Uint32 *argv)
 	int i;
 
 	for (i = 0; i < size; i++) {
-		SDL_GetRGBA(GET_PIXEL(su, p), su->format, &r, &g, &b, &a);
-		PUT_PIXEL(su, p, SDL_MapRGBA(su->format,
+		SDL_GetRGBA(AG_GET_PIXEL(su, p), su->format, &r, &g, &b, &a);
+		AG_PUT_PIXEL(su, p, SDL_MapRGBA(su->format,
 		    255 - r,
 		    255 - g,
 		    255 - b,
@@ -345,12 +345,12 @@ invert(SDL_Surface *su, int argc, Uint32 *argv)
 	return (su);
 }
 
-const struct transform_ent transforms[] = {
-	{ "h-flip",	TRANSFORM_HFLIP,	hflip },
-	{ "v-flip",	TRANSFORM_VFLIP,	vflip },
-	{ "rotate",	TRANSFORM_ROTATE,	rotate },
-	{ "invert",	TRANSFORM_INVERT,	invert }
+const struct ag_transform_ent agTransforms[] = {
+	{ "mirror",	AG_TRANSFORM_MIRROR,		mirror },
+	{ "flip",	AG_TRANSFORM_FLIP,		flip },
+	{ "rotate",	AG_TRANSFORM_ROTATE,		rotate },
+	{ "rgb-invert",	AG_TRANSFORM_RGB_INVERT,	rgbinvert }
 };
-const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
+const int agnTransforms = sizeof(agTransforms) / sizeof(agTransforms[0]);
 
 #endif /* MAP */

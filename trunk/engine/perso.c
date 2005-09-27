@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.55 2005/09/19 01:25:16 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.56 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -45,28 +45,25 @@
 
 #include "perso.h"
 
-const struct version perso_ver = {
+const AG_Version agPersoVer = {
 	"agar personage",
 	3, 0
 };
 
-static int perso_keydown(void *, int, int);
-static int perso_keyup(void *, int, int);
-
-const struct actor_ops perso_ops = {
+const AG_ActorOps agPersoOps = {
 	{
-		perso_init,
-		perso_reinit,
-		perso_destroy,
-		perso_load,
-		perso_save,
-		perso_edit
+		AG_PersoInit,
+		AG_PersoReinit,
+		AG_PersoDestroy,
+		AG_PersoLoad,
+		AG_PersoSave,
+		AG_PersoEdit
 	},
-	perso_map,
+	AG_PersoMap,
 	NULL,		/* unmap */
-	perso_update,
-	perso_keydown,
-	perso_keyup,
+	AG_PersoUpdate,
+	AG_PersoKeydown,
+	AG_PersoKeyup,
 	NULL,		/* mousemotion */
 	NULL,		/* mousebuttondown */
 	NULL,		/* mousebuttonup */
@@ -76,29 +73,27 @@ const struct actor_ops perso_ops = {
 	NULL		/* joybutton */
 };
 
-static void *perso_tileset = NULL;
-
-struct perso *
-perso_new(void *parent, const char *name)
+AG_Perso *
+AG_PersoNew(void *parent, const char *name)
 {
-	struct perso *ps;
+	AG_Perso *ps;
 
-	ps = Malloc(sizeof(struct perso), M_OBJECT);
-	perso_init(ps, name);
-	object_attach(parent, ps);
+	ps = Malloc(sizeof(AG_Perso), M_OBJECT);
+	AG_PersoInit(ps, name);
+	AG_ObjectAttach(parent, ps);
 	return (ps);
 }
 
-static int
-can_walk_to(void *p, int xo, int yo)
+int
+AG_PersoCanWalkTo(void *p, int xo, int yo)
 {
-	struct actor *go = p;
-	struct map *m = go->parent;
+	AG_Actor *go = p;
+	AG_Map *m = go->parent;
 	int dx0 = go->g_map.x0 + xo;
 	int dy0 = go->g_map.y0 + yo;
 	int dx1 = go->g_map.x1 + xo;
 	int dy1 = go->g_map.y1 + yo;
-	struct node *n;
+	AG_Node *n;
 	int x, y;
 
 	if (dx0 < 0 || dy0 < 0 || dx0 >= m->mapw || dy0 >= m->maph ||
@@ -107,16 +102,16 @@ can_walk_to(void *p, int xo, int yo)
 
 	for (y = dy0; y < dy1; y++) {
 		for (x = dx0; x < dx1; x++) {
-			struct node *n = &m->map[y][x];
-			struct noderef *r;
+			AG_Node *n = &m->map[y][x];
+			AG_Nitem *r;
 
 			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 				if (r->p != go &&
 				    r->layer >= go->g_map.l0 &&
 				    r->layer <= go->g_map.l1 &&
-				    r->flags & NODEREF_BLOCK) {
+				    r->flags & AG_NITEM_BLOCK) {
 					dprintf("%s: blocked\n",
-					    OBJECT(go)->name);
+					    AGOBJECT(go)->name);
 					return (0);
 				}
 			}
@@ -126,10 +121,10 @@ can_walk_to(void *p, int xo, int yo)
 }
 
 static Uint32
-perso_move(void *obj, Uint32 ival, void *arg)
+move(void *obj, Uint32 ival, void *arg)
 {
-	struct actor *go = obj;
-	struct perso *ps = obj;
+	AG_Actor *go = obj;
+	AG_Perso *ps = obj;
 	int xo = 0, yo = 0;
 
 	switch (go->g_map.da) {
@@ -140,18 +135,18 @@ perso_move(void *obj, Uint32 ival, void *arg)
 	}
 
 	if ((xo != 0 || yo != 0) &&
-	    can_walk_to(ps, xo, yo)) {
-		actor_move_sprite(ps, xo, yo);
+	    AG_PersoCanWalkTo(ps, xo, yo)) {
+		AG_ActorMoveSprite(ps, xo, yo);
 	}
 	return (ival);
 }
 
 void
-perso_init(void *obj, const char *name)
+AG_PersoInit(void *obj, const char *name)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 
-	actor_init(ps, "perso", name, &perso_ops);
+	AG_ActorInit(ps, "perso", name, &agPersoOps);
 	ps->tileset = NULL;
 	ps->name[0] = '\0';
 	ps->flags = 0;
@@ -163,68 +158,68 @@ perso_init(void *obj, const char *name)
 	ps->mp = ps->maxmp = 0;
 	ps->nzuars = 0;
 	pthread_mutex_init(&ps->lock, NULL);
-	timeout_set(&ps->move_to, perso_move, NULL, 0);
+	AG_SetTimeout(&ps->move_to, move, NULL, 0);
 }
 
 void
-perso_reinit(void *obj)
+AG_PersoReinit(void *obj)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 	
-	timeout_del(ps, &ps->move_to);
+	AG_DelTimeout(ps, &ps->move_to);
 
-	actor_reinit(obj);
+	AG_ActorReinit(obj);
 	
 	if (ps->tileset != NULL) {
-		object_page_out(ps->tileset, OBJECT_GFX);
-		object_del_dep(ps, ps->tileset);
+		AG_ObjectPageOut(ps->tileset, AG_OBJECT_GFX);
+		AG_ObjectDelDep(ps, ps->tileset);
 		ps->tileset = NULL;
 	}
 }
 
 void
-perso_destroy(void *obj)
+AG_PersoDestroy(void *obj)
 {
-	actor_destroy(obj);
+	AG_ActorDestroy(obj);
 }
 
 int
-perso_load(void *obj, struct netbuf *buf)
+AG_PersoLoad(void *obj, AG_Netbuf *buf)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 	void *tileset;
 	Uint32 name;
 
-	if (version_read(buf, &perso_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, &agPersoVer, NULL) != 0)
 		return (-1);
 	
-	if (actor_load(ps, buf) == -1)
+	if (AG_ActorLoad(ps, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&ps->lock);
-	copy_string(ps->name, buf, sizeof(ps->name));
-	ps->flags = read_uint32(buf);
-	name = read_uint32(buf);
+	AG_CopyString(ps->name, buf, sizeof(ps->name));
+	ps->flags = AG_ReadUint32(buf);
+	name = AG_ReadUint32(buf);
 
 	if (name != 0) {
-		if (object_find_dep(ps, name, &ps->tileset) == -1) {
+		if (AG_ObjectFindDep(ps, name, &ps->tileset) == -1) {
 			goto fail;
 		}
 		if (ps->tileset != NULL) {
-			object_add_dep(ps, ps->tileset);
-			object_page_in(ps->tileset, OBJECT_GFX);
+			AG_ObjectAddDep(ps, ps->tileset);
+			AG_ObjectPageIn(ps->tileset, AG_OBJECT_GFX);
 		}
 	}
 
-	ps->level = read_sint32(buf);
-	ps->exp = read_uint32(buf);
-	ps->age = (int)read_uint32(buf);
-	ps->seed = read_uint32(buf);
-	ps->maxhp = (int)read_uint32(buf);
-	ps->hp = (int)read_uint32(buf);
-	ps->maxmp = (int)read_uint32(buf);
-	ps->mp = (int)read_uint32(buf);
-	ps->nzuars = (u_int)read_uint32(buf);
+	ps->level = AG_ReadSint32(buf);
+	ps->exp = AG_ReadUint32(buf);
+	ps->age = (int)AG_ReadUint32(buf);
+	ps->seed = AG_ReadUint32(buf);
+	ps->maxhp = (int)AG_ReadUint32(buf);
+	ps->hp = (int)AG_ReadUint32(buf);
+	ps->maxmp = (int)AG_ReadUint32(buf);
+	ps->mp = (int)AG_ReadUint32(buf);
+	ps->nzuars = (u_int)AG_ReadUint32(buf);
 
 	pthread_mutex_unlock(&ps->lock);
 	return (0);
@@ -234,115 +229,117 @@ fail:
 }
 
 int
-perso_save(void *obj, struct netbuf *buf)
+AG_PersoSave(void *obj, AG_Netbuf *buf)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 
-	version_write(buf, &perso_ver);
+	AG_WriteVersion(buf, &agPersoVer);
 	
-	if (actor_save(ps, buf) == -1)
+	if (AG_ActorSave(ps, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&ps->lock);
-	write_string(buf, ps->name);
-	write_uint32(buf, ps->flags);
-	write_uint32(buf, object_encode_name(ps, ps->tileset));
+	AG_WriteString(buf, ps->name);
+	AG_WriteUint32(buf, ps->flags);
+	AG_WriteUint32(buf, AG_ObjectEncodeName(ps, ps->tileset));
 
-	write_sint32(buf, ps->level);
-	write_uint32(buf, ps->exp);
-	write_uint32(buf, ps->age);
-	write_uint32(buf, ps->seed);
-	write_uint32(buf, (Uint32)ps->maxhp);
-	write_uint32(buf, (Uint32)ps->hp);
-	write_uint32(buf, (Uint32)ps->maxmp);
-	write_uint32(buf, (Uint32)ps->mp);
-	write_uint32(buf, (Uint32)ps->nzuars);
+	AG_WriteSint32(buf, ps->level);
+	AG_WriteUint32(buf, ps->exp);
+	AG_WriteUint32(buf, ps->age);
+	AG_WriteUint32(buf, ps->seed);
+	AG_WriteUint32(buf, (Uint32)ps->maxhp);
+	AG_WriteUint32(buf, (Uint32)ps->hp);
+	AG_WriteUint32(buf, (Uint32)ps->maxmp);
+	AG_WriteUint32(buf, (Uint32)ps->mp);
+	AG_WriteUint32(buf, (Uint32)ps->nzuars);
 	pthread_mutex_unlock(&ps->lock);
 	return (0);
 }
 
 void *
-perso_edit(void *obj)
+AG_PersoEdit(void *obj)
 {
-	struct perso *ps = obj;
-	struct window *win;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	struct vbox *vb;
+	AG_Perso *ps = obj;
+	AG_Window *win;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_VBox *vb;
 
-	win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE, NULL);
-	window_set_caption(win, _("Character \"%s\""), OBJECT(ps)->name);
+	win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_VRESIZE, NULL);
+	AG_WindowSetCaption(win, _("Character \"%s\""), AGOBJECT(ps)->name);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
-	ntab = notebook_add_tab(nb, _("Informations"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	ntab = AG_NotebookAddTab(nb, _("Informations"), AG_BOX_VERT);
 	{
-		struct textbox *tb;
-		struct spinbutton *sbu;
-		struct hbox *hb;
-		struct objsel *os;
+		AG_Textbox *tb;
+		AG_Spinbutton *sbu;
+		AG_HBox *hb;
+		AG_ObjectSelector *os;
 
-		tb = textbox_new(ntab, _("Name: "));
-		widget_bind(tb, "string", WIDGET_STRING, ps->name,
+		tb = AG_TextboxNew(ntab, _("Name: "));
+		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ps->name,
 		    sizeof(ps->name));
 
-		os = objsel_new(ntab, OBJSEL_PAGE_GFX, ps, world,
+		os = AG_ObjectSelectorNew(ntab, AG_OBJSEL_PAGE_GFX, ps, agWorld,
 		    _("Tileset: "));
-		objsel_mask_type(os, "tileset");
-		widget_bind(os, "object", WIDGET_POINTER, &ps->tileset);
-		objsel_select(os, ps->tileset);
+		AG_ObjectSelectorMaskType(os, "tileset");
+		AG_WidgetBind(os, "object", AG_WIDGET_POINTER, &ps->tileset);
+		AG_ObjectSelectorSelect(os, ps->tileset);
 
-		separator_new(ntab, SEPARATOR_HORIZ);
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		sbu = spinbutton_new(ntab, _("Level: "));
-		widget_bind(sbu, "value", WIDGET_SINT32, &ps->level);
+		sbu = AG_SpinbuttonNew(ntab, _("Level: "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_SINT32, &ps->level);
 
-		sbu = spinbutton_new(ntab, _("Experience: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &ps->exp);
+		sbu = AG_SpinbuttonNew(ntab, _("Experience: "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_UINT32, &ps->exp);
 
-		sbu = spinbutton_new(ntab, _("Zuars: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &ps->nzuars);
+		sbu = AG_SpinbuttonNew(ntab, _("Zuars: "));
+		AG_WidgetBind(sbu, "value", AG_WIDGET_UINT32, &ps->nzuars);
 
-		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
+		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			sbu = spinbutton_new(hb, _("HP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &ps->hp);
+			sbu = AG_SpinbuttonNew(hb, _("HP: "));
+			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->hp);
 			
-			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &ps->maxhp);
+			sbu = AG_SpinbuttonNew(hb, " / ");
+			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->maxhp);
 		}
 		
-		hb = hbox_new(ntab, HBOX_HOMOGENOUS|HBOX_WFILL);
+		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			sbu = spinbutton_new(hb, _("MP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &ps->mp);
+			sbu = AG_SpinbuttonNew(hb, _("MP: "));
+			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->mp);
 			
-			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &ps->maxmp);
+			sbu = AG_SpinbuttonNew(hb, " / ");
+			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->maxmp);
 		}
 	}
-	ntab = notebook_add_tab(nb, _("Position"), BOX_VERT);
-	actor_edit(ACTOR(ps), ntab);
+	ntab = AG_NotebookAddTab(nb, _("Position"), AG_BOX_VERT);
+	AG_ActorEdit(AGACTOR(ps), ntab);
 	return (win);
 }
 
 void
-perso_map(void *obj, void *space)
+AG_PersoMap(void *obj, void *space)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 
-	dprintf("%s: mapping into %s\n", OBJECT(ps)->name, OBJECT(space)->name);
+	dprintf("%s: mapping into %s\n", AGOBJECT(ps)->name,
+	    AGOBJECT(space)->name);
 
-	if (OBJECT_TYPE(space, "map")) {
-		struct map *m = space;
+	if (AGOBJECT_TYPE(space, "map")) {
+		AG_Map *m = space;
 
-		if (actor_map_sprite(ps, 0, 0, 0, ps->tileset, "Idle-S")
+		if (AG_ActorMapSprite(ps, 0, 0, 0, ps->tileset, "Idle-S")
 		    == -1) {
-			text_msg(MSG_ERROR, "%s->%s: %s", OBJECT(obj)->name,
-			    OBJECT(space)->name, error_get());
+			AG_TextMsg(AG_MSG_ERROR, "%s->%s: %s",
+			    AGOBJECT(obj)->name, AGOBJECT(space)->name,
+			    AG_GetError());
 		}
 	}
 #ifdef HAVE_OPENGL
-	else if (OBJECT_TYPE(space, "scene")) {
+	else if (AGOBJECT_TYPE(space, "scene")) {
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(-3, +3, 0);
 		glVertex3f(-3, -3, 0);
@@ -354,53 +351,53 @@ perso_map(void *obj, void *space)
 }
 
 void
-perso_update(void *space, void *obj)
+AG_PersoUpdate(void *space, void *obj)
 {
-	struct perso *ps = obj;
+	AG_Perso *ps = obj;
 	
-	dprintf("%s: update (space=%s)\n", OBJECT(ps)->name,
-	    OBJECT(space)->name);
+	dprintf("%s: update (space=%s)\n", AGOBJECT(ps)->name,
+	    AGOBJECT(space)->name);
 }
 
 int
-perso_keydown(void *p, int ks, int km)
+AG_PersoKeydown(void *p, int ks, int km)
 {
-	struct actor *go = p;
-	struct perso *ps = p;
+	AG_Actor *go = p;
+	AG_Perso *ps = p;
 
 	switch (ks) {
 	case SDLK_LEFT:
 		go->g_map.da = 0;
 		go->g_map.dv = 1;
-		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-W");
+		AG_ActorSetSprite(go, 0, 0, 0, ps->tileset, "Idle-W");
 		break;
 	case SDLK_UP:
 		go->g_map.da = 90;
 		go->g_map.dv = 1;
-		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-N");
+		AG_ActorSetSprite(go, 0, 0, 0, ps->tileset, "Idle-N");
 		break;
 	case SDLK_RIGHT:
 		go->g_map.da = 180;
 		go->g_map.dv = 1;
-		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-E");
+		AG_ActorSetSprite(go, 0, 0, 0, ps->tileset, "Idle-E");
 		break;
 	case SDLK_DOWN:
 		go->g_map.da = 270;
 		go->g_map.dv = 1;
-		actor_set_sprite(go, 0, 0, 0, ps->tileset, "Idle-S");
+		AG_ActorSetSprite(go, 0, 0, 0, ps->tileset, "Idle-S");
 		break;
 	}
 	if (go->g_map.dv > 0) {
-		timeout_add(p, &ps->move_to, 10);
+		AG_AddTimeout(p, &ps->move_to, 10);
 	}
 	return (0);
 }
 
 int
-perso_keyup(void *p, int ks, int km)
+AG_PersoKeyup(void *p, int ks, int km)
 {
-	struct perso *ps = p;
-	struct actor *go = p;
+	AG_Perso *ps = p;
+	AG_Actor *go = p;
 
 	switch (ks) {
 	case SDLK_LEFT:
@@ -418,7 +415,7 @@ perso_keyup(void *p, int ks, int km)
 	}
 	return (0);
 stop:
-	timeout_del(ps, &ps->move_to);
+	AG_DelTimeout(ps, &ps->move_to);
 	go->g_map.dv = 0;
 	return (0);
 }

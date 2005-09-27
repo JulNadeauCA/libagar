@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.13 2005/09/17 04:48:40 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.14 2005/09/17 07:35:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,29 +44,29 @@
 #include  "version.h"
 
 int
-version_read(struct netbuf *buf, const struct version *ver,
-    struct version *rver)
+AG_ReadVersion(AG_Netbuf *buf, const AG_Version *ver,
+    AG_Version *rver)
 {
-	char nbuf[VERSION_NAME_MAX];
+	char nbuf[AG_VERSION_NAME_MAX];
 	size_t nlen;
 	Uint32 major, minor;
 
 	nlen = strlen(ver->name);
 
-	if (netbuf_eread(nbuf, sizeof(nbuf), 1, buf) < 1 ||
+	if (AG_NetbufReadE(nbuf, sizeof(nbuf), 1, buf) < 1 ||
 	    strncmp(nbuf, ver->name, nlen) != 0) {
-		error_set("%s: Bad magic", ver->name);
+		AG_SetError("%s: Bad magic", ver->name);
 		return (-1);
 	}
-	major = read_uint32(buf);
-	minor = read_uint32(buf);
+	major = AG_ReadUint32(buf);
+	minor = AG_ReadUint32(buf);
 
 	if (rver != NULL) {
 		rver->major = major;
 		rver->minor = minor;
 	}
 	if (major != ver->major) {
-		error_set("%s: Major differs: v%d.%d != %d.%d.",
+		AG_SetError("%s: Major differs: v%d.%d != %d.%d.",
 		    ver->name, major, minor, ver->major, ver->minor);
 		return (-1);
 	}
@@ -78,14 +78,14 @@ version_read(struct netbuf *buf, const struct version *ver,
 }
 
 void
-version_write(struct netbuf *buf, const struct version *ver)
+AG_WriteVersion(AG_Netbuf *buf, const AG_Version *ver)
 {
-	char nbuf[VERSION_NAME_MAX];
+	char nbuf[AG_VERSION_NAME_MAX];
 
 	memset(nbuf, '!', sizeof(nbuf));
 	strlcpy(nbuf, ver->name, sizeof(nbuf));
-	netbuf_write(nbuf, sizeof(nbuf), 1, buf);
-	write_uint32(buf, ver->major);
-	write_uint32(buf, ver->minor);
+	AG_NetbufWrite(nbuf, sizeof(nbuf), 1, buf);
+	AG_WriteUint32(buf, ver->major);
+	AG_WriteUint32(buf, ver->minor);
 }
 

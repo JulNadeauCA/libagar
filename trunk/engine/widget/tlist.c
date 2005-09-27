@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.132 2005/09/19 13:39:20 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.133 2005/09/20 10:23:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,17 +38,17 @@
 #include <string.h>
 #include <stdarg.h>
 
-static struct widget_ops tlist_ops = {
+static AG_WidgetOps tlist_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		tlist_destroy,
+		AG_TlistDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	tlist_draw,
-	tlist_scale
+	AG_TlistDraw,
+	AG_TlistScale
 };
 
 enum {
@@ -59,21 +59,21 @@ static void tlist_mousebuttondown(int, union evarg *);
 static void tlist_keydown(int, union evarg *);
 static void tlist_keyup(int, union evarg *);
 static void tlist_scrolled(int, union evarg *);
-static void free_item(struct tlist *, struct tlist_item *);
-static void select_item(struct tlist *, struct tlist_item *);
-static void unselect_item(struct tlist *, struct tlist_item *);
-static void show_popup(struct tlist *, struct tlist_popup *);
-static void set_icon(struct tlist *, struct tlist_item *, SDL_Surface *);
-static void update_scrollbar(struct tlist *);
+static void free_item(AG_Tlist *, AG_TlistItem *);
+static void select_item(AG_Tlist *, AG_TlistItem *);
+static void unselect_item(AG_Tlist *, AG_TlistItem *);
+static void show_popup(AG_Tlist *, struct ag_tlist_popup *);
+static void set_icon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
+static void update_scrollbar(AG_Tlist *);
 
-struct tlist *
-tlist_new(void *parent, int flags)
+AG_Tlist *
+AG_TlistNew(void *parent, int flags)
 {
-	struct tlist *tl;
+	AG_Tlist *tl;
 
-	tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl, flags);
-	object_attach(parent, tl);
+	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl, flags);
+	AG_ObjectAttach(parent, tl);
 	return (tl);
 }
 
@@ -81,19 +81,19 @@ tlist_new(void *parent, int flags)
 static void
 key_tick(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 	SDLKey keysym = (SDLKey)argv[1].i;
-	struct tlist_item *it, *pit;
-	struct widget_binding *offsetb;
+	AG_TlistItem *it, *pit;
+	AG_WidgetBinding *offsetb;
 	int *offset;
 
 	pthread_mutex_lock(&tl->lock);
-	offsetb = widget_get_binding(tl->sbar, "value", &offset);
+	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	switch (keysym) {
 	case SDLK_UP:
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected &&
-			    (pit = TAILQ_PREV(it, tlist_itemq, items))
+			    (pit = TAILQ_PREV(it, ag_tlist_itemq, items))
 			     != NULL) {
 				unselect_item(tl, it);
 				select_item(tl, pit);
@@ -101,7 +101,7 @@ key_tick(int argc, union evarg *argv)
 				if (--(*offset) < 0) {
 					*offset = 0;
 				}
-				widget_binding_modified(offsetb);
+				AG_WidgetBindingChanged(offsetb);
 #endif
 				break;
 			}
@@ -119,7 +119,7 @@ key_tick(int argc, union evarg *argv)
 					*offset = tl->nitems -
 					    tl->nvisitems;
 				}
-				widget_binding_modified(offsetb);
+				AG_WidgetBindingChanged(offsetb);
 #endif
 				break;
 			}
@@ -129,28 +129,28 @@ key_tick(int argc, union evarg *argv)
 		if ((*offset -= PAGE_INCREMENT) < 0) {
 			*offset = 0;
 		}
-		widget_binding_modified(offsetb);
+		AG_WidgetBindingChanged(offsetb);
 		break;
 	case SDLK_PAGEDOWN:
 		if ((*offset += PAGE_INCREMENT) > tl->nitems - tl->nvisitems) {
 			*offset = tl->nitems - tl->nvisitems;
 		}
-		widget_binding_modified(offsetb);
+		AG_WidgetBindingChanged(offsetb);
 		break;
 	default:
 		break;
 	}
-	widget_binding_unlock(offsetb);
+	AG_WidgetUnlockBinding(offsetb);
 	pthread_mutex_unlock(&tl->lock);
 
 	tl->keymoved++;
-	event_resched(tl, "key-tick", kbd_repeat);
+	AG_ReschedEvent(tl, "key-tick", agKbdRepeat);
 }
 
 static void
 dblclick_expire(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 
 	pthread_mutex_lock(&tl->lock);
 	tl->dblclicked = NULL;
@@ -160,61 +160,62 @@ dblclick_expire(int argc, union evarg *argv)
 static void
 lost_focus(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 
-	event_cancel(tl, "key-tick");
-	event_cancel(tl, "dblclick-expire");
+	AG_CancelEvent(tl, "key-tick");
+	AG_CancelEvent(tl, "dblclick-expire");
 	tl->keymoved = 0;
 }
 
 void
-tlist_init(struct tlist *tl, int flags)
+AG_TlistInit(AG_Tlist *tl, int flags)
 {
-	widget_init(tl, "tlist", &tlist_ops,
-	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
-	widget_bind(tl, "selected", WIDGET_POINTER, &tl->selected);
+	AG_WidgetInit(tl, "tlist", &tlist_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
+	    AG_WIDGET_HFILL);
+	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
 
 	tl->flags = flags;
-	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
+	pthread_mutex_init(&tl->lock, &agRecursiveMutexAttr);
 	tl->selected = NULL;
 	tl->keymoved = 0;
-	tl->item_h = text_font_height+2;
+	tl->item_h = agTextFontHeight+2;
 	tl->icon_w = tl->item_h - 4;
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
-	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
-	tl->compare_fn = tlist_compare_ptrs;
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT);
+	tl->compare_fn = AG_TlistComparePtrs;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 	
-	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
+	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
 
-	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
-	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
-	event_new(tl, "window-keydown", tlist_keydown, NULL);
-	event_new(tl, "window-keyup", tlist_keyup, NULL);
-	event_new(tl, "key-tick", key_tick, NULL);
-	event_new(tl, "dblclick-expire", dblclick_expire, NULL);
-	event_new(tl, "widget-lostfocus", lost_focus, NULL);
-	event_new(tl, "widget-hidden", lost_focus, NULL);
+	AG_SetEvent(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
+	AG_SetEvent(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
+	AG_SetEvent(tl, "window-keydown", tlist_keydown, NULL);
+	AG_SetEvent(tl, "window-keyup", tlist_keyup, NULL);
+	AG_SetEvent(tl, "key-tick", key_tick, NULL);
+	AG_SetEvent(tl, "dblclick-expire", dblclick_expire, NULL);
+	AG_SetEvent(tl, "widget-lostfocus", lost_focus, NULL);
+	AG_SetEvent(tl, "widget-hidden", lost_focus, NULL);
 }
 
 void
-tlist_prescale(struct tlist *tl, const char *text, int nitems)
+AG_TlistPrescale(AG_Tlist *tl, const char *text, int nitems)
 {
-	text_prescale(text, &tl->prew, NULL);
+	AG_TextPrescale(text, &tl->prew, NULL);
 	tl->prew += tl->item_h + 5;
 	tl->preh = (tl->item_h+2)*nitems;
 }
 
 void
-tlist_destroy(void *p)
+AG_TlistDestroy(void *p)
 {
-	struct tlist *tl = p;
-	struct tlist_item *it, *nit;
-	struct tlist_popup *tp, *ntp;
+	AG_Tlist *tl = p;
+	AG_TlistItem *it, *nit;
+	struct ag_tlist_popup *tp, *ntp;
 
 	for (it = TAILQ_FIRST(&tl->selitems);
 	     it != TAILQ_END(&tl->selitems);
@@ -232,135 +233,135 @@ tlist_destroy(void *p)
 	     tp != TAILQ_END(&tl->popups);
 	     tp = ntp) {
 		ntp = TAILQ_NEXT(tp, popups);
-		object_destroy(tp->menu);
+		AG_ObjectDestroy(tp->menu);
 		Free(tp->menu, M_OBJECT);
 		Free(tp, M_WIDGET);
 	}
 
 	pthread_mutex_destroy(&tl->lock);
-	widget_destroy(tl);
+	AG_WidgetDestroy(tl);
 }
 
 void
-tlist_scale(void *p, int w, int h)
+AG_TlistScale(void *p, int w, int h)
 {
-	struct tlist *tl = p;
+	AG_Tlist *tl = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(tl)->w = tl->prew;
-		WIDGET(tl)->h = tl->preh;
+		AGWIDGET(tl)->w = tl->prew;
+		AGWIDGET(tl)->h = tl->preh;
 	}
 
-	WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->button_size;
-	WIDGET(tl->sbar)->y = 0;
+	AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->button_size;
+	AGWIDGET(tl->sbar)->y = 0;
 
-	widget_scale(tl->sbar,
+	AG_WidgetScale(tl->sbar,
 	    tl->sbar->button_size,
-	    WIDGET(tl)->h);
+	    AGWIDGET(tl)->h);
 	
 	update_scrollbar(tl);
 }
 
 void
-tlist_draw(void *p)
+AG_TlistDraw(void *p)
 {
-	struct tlist *tl = p;
-	struct tlist_item *it;
+	AG_Tlist *tl = p;
+	AG_TlistItem *it;
 	int y = 0, i = 0;
 	int offset;
 
-	if (WIDGET(tl)->w < tl->item_h ||
-	    WIDGET(tl)->h < tl->item_h)
+	if (AGWIDGET(tl)->w < tl->item_h ||
+	    AGWIDGET(tl)->h < tl->item_h)
 		return;
 
-	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
-	    COLOR(TLIST_BG_COLOR));
+	agPrim.box(tl, 0, 0, AGWIDGET(tl)->w, AGWIDGET(tl)->h, -1,
+	    AG_COLOR(TLIST_BG_COLOR));
 
 	pthread_mutex_lock(&tl->lock);
-	if (tl->flags & TLIST_POLL) {
-		event_post(NULL, tl, "tlist-poll", NULL);
+	if (tl->flags & AG_TLIST_POLL) {
+		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
-	offset = widget_get_int(tl->sbar, "value");
+	offset = AG_WidgetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
 
 		if (i++ < offset)
 			continue;
-		if (y > WIDGET(tl)->h - tl->item_h)
+		if (y > AGWIDGET(tl)->h - tl->item_h)
 			break;
 
 		if (it->selected) {
 			int x1 = x + tl->item_h + 2;
 
-			primitives.rect_filled(tl,
+			agPrim.rect_filled(tl,
 			    x1, y+1,
-			    WIDGET(tl)->w-x1-1,
+			    AGWIDGET(tl)->w-x1-1,
 			    tl->item_h-1,
-			    COLOR(TLIST_SEL_COLOR));
+			    AG_COLOR(TLIST_SEL_COLOR));
 		}
 		
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
 				SDL_Surface *scaled = NULL;
 
-				view_scale_surface(it->iconsrc,
+				AG_ScaleSurface(it->iconsrc,
 				    tl->item_h, tl->item_h, &scaled);
-				it->icon = widget_map_surface(tl, scaled);
+				it->icon = AG_WidgetMapSurface(tl, scaled);
 			}
-			widget_blit_surface(tl, it->icon, x, y);
+			AG_WidgetBlitSurface(tl, it->icon, x, y);
 		}
 
-		if (it->flags & TLIST_HAS_CHILDREN) {
+		if (it->flags & AG_TLIST_HAS_CHILDREN) {
 			Uint8 cBg[4] = { 0, 0, 0, 64 };
 			Uint8 cFg[4] = { 255, 255, 255, 100 };
 
-			primitives.rect_blended(tl,
+			agPrim.rect_blended(tl,
 			    x-1, y,
 			    tl->item_h + 2, tl->item_h,
-			    cBg, ALPHA_SRC);
+			    cBg, AG_ALPHA_SRC);
 
-			if (it->flags & TLIST_VISIBLE_CHILDREN) {
-				primitives.minus(tl,
+			if (it->flags & AG_TLIST_VISIBLE_CHILDREN) {
+				agPrim.minus(tl,
 				    x+2, y+2,
 				    tl->item_h-4, tl->item_h-4,
-				    cFg, ALPHA_SRC);
+				    cFg, AG_ALPHA_SRC);
 			} else {
-				primitives.plus(tl,
+				agPrim.plus(tl,
 				    x+2, y+2,
 				    tl->item_h-4, tl->item_h-4,
-				    cFg, ALPHA_SRC);
+				    cFg, AG_ALPHA_SRC);
 			}
 		}
 		
 		if (it->label == -1) {
-			it->label = widget_map_surface(tl,
-			    text_render(NULL, -1, COLOR(TLIST_TXT_COLOR),
+			it->label = AG_WidgetMapSurface(tl,
+			    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR),
 			        it->text));
 		}
-		widget_blit_surface(tl, it->label,
+		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->item_h + 5,
-		    y + tl->item_h/2 - WIDGET_SURFACE(tl,it->label)->h/2 + 1);
+		    y + tl->item_h/2 - AGWIDGET_SURFACE(tl,it->label)->h/2 + 1);
 
 		y += tl->item_h;
-		primitives.hline(tl, 0, WIDGET(tl)->w, y,
-		    COLOR(TLIST_LINE_COLOR));
+		agPrim.hline(tl, 0, AGWIDGET(tl)->w, y,
+		    AG_COLOR(TLIST_LINE_COLOR));
 	}
 	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Adjust the scrollbar offset according to the number of visible items. */
 static void
-update_scrollbar(struct tlist *tl)
+update_scrollbar(AG_Tlist *tl)
 {
-	struct widget_binding *maxb, *offsetb;
+	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
 	int noffset;
 	
-	tl->nvisitems = WIDGET(tl)->h / tl->item_h;
+	tl->nvisitems = AGWIDGET(tl)->h / tl->item_h;
 
-	maxb = widget_get_binding(tl->sbar, "max", &max);
-	offsetb = widget_get_binding(tl->sbar, "value", &offset);
+	maxb = AG_WidgetGetBinding(tl->sbar, "max", &max);
+	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	noffset = *offset;
 
 	*max = tl->nitems - tl->nvisitems;
@@ -372,42 +373,42 @@ update_scrollbar(struct tlist *tl)
 
 	if (*offset != noffset) {
 		*offset = noffset;
-		widget_binding_modified(offsetb);
+		AG_WidgetBindingChanged(offsetb);
 	}
 
 	if (tl->nitems > 0 && tl->nvisitems > 0 &&
 	    tl->nvisitems < tl->nitems) {
-		scrollbar_set_bar_size(tl->sbar,
+		AG_ScrollbarSetBarSize(tl->sbar,
 		    tl->nvisitems *
-		    (WIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
+		    (AGWIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
 		    tl->nitems);
 	} else {
-		scrollbar_set_bar_size(tl->sbar, -1);		/* Full range */
+		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
 	}
 
-	widget_binding_unlock(offsetb);
-	widget_binding_unlock(maxb);
+	AG_WidgetUnlockBinding(offsetb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 static void
-free_item(struct tlist *tl, struct tlist_item *it)
+free_item(AG_Tlist *tl, AG_TlistItem *it)
 {
 	if (it->label != -1) {
-		widget_unmap_surface(tl, it->label);
+		AG_WidgetUnmapSurface(tl, it->label);
 	}
-	if (it->flags & TLIST_DYNICON && it->iconsrc != NULL) {
+	if (it->flags & AG_TLIST_DYNICON && it->iconsrc != NULL) {
 		SDL_FreeSurface(it->iconsrc);
 	}
 	if (it->icon != -1)
-		widget_unmap_surface(tl, it->icon);
+		AG_WidgetUnmapSurface(tl, it->icon);
 
 	Free(it, M_WIDGET);
 }
 
 void
-tlist_remove_item(struct tlist *tl, struct tlist_item *it)
+AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 {
-	struct widget_binding *offsetb;
+	AG_WidgetBinding *offsetb;
 	int *offset;
 	int nitems;
 
@@ -419,21 +420,21 @@ tlist_remove_item(struct tlist *tl, struct tlist_item *it)
 	free_item(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
-	widget_set_int(tl->sbar, "max", nitems);
-	offsetb = widget_get_binding(tl->sbar, "value", &offset);
+	AG_WidgetSetInt(tl->sbar, "max", nitems);
+	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	if (*offset > nitems) {
 		*offset = nitems;
 	} else if (nitems > 0 && *offset < nitems) {		/* XXX ugly */
 		*offset = 0;
 	}
-	widget_binding_unlock(offsetb);
+	AG_WidgetUnlockBinding(offsetb);
 }
 
 /* Clear the items on the list, save the selections if polling. */
 void
-tlist_clear_items(struct tlist *tl)
+AG_TlistClear(AG_Tlist *tl)
 {
-	struct tlist_item *it, *nit;
+	AG_TlistItem *it, *nit;
 	
 	pthread_mutex_lock(&tl->lock);
 
@@ -441,7 +442,7 @@ tlist_clear_items(struct tlist *tl)
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		if (it->selected || (it->flags & TLIST_HAS_CHILDREN)) {
+		if (it->selected || (it->flags & AG_TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
 			free_item(tl, it);
@@ -451,21 +452,21 @@ tlist_clear_items(struct tlist *tl)
 	tl->nitems = 0;
 	
 	/* Preserve the offset value, for polling. */
-	widget_set_int(tl->sbar, "max", 0);
+	AG_WidgetSetInt(tl->sbar, "max", 0);
 
 	pthread_mutex_unlock(&tl->lock);
 }
 
 int
-tlist_compare_strings(const struct tlist_item *it1,
-    const struct tlist_item *it2)
+AG_TlistCompareStrings(const AG_TlistItem *it1,
+    const AG_TlistItem *it2)
 {
 	return (it1->text != NULL && it2->text != NULL &&
 	        strcmp(it1->text, it2->text) == 0);
 }
 
 int
-tlist_compare_ptrs(const struct tlist_item *it1, const struct tlist_item *it2)
+AG_TlistComparePtrs(const AG_TlistItem *it1, const AG_TlistItem *it2)
 {
 	if (it1->argc != it2->argc ||
 	   (it1->argc > 0 &&
@@ -476,8 +477,8 @@ tlist_compare_ptrs(const struct tlist_item *it1, const struct tlist_item *it2)
 }
 
 int
-tlist_compare_ptrs_classes(const struct tlist_item *it1,
-    const struct tlist_item *it2)
+AG_TlistComparePtrsAndClasses(const AG_TlistItem *it1,
+    const AG_TlistItem *it2)
 {
 	return ((it1->p1 == it2->p1) &&
 	        (it1->class != NULL && it2->class != NULL &&
@@ -485,17 +486,17 @@ tlist_compare_ptrs_classes(const struct tlist_item *it1,
 }
 
 void
-tlist_set_compare_fn(struct tlist *tl,
-    int (*fn)(const struct tlist_item *, const struct tlist_item *))
+AG_TlistSetCompareFn(AG_Tlist *tl,
+    int (*fn)(const AG_TlistItem *, const AG_TlistItem *))
 {
 	tl->compare_fn = fn;
 }
 
 /* Restore previous item selection state. */
 void
-tlist_restore_selections(struct tlist *tl)
+AG_TlistRestore(AG_Tlist *tl)
 {
-	struct tlist_item *sit, *cit, *nsit;
+	AG_TlistItem *sit, *cit, *nsit;
 
 	for (sit = TAILQ_FIRST(&tl->selitems);
 	     sit != TAILQ_END(&tl->selitems);
@@ -506,10 +507,10 @@ tlist_restore_selections(struct tlist *tl)
 				continue;
 			}
 			cit->selected = sit->selected;
-			if (sit->flags & TLIST_VISIBLE_CHILDREN) {
-				cit->flags |= TLIST_VISIBLE_CHILDREN;
+			if (sit->flags & AG_TLIST_VISIBLE_CHILDREN) {
+				cit->flags |= AG_TLIST_VISIBLE_CHILDREN;
 			} else {
-				cit->flags &= ~(TLIST_VISIBLE_CHILDREN);
+				cit->flags &= ~(AG_TLIST_VISIBLE_CHILDREN);
 			}
 		}
 		free_item(tl, sit);
@@ -524,9 +525,9 @@ tlist_restore_selections(struct tlist *tl)
  * polling routines when displaying trees.
  */
 int
-tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
+AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 {
-	struct tlist_item *sit;
+	AG_TlistItem *sit;
 
 	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
 		if (tl->compare_fn(sit, cit))
@@ -535,19 +536,19 @@ tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
 	if (sit == NULL) 
 		return (0);				/* Default */
 
-	return (sit->flags & TLIST_VISIBLE_CHILDREN);
+	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
 }
 
 /*
  * Allocate a new tlist item.
  * XXX allocate from a pool, especially for polled items.
  */
-static __inline__ struct tlist_item *
-allocate_item(struct tlist *tl, SDL_Surface *iconsrc)
+static __inline__ AG_TlistItem *
+allocate_item(AG_Tlist *tl, SDL_Surface *iconsrc)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
-	it = Malloc(sizeof(struct tlist_item), M_WIDGET);
+	it = Malloc(sizeof(AG_TlistItem), M_WIDGET);
 	it->selected = 0;
 	it->class = "";
 	it->depth = 0;
@@ -560,7 +561,7 @@ allocate_item(struct tlist *tl, SDL_Surface *iconsrc)
 }
 
 static __inline__ void
-insert_item(struct tlist *tl, struct tlist_item *it, int ins_head)
+insert_item(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 {
 	pthread_mutex_lock(&tl->lock);
 	if (ins_head) {
@@ -568,16 +569,16 @@ insert_item(struct tlist *tl, struct tlist_item *it, int ins_head)
 	} else {
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
-	widget_set_int(tl->sbar, "max", ++tl->nitems);
+	AG_WidgetSetInt(tl->sbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Add an item to the list. */
-struct tlist_item *
-tlist_insert_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
+AG_TlistItem *
+AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
     void *p1)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	it = allocate_item(tl, iconsrc);
 	it->p1 = p1;
@@ -587,10 +588,10 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
 	return (it);
 }
 
-struct tlist_item *
-tlist_insert(struct tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
+AG_TlistItem *
+AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 	va_list args;
 	
 	it = allocate_item(tl, iconsrc);
@@ -605,7 +606,7 @@ tlist_insert(struct tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 }
 
 void
-tlist_set_args(struct tlist_item *it, const char *fmt, ...)
+AG_TlistSetArgs(AG_TlistItem *it, const char *fmt, ...)
 {
 	va_list ap;
 	const char *s = fmt;
@@ -642,11 +643,11 @@ tlist_set_args(struct tlist_item *it, const char *fmt, ...)
 	va_end(ap);
 }
 
-struct tlist_item *
-tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
+AG_TlistItem *
+AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
     void *p1)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	it = allocate_item(tl, icon);
 	it->p1 = p1;
@@ -657,17 +658,17 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
 }
 
 /* Select an item based on its pointer value. */
-struct tlist_item *
-tlist_select_pointer(struct tlist *tl, void *p)
+AG_TlistItem *
+AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
-	if (tl->flags & TLIST_POLL) {
-		event_post(NULL, tl, "tlist-poll", NULL);
+	if (tl->flags & AG_TLIST_POLL) {
+		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
-	if ((tl->flags & TLIST_MULTI) == 0) {
-		tlist_unselect_all(tl);
+	if ((tl->flags & AG_TLIST_MULTI) == 0) {
+		AG_TlistDeselectAll(tl);
 	}
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->p1 == p) {
@@ -680,17 +681,17 @@ tlist_select_pointer(struct tlist *tl, void *p)
 }
 
 /* Select an item based on text. */
-struct tlist_item *
-tlist_select_text(struct tlist *tl, const char *text)
+AG_TlistItem *
+AG_TlistSelectText(AG_Tlist *tl, const char *text)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
-	if (tl->flags & TLIST_POLL) {
-		event_post(NULL, tl, "tlist-poll", NULL);
+	if (tl->flags & AG_TLIST_POLL) {
+		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
-	if ((tl->flags & TLIST_MULTI) == 0) {
-		tlist_unselect_all(tl);
+	if ((tl->flags & AG_TLIST_MULTI) == 0) {
+		AG_TlistDeselectAll(tl);
 	}
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->text[0] == text[0] &&
@@ -705,11 +706,11 @@ tlist_select_text(struct tlist *tl, const char *text)
 
 /* Set the selection flag on an item. */
 void
-tlist_select(struct tlist *tl, struct tlist_item *it)
+AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 {
 	pthread_mutex_lock(&tl->lock);
-	if ((tl->flags & TLIST_MULTI) == 0) {
-		tlist_unselect_all(tl);
+	if ((tl->flags & AG_TLIST_MULTI) == 0) {
+		AG_TlistDeselectAll(tl);
 	}
 	it->selected = 1;
 	pthread_mutex_unlock(&tl->lock);
@@ -717,7 +718,7 @@ tlist_select(struct tlist *tl, struct tlist_item *it)
 
 /* Clear the selection flag on an item. */
 void
-tlist_unselect(struct tlist *tl, struct tlist_item *it)
+AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
 	pthread_mutex_lock(&tl->lock);
 	it->selected = 0;
@@ -726,9 +727,9 @@ tlist_unselect(struct tlist *tl, struct tlist_item *it)
 
 /* Set the selection flag on all items. */
 void
-tlist_select_all(struct tlist *tl)
+AG_TlistSelectAll(AG_Tlist *tl)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -739,9 +740,9 @@ tlist_select_all(struct tlist *tl)
 
 /* Unset the selection flag on all items. */
 void
-tlist_unselect_all(struct tlist *tl)
+AG_TlistDeselectAll(AG_Tlist *tl)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -751,63 +752,63 @@ tlist_unselect_all(struct tlist *tl)
 }
 
 static void
-select_item(struct tlist *tl, struct tlist_item *it)
+select_item(AG_Tlist *tl, AG_TlistItem *it)
 {
-	struct widget_binding *selectedb;
+	AG_WidgetBinding *selectedb;
 	void **selected;
 
-	selectedb = widget_get_binding(tl, "selected", &selected);
+	selectedb = AG_WidgetGetBinding(tl, "selected", &selected);
 	*selected = it->p1;
 	it->selected++;
-	event_post(NULL, tl, "tlist-changed", "%p, %i", it, 1);
-	event_post(NULL, tl, "tlist-selected", "%p", it);
-	widget_binding_modified(selectedb);
-	widget_binding_unlock(selectedb);
+	AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
+	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
+	AG_WidgetBindingChanged(selectedb);
+	AG_WidgetUnlockBinding(selectedb);
 }
 
 static void
-unselect_item(struct tlist *tl, struct tlist_item *it)
+unselect_item(AG_Tlist *tl, AG_TlistItem *it)
 {
-	struct widget_binding *selectedb;
+	AG_WidgetBinding *selectedb;
 	void **selected;
 
-	selectedb = widget_get_binding(tl, "selected", &selected);
+	selectedb = AG_WidgetGetBinding(tl, "selected", &selected);
 	*selected = NULL;
 	it->selected = 0;
-	event_post(NULL, tl, "tlist-changed", "%p, %i", it, 0);
-	widget_binding_modified(selectedb);
-	widget_binding_unlock(selectedb);
+	AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
+	AG_WidgetBindingChanged(selectedb);
+	AG_WidgetUnlockBinding(selectedb);
 }
 
 static void
 tlist_mousebuttondown(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
-	struct tlist_item *ti;
+	AG_TlistItem *ti;
 	int tind;
 
 	pthread_mutex_lock(&tl->lock);
 
-	tind = (widget_get_int(tl->sbar, "value") + y/tl->item_h) + 1;
+	tind = (AG_WidgetInt(tl->sbar, "value") + y/tl->item_h) + 1;
 
 	/* XXX use array */
-	if ((ti = tlist_find_index(tl, tind)) == NULL)
+	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
 		goto out;
 
 	/* Expand the children if the user clicked on the [+] sign. */
-	if (ti->flags & TLIST_HAS_CHILDREN) {
+	if (ti->flags & AG_TLIST_HAS_CHILDREN) {
 		int th = tl->icon_w;
 
 		x -= 7;
 		if (x >= ti->depth*th &&
 		    x <= (ti->depth+1)*th) {
-			if (ti->flags & TLIST_VISIBLE_CHILDREN) {
-				ti->flags &= ~(TLIST_VISIBLE_CHILDREN);
+			if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
+				ti->flags &= ~(AG_TLIST_VISIBLE_CHILDREN);
 			} else {
-				ti->flags |= TLIST_VISIBLE_CHILDREN;
+				ti->flags |= AG_TLIST_VISIBLE_CHILDREN;
 			}
 			goto out;
 		}
@@ -816,9 +817,9 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		/* Handle range selections. */
-		if ((tl->flags & TLIST_MULTI) &&
+		if ((tl->flags & AG_TLIST_MULTI) &&
 		    (SDL_GetModState() & KMOD_SHIFT)) {
-			struct tlist_item *oitem;
+			AG_TlistItem *oitem;
 			int oind = -1, i = 0, nitems = 0;
 
 			TAILQ_FOREACH(oitem, &tl->items, items) {
@@ -843,7 +844,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 			} else if (oind >= tind) {		  /* Backward */
 				i = nitems;
 				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
-				    items, tlist_itemq) {
+				    items, ag_tlist_itemq) {
 					if (i <= oind)
 						oitem->selected = 1;
 					if (i == tind)
@@ -855,38 +856,39 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		}
 
 		/* Handle single selections. */
-		if ((tl->flags & TLIST_MULTITOGGLE) ||
-		    ((tl->flags & TLIST_MULTI) &&
+		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
+		    ((tl->flags & AG_TLIST_MULTI) &&
 		     (SDL_GetModState() & KMOD_CTRL))) {
 		    	ti->selected = !ti->selected;
 			break;
 		}
 
-		widget_focus(tl);
-		tlist_unselect_all(tl);
+		AG_WidgetFocus(tl);
+		AG_TlistDeselectAll(tl);
 		select_item(tl, ti);
 
 		/* Handle double clicks. */
 		/* XXX compare the args as well as p1 */
 		if (tl->dblclicked != NULL && tl->dblclicked == ti->p1) {
-			event_cancel(tl, "dblclick-expire");
-			event_post(NULL, tl, "tlist-dblclick", "%p", ti->p1);
+			AG_CancelEvent(tl, "dblclick-expire");
+			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti->p1);
 			tl->dblclicked = NULL;
 		} else {
 			tl->dblclicked = ti->p1;
-			event_schedule(NULL, tl, mouse_dblclick_delay,
+			AG_SchedEvent(NULL, tl, agMouseDblclickDelay,
 			    "dblclick-expire", "%p", ti);
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
 		if (ti->class != NULL) {
-			struct tlist_popup *tp;
+			struct ag_tlist_popup *tp;
 	
-			widget_focus(tl);
+			AG_WidgetFocus(tl);
 		
-			if (!(tl->flags & (TLIST_MULTITOGGLE|TLIST_MULTI)) ||
+			if (!(tl->flags &
+			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
 			    !(SDL_GetModState() & (KMOD_CTRL|KMOD_SHIFT))) {
-				tlist_unselect_all(tl);
+				AG_TlistDeselectAll(tl);
 				select_item(tl, ti);
 			}
 	
@@ -908,7 +910,7 @@ out:
 static void
 tlist_keydown(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 	int keysym = argv[1].i;
 
 	pthread_mutex_lock(&tl->lock);
@@ -917,7 +919,7 @@ tlist_keydown(int argc, union evarg *argv)
 	case SDLK_DOWN:
 	case SDLK_PAGEUP:
 	case SDLK_PAGEDOWN:
-		event_schedule(NULL, tl, kbd_delay, "key-tick", "%i", keysym);
+		AG_SchedEvent(NULL, tl, agKbdDelay, "key-tick", "%i", keysym);
 		break;
 	default:
 		break;
@@ -928,7 +930,7 @@ tlist_keydown(int argc, union evarg *argv)
 static void
 tlist_keyup(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	AG_Tlist *tl = argv[0].p;
 	int keysym = argv[1].i;
 
 	pthread_mutex_lock(&tl->lock);
@@ -938,9 +940,9 @@ tlist_keyup(int argc, union evarg *argv)
 	case SDLK_PAGEUP:
 	case SDLK_PAGEDOWN:
 		if (tl->keymoved == 0) {
-			event_post(NULL, tl, "key-tick", "%i", keysym);
+			AG_PostEvent(NULL, tl, "key-tick", "%i", keysym);
 		}
-		event_cancel(tl, "key-tick");
+		AG_CancelEvent(tl, "key-tick");
 		tl->keymoved = 0;
 		break;
 	default:
@@ -952,7 +954,7 @@ tlist_keyup(int argc, union evarg *argv)
 static void
 tlist_scrolled(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
+	AG_Tlist *tl = argv[1].p;
 
 	update_scrollbar(tl);
 }
@@ -961,10 +963,10 @@ tlist_scrolled(int argc, union evarg *argv)
  * Return the item at the given index.
  * The tlist must be locked.
  */
-struct tlist_item *
-tlist_find_index(struct tlist *tl, int index)
+AG_TlistItem *
+AG_TlistFindByIndex(AG_Tlist *tl, int index)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 	int i = 0;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -978,10 +980,10 @@ tlist_find_index(struct tlist *tl, int index)
  * Return the first selected item.
  * The tlist must be locked.
  */
-struct tlist_item *
-tlist_selected_item(struct tlist *tl)
+AG_TlistItem *
+AG_TlistSelectedItem(AG_Tlist *tl)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected)
@@ -995,9 +997,9 @@ tlist_selected_item(struct tlist *tl)
  * The tlist must be locked.
  */
 void *
-tlist_find_pointer(struct tlist *tl)
+AG_TlistFindPtr(AG_Tlist *tl)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected)
@@ -1010,10 +1012,10 @@ tlist_find_pointer(struct tlist *tl)
  * Return the first item matching a text string.
  * The tlist must be locked.
  */
-struct tlist_item *
-tlist_find_text(struct tlist *tl, const char *text)
+AG_TlistItem *
+AG_TlistFindText(AG_Tlist *tl, const char *text)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (strcmp(it->text, text) == 0)
@@ -1026,8 +1028,8 @@ tlist_find_text(struct tlist *tl, const char *text)
  * Return the first item on the list.
  * The tlist must be locked.
  */
-struct tlist_item *
-tlist_first_item(struct tlist *tl)
+AG_TlistItem *
+AG_TlistFirstItem(AG_Tlist *tl)
 {
 	return (TAILQ_FIRST(&tl->items));
 }
@@ -1036,17 +1038,17 @@ tlist_first_item(struct tlist *tl)
  * Return the last item on the list.
  * The tlist must be locked.
  */
-struct tlist_item *
-tlist_last_item(struct tlist *tl)
+AG_TlistItem *
+AG_TlistLastItem(AG_Tlist *tl)
 {
-	return (TAILQ_LAST(&tl->items, tlist_itemq));
+	return (TAILQ_LAST(&tl->items, ag_tlist_itemq));
 }
 
 /* Set the height to use for item display. */
 void
-tlist_set_item_height(struct tlist *tl, int ih)
+AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);
 	tl->item_h = ih;
@@ -1054,9 +1056,9 @@ tlist_set_item_height(struct tlist *tl, int ih)
 		if (it->icon != -1) {
 			SDL_Surface *scaled = NULL;
 
-			view_scale_surface(it->iconsrc,
+			AG_ScaleSurface(it->iconsrc,
 			    tl->item_h-1, tl->item_h-1, &scaled);
-			widget_replace_surface(tl, it->icon, scaled);
+			AG_WidgetReplaceSurface(tl, it->icon, scaled);
 		}
 	}
 	pthread_mutex_unlock(&tl->lock);
@@ -1064,14 +1066,14 @@ tlist_set_item_height(struct tlist *tl, int ih)
 
 /* Update the icon associated with an item. */
 static void
-set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
+set_icon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
-	if (it->flags & TLIST_DYNICON) {
+	if (it->flags & AG_TLIST_DYNICON) {
 		if (it->iconsrc != NULL) {
 			SDL_FreeSurface(it->iconsrc);
 		}
 		if (iconsrc != NULL) {
-			it->iconsrc = view_copy_surface(iconsrc);
+			it->iconsrc = AG_DupSurface(iconsrc);
 		} else {
 			it->iconsrc = NULL;
 		}
@@ -1080,59 +1082,59 @@ set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
 	}
 
 	if (it->icon != -1) {
-		widget_unmap_surface(tl, it->icon);
+		AG_WidgetUnmapSurface(tl, it->icon);
 		it->icon = -1;
 	}
 }
 
 void
-tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
+AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
-	it->flags |= TLIST_DYNICON;
+	it->flags |= AG_TLIST_DYNICON;
 	set_icon(tl, it, iconsrc);
 }
 
 /* Create a new popup menu for items of the given class. */
-struct AGMenuItem *
-tlist_set_popup(struct tlist *tl, const char *iclass)
+AG_MenuItem *
+AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 {
-	struct tlist_popup *tp;
+	struct ag_tlist_popup *tp;
 
-	tp = Malloc(sizeof(struct tlist_popup), M_WIDGET);
+	tp = Malloc(sizeof(struct ag_tlist_popup), M_WIDGET);
 	tp->iclass = iclass;
 	tp->panel = NULL;
 
-	tp->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	menu_init(tp->menu);
+	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(tp->menu);
 
-	tp->item = menu_add_item(tp->menu, iclass);
+	tp->item = AG_MenuAddItem(tp->menu, iclass);
 
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
 	return (tp->item);
 }
 
 static void
-show_popup(struct tlist *tl, struct tlist_popup *tp)
+show_popup(AG_Tlist *tl, struct ag_tlist_popup *tp)
 {
-	struct AGMenu *m = tp->menu;
+	AG_Menu *m = tp->menu;
 	int x, y;
 
 #if 0
-	if (widget_parent_window(tl) == NULL)
-		fatal("%s is unattached", OBJECT(tl)->name);
+	if (AG_WidgetParentWindow(tl) == NULL)
+		fatal("%s is unattached", AGOBJECT(tl)->name);
 #endif
-	mouse_get_state(&x, &y);
+	AG_MouseGetState(&x, &y);
 
 	if (tp->panel != NULL) {
-		menu_collapse(m, tp->item);
+		AG_MenuCollapse(m, tp->item);
 		tp->panel = NULL;
 	}
 #if 0
 	if (m->sel_item != NULL) {
-		menu_collapse(m, m->sel_item);
+		AG_MenuCollapse(m, m->sel_item);
 	}
 #endif
 	m->sel_item = tp->item;
-	tp->panel = menu_expand(m, tp->item, x+4, y+4);
+	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
 }
 

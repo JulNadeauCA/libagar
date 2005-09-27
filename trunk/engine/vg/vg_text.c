@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.21 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.22 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include <stdarg.h>
 
 static void
-init(struct vg *vg, struct vg_element *vge)
+init(VG *vg, VG_Element *vge)
 {
 	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
@@ -53,7 +53,7 @@ init(struct vg *vg, struct vg_element *vge)
 }
 
 static void
-destroy(struct vg *vg, struct vg_element *vge)
+destroy(VG *vg, VG_Element *vge)
 {
 	if (vge->vg_text.su != NULL)
 		SDL_FreeSurface(vge->vg_text.su);
@@ -61,23 +61,23 @@ destroy(struct vg *vg, struct vg_element *vge)
 
 /* Specify the text alignment around the central vertex. */
 void
-vg_text_align(struct vg *vg, enum vg_alignment align)
+VG_TextAlignment(VG *vg, enum vg_alignment align)
 {
 	vg->cur_vge->vg_text.align = align;
 }
 
 /* Specify the angle relative to the central vertex. */
 void
-vg_text_angle(struct vg *vg, double angle)
+VG_TextAngle(VG *vg, double angle)
 {
 	vg->cur_vge->vg_text.angle = angle;
 }
 
 /* Specify text with polled values. */
 void
-vg_pprintf(struct vg *vg, const char *fmt, ...)
+VG_PrintfP(VG *vg, const char *fmt, ...)
 {
-	struct vg_element *vge = vg->cur_vge;
+	VG_Element *vge = vg->cur_vge;
 	const char *p;
 	va_list ap;
 	
@@ -117,9 +117,9 @@ vg_pprintf(struct vg *vg, const char *fmt, ...)
 
 /* Specify static text. */
 void
-vg_printf(struct vg *vg, const char *fmt, ...)
+VG_Printf(VG *vg, const char *fmt, ...)
 {
-	struct vg_element *vge = vg->cur_vge;
+	VG_Element *vge = vg->cur_vge;
 	va_list args;
 
 	if (fmt != NULL) {
@@ -156,12 +156,12 @@ static const struct {
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 static void
-align_text(struct vg *vg, struct vg_element *vge, Sint16 *x, Sint16 *y)
+align_text(VG *vg, VG_Element *vge, Sint16 *x, Sint16 *y)
 {
 	SDL_Surface *su = vge->vg_text.su;
 	int vx, vy;
 	
-	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
+	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
 
 	switch (vge->vg_text.align) {
 	case VG_ALIGN_TL:
@@ -206,7 +206,7 @@ align_text(struct vg *vg, struct vg_element *vge, Sint16 *x, Sint16 *y)
 }
 
 static void
-render_label(struct vg *vg, struct vg_element *vge)
+render_label(VG *vg, VG_Element *vge)
 {
 	char s[VG_TEXT_MAX];
 	char s2[32];
@@ -216,7 +216,7 @@ render_label(struct vg *vg, struct vg_element *vge)
 
 	if (vge->vg_text.nptrs == 0) {
 		if (vge->vg_text.su == NULL) {
-			vge->vg_text.su = text_render(
+			vge->vg_text.su = AG_TextRender(
 			    vge->text_st.face[0] != '\0' ? vge->text_st.face :
 			    NULL, vge->text_st.size, vge->color,
 			    vge->vg_text.text);
@@ -307,11 +307,11 @@ render_label(struct vg *vg, struct vg_element *vge)
 	if (vge->vg_text.su != NULL) {
 		SDL_FreeSurface(vge->vg_text.su);
 	}
-	vge->vg_text.su = text_render(NULL, -1, vge->color, s);
+	vge->vg_text.su = AG_TextRender(NULL, -1, vge->color, s);
 }
 
 static void
-render(struct vg *vg, struct vg_element *vge)
+render(VG *vg, VG_Element *vge)
 {
 	SDL_Rect rd;
 	
@@ -321,7 +321,7 @@ render(struct vg *vg, struct vg_element *vge)
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	Sint16 rx, ry;
 
@@ -334,7 +334,7 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 }
 
 static float
-intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, double x, double y)
 {
 	if (vge->nvtx < 1)
 		return (FLT_MAX);
@@ -346,7 +346,7 @@ intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 	}
 }
 
-const struct vg_element_ops vg_text_ops = {
+const VG_ElementOps vgTextOps = {
 	N_("Text string"),
 	VGTEXT_ICON,
 	init,
@@ -357,17 +357,17 @@ const struct vg_element_ops vg_text_ops = {
 };
 
 #ifdef EDITION
-static struct vg_element *cur_text;
-static struct vg_vertex *cur_vtx;
+static VG_Element *cur_text;
+static VG_Vtx *cur_vtx;
 static enum vg_alignment cur_align;
 static char cur_string[1024];
 
 static void
 select_alignment(int argc, union evarg *argv)
 {
-	struct combo *com = argv[0].p;
-	struct tool *t = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	AG_Combo *com = argv[0].p;
+	AG_Maptool *t = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
 	char *align = (char *)it->p1;
 
 	switch (align[0]) {
@@ -416,22 +416,22 @@ select_alignment(int argc, union evarg *argv)
 static void
 string_changed(int argc, union evarg *argv)
 {
-	struct textbox *tb = argv[0].p;
-	struct tool *t = argv[1].p;
-	struct vg *vg = t->p;
-	struct widget_binding *stringb;
+	AG_Textbox *tb = argv[0].p;
+	AG_Maptool *t = argv[1].p;
+	VG *vg = t->p;
+	AG_WidgetBinding *stringb;
 	char *s;
 	
-	stringb = widget_get_binding(tb, "string", &s);
+	stringb = AG_WidgetGetBinding(tb, "string", &s);
 	if (cur_text != NULL) {
-		vg_select_element(vg, cur_text);
-		vg_printf(vg, "%s", s);
+		VG_Select(vg, cur_text);
+		VG_Printf(vg, "%s", s);
 	}
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 }
 
 static void
-text_tool_init(void *t)
+text_AG_MaptoolInit(void *t)
 {
 	cur_text = NULL;
 	cur_vtx = NULL;
@@ -442,36 +442,36 @@ text_tool_init(void *t)
 static void
 text_tool_pane(void *t, void *con)
 {
-	struct combo *com;
-	struct textbox *tb;
-	struct tlist_item *it;
+	AG_Combo *com;
+	AG_Textbox *tb;
+	AG_TlistItem *it;
 	
-	tb = textbox_new(con, _("Text: "));
-	widget_bind(tb, "string", WIDGET_STRING, cur_string,
+	tb = AG_TextboxNew(con, _("Text: "));
+	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, cur_string,
 	    sizeof(cur_string));
-	event_new(tb, "textbox-postchg", string_changed, "%p", t);
+	AG_SetEvent(tb, "textbox-postchg", string_changed, "%p", t);
 
-	com = combo_new(con, 0, _("Alignment: "));
-	it = tlist_insert_item(com->list, ICON(VGTL_ICON), _("Top/left"), "TL");
-	tlist_insert_item(com->list, ICON(VGTC_ICON), _("Top/center"), "TC");
-	tlist_insert_item(com->list, ICON(VGTR_ICON), _("Top/right"), "TR");
-	tlist_insert_item(com->list, ICON(VGML_ICON), _("Middle/left"), "ML");
-	tlist_insert_item(com->list, ICON(VGMC_ICON), _("Middle/center"), "MC");
-	tlist_insert_item(com->list, ICON(VGMR_ICON), _("Middle/right"), "MR");
-	tlist_insert_item(com->list, ICON(VGBL_ICON), _("Bottom/left"), "BL");
-	tlist_insert_item(com->list, ICON(VGBC_ICON), _("Bottom/center"), "BC");
-	tlist_insert_item(com->list, ICON(VGBR_ICON), _("Bottom/right"), "BR");
-	event_new(com, "combo-selected", select_alignment, "%p", t);
+	com = AG_ComboNew(con, 0, _("Alignment: "));
+	it = AG_TlistAddPtr(com->list, AGICON(VGTL_ICON), _("Top/left"), "TL");
+	AG_TlistAddPtr(com->list, AGICON(VGTC_ICON), _("Top/center"), "TC");
+	AG_TlistAddPtr(com->list, AGICON(VGTR_ICON), _("Top/right"), "TR");
+	AG_TlistAddPtr(com->list, AGICON(VGML_ICON), _("Middle/left"), "ML");
+	AG_TlistAddPtr(com->list, AGICON(VGMC_ICON), _("Middle/center"), "MC");
+	AG_TlistAddPtr(com->list, AGICON(VGMR_ICON), _("Middle/right"), "MR");
+	AG_TlistAddPtr(com->list, AGICON(VGBL_ICON), _("Bottom/left"), "BL");
+	AG_TlistAddPtr(com->list, AGICON(VGBC_ICON), _("Bottom/center"), "BC");
+	AG_TlistAddPtr(com->list, AGICON(VGBR_ICON), _("Bottom/right"), "BR");
+	AG_SetEvent(com, "combo-selected", select_alignment, "%p", t);
 	combo_select(com, it);
 }
 
 static int
 text_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double x, y;
 	
-	vg_map2vec(vg, xmap, ymap, &x, &y);
+	VG_Map2Vec(vg, xmap, ymap, &x, &y);
 	if (cur_vtx != NULL) {
 		cur_vtx->x = x;
 		cur_vtx->y = y;
@@ -491,23 +491,23 @@ text_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel, int btn)
 static int
 text_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (btn) {
 	case 1:
-		cur_text = vg_begin_element(vg, VG_TEXT);
-		vg_printf(vg, "%s", cur_string);
-		vg_map2vec(vg, xmap, ymap, &vx, &vy);
-		cur_vtx = vg_vertex2(vg, vx, vy);
-		vg_text_align(vg, cur_align);
-		vg_end_element(vg);
+		cur_text = VG_Begin(vg, VG_TEXT);
+		VG_Printf(vg, "%s", cur_string);
+		VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+		cur_vtx = VG_Vertex2(vg, vx, vy);
+		VG_TextAlignment(vg, cur_align);
+		VG_End(vg);
 
 		cur_text->redraw++;
 		break;
 	default:
 		if (cur_text != NULL) {
-			vg_destroy_element(vg, cur_text);
+			VG_DestroyElement(vg, cur_text);
 		}
 		goto finish;
 	}
@@ -518,12 +518,12 @@ finish:
 	return (1);
 }
 
-const struct tool_ops vg_text_tool = {
+const AG_MaptoolOps vg_text_tool = {
 	"Text", N_("Insert text labels."),
 	VGTEXT_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	text_tool_init,
+	text_AG_MaptoolInit,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

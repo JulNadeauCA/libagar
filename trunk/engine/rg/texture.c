@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.7 2005/08/29 02:56:44 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.8 2005/08/29 03:29:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -42,74 +42,74 @@
 #include "tileview.h"
 
 void
-texture_init(struct texture *tex, struct tileset *ts, const char *name)
+RG_TextureInit(RG_Texture *tex, RG_Tileset *ts, const char *name)
 {
 	strlcpy(tex->name, name, sizeof(tex->name));
 	tex->tileset[0] = '\0';
 	tex->tile[0] = '\0';
 	tex->t = NULL;
-	tex->wrap_s = TEXTURE_REPEAT;
-	tex->wrap_t = TEXTURE_REPEAT;
+	tex->wrap_s = RG_TEXTURE_REPEAT;
+	tex->wrap_t = RG_TEXTURE_REPEAT;
 	tex->flags = 0;
-	tex->blend_func = ALPHA_OVERLAY;
+	tex->blend_func = AG_ALPHA_OVERLAY;
 	tex->alpha = 255;
 }
 
 void
-texture_destroy(struct texture *tex)
+RG_TextureDestroy(RG_Texture *tex)
 {
 }
 
 int
-texture_load(struct texture *tex, struct netbuf *buf)
+RG_TextureLoad(RG_Texture *tex, AG_Netbuf *buf)
 {
-	copy_string(tex->tileset, buf, sizeof(tex->tileset));
-	copy_string(tex->tile, buf, sizeof(tex->tile));
-	tex->flags = (int)read_uint32(buf);
-	tex->wrap_s = (enum texture_wrap_mode)read_uint8(buf);
-	tex->wrap_t = (enum texture_wrap_mode)read_uint8(buf);
-	tex->blend_func = (enum view_blend_func)read_uint8(buf);
-	tex->alpha = read_uint8(buf);
+	AG_CopyString(tex->tileset, buf, sizeof(tex->tileset));
+	AG_CopyString(tex->tile, buf, sizeof(tex->tile));
+	tex->flags = (int)AG_ReadUint32(buf);
+	tex->wrap_s = (enum texture_wrap_mode)AG_ReadUint8(buf);
+	tex->wrap_t = (enum texture_wrap_mode)AG_ReadUint8(buf);
+	tex->blend_func = (enum ag_blend_func)AG_ReadUint8(buf);
+	tex->alpha = AG_ReadUint8(buf);
 	return (0);
 }
 
 void
-texture_save(struct texture *tex, struct netbuf *buf)
+RG_TextureSave(RG_Texture *tex, AG_Netbuf *buf)
 {
-	write_string(buf, tex->tileset);
-	write_string(buf, tex->tile);
-	write_uint32(buf, (Uint32)tex->flags);
-	write_uint8(buf, (Uint8)tex->wrap_s);
-	write_uint8(buf, (Uint8)tex->wrap_t);
-	write_uint8(buf, (Uint8)tex->blend_func);
-	write_uint8(buf, tex->alpha);
+	AG_WriteString(buf, tex->tileset);
+	AG_WriteString(buf, tex->tile);
+	AG_WriteUint32(buf, (Uint32)tex->flags);
+	AG_WriteUint8(buf, (Uint8)tex->wrap_s);
+	AG_WriteUint8(buf, (Uint8)tex->wrap_t);
+	AG_WriteUint8(buf, (Uint8)tex->blend_func);
+	AG_WriteUint8(buf, tex->alpha);
 }
 
-struct texture *
-texture_find(struct tileset *ts, const char *texname)
+RG_Texture *
+RG_TextureFind(RG_Tileset *ts, const char *texname)
 {
-	struct texture *tex;
+	RG_Texture *tex;
 
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
 		if (strcmp(tex->name, texname) == 0)
 			break;
 	}
 	if (tex == NULL ||
-	   (tex->t = tileset_resolve_tile(tex->tileset, tex->tile)) == NULL) {
+	   (tex->t = RG_TilesetResvTile(tex->tileset, tex->tile)) == NULL) {
 		return (NULL);
 	}
 	return (tex);
 }
 
 static void
-find_tilesets(struct tlist *tl, struct object *pob, int depth)
+find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 {
-	struct object *cob;
-	struct tlist_item *it;
+	AG_Object *cob;
+	AG_TlistItem *it;
 	
-	if (OBJECT_TYPE(pob, "tileset")) {
-		it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
-		    (pob->flags & OBJECT_DATA_RESIDENT) ?
+	if (AGOBJECT_TYPE(pob, "tileset")) {
+		it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
+		    (pob->flags & AG_OBJECT_DATA_RESIDENT) ?
 		    _(" (resident)") : "");
 		it->p1 = pob;
 	}
@@ -120,69 +120,69 @@ find_tilesets(struct tlist *tl, struct object *pob, int depth)
 static void
 poll_tilesets(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
-	lock_linkage();
-	find_tilesets(tl, world, 0);
-	unlock_linkage();
-	tlist_restore_selections(tl);
+	AG_TlistClear(tl);
+	AG_LockLinkage();
+	find_tilesets(tl, agWorld, 0);
+	AG_UnlockLinkage();
+	AG_TlistRestore(tl);
 }
 
 static void
 poll_src_tiles(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct texture *tex = argv[1].p;
-	struct tileset *ts;
-	struct tile *t;
-	struct tlist_item *it;
+	AG_Tlist *tl = argv[0].p;
+	RG_Texture *tex = argv[1].p;
+	RG_Tileset *ts;
+	RG_Tile *t;
+	AG_TlistItem *it;
 
-	tlist_clear_items(tl);
+	AG_TlistClear(tl);
 	if (tex->tileset[0] != '\0' &&
-	    (ts = object_find(tex->tileset)) != NULL &&
-	    OBJECT_TYPE(ts, "tileset")) {
+	    (ts = AG_ObjectFind(tex->tileset)) != NULL &&
+	    AGOBJECT_TYPE(ts, "tileset")) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
-			it = tlist_insert(tl, NULL, t->name);
+			it = AG_TlistAdd(tl, NULL, t->name);
 			it->p1 = t;
-			tlist_set_icon(tl, it, t->su);
+			AG_TlistSetIcon(tl, it, t->su);
 		}
 	}
-	tlist_restore_selections(tl);
+	AG_TlistRestore(tl);
 }
 
 static void
 select_tileset(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct texture *tex = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct tileset *ts = it->p1;
+	AG_Tlist *tl = argv[0].p;
+	RG_Texture *tex = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
+	RG_Tileset *ts = it->p1;
 
-	object_copy_name(ts, tex->tileset, sizeof(tex->tileset));
+	AG_ObjectCopyName(ts, tex->tileset, sizeof(tex->tileset));
 	tex->tile[0] = '\0';
 }
 
 static void
 select_src_tile(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
-	struct texture *tex = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct tile *t = it->p1;
+	AG_Tlist *tl = argv[0].p;
+	RG_Texture *tex = argv[1].p;
+	AG_TlistItem *it = argv[2].p;
+	RG_Tile *t = it->p1;
 
 	strlcpy(tex->tile, t->name, sizeof(tex->tile));
 }
 
 static int
-compare_pixmap_ents(const struct tlist_item *it1, const struct tlist_item *it2)
+compare_pixmap_ents(const AG_TlistItem *it1, const AG_TlistItem *it2)
 {
 	return (0);
 }
 
-struct window *
-texture_edit(struct texture *tex)
+AG_Window *
+RG_TextureEdit(RG_Texture *tex)
 {
 	const char *wrap_modes[] ={
 		N_("Repeat"),
@@ -191,54 +191,55 @@ texture_edit(struct texture *tex)
 		N_("Clamp to border"),
 		NULL
 	};
-	struct window *win;
-	struct box *bo;
-	struct combo *com;
-	struct tlist *tl;
-	struct spinbutton *sb;
-	struct notebook *nb;
-	struct notebook_tab *ntab;
-	struct radio *rad;
-	struct textbox *tb;
+	AG_Window *win;
+	AG_Box *bo;
+	AG_Combo *com;
+	AG_Tlist *tl;
+	AG_Spinbutton *sb;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_Radio *rad;
+	AG_Textbox *tb;
 	
-	win = window_new(0, NULL);
-	window_set_caption(win, "%s", tex->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, "%s", tex->name);
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	tb = textbox_new(win, _("Name: "));
-	widget_bind(tb, "string", WIDGET_STRING, tex->name, sizeof(tex->name));
+	tb = AG_TextboxNew(win, _("Name: "));
+	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
+	    sizeof(tex->name));
 
-	com = combo_new(win, COMBO_POLL, _("Tileset: "));
-	event_new(com->list, "tlist-poll", poll_tilesets, NULL);
-	event_new(com, "combo-selected", select_tileset, "%p", tex);
-	combo_select_text(com, tex->tileset);
-	textbox_printf(com->tbox, "%s", tex->tileset);
+	com = AG_ComboNew(win, AG_COMBO_POLL, _("Tileset: "));
+	AG_SetEvent(com->list, "tlist-poll", poll_tilesets, NULL);
+	AG_SetEvent(com, "combo-selected", select_tileset, "%p", tex);
+	AG_ComboSelectText(com, tex->tileset);
+	AG_TextboxPrintf(com->tbox, "%s", tex->tileset);
 
-	tl = tlist_new(win, TLIST_POLL);
-	event_new(tl, "tlist-poll", poll_src_tiles, "%p", tex);
-	event_new(tl, "tlist-selected", select_src_tile, "%p", tex);
-	tlist_select_text(tl, tex->tile);
+	tl = AG_TlistNew(win, AG_TLIST_POLL);
+	AG_SetEvent(tl, "tlist-poll", poll_src_tiles, "%p", tex);
+	AG_SetEvent(tl, "tlist-selected", select_src_tile, "%p", tex);
+	AG_TlistSelectText(tl, tex->tile);
 
-	nb = notebook_new(win, NOTEBOOK_WFILL);
-	ntab = notebook_add_tab(nb, _("Wrapping"), BOX_VERT);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL);
+	ntab = AG_NotebookAddTab(nb, _("Wrapping"), AG_BOX_VERT);
 	{
-		label_static(ntab, _("S-coordinate: "));
-		rad = radio_new(ntab, wrap_modes);
-		widget_bind(rad, "value", WIDGET_INT, &tex->wrap_s);
+		AG_LabelStatic(ntab, _("S-coordinate: "));
+		rad = AG_RadioNew(ntab, wrap_modes);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_s);
 		
-		label_static(ntab, _("T-coordinate: "));
-		rad = radio_new(ntab, wrap_modes);
-		widget_bind(rad, "value", WIDGET_INT, &tex->wrap_t);
+		AG_LabelStatic(ntab, _("T-coordinate: "));
+		rad = AG_RadioNew(ntab, wrap_modes);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_t);
 	}
 
-	ntab = notebook_add_tab(nb, _("Blending"), BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
-		label_static(ntab, _("Blending function: "));
-		rad = radio_new(ntab, view_blend_func_txt);
-		widget_bind(rad, "value", WIDGET_INT, &tex->blend_func);
+		AG_LabelStatic(ntab, _("Blending function: "));
+		rad = AG_RadioNew(ntab, agBlendFuncNames);
+		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->blend_func);
 	}
 
-	sb = spinbutton_new(win, _("Overall alpha: "));
-	widget_bind(sb, "value", WIDGET_UINT8, &tex->alpha);
+	sb = AG_SpinbuttonNew(win, _("Overall alpha: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &tex->alpha);
 	return (win);
 }

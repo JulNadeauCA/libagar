@@ -1,4 +1,4 @@
-.\"	$Csoft: menu.3,v 1.1 2005/05/30 04:43:58 vedge Exp $
+.\"	$Csoft: menu.3,v 1.2 2005/06/10 05:42:56 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,38 +46,38 @@ Individual menu items can bind to boolean values and specific bits in integer
 values.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr object 3 ->
+.Xr AG_Object 3 ->
 .Xr widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct AGMenu *"
-.Fn menu_new "void *parent"
+.Ft "AG_Menu *"
+.Fn AG_MenuNew "void *parent"
 .Pp
 .Ft void
-.Fn menu_init "struct AGMenu *menu"
+.Fn AG_MenuInit "AG_Menu *menu"
 .Pp
 .Ft void
-.Fn menu_expand "struct AGMenu *menu" "struct AGMenuItem *item" "int x" "int y"
+.Fn AG_MenuExpand "AG_Menu *menu" "AG_MenuItem *item" "int x" "int y"
 .Pp
 .Ft void
-.Fn menu_collapse "struct AGMenu *menu" "struct AGMenuItem *item"
+.Fn AG_MenuCollapse "AG_Menu *menu" "AG_MenuItem *item"
 .Pp
 .nr nS 0
 .Pp
 The
-.Fn menu_new
+.Fn AG_MenuNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn menu_init
+.Fn AG_MenuInit
 function initializes a
 .Nm
 widget.
 .Pp
 The
-.Fn menu_expand
+.Fn AG_MenuExpand
 function creates a new (frameless) window at the coordinates
 .Fa x ,
 .Fa y .
@@ -87,55 +87,55 @@ widget which shows the child entries of
 .Fa item .
 If an item is clicked on, the window is automatically destroyed.
 The
-.Fn menu_collapse
+.Fn AG_MenuCollapse
 function manually destroys the popup window.
 .Sh TOP-LEVEL ITEMS
 .nr nS 1
-.Ft "struct AGMenuItem *"
-.Fn menu_add_item "struct AGMenu *menu" "const char *text"
+.Ft "AG_MenuItem *"
+.Fn AG_MenuAddItem "AG_Menu *menu" "const char *text"
 .Pp
 .Ft "void"
-.Fn menu_free_items "struct AGMenu *menu" 
+.Fn AG_MenuFreeItems "AG_Menu *menu" 
 .Pp
 .Ft "void"
-.Fn menu_free_subitems "struct AGMenuItem *item" 
+.Fn AG_MenuFreeSubItems "AG_MenuItem *item" 
 .nr nS 0
 .Pp
 The
-.Fn menu_add_item
+.Fn AG_MenuAddItem
 inserts a new top-level menu item with a label displaying the string
 .Fa text .
 Top-level menu items have no associated action or binding.
 The
-.Fn menu_free_items
+.Fn AG_MenuFreeItems
 function destroys all top-level menu items in
 .Fa menu .
-.Fn menu_free_subitems
+.Fn AG_MenuFreeSubItems
 destroys all subitems associated with
 .Fa item .
 .Sh ACTION ITEMS
 .nr nS 1
-.Ft "struct AGMenuItem *"
-.Fn menu_action "struct AGMenuItem *" "const char *text" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
+.Ft "AG_MenuItem *"
+.Fn AG_MenuAction "AG_MenuItem *" "const char *text" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn menu_action_kb "struct AGMenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
+.Ft "AG_MenuItem *"
+.Fn AG_MenuActionKb "AG_MenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn menu_tool "struct AGMenuItem *" "struct toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
+.Ft "AG_MenuItem *"
+.Fn AG_MenuTool "AG_MenuItem *" "AG_Toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn menu_dynamic "struct AGMenuItem *" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
-.Pp
-.Ft "void"
-.Fn menu_set_icon "struct AGMenuItem *" "SDL_Surface *su"
+.Ft "AG_MenuItem *"
+.Fn AG_MenuDynamic "AG_MenuItem *" "int icon" "void (*fn)(int, union evarg *)" "const char *fmt, ..."
 .Pp
 .Ft "void"
-.Fn menu_set_label "struct AGMenuItem *" "const char *label"
+.Fn AG_MenuSetIcon "AG_MenuItem *" "SDL_Surface *su"
+.Pp
+.Ft "void"
+.Fn AG_MenuSetLabel "AG_MenuItem *" "const char *label"
 .nr nS 0
 .Pp
 The
-.Fn menu_action
+.Fn AG_MenuAction
 function inserts a new action item identified by the string
 .Fa text .
 The
@@ -151,19 +151,17 @@ with the additional arguments specified in
 (unless it is NULL).
 .Pp
 The
-.Fn menu_action_kb
+.Fn AG_MenuActionKb
 variant also associates the action with the given
 .Xr SDLKey 3
 and modifier.
 .Pp
 The
-.Fn menu_tool
-variant automatically inserts an item into the given
-.Fa toolbar
-as well.
+.Fn AG_MenuTool
+variant automatically inserts an item into the given toolbar as well.
 .Pp
 The
-.Fn menu_dynamic
+.Fn AG_MenuDynamic
 function creates a dynamic menu item.
 The specified event handler routine will be invoked every time the menu item
 is rendered.
@@ -178,9 +176,9 @@ and
 .Va onclick
 members directly.
 The label may be modified using
-.Fn menu_set_label ,
+.Fn AG_MenuSetLabel ,
 and the icon using
-.Fn menu_set_icon .
+.Fn AG_MenuSetIcon .
 If
 .Va state
 is 0 or 1, it defines the current state for boolean items (unless it is -1,
@@ -191,41 +189,41 @@ member is a pointer to the event handler to invoke when the user selects the
 item.
 .Sh BOOLEAN AND BITMASK ITEMS
 .nr nS 1
-.Ft "struct AGMenuItem *"
-.Fn "menu_int_bool" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuIntBool" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int_bool_mp" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuIntBoolMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert" "pthread_mutex_t *mutex"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int8_bool" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt8Bool" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int8_bool_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt8BoolMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "pthread_mutex_t *mutex"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int_flags" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuIntFlags" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "pthread_mutex_t *mutex"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int8_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt8Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int8_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt8FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "pthread_mutex_t *mutex"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int16_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt16Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int16_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt16FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "pthread_mutex_t *mutex"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int32_flags" "struct AGMenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuInt32Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert"
 .Pp
-.Ft "struct AGMenuItem *"
-.Fn "menu_int_flags_mp" "struct AGMenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "pthread_mutex_t *mutex"
+.Ft "AG_MenuItem *"
+.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "pthread_mutex_t *mutex"
 .Pp
 .nr nS 0
 The
@@ -256,11 +254,11 @@ argument specifying a mutex to acquire prior to reading or writing the data.
 .Sh OTHER ITEMS
 .nr nS 1
 .Ft "void"
-.Fn menu_separator "struct AGMenuItem *item"
+.Fn AG_MenuSeparator "AG_MenuItem *item"
 .nr nS 0
 .Pp
 The
-.Fn menu_separator
+.Fn AG_MenuSeparator
 function inserts a horizontal menu separator.
 .Sh EVENTS
 The
@@ -296,24 +294,24 @@ hello(int argc, union evarg *argv)
 {
 	char *s = argv[1].s;
 
-	text_msg(MSG_INFO, "Hello, %s!", s);
+	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
 }
  
 .Li ...
 
-struct AGMenu *menu;
-struct AGMenuItem *item;
+AG_Menu *menu;
+AG_MenuItem *item;
 
-menu = menu_new(win);
-item = menu_add_item(menu, "File");
+menu = AG_MenuNew(win);
+item = AG_MenuAddItem(menu, "File");
 {
-	menu_action(item, "Say hello", -1, hello, "%s", "world");
-	menu_separator(item);
-	menu_int_bool(item, "Some flag", -1, &someflag, 0);
+	AG_MenuAction(item, "Say hello", -1, hello, "%s", "world");
+	AG_MenuSeparator(item);
+	AG_MenuIntBool(item, "Some flag", -1, &someflag, 0);
 	menu_int16_bool(item, "Foo flag", -1, &flags, FOO_FLAG, 0);
 	menu_int16_bool(item, "Bar flag", -1, &flags, BAR_FLAG, 0);
-	menu_separator(item);
-	menu_action(item, "Quit", CLOSE_ICON, quit_app, NULL);
+	AG_MenuSeparator(item);
+	AG_MenuAction(item, "Quit", CLOSE_ICON, quit_app, NULL);
 }
 .Ed
 .Sh SEE ALSO

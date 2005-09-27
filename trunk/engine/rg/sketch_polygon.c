@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_polygon.c,v 1.2 2005/06/07 06:49:25 vedge Exp $	*/
+/*	$Csoft: sketch_polygon.c,v 1.3 2005/07/29 06:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -42,13 +42,13 @@
 #include "tileview.h"
 
 struct polygon_tool {
-	struct tileview_tool tool;
+	RG_TileviewTool tool;
 	enum {
 		BEGIN_POLYGON,
 		CONTINUE_POLYGON
 	} seq;
-	struct vg_element *polygon;
-	struct vg_vertex *vtx;
+	VG_Element *polygon;
+	VG_Vtx *vtx;
 	int preview;
 };
 
@@ -60,10 +60,10 @@ compare_ints(const void *p1, const void *p2)
 
 /* Special rendering function for sketch polygons with texturing. */
 void
-sketch_polygon_render(struct tile *t, struct vg *vg, struct vg_element *vge)
+RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 {
-	struct texture *tex = NULL;
-	struct vg_vertex *vtx = vge->vtx;
+	RG_Texture *tex = NULL;
+	VG_Vtx *vtx = vge->vtx;
 	u_int i, nvtx = vge->nvtx;
 	int x, y, x1, y1, x2, y2;
 	int miny, maxy;
@@ -71,11 +71,11 @@ sketch_polygon_render(struct tile *t, struct vg *vg, struct vg_element *vge)
 	int ints;
 
 	if (vge->nvtx < 3 || vge->vg_polygon.outline) {	/* Draw outline */
-		vg_draw_line_loop(vg, vge);
+		VG_DrawLineLoop(vg, vge);
 		return;
 	}
 	if ((vge->fill_st.style == VG_TEXTURED) &&
-	    (tex = texture_find(t->ts, vge->fill_st.texture)) == NULL)
+	    (tex = RG_TextureFind(t->ts, vge->fill_st.texture)) == NULL)
 		return;
 
 	if (vg->ints == NULL) {
@@ -146,15 +146,15 @@ sketch_polygon_render(struct tile *t, struct vg *vg, struct vg_element *vge)
 			case VG_NOFILL:
 				break;
 			case VG_SOLID:
-				vg_hline_primitive(vg, xa, xb, y, vge->color);
+				VG_HLinePrimitive(vg, xa, xb, y, vge->color);
 				break;
 			case VG_TEXTURED:
 				for (xi = xa; xi < xb; xi++) {
-					SDL_GetRGB(GET_PIXEL2(tex->t->su,
+					SDL_GetRGB(AG_GET_PIXEL2(tex->t->su,
 					    (xi % tex->t->su->w),
 					    (y % tex->t->su->h)),
 					    tex->t->su->format, &r, &g, &b);
-					PUT_PIXEL2_CLIPPED(vg->su, xi, y,
+					AG_PUT_PIXEL2_CLIPPED(vg->su, xi, y,
 					    SDL_MapRGB(vg->fmt, r, g, b));
 				}
 				break;
@@ -174,38 +174,38 @@ init(void *p)
 	pt->preview = 0;
 }
 
-static struct window *
+static AG_Window *
 edit(void *p)
 {
 	struct polygon_tool *pt = p;
-	struct window *win;
-	struct checkbox *cb;
+	AG_Window *win;
+	AG_Checkbox *cb;
 
-	win = window_new(0, NULL);
-	cb = checkbox_new(win, _("Preview"));
-	widget_bind(cb, "state", WIDGET_INT, &pt->preview);
+	win = AG_WindowNew(0, NULL);
+	cb = AG_CheckboxNew(win, _("Preview"));
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &pt->preview);
 	return (win);
 }
 
 static void
-mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
+mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 {
 	struct polygon_tool *pt = p;
-	struct vg *vg = sk->vg;
-	struct tileview *tv = TILEVIEW_TOOL(pt)->tv;
+	VG *vg = sk->vg;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(pt)->tv;
 	Uint8 r, g, b;
 
 	switch (pt->seq) {
 	case BEGIN_POLYGON:
 		if (button == SDL_BUTTON_LEFT) {
-			pt->polygon = vg_begin_element(vg, VG_POLYGON);
-			vg_vertex2(vg, x, y);
-			pt->vtx = vg_vertex2(vg, x, y);
+			pt->polygon = VG_Begin(vg, VG_POLYGON);
+			VG_Vertex2(vg, x, y);
+			pt->vtx = VG_Vertex2(vg, x, y);
 			pt->seq = CONTINUE_POLYGON;
-			tv->flags |= TILEVIEW_NO_SCROLLING;
+			tv->flags |= RG_TILEVIEW_NO_SCROLLING;
 	
-			prim_hsv2rgb(sk->h, sk->s, sk->v, &r, &g, &b);
-			vg_color4(vg, r, g, b, (int)(sk->a*255.0));
+			RG_HSV2RGB(sk->h, sk->s, sk->v, &r, &g, &b);
+			VG_Color4(vg, r, g, b, (int)(sk->a*255.0));
 
 			if (!pt->preview)
 				pt->polygon->vg_polygon.outline = 1;
@@ -213,29 +213,29 @@ mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
 		break;
 	case CONTINUE_POLYGON:
 		if (button == SDL_BUTTON_LEFT) {
-			pt->vtx = vg_vertex2(vg, x, y);
+			pt->vtx = VG_Vertex2(vg, x, y);
 		} else {
 			if (pt->polygon->nvtx < 3) {
-				vg_destroy_element(vg, pt->polygon);
+				VG_DestroyElement(vg, pt->polygon);
 			} else {
 				pt->polygon->vg_polygon.outline = 0;
-				vg_pop_vertex(vg);
+				VG_PopVertex(vg);
 			}
 			pt->vtx = NULL;
 			pt->polygon = NULL;
 			pt->seq = BEGIN_POLYGON;
-			tv->flags &= ~TILEVIEW_NO_SCROLLING;
+			tv->flags &= ~RG_TILEVIEW_NO_SCROLLING;
 		}
 		break;
 	}
 }
 
 static void
-mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
+mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct polygon_tool *pt = p;
-	struct tileview *tv = TILEVIEW_TOOL(pt)->tv;
+	RG_Tileview *tv = RG_TILEVIEW_TOOL(pt)->tv;
 
 	if (pt->vtx != NULL) {
 		pt->vtx->x = x;
@@ -244,7 +244,7 @@ mousemotion(void *p, struct sketch *sk, double x, double y, double xrel,
 	}
 }
 
-struct tileview_sketch_tool_ops sketch_polygon_ops = {
+RG_TileviewSketchToolOps sketch_polygon_ops = {
 	{
 		N_("Polygon"),
 		N_("Sketch filled polygons."),

@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.7 2005/01/30 05:39:11 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.8 2005/07/08 04:36:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,34 +41,34 @@
 #include <errno.h>
 #include <limits.h>
 
-static struct widget_ops mfspinbutton_ops = {
+static AG_WidgetOps mfspinbutton_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		mfspinbutton_destroy,
+		AG_MFSpinbuttonDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	mfspinbutton_draw,
-	mfspinbutton_scale
+	AG_MFSpinbuttonDraw,
+	AG_MFSpinbuttonScale
 };
 
-struct mfspinbutton *
-mfspinbutton_new(void *parent, const char *unit, const char *sep,
+AG_MFSpinbutton *
+AG_MFSpinbuttonNew(void *parent, const char *unit, const char *sep,
     const char *fmt, ...)
 {
-	char label[LABEL_MAX];
-	struct mfspinbutton *fsu;
+	char label[AG_LABEL_MAX];
+	AG_MFSpinbutton *fsu;
 	va_list ap;
 
 	va_start(ap, fmt);
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	fsu = Malloc(sizeof(struct mfspinbutton), M_OBJECT);
-	mfspinbutton_init(fsu, unit, sep, label);
-	object_attach(parent, fsu);
+	fsu = Malloc(sizeof(AG_MFSpinbutton), M_OBJECT);
+	AG_MFSpinbuttonInit(fsu, unit, sep, label);
+	AG_ObjectAttach(parent, fsu);
 	return (fsu);
 }
 
@@ -77,18 +77,18 @@ mfspinbutton_new(void *parent, const char *unit, const char *sep,
 static void
 mfspinbutton_bound(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[0].p;
-	struct widget_binding *binding = argv[1].p;
+	AG_MFSpinbutton *fsu = argv[0].p;
+	AG_WidgetBinding *binding = argv[1].p;
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
 		pthread_mutex_lock(&fsu->lock);
 		switch (binding->vtype) {
-		case WIDGET_DOUBLE:
+		case AG_WIDGET_DOUBLE:
 			fsu->min = -DBL_MAX+1;
 			fsu->max = DBL_MAX-1;
 			break;
-		case WIDGET_FLOAT:
+		case AG_WIDGET_FLOAT:
 			fsu->min = -FLT_MAX+1;
 			fsu->max = FLT_MAX-1;
 			break;
@@ -100,22 +100,22 @@ mfspinbutton_bound(int argc, union evarg *argv)
 static void
 mfspinbutton_keydown(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[0].p;
+	AG_MFSpinbutton *fsu = argv[0].p;
 	int keysym = argv[1].i;
 
 	pthread_mutex_lock(&fsu->lock);
 	switch (keysym) {
 	case SDLK_LEFT:
-		mfspinbutton_add_value(fsu, "xvalue", -fsu->inc);
+		AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
 		break;
 	case SDLK_RIGHT:
-		mfspinbutton_add_value(fsu, "xvalue", fsu->inc);
+		AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
 		break;
 	case SDLK_UP:
-		mfspinbutton_add_value(fsu, "yvalue", -fsu->inc);
+		AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
 		break;
 	case SDLK_DOWN:
-		mfspinbutton_add_value(fsu, "yvalue", fsu->inc);
+		AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
 		break;
 	}
 	pthread_mutex_unlock(&fsu->lock);
@@ -124,98 +124,98 @@ mfspinbutton_keydown(int argc, union evarg *argv)
 static void
 mfspinbutton_changed(int argc, union evarg *argv)
 {
-	char text[TEXTBOX_STRING_MAX];
-	struct mfspinbutton *fsu = argv[1].p;
+	char text[AG_TEXTBOX_STRING_MAX];
+	AG_MFSpinbutton *fsu = argv[1].p;
 	int unfocus = argv[2].i;
-	struct widget_binding *stringb;
+	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
 
-	stringb = widget_get_binding(fsu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
 	strlcpy(text, s, sizeof(text));
 
 	if ((s = strsep(&tp, fsu->sep)) != NULL) {
-		mfspinbutton_set_value(fsu, "xvalue",
+		AG_MFSpinbuttonSetValue(fsu, "xvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
 	if ((s = strsep(&tp, fsu->sep)) != NULL) {
-		mfspinbutton_set_value(fsu, "yvalue",
+		AG_MFSpinbuttonSetValue(fsu, "yvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
-	widget_binding_unlock(stringb);
+	AG_WidgetUnlockBinding(stringb);
 
-	event_post(NULL, fsu, "mfspinbutton-return", NULL);
+	AG_PostEvent(NULL, fsu, "mfspinbutton-return", NULL);
 
 	if (unfocus)
-		WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
+		AGWIDGET(fsu->input)->flags &= ~(AG_WIDGET_FOCUSED);
 }
 
 static void
 mfspinbutton_up(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = argv[1].p;
 
 	pthread_mutex_lock(&fsu->lock);
-	mfspinbutton_add_value(fsu, "yvalue", -fsu->inc);
+	AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 static void
 mfspinbutton_down(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = argv[1].p;
 	
 	pthread_mutex_lock(&fsu->lock);
-	mfspinbutton_add_value(fsu, "yvalue", fsu->inc);
+	AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 static void
 mfspinbutton_left(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = argv[1].p;
 	
 	pthread_mutex_lock(&fsu->lock);
-	mfspinbutton_add_value(fsu, "xvalue", -fsu->inc);
+	AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 static void
 mfspinbutton_right(int argc, union evarg *argv)
 {
-	struct mfspinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = argv[1].p;
 	
 	pthread_mutex_lock(&fsu->lock);
-	mfspinbutton_add_value(fsu, "xvalue", fsu->inc);
+	AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 static void
-update_unit_button(struct mfspinbutton *fsu)
+update_unit_button(AG_MFSpinbutton *fsu)
 {
-	button_printf(fsu->units->button, "%s", unit_abbr(fsu->unit));
+	AG_ButtonPrintf(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
 }
 
 static void
 selected_unit(int argc, union evarg *argv)
 {
-	struct ucombo *ucom = argv[0].p;
-	struct mfspinbutton *fsu = argv[1].p;
-	struct tlist_item *ti = argv[2].p;
+	AG_UCombo *ucom = argv[0].p;
+	AG_MFSpinbutton *fsu = argv[1].p;
+	AG_TlistItem *ti = argv[2].p;
 
-	fsu->unit = (const struct unit *)ti->p1;
+	fsu->unit = (const AG_Unit *)ti->p1;
 	update_unit_button(fsu);
 }
 
 static void
-init_unit_system(struct mfspinbutton *fsu, const char *unit_key)
+init_unit_system(AG_MFSpinbutton *fsu, const char *unit_key)
 {
-	const struct unit *unit = NULL;
-	const struct unit *ugroup = NULL;
+	const AG_Unit *unit = NULL;
+	const AG_Unit *ugroup = NULL;
 	int found = 0;
 	int i;
 	
-	for (i = 0; i < nunit_groups; i++) {
-		ugroup = unit_groups[i];
+	for (i = 0; i < agnUnitGroups; i++) {
+		ugroup = agUnitGroups[i];
 		for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 			if (strcmp(unit->key, unit_key) == 0) {
 				found++;
@@ -232,11 +232,11 @@ init_unit_system(struct mfspinbutton *fsu, const char *unit_key)
 	update_unit_button(fsu);
 
 	pthread_mutex_lock(&fsu->units->list->lock);
-	tlist_unselect_all(fsu->units->list);
+	AG_TlistDeselectAll(fsu->units->list);
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
-		struct tlist_item *it;
+		AG_TlistItem *it;
 
-		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
+		it = AG_TlistAddPtr(fsu->units->list, NULL, _(unit->name),
 		    (void *)unit);
 		if (unit == fsu->unit)
 			it->selected++;
@@ -245,20 +245,20 @@ init_unit_system(struct mfspinbutton *fsu, const char *unit_key)
 }
 
 void
-mfspinbutton_init(struct mfspinbutton *fsu, const char *unit,
+AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, const char *unit,
     const char *sep, const char *label)
 {
-	widget_init(fsu, "mfspinbutton", &mfspinbutton_ops,
-	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(fsu, "xvalue", WIDGET_DOUBLE, &fsu->xvalue);
-	widget_bind(fsu, "yvalue", WIDGET_DOUBLE, &fsu->yvalue);
-	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
-	widget_bind(fsu, "max", WIDGET_DOUBLE, &fsu->max);
+	AG_WidgetInit(fsu, "mfspinbutton", &mfspinbutton_ops,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	AG_WidgetBind(fsu, "xvalue", AG_WIDGET_DOUBLE, &fsu->xvalue);
+	AG_WidgetBind(fsu, "yvalue", AG_WIDGET_DOUBLE, &fsu->yvalue);
+	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
+	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);
 	
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = textbox_new(fsu, label);
+	fsu->input = AG_TextboxNew(fsu, label);
 	fsu->writeable = 1;
 	fsu->sep = sep;
 	pthread_mutex_init(&fsu->lock, NULL);
@@ -268,153 +268,154 @@ mfspinbutton_init(struct mfspinbutton *fsu, const char *unit,
 	strlcat(fsu->format, "%g", sizeof(fsu->format));
 	
 	if (unit != NULL) {
-		fsu->units = ucombo_new(fsu);
-		event_new(fsu->units, "ucombo-selected", selected_unit,
+		fsu->units = AG_UComboNew(fsu);
+		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
 		init_unit_system(fsu, unit);
 	} else {
-		fsu->unit = unit_find("identity");
+		fsu->unit = AG_FindUnit("identity");
 		fsu->units = NULL;
 	}
 
-	fsu->xincbu = button_new(fsu, "+");
-	button_set_padding(fsu->xincbu, 0);
-	button_set_repeat(fsu->xincbu, 1);
-	event_new(fsu->xincbu, "button-pushed", mfspinbutton_right, "%p", fsu);
+	fsu->xincbu = AG_ButtonNew(fsu, "+");
+	AG_ButtonSetPadding(fsu->xincbu, 0);
+	AG_ButtonSetRepeatMode(fsu->xincbu, 1);
+	AG_SetEvent(fsu->xincbu, "button-pushed", mfspinbutton_right,
+	    "%p", fsu);
 
-	fsu->xdecbu = button_new(fsu, "-");
-	button_set_padding(fsu->xdecbu, 0);
-	button_set_repeat(fsu->xdecbu, 1);
-	event_new(fsu->xdecbu, "button-pushed", mfspinbutton_left, "%p", fsu);
+	fsu->xdecbu = AG_ButtonNew(fsu, "-");
+	AG_ButtonSetPadding(fsu->xdecbu, 0);
+	AG_ButtonSetRepeatMode(fsu->xdecbu, 1);
+	AG_SetEvent(fsu->xdecbu, "button-pushed", mfspinbutton_left, "%p", fsu);
 
-	fsu->yincbu = button_new(fsu, "+");
-	button_set_padding(fsu->yincbu, 0);
-	button_set_repeat(fsu->yincbu, 1);
-	event_new(fsu->yincbu, "button-pushed", mfspinbutton_down, "%p", fsu);
+	fsu->yincbu = AG_ButtonNew(fsu, "+");
+	AG_ButtonSetPadding(fsu->yincbu, 0);
+	AG_ButtonSetRepeatMode(fsu->yincbu, 1);
+	AG_SetEvent(fsu->yincbu, "button-pushed", mfspinbutton_down, "%p", fsu);
 
-	fsu->ydecbu = button_new(fsu, "-");
-	button_set_padding(fsu->ydecbu, 0);
-	button_set_repeat(fsu->ydecbu, 1);
-	event_new(fsu->ydecbu, "button-pushed", mfspinbutton_up, "%p", fsu);
+	fsu->ydecbu = AG_ButtonNew(fsu, "-");
+	AG_ButtonSetPadding(fsu->ydecbu, 0);
+	AG_ButtonSetRepeatMode(fsu->ydecbu, 1);
+	AG_SetEvent(fsu->ydecbu, "button-pushed", mfspinbutton_up, "%p", fsu);
 
-	event_new(fsu, "widget-bound", mfspinbutton_bound, NULL);
-	event_new(fsu, "window-keydown", mfspinbutton_keydown, NULL);
-	event_new(fsu->input, "textbox-return", mfspinbutton_changed,
+	AG_SetEvent(fsu, "widget-bound", mfspinbutton_bound, NULL);
+	AG_SetEvent(fsu, "window-keydown", mfspinbutton_keydown, NULL);
+	AG_SetEvent(fsu->input, "textbox-return", mfspinbutton_changed,
 	    "%p,%i", fsu, 1);
-	event_new(fsu->input, "textbox-changed", mfspinbutton_changed,
+	AG_SetEvent(fsu->input, "textbox-changed", mfspinbutton_changed,
 	    "%p,%i", fsu, 0);
 }
 
 void
-mfspinbutton_destroy(void *p)
+AG_MFSpinbuttonDestroy(void *p)
 {
-	struct mfspinbutton *fsu = p;
+	AG_MFSpinbutton *fsu = p;
 
 	pthread_mutex_destroy(&fsu->lock);
-	widget_destroy(fsu);
+	AG_WidgetDestroy(fsu);
 }
 
 void
-mfspinbutton_scale(void *p, int w, int h)
+AG_MFSpinbuttonScale(void *p, int w, int h)
 {
-	struct mfspinbutton *fsu = p;
-	struct ucombo *units = fsu->units;
+	AG_MFSpinbutton *fsu = p;
+	AG_UCombo *units = fsu->units;
 	const int bw = 10;
 	int bh = h/2;
 	int uw = units != NULL ? 25 : 0;
 	int x = 0, y = 0;
 
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(fsu->input, -1, -1);
-		WIDGET(fsu)->w = WIDGET(fsu->input)->w;
-		WIDGET(fsu)->h = WIDGET(fsu->input)->h;
+		AGWIDGET_SCALE(fsu->input, -1, -1);
+		AGWIDGET(fsu)->w = AGWIDGET(fsu->input)->w;
+		AGWIDGET(fsu)->h = AGWIDGET(fsu->input)->h;
 
 		if (units != NULL) {
-			WIDGET_SCALE(units, -1, -1);
-			WIDGET(fsu)->w += WIDGET(units)->w+4;
+			AGWIDGET_SCALE(units, -1, -1);
+			AGWIDGET(fsu)->w += AGWIDGET(units)->w+4;
 		}
-		WIDGET_SCALE(fsu->yincbu, -1, -1);
-		WIDGET_SCALE(fsu->ydecbu, -1, -1);
-		WIDGET_SCALE(fsu->xincbu, -1, -1);
-		WIDGET_SCALE(fsu->xdecbu, -1, -1);
+		AGWIDGET_SCALE(fsu->yincbu, -1, -1);
+		AGWIDGET_SCALE(fsu->ydecbu, -1, -1);
+		AGWIDGET_SCALE(fsu->xincbu, -1, -1);
+		AGWIDGET_SCALE(fsu->xdecbu, -1, -1);
 
-		WIDGET(fsu)->w += WIDGET(fsu->xdecbu)->w +
-		                  max(WIDGET(fsu->yincbu)->w,
-				      WIDGET(fsu->ydecbu)->w) +
-		                  WIDGET(fsu->xincbu)->w;
+		AGWIDGET(fsu)->w += AGWIDGET(fsu->xdecbu)->w +
+		                  max(AGWIDGET(fsu->yincbu)->w,
+				      AGWIDGET(fsu->ydecbu)->w) +
+		                  AGWIDGET(fsu->xincbu)->w;
 		return;
 	}
 
-	WIDGET(fsu->input)->x = x;
-	WIDGET(fsu->input)->y = y;
-	widget_scale(fsu->input, w - 2 - uw - 2 - bw*3, h);
-	x += WIDGET(fsu->input)->w+2;
+	AGWIDGET(fsu->input)->x = x;
+	AGWIDGET(fsu->input)->y = y;
+	AG_WidgetScale(fsu->input, w - 2 - uw - 2 - bw*3, h);
+	x += AGWIDGET(fsu->input)->w+2;
 
 	if (units != NULL) {
-		WIDGET(units)->x = x;
-		WIDGET(units)->y = y;
-		widget_scale(units, uw, h);
-		x += WIDGET(units)->w+2;
+		AGWIDGET(units)->x = x;
+		AGWIDGET(units)->y = y;
+		AG_WidgetScale(units, uw, h);
+		x += AGWIDGET(units)->w+2;
 	}
 
-	WIDGET(fsu->xdecbu)->x = x;
-	WIDGET(fsu->xdecbu)->y = y + bh/2;
-	widget_scale(fsu->xdecbu, bw, bh);
+	AGWIDGET(fsu->xdecbu)->x = x;
+	AGWIDGET(fsu->xdecbu)->y = y + bh/2;
+	AG_WidgetScale(fsu->xdecbu, bw, bh);
 
-	WIDGET(fsu->xincbu)->x = x + bh*2;
-	WIDGET(fsu->xincbu)->y = y + bh/2;
-	widget_scale(fsu->xincbu, bw, bh);
+	AGWIDGET(fsu->xincbu)->x = x + bh*2;
+	AGWIDGET(fsu->xincbu)->y = y + bh/2;
+	AG_WidgetScale(fsu->xincbu, bw, bh);
 
-	WIDGET(fsu->ydecbu)->x = x + bh;
-	WIDGET(fsu->ydecbu)->y = y;
-	widget_scale(fsu->ydecbu, bw, bh);
+	AGWIDGET(fsu->ydecbu)->x = x + bh;
+	AGWIDGET(fsu->ydecbu)->y = y;
+	AG_WidgetScale(fsu->ydecbu, bw, bh);
 	
-	WIDGET(fsu->yincbu)->x = x + bh;
-	WIDGET(fsu->yincbu)->y = y + bh;
-	widget_scale(fsu->yincbu, bw, bh);
+	AGWIDGET(fsu->yincbu)->x = x + bh;
+	AGWIDGET(fsu->yincbu)->y = y + bh;
+	AG_WidgetScale(fsu->yincbu, bw, bh);
 }
 
 void
-mfspinbutton_draw(void *p)
+AG_MFSpinbuttonDraw(void *p)
 {
-	struct mfspinbutton *fsu = p;
-	struct widget_binding *xvalueb, *yvalueb;
+	AG_MFSpinbutton *fsu = p;
+	AG_WidgetBinding *xvalueb, *yvalueb;
 	double *xvalue, *yvalue;
 
-	if (WIDGET(fsu->input)->flags & WIDGET_FOCUSED)
+	if (AGWIDGET(fsu->input)->flags & AG_WIDGET_FOCUSED)
 		return;
 
-	xvalueb = widget_get_binding(fsu, "xvalue", &xvalue);
-	yvalueb = widget_get_binding(fsu, "yvalue", &yvalue);
+	xvalueb = AG_WidgetGetBinding(fsu, "xvalue", &xvalue);
+	yvalueb = AG_WidgetGetBinding(fsu, "yvalue", &yvalue);
 
-	textbox_printf(fsu->input, fsu->format,
+	AG_TextboxPrintf(fsu->input, fsu->format,
 	    *xvalue/fsu->unit->divider,
 	    *yvalue/fsu->unit->divider);
 
-	widget_binding_unlock(xvalueb);
-	widget_binding_unlock(yvalueb);
+	AG_WidgetUnlockBinding(xvalueb);
+	AG_WidgetUnlockBinding(yvalueb);
 }
 
 void
-mfspinbutton_add_value(struct mfspinbutton *fsu, const char *which, double inc)
+AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 {
-	struct widget_binding *valueb, *minb, *maxb;
+	AG_WidgetBinding *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
 
 	inc *= fsu->unit->divider;
 
-	valueb = widget_get_binding(fsu, which, &value);
-	minb = widget_get_binding(fsu, "min", &min);
-	maxb = widget_get_binding(fsu, "max", &max);
+	valueb = AG_WidgetGetBinding(fsu, which, &value);
+	minb = AG_WidgetGetBinding(fsu, "min", &min);
+	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
-	case WIDGET_DOUBLE:
+	case AG_WIDGET_DOUBLE:
 		*(double *)value = *(double *)value+inc < *min ? *min :
 		                   *(double *)value+inc > *max ? *max :
 				   *(double *)value+inc;
 		break;
-	case WIDGET_FLOAT:
+	case AG_WIDGET_FLOAT:
 		*(float *)value = *(float *)value+inc < *min ? *min :
 		                  *(float *)value+inc > *max ? *max :
 				  *(float *)value+inc;
@@ -422,84 +423,84 @@ mfspinbutton_add_value(struct mfspinbutton *fsu, const char *which, double inc)
 	default:
 		break;
 	}
-	event_post(NULL, fsu, "mfspinbutton-changed", "%s", which);
-	widget_binding_modified(valueb);
+	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
+	AG_WidgetBindingChanged(valueb);
 
-	widget_binding_unlock(valueb);
-	widget_binding_unlock(minb);
-	widget_binding_unlock(maxb);
+	AG_WidgetUnlockBinding(valueb);
+	AG_WidgetUnlockBinding(minb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-mfspinbutton_set_value(struct mfspinbutton *fsu, const char *which,
+AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
     double nvalue)
 {
-	struct widget_binding *valueb, *minb, *maxb;
+	AG_WidgetBinding *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
 
-	valueb = widget_get_binding(fsu, which, &value);
-	minb = widget_get_binding(fsu, "min", &min);
-	maxb = widget_get_binding(fsu, "max", &max);
+	valueb = AG_WidgetGetBinding(fsu, which, &value);
+	minb = AG_WidgetGetBinding(fsu, "min", &min);
+	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
-	case WIDGET_DOUBLE:
+	case AG_WIDGET_DOUBLE:
 		*(double *)value = nvalue < *min ? *min :
 		                   nvalue > *max ? *max :
 				   nvalue;
 		break;
-	case WIDGET_FLOAT:
+	case AG_WIDGET_FLOAT:
 		*(float *)value = nvalue < *min ? *min :
 		                  nvalue > *max ? *max :
 				  (float)nvalue;
 		break;
 	}
-	event_post(NULL, fsu, "mfspinbutton-changed", "%s", which);
-	widget_binding_modified(valueb);
+	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
+	AG_WidgetBindingChanged(valueb);
 
-	widget_binding_unlock(valueb);
-	widget_binding_unlock(minb);
-	widget_binding_unlock(maxb);
+	AG_WidgetUnlockBinding(valueb);
+	AG_WidgetUnlockBinding(minb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-mfspinbutton_set_min(struct mfspinbutton *fsu, double nmin)
+AG_MFSpinbuttonSetMin(AG_MFSpinbutton *fsu, double nmin)
 {
-	struct widget_binding *minb;
+	AG_WidgetBinding *minb;
 	void *min;
 	
-	minb = widget_get_binding(fsu, "min", &min);
+	minb = AG_WidgetGetBinding(fsu, "min", &min);
 	switch (minb->vtype) {
-	case WIDGET_DOUBLE:
+	case AG_WIDGET_DOUBLE:
 		*(double *)min = nmin;
 		break;
-	case WIDGET_FLOAT:
+	case AG_WIDGET_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
 	}
-	widget_binding_unlock(minb);
+	AG_WidgetUnlockBinding(minb);
 }
 
 void
-mfspinbutton_set_max(struct mfspinbutton *fsu, double nmax)
+AG_MFSpinbuttonSetMax(AG_MFSpinbutton *fsu, double nmax)
 {
-	struct widget_binding *maxb;
+	AG_WidgetBinding *maxb;
 	void *max;
 	
-	maxb = widget_get_binding(fsu, "max", &max);
+	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 	switch (maxb->vtype) {
-	case WIDGET_DOUBLE:
+	case AG_WIDGET_DOUBLE:
 		*(double *)max = nmax;
 		break;
-	case WIDGET_FLOAT:
+	case AG_WIDGET_FLOAT:
 		*(float *)max = (float)nmax;
 		break;
 	}
-	widget_binding_unlock(maxb);
+	AG_WidgetUnlockBinding(maxb);
 }
 
 void
-mfspinbutton_set_increment(struct mfspinbutton *fsu, double inc)
+AG_MFSpinbuttonSetIncrement(AG_MFSpinbutton *fsu, double inc)
 {
 	pthread_mutex_lock(&fsu->lock);
 	fsu->inc = inc;
@@ -507,7 +508,7 @@ mfspinbutton_set_increment(struct mfspinbutton *fsu, double inc)
 }
 
 void
-mfspinbutton_set_precision(struct mfspinbutton *fsu, const char *mode,
+AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *fsu, const char *mode,
     int precision)
 {
 	char ps[8];
@@ -521,14 +522,14 @@ mfspinbutton_set_precision(struct mfspinbutton *fsu, const char *mode,
 }
 
 void
-mfspinbutton_select_unit(struct mfspinbutton *fsu, const char *uname)
+AG_MFSpinbuttonSelectUnit(AG_MFSpinbutton *fsu, const char *uname)
 {
-	struct tlist_item *it;
+	AG_TlistItem *it;
 
 	pthread_mutex_lock(&fsu->units->list->lock);
-	tlist_unselect_all(fsu->units->list);
+	AG_TlistDeselectAll(fsu->units->list);
 	TAILQ_FOREACH(it, &fsu->units->list->items, items) {
-		const struct unit *u = it->p1;
+		const AG_Unit *u = it->p1;
 
 		if (strcmp(u->key, uname) == 0) {
 			it->selected++;
@@ -541,30 +542,30 @@ mfspinbutton_select_unit(struct mfspinbutton *fsu, const char *uname)
 }
 
 void
-mfspinbutton_set_writeable(struct mfspinbutton *fsu, int writeable)
+AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *fsu, int writeable)
 {
 	pthread_mutex_lock(&fsu->lock);
 	fsu->writeable = writeable;
-	textbox_set_writeable(fsu->input, writeable);
+	AG_TextboxSetWriteable(fsu->input, writeable);
 	if (writeable) {
-		button_enable(fsu->xincbu);
-		button_enable(fsu->xdecbu);
-		button_enable(fsu->yincbu);
-		button_enable(fsu->ydecbu);
+		AG_ButtonEnable(fsu->xincbu);
+		AG_ButtonEnable(fsu->xdecbu);
+		AG_ButtonEnable(fsu->yincbu);
+		AG_ButtonEnable(fsu->ydecbu);
 	} else {
-		button_disable(fsu->xincbu);
-		button_disable(fsu->xdecbu);
-		button_disable(fsu->yincbu);
-		button_disable(fsu->ydecbu);
+		AG_ButtonDisable(fsu->xincbu);
+		AG_ButtonDisable(fsu->xdecbu);
+		AG_ButtonDisable(fsu->yincbu);
+		AG_ButtonDisable(fsu->ydecbu);
 	}
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 void
-mfspinbutton_set_range(struct mfspinbutton *fsu, double min, double max)
+AG_MFSpinbuttonSetRange(AG_MFSpinbutton *fsu, double min, double max)
 {
 	pthread_mutex_lock(&fsu->lock);
-	mfspinbutton_set_min(fsu, min);
-	mfspinbutton_set_max(fsu, max);
+	AG_MFSpinbuttonSetMin(fsu, min);
+	AG_MFSpinbuttonSetMax(fsu, max);
 	pthread_mutex_unlock(&fsu->lock);
 }

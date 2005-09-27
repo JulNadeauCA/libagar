@@ -1,4 +1,4 @@
-/*	$Csoft: matview.c,v 1.1 2005/09/11 02:33:45 vedge Exp $	*/
+/*	$Csoft: matview.c,v 1.2 2005/09/11 07:05:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <errno.h>
 
-static struct widget_ops matview_ops = {
+static AG_WidgetOps matview_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -48,33 +48,33 @@ static struct widget_ops matview_ops = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	matview_draw_numerical,
-	matview_scale
+	AG_MatviewDrawNumerical,
+	AG_MatviewScale
 };
 
-struct matview *
-matview_new(void *parent, struct mat *mat, u_int flags)
+AG_Matview *
+AG_MatviewNew(void *parent, struct mat *mat, u_int flags)
 {
-	struct matview *mv;
+	AG_Matview *mv;
 
-	mv = Malloc(sizeof(struct matview), M_OBJECT);
-	matview_init(mv, mat, flags);
-	object_attach(parent, mv);
+	mv = Malloc(sizeof(AG_Matview), M_OBJECT);
+	AG_MatviewInit(mv, mat, flags);
+	AG_ObjectAttach(parent, mv);
 	return (mv);
 }
 
 static void
 matview_keydown(int argc, union evarg *argv)
 {
-	struct matview *mv = argv[0].p;
+	AG_Matview *mv = argv[0].p;
 	int keysym = argv[1].i;
 
 	switch (keysym) {
 	case SDLK_g:
-		WIDGET_OPS(mv)->draw = matview_draw_greyscale;
+		AGWIDGET_OPS(mv)->draw = AG_MatviewDrawGreyscale;
 		break;
 	case SDLK_n:
-		WIDGET_OPS(mv)->draw = matview_draw_numerical;
+		AGWIDGET_OPS(mv)->draw = AG_MatviewDrawNumerical;
 		break;
 	case SDLK_EQUALS:
 		mv->scale++;
@@ -90,23 +90,23 @@ matview_keydown(int argc, union evarg *argv)
 static void
 matview_mousebuttondown(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
+	AG_Button *bu = argv[0].p;
 
-	widget_focus(bu);
+	AG_WidgetFocus(bu);
 }
 
 void
-matview_init(struct matview *mv, struct mat *mat, u_int flags)
+AG_MatviewInit(AG_Matview *mv, struct mat *mat, u_int flags)
 {
-	widget_init(mv, "matview", &matview_ops, WIDGET_WFILL|WIDGET_HFILL|
-	                                         WIDGET_CLIPPING|
-						 WIDGET_FOCUSABLE);
+	AG_WidgetInit(mv, "matview", &matview_ops,
+	    AG_WIDGET_WFILL|AG_WIDGET_HFILL|AG_WIDGET_CLIPPING|
+	    AG_WIDGET_FOCUSABLE);
 	mv->mat = mat;
 	mv->flags = flags;
 	mv->hspace = 2;
 	mv->vspace = 2;
-	mv->hbar = scrollbar_new(mv, SCROLLBAR_HORIZ);
-	mv->vbar = scrollbar_new(mv, SCROLLBAR_VERT);
+	mv->hbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ);
+	mv->vbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_VERT);
 	mv->xoffs = 0;
 	mv->yoffs = 0;
 	mv->scale = 4;
@@ -114,110 +114,112 @@ matview_init(struct matview *mv, struct mat *mat, u_int flags)
 	mv->pre_n = mat->n;
 	mv->numfmt = "%g";
 	
-	widget_bind(mv->hbar, "value", WIDGET_INT, &mv->xoffs);
-	widget_bind(mv->vbar, "value", WIDGET_INT, &mv->yoffs);
-	widget_bind(mv->hbar, "max", WIDGET_INT, &mv->mat->m);
-	widget_bind(mv->vbar, "max", WIDGET_INT, &mv->mat->n);
-	widget_set_int(mv->hbar, "min", 0);
-	widget_set_int(mv->vbar, "min", 0);
+	AG_WidgetBind(mv->hbar, "value", AG_WIDGET_INT, &mv->xoffs);
+	AG_WidgetBind(mv->vbar, "value", AG_WIDGET_INT, &mv->yoffs);
+	AG_WidgetBind(mv->hbar, "max", AG_WIDGET_INT, &mv->mat->m);
+	AG_WidgetBind(mv->vbar, "max", AG_WIDGET_INT, &mv->mat->n);
+	AG_WidgetSetInt(mv->hbar, "min", 0);
+	AG_WidgetSetInt(mv->vbar, "min", 0);
 
-	text_prescale("-00", &mv->ent_w, &mv->ent_h);
-	event_new(mv, "window-keydown", matview_keydown, NULL);
-	event_new(mv, "window-mousebuttondown", matview_mousebuttondown, NULL);
+	AG_TextPrescale("-00", &mv->ent_w, &mv->ent_h);
+	AG_SetEvent(mv, "window-keydown", matview_keydown, NULL);
+	AG_SetEvent(mv, "window-mousebuttondown", matview_mousebuttondown,
+	    NULL);
 }
 
 void
-matview_set_numfmt(struct matview *mv, const char *fmt)
+AG_MatviewSetNumericalFmt(AG_Matview *mv, const char *fmt)
 {
 	mv->numfmt = fmt;
 }
 
 void
-matview_prescale(struct matview *mv, const char *text, u_int m, u_int n)
+AG_MatviewPrescale(AG_Matview *mv, const char *text, u_int m, u_int n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;
-	text_prescale(text, &mv->ent_w, &mv->ent_h);
+	AG_TextPrescale(text, &mv->ent_w, &mv->ent_h);
 }
 
 void
-matview_scale(void *p, int w, int h)
+AG_MatviewScale(void *p, int w, int h)
 {
-	struct matview *mv = p;
+	AG_Matview *mv = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
+		AGWIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
 		    mv->hspace*2;
-		WIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
+		AGWIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
 		    mv->vspace*2;
 		return;
 	}
 
-	WIDGET(mv->hbar)->x = 0;
-	WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->button_size;
-	WIDGET(mv->hbar)->w = WIDGET(mv)->w;
-	WIDGET(mv->hbar)->h = mv->hbar->button_size;
+	AGWIDGET(mv->hbar)->x = 0;
+	AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->button_size;
+	AGWIDGET(mv->hbar)->w = AGWIDGET(mv)->w;
+	AGWIDGET(mv->hbar)->h = mv->hbar->button_size;
 
-	WIDGET(mv->vbar)->x = WIDGET(mv)->w - mv->vbar->button_size;
-	WIDGET(mv->vbar)->y = mv->vbar->button_size;
-	WIDGET(mv->vbar)->w = mv->vbar->button_size;
-	WIDGET(mv->vbar)->h = WIDGET(mv)->h - mv->vbar->button_size;
+	AGWIDGET(mv->vbar)->x = AGWIDGET(mv)->w - mv->vbar->button_size;
+	AGWIDGET(mv->vbar)->y = mv->vbar->button_size;
+	AGWIDGET(mv->vbar)->w = mv->vbar->button_size;
+	AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h - mv->vbar->button_size;
 }
 
 void
-matview_draw_numerical(void *p)
+AG_MatviewDrawNumerical(void *p)
 {
 	char text[8];
-	struct matview *mv = p;
+	AG_Matview *mv = p;
 	struct mat *M = mv->mat;
 	u_int m, n;
 	SDL_Surface *su;
 	int x, y;
 
-	primitives.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
-	    COLOR(BG_COLOR));
+	agPrim.box(mv, 0, 0, AGWIDGET(mv)->w, AGWIDGET(mv)->h, -1,
+	    AG_COLOR(BG_COLOR));
 
 	for (m = 0, y = -mv->yoffs*mv->ent_h;
-	     m <= M->m && y < WIDGET(mv)->h;
+	     m <= M->m && y < AGWIDGET(mv)->h;
 	     m++, y += (mv->ent_h + mv->vspace)) {
 		for (n = 0, x = -mv->xoffs*mv->ent_w;
-		     n <= M->n && x < WIDGET(mv)->w;
+		     n <= M->n && x < AGWIDGET(mv)->w;
 		     n++, x += (mv->ent_w + mv->hspace)) {
 			if (m == 0) {
 				snprintf(text, sizeof(text), "%d", n);
 			} else if (n == 0) {
 				snprintf(text, sizeof(text), "%d", m);
 			} else {
-				primitives.box(mv, x, y,
+				agPrim.box(mv, x, y,
 				    mv->ent_w, mv->ent_h, -1,
-				    COLOR(FRAME_COLOR));
+				    AG_COLOR(FRAME_COLOR));
 				snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
-			su = text_render(NULL, -1, COLOR(TEXT_COLOR), text);
-			widget_blit(mv, su, x, y);
+			su = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
+			    text);
+			AG_WidgetBlit(mv, su, x, y);
 			SDL_FreeSurface(su);
 		}
 	}
 }
 
 void
-matview_draw_greyscale(void *p)
+AG_MatviewDrawGreyscale(void *p)
 {
-	struct matview *mv = p;
+	AG_Matview *mv = p;
 	struct mat *M = mv->mat;
 	SDL_Surface *su;
 	u_int m, n;
 	int x, y;
 
-	primitives.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
-	    COLOR(BG_COLOR));
+	agPrim.box(mv, 0, 0, AGWIDGET(mv)->w, AGWIDGET(mv)->h, -1,
+	    AG_COLOR(BG_COLOR));
 
 	for (m = 1, y = -mv->yoffs*mv->scale;
-	     m <= M->m && y < WIDGET(mv)->h;
+	     m <= M->m && y < AGWIDGET(mv)->h;
 	     m++, y += mv->scale) {
 		for (n = 1, x = -mv->xoffs*mv->scale;
-		     n <= M->n && x < WIDGET(mv)->w;
+		     n <= M->n && x < AGWIDGET(mv)->w;
 		     n++, x += mv->scale) {
 		     	double dv = M->mat[m][n];
 			SDL_Rect rd;
@@ -226,28 +228,28 @@ matview_draw_greyscale(void *p)
 			u_int vi;
 
 			if (dv == HUGE_VAL) {
-				c = SDL_MapRGB(vfmt, 200, 0, 0);
+				c = SDL_MapRGB(agVideoFmt, 200, 0, 0);
 			} else {
 #if 0
 				if (dv > 0.0) {
 					vi = 30 + ((u_int)(dv) - 30);
 					v8 = vi < 255 ? (Uint8)vi : 255;
-					c = SDL_MapRGB(vfmt, v8, v8, 0);
+					c = SDL_MapRGB(agVideoFmt, v8, v8, 0);
 				} else {
 					vi = 30 + ((u_int)(fabs(dv)) - 30);
 					v8 = vi < 255 ? (Uint8)vi : 255;
-					c = SDL_MapRGB(vfmt, v8, 0, v8);
+					c = SDL_MapRGB(agVideoFmt, v8, 0, v8);
 				}
 #else
 				c = (Uint32)dv;
 #endif
 			}
 			if (dv != 0.0) {
-				rd.x = WIDGET(mv)->cx+x;
-				rd.y = WIDGET(mv)->cy+y;
+				rd.x = AGWIDGET(mv)->cx+x;
+				rd.y = AGWIDGET(mv)->cy+y;
 				rd.w = mv->scale;
 				rd.h = mv->scale;
-				SDL_FillRect(view->v, &rd, c);
+				SDL_FillRect(agView->v, &rd, c);
 			}
 		}
 	}

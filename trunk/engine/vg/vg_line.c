@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.27 2005/06/30 06:26:23 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.28 2005/07/30 05:01:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include "vg_primitive.h"
 
 void
-vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
+VG_DrawLineSegments(VG *vg, VG_Element *vge)
 {
 	int i;
 
@@ -48,32 +48,32 @@ vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
 		if (vg->flags & VG_ANTIALIAS) {
 			double x1, y1, x2, y2;
 
-			vg_vtxcoords2d(vg, &vge->vtx[i], &x1, &y1);
-			vg_vtxcoords2d(vg, &vge->vtx[i+1], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			VG_VtxCoords2d(vg, &vge->vtx[i], &x1, &y1);
+			VG_VtxCoords2d(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 		} else {
 			int x1, y1, x2, y2;
 
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x1, &y1);
-			vg_vtxcoords2i(vg, &vge->vtx[i+1], &x2, &y2);
-			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x1, &y1);
+			VG_VtxCoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 		}
 	}
 }
 
 void
-vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
+VG_DrawLineStrip(VG *vg, VG_Element *vge)
 {
 	int i;
 
 	if (vg->flags & VG_ANTIALIAS) {
 		double x1, y1, x2, y2;
 
-		vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 			x1 = x2;
 			y1 = y2;
@@ -81,10 +81,10 @@ vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 	} else {
 		int x1, y1, x2, y2;
 
-		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
-			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 			x1 = x2;
 			y1 = y2;
 		}
@@ -92,45 +92,45 @@ vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 }
 
 void
-vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
+VG_DrawLineLoop(VG *vg, VG_Element *vge)
 {
 	if (vg->flags & VG_ANTIALIAS) {
 		double x1, y1, x2, y2;
 		double x0, y0;
 		int i;
 
-		vg_vtxcoords2d(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2d(vg, &vge->vtx[i], &x2, &y2);
-			vg_wuline_primitive(vg, x1, y1, x2, y2,
+			VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 			x1 = x2;
 			y1 = y2;
 		}
-		vg_wuline_primitive(vg, x0, y0, x1, y1,
+		VG_WuLinePrimitive(vg, x0, y0, x1, y1,
 		    vge->line_st.thickness, vge->color);
 	} else {
 		int x1, y1, x2, y2;
 		int x0, y0;
 		int i;
 
-		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
-			vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 			x1 = x2;
 			y1 = y2;
 		}
-		vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
+		VG_LinePrimitive(vg, x0, y0, x1, y1, vge->color);
 	}
 }
 
 static void
-extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	double xmin, xmax;
 	double ymin, ymax;
@@ -159,7 +159,7 @@ extent(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
  * point on a line.
  */
 static float
-intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
+intsect_line(VG *vg, int x1, int y1, int x2, int y2, int mx, int my)
 {
 	int dx, dy;
 	int inc1, inc2;
@@ -187,7 +187,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 			ydir = 1;
 			xend = x2;
 		}
-		vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+		VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 		if (rho < closest) { closest = rho; }
 
 		if (((y2-y1)*ydir) > 0) {
@@ -199,7 +199,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 					y++;
 					d += inc2;
 				}
-				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 				if (rho <= closest) {
 					closest = rho;
 				} else {
@@ -215,7 +215,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 					y--;
 					d += inc2;
 				}
-				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 				if (rho <= closest) {
 					closest = rho;
 				} else {
@@ -238,7 +238,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 			yend = y2;
 			xdir = 1;
 		}
-		vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+		VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 		if (rho < closest) { closest = rho; }
 
 		if (((x2-x1)*xdir) > 0) {
@@ -250,7 +250,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 					x++;
 					d += inc2;
 				}
-				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 				if (rho <= closest) {
 					closest = rho;
 				} else {
@@ -266,7 +266,7 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 					x--;
 					d += inc2;
 				}
-				vg_car2pol(vg, mx-x, my-y, &rho, &theta);
+				VG_Car2Pol(vg, mx-x, my-y, &rho, &theta);
 				if (rho <= closest) {
 					closest = rho;
 				} else {
@@ -279,21 +279,21 @@ intsect_line(struct vg *vg, int x1, int y1, int x2, int y2, int mx, int my)
 }
 
 float
-vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
+VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 {
 	int mx = VG_RASX(vg,x);
 	int my = VG_RASX(vg,y);
 	double rho, theta;
 	float d, min_distance = FLT_MAX;
-	struct vg_vertex v1, v2;
+	VG_Vtx v1, v2;
 	int x1, y1, x2, y2, x0, y0;
 	int i;
 
 	switch (vge->type) {
 	case VG_LINE_STRIP:
-		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
@@ -304,8 +304,8 @@ vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 		break;
 	case VG_LINES:
 		for (i = 0; i < vge->nvtx-1; i+=2) {
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x1, &y1);
-			vg_vtxcoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x1, &y1);
+			VG_VtxCoords2i(vg, &vge->vtx[i+1], &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
@@ -313,11 +313,11 @@ vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 		break;
 	case VG_LINE_LOOP:
 	case VG_POLYGON:
-		vg_vtxcoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			vg_vtxcoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
@@ -334,32 +334,32 @@ vg_line_intsect(struct vg *vg, struct vg_element *vge, double x, double y)
 	return (VG_VECLENF(vg,min_distance));
 }
 
-const struct vg_element_ops vg_lines_ops = {
+const VG_ElementOps vgLinesOps = {
 	N_("Line"),
 	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	vg_draw_line_segments,
+	VG_DrawLineSegments,
 	extent,
-	vg_line_intsect
+	VG_LineIntersect
 };
-const struct vg_element_ops vg_line_strip_ops = {
+const VG_ElementOps vgLineStripOps = {
 	N_("Line strip"),
 	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	vg_draw_line_strip,
+	VG_DrawLineStrip,
 	extent,
-	vg_line_intsect
+	VG_LineIntersect
 };
-const struct vg_element_ops vg_line_loop_ops = {
+const VG_ElementOps vgLineLoopOps = {
 	N_("Line loop"),
 	VGLINES_ICON,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	vg_draw_line_loop,
+	VG_DrawLineLoop,
 	extent,
-	vg_line_intsect
+	VG_LineIntersect
 };
 
 #ifdef EDITION
@@ -370,13 +370,13 @@ static enum {
 } mode = MODE_STRIP;
 
 static int seq;
-static struct vg_element *cur_line;
-static struct vg_vertex *cur_vtx;
+static VG_Element *cur_line;
+static VG_Vtx *cur_vtx;
 
 static void
-line_tool_init(void *t)
+line_AG_MaptoolInit(void *t)
 {
-	tool_push_status(t, _("Specify first point."));
+	AG_MaptoolPushStatus(t, _("Specify first point."));
 	seq = 0;
 	cur_line = NULL;
 	cur_vtx = NULL;
@@ -391,20 +391,20 @@ line_tool_pane(void *t, void *con)
 		N_("Line loop"),
 		NULL
 	};
-	struct radio *rad;
+	AG_Radio *rad;
 
-	rad = radio_new(con, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &mode);
+	rad = AG_RadioNew(con, mode_items);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &mode);
 }
 
 static int
 line_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
     int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double x, y;
 	
-	vg_map2vec(vg, xmap, ymap, &x, &y);
+	VG_Map2Vec(vg, xmap, ymap, &x, &y);
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
 
@@ -419,26 +419,26 @@ line_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
 static int
 line_mousebuttondown(void *t, int xmap, int ymap, int btn)
 {
-	struct vg *vg = TOOL(t)->p;
+	VG *vg = TOOL(t)->p;
 	double vx, vy;
 
 	switch (mode) {
 	case MODE_SEGMENTS:
 		if (btn == 1) {
 			if (seq++ == 0) {
-				cur_line = vg_begin_element(vg, VG_LINES);
-				vg_map2vec(vg, xmap, ymap, &vx, &vy);
-				vg_vertex2(vg, vx, vy);
-				cur_vtx = vg_vertex2(vg, vx, vy);
+				cur_line = VG_Begin(vg, VG_LINES);
+				VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+				VG_Vertex2(vg, vx, vy);
+				cur_vtx = VG_Vertex2(vg, vx, vy);
 
-				tool_push_status(t, _("Specify second point "
-				                      "or [undo line]."));
+				AG_MaptoolPushStatus(t,
+				    _("Specify second point or [undo line]."));
 			} else {
 				goto finish;
 			}
 		} else {
 			if (cur_line != NULL) {
-				vg_destroy_element(vg, cur_line);
+				VG_DestroyElement(vg, cur_line);
 			}
 			goto finish;
 		}
@@ -451,27 +451,27 @@ line_mousebuttondown(void *t, int xmap, int ymap, int btn)
 				if (vg->cur_block != NULL)
 					fatal("block");
 #endif
-				cur_line = vg_begin_element(vg,
+				cur_line = VG_Begin(vg,
 				    mode == MODE_STRIP ? VG_LINE_STRIP :
 							 VG_LINE_LOOP);
-				vg_map2vec(vg, xmap, ymap, &vx, &vy);
-				vg_vertex2(vg, vx, vy);
+				VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+				VG_Vertex2(vg, vx, vy);
 			} else {
-				tool_pop_status(t);
+				AG_MaptoolPopStatus(t);
 			}
-			vg_map2vec(vg, xmap, ymap, &vx, &vy);
-			cur_vtx = vg_vertex2(vg, vx, vy);
+			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
+			cur_vtx = VG_Vertex2(vg, vx, vy);
 			vg->redraw++;
 
-			tool_push_status(t, _("Specify point %d or "
+			AG_MaptoolPushStatus(t, _("Specify point %d or "
 			                      "[close/undo vertex]."), seq+1);
 		} else {
 			if (cur_vtx != NULL) {
 				if (cur_line->nvtx <= 2) {
-					vg_destroy_element(vg, cur_line);
+					VG_DestroyElement(vg, cur_line);
 					cur_line = NULL;
 				} else {
-					vg_pop_vertex(vg);
+					VG_PopVertex(vg);
 				}
 				vg->redraw++;
 			}
@@ -486,16 +486,16 @@ finish:
 	cur_line = NULL;
 	cur_vtx = NULL;
 	seq = 0;
-	tool_pop_status(t);
+	AG_MaptoolPopStatus(t);
 	return (1);
 }
 
-const struct tool_ops vg_line_tool = {
+const AG_MaptoolOps vg_line_tool = {
 	"Lines", N_("Line segments, strips and loops."),
 	VGLINES_ICON,
-	sizeof(struct tool),
+	sizeof(AG_Maptool),
 	0,
-	line_tool_init,
+	line_AG_MaptoolInit,
 	NULL,			/* destroy */
 	line_tool_pane,
 	NULL,			/* edit */
