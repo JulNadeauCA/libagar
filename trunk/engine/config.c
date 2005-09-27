@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.151 2005/09/27 00:25:16 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.152 2005/09/27 03:13:56 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -77,7 +77,7 @@
 
 const AG_Version agConfigVer = {
 	"agar config",
-	8, 0
+	8, 1
 };
 
 const AG_ObjectOps agConfigOps = {
@@ -194,7 +194,7 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetUint16(cfg, "view.min-w", 320);
 	AG_SetUint16(cfg, "view.min-h", 240);
 	AG_SetUint8(cfg, "view.depth", 32);
-	AG_SetUint8(cfg, "view.fps", 60);
+	AG_SetUint(cfg, "view.nominal-fps", 60);
 	AG_SetBool(cfg, "input.joysticks", 1);
 
 	/* Set the save directory path and create it as needed. */
@@ -251,7 +251,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 {
 	if (AG_ReadVersion(buf, &agConfigVer, NULL) != 0)
 		return (-1);
-	
+
 #ifdef DEBUG
 	agDebugLvl = AG_ReadUint8(buf);
 #else
@@ -270,7 +270,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	agMouseSpinIval = (int)AG_ReadUint16(buf);
 	agScreenshotQuality = (int)AG_ReadUint8(buf);
 	agTextTabWidth = (int)AG_ReadUint16(buf);
-
+	
 	agRcsMode = (int)AG_ReadUint8(buf);
 	AG_CopyString(agRcsHostname, buf, sizeof(agRcsHostname));
 	agRcsPort = (u_int)AG_ReadUint16(buf);
@@ -351,7 +351,6 @@ AG_ConfigWindow(AG_Config *cfg, u_int flags)
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_HBox *hb;
-	AG_Button *button;
 	AG_Textbox *tbox;
 	AG_Checkbox *cbox;
 	AG_Notebook *nb;
@@ -552,12 +551,8 @@ AG_ConfigWindow(AG_Config *cfg, u_int flags)
 
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
-		button = AG_ButtonNew(hb, _("Close"));
-		AG_SetEvent(button, "button-pushed", AG_WindowHideGenEv, "%p",
-		    win);
-
-		button = AG_ButtonNew(hb, _("Save"));
-		AG_SetEvent(button, "button-pushed", save_config, NULL);
+		AG_ButtonAct(hb, _("Close"), 0, AGWINHIDE(win));
+		AG_ButtonAct(hb, _("Save"), 0, save_config, NULL);
 	}
 	agConfig->window = win;
 }

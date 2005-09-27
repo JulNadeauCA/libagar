@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.215 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.216 2005/09/27 00:25:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,10 +65,13 @@ int	agEventDebugLvl = DEBUG_UNDERRUNS|DEBUG_ASYNC;
 
 int	agEventAvg = 0;		/* Number of events in last frame */
 int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
+int	agBgPopupMenu = 0;	/* Background popup menu */
+int	agScreenshotKey = 0;	/* Disable capture key (F8) */
+int	agNoQuitKey = 0;	/* Disable quit key (ESC) */
 
-AG_Window *agFPSWindow;
-static AG_Graph *agFPSGraph;
-static AG_GraphItem *agFPSRefreshItem, *agFPSEventsItem, *agFPSIdlingItem;
+AG_Window *agPerfWindow;
+static AG_Graph *agPerfGraph;
+static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif	/* DEBUG */
 
 int agIdleThresh = 20;					/* Idling threshold */
@@ -96,47 +99,19 @@ const char *agEvArgTypeNames[] = {
 static void
 event_hotkey(SDL_Event *ev)
 {
-	switch (ev->key.keysym.sym) {
-	case SDLK_F8:
-		{
-			char path[MAXPATHLEN];
-	
-			AG_DumpSurface(agView->v, path);
-			AG_TextTmsg(AG_MSG_INFO, 1000,
-			    _("Screenshot saved to %s."), path);
-		}
-
-		break;
-	case SDLK_ESCAPE:
-		{
-			SDL_Event nev;
-#ifdef DEBUG
-			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				nev.type = SDL_USEREVENT;
-				SDL_PushEvent(&nev);
-				break;
-			}
-#endif
-			nev.type = SDL_QUIT;
-			SDL_PushEvent(&nev);
-		}
-		break;
-	default:
-		break;
-	}
 }
 
 #ifdef DEBUG
 /* XXX remove this once the graph widget implements polling. */
 static __inline__ void
-update_fpsgraph(void)
+update_perf_graph(void)
 {
 	static int einc = 0;
 
-	AG_GraphPlot(agFPSRefreshItem, agView->refresh.r);
-	AG_GraphPlot(agFPSEventsItem, agEventAvg * 30 / 10);
-	AG_GraphPlot(agFPSIdlingItem, agIdleAvg);
-	AG_GraphScroll(agFPSGraph, 1);
+	AG_GraphPlot(agPerfFPS, agView->rCur);
+	AG_GraphPlot(agPerfEvnts, agEventAvg * 30 / 10);
+	AG_GraphPlot(agPerfIdle, agIdleAvg);
+	AG_GraphScroll(agPerfGraph, 1);
 
 	if (++einc == 1) {
 		agEventAvg = 0;
@@ -145,29 +120,27 @@ update_fpsgraph(void)
 }
 
 static void
-init_fpsgraph(void)
+init_perf_graph(void)
 {
 	AG_Label *label;
 
-	agFPSWindow = AG_WindowNew(0, "event-fps-counter");
-	AG_WindowSetCaption(agFPSWindow, _("Refresh rate"));
-	AG_WindowSetPosition(agFPSWindow, AG_WINDOW_LOWER_CENTER, 0);
+	agPerfWindow = AG_WindowNew(0, "event-fps-counter");
+	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
+	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 
-	label = AG_LabelNew(agFPSWindow, AG_LABEL_POLLED,
+	label = AG_LabelNew(agPerfWindow, AG_LABEL_POLLED,
 	    "%dms (nom %dms), %d evnt, %dms idle",
-	    &agView->refresh.r, &agView->refresh.rnom, &agEventAvg,
+	    &agView->rCur, &agView->rNom, &agEventAvg,
 	    &agIdleAvg);
 	AG_LabelPrescale(label, "XXXms (nom XXXms), XX evnt, XXXms idle");
 
-	agFPSGraph = AG_GraphNew(agFPSWindow, _("Refresh rate"), AG_GRAPH_LINES,
+	agPerfGraph = AG_GraphNew(agPerfWindow, "agar-perf", AG_GRAPH_LINES,
 	    AG_GRAPH_ORIGIN, 100);
 	/* XXX use polling */
 
-	agFPSRefreshItem = AG_GraphAddItem(agFPSGraph, "refresh", 0, 160, 0,
-	    99);
-	agFPSEventsItem = AG_GraphAddItem(agFPSGraph, "event", 0, 0, 180, 99);
-	agFPSIdlingItem = AG_GraphAddItem(agFPSGraph, "idle", 180, 180, 180,
-	    99);
+	agPerfFPS = AG_GraphAddItem(agPerfGraph, "refresh", 0, 160, 0, 99);
+	agPerfEvnts = AG_GraphAddItem(agPerfGraph, "event", 0, 0, 180, 99);
+	agPerfIdle = AG_GraphAddItem(agPerfGraph, "idle", 180, 180, 180, 99);
 }
 #endif /* DEBUG */
 
@@ -185,12 +158,12 @@ AG_EventLoop_FixedFPS(void)
 	Uint32 Tr1, Tr2 = 0;
 
 #ifdef DEBUG
-	init_fpsgraph();
+	init_perf_graph();
 #endif
 	Tr1 = SDL_GetTicks();
 	for (;;) {
 		Tr2 = SDL_GetTicks();
-		if (Tr2-Tr1 >= agView->refresh.rnom) {
+		if (Tr2-Tr1 >= agView->rNom) {
 			pthread_mutex_lock(&agView->lock);
 			agView->ndirty = 0;
 
@@ -228,22 +201,23 @@ AG_EventLoop_FixedFPS(void)
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
-			agView->refresh.r = agView->refresh.rnom - (Tr1-Tr2);
+			agView->rCur = agView->rNom - (Tr1-Tr2);
 #ifdef DEBUG
-			if (agFPSWindow->visible)
-				update_fpsgraph();
+			if (agPerfWindow->visible)
+				update_perf_graph();
 #endif
-			if (agView->refresh.r < 1)
-				agView->refresh.r = 1;
+			if (agView->rCur < 1) {
+				agView->rCur = 1;
+			}
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
 #ifdef DEBUG
 			agEventAvg++;
 #endif
-		} else if (TAILQ_FIRST(&agTimeoutObjQ) != NULL) {      /* Safe */
+		} else if (TAILQ_FIRST(&agTimeoutObjQ) != NULL) {     /* Safe */
 			AG_ProcessTimeout(Tr2);
-		} else if (agView->refresh.r > agIdleThresh) {
-			SDL_Delay(agView->refresh.r - agIdleThresh);
+		} else if (agView->rCur > agIdleThresh) {
+			SDL_Delay(agView->rCur - agIdleThresh);
 #ifdef DEBUG
 			agIdleAvg = SDL_GetTicks() - Tr2;
 		} else {
@@ -272,7 +246,9 @@ static void
 event_dispatch(SDL_Event *ev)
 {
 	extern int agObjMgrExiting;
+	extern int agEditMode;
 	AG_Window *win;
+	int rv;
 
 	pthread_mutex_lock(&agView->lock);
 
@@ -296,42 +272,41 @@ event_dispatch(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		{
-			int rv = 1;
-
 #if defined(__APPLE__) && defined(HAVE_OPENGL)
-			if (agView->opengl)
-				ev->button.y = agView->h - ev->button.y;
+		if (agView->opengl)
+			ev->button.y = agView->h - ev->button.y;
 #endif
-			if (!TAILQ_EMPTY(&agView->windows)) {
-				rv = AG_WindowEvent(ev);
-			}
-			if (rv == 0 && ev->type == SDL_MOUSEBUTTONDOWN &&
-			    (ev->button.button == SDL_BUTTON_MIDDLE ||
-			     ev->button.button == SDL_BUTTON_RIGHT)) {
-				AG_Menu *me;
-				AG_MenuItem *mi;
-				AG_Window *win;
-				int x, y;
+		if (!TAILQ_EMPTY(&agView->windows)) {
+			rv = AG_WindowEvent(ev);
+		} else {
+			rv = 1;
+		}
+		if (rv == 0 && agBgPopupMenu &&
+		    ev->type == SDL_MOUSEBUTTONDOWN &&
+		    (ev->button.button == SDL_BUTTON_MIDDLE ||
+		     ev->button.button == SDL_BUTTON_RIGHT)) {
+			AG_Menu *me;
+			AG_MenuItem *mi;
+			AG_Window *win;
+			int x, y;
 
-				me = Malloc(sizeof(AG_Menu), M_OBJECT);
-				AG_MenuInit(me);
-				mi = me->sel_item = AG_MenuAddItem(me, NULL);
+			me = Malloc(sizeof(AG_Menu), M_OBJECT);
+			AG_MenuInit(me);
+			mi = me->sel_item = AG_MenuAddItem(me, NULL);
 
-				TAILQ_FOREACH_REVERSE(win, &agView->windows,
-				    windows, ag_windowq) {
-					if (strcmp(win->caption, "win-popup")
-					    == 0) {
-						continue;
-					}
-					AG_MenuAction(mi, win->caption,
-					    OBJ_ICON,
-					    unminimize_window, "%p", win);
+			TAILQ_FOREACH_REVERSE(win, &agView->windows,
+			    windows, ag_windowq) {
+				if (strcmp(win->caption, "win-popup")
+				    == 0) {
+					continue;
 				}
-				
-				AG_MouseGetState(&x, &y);
-				AG_MenuExpand(me, mi, x+4, y+4);
+				AG_MenuAction(mi, win->caption,
+				    OBJ_ICON,
+				    unminimize_window, "%p", win);
 			}
+				
+			AG_MouseGetState(&x, &y);
+			AG_MenuExpand(me, mi, x+4, y+4);
 		}
 		break;
 	case SDL_JOYAXISMOTION:
@@ -340,38 +315,61 @@ event_dispatch(SDL_Event *ev)
 		debug(DEBUG_JOY_EV, "SDL_JOY%s\n",
 		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
-		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
+		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
+		    "???");
 		AG_InputEvent(AG_INPUT_JOY, ev);
 		break;
 	case SDL_KEYDOWN:
-		event_hotkey(ev);
+		switch (ev->key.keysym.sym) {
+		case SDLK_F8:
+			if (!agScreenshotKey) {
+				char path[MAXPATHLEN];
+	
+				AG_DumpSurface(agView->v, path);
+				AG_TextTmsg(AG_MSG_INFO, 1000,
+				    _("Screenshot saved to %s."), path);
+			}
+			break;
+		case SDLK_ESCAPE:
+			if (!agNoQuitKey) {
+				SDL_Event nev;
+#ifdef DEBUG
+				if (ev->key.keysym.mod & KMOD_SHIFT) {
+					nev.type = SDL_USEREVENT;
+					SDL_PushEvent(&nev);
+					break;
+				}
+#endif
+				nev.type = SDL_QUIT;
+				SDL_PushEvent(&nev);
+			}
+			break;
+		default:
+			break;
+		}
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
 		debug(DEBUG_KEY_EV, "SDL_KEY%s keysym=%d u=%04x state=%s\n",
 		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
 		    (int)ev->key.keysym.sym, ev->key.keysym.unicode,
-		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
-		{
-			int rv = 0;
-
-			if (!TAILQ_EMPTY(&agView->windows)) {
-				rv = AG_WindowEvent(ev);
-			}
-			if (rv == 0)
-				AG_InputEvent(AG_INPUT_KEYBOARD, ev);
+		    (ev->key.state == SDL_PRESSED) ?
+		    "PRESSED" : "RELEASED");
+		if (!TAILQ_EMPTY(&agView->windows)) {
+			rv = AG_WindowEvent(ev);
+		} else {
+			rv = 0;
+		}
+		if (rv == 0) {
+			AG_InputEvent(AG_INPUT_KEYBOARD, ev);
 		}
 		break;
 	case SDL_QUIT:
 #ifdef EDITION
-		{
-			extern int agEditMode;
-
-			if (!agObjMgrExiting && agEditMode &&
-			    AG_ObjectChangedAll(agWorld)) {
-				agObjMgrExiting = 1;
-				AG_ObjMgrQuitDlg(agWorld);
-				break;
-			}
+		if (!agObjMgrExiting && agEditMode &&
+		    AG_ObjectChangedAll(agWorld)) {
+			agObjMgrExiting = 1;
+			AG_ObjMgrQuitDlg(agWorld);
+			break;
 		}
 #endif
 		/* FALLTHROUGH */
@@ -383,9 +381,7 @@ event_dispatch(SDL_Event *ev)
 		break;
 	}
 out:
-	/* Perform deferred window garbage collection. */
 	AG_ViewDetachQueued();
-
 	pthread_mutex_unlock(&agView->lock);
 }
 

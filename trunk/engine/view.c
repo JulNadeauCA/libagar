@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.190 2005/09/27 03:33:06 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.191 2005/09/27 06:15:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -102,6 +102,8 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	agView->modal_win = NULL;
 	agView->wop_win = NULL;
 	agView->focus_win = NULL;
+	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
+	agView->rCur = 0;
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
 	pthread_mutex_init(&agView->lock, &agRecursiveMutexAttr);
@@ -109,7 +111,6 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	depth = AG_Uint8(agConfig, "view.depth");
 	agView->w = AG_Uint16(agConfig, "view.w");
 	agView->h = AG_Uint16(agConfig, "view.h");
-	dprintf("setting mode %ux%ux%u\n", agView->w, agView->h, depth);
 
 	if (AG_Bool(agConfig, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
@@ -120,6 +121,8 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	    screenflags);
 	if (agView->depth == 8)
 		screenflags |= SDL_HWPALETTE;
+	
+	dprintf("Mode: %ux%ux%u\n", agView->w, agView->h, agView->depth);
 
 #ifdef HAVE_OPENGL
 	if (AG_Bool(agConfig, "view.opengl")) {
@@ -143,7 +146,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	/* Set the video mode. */
 	agView->v = SDL_SetVideoMode(agView->w, agView->h, 0, screenflags);
 	if (agView->v == NULL) {
-		AG_SetError(_("Setting %dx%dx%d mode: %s"),
+		AG_SetError("Setting %dx%dx%d mode: %s",
 		    agView->w, agView->h, agView->depth, SDL_GetError());
 		goto fail;
 	}
@@ -216,11 +219,6 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
-
-	if (AG_SetRefreshRate(AG_Uint8(agConfig, "view.fps")) == -1) {
-		fprintf(stderr, "%s\n", AG_GetError());
-		goto fail;
-	}
 	return (0);
 fail:
 	pthread_mutex_destroy(&agView->lock);
@@ -591,11 +589,11 @@ AG_SetRefreshRate(int fps)
 		return (-1);
 	}
 	pthread_mutex_lock(&agView->lock);
-	agView->refresh.r = 0;
-	agView->refresh.rnom = 1000/fps;
+	AG_SetUint(agConfig, "view.nominal-fps", fps);
+	agView->rNom = 1000/fps;
+	agView->rCur = 0;
 	pthread_mutex_unlock(&agView->lock);
-	AG_SetUint8(agConfig, "view.fps", fps);
-	dprintf("%d fps\n", fps);
+	dprintf("%u fps\n", fps);
 	return (0);
 }
 

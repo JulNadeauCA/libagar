@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.98 2005/09/27 00:25:16 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.99 2005/09/27 02:24:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -152,18 +152,21 @@ extern pthread_mutex_t agTimingLock;	/* engine.c */
 #define AG_LockTiming() pthread_mutex_lock(&agTimingLock)
 #define AG_UnlockTiming() pthread_mutex_unlock(&agTimingLock)
 
-#define AG_VIDEO_HWSURFACE	0x01
-#define AG_VIDEO_ASYNCBLIT	0x02
-#define AG_VIDEO_ANYFORMAT	0x04
-#define AG_VIDEO_HWPALETTE	0x08
-#define AG_VIDEO_DOUBLEBUF	0x10
-#define AG_VIDEO_FULLSCREEN	0x20
-#define AG_VIDEO_RESIZABLE	0x40
-#define AG_VIDEO_NOFRAME	0x80
+#define AG_VIDEO_HWSURFACE	0x001
+#define AG_VIDEO_ASYNCBLIT	0x002
+#define AG_VIDEO_ANYFORMAT	0x004
+#define AG_VIDEO_HWPALETTE	0x008
+#define AG_VIDEO_DOUBLEBUF	0x010
+#define AG_VIDEO_FULLSCREEN	0x020
+#define AG_VIDEO_RESIZABLE	0x040
+#define AG_VIDEO_NOFRAME	0x080
+#define AG_VIDEO_BGPOPUPMENU	0x100
 
-#define AG_INPUT_KBDMOUSE	0x01
-#define AG_INPUT_JOYSTICKS	0x02
-#define AG_INPUT_ALL		0xff
+#define AG_INPUT_KBDMOUSE		0x01
+#define AG_INPUT_JOYSTICKS		0x02
+#define AG_INPUT_SCREENSHOT_KEY		0x04
+#define AG_INPUT_NO_QUIT_KEY		0x08
+#define AG_INPUT_ALL			0xff
 
 #define AG_NETWORK_SERVERMODE	0x01
 #define AG_NETWORK_RCS		0x02

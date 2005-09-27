@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.106 2005/09/20 10:22:13 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.107 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -440,7 +440,6 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Button *bu;
 	va_list args;
 
 	va_start(args, format);
@@ -457,16 +456,15 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	bu = AG_ButtonNew(vb, _("Ok"));
-	AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
+	AG_ButtonAct(vb, _("Ok"), AG_BUTTON_FOCUS, AGWINDETACH(win));
 
-	AG_WidgetFocus(bu);
 	AG_WindowShow(win);
 }
 
 /* Display a message for a given period of time. */
 void
-AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format, ...)
+AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
+    ...)
 {
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
@@ -536,7 +534,6 @@ AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
 	AG_Window *win;
 	AG_VBox *vb;
 	va_list args;
-	AG_Button *button;
 	AG_FSpinbutton *fsb;
 
 	va_start(args, format);
@@ -551,15 +548,16 @@ AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
 	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
-	fsb = AG_FSpinbuttonNew(vb, unit, _("Number: "));
-	AGWIDGET(fsb)->flags |= AG_WIDGET_WFILL;
-	AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, fp);
-	AG_FSpinbuttonSetRange(fsb, min, max);
-	AG_SetEvent(fsb, "fspinbutton-return", AGWINDETACH(win));
+	{
+		fsb = AG_FSpinbuttonNew(vb, unit, _("Number: "));
+		AGWIDGET(fsb)->flags |= AG_WIDGET_WFILL;
+		AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, fp);
+		AG_FSpinbuttonSetRange(fsb, min, max);
+		AG_SetEvent(fsb, "fspinbutton-return", AGWINDETACH(win));
+	}
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	button = AG_ButtonNew(vb, _("Ok"));
-	AG_SetEvent(button, "button-pushed", AGWINDETACH(win));
+	AG_ButtonAct(vb, _("Ok"), 0, AGWINDETACH(win));
 
 	/* TODO test type */
 
@@ -575,7 +573,6 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	AG_Window *win;
 	AG_VBox *vb;
 	va_list args;
-	AG_Button *button;
 	AG_Textbox *tb;
 
 	va_start(args, msgfmt);
@@ -587,9 +584,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
-	{
-		AG_LabelNew(vb, AG_LABEL_STATIC, msg);
-	}
+	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
@@ -600,10 +595,8 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	}
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	{
-		button = AG_ButtonNew(vb, _("Ok"));
-		AG_SetEvent(button, "button-pushed", AGWINDETACH(win));
-	}
+	AG_ButtonAct(vb, _("Ok"), 0, AGWINDETACH(win));
+
 	AG_WindowShow(win);
 	AG_WidgetFocus(tb);
 }
@@ -623,7 +616,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 	va_list ap;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE|
-	    AG_WINDOW_NO_TITLEBAR, NULL);
+	                   AG_WINDOW_NO_TITLEBAR, NULL);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
@@ -662,8 +655,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 		AG_EVENT_INSERT_VAL(ev, AG_EVARG_STRING, s, &tb->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
-		btn = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowShow(win);

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.44 2005/09/22 04:24:44 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.45 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -348,7 +348,6 @@ insert_brush_dlg(int argc, union evarg *argv)
 	AG_Tlist *tl;
 	AG_Box *bo;
 	AG_Textbox *tb_name;
-	AG_Button *bu;
 	AG_Radio *rad_types;
 	AG_Checkbox *cb_oneshot;
 	static const char *types[] = {
@@ -393,13 +392,10 @@ insert_brush_dlg(int argc, union evarg *argv)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		bu = AG_ButtonNew(bo, _("OK"));
-		AG_SetEvent(bu, "button-pushed", insert_brush,
+		AG_ButtonAct(bo, _("OK"), 0, insert_brush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
-		        cb_oneshot, win);
-	
-		bu = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
+		    cb_oneshot, win);
+		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -488,7 +484,6 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 
 	ntab = AG_NotebookAddTab(nb, _("Brushes"), AG_BOX_VERT);
 	{
-		AG_Button *bu;
 		AG_Tlist *tl;
 
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
@@ -497,10 +492,8 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);
 
-		bu = AG_ButtonNew(ntab, _("Create new brush"));
-		AGWIDGET(bu)->flags |= AG_WIDGET_WFILL;
-		AG_SetEvent(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
-		    tv, px, win);
+		AG_ButtonAct(ntab, _("Create new brush"), AG_BUTTON_WFILL,
+		    insert_brush_dlg, "%p,%p,%p", tv, px, win);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);

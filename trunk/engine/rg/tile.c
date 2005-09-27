@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.87 2005/09/22 02:30:26 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.88 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1289,14 +1289,9 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_Button *bu;
-	
-		bu = AG_ButtonNew(bo, _("OK"));
-		AG_SetEvent(bu, "button-pushed", attach_pixmap,
-		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
-	
-		bu = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(bo, _("OK"), 0, attach_pixmap, "%p,%p,%p,%p,%p",
+		    tv, pwin, win, tl_feats, tl);
+		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1373,14 +1368,9 @@ attach_sketch_dlg(int argc, union evarg *argv)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_Button *bu;
-	
-		bu = AG_ButtonNew(bo, _("OK"));
-		AG_SetEvent(bu, "button-pushed", attach_sketch,
-		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
-	
-		bu = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(bu, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(bo, _("OK"), 0, attach_sketch, "%p,%p,%p,%p,%p",
+		    tv, pwin, win, tl_feats, tl);
+		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1786,13 +1776,9 @@ tile_infos(int argc, union evarg *argv)
 	
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		b = AG_ButtonNew(box, _("OK"));
-		AG_SetEvent(b, "button-pushed", resize_tile,
-		    "%p,%p,%p,%p,%p,%p", tv, msb, win, ckey_cb, alpha_cb,
-		    alpha_sb);
-
-		b = AG_ButtonNew(box, _("Cancel"));
-		AG_SetEvent(b, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(box, _("OK"), 0, resize_tile, "%p,%p,%p,%p,%p,%p",
+		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
+		AG_ButtonAct(box, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.72 2005/09/18 04:08:22 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.73 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -44,19 +44,19 @@
 #include "monitor.h"
 
 static AG_Window *
-show_fps(void)
+show_perfgraph(void)
 {
-	extern AG_Window *agFPSWindow;
+	extern AG_Window *agPerfWindow;
 
-	AG_WindowShow(agFPSWindow);
-	return (agFPSWindow);
+	AG_WindowShow(agPerfWindow);
+	return (agPerfWindow);
 }
 
 static const struct ag_maptool_ent {
 	char	      *name;
 	AG_Window *(*fn)(void);
 } tool_ents[] = {
-	{ N_("Refresh rate"), show_fps },
+	{ N_("Performance graph"), show_perfgraph },
 #if defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Upload screenshot"), AG_DebugScreenshot },
 #endif

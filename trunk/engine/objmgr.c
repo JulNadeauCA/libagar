@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.48 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.49 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -718,16 +718,12 @@ create_obj_dlg(int argc, union evarg *argv)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_Button *btn;
-	
-		btn = AG_ButtonNew(bo, _("OK"));
-		AG_SetEvent(tb, "textbox-return", create_obj, "%p,%p,%p,%p", t,
-		    tb, pobj_tl, win);
-		AG_SetEvent(btn, "button-pushed", create_obj, "%p,%p,%p,%p", t,
-		    tb, pobj_tl, win);
+		AG_ButtonAct(bo, _("OK"), 0, create_obj, "%p,%p,%p,%p",
+		    t, tb, pobj_tl, win);
+		AG_SetEvent(tb, "textbox-return", create_obj, "%p,%p,%p,%p",
+		    t, tb, pobj_tl, win);
 		
-		btn = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -938,7 +934,7 @@ AG_ObjMgrWindow(void)
 		    OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
-
+	
 #ifdef DEBUG
 	mi = AG_MenuAddItem(me, _("Debug"));
 	AG_MonitorMenu(mi);
@@ -1045,11 +1041,8 @@ AG_ObjMgrWindow(void)
 			    -1, rename_repo_dlg, "%p", tl);
 		}
 
-		btn = AG_ButtonNew(ntab, _("Refresh listing"));
-		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
-		AG_SetEvent(btn, "button-pushed", update_repo_listing, "%p",
-		    tl);
-
+		btn = AG_ButtonAct(ntab, _("Refresh listing"), AG_BUTTON_WFILL,
+		    update_repo_listing, "%p", tl);
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
@@ -1077,7 +1070,7 @@ objmgr_quit(int argc, union evarg *argv)
 }
 
 static void
-objmgr_quit_cancel(int argc, union evarg *argv)
+quit_cancel(int argc, union evarg *argv)
 {
 	AG_Window *win = argv[1].p;
 
@@ -1094,10 +1087,9 @@ AG_ObjMgrQuitDlg(void *obj)
 {
 	AG_Window *win;
 	AG_Box *bo;
-	AG_Button *b;
 
-	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_TITLEBAR|AG_WINDOW_NO_RESIZE,
-	    "objmgr-changed-dlg")) == NULL) {
+	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_TITLEBAR|
+	    AG_WINDOW_NO_RESIZE, "objmgr-changed-dlg")) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Exit application?"));
@@ -1111,12 +1103,9 @@ AG_ObjMgrQuitDlg(void *obj)
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);
 	{
-		b = AG_ButtonNew(bo, _("Quit"));
-		AG_SetEvent(b, "button-pushed", objmgr_quit, NULL);
-
-		b = AG_ButtonNew(bo, _("Cancel"));
-		AG_SetEvent(b, "button-pushed", objmgr_quit_cancel, "%p", win);
-		AG_WidgetFocus(b);
+		AG_ButtonAct(bo, _("Quit"), 0, objmgr_quit, NULL);
+		AG_ButtonAct(bo, _("Cancel"), AG_BUTTON_FOCUS,
+		    quit_cancel, "%p", win);
 	}
 	AG_WindowShow(win);
 }

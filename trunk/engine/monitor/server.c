@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.10 2005/09/18 04:08:22 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.11 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -288,7 +288,7 @@ static int
 cmd_refresh(struct command *cmd, void *p)
 {
 	pthread_mutex_lock(&agView->lock);
-	printf("0 %d:%d\n", agView->refresh.r, agView->refresh.rnom);
+	printf("0 %d:%d\n", agView->rCur, agView->rNom);
 	pthread_mutex_unlock(&agView->lock);
 	return (0);
 }
