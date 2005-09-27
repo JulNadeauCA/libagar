@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.188 2005/09/27 00:25:17 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.189 2005/09/27 03:17:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -593,7 +593,7 @@ AG_SetRefreshRate(int fps)
 	}
 	pthread_mutex_lock(&agView->lock);
 	agView->refresh.r = 0;
-	agView->refresh.rnom = fps;
+	agView->refresh.rnom = 1000/fps;
 	pthread_mutex_unlock(&agView->lock);
 	return (0);
 }
