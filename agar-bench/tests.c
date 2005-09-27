@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.5 2005/09/27 00:46:11 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -207,7 +207,7 @@ tests_window(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = 60;
+	int c, i, fps = -1;
 	char *s;
 
 	if (AG_InitCore("agar-bench", 0) == -1) {
