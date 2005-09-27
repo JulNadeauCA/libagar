@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.24 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.25 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -172,7 +172,7 @@ finish:
 	return (1);
 }
 
-const AG_MaptoolOps vg_circle_tool = {
+const AG_MaptoolOps vgCircleTool = {
 	"Circles", N_("Draw circles."),
 	VGCIRCLES_ICON,
 	sizeof(AG_Maptool),

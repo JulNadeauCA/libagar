@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.28 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.29 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -490,7 +490,7 @@ finish:
 	return (1);
 }
 
-const AG_MaptoolOps vg_line_tool = {
+const AG_MaptoolOps vgLineTool = {
 	"Lines", N_("Line segments, strips and loops."),
 	VGLINES_ICON,
 	sizeof(AG_Maptool),
