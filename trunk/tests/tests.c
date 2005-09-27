@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.3 2005/05/29 05:48:06 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.4 2005/09/27 00:25:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -55,10 +55,10 @@ int ntests = sizeof(tests) / sizeof(tests[0]);
 static void
 test_params(int argc, union evarg *argv)
 {
-	struct tableview *tv = argv[1].p;
-	struct tableview_row *row;
+	AG_Tableview *tv = argv[1].p;
+	AG_TableviewRow *row;
+	AG_Window *win;
 	struct test_ops *ops = NULL;
-	struct window *win;
 
 	TAILQ_FOREACH(row, &tv->children, siblings) {
 		if (row->selected) {
@@ -68,19 +68,19 @@ test_params(int argc, union evarg *argv)
 	if (ops == NULL)
 		return;
 
-	win = window_new(0, NULL);
-	window_set_caption(win, ops->name);
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, ops->name);
 	ops->edit(win);
-	window_show(win);
+	AG_WindowShow(win);
 }
 
 static void
 run_tests(int argc, union evarg *argv)
 {
-	struct tableview *tv = argv[1].p;
+	AG_Tableview *tv = argv[1].p;
 	u_int i, j, ti, fi;
-	struct window *win;
-	struct button *btn;
+	AG_Window *win;
+	AG_Button *btn;
 	Uint32 t1, t2;
 	u_long tTot;
 
@@ -91,8 +91,8 @@ run_tests(int argc, union evarg *argv)
 			struct testfn_ops *ops = &test->funcs[fi];
 			u_long tot;
 
-			if (((ops->flags & TEST_SDL) && view->opengl) ||
-			    ((ops->flags & TEST_GL)  && !view->opengl))
+			if (((ops->flags & TEST_SDL) && agView->opengl) ||
+			    ((ops->flags & TEST_GL)  && !agView->opengl))
 				continue;
 
 			if (ops->init != NULL) ops->init();
@@ -114,10 +114,10 @@ run_tests(int argc, union evarg *argv)
 }
 
 static char *
-tests_callback(struct tableview *tv, colID cid, rowID rid)
+tests_callback(AG_Tableview *tv, AG_TableviewColID cid, AG_TableviewRowID rid)
 {
 	static char text[32];
-	struct tableview_row *row = tableview_row_get(tv, rid);
+	AG_TableviewRow *row = AG_TableviewRowGet(tv, rid);
 	struct testfn_ops *ops = row->userp;
 
 	switch (cid) {
@@ -145,34 +145,33 @@ tests_callback(struct tableview *tv, colID cid, rowID rid)
 static void
 tests_window(void)
 {
-	struct window *win;
-	struct tableview *tv;
-	int i;
-	struct button *btn;
-	struct box *bo;
-	int id = 0;
+	AG_Window *win;
+	AG_Tableview *tv;
+	AG_Button *btn;
+	AG_Box *bo;
+	int i, id = 0;
 
-	win = window_new(0, "tests");
-	window_set_caption(win, "Agar Test Suite");
+	win = AG_WindowNew(0, "tests");
+	AG_WindowSetCaption(win, "Agar Test Suite");
 
-	tv = tableview_new(win, 0, tests_callback, NULL);
-	tableview_set_update(tv, 250);
-	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
+	tv = AG_TableviewNew(win, 0, tests_callback, NULL);
+	AG_TableviewSetUpdate(tv, 250);
+	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 			      0, "Test",
 			      "< VIEW_PUT_PIXEL_2_CLIPPED() -- Clipped >");
-	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
+	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 			      1, "Runs", "<XX>");
-	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
+	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 			      2, "Iterations", "<XXXXXXXXX>");
-	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_UPDATE,
+	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 			      3, "Result", NULL);
 
 	for (i = 0; i < ntests; i++) {
 		struct test_ops *test = tests[i];
-		struct tableview_row *pRow;
+		AG_TableviewRow *pRow;
 		int j;
 
-		pRow = tableview_row_add(tv, TABLEVIEW_STATIC_ROW,
+		pRow = AG_TableviewRowAdd(tv, AG_TABLEVIEW_STATIC_ROW,
 		    NULL, NULL, id++,
 		    0, test->name,
 		    1, "",
@@ -182,7 +181,7 @@ tests_window(void)
 		for (j = 0; j < test->nfuncs; j++) {
 			struct testfn_ops *func = &test->funcs[j];
 
-			tableview_row_add(tv, 0, pRow, func, id++,
+			AG_TableviewRowAdd(tv, 0, pRow, func, id++,
 			    0, func->name,
 			    1, "",
 			    2, "",
@@ -190,28 +189,28 @@ tests_window(void)
 		}
 	}
 
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = button_new(bo, "Run tests");
+		btn = AG_ButtonNew(bo, "Run tests");
 		AG_SetEvent(btn, "button-pushed", run_tests, "%p", tv);
 
-		btn = button_new(bo, "Parameters");
+		btn = AG_ButtonNew(bo, "Parameters");
 		AG_SetEvent(btn, "button-pushed", test_params, "%p", tv);
 	}
 
-	window_show(win);
-	window_set_geometry(win,
+	AG_WindowShow(win);
+	AG_WindowSetGeometry(win,
 	    10, 10,
-	    view->w - 20, view->h - 20);
+	    agView->w - 20, agView->h - 20);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int c, i;
+	int c, i, fps = 60;
 	char *s;
 
-	if (engine_preinit("agar-tests") == -1) {
+	if (AG_InitCore("agar-tests", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
@@ -223,39 +222,39 @@ main(int argc, char *argv[])
 		case 'v':
 			exit(0);
 		case 'f':
-			prop_set_bool(config, "view.full-screen", 1);
+			AG_SetBool(agConfig, "view.full-screen", 1);
 			break;
 		case 'F':
-			prop_set_bool(config, "view.full-screen", 0);
+			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
 #ifdef HAVE_OPENGL
 		case 'g':
-			prop_set_bool(config, "view.opengl", 1);
+			AG_SetBool(agConfig, "view.opengl", 1);
 			break;
 		case 'G':
-			prop_set_bool(config, "view.opengl", 0);
+			AG_SetBool(agConfig, "view.opengl", 0);
 			break;
 #endif
 		case 'w':
-			prop_set_uint16(config, "view.w", atoi(optarg));
+			AG_SetUint16(agConfig, "view.w", atoi(optarg));
 			break;
 		case 'h':
-			prop_set_uint16(config, "view.h", atoi(optarg));
+			AG_SetUint16(agConfig, "view.h", atoi(optarg));
 			break;
 		case 't':
-			text_parse_fontspec(optarg);
+			AG_TextParseFontSpec(optarg);
 			break;
 		case 'T':
-			prop_set_string(config, "font-path", "%s", optarg);
+			AG_SetString(agConfig, "font-path", "%s", optarg);
 			break;
 		case 'r':
-			view_parse_fpsspec(optarg);
+			fps = atoi(optarg);
 			break;
 		case '?':
 		default:
 			printf("%s [-vfF] [-w width] [-h height] [-r fps]"
 			       " [-t font,size,flags] [-T font-path]",
-			    progname);
+			    agProgName);
 #ifdef HAVE_OPENGL
 			printf(" [-gG]");
 #endif
@@ -264,14 +263,18 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (engine_init() == -1) {
+	if (AG_InitVideo(320, 240, 32, 0) == -1 ||
+	    AG_InitInput(AG_INPUT_KBDMOUSE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitConfigWin(AG_CONFIG_FULLSCREEN|AG_CONFIG_GL|
+	                 AG_CONFIG_RESOLUTION);
+	AG_SetRefreshRate(fps);
 
 	tests_window();
 
-	event_loop();
+	AG_EventLoop();
 	AG_Quit();
 	return (0);
 fail:

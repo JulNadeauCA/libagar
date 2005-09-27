@@ -1,4 +1,4 @@
-/*	$Csoft: test.h,v 1.2 2005/05/12 06:57:32 vedge Exp $	*/
+/*	$Csoft: test.h,v 1.3 2005/09/22 04:12:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -22,7 +22,7 @@ struct testfn_ops {
 
 struct test_ops {
 	char *name;
-	void (*edit)(struct window *);
+	void (*edit)(AG_Window *);
 	struct testfn_ops *funcs;
 	u_int nfuncs;
 };

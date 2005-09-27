@@ -1,4 +1,4 @@
-/*	$Csoft: pixelops.c,v 1.3 2005/05/24 08:19:34 vedge Exp $	*/
+/*	$Csoft: agPrim.c,v 1.1 2005/05/29 05:48:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -7,18 +7,18 @@
 #include <engine/widget/primitive.h>
 
 static SDL_Surface *su;
-static struct widget wid;
+static AG_Widget wid;
 
 static void
 init_widget(void)
 {
-	widget_init(&wid, "test-widget", NULL, 0);
+	AG_WidgetInit(&wid, "test-widget", NULL, 0);
 	wid.cx = 1;
 	wid.cy = 1;
 	wid.x = 0;
 	wid.y = 0;
-	wid.w = view->w-1;
-	wid.h = view->h-1;
+	wid.w = agView->w-1;
+	wid.h = agView->h-1;
 	wid.cx2 = wid.cx + wid.w;
 	wid.cy2 = wid.cy + wid.h;
 }
@@ -26,13 +26,13 @@ init_widget(void)
 static void
 destroy_widget(void)
 {
-	widget_destroy(&wid);
+	AG_WidgetDestroy(&wid);
 }
 
 static void
 test_box(void)
 {
-	primitives.box(&wid, 0, 0, wid.w/2, wid.h/2, 1, 0);
+	agPrim.box(&wid, 0, 0, wid.w/2, wid.h/2, 1, 0);
 }
 
 static void
@@ -42,28 +42,28 @@ test_box_chamfered(void)
 
 	r.x = 0;
 	r.y = 0;
-	r.w = view->w/2;
-	r.h = view->h/2;
-	primitives.box_chamfered(&wid, &r, 1, 32, 0);
+	r.w = agView->w/2;
+	r.h = agView->h/2;
+	agPrim.box_chamfered(&wid, &r, 1, 32, 0);
 }
 
 static void
 test_frame(void)
 {
-	primitives.frame(&wid, 0, 0, wid.w, wid.h, 0);
+	agPrim.frame(&wid, 0, 0, wid.w, wid.h, 0);
 }
 
 static void
 test_circle(void)
 {
-	primitives.circle(&wid, 0, 0, wid.w/3, 0);
+	agPrim.circle(&wid, 0, 0, wid.w/3, 0);
 }
 
 static void
 test_line(void)
 {
-	primitives.line(&wid, 0, 0, wid.w, wid.h, 0);
-	primitives.line(&wid, 0, 0, wid.w, wid.h/2, 0);
+	agPrim.line(&wid, 0, 0, wid.w, wid.h, 0);
+	agPrim.line(&wid, 0, 0, wid.w, wid.h/2, 0);
 }
 
 static void
@@ -71,26 +71,26 @@ test_line_blended(void)
 {
 	Uint8 c[4];
 
-	primitives.line_blended(&wid, 0, 0, wid.w, wid.h, c, ALPHA_SRC);
-	primitives.line_blended(&wid, 0, 0, wid.w, wid.h/2, c, ALPHA_SRC);
+	agPrim.line_blended(&wid, 0, 0, wid.w, wid.h, c, AG_ALPHA_SRC);
+	agPrim.line_blended(&wid, 0, 0, wid.w, wid.h/2, c, AG_ALPHA_SRC);
 }
 
 static void
 test_hline(void)
 {
-	primitives.hline(&wid, 1, wid.w, 1, 0);
+	agPrim.hline(&wid, 1, wid.w, 1, 0);
 }
 
 static void
 test_vline(void)
 {
-	primitives.vline(&wid, 1, 1, wid.h, 0);
+	agPrim.vline(&wid, 1, 1, wid.h, 0);
 }
 
 static void
 test_rect_filled(void)
 {
-	primitives.rect_filled(&wid, 1, 1, wid.w/2, wid.h/2, 0);
+	agPrim.rect_filled(&wid, 1, 1, wid.w/2, wid.h/2, 0);
 }
 
 static void
@@ -98,7 +98,7 @@ test_rect_blended(void)
 {
 	Uint8 c[4];
 
-	primitives.rect_blended(&wid, 1, 1, wid.w/2, wid.h/2, c, ALPHA_SRC);
+	agPrim.rect_blended(&wid, 1, 1, wid.w/2, wid.h/2, c, AG_ALPHA_SRC);
 }
 
 static void
@@ -110,7 +110,7 @@ test_tiling16(void)
 	rd.y = 0;
 	rd.w = wid.w/2;
 	rd.h = wid.h/2;
-	primitives.tiling(&wid, rd, 16, 0, 255, 0);
+	agPrim.tiling(&wid, rd, 16, 0, 255, 0);
 }
 
 static void

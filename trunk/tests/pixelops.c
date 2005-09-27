@@ -1,4 +1,4 @@
-/*	$Csoft: pixelops.c,v 1.3 2005/05/24 08:19:34 vedge Exp $	*/
+/*	$Csoft: pixelops.c,v 1.4 2005/07/23 17:55:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -9,102 +9,102 @@ static void
 init_su(void)
 {
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, 32, 32, 32,
-	    vfmt->Rmask,
-	    vfmt->Gmask,
-	    vfmt->Bmask,
+	    agVideoFmt->Rmask,
+	    agVideoFmt->Gmask,
+	    agVideoFmt->Bmask,
 	    0);
 }
 
 static void
 init_view(void)
 {
-	SDL_LockSurface(view->v);
+	SDL_LockSurface(agView->v);
 }
 
 static void
 destroy_view(void)
 {
-	SDL_UnlockSurface(view->v);
+	SDL_UnlockSurface(agView->v);
 }
 
 static void
 test_view_putpixel(void)
 {
-	Uint8 *p = view->v->pixels;
+	Uint8 *p = agView->v->pixels;
 
-	VIEW_PUT_PIXEL(p, 1);
+	AG_VIEW_PUT_PIXEL(p, 1);
 }
 
 static void
 test_view_putpixel2(void)
 {
-	VIEW_PUT_PIXEL2(4, 5, 1);
+	AG_VIEW_PUT_PIXEL2(4, 5, 1);
 }
 
 static void
 test_view_putpixel2_clipped(void)
 {
-	VIEW_PUT_PIXEL2_CLIPPED(1, 1, 1);
+	AG_VIEW_PUT_PIXEL2_CLIPPED(1, 1, 1);
 }
 
 static void
 test_view_putpixel2_clipped_out(void)
 {
-	VIEW_PUT_PIXEL2_CLIPPED(32000, 32000, 1);
+	AG_VIEW_PUT_PIXEL2_CLIPPED(32000, 32000, 1);
 }
 
 static void
 test_get_pixel(void)
 {
-	GET_PIXEL(su, su->pixels);
+	AG_GET_PIXEL(su, su->pixels);
 }
 
 static void
 test_get_pixel2(void)
 {
-	GET_PIXEL2(su, 1, 1);
+	AG_GET_PIXEL2(su, 1, 1);
 }
 
 static void
 test_put_pixel(void)
 {
-	PUT_PIXEL(su, su->pixels, 1);
+	AG_PUT_PIXEL(su, su->pixels, 1);
 }
 
 static void
 test_put_pixel2(void)
 {
-	PUT_PIXEL2(su, 1, 1, 1);
+	AG_PUT_PIXEL2(su, 1, 1, 1);
 }
 
 static void
 test_put_pixel2_clipped(void)
 {
-	PUT_PIXEL2_CLIPPED(su, 1, 1, 1);
+	AG_PUT_PIXEL2_CLIPPED(su, 1, 1, 1);
 }
 
 static void
 test_put_pixel2_clipped_out(void)
 {
-	PUT_PIXEL2_CLIPPED(su, 35, 100, 1);
+	AG_PUT_PIXEL2_CLIPPED(su, 35, 100, 1);
 }
 
 static void
 test_blend_rgba(void)
 {
-	BLEND_RGBA(su, su->pixels, 10, 10, 10, 100, ALPHA_SRC);
+	AG_BLEND_RGBA(su, su->pixels, 10, 10, 10, 100, AG_ALPHA_SRC);
 }
 
 static void
 test_blend_rgba2(void)
 {
-	BLEND_RGBA2(su, 1, 1, 10, 10, 10, 100, ALPHA_SRC);
+	AG_BLEND_RGBA2(su, 1, 1, 10, 10, 10, 100, AG_ALPHA_SRC);
 }
 
 static void
 test_blend_rgba2_clipped(void)
 {
-	BLEND_RGBA2_CLIPPED(su, 1, 1, 10, 10, 10, 100, ALPHA_SRC);
+	AG_BLEND_RGBA2_CLIPPED(su, 1, 1, 10, 10, 10, 100, AG_ALPHA_SRC);
 }
 
 
