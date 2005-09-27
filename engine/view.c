@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.191 2005/09/27 06:15:03 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.192 2005/09/27 14:06:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -104,6 +104,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	agView->focus_win = NULL;
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
 	agView->rCur = 0;
+	dprintf("FPS: %u\n", agView->rNom);
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
 	pthread_mutex_init(&agView->lock, &agRecursiveMutexAttr);

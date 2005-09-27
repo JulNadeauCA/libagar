@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.216 2005/09/27 00:25:16 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.217 2005/09/27 14:06:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -77,7 +77,6 @@ static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 int agIdleThresh = 20;					/* Idling threshold */
 
 static void relay_event(void *, AG_Event *);
-static void event_hotkey(SDL_Event *);
 static void event_dispatch(SDL_Event *);
 #ifdef THREADS
 static void *event_async(void *);
@@ -95,11 +94,6 @@ const char *agEvArgTypeNames[] = {
 	"float",
 	"double"
 };
-
-static void
-event_hotkey(SDL_Event *ev)
-{
-}
 
 #ifdef DEBUG
 /* XXX remove this once the graph widget implements polling. */

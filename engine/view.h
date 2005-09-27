@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.103 2005/09/27 00:25:17 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.104 2005/09/27 14:06:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -21,7 +21,7 @@ typedef struct ag_display {
 	int depth;			/* Depth in bpp */
 	int opengl;			/* OpenGL rendering? (if available) */
 
-	u_int rCur;			/* Estimated refresh delay in ms */
+	int rCur;			/* Estimated refresh delay in ms */
 	u_int rNom;			/* Nominal refresh delay */
 
 	SDL_Rect *dirty;		/* Video rectangles to update */
