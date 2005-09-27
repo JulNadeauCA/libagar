@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.187 2005/07/16 16:07:28 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.188 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -584,12 +584,10 @@ AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 }
 
 int
-AG_SetRefreshRate(int ms)
+AG_SetRefreshRate(int fps)
 {
-	int fps = 1000/ms;
-
 	dprintf("%d fps\n", fps);
-	if (fps < 4 || fps > 240) {
+	if (fps <= 0 || fps >= 255) {
 		AG_SetError(_("The refresh rate is out of range."));
 		return (-1);
 	}
