@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.12 2005/09/19 01:25:20 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.13 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -188,7 +188,7 @@ AG_DrawingEdit(void *obj)
 	extern const AG_MaptoolOps vg_line_tool;
 	extern const AG_MaptoolOps vg_circle_tool;
 	extern const AG_MaptoolOps vg_ellipse_tool;
-	extern const AG_MaptoolOps vg_text_tool;
+	extern const AG_MaptoolOps vgTextTool;
 	AG_Drawing *dwg = obj;
 	VG *vg = dwg->vg;
 	AG_Window *win;
@@ -236,7 +236,7 @@ AG_DrawingEdit(void *obj)
 			AG_MapviewRegTool(mv, &vg_line_tool, vg);
 			AG_MapviewRegTool(mv, &vg_circle_tool, vg);
 			AG_MapviewRegTool(mv, &vg_ellipse_tool, vg);
-			AG_MapviewRegTool(mv, &vg_text_tool, vg);
+			AG_MapviewRegTool(mv, &vgTextTool, vg);
 		}
 	}
 

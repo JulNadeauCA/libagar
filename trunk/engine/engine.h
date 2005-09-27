@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.97 2005/09/17 05:28:22 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.98 2005/09/27 00:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -163,6 +163,7 @@ extern pthread_mutex_t agTimingLock;	/* engine.c */
 
 #define AG_INPUT_KBDMOUSE	0x01
 #define AG_INPUT_JOYSTICKS	0x02
+#define AG_INPUT_ALL		0xff
 
 #define AG_NETWORK_SERVERMODE	0x01
 #define AG_NETWORK_RCS		0x02
@@ -171,6 +172,7 @@ extern pthread_mutex_t agTimingLock;	/* engine.c */
 #define AG_CONFIG_GL		0x02
 #define AG_CONFIG_RESOLUTION	0x04
 #define AG_CONFIG_DIRECTORIES	0x08
+#define AG_CONFIG_ALL		0xff
 
 __BEGIN_DECLS
 int	 AG_InitCore(const char *, u_int);
