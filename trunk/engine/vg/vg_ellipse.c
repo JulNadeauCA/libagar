@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.19 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.20 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -193,7 +193,7 @@ finish:
 	return (1);
 }
 
-const AG_MaptoolOps vg_ellipse_tool = {
+const AG_MaptoolOps vgEllipseTool = {
 	N_("Ellipses"), N_("Draw ellipses."),
 	VGCIRCLES_ICON,
 	sizeof(AG_Maptool),

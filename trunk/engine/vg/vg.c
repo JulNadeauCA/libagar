@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.70 2005/09/27 00:25:20 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.71 2005/09/27 02:25:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1689,8 +1689,8 @@ VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
     struct ag_mapview *mv)
 {
 	extern const AG_MaptoolOps vgOriginTool;
-	extern const AG_MaptoolOps vg_line_tool;
-	extern const AG_MaptoolOps vg_circle_tool;
+	extern const AG_MaptoolOps vgLineTool;
+	extern const AG_MaptoolOps vgCircleTool;
 	extern const AG_MaptoolOps vgTextTool;
 	AG_MenuItem *mi_snap;
 	
@@ -1701,9 +1701,9 @@ VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
 	    show_blocks, "%p", vg);
 	AG_MenuAction(pitem, _("Move origin"), vgOriginTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Origin", mv);
-	AG_MenuAction(pitem, _("Line strip"), vg_line_tool.icon,
+	AG_MenuAction(pitem, _("Line strip"), vgLineTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Lines", mv);
-	AG_MenuAction(pitem, _("Circle"), vg_circle_tool.icon,
+	AG_MenuAction(pitem, _("Circle"), vgCircleTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Circles", mv);
 	AG_MenuAction(pitem, _("Text"), vgTextTool.icon,
 	    select_tool, "%p,%s,%p", vg, "Text", mv);

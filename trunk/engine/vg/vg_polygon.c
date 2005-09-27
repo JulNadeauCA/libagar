@@ -1,4 +1,4 @@
-/*	$Csoft: vg_polygon.c,v 1.7 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_polygon.c,v 1.8 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -246,7 +246,7 @@ finish:
 	return (1);
 }
 
-const AG_MaptoolOps vg_polygon_tool = {
+const AG_MaptoolOps vgPolygonTool = {
 	"Polygon", N_("Draw filled polygons."),
 	RG_POLYGON_ICON,
 	sizeof(AG_Maptool),

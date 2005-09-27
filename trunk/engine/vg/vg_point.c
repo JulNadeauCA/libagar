@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.22 2005/07/30 05:01:34 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.23 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -123,7 +123,7 @@ point_mousebuttondown(void *t, int xmap, int ymap, int btn)
 	return (1);
 }
 
-const AG_MaptoolOps vg_point_tool = {
+const AG_MaptoolOps vgPointTool = {
 	N_("Point"), N_("Trace an individual point."),
 	VGPOINTS_ICON,
 	sizeof(AG_Maptool),
