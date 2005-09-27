@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.189 2005/09/27 03:17:31 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.190 2005/09/27 03:33:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -143,8 +143,8 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	/* Set the video mode. */
 	agView->v = SDL_SetVideoMode(agView->w, agView->h, 0, screenflags);
 	if (agView->v == NULL) {
-		AG_SetError(_("Setting %dx%dx%d mode: %s"), agView->w, agView->h,
-		    agView->depth, SDL_GetError());
+		AG_SetError(_("Setting %dx%dx%d mode: %s"),
+		    agView->w, agView->h, agView->depth, SDL_GetError());
 		goto fail;
 	}
 	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
@@ -586,15 +586,16 @@ AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 int
 AG_SetRefreshRate(int fps)
 {
-	dprintf("%d fps\n", fps);
-	if (fps <= 0 || fps >= 255) {
-		AG_SetError(_("The refresh rate is out of range."));
+	if (fps < 1) {
+		AG_SetError("FPS < 1");
 		return (-1);
 	}
 	pthread_mutex_lock(&agView->lock);
 	agView->refresh.r = 0;
 	agView->refresh.rnom = 1000/fps;
 	pthread_mutex_unlock(&agView->lock);
+	AG_SetUint8(agConfig, "view.fps", fps);
+	dprintf("%d fps\n", fps);
 	return (0);
 }
 
