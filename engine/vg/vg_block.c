@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.15 2005/06/17 04:33:49 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.16 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -316,10 +316,8 @@ VG_BlockEditor(VG *vg)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_Button *bu;
-
-		bu = AG_ButtonNew(bo, _("Destroy"));
-		AG_SetEvent(bu, "button-pushed", destroy_block, "%p,%p", vg, tl);
+		AG_ButtonAct(bo, _("Destroy"), 0,
+		    destroy_block, "%p,%p", vg, tl);
 	}
 	return (win);
 }

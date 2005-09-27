@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.237 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.238 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2171,8 +2171,8 @@ AG_ObjectEdit(void *p)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_Tlist *tl;
-	AG_Button *btn;
 	AG_Box *box;
+	AG_Button *btn;
 
 	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
@@ -2191,7 +2191,8 @@ AG_ObjectEdit(void *p)
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Type: %s"), ob->type);
-		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Flags: 0x%x"), &ob->flags);
+		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Flags: 0x%x"),
+		    &ob->flags);
 		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Parent: %[obj]"),
 		    &agLinkageLock, &ob->parent);
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Save prefix: %s"),
@@ -2219,9 +2220,9 @@ AG_ObjectEdit(void *p)
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
 					            AG_BOX_WFILL);
 		{
-			btn = AG_ButtonNew(box, _("Refresh checksums"));
-			AG_SetEvent(btn, "button-pushed", refresh_checksums,
-			    "%p,%p,%p,%p", ob, tb_md5, tb_sha1, tb_rmd160);
+			btn = AG_ButtonAct(box, _("Refresh checksums"), 0,
+			    refresh_checksums, "%p,%p,%p,%p", ob, tb_md5,
+			    tb_sha1, tb_rmd160);
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 		}
 	}
@@ -2237,10 +2238,8 @@ AG_ObjectEdit(void *p)
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Revision history:"));
 		tl = AG_TlistNew(ntab, 0);
 
-		btn = AG_ButtonNew(ntab, _("Refresh RCS status"));
-		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
-		AG_SetEvent(btn, "button-pushed", refresh_rcs_status,
-		    "%p,%p,%p", ob, lb_status, tl);
+		btn = AG_ButtonAct(ntab, _("Refresh status"), AG_BUTTON_WFILL,
+		    refresh_rcs_status, "%p,%p,%p", ob, lb_status, tl);
 
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);

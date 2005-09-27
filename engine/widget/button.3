@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.25 2005/01/30 05:39:11 vedge Exp $
+.\"	$Csoft: button.3,v 1.26 2005/09/27 00:25:22 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,8 +52,11 @@ an image.
 .Ft "AG_Button *"
 .Fn AG_ButtonNew "void *parent" "char *caption"
 .Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonAct "void *parent" "char *caption" "u_int flags" "const char *fmt" "..."
+.Pp
 .Ft void
-.Fn AG_ButtonInit "AG_Button *button" "char *caption"
+.Fn AG_ButtonInit "AG_Button *button" "char *caption" "u_int flags"
 .Pp
 .Ft void
 .Fn AG_ButtonEnable "AG_Button *button"
@@ -88,13 +91,44 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
+.Pp
+The
+.Fn AG_ButtonAct
+variant creates a button and automatically binds the provided event handler
+function to its
+.Sq button-pushed
+event.
+The
+.Fa fmt
+and following arguments specify an
+.Xr event 3
+style argument list.
+.Pp
 The
 .Fn AG_ButtonInit
 function initializes a
 .Nm
-widget displaying
-.Fa caption ,
-unless it is NULL.
+widget displaying the string
+.Fa caption
+(if not NULL).
+Acceptable values for the
+.Fa flags
+argument include:
+.Bd -literal
+#define AG_BUTTON_INSENSITIVE	0x01	/* Not responsive */
+#define AG_BUTTON_STICKY	0x02	/* Toggle state */
+#define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
+#define AG_BUTTON_WFILL		0x10	/* Fill available width */
+#define AG_BUTTON_HFILL		0x20	/* Fill available height */
+#define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
+.Ed
+.Pp
+Note that the
+.Dv AG_BUTTON_FOCUS
+flag is only effective when passed to
+.Fn AG_ButtonAct ,
+.Fn AG_ButtonInit
+will ignore it.
 .Pp
 The
 .Fn AG_ButtonEnable
@@ -227,3 +261,7 @@ A more general interface may be preferable to
 .Fn AG_ButtonEnable
 and
 .Fn AG_ButtonDisable .
+.Pp
+This widget uses the
+.Dv AG_WIDGET_UNFOCUSED_MOTION
+flag which is very inefficient.

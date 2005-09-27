@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.62 2005/09/20 13:46:32 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.63 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -992,7 +992,6 @@ insert_tile_dlg(int argc, union evarg *argv)
 	AG_Window *pwin = argv[2].p;
 	AG_Window *win;
 	AG_Box *btnbox;
-	AG_Button *btn;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Checkbox *cb;
@@ -1006,6 +1005,7 @@ insert_tile_dlg(int argc, union evarg *argv)
 	tb = AG_TextboxNew(win, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
+	AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT, _("Class: "));
@@ -1033,14 +1033,8 @@ insert_tile_dlg(int argc, union evarg *argv)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = AG_ButtonNew(btnbox, "OK");
-		AG_SetEvent(btn, "button-pushed", insert_tile, "%p,%p",
-		    win, ts);
-		AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p",
-		    win, ts);
-		
-		btn = AG_ButtonNew(btnbox, "Cancel");
-		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(btnbox, _("OK"), 0, insert_tile, "%p,%p", win, ts);
+		AG_ButtonAct(btnbox, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1054,7 +1048,6 @@ insert_texture_dlg(int argc, union evarg *argv)
 	AG_Window *pwin = argv[2].p;
 	AG_Window *win;
 	AG_Box *btnbox;
-	AG_Button *btn;
 	AG_Textbox *tb;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
@@ -1064,18 +1057,15 @@ insert_texture_dlg(int argc, union evarg *argv)
 	tb = AG_TextboxNew(win, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
 	    sizeof(ins_texture_name));
+	AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p", win,
+	    pwin, ts);
 	AG_WidgetFocus(tb);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = AG_ButtonNew(btnbox, "OK");
-		AG_SetEvent(btn, "button-pushed", insert_texture, "%p,%p,%p",
+		AG_ButtonAct(btnbox, _("OK"), 0, insert_texture, "%p,%p,%p",
 		    win, pwin, ts);
-		AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p",
-		    win, pwin, ts);
-	
-		btn = AG_ButtonNew(btnbox, "Cancel");
-		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(btnbox, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1101,6 +1091,7 @@ insert_anim_dlg(int argc, union evarg *argv)
 	tb = AG_TextboxNew(win, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
 	    sizeof(ins_anim_name));
+	AG_SetEvent(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
 	msb = AG_MSpinbuttonNew(win, "x", _("Size:"));
@@ -1116,14 +1107,8 @@ insert_anim_dlg(int argc, union evarg *argv)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		btn = AG_ButtonNew(btnbox, "OK");
-		AG_SetEvent(btn, "button-pushed", insert_anim,
-		    "%p,%p", win, ts);
-		AG_SetEvent(tb, "textbox-return", insert_anim,
-		    "%p,%p", win, ts);
-		
-		btn = AG_ButtonNew(btnbox, "Cancel");
-		AG_SetEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_ButtonAct(btnbox, _("OK"), 0, insert_anim, "%p,%p", win, ts);
+		AG_ButtonAct(btnbox, _("Cancel"), 0, AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1547,22 +1532,17 @@ RG_TilesetEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tl_tiles);
+		AG_SetEvent(tl_tiles, "tlist-dblclick", edit_tiles,
+		    "%p,%p,%p", ts, tl_tiles, win);
 
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = AG_ButtonNew(bbox, _("Insert"));
-			AG_SetEvent(bu, "button-pushed", insert_tile_dlg,
+			AG_ButtonAct(bbox, _("Insert"), 0, insert_tile_dlg,
 			    "%p,%p", ts, win);
-
-			bu = AG_ButtonNew(bbox, _("Edit"));
-			AG_SetEvent(bu, "button-pushed", edit_tiles,
+			AG_ButtonAct(bbox, _("Edit"), 0, edit_tiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
-			AG_SetEvent(tl_tiles, "tlist-dblclick",
-			    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
-
-			bu = AG_ButtonNew(bbox, _("Delete"));
-			AG_SetEvent(bu, "button-pushed", delete_tiles,
+			AG_ButtonAct(bbox, _("Delete"), 0, delete_tiles,
 			    "%p,%p", tl_tiles, ts);
 		}
 	}
@@ -1600,17 +1580,12 @@ RG_TilesetEdit(void *p)
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
 		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = AG_ButtonNew(bbox, _("Insert"));
-			AG_SetEvent(bu, "button-pushed", insert_texture_dlg,
-			    "%p,%p", ts, win);
-
-			bu = AG_ButtonNew(bbox, _("Edit"));
-			AG_SetEvent(bu, "button-pushed", edit_textures,
-			    "%p,%p,%p", ts, tl_textures, win);
-
-			bu = AG_ButtonNew(bbox, _("Delete"));
-			AG_SetEvent(bu, "button-pushed", delete_textures,
-			    "%p,%p", ts, tl_textures);
+			AG_ButtonAct(bbox, _("Insert"), 0,
+			    insert_texture_dlg, "%p,%p", ts, win);
+			AG_ButtonAct(bbox, _("Edit"), 0,
+			    edit_textures, "%p,%p,%p", ts, tl_textures, win);
+			AG_ButtonAct(bbox, _("Delete"), 0,
+			    delete_textures, "%p,%p", ts, tl_textures);
 		}
 		
 		AG_SetEvent(tl_textures, "tlist-dblclick", edit_textures,
@@ -1620,6 +1595,8 @@ RG_TilesetEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Animations"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tl_anims);
+		AG_SetEvent(tl_anims, "tlist-dblclick",
+		    edit_anims, "%p,%p,%p", ts, tl_anims, win);
 		
 		mi = AG_TlistSetPopup(tl_anims, "anim");
 		{
@@ -1632,23 +1609,14 @@ RG_TilesetEdit(void *p)
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 		{
-			bu = AG_ButtonNew(bbox, _("Insert"));
-			AG_SetEvent(bu, "button-pushed", insert_anim_dlg,
-			    "%p,%p", ts, win);
-
-			bu = AG_ButtonNew(bbox, _("Edit"));
-			AG_SetEvent(bu, "button-pushed", edit_anims,
-			    "%p,%p,%p", ts, tl_anims, win);
-			AG_SetEvent(tl_anims, "tlist-dblclick", edit_anims,
-			    "%p,%p,%p", ts, tl_anims, win);
-
-			bu = AG_ButtonNew(bbox, _("Delete"));
-			AG_SetEvent(bu, "button-pushed", delete_anim, "%p,%p",
-			    ts, tl_anims);
+			AG_ButtonAct(bbox, _("Insert"), 0,
+			    insert_anim_dlg, "%p,%p", ts, win);
+			AG_ButtonAct(bbox, _("Edit"), 0, 
+			    edit_anims, "%p,%p,%p", ts, tl_anims, win);
+			AG_ButtonAct(bbox, _("Delete"), 0,
+			    delete_anim, "%p,%p", ts, tl_anims);
 		}
 	}
-
-
 	return (win);
 }
 

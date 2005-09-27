@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.162 2005/09/18 05:13:13 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.163 2005/09/27 00:25:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -125,6 +125,8 @@ AG_InitCore(const char *progname, u_int flags)
 int
 AG_InitVideo(int w, int h, int bpp, u_int flags)
 {
+	extern int agBgPopupMenu;
+
 #ifdef HAVE_X11
 	setenv("SDL_VIDEO_X11_WMCLASS", agProgName, 1);
 #endif
@@ -185,6 +187,8 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	AG_ColorsInit();
 	AG_InitPrimitives();
 	AG_CursorsInit();
+
+	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
 	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
 	AG_WireGfx(&agIconMgr, "/engine/icons/icons");
@@ -202,6 +206,7 @@ AG_InitConfigWin(u_int flags)
 int
 AG_InitInput(u_int flags)
 {
+	extern int agScreenshotKey, agNoQuitKey;
 	int i, njoys;
 
 	if (flags & AG_INPUT_KBDMOUSE) {
@@ -216,6 +221,8 @@ AG_InitInput(u_int flags)
 				AG_JoystickNew(i);
 		}
 	}
+	if (flags & AG_INPUT_SCREENSHOT_KEY) { agScreenshotKey = 1; }
+	if (flags & AG_INPUT_NO_QUIT_KEY) { agNoQuitKey = 1; }
 	return (0);
 }
 

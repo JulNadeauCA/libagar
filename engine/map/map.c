@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.56 2005/09/20 13:46:31 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.57 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -3012,10 +3012,8 @@ map_edit(void *p)
 				AG_SetEvent(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 			}
-			bu = AG_ButtonNew(ntab, _("Push"));
-			AGWIDGET(bu)->flags |= AG_WIDGET_WFILL;
-			AG_SetEvent(bu, "button-pushed", push_layer,
-			    "%p, %p", m, tb);
+			AG_ButtonAct(ntab, _("Push"), AG_BUTTON_WFILL,
+			    push_layer, "%p, %p", m, tb);
 		}
 		
 		AG_SeparatorNew(hdiv->box1, AG_SEPARATOR_HORIZ);

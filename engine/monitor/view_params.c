@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.25 2005/06/18 04:25:23 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.26 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,8 +60,8 @@ AG_DebugViewSettings(void)
 		AG_LabelNew(vb, AG_LABEL_STATIC, _("OpenGL mode: %s"),
 		    agView->opengl ? _("yes") : _("no"));
 
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, "%dx%d", &agView->lock,
-		    &agView->w, &agView->h);
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, "%dx%d",
+		    &agView->lock, &agView->w, &agView->h);
 		AG_LabelPrescale(lab, "0000x0000x00");
 
 		AG_LabelNew(vb, AG_LABEL_STATIC, _("Depth: %dbpp"),
@@ -76,17 +76,18 @@ AG_DebugViewSettings(void)
 		AG_LabelNew(vb, AG_LABEL_STATIC, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
 
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, _("Window op: %d (%p)"),
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
+		    _("Window op: %d (%p)"),
 		    &agView->lock, &agView->winop, &agView->wop_win);
 		AG_LabelPrescale(lab,
 		    _("Window op: 000 (0x00000000)"));
 		
 		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("Refresh rate (effective): %d"),
-		    &agView->lock, &agView->refresh.r);
+		    &agView->lock, &agView->rCur);
 		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
 		    _("Refresh rate (nominal): %d"),
-		    &agView->lock, &agView->refresh.rnom);
+		    &agView->lock, &agView->rNom);
 	}
 	return (win);
 }
