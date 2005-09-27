@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.217 2005/09/27 14:06:29 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.218 2005/09/27 14:12:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,16 +65,16 @@ int	agEventDebugLvl = DEBUG_UNDERRUNS|DEBUG_ASYNC;
 
 int	agEventAvg = 0;		/* Number of events in last frame */
 int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
-int	agBgPopupMenu = 0;	/* Background popup menu */
-int	agScreenshotKey = 0;	/* Disable capture key (F8) */
-int	agNoQuitKey = 0;	/* Disable quit key (ESC) */
 
 AG_Window *agPerfWindow;
 static AG_Graph *agPerfGraph;
 static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif	/* DEBUG */
 
-int agIdleThresh = 20;					/* Idling threshold */
+int agIdleThresh = 20;				/* Idling threshold */
+int agBgPopupMenu = 0;				/* Background popup menu */
+int agScreenshotKey = 0;			/* Disable capture key (F8) */
+int agNoQuitKey = 0;				/* Disable quit key (ESC) */
 
 static void relay_event(void *, AG_Event *);
 static void event_dispatch(SDL_Event *);
