@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.192 2005/09/27 14:06:30 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.193 2005/09/27 14:12:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -104,14 +104,14 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	agView->focus_win = NULL;
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
 	agView->rCur = 0;
-	dprintf("FPS: %u\n", agView->rNom);
+	dprintf("%u fps\n", agView->rNom);
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
 	pthread_mutex_init(&agView->lock, &agRecursiveMutexAttr);
 
-	depth = AG_Uint8(agConfig, "view.depth");
-	agView->w = AG_Uint16(agConfig, "view.w");
-	agView->h = AG_Uint16(agConfig, "view.h");
+	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
+	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
+	agView->h = h > 0 ? h : AG_Uint16(agConfig, "view.h");
 
 	if (AG_Bool(agConfig, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
@@ -218,6 +218,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 		SDL_UpdateRect(agView->v, 0, 0, agView->v->w, agView->v->h);
 	}
 
+	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 	return (0);
