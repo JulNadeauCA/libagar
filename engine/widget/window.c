@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.261 2005/09/20 13:34:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.262 2005/09/27 00:25:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -475,7 +475,7 @@ cycle_focus(AG_Window *win, int reverse)
 	AG_Widget **widgets;
 	AG_Widget *olfocus;
 	u_int nwidgets = 0;
-	u_int i = 0;
+	int i = 0;
 
 	if ((olfocus = AG_WidgetFindFocused(win)) == NULL) {
 		dprintf("no focus!\n");
