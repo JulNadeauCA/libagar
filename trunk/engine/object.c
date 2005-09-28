@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.238 2005/09/27 00:25:17 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.239 2005/09/27 14:06:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -408,6 +408,9 @@ AG_ObjectAttach(void *parentp, void *childp)
 {
 	AG_Object *parent = parentp;
 	AG_Object *child = childp;
+
+	if (parent == NULL)
+		return;
 
 	AG_LockLinkage();
 	TAILQ_INSERT_TAIL(&parent->children, child, cobjs);
