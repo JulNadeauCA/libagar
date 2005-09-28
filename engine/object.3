@@ -1,4 +1,4 @@
-.\"	$Csoft: AG_Object.3,v 1.81 2005/09/19 01:25:16 vedge Exp $
+.\"	$Csoft: object.3,v 1.82 2005/09/27 00:25:16 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -258,6 +258,11 @@ These operations raise
 and
 .Fn detached
 events.
+If
+.Fa parent
+is NULL,
+.Fn AG_ObjectAttach
+is a no-op.
 .Pp
 The
 .Fn AG_ObjectAttachPath
