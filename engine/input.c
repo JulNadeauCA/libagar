@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.55 2005/04/14 06:19:35 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.56 2005/09/27 00:25:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,7 +49,7 @@ AG_InputSet(void *p, enum ag_input_type type, const char *name,
 	SLIST_INSERT_HEAD(&ag_input_devs, in, inputs);
 	pthread_mutex_unlock(&ag_input_lock);
 
-	dprintf("registered %s (%s)\n", in->name, in->ops->name);
+	dprintf("+ %s (%s)\n", in->name, in->ops->name);
 }
 
 /* Detach and free an input device structure. */
