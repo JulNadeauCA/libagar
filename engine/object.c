@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.239 2005/09/27 14:06:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.240 2005/09/28 05:22:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1212,7 +1212,8 @@ AG_ObjectLoadData(void *p)
 	off_t data_offs;
 
 	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
-		AG_SetError(_("The data of `%s' is already resident."), ob->name);
+		AG_SetError(_("The data of `%s' is already resident."),
+		    ob->name);
 		return (-1);
 	}
 	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
@@ -1342,7 +1343,8 @@ AG_ObjectSave(void *p)
 
 	backup_object(ob, save_file);
 
-	if ((buf = AG_NetbufOpen(save_file, "wb", AG_NETBUF_BIG_ENDIAN)) == NULL)
+	if ((buf = AG_NetbufOpen(save_file, "wb", AG_NETBUF_BIG_ENDIAN))
+	    == NULL)
 		goto fail_reinit;
 
 	AG_WriteVersion(buf, &ag_object_ver);

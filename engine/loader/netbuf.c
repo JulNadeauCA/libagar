@@ -1,4 +1,4 @@
-/*	$Csoft: netbuf.c,v 1.6 2005/09/06 04:13:16 vedge Exp $	*/
+/*	$Csoft: netbuf.c,v 1.7 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,8 @@
 #include <engine/loader/netbuf.h>
 
 AG_Netbuf *
-AG_NetbufOpen(const char *path, const char *mode, enum ag_netbuf_endian byte_order)
+AG_NetbufOpen(const char *path, const char *mode,
+    enum ag_netbuf_endian byte_order)
 {
 	AG_Netbuf *buf;
 
