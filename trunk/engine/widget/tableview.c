@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.33 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.34 2005/06/08 17:28:31 twingy Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -870,9 +870,11 @@ view_changed_check(AG_Tableview *tv, struct ag_tableview_rowq* in, int depth,
 		if (*seen) {
 			(*seen)--;
 		} else {
-			tv->visible.items[filled+x].row = row;
-			tv->visible.items[filled+x].depth = depth;
-			x++;
+			if ((filled+x) < tv->visible.count) {
+				tv->visible.items[filled+x].row = row;
+				tv->visible.items[filled+x].depth = depth;
+				x++;
+			}
 		}
 
 		if (row->expanded && filled+x < tv->visible.count)
