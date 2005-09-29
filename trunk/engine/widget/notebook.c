@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.6 2005/06/13 06:06:15 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.7 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -68,7 +68,8 @@ mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 
-	if (y <= nb->bar_h) {
+	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
+	    y <= nb->bar_h) {
 		AG_NotebookTab *tab;
 		int tx = SPACING;
 
@@ -132,6 +133,9 @@ AG_NotebookDraw(void *p)
 	    AGWIDGET(nb)->h - nb->bar_h,
 	    AG_COLOR(NOTEBOOK_SEL_COLOR));
 
+	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
+		return;
+	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		box.x = x;
 		box.y = y;
@@ -160,16 +164,24 @@ AG_NotebookScale(void *p, int w, int h)
 	
 	pthread_mutex_lock(&nb->lock);
 	if (w == -1 || h == -1) {
-		nb->bar_h = agTextFontHeight + SPACING*2;
-		nb->bar_w = SPACING*2;
+		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
+			nb->bar_h = agTextFontHeight + SPACING*2;
+			nb->bar_w = SPACING*2;
+		} else {
+			nb->bar_h = 0;
+			nb->bar_w = 0;
+		}
 		nb->cont_w = 0;
 		nb->cont_h = 0;
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 			AGWIDGET_OPS(tab)->scale(tab, -1, -1);
 			nb->cont_w = MAX(nb->cont_w,AGWIDGET(tab)->w);
 			nb->cont_h = MAX(nb->cont_h,AGWIDGET(tab)->h);
-			nb->bar_w += AGWIDGET_SURFACE(nb,tab->label)->w +
-			    SPACING*2;
+			if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
+				nb->bar_w +=
+				    AGWIDGET_SURFACE(nb,tab->label)->w +
+				    SPACING*2;
+			}
 		}
 		AGWIDGET(nb)->h = nb->cont_h + nb->bar_h;
 		AGWIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
@@ -247,4 +259,14 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 #if 0
 	AG_WidgetFocus(tab);
 #endif
+}
+
+void
+AG_NotebookSetTabVisiblity(AG_Notebook *nb, int flag)
+{
+	if (flag) {
+		nb->flags &= ~(AG_NOTEBOOK_HIDE_TABS);
+	} else {
+		nb->flags |= AG_NOTEBOOK_HIDE_TABS;
+	}
 }
