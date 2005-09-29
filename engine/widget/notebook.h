@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.h,v 1.2 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: notebook.h,v 1.3 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_NOTEBOOK_H_
@@ -26,8 +26,9 @@ typedef struct ag_notebook {
 	struct ag_widget wid;
 	enum ag_notebook_tab_alignment tab_align;
 	int flags;
-#define AG_NOTEBOOK_WFILL 0x01		/* Expand to fill available width */
-#define AG_NOTEBOOK_HFILL 0x02		/* Expand to fill available height */
+#define AG_NOTEBOOK_WFILL 	0x01	/* Expand to fill available width */
+#define AG_NOTEBOOK_HFILL 	0x02	/* Expand to fill available height */
+#define AG_NOTEBOOK_HIDE_TABS	0x04	/* Don't display the tabs. */
 	pthread_mutex_t	lock;
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
@@ -48,6 +49,7 @@ AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,
 		                  enum ag_box_type);
 void AG_NotebookDelTab(AG_Notebook *, AG_NotebookTab *);
 void AG_NotebookSelectTab(AG_Notebook *, AG_NotebookTab *);
+void AG_NotebookSetTabVisiblity(AG_Notebook *, int);
 __END_DECLS
 
 #include "close_code.h"
