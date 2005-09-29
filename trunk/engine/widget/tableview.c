@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.34 2005/06/08 17:28:31 twingy Exp $	*/
+/*	$Csoft: tableview.c,v 1.35 2005/09/29 02:16:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -322,7 +322,8 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 		return (NULL);
 	}
 	row = Malloc(sizeof(AG_TableviewRow), M_WIDGET);
-	row->cell = Malloc(sizeof(struct ag_tableview_cell) * tv->columncount, M_WIDGET);
+	row->cell = Malloc(sizeof(struct ag_tableview_cell) * tv->columncount,
+	    M_WIDGET);
 	row->userp = userp;
 	row->dynamic = !(flags & AG_TABLEVIEW_STATIC_ROW);
 
@@ -707,6 +708,9 @@ AG_TableviewDraw(void *p)
 	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
 
 	pthread_mutex_lock(&tv->lock);
+	
+	if (tv->visible.count == 0)
+		goto out;
 
 	/* before we draw, update if needed */
 	if (tv->visible.dirty)
@@ -719,7 +723,7 @@ AG_TableviewDraw(void *p)
 	/* Draw the background box */
 	agPrim.box(tv, 0, 0, AGWIDGET(tv)->w, AGWIDGET(tv)->h, -1,
 	    AG_COLOR(TABLEVIEW_COLOR));
-
+	
 	/* draw row selection hilites */
 	y = tv->head_height;
 	for (i = 0; i < tv->visible.count; i++) {
@@ -742,6 +746,7 @@ AG_TableviewDraw(void *p)
 	if (update) {
 		tv->visible.redraw_last = SDL_GetTicks();
 	}
+out:
 	pthread_mutex_unlock(&tv->lock);
 }
 
