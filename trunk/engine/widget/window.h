@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.93 2005/09/20 10:22:40 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.94 2005/09/27 00:25:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -27,8 +27,6 @@ typedef struct ag_window {
 	struct ag_widget wid;
 
 	int flags;
-#define AG_WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
-				 	   (for named windows only) */
 #define AG_WINDOW_CASCADE	0x0002	/* Increment position slightly */
 #define AG_WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
 #define AG_WINDOW_NO_DECORATIONS 0x0008	/* Disable the window borders */
@@ -38,12 +36,13 @@ typedef struct ag_window {
 #define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized */
 #define AG_WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
 #define AG_WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
-#define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
 #define AG_WINDOW_NO_CLOSE	0x0400	/* Disable close button */
 #define AG_WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
 #define AG_WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
 #define AG_WINDOW_MODAL		0x2000	/* Modal window behavior */
-#define AG_WINDOW_INHIBIT_FOCUS	0x4000	/* Prevent widgets from gaining focus */
+#define AG_WINDOW_INHIBIT_FOCUS	0x4000	/* Widgets cannot gain focus */
+#define AG_WINDOW_NO_BACKGROUND 0x8000	/* Don't fill the background */
+#define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
 
 	char caption[128];
 	int visible;				/* Window is visible */
@@ -100,8 +99,10 @@ int	 AG_WindowToggleVisibility(AG_Window *);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 void	 AG_WindowFocus(AG_Window *);
+void	 AG_WindowCycleFocus(AG_Window *, int);
 void	 AG_WindowClamp(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
+void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
 
 /* Generic event handlers */
 void	 AG_WindowDetachGenEv(int, union evarg *);

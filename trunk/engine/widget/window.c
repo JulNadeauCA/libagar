@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.262 2005/09/27 00:25:25 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.263 2005/09/28 16:08:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,12 +35,13 @@
 #include <engine/widget/window.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/cursors.h>
 
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
 
-const AG_WidgetOps window_ops = {
+const AG_WidgetOps agWindowOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -53,7 +54,7 @@ const AG_WidgetOps window_ops = {
 	AG_WindowScale
 };
 
-const AG_WidgetStyleMod default_style = {
+const AG_WidgetStyleMod agWindowDefaultStyle = {
 	"default",
 	{
 		NULL,			/* bggradient */
@@ -63,19 +64,18 @@ const AG_WidgetStyleMod default_style = {
 	NULL				/* misc fn */
 };
 
-static void shown(int, union evarg *);
-static void hidden(int, union evarg *);
-static void apply_alignment(AG_Window *);
-static void move_window(AG_Window *, SDL_MouseMotionEvent *);
-static void resize_window(int, AG_Window *, SDL_MouseMotionEvent *);
+static void AG_WindowResizeOp(int, AG_Window *, SDL_MouseMotionEvent *);
+static void AG_WindowMoveOp(AG_Window *, SDL_MouseMotionEvent *);
+static void AG_WindowShownEv(int, union evarg *);
+static void AG_WindowHiddenEv(int, union evarg *);
 
-pthread_mutex_t	window_lock = PTHREAD_MUTEX_INITIALIZER;
-int		window_xoffs = 0;
-int		window_yoffs = 0;
+pthread_mutex_t	agWindowLock = PTHREAD_MUTEX_INITIALIZER;
+int		agWindowXOffs = 0;
+int		agWindowYOffs = 0;
 int		agWindowAnySize = 0;
 
 static __inline__ int
-focus_existing(const char *name)
+AG_WindowFocusExisting(const char *name)
 {
 	AG_Window *owin;
 
@@ -109,7 +109,7 @@ AG_WindowNew(int flags, const char *fmt, ...)
 			if (*c == '/')
 				*c = '_';
 		}
-		if (focus_existing(name)) {
+		if (AG_WindowFocusExisting(name)) {
 			win = NULL;
 			goto out;
 		}
@@ -145,7 +145,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 
 	strlcpy(wname, "win-", sizeof(wname));
 	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
-	AG_WidgetInit(win, "window", &window_ops, 0);
+	AG_WidgetInit(win, "window", &agWindowOps, 0);
 	AG_ObjectSetType(win, "window");
 	AG_ObjectSetName(win, wname);
 
@@ -167,7 +167,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 	pthread_mutex_init(&win->lock, &agRecursiveMutexAttr);
 	
 	/* Select the default window style. */
-	AG_WindowSetStyle(win, &default_style);
+	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 	
 	/* Create the titlebar unless disabled. */
 	if (flags & AG_WINDOW_NO_CLOSE)
@@ -181,9 +181,9 @@ AG_WindowInit(void *p, const char *name, int flags)
 	    AG_TitlebarNew(win, titlebar_flags);
 
 	/* Automatically notify children of visibility changes. */
-	ev = AG_SetEvent(win, "widget-shown", shown, NULL);
+	ev = AG_SetEvent(win, "widget-shown", AG_WindowShownEv, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "widget-hidden", hidden, NULL);
+	ev = AG_SetEvent(win, "widget-hidden", AG_WindowHiddenEv, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "widget-lostfocus", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
@@ -224,9 +224,11 @@ AG_WindowDraw(void *p)
 	AG_Window *win = p;
 	int i;
 
-	agPrim.rect_filled(win, 0, 0, AGWIDGET(win)->w, AGWIDGET(win)->h,
-	    AG_COLOR(WINDOW_BG_COLOR));
-
+	if ((win->flags & AG_WINDOW_NO_BACKGROUND) == 0) {
+		agPrim.rect_filled(win, 0, 0,
+		    AGWIDGET(win)->w, AGWIDGET(win)->h,
+		    AG_COLOR(WINDOW_BG_COLOR));
+	}
 	if (win->flags & AG_WINDOW_NO_DECORATIONS)
 		return;
 
@@ -253,6 +255,7 @@ AG_WindowDraw(void *p)
 		    agColorsBorder[i-1]);
 	}
 
+	/* Draw the resize controls. */
 	if ((win->flags & AG_WINDOW_NO_HRESIZE) == 0) {
 		agPrim.vline(win,
 		    18,
@@ -313,7 +316,7 @@ AG_WindowDestroy(void *p)
 }
 
 static void
-shown(int argc, union evarg *argv)
+AG_WindowShownEv(int argc, union evarg *argv)
 {
 	AG_Window *win = argv[0].p;
 	int init = (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1);
@@ -335,18 +338,14 @@ shown(int argc, union evarg *argv)
 		    AGWIDGET(win)->h);
 	
 		/* Position the window and cache the absolute widget coords. */
-		apply_alignment(win);
+		AG_WindowApplyAlignment(win, win->alignment);
 		AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
 	}
-
-	if (win->flags & AG_WINDOW_PERSISTENT)
-		AG_ObjectLoad(win);
-	
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 }
 
 static void
-hidden(int argc, union evarg *argv)
+AG_WindowHiddenEv(int argc, union evarg *argv)
 {
 	AG_Window *win = argv[0].p;
 
@@ -369,10 +368,6 @@ hidden(int argc, union evarg *argv)
 			    AGWIDGET(win)->w, AGWIDGET(win)->h);
 		}
 	}
-
-	if (win->flags & AG_WINDOW_PERSISTENT)
-		AG_ObjectSave(win);
-
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
 }
 
@@ -442,7 +437,7 @@ AG_WindowHide(AG_Window *win)
 }
 
 static void
-count_widgets(AG_Widget *wid, u_int *nwidgets)
+AG_WindowCountWidgets(AG_Widget *wid, u_int *nwidgets)
 {
 	AG_Widget *cwid;
 
@@ -450,11 +445,11 @@ count_widgets(AG_Widget *wid, u_int *nwidgets)
 		(*nwidgets)++;
 
 	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
-		count_widgets(cwid, nwidgets);
+		AG_WindowCountWidgets(cwid, nwidgets);
 }
 
 static void
-map_widgets(AG_Widget *wid, AG_Widget **widgets, u_int *i)
+AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, u_int *i)
 {
 	AG_Widget *cwid;
 
@@ -462,15 +457,15 @@ map_widgets(AG_Widget *wid, AG_Widget **widgets, u_int *i)
 		widgets[(*i)++] = wid;
 
 	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
-		map_widgets(cwid, widgets, i);
+		AG_WindowMapWidgets(cwid, widgets, i);
 }
 
 /*
  * Move the widget focus inside a window.
  * The window must be locked.
  */
-static void
-cycle_focus(AG_Window *win, int reverse)
+void
+AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
 	AG_Widget **widgets;
 	AG_Widget *olfocus;
@@ -482,9 +477,9 @@ cycle_focus(AG_Window *win, int reverse)
 		return;
 	}
 
-	count_widgets(AGWIDGET(win), &nwidgets);
+	AG_WindowCountWidgets(AGWIDGET(win), &nwidgets);
 	widgets = Malloc(nwidgets * sizeof(AG_Widget *), M_WIDGET);
-	map_widgets(AGWIDGET(win), widgets, &i);
+	AG_WindowMapWidgets(AGWIDGET(win), widgets, &i);
 
 	for (i = 0; i < nwidgets; i++) {
 		if (widgets[i] == olfocus) {
@@ -512,7 +507,7 @@ cycle_focus(AG_Window *win, int reverse)
  * The view and window must be locked.
  */
 static void
-move_window(AG_Window *win, SDL_MouseMotionEvent *motion)
+AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
 
@@ -597,6 +592,25 @@ AG_WindowFocus(AG_Window *win)
 }
 
 /*
+ * Check if the given coordinates overlap a window control, and if so
+ * which operation is related to it.
+ */
+static __inline__ int
+AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
+{
+	if ((y - AGWIDGET(win)->y) > (AGWIDGET(win)->h - agColorsBorderSize)) {
+	    	if ((x - AGWIDGET(win)->x) < 17) {
+			return (AG_WINOP_LRESIZE);
+		} else if ((x - AGWIDGET(win)->x) > (AGWIDGET(win)->w - 17)) {
+			return (AG_WINOP_RRESIZE);
+		} else if ((win->flags & AG_WINDOW_NO_VRESIZE) == 0) {
+			return (AG_WINOP_HRESIZE);
+		}
+	}
+	return (AG_WINOP_NONE);
+}
+
+/*
  * Dispatch events to widgets.
  * The view must be locked, and the window list must be nonempty.
  */
@@ -649,6 +663,29 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
+			if (AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
+				switch (AG_WindowMouseOverCtrl(win,
+				    ev->motion.x, ev->motion.y)) {
+				case AG_WINOP_LRESIZE:
+					AG_WidgetReplaceCursor(win,
+					    AG_LLDIAG_CURSOR);
+					break;
+				case AG_WINOP_RRESIZE:
+					AG_WidgetReplaceCursor(win,
+					    AG_LRDIAG_CURSOR);
+					break;
+				case AG_WINOP_HRESIZE:
+					AG_WidgetReplaceCursor(win,
+					    AG_VRESIZE_CURSOR);
+					break;
+				default:
+					AG_WidgetUnsetCursor(win);
+					break;
+				}
+			} else {
+				if (agView->winop == AG_WINOP_NONE)
+					AG_WidgetUnsetCursor(win);
+			}
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->wop_win != win) {
 				pthread_mutex_unlock(&win->lock);
@@ -658,12 +695,22 @@ AG_WindowEvent(SDL_Event *ev)
 			case AG_WINOP_NONE:
 				break;
 			case AG_WINOP_MOVE:
-				move_window(win, &ev->motion);
+				AG_WindowMoveOp(win, &ev->motion);
 				goto out;
 			case AG_WINOP_LRESIZE:
+				AG_WidgetReplaceCursor(win, AG_LLDIAG_CURSOR);
+				AG_WindowResizeOp(AG_WINOP_LRESIZE, win,
+				    &ev->motion);
+				break;
 			case AG_WINOP_RRESIZE:
+				AG_WidgetReplaceCursor(win, AG_LRDIAG_CURSOR);
+				AG_WindowResizeOp(AG_WINOP_RRESIZE, win,
+				    &ev->motion);
+				break;
 			case AG_WINOP_HRESIZE:
-				resize_window(agView->winop, win, &ev->motion);
+				AG_WidgetReplaceCursor(win, AG_VRESIZE_CURSOR);
+				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
+				    &ev->motion);
 				goto out;
 			}
 			/*
@@ -678,8 +725,11 @@ AG_WindowEvent(SDL_Event *ev)
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			agView->winop = AG_WINOP_NONE;
-			agView->wop_win = NULL;
+			if (agView->winop != AG_WINOP_NONE) {
+				agView->winop = AG_WINOP_NONE;
+				agView->wop_win = NULL;
+				AG_WidgetUnsetCursor(win);
+			}
 			/*
 			 * Forward to all widgets that either hold focus or have
 			 * the AG_WIDGET_UNFOCUSED_BUTTONUP flag set.
@@ -698,21 +748,9 @@ AG_WindowEvent(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			if ((ev->button.y - AGWIDGET(win)->y) >
-			    (AGWIDGET(win)->h - win->ypadding_bot)) {
-				/* Initiate a resize operation. */
-				/* XXX don't hardcode notch position */
-			    	if ((ev->button.x - AGWIDGET(win)->x) < 17) {
-					agView->winop = AG_WINOP_LRESIZE;
-					agView->wop_win = win;
-				} else if ((ev->button.x - AGWIDGET(win)->x) >
-				           (AGWIDGET(win)->w - 17)) {
-					agView->winop = AG_WINOP_RRESIZE;
-					agView->wop_win = win;
-				} else if (!(win->flags&AG_WINDOW_NO_VRESIZE)) {
-					agView->winop = AG_WINOP_HRESIZE;
-					agView->wop_win = win;
-				}
+			if ((agView->winop = AG_WindowMouseOverCtrl(win,
+			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
+				agView->wop_win = win;
 			}
 			/* Forward to overlapping widgets. */
 			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
@@ -737,6 +775,7 @@ AG_WindowEvent(SDL_Event *ev)
 			}
 			/* FALLTHROUGH */
 		case SDL_KEYDOWN:
+			/* XXX */
 			switch (ev->key.keysym.sym) {
 			case SDLK_LSHIFT:
 			case SDLK_RSHIFT:
@@ -752,7 +791,7 @@ AG_WindowEvent(SDL_Event *ev)
 			}
 			if (ev->key.keysym.sym == SDLK_TAB &&	/* Move focus */
 			    ev->type == SDL_KEYUP) {
-				cycle_focus(win,
+				AG_WindowCycleFocus(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
 				goto out;
 			}
@@ -899,7 +938,7 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
  * The window must be locked.
  */
 static void
-resize_window(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
+AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	int x = AGWIDGET(win)->x;
 	int y = AGWIDGET(win)->y;
@@ -941,7 +980,6 @@ resize_window(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 	default:
 		break;
 	}
-
 #if 0
 	if (!agWindowAnySize) {
 		if (w < win->minw)
@@ -1129,10 +1167,10 @@ AG_WindowSetCloseAction(AG_Window *win, int mode)
  * Set the position of a window assuming its size is known.
  * The window must be locked.
  */
-static void
-apply_alignment(AG_Window *win)
+void
+AG_WindowApplyAlignment(AG_Window *win, enum ag_window_alignment alignment)
 {
-	switch (win->alignment) {
+	switch (alignment) {
 	case AG_WINDOW_UPPER_LEFT:
 		AGWIDGET(win)->x = 0;
 		AGWIDGET(win)->y = 0;
@@ -1171,46 +1209,46 @@ apply_alignment(AG_Window *win)
 		break;
 	}
 	if (win->flags & AG_WINDOW_CASCADE) {
-		pthread_mutex_lock(&window_lock);
-		switch (win->alignment) {
+		pthread_mutex_lock(&agWindowLock);
+		switch (alignment) {
 		case AG_WINDOW_UPPER_LEFT:
 		case AG_WINDOW_UPPER_RIGHT:
 			break;
 		case AG_WINDOW_MIDDLE_LEFT:
 		case AG_WINDOW_MIDDLE_RIGHT:
-			window_yoffs += AGWIDGET(win->tbar)->h;
-			if ((AGWIDGET(win)->y+window_yoffs+AGWIDGET(win)->h) >
+			agWindowYOffs += AGWIDGET(win->tbar)->h;
+			if ((AGWIDGET(win)->y+agWindowYOffs+AGWIDGET(win)->h) >
 			    agView->h) {
-				window_yoffs = 0;
+				agWindowYOffs = 0;
 			}
 			break;
 		case AG_WINDOW_LOWER_LEFT:
 		case AG_WINDOW_LOWER_RIGHT:
 			break;
 		case AG_WINDOW_CENTER:
-			window_xoffs += AGWIDGET(win->tbar)->h/2;
-			window_yoffs += AGWIDGET(win->tbar)->h/2;
-			if ((AGWIDGET(win)->x+window_xoffs+AGWIDGET(win)->w) >
+			agWindowXOffs += AGWIDGET(win->tbar)->h/2;
+			agWindowYOffs += AGWIDGET(win->tbar)->h/2;
+			if ((AGWIDGET(win)->x+agWindowXOffs+AGWIDGET(win)->w) >
 			    agView->w) {
-				window_xoffs = 0;
+				agWindowXOffs = 0;
 			}
-			if ((AGWIDGET(win)->y+window_yoffs+AGWIDGET(win)->h) >
+			if ((AGWIDGET(win)->y+agWindowYOffs+AGWIDGET(win)->h) >
 			    agView->h) {
-				window_yoffs = 0;
+				agWindowYOffs = 0;
 			}
 			break;
 		case AG_WINDOW_LOWER_CENTER:
 		case AG_WINDOW_UPPER_CENTER:
-			window_xoffs += AGWIDGET(win->tbar)->h/2;
-			if ((AGWIDGET(win)->x+window_xoffs+AGWIDGET(win)->w) >
+			agWindowXOffs += AGWIDGET(win->tbar)->h/2;
+			if ((AGWIDGET(win)->x+agWindowXOffs+AGWIDGET(win)->w) >
 			    agView->w) {
-				window_xoffs = 0;
+				agWindowXOffs = 0;
 			}
 			break;
 		}
-		AGWIDGET(win)->x += window_xoffs;
-		AGWIDGET(win)->y += window_yoffs;
-		pthread_mutex_unlock(&window_lock);
+		AGWIDGET(win)->x += agWindowXOffs;
+		AGWIDGET(win)->y += agWindowYOffs;
+		pthread_mutex_unlock(&agWindowLock);
 	}
 	AG_WindowClamp(win);
 }
