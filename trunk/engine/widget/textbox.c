@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.102 2005/09/20 06:12:47 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.103 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 #include <stdarg.h>
 #include <errno.h>
 
-const AG_WidgetOps textbox_ops = {
+const AG_WidgetOps agTextboxOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -171,7 +171,7 @@ lost_focus(int argc, union evarg *argv)
 void
 AG_TextboxInit(AG_Textbox *tbox, const char *label)
 {
-	AG_WidgetInit(tbox, "textbox", &textbox_ops,
+	AG_WidgetInit(tbox, "textbox", &agTextboxOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
 	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));

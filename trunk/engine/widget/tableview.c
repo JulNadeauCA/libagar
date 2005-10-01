@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.37 2005/10/01 06:01:01 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.38 2005/10/01 09:55:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -42,7 +42,7 @@
 
 #define ID_INVALID ((u_int)-1)
 
-static AG_WidgetOps tableview_ops = {
+static AG_WidgetOps agTableviewOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -104,7 +104,7 @@ void
 AG_TableviewInit(AG_Tableview *tv, int flags, AG_TableviewDataFn data_callback,
     AG_TableviewSortFn sort_callback)
 {
-	AG_WidgetInit(tv, "tableview", &tableview_ops,
+	AG_WidgetInit(tv, "tableview", &agTableviewOps,
 	  AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
 	  AG_WIDGET_HFILL);
 	pthread_mutex_init(&tv->lock, &agRecursiveMutexAttr);

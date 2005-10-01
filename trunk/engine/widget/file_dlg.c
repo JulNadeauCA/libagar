@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.9 2005/09/19 13:39:20 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.10 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-static AG_WidgetOps file_dlg_ops = {
+static AG_WidgetOps agFileDlgOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -265,8 +265,8 @@ void
 AG_FileDlgInit(AG_FileDlg *fdg, int flags, const char *cwd,
     const char *file)
 {
-	AG_WidgetInit(fdg, "file-dlg", &file_dlg_ops, AG_WIDGET_WFILL|
-					              AG_WIDGET_HFILL);
+	AG_WidgetInit(fdg, "file-dlg", &agFileDlgOps,
+	    AG_WIDGET_WFILL|AG_WIDGET_HFILL);
 	fdg->flags = flags;
 	if (cwd != NULL) {
 		strlcpy(fdg->cwd, cwd, sizeof(fdg->cwd));

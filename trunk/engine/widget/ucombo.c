@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.13 2005/05/24 08:15:11 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.14 2005/09/27 00:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-static AG_WidgetOps ucombo_ops = {
+static AG_WidgetOps agUComboOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -137,7 +137,7 @@ ucombo_selected(int argc, union evarg *argv)
 void
 AG_UComboInit(AG_UCombo *com)
 {
-	AG_WidgetInit(com, "ucombo", &ucombo_ops,
+	AG_WidgetInit(com, "ucombo", &agUComboOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
 	com->panel = NULL;
 	com->saved_h = 0;

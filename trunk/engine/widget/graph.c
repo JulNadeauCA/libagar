@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.54 2005/08/06 07:19:41 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.55 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,12 +36,7 @@
 
 #include "graph.h"
 
-const AG_Version graph_ver = {
-	"agar graph",
-	2, 0
-};
-
-const AG_WidgetOps graph_ops = {
+const AG_WidgetOps agGraphOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -80,7 +75,7 @@ void
 AG_GraphInit(AG_Graph *graph, const char *caption, enum ag_graph_type type,
     int flags, AG_GraphValue yrange)
 {
-	AG_WidgetInit(graph, "graph", &graph_ops,
+	AG_WidgetInit(graph, "graph", &agGraphOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL);
 
 	strlcpy(graph->caption, caption, sizeof(graph->caption));

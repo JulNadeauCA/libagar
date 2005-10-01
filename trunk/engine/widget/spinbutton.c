@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.24 2005/09/03 14:19:33 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.25 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <limits.h>
 
-static AG_WidgetOps spinbutton_ops = {
+static AG_WidgetOps agSpinbuttonOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -185,7 +185,7 @@ spinbutton_dec(int argc, union evarg *argv)
 void
 AG_SpinbuttonInit(AG_Spinbutton *sbu, const char *label)
 {
-	AG_WidgetInit(sbu, "spinbutton", &spinbutton_ops,
+	AG_WidgetInit(sbu, "spinbutton", &agSpinbuttonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
 	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &sbu->value);
 	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);

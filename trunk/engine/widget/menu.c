@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.23 2005/09/20 10:21:04 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.24 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-static AG_WidgetOps menu_ops = {
+static AG_WidgetOps agMenuOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -223,9 +223,9 @@ attached(int argc, union evarg *argv)
 void
 AG_MenuInit(AG_Menu *m)
 {
-	AG_WidgetInit(m, "AGMenu", &menu_ops, AG_WIDGET_WFILL|
-					       AG_WIDGET_UNFOCUSED_MOTION|
-	                                       AG_WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetInit(m, "AGMenu", &agMenuOps,
+	    AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_MOTION|
+	    AG_WIDGET_UNFOCUSED_BUTTONUP);
 
 	m->items = Malloc(sizeof(AG_MenuItem), M_WIDGET);
 	m->nitems = 0;

@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.31 2005/07/08 04:36:47 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.32 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -41,7 +41,7 @@
 #include <errno.h>
 #include <limits.h>
 
-static AG_WidgetOps fspinbutton_ops = {
+static AG_WidgetOps agFSpinbuttonOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -221,7 +221,7 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 void
 AG_FSpinbuttonInit(AG_FSpinbutton *fsu, const char *unit, const char *label)
 {
-	AG_WidgetInit(fsu, "fspinbutton", &fspinbutton_ops,
+	AG_WidgetInit(fsu, "fspinbutton", &agFSpinbuttonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
 
 	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &fsu->value);

@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.22 2005/08/03 04:15:44 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.23 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/fspinbutton.h>
 
-const AG_WidgetOps hsvpal_ops = {
+const AG_WidgetOps agHSVPalOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -522,7 +522,7 @@ AG_HSVPalInit(AG_HSVPal *pal)
 {
 	int i;
 
-	AG_WidgetInit(pal, "hsvpal", &hsvpal_ops, AG_WIDGET_FOCUSABLE);
+	AG_WidgetInit(pal, "hsvpal", &agHSVPalOps, AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);
 	AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &pal->s);
 	AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &pal->v);

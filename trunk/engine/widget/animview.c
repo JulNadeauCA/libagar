@@ -1,4 +1,4 @@
-/*	$Csoft: animview.c,v 1.3 2005/05/29 15:10:51 vedge Exp $	*/
+/*	$Csoft: animview.c,v 1.4 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,7 +31,7 @@
 
 #include "animview.h"
 
-const AG_WidgetOps animview_ops = {
+const AG_WidgetOps agAnimviewOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -190,7 +190,7 @@ mousebuttondown(int argc, union evarg *argv)
 void
 RG_AnimviewInit(RG_Animview *av)
 {
-	AG_WidgetInit(av, "animview", &animview_ops, 0);
+	AG_WidgetInit(av, "animview", &agAnimviewOps, 0);
 	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
 			       AG_WIDGET_HFILL;
 	av->pre_w = 64;

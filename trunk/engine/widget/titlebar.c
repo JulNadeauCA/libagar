@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.25 2005/07/16 16:07:33 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.26 2005/09/27 00:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 
 #include "titlebar.h"
 
-const AG_WidgetOps titlebar_ops = {
+const AG_WidgetOps agTitlebarOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -111,7 +111,7 @@ void
 AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_WFILL);
-	AG_ObjectSetOps(tbar, &titlebar_ops);
+	AG_ObjectSetOps(tbar, &agTitlebarOps);
 	AG_WireGfx(tbar, "/engine/widget/pixmaps");
 
 	AG_BoxSetPadding(&tbar->hb, 5);

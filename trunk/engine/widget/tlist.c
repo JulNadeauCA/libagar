@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.134 2005/09/27 00:25:24 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.135 2005/10/01 09:55:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-static AG_WidgetOps tlist_ops = {
+static AG_WidgetOps agTlistOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -169,7 +169,7 @@ lost_focus(int argc, union evarg *argv)
 void
 AG_TlistInit(AG_Tlist *tl, int flags)
 {
-	AG_WidgetInit(tl, "tlist", &tlist_ops,
+	AG_WidgetInit(tl, "tlist", &agTlistOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
 	    AG_WIDGET_HFILL);
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);

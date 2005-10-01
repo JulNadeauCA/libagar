@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.49 2005/06/21 04:31:34 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.50 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-const AG_WidgetOps scrollbar_ops = {
+const AG_WidgetOps agScrollbarOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -72,7 +72,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type)
 void
 AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type)
 {
-	AG_WidgetInit(sb, "scrollbar", &scrollbar_ops,
+	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps,
 		AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP);
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &sb->value);
 	AG_WidgetBind(sb, "min", AG_WIDGET_INT, &sb->min);

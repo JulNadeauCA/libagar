@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.7 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.8 2005/09/29 02:42:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static AG_WidgetOps notebook_ops = {
+static AG_WidgetOps agNotebookOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -91,7 +91,7 @@ mousebuttondown(int argc, union evarg *argv)
 void
 AG_NotebookInit(AG_Notebook *nb, int flags)
 {
-	AG_WidgetInit(nb, "notebook", &notebook_ops, 0);
+	AG_WidgetInit(nb, "notebook", &agNotebookOps, 0);
 
 	nb->flags = flags;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;

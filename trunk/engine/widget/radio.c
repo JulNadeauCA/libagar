@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.49 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.50 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static AG_WidgetOps radio_ops = {
+static AG_WidgetOps agRadioOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -81,8 +81,8 @@ AG_RadioInit(AG_Radio *rad, const char **items)
 	const char *s, **itemsp = items;
 	int i;
 
-	AG_WidgetInit(rad, "radio", &radio_ops, AG_WIDGET_FOCUSABLE|
-		                                AG_WIDGET_WFILL);
+	AG_WidgetInit(rad, "radio", &agRadioOps,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
 	rad->value = -1;
