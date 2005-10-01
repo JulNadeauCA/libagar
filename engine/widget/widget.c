@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.116 2005/09/27 00:25:25 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.117 2005/10/01 06:00:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1054,10 +1054,15 @@ AG_WidgetParentWindow(void *p)
 void
 AG_WidgetFocus(void *p)
 {
-	AG_Widget *wid = p, *pwid = wid;
+	AG_Widget *wid = p, *pwid = wid, *fwid;
 	AG_Window *pwin;
 
 	if ((wid->flags & AG_WIDGET_FOCUSABLE) == 0)
+		return;
+
+	/* See if this widget is already focused. */
+	if ((fwid = AG_WidgetFindFocused(wid)) != NULL &&
+	    (fwid == wid))
 		return;
 
 	/* Remove focus from other widgets inside this window. */
