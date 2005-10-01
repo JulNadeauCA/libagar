@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.98 2005/10/01 06:00:51 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.99 2005/10/01 12:02:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -134,6 +134,7 @@ void	 AG_WidgetPopClipRect(void *);
 void	 AG_WidgetPushCursor(void *, int);
 void	 AG_WidgetPopCursor(void *);
 void	 AG_WidgetSetCursor(void *, int);
+void	 AG_WidgetReplaceCursor(void *, int);
 #define  AG_WidgetUnsetCursor(w) AG_WidgetPopCursor(w)
 
 #define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)

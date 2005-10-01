@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.118 2005/10/01 09:01:38 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.119 2005/10/01 12:02:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,13 +36,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-const AG_Version widget_ver = {
-	"agar widget",
-	0, 0
-};
-
 static void
-inherit_style(int argc, union evarg *argv)
+AG_WidgetInheritStyleEv(int argc, union evarg *argv)
 {
 	AG_Widget *pwid = argv[0].p;
 	AG_Widget *wid = argv[argc].p;
@@ -86,7 +81,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	 * Arrange for immediate children to inherit the style settings
 	 * of the parent on attachment.
 	 */
-	AG_SetEvent(wid, "child-attached", inherit_style, NULL);
+	AG_SetEvent(wid, "child-attached", AG_WidgetInheritStyleEv, NULL);
 }
 
 int
@@ -1149,6 +1144,18 @@ AG_WidgetSetCursor(void *p, int cursor)
 		wid->cursSave = SDL_GetCursor();
 		SDL_SetCursor(agCursors[cursor]);
 	}
+}
+
+void
+AG_WidgetReplaceCursor(void *p, int cursor)
+{
+	AG_Widget *wid = p;
+
+	if (wid->cursSave == NULL) {
+		wid->cursSave = SDL_GetCursor();
+	}
+	if (SDL_GetCursor() != agCursors[cursor])
+		SDL_SetCursor(agCursors[cursor]);
 }
 
 void
