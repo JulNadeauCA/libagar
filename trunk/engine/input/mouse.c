@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.13 2005/05/08 11:19:00 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.14 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@ int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
 
 static int
-match(const void *p, const SDL_Event *ev)
+mouse_match(const void *p, const SDL_Event *ev)
 {
 	const AG_Mouse *ms = p;
 
@@ -58,7 +58,7 @@ match(const void *p, const SDL_Event *ev)
 }
 
 static void
-proc_event(void *p, const SDL_Event *ev)
+mouse_event(void *p, const SDL_Event *ev)
 {
 	/* TODO */
 }
@@ -92,7 +92,7 @@ AG_MouseGetState(int *x, int *y)
 const AG_InputOps agMouseOps = {
 	N_("Mouse"),
 	NULL,
-	match,
-	proc_event
+	mouse_match,
+	mouse_event
 };
 
