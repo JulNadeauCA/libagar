@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.163 2005/09/27 00:25:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.164 2005/09/27 14:06:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,6 @@
 #include <compat/strlcat.h>
 
 #include <engine/engine.h>
-#include <engine/input.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/typesw.h>
@@ -206,37 +205,50 @@ AG_InitConfigWin(u_int flags)
 int
 AG_InitInput(u_int flags)
 {
-	extern int agScreenshotKey, agNoQuitKey;
-	int i, njoys;
+	extern int agKbdUnicode;			/* config.c */
+	int i, n, njoys;
 
-	if (flags & AG_INPUT_KBDMOUSE) {
-		AG_KeyboardNew(0);
-		AG_MouseNew(0);
-	}
-	if (flags & AG_INPUT_JOYSTICKS) {
-		if (AG_Bool(agConfig, "input.joysticks") &&
-		    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
-			njoys = SDL_NumJoysticks();
-			for (i = 0; i < njoys; i++)
-				AG_JoystickNew(i);
+	SDL_EnableUNICODE(agKbdUnicode || (flags & AG_FORCE_UNICODE));
+
+	if (AG_Bool(agConfig, "input.joysticks") ||
+	    (flags & AG_FORCE_JOYSTICK)) {
+		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+			n = SDL_NumJoysticks();
+			for (i = 0, njoys = 0; i < n; i++) {
+				if (SDL_JoystickOpen(i) != NULL)
+					njoys++;
+			}
+			if (njoys > 0)
+				SDL_JoystickEventState(SDL_ENABLE);
 		}
 	}
-	if (flags & AG_INPUT_SCREENSHOT_KEY) { agScreenshotKey = 1; }
-	if (flags & AG_INPUT_NO_QUIT_KEY) { agNoQuitKey = 1; }
 	return (0);
+}
+
+Uint8
+AG_MouseGetState(int *x, int *y)
+{
+	Uint8 rv;
+
+	rv = SDL_GetMouseState(x, y);
+#if defined(__APPLE__) && defined(HAVE_OPENGL)
+	if (agView->opengl && y != NULL)
+		*y = agView->h - *y;
+#endif
+	return (rv);
 }
 
 int
 AG_InitNetwork(u_int flags)
 {
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
-	if ((flags & AG_NETWORK_SERVERMODE) && agServerMode) {
+	if ((flags & AG_INIT_DEBUG_SERVER) && agServerMode) {
 		extern int AG_DebugServerStart(void);
 		AG_DebugServerStart();
 	}
 #endif
 #if defined(NETWORK)
-	if (flags & AG_NETWORK_RCS)
+	if (flags & AG_INIT_RCS)
 		AG_RcsInit();
 #endif
 	return (0);
@@ -249,12 +261,19 @@ AG_AtExitFunc(void (*func)(void))
 	agAtexitFunc = func;
 }
 
-/*
- * Release all resources allocated by the Agar engine.
- * Only one thread must be running.
- */
+/* Request a graceful shutdown of the application. */
 void
 AG_Quit(void)
+{
+	SDL_Event nev;
+
+	nev.type = SDL_QUIT;
+	SDL_PushEvent(&nev);
+}
+
+/* Immediately clean up and exit the application. */
+void
+AG_Destroy(void)
 {
 	if (agAtexitFunc != NULL)
 		agAtexitFunc();
@@ -270,7 +289,6 @@ AG_Quit(void)
 	AG_ObjectDestroy(agWorld);
 	AG_TextDestroy();
 	AG_ViewDestroy();
-	AG_InputDestroy();
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();

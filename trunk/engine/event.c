@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.218 2005/09/27 14:12:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.219 2005/09/27 18:03:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 #include <config/have_opengl.h>
 
 #include <engine/engine.h>
-#include <engine/input.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/timeout.h>
@@ -73,8 +72,15 @@ static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 
 int agIdleThresh = 20;				/* Idling threshold */
 int agBgPopupMenu = 0;				/* Background popup menu */
-int agScreenshotKey = 0;			/* Disable capture key (F8) */
-int agNoQuitKey = 0;				/* Disable quit key (ESC) */
+
+struct ag_global_key {
+	SDLKey keysym;
+	SDLMod keymod;
+	void (*fn)(void);
+	SLIST_ENTRY(ag_global_key) gkeys;
+};
+static SLIST_HEAD(,ag_global_key) agGlobalKeys =
+    SLIST_HEAD_INITIALIZER(&agGlobalKeys);
 
 static void relay_event(void *, AG_Event *);
 static void event_dispatch(SDL_Event *);
@@ -260,9 +266,7 @@ event_dispatch(SDL_Event *ev)
 			ev->motion.yrel = -ev->motion.yrel;
 		}
 #endif
-		if (!TAILQ_EMPTY(&agView->windows)) {
-			AG_WindowEvent(ev);
-		}
+		AG_WindowEvent(ev);
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
@@ -270,13 +274,8 @@ event_dispatch(SDL_Event *ev)
 		if (agView->opengl)
 			ev->button.y = agView->h - ev->button.y;
 #endif
-		if (!TAILQ_EMPTY(&agView->windows)) {
-			rv = AG_WindowEvent(ev);
-		} else {
-			rv = 1;
-		}
-		if (rv == 0 && agBgPopupMenu &&
-		    ev->type == SDL_MOUSEBUTTONDOWN &&
+		if (AG_WindowEvent(ev) == 0 &&
+		    agBgPopupMenu && ev->type == SDL_MOUSEBUTTONDOWN &&
 		    (ev->button.button == SDL_BUTTON_MIDDLE ||
 		     ev->button.button == SDL_BUTTON_RIGHT)) {
 			AG_Menu *me;
@@ -311,35 +310,18 @@ event_dispatch(SDL_Event *ev)
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
 		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
 		    "???");
-		AG_InputEvent(AG_INPUT_JOY, ev);
+		AG_WindowEvent(ev);
 		break;
 	case SDL_KEYDOWN:
-		switch (ev->key.keysym.sym) {
-		case SDLK_F8:
-			if (!agScreenshotKey) {
-				char path[MAXPATHLEN];
-	
-				AG_DumpSurface(agView->v, path);
-				AG_TextTmsg(AG_MSG_INFO, 1000,
-				    _("Screenshot saved to %s."), path);
+		{
+			struct ag_global_key *gk;
+
+			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
+				if (gk->keysym == ev->key.keysym.sym &&
+				    (gk->keymod == 0 ||
+				     ev->key.keysym.mod & gk->keymod))
+					gk->fn();
 			}
-			break;
-		case SDLK_ESCAPE:
-			if (!agNoQuitKey) {
-				SDL_Event nev;
-#ifdef DEBUG
-				if (ev->key.keysym.mod & KMOD_SHIFT) {
-					nev.type = SDL_USEREVENT;
-					SDL_PushEvent(&nev);
-					break;
-				}
-#endif
-				nev.type = SDL_QUIT;
-				SDL_PushEvent(&nev);
-			}
-			break;
-		default:
-			break;
 		}
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
@@ -348,14 +330,7 @@ event_dispatch(SDL_Event *ev)
 		    (int)ev->key.keysym.sym, ev->key.keysym.unicode,
 		    (ev->key.state == SDL_PRESSED) ?
 		    "PRESSED" : "RELEASED");
-		if (!TAILQ_EMPTY(&agView->windows)) {
-			rv = AG_WindowEvent(ev);
-		} else {
-			rv = 0;
-		}
-		if (rv == 0) {
-			AG_InputEvent(AG_INPUT_KEYBOARD, ev);
-		}
+		AG_WindowEvent(ev);
 		break;
 	case SDL_QUIT:
 #ifdef EDITION
@@ -370,7 +345,7 @@ event_dispatch(SDL_Event *ev)
 	case SDL_USEREVENT:
 		pthread_mutex_unlock(&agView->lock);
 		agObjMgrExiting = 1;
-		AG_Quit();
+		AG_Destroy();
 		/* NOTREACHED */
 		break;
 	}
@@ -412,6 +387,18 @@ event_timeout(void *p, Uint32 ival, void *arg)
 		ev->handler(ev->argc, ev->argv);
 	}
 	return (0);
+}
+
+void
+AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
+{
+	struct ag_global_key *gk;
+
+	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk->keysym = keysym;
+	gk->keymod = keymod;
+	gk->fn = fn;
+	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
 }
 
 /*

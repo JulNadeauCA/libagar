@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.57 2005/09/27 00:25:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.58 2005/09/27 14:06:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -289,8 +289,8 @@ AG_MapAllocNodes(AG_Map *m, u_int w, u_int h)
 	int x, y;
 	
 	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
-		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h, AG_MAP_MAXWIDTH,
-		    AG_MAP_MAXHEIGHT);
+		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
+		    AG_MAP_MAXWIDTH, AG_MAP_MAXHEIGHT);
 		return (-1);
 	}
 
@@ -354,8 +354,8 @@ AG_MapResize(AG_Map *m, u_int w, u_int h)
 	int x, y;
 
 	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
-		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h, AG_MAP_MAXWIDTH,
-		    AG_MAP_MAXHEIGHT);
+		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
+		    AG_MAP_MAXWIDTH, AG_MAP_MAXHEIGHT);
 		return (-1);
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.41 2005/05/12 07:51:38 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.42 2005/09/27 00:25:22 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <config/utf8.h>
 
 #include <engine/engine.h>
-#include <engine/input.h>
 #include <engine/prop.h>
 #include <engine/config.h>
 

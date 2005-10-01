@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.240 2005/09/28 05:22:56 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.241 2005/09/28 15:46:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -33,7 +33,6 @@
 #include <compat/rmd160.h>
 
 #include <engine/config.h>
-#include <engine/input.h>
 #include <engine/view.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.104 2005/09/27 14:06:30 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.105 2005/09/27 14:12:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -216,6 +216,7 @@ void			 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16,
 void			 AG_SetAlphaPixels(SDL_Surface *, Uint8);
 void			 AG_DumpSurface(SDL_Surface *, char *);
 __inline__ void		 AG_UpdateRectQ(int, int, int, int);
+void			 AG_ViewCapture(void);
 
 #ifdef HAVE_OPENGL
 GLuint		 AG_SurfaceTexture(SDL_Surface *, GLfloat *);

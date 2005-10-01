@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.8 2005/08/29 03:29:05 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.9 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/input.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
