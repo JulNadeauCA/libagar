@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.153 2005/09/27 14:06:29 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.154 2005/10/01 09:55:38 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -347,6 +347,16 @@ updated_bg(int argc, union evarg *argv)
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
 		}
 #endif
+	}
+}
+
+void
+AG_ShowSettings(void)
+{
+	if (!agConfig->window->visible) {
+		AG_WindowShow(agConfig->window);
+	} else {
+		AG_WindowFocus(agConfig->window);
 	}
 }
 
