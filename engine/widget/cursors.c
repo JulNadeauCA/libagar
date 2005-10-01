@@ -1,4 +1,4 @@
-/*	$Csoft: cursors.c,v 1.3 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: cursors.c,v 1.4 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -32,6 +32,10 @@
 #include "cursors/fill.xpm"
 #include "cursors/erase.xpm"
 #include "cursors/pick.xpm"
+#include "cursors/hresize.xpm"
+#include "cursors/vresize.xpm"
+#include "cursors/lldiag.xpm"
+#include "cursors/lrdiag.xpm"
 
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
@@ -82,6 +86,10 @@ AG_CursorsInit(void)
 	agCursors[AG_FILL_CURSOR] = create_cursor(fill_xpm, 23, 25);
 	agCursors[AG_ERASE_CURSOR] = create_cursor(erase_xpm, 10, 20);
 	agCursors[AG_PICK_CURSOR] = create_cursor(pick_xpm, 8, 22);
+	agCursors[AG_HRESIZE_CURSOR] = create_cursor(hresize_xpm, 16, 17);
+	agCursors[AG_VRESIZE_CURSOR] = create_cursor(vresize_xpm, 15, 16);
+	agCursors[AG_LLDIAG_CURSOR] = create_cursor(lldiag_xpm, 16, 15);
+	agCursors[AG_LRDIAG_CURSOR] = create_cursor(lrdiag_xpm, 16, 15);
 }
 
 void
