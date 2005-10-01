@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.63 2005/05/31 01:31:42 vedge Exp $
+.\"	$Csoft: widget.3,v 1.64 2005/09/27 00:25:25 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -92,13 +92,15 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define AG_WIDGET_FOCUSABLE          0x01  /* Able to grab focus */
-#define AG_WIDGET_FOCUSED            0x02  /* Holds focus (optimization) */
-#define AG_WIDGET_UNFOCUSED_MOTION   0x04  /* Unfocused mousemotion */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP 0x08  /* Unfocused mousebuttonup */
-#define AG_WIDGET_CLIPPING           0x10  /* Enable clipping */
-#define AG_WIDGET_WFILL              0x20  /* Fill available width */
-#define AG_WIDGET_HFILL              0x40  /* Fill available height */
+#define AG_WIDGET_FOCUSABLE		0x001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x002 /* Holds focus */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x004 /* All motion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x008 /* All buttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x010 /* All buttondown events */
+#define AG_WIDGET_CLIPPING		0x020 /* Automatic clipping */
+#define AG_WIDGET_WFILL			0x040 /* Expand to fill width */
+#define AG_WIDGET_HFILL			0x080 /* Expand to fill height */
+#define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
 .Ed
 .Pp
 Only widgets with the
@@ -115,9 +117,12 @@ and
 events, even if it's not holding focus.
 .Pp
 .Dv AG_WIDGET_CLIPPING
-arranges for a clipping rectangle (as set by
-.Xr SDL_SetClipRect 3 )
-to surround the widget area for the duration of the draw operation.
+arranges for a temporary clipping rectangle to surround the widget's
+allocated area for the duration of the draw operation.
+Widgets can set clipping rectangles over specific areas with
+.Fn AG_WidgetPushClipRect
+and
+.Fn AG_WidgetPopClipRect .
 .Pp
 The
 .Dv AG_WIDGET_WFILL
@@ -133,7 +138,7 @@ argument to
 is a pointer to the following structure:
 .Bd -literal
 AG_WidgetOps {
-	const AG_ObjectOps ops;                 /* Generic AG_Object(3) ops */
+	const AG_ObjectOps ops;                 /* Object operations */
 	void (*draw)(void *p);                  /* Rendering routine */
 	void (*scale)(void *p, int w, int h);   /* Size request routine */
 };
@@ -175,6 +180,12 @@ parent container.
 .Pp
 .Ft "void"
 .Fn AG_WidgetFocus "void *widget"
+.Pp
+.Ft "void"
+.Fn AG_WidgetUnfocus "void *widget"
+.Pp
+.Ft "void"
+.Fn AG_WidgetFindFocused "AG_Window *win"
 .nr nS 0
 .Pp
 The
@@ -190,15 +201,11 @@ function moves the keyboard/mousemotion focus over the given widget
 A widget holding the keyboard/mousemotion focus receives keyboard and
 mousemotion events.
 The widget may also change its appearance depending on its focus state.
-Some primitive routines such as
-.Fn primitive.box
-alter their appearance slightly depending on the focus state.
 .Pp
-Internally, the window focus is independent from the widget focus (the
-highest window on the stack always holds focus).
 The
-.Fn WINDOW_FOCUSED
-macro may be used to determine the focus state of a given window.
+.Fn AG_WidgetFindFocused
+function searches the given window for a focused widget and returns a pointer
+to it if it was found, or NULL otherwise.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
@@ -255,6 +262,12 @@ direct video agPrim in OpenGL mode.
 .Pp
 .nr nS 1
 .Ft void
+.Fn AG_WidgetPushClipRect "void *widget" "int x" "int y" "u_int w" "u_int h"
+.Pp
+.Ft void
+.Fn AG_WidgetPopClipRect "void *widget"
+.Pp
+.Ft void
 .Fn AG_WidgetBlit "void *widget" "SDL_Surface *src" "int x" "int y"
 .Pp
 .Ft void
@@ -293,6 +306,18 @@ direct video agPrim in OpenGL mode.
 .Ft void
 .Fn agPrim.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
 .nr nS 0
+.Pp
+The
+.Fn AG_WidgetPushClipRect
+function creates a clipping rectangle over the given area (given in
+widget coordinates).
+The current clipping rectangle is saved and can be restored by calling
+.Fn AG_WidgetPopClipRect .
+In SDL mode, the temporary rectangle is set by
+.Xr SDL_SetClipRect 3 .
+In OpenGL mode,
+.Xr glClipPlane 3
+is used.
 .Pp
 The
 .Fn AG_WidgetBlit
