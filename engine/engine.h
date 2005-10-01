@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.99 2005/09/27 02:24:43 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.100 2005/09/27 14:06:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -162,14 +162,11 @@ extern pthread_mutex_t agTimingLock;	/* engine.c */
 #define AG_VIDEO_NOFRAME	0x080
 #define AG_VIDEO_BGPOPUPMENU	0x100
 
-#define AG_INPUT_KBDMOUSE		0x01
-#define AG_INPUT_JOYSTICKS		0x02
-#define AG_INPUT_SCREENSHOT_KEY		0x04
-#define AG_INPUT_NO_QUIT_KEY		0x08
-#define AG_INPUT_ALL			0xff
+#define AG_FORCE_UNICODE	0x01
+#define AG_FORCE_JOYSTICK	0x02
 
-#define AG_NETWORK_SERVERMODE	0x01
-#define AG_NETWORK_RCS		0x02
+#define AG_INIT_DEBUG_SERVER	0x01
+#define AG_INIT_RCS		0x02
 
 #define AG_CONFIG_FULLSCREEN	0x01
 #define AG_CONFIG_GL		0x02
@@ -183,9 +180,11 @@ int	 AG_InitVideo(int, int, int, u_int);
 int	 AG_InitInput(u_int);
 int	 AG_InitNetwork(u_int);
 int	 AG_InitConfigWin(u_int);
+Uint8	 AG_MouseGetState(int *, int *);
 
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_Quit(void);
+void	 AG_Destroy(void);
 __END_DECLS
 
 #include "close_code.h"

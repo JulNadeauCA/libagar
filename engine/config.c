@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.152 2005/09/27 03:13:56 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.153 2005/09/27 14:06:29 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/prop.h>
-#include <engine/input.h>
 #include <engine/rcs.h>
 
 #include <engine/map/map.h>
@@ -89,11 +88,17 @@ const AG_ObjectOps agConfigOps = {
 	NULL
 };
 
+int agKbdUnicode = 1;				/* Unicode translation */
+int agKbdDelay = 250;				/* Key repeat delay */
+int agKbdRepeat = 35;				/* Key repeat interval */
+int agMouseDblclickDelay = 250;			/* Mouse double-click delay */
+int agMouseSpinDelay = 250;			/* Spinbutton repeat delay */
+int agMouseSpinIval = 50;			/* Spinbutton repeat interval */
+
 extern int agTextComposition;
 extern int agTextBidi;
 extern int agTextTabWidth;
 extern int agWindowAnySize;
-extern int agKbdUnicode;
 extern int agIdleThresh;
 extern int agServerMode;
 extern int agScreenshotQuality;

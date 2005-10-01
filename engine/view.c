@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.193 2005/09/27 14:12:18 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.194 2005/09/28 05:10:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -770,6 +770,15 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 		    (((sB - dB) * sA) >> 8) + dB,
 		    (Uint8)alpha));
 	}
+}
+
+void
+AG_ViewCapture(void)
+{
+	char path[MAXPATHLEN];
+	
+	AG_DumpSurface(agView->v, path);
+	AG_TextTmsg(AG_MSG_INFO, 1000, _("Screenshot saved to %s."), path);
 }
 
 /* Dump a surface to a JPEG image. */

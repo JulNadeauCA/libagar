@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.32 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.33 2005/09/27 00:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -61,6 +61,7 @@ int		 AG_ReschedEvent(void *, const char *, Uint32);
 int		 AG_CancelEvent(void *, const char *);
 __inline__ void	 AG_ExecEvent(void *, const char *);
 void		 AG_ForwardEvent(void *, const char *, int, union evarg *);
+void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 __END_DECLS
 
 #ifdef DEBUG

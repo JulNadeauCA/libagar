@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.24 2005/06/18 03:46:01 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.25 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/input.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.47 2005/09/20 13:46:31 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.48 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,7 +31,6 @@
 #ifdef MAP
 
 #include <engine/view.h>
-#include <engine/input.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -367,7 +366,8 @@ AG_MapviewInit(AG_Mapview *mv, AG_Map *m, int flags,
     struct ag_toolbar *toolbar, struct ag_statusbar *statbar)
 {
 	AG_WidgetInit(mv, "mapview", &mapview_ops,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|AG_WIDGET_HFILL);
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
+	    AG_WIDGET_HFILL);
 
 	mv->flags = (flags | AG_MAPVIEW_CENTER);
 	mv->mode = AG_MAPVIEW_EDITION;
