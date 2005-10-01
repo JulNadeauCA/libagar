@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.134 2005/09/27 00:25:24 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.1 2005/10/01 09:50:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/scrollbar.h>
 #include <engine/widget/label.h>
+#include <engine/widget/cursors.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -59,6 +60,9 @@ static void keydown(int, union evarg *);
 static void keyup(int, union evarg *);
 static void lostfocus(int, union evarg *);
 static void kbdscroll(int, union evarg *);
+
+#define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
+#define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
 
 AG_Table *
 AG_TablePolled(void *parent, u_int flags, void (*fn)(int, union evarg *),
@@ -86,7 +90,8 @@ void
 AG_TableInit(AG_Table *t, u_int flags)
 {
 	AG_WidgetInit(t, "table", &agTableOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL);
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL|
+	    AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
@@ -120,7 +125,7 @@ AG_TableInit(AG_Table *t, u_int flags)
 	AG_SetEvent(t, "window-keyup", keyup, NULL);
 	AG_SetEvent(t, "widget-lostfocus", lostfocus, NULL);
 	AG_SetEvent(t, "widget-hidden", lostfocus, NULL);
-	AG_SetEvent(t, "detached", lostfocus, NULL);
+//	AG_SetEvent(t, "detached", lostfocus, NULL);
 	AG_SetEvent(t, "kbdscroll", kbdscroll, NULL);
 }
 
@@ -281,8 +286,6 @@ AG_TableDraw(void *p)
 		int cw;
 		
 		cw = (x+col->w) < AGWIDGET(t)->w ? col->w: AGWIDGET(t)->w - x;
-		if (cw <= 0)
-			continue;
 
 		/* Draw the column header and separator. */
 		if (x > 0 && x < AGWIDGET(t)->w) {
@@ -507,20 +510,21 @@ column_popup(AG_Table *t, int x)
 }
 
 static void
-column_sel(AG_Table *t, int x)
+column_sel(AG_Table *t, int px)
 {
 	AG_TableCell *c;
 	u_int n;
 	int cx;
+	int x = px - (COLUMN_RESIZE_RANGE/2);
 
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
 		int x2 = cx+tc->w;
 
 		if (x > cx && x < x2) {
-			dprintf("x=%d, cx=%d, x2=%d\n", x, cx, x2);
-			if ((x2 - x) < 10) {
-				t->nResizing = n;
+			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
+				if (t->nResizing == -1)
+					t->nResizing = n;
 			} else {
 				if (multisel(t)) {
 					tc->selected = !tc->selected;
@@ -567,6 +571,12 @@ cell_popup(AG_Table *t, int mc, int x)
 {
 }
 
+static __inline__ int
+column_over(AG_Table *t, int y)
+{
+	return (AG_WidgetInt(t->vbar, "value") + y/t->row_h - 1);
+}
+
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
@@ -577,17 +587,14 @@ mousebuttondown(int argc, union evarg *argv)
 	int m;
 
 	pthread_mutex_lock(&t->lock);
-	m = AG_WidgetInt(t->vbar, "value") + y/t->row_h - 1;
-	if (m >= (int)t->m)
+	if ((m = column_over(t, y)) >= (int)t->m)
 		goto out;
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (m < 0) {
-			dprintf("column sel (%d)\n", x);
 			column_sel(t, x);
 		} else {
-			dprintf("row sel (%d,%d)\n", m, x);
 			cell_sel(t, m, x);
 		}
 		break;
@@ -617,7 +624,9 @@ mousebuttonup(int argc, union evarg *argv)
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
-		t->nResizing = -1;
+		if (t->nResizing >= 0) {
+			t->nResizing = -1;
+		}
 		break;
 	}
 }
@@ -643,6 +652,25 @@ keydown(int argc, union evarg *argv)
 	pthread_mutex_unlock(&t->lock);
 }
 
+static int
+column_resize_over(AG_Table *t, int px)
+{
+	int x = px - (COLUMN_RESIZE_RANGE/2);
+	u_int n;
+	int cx;
+
+	for (n = 0, cx = t->xoffs; n < t->n; n++) {
+		int x2 = cx + t->cols[n].w;
+
+		if (x > cx && x < x2) {
+			if ((x2 - x) < COLUMN_RESIZE_RANGE)
+				return (1);
+		}
+		cx += t->cols[n].w;
+	}
+	return (0);
+}
+
 static void
 mousemotion(int argc, union evarg *argv)
 {
@@ -651,11 +679,21 @@ mousemotion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
+	int n, cx;
+	int m;
 
 	pthread_mutex_lock(&t->lock);
 	if (t->nResizing >= 0 && (u_int)t->nResizing < t->n) {
-		dprintf("resizing col %d\n", t->nResizing);
-		t->cols[t->nResizing].w += xrel;
+		if ((t->cols[t->nResizing].w += xrel) < COLUMN_MIN_WIDTH) {
+			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
+		}
+	} else {
+		if ((m = column_over(t, y)) == -1 &&
+		    column_resize_over(t, x)) {
+			AG_WidgetSetCursor(t, AG_HRESIZE_CURSOR);
+		} else {
+			AG_WidgetUnsetCursor(t);
+		}
 	}
 	pthread_mutex_unlock(&t->lock);
 }
@@ -688,7 +726,10 @@ lostfocus(int argc, union evarg *argv)
 	pthread_mutex_lock(&t->lock);
 	AG_CancelEvent(t, "key-tick");
 	AG_CancelEvent(t, "dblclick-expire");
-	t->nResizing = -1;
+	if (t->nResizing >= 0) {
+		AG_WidgetUnsetCursor(t);
+		t->nResizing = -1;
+	}
 	pthread_mutex_unlock(&t->lock);
 }
 
