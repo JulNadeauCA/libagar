@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.12 2005/04/14 06:19:37 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.13 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@ AG_KeyboardNew(int index)
 }
 
 static int
-match(const void *p, const SDL_Event *ev)
+kbd_match(const void *p, const SDL_Event *ev)
 {
 	const AG_Keyboard *kbd = p;
 
@@ -66,7 +66,7 @@ match(const void *p, const SDL_Event *ev)
 }
 
 static void
-proc_event(void *p, const SDL_Event *ev)
+kbd_event(void *p, const SDL_Event *ev)
 {
 	/* TODO */
 }
@@ -74,7 +74,7 @@ proc_event(void *p, const SDL_Event *ev)
 const AG_InputOps agKeyboardOps = {
 	N_("Keyboard"),
 	NULL,
-	match,
-	proc_event
+	kbd_match,
+	kbd_event
 };
 

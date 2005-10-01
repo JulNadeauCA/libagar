@@ -1,4 +1,4 @@
-/*	$Csoft: joy.c,v 1.8 2005/04/14 06:19:37 vedge Exp $	*/
+/*	$Csoft: joy.c,v 1.9 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@ fail:
 }
 
 static void
-close(void *p)
+joy_close(void *p)
 {
 	AG_Joystick *joy = p;
 
@@ -59,7 +59,7 @@ close(void *p)
 }
 
 static int
-match(const void *p, const SDL_Event *ev)
+joy_match(const void *p, const SDL_Event *ev)
 {
 	const AG_Joystick *joy = p;
 
@@ -90,15 +90,15 @@ match(const void *p, const SDL_Event *ev)
 }
 
 static void
-proc_event(void *p, const SDL_Event *ev)
+joy_event(void *p, const SDL_Event *ev)
 {
 	/* TODO */
 }
 
 const AG_InputOps agJoystickOps = {
 	N_("Joystick"),
-	close,
-	match,
-	proc_event
+	joy_close,
+	joy_match,
+	joy_event
 };
 
