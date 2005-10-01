@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.1 2005/09/28 15:46:13 vedge Exp $	*/
+/*	$Csoft: gamemenu.c,v 1.2 2005/10/01 14:16:53 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -148,19 +148,23 @@ main(int argc, char *argv[])
 
 	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
 	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
-	    AG_InitInput(AG_INPUT_KBDMOUSE) == -1) {
+	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
+	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
+	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
 	CreateGameMenu();
 
 	AG_EventLoop();
-	AG_Quit();
+	AG_Destroy();
 	return (0);
 fail:
-	AG_Quit();
+	AG_Destroy();
 	return (1);
 }
 
