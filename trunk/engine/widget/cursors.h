@@ -1,4 +1,4 @@
-/*	$Csoft: cursors.h,v 1.3 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: cursors.h,v 1.4 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CURSORS_H_
@@ -9,6 +9,10 @@ enum {
 	AG_FILL_CURSOR,
 	AG_ERASE_CURSOR,
 	AG_PICK_CURSOR,
+	AG_HRESIZE_CURSOR,
+	AG_VRESIZE_CURSOR,
+	AG_LRDIAG_CURSOR,
+	AG_LLDIAG_CURSOR,
 	AG_LAST_CURSOR
 };
 
