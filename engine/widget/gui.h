@@ -1,4 +1,4 @@
-/*	$Csoft: gui.h,v 1.4 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: gui.h,v 1.5 2005/09/28 15:46:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GUI_H_
@@ -28,6 +28,7 @@
 #include <engine/widget/separator.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/statusbar.h>
+#include <engine/widget/table.h>
 #include <engine/widget/tableview.h>
 #include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
