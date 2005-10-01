@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.48 2005/06/16 15:58:44 vedge Exp $
+.\"	$Csoft: window.3,v 1.49 2005/09/27 00:25:25 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -119,21 +119,19 @@ window, no new window is created and the function returns NULL.
 .Pp
 Acceptable flags include:
 .Bd -literal
-#define AG_WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
-				 	   (for named windows only) */
-#define AG_WINDOW_CASCADE		0x0002	/* Increment position slightly */
 #define AG_WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
-#define AG_WINDOW_NO_DECORATIONS	0x0008	/* Disable the window borders */
-#define AG_WINDOW_HIDE		0x0010	/* Hide on window-close */
-#define AG_WINDOW_DETACH		0x0020	/* Detach on window-close */
-#define AG_WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
-#define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized */
-#define AG_WINDOW_NO_HRESIZE	0x0100	/* Don't resize horizontally */
-#define AG_WINDOW_NO_VRESIZE	0x0200	/* Don't resize vertically */
+#define AG_WINDOW_NO_DECORATIONS 0x0008	/* Disable the window borders */
+#define AG_WINDOW_MAXIMIZED	0x0040	/* Window is maximized (RO) */
+#define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized (RO) */
+#define AG_WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
+#define AG_WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
+#define AG_WINDOW_NO_CLOSE	0x0400	/* Disable close button */
+#define AG_WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
+#define AG_WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
+#define AG_WINDOW_MODAL		0x2000	/* Modal window behavior */
+#define AG_WINDOW_INHIBIT_FOCUS	0x4000	/* Widgets cannot gain focus */
+#define AG_WINDOW_NO_BACKGROUND 0x8000	/* Don't fill the background */
 #define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
-#define AG_WINDOW_NO_CLOSE_BTN	0x0400	/* Disable close button */
-#define AG_WINDOW_NO_MINIMIZE_BTN	0x0800	/* Disable minimize button */
-#define AG_WINDOW_NO_MAXIMIZE_BTN	0x1000	/* Disable maximize button */
 .Ed
 .Pp
 The
