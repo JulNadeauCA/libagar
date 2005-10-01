@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.21 2003/10/11 04:31:34 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.22 2005/09/27 00:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -19,6 +19,7 @@ int  AG_ConfigSave(void *, AG_Netbuf *);
 void AG_ConfigWindow(AG_Config *, u_int);
 int  AG_ConfigFile(const char *, const char *, const char *, char *, size_t)
 		   BOUNDED_ATTRIBUTE(__string__, 4, 5);
+void AG_ShowSettings(void);
 __END_DECLS
 
 #include "close_code.h"
