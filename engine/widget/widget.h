@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.96 2005/09/19 13:27:32 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.97 2005/09/27 00:25:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -60,6 +60,14 @@ typedef struct ag_widget_binding {
 	SLIST_ENTRY(ag_widget_binding) bindings;
 } AG_WidgetBinding;
 
+typedef struct ag_widget_clip_state {
+	SDL_Rect rect;
+#ifdef HAVE_OPENGL
+	GLdouble plane0sv[4], plane1sv[4], plane2sv[4], plane3sv[4];
+	int plane0ena, plane1ena, plane2ena, plane3ena;
+#endif
+} AG_WidgetClipState;
+
 typedef struct ag_widget {
 	struct ag_object obj;
 
@@ -74,10 +82,12 @@ typedef struct ag_widget {
 #define AG_WIDGET_WFILL			0x040 /* Expand to fill width */
 #define AG_WIDGET_HFILL			0x080 /* Expand to fill height */
 #define AG_WIDGET_EXCEDENT		0x100 /* Used internally for scaling */
+#define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
 
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
+	SDL_Rect rClipSave;		/* Saved clipping rectangle */
 	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	u_int nsurfaces;
@@ -110,8 +120,6 @@ void	 AG_WidgetDestroy(void *);
 void	 AG_WidgetDraw(void *);
 void	 AG_WidgetScale(void *, int, int);
 
-#define AG_WidgetIsFocused(w) ((w)->flags & AG_WIDGET_FOCUSED)
-
 void		 AG_WidgetSetType(void *, const char *);
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
@@ -128,6 +136,8 @@ __inline__ void	 AG_WidgetUpdateSurface(void *, int);
 
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
+void	 AG_WidgetPushClipRect(void *, int, int, u_int, u_int);
+void	 AG_WidgetPopClipRect(void *);
 
 #define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)
 #define	AG_WidgetBlitSurface(p,n,x,y) \

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.115 2005/09/19 13:27:32 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.116 2005/09/27 00:25:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1091,7 +1091,7 @@ AG_WidgetFocus(void *p)
 /* Evaluate whether a given widget is at least partially visible. */
 /* TODO optimize on a per window basis */
 static __inline__ int
-widget_completely_occulted(AG_Widget *wid)
+widget_occulted(AG_Widget *wid)
 {
 	AG_Window *owin;
 	AG_Window *wwin;
@@ -1113,6 +1113,56 @@ widget_completely_occulted(AG_Widget *wid)
 	return (0);
 }
 
+void
+AG_WidgetPushClipRect(void *p, int x, int y, u_int w, u_int h)
+{
+	AG_Widget *wid = p;
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+x) };
+		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+y) };
+		GLdouble eq2[4] = { -1, 0, 0, (wid->cx+x+w) };
+		GLdouble eq3[4] = { 0, -1, 0, (wid->cy+y+h) };
+
+		glPushAttrib(GL_TRANSFORM_BIT);
+		glClipPlane(GL_CLIP_PLANE0, eq0);
+		glClipPlane(GL_CLIP_PLANE1, eq1);
+		glClipPlane(GL_CLIP_PLANE2, eq2);
+		glClipPlane(GL_CLIP_PLANE3, eq3);
+		glEnable(GL_CLIP_PLANE0);
+		glEnable(GL_CLIP_PLANE1);
+		glEnable(GL_CLIP_PLANE2);
+		glEnable(GL_CLIP_PLANE3);
+	} else
+#endif
+	{
+		SDL_Rect r;
+
+		r.x = wid->cx+x;
+		r.y = wid->cy+y;
+		r.w = w;
+		r.h = h;
+		SDL_GetClipRect(agView->v, &wid->rClipSave);
+		SDL_SetClipRect(agView->v, &r);
+	}
+}
+
+void
+AG_WidgetPopClipRect(void *p)
+{
+	AG_Widget *wid = p;
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glPopAttrib();
+	} else
+#endif
+	{
+		SDL_SetClipRect(agView->v, &wid->rClipSave);
+	}
+}
+
 /*
  * Render a widget and its descendents, recursively.
  * The view must be locked.
@@ -1122,99 +1172,18 @@ AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
 	AG_Widget *cwid;
-#ifdef HAVE_OPENGL
-	GLdouble plane0sv[4];
-	GLdouble plane1sv[4];
-	GLdouble plane2sv[4];
-	GLdouble plane3sv[4];
-	int plane0ena = 0;		/* XXX warnings */
-	int plane1ena = 0;
-	int plane2ena = 0;
-	int plane3ena = 0;
-#ifdef DEBUG
-	GLdouble plane4sv[4];
-	int plane4ena;
-#endif
-#endif /* HAVE_OPENGL */
+	SDL_Rect clip_save;
 
-	if (AGWIDGET_OPS(wid)->draw != NULL &&
-	    !widget_completely_occulted(wid)) {
-		SDL_Rect clip_save;
+	if (wid->flags & AG_WIDGET_HIDE)
+		return;
 
+	if (AGWIDGET_OPS(wid)->draw != NULL && !widget_occulted(wid)) {
 		if (wid->flags & AG_WIDGET_CLIPPING) {
-			if (!agView->opengl) {
-				SDL_Rect clip;
-
-				clip.x = wid->cx;
-				clip.y = wid->cy;
-				clip.w = wid->w;
-				clip.h = wid->h;
-				SDL_GetClipRect(agView->v, &clip_save);
-				SDL_SetClipRect(agView->v, &clip);
-			} else {
-#ifdef HAVE_OPENGL
-				GLdouble eq0[4] = { 1, 0, 0, -wid->cx };
-				GLdouble eq1[4] = { 0, 1, 0, -wid->cy };
-				GLdouble eq2[4] = { -1, 0, 0, wid->cx2-1 };
-				GLdouble eq3[4] = { 0, -1, 0, wid->cy2-1 };
-
-				plane0ena = glIsEnabled(GL_CLIP_PLANE0);
-				plane1ena = glIsEnabled(GL_CLIP_PLANE1);
-				plane2ena = glIsEnabled(GL_CLIP_PLANE2);
-				plane3ena = glIsEnabled(GL_CLIP_PLANE3);
-
-				glGetClipPlane(GL_CLIP_PLANE0, plane0sv);
-				glGetClipPlane(GL_CLIP_PLANE1, plane1sv);
-				glGetClipPlane(GL_CLIP_PLANE2, plane2sv);
-				glGetClipPlane(GL_CLIP_PLANE3, plane3sv);
-
-				glClipPlane(GL_CLIP_PLANE0, eq0);
-				glClipPlane(GL_CLIP_PLANE1, eq1);
-				glClipPlane(GL_CLIP_PLANE2, eq2);
-				glClipPlane(GL_CLIP_PLANE3, eq3);
-				
-				glEnable(GL_CLIP_PLANE0);
-				glEnable(GL_CLIP_PLANE1);
-				glEnable(GL_CLIP_PLANE2);
-				glEnable(GL_CLIP_PLANE3);
-#endif /* HAVE_OPENGL */
-			}
+			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
 		}
-
 		AGWIDGET_OPS(wid)->draw(wid);
-		
 		if (wid->flags & AG_WIDGET_CLIPPING) {
-			if (!agView->opengl) {
-				SDL_SetClipRect(agView->v, &clip_save);
-			} else {
-#ifdef HAVE_OPENGL
-				glClipPlane(GL_CLIP_PLANE0, plane0sv);
-				glClipPlane(GL_CLIP_PLANE1, plane1sv);
-				glClipPlane(GL_CLIP_PLANE2, plane2sv);
-				glClipPlane(GL_CLIP_PLANE3, plane3sv);
-				
-				if (plane0ena) {
-					glEnable(GL_CLIP_PLANE0);
-				} else {
-					glDisable(GL_CLIP_PLANE0);
-				}
-				if (plane1ena) {
-					glEnable(GL_CLIP_PLANE1);
-				} else {
-					glDisable(GL_CLIP_PLANE1);
-				}
-				if (plane2ena) {
-					glEnable(GL_CLIP_PLANE2);
-				} else {
-					glDisable(GL_CLIP_PLANE2);
-				}
-				if (plane3ena) {
-					glEnable(GL_CLIP_PLANE3);
-				} else {
-					glDisable(GL_CLIP_PLANE3);
-				}
-#endif /* HAVE_OPENGL */
-			}
+			AG_WidgetPopClipRect(wid);
 		}
 	}
 
