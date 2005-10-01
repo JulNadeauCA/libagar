@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.64 2005/09/27 00:25:25 vedge Exp $
+.\"	$Csoft: widget.3,v 1.65 2005/10/01 06:00:51 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -268,6 +268,12 @@ direct video agPrim in OpenGL mode.
 .Fn AG_WidgetPopClipRect "void *widget"
 .Pp
 .Ft void
+.Fn AG_WidgetPushCursor "void *widget" "int cursor"
+.Pp
+.Ft void
+.Fn AG_WidgetPopCursor "void *widget"
+.Pp
+.Ft void
 .Fn AG_WidgetBlit "void *widget" "SDL_Surface *src" "int x" "int y"
 .Pp
 .Ft void
@@ -318,6 +324,16 @@ In SDL mode, the temporary rectangle is set by
 In OpenGL mode,
 .Xr glClipPlane 3
 is used.
+.Pp
+The
+.Fn AG_WidgetPushCursor
+function changes the active cursor, saving the previous one.
+The argument is an index into the global
+.Va agCursors
+array.
+The
+.Fn AG_WidgetPopCursor
+restores the previously saved cursor.
 .Pp
 The
 .Fn AG_WidgetBlit

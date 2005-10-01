@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.117 2005/10/01 06:00:51 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.118 2005/10/01 09:01:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/cursors.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -70,6 +71,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	wid->w = -1;
 	wid->h = -1;
 	wid->style = NULL;
+	wid->cursSave = NULL;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, &agRecursiveMutexAttr);
 
@@ -1116,6 +1118,37 @@ widget_occulted(AG_Widget *wid)
 		}
 	}
 	return (0);
+}
+
+void
+AG_WidgetPushCursor(void *p, int cursor)
+{
+	AG_Widget *wid = p;
+
+	wid->cursSave = SDL_GetCursor();
+	SDL_SetCursor(agCursors[cursor]);
+}
+
+void
+AG_WidgetPopCursor(void *p)
+{
+	AG_Widget *wid = p;
+
+	if (wid->cursSave != NULL) {
+		SDL_SetCursor(wid->cursSave);
+		wid->cursSave = NULL;
+	}
+}
+
+void
+AG_WidgetSetCursor(void *p, int cursor)
+{
+	AG_Widget *wid = p;
+
+	if (wid->cursSave == NULL) {
+		wid->cursSave = SDL_GetCursor();
+		SDL_SetCursor(agCursors[cursor]);
+	}
 }
 
 void
