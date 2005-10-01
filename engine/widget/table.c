@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.2 2005/10/01 14:13:58 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.3 2005/10/01 15:26:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -348,7 +348,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
 	noffset = *offset;
-	*max = t->m - t->mVis;
+	*max = t->m - t->mVis + 2;
 	if (noffset > *max) { noffset = *max; }
 	if (noffset < 0) { noffset = 0; }
 	if (*offset != noffset) {
