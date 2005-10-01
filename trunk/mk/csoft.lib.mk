@@ -314,6 +314,9 @@ deinstall-lib:
 	    done; \
 	fi
 
+includes:
+	(cd ${TOP} && ${MAKE} install-includes)
+
 ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
@@ -322,7 +325,7 @@ ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
-.PHONY: install deinstall clean cleandir regress depend
+.PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
 .PHONY: _lib_objs _lib_shobjs
 
