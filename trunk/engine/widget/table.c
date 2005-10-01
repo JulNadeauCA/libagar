@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.1 2005/10/01 09:50:49 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.2 2005/10/01 14:13:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -901,6 +901,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		int ptr = 0, lflag = 0;
 
 		AG_TableInitCell(t, c);
+		strlcpy(c->fmt, s, sizeof(c->fmt));
 		for (sc = &s[0]; *sc != '\0'; sc++) {
 			if (*sc == '%') {
 				continue;
@@ -926,6 +927,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				    sizeof(c->data.s));
 			}
 			break;
+		case 'd':
 		case 'i':
 			if (ptr) {
 				c->type = AG_CELL_PINT;
@@ -979,6 +981,8 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
+		default:
+			fatal("invalid format string");
 		}
 	}
 	va_end(ap);
