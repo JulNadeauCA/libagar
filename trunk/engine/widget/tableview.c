@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.35 2005/09/29 02:16:25 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.36 2005/09/29 02:43:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -709,9 +709,6 @@ AG_TableviewDraw(void *p)
 
 	pthread_mutex_lock(&tv->lock);
 	
-	if (tv->visible.count == 0)
-		goto out;
-
 	/* before we draw, update if needed */
 	if (tv->visible.dirty)
 		view_changed(tv);
@@ -719,7 +716,7 @@ AG_TableviewDraw(void *p)
 	if (tv->visible.redraw_rate &&
 	    SDL_GetTicks() > tv->visible.redraw_last + tv->visible.redraw_rate)
 		update = 1;
-
+	
 	/* Draw the background box */
 	agPrim.box(tv, 0, 0, AGWIDGET(tv)->w, AGWIDGET(tv)->h, -1,
 	    AG_COLOR(TABLEVIEW_COLOR));
