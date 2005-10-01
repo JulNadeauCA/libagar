@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.22 2005/01/28 12:49:51 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.23 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,7 +31,7 @@
 
 #include "bitmap.h"
 
-const AG_WidgetOps bitmap_ops = {
+const AG_WidgetOps agBitmapOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -58,7 +58,7 @@ AG_BitmapNew(void *parent)
 void
 AG_BitmapInit(AG_Bitmap *bmp)
 {
-	AG_WidgetInit(bmp, "bitmap", &bitmap_ops, 0);
+	AG_WidgetInit(bmp, "bitmap", &agBitmapOps, 0);
 	AG_WidgetMapSurface(bmp, NULL);
 	AGWIDGET(bmp)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
 	                        AG_WIDGET_HFILL;

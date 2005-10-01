@@ -1,4 +1,4 @@
-/*	$Csoft: vpane.c,v 1.3 2005/08/23 04:38:58 vedge Exp $	*/
+/*	$Csoft: vpane.c,v 1.4 2005/09/27 00:25:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static AG_WidgetOps vpane_ops = {
+static AG_WidgetOps agVPaneOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -163,7 +163,7 @@ AG_VPaneInit(AG_VPane *pa, int flags)
 	AG_BoxSetPadding(&pa->box, 0);
 	AG_BoxSetSpacing(&pa->box, 0);
 	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
-	AG_ObjectSetOps(pa, &vpane_ops);
+	AG_ObjectSetOps(pa, &agVPaneOps);
 	TAILQ_INIT(&pa->divs);
 
 	AG_SetEvent(pa, "window-mousebuttondown", mousebuttondown, NULL);

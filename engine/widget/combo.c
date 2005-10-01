@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.26 2005/09/23 04:02:38 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.27 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps combo_ops = {
+static AG_WidgetOps agComboOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -224,9 +224,8 @@ combo_mousebuttonup(int argc, union evarg *argv)
 void
 AG_ComboInit(AG_Combo *com, const char *label, int flags)
 {
-	AG_WidgetInit(com, "combo", &combo_ops, AG_WIDGET_FOCUSABLE|
-	                                        AG_WIDGET_WFILL|
-						AG_WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetInit(com, "combo", &agComboOps,
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
 	com->panel = NULL;
 	com->flags = flags;
 	com->saved_h = 0;

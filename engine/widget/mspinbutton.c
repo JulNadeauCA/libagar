@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.9 2005/07/08 04:36:47 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.10 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include <errno.h>
 #include <limits.h>
 
-static AG_WidgetOps mspinbutton_ops = {
+static AG_WidgetOps agMSpinbuttonOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -229,7 +229,7 @@ mspinbutton_right(int argc, union evarg *argv)
 void
 AG_MSpinbuttonInit(AG_MSpinbutton *sbu, const char *sep, const char *label)
 {
-	AG_WidgetInit(sbu, "mspinbutton", &mspinbutton_ops,
+	AG_WidgetInit(sbu, "mspinbutton", &agMSpinbuttonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
 	AG_WidgetBind(sbu, "xvalue", AG_WIDGET_INT, &sbu->xvalue);
 	AG_WidgetBind(sbu, "yvalue", AG_WIDGET_INT, &sbu->yvalue);

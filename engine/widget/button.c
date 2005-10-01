@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.93 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.94 2005/09/27 14:06:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-const AG_WidgetOps button_ops = {
+const AG_WidgetOps agButtonOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -116,7 +116,7 @@ AG_ButtonInit(AG_Button *bu, const char *caption, u_int flags)
 	SDL_Surface *label;
 
 	/* XXX replace the unfocused motion flag with a timer */
-	AG_WidgetInit(bu, "button", &button_ops,
+	AG_WidgetInit(bu, "button", &agButtonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBind(bu, "state", AG_WIDGET_BOOL, &bu->state);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.10 2005/09/08 08:20:30 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.11 2005/09/27 00:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps toolbar_ops = {
+static AG_WidgetOps agToolbarOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -78,7 +78,7 @@ AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows, int flags
 	}
 	AG_BoxSetPadding(&tbar->box, 1);
 	AG_BoxSetSpacing(&tbar->box, 1);
-	AG_ObjectSetOps(tbar, &toolbar_ops);
+	AG_ObjectSetOps(tbar, &agToolbarOps);
 
 	tbar->type = type;
 	tbar->nrows = 0;

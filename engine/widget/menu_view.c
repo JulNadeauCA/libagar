@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.25 2005/09/01 02:38:32 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.26 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static AG_WidgetOps menu_view_ops = {
+static AG_WidgetOps agMenuViewOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -270,7 +270,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 {
 	AG_MenuView *mview = p;
 
-	AG_WidgetInit(mview, "AGMenuView", &menu_view_ops,
+	AG_WidgetInit(mview, "AGMenuView", &agMenuViewOps,
 	    AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP);
 	AG_WireGfx(mview, "/engine/widget/pixmaps");
 

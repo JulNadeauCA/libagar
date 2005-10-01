@@ -1,4 +1,4 @@
-/*	$Csoft: separator.c,v 1.4 2005/05/29 05:49:59 vedge Exp $	*/
+/*	$Csoft: separator.c,v 1.5 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
 
-const AG_WidgetOps separator_ops = {
+const AG_WidgetOps agSeparatorOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -64,7 +64,7 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 void
 AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
 {
-	AG_WidgetInit(sep, "separator", &separator_ops,
+	AG_WidgetInit(sep, "separator", &agSeparatorOps,
 	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_WFILL : AG_WIDGET_HFILL);
 	sep->type = type;
 }

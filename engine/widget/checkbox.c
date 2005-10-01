@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.53 2005/05/13 09:21:47 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.54 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps checkbox_ops = {
+static AG_WidgetOps agCheckboxOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -77,7 +77,7 @@ AG_CheckboxNew(void *parent, const char *fmt, ...)
 void
 AG_CheckboxInit(AG_Checkbox *cbox, char *caption)
 {
-	AG_WidgetInit(cbox, "checkbox", &checkbox_ops, AG_WIDGET_FOCUSABLE);
+	AG_WidgetInit(cbox, "checkbox", &agCheckboxOps, AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;

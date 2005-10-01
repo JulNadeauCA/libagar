@@ -1,4 +1,4 @@
-/*	$Csoft: statusbar.c,v 1.2 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: statusbar.c,v 1.3 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps statusbar_ops = {
+static AG_WidgetOps agStatusbarOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -65,7 +65,7 @@ AG_StatusbarInit(AG_Statusbar *sbar)
 	AG_BoxInit(&sbar->box, AG_BOX_VERT, AG_BOX_WFILL);
 	AG_BoxSetPadding(&sbar->box, 2);
 	AG_BoxSetSpacing(&sbar->box, 1);
-	AG_ObjectSetOps(sbar, &statusbar_ops);
+	AG_ObjectSetOps(sbar, &agStatusbarOps);
 	sbar->nlabels = 0;
 }
 

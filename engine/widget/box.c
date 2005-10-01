@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.13 2005/03/10 09:43:34 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.14 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static AG_WidgetOps box_ops = {
+static AG_WidgetOps agBoxOps = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -47,7 +47,7 @@ static AG_WidgetOps box_ops = {
 	AG_BoxScale
 };
 
-static AG_WidgetOps box_ops_visframe = {
+static AG_WidgetOps agBoxOpsWithFrame = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
@@ -75,7 +75,7 @@ void
 AG_BoxInit(AG_Box *bo, enum ag_box_type type, int flags)
 {
 	AG_WidgetInit(bo, "box", (flags & AG_BOX_FRAME) ?
-	    &box_ops_visframe : &box_ops, 0);
+	    &agBoxOpsWithFrame : &agBoxOps, 0);
 
 	bo->type = type;
 	bo->depth = -1;

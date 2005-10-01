@@ -1,4 +1,4 @@
-/*	$Csoft: matview.c,v 1.2 2005/09/11 07:05:58 vedge Exp $	*/
+/*	$Csoft: matview.c,v 1.3 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps matview_ops = {
+static AG_WidgetOps agMatviewOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -98,7 +98,7 @@ matview_mousebuttondown(int argc, union evarg *argv)
 void
 AG_MatviewInit(AG_Matview *mv, struct mat *mat, u_int flags)
 {
-	AG_WidgetInit(mv, "matview", &matview_ops,
+	AG_WidgetInit(mv, "matview", &agMatviewOps,
 	    AG_WIDGET_WFILL|AG_WIDGET_HFILL|AG_WIDGET_CLIPPING|
 	    AG_WIDGET_FOCUSABLE);
 	mv->mat = mat;
