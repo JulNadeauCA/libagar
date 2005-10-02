@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.23 2005/09/17 07:34:04 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.24 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -71,6 +71,8 @@ const char *agColorNames[] = {
 	N_("Radio text"),
 	N_("Scrollbar"),
 	N_("Scrollbar buttons"),
+	N_("Scrollbar arrow 1"),
+	N_("Scrollbar arrow 2"),
 	N_("Separator line 1"),
 	N_("Separator line 2"),
 	N_("Tableview"),
@@ -145,6 +147,8 @@ AG_ColorsInit(void)
 	agColors[RADIO_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[SCROLLBAR_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
 	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];
+	agColors[SCROLLBAR_ARR1_COLOR] = SDL_MapRGB(agVideoFmt, 200, 200, 200);
+	agColors[SCROLLBAR_ARR2_COLOR] = SDL_MapRGB(agVideoFmt, 158, 158, 158);
 	agColors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[SEPARATOR_LINE2_COLOR] = SDL_MapRGB(agVideoFmt, 25, 25, 25);
 	agColors[TABLEVIEW_COLOR] = agColors[FRAME_COLOR];

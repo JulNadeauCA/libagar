@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.8 2005/08/22 02:08:18 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.9 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -41,6 +41,8 @@ enum {
 	RADIO_TXT_COLOR,
 	SCROLLBAR_COLOR,
 	SCROLLBAR_BTN_COLOR,
+	SCROLLBAR_ARR1_COLOR,
+	SCROLLBAR_ARR2_COLOR,
 	SEPARATOR_LINE1_COLOR,
 	SEPARATOR_LINE2_COLOR,
 	TABLEVIEW_COLOR,
