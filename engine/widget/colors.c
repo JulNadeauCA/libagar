@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.24 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.25 2005/10/02 09:39:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@ int    agColorsBorderSize = 7;
 const char *agColorNames[] = {
 	N_("Background"),
 	N_("Frame"),
+	N_("Line"),
 	N_("Text"),
 	N_("Window background"),
 	N_("Window highlight"),
@@ -107,6 +108,8 @@ const char *agColorNames[] = {
 	N_("Mapview noderef selection"),
 	N_("Mapview origin point"),
 	N_("Focus"),
+	N_("Table"),
+	N_("Table lines")
 };
 
 void
@@ -114,6 +117,7 @@ AG_ColorsInit(void)
 {
 	agColors[BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
 	agColors[FRAME_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[LINE_COLOR] = SDL_MapRGB(agVideoFmt, 55, 55, 55);
 	agColors[TEXT_COLOR] = SDL_MapRGB(agVideoFmt, 250, 250, 250);
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 45, 45, 45);
 	agColors[WINDOW_HI_COLOR] = SDL_MapRGB(agVideoFmt, 90, 90, 85);
@@ -155,7 +159,7 @@ AG_ColorsInit(void)
 	agColors[TABLEVIEW_HEAD_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLEVIEW_HTXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TABLEVIEW_CTXT_COLOR] = agColors[TEXT_COLOR];
-	agColors[TABLEVIEW_LINE_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
+	agColors[TABLEVIEW_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
 	agColors[TEXTBOX_RW_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[TEXTBOX_RO_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
@@ -163,7 +167,7 @@ AG_ColorsInit(void)
 	agColors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 251, 255, 197);
 	agColors[TLIST_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TLIST_BG_COLOR] = agColors[FRAME_COLOR];
-	agColors[TLIST_LINE_COLOR] = SDL_MapRGB(agVideoFmt, 40, 40, 40);
+	agColors[TLIST_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[TLIST_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
 	agColors[MAPVIEW_GRID_COLOR] = SDL_MapRGB(agVideoFmt, 200, 200, 200);
 	agColors[MAPVIEW_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
@@ -183,6 +187,8 @@ AG_ColorsInit(void)
 	agColors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(agVideoFmt, 60, 250, 60);
 	agColors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 0);
 	agColors[FOCUS_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 150);
+	agColors[TABLE_COLOR] = agColors[FRAME_COLOR];
+	agColors[TABLE_LINE_COLOR] = agColors[LINE_COLOR];
 
 	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
 	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);
