@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.75 2005/09/12 10:07:35 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.76 2005/09/27 00:25:23 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -73,6 +73,98 @@ alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
 
 	rv |= agVideoFmt->Amask;
 	return (rv);
+}
+
+static void
+arrow_up(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint8 *pLeft, *pDst, *pEnd;
+	int y1 = wid->cy+y0 - (h>>1);
+	int y2 = y1+h-1;
+	int xs = wid->cx+x0, xe = xs;
+	int x, y;
+
+	SDL_LockSurface(agView->v);
+	for (y = y1; y < y2; y+=2) {
+		for (x = xs; x <= xe; x++) {
+			AG_VIEW_PUT_PIXEL2(x, y,
+			    (x == xs || x == xe) ? c2 : c1);
+			AG_VIEW_PUT_PIXEL2(x, y+1, c1);
+		}
+		xs--;
+		xe++;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+arrow_down(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint8 *pLeft, *pDst, *pEnd;
+	int y1 = wid->cy+y0 - (h>>1);
+	int y2 = y1+h-1;
+	int xs = wid->cx+x0, xe = xs;
+	int x, y;
+
+	SDL_LockSurface(agView->v);
+	for (y = y2; y > y1; y-=2) {
+		for (x = xs; x <= xe; x++) {
+			AG_VIEW_PUT_PIXEL2(x, y,
+			    (x == xs || x == xe) ? c2 : c1);
+			AG_VIEW_PUT_PIXEL2(x, y-1, c1);
+		}
+		xs--;
+		xe++;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+arrow_left(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint8 *pLeft, *pDst, *pEnd;
+	int x1 = wid->cx+x0 - (h>>1);
+	int x2 = x1+h-1;
+	int ys = wid->cy+y0, ye = ys;
+	int x, y;
+
+	SDL_LockSurface(agView->v);
+	for (x = x1; x < x2; x+=2) {
+		for (y = ys; y <= ye; y++) {
+			AG_VIEW_PUT_PIXEL2(x+1, y, c1);
+			AG_VIEW_PUT_PIXEL2(x, y,
+			    (y == ys || y == ye) ? c2 : c1);
+		}
+		ys--;
+		ye++;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint8 *pLeft, *pDst, *pEnd;
+	int x1 = wid->cx+x0 - (h>>1);
+	int x2 = x1+h-1;
+	int ys = wid->cy+y0, ye = ys;
+	int x, y;
+
+	SDL_LockSurface(agView->v);
+	for (x = x2; x > x1; x-=2) {
+		for (y = ys; y <= ye; y++) {
+			AG_VIEW_PUT_PIXEL2(x-1, y, c1);
+			AG_VIEW_PUT_PIXEL2(x, y,
+			    (y == ys || y == ye) ? c2 : c1);
+		}
+		ys--;
+		ye++;
+	}
+	SDL_UnlockSurface(agView->v);
 }
 
 /* Draw a 3D-style box. */
@@ -447,151 +539,181 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 	SDL_UnlockSurface(agView->v);
 }
 
-/* Draw a horizontal line segment. */
+#define HLINE_CLIP() \
+	if (y >= wid->h || y < 0) { return; } \
+	if (x1 >= wid->w) { x1 = wid->w - 1; } else if (x1 < 0) { x1 = 0; } \
+	if (x2 >= wid->w) { x2 = wid->w - 1; } else if (x2 < 0) { x2 = 0; } \
+	if (x1 > x2) { dx = x2; x2 = x1; x1 = dx; } \
+	dx = x2 - x1
+
 static void
-hline(void *widget, int x1, int x2, int y, Uint32 c)
+hline32(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
-	int x, xtmp;
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	if (y >= wid->h || y < 0) { return; }
-	if (x1 >= wid->w) { x1 = wid->w - 1; } else if (x1 < 0) { x1 = 0; }
-	if (x2 >= wid->w) { x2 = wid->w - 1; } else if (x2 < 0) { x2 = 0; }
-	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
-	dx = x2 - x1;
-
+	HLINE_CLIP();
 	SDL_LockSurface(agView->v);
-	switch (agVideoFmt->BytesPerPixel) {
-#ifdef VIEW_32BPP
-	case 4:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y)*agView->v->pitch +
-		    ((wid->cx+x1)<<2);
-		pEnd = pDst + (dx<<2);
-		while (pDst < pEnd) {
-			*(Uint32 *)pDst = c;
-			pDst += 4;
-		}
-		break;
-#endif
-#ifdef VIEW_16BPP
-	case 2:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y)*agView->v->pitch +
-		    ((wid->cx+x1)<<1);
-		pEnd = pDst + (dx<<1);
-		while (pDst < pEnd) {
-			*(Uint16 *)pDst = c;
-			pDst += 2;
-		}
-		break;
-#endif
-#ifdef VIEW_24BPP
-	case 3:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y)*agView->v->pitch +
-		    (wid->cx+x1)*3;
-		pEnd = pDst + dx*3;
-		while (pDst < pEnd) {
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pDst[0] = (c >>16) & 0xff;
-			pDst[1] = (c >>8) & 0xff;
-			pDst[2] = c & 0xff;
-#else
-			pDst[2] = (c>>16) & 0xff;
-			pDst[1] = (c>>8) & 0xff;
-			pDst[0] = c & 0xff;
-#endif
-			pDst += 3;
-		}
-		break;
-#endif
-#ifdef VIEW_8BPP
-	case 1:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y)*agView->v->pitch +
-		    (wid->cx+x1);
-		pEnd = pDst + dx;
-		memset(pDst, c, pEnd-pDst);
-		break;
-#endif
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
+	    ((wid->cx+x1)<<2);
+	pEnd = pDst + (dx<<2);
+	while (pDst < pEnd) {
+		*(Uint32 *)pDst = c;
+		pDst += 4;
 	}
 	SDL_UnlockSurface(agView->v);
 }
 
 static void
-vline(void *widget, int x, int y1, int y2, Uint32 c)
+hline24(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
-	int y, dy, ytmp;
 	Uint8 *pDst, *pEnd;
+	int dx;
 
-	if (x >= wid->w || x < 0) { return; }
-	if (y1 >= wid->h) { y1 = wid->h - 1; } else if (y1 < 0) { y1 = 0; }
-	if (y2 >= wid->h) { y2 = wid->h - 1; } else if (y2 < 0) { y2 = 0; }
-	if (y1 > y2) { ytmp = y2; y2 = y1; y1 = ytmp; }
-	dy = y2 - y1;
-
+	HLINE_CLIP();
 	SDL_LockSurface(agView->v);
-	switch (agVideoFmt->BytesPerPixel) {
-#ifdef VIEW_32BPP
-	case 4:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y1)*agView->v->pitch +
-		    ((wid->cx+x)<<2);
-		pEnd = pDst + dy*agView->v->pitch;
-		while (pDst < pEnd) {
-			*(Uint32 *)pDst = c;
-			pDst += agView->v->pitch;
-		}
-		break;
-#endif
-#ifdef VIEW_16BPP
-	case 2:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y1)*agView->v->pitch +
-		    ((wid->cx+x)<<1);
-		pEnd = pDst + dy*agView->v->pitch;
-		while (pDst < pEnd) {
-			*(Uint16 *)pDst = c;
-			pDst += agView->v->pitch;
-		}
-		break;
-#endif
-#ifdef VIEW_24BPP
-	case 3:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y1)*agView->v->pitch +
-		    (wid->cx+x)*3;
-		pEnd = pDst + dy*agView->v->pitch;
-		while (pDst < pEnd) {
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
+	    (wid->cx+x1)*3;
+	pEnd = pDst + dx*3;
+	while (pDst < pEnd) {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pDst[0] = (c >>16) & 0xff;
-			pDst[1] = (c >>8) & 0xff;
-			pDst[2] = c & 0xff;
+		pDst[0] = (c >>16) & 0xff;
+		pDst[1] = (c >>8) & 0xff;
+		pDst[2] = c & 0xff;
 #else
-			pDst[2] = (c>>16) & 0xff;
-			pDst[1] = (c>>8) & 0xff;
-			pDst[0] = c & 0xff;
+		pDst[2] = (c>>16) & 0xff;
+		pDst[1] = (c>>8) & 0xff;
+		pDst[0] = c & 0xff;
 #endif
-			pDst += agView->v->pitch;
-		}
-		break;
+		pDst += 3;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+hline16(void *widget, int x1, int x2, int y, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int dx;
+
+	HLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
+	    ((wid->cx+x1)<<1);
+	pEnd = pDst + (dx<<1);
+	while (pDst < pEnd) {
+		*(Uint16 *)pDst = c;
+		pDst += 2;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+		
+static void
+hline8(void *widget, int x1, int x2, int y, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int dx;
+
+	HLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
+	    (wid->cx+x1);
+	pEnd = pDst + dx;
+	memset(pDst, c, pEnd-pDst);
+	SDL_UnlockSurface(agView->v);
+}
+
+#define VLINE_CLIP() \
+	if (x >= wid->w || x < 0) { return; } \
+	if (y1 >= wid->h) { y1 = wid->h - 1; } else if (y1 < 0) { y1 = 0; } \
+	if (y2 >= wid->h) { y2 = wid->h - 1; } else if (y2 < 0) { y2 = 0; } \
+	if (y1 > y2) { dy = y2; y2 = y1; y1 = dy; } \
+	dy = y2 - y1
+
+static void
+vline32(void *widget, int x, int y1, int y2, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int y, dy;
+
+	VLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
+	    ((wid->cx+x)<<2);
+	pEnd = pDst + dy*agView->v->pitch;
+	while (pDst < pEnd) {
+		*(Uint32 *)pDst = c;
+		pDst += agView->v->pitch;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+vline24(void *widget, int x, int y1, int y2, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int y, dy;
+
+	VLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
+	    (wid->cx+x)*3;
+	pEnd = pDst + dy*agView->v->pitch;
+	while (pDst < pEnd) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		pDst[0] = (c >>16) & 0xff;
+		pDst[1] = (c >>8) & 0xff;
+		pDst[2] = c & 0xff;
+#else
+		pDst[2] = (c>>16) & 0xff;
+		pDst[1] = (c>>8) & 0xff;
+		pDst[0] = c & 0xff;
 #endif
-#ifdef VIEW_8BPP
-	case 1:
-		pDst = (Uint8 *)agView->v->pixels +
-		    (wid->cy+y1)*agView->v->pitch +
-		    (wid->cx+x);
-		pEnd = pDst + dy*agView->v->pitch;
-		while (pDst < pEnd) {
-			*(Uint16 *)pDst = c;
-			pDst += agView->v->pitch;
-		}
-		break;
-#endif
+		pDst += agView->v->pitch;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+vline16(void *widget, int x, int y1, int y2, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int y, dy;
+
+	VLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
+	    ((wid->cx+x)<<1);
+	pEnd = pDst + dy*agView->v->pitch;
+	while (pDst < pEnd) {
+		*(Uint16 *)pDst = c;
+		pDst += agView->v->pitch;
+	}
+	SDL_UnlockSurface(agView->v);
+}
+
+static void
+vline8(void *widget, int x, int y1, int y2, Uint32 c)
+{
+	AG_Widget *wid = widget;
+	Uint8 *pDst, *pEnd;
+	int y, dy;
+
+	VLINE_CLIP();
+	SDL_LockSurface(agView->v);
+	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
+	    (wid->cx+x);
+	pEnd = pDst + dy*agView->v->pitch;
+	while (pDst < pEnd) {
+		*(Uint8 *)pDst = c;
+		pDst += agView->v->pitch;
 	}
 	SDL_UnlockSurface(agView->v);
 }
@@ -1132,6 +1254,42 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
 	glEnd();
 	glPopMatrix();
 }
+
+static void
+arrow_up_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint8 r, g, b;
+
+	SDL_GetRGB(c1, agVideoFmt, &r, &g, &b);
+
+	glPushMatrix();
+	glTranslatef(wid->cx, wid->cy, 0);
+	glBegin(GL_POLYGON);
+	{
+		glColor3ub(r, g, b);
+		glVertex2i(x, y);
+		glVertex2i(x - (h>>1), y+h);
+		glVertex2i(x + (h>>1), y+h);
+	}
+	glEnd();
+	glPopMatrix();
+}
+
+static void
+arrow_down_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+{
+}
+
+static void
+arrow_left_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+{
+}
+
+static void
+arrow_right_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+{
+}
 #endif /* HAVE_OPENGL */
 
 void
@@ -1157,18 +1315,43 @@ AG_InitPrimitives(void)
 		agPrim.circle = circle_opengl;
 		agPrim.circle2 = circle2_opengl;
 		agPrim.box_chamfered = box_chamfered_gl;
+		agPrim.arrow_up = arrow_up_gl;
+		agPrim.arrow_down = arrow_down_gl;
+		agPrim.arrow_left = arrow_left_gl;
+		agPrim.arrow_right = arrow_right_gl;
 	} else
 #endif
 	{
 		agPrim.line = line_bresenham;
-		agPrim.hline = hline;
-		agPrim.vline = vline;
 		agPrim.line_blended = line_blended_bresenham;
 		agPrim.rect_filled = rect_filled;
 		agPrim.rect_blended = rect_blended;
 		agPrim.circle = circle_bresenham;
 		agPrim.circle2 = circle2_bresenham;
 		agPrim.box_chamfered = box_chamfered;
+		agPrim.arrow_up = arrow_up;
+		agPrim.arrow_down = arrow_down;
+		agPrim.arrow_left = arrow_left;
+		agPrim.arrow_right = arrow_right;
+		
+		switch (agVideoFmt->BytesPerPixel) {
+		case 4:
+			agPrim.hline = hline32;
+			agPrim.vline = vline32;
+			break;
+		case 3:
+			agPrim.hline = hline24;
+			agPrim.vline = vline24;
+			break;
+		case 2:
+			agPrim.hline = hline16;
+			agPrim.vline = vline16;
+			break;
+		case 1:
+			agPrim.hline = hline8;
+			agPrim.vline = vline8;
+			break;
+		}
 	}
 }
 
