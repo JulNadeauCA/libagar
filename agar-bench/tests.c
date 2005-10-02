@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.2 2005/09/27 04:11:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -34,169 +34,109 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/button.h>
-#include <engine/widget/label.h>
-#include <engine/widget/separator.h>
+#include <engine/widget/gui.h>
 
 #include "test.h"
 
 extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;
+extern struct test_ops surfaceops_test;
 
 struct test_ops *tests[] = {
 	&pixelops_test,
-	&primitives_test
+	&primitives_test,
+	&surfaceops_test
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
 static void
-test_params(int argc, union evarg *argv)
+run_tests(int argc, union evarg *argv)
 {
-	AG_Tableview *tv = argv[1].p;
-	AG_TableviewRow *row;
-	AG_Window *win;
-	struct test_ops *ops = NULL;
+	AG_Table *t = argv[1].p;
+	u_int i, j, m;
+	Uint32 t1, t2;
+	u_long tTot;
+	struct testfn_ops *ops;
 
-	TAILQ_FOREACH(row, &tv->children, siblings) {
-		if (row->selected) {
-			ops = row->userp;
+	for (m = 0; m < t->m; m++) {
+		if (!AG_TableRowSelected(t, m)) {
+			continue;
 		}
+		ops = t->cells[m][4].data.p;
+		if (((ops->flags & TEST_SDL) && agView->opengl) ||
+		    ((ops->flags & TEST_GL)  && !agView->opengl)) {
+			continue;
+		}
+		fprintf(stderr, "Running test: %s...", ops->name);
+		if (ops->init != NULL) ops->init();
+		for (i = 0, tTot = 0; i < ops->runs; i++) {
+			t1 = SDL_GetTicks();
+			for (j = 0; j < ops->iterations; j++) {
+				ops->run();
+			}
+			t2 = SDL_GetTicks();
+			tTot += (t2 - t1);
+		}
+		if (ops->destroy != NULL) ops->destroy();
+		ops->last_result = (u_long)(tTot / ops->runs);
+		fprintf(stderr, "%gms.\n", ops->last_result);
 	}
-	if (ops == NULL)
-		return;
-
-	win = AG_WindowNew(0, NULL);
-	AG_WindowSetCaption(win, ops->name);
-	ops->edit(win);
-	AG_WindowShow(win);
 }
 
 static void
-run_tests(int argc, union evarg *argv)
+poll_test(int argc, union evarg *argv)
 {
-	AG_Tableview *tv = argv[1].p;
-	u_int i, j, ti, fi;
-	AG_Window *win;
-	AG_Button *btn;
-	Uint32 t1, t2;
-	u_long tTot;
+	AG_Table *t = argv[0].p;
+	struct test_ops *test = tests[argv[1].i];
+	int i;
 
-	for (ti = 0; ti < ntests; ti++) {
-		struct test_ops *test = tests[ti];
+	AG_TableBegin(t);
+	for (i = 0; i < test->nfuncs; i++) {
+		struct testfn_ops *fn = &test->funcs[i];
 
-		for (fi = 0; fi < test->nfuncs; fi++) {
-			struct testfn_ops *ops = &test->funcs[fi];
-			u_long tot;
-
-			if (((ops->flags & TEST_SDL) && agView->opengl) ||
-			    ((ops->flags & TEST_GL)  && !agView->opengl))
-				continue;
-
-			if (ops->init != NULL) ops->init();
-			for (i = 0, tTot = 0; i < ops->runs; i++) {
-				t1 = SDL_GetTicks();
-				for (j = 0; j < ops->iterations; j++) {
-					ops->run();
-				}
-				t2 = SDL_GetTicks();
-				tTot += (t2 - t1);
-			}
-			if (ops->destroy != NULL) ops->destroy();
-
-			tot = (u_long)(tTot / ops->runs);
-			ops->last_result = ((double)tTot /
-			                    (double)ops->iterations) * 1e5;
-		}
+		AG_TableAddRow(t, "%s:%lu:%lu:%g:%pms", fn->name, fn->runs,
+		    fn->iterations, fn->last_result, fn);
 	}
+	AG_TableEnd(t);
 }
 
-static char *
-tests_callback(AG_Tableview *tv, AG_TableviewColID cid, AG_TableviewRowID rid)
+static void
+quit_app(int argc, union evarg *argv)
 {
-	static char text[32];
-	AG_TableviewRow *row = AG_TableviewRowGet(tv, rid);
-	struct testfn_ops *ops = row->userp;
-
-	switch (cid) {
-	case 0:
-		return (ops->name);
-	case 1:
-		snprintf(text, sizeof(text), "%u", ops->runs);
-		return (text);
-	case 2:
-		snprintf(text, sizeof(text), "%u", ops->iterations);
-		return (text);
-	case 3:
-		if (ops->last_result > 10000) {
-			snprintf(text, sizeof(text), "%f ms (%u/%u)",
-			    (double)(ops->last_result*1e-06), ops->runs,
-			    ops->iterations);
-		} else {
-			snprintf(text, sizeof(text), "%g ns (%u/%u)",
-			    ops->last_result, ops->runs, ops->iterations);
-		}
-		return (text);
-	}
+	AG_Quit();
 }
 
 static void
 tests_window(void)
 {
 	AG_Window *win;
-	AG_Tableview *tv;
+	AG_Table *t;
 	AG_Button *btn;
-	AG_Box *bo;
-	int i, id = 0;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	int i;
 
-	win = AG_WindowNew(0, "agar-bench");
+	win = AG_WindowNew(0, "agar-benchmarks");
 	AG_WindowSetCaption(win, "Agar Benchmarks");
 
-	tv = AG_TableviewNew(win, 0, tests_callback, NULL);
-	AG_TableviewSetUpdate(tv, 250);
-	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
-			      0, "Test",
-			      "< VIEW_PUT_PIXEL_2_CLIPPED() -- Clipped >");
-	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
-			      1, "Runs", "<XX>");
-	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
-			      2, "Iterations", "<XXXXXXXXX>");
-	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
-			      3, "Result", NULL);
-
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 	for (i = 0; i < ntests; i++) {
-		struct test_ops *test = tests[i];
-		AG_TableviewRow *pRow;
-		int j;
-
-		pRow = AG_TableviewRowAdd(tv, AG_TABLEVIEW_STATIC_ROW,
-		    NULL, NULL, id++,
-		    0, test->name,
-		    1, "",
-		    2, "",
-		    3, "");
-
-		for (j = 0; j < test->nfuncs; j++) {
-			struct testfn_ops *func = &test->funcs[j];
-
-			AG_TableviewRowAdd(tv, 0, pRow, func, id++,
-			    0, func->name,
-			    1, "",
-			    2, "",
-			    3, "");
-		}
+		ntab = AG_NotebookAddTab(nb, tests[i]->name, AG_BOX_VERT);
+		t = AG_TablePolled(ntab, AG_TABLE_MULTI, poll_test, "%i", i);
+		AG_TableAddCol(t, "Test", "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>",
+		    NULL);
+		AG_TableAddCol(t, "Runs", "<8888>", NULL);
+		AG_TableAddCol(t, "Iterations", "<888888888>", NULL);
+		AG_TableAddCol(t, "Result", "<8888888888888888>", NULL);
+		AG_TableAddCol(t, "Pointer", NULL, NULL);
+		
+		btn = AG_ButtonNew(ntab, "Run tests");
+		AG_SetEvent(btn, "button-pushed", run_tests, "%p", t);
+		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
 	}
-
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
-	{
-		btn = AG_ButtonNew(bo, "Run tests");
-		AG_SetEvent(btn, "button-pushed", run_tests, "%p", tv);
-
-		btn = AG_ButtonNew(bo, "Parameters");
-		AG_SetEvent(btn, "button-pushed", test_params, "%p", tv);
-	}
+	btn = AG_ButtonNew(win, "Quit");
+	AG_SetEvent(btn, "button-pushed", quit_app, NULL);
+	AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
@@ -263,22 +203,25 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitVideo(320, 240, 32, 0) == -1 ||
-	    AG_InitInput(AG_INPUT_KBDMOUSE) == -1) {
+	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
 	AG_InitConfigWin(AG_CONFIG_FULLSCREEN|AG_CONFIG_GL|
 	                 AG_CONFIG_RESOLUTION);
+	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
+	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	AG_SetRefreshRate(fps);
 
 	tests_window();
 
 	AG_EventLoop();
-	AG_Quit();
+	AG_Destroy();
 	return (0);
 fail:
-	AG_Quit();
+	AG_Destroy();
 	return (1);
 }
 

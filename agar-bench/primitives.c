@@ -1,4 +1,4 @@
-/*	$Csoft: primitives.c,v 1.2 2005/09/27 00:46:11 vedge Exp $	*/
+/*	$Csoft: primitives.c,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "test.h"
@@ -10,7 +10,7 @@ static SDL_Surface *su;
 static AG_Widget wid;
 
 static void
-init_widget(void)
+InitWidget(void)
 {
 	AG_WidgetInit(&wid, "test-widget", NULL, 0);
 	wid.cx = 1;
@@ -24,7 +24,7 @@ init_widget(void)
 }
 
 static void
-destroy_widget(void)
+FreeWidget(void)
 {
 	AG_WidgetDestroy(&wid);
 }
@@ -124,77 +124,77 @@ static struct testfn_ops testfns[] = {
 		"primitive.box()",
 		2, 50,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_box
 	},
 	{
 		"primitive.box_chamfered()",
 		2, 50,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_box_chamfered
 	},
 	{
 		"primitive.frame()",
 		2, 100,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_frame
 	},
 	{
 		"primitive.circle()",
 		2, 100,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_circle
 	},
 	{
 		"primitive.line()",
 		2, 100,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_line
 	},
 	{
 		"primitive.line_blended(src)",
 		2, 100,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_line_blended
 	},
 	{
 		"primitive.hline()",
 		3, 200,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_hline
 	},
 	{
 		"primitive.vline()",
 		2, 100,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_vline
 	},
 	{
 		"primitive.rect_filled()",
 		2, 30,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_rect_filled
 	},
 	{
 		"primitive.rect_blended(src)",
 		2, 10,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_rect_blended
 	},
 	{
 		"primitive.tiling(16px)",
 		2, 10,
 		0,
-		init_widget, destroy_widget,
+		InitWidget, FreeWidget,
 		test_tiling16
 	},
 };

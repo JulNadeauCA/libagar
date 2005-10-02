@@ -1,4 +1,4 @@
-/*	$Csoft: test.h,v 1.4 2005/09/27 00:46:11 vedge Exp $	*/
+/*	$Csoft: test.h,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -26,4 +26,11 @@ struct test_ops {
 	struct testfn_ops *funcs;
 	u_int nfuncs;
 };
+
+extern SDL_Surface *surface;
+
+void InitSurface(void);
+void FreeSurface(void);
+void LockView(void);
+void UnlockView(void);
 
