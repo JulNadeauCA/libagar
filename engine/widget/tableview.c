@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.38 2005/10/01 09:55:42 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.39 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -41,6 +41,8 @@
 #include "tableview.h"
 
 #define ID_INVALID ((u_int)-1)
+#define VISROW(tv,i) ((tv)->visible.items[i].row)
+#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
 
 static AG_WidgetOps agTableviewOps = {
 	{
@@ -127,8 +129,8 @@ AG_TableviewInit(AG_Tableview *tv, int flags, AG_TableviewDataFn data_callback,
 	if (!(flags & AG_TABLEVIEW_NOHEADER))	tv->header = 1;
 	if (!(flags & AG_TABLEVIEW_NOSORT))	tv->sort = 1;
 	if (flags & AG_TABLEVIEW_REORDERCOLS)	tv->reordercols = 1;
-	if (flags & AG_TABLEVIEW_SELMULTI)		tv->selmulti = 1;
-	if (flags & AG_TABLEVIEW_POLLED)		tv->polled = 1;
+	if (flags & AG_TABLEVIEW_SELMULTI)	tv->selmulti = 1;
+	if (flags & AG_TABLEVIEW_POLLED)	tv->polled = 1;
 
 	tv->head_height = tv->header ? agTextFontHeight : 0;
 	tv->row_height = agTextFontHeight+2;
@@ -683,7 +685,7 @@ AG_TableviewScale(void *p, int w, int h)
 		    sizeof(struct ag_tableview_rowdocket_item) * rows_per_view);
 
 		for (i = tv->visible.count; i < rows_per_view; i++)
-			tv->visible.items[i].row = NULL;
+			VISROW(tv,i) = NULL;
 
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
@@ -723,10 +725,10 @@ AG_TableviewDraw(void *p)
 	/* draw row selection hilites */
 	y = tv->head_height;
 	for (i = 0; i < tv->visible.count; i++) {
-		if (tv->visible.items[i].row == NULL) {
+		if (VISROW(tv,i) == NULL) {
 			break;
 		}
-		if (tv->visible.items[i].row->selected) {
+		if (VISROW(tv,i)->selected) {
 			agPrim.box(tv,
 			    1, y,
 			    view_width - 2,
@@ -845,7 +847,7 @@ view_changed(AG_Tableview *tv)
 
 	/* blank empty rows */
 	for (i = filled; i < tv->visible.count; i++)
-		tv->visible.items[i].row = NULL;
+		VISROW(tv,i) = NULL;
 
 	/* render dynamic columns */
 	for (i = 0; i < tv->columncount; i++)
@@ -872,8 +874,8 @@ view_changed_check(AG_Tableview *tv, struct ag_tableview_rowq* in, int depth,
 			(*seen)--;
 		} else {
 			if ((filled+x) < tv->visible.count) {
-				tv->visible.items[filled+x].row = row;
-				tv->visible.items[filled+x].depth = depth;
+				VISROW(tv,filled+x) = row;
+				VISDEPTH(tv,filled+x) = depth;
 				x++;
 			}
 		}
@@ -1010,11 +1012,12 @@ static void
 render_dyncolumn(AG_Tableview *tv, u_int idx)
 {
 	char *celltext;
-	AG_TableviewRow *row;
 	u_int i, cidx = tv->column[idx].idx;
 
 	for (i = 0; i < tv->visible.count; i++) {
-		if ((row = tv->visible.items[i].row) == NULL)
+		AG_TableviewRow *row = VISROW(tv,i);
+
+		if (row == NULL)
 			break;
 		if (!row->dynamic)
 			continue;
@@ -1022,10 +1025,7 @@ render_dyncolumn(AG_Tableview *tv, u_int idx)
 		if (row->cell[cidx].image != NULL)
 			SDL_FreeSurface(row->cell[cidx].image);
 
-		celltext = tv->data_callback(tv,
-		    tv->column[idx].cid,
-		    tv->visible.items[i].row->rid);
-
+		celltext = tv->data_callback(tv, tv->column[idx].cid, row->rid);
 		row->cell[cidx].image =
 		    AG_TextRender(NULL, -1, AG_COLOR(TABLEVIEW_CTXT_COLOR),
 		    celltext != NULL ? celltext : "");
@@ -1079,40 +1079,37 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 	int depth = 0;
 	int ts = tv->row_height/2 + 1;
 	SDLMod modifiers = SDL_GetModState();
+	u_int i, j, row_idx;
+	int px;
 
 	if (x < visible_start || x >= visible_end)
 		return (1);
 
-	/* find the visible row clicked on */
-	{
-		u_int row_idx;
-		int pix;
-
-		pix = tv->head_height;
-		for (row_idx = 0; row_idx < tv->visible.count; row_idx++) {
-			if (y >= pix && y < pix+tv->row_height) {
-				if (tv->visible.items[row_idx].row == NULL) {
-					row_idx = tv->visible.count;
-				}
-				break;
+	/* Find the visible row under the cursor. */
+	for (i = 0, px = tv->head_height;
+	     i < tv->visible.count;
+	     i++, px += tv->row_height) {
+		if (y >= px && y < px+tv->row_height) {
+			if (VISROW(tv,i) == NULL) {
+				i = tv->visible.count;
 			}
-			pix += tv->row_height;
-		}
-
-		if (row_idx != tv->visible.count) {
-			row = tv->visible.items[row_idx].row;
-			depth = tv->visible.items[row_idx].depth;
+			break;
 		}
 	}
+	if (i != tv->visible.count) {
+		row = VISROW(tv,i);
+		depth = VISDEPTH(tv,i);
+	}
+	row_idx = i;
 
-	/* clicking on blank space clears the selection */
+	/* Clicking on blank space clears the selection. */
 	if (row == NULL) {
 		deselect_all(&tv->children);
 		//AG_PostEvent(NULL, tv, "tableview-selectclear", "");
 		return (0);
 	}
 
-	/* check for a click on the +/- button, if applicable */
+	/* Check for a click on the +/- button, if applicable. */
 	if (tv->column[idx].cid == tv->expanderColumn &&
 	    !TAILQ_EMPTY(&row->children) &&
 	    x > (visible_start+4+(depth * (ts+4))) &&
@@ -1135,35 +1132,50 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 		return (0);
 	}
 	
-	/* handle a command/control click... */
+	/* Handle command/control clicks and range selections. */
 	if ((modifiers & KMOD_META || modifiers & KMOD_CTRL)) {
-		/* ...which always disselects a selected row */
 		if (row->selected) {
 			row->selected = 0;
 			AG_PostEvent(NULL, tv, "tableview-deselect", "%p", row);
-		}
-		/*
-		 * ...or selects a row (clearing other selections if not
-		 * selmulti)
-		 */
-		else {
+		} else {
 			if (!tv->selmulti) {
 				deselect_all(&tv->children);
 			}
 			row->selected = 1;
 			AG_PostEvent(NULL, tv, "tableview-select", "%p", row);
 		}
-	}
-	/* handle a normal click */
-	else {
+	} else if (modifiers & KMOD_SHIFT) {
+		for (j = 0; j < tv->visible.count; j++) {
+			if (VISROW(tv,j) != NULL &&
+			    VISROW(tv,j)->selected)
+				break;
+		}
+		if (j < tv->visible.count) {
+			/* XXX the selection may start on an invisible row */
+			if (j < row_idx) {
+				for (i = j; i <= row_idx; i++) {
+					if (VISROW(tv,i) != NULL)
+						VISROW(tv,i)->selected = 1;
+				}
+			} else if (j > row_idx) {
+				for (i = row_idx; i <= j; i++) {
+					if (VISROW(tv,i) != NULL)
+						VISROW(tv,i)->selected = 1;
+				}
+			} else {
+				if (VISROW(tv,row_idx) != NULL)
+					VISROW(tv,row_idx)->selected = 1;
+			}
+		}
+	} else {
+		deselect_all(&tv->children);
 		if (!row->selected) {
-			deselect_all(&tv->children);
 			row->selected = 1;
 			AG_PostEvent(NULL, tv, "tableview-select", "%p", row);
 		}
 	}
 
-	/* handle double-clicks */
+	/* Handle double-clicks. */
 	if (tv->dblclicked) {
 		AG_CancelEvent(tv, "dblclick-expire");
 		deselect_all(&tv->children);
@@ -1210,21 +1222,21 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 	for (j = 0; j < tv->visible.count; j++) {
 		int offset = visible_start+4;
 
-		if (tv->visible.items[j].row == NULL) {
+		if (VISROW(tv,j) == NULL) {
 			break;
 		}
 		if (tv->column[idx].cid == tv->expanderColumn) {
 			int tw = tv->row_height/2 + 1;
 			int ty = y + tw/2;
 
-			offset += tv->visible.items[j].depth * (tw+4);
+			offset += VISDEPTH(tv,j)*(tw+4);
 
-			if (!TAILQ_EMPTY(&tv->visible.items[j].row->children)) {
+			if (!TAILQ_EMPTY(&VISROW(tv,j)->children)) {
 				Uint8 c[4] = { 255, 255, 255, 128 };
 
 				agPrim.frame(tv, offset, ty, tw, tw,
 				    AG_COLOR(TABLEVIEW_LINE_COLOR));
-				if (tv->visible.items[j].row->expanded) {
+				if (VISROW(tv,j)->expanded) {
 					agPrim.minus(tv, offset, ty,
 					    tw - 2,
 					    tw - 2,
@@ -1238,10 +1250,10 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 			}
 			offset += tw+4;
 		}
-		if (tv->visible.items[j].row->cell[cidx].image) {
+		if (VISROW(tv,j)->cell[cidx].image) {
 			/* XXX inefficient in opengl mode */
 			AG_WidgetBlit(tv,
-			    tv->visible.items[j].row->cell[cidx].image,
+			    VISROW(tv,j)->cell[cidx].image,
 			    offset, y+1);
 		}
 		y += tv->row_height;
