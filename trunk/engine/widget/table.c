@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.4 2005/10/01 15:43:22 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -214,6 +214,10 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 	case AG_CELL_UINT:
 		snprintf(txt, sizeof(txt), c->fmt, c->data.i);
 		break;
+	case AG_CELL_LONG:
+	case AG_CELL_ULONG:
+		snprintf(txt, sizeof(txt), c->fmt, c->data.l);
+		break;
 	case AG_CELL_PINT:
 	case AG_CELL_PUINT:
 		snprintf(txt, sizeof(txt), c->fmt, *(int *)c->data.p);
@@ -247,6 +251,9 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		break;
 	case AG_CELL_PSINT8:
 		snprintf(txt, sizeof(txt), c->fmt, *(Sint8 *)c->data.p);
+		break;
+	case AG_CELL_POINTER:
+		snprintf(txt, sizeof(txt), c->fmt, c->data.p);
 		break;
 	case AG_CELL_FN:
 		c->surface = AG_WidgetMapSurface(t,
@@ -289,7 +296,10 @@ AG_TableDraw(void *p)
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
 		int cw;
-		
+	
+		if (col->w <= 0) {
+			continue;
+		}
 		cw = (x+col->w) < AGWIDGET(t)->w ? col->w: AGWIDGET(t)->w - x;
 
 		/* Draw the column header and separator. */
@@ -301,9 +311,11 @@ AG_TableDraw(void *p)
 		    AG_COLOR(TLIST_BG_COLOR));
 		
 		AG_WidgetPushClipRect(t, x, 0, cw, AGWIDGET(t)->h);
-		AG_WidgetBlitSurface(t, col->surface,
-		    x + cw/2 - AGWIDGET_SURFACE(t,col->surface)->w/2,
-		    0);
+		if (col->surface != -1) {
+			AG_WidgetBlitSurface(t, col->surface,
+			    x + cw/2 - AGWIDGET_SURFACE(t,col->surface)->w/2,
+			    0);
+		}
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, y = t->row_h;
@@ -321,6 +333,8 @@ AG_TableDraw(void *p)
 			AG_TableDrawCell(t, &t->cells[m][n], &rCell);
 			y += t->row_h;
 		}
+		agPrim.hline(t, 0, AGWIDGET(t)->w, y,
+		    AG_COLOR(TLIST_LINE_COLOR));
 
 		/* Indicate column selection. */
 		if (col->selected) {
@@ -444,9 +458,15 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_INT:
 	case AG_CELL_UINT:
 		return (c1->data.i - c2->data.i);
+	case AG_CELL_LONG:
+	case AG_CELL_ULONG:
+		return (c1->data.l - c2->data.l);
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
 		return (c1->data.f - c2->data.f);
+	case AG_CELL_PULONG:
+	case AG_CELL_PLONG:
+		return (*(long *)c1->data.p - *(long *)c2->data.p);
 	case AG_CELL_PUINT:
 	case AG_CELL_PINT:
 		return (*(int *)c1->data.p - *(int *)c2->data.p);
@@ -463,6 +483,8 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		return (*(float *)c1->data.p - *(float *)c2->data.p);
 	case AG_CELL_PDOUBLE:
 		return (*(double *)c1->data.p - *(double *)c2->data.p);
+	case AG_CELL_POINTER:
+		return (c1->data.p != c2->data.p);
 	case AG_CELL_FN:
 		return ((c1->data.p != c2->data.p) || (c1->fn != c2->fn));
 	case AG_CELL_NULL:
@@ -508,6 +530,13 @@ multisel(AG_Table *t)
 	        ((t->flags & AG_TABLE_MULTI) && SDL_GetModState() & KMOD_CTRL));
 }
 
+static __inline__ int
+rangesel(AG_Table *t)
+{
+	return ((t->flags & AG_TABLE_MULTI) &&
+	        (SDL_GetModState() & KMOD_SHIFT));
+}
+
 static void
 column_popup(AG_Table *t, int x)
 {
@@ -520,6 +549,7 @@ column_sel(AG_Table *t, int px)
 	u_int n;
 	int cx;
 	int x = px - (COLUMN_RESIZE_RANGE/2);
+	int multi = multisel(t);
 
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -530,7 +560,7 @@ column_sel(AG_Table *t, int px)
 				if (t->nResizing == -1)
 					t->nResizing = n;
 			} else {
-				if (multisel(t)) {
+				if (multi) {
 					tc->selected = !tc->selected;
 				} else {
 					tc->selected = 1;
@@ -538,7 +568,7 @@ column_sel(AG_Table *t, int px)
 				goto cont;
 			}
 		}
-		if (!(t->flags & AG_TABLE_MULTIMODE))
+		if (!multi)
 			tc->selected = 0;
 cont:
 		cx += tc->w;
@@ -549,15 +579,29 @@ static void
 cell_sel(AG_Table *t, int mc, int x)
 {
 	AG_TableCell *c;
-	u_int m, n;
+	u_int m, n, i;
 
-	if (multisel(t)) {
-		if (mc < t->m) {
-			for (n = 0; n < t->n; n++) {
-				c = &t->cells[mc][n];
-				c->selected = !c->selected;
-				t->cols[n].selected = 0;
+	if (rangesel(t)) {
+		for (m = 0; m < t->m; m++) {
+			if (AG_TableRowSelected(t, m))
+				break;
+		}
+		if (m < t->m) {
+			if (m < mc) {
+				for (i = m; i <= mc; i++)
+					AG_TableSelectRow(t, i);
+			} else if (m > mc) {
+				for (i = mc; i <= m; i++)
+					AG_TableSelectRow(t, i);
+			} else {
+				AG_TableSelectRow(t, mc);
 			}
+		}
+	} else if (multisel(t)) {
+		for (n = 0; n < t->n; n++) {
+			c = &t->cells[mc][n];
+			c->selected = !c->selected;
+			t->cols[n].selected = 0;
 		}
 	} else {
 		for (m = 0; m < t->m; m++) {
@@ -591,8 +635,10 @@ mousebuttondown(int argc, union evarg *argv)
 	int m;
 
 	pthread_mutex_lock(&t->lock);
-	if ((m = column_over(t, y)) >= (int)t->m)
+	if ((m = column_over(t, y)) >= (int)t->m) {
+		AG_TableDeselectAllRows(t);
 		goto out;
+	}
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
@@ -844,12 +890,16 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	/* Initialize the column information structure. */
 	t->cols = Realloc(t->cols, (t->n+1)*sizeof(AG_TableCol));
 	tc = &t->cols[t->n];
-	strlcpy(tc->name, name, sizeof(tc->name));
+	if (name != NULL) {
+		strlcpy(tc->name, name, sizeof(tc->name));
+	} else {
+		tc->name[0] = '\0';
+	}
 	tc->sort_fn = sort_fn;
 	tc->sort_order = 0;
 	tc->selected = 0;
-	tc->surface = AG_WidgetMapSurface(t,
-	    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR), name));
+	tc->surface = (name != NULL) ? AG_WidgetMapSurface(t,
+	    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR), name)) : -1;
 	if (t->n > 0) {
 		lc = &t->cols[t->n - 1];
 		tc->x = lc->x+lc->w;
@@ -858,13 +908,23 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	}
 	tc->pool = NULL;
 	tc->mpool = 0;
-	
-	switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
-	case AG_WIDGET_PERCENT:
-		tc->w = tc->w*AGWIDGET(t)->w/100;
-		break;
-	default:
-		break;
+
+	if (size_spec != NULL) {
+		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
+		case AG_WIDGET_PERCENT:
+			tc->w = tc->w*AGWIDGET(t)->w/100;
+			break;
+		default:
+			break;
+		}
+	} else {
+		if (name == NULL) {
+			tc->w = 0;
+		} else {
+			tc->w = AGWIDGET(t)->w;
+			for (n = 0; n < t->n; n++)
+				tc->w -= t->cols[n].w;
+		}
 	}
 
 	/* Resize the row arrays. */
@@ -933,19 +993,37 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 			break;
 		case 'd':
 		case 'i':
-			if (ptr) {
-				c->type = AG_CELL_PINT;
+			if (lflag) {
+				if (ptr) {
+					c->type = AG_CELL_PINT;
+				} else {
+					c->type = AG_CELL_INT;
+					c->data.i = va_arg(ap, int);
+				}
 			} else {
-				c->type = AG_CELL_INT;
-				c->data.i = va_arg(ap, int);
+				if (ptr) {
+					c->type = AG_CELL_PLONG;
+				} else {
+					c->type = AG_CELL_LONG;
+					c->data.l = va_arg(ap, long);
+				}
 			}
 			break;
 		case 'u':
-			if (ptr) {
-				c->type = AG_CELL_PUINT;
+			if (lflag) {
+				if (ptr) {
+					c->type = AG_CELL_PULONG;
+				} else {
+					c->type = AG_CELL_ULONG;
+					c->data.l = va_arg(ap, u_long);
+				}
 			} else {
-				c->type = AG_CELL_UINT;
-				c->data.i = va_arg(ap, int);
+				if (ptr) {
+					c->type = AG_CELL_PUINT;
+				} else {
+					c->type = AG_CELL_UINT;
+					c->data.i = va_arg(ap, int);
+				}
 			}
 			break;
 		case 'f':
@@ -984,6 +1062,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->type = AG_CELL_PUINT8;
 				}
 			}
+			break;
+		case 'p':
+			c->type = AG_CELL_POINTER;
+			c->data.p = va_arg(ap, void *);
 			break;
 		default:
 			fatal("invalid format string");
