@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.6 2005/10/02 14:17:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -202,12 +202,11 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 	switch (c->type) {
 	case AG_CELL_STRING:
 		c->surface = AG_WidgetMapSurface(t,
-		    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR),
-		    c->data.s));
+		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), c->data.s));
 		goto blit;
 	case AG_CELL_PSTRING:
 		c->surface = AG_WidgetMapSurface(t,
-		    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR),
+		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
 		    (char *)c->data.p));
 		goto blit;
 	case AG_CELL_INT:
@@ -265,7 +264,7 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		break;
 	}
 	c->surface = AG_WidgetMapSurface(t,
-	    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR), txt));
+	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
 	    rd->x,
@@ -283,7 +282,7 @@ AG_TableDraw(void *p)
 		return;
 
 	agPrim.box(t, 0, 0, AGWIDGET(t)->w, AGWIDGET(t)->h, -1,
-	    AG_COLOR(TLIST_BG_COLOR));
+	    AG_COLOR(TABLE_COLOR));
 
 	pthread_mutex_lock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
@@ -305,10 +304,9 @@ AG_TableDraw(void *p)
 		/* Draw the column header and separator. */
 		if (x > 0 && x < AGWIDGET(t)->w) {
 			agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
-			    AG_COLOR(TLIST_LINE_COLOR));
+			    AG_COLOR(TABLE_LINE_COLOR));
 		}
-		agPrim.box(t, x, 0, cw, t->col_h - 1, 1,
-		    AG_COLOR(TLIST_BG_COLOR));
+		agPrim.box(t, x, 0, cw, t->col_h - 1, 1, AG_COLOR(TABLE_COLOR));
 		
 		AG_WidgetPushClipRect(t, x, 0, cw, AGWIDGET(t)->h);
 		if (col->surface != -1) {
@@ -324,7 +322,7 @@ AG_TableDraw(void *p)
 			SDL_Rect rCell;
 			
 			agPrim.hline(t, 0, AGWIDGET(t)->w, y,
-			    AG_COLOR(TLIST_LINE_COLOR));
+			    AG_COLOR(TABLE_LINE_COLOR));
 
 			rCell.x = x;
 			rCell.y = y;
@@ -334,7 +332,7 @@ AG_TableDraw(void *p)
 			y += t->row_h;
 		}
 		agPrim.hline(t, 0, AGWIDGET(t)->w, y,
-		    AG_COLOR(TLIST_LINE_COLOR));
+		    AG_COLOR(TABLE_LINE_COLOR));
 
 		/* Indicate column selection. */
 		if (col->selected) {
@@ -348,7 +346,7 @@ AG_TableDraw(void *p)
 		x += col->w;
 	}
 	agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
-	    AG_COLOR(TLIST_LINE_COLOR));
+	    AG_COLOR(TABLE_LINE_COLOR));
 
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
 	pthread_mutex_unlock(&t->lock);
@@ -899,7 +897,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->sort_order = 0;
 	tc->selected = 0;
 	tc->surface = (name != NULL) ? AG_WidgetMapSurface(t,
-	    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR), name)) : -1;
+	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), name)) : -1;
 	if (t->n > 0) {
 		lc = &t->cols[t->n - 1];
 		tc->x = lc->x+lc->w;

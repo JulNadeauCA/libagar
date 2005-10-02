@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.9 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.10 2005/10/02 09:39:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -8,6 +8,7 @@
 enum {
 	BG_COLOR,
 	FRAME_COLOR,
+	LINE_COLOR,
 	TEXT_COLOR,
 	WINDOW_BG_COLOR,
 	WINDOW_HI_COLOR,
@@ -77,6 +78,8 @@ enum {
 	MAPVIEW_RSEL_COLOR,
 	MAPVIEW_ORIGIN_COLOR,
 	FOCUS_COLOR,
+	TABLE_COLOR,
+	TABLE_LINE_COLOR,
 	LAST_COLOR
 };
 
