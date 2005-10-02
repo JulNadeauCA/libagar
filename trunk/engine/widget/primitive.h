@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.30 2005/05/29 05:49:59 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.31 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -28,6 +28,10 @@ typedef struct ag_primitive_ops {
 	void	(*minus)(void *, int, int, int, int, Uint8 [4],
 			 enum ag_blend_func);
 	void	(*tiling)(void *, SDL_Rect, int, int, Uint32, Uint32);
+	void	(*arrow_up)(void *, int, int, int, Uint32, Uint32);
+	void	(*arrow_down)(void *, int, int, int, Uint32, Uint32);
+	void	(*arrow_left)(void *, int, int, int, Uint32, Uint32);
+	void	(*arrow_right)(void *, int, int, int, Uint32, Uint32);
 } AG_PrimitiveOps;
 
 extern AG_PrimitiveOps agPrim;
