@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.164 2005/09/27 14:06:29 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.165 2005/10/01 09:55:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -115,6 +115,18 @@ AG_InitCore(const char *progname, u_int flags)
 	agConfig = Malloc(sizeof(AG_Config), M_OBJECT);
 	AG_ConfigInit(agConfig);
 	AG_ObjectLoad(agConfig);
+
+	printf("\n");
+	printf(_("Architecture extensions: "));
+	if (SDL_HasRDTSC()) { printf("RDTSC "); }
+	if (SDL_HasMMX()) { printf("MMX "); }
+	if (SDL_HasMMXExt()) { printf("MMXExt "); }
+	if (SDL_Has3DNow()) { printf("3DNow "); }
+	if (SDL_Has3DNowExt()) { printf("3DNowExt "); }
+	if (SDL_HasSSE()) { printf("SSE "); }
+	if (SDL_HasSSE2()) { printf("SSE2 "); }
+	if (SDL_HasAltiVec()) { printf("AltiVec "); }
+	printf(".\n");
 
 	agWorld = AG_ObjectNew(NULL, "world");
 	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);

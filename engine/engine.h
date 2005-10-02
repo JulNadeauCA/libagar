@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.100 2005/09/27 14:06:29 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.101 2005/10/01 09:55:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -31,6 +31,7 @@
 
 #include <SDL.h>
 #include <SDL_endian.h>
+#include <SDL_cpuinfo.h>
 
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__ /* OS X */
