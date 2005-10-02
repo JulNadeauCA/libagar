@@ -1,4 +1,4 @@
-/*	$Csoft: matview.c,v 1.3 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: matview.c,v 1.4 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -155,14 +155,14 @@ AG_MatviewScale(void *p, int w, int h)
 	}
 
 	AGWIDGET(mv->hbar)->x = 0;
-	AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->button_size;
+	AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->bw;
 	AGWIDGET(mv->hbar)->w = AGWIDGET(mv)->w;
-	AGWIDGET(mv->hbar)->h = mv->hbar->button_size;
+	AGWIDGET(mv->hbar)->h = mv->hbar->bw;
 
-	AGWIDGET(mv->vbar)->x = AGWIDGET(mv)->w - mv->vbar->button_size;
-	AGWIDGET(mv->vbar)->y = mv->vbar->button_size;
-	AGWIDGET(mv->vbar)->w = mv->vbar->button_size;
-	AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h - mv->vbar->button_size;
+	AGWIDGET(mv->vbar)->x = AGWIDGET(mv)->w - mv->vbar->bw;
+	AGWIDGET(mv->vbar)->y = mv->vbar->bw;
+	AGWIDGET(mv->vbar)->w = mv->vbar->bw;
+	AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h - mv->vbar->bw;
 }
 
 void
