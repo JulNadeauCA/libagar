@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.48 2005/09/27 00:25:18 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.49 2005/10/01 09:55:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1486,16 +1486,16 @@ AG_MapviewScale(void *p, int rw, int rh)
 
 	if (mv->hbar != NULL) {
 		AGWIDGET(mv->hbar)->x = 0;
-		AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->button_size;
+		AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->bw;
 		AGWIDGET(mv->hbar)->w = AGWIDGET(mv)->w;
-		AGWIDGET(mv->hbar)->h = mv->hbar->button_size;
+		AGWIDGET(mv->hbar)->h = mv->hbar->bw;
 		AG_WidgetScale(mv->hbar, AGWIDGET(mv->hbar)->w,
 		   AGWIDGET(mv->hbar)->h);
 	}
 	if (mv->vbar != NULL) {
 		AGWIDGET(mv->vbar)->x = 0;
 		AGWIDGET(mv->vbar)->y = 0;
-		AGWIDGET(mv->vbar)->w = mv->vbar->button_size;
+		AGWIDGET(mv->vbar)->w = mv->vbar->bw;
 		AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h;
 		AG_WidgetScale(mv->vbar, AGWIDGET(mv->vbar)->w,
 		    AGWIDGET(mv->vbar)->h);
