@@ -1,10 +1,10 @@
-#	$Csoft: Makefile,v 1.2 2005/05/29 05:48:06 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2005/09/27 03:48:57 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
 
 PROG=	agar-bench
-SRCS=	tests.c pixelops.c primitives.c
+SRCS=	tests.c generic.c pixelops.c primitives.c surfaceops.c
 
 CFLAGS+=${AGAR_CFLAGS} -I.
 LIBS+=	${AGAR_LIBS}
