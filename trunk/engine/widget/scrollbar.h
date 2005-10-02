@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.h,v 1.14 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.15 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SCROLLBAR_H_
@@ -18,9 +18,10 @@ typedef struct ag_scrollbar {
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
 	enum ag_scrollbar_type type;
-	int button_size;		/* Scroll button size */
+	int bw;				/* Scroll button size */
 	int curbutton;			/* Button held */
-	int bar_size;			/* Scroll bar size */
+	int barSz;			/* Scroll bar size */
+	int arrowSz;			/* Arrow height */
 } AG_Scrollbar;
 
 __BEGIN_DECLS
