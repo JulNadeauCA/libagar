@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.3 2005/10/01 15:26:57 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.4 2005/10/01 15:43:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -63,6 +63,17 @@ static void kbdscroll(int, union evarg *);
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
+
+AG_Table *
+AG_TableNew(void *parent, u_int flags)
+{
+	AG_Table *t;
+
+	t = Malloc(sizeof(AG_Table), M_OBJECT);
+	AG_TableInit(t, flags);
+	AG_ObjectAttach(parent, t);
+	return (t);
+}
 
 AG_Table *
 AG_TablePolled(void *parent, u_int flags, void (*fn)(int, union evarg *),
@@ -158,18 +169,13 @@ AG_TableScale(void *p, int w, int h)
 		AGWIDGET(t)->h = t->preh;
 	}
 
-	AGWIDGET(t->vbar)->x = AGWIDGET(t)->w - t->vbar->button_size;
+	AGWIDGET(t->vbar)->x = AGWIDGET(t)->w - t->vbar->bw;
 	AGWIDGET(t->vbar)->y = 0;
-	AG_WidgetScale(t->vbar,
-	     t->vbar->button_size,
-	     AGWIDGET(t)->h);
+	AG_WidgetScale(t->vbar, t->vbar->bw, AGWIDGET(t)->h);
 	
-	AGWIDGET(t->hbar)->x = t->vbar->button_size + 1;
-	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->button_size;
-	AG_WidgetScale(t->hbar,
-	    AGWIDGET(t)->w - t->hbar->button_size,
-	    t->vbar->button_size);
-
+	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
+	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
+	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 	AG_TableUpdateScrollbars(t);
 }
 
@@ -266,8 +272,7 @@ AG_TableDraw(void *p)
 	int n, m;
 	int x, y;
 
-	if (AGWIDGET(t)->w <= t->vbar->button_size ||
-	    AGWIDGET(t)->h <= t->row_h)
+	if (AGWIDGET(t)->w <= t->vbar->bw || AGWIDGET(t)->h <= t->row_h)
 		return;
 
 	agPrim.box(t, 0, 0, AGWIDGET(t)->w, AGWIDGET(t)->h, -1,
@@ -357,8 +362,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	}
 	if (t->m > 0 && t->mVis > 0 && t->mVis < t->m) {
 		AG_ScrollbarSetBarSize(t->vbar,
-		    t->mVis*(AGWIDGET(t->vbar)->h - t->vbar->button_size*2) /
-		    t->m);
+		    t->mVis*(AGWIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
 	} else {
 		AG_ScrollbarSetBarSize(t->vbar, -1);		/* Full range */
 	}

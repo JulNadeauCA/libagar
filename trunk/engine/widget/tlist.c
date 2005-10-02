@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.135 2005/10/01 09:55:42 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.136 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -250,14 +250,9 @@ AG_TlistScale(void *p, int w, int h)
 		AGWIDGET(tl)->w = tl->prew;
 		AGWIDGET(tl)->h = tl->preh;
 	}
-
-	AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->button_size;
+	AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->bw;
 	AGWIDGET(tl->sbar)->y = 0;
-
-	AG_WidgetScale(tl->sbar,
-	    tl->sbar->button_size,
-	    AGWIDGET(tl)->h);
-	
+	AG_WidgetScale(tl->sbar, tl->sbar->bw, AGWIDGET(tl)->h);
 	update_scrollbar(tl);
 }
 
@@ -379,8 +374,7 @@ update_scrollbar(AG_Tlist *tl)
 	    tl->nvisitems < tl->nitems) {
 		AG_ScrollbarSetBarSize(tl->sbar,
 		    tl->nvisitems *
-		    (AGWIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
-		    tl->nitems);
+		    (AGWIDGET(tl->sbar)->h - tl->sbar->bw*2)/tl->nitems);
 	} else {
 		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
 	}

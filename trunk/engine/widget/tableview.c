@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.39 2005/10/01 14:15:39 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.40 2005/10/02 08:00:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -600,9 +600,9 @@ AG_TableviewScale(void *p, int w, int h)
 
 	/* estimate but don't change anything */
 	if (w == -1 && h == -1) {
-		AGWIDGET(tv)->w = tv->prew + tv->sbar_v->button_size;
-		AGWIDGET(tv)->h = tv->preh + (NULL == tv->sbar_h ? 0 :
-		                tv->sbar_h->button_size);
+		AGWIDGET(tv)->w = tv->prew + tv->sbar_v->bw;
+		AGWIDGET(tv)->h = tv->preh +
+		    (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
 
 		for (i = 0; i < tv->columncount; i++) {
 			AGWIDGET(tv)->w += tv->column[i].w;
@@ -610,18 +610,17 @@ AG_TableviewScale(void *p, int w, int h)
 		goto out;
 	}
 	/* vertical scroll bar */
-	AGWIDGET(tv->sbar_v)->x = w - tv->sbar_v->button_size;
+	AGWIDGET(tv->sbar_v)->x = w - tv->sbar_v->bw;
 	AGWIDGET(tv->sbar_v)->y = 0;
-	AG_WidgetScale(tv->sbar_v, -1, h -
-	    (tv->sbar_h ? tv->sbar_v->button_size : 0));
+	AG_WidgetScale(tv->sbar_v, -1, h - (tv->sbar_h ? tv->sbar_v->bw : 0));
 
 	/* horizontal scroll bar, if enabled */
 	if (tv->sbar_h != NULL) {
 		int col_w = 0;
 
 		AGWIDGET(tv->sbar_h)->x = 0;
-		AGWIDGET(tv->sbar_h)->y = h - tv->sbar_v->button_size;
-		AG_WidgetScale(tv->sbar_h, w - tv->sbar_v->button_size, -1);
+		AGWIDGET(tv->sbar_h)->y = h - tv->sbar_v->bw;
+		AG_WidgetScale(tv->sbar_h, w - tv->sbar_v->bw, -1);
 
 		for (i = 0; i < tv->columncount; i++)
 			col_w += tv->column[i].w;
@@ -634,8 +633,7 @@ AG_TableviewScale(void *p, int w, int h)
 				AG_WidgetSetInt(tv->sbar_h, "value", scroll);
 			}
 			AG_ScrollbarSetBarSize(tv->sbar_h,
-			    AGWIDGET(tv->sbar_h)->w *
-			    (w - tv->sbar_h->button_size * 3) / col_w);
+			    AGWIDGET(tv->sbar_h)->w*(w-tv->sbar_h->bw*3)/col_w);
 		} else {
 			AG_WidgetSetInt(tv->sbar_h, "value", 0);
 			AG_ScrollbarSetBarSize(tv->sbar_h, -1);
@@ -810,8 +808,7 @@ view_changed(AG_Tableview *tv)
 	int rows_per_view, max, filled, value;
 	int view_height = AGWIDGET(tv)->h - (tv->sbar_h != NULL ?
 			                   AGWIDGET(tv->sbar_h)->h : 0);
-	int scrolling_area = AGWIDGET(tv->sbar_v)->h -
-	    tv->sbar_v->button_size*2;
+	int scrolling_area = AGWIDGET(tv->sbar_v)->h - tv->sbar_v->bw*2;
 	u_int i;
 
 	/* cancel double clicks if what's under it changes it */
