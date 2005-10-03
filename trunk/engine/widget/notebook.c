@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.8 2005/09/29 02:42:58 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.9 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -101,6 +101,10 @@ AG_NotebookInit(AG_Notebook *nb, int flags)
 	nb->cont_w = -1;
 	nb->cont_h = -1;
 	nb->tab_rad = (int)(agTextFontHeight/1.5);
+	nb->spacing = -1;
+	nb->padding = -1;
+	nb->tabFontFace = NULL;
+	nb->tabFontSize = 9;
 	pthread_mutex_init(&nb->lock, &agRecursiveMutexAttr);
 	TAILQ_INIT(&nb->tabs);
 
@@ -208,6 +212,38 @@ AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 	pthread_mutex_unlock(&nb->lock);
 }
 
+void
+AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
+{
+	pthread_mutex_lock(&nb->lock);
+	nb->spacing = spacing;
+	pthread_mutex_unlock(&nb->lock);
+}
+
+void
+AG_NotebookSetTabFontFace(AG_Notebook *nb, const char *face)
+{
+	pthread_mutex_lock(&nb->lock);
+	nb->tabFontFace = face;
+	pthread_mutex_unlock(&nb->lock);
+}
+
+void
+AG_NotebookSetTabFontSize(AG_Notebook *nb, int size)
+{
+	pthread_mutex_lock(&nb->lock);
+	nb->tabFontSize = size;
+	pthread_mutex_unlock(&nb->lock);
+}
+
+void
+AG_NotebookSetPadding(AG_Notebook *nb, int padding)
+{
+	pthread_mutex_lock(&nb->lock);
+	nb->padding = padding;
+	pthread_mutex_unlock(&nb->lock);
+}
+
 AG_NotebookTab *
 AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 {
@@ -215,8 +251,14 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 
 	tab = Malloc(sizeof(AG_NotebookTab), M_OBJECT);
 	AG_BoxInit((AG_Box *)tab, btype, AG_BOX_WFILL|AG_BOX_HFILL);
+	if (nb->padding >= 0)
+		AG_BoxSetPadding((AG_Box *)tab, nb->padding);
+	if (nb->spacing >= 0)
+		AG_BoxSetSpacing((AG_Box *)tab, nb->spacing);
+		
 	tab->label = AG_WidgetMapSurface(nb,
-	    AG_TextRender(NULL, 9, AG_COLOR(NOTEBOOK_TXT_COLOR), label));
+	    AG_TextRender(nb->tabFontFace, nb->tabFontSize,
+	    AG_COLOR(NOTEBOOK_TXT_COLOR), label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	if (TAILQ_FIRST(&nb->tabs) == tab) {
 		AG_NotebookSelectTab(nb, tab);
