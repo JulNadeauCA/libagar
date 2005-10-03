@@ -1,4 +1,4 @@
-/*	$Csoft: tests.c,v 1.3 2005/10/02 16:06:31 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.1 2005/10/03 06:15:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -33,7 +33,7 @@ run_tests(int argc, union evarg *argv)
 		if (!AG_TableRowSelected(t, m)) {
 			continue;
 		}
-		ops = t->cells[m][4].data.p;
+		ops = t->cells[m][3].data.p;
 		if (((ops->flags & TEST_SDL) && agView->opengl) ||
 		    ((ops->flags & TEST_GL)  && !agView->opengl)) {
 			continue;
@@ -64,21 +64,25 @@ poll_test(int argc, union evarg *argv)
 
 	AG_TableBegin(t);
 	for (i = 0; i < test->nfuncs; i++) {
+		char itertxt[16];
 		struct testfn_ops *fn = &test->funcs[i];
 
+		snprintf(itertxt, sizeof(itertxt), "%ux%u", fn->runs,
+		    fn->iterations);
+
 		if (fn->clks >= 1e6) {
-			AG_TableAddRow(t, "%s:%lu:%lu:%.04f MClks:%p", fn->name,
-			    fn->runs, fn->iterations,
+			AG_TableAddRow(t, "%s:%s:%.04f MClks:%p", fn->name,
+			    itertxt,
 			    (double)(fn->clks/1e6),
 			    fn);
 		} else if (fn->clks >= 1e3) {
-			AG_TableAddRow(t, "%s:%lu:%lu:%.04f kClks:%p", fn->name,
-			    fn->runs, fn->iterations,
+			AG_TableAddRow(t, "%s:%s:%.04f kClks:%p", fn->name,
+			    itertxt,
 			    (double)(fn->clks/1e3),
 			    fn);
 		} else {
-			AG_TableAddRow(t, "%s:%lu:%lu:%lu Clks:%p", fn->name,
-			    fn->runs, fn->iterations,
+			AG_TableAddRow(t, "%s:%s:%lu Clks:%p", fn->name,
+			    itertxt,
 			    (u_long)fn->clks, fn);
 		}
 	}
@@ -112,7 +116,6 @@ tests_window(void)
 		t = AG_TablePolled(ntab, AG_TABLE_MULTI, poll_test, "%i", i);
 		AG_TableAddCol(t, "Test", "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>",
 		    NULL);
-		AG_TableAddCol(t, "Runs", "<8888>", NULL);
 		AG_TableAddCol(t, "Iterations", "<888888888>", NULL);
 		AG_TableAddCol(t, "Result", NULL, NULL);
 		AG_TableAddCol(t, NULL, NULL, NULL);
