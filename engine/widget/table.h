@@ -1,4 +1,4 @@
-/*	$Csoft: table.h,v 1.3 2005/10/02 14:17:23 vedge Exp $	*/
+/*	$Csoft: table.h,v 1.4 2005/10/03 03:41:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TABLE_H_
@@ -33,6 +33,12 @@ typedef struct ag_table_cell {
 		AG_CELL_PSINT32,
 		AG_CELL_PFLOAT,
 		AG_CELL_PDOUBLE,
+#ifdef SDL_HAS_64BIT_TYPE
+		AG_CELL_INT64,
+		AG_CELL_UINT64,
+		AG_CELL_PINT64,
+		AG_CELL_PUINT64,
+#endif
 		AG_CELL_POINTER,
 		AG_CELL_FN
 	} type;
@@ -42,6 +48,9 @@ typedef struct ag_table_cell {
 		double f;
 		void *p;
 		long l;
+#ifdef SDL_HAS_64BIT_TYPE
+		Uint64 u64;
+#endif
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
 	SDL_Surface *(*fn)(void *, int, int);	/* For AG_CELL_FN */

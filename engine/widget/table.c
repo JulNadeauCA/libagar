@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.7 2005/10/02 16:10:37 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.8 2005/10/03 03:41:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -254,6 +254,18 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 	case AG_CELL_PDOUBLE:
 		snprintf(txt, sizeof(txt), c->fmt, *(double *)c->data.p);
 		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_CELL_INT64:
+	case AG_CELL_UINT64:
+		snprintf(txt, sizeof(txt), c->fmt, c->data.f);
+		break;
+	case AG_CELL_PUINT64:
+		snprintf(txt, sizeof(txt), c->fmt, *(Uint64 *)c->data.p);
+		break;
+	case AG_CELL_PINT64:
+		snprintf(txt, sizeof(txt), c->fmt, *(Sint64 *)c->data.p);
+		break;
+#endif
 	case AG_CELL_PUINT32:
 		snprintf(txt, sizeof(txt), c->fmt, *(Uint32 *)c->data.p);
 		break;
@@ -483,6 +495,14 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
 		return (c1->data.f - c2->data.f);
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_CELL_INT64:
+	case AG_CELL_UINT64:
+		return (c1->data.u64 - c2->data.u64);
+	case AG_CELL_PUINT64:
+	case AG_CELL_PINT64:
+		return (*(Uint64 *)c1->data.p - *(Uint64 *)c2->data.p);
+#endif
 	case AG_CELL_PULONG:
 	case AG_CELL_PLONG:
 		return (*(long *)c1->data.p - *(long *)c2->data.p);
@@ -1011,14 +1031,23 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 			break;
 		case 'd':
 		case 'i':
-			if (lflag) {
+			if (lflag == 0) {
 				if (ptr) {
 					c->type = AG_CELL_PINT;
 				} else {
 					c->type = AG_CELL_INT;
 					c->data.i = va_arg(ap, int);
 				}
-			} else {
+#ifdef SDL_HAS_64BIT_TYPE
+			} else if (lflag == 2) {
+				if (ptr) {
+					c->type = AG_CELL_PINT64;
+				} else {
+					c->type = AG_CELL_INT64;
+					c->data.l = va_arg(ap, Sint64);
+				}
+#endif
+			} else if (lflag == 1) {
 				if (ptr) {
 					c->type = AG_CELL_PLONG;
 				} else {
@@ -1028,19 +1057,28 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 			}
 			break;
 		case 'u':
-			if (lflag) {
-				if (ptr) {
-					c->type = AG_CELL_PULONG;
-				} else {
-					c->type = AG_CELL_ULONG;
-					c->data.l = va_arg(ap, u_long);
-				}
-			} else {
+			if (lflag == 0) {
 				if (ptr) {
 					c->type = AG_CELL_PUINT;
 				} else {
 					c->type = AG_CELL_UINT;
 					c->data.i = va_arg(ap, int);
+				}
+#ifdef SDL_HAS_64BIT_TYPE
+			} else if (lflag == 2) {
+				if (ptr) {
+					c->type = AG_CELL_PUINT64;
+				} else {
+					c->type = AG_CELL_UINT64;
+					c->data.l = va_arg(ap, Uint64);
+				}
+#endif
+			} else if (lflag == 1) {
+				if (ptr) {
+					c->type = AG_CELL_PULONG;
+				} else {
+					c->type = AG_CELL_ULONG;
+					c->data.l = va_arg(ap, u_long);
 				}
 			}
 			break;
