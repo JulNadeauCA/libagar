@@ -1,4 +1,4 @@
-/*	$Csoft: primitives.c,v 1.3 2005/10/03 06:15:46 vedge Exp $	*/
+/*	$Csoft: primitives.c,v 1.4 2005/10/03 07:17:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -30,13 +30,13 @@ FreeWidget(void)
 }
 
 static void
-test_box(void)
+T_Box(void)
 {
 	agPrim.box(&wid, 0, 0, wid.w/2, wid.h/2, 1, 0);
 }
 
 static void
-test_box_chamfered(void)
+T_BoxChamfered(void)
 {
 	SDL_Rect r;
 
@@ -48,26 +48,26 @@ test_box_chamfered(void)
 }
 
 static void
-test_frame(void)
+T_Frame(void)
 {
 	agPrim.frame(&wid, 0, 0, wid.w, wid.h, 0);
 }
 
 static void
-test_circle(void)
+T_Circle(void)
 {
 	agPrim.circle(&wid, 0, 0, wid.w/3, 0);
 }
 
 static void
-test_line(void)
+T_Line(void)
 {
 	agPrim.line(&wid, 0, 0, wid.w, wid.h, 0);
 	agPrim.line(&wid, 0, 0, wid.w, wid.h/2, 0);
 }
 
 static void
-test_line_blended(void)
+T_LineBlended(void)
 {
 	Uint8 c[4];
 
@@ -76,33 +76,33 @@ test_line_blended(void)
 }
 
 static void
-test_hline(void)
+T_HLine(void)
 {
-	agPrim.hline(&wid, 1, wid.w, 1, 0);
+	agPrim.hline(&wid, 1, 479, 1, 0);
 }
 
 static void
-test_vline(void)
+T_VLine(void)
 {
-	agPrim.vline(&wid, 1, 1, wid.h, 0);
+	agPrim.vline(&wid, 1, 1, 479, 0);
 }
 
 static void
-test_rect_filled(void)
+T_RectFilled(void)
 {
-	agPrim.rect_filled(&wid, 1, 1, wid.w/2, wid.h/2, 0);
+	agPrim.rect_filled(&wid, 1, 1, 256, 256, 0);
 }
 
 static void
-test_rect_blended(void)
+T_RectBlended(void)
 {
 	Uint8 c[4];
 
-	agPrim.rect_blended(&wid, 1, 1, wid.w/2, wid.h/2, c, AG_ALPHA_SRC);
+	agPrim.rect_blended(&wid, 1, 1, 128, 128, c, AG_ALPHA_SRC);
 }
 
 static void
-test_tiling16(void)
+T_Tiling16(void)
 {
 	SDL_Rect rd;
 
@@ -114,7 +114,7 @@ test_tiling16(void)
 }
 
 static void
-test_tiling32(void)
+T_Tiling32(void)
 {
 	SDL_Rect rd;
 
@@ -126,18 +126,19 @@ test_tiling32(void)
 }
 
 static struct testfn_ops testfns[] = {
- { "primitive.box()", InitWidget, FreeWidget, test_box },
- { "primitive.box_chamfered()", InitWidget, FreeWidget, test_box_chamfered },
- { "primitive.frame()", InitWidget, FreeWidget, test_frame },
- { "primitive.circle()", InitWidget, FreeWidget, test_circle },
- { "primitive.line()", InitWidget, FreeWidget, test_line },
- { "primitive.line_blended()", InitWidget, FreeWidget, test_line_blended },
- { "primitive.hline()", InitWidget, FreeWidget, test_hline },
- { "primitive.vline()", InitWidget, FreeWidget, test_vline },
- { "primitive.rect_filled()", InitWidget, FreeWidget, test_rect_filled },
- { "primitive.rect_blended(ALPHA_SRC)", InitWidget, FreeWidget,
-    test_rect_blended },
- { "primitive.tiling(16x16)", InitWidget, FreeWidget, test_tiling16 },
+ { "primitive.box()", InitWidget, FreeWidget, T_Box },
+ { "primitive.box_chamfered()", InitWidget, FreeWidget, T_BoxChamfered },
+ { "primitive.frame()", InitWidget, FreeWidget, T_Frame },
+ { "primitive.circle()", InitWidget, FreeWidget, T_Circle },
+ { "primitive.line()", InitWidget, FreeWidget, T_Line },
+ { "primitive.line_blended()", InitWidget, FreeWidget, T_LineBlended },
+ { "primitive.hline(479px)", InitWidget, FreeWidget, T_HLine },
+ { "primitive.vline(479px)", InitWidget, FreeWidget, T_VLine },
+ { "primitive.rect_filled(256x256)", InitWidget, FreeWidget, T_RectFilled },
+ { "primitive.rect_blended(128x128, ALPHA_SRC)", InitWidget, FreeWidget,
+    T_RectBlended },
+ { "primitive.tiling(16x16)", InitWidget, FreeWidget, T_Tiling16 },
+ { "primitive.tiling(32x32)", InitWidget, FreeWidget, T_Tiling32 },
 };
 
 struct test_ops primitives_test = {
