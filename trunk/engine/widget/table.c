@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.8 2005/10/03 03:41:24 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.9 2005/10/03 05:10:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -136,7 +136,7 @@ AG_TableInit(AG_Table *t, u_int flags)
 	AG_SetEvent(t, "window-keyup", keyup, NULL);
 	AG_SetEvent(t, "widget-lostfocus", lostfocus, NULL);
 	AG_SetEvent(t, "widget-hidden", lostfocus, NULL);
-//	AG_SetEvent(t, "detached", lostfocus, NULL);
+	AG_SetEvent(t, "detached", lostfocus, NULL);
 	AG_SetEvent(t, "kbdscroll", kbdscroll, NULL);
 }
 
@@ -1047,7 +1047,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->data.l = va_arg(ap, Sint64);
 				}
 #endif
-			} else if (lflag == 1) {
+			} else {
 				if (ptr) {
 					c->type = AG_CELL_PLONG;
 				} else {
@@ -1073,7 +1073,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->data.l = va_arg(ap, Uint64);
 				}
 #endif
-			} else if (lflag == 1) {
+			} else {
 				if (ptr) {
 					c->type = AG_CELL_PULONG;
 				} else {
@@ -1124,7 +1124,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 			c->data.p = va_arg(ap, void *);
 			break;
 		default:
-			fatal("invalid format string");
+			break;
 		}
 	}
 	va_end(ap);
