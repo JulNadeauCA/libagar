@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.9 2005/10/03 05:10:42 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.10 2005/10/03 05:38:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -292,7 +292,15 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		    c->fn(c->data.p, rd->x, rd->y));
 		goto blit;
 	case AG_CELL_NULL:
-		return;
+		if (c->fmt[0] != '\0') {
+			c->surface = AG_WidgetMapSurface(t,
+			    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
+			    c->fmt));
+			goto blit;
+		} else {
+			return;
+		}
+		break;
 	default:
 		break;
 	}
@@ -1001,20 +1009,28 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		AG_TableCell *c = &t->cells[t->m][n];
 		char *s = strsep(&sp, ":;, "), *sc;
 		int ptr = 0, lflag = 0;
+		int infmt = 0;
 
 		AG_TableInitCell(t, c);
 		strlcpy(c->fmt, s, sizeof(c->fmt));
 		for (sc = &s[0]; *sc != '\0'; sc++) {
 			if (*sc == '%') {
+				infmt = 1;
 				continue;
 			}
 			if (*sc == '*' || *sc == '[') {
 				ptr++;
 			} else if (*sc == 'l') {
 				lflag++;
-			} else {
+			} else if (infmt && strchr("sdiufgp]", *sc)) {
 				break;
+			} else {
+				infmt = 0;
 			}
+		}
+		if (*sc == '\0' || !infmt) {
+			c->type = AG_CELL_NULL;
+			continue;
 		}
 		if (ptr) {
 			c->data.p = va_arg(ap, void *);
