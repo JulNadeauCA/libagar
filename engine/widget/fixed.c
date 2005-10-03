@@ -1,4 +1,4 @@
-/*	$Csoft: fixed.c,v 1.1 2005/09/28 15:46:32 vedge Exp $	*/
+/*	$Csoft: fixed.c,v 1.2 2005/10/03 01:28:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -73,8 +73,7 @@ AG_FixedScale(void *p, int w, int h)
 	AG_Widget *cw;
 
 	AGOBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
-		if (AGWIDGET_OPS(cw)->scale != NULL)
-			AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
+		AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
 	}
 }
 
@@ -98,9 +97,7 @@ AG_FixedPut(AG_Fixed *fx, void *child, int x, int y)
 	cw->x = x;
 	cw->y = y;
 
-	if (AGWIDGET_OPS(cw)->scale != NULL) {
-		AGWIDGET_OPS(cw)->scale(cw, -1, -1);
-	}
+	AGWIDGET_OPS(cw)->scale(cw, -1, -1);
 	AG_FixedUpdate(fx);
 }
 
@@ -122,9 +119,7 @@ AG_FixedSize(AG_Fixed *fx, void *child, int w, int h)
 	cw->w = w;
 	cw->h = h;
 
-	if (AGWIDGET_OPS(cw)->scale != NULL) {
-		AGWIDGET_OPS(cw)->scale(cw, w, h);
-	}
+	AGWIDGET_OPS(cw)->scale(cw, w, h);
 	AG_FixedUpdate(fx);
 }
 
