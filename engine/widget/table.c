@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.11 2005/10/03 06:02:35 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.12 2005/10/03 06:12:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1007,7 +1007,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
 		AG_TableCell *c = &t->cells[t->m][n];
-		char *s = strsep(&sp, ":;, "), *sc;
+		char *s = strsep(&sp, ":"), *sc;
 		int ptr = 0, lflag = 0;
 		int infmt = 0;
 
