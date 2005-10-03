@@ -1,4 +1,4 @@
-/*	$Csoft: fixed.c,v 1.3 2005/10/03 01:57:47 vedge Exp $	*/
+/*	$Csoft: fixed.c,v 1.4 2005/10/03 02:28:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 
 #include <engine/widget/fixed.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 static AG_WidgetOps agFixedOps = {
 	{
@@ -64,6 +65,15 @@ AG_FixedInit(AG_Fixed *fx, u_int flags)
 	fx->flags = flags;
 	if (flags & AG_FIXED_WFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_WFILL; }
 	if (flags & AG_FIXED_HFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_HFILL; }
+
+	if (flags & AG_FIXED_FILLBG)
+		AGWIDGET_OPS(fx)->draw = AG_FixedDrawBg;
+	if (flags & AG_FIXED_BOX)
+		AGWIDGET_OPS(fx)->draw = AG_FixedDrawBox;
+	if (flags & AG_FIXED_INVBOX)
+		AGWIDGET_OPS(fx)->draw = AG_FixedDrawInvBox;
+	if (flags & AG_FIXED_FRAME)
+		AGWIDGET_OPS(fx)->draw = AG_FixedDrawFrame;
 }
 
 void
@@ -79,6 +89,38 @@ AG_FixedScale(void *p, int w, int h)
 		}
 		AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
 	}
+}
+
+void
+AG_FixedDrawBg(void *p)
+{
+	AG_Widget *w = p;
+
+	agPrim.rect_filled(w, 0, 0, w->w, w->h, AG_COLOR(FIXED_BG_COLOR));
+}
+
+void
+AG_FixedDrawBox(void *p)
+{
+	AG_Widget *w = p;
+	
+	agPrim.box(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
+}
+
+void
+AG_FixedDrawInvBox(void *p)
+{
+	AG_Widget *w = p;
+	
+	agPrim.box(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
+}
+
+void
+AG_FixedDrawFrame(void *p)
+{
+	AG_Widget *w = p;
+
+	agPrim.frame(w, 0, 0, w->w, w->h, AG_COLOR(FRAME_COLOR));
 }
 
 static __inline__ void

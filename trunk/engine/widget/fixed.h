@@ -1,4 +1,4 @@
-/*	$Csoft: box.h,v 1.6 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: fixed.h,v 1.1 2005/09/28 15:46:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FIXED_H_
@@ -14,13 +14,20 @@ typedef struct ag_fixed {
 #define AG_FIXED_WFILL		0x01	/* Expand to fill available width */
 #define AG_FIXED_HFILL		0x02	/* Expand to fill available height */
 #define AG_FIXED_NO_UPDATE	0x04	/* Don't call WINDOW_UPDATE() */
+#define AG_FIXED_FILLBG		0x08	/* Fill background */
+#define AG_FIXED_BOX		0x10	/* Draw a box */
+#define AG_FIXED_INVBOX		0x20	/* Draw a box */
+#define AG_FIXED_FRAME		0x40	/* Draw a frame */
 } AG_Fixed;
 
 __BEGIN_DECLS
 AG_Fixed *AG_FixedNew(void *, u_int);
 void	  AG_FixedInit(AG_Fixed *, u_int);
 void	  AG_FixedDestroy(void *);
-void	  AG_FixedDraw(void *);
+void	  AG_FixedDrawBg(void *);
+void	  AG_FixedDrawBox(void *);
+void	  AG_FixedDrawInvBox(void *);
+void	  AG_FixedDrawFrame(void *);
 void	  AG_FixedScale(void *, int, int);
 void	  AG_FixedPut(AG_Fixed *, void *, int, int);
 void	  AG_FixedDel(AG_Fixed *, void *);
