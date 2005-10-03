@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.119 2005/10/01 12:02:06 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.120 2005/10/01 14:12:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,6 +47,17 @@ AG_WidgetInheritStyleEv(int argc, union evarg *argv)
 		return;
 
 	wid->style = style;
+}
+
+AG_Widget *
+AG_WidgetNew(void *parent, int flags)
+{
+	AG_Widget *w;
+
+	w = Malloc(sizeof(AG_Widget), M_OBJECT);
+	AG_WidgetInit(w, "widget", NULL, flags);
+	AG_ObjectAttach(parent, w);
+	return (w);
 }
 
 void
