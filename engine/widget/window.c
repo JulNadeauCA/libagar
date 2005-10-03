@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.263 2005/09/28 16:08:03 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.264 2005/10/01 14:15:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -663,7 +663,8 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			if (AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
+			if ((win->flags & AG_WINDOW_NO_DECORATIONS) == 0 &&
+			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
 				switch (AG_WindowMouseOverCtrl(win,
 				    ev->motion.x, ev->motion.y)) {
 				case AG_WINOP_LRESIZE:
@@ -748,7 +749,8 @@ AG_WindowEvent(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			if ((agView->winop = AG_WindowMouseOverCtrl(win,
+			if ((win->flags & WINDOW_NO_DECORATIONS) == 0 &&
+			    (agView->winop = AG_WindowMouseOverCtrl(win,
 			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
 				agView->wop_win = win;
 			}
