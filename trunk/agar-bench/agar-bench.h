@@ -1,4 +1,4 @@
-/*	$Csoft: test.h,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
+/*	$Csoft: test.h,v 1.2 2005/10/02 16:06:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -17,7 +17,7 @@ struct testfn_ops {
 	void (*init)(void);
 	void (*destroy)(void);
 	void (*run)(void);
-	double last_result;
+	Uint64 clks;
 };
 
 struct test_ops {

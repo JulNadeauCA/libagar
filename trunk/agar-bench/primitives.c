@@ -1,7 +1,7 @@
-/*	$Csoft: primitives.c,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
+/*	$Csoft: primitives.c,v 1.2 2005/10/02 16:06:31 vedge Exp $	*/
 /*	Public domain	*/
 
-#include "test.h"
+#include "agar-bench.h"
 
 #include <engine/widget/widget.h>
 #include <engine/widget/primitive.h>
