@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.25 2005/10/02 09:39:19 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.26 2005/10/02 16:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -109,7 +109,9 @@ const char *agColorNames[] = {
 	N_("Mapview origin point"),
 	N_("Focus"),
 	N_("Table"),
-	N_("Table lines")
+	N_("Table lines"),
+	N_("Fixed background"),
+	N_("Fixed box"),
 };
 
 void
@@ -189,6 +191,8 @@ AG_ColorsInit(void)
 	agColors[FOCUS_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 150);
 	agColors[TABLE_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLE_LINE_COLOR] = agColors[LINE_COLOR];
+	agColors[FIXED_BG_COLOR] = agColors[FRAME_COLOR];
+	agColors[FIXED_BOX_COLOR] = agColors[FRAME_COLOR];
 
 	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
 	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);

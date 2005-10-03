@@ -1,4 +1,4 @@
-/*	$Csoft: colors.h,v 1.10 2005/10/02 09:39:19 vedge Exp $	*/
+/*	$Csoft: colors.h,v 1.11 2005/10/02 16:10:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_
@@ -80,6 +80,8 @@ enum {
 	FOCUS_COLOR,
 	TABLE_COLOR,
 	TABLE_LINE_COLOR,
+	FIXED_BG_COLOR,
+	FIXED_BOX_COLOR,
 	LAST_COLOR
 };
 
