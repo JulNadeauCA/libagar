@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.6 2005/10/02 14:17:23 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.7 2005/10/02 16:10:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -159,6 +159,25 @@ AG_TableDestroy(void *p)
 	AG_WidgetDestroy(t);
 }
 
+static void
+AG_TableSizeFillCols(AG_Table *t)
+{
+	u_int n;
+
+	for (n = 0; n < t->n; n++) {
+		AG_TableCol *tc = &t->cols[n];
+		
+		if (tc->flags & AG_TABLE_COL_FILL) {
+			tc->w = AGWIDGET(t)->w;
+			for (n = 0; n < t->n; n++) {
+				if ((t->cols[n].flags & AG_TABLE_COL_FILL) == 0)
+					tc->w -= t->cols[n].w;
+			}
+			break;
+		}
+	}
+}
+
 void
 AG_TableScale(void *p, int w, int h)
 {
@@ -176,6 +195,8 @@ AG_TableScale(void *p, int w, int h)
 	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
 	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
+
+	AG_TableSizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
 }
 
@@ -735,6 +756,7 @@ mousemotion(int argc, union evarg *argv)
 		if ((t->cols[t->nResizing].w += xrel) < COLUMN_MIN_WIDTH) {
 			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
 		}
+		AG_TableSizeFillCols(t);
 	} else {
 		if ((m = column_over(t, y)) == -1 &&
 		    column_resize_over(t, x)) {
@@ -893,8 +915,8 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	} else {
 		tc->name[0] = '\0';
 	}
+	tc->flags = AG_TABLE_SORT_ASCENDING;
 	tc->sort_fn = sort_fn;
-	tc->sort_order = 0;
 	tc->selected = 0;
 	tc->surface = (name != NULL) ? AG_WidgetMapSurface(t,
 	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), name)) : -1;
@@ -916,12 +938,10 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 			break;
 		}
 	} else {
-		if (name == NULL) {
-			tc->w = 0;
+		if (name != NULL) {
+			tc->flags |= AG_TABLE_COL_FILL;
 		} else {
-			tc->w = AGWIDGET(t)->w;
-			for (n = 0; n < t->n; n++)
-				tc->w -= t->cols[n].w;
+			tc->w = 0;
 		}
 	}
 

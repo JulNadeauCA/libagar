@@ -1,4 +1,4 @@
-/*	$Csoft: table.h,v 1.2 2005/10/02 09:39:39 vedge Exp $	*/
+/*	$Csoft: table.h,v 1.3 2005/10/02 14:17:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TABLE_H_
@@ -52,7 +52,10 @@ typedef struct ag_table_cell {
 typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
 	int (*sort_fn)(const void *, const void *);
-	int sort_order;			/* -1=reverse, 0=none, 1=forward */
+	int flags;
+#define AG_TABLE_COL_FILL	 0x01
+#define AG_TABLE_SORT_ASCENDING	 0x02
+#define AG_TABLE_SORT_DESCENDING 0x04
 	int selected;			/* Entire column is selected */
 	int w;				/* Width in pixel */
 	int x;				/* Current position */
