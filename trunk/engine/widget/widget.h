@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.99 2005/10/01 12:02:06 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.100 2005/10/01 14:12:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -108,10 +108,11 @@ extern int agMouseDblclickDelay;
 extern int agMouseSpinDelay;
 extern int agMouseSpinIval;
 
-void	 AG_WidgetInit(void *, const char *, const void *, int);
-void	 AG_WidgetDestroy(void *);
-void	 AG_WidgetDraw(void *);
-void	 AG_WidgetScale(void *, int, int);
+AG_Widget *AG_WidgetNew(void *, int);
+void	   AG_WidgetInit(void *, const char *, const void *, int);
+void	   AG_WidgetDestroy(void *);
+void	   AG_WidgetDraw(void *);
+void	   AG_WidgetScale(void *, int, int);
 
 void		 AG_WidgetSetType(void *, const char *);
 void		 AG_WidgetFocus(void *);
