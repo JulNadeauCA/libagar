@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.105 2005/09/27 14:12:18 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.106 2005/10/01 09:55:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -73,31 +73,33 @@ enum ag_blend_func {
  */
 
 #ifdef VIEW_8BPP
-# define _AG_VIEW_PUTPIXEL_8(dst, c)	\
+# define AG_VIEW_PUT_PIXEL8(dst, c)	\
 case 1:					\
 	*(dst) = (c);			\
 	break;
 #else
-# define _AG_VIEW_PUTPIXEL_8(dst, c)
+# define AG_VIEW_PUT_PIXEL8(dst, c)
 #endif
+
 #ifdef VIEW_16BPP
-# define _AG_VIEW_PUTPIXEL_16(dst, c)	\
+# define AG_VIEW_PUT_PIXEL16(dst, c)	\
 case 2:					\
 	*(Uint16 *)(dst) = (c);		\
 	break;
 #else
-# define _AG_VIEW_PUTPIXEL_16(dst, c)
+# define AG_VIEW_PUT_PIXEL16(dst, c)
 #endif
+
 #ifdef VIEW_24BPP
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#  define _AG_VIEW_PUTPIXEL_24(dst, c)	\
+#  define AG_VIEW_PUT_PIXEL24(dst, c)	\
 case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
 	(dst)[2] =  (c) & 0xff;		\
 	break;
 # else
-#  define _AG_VIEW_PUTPIXEL_24(dst, c)	\
+#  define AG_VIEW_PUT_PIXEL24(dst, c)	\
 case 3:					\
 	(dst)[0] =  (c) & 0xff;		\
 	(dst)[1] = ((c)>>8) & 0xff;	\
@@ -105,33 +107,34 @@ case 3:					\
 	break;
 # endif
 #else
-# define _AG_VIEW_PUTPIXEL_24(dst, c)
+# define AG_VIEW_PUT_PIXEL24(dst, c)
 #endif
+
 #ifdef VIEW_32BPP
-# define _AG_VIEW_PUTPIXEL_32(dst, c)	\
+# define AG_VIEW_PUT_PIXEL32(dst, c)	\
 case 4:					\
 	*(Uint32 *)(dst) = (c);		\
 	break;
 #else
-# define _AG_VIEW_PUTPIXEL_32(dst, c)
+# define AG_VIEW_PUT_PIXEL32(dst, c)
 #endif
 
 #define AG_VIEW_PUT_PIXEL(p, c) do {					\
 	switch (agVideoFmt->BytesPerPixel) {				\
-		_AG_VIEW_PUTPIXEL_8((p),  (c))				\
-		_AG_VIEW_PUTPIXEL_16((p), (c))				\
-		_AG_VIEW_PUTPIXEL_24((p), (c))				\
-		_AG_VIEW_PUTPIXEL_32((p), (c))				\
+		AG_VIEW_PUT_PIXEL8((p),  (c))				\
+		AG_VIEW_PUT_PIXEL16((p), (c))				\
+		AG_VIEW_PUT_PIXEL24((p), (c))				\
+		AG_VIEW_PUT_PIXEL32((p), (c))				\
 	}								\
 } while (0)
 #define AG_VIEW_PUT_PIXEL2(vx, vy, c) do {				\
 	Uint8 *_view_dst = (Uint8 *)agView->v->pixels +			\
 	    (vy)*agView->v->pitch + (vx)*agVideoFmt->BytesPerPixel;	 \
 	switch (agVideoFmt->BytesPerPixel) {				 \
-		_AG_VIEW_PUTPIXEL_8(_view_dst,  (c))			\
-		_AG_VIEW_PUTPIXEL_16(_view_dst, (c))			\
-		_AG_VIEW_PUTPIXEL_24(_view_dst, (c))			\
-		_AG_VIEW_PUTPIXEL_32(_view_dst, (c))			\
+		AG_VIEW_PUT_PIXEL8(_view_dst,  (c))			\
+		AG_VIEW_PUT_PIXEL16(_view_dst, (c))			\
+		AG_VIEW_PUT_PIXEL24(_view_dst, (c))			\
+		AG_VIEW_PUT_PIXEL32(_view_dst, (c))			\
 	}								\
 } while (0)
 #define AG_VIEW_PUT_PIXEL2_CLIPPED(vx, vy, c) do {			\
@@ -139,10 +142,10 @@ case 4:					\
 		Uint8 *_view_dst = (Uint8 *)agView->v->pixels +		\
 		    (vy)*agView->v->pitch + (vx)*agVideoFmt->BytesPerPixel; \
 		switch (agVideoFmt->BytesPerPixel) {			 \
-			_AG_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
-			_AG_VIEW_PUTPIXEL_16(_view_dst, (c))		\
-			_AG_VIEW_PUTPIXEL_24(_view_dst, (c))		\
-			_AG_VIEW_PUTPIXEL_32(_view_dst, (c))		\
+			AG_VIEW_PUT_PIXEL8(_view_dst,  (c))		\
+			AG_VIEW_PUT_PIXEL16(_view_dst, (c))		\
+			AG_VIEW_PUT_PIXEL24(_view_dst, (c))		\
+			AG_VIEW_PUT_PIXEL32(_view_dst, (c))		\
 		}							\
 	}								\
 } while (0)
