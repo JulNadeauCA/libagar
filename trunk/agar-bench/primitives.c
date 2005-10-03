@@ -1,4 +1,4 @@
-/*	$Csoft: primitives.c,v 1.2 2005/10/02 16:06:31 vedge Exp $	*/
+/*	$Csoft: primitives.c,v 1.3 2005/10/03 06:15:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -108,100 +108,43 @@ test_tiling16(void)
 
 	rd.x = 0;
 	rd.y = 0;
-	rd.w = wid.w/2;
-	rd.h = wid.h/2;
+	rd.w = wid.w;
+	rd.h = wid.h;
 	agPrim.tiling(&wid, rd, 16, 0, 255, 0);
 }
 
 static void
-destroy_su(void)
+test_tiling32(void)
 {
-	SDL_FreeSurface(su);
+	SDL_Rect rd;
+
+	rd.x = 0;
+	rd.y = 0;
+	rd.w = wid.w;
+	rd.h = wid.h;
+	agPrim.tiling(&wid, rd, 32, 0, 255, 0);
 }
 
 static struct testfn_ops testfns[] = {
-	{
-		"primitive.box()",
-		2, 50,
-		0,
-		InitWidget, FreeWidget,
-		test_box
-	},
-	{
-		"primitive.box_chamfered()",
-		2, 50,
-		0,
-		InitWidget, FreeWidget,
-		test_box_chamfered
-	},
-	{
-		"primitive.frame()",
-		2, 100,
-		0,
-		InitWidget, FreeWidget,
-		test_frame
-	},
-	{
-		"primitive.circle()",
-		2, 100,
-		0,
-		InitWidget, FreeWidget,
-		test_circle
-	},
-	{
-		"primitive.line()",
-		2, 100,
-		0,
-		InitWidget, FreeWidget,
-		test_line
-	},
-	{
-		"primitive.line_blended(src)",
-		2, 100,
-		0,
-		InitWidget, FreeWidget,
-		test_line_blended
-	},
-	{
-		"primitive.hline()",
-		3, 200,
-		0,
-		InitWidget, FreeWidget,
-		test_hline
-	},
-	{
-		"primitive.vline()",
-		2, 100,
-		0,
-		InitWidget, FreeWidget,
-		test_vline
-	},
-	{
-		"primitive.rect_filled()",
-		2, 30,
-		0,
-		InitWidget, FreeWidget,
-		test_rect_filled
-	},
-	{
-		"primitive.rect_blended(src)",
-		2, 10,
-		0,
-		InitWidget, FreeWidget,
-		test_rect_blended
-	},
-	{
-		"primitive.tiling(16px)",
-		2, 10,
-		0,
-		InitWidget, FreeWidget,
-		test_tiling16
-	},
+ { "primitive.box()", InitWidget, FreeWidget, test_box },
+ { "primitive.box_chamfered()", InitWidget, FreeWidget, test_box_chamfered },
+ { "primitive.frame()", InitWidget, FreeWidget, test_frame },
+ { "primitive.circle()", InitWidget, FreeWidget, test_circle },
+ { "primitive.line()", InitWidget, FreeWidget, test_line },
+ { "primitive.line_blended()", InitWidget, FreeWidget, test_line_blended },
+ { "primitive.hline()", InitWidget, FreeWidget, test_hline },
+ { "primitive.vline()", InitWidget, FreeWidget, test_vline },
+ { "primitive.rect_filled()", InitWidget, FreeWidget, test_rect_filled },
+ { "primitive.rect_blended(ALPHA_SRC)", InitWidget, FreeWidget,
+    test_rect_blended },
+ { "primitive.tiling(16x16)", InitWidget, FreeWidget, test_tiling16 },
 };
 
 struct test_ops primitives_test = {
 	"Geometric primitives",
 	NULL,
 	&testfns[0],
-	sizeof(testfns) / sizeof(testfns[0])
+	sizeof(testfns) / sizeof(testfns[0]),
+	TEST_SDL,
+	4, 32
 };

@@ -1,4 +1,4 @@
-/*	$Csoft: test.h,v 1.2 2005/10/02 16:06:31 vedge Exp $	*/
+/*	$Csoft: agar-bench.h,v 1.1 2005/10/03 06:15:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -8,12 +8,6 @@
 
 struct testfn_ops {
 	char *name;
-	u_int runs;
-	u_int iterations;
-	int flags;
-#define TEST_SDL	0x01		/* SDL-only */
-#define TEST_GL		0x02		/* OpenGL-only */
-
 	void (*init)(void);
 	void (*destroy)(void);
 	void (*run)(void);
@@ -25,6 +19,11 @@ struct test_ops {
 	void (*edit)(AG_Window *);
 	struct testfn_ops *funcs;
 	u_int nfuncs;
+	u_int flags;
+#define TEST_SDL	0x01		/* SDL-only */
+#define TEST_GL		0x02		/* OpenGL-only */
+	u_int runs;
+	u_int iterations;
 };
 
 extern SDL_Surface *surface;
