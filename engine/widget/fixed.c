@@ -1,4 +1,4 @@
-/*	$Csoft: fixed.c,v 1.2 2005/10/03 01:28:41 vedge Exp $	*/
+/*	$Csoft: fixed.c,v 1.3 2005/10/03 01:57:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -73,6 +73,10 @@ AG_FixedScale(void *p, int w, int h)
 	AG_Widget *cw;
 
 	AGOBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
+		if (w != -1 && h != -1) {
+			if (cw->flags & AG_WIDGET_WFILL) { cw->w = w; }
+			if (cw->flags & AG_WIDGET_HFILL) { cw->h = h; }
+		}
 		AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
 	}
 }
