@@ -1,42 +1,11 @@
-/*	$Csoft: tests.c,v 1.2 2005/09/27 04:11:01 vedge Exp $	*/
+/*	$Csoft: tests.c,v 1.3 2005/10/02 16:06:31 vedge Exp $	*/
+/*	Public domain	*/
 
-/*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-#include <engine/engine.h>
-#include <engine/input.h>
+#include "agar-bench.h"
 #include <engine/config.h>
-#include <engine/view.h>
 
 #include <string.h>
 #include <unistd.h>
-
-#include <engine/widget/gui.h>
-
-#include "test.h"
 
 extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;
@@ -49,13 +18,15 @@ struct test_ops *tests[] = {
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
+#define RDTSC(t) asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
+
 static void
 run_tests(int argc, union evarg *argv)
 {
 	AG_Table *t = argv[1].p;
 	u_int i, j, m;
-	Uint32 t1, t2;
-	u_long tTot;
+	Uint64 t1, t2;
+	Uint64 tTot;
 	struct testfn_ops *ops;
 
 	for (m = 0; m < t->m; m++) {
@@ -70,16 +41,17 @@ run_tests(int argc, union evarg *argv)
 		fprintf(stderr, "Running test: %s...", ops->name);
 		if (ops->init != NULL) ops->init();
 		for (i = 0, tTot = 0; i < ops->runs; i++) {
-			t1 = SDL_GetTicks();
+			RDTSC(t1);
 			for (j = 0; j < ops->iterations; j++) {
 				ops->run();
 			}
-			t2 = SDL_GetTicks();
+			RDTSC(t2);
+			fprintf(stderr, " %llu", (t2 - t1));
 			tTot += (t2 - t1);
 		}
+		fprintf(stderr, ".\n");
 		if (ops->destroy != NULL) ops->destroy();
-		ops->last_result = (u_long)(tTot / ops->runs);
-		fprintf(stderr, "%gms.\n", ops->last_result);
+		ops->clks = (Uint64)(tTot / ops->runs);
 	}
 }
 
@@ -94,8 +66,21 @@ poll_test(int argc, union evarg *argv)
 	for (i = 0; i < test->nfuncs; i++) {
 		struct testfn_ops *fn = &test->funcs[i];
 
-		AG_TableAddRow(t, "%s:%lu:%lu:%g:%pms", fn->name, fn->runs,
-		    fn->iterations, fn->last_result, fn);
+		if (fn->clks >= 1e6) {
+			AG_TableAddRow(t, "%s:%lu:%lu:%.04f MClks:%p", fn->name,
+			    fn->runs, fn->iterations,
+			    (double)(fn->clks/1e6),
+			    fn);
+		} else if (fn->clks >= 1e3) {
+			AG_TableAddRow(t, "%s:%lu:%lu:%.04f kClks:%p", fn->name,
+			    fn->runs, fn->iterations,
+			    (double)(fn->clks/1e3),
+			    fn);
+		} else {
+			AG_TableAddRow(t, "%s:%lu:%lu:%lu Clks:%p", fn->name,
+			    fn->runs, fn->iterations,
+			    (u_long)fn->clks, fn);
+		}
 	}
 	AG_TableEnd(t);
 }
@@ -114,25 +99,33 @@ tests_window(void)
 	AG_Button *btn;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
-	int i;
+	int i, j;
 
 	win = AG_WindowNew(0, "agar-benchmarks");
 	AG_WindowSetCaption(win, "Agar Benchmarks");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 	for (i = 0; i < ntests; i++) {
-		ntab = AG_NotebookAddTab(nb, tests[i]->name, AG_BOX_VERT);
+		struct test_ops *test = tests[i];
+
+		ntab = AG_NotebookAddTab(nb, test->name, AG_BOX_VERT);
 		t = AG_TablePolled(ntab, AG_TABLE_MULTI, poll_test, "%i", i);
 		AG_TableAddCol(t, "Test", "<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>",
 		    NULL);
 		AG_TableAddCol(t, "Runs", "<8888>", NULL);
 		AG_TableAddCol(t, "Iterations", "<888888888>", NULL);
-		AG_TableAddCol(t, "Result", "<8888888888888888>", NULL);
-		AG_TableAddCol(t, "Pointer", NULL, NULL);
+		AG_TableAddCol(t, "Result", NULL, NULL);
+		AG_TableAddCol(t, NULL, NULL, NULL);
 		
 		btn = AG_ButtonNew(ntab, "Run tests");
 		AG_SetEvent(btn, "button-pushed", run_tests, "%p", t);
 		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
+	
+		for (j = 0; j < test->nfuncs; j++) {
+			struct testfn_ops *fn = &test->funcs[j];
+
+			fn->clks = 0;
+		}
 	}
 	btn = AG_ButtonNew(win, "Quit");
 	AG_SetEvent(btn, "button-pushed", quit_app, NULL);

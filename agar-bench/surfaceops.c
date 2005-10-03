@@ -1,7 +1,7 @@
-/*	$Csoft: pixelops.c,v 1.1 2005/09/27 03:48:58 vedge Exp $	*/
+/*	$Csoft: surfaceops.c,v 1.1 2005/10/02 16:06:31 vedge Exp $	*/
 /*	Public domain	*/
 
-#include "test.h"
+#include "agar-bench.h"
 
 static void
 Test_DupSurface(void)
