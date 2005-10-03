@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.10 2005/10/03 05:38:29 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.11 2005/10/03 06:02:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1022,8 +1022,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				ptr++;
 			} else if (*sc == 'l') {
 				lflag++;
-			} else if (infmt && strchr("sdiufgp]", *sc)) {
+			} else if (infmt && strchr("sdiufgp]", *sc) != NULL) {
 				break;
+			} else if (strchr(".0123456789", *sc)) {
+				continue;
 			} else {
 				infmt = 0;
 			}
