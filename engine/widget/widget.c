@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.121 2005/10/03 00:56:20 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.122 2005/10/03 01:35:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@ const AG_WidgetOps agWidgetOps = {
 		NULL		/* edit */
 	},
 	NULL,			/* draw */
-	NULL,			/* scale */
+	AG_WidgetScaleGeneric
 };
 
 static void
@@ -1269,6 +1269,17 @@ AG_WidgetScale(void *p, int w, int h)
 	wid->w = w;
 	wid->h = h;
 	AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+}
+
+void
+AG_WidgetScaleGeneric(void *p, int w, int h)
+{
+	AG_Widget *wid = p;
+
+	if (w == -1 || h == -1) {
+		wid->w = 0;
+		wid->h = 0;
+	}
 }
 
 /*
