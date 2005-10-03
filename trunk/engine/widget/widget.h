@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.100 2005/10/01 14:12:15 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.101 2005/10/03 00:56:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -113,6 +113,7 @@ void	   AG_WidgetInit(void *, const char *, const void *, int);
 void	   AG_WidgetDestroy(void *);
 void	   AG_WidgetDraw(void *);
 void	   AG_WidgetScale(void *, int, int);
+void	   AG_WidgetScaleGeneric(void *, int, int);
 
 void		 AG_WidgetSetType(void *, const char *);
 void		 AG_WidgetFocus(void *);
