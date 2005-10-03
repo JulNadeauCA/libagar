@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.h,v 1.1 2005/10/03 06:15:46 vedge Exp $	*/
+/*	$Csoft: agar-bench.h,v 1.2 2005/10/03 07:17:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -11,7 +11,7 @@ struct testfn_ops {
 	void (*init)(void);
 	void (*destroy)(void);
 	void (*run)(void);
-	Uint64 clks;
+	Uint64 clksMin, clksAvg, clksMax;
 };
 
 struct test_ops {
