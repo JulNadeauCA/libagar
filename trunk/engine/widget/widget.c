@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.120 2005/10/01 14:12:15 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.121 2005/10/03 00:56:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,19 @@
 #include <stdarg.h>
 #include <string.h>
 
+const AG_WidgetOps agWidgetOps = {
+	{
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	NULL,			/* scale */
+};
+
 static void
 AG_WidgetInheritStyleEv(int argc, union evarg *argv)
 {
@@ -55,7 +68,7 @@ AG_WidgetNew(void *parent, int flags)
 	AG_Widget *w;
 
 	w = Malloc(sizeof(AG_Widget), M_OBJECT);
-	AG_WidgetInit(w, "widget", NULL, flags);
+	AG_WidgetInit(w, "widget", &agWidgetOps, flags);
 	AG_ObjectAttach(parent, w);
 	return (w);
 }
