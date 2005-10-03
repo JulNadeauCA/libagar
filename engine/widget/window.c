@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.264 2005/10/01 14:15:19 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.265 2005/10/03 14:16:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -749,7 +749,7 @@ AG_WindowEvent(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			if ((win->flags & WINDOW_NO_DECORATIONS) == 0 &&
+			if ((win->flags & AG_WINDOW_NO_DECORATIONS) == 0 &&
 			    (agView->winop = AG_WindowMouseOverCtrl(win,
 			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
 				agView->wop_win = win;
