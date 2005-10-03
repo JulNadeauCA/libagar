@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.c,v 1.2 2005/10/03 06:19:51 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.3 2005/10/03 07:17:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -10,11 +10,13 @@
 extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;
 extern struct test_ops surfaceops_test;
+extern struct test_ops memops_test;
 
 struct test_ops *tests[] = {
 	&pixelops_test,
 	&primitives_test,
-	&surfaceops_test
+	&surfaceops_test,
+	&memops_test
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
@@ -30,7 +32,7 @@ run_tests(int argc, union evarg *argv)
 	AG_Table *t = argv[2].p;
 	u_int i, j, m;
 	Uint64 t1, t2;
-	Uint64 tTot;
+	Uint64 tTot, tRun;
 	
 	if ((test->flags & TEST_GL)  && !agView->opengl) {
 		AG_TextMsg(AG_MSG_ERROR, "This test requires OpenGL mode.");
@@ -43,7 +45,7 @@ run_tests(int argc, union evarg *argv)
 	}
 
 	for (m = 0; m < t->m; m++) {
-		struct testfn_ops *ops = t->cells[m][2].data.p;
+		struct testfn_ops *ops = t->cells[m][4].data.p;
 
 		if (!AG_TableRowSelected(t, m)) {
 			continue;
@@ -53,27 +55,33 @@ run_tests(int argc, union evarg *argv)
 		for (i = 0, tTot = 0; i < test->runs; i++) {
 #ifdef USE_RDTSC
 			RDTSC(t1);
-#else
-			t1 = SDL_GetTicks();
-#endif
 			for (j = 0; j < test->iterations; j++) {
 				ops->run();
 			}
-#ifdef USE_RDTSC
 			RDTSC(t2);
-#else
-			t2 = SDL_GetTicks();
-#endif
 			fprintf(stderr, " %llu", (t2 - t1));
-			tTot += (t2 - t1);
+			tRun = (t2 - t1) / test->iterations;
+			ops->clksMax = MAX(ops->clksMax, tRun);
+			ops->clksMin = ops->clksMin > 0 ?
+			    MIN(ops->clksMin, tRun) : tRun;
+			tTot += tRun;
+#else
+			t1 = SDL_GetTicks();
+			for (j = 0; j < test->iterations; j++) {
+				ops->run();
+			}
+			t2 = SDL_GetTicks();
+			fprintf(stderr, " %llu", (t2 - t1));
+			tRun = (t2 - t1);
+			ops->clksMax = MAX(ops->clksMax, tRun);
+			ops->clksMin = ops->clksMin > 0 ?
+			    MIN(ops->clksMin, tRun) : tRun;
+			tTot += tRun;
+#endif
 		}
 		fprintf(stderr, ".\n");
 		if (ops->destroy != NULL) ops->destroy();
-#ifdef USE_RDTSC
-		ops->clks = (Uint64)(tTot / test->iterations / test->runs);
-#else
-		ops->clks = (Uint64)(tTot / test->runs);
-#endif
+		ops->clksAvg = (Uint64)(tTot / test->runs);
 	}
 }
 
@@ -87,22 +95,31 @@ poll_test(int argc, union evarg *argv)
 	AG_TableBegin(t);
 	for (i = 0; i < test->nfuncs; i++) {
 		struct testfn_ops *fn = &test->funcs[i];
-
 #ifdef USE_RDTSC
-		if (fn->clks >= 1e6) {
-			AG_TableAddRow(t, "%s:%.04f MClks:%p", fn->name,
-			    (double)(fn->clks/1e6), fn);
-		} else if (fn->clks >= 1e3) {
-			AG_TableAddRow(t, "%s:%.04f kClks:%p", fn->name,
-			    (double)(fn->clks/1e3), fn);
+		if (fn->clksAvg >= 1e6) {
+			AG_TableAddRow(t, "%s:%.06fM:%.06fM:%.06fM:%p",
+			    fn->name,
+			    (double)(fn->clksMin/1e6),
+			    (double)(fn->clksAvg/1e6),
+			    (double)(fn->clksMax/1e6), fn);
+		} else if (fn->clksAvg >= 1e3) {
+			AG_TableAddRow(t, "%s:%.03fk:%.03fk:%.03fk:%p",
+			    fn->name,
+			    (double)(fn->clksMin/1e3),
+			    (double)(fn->clksAvg/1e3),
+			    (double)(fn->clksMax/1e3), fn);
 		} else {
-			AG_TableAddRow(t, "%s:%lu Clks:%p", fn->name,
-			    (u_long)fn->clks, fn);
+			AG_TableAddRow(t, "%s:%lu:%lu:%lu:%p", fn->name,
+			    (u_long)fn->clksMin,
+			    (u_long)fn->clksAvg,
+			    (u_long)fn->clksMax, fn);
 		}
-#else
-		AG_TableAddRow(t, "%s:%lu Ticks:%p", fn->name,
-		    (u_long)fn->clks, fn);
-#endif
+#else /* !USE_RDTSC */
+		AG_TableAddRow(t, "%s:%luT:%luT:%luT:%p", fn->name,
+		    (u_long)fn->clksMin,
+		    (u_long)fn->clksAvg,
+		    (u_long)fn->clksMax, fn);
+#endif /* USE_RDTSC */
 	}
 	AG_TableEnd(t);
 }
@@ -133,7 +150,9 @@ tests_window(void)
 		ntab = AG_NotebookAddTab(nb, test->name, AG_BOX_VERT);
 		t = AG_TablePolled(ntab, AG_TABLE_MULTI, poll_test, "%i", i);
 		AG_TableAddCol(t, "Test", NULL, NULL);
-		AG_TableAddCol(t, "Result", "<88888888888 MClks>", NULL);
+		AG_TableAddCol(t, "Min", "<88.8888M>", NULL);
+		AG_TableAddCol(t, "Avg", "<88.8888M>", NULL);
+		AG_TableAddCol(t, "Max", "<88.8888M>", NULL);
 		AG_TableAddCol(t, NULL, NULL, NULL);
 		
 		btn = AG_ButtonNew(ntab, "Run tests");
@@ -143,7 +162,9 @@ tests_window(void)
 		for (j = 0; j < test->nfuncs; j++) {
 			struct testfn_ops *fn = &test->funcs[j];
 
-			fn->clks = 0;
+			fn->clksMin = 0;
+			fn->clksAvg = 0;
+			fn->clksMax = 0;
 		}
 	}
 	btn = AG_ButtonNew(win, "Quit");
@@ -215,7 +236,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
