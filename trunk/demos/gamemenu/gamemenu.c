@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
+/*	$Csoft: gamemenu.c,v 1.4 2005/10/04 17:34:49 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -9,7 +9,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/input.h>
 #include <engine/config.h>
 #include <engine/view.h>
 
