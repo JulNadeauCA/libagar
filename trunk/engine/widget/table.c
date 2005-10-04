@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.12 2005/10/03 06:12:02 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.13 2005/10/03 06:14:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -201,9 +201,100 @@ AG_TableScale(void *p, int w, int h)
 }
 
 static __inline__ void
+AG_TablePrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
+{
+	switch (c->type) {
+	case AG_CELL_INT:
+	case AG_CELL_UINT:
+		snprintf(buf, bufsz, c->fmt, c->data.i);
+		break;
+	case AG_CELL_LONG:
+	case AG_CELL_ULONG:
+		snprintf(buf, bufsz, c->fmt, c->data.l);
+		break;
+	case AG_CELL_PINT:
+		snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
+		break;
+	case AG_CELL_PUINT:
+		snprintf(buf, bufsz, c->fmt, *(u_int *)c->data.p);
+		break;
+	case AG_CELL_PLONG:
+		snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
+		break;
+	case AG_CELL_PULONG:
+		snprintf(buf, bufsz, c->fmt, *(u_long *)c->data.p);
+		break;
+	case AG_CELL_FLOAT:
+		snprintf(buf, bufsz, c->fmt, (float)c->data.f);
+		break;
+	case AG_CELL_PFLOAT:
+		snprintf(buf, bufsz, c->fmt, *(float *)c->data.p);
+		break;
+	case AG_CELL_DOUBLE:
+		snprintf(buf, bufsz, c->fmt, c->data.f);
+		break;
+	case AG_CELL_PDOUBLE:
+		snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_CELL_INT64:
+	case AG_CELL_UINT64:
+		snprintf(buf, bufsz, c->fmt, c->data.f);
+		break;
+	case AG_CELL_PUINT64:
+		snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
+		break;
+	case AG_CELL_PINT64:
+		snprintf(buf, bufsz, c->fmt, *(Sint64 *)c->data.p);
+		break;
+#endif
+	case AG_CELL_PUINT32:
+		snprintf(buf, bufsz, c->fmt, *(Uint32 *)c->data.p);
+		break;
+	case AG_CELL_PSINT32:
+		snprintf(buf, bufsz, c->fmt, *(Sint32 *)c->data.p);
+		break;
+	case AG_CELL_PUINT16:
+		snprintf(buf, bufsz, c->fmt, *(Uint16 *)c->data.p);
+		break;
+	case AG_CELL_PSINT16:
+		snprintf(buf, bufsz, c->fmt, *(Sint16 *)c->data.p);
+		break;
+	case AG_CELL_PUINT8:
+		snprintf(buf, bufsz, c->fmt, *(Uint8 *)c->data.p);
+		break;
+	case AG_CELL_PSINT8:
+		snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
+		break;
+	case AG_CELL_STRING:
+		strlcpy(buf, c->data.s, bufsz);
+		break;
+	case AG_CELL_PSTRING:
+		strlcpy(buf, (char *)c->data.p, bufsz);
+		break;
+	case AG_CELL_FN_TXT:
+		c->fnTxt(c->data.p, buf, bufsz);
+		break;
+	case AG_CELL_FN_SU:
+		strlcpy(buf, "<image>", bufsz);
+		break;
+	case AG_CELL_POINTER:
+		snprintf(buf, bufsz, c->fmt, c->data.p);
+		break;
+	case AG_CELL_NULL:
+		if (c->fmt[0] == '\0') {
+			strlcpy(buf, "<null>", bufsz);
+		} else {
+			strlcpy(buf, c->fmt, bufsz);
+		}
+		break;
+	}
+}
+
+static __inline__ void
 AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 {
-	char txt[AG_LABEL_MAX];
+	char txt[AG_TABLE_TXT_MAX];
 
 	if (c->selected) {		     		 /* TODO col sel */
 		Uint8 c[4] = { 0, 0, 250, 64 };
@@ -221,75 +312,18 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 	}
 
 	switch (c->type) {
-	case AG_CELL_STRING:
+	case AG_CELL_STRING:					/* Avoid copy */
 		c->surface = AG_WidgetMapSurface(t,
 		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), c->data.s));
 		goto blit;
-	case AG_CELL_PSTRING:
+	case AG_CELL_PSTRING:					/* Avoid copy */
 		c->surface = AG_WidgetMapSurface(t,
 		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
 		    (char *)c->data.p));
 		goto blit;
-	case AG_CELL_INT:
-	case AG_CELL_UINT:
-		snprintf(txt, sizeof(txt), c->fmt, c->data.i);
-		break;
-	case AG_CELL_LONG:
-	case AG_CELL_ULONG:
-		snprintf(txt, sizeof(txt), c->fmt, c->data.l);
-		break;
-	case AG_CELL_PINT:
-	case AG_CELL_PUINT:
-		snprintf(txt, sizeof(txt), c->fmt, *(int *)c->data.p);
-		break;
-	case AG_CELL_FLOAT:
-		snprintf(txt, sizeof(txt), c->fmt, (float)c->data.f);
-		break;
-	case AG_CELL_PFLOAT:
-		snprintf(txt, sizeof(txt), c->fmt, *(float *)c->data.p);
-		break;
-	case AG_CELL_DOUBLE:
-		snprintf(txt, sizeof(txt), c->fmt, c->data.f);
-		break;
-	case AG_CELL_PDOUBLE:
-		snprintf(txt, sizeof(txt), c->fmt, *(double *)c->data.p);
-		break;
-#ifdef SDL_HAS_64BIT_TYPE
-	case AG_CELL_INT64:
-	case AG_CELL_UINT64:
-		snprintf(txt, sizeof(txt), c->fmt, c->data.f);
-		break;
-	case AG_CELL_PUINT64:
-		snprintf(txt, sizeof(txt), c->fmt, *(Uint64 *)c->data.p);
-		break;
-	case AG_CELL_PINT64:
-		snprintf(txt, sizeof(txt), c->fmt, *(Sint64 *)c->data.p);
-		break;
-#endif
-	case AG_CELL_PUINT32:
-		snprintf(txt, sizeof(txt), c->fmt, *(Uint32 *)c->data.p);
-		break;
-	case AG_CELL_PSINT32:
-		snprintf(txt, sizeof(txt), c->fmt, *(Sint32 *)c->data.p);
-		break;
-	case AG_CELL_PUINT16:
-		snprintf(txt, sizeof(txt), c->fmt, *(Uint16 *)c->data.p);
-		break;
-	case AG_CELL_PSINT16:
-		snprintf(txt, sizeof(txt), c->fmt, *(Sint16 *)c->data.p);
-		break;
-	case AG_CELL_PUINT8:
-		snprintf(txt, sizeof(txt), c->fmt, *(Uint8 *)c->data.p);
-		break;
-	case AG_CELL_PSINT8:
-		snprintf(txt, sizeof(txt), c->fmt, *(Sint8 *)c->data.p);
-		break;
-	case AG_CELL_POINTER:
-		snprintf(txt, sizeof(txt), c->fmt, c->data.p);
-		break;
-	case AG_CELL_FN:
+	case AG_CELL_FN_SU:
 		c->surface = AG_WidgetMapSurface(t,
-		    c->fn(c->data.p, rd->x, rd->y));
+		    c->fnSu(c->data.p, rd->x, rd->y));
 		goto blit;
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
@@ -302,6 +336,7 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		}
 		break;
 	default:
+		AG_TablePrintCell(t, c, txt, sizeof(txt));
 		break;
 	}
 	c->surface = AG_WidgetMapSurface(t,
@@ -532,8 +567,17 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		return (*(double *)c1->data.p - *(double *)c2->data.p);
 	case AG_CELL_POINTER:
 		return (c1->data.p != c2->data.p);
-	case AG_CELL_FN:
-		return ((c1->data.p != c2->data.p) || (c1->fn != c2->fn));
+	case AG_CELL_FN_SU:
+		return ((c1->data.p != c2->data.p) || (c1->fnSu != c2->fnSu));
+	case AG_CELL_FN_TXT:
+		{
+			char b1[AG_TABLE_TXT_MAX];
+			char b2[AG_TABLE_TXT_MAX];
+
+			c1->fnTxt(c1->data.p, b1, sizeof(b1));
+			c2->fnTxt(c2->data.p, b2, sizeof(b2));
+			return (strcmp(b1, b2));
+		}
 	case AG_CELL_NULL:
 		return (0);
 	}
@@ -987,7 +1031,8 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 {
 	c->type = AG_CELL_NULL;
 	c->fmt[0] = '\0';
-	c->fn = NULL;
+	c->fnSu = NULL;
+	c->fnTxt = NULL;
 	c->selected = 0;
 	c->surface = -1;
 }
@@ -1148,3 +1193,32 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_end(ap);
 	return (t->m++);
 }
+
+int
+AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
+{
+	char txt[AG_TABLE_TXT_MAX];
+	u_int m, n;
+	
+	for (n = 0; n < t->n; n++) {
+		if (t->cols[n].name[0] == '\0') {
+			continue;
+		}
+		fputs(t->cols[n].name, f);
+		fputc(sep, f);
+	}
+	fputc('\n', f);
+	for (m = 0; m < t->m; m++) {
+		for (n = 0; n < t->n; n++) {
+			if (t->cols[n].name[0] == '\0') {
+				continue;
+			}
+			AG_TablePrintCell(t, &t->cells[m][n], txt, sizeof(txt));
+			fputs(txt, f);
+			fputc(sep, f);
+		}
+		fputc('\n', f);
+	}
+	return (0);
+}
+
