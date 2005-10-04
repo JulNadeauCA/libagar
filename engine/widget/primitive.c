@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.76 2005/09/27 00:25:23 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.77 2005/10/02 09:36:38 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -879,14 +879,14 @@ rect_blended(void *p, int x1, int y1, int pw, int ph, Uint8 c[4],
 
 	pView = (Uint8 *)agView->v->pixels +
 	    (wid->cy+y1)*agView->v->pitch +
-	    (wid->cx+x1)*agView->v->format->BytesPerPixel;
-	yinc = agView->v->pitch - w*agView->v->format->BytesPerPixel;
+	    (wid->cx+x1)*agVideoFmt->BytesPerPixel;
+	yinc = agView->v->pitch - w*agVideoFmt->BytesPerPixel;
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
 			AG_BLEND_RGBA(agView->v, pView, c[0], c[1], c[2], c[3],
 			    func);
-			pView += agView->v->format->BytesPerPixel;
+			pView += agVideoFmt->BytesPerPixel;
 		}
 		pView += yinc;
 	}
