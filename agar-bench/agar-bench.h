@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.h,v 1.2 2005/10/03 07:17:31 vedge Exp $	*/
+/*	$Csoft: agar-bench.h,v 1.3 2005/10/03 17:37:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/engine.h>
@@ -26,7 +26,7 @@ struct test_ops {
 	u_int iterations;
 };
 
-extern SDL_Surface *surface;
+extern SDL_Surface *surface, *surface64, *surface128;
 
 void InitSurface(void);
 void FreeSurface(void);
