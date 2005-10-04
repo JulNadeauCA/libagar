@@ -1,11 +1,13 @@
-/*	$Csoft: agar-bench.c,v 1.3 2005/10/03 07:17:31 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.4 2005/10/03 17:37:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
 #include <engine/config.h>
 
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;
@@ -125,19 +127,68 @@ poll_test(int argc, union evarg *argv)
 }
 
 static void
-quit_app(int argc, union evarg *argv)
+QuitApp(int argc, union evarg *argv)
 {
 	AG_Quit();
 }
 
 static void
-tests_window(void)
+SaveToCSV(int argc, union evarg *argv)
+{
+	struct test_ops *test = argv[1].p;
+	AG_Table *t = argv[2].p;
+	char separator = (char)argv[3].i;
+	char *path = argv[4].s;
+	FILE *f;
+
+	if ((f = fopen(path, "w")) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, strerror(errno));
+		return;
+	}
+	fprintf(f, "Agar Benchmark %s\n", VERSION);
+	fprintf(f, "Test: %s%s\n", test->name,
+	    (test->flags&TEST_SDL) ? " (SDL-only)" :
+	    (test->flags&TEST_GL) ? " (GL-only)" : "");
+	fprintf(f, "Iterations: %u x %u\n\n", test->runs, test->iterations);
+	AG_TableSaveASCII(t, f, ':');
+	fclose(f);
+}
+
+static void
+SaveToFileDlg(int argc, union evarg *argv)
+{
+	char defpath[FILENAME_MAX];
+	struct test_ops *test = argv[1].p;
+	AG_Table *t = argv[2].p;
+	AG_Window *win;
+	AG_FileDlg *dlg;
+	FILE *f;
+
+	strlcpy(defpath, test->name, sizeof(defpath));
+	strlcat(defpath, ".txt", sizeof(defpath));
+
+	win = AG_WindowNew(0, NULL);
+	AG_WindowSetCaption(win, "Save benchmark results");
+	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"), defpath);
+	AG_FileDlgAddType(dlg, "ASCII File (comma-separated)", "*.txt",
+	    SaveToCSV, "%p,%p,%i", test, t, ':');
+	AG_FileDlgAddType(dlg, "ASCII File (tab-separated)", "*.txt",
+	    SaveToCSV, "%p,%p,%i", test, t, '\t');
+	AG_FileDlgAddType(dlg, "ASCII File (space-separated)", "*.txt",
+	    SaveToCSV, "%p,%p,%i", test, t, ' ');
+	
+	AG_WindowShow(win);
+}
+
+static void
+MainWindow(void)
 {
 	AG_Window *win;
 	AG_Table *t;
 	AG_Button *btn;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
+	AG_HBox *hbox;
 	int i, j;
 
 	win = AG_WindowNew(0, "agar-benchmarks");
@@ -154,10 +205,20 @@ tests_window(void)
 		AG_TableAddCol(t, "Avg", "<88.8888M>", NULL);
 		AG_TableAddCol(t, "Max", "<88.8888M>", NULL);
 		AG_TableAddCol(t, NULL, NULL, NULL);
-		
-		btn = AG_ButtonNew(ntab, "Run tests");
-		AG_SetEvent(btn, "button-pushed", run_tests, "%p,%p", test, t);
-		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
+	
+		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		{
+			btn = AG_ButtonNew(hbox, "Run tests");
+			AG_SetEvent(btn, "button-pushed", run_tests,
+			    "%p,%p", test, t);
+	
+			btn = AG_ButtonNew(hbox, "Save results");
+			AG_SetEvent(btn, "button-pushed", SaveToFileDlg,
+			    "%p,%p", test, t);
+	
+			btn = AG_ButtonNew(hbox, "Quit");
+			AG_SetEvent(btn, "button-pushed", QuitApp, NULL);
+		}
 	
 		for (j = 0; j < test->nfuncs; j++) {
 			struct testfn_ops *fn = &test->funcs[j];
@@ -167,9 +228,6 @@ tests_window(void)
 			fn->clksMax = 0;
 		}
 	}
-	btn = AG_ButtonNew(win, "Quit");
-	AG_SetEvent(btn, "button-pushed", quit_app, NULL);
-	AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
@@ -248,7 +306,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	AG_SetRefreshRate(fps);
 
-	tests_window();
+	MainWindow();
 
 	AG_EventLoop();
 	AG_Destroy();
