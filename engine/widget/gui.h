@@ -1,4 +1,4 @@
-/*	$Csoft: gui.h,v 1.5 2005/09/28 15:46:52 vedge Exp $	*/
+/*	$Csoft: gui.h,v 1.6 2005/10/01 09:51:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GUI_H_
@@ -9,6 +9,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/file_dlg.h>
 #include <engine/widget/fixed.h>
 #include <engine/widget/fspinbutton.h>
 #include <engine/widget/graph.h>
