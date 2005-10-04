@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.c,v 1.4 2005/10/03 17:37:59 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.5 2005/10/04 05:52:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -13,12 +13,14 @@ extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;
 extern struct test_ops surfaceops_test;
 extern struct test_ops memops_test;
+extern struct test_ops misc_test;
 
 struct test_ops *tests[] = {
 	&pixelops_test,
 	&primitives_test,
 	&surfaceops_test,
-	&memops_test
+	&memops_test,
+	&misc_test
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
