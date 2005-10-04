@@ -1,0 +1,8 @@
+Agar Benchmark 1.0
+Test: Memory operations
+Iterations: 4 x 10
+
+Test:Min:Avg:Max:
+memcpy(4M):6.575330M:6.806038M:7.380002M:
+memcpyQ(4M):6.629454M:6.955357M:7.541318M:
+memmove(4M):6.526434M:6.865845M:7.536851M:
