@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.17 2005/05/26 06:46:47 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.18 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -147,7 +147,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 	};
 	AG_Box *box;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Fill/gradient"));
 
 	rad = AG_RadioNew(win, modes);

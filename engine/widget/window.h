@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.94 2005/09/27 00:25:25 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.95 2005/10/01 14:15:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -21,28 +21,34 @@ enum ag_window_alignment {
 	AG_WINDOW_UPPER_CENTER
 };
 
+enum ag_window_close_action {
+	AG_WINDOW_HIDE,
+	AG_WINDOW_DETACH,
+	AG_WINDOW_NONE
+};
+
 struct ag_widget;
 
 typedef struct ag_window {
 	struct ag_widget wid;
 
-	int flags;
-#define AG_WINDOW_CASCADE	0x0002	/* Increment position slightly */
-#define AG_WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
-#define AG_WINDOW_NO_DECORATIONS 0x0008	/* Disable the window borders */
-#define AG_WINDOW_HIDE		0x0010	/* Hide on window-close */
-#define AG_WINDOW_DETACH	0x0020	/* Detach on window-close */
-#define AG_WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
-#define AG_WINDOW_ICONIFIED	0x0080	/* Window is minimized */
-#define AG_WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
-#define AG_WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
-#define AG_WINDOW_NO_CLOSE	0x0400	/* Disable close button */
-#define AG_WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
-#define AG_WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
-#define AG_WINDOW_MODAL		0x2000	/* Modal window behavior */
-#define AG_WINDOW_INHIBIT_FOCUS	0x4000	/* Widgets cannot gain focus */
-#define AG_WINDOW_NO_BACKGROUND 0x8000	/* Don't fill the background */
-#define AG_WINDOW_NO_RESIZE	(AG_WINDOW_NO_HRESIZE|AG_WINDOW_NO_VRESIZE)
+	u_int flags;
+#define AG_WINDOW_MODAL		0x00001	/* Place in foreground */
+#define AG_WINDOW_MAXIMIZED	0x00002	/* Window is maximized */
+#define AG_WINDOW_MINIMIZED	0x00004	/* Window is minimized */
+#define AG_WINDOW_KEEPABOVE	0x00008	/* Keep window above */
+#define AG_WINDOW_KEEPBELOW	0x00010	/* Keep window below */
+#define AG_WINDOW_DENYFOCUS	0x00020	/* Widgets cannot gain focus */
+#define AG_WINDOW_NOTITLE	0x00040	/* Disable the titlebar */
+#define AG_WINDOW_NOBORDERS	0x00080	/* Disable the window borders */
+#define AG_WINDOW_NOHRESIZE	0x00100	/* Disable horizontal resize */
+#define AG_WINDOW_NOVRESIZE	0x00200	/* Disable vertical resize */
+#define AG_WINDOW_NOCLOSE	0x00400	/* Disable close button */
+#define AG_WINDOW_NOMINIMIZE	0x00800	/* Disable minimize button */
+#define AG_WINDOW_NOMAXIMIZE	0x01000	/* Disable maximize button */
+#define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
+#define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
+#define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 
 	char caption[128];
 	int visible;				/* Window is visible */
@@ -73,8 +79,9 @@ typedef struct ag_window {
 	} while (/*CONSTCOND*/0)
 
 __BEGIN_DECLS
-AG_Window *AG_WindowNew(int, const char *, ...)
-			FORMAT_ATTRIBUTE(printf, 2, 3);
+AG_Window *AG_WindowNew(u_int);
+AG_Window *AG_WindowNewNamed(u_int, const char *, ...)
+			     FORMAT_ATTRIBUTE(printf, 2, 3);
 
 void	 AG_WindowInit(void *, const char *, int);
 void	 AG_WindowDestroy(void *);
@@ -87,9 +94,13 @@ void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 void	 AG_WindowSetSpacing(AG_Window *, int);
 void	 AG_WindowSetPadding(AG_Window *, int, int, int);
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
-void	 AG_WindowSetCloseAction(AG_Window *, int);
+void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
 void	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
+void	 AG_WindowSaveGeometry(AG_Window *);
+void	 AG_WindowMaximize(AG_Window *);
+void	 AG_WindowUnmaximize(AG_Window *);
+void	 AG_WindowMinimize(AG_Window *);
 
 void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);

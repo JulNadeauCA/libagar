@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.7 2005/07/24 06:55:57 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.8 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -198,7 +198,7 @@ merge_edit_brush(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		if ((win = AG_WindowNew(0, "mapedit-tool-merge-%s",
+		if ((win = AG_WindowNewNamed(0, "mapedit-tool-merge-%s",
 		    AGOBJECT(brush)->name)) == NULL)
 			continue;
 

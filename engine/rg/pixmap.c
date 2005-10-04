@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.46 2005/09/27 14:06:33 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.47 2005/10/01 09:55:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -355,7 +355,7 @@ insert_brush_dlg(int argc, union evarg *argv)
 		NULL
 	};
 
-	win = AG_WindowNew(AG_WINDOW_NO_CLOSE|AG_WINDOW_NO_MINIMIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("New %s brush"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -455,7 +455,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Pixmap %s"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 

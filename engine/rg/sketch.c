@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.25 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.26 2005/10/01 09:55:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -203,7 +203,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_NotebookTab *ntab;
 	AG_Combo *com;
 	
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Sketch %s"), sk->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
@@ -286,7 +286,8 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_Spinbutton *sb;
 	AG_Combo *com;
 	
-	if ((win = AG_WindowNew(0, "%s-%p-%p", sk->name, tel, vge)) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "%s-%p-%p", sk->name, tel, vge))
+	    == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Sketch element (%s)"), sk->name);

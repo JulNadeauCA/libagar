@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.27 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.28 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -99,8 +99,8 @@ combo_expand(int argc, union evarg *argv)
 	if (expand) {						/* Expand */
 		AG_Widget *panel;
 
-		com->panel = AG_WindowNew(AG_WINDOW_NO_TITLEBAR|
-				        AG_WINDOW_NO_DECORATIONS, NULL);
+		com->panel = AG_WindowNew(AG_WINDOW_NOTITLE|
+		                          AG_WINDOW_NOBORDERS);
 		panel = AGWIDGET(com->panel);
 		AG_ObjectAttach(com->panel, com->list);
 

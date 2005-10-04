@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.26 2005/09/27 00:25:24 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.27 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -71,21 +71,9 @@ maximize_window(int argc, union evarg *argv)
 	AG_Window *win = tbar->win;
 
 	if (win->flags & AG_WINDOW_MAXIMIZED) {
-		AG_WindowSetGeometry(win, win->savx, win->savy, win->savw,
-		    win->savh);
-		win->flags &= ~(AG_WINDOW_MAXIMIZED);
-		if (!agView->opengl) {
-			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-			SDL_UpdateRect(agView->v, 0, 0, agView->v->w,
-			    agView->v->h);
-		}
+		AG_WindowUnmaximize(win);
 	} else {
-		win->savx = AGWIDGET(win)->x;
-		win->savy = AGWIDGET(win)->y;
-		win->savw = AGWIDGET(win)->w;
-		win->savh = AGWIDGET(win)->h;
-		AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h);
-		win->flags |= AG_WINDOW_MAXIMIZED;
+		AG_WindowMaximize(win);
 	}
 }
 
@@ -93,10 +81,8 @@ static void
 minimize_window(int argc, union evarg *argv)
 {
 	AG_Titlebar *tbar = argv[1].p;
-	AG_Window *win = tbar->win;
 
-	win->flags |= AG_WINDOW_ICONIFIED;
-	AG_WindowHide(win);
+	AG_WindowMinimize(tbar->win);
 }
 
 static void

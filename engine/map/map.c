@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.58 2005/09/27 14:06:31 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.59 2005/10/01 09:55:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2087,7 +2087,7 @@ create_view(int argc, union evarg *argv)
 	AG_Mapview *mv;
 	AG_Window *win;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("View: %s"), AGOBJECT(map)->name);
 	
 	mv = AG_MapviewNew(win, map, 0, NULL, NULL);
@@ -2174,7 +2174,7 @@ edit_properties(int argc, union evarg *argv)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	if ((win = AG_WindowNew(AG_WINDOW_NO_RESIZE, "map-props-%s",
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "map-props-%s",
 	    AGOBJECT(m)->name)) == NULL) {
 		return;
 	}
@@ -2642,7 +2642,7 @@ noderef_edit(int argc, union evarg *argv)
 		return;
 	}
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Node reference"));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
@@ -2834,7 +2834,7 @@ map_edit(void *p)
 	if ((AGOBJECT(m)->flags & AG_OBJECT_READONLY) == 0)
 		flags |= AG_MAPVIEW_EDIT;
 	
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", AGOBJECT(m)->name);
 
 	toolbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);

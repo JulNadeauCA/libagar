@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.63 2005/09/27 00:25:20 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.64 2005/09/27 14:06:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -998,8 +998,10 @@ insert_tile_dlg(int argc, union evarg *argv)
 	AG_Radio *rad;
 	AG_Combo *com;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
-	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	    AG_WINDOW_NOMINIMIZE, "rg-instiledlg")) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
 	tb = AG_TextboxNew(win, _("Name: "));
@@ -1050,8 +1052,10 @@ insert_texture_dlg(int argc, union evarg *argv)
 	AG_Box *btnbox;
 	AG_Textbox *tb;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
-	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	    AG_WINDOW_NOMINIMIZE, "rg-instexturedlg")) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
 	tb = AG_TextboxNew(win, _("Name:"));
@@ -1084,8 +1088,10 @@ insert_anim_dlg(int argc, union evarg *argv)
 	AG_MSpinbutton *msb;
 	AG_Checkbox *cb;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
-	                 AG_WINDOW_NO_MINIMIZE, NULL);
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	    AG_WINDOW_NOMINIMIZE, "rg-insanimdlg")) == NULL) {
+		return;
+	}
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
 	tb = AG_TextboxNew(win, _("Name:"));
@@ -1487,7 +1493,7 @@ RG_TilesetEdit(void *p)
 	AG_NotebookTab *ntab;
 	AG_Combo *com;
 
-	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Tile set: %s"), AGOBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 

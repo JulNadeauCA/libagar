@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.16 2005/09/27 00:25:20 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.17 2005/09/27 14:06:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -307,9 +307,10 @@ VG_BlockEditor(VG *vg)
 	AG_Box *bo;
 	AG_Tlist *tl;
 
-	win = AG_WindowNew(AG_WINDOW_HIDE, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Blocks"));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
+	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
 	
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
 	AG_SetEvent(tl, "tlist-poll", poll_blocks, "%p", vg);

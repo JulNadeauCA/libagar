@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.88 2005/09/27 00:25:20 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.89 2005/09/27 14:06:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1160,7 +1160,7 @@ import_images(int argc, union evarg *argv)
 	AG_FileDlg *dlg;
 	AG_Window *win;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
 	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
 	    NULL);
@@ -1271,7 +1271,7 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 	AG_Window *win;
 	AG_Box *bo;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_MINIMIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing pixmap"));
 
 	tl = AG_TlistNew(win, 0);
@@ -1349,7 +1349,7 @@ attach_sketch_dlg(int argc, union evarg *argv)
 	AG_Window *win;
 	AG_Box *bo;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_MINIMIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing sketch"));
 
 	tl = AG_TlistNew(win, 0);
@@ -1734,9 +1734,11 @@ tile_infos(int argc, union evarg *argv)
 	AG_Textbox *tb;
 	int i;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE|
-		         AG_WINDOW_NO_MINIMIZE, NULL);
-	AG_WindowSetCaption(win, _("Resize tile `%s'"), t->name);
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	    AG_WINDOW_NOMINIMIZE, "rg-tileinfo-%s", t->name)) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
 	tb = AG_TextboxNew(win, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->name, sizeof(t->name));
@@ -1907,9 +1909,8 @@ export_image_dlg(int argc, union evarg *argv)
 	strlcpy(path, t->name, sizeof(path));
 	strlcat(path, ".bmp", sizeof(path));
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
-	
 	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
 	    path);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);
@@ -2041,9 +2042,7 @@ create_view(int argc, union evarg *argv)
 	AG_Window *win;
 	RG_Tileview *tv;
 
-	if ((win = AG_WindowNew(0, NULL)) == NULL) {
-		return;
-	}
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s <%s>", t->name, AGOBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_CENTER, 0);
 	tv = RG_TileviewNew(win, ts, RG_TILEVIEW_READONLY);
@@ -2066,12 +2065,13 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_HPane *pane;
 	AG_HPaneDiv *div;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "tile-%s:%s",
-	    AGOBJECT(ts)->name, t->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "tile-%s:%s", AGOBJECT(ts)->name,
+	    t->name)) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, "%s <%s>", t->name, AGOBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	
 	tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
 	RG_TileviewInit(tv, ts, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.44 2005/05/24 08:15:09 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.45 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -128,7 +128,7 @@ examine_widget(int argc, union evarg *argv)
 	}
 	wid = it->p1;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Widget info: %s"), AGOBJECT(wid)->name);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
@@ -230,11 +230,12 @@ examine_window(int argc, union evarg *argv)
 	}
 	pwin = it->p1;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "monitor-win-%s",
+	if ((win = AG_WindowNewNamed(0, "widget-browser-%s",
 	    AGOBJECT(pwin)->name)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, "%s", AGOBJECT(pwin)->name);
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	AG_LabelNew(win, AG_LABEL_STATIC, "Name: \"%s\"", AGOBJECT(pwin)->name);
 	AG_LabelNew(win, AG_LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
@@ -279,11 +280,11 @@ AG_DebugWidgetBrowser(void)
 	AG_Tlist *tl;
 	AG_MenuItem *it;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "monitor-window-stack"))
-	    == NULL) {
+	if ((win = AG_WindowNewNamed(0, "widget-browser")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Window stack"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL);
 	AG_SetEvent(tl, "tlist-poll", poll_windows, NULL);

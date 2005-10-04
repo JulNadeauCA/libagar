@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.16 2005/05/12 02:39:21 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -227,10 +227,11 @@ AG_DebugUnicodeBrowser(void)
 	AG_Tableview *tv;
 	int i;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "uniconv")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "uniconv")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Unicode Conversion"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	com = AG_ComboNew(win, 0, _("Range: "));
 	for (i = 0; i < nunicode_ranges; i++) {

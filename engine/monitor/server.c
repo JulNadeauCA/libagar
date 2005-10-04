@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.11 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.12 2005/09/27 14:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -381,7 +381,7 @@ AG_DebugServerWindow(void)
 	AG_Tlist *tl;
 	AG_Box *bo;
 	
-	win = AG_WindowNew(AG_WINDOW_NO_CLOSE, NULL);
+	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
 	AG_WindowSetCaption(win, _("Agar clients"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 

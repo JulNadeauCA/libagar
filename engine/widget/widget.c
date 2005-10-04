@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.122 2005/10/03 01:35:38 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.123 2005/10/03 01:55:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1089,7 +1089,7 @@ AG_WidgetFocus(void *p)
 	/* Remove focus from other widgets inside this window. */
 	pwin = AG_WidgetParentWindow(wid);
 	if (pwin != NULL) {
-		if (pwin->flags & AG_WINDOW_INHIBIT_FOCUS) {
+		if (pwin->flags & AG_WINDOW_DENYFOCUS) {
 			return;
 		}
 		AG_WidgetUnfocus(pwin);

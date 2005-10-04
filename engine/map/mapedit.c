@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.5 2005/09/19 01:25:18 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.6 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -158,7 +158,7 @@ AG_MapEditorConfig(void *p)
 	AG_MSpinbutton *msb;
 	AG_Box *bo;
 
-	win = AG_WindowNew(AG_WINDOW_NO_VRESIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, _("Map editor settings"));
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);

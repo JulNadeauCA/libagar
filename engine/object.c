@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.241 2005/09/28 15:46:58 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.242 2005/10/01 09:55:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2178,7 +2178,7 @@ AG_ObjectEdit(void *p)
 	AG_Box *box;
 	AG_Button *btn;
 
-	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_RIGHT, 1);
 

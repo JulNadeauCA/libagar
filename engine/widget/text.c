@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.107 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.108 2005/09/27 14:06:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -446,9 +446,8 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_NO_RESIZE|AG_WINDOW_NO_CLOSE|
-	    AG_WINDOW_NO_MINIMIZE|AG_WINDOW_NO_MAXIMIZE|
-	    AG_WINDOW_NO_DECORATIONS, NULL);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -475,9 +474,8 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_NO_RESIZE|AG_WINDOW_NO_CLOSE|
-	    AG_WINDOW_NO_MINIMIZE|AG_WINDOW_NO_MAXIMIZE|
-	    AG_WINDOW_NO_DECORATIONS, NULL);
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -510,8 +508,8 @@ AG_TextPromptOptions(AG_Button **bOpts, u_int nbOpts, const char *fmt, ...)
 	vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_RESIZE|
-	    AG_WINDOW_NO_TITLEBAR, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	    AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
@@ -540,7 +538,7 @@ AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, "%s", _("Enter real number"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -579,7 +577,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, "%s", _("Edit string"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -615,8 +613,8 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 	const char *fmtp;
 	va_list ap;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_VRESIZE|
-	                   AG_WINDOW_NO_TITLEBAR, NULL);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
+	    AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 

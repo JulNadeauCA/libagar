@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_polygon.c,v 1.3 2005/07/29 06:33:41 vedge Exp $	*/
+/*	$Csoft: sketch_polygon.c,v 1.4 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -181,7 +181,7 @@ edit(void *p)
 	AG_Window *win;
 	AG_Checkbox *cb;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	cb = AG_CheckboxNew(win, _("Preview"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &pt->preview);
 	return (win);

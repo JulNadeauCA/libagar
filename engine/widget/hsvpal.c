@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.23 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.24 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -280,12 +280,13 @@ edit_values(int argc, union evarg *argv)
 	if ((pwin = AG_WidgetParentWindow(pal)) == NULL)
 		return;
 
-	if ((win = AG_WindowNew(AG_WINDOW_NO_MAXIMIZE|AG_WINDOW_DETACH,
-	    "hsvpal-%p-numedit", pal)) == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NOMAXIMIZE, "hsvpal-%p-numedit",
+	    pal)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Color values"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_LEFT, 0);
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	{
 		AG_WidgetBinding *bAlpha;
 		void *pAlpha;
