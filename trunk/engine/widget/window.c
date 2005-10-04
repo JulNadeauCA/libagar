@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.265 2005/10/03 14:16:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.266 2005/10/03 16:13:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -357,17 +357,17 @@ AG_WindowHiddenEv(int argc, union evarg *argv)
 		agView->modal_win = NULL;
 
 	/* Update the background if necessary. */
-	if (!AG_WindowIsSurrounded(win)) {
+//	if (!AG_WindowIsSurrounded(win)) {
 		agPrim.rect_filled(win, 0, 0,
 		    AGWIDGET(win)->w,
 		    AGWIDGET(win)->h,
 		    AG_COLOR(BG_COLOR));
 		if (!agView->opengl) {
-			SDL_UpdateRect(agView->v,
+			AG_UpdateRectQ(
 			    AGWIDGET(win)->x, AGWIDGET(win)->y,
 			    AGWIDGET(win)->w, AGWIDGET(win)->h);
 		}
-	}
+//	}
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
 }
 
