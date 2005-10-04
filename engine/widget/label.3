@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.28 2005/05/26 06:43:28 vedge Exp $
+.\"	$Csoft: label.3,v 1.29 2005/09/27 00:25:22 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -104,8 +104,12 @@ should be a
 .Bl -tag -compact -width "%o, %u, %x, %X "
 .It %d, %i
 int
+.It %lld, %lli
+Sint64
 .It %o, %u, %x, %X
 u_int
+.It %llu, %llo, %llx
+Uint64
 .It %c
 char
 .It %s
