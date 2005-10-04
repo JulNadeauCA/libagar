@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.86 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.87 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -337,6 +337,46 @@ AG_LabelDrawPolled(AG_Label *label)
 	for (fmtp = label->poll.fmt; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
+#ifdef SDL_HAS_64BIT_TYPE
+			case 'l':
+				if (*(fmtp+2) == 'l') {
+					switch (*(fmtp+3)) {
+					case 'd':
+					case 'i':
+						snprintf(s2, sizeof(s2),
+						    "%lld", LABEL_ARG(Sint64));
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					case 'o':
+						snprintf(s2, sizeof(s2),
+						    "%llo", LABEL_ARG(Uint64));
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					case 'u':
+						snprintf(s2, sizeof(s2),
+						    "%llu", LABEL_ARG(Uint64));
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					case 'x':
+						snprintf(s2, sizeof(s2),
+						    "%llx", LABEL_ARG(Uint64));
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					case 'X':
+						snprintf(s2, sizeof(s2),
+						    "%llX", LABEL_ARG(Uint64));
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					}
+					fmtp += 2;
+				}
+				break;
+#endif /* SDL_HAS_64BIT_TYPE */
 			case 'd':
 			case 'i':
 				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
