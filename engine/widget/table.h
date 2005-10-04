@@ -1,4 +1,4 @@
-/*	$Csoft: table.h,v 1.4 2005/10/03 03:41:24 vedge Exp $	*/
+/*	$Csoft: table.h,v 1.5 2005/10/03 05:10:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TABLE_H_
@@ -6,9 +6,9 @@
 
 #include "begin_code.h"
 
-#define AG_TABLE_CELL_TEXT_MAX 48
-#define AG_TABLE_COL_NAME_MAX 48
+#define AG_TABLE_TXT_MAX 128
 #define AG_TABLE_FMT_MAX 16
+#define AG_TABLE_COL_NAME_MAX 48
 
 typedef struct ag_table_cell {
 	enum ag_table_cell_type {
@@ -40,10 +40,11 @@ typedef struct ag_table_cell {
 		AG_CELL_PUINT64,
 #endif
 		AG_CELL_POINTER,
-		AG_CELL_FN
+		AG_CELL_FN_SU,
+		AG_CELL_FN_TXT,
 	} type;
 	union {
-		char s[AG_TABLE_CELL_TEXT_MAX];
+		char s[AG_TABLE_TXT_MAX];
 		int i;
 		double f;
 		void *p;
@@ -53,7 +54,8 @@ typedef struct ag_table_cell {
 #endif
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
-	SDL_Surface *(*fn)(void *, int, int);	/* For AG_CELL_FN */
+	SDL_Surface *(*fnSu)(void *, int, int); /* For AG_CELL_FN_SURFACE */
+	void *(*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TEXT */
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
 } AG_TableCell;
@@ -145,6 +147,9 @@ void	  	  AG_TableUpdateScrollbars(AG_Table *);
 __inline__ void	  AG_TableRedrawCells(AG_Table *);
 __inline__ int	  AG_TableCompareCells(const AG_TableCell *,
 			               const AG_TableCell *);
+
+int	  AG_TableSaveASCII(AG_Table *, FILE *, char);
+
 __END_DECLS
 
 #include "close_code.h"
