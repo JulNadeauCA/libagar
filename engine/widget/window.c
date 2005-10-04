@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.266 2005/10/03 16:13:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.267 2005/10/04 01:23:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -363,7 +363,7 @@ AG_WindowHiddenEv(int argc, union evarg *argv)
 		    AGWIDGET(win)->h,
 		    AG_COLOR(BG_COLOR));
 		if (!agView->opengl) {
-			AG_UpdateRectQ(
+			SDL_UpdateRect(agView->v,
 			    AGWIDGET(win)->x, AGWIDGET(win)->y,
 			    AGWIDGET(win)->w, AGWIDGET(win)->h);
 		}
