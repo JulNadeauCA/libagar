@@ -11,21 +11,16 @@ becomes gelatinous in water and is primarly used as a culture medium for
 microbiological work. Agar is also a framework for graphical applications
 using SDL or OpenGL.
 
-Agar is most well-known for its GUI toolkit, which is sophisticated enough
-to accomodate applications such as CAD, 3D modeling and game/level edition.
-But Agar is much more than a GUI. The GUI toolkit is only a small part of
-the project. Agar was initially designed as a game engine for our upcoming
-game, "Trek to the Cave", and it implements an object system which allows
-it to function essentially as an interpreter.
+Agar is most well-known for its extensive GUI library, which is being used
+by games, game edition tools, CAD and scientific applications.
 
-That is, an Agar game can be constructed entirely from data files created
-by the the built-in graphical edition facilties. Agar manages memory and
-persistence. Typically, all of the code needed by an Agar game will take
-the form of object implementations, and some simple games which make use
-of the built-in object types will not require any code at all (besides
-the initialization in main(), of course). Agar provides some built-in object
-implementations, such as "map" for tile-based 2D levels, "drawing" for 2D
-sketches and "perso" for simple game characters.
+The Agar core library features an object system providing event and timing
+facilities, advanced memory management, dependency keeping and an optional
+graphical edition framework.
+
+The distribution also includes a vector drawing engine, a map system and
+a flexible image/animation editor which can be built into applications
+such as games, for purposes of retouching, composition and authoring.
 
 Availability
 ------------
@@ -44,5 +39,5 @@ Agar is freely distributable under the terms of a BSD license.
 
 Acknowledgements
 ----------------
-Please refer to http://agar.csoft.org/credits.html.
+See: http://agar.csoft.org/credits.html.
 
