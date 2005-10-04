@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.2 2005/10/01 14:16:53 vedge Exp $	*/
+/*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -42,8 +42,8 @@ CreateGameMenu(void)
 	AG_Pixmap *px;
 	AG_Table *t;
 
-	/* Create a fixed-size window with no titlebar or border. */
-	win = AG_WindowNew(AG_WINDOW_NO_TITLEBAR|AG_WINDOW_NO_DECORATIONS,
+	/* Create a fixed-size window with no titlebar or decorations. */
+	win = AG_WindowNewNamed(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS,
 	    "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0);
 

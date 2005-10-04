@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.5 2005/07/29 06:33:41 vedge Exp $	*/
+/*	$Csoft: sketch_line.c,v 1.6 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ edit(void *p)
 	AG_Window *win;
 	AG_Radio *rad;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	rad = AG_RadioNew(win, mode_items);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &lt->mode);
 	return (win);

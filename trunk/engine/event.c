@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.219 2005/09/27 18:03:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.220 2005/10/01 09:55:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -124,7 +124,7 @@ init_perf_graph(void)
 {
 	AG_Label *label;
 
-	agPerfWindow = AG_WindowNew(0, "event-fps-counter");
+	agPerfWindow = AG_WindowNewNamed(0, "event-fps-counter");
 	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 
@@ -179,9 +179,10 @@ AG_EventLoop_FixedFPS(void)
 				AG_WidgetDraw(win);
 				pthread_mutex_unlock(&win->lock);
 
-				AG_UpdateRectQ(
-				    AGWIDGET(win)->x, AGWIDGET(win)->y,
-				    AGWIDGET(win)->w, AGWIDGET(win)->h);
+				if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0)
+					AG_UpdateRectQ(
+					    AGWIDGET(win)->x, AGWIDGET(win)->y,
+					    AGWIDGET(win)->w, AGWIDGET(win)->h);
 			}
 
 			if (agView->ndirty > 0) {
@@ -236,7 +237,7 @@ unminimize_window(int argc, union evarg *argv)
 
 	if (!win->visible) {
 		AG_WindowShow(win);
-		win->flags &= ~(AG_WINDOW_ICONIFIED);
+		win->flags &= ~(AG_WINDOW_MINIMIZED);
 	} else {
 		AG_WindowFocus(win);
 	}

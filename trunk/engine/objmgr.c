@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.49 2005/09/27 00:25:17 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.50 2005/09/27 14:06:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -374,10 +374,9 @@ AG_ObjMgrSaveTo(void *p)
 	strlcat(path, ".", sizeof(path));
 	strlcat(path, ob->type, sizeof(path));
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fdg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
-	    path);
+	fdg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"), path);
 	AG_SetEvent(fdg, "file-validated", export_object, "%p,%p", ob, win);
 	AG_SetEvent(fdg, "file-cancelled", AGWINDETACH(win));
 
@@ -683,7 +682,7 @@ create_obj_dlg(int argc, union evarg *argv)
 	AG_Textbox *tb;
 	AG_Checkbox *cb;
 
-	win = AG_WindowNew(AG_WINDOW_NO_CLOSE|AG_WINDOW_NO_MINIMIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("New %s object"), t->type);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -837,7 +836,7 @@ AG_ObjMgrWindow(void)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	win = AG_WindowNew(0, "objmgr");
+	win = AG_WindowNewNamed(0, "objmgr");
 	AG_WindowSetCaption(win, _("Object manager"));
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
@@ -1088,8 +1087,8 @@ AG_ObjMgrQuitDlg(void *obj)
 	AG_Window *win;
 	AG_Box *bo;
 
-	if ((win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NO_TITLEBAR|
-	    AG_WINDOW_NO_RESIZE, "objmgr-changed-dlg")) == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+	    AG_WINDOW_NORESIZE, "objmgr-changed-dlg")) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Exit application?"));

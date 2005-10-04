@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.18 2005/05/18 03:16:53 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.19 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -256,16 +256,18 @@ AG_DebugScreenshot(void)
 	AG_Label *lab;
 	AG_Spinbutton *sbu;
 	
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_VRESIZE,
-	    "monitor-screenshot")) == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE, "monitor-screenshot"))
+	    == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Screenshot"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
 		strlcpy(status, _("Idle"), sizeof(status));
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED, _("Status: %s."), &status);
+		lab = AG_LabelNew(vb, AG_LABEL_POLLED, _("Status: %s."),
+		    &status);
 		AG_LabelPrescale(lab, _("Transmitting frame XXXXXXXXXXX"));
 		AGWIDGET(lab)->flags |= AG_WIDGET_CLIPPING;
 

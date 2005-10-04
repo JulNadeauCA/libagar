@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.267 2005/10/04 01:23:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.268 2005/10/04 02:35:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ AG_WindowFocusExisting(const char *name)
 		if (strlen(AGOBJECT(owin)->name) >= 4 &&
 		    strcmp(AGOBJECT(owin)->name+4, name) == 0) {
 			AG_WindowShow(owin);
-			if ((owin->flags & AG_WINDOW_INHIBIT_FOCUS) == 0) {
+			if ((owin->flags & AG_WINDOW_DENYFOCUS) == 0) {
 				agView->focus_win = owin;
 			}
 		    	return (1);
@@ -93,41 +93,41 @@ AG_WindowFocusExisting(const char *name)
 }
 
 AG_Window *
-AG_WindowNew(int flags, const char *fmt, ...)
+AG_WindowNew(u_int flags)
+{
+	AG_Window *win;
+
+	pthread_mutex_lock(&agView->lock);
+	win = Malloc(sizeof(AG_Window), M_OBJECT);
+	AG_WindowInit(win, NULL, flags);
+	AG_SetEvent(win, "window-close", AGWINDETACH(win));
+	AG_ViewAttach(win);
+	pthread_mutex_unlock(&agView->lock);
+	return (win);
+}
+
+AG_Window *
+AG_WindowNewNamed(u_int flags, const char *fmt, ...)
 {
 	char name[AG_OBJECT_NAME_MAX], *c;
 	AG_Window *win;
 	va_list ap;
 
 	pthread_mutex_lock(&agView->lock);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		vsnprintf(name, sizeof(name), fmt, ap);
-		va_end(ap);
-
-		for (c = &name[0]; *c != '\0'; c++) {
-			if (*c == '/')
-				*c = '_';
-		}
-		if (AG_WindowFocusExisting(name)) {
-			win = NULL;
-			goto out;
-		}
-
-		win = Malloc(sizeof(AG_Window), M_OBJECT);
-		AG_WindowInit(win, name, flags);
-		AG_SetEvent(win, "window-close", AGWINHIDE(win));
-	} else {
-		win = Malloc(sizeof(AG_Window), M_OBJECT);
-		AG_WindowInit(win, NULL, flags);
-		AG_SetEvent(win, "window-close", AGWINDETACH(win));
+	va_start(ap, fmt);
+	vsnprintf(name, sizeof(name), fmt, ap);
+	va_end(ap);
+	for (c = &name[0]; *c != '\0'; c++) {
+		if (*c == '/')
+			*c = '_';
 	}
-	if (flags & AG_WINDOW_HIDE) {
-		AG_SetEvent(win, "window-close", AGWINHIDE(win));
-	} else if (flags & AG_WINDOW_DETACH) {
-		AG_SetEvent(win, "window-close", AGWINDETACH(win));
+	if (AG_WindowFocusExisting(name)) {
+		win = NULL;
+		goto out;
 	}
-	
+	win = Malloc(sizeof(AG_Window), M_OBJECT);
+	AG_WindowInit(win, name, flags);
+	AG_SetEvent(win, "window-close", AGWINHIDE(win));
 	AG_ViewAttach(win);
 out:
 	pthread_mutex_unlock(&agView->lock);
@@ -170,14 +170,14 @@ AG_WindowInit(void *p, const char *name, int flags)
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 	
 	/* Create the titlebar unless disabled. */
-	if (flags & AG_WINDOW_NO_CLOSE)
+	if (flags & AG_WINDOW_NOCLOSE)
 		titlebar_flags |= AG_TITLEBAR_NO_CLOSE;
-	if (flags & AG_WINDOW_NO_MINIMIZE)
+	if (flags & AG_WINDOW_NOMINIMIZE)
 		titlebar_flags |= AG_TITLEBAR_NO_MINIMIZE;
-	if (flags & AG_WINDOW_NO_MAXIMIZE)
+	if (flags & AG_WINDOW_NOMAXIMIZE)
 		titlebar_flags |= AG_TITLEBAR_NO_MAXIMIZE;
 
-	win->tbar = (flags & AG_WINDOW_NO_TITLEBAR) ? NULL :
+	win->tbar = (flags & AG_WINDOW_NOTITLE) ? NULL :
 	    AG_TitlebarNew(win, titlebar_flags);
 
 	/* Automatically notify children of visibility changes. */
@@ -224,12 +224,12 @@ AG_WindowDraw(void *p)
 	AG_Window *win = p;
 	int i;
 
-	if ((win->flags & AG_WINDOW_NO_BACKGROUND) == 0) {
+	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0) {
 		agPrim.rect_filled(win, 0, 0,
 		    AGWIDGET(win)->w, AGWIDGET(win)->h,
 		    AG_COLOR(WINDOW_BG_COLOR));
 	}
-	if (win->flags & AG_WINDOW_NO_DECORATIONS)
+	if (win->flags & AG_WINDOW_NOBORDERS)
 		return;
 
 	/* Draw the window frame (expected to fit inside padding). */
@@ -256,7 +256,7 @@ AG_WindowDraw(void *p)
 	}
 
 	/* Draw the resize controls. */
-	if ((win->flags & AG_WINDOW_NO_HRESIZE) == 0) {
+	if ((win->flags & AG_WINDOW_NOHRESIZE) == 0) {
 		agPrim.vline(win,
 		    18,
 		    AGWIDGET(win)->h - agColorsBorderSize,
@@ -280,7 +280,7 @@ AG_WindowDraw(void *p)
 		    AG_COLOR(WINDOW_HI_COLOR));
 	}
 	
-	if ((win->flags & AG_WINDOW_NO_VRESIZE) == 0) {
+	if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
 		agPrim.hline(win,
 		    2,
 		    agColorsBorderSize,
@@ -321,7 +321,7 @@ AG_WindowShownEv(int argc, union evarg *argv)
 	AG_Window *win = argv[0].p;
 	int init = (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1);
 
-	if ((win->flags & AG_WINDOW_INHIBIT_FOCUS) == 0) {
+	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		agView->focus_win = win;
 		AG_WindowFocus(win);
 	}
@@ -349,7 +349,7 @@ AG_WindowHiddenEv(int argc, union evarg *argv)
 {
 	AG_Window *win = argv[0].p;
 
-	if ((win->flags & AG_WINDOW_INHIBIT_FOCUS) == 0) {
+	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		/* Remove the focus. XXX cycle */
 		agView->focus_win = NULL;
 	}
@@ -603,7 +603,7 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 			return (AG_WINOP_LRESIZE);
 		} else if ((x - AGWIDGET(win)->x) > (AGWIDGET(win)->w - 17)) {
 			return (AG_WINOP_RRESIZE);
-		} else if ((win->flags & AG_WINDOW_NO_VRESIZE) == 0) {
+		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
 			return (AG_WINOP_HRESIZE);
 		}
 	}
@@ -635,7 +635,7 @@ AG_WindowEvent(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			if (win->flags & AG_WINDOW_INHIBIT_FOCUS) {
+			if (win->flags & AG_WINDOW_DENYFOCUS) {
 				agView->focus_win = focus_saved;
 			} else {
 				agView->focus_win = win;
@@ -663,7 +663,7 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			if ((win->flags & AG_WINDOW_NO_DECORATIONS) == 0 &&
+			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
 			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
 				switch (AG_WindowMouseOverCtrl(win,
 				    ev->motion.x, ev->motion.y)) {
@@ -749,7 +749,7 @@ AG_WindowEvent(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			if ((win->flags & AG_WINDOW_NO_DECORATIONS) == 0 &&
+			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
 			    (agView->winop = AG_WindowMouseOverCtrl(win,
 			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
 				agView->wop_win = win;
@@ -935,6 +935,41 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	}
 }
 
+void
+AG_WindowSaveGeometry(AG_Window *win)
+{
+	win->savx = AGWIDGET(win)->x;
+	win->savy = AGWIDGET(win)->y;
+	win->savw = AGWIDGET(win)->w;
+	win->savh = AGWIDGET(win)->h;
+}
+
+void
+AG_WindowMaximize(AG_Window *win)
+{
+	AG_WindowSaveGeometry(win);
+	AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h);
+	win->flags |= AG_WINDOW_MAXIMIZED;
+}
+
+void
+AG_WindowUnmaximize(AG_Window *win)
+{
+	AG_WindowSetGeometry(win, win->savx, win->savy, win->savw, win->savh);
+	win->flags &= ~(AG_WINDOW_MAXIMIZED);
+	if (!agView->opengl) {
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, agView->v->w, agView->v->h);
+	}
+}
+
+void
+AG_WindowMinimize(AG_Window *win)
+{
+	win->flags |= AG_WINDOW_MINIMIZED;
+	AG_WindowHide(win);
+}
+
 /*
  * Resize a window with the mouse.
  * The window must be locked.
@@ -949,7 +984,7 @@ AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 
 	switch (op) {
 	case AG_WINOP_LRESIZE:
-		if (!(win->flags & AG_WINDOW_NO_HRESIZE)) {
+		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
 			if (motion->xrel < 0) {
 				w -= motion->xrel;
 				x += motion->xrel;
@@ -958,23 +993,23 @@ AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 				x += motion->xrel;
 			}
 		}
-		if (!(win->flags & AG_WINDOW_NO_VRESIZE)) {
+		if (!(win->flags & AG_WINDOW_NOVRESIZE)) {
 			if (motion->yrel < 0 || motion->yrel > 0)
 				h += motion->yrel;
 		}
 		break;
 	case AG_WINOP_RRESIZE:
-		if (!(win->flags & AG_WINDOW_NO_HRESIZE)) {
+		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
 			if (motion->xrel < 0 || motion->xrel > 0)
 				w += motion->xrel;
 		}
-		if (!(win->flags & AG_WINDOW_NO_VRESIZE)) {
+		if (!(win->flags & AG_WINDOW_NOVRESIZE)) {
 			if (motion->yrel < 0 || motion->yrel > 0)
 				h += motion->yrel;
 		}
 		break;
 	case AG_WINOP_HRESIZE:
-		if (!(win->flags & AG_WINDOW_NO_HRESIZE)) {
+		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
 			if (motion->yrel < 0 || motion->yrel > 0)
 				h += motion->yrel;
 		}
@@ -1033,8 +1068,8 @@ AG_WindowScale(void *p, int w, int h)
 
 	pthread_mutex_lock(&win->lock);
 
-	if ((win->flags & AG_WINDOW_NO_TITLEBAR) &&
-	    (win->flags & AG_WINDOW_NO_DECORATIONS) == 0) {
+	if ((win->flags & AG_WINDOW_NOTITLE) &&
+	    (win->flags & AG_WINDOW_NOBORDERS) == 0) {
 		y = win->ypadding_top + win->spacing;
 	} else {
 		y = 0;
@@ -1045,7 +1080,7 @@ AG_WindowScale(void *p, int w, int h)
 
 		AGWIDGET(win)->w = win->xpadding*2;
 		AGWIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
-		if (win->flags & AG_WINDOW_NO_TITLEBAR)
+		if (win->flags & AG_WINDOW_NOTITLE)
 			AGWIDGET(win)->h += win->spacing;
 
 		AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
@@ -1140,17 +1175,13 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 {
 	pthread_mutex_lock(&win->lock);
 	win->alignment = alignment;
-	if (cascade) {
-		win->flags |= AG_WINDOW_CASCADE;
-	} else {
-		win->flags &= ~AG_WINDOW_CASCADE;
-	}
+	/* Ignore cascade for now */
 	pthread_mutex_unlock(&win->lock);
 }
 
 /* Set a default window-close handler. */
 void
-AG_WindowSetCloseAction(AG_Window *win, int mode)
+AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 {
 	switch (mode) {
 	case AG_WINDOW_HIDE:
@@ -1209,48 +1240,6 @@ AG_WindowApplyAlignment(AG_Window *win, enum ag_window_alignment alignment)
 		AGWIDGET(win)->x = agView->w/2 - AGWIDGET(win)->w/2;
 		AGWIDGET(win)->y = 0;
 		break;
-	}
-	if (win->flags & AG_WINDOW_CASCADE) {
-		pthread_mutex_lock(&agWindowLock);
-		switch (alignment) {
-		case AG_WINDOW_UPPER_LEFT:
-		case AG_WINDOW_UPPER_RIGHT:
-			break;
-		case AG_WINDOW_MIDDLE_LEFT:
-		case AG_WINDOW_MIDDLE_RIGHT:
-			agWindowYOffs += AGWIDGET(win->tbar)->h;
-			if ((AGWIDGET(win)->y+agWindowYOffs+AGWIDGET(win)->h) >
-			    agView->h) {
-				agWindowYOffs = 0;
-			}
-			break;
-		case AG_WINDOW_LOWER_LEFT:
-		case AG_WINDOW_LOWER_RIGHT:
-			break;
-		case AG_WINDOW_CENTER:
-			agWindowXOffs += AGWIDGET(win->tbar)->h/2;
-			agWindowYOffs += AGWIDGET(win->tbar)->h/2;
-			if ((AGWIDGET(win)->x+agWindowXOffs+AGWIDGET(win)->w) >
-			    agView->w) {
-				agWindowXOffs = 0;
-			}
-			if ((AGWIDGET(win)->y+agWindowYOffs+AGWIDGET(win)->h) >
-			    agView->h) {
-				agWindowYOffs = 0;
-			}
-			break;
-		case AG_WINDOW_LOWER_CENTER:
-		case AG_WINDOW_UPPER_CENTER:
-			agWindowXOffs += AGWIDGET(win->tbar)->h/2;
-			if ((AGWIDGET(win)->x+agWindowXOffs+AGWIDGET(win)->w) >
-			    agView->w) {
-				agWindowXOffs = 0;
-			}
-			break;
-		}
-		AGWIDGET(win)->x += agWindowXOffs;
-		AGWIDGET(win)->y += agWindowYOffs;
-		pthread_mutex_unlock(&agWindowLock);
 	}
 	AG_WindowClamp(win);
 }

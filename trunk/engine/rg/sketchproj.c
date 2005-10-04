@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.6 2005/08/29 03:29:05 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.7 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -146,7 +146,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	AG_Box *box;
 	AG_Combo *com;
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Polygon"));
 
 	com = AG_ComboNew(win, AG_COMBO_POLL, _("Sketch: "));

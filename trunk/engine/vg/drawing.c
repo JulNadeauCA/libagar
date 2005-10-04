@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.14 2005/09/27 02:25:02 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.15 2005/09/27 03:14:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -122,13 +122,14 @@ drawing_settings(int argc, union evarg *argv)
 	AG_MFSpinbutton *mfsu;
 	AG_FSpinbutton *fsu;
 	
-	if ((win = AG_WindowNew(AG_WINDOW_HIDE|AG_WINDOW_NO_VRESIZE, "%s-settings",
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE, "vg-dwgsettings-%s",
 	    AGOBJECT(dwg)->name)) == NULL)
 		return;
 
 	AG_WindowSetCaption(win, _("Parameters for \"%s\""),
 	    AGOBJECT(dwg)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
+	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
 
 	mfsu = AG_MFSpinbuttonNew(win, NULL, "x", _("Geometry: "));
 	AG_WidgetBind(mfsu, "xvalue", AG_WIDGET_DOUBLE, &vg->w);
@@ -196,7 +197,7 @@ AG_DrawingEdit(void *obj)
 	AG_Toolbar *tbar;
 	AG_Statusbar *statbar;
 
-	win = AG_WindowNew(AG_WINDOW_DETACH, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Drawing: %s"), AGOBJECT(dwg)->name);
 
 	tbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);

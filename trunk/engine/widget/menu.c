@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.24 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.25 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -70,8 +70,7 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	if (item->nsubitems == 0)
 		return (NULL);
 
-	panel = AG_WindowNew(AG_WINDOW_NO_TITLEBAR|AG_WINDOW_NO_DECORATIONS,
-	    NULL);
+	panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(panel, "win-popup");
 	AG_WindowSetPadding(panel, 0, 0, 0);
 

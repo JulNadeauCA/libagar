@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.10 2005/08/22 02:14:59 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.11 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ AG_MaptoolWindow(void *p, const char *name)
 	AG_Maptool *tool = p;
 	AG_Window *win;
 
-	win = tool->win = AG_WindowNew(0, NULL);
+	win = tool->win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _(tool->ops->desc));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_SetEvent(win, "window-close", close_AG_MaptoolWindow, "%p", tool);

@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.9 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.10 2005/10/01 09:55:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -200,7 +200,7 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_Radio *rad;
 	AG_Textbox *tb;
 	
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.5 2005/08/29 03:29:05 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.6 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -602,12 +602,13 @@ preview_anim(int argc, union evarg *argv)
 	AG_Window *win;
 	RG_Animview *av;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "anim-prev-%s:%s",
+	if ((win = AG_WindowNewNamed(0, "rg-anim-prev-%s:%s",
 	    AGOBJECT(ani->tileset)->name, ani->name)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, "%s", ani->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_CENTER, 1);
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WindowAttach(pwin, win);
 
 	av = RG_AnimviewNew(win);
@@ -633,8 +634,8 @@ RG_AnimEdit(RG_Anim *ani)
 	AG_MenuItem *mi;
 	int i;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "animation-%s:%s",
-	    AGOBJECT(ts)->name, ani->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "rg-anim-%s:%s", AGOBJECT(ts)->name,
+	    ani->name)) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Animation: %s"), ani->name);

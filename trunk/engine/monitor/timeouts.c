@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.9 2005/05/12 02:39:21 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.10 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ AG_DebugTimeoutList(void)
 {
 	AG_Window *win;
 
-	if ((win = AG_WindowNew(0, "monitor-timeouts")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "monitor-timeouts")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Running timers"));

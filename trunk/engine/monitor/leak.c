@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.16 2005/05/12 02:39:21 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ AG_DebugLeakDetector(void)
 	AG_Window *win;
 	AG_Tableview *tv;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH, "monitor-leak")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "monitor-leak")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Leak detection"));

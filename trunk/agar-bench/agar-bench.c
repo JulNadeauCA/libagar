@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.c,v 1.5 2005/10/04 05:52:22 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.6 2005/10/04 16:12:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -169,7 +169,7 @@ SaveToFileDlg(int argc, union evarg *argv)
 	strlcpy(defpath, test->name, sizeof(defpath));
 	strlcat(defpath, ".txt", sizeof(defpath));
 
-	win = AG_WindowNew(0, NULL);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Save benchmark results");
 	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"), defpath);
 	AG_FileDlgAddType(dlg, "ASCII File (comma-separated)", "*.txt",
@@ -193,7 +193,7 @@ MainWindow(void)
 	AG_HBox *hbox;
 	int i, j;
 
-	win = AG_WindowNew(0, "agar-benchmarks");
+	win = AG_WindowNewNamed(0, "agar-benchmarks");
 	AG_WindowSetCaption(win, "Agar Benchmarks");
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);

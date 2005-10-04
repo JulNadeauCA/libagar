@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.154 2005/10/01 09:55:38 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.155 2005/10/01 10:07:16 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -373,7 +373,7 @@ AG_ConfigWindow(AG_Config *cfg, u_int flags)
 	AG_MSpinbutton *msb;
 	AG_Spinbutton *sbu;
 
-	win = AG_WindowNew(0, "config-engine-settings");
+	win = AG_WindowNewNamed(0, "config-engine-settings");
 	AG_WindowSetCaption(win, _("Agar settings"));
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);

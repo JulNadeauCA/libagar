@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.56 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.57 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -265,7 +265,7 @@ AG_PersoEdit(void *obj)
 	AG_NotebookTab *ntab;
 	AG_VBox *vb;
 
-	win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_VRESIZE, NULL);
+	win = AG_WindowNew(AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, _("Character \"%s\""), AGOBJECT(ps)->name);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);

@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.26 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.27 2005/09/27 14:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,11 +49,12 @@ AG_DebugViewSettings(void)
 	AG_VBox *vb;
 	AG_Label *lab;
 
-	if ((win = AG_WindowNew(AG_WINDOW_DETACH|AG_WINDOW_NO_RESIZE,
-	    "monitor-view-params")) == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "monitor-view-params"))
+	    == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Viewport"));
+	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	
 	vb = AG_VBoxNew(win, 0);
 	{
