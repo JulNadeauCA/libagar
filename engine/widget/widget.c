@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.124 2005/10/04 17:34:56 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.125 2005/10/05 03:40:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1430,20 +1430,10 @@ AG_WidgetUpdateCoords(void *parent, int x, int y)
 	pwid->cy = y;
 	pwid->cx2 = x + pwid->w;
 	pwid->cy2 = y + pwid->h;
-
-	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
-		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
-}
-
-void
-AG_WidgetNotifyMove(void *parent)
-{
-	AG_Widget *pwid = parent, *cwid;
-
 	AG_PostEvent(NULL, pwid, "widget-moved", NULL);
 
 	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
-		AG_WidgetNotifyMove(cwid);
+		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
 }
 
 /* Parse a generic size specification. */
