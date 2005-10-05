@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.166 2005/10/02 09:41:08 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.167 2005/10/05 02:00:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -194,7 +194,7 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 
 	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
 #ifdef HAVE_OPENGL
-		AG_SetBool(cfg, "view.opengl", 1);
+		AG_SetBool(agConfig, "view.opengl", 1);
 #else
 		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
 			fatal("Agar OpenGL support is not compiled in");
