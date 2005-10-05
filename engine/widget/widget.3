@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.65 2005/10/01 06:00:51 vedge Exp $
+.\"	$Csoft: widget.3,v 1.66 2005/10/01 12:02:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -638,6 +638,8 @@ layer generates the following events:
 The widget is now visible.
 .It Fn widget-hidden "void"
 The widget is no longer visible.
+.It Fn widget-moved "void"
+The widget (or one of its parents) has been moved.
 .It Fn widget-gainfocus "void"
 The widget now holds focus inside its parent container.
 This event originates from the parent container object.
