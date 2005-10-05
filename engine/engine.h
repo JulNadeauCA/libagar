@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.101 2005/10/01 09:55:38 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.102 2005/10/02 09:41:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -162,6 +162,8 @@ extern pthread_mutex_t agTimingLock;	/* engine.c */
 #define AG_VIDEO_RESIZABLE	0x040
 #define AG_VIDEO_NOFRAME	0x080
 #define AG_VIDEO_BGPOPUPMENU	0x100
+#define AG_VIDEO_OPENGL		0x200
+#define AG_VIDEO_OPENGL_OR_SDL	0x400
 
 #define AG_FORCE_UNICODE	0x01
 #define AG_FORCE_JOYSTICK	0x02
