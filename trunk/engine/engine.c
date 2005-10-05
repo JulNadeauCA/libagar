@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.165 2005/10/01 09:55:38 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.166 2005/10/02 09:41:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -192,6 +192,14 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 		printf("\n");
 	}
 
+	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
+#ifdef HAVE_OPENGL
+		AG_SetBool(cfg, "view.opengl", 1);
+#else
+		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
+			fatal("Agar OpenGL support is not compiled in");
+#endif
+	}
 	if (AG_ViewInit(w, h, bpp, flags) == -1 || AG_TextInit() == -1) {
 		return (-1);
 	}
