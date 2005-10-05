@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.123 2005/10/03 01:55:07 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.124 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -212,7 +212,8 @@ widget_vtype(AG_WidgetBinding *binding)
 
 /* Bind a variable to a widget. */
 AG_WidgetBinding *
-AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type, ...)
+AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
+    ...)
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *binding;
@@ -1432,6 +1433,17 @@ AG_WidgetUpdateCoords(void *parent, int x, int y)
 
 	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
 		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
+}
+
+void
+AG_WidgetNotifyMove(void *parent)
+{
+	AG_Widget *pwid = parent, *cwid;
+
+	AG_PostEvent(NULL, pwid, "widget-moved", NULL);
+
+	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
+		AG_WidgetNotifyMove(cwid);
 }
 
 /* Parse a generic size specification. */

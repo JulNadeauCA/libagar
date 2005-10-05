@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.268 2005/10/04 02:35:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.269 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -561,6 +561,8 @@ AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
 			SDL_UpdateRects(agView->v, 1, &rfill2);
 		}
 	}
+
+	AG_WidgetNotifyMove(win);
 }
 
 /*
