@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.33 2005/09/27 00:25:16 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.34 2005/10/01 09:55:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -27,6 +27,8 @@ typedef union evarg {
 	long int li;
 	double	 f;
 } AG_EvArg;
+
+typedef void (*AG_EventFn)(int, union evarg *);
 
 typedef struct ag_event {
 	char	name[AG_EVENT_NAME_MAX];
@@ -136,6 +138,16 @@ __END_DECLS
 		break;							\
 	default:							\
 		fatal("bad evarg spec");				\
+	}
+
+#define AG_EVENT_GET_ARGS(ev, fmtp)					\
+	if ((fmtp) != NULL) {						\
+		const char *e_fc = fmtp;				\
+		va_list e_ap;						\
+		va_start(e_ap, fmtp);					\
+		for (; *e_fc != '\0'; e_fc++) 				\
+			AG_EVENT_PUSH_ARG(e_ap, *e_fc, (ev));		\
+		va_end(e_ap);						\
 	}
 
 #include "close_code.h"
