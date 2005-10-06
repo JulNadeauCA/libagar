@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.53 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.54 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ AG_CopyProp(const AG_Prop *prop)
 		nprop->data.s = strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
 			Free(nprop, M_PROP);
-			AG_SetError(_("Out of memory for string."));
+			AG_SetError(_("Out of memory for string"));
 			return (NULL);
 		}
 		break;
@@ -100,7 +100,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	switch (type) {
 	case AG_PROP_UINT:
 		nprop->data.u = va_arg(ap, unsigned int);
-		debug(DEBUG_SET, "uint %s: %d\n", key, nprop->data.u);
+		debug(DEBUG_SET, "uint %s: %u\n", key, nprop->data.u);
 		break;
 	case AG_PROP_INT:
 		nprop->data.i = va_arg(ap, int);
@@ -112,7 +112,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		break;
 	case AG_PROP_UINT8:
 		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u8 %s: %d\n", key, nprop->data.u8);
+		debug(DEBUG_SET, "u8 %s: %u\n", key, nprop->data.u8);
 		break;
 	case AG_PROP_SINT8:
 		nprop->data.s8 = (Sint8)va_arg(ap, int);	/* Promoted */
@@ -120,7 +120,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		break;
 	case AG_PROP_UINT16:
 		nprop->data.u16 = (Uint16)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u16 %s: %d\n", key, nprop->data.u16);
+		debug(DEBUG_SET, "u16 %s: %u\n", key, nprop->data.u16);
 		break;
 	case AG_PROP_SINT16:
 		nprop->data.s16 = (Sint16)va_arg(ap, int);	/* Promoted */
@@ -128,13 +128,22 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		break;
 	case AG_PROP_UINT32:
 		nprop->data.u32 = va_arg(ap, Uint32);
-		debug(DEBUG_SET, "u32 %s: %d\n", key, nprop->data.u32);
+		debug(DEBUG_SET, "u32 %s: %u\n", key, nprop->data.u32);
 		break;
 	case AG_PROP_SINT32:
 		nprop->data.s32 = va_arg(ap, Sint32);
 		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
 		break;
-#ifdef FLOATING_POINT
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_PROP_UINT64:
+		nprop->data.u64 = va_arg(ap, Uint64);
+		debug(DEBUG_SET, "u64 %s: %llu\n", key, nprop->data.u64);
+		break;
+	case AG_PROP_SINT64:
+		nprop->data.s64 = va_arg(ap, Sint64);
+		debug(DEBUG_SET, "s64 %s: %lld\n", key, nprop->data.s64);
+		break;
+#endif
 	case AG_PROP_FLOAT:
 		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
 		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
@@ -143,7 +152,6 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		nprop->data.d = va_arg(ap, double);
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
-#endif
 	case AG_PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
@@ -153,7 +161,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		debug(DEBUG_SET, "pointer %s: %p\n", key, nprop->data.p);
 		break;
 	default:
-		fatal("unsupported type: %d", type);
+		fatal("unimplemented prop type: %d", type);
 	}
 	va_end(ap);
 
@@ -215,7 +223,20 @@ AG_SetSint32(void *ob, const char *key, Sint32 i)
 	return (AG_SetProp(ob, key, AG_PROP_SINT32, i));
 }
 
-#ifdef FLOATING_POINT
+#ifdef SDL_HAS_64BIT_TYPE
+AG_Prop *
+AG_SetUint64(void *ob, const char *key, Uint64 i)
+{
+	return (AG_SetProp(ob, key, AG_PROP_UINT64, i));
+}
+
+AG_Prop *
+AG_SetSint64(void *ob, const char *key, Sint64 i)
+{
+	return (AG_SetProp(ob, key, AG_PROP_SINT64, i));
+}
+#endif /* SDL_HAS_64BIT_TYPE */
+
 AG_Prop *
 AG_SetFloat(void *ob, const char *key, float f)
 {
@@ -227,7 +248,6 @@ AG_SetDouble(void *ob, const char *key, double d)
 {
 	return (AG_SetProp(ob, key, AG_PROP_DOUBLE, d));
 }
-#endif
 
 AG_Prop *
 AG_SetString(void *ob, const char *key, const char *fmt, ...)
@@ -307,14 +327,20 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 			case AG_PROP_SINT32:
 				*(Sint32 *)p = prop->data.s32;
 				break;
-#ifdef FLOATING_POINT
+#ifdef SDL_HAS_64BIT_TYPE
+			case AG_PROP_UINT64:
+				*(Uint64 *)p = prop->data.u64;
+				break;
+			case AG_PROP_SINT64:
+				*(Sint64 *)p = prop->data.s64;
+				break;
+#endif
 			case AG_PROP_FLOAT:
 				*(float *)p = prop->data.f;
 				break;
 			case AG_PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
-#endif
 			case AG_PROP_STRING:
 				*(char **)p = prop->data.s;
 				break;
@@ -322,8 +348,8 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 				*(void **)p = prop->data.p;
 				break;
 			default:
-				AG_SetError(_("Unsupported property type: %d."),
-				    t);
+				AG_SetError("Unimplemented prop type (%d)",
+				    prop->type);
 				goto fail;
 			}
 		}
@@ -436,7 +462,30 @@ AG_Sint32(void *p, const char *key)
 	return (i);
 }
 
-#ifdef FLOATING_POINT
+#ifdef SDL_HAS_64BIT_TYPE
+Uint64
+AG_Uint64(void *p, const char *key)
+{
+	Uint64 i;
+
+	if (AG_GetProp(p, key, AG_PROP_UINT64, &i) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	return (i);
+}
+
+Sint64
+AG_Sint64(void *p, const char *key)
+{
+	Sint64 i;
+
+	if (AG_GetProp(p, key, AG_PROP_SINT64, &i) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	return (i);
+}
+#endif /* SDL_HAS_64BIT_TYPE */
+
 float
 AG_Float(void *p, const char *key)
 {
@@ -458,7 +507,6 @@ AG_Double(void *p, const char *key)
 	}
 	return (d);
 }
-#endif /* FLOATING_POINT */
 
 /* The object must be locked. */
 char *
@@ -547,13 +595,21 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 		case AG_PROP_SINT32:
 			AG_SetSint32(ob, key, AG_ReadSint32(buf));
 			break;
+#ifdef SDL_HAS_64BIT_TYPE
+		case AG_PROP_UINT64:
+			AG_SetUint64(ob, key, AG_ReadUint64(buf));
+			break;
+		case AG_PROP_SINT64:
+			AG_SetSint64(ob, key, AG_ReadSint64(buf));
+			break;
+#endif
 		case AG_PROP_UINT:
 			AG_SetUint(ob, key, (u_int)AG_ReadUint32(buf));
 			break;
 		case AG_PROP_INT:
 			AG_SetInt(ob, key, (int)AG_ReadSint32(buf));
 			break;
-#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
+#ifdef HAVE_IEEE754
 		case AG_PROP_FLOAT:
 			AG_SetFloat(ob, key, AG_ReadFloat(buf));
 			break;
@@ -630,13 +686,21 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		case AG_PROP_SINT32:
 			AG_WriteSint32(buf, prop->data.s32);
 			break;
+#ifdef SDL_HAS_64BIT_TYPE
+		case AG_PROP_UINT64:
+			AG_WriteUint64(buf, prop->data.u64);
+			break;
+		case AG_PROP_SINT64:
+			AG_WriteSint64(buf, prop->data.s64);
+			break;
+#endif
 		case AG_PROP_UINT:
 			AG_WriteUint32(buf, (Uint32)prop->data.u);
 			break;
 		case AG_PROP_INT:
 			AG_WriteSint32(buf, (Sint32)prop->data.i);
 			break;
-#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
+#ifdef HAVE_IEEE754
 		case AG_PROP_FLOAT:
 			AG_WriteFloat(buf, prop->data.f);
 			break;
@@ -648,12 +712,9 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 			AG_WriteString(buf, prop->data.s);
 			break;
 		case AG_PROP_POINTER:
-			debug(DEBUG_STATE,
-			    "skipped machine-dependent property `%s'\n",
-			    prop->key);
 			break;
 		default:
-			AG_SetError(_("Cannot save prop of type 0x%x."),
+			AG_SetError("Property of type %d cannot be saved",
 			    prop->type);
 			goto fail;
 		}
@@ -705,6 +766,14 @@ AG_PropPrint(char *s, size_t len, AG_Prop *prop)
 	case AG_PROP_SINT32:
 		snprintf(s, len, "%d", prop->data.s32);
 		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_PROP_UINT64:
+		snprintf(s, len, "%llu", prop->data.u64);
+		break;
+	case AG_PROP_SINT64:
+		snprintf(s, len, "%lld", prop->data.s64);
+		break;
+#endif
 	case AG_PROP_FLOAT:
 		snprintf(s, len, "%f", prop->data.f);
 		break;
