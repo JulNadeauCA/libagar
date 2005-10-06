@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.1 2005/05/10 12:22:07 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.41 2005/10/06 10:28:22 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -211,10 +211,11 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f core *.core
+	rm -f core *.core config.log Makefile.config
+	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 
 install-prog:
-	@if [ -e "${BINDIR}" ]; then \
+	@if [ ! -e "${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG_DIR} ${BINDIR}; \
 	fi

@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.1 2005/05/10 12:22:07 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.50 2005/10/06 10:28:22 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -255,7 +255,8 @@ clean-lib:
 	fi
 
 cleandir-lib:
-	rm -f ${LIBTOOL} ${LTCONFIG_LOG}
+	rm -f ${LIBTOOL} ${LTCONFIG_LOG} config.log Makefile.config
+	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 
 install-lib:
 	@if [ "${INCL}" != "" ]; then \
@@ -314,6 +315,9 @@ deinstall-lib:
 	    done; \
 	fi
 
+includes:
+	(cd ${TOP} && ${MAKE} install-includes)
+
 ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
@@ -322,7 +326,7 @@ ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
-.PHONY: install deinstall clean cleandir regress depend
+.PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
 .PHONY: _lib_objs _lib_shobjs
 

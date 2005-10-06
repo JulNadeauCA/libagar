@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.1 2005/05/10 12:22:07 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.18 2004/10/19 16:08:47 vedge Exp $
 
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -78,10 +78,13 @@ ${DOMAIN}.pot: ${POTFILES}
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
 		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@"; \
-		${XGETTEXT} --default-domain=${DOMAIN} \
+		if [ "${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
-		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@; \
+		    --files-from=${POTFILES} \
+		    ${XGETTEXT_FLAGS} -o $@" != 0 ]; then \
+			echo "skipping $@ (xgettext failed); "; \
+		fi; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
