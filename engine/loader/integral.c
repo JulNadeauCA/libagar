@@ -1,4 +1,4 @@
-/*	$Csoft: integral.c,v 1.5 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: integral.c,v 1.6 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -116,3 +116,32 @@ AG_PwriteUint32(AG_Netbuf *buf, Uint32 u32, off_t offs)
 	AG_NetbufPwrite(&i, sizeof(i), 1, offs, buf);
 }
 
+#ifdef SDL_HAS_64BIT_TYPE
+Uint64
+AG_ReadUint64(AG_Netbuf *buf)
+{
+	Uint64 i;
+
+	AG_NetbufRead(&i, sizeof(i), 1, buf);
+	return ((buf->byte_order == AG_NETBUF_BIG_ENDIAN) ?
+	    SDL_SwapBE64(i) : SDL_SwapLE64(i));
+}
+
+void
+AG_WriteUint64(AG_Netbuf *buf, Uint64 u64)
+{
+	Uint64 i = (buf->byte_order == AG_NETBUF_BIG_ENDIAN) ?
+	    SDL_SwapBE64(u64) : SDL_SwapLE64(u64);
+
+	AG_NetbufWrite(&i, sizeof(i), 1, buf);
+}
+
+void
+AG_PwriteUint64(AG_Netbuf *buf, Uint64 u64, off_t offs)
+{
+	Uint64 i = (buf->byte_order == AG_NETBUF_BIG_ENDIAN) ?
+	    SDL_SwapBE64(u64) : SDL_SwapLE64(u64);
+
+	AG_NetbufPwrite(&i, sizeof(i), 1, offs, buf);
+}
+#endif /* SDL_HAS_64BIT_TYPE */

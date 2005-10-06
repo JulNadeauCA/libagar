@@ -1,13 +1,9 @@
-/*	$Csoft: prop.h,v 1.25 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.26 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
 #define _AGAR_PROP_H_
 #include "begin_code.h"
-
-#include <config/floating_point.h>
-#include <config/have_ieee754.h>
-#include <config/have_long_double.h>
 
 #define AG_PROP_KEY_MAX		64
 #define AG_PROP_STRING_MAX	65535
@@ -21,11 +17,11 @@ enum ag_prop_type {
 	AG_PROP_SINT16,
 	AG_PROP_UINT32,
 	AG_PROP_SINT32,
-	AG_PROP_UINT64,		/* Unused */
-	AG_PROP_SINT64,		/* Unused */
-	AG_PROP_FLOAT,		/* IEEE 754 encoding */
-	AG_PROP_DOUBLE,		/* IEEE 754 encoding */
-	AG_PROP_LONG_DOUBLE,	/* Unused */
+	AG_PROP_UINT64,		/* Optional */
+	AG_PROP_SINT64,		/* Optional */
+	AG_PROP_FLOAT,		/* IEEE 754 encoding required */
+	AG_PROP_DOUBLE,		/* IEEE 754 encoding required */
+	AG_PROP_LONG_DOUBLE,	/* Optional */
 	AG_PROP_STRING,
 	AG_PROP_POINTER,
 	AG_PROP_BOOL,
@@ -44,10 +40,12 @@ typedef struct ag_prop {
 		Sint16	 s16;
 		Uint32	 u32;
 		Sint32	 s32;
-#ifdef FLOATING_POINT
+#ifdef SDL_HAS_64BIT_TYPE
+		Uint64   u64;
+		Sint64   s64;
+#endif
 		float	 f;
 		double	 d;
-#endif
 		char	*s;
 		void	*p;
 	} data;
@@ -72,10 +70,10 @@ AG_Prop	*AG_SetUint16(void *, const char *, Uint16);
 AG_Prop	*AG_SetSint16(void *, const char *, Sint16);
 AG_Prop	*AG_SetUint32(void *, const char *, Uint32);
 AG_Prop	*AG_SetSint32(void *, const char *, Sint32);
-#ifdef FLOATING_POINT
+AG_Prop	*AG_SetUint64(void *, const char *, Uint64);
+AG_Prop	*AG_SetSint64(void *, const char *, Sint64);
 AG_Prop	*AG_SetFloat(void *, const char *, float);
 AG_Prop	*AG_SetDouble(void *, const char *, double);
-#endif
 AG_Prop	*AG_SetString(void *, const char *, const char *, ...)
 		      FORMAT_ATTRIBUTE(printf, 3, 4)
 		      NONNULL_ATTRIBUTE(3);
@@ -91,16 +89,16 @@ __inline__ Uint16 AG_Uint16(void *, const char *);
 __inline__ Sint16 AG_Sint16(void *, const char *);
 __inline__ Uint32 AG_Uint32(void *, const char *);
 __inline__ Sint32 AG_Sint32(void *, const char *);
-#ifdef FLOATING_POINT
+__inline__ Uint64 AG_Uint64(void *, const char *);
+__inline__ Sint64 AG_Sint64(void *, const char *);
 __inline__ float  AG_Float(void *, const char *);
 __inline__ double AG_Double(void *, const char *);
-#endif
-__inline__ void	*AG_Pointer(void *, const char *);
-__inline__ char	*AG_String(void *, const char *);
-size_t		 AG_StringCopy(void *, const char *, char *, size_t)
-		     BOUNDED_ATTRIBUTE(__string__, 3, 4);
-void		 AG_PropPrint(char *, size_t, AG_Prop *)
-		     BOUNDED_ATTRIBUTE(__string__, 1, 2);
+__inline__ void	 *AG_Pointer(void *, const char *);
+__inline__ char	 *AG_String(void *, const char *);
+size_t		  AG_StringCopy(void *, const char *, char *, size_t)
+		                BOUNDED_ATTRIBUTE(__string__, 3, 4);
+void		  AG_PropPrint(char *, size_t, AG_Prop *)
+		               BOUNDED_ATTRIBUTE(__string__, 1, 2);
 __END_DECLS
 
 #include "close_code.h"
