@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.48 2004/09/03 10:14:24 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.50 2005/10/06 10:28:22 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -255,7 +255,8 @@ clean-lib:
 	fi
 
 cleandir-lib:
-	rm -f ${LIBTOOL} ${LTCONFIG_LOG}
+	rm -f ${LIBTOOL} ${LTCONFIG_LOG} config.log Makefile.config
+	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 
 install-lib:
 	@if [ "${INCL}" != "" ]; then \
