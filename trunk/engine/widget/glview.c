@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: glview.c,v 1.1 2005/10/04 18:04:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -64,6 +64,51 @@ AG_GLViewNew(void *parent, u_int flags)
 	return (glv);
 }
 
+static void
+SetIdentity(GLdouble *M, GLenum which)
+{
+	glMatrixMode(which);
+	glPushMatrix();
+	glLoadIdentity();
+	glGetDoublev(which, M);
+	glPopMatrix();
+}
+
+static void
+GLViewMoved(int argc, union evarg *argv)
+{
+	AG_GLViewReshape(argv[0].p);
+}
+
+static void
+GLViewButtondown(int argc, union evarg *argv)
+{
+	AG_GLView *glv = argv[0].p;
+	int button = argv[1].i;
+
+	dprintf("focus\n");
+	AG_WidgetFocus(glv);
+}
+
+static void
+GLViewKeydown(int argc, union evarg *argv)
+{
+	AG_GLView *glv = argv[0].p;
+	int sym = argv[1].i;
+	int mod = argv[2].i;
+	
+	if (glv->keydown_ev != NULL) {
+		glv->keydown_ev->handler(glv->keydown_ev->argc,
+				         glv->keydown_ev->argv);
+	} else {
+		extern const char *agKeySyms[];
+		extern const int agnKeySyms;
+
+		if (sym < agnKeySyms)
+			dprintf("%s: no binding\n", agKeySyms[sym]);
+	}
+}
+
 void
 AG_GLViewInit(AG_GLView *glv, u_int flags)
 {
@@ -76,48 +121,96 @@ AG_GLViewInit(AG_GLView *glv, u_int flags)
 	if (flags & AG_GLVIEW_HFILL) AGWIDGET(glv)->flags |= AG_WIDGET_HFILL;
 
 	glv->draw_ev = NULL;
-	glv->reshape_ev = NULL;
-#if 0
-	AG_SetEvent(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
-	AG_SetEvent(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
-	AG_SetEvent(bu, "window-mousemotion", button_mousemotion, NULL);
-	AG_SetEvent(bu, "window-keyup", button_keyup, NULL);
-	AG_SetEvent(bu, "window-keydown", button_keydown, NULL);
-#endif
+	glv->scale_ev = NULL;
+	glv->keydown_ev = NULL;
+	glv->btndown_ev = NULL;
+	glv->keyup_ev = NULL;
+	glv->btnup_ev = NULL;
+	glv->motion_ev = NULL;
+
+	SetIdentity(glv->mProjection, GL_PROJECTION);
+	SetIdentity(glv->mModelview, GL_MODELVIEW);
+	SetIdentity(glv->mTexture, GL_TEXTURE);
+	SetIdentity(glv->mColor, GL_COLOR);
+
+	AG_SetEvent(glv, "widget-moved", GLViewMoved, NULL);
 }
 
 void
-AG_GLViewDrawFn(AG_GLView *glv, void (*fn)(int, union evarg *),
-    const char *fmtp, ...)
+AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
-	const char *fmt = fmtp;
-	va_list ap;
-
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmtp);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, glv->draw_ev);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
 }
 
 void
-AG_GLViewReshapeFn(AG_GLView *glv, void (*fn)(int, union evarg *),
-    const char *fmtp, ...)
+AG_GLViewScaleFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
-	const char *fmt = fmtp;
-	va_list ap;
+	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(glv->scale_ev, fmt);
+}
 
-	glv->reshape_ev = AG_SetEvent(glv, NULL, fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmtp);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, glv->reshape_ev);
-		}
-		va_end(ap);
+void
+AG_GLViewKeydownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->keydown_ev = AG_SetEvent(glv, "window-keydown", fn, NULL);
+	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
+}
+
+void
+AG_GLViewKeyupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->keyup_ev = AG_SetEvent(glv, "window-keyup", fn, NULL);
+	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
+}
+
+void
+AG_GLViewButtondownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->btndown_ev = AG_SetEvent(glv, "window-mousebuttondown", fn, NULL);
+	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
+}
+
+void
+AG_GLViewButtonupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->btnup_ev = AG_SetEvent(glv, "window-mousebuttonup", fn, NULL);
+	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
+}
+
+void
+AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->motion_ev = AG_SetEvent(glv, "window-mousemotion", fn, NULL);
+	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
+}
+
+/*
+ * Compute the projection matrix for the context and save it for later.
+ * Called automatically when the widget is scaled or moved.
+ */
+void
+AG_GLViewReshape(AG_GLView *glv)
+{
+	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_COLOR);		glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);	glPushMatrix();	glLoadIdentity();
+	
+	glLoadIdentity();
+	if (glv->scale_ev != NULL) {
+		glv->scale_ev->handler(glv->draw_ev->argc,
+		                       glv->draw_ev->argv);
 	}
+	glGetDoublev(GL_PROJECTION_MATRIX, glv->mProjection);
+	glGetDoublev(GL_MODELVIEW_MATRIX, glv->mModelview);
+	glGetDoublev(GL_TEXTURE_MATRIX, glv->mTexture);
+	glGetDoublev(GL_COLOR_MATRIX, glv->mColor);
+	
+	glMatrixMode(GL_PROJECTION);	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
+	glMatrixMode(GL_TEXTURE);	glPopMatrix();
+	glMatrixMode(GL_COLOR);		glPopMatrix();
 }
 
 void
@@ -126,38 +219,57 @@ AG_GLViewScale(void *p, int w, int h)
 	AG_GLView *glv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(glv)->w = 32;	/* XXX */
-		AGWIDGET(glv)->h = 32;
+		AGWIDGET(glv)->w = 256;		/* XXX */
+		AGWIDGET(glv)->h = 256;
+		AG_GLViewReshape(glv);
 		return;
 	}
+	AGWIDGET(glv)->w = w;
+	AGWIDGET(glv)->h = h;
+	AG_GLViewReshape(glv);
 }
 
 void
 AG_GLViewDraw(void *p)
 {
 	AG_GLView *glv = p;
+	
+	glViewport(
+	    AGWIDGET(glv)->cx, agView->h - AGWIDGET(glv)->cy2,
+	    AGWIDGET(glv)->w, AGWIDGET(glv)->h);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
-	glTranslatef(
-	    AGWIDGET(glv)->cx + AGWIDGET(glv)->w/2,
-	    AGWIDGET(glv)->cy + AGWIDGET(glv)->h/2, 0);
-	glScalef(AGWIDGET(glv)->w, AGWIDGET(glv)->h, 0);
-
-	if (glv->draw_ev != NULL) {
-		glv->draw_ev->handler(
-		    glv->draw_ev->argc,
-		    glv->draw_ev->argv);
-	}
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
+	glPushMatrix();
+	glLoadMatrixd(glv->mTexture);
+
+	glMatrixMode(GL_COLOR);
+	glPushMatrix();
+	glLoadMatrixd(glv->mColor);
+	
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadMatrixd(glv->mProjection);
+		
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadMatrixd(glv->mModelview);
+	
+	if (glv->draw_ev != NULL)
+		glv->draw_ev->handler(glv->draw_ev->argc, glv->draw_ev->argv);
+		
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	
+	glMatrixMode(GL_COLOR);
+	glPopMatrix();
+	
+	glMatrixMode(GL_TEXTURE);
+	glPopMatrix();
+	
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	
+	glViewport(0, 0, agView->w, agView->h);
 }
 
 #endif /* HAVE_OPENGL */
