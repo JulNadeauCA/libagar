@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.194 2005/09/28 05:10:20 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.195 2005/10/01 09:55:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -61,6 +61,7 @@ SDL_PixelFormat *agVideoFmt = NULL;
 SDL_PixelFormat *agSurfaceFmt = NULL;
 const SDL_VideoInfo *agVideoInfo;
 int agScreenshotQuality = 75;
+SDL_Cursor *agDefaultCursor = NULL;
 
 const char *agBlendFuncNames[] = {
 	N_("Overlay"),
@@ -203,7 +204,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 
 		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
 		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		
 		glEnable(GL_TEXTURE_2D);
 
@@ -221,6 +222,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
+	agDefaultCursor = SDL_GetCursor();
 	return (0);
 fail:
 	pthread_mutex_destroy(&agView->lock);
