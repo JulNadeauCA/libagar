@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.271 2005/10/05 05:07:39 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.272 2005/10/06 09:52:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -684,8 +684,7 @@ AG_WindowEvent(SDL_Event *ev)
 					break;
 				}
 			} else {
-				if (agView->winop == AG_WINOP_NONE)
-					AG_WidgetUnsetCursor(win);
+				AG_WidgetUnsetCursor(win);
 			}
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->wop_win != win) {
