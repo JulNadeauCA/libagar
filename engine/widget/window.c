@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.270 2005/10/05 03:40:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.271 2005/10/05 05:07:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -699,17 +699,14 @@ AG_WindowEvent(SDL_Event *ev)
 				AG_WindowMoveOp(win, &ev->motion);
 				goto out;
 			case AG_WINOP_LRESIZE:
-				AG_WidgetReplaceCursor(win, AG_LLDIAG_CURSOR);
 				AG_WindowResizeOp(AG_WINOP_LRESIZE, win,
 				    &ev->motion);
 				break;
 			case AG_WINOP_RRESIZE:
-				AG_WidgetReplaceCursor(win, AG_LRDIAG_CURSOR);
 				AG_WindowResizeOp(AG_WINOP_RRESIZE, win,
 				    &ev->motion);
 				break;
 			case AG_WINOP_HRESIZE:
-				AG_WidgetReplaceCursor(win, AG_VRESIZE_CURSOR);
 				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
 				    &ev->motion);
 				goto out;
