@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.106 2005/10/01 09:55:38 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.107 2005/10/03 17:37:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -201,6 +201,7 @@ extern SDL_PixelFormat *agVideoFmt;
 extern SDL_PixelFormat *agSurfaceFmt;
 extern const SDL_VideoInfo *agVideoInfo;
 extern const char *agBlendFuncNames[];
+extern SDL_Cursor *agDefaultCursor;
 
 __BEGIN_DECLS
 int		 AG_ViewInit(int, int, int, u_int);
