@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.220 2005/10/01 09:55:38 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.221 2005/10/04 17:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -169,7 +169,8 @@ AG_EventLoop_FixedFPS(void)
 
 #if defined(DEBUG) && defined(HAVE_OPENGL)
 			if (agView->opengl)
-				glClear(GL_COLOR_BUFFER_BIT);
+				glClear(GL_COLOR_BUFFER_BIT|
+				        GL_DEPTH_BUFFER_BIT);
 #endif
 			TAILQ_FOREACH(win, &agView->windows, windows) {
 				if (!win->visible)
