@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.125 2005/10/05 03:40:41 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.126 2005/10/05 05:07:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -193,6 +193,12 @@ widget_vtype(AG_WidgetBinding *binding)
 			return (AG_WIDGET_UINT32);
 		case AG_PROP_SINT32:
 			return (AG_WIDGET_SINT32);
+#ifdef SDL_HAS_64BIT_TYPE
+		case AG_PROP_UINT64:
+			return (AG_WIDGET_UINT64);
+		case AG_PROP_SINT64:
+			return (AG_WIDGET_SINT64);
+#endif
 		case AG_PROP_FLOAT:
 			return (AG_WIDGET_FLOAT);
 		case AG_PROP_DOUBLE:
@@ -319,6 +325,14 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_SINT32:
 			*(Sint32 **)res = (Sint32 *)binding->p1;
 			break;
+#ifdef SDL_HAS_64BIT_TYPE
+		case AG_WIDGET_UINT64:
+			*(Uint64 **)res = (Uint64 *)binding->p1;
+			break;
+		case AG_WIDGET_SINT64:
+			*(Sint64 **)res = (Sint64 *)binding->p1;
+			break;
+#endif
 		case AG_WIDGET_FLOAT:
 			*(float **)res = (float *)binding->p1;
 			break;
@@ -359,6 +373,14 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			case AG_PROP_SINT32:
 				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
 				break;
+#ifdef SDL_HAS_64BIT_TYPE
+			case AG_PROP_UINT64:
+				*(Uint64 **)res = (Uint64 *)&prop->data.u64;
+				break;
+			case AG_PROP_SINT64:
+				*(Sint64 **)res = (Sint64 *)&prop->data.s64;
+				break;
+#endif
 			case AG_PROP_FLOAT:
 				*(float **)res = (float *)&prop->data.f;
 				break;
@@ -503,6 +525,36 @@ AG_WidgetSint32(void *wid, const char *name)
 	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
+
+#ifdef SDL_HAS_64BIT_TYPE
+Uint64
+AG_WidgetUint64(void *wid, const char *name)
+{
+	AG_WidgetBinding *b;
+	Uint64 *i, rv;
+
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	rv = *i;
+	AG_WidgetUnlockBinding(b);
+	return (rv);
+}
+
+Sint64
+AG_WidgetSint64(void *wid, const char *name)
+{
+	AG_WidgetBinding *b;
+	Sint64 *i, rv;
+
+	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	rv = *i;
+	AG_WidgetUnlockBinding(b);
+	return (rv);
+}
+#endif /* SDL_HAS_64BIT_TYPE */
 
 float
 AG_WidgetFloat(void *wid, const char *name)
@@ -678,6 +730,34 @@ AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 	*i = ni;
 	AG_WidgetUnlockBinding(binding);
 }
+
+#ifdef SDL_HAS_64BIT_TYPE
+void
+AG_WidgetSetUint64(void *wid, const char *name, Uint64 ni)
+{
+	AG_WidgetBinding *binding;
+	Uint64 *i;
+
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	*i = ni;
+	AG_WidgetUnlockBinding(binding);
+}
+
+void
+AG_WidgetSetSint64(void *wid, const char *name, Sint64 ni)
+{
+	AG_WidgetBinding *binding;
+	Sint64 *i;
+
+	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	*i = ni;
+	AG_WidgetUnlockBinding(binding);
+}
+#endif /* SDL_HAS_64BIT_TYPE */
 
 void
 AG_WidgetSetFloat(void *wid, const char *name, float nf)
@@ -1145,8 +1225,10 @@ AG_WidgetPushCursor(void *p, int cursor)
 {
 	AG_Widget *wid = p;
 
-	wid->cursSave = SDL_GetCursor();
-	SDL_SetCursor(agCursors[cursor]);
+	if (SDL_GetCursor() != agCursors[cursor]) {
+		wid->cursSave = SDL_GetCursor();
+		SDL_SetCursor(agCursors[cursor]);
+	}
 }
 
 void
