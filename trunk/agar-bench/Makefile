@@ -1,11 +1,11 @@
-#	$Csoft: Makefile,v 1.6 2005/10/04 05:52:22 vedge Exp $
+#	$Csoft: Makefile,v 1.7 2005/10/04 16:12:31 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
 
 PROG=	agar-bench
 SRCS=	agar-bench.c generic.c pixelops.c primitives.c surfaceops.c memops.c \
-	misc.c
+	misc.c events.c
 VERSION=1.0
 
 CFLAGS+=${AGAR_CFLAGS} -I. -DHAVE_RDTSC -DVERSION=\"${VERSION}\"
