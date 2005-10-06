@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.103 2005/10/05 03:40:41 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.104 2005/10/05 05:07:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -35,6 +35,8 @@ enum ag_widget_binding_type {
 	AG_WIDGET_SINT16,
 	AG_WIDGET_UINT32,
 	AG_WIDGET_SINT32,
+	AG_WIDGET_UINT64,
+	AG_WIDGET_SINT64,
 	AG_WIDGET_FLOAT,
 	AG_WIDGET_DOUBLE,
 	AG_WIDGET_STRING,
@@ -46,8 +48,8 @@ enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,
 	AG_WIDGET_PIXELS,			/* Pixel count */
 	AG_WIDGET_PERCENT,			/* % of available space */
-	AG_WIDGET_STRINGLEN,		/* Width of given string */
-	AG_WIDGET_FILL			/* Fill remaining space */
+	AG_WIDGET_STRINGLEN,			/* Width of given string */
+	AG_WIDGET_FILL				/* Fill remaining space */
 };
 
 typedef struct ag_widget_binding {
@@ -137,7 +139,11 @@ void	 AG_WidgetPushCursor(void *, int);
 void	 AG_WidgetPopCursor(void *);
 void	 AG_WidgetSetCursor(void *, int);
 void	 AG_WidgetReplaceCursor(void *, int);
-#define  AG_WidgetUnsetCursor(w) AG_WidgetPopCursor(w)
+
+#define AG_WidgetUnsetCursor(w) do {	\
+	AG_WidgetPopCursor(w);		\
+	SDL_SetCursor(agDefaultCursor);	\
+} while (0)
 
 #define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)
 #define	AG_WidgetBlitSurface(p,n,x,y) \
@@ -163,6 +169,24 @@ __inline__ void	  AG_WidgetBindingChanged(AG_WidgetBinding *);
 __inline__ int	  AG_WidgetCopyBinding(void *, const char *, void *,
 		                       const char *);
 
+#define AG_WidgetBindBool(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_BOOL,(p))
+#define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))
+#define AG_WidgetBindUint(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT,(p))
+#define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))
+#define AG_WidgetBindUint8(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT8,(p))
+#define AG_WidgetBindSint8(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT8,(p))
+#define AG_WidgetBindUint16(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT16,(p))
+#define AG_WidgetBindSint16(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT16,(p))
+#define AG_WidgetBindUint32(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT32,(p))
+#define AG_WidgetBindSint32(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT32,(p))
+#define AG_WidgetBindUint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT64,(p))
+#define AG_WidgetBindSint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT64,(p))
+#define AG_WidgetBindFloat(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_FLOAT,(p))
+#define AG_WidgetBindDouble(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_DOUBLE,(p))
+#define AG_WidgetBindString(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_STRING,(p))
+#define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
+#define AG_WidgetBindProp(w,b,o,k) AG_WidgetBind((w),(b),AG_WIDGET_PROP,(o),(k))
+
 __inline__ u_int	 AG_WidgetUint(void *, const char *);
 __inline__ int		 AG_WidgetInt(void *, const char *);
 #define			 AG_WidgetBool AG_WidgetInt
@@ -172,6 +196,8 @@ __inline__ Uint16	 AG_WidgetUint16(void *, const char *);
 __inline__ Sint16	 AG_WidgetSint16(void *, const char *);
 __inline__ Uint32	 AG_WidgetUint32(void *, const char *);
 __inline__ Sint32	 AG_WidgetSint32(void *, const char *);
+__inline__ Uint64	 AG_WidgetUint64(void *, const char *);
+__inline__ Sint64	 AG_WidgetSint64(void *, const char *);
 __inline__ float	 AG_WidgetFloat(void *, const char *);
 __inline__ double	 AG_WidgetDouble(void *, const char *);
 
@@ -189,6 +215,8 @@ __inline__ void	 AG_WidgetSetUint16(void *, const char *, Uint16);
 __inline__ void	 AG_WidgetSetSint16(void *, const char *, Sint16);
 __inline__ void	 AG_WidgetSetUint32(void *, const char *, Uint32);
 __inline__ void	 AG_WidgetSetSint32(void *, const char *, Sint32);
+__inline__ void	 AG_WidgetSetUint64(void *, const char *, Uint64);
+__inline__ void	 AG_WidgetSetSint64(void *, const char *, Sint64);
 __inline__ void	 AG_WidgetSetFloat(void *, const char *, float);
 __inline__ void	 AG_WidgetSetDouble(void *, const char *, double);
 __inline__ void	 AG_WidgetSetString(void *, const char *, const char *);
