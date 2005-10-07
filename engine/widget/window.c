@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.272 2005/10/06 09:52:27 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.273 2005/10/06 10:38:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -617,12 +617,13 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 int
 AG_WindowEvent(SDL_Event *ev)
 {
+	extern SDL_Cursor *SDL_cursor;
 	static AG_Window *keydown_win = NULL;	/* XXX hack */
 	AG_Window *win;
 	AG_Widget *wid;
-	int focus_changed = 0;
+	int focus_changed = 0, cursor_set = 0;
 	AG_Window *focus_saved = agView->focus_win;
-
+		
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
 		/* Focus on the highest overlapping window. */
@@ -648,6 +649,9 @@ AG_WindowEvent(SDL_Event *ev)
 	case SDL_MOUSEBUTTONUP:
 		agView->winop = AG_WINOP_NONE;
 		break;
+	case SDL_MOUSEMOTION:
+		AG_UnsetCursor();
+		break;
 	}
 
 	/* Process the input events. */
@@ -663,29 +667,6 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
-			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
-				switch (AG_WindowMouseOverCtrl(win,
-				    ev->motion.x, ev->motion.y)) {
-				case AG_WINOP_LRESIZE:
-					AG_WidgetReplaceCursor(win,
-					    AG_LLDIAG_CURSOR);
-					break;
-				case AG_WINOP_RRESIZE:
-					AG_WidgetReplaceCursor(win,
-					    AG_LRDIAG_CURSOR);
-					break;
-				case AG_WINOP_HRESIZE:
-					AG_WidgetReplaceCursor(win,
-					    AG_VRESIZE_CURSOR);
-					break;
-				default:
-					AG_WidgetUnsetCursor(win);
-					break;
-				}
-			} else {
-				AG_WidgetUnsetCursor(win);
-			}
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->wop_win != win) {
 				pthread_mutex_unlock(&win->lock);
@@ -708,6 +689,7 @@ AG_WindowEvent(SDL_Event *ev)
 			case AG_WINOP_HRESIZE:
 				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
 				    &ev->motion);
+			default:
 				goto out;
 			}
 			/*
@@ -720,12 +702,31 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->motion.xrel, ev->motion.yrel,
 				    ev->motion.state);
 			}
+			if (!cursor_set &&
+			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
+				cursor_set++;
+				if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
+					switch (AG_WindowMouseOverCtrl(win,
+					    ev->motion.x, ev->motion.y)) {
+					case AG_WINOP_LRESIZE:
+						AG_SetCursor(AG_LLDIAG_CURSOR);
+						break;
+					case AG_WINOP_RRESIZE:
+						AG_SetCursor(AG_LRDIAG_CURSOR);
+						break;
+					case AG_WINOP_HRESIZE:
+						AG_SetCursor(AG_VRESIZE_CURSOR);
+						break;
+					default:
+						break;
+					}
+				}
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
 			if (agView->winop != AG_WINOP_NONE) {
 				agView->winop = AG_WINOP_NONE;
 				agView->wop_win = NULL;
-				AG_WidgetUnsetCursor(win);
 			}
 			/*
 			 * Forward to all widgets that either hold focus or have

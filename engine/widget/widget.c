@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.126 2005/10/05 05:07:39 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.127 2005/10/06 10:38:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -90,7 +90,6 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	wid->w = -1;
 	wid->h = -1;
 	wid->style = NULL;
-	wid->cursSave = NULL;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, &agRecursiveMutexAttr);
 
@@ -1221,48 +1220,15 @@ widget_occulted(AG_Widget *wid)
 }
 
 void
-AG_WidgetPushCursor(void *p, int cursor)
+AG_SetCursor(int cursor)
 {
-	AG_Widget *wid = p;
-
-	if (SDL_GetCursor() != agCursors[cursor]) {
-		wid->cursSave = SDL_GetCursor();
-		SDL_SetCursor(agCursors[cursor]);
-	}
+	SDL_SetCursor(agCursors[cursor]);
 }
 
 void
-AG_WidgetPopCursor(void *p)
+AG_UnsetCursor(void)
 {
-	AG_Widget *wid = p;
-
-	if (wid->cursSave != NULL) {
-		SDL_SetCursor(wid->cursSave);
-		wid->cursSave = NULL;
-	}
-}
-
-void
-AG_WidgetSetCursor(void *p, int cursor)
-{
-	AG_Widget *wid = p;
-
-	if (wid->cursSave == NULL) {
-		wid->cursSave = SDL_GetCursor();
-		SDL_SetCursor(agCursors[cursor]);
-	}
-}
-
-void
-AG_WidgetReplaceCursor(void *p, int cursor)
-{
-	AG_Widget *wid = p;
-
-	if (wid->cursSave == NULL) {
-		wid->cursSave = SDL_GetCursor();
-	}
-	if (SDL_GetCursor() != agCursors[cursor])
-		SDL_SetCursor(agCursors[cursor]);
+	SDL_SetCursor(agDefaultCursor);
 }
 
 void
