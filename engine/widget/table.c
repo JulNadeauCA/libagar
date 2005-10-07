@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.14 2005/10/04 05:41:24 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.15 2005/10/07 01:54:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -828,6 +828,7 @@ mousemotion(int argc, union evarg *argv)
 			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
 		}
 		AG_TableSizeFillCols(t);
+		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
 		if ((m = column_over(t, y)) == -1 &&
 		    column_resize_over(t, x))
