@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.11 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.12 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -226,6 +226,17 @@ AG_FatalError(const char *fmt, ...)
 	va_end(args);
 
 	abort();
+}
+
+void *AG_PtrMismatch(void) { fatal("pointer type mismatch"); return (NULL); }
+int AG_IntMismatch(void) { fatal("integer type mismatch"); return (0); }
+float AG_FloatMismatch(void) { fatal("real type mismatch"); return (0.0); }
+
+void *
+AG_ObjectMismatch(const char *t1, const char *t2)
+{
+	fatal("object type mismatch (%s != %s)", t1, t2);
+	return (NULL);
 }
 
 char *

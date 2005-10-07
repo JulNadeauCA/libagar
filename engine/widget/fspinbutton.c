@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.32 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.33 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,10 +74,10 @@ AG_FSpinbuttonNew(void *parent, const char *unit, const char *fmt, ...)
 
 /* Adjust the default range depending on the data type of a new binding. */
 static void
-binding_changed(int argc, union evarg *argv)
+binding_changed(AG_Event *event)
 {
-	AG_FSpinbutton *fsu = argv[0].p;
-	AG_WidgetBinding *binding = argv[1].p;
+	AG_FSpinbutton *fsu = AG_SELF();
+	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
 		pthread_mutex_lock(&fsu->lock);
@@ -108,10 +108,10 @@ binding_changed(int argc, union evarg *argv)
 }
 
 static void
-key_pressed(int argc, union evarg *argv)
+key_pressed(AG_Event *event)
 {
-	AG_FSpinbutton *fsu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_FSpinbutton *fsu = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&fsu->lock);
 	switch (keysym) {
@@ -126,10 +126,10 @@ key_pressed(int argc, union evarg *argv)
 }
 
 static void
-changed(int argc, union evarg *argv)
+changed(AG_Event *event)
 {
-	AG_FSpinbutton *fsu = argv[1].p;
-	int unfocus = argv[2].i;
+	AG_FSpinbutton *fsu = AG_PTR(1);
+	int unfocus = AG_INT(2);
 	AG_WidgetBinding *stringb;
 	char *s;
 
@@ -144,9 +144,9 @@ changed(int argc, union evarg *argv)
 }
 
 static void
-increment_pressed(int argc, union evarg *argv)
+increment_pressed(AG_Event *event)
 {
-	AG_FSpinbutton *fsu = argv[1].p;
+	AG_FSpinbutton *fsu = AG_PTR(1);
 
 	pthread_mutex_lock(&fsu->lock);
 	AG_FSpinbuttonAddValue(fsu, fsu->inc);
@@ -154,9 +154,9 @@ increment_pressed(int argc, union evarg *argv)
 }
 
 static void
-decrement_pressed(int argc, union evarg *argv)
+decrement_pressed(AG_Event *event)
 {
-	AG_FSpinbutton *fsu = argv[1].p;
+	AG_FSpinbutton *fsu = AG_PTR(1);
 	
 	pthread_mutex_lock(&fsu->lock);
 	AG_FSpinbuttonAddValue(fsu, -fsu->inc);
@@ -170,11 +170,11 @@ update_unit_button(AG_FSpinbutton *fsu)
 }
 
 static void
-selected_unit(int argc, union evarg *argv)
+selected_unit(AG_Event *event)
 {
-	AG_UCombo *ucom = argv[0].p;
-	AG_FSpinbutton *fsu = argv[1].p;
-	AG_TlistItem *ti = argv[2].p;
+	AG_UCombo *ucom = AG_SELF();
+	AG_FSpinbutton *fsu = AG_PTR(1);
+	AG_TlistItem *ti = AG_PTR(2);
 
 	fsu->unit = (const AG_Unit *)ti->p1;
 	update_unit_button(fsu);

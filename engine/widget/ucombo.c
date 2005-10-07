@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.15 2005/10/01 14:15:39 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.16 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -82,10 +82,10 @@ ucombo_collapse(AG_UCombo *com)
 }
 
 static void
-ucombo_expand(int argc, union evarg *argv)
+ucombo_expand(AG_Event *event)
 {
-	AG_UCombo *com = argv[1].p;
-	int expand = argv[2].i;
+	AG_UCombo *com = AG_PTR(1);
+	int expand = AG_INT(2);
 	AG_Widget *pan;
 
 	if (expand) {
@@ -118,10 +118,10 @@ ucombo_expand(int argc, union evarg *argv)
 
 /* Effect a user item selection. */
 static void
-ucombo_selected(int argc, union evarg *argv)
+ucombo_selected(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_UCombo *com = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_UCombo *com = AG_PTR(1);
 	AG_TlistItem *it;
 
 	pthread_mutex_lock(&tl->lock);

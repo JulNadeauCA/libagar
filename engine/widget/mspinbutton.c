@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.10 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.11 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -71,10 +71,10 @@ AG_MSpinbuttonNew(void *parent, const char *sep, const char *fmt, ...)
 }
 
 static void
-mspinbutton_bound(int argc, union evarg *argv)
+mspinbutton_bound(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[0].p;
-	AG_WidgetBinding *binding = argv[1].p;
+	AG_MSpinbutton *sbu = AG_SELF();
+	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
@@ -118,10 +118,10 @@ mspinbutton_bound(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_keydown(int argc, union evarg *argv)
+mspinbutton_keydown(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_MSpinbutton *sbu = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&sbu->lock);
 	switch (keysym) {
@@ -142,10 +142,10 @@ mspinbutton_keydown(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_return(int argc, union evarg *argv)
+mspinbutton_return(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
 
@@ -165,10 +165,10 @@ mspinbutton_return(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_textchg(int argc, union evarg *argv)
+mspinbutton_textchg(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
 
@@ -187,9 +187,9 @@ mspinbutton_textchg(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_up(int argc, union evarg *argv)
+mspinbutton_up(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 
 	pthread_mutex_lock(&sbu->lock);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
@@ -197,9 +197,9 @@ mspinbutton_up(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_down(int argc, union evarg *argv)
+mspinbutton_down(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 	
 	pthread_mutex_lock(&sbu->lock);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
@@ -207,9 +207,9 @@ mspinbutton_down(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_left(int argc, union evarg *argv)
+mspinbutton_left(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 	
 	pthread_mutex_lock(&sbu->lock);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
@@ -217,9 +217,9 @@ mspinbutton_left(int argc, union evarg *argv)
 }
 
 static void
-mspinbutton_right(int argc, union evarg *argv)
+mspinbutton_right(AG_Event *event)
 {
-	AG_MSpinbutton *sbu = argv[1].p;
+	AG_MSpinbutton *sbu = AG_PTR(1);
 	
 	pthread_mutex_lock(&sbu->lock);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);

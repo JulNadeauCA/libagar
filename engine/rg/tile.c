@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.89 2005/09/27 14:06:33 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.90 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -695,10 +695,10 @@ RG_TileDestroy(RG_Tile *t)
 #ifdef EDITION
 
 static void
-geo_ctrl_buttonup(int argc, union evarg *argv)
+geo_ctrl_buttonup(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	RG_TileviewCtrl *ctrl = argv[1].p;
+	RG_Tileview *tv = AG_SELF();
+	RG_TileviewCtrl *ctrl = AG_PTR(1);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	int w = RG_TileviewInt(ctrl, 2);
@@ -806,21 +806,21 @@ close_element(RG_Tileview *tv)
 }
 
 static void
-element_closed(int argc, union evarg *argv)
+element_closed(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
-	RG_Tileview *tv = argv[1].p;
+	AG_Window *win = AG_SELF();
+	RG_Tileview *tv = AG_PTR(1);
 
 	if (tv->edit_mode)
 		close_element(tv);
 }
 
 static void
-pixmap_ctrl_buttonup(int argc, union evarg *argv)
+pixmap_ctrl_buttonup(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	RG_TileviewCtrl *ctrl = argv[1].p;
-	RG_Pixmap *px = argv[2].p;
+	RG_Tileview *tv = AG_SELF();
+	RG_TileviewCtrl *ctrl = AG_PTR(1);
+	RG_Pixmap *px = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	int w = RG_TileviewInt(ctrl, 2);
 	int h = RG_TileviewInt(ctrl, 3);
@@ -832,11 +832,11 @@ pixmap_ctrl_buttonup(int argc, union evarg *argv)
 }
 
 static void
-sketch_ctrl_buttonup(int argc, union evarg *argv)
+sketch_ctrl_buttonup(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	RG_TileviewCtrl *ctrl = argv[1].p;
-	RG_TileElement *tel = argv[2].p;
+	RG_Tileview *tv = AG_SELF();
+	RG_TileviewCtrl *ctrl = AG_PTR(1);
+	RG_TileElement *tel = AG_PTR(2);
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	RG_Tile *t = tv->tile;
 	int w = RG_TileviewInt(ctrl, 2);
@@ -968,11 +968,11 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 static void
-create_pixmap(int argc, union evarg *argv)
+create_pixmap(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_TlistItem *eit;
 	RG_Pixmap *px;
 	RG_TileElement *tel;
@@ -1017,12 +1017,12 @@ tryname:
 }
 
 static void
-import_xcf(int argc, union evarg *argv)
+import_xcf(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl_feats = argv[2].p;
-	int into_pixmaps = argv[3].i;
-	char *path = argv[4].s;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl_feats = AG_PTR(2);
+	int into_pixmaps = AG_INT(3);
+	char *path = AG_STRING(4);
 	RG_Tileset *ts = tv->ts;
 	AG_Netbuf *buf;
 	AG_Object tmpObj;
@@ -1112,12 +1112,12 @@ fail:
 }
 
 static void
-import_bmp(int argc, union evarg *argv)
+import_bmp(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl_feats = argv[2].p;
-	int into_pixmaps = argv[3].i;
-	char *path = argv[4].s;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl_feats = AG_PTR(2);
+	int into_pixmaps = AG_INT(3);
+	char *path = AG_STRING(4);
 	RG_Pixmap *px;
 	u_int pixno = 0;
 	RG_Pixmap *opx;
@@ -1150,12 +1150,12 @@ tryname:
 }
 
 static void
-import_images(int argc, union evarg *argv)
+import_images(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
-	int into_pixmaps = argv[4].i;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
+	int into_pixmaps = AG_INT(4);
 	RG_Tile *t = tv->tile;
 	AG_FileDlg *dlg;
 	AG_Window *win;
@@ -1173,11 +1173,11 @@ import_images(int argc, union evarg *argv)
 }
 
 static void
-create_sketch(int argc, union evarg *argv)
+create_sketch(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_TlistItem *eit;
 	RG_Sketch *sk, *osk;
 	RG_TileElement *tel;
@@ -1221,13 +1221,13 @@ tryname:
 }
 
 static void
-attach_pixmap(int argc, union evarg *argv)
+attach_pixmap(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Window *win_dlg = argv[3].p;
-	AG_Tlist *tl_feats = argv[4].p;
-	AG_Tlist *tl_pixmaps = argv[5].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Window *win_dlg = AG_PTR(3);
+	AG_Tlist *tl_feats = AG_PTR(4);
+	AG_Tlist *tl_pixmaps = AG_PTR(5);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 	RG_Pixmap *px;
@@ -1261,11 +1261,11 @@ attach_pixmap(int argc, union evarg *argv)
 }
 
 static void
-attach_pixmap_dlg(int argc, union evarg *argv)
+attach_pixmap_dlg(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_Tlist *tl;
 	RG_Pixmap *px;
 	AG_Window *win;
@@ -1299,13 +1299,13 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 }
 
 static void
-attach_sketch(int argc, union evarg *argv)
+attach_sketch(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Window *win_dlg = argv[3].p;
-	AG_Tlist *tl_feats = argv[4].p;
-	AG_Tlist *tl_sketches = argv[5].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Window *win_dlg = AG_PTR(3);
+	AG_Tlist *tl_feats = AG_PTR(4);
+	AG_Tlist *tl_sketches = AG_PTR(5);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 	RG_Sketch *sk;
@@ -1339,11 +1339,11 @@ attach_sketch(int argc, union evarg *argv)
 }
 
 static void
-attach_sketch_dlg(int argc, union evarg *argv)
+attach_sketch_dlg(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_Tlist *tl;
 	RG_Sketch *sk;
 	AG_Window *win;
@@ -1401,11 +1401,11 @@ select_feature(AG_Tlist *tl_feats, void *fp)
 }
 
 static void
-insert_fill(int argc, union evarg *argv)
+insert_fill(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_TlistItem *eit;
 	struct rg_fill_feature *fill;
 	RG_TileElement *tel;
@@ -1420,11 +1420,11 @@ insert_fill(int argc, union evarg *argv)
 }
 
 static void
-insert_sketchproj(int argc, union evarg *argv)
+insert_sketchproj(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	AG_Tlist *tl_feats = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	AG_Tlist *tl_feats = AG_PTR(3);
 	AG_TlistItem *eit;
 	struct rg_sketchproj *sproj;
 	RG_TileElement *tel;
@@ -1439,13 +1439,13 @@ insert_sketchproj(int argc, union evarg *argv)
 }
 
 static void
-poll_feats(int argc, union evarg *argv)
+poll_feats(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
-	RG_Tile *t = argv[2].p;
-	AG_Window *win = argv[3].p;
-	RG_Tileview *tv = argv[4].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
+	RG_Tile *t = AG_PTR(2);
+	AG_Window *win = AG_PTR(3);
+	RG_Tileview *tv = AG_PTR(4);
 	RG_TileElement *tel;
 	AG_TlistItem *it;
 	static char attr_names[6];			/* XXX tlist hack */
@@ -1594,12 +1594,12 @@ poll_feats(int argc, union evarg *argv)
 }
 
 static void
-edit_element(int argc, union evarg *argv)
+edit_element(AG_Event *event)
 {
-	AG_Widget *sndr = argv[0].p;
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
-	AG_Window *pwin = argv[3].p;
+	AG_Widget *sndr = AG_SELF();
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
@@ -1645,13 +1645,13 @@ edit_element(int argc, union evarg *argv)
 }
 
 static void
-delete_element(int argc, union evarg *argv)
+delete_element(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
+	RG_Tileview *tv = AG_PTR(1);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
-	AG_Tlist *tl_feats = argv[2].p;
-	int detach_only = argv[3].i;
+	AG_Tlist *tl_feats = AG_PTR(2);
+	int detach_only = AG_INT(3);
 	AG_TlistItem *it;
 	RG_TileElement *tel;
 
@@ -1687,14 +1687,14 @@ delete_element(int argc, union evarg *argv)
 }
 
 static void
-resize_tile(int argc, union evarg *argv)
+resize_tile(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_MSpinbutton *msb = argv[2].p;
-	AG_Window *dlg_w = argv[3].p;
-	AG_Checkbox *ckey_cb = argv[4].p;
-	AG_Checkbox *alpha_cb = argv[5].p;
-	AG_Spinbutton *alpha_sb = argv[6].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_MSpinbutton *msb = AG_PTR(2);
+	AG_Window *dlg_w = AG_PTR(3);
+	AG_Checkbox *ckey_cb = AG_PTR(4);
+	AG_Checkbox *alpha_cb = AG_PTR(5);
+	AG_Spinbutton *alpha_sb = AG_PTR(6);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	int w = AG_WidgetInt(msb, "xvalue");
@@ -1718,10 +1718,10 @@ resize_tile(int argc, union evarg *argv)
 }
 
 static void
-tile_infos(int argc, union evarg *argv)
+tile_infos(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	AG_Window *win;
@@ -1788,10 +1788,10 @@ tile_infos(int argc, union evarg *argv)
 }
 
 static void
-move_element_up(int argc, union evarg *argv)
+move_element_up(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel, *ptel;
@@ -1812,10 +1812,10 @@ move_element_up(int argc, union evarg *argv)
 }
 
 static void
-move_element_down(int argc, union evarg *argv)
+move_element_down(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel, *ntel;
@@ -1835,10 +1835,10 @@ move_element_down(int argc, union evarg *argv)
 }
 
 static void
-visible_element(int argc, union evarg *argv)
+visible_element(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	RG_TileElement *tel, *ntel;
@@ -1855,9 +1855,9 @@ visible_element(int argc, union evarg *argv)
 }
 
 static void
-tile_undo(int argc, union evarg *argv)
+tile_undo(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
+	RG_Tileview *tv = AG_PTR(1);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -1869,9 +1869,9 @@ tile_undo(int argc, union evarg *argv)
 }
 
 static void
-tile_redo(int argc, union evarg *argv)
+tile_redo(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
+	RG_Tileview *tv = AG_PTR(1);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -1883,10 +1883,10 @@ tile_redo(int argc, union evarg *argv)
 }
 
 static void
-export_bmp(int argc, union evarg *argv)
+export_bmp(AG_Event *event)
 {
-	RG_Tile *t = argv[1].p;
-	char *path = argv[2].s;
+	RG_Tile *t = AG_PTR(1);
+	char *path = AG_STRING(2);
 
 	if (SDL_SaveBMP(t->su, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
@@ -1897,11 +1897,11 @@ export_bmp(int argc, union evarg *argv)
 }
 
 static void
-export_image_dlg(int argc, union evarg *argv)
+export_image_dlg(AG_Event *event)
 {
 	char path[FILENAME_MAX];
-	AG_Window *pwin = argv[1].p;
-	RG_Tileview *tv = argv[2].p;
+	AG_Window *pwin = AG_PTR(1);
+	RG_Tileview *tv = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_FileDlg *dlg;
 	AG_Window *win;
@@ -2021,11 +2021,11 @@ feature_menus(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 }
 
 static void
-edit_attrib(int argc, union evarg *argv)
+edit_attrib(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	AG_Window *win = argv[2].p;
-	int attr = argv[3].i;
+	RG_Tileview *tv = AG_PTR(1);
+	AG_Window *win = AG_PTR(2);
+	int attr = AG_INT(3);
 
 	close_element(tv);
 	tv->state = RG_TILEVIEW_ATTRIB_EDIT;
@@ -2034,11 +2034,11 @@ edit_attrib(int argc, union evarg *argv)
 }
 
 static void
-create_view(int argc, union evarg *argv)
+create_view(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	RG_Tile *t = argv[2].p;
-	AG_Window *pwin = argv[3].p;
+	RG_Tileset *ts = AG_PTR(1);
+	RG_Tile *t = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	AG_Window *win;
 	RG_Tileview *tv;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.9 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.10 2005/10/07 01:53:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -87,11 +87,11 @@ OverDivControl(AG_HPaneDiv *div, int x)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_HPane *pa = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
+	AG_HPane *pa = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
 	AG_HPaneDiv *div;
 	
 	TAILQ_FOREACH(div, &pa->divs, divs)
@@ -99,19 +99,19 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_HPane *pa = argv[0].p;
+	AG_HPane *pa = AG_SELF();
 	AG_Window *pwin;
 	AG_HPaneDiv *div;
-	int x = argv[1].i;
-	int y = argv[2].i;
+	int x = AG_INT(1);
+	int y = AG_INT(2);
 	int rx;
 
 	if (y < 0 || y > AGWIDGET(pa)->h) {
 		return;
 	}
-	rx = argv[3].i;
+	rx = AG_INT(3);
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
@@ -152,9 +152,9 @@ mousemotion(int argc, union evarg *argv)
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_HPane *pa = argv[0].p;
+	AG_HPane *pa = AG_SELF();
 	AG_HPaneDiv *div;
 
 	TAILQ_FOREACH(div, &pa->divs, divs)

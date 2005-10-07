@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.273 2005/10/06 10:38:30 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.274 2005/10/07 01:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -66,8 +66,8 @@ const AG_WidgetStyleMod agWindowDefaultStyle = {
 
 static void AG_WindowResizeOp(int, AG_Window *, SDL_MouseMotionEvent *);
 static void AG_WindowMoveOp(AG_Window *, SDL_MouseMotionEvent *);
-static void AG_WindowShownEv(int, union evarg *);
-static void AG_WindowHiddenEv(int, union evarg *);
+static void AG_WindowShownEv(AG_Event *);
+static void AG_WindowHiddenEv(AG_Event *);
 
 pthread_mutex_t	agWindowLock = PTHREAD_MUTEX_INITIALIZER;
 int		agWindowXOffs = 0;
@@ -316,9 +316,9 @@ AG_WindowDestroy(void *p)
 }
 
 static void
-AG_WindowShownEv(int argc, union evarg *argv)
+AG_WindowShownEv(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
+	AG_Window *win = AG_SELF();
 	int init = (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1);
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
@@ -345,9 +345,9 @@ AG_WindowShownEv(int argc, union evarg *argv)
 }
 
 static void
-AG_WindowHiddenEv(int argc, union evarg *argv)
+AG_WindowHiddenEv(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
+	AG_Window *win = AG_SELF();
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		/* Remove the focus. XXX cycle */
@@ -1028,29 +1028,29 @@ AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 }
 
 void
-AG_WindowDetachGenEv(int argc, union evarg *argv)
+AG_WindowDetachGenEv(AG_Event *event)
 {
-	AG_Window *win = argv[1].p;
+	AG_Window *win = AG_PTR(1);
 
 	AG_ViewDetach(win);
 }
 
 void
-AG_WindowShowGenEv(int argc, union evarg *argv)
+AG_WindowShowGenEv(AG_Event *event)
 {
-	AG_WindowShow(argv[1].p);
+	AG_WindowShow(AG_PTR(1));
 }
 
 void
-AG_WindowHideGenEv(int argc, union evarg *argv)
+AG_WindowHideGenEv(AG_Event *event)
 {
-	AG_WindowHide(argv[1].p);
+	AG_WindowHide(AG_PTR(1));
 }
 
 void
-AG_WindowCloseGenEv(int argc, union evarg *argv)
+AG_WindowCloseGenEv(AG_Event *event)
 {
-	AG_PostEvent(NULL, argv[1].p, "window-close", NULL);
+	AG_PostEvent(NULL, AG_PTR(1), "window-close", NULL);
 }
 
 void

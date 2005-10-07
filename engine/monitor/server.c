@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.12 2005/09/27 14:06:32 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.13 2005/10/04 17:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ static pthread_t serv_th;
 static int server_inited = 0;
 static int jpeg_quality = 75;
 
-void start_server(int, union evarg *);
+void start_server(AG_Event *);
 
 static void
 my_exit(void)
@@ -84,9 +84,9 @@ my_exit(void)
 }
 
 static void
-poll_clients(int argc, union evarg *argv)
+poll_clients(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
+	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it;
 	struct client *cl;
 
@@ -102,9 +102,9 @@ poll_clients(int argc, union evarg *argv)
 }
 
 static void
-disconnect_client(int argc, union evarg *argv)
+disconnect_client(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	struct client *cl;
 
@@ -362,13 +362,13 @@ AG_DebugServerStart(void)
 }
 
 void
-start_server(int argc, union evarg *argv)
+start_server(AG_Event *event)
 {
 	AG_DebugServerStart();
 }
 
 static void
-stop_server(int argc, union evarg *argv)
+stop_server(AG_Event *event)
 {
 }
 

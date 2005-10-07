@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.50 2005/09/27 14:06:30 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.51 2005/10/04 17:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -81,13 +81,13 @@ int agObjMgrHexDiff = 0;
 #endif
 
 static void
-create_obj(int argc, union evarg *argv)
+create_obj(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_ObjectType *t = argv[1].p;
-	AG_Textbox *name_tb = argv[2].p;
-	AG_Tlist *objs_tl = argv[3].p;
-	AG_Window *dlg_win = argv[4].p;
+	AG_ObjectType *t = AG_PTR(1);
+	AG_Textbox *name_tb = AG_PTR(2);
+	AG_Tlist *objs_tl = AG_PTR(3);
+	AG_Window *dlg_win = AG_PTR(4);
 	AG_TlistItem *it;
 	AG_Object *pobj;
 	void *nobj;
@@ -160,10 +160,10 @@ enum {
 };
 
 static void
-close_obj_generic(int argc, union evarg *argv)
+close_obj_generic(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
-	struct objent *oent = argv[1].p;
+	AG_Window *win = AG_SELF();
+	struct objent *oent = AG_PTR(1);
 
 	AG_ViewDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
@@ -217,20 +217,20 @@ close_object(struct objent *oent, AG_Window *win, int save)
 }
 
 static void
-close_object_cb(int argc, union evarg *argv)
+close_object_cb(AG_Event *event)
 {
-	AG_Window *win = argv[1].p;
-	struct objent *oent = argv[2].p;
-	int save = argv[3].i;
+	AG_Window *win = AG_PTR(1);
+	struct objent *oent = AG_PTR(2);
+	int save = AG_INT(3);
 
 	close_object(oent, win, save);
 }
 
 static void
-close_object_dlg(int argc, union evarg *argv)
+close_object_dlg(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
-	struct objent *oent = argv[1].p;
+	AG_Window *win = AG_SELF();
+	struct objent *oent = AG_PTR(1);
 
 	if (AG_ObjectChanged(oent->obj)) {
 		AG_Button *bOpts[3];
@@ -326,12 +326,12 @@ fail_data:
 }
 
 static void
-export_object(int argc, union evarg *argv)
+export_object(AG_Event *event)
 {
 	char save_path[MAXPATHLEN];
-	AG_Object *ob = argv[1].p;
-	AG_Window *win = argv[2].p;
-	char *path = argv[3].s;
+	AG_Object *ob = AG_PTR(1);
+	AG_Window *win = AG_PTR(2);
+	char *path = AG_STRING(3);
 	char *pfx_save = ob->save_pfx;
 	int paged_in = 0;
 
@@ -384,11 +384,11 @@ AG_ObjMgrSaveTo(void *p)
 }
 
 static void
-obj_op(int argc, union evarg *argv)
+obj_op(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
-	int op = argv[2].i;
+	int op = AG_INT(2);
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		AG_Object *ob = it->p1;
@@ -543,9 +543,9 @@ obj_op(int argc, union evarg *argv)
 }
 
 static void
-generic_save(int argc, union evarg *argv)
+generic_save(AG_Event *event)
 {
-	AG_Object *ob = argv[1].p;
+	AG_Object *ob = AG_PTR(1);
 
 	if (AG_ObjectSave(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
@@ -557,9 +557,9 @@ generic_save(int argc, union evarg *argv)
 }
 
 static void
-generic_save_to(int argc, union evarg *argv)
+generic_save_to(AG_Event *event)
 {
-	AG_ObjMgrSaveTo(argv[1].p);
+	AG_ObjMgrSaveTo(AG_PTR(1));
 }
 
 void
@@ -605,11 +605,11 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 
 /* Update the object tree display. */
 static void
-poll_objs(int argc, union evarg *argv)
+poll_objs(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *pob = argv[1].p;
-	AG_Object *dob = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *pob = AG_PTR(1);
+	AG_Object *dob = AG_PTR(2);
 	AG_TlistItem *it;
 
 	AG_LockLinkage();
@@ -629,9 +629,9 @@ poll_objs(int argc, union evarg *argv)
 }
 
 static void
-load_object(int argc, union evarg *argv)
+load_object(AG_Event *event)
 {
-	AG_Object *o = argv[1].p;
+	AG_Object *o = AG_PTR(1);
 
 	if (AG_ObjectLoad(o) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", AGOBJECT(o)->name,
@@ -640,9 +640,9 @@ load_object(int argc, union evarg *argv)
 }
 
 static void
-save_object(int argc, union evarg *argv)
+save_object(AG_Event *event)
 {
-	AG_Object *ob = argv[1].p;
+	AG_Object *ob = AG_PTR(1);
 
 	if (AG_ObjectSave(ob) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
@@ -653,7 +653,7 @@ save_object(int argc, union evarg *argv)
 }
 
 static void
-exit_program(int argc, union evarg *argv)
+exit_program(AG_Event *event)
 {
 	SDL_Event ev;
 
@@ -662,7 +662,7 @@ exit_program(int argc, union evarg *argv)
 }
 
 static void
-show_config_win(int argc, union evarg *argv)
+show_config_win(AG_Event *event)
 {
 	if (!agConfig->window->visible) {
 		AG_WindowShow(agConfig->window);
@@ -672,11 +672,11 @@ show_config_win(int argc, union evarg *argv)
 }
 
 static void
-create_obj_dlg(int argc, union evarg *argv)
+create_obj_dlg(AG_Event *event)
 {
 	AG_Window *win;
-	AG_ObjectType *t = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	AG_ObjectType *t = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Tlist *pobj_tl;
 	AG_Box *bo;
 	AG_Textbox *tb;
@@ -732,9 +732,9 @@ create_obj_dlg(int argc, union evarg *argv)
 #ifdef NETWORK
 
 static void
-update_repo_listing(int argc, union evarg *argv)
+update_repo_listing(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 
 	if (!agRcsMode) {
 		AG_TextMsg(AG_MSG_ERROR, _("RCS is currently disabled."));
@@ -748,9 +748,9 @@ update_repo_listing(int argc, union evarg *argv)
 }
 
 static void
-update_from_repo(int argc, union evarg *argv)
+update_from_repo(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -765,9 +765,9 @@ update_from_repo(int argc, union evarg *argv)
 }
 
 static void
-delete_from_repo(int argc, union evarg *argv)
+delete_from_repo(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -789,11 +789,11 @@ delete_from_repo(int argc, union evarg *argv)
 }
 
 static void
-rename_repo(int argc, union evarg *argv)
+rename_repo(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	char *from = argv[2].s;
-	char *to = argv[3].s;
+	AG_Tlist *tl = AG_PTR(1);
+	char *from = AG_STRING(2);
+	char *to = AG_STRING(3);
 
 	if (AG_RcsRename(from, to) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", from, AG_GetError());
@@ -808,10 +808,10 @@ rename_repo(int argc, union evarg *argv)
 }
 
 static void
-rename_repo_dlg(int argc, union evarg *argv)
+rename_repo_dlg(AG_Event *event)
 {
 	char prompt[AG_LABEL_MAX];
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 	
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
@@ -1059,7 +1059,7 @@ AG_ObjMgrInit(void)
 }
 
 static void
-objmgr_quit(int argc, union evarg *argv)
+objmgr_quit(AG_Event *event)
 {
 	SDL_Event nev;
 
@@ -1069,9 +1069,9 @@ objmgr_quit(int argc, union evarg *argv)
 }
 
 static void
-quit_cancel(int argc, union evarg *argv)
+quit_cancel(AG_Event *event)
 {
-	AG_Window *win = argv[1].p;
+	AG_Window *win = AG_PTR(1);
 
 	agObjMgrExiting = 0;
 	AG_ViewDetach(win);

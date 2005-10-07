@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.10 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.11 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -145,22 +145,22 @@ VG_DrawGrid(VG *vg)
 }
 
 static void
-snap_to(int argc, union evarg *argv)
+snap_to(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	AG_Toolbar *tbar = argv[1].p;
-	VG *vg = argv[2].p;
-	int snap_mode = argv[3].i;
+	AG_Button *bu = AG_SELF();
+	AG_Toolbar *tbar = AG_PTR(1);
+	VG *vg = AG_PTR(2);
+	int snap_mode = AG_INT(3);
 
 	AG_ToolbarSelectUnique(tbar, bu);
 	VG_SetSnapMode(vg, snap_mode);
 }
 
 static void
-snap_to_m(int argc, union evarg *argv)
+snap_to_m(AG_Event *event)
 {
-	VG *vg = argv[1].p;
-	int snap_mode = argv[2].i;
+	VG *vg = AG_PTR(1);
+	int snap_mode = AG_INT(2);
 
 	VG_SetSnapMode(vg, snap_mode);
 }

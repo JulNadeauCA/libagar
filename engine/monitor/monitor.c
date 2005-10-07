@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.73 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.74 2005/09/27 14:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -71,9 +71,9 @@ static const struct ag_maptool_ent {
 };
 
 static void
-selected_tool(int argc, union evarg *argv)
+selected_tool(AG_Event *event)
 {
-	const struct ag_maptool_ent *ent = argv[1].p;
+	const struct ag_maptool_ent *ent = AG_PTR(1);
 	AG_Window *win;
 
 	if ((win = (ent->fn)()) != NULL)

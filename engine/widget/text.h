@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.43 2005/09/20 10:22:13 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.44 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -71,7 +71,7 @@ void AG_TextPromptFloat(double *, double, double, const char *,
 void AG_TextEditString(char **, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf, 3, 4)
 		       NONNULL_ATTRIBUTE(3);
-void AG_TextPromptString(const char *, void (*)(int, union evarg *),
+void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
 
 AG_Glyph *AG_TextRenderGlyph(const char *, int, Uint32, Uint32);

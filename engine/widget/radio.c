@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.50 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.51 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -61,8 +61,8 @@ enum {
 	KEYDOWN_EVENT
 };
 
-static void radio_event(int, union evarg *);
-static void mousemotion(int, union evarg *);
+static void radio_event(AG_Event *);
+static void mousemotion(AG_Event *);
 
 AG_Radio *
 AG_RadioNew(void *parent, const char **items)
@@ -193,21 +193,21 @@ AG_RadioScale(void *p, int rw, int rh)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Radio *rad = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i - YPADDING;
+	AG_Radio *rad = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2) - YPADDING;
 
 	rad->oversel = (y/(RADIUS*2 + YSPACING));
 }
 
 static void
-radio_event(int argc, union evarg *argv)
+radio_event(AG_Event *event)
 {
-	AG_Radio *rad = argv[0].p;
+	AG_Radio *rad = AG_SELF();
 	AG_WidgetBinding *valueb;
-	int type = argv[1].i;
+	int type = AG_INT(1);
 	int button, keysym;
 	int y;
 	int *sel;
@@ -215,15 +215,15 @@ radio_event(int argc, union evarg *argv)
 	valueb = AG_WidgetGetBinding(rad, "value", &sel);
 	switch (type) {
 	case MOUSEBUTTONDOWN_EVENT:
-		button = argv[2].i;
+		button = AG_INT(2);
 		if (button == SDL_BUTTON_LEFT) {
-			y = argv[4].i - YPADDING;
+			y = AG_INT(4) - YPADDING;
 			*sel = (y/(RADIUS*2 + YSPACING));
 			AG_WidgetFocus(rad);
 		}
 		break;
 	case KEYDOWN_EVENT:
-		keysym = argv[2].i;
+		keysym = AG_INT(2);
 		switch ((SDLKey)keysym) {
 		case SDLK_DOWN:
 			if (++(*sel) > rad->nitems)

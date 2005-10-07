@@ -1,4 +1,4 @@
-/*	$Csoft: glview.c,v 1.1 2005/10/04 18:04:47 vedge Exp $	*/
+/*	$Csoft: glview.c,v 1.2 2005/10/06 10:41:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -75,31 +75,30 @@ SetIdentity(GLdouble *M, GLenum which)
 }
 
 static void
-GLViewMoved(int argc, union evarg *argv)
+GLViewMoved(AG_Event *event)
 {
-	AG_GLViewReshape(argv[0].p);
+	AG_GLViewReshape(AG_SELF());
 }
 
 static void
-GLViewButtondown(int argc, union evarg *argv)
+GLViewButtondown(AG_Event *event)
 {
-	AG_GLView *glv = argv[0].p;
-	int button = argv[1].i;
+	AG_GLView *glv = AG_SELF();
+	int button = AG_INT(1);
 
 	dprintf("focus\n");
 	AG_WidgetFocus(glv);
 }
 
 static void
-GLViewKeydown(int argc, union evarg *argv)
+GLViewKeydown(AG_Event *event)
 {
-	AG_GLView *glv = argv[0].p;
-	int sym = argv[1].i;
-	int mod = argv[2].i;
+	AG_GLView *glv = AG_SELF();
+	int sym = AG_INT(1);
+	int mod = AG_INT(2);
 	
 	if (glv->keydown_ev != NULL) {
-		glv->keydown_ev->handler(glv->keydown_ev->argc,
-				         glv->keydown_ev->argv);
+		glv->keydown_ev->handler(glv->keydown_ev);
 	} else {
 		extern const char *agKeySyms[];
 		extern const int agnKeySyms;
@@ -199,8 +198,7 @@ AG_GLViewReshape(AG_GLView *glv)
 	
 	glLoadIdentity();
 	if (glv->scale_ev != NULL) {
-		glv->scale_ev->handler(glv->draw_ev->argc,
-		                       glv->draw_ev->argv);
+		glv->scale_ev->handler(glv->draw_ev);
 	}
 	glGetDoublev(GL_PROJECTION_MATRIX, glv->mProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, glv->mModelview);
@@ -255,7 +253,7 @@ AG_GLViewDraw(void *p)
 	glLoadMatrixd(glv->mModelview);
 	
 	if (glv->draw_ev != NULL)
-		glv->draw_ev->handler(glv->draw_ev->argc, glv->draw_ev->argv);
+		glv->draw_ev->handler(glv->draw_ev);
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();

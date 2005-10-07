@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.26 2005/10/01 09:55:41 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.27 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -182,10 +182,10 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 }
 
 static void
-update_sketch(int argc, union evarg *argv)
+update_sketch(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	RG_TileElement *tel = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	RG_TileElement *tel = AG_PTR(2);
 	RG_Sketch *sk = tel->tel_sketch.sk;
 
 	RG_SketchScale(sk, -1, -1, tel->tel_sketch.scale, 0, 0);
@@ -257,10 +257,10 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 }
 
 static void
-poll_styles(int argc, union evarg *argv)
+poll_styles(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	VG *vg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	VG *vg = AG_PTR(1);
 	VG_Style *vgs;
 
 	AG_TlistClear(tl);
@@ -422,18 +422,18 @@ RG_SketchRedo(RG_Tileview *tv, RG_TileElement *tel)
 }
 
 static void
-redraw_sketch(int argc, union evarg *argv)
+redraw_sketch(AG_Event *event)
 {
-	VG *vg = argv[1].p;
+	VG *vg = AG_PTR(1);
 
 	vg->redraw++;
 }
 
 static void
-update_circle_radius(int argc, union evarg *argv)
+update_circle_radius(AG_Event *event)
 {
-	VG *vg = argv[1].p;
-	VG_Element *vge = argv[2].p;
+	VG *vg = AG_PTR(1);
+	VG_Element *vge = AG_PTR(2);
 
 	vge->vg_circle.radius = sqrt(
 	    pow(vge->vtx[1].x - vge->vtx[0].x, 2) +
@@ -441,10 +441,10 @@ update_circle_radius(int argc, union evarg *argv)
 }
 
 static void
-update_circle_vertex(int argc, union evarg *argv)
+update_circle_vertex(AG_Event *event)
 {
-	VG *vg = argv[1].p;
-	VG_Element *vge = argv[2].p;
+	VG *vg = AG_PTR(1);
+	VG_Element *vge = AG_PTR(2);
 
 	vge->vtx[1].x = vge->vtx[0].x + vge->vg_circle.radius;
 	vge->vtx[1].y = vge->vtx[0].y;
@@ -728,21 +728,21 @@ RG_SketchKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
 }
 
 static void
-select_tool(int argc, union evarg *argv)
+select_tool(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	RG_TileviewTool *tvt = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	RG_TileviewTool *tvt = AG_PTR(2);
 
 	RG_TileviewSelectTool(tv, tvt);
 }
 
 static void
-select_tool_tbar(int argc, union evarg *argv)
+select_tool_tbar(AG_Event *event)
 {
-	AG_Button *btn = argv[0].p;
-	AG_Toolbar *tbar = argv[1].p;
-	RG_Tileview *tv = argv[2].p;
-	RG_TileviewTool *tvt = argv[3].p;
+	AG_Button *btn = AG_SELF();
+	AG_Toolbar *tbar = AG_PTR(1);
+	RG_Tileview *tv = AG_PTR(2);
+	RG_TileviewTool *tvt = AG_PTR(3);
 
 	AG_ToolbarSelectUnique(tbar, btn);
 	if (tv->cur_tool == tvt) {

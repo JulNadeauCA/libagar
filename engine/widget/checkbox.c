@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.54 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.55 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,8 +54,8 @@ static AG_WidgetOps agCheckboxOps = {
 
 #define XSPACING 6
 
-static void checkbox_mousebutton(int , union evarg *);
-static void checkbox_keydown(int , union evarg *);
+static void checkbox_mousebutton(AG_Event *);
+static void checkbox_keydown(AG_Event *);
 
 AG_Checkbox *
 AG_CheckboxNew(void *parent, const char *fmt, ...)
@@ -104,24 +104,21 @@ AG_CheckboxDraw(void *p)
 }
 
 static void
-checkbox_mousebutton(int argc, union evarg *argv)
+checkbox_mousebutton(AG_Event *event)
 {
-	AG_Checkbox *cbox = argv[0].p;
-	int button = argv[1].i;
+	AG_Checkbox *cbox = AG_SELF();
 
 	AG_WidgetFocus(cbox);
-
-	if (button == SDL_BUTTON(1))
+	if (AG_INT(1) == SDL_BUTTON(1))
 		AG_CheckboxToggle(cbox);
 }
 
 static void
-checkbox_keydown(int argc, union evarg *argv)
+checkbox_keydown(AG_Event *event)
 {
-	AG_Checkbox *cbox = argv[0].p;
-	SDLKey key = argv[1].i;
+	AG_Checkbox *cbox = AG_SELF();
 
-	switch (key) {
+	switch (AG_SDLKEY(1)) {
 	case SDLK_RETURN:
 	case SDLK_SPACE:
 		AG_CheckboxToggle(cbox);

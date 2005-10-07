@@ -1,15 +1,13 @@
-/*	$Csoft: error.h,v 1.10 2004/06/18 03:11:26 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.11 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_ERROR_H_
 #define _AGAR_ERROR_ERROR_H_
 
 #include <compat/queue.h>
-
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <config/debug.h>
 #include <config/threads.h>
 #include <config/have_bounded_attribute.h>
@@ -55,14 +53,17 @@
 #define fatal AG_FatalError
 #endif
 
-#define Malloc(len, t)		AG_Malloc((len), (t))
-#define Realloc(p, len)		AG_Realloc((p), (len))
+#define Malloc(len, t) AG_Malloc((len), (t))
+#define Realloc(p, len) AG_Realloc((p), (len))
+
 #ifdef DEBUG
-#define Free(p, t)		AG_Free((p), (t))
+#define Free(p, t) AG_Free((p), (t))
 #else
-#define Free(p, t)		if ((p) != NULL) free((p))
+/* XXX redundant on some systems */
+#define Free(p, t) if ((p) != NULL) free((p))
 #endif
-#define Strdup(s)		AG_Strdup(s)
+
+#define Strdup(s) AG_Strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
 	if (vasprintf((msg), (fmt), (args)) == -1) 		\
@@ -104,51 +105,42 @@ void		 AG_DebugNop(int, const char *, ...)
 void		 AG_DebugN(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
+void		*AG_PtrMismatch(void);
+void		*AG_ObjectMismatch(const char *, const char *);
+int		 AG_IntMismatch(void);
+float		 AG_FloatMismatch(void);
 __END_DECLS
 
 #include "close_code.h"
 
 #ifdef DEBUG
-
 #ifdef __GNUC__
-
-# define dprintf(fmt, args...) \
-	printf("%s: " fmt, __FUNCTION__ , ##args)
-
-# define deprintf(fmt, args...) \
-	fprintf(stderr, fmt, ##args)
-
-# define debug(mask, fmt, args...)				\
-	if (agDebugLvl & (mask)) 				\
-		printf("%s: " fmt , __FUNCTION__ , ##args)
-
-# define debug_n(mask, fmt, args...)				\
-	if (agDebugLvl & (mask))				\
-		fprintf(stderr, fmt, ##args)
-
+# define dprintf(fmt,args...) printf("%s: " fmt, __FUNCTION__ , ##args)
+# define debug(mask,fmt,args...) \
+ if(agDebugLvl&(mask)) printf("%s: " fmt, __FUNCTION__ , ##args)
+# define debug_n(mask,fmt,args...) \
+ if(agDebugLvl&(mask)) fprintf(stderr, fmt, ##args)
 #else
 # define dprintf	AG_DebugPrintf
 # define deprintf	AG_DebugPrintf
 # define debug		AG_Debug
 # define debug_n	AG_DebugN
-#endif /* __GNUC__ */
-
-#else /* !DEBUG */
-
-#if defined(__GNUC__)
-# define dprintf(arg...)	((void)0)
-# define deprintf(arg...)	((void)0)
-# define debug(level, arg...)	((void)0)
-# define debug_n(level, arg...)	((void)0)
+#endif
 #else
-# define dprintf	AG_DebugPrintfNop
-# define deprintf	AG_DebugPrintfNop
-# define debug		AG_DebugNop
-# define debug_n	AG_DebugNop
-#endif /* __GNUC__ */
+#if defined(__GNUC__)
+# define dprintf(arg...) ((void)0)
+# define deprintf(arg...) ((void)0)
+# define debug(level, arg...) ((void)0)
+# define debug_n(level, arg...) ((void)0)
+#else
+# define dprintf AG_DebugPrintfNop
+# define deprintf AG_DebugPrintfNop
+# define debug AG_DebugNop
+# define debug_n AG_DebugNop
+#endif
+#endif
 
-#endif	/* DEBUG */
-
+/* XXX */
 #ifdef THREADS
 # ifdef DEBUG
 #  define pthread_mutex_lock(mutex) \
@@ -163,13 +155,13 @@ __END_DECLS
 #  define pthread_mutex_destroy(mutex) \
 	if (pthread_mutex_destroy((mutex)) != 0) \
 		abort()
-# endif /* DEBUG */
+# endif
 # define Pthread_create(thread, attr, func, arg) \
 	if (pthread_create((thread), (attr), (func), (arg)) != 0) \
 		abort()
 # define Pthread_join(thread, valptr) \
 	if (pthread_join((thread), (valptr)) != 0) \
 		abort()
-#endif /* THREADS */
+#endif
 
 #endif /* _AGAR_ERROR_ERROR_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.94 2005/09/27 14:06:35 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.95 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,11 +50,11 @@ const AG_WidgetOps agButtonOps = {
 	AG_ButtonScale
 };
 
-static void button_mousemotion(int, union evarg *);
-static void button_mousebuttonup(int, union evarg *);
-static void button_mousebuttondown(int, union evarg *);
-static void button_keyup(int, union evarg *);
-static void button_keydown(int, union evarg *);
+static void button_mousemotion(AG_Event *);
+static void button_mousebuttonup(AG_Event *);
+static void button_mousebuttondown(AG_Event *);
+static void button_keyup(AG_Event *);
+static void button_keydown(AG_Event *);
 
 AG_Button *
 AG_ButtonNew(void *parent, const char *caption)
@@ -69,24 +69,18 @@ AG_ButtonNew(void *parent, const char *caption)
 
 AG_Button *
 AG_ButtonAct(void *parent, const char *caption, u_int flags,
-    void (*fn)(int, union evarg *), const char *fmt, ...)
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *btn;
 	AG_Event *ev;
-	va_list ap;
 
 	btn = Malloc(sizeof(AG_Button), M_OBJECT);
 	AG_ButtonInit(btn, caption, flags);
 	AG_ObjectAttach(parent, btn);
 
 	ev = AG_SetEvent(btn, "button-pushed", fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, ev);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(ev, fmt);
+
 	if (flags & AG_BUTTON_FOCUS) {
 		AG_WidgetFocus(btn);
 	}
@@ -208,12 +202,12 @@ AG_ButtonDraw(void *p)
 }
 
 static void
-button_mousemotion(int argc, union evarg *argv)
+button_mousemotion(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
+	AG_Button *bu = AG_SELF();
 	AG_WidgetBinding *stateb;
-	int x = argv[1].i;
-	int y = argv[2].i;
+	int x = AG_INT(1);
+	int y = AG_INT(2);
 	int *pressed;
 
 	if (bu->flags & AG_BUTTON_INSENSITIVE)
@@ -238,10 +232,10 @@ button_mousemotion(int argc, union evarg *argv)
 }
 
 static void
-button_mousebuttondown(int argc, union evarg *argv)
+button_mousebuttondown(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	int button = argv[1].i;
+	AG_Button *bu = AG_SELF();
+	int button = AG_INT(1);
 	AG_WidgetBinding *stateb;
 	int *pushed;
 	
@@ -270,14 +264,14 @@ button_mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-button_mousebuttonup(int argc, union evarg *argv)
+button_mousebuttonup(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	int button = argv[1].i;
+	AG_Button *bu = AG_SELF();
+	int button = AG_INT(1);
 	AG_WidgetBinding *stateb;
 	int *pushed;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 		
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->repeat_to);
@@ -302,10 +296,10 @@ button_mousebuttonup(int argc, union evarg *argv)
 }
 
 static void
-button_keydown(int argc, union evarg *argv)
+button_keydown(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Button *bu = AG_SELF();
+	int keysym = AG_INT(1);
 	
 	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;
@@ -322,10 +316,10 @@ button_keydown(int argc, union evarg *argv)
 }
 
 static void
-button_keyup(int argc, union evarg *argv)
+button_keyup(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Button *bu = AG_SELF();
+	int keysym = AG_INT(1);
 	
 	if (bu->flags & AG_BUTTON_INSENSITIVE)
 		return;

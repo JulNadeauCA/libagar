@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.40 2005/09/07 04:23:41 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.41 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -324,8 +324,8 @@ struct ag_menu_item;
 struct ag_mapview;
 struct ag_combo;
   
-void	         VG_GeoChangedEv(int, union evarg *);
-void	         VG_ChangedEv(int, union evarg *);
+void	         VG_GeoChangedEv(AG_Event *);
+void	         VG_ChangedEv(AG_Event *);
 struct ag_combo *VG_NewLayerSelector(void *, VG *);
 void	         VG_GenericMenu(struct ag_menu *, struct ag_menu_item *, VG *,
 		             struct ag_mapview *);

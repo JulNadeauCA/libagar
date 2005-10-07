@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.28 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.29 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -91,10 +91,10 @@ combo_collapse(AG_Combo *com)
 }
 
 static void
-combo_expand(int argc, union evarg *argv)
+combo_expand(AG_Event *event)
 {
-	AG_Combo *com = argv[1].p;
-	int expand = argv[2].i;
+	AG_Combo *com = AG_PTR(1);
+	int expand = AG_INT(2);
 
 	if (expand) {						/* Expand */
 		AG_Widget *panel;
@@ -160,10 +160,10 @@ combo_select(AG_Combo *com, AG_TlistItem *it)
 }
 
 static void
-combo_selected(int argc, union evarg *argv)
+combo_selected(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Combo *com = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Combo *com = AG_PTR(1);
 	AG_TlistItem *ti;
 
 	pthread_mutex_lock(&tl->lock);
@@ -176,11 +176,11 @@ combo_selected(int argc, union evarg *argv)
 }
 
 static void
-combo_return(int argc, union evarg *argv)
+combo_return(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
-	AG_Textbox *tbox = argv[0].p;
-	AG_Combo *com = argv[1].p;
+	AG_Textbox *tbox = AG_SELF();
+	AG_Combo *com = AG_PTR(1);
 	
 	pthread_mutex_lock(&com->list->lock);
 
@@ -209,10 +209,10 @@ combo_return(int argc, union evarg *argv)
 
 #if 0
 static void
-combo_mousebuttonup(int argc, union evarg *argv)
+combo_mousebuttonup(AG_Event *event)
 {
-	AG_Combo *com = argv[0].p;
-/*	int button = argv[1].i; */
+	AG_Combo *com = AG_SELF();
+/*	int button = AG_INT(1); */
 	int x = AGWIDGET(com)->cx + argv[2].i;
 	int y = AGWIDGET(com)->cy + argv[3].i;
 

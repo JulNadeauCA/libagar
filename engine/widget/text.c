@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.108 2005/09/27 14:06:35 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.109 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -601,7 +601,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 
 /* Prompt the user for a string. */
 void
-AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
+AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Window *win;
@@ -610,8 +610,6 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 	AG_Button *btn;
 	AG_Textbox *tb;
 	AG_Event *ev;
-	const char *fmtp;
-	va_list ap;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
 	    AG_WINDOW_NOTITLE);
@@ -628,14 +626,9 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 		AG_WidgetFocus(tb);
 
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
-		if (fmt != NULL) {
-			va_start(ap, fmt);
-			for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-				AG_EVENT_PUSH_ARG(ap, *fmtp, ev);
-			}
-			va_end(ap);
-		}
-		AG_EVENT_INSERT_VAL(ev, AG_EVARG_STRING, s, &tb->string[0]);
+		AG_EVENT_GET_ARGS(ev, fmt)
+		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
+		    &tb->string[0]);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
 
@@ -643,14 +636,9 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(int, union evarg *),
 	{
 		btn = AG_ButtonNew(bo, _("Ok"));
 		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
-		if (fmt != NULL) {
-			va_start(ap, fmt);
-			for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-				AG_EVENT_PUSH_ARG(ap, *fmtp, ev);
-			}
-			va_end(ap);
-		}
-		AG_EVENT_INSERT_VAL(ev, AG_EVARG_STRING, s, &tb->string[0]);
+		AG_EVENT_GET_ARGS(ev, fmt);
+		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
+		    &tb->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
 		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));

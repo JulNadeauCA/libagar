@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.221 2005/10/04 17:34:50 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.222 2005/10/06 03:11:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -82,11 +82,9 @@ struct ag_global_key {
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
 
-static void relay_event(void *, AG_Event *);
-static void event_dispatch(SDL_Event *);
-#ifdef THREADS
-static void *event_async(void *);
-#endif
+static void AG_EventRelay(void *, AG_Event *);
+static void AG_EventProcess(SDL_Event *);
+static void *AG_EventAsyncHandler(void *);
 
 const char *agEvArgTypeNames[] = {
 	"pointer",
@@ -212,7 +210,7 @@ AG_EventLoop_FixedFPS(void)
 				agView->rCur = 1;
 			}
 		} else if (SDL_PollEvent(&ev) != 0) {
-			event_dispatch(&ev);
+			AG_EventProcess(&ev);
 #ifdef DEBUG
 			agEventAvg++;
 #endif
@@ -232,9 +230,9 @@ AG_EventLoop_FixedFPS(void)
 }
 
 static void
-unminimize_window(int argc, union evarg *argv)
+unminimize_window(AG_Event *event)
 {
-	AG_Window *win = argv[1].p;
+	AG_Window *win = AG_PTR(1);
 
 	if (!win->visible) {
 		AG_WindowShow(win);
@@ -245,7 +243,7 @@ unminimize_window(int argc, union evarg *argv)
 }
 
 static void
-event_dispatch(SDL_Event *ev)
+AG_EventProcess(SDL_Event *ev)
 {
 	extern int agObjMgrExiting;
 	extern int agEditMode;
@@ -379,14 +377,14 @@ event_timeout(void *p, Uint32 ival, void *arg)
 		    ob->name, ev->name);
 		AG_LockLinkage();
 		AGOBJECT_FOREACH_CHILD(cobj, ob, ag_object) {
-			relay_event(cobj, ev);
+			AG_EventRelay(cobj, ev);
 		}
 		AG_UnlockLinkage();
 	}
 
-	/* Invoke the event handler function. */
+	/* Invoke the event handler routine. */
 	if (ev->handler != NULL) {
-		ev->handler(ev->argc, ev->argv);
+		ev->handler(ev);
 	}
 	return (0);
 }
@@ -403,14 +401,9 @@ AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
 	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
 }
 
-/*
- * Register an event handler function for events of the given type.
- * If another event handler is registered for events of the same type,
- * replace it.
- */
 AG_Event *
-AG_SetEvent(void *p, const char *name, void (*handler)(int, union evarg *),
-    const char *fmt, ...)
+AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt,
+    ...)
 {
 	AG_Object *ob = p;
 	AG_Event *ev;
@@ -424,40 +417,26 @@ AG_SetEvent(void *p, const char *name, void (*handler)(int, union evarg *),
 	} else {
 		ev = NULL;
 	}
-
 	if (ev == NULL) {
 		ev = Malloc(sizeof(AG_Event), M_EVENT);
 		if (name != NULL) {
 			strlcpy(ev->name, name, sizeof(ev->name));
 		} else {
-			static Uint32 nevent = 0;
-
-			/* XXX thread unsafe */
-			snprintf(ev->name, sizeof(ev->name), "@anon%u",
-			    nevent++);
+			/* XXX use something faster */
+			snprintf(ev->name, sizeof(ev->name), "__%u",
+			    ob->nevents);
 		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
+		ob->nevents++;
 	}
 	ev->flags = 0;
 	ev->argv[0].p = ob;
 	ev->argt[0] = AG_EVARG_POINTER;
+	ev->argn[0] = "_self";
 	ev->argc = 1;
-	ev->argc_base = 1;
-	ev->handler = handler;
+	ev->handler = fn;
 	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
-
-	if (fmt != NULL) {
-		const char *s = fmt;
-		va_list ap;
-
-		va_start(ap, fmt);
-		while (*s != '\0') {
-			AG_EVENT_PUSH_ARG(ap, *s, ev);
-			ev->argc_base++;
-			s++;
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(ev, fmt);
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
@@ -467,8 +446,7 @@ AG_SetEvent(void *p, const char *name, void (*handler)(int, union evarg *),
  * given type.
  */
 AG_Event *
-AG_AddEvent(void *p, const char *name, void (*handler)(int, union evarg *),
-    const char *fmt, ...)
+AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Object *ob = p;
 	AG_Event *ev;
@@ -479,33 +457,19 @@ AG_AddEvent(void *p, const char *name, void (*handler)(int, union evarg *),
 	if (name != NULL) {
 		strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
-		static Uint32 nevent2 = 0;
-
-		/* XXX thread unsafe */
-		snprintf(ev->name, sizeof(ev->name), "@anon%u", nevent2++);
+		snprintf(ev->name, sizeof(ev->name), "__%u", ob->nevents);
 	}
-	TAILQ_INSERT_TAIL(&ob->events, ev, events);
-
 	ev->flags = 0;
 	ev->argv[0].p = ob;
 	ev->argt[0] = AG_EVARG_POINTER;
+	ev->argn[0] = "_self";
 	ev->argc = 1;
-	ev->argc_base = 1;
-	ev->handler = handler;
+	ev->handler = fn;
 	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
+	AG_EVENT_GET_ARGS(ev, fmt);
 
-	if (fmt != NULL) {
-		const char *s = fmt;
-		va_list ap;
-
-		va_start(ap, fmt);
-		while (*s != '\0') {
-			AG_EVENT_PUSH_ARG(ap, *s, ev);
-			ev->argc_base++;
-			s++;
-		}
-		va_end(ap);
-	}
+	TAILQ_INSERT_TAIL(&ob->events, ev, events);
+	ob->nevents++;
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
@@ -530,6 +494,7 @@ AG_UnsetEvent(void *p, const char *name)
 		AG_DelTimeout(ob, &ev->timeout);
 	}
 	TAILQ_REMOVE(&ob->events, ev, events);
+	ob->nevents--;
 	Free(ev, M_EVENT);
 out:
 	pthread_mutex_unlock(&ob->lock);
@@ -537,20 +502,20 @@ out:
 
 /* Forward an event to an object's descendents. */
 static void
-relay_event(void *p, AG_Event *ev)
+AG_EventRelay(void *p, AG_Event *ev)
 {
 	AG_Object *ob = p, *cob;
 
 	AGOBJECT_FOREACH_CHILD(cob, ob, ag_object)
-		relay_event(cob, ev);
+		AG_EventRelay(cob, ev);
 
-	AG_ForwardEvent(ob, ev->name, ev->argc, ev->argv);
+	AG_ForwardEvent(ob, ev);
 }
 
 #ifdef THREADS
 /* Invoke an event handler routine asynchronously. */
 static void *
-event_async(void *p)
+AG_EventAsyncHandler(void *p)
 {
 	AG_Event *eev = p;
 	AG_Object *rcvr = eev->argv[0].p;
@@ -563,15 +528,15 @@ event_async(void *p)
 		    rcvr->name, eev->name);
 		AG_LockLinkage();
 		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-			relay_event(cobj, eev);
+			AG_EventRelay(cobj, eev);
 		}
 		AG_UnlockLinkage();
 	}
 
-	/* Invoke the event handler function. */
+	/* Invoke the event handler routine. */
 	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
 	if (eev->handler != NULL) {
-		eev->handler(eev->argc, eev->argv);
+		eev->handler(eev);
 	}
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
 
@@ -581,9 +546,8 @@ event_async(void *p)
 #endif /* THREADS */
 
 /*
- * Execute the event handler routine for the given event, with the given
- * arguments inserted at the end of the argument vector, argument #0 pointing
- * to the receiver object and argument #argc pointing to the sender.
+ * Execute the event handler routine for the given event. The given arguments
+ * are appended to the end of the argument vector.
  *
  * Event handler invocations may be nested. However, the event handler table
  * of the object should not be modified while in event context (XXX)
@@ -605,28 +569,19 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	}
 	if (ev == NULL)
 		goto fail;
-
 #ifdef THREADS
 	if (ev->flags & AG_EVENT_ASYNC) {
 		pthread_t th;
-		va_list ap;
 		AG_Event *nev;
 
-		/* Construct the argument vector. */
-		/* TODO allocate from a pool */
+		/* TODO allocate from an per-object pool */
 		nev = Malloc(sizeof(AG_Event), M_EVENT);
 		memcpy(nev, ev, sizeof(AG_Event));
-		if (fmt != NULL) {
-			va_start(ap, fmt);
-			for (; *fmt != '\0'; fmt++) {
-				AG_EVENT_PUSH_ARG(ap, *fmt, nev);
-			}
-			va_end(ap);
-		}
+		AG_EVENT_GET_ARGS(nev, fmt);
 		nev->argv[nev->argc].p = sndr;
-
-		/* Create the event handler function thread. */
-		Pthread_create(&th, NULL, event_async, nev);
+		nev->argt[nev->argc] = AG_EVARG_POINTER;
+		nev->argn[nev->argc] = "_sender";
+		Pthread_create(&th, NULL, AG_EventAsyncHandler, nev);
 	} else
 #endif /* THREADS */
 	{
@@ -635,14 +590,10 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 
 		/* Construct the argument vector. */
 		memcpy(&tmpev, ev, sizeof(AG_Event));
-		if (fmt != NULL) {
-			va_start(ap, fmt);
-			for (; *fmt != '\0'; fmt++) {
-				AG_EVENT_PUSH_ARG(ap, *fmt, &tmpev);
-			}
-			va_end(ap);
-		}
+		AG_EVENT_GET_ARGS(&tmpev, fmt);
 		tmpev.argv[tmpev.argc].p = sndr;
+		tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
+		tmpev.argn[tmpev.argc] = "_sender";
 
 		/* Propagate event to children. */
 		if (tmpev.flags & AG_EVENT_PROPAGATE) {
@@ -652,14 +603,14 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			    rcvr->name, evname);
 			AG_LockLinkage();
 			AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-				relay_event(cobj, &tmpev);
+				AG_EventRelay(cobj, &tmpev);
 			}
 			AG_UnlockLinkage();
 		}
 
 		/* Invoke the event handler function. */
 		if (tmpev.handler != NULL)
-			tmpev.handler(tmpev.argc, tmpev.argv);
+			tmpev.handler(&tmpev);
 	}
 
 	pthread_mutex_unlock(&rcvr->lock);
@@ -668,15 +619,10 @@ fail:
 	pthread_mutex_unlock(&rcvr->lock);
 	return (0);
 }
- 
+
 /*
  * Schedule the execution of the given event in the given number of
- * ticks, with the given arguments inserted at the end of the
- * argument vector. Argument #0 always points to the receiver object,
- * and argument #argc points to the sender.
- *
- * Since the timeout resides in the event handler structure,
- * multiple executions of the same event handler are not possible.
+ * ticks. The given arguments are appended to the argument vector.
  */
 int
 AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
@@ -685,7 +631,6 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Object *sndr = sp;
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
-	va_list ap;
 	
 	debug(DEBUG_SCHED, "%s: sched `%s' (in %u ticks)\n", rcvr->name,
 	    evname, ticks);
@@ -703,21 +648,12 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 		debug(DEBUG_SCHED, "%s: resched `%s'\n", rcvr->name, evname);
 		AG_DelTimeout(rcvr, &ev->timeout);
 	}
-
-	/* Construct the argument vector. */
-	ev->argc = ev->argc_base;
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, ev);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argv[ev->argc].p = sndr;
+	ev->argt[ev->argc] = AG_EVARG_POINTER;
+	ev->argn[ev->argc] = "_sender";
 	ev->flags |= AG_EVENT_SCHEDULED;
-
 	AG_AddTimeout(rcvr, &ev->timeout, ticks);
-
 	AG_UnlockTiming();
 	pthread_mutex_unlock(&rcvr->lock);
 	return (0);
@@ -807,9 +743,8 @@ AG_ExecEvent(void *p, const char *evname)
 		if (strcmp(ev->name, evname) == 0)
 			break;
 	}
-	if (ev != NULL &&
-	    ev->handler != NULL)
-		ev->handler(ev->argc, ev->argv);
+	if (ev != NULL && ev->handler != NULL)
+		ev->handler(ev);
 }
 
 /*
@@ -818,19 +753,19 @@ AG_ExecEvent(void *p, const char *evname)
  */
 /* XXX substitute the sender ptr? */
 void
-AG_ForwardEvent(void *rp, const char *evname, int argc, union evarg *argv)
+AG_ForwardEvent(void *rp, AG_Event *event)
 {
 	union evarg nargv[AG_EVENT_ARGS_MAX];
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 
-	debug(DEBUG_EVENTS, "%s event to %s\n", evname, rcvr->name);
+	debug(DEBUG_EVENTS, "%s event to %s\n", event->name, rcvr->name);
 
 	pthread_mutex_lock(&rcvr->lock);
-	memcpy(nargv, argv, argc*sizeof(union evarg));
+	memcpy(nargv, event->argv, event->argc*sizeof(union evarg));
 	nargv[0].p = rcvr;
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(evname, ev->name) == 0)
+		if (strcmp(event->name, ev->name) == 0)
 			break;
 	}
 	if (ev == NULL)
@@ -841,16 +776,16 @@ AG_ForwardEvent(void *rp, const char *evname, int argc, union evarg *argv)
 		AG_Object *cobj;
 
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
-		    rcvr->name, evname);
+		    rcvr->name, event->name);
 		AG_LockLinkage();
 		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-			relay_event(cobj, ev);
+			AG_EventRelay(cobj, ev);
 		}
 		AG_UnlockLinkage();
 	}
 	/* XXX AG_EVENT_ASYNC.. */
 	if (ev->handler != NULL)
-		ev->handler(argc, nargv);
+		ev->handler(ev);
 out:
 	pthread_mutex_unlock(&rcvr->lock);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: animview.c,v 1.4 2005/09/27 00:25:21 vedge Exp $	*/
+/*	$Csoft: animview.c,v 1.5 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -56,9 +56,9 @@ RG_AnimviewNew(void *parent)
 }
 
 static void
-do_play(int argc, union evarg *argv)
+do_play(AG_Event *event)
 {
-	RG_Animview *av = argv[1].p;
+	RG_Animview *av = AG_PTR(1);
 
 	AG_ReplaceTimeout(av, &av->timer, 1);
 	AG_ButtonDisable(av->btns.play);
@@ -67,9 +67,9 @@ do_play(int argc, union evarg *argv)
 }
 
 static void
-do_pause(int argc, union evarg *argv)
+do_pause(AG_Event *event)
 {
-	RG_Animview *av = argv[1].p;
+	RG_Animview *av = AG_PTR(1);
 	
 	AG_DelTimeout(av, &av->timer);
 	AG_ButtonEnable(av->btns.play);
@@ -78,9 +78,9 @@ do_pause(int argc, union evarg *argv)
 }
 
 static void
-do_stop(int argc, union evarg *argv)
+do_stop(AG_Event *event)
 {
-	RG_Animview *av = argv[1].p;
+	RG_Animview *av = AG_PTR(1);
 	
 	AG_DelTimeout(av, &av->timer);
 	av->frame = 0;
@@ -122,10 +122,10 @@ close_menu(RG_Animview *av)
 }
 
 static void
-set_speed(int argc, union evarg *argv)
+set_speed(AG_Event *event)
 {
-	RG_Animview *av = argv[1].p;
-	u_int factor = argv[2].i;
+	RG_Animview *av = AG_PTR(1);
+	u_int factor = AG_INT(2);
 
 	av->speed = factor;
 }
@@ -174,12 +174,12 @@ open_menu(RG_Animview *av, int x, int y)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	RG_Animview *av = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	RG_Animview *av = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 
 	if (button == SDL_BUTTON_RIGHT &&
 	    y < AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h) {

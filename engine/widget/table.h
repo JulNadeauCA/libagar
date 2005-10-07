@@ -1,4 +1,4 @@
-/*	$Csoft: table.h,v 1.5 2005/10/03 05:10:42 vedge Exp $	*/
+/*	$Csoft: table.h,v 1.6 2005/10/04 05:41:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TABLE_H_
@@ -112,7 +112,7 @@ typedef struct ag_table {
 
 __BEGIN_DECLS
 AG_Table *AG_TableNew(void *, u_int);
-AG_Table *AG_TablePolled(void *, u_int, void (*fn)(int, union evarg *),
+AG_Table *AG_TablePolled(void *, u_int, void (*fn)(AG_Event *),
  			 const char *, ...);
 void	  AG_TableInit(AG_Table *, u_int);
 void	  AG_TableScale(void *, int, int);

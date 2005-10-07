@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.27 2005/10/01 14:15:39 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.28 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,8 +49,8 @@ const AG_WidgetOps agTitlebarOps = {
 	AG_BoxScale
 };
 
-static void titlebar_mousebuttondown(int, union evarg *);
-static void titlebar_mousebuttonup(int, union evarg *);
+static void titlebar_mousebuttondown(AG_Event *);
+static void titlebar_mousebuttonup(AG_Event *);
 
 AG_Titlebar *
 AG_TitlebarNew(void *parent, int flags)
@@ -65,9 +65,9 @@ AG_TitlebarNew(void *parent, int flags)
 }
 
 static void
-maximize_window(int argc, union evarg *argv)
+maximize_window(AG_Event *event)
 {
-	AG_Titlebar *tbar = argv[1].p;
+	AG_Titlebar *tbar = AG_PTR(1);
 	AG_Window *win = tbar->win;
 
 	if (win->flags & AG_WINDOW_MAXIMIZED) {
@@ -78,17 +78,17 @@ maximize_window(int argc, union evarg *argv)
 }
 
 static void
-minimize_window(int argc, union evarg *argv)
+minimize_window(AG_Event *event)
 {
-	AG_Titlebar *tbar = argv[1].p;
+	AG_Titlebar *tbar = AG_PTR(1);
 
 	AG_WindowMinimize(tbar->win);
 }
 
 static void
-close_window(int argc, union evarg *argv)
+close_window(AG_Event *event)
 {
-	AG_Titlebar *tbar = argv[1].p;
+	AG_Titlebar *tbar = AG_PTR(1);
 
 	AG_PostEvent(NULL, tbar->win, "window-close", NULL);
 }
@@ -169,9 +169,9 @@ AG_TitlebarDraw(void *p)
 }
 
 static void
-titlebar_mousebuttondown(int argc, union evarg *argv)
+titlebar_mousebuttondown(AG_Event *event)
 {
-	AG_Titlebar *tbar = argv[0].p;
+	AG_Titlebar *tbar = AG_SELF();
 
 	tbar->pressed = 1;
 
@@ -183,9 +183,9 @@ titlebar_mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-titlebar_mousebuttonup(int argc, union evarg *argv)
+titlebar_mousebuttonup(AG_Event *event)
 {
-	AG_Titlebar *tbar = argv[0].p;
+	AG_Titlebar *tbar = AG_SELF();
 	
 	tbar->pressed = 0;
 	

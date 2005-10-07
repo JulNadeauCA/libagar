@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.8 2005/09/27 00:25:18 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.9 2005/10/04 17:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,9 +50,9 @@ const AG_Version merge_ver = {
 	6, 0
 };
 
-static void merge_create_brush(int, union evarg *);
-static void merge_edit_brush(int, union evarg *);
-static void merge_remove_brush(int, union evarg *);
+static void merge_create_brush(AG_Event *);
+static void merge_edit_brush(AG_Event *);
+static void merge_remove_brush(AG_Event *);
 static void merge_interpolate(AG_Map *, AG_Node *,
 	                      AG_Nitem *, AG_Map *, AG_Node *,
 			      AG_Nitem *);
@@ -141,11 +141,11 @@ merge_destroy(AG_Maptool *t)
 }
 
 static void
-merge_create_brush(int argc, union evarg *argv)
+merge_create_brush(AG_Event *event)
 {
 	char brush_name[AG_OBJECT_NAME_MAX];
 	char m_name[AG_OBJECT_NAME_MAX];
-	AG_Textbox *name_tbox = argv[1].p;
+	AG_Textbox *name_tbox = AG_PTR(1);
 	AG_Map *m;
 
 	AG_TextboxCopyString(name_tbox, brush_name,
@@ -185,10 +185,10 @@ fail:
 }
 
 static void
-merge_edit_brush(int argc, union evarg *argv)
+merge_edit_brush(AG_Event *event)
 {
 	AG_TlistItem *it;
-	AG_Window *pwin = argv[1].p;
+	AG_Window *pwin = AG_PTR(1);
 
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
 		AG_Map *brush = it->p1;
@@ -211,7 +211,7 @@ merge_edit_brush(int argc, union evarg *argv)
 }
 
 static void
-merge_remove_brush(int argc, union evarg *argv)
+merge_remove_brush(AG_Event *event)
 {
 	AG_TlistItem *it, *nit;
 

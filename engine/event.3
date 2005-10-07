@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.28 2005/09/20 13:46:29 vedge Exp $
+.\"	$Csoft: event.3,v 1.29 2005/09/27 00:25:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -122,7 +122,7 @@ are expired.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "AG_Event *"
-.Fn AG_SetEvent "void *obj" "const char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Fn AG_SetEvent "void *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_UnsetEvent "void *obj" "const char *event_name"

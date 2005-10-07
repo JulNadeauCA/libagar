@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.103 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.104 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,10 +63,10 @@ const AG_WidgetOps agTextboxOps = {
 	AG_TextboxScale
 };
 
-static void mousebuttondown(int, union evarg *);
-static void mousemotion(int, union evarg *);
-static void keydown(int, union evarg *);
-static void keyup(int, union evarg *);
+static void mousebuttondown(AG_Event *);
+static void mousemotion(AG_Event *);
+static void keydown(AG_Event *);
+static void keyup(AG_Event *);
 
 AG_Textbox *
 AG_TextboxNew(void *parent, const char *label)
@@ -147,9 +147,9 @@ blink_expire(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-gained_focus(int argc, union evarg *argv)
+gained_focus(AG_Event *event)
 {
-	AG_Textbox *tb = argv[0].p;
+	AG_Textbox *tb = AG_SELF();
 
 	AG_DelTimeout(tb, &tb->delay_to);
 	AG_DelTimeout(tb, &tb->repeat_to);
@@ -157,9 +157,9 @@ gained_focus(int argc, union evarg *argv)
 }
 
 static void
-lost_focus(int argc, union evarg *argv)
+lost_focus(AG_Event *event)
 {
-	AG_Textbox *tb = argv[0].p;
+	AG_Textbox *tb = AG_SELF();
 
 	AG_LockTimeouts(tb);
 	AG_DelTimeout(tb, &tb->delay_to);
@@ -412,12 +412,12 @@ AG_TextboxScale(void *p, int rw, int rh)
 }
 
 static void
-keydown(int argc, union evarg *argv)
+keydown(AG_Event *event)
 {
-	AG_Textbox *tbox = argv[0].p;
-	SDLKey keysym = (SDLKey)argv[1].i;
-	int keymod = argv[2].i;
-	Uint32 unicode = (Uint32)argv[3].i;
+	AG_Textbox *tbox = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
+	int keymod = AG_INT(2);
+	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
 	if ((tbox->flags & AG_TEXTBOX_WRITEABLE) == 0)
 		return;
@@ -442,12 +442,12 @@ keydown(int argc, union evarg *argv)
 }
 
 static void
-keyup(int argc, union evarg *argv)
+keyup(AG_Event *event)
 {
-	AG_Textbox *tb = argv[0].p;
-	SDLKey keysym = (SDLKey)argv[1].i;
-	int keymod = argv[2].i;
-	Uint32 unicode = (Uint32)argv[3].i;
+	AG_Textbox *tb = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
+	int keymod = AG_INT(2);
+	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
 	AG_LockTimeouts(tb);
 	AG_DelTimeout(tb, &tb->repeat_to);
@@ -550,12 +550,12 @@ move_cursor(AG_Textbox *tbox, int mx, int my)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Textbox *tbox = argv[0].p;
-	int btn = argv[1].i;
-	int mx = argv[2].i;
-	int my = argv[3].i;
+	AG_Textbox *tbox = AG_SELF();
+	int btn = AG_INT(1);
+	int mx = AG_INT(2);
+	int my = AG_INT(3);
 	int rv;
 
 	if (tbox->label_id < 0 || mx > tbox->label_su->w)
@@ -566,12 +566,12 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Textbox *tbox = argv[0].p;
-	int mx = argv[1].i;
-	int my = argv[2].i;
-	int state = argv[5].i;
+	AG_Textbox *tbox = AG_SELF();
+	int mx = AG_INT(1);
+	int my = AG_INT(2);
+	int state = AG_INT(5);
 
 	if (state & SDL_BUTTON_LEFT)
 		move_cursor(tbox, mx, my);

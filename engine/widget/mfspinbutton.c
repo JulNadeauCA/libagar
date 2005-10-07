@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.9 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.10 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -75,10 +75,10 @@ AG_MFSpinbuttonNew(void *parent, const char *unit, const char *sep,
 
 /* Adjust the default range depending on the data type of a new binding. */
 static void
-mfspinbutton_bound(int argc, union evarg *argv)
+mfspinbutton_bound(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[0].p;
-	AG_WidgetBinding *binding = argv[1].p;
+	AG_MFSpinbutton *fsu = AG_SELF();
+	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
@@ -98,10 +98,10 @@ mfspinbutton_bound(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_keydown(int argc, union evarg *argv)
+mfspinbutton_keydown(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_MFSpinbutton *fsu = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&fsu->lock);
 	switch (keysym) {
@@ -122,11 +122,11 @@ mfspinbutton_keydown(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_changed(int argc, union evarg *argv)
+mfspinbutton_changed(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
-	AG_MFSpinbutton *fsu = argv[1].p;
-	int unfocus = argv[2].i;
+	AG_MFSpinbutton *fsu = AG_PTR(1);
+	int unfocus = AG_INT(2);
 	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
 
@@ -150,9 +150,9 @@ mfspinbutton_changed(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_up(int argc, union evarg *argv)
+mfspinbutton_up(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = AG_PTR(1);
 
 	pthread_mutex_lock(&fsu->lock);
 	AG_MFSpinbuttonAddValue(fsu, "yvalue", -fsu->inc);
@@ -160,9 +160,9 @@ mfspinbutton_up(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_down(int argc, union evarg *argv)
+mfspinbutton_down(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
 	pthread_mutex_lock(&fsu->lock);
 	AG_MFSpinbuttonAddValue(fsu, "yvalue", fsu->inc);
@@ -170,9 +170,9 @@ mfspinbutton_down(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_left(int argc, union evarg *argv)
+mfspinbutton_left(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
 	pthread_mutex_lock(&fsu->lock);
 	AG_MFSpinbuttonAddValue(fsu, "xvalue", -fsu->inc);
@@ -180,9 +180,9 @@ mfspinbutton_left(int argc, union evarg *argv)
 }
 
 static void
-mfspinbutton_right(int argc, union evarg *argv)
+mfspinbutton_right(AG_Event *event)
 {
-	AG_MFSpinbutton *fsu = argv[1].p;
+	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
 	pthread_mutex_lock(&fsu->lock);
 	AG_MFSpinbuttonAddValue(fsu, "xvalue", fsu->inc);
@@ -196,11 +196,11 @@ update_unit_button(AG_MFSpinbutton *fsu)
 }
 
 static void
-selected_unit(int argc, union evarg *argv)
+selected_unit(AG_Event *event)
 {
-	AG_UCombo *ucom = argv[0].p;
-	AG_MFSpinbutton *fsu = argv[1].p;
-	AG_TlistItem *ti = argv[2].p;
+	AG_UCombo *ucom = AG_SELF();
+	AG_MFSpinbutton *fsu = AG_PTR(1);
+	AG_TlistItem *ti = AG_PTR(2);
 
 	fsu->unit = (const AG_Unit *)ti->p1;
 	update_unit_button(fsu);

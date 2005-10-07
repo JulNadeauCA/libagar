@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.18 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.19 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -289,9 +289,9 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 }
 
 static void
-invert_colors(int argc, union evarg *argv)
+invert_colors(AG_Event *event)
 {
-	struct rg_fill_feature *fi = argv[1].p;
+	struct rg_fill_feature *fi = AG_PTR(1);
 	RG_Tileset *ts = RG_FEATURE(fi)->ts;
 	Uint8 r, g, b;
 
@@ -323,9 +323,9 @@ invert_colors(int argc, union evarg *argv)
 }
 
 static void
-swap_gradient(int argc, union evarg *argv)
+swap_gradient(AG_Event *event)
 {
-	struct rg_fill_feature *fi = argv[1].p;
+	struct rg_fill_feature *fi = AG_PTR(1);
 	Uint32 cSave;
 
 	switch (fi->type) {
@@ -342,10 +342,10 @@ swap_gradient(int argc, union evarg *argv)
 }
 
 static void
-set_type(int argc, union evarg *argv)
+set_type(AG_Event *event)
 {
-	struct rg_fill_feature *fi = argv[1].p;
-	int type = argv[2].i;
+	struct rg_fill_feature *fi = AG_PTR(1);
+	int type = AG_INT(2);
 
 	fi->type = type;
 }

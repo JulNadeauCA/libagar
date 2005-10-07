@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.23 2005/09/27 00:25:21 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.24 2005/09/27 02:25:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -363,11 +363,11 @@ static enum vg_alignment cur_align;
 static char cur_string[1024];
 
 static void
-select_alignment(int argc, union evarg *argv)
+select_alignment(AG_Event *event)
 {
-	AG_Combo *com = argv[0].p;
-	AG_Maptool *t = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Combo *com = AG_SELF();
+	AG_Maptool *t = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	char *align = (char *)it->p1;
 
 	switch (align[0]) {
@@ -414,10 +414,10 @@ select_alignment(int argc, union evarg *argv)
 }
 
 static void
-string_changed(int argc, union evarg *argv)
+string_changed(AG_Event *event)
 {
-	AG_Textbox *tb = argv[0].p;
-	AG_Maptool *t = argv[1].p;
+	AG_Textbox *tb = AG_SELF();
+	AG_Maptool *t = AG_PTR(1);
 	VG *vg = t->p;
 	AG_WidgetBinding *stringb;
 	char *s;

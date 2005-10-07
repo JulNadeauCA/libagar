@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.10 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.11 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -134,10 +134,10 @@ update_listing(AG_FileDlg *fdg)
 }
 
 static void
-select_dir(int argc, union evarg *argv)
+select_dir(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_FileDlg *fdg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
 	pthread_mutex_lock(&tl->lock);
@@ -171,10 +171,10 @@ process_file(AG_FileDlg *fdg, const char *file)
 }
 
 static void
-select_file(int argc, union evarg *argv)
+select_file(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_FileDlg *fdg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
 	pthread_mutex_lock(&tl->lock);
@@ -187,10 +187,10 @@ select_file(int argc, union evarg *argv)
 }
 
 static void
-select_and_validate_file(int argc, union evarg *argv)
+select_and_validate_file(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_FileDlg *fdg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
 	pthread_mutex_lock(&tl->lock);
@@ -203,10 +203,10 @@ select_and_validate_file(int argc, union evarg *argv)
 }
 
 static void
-validate_file(int argc, union evarg *argv)
+validate_file(AG_Event *event)
 {
 	char file[MAXPATHLEN];
-	AG_FileDlg *fdg = argv[1].p;
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_FileType *ft;
 
 	AG_TextboxCopyString(fdg->tbFile, file, sizeof(file));
@@ -215,10 +215,10 @@ validate_file(int argc, union evarg *argv)
 }
 
 static void
-enter_file(int argc, union evarg *argv)
+enter_file(AG_Event *event)
 {
 	char file[MAXPATHLEN];
-	AG_FileDlg *fdg = argv[1].p;
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_FileType *ft;
 	struct stat sb;
 
@@ -242,9 +242,9 @@ fail:
 }
 
 static void
-do_cancel(int argc, union evarg *argv)
+do_cancel(AG_Event *event)
 {
-	AG_FileDlg *fdg = argv[1].p;
+	AG_FileDlg *fdg = AG_PTR(1);
 	AG_Window *pwin = AG_WidgetParentWindow(fdg);
 	
 	if ((fdg->flags & AG_FILEDLG_NOCLOSE) == 0)
@@ -252,9 +252,9 @@ do_cancel(int argc, union evarg *argv)
 }
 
 static void
-file_dlg_shown(int argc, union evarg *argv)
+file_dlg_shown(AG_Event *event)
 {
-	AG_FileDlg *fdg = argv[0].p;
+	AG_FileDlg *fdg = AG_SELF();
 
 	AG_WidgetScale(fdg, AGWIDGET(fdg)->w, AGWIDGET(fdg)->h);
 	AG_WidgetFocus(fdg->tbFile);
@@ -392,11 +392,10 @@ AG_FileDlgScale(void *p, int w, int h)
 
 AG_FileType *
 AG_FileDlgAddType(AG_FileDlg *fdg, const char *descr, const char *exts,
-    void (*fn)(int, union evarg *), const char *fmt, ...)
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_FileType *ft;
 	char *dexts, *ds, *ext;
-	va_list ap;
 	AG_TlistItem *it;
 
 	ft = Malloc(sizeof(AG_FileType), M_WIDGET);
@@ -412,13 +411,7 @@ AG_FileDlgAddType(AG_FileDlg *fdg, const char *descr, const char *exts,
 	Free(dexts, M_WIDGET);
 
 	ft->action = AG_SetEvent(fdg, NULL, fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, ft->action);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(ft->action, fmt);
 
 	it = AG_TlistAdd(fdg->comTypes->list, NULL, "%s (%s)", descr, exts);
 	it->p1 = ft;

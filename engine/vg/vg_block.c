@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.17 2005/09/27 14:06:34 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.18 2005/10/04 17:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -243,10 +243,10 @@ VG_BlockOffset(VG *vg, VG_Vtx *vtx)
 #ifdef EDITION
 
 static void
-destroy_block(int argc, union evarg *argv)
+destroy_block(AG_Event *event)
 {
-	VG *vg = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
+	VG *vg = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -262,10 +262,10 @@ destroy_block(int argc, union evarg *argv)
 }
 
 static void
-poll_blocks(int argc, union evarg *argv)
+poll_blocks(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	VG *vg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	VG *vg = AG_PTR(1);
 	VG_Block *vgb;
 	VG_Element *vge;
 	AG_TlistItem *it;

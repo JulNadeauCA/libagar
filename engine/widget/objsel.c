@@ -1,4 +1,4 @@
-/*	$Csoft: objsel.c,v 1.3 2005/08/04 07:36:05 vedge Exp $	*/
+/*	$Csoft: objsel.c,v 1.4 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -91,10 +91,10 @@ find_objs(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-poll_objs(int argc, union evarg *argv)
+poll_objs(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_ObjectSelector *os = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_ObjectSelector *os = AG_PTR(1);
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
@@ -105,11 +105,11 @@ poll_objs(int argc, union evarg *argv)
 }
 
 static void
-selected_obj(int argc, union evarg *argv)
+selected_obj(AG_Event *event)
 {
-	AG_Combo *com = argv[0].p;
-	AG_ObjectSelector *os = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Combo *com = AG_SELF();
+	AG_ObjectSelector *os = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	AG_WidgetBinding *objectb;
 	void **object;
 	
@@ -140,10 +140,10 @@ selected_obj(int argc, union evarg *argv)
 }
 
 static void
-bound(int argc, union evarg *argv)
+bound(AG_Event *event)
 {
-	AG_ObjectSelector *os = argv[0].p;
-	AG_WidgetBinding *b = argv[1].p;
+	AG_ObjectSelector *os = AG_SELF();
+	AG_WidgetBinding *b = AG_PTR(1);
 
 	if (strcmp(b->name, "object") == 0) {
 		void **object = b->p1;

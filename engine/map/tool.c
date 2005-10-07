@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.11 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.12 2005/10/04 17:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -99,9 +99,9 @@ AG_MaptoolDestroy(AG_Maptool *tool)
 }
 
 static void
-close_AG_MaptoolWindow(int argc, union evarg *argv)
+close_AG_MaptoolWindow(AG_Event *event)
 {
-	AG_Maptool *tool = argv[1].p;
+	AG_Maptool *tool = AG_PTR(1);
 
 	AG_MapviewSelectTool(tool->mv, NULL, NULL);
 }

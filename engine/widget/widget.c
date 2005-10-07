@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.127 2005/10/06 10:38:50 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.128 2005/10/07 01:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,10 +50,10 @@ const AG_WidgetOps agWidgetOps = {
 };
 
 static void
-AG_WidgetInheritStyleEv(int argc, union evarg *argv)
+AG_WidgetInheritStyleEv(AG_Event *event)
 {
-	AG_Widget *pwid = argv[0].p;
-	AG_Widget *wid = argv[argc].p;
+	AG_Widget *pwid = AG_SELF();
+	AG_Widget *wid = AG_SENDER();
 	const AG_WidgetStyleMod *style = pwid->style;
 
 	if (style == NULL)

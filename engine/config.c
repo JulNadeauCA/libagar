@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.155 2005/10/01 10:07:16 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.156 2005/10/04 17:34:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -104,11 +104,11 @@ extern int agServerMode;
 extern int agScreenshotQuality;
 
 static void
-set_path(int argc, union evarg *argv)
+set_path(AG_Event *event)
 {
 	char path[MAXPATHLEN];
-	AG_Textbox *tbox = argv[0].p;
-	char *varname = argv[1].s;
+	AG_Textbox *tbox = AG_SELF();
+	char *varname = AG_STRING(1);
 
 	AG_TextboxCopyString(tbox, path, sizeof(path));
 	AG_SetString(agConfig, varname, "%s", path);
@@ -116,9 +116,9 @@ set_path(int argc, union evarg *argv)
 }
 
 static void
-set_full_screen(int argc, union evarg *argv)
+set_full_screen(AG_Event *event)
 {
-	int enable = argv[1].i;
+	int enable = AG_INT(1);
 	SDL_Event vexp;
 
 	if (agView == NULL)
@@ -133,9 +133,9 @@ set_full_screen(int argc, union evarg *argv)
 }
 
 static void
-set_opengl(int argc, union evarg *argv)
+set_opengl(AG_Event *event)
 {
-	int enable = argv[1].i;
+	int enable = AG_INT(1);
 
 	if (enable)
 		AG_TextMsg(AG_MSG_WARNING,
@@ -145,9 +145,9 @@ set_opengl(int argc, union evarg *argv)
 }
 
 static void
-set_async_blits(int argc, union evarg *argv)
+set_async_blits(AG_Event *event)
 {
-	int enable = argv[1].i;
+	int enable = AG_INT(1);
 
 	if (enable)
 		AG_TextMsg(AG_MSG_WARNING,
@@ -157,9 +157,9 @@ set_async_blits(int argc, union evarg *argv)
 }
 
 static void
-set_unitrans(int argc, union evarg *argv)
+set_unitrans(AG_Event *event)
 {
-	int enable = argv[1].i;
+	int enable = AG_INT(1);
 
 	if (SDL_EnableUNICODE(enable)) {
 		dprintf("disabled unicode translation\n");
@@ -169,7 +169,7 @@ set_unitrans(int argc, union evarg *argv)
 }
 
 static void
-save_config(int argc, union evarg *argv)
+save_config(AG_Event *event)
 {
 	if (AG_ObjectSave(agConfig) == -1)
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
@@ -321,21 +321,21 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 }
 
 static void
-selected_color(int argc, union evarg *argv)
+selected_color(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_HSVPal *hsv = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_HSVPal *hsv = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	Uint32 *c = it->p1;
 
 	AG_WidgetBind(hsv, "pixel", AG_WIDGET_UINT32, c);
 }
 
 static void
-updated_bg(int argc, union evarg *argv)
+updated_bg(AG_Event *event)
 {
-	AG_HSVPal *hsv = argv[0].p;
-	AG_Tlist *tl = argv[1].p;
+	AG_HSVPal *hsv = AG_SELF();
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 	Uint8 r, g, b;
 

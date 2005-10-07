@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.h,v 1.4 2005/09/19 07:26:29 vedge Exp $	*/
+/*	$Csoft: file_dlg.h,v 1.5 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
@@ -47,7 +47,7 @@ void AG_FileDlgScale(void *, int, int);
 void AG_FileDlgDestroy(void *);
 
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
-			       const char *, void (*)(int, union evarg *),
+			       const char *, void (*)(AG_Event *),
 			       const char *, ...);
 __END_DECLS
 

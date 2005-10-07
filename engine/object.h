@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.135 2005/09/27 00:25:17 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.136 2005/09/27 02:24:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -49,10 +49,10 @@ typedef struct ag_object_classinfo {
 TAILQ_HEAD(ag_objectq, ag_object);
 
 typedef struct ag_object {
-	char type[AG_OBJECT_TYPE_MAX];	/* Type of object */
-	char name[AG_OBJECT_NAME_MAX];	/* Identifier */
-	char *save_pfx;			/* Save dir prefix */
-	const AG_ObjectOps *ops;	/* Generic operations */
+	char type[AG_OBJECT_TYPE_MAX];
+	char name[AG_OBJECT_NAME_MAX];
+	char *save_pfx;
+	const AG_ObjectOps *ops;
 	int flags;
 #define AG_OBJECT_RELOAD_PROPS	 0x001	/* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x002	/* Never include in saves */
@@ -80,21 +80,20 @@ typedef struct ag_object {
 				 AG_OBJECT_REMAIN_GFX)
 
 	pthread_mutex_t lock;
-	AG_Gfx	 *gfx;			/* Associated graphics package */
-	AG_Audio *audio;		/* Associated audio package */
-	Uint32	  data_used;		/* Dynamic data is in use */
-
-	TAILQ_HEAD(,ag_event)	 events;	/* Event handlers */
-	TAILQ_HEAD(,ag_prop)	 props;		/* Generic properties */
-	CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Scheduled function calls */
+	AG_Gfx *gfx;
+	AG_Audio *audio;
+	Uint32 data_used;
+	u_int nevents;
+	TAILQ_HEAD(,ag_event) events;
+	TAILQ_HEAD(,ag_prop) props;
+	CIRCLEQ_HEAD(,ag_timeout) timeouts;
 
 	/* Uses linkage_lock */
-	TAILQ_HEAD(,ag_object_dep) deps;	/* Object dependencies */
-	struct ag_objectq children;		/* Child objects */
-	void *parent;				/* Parent object */
-
+	TAILQ_HEAD(,ag_object_dep) deps;
+	struct ag_objectq children;
+	void *parent;
 	TAILQ_ENTRY(ag_object) cobjs;	/* Entry in child object queue */
-	TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timed object queue */
+	TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timeout queue */
 } AG_Object;
 
 enum ag_object_page_item {

@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.32 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.33 2005/09/27 14:06:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -35,7 +35,7 @@ typedef struct ag_button {
 __BEGIN_DECLS
 AG_Button *AG_ButtonNew(void *, const char *);
 AG_Button *AG_ButtonAct(void *, const char *, u_int,
-			void (*)(int, union evarg *), const char *, ...);
+			void (*)(AG_Event *), const char *, ...);
 void	   AG_ButtonInit(AG_Button *, const char *, u_int);
 void	   AG_ButtonDestroy(void *);
 void	   AG_ButtonDraw(void *);

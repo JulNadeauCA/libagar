@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.59 2005/10/01 09:55:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.60 2005/10/04 17:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -2079,10 +2079,10 @@ AG_MapmodLayerAdd(AG_Map *m, int l)
 #ifdef EDITION
 
 static void
-create_view(int argc, union evarg *argv)
+create_view(AG_Event *event)
 {
-	AG_Mapview *omv = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	AG_Mapview *omv = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Map *map = omv->map;
 	AG_Mapview *mv;
 	AG_Window *win;
@@ -2102,31 +2102,31 @@ create_view(int argc, union evarg *argv)
 }
 
 static void
-switch_tool(int argc, union evarg *argv)
+switch_tool(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
-	AG_Maptool *ntool = argv[2].p;
+	AG_Mapview *mv = AG_PTR(1);
+	AG_Maptool *ntool = AG_PTR(2);
 
 	AG_MapviewSelectTool(mv, ntool, mv->map);
 	AG_WidgetFocus(mv);
 }
 
 static void
-resize_map(int argc, union evarg *argv)
+resize_map(AG_Event *event)
 {
-	AG_MSpinbutton *msb = argv[0].p;
-	AG_Map *m = argv[1].p;
-	AG_Mapview *mv = argv[2].p;
+	AG_MSpinbutton *msb = AG_SELF();
+	AG_Map *m = AG_PTR(1);
+	AG_Mapview *mv = AG_PTR(2);
 
 	AG_MapResize(m, msb->xvalue, msb->yvalue);
 	AG_PostEvent(NULL, mv, "map-resized", NULL);
 }
 
 static void
-poll_undo(int argc, union evarg *argv)
+poll_undo(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Map *m = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Map *m = AG_PTR(1);
 	int i, j;
 
 	AG_TlistClear(tl);
@@ -2161,11 +2161,11 @@ poll_undo(int argc, union evarg *argv)
 }
 
 static void
-edit_properties(int argc, union evarg *argv)
+edit_properties(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
+	AG_Mapview *mv = AG_PTR(1);
 	AG_Map *m = mv->map;
-	AG_Window *pwin = argv[2].p;
+	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_Box *bo;
 	AG_MSpinbutton *msb;
@@ -2326,10 +2326,10 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-poll_libs(int argc, union evarg *argv)
+poll_libs(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *pob = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *pob = AG_PTR(1);
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
@@ -2340,11 +2340,11 @@ poll_libs(int argc, union evarg *argv)
 }
 
 static void
-select_lib(int argc, union evarg *argv)
+select_lib(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
-	int state = argv[3].i;
+	AG_Mapview *mv = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
+	int state = AG_INT(3);
 	AG_Maptool *t;
 
 	if (state == 0) {
@@ -2387,10 +2387,10 @@ select_lib(int argc, union evarg *argv)
 }
 
 static void
-poll_actors(int argc, union evarg *argv)
+poll_actors(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Mapview *mv = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Mapview *mv = AG_PTR(1);
 	AG_Map *m = mv->map;
 	AG_TlistItem *it;
 	AG_Actor *go;
@@ -2407,10 +2407,10 @@ poll_actors(int argc, union evarg *argv)
 }
 
 static void
-poll_layers(int argc, union evarg *argv)
+poll_layers(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Map *m = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Map *m = AG_PTR(1);
 	AG_TlistItem *it;
 	int i;
 
@@ -2428,10 +2428,10 @@ poll_layers(int argc, union evarg *argv)
 }
 
 static void
-mask_layer(int argc, union evarg *argv)
+mask_layer(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_MapLayer *lay = it->p1;
 
@@ -2439,10 +2439,10 @@ mask_layer(int argc, union evarg *argv)
 }
 
 static void
-select_layer(int argc, union evarg *argv)
+select_layer(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Map *m = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Map *m = AG_PTR(1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	int nlayer;
 
@@ -2455,10 +2455,10 @@ select_layer(int argc, union evarg *argv)
 }
 
 static void
-delete_layer(int argc, union evarg *argv)
+delete_layer(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_MapLayer *lay = it->p1;
 	int i, x, y, nlayer;
@@ -2504,10 +2504,10 @@ delete_layer(int argc, union evarg *argv)
 }
 
 static void
-clear_layer(int argc, union evarg *argv)
+clear_layer(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_MapLayer *lay = it->p1;
 	int i, x, y, nlayer;
@@ -2537,12 +2537,12 @@ clear_layer(int argc, union evarg *argv)
 }
 
 static void
-move_layer(int argc, union evarg *argv)
+move_layer(AG_Event *event)
 {
 	char tmp[AG_MAP_MAXLAYERNAME];
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
-	int movedown = argv[3].i;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
+	int movedown = AG_INT(3);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_MapLayer *lay1 = it->p1, *lay2;
 	int x, y;
@@ -2589,12 +2589,12 @@ move_layer(int argc, union evarg *argv)
 }
 
 static void
-mask_layer_menu(int argc, union evarg *argv)
+mask_layer_menu(AG_Event *event)
 {
-	AG_Menu *menu = argv[0].p;
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
-	AG_MenuItem *item = argv[argc-1].p;
+	AG_Menu *menu = AG_SELF();
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
+	AG_MenuItem *item = AG_PTR(event->argc - 1);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_MapLayer *lay = it->p1;
 
@@ -2608,11 +2608,11 @@ mask_layer_menu(int argc, union evarg *argv)
 }
 
 static void
-push_layer(int argc, union evarg *argv)
+push_layer(AG_Event *event)
 {
 	char name[AG_MAP_MAXLAYERNAME];
-	AG_Map *m = argv[1].p;
-	AG_Textbox *tb = argv[2].p;
+	AG_Map *m = AG_PTR(1);
+	AG_Textbox *tb = AG_PTR(2);
 	
 	AG_TextboxCopyString(tb, name, sizeof(name));
 
@@ -2624,14 +2624,14 @@ push_layer(int argc, union evarg *argv)
 }
 
 static void
-noderef_edit(int argc, union evarg *argv)
+noderef_edit(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
-	int xoffs = argv[4].i;
-	int yoffs = argv[5].i;
+	AG_Mapview *mv = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+	int xoffs = AG_INT(4);
+	int yoffs = AG_INT(5);
 	AG_Nitem *r;
 	AG_Window *pwin, *win;
 	AG_Spinbutton *sb;
@@ -2688,10 +2688,10 @@ noderef_edit(int argc, union evarg *argv)
 }
 
 static void
-edit_prop_mode(int argc, union evarg *argv)
+edit_prop_mode(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
-	int flag = argv[2].i;
+	AG_Mapview *mv = AG_PTR(1);
+	int flag = AG_INT(2);
 
 	if (flag != 0) {
 		mv->mode = AG_MAPVIEW_EDIT_ATTRS;
@@ -2702,21 +2702,21 @@ edit_prop_mode(int argc, union evarg *argv)
 }
 
 static void
-undo(int argc, union evarg *argv)
+undo(AG_Event *event)
 {
-	map_undo((AG_Map *)argv[1].p);
+	map_undo(AG_PTR(1));
 }
 
 static void
-redo(int argc, union evarg *argv)
+redo(AG_Event *event)
 {
-	map_redo((AG_Map *)argv[1].p);
+	map_redo(AG_PTR(1));
 }
 
 static void
-center_to_origin(int argc, union evarg *argv)
+center_to_origin(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
+	AG_Mapview *mv = AG_PTR(1);
 
 	AGMCAM(mv).x = mv->map->origin.x*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
 	AGMCAM(mv).y = mv->map->origin.y*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
@@ -2724,10 +2724,10 @@ center_to_origin(int argc, union evarg *argv)
 }
 
 static void
-detach_actor(int argc, union evarg *argv)
+detach_actor(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Map *m = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Map *m = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
@@ -2740,10 +2740,10 @@ detach_actor(int argc, union evarg *argv)
 }
 
 static void
-control_actor(int argc, union evarg *argv)
+control_actor(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Mapview *mv = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Mapview *mv = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
@@ -2755,10 +2755,10 @@ control_actor(int argc, union evarg *argv)
 }
 
 static void
-remove_tileset_refs(int argc, union evarg *argv)
+remove_tileset_refs(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Mapview *mv = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Mapview *mv = AG_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_Object *ts = it->p1;
 	AG_Map *m = mv->map;
@@ -2784,10 +2784,10 @@ remove_tileset_refs(int argc, union evarg *argv)
 }
 
 static void
-remove_tile_refs(int argc, union evarg *argv)
+remove_tile_refs(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Mapview *mv = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Mapview *mv = AG_PTR(2);
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_Sprite *spr = it->p1;
 	AG_Map *m = mv->map;

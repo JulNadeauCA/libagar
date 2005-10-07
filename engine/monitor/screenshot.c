@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.19 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.20 2005/10/04 17:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -170,7 +170,7 @@ screenshot_xmit(int fd)
 }
 
 static void
-screenshot_connect(int argc, union evarg *argv)
+screenshot_connect(AG_Event *event)
 {
 	char host[256];
 	char port[32];
@@ -238,7 +238,7 @@ out1:
 }
 
 static void
-screenshot_disconnect(int argc, union evarg *argv)
+screenshot_disconnect(AG_Event *event)
 {
 	pthread_mutex_lock(&xmit_lock);
 	aflag++;

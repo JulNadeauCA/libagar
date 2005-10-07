@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.9 2005/06/10 05:42:56 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.10 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -82,13 +82,13 @@ __inline__ void AG_MenuSetIcon(AG_MenuItem *, SDL_Surface *);
 __inline__ void AG_MenuSetLabel(AG_MenuItem *, const char *);
 
 AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, int,
-			   void (*)(int, union evarg *), const char *, ...);
+			   void (*)(AG_Event *), const char *, ...);
 AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, int, SDLKey, SDLMod,
-	                     void (*)(int, union evarg *), const char *, ...);
+	                     void (*)(AG_Event *), const char *, ...);
 AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *, int,
-			 SDLKey, SDLMod, void (*)(int, union evarg *),
+			 SDLKey, SDLMod, void (*)(AG_Event *),
 			 const char *, ...);
-AG_MenuItem *AG_MenuDynamic(AG_MenuItem *, int, void (*)(int, union evarg *),
+AG_MenuItem *AG_MenuDynamic(AG_MenuItem *, int, void (*)(AG_Event *),
 			    const char *, ...);
 AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, int, int *, int,
 			      pthread_mutex_t *);

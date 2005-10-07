@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.55 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.56 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,10 +54,10 @@ enum {
 	NITEMS_GROW =	16
 };
 
-static void	graph_key(int, union evarg *);
-static void	graph_mousemotion(int, union evarg *);
-static void	graph_focus(int, union evarg *);
-static void	graph_resume_scroll(int, union evarg *);
+static void	graph_key(AG_Event *);
+static void	graph_mousemotion(AG_Event *);
+static void	graph_focus(AG_Event *);
+static void	graph_resume_scroll(AG_Event *);
 
 AG_Graph *
 AG_GraphNew(void *parent, const char *caption, enum ag_graph_type type, int flags,
@@ -94,10 +94,10 @@ AG_GraphInit(AG_Graph *graph, const char *caption, enum ag_graph_type type,
 }
 
 static void
-graph_key(int argc, union evarg *argv)
+graph_key(AG_Event *event)
 {
-	AG_Graph *gra = argv[0].p;
-	SDLKey key = (SDLKey)argv[1].p;
+	AG_Graph *gra = AG_SELF();
+	SDLKey key = AG_SDLKEY(1);
 
 	switch (key) {
 	case SDLK_0:
@@ -116,12 +116,12 @@ graph_key(int argc, union evarg *argv)
 }
 
 static void
-graph_mousemotion(int argc, union evarg *argv)
+graph_mousemotion(AG_Event *event)
 {
-	AG_Graph *gra = argv[0].p;
-	int xrel = argv[3].i;
-	int yrel = argv[4].i;
-	int state = argv[5].i;
+	AG_Graph *gra = AG_SELF();
+	int xrel = AG_INT(3);
+	int yrel = AG_INT(4);
+	int state = AG_INT(5);
 
 	if ((state & SDL_BUTTON_LMASK) == 0)
 		return;
@@ -137,17 +137,17 @@ graph_mousemotion(int argc, union evarg *argv)
 }
 
 static void
-graph_resume_scroll(int argc, union evarg *argv)
+graph_resume_scroll(AG_Event *event)
 {
-	AG_Graph *gra = argv[0].p;
+	AG_Graph *gra = AG_SELF();
 
 	gra->flags |= AG_GRAPH_SCROLL;
 }
 
 static void
-graph_focus(int argc, union evarg *argv)
+graph_focus(AG_Event *event)
 {
-	AG_Graph *gra = argv[0].p;
+	AG_Graph *gra = AG_SELF();
 
 	gra->flags &= ~(AG_GRAPH_SCROLL);
 	AG_WidgetFocus(gra);
