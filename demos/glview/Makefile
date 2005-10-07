@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.1 2005/09/28 15:46:13 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2005/10/04 18:02:17 vedge Exp $
 
 TOP=	../..
 include Makefile.config
@@ -7,7 +7,7 @@ PROG=	glview
 SRCS=	glview.c
 
 CFLAGS+=${AGAR_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS}
+LIBS+=	${AGAR_LIBS} -lGLU
 
 all: all-subdir ${PROG}
 
