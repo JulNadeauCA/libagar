@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.18 2005/10/04 17:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -172,11 +172,11 @@ static const int nunicode_ranges =
     sizeof(unicode_ranges) / sizeof(unicode_ranges[0]);
 
 static void
-select_range(int argc, union evarg *argv)
+select_range(AG_Event *event)
 {
 	char text[4][128];
-	AG_Tableview *tv = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Tableview *tv = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
 	Uint32 i, j, end;

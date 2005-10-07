@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ortho.c,v 1.3 2005/03/05 12:14:04 vedge Exp $	*/
+/*	$Csoft: vg_ortho.c,v 1.4 2005/09/27 00:25:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -55,12 +55,12 @@ VG_OrthoRestrictMode(VG *vg, enum vg_ortho_mode mode)
 }
 
 static void
-select_mode(int argc, union evarg *argv)
+select_mode(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
-	AG_Toolbar *tbar = argv[1].p;
-	VG *vg = argv[2].p;
-	int ortho_mode = argv[3].i;
+	AG_Button *bu = AG_SELF();
+	AG_Toolbar *tbar = AG_PTR(1);
+	VG *vg = AG_PTR(2);
+	int ortho_mode = AG_INT(3);
 
 	AG_ToolbarSelectUnique(tbar, bu);
 	VG_OrthoRestrictMode(vg, ortho_mode);

@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.6 2005/09/08 08:18:57 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.7 2005/09/27 00:25:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -38,7 +38,7 @@ void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, int);
 void		 AG_ToolbarScale(void *, int, int);
 void	 	 AG_ToolbarDestroy(void *);
 AG_Button	*AG_ToolbarAddButton(AG_Toolbar *, int, SDL_Surface *, int,
-		                     int, void (*)(int, union evarg *),
+		                     int, void (*)(AG_Event *),
 				     const char *, ...);
 void		 AG_ToolbarAddSeparator(AG_Toolbar *, int);
 void		 AG_ToolbarSelectUnique(AG_Toolbar *, AG_Button *);

@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.10 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.11 2005/10/04 17:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -73,10 +73,10 @@ timeouts_refresh(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-close_timeouts(int argc, union evarg *argv)
+close_timeouts(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
-	AG_Tableview *tv = argv[1].p;
+	AG_Window *win = AG_SELF();
+	AG_Tableview *tv = AG_PTR(1);
 
 	AG_DelTimeout(tv, &refresher);
 	AG_ViewDetach(win);

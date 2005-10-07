@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.47 2005/10/01 09:55:41 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.48 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -227,18 +227,18 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 }
 
 static void
-update_tv(int argc, union evarg *argv)
+update_tv(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
+	RG_Tileview *tv = AG_PTR(1);
 	
 	tv->tile->flags |= RG_TILE_DIRTY;
 }
 
 static void
-poll_brushes(int argc, union evarg *argv)
+poll_brushes(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Pixmap *px = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Pixmap *px = AG_PTR(1);
 	struct rg_pixmap_brush *br;
 	AG_TlistItem *it;
 
@@ -259,10 +259,10 @@ poll_brushes(int argc, union evarg *argv)
 }
 
 static void
-select_brush(int argc, union evarg *argv)
+select_brush(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Pixmap *px = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Pixmap *px = AG_PTR(1);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
@@ -275,10 +275,10 @@ select_brush(int argc, union evarg *argv)
 }
 
 static void
-poll_pixmaps(int argc, union evarg *argv)
+poll_pixmaps(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	AG_TlistItem *it;
 	RG_Pixmap *px;
 
@@ -294,14 +294,14 @@ poll_pixmaps(int argc, union evarg *argv)
 }
 
 static void
-insert_brush(int argc, union evarg *argv)
+insert_brush(AG_Event *event)
 {
-	RG_Pixmap *px = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
-	AG_Textbox *tb = argv[3].p;
-	AG_Radio *rad_types = argv[4].p;
-	AG_Checkbox *cb_oneshot = argv[5].p;
-	AG_Window *dlg_win = argv[6].p;
+	RG_Pixmap *px = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	AG_Textbox *tb = AG_PTR(3);
+	AG_Radio *rad_types = AG_PTR(4);
+	AG_Checkbox *cb_oneshot = AG_PTR(5);
+	AG_Window *dlg_win = AG_PTR(6);
 	enum pixmap_brush_type btype;
 	RG_Pixmap *spx;
 	struct rg_pixmap_brush *pbr;
@@ -325,11 +325,11 @@ insert_brush(int argc, union evarg *argv)
 }
 
 static void
-update_bropts(int argc, union evarg *argv)
+update_bropts(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Textbox *tb_name = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Textbox *tb_name = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	RG_Pixmap *spx;
 
 	if (it != NULL) {
@@ -339,11 +339,11 @@ update_bropts(int argc, union evarg *argv)
 }
 
 static void
-insert_brush_dlg(int argc, union evarg *argv)
+insert_brush_dlg(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	RG_Pixmap *px = argv[2].p;
-	AG_Window *win, *pwin = argv[3].p;
+	RG_Tileview *tv = AG_PTR(1);
+	RG_Pixmap *px = AG_PTR(2);
+	AG_Window *win, *pwin = AG_PTR(3);
 	AG_Tlist *tl;
 	AG_Box *bo;
 	AG_Textbox *tb_name;
@@ -402,10 +402,10 @@ insert_brush_dlg(int argc, union evarg *argv)
 }
 
 static void
-flip_pixmap(int argc, union evarg *argv)
+flip_pixmap(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	RG_Pixmap *px = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	RG_Pixmap *px = AG_PTR(2);
 	size_t totsize = px->su->h*px->su->pitch;
 	Uint8 *row, *buf;
 	Uint8 *fb = px->su->pixels;
@@ -423,10 +423,10 @@ flip_pixmap(int argc, union evarg *argv)
 }
 
 static void
-mirror_pixmap(int argc, union evarg *argv)
+mirror_pixmap(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
-	RG_Pixmap *px = argv[2].p;
+	RG_Tileview *tv = AG_PTR(1);
+	RG_Pixmap *px = AG_PTR(2);
 	Uint8 *row, *rowp;
 	Uint8 *fb = px->su->pixels;
 	int x, y;

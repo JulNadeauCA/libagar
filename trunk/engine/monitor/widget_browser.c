@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.45 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.46 2005/10/04 17:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -70,9 +70,9 @@ poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
 }
 
 static void
-poll_windows(int argc, union evarg *argv)
+poll_windows(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
+	AG_Tlist *tl = AG_SELF();
 	AG_Window *win;
 
 	AG_TlistClear(tl);
@@ -85,9 +85,9 @@ poll_windows(int argc, union evarg *argv)
 }
 
 static void
-show_window(int argc, union evarg *argv)
+show_window(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 	AG_Window *win;
 
@@ -99,9 +99,9 @@ show_window(int argc, union evarg *argv)
 }
 
 static void
-hide_window(int argc, union evarg *argv)
+hide_window(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
 	AG_Window *win;
 
@@ -114,10 +114,10 @@ hide_window(int argc, union evarg *argv)
 
 /* Display widget information. */
 static void
-examine_widget(int argc, union evarg *argv)
+examine_widget(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_TlistItem *it;
 	AG_Widget *wid;
 	AG_Window *win;
@@ -188,10 +188,10 @@ poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
 }
 
 static void
-poll_widgets(int argc, union evarg *argv)
+poll_widgets(AG_Event *event)
 {
-	AG_Tlist *widtl = argv[0].p;
-	AG_Window *win = argv[1].p;
+	AG_Tlist *widtl = AG_SELF();
+	AG_Window *win = AG_PTR(1);
 	
 	AG_TlistClear(widtl);
 	AG_LockLinkage();
@@ -205,9 +205,9 @@ poll_widgets(int argc, union evarg *argv)
 }
 
 static void
-scale_window(int argc, union evarg *argv)
+scale_window(AG_Event *event)
 {
-	AG_Window *win = argv[1].p;
+	AG_Window *win = AG_PTR(1);
 
 	AG_WindowScale(win, -1, -1);
 	AG_WindowScale(win, AGWIDGET(win)->w, AGWIDGET(win)->h);
@@ -215,9 +215,9 @@ scale_window(int argc, union evarg *argv)
 }
 
 static void
-examine_window(int argc, union evarg *argv)
+examine_window(AG_Event *event)
 {
-	AG_Tlist *wintl = argv[1].p;
+	AG_Tlist *wintl = AG_PTR(1);
 	AG_TlistItem *it;
 	AG_Window *pwin, *win;
 	AG_Tlist *tl;

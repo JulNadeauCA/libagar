@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.95 2005/10/01 14:15:19 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.96 2005/10/04 17:34:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -116,10 +116,10 @@ int	 AG_WindowIsSurrounded(AG_Window *);
 void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
 
 /* Generic event handlers */
-void	 AG_WindowDetachGenEv(int, union evarg *);
-void	 AG_WindowHideGenEv(int, union evarg *);
-void	 AG_WindowShowGenEv(int, union evarg *);
-void	 AG_WindowCloseGenEv(int, union evarg *);
+void	 AG_WindowDetachGenEv(AG_Event *);
+void	 AG_WindowHideGenEv(AG_Event *);
+void	 AG_WindowShowGenEv(AG_Event *);
+void	 AG_WindowCloseGenEv(AG_Event *);
 
 #define AGWINDETACH(win)	AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)		AG_WindowHideGenEv, "%p", (win)

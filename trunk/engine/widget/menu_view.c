@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.26 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.27 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -86,13 +86,13 @@ submenu_timeout(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_MenuView *mview = argv[0].p;
+	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
-	int mx = argv[1].i;
-	int my = argv[2].i;
+	int mx = AG_INT(1);
+	int my = AG_INT(2);
 	int y = mview->vpadding, i;
 
 	if (my < 0)
@@ -220,13 +220,13 @@ toggle_option(AG_MenuItem *mi)
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_MenuView *mview = argv[0].p;
+	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
-	int mx = argv[2].i;
-	int my = argv[3].i;
+	int mx = AG_INT(2);
+	int my = AG_INT(3);
 	int y = mview->vpadding;
 	int i;
 

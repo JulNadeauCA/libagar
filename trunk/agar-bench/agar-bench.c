@@ -1,4 +1,4 @@
-/*	$Csoft: agar-bench.c,v 1.7 2005/10/04 17:34:48 vedge Exp $	*/
+/*	$Csoft: agar-bench.c,v 1.8 2005/10/06 10:29:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "agar-bench.h"
@@ -32,10 +32,10 @@ int ntests = sizeof(tests) / sizeof(tests[0]);
 #endif
 
 static void
-run_tests(int argc, union evarg *argv)
+run_tests(AG_Event *event)
 {
-	struct test_ops *test = argv[1].p;
-	AG_Table *t = argv[2].p;
+	struct test_ops *test = AG_PTR(1);
+	AG_Table *t = AG_PTR(2);
 	u_int i, j, m;
 	Uint64 t1, t2;
 	Uint64 tTot, tRun;
@@ -92,10 +92,10 @@ run_tests(int argc, union evarg *argv)
 }
 
 static void
-poll_test(int argc, union evarg *argv)
+poll_test(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	struct test_ops *test = tests[argv[1].i];
+	AG_Table *t = AG_SELF();
+	struct test_ops *test = tests[AG_INT(1)];
 	int i;
 
 	AG_TableBegin(t);
@@ -131,18 +131,18 @@ poll_test(int argc, union evarg *argv)
 }
 
 static void
-QuitApp(int argc, union evarg *argv)
+QuitApp(AG_Event *event)
 {
 	AG_Quit();
 }
 
 static void
-SaveToCSV(int argc, union evarg *argv)
+SaveToCSV(AG_Event *event)
 {
-	struct test_ops *test = argv[1].p;
-	AG_Table *t = argv[2].p;
-	char separator = (char)argv[3].i;
-	char *path = argv[4].s;
+	struct test_ops *test = AG_PTR(1);
+	AG_Table *t = AG_PTR(2);
+	char separator = AG_CHAR(3);
+	char *path = AG_STRING(4);
 	FILE *f;
 
 	if ((f = fopen(path, "w")) == NULL) {
@@ -159,11 +159,11 @@ SaveToCSV(int argc, union evarg *argv)
 }
 
 static void
-SaveToFileDlg(int argc, union evarg *argv)
+SaveToFileDlg(AG_Event *event)
 {
 	char defpath[FILENAME_MAX];
-	struct test_ops *test = argv[1].p;
-	AG_Table *t = argv[2].p;
+	struct test_ops *test = AG_PTR(1);
+	AG_Table *t = AG_PTR(2);
 	AG_Window *win;
 	AG_FileDlg *dlg;
 	FILE *f;

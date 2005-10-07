@@ -1,4 +1,4 @@
-/*	$Csoft: sketchproj.c,v 1.7 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: sketchproj.c,v 1.8 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -104,10 +104,10 @@ RG_SketchProjSave(void *p, AG_Netbuf *buf)
 }
 
 static void
-poll_sketches(int argc, union evarg *argv)
+poll_sketches(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tile *t = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tile *t = AG_PTR(1);
 	RG_Tileset *ts = t->ts;
 	RG_TileElement *tel;
 	AG_TlistItem *it;
@@ -128,12 +128,12 @@ poll_sketches(int argc, union evarg *argv)
 }
 
 static void
-select_sketch(int argc, union evarg *argv)
+select_sketch(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	struct rg_sketchproj *sproj = argv[1].p;
-	RG_Tile *t = argv[2].p;
-	AG_TlistItem *it = argv[3].p;
+	AG_Tlist *tl = AG_SELF();
+	struct rg_sketchproj *sproj = AG_PTR(1);
+	RG_Tile *t = AG_PTR(2);
+	AG_TlistItem *it = AG_PTR(3);
 
 	strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }

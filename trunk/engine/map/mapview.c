@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.49 2005/10/01 09:55:39 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.50 2005/10/02 09:39:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -80,12 +80,12 @@ int	agMapviewEditSelOnly = 0;	/* Restrict edition to selection */
 int	agMapviewZoomInc = 8;
 
 
-static void lost_focus(int, union evarg *);
-static void mousemotion(int, union evarg *);
-static void mousebuttondown(int, union evarg *);
-static void mousebuttonup(int, union evarg *);
-static void key_up(int, union evarg *);
-static void key_down(int, union evarg *);
+static void lost_focus(AG_Event *);
+static void mousemotion(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void mousebuttonup(AG_Event *);
+static void key_up(AG_Event *);
+static void key_down(AG_Event *);
 
 AG_Mapview *
 AG_MapviewNew(void *parent, AG_Map *m, int flags, struct ag_toolbar *toolbar,
@@ -228,11 +228,11 @@ AG_MapviewFindTool(AG_Mapview *mv, const char *name)
 }
 
 static void
-sel_tool(int argc, union evarg *argv)
+sel_tool(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
-	AG_Maptool *tool = argv[2].p;
-	void *p = argv[3].p;
+	AG_Mapview *mv = AG_PTR(1);
+	AG_Maptool *tool = AG_PTR(2);
+	void *p = AG_PTR(3);
 
 	if (mv->curtool == tool) {
 		AG_MapviewSelectTool(mv, NULL, NULL);
@@ -243,11 +243,11 @@ sel_tool(int argc, union evarg *argv)
 
 #if 0
 static void
-update_tooltips(int argc, union evarg *argv)
+update_tooltips(AG_Event *event)
 {
-	AG_Mapview *mv = argv[1].p;
-	AG_Maptool *tool = argv[2].p;
-	int in = argv[3].i;
+	AG_Mapview *mv = AG_PTR(1);
+	AG_Maptool *tool = AG_PTR(2);
+	int in = AG_INT(3);
 
 	if (in) {
 		AG_MapviewStatus(mv, "%s", _(tool->desc));
@@ -320,9 +320,9 @@ AG_MapviewDestroy(void *p)
 }
 
 static void
-mapview_detached(int argc, union evarg *argv)
+mapview_detached(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 	AG_Maptool *tool, *ntool;
 
 	for (tool = TAILQ_FIRST(&mv->tools);
@@ -337,26 +337,26 @@ mapview_detached(int argc, union evarg *argv)
 }
 
 static void
-dblclick_expired(int argc, union evarg *argv)
+dblclick_expired(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 
 	mv->dblclicked = 0;
 }
 
 static void
-scrolled_bar(int argc, union evarg *argv)
+scrolled_bar(AG_Event *event)
 {
-	AG_Scrollbar *sb = argv[0].p;
-	AG_Mapview *mv = argv[1].p;
+	AG_Scrollbar *sb = AG_SELF();
+	AG_Mapview *mv = AG_PTR(1);
 
 	AG_MapviewUpdateCamera(mv);
 }
 
 static void
-resized_map(int argc, union evarg *argv)
+resized_map(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 
 	AG_MapviewUpdateCamera(mv);
 }
@@ -935,14 +935,14 @@ toggle_attrib(AG_Mapview *mv)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
-	int xrel = argv[3].i;
-	int yrel = argv[4].i;
-	int state = argv[5].i;
+	AG_Mapview *mv = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+	int xrel = AG_INT(3);
+	int yrel = AG_INT(4);
+	int state = AG_INT(5);
 	int xmap, ymap;
 	int rv;
 
@@ -1028,13 +1028,13 @@ AG_MapviewSetMode(AG_Mapview *mv, enum ag_mapview_mode mode)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 	AG_Map *m = mv->map;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	AG_Maptool *tool;
 	int rv;
 	
@@ -1210,13 +1210,13 @@ out:
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 	AG_Map *m = mv->map;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	AG_Maptool *tool;
 	
 	pthread_mutex_lock(&m->lock);
@@ -1305,11 +1305,11 @@ out:
 }
 
 static void
-key_up(int argc, union evarg *argv)
+key_up(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
-	int keysym = argv[1].i;
-	int keymod = argv[2].i;
+	AG_Mapview *mv = AG_SELF();
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
 	AG_Maptool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
@@ -1352,11 +1352,11 @@ out:
 }
 
 static void
-key_down(int argc, union evarg *argv)
+key_down(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
-	int keysym = argv[1].i;
-	int keymod = argv[2].i;
+	AG_Mapview *mv = AG_SELF();
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
 	AG_Maptool *tool;
 	
 	pthread_mutex_lock(&mv->map->lock);
@@ -1507,9 +1507,9 @@ AG_MapviewScale(void *p, int rw, int rh)
 }
 
 static void
-lost_focus(int argc, union evarg *argv)
+lost_focus(AG_Event *event)
 {
-	AG_Mapview *mv = argv[0].p;
+	AG_Mapview *mv = AG_SELF();
 
 	AG_CancelEvent(mv, "dblclick-expire");
 	if (mv->actor != NULL)

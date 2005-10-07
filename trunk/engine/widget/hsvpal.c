@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.24 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.25 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -251,9 +251,9 @@ close_menu(AG_HSVPal *pal)
 }
 
 static void
-show_rgb(int argc, union evarg *argv)
+show_rgb(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 	Uint8 r, g, b;
 	float h, s, v;
 	
@@ -268,9 +268,9 @@ show_rgb(int argc, union evarg *argv)
 
 #if 0
 static void
-edit_values(int argc, union evarg *argv)
+edit_values(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 	AG_Window *pwin;
 	AG_Window *win;
 	AG_FSpinbutton *fsb;
@@ -340,9 +340,9 @@ edit_values(int argc, union evarg *argv)
 #endif
 
 static void
-complementary(int argc, union evarg *argv)
+complementary(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 	float hue = AG_WidgetFloat(pal, "hue");
 
 	AG_WidgetSetFloat(pal, "hue", ((int)hue+180) % 359);
@@ -351,9 +351,9 @@ complementary(int argc, union evarg *argv)
 }
 
 static void
-copy_color(int argc, union evarg *argv)
+copy_color(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 	
 	cH = AG_WidgetFloat(pal, "hue");
 	cS = AG_WidgetFloat(pal, "saturation");
@@ -362,9 +362,9 @@ copy_color(int argc, union evarg *argv)
 }
 
 static void
-paste_color(int argc, union evarg *argv)
+paste_color(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 
 	AG_WidgetSetFloat(pal, "hue", cH);
 	AG_WidgetSetFloat(pal, "saturation", cS);
@@ -375,9 +375,9 @@ paste_color(int argc, union evarg *argv)
 }
 
 static void
-invert_saturation(int argc, union evarg *argv)
+invert_saturation(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 
 	AG_WidgetSetFloat(pal, "saturation",
 	    1.0 - AG_WidgetFloat(pal, "saturation"));
@@ -386,9 +386,9 @@ invert_saturation(int argc, union evarg *argv)
 }
 
 static void
-invert_value(int argc, union evarg *argv)
+invert_value(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[1].p;
+	AG_HSVPal *pal = AG_PTR(1);
 
 	AG_WidgetSetFloat(pal, "value",
 	    1.0 - AG_WidgetFloat(pal, "value"));
@@ -435,12 +435,12 @@ open_menu(AG_HSVPal *pal)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[0].p;
-	int btn = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_HSVPal *pal = AG_SELF();
+	int btn = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	float r;
 
 	switch (btn) {
@@ -457,7 +457,7 @@ mousebuttondown(int argc, union evarg *argv)
 				update_h(pal, x, y);
 				pal->state = AG_HSVPAL_SEL_H;
 			} else {
-				update_sv(pal, argv[2].i, argv[3].i);
+				update_sv(pal, AG_INT(2), AG_INT(3));
 				pal->state = AG_HSVPAL_SEL_SV;
 			}
 		}
@@ -471,19 +471,19 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[0].p;
+	AG_HSVPal *pal = AG_SELF();
 
 	pal->state = AG_HSVPAL_SEL_NONE;
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_HSVPal *pal = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
+	AG_HSVPal *pal = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
 
 	switch (pal->state) {
 	case AG_HSVPAL_SEL_NONE:
@@ -503,10 +503,10 @@ mousemotion(int argc, union evarg *argv)
 }
 
 static void
-binding_changed(int argc, union evarg *argv)
+binding_changed(AG_Event *event)
 {
-	AG_HSVPal *hsv = argv[0].p;
-	AG_WidgetBinding *bind = argv[1].p;
+	AG_HSVPal *hsv = AG_SELF();
+	AG_WidgetBinding *bind = AG_PTR(1);
 
 	if (bind->type == AG_WIDGET_UINT32 &&
 	    strcmp(bind->name, "pixel") == 0) {

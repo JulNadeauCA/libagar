@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.51 2005/10/01 14:15:39 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.52 2005/10/02 09:39:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,9 +54,9 @@ enum ag_button_which {
 	AG_BUTTON_SCROLL
 };
 
-static void mousebuttonup(int, union evarg *);
-static void mousebuttondown(int, union evarg *);
-static void mousemotion(int, union evarg *);
+static void mousebuttonup(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void mousemotion(AG_Event *);
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type)
@@ -93,9 +93,9 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type)
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_Scrollbar *sb = argv[0].p;
+	AG_Scrollbar *sb = AG_SELF();
 
 	sb->curbutton = AG_BUTTON_NONE;
 }
@@ -139,11 +139,11 @@ AG_ScrollbarMove(AG_Scrollbar *sb, int x, int totalsize)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Scrollbar *sb = argv[0].p;
-	int button = argv[1].i;
-	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? argv[2].i : argv[3].i;
+	AG_Scrollbar *sb = AG_SELF();
+	int button = AG_INT(1);
+	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3);
 	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
 	int min, value, max, nvalue;
@@ -184,11 +184,11 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Scrollbar *sb = argv[0].p;
-	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? argv[1].i : argv[2].i;
-	int state = argv[5].i;
+	AG_Scrollbar *sb = AG_SELF();
+	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
+	int state = AG_INT(5);
 	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
 

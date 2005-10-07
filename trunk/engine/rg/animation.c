@@ -1,4 +1,4 @@
-/*	$Csoft: animation.c,v 1.6 2005/09/27 00:25:19 vedge Exp $	*/
+/*	$Csoft: animation.c,v 1.7 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -325,11 +325,11 @@ RG_AnimGenerate(RG_Anim *ani)
 #ifdef EDITION
 
 static void
-close_animation(int argc, union evarg *argv)
+close_animation(AG_Event *event)
 {
-	AG_Window *win = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
-	RG_Anim *ani = argv[2].p;
+	AG_Window *win = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
+	RG_Anim *ani = AG_PTR(2);
 	
 	pthread_mutex_lock(&ts->lock);
 	ani->nrefs--;
@@ -339,10 +339,10 @@ close_animation(int argc, union evarg *argv)
 }
 
 static void
-poll_insns(int argc, union evarg *argv)
+poll_insns(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Anim *ani = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Anim *ani = AG_PTR(1);
 	RG_Tileset *ts = ani->tileset;
 	AG_TlistItem *it;
 	u_int i;
@@ -390,10 +390,10 @@ poll_insns(int argc, union evarg *argv)
 }
 
 static void
-poll_frames(int argc, union evarg *argv)
+poll_frames(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Anim *ani = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Anim *ani = AG_PTR(1);
 	RG_Tileset *ts = ani->tileset;
 	u_int i;
 
@@ -414,10 +414,10 @@ poll_frames(int argc, union evarg *argv)
 }
 
 static void
-poll_tiles(int argc, union evarg *argv)
+poll_tiles(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	AG_TlistItem *it;
 	RG_Tile *t;
 
@@ -438,12 +438,12 @@ poll_tiles(int argc, union evarg *argv)
 }
 
 static void
-select_insn_tile(int argc, union evarg *argv)
+select_insn_tile(AG_Event *event)
 {
-	RG_Anim *ani = argv[1].p;
-	RG_AnimInsn *insn = argv[2].p;
-	RG_Tileview *tv = argv[3].p;
-	AG_TlistItem *it = argv[4].p;
+	RG_Anim *ani = AG_PTR(1);
+	RG_AnimInsn *insn = AG_PTR(2);
+	RG_Tileview *tv = AG_PTR(3);
+	AG_TlistItem *it = AG_PTR(4);
 
 	if (it != NULL) {
 		insn->t = (RG_Tile *)it->p1;
@@ -544,11 +544,11 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 }
 
 static void
-select_insn(int argc, union evarg *argv)
+select_insn(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Anim *ani = argv[1].p;
-	AG_Box *box = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Anim *ani = AG_PTR(1);
+	AG_Box *box = AG_PTR(2);
 	AG_TlistItem *it, *eit;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
@@ -558,11 +558,11 @@ select_insn(int argc, union evarg *argv)
 }
 
 static void
-select_frame(int argc, union evarg *argv)
+select_frame(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Anim *ani = argv[1].p;
-	AG_Box *box = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Anim *ani = AG_PTR(1);
+	AG_Box *box = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
@@ -572,12 +572,12 @@ select_frame(int argc, union evarg *argv)
 }
 
 static void
-insert_insn(int argc, union evarg *argv)
+insert_insn(AG_Event *event)
 {
-	RG_Anim *ani = argv[1].p;
-	enum rg_anim_insn_type type = (enum rg_anim_insn_type)argv[2].i;
-	AG_Box *box = argv[3].p;
-	AG_Tlist *tl = argv[4].p;
+	RG_Anim *ani = AG_PTR(1);
+	enum rg_anim_insn_type type = AG_INT(2);
+	AG_Box *box = AG_PTR(3);
+	AG_Tlist *tl = AG_PTR(4);
 	AG_TlistItem *it;
 	RG_AnimInsn *insn;
 	
@@ -587,18 +587,18 @@ insert_insn(int argc, union evarg *argv)
 }
 
 static void
-recompile_anim(int argc, union evarg *argv)
+recompile_anim(AG_Event *event)
 {
-	RG_Anim *ani = argv[1].p;
+	RG_Anim *ani = AG_PTR(1);
 	
 	RG_AnimGenerate(ani);
 }
 
 static void
-preview_anim(int argc, union evarg *argv)
+preview_anim(AG_Event *event)
 {
-	RG_Anim *ani = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	RG_Anim *ani = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	RG_Animview *av;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.9 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.10 2005/10/03 04:27:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -61,12 +61,12 @@ AG_NotebookNew(void *parent, int flags)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Notebook *nb = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Notebook *nb = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0 &&
 	    y <= nb->bar_h) {

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.54 2005/09/22 02:30:26 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.55 2005/09/27 00:25:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -104,11 +104,11 @@ cursor_overlap(struct rg_tileview_handle *th, int sx, int sy)
 }
 
 static void
-keydown(int argc, union evarg *argv)
+keydown(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	int keysym = argv[1].i;
-	int keymod = argv[2].i;
+	RG_Tileview *tv = AG_SELF();
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -172,11 +172,11 @@ keydown(int argc, union evarg *argv)
 }
 
 static void
-keyup(int argc, union evarg *argv)
+keyup(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	int keysym = argv[1].i;
-	int keymod = argv[2].i;
+	RG_Tileview *tv = AG_SELF();
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
@@ -260,12 +260,12 @@ increment_layer(RG_Tileview *tv, int sx, int sy, int inc)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	RG_Tileview *tv = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	RG_TileviewCtrl *ctrl;
 	RG_TileElement *tel = tv->tv_pixmap.tel;
 	int sx = (x - tv->xoffs)/tv->pxsz;
@@ -405,10 +405,10 @@ mousebuttondown(int argc, union evarg *argv)
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	int button = argv[1].i;
+	RG_Tileview *tv = AG_SELF();
+	int button = AG_INT(1);
 	RG_TileviewCtrl *ctrl;
 	int i;
 
@@ -668,14 +668,14 @@ move_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	RG_Tileview *tv = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
-	int xrel = argv[3].i;
-	int yrel = argv[4].i;
-	int state = argv[5].i;
+	RG_Tileview *tv = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+	int xrel = AG_INT(3);
+	int yrel = AG_INT(4);
+	int state = AG_INT(5);
 	RG_TileviewCtrl *ctrl;
 	int sx, sy, i;
 
@@ -1820,9 +1820,9 @@ RG_TileviewDestroy(void *p)
 }
 
 static void
-close_tool_win(int argc, union evarg *argv)
+close_tool_win(AG_Event *event)
 {
-	RG_Tileview *tv = argv[1].p;
+	RG_Tileview *tv = AG_PTR(1);
 	
 	AG_ViewDetach(tv->cur_tool->win);
 	tv->cur_tool->win = NULL;

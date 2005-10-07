@@ -1,4 +1,4 @@
-/*	$Csoft: matview.c,v 1.4 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: matview.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -64,10 +64,10 @@ AG_MatviewNew(void *parent, struct mat *mat, u_int flags)
 }
 
 static void
-matview_keydown(int argc, union evarg *argv)
+matview_keydown(AG_Event *event)
 {
-	AG_Matview *mv = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Matview *mv = AG_SELF();
+	int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case SDLK_g:
@@ -88,9 +88,9 @@ matview_keydown(int argc, union evarg *argv)
 }
 
 static void
-matview_mousebuttondown(int argc, union evarg *argv)
+matview_mousebuttondown(AG_Event *event)
 {
-	AG_Button *bu = argv[0].p;
+	AG_Button *bu = AG_SELF();
 
 	AG_WidgetFocus(bu);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.15 2005/09/27 03:14:13 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.16 2005/10/04 17:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -111,12 +111,12 @@ AG_DrawingSave(void *p, AG_Netbuf *buf)
 }
 
 static void
-drawing_settings(int argc, union evarg *argv)
+drawing_settings(AG_Event *event)
 {
-	extern void VG_ChangedEv(int, union evarg *);
-	extern void VG_GeoChangedEv(int, union evarg *);
-	AG_Window *pwin = argv[1].p;
-	AG_Drawing *dwg = argv[2].p;
+	extern void VG_ChangedEv(AG_Event *);
+	extern void VG_GeoChangedEv(AG_Event *);
+	AG_Window *pwin = AG_PTR(1);
+	AG_Drawing *dwg = AG_PTR(2);
 	VG *vg = dwg->vg;
 	AG_Window *win;
 	AG_MFSpinbutton *mfsu;

@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.25 2005/10/01 14:15:38 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.26 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -106,12 +106,12 @@ AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Menu *m = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Menu *m = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	int i;
 
 	for (i = 0; i < m->nitems; i++) {
@@ -143,12 +143,12 @@ mousebuttondown(int argc, union evarg *argv)
 
 #if 0
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_Menu *m = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Menu *m = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 
 	if (m->sel_item != NULL && m->sel_subitem == NULL &&
 	    x >= m->sel_item->x &&
@@ -162,11 +162,11 @@ mousebuttonup(int argc, union evarg *argv)
 #endif
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Menu *m = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
+	AG_Menu *m = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
 	int i;
 
 	if (!m->selecting || y < 0 || y >= AGWIDGET(m)->h-1)
@@ -207,10 +207,10 @@ mousemotion(int argc, union evarg *argv)
 }
 
 static void
-attached(int argc, union evarg *argv)
+attached(AG_Event *event)
 {
-	AG_Menu *m = argv[0].p;
-	AG_Widget *pwid = argv[argc].p;
+	AG_Menu *m = AG_SELF();
+	AG_Widget *pwid = AG_SENDER();
 	AG_Window *pwin;
 
 	/* Adjust the top padding of the parent window if any. */
@@ -343,98 +343,64 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 
 AG_MenuItem *
 AG_MenuDynamic(AG_MenuItem *pitem, int nicon,
-    void (*poll_fn)(int, union evarg *), const char *fmt, ...)
+    void (*poll_fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
-	va_list ap;
 
 	mi = add_subitem(pitem, NULL, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->poll = AG_SetEvent(m, NULL, poll_fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, mi->poll);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(mi->poll, fmt);
 	return (mi);
 }
 
 AG_MenuItem *
 AG_MenuAction(AG_MenuItem *pitem, const char *text, int nicon,
-    void (*fn)(int, union evarg *), const char *fmt, ...)
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
-	va_list ap;
 
 	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, mi->onclick);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(mi->onclick, fmt);
 	return (mi);
 }
 
 AG_MenuItem *
 AG_MenuActionKb(AG_MenuItem *pitem, const char *text,
     int nicon, SDLKey key_equiv, SDLMod key_mod,
-    void (*fn)(int, union evarg *), const char *fmt, ...)
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
-	va_list ap;
 
 	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL,
 	    key_equiv, key_mod);
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, mi->onclick);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(mi->onclick, fmt);
 	return (mi);
 }
 
 AG_MenuItem *
 AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar,
     const char *text, int icon, SDLKey key_equiv, SDLMod key_mod,
-    void (*fn)(int, union evarg *), const char *fmt, ...)
+    void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 	AG_Button *bu;
-	AG_Event *ev;
-	va_list ap;
-	const char *fmtp;
+	AG_Event *btn_ev;
 	
 	bu = AG_ButtonNew(tbar->rows[0], NULL);
 	AG_ButtonSetSurface(bu, AGICON(icon));
 	AG_ButtonSetFocusable(bu, 0);
+	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
+	AG_EVENT_GET_ARGS(btn_ev, fmt);
 
 	mi = add_subitem(pitem, text, AGICON(icon), key_equiv, key_mod);
-	
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
-	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-			AG_EVENT_PUSH_ARG(ap, *fmtp, mi->onclick);
-		}
-		va_end(ap);
-		va_start(ap, fmt);
-		for (fmtp = fmt; *fmtp != '\0'; fmtp++) {
-			AG_EVENT_PUSH_ARG(ap, *fmtp, ev);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(mi->onclick, fmt);
 	return (mi);
 }
 

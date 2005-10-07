@@ -1,4 +1,4 @@
-/*	$Csoft: texture.c,v 1.10 2005/10/01 09:55:41 vedge Exp $	*/
+/*	$Csoft: texture.c,v 1.11 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -117,9 +117,9 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-poll_tilesets(int argc, union evarg *argv)
+poll_tilesets(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
+	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
@@ -130,10 +130,10 @@ poll_tilesets(int argc, union evarg *argv)
 }
 
 static void
-poll_src_tiles(int argc, union evarg *argv)
+poll_src_tiles(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Texture *tex = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Texture *tex = AG_PTR(1);
 	RG_Tileset *ts;
 	RG_Tile *t;
 	AG_TlistItem *it;
@@ -152,11 +152,11 @@ poll_src_tiles(int argc, union evarg *argv)
 }
 
 static void
-select_tileset(int argc, union evarg *argv)
+select_tileset(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Texture *tex = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Texture *tex = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	RG_Tileset *ts = it->p1;
 
 	AG_ObjectCopyName(ts, tex->tileset, sizeof(tex->tileset));
@@ -164,11 +164,11 @@ select_tileset(int argc, union evarg *argv)
 }
 
 static void
-select_src_tile(int argc, union evarg *argv)
+select_src_tile(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Texture *tex = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Texture *tex = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	RG_Tile *t = it->p1;
 
 	strlcpy(tex->tile, t->name, sizeof(tex->tile));

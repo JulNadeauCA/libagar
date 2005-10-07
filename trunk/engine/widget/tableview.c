@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.40 2005/10/02 08:00:51 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.41 2005/10/02 09:39:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -81,13 +81,13 @@ static int clicked_header(AG_Tableview *, int, int, Uint32, void *, void *);
 static int clicked_row(AG_Tableview *, int, int, Uint32, void *, void *);
 static int draw_column(AG_Tableview *, int, int, Uint32, void *, void *);
 
-static void mousebuttonup(int, union evarg *);
-static void mousebuttondown(int, union evarg *);
-static void scrolled(int, union evarg *);
-static void dblclick_expire(int, union evarg *);
-static void lost_focus(int, union evarg *);
-static void columnresize(int, union evarg *);
-static void columnmove(int argc, union evarg *);
+static void mousebuttonup(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void scrolled(AG_Event *);
+static void dblclick_expire(AG_Event *);
+static void lost_focus(AG_Event *);
+static void columnresize(AG_Event *);
+static void columnmove(AG_Event *);
 
 
 AG_Tableview *
@@ -1044,7 +1044,7 @@ clicked_header(AG_Tableview *tv, int visible_start, int visible_end,
 	    x <= visible_end-3) {
 		if (tv->reordercols) {
 			AG_SchedEvent(NULL, tv, 400, "column-move",
-				       "%i, %i", idx, visible_start);
+				       "%i,%i", idx, visible_start);
 		}
 		if (tv->reordercols || tv->sort)
 			tv->column[idx].mousedown = 1;
@@ -1054,14 +1054,14 @@ clicked_header(AG_Tableview *tv, int visible_start, int visible_end,
 		 idx > 0 &&
 		 x < visible_start+3) {
 		 AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		     "%i, %i", idx-1, visible_start - tv->column[idx - 1].w);
+		     "%i,%i", idx-1, visible_start - tv->column[idx - 1].w);
 	}
 	/* click on the RIGHT resize line */
 	else if (tv->column[idx].resizable &&
 		 (x > visible_end-3 ||
 		  (idx == tv->columncount-1 && x < visible_end+3))) {
 		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		    "%i, %i", idx, visible_start);
+		    "%i,%i", idx, visible_start);
 	}
 	return (0);
 }
@@ -1181,8 +1181,8 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 		AG_PostEvent(NULL, tv, "tableview-dblclick", "%p", row);
 	} else {
 		tv->dblclicked++;
-		AG_SchedEvent(NULL, tv, agMouseDblclickDelay,
-		    "dblclick-expire", "");
+		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "dblclick-expire",
+		    NULL);
 	}
 	return (0);
 }
@@ -1276,10 +1276,10 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
  */
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
-	int coord_x = argv[2].i, coord_y = argv[3].i;
+	AG_Tableview *tv = AG_SELF();
+	int coord_x = AG_INT(2), coord_y = AG_INT(3);
 	int left;
 	u_int i;
 
@@ -1327,11 +1327,11 @@ mousebuttonup(int argc, union evarg *argv)
 }
 
 static void
-mousebuttondown(int argc, union evarg * argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
-	int coord_x = argv[2].i;
-	int coord_y = argv[3].i;
+	AG_Tableview *tv = AG_SELF();
+	int coord_x = AG_INT(2);
+	int coord_y = AG_INT(3);
 
 	AG_WidgetFocus(tv);
 
@@ -1347,17 +1347,17 @@ mousebuttondown(int argc, union evarg * argv)
 }
 
 static void
-scrolled(int argc, union evarg *argv)
+scrolled(AG_Event *event)
 {
-	AG_Tableview *tv = argv[1].p;
+	AG_Tableview *tv = AG_PTR(1);
 
 	tv->visible.dirty = 1;
 }
 
 static void
-dblclick_expire(int argc, union evarg *argv)
+dblclick_expire(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
+	AG_Tableview *tv = AG_SELF();
 
 	pthread_mutex_lock(&tv->lock);
 
@@ -1371,9 +1371,9 @@ dblclick_expire(int argc, union evarg *argv)
 
 /* XXX - this seems to be called after every click.. */
 static void
-lost_focus(int argc, union evarg *argv)
+lost_focus(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
+	AG_Tableview *tv = AG_SELF();
 
 	//AG_CancelEvent(tv, "key-tick");
 	//AG_CancelEvent(tv, "dblclick-expire");
@@ -1382,10 +1382,10 @@ lost_focus(int argc, union evarg *argv)
 }
 
 static void
-columnresize(int argc, union evarg *argv)
+columnresize(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
-	int col = argv[1].i, left = argv[2].i;
+	AG_Tableview *tv = AG_SELF();
+	int col = AG_INT(1), left = AG_INT(2);
 	int x;
 
 	AG_MouseGetState(&x, NULL);
@@ -1397,11 +1397,11 @@ columnresize(int argc, union evarg *argv)
 }
 
 static void
-columnmove(int argc, union evarg * argv)
+columnmove(AG_Event *event)
 {
-	AG_Tableview *tv = argv[0].p;
-	u_int col = (u_int)argv[1].i;
-	int left = argv[2].i;
+	AG_Tableview *tv = AG_SELF();
+	u_int col = AG_UINT(1);
+	int left = AG_INT(2);
 	int x;
 
 	/*
@@ -1435,8 +1435,8 @@ columnmove(int argc, union evarg * argv)
 			col++;
 		}
 	}
-	AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-move",
-	    "%i, %i", col, left);
+	AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-move", "%u,%i",
+	    col, left);
 }
 
 void

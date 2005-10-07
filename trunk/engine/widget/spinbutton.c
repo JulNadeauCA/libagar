@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.25 2005/09/27 00:25:23 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.26 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -71,10 +71,10 @@ AG_SpinbuttonNew(void *parent, const char *fmt, ...)
 }
 
 static void
-spinbutton_bound(int argc, union evarg *argv)
+spinbutton_bound(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[0].p;
-	AG_WidgetBinding *binding = argv[1].p;
+	AG_Spinbutton *sbu = AG_SELF();
+	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
 		pthread_mutex_lock(&sbu->lock);
@@ -117,10 +117,10 @@ spinbutton_bound(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_keydown(int argc, union evarg *argv)
+spinbutton_keydown(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Spinbutton *sbu = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&sbu->lock);
 	switch (keysym) {
@@ -135,9 +135,9 @@ spinbutton_keydown(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_changed(int argc, union evarg *argv)
+spinbutton_changed(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 	char *s;
 
@@ -149,9 +149,9 @@ spinbutton_changed(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_return(int argc, union evarg *argv)
+spinbutton_return(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 
 	AG_PostEvent(NULL, sbu, "spinbutton-return", NULL);
@@ -159,9 +159,9 @@ spinbutton_return(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_inc(int argc, union evarg *argv)
+spinbutton_inc(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = AG_PTR(1);
 
 	pthread_mutex_lock(&sbu->lock);
 	AG_SpinbuttonAddValue(sbu, sbu->incr);
@@ -171,9 +171,9 @@ spinbutton_inc(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_dec(int argc, union evarg *argv)
+spinbutton_dec(AG_Event *event)
 {
-	AG_Spinbutton *sbu = argv[1].p;
+	AG_Spinbutton *sbu = AG_PTR(1);
 	
 	pthread_mutex_lock(&sbu->lock);
 	AG_SpinbuttonAddValue(sbu, -sbu->incr);

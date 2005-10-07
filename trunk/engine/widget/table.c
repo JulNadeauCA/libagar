@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.15 2005/10/07 01:54:25 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.16 2005/10/07 01:55:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -53,13 +53,13 @@ static AG_WidgetOps agTableOps = {
 	AG_TableScale
 };
 
-static void mousebuttondown(int, union evarg *);
-static void mousebuttonup(int, union evarg *);
-static void mousemotion(int, union evarg *);
-static void keydown(int, union evarg *);
-static void keyup(int, union evarg *);
-static void lostfocus(int, union evarg *);
-static void kbdscroll(int, union evarg *);
+static void mousebuttondown(AG_Event *);
+static void mousebuttonup(AG_Event *);
+static void mousemotion(AG_Event *);
+static void keydown(AG_Event *);
+static void keyup(AG_Event *);
+static void lostfocus(AG_Event *);
+static void kbdscroll(AG_Event *);
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
@@ -76,23 +76,17 @@ AG_TableNew(void *parent, u_int flags)
 }
 
 AG_Table *
-AG_TablePolled(void *parent, u_int flags, void (*fn)(int, union evarg *),
+AG_TablePolled(void *parent, u_int flags, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Table *t;
-	va_list ap;
 
 	t = Malloc(sizeof(AG_Table), M_OBJECT);
 	AG_TableInit(t, flags);
+
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, t->poll_ev);
-		}
-		va_end(ap);
-	}
-	
+	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
+
 	AG_ObjectAttach(parent, t);
 	return (t);
 }
@@ -364,7 +358,7 @@ AG_TableDraw(void *p)
 	t->moffs = AG_WidgetInt(t->vbar, "value");
 	
 	if (t->poll_ev != NULL)
-		t->poll_ev->handler(t->poll_ev->argc, t->poll_ev->argv);
+		t->poll_ev->handler(t->poll_ev);
 
 	for (n = 0, x = t->xoffs;
 	     n < t->n && x < AGWIDGET(t)->w;
@@ -716,12 +710,12 @@ column_over(AG_Table *t, int y)
 }
 
 static void
-mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Table *t = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	int m;
 
 	pthread_mutex_lock(&t->lock);
@@ -754,12 +748,12 @@ out:
 }
 
 static void
-mousebuttonup(int argc, union evarg *argv)
+mousebuttonup(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Table *t = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	u_int m, n;
 
 	switch (button) {
@@ -772,10 +766,10 @@ mousebuttonup(int argc, union evarg *argv)
 }
 
 static void
-keydown(int argc, union evarg *argv)
+keydown(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Table *t = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&t->lock);
 	switch (keysym) {
@@ -812,13 +806,13 @@ column_resize_over(AG_Table *t, int px)
 }
 
 static void
-mousemotion(int argc, union evarg *argv)
+mousemotion(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	int x = argv[1].i;
-	int y = argv[2].i;
-	int xrel = argv[3].i;
-	int yrel = argv[4].i;
+	AG_Table *t = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+	int xrel = AG_INT(3);
+	int yrel = AG_INT(4);
 	int n, cx;
 	int m;
 
@@ -838,10 +832,10 @@ mousemotion(int argc, union evarg *argv)
 }
 
 static void
-keyup(int argc, union evarg *argv)
+keyup(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Table *t = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&t->lock);
 	switch (keysym) {
@@ -858,9 +852,9 @@ keyup(int argc, union evarg *argv)
 }
 
 static void
-lostfocus(int argc, union evarg *argv)
+lostfocus(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
+	AG_Table *t = AG_SELF();
 
 	pthread_mutex_lock(&t->lock);
 	AG_CancelEvent(t, "key-tick");
@@ -931,10 +925,10 @@ AG_TableDeselectAllCols(AG_Table *t)
 }
 
 static void
-kbdscroll(int argc, union evarg *argv)
+kbdscroll(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
-	SDLKey keysym = (SDLKey)argv[1].i;
+	AG_Table *t = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
 	u_int m2, n;
 	int m;
 	

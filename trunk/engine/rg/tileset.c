@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.64 2005/09/27 14:06:33 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.65 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -577,10 +577,10 @@ RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 #ifdef EDITION
 
 static void
-poll_graphics(int argc, union evarg *argv)
+poll_graphics(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	RG_Pixmap *px;
 	RG_Sketch *sk;
 	AG_TlistItem *it;
@@ -609,10 +609,10 @@ poll_graphics(int argc, union evarg *argv)
 }
 
 static void
-poll_textures(int argc, union evarg *argv)
+poll_textures(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	RG_Texture *tex;
 	AG_TlistItem *it;
 
@@ -639,10 +639,10 @@ poll_textures(int argc, union evarg *argv)
 }
 
 static void
-poll_anims(int argc, union evarg *argv)
+poll_anims(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	RG_Anim *ani;
 	AG_TlistItem *it;
 
@@ -661,10 +661,10 @@ poll_anims(int argc, union evarg *argv)
 }
 
 static void
-poll_tiles(int argc, union evarg *argv)
+poll_tiles(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	RG_Tileset *ts = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
 	RG_Tile *t;
 	AG_TlistItem *it;
 	RG_TileElement *tel;
@@ -765,10 +765,10 @@ static int ins_colorkey = 1;
 static enum ag_gfx_snap_mode ins_snap_mode = AG_GFX_SNAP_NOT;
 
 static void
-insert_tile(int argc, union evarg *argv)
+insert_tile(AG_Event *event)
 {
-	AG_Window *pwin = argv[1].p;
-	RG_Tileset *ts = argv[2].p;
+	AG_Window *pwin = AG_PTR(1);
+	RG_Tileset *ts = AG_PTR(2);
 	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
 	RG_Tile *t;
 	u_int flags = 0;
@@ -857,11 +857,11 @@ tryname2:
 }
 
 static void
-insert_texture(int argc, union evarg *argv)
+insert_texture(AG_Event *event)
 {
-	AG_Window *dlgwin = argv[1].p;
-	AG_Window *pwin = argv[2].p;
-	RG_Tileset *ts = argv[3].p;
+	AG_Window *dlgwin = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
+	RG_Tileset *ts = AG_PTR(3);
 	AG_Window *win;
 	RG_Texture *tex;
 	u_int flags = 0;
@@ -923,10 +923,10 @@ tryname2:
 }
 
 static void
-insert_anim(int argc, union evarg *argv)
+insert_anim(AG_Event *event)
 {
-	AG_Window *pwin = argv[1].p;
-	RG_Tileset *ts = argv[2].p;
+	AG_Window *pwin = AG_PTR(1);
+	RG_Tileset *ts = AG_PTR(2);
 	RG_Anim *ani;
 	int flags = 0;
 
@@ -986,10 +986,10 @@ tryname2:
 }
 
 static void
-insert_tile_dlg(int argc, union evarg *argv)
+insert_tile_dlg(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Textbox *tb;
@@ -1044,10 +1044,10 @@ insert_tile_dlg(int argc, union evarg *argv)
 }
 
 static void
-insert_texture_dlg(int argc, union evarg *argv)
+insert_texture_dlg(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Textbox *tb;
@@ -1077,10 +1077,10 @@ insert_texture_dlg(int argc, union evarg *argv)
 }
 
 static void
-insert_anim_dlg(int argc, union evarg *argv)
+insert_anim_dlg(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Window *pwin = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
 	AG_Button *btn;
@@ -1122,10 +1122,10 @@ insert_anim_dlg(int argc, union evarg *argv)
 }
 
 static void
-delete_tiles(int argc, union evarg *argv)
+delete_tiles(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
-	RG_Tileset *ts = argv[2].p;
+	AG_Tlist *tl = AG_PTR(1);
+	RG_Tileset *ts = AG_PTR(2);
 	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
@@ -1228,10 +1228,10 @@ tryname2:
 }
 
 static void
-dup_tiles(int argc, union evarg *argv)
+dup_tiles(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	AG_TlistItem *it;
 
 	pthread_mutex_lock(&ts->lock);
@@ -1247,11 +1247,11 @@ dup_tiles(int argc, union evarg *argv)
 }
 
 static void
-edit_tiles(int argc, union evarg *argv)
+edit_tiles(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
-	AG_Window *pwin = argv[3].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1270,11 +1270,11 @@ edit_tiles(int argc, union evarg *argv)
 }
 
 static void
-edit_anims(int argc, union evarg *argv)
+edit_anims(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
-	AG_Window *pwin = argv[3].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1294,11 +1294,11 @@ edit_anims(int argc, union evarg *argv)
 }
 
 static void
-edit_textures(int argc, union evarg *argv)
+edit_textures(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl = argv[2].p;
-	AG_Window *pwin = argv[3].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	AG_Window *win;
 	AG_TlistItem *it;
 
@@ -1316,10 +1316,10 @@ edit_textures(int argc, union evarg *argv)
 }
 
 static void
-delete_pixmap(int argc, union evarg *argv)
+delete_pixmap(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl_art = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl_art = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
@@ -1338,10 +1338,10 @@ delete_pixmap(int argc, union evarg *argv)
 }
 
 static void
-delete_anim(int argc, union evarg *argv)
+delete_anim(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl_anims = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl_anims = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl_anims)) != NULL) {
@@ -1360,10 +1360,10 @@ delete_anim(int argc, union evarg *argv)
 }
 
 static void
-delete_sketch(int argc, union evarg *argv)
+delete_sketch(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl_art = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl_art = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
@@ -1382,10 +1382,10 @@ delete_sketch(int argc, union evarg *argv)
 }
 
 static void
-delete_textures(int argc, union evarg *argv)
+delete_textures(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl_textures = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl_textures = AG_PTR(2);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl_textures->items, items) {
@@ -1401,10 +1401,10 @@ delete_textures(int argc, union evarg *argv)
 }
 
 static void
-duplicate_pixmap(int argc, union evarg *argv)
+duplicate_pixmap(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
-	AG_Tlist *tl_art = argv[2].p;
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tl_art = AG_PTR(2);
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl_art)) != NULL) {
@@ -1436,9 +1436,9 @@ tryname:
 }
 
 static void
-select_template(int argc, union evarg *argv)
+select_template(AG_Event *event)
 {
-	RG_Tileset *ts = argv[1].p;
+	RG_Tileset *ts = AG_PTR(1);
 
 	RG_TilesetReinit(ts);
 

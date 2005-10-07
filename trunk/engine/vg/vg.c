@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.71 2005/09/27 02:25:02 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.72 2005/09/27 03:14:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -1440,27 +1440,27 @@ fail:
 
 #ifdef EDITION
 void
-VG_GeoChangedEv(int argc, union evarg *argv)
+VG_GeoChangedEv(AG_Event *event)
 {
-	VG *vg = argv[1].p;
+	VG *vg = AG_PTR(1);
 
 	VG_Scale(vg, vg->w, vg->h, vg->scale);
 	vg->redraw = 1;
 }
 
 void
-VG_ChangedEv(int argc, union evarg *argv)
+VG_ChangedEv(AG_Event *event)
 {
-	VG *vg = argv[1].p;
+	VG *vg = AG_PTR(1);
 
 	vg->redraw = 1;
 }
 
 static void
-poll_layers(int argc, union evarg *argv)
+poll_layers(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	VG *vg = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	VG *vg = AG_PTR(1);
 	int i;
 	
 	AG_TlistClear(tl);
@@ -1487,11 +1487,11 @@ poll_layers(int argc, union evarg *argv)
 }
 
 static void
-select_layer(int argc, union evarg *argv)
+select_layer(AG_Event *event)
 {
-	AG_Combo *com = argv[0].p;
-	VG *vg = argv[1].p;
-	AG_TlistItem *it = argv[2].p;
+	AG_Combo *com = AG_SELF();
+	VG *vg = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
 	int i = 0;
 
 	TAILQ_FOREACH(it, &com->list->items, items) {
@@ -1661,11 +1661,11 @@ const AG_MaptoolOps vgScaleTool = {
 
 #ifdef EDITION
 static void
-select_tool(int argc, union evarg *argv)
+select_tool(AG_Event *event)
 {
-	VG *vg = argv[1].p;
-	char *name = argv[2].s;
-	AG_Mapview *mv = argv[3].p;
+	VG *vg = AG_PTR(1);
+	char *name = AG_STRING(2);
+	AG_Mapview *mv = AG_PTR(3);
 	AG_Maptool *t;
 	
 	if ((t = AG_MapviewFindTool(mv, name)) != NULL) {
@@ -1675,9 +1675,9 @@ select_tool(int argc, union evarg *argv)
 }
 
 static void
-show_blocks(int argc, union evarg *argv)
+show_blocks(AG_Event *event)
 {
-	VG *vg = argv[1].p;
+	VG *vg = AG_PTR(1);
 	AG_Window *win;
 
 	win = VG_BlockEditor(vg);

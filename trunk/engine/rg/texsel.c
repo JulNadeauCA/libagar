@@ -1,4 +1,4 @@
-/*	$Csoft: texsel.c,v 1.4 2005/08/29 03:29:05 vedge Exp $	*/
+/*	$Csoft: texsel.c,v 1.5 2005/09/27 00:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -43,9 +43,9 @@ RG_TextureSelectorNew(void *parent, RG_Tileset *tset, int flags)
 }
 
 static void
-poll_textures(int argc, union evarg *argv)
+poll_textures(AG_Event *event)
 {
-	RG_TextureSelector *ts = argv[0].p;
+	RG_TextureSelector *ts = AG_SELF();
 	AG_Tlist *tl = (AG_Tlist *)ts;
 	RG_Texture *tex;
 	AG_TlistItem *it;
@@ -69,9 +69,9 @@ poll_textures(int argc, union evarg *argv)
 }
 
 static void
-select_texture(int argc, union evarg *argv)
+select_texture(AG_Event *event)
 {
-	RG_TextureSelector *ts = argv[0].p;
+	RG_TextureSelector *ts = AG_SELF();
 	AG_Tlist *tl = (AG_Tlist *)ts;
 	AG_TlistItem *it;
 	RG_Texture *tex;

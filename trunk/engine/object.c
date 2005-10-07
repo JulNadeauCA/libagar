@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.242 2005/10/01 09:55:38 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.243 2005/10/04 17:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -129,6 +129,7 @@ AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 	ob->ops = (opsp != NULL) ? opsp : &agObjectOps;
 	ob->parent = NULL;
 	ob->flags = 0;
+	ob->nevents = 0;
 
 	pthread_mutex_init(&ob->lock, &agRecursiveMutexAttr);
 	ob->gfx = NULL;
@@ -1921,11 +1922,11 @@ fail:
 #ifdef EDITION
 
 static void
-poll_deps(int argc, union evarg *argv)
+poll_deps(AG_Event *event)
 {
 	char path[AG_OBJECT_PATH_MAX];
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *ob = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
 	AG_ObjectDep *dep;
 
 	AG_TlistClear(tl);
@@ -1951,10 +1952,10 @@ poll_deps(int argc, union evarg *argv)
 }
 
 static void
-poll_gfx(int argc, union evarg *argv)
+poll_gfx(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *ob = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
 	AG_Gfx *gfx = ob->gfx;
 	AG_TlistItem *it;
 	Uint32 i;
@@ -1999,10 +2000,10 @@ poll_gfx(int argc, union evarg *argv)
 }
 
 static void
-poll_props(int argc, union evarg *argv)
+poll_props(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *ob = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
 	AG_Prop *prop;
 	
 	AG_TlistClear(tl);
@@ -2016,11 +2017,11 @@ poll_props(int argc, union evarg *argv)
 }
 
 static void
-poll_events(int argc, union evarg *argv)
+poll_events(AG_Event *event)
 {
 	extern const char *evarg_type_names[];
-	AG_Tlist *tl = argv[0].p;
-	AG_Object *ob = argv[1].p;
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
 	AG_Event *ev;
 	
 	AG_TlistClear(tl);
@@ -2031,6 +2032,12 @@ poll_events(int argc, union evarg *argv)
 		args[0] = '(';
 		args[1] = '\0';
 		for (i = 1; i < ev->argc; i++) {
+			char *argn = ev->argn[i];
+
+			if (argn[0] != '\0') {
+				strlcat(args, argn, sizeof(args));
+				strlcat(args, "=", sizeof(args));
+			}
 			switch (ev->argt[i]) {
 			case AG_EVARG_POINTER:
 				snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
@@ -2086,11 +2093,11 @@ poll_events(int argc, union evarg *argv)
 }
 
 static void
-rename_object(int argc, union evarg *argv)
+rename_object(AG_Event *event)
 {
 	AG_WidgetBinding *stringb;
-	AG_Textbox *tb = argv[0].p;
-	AG_Object *ob = argv[1].p;
+	AG_Textbox *tb = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
 
 	AG_ObjectPageIn(ob, AG_OBJECT_DATA);
 	AG_ObjectUnlinkDatafiles(ob);
@@ -2101,13 +2108,13 @@ rename_object(int argc, union evarg *argv)
 }
 
 static void
-refresh_checksums(int argc, union evarg *argv)
+refresh_checksums(AG_Event *event)
 {
 	char checksum[128];
-	AG_Object *ob = argv[1].p;
-	AG_Textbox *tb_md5 = argv[2].p;
-	AG_Textbox *tb_sha1 = argv[3].p;
-	AG_Textbox *tb_rmd160 = argv[4].p;
+	AG_Object *ob = AG_PTR(1);
+	AG_Textbox *tb_md5 = AG_PTR(2);
+	AG_Textbox *tb_sha1 = AG_PTR(3);
+	AG_Textbox *tb_rmd160 = AG_PTR(4);
 
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, checksum) > 0) {
 		AG_TextboxPrintf(tb_md5,  "%s", checksum);
@@ -2128,13 +2135,13 @@ refresh_checksums(int argc, union evarg *argv)
 
 #ifdef NETWORK
 static void
-refresh_rcs_status(int argc, union evarg *argv)
+refresh_rcs_status(AG_Event *event)
 {
 	char objdir[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
-	AG_Object *ob = argv[1].p;
-	AG_Label *lb_status = argv[2].p;
-	AG_Tlist *tl = argv[3].p;
+	AG_Object *ob = AG_PTR(1);
+	AG_Label *lb_status = AG_PTR(2);
+	AG_Tlist *tl = AG_PTR(3);
 	extern const char *agRcsStatusStrings[];
 	enum ag_rcs_status status;
 	size_t len;

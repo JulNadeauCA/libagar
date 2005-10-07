@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.136 2005/10/01 14:15:39 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.137 2005/10/02 09:39:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,10 +54,10 @@ enum {
 	PAGE_INCREMENT = 4
 };
 
-static void tlist_mousebuttondown(int, union evarg *);
-static void tlist_keydown(int, union evarg *);
-static void tlist_keyup(int, union evarg *);
-static void tlist_scrolled(int, union evarg *);
+static void tlist_mousebuttondown(AG_Event *);
+static void tlist_keydown(AG_Event *);
+static void tlist_keyup(AG_Event *);
+static void tlist_scrolled(AG_Event *);
 static void free_item(AG_Tlist *, AG_TlistItem *);
 static void select_item(AG_Tlist *, AG_TlistItem *);
 static void unselect_item(AG_Tlist *, AG_TlistItem *);
@@ -78,10 +78,10 @@ AG_TlistNew(void *parent, int flags)
 
 /* Displace the selection or scroll in response to keyboard events. */
 static void
-key_tick(int argc, union evarg *argv)
+key_tick(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	SDLKey keysym = (SDLKey)argv[1].i;
+	AG_Tlist *tl = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
 	AG_TlistItem *it, *pit;
 	AG_WidgetBinding *offsetb;
 	int *offset;
@@ -147,9 +147,9 @@ key_tick(int argc, union evarg *argv)
 }
 
 static void
-dblclick_expire(int argc, union evarg *argv)
+dblclick_expire(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
+	AG_Tlist *tl = AG_SELF();
 
 	pthread_mutex_lock(&tl->lock);
 	tl->dblclicked = NULL;
@@ -157,9 +157,9 @@ dblclick_expire(int argc, union evarg *argv)
 }
 
 static void
-lost_focus(int argc, union evarg *argv)
+lost_focus(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
+	AG_Tlist *tl = AG_SELF();
 
 	AG_CancelEvent(tl, "key-tick");
 	AG_CancelEvent(tl, "dblclick-expire");
@@ -774,12 +774,12 @@ unselect_item(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 static void
-tlist_mousebuttondown(int argc, union evarg *argv)
+tlist_mousebuttondown(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
+	AG_Tlist *tl = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
 	AG_TlistItem *ti;
 	int tind;
 
@@ -901,10 +901,10 @@ out:
 }
 
 static void
-tlist_keydown(int argc, union evarg *argv)
+tlist_keydown(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Tlist *tl = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&tl->lock);
 	switch (keysym) {
@@ -921,10 +921,10 @@ tlist_keydown(int argc, union evarg *argv)
 }
 
 static void
-tlist_keyup(int argc, union evarg *argv)
+tlist_keyup(AG_Event *event)
 {
-	AG_Tlist *tl = argv[0].p;
-	int keysym = argv[1].i;
+	AG_Tlist *tl = AG_SELF();
+	int keysym = AG_INT(1);
 
 	pthread_mutex_lock(&tl->lock);
 	switch (keysym) {
@@ -945,9 +945,9 @@ tlist_keyup(int argc, union evarg *argv)
 }
 
 static void
-tlist_scrolled(int argc, union evarg *argv)
+tlist_scrolled(AG_Event *event)
 {
-	AG_Tlist *tl = argv[1].p;
+	AG_Tlist *tl = AG_PTR(1);
 
 	update_scrollbar(tl);
 }

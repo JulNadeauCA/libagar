@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.11 2005/09/27 00:25:24 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.12 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -106,12 +106,11 @@ AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows, int flags
 
 AG_Button *
 AG_ToolbarAddButton(AG_Toolbar *tbar, int row, SDL_Surface *icon,
-    int sticky, int def, void (*handler)(int, union evarg *),
+    int sticky, int def, void (*handler)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Button *bu;
 	AG_Event *ev;
-	va_list ap;
 
 #ifdef DEBUG
 	if (row < 0 || row > tbar->nrows)
@@ -124,13 +123,7 @@ AG_ToolbarAddButton(AG_Toolbar *tbar, int row, SDL_Surface *icon,
 	AG_WidgetSetBool(bu, "state", def);
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
-	if (fmt != NULL) {
-		va_start(ap, fmt);
-		for (; *fmt != '\0'; fmt++) {
-			AG_EVENT_PUSH_ARG(ap, *fmt, ev);
-		}
-		va_end(ap);
-	}
+	AG_EVENT_GET_ARGS(ev, fmt);
 	return (bu);
 }
 
