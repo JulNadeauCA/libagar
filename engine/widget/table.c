@@ -1,4 +1,4 @@
-/*	$Csoft: table.c,v 1.13 2005/10/03 06:14:30 vedge Exp $	*/
+/*	$Csoft: table.c,v 1.14 2005/10/04 05:41:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -417,7 +417,6 @@ AG_TableDraw(void *p)
 			agPrim.rect_blended(t, x, 0, col->w, AGWIDGET(t)->h,
 			    c, AG_ALPHA_SRC);
 		}
-		
 		AG_WidgetPopClipRect(t);
 		x += col->w;
 	}
@@ -831,11 +830,8 @@ mousemotion(int argc, union evarg *argv)
 		AG_TableSizeFillCols(t);
 	} else {
 		if ((m = column_over(t, y)) == -1 &&
-		    column_resize_over(t, x)) {
-			AG_WidgetSetCursor(t, AG_HRESIZE_CURSOR);
-		} else {
-			AG_WidgetUnsetCursor(t);
-		}
+		    column_resize_over(t, x))
+			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
 	pthread_mutex_unlock(&t->lock);
 }
@@ -869,7 +865,6 @@ lostfocus(int argc, union evarg *argv)
 	AG_CancelEvent(t, "key-tick");
 	AG_CancelEvent(t, "dblclick-expire");
 	if (t->nResizing >= 0) {
-		AG_WidgetUnsetCursor(t);
 		t->nResizing = -1;
 	}
 	pthread_mutex_unlock(&t->lock);
