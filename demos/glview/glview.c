@@ -19,25 +19,23 @@
 
 #include <GL/glu.h>
 
-static GLfloat vx = 0.0, vy = 0.0, vz = 0.0;
-static GLdouble spin = 0.0;
+static GLdouble spin = 0.0, vz = -5.0;
+static GLfloat material[4] = { 1.0, 0.0, 0.0, 1.0 };
 
 static void
 ScaleCube(AG_Event *event)
 {
 	glLoadIdentity();
-	glOrtho(-1.0, 1.0, 1.0, -1.0, -1.0, 1.0);
-	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	gluPerspective(60.0, 1.0, 0.001, 100.0);
 }
 
 static void
 DrawCube(AG_Event *event)
 {
-	GLfloat redMat[] = { 1.0, 0.0, 0.0, 1.0 };
-	GLfloat blueMat[] = { 0.0, 1.0, 0.0, 0.5 };
 	GLUquadric *q;
+	
+	glLoadIdentity();
+	gluLookAt(0.5, vz, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -45,10 +43,14 @@ DrawCube(AG_Event *event)
 
 	glPushMatrix();
 	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redMat);
-		glRotatef(spin, vx, vy, 1.0);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
+		glRotatef(spin, 1.0, 0.0, 1.0);
 		q = gluNewQuadric();
-		gluSphere(q, 0.50, 10, 10);
+		gluCylinder(q, 1.0, 0.0, 1.0, 30, 5);
+		
+		glRotatef(180.0, 0.0, 1.0, 0.0);
+		q = gluNewQuadric();
+		gluCylinder(q, 1.0, 0.0, 1.0, 30, 5);
 	}
 	glPopMatrix();
 	
@@ -61,33 +63,53 @@ DrawCube(AG_Event *event)
 }
 
 static void
+Mousebutton(AG_Event *event)
+{
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+
+	switch (button) {
+	case SDL_BUTTON_WHEELDOWN:
+		vz += 1.0;
+		break;
+	case SDL_BUTTON_WHEELUP:
+		vz -= 1.0;
+		break;
+	}
+}
+
+static void
 CreateWindow(void)
 {
 	AG_Window *win;
 	AG_GLView *glv;
+	AG_HBox *hb;
 	AG_VBox *vb;
+	AG_HSVPal *pal;
+	AG_FSpinbutton *fsb;
 
 	SDL_EnableKeyRepeat(250, 50);
 
-	win = AG_WindowNew(AG_WINDOW_NOBACKGROUND);
-	glv = AG_GLViewNew(win, AG_GLVIEW_WFILL|AG_GLVIEW_HFILL);
-
-	AG_GLViewScaleFn(glv, ScaleCube, NULL);
-	AG_GLViewDrawFn(glv, DrawCube, NULL);
-	AG_WidgetFocus(glv);
-
-	vb = AG_VBoxNew(win, 0);
+	win = AG_WindowNew(0);
+	
+	hb = AG_HBoxNew(win, AG_HBOX_WFILL|AG_HBOX_HFILL);
 	{
-		AG_FSpinbutton *fsb;
+		glv = AG_GLViewNew(hb, AG_GLVIEW_WFILL|AG_GLVIEW_HFILL);
 
+		AG_GLViewScaleFn(glv, ScaleCube, NULL);
+		AG_GLViewDrawFn(glv, DrawCube, NULL);
+		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
+		AG_WidgetFocus(glv);
+
+		pal = AG_HSVPalNew(hb);
+		AGWIDGET(pal)->flags |= AG_WIDGET_HFILL;
+		AG_WidgetBindPointer(pal, "HSVAfv", material);
+	}
+
+	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	{
 		fsb = AG_FSpinbuttonNew(vb, NULL, "Vx:");
-		AG_WidgetBindFloat(fsb, "value", &vx);
-		
-		fsb = AG_FSpinbuttonNew(vb, NULL, "Vy:");
-		AG_WidgetBindFloat(fsb, "value", &vy);
-
-		fsb = AG_FSpinbuttonNew(vb, NULL, "Vz:");
-		AG_WidgetBindFloat(fsb, "value", &vz);
 	}
 
 	AG_WindowShow(win);
@@ -145,7 +167,8 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
+
+	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
 	CreateWindow();
 
 	AG_EventLoop();
