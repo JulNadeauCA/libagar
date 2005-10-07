@@ -121,16 +121,26 @@ update_pixel_from_hsva(AG_HSVPal *pal)
 {
 	float h, s, v;
 	Uint8 r, g, b, a;
-	AG_WidgetBinding *bFormat;
+	AG_WidgetBinding *bFormat, *bHSVAfv;
 	SDL_PixelFormat **pFormat;
+	float *pHSVA;
 
 	h = AG_WidgetFloat(pal, "hue");
 	s = AG_WidgetFloat(pal, "saturation");
 	v = AG_WidgetFloat(pal, "value");
 	bFormat = AG_WidgetGetBinding(pal, "pixel-format", &pFormat);
+	
 	RG_HSV2RGB(h, s, v, &r, &g, &b);
+	if ((bHSVAfv = AG_WidgetGetBinding(pal, "HSVAfv", &pHSVA)) != NULL) {
+		pHSVA[0] = r/255.0;
+		pHSVA[1] = g/255.0;
+		pHSVA[2] = b/255.0;
+		pHSVA[3] = a/255.0;
+		AG_WidgetUnlockBinding(bHSVAfv);
+	}
 	AG_WidgetSetUint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b,
 	    get_alpha8(pal)));
+
 	AG_WidgetUnlockBinding(bFormat);
 }
 
