@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.104 2005/10/05 05:07:39 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.105 2005/10/06 10:38:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -82,7 +82,6 @@ typedef struct ag_widget {
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	SDL_Rect rClipSave;		/* Saved clipping rectangle */
-	SDL_Cursor *cursSave;		/* Saved cursor */
 	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	u_int nsurfaces;
@@ -135,15 +134,9 @@ void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 void	 AG_WidgetPushClipRect(void *, int, int, u_int, u_int);
 void	 AG_WidgetPopClipRect(void *);
-void	 AG_WidgetPushCursor(void *, int);
-void	 AG_WidgetPopCursor(void *);
-void	 AG_WidgetSetCursor(void *, int);
-void	 AG_WidgetReplaceCursor(void *, int);
 
-#define AG_WidgetUnsetCursor(w) do {	\
-	AG_WidgetPopCursor(w);		\
-	SDL_SetCursor(agDefaultCursor);	\
-} while (0)
+__inline__ void	 AG_SetCursor(int);
+__inline__ void	 AG_UnsetCursor(void);
 
 #define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)
 #define	AG_WidgetBlitSurface(p,n,x,y) \
