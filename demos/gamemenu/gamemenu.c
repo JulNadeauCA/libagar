@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.5 2005/10/04 17:59:32 vedge Exp $	*/
+/*	$Csoft: gamemenu.c,v 1.6 2005/10/07 07:09:35 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -18,20 +18,6 @@
 #include <unistd.h>
 
 static void
-PollItems(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-
-	AG_TableBegin(t);
-	AG_TableAddRow(t, "%s:%s", "Foo", "Bar");
-	AG_TableAddRow(t, "%d:%d", 10, 2);
-	AG_TableAddRow(t, "%s:%d", "Baz", 3);
-	AG_TableAddRow(t, "%s:%d", "Bezo", 4);
-	AG_TableAddRow(t, "%s:%d", "Fez", 5);
-	AG_TableEnd(t);
-}
-
-static void
 CreateGameMenu(void)
 {
 	AG_Window *win;
@@ -39,7 +25,6 @@ CreateGameMenu(void)
 	AG_Label *lb1, *lb2;
 	AG_Button *btn;
 	AG_Pixmap *px;
-	AG_Table *t;
 
 	/* Create a fixed-size window with no titlebar or decorations. */
 	win = AG_WindowNewNamed(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS,
@@ -88,13 +73,6 @@ CreateGameMenu(void)
 	btn = AG_ButtonNew(fx, "D");
 	AG_FixedMove(fx, btn, 204+192, 48);
 	AG_FixedSize(fx, btn, 32, 32);
-
-	/* Create a polled table. */
-	t = AG_TablePolled(fx, 0, PollItems, NULL);
-	AG_FixedMove(fx, t, 640-128, 32);
-	AG_FixedSize(fx, t, 128-16, 128-64);
-	AG_TableAddCol(t, "Name", "<Name>", NULL);
-	AG_TableAddCol(t, "Num", "<88>", NULL);
 
 	/*
 	 * Set the window geometry manually. This must be called after the
