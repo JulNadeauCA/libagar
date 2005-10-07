@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.4 2005/10/04 17:34:49 vedge Exp $	*/
+/*	$Csoft: gamemenu.c,v 1.5 2005/10/04 17:59:32 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -18,9 +18,9 @@
 #include <unistd.h>
 
 static void
-PollItems(int argc, union evarg *argv)
+PollItems(AG_Event *event)
 {
-	AG_Table *t = argv[0].p;
+	AG_Table *t = AG_SELF();
 
 	AG_TableBegin(t);
 	AG_TableAddRow(t, "%s:%s", "Foo", "Bar");
