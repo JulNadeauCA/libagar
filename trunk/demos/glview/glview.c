@@ -1,4 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
+/*	$Csoft: glview.c,v 1.1 2005/10/04 18:02:17 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -16,6 +16,82 @@
 
 #include <string.h>
 #include <unistd.h>
+
+#include <GL/glu.h>
+
+static GLfloat vx = 0.0, vy = 0.0, vz = 0.0;
+static GLdouble spin = 0.0;
+
+static void
+ScaleCube(AG_Event *event)
+{
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, 1.0, -1.0, -1.0, 1.0);
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+static void
+DrawCube(AG_Event *event)
+{
+	GLfloat redMat[] = { 1.0, 0.0, 0.0, 1.0 };
+	GLfloat blueMat[] = { 0.0, 1.0, 0.0, 0.5 };
+	GLUquadric *q;
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_DEPTH_TEST);
+
+	glPushMatrix();
+	{
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redMat);
+		glRotatef(spin, vx, vy, 1.0);
+		q = gluNewQuadric();
+		gluSphere(q, 0.50, 10, 10);
+	}
+	glPopMatrix();
+	
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHT0);
+	glDisable(GL_LIGHTING);
+	
+	spin = (spin + 2.0);
+	if (spin > 360.0) { spin -= 360.0; }
+}
+
+static void
+CreateWindow(void)
+{
+	AG_Window *win;
+	AG_GLView *glv;
+	AG_VBox *vb;
+
+	SDL_EnableKeyRepeat(250, 50);
+
+	win = AG_WindowNew(AG_WINDOW_NOBACKGROUND);
+	glv = AG_GLViewNew(win, AG_GLVIEW_WFILL|AG_GLVIEW_HFILL);
+
+	AG_GLViewScaleFn(glv, ScaleCube, NULL);
+	AG_GLViewDrawFn(glv, DrawCube, NULL);
+	AG_WidgetFocus(glv);
+
+	vb = AG_VBoxNew(win, 0);
+	{
+		AG_FSpinbutton *fsb;
+
+		fsb = AG_FSpinbuttonNew(vb, NULL, "Vx:");
+		AG_WidgetBindFloat(fsb, "value", &vx);
+		
+		fsb = AG_FSpinbuttonNew(vb, NULL, "Vy:");
+		AG_WidgetBindFloat(fsb, "value", &vy);
+
+		fsb = AG_FSpinbuttonNew(vb, NULL, "Vz:");
+		AG_WidgetBindFloat(fsb, "value", &vz);
+	}
+
+	AG_WindowShow(win);
+}
 
 int
 main(int argc, char *argv[])
@@ -59,7 +135,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
@@ -70,7 +146,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
-	CreateGameMenu();
+	CreateWindow();
 
 	AG_EventLoop();
 	AG_Destroy();
