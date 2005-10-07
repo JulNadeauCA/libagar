@@ -14,8 +14,8 @@ using SDL or OpenGL.
 Agar is most well-known for its extensive GUI library, which is being used
 by games, game edition tools, CAD and scientific applications.
 
-The Agar core library features an object system providing event and timing
-facilities, advanced memory management, dependency keeping and an optional
+The Agar core library features an object system which implements event and
+timing facilities, archiving, memory management, dependency keeping and a
 graphical edition framework.
 
 The distribution also includes a vector drawing engine, a map system and
