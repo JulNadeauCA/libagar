@@ -1,4 +1,4 @@
-/*	$Csoft: hpane.c,v 1.8 2005/09/27 00:25:22 vedge Exp $	*/
+/*	$Csoft: hpane.c,v 1.9 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/cursors.h>
 
 static AG_WidgetOps agHPaneOps = {
 	{
@@ -79,23 +80,22 @@ AG_HPaneAddDiv(AG_HPane *pa, enum ag_box_type b1type, int b1flags,
 	return (div);
 }
 
+static __inline__ int
+OverDivControl(AG_HPaneDiv *div, int x)
+{
+	return (x >= (div->x - 4) && x <= (div->x + 4));
+}
+
 static void
 mousebuttondown(int argc, union evarg *argv)
 {
 	AG_HPane *pa = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
-	int y = argv[3].i;
 	AG_HPaneDiv *div;
 	
-	TAILQ_FOREACH(div, &pa->divs, divs) {
-		if (x > div->x-4 && x < div->x+4) {
-			div->moving = 1;
-			AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
-		} else {
-			div->moving = 0;
-		}
-	}
+	TAILQ_FOREACH(div, &pa->divs, divs)
+		div->moving = OverDivControl(div, x);
 }
 
 static void
@@ -104,8 +104,14 @@ mousemotion(int argc, union evarg *argv)
 	AG_HPane *pa = argv[0].p;
 	AG_Window *pwin;
 	AG_HPaneDiv *div;
-	int rx = argv[3].i;
-	int ry = argv[4].i;
+	int x = argv[1].i;
+	int y = argv[2].i;
+	int rx;
+
+	if (y < 0 || y > AGWIDGET(pa)->h) {
+		return;
+	}
+	rx = argv[3].i;
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
@@ -132,9 +138,15 @@ mousemotion(int argc, union evarg *argv)
 				AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x,
 				    AGWIDGET(pwin)->y);
 			}
+			if (OverDivControl(div, x)) {
+				AG_SetCursor(AG_HRESIZE_CURSOR);
+			}
 			break;
+		} else if (OverDivControl(div, x)) {
+			AG_SetCursor(AG_HRESIZE_CURSOR);
 		}
 	}
+
 	TAILQ_FOREACH(div, &pa->divs, divs)
 		div->x = AGWIDGET(div->box2)->x - 5;
 }
@@ -147,8 +159,6 @@ mousebuttonup(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(div, &pa->divs, divs)
 		div->moving = 0;
-	
-	AGWIDGET(pa)->flags &= ~AG_WIDGET_UNFOCUSED_MOTION;
 }
 
 void
@@ -162,7 +172,8 @@ AG_HPaneInit(AG_HPane *pa, int flags)
 	AG_BoxInit(&pa->box, AG_BOX_HORIZ, boxflags);
 	AG_BoxSetPadding(&pa->box, 0);
 	AG_BoxSetSpacing(&pa->box, 0);
-	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+			       AG_WIDGET_UNFOCUSED_MOTION;
 	AG_ObjectSetOps(pa, &agHPaneOps);
 	TAILQ_INIT(&pa->divs);
 
