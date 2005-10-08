@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.128 2005/10/07 01:39:16 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.129 2005/10/07 07:16:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -48,6 +48,8 @@ const AG_WidgetOps agWidgetOps = {
 	NULL,			/* draw */
 	AG_WidgetScaleGeneric
 };
+
+SDL_Cursor *agCursorToSet = NULL;
 
 static void
 AG_WidgetInheritStyleEv(AG_Event *event)
@@ -1222,13 +1224,14 @@ widget_occulted(AG_Widget *wid)
 void
 AG_SetCursor(int cursor)
 {
-	SDL_SetCursor(agCursors[cursor]);
+	if (agCursorToSet == NULL)
+		agCursorToSet = agCursors[cursor];
 }
 
 void
 AG_UnsetCursor(void)
 {
-	SDL_SetCursor(agDefaultCursor);
+	agCursorToSet = agDefaultCursor;
 }
 
 void

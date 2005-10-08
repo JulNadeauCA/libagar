@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.274 2005/10/07 01:39:16 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.275 2005/10/07 07:16:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -618,11 +618,14 @@ int
 AG_WindowEvent(SDL_Event *ev)
 {
 	extern SDL_Cursor *SDL_cursor;
+	extern SDL_Cursor *agCursorToSet;
 	static AG_Window *keydown_win = NULL;	/* XXX hack */
 	AG_Window *win;
 	AG_Widget *wid;
-	int focus_changed = 0, cursor_set = 0;
+	int focus_changed = 0;
 	AG_Window *focus_saved = agView->focus_win;
+	
+	agCursorToSet = NULL;
 		
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
@@ -648,9 +651,6 @@ AG_WindowEvent(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 		agView->winop = AG_WINOP_NONE;
-		break;
-	case SDL_MOUSEMOTION:
-		AG_UnsetCursor();
 		break;
 	}
 
@@ -702,9 +702,8 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->motion.xrel, ev->motion.yrel,
 				    ev->motion.state);
 			}
-			if (!cursor_set &&
+			if (agCursorToSet == NULL &&
 			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
-				cursor_set++;
 				if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
 					switch (AG_WindowMouseOverCtrl(win,
 					    ev->motion.x, ev->motion.y)) {
@@ -721,6 +720,13 @@ AG_WindowEvent(SDL_Event *ev)
 						break;
 					}
 				}
+			}
+			if (agCursorToSet == NULL) {
+				/*
+				 * Prevent widgets in other windows from
+				 * changing the cursor.
+				 */
+				agCursorToSet = agDefaultCursor;
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
@@ -819,6 +825,9 @@ AG_WindowEvent(SDL_Event *ev)
 			}
 		}
 		pthread_mutex_unlock(&win->lock);
+	}
+	if (agCursorToSet != NULL && SDL_cursor != agCursorToSet) {
+		SDL_SetCursor(agCursorToSet);
 	}
 	return (0);
 out:
