@@ -3,9 +3,9 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-PROG=	denex
-SRCS=	denex.c
-MAN1=	denex.1
+PROG=	denuncomp
+SRCS=	denuncomp.c
+MAN1=	denuncomp.1
 
 CFLAGS+=${SDL_CFLAGS}
 LIBS+=	${TOP}/engine/loader/libloader.a \
