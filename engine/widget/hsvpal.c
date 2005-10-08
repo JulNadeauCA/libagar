@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.25 2005/10/04 17:34:56 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.27 2005/10/07 14:49:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -121,26 +121,72 @@ update_pixel_from_hsva(AG_HSVPal *pal)
 {
 	float h, s, v;
 	Uint8 r, g, b, a;
-	AG_WidgetBinding *bFormat, *bHSVAfv;
+	AG_WidgetBinding *bFormat, *bRGBAv, *bRGBv;
 	SDL_PixelFormat **pFormat;
-	float *pHSVA;
+	void *pRGBAv, *pRGBv;
 
 	h = AG_WidgetFloat(pal, "hue");
 	s = AG_WidgetFloat(pal, "saturation");
 	v = AG_WidgetFloat(pal, "value");
-	bFormat = AG_WidgetGetBinding(pal, "pixel-format", &pFormat);
+	a = get_alpha8(pal);
 	
 	RG_HSV2RGB(h, s, v, &r, &g, &b);
-	if ((bHSVAfv = AG_WidgetGetBinding(pal, "HSVAfv", &pHSVA)) != NULL) {
-		pHSVA[0] = r/255.0;
-		pHSVA[1] = g/255.0;
-		pHSVA[2] = b/255.0;
-		pHSVA[3] = a/255.0;
-		AG_WidgetUnlockBinding(bHSVAfv);
+	
+	if ((bRGBv = AG_WidgetGetBinding(pal, "RGBv", &pRGBv)) != NULL) {
+		if (bRGBv->vtype == AG_WIDGET_FLOAT) {
+			float *RGBf = pRGBv;
+			RGBf[0] = (float)(r/255.0);
+			RGBf[1] = (float)(g/255.0);
+			RGBf[2] = (float)(b/255.0);
+		} else if (bRGBv->vtype == AG_WIDGET_DOUBLE) {
+			double *RGBd = pRGBv;
+			RGBd[0] = (double)(r/255.0);
+			RGBd[1] = (double)(g/255.0);
+			RGBd[2] = (double)(b/255.0);
+		} else if (bRGBv->vtype == AG_WIDGET_INT) {
+			int *RGBi = pRGBv;
+			RGBi[0] = (int)r;
+			RGBi[1] = (int)g;
+			RGBi[2] = (int)b;
+		} else if (bRGBv->vtype == AG_WIDGET_UINT8) {
+			Uint8 *RGBi = pRGBv;
+			RGBi[0] = r;
+			RGBi[1] = g;
+			RGBi[2] = b;
+		}
+		AG_WidgetUnlockBinding(bRGBv);
 	}
-	AG_WidgetSetUint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b,
-	    get_alpha8(pal)));
-
+	if ((bRGBAv = AG_WidgetGetBinding(pal, "RGBAv", &pRGBAv)) != NULL) {
+		if (bRGBAv->vtype == AG_WIDGET_FLOAT) {
+			float *RGBAf = pRGBAv;
+			RGBAf[0] = (float)(r/255.0);
+			RGBAf[1] = (float)(g/255.0);
+			RGBAf[2] = (float)(b/255.0);
+			RGBAf[3] = (float)(a/255.0);
+		} else if (bRGBAv->vtype == AG_WIDGET_DOUBLE) {
+			double *RGBAd = pRGBAv;
+			RGBAd[0] = (double)(r/255.0);
+			RGBAd[1] = (double)(g/255.0);
+			RGBAd[2] = (double)(b/255.0);
+			RGBAd[3] = (double)(a/255.0);
+		} else if (bRGBAv->vtype == AG_WIDGET_INT) {
+			int *RGBAi = pRGBAv;
+			RGBAi[0] = (int)r;
+			RGBAi[1] = (int)g;
+			RGBAi[2] = (int)b;
+			RGBAi[3] = (int)a;
+		} else if (bRGBAv->vtype == AG_WIDGET_UINT8) {
+			Uint8 *RGBAi = pRGBAv;
+			RGBAi[0] = r;
+			RGBAi[1] = g;
+			RGBAi[2] = b;
+			RGBAi[3] = a;
+		}
+		AG_WidgetUnlockBinding(bRGBAv);
+	}
+	
+	bFormat = AG_WidgetGetBinding(pal, "pixel-format", &pFormat);
+	AG_WidgetSetUint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b, a));
 	AG_WidgetUnlockBinding(bFormat);
 }
 
