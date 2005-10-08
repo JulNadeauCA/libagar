@@ -19,14 +19,14 @@
 
 #include <GL/glu.h>
 
-static GLdouble spin = 0.0, vz = -5.0;
+static GLdouble spin = 0.0, vx = 1.0, vz = -5.0;
 static GLfloat material[4] = { 1.0, 0.0, 0.0, 1.0 };
 
 static void
 ScaleCube(AG_Event *event)
 {
 	glLoadIdentity();
-	gluPerspective(60.0, 1.0, 0.001, 100.0);
+	gluPerspective(60.0, 1.0, 0.01, 100.0);
 }
 
 static void
@@ -44,13 +44,13 @@ DrawCube(AG_Event *event)
 	glPushMatrix();
 	{
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
-		glRotatef(spin, 1.0, 0.0, 1.0);
+		glRotatef(spin, vx, 0.0, 1.0);
 		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 30, 5);
+		gluCylinder(q, 1.0, 0.0, 1.0, 5, 2);
 		
 		glRotatef(180.0, 0.0, 1.0, 0.0);
 		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 30, 5);
+		gluCylinder(q, 1.0, 0.0, 1.0, 5, 2);
 	}
 	glPopMatrix();
 	
@@ -110,6 +110,7 @@ CreateWindow(void)
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
 		fsb = AG_FSpinbuttonNew(vb, NULL, "Vx:");
+		AG_WidgetBindDouble(fsb, "value", &vx);
 	}
 
 	AG_WindowShow(win);
