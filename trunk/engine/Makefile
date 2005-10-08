@@ -5,7 +5,7 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	error \
 	monitor \
-	loader \
+	loaders \
 	icons
 
 LIB=		ag_core
