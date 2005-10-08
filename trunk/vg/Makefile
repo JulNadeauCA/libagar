@@ -1,9 +1,9 @@
 #	$Csoft: Makefile,v 1.12 2004/11/25 02:49:01 vedge Exp $
 
-TOP=	../..
+TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=		vg
+LIB=		ag_vg
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
