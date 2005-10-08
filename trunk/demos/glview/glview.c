@@ -1,4 +1,4 @@
-/*	$Csoft: glview.c,v 1.1 2005/10/04 18:02:17 vedge Exp $	*/
+/*	$Csoft: glview.c,v 1.4 2005/10/08 00:38:42 vedge Exp $	*/
 /*	Public domain	*/
 
 /*
@@ -104,7 +104,7 @@ CreateWindow(void)
 
 		pal = AG_HSVPalNew(hb);
 		AGWIDGET(pal)->flags |= AG_WIDGET_HFILL;
-		AG_WidgetBindPointer(pal, "HSVAfv", material);
+		AG_WidgetBindPointer(pal, "RGBAv", material);
 	}
 
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
