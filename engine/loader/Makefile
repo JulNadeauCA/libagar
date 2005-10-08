@@ -3,7 +3,7 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=		loader
+LIB=		ag_core_loaders
 LIB_SHARED=	Yes
 LIB_STATIC=	Yes
 
