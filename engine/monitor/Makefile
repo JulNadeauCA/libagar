@@ -5,7 +5,7 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	pixmaps
 
-LIB=		monitor
+LIB=		ag_core_monitor
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
