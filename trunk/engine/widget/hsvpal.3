@@ -1,4 +1,4 @@
-.\"	$Csoft: hsvpal.3,v 1.2 2005/05/22 06:31:25 vedge Exp $
+.\"	$Csoft: hsvpal.3,v 1.3 2005/09/27 00:25:22 vedge Exp $
 .\"
 .\" Copyright (c) 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -102,6 +102,13 @@ so make sure to always bind
 .Va pixel-format
 prior to
 .Va pixel .
+.It Va void *RGBv
+A three-element array containing the RGB components.
+Acceptable binding types include FLOAT and DOUBLE, INT and UINT8.
+For floating point types, the values are scaled to 0.0-1.0.
+For integral types, the values are scaled to 0-255.
+.It Va void *RGBAv
+Same as above, except that the array also includes the alpha component.
 .El
 .Sh EVENTS
 The
