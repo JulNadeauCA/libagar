@@ -54,7 +54,7 @@ printusage(void)
 	extern char *__progname;
 	char *progname = __progname;
 #else
-	char *progname = "denex";
+	char *progname = "denuncomp";
 #endif
 	fprintf(stderr, "Usage: %s [-qi] [-o outdir] archive.den\n", progname);
 }
