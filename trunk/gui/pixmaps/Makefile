@@ -1,6 +1,6 @@
 #	$Csoft: Makefile,v 1.1 2004/04/22 01:52:29 vedge Exp $
 
-TOP=	../../..
+TOP=	../..
 include ${TOP}/Makefile.config
 
 XCF=		window.xcf \
