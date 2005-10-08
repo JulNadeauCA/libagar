@@ -3,7 +3,7 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=		unicode
+LIB=		ag_unicode
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
