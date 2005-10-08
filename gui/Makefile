@@ -1,12 +1,12 @@
 #	$Csoft: Makefile,v 1.90 2005/10/01 09:50:55 vedge Exp $
 
-TOP=	../..
+TOP=	../
 include ${TOP}/Makefile.config
 
 SUBDIR=	fonts \
 	pixmaps
 
-LIB=		widget
+LIB=		ag_gui
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 

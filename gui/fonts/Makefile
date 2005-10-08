@@ -1,6 +1,6 @@
 #	$Csoft: Makefile,v 1.6 2004/02/26 08:01:50 vedge Exp $
 
-TOP=	../../..
+TOP=	../..
 include ${TOP}/Makefile.config
 
 TTFSRCS=ttf-bitstream-vera-1.10
