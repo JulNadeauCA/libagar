@@ -5,7 +5,6 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	error \
 	monitor \
-	unicode \
 	loader \
 	icons
 
