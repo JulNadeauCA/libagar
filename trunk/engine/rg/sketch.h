@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.h,v 1.7 2005/06/07 06:49:25 vedge Exp $	*/
+/*	$Csoft: sketch.h,v 1.8 2005/09/27 00:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_
@@ -51,13 +51,13 @@ void RG_SketchUnselect(struct rg_tileview *, RG_TileElement *,
 
 void RG_SketchKeyDown(struct rg_tileview *, RG_TileElement *, int, int);
 void RG_SketchKeyUp(struct rg_tileview *, RG_TileElement *, int, int);
-int  RG_SketchMouseWheel(struct rg_tileview *, RG_TileElement *, int);
-void RG_SketchMouseButtonDown(struct rg_tileview *, RG_TileElement *, double,
-	                    double, int);
-void RG_SketchMouseButtonUp(struct rg_tileview *, RG_TileElement *, double,
+int  RG_SketchWheel(struct rg_tileview *, RG_TileElement *, int);
+void RG_SketchButtondown(struct rg_tileview *, RG_TileElement *, double, double,
+			 int);
+void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, double,
 		          double, int);
-void RG_SketchMouseMotion(struct rg_tileview *, RG_TileElement *, double,
-	                double, double, double, int);
+void RG_SketchMotion(struct rg_tileview *, RG_TileElement *, double, double,
+		     double, double, int);
 
 void RG_SketchBeginUndoBlk(RG_Sketch *);
 void RG_SketchUndo(struct rg_tileview *, RG_TileElement *);

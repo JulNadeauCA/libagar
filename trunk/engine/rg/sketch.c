@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.c,v 1.27 2005/10/04 17:34:53 vedge Exp $	*/
+/*	$Csoft: sketch.c,v 1.28 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -529,7 +529,7 @@ RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchMouseButtonDown(RG_Tileview *tv, RG_TileElement *tel,
+RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
     double x, double y, int button)
 {
 	RG_Sketch *sk = tel->tel_sketch.sk;
@@ -605,7 +605,7 @@ RG_SketchMouseButtonDown(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchMouseButtonUp(RG_Tileview *tv, RG_TileElement *tel,
+RG_SketchButtonup(RG_Tileview *tv, RG_TileElement *tel,
     double x, double y, int button)
 {
 	if (tv->cur_tool != NULL &&
@@ -620,8 +620,8 @@ RG_SketchMouseButtonUp(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchMouseMotion(RG_Tileview *tv, RG_TileElement *tel,
-    double x, double y, double xrel, double yrel, int state)
+RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
+    double xrel, double yrel, int state)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
@@ -661,7 +661,7 @@ RG_SketchMouseMotion(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 int
-RG_SketchMouseWheel(RG_Tileview *tv, RG_TileElement *tel, int which)
+RG_SketchWheel(RG_Tileview *tv, RG_TileElement *tel, int which)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
