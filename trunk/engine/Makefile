@@ -4,7 +4,6 @@ TOP=..
 include ${TOP}/Makefile.config
 
 SUBDIR=	error \
-	map \
 	widget \
 	monitor \
 	unicode \

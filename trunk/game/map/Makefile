@@ -3,7 +3,7 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=		map
+LIB=		ag_game_map
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
