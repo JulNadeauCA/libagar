@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.90 2005/10/04 17:34:53 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.91 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -747,7 +747,7 @@ close_element(RG_Tileview *tv)
 			tv->tv_pixmap.win = NULL;
 		}
 		break;
-	case RG_RG_TILEVIEW_SKETCH_EDIT:
+	case RG_TILEVIEW_SKETCH_EDIT:
 		if (tv->tv_sketch.win != NULL) {
 			tv->tv_sketch.ctrl = NULL;
 			AG_ViewDetach(tv->tv_sketch.win);
@@ -935,7 +935,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 		{
 			AG_Window *win;
 			
-			tv->state = RG_RG_TILEVIEW_SKETCH_EDIT;
+			tv->state = RG_TILEVIEW_SKETCH_EDIT;
 			tv->tv_sketch.sk = tel->tel_sketch.sk;
 			tv->tv_sketch.tel = tel;
 			tv->tv_sketch.ctrl = RG_TileviewAddCtrl(tv,
@@ -1526,7 +1526,7 @@ poll_feats(AG_Event *event)
 			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
 				it = AG_TlistAdd(tl, AGICON(DRAWING_ICON),
 				    "%s%s%s",
-				    (tv->state==RG_RG_TILEVIEW_SKETCH_EDIT &&
+				    (tv->state==RG_TILEVIEW_SKETCH_EDIT &&
 				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
 				    tel->name,
 				    fsk->visible ? "" : _(" (invisible)"));
@@ -1562,7 +1562,7 @@ poll_feats(AG_Event *event)
 			VG_Element *vge;
 
 			it = AG_TlistAdd(tl, NULL, "%s%s%s",
-			    (tv->state==RG_RG_TILEVIEW_SKETCH_EDIT &&
+			    (tv->state==RG_TILEVIEW_SKETCH_EDIT &&
 			     tv->tv_sketch.sk == sk) ? "* ": "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
@@ -1658,7 +1658,7 @@ delete_element(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tl_feats)) == NULL)
 		return;
 
-	if (tv->state == RG_RG_TILEVIEW_SKETCH_EDIT &&
+	if (tv->state == RG_TILEVIEW_SKETCH_EDIT &&
 	    strcmp(it->class, "sketch-element") == 0) {
 	    	VG *vg = tv->tv_sketch.sk->vg;
 		VG_Element *vge = (VG_Element *)it->p1;

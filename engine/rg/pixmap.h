@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.16 2005/04/10 09:09:02 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -72,15 +72,13 @@ AG_Window	*RG_PixmapEdit(struct rg_tileview *, RG_TileElement *);
 AG_Toolbar	*RG_PixmapToolbar(struct rg_tileview *, RG_TileElement *);
 void		 RG_PixmapScale(RG_Pixmap *, int, int, int, int);
 
-void RG_PixmapMousebuttonDown(struct rg_tileview *, RG_TileElement *,
-			      int, int, int);
-void RG_PixmapMousebuttonUp(struct rg_tileview *, RG_TileElement *,
-			    int, int, int);
-void RG_PixmapMouseMotion(struct rg_tileview *, RG_TileElement *,
-		          int, int, int, int, int);
-int RG_PixmapMouseWheel(struct rg_tileview *, RG_TileElement *, int);
-void RG_PixmapKeyDown(struct rg_tileview *, RG_TileElement *, int, int);
-void RG_PixmapKeyUp(struct rg_tileview *, RG_TileElement *, int, int);
+void RG_PixmapButtondown(struct rg_tileview *, RG_TileElement *, int, int, int);
+void RG_PixmapButtonup(struct rg_tileview *, RG_TileElement *, int, int, int);
+void RG_PixmapMotion(struct rg_tileview *, RG_TileElement *, int, int, int, int,
+		     int);
+int  RG_PixmapWheel(struct rg_tileview *, RG_TileElement *, int);
+void RG_PixmapKeydown(int);
+void RG_PixmapKeyup(void);
 
 void RG_PixmapBeginUndoBlk(RG_Pixmap *);
 void RG_PixmapUndo(struct rg_tileview *, RG_TileElement *);

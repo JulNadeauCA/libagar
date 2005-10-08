@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.32 2005/09/22 02:30:26 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.33 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -120,7 +120,7 @@ typedef struct rg_tileview_tool {
 enum rg_tileview_state {
 	RG_TILEVIEW_TILE_EDIT,	/* Default edition mode */
 	RG_TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
-	RG_RG_TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
+	RG_TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
 	RG_TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
 	RG_TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
 	RG_TILEVIEW_LAYERS_EDIT	/* Node layers are being edited */

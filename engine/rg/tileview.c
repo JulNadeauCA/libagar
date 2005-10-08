@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.55 2005/09/27 00:25:20 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.56 2005/10/07 07:16:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -112,9 +112,9 @@ keydown(AG_Event *event)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapKeyDown(tv, tv->tv_pixmap.tel, keysym, keymod);
+		RG_PixmapKeydown(keysym);
 		break;
-	case RG_RG_TILEVIEW_SKETCH_EDIT:
+	case RG_TILEVIEW_SKETCH_EDIT:
 		RG_SketchKeyDown(tv, tv->tv_sketch.tel, keysym, keymod);
 		break;
 	default:
@@ -128,7 +128,7 @@ keydown(AG_Event *event)
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapUndo(tv, tv->tv_pixmap.tel);
 				break;
-			case RG_RG_TILEVIEW_SKETCH_EDIT:
+			case RG_TILEVIEW_SKETCH_EDIT:
 				RG_SketchUndo(tv, tv->tv_sketch.tel);
 				break;
 			default:
@@ -142,7 +142,7 @@ keydown(AG_Event *event)
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapRedo(tv, tv->tv_pixmap.tel);
 				break;
-			case RG_RG_TILEVIEW_SKETCH_EDIT:
+			case RG_TILEVIEW_SKETCH_EDIT:
 				RG_SketchRedo(tv, tv->tv_sketch.tel);
 				break;
 			default:
@@ -180,9 +180,9 @@ keyup(AG_Event *event)
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		RG_PixmapKeyUp(tv, tv->tv_pixmap.tel, keysym, keymod);
+		RG_PixmapKeyup();
 		break;
-	case RG_RG_TILEVIEW_SKETCH_EDIT:
+	case RG_TILEVIEW_SKETCH_EDIT:
 		RG_SketchKeyUp(tv, tv->tv_sketch.tel, keysym, keymod);
 		break;
 	default:
@@ -277,10 +277,10 @@ mousebuttondown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
-			if (RG_PixmapMouseWheel(tv, tel, 0) == 1)
+			if (RG_PixmapWheel(tv, tel, 0) == 1)
 				return;
-		} else if (tv->state == RG_RG_TILEVIEW_SKETCH_EDIT) {
-			if (RG_SketchMouseWheel(tv, tel, 0) == 1)
+		} else if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
+			if (RG_SketchWheel(tv, tel, 0) == 1)
 				return;
 		}
 		RG_TileviewSetZoom(tv,
@@ -289,10 +289,10 @@ mousebuttondown(AG_Event *event)
 		return;
 	case SDL_BUTTON_WHEELDOWN:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
-			if (RG_PixmapMouseWheel(tv, tel, 1) == 1)
+			if (RG_PixmapWheel(tv, tel, 1) == 1)
 				return;
-		} else if (tv->state == RG_RG_TILEVIEW_SKETCH_EDIT) {
-			if (RG_SketchMouseWheel(tv, tel, 1) == 1)
+		} else if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
+			if (RG_SketchWheel(tv, tel, 1) == 1)
 				return;
 		}
 		RG_TileviewSetZoom(tv,
@@ -334,7 +334,7 @@ mousebuttondown(AG_Event *event)
 		if (pixmap_coincident(tel, sx, sy)) {
 			tv->tv_pixmap.xorig = sx - tel->tel_pixmap.x;
 			tv->tv_pixmap.yorig = sy - tel->tel_pixmap.y;
-			RG_PixmapMousebuttonDown(tv, tel, tv->tv_pixmap.xorig,
+			RG_PixmapButtondown(tv, tel, tv->tv_pixmap.xorig,
 			    tv->tv_pixmap.yorig, button);
 			return;
 		} else {
@@ -342,7 +342,7 @@ mousebuttondown(AG_Event *event)
 				tv->scrolling++;
 		}
 		break;
-	case RG_RG_TILEVIEW_SKETCH_EDIT:
+	case RG_TILEVIEW_SKETCH_EDIT:
 		if (button == SDL_BUTTON_RIGHT &&
 		   (tv->flags & RG_TILEVIEW_NO_SCROLLING) == 0) {
 			tv->scrolling++;
@@ -356,7 +356,7 @@ mousebuttondown(AG_Event *event)
 
 			vx = VG_VECXF(sk->vg, sx - tel->tel_sketch.x);
 			vy = VG_VECYF(sk->vg, sy - tel->tel_sketch.y);
-			RG_SketchMouseButtonDown(tv, tel, vx, vy, button);
+			RG_SketchButtondown(tv, tel, vx, vy, button);
 			return;
 		}
 		break;
@@ -447,13 +447,13 @@ mousebuttonup(AG_Event *event)
 					    tv->tv_pixmap.tel;
 					RG_Pixmap *px = tel->tel_pixmap.px;
 
-					RG_PixmapMousebuttonUp(tv, tel,
+					RG_PixmapButtonup(tv, tel,
 					    tv->xms - tel->tel_pixmap.x,
 					    tv->yms - tel->tel_pixmap.y,
 					    button);
 				}
 				break;
-			case RG_RG_TILEVIEW_SKETCH_EDIT:
+			case RG_TILEVIEW_SKETCH_EDIT:
 				{
 					RG_TileElement *tel =
 					    tv->tv_sketch.tel;
@@ -465,7 +465,7 @@ mousebuttonup(AG_Event *event)
 					    tv->yms - tel->tel_sketch.y,
 					    0, 0, &vx, &vy);
 
-					RG_SketchMouseButtonUp(tv, tel, vx, vy,
+					RG_SketchButtonup(tv, tel, vx, vy,
 					    button);
 				}
 				break;
@@ -718,7 +718,7 @@ mousemotion(AG_Event *event)
 				RG_TileElement *tel = tv->tv_pixmap.tel;
 
 				if (pixmap_coincident(tel, sx, sy)) {
-					RG_PixmapMouseMotion(tv, tel,
+					RG_PixmapMotion(tv, tel,
 					    sx - tel->tel_pixmap.x,
 					    sy - tel->tel_pixmap.y,
 					    sx - tv->xorig,
@@ -727,7 +727,7 @@ mousemotion(AG_Event *event)
 				}
 			}
 			break;
-		case RG_RG_TILEVIEW_SKETCH_EDIT:
+		case RG_TILEVIEW_SKETCH_EDIT:
 			{
 				RG_TileElement *tel = tv->tv_sketch.tel;
 				double vx, vy, vxrel, vyrel;
@@ -740,7 +740,7 @@ mousemotion(AG_Event *event)
 				    sx - tv->xorig,
 				    sy - tv->yorig,
 				    0, 0, &vxrel, &vyrel);
-				RG_SketchMouseMotion(tv, tel,
+				RG_SketchMotion(tv, tel,
 				    vx/AGTILESZ, vy/AGTILESZ,
 				    vxrel/AGTILESZ, vyrel/AGTILESZ,
 				    state);
@@ -1590,7 +1590,7 @@ RG_TileviewDraw(void *p)
 	if (t == NULL)
 		return;
 
-	if (tv->state == RG_RG_TILEVIEW_SKETCH_EDIT) {
+	if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
 		RG_Sketch *sk = tv->tv_sketch.sk;
 		int nredraw = sk->vg->redraw - 1;
 
@@ -1765,7 +1765,7 @@ RG_TileviewDraw(void *p)
 		strlcat(status, tv->tv_feature.ft->name, sizeof(status));
 		draw_status_text(tv, status);
 		break;
-	case RG_RG_TILEVIEW_SKETCH_EDIT:
+	case RG_TILEVIEW_SKETCH_EDIT:
 		strlcpy(status, _("Editing sketch: "), sizeof(status));
 		strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
 		draw_status_text(tv, status);

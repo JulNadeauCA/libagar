@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.48 2005/10/04 17:34:53 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.49 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,7 +49,6 @@
 #include "tileset.h"
 #include "tileview.h"
 
-static SDL_Cursor *saved_cursor = NULL;
 int pixmap_source = 1;
 const char *pixmap_state_names[] = {
 	"",
@@ -736,8 +735,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 int
-RG_PixmapMouseWheel(RG_Tileview *tv, RG_TileElement *tel,
-    int nwheel)
+RG_PixmapWheel(RG_Tileview *tv, RG_TileElement *tel, int nwheel)
 {
 	Uint8 *keystate = SDL_GetKeyState(NULL);
 	RG_Pixmap *px = tel->tel_pixmap.px;
@@ -982,7 +980,29 @@ pixmap_pick(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 }
 
 void
-RG_PixmapMousebuttonDown(RG_Tileview *tv, RG_TileElement *tel,
+RG_PixmapKeydown(int ksym)
+{
+	switch (ksym) {
+	case SDLK_f:
+		AG_SetCursor(AG_FILL_CURSOR);
+		break;
+	case SDLK_e:
+		AG_SetCursor(AG_ERASE_CURSOR);
+		break;
+	case SDLK_c:
+		AG_SetCursor(AG_PICK_CURSOR);
+		break;
+	}
+}
+
+void
+RG_PixmapKeyup(void)
+{
+	AG_UnsetCursor();
+}
+
+void
+RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
     int x, int y, int button)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
@@ -1033,7 +1053,7 @@ RG_PixmapMousebuttonDown(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_PixmapMousebuttonUp(RG_Tileview *tv, RG_TileElement *tel, int x,
+RG_PixmapButtonup(RG_Tileview *tv, RG_TileElement *tel, int x,
     int y, int button)
 {
 	if (button == SDL_BUTTON_LEFT) {
@@ -1043,48 +1063,21 @@ RG_PixmapMousebuttonUp(RG_Tileview *tv, RG_TileElement *tel, int x,
 }
 
 void
-RG_PixmapKeyDown(RG_Tileview *tv, RG_TileElement *tel,
-    int keysym, int keymod)
-{
-	switch (keysym) {
-	case SDLK_f:
-		if (saved_cursor == NULL) {
-			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(agCursors[AG_FILL_CURSOR]);
-		}
-		break;
-	case SDLK_e:
-		if (saved_cursor == NULL) {
-			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(agCursors[AG_ERASE_CURSOR]);
-		}
-		break;
-	case SDLK_c:
-		if (saved_cursor == NULL) {
-			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(agCursors[AG_PICK_CURSOR]);
-		}
-		break;
-	}
-}
-
-void
-RG_PixmapKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
-    int keymod)
-{
-	if (saved_cursor != NULL) {
-		SDL_SetCursor(saved_cursor);
-		saved_cursor = NULL;
-	}
-}
-
-void
-RG_PixmapMouseMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
+RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
+	Uint8 *ks = SDL_GetKeyState(NULL);
 	int d, x2, y2;
 
+	if (ks[SDLK_f]) {
+		AG_SetCursor(AG_FILL_CURSOR);
+	} else if (ks[SDLK_e]) {
+		AG_SetCursor(AG_ERASE_CURSOR);
+	} else if (ks[SDLK_c]) {
+		AG_SetCursor(AG_PICK_CURSOR);
+	}
+	
 	switch (tv->tv_pixmap.state) {
 	case RG_TVPIXMAP_FREEHAND:
 		pixmap_apply(tv, tel, x, y);
@@ -1122,9 +1115,7 @@ RG_PixmapMouseMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	}
 
 	if (state == SDL_BUTTON_LEFT) {
-		Uint8 *keystate = SDL_GetKeyState(NULL);
-
-		if (keystate[SDLK_c])
+		if (ks[SDLK_c])
 			pixmap_pick(tv, tel, x, y);
 	}
 }
