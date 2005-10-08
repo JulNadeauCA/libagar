@@ -5,12 +5,15 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	 agar-config \
 	 dencomp \
-	 denex \
-	 engine \
-	 libintl \
-	 po \
 	 compat \
-	 mat
+	 core \
+	 gui \
+	 vg \
+	 rg \
+	 game \
+	 mat \
+	 libintl \
+	 po
 
 all: all-subdir
 clean: clean-subdir
