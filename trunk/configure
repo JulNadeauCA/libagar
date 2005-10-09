@@ -276,9 +276,9 @@ TTFDIR="\"$PREFIX/share/agar/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
 echo "#endif /* TTFDIR */" >> config/ttfdir.h
-LIBDIR="$PREFIX/lib/agar"
+LIBDIR="$PREFIX/lib"
 echo "LIBDIR=$LIBDIR" >> Makefile.config
-LIBDIR="\"$PREFIX/lib/agar\""
+LIBDIR="\"$PREFIX/lib\""
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR" $LIBDIR >> config/libdir.h
 echo "#endif /* LIBDIR */" >> config/libdir.h
