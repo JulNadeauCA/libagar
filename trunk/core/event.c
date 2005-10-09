@@ -158,7 +158,7 @@ AG_EventLoop_FixedFPS(void)
 	for (;;) {
 		Tr2 = SDL_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {
-			pthread_mutex_lock(&agView->lock);
+			AG_MutexLock(&agView->lock);
 			agView->ndirty = 0;
 
 #if defined(DEBUG) && defined(HAVE_OPENGL)
@@ -170,9 +170,9 @@ AG_EventLoop_FixedFPS(void)
 				if (!win->visible)
 					continue;
 
-				pthread_mutex_lock(&win->lock);
+				AG_MutexLock(&win->lock);
 				AG_WidgetDraw(win);
-				pthread_mutex_unlock(&win->lock);
+				AG_MutexUnlock(&win->lock);
 
 				if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0)
 					AG_UpdateRectQ(
@@ -193,7 +193,7 @@ AG_EventLoop_FixedFPS(void)
 				}
 				agView->ndirty = 0;
 			}
-			pthread_mutex_unlock(&agView->lock);
+			AG_MutexUnlock(&agView->lock);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
@@ -246,7 +246,7 @@ AG_EventProcess(SDL_Event *ev)
 	AG_Window *win;
 	int rv;
 
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
@@ -339,7 +339,7 @@ AG_EventProcess(SDL_Event *ev)
 #endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
-		pthread_mutex_unlock(&agView->lock);
+		AG_MutexUnlock(&agView->lock);
 		agObjMgrExiting = 1;
 		AG_Destroy();
 		/* NOTREACHED */
@@ -347,7 +347,7 @@ AG_EventProcess(SDL_Event *ev)
 	}
 out:
 	AG_ViewDetachQueued();
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 /*
@@ -404,7 +404,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt,
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	if (name != NULL) {
 		TAILQ_FOREACH(ev, &ob->events, events) {
 			if (strcmp(ev->name, name) == 0)
@@ -433,7 +433,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt,
 	ev->handler = fn;
 	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (ev);
 }
 
@@ -447,7 +447,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	ev = Malloc(sizeof(AG_Event), M_EVENT);
 	if (name != NULL) {
@@ -466,7 +466,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 
 	TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	ob->nevents++;
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (ev);
 }
 
@@ -477,7 +477,7 @@ AG_UnsetEvent(void *p, const char *name)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(name, ev->name) == 0)
 			break;
@@ -493,7 +493,7 @@ AG_UnsetEvent(void *p, const char *name)
 	ob->nevents--;
 	Free(ev, M_EVENT);
 out:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /* Forward an event to an object's descendents. */
@@ -558,7 +558,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
 	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
 
-	pthread_mutex_lock(&rcvr->lock);
+	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) == 0)
 			break;
@@ -567,7 +567,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		goto fail;
 #ifdef THREADS
 	if (ev->flags & AG_EVENT_ASYNC) {
-		pthread_t th;
+		AG_Thread th;
 		AG_Event *nev;
 
 		/* TODO allocate from an per-object pool */
@@ -577,7 +577,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		nev->argv[nev->argc].p = sndr;
 		nev->argt[nev->argc] = AG_EVARG_POINTER;
 		nev->argn[nev->argc] = "_sender";
-		Pthread_create(&th, NULL, AG_EventAsyncHandler, nev);
+		AG_ThreadCreate(&th, NULL, AG_EventAsyncHandler, nev);
 	} else
 #endif /* THREADS */
 	{
@@ -609,10 +609,10 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			tmpev.handler(&tmpev);
 	}
 
-	pthread_mutex_unlock(&rcvr->lock);
+	AG_MutexUnlock(&rcvr->lock);
 	return (1);
 fail:
-	pthread_mutex_unlock(&rcvr->lock);
+	AG_MutexUnlock(&rcvr->lock);
 	return (0);
 }
 
@@ -632,7 +632,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	    evname, ticks);
 
 	AG_LockTiming();
-	pthread_mutex_lock(&rcvr->lock);
+	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) == 0)
 			break;
@@ -651,11 +651,11 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_AddTimeout(rcvr, &ev->timeout, ticks);
 	AG_UnlockTiming();
-	pthread_mutex_unlock(&rcvr->lock);
+	AG_MutexUnlock(&rcvr->lock);
 	return (0);
 fail:
 	AG_UnlockTiming();
-	pthread_mutex_unlock(&rcvr->lock);
+	AG_MutexUnlock(&rcvr->lock);
 	return (-1);
 }
 
@@ -669,7 +669,7 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	    ticks);
 
 	AG_LockTiming();
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(evname, ev->name) == 0)
@@ -684,11 +684,11 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_AddTimeout(ob, &ev->timeout, ticks);
 
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockTiming();
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockTiming();
 	return (-1);
 }
@@ -702,7 +702,7 @@ AG_CancelEvent(void *p, const char *evname)
 	int rv = 0;
 
 	AG_LockTiming();
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, evname) == 0)
 			break;
@@ -718,11 +718,11 @@ AG_CancelEvent(void *p, const char *evname)
 		ev->flags &= ~(AG_EVENT_SCHEDULED);
 	}
 	/* XXX concurrent */
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockTiming();
 	return (rv);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockTiming();
 	return (-1);
 }
@@ -734,7 +734,7 @@ AG_ExecEvent(void *p, const char *evname)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, evname) == 0)
 			break;
@@ -757,7 +757,7 @@ AG_ForwardEvent(void *rp, AG_Event *event)
 
 	debug(DEBUG_EVENTS, "%s event to %s\n", event->name, rcvr->name);
 
-	pthread_mutex_lock(&rcvr->lock);
+	AG_MutexLock(&rcvr->lock);
 	memcpy(nargv, event->argv, event->argc*sizeof(union evarg));
 	nargv[0].p = rcvr;
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
@@ -783,6 +783,6 @@ AG_ForwardEvent(void *rp, AG_Event *event)
 	if (ev->handler != NULL)
 		ev->handler(ev);
 out:
-	pthread_mutex_unlock(&rcvr->lock);
+	AG_MutexUnlock(&rcvr->lock);
 }
 

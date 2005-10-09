@@ -67,10 +67,10 @@ static void AG_WindowMoveOp(AG_Window *, SDL_MouseMotionEvent *);
 static void AG_WindowShownEv(AG_Event *);
 static void AG_WindowHiddenEv(AG_Event *);
 
-pthread_mutex_t	agWindowLock = PTHREAD_MUTEX_INITIALIZER;
-int		agWindowXOffs = 0;
-int		agWindowYOffs = 0;
-int		agWindowAnySize = 0;
+AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
+int	 agWindowXOffs = 0;
+int	 agWindowYOffs = 0;
+int	 agWindowAnySize = 0;
 
 static __inline__ int
 AG_WindowFocusExisting(const char *name)
@@ -95,12 +95,12 @@ AG_WindowNew(u_int flags)
 {
 	AG_Window *win;
 
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	win = Malloc(sizeof(AG_Window), M_OBJECT);
 	AG_WindowInit(win, NULL, flags);
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 	AG_ViewAttach(win);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	return (win);
 }
 
@@ -111,7 +111,7 @@ AG_WindowNewNamed(u_int flags, const char *fmt, ...)
 	AG_Window *win;
 	va_list ap;
 
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	va_start(ap, fmt);
 	vsnprintf(name, sizeof(name), fmt, ap);
 	va_end(ap);
@@ -128,7 +128,7 @@ AG_WindowNewNamed(u_int flags, const char *fmt, ...)
 	AG_SetEvent(win, "window-close", AGWINHIDE(win));
 	AG_ViewAttach(win);
 out:
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	return (win);
 }
 
@@ -162,7 +162,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->savw = -1;
 	win->savh = -1;
 	TAILQ_INIT(&win->subwins);
-	pthread_mutex_init(&win->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&win->lock);
 	
 	/* Select the default window style. */
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
@@ -202,18 +202,18 @@ AG_WindowSetStyle(AG_Window *win, const AG_WidgetStyleMod *style)
 void
 AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 {
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 /* Detach a sub-window. */
 void
 AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 {
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	TAILQ_REMOVE(&win->subwins, subwin, swins);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 void
@@ -308,7 +308,7 @@ AG_WindowDestroy(void *p)
 {
 	AG_Window *win = p;
 
-	pthread_mutex_destroy(&win->lock);
+	AG_MutexDestroy(&win->lock);
 	/* AG_ViewDetachQueued() will free the sub-windows */
 	AG_WidgetDestroy(win);
 }
@@ -379,16 +379,16 @@ AG_WindowIsSurrounded(AG_Window *win)
 	AG_Window *owin;
 
 	TAILQ_FOREACH(owin, &agView->windows, windows) {
-		pthread_mutex_lock(&owin->lock);
+		AG_MutexLock(&owin->lock);
 		if (owin->visible &&
 		    AG_WidgetArea(owin, AGWIDGET(win)->x, AGWIDGET(win)->y) &&
 		    AG_WidgetArea(owin,
 		     AGWIDGET(win)->x + AGWIDGET(win)->w,
 		     AGWIDGET(win)->y + AGWIDGET(win)->h)) {
-			pthread_mutex_unlock(&owin->lock);
+			AG_MutexUnlock(&owin->lock);
 			return (1);
 		}
-		pthread_mutex_unlock(&owin->lock);
+		AG_MutexUnlock(&owin->lock);
 	}
 	return (0);
 }
@@ -399,14 +399,14 @@ AG_WindowToggleVisibility(AG_Window *win)
 {
 	int oldvis;
 
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	oldvis = win->visible;
 	if (win->visible) {
 		AG_WindowHide(win);
 	} else {
 		AG_WindowShow(win);
 	}
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 	return (oldvis);
 }
 
@@ -414,24 +414,24 @@ AG_WindowToggleVisibility(AG_Window *win)
 void
 AG_WindowShow(AG_Window *win)
 {
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	if (!win->visible) {
 		win->visible++;
 		AG_PostEvent(NULL, win, "widget-shown", NULL);
 	}
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 /* Clear the visibility bit of a window. */
 void
 AG_WindowHide(AG_Window *win)
 {
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	if (win->visible) {
 		win->visible = 0;
 		AG_PostEvent(NULL, win, "widget-hidden", NULL);
 	}
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 static void
@@ -631,10 +631,10 @@ AG_WindowEvent(SDL_Event *ev)
 		agView->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &agView->windows, windows,
 		    ag_windowq) {
-			pthread_mutex_lock(&win->lock);
+			AG_MutexLock(&win->lock);
 			if (!win->visible ||
 			    !AG_WidgetArea(win, ev->button.x, ev->button.y)) {
-				pthread_mutex_unlock(&win->lock);
+				AG_MutexUnlock(&win->lock);
 				continue;
 			}
 			if (win->flags & AG_WINDOW_DENYFOCUS) {
@@ -643,7 +643,7 @@ AG_WindowEvent(SDL_Event *ev)
 				agView->focus_win = win;
 				focus_changed++;
 			}
-			pthread_mutex_unlock(&win->lock);
+			AG_MutexUnlock(&win->lock);
 			break;
 		}
 		break;
@@ -658,16 +658,16 @@ AG_WindowEvent(SDL_Event *ev)
 		    win != agView->modal_win) {
 			continue;
 		}
-		pthread_mutex_lock(&win->lock);
+		AG_MutexLock(&win->lock);
 		if (!win->visible) {
-			pthread_mutex_unlock(&win->lock);
+			AG_MutexUnlock(&win->lock);
 			continue;
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->wop_win != win) {
-				pthread_mutex_unlock(&win->lock);
+				AG_MutexUnlock(&win->lock);
 				continue;
 			}
 			switch (agView->winop) {
@@ -747,7 +747,7 @@ AG_WindowEvent(SDL_Event *ev)
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (!AG_WidgetArea(win, ev->button.x, ev->button.y)) {
-				pthread_mutex_unlock(&win->lock);
+				AG_MutexUnlock(&win->lock);
 				continue;
 			}
 			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
@@ -787,7 +787,7 @@ AG_WindowEvent(SDL_Event *ev)
 			case SDLK_LCTRL:
 			case SDLK_RCTRL:
 				/* Always ignore modifiers */
-				pthread_mutex_unlock(&win->lock);
+				AG_MutexUnlock(&win->lock);
 				return (0);
 			default:
 				break;
@@ -822,14 +822,14 @@ AG_WindowEvent(SDL_Event *ev)
 				}
 			}
 		}
-		pthread_mutex_unlock(&win->lock);
+		AG_MutexUnlock(&win->lock);
 	}
 	if (agCursorToSet != NULL && SDL_cursor != agCursorToSet) {
 		SDL_SetCursor(agCursorToSet);
 	}
 	return (0);
 out:
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 
 	/*
 	 * The focus_changed flag is set if there was a focus change
@@ -1070,7 +1070,7 @@ AG_WindowScale(void *p, int w, int h)
 	int y, dy;
 	int nwidgets = 0;
 
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 
 	if ((win->flags & AG_WINDOW_NOTITLE) &&
 	    (win->flags & AG_WINDOW_NOBORDERS) == 0) {
@@ -1148,16 +1148,16 @@ AG_WindowScale(void *p, int w, int h)
 	}
 out:
 	AG_WindowClamp(win);
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 /* Change the spacing between child widgets. */
 void
 AG_WindowSetSpacing(AG_Window *win, int spacing)
 {
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	win->spacing = spacing;
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 /* Change the padding around child widgets. */
@@ -1165,11 +1165,11 @@ void
 AG_WindowSetPadding(AG_Window *win, int xpadding, int ypadding_top,
     int ypadding_bot)
 {
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	if (xpadding >= 0)	{ win->xpadding = xpadding; }
 	if (ypadding_top >= 0)	{ win->ypadding_top = ypadding_top; }
 	if (ypadding_bot >= 0)	{ win->ypadding_bot = ypadding_bot; }
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 /* Request a specific initial window position. */
@@ -1177,10 +1177,10 @@ void
 AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
     int cascade)
 {
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 	win->alignment = alignment;
 	/* Ignore cascade for now */
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 }
 
 /* Set a default window-close handler. */

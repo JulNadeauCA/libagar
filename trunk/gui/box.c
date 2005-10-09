@@ -86,7 +86,7 @@ AG_BoxInit(AG_Box *bo, enum ag_box_type type, int flags)
 	bo->padding = 2;
 	bo->spacing = 1;
 	bo->homogenous = (flags & AG_BOX_HOMOGENOUS);
-	pthread_mutex_init(&bo->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&bo->lock);
 }
 
 void
@@ -94,7 +94,7 @@ AG_BoxDestroy(void *p)
 {
 	AG_Box *box = p;
 
-	pthread_mutex_destroy(&box->lock);
+	AG_MutexDestroy(&box->lock);
 	AG_WidgetDestroy(box);
 }
 
@@ -116,7 +116,7 @@ AG_BoxScale(void *p, int w, int h)
 	int nwidgets = 0;
 	int totfixed = 0;
 
-	pthread_mutex_lock(&bo->lock);
+	AG_MutexLock(&bo->lock);
 	
 	/* Count the child widgets. */
 	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
@@ -257,37 +257,37 @@ AG_BoxScale(void *p, int w, int h)
 		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 	}
 out:
-	pthread_mutex_unlock(&bo->lock);
+	AG_MutexUnlock(&bo->lock);
 }
 
 void
 AG_BoxSetHomogenous(AG_Box *bo, int homogenous)
 {
-	pthread_mutex_lock(&bo->lock);
+	AG_MutexLock(&bo->lock);
 	bo->homogenous = homogenous;
-	pthread_mutex_unlock(&bo->lock);
+	AG_MutexUnlock(&bo->lock);
 }
 
 void
 AG_BoxSetPadding(AG_Box *bo, int padding)
 {
-	pthread_mutex_lock(&bo->lock);
+	AG_MutexLock(&bo->lock);
 	bo->padding = padding;
-	pthread_mutex_unlock(&bo->lock);
+	AG_MutexUnlock(&bo->lock);
 }
 
 void
 AG_BoxSetSpacing(AG_Box *bo, int spacing)
 {
-	pthread_mutex_lock(&bo->lock);
+	AG_MutexLock(&bo->lock);
 	bo->spacing = spacing;
-	pthread_mutex_unlock(&bo->lock);
+	AG_MutexUnlock(&bo->lock);
 }
 
 void
 AG_BoxSetDepth(AG_Box *bo, int depth)
 {
-	pthread_mutex_lock(&bo->lock);
+	AG_MutexLock(&bo->lock);
 	bo->depth = depth;
-	pthread_mutex_unlock(&bo->lock);
+	AG_MutexUnlock(&bo->lock);
 }

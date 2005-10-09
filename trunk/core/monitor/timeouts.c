@@ -61,13 +61,13 @@ timeouts_refresh(void *obj, Uint32 ival, void *arg)
 		row1 = AG_TableviewRowAdd(tv, 0, NULL, NULL, id++, 0, ob->name);
 		AG_TableviewRowExpand(tv, row1);
 
-		pthread_mutex_lock(&ob->lock);
+		AG_MutexLock(&ob->lock);
 		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
 			snprintf(text, sizeof(text), "%p: %u ticks", to,
 			    to->ticks);
 			AG_TableviewRowAdd(tv, 0, row1, NULL, id++, 0, text);
 		}
-		pthread_mutex_unlock(&ob->lock);
+		AG_MutexUnlock(&ob->lock);
 	}
 	AG_UnlockTiming();
 	return (ival);

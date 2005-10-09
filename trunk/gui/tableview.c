@@ -109,7 +109,7 @@ AG_TableviewInit(AG_Tableview *tv, int flags, AG_TableviewDataFn data_callback,
 	AG_WidgetInit(tv, "tableview", &agTableviewOps,
 	  AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
 	  AG_WIDGET_HFILL);
-	pthread_mutex_init(&tv->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&tv->lock);
 
 	tv->data_callback = data_callback;
 	tv->sort_callback = sort_callback;
@@ -206,7 +206,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	if (tv->locked || cid == ID_INVALID)
 		return (NULL);
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	/* column identifier must be unique */
 	for (i = 0; i < tv->columncount; i++) {
@@ -270,7 +270,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 
 	tv->visible.dirty = 1;
 out:
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 	return (col);
 }
 
@@ -279,7 +279,7 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 {
 	u_int i, ind = -1, valid = 0;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
         /* check if cid is valid */
         for (i = 0; i < tv->columncount; i++) {
@@ -293,15 +293,15 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 	if (valid) {
 		tv->column[ind].mousedown = 1;
 	}
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
 AG_TableviewSetUpdate(AG_Tableview *tv, u_int ms)
 {
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	tv->visible.redraw_rate = ms;
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 AG_TableviewRow *
@@ -313,13 +313,13 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 	va_list ap;
 	AG_TableviewColID cid;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	tv->locked = 1;
 
 	/* verify the row identifier is not in use */
 	if (row_get(&tv->children, rid)) {
-		pthread_mutex_unlock(&tv->lock);
+		AG_MutexUnlock(&tv->lock);
 		return (NULL);
 	}
 	row = Malloc(sizeof(AG_TableviewRow), M_WIDGET);
@@ -384,7 +384,7 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 		tv->expandedrows++;
 
 	tv->visible.dirty = 1;
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 	return (row);
 }
 
@@ -411,7 +411,7 @@ AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 	if (row == NULL)
 		return;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	/* first remove children */
 	row1 = TAILQ_FIRST(&row->children);
@@ -437,7 +437,7 @@ AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 	tableview_row_destroy(tv, row);
 out:
 	tv->visible.dirty = 1;
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
@@ -445,7 +445,7 @@ AG_TableviewRowDelAll(AG_Tableview *tv)
 {
 	AG_TableviewRow *row1, *row2;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	row1 = TAILQ_FIRST(&tv->children);
 	while (row1 != NULL) {
 		row2 = TAILQ_NEXT(row1, siblings);
@@ -456,7 +456,7 @@ AG_TableviewRowDelAll(AG_Tableview *tv)
 	
 	tv->expandedrows = 0;
 	tv->visible.dirty = 1;
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
@@ -465,7 +465,7 @@ AG_TableviewRowRestoreAll(AG_Tableview *tv)
 	AG_TableviewRow *row, *nrow, *srow;
 	int i;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 		
 	for (row = TAILQ_FIRST(&tv->backstore);
 	     row != TAILQ_END(&tv->backstore);
@@ -484,18 +484,18 @@ AG_TableviewRowRestoreAll(AG_Tableview *tv)
 	}
 	TAILQ_INIT(&tv->backstore);
 
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
 AG_TableviewRowSelect(AG_Tableview *tv, AG_TableviewRow *row)
 {
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	if (!tv->selmulti) {
 		AG_TableviewRowDeselectAll(tv, NULL);
 	}
 	row->selected = 1;
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 AG_TableviewRow *
@@ -504,9 +504,9 @@ AG_TableviewRowGet(AG_Tableview *tv, AG_TableviewRowID rid)
 	AG_TableviewRow *row;
 
 	/* XXX pointless lock */
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	row = row_get(&tv->children, rid);
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 	return (row);
 }
 
@@ -516,31 +516,31 @@ AG_TableviewRowSelectAll(AG_Tableview *tv, AG_TableviewRow *root)
 	if (!tv->selmulti)
 		return;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	if (root == NULL) {
 		select_all(&tv->children);
 	} else {
 		select_all(&root->children);
 	}
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
 AG_TableviewRowDeselectAll(AG_Tableview *tv, AG_TableviewRow *root)
 {
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	if (root == NULL) {
 		deselect_all(&tv->children);
 	} else {
 		deselect_all(&root->children);
 	}
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
 AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
 {
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	
 	if (!in->expanded) {
 		in->expanded = 1;
@@ -551,13 +551,13 @@ AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
 		}
 	}
 	
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
 AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 {
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	
 	if (in->expanded) {
 		in->expanded = 0;
@@ -568,7 +568,7 @@ AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 		}
 	}
 	
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
@@ -577,15 +577,15 @@ AG_TableviewDestroy(void *p)
 	AG_Tableview *tv = p;
 	u_int i;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	AG_TableviewRowDelAll(tv);
 
 	Free(tv->column, M_WIDGET);
 	Free(tv->visible.items, M_WIDGET);
 
-	pthread_mutex_unlock(&tv->lock);
-	pthread_mutex_destroy(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
+	AG_MutexDestroy(&tv->lock);
 
 	AG_WidgetDestroy(tv);
 }
@@ -596,7 +596,7 @@ AG_TableviewScale(void *p, int w, int h)
 	AG_Tableview *tv = p;
 	u_int rows_per_view, i;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	/* estimate but don't change anything */
 	if (w == -1 && h == -1) {
@@ -695,7 +695,7 @@ AG_TableviewScale(void *p, int w, int h)
 		tv->visible.dirty = 1;
 	}
 out:
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 void
@@ -706,7 +706,7 @@ AG_TableviewDraw(void *p)
 	int y, update = 0;
 	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	
 	/* before we draw, update if needed */
 	if (tv->visible.dirty)
@@ -743,7 +743,7 @@ AG_TableviewDraw(void *p)
 		tv->visible.redraw_last = SDL_GetTicks();
 	}
 out:
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 /*
@@ -927,14 +927,14 @@ AG_TableviewRowSelected(AG_Tableview *tv)
 {
 	AG_TableviewRow *row;
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	TAILQ_FOREACH(row, &tv->children, siblings) {
 		if (row->selected) {
-			pthread_mutex_unlock(&tv->lock);
+			AG_MutexUnlock(&tv->lock);
 			return (row);
 		}
 	}
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 	return (NULL);
 }
 
@@ -1335,7 +1335,7 @@ mousebuttondown(AG_Event *event)
 
 	AG_WidgetFocus(tv);
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 	if (tv->header && coord_y < tv->head_height) {
 		/* a mouse down on the column header */
 		foreach_visible_column(tv, clicked_header, &coord_x, NULL);
@@ -1343,7 +1343,7 @@ mousebuttondown(AG_Event *event)
 		/* a mouse down in the body */
 		foreach_visible_column(tv, clicked_row, &coord_x, &coord_y);
 	}
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 static void
@@ -1359,14 +1359,14 @@ dblclick_expire(AG_Event *event)
 {
 	AG_Tableview *tv = AG_SELF();
 
-	pthread_mutex_lock(&tv->lock);
+	AG_MutexLock(&tv->lock);
 
 	/* the user hasn't clicked again, so cancel the double click */
 	tv->dblclicked = 0;
 
 	/* XXX - if the cursor remains in the cell, activate a click-to-edit */
 
-	pthread_mutex_unlock(&tv->lock);
+	AG_MutexUnlock(&tv->lock);
 }
 
 /* XXX - this seems to be called after every click.. */

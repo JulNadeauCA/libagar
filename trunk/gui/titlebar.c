@@ -175,11 +175,11 @@ titlebar_mousebuttondown(AG_Event *event)
 
 	tbar->pressed = 1;
 
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_MOVE;
 	agView->focus_win = tbar->win;
 	agView->wop_win = tbar->win;
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 static void
@@ -189,10 +189,10 @@ titlebar_mousebuttonup(AG_Event *event)
 	
 	tbar->pressed = 0;
 	
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_NONE;
 	agView->wop_win = NULL;
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 void

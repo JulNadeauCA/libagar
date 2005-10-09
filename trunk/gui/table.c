@@ -101,7 +101,7 @@ AG_TableInit(AG_Table *t, u_int flags)
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
 
-	pthread_mutex_init(&t->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&t->lock);
 	t->flags = flags;
 	t->selected_row = NULL;
 	t->selected_col = NULL;
@@ -149,7 +149,7 @@ AG_TableDestroy(void *p)
 	}
 	Free(t->cols, M_WIDGET);
 
-	pthread_mutex_destroy(&t->lock);
+	AG_MutexDestroy(&t->lock);
 	AG_WidgetDestroy(t);
 }
 
@@ -354,7 +354,7 @@ AG_TableDraw(void *p)
 	agPrim.box(t, 0, 0, AGWIDGET(t)->w, AGWIDGET(t)->h, -1,
 	    AG_COLOR(TABLE_COLOR));
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
 	
 	if (t->poll_ev != NULL)
@@ -418,7 +418,7 @@ AG_TableDraw(void *p)
 	    AG_COLOR(TABLE_LINE_COLOR));
 
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 /* Adjust the scrollbar offset according to the number of visible items. */
@@ -495,7 +495,7 @@ AG_TableBegin(AG_Table *t)
 {
 	u_int m, n;
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 
 	/* Copy the existing cells to the column pools and free the table. */
 	for (m = 0; m < t->m; m++) {
@@ -508,7 +508,7 @@ AG_TableBegin(AG_Table *t)
 	t->cells = NULL;
 	t->m = 0;
 	AG_WidgetSetInt(t->vbar, "max", 0);
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 int
@@ -718,7 +718,7 @@ mousebuttondown(AG_Event *event)
 	int y = AG_INT(3);
 	int m;
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	if ((m = column_over(t, y)) >= (int)t->m) {
 		AG_TableDeselectAllRows(t);
 		goto out;
@@ -744,7 +744,7 @@ mousebuttondown(AG_Event *event)
 	}
 out:
 	AG_WidgetFocus(t);
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -771,7 +771,7 @@ keydown(AG_Event *event)
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -783,7 +783,7 @@ keydown(AG_Event *event)
 	default:
 		break;
 	}
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 static int
@@ -816,7 +816,7 @@ mousemotion(AG_Event *event)
 	int n, cx;
 	int m;
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	if (t->nResizing >= 0 && (u_int)t->nResizing < t->n) {
 		if ((t->cols[t->nResizing].w += xrel) < COLUMN_MIN_WIDTH) {
 			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
@@ -828,7 +828,7 @@ mousemotion(AG_Event *event)
 		    column_resize_over(t, x))
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -837,7 +837,7 @@ keyup(AG_Event *event)
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -848,7 +848,7 @@ keyup(AG_Event *event)
 	default:
 		break;
 	}
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -856,13 +856,13 @@ lostfocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	AG_CancelEvent(t, "key-tick");
 	AG_CancelEvent(t, "dblclick-expire");
 	if (t->nResizing >= 0) {
 		t->nResizing = -1;
 	}
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 int
@@ -932,7 +932,7 @@ kbdscroll(AG_Event *event)
 	u_int m2, n;
 	int m;
 	
-	pthread_mutex_lock(&t->lock);
+	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 		for (m = 0; m < t->m; m++) {
@@ -958,7 +958,7 @@ kbdscroll(AG_Event *event)
 		break;
 	}
 	AG_ReschedEvent(t, "kbdscroll", agKbdRepeat);
-	pthread_mutex_unlock(&t->lock);
+	AG_MutexUnlock(&t->lock);
 }
 
 int

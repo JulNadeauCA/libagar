@@ -74,7 +74,7 @@ static TAILQ_HEAD(,client) clients = TAILQ_HEAD_INITIALIZER(clients);
 
 static char *serv_host = NULL;
 static char *serv_port = "1173";
-static pthread_t serv_th;
+static AG_Thread serv_th;
 static int server_inited = 0;
 static int jpeg_quality = 75;
 
@@ -273,7 +273,7 @@ cmd_surface(struct command *cmd, void *pSu)
 static int
 cmd_view_fmt(struct command *cmd, void *p)
 {
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
 	    agView->opengl ? "gl" : "",
 	    agView->w, agView->h, agVideoInfo->vfmt->BitsPerPixel,
@@ -283,16 +283,16 @@ cmd_view_fmt(struct command *cmd, void *p)
 	    agVideoInfo->vfmt->Amask,
 	    agVideoInfo->vfmt->colorkey,
 	    agVideoInfo->vfmt->alpha);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	return (0);
 }
 
 static int
 cmd_refresh(struct command *cmd, void *p)
 {
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	printf("0 %d:%d\n", agView->rCur, agView->rNom);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	return (0);
 }
 
@@ -357,8 +357,8 @@ AG_DebugServerStart(void)
 		server_inited = 1;
 		init_server();
 	}
-	if ((rv = pthread_create(&serv_th, NULL, loop_server, NULL)) != 0) {
-		AG_TextMsg(AG_MSG_ERROR, "pthread_create: %s", strerror(rv));
+	if ((rv = AG_ThreadCreate(&serv_th, NULL, loop_server, NULL)) != 0) {
+		AG_TextMsg(AG_MSG_ERROR, "AG_ThreadCreate: %s", strerror(rv));
 		return (-1);
 	}
 	return (0);

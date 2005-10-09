@@ -243,12 +243,12 @@ mousebuttonup(AG_Event *event)
 			}
 			if (mi->bind_type != AG_MENU_NO_BINDING) {
 				if (mi->bind_lock != NULL)
-					pthread_mutex_lock(mi->bind_lock);
+					AG_MutexLock(mi->bind_lock);
 
 				toggle_option(mi);
 
 				if (mi->bind_lock != NULL)
-					pthread_mutex_unlock(mi->bind_lock);
+					AG_MutexUnlock(mi->bind_lock);
 			}
 			goto collapse;
 		}

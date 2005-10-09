@@ -271,7 +271,7 @@ poll_blocks(AG_Event *event)
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
@@ -296,7 +296,7 @@ poll_blocks(AG_Event *event)
 		it->depth = 1;
 	}
 
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 	AG_TlistRestore(tl);
 }
 

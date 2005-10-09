@@ -51,7 +51,7 @@ typedef struct ag_quaternion {
 
 typedef struct ag_space {
 	struct ag_object obj;
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	TAILQ_HEAD(, ag_actor) actors;
 } AG_Space;
 

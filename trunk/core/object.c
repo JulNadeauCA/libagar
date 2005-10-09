@@ -130,7 +130,7 @@ AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 	ob->flags = 0;
 	ob->nevents = 0;
 
-	pthread_mutex_init(&ob->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&ob->lock);
 	ob->gfx = NULL;
 	ob->audio = NULL;
 	ob->data_used = 0;
@@ -465,7 +465,7 @@ AG_ObjectDetach(void *childp)
 	AG_Object *parent = child->parent;
 
 	AG_LockLinkage();
-	pthread_mutex_lock(&child->lock);
+	AG_MutexLock(&child->lock);
 
 	/* Cancel scheduled non-detachable timeouts. */
 	AG_ObjectCancelTimeouts(child, AG_TIMEOUT_DETACHABLE);
@@ -477,7 +477,7 @@ AG_ObjectDetach(void *childp)
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
 
-	pthread_mutex_unlock(&child->lock);
+	AG_MutexUnlock(&child->lock);
 	AG_UnlockLinkage();
 }
 
@@ -607,7 +607,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 {
 	AG_Object *cob, *ncob;
 
-	pthread_mutex_lock(&pob->lock);
+	AG_MutexLock(&pob->lock);
 	for (cob = TAILQ_FIRST(&pob->children);
 	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
@@ -618,7 +618,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 			Free(cob, M_OBJECT);
 	}
 	TAILQ_INIT(&pob->children);
-	pthread_mutex_unlock(&pob->lock);
+	AG_MutexUnlock(&pob->lock);
 }
 
 /* Clear an object's property table. */
@@ -627,7 +627,7 @@ AG_ObjectFreeProps(AG_Object *ob)
 {
 	AG_Prop *prop, *nextprop;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	for (prop = TAILQ_FIRST(&ob->props);
 	     prop != TAILQ_END(&ob->props);
 	     prop = nextprop) {
@@ -636,7 +636,7 @@ AG_ObjectFreeProps(AG_Object *ob)
 		Free(prop, M_PROP);
 	}
 	TAILQ_INIT(&ob->props);
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /*
@@ -648,7 +648,7 @@ AG_ObjectFreeEvents(AG_Object *ob)
 {
 	AG_Event *eev, *neev;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
 	     eev = neev) {
@@ -660,7 +660,7 @@ AG_ObjectFreeEvents(AG_Object *ob)
 		Free(eev, M_EVENT);
 	}
 	TAILQ_INIT(&ob->events);
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /* Cancel any scheduled timeout(3) event associated with the object. */
@@ -673,7 +673,7 @@ AG_ObjectCancelTimeouts(void *p, int flags)
 	AG_Timeout *to;
 
 	AG_LockTiming();
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
@@ -690,7 +690,7 @@ AG_ObjectCancelTimeouts(void *p, int flags)
 	}
 	CIRCLEQ_INIT(&ob->timeouts);
 
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockTiming();
 }
 
@@ -733,7 +733,7 @@ AG_ObjectDestroy(void *p)
 
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
-	pthread_mutex_destroy(&ob->lock);
+	AG_MutexDestroy(&ob->lock);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
@@ -810,7 +810,7 @@ AG_ObjectPageIn(void *p, enum ag_object_page_item item)
 {
 	AG_Object *ob = p;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	switch (item) {
 	case AG_OBJECT_GFX:
@@ -847,10 +847,10 @@ out:
 		}
 		break;
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (-1);
 }
 
@@ -860,7 +860,7 @@ AG_ObjectPageOut(void *p, enum ag_object_page_item item)
 {
 	AG_Object *ob = p;
 	
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	
 	switch (item) {
 	case AG_OBJECT_GFX:
@@ -894,10 +894,10 @@ AG_ObjectPageOut(void *p, enum ag_object_page_item item)
 		break;
 	}
 done:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (-1);
 }
 
@@ -907,7 +907,7 @@ AG_ObjectLoad(void *p)
 	AG_Object *ob = p;
 
 	AG_LockLinkage();
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	
 	/* Cancel scheduled non-loadable timeouts. */
 	AG_ObjectCancelTimeouts(ob, AG_TIMEOUT_LOADABLE);
@@ -935,11 +935,11 @@ AG_ObjectLoad(void *p)
 	if (AG_ObjectReloadData(ob) == -1)
 		goto fail;
 
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
 }
@@ -1297,7 +1297,7 @@ AG_ObjectSave(void *p)
 	int was_resident;
 
 	AG_LockLinkage();
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
@@ -1402,7 +1402,7 @@ AG_ObjectSave(void *p)
 	if (!was_resident) {
 		AG_ObjectFreeData(ob);
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
@@ -1411,7 +1411,7 @@ fail_reinit:
 	if (!was_resident)
 		AG_ObjectFreeData(ob);
 fail_lock:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
 }
@@ -1693,7 +1693,7 @@ AG_ObjectDuplicate(void *p)
 #endif
 	dob = Malloc(t->size, M_OBJECT);
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	/* Create the duplicate object. */
 	if (t->ops->init != NULL) {
@@ -1725,11 +1725,11 @@ AG_ObjectDuplicate(void *p)
 		goto fail;
 
 	strlcpy(ob->name, oname, sizeof(ob->name));
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (dob);
 fail:
 	strlcpy(ob->name, oname, sizeof(ob->name));
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_ObjectDestroy(dob);
 	Free(dob, M_OBJECT);
 	return (NULL);

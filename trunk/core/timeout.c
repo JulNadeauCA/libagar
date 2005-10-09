@@ -57,7 +57,7 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 	if (ob == NULL)
 		ob = agWorld;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
 	if (replace) {
 		CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
@@ -84,7 +84,7 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 		TAILQ_INSERT_TAIL(&agTimeoutObjQ, ob, tobjs);
 		AG_UnlockTiming();
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /*

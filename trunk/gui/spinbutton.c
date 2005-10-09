@@ -77,7 +77,7 @@ spinbutton_bound(AG_Event *event)
 	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		pthread_mutex_lock(&sbu->lock);
+		AG_MutexLock(&sbu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_INT:
 			sbu->min = INT_MIN+1;
@@ -112,7 +112,7 @@ spinbutton_bound(AG_Event *event)
 			sbu->max =  0x7fffffff-1;
 			break;
 		}
-		pthread_mutex_unlock(&sbu->lock);
+		AG_MutexUnlock(&sbu->lock);
 	}
 }
 
@@ -122,7 +122,7 @@ spinbutton_keydown(AG_Event *event)
 	AG_Spinbutton *sbu = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&sbu->lock);
+	AG_MutexLock(&sbu->lock);
 	switch (keysym) {
 	case SDLK_UP:
 		AG_SpinbuttonAddValue(sbu, sbu->incr);
@@ -131,7 +131,7 @@ spinbutton_keydown(AG_Event *event)
 		AG_SpinbuttonAddValue(sbu, -sbu->incr);
 		break;
 	}
-	pthread_mutex_unlock(&sbu->lock);
+	AG_MutexUnlock(&sbu->lock);
 }
 
 static void
@@ -163,9 +163,9 @@ spinbutton_inc(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
-	pthread_mutex_lock(&sbu->lock);
+	AG_MutexLock(&sbu->lock);
 	AG_SpinbuttonAddValue(sbu, sbu->incr);
-	pthread_mutex_unlock(&sbu->lock);
+	AG_MutexUnlock(&sbu->lock);
 	
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
@@ -175,9 +175,9 @@ spinbutton_dec(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 	
-	pthread_mutex_lock(&sbu->lock);
+	AG_MutexLock(&sbu->lock);
 	AG_SpinbuttonAddValue(sbu, -sbu->incr);
-	pthread_mutex_unlock(&sbu->lock);
+	AG_MutexUnlock(&sbu->lock);
 	
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
@@ -196,7 +196,7 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, const char *label)
 	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
-	pthread_mutex_init(&sbu->lock, NULL);
+	AG_MutexInit(&sbu->lock);
 	sbu->input = AG_TextboxNew(sbu, label);
 
 	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
@@ -222,7 +222,7 @@ AG_SpinbuttonDestroy(void *p)
 {
 	AG_Spinbutton *sbu = p;
 
-	pthread_mutex_destroy(&sbu->lock);
+	AG_MutexDestroy(&sbu->lock);
 	AG_WidgetDestroy(sbu);
 }
 
@@ -508,15 +508,15 @@ AG_SpinbuttonSetRange(AG_Spinbutton *sbu, int nmin, int nmax)
 void
 AG_SpinbuttonSetIncrement(AG_Spinbutton *sbu, int incr)
 {
-	pthread_mutex_lock(&sbu->lock);
+	AG_MutexLock(&sbu->lock);
 	sbu->incr = incr;
-	pthread_mutex_unlock(&sbu->lock);
+	AG_MutexUnlock(&sbu->lock);
 }
 
 void
 AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 {
-	pthread_mutex_lock(&sbu->lock);
+	AG_MutexLock(&sbu->lock);
 
 	sbu->writeable = writeable;
 	AG_TextboxSetWriteable(sbu->input, writeable);
@@ -527,5 +527,5 @@ AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 		AG_ButtonDisable(sbu->incbu);
 		AG_ButtonDisable(sbu->decbu);
 	}
-	pthread_mutex_unlock(&sbu->lock);
+	AG_MutexUnlock(&sbu->lock);
 }

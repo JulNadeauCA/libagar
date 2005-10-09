@@ -138,7 +138,7 @@ typedef struct ag_mapmodblk {
 typedef struct ag_map {
 	AG_Space space;
 
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	u_int flags;
 #define AG_MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
 #define AG_MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */

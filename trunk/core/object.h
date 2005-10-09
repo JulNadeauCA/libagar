@@ -79,7 +79,7 @@ typedef struct ag_object {
 				 AG_OBJECT_REMAIN_DATA|\
 				 AG_OBJECT_REMAIN_GFX)
 
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	AG_Gfx *gfx;
 	AG_Audio *audio;
 	Uint32 data_used;
@@ -108,10 +108,10 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-#define AGOBJECT_INITIALIZER(ob, type, name, ops) {		\
-		(type), (name), "/world", (ops), 0,		\
-		PTHREAD_MUTEX_INITIALIZER,			\
-		NULL, NULL, NULL, 0, NULL, NULL, 0, 0, NULL,	\
+#define AGOBJECT_INITIALIZER(ob, type, name, pfx, ops) {	\
+		(type),(name),(pfx),(ops),0,			\
+		AG_MUTEX_INITIALIZER,				\
+		NULL, NULL, 0, 0, 				\
 		TAILQ_HEAD_INITIALIZER((ob)->events),		\
 		TAILQ_HEAD_INITIALIZER((ob)->props),		\
 		CIRCLEQ_HEAD_INITIALIZER((ob)->timeouts),	\
@@ -137,8 +137,8 @@ enum ag_object_checksum_alg {
 	    (var) = (struct type *)TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
-#define AG_ObjectLock(ob) pthread_mutex_lock(&(ob)->lock)
-#define AG_ObjectUnlock(ob) pthread_mutex_unlock(&(ob)->lock)
+#define AG_ObjectLock(ob) AG_MutexLock(&(ob)->lock)
+#define AG_ObjectUnlock(ob) AG_MutexLock(&(ob)->lock)
 
 __BEGIN_DECLS
 AG_Object *AG_ObjectNew(void *, const char *);

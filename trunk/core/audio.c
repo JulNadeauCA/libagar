@@ -40,7 +40,7 @@ enum {
 };
 
 static TAILQ_HEAD(, ag_audio) ag_audioq = TAILQ_HEAD_INITIALIZER(ag_audioq);
-pthread_mutex_t		      ag_audioq_lock = PTHREAD_MUTEX_INITIALIZER;
+AG_Mutex		      ag_audioq_lock = AG_MUTEX_INITIALIZER;
 
 /* Insert a new sample. */
 Uint32
@@ -86,7 +86,7 @@ AG_AudioFetch(const char *name)
 	AG_Audio *audio;
 	AG_Den *den;
 
-	pthread_mutex_lock(&ag_audioq_lock);
+	AG_MutexLock(&ag_audioq_lock);
 
 	TAILQ_FOREACH(audio, &ag_audioq, audios) {
 		if (strcmp(audio->name, name) == 0)
@@ -125,10 +125,10 @@ AG_AudioFetch(const char *name)
 
 	TAILQ_INSERT_HEAD(&ag_audioq, audio, audios);
 out:
-	pthread_mutex_unlock(&ag_audioq_lock);
+	AG_MutexUnlock(&ag_audioq_lock);
 	return (audio);
 fail:
-	pthread_mutex_unlock(&ag_audioq_lock);
+	AG_MutexUnlock(&ag_audioq_lock);
 	if (audio != NULL) {
 		Free(audio->name, 0);
 		Free(audio, M_AUDIO);
@@ -142,9 +142,9 @@ AG_AudioDestroy(AG_Audio *audio)
 {
 	Uint32 i;
 
-	pthread_mutex_lock(&ag_audioq_lock);
+	AG_MutexLock(&ag_audioq_lock);
 	TAILQ_REMOVE(&ag_audioq, audio, audios);
-	pthread_mutex_unlock(&ag_audioq_lock);
+	AG_MutexUnlock(&ag_audioq_lock);
 
 	for (i = 0; i < audio->nsamples; i++)
 		Free(audio->samples[i].data, M_AUDIO);

@@ -33,6 +33,7 @@
 #include <core/config.h>
 #include <core/view.h>
 #include <core/objmgr.h>
+#include <core/math.h>
 
 #include <game/actor.h>
 
@@ -293,7 +294,7 @@ AG_MapAllocNodes(AG_Map *m, u_int w, u_int h)
 		return (-1);
 	}
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	m->mapw = w;
 	m->maph = h;
 	m->map = Malloc(h * sizeof(AG_Node *), M_MAP);
@@ -303,7 +304,7 @@ AG_MapAllocNodes(AG_Map *m, u_int w, u_int h)
 			AG_NodeInit(&m->map[y][x]);
 		}
 	}
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	return (0);
 }
 
@@ -314,7 +315,7 @@ AG_MapFreeNodes(AG_Map *m)
 	int x, y;
 	AG_Node *node;
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	if (m->map != NULL) {
 		for (y = 0; y < m->maph; y++) {
 			for (x = 0; x < m->mapw; x++) {
@@ -326,7 +327,7 @@ AG_MapFreeNodes(AG_Map *m)
 		Free(m->map, M_MAP);
 		m->map = NULL;
 	}
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 static void
@@ -358,7 +359,7 @@ AG_MapResize(AG_Map *m, u_int w, u_int h)
 		return (-1);
 	}
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 
 	/* Save the nodes to a temporary map, to preserve dependencies. */
 	AG_MapInit(&tm, "t");
@@ -395,11 +396,11 @@ AG_MapResize(AG_Map *m, u_int w, u_int h)
 	if (m->origin.x >= w) { m->origin.x = w-1; }
 	if (m->origin.y >= h) { m->origin.y = h-1; }
 
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	AG_ObjectDestroy(&tm);
 	return (0);
 fail:
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	AG_ObjectDestroy(&tm);
 	return (-1);
 }
@@ -410,12 +411,12 @@ AG_MapSetZoom(AG_Map *m, int ncam, u_int zoom)
 {
 	AG_MapCamera *cam = &m->cameras[ncam];
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	cam->zoom = zoom;
 	if ((cam->tilesz = cam->zoom*AGTILESZ/100) > AG_MAX_TILESZ) {
 		cam->tilesz = AG_MAX_TILESZ;
 	}
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 AG_Map *
@@ -494,7 +495,7 @@ AG_MapInit(void *obj, const char *name)
 	m->nlayers = 1;
 	m->cameras = Malloc(sizeof(AG_MapCamera), M_MAP);
 	m->ncameras = 1;
-	pthread_mutex_init(&m->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&m->lock);
 	
 	AG_MapInitLayer(&m->layers[0], _("Layer 0"));
 	AG_MapInitCamera(&m->cameras[0], _("Camera 0"));
@@ -662,8 +663,8 @@ void
 AG_NodeMoveItem(AG_Map *sm, AG_Node *sn, AG_Nitem *r,
     AG_Map *dm, AG_Node *dn, int dlayer)
 {
-	pthread_mutex_lock(&sm->lock);
-	pthread_mutex_lock(&dm->lock);
+	AG_MutexLock(&sm->lock);
+	AG_MutexLock(&dm->lock);
 
 	TAILQ_REMOVE(&sn->nrefs, r, nrefs);
 	TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
@@ -684,8 +685,8 @@ AG_NodeMoveItem(AG_Map *sm, AG_Node *sn, AG_Nitem *r,
 		break;
 	}
 	
-	pthread_mutex_unlock(&dm->lock);
-	pthread_mutex_unlock(&sm->lock);
+	AG_MutexUnlock(&dm->lock);
+	AG_MutexUnlock(&sm->lock);
 }
 
 /*
@@ -699,8 +700,8 @@ AG_NodeCopy(AG_Map *sm, AG_Node *sn, int slayer,
 {
 	AG_Nitem *sr;
 
-	pthread_mutex_lock(&sm->lock);
-	pthread_mutex_lock(&dm->lock);
+	AG_MutexLock(&sm->lock);
+	AG_MutexLock(&dm->lock);
 
 	TAILQ_FOREACH(sr, &sn->nrefs, nrefs) {
 		if (slayer != -1 &&
@@ -710,8 +711,8 @@ AG_NodeCopy(AG_Map *sm, AG_Node *sn, int slayer,
 		AG_NodeCopyItem(sr, dm, dn, dlayer);
 	}
 	
-	pthread_mutex_unlock(&dm->lock);
-	pthread_mutex_unlock(&sm->lock);
+	AG_MutexUnlock(&dm->lock);
+	AG_MutexUnlock(&sm->lock);
 }
 
 /*
@@ -784,11 +785,11 @@ AG_NodeCopyItem(const AG_Nitem *sr, AG_Map *dm, AG_Node *dn,
 void
 AG_NodeDelItem(AG_Map *m, AG_Node *node, AG_Nitem *r)
 {
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
 	AG_NitemDestroy(m, r);
 	Free(r, M_MAP_NITEM);
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 /* Remove all references associated with the given layer. */
@@ -797,7 +798,7 @@ AG_NodeRemoveAll(AG_Map *m, AG_Node *node, int layer)
 {
 	AG_Nitem *r, *nr;
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 
 	for (r = TAILQ_FIRST(&node->nrefs);
 	     r != TAILQ_END(&node->nrefs);
@@ -812,7 +813,7 @@ AG_NodeRemoveAll(AG_Map *m, AG_Node *node, int layer)
 		Free(r, M_MAP_NITEM);
 	}
 
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 /* Move all references from a layer to another. */
@@ -821,12 +822,12 @@ AG_NodeSwapLayers(AG_Map *m, AG_Node *node, int layer1, int layer2)
 {
 	AG_Nitem *r;
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 		if (r->layer == layer1)
 			r->layer = layer2;
 	}
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 /*
@@ -913,7 +914,7 @@ map_destroy(void *p)
 	AG_Map *m = p;
 
 #ifdef THREADS
-	pthread_mutex_destroy(&m->lock);
+	AG_MutexDestroy(&m->lock);
 #endif
 	Free(m->layers, M_MAP);
 	Free(m->cameras, M_MAP);
@@ -1104,7 +1105,7 @@ map_load(void *ob, AG_Netbuf *buf)
 	if (AG_SpaceLoad(m, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	m->flags = (u_int)AG_ReadUint32(buf) & AG_MAP_SAVED_FLAGS;
 	w = AG_ReadUint32(buf);
 	h = AG_ReadUint32(buf);
@@ -1201,10 +1202,10 @@ map_load(void *ob, AG_Netbuf *buf)
 			    AGOBJECT(ac)->name, AG_GetError());
 	}
 
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	return (-1);
 }
 
@@ -1309,7 +1310,7 @@ map_save(void *p, AG_Netbuf *buf)
 	if (AG_SpaceSave(m, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	
 	/*
 	 * Detach all geometric objects since we don't want to save any
@@ -1365,7 +1366,7 @@ map_save(void *p, AG_Netbuf *buf)
 	TAILQ_FOREACH(go, &AG_SPACE(m)->actors, actors) {
 		AG_SpaceAttach(m, go);
 	}
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 	return (0);
 }
 
@@ -1884,15 +1885,15 @@ draw:
 		if (freesu) {
 			texcoord[0] = 0.0;
 			texcoord[1] = 0.0;
-			texcoord[2] = (GLfloat)su->w / powof2(su->w);
-			texcoord[3] = (GLfloat)su->h / powof2(su->h);
+			texcoord[2] = (GLfloat)su->w / AG_PowOf2i(su->w);
+			texcoord[3] = (GLfloat)su->h / AG_PowOf2i(su->h);
 		} else {
 			texcoord[0] = (GLfloat)r->r_gfx.rs.x;
 			texcoord[1] = (GLfloat)r->r_gfx.rs.y;
 			texcoord[2] = (GLfloat)r->r_gfx.rs.w /
-			                       powof2(r->r_gfx.rs.w);
+			                       AG_PowOf2i(r->r_gfx.rs.w);
 			texcoord[3] = (GLfloat)r->r_gfx.rs.h /
-			                       powof2(r->r_gfx.rs.h);
+			                       AG_PowOf2i(r->r_gfx.rs.h);
 		}
 		
 		if (tilesz != AGTILESZ) {
@@ -2283,7 +2284,7 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 
 		it->class = "tileset";
 
-		pthread_mutex_lock(&ts->lock);
+		AG_MutexLock(&ts->lock);
 		
 		if (ts->gfx != NULL &&
 		    (ts->gfx->nsprites > 0 ||
@@ -2307,7 +2308,7 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 				AG_TlistSetIcon(tl, sit, spr->su);
 			}
 		}
-		pthread_mutex_unlock(&ts->lock);
+		AG_MutexUnlock(&ts->lock);
 	} else {
 		it->class = "object";
 	}

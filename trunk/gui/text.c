@@ -67,7 +67,7 @@ static const char *agTextMsgTitles[] = {
 	N_("Information")
 };
 
-pthread_mutex_t agTextLock = PTHREAD_MUTEX_INITIALIZER;
+AG_Mutex agTextLock = AG_MUTEX_INITIALIZER;
 static SLIST_HEAD(ag_fontq, ag_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
 AG_Font *agDefaultFont = NULL;
 
@@ -83,7 +83,7 @@ AG_FetchFont(const char *name, int size, int style)
 	char path[MAXPATHLEN];
 	AG_Font *font;
 	
-	pthread_mutex_lock(&agTextLock);
+	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
 		if (font->size == size &&
 		    font->style == style &&
@@ -113,7 +113,7 @@ AG_FetchFont(const char *name, int size, int style)
 
 	SLIST_INSERT_HEAD(&fonts, font, fonts);
 out:
-	pthread_mutex_unlock(&agTextLock);
+	AG_MutexUnlock(&agTextLock);
 	return (font);
 }
 

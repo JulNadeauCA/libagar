@@ -38,7 +38,7 @@ typedef struct ag_menu_item {
 	void *bind_p;			/* Pointer to bound variable */
 	Uint32 bind_flags;		/* Bitmask to control */
 	int bind_invert;		/* Invert the option */
-	pthread_mutex_t	*bind_lock;	/* Lock when accessing binding */
+	AG_Mutex *bind_lock;		/* Lock when accessing binding */
 
 	struct ag_menu_view *view;	/* Back pointer to view (subitems) */
 	struct ag_menu *pmenu;		/* Parent menu */
@@ -91,17 +91,17 @@ AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *, int,
 AG_MenuItem *AG_MenuDynamic(AG_MenuItem *, int, void (*)(AG_Event *),
 			    const char *, ...);
 AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, int, int *, int,
-			      pthread_mutex_t *);
+			      AG_Mutex *);
 AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, int, Uint8 *, int,
-			       pthread_mutex_t *);
+			       AG_Mutex *);
 AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, int, int *, int,
-			       int, pthread_mutex_t *);
+			       int, AG_Mutex *);
 AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, int, Uint8 *,
-				Uint8, int, pthread_mutex_t *);
+				Uint8, int, AG_Mutex *);
 AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, int, Uint16 *,
-				 Uint16, int, pthread_mutex_t *);
+				 Uint16, int, AG_Mutex *);
 AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
-				 Uint32, int, pthread_mutex_t *);
+				 Uint32, int, AG_Mutex *);
 
 #define AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)

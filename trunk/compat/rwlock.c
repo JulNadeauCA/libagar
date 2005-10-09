@@ -27,9 +27,9 @@
  */
 
 #include <config/threads.h>
-#include <config/debug.h>
-
 #ifdef THREADS
+
+#include <config/debug.h>
 
 #define _XOPEN_SOURCE 500	/* Require recursive mutexes */
 #include <pthread.h>

@@ -156,7 +156,7 @@ VG_Init(VG *vg, int flags)
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
-	pthread_mutex_init(&vg->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&vg->lock);
 
 	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
@@ -257,7 +257,7 @@ VG_Destroy(VG *vg)
 	VG_DestroyBlocks(vg);
 	VG_DestroyElements(vg);
 	VG_DestroyStyles(vg);
-	pthread_mutex_destroy(&vg->lock);
+	AG_MutexDestroy(&vg->lock);
 
 	Free(vg->ints, M_VG);
 }
@@ -477,7 +477,7 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->fill_st.texture[0] = '\0';
 	vge->fill_st.texture_alpha = 255;
 
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 	TAILQ_INSERT_TAIL(&vg->vges, vge, vges);
 
 	if (vg->cur_block != NULL) {
@@ -495,7 +495,7 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 
 	vg->cur_vge = vge;
 	vg->redraw++;
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 	return (vge);
 }
 
@@ -650,7 +650,7 @@ VG_Rasterize(VG *vg)
 	VG_Block *vgb;
 	int i;
 
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
 
@@ -674,7 +674,7 @@ VG_Rasterize(VG *vg)
 		VG_UpdateFragments(vg);
 
 	vg->redraw = 0;
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 }
 
 /*
@@ -1062,7 +1062,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 
 	AG_WriteVersion(buf, &vgVer);
 
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 
 	AG_WriteString(buf, vg->name);
 	AG_WriteUint32(buf, (Uint32)vg->flags);
@@ -1210,7 +1210,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 	}
 	AG_PwriteUint32(buf, nvges, nvges_offs);
 
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 }
 
 int
@@ -1222,7 +1222,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	if (AG_ReadVersion(buf, &vgVer, NULL) != 0)
 		return (-1);
 
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 	AG_CopyString(vg->name, buf, sizeof(vg->name));
 	vg->flags = AG_ReadUint32(buf);
 	vg->w = AG_ReadDouble(buf);
@@ -1430,11 +1430,11 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	}
 
 	vg->redraw = 1;
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 	return (0);
 fail:
 	vg->redraw = 1;
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 	return (-1);
 }
 

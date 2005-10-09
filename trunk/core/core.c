@@ -71,8 +71,8 @@ AG_Config *agConfig;
 AG_Object *agWorld;
 AG_Object agIconMgr;
 void (*agAtexitFunc)(void) = NULL;
-pthread_mutex_t agLinkageLock;
-pthread_mutex_t agTimingLock;
+AG_Mutex agLinkageLock;
+AG_Mutex agTimingLock;
 int agServerMode = 0;
 
 int
@@ -94,8 +94,8 @@ AG_InitCore(const char *progname, u_int flags)
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&agLinkageLock, &agRecursiveMutexAttr);
-	pthread_mutex_init(&agTimingLock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&agLinkageLock);
+	AG_MutexInitRecursive(&agTimingLock);
 #endif
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		AG_SetError("SDL_Init: %s", SDL_GetError());
@@ -308,8 +308,8 @@ AG_Destroy(void)
 	AG_ObjectDestroy(agConfig);
 	Free(agConfig, M_OBJECT);
 
-/*	pthread_mutex_destroy(&agLinkageLock); */
-	pthread_mutex_destroy(&agTimingLock);
+/*	AG_MutexDestroy(&agLinkageLock); */
+	AG_MutexDestroy(&agTimingLock);
 
 	AG_DestroyError();
 	AG_DestroyTypeSw();

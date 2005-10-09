@@ -53,7 +53,7 @@ typedef struct ag_window {
 	char caption[128];
 	int visible;				/* Window is visible */
 
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	AG_Titlebar *tbar;			/* Titlebar (if any) */
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */

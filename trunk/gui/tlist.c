@@ -86,7 +86,7 @@ key_tick(AG_Event *event)
 	AG_WidgetBinding *offsetb;
 	int *offset;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	switch (keysym) {
 	case SDLK_UP:
@@ -140,7 +140,7 @@ key_tick(AG_Event *event)
 		break;
 	}
 	AG_WidgetUnlockBinding(offsetb);
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 
 	tl->keymoved++;
 	AG_ReschedEvent(tl, "key-tick", agKbdRepeat);
@@ -151,9 +151,9 @@ dblclick_expire(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	tl->dblclicked = NULL;
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -175,7 +175,7 @@ AG_TlistInit(AG_Tlist *tl, int flags)
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
 
 	tl->flags = flags;
-	pthread_mutex_init(&tl->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&tl->lock);
 	tl->selected = NULL;
 	tl->keymoved = 0;
 	tl->item_h = agTextFontHeight+2;
@@ -237,7 +237,7 @@ AG_TlistDestroy(void *p)
 		Free(tp, M_WIDGET);
 	}
 
-	pthread_mutex_destroy(&tl->lock);
+	AG_MutexDestroy(&tl->lock);
 	AG_WidgetDestroy(tl);
 }
 
@@ -271,7 +271,7 @@ AG_TlistDraw(void *p)
 	agPrim.box(tl, 0, 0, AGWIDGET(tl)->w, AGWIDGET(tl)->h, -1,
 	    AG_COLOR(TLIST_BG_COLOR));
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -341,7 +341,7 @@ AG_TlistDraw(void *p)
 		agPrim.hline(tl, 0, AGWIDGET(tl)->w, y,
 		    AG_COLOR(TLIST_LINE_COLOR));
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Adjust the scrollbar offset according to the number of visible items. */
@@ -405,10 +405,10 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	int *offset;
 	int nitems;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	TAILQ_REMOVE(&tl->items, it, items);
 	nitems = --tl->nitems;
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 
 	free_item(tl, it);
 
@@ -429,7 +429,7 @@ AG_TlistClear(AG_Tlist *tl)
 {
 	AG_TlistItem *it, *nit;
 	
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
@@ -447,7 +447,7 @@ AG_TlistClear(AG_Tlist *tl)
 	/* Preserve the offset value, for polling. */
 	AG_WidgetSetInt(tl->sbar, "max", 0);
 
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 int
@@ -556,14 +556,14 @@ allocate_item(AG_Tlist *tl, SDL_Surface *iconsrc)
 static __inline__ void
 insert_item(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 {
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if (ins_head) {
 		TAILQ_INSERT_HEAD(&tl->items, it, items);
 	} else {
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
 	AG_WidgetSetInt(tl->sbar, "max", ++tl->nitems);
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Add an item to the list. */
@@ -656,7 +656,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -669,7 +669,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 	return (it);
 }
 
@@ -679,7 +679,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -693,7 +693,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 	return (it);
 }
 
@@ -701,21 +701,21 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 void
 AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 {
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
 	it->selected = 1;
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Clear the selection flag on an item. */
 void
 AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	it->selected = 0;
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Set the selection flag on all items. */
@@ -724,11 +724,11 @@ AG_TlistSelectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		it->selected = 1;
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Unset the selection flag on all items. */
@@ -737,11 +737,11 @@ AG_TlistDeselectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		it->selected = 0;
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -783,7 +783,7 @@ tlist_mousebuttondown(AG_Event *event)
 	AG_TlistItem *ti;
 	int tind;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 
 	tind = (AG_WidgetInt(tl->sbar, "value") + y/tl->item_h) + 1;
 
@@ -897,7 +897,7 @@ tlist_mousebuttondown(AG_Event *event)
 		break;
 	}
 out:
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -906,7 +906,7 @@ tlist_keydown(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -917,7 +917,7 @@ tlist_keydown(AG_Event *event)
 	default:
 		break;
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -926,7 +926,7 @@ tlist_keyup(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -941,7 +941,7 @@ tlist_keyup(AG_Event *event)
 	default:
 		break;
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -1043,7 +1043,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != -1) {
@@ -1054,7 +1054,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 			AG_WidgetReplaceSurface(tl, it->icon, scaled);
 		}
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Update the icon associated with an item. */

@@ -32,6 +32,7 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
+#include <core/math.h>
 #ifdef MAP
 #include <game/map/map.h>
 #endif
@@ -103,7 +104,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	dprintf("%u fps\n", agView->rNom);
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
-	pthread_mutex_init(&agView->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&agView->lock);
 
 	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
 	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
@@ -220,7 +221,7 @@ AG_ViewInit(int w, int h, int bpp, u_int flags)
 	agDefaultCursor = SDL_GetCursor();
 	return (0);
 fail:
-	pthread_mutex_destroy(&agView->lock);
+	AG_MutexDestroy(&agView->lock);
 	Free(agView, M_VIEW);
 	agView = NULL;
 	return (-1);
@@ -242,11 +243,11 @@ AG_ResizeDisplay(int w, int h)
 	 * scaled yet.
 	 */
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		pthread_mutex_lock(&win->lock);
+		AG_MutexLock(&win->lock);
 		if (!win->visible) {
 			AG_WINDOW_UPDATE(win);
 		}
-		pthread_mutex_unlock(&win->lock);
+		AG_MutexUnlock(&win->lock);
 	}
 
 	/* XXX set a minimum! */
@@ -264,13 +265,13 @@ AG_ResizeDisplay(int w, int h)
 	AG_SetUint16(agConfig, "view.h", h);
 
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		pthread_mutex_lock(&win->lock);
+		AG_MutexLock(&win->lock);
 		AGWIDGET(win)->x = AGWIDGET(win)->x*w/ow;
 		AGWIDGET(win)->y = AGWIDGET(win)->y*h/oh;
 		AGWIDGET(win)->w = AGWIDGET(win)->w*w/ow;
 		AGWIDGET(win)->h = AGWIDGET(win)->h*h/oh;
 		AG_WINDOW_UPDATE(win);
-		pthread_mutex_unlock(&win->lock);
+		AG_MutexUnlock(&win->lock);
 	}
 	return (0);
 }
@@ -281,11 +282,11 @@ AG_ViewVideoExpose(void)
 	AG_Window *win;
 
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		pthread_mutex_lock(&win->lock);
+		AG_MutexLock(&win->lock);
 		if (win->visible) {
 			AG_WidgetDraw(win);
 		}
-		pthread_mutex_unlock(&win->lock);
+		AG_MutexUnlock(&win->lock);
 	}
 
 #ifdef HAVE_OPENGL
@@ -308,7 +309,7 @@ AG_ViewDestroy(void)
 	}
 
 	Free(agView->dirty, M_VIEW);
-	pthread_mutex_destroy(&agView->lock);
+	AG_MutexDestroy(&agView->lock);
 	Free(agView, M_VIEW);
 	agView = NULL;
 }
@@ -319,12 +320,12 @@ AG_FindWindow(const char *name)
 {
 	AG_Window *win;
 
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		if (strcmp(AGOBJECT(win)->name, name) == 0)
 			break;
 	}
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	return (win);
 }
 
@@ -334,10 +335,10 @@ AG_ViewAttach(void *child)
 {
 	AG_Window *win = child;
 	
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	agView->focus_win = NULL;
 	TAILQ_INSERT_TAIL(&agView->windows, win, windows);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 static void
@@ -373,9 +374,9 @@ detach_window(AG_Window *win)
 void
 AG_ViewDetach(AG_Window *win)
 {
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	detach_window(win);
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 }
 
 /* Return the 32-bit form of the pixel at the given location. */
@@ -587,11 +588,11 @@ AG_SetRefreshRate(int fps)
 		AG_SetError("FPS < 1");
 		return (-1);
 	}
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	AG_SetUint(agConfig, "view.nominal-fps", fps);
 	agView->rNom = 1000/fps;
 	agView->rCur = 0;
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	dprintf("%u fps\n", fps);
 	return (0);
 }
@@ -606,8 +607,8 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 
-	w = powof2(sourcesu->w);
-	h = powof2(sourcesu->h);
+	w = AG_PowOf2i(sourcesu->w);
+	h = AG_PowOf2i(sourcesu->h);
 
 	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
@@ -649,8 +650,8 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 	
-	w = powof2(sourcesu->w);
-	h = powof2(sourcesu->h);
+	w = AG_PowOf2i(sourcesu->w);
+	h = AG_PowOf2i(sourcesu->h);
 
 	/* The size of OpenGL surfaces must be a power of two. */
 	if (texcoord != NULL) {

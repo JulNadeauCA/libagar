@@ -56,7 +56,7 @@ typedef struct ag_widget_binding {
 	char name[AG_WIDGET_BINDING_NAME_MAX];
 	int type;
 	int vtype;
-	pthread_mutex_t	*mutex;	
+	AG_Mutex *mutex;	
 	void *p1, *p2;
 	size_t size;
 	SLIST_ENTRY(ag_widget_binding) bindings;
@@ -89,7 +89,7 @@ typedef struct ag_widget {
 	GLuint *textures;		/* Cached OpenGL textures */
 	GLfloat	*texcoords;		/* Cached texture coordinates */
 #endif
-	pthread_mutex_t bindings_lock;
+	AG_Mutex bindings_lock;
 	SLIST_HEAD(, ag_widget_binding) bindings;	/* Variable bindings */
 } AG_Widget;
 
@@ -153,7 +153,7 @@ int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
 
 AG_WidgetBinding *AG_WidgetBind(void *, const char *,
 	                        enum ag_widget_binding_type, ...);
-AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, pthread_mutex_t *,
+AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *,
 			          enum ag_widget_binding_type, ...);
 AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
 __inline__ void	  AG_WidgetLockBinding(AG_WidgetBinding *);
