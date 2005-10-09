@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.51 2005/10/06 10:30:13 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.50 2005/10/06 10:28:22 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -54,6 +54,7 @@ BINMODE?=	755
 STATIC?=	Yes
 CFLAGS+=    ${COPTS}
 SHARE?=
+SHARESRC?=
 LFLAGS?=
 YFLAGS?=
 
@@ -296,6 +297,24 @@ install-lib:
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
+	@export _share="${SHARESRC}"; \
+        if [ "$$_sharesrc" != "" ]; then \
+            if [ ! -d "${SHAREDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+            fi; \
+	    if [ "${SRC}" != "" ]; then \
+                for F in $$_share; do \
+                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                    ${SUDO} ${INSTALL_DATA} ${SRC}/$$F ${SHAREDIR}; \
+                done; \
+	    else \
+                for F in $$_share; do \
+                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                    ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                done; \
+	    fi; \
+	fi
 
 deinstall-lib:
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
@@ -310,6 +329,12 @@ deinstall-lib:
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
+	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
+	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	    done; \
+	fi
+	@if [ "${SHARESRC}" != "" ]; then \
+	    for F in ${SHARESRC}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
