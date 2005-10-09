@@ -1,14 +1,14 @@
 /*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/objmgr.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/core/view.h>
+#include <agar/core/objmgr.h>
 
-#include <engine/map/mapedit.h>
+#include <agar/game/map/mapedit.h>
 
-#include <engine/widget/gui.h>
+#include <agar/gui/gui.h>
 
 #include <string.h>
 #include <unistd.h>
