@@ -4,21 +4,21 @@
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
-CVSROOT=/home/cvs/CVSROOT
+#CVSROOT=/home/cvs/CVSROOT
 
 cd ..
 echo "snapshot: agar-${VER}"
 rm -fr agar-${VER}
 cp -fRp agar agar-${VER}
 
-(cd ${CVSROOT} &&
- mv -f Agar-ChangeLog Agar-ChangeLog-${VER} &&
- touch Agar-ChangeLog &&
- chgrp csoft Agar-ChangeLog &&
- chmod 666 Agar-ChangeLog)
+#(cd ${CVSROOT} &&
+# mv -f Agar-ChangeLog Agar-ChangeLog-${VER} &&
+# touch Agar-ChangeLog &&
+# chgrp csoft Agar-ChangeLog &&
+# chmod 666 Agar-ChangeLog)
 
-cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}/ChangeLog-${VER}
-cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
+#cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}/ChangeLog-${VER}
+#cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
 
 rm -fR `find agar-${VER} \( -name Root \
     -or -name \*~ \
@@ -38,8 +38,8 @@ sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 gpg -ab ${DISTFILE}.tar.gz
 
 echo "uploading"
-scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} vedge@resin:www/snap
-ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
+scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} vedge@resin:www/snap
+ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
 
 echo "notifying agar-announce@"
 TMP=`mktemp /tmp/agarannounceXXXXXXXX`
@@ -57,14 +57,7 @@ any problems you might run into.
 	http://beta.csoft.org/agar/agar-$VER.tar.gz
 	http://beta.csoft.org/agar/agar-$VER.tar.gz.asc
 	http://beta.csoft.org/agar/agar-$VER.tar.gz.md5
-	http://beta.csoft.org/agar/agar-$VER.ChangeLog
-
-Below is the summary of changes since the last release. If you wish to
-receive individual e-mails whenever commits are made, send an empty
-e-mail to <source-diff-subscribe@lists.csoft.net> (unified diffs inline),
-or <source-changes-subscribe@lists.csoft.net> (no diffs).
 
 EOF
-cat agar-${VER}.ChangeLog >> $TMP
 cat $TMP | sendmail -t
 rm -f $TMP
