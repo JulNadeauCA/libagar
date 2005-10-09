@@ -20,7 +20,7 @@ cp -fRp agar agar-${VER}
 #cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}/ChangeLog-${VER}
 #cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
 
-rm -fR `find agar-${VER} \( -name Root \
+rm -fR `find agar-${VER} \( -name .svn \
     -or -name \*~ \
     -or -name \*.o \
     -or -name \*.a \
