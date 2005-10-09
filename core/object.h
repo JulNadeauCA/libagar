@@ -138,7 +138,7 @@ enum ag_object_checksum_alg {
 	    cobjs))
 
 #define AG_ObjectLock(ob) AG_MutexLock(&(ob)->lock)
-#define AG_ObjectUnlock(ob) AG_MutexLock(&(ob)->lock)
+#define AG_ObjectUnlock(ob) AG_MutexUnlock(&(ob)->lock)
 
 __BEGIN_DECLS
 AG_Object *AG_ObjectNew(void *, const char *);
