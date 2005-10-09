@@ -26,20 +26,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <config/debug.h>
+#ifdef DEBUG
+
 #include <config/have_jpeg.h>
 #include <config/network.h>
 
-#ifdef DEBUG
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapview.h>
+#include <game/map/map.h>
+#include <game/map/mapview.h>
 
-#include <engine/view.h>
-
-#include <engine/widget/window.h>
-#include <engine/widget/tableview.h>
-#include <engine/widget/menu.h>
+#include <gui/window.h>
+#include <gui/menu.h>
 
 #include "monitor.h"
 
