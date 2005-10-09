@@ -13,8 +13,8 @@ XCF=	map-edition.xcf \
 	anim.xcf \
 	symbols.xcf
 
-DEN=		icons.den
-DEN_NAME=	"Agar GUI icons"
+DEN=		core-icons.den
+DEN_NAME=	"Agar Core Icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc"
 
