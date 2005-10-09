@@ -56,8 +56,8 @@
 
 #include "monitor.h"
 
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t xmit_lock = PTHREAD_MUTEX_INITIALIZER;
+static AG_Mutex lock = AG_MUTEX_INITIALIZER;
+static AG_Mutex xmit_lock = AG_MUTEX_INITIALIZER;
 static int default_port = 1173;
 static int sock = -1;
 static int aflag = 0;
@@ -115,10 +115,10 @@ screenshot_xmit(int fd)
 		JSAMPROW row[1];
 		int x;
 
-		pthread_mutex_lock(&xmit_lock);
+		AG_MutexLock(&xmit_lock);
 		if (aflag) {
 			aflag = 0;
-			pthread_mutex_unlock(&xmit_lock);
+			AG_MutexUnlock(&xmit_lock);
 			break;
 		}
 
@@ -164,7 +164,7 @@ screenshot_xmit(int fd)
 
 		SDL_Delay(xmit_delay);
 		nframe++;
-		pthread_mutex_unlock(&xmit_lock);
+		AG_MutexUnlock(&xmit_lock);
 	}
 	Free(jcopybuf, M_VIEW);
 	jpeg_destroy_compress(&jcomp);
@@ -180,7 +180,7 @@ screenshot_connect(AG_Event *event)
 	const char *cause = "";
 	int rv;
 	
-	pthread_mutex_lock(&lock);
+	AG_MutexLock(&lock);
 
 	if (sock != -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Already connected to a server."));
@@ -236,15 +236,15 @@ screenshot_connect(AG_Event *event)
 out2:
 	freeaddrinfo(res0);
 out1:
-	pthread_mutex_unlock(&lock);
+	AG_MutexUnlock(&lock);
 }
 
 static void
 screenshot_disconnect(AG_Event *event)
 {
-	pthread_mutex_lock(&xmit_lock);
+	AG_MutexLock(&xmit_lock);
 	aflag++;
-	pthread_mutex_unlock(&xmit_lock);
+	AG_MutexUnlock(&xmit_lock);
 
 	snprintf(status, sizeof(status), _("Disconnected"));
 }

@@ -165,13 +165,13 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	}
 	va_end(ap);
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	if (!modify) {
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
 	} else {
 		AG_PostEvent(NULL, ob, "prop-modified", "%p", nprop);
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (nprop);
 }
 
@@ -277,13 +277,13 @@ AG_SetBool(void *ob, const char *key, int i)
 void
 AG_LockProps(void *p)
 {
-	pthread_mutex_lock(&AGOBJECT(p)->lock);
+	AG_MutexLock(&AGOBJECT(p)->lock);
 }
 
 void
 AG_UnlockProps(void *p)
 {
-	pthread_mutex_unlock(&AGOBJECT(p)->lock);
+	AG_MutexUnlock(&AGOBJECT(p)->lock);
 }
 
 /* Return a pointer to the data of a property. */
@@ -293,7 +293,7 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 	AG_Object *ob = obp;
 	AG_Prop *prop;
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		if (strcmp(key, prop->key) != 0)
 			continue;
@@ -353,13 +353,13 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 				goto fail;
 			}
 		}
-		pthread_mutex_unlock(&ob->lock);
+		AG_MutexUnlock(&ob->lock);
 		return (prop);
 	}
 
 	AG_SetError(_("%s has no `%s' property (type %d)."), ob->name, key, t);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (NULL);
 }
 
@@ -555,7 +555,7 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 	if (AG_ReadVersion(buf, &prop_ver, NULL) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
 		AG_ObjectFreeProps(ob);
@@ -636,10 +636,10 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 			goto fail;
 		}
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (-1);
 }
 
@@ -654,7 +654,7 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 	
 	AG_WriteVersion(buf, &prop_ver);
 	
-	pthread_mutex_lock(&ob->lock);
+	AG_MutexLock(&ob->lock);
 
 	count_offs = AG_NetbufTell(buf);			/* Skip count */
 	AG_WriteUint32(buf, 0);
@@ -720,11 +720,11 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		}
 		nprops++;
 	}
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	AG_PwriteUint32(buf, nprops, count_offs);	/* Write count */
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	AG_MutexUnlock(&ob->lock);
 	return (-1);
 }
 

@@ -94,7 +94,7 @@ typedef struct ag_table {
 	void *selected_cell;		/* Default `selected-cell' binding */
 	int prew, preh;			/* Prescale hint */
 
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	int row_h;			/* Row height in pixels */
 	int col_h;			/* Column header height in pixels */
 	int xoffs;			/* Column display offset */

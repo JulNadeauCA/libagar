@@ -14,7 +14,7 @@ typedef struct ag_spinbutton {
 	struct ag_widget wid;
 	int value;			/* Default value binding */
 	int min, max;			/* Default range bindings */
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	int incr;			/* Increment for buttons */
 	int writeable;			/* 0 = read-only */
 	AG_Textbox *input;

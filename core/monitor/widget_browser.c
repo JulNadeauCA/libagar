@@ -75,11 +75,11 @@ poll_windows(AG_Event *event)
 	AG_Window *win;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&agView->lock);
+	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
 		poll_windows_do(tl, win, 0);
 	}
-	pthread_mutex_unlock(&agView->lock);
+	AG_MutexUnlock(&agView->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -194,11 +194,11 @@ poll_widgets(AG_Event *event)
 	
 	AG_TlistClear(widtl);
 	AG_LockLinkage();
-	pthread_mutex_lock(&win->lock);
+	AG_MutexLock(&win->lock);
 
 	poll_widgets_do(AGWIDGET(win), widtl, 0);
 
-	pthread_mutex_unlock(&win->lock);
+	AG_MutexUnlock(&win->lock);
 	AG_UnlockLinkage();
 	AG_TlistRestore(widtl);
 }

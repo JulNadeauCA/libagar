@@ -7,7 +7,7 @@ LIB=		ag_compat
 LIB_SHARED=	Yes
 LIB_STATIC=	Yes
 
-SRCS=	setenv.c strlcat.c strlcpy.c strsep.c asprintf.c vasprintf.c rwlock.c \
+SRCS=	setenv.c strlcat.c strlcpy.c strsep.c asprintf.c vasprintf.c \
 	gethostname.c snprintf.c arc4random.c dir.c md5.c sha1.c rmd160.c
 
 CFLAGS+=-I.. ${SDL_CFLAGS}

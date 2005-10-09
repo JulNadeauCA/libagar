@@ -128,11 +128,11 @@ AG_ComboSelectPointer(AG_Combo *com, void *p)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&com->list->lock);
+	AG_MutexLock(&com->list->lock);
 	if ((it = AG_TlistSelectPtr(com->list, p)) != NULL) {
 		AG_TextboxPrintf(com->tbox, "%s", it->text);
 	}
-	pthread_mutex_unlock(&com->list->lock);
+	AG_MutexUnlock(&com->list->lock);
 	return (it);
 }
 
@@ -142,21 +142,21 @@ AG_ComboSelectText(AG_Combo *com, const char *text)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&com->list->lock);
+	AG_MutexLock(&com->list->lock);
 	if ((it = AG_TlistSelectText(com->list, text)) != NULL) {
 		AG_TextboxPrintf(com->tbox, "%s", it->text);
 	}
-	pthread_mutex_unlock(&com->list->lock);
+	AG_MutexUnlock(&com->list->lock);
 	return (it);
 }
 
 void
 combo_select(AG_Combo *com, AG_TlistItem *it)
 {
-	pthread_mutex_lock(&com->list->lock);
+	AG_MutexLock(&com->list->lock);
 	AG_TextboxPrintf(com->tbox, "%s", it->text);
 	AG_TlistSelect(com->list, it);
-	pthread_mutex_unlock(&com->list->lock);
+	AG_MutexUnlock(&com->list->lock);
 }
 
 static void
@@ -166,12 +166,12 @@ combo_selected(AG_Event *event)
 	AG_Combo *com = AG_PTR(1);
 	AG_TlistItem *ti;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_TextboxPrintf(com->tbox, "%s", ti->text);
 		AG_PostEvent(NULL, com, "combo-selected", "%p", ti);
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 	combo_collapse(com);
 }
 
@@ -182,7 +182,7 @@ combo_return(AG_Event *event)
 	AG_Textbox *tbox = AG_SELF();
 	AG_Combo *com = AG_PTR(1);
 	
-	pthread_mutex_lock(&com->list->lock);
+	AG_MutexLock(&com->list->lock);
 
 	AG_TextboxCopyString(tbox, text, sizeof(text));
 
@@ -204,7 +204,7 @@ combo_return(AG_Event *event)
 		AG_PostEvent(NULL, com, "combo-text-entry", "%s", text);
 	}
 
-	pthread_mutex_unlock(&com->list->lock);
+	AG_MutexUnlock(&com->list->lock);
 }
 
 #if 0

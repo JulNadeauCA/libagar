@@ -124,12 +124,12 @@ ucombo_selected(AG_Event *event)
 	AG_UCombo *com = AG_PTR(1);
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
 		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 
 	ucombo_collapse(com);
 }

@@ -26,7 +26,7 @@ typedef struct ag_actor_ops {
 
 typedef struct ag_actor {
 	struct ag_object obj;
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	int flags;
 #define AG_ACTOR_SAVED_FLAGS	0x00
 	void *parent;			/* Parent object (NULL=unset) */

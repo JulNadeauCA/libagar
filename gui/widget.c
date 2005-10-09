@@ -28,6 +28,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/math.h>
 
 #include <gui/widget.h>
 #include <gui/window.h>
@@ -93,7 +94,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	wid->h = -1;
 	wid->style = NULL;
 	SLIST_INIT(&wid->bindings);
-	pthread_mutex_init(&wid->bindings_lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&wid->bindings_lock);
 
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
@@ -134,14 +135,14 @@ AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 
 /* Bind a mutex-protected variable to a widget. */
 AG_WidgetBinding *
-AG_WidgetBindMp(void *widp, const char *name, pthread_mutex_t *mutex,
+AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
     enum ag_widget_binding_type type, ...)
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *b;
 	va_list ap;
 	
-	pthread_mutex_lock(&wid->bindings_lock);
+	AG_MutexLock(&wid->bindings_lock);
 	va_start(ap, type);
 	switch (type) {
 	case AG_WIDGET_PROP:
@@ -161,7 +162,7 @@ AG_WidgetBindMp(void *widp, const char *name, pthread_mutex_t *mutex,
 	}
 	va_end(ap);
 	b->mutex = mutex;
-	pthread_mutex_unlock(&wid->bindings_lock);
+	AG_MutexUnlock(&wid->bindings_lock);
 	return (b);
 }
 
@@ -244,7 +245,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	}
 	va_end(ap);
 
-	pthread_mutex_lock(&wid->bindings_lock);
+	AG_MutexLock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) == 0) {
 			binding->type = type;
@@ -254,7 +255,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 			binding->vtype = widget_vtype(binding);
 
 			AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
-			pthread_mutex_unlock(&wid->bindings_lock);
+			AG_MutexUnlock(&wid->bindings_lock);
 			return (binding);
 		}
 	}
@@ -270,7 +271,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
 	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
-	pthread_mutex_unlock(&wid->bindings_lock);
+	AG_MutexUnlock(&wid->bindings_lock);
 	return (binding);
 }
 
@@ -292,13 +293,13 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 	res = va_arg(ap, void **);
 	va_end(ap);
 
-	pthread_mutex_lock(&wid->bindings_lock);
+	AG_MutexLock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) != 0)
 			continue;
 
 		if (binding->mutex != NULL) {
-			pthread_mutex_lock(binding->mutex);
+			AG_MutexLock(binding->mutex);
 		}
 		switch (binding->type) {
 		case AG_WIDGET_BOOL:
@@ -406,10 +407,10 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			goto out;
 		}
 out:
-		pthread_mutex_unlock(&wid->bindings_lock);
+		AG_MutexUnlock(&wid->bindings_lock);
 		return (binding);			/* Return locked */
 	}
-	pthread_mutex_unlock(&wid->bindings_lock);
+	AG_MutexUnlock(&wid->bindings_lock);
 
 	AG_SetError("No such widget binding: `%s'.", name);
 	return (NULL);
@@ -816,14 +817,14 @@ void
 AG_WidgetLockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
-		pthread_mutex_lock(bind->mutex);
+		AG_MutexLock(bind->mutex);
 }
 
 void
 AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
-		pthread_mutex_unlock(bind->mutex);
+		AG_MutexUnlock(bind->mutex);
 }
 
 /*
@@ -953,7 +954,7 @@ AG_WidgetDestroy(void *p)
 		nbind = SLIST_NEXT(bind, bindings);
 		Free(bind, M_WIDGET);
 	}
-	pthread_mutex_destroy(&wid->bindings_lock);
+	AG_MutexDestroy(&wid->bindings_lock);
 }
 
 /*
@@ -1061,10 +1062,10 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			texcoord = &srcwid->texcoords[name*4];
 		} else {
 			texcoord = &tmptexcoord[0];
-			texcoord[0] = (GLfloat)rs->x/powof2(rs->x);
-			texcoord[1] = (GLfloat)rs->y/powof2(rs->y);
-			texcoord[2] = (GLfloat)rs->w/powof2(rs->w);
-			texcoord[3] = (GLfloat)rs->h/powof2(rs->h);
+			texcoord[0] = (GLfloat)rs->x/AG_PowOf2i(rs->x);
+			texcoord[1] = (GLfloat)rs->y/AG_PowOf2i(rs->y);
+			texcoord[2] = (GLfloat)rs->w/AG_PowOf2i(rs->w);
+			texcoord[3] = (GLfloat)rs->h/AG_PowOf2i(rs->h);
 		}
 #ifdef DEBUG
 		if (texture == 0)

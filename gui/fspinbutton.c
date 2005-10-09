@@ -80,7 +80,7 @@ binding_changed(AG_Event *event)
 	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		pthread_mutex_lock(&fsu->lock);
+		AG_MutexLock(&fsu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_DOUBLE:
 			fsu->min = -DBL_MAX+1;
@@ -103,7 +103,7 @@ binding_changed(AG_Event *event)
 			fsu->max = 0xffU;
 			break;
 		}
-		pthread_mutex_unlock(&fsu->lock);
+		AG_MutexUnlock(&fsu->lock);
 	}
 }
 
@@ -113,7 +113,7 @@ key_pressed(AG_Event *event)
 	AG_FSpinbutton *fsu = AG_SELF();
 	int keysym = AG_INT(1);
 
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	switch (keysym) {
 	case SDLK_UP:
 		AG_FSpinbuttonAddValue(fsu, fsu->inc);
@@ -122,7 +122,7 @@ key_pressed(AG_Event *event)
 		AG_FSpinbuttonAddValue(fsu, -fsu->inc);
 		break;
 	}
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 static void
@@ -148,9 +148,9 @@ increment_pressed(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	AG_FSpinbuttonAddValue(fsu, fsu->inc);
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 static void
@@ -158,9 +158,9 @@ decrement_pressed(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	AG_FSpinbuttonAddValue(fsu, -fsu->inc);
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 static void
@@ -205,7 +205,7 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 	fsu->unit = unit;
 	update_unit_button(fsu);
 
-	pthread_mutex_lock(&fsu->units->list->lock);
+	AG_MutexLock(&fsu->units->list->lock);
 	AG_TlistDeselectAll(fsu->units->list);
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		AG_TlistItem *it;
@@ -215,7 +215,7 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 		if (unit == fsu->unit)
 			it->selected++;
 	}
-	pthread_mutex_unlock(&fsu->units->list->lock);
+	AG_MutexUnlock(&fsu->units->list->lock);
 }
 
 void
@@ -233,7 +233,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, const char *unit, const char *label)
 	fsu->input = AG_TextboxNew(fsu, label);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
-	pthread_mutex_init(&fsu->lock, NULL);
+	AG_MutexInit(&fsu->lock);
 	
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu);
@@ -272,7 +272,7 @@ AG_FSpinbuttonDestroy(void *p)
 {
 	AG_FSpinbutton *fsu = p;
 
-	pthread_mutex_destroy(&fsu->lock);
+	AG_MutexDestroy(&fsu->lock);
 	AG_WidgetDestroy(fsu);
 }
 
@@ -532,21 +532,21 @@ AG_FSpinbuttonSetMax(AG_FSpinbutton *fsu, double nmax)
 void
 AG_FSpinbuttonSetIncrement(AG_FSpinbutton *fsu, double inc)
 {
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	fsu->inc = inc;
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 void
 AG_FSpinbuttonSetPrecision(AG_FSpinbutton *fsu, const char *mode,
     int precision)
 {
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
 	snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
 	strlcat(fsu->format, mode, sizeof(fsu->format));
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 void
@@ -554,7 +554,7 @@ AG_FSpinbuttonSelectUnit(AG_FSpinbutton *fsu, const char *uname)
 {
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&fsu->units->list->lock);
+	AG_MutexLock(&fsu->units->list->lock);
 	AG_TlistDeselectAll(fsu->units->list);
 	TAILQ_FOREACH(it, &fsu->units->list->items, items) {
 		const AG_Unit *unit = it->p1;
@@ -566,13 +566,13 @@ AG_FSpinbuttonSelectUnit(AG_FSpinbutton *fsu, const char *uname)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&fsu->units->list->lock);
+	AG_MutexUnlock(&fsu->units->list->lock);
 }
 
 void
 AG_FSpinbuttonSetWriteable(AG_FSpinbutton *fsu, int writeable)
 {
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	fsu->writeable = writeable;
 	AG_TextboxSetWriteable(fsu->input, writeable);
 	if (writeable) {
@@ -582,14 +582,14 @@ AG_FSpinbuttonSetWriteable(AG_FSpinbutton *fsu, int writeable)
 		AG_ButtonDisable(fsu->incbu);
 		AG_ButtonDisable(fsu->decbu);
 	}
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }
 
 void
 AG_FSpinbuttonSetRange(AG_FSpinbutton *fsu, double min, double max)
 {
-	pthread_mutex_lock(&fsu->lock);
+	AG_MutexLock(&fsu->lock);
 	AG_FSpinbuttonSetMin(fsu, min);
 	AG_FSpinbuttonSetMax(fsu, max);
-	pthread_mutex_unlock(&fsu->lock);
+	AG_MutexUnlock(&fsu->lock);
 }

@@ -20,14 +20,14 @@ enum ag_label_type {
 typedef struct ag_label {
 	struct ag_widget wid;
 	enum ag_label_type type;
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	int surface;
 	int prew, preh;
 	struct {
 		char fmt[AG_LABEL_MAX];
 		void *ptrs[AG_LABEL_MAX_POLLPTRS];
 		int nptrs;
-		pthread_mutex_t	*lock;
+		AG_Mutex *lock;
 	} poll;
 } AG_Label;
 

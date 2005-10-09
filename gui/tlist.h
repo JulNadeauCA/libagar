@@ -53,7 +53,7 @@ typedef struct ag_tlist {
 	void *selected;			/* Default `selected' binding */
 	int prew, preh;			/* Prescale hint */
 
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
 	void *dblclicked;		/* Used by double click */

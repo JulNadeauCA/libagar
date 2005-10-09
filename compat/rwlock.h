@@ -1,6 +1,9 @@
 /*	$Csoft: rwlock.h,v 1.2 2002/09/16 12:59:04 vedge Exp $	*/
 /*	Public domain	*/
 
+#include <config/threads.h>
+#ifdef THREADS
+
 typedef struct {
 	int	type;
 #define RWLOCK_DEFAULT		0x01	 /* Error checking */
@@ -45,3 +48,4 @@ int	rwlockattr_destroy(rwlockattr_t *);
 int	rwlockattr_settype(rwlockattr_t *, int);
 int	rwlockattr_gettype(rwlockattr_t *, int *);
 
+#endif /* THREADS */

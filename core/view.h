@@ -28,7 +28,7 @@ typedef struct ag_display {
 	u_int	 ndirty;
 	u_int  maxdirty;
 
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	struct ag_windowq windows;	/* Windows in view */
 	struct ag_windowq detach;	/* Windows to free */
 	struct ag_window *focus_win;	/* Give focus to this window,

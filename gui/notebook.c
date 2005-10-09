@@ -105,7 +105,7 @@ AG_NotebookInit(AG_Notebook *nb, int flags)
 	nb->padding = -1;
 	nb->tabFontFace = NULL;
 	nb->tabFontSize = 9;
-	pthread_mutex_init(&nb->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
 
 	if (flags & AG_NOTEBOOK_WFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_WFILL;
@@ -119,7 +119,7 @@ AG_NotebookDestroy(void *p)
 {
 	AG_Notebook *nb = p;
 
-	pthread_mutex_destroy(&nb->lock);
+	AG_MutexDestroy(&nb->lock);
 }
 
 void
@@ -166,7 +166,7 @@ AG_NotebookScale(void *p, int w, int h)
 	AG_Notebook *nb = p;
 	AG_NotebookTab *tab;
 	
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	if (w == -1 || h == -1) {
 		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
 			nb->bar_h = agTextFontHeight + SPACING*2;
@@ -201,47 +201,47 @@ AG_NotebookScale(void *p, int w, int h)
 		    AGWIDGET(tab)->w,
 		    AGWIDGET(tab)->h);
 	}
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 void
 AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 {
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	nb->tab_align = ta;
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 void
 AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	nb->spacing = spacing;
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 void
 AG_NotebookSetTabFontFace(AG_Notebook *nb, const char *face)
 {
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	nb->tabFontFace = face;
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 void
 AG_NotebookSetTabFontSize(AG_Notebook *nb, int size)
 {
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	nb->tabFontSize = size;
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 void
 AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
-	pthread_mutex_lock(&nb->lock);
+	AG_MutexLock(&nb->lock);
 	nb->padding = padding;
-	pthread_mutex_unlock(&nb->lock);
+	AG_MutexUnlock(&nb->lock);
 }
 
 AG_NotebookTab *

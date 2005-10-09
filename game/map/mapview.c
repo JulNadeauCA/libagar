@@ -426,10 +426,10 @@ AG_MapviewInit(AG_Mapview *mv, AG_Map *m, int flags,
 	mv->col.a = 32;
 	mv->col.pixval = SDL_MapRGB(agVideoFmt, 255, 255, 255);
 
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	mv->mx = m->origin.x;
 	mv->my = m->origin.y;
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 
 	AG_SetEvent(mv, "widget-lostfocus", lost_focus, NULL);
 	AG_SetEvent(mv, "widget-hidden", lost_focus, NULL);
@@ -610,7 +610,7 @@ AG_MapviewDraw(void *p)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 #endif
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 
 	if (m->map == NULL)
 		goto out;
@@ -760,7 +760,7 @@ out:
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
 	}
 #endif
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 /*
@@ -773,7 +773,7 @@ AG_MapviewUpdateCamera(AG_Mapview *mv)
 	AG_MapCamera *cam;
 	int xcam, ycam;
 
-	pthread_mutex_lock(&mv->map->lock);
+	AG_MutexLock(&mv->map->lock);
 	cam = &AGMCAM(mv);
 	
 	if (cam->x < 0) {
@@ -838,7 +838,7 @@ AG_MapviewUpdateCamera(AG_Mapview *mv)
 	} else {
 		mv->yoffs = -(ycam % AGMTILESZ(mv)) - AGMTILESZ(mv);
 	}
-	pthread_mutex_unlock(&mv->map->lock);
+	AG_MutexUnlock(&mv->map->lock);
 
 	if (mv->hbar != NULL) {
 		AG_WidgetSetInt(mv->hbar, "min", 0);
@@ -940,7 +940,7 @@ mousemotion(AG_Event *event)
 	int xmap, ymap;
 	int rv;
 
-	pthread_mutex_lock(&mv->map->lock);
+	AG_MutexLock(&mv->map->lock);
 	get_node_coords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
@@ -1012,7 +1012,7 @@ mousemotion(AG_Event *event)
 out:
 	mv->mouse.x = x;
 	mv->mouse.y = y;
-	pthread_mutex_unlock(&mv->map->lock);
+	AG_MutexUnlock(&mv->map->lock);
 }
 
 void
@@ -1034,7 +1034,7 @@ mousebuttondown(AG_Event *event)
 	
 	AG_WidgetFocus(mv);
 	
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	get_node_coords(mv, &x, &y);
 	mv->mouse.x = x;
 	mv->mouse.y = y;
@@ -1200,7 +1200,7 @@ mousebuttondown(AG_Event *event)
 		break;
 	}
 out:
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 static void
@@ -1213,7 +1213,7 @@ mousebuttonup(AG_Event *event)
 	int y = AG_INT(3);
 	AG_Maptool *tool;
 	
-	pthread_mutex_lock(&m->lock);
+	AG_MutexLock(&m->lock);
 	get_node_coords(mv, &x, &y);
 
 	mv->flags &= ~(AG_MAPVIEW_SET_ATTRS);
@@ -1295,7 +1295,7 @@ mousebuttonup(AG_Event *event)
 		break;
 	}
 out:
-	pthread_mutex_unlock(&m->lock);
+	AG_MutexUnlock(&m->lock);
 }
 
 static void
@@ -1306,7 +1306,7 @@ key_up(AG_Event *event)
 	int keymod = AG_INT(2);
 	AG_Maptool *tool;
 	
-	pthread_mutex_lock(&mv->map->lock);
+	AG_MutexLock(&mv->map->lock);
 
 	if (mv->actor != NULL &&
 	    AGACTOR_OPS(mv->actor)->keyup != NULL) {
@@ -1342,7 +1342,7 @@ key_up(AG_Event *event)
 		}
 	}
 out:
-	pthread_mutex_unlock(&mv->map->lock);
+	AG_MutexUnlock(&mv->map->lock);
 }
 
 static void
@@ -1353,7 +1353,7 @@ key_down(AG_Event *event)
 	int keymod = AG_INT(2);
 	AG_Maptool *tool;
 	
-	pthread_mutex_lock(&mv->map->lock);
+	AG_MutexLock(&mv->map->lock);
 
 	if (mv->actor != NULL &&
 	    AGACTOR_OPS(mv->actor)->keydown != NULL) {
@@ -1458,7 +1458,7 @@ key_down(AG_Event *event)
 		break;
 	}
 out:	
-	pthread_mutex_unlock(&mv->map->lock);
+	AG_MutexUnlock(&mv->map->lock);
 }
 
 void
@@ -1495,9 +1495,9 @@ AG_MapviewScale(void *p, int rw, int rh)
 		    AGWIDGET(mv->vbar)->h);
 	}
 	
-	pthread_mutex_lock(&mv->map->lock);
+	AG_MutexLock(&mv->map->lock);
 	AG_MapviewSetScale(mv, AGMZOOM(mv), 0);
-	pthread_mutex_unlock(&mv->map->lock);
+	AG_MutexUnlock(&mv->map->lock);
 }
 
 static void

@@ -207,7 +207,7 @@ typedef struct vg {
 #define VG_COLORKEY	0x40		/* Enable colorkey */
 #define VG_RLEACCEL	0x80		/* Enable RLE acceleration */
 
-	pthread_mutex_t lock;
+	AG_Mutex lock;
 	int redraw;			/* Global redraw */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */

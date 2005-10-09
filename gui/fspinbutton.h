@@ -15,7 +15,7 @@
 typedef struct ag_fspinbutton {
 	struct ag_widget wid;
 
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	double value;			/* Default value binding */
 	double min, max;		/* Default range bindings */
 	double inc;			/* Increment for buttons */

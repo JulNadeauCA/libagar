@@ -177,28 +177,4 @@ __END_DECLS
 #endif
 #endif
 
-/* XXX */
-#ifdef THREADS
-# ifdef DEBUG
-#  define pthread_mutex_lock(mutex) \
-	if (pthread_mutex_lock((mutex)) != 0) \
-		abort()
-#  define pthread_mutex_unlock(mutex) \
-	if (pthread_mutex_unlock((mutex)) != 0) \
-		abort()
-#  define pthread_mutex_init(mutex, attr) \
-	if (pthread_mutex_init((mutex), (attr)) != 0) \
-		abort()
-#  define pthread_mutex_destroy(mutex) \
-	if (pthread_mutex_destroy((mutex)) != 0) \
-		abort()
-# endif
-# define Pthread_create(thread, attr, func, arg) \
-	if (pthread_create((thread), (attr), (func), (arg)) != 0) \
-		abort()
-# define Pthread_join(thread, valptr) \
-	if (pthread_join((thread), (valptr)) != 0) \
-		abort()
-#endif
-
 #endif /* _AGAR_CORE_ERROR_H_ */

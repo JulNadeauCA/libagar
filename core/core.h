@@ -17,17 +17,6 @@
 
 #include <sys/types.h>
 
-#ifdef THREADS
-# define _XOPEN_SOURCE 500	/* Require recursive mutexes */
-# include <pthread.h>
-# include <signal.h>
-# undef _XOPEN_SOURCE
-#else
-# define pthread_mutex_t	int
-# define pthread_mutexattr_t	int
-# define pthread_t		int
-#endif
-
 #include <SDL.h>
 #include <SDL_endian.h>
 #include <SDL_cpuinfo.h>
@@ -68,6 +57,8 @@
 #include <agar/compat/strsep.h>
 #include <agar/compat/math.h>
 
+#include <agar/core/threads.h>
+
 #include <agar/core/loaders/netbuf.h>
 #include <agar/core/loaders/integral.h>
 #include <agar/core/loaders/real.h>
@@ -97,27 +88,6 @@
 # define bindtextdomain(p, d)
 #endif
 
-#ifdef THREADS
-extern pthread_mutexattr_t agRecursiveMutexAttr;
-# ifdef _SGI_SOURCE
-#  undef PTHREAD_MUTEX_INITIALIZER
-#  define PTHREAD_MUTEX_INITIALIZER { { 0 } }
-# endif
-#else
-# define pthread_mutex_destroy(mu)
-# define pthread_mutex_init(mu, attr)
-# define pthread_mutex_lock(mu)
-# define pthread_mutex_trylock(mu)
-# define pthread_mutex_unlock(mu)
-# define pthread_mutexattr_init(mu)
-# define pthread_mutexattr_destroy(mu)
-# define pthread_mutexattr_settype(mu, type)
-# define Pthread_create(th, attr, func, arg)
-# define Pthread_join(th, ptr)
-# define PTHREAD_MUTEX_INITIALIZER 0
-# define PTHREAD_MUTEX_RECURSIVE 0
-#endif
-
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024
 #endif
@@ -139,14 +109,14 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 
 extern const char *agProgName;
 extern AG_Object *agWorld;
-extern pthread_mutex_t agLinkageLock;
-extern pthread_mutex_t agTimingLock;
+extern AG_Mutex agLinkageLock;
+extern AG_Mutex agTimingLock;
 
-#define AG_LockLinkage() pthread_mutex_lock(&agLinkageLock)
-#define AG_UnlockLinkage() pthread_mutex_unlock(&agLinkageLock)
+#define AG_LockLinkage() AG_MutexLock(&agLinkageLock)
+#define AG_UnlockLinkage() AG_MutexUnlock(&agLinkageLock)
 
-#define AG_LockTiming() pthread_mutex_lock(&agTimingLock)
-#define AG_UnlockTiming() pthread_mutex_unlock(&agTimingLock)
+#define AG_LockTiming() AG_MutexLock(&agTimingLock)
+#define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
 
 #define AG_VIDEO_HWSURFACE	0x001
 #define AG_VIDEO_ASYNCBLIT	0x002

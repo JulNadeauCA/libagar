@@ -56,7 +56,7 @@ AG_ActorInit(void *obj, const char *type, const char *name,
 
 	AG_ObjectInit(go, tname, name, ops);
 	AG_ObjectRemain(go, AG_OBJECT_REMAIN_DATA);
-	pthread_mutex_init(&go->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&go->lock);
 	go->flags = 0;
 	go->parent = NULL;
 	go->type = AG_ACTOR_MAP;
@@ -82,7 +82,7 @@ AG_ActorDestroy(void *obj)
 {
 	AG_Actor *go = obj;
 
-	pthread_mutex_destroy(&go->lock);
+	AG_MutexDestroy(&go->lock);
 }
 
 int
@@ -94,14 +94,14 @@ AG_ActorLoad(void *obj, AG_Netbuf *buf)
 	if (AG_ReadVersion(buf, &ag_actor_ver, NULL) != 0)
 		return (-1);
 
-	pthread_mutex_lock(&go->lock);
+	AG_MutexLock(&go->lock);
 
 #if 0
 	if (go->parent != NULL) {
 		dprintf("reattaching %s to %s\n", AGOBJECT(go)->name,
 		    AGOBJECT(go->parent)->name);
 		space = go->parent;
-		pthread_mutex_lock(&space->lock);
+		AG_MutexLock(&space->lock);
 		AG_SpaceDetach(space, go);
 	} else {
 		space = NULL;
@@ -137,10 +137,10 @@ AG_ActorLoad(void *obj, AG_Netbuf *buf)
 		AG_SpaceAttach(space, go);
 		dprintf("reattached %s to %s\n", AGOBJECT(go)->name,
 		    AGOBJECT(go->parent)->name);
-		pthread_mutex_unlock(&space->lock);
+		AG_MutexUnlock(&space->lock);
 	}
 #endif
-	pthread_mutex_unlock(&go->lock);
+	AG_MutexUnlock(&go->lock);
 	return (0);
 }
 
@@ -151,7 +151,7 @@ AG_ActorSave(void *obj, AG_Netbuf *buf)
 
 	AG_WriteVersion(buf, &ag_actor_ver);
 
-	pthread_mutex_lock(&go->lock);
+	AG_MutexLock(&go->lock);
 	AG_WriteUint32(buf, (Uint32)go->type);
 	AG_WriteUint32(buf, (Uint32)go->flags & AG_ACTOR_SAVED_FLAGS);
 
@@ -173,7 +173,7 @@ AG_ActorSave(void *obj, AG_Netbuf *buf)
 	default:
 		break;
 	}
-	pthread_mutex_unlock(&go->lock);
+	AG_MutexUnlock(&go->lock);
 	return (0);
 }
 
@@ -225,7 +225,7 @@ AG_ActorMoveSprite(void *obj, int xo, int yo)
 	AG_Map *m = go->parent;
 	int x, y;
 
-	pthread_mutex_lock(&go->lock);
+	AG_MutexLock(&go->lock);
 
 	go->g_map.xmot += xo;
 	go->g_map.ymot += yo;
@@ -279,7 +279,7 @@ AG_ActorMoveSprite(void *obj, int xo, int yo)
 		}
 	}
 out:
-	pthread_mutex_unlock(&go->lock);
+	AG_MutexUnlock(&go->lock);
 }
 
 int

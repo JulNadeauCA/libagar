@@ -99,7 +99,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
 		va_start(ap, fmt);
 		lab->poll.lock = (type == AG_LABEL_POLLED_MT) ?
-		                 va_arg(ap, pthread_mutex_t *) : NULL;
+		                 va_arg(ap, AG_Mutex *) : NULL;
 		for (p = fmt; *p != '\0'; p++) {
 			if (*p == '%' && *(p+1) != '\0') {
 				switch (*(p+1)) {

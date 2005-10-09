@@ -406,7 +406,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar,
 
 AG_MenuItem *
 AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int nicon,
-    int *boolp, int inv, pthread_mutex_t *lock)
+    int *boolp, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -421,7 +421,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int nicon,
 
 AG_MenuItem *
 AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int nicon,
-    Uint8 *boolp, int inv, pthread_mutex_t *lock)
+    Uint8 *boolp, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -436,7 +436,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int nicon,
 
 AG_MenuItem *
 AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
-    int *flagsp, int flags, int inv, pthread_mutex_t *lock)
+    int *flagsp, int flags, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -452,7 +452,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 
 AG_MenuItem *
 AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int nicon, 
-    Uint8 *flagsp, Uint8 flags, int inv, pthread_mutex_t *lock)
+    Uint8 *flagsp, Uint8 flags, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -468,7 +468,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 
 AG_MenuItem *
 AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
-    Uint16 *flagsp, Uint16 flags, int inv, pthread_mutex_t *lock)
+    Uint16 *flagsp, Uint16 flags, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -484,7 +484,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 
 AG_MenuItem *
 AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, int nicon, 
-    Uint32 *flagsp, Uint32 flags, int inv, pthread_mutex_t *lock)
+    Uint32 *flagsp, Uint32 flags, int inv, AG_Mutex *lock)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;

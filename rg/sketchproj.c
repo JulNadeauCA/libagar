@@ -113,7 +113,7 @@ poll_sketches(AG_Event *event)
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		if (tel->type != RG_TILE_SKETCH) {
 			continue;
@@ -123,7 +123,7 @@ poll_sketches(AG_Event *event)
 		it->class = "tile-sketch";
 		AG_TlistSetIcon(tl, it, tel->tel_sketch.sk->vg->su);
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 

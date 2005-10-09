@@ -26,27 +26,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/threads.h>
-
-#include <compat/vasprintf.h>
-#include <compat/queue.h>
+#include <core/core.h>
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 #include <unistd.h>
-#ifdef THREADS
-#include <pthread.h>
-#endif
-
-#include <core/error.h>
 
 #ifdef THREADS
-pthread_key_t error_key;
+AG_ThreadKey agErrorKey;
 #else
-char *error_key;
+char *agErrorKey;
 #endif
 
 #ifdef DEBUG
@@ -65,9 +55,9 @@ AG_InitError(void)
 #endif
 
 #ifdef THREADS
-	pthread_key_create(&error_key, NULL);
+	AG_ThreadKeyCreate(&agErrorKey);
 #else
-	error_key = NULL;
+	agErrorKey = NULL;
 #endif
 }
 
@@ -75,9 +65,9 @@ void
 AG_DestroyError(void)
 {
 #ifdef THREADS
-	pthread_key_delete(error_key);
+	AG_ThreadKeyDelete(agErrorKey);
 #else
-	Free(error_key, 0);
+	Free(agErrorKey, 0);
 #endif
 }
 
@@ -94,15 +84,14 @@ AG_SetError(const char *fmt, ...)
 	{
 		char *ekey;
 
-		ekey = (char *)pthread_getspecific(error_key);
-		if (ekey != NULL) {
-			free(ekey);
+		if ((ekey = (char *)AG_ThreadKeyGet(agErrorKey)) != NULL) {
+			Free(ekey, 0);
 		}
-		pthread_setspecific(error_key, buf);
+		AG_ThreadKeySet(agErrorKey, buf);
 	}
 #else
-	Free(error_key, 0);
-	error_key = buf;
+	Free(agErrorKey, 0);
+	agErrorKey = buf;
 #endif
 }
 
@@ -110,9 +99,9 @@ const char *
 AG_GetError(void)
 {
 #ifdef THREADS
-	return ((const char *)pthread_getspecific(error_key));
+	return ((const char *)AG_ThreadKeyGet(agErrorKey));
 #else
-	return ((const char *)error_key);
+	return ((const char *)agErrorKey);
 #endif
 }
 

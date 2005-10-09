@@ -1451,7 +1451,7 @@ poll_feats(AG_Event *event)
 	static char attr_names[6];			/* XXX tlist hack */
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	
 	it = AG_TlistAdd(tl, NULL, _("Attributes"));
 	it->class = "attributes";
@@ -1589,7 +1589,7 @@ poll_feats(AG_Event *event)
 		}
 	}
 
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 

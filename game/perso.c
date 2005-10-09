@@ -157,7 +157,7 @@ AG_PersoInit(void *obj, const char *name)
 	ps->hp = ps->maxhp = 1;
 	ps->mp = ps->maxmp = 0;
 	ps->nzuars = 0;
-	pthread_mutex_init(&ps->lock, NULL);
+	AG_MutexInit(&ps->lock);
 	AG_SetTimeout(&ps->move_to, move, NULL, 0);
 }
 
@@ -196,7 +196,7 @@ AG_PersoLoad(void *obj, AG_Netbuf *buf)
 	if (AG_ActorLoad(ps, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&ps->lock);
+	AG_MutexLock(&ps->lock);
 	AG_CopyString(ps->name, buf, sizeof(ps->name));
 	ps->flags = AG_ReadUint32(buf);
 	name = AG_ReadUint32(buf);
@@ -221,10 +221,10 @@ AG_PersoLoad(void *obj, AG_Netbuf *buf)
 	ps->mp = (int)AG_ReadUint32(buf);
 	ps->nzuars = (u_int)AG_ReadUint32(buf);
 
-	pthread_mutex_unlock(&ps->lock);
+	AG_MutexUnlock(&ps->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ps->lock);
+	AG_MutexUnlock(&ps->lock);
 	return (-1);
 }
 
@@ -238,7 +238,7 @@ AG_PersoSave(void *obj, AG_Netbuf *buf)
 	if (AG_ActorSave(ps, buf) == -1)
 		return (-1);
 
-	pthread_mutex_lock(&ps->lock);
+	AG_MutexLock(&ps->lock);
 	AG_WriteString(buf, ps->name);
 	AG_WriteUint32(buf, ps->flags);
 	AG_WriteUint32(buf, AG_ObjectEncodeName(ps, ps->tileset));
@@ -252,7 +252,7 @@ AG_PersoSave(void *obj, AG_Netbuf *buf)
 	AG_WriteUint32(buf, (Uint32)ps->maxmp);
 	AG_WriteUint32(buf, (Uint32)ps->mp);
 	AG_WriteUint32(buf, (Uint32)ps->nzuars);
-	pthread_mutex_unlock(&ps->lock);
+	AG_MutexUnlock(&ps->lock);
 	return (0);
 }
 

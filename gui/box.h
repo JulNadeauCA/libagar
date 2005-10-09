@@ -21,7 +21,7 @@ enum ag_box_type {
 typedef struct ag_box {
 	struct ag_widget wid;
 	enum ag_box_type type;
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	int homogenous;			/* Divide space evenly */
 	int padding;			/* Padding around widgets */
 	int spacing;			/* Spacing between widgets */

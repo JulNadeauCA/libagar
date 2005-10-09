@@ -264,11 +264,11 @@ poll_styles(AG_Event *event)
 	VG_Style *vgs;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&vg->lock);
+	AG_MutexLock(&vg->lock);
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
 		AG_TlistAddPtr(tl, NULL, vgs->name, vgs);
 	}
-	pthread_mutex_unlock(&vg->lock);
+	AG_MutexUnlock(&vg->lock);
 	AG_TlistRestore(tl);
 }
 

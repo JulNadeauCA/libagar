@@ -70,7 +70,7 @@ AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 		break;
 	case AG_LABEL_POLLED_MT:
 		AG_LabelInit(label, AG_LABEL_POLLED_MT, fmt);
-		label->poll.lock = va_arg(ap, pthread_mutex_t *);
+		label->poll.lock = va_arg(ap, AG_Mutex *);
 		break;
 	}
 	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
@@ -135,14 +135,14 @@ AG_LabelScale(void *p, int rw, int rh)
 
 	switch (lab->type) {
 	case AG_LABEL_STATIC:
-		pthread_mutex_lock(&lab->lock);
+		AG_MutexLock(&lab->lock);
 		if (rw == -1 && rh == -1 && lab->surface != -1) {
 			AGWIDGET(lab)->w =
 			    AGWIDGET_SURFACE(lab,lab->surface)->w;
 			AGWIDGET(lab)->h =
 			    AGWIDGET_SURFACE(lab,lab->surface)->h;
 		}
-		pthread_mutex_unlock(&lab->lock);
+		AG_MutexUnlock(&lab->lock);
 		break;
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
@@ -164,7 +164,7 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 	case AG_LABEL_STATIC:
 		label->surface = (s==NULL) ? -1 : AG_WidgetMapSurface(label,
 		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s));
-		pthread_mutex_init(&label->lock, NULL);
+		AG_MutexInit(&label->lock);
 		break;
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
@@ -192,9 +192,9 @@ AG_LabelSetSurface(AG_Label *label, SDL_Surface *su)
 	if (label->type != AG_LABEL_STATIC)
 		fatal("label is not static");
 #endif
-	pthread_mutex_lock(&label->lock);
+	AG_MutexLock(&label->lock);
 	AG_WidgetReplaceSurface(label, 0, su);
-	pthread_mutex_unlock(&label->lock);
+	AG_MutexUnlock(&label->lock);
 }
 
 void
@@ -482,17 +482,17 @@ AG_LabelDraw(void *p)
 	
 	switch (label->type) {
 	case AG_LABEL_STATIC:
-		pthread_mutex_lock(&label->lock);
+		AG_MutexLock(&label->lock);
 		AG_WidgetBlitSurface(label, label->surface, 0, 0);
-		pthread_mutex_unlock(&label->lock);
+		AG_MutexUnlock(&label->lock);
 		break;
 	case AG_LABEL_POLLED:
 		AG_LabelDrawPolled(label);
 		break;
 	case AG_LABEL_POLLED_MT:
-		pthread_mutex_lock(label->poll.lock);
+		AG_MutexLock(label->poll.lock);
 		AG_LabelDrawPolled(label);
-		pthread_mutex_unlock(label->poll.lock);
+		AG_MutexUnlock(label->poll.lock);
 		break;
 	}
 }
@@ -503,7 +503,7 @@ AG_LabelDestroy(void *p)
 	AG_Label *label = p;
 
 	if (label->type == AG_LABEL_STATIC) {
-		pthread_mutex_destroy(&label->lock);
+		AG_MutexDestroy(&label->lock);
 	}
 	AG_WidgetDestroy(label);
 }

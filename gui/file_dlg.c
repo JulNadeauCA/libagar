@@ -89,8 +89,8 @@ update_listing(AG_FileDlg *fdg)
 	dirs = Malloc(sizeof(char *), M_WIDGET);
 	files = Malloc(sizeof(char *), M_WIDGET);
 	
-	pthread_mutex_lock(&fdg->tlDirs->lock);
-	pthread_mutex_lock(&fdg->tlFiles->lock);
+	AG_MutexLock(&fdg->tlDirs->lock);
+	AG_MutexLock(&fdg->tlFiles->lock);
 
 	while ((dent = readdir(dir)) != NULL) {
 		if (stat(dent->d_name, &sb) == -1) {
@@ -128,8 +128,8 @@ update_listing(AG_FileDlg *fdg)
 	AG_TlistRestore(fdg->tlDirs);
 	AG_TlistRestore(fdg->tlFiles);
 	
-	pthread_mutex_unlock(&fdg->tlFiles->lock);
-	pthread_mutex_unlock(&fdg->tlDirs->lock);
+	AG_MutexUnlock(&fdg->tlFiles->lock);
+	AG_MutexUnlock(&fdg->tlDirs->lock);
 	closedir(dir);
 }
 
@@ -140,7 +140,7 @@ select_dir(AG_Event *event)
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		if (chdir(ti->text) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "%s: %s", ti->text,
@@ -150,7 +150,7 @@ select_dir(AG_Event *event)
 			update_listing(fdg);
 		}
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -177,13 +177,13 @@ select_file(AG_Event *event)
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_TextboxPrintf(fdg->tbFile, "%s", ti->text);
 		AG_PostEvent(NULL, fdg, "file-selected", "%s/%s",
 		    fdg->cwd, ti->text);
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -193,13 +193,13 @@ select_and_validate_file(AG_Event *event)
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_TlistItem *ti;
 
-	pthread_mutex_lock(&tl->lock);
+	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		AG_TextboxPrintf(fdg->tbFile, "%s", ti->text);
 		AG_PostEvent(NULL, fdg, "file-validated", "%s", ti->text);
 		process_file(fdg, ti->text);
 	}
-	pthread_mutex_unlock(&tl->lock);
+	AG_MutexUnlock(&tl->lock);
 }
 
 static void

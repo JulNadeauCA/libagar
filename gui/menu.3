@@ -193,37 +193,37 @@ item.
 .Fn "AG_MenuIntBool" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuIntBoolMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuIntBoolMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn "AG_MenuInt8Bool" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuInt8BoolMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuInt8BoolMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn "AG_MenuIntFlags" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn "AG_MenuInt8Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuInt8FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuInt8FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn "AG_MenuInt16Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuInt16FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuInt16FlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn "AG_MenuInt32Flags" "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "pthread_mutex_t *mutex"
+.Fn "AG_MenuIntFlagsMp" "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .nr nS 0
 The
@@ -249,7 +249,7 @@ The
 and
 .Fn menu_*_flags_mp
 variants accept a
-.Ft "pthread_mutex_t *"
+.Ft "AG_Mutex *"
 argument specifying a mutex to acquire prior to reading or writing the data.
 .Sh OTHER ITEMS
 .nr nS 1

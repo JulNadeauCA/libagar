@@ -13,7 +13,7 @@
 typedef struct ag_perso {
 	struct ag_actor obj;
 
-	pthread_mutex_t	lock;
+	AG_Mutex lock;
 	void *tileset;			/* Graphics source */
 	char  name[AG_PERSO_NAME_MAX];	/* Name set by user */
 	Uint32 flags;

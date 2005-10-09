@@ -43,7 +43,7 @@ AG_SpaceInit(void *obj, const char *type, const char *name, const void *ops)
 	AG_Space *sp = obj;
 
 	AG_ObjectInit(sp, type, name, ops);
-	pthread_mutex_init(&sp->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&sp->lock);
 	TAILQ_INIT(&sp->actors);
 }
 
@@ -53,12 +53,12 @@ AG_SpaceReinit(void *obj)
 	AG_Space *sp = obj;
 	AG_Actor *ac;
 	
-	pthread_mutex_lock(&sp->lock);
+	AG_MutexLock(&sp->lock);
 	TAILQ_FOREACH(ac, &sp->actors, actors) {
 		AG_SpaceDetach(sp, ac);
 	}
 	TAILQ_INIT(&sp->actors);
-	pthread_mutex_unlock(&sp->lock);
+	AG_MutexUnlock(&sp->lock);
 }
 
 void
@@ -77,7 +77,7 @@ AG_SpaceLoad(void *obj, AG_Netbuf *buf)
 	if (AG_ReadVersion(buf, &agSpaceVer, NULL) != 0)
 		return (-1);
 
-	pthread_mutex_lock(&sp->lock);
+	AG_MutexLock(&sp->lock);
 	nactors = AG_ReadUint32(buf);
 	for (i = 0; i < nactors; i++) {
 		name = AG_ReadUint32(buf);
@@ -86,10 +86,10 @@ AG_SpaceLoad(void *obj, AG_Netbuf *buf)
 		}
 		TAILQ_INSERT_TAIL(&sp->actors, AGACTOR(actor), actors);
 	}
-	pthread_mutex_unlock(&sp->lock);
+	AG_MutexUnlock(&sp->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&sp->lock);
+	AG_MutexUnlock(&sp->lock);
 	return (-1);
 }
 
@@ -103,7 +103,7 @@ AG_SpaceSave(void *obj, AG_Netbuf *buf)
 
 	AG_WriteVersion(buf, &agSpaceVer);
 
-	pthread_mutex_lock(&sp->lock);
+	AG_MutexLock(&sp->lock);
 	nactors_offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(actor, &sp->actors, actors) {
@@ -113,7 +113,7 @@ AG_SpaceSave(void *obj, AG_Netbuf *buf)
 		nactors++;
 	}
 	AG_PwriteUint32(buf, nactors, nactors_offs);
-	pthread_mutex_unlock(&sp->lock);
+	AG_MutexUnlock(&sp->lock);
 	return (0);
 }
 
@@ -124,7 +124,7 @@ AG_SpaceAttach(void *sp_obj, void *obj)
 	AG_Space *space = sp_obj;
 	AG_Actor *ac = obj;
 
-	pthread_mutex_lock(&ac->lock);
+	AG_MutexLock(&ac->lock);
 		
 	AG_ObjectAddDep(space, ac);
 	
@@ -151,10 +151,10 @@ AG_SpaceAttach(void *sp_obj, void *obj)
 		ac->type = AG_ACTOR_NONE;
 		ac->parent = NULL;
 	}
-	pthread_mutex_unlock(&ac->lock);
+	AG_MutexUnlock(&ac->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ac->lock);
+	AG_MutexUnlock(&ac->lock);
 	return (-1);
 }
 
@@ -164,7 +164,7 @@ AG_SpaceDetach(void *sp_obj, void *obj)
 	AG_Space *space = sp_obj;
 	AG_Actor *ac = obj;
 
-	pthread_mutex_lock(&ac->lock);
+	AG_MutexLock(&ac->lock);
 
 	AG_ObjectCancelTimeouts(ac, 0);		/* XXX hook? */
 
@@ -174,6 +174,6 @@ AG_SpaceDetach(void *sp_obj, void *obj)
 	AG_ObjectDelDep(space, ac);
 	ac->parent = NULL;
 out:
-	pthread_mutex_unlock(&ac->lock);
+	AG_MutexUnlock(&ac->lock);
 }
 

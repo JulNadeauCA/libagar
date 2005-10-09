@@ -331,9 +331,9 @@ close_animation(AG_Event *event)
 	RG_Tileset *ts = AG_PTR(1);
 	RG_Anim *ani = AG_PTR(2);
 	
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	ani->nrefs--;
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 
 	AG_ViewDetach(win);
 }
@@ -348,7 +348,7 @@ poll_insns(AG_Event *event)
 	u_int i;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 
 	for (i = 0; i < ani->ninsns; i++) {
 		RG_AnimInsn *insn = &ani->insns[i];
@@ -385,7 +385,7 @@ poll_insns(AG_Event *event)
 		it->class = "insn";
 	}
 
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -398,7 +398,7 @@ poll_frames(AG_Event *event)
 	u_int i;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	for (i = 0; i < ani->nframes; i++) {
 		RG_AnimFrame *fr = &ani->frames[i];
 		AG_TlistItem *it;
@@ -409,7 +409,7 @@ poll_frames(AG_Event *event)
 		it->class = "frame";
 		AG_TlistSetIcon(tl, it, fr->su);
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -422,7 +422,7 @@ poll_tiles(AG_Event *event)
 	RG_Tile *t;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)%s%s", t->name,
@@ -433,7 +433,7 @@ poll_tiles(AG_Event *event)
 		AG_TlistSetIcon(tl, it, t->su);
 	}
 
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 

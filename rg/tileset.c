@@ -84,7 +84,7 @@ RG_TilesetInit(void *obj, const char *name)
 	AGOBJECT(ts)->gfx->used = 0;
 	AGOBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 
-	pthread_mutex_init(&ts->lock, &agRecursiveMutexAttr);
+	AG_MutexInitRecursive(&ts->lock);
 	TAILQ_INIT(&ts->tiles);
 	TAILQ_INIT(&ts->sketches);
 	TAILQ_INIT(&ts->pixmaps);
@@ -120,7 +120,7 @@ RG_TilesetReinit(void *obj)
 	RG_Anim *ani, *nani;
 	RG_Texture *tex, *ntex;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	
 	for (t = TAILQ_FIRST(&ts->tiles);
 	     t != TAILQ_END(&ts->tiles);
@@ -178,7 +178,7 @@ RG_TilesetReinit(void *obj)
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 void
@@ -186,7 +186,7 @@ RG_TilesetDestroy(void *obj)
 {
 	RG_Tileset *ts = obj;
 
-	pthread_mutex_destroy(&ts->lock);
+	AG_MutexDestroy(&ts->lock);
 	SDL_FreeSurface(ts->icon);
 }
 
@@ -202,7 +202,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	if (AG_ReadVersion(buf, &rgTilesetVer, NULL) != 0)
 		return (-1);
 	
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	AG_CopyString(ts->template, buf, sizeof(ts->template));
 	ts->flags = AG_ReadUint32(buf);
 	ts->max_sprites = AG_ReadUint32(buf);
@@ -358,10 +358,10 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 				fatal("%s: bad pixmap ref", pbr->px_name);
 		}
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	return (-1);
 }
 
@@ -382,7 +382,7 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 
 	AG_WriteVersion(buf, &rgTilesetVer);
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 
 	AG_WriteString(buf, ts->template);
 	AG_WriteUint32(buf, ts->flags);
@@ -458,7 +458,7 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 	}
 	AG_PwriteUint32(buf, ntextures, ntextures_offs);
 	
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	return (0);
 }
 
@@ -584,7 +584,7 @@ poll_graphics(AG_Event *event)
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]",
@@ -602,7 +602,7 @@ poll_graphics(AG_Event *event)
 		AG_TlistSetIcon(tl, it, sk->vg->su);
 	}
 
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -615,7 +615,7 @@ poll_textures(AG_Event *event)
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
 		RG_Tile *t;
 
@@ -632,7 +632,7 @@ poll_textures(AG_Event *event)
 		it->class = "texture";
 		it->p1 = tex;
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -645,7 +645,7 @@ poll_anims(AG_Event *event)
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]", ani->name,
@@ -654,7 +654,7 @@ poll_anims(AG_Event *event)
 		it->class = "anim";
 	}
 	
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
 
@@ -668,7 +668,7 @@ poll_tiles(AG_Event *event)
 	RG_TileElement *tel;
 
 	AG_TlistClear(tl);
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
@@ -749,7 +749,7 @@ poll_tiles(AG_Event *event)
 		}
 	}
 	AG_TlistRestore(tl);
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 static char ins_tile_name[RG_TILE_NAME_MAX];
@@ -1126,7 +1126,7 @@ delete_tiles(AG_Event *event)
 	RG_Tileset *ts = AG_PTR(2);
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		RG_Tile *t = it->p1;
 
@@ -1141,7 +1141,7 @@ delete_tiles(AG_Event *event)
 		TAILQ_REMOVE(&ts->tiles, t, tiles);
 		Free(t, M_RG);
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 int
@@ -1232,7 +1232,7 @@ dup_tiles(AG_Event *event)
 	AG_Tlist *tl = AG_PTR(2);
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		RG_Tile *t = it->p1;
 
@@ -1241,7 +1241,7 @@ dup_tiles(AG_Event *event)
 		}
 		dup_tile(ts, t);
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 static void
@@ -1253,7 +1253,7 @@ edit_tiles(AG_Event *event)
 	AG_Window *win;
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected ||
 		    strcmp(it->class, "tile") != 0) {
@@ -1264,7 +1264,7 @@ edit_tiles(AG_Event *event)
 			AG_WindowShow(win);
 		}
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 static void
@@ -1276,7 +1276,7 @@ edit_anims(AG_Event *event)
 	AG_Window *win;
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected ||
 		    strcmp(it->class, "anim") != 0) {
@@ -1288,7 +1288,7 @@ edit_anims(AG_Event *event)
 			AG_WindowShow(win);
 		}
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 static void
@@ -1300,7 +1300,7 @@ edit_textures(AG_Event *event)
 	AG_Window *win;
 	AG_TlistItem *it;
 
-	pthread_mutex_lock(&ts->lock);
+	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
 			continue;
@@ -1310,7 +1310,7 @@ edit_textures(AG_Event *event)
 			AG_WindowShow(win);
 		}
 	}
-	pthread_mutex_unlock(&ts->lock);
+	AG_MutexUnlock(&ts->lock);
 }
 
 static void
