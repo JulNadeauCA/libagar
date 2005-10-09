@@ -304,12 +304,12 @@ install-lib:
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
-                for F in $$_share; do \
+                for F in $$_sharesrc; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/$$F ${SHAREDIR}; \
                 done; \
 	    else \
-                for F in $$_share; do \
+                for F in $$_sharesrc; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
                 done; \
