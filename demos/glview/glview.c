@@ -7,12 +7,12 @@
  * to have been compiled with OpenGL support.
  */
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
+#include <agar/core/core.h>
+#include <agar/core/config.h>
+#include <agar/core/view.h>
 
-#include <engine/widget/gui.h>
-#include <engine/widget/glview.h>	/* This is a nonstandard widget */
+#include <agar/gui/gui.h>
+#include <agar/gui/glview.h>	/* This is a nonstandard widget */
 
 #include <string.h>
 #include <unistd.h>
