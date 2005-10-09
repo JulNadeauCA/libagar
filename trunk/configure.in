@@ -33,6 +33,8 @@ MDEFINE(LIBDIR, "$PREFIX/lib")
 HDEFINE(LIBDIR, "\"$PREFIX/lib\"")
 MDEFINE(INCLDIR, "$PREFIX/include/agar")
 HDEFINE(INCLDIR, "\"$PREFIX/include/agar\"")
+MDEFINE(INCLPDIR, "$PREFIX/include")
+HDEFINE(INCLPDIR, "\"$PREFIX/include\"")
 MDEFINE(MANDIR, "$PREFIX/share/agar/man")
 MDEFINE(PSDIR, "$PREFIX/share/agar/ps")
 
