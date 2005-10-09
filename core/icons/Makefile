@@ -18,5 +18,4 @@ DEN_NAME=	"Agar GUI icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc"
 
-DENCOMP=${TOP}/dencomp/dencomp
 include ${TOP}/mk/csoft.den.mk
