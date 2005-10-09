@@ -46,6 +46,7 @@
 #endif
 
 #include <agar/core/error.h>
+#include <agar/core/threads.h>
 
 #include <agar/compat/queue.h>
 #include <agar/compat/strlcpy.h>
@@ -56,8 +57,6 @@
 #include <agar/compat/vasprintf.h>
 #include <agar/compat/strsep.h>
 #include <agar/compat/math.h>
-
-#include <agar/core/threads.h>
 
 #include <agar/core/loaders/netbuf.h>
 #include <agar/core/loaders/integral.h>

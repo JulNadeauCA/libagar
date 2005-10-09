@@ -92,13 +92,31 @@ typedef int AG_Cond;
 #define AG_COND_INITIALIZER 0
 #define AG_RWLOCK_INITIALIZER 0
 
-#define AG_MutexInit(m,attr)
+#define AG_MutexInit(m)
+#define AG_MutexInitRecursive(m)
 #define AG_MutexDestroy(m)
 #define AG_MutexLock(m)
-#define AG_MutexTrylock(m)
 #define AG_MutexUnlock(m)
-
+#define AG_CondInit(cd)
+#define AG_CondDestroy(cd)
+#define AG_CondBroadcast(cd)
+#define AG_CondSignal(cd)
+#define AG_CondWait(cd,m)
+#define AG_CondTimedWait(cd,m,t)
+#define AG_RWLockInit(l)
+#define AG_RWLockDestroy(l)
+#define AG_RWLockRDLock(l)
+#define AG_RWLockWRLock(l)
+#define AG_ThreadCancel(thread,valptr)
 #define AG_ThreadCreate(thread,attr,func,arg) fatal("no THREADS")
 #define AG_ThreadJoin(thread,valptr) fatal("no THREADS")
+#define AG_ThreadExit(p)
+#define AG_MutexTrylock(m)
+#define AG_RWLockTryRDLock(m)
+#define AG_RWLockTryWRLock(m)
+#define AG_ThreadKeyCreate(k)
+#define AG_ThreadKeyDelete(k)
+#define AG_ThreadKeyGet(k)
+#define AG_ThreadKeySet(k,v)
 
 #endif /* THREADS */
