@@ -397,16 +397,16 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		grad = yd/xd;
 
 		/* End point 1 */
-		xend = ftrunc(x1+0.5);
+		xend = AG_Truncf(x1+0.5);
 		yend = y1 + grad*(xend-x1);
 
-		xgap = finvfrac(x1+0.5);
+		xgap = AG_FracInvf(x1+0.5);
 
 		ix1 = (int)xend;
 		iy1 = (int)yend;
 
-		lum1 = finvfrac(yend)*xgap;
-		lum2 = ffrac(yend)*xgap;
+		lum1 = AG_FracInvf(yend)*xgap;
+		lum2 = AG_Fracf(yend)*xgap;
 		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum1*255));
 		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
@@ -415,16 +415,16 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		yf = yend+grad;
 
 		/* End point 2 */
-		xend = ftrunc(x2+0.5);
+		xend = AG_Truncf(x2+0.5);
 		yend = y2 + grad*(xend-x2);
 
-		xgap = finvfrac(x2-0.5);
+		xgap = AG_FracInvf(x2-0.5);
 
 		ix2 = (int)xend;
 		iy2 = (int)yend;
 
-		lum1 = finvfrac(yend)*xgap;
-		lum2 = ffrac(yend)*xgap;
+		lum1 = AG_FracInvf(yend)*xgap;
+		lum2 = AG_Fracf(yend)*xgap;
 		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA, r, g, b,
 		    (Uint8)(lum1*255));
 		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA, r, g, b,
@@ -434,8 +434,8 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		for (x = (ix1+1); x < ix2; x++) {
 			float focus;
 
-			lum1 = finvfrac(yf);
-			lum2 = ffrac(yf);
+			lum1 = AG_FracInvf(yf);
+			lum2 = AG_Fracf(yf);
 			focus = (1.0 - fabs(lum1-lum2));
 			lum1 += 0.3*focus;
 			lum2 += 0.3*focus;
@@ -459,16 +459,16 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		grad = xd/yd;
 
 		/* End point 1 */
-		xend = ftrunc(x1+0.5);
+		xend = AG_Truncf(x1+0.5);
 		yend = y1 + grad*(xend-x1);
 
-		xgap = ffrac(x1+0.5);
+		xgap = AG_Fracf(x1+0.5);
 
 		ix1 = (int)xend;
 		iy1 = (int)yend;
 
-		lum1 = finvfrac(yend)*xgap;
-		lum2 = ffrac(yend)*xgap;
+		lum1 = AG_FracInvf(yend)*xgap;
+		lum2 = AG_Fracf(yend)*xgap;
 		RG_BlendRGB(t->su, ix1, iy1, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum1*255));
 		RG_BlendRGB(t->su, ix1, iy1+1, RG_PRIM_OVERLAY_ALPHA,
@@ -477,16 +477,16 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		xf = xend + grad;
 
 		/* End point 2 */
-		xend = ftrunc(x2+0.5);
+		xend = AG_Truncf(x2+0.5);
 		yend = y2 + grad*(xend-x2);
 
-		xgap = finvfrac(x2-0.5);
+		xgap = AG_FracInvf(x2-0.5);
 
 		ix2 = (int)xend;
 		iy2 = (int)yend;
 
-		lum1 = finvfrac(yend)*xgap;
-		lum2 = ffrac(yend)*xgap;
+		lum1 = AG_FracInvf(yend)*xgap;
+		lum2 = AG_Fracf(yend)*xgap;
 		RG_BlendRGB(t->su, ix2, iy2, RG_PRIM_OVERLAY_ALPHA,
 		    r, g, b, (Uint8)(lum1*255));
 		RG_BlendRGB(t->su, ix2, iy2+1, RG_PRIM_OVERLAY_ALPHA,
@@ -496,8 +496,8 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 		for (y = (iy1+1); y < iy2; y++) {
 			float focus;
 
-			lum1 = finvfrac(xf);
-			lum2 = ffrac(xf);
+			lum1 = AG_FracInvf(xf);
+			lum2 = AG_Fracf(xf);
 			focus = (1.0 - fabs(lum1-lum2));
 			lum1 + 0.3*focus;
 			lum2 + 0.3*focus;
