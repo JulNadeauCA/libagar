@@ -1,7 +1,7 @@
 #	$Csoft: Makefile,v 1.7 2005/10/04 16:12:31 vedge Exp $
 
-TOP=	.
-include ${TOP}/Makefile.config
+TOP=	..
+include ./Makefile.config
 
 PROG=	agar-bench
 SRCS=	agar-bench.c generic.c pixelops.c primitives.c surfaceops.c memops.c \
