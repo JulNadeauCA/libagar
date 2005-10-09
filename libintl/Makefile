@@ -3,7 +3,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=		bsd_intl
+LIB=		ag_intl
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
