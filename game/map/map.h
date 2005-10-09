@@ -17,9 +17,9 @@
 #define AG_NITEM_MAXTRANSFORMS 16384
 #define AG_NITEM_MAXMASKS	16384
 
-#include <engine/space/space.h>
-#include <engine/map/transform.h>
-#include <engine/map/nodemask.h>
+#include <agar/game/space.h>
+#include <agar/game/map/transform.h>
+#include <agar/game/map/nodemask.h>
 
 #include "begin_code.h"
 

@@ -6,8 +6,8 @@
 
 #include <mat/mat.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/scrollbar.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/scrollbar.h>
 
 #include "begin_code.h"
 

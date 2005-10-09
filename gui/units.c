@@ -26,8 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/map/map.h>
+#include <core/core.h>
 
 #include "units.h"
 
@@ -204,7 +203,6 @@ const AG_Unit agLengthUnits[] = {
 /* TODO resolution-specific functions */
 const AG_Unit agVideoUnits[] = {
 	{ "px", "", N_("Pixels"),		1.0, NULL },
-	{ "tsz", "", N_("Agar tiles"),		AGTILESZ, NULL },
 	{ "kpx", "", N_("Kilopixels"),		1e3, NULL },
 	{ "Mpx", "", N_("Megapixels"),		1e6, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }

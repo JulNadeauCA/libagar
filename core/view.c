@@ -29,17 +29,13 @@
 #include <config/have_jpeg.h>
 #include <compat/dir.h>
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/prop.h>
-
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
 #ifdef MAP
-#include <engine/map/map.h>
+#include <game/map/map.h>
 #endif
-
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include <gui/window.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -50,7 +46,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-
 #ifdef HAVE_JPEG
 #include <jpeglib.h>
 #endif
@@ -815,6 +810,8 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	} else {
 #ifdef HAVE_OPENGL
 		su = AG_CaptureGLView();
+#else
+		su = NULL;
 #endif
 	}
 

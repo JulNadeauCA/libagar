@@ -1,8 +1,7 @@
 /*	$Csoft: snprintf.h,v 1.2 2003/10/09 22:39:29 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_snprintf.h>
-
+#include <agar/config/have_snprintf.h>
 #include <sys/types.h>
 
 #ifdef HAVE_SNPRINTF

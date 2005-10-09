@@ -28,17 +28,16 @@
 
 #include <config/utf8.h>
 
-#include <engine/engine.h>
-#include <engine/prop.h>
-#include <engine/config.h>
+#include <core/core.h>
+#include <core/config.h>
 
 #include <ctype.h>
 #include <string.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/keycodes.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/textbox.h>
+#include <gui/keycodes.h>
 
 #ifdef UTF8
 static int key_del_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);

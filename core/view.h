@@ -1,14 +1,14 @@
 /*	$Csoft: view.h,v 1.107 2005/10/03 17:37:30 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_VIEW_H_
-#define _AGAR_VIEW_H_
+#ifndef _AGAR_CORE_VIEW_H_
+#define _AGAR_CORE_VIEW_H_
 #include "begin_code.h"
 
-#include <config/view_8bpp.h>
-#include <config/view_16bpp.h>
-#include <config/view_24bpp.h>
-#include <config/view_32bpp.h>
+#include <agar/config/view_8bpp.h>
+#include <agar/config/view_16bpp.h>
+#include <agar/config/view_24bpp.h>
+#include <agar/config/view_32bpp.h>
 
 struct ag_window;
 TAILQ_HEAD(ag_windowq, ag_window);
@@ -239,4 +239,4 @@ __inline__ void AG_FlipSurface(Uint8 *, int, int);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_VIEW_H_ */
+#endif	/* _AGAR_CORE_VIEW_H_ */

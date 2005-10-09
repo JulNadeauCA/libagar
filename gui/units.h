@@ -1,7 +1,7 @@
 /*	$Csoft: units.h,v 1.14 2005/06/01 08:48:31 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/historical_units.h>
+#include <agar/config/historical_units.h>
 
 #ifndef _AGAR_WIDGET_UNITS_H_
 #define _AGAR_WIDGET_UNITS_H_

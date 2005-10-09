@@ -26,21 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapedit.h>
+#include <game/map/map.h>			/* XXX for fragment maps */
+#include <game/map/mapedit.h>
 
-#include <engine/loader/den.h>
-#include <engine/loader/xcf.h>
-#include <engine/loader/surface.h>
-
-#ifdef DEBUG
-#include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
-#endif
+#include <core/loaders/den.h>
+#include <core/loaders/xcf.h>
+#include <core/loaders/surface.h>
 
 #include <string.h>
 #include <stdarg.h>

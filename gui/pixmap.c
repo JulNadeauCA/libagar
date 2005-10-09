@@ -26,11 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/loader/xcf.h>
-#include <engine/widget/primitive.h>
+#include <core/loaders/xcf.h>
+
+#include <gui/primitive.h>
 
 #include "pixmap.h"
 

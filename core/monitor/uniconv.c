@@ -31,11 +31,11 @@
 
 #include <core/core.h>
 #include <core/view.h>
-#include <core/unicode.h>
 
 #include <gui/window.h>
 #include <gui/combo.h>
 #include <gui/tableview.h>
+#include <gui/unicode.h>
 
 #include "monitor.h"
 

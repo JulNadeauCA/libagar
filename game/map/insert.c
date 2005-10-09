@@ -26,21 +26,21 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/rg/tileset.h>
+#include <core/core.h>
 
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/label.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/separator.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/combo.h>
+#include <rg/tileset.h>
+
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/spinbutton.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/primitive.h>
+#include <gui/notebook.h>
+#include <gui/combo.h>
 
 #include "map.h"
 #include "mapedit.h"

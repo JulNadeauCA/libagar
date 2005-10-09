@@ -4,8 +4,8 @@
 #ifndef _AGAR_WIDGET_GRAPH_H_
 #define _AGAR_WIDGET_GRAPH_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/label.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/label.h>
 
 #include "begin_code.h"
 

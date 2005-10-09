@@ -26,8 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/vg/vg.h>
+#include <core/core.h>
+
+#include <vg/vg.h>
 
 #include "netbuf.h"
 #include "integral.h"

@@ -1,8 +1,7 @@
 /*	$Csoft: gethostname.h,v 1.4 2003/03/25 11:39:02 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_gethostname.h>
-
+#include <agar/config/have_gethostname.h>
 #include <sys/types.h>
 
 #ifdef HAVE_GETHOSTNAME

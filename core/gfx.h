@@ -1,7 +1,7 @@
 /*	$Csoft: gfx.h,v 1.41 2005/08/27 04:35:51 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/map/transform.h>
+#include <agar/game/map/transform.h> /* XXX */
 
 #include "begin_code.h"
 

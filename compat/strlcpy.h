@@ -1,8 +1,8 @@
 /*	$Csoft: strlcpy.h,v 1.6 2004/01/23 06:12:26 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_strlcpy.h>
-#include <config/have_bounded_attribute.h>
+#include <agar/config/have_strlcpy.h>
+#include <agar/config/have_bounded_attribute.h>
 
 #ifndef BOUNDED_ATTRIBUTE
 # ifdef HAVE_BOUNDED_ATTRIBUTE

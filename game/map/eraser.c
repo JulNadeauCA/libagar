@@ -26,15 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
+
+#include <core/core.h>
 
 #include "map.h"
 #include "mapedit.h"
 
-#include <engine/widget/checkbox.h>
-#include <engine/widget/primitive.h>
+#include <gui/checkbox.h>
+#include <gui/primitive.h>
 
 static int erase_all = 0;
 static int all_layers = 0;

@@ -4,7 +4,7 @@
 #ifndef _AGAR_WIDGET_HBOX_H_
 #define _AGAR_WIDGET_HBOX_H_
 
-#include <engine/widget/box.h>
+#include <agar/gui/box.h>
 
 typedef struct ag_hbox {
 	struct ag_box box;

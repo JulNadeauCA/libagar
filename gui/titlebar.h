@@ -4,9 +4,9 @@
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
 #define _AGAR_WIDGET_TITLEBAR_H_
 
-#include <engine/widget/box.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
+#include <agar/gui/box.h>
+#include <agar/gui/label.h>
+#include <agar/gui/button.h>
 
 #include "begin_code.h"
 

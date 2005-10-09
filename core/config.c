@@ -34,33 +34,30 @@
 
 #include <compat/dir.h>
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/prop.h>
-#include <engine/rcs.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
+#include <core/rcs.h>
 
-#include <engine/map/map.h>
+#include <game/map/map.h>
 #ifdef EDITION
-#include <engine/map/mapedit.h>
+#include <game/map/mapedit.h>
 #endif
 
-#include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/hbox.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/keycodes.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/hsvpal.h>
-#include <engine/widget/separator.h>
+#include <gui/window.h>
+#include <gui/vbox.h>
+#include <gui/hbox.h>
+#include <gui/label.h>
+#include <gui/button.h>
+#include <gui/checkbox.h>
+#include <gui/textbox.h>
+#include <gui/keycodes.h>
+#include <gui/tlist.h>
+#include <gui/mspinbutton.h>
+#include <gui/spinbutton.h>
+#include <gui/notebook.h>
+#include <gui/hsvpal.h>
+#include <gui/separator.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

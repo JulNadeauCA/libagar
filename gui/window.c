@@ -26,16 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-
-#include <engine/widget/window.h>
-#include <engine/widget/widget.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/cursors.h>
+#include <gui/window.h>
+#include <gui/widget.h>
+#include <gui/primitive.h>
+#include <gui/cursors.h>
 
 #include <string.h>
 #include <stdarg.h>

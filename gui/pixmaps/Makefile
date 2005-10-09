@@ -7,10 +7,8 @@ XCF=		window.xcf \
 		arrow.xcf
 
 DEN=		pixmaps.den
-DEN_DIR=	engine/widget
 DEN_NAME=	"Agar widget pixmaps"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2003, 2004 CubeSoft Communications, Inc."
 
-DENCOMP=${TOP}/dencomp/dencomp
 include ${TOP}/mk/csoft.den.mk

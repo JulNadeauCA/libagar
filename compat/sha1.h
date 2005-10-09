@@ -7,7 +7,7 @@
  * 100% Public Domain
  */
 
-#include <config/have_sha1.h>
+#include <agar/config/have_sha1.h>
 
 #ifdef HAVE_SHA1
 

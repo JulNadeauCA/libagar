@@ -34,7 +34,7 @@
 
 #ifndef HAVE_STRSEP
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "strsep.h"
 
 #include <stdio.h>

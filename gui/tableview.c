@@ -25,15 +25,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/config.h>
+#include <core/core.h>
+#include <core/view.h>
+#include <core/config.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/scrollbar.h>
-/* #include <engine/widget/textbox.h> */
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
+#include <gui/scrollbar.h>
+/* #include <gui/textbox.h> */
 
 #include <string.h>
 #include <stdarg.h>

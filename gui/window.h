@@ -4,8 +4,8 @@
 #ifndef _AGAR_WIDGET_WINDOW_H_
 #define _AGAR_WIDGET_WINDOW_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/titlebar.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/titlebar.h>
 
 #include "begin_code.h"
 

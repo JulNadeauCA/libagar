@@ -144,7 +144,7 @@ enum {
 	CTRL_SYMBOL
 };
 
-extern AG_Object agIconMgr;					/* engine.c */
+extern AG_Object agIconMgr;
 #define AGICON(n) ((n >= 0) ? AG_SPRITE(&agIconMgr,(n)).su : NULL)
 
 #include "close_code.h"

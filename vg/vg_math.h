@@ -5,7 +5,7 @@
 #define _AGAR_VG_MATH_H_
 #include "begin_code.h"
 
-#include <compat/math.h>
+#include <agar/compat/math.h>
 
 __BEGIN_DECLS
 __inline__ double VG_Rad2Deg(double);

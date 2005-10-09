@@ -26,18 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/actor.h>
+#include <core/core.h>
 
-#include <engine/map/map.h>
-
-#include <engine/widget/window.h>
-#include <engine/widget/menu.h>
-
-#include <errno.h>
-#include <stdarg.h>
-#include <string.h>
-
+#include "map/map.h"
+#include "actor.h"
 #include "space.h"
 
 const AG_Version agSpaceVer = {

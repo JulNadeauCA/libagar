@@ -26,17 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <compat/arc4random.h>
-
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/rg/tileset.h>
+#include <compat/arc4random.h>
 
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/tlist.h>
+#include <core/core.h>
+
+#include <rg/tileset.h>
+
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/tlist.h>
 
 #include "map.h"
 #include "mapedit.h"

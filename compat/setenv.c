@@ -33,7 +33,7 @@
 
 #ifndef HAVE_SETENV
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "setenv.h"
 
 #include <stdlib.h>

@@ -30,7 +30,7 @@
 
 #ifndef HAVE_VASPRINTF
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "vasprintf.h"
 
 #include <stdio.h>

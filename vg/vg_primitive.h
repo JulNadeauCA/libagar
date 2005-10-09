@@ -4,7 +4,7 @@
 #ifndef _AGAR_VG_PRIMITIVE_H_
 #define _AGAR_VG_PRIMITIVE_H_
 
-#include <engine/view.h>
+#include <agar/core/view.h>
 
 #include "begin_code.h"
 

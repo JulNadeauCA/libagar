@@ -4,11 +4,11 @@
 #ifndef _AGAR_WIDGET_ANIMVIEW_H_
 #define _AGAR_WIDGET_ANIMVIEW_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/button.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/window.h>
-#include <engine/rg/animation.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/button.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/window.h>
+#include <agar/rg/animation.h>
 
 #include "begin_code.h"
 

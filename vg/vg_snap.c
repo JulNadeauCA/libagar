@@ -26,12 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
-#include <engine/widget/toolbar.h>
-#include <engine/widget/button.h>
+#include <gui/toolbar.h>
+#include <gui/button.h>
 #ifdef EDITION
-#include <engine/widget/menu.h>
+#include <gui/menu.h>
 #endif
 
 #include "vg.h"

@@ -26,15 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "map.h"
 
-#include <string.h>
 #include <stdarg.h>
 
 const struct ag_transform_ent agTransforms[];

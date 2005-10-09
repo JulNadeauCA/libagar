@@ -130,6 +130,8 @@ screenshot_xmit(int fd)
 		} else {
 #ifdef HAVE_OPENGL
 			su = AG_CaptureGLView();
+#else
+			su = NULL;
 #endif
 		}
 

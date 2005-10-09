@@ -4,13 +4,13 @@
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
 #define _AGAR_WIDGET_FILE_DLG_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/combo.h>
-#include <engine/widget/hpane.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/button.h>
+#include <agar/gui/window.h>
+#include <agar/gui/tlist.h>
+#include <agar/gui/combo.h>
+#include <agar/gui/hpane.h>
 
 #include "begin_code.h"
 

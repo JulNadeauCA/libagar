@@ -4,8 +4,8 @@
 #ifndef _AGAR_WIDGET_NOTEBOOK_H_
 #define _AGAR_WIDGET_NOTEBOOK_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/box.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/box.h>
 
 #include "begin_code.h"
 

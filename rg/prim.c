@@ -26,10 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "tileset.h"
+#include "fixpt.h"
 
 /* Obtain the hue/saturation/value of a given RGB triplet. */
 void

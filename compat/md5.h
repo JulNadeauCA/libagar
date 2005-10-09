@@ -13,7 +13,7 @@
  * with every copy.
  */
 
-#include <config/have_md5.h>
+#include <agar/config/have_md5.h>
 #ifdef HAVE_MD5
 
 #include <sys/types.h>

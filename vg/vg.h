@@ -4,7 +4,7 @@
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
-#include <engine/map/map.h>
+#include <agar/game/map/map.h>
 
 #include "begin_code.h"
 
@@ -47,18 +47,18 @@ struct vg_element;
 
 #include "close_code.h"
 
-#include <engine/vg/vg_math.h>
-#include <engine/vg/vg_snap.h>
-#include <engine/vg/vg_ortho.h>
-#include <engine/vg/vg_origin.h>
-#include <engine/vg/vg_block.h>
+#include <agar/vg/vg_math.h>
+#include <agar/vg/vg_snap.h>
+#include <agar/vg/vg_ortho.h>
+#include <agar/vg/vg_origin.h>
+#include <agar/vg/vg_block.h>
 
-#include <engine/vg/vg_line.h>
-#include <engine/vg/vg_circle.h>
-#include <engine/vg/vg_ellipse.h>
-#include <engine/vg/vg_text.h>
-#include <engine/vg/vg_mask.h>
-#include <engine/vg/vg_polygon.h>
+#include <agar/vg/vg_line.h>
+#include <agar/vg/vg_circle.h>
+#include <agar/vg/vg_ellipse.h>
+#include <agar/vg/vg_text.h>
+#include <agar/vg/vg_mask.h>
+#include <agar/vg/vg_polygon.h>
 
 #include "begin_code.h"
 

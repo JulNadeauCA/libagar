@@ -1,18 +1,18 @@
 /*	$Csoft: error.h,v 1.11 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_ERROR_ERROR_H_
-#define _AGAR_ERROR_ERROR_H_
+#ifndef _AGAR_CORE_ERROR_H_
+#define _AGAR_CORE_ERROR_H_
 
-#include <compat/queue.h>
+#include <agar/compat/queue.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <config/debug.h>
-#include <config/threads.h>
-#include <config/have_bounded_attribute.h>
-#include <config/have_format_attribute.h>
-#include <config/have_nonnull_attribute.h>
+#include <agar/config/debug.h>
+#include <agar/config/threads.h>
+#include <agar/config/have_bounded_attribute.h>
+#include <agar/config/have_format_attribute.h>
+#include <agar/config/have_nonnull_attribute.h>
 
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
 # if defined(__cplusplus)
@@ -201,4 +201,4 @@ __END_DECLS
 		abort()
 #endif
 
-#endif /* _AGAR_ERROR_ERROR_H_ */
+#endif /* _AGAR_CORE_ERROR_H_ */

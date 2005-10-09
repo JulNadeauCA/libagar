@@ -4,10 +4,10 @@
 #ifndef _AGAR_MAP_MAPEDIT_H_
 #define _AGAR_MAP_MAPEDIT_H_
 
-#include <engine/map/mapview.h>
+#include <agar/game/map/mapview.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/button.h>
+#include <agar/gui/window.h>
+#include <agar/gui/button.h>
 
 #include "begin_code.h"
 

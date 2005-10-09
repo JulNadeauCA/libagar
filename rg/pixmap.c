@@ -26,25 +26,25 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
+#include <game/map/map.h>
 
-#include <engine/loader/surface.h>
+#include <core/loaders/surface.h>
 
-#include <engine/widget/cursors.h>
-#include <engine/widget/window.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/hsvpal.h>
-#include <engine/widget/label.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/separator.h>
-#include <engine/widget/notebook.h>
+#include <gui/cursors.h>
+#include <gui/window.h>
+#include <gui/spinbutton.h>
+#include <gui/fspinbutton.h>
+#include <gui/mspinbutton.h>
+#include <gui/checkbox.h>
+#include <gui/hsvpal.h>
+#include <gui/label.h>
+#include <gui/radio.h>
+#include <gui/tlist.h>
+#include <gui/separator.h>
+#include <gui/notebook.h>
 
 #include "tileset.h"
 #include "tileview.h"

@@ -26,18 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
-#include <engine/map/map.h>
+#include <game/map/map.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/hbox.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/objsel.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/separator.h>
+#include <gui/window.h>
+#include <gui/hbox.h>
+#include <gui/vbox.h>
+#include <gui/textbox.h>
+#include <gui/objsel.h>
+#include <gui/spinbutton.h>
+#include <gui/notebook.h>
+#include <gui/separator.h>
 
 #include <errno.h>
 #include <stdarg.h>

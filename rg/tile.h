@@ -1,8 +1,8 @@
 /*	$Csoft: tile.h,v 1.26 2005/08/22 02:10:39 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_BG_TILE_H_
-#define _AGAR_BG_TILE_H_
+#ifndef _AGAR_RG_TILE_H_
+#define _AGAR_RG_TILE_H_
 #include "begin_code.h"
 
 #define RG_TILE_NAME_MAX 32
@@ -114,4 +114,4 @@ void		     RG_TileDelSketch(RG_Tile *, struct rg_sketch *, int);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_BG_TILE_H_ */
+#endif	/* _AGAR_RG_TILE_H_ */

@@ -26,19 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <config/map.h>
 
 #ifdef MAP
 
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/hbox.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/toolbar.h>
+#include <gui/window.h>
+#include <gui/hbox.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#include <gui/tlist.h>
+#include <gui/toolbar.h>
 
 #include "map.h"
 #include "mapedit.h"

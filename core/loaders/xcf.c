@@ -28,12 +28,8 @@
 
 #include <config/have_ieee754.h>
 
-#include <engine/engine.h>
-#include <engine/view.h>
-
-#include <engine/map/map.h>			/* For AGTILESZ */
-
-#include <engine/loader/xcf.h>
+#include <core/core.h>
+#include <core/loaders/xcf.h>
 
 #include <string.h>
 #include <stdlib.h>

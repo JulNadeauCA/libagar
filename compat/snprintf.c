@@ -63,7 +63,7 @@
 
 #if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "snprintf.h"
 #include "vsnprintf.h"
 

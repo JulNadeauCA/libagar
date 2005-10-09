@@ -12,14 +12,14 @@ struct rg_feature;
 struct rg_anim;
 struct rg_texture;
 
-#include <engine/vg/vg.h>
-#include <engine/rg/tile.h>
-#include <engine/rg/feature.h>
-#include <engine/rg/pixmap.h>
-#include <engine/rg/sketch.h>
-#include <engine/rg/animation.h>
-#include <engine/rg/texture.h>
-#include <engine/rg/prim.h>
+#include <agar/vg/vg.h>
+#include <agar/rg/tile.h>
+#include <agar/rg/feature.h>
+#include <agar/rg/pixmap.h>
+#include <agar/rg/sketch.h>
+#include <agar/rg/animation.h>
+#include <agar/rg/texture.h>
+#include <agar/rg/prim.h>
 
 #include "begin_code.h"
 

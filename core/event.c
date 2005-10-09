@@ -29,22 +29,18 @@
 #include <config/threads.h>
 #include <config/have_opengl.h>
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/timeout.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-
-#include <engine/widget/window.h>
-#include <engine/widget/menu.h>
+#include <gui/window.h>
+#include <gui/menu.h>
 #ifdef DEBUG
-#include <engine/widget/label.h>
-#include <engine/widget/graph.h>
+#include <gui/label.h>
+#include <gui/graph.h>
 #endif
-
 #ifdef EDITION
-#include <engine/objmgr.h>
+#include <core/objmgr.h>
 #endif
 
 #include <string.h>

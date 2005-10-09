@@ -4,7 +4,7 @@
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
-#include <engine/widget/label.h>
+#include <agar/gui/label.h>
 
 #include "begin_code.h"
 

@@ -26,22 +26,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_getpwuid.h>
-#include <config/have_getuid.h>
-
-#include <compat/gethostname.h>
-#include <engine/error/error.h>
+#include <core/error.h>
 
 #include <sys/types.h>
 #include <SDL_types.h>
-
 #include <string.h>
 #include <stdio.h>
 
-#include <engine/loader/netbuf.h>
-#include <engine/loader/integral.h>
+#include <core/loaders/netbuf.h>
+#include <core/loaders/integral.h>
 
-#include  "version.h"
+#include "version.h"
 
 int
 AG_ReadVersion(AG_Netbuf *buf, const AG_Version *ver,

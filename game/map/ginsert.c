@@ -26,19 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/actor.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/rg/tileset.h>
+#include <core/core.h>
 
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/label.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/combo.h>
+#include <game/actor.h>
+
+#include <rg/tileset.h>
+
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
 
 #include "map.h"
 #include "mapedit.h"
@@ -67,7 +67,6 @@ ginsert_pane(void *p, void *con)
 	AG_Mapview *mv = TOOL(ins)->mv;
 	AG_Radio *rad;
 	AG_Checkbox *cb;
-	AG_Combo *com;
 	AG_TlistItem *it;
 	
 	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {

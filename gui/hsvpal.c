@@ -26,17 +26,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
 
-#include <engine/rg/prim.h>
+#include <rg/prim.h>
 
 #include "hsvpal.h"
 
-#include <engine/widget/primitive.h>
-#include <engine/widget/window.h>
-#include <engine/widget/fspinbutton.h>
+#include <gui/primitive.h>
+#include <gui/window.h>
+#include <gui/fspinbutton.h>
 
 const AG_WidgetOps agHSVPalOps = {
 	{

@@ -1,16 +1,16 @@
 /*	$Csoft: tileview.h,v 1.33 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_BG_TILEVIEW_H_
-#define _AGAR_BG_TILEVIEW_H_
+#ifndef _AGAR_RG_TILEVIEW_H_
+#define _AGAR_RG_TILEVIEW_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/box.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/toolbar.h>
+#include <agar/gui/box.h>
 
-#include <engine/rg/tileset.h>
-#include <engine/timeout.h>
+#include <agar/rg/tileset.h>
+#include <agar/core/timeout.h>
 
 #include "begin_code.h"
 
@@ -18,9 +18,9 @@
 #define RG_TILEVIEW_MIN_H	32
 
 enum rg_tileview_ctrl_type {
-	RG_TILEVIEW_POINT,			/* Point (x,y) */
+	RG_TILEVIEW_POINT,		/* Point (x,y) */
 	RG_TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
-	RG_TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
+	RG_TILEVIEW_RDIMENSIONS,	/* Rectangle (w,h) */
 	RG_TILEVIEW_CIRCLE,		/* Circle (x,y,r) */
 	RG_TILEVIEW_VERTEX,		/* Vg vertex (x,y) */
 };
@@ -118,12 +118,12 @@ typedef struct rg_tileview_tool {
 } RG_TileviewTool;
 
 enum rg_tileview_state {
-	RG_TILEVIEW_TILE_EDIT,	/* Default edition mode */
+	RG_TILEVIEW_TILE_EDIT,		/* Default edition mode */
 	RG_TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
 	RG_TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
 	RG_TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
 	RG_TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
-	RG_TILEVIEW_LAYERS_EDIT	/* Node layers are being edited */
+	RG_TILEVIEW_LAYERS_EDIT		/* Node layers are being edited */
 };
 
 typedef struct rg_tileview {
@@ -157,7 +157,7 @@ typedef struct rg_tileview {
 	AG_Box *tel_box;		/* Element-specific toolbar container */
 	AG_Toolbar *tel_tbar;		/* Element-specific toolbar */
 	
-	AG_Menu *menu;		/* Popup menu */
+	AG_Menu *menu;			/* Popup menu */
 	AG_MenuItem *menu_item;
 	AG_Window *menu_win;
 
@@ -195,12 +195,11 @@ typedef struct rg_tileview {
 			AG_Menu *menu;		/* Popup menu */
 			AG_MenuItem *menu_item;	/* Popup menu item */
 			AG_Window *menu_win;	/* Popup menu window */
-			int xorig, yorig;		/* Reference point
-							   for restrictions */
+			int xorig, yorig;	/* Ref pt for restrictions */
 		} pixmap;
 		struct {
-			RG_TileviewCtrl *geo_ctrl;	 /* Geometry control */
-			RG_TileviewCtrl *orig_ctrl; /* Origin control */
+			RG_TileviewCtrl *geo_ctrl;	/* Geometry control */
+			RG_TileviewCtrl *orig_ctrl;	/* Origin control */
 		} tile;
 		struct {
 			int nx, ny;			/* Current position */
@@ -276,4 +275,4 @@ void RG_TileviewGenericMenu(RG_Tileview *, AG_MenuItem *);
 __END_DECLS
 
 #include "close_code.h"
-#endif /* _AGAR_BG_TILEVIEW_H */
+#endif /* _AGAR_RG_TILEVIEW_H */

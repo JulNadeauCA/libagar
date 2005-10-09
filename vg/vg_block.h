@@ -4,8 +4,6 @@
 #ifndef _AGAR_VG_BLOCK_H_
 #define _AGAR_VG_BLOCK_H_
 
-#include <engine/widget/window.h>
-
 #include "begin_code.h"
 
 #define VG_BLOCK_NAME_MAX 128
@@ -22,6 +20,8 @@ typedef struct vg_block {
 	TAILQ_ENTRY(vg_block) vgbs;
 } VG_Block;
 
+struct ag_window;
+
 __BEGIN_DECLS
 VG_Block	  *VG_BeginBlock(struct vg *, const char *, int);
 __inline__ void	   VG_SelectBlock(struct vg *, VG_Block *);
@@ -33,7 +33,7 @@ void		   VG_RotateBlock(struct vg *, VG_Block *, double);
 void		   VG_ClearBlock(struct vg *, VG_Block *);
 void		   VG_DestroyBlock(struct vg *, VG_Block *);
 void		   VG_BlockOffset(struct vg *, VG_Vtx *);
-AG_Window	  *VG_BlockEditor(struct vg *);
+struct ag_window  *VG_BlockEditor(struct vg *);
 void		   VG_BlockExtent(struct vg *, VG_Block *, VG_Rect *);
 __inline__ void	   VG_Abs2Rel(struct vg *, const VG_Vtx *, double *,
 		              double *);
