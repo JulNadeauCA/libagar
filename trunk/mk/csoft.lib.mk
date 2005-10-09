@@ -297,7 +297,7 @@ install-lib:
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
-	@export _share="${SHARESRC}"; \
+	@export _sharesrc="${SHARESRC}"; \
         if [ "$$_sharesrc" != "" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
