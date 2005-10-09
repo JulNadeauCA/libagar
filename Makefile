@@ -4,7 +4,6 @@ TOP=	.
 include ${TOP}/Makefile.config
 
 SUBDIR=	 agar-config \
-	 dencomp \
 	 compat \
 	 core \
 	 gui \
@@ -24,15 +23,11 @@ depend: prereq depend-subdir
 regress: regress-subdir
 
 prereq:
-	(cd compat && ${MAKE})
-	(cd engine/error && ${MAKE})
-	(cd engine/loader && ${MAKE})
-	(cd dencomp && ${MAKE})
+	@if [ ! -e "agar" ]; then ln -s . agar; fi
 
 configure:
 	cat configure.in | manuconf > configure
 	chmod 755 configure
-	cvs commit -m "sync; rien" configure
 
 cleandir-config:
 	rm -fr config config.log
@@ -44,7 +39,7 @@ release: cleandir
 fastclean:
 	find . -type f -and \( -name \*.o -or -name \*.lo -or \
 	          -name \*.la -or -name \*.a -or \
-	          -name \*.den -or -name libtool -or \
+	          -name libtool -or -name \*.out \
 	          -name .depend -or -name config.log -or \
 	          -name stdout.txt -or -name stderr.txt \) \
 		  -exec rm -f {} \;
@@ -55,26 +50,26 @@ install-includes:
 	${SUDO} env \
 	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	    INSTALL_INCL="${INSTALL_INCL}" \
-	    ${FIND} . -follow -type d \! -name CVS \
+	    ${FIND} . -type d \! -name CVS \
 	    -exec ${SH} mk/install-includes.sh "{}" "${INCLDIR}/{}" \;
 	@if [ "${SRC}" != "" ]; then \
 		(cd ${SRC} && ${SUDO} env \
 		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 		    INSTALL_INCL="${INSTALL_INCL}" \
-		    ${FIND} . -follow -type d \! -name CVS \
+		    ${FIND} . -type d \! -name CVS \
 		    -exec ${SH} mk/install-includes.sh "{}" \
 		    "${INCLDIR}/{}" \;); \
 	fi
 
 deinstall-includes:
-	${FIND} . -follow -type f -name '*.h' -print \
+	${FIND} . -type f -name '*.h' -print \
 	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
 	    | ${SUDO} ${SH}
 	@if [ "${SRC}" != "" ]; then \
-		echo "${FIND} ${SRC} -follow -type f -name '*.h' -print \
+		echo "${FIND} ${SRC} -type f -name '*.h' -print \
 		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
 		    | ${SUDO} ${SH}"; \
-		(cd ${SRC} && ${FIND} . -follow -type f -name '*.h' -print \
+		(cd ${SRC} && ${FIND} . -type f -name '*.h' -print \
 		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
 		    | ${SUDO} ${SH}); \
 	fi
