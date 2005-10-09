@@ -29,11 +29,11 @@
  * SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
+#include "unicode.h"
+
 #include <sys/types.h>
 #include <string.h>
-
-#include "unicode.h"
 
 /*
  * Get next token from text *stringp, where tokens are possibly-empty
