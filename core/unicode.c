@@ -26,8 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
+
 #include <sys/types.h>
+
 #include <string.h>
 #include <stdio.h>
 
