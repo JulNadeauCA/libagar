@@ -11,7 +11,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 SHARESRC=	core-icons.den
 
-SRCS=	audio.c config.c core.c error.c event.c gfx.c mkpath.c object.c \
+SRCS=	audio.c config.c core.c error.c event.c gfx.c math.c mkpath.c object.c \
 	objmgr.c prop.c rcs.c timeout.c typesw.c view.c
 MAN3=	agar.3 core.3 event.3 gfx.3 object.3 prop.3 timeout.3 view.3
 
