@@ -28,9 +28,9 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/math.h>
 
 #include "tileset.h"
-#include "fixpt.h"
 
 /* Obtain the hue/saturation/value of a given RGB triplet. */
 void
