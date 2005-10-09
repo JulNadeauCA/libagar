@@ -26,28 +26,31 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <config/have_jpeg.h>
+#include <config/debug.h>
 #include <config/network.h>
+#include <config/threads.h>
 
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 
-#include <engine/view.h>
-#include <engine/config.h>
 #include <config/version.h>
+#include <config/have_jpeg.h>
+
+#include <core/core.h>
+#include <core/view.h>
+#include <core/config.h>
 
 #include <qnet/qnet.h>
 #include <qnet/server.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/mfspinbutton.h>
-#include <engine/widget/statusbar.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/text.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/tlist.h>
+#include <gui/textbox.h>
+#include <gui/fspinbutton.h>
+#include <gui/mfspinbutton.h>
+#include <gui/statusbar.h>
+#include <gui/menu.h>
+#include <gui/text.h>
 
 #include "monitor.h"
 

@@ -30,17 +30,16 @@
 
 #ifdef DEBUG
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/map/mapview.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
-#include <engine/widget/spinbutton.h>
+#include <gui/window.h>
+#include <gui/vbox.h>
+#include <gui/textbox.h>
+#include <gui/tlist.h>
+#include <gui/label.h>
+#include <gui/button.h>
+#include <gui/spinbutton.h>
 
 #include "monitor.h"
 

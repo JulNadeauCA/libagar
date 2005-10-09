@@ -26,15 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/debug.h>
 #ifdef DEBUG
 
-#include <engine/view.h>
-#include <engine/map/mapview.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/tableview.h>
+#include <gui/window.h>
+#include <gui/tableview.h>
 
 #include "monitor.h"
 

@@ -26,19 +26,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/debug.h>
 #ifdef DEBUG
 
-#include <engine/view.h>
-#include <engine/map/mapview.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/label.h>
-#include <engine/widget/textbox.h>
+#include <game/map/mapview.h>
+
+#include <gui/window.h>
+#include <gui/vbox.h>
+#include <gui/button.h>
+#include <gui/tlist.h>
+#include <gui/label.h>
+#include <gui/textbox.h>
 
 #include "monitor.h"
 
