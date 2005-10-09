@@ -16,12 +16,11 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
+#include "unicode.h"
 
 #include <sys/types.h>
 #include <string.h>
-
-#include "unicode.h"
 
 /*
  * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(Uint32)
