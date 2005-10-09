@@ -32,6 +32,7 @@
 #include "vg.h"
 #include "vg_math.h"
 #include "vg_primitive.h"
+#include "fixpt.h"
 
 void
 VG_PutPixel(VG *vg, int x, int y, Uint32 c)
@@ -264,7 +265,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 		grad = yd/xd;
 
 		/* End point 1 */
-		xend = ftrunc(x1+0.5f);
+		xend = AG_Truncf(x1+0.5f);
 		yend = y1 + grad*(xend-x1);
 
 		xgap = finvfrac(x1+0.5f);
@@ -282,7 +283,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 		yf = yend+grad;
 
 		/* End point 2 */
-		xend = ftrunc(x2+0.5f);
+		xend = AG_Truncf(x2+0.5f);
 		yend = y2 + grad*(xend-x2);
 
 		xgap = finvfrac(x2-0.5f);
@@ -342,7 +343,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 		grad = xd/yd;
 
 		/* End point 1 */
-		yend = ftrunc(y1+0.5f);
+		yend = AG_Truncf(y1+0.5f);
 		xend = x1 + grad*(yend-y1);
 
 		ygap = finvfrac(y1+0.5f);
@@ -360,7 +361,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 		xf = xend + grad;
 
 		/* End point 2 */
-		yend = ftrunc(y2+0.5f);
+		yend = AG_Truncf(y2+0.5f);
 		xend = x2 + grad*(yend-y2);
 
 		xgap = finvfrac(y2-0.5f);
