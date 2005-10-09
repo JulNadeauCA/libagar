@@ -1,7 +1,7 @@
 /*	$Csoft: gaussj.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #include "mat.h"
 

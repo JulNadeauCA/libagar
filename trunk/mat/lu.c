@@ -1,7 +1,7 @@
 /*	$Csoft: lu.c,v 1.4 2005/09/15 02:22:59 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #include "mat.h"
 

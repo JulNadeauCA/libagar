@@ -3,7 +3,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=		mat
+LIB=		ag_mat
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
