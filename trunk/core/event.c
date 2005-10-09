@@ -113,6 +113,13 @@ update_perf_graph(void)
 	}
 }
 
+AG_Window *
+AG_EventShowPerfGraph(void)
+{
+	AG_WindowShow(agPerfWindow);
+	return (agPerfWindow);
+}
+
 static void
 init_perf_graph(void)
 {
