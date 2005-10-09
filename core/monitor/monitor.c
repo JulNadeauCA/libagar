@@ -43,20 +43,11 @@
 
 #include "monitor.h"
 
-static AG_Window *
-show_perfgraph(void)
-{
-	extern AG_Window *agPerfWindow;
-
-	AG_WindowShow(agPerfWindow);
-	return (agPerfWindow);
-}
-
 static const struct ag_maptool_ent {
 	char	      *name;
 	AG_Window *(*fn)(void);
 } tool_ents[] = {
-	{ N_("Performance graph"), show_perfgraph },
+	{ N_("Performance graph"), AG_EventShowPerfGraph },
 #if defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Upload screenshot"), AG_DebugScreenshot },
 #endif
@@ -83,7 +74,9 @@ selected_tool(AG_Event *event)
 void
 AG_MonitorMenu(AG_MenuItem *mi)
 {
+#if 0
 	extern int agObjMgrHexDiff;
+#endif
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	int i;
 
@@ -92,8 +85,10 @@ AG_MonitorMenu(AG_MenuItem *mi)
 		    selected_tool, "%p", &tool_ents[i]);
 	}
 	AG_MenuSeparator(mi);
+#if 0
 	AG_MenuIntBool(mi, _("Datafile hex diffs"), OBJ_ICON,
 	    &agObjMgrHexDiff, 0);
+#endif
 }
 
 #endif	/* DEBUG */
