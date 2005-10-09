@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/error/error.h>
+#include <core/error.h>
 
 #include <sys/types.h>
 #include <SDL_types.h>
@@ -35,9 +35,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <engine/loader/netbuf.h>
-#include <engine/loader/integral.h>
-#include <engine/loader/string.h>
+#include <core/loaders/netbuf.h>
+#include <core/loaders/integral.h>
+#include <core/loaders/string.h>
 
 /* Allocate and read a length-encoded string. */
 char *

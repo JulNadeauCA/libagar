@@ -33,8 +33,10 @@
 
 #ifdef HAVE_FREETYPE
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
+
+#include <gui/unicode.h>
 
 #include <stdio.h>
 #include <stdlib.h>

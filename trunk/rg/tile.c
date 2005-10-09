@@ -26,33 +26,33 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/config.h>
-#include <engine/objmgr.h>
+#include <core/core.h>
+#include <core/view.h>
+#include <core/config.h>
+#include <core/objmgr.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapview.h>
+#include <game/map/map.h>
+#include <game/map/mapview.h>
 
-#include <engine/loader/surface.h>
-#include <engine/loader/xcf.h>
+#include <core/loaders/surface.h>
+#include <core/loaders/xcf.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/button.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/label.h>
-#include <engine/widget/separator.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/separator.h>
-#include <engine/widget/hpane.h>
-#include <engine/widget/file_dlg.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/tlist.h>
+#include <gui/button.h>
+#include <gui/textbox.h>
+#include <gui/menu.h>
+#include <gui/checkbox.h>
+#include <gui/spinbutton.h>
+#include <gui/mspinbutton.h>
+#include <gui/toolbar.h>
+#include <gui/label.h>
+#include <gui/separator.h>
+#include <gui/radio.h>
+#include <gui/separator.h>
+#include <gui/hpane.h>
+#include <gui/file_dlg.h>
 
 #include "tileset.h"
 #include "tileview.h"

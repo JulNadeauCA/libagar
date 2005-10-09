@@ -28,7 +28,7 @@
 
 #include <compat/strlcpy.h>
 
-#include <engine/error/error.h>
+#include <core/error.h>
 
 #include <sys/types.h>
 #include <SDL_types.h>
@@ -39,11 +39,11 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <engine/loader/netbuf.h>
-#include <engine/loader/version.h>
-#include <engine/loader/integral.h>
-#include <engine/loader/string.h>
-#include <engine/loader/den.h>
+#include <core/loaders/netbuf.h>
+#include <core/loaders/version.h>
+#include <core/loaders/integral.h>
+#include <core/loaders/string.h>
+#include <core/loaders/den.h>
 
 const AG_Version den_ver = {
 	"agar den",

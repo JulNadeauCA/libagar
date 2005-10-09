@@ -26,12 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/textbox.h>
+#include <gui/window.h>
+#include <gui/tlist.h>
+#include <gui/toolbar.h>
+#include <gui/textbox.h>
 
 #include "vg.h"
 #include "vg_math.h"

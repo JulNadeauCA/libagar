@@ -4,17 +4,17 @@
 #ifndef _AGAR_RG_TEXSEL_H_
 #define _AGAR_RG_TEXSEL_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/tlist.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/tlist.h>
 
-#include <engine/rg/tileset.h>
+#include <agar/rg/tileset.h>
 
 #include "begin_code.h"
 
 typedef struct rg_texture_selector {
-	AG_Tlist tl;		/* Superclass */
-	RG_Tileset *tset;		/* Attached tileset */
-	char texname[RG_TEXTURE_NAME_MAX];	/* Default texture name binding */
+	struct ag_tlist tl;
+	RG_Tileset *tset;		   /* Attached tileset */
+	char texname[RG_TEXTURE_NAME_MAX]; /* Default texture name binding */
 	int flags;
 } RG_TextureSelector;
 

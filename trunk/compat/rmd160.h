@@ -25,7 +25,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_rmd160.h>
+#include <agar/config/have_rmd160.h>
 
 #ifdef HAVE_RMD160
 

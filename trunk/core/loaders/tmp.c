@@ -29,8 +29,8 @@
 #include <compat/dir.h>
 #include <compat/arc4random.h>
 
-#include <engine/engine.h>
-#include <engine/config.h>
+#include <core/core.h>
+#include <core/config.h>
 
 #include <sys/stat.h>
 #include <errno.h>

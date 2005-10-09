@@ -1,7 +1,7 @@
 /*	$Csoft: vsnprintf.h,v 1.2 2003/10/09 22:39:29 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_vsnprintf.h>
+#include <agar/config/have_vsnprintf.h>
 #include <sys/types.h>
 
 #ifdef HAVE_VSNPRINTF

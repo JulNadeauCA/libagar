@@ -26,33 +26,32 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #include <compat/md5.h>
 #include <compat/sha1.h>
 #include <compat/rmd160.h>
 
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/typesw.h>
-#include <engine/mkpath.h>
-#include <engine/objmgr.h>
+#include <core/config.h>
+#include <core/view.h>
+#include <core/typesw.h>
+#include <core/mkpath.h>
+#include <core/objmgr.h>
 
-#include <engine/map/map.h>
+#include <game/map/map.h>
 
 #ifdef EDITION
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/label.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/combo.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/separator.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/textbox.h>
+#include <gui/notebook.h>
+#include <gui/separator.h>
 #endif
 
 #ifdef NETWORK
-#include <engine/rcs.h>
+#include <core/rcs.h>
 #endif
 
 #include <sys/stat.h>

@@ -1,7 +1,7 @@
 /*	$Csoft: arc4random.h,v 1.2 2004/04/21 00:15:21 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_arc4random.h>
+#include <agar/config/have_arc4random.h>
 
 #ifndef HAVE_ARC4RANDOM
 #include <SDL/SDL_types.h>

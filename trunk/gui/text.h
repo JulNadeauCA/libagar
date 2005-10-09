@@ -4,8 +4,8 @@
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
-#include <engine/widget/button.h>
-#include <engine/widget/window.h>
+#include <agar/gui/button.h>
+#include <agar/gui/window.h>
 
 #include "begin_code.h"
 

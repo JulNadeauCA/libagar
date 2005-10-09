@@ -26,15 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/typesw.h>
+#include <core/core.h>
+#include <core/typesw.h>
 
-#include <engine/object.h>
-#include <engine/perso.h>
-
-#include <engine/map/map.h>
-#include <engine/map/mapedit.h>
-#include <engine/rg/tileset.h>
+/* XXX */
+#include <game/perso.h>
+#include <game/map/map.h>
+#include <game/map/mapedit.h>
+#include <rg/tileset.h>
 
 AG_ObjectType *agTypes = NULL;
 int agnTypes = 0;

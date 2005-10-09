@@ -31,15 +31,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-char mkpath_copyright[] =
-"@(#) Copyright (c) 1983, 1992, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
 #include <compat/dir.h>
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

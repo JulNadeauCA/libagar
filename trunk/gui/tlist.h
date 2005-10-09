@@ -4,9 +4,9 @@
 #ifndef _AGAR_WIDGET_TLIST_H_
 #define _AGAR_WIDGET_TLIST_H_
 
-#include <engine/widget/scrollbar.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/label.h>
+#include <agar/gui/scrollbar.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/label.h>
 
 #include "begin_code.h"
 

@@ -4,11 +4,11 @@
 #ifndef _AGAR_WIDGET_GLVIEW_H_
 #define _AGAR_WIDGET_GLVIEW_H_
 
-#include <config/have_opengl.h>
+#include <agar/config/have_opengl.h>
 
 #ifdef HAVE_OPENGL
 
-#include <engine/widget/widget.h>
+#include <agar/gui/widget.h>
 #include "begin_code.h"
 
 typedef struct ag_glview {

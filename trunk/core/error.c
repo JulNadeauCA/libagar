@@ -41,7 +41,7 @@
 #include <pthread.h>
 #endif
 
-#include <engine/error/error.h>
+#include <core/error.h>
 
 #ifdef THREADS
 pthread_key_t error_key;

@@ -35,34 +35,26 @@
 #include <compat/setenv.h>
 #include <compat/strlcat.h>
 
-#include <engine/engine.h>
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/typesw.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
+#include <core/typesw.h>
 
-#ifdef MAP
-#include <engine/map/map.h>
-#endif
-
-#ifdef EDITION
-#include <engine/map/mapedit.h>
-#endif
-
-#ifdef NETWORK
-#include <engine/rcs.h>
-#endif
-
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/keycodes.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/cursors.h>
+#include <gui/primitive.h>
+#include <gui/cursors.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+
+#ifdef MAP
+#include <game/map/map.h>
+#endif
+#ifdef EDITION
+#include <game/map/mapedit.h>
+#endif
+#ifdef NETWORK
+#include <core/rcs.h>
+#endif
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
 #endif
@@ -210,7 +202,7 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
 	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
-	AG_WireGfx(&agIconMgr, "/engine/icons/icons");
+	AG_WireGfx(&agIconMgr, "/core-icons");
 	return (0);
 }
 

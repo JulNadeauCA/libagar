@@ -1,7 +1,7 @@
 /*	$Csoft: keysyms.c,v 1.2 2005/02/03 02:15:10 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 const char *agKeySyms[] = {
 	NULL,	

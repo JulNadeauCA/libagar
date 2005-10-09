@@ -4,7 +4,7 @@
 #ifndef _AGAR_VG_DRAWING_H_
 #define _AGAR_VG_DRAWING_H_
 
-#include <engine/vg/vg.h>
+#include <agar/vg/vg.h>
 
 #include "begin_code.h"
 

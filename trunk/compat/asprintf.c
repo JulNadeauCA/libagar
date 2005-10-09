@@ -30,7 +30,7 @@
 
 #ifndef HAVE_ASPRINTF
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "asprintf.h"
 
 #include <stdio.h>

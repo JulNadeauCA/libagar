@@ -26,21 +26,21 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapedit.h>
-#include <engine/map/mapview.h>
+#include <game/map/map.h>
+#include <game/map/mapedit.h>
+#include <game/map/mapview.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/mfspinbutton.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/statusbar.h>
-#include <engine/widget/combo.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/spinbutton.h>
+#include <gui/fspinbutton.h>
+#include <gui/mfspinbutton.h>
+#include <gui/toolbar.h>
+#include <gui/statusbar.h>
+#include <gui/combo.h>
 
 #include <errno.h>
 #include <stdarg.h>

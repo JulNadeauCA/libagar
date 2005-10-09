@@ -26,19 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #ifdef HAVE_OPENGL
 
-#include <engine/config.h>
-#include <engine/view.h>
+#include <core/config.h>
+#include <core/view.h>
 
 #include <stdarg.h>
 
 #include "glview.h"
 
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
 
 const AG_WidgetOps agGLViewOps = {
 	{

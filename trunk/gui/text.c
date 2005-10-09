@@ -27,24 +27,24 @@
  */
 
 #include <config/have_freetype.h>
+#include <config/have_opengl.h>
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/config.h>
-
+#include <core/core.h>
+#include <core/view.h>
+#include <core/config.h>
 #ifdef HAVE_FREETYPE
-#include <engine/loader/ttf.h>
+#include <core/loaders/ttf.h>
 #endif
 
-#include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/box.h>
-#include <engine/widget/label.h>
-#include <engine/widget/bitmap.h>
-#include <engine/widget/button.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/keycodes.h>
+#include <gui/window.h>
+#include <gui/vbox.h>
+#include <gui/box.h>
+#include <gui/label.h>
+#include <gui/button.h>
+#include <gui/fspinbutton.h>
+#include <gui/textbox.h>
+#include <gui/keycodes.h>
+#include <gui/unicode.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -251,8 +251,9 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 		ucs[0] = ch;
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
+#ifdef HAVE_OPENGL
 		gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
-	
+#endif
 		gl->nrefs = 1;
 		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
 	} else {

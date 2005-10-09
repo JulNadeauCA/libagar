@@ -26,15 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/view.h>
-
+#include <core/core.h>
 #include "map.h"
-
-#include <string.h>
 
 AG_NodeMask *
 AG_NodeMaskNew(enum ag_nodemask_type type)

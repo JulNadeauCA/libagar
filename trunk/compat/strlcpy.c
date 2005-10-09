@@ -21,7 +21,7 @@
 
 #ifndef HAVE_STRLCPY
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "strlcpy.h"
 
 /*

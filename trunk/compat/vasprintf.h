@@ -1,9 +1,9 @@
 /*	$Csoft: vasprintf.h,v 1.8 2004/02/26 06:27:10 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_vasprintf.h>
-#include <config/have_format_attribute.h>
-#include <config/have_nonnull_attribute.h>
+#include <agar/config/have_vasprintf.h>
+#include <agar/config/have_format_attribute.h>
+#include <agar/config/have_nonnull_attribute.h>
 
 #ifndef FORMAT_ATTRIBUTE
 # ifdef HAVE_FORMAT_ATTRIBUTE

@@ -26,25 +26,25 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/config.h>
+#include <core/core.h>
+#include <core/view.h>
+#include <core/config.h>
 
 #include <config/have_freetype.h>
 #include <config/utf8.h>
 
 #ifdef HAVE_FREETYPE
-#include <engine/loader/ttf.h>
+#include <core/loaders/ttf.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #endif
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/keycodes.h>
-#include <engine/widget/primitive.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/textbox.h>
+#include <gui/keycodes.h>
+#include <gui/primitive.h>
 
 #include <string.h>
 #include <stdarg.h>

@@ -27,7 +27,7 @@
 #include <config/have_sha1.h>
 
 #ifndef HAVE_SHA1
-#include <engine/engine.h>
+#include <core/core.h>
 #include <string.h>
 #include <compat/sha1.h>
 

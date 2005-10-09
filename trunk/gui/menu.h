@@ -4,9 +4,9 @@
 #ifndef _AGAR_WIDGET_MENU_H_
 #define _AGAR_WIDGET_MENU_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/toolbar.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/window.h>
+#include <agar/gui/toolbar.h>
 
 #include "begin_code.h"
 

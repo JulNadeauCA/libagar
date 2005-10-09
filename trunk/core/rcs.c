@@ -26,8 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/typesw.h>
+#include <core/core.h>
+#include <core/typesw.h>
 
 #include <compat/md5.h>
 #include <compat/sha1.h>
@@ -36,9 +36,9 @@
 #include <config/network.h>
 #include <config/version.h>
 
-#include <engine/widget/text.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/tableview.h>
+#include <gui/text.h>
+#include <gui/tlist.h>
+#include <gui/tableview.h>
 
 #include "rcs.h"
 

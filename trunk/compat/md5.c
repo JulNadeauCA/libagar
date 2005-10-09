@@ -31,7 +31,7 @@
 #include <config/have_md5.h>
 
 #ifndef HAVE_MD5
-#include <engine/engine.h>
+#include <core/core.h>
 #include <string.h>
 #include <compat/md5.h>
 

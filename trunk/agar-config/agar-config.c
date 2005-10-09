@@ -31,6 +31,7 @@
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
 #include <config/incldir.h>
+#include <config/inclpdir.h>
 #include <config/libdir.h>
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
@@ -99,7 +100,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--localedir") == 0) {
 			printf("%s\n", LOCALEDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
-			printf("-I%s ", INCLDIR);
+			printf("-I%s ", INCLPDIR);
 #ifdef SDL_CFLAGS
 			printf("%s ", SDL_CFLAGS);
 #endif
@@ -127,11 +128,12 @@ main(int argc, char *argv[])
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lengine -lerror -lmonitor -lmap "
-			       "-lspace -lrg -lvg -lwidget -lunicode -lloader "
-			       "-lcompat -lmat ");
+			printf("-lag_core -lag_core_monitor -lag_game "
+			       "-lag_game_map -lag_rg -lag_vg -lag_gui "
+			       "-lag_core_loaders "
+			       "-lag_compat -lag_mat ");
 #if defined(ENABLE_NLS) && !defined(__linux__) /* XXX */
-			printf("-lbsd_intl ");
+			printf("-lag_intl ");
 #endif
 #ifdef SDL_LIBS
 			printf("%s ", SDL_LIBS);

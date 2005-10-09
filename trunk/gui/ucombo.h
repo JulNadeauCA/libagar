@@ -4,10 +4,10 @@
 #ifndef _AGAR_WIDGET_UCOMBO_H_
 #define _AGAR_WIDGET_UCOMBO_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/button.h>
-#include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/button.h>
+#include <agar/gui/window.h>
+#include <agar/gui/tlist.h>
 
 #include "begin_code.h"
 

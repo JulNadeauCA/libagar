@@ -4,11 +4,11 @@
 #ifndef _AGAR_WIDGET_MFSPINBUTTON_H_
 #define _AGAR_WIDGET_MFSPINBUTTON_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/ucombo.h>
-#include <engine/widget/units.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/button.h>
+#include <agar/gui/ucombo.h>
+#include <agar/gui/units.h>
 
 #include "begin_code.h"
 

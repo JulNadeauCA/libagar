@@ -33,11 +33,11 @@
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm engine
-.Nd agar engine initialization and globals
+.Nm core
+.Nd agar core initialization and globals
 .Sh SYNOPSIS
 .Bd -literal
-#include <engine/engine.h>
+#include <core/core.h>
 .Ed
 .Sh DESCRIPTION
 .Pp
@@ -47,102 +47,79 @@ mode, the font engine and the attachment of input devices.
 .Pp
 .nr nS 1
 .Ft "int"
-.Fn engine_preinit "const char *progname"
+.Fn AG_InitCore "const char *progname" "u_int flags"
 .Pp
 .Ft "int"
-.Fn engine_init "void"
+.Fn AG_InitVideo "int w" "int h" "int depth" "u_int flags"
+.Pp
+.Ft "int"
+.Fn AG_InitInput "u_int flags"
+.Pp
+.Ft "int"
+.Fn AG_InitNetwork "u_int flags"
+.Pp
+.Ft "int"
+.Fn AG_InitConfigWin "u_int flags"
+.Pp
+.Ft "void"
+.Fn AG_AtExitFunc "void (*fn)(void)"
+.Pp
+.Ft "void"
+.Fn AG_Quit "void"
+.Pp
+.Ft "void"
+.Fn AG_destroy "void"
 .nr nS 0
 .Pp
 The
-.Fn engine_preinit
+.Fn AG_InitCore
 function initializes Agar's internal data structures as well as SDL.
-Agar applications should invoke
-.Fn engine_preinit
-first, with the name of the application as the
+It must be called before any other Agar function.
+The
 .Fa progname
-argument.
-By default, Agar will use
+argument specifies the name of the program.
+The application's data files will be stored in the
 .Pa ~/.<progname>
-for the application's data files.
+directory.
+This is the only initialization function which is required, the other
+.Fn AG_Init*
+functions are optional.
 .Pp
 The
-.Fn engine_init
-function sets the video mode, initializes the font engine and input devices.
+.Fn AG_InitVideo
+function sets the video mode, initializes the font engine and GUI.
 .Pp
-Between the calls to
-.Fn engine_init
-and
-.Fn engine_preinit ,
-several parameters may be set, such as the font engine, the font directory,
-the default font and the graphic mode to use.
-.Sh INCLUDE FILES
 The
-.Pa Aq compat/*.h
-and
-.Pa Aq config/*.h
-includes should come first, followed by
-.Pa Aq engine/engine.h ,
-which itself includes:
+.Fn AG_InitInput
+function initializes the input devices.
 .Pp
-.Bl -tag -width "<engine/loader/integral.h> " -compact
-.It Pa Aq pthread.h
-POSIX threads, if available and enabled.
-.It Pa Aq SDL.h
-Software DirectMedia Layer.
-.It Pa Aq GL/GL.h
-OpenGL interface, if available and enabled.
-.It Pa Aq compat/queue.h
-4.4BSD
-.Xr queue 3
-definitions.
-.It Pa Aq compat/strlcpy.h
-For
-.Xr strlcpy 3 .
-.It Pa Aq compat/strlcat.h
-For
-.Xr strlcat 3 .
-.It Pa Aq compat/snprintf.h
-For
-.Xr snprintf 3 .
-.It Pa Aq compat/vsnprintf.h
-For
-.Xr vsnprintf 3 .
-.It Pa Aq compat/vasprintf.h
-For
-.Xr vasprintf 3 .
-.It Pa Aq compat/asprintf.h
-For
-.Xr asprintf 3 .
-.It Pa Aq compat/strsep.h
-For
-.Xr strsep 3 .
-.It Pa Aq engine/loader/netbuf.h
-For the
-.Ft AG_Netbuf
-definition, required by load/save function prototypes.
-.It Pa Aq engine/loader/integral.h
-For saving integers.
-.It Pa Aq engine/loader/real.h
-For saving real numbers.
-.It Pa Aq engine/loader/string.h
-For saving text.
-.It Pa Aq engine/loader/version.h
-For versioning.
-.It Pa Aq engine/error/error.h
-Generic error handling.
-.It Pa Aq engine/object.h
-Generic
-.Xr AG_Object 3
-types and operations.
-.It Pa Aq engine/event.h
-For the
-.Ft union evarg
-definition and generic
-.Xr event 3
-handling.
-.El
+The
+.Fn AG_InitNetwork
+function initializes the network facilities, if the
+.Dv NETWORK
+option was enabled at compile-time.
+.Pp
+The
+.Fn AG_InitConfigWin
+function initializes a dialog window which can be used to modify generic
+application settings.
+.Pp
+The
+.Fn AG_AtExitFunc
+registers a function that will be invoked automatically by
+.Fn AG_Destroy .
+.Pp
+The
+.Fn AG_Quit
+function is used to normally terminate the application by pushing an
+.Dv SDL_QUIT
+event onto the event queue.
+.Pp
+The
+.Fn AG_Destroy
+function immediately frees all resources allocated by Agar.
 .Sh SEE ALSO
-.Xr AG_Object 3 ,
+.Xr object 3 ,
 .Xr input 3 ,
 .Xr map 3 ,
 .Xr view 3 ,

@@ -28,7 +28,7 @@
 
 #include <config/have_ieee754.h>
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #include <fcntl.h>
 #include <stdarg.h>

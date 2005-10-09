@@ -26,14 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "toolbar.h"
 
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
-#include <engine/widget/separator.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
+#include <gui/separator.h>
 
 #include <stdarg.h>
 #include <string.h>

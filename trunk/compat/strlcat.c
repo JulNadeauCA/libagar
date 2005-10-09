@@ -21,7 +21,7 @@
 
 #ifndef HAVE_STRLCAT
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "strlcat.h"
 
 #include <string.h>

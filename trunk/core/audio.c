@@ -26,11 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/config.h>
+#include <core/core.h>
+#include <core/config.h>
 
-#include <engine/loader/den.h>
-#include <engine/loader/xcf.h>
+#include <core/loaders/den.h>
+#include <core/loaders/xcf.h>
 
 #include <string.h>
 

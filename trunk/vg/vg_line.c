@@ -26,14 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
 #ifdef EDITION
-#include <engine/map/mapview.h>
-#include <engine/map/tool.h>
+#include <game/map/mapview.h>
+#include <game/map/tool.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/radio.h>
+#include <gui/window.h>
+#include <gui/radio.h>
 #endif
 
 #include "vg.h"

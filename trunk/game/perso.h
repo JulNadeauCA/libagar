@@ -4,7 +4,7 @@
 #ifndef _AGAR_PERSO_H_
 #define _AGAR_PERSO_H_
 
-#include <engine/actor.h>
+#include <agar/game/actor.h>
 
 #include "begin_code.h"
 

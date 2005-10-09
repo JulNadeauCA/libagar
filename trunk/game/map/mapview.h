@@ -4,13 +4,11 @@
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
 #define _AGAR_MAPEDIT_MAPVIEW_H_
 
-#include <engine/map/map.h>
-#include <engine/map/mapedit.h>
-#include <engine/map/tool.h>
-
-#include <engine/actor.h>
-
-#include <engine/widget/widget.h>
+#include <agar/game/map/map.h>
+#include <agar/game/map/mapedit.h>
+#include <agar/game/map/tool.h>
+#include <agar/game/actor.h>
+#include <agar/gui/widget.h>
 
 #include "begin_code.h"
 

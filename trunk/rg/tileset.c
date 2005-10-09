@@ -26,24 +26,22 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
+#include <game/map/map.h>
 
-#include <engine/loader/tmp.h>
-
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/button.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/combo.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/tlist.h>
+#include <gui/button.h>
+#include <gui/textbox.h>
+#include <gui/mspinbutton.h>
+#include <gui/checkbox.h>
+#include <gui/menu.h>
+#include <gui/notebook.h>
+#include <gui/radio.h>
+#include <gui/combo.h>
 
 #include "tileset.h"
 

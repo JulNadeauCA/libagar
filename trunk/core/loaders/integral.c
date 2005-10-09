@@ -26,17 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/error/error.h>
+#include <core/error.h>
 
 #include <sys/types.h>
+
 #include <SDL_types.h>
-
-#include <stdio.h>
-
-#include <engine/loader/netbuf.h>
-#include <engine/loader/integral.h>
-
 #include <SDL_endian.h>
+
+#include <core/loaders/netbuf.h>
+#include <core/loaders/integral.h>
 
 Uint8
 AG_ReadUint8(AG_Netbuf *buf)

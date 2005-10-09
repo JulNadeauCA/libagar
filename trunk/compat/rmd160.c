@@ -32,7 +32,7 @@
 #include <config/have_rmd160.h>
 
 #ifndef HAVE_RMD160
-#include <engine/engine.h>
+#include <core/core.h>
 #include <string.h>
 #include <compat/rmd160.h>
 

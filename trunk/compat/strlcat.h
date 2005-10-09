@@ -1,8 +1,8 @@
 /*	$Csoft: strlcat.h,v 1.7 2004/02/26 06:27:10 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <config/have_strlcat.h>
-#include <config/have_bounded_attribute.h>
+#include <agar/config/have_strlcat.h>
+#include <agar/config/have_bounded_attribute.h>
 
 #ifndef BOUNDED_ATTRIBUTE
 # ifdef HAVE_BOUNDED_ATTRIBUTE

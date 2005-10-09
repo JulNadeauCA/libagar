@@ -29,7 +29,7 @@
 
 #ifndef HAVE_ARC4RANDOM
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "arc4random.h"
 
 #include <fcntl.h>

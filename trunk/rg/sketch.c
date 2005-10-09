@@ -26,19 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <core/core.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/hsvpal.h>
-#include <engine/widget/fspinbutton.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/combo.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/units.h>
-#include <engine/widget/radio.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/hsvpal.h>
+#include <gui/fspinbutton.h>
+#include <gui/spinbutton.h>
+#include <gui/mspinbutton.h>
+#include <gui/checkbox.h>
+#include <gui/combo.h>
+#include <gui/notebook.h>
+#include <gui/units.h>
+#include <gui/radio.h>
 
 #include "tileset.h"
 #include "tileview.h"

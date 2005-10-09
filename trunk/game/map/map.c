@@ -26,43 +26,42 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/config.h>
-#include <engine/view.h>
-#include <engine/objmgr.h>
-#include <engine/actor.h>
+#include <core/core.h>
+#include <core/config.h>
+#include <core/view.h>
+#include <core/objmgr.h>
+
+#include <game/actor.h>
 
 #include "map.h"
 #include "tool.h"
 #include "insert.h"
-
 #include "tools.h"
 
 #ifdef EDITION
-#include <engine/map/mapedit.h>
-#include <engine/map/mapview.h>
+#include "mapedit.h"
+#include "mapview.h"
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/box.h>
-#include <engine/widget/label.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/combo.h>
-#include <engine/widget/toolbar.h>
-#include <engine/widget/statusbar.h>
-#include <engine/widget/button.h>
-#include <engine/widget/menu.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/mspinbutton.h>
-#include <engine/widget/notebook.h>
-#include <engine/widget/scrollbar.h>
-#include <engine/widget/hpane.h>
-#include <engine/widget/vpane.h>
-#include <engine/widget/separator.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/checkbox.h>
+#include <gui/box.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/toolbar.h>
+#include <gui/statusbar.h>
+#include <gui/textbox.h>
+#include <gui/menu.h>
+#include <gui/spinbutton.h>
+#include <gui/mspinbutton.h>
+#include <gui/notebook.h>
+#include <gui/scrollbar.h>
+#include <gui/hpane.h>
+#include <gui/vpane.h>
+#include <gui/separator.h>
 #endif
 
 #include <string.h>
@@ -2819,7 +2818,6 @@ map_edit(void *p)
 	AG_Toolbar *toolbar;
 	AG_Statusbar *statbar;
 	AG_Scrollbar *hbar, *vbar;
-	AG_Combo *com;
 	AG_Mapview *mv;
 	AG_Menu *menu;
 	AG_MenuItem *pitem;
@@ -2972,7 +2970,6 @@ map_edit(void *p)
 		ntab = AG_NotebookAddTab(nb, _("Layers"), AG_BOX_VERT);
 		{
 			AG_Textbox *tb;
-			AG_Button *bu;
 
 			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL);
 			AG_TlistSetItemHeight(mv->layers_tl, AGTILESZ);

@@ -26,15 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/error/error.h>
-#include <engine/error/malloc.h>
+#include <core/error.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
-#include <engine/loader/netbuf.h>
+#include <core/loaders/netbuf.h>
 
 AG_Netbuf *
 AG_NetbufOpen(const char *path, const char *mode,

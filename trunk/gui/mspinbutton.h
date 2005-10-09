@@ -4,9 +4,9 @@
 #ifndef _AGAR_WIDGET_MSPINBUTTON_H_
 #define _AGAR_WIDGET_MSPINBUTTON_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/textbox.h>
+#include <agar/gui/button.h>
 
 #include "begin_code.h"
 

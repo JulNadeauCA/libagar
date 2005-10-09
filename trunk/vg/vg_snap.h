@@ -4,7 +4,8 @@
 #ifndef _AGAR_VG_SNAP_H_
 #define _AGAR_VG_SNAP_H_
 
-#include <engine/widget/toolbar.h>
+#include <agar/gui/toolbar.h>
+
 #include "begin_code.h"
 
 enum vg_snap_mode {
@@ -24,7 +25,7 @@ __BEGIN_DECLS
 void		 VG_SnapPoint(struct vg *, double *, double *);
 __inline__ void	 VG_SetSnapMode(struct vg *, enum vg_snap_mode);
 __inline__ void	 VG_DrawGrid(struct vg *);
-AG_Toolbar	*VG_SnapToolbar(void *, struct vg *, enum ag_toolbar_type);
+struct ag_toolbar *VG_SnapToolbar(void *, struct vg *, enum ag_toolbar_type);
 
 #ifdef EDITION
 struct ag_menu;

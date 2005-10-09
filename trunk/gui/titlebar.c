@@ -26,11 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
 
 #include <string.h>
 
@@ -98,7 +98,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_WFILL);
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
-	AG_WireGfx(tbar, "/engine/widget/pixmaps");
+	AG_WireGfx(tbar, "/gui-pixmaps");
 
 	AG_BoxSetPadding(&tbar->hb, 5);
 	AG_BoxSetSpacing(&tbar->hb, 0);

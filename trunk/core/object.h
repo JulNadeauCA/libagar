@@ -4,15 +4,15 @@
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
-#define AG_OBJECT_TYPE_MAX	32
-#define AG_OBJECT_NAME_MAX	128
-#define AG_OBJECT_PATH_MAX	1024
+#define AG_OBJECT_TYPE_MAX 32
+#define AG_OBJECT_NAME_MAX 128
+#define AG_OBJECT_PATH_MAX 1024
 #define AG_OBJECT_DIGEST_MAX 170
 
-#include <engine/timeout.h>
-#include <engine/prop.h>
-#include <engine/gfx.h>
-#include <engine/audio.h>
+#include <agar/core/timeout.h>
+#include <agar/core/prop.h>
+#include <agar/core/gfx.h>
+#include <agar/core/audio.h>
 
 #include "begin_code.h"
 

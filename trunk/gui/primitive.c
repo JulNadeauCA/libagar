@@ -26,14 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/label.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/primitive.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/primitive.h>
 
 AG_PrimitiveOps agPrim;
 

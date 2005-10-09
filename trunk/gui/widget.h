@@ -4,11 +4,11 @@
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
 
-#include <config/have_opengl.h>
+#include <agar/config/have_opengl.h>
 
-#include <engine/widget/style.h>
-#include <engine/widget/colors.h>
-#include <engine/view.h>
+#include <agar/gui/style.h>
+#include <agar/gui/colors.h>
+#include <agar/core/view.h>
 
 #include "begin_code.h"
 

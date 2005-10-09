@@ -26,20 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/prop.h>
-#include <engine/objmgr.h>
+#include <core/core.h>
+#include <core/objmgr.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/box.h>
-#include <engine/widget/button.h>
-#include <engine/widget/checkbox.h>
-#include <engine/widget/spinbutton.h>
-#include <engine/widget/mspinbutton.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/checkbox.h>
+#include <gui/spinbutton.h>
+#include <gui/mspinbutton.h>
 
 #include "map.h"
 #include "mapedit.h"

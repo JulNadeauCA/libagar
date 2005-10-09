@@ -26,17 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/map.h>
 #ifdef MAP
 
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <engine/map/map.h>
-#include <engine/map/mapview.h>
+#include <game/map/map.h>
+#include <game/map/mapview.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include <gui/window.h>
 
 #include "tool.h"
 

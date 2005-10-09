@@ -30,7 +30,7 @@
 
 #ifndef HAVE_GETHOSTNAME
 
-#include <engine/engine.h>
+#include <core/core.h>
 #include "gethostname.h"
 
 int

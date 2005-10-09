@@ -26,13 +26,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "menu.h"
 
-#include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
 
 static AG_WidgetOps agMenuViewOps = {
 	{
@@ -272,7 +272,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 
 	AG_WidgetInit(mview, "AGMenuView", &agMenuViewOps,
 	    AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP);
-	AG_WireGfx(mview, "/engine/widget/pixmaps");
+	AG_WireGfx(mview, "/gui-pixmaps");
 
 	mview->panel = panel;
 	mview->pmenu = pmenu;

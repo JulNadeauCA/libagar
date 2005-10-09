@@ -4,8 +4,8 @@
 #ifndef _AGAR_WIDGET_OBJSEL_H_
 #define _AGAR_WIDGET_OBJSEL_H_
 
-#include <engine/widget/widget.h>
-#include <engine/widget/combo.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/combo.h>
 
 #include "begin_code.h"
 
