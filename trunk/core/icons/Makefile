@@ -14,7 +14,6 @@ XCF=	map-edition.xcf \
 	symbols.xcf
 
 DEN=		icons.den
-DEN_DIR=	engine/icons
 DEN_NAME=	"Agar GUI icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc"
