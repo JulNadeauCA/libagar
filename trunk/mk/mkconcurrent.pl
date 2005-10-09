@@ -82,6 +82,7 @@ sub ConvertMakefile
 	print DSTMAKEFILE '# $Csoft: mkconcurrent.pl,v 1.21 2004/04/26 02:36:16 vedge Exp $', "\n";
 	print DSTMAKEFILE "SRC=$SRC\n";
 	print DSTMAKEFILE "BUILD=$BUILD\n";
+	print DSTMAKEFILE "BUILDREL=$dir\n";
 	print DSTMAKEFILE "\n";
 
 	my @deps = ();

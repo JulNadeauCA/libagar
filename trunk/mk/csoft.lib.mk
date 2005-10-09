@@ -306,7 +306,8 @@ install-lib:
 	    if [ "${SRC}" != "" ]; then \
                 for F in $$_sharesrc; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                    ${SUDO} ${INSTALL_DATA} ${SRC}/$$F ${SHAREDIR}; \
+                    ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
+		    ${SHAREDIR}; \
                 done; \
 	    else \
                 for F in $$_sharesrc; do \
