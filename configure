@@ -288,6 +288,12 @@ INCLDIR="\"$PREFIX/include/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif /* INCLDIR */" >> config/incldir.h
+INCLPDIR="$PREFIX/include"
+echo "INCLPDIR=$INCLPDIR" >> Makefile.config
+INCLPDIR="\"$PREFIX/include\""
+echo "#ifndef INCLPDIR" > config/inclpdir.h
+echo "#define INCLPDIR" $INCLPDIR >> config/inclpdir.h
+echo "#endif /* INCLPDIR */" >> config/inclpdir.h
 MANDIR="$PREFIX/share/agar/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
 PSDIR="$PREFIX/share/agar/ps"
