@@ -120,9 +120,7 @@ int		 AG_CancelEvent(void *, const char *);
 __inline__ void	 AG_ExecEvent(void *, const char *);
 void		 AG_ForwardEvent(void *, AG_Event *);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
-#ifdef DEBUG
 struct ag_window *AG_EventShowPerfGraph(void);
-#endif
 __END_DECLS
 
 #ifdef DEBUG
