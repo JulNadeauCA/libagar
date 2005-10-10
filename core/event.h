@@ -121,6 +121,7 @@ __inline__ void	 AG_ExecEvent(void *, const char *);
 void		 AG_ForwardEvent(void *, AG_Event *);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 struct ag_window *AG_EventShowPerfGraph(void);
+__inline__ Uint8 AG_MouseGetState(int *, int *);
 __END_DECLS
 
 #ifdef DEBUG

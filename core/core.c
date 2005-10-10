@@ -237,19 +237,6 @@ AG_InitInput(u_int flags)
 	return (0);
 }
 
-Uint8
-AG_MouseGetState(int *x, int *y)
-{
-	Uint8 rv;
-
-	rv = SDL_GetMouseState(x, y);
-#if defined(__APPLE__) && defined(HAVE_OPENGL)
-	if (agView->opengl && y != NULL)
-		*y = agView->h - *y;
-#endif
-	return (rv);
-}
-
 int
 AG_InitNetwork(u_int flags)
 {
