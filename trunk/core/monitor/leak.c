@@ -64,7 +64,8 @@ static const char *mement_names[] = {
 	"cad",
 	"eda",
 	"game",
-	"math"
+	"math",
+	"sg"
 };
 
 static char *

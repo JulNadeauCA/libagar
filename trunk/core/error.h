@@ -100,6 +100,7 @@ enum {
 	M_EDA,		/* eda applications */
 	M_GAME,		/* game applications */
 	M_MATH,		/* math routines */
+	M_SG,		/* scene graph */
 	M_LAST
 };
 
