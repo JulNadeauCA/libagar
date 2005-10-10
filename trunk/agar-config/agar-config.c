@@ -129,7 +129,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lag_core -lag_core_monitor -lag_game_map "
-			       "-lag_game -lag_rg -lag_vg -lag_gui "
+			       "-lag_game -lag_rg -lag_vg -lag_sg -lag_gui "
 			       "-lag_core_loaders "
 			       "-lag_compat -lag_mat ");
 #if defined(ENABLE_NLS) && !defined(__linux__) /* XXX */
