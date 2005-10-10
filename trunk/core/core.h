@@ -147,7 +147,6 @@ int	 AG_InitVideo(int, int, int, u_int);
 int	 AG_InitInput(u_int);
 int	 AG_InitNetwork(u_int);
 int	 AG_InitConfigWin(u_int);
-Uint8	 AG_MouseGetState(int *, int *);
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_Quit(void);
 void	 AG_Destroy(void);

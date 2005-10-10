@@ -29,6 +29,8 @@
 #include <config/threads.h>
 #include <config/have_opengl.h>
 
+/* #define OPENGL_INVERTED_Y */
+
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
@@ -245,6 +247,19 @@ unminimize_window(AG_Event *event)
 	}
 }
 
+Uint8
+AG_MouseGetState(int *x, int *y)
+{
+	Uint8 rv;
+
+	rv = SDL_GetMouseState(x, y);
+#ifdef OPENGL_INVERTED_Y
+	if (agView->opengl && y != NULL)
+		*y = agView->h - *y;
+#endif
+	return (rv);
+}
+
 static void
 AG_EventProcess(SDL_Event *ev)
 {
@@ -263,7 +278,7 @@ AG_EventProcess(SDL_Event *ev)
 		AG_ViewVideoExpose();
 		break;
 	case SDL_MOUSEMOTION:
-#if defined(__APPLE__) && defined(HAVE_OPENGL)
+#ifdef OPENGL_INVERTED_Y
 		if (agView->opengl) {
 			ev->motion.y = agView->h - ev->motion.y;
 			ev->motion.yrel = -ev->motion.yrel;
@@ -273,7 +288,7 @@ AG_EventProcess(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-#if defined(__APPLE__) && defined(HAVE_OPENGL)
+#ifdef OPENGL_INVERTED_Y
 		if (agView->opengl)
 			ev->button.y = agView->h - ev->button.y;
 #endif
