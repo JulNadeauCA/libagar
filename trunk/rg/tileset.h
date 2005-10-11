@@ -44,12 +44,13 @@ typedef struct rg_tileset {
 #define RG_TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
 
 __BEGIN_DECLS
-void		 RG_TilesetInit(void *, const char *);
-void		 RG_TilesetReinit(void *);
-void		 RG_TilesetDestroy(void *);
-int		 RG_TilesetLoad(void *, AG_Netbuf *);
-int		 RG_TilesetSave(void *, AG_Netbuf *);
-void		*RG_TilesetEdit(void *);
+void	 AG_InitRG(void);
+void	 RG_TilesetInit(void *, const char *);
+void	 RG_TilesetReinit(void *);
+void	 RG_TilesetDestroy(void *);
+int	 RG_TilesetLoad(void *, AG_Netbuf *);
+int	 RG_TilesetSave(void *, AG_Netbuf *);
+void	*RG_TilesetEdit(void *);
 
 __inline__ int RG_TilesetInsertSprite(RG_Tileset *, SDL_Surface *);
 

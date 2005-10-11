@@ -28,6 +28,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/typesw.h>
 
 #include <game/map/map.h>
 
@@ -73,6 +74,13 @@ const RG_FeatureOps *feature_tbl[] = {
 	&rgSketchProjOps,
 	NULL
 };
+
+void
+AG_InitRG(void)
+{
+	AG_RegisterType("tileset", sizeof(RG_Tileset), &rgTilesetOps,
+	    TILESET_ICON);
+}
 
 void
 RG_TilesetInit(void *obj, const char *name)
