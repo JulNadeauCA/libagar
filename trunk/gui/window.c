@@ -146,7 +146,6 @@ AG_WindowInit(void *p, const char *name, int flags)
 	AG_WidgetInit(win, "window", &agWindowOps, 0);
 	AG_ObjectSetType(win, "window");
 	AG_ObjectSetName(win, wname);
-
 	win->flags = flags;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_CENTER;
@@ -163,16 +162,15 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->savh = -1;
 	TAILQ_INIT(&win->subwins);
 	AG_MutexInitRecursive(&win->lock);
-	
-	/* Select the default window style. */
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 	
-	/* Create the titlebar unless disabled. */
-	if (flags & AG_WINDOW_NOCLOSE)
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+	if (win->flags & AG_WINDOW_NOCLOSE)
 		titlebar_flags |= AG_TITLEBAR_NO_CLOSE;
-	if (flags & AG_WINDOW_NOMINIMIZE)
+	if (win->flags & AG_WINDOW_NOMINIMIZE)
 		titlebar_flags |= AG_TITLEBAR_NO_MINIMIZE;
-	if (flags & AG_WINDOW_NOMAXIMIZE)
+	if (win->flags & AG_WINDOW_NOMAXIMIZE)
 		titlebar_flags |= AG_TITLEBAR_NO_MAXIMIZE;
 
 	win->tbar = (flags & AG_WINDOW_NOTITLE) ? NULL :
