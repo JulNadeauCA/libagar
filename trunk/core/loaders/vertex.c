@@ -39,8 +39,6 @@ AG_WriteVertex(AG_Netbuf *buf, VG_Vtx *vtx)
 {
 	AG_WriteDouble(buf, vtx->x);
 	AG_WriteDouble(buf, vtx->y);
-	AG_WriteDouble(buf, vtx->z);
-	AG_WriteDouble(buf, vtx->w);
 }
 
 void
@@ -48,6 +46,4 @@ AG_ReadVertex(AG_Netbuf *buf, VG_Vtx *vtx)
 {
 	vtx->x = AG_ReadDouble(buf);
 	vtx->y = AG_ReadDouble(buf);
-	vtx->z = AG_ReadDouble(buf);
-	vtx->w = AG_ReadDouble(buf);
 }
