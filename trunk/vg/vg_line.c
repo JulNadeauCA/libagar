@@ -48,15 +48,15 @@ VG_DrawLineSegments(VG *vg, VG_Element *vge)
 		if (vg->flags & VG_ANTIALIAS) {
 			double x1, y1, x2, y2;
 
-			VG_VtxCoords2d(vg, &vge->vtx[i], &x1, &y1);
-			VG_VtxCoords2d(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_VtxCoords2d(vg, vge, i, &x1, &y1);
+			VG_VtxCoords2d(vg, vge, i+1, &x2, &y2);
 			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 		} else {
 			int x1, y1, x2, y2;
 
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x1, &y1);
-			VG_VtxCoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x1, &y1);
+			VG_VtxCoords2i(vg, vge, i+1, &x2, &y2);
 			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 		}
 	}
@@ -70,9 +70,9 @@ VG_DrawLineStrip(VG *vg, VG_Element *vge)
 	if (vg->flags & VG_ANTIALIAS) {
 		double x1, y1, x2, y2;
 
-		VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2d(vg, vge, 0, &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2d(vg, vge, i, &x2, &y2);
 			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 			x1 = x2;
@@ -81,9 +81,9 @@ VG_DrawLineStrip(VG *vg, VG_Element *vge)
 	} else {
 		int x1, y1, x2, y2;
 
-		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, vge, 0, &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 			x1 = x2;
 			y1 = y2;
@@ -99,11 +99,11 @@ VG_DrawLineLoop(VG *vg, VG_Element *vge)
 		double x0, y0;
 		int i;
 
-		VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2d(vg, vge, 0, &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2d(vg, vge, i, &x2, &y2);
 			VG_WuLinePrimitive(vg, x1, y1, x2, y2,
 			    vge->line_st.thickness, vge->color);
 			x1 = x2;
@@ -116,11 +116,11 @@ VG_DrawLineLoop(VG *vg, VG_Element *vge)
 		int x0, y0;
 		int i;
 
-		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, vge, 0, &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 			VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
 			x1 = x2;
 			y1 = y2;
@@ -291,9 +291,9 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 
 	switch (vge->type) {
 	case VG_LINE_STRIP:
-		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, vge, 0, &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
@@ -304,8 +304,8 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 		break;
 	case VG_LINES:
 		for (i = 0; i < vge->nvtx-1; i+=2) {
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x1, &y1);
-			VG_VtxCoords2i(vg, &vge->vtx[i+1], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x1, &y1);
+			VG_VtxCoords2i(vg, vge, i+1, &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
@@ -313,11 +313,11 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 		break;
 	case VG_LINE_LOOP:
 	case VG_POLYGON:
-		VG_VtxCoords2i(vg, &vge->vtx[0], &x1, &y1);
+		VG_VtxCoords2i(vg, vge, 0, &x1, &y1);
 		x0 = x1;
 		y0 = y1;
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, &vge->vtx[i], &x2, &y2);
+			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 
 			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
