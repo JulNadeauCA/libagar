@@ -32,6 +32,9 @@ void	   AG_PixmapScale(void *, int, int);
 
 __inline__ void AG_PixmapSetSurface(AG_Pixmap *, int);
 __inline__ void AG_PixmapSetCoords(AG_Pixmap *, int, int);
+
+#define AG_PixmapReplaceSurface(px,su)	AG_WidgetReplaceSurface((px),(px)->n,su)
+#define AG_PixmapUpdateSurface(px)	AG_WidgetUpdateSurface((px),(px)->n)
 __END_DECLS
 
 #include "close_code.h"
