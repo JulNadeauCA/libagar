@@ -6,7 +6,8 @@ include ${TOP}/Makefile.config
 SUBDIR=	gamemenu \
 	glview \
 	objmgr \
-	focusing
+	focusing \
+	vectordwg
 
 all: prereq all-subdir
 clean: prereq clean-subdir
