@@ -161,8 +161,6 @@ VG_Init(VG *vg, int flags)
 	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
 		vg->origin[i].y = 0;
-		vg->origin[i].z = 0;
-		vg->origin[i].w = 1.0;
 		vg->origin_radius[i] = 0.0625;
 		vg->origin_color[i] = SDL_MapRGB(vg->fmt, 0, 0, 180);
 	}
@@ -802,12 +800,13 @@ void
 VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, double *rx, double *ry)
 {
 	VG_Vtx c;
+	VG_Matrix m;
 	int i;
-	
+
 	c.x = vge->vtx[vi].x;
 	c.y = vge->vtx[vi].y;
 	for (i = 0; i < vge->ntrans; i++) {
-		VG_MultMatrix(&c, &c, &vge->trans[i]);
+		VG_MultMatrixByVector(&c, &c, &vge->trans[i]);
 	}
 	if (rx != NULL)	*rx = VG_RASXF(vg,c.x);
 	if (ry != NULL)	*ry = VG_RASYF(vg,c.y);
@@ -820,16 +819,11 @@ VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, double *rx, double *ry)
 void
 VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
 {
-	VG_Vtx c;
-	int i;
-	
-	c.x = VG_RASX(vg,vge->vtx[vi].x);
-	c.y = VG_RASY(vg,vge->vtx[vi].y);
-	for (i = 0; i < vge->ntrans; i++) {
-		VG_MultMatrix(&c, &c, &vge->trans[i]);
-	}
-	if (rx != NULL)	*rx = (int)c.x;
-	if (ry != NULL)	*ry = (int)c.y;
+	double x, y;
+
+	VG_VtxCoords2d(vg, vge, vi, &x, &y);
+	if (rx != NULL)	*rx = (int)x;
+	if (ry != NULL)	*ry = (int)y;
 }
 
 /*
@@ -917,40 +911,6 @@ VG_Vertex2(VG *vg, double x, double y)
 	vtx = VG_AllocVertex(vg->cur_vge);
 	vtx->x = x;
 	vtx->y = y;
-	vtx->z = 0;
-	vtx->w = 1.0;
-	VG_BlockOffset(vg, vtx);
-	vg->redraw++;
-	return (vtx);
-}
-
-/* Push a 3D vertex onto the vertex array. */
-VG_Vtx *
-VG_Vertex3(VG *vg, double x, double y, double z)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->cur_vge);
-	vtx->x = x;
-	vtx->y = y;
-	vtx->z = z;
-	vtx->w = 1.0;
-	VG_BlockOffset(vg, vtx);
-	vg->redraw++;
-	return (vtx);
-}
-
-/* Push a homogenized 3D vertex onto the vertex array. */
-VG_Vtx *
-VG_Vertex4(VG *vg, double x, double y, double z, double w)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->cur_vge);
-	vtx->x = x;
-	vtx->y = y;
-	vtx->z = z;
-	vtx->w = w;
 	VG_BlockOffset(vg, vtx);
 	vg->redraw++;
 	return (vtx);
@@ -974,15 +934,46 @@ VG_VertexV(VG *vg, const VG_Vtx *svtx, u_int nsvtx)
 }
 
 void
-VG_MultMatrix(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
+VG_MultMatrixByVector(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
 {
 	double ax = a->x;
 	double ay = a->y;
-	double az = a->z;
 
-	c->x = ax*T->m[0][0] + ay*T->m[1][0] + az*T->m[2][0] + T->m[0][3];
-	c->y = ax*T->m[0][1] + ay*T->m[1][1] + az*T->m[2][1] + T->m[1][3];
-	c->z = ax*T->m[0][2] + ay*T->m[1][2] + az*T->m[2][2] + T->m[2][3];
+	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
+	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
+}
+
+void
+VG_CopyMatrix(VG_Matrix *B, const VG_Matrix *A)
+{
+	int m, n;
+
+	for (m = 0; m < 3; m++)
+		for (n = 0; n < 3; n++)
+			B->m[m][n] = A->m[m][n];
+}
+
+void
+VG_MultMatrixByMatrix(VG_Matrix *C, const VG_Matrix *B, const VG_Matrix *A)
+{
+	VG_Matrix R;
+	int m, n;
+
+	for (m = 0; m < 3; m++) {
+		for (n = 0; n < 3; n++)
+			R.m[m][n] = B->m[m][0]*A->m[0][n] +
+			            B->m[m][1]*A->m[1][n] +
+			            B->m[m][2]*A->m[2][n];
+	}
+	VG_CopyMatrix(C, &R);
+}
+
+void
+VG_LoadIdentity(VG_Matrix *m)
+{
+	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0;
+	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0;
+	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0;
 }
 
 VG_Matrix *
@@ -991,71 +982,54 @@ VG_PushIdentity(VG *vg)
 	VG_Matrix *m;
 
 	m = VG_AllocMatrix(vg->cur_vge);
-	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = 0.0;
-	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = 0.0;
-	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = 0.0;
-	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
+	VG_LoadIdentity(m);
 	return (m);
 }
 
+void
+VG_LoadTranslate(VG_Matrix *m, double x, double y)
+{
+	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = x;
+	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = y;
+	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0;
+}
+
 VG_Matrix *
-VG_Translate2(VG *vg, double x, double y)
+VG_Translate(VG *vg, double x, double y)
 {
 	VG_Matrix *m;
 
 	m = VG_AllocMatrix(vg->cur_vge);
-	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = x;
-	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = y;
-	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = 0.0;
-	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
+	VG_LoadTranslate(m, x, y);
 	return (m);
 }
 
-VG_Matrix *
-VG_Translate3(VG *vg, double x, double y, double z)
+void
+VG_LoadRotate(VG_Matrix *m, double tdeg)
 {
-	VG_Matrix *m;
-
-	m = VG_AllocMatrix(vg->cur_vge);
-	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = x;
-	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = y;
-	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = z;
-	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
-	return (m);
-}
-
-VG_Matrix *
-VG_Rotate2(VG *vg, double tdeg)
-{
-	VG_Matrix *m;
 	double theta = (tdeg/360.0)*(2.0*M_PI);
 	double rcos = cos(theta);
 	double rsin = sin(theta);
 
-	m = VG_AllocMatrix(vg->cur_vge);
 	m->m[0][0] = +rcos;
 	m->m[0][1] = -rsin;
 	m->m[0][2] = 0.0;
-	m->m[0][3] = 0.0;
 	m->m[1][0] = +rsin;
 	m->m[1][1] = +rcos;
 	m->m[1][2] = 0.0;
-	m->m[1][3] = 0.0;
 	m->m[2][0] = 0.0;
 	m->m[2][1] = 0.0;
 	m->m[2][2] = 1.0;
-	m->m[2][3] = 0.0;
-	m->m[3][0] = 0.0;
-	m->m[3][1] = 0.0;
-	m->m[3][2] = 0.0;
-	m->m[3][3] = 1.0;
-	return (m);
 }
 
 VG_Matrix *
-VG_Rotate3(VG *vg, double theta, double x, double y, double z)
+VG_Rotate(VG *vg, double tdeg)
 {
-	return (NULL);
+	VG_Matrix *m;
+
+	m = VG_AllocMatrix(vg->cur_vge);
+	VG_LoadRotate(m, tdeg);
+	return (m);
 }
 
 /* Create a new global style. */
@@ -1188,8 +1162,8 @@ VG_SaveMatrix(VG_Matrix *A, AG_Netbuf *buf)
 {
 	int m, n;
 
-	for (m = 0; m < 4; m++) {
-		for (n = 0; n < 4; n++)
+	for (m = 0; m < 3; m++) {
+		for (n = 0; n < 3; n++)
 			AG_WriteDouble(buf, A->m[m][n]);
 	}
 }
@@ -1199,8 +1173,8 @@ VG_LoadMatrix(VG_Matrix *A, AG_Netbuf *buf)
 {
 	int m, n;
 
-	for (m = 0; m < 4; m++) {
-		for (n = 0; n < 4; n++)
+	for (m = 0; m < 3; m++) {
+		for (n = 0; n < 3; n++)
 			A->m[m][n] = AG_ReadDouble(buf);
 	}
 }
