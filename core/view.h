@@ -221,6 +221,7 @@ void			 AG_SetAlphaPixels(SDL_Surface *, Uint8);
 void			 AG_DumpSurface(SDL_Surface *, char *);
 __inline__ void		 AG_UpdateRectQ(int, int, int, int);
 void			 AG_ViewCapture(void);
+__inline__ void		 AG_FlipSurface(Uint8 *, int, int);
 
 #ifdef HAVE_OPENGL
 GLuint		 AG_SurfaceTexture(SDL_Surface *, GLfloat *);
@@ -234,8 +235,8 @@ __inline__ void	  AG_PutPixel(SDL_Surface *, Uint8 *, Uint32);
 __inline__ void	  AG_BlendPixelRGBA(SDL_Surface *, Uint8 *,
 		                    Uint8, Uint8, Uint8, Uint8,
 			  	    enum ag_blend_func);
-
-__inline__ void AG_FlipSurface(Uint8 *, int, int);
+void		  AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
+void		  AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
 __END_DECLS
 
 #include "close_code.h"

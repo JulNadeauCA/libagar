@@ -787,7 +787,7 @@ pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
+		AG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 
 	if (erase_mode) {
@@ -936,7 +936,7 @@ pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
+		AG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	fill_ortho(tv, tel, x, y, cOrig, cFill);
@@ -961,7 +961,7 @@ pixmap_randfill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		RG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
+		AG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	randfill_ortho(tv, tel, x, y, cOrig, cFill, &bit, &rand);
@@ -975,7 +975,7 @@ pixmap_pick(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	Uint8 r, g, b, a;
 
 	RG_PixmapSourceRGBA(tv, tel, x, y, &r, &g, &b, &a);
-	RG_RGB2HSV(r, g, b, &px->h, &px->s, &px->v);
+	AG_RGB2HSV(r, g, b, &px->h, &px->s, &px->v);
 	px->a = ((float)a)/255.0;
 }
 
