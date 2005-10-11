@@ -5,7 +5,8 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	gamemenu \
 	glview \
-	objmgr
+	objmgr \
+	focusing
 
 all: prereq all-subdir
 clean: prereq clean-subdir
