@@ -76,10 +76,12 @@ render(VG *vg, VG_Element *vge)
 	}
 
 	/* Find Y maxima */
-	maxy = miny = VG_RASY(vg, vge->vtx[0].y);
+	VG_VtxCoords2i(vg, vge, 0, NULL, &miny);
+	maxy = miny;
 	for (i = 1; i < vge->nvtx; i++) {
-		int vy = VG_RASY(vg, vge->vtx[i].y);
-
+		int vy;
+	
+		VG_VtxCoords2i(vg, vge, i, NULL, &vy);
 		if (vy < miny) {
 			miny = vy;
 		} else if (vy > maxy) {
@@ -98,16 +100,20 @@ render(VG *vg, VG_Element *vge)
 				ind1 = i - 1;
 				ind2 = i;
 			}
-			y1 = VG_RASY(vg, vge->vtx[ind1].y);
-			y2 = VG_RASY(vg, vge->vtx[ind2].y);
+			VG_VtxCoords2i(vg, vge, ind1, NULL, &y1);
+			VG_VtxCoords2i(vg, vge, ind2, NULL, &y2);
 			if (y1 < y2) {
-				x1 = VG_RASX(vg, vge->vtx[ind1].x);
-				x2 = VG_RASX(vg, vge->vtx[ind2].x);
+				VG_VtxCoords2i(vg, vge, ind1, &x1, NULL);
+				VG_VtxCoords2i(vg, vge, ind2, &x2, NULL);
+//				x1 = VG_RASX(vg, vge->vtx[ind1].x);
+//				x2 = VG_RASX(vg, vge->vtx[ind2].x);
 			} else if (y1 > y2) {
-				y2 = VG_RASY(vg, vge->vtx[ind1].y);
-				y1 = VG_RASY(vg, vge->vtx[ind2].y);
-				x2 = VG_RASX(vg, vge->vtx[ind1].x);
-				x1 = VG_RASX(vg, vge->vtx[ind2].x);
+				VG_VtxCoords2i(vg, vge, ind1, &x2, &y2);
+				VG_VtxCoords2i(vg, vge, ind2, &x1, &y1);
+//				y2 = VG_RASY(vg, vge->vtx[ind1].y);
+//				y1 = VG_RASY(vg, vge->vtx[ind2].y);
+//				x2 = VG_RASX(vg, vge->vtx[ind1].x);
+//				x1 = VG_RASX(vg, vge->vtx[ind2].x);
 			} else {
 				continue;
 			}
