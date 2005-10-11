@@ -130,7 +130,7 @@ update_pixel_from_hsva(AG_HSVPal *pal)
 	v = AG_WidgetFloat(pal, "value");
 	a = get_alpha8(pal);
 	
-	RG_HSV2RGB(h, s, v, &r, &g, &b);
+	AG_HSV2RGB(h, s, v, &r, &g, &b);
 	
 	if ((bRGBv = AG_WidgetGetBinding(pal, "RGBv", &pRGBv)) != NULL) {
 		if (bRGBv->vtype == AG_WIDGET_FLOAT) {
@@ -200,7 +200,7 @@ update_hsv_from_pixel(AG_HSVPal *hsv, Uint32 pixel)
 	
 	bFormat = AG_WidgetGetBinding(hsv, "pixel-format", &pFormat);
 	SDL_GetRGBA(pixel, *pFormat, &r, &g, &b, &a);
-	RG_RGB2HSV(r, g, b, &h, &s, &v);
+	AG_RGB2HSV(r, g, b, &h, &s, &v);
 	AG_WidgetSetFloat(hsv, "hue", h);
 	AG_WidgetSetFloat(hsv, "saturation", s);
 	AG_WidgetSetFloat(hsv, "value", v);
@@ -317,8 +317,7 @@ show_rgb(AG_Event *event)
 	s = AG_WidgetFloat(pal, "saturation");
 	v = AG_WidgetFloat(pal, "value");
 
-	RG_HSV2RGB(h, s, v, &r, &g, &b);
-
+	AG_HSV2RGB(h, s, v, &r, &g, &b);
 	AG_TextMsg(AG_MSG_INFO, "%.2f,%.2f,%.2f -> %u,%u,%u", h, s, v, r, g, b);
 }
 
@@ -626,7 +625,7 @@ render_palette(AG_HSVPal *pal)
 
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*M_PI; h += pal->circle.dh) {
-		RG_HSV2RGB((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
+		AG_HSV2RGB((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
 		pc = SDL_MapRGB(agVideoFmt, r, g, b);
 
 		for (i = 0; i < pal->circle.width; i++) {
@@ -646,7 +645,7 @@ render_palette(AG_HSVPal *pal)
 		            (float)(pal->triangle.h);
 
 		for (x = 0; x < y; x++) {
-			RG_HSV2RGB((cur_h/(2*M_PI))*360.0, sat,
+			AG_HSV2RGB((cur_h/(2*M_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
 			pc = SDL_MapRGB(agVideoFmt, r, g, b);
@@ -680,7 +679,7 @@ render_palette(AG_HSVPal *pal)
 			SDL_FillRect(pal->surface, &rd, pal->cTile);
 		}
 	}
-	RG_HSV2RGB((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
+	AG_HSV2RGB((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
 	da = MIN(1, pal->surface->w/255);
 	for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
 		for (x = 0, a = 0; x < pal->surface->w; x++) {
@@ -776,7 +775,7 @@ AG_HSVPalDraw(void *p)
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
 
 	/* Draw the color preview. */
-	RG_HSV2RGB((cur_h*360.0)/(2*M_PI), cur_s, cur_v, &r, &g, &b);
+	AG_HSV2RGB((cur_h*360.0)/(2*M_PI), cur_s, cur_v, &r, &g, &b);
 	agPrim.rect_filled(pal,
 	    pal->rAlpha.x, pal->rAlpha.y,
 	    pal->rAlpha.w, 8,

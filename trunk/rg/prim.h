@@ -15,9 +15,6 @@ enum rg_prim_blend_mode {
 };
 
 __BEGIN_DECLS
-void RG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
-void RG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
-
 void RG_ColorRGB(struct rg_tile *, Uint8, Uint8, Uint8);
 void RG_ColorRGBA(struct rg_tile *, Uint8, Uint8, Uint8, Uint8);
 void RG_ColorHSV(struct rg_tile *, float, float, float);

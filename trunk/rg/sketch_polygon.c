@@ -204,7 +204,7 @@ mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 			pt->seq = CONTINUE_POLYGON;
 			tv->flags |= RG_TILEVIEW_NO_SCROLLING;
 	
-			RG_HSV2RGB(sk->h, sk->s, sk->v, &r, &g, &b);
+			AG_HSV2RGB(sk->h, sk->s, sk->v, &r, &g, &b);
 			VG_Color4(vg, r, g, b, (int)(sk->a*255.0));
 
 			if (!pt->preview)

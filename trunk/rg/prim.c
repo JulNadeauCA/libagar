@@ -32,105 +32,6 @@
 
 #include "tileset.h"
 
-/* Obtain the hue/saturation/value of a given RGB triplet. */
-void
-RG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
-{
-	float vR, vG, vB;
-	float vMin, vMax, deltaMax;
-	float deltaR, deltaG, deltaB;
-
-	vR = (float)r/255.0;
-	vG = (float)g/255.0;
-	vB = (float)b/255.0;
-
-	vMin = MIN3(vR, vG, vB);
-	vMax = MAX3(vR, vG, vB);
-	deltaMax = vMax - vMin;
-	*v = vMax;
-	
-	if (deltaMax == 0.0) {
-		/* This is a gray color (zero hue, no saturation). */
-		*h = 0.0;
-		*s = 0.0;
-	} else {
-		*s = deltaMax / vMax;
-		deltaR = ((vMax - vR)/6.0 + deltaMax/2.0) / deltaMax;
-		deltaG = ((vMax - vG)/6.0 + deltaMax/2.0) / deltaMax;
-		deltaB = ((vMax - vB)/6.0 + deltaMax/2.0) / deltaMax;
-
-		if (vR == vMax) {
-			*h = (deltaB - deltaG)*360.0;
-		} else if (vG == vMax) {
-			*h = 120.0 + (deltaR - deltaB)*360.0;	/* 1/3 */
-		} else if (vB == vMax) {
-			*h = 240.0 + (deltaG - deltaR)*360.0;	/* 2/3 */
-		}
-
-		if (*h < 0.0)	(*h)++;
-		if (*h > 360.0)	(*h)--;
-	}
-}
-
-/* Convert hue/saturation/value to RGB. */
-void
-RG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
-{
-	float var[3];
-	float vR, vG, vB, hv;
-	int iv;
-
-	if (s == 0.0) {
-		*r = (Uint8)v*255;
-		*g = (Uint8)v*255;
-		*b = (Uint8)v*255;
-		return;
-	}
-	
-	hv = h/60.0;
-	iv = floorf(hv);
-	var[0] = v * (1 - s);
-	var[1] = v * (1 - s*(hv - iv));
-	var[2] = v * (1 - s*(1 - (hv - iv)));
-
-	switch (iv) {
-	case 0:
-		vR = v;
-		vG = var[2];
-		vB = var[0];
-		break;
-	case 1:
-		vR = var[1];
-		vG = v;
-		vB = var[0];
-		break;
-	case 2:
-		vR = var[0];
-		vG = v;
-		vB = var[2];
-		break;
-	case 3:
-		vR = var[0];
-		vG = var[1];
-		vB = v;
-		break;
-	case 4:
-		vR = var[2];
-		vG = var[0];
-		vB = v;
-		break;
-	default:
-		vR = v;
-		vG = var[0];
-		vB = var[1];
-		break;
-	}
-	
-	*r = vR*255;
-	*g = vG*255;
-	*b = vB*255;
-}
-
 void
 RG_ColorRGB(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b)
 {
@@ -152,24 +53,21 @@ RG_ColorRGBA(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 void
 RG_ColorHSV(RG_Tile *t, float h, float s, float v)
 {
-	RG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
+	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = SDL_MapRGB(t->su->format, t->c.r, t->c.g, t->c.b);
 }
 
 void
 RG_ColorHSVA(RG_Tile *t, float h, float s, float v, Uint8 a)
 {
-	RG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
+	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = SDL_MapRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
 }
 
 void
 RG_ColorUint32(RG_Tile *t, Uint32 pc)
 {
-	SDL_GetRGB(pc, t->su->format,
-	    &t->c.r,
-	    &t->c.g,
-	    &t->c.b);
+	SDL_GetRGB(pc, t->su->format, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = pc;
 }
 
