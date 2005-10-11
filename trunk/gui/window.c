@@ -701,6 +701,7 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->motion.state);
 			}
 			if (agCursorToSet == NULL &&
+			    (win->flags & AG_WINDOW_NORESIZE) == 0 &&
 			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
 				if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
 					switch (AG_WindowMouseOverCtrl(win,
