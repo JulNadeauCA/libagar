@@ -34,7 +34,7 @@ enum vg_alignment {
 };
 
 typedef struct vg_vertex {
-	double x, y, z, w;
+	double x, y;
 } VG_Vtx;
 
 typedef struct vg_rect {
@@ -158,7 +158,7 @@ typedef struct vg_style {
 } VG_Style;
 
 typedef struct vg_matrix {
-	double m[4][4];
+	double m[3][3];
 } VG_Matrix;
 
 typedef struct vg_element {
@@ -322,17 +322,19 @@ __inline__ void	 VG_Color(VG *, Uint32);
 __inline__ void	 VG_Color3(VG *, int, int, int);
 __inline__ void	 VG_Color4(VG *, int, int, int, int);
 VG_Vtx		*VG_Vertex2(VG *, double, double);
-VG_Vtx		*VG_Vertex3(VG *, double, double, double);
-VG_Vtx		*VG_Vertex4(VG *, double, double, double, double);
 void		 VG_VertexV(VG *, const VG_Vtx *, u_int);
-VG_Vtx		*VG_Vertex2(VG *, double, double);
 
-void		 VG_MultMatrix(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
 VG_Matrix	*VG_PushIdentity(VG *);
-VG_Matrix	*VG_Translate2(VG *, double, double);
-VG_Matrix	*VG_Translate3(VG *, double, double, double);
-VG_Matrix	*VG_Rotate2(VG *, double);
-VG_Matrix	*VG_Rotate3(VG *, double, double, double, double);
+VG_Matrix	*VG_Translate(VG *, double, double);
+VG_Matrix	*VG_Rotate(VG *, double);
+
+void VG_LoadIdentity(VG_Matrix *);
+void VG_LoadTranslate(VG_Matrix *, double, double);
+void VG_LoadRotate(VG_Matrix *, double);
+void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
+void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
+
+__inline__ void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
 
 #ifdef EDITION
 struct ag_menu;

@@ -41,13 +41,7 @@
 #include "vg_primitive.h"
 
 void
-VG_Origin2(VG *vg, int o, double ox, double oy)
-{
-	VG_Origin3(vg, o, ox, oy, 0);
-}
-
-void
-VG_Origin3(VG *vg, int o, double ox, double oy, double oz)
+VG_Origin(VG *vg, int o, double ox, double oy)
 {
 	VG_Element *vge;
 	VG_Block *vgb;
@@ -62,12 +56,10 @@ VG_Origin3(VG *vg, int o, double ox, double oy, double oz)
 
 					vtx->x -= ox - vg->origin[0].x;
 					vtx->y -= oy - vg->origin[0].y;
-					vtx->z -= oz - vg->origin[0].z;
 				}
 			}
 			vg->cur_block->origin.x = ox;
 			vg->cur_block->origin.y = oy;
-			vg->cur_block->origin.z = oz;
 			return;
 		}
 
@@ -77,26 +69,21 @@ VG_Origin3(VG *vg, int o, double ox, double oy, double oz)
 
 				vtx->x -= ox - vg->origin[0].x;
 				vtx->y -= oy - vg->origin[0].y;
-				vtx->z -= oz - vg->origin[0].z;
 			}
 		}
 		TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 			vgb->pos.x -= ox - vg->origin[0].x;
 			vgb->pos.y -= oy - vg->origin[0].y;
-			vgb->pos.z -= oz - vg->origin[0].z;
 		}
 		for (i = 1; i < vg->norigin; i++) {
 			vg->origin[i].x -= ox - vg->origin[0].x;
 			vg->origin[i].y -= oy - vg->origin[0].y;
-			vg->origin[i].z -= oz - vg->origin[0].z;
 		}
 		vg->origin[0].x = ox;
 		vg->origin[0].y = oy;
-		vg->origin[0].z = oz;
 	} else {
 		vg->origin[o].x = ox - vg->origin[0].x;
 		vg->origin[o].y = oy - vg->origin[0].y;
-		vg->origin[o].z = oz - vg->origin[0].z;
 	}
 }
 
@@ -163,7 +150,7 @@ origin_mousebuttondown(void *t, int xmap, int ymap, int btn)
 
 	if (btn == 1) {
 		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
-		VG_Origin2(vg, norigin, x, y);
+		VG_Origin(vg, norigin, x, y);
 		vg->redraw++;
 	}
 	return (1);
@@ -178,7 +165,7 @@ origin_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
 
 	if (btn & SDL_BUTTON(1)) {
 		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
-		VG_Origin2(vg, norigin, x, y);
+		VG_Origin(vg, norigin, x, y);
 		vg->redraw++;
 	}
 	return (1);

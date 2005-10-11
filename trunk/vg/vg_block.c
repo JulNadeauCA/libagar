@@ -48,10 +48,8 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 	vgb->flags = flags;
 	vgb->pos.x = 0;
 	vgb->pos.y = 0;
-	vgb->pos.z = 0;
 	vgb->origin.x = 0;
 	vgb->origin.y = 0;
-	vgb->origin.z = 0;
 	vgb->theta = 0;
 	vgb->selected = 0;
 	TAILQ_INIT(&vgb->vges);
