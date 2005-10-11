@@ -47,7 +47,7 @@
 
 const AG_Version vgVer = {
 	"agar vg",
-	4, 0
+	5, 0
 };
 
 extern const VG_ElementOps vgPointsOps;
@@ -185,6 +185,7 @@ VG_FreeElement(VG *vg, VG_Element *vge)
 		vge->ops->destroy(vg, vge);
 	}
 	Free(vge->vtx, M_VG);
+	Free(vge->trans, M_VG);
 	Free(vge, M_VG);
 }
 
@@ -463,6 +464,8 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->mouseover = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
+	vge->trans = NULL;
+	vge->ntrans = 0;
 	vge->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
 
 	vge->line_st.style = VG_CONTINUOUS;
@@ -790,14 +793,24 @@ VG_Rcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 }
 
 /*
- * Translate vertex coordinates to floating-point raster coordinates.
+ * Translate vertex coordinates to floating-point raster coordinates
+ * and apply the transformations.
+ *
  * The vg must be locked.
  */
 void
-VG_VtxCoords2d(VG *vg, VG_Vtx *vtx, double *rx, double *ry)
+VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, double *rx, double *ry)
 {
-	if (rx != NULL)	*rx = VG_RASXF(vg,vtx->x);
-	if (ry != NULL)	*ry = VG_RASYF(vg,vtx->y);
+	VG_Vtx c;
+	int i;
+	
+	c.x = vge->vtx[vi].x;
+	c.y = vge->vtx[vi].y;
+	for (i = 0; i < vge->ntrans; i++) {
+		VG_MultMatrix(&c, &c, &vge->trans[i]);
+	}
+	if (rx != NULL)	*rx = VG_RASXF(vg,c.x);
+	if (ry != NULL)	*ry = VG_RASYF(vg,c.y);
 }
 
 /*
@@ -805,10 +818,18 @@ VG_VtxCoords2d(VG *vg, VG_Vtx *vtx, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-VG_VtxCoords2i(VG *vg, VG_Vtx *vtx, int *rx, int *ry)
+VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
 {
-	if (rx != NULL)	*rx = VG_RASX(vg,vtx->x);
-	if (ry != NULL) *ry = VG_RASY(vg,vtx->y);
+	VG_Vtx c;
+	int i;
+	
+	c.x = VG_RASX(vg,vge->vtx[vi].x);
+	c.y = VG_RASY(vg,vge->vtx[vi].y);
+	for (i = 0; i < vge->ntrans; i++) {
+		VG_MultMatrix(&c, &c, &vge->trans[i]);
+	}
+	if (rx != NULL)	*rx = (int)c.x;
+	if (ry != NULL)	*ry = (int)c.y;
 }
 
 /*
@@ -843,7 +864,18 @@ VG_AllocVertex(VG_Element *vge)
 	return (&vge->vtx[vge->nvtx++]);
 }
 
-/* Pop the highest vertex off the vertex array. */
+VG_Matrix *
+VG_AllocMatrix(VG_Element *vge)
+{
+	if (vge->trans == NULL) {
+		vge->trans = Malloc(sizeof(VG_Matrix), M_VG);
+	} else {
+		vge->trans = Realloc(vge->trans,
+		    (vge->ntrans+1)*sizeof(VG_Matrix));
+	}
+	return (&vge->trans[vge->ntrans++]);
+}
+
 VG_Vtx *
 VG_PopVertex(VG *vg)
 {
@@ -857,7 +889,23 @@ VG_PopVertex(VG *vg)
 #endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(VG_Vtx));
 	vg->redraw++;
-	return (vge->nvtx > 0 ? &vge->vtx[vge->nvtx-1] : NULL);
+	return ((vge->nvtx > 0) ? &vge->vtx[vge->nvtx-1] : NULL);
+}
+
+VG_Matrix *
+VG_PopMatrix(VG *vg)
+{
+	VG_Element *vge = vg->cur_vge;
+
+	if (vge->trans == NULL)
+		return (NULL);
+#ifdef DEBUG
+	if (vge->ntrans-1 < 0)
+		fatal("neg ntrans");
+#endif
+	vge->trans = Realloc(vge->trans, (--vge->ntrans)*sizeof(VG_Matrix));
+	vg->redraw++;
+	return ((vge->ntrans > 0) ? &vge->trans[vge->ntrans-1] : NULL);
 }
 
 /* Push a 2D vertex onto the vertex array. */
@@ -923,6 +971,91 @@ VG_VertexV(VG *vg, const VG_Vtx *svtx, u_int nsvtx)
 		VG_BlockOffset(vg, vtx);
 	}
 	vg->redraw++;
+}
+
+void
+VG_MultMatrix(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
+{
+	double ax = a->x;
+	double ay = a->y;
+	double az = a->z;
+
+	c->x = ax*T->m[0][0] + ay*T->m[1][0] + az*T->m[2][0] + T->m[0][3];
+	c->y = ax*T->m[0][1] + ay*T->m[1][1] + az*T->m[2][1] + T->m[1][3];
+	c->z = ax*T->m[0][2] + ay*T->m[1][2] + az*T->m[2][2] + T->m[2][3];
+}
+
+VG_Matrix *
+VG_PushIdentity(VG *vg)
+{
+	VG_Matrix *m;
+
+	m = VG_AllocMatrix(vg->cur_vge);
+	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = 0.0;
+	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = 0.0;
+	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = 0.0;
+	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
+	return (m);
+}
+
+VG_Matrix *
+VG_Translate2(VG *vg, double x, double y)
+{
+	VG_Matrix *m;
+
+	m = VG_AllocMatrix(vg->cur_vge);
+	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = x;
+	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = y;
+	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = 0.0;
+	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
+	return (m);
+}
+
+VG_Matrix *
+VG_Translate3(VG *vg, double x, double y, double z)
+{
+	VG_Matrix *m;
+
+	m = VG_AllocMatrix(vg->cur_vge);
+	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0; m->m[0][3] = x;
+	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0; m->m[1][3] = y;
+	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0; m->m[2][3] = z;
+	m->m[3][0] = 0.0; m->m[3][1] = 0.0; m->m[3][2] = 0.0; m->m[3][3] = 1.0;
+	return (m);
+}
+
+VG_Matrix *
+VG_Rotate2(VG *vg, double tdeg)
+{
+	VG_Matrix *m;
+	double theta = (tdeg/360.0)*(2.0*M_PI);
+	double rcos = cos(theta);
+	double rsin = sin(theta);
+
+	m = VG_AllocMatrix(vg->cur_vge);
+	m->m[0][0] = +rcos;
+	m->m[0][1] = -rsin;
+	m->m[0][2] = 0.0;
+	m->m[0][3] = 0.0;
+	m->m[1][0] = +rsin;
+	m->m[1][1] = +rcos;
+	m->m[1][2] = 0.0;
+	m->m[1][3] = 0.0;
+	m->m[2][0] = 0.0;
+	m->m[2][1] = 0.0;
+	m->m[2][2] = 1.0;
+	m->m[2][3] = 0.0;
+	m->m[3][0] = 0.0;
+	m->m[3][1] = 0.0;
+	m->m[3][2] = 0.0;
+	m->m[3][3] = 1.0;
+	return (m);
+}
+
+VG_Matrix *
+VG_Rotate3(VG *vg, double theta, double x, double y, double z)
+{
+	return (NULL);
 }
 
 /* Create a new global style. */
@@ -1050,6 +1183,28 @@ VG_PopLayer(VG *vg)
 	vg->redraw++;
 }
 
+static void
+VG_SaveMatrix(VG_Matrix *A, AG_Netbuf *buf)
+{
+	int m, n;
+
+	for (m = 0; m < 4; m++) {
+		for (n = 0; n < 4; n++)
+			AG_WriteDouble(buf, A->m[m][n]);
+	}
+}
+
+static void
+VG_LoadMatrix(VG_Matrix *A, AG_Netbuf *buf)
+{
+	int m, n;
+
+	for (m = 0; m < 4; m++) {
+		for (n = 0; n < 4; n++)
+			A->m[m][n] = AG_ReadDouble(buf);
+	}
+}
+
 void
 VG_Save(VG *vg, AG_Netbuf *buf)
 {
@@ -1123,7 +1278,8 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		switch (vgs->type) {
 		case VG_LINE_STYLE:
 			AG_WriteUint8(buf, (Uint8)vgs->vg_line_st.style);
-			AG_WriteUint8(buf, (Uint8)vgs->vg_line_st.endpoint_style);
+			AG_WriteUint8(buf,
+			    (Uint8)vgs->vg_line_st.endpoint_style);
 			AG_WriteUint16(buf, vgs->vg_line_st.stipple);
 			AG_WriteUint8(buf, vgs->vg_line_st.thickness);
 			AG_WriteUint8(buf, vgs->vg_line_st.miter_len);
@@ -1151,7 +1307,8 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 			continue;
 
 		AG_WriteUint32(buf, (Uint32)vge->type);
-		AG_WriteString(buf, vge->block != NULL ? vge->block->name : NULL);
+		AG_WriteString(buf, vge->block != NULL ?
+		    vge->block->name : NULL);
 		AG_WriteUint32(buf, (Uint32)vge->layer);
 		AG_WriteColor(buf, vg->fmt, vge->color);
 
@@ -1176,6 +1333,11 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		AG_WriteUint32(buf, (Uint32)vge->nvtx);
 		for (i = 0; i < vge->nvtx; i++)
 			AG_WriteVertex(buf, &vge->vtx[i]);
+		
+		/* Save the transformation matrices. */
+		AG_WriteUint32(buf, (Uint32)vge->ntrans);
+		for (i = 0; i < vge->ntrans; i++)
+			VG_SaveMatrix(&vge->trans[i], buf);
 
 		/* Save element specific data. */
 		switch (vge->type) {
@@ -1367,6 +1529,12 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		for (j = 0; j < vge->nvtx; j++)
 			AG_ReadVertex(buf, &vge->vtx[j]);
 
+		/* Load the matrices. */
+		vge->ntrans = (u_int)AG_ReadUint32(buf);
+		vge->trans = Malloc(vge->ntrans*sizeof(VG_Matrix), M_VG);
+		for (j = 0; j < vge->ntrans; j++)
+			VG_LoadMatrix(&vge->trans[j], buf);
+			
 		/* Associate the element with a block if necessary. */
 		if (block_id[0] != '\0') {
 			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
@@ -1374,7 +1542,8 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 					break;
 			}
 			if (block == NULL) {
-				AG_SetError("unexisting vg block: %s", block_id);
+				AG_SetError("unexisting vg block: %s",
+				    block_id);
 				goto fail;
 			}
 		} else {

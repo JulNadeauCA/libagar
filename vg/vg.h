@@ -157,6 +157,10 @@ typedef struct vg_style {
 	TAILQ_ENTRY(vg_style) styles;
 } VG_Style;
 
+typedef struct vg_matrix {
+	double m[4][4];
+} VG_Matrix;
+
 typedef struct vg_element {
 	enum vg_element_type type;
 	const VG_ElementOps *ops;
@@ -174,9 +178,11 @@ typedef struct vg_element {
 	int redraw, drawn;		/* Element needs to be redrawn */
 	int selected;			/* Multiple selection flag */
 	int mouseover;			/* Mouse overlap flag */
-	
-	VG_Vtx *vtx;			/* Vertices */
+
+	VG_Vtx	  *vtx;			/* Vertices */
 	u_int	  nvtx;
+	VG_Matrix *trans;		/* Transformation matrices */
+	u_int     ntrans;
 
 	union {
 		struct vg_circle_args vg_circle;
@@ -219,9 +225,9 @@ typedef struct vg {
 	Uint32 selection_color;		/* Selected item/block color */
 	Uint32 mouseover_color;		/* Mouse overlap item color */
 
-	VG_Vtx *origin;		/* Origin point vertices */
-	float	  *origin_radius;	 /* Origin point radii */
-	Uint32	  *origin_color;	/* Origin point colors */
+	VG_Vtx	  *origin;		/* Reference points */
+	float	  *origin_radius;	/* Reference point radii */
+	Uint32	  *origin_color;	/* Reference point colors */
 	Uint32	  norigin;
 
 	VG_Layer *layers;
@@ -288,13 +294,15 @@ __inline__ void  VG_Rcoords2(VG *, double, double, int *, int *);
 __inline__ void	 VG_AbsRcoords2(VG *, double, double, int *, int *);
 __inline__ void  VG_Rcoords2d(VG *, double, double, double *, double *);
 __inline__ void	 VG_AbsRcoords2d(VG *, double, double, double *, double *);
-__inline__ void	 VG_VtxCoords2d(VG *, VG_Vtx *, double *, double *);
-__inline__ void	 VG_VtxCoords2i(VG *, VG_Vtx *, int *, int *);
+__inline__ void	 VG_VtxCoords2d(VG *, VG_Element *, int, double *, double *);
+__inline__ void	 VG_VtxCoords2i(VG *, VG_Element *, int, int *, int *);
 __inline__ void  VG_RLength(VG *, double, int *);
 void		 VG_VLength(VG *, int, double *);
 
-VG_Vtx		  *VG_PopVertex(VG *);
-__inline__ VG_Vtx *VG_AllocVertex(VG_Element *);
+VG_Vtx		     *VG_PopVertex(VG *);
+__inline__ VG_Vtx    *VG_AllocVertex(VG_Element *);
+__inline__ VG_Matrix *VG_AllocMatrix(VG_Element *);
+VG_Matrix	     *VG_PopMatrix(VG *);
 
 VG_Layer	*VG_PushLayer(VG *, const char *);
 __inline__ void	 VG_PopLayer(VG *);
@@ -317,6 +325,14 @@ VG_Vtx		*VG_Vertex2(VG *, double, double);
 VG_Vtx		*VG_Vertex3(VG *, double, double, double);
 VG_Vtx		*VG_Vertex4(VG *, double, double, double, double);
 void		 VG_VertexV(VG *, const VG_Vtx *, u_int);
+VG_Vtx		*VG_Vertex2(VG *, double, double);
+
+void		 VG_MultMatrix(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
+VG_Matrix	*VG_PushIdentity(VG *);
+VG_Matrix	*VG_Translate2(VG *, double, double);
+VG_Matrix	*VG_Translate3(VG *, double, double, double);
+VG_Matrix	*VG_Rotate2(VG *, double);
+VG_Matrix	*VG_Rotate3(VG *, double, double, double, double);
 
 #ifdef EDITION
 struct ag_menu;
