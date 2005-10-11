@@ -45,6 +45,7 @@ CreateDrawing(void)
 {
 	AG_Window *win;
 	VG_Matrix *rot, *pos;
+	VG_Style *bold;
 	VG *vg;
 
 	/*
@@ -59,12 +60,19 @@ CreateDrawing(void)
 	 * using vg->su.
 	 */
 	VG_Scale(vg, 20.0, 20.0, 1.0);
-	
+
+	/* Create a thick green line style. */
+	bold = VG_CreateStyle(vg, VG_LINE_STYLE, "bold");
+	bold->vg_line_st.thickness = 2;
+
 	/* Draw a triangle and apply some transformations. */
 	VG_Begin(vg, VG_LINE_LOOP);
 	{
 		/* Request a green color for this element. */
 		VG_Color3(vg, 0, 255, 0);
+
+		/* Assign the "bold" line style. */
+		VG_SetStyle(vg, "bold");
 
 		/*
 		 * Push a rotation and a translation matrix. If you think in
