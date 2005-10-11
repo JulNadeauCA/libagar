@@ -136,6 +136,11 @@ AG_GLViewInit(AG_GLView *glv, u_int flags)
 }
 
 void
+AG_GLViewDestroy(void *p)
+{
+}
+
+void
 AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
