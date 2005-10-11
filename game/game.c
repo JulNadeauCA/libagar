@@ -1,7 +1,7 @@
-/*	$Csoft: typesw.c,v 1.24 2005/09/20 13:46:29 vedge Exp $	*/
+/*	$Csoft: actor.c,v 1.1 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -28,49 +28,15 @@
 
 #include <core/core.h>
 #include <core/typesw.h>
-
-AG_ObjectType *agTypes = NULL;
-int agnTypes = 0;
-
-/* Initialize the type switch and register the built-in types. */
-void
-AG_InitTypeSw(void)
-{
-	extern const AG_ObjectOps agObjectOps, agMapOps, agPersoOps;
-
-	agTypes = Malloc(sizeof(AG_ObjectType), M_TYPESW);
-	agnTypes = 0;
-	AG_RegisterType("object", sizeof(AG_Object), &agObjectOps, OBJ_ICON);
-}
+#include <game/game.h>
 
 void
-AG_DestroyTypeSw(void)
+AG_InitGame(void)
 {
-	Free(agTypes, M_TYPESW);
-}
+	extern const AG_ObjectOps agMapOps;
+	extern const AG_ObjectOps agPersoOps;
 
-void
-AG_RegisterType(const char *type, size_t size, const AG_ObjectOps *ops,
-    int icon)
-{
-	AG_ObjectType *ntype;
-
-	agTypes = Realloc(agTypes, (agnTypes+1)*sizeof(AG_ObjectType));
-	ntype = &agTypes[agnTypes++];
-	strlcpy(ntype->type, type, sizeof(ntype->type));
-	ntype->size = size;
-	ntype->ops = ops;
-	ntype->icon = icon;
-}
-
-AG_ObjectType *
-AG_FindType(const char *type)
-{
-	int i;
-
-	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].type, type) == 0)
-			return (&agTypes[i]);
-	}
-	return (NULL);
+	AG_RegisterType("map", sizeof(AG_Map), &agMapOps, MAP_ICON);
+	AG_RegisterType("actor.perso", sizeof(AG_Perso), &agPersoOps,
+	    PERSO_ICON);
 }

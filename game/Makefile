@@ -9,7 +9,7 @@ LIB=		ag_game
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SRCS=	actor.c perso.c space.c
+SRCS=	game.c actor.c perso.c space.c
 #MAN3=	actor.3 perso.3 space.3
 
 CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
