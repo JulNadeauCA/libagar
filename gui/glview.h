@@ -32,6 +32,8 @@ typedef struct ag_glview {
 	GLdouble mColor[16];			/* Color matrix to load */
 } AG_GLView;
 
+#define AGGLVIEW(p) ((AG_GLView *)(p))
+
 __BEGIN_DECLS
 AG_GLView *AG_GLViewNew(void *, u_int);
 void	   AG_GLViewInit(AG_GLView *, u_int);
