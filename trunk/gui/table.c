@@ -1181,6 +1181,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 	}
 	va_end(ap);
+	AG_TableUpdateScrollbars(t);
 	return (t->m++);
 }
 
