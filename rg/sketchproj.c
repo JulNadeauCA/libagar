@@ -205,9 +205,9 @@ RG_SketchProjApply(void *p, RG_Tile *t, int fx, int fy)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
 		case VG_LINE_STRIP:
-			VG_VtxCoords2d(vg, &vge->vtx[0], &x1, &y1);
+			VG_VtxCoords2d(vg, vge, 0, &x1, &y1);
 			for (i = 1; i < vge->nvtx; i++) {
-				VG_VtxCoords2d(vg, &vge->vtx[i], &x2, &y2);
+				VG_VtxCoords2d(vg, vge, i, &x2, &y2);
 				RG_ColorUint32(t, sproj->color);
 				RG_WuLine(t,
 				    ske->tel_sketch.x+x1,
