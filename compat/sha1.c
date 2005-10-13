@@ -207,7 +207,7 @@ SHA1End(SHA1_CTX *ctx, char *buf)
 }
 
 char *
-SHA1Data(const u_char *data, size_t len, char *buf)
+SHA1Data(const Uint8 *data, size_t len, char *buf)
 {
 	SHA1_CTX ctx;
 
