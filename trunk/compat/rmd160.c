@@ -396,7 +396,7 @@ RMD160End(RMD160_CTX *ctx, char *buf)
 }
 
 char *
-RMD160Data(const u_char *data, size_t len, char *buf)
+RMD160Data(const Uint8 *data, size_t len, char *buf)
 {
 	RMD160_CTX ctx;
 

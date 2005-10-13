@@ -4,8 +4,7 @@
 #include <agar/config/have_arc4random.h>
 
 #ifndef HAVE_ARC4RANDOM
-#include <SDL/SDL_types.h>
-#include <sys/types.h>
+#include <SDL_types.h>
 Uint32	arc4random(void);
 void	arc4random_stir(void);
 void	arc4random_addrandom(unsigned char *, int);

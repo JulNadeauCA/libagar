@@ -30,8 +30,6 @@ typedef struct {
     Uint8 buffer[SHA1_BLOCK_LENGTH];
 } SHA1_CTX;
 
-#include <sys/cdefs.h>
-
 __BEGIN_DECLS
 void SHA1Init(SHA1_CTX *);
 void SHA1Pad(SHA1_CTX *);

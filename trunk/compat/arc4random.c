@@ -84,14 +84,12 @@ arc4_stir(struct arc4_stream *as)
 {
 	int     i;
 	struct {
-		struct timeval tv;
 		unsigned rnd[(128 - sizeof(struct timeval)) / sizeof(unsigned)];
 	}       rdat;
 	int	fd;
 
 	fd = open("/dev/random", O_RDONLY);
 
-	gettimeofday(&rdat.tv, NULL);
 	for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i ++) {
 		read(fd, &rdat.rnd[i], sizeof(unsigned));
 	}

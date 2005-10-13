@@ -48,8 +48,6 @@ typedef struct RMD160Context {
 	Uint8 buffer[RMD160_BLOCK_LENGTH];	/* input buffer */
 } RMD160_CTX;
 
-#include <sys/cdefs.h>
-
 __BEGIN_DECLS
 void	 RMD160Init(RMD160_CTX *);
 void	 RMD160Transform(Uint32 [5], const Uint8 [RMD160_BLOCK_LENGTH]);
