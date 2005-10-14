@@ -8,6 +8,7 @@
 #include <agar/game/actor.h>
 #include <agar/game/perso.h>
 #include <agar/game/map/map.h>
+#include <agar/game/map/mapview.h>
 
 #include "begin_code.h"
 __BEGIN_DECLS
