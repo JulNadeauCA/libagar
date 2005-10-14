@@ -345,7 +345,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -377,7 +377,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -417,7 +417,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -Wall -Werror -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -459,7 +459,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -Wall -Werror -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -497,7 +497,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -Wall -Werror -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -533,7 +533,7 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC -mcygwin -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -566,7 +566,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -603,7 +603,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
+$CC $CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -649,7 +649,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -685,7 +685,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -720,7 +720,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -751,7 +751,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -782,7 +782,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -815,7 +815,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -846,7 +846,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -877,7 +877,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -908,7 +908,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -945,7 +945,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -993,7 +993,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1027,7 +1027,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1071,7 +1071,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1103,7 +1103,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1137,7 +1137,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1172,7 +1172,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1207,7 +1207,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1242,7 +1242,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
+$CC $CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
@@ -1319,7 +1319,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+$CC $CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1450,7 +1450,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+$CC $CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1545,7 +1545,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+$CC $CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1671,7 +1671,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+$CC $CFLAGS ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1736,7 +1736,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+$CC $CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1814,7 +1814,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
+$CC $CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1911,7 +1911,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+$CC $CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
