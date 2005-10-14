@@ -143,10 +143,6 @@ if [ "${srcdir}" != "" ]; then
 		exit 1;
 	fi
 else
-#	if [ ! -e "configure.in" ]; then
-#		echo "Missing --srcdir argument"
-#		exit 1
-#	fi
 	SRC=`pwd`
 fi
 if [ "${help}" = "yes" ]; then
@@ -260,6 +256,37 @@ echo "LOCALEDIR=${LOCALEDIR}" >> Makefile.config
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR \"${LOCALEDIR}\"" >> config/localedir.h
 echo "#endif /* LOCALEDIR */" >> config/localedir.h
+
+echo -n "checking for a cygwin environment..."
+echo -n "checking for a cygwin environment..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+
+int main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return (0);
+}
+EOT
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "no"
+	echo "no" >> config.log
+	HAVE_CYGWIN="no"
+	echo "#undef HAVE_CYGWIN" > config/have_cygwin.h
+else
+	echo "yes"
+	echo "yes" >> config.log
+	echo "CFLAGS+=-mno-cygwin" >> Makefile.config
+	HAVE_CYGWIN="no"
+	echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
+	echo "#define HAVE_CYGWIN 1" >> config/have_cygwin.h
+	echo "#endif /* HAVE_CYGWIN */" >> config/have_cygwin.h
+fi
 VERSION="\"1.0-beta\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
