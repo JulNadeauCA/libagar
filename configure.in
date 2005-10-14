@@ -70,7 +70,7 @@ fi
 
 # Require SDL and FreeType.
 REQUIRE(sdl, 1.2.0)
-REQUIRE(freetype, 7.0.1)
+CHECK(freetype, 7.0.1)
 
 # Include X11-specific code? (only used for debugging)
 if [ "${with_x11}" != "no" ]; then
