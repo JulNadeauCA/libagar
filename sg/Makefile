@@ -7,7 +7,7 @@ LIB=		ag_sg
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SRCS=	sg.c sg_math.c sg_vector.c sg_matrix.c
+SRCS=	sg.c sg_math.c sg_vector.c sg_matrix.c sg_view.c
 #MAN3=	sg.3
 
 CFLAGS+=${SDL_CFLAGS}
