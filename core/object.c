@@ -28,6 +28,7 @@
 
 #include <core/core.h>
 
+#include <compat/dir.h>
 #include <compat/md5.h>
 #include <compat/sha1.h>
 #include <compat/rmd160.h>
@@ -1671,7 +1672,7 @@ AG_ObjectUnlinkDatafiles(void *p)
 		AG_ObjectUnlinkDatafiles(cob);
 
 	if (AG_ObjectCopyDirname(ob, path, sizeof(path)) == 0)
-		rmdir(path);
+		Rmdir(path);
 }
 
 /* Duplicate an object and its children. */
