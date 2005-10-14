@@ -1524,8 +1524,8 @@ echo "FREETYPE_LIBS=$FREETYPE_LIBS" >> Makefile.config
 echo "yes"
 echo "yes" >> config.log
 else
-echo "Cannot find FreeType. Is freetype-config in your $PATH?"
-exit 1
+echo "no"
+echo "no" >> config.log
 fi
 echo -n "checking whether FreeType works..."
 echo -n "checking whether FreeType works..." >> config.log
@@ -1578,8 +1578,7 @@ echo "#endif /* FREETYPE_CFLAGS */" >> config/freetype_cflags.h
 else
 echo "#undef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#undef FREETYPE_CFLAGS" > config/freetype_cflags.h
-echo "The FreeType test would not compile."
-exit 1
+NONE=1
 fi
 if [ "${with_x11}" != "no" ]
  then
