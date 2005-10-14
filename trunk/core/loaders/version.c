@@ -26,17 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/error.h>
+#include <core/core.h>
 
-#include <sys/types.h>
-#include <SDL_types.h>
 #include <string.h>
 #include <stdio.h>
-
-#include <core/loaders/netbuf.h>
-#include <core/loaders/integral.h>
-
-#include "version.h"
 
 int
 AG_ReadVersion(AG_Netbuf *buf, const AG_Version *ver,
