@@ -28,10 +28,6 @@
 
 #include <core/core.h>
 
-#include "netbuf.h"
-#include "integral.h"
-#include "color.h"
-
 void
 AG_WriteColor(AG_Netbuf *buf, SDL_PixelFormat *pixfmt, Uint32 color)
 {
