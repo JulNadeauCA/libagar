@@ -41,6 +41,7 @@
 #include "vg_text.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 static void
 init(VG *vg, VG_Element *vge)

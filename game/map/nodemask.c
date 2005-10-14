@@ -30,7 +30,10 @@
 #ifdef MAP
 
 #include <core/core.h>
+
 #include "map.h"
+
+#include <string.h>
 
 AG_NodeMask *
 AG_NodeMaskNew(enum ag_nodemask_type type)

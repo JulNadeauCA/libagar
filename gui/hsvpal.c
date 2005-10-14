@@ -38,6 +38,8 @@
 #include <gui/window.h>
 #include <gui/fspinbutton.h>
 
+#include <string.h>
+
 const AG_WidgetOps agHSVPalOps = {
 	{
 		NULL,		/* init */

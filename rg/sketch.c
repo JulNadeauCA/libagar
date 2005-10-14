@@ -44,6 +44,8 @@
 #include "tileview.h"
 #include "texsel.h"
 
+#include <string.h>
+
 void
 RG_SketchInit(RG_Sketch *sk, RG_Tileset *ts, int flags)
 {

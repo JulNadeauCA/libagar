@@ -30,6 +30,8 @@
 
 #include "units.h"
 
+#include <string.h>
+
 #include <config/astronomical_units.h>
 #include <config/historical_units.h>
 

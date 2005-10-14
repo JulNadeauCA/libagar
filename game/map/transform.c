@@ -35,6 +35,7 @@
 #include "map.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 const struct ag_transform_ent agTransforms[];
 const int agnTransforms;

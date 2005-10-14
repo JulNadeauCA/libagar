@@ -32,6 +32,8 @@
 #include "actor.h"
 #include "space.h"
 
+#include <string.h>
+
 const AG_Version agSpaceVer = {
 	"agar space",
 	1, 0

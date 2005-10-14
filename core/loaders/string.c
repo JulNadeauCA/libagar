@@ -28,6 +28,9 @@
 
 #include <core/core.h>
 
+#include <string.h>
+#include <stdlib.h>
+
 /* Allocate and read a length-encoded string. */
 char *
 AG_ReadStringLen(AG_Netbuf *buf, size_t maxlen)

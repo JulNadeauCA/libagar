@@ -43,6 +43,8 @@
 
 #include "monitor.h"
 
+#include <string.h>
+
 static void
 poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
 {

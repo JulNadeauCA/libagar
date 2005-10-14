@@ -29,6 +29,8 @@
 #include <core/core.h>
 #include <core/typesw.h>
 
+#include <string.h>
+
 AG_ObjectType *agTypes = NULL;
 int agnTypes = 0;
 

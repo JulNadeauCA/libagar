@@ -37,6 +37,8 @@
 #include "vg_math.h"
 #include "vg_primitive.h"
 
+#include <string.h>
+
 /* Create a new block and select it for edition. */
 VG_Block *
 VG_BeginBlock(VG *vg, const char *name, int flags)

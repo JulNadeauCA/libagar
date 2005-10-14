@@ -59,6 +59,8 @@
 #include "fill.h"
 #include "sketchproj.h"
 
+#include <string.h>
+
 /*
  * Blend a pixmap with the tile; add the source alpha to the destination
  * alpha of each pixel.

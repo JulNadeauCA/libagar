@@ -43,6 +43,8 @@
 #include "map.h"
 #include "mapedit.h"
 
+#include <string.h>
+
 struct ginsert_tool {
 	AG_Maptool tool;
 	enum ag_gfx_snap_mode snap_mode;

@@ -45,6 +45,8 @@
 
 #include <core/loaders/vertex.h>
 
+#include <string.h>
+
 const AG_Version vgVer = {
 	"agar vg",
 	5, 0
