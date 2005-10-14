@@ -26,13 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/error.h>
-
-#include <SDL_types.h>
-#include <SDL_endian.h>
-
-#include <core/loaders/netbuf.h>
-#include <core/loaders/real.h>
+#include <core/core.h>
 
 float
 AG_ReadFloat(AG_Netbuf *buf)
