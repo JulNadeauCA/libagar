@@ -613,7 +613,6 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 int
 AG_WindowEvent(SDL_Event *ev)
 {
-	extern SDL_Cursor *SDL_cursor;
 	extern SDL_Cursor *agCursorToSet;
 	static AG_Window *keydown_win = NULL;	/* XXX hack */
 	AG_Window *win;
@@ -823,7 +822,7 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		AG_MutexUnlock(&win->lock);
 	}
-	if (agCursorToSet != NULL && SDL_cursor != agCursorToSet) {
+	if (agCursorToSet != NULL && SDL_GetCursor() != agCursorToSet) {
 		SDL_SetCursor(agCursorToSet);
 	}
 	return (0);
