@@ -16,6 +16,11 @@
 #include <agar/config/map.h>
 
 #include <sys/types.h>
+#ifdef __MINGW32__
+typedef unsigned int u_int;
+typedef unsigned char u_char;
+typedef unsigned long u_long;
+#endif
 
 #include <SDL.h>
 #include <SDL_endian.h>
