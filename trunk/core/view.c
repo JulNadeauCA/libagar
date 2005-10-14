@@ -27,7 +27,6 @@
  */
 
 #include <config/have_jpeg.h>
-#include <compat/dir.h>
 
 #include <core/core.h>
 #include <core/config.h>
@@ -39,7 +38,8 @@
 #include <gui/window.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
+
+#include <compat/dir.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -801,7 +801,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	}
 	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
 		goto toobig;
-	if (Mkdir(path) == -1 && errno != EEXIST) {
+	if (AG_MkDir(path) == -1 && errno != EEXIST) {
 		AG_TextMsg(AG_MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
 	}

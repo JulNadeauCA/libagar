@@ -32,12 +32,13 @@
 #include <config/have_getuid.h>
 #include <config/have_freetype.h>
 
-#include <compat/dir.h>
-
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
 #include <core/rcs.h>
+
+#include <compat/dir.h>
+#include <compat/file.h>
 
 #include <game/map/map.h>
 #ifdef EDITION
@@ -60,10 +61,7 @@
 #include <gui/separator.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
 
-#include <dirent.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
@@ -180,7 +178,6 @@ AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[MAXPATHLEN];
 	struct passwd *pwd;
-	struct stat sta;
 
 	AG_ObjectInit(cfg, "object", "config", &agConfigOps);
 	AGOBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_DATA_RESIDENT;
@@ -209,9 +206,9 @@ AG_ConfigInit(AG_Config *cfg)
 	udatadir[0] = '.';
 	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 #endif
-	if (stat(udatadir, &sta) != 0 &&
-	    Mkdir(udatadir) != 0) {
-		fatal("%s: %s", udatadir, strerror(errno));
+	if (AG_FileExists(udatadir) == 0 &&
+	    AG_MkDir(udatadir) != 0) {
+		fatal("%s: %s", udatadir, AG_GetError());
 	}
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 
@@ -575,7 +572,6 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
     char *path, size_t path_len)
 {
 	char file[MAXPATHLEN];
-	struct stat sta;
 	char *dir, *pathp = path;
 
 	AG_StringCopy(agConfig, path_key, path, path_len);
@@ -593,7 +589,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 			strlcat(file, ".", sizeof(file));
 			strlcat(file, ext, sizeof(file));
 		}
-		if (stat(file, &sta) == 0) {
+		if (AG_FileExists(file)) {
 			if (strlcpy(path, file, path_len) >= path_len) {
 				AG_SetError(_("The search path is too big."));
 				return (-1);
