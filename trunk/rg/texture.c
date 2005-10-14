@@ -40,6 +40,8 @@
 #include "tileset.h"
 #include "tileview.h"
 
+#include <string.h>
+
 void
 RG_TextureInit(RG_Texture *tex, RG_Tileset *ts, const char *name)
 {

@@ -48,6 +48,7 @@
 #include "tileview.h"
 
 #include <stdarg.h>
+#include <string.h>
 	
 static const char *insn_names[] = {
 	N_("Tile"),

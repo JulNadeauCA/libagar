@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 int
 asprintf(char **ret, const char *fmt, ...)

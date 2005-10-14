@@ -42,6 +42,8 @@
 #include "map.h"
 #include "mapedit.h"
 
+#include <string.h>
+
 struct rg_fill_tool {
 	AG_Maptool tool;
 	enum fill_mode {

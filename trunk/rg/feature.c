@@ -41,6 +41,8 @@
 #include "tileset.h"
 #include "tileview.h"
 
+#include <string.h>
+
 void
 AG_FeatureInit(void *p, RG_Tileset *ts, int flags,
     const RG_FeatureOps *ops)

@@ -47,6 +47,8 @@
 #include "insert.h"
 #include "tools.h"
 
+#include <string.h>
+
 static void
 insert_init(void *p)
 {

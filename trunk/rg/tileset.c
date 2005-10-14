@@ -47,6 +47,7 @@
 #include "tileset.h"
 
 #include <ctype.h>
+#include <string.h>
 
 const AG_Version rgTilesetVer = {
 	"agar tileset",

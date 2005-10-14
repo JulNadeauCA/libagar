@@ -26,6 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/arc4random.h>
+
 #include <core/core.h>
 #include <core/view.h>
 
@@ -48,6 +50,9 @@
 
 #include "tileset.h"
 #include "tileview.h"
+
+#include <string.h>
+#include <stdlib.h>
 
 int pixmap_source = 1;
 const char *pixmap_state_names[] = {

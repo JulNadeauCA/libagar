@@ -35,6 +35,8 @@
 #include <gui/tlist.h>
 #include <gui/primitive.h>
 
+#include <string.h>
+
 AG_PrimitiveOps agPrim;
 
 /* Add to individual RGB components of a pixel. */

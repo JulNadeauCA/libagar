@@ -31,9 +31,10 @@
 
 #include <gui/primitive.h>
 
-#include <stdarg.h>
-
 #include "tileview.h"
+
+#include <stdarg.h>
+#include <string.h>
 
 const AG_WidgetOps tileview_ops = {
 	{
