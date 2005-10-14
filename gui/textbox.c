@@ -314,6 +314,7 @@ AG_TextboxDraw(void *p)
 		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
 
 		if (!agView->opengl) {
+#ifdef HAVE_FREETYPE
 			FT_Bitmap *ftbmp;
 			AG_TTFFont *ttf = font->p;
 			AG_TTFGlyph *glyph;
@@ -354,6 +355,19 @@ AG_TextboxDraw(void *p)
 				src += ftbmp->pitch;
 			}
 			x += glyph->advance;
+#else /* !HAVE_FREETYPE */
+			{
+				SDL_Rect rd;
+
+				gl = AG_TextRenderGlyph(NULL, -1,
+				    AG_COLOR(TEXTBOX_TXT_COLOR), c);
+				rd.x = AGWIDGET(tbox)->cx + x;
+				rd.y = AGWIDGET(tbox)->cy + y;
+				x += gl->su->w;
+				SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
+				AG_TextUnusedGlyph(gl);
+			}
+#endif /* HAVE_FREETYPE */
 		} else {
 #ifdef HAVE_OPENGL
 			int dx, dy;
@@ -474,6 +488,7 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 	int i, x, y;
 	size_t len;
 	char *s;
+	Uint32 ch;
 
 	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	if (mx <= x) {
@@ -496,9 +511,10 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 			x += agTextTabWidth;
 			continue;
 		}
-
+		
+		ch = (Uint32)s[i];
+#ifdef HAVE_FREETYPE
 		{
-			Uint32 ch = (Uint32)s[i];
 			AG_TTFFont *ttf = font->p;
 			FT_Bitmap *ftbmp;
 			AG_TTFGlyph *glyph;
@@ -523,6 +539,22 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 			}
 			x += glyph->advance;
 		}
+#else /* !HAVE_FREETYPE */
+		{
+			AG_Glyph *gl;
+			
+			gl = AG_TextRenderGlyph(NULL, -1, 0, ch);
+			if ((x + gl->su->w) >= AGWIDGET(tbox)->w) {
+				continue;
+			}
+			if (mx >= x && mx < (x + gl->su->w)) {
+				*pos = i;
+				goto in;
+			}
+			x += gl->su->w;
+			AG_TextUnusedGlyph(gl);
+		}
+#endif /* HAVE_FREETYPE */
 	}
 	AG_WidgetUnlockBinding(stringb);
 	return (1);
