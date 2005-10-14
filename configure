@@ -551,7 +551,10 @@ else
 
 	echo "no"
 fi
-echo "CFLAGS+=-mno-cygwin" >> Makefile.config
+if [ "${compile}" = "ok" ]; then
+	CFLAGS="$CFLAGS -mno-cygwin"
+	echo "CFLAGS=$CFLAGS" >> Makefile.config
+fi
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c
