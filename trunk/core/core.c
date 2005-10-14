@@ -202,7 +202,9 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
 	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
-	AG_WireGfx(&agIconMgr, "/core-icons");
+	if (AG_WireGfx(&agIconMgr, "/core-icons") == -1) {
+		fatal("icons: %s", AG_GetError());
+	}
 	return (0);
 }
 
