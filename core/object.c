@@ -28,15 +28,15 @@
 
 #include <core/core.h>
 
-#include <compat/dir.h>
 #include <compat/md5.h>
 #include <compat/sha1.h>
 #include <compat/rmd160.h>
+#include <compat/dir.h>
+#include <compat/file.h>
 
 #include <core/config.h>
 #include <core/view.h>
 #include <core/typesw.h>
-#include <core/mkpath.h>
 #include <core/objmgr.h>
 
 #include <game/map/map.h>
@@ -54,8 +54,6 @@
 #ifdef NETWORK
 #include <core/rcs.h>
 #endif
-
-#include <sys/stat.h>
 
 #include <stdarg.h>
 #include <ctype.h>
@@ -745,7 +743,6 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
 	const AG_Object *ob = p;
-	struct stat sta;
 	char *dir;
 
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
@@ -764,7 +761,7 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 		strlcat(path, ".", path_len);
 		strlcat(path, ob->type, path_len);
 
-		if (stat(path, &sta) == 0)
+		if (AG_FileExists(path))
 			return (0);
 	}
 	AG_SetError(_("The %s%s/%s.%s file is not in load-path."),
@@ -780,7 +777,6 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
 	const AG_Object *ob = p;
-	struct stat sta;
 	char *dir;
 
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
@@ -796,7 +792,7 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 			strlcat(tmp_path, ob->save_pfx, sizeof(tmp_path));
 		}
 		strlcat(tmp_path, obj_name, sizeof(tmp_path));
-		if (stat(tmp_path, &sta) == 0) {
+		if (AG_FileExists(tmp_path)) {
 			strlcpy(path, tmp_path, path_len);
 			return (0);
 		}
@@ -1247,9 +1243,8 @@ static void
 backup_object(void *p, const char *orig)
 {
 	char path[MAXPATHLEN];
-	struct stat sb;
 
-	if (stat(orig, &sb) == 0) {
+	if (AG_FileExists(orig)) {
 		strlcpy(path, orig, sizeof(path));
 		strlcat(path, ".bak", sizeof(path));
 		rename(orig, path);
@@ -1289,7 +1284,6 @@ AG_ObjectSave(void *p)
 	char save_file[MAXPATHLEN];
 	char obj_name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
-	struct stat sta;
 	AG_Netbuf *buf;
 	AG_Object *child;
 	off_t count_offs, data_offs, gfx_offs;
@@ -1314,11 +1308,9 @@ AG_ObjectSave(void *p)
 		strlcat(save_dir, ob->save_pfx, sizeof(save_dir));
 	}
 	strlcat(save_dir, obj_name, sizeof(save_dir));
-	if (stat(save_dir, &sta) == -1 &&
-	    mkpath(save_dir) == -1) {
-		AG_SetError("mkpath %s: %s", save_dir, strerror(errno));
+	if (AG_FileExists(save_dir) == 0 &&
+	    AG_MkPath(save_dir) == -1)
 		goto fail_lock;
-	}
 
 	/* Page in the data unless it is already resident. */
 	if (!was_resident) {
@@ -1672,7 +1664,7 @@ AG_ObjectUnlinkDatafiles(void *p)
 		AG_ObjectUnlinkDatafiles(cob);
 
 	if (AG_ObjectCopyDirname(ob, path, sizeof(path)) == 0)
-		Rmdir(path);
+		AG_RmDir(path);
 }
 
 /* Duplicate an object and its children. */

@@ -29,10 +29,11 @@
 #include <core/core.h>
 #include <core/view.h>
 
+#include <compat/dir.h>
+#include <compat/file.h>
+
 #include "file_dlg.h"
 
-#include <sys/stat.h>
-#include <dirent.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
@@ -75,13 +76,12 @@ static void
 update_listing(AG_FileDlg *fdg)
 {
 	AG_TlistItem *it;
-	struct dirent *dent;
-	struct stat sb;
-	DIR *dir;
+	AG_FileInfo info;
+	AG_Dir *dir;
 	char **dirs, **files;
 	size_t i, ndirs = 0, nfiles = 0;
 
-	if ((dir = opendir(".")) == NULL) {
+	if ((dir = AG_OpenDir(".")) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, ".: %s", strerror(errno));
 		return;
 	}
@@ -92,16 +92,18 @@ update_listing(AG_FileDlg *fdg)
 	AG_MutexLock(&fdg->tlDirs->lock);
 	AG_MutexLock(&fdg->tlFiles->lock);
 
-	while ((dent = readdir(dir)) != NULL) {
-		if (stat(dent->d_name, &sb) == -1) {
+	for (i = 0; i < dir->nents; i++) {
+		char *file = dir->ents[i];
+
+		if (AG_GetFileInfo(file, &info) == -1) {
 			continue;
 		}
-		if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
+		if (info.type == AG_FILE_DIRECTORY) {
 			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
-			dirs[ndirs++] = Strdup(dent->d_name);
+			dirs[ndirs++] = Strdup(file);
 		} else {
 			files = Realloc(files, (nfiles + 1) * sizeof(char *));
-			files[nfiles++] = Strdup(dent->d_name);
+			files[nfiles++] = Strdup(file);
 		}
 	}
 	qsort(dirs, ndirs, sizeof(char *), compare_filenames);
@@ -130,7 +132,7 @@ update_listing(AG_FileDlg *fdg)
 	
 	AG_MutexUnlock(&fdg->tlFiles->lock);
 	AG_MutexUnlock(&fdg->tlDirs->lock);
-	closedir(dir);
+	AG_CloseDir(dir);
 }
 
 static void
@@ -142,7 +144,7 @@ select_dir(AG_Event *event)
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		if (chdir(ti->text) == -1) {
+		if (AG_ChDir(ti->text) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "%s: %s", ti->text,
 			    strerror(errno));
 		} else {
@@ -220,14 +222,14 @@ enter_file(AG_Event *event)
 	char file[MAXPATHLEN];
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_FileType *ft;
-	struct stat sb;
+	AG_FileInfo info;
 
 	AG_TextboxCopyString(fdg->tbFile, file, sizeof(file));
-	if (stat(file, &sb) == -1) {
+	if (AG_GetFileInfo(file, &info) == -1) {
 		goto fail;
 	}
-	if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
-		if (chdir(file) == 0) {
+	if (info.type == AG_FILE_DIRECTORY) {
+		if (AG_ChDir(file) == 0) {
 			update_listing(fdg);
 		} else {
 			goto fail;

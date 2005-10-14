@@ -5,46 +5,19 @@
 #define _AGAR_COMPAT_DIR_H_
 #include "begin_code.h"
 
-#ifdef WIN32
-#include <windows.h>
-#undef SLIST_ENTRY
-#undef INPUT_KEYBOARD
-#undef INPUT_MOUSE
-#else
-#include <sys/types.h>
-#include <dirent.h>
-#endif
+typedef struct ag_dir {
+	char **ents;
+	int nents;
+} AG_Dir;
 
-struct compat_dirent {
-#ifdef WIN32
-	WIN32_FIND_DATA ent;
-#else
-	struct dirent *ent;
-#endif
-	char *name;
-};
-
-struct compat_dir {
-#ifdef WIN32
-	HANDLE dir;
-	WIN32_FIND_DATA ent;
-#else
-	DIR *dir;
-	struct dirent *ent;
-#endif
-};
-
-#define Mkdir(d) compat_mkdir(d)
-#define Rmdir(d) compat_rmdir(d)
-
-int	compat_mkdir(const char *);
-int	compat_rmdir(const char *);
-
-#if 0
-int		      compat_opendir(const char *, struct compat_dir *);
-struct compat_dirent *compat_readdir(struct compat_dir *);
-int		      compat_closedir(struct compat_dir *);
-#endif
+__BEGIN_DECLS
+int	   AG_MkDir(const char *);
+int	   AG_RmDir(const char *);
+int	   AG_ChDir(const char *);
+AG_Dir	  *AG_OpenDir(const char *);
+void	   AG_CloseDir(AG_Dir *);
+int	   AG_MkPath(const char *);
+__END_DECLS
 
 #include "close_code.h"
 #endif /* _AGAR_COMPAT_DIR_H_ */
