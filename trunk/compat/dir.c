@@ -59,6 +59,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#undef SLIST_ENTRY
 #else
 #include <sys/stat.h>
 #include <dirent.h>
@@ -79,7 +80,8 @@ AG_MkDir(const char *dir)
 	if (CreateDirectory(dir, NULL)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot create dir (%u)", GetLastError());
+		AG_SetError("%s: cannot create dir (%lu)", dir,
+		    (u_long)GetLastError());
 		return (-1);
 	}
 #else
@@ -99,7 +101,8 @@ AG_RmDir(const char *dir)
 	if (RemoveDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot remove dir (%u)", GetLastError());
+		AG_SetError("%s: cannot remove dir (%lu)", dir,
+		    (u_long)GetLastError());
 		return (-1);
 	}
 #else
@@ -119,7 +122,8 @@ AG_ChDir(const char *dir)
 	if (SetCurrentDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot set cwd (%u)", GetLastError());
+		AG_SetError("%s: cannot set cwd (%lu)", dir,
+		    (u_long)GetLastError());
 		return (-1);
 	}
 #else
@@ -148,7 +152,8 @@ AG_OpenDir(const char *path)
 		DWORD rv;
 
 		if ((h = FindFirstFile("*", &fdata))==INVALID_HANDLE_VALUE) {
-			AG_SetError("Invalid file handle (%u)", GetLastError());
+			AG_SetError("Invalid file handle (%lu)",
+			    (u_long)GetLastError());
 			goto fail;
 		}
 		while (FindNextFile(h, &fdata) != 0) {
@@ -159,7 +164,7 @@ AG_OpenDir(const char *path)
 		rv = GetLastError();
 		FindClose(h);
 		if (rv != ERROR_NO_MORE_FILES) {
-			AG_SetError("FindNextFileError (%u)", rv);
+			AG_SetError("FindNextFileError (%lu)", rv);
 			goto fail;
 		}
 		return (dir);

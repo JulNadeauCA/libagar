@@ -28,6 +28,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#undef SLIST_ENTRY
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -103,17 +104,27 @@ int
 AG_FileExists(const char *path)
 {
 #ifdef WIN32
-	
+	if (GetFileAttributes(path) == INVALID_FILE_ATTRIBUTES) {
+		if (GetLastError() == ERROR_FILE_NOT_FOUND ||
+		    GetLastError() == ERROR_PATH_NOT_FOUND) {
+			return (0);
+		} else {
+			AG_SetError("%s: failed (%lu)", path,
+			    (u_long)GetLastError());
+			return (-1);
+		}
+	} else {
+		return (1);
+	}
 #else
 	struct stat sb;
 
 	if (stat(path, &sb) == -1) {
-		if (errno == ENOENT) {
-			return (0);
-		} else {
+		if (errno != ENOENT) {
 			AG_SetError("%s: %s", path, strerror(errno));
 			return (-1);
 		}
+		return (0);
 	} else {
 		return (1);
 	}
