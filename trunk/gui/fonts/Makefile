@@ -3,8 +3,9 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-TTFSRCS=ttf-bitstream-vera-1.10
+SUBDIR=	bitmap
 
+TTFSRCS=ttf-bitstream-vera-1.10
 TTF=	COPYRIGHT.TXT \
 	README.TXT \
 	RELEASENOTES.TXT \
