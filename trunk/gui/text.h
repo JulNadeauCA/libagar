@@ -36,6 +36,9 @@ typedef struct ag_font {
 	int size;
 	int style;
 	void *p;
+	struct {
+		Uint32 c0, c1;
+	} bmp;
 	SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 

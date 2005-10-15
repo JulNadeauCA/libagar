@@ -243,8 +243,9 @@ AG_TextboxDraw(void *p)
 
 	font = AG_FetchFont(
 	    AG_String(agConfig, "font-engine.default-font"),
-	    AG_Int(agConfig, "font-engine.default-size"),
-	    0);
+	    AG_Int(agConfig, "font-engine.default-size"), 0);
+	if (font == NULL)
+		fatal("%s", AG_GetError());
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 #ifdef UTF8
@@ -502,6 +503,8 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 	font = AG_FetchFont(
 	    AG_String(agConfig, "font-engine.default-font"),
 	    AG_Int(agConfig, "font-engine.default-size"), 0);
+	if (font == NULL)
+		fatal("%s", AG_GetError());
 
 	for (i = tstart; i < len; i++) {
 		if (s[i] == '\n') {

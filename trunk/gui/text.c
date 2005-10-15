@@ -58,6 +58,7 @@ int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
+int agFreetype = 1;			/* Use Freetype if available */
 
 #define GLYPH_NBUCKETS 1024
 
@@ -94,7 +95,7 @@ AG_FetchFont(const char *name, int size, int style)
 		goto out;
 
 	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
-		fatal("%s", AG_GetError());
+		goto fail;
 	
 	font = Malloc(sizeof(AG_Font), M_TEXT);
 	strlcpy(font->name, name, sizeof(font->name));
@@ -102,19 +103,54 @@ AG_FetchFont(const char *name, int size, int style)
 	font->style = style;
 
 #ifdef HAVE_FREETYPE
-	dprintf("%s (%d pts)\n", path, size);
-	if ((font->p = AG_TTFOpenFont(path, size)) == NULL) {
-		fatal("%s: %s", path, AG_GetError());
-	}
-	AG_TTFSetFontStyle(font->p, style);
-#else
-	/* TODO */
+	if (agFreetype) {
+		dprintf("FreeType <%s> (%d pts)\n", path, size);
+		if ((font->p = AG_TTFOpenFont(path, size)) == NULL) {
+			goto fail;
+		}
+		AG_TTFSetFontStyle(font->p, style);
+	} else
 #endif
+	{
+		char *spec;
+		char *msig, *c0, *c1, *flags;
+
+		font->p = AG_ObjectNew(NULL, path);
+		if (AG_WireGfx(font->p, "/gui-fonts") == -1) {
+			goto fail;
+		}
+		dprintf("Bitmap <%s> (%d pts)\n", path, size);
+		spec = AG_SPRITE(font->p,0).name;
+		msig = strsep(&spec, ":");
+		c0 = strsep(&spec, ":");
+		c1 = strsep(&spec, ":");
+		if (msig == NULL || strcasecmp(msig, "MAP") != 0 ||
+		    c0 == NULL || c1 == NULL) {
+			AG_ObjectDestroy(font->p);
+			Free(font->p, M_OBJECT);
+			AG_SetError("Invalid bitmap font spec");
+			goto fail;
+		}
+		font->bmp.c0 = (Uint32)strtol(c0, NULL, 10);
+		font->bmp.c1 = (Uint32)strtol(c1, NULL, 10);
+		if (AGOBJECT(font->p)->gfx->nsprites
+		    < (font->bmp.c1 - font->bmp.c0)) {
+			AG_ObjectDestroy(font->p);
+			Free(font->p, M_OBJECT);
+			AG_SetError("Font spec does not match bitmap count");
+			goto fail;
+		}
+		dprintf("Maps to Unicode %u-%u\n", font->bmp.c0, font->bmp.c1);
+	}
 
 	SLIST_INSERT_HEAD(&fonts, font, fonts);
 out:
 	AG_MutexUnlock(&agTextLock);
 	return (font);
+fail:
+	AG_MutexUnlock(&agTextLock);
+	Free(font, M_TEXT);
+	return (NULL);
 }
 
 static Uint32
@@ -132,23 +168,30 @@ AG_TextInit(void)
 {
 	int i;
 
-	if (AG_Bool(agConfig, "font-engine") == 0)
-		return (0);
-
 #ifdef HAVE_FREETYPE
-	if (AG_TTFInit() == -1) {
-		AG_SetError("AG_TTFInit: %s", SDL_GetError());
-		return (-1);
+	if (AG_Bool(agConfig, "use-freetype")) {
+		if (AG_TTFInit() == -1) {
+			AG_SetError("AG_TTFInit: %s", SDL_GetError());
+			return (-1);
+		}
+		agFreetype = 1;
+	} else
+#endif
+	{
+		agFreetype = 0;
 	}
+
 	agDefaultFont = AG_FetchFont(
 	    AG_String(agConfig, "font-engine.default-font"),
 	    AG_Int(agConfig, "font-engine.default-size"),
 	    AG_Int(agConfig, "font-engine.default-style"));
+	if (agDefaultFont == NULL) {
+		fatal("%s", AG_GetError());
+	}
 	agTextFontHeight = AG_TTFHeight(agDefaultFont->p);
 	agTextFontAscent = AG_TTFAscent(agDefaultFont->p);
 	agTextFontDescent = AG_TTFDescent(agDefaultFont->p);
 	agTextFontLineSkip = AG_TTFLineSkip(agDefaultFont->p);
-#endif
 
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
@@ -201,12 +244,19 @@ AG_TextDestroy(void)
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
 #ifdef HAVE_FREETYPE
-		AG_TTFCloseFont(fon->p);
+		if (agFreetype) {
+			AG_TTFCloseFont(fon->p);
+		} else
 #endif
+		{
+			AG_ObjectDestroy(fon->p);
+			Free(fon->p, M_OBJECT);
+		}
 		Free(fon, M_TEXT);
 	}
 #ifdef HAVE_FREETYPE
-	AG_TTFDestroy();
+	if (agFreetype)
+		AG_TTFDestroy();
 #endif
 }
 
@@ -277,7 +327,8 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 /* Render UTF-8 text onto a newly allocated transparent surface. */
 /* XXX use state variables for font spec */
 SDL_Surface *
-AG_TextRender(const char *fontname, int fontsize, Uint32 color, const char *text)
+AG_TextRender(const char *fontname, int fontsize, Uint32 color,
+    const char *text)
 {
 	SDL_Color c;
 	Uint32 *ucs;
@@ -318,6 +369,9 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 	    AG_String(agConfig, "font-engine.default-font"),
 	    fontsize >= 0 ? fontsize :
 	    AG_Int(agConfig, "font-engine.default-size"), 0);
+	if (font == NULL) {
+		fatal("%s", AG_GetError());
+	}
 	font_h = AG_TTFHeight(font->p);
 
 	/* Find out the line count. */
@@ -393,12 +447,68 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 
 #else /* !HAVE_FREETYPE */
 
+static __inline__ AG_Sprite *
+AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
+{
+	return (AG_SPRITE())
+}
+
 SDL_Surface *
 AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
-	/* TODO bitmap version */
-	return (NULL);
+	AG_Font font;
+	size_t i, text_len;
+	SDL_Surface *su0, *gsu, *su;
+	SDL_Rect rd;
+	int w, h = 0;
+	u_char c;
+
+	/* TODO support for size variants or scaling */
+	font = AG_FetchFont((fontname != NULL) ? fontname :
+	    AG_String(agConfig, "font-engine.default-font"), 0, 0);
+	if (font == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	su0 = AG_SPRITE(font->p,0);
+
+	/* Figure out the required surface dimensions. */
+	text_len = strlen(text);
+	for (w = 0, i = text_len-1; i >= 0; i--) {
+		c = text[i];
+		gsu = AG_TextBitmapGlyph(font, (Uint32)(text[i]));
+		w += gsu->w;
+		h = MAX(h,gsu->h);
+	}
+
+	/* Allocate the final surface. */
+	su = SDL_CreateRGBSurface(SDL_SWSURFACE | 
+	    (su0->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	    w, h, su0->format->BytesPerPixel,
+	    su0->format->Rmask,
+	    su0->format->Gmask,
+	    su0->format->Bmask,
+	    su0->format->Amask);
+	if (su == NULL)
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+
+	SDL_SetColorKey(su, su0->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL),
+	    su0->format->colorkey);
+	SDL_SetAlpha(su, su0->flags & (SDL_SRCALPHA|SDL_RLEACCEL),
+	    su0->format->alpha);
+
+	/* Blit the glyphs. */
+	rd.x = 0;
+	rd.y = 0;
+	for (i = 0; i < text_len; i++) {
+		c = text[i];
+		gsu = AG_TextBitmapGlyph(font, (Uint32)(text[i]));
+		rd.w = gsu->w;
+		rd.h = gsu->h;
+		SDL_BlitSurface(gsu, NULL, su, &rd);
+		rd.x += gsu->w;
+	}
+	return (su);
 }
 
 #endif /* HAVE_FREETYPE */
@@ -414,12 +524,10 @@ AG_TextPrescaleUnicode(const Uint32 *ucs, int *w, int *h)
 	c.g = 0;
 	c.b = 0;
 
-	/* XXX get the bounding box instead */
+	/* TODO use the bounding box in freetype mode */
 	su = AG_TextRenderUnicode(NULL, -1, c, ucs);
-	if (w != NULL)
-		*w = (int)su->w;
-	if (h != NULL)
-		*h = (int)su->h;
+	if (w != NULL) { *w = (int)su->w; }
+	if (h != NULL) { *h = (int)su->h; }
 	SDL_FreeSurface(su);
 }
 
