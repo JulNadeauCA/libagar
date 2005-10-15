@@ -7,11 +7,8 @@ PROG=	dencomp
 SRCS=	dencomp.c
 MAN1=	dencomp.1
 
-CFLAGS+=${SDL_CFLAGS}
-LIBS+=	${TOP}/core/loaders/libloader.a \
-	${TOP}/engine/error/liberror.a \
-	${TOP}/compat/libcompat.a \
-	${SDL_LIBS}
+CFLAGS+=`agar-config --cflags`
+LIBS+=	`agar-config --libs`
 
 include ${TOP}/mk/csoft.prog.mk
 include ${TOP}/mk/csoft.man.mk
