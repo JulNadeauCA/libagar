@@ -28,20 +28,13 @@
 
 #include <config/have_progname.h>
 
-#include <compat/strlcpy.h>
-#include <compat/strlcat.h>
-#include <compat/strsep.h>
-#include <compat/snprintf.h>
-
-#include <engine/error/error.h>
+#include <core/core.h>
 
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <SDL_types.h>
 
-#include <engine/loader/netbuf.h>
-#include <engine/loader/den.h>
+#include <core/loaders/den.h>
 
 int verbose = 0;
 char *outfile = NULL;
