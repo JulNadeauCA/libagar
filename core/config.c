@@ -573,6 +573,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 {
 	char file[MAXPATHLEN];
 	char *dir, *pathp = path;
+	int rv;
 
 	AG_StringCopy(agConfig, path_key, path, path_len);
 
@@ -581,20 +582,27 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	     dir = strsep(&pathp, ":")) {
 		strlcpy(file, dir, sizeof(file));
 
-		if (name[0] != '/') {
+#ifdef WIN32
+		if (name[0] != '\\')
+			strlcat(file, "\\", sizeof(file));
+#else
+		if (name[0] != '/')
 			strlcat(file, "/", sizeof(file));
-		}
+#endif
 		strlcat(file, name, sizeof(file));
 		if (ext != NULL) {
 			strlcat(file, ".", sizeof(file));
 			strlcat(file, ext, sizeof(file));
 		}
-		if (AG_FileExists(file)) {
+		if ((rv = AG_FileExists(file)) == 1) {
 			if (strlcpy(path, file, path_len) >= path_len) {
 				AG_SetError(_("The search path is too big."));
 				return (-1);
 			}
 			return (0);
+		} else if (rv == -1) {
+			AG_SetError("%s: %s", file, AG_GetError());
+			return (-1);
 		}
 	}
 	AG_StringCopy(agConfig, path_key, path, path_len);
