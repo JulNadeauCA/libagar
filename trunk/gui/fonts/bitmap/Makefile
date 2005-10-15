@@ -3,7 +3,7 @@
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-SHARE=	gui-fonts.den
+SHARESRC=gui-fonts.den
 SHAREDIR=${TTFDIR}
 
 include ${TOP}/mk/csoft.lib.mk
