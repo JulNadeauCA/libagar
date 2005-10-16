@@ -38,8 +38,6 @@
 #include <config/localedir.h>
 #include <config/network.h>
 
-#include <config/have_smpeg.h>
-#include <config/have_x11.h>
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
 #include <config/have_jpeg.h>
@@ -47,16 +45,9 @@
 
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
+
 #include <config/math_libs.h>
 
-#ifdef HAVE_SMPEG
-#include <config/smpeg_libs.h>
-#include <config/smpeg_cflags.h>
-#endif
-#ifdef HAVE_X11
-#include <config/x11_libs.h>
-#include <config/x11_cflags.h>
-#endif
 #ifdef HAVE_FREETYPE
 #include <config/freetype_libs.h>
 #include <config/freetype_cflags.h>
@@ -104,12 +95,6 @@ main(int argc, char *argv[])
 #ifdef SDL_CFLAGS
 			printf("%s ", SDL_CFLAGS);
 #endif
-#ifdef SMPEG_CFLAGS
-			printf("%s ", SMPEG_CFLAGS);
-#endif
-#ifdef X11_CFLAGS
-			printf("%s ", X11_CFLAGS);
-#endif
 #ifdef FREETYPE_CFLAGS
 			printf("%s ", FREETYPE_CFLAGS);
 #endif
@@ -137,12 +122,6 @@ main(int argc, char *argv[])
 #endif
 #ifdef SDL_LIBS
 			printf("%s ", SDL_LIBS);
-#endif
-#ifdef SMPEG_LIBS
-			printf("%s ", SMPEG_LIBS);
-#endif
-#ifdef X11_LIBS
-			printf("%s ", X11_LIBS);
 #endif
 #ifdef FREETYPE_LIBS
 			printf("%s ", FREETYPE_LIBS);

@@ -26,7 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_x11.h>
 #include <config/have_setlocale.h>
 #include <config/localedir.h>
 #include <config/version.h>
@@ -57,9 +56,6 @@
 #endif
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
-#endif
-#ifdef HAVE_X11
-#include <SDL_syswm.h>
 #endif
 
 #ifdef THREADS
@@ -130,9 +126,8 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 {
 	extern int agBgPopupMenu;
 
-#ifdef HAVE_X11
 	setenv("SDL_VIDEO_X11_WMCLASS", agProgName, 1);
-#endif
+
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
 		return (-1);

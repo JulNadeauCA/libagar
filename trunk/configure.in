@@ -1,15 +1,14 @@
 # $Csoft: configure.in,v 1.88 2005/05/08 02:10:27 vedge Exp $
 # Public domain
 
-REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
-REGISTER("--with-x11",		"X11-specific code [default: check]")
+REGISTER("--with-freetype",	"Use FreeType font engine [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-libqnet",	"Network support [default: check]")
 REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-network",	"Network support [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
-REGISTER("--enable-map",	"2D maps [default: yes]")
+REGISTER("--enable-map",	"Enable maps in Agar-Game [default: yes]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
@@ -19,7 +18,7 @@ REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
-REGISTER("--enable-warnings",	"Enable compiler warnings [default: no]")
+REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 
 # Agar version
 HDEFINE(VERSION, "\"1.0-beta\"")
@@ -68,15 +67,15 @@ if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
 fi
 
-# Require SDL and FreeType.
+# SDL is required.
 REQUIRE(sdl, 1.2.0)
-CHECK(freetype, 7.0.1)
 
-# Include X11-specific code? (only used for debugging)
-if [ "${with_x11}" != "no" ]; then
-	CHECK(x11)
+# Enable Freetype support if the Freetype library is found.
+# If FreeType is unavailable, Agar will fall back to bitmap fonts.
+if [ "${with_freetype}" != "no" ]; then
+	CHECK(freetype, 7.0.1)
 else
-	HUNDEF(HAVE_X11)
+	HUNDEF(HAVE_FREETYPE)
 fi
 
 # Enable OpenGL support if an OpenGL library is found.
@@ -103,13 +102,6 @@ else
 	HUNDEF(HAVE_LIBQNET)
 fi
 
-# Enable MPEG support if the SMPEG library is found.
-if [ "${with_smpeg}" != "no" ]; then
-	CHECK(smpeg, 0.4.4)
-else
-	HUNDEF(HAVE_SMPEG)
-fi
-
 # Compile a static binary?
 if [ "${enable_static}" = "yes" ]; then
 	MDEFINE(LDFLAGS, "-static")
@@ -129,12 +121,14 @@ else
 	HUNDEF(UTF8)
 fi
 
+# Enable astronomical units (constants are too large for some compilers).
 if [ "${enable_astro_units}" = "yes" ]; then
 	HDEFINE(ASTRONOMICAL_UNITS, 1)
 else
 	HUNDEF(ASTRONOMICAL_UNITS)
 fi
 
+# Enable conversion of historical units.
 if [ "${enable_histo_units}" = "yes" ]; then
 	HDEFINE(HISTORICAL_UNITS, 1)
 else
@@ -168,7 +162,6 @@ if [ "${enable_map}" != "no" ]; then
 else
 	HUNDEF(MAP)
 fi
-
 
 # Support 8/16/24/32bpp video displays by default.
 # Disable unused modes to reduce code size and gain some cycles.
