@@ -24,7 +24,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGbBtr:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGbBt:r:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -49,12 +49,12 @@ main(int argc, char *argv[])
 			break;
 		case 'b':
 			AG_SetBool(agConfig, "font.freetype", 0);
-			AG_SetString(agConfig, "font-face", "Vera.ttf");
+			AG_SetString(agConfig, "font-face", "minimal.xcf");
 			AG_SetInt(agConfig, "font-size", 11);
 			break;
 		case 'B':
 			AG_SetBool(agConfig, "font.freetype", 1);
-			AG_SetString(agConfig, "font-face", "minimal.xcf");
+			AG_SetString(agConfig, "font-face", "Vera.ttf");
 			break;
 		case 't':
 			AG_TextParseFontSpec(optarg);
@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
