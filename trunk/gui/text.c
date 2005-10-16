@@ -375,7 +375,8 @@ AG_TextRender(const char *fontname, int fontsize, Uint32 color,
 static __inline__ SDL_Surface *
 AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
 {
-	if (isalpha(c) && islower(c)) {
+	if ((font->flags & AG_FONT_UPPERCASE) &&
+	    (isalpha(c) && islower(c))) {
 		c = toupper(c);
 	}
 	if (c < font->c0 || c > font->c1) {
@@ -400,7 +401,7 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 			    0, 0, 8,
 			    0, 0, 0, 0));
 		}
-		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
+		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 			fatal("%s", AG_GetError());
 		}
 		return (AG_TTFRenderUnicodeSolid(font->p, text, NULL, cFg));
