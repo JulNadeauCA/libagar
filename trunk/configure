@@ -1599,14 +1599,76 @@ echo "#undef HAVE_FREETYPE" > config/have_freetype.h
 fi
 if [ "${with_gl}" != "no" ]
  then
-echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
-echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
+echo -n "checking for OpenGL (http://www.opengl.org)..."
+echo -n "checking for OpenGL (http://www.opengl.org)..." >> config.log
+GL_CFLAGS=
+GL_LIBS=
+if [ -d /usr/include/X11/GL ]; then
+GL_CFLAGS="-I/usr/include/X11"
+else
+NONE=1
+fi
+if [ -d /usr/include/X11R6/GL ]; then
+GL_CFLAGS="-I/usr/include/X11R6"
+else
+NONE=1
+fi
+if [ -d /usr/local/X11/include/GL ]; then
+GL_CFLAGS="-I/usr/local/X11/include"
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/include/GL ]; then
+GL_CFLAGS="-I/usr/local/X11R6/include"
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11/GL ]; then
+GL_CFLAGS="-I/usr/local/include/X11"
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11R6/GL ]; then
+GL_CFLAGS="-I/usr/local/include/X11R6"
+else
+NONE=1
+fi
+if [ -d /usr/X11/include/GL ]; then
+GL_CFLAGS="-I/usr/X11/include"
+else
+NONE=1
+fi
+if [ -d /usr/X11R6/include/GL ]; then
+GL_CFLAGS="-I/usr/X11R6/include"
+else
+NONE=1
+fi
+if [ -d /usr/local/X11/lib ]; then
+GL_LIBS="-L/usr/local/X11/lib"
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/lib ]; then
+GL_LIBS="-L/usr/local/X11R6/lib"
+else
+NONE=1
+fi
+if [ -d /usr/X11/lib ]; then
+GL_LIBS="-L/usr/X11/lib"
+else
+NONE=1
+fi
+if [ -d /usr/X11R6/lib ]; then
+GL_LIBS="-L/usr/X11R6/lib"
+else
+NONE=1
+fi
 if [ "$SYSTEM" = "Darwin" ]; then
 	OPENGL_CFLAGS=""
 	OPENGL_LIBS="-framework OpenGL"
 else
-	OPENGL_CFLAGS="${X11_CFLAGS}"
-	OPENGL_LIBS="${X11_LIBS} -lGL"
+	OPENGL_CFLAGS="${GL_CFLAGS}"
+	OPENGL_LIBS="${GL_LIBS} -lGL"
 fi
 cat << EOT > conftest.c
 #ifdef __APPLE__
