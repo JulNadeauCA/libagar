@@ -160,7 +160,7 @@ echo "    --with-docs                    Printable docs (-me/tbl/eqn/pic/refer) 
 echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-freetype                Use FreeType font engine [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
-echo "    --with-jpeg                    JPEG screenshot support [default: check]"
+echo "    --with-jpeg                    JPEG screenshot support [default: no]"
 echo "    --with-libqnet                 Network support [default: check]"
 echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-network               Network support [default: no]"
@@ -1654,7 +1654,7 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
 fi
-if [ "${with_jpeg}" != "no" ]
+if [ "${with_jpeg}" = "yes" ]
  then
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log

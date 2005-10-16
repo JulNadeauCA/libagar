@@ -3,7 +3,7 @@
 
 REGISTER("--with-freetype",	"Use FreeType font engine [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
-REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
+REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
 REGISTER("--with-libqnet",	"Network support [default: check]")
 REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-network",	"Network support [default: no]")
@@ -89,7 +89,7 @@ else
 fi
 
 # Enable JPEG support if libjpeg is found.
-if [ "${with_jpeg}" != "no" ]; then
+if [ "${with_jpeg}" = "yes" ]; then
 	CHECK(jpeg)
 else
 	HUNDEF(HAVE_JPEG)
@@ -185,4 +185,13 @@ if [ "${enable_32bpp}" != "no" ]; then
 else
 	HUNDEF(VIEW_32BPP)
 fi
+
+#if [ -d "$PREFIX/include/agar" ]; then
+#	echo ""
+#	echo "WARNING: -I$PREFIX/include is in your \$CFLAGS and agar"
+#	echo "includes are currently installed in $PREFIX/include/agar."
+#	echo "It is recommended that you remove them with \"make deinstall\""
+#	echo "prior to compiling in order to prevent conflicts."
+#	echo ""
+#fi
 
