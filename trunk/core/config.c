@@ -228,15 +228,12 @@ AG_ConfigInit(AG_Config *cfg)
 
 #ifdef HAVE_FREETYPE
 	AG_SetBool(cfg, "font.freetype", 1);
-	AG_SetString(cfg, "font.face", "Vera.ttf");
-	AG_SetInt(cfg, "font.size", 11);
-	AG_SetUint(cfg, "font.flags", 0);
 #else
 	AG_SetBool(cfg, "font.freetype", 0);
-	AG_SetString(cfg, "font.face", "minimal.xcf");
+#endif
+	AG_SetString(cfg, "font.face", "?");
 	AG_SetInt(cfg, "font.size", -1);
 	AG_SetUint(cfg, "font.flags", 0);
-#endif
 }
 
 int

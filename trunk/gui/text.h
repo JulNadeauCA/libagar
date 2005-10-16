@@ -59,7 +59,7 @@ extern int agTextFontHeight, agTextFontAscent, agTextFontDescent,
 	   agTextFontLineSkip, agTextTabWidth, agTextBlinkRate;
 
 int	 AG_TextInit(void);
-void	 AG_TextParseFontSpec(char *);
+void	 AG_TextParseFontSpec(const char *);
 void	 AG_TextDestroy(void);
 
 AG_Font			*AG_FetchFont(const char *, int, int);

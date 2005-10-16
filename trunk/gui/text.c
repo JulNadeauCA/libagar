@@ -120,6 +120,8 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
 		goto fail;
 
+	dprintf("Loading %s\n", path);
+
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
 		int tflags = 0;
@@ -145,7 +147,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		char *msig, *c0, *c1, *flags;
 		AG_Object *fobj;
 		AG_Netbuf *buf;
-
+		
 		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
 		    == NULL) {
 			goto fail;
@@ -214,6 +216,11 @@ AG_TextInit(void)
 
 #ifdef HAVE_FREETYPE
 	if (AG_Bool(agConfig, "font.freetype")) {
+		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
+			AG_SetString(agConfig, "font.face", "Vera.ttf");
+			AG_SetInt(agConfig, "font.size", 11);
+			AG_SetUint(agConfig, "font.flags", 0);
+		}
 		if (AG_TTFInit() == -1) {
 			AG_SetError("AG_TTFInit: %s", SDL_GetError());
 			return (-1);
@@ -224,6 +231,11 @@ AG_TextInit(void)
 	} else
 #endif
 	{
+		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
+			AG_SetString(agConfig, "font.face", "minimal.xcf");
+			AG_SetInt(agConfig, "font.size", -1);
+			AG_SetUint(agConfig, "font.flags", 0);
+		}
 		agFreetype = 0;
 		if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL)
 			fatal("%s", AG_GetError());
@@ -717,19 +729,24 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
  * (bold), 'i' (italic) and 'U' (uppercase).
  */
 void
-AG_TextParseFontSpec(char *fontspec)
+AG_TextParseFontSpec(const char *fontspec)
 {
-	char *s, *c;
+	char buf[128];
+	char *fs, *s, *c;
 
-	if ((s = strsep(&fontspec, ":,/")) != NULL &&
+	strlcpy(buf, fontspec, sizeof(buf));
+	fs = &buf[0];
+
+	if ((s = strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		AG_SetString(agConfig, "font.face", s);
+		dprintf("set: %s\n", AG_String(agConfig, "font.face"));
 	}
-	if ((s = strsep(&fontspec, ":,/")) != NULL &&
+	if ((s = strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		AG_SetInt(agConfig, "font.size", atoi(s));
 	}
-	if ((s = strsep(&fontspec, ":,/")) != NULL &&
+	if ((s = strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		u_int flags = 0;
 
