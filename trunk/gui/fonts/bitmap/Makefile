@@ -3,6 +3,6 @@
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-SHARESRC=gui-fonts.den
+SHARESRC=minimal.xcf
 
 include ${TOP}/mk/csoft.lib.mk

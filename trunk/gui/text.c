@@ -32,9 +32,11 @@
 #include <core/core.h>
 #include <core/view.h>
 #include <core/config.h>
+
 #ifdef HAVE_FREETYPE
 #include <core/loaders/ttf.h>
 #endif
+#include <core/loaders/xcf.h>
 
 #include <gui/window.h>
 #include <gui/vbox.h>
@@ -114,16 +116,15 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	font->ascent = 0;
 	font->descent = 0;
 	font->lineskip = 0;
+	
+	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
+		goto fail;
 
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
 		int tflags = 0;
 
-		dprintf("<%s>: Vector (%d pts)\n", path, size);
-		if (AG_ConfigFile("font-path", name, NULL,
-		    path, sizeof(path)) == -1) {
-			goto fail;
-		}
+		dprintf("<%s>: Vector (%d pts)\n", name, size);
 		if ((font->p = AG_TTFOpenFont(path, size)) == NULL) {
 			goto fail;
 		}
@@ -142,11 +143,20 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	{
 		char *spec;
 		char *msig, *c0, *c1, *flags;
+		AG_Object *fobj;
+		AG_Netbuf *buf;
 
-		font->p = AG_ObjectNew(NULL, name);
-		if (AG_WireGfx(font->p, "/gui-fonts") == -1) {
+		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
+		    == NULL) {
 			goto fail;
 		}
+		font->p = fobj = AG_ObjectNew(NULL, "font");
+		fobj->gfx = AG_GfxNew(fobj);
+		if (AG_XCFLoad(buf, 0, fobj->gfx) == -1) {
+			goto fail_bmp;
+		}
+		AG_NetbufClose(buf);
+
 		spec = AG_SPRITE(font->p,0).name;
 		msig = strsep(&spec, ":");
 		c0 = strsep(&spec, "-");
@@ -170,7 +180,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		font->descent = 0;
 		font->lineskip = font->height+2;
 	
-		dprintf("<%s>: Bitmap '%c'-'%c'\n", font->name,
+		dprintf("<%s>: Bitmap '%c'-'%c'\n", name,
 		    (char)font->c0, (char)font->c1);
 	}
 
