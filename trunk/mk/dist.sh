@@ -4,21 +4,11 @@
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
-#CVSROOT=/home/cvs/CVSROOT
 
 cd ..
 echo "snapshot: agar-${VER}"
 rm -fr agar-${VER}
 cp -fRp agar agar-${VER}
-
-#(cd ${CVSROOT} &&
-# mv -f Agar-ChangeLog Agar-ChangeLog-${VER} &&
-# touch Agar-ChangeLog &&
-# chgrp csoft Agar-ChangeLog &&
-# chmod 666 Agar-ChangeLog)
-
-#cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}/ChangeLog-${VER}
-#cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
 
 rm -fR `find agar-${VER} \( -name .svn \
     -or -name \*~ \
