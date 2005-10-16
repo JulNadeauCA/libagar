@@ -293,7 +293,8 @@ sub Scan
 
 	opendir(DIR, $dir) || die "$dir: $!";
 	ENTRY: foreach my $ent (readdir(DIR)) {
-		if ($ent eq '.' || $ent eq '..' || $ent eq 'CVS') {
+		if ($ent eq '.' || $ent eq '..' ||
+		    $ent eq 'CVS' || $ent eq '.svn') {
 			next ENTRY;
 		}
 		my $dent = join('/',$dir,$ent);
