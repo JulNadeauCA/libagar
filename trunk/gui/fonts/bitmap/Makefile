@@ -3,6 +3,6 @@
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-SHARESRC=minimal.xcf
+SHARESRC=minimal.xcf serif.xcf
 
 include ${TOP}/mk/csoft.lib.mk
