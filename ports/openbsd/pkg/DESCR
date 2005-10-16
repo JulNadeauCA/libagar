@@ -1,0 +1,13 @@
+The Agar project produces a portable and window-system independent
+GUI toolkit for SDL/OpenGL. The Agar core library implements an
+object system used by applications such as editors, games and
+simulations. The distribution also includes libraries for vector
+and raster graphics manipulations, game objects and 3D scene graphs.
+
+Packages can be built with additional FLAVORs:
+
+  threads: Agar built with support for multithreading.
+  net:     Agar built with networking capabilities.
+  gl:      Agar built with OpenGL support.
+  debug:   Agar built with debugging code.
+ 

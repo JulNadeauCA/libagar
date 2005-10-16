@@ -1,0 +1,359 @@
+@comment $OpenBSD$
+%%SHARED%%
+bin/agar-config
+include/agar/
+include/agar/compat/
+include/agar/compat/arc4random.h
+include/agar/compat/asprintf.h
+include/agar/compat/dir.h
+include/agar/compat/file.h
+include/agar/compat/gethostname.h
+include/agar/compat/math.h
+include/agar/compat/md5.h
+include/agar/compat/queue.h
+include/agar/compat/rmd160.h
+include/agar/compat/rwlock.h
+include/agar/compat/setenv.h
+include/agar/compat/sha1.h
+include/agar/compat/snprintf.h
+include/agar/compat/strlcat.h
+include/agar/compat/strlcpy.h
+include/agar/compat/strsep.h
+include/agar/compat/tree.h
+include/agar/compat/vasprintf.h
+include/agar/compat/vsnprintf.h
+include/agar/config/
+include/agar/config/astronomical_units.h
+include/agar/config/debug.h
+include/agar/config/edition.h
+include/agar/config/enable_nls.h
+include/agar/config/floating_point.h
+include/agar/config/freetype_cflags.h
+include/agar/config/freetype_libs.h
+include/agar/config/have_arc4random.h
+include/agar/config/have_asprintf.h
+include/agar/config/have_bounded_attribute.h
+include/agar/config/have_cygwin.h
+include/agar/config/have_format_attribute.h
+include/agar/config/have_freetype.h
+include/agar/config/have_getenv.h
+include/agar/config/have_gethostname.h
+include/agar/config/have_getpwuid.h
+include/agar/config/have_getuid.h
+include/agar/config/have_ieee754.h
+include/agar/config/have_jpeg.h
+include/agar/config/have_libqnet.h
+include/agar/config/have_long_double.h
+include/agar/config/have_math.h
+include/agar/config/have_md5.h
+include/agar/config/have_nonnull_attribute.h
+include/agar/config/have_opengl.h
+include/agar/config/have_progname.h
+include/agar/config/have_rmd160.h
+include/agar/config/have_sdl.h
+include/agar/config/have_setenv.h
+include/agar/config/have_setlocale.h
+include/agar/config/have_sha1.h
+include/agar/config/have_snprintf.h
+include/agar/config/have_strlcat.h
+include/agar/config/have_strlcpy.h
+include/agar/config/have_strsep.h
+include/agar/config/have_vasprintf.h
+include/agar/config/have_vsnprintf.h
+include/agar/config/historical_units.h
+include/agar/config/incldir.h
+include/agar/config/inclpdir.h
+include/agar/config/libdir.h
+include/agar/config/libqnet_cflags.h
+include/agar/config/libqnet_libs.h
+include/agar/config/localedir.h
+include/agar/config/map.h
+include/agar/config/math_libs.h
+include/agar/config/network.h
+include/agar/config/prefix.h
+include/agar/config/sdl_cflags.h
+include/agar/config/sdl_libs.h
+include/agar/config/sharedir.h
+include/agar/config/sysconfdir.h
+include/agar/config/threads.h
+include/agar/config/ttfdir.h
+include/agar/config/utf8.h
+include/agar/config/version.h
+include/agar/config/view_16bpp.h
+include/agar/config/view_24bpp.h
+include/agar/config/view_32bpp.h
+include/agar/config/view_8bpp.h
+include/agar/core/
+include/agar/core/audio.h
+include/agar/core/config.h
+include/agar/core/core.h
+include/agar/core/error.h
+include/agar/core/event.h
+include/agar/core/gfx.h
+include/agar/core/icons.h
+include/agar/core/loaders/
+include/agar/core/loaders/color.h
+include/agar/core/loaders/den.h
+include/agar/core/loaders/integral.h
+include/agar/core/loaders/netbuf.h
+include/agar/core/loaders/real.h
+include/agar/core/loaders/string.h
+include/agar/core/loaders/surface.h
+include/agar/core/loaders/ttf.h
+include/agar/core/loaders/version.h
+include/agar/core/loaders/vertex.h
+include/agar/core/loaders/xcf.h
+include/agar/core/math.h
+include/agar/core/monitor/
+include/agar/core/monitor/monitor.h
+include/agar/core/object.h
+include/agar/core/objmgr.h
+include/agar/core/prop.h
+include/agar/core/rcs.h
+include/agar/core/threads.h
+include/agar/core/timeout.h
+include/agar/core/typesw.h
+include/agar/core/view.h
+include/agar/game/
+include/agar/game/actor.h
+include/agar/game/game.h
+include/agar/game/map/
+include/agar/game/map/insert.h
+include/agar/game/map/map.h
+include/agar/game/map/mapedit.h
+include/agar/game/map/mapview.h
+include/agar/game/map/nodemask.h
+include/agar/game/map/nodesel.h
+include/agar/game/map/refsel.h
+include/agar/game/map/tool.h
+include/agar/game/map/tools.h
+include/agar/game/map/transform.h
+include/agar/game/perso.h
+include/agar/game/space.h
+include/agar/gui/
+include/agar/gui/animview.h
+include/agar/gui/bitmap.h
+include/agar/gui/box.h
+include/agar/gui/button.h
+include/agar/gui/checkbox.h
+include/agar/gui/colors.h
+include/agar/gui/combo.h
+include/agar/gui/cursors.h
+include/agar/gui/file_dlg.h
+include/agar/gui/fixed.h
+include/agar/gui/fspinbutton.h
+include/agar/gui/glview.h
+include/agar/gui/graph.h
+include/agar/gui/gui.h
+include/agar/gui/hbox.h
+include/agar/gui/hpane.h
+include/agar/gui/hsvpal.h
+include/agar/gui/keycodes.h
+include/agar/gui/label.h
+include/agar/gui/matview.h
+include/agar/gui/menu.h
+include/agar/gui/mfspinbutton.h
+include/agar/gui/mspinbutton.h
+include/agar/gui/notebook.h
+include/agar/gui/objsel.h
+include/agar/gui/pixmap.h
+include/agar/gui/primitive.h
+include/agar/gui/radio.h
+include/agar/gui/scrollbar.h
+include/agar/gui/separator.h
+include/agar/gui/spinbutton.h
+include/agar/gui/statusbar.h
+include/agar/gui/style.h
+include/agar/gui/table.h
+include/agar/gui/tableview.h
+include/agar/gui/text.h
+include/agar/gui/textbox.h
+include/agar/gui/titlebar.h
+include/agar/gui/tlist.h
+include/agar/gui/toolbar.h
+include/agar/gui/ucombo.h
+include/agar/gui/unicode.h
+include/agar/gui/units.h
+include/agar/gui/vbox.h
+include/agar/gui/vpane.h
+include/agar/gui/widget.h
+include/agar/gui/window.h
+include/agar/libintl/
+include/agar/libintl/libintl.h
+include/agar/libintl/libintl_local.h
+include/agar/mat/
+include/agar/mat/gaussj.h
+include/agar/mat/lu.h
+include/agar/mat/mat.h
+include/agar/mat/vec.h
+include/agar/mat/veci.h
+include/agar/rg/
+include/agar/rg/animation.h
+include/agar/rg/feature.h
+include/agar/rg/fill.h
+include/agar/rg/pixmap.h
+include/agar/rg/prim.h
+include/agar/rg/sketch.h
+include/agar/rg/sketchproj.h
+include/agar/rg/texsel.h
+include/agar/rg/texture.h
+include/agar/rg/tile.h
+include/agar/rg/tileset.h
+include/agar/rg/tileview.h
+include/agar/sg/
+include/agar/sg/sg.h
+include/agar/sg/sg_camera.h
+include/agar/sg/sg_math.h
+include/agar/sg/sg_matrix.h
+include/agar/sg/sg_quaternion.h
+include/agar/sg/sg_vector.h
+include/agar/sg/sg_view.h
+include/agar/vg/
+include/agar/vg/drawing.h
+include/agar/vg/vg.h
+include/agar/vg/vg_block.h
+include/agar/vg/vg_circle.h
+include/agar/vg/vg_ellipse.h
+include/agar/vg/vg_line.h
+include/agar/vg/vg_mask.h
+include/agar/vg/vg_math.h
+include/agar/vg/vg_origin.h
+include/agar/vg/vg_ortho.h
+include/agar/vg/vg_polygon.h
+include/agar/vg/vg_primitive.h
+include/agar/vg/vg_snap.h
+include/agar/vg/vg_text.h
+lib/libag_compat.a
+lib/libag_compat.la
+lib/libag_core.a
+lib/libag_core.la
+lib/libag_core_loaders.a
+lib/libag_core_loaders.la
+lib/libag_core_monitor.a
+lib/libag_core_monitor.la
+lib/libag_game.a
+lib/libag_game.la
+lib/libag_game_map.a
+lib/libag_game_map.la
+lib/libag_gui.a
+lib/libag_gui.la
+lib/libag_intl.a
+lib/libag_intl.la
+lib/libag_mat.a
+lib/libag_mat.la
+lib/libag_rg.a
+lib/libag_rg.la
+lib/libag_vg.a
+lib/libag_vg.la
+share/agar/
+share/agar/core-icons.den
+share/agar/fonts/
+share/agar/fonts/COPYRIGHT.TXT
+share/agar/fonts/README.TXT
+share/agar/fonts/RELEASENOTES.TXT
+share/agar/fonts/Vera.ttf
+share/agar/fonts/VeraBI.ttf
+share/agar/fonts/VeraBd.ttf
+share/agar/fonts/VeraIt.ttf
+share/agar/fonts/VeraMoBI.ttf
+share/agar/fonts/VeraMoBd.ttf
+share/agar/fonts/VeraMoIt.ttf
+share/agar/fonts/VeraMono.ttf
+share/agar/fonts/VeraSe.ttf
+share/agar/fonts/VeraSeBd.ttf
+share/agar/fonts/minimal.xcf
+share/agar/fonts/serif.xcf
+share/agar/gui-pixmaps.den
+share/agar/man/
+share/agar/man/cat1/
+share/agar/man/cat2/
+share/agar/man/cat3/
+share/agar/man/cat3/agar.cat3
+share/agar/man/cat3/bitmap.cat3
+share/agar/man/cat3/box.cat3
+share/agar/man/cat3/button.cat3
+share/agar/man/cat3/checkbox.cat3
+share/agar/man/cat3/combo.cat3
+share/agar/man/cat3/core.cat3
+share/agar/man/cat3/event.cat3
+share/agar/man/cat3/fspinbutton.cat3
+share/agar/man/cat3/gettext.cat3
+share/agar/man/cat3/gfx.cat3
+share/agar/man/cat3/graph.cat3
+share/agar/man/cat3/hbox.cat3
+share/agar/man/cat3/hsvpal.cat3
+share/agar/man/cat3/label.cat3
+share/agar/man/cat3/map.cat3
+share/agar/man/cat3/mapview.cat3
+share/agar/man/cat3/menu.cat3
+share/agar/man/cat3/object.cat3
+share/agar/man/cat3/prop.cat3
+share/agar/man/cat3/radio.cat3
+share/agar/man/cat3/scrollbar.cat3
+share/agar/man/cat3/spinbutton.cat3
+share/agar/man/cat3/text.cat3
+share/agar/man/cat3/textbox.cat3
+share/agar/man/cat3/tileview.cat3
+share/agar/man/cat3/timeout.cat3
+share/agar/man/cat3/tlist.cat3
+share/agar/man/cat3/ucombo.cat3
+share/agar/man/cat3/units.cat3
+share/agar/man/cat3/vbox.cat3
+share/agar/man/cat3/version.cat3
+share/agar/man/cat3/view.cat3
+share/agar/man/cat3/widget.cat3
+share/agar/man/cat3/window.cat3
+share/agar/man/cat4/
+share/agar/man/cat5/
+share/agar/man/cat5/den.cat5
+share/agar/man/cat5/xcf.cat5
+share/agar/man/cat6/
+share/agar/man/cat7/
+share/agar/man/cat8/
+share/agar/man/cat9/
+share/agar/man/man1/
+share/agar/man/man2/
+share/agar/man/man3/
+@man share/agar/man/man3/agar.3
+@man share/agar/man/man3/bitmap.3
+@man share/agar/man/man3/box.3
+@man share/agar/man/man3/button.3
+@man share/agar/man/man3/checkbox.3
+@man share/agar/man/man3/combo.3
+@man share/agar/man/man3/core.3
+@man share/agar/man/man3/event.3
+@man share/agar/man/man3/fspinbutton.3
+@man share/agar/man/man3/gettext.3
+@man share/agar/man/man3/gfx.3
+@man share/agar/man/man3/graph.3
+@man share/agar/man/man3/hbox.3
+@man share/agar/man/man3/hsvpal.3
+@man share/agar/man/man3/label.3
+@man share/agar/man/man3/map.3
+@man share/agar/man/man3/mapview.3
+@man share/agar/man/man3/menu.3
+@man share/agar/man/man3/object.3
+@man share/agar/man/man3/prop.3
+@man share/agar/man/man3/radio.3
+@man share/agar/man/man3/scrollbar.3
+@man share/agar/man/man3/spinbutton.3
+@man share/agar/man/man3/text.3
+@man share/agar/man/man3/textbox.3
+@man share/agar/man/man3/tileview.3
+@man share/agar/man/man3/timeout.3
+@man share/agar/man/man3/tlist.3
+@man share/agar/man/man3/ucombo.3
+@man share/agar/man/man3/units.3
+@man share/agar/man/man3/vbox.3
+@man share/agar/man/man3/version.3
+@man share/agar/man/man3/view.3
+@man share/agar/man/man3/widget.3
+@man share/agar/man/man3/window.3
+share/agar/man/man4/
+share/agar/man/man5/
+@man share/agar/man/man5/den.5
+@man share/agar/man/man5/xcf.5
+share/agar/man/man6/
+share/agar/man/man7/
+share/agar/man/man8/
+share/agar/man/man9/
