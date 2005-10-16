@@ -41,9 +41,8 @@ LIB_MINOR?=	0
 LIB_ADD?=
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
-LIBTOOL?=	./libtool
 
-# Required files
+LIBTOOL?=	${TOP}/mk/libtool/libtool
 LTCONFIG?=	${TOP}/mk/libtool/ltconfig
 LTCONFIG_GUESS?=${TOP}/mk/libtool/config.guess
 LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
@@ -348,6 +347,10 @@ ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
 	    ${SH} ${LTCONFIG} ${LTMAIN_SH}; \
+	    if [ ! -f "${LIBTOOL}" ]; then \
+		echo "mv libtool ${LIBTOOL}"; \
+		mv libtool ${LIBTOOL}; \
+	    fi; \
 	fi
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
