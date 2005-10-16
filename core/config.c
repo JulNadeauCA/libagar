@@ -227,16 +227,16 @@ AG_ConfigInit(AG_Config *cfg)
 #endif
 
 #ifdef HAVE_FREETYPE
-	AG_SetBool(cfg, "use-freetype", 1);
-	AG_SetString(cfg, "font-engine.default-font", "Vera.ttf");
-	AG_SetInt(cfg, "font-engine.default-size", 11);
-	AG_SetInt(cfg, "font-engine.default-style", 0);
+	AG_SetBool(cfg, "font.freetype", 1);
+	AG_SetString(cfg, "font.face", "Vera.ttf");
+	AG_SetInt(cfg, "font.size", 11);
+	AG_SetUint(cfg, "font.flags", 0);
 #else
-	AG_SetBool(cfg, "use-freetype", 0);
-	AG_SetString(cfg, "font-engine.default-font", "minimal.xcf");
-	AG_SetInt(cfg, "font-engine.default-size", -1);
-	AG_SetInt(cfg, "font-engine.default-style", -1);
-#endif /* HAVE_FREETYPE */
+	AG_SetBool(cfg, "font.freetype", 0);
+	AG_SetString(cfg, "font.face", "minimal.xcf");
+	AG_SetInt(cfg, "font.size", -1);
+	AG_SetUint(cfg, "font.flags", 0);
+#endif
 }
 
 int

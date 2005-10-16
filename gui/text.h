@@ -9,6 +9,8 @@
 
 #include "begin_code.h"
 
+#define AG_FONT_NAME_MAX 32
+
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
 	AG_MSG_WARNING,
@@ -17,7 +19,7 @@ enum ag_text_msg_title {
 
 /* Cached glyph surface/texture information. */
 typedef struct ag_glyph {
-	char fontname[32];		/* Font name */
+	char fontname[AG_FONT_NAME_MAX];
 	int fontsize;			/* Font size in points */
 	Uint32 color;			/* Glyph color */
 	Uint32 ch;			/* Unicode character */
@@ -30,15 +32,25 @@ typedef struct ag_glyph {
 	SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
-/* Font engine independent representation of a font style. */
+/* Cached font */
 typedef struct ag_font {
-	char name[32];
-	int size;
-	int style;
-	void *p;
-	struct {
-		Uint32 c0, c1;
-	} bmp;
+	enum {
+		AG_FONT_VECTOR,
+		AG_FONT_BITMAP
+	} type;
+	char name[AG_FONT_NAME_MAX];
+	int size;			/* Size in points */
+	u_int flags;
+#define AG_FONT_BOLD		0x01	/* Bold font */
+#define AG_FONT_ITALIC		0x02	/* Italic font */
+#define AG_FONT_UNDERLINE	0x04	/* Underlined */
+#define AG_FONT_UPPERCASE	0x08	/* Force uppercase display */
+	void *p;			/* Underlying font object */
+	Uint32 c0, c1;			/* Range of characters (bitmap) */
+	int height;			/* Body size in pixels */
+	int ascent;			/* Ascent (relative to baseline) */
+	int descent;			/* Descent (relative to baseline) */
+	int lineskip;			/* Multiline y-increment */
 	SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 
@@ -50,7 +62,7 @@ int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(char *);
 void	 AG_TextDestroy(void);
 
-AG_Font		*AG_FetchFont(const char *, int, int);
+AG_Font			*AG_FetchFont(const char *, int, int);
 __inline__ SDL_Surface	*AG_TextRender(const char *, int, Uint32, const char *);
 SDL_Surface		*AG_TextRenderUnicode(const char *, int, SDL_Color,
 			                      const Uint32 *);
