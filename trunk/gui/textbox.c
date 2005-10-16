@@ -63,6 +63,8 @@ const AG_WidgetOps agTextboxOps = {
 	AG_TextboxScale
 };
 
+extern int agFreetype;
+
 static void mousebuttondown(AG_Event *);
 static void mousemotion(AG_Event *);
 static void keydown(AG_Event *);
@@ -241,10 +243,7 @@ AG_TextboxDraw(void *p)
 			return;
 	}
 
-	font = AG_FetchFont(
-	    AG_String(agConfig, "font-engine.default-font"),
-	    AG_Int(agConfig, "font-engine.default-size"), 0);
-	if (font == NULL)
+	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
 		fatal("%s", AG_GetError());
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
@@ -284,7 +283,6 @@ AG_TextboxDraw(void *p)
 
 	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
-		int invert = 0;
 #ifdef UTF8
 		Uint32 c = ucs[i];
 #else
@@ -316,47 +314,49 @@ AG_TextboxDraw(void *p)
 
 		if (!agView->opengl) {
 #ifdef HAVE_FREETYPE
-			FT_Bitmap *ftbmp;
-			AG_TTFFont *ttf = font->p;
-			AG_TTFGlyph *glyph;
-			int xglyph, yglyph;
-			Uint8 *src;
+			if (agFreetype) {
+				FT_Bitmap *ftbmp;
+				AG_TTFFont *ttf = font->p;
+				AG_TTFGlyph *glyph;
+				int xglyph, yglyph;
+				Uint8 *src;
 
-			if (AG_TTFFindGlyph(ttf, c,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-				continue;
-			}
-			glyph = ttf->current;
-			ftbmp = &glyph->bitmap;
-			src = ftbmp->buffer;
-
-			if (i == 0 && glyph->minx < 0) {
-				x -= glyph->minx;
-			}
-			if ((x + glyph->minx + ftbmp->width + glyph->advance)
-			    >= AGWIDGET(tbox)->w)
-				continue;
-
-			for (yglyph = 0; yglyph < ftbmp->rows; yglyph++) {
-				/* Work around FreeType 9.3.3 bug. */
-				if (glyph->yoffset < 0)
-					glyph->yoffset = 0;
-
-				for (xglyph = 0; xglyph < ftbmp->width;
-				     xglyph++) {
-					if ((invert && src[xglyph]) ||
-					   (!invert && !src[xglyph])) {
-						continue;
-					}
-					AG_WidgetPutPixel(tbox,
-					    x + glyph->minx + xglyph,
-					    y + glyph->yoffset + yglyph,
-					    AG_COLOR(TEXTBOX_TXT_COLOR));
+				if (AG_TTFFindGlyph(ttf, c,
+				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP)
+				    != 0) {
+					continue;
 				}
-				src += ftbmp->pitch;
-			}
-			x += glyph->advance;
-#else /* !HAVE_FREETYPE */
+				glyph = ttf->current;
+				ftbmp = &glyph->bitmap;
+				src = ftbmp->buffer;
+
+				if (i == 0 && glyph->minx < 0) {
+					x -= glyph->minx;
+				}
+				if ((x + glyph->minx + ftbmp->width +
+				    glyph->advance) >= AGWIDGET(tbox)->w)
+					continue;
+
+				for (yglyph = 0; yglyph < ftbmp->rows;
+				     yglyph++) {
+					if (glyph->yoffset < 0) {
+						glyph->yoffset = 0;
+					}
+					for (xglyph = 0; xglyph < ftbmp->width;
+					     xglyph++) {
+						if (!src[xglyph]) {
+							continue;
+						}
+						AG_WidgetPutPixel(tbox,
+						   x + glyph->minx + xglyph,
+						   y + glyph->yoffset + yglyph,
+						   AG_COLOR(TEXTBOX_TXT_COLOR));
+					}
+					src += ftbmp->pitch;
+				}
+				x += glyph->advance;
+			} else
+#endif /* HAVE_FREETYPE */
 			{
 				SDL_Rect rd;
 
@@ -368,8 +368,7 @@ AG_TextboxDraw(void *p)
 				SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
 				AG_TextUnusedGlyph(gl);
 			}
-#endif /* HAVE_FREETYPE */
-		} else {
+		} else {				/* agView->opengl */
 #ifdef HAVE_OPENGL
 			int dx, dy;
 
@@ -481,12 +480,12 @@ keyup(AG_Event *event)
 
 /* Map mouse coordinates to a position within the string. */
 static int
-cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
+AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 {
 	AG_WidgetBinding *stringb;
 	AG_Font *font;
 	int tstart = 0;
-	int i, x, y;
+	int i, x, x1, y;
 	size_t len;
 	char *s;
 	Uint32 ch;
@@ -500,10 +499,7 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
-	font = AG_FetchFont(
-	    AG_String(agConfig, "font-engine.default-font"),
-	    AG_Int(agConfig, "font-engine.default-size"), 0);
-	if (font == NULL)
+	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
 		fatal("%s", AG_GetError());
 
 	for (i = tstart; i < len; i++) {
@@ -517,7 +513,7 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 		
 		ch = (Uint32)s[i];
 #ifdef HAVE_FREETYPE
-		{
+		if (agFreetype) {
 			AG_TTFFont *ttf = font->p;
 			FT_Bitmap *ftbmp;
 			AG_TTFGlyph *glyph;
@@ -528,36 +524,23 @@ cursor_position(AG_Textbox *tbox, int mx, int my, int *pos)
 			}
 			glyph = ttf->current;
 			ftbmp = &glyph->bitmap;
-
-			if (i == 0 && glyph->minx < 0)
-				x -= glyph->minx;
-			if ((x + glyph->minx+ftbmp->width)
-			    >= AGWIDGET(tbox)->w)
-				continue;
-		
-			if (mx >= x &&
-			    mx < x+glyph->minx+ftbmp->width) {
-				*pos = i;
-				goto in;
-			}
+			x1 = x + glyph->minx + ftbmp->width;
+			if (i == 0 && glyph->minx < 0) { x -= glyph->minx; }
+			if (x1 >= AGWIDGET(tbox)->w) { continue; }
+			if (mx >= x && mx < x1) { *pos = i; goto in; }
 			x += glyph->advance;
-		}
-#else /* !HAVE_FREETYPE */
+		} else
+#endif /* HAVE_FREETYPE */
 		{
 			AG_Glyph *gl;
 			
 			gl = AG_TextRenderGlyph(NULL, -1, 0, ch);
-			if ((x + gl->su->w) >= AGWIDGET(tbox)->w) {
-				continue;
-			}
-			if (mx >= x && mx < (x + gl->su->w)) {
-				*pos = i;
-				goto in;
-			}
+			x1 = x + gl->su->w;
+			if (x1 >= AGWIDGET(tbox)->w) { continue; }
+			if (mx >= x && mx < x1) { *pos = i; goto in; }
 			x += gl->su->w;
 			AG_TextUnusedGlyph(gl);
 		}
-#endif /* HAVE_FREETYPE */
 	}
 	AG_WidgetUnlockBinding(stringb);
 	return (1);
@@ -567,11 +550,11 @@ in:
 }
 
 static void
-move_cursor(AG_Textbox *tbox, int mx, int my)
+AG_TextboxMoveCursor(AG_Textbox *tbox, int mx, int my)
 {
 	int rv;
 
-	rv = cursor_position(tbox, mx, my, &tbox->pos);
+	rv = AG_TextboxCursorPosition(tbox, mx, my, &tbox->pos);
 	if (rv == -1) {
 		tbox->pos = 0;
 	} else if (rv == 1) {
@@ -597,7 +580,7 @@ mousebuttondown(AG_Event *event)
 		AG_WidgetFocus(tbox);
 
 	if (btn == SDL_BUTTON_LEFT)
-		move_cursor(tbox, mx, my);
+		AG_TextboxMoveCursor(tbox, mx, my);
 }
 
 static void
@@ -609,7 +592,7 @@ mousemotion(AG_Event *event)
 	int state = AG_INT(5);
 
 	if (state & SDL_BUTTON_LEFT)
-		move_cursor(tbox, mx, my);
+		AG_TextboxMoveCursor(tbox, mx, my);
 }
 
 void

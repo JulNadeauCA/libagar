@@ -127,7 +127,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGr:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGbBtr:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -150,9 +150,19 @@ main(int argc, char *argv[])
 		case 'r':
 			fps = atoi(optarg);
 			break;
+		case 'b':
+			AG_SetBool(agConfig, "font.freetype", 0);
+			break;
+		case 'B':
+			AG_SetBool(agConfig, "font.freetype", 1);
+			break;
+		case 't':
+			AG_TextParseFontSpec(optarg);
+			break;
 		case '?':
 		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
+			printf("%s [-vfFgGbB] [-r fps] [-t fontspec]\n",
+			    agProgName);
 			exit(0);
 		}
 	}
