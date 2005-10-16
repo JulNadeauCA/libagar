@@ -127,7 +127,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGbBtr:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGbBt:r:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
