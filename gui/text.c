@@ -222,7 +222,6 @@ AG_TextInit(void)
 	agTextFontAscent = agDefaultFont->ascent;
 	agTextFontDescent = agDefaultFont->descent;
 	agTextFontLineSkip = agDefaultFont->lineskip;
-	dprintf("XXXXXXXXXXXXXXXXXX Freetype: %d\n", agFreetype);
 
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
