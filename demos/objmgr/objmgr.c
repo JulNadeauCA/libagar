@@ -24,7 +24,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGbBt:r:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGbBt:T:r:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -56,12 +56,16 @@ main(int argc, char *argv[])
 			AG_SetBool(agConfig, "font.freetype", 1);
 			AG_SetString(agConfig, "font-face", "Vera.ttf");
 			break;
+		case 'T':
+			AG_SetString(agConfig, "font-path", "%s", optarg);
+			break;
 		case 't':
 			AG_TextParseFontSpec(optarg);
 			break;
 		case '?':
 		default:
-			printf("%s [-vfFgGbB] [-r fps] [-t fontspec]\n",
+			printf("%s [-vfFgGbB] [-r fps] [-t fontspec] "
+			       "[-T font-path]\n",
 			    agProgName);
 			exit(0);
 		}
