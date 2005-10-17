@@ -212,16 +212,21 @@ AG_ConfigInit(AG_Config *cfg)
 	}
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 
+#if defined(WIN32)
+	AG_SetString(cfg, "den-path", ".");
+	AG_SetString(cfg, "load-path", "%s:.", udatadir);
+#else
 	AG_SetString(cfg, "den-path", "%s", SHAREDIR);
 	AG_SetString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
-
+#endif
+	
 #if defined(__APPLE__)
 	AG_SetString(cfg, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
 	                                  "/Library/Fonts:"
 					  "/System/Library/Fonts",
 					  udatadir, TTFDIR, pwd->pw_dir);
 #elif defined(WIN32)
-	AG_SetString(cfg, "font-path", "fonts:%s", TTFDIR);
+	AG_SetString(cfg, "font-path", "fonts:.");
 #else
 	AG_SetString(cfg, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 #endif
