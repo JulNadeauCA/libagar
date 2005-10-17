@@ -41,6 +41,7 @@ YFLAGS?=	-d
 SHARE?=
 CONF?=
 CONFDIR?=
+WINDRES?=
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
@@ -106,7 +107,7 @@ depend: depend-subdir
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
-# Build the program's object files.
+# Build the program's object files
 _prog_objs:
 	@if [ "${PROG}" != "" -a "${OBJS}" = "" ]; then \
 	    for F in ${SRCS}; do \
@@ -120,8 +121,12 @@ _prog_objs:
 		fi; \
 	    done; \
 	fi
+	if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
+		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
+		${WINDRES} -o ${WINRES}.o ${WINRES}; \
+	fi
 
-# Build profiled versions of the program's object files.
+# Build profiled versions of the program's object files
 _prog_pobjs:
 	@if [ "${GMONOUT}" != "" -a "${POBJS}" = "" ]; then \
 	    for F in ${SRCS}; do \
@@ -147,11 +152,25 @@ ${PROG}: _prog_objs ${OBJS}
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
                 done; \
-	        echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}"; \
-	        ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}; \
+		if [ "${WINRES}" != "" ]; then \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS} \
+		        ${WINRES}.o"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS} \
+		        ${WINRES}.o; \
+		else \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}; \
+		fi; \
 	    else \
-	        echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}"; \
-	        ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}; \
+		if [ "${WINRES}" != "" ]; then \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS} \
+		        ${WINRES}.o"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS} \
+		        ${WINRES}.o; \
+		else \
+	            echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}"; \
+	            ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}; \
+		fi; \
 	    fi; \
 	fi
 
@@ -202,8 +221,8 @@ clean-prog:
 	        echo "rm -f ${POBJS}"; \
 	        rm -f ${POBJS}; \
 	    fi; \
-	    echo "rm -f ${PROG} ${GMONOUT}"; \
-	    rm -f ${PROG} ${GMONOUT}; \
+	    echo "rm -f ${PROG} ${GMONOUT} ${WINRES}.o"; \
+	    rm -f ${PROG} ${GMONOUT} ${WINRES}.o; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
 	    echo "rm -f ${CLEANFILES}"; \
