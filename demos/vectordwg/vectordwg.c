@@ -162,7 +162,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL) == -1 ||
+	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
