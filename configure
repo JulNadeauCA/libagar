@@ -290,15 +290,15 @@ LIBDIR="\"$PREFIX/lib\""
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR" $LIBDIR >> config/libdir.h
 echo "#endif /* LIBDIR */" >> config/libdir.h
-INCLDIR="\${PREFIX}/include/agar"
+INCLDIR="\${PREFIX}/include/agar/agar"
 echo "INCLDIR=$INCLDIR" >> Makefile.config
-INCLDIR="\"$PREFIX/include/agar\""
+INCLDIR="\"$PREFIX/include/agar/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif /* INCLDIR */" >> config/incldir.h
-INCLPDIR="\${PREFIX}/include"
+INCLPDIR="\${PREFIX}/include/agar"
 echo "INCLPDIR=$INCLPDIR" >> Makefile.config
-INCLPDIR="\"$PREFIX/include\""
+INCLPDIR="\"$PREFIX/include/agar\""
 echo "#ifndef INCLPDIR" > config/inclpdir.h
 echo "#define INCLPDIR" $INCLPDIR >> config/inclpdir.h
 echo "#endif /* INCLPDIR */" >> config/inclpdir.h
