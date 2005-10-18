@@ -337,6 +337,7 @@ AG_FileDlgInit(AG_FileDlg *fdg, int flags)
 	AG_WidgetInit(fdg, "file-dlg", &agFileDlgOps,
 	    AG_WIDGET_WFILL|AG_WIDGET_HFILL);
 	fdg->flags = flags;
+	fdg->cfile[0] = '\0';
 	if ((getcwd(fdg->cwd, sizeof(fdg->cwd))) == NULL) {
 		fprintf(stderr, "%s: %s", fdg->cwd, strerror(errno));
 	}
