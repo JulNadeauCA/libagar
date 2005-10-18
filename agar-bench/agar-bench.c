@@ -161,19 +161,18 @@ SaveToCSV(AG_Event *event)
 static void
 SaveToFileDlg(AG_Event *event)
 {
-	char defpath[FILENAME_MAX];
 	struct test_ops *test = AG_PTR(1);
 	AG_Table *t = AG_PTR(2);
 	AG_Window *win;
 	AG_FileDlg *dlg;
 	FILE *f;
 
-	strlcpy(defpath, test->name, sizeof(defpath));
-	strlcat(defpath, ".txt", sizeof(defpath));
-
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Save benchmark results");
-	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"), defpath);
+	dlg = AG_FileDlgNew(win, 0);
+	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(dlg, "%s.txt", test->name);
+
 	AG_FileDlgAddType(dlg, "ASCII File (comma-separated)", "*.txt",
 	    SaveToCSV, "%p,%p,%i", test, t, ':');
 	AG_FileDlgAddType(dlg, "ASCII File (tab-separated)", "*.txt",
