@@ -1,6 +1,11 @@
 /*	$Csoft: gamemenu.c,v 1.6 2005/10/07 07:09:35 vedge Exp $	*/
 /*	Public domain	*/
 
+/*
+ * This program demonstrates the use of the file loader widget,
+ * AG_FileDlg.
+ */
+
 #include <agar/core/core.h>
 #include <agar/core/config.h>
 #include <agar/core/view.h>
@@ -16,8 +21,6 @@ LoadFile(AG_Event *event)
 	char *file = AG_STRING(1);
 
 	AG_TextMsg(AG_MSG_INFO, "File: %s", file);
-	AG_TextMsg(AG_MSG_INFO, "%d args, a[0]=%d, a[1]=%d", event->argc,
-	    event->argt[0], event->argt[1]);
 }
 
 static void
@@ -32,6 +35,7 @@ CreateWindow(void)
 	AG_FileDlgSetDirectory(fd, "/");
 	AG_FileDlgSetFilename(fd, "foo.foo");
 	AG_FileDlgAddType(fd, "Foo file", "*.foo", LoadFile, NULL);
+	AG_FileDlgAddType(fd, "Bar/baz file", "*.bar,*.baz", LoadFile, NULL);
 	
 	AG_WindowMaximize(win);
 	AG_WindowShow(win);
