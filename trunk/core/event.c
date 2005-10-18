@@ -455,6 +455,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt,
 	ev->handler = fn;
 	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
 	AG_MutexUnlock(&ob->lock);
 	return (ev);
 }
@@ -485,6 +486,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	ev->handler = fn;
 	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	ev->argc0 = ev->argc;
 
 	TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	ob->nevents++;
@@ -666,6 +668,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 		debug(DEBUG_SCHED, "%s: resched `%s'\n", rcvr->name, evname);
 		AG_DelTimeout(rcvr, &ev->timeout);
 	}
+	ev->argc = ev->argc0;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argv[ev->argc].p = sndr;
 	ev->argt[ev->argc] = AG_EVARG_POINTER;
