@@ -92,7 +92,7 @@ typedef struct ag_event {
 #define AG_EVENT_PROPAGATE	0x02	/* Relay event to object descendents */
 #define AG_EVENT_SCHEDULED	0x04	/* Timing-dependent (read-only flag) */
 	void (*handler)(struct ag_event *);
-	int	 argc;
+	int	 argc, argc0;
 	AG_EvArg argv[AG_EVENT_ARGS_MAX];
 	int 	 argt[AG_EVENT_ARGS_MAX];
 	char	*argn[AG_EVENT_ARGS_MAX];
