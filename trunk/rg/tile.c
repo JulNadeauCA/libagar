@@ -1164,8 +1164,8 @@ import_images(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
-	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
-	    NULL);
+	dlg = AG_FileDlgNew(win, 0);
+	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", import_xcf,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", import_bmp,
@@ -1901,20 +1901,17 @@ export_bmp(AG_Event *event)
 static void
 export_image_dlg(AG_Event *event)
 {
-	char path[FILENAME_MAX];
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileview *tv = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_FileDlg *dlg;
 	AG_Window *win;
 
-	strlcpy(path, t->name, sizeof(path));
-	strlcat(path, ".bmp", sizeof(path));
-
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
-	dlg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"),
-	    path);
+	dlg = AG_FileDlgNew(win, 0);
+	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);
 	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);

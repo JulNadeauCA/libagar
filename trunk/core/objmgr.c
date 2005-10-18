@@ -362,17 +362,14 @@ void
 AG_ObjMgrSaveTo(void *p)
 {
 	AG_Object *ob = p;
-	char path[FILENAME_MAX];
 	AG_Window *win;
 	AG_FileDlg *fdg;
 
-	strlcpy(path, ob->name, sizeof(path));
-	strlcat(path, ".", sizeof(path));
-	strlcat(path, ob->type, sizeof(path));
-
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fdg = AG_FileDlgNew(win, 0, AG_String(agConfig, "save-path"), path);
+	fdg = AG_FileDlgNew(win, 0);
+	AG_FileDlgSetDirectory(fdg, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(fdg, "%s.%s", ob->name, ob->type);
 	AG_SetEvent(fdg, "file-validated", export_object, "%p,%p", ob, win);
 	AG_SetEvent(fdg, "file-cancelled", AGWINDETACH(win));
 
