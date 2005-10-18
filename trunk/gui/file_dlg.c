@@ -39,6 +39,14 @@
 #include <errno.h>
 #include <unistd.h>
 
+#ifdef WIN32
+#define FILESEPC '\\'
+#define FILESEPSTR "\\"
+#else
+#define FILESEPC '/'
+#define FILESEPSTR "/"
+#endif
+
 static AG_WidgetOps agFileDlgOps = {
 	{
 		NULL,			/* init */
@@ -53,12 +61,12 @@ static AG_WidgetOps agFileDlgOps = {
 };
 
 AG_FileDlg *
-AG_FileDlgNew(void *parent, int flags, const char *cwd, const char *file)
+AG_FileDlgNew(void *parent, int flags)
 {
 	AG_FileDlg *fdg;
 
 	fdg = Malloc(sizeof(AG_FileDlg), M_OBJECT);
-	AG_FileDlgInit(fdg, flags, cwd, file);
+	AG_FileDlgInit(fdg, flags);
 	AG_ObjectAttach(parent, fdg);
 	return (fdg);
 }
@@ -81,7 +89,7 @@ update_listing(AG_FileDlg *fdg)
 	char **dirs, **files;
 	size_t i, ndirs = 0, nfiles = 0;
 
-	if ((dir = AG_OpenDir(".")) == NULL) {
+	if ((dir = AG_OpenDir(fdg->cwd)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, ".: %s", strerror(errno));
 		return;
 	}
@@ -93,17 +101,24 @@ update_listing(AG_FileDlg *fdg)
 	AG_MutexLock(&fdg->tlFiles->lock);
 
 	for (i = 0; i < dir->nents; i++) {
-		char *file = dir->ents[i];
+		char path[FILENAME_MAX];
+		
+		strlcpy(path, fdg->cwd, sizeof(path));
+		strlcat(path, FILESEPSTR, sizeof(path));
+		strlcat(path, dir->ents[i], sizeof(path));
 
-		if (AG_GetFileInfo(file, &info) == -1) {
+		if (AG_FileDlgAtRoot(fdg) && strcmp(dir->ents[i], "..")==0) {
+			continue;
+		}
+		if (AG_GetFileInfo(path, &info) == -1) {
 			continue;
 		}
 		if (info.type == AG_FILE_DIRECTORY) {
 			dirs = Realloc(dirs, (ndirs + 1) * sizeof(char *));
-			dirs[ndirs++] = Strdup(file);
+			dirs[ndirs++] = Strdup(dir->ents[i]);
 		} else {
 			files = Realloc(files, (nfiles + 1) * sizeof(char *));
-			files[nfiles++] = Strdup(file);
+			files[nfiles++] = Strdup(dir->ents[i]);
 		}
 	}
 	qsort(dirs, ndirs, sizeof(char *), compare_filenames);
@@ -144,9 +159,8 @@ select_dir(AG_Event *event)
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		if (AG_ChDir(ti->text) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "%s: %s", ti->text,
-			    strerror(errno));
+		if (AG_FileDlgSetDirectory(fdg, ti->text) == -1) {
+			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		} else {
 			AG_PostEvent(NULL, fdg, "dir-selected", NULL);
 			update_listing(fdg);
@@ -156,19 +170,21 @@ select_dir(AG_Event *event)
 }
 
 static void
-process_file(AG_FileDlg *fdg, const char *file)
+AG_FileDlgProcessFile(AG_FileDlg *fdg)
 {
-	AG_Window *pwin = AG_WidgetParentWindow(fdg);
 	AG_TlistItem *it;
-
-	if ((fdg->flags & AG_FILEDLG_NOCLOSE) == 0)
-		AG_ViewDetach(pwin);
+	AG_Window *pwin;
 
 	if ((it = AG_TlistSelectedItem(fdg->comTypes->list)) != NULL) {
 		AG_FileType *ft = it->p1;
 
 		if (ft->action != NULL)
-			AG_PostEvent(NULL, fdg, ft->action->name, "%s", file);
+			AG_PostEvent(NULL, fdg, ft->action->name, "%s",
+			    fdg->cfile);
+	}
+	if ((fdg->flags & AG_FILEDLG_CLOSEWIN) == 0) {
+		pwin = AG_WidgetParentWindow(fdg);
+		AG_PostEvent(NULL, pwin, "window-close", NULL);
 	}
 }
 
@@ -181,9 +197,10 @@ select_file(AG_Event *event)
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_TextboxPrintf(fdg->tbFile, "%s", ti->text);
-		AG_PostEvent(NULL, fdg, "file-selected", "%s/%s",
-		    fdg->cwd, ti->text);
+		char path[MAXPATHLEN];
+
+		AG_FileDlgSetFilename(fdg, ti->text);
+		AG_PostEvent(NULL, fdg, "file-selected", "%s", fdg->cfile);
 	}
 	AG_MutexUnlock(&tl->lock);
 }
@@ -197,9 +214,9 @@ select_and_validate_file(AG_Event *event)
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_TextboxPrintf(fdg->tbFile, "%s", ti->text);
-		AG_PostEvent(NULL, fdg, "file-validated", "%s", ti->text);
-		process_file(fdg, ti->text);
+		AG_FileDlgSetFilename(fdg, ti->text);
+		AG_PostEvent(NULL, fdg, "file-validated", "%s", fdg->cfile);
+		AG_FileDlgProcessFile(fdg);
 	}
 	AG_MutexUnlock(&tl->lock);
 }
@@ -207,13 +224,11 @@ select_and_validate_file(AG_Event *event)
 static void
 validate_file(AG_Event *event)
 {
-	char file[MAXPATHLEN];
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_FileType *ft;
 
-	AG_TextboxCopyString(fdg->tbFile, file, sizeof(file));
-	AG_PostEvent(NULL, fdg, "file-validated", "%s", file);
-	process_file(fdg, file);
+	AG_PostEvent(NULL, fdg, "file-validated", "%s", fdg->cfile);
+	AG_FileDlgProcessFile(fdg);
 }
 
 static void
@@ -229,14 +244,16 @@ enter_file(AG_Event *event)
 		goto fail;
 	}
 	if (info.type == AG_FILE_DIRECTORY) {
-		if (AG_ChDir(file) == 0) {
+		if (AG_FileDlgSetDirectory(fdg, file) == 0) {
 			update_listing(fdg);
 		} else {
-			goto fail;
+			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			return;
 		}
 	} else {
-		AG_PostEvent(NULL, fdg, "file-validated", "%s", file);
-		process_file(fdg, file);
+		AG_FileDlgSetFilename(fdg, file);
+		AG_PostEvent(NULL, fdg, "file-validated", "%s", fdg->cfile);
+		AG_FileDlgProcessFile(fdg);
 	}
 	return;
 fail:
@@ -247,10 +264,12 @@ static void
 do_cancel(AG_Event *event)
 {
 	AG_FileDlg *fdg = AG_PTR(1);
-	AG_Window *pwin = AG_WidgetParentWindow(fdg);
+	AG_Window *pwin;
 	
-	if ((fdg->flags & AG_FILEDLG_NOCLOSE) == 0)
-		AG_ViewDetach(pwin);
+	if ((fdg->flags & AG_FILEDLG_CLOSEWIN) == 0) {
+		pwin = AG_WidgetParentWindow(fdg);
+		AG_PostEvent(NULL, pwin, "window-close", NULL);
+	}
 }
 
 static void
@@ -263,20 +282,63 @@ file_dlg_shown(AG_Event *event)
 	update_listing(fdg);
 }
 
+int
+AG_FileDlgAtRoot(AG_FileDlg *fdg)
+{
+	return (fdg->cwd[0] == FILESEPC && fdg->cwd[1] == '\0');
+}
+
+int
+AG_FileDlgSetDirectory(AG_FileDlg *fdg, const char *dir)
+{
+	char *c;
+
+	if (dir[0] == '.' && dir[1] == '\0') {
+		if ((getcwd(fdg->cwd, sizeof(fdg->cwd))) == NULL) {
+			AG_SetError("getcwd: %s", strerror(errno));
+			return (-1);
+		}
+	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
+		if (!AG_FileDlgAtRoot(fdg)) {
+			if ((c = strrchr(fdg->cwd, FILESEPC)) != NULL)
+				*c = '\0';
+		}
+	} else if (dir[0] != FILESEPC) {
+		strlcat(fdg->cwd, FILESEPSTR, sizeof(fdg->cwd));
+		strlcat(fdg->cwd, dir, sizeof(fdg->cwd));
+	} else {
+		strlcpy(fdg->cwd, dir, sizeof(fdg->cwd));
+	}
+	return (0);
+}
+
 void
-AG_FileDlgInit(AG_FileDlg *fdg, int flags, const char *cwd,
-    const char *file)
+AG_FileDlgSetFilename(AG_FileDlg *fdg, const char *fmt, ...)
+{
+	char file[FILENAME_MAX];
+	va_list ap;
+	
+	va_start(ap, fmt);
+	vsnprintf(file, sizeof(file), fmt, ap);
+	va_end(ap);
+
+	AG_TextboxPrintf(fdg->tbFile, "%s", file);
+	
+	strlcpy(fdg->cfile, fdg->cwd, sizeof(fdg->cfile));
+	if (!AG_FileDlgAtRoot(fdg)) {
+		strlcat(fdg->cfile, FILESEPSTR, sizeof(fdg->cfile));
+	}
+	strlcat(fdg->cfile, file, sizeof(fdg->cfile));
+}
+
+void
+AG_FileDlgInit(AG_FileDlg *fdg, int flags)
 {
 	AG_WidgetInit(fdg, "file-dlg", &agFileDlgOps,
 	    AG_WIDGET_WFILL|AG_WIDGET_HFILL);
 	fdg->flags = flags;
-	if (cwd != NULL) {
-		strlcpy(fdg->cwd, cwd, sizeof(fdg->cwd));
-	} else {
-		if ((getcwd(fdg->cwd, sizeof(fdg->cwd))) == NULL) {
-			fdg->cwd[0] = '/';
-			fdg->cwd[1] = '\0';
-		}
+	if ((getcwd(fdg->cwd, sizeof(fdg->cwd))) == NULL) {
+		fprintf(stderr, "%s: %s", fdg->cwd, strerror(errno));
 	}
 	TAILQ_INIT(&fdg->types);
 
@@ -290,10 +352,10 @@ AG_FileDlgInit(AG_FileDlg *fdg, int flags, const char *cwd,
 		    (flags&AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0);
 	}
 
+	fdg->lbCwd = AG_LabelNew(fdg, AG_LABEL_POLLED, _("Cwd: %s"),
+	    &fdg->cwd[0]);
+
 	fdg->tbFile = AG_TextboxNew(fdg, _("File: "));
-	if (file != NULL) {
-		AG_TextboxPrintf(fdg->tbFile, "%s", file);
-	}
 	fdg->comTypes = AG_ComboNew(fdg, 0, _("Type: "));
 	AG_TlistPrescale(fdg->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistPrescale(fdg->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
@@ -340,6 +402,7 @@ AG_FileDlgScale(void *p, int w, int h)
 	
 	if (w == -1 && h == -1) {
 		AGWIDGET_SCALE(fdg->hPane, -1, -1);
+		AGWIDGET_SCALE(fdg->lbCwd , -1, -1);
 		AGWIDGET_SCALE(fdg->tbFile, -1, -1);
 		AGWIDGET_SCALE(fdg->comTypes, -1, -1);
 		AGWIDGET_SCALE(fdg->btnOk, -1, -1);
@@ -347,6 +410,7 @@ AG_FileDlgScale(void *p, int w, int h)
 	
 		AGWIDGET(fdg)->w = AGWIDGET(fdg->hPane)->w;
 		AGWIDGET(fdg)->h = AGWIDGET(fdg->hPane)->h +
+				 AGWIDGET(fdg->lbCwd)->h+1 +
 				 AGWIDGET(fdg->tbFile)->h+1 +
 				 AGWIDGET(fdg->comTypes)->h+1 +
 				 MAX(AGWIDGET(fdg->btnOk)->h,
@@ -358,8 +422,10 @@ AG_FileDlgScale(void *p, int w, int h)
 	
 	AG_WidgetScale(fdg->hPane,
 	    w,
-	    h - AGWIDGET(fdg->tbFile)->h - AGWIDGET(fdg->comTypes)->h - btn_h);
+	    h - AGWIDGET(fdg->lbCwd)->h - AGWIDGET(fdg->tbFile)->h -
+	        AGWIDGET(fdg->comTypes)->h - btn_h);
 
+	AG_WidgetScale(fdg->lbCwd, w, AGWIDGET(fdg->lbCwd)->h);
 	AG_WidgetScale(fdg->tbFile, w, AGWIDGET(fdg->tbFile)->h);
 	AG_WidgetScale(fdg->comTypes, w, AGWIDGET(fdg->comTypes)->h);
 	AG_WidgetScale(fdg->btnOk, w/2, AGWIDGET(fdg->tbFile)->h);
@@ -368,11 +434,17 @@ AG_FileDlgScale(void *p, int w, int h)
 	AGWIDGET(fdg->hPane)->x = 0;
 	AGWIDGET(fdg->hPane)->y = 0;
 	AGWIDGET(fdg->hPane)->w = w;
-	AGWIDGET(fdg->hPane)->h = h - AGWIDGET(fdg->tbFile)->h -
+	AGWIDGET(fdg->hPane)->h = h -
+	    AGWIDGET(fdg->tbFile)->h -
+	    AGWIDGET(fdg->lbCwd)->h -
 	    AGWIDGET(fdg->comTypes)->h - btn_h - 2;
 	AG_WidgetScale(fdg->hPane, AGWIDGET(fdg->hPane)->w,
 	    AGWIDGET(fdg->hPane)->h);
 	y += AGWIDGET(fdg->hPane)->h + 1;
+
+	AGWIDGET(fdg->lbCwd)->x = 0;
+	AGWIDGET(fdg->lbCwd)->y = y;
+	y += AGWIDGET(fdg->lbCwd)->h + 1;
 
 	AGWIDGET(fdg->tbFile)->x = 0;
 	AGWIDGET(fdg->tbFile)->y = y;

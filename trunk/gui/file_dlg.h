@@ -11,6 +11,7 @@
 #include <agar/gui/tlist.h>
 #include <agar/gui/combo.h>
 #include <agar/gui/hpane.h>
+#include <agar/gui/label.h>
 
 #include "begin_code.h"
 
@@ -26,13 +27,15 @@ typedef struct ag_file_dlg {
 	AG_Widget wid;
 	int flags;
 #define AG_FILEDLG_MULTI	0x01	/* Return a set of files */
-#define AG_FILEDLG_NOCLOSE	0x02	/* Never close the parent window */
+#define AG_FILEDLG_CLOSEWIN	0x02	/* Close the parent window when done */
 
 	char cwd[MAXPATHLEN];			/* Current working directory */
+	char cfile[MAXPATHLEN];			/* Current file path */
 	AG_HPane *hPane;
 	AG_HPaneDiv *hDiv;
 	AG_Tlist *tlDirs;			/* List of directories */
 	AG_Tlist *tlFiles;			/* List of files */
+	AG_Label *lbCwd;			/* CWD label */
 	AG_Textbox *tbFile;			/* Filename input */
 	AG_Combo *comTypes;			/* File types combo */
 	AG_Button *btnOk;			/* OK button */
@@ -41,14 +44,17 @@ typedef struct ag_file_dlg {
 } AG_FileDlg;
 
 __BEGIN_DECLS
-AG_FileDlg *AG_FileDlgNew(void *, int, const char *, const char *);
-void AG_FileDlgInit(AG_FileDlg *, int, const char *, const char *);
+AG_FileDlg *AG_FileDlgNew(void *, int);
+void AG_FileDlgInit(AG_FileDlg *, int);
 void AG_FileDlgScale(void *, int, int);
 void AG_FileDlgDestroy(void *);
+int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);
+void AG_FileDlgSetFilename(AG_FileDlg *, const char *, ...);
 
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
 			       const char *, void (*)(AG_Event *),
 			       const char *, ...);
+__inline__ int AG_FileDlgAtRoot(AG_FileDlg *);
 __END_DECLS
 
 #include "close_code.h"
