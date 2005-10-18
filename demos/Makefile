@@ -7,7 +7,8 @@ SUBDIR=	gamemenu \
 	glview \
 	objmgr \
 	focusing \
-	vectordwg
+	vectordwg \
+	loader
 
 all: prereq all-subdir
 clean: prereq clean-subdir
