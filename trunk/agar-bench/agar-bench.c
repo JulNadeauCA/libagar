@@ -142,7 +142,7 @@ SaveToCSV(AG_Event *event)
 {
 	struct test_ops *test = AG_PTR(1);
 	AG_Table *t = AG_PTR(2);
-	char separator = AG_CHAR(3);
+	char separator = AG_UCHAR(3);
 	char *path = AG_STRING(4);
 	FILE *f;
 
@@ -175,11 +175,11 @@ SaveToFileDlg(AG_Event *event)
 	AG_FileDlgSetFilename(dlg, "%s.txt", test->name);
 
 	AG_FileDlgAddType(dlg, "ASCII File (comma-separated)", "*.txt",
-	    SaveToCSV, "%p,%p,%i", test, t, ':');
+	    SaveToCSV, "%p,%p,%c", test, t, ':');
 	AG_FileDlgAddType(dlg, "ASCII File (tab-separated)", "*.txt",
-	    SaveToCSV, "%p,%p,%i", test, t, '\t');
+	    SaveToCSV, "%p,%p,%c", test, t, '\t');
 	AG_FileDlgAddType(dlg, "ASCII File (space-separated)", "*.txt",
-	    SaveToCSV, "%p,%p,%i", test, t, ' ');
+	    SaveToCSV, "%p,%p,%c", test, t, ' ');
 	
 	AG_WindowShow(win);
 }
