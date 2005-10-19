@@ -39,14 +39,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#ifdef WIN32
-#define FILESEPC '\\'
-#define FILESEPSTR "\\"
-#else
-#define FILESEPC '/'
-#define FILESEPSTR "/"
-#endif
-
 static AG_WidgetOps agFileDlgOps = {
 	{
 		NULL,			/* init */
@@ -104,7 +96,7 @@ update_listing(AG_FileDlg *fdg)
 		char path[FILENAME_MAX];
 		
 		strlcpy(path, fdg->cwd, sizeof(path));
-		strlcat(path, FILESEPSTR, sizeof(path));
+		strlcat(path, AG_PATHSEP, sizeof(path));
 		strlcat(path, dir->ents[i], sizeof(path));
 
 		if (AG_FileDlgAtRoot(fdg) && strcmp(dir->ents[i], "..")==0) {
@@ -182,7 +174,7 @@ AG_FileDlgProcessFile(AG_FileDlg *fdg)
 			AG_PostEvent(NULL, fdg, ft->action->name, "%s",
 			    fdg->cfile);
 	}
-	if ((fdg->flags & AG_FILEDLG_CLOSEWIN) == 0) {
+	if (fdg->flags & AG_FILEDLG_CLOSEWIN) {
 		pwin = AG_WidgetParentWindow(fdg);
 		AG_PostEvent(NULL, pwin, "window-close", NULL);
 	}
@@ -266,7 +258,7 @@ do_cancel(AG_Event *event)
 	AG_FileDlg *fdg = AG_PTR(1);
 	AG_Window *pwin;
 	
-	if ((fdg->flags & AG_FILEDLG_CLOSEWIN) == 0) {
+	if (fdg->flags & AG_FILEDLG_CLOSEWIN) {
 		pwin = AG_WidgetParentWindow(fdg);
 		AG_PostEvent(NULL, pwin, "window-close", NULL);
 	}
@@ -285,7 +277,7 @@ file_dlg_shown(AG_Event *event)
 int
 AG_FileDlgAtRoot(AG_FileDlg *fdg)
 {
-	return (fdg->cwd[0] == FILESEPC && fdg->cwd[1] == '\0');
+	return (fdg->cwd[0] == AG_PATHSEPC && fdg->cwd[1] == '\0');
 }
 
 int
@@ -300,11 +292,19 @@ AG_FileDlgSetDirectory(AG_FileDlg *fdg, const char *dir)
 		}
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
 		if (!AG_FileDlgAtRoot(fdg)) {
-			if ((c = strrchr(fdg->cwd, FILESEPC)) != NULL)
+			if ((c = strrchr(fdg->cwd, AG_PATHSEPC)) != NULL) {
 				*c = '\0';
+			}
+			if (c == &fdg->cwd[0]) {
+				fdg->cwd[0] = AG_PATHSEPC;
+				fdg->cwd[1] = '\0';
+			}
 		}
-	} else if (dir[0] != FILESEPC) {
-		strlcat(fdg->cwd, FILESEPSTR, sizeof(fdg->cwd));
+	} else if (dir[0] != AG_PATHSEPC) {
+		if (!(fdg->cwd[0] == AG_PATHSEPC &&
+		      fdg->cwd[1] == '\0')) {
+			strlcat(fdg->cwd, AG_PATHSEP, sizeof(fdg->cwd));
+		}
 		strlcat(fdg->cwd, dir, sizeof(fdg->cwd));
 	} else {
 		strlcpy(fdg->cwd, dir, sizeof(fdg->cwd));
@@ -326,7 +326,7 @@ AG_FileDlgSetFilename(AG_FileDlg *fdg, const char *fmt, ...)
 	
 	strlcpy(fdg->cfile, fdg->cwd, sizeof(fdg->cfile));
 	if (!AG_FileDlgAtRoot(fdg)) {
-		strlcat(fdg->cfile, FILESEPSTR, sizeof(fdg->cfile));
+		strlcat(fdg->cfile, AG_PATHSEP, sizeof(fdg->cfile));
 	}
 	strlcat(fdg->cfile, file, sizeof(fdg->cfile));
 }
