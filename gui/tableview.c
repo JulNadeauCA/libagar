@@ -1451,7 +1451,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	Free(row->cell[cell].text, 0);
 
 	va_start(args, fmt);
-	vasprintf(&row->cell[cell].text, fmt, args);
+	AG_Vasprintf(&row->cell[cell].text, fmt, args);
 	va_end(args);
 
 	row->cell[cell].image = AG_TextRender(NULL, -1,
