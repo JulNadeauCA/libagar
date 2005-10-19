@@ -192,6 +192,7 @@ AG_TableScale(void *p, int w, int h)
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 
 	AG_TableSizeFillCols(t);
+	AG_TableUpdateScrollbars(t);
 }
 
 static __inline__ void
@@ -607,6 +608,7 @@ AG_TableEnd(AG_Table *t)
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
+	AG_TableUpdateScrollbars(t);
 	AG_MutexUnlock(&t->lock);
 }
 
