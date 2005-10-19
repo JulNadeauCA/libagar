@@ -30,14 +30,16 @@
 #include <config/localedir.h>
 #include <config/version.h>
 #include <config/network.h>
-
-#include <compat/setenv.h>
-#include <compat/strlcat.h>
+#include <config/have_pthreads_xopen.h>
+#include <config/have_pthread_mutex_recursive.h>
+#include <config/have_pthread_mutex_recursive_np.h>
 
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
 #include <core/typesw.h>
+
+#include <compat/setenv.h>
 
 #include <gui/primitive.h>
 #include <gui/cursors.h>
@@ -88,8 +90,16 @@ AG_InitCore(const char *progname, u_int flags)
 
 #ifdef THREADS
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
+#if defined(HAVE_PTHREADS_XOPEN)
+	pthread_mutexattr_settype(&agRecursiveMutexAttr,
+	    PTHREAD_MUTEX_RECURSIVE_NP);
+#elif defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP) || \
+      defined(HAVE_PTHREAD_MUTEX_RECURSIVE)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
+#else
+#error "THREADS options requires recursive mutexes"
+#endif
 	AG_MutexInitRecursive(&agLinkageLock);
 	AG_MutexInitRecursive(&agTimingLock);
 #endif
