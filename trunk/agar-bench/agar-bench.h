@@ -1,10 +1,10 @@
 /*	$Csoft: agar-bench.h,v 1.3 2005/10/03 17:37:59 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
-#include <engine/view.h>
-#include <engine/map/map.h>
-#include <engine/widget/gui.h>
+#include <agar/core/core.h>
+#include <agar/core/view.h>
+#include <agar/game/map/map.h>
+#include <agar/gui/gui.h>
 
 struct testfn_ops {
 	char *name;
