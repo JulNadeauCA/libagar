@@ -437,6 +437,7 @@ keydown(AG_Event *event)
 		return;
 
 	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
+		AG_PostEvent(NULL, tbox, "textbox-done", NULL);
 		return;
 	}
 	
