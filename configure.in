@@ -60,6 +60,7 @@ CHECK(arc4random)
 CHECK(md5)
 CHECK(sha1)
 CHECK(rmd160)
+CHECK(pthreads)
 
 CHECK(libqnet)
 
