@@ -216,6 +216,7 @@ __inline__ void	 AG_WidgetSetString(void *, const char *, const char *);
 __inline__ void	 AG_WidgetSetPointer(void *, const char *, void *);
 
 enum ag_widget_sizespec AG_WidgetParseSizeSpec(const char *, int *);
+__inline__ int AG_WidgetScrollDelta(Uint32 *);
 __END_DECLS
 
 #include "close_code.h"

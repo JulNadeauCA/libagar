@@ -1529,3 +1529,16 @@ AG_WidgetParseSizeSpec(const char *spec_text, int *w)
 	return (AG_WIDGET_BAD_SPEC);
 }
 
+int
+AG_WidgetScrollDelta(Uint32 *t1)
+{
+	Uint32 t2 = SDL_GetTicks();
+	int delta;
+
+	if (*t1 != 0 && ((delta = (t2 - *t1))) < 250) {
+		return (((250-delta)<<3)>>9);
+	}
+	*t1 = SDL_GetTicks();
+	return (1);
+}
+
