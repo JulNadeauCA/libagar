@@ -59,8 +59,7 @@
 #include <gui/notebook.h>
 #include <gui/hsvpal.h>
 #include <gui/separator.h>
-
-#include <sys/types.h>
+#include <gui/file_dlg.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -200,7 +199,8 @@ AG_ConfigInit(AG_Config *cfg)
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	pwd = getpwuid(getuid());
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
-	strlcat(udatadir, "/.", sizeof(udatadir));
+	strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
+	strlcat(udatadir, ".", sizeof(udatadir));
 	strlcat(udatadir, agProgName, sizeof(udatadir));
 #else
 	udatadir[0] = '.';
@@ -307,6 +307,16 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 	AG_WriteString(buf, agRcsPassword);
 
 	AG_MapEditorSave(buf);
+
+	if (AG_String(agConfig, "save-path") != NULL) {
+		char path[MAXPATHLEN];
+
+		strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+		strlcat(path, AG_PATHSEP, sizeof(path));
+		strlcat(path, "gui-colors.acs", sizeof(path));
+		if (AG_ColorsSave(path) == -1)
+			fprintf(stderr, "%s\n", AG_GetError());
+	}
 	return (0);
 }
 
@@ -348,6 +358,62 @@ AG_ShowSettings(void)
 	} else {
 		AG_WindowFocus(agConfig->window);
 	}
+}
+
+static void
+AG_LoadColorSchemeFromACS(AG_Event *event)
+{
+	char *file = AG_STRING(1);
+
+	if (AG_ColorsLoad(file) == 0) {
+		AG_TextTmsg(AG_MSG_INFO, 1000,
+		    _("Color scheme loaded from %s."), file);
+	} else {
+		AG_TextTmsg(AG_MSG_INFO, "%s", AG_GetError());
+	}
+}
+
+static void
+AG_SaveColorSchemeToACS(AG_Event *event)
+{
+	char *file = AG_STRING(1);
+
+	if (AG_ColorsSave(file) == 0) {
+		AG_TextTmsg(AG_MSG_INFO, 1000, _("Color scheme saved to %s."),
+		    file);
+	} else {
+		AG_TextTmsg(AG_MSG_INFO, "%s", AG_GetError());
+	}
+}
+
+static void
+AG_LoadColorSchemeDlg(AG_Event *event)
+{
+	AG_Window *win;
+	AG_FileDlg *fd;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, _("Load color scheme..."));
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
+	    AG_LoadColorSchemeFromACS, NULL);
+	AG_WindowShow(win);
+}
+
+static void
+AG_SaveColorSchemeDlg(AG_Event *event)
+{
+	AG_Window *win;
+	AG_FileDlg *fd;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, _("Load color scheme..."));
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
+	    AG_SaveColorSchemeToACS, NULL);
+	AG_WindowShow(win);
 }
 
 void
@@ -480,32 +546,43 @@ AG_ConfigWindow(AG_Config *cfg, u_int flags)
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s", "den-path");
 	}
 	
-	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_HORIZ);
+	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
 		AG_HSVPal *hsv;
 		AG_Tlist *tl;
 		AG_TlistItem *it;
 		int i;
+		
+		hb = AG_HBoxNew(tab, AG_HBOX_WFILL|AG_HBOX_HFILL);
+		{
+			tl = AG_TlistNew(hb, 0);
+			AGWIDGET(tl)->flags &= ~AG_WIDGET_WFILL;
+			for (i = 0; i < LAST_COLOR; i++) {
+				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
+				it->p1 = &agColors[i];
+			}
+			for (i = 0; i < agColorsBorderSize; i++) {
+				it = AG_TlistAdd(tl, NULL,
+				    _("Window border #%i"), i);
+				it->p1 = &agColorsBorder[i];
+			}
 
-		tl = AG_TlistNew(tab, 0);
-		AGWIDGET(tl)->flags &= ~AG_WIDGET_WFILL;
-		for (i = 0; i < LAST_COLOR; i++) {
-			it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
-			it->p1 = &agColors[i];
+			hsv = AG_HSVPalNew(hb);
+			AGWIDGET(hsv)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
+			    &agVideoFmt);
+			AG_SetEvent(hsv, "h-changed", updated_bg, "%p", tl);
+			AG_SetEvent(hsv, "sv-changed", updated_bg, "%p", tl);
+			AG_SetEvent(tl, "tlist-selected", selected_color,
+			    "%p", hsv);
 		}
-		for (i = 0; i < agColorsBorderSize; i++) {
-			it = AG_TlistAdd(tl, NULL, _("Window border #%i"),
-			    i);
-			it->p1 = &agColorsBorder[i];
+		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		{
+			AG_ButtonAct(hb, _("Load scheme"), 0,
+			    AG_LoadColorSchemeDlg, NULL);
+			AG_ButtonAct(hb, _("Save scheme"), 0,
+			    AG_SaveColorSchemeDlg, NULL);
 		}
-
-		hsv = AG_HSVPalNew(tab);
-		AGWIDGET(hsv)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
-		AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
-		    &agVideoFmt);
-		AG_SetEvent(hsv, "h-changed", updated_bg, "%p", tl);
-		AG_SetEvent(hsv, "sv-changed", updated_bg, "%p", tl);
-		AG_SetEvent(tl, "tlist-selected", selected_color, "%p", hsv);
 	}
 
 #ifdef NETWORK
@@ -562,7 +639,7 @@ AG_ConfigWindow(AG_Config *cfg, u_int flags)
 	agConfig->window = win;
 }
 
-/* Copy the full pathname to a data file to a fixed-size buffer. */
+/* Copy the full pathname of a data file to a sized buffer. */
 int
 AG_ConfigFile(const char *path_key, const char *name, const char *ext,
     char *path, size_t path_len)
@@ -578,13 +655,9 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	     dir = strsep(&pathp, ":")) {
 		strlcpy(file, dir, sizeof(file));
 
-#ifdef WIN32
-		if (name[0] != '\\')
-			strlcat(file, "\\", sizeof(file));
-#else
-		if (name[0] != '/')
-			strlcat(file, "/", sizeof(file));
-#endif
+		if (name[0] != AG_PATHSEPC) {
+			strlcat(file, AG_PATHSEP, sizeof(file));
+		}
 		strlcat(file, name, sizeof(file));
 		if (ext != NULL) {
 			strlcat(file, ".", sizeof(file));
