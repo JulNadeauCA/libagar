@@ -430,7 +430,6 @@ AG_TableUpdateScrollbars(AG_Table *t)
 {
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
-	int noffset;
 	
 	t->mVis = AGWIDGET(t)->h / t->row_h;
 
@@ -439,12 +438,9 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	*max = LAST_VISIBLE(t);
 	if (*offset > *max) {
 		*offset = *max;
+		AG_WidgetBindingChanged(offsetb);
 	} else if (*offset < 0) {
 		*offset = 0;
-	}
-	if (noffset < 0) { noffset = 0; }
-	if (*offset != noffset) {
-		*offset = noffset;
 		AG_WidgetBindingChanged(offsetb);
 	}
 	if (t->m > 0 && t->mVis > 0 && t->mVis < t->m) {
