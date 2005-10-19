@@ -265,43 +265,43 @@ fi
 VERSION="\"1.0-beta\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
-echo "#endif /* VERSION */" >> config/version.h
+echo "#endif" >> config/version.h
 SHAREDIR="\${PREFIX}/share/agar"
 echo "SHAREDIR=$SHAREDIR" >> Makefile.config
 SHAREDIR="\"$PREFIX/share/agar\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
-echo "#endif /* SHAREDIR */" >> config/sharedir.h
+echo "#endif" >> config/sharedir.h
 LOCALEDIR="\${PREFIX}/share/agar/locale"
 echo "LOCALEDIR=$LOCALEDIR" >> Makefile.config
 LOCALEDIR="\"$PREFIX/share/agar/locale\""
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR" $LOCALEDIR >> config/localedir.h
-echo "#endif /* LOCALEDIR */" >> config/localedir.h
+echo "#endif" >> config/localedir.h
 TTFDIR="\${PREFIX}/share/agar/fonts"
 echo "TTFDIR=$TTFDIR" >> Makefile.config
 TTFDIR="\"$PREFIX/share/agar/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
-echo "#endif /* TTFDIR */" >> config/ttfdir.h
+echo "#endif" >> config/ttfdir.h
 LIBDIR="\${PREFIX}/lib"
 echo "LIBDIR=$LIBDIR" >> Makefile.config
 LIBDIR="\"$PREFIX/lib\""
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR" $LIBDIR >> config/libdir.h
-echo "#endif /* LIBDIR */" >> config/libdir.h
+echo "#endif" >> config/libdir.h
 INCLDIR="\${PREFIX}/include/agar/agar"
 echo "INCLDIR=$INCLDIR" >> Makefile.config
 INCLDIR="\"$PREFIX/include/agar/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
-echo "#endif /* INCLDIR */" >> config/incldir.h
+echo "#endif" >> config/incldir.h
 INCLPDIR="\${PREFIX}/include/agar"
 echo "INCLPDIR=$INCLPDIR" >> Makefile.config
 INCLPDIR="\"$PREFIX/include/agar\""
 echo "#ifndef INCLPDIR" > config/inclpdir.h
 echo "#define INCLPDIR" $INCLPDIR >> config/inclpdir.h
-echo "#endif /* INCLPDIR */" >> config/inclpdir.h
+echo "#endif" >> config/inclpdir.h
 MANDIR="\${PREFIX}/share/agar/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
 PSDIR="\${PREFIX}/share/agar/ps"
@@ -367,7 +367,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
 echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> config/have_ieee754.h
-echo "#endif /* HAVE_IEEE754 */" >> config/have_ieee754.h
+echo "#endif" >> config/have_ieee754.h
 
 	echo "yes"
 else
@@ -399,7 +399,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_LONG_DOUBLE" > config/have_long_double.h
 echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> config/have_long_double.h
-echo "#endif /* HAVE_LONG_DOUBLE */" >> config/have_long_double.h
+echo "#endif" >> config/have_long_double.h
 
 	echo "yes"
 else
@@ -439,7 +439,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
 echo "#define HAVE_BOUNDED_ATTRIBUTE" $HAVE_BOUNDED_ATTRIBUTE >> config/have_bounded_attribute.h
-echo "#endif /* HAVE_BOUNDED_ATTRIBUTE */" >> config/have_bounded_attribute.h
+echo "#endif" >> config/have_bounded_attribute.h
 
 	echo "yes"
 else
@@ -481,7 +481,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
 echo "#define HAVE_FORMAT_ATTRIBUTE" $HAVE_FORMAT_ATTRIBUTE >> config/have_format_attribute.h
-echo "#endif /* HAVE_FORMAT_ATTRIBUTE */" >> config/have_format_attribute.h
+echo "#endif" >> config/have_format_attribute.h
 
 	echo "yes"
 else
@@ -519,7 +519,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 echo "#define HAVE_NONNULL_ATTRIBUTE" $HAVE_NONNULL_ATTRIBUTE >> config/have_nonnull_attribute.h
-echo "#endif /* HAVE_NONNULL_ATTRIBUTE */" >> config/have_nonnull_attribute.h
+echo "#endif" >> config/have_nonnull_attribute.h
 
 	echo "yes"
 else
@@ -555,7 +555,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
 echo "#define HAVE_CYGWIN" $HAVE_CYGWIN >> config/have_cygwin.h
-echo "#endif /* HAVE_CYGWIN */" >> config/have_cygwin.h
+echo "#endif" >> config/have_cygwin.h
 
 	echo "yes"
 else
@@ -591,7 +591,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_PROGNAME" > config/have_progname.h
 echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> config/have_progname.h
-echo "#endif /* HAVE_PROGNAME */" >> config/have_progname.h
+echo "#endif" >> config/have_progname.h
 
 	echo "yes"
 else
@@ -628,7 +628,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_MATH" > config/have_math.h
 echo "#define HAVE_MATH" $HAVE_MATH >> config/have_math.h
-echo "#endif /* HAVE_MATH */" >> config/have_math.h
+echo "#endif" >> config/have_math.h
 
 	HAVE_MATH=yes
 
@@ -642,7 +642,7 @@ if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
 echo "#ifndef MATH_LIBS" > config/math_libs.h
 echo "#define MATH_LIBS \"$MATH_LIBS\"" >> config/math_libs.h
-echo "#endif /* MATH_LIBS */" >> config/math_libs.h
+echo "#endif" >> config/math_libs.h
 else
 echo "#undef MATH_LIBS" > config/math_libs.h
 fi
@@ -674,7 +674,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
 echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> config/have_gethostname.h
-echo "#endif /* HAVE_GETHOSTNAME */" >> config/have_gethostname.h
+echo "#endif" >> config/have_gethostname.h
 
 	echo "yes"
 else
@@ -710,7 +710,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_GETPWUID" > config/have_getpwuid.h
 echo "#define HAVE_GETPWUID" $HAVE_GETPWUID >> config/have_getpwuid.h
-echo "#endif /* HAVE_GETPWUID */" >> config/have_getpwuid.h
+echo "#endif" >> config/have_getpwuid.h
 
 	echo "yes"
 else
@@ -745,7 +745,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_GETUID" > config/have_getuid.h
 echo "#define HAVE_GETUID" $HAVE_GETUID >> config/have_getuid.h
-echo "#endif /* HAVE_GETUID */" >> config/have_getuid.h
+echo "#endif" >> config/have_getuid.h
 
 	echo "yes"
 else
@@ -776,7 +776,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
 echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
-echo "#endif /* HAVE_STRSEP */" >> config/have_strsep.h
+echo "#endif" >> config/have_strsep.h
 
 	echo "yes"
 else
@@ -807,7 +807,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_GETENV" > config/have_getenv.h
 echo "#define HAVE_GETENV" $HAVE_GETENV >> config/have_getenv.h
-echo "#endif /* HAVE_GETENV */" >> config/have_getenv.h
+echo "#endif" >> config/have_getenv.h
 
 	echo "yes"
 else
@@ -840,7 +840,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_SETENV" > config/have_setenv.h
 echo "#define HAVE_SETENV" $HAVE_SETENV >> config/have_setenv.h
-echo "#endif /* HAVE_SETENV */" >> config/have_setenv.h
+echo "#endif" >> config/have_setenv.h
 
 	echo "yes"
 else
@@ -871,7 +871,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
 echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
-echo "#endif /* HAVE_STRSEP */" >> config/have_strsep.h
+echo "#endif" >> config/have_strsep.h
 
 	echo "yes"
 else
@@ -902,7 +902,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRLCAT" > config/have_strlcat.h
 echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> config/have_strlcat.h
-echo "#endif /* HAVE_STRLCAT */" >> config/have_strlcat.h
+echo "#endif" >> config/have_strlcat.h
 
 	echo "yes"
 else
@@ -933,7 +933,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRLCPY" > config/have_strlcpy.h
 echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> config/have_strlcpy.h
-echo "#endif /* HAVE_STRLCPY */" >> config/have_strlcpy.h
+echo "#endif" >> config/have_strlcpy.h
 
 	echo "yes"
 else
@@ -970,7 +970,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_ASPRINTF" > config/have_asprintf.h
 echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> config/have_asprintf.h
-echo "#endif /* HAVE_ASPRINTF */" >> config/have_asprintf.h
+echo "#endif" >> config/have_asprintf.h
 
 	echo "yes"
 else
@@ -1018,7 +1018,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
 echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> config/have_vasprintf.h
-echo "#endif /* HAVE_VASPRINTF */" >> config/have_vasprintf.h
+echo "#endif" >> config/have_vasprintf.h
 
 	echo "yes"
 else
@@ -1052,7 +1052,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_SNPRINTF" > config/have_snprintf.h
 echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> config/have_snprintf.h
-echo "#endif /* HAVE_SNPRINTF */" >> config/have_snprintf.h
+echo "#endif" >> config/have_snprintf.h
 
 	echo "yes"
 else
@@ -1096,7 +1096,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_VSNPRINTF" > config/have_vsnprintf.h
 echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> config/have_vsnprintf.h
-echo "#endif /* HAVE_VSNPRINTF */" >> config/have_vsnprintf.h
+echo "#endif" >> config/have_vsnprintf.h
 
 	echo "yes"
 else
@@ -1128,7 +1128,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_SETLOCALE" > config/have_setlocale.h
 echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> config/have_setlocale.h
-echo "#endif /* HAVE_SETLOCALE */" >> config/have_setlocale.h
+echo "#endif" >> config/have_setlocale.h
 
 	echo "yes"
 else
@@ -1162,7 +1162,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_ARC4RANDOM" > config/have_arc4random.h
 echo "#define HAVE_ARC4RANDOM" $HAVE_ARC4RANDOM >> config/have_arc4random.h
-echo "#endif /* HAVE_ARC4RANDOM */" >> config/have_arc4random.h
+echo "#endif" >> config/have_arc4random.h
 
 	echo "yes"
 else
@@ -1197,7 +1197,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_MD5" > config/have_md5.h
 echo "#define HAVE_MD5" $HAVE_MD5 >> config/have_md5.h
-echo "#endif /* HAVE_MD5 */" >> config/have_md5.h
+echo "#endif" >> config/have_md5.h
 
 	echo "yes"
 else
@@ -1232,7 +1232,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_SHA1" > config/have_sha1.h
 echo "#define HAVE_SHA1" $HAVE_SHA1 >> config/have_sha1.h
-echo "#endif /* HAVE_SHA1 */" >> config/have_sha1.h
+echo "#endif" >> config/have_sha1.h
 
 	echo "yes"
 else
@@ -1267,13 +1267,224 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_RMD160" > config/have_rmd160.h
 echo "#define HAVE_RMD160" $HAVE_RMD160 >> config/have_rmd160.h
-echo "#endif /* HAVE_RMD160 */" >> config/have_rmd160.h
+echo "#endif" >> config/have_rmd160.h
 
 	echo "yes"
 else
     echo "#undef HAVE_RMD160" > config/have_rmd160.h
 
 	echo "no"
+fi
+echo -n "checking for POSIX threads..."
+echo -n "checking for POSIX threads..." >> config.log
+PTHREADS_CFLAGS=
+PTHREADS_LIBS=-pthread
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int
+main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_t thread;
+	pthread_cond_t cond;
+	pthread_key_t key;
+
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS" $HAVE_PTHREADS >> config/have_pthreads.h
+echo "#endif" >> config/have_pthreads.h
+
+	HAVE_PTHREADS=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+
+	echo "no"
+fi
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
+else
+echo "#undef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#undef PTHREADS_LIBS" > config/pthreads_libs.h
+fi
+echo -n "checking for the X/Open Threads Extension..."
+echo -n "checking for the X/Open Threads Extension..." >> config.log
+cat << EOT > conftest.c
+#define _XOPEN_SOURCE 500
+#include <pthread.h>
+#include <signal.h>
+#undef _XOPEN_SOURCE
+
+int
+main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN" $HAVE_PTHREADS_XOPEN >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+
+	HAVE_PTHREADS_XOPEN=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+
+	echo "no"
+fi
+if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN 1" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN 1" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+else
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+fi
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int
+main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE" $HAVE_PTHREAD_MUTEX_RECURSIVE >> config/have_pthread_mutex_recursive.h
+echo "#endif" >> config/have_pthread_mutex_recursive.h
+
+	HAVE_PTHREAD_MUTEX_RECURSIVE=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+
+	echo "no"
+fi
+if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE 1" >> config/have_pthread_mutex_recursive.h
+echo "#endif" >> config/have_pthread_mutex_recursive.h
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE 1" >> config/have_pthread_mutex_recursive.h
+echo "#endif" >> config/have_pthread_mutex_recursive.h
+else
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+fi
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int
+main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP" $HAVE_PTHREAD_MUTEX_RECURSIVE_NP >> config/have_pthread_mutex_recursive_np.h
+echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+
+	HAVE_PTHREAD_MUTEX_RECURSIVE_NP=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+
+	echo "no"
+fi
+if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP 1" >> config/have_pthread_mutex_recursive_np.h
+echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP 1" >> config/have_pthread_mutex_recursive_np.h
+echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+else
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 fi
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
 echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
@@ -1302,13 +1513,13 @@ echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
 echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
 echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
 echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#endif" >> config/have_libqnet.h
 echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
 echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
-echo "#endif /* LIBQNET_CFLAGS */" >> config/libqnet_cflags.h
+echo "#endif" >> config/libqnet_cflags.h
 echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
 echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
-echo "#endif /* LIBQNET_LIBS */" >> config/libqnet_libs.h
+echo "#endif" >> config/libqnet_libs.h
 else
 echo "no"
 echo "no" >> config.log
@@ -1344,7 +1555,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
 echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#endif" >> config/have_libqnet.h
 
 	HAVE_LIBQNET=yes
 
@@ -1475,7 +1686,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_SDL" > config/have_sdl.h
 echo "#define HAVE_SDL" $HAVE_SDL >> config/have_sdl.h
-echo "#endif /* HAVE_SDL */" >> config/have_sdl.h
+echo "#endif" >> config/have_sdl.h
 
 	HAVE_SDL=yes
 
@@ -1488,10 +1699,10 @@ fi
 if [ "${HAVE_SDL}" = "yes" ]; then
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
-echo "#endif /* SDL_LIBS */" >> config/sdl_libs.h
+echo "#endif" >> config/sdl_libs.h
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
-echo "#endif /* SDL_CFLAGS */" >> config/sdl_cflags.h
+echo "#endif" >> config/sdl_cflags.h
 else
 echo "#undef SDL_LIBS" > config/sdl_libs.h
 echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
@@ -1572,7 +1783,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
 echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> config/have_freetype.h
-echo "#endif /* HAVE_FREETYPE */" >> config/have_freetype.h
+echo "#endif" >> config/have_freetype.h
 
 	HAVE_FREETYPE=yes
 
@@ -1585,10 +1796,10 @@ fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
-echo "#endif /* FREETYPE_LIBS */" >> config/freetype_libs.h
+echo "#endif" >> config/freetype_libs.h
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
 echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
-echo "#endif /* FREETYPE_CFLAGS */" >> config/freetype_cflags.h
+echo "#endif" >> config/freetype_cflags.h
 else
 echo "#undef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#undef FREETYPE_CFLAGS" > config/freetype_cflags.h
@@ -1698,7 +1909,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
 echo "#define HAVE_OPENGL" $HAVE_OPENGL >> config/have_opengl.h
-echo "#endif /* HAVE_OPENGL */" >> config/have_opengl.h
+echo "#endif" >> config/have_opengl.h
 
 	HAVE_OPENGL=yes
 
@@ -1713,10 +1924,10 @@ echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
 echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
 echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
-echo "#endif /* OPENGL_CFLAGS */" >> config/opengl_cflags.h
+echo "#endif" >> config/opengl_cflags.h
 echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
 echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
-echo "#endif /* OPENGL_LIBS */" >> config/opengl_libs.h
+echo "#endif" >> config/opengl_libs.h
 else
 echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#undef OPENGL_LIBS" > config/opengl_libs.h
@@ -1776,7 +1987,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
 echo "#define HAVE_JPEG" $HAVE_JPEG >> config/have_jpeg.h
-echo "#endif /* HAVE_JPEG */" >> config/have_jpeg.h
+echo "#endif" >> config/have_jpeg.h
 
 	HAVE_JPEG=yes
 
@@ -1791,10 +2002,10 @@ echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
 echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
 echo "#ifndef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#define JPEG_CFLAGS \"$JPEG_CFLAGS\"" >> config/jpeg_cflags.h
-echo "#endif /* JPEG_CFLAGS */" >> config/jpeg_cflags.h
+echo "#endif" >> config/jpeg_cflags.h
 echo "#ifndef JPEG_LIBS" > config/jpeg_libs.h
 echo "#define JPEG_LIBS \"$JPEG_LIBS\"" >> config/jpeg_libs.h
-echo "#endif /* JPEG_LIBS */" >> config/jpeg_libs.h
+echo "#endif" >> config/jpeg_libs.h
 else
 echo "#undef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#undef JPEG_LIBS" > config/jpeg_libs.h
@@ -1831,13 +2042,13 @@ echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
 echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
 echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
 echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#endif" >> config/have_libqnet.h
 echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
 echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
-echo "#endif /* LIBQNET_CFLAGS */" >> config/libqnet_cflags.h
+echo "#endif" >> config/libqnet_cflags.h
 echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
 echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
-echo "#endif /* LIBQNET_LIBS */" >> config/libqnet_libs.h
+echo "#endif" >> config/libqnet_libs.h
 else
 echo "no"
 echo "no" >> config.log
@@ -1873,7 +2084,7 @@ if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
 	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
 echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#endif" >> config/have_libqnet.h
 
 	HAVE_LIBQNET=yes
 
@@ -1896,7 +2107,7 @@ if [ "${enable_threads}" = "yes" ]
 THREADS=1
 echo "#ifndef THREADS" > config/threads.h
 echo "#define THREADS" $THREADS >> config/threads.h
-echo "#endif /* THREADS */" >> config/threads.h
+echo "#endif" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
 fi
@@ -1905,7 +2116,7 @@ if [ "${enable_utf8}" = "yes" ]
 UTF8=1
 echo "#ifndef UTF8" > config/utf8.h
 echo "#define UTF8" $UTF8 >> config/utf8.h
-echo "#endif /* UTF8 */" >> config/utf8.h
+echo "#endif" >> config/utf8.h
 else
 echo "#undef UTF8" > config/utf8.h
 fi
@@ -1914,7 +2125,7 @@ if [ "${enable_astro_units}" = "yes" ]
 ASTRONOMICAL_UNITS=1
 echo "#ifndef ASTRONOMICAL_UNITS" > config/astronomical_units.h
 echo "#define ASTRONOMICAL_UNITS" $ASTRONOMICAL_UNITS >> config/astronomical_units.h
-echo "#endif /* ASTRONOMICAL_UNITS */" >> config/astronomical_units.h
+echo "#endif" >> config/astronomical_units.h
 else
 echo "#undef ASTRONOMICAL_UNITS" > config/astronomical_units.h
 fi
@@ -1923,7 +2134,7 @@ if [ "${enable_histo_units}" = "yes" ]
 HISTORICAL_UNITS=1
 echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS" $HISTORICAL_UNITS >> config/historical_units.h
-echo "#endif /* HISTORICAL_UNITS */" >> config/historical_units.h
+echo "#endif" >> config/historical_units.h
 else
 echo "#undef HISTORICAL_UNITS" > config/historical_units.h
 fi
@@ -1932,7 +2143,7 @@ if [ "${enable_floating_point}" != "no" ]
 FLOATING_POINT=1
 echo "#ifndef FLOATING_POINT" > config/floating_point.h
 echo "#define FLOATING_POINT" $FLOATING_POINT >> config/floating_point.h
-echo "#endif /* FLOATING_POINT */" >> config/floating_point.h
+echo "#endif" >> config/floating_point.h
 else
 echo "#undef FLOATING_POINT" > config/floating_point.h
 fi
@@ -1941,7 +2152,7 @@ if [ "${enable_edition}" != "no" ]
 EDITION=1
 echo "#ifndef EDITION" > config/edition.h
 echo "#define EDITION" $EDITION >> config/edition.h
-echo "#endif /* EDITION */" >> config/edition.h
+echo "#endif" >> config/edition.h
 else
 echo "#undef EDITION" > config/edition.h
 fi
@@ -1950,7 +2161,7 @@ if [ "${enable_network}" = "yes" ]
 NETWORK=1
 echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK" $NETWORK >> config/network.h
-echo "#endif /* NETWORK */" >> config/network.h
+echo "#endif" >> config/network.h
 else
 echo "#undef NETWORK" > config/network.h
 fi
@@ -1959,7 +2170,7 @@ if [ "${enable_map}" != "no" ]
 MAP=1
 echo "#ifndef MAP" > config/map.h
 echo "#define MAP" $MAP >> config/map.h
-echo "#endif /* MAP */" >> config/map.h
+echo "#endif" >> config/map.h
 else
 echo "#undef MAP" > config/map.h
 fi
@@ -1968,7 +2179,7 @@ if [ "${enable_8bpp}" != "no" ]
 VIEW_8BPP=1
 echo "#ifndef VIEW_8BPP" > config/view_8bpp.h
 echo "#define VIEW_8BPP" $VIEW_8BPP >> config/view_8bpp.h
-echo "#endif /* VIEW_8BPP */" >> config/view_8bpp.h
+echo "#endif" >> config/view_8bpp.h
 else
 echo "#undef VIEW_8BPP" > config/view_8bpp.h
 fi
@@ -1977,7 +2188,7 @@ if [ "${enable_16bpp}" != "no" ]
 VIEW_16BPP=1
 echo "#ifndef VIEW_16BPP" > config/view_16bpp.h
 echo "#define VIEW_16BPP" $VIEW_16BPP >> config/view_16bpp.h
-echo "#endif /* VIEW_16BPP */" >> config/view_16bpp.h
+echo "#endif" >> config/view_16bpp.h
 else
 echo "#undef VIEW_16BPP" > config/view_16bpp.h
 fi
@@ -1986,7 +2197,7 @@ if [ "${enable_24bpp}" != "no" ]
 VIEW_24BPP=1
 echo "#ifndef VIEW_24BPP" > config/view_24bpp.h
 echo "#define VIEW_24BPP" $VIEW_24BPP >> config/view_24bpp.h
-echo "#endif /* VIEW_24BPP */" >> config/view_24bpp.h
+echo "#endif" >> config/view_24bpp.h
 else
 echo "#undef VIEW_24BPP" > config/view_24bpp.h
 fi
@@ -1995,7 +2206,7 @@ if [ "${enable_32bpp}" != "no" ]
 VIEW_32BPP=1
 echo "#ifndef VIEW_32BPP" > config/view_32bpp.h
 echo "#define VIEW_32BPP" $VIEW_32BPP >> config/view_32bpp.h
-echo "#endif /* VIEW_32BPP */" >> config/view_32bpp.h
+echo "#endif" >> config/view_32bpp.h
 else
 echo "#undef VIEW_32BPP" > config/view_32bpp.h
 fi
