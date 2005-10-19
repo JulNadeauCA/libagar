@@ -363,15 +363,15 @@ AG_ObjMgrSaveTo(void *p)
 {
 	AG_Object *ob = p;
 	AG_Window *win;
-	AG_FileDlg *fdg;
+	AG_FileDlg *fd;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fdg = AG_FileDlgNew(win, 0);
-	AG_FileDlgSetDirectory(fdg, AG_String(agConfig, "save-path"));
-	AG_FileDlgSetFilename(fdg, "%s.%s", ob->name, ob->type);
-	AG_SetEvent(fdg, "file-validated", export_object, "%p,%p", ob, win);
-	AG_SetEvent(fdg, "file-cancelled", AGWINDETACH(win));
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
+	AG_SetEvent(fd, "file-validated", export_object, "%p,%p", ob, win);
+	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
 
 	AG_WindowShow(win);
 }
