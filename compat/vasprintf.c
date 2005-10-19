@@ -28,9 +28,12 @@
 
 #include <config/have_vasprintf.h>
 
-#ifndef HAVE_VASPRINTF
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
 #include <core/core.h>
+
 #include "vasprintf.h"
 
 #include <stdio.h>
@@ -38,8 +41,9 @@
 #include <string.h>
 
 int
-vasprintf(char **ret, const char *fmt, va_list ap)
+AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 {
+#ifndef HAVE_VASPRINTF
 	char *buf;
 	int size;
 	size_t buflen;
@@ -56,7 +60,7 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);
+#else
+	return (vasprintf(ret, fmt, ap));
+#endif
 }
-
-#endif	/* !HAVE_VASPRINTF */
-

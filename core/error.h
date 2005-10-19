@@ -66,7 +66,7 @@
 #define Strdup(s) AG_Strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
-	if (vasprintf((msg), (fmt), (args)) == -1) 		\
+	if (AG_Vasprintf((msg), (fmt), (args)) == -1) 		\
 		fatal("vasprintf");				\
 	va_end((args));						\
 } while (0)
