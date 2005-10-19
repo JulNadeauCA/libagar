@@ -756,7 +756,7 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 			strlcat(path, ob->save_pfx, path_len);
 		}
 		strlcat(path, obj_name, path_len);
-		strlcat(path, "/", path_len);
+		strlcat(path, AG_PATHSEP, path_len);
 		strlcat(path, ob->name, path_len);
 		strlcat(path, ".", path_len);
 		strlcat(path, ob->type, path_len);
@@ -764,9 +764,9 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 		if (AG_FileExists(path))
 			return (0);
 	}
-	AG_SetError(_("The %s%s/%s.%s file is not in load-path."),
+	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
-	    obj_name, ob->name, ob->type);
+	    obj_name, AG_PATHSEPC, ob->name, ob->type);
 	return (-1);
 }
 
@@ -1326,7 +1326,7 @@ AG_ObjectSave(void *p)
 	}
 
 	strlcpy(save_file, save_dir, sizeof(save_file));
-	strlcat(save_file, "/", sizeof(save_file));
+	strlcat(save_file, AG_PATHSEP, sizeof(save_file));
 	strlcat(save_file, ob->name, sizeof(save_file));
 	strlcat(save_file, ".", sizeof(save_file));
 	strlcat(save_file, ob->type, sizeof(save_file));
@@ -1428,7 +1428,7 @@ AG_ObjectSetName(void *p, const char *name)
 	strlcpy(ob->name, name, sizeof(ob->name));
 
 	for (c = &ob->name[0]; *c != '\0'; c++) {
-		if (*c == '/')			/* Pathname separator */
+		if (*c == '/' || *c == '\\')		/* Pathname separator */
 			*c = '_';
 	}
 }
@@ -1852,6 +1852,7 @@ AG_ObjectChangedAll(void *p)
 int
 AG_ObjectChanged(void *p)
 {
+	char save_pfx[6];
 	char save_sha1[SHA1_DIGEST_STRING_LENGTH];
 	char tmp_sha1[SHA1_DIGEST_STRING_LENGTH];
 	AG_Object *ob = p;
@@ -1869,7 +1870,9 @@ AG_ObjectChanged(void *p)
 		return (1);
 
 	pfx_save = ob->save_pfx;
-	AG_ObjectSetSavePfx(ob, "/.tmp");
+	save_pfx[0] = AG_PATHSEPC;
+	strlcpy(&save_pfx[1], ".tmp", sizeof(save_pfx)-1);
+	AG_ObjectSetSavePfx(ob, save_pfx);
 	if (AG_ObjectSave(ob) == -1) {
 		fprintf(stderr, "save %s: %s\n", ob->name, AG_GetError());
 		goto fail;
@@ -1880,7 +1883,7 @@ AG_ObjectChanged(void *p)
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
 
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(WIN32)
 	if (rv == 1 && agObjMgrHexDiff) {
 		char path[MAXPATHLEN];
 		char tmp[MAXPATHLEN];
@@ -2153,8 +2156,8 @@ refresh_rcs_status(AG_Event *event)
 	      "Working revision: #%u\n"
 	      "Repository revision: #%u\n"),
 	    agRcsStatusStrings[status],
-	    (status != AG_RCS_UNKNOWN && status != AG_RCS_ERROR) ? working_rev : 0,
-	    (status != AG_RCS_UNKNOWN && status != AG_RCS_ERROR) ? repo_rev: 0);
+	    (status!=AG_RCS_UNKNOWN && status!=AG_RCS_ERROR) ? working_rev : 0,
+	    (status!=AG_RCS_UNKNOWN && status!=AG_RCS_ERROR) ? repo_rev: 0);
 
 	AG_TlistClear(tl);
 	AG_RcsLog(objdir, tl);
@@ -2199,7 +2202,7 @@ AG_ObjectEdit(void *p)
 		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Parent: %[obj]"),
 		    &agLinkageLock, &ob->parent);
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Save prefix: %s"),
-		    ob->save_pfx != NULL ? ob->save_pfx : "/");
+		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 

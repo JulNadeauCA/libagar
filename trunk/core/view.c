@@ -795,12 +795,9 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	JSAMPROW row[1];
 	int x;
 
-	if (AG_StringCopy(agConfig, "save-path", path, sizeof(path))
-	    >= sizeof(path)) {
-		goto toobig;
-	}
-	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
-		goto toobig;
+	AG_StringCopy(agConfig, "save-path", path, sizeof(path));
+	strlcat(path, AG_PATHSEP, sizeof(path));
+	strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {
 		AG_TextMsg(AG_MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
@@ -885,8 +882,6 @@ out:
 		SDL_FreeSurface(su);
 #endif
 	return;
-toobig:
-	AG_TextMsg(AG_MSG_ERROR, _("Path is too big."));
 #else
 	AG_TextMsg(AG_MSG_ERROR, _("Screenshot feature requires libjpeg"));
 #endif
