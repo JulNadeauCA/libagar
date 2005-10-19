@@ -1164,7 +1164,7 @@ import_images(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
-	dlg = AG_FileDlgNew(win, 0);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", import_xcf,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
@@ -1909,7 +1909,7 @@ export_image_dlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
-	dlg = AG_FileDlgNew(win, 0);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);
