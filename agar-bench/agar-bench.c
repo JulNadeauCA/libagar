@@ -2,7 +2,7 @@
 /*	Public domain	*/
 
 #include "agar-bench.h"
-#include <engine/config.h>
+#include <agar/core/config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +26,8 @@ struct test_ops *tests[] = {
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
-#if defined(i386) && defined(HAVE_RDTSC)
+#if (defined(i386) || defined(__i386__) || defined(__x86_64__)) && \
+     defined(HAVE_RDTSC)
 #define USE_RDTSC
 #define RDTSC(t) asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
 #endif

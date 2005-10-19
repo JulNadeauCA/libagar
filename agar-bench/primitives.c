@@ -3,8 +3,8 @@
 
 #include "agar-bench.h"
 
-#include <engine/widget/widget.h>
-#include <engine/widget/primitive.h>
+#include <agar/gui/widget.h>
+#include <agar/gui/primitive.h>
 
 static SDL_Surface *su;
 static AG_Widget wid;

@@ -1,7 +1,7 @@
 /*	$Csoft: generic.c,v 1.1 2005/10/03 17:38:40 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/engine.h>
+#include <agar/core/core.h>
 #include "agar-bench.h"
 
 SDL_Surface *surface;
