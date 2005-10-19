@@ -95,8 +95,8 @@ extern const char *agColorNames[];
 __BEGIN_DECLS
 void AG_ColorsInit(void);
 void AG_ColorsDestroy(void);
-void AG_ColorsLoad(AG_Netbuf *);
-void AG_ColorsSave(AG_Netbuf *);
+int AG_ColorsLoad(const char *);
+int AG_ColorsSave(const char *);
 __END_DECLS
 
 #include "close_code.h"

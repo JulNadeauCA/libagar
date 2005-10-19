@@ -135,6 +135,7 @@ int
 AG_InitVideo(int w, int h, int bpp, u_int flags)
 {
 	extern int agBgPopupMenu;
+	char *s;
 
 	setenv("SDL_VIDEO_X11_WMCLASS", agProgName, 1);
 
@@ -204,10 +205,20 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	AG_InitPrimitives();
 	AG_CursorsInit();
 
+	if (!AG_Bool(agConfig, "initial-run")) {
+		char path[MAXPATHLEN];
+
+		strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+		strlcat(path, AG_PATHSEP, sizeof(path));
+		strlcat(path, "gui-colors.acs", sizeof(path));
+		if (AG_ColorsLoad(path) == -1)
+			fprintf(stderr, "%s\n", AG_GetError());
+	}
+
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
 	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
-	if (AG_WireGfx(&agIconMgr, "/core-icons") == -1) {
+	if (AG_WireGfx(&agIconMgr, "core-icons") == -1) {
 		fatal("icons: %s", AG_GetError());
 	}
 	return (0);

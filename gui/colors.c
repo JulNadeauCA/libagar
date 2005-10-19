@@ -31,6 +31,11 @@
 
 #include "colors.h"
 
+const AG_Version agColorSchemeVer = {
+	"agar color scheme",
+	0, 0
+};
+
 Uint32 agColors[LAST_COLOR];
 Uint32 agColorsBorder[7];
 int    agColorsBorderSize = 7;
@@ -203,10 +208,15 @@ AG_ColorsInit(void)
 	agColorsBorder[6] = SDL_MapRGB(agVideoFmt, 0, 255, 0);
 }
 
-void
-AG_ColorsLoad(AG_Netbuf *buf)
+int
+AG_ColorsLoad(const char *file)
 {
+	AG_Netbuf *buf;
 	int i, ncolors;
+
+	if ((buf = AG_NetbufOpen(file, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL ||
+	    AG_ReadVersion(buf, &agColorSchemeVer, NULL) == -1)
+		return (-1);
 
 	ncolors = (int)AG_ReadUint32(buf);
 	for (i = 0; i < ncolors; i++)
@@ -215,12 +225,20 @@ AG_ColorsLoad(AG_Netbuf *buf)
 	ncolors = (int)AG_ReadUint32(buf);
 	for (i = 0; i < ncolors; i++)
 		agColorsBorder[i] = AG_ReadColor(buf, agVideoFmt);
+	
+	AG_NetbufClose(buf);
 }
 
-void
-AG_ColorsSave(AG_Netbuf *buf)
+int
+AG_ColorsSave(const char *file)
 {
+	AG_Netbuf *buf;
 	int i;
+	
+	if ((buf = AG_NetbufOpen(file, "wb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+		return (-1);
+	}
+	AG_WriteVersion(buf, &agColorSchemeVer);
 
 	AG_WriteUint32(buf, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {
@@ -230,6 +248,8 @@ AG_ColorsSave(AG_Netbuf *buf)
 	for (i = 0; i < agColorsBorderSize; i++) {
 		AG_WriteColor(buf, agVideoFmt, agColorsBorder[i]);
 	}
+	
+	AG_NetbufClose(buf);
 }
 
 void

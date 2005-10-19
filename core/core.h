@@ -114,6 +114,14 @@ typedef unsigned long u_long;
 #define	MAX3(a,b,c) MAX((a),MAX((b),(c)))
 #endif
 
+#ifdef WIN32
+#define AG_PATHSEPC '\\'
+#define AG_PATHSEP "\\"
+#else
+#define AG_PATHSEPC '/'
+#define AG_PATHSEP "/"
+#endif
+
 #include "begin_code.h"
 
 extern const char *agProgName;
