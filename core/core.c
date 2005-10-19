@@ -134,6 +134,7 @@ AG_InitCore(const char *progname, u_int flags)
 int
 AG_InitVideo(int w, int h, int bpp, u_int flags)
 {
+	char path[MAXPATHLEN];
 	extern int agBgPopupMenu;
 	char *s;
 
@@ -205,15 +206,10 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	AG_InitPrimitives();
 	AG_CursorsInit();
 
-	if (!AG_Bool(agConfig, "initial-run")) {
-		char path[MAXPATHLEN];
-
-		strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
-		strlcat(path, AG_PATHSEP, sizeof(path));
-		strlcat(path, "gui-colors.acs", sizeof(path));
-		if (AG_ColorsLoad(path) == -1)
-			fprintf(stderr, "%s\n", AG_GetError());
-	}
+	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+	strlcat(path, AG_PATHSEP, sizeof(path));
+	strlcat(path, "gui-colors.acs", sizeof(path));
+	(void)AG_ColorsLoad(path);
 
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
