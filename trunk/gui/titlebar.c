@@ -98,7 +98,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_WFILL);
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
-	AG_WireGfx(tbar, "/gui-pixmaps");
+	AG_WireGfx(tbar, "gui-pixmaps");
 
 	AG_BoxSetPadding(&tbar->hb, 5);
 	AG_BoxSetSpacing(&tbar->hb, 0);

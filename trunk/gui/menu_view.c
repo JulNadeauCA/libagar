@@ -272,7 +272,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 
 	AG_WidgetInit(mview, "AGMenuView", &agMenuViewOps,
 	    AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP);
-	AG_WireGfx(mview, "/gui-pixmaps");
+	AG_WireGfx(mview, "gui-pixmaps");
 
 	mview->panel = panel;
 	mview->pmenu = pmenu;
