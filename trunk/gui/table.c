@@ -63,6 +63,7 @@ static void kbdscroll(AG_Event *);
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
+#define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 2)
 
 AG_Table *
 AG_TableNew(void *parent, u_int flags)
@@ -191,7 +192,6 @@ AG_TableScale(void *p, int w, int h)
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 
 	AG_TableSizeFillCols(t);
-	AG_TableUpdateScrollbars(t);
 }
 
 static __inline__ void
@@ -421,7 +421,10 @@ AG_TableDraw(void *p)
 	AG_MutexUnlock(&t->lock);
 }
 
-/* Adjust the scrollbar offset according to the number of visible items. */
+/*
+ * Adjust the scrollbar offset according to the number of visible items,
+ * and scroll if requested.
+ */
 void
 AG_TableUpdateScrollbars(AG_Table *t)
 {
@@ -433,9 +436,12 @@ AG_TableUpdateScrollbars(AG_Table *t)
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
-	noffset = *offset;
-	*max = t->m - t->mVis + 2;
-	if (noffset > *max) { noffset = *max; }
+	*max = LAST_VISIBLE(t);
+	if (*offset > *max) {
+		*offset = *max;
+	} else if (*offset < 0) {
+		*offset = 0;
+	}
 	if (noffset < 0) { noffset = 0; }
 	if (*offset != noffset) {
 		*offset = noffset;
@@ -454,7 +460,9 @@ AG_TableUpdateScrollbars(AG_Table *t)
 void
 AG_TableRedrawCells(AG_Table *t)
 {
+	AG_MutexLock(&t->lock);
 	t->flags |= AG_TABLE_REDRAW_CELLS;
+	AG_MutexUnlock(&t->lock);
 }
 
 void
@@ -508,7 +516,6 @@ AG_TableBegin(AG_Table *t)
 	t->cells = NULL;
 	t->m = 0;
 	AG_WidgetSetInt(t->vbar, "max", 0);
-	AG_MutexUnlock(&t->lock);
 }
 
 int
@@ -604,7 +611,7 @@ AG_TableEnd(AG_Table *t)
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
-	AG_TableUpdateScrollbars(t);
+	AG_MutexUnlock(&t->lock);
 }
 
 static __inline__ int
@@ -719,13 +726,41 @@ mousebuttondown(AG_Event *event)
 	int m;
 
 	AG_MutexLock(&t->lock);
-	if ((m = column_over(t, y)) >= (int)t->m) {
-		AG_TableDeselectAllRows(t);
-		goto out;
-	}
-
 	switch (button) {
+	case SDL_BUTTON_WHEELUP:
+		{
+			static Uint32 t1 = 0;
+			AG_WidgetBinding *offsb;
+			int *offs;
+
+			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
+			if (((*offs) -= AG_WidgetScrollDelta(&t1)) < 0) {
+				*offs = 0;
+			}
+			AG_WidgetBindingChanged(offsb);
+			AG_WidgetUnlockBinding(offsb);
+		}
+		break;
+	case SDL_BUTTON_WHEELDOWN:
+		{
+			static Uint32 t1 = 0;
+			AG_WidgetBinding *offsb;
+			int *offs;
+
+			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
+			if (((*offs) += AG_WidgetScrollDelta(&t1)) >
+			    LAST_VISIBLE(t)) {
+				*offs = LAST_VISIBLE(t);
+			}
+			AG_WidgetBindingChanged(offsb);
+			AG_WidgetUnlockBinding(offsb);
+		}
+		break;
 	case SDL_BUTTON_LEFT:
+		if ((m = column_over(t, y)) >= (int)t->m) {
+			AG_TableDeselectAllRows(t);
+			goto out;
+		}
 		if (m < 0) {
 			column_sel(t, x);
 		} else {
@@ -969,6 +1004,8 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	AG_TableCell *c;
 	u_int m, n;
 
+	AG_MutexLock(&t->lock);
+
 	/* Initialize the column information structure. */
 	t->cols = Realloc(t->cols, (t->n+1)*sizeof(AG_TableCol));
 	tc = &t->cols[t->n];
@@ -1013,7 +1050,9 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 		    (t->n+1)*sizeof(AG_TableCell));
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
-	return (t->n++);
+	n = t->n++;
+	AG_MutexUnlock(&t->lock);
+	return (n);
 }
 
 void
@@ -1181,7 +1220,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 	}
 	va_end(ap);
-	AG_TableUpdateScrollbars(t);
 	return (t->m++);
 }
 
@@ -1190,7 +1228,8 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 {
 	char txt[AG_TABLE_TXT_MAX];
 	u_int m, n;
-	
+
+	AG_MutexLock(&t->lock);
 	for (n = 0; n < t->n; n++) {
 		if (t->cols[n].name[0] == '\0') {
 			continue;
@@ -1210,6 +1249,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 		}
 		fputc('\n', f);
 	}
+	AG_MutexUnlock(&t->lock);
 	return (0);
 }
 

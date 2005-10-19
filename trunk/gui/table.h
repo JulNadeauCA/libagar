@@ -143,12 +143,12 @@ void	  AG_TableSelectAllCols(AG_Table *);
 void	  AG_TableDeselectAllCols(AG_Table *);
 #define	  AG_TableColSelected(t,n) ((t)->cols[n].selected)
 
-void	  	  AG_TableUpdateScrollbars(AG_Table *);
 __inline__ void	  AG_TableRedrawCells(AG_Table *);
 __inline__ int	  AG_TableCompareCells(const AG_TableCell *,
 			               const AG_TableCell *);
 
 int	  AG_TableSaveASCII(AG_Table *, FILE *, char);
+void	  AG_TableUpdateScrollbars(AG_Table *);
 
 __END_DECLS
 
