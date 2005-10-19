@@ -15,7 +15,13 @@
 #include <agar/config/have_nonnull_attribute.h>
 #include <agar/config/map.h>
 
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE	/* For u_* types */
+#endif
+
+#include <agar/core/threads.h>
 #include <sys/types.h>
+
 #ifdef __MINGW32__
 typedef unsigned int u_int;
 typedef unsigned char u_char;
@@ -51,7 +57,6 @@ typedef unsigned long u_long;
 #endif
 
 #include <agar/core/error.h>
-#include <agar/core/threads.h>
 
 #include <agar/compat/queue.h>
 #include <agar/compat/strlcpy.h>
