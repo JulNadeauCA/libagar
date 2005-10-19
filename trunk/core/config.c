@@ -369,7 +369,7 @@ AG_LoadColorSchemeFromACS(AG_Event *event)
 		AG_TextTmsg(AG_MSG_INFO, 1000,
 		    _("Color scheme loaded from %s."), file);
 	} else {
-		AG_TextTmsg(AG_MSG_INFO, "%s", AG_GetError());
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
 }
 
@@ -382,7 +382,7 @@ AG_SaveColorSchemeToACS(AG_Event *event)
 		AG_TextTmsg(AG_MSG_INFO, 1000, _("Color scheme saved to %s."),
 		    file);
 	} else {
-		AG_TextTmsg(AG_MSG_INFO, "%s", AG_GetError());
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
 }
 
