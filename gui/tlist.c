@@ -808,6 +808,35 @@ tlist_mousebuttondown(AG_Event *event)
 	}
 
 	switch (button) {
+	case SDL_BUTTON_WHEELUP:
+		{
+			static Uint32 t = 0;
+			AG_WidgetBinding *offsb;
+			int *offs;
+
+			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
+			if (((*offs) -= AG_WidgetScrollDelta(&t)) < 0) {
+				*offs = 0;
+			}
+			AG_WidgetBindingChanged(offsb);
+			AG_WidgetUnlockBinding(offsb);
+		}
+		break;
+	case SDL_BUTTON_WHEELDOWN:
+		{
+			static Uint32 t = 0;
+			AG_WidgetBinding *offsb;
+			int *offs;
+
+			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
+			if (((*offs) += AG_WidgetScrollDelta(&t)) >
+			    (tl->nitems - tl->nvisitems)) {
+				*offs = tl->nitems - tl->nvisitems;
+			}
+			AG_WidgetBindingChanged(offsb);
+			AG_WidgetUnlockBinding(offsb);
+		}
+		break;
 	case SDL_BUTTON_LEFT:
 		/* Handle range selections. */
 		if ((tl->flags & AG_TLIST_MULTI) &&
