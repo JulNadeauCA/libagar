@@ -227,6 +227,7 @@ AG_ColorsLoad(const char *file)
 		agColorsBorder[i] = AG_ReadColor(buf, agVideoFmt);
 	
 	AG_NetbufClose(buf);
+	return (0);
 }
 
 int
@@ -250,6 +251,7 @@ AG_ColorsSave(const char *file)
 	}
 	
 	AG_NetbufClose(buf);
+	return (0);
 }
 
 void
