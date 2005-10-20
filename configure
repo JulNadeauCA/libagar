@@ -155,7 +155,6 @@ echo "    --enable-utf8                  Unicode text/input support [default: no
 echo "    --enable-astro-units           Include astronomical units [default: no]"
 echo "    --enable-histo-units           Include historical units [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
-echo "    --enable-static                Produce a static binary [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
@@ -2233,11 +2232,6 @@ echo "no" >> config.log
 fi;
 else
 echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
-fi
-if [ "${enable_static}" = "yes" ]
- then
-LDFLAGS="-static"
-echo "LDFLAGS=$LDFLAGS" >> Makefile.config
 fi
 if [ "${enable_threads}" = "yes" ]
  then

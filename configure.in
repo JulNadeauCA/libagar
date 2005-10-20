@@ -13,7 +13,6 @@ REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
 REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
-REGISTER("--enable-static",	"Produce a static binary [default: no]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
@@ -40,7 +39,10 @@ MDEFINE(MANDIR, "\${PREFIX}/share/agar/man")
 MDEFINE(PSDIR, "\${PREFIX}/share/agar/ps")
 
 CHECK(cc)
+CHECK(sys_types)
+CHECK(bsd_types)
 CHECK(progname)
+CHECK(free_null)
 CHECK(math)
 CHECK(gethostname)
 CHECK(getpwuid)
@@ -118,11 +120,6 @@ if [ "${with_libqnet}" != "no" ]; then
 	CHECK(libqnet)
 else
 	HUNDEF(HAVE_LIBQNET)
-fi
-
-# Compile a static binary?
-if [ "${enable_static}" = "yes" ]; then
-	MDEFINE(LDFLAGS, "-static")
 fi
 
 # Don't enable thread safety unless requested explicitely.
