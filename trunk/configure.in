@@ -62,8 +62,6 @@ CHECK(sha1)
 CHECK(rmd160)
 CHECK(pthreads)
 
-CHECK(libqnet)
-
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
 if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
