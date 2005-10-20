@@ -68,7 +68,7 @@ static struct testfn_ops testfns[] = {
 };
 
 struct test_ops misc_test = {
-	"Miscellaneous",
+	"Misc",
 	NULL,
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),

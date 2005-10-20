@@ -51,7 +51,7 @@ static struct testfn_ops testfns[] = {
 };
 
 struct test_ops surfaceops_test = {
-	"Surface operations",
+	"Surface",
 	NULL,
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
