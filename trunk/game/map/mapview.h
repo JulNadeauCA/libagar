@@ -136,12 +136,10 @@ void	 AG_MapviewStatus(AG_Mapview *, const char *, ...);
 void	 AG_MapviewSetMode(AG_Mapview *, enum ag_mapview_mode);
 void	 AG_MapviewControl(AG_Mapview *, const char *, void *);
 
-#ifdef EDITION
 AG_Maptool *AG_MapviewRegTool(AG_Mapview *, const AG_MaptoolOps *, void *);
 AG_Maptool *AG_MapviewFindTool(AG_Mapview *, const char *);
 void AG_MapviewSetDefaultTool(AG_Mapview *, AG_Maptool *);
 void AG_MapviewSelectTool(AG_Mapview *, AG_Maptool *, void *);
-#endif
 __END_DECLS
 
 #include "close_code.h"

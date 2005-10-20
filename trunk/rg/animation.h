@@ -74,14 +74,12 @@ void RG_AnimSave(RG_Anim *, AG_Netbuf *);
 void RG_AnimScale(RG_Anim *, u_int, u_int);
 void RG_AnimGenerate(RG_Anim *);
 
-#ifdef EDITION
-AG_Window *RG_AnimEdit(RG_Anim *);
-#endif
-
 u_int	RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
 void	RG_AnimRemoveInsn(RG_Anim *, u_int);
 u_int	RG_AnimInsertFrame(RG_Anim *);
 void	RG_AnimRemoveFrame(RG_Anim *, u_int);
+
+AG_Window *RG_AnimEdit(RG_Anim *);
 __END_DECLS
 
 #include "close_code.h"

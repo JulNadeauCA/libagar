@@ -270,6 +270,11 @@ typedef struct vg {
 
 extern const VG_ElementOps *vgElementTypes[];
 
+struct ag_menu;
+struct ag_menu_item;
+struct ag_mapview;
+struct ag_combo;
+
 __BEGIN_DECLS
 VG	*VG_New(void *, int);
 void	 VG_Init(VG *, int);
@@ -333,24 +338,15 @@ void VG_LoadTranslate(VG_Matrix *, double, double);
 void VG_LoadRotate(VG_Matrix *, double);
 void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
 void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
-
 __inline__ void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
 
-#ifdef EDITION
-struct ag_menu;
-struct ag_menu_item;
-struct ag_mapview;
-struct ag_combo;
-  
 void	         VG_GeoChangedEv(AG_Event *);
 void	         VG_ChangedEv(AG_Event *);
 struct ag_combo *VG_NewLayerSelector(void *, VG *);
 void	         VG_GenericMenu(struct ag_menu *, struct ag_menu_item *, VG *,
-		             struct ag_mapview *);
-#endif /* EDITION */
-
+		                struct ag_mapview *);
 #ifdef DEBUG
-void VG_DrawExtents(VG *);
+void		 VG_DrawExtents(VG *);
 #endif
 __END_DECLS
 
