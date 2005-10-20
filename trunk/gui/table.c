@@ -84,7 +84,7 @@ AG_TablePolled(void *parent, u_int flags, void (*fn)(AG_Event *),
 
 	t = Malloc(sizeof(AG_Table), M_OBJECT);
 	AG_TableInit(t, flags);
-
+	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
 
@@ -192,7 +192,6 @@ AG_TableScale(void *p, int w, int h)
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 
 	AG_TableSizeFillCols(t);
-	AG_TableUpdateScrollbars(t);
 }
 
 static __inline__ void
@@ -436,7 +435,9 @@ AG_TableUpdateScrollbars(AG_Table *t)
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
-	*max = LAST_VISIBLE(t);
+	if ((*max = LAST_VISIBLE(t)) < 0) {
+		*max = 0;
+	}
 	if (*offset > *max) {
 		*offset = *max;
 		AG_WidgetBindingChanged(offsetb);
@@ -444,9 +445,9 @@ AG_TableUpdateScrollbars(AG_Table *t)
 		*offset = 0;
 		AG_WidgetBindingChanged(offsetb);
 	}
-	if (t->m > 0 && t->mVis > 0 && t->mVis < t->m) {
+	if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
 		AG_ScrollbarSetBarSize(t->vbar,
-		    t->mVis*(AGWIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
+		    (t->mVis-1)*(AGWIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
 	} else {
 		AG_ScrollbarSetBarSize(t->vbar, -1);		/* Full range */
 	}
@@ -608,7 +609,9 @@ AG_TableEnd(AG_Table *t)
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
-	AG_TableUpdateScrollbars(t);
+	if (t->flags & AG_TABLE_POLL) {
+		AG_TableUpdateScrollbars(t);
+	}
 	AG_MutexUnlock(&t->lock);
 }
 
@@ -1218,6 +1221,9 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 	}
 	va_end(ap);
+	if ((t->flags & AG_TABLE_POLL) == 0) {
+		AG_TableUpdateScrollbars(t);
+	}
 	return (t->m++);
 }
 
