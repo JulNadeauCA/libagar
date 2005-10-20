@@ -1804,87 +1804,59 @@ if [ "${with_gl}" != "no" ]
  then
 echo -n "checking for OpenGL (http://www.opengl.org)..."
 echo -n "checking for OpenGL (http://www.opengl.org)..." >> config.log
-GL_CFLAGS=
-GL_LIBS=
-if [ -d /usr/include/X11/GL ]; then
+GL_CFLAGS=""
+GL_LIBS=""
+if [ -d "/usr/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11"
-else
-NONE=1
-fi
-if [ -d /usr/include/X11R6/GL ]; then
+fi;
+if [ -d "/usr/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/include/X11R6"
-else
-NONE=1
-fi
-if [ -d /usr/local/X11/include/GL ]; then
+fi;
+if [ -d "/usr/local/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11/include"
-else
-NONE=1
-fi
-if [ -d /usr/local/X11R6/include/GL ]; then
+fi;
+if [ -d "/usr/local/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/local/X11R6/include"
-else
-NONE=1
-fi
-if [ -d /usr/local/include/X11/GL ]; then
+fi;
+if [ -d "/usr/local/include/X11/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11"
-else
-NONE=1
-fi
-if [ -d /usr/local/include/X11R6/GL ]; then
+fi;
+if [ -d "/usr/local/include/X11R6/GL" ]; then
 GL_CFLAGS="-I/usr/local/include/X11R6"
-else
-NONE=1
-fi
-if [ -d /usr/X11/include/GL ]; then
+fi;
+if [ -d "/usr/X11/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11/include"
-else
-NONE=1
-fi
-if [ -d /usr/X11R6/include/GL ]; then
+fi;
+if [ -d "/usr/X11R6/include/GL" ]; then
 GL_CFLAGS="-I/usr/X11R6/include"
-else
-NONE=1
-fi
-if [ -d /usr/local/X11/lib ]; then
+fi;
+if [ -d "/usr/local/X11/lib" ]; then
 GL_LIBS="-L/usr/local/X11/lib"
-else
-NONE=1
-fi
-if [ -d /usr/local/X11R6/lib ]; then
+fi;
+if [ -d "/usr/local/X11R6/lib" ]; then
 GL_LIBS="-L/usr/local/X11R6/lib"
-else
-NONE=1
-fi
-if [ -d /usr/X11/lib ]; then
+fi;
+if [ -d "/usr/X11/lib" ]; then
 GL_LIBS="-L/usr/X11/lib"
-else
-NONE=1
-fi
-if [ -d /usr/X11R6/lib ]; then
+fi;
+if [ -d "/usr/X11R6/lib" ]; then
 GL_LIBS="-L/usr/X11R6/lib"
-else
-NONE=1
-fi
+fi;
 if [ "$SYSTEM" = "Darwin" ]; then
-	OPENGL_CFLAGS=""
-	OPENGL_LIBS="-framework OpenGL"
+OPENGL_CFLAGS=""
+OPENGL_LIBS="-framework OpenGL"
 else
-	OPENGL_CFLAGS="${GL_CFLAGS}"
-	OPENGL_LIBS="${GL_LIBS} -lGL"
-fi
+OPENGL_CFLAGS="${GL_CFLAGS}"
+OPENGL_LIBS="${GL_LIBS} -lGL"
+fi;
 cat << EOT > conftest.c
 #ifdef __APPLE__
-# include <OpenGL/gl.h>
+#include <OpenGL/gl.h>
 #else
-# include <GL/gl.h>
+#include <GL/gl.h>
 #endif
-
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	GLdouble d;
-
 	glFlush();
 	return (0);
 }
@@ -1923,7 +1895,7 @@ echo "#endif" >> config/opengl_libs.h
 else
 echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#undef OPENGL_LIBS" > config/opengl_libs.h
-fi
+fi;
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
