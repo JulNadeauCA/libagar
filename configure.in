@@ -90,7 +90,7 @@ else
 fi
 
 # Enable JPEG support if libjpeg is found.
-if [ "${with_jpeg}" = "yes" ]; then
+if [ "${with_jpeg}" != "no" ]; then
 	CHECK(jpeg)
 else
 	HUNDEF(HAVE_JPEG)
