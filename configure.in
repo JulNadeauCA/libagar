@@ -69,12 +69,29 @@ if [ "${enable_warnings}" = "yes" ]; then
 fi
 
 # SDL is required.
-REQUIRE(sdl, 1.2.0)
+CHECK(sdl, 1.2.0)
+if [ "${HAVE_SDL}" != "yes" ]; then
+	echo "*"
+	echo "* Agar requires the SDL library. Please install it and try again."
+	echo "* You can download SDL from: http://www.libsdl.org/."
+	echo "*"
+	exit 1
+fi
 
 # Enable Freetype support if the Freetype library is found.
 # If FreeType is unavailable, Agar will fall back to bitmap fonts.
 if [ "${with_freetype}" != "no" ]; then
 	CHECK(freetype, 7.0.1)
+	if [ "${HAVE_FREETYPE}" != "yes" ]; then
+		echo "*"
+		echo "* Agar needs FreeType in order to display vector-based"
+		echo "* fonts. If you would like to use Agar's bitmap font, "
+		echo "* rerun configure with the --without-freetype option."
+		echo "* (note that the bundled bitmap font can only display"
+		echo "* ASCII characters)."
+		echo "*"
+		exit 1
+	fi
 else
 	HUNDEF(HAVE_FREETYPE)
 fi
@@ -186,13 +203,4 @@ if [ "${enable_32bpp}" != "no" ]; then
 else
 	HUNDEF(VIEW_32BPP)
 fi
-
-#if [ -d "$PREFIX/include/agar" ]; then
-#	echo ""
-#	echo "WARNING: -I$PREFIX/include is in your \$CFLAGS and agar"
-#	echo "includes are currently installed in $PREFIX/include/agar."
-#	echo "It is recommended that you remove them with \"make deinstall\""
-#	echo "prior to compiling in order to prevent conflicts."
-#	echo ""
-#fi
 
