@@ -1551,10 +1551,50 @@ echo "CFLAGS=$CFLAGS" >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
-sdl_version=""
+if [ "${SYSTEM}" = "Darwin" ]; then
+SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
-		sdl_version=`${path}/sdl-config --version`
+		SDL_VERSION=`${path}/sdl-config --version`
+	fi
+done
+SDL_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_CFLAGS=`${path}/sdl-config --cflags`
+	fi
+done
+SDL_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_LIBS=`${path}/sdl-config --libs`
+	fi
+done
+elif [ "${SYSTEM}" = "FreeBSD" ]; then
+SDL_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		SDL_VERSION=`${path}/sdl11-config --version`
+	fi
+done
+if [ "${SDL_VERSION}" != "" ]; then
+SDL_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		SDL_CFLAGS=`${path}/sdl11-config --cflags`
+	fi
+done
+SDL_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		SDL_LIBS=`${path}/sdl11-config --static-libs`
+	fi
+done
+else
+SDL_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_VERSION=`${path}/sdl-config --version`
 	fi
 done
 SDL_CFLAGS=""
@@ -1569,85 +1609,47 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 		SDL_LIBS=`${path}/sdl-config --static-libs`
 	fi
 done
-SDL_LIBS_SHORT=""
+fi;
+else
+SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
-		SDL_LIBS_SHORT=`${path}/sdl-config --libs`
+		SDL_VERSION=`${path}/sdl-config --version`
 	fi
 done
-if [ "$SYSTEM" = "Darwin" ]; then
-	SDL_LIBS=$SDL_LIBS_SHORT
-fi
-sdl11_version=""
+SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		sdl11_version=`${path}/sdl11-config --version`
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_CFLAGS=`${path}/sdl-config --cflags`
 	fi
 done
-sdl11_cflags=""
+SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		sdl11_cflags=`${path}/sdl11-config --cflags`
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_LIBS=`${path}/sdl-config --static-libs`
 	fi
 done
-sdl11_libs=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		sdl11_libs=`${path}/sdl11-config --static-libs`
-	fi
-done
-if [ "${sdl_version}" != "" ]; then
-sdl_found=yes
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
-echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
-else
-NONE=1
-fi
-if [ "${sdl11_version}" != "" ]; then
-sdl_found=yes
-SDL_CFLAGS=$sdl11_cflags
-SDL_LIBS=$sdl11_libs
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
-echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
-else
-NONE=1
-fi
-if [ "${sdl_found}" = "yes" ]; then
-echo "ok"
-echo "ok" >> config.log
-else
-echo "Could not find the SDL library. Is sdl-config in $PATH?"
-exit 1
-fi
+fi;
+if [ "${SDL_VERSION}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
 echo -n "checking whether SDL works..."
 echo -n "checking whether SDL works..." >> config.log
 cat << EOT > conftest.c
-
 #include <stdio.h>
-
 #include <SDL.h>
-
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	SDL_Surface su;
 	SDL_TimerID tid;
 	SDL_Color color;
 	SDL_Event event;
-	Uint8 u8;
-	Uint16 u16;
 	Uint32 u32;
-	Sint8 s8;
-	Sint16 s16;
-	Sint32 s32;
-
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		return (1);
 	}
 	SDL_Quit();
 	return (0);
 }
-
 
 EOT
 compile="ok"
@@ -1671,25 +1673,29 @@ else
 
 	echo "no"
 fi
-if [ "${HAVE_SDL}" = "yes" ]; then
-echo "#ifndef SDL_LIBS" > config/sdl_libs.h
-echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
-echo "#endif" >> config/sdl_libs.h
+if [ "${HAVE_SDL}" != "" ]; then
+echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
+echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif" >> config/sdl_cflags.h
-else
-echo "#undef SDL_LIBS" > config/sdl_libs.h
-echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
-echo "The SDL test would not compile."
-exit 1
-fi
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
-echo "#define SDL_LIBS \"${SDL_LIBS}\"" >> config/sdl_libs.h
-echo "#endif /* SDL_LIBS */" >> config/sdl_libs.h
-echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#define SDL_CFLAGS \"${SDL_CFLAGS}\"" >> config/sdl_cflags.h
-echo "#endif /* SDL_CFLAGS */" >> config/sdl_cflags.h
+echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
+echo "#endif" >> config/sdl_libs.h
+fi;
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_SDL" > config/have_sdl.h
+fi;
+if [ "${HAVE_SDL}" != "yes" ]
+ then
+	echo "*"
+	echo "* Agar requires the SDL library. Please install it and try again."
+	echo "* You can download SDL from: http://www.libsdl.org/."
+	echo "*"
+	exit 1
+fi
 if [ "${with_freetype}" != "no" ]
  then
 echo -n "checking for FreeType (http://www.freetype.org)..."
@@ -1780,6 +1786,17 @@ echo "#undef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#undef FREETYPE_CFLAGS" > config/freetype_cflags.h
 NONE=1
 fi
+	if [ "${HAVE_FREETYPE}" != "yes" ]
+ then
+		echo "*"
+		echo "* Agar needs FreeType in order to display vector-based"
+		echo "* fonts. If you would like to use Agar's bitmap font, "
+		echo "* rerun configure with the --without-freetype option."
+		echo "* (note that the bundled bitmap font can only display"
+		echo "* ASCII characters)."
+		echo "*"
+		exit 1
+	fi
 else
 echo "#undef HAVE_FREETYPE" > config/have_freetype.h
 fi
@@ -2006,6 +2023,7 @@ echo "#undef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#undef JPEG_LIBS" > config/jpeg_libs.h
 fi;
 else
+echo "#undef HAVE_JPEG" > config/have_jpeg.h
 echo "no"
 echo "no" >> config.log
 fi;
@@ -2014,8 +2032,8 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
 if [ "${with_libqnet}" != "no" ]
  then
-echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
-echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
+echo -n "checking for libqnet (http://libqnet.csoft.org/)..."
+echo -n "checking for libqnet (http://libqnet.csoft.org/)..." >> config.log
 libqnet_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/qnet-config" ]; then
@@ -2085,6 +2103,7 @@ echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
 echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
 fi;
 else
+echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
 echo "no"
 echo "no" >> config.log
 fi;
