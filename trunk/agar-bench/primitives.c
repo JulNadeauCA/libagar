@@ -142,7 +142,7 @@ static struct testfn_ops testfns[] = {
 };
 
 struct test_ops primitives_test = {
-	"Geometric primitives",
+	"Primitives",
 	NULL,
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
