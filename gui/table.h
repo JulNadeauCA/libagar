@@ -67,6 +67,7 @@ typedef struct ag_table_col {
 #define AG_TABLE_COL_FILL	 0x01
 #define AG_TABLE_SORT_ASCENDING	 0x02
 #define AG_TABLE_SORT_DESCENDING 0x04
+#define AG_TABLE_POLL		 0x08
 	int selected;			/* Entire column is selected */
 	int w;				/* Width in pixel */
 	int x;				/* Current position */
