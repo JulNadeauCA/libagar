@@ -32,9 +32,11 @@ configure:
 cleandir-config:
 	rm -fr config config.log
 
-release: cleandir
+package: cleandir
 	sh mk/dist.sh
-	#sh mk/agar-cvs.sh
+
+release: cleandir
+	sh mk/dist.sh commit
 
 fastclean:
 	find . -type f -and \( -name \*.o -or -name \*.lo -or \
