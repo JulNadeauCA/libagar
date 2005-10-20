@@ -5,17 +5,19 @@
 #define _AGAR_OBJMGR_H_
 #include "begin_code.h"
 
+struct ag_window;
+
 __BEGIN_DECLS
-AG_Window	*AG_ObjMgrWindow(void);
-void		 AG_ObjMgrInit(void);
-void		 AG_ObjMgrDestroy(void);
-void		 AG_ObjMgrReopen(AG_Object *);
-void		 AG_ObjMgrOpenData(void *, int);
-void		 AG_ObjMgrCloseData(void *);
-void		 AG_ObjMgrOpenGeneric(AG_Object *);
-void		 AG_ObjMgrQuitDlg(void *);
-void		 AG_ObjMgrSaveTo(void *);
-void		 AG_ObjMgrGenericMenu(void *, void *);
+struct ag_window *AG_ObjMgrWindow(void);
+void		  AG_ObjMgrInit(void);
+void		  AG_ObjMgrDestroy(void);
+void		  AG_ObjMgrReopen(AG_Object *);
+void		  AG_ObjMgrOpenData(void *, int);
+void		  AG_ObjMgrCloseData(void *);
+void		  AG_ObjMgrOpenGeneric(AG_Object *);
+void		  AG_ObjMgrQuitDlg(void *);
+void		  AG_ObjMgrSaveTo(void *);
+void		  AG_ObjMgrGenericMenu(void *, void *);
 __END_DECLS
 
 #include "close_code.h"

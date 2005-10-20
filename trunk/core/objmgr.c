@@ -817,7 +817,7 @@ rename_repo_dlg(AG_Event *event)
 #endif /* NETWORK */
 
 /* Create the object editor window. */
-AG_Window *
+struct ag_window *
 AG_ObjMgrWindow(void)
 {
 	AG_Window *win;
