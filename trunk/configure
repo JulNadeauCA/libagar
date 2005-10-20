@@ -567,6 +567,122 @@ if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
 	echo "CFLAGS=$CFLAGS" >> Makefile.config
 fi
+echo -n "checking for <sys/types.h>..."
+echo -n "checking for <sys/types.h>..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+int main(int argc, char *argv[]) {
+	size_t len = 1;
+	ssize_t slen = 1;
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SYS_TYPES_H" > config/have_sys_types_h.h
+echo "#define HAVE_SYS_TYPES_H" $HAVE_SYS_TYPES_H >> config/have_sys_types_h.h
+echo "#endif" >> config/have_sys_types_h.h
+
+	HAVE_SYS_TYPES_H=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_SYS_TYPES_H" > config/have_sys_types_h.h
+
+	echo "no"
+fi
+echo -n "checking for BSD types..."
+echo -n "checking for BSD types..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+	u_int foo = 0;
+	u_long bar = 0;
+	u_char baz = 0;
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_BSD_TYPES" > config/have_bsd_types.h
+echo "#define HAVE_BSD_TYPES" $HAVE_BSD_TYPES >> config/have_bsd_types.h
+echo "#endif" >> config/have_bsd_types.h
+
+	HAVE_BSD_TYPES=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_BSD_TYPES" > config/have_bsd_types.h
+
+	echo "no"
+fi
+if [ "${HAVE_BSD_TYPES}" != "yes" ]; then
+echo -n "checking whether _BSD_SOURCE is needed..."
+echo -n "checking whether _BSD_SOURCE is needed..." >> config.log
+cat << EOT > conftest.c
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE
+#endif
+#include <sys/types.h>
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+	u_int foo = 0;
+	u_long bar = 0;
+	u_char baz = 0;
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
+echo "#define BSD_SOURCE_NEEDED" $BSD_SOURCE_NEEDED >> config/bsd_source_needed.h
+echo "#endif" >> config/bsd_source_needed.h
+
+	BSD_SOURCE_NEEDED=yes
+
+	echo "yes"
+else
+	echo "#undef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
+
+	echo "no"
+fi
+if [ ${BSD_SOURCE_NEEDED} != "yes" ]; then
+echo "#undef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
+echo "#ifndef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
+echo "#define BSD_TYPES_NEEDED \"$BSD_TYPES_NEEDED\"" >> config/bsd_types_needed.h
+echo "#endif" >> config/bsd_types_needed.h
+else
+echo "#undef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
+fi;
+else
+echo "#undef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
+echo "#undef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
+fi;
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c
@@ -599,6 +715,42 @@ else
 
 	echo "no"
 fi
+echo -n "checking for free(NULL) is a no-op..."
+echo -n "checking for free(NULL) is a no-op..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+int main(int argc, char *argv[]) {
+	free(NULL);
+	return (0);
+}
+
+EOT
+$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "-> compile failed ($?)" >> config.log
+	compile="failed"
+else
+	compile="ok"
+	./conftest >> config.log
+	if [ $? != 0 ]; then
+		echo "-> execution failed ($?)" >> config.log
+		free_null_noop="no"
+	else
+		free_null_noop="yes"
+	fi
+fi
+rm -f conftest conftest.c
+if [ "${free_null_noop}" = "yes" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo "#ifndef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
+echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_is_a_noop.h
+echo "#endif" >> config/free_null_is_a_noop.h
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
+fi;
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
 MATH_LIBS=-lm
