@@ -21,18 +21,15 @@ enum vg_snap_mode {
 	VG_INTERSECTIONS_MANUAL	/* Snap to intersections manually */
 };
 
+struct ag_menu;
+struct ag_menu_item;
+
 __BEGIN_DECLS
 void		 VG_SnapPoint(struct vg *, double *, double *);
 __inline__ void	 VG_SetSnapMode(struct vg *, enum vg_snap_mode);
 __inline__ void	 VG_DrawGrid(struct vg *);
 struct ag_toolbar *VG_SnapToolbar(void *, struct vg *, enum ag_toolbar_type);
-
-#ifdef EDITION
-struct ag_menu;
-struct ag_menu_item;
-
 void VG_SnapMenu(struct ag_menu *, struct ag_menu_item *, struct vg *);
-#endif
 __END_DECLS
 
 #include "close_code.h"

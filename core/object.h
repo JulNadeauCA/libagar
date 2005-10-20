@@ -206,10 +206,7 @@ AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
 __inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
-
-#ifdef EDITION
-void	*AG_ObjectEdit(void *);
-#endif
+void		*AG_ObjectEdit(void *);
 __END_DECLS
 
 #include "close_code.h"

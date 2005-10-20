@@ -54,10 +54,7 @@ void	 SG_Reinit(void *);
 void	 SG_Destroy(void *);
 int	 SG_Save(void *, AG_Netbuf *);
 int	 SG_Load(void *, AG_Netbuf *);
-#ifdef EDITION
 void	*SG_Edit(void *);
-#endif
-
 SG_Node	*SG_AddNode(SG_Node *, const SG_NodeOps *, u_int);
 __END_DECLS
 
