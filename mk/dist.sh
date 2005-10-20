@@ -4,6 +4,9 @@
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
+HOST=resin.csoft.net
+RUSER=vedge
+MAILER="sendmail -t"
 
 cd ..
 echo "snapshot: agar-${VER}"
@@ -28,8 +31,8 @@ openssl sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 gpg -ab ${DISTFILE}.tar.gz
 
 echo "uploading"
-scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} vedge@resin:www/snap
-ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
+scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/snap
+ssh ${RUSER}@${HOST}"cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
 
 echo "notifying agar-announce@"
 TMP=`mktemp /tmp/agarannounceXXXXXXXX`
@@ -49,5 +52,5 @@ any problems you might run into.
 	http://beta.csoft.org/agar/agar-$VER.tar.gz.md5
 
 EOF
-cat $TMP | sendmail -t
+cat $TMP | ${MAILER}
 rm -f $TMP
