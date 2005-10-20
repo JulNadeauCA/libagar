@@ -1277,8 +1277,8 @@ else
 fi
 echo -n "checking for POSIX threads..."
 echo -n "checking for POSIX threads..." >> config.log
-PTHREADS_CFLAGS=
-PTHREADS_LIBS=-pthread
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -1301,7 +1301,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -1321,7 +1321,60 @@ else
 
 	echo "no"
 fi
-if [ "${HAVE_PTHREADS}" = "yes" ]; then
+if [ ${HAVE_PTHREADS} = "yes" ]; then
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
+else
+PTHREADS_LIBS="-lpthread"
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int
+main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_t thread;
+	pthread_cond_t cond;
+	pthread_key_t key;
+
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS" $HAVE_PTHREADS >> config/have_pthreads.h
+echo "#endif" >> config/have_pthreads.h
+
+	HAVE_PTHREADS=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+
+	echo "no"
+fi
+if [ ${HAVE_PTHREADS} = "yes" ]; then
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
 echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
 echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
@@ -1333,7 +1386,8 @@ echo "#endif" >> config/pthreads_libs.h
 else
 echo "#undef PTHREADS_CFLAGS" > config/pthreads_cflags.h
 echo "#undef PTHREADS_LIBS" > config/pthreads_libs.h
-fi
+fi;
+fi;
 echo -n "checking for the X/Open Threads Extension..."
 echo -n "checking for the X/Open Threads Extension..." >> config.log
 cat << EOT > conftest.c
@@ -1485,85 +1539,6 @@ echo "#endif" >> config/have_pthread_mutex_recursive_np.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-fi
-echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
-echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
-libqnet_version=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		libqnet_version=`${path}/qnet-config --version`
-	fi
-done
-LIBQNET_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		LIBQNET_CFLAGS=`${path}/qnet-config --cflags`
-	fi
-done
-LIBQNET_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		LIBQNET_LIBS=`${path}/qnet-config --libs`
-	fi
-done
-if [ "${libqnet_version}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
-echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
-echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif" >> config/have_libqnet.h
-echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
-echo "#endif" >> config/libqnet_cflags.h
-echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
-echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
-echo "#endif" >> config/libqnet_libs.h
-else
-echo "no"
-echo "no" >> config.log
-echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
-fi
-echo -n "checking whether libqnet works..."
-echo -n "checking whether libqnet works..." >> config.log
-cat << EOT > conftest.c
-#include <sys/param.h>
-
-#include <qnet/qnet.h>
-#include <qnet/server.h>
-
-int
-main(int argc, char *argv[])
-{
-	server_regcmd("foo", NULL, NULL);
-	server_listen("foo", "1.0", NULL, NULL);
-	return (0);
-}
-
-EOT
-compile="ok"
-$CC $CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif" >> config/have_libqnet.h
-
-	HAVE_LIBQNET=yes
-
-	echo "yes"
-else
-	echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
-
-	echo "no"
 fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1940,16 +1915,36 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
 fi
-if [ "${with_jpeg}" = "yes" ]
+if [ "${with_jpeg}" != "no" ]
  then
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
-JPEG_CFLAGS=-I/usr/local/include
+JPEG_CFLAGS=""
+if [ -d "/usr/local/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I/usr/local/include"
 JPEG_LIBS="-L/usr/local/lib -ljpeg"
+fi;
+if [ -d "/usr/X11R6/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I/usr/X11R6/include"
+JPEG_LIBS="-L/usr/X11R6/lib -ljpeg"
+fi;
+if [ -d "/usr/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I/usr/include"
+JPEG_LIBS="-L/usr/lib -ljpeg"
+fi;
+if [ -d "/opt/local/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I/opt/local/include"
+JPEG_LIBS="-L/opt/local/lib -ljpeg"
+fi;
+if [ -d "/opt/include/jpeglib.h" ]; then
+JPEG_CFLAGS="-I/opt/include"
+JPEG_LIBS="-L/opt/lib -ljpeg"
+fi;
+if [ "${JPEG_CFLAGS}" != "" ]; then
 echo "ok"
 echo "ok" >> config.log
-echo -n "checking whether libjpeg works..."
-echo -n "checking whether libjpeg works..." >> config.log
+echo "checking whether libjpeg works..."
+echo "checking whether libjpeg works..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <jpeglib.h>
@@ -2009,7 +2004,11 @@ echo "#endif" >> config/jpeg_libs.h
 else
 echo "#undef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#undef JPEG_LIBS" > config/jpeg_libs.h
-fi
+fi;
+else
+echo "no"
+echo "no" >> config.log
+fi;
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
@@ -2023,6 +2022,9 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 		libqnet_version=`${path}/qnet-config --version`
 	fi
 done
+if [ "${libqnet_version}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
 LIBQNET_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/qnet-config" ]; then
@@ -2035,38 +2037,13 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 		LIBQNET_LIBS=`${path}/qnet-config --libs`
 	fi
 done
-if [ "${libqnet_version}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
-echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
-echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif" >> config/have_libqnet.h
-echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
-echo "#endif" >> config/libqnet_cflags.h
-echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
-echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
-echo "#endif" >> config/libqnet_libs.h
-else
-echo "no"
-echo "no" >> config.log
-echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
-fi
-echo -n "checking whether libqnet works..."
-echo -n "checking whether libqnet works..." >> config.log
+echo "checking whether libqnet works..."
+echo "checking whether libqnet works..." >> config.log
 cat << EOT > conftest.c
 #include <sys/param.h>
-
 #include <qnet/qnet.h>
 #include <qnet/server.h>
-
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	server_regcmd("foo", NULL, NULL);
 	server_listen("foo", "1.0", NULL, NULL);
 	return (0);
@@ -2094,6 +2071,23 @@ else
 
 	echo "no"
 fi
+if [ ${HAVE_LIBQNET} = "yes" ]; then
+echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
+echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
+echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
+echo "#endif" >> config/libqnet_cflags.h
+echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
+echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
+echo "#endif" >> config/libqnet_libs.h
+else
+echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
+fi;
+else
+echo "no"
+echo "no" >> config.log
+fi;
 else
 echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
 fi
