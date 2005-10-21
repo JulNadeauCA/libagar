@@ -238,7 +238,6 @@ typedef struct vg {
 	enum vg_snap_mode  snap_mode;	/* Positional restriction */
 	enum vg_ortho_mode ortho_mode;	/* Orthogonal restriction */
 
-	AG_Object *pobj;		/* Tied object */
 	SDL_Surface *su;		/* Raster surface */
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
 
@@ -250,30 +249,23 @@ typedef struct vg {
 	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 } VG;
 
-#define VG_RASXF(vg,cx) ((cx)*(vg)->scale*AGTILESZ + \
-                        (vg)->origin[0].x*(vg)->scale*AGTILESZ)
-#define VG_RASYF(vg,cy) ((cy)*(vg)->scale*AGTILESZ + \
-                        (vg)->origin[0].y*(vg)->scale*AGTILESZ)
-#define VG_RASLENF(vg,i) ((i)*(vg)->scale*AGTILESZ)
-#define VG_VECXF(vg,rx) ((rx)/(vg)->scale/AGTILESZ - (vg)->origin[0].x)
-#define VG_VECYF(vg,ry) ((ry)/(vg)->scale/AGTILESZ - (vg)->origin[0].y)
-#define VG_VECLENF(vg,ry) ((ry)/(vg)->scale/AGTILESZ)
+#define VG_RASXF(vg,cx) ((cx)*(vg)->scale + (vg)->origin[0].x*(vg)->scale)
+#define VG_RASYF(vg,cy) ((cy)*(vg)->scale + (vg)->origin[0].y*(vg)->scale)
+#define VG_RASLENF(vg,i) ((i)*(vg)->scale)
+#define VG_VECXF(vg,rx) ((rx)/(vg)->scale - (vg)->origin[0].x)
+#define VG_VECYF(vg,ry) ((ry)/(vg)->scale - (vg)->origin[0].y)
+#define VG_VECLENF(vg,ry) ((ry)/(vg)->scale)
 
-#define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale*AGTILESZ) + \
-                       (int)((vg)->origin[0].x*(vg)->scale*AGTILESZ))
-#define VG_RASY(vg,cy) ((int)((cy)*(vg)->scale*AGTILESZ) + \
-                       (int)((vg)->origin[0].y*(vg)->scale*AGTILESZ))
-#define VG_RASLEN(vg,i) (int)((i)*(vg)->scale*AGTILESZ)
+#define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale) + \
+                       (int)((vg)->origin[0].x*(vg)->scale))
+#define VG_RASY(vg,cy) ((int)((cy)*(vg)->scale) + \
+                       (int)((vg)->origin[0].y*(vg)->scale))
+#define VG_RASLEN(vg,i) (int)((i)*(vg)->scale)
 
 extern const VG_ElementOps *vgElementTypes[];
 
-struct ag_menu;
-struct ag_menu_item;
-struct ag_mapview;
-struct ag_combo;
-
 __BEGIN_DECLS
-VG	*VG_New(void *, int);
+VG	*VG_New(int);
 void	 VG_Init(VG *, int);
 void	 VG_Reinit(VG *);
 void	 VG_Destroy(VG *);
@@ -285,8 +277,6 @@ __inline__ void	 VG_DefaultScale(VG *, double);
 __inline__ void	 VG_SetGridGap(VG *, double);
 void		 VG_Rasterize(VG *);
 void		 VG_RasterizeElement(VG *, VG_Element *);
-__inline__ void	 VG_UpdateFragments(VG *);
-__inline__ void	 VG_FreeFragments(VG *);
 
 __inline__ void	 VG_Vcoords2(VG *, int, int, int, int, double *, double *);
 __inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, double *, double *);
@@ -335,13 +325,8 @@ void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
 void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
 __inline__ void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
 
-void	         VG_GeoChangedEv(AG_Event *);
-void	         VG_ChangedEv(AG_Event *);
-struct ag_combo *VG_NewLayerSelector(void *, VG *);
-void	         VG_GenericMenu(struct ag_menu *, struct ag_menu_item *, VG *,
-		                struct ag_mapview *);
 #ifdef DEBUG
-void		 VG_DrawExtents(VG *);
+void VG_DrawExtents(VG *);
 #endif
 __END_DECLS
 

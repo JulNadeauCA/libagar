@@ -28,14 +28,6 @@
 
 #include <core/core.h>
 
-#ifdef EDITION
-#include <game/map/mapview.h>
-#include <game/map/tool.h>
-
-#include <gui/window.h>
-#include <gui/radio.h>
-#endif
-
 #include "vg.h"
 #include "vg_primitive.h"
 
@@ -130,7 +122,7 @@ VG_DrawLineLoop(VG *vg, VG_Element *vge)
 }
 
 static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	double xmin, xmax;
 	double ymin, ymax;
@@ -159,7 +151,7 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
  * point on a line.
  */
 static float
-intsect_line(VG *vg, int x1, int y1, int x2, int y2, int mx, int my)
+VG_ClosestLinePoint(VG *vg, int x1, int y1, int x2, int y2, int mx, int my)
 {
 	int dx, dy;
 	int inc1, inc2;
@@ -295,7 +287,7 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 		for (i = 1; i < vge->nvtx; i++) {
 			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 
-			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			d = VG_ClosestLinePoint(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
 
 			x1 = x2;
@@ -307,7 +299,7 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 			VG_VtxCoords2i(vg, vge, i, &x1, &y1);
 			VG_VtxCoords2i(vg, vge, i+1, &x2, &y2);
 
-			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			d = VG_ClosestLinePoint(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
 		}
 		break;
@@ -319,13 +311,13 @@ VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
 		for (i = 1; i < vge->nvtx; i++) {
 			VG_VtxCoords2i(vg, vge, i, &x2, &y2);
 
-			d = intsect_line(vg, x1, y1, x2, y2, mx, my);
+			d = VG_ClosestLinePoint(vg, x1, y1, x2, y2, mx, my);
 			if (d < min_distance) { min_distance = d; }
 			
 			x1 = x2;
 			y1 = y2;
 		}
-		d = intsect_line(vg, x0, y0, x1, y1, mx, my);
+		d = VG_ClosestLinePoint(vg, x0, y0, x1, y1, mx, my);
 		if (d < min_distance) { min_distance = d; }
 		break;
 	default:
@@ -340,7 +332,7 @@ const VG_ElementOps vgLinesOps = {
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineSegments,
-	extent,
+	VG_LineExtent,
 	VG_LineIntersect
 };
 const VG_ElementOps vgLineStripOps = {
@@ -349,7 +341,7 @@ const VG_ElementOps vgLineStripOps = {
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineStrip,
-	extent,
+	VG_LineExtent,
 	VG_LineIntersect
 };
 const VG_ElementOps vgLineLoopOps = {
@@ -358,154 +350,6 @@ const VG_ElementOps vgLineLoopOps = {
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineLoop,
-	extent,
+	VG_LineExtent,
 	VG_LineIntersect
 };
-
-#ifdef EDITION
-static enum {
-	MODE_SEGMENTS,
-	MODE_STRIP,
-	MODE_LOOP
-} mode = MODE_STRIP;
-
-static int seq;
-static VG_Element *cur_line;
-static VG_Vtx *cur_vtx;
-
-static void
-line_AG_MaptoolInit(void *t)
-{
-	AG_MaptoolPushStatus(t, _("Specify first point."));
-	seq = 0;
-	cur_line = NULL;
-	cur_vtx = NULL;
-}
-
-static void
-line_tool_pane(void *t, void *con)
-{
-	static const char *mode_items[] = {
-		N_("Line segments"),
-		N_("Line strip"),
-		N_("Line loop"),
-		NULL
-	};
-	AG_Radio *rad;
-
-	rad = AG_RadioNew(con, mode_items);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &mode);
-}
-
-static int
-line_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
-    int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double x, y;
-	
-	VG_Map2Vec(vg, xmap, ymap, &x, &y);
-	vg->origin[1].x = x;
-	vg->origin[1].y = y;
-
-	if (cur_vtx != NULL) {
-		cur_vtx->x = x;
-		cur_vtx->y = y;
-		vg->redraw++;
-	}
-	return (1);
-}
-
-static int
-line_mousebuttondown(void *t, int xmap, int ymap, int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double vx, vy;
-
-	switch (mode) {
-	case MODE_SEGMENTS:
-		if (btn == 1) {
-			if (seq++ == 0) {
-				cur_line = VG_Begin(vg, VG_LINES);
-				VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
-				VG_Vertex2(vg, vx, vy);
-				cur_vtx = VG_Vertex2(vg, vx, vy);
-
-				AG_MaptoolPushStatus(t,
-				    _("Specify second point or [undo line]."));
-			} else {
-				goto finish;
-			}
-		} else {
-			if (cur_line != NULL) {
-				VG_DestroyElement(vg, cur_line);
-			}
-			goto finish;
-		}
-		break;
-	case MODE_STRIP:
-	case MODE_LOOP:
-		if (btn == 1) {
-			if (seq++ == 0) {
-#ifdef DEBUG
-				if (vg->cur_block != NULL)
-					fatal("block");
-#endif
-				cur_line = VG_Begin(vg,
-				    mode == MODE_STRIP ? VG_LINE_STRIP :
-							 VG_LINE_LOOP);
-				VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
-				VG_Vertex2(vg, vx, vy);
-			} else {
-				AG_MaptoolPopStatus(t);
-			}
-			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
-			cur_vtx = VG_Vertex2(vg, vx, vy);
-			vg->redraw++;
-
-			AG_MaptoolPushStatus(t, _("Specify point %d or "
-			                      "[close/undo vertex]."), seq+1);
-		} else {
-			if (cur_vtx != NULL) {
-				if (cur_line->nvtx <= 2) {
-					VG_DestroyElement(vg, cur_line);
-					cur_line = NULL;
-				} else {
-					VG_PopVertex(vg);
-				}
-				vg->redraw++;
-			}
-			goto finish;
-		}
-		break;
-	default:
-		break;
-	}
-	return (1);
-finish:
-	cur_line = NULL;
-	cur_vtx = NULL;
-	seq = 0;
-	AG_MaptoolPopStatus(t);
-	return (1);
-}
-
-const AG_MaptoolOps vgLineTool = {
-	"Lines", N_("Line segments, strips and loops."),
-	VGLINES_ICON,
-	sizeof(AG_Maptool),
-	0,
-	line_AG_MaptoolInit,
-	NULL,			/* destroy */
-	line_tool_pane,
-	NULL,			/* edit */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-
-	line_mousemotion,
-	line_mousebuttondown,
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-#endif /* EDITION */

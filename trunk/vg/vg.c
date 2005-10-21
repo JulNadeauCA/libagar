@@ -29,17 +29,6 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#ifdef EDITION
-#include <game/map/mapview.h>
-#include <game/map/tool.h>
-
-#include <gui/toolbar.h>
-#include <gui/button.h>
-#include <gui/combo.h>
-#include <gui/tlist.h>
-#include <gui/menu.h>
-#endif
-
 #include "vg.h"
 #include "vg_primitive.h"
 
@@ -84,23 +73,12 @@ const VG_ElementOps *vgElementTypes[] = {
 };
 
 VG *
-VG_New(void *p, int flags)
+VG_New(int flags)
 {
-	char path[AG_OBJECT_PATH_MAX];
-	AG_Object *ob = p;
 	VG *vg;
-	
+
 	vg = Malloc(sizeof(VG), M_VG);
 	VG_Init(vg, flags);
-	if (ob != NULL) {
-		ob->gfx = AG_GfxNew(ob);
-		ob->gfx->used = 1;
-
-		vg->pobj = ob;
-		vg->map = AG_MapNew(ob, "raster");
-		AGOBJECT(vg->map)->flags |= AG_OBJECT_NON_PERSISTENT|
-					     AG_OBJECT_INDESTRUCTIBLE;
-	}
 	return (vg);
 }
 
@@ -145,8 +123,6 @@ VG_Init(VG *vg, int flags)
 	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
 	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS, M_VG);
-	vg->pobj = NULL;
-	vg->map = NULL;
 	vg->layers = Malloc(sizeof(VG_Layer), M_VG);
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
@@ -242,17 +218,11 @@ VG_Reinit(VG *vg)
 void
 VG_Destroy(VG *vg)
 {
-	AG_Object *ob = vg->pobj;
 	int y;
 
 	Free(vg->origin, M_VG);
 	Free(vg->origin_radius, M_VG);
 	Free(vg->origin_color, M_VG);
-
-	if (ob != NULL && ob->gfx != NULL) {
-		AG_GfxDestroy(ob->gfx);
-		ob->gfx = NULL;
-	}
 	Free(vg->layers, M_VG);
 
 	VG_DestroyBlocks(vg);
@@ -277,114 +247,6 @@ VG_DestroyElement(VG *vg, VG_Element *vge)
 	vg->redraw++;
 }
 
-/*
- * Generate tile-sized fragments of the raster surface.
- * The vg must be tied to an object.
- */
-void
-VG_UpdateFragments(VG *vg)
-{
-	AG_Object *pobj = vg->pobj;
-	AG_Nitem *r;
-	int x, y;
-	int mx, my;
-	SDL_Rect sd, rd;
-	Uint32 saflags = vg->su->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-	Uint32 scflags = vg->su->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-	Uint8 salpha = vg->su->format->alpha;
-	Uint32 scolorkey = vg->su->format->colorkey;
-
-	rd.x = 0;
-	rd.y = 0;
-	sd.w = AGTILESZ;
-	sd.h = AGTILESZ;
-	
-	SDL_SetAlpha(vg->su, 0, 0);
-	SDL_SetColorKey(vg->su, 0, 0);
-	
-	for (y = 0, my = 0;
-	     y < vg->su->h && my < vg->map->maph;
-	     y += AGTILESZ, my++) {
-		for (x = 0, mx = 0;
-		     x < vg->su->w && mx < vg->map->mapw;
-		     x += AGTILESZ, mx++) {
-			AG_Node *n = &vg->map->map[my][mx];
-			SDL_Surface *fragsu = NULL;
-			int fw, fh;
-
-			fw = vg->su->w-x < AGTILESZ ? vg->su->w-x : AGTILESZ;
-			fh = vg->su->h-y < AGTILESZ ? vg->su->h-y : AGTILESZ;
-#ifdef DEBUG
-			if (fw <= 0 || fh <= 0)
-				fatal("fragment too small");
-#endif
-			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
-				if (r->type == AG_NITEM_SPRITE &&
-				    r->layer == vg->map->cur_layer &&
-				    r->r_sprite.obj == pobj) {
-					fragsu = AG_SPRITE(pobj,
-					                r->r_sprite.offs).su;
-					break;
-				}
-			}
-			if (r == NULL) {
-				fragsu = SDL_CreateRGBSurface(SDL_SWSURFACE|
-				    saflags|scflags, fw, fh,
-				    vg->fmt->BitsPerPixel,
-				    vg->fmt->Rmask,
-				    vg->fmt->Gmask,
-				    vg->fmt->Bmask,
-				    vg->fmt->Amask);
-			}
-			if (fragsu == NULL)
-				continue;
-			
-			sd.x = x;
-			sd.y = y;
-
-			SDL_BlitSurface(vg->su, &sd, fragsu, &rd);
-
-			if (r == NULL) {
-				Uint32 sp;
-
-				sp = AG_GfxAddSprite(pobj->gfx, fragsu);
-				AG_SPRITE(pobj,sp).snap_mode =
-				    AG_GFX_SNAP_TO_GRID;
-				AG_NodeAddSprite(vg->map, n, pobj, sp);
-			}
-		}
-	}
-	vg->map->origin.x = vg->map->mapw>>1;
-	vg->map->origin.y = vg->map->maph>>1;
-
-	SDL_SetAlpha(vg->su, saflags, salpha);
-	SDL_SetColorKey(vg->su, scflags, scolorkey);
-}
-
-/*
- * Release the raster fragments.
- * The vg must be tied to an object.
- */
-void
-VG_FreeFragments(VG *vg)
-{
-	AG_Gfx *gfx = vg->pobj->gfx;
-	Uint32 i;
-
-	for (i = 0; i < gfx->nsprites; i++) {
-		AG_SpriteDestroy(gfx, i);
-	}
-	for (i = 0; i < gfx->nsubmaps; i++) {
-		AG_ObjectDestroy(gfx->submaps[i]);
-		Free(gfx->submaps[i], M_OBJECT);
-	}
-	gfx->nsprites = 0;
-	gfx->nsubmaps = 0;
-
-	if (vg->map != NULL)
-		AG_MapFreeNodes(vg->map);
-}
-
 /* Set the default scale factor. */
 void
 VG_DefaultScale(VG *vg, double scale)
@@ -403,8 +265,8 @@ VG_SetGridGap(VG *vg, double gap)
 void
 VG_Scale(VG *vg, double w, double h, double scale)
 {
-	int pw = (int)(w*scale*AGTILESZ);
-	int ph = (int)(h*scale*AGTILESZ);
+	int pw = (int)(w*scale);
+	int ph = (int)(h*scale);
 	int mw, mh, y;
 	Uint32 Rmask = vg->fmt->Rmask;
 	Uint32 Gmask = vg->fmt->Gmask;
@@ -432,15 +294,6 @@ VG_Scale(VG *vg, double w, double h, double scale)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	vg->fmt = vg->su->format;
-
-	/* Resize the fragment map. */
-	if (vg->pobj != NULL) {
-		VG_FreeFragments(vg);
-		mw = vg->su->w/AGTILESZ+1;
-		mh = vg->su->h/AGTILESZ+1;
-		if (AG_MapAllocNodes(vg->map, mw, mh) == -1)
-			fatal("%s", AG_GetError());
-	}
 	vg->redraw++;
 }
 
@@ -673,9 +526,6 @@ VG_Rasterize(VG *vg)
 	if (vg->flags & VG_VISORIGIN)
 		VG_DrawOrigin(vg);
 
-	if (vg->pobj != NULL)
-		VG_UpdateFragments(vg);
-
 	vg->redraw = 0;
 	AG_MutexUnlock(&vg->lock);
 }
@@ -687,7 +537,7 @@ VG_Rasterize(VG *vg)
 void
 VG_VLength(VG *vg, int len, double *vlen)
 {
-	*vlen = (double)(len/vg->scale/AGTILESZ);
+	*vlen = (double)(len/vg->scale);
 }
 
 /*
@@ -699,45 +549,13 @@ void
 VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/AGTILESZ -
-	    vg->origin[0].x;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/AGTILESZ -
-	    vg->origin[0].y;
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale - vg->origin[0].x;
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale - vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
 	if (vg->ortho_mode != VG_NO_ORTHO)
 		VG_RestrictOrtho(vg, vx, vy);
-}
-
-int
-VG_Map2Vec(VG *vg, int rx, int ry, double *vx, double *vy)
-{
-	*vx = (double)rx/vg->scale/AGTILESZ - vg->origin[0].x;
-	*vy = (double)ry/vg->scale/AGTILESZ - vg->origin[0].y;
-	
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, vx, vy);
-	if (vg->ortho_mode != VG_NO_ORTHO)
-		VG_RestrictOrtho(vg, vx, vy);
-	
-	return ((rx < 0 || ry < 0) ? -1 : 0);
-}
-
-/*
- * Translate map coordinates to absolute vg coordinates.
- * The vg must be locked.
- */
-int
-VG_Map2VecAbs(VG *vg, int rx, int ry, double *vx, double *vy)
-{
-	*vx = (double)rx/vg->scale/AGTILESZ;
-	*vy = (double)ry/vg->scale/AGTILESZ;
-
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, vx, vy);
-
-	return ((rx < 0 || ry < 0) ? -1 : 0);
 }
 
 /*
@@ -748,8 +566,8 @@ void
 VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/AGTILESZ;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/AGTILESZ;
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale;
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale;
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
@@ -762,10 +580,8 @@ VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
 void
 VG_Rcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 {
-	*rx = (int)(vx*vg->scale*AGTILESZ) +
-	      (int)(vg->origin[0].x*vg->scale*AGTILESZ);
-	*ry = (int)(vy*vg->scale*AGTILESZ) +
-	      (int)(vg->origin[0].y*vg->scale*AGTILESZ);
+	*rx = (int)(vx*vg->scale) + (int)(vg->origin[0].x*vg->scale);
+	*ry = (int)(vy*vg->scale) + (int)(vg->origin[0].y*vg->scale);
 }
 
 /*
@@ -775,8 +591,8 @@ VG_Rcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 void
 VG_AbsRcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 {
-	*rx = (int)(vx*vg->scale*AGTILESZ);
-	*ry = (int)(vy*vg->scale*AGTILESZ);
+	*rx = (int)(vx*vg->scale);
+	*ry = (int)(vy*vg->scale);
 }
 
 /*
@@ -786,10 +602,8 @@ VG_AbsRcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
 void
 VG_Rcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 {
-	*rx = vx*vg->scale*AGTILESZ +
-	      vg->origin[0].x*vg->scale*AGTILESZ;
-	*ry = vy*vg->scale*AGTILESZ +
-	      vg->origin[0].y*vg->scale*AGTILESZ;
+	*rx = vx*vg->scale + vg->origin[0].x*vg->scale;
+	*ry = vy*vg->scale + vg->origin[0].y*vg->scale;
 }
 
 /*
@@ -835,8 +649,8 @@ VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
 void
 VG_AbsRcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 {
-	*rx = vx*vg->scale*AGTILESZ;
-	*ry = vy*vg->scale*AGTILESZ;
+	*rx = vx*vg->scale;
+	*ry = vy*vg->scale;
 }
 
 /*
@@ -846,7 +660,7 @@ VG_AbsRcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
 void
 VG_RLength(VG *vg, double len, int *rlen)
 {
-	*rlen = (int)(len*vg->scale*AGTILESZ);
+	*rlen = (int)(len*vg->scale);
 }
 
 VG_Vtx *
@@ -1583,274 +1397,3 @@ fail:
 	return (-1);
 }
 
-#ifdef EDITION
-void
-VG_GeoChangedEv(AG_Event *event)
-{
-	VG *vg = AG_PTR(1);
-
-	VG_Scale(vg, vg->w, vg->h, vg->scale);
-	vg->redraw = 1;
-}
-
-void
-VG_ChangedEv(AG_Event *event)
-{
-	VG *vg = AG_PTR(1);
-
-	vg->redraw = 1;
-}
-
-static void
-poll_layers(AG_Event *event)
-{
-	AG_Tlist *tl = AG_SELF();
-	VG *vg = AG_PTR(1);
-	int i;
-	
-	AG_TlistClear(tl);
-	for (i = 0; i < vg->nlayers; i++) {
-		VG_Layer *layer = &vg->layers[i];
-		char label[AG_TLIST_LABEL_MAX];
-
-		if (layer->visible) {
-			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
-			    layer->name,
-			    (i == vg->cur_layer) ? _(", editing") : "");
-		} else {
-			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
-			    layer->name,
-			    (i == vg->cur_layer) ? _(", editing") : "");
-		}
-		AG_TlistAddPtr(tl, NULL, label, layer);
-	}
-	AG_TlistRestore(tl);
-
-	/* XXX load/save hack */
-	if (vg->cur_layer >= vg->nlayers)
-		vg->cur_layer--;
-}
-
-static void
-select_layer(AG_Event *event)
-{
-	AG_Combo *com = AG_SELF();
-	VG *vg = AG_PTR(1);
-	AG_TlistItem *it = AG_PTR(2);
-	int i = 0;
-
-	TAILQ_FOREACH(it, &com->list->items, items) {
-		if (it->selected) {
-			VG_Layer *lay = it->p1;
-
-			vg->cur_layer = i;
-			AG_TextboxPrintf(com->tbox, "%d. %s", i, lay->name);
-			return;
-		}
-		i++;
-	}
-	AG_TextMsg(AG_MSG_ERROR, _("No layer is selected."));
-}
-
-AG_Combo *
-VG_NewLayerSelector(void *parent, VG *vg)
-{
-	AG_Combo *com;
-
-	com = AG_ComboNew(parent, AG_COMBO_POLL, _("Layer:"));
-	AG_TextboxPrintf(com->tbox, "%d. %s", vg->cur_layer,
-	    vg->layers[vg->cur_layer].name);
-	AG_SetEvent(com->list, "tlist-poll", poll_layers, "%p", vg);
-	AG_SetEvent(com, "combo-selected", select_layer, "%p", vg);
-	return (com);
-}
-
-static void
-zoom_status(AG_Maptool *t, VG *vg)
-{
-	AG_MapviewStatus(t->mv, _("Scale %.0f%%"), vg->scale*100.0);
-}
-
-static int
-zoom_in(AG_Maptool *t, int button, int state, int x, int y, void *arg)
-{
-	VG *vg = t->p;
-
-	vg->scale += 0.125;
-	VG_Scale(vg, vg->w, vg->h, vg->scale);
-	zoom_status(t, vg);
-	return (1);
-}
-
-static int
-zoom_out(AG_Maptool *t, int button, int state, int x, int y, void *arg)
-{
-	VG *vg = t->p;
-
-	vg->scale -= 0.125;
-	if (vg->scale < 0.125) {
-		vg->scale = 0.125;
-	}
-	VG_Scale(vg, vg->w, vg->h, vg->scale);
-	zoom_status(t, vg);
-	return (1);
-}
-
-static int
-zoom_ident(AG_Maptool *t, SDLKey key, int state, void *arg)
-{
-	VG *vg = t->p;
-
-	if (state) {
-		VG_Scale(vg, vg->w, vg->h, vg->default_scale);
-		zoom_status(t, vg);
-		return (1);
-	}
-	return (0);
-}
-
-static int
-toggle_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
-{
-	VG *vg = t->p;
-
-	if (state) {
-		if (vg->flags & VG_VISGRID) {
-			vg->flags &= ~VG_VISGRID;
-		} else {
-			vg->flags |= VG_VISGRID;
-		}
-		return (1);
-	}
-	return (0);
-}
-
-static int
-toggle_bboxes(AG_Maptool *t, SDLKey key, int state, void *arg)
-{
-	VG *vg = t->p;
-
-	if (state) {
-		if (vg->flags & VG_VISBBOXES) {
-			vg->flags &= ~VG_VISBBOXES;
-		} else {
-			vg->flags |= VG_VISBBOXES;
-		}
-		return (1);
-	}
-	return (0);
-}
-
-static int
-expand_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
-{
-	VG *vg = t->p;
-
-	if (state) {
-		vg->grid_gap += 0.25;
-		zoom_status(t, vg);
-		return (1);
-	}
-	return (0);
-}
-
-static int
-contract_grid(AG_Maptool *t, SDLKey key, int state, void *arg)
-{
-	VG *vg = t->p;
-
-	if (state) {
-		vg->grid_gap -= 0.25;
-		if (vg->grid_gap < 0.25) {
-			vg->grid_gap = 0.25;
-		}
-		zoom_status(t, vg);
-		return (1);
-	}
-	return (0);
-}
-
-static void
-init_scale_tool(void *t)
-{
-	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_0, zoom_ident, NULL);
-	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_1, zoom_ident, NULL);
-	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_g, toggle_grid, NULL);
-	AG_MaptoolBindKey(t, KMOD_NONE, SDLK_b, toggle_bboxes, NULL);
-	AG_MaptoolBindKey(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, NULL);
-	AG_MaptoolBindKey(t, KMOD_CTRL, SDLK_MINUS, contract_grid, NULL);
-
-	AG_MaptoolBindMouseButton(t, SDL_BUTTON_WHEELDOWN, zoom_out, NULL);
-	AG_MaptoolBindMouseButton(t, SDL_BUTTON_WHEELUP, zoom_in, NULL);
-}
-
-const AG_MaptoolOps vgScaleTool = {
-	N_("Scale drawing"), N_("Zoom in and out on the drawing."),
-	MAGNIFIER_TOOL_ICON,
-	sizeof(AG_Maptool),
-	TOOL_HIDDEN,
-	init_scale_tool,
-	NULL,			/* destroy */
-	NULL,			/* pane */
-	NULL,			/* edit */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-
-	NULL,			/* mousemotion */
-	NULL,			/* mousebuttondown */
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-#endif /* EDITION */
-
-#ifdef EDITION
-static void
-select_tool(AG_Event *event)
-{
-	VG *vg = AG_PTR(1);
-	char *name = AG_STRING(2);
-	AG_Mapview *mv = AG_PTR(3);
-	AG_Maptool *t;
-	
-	if ((t = AG_MapviewFindTool(mv, name)) != NULL) {
-		AG_MapviewSelectTool(mv, t, vg);
-		AG_WidgetFocus(mv);
-	}
-}
-
-static void
-show_blocks(AG_Event *event)
-{
-	VG *vg = AG_PTR(1);
-	AG_Window *win;
-
-	win = VG_BlockEditor(vg);
-	AG_WindowShow(win);
-}
-
-void
-VG_GenericMenu(AG_Menu *m, AG_MenuItem *pitem, VG *vg,
-    struct ag_mapview *mv)
-{
-	extern const AG_MaptoolOps vgOriginTool;
-	extern const AG_MaptoolOps vgLineTool;
-	extern const AG_MaptoolOps vgCircleTool;
-	extern const AG_MaptoolOps vgTextTool;
-	AG_MenuItem *mi_snap;
-	
-	mi_snap = AG_MenuAction(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
-	VG_SnapMenu(m, mi_snap, vg);
-
-	AG_MenuAction(pitem, _("Show blocks"), VGBLOCK_ICON,
-	    show_blocks, "%p", vg);
-	AG_MenuAction(pitem, _("Move origin"), vgOriginTool.icon,
-	    select_tool, "%p,%s,%p", vg, "Origin", mv);
-	AG_MenuAction(pitem, _("Line strip"), vgLineTool.icon,
-	    select_tool, "%p,%s,%p", vg, "Lines", mv);
-	AG_MenuAction(pitem, _("Circle"), vgCircleTool.icon,
-	    select_tool, "%p,%s,%p", vg, "Circles", mv);
-	AG_MenuAction(pitem, _("Text"), vgTextTool.icon,
-	    select_tool, "%p,%s,%p", vg, "Text", mv);
-}
-#endif /* EDITION */

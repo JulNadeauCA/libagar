@@ -28,11 +28,6 @@
 
 #include <core/core.h>
 
-#ifdef EDITION
-#include <game/map/mapview.h>
-#include <game/map/tool.h>
-#endif
-
 #include "vg.h"
 #include "vg_primitive.h"
 
@@ -91,54 +86,3 @@ const VG_ElementOps vgPointsOps = {
 	extent,
 	intsect
 };
-
-#ifdef EDITION
-static void
-point_AG_MaptoolInit(void *t)
-{
-	AG_MaptoolPushStatus(t, _("Specify the point location."));
-}
-
-static int
-point_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
-    int btn)
-{
-	VG *vg = TOOL(t)->p;
-	
-	VG_Map2Vec(vg, xmap, ymap, &vg->origin[1].x, &vg->origin[1].y);
-	vg->redraw++;
-	return (1);
-}
-
-static int
-point_mousebuttondown(void *t, int xmap, int ymap, int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double vx, vy;
-
-	VG_Begin(vg, VG_POINTS);
-	VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
-	VG_Vertex2(vg, vx, vy);
-	VG_End(vg);
-	return (1);
-}
-
-const AG_MaptoolOps vgPointTool = {
-	N_("Point"), N_("Trace an individual point."),
-	VGPOINTS_ICON,
-	sizeof(AG_Maptool),
-	0,
-	point_AG_MaptoolInit,
-	NULL,			/* destroy */
-	NULL,			/* pane */
-	NULL,			/* edit */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-
-	point_mousemotion,
-	point_mousebuttondown,
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-#endif /* EDITION */

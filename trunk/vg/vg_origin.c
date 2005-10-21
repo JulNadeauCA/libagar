@@ -28,15 +28,6 @@
 
 #include <core/core.h>
 
-#ifdef EDITION
-#include <game/map/mapview.h>
-#include <game/map/tool.h>
-
-#include <gui/window.h>
-#include <gui/radio.h>
-#include <gui/spinbutton.h>
-#endif
-
 #include "vg.h"
 #include "vg_primitive.h"
 
@@ -122,71 +113,3 @@ VG_DrawOrigin(VG *vg)
 		    vg->origin_color[o]);
 	}
 }
-
-#ifdef EDITION
-static int norigin = 0;
-
-static void
-origin_AG_MaptoolInit(void *t)
-{
-	AG_MaptoolPushStatus(t, _("Specify origin point."));
-}
-
-static void
-origin_tool_pane(void *t, void *con)
-{
-	AG_Spinbutton *sbu;
-
-	sbu = AG_SpinbuttonNew(con, _("Origin#: "));
-	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &norigin);
-	AG_SpinbuttonSetRange(sbu, 0, VG_NORIGINS-1);
-}
-
-static int
-origin_mousebuttondown(void *t, int xmap, int ymap, int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double x, y;
-
-	if (btn == 1) {
-		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
-		VG_Origin(vg, norigin, x, y);
-		vg->redraw++;
-	}
-	return (1);
-}
-
-static int
-origin_mousemotion(void *t, int xmap, int ymap, int xrel, int yrel,
-    int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double x, y;
-
-	if (btn & SDL_BUTTON(1)) {
-		VG_Map2VecAbs(vg, xmap, ymap, &x, &y);
-		VG_Origin(vg, norigin, x, y);
-		vg->redraw++;
-	}
-	return (1);
-}
-
-const AG_MaptoolOps vgOriginTool = {
-	"Origin", N_("Displace the origin point."),
-	VGORIGIN_ICON,
-	sizeof(AG_Maptool),
-	0,
-	origin_AG_MaptoolInit,
-	NULL,			/* destroy */
-	NULL,			/* pane */
-	NULL,			/* edit */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-	
-	origin_mousemotion,
-	origin_mousebuttondown,
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-#endif /* EDITION */
