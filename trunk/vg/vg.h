@@ -4,8 +4,6 @@
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
-#include <agar/game/map/map.h>
-
 #include "begin_code.h"
 
 #define VG_NAME_MAX		128
@@ -243,7 +241,6 @@ typedef struct vg {
 	AG_Object *pobj;		/* Tied object */
 	SDL_Surface *su;		/* Raster surface */
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
-	AG_Map *map;			/* Raster map (optional) */
 
 	int *ints;			/* Used for scan conversion */
 	u_int nints;
@@ -291,8 +288,6 @@ void		 VG_RasterizeElement(VG *, VG_Element *);
 __inline__ void	 VG_UpdateFragments(VG *);
 __inline__ void	 VG_FreeFragments(VG *);
 
-__inline__ int	 VG_Map2Vec(VG *, int, int, double *, double *);
-__inline__ int	 VG_Map2VecAbs(VG *, int, int, double *, double *);
 __inline__ void	 VG_Vcoords2(VG *, int, int, int, int, double *, double *);
 __inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, double *, double *);
 __inline__ void  VG_Rcoords2(VG *, double, double, int *, int *);

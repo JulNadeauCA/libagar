@@ -3,9 +3,11 @@
 
 #include "begin_code.h"
 
+struct ag_window;
+
 typedef struct ag_config {
 	struct ag_object obj;
-	AG_Window *window;
+	struct ag_window *window;
 	AG_Mutex lock;
 	char *save_path;			/* Data file save path */
 } AG_Config;

@@ -9,7 +9,7 @@ LIB_STATIC=	No
 
 SRCS=	vg.c vg_block.c vg_circle.c vg_ellipse.c vg_line.c vg_mask.c \
 	vg_math.c vg_origin.c vg_ortho.c vg_point.c vg_primitive.c vg_snap.c \
-	vg_tables.c vg_text.c drawing.c vg_polygon.c
+	vg_tables.c vg_text.c vg_polygon.c
 
 #MAN3=	vg.3
 

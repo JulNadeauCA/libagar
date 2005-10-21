@@ -90,11 +90,10 @@ AG_InitCore(const char *progname, u_int flags)
 
 #ifdef THREADS
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
-#if defined(HAVE_PTHREADS_XOPEN)
+#if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE_NP);
-#elif defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP) || \
-      defined(HAVE_PTHREAD_MUTEX_RECURSIVE)
+#elif defined(HAVE_PTHREAD_MUTEX_RECURSIVE) || defined(HAVE_PTHREADS_XOPEN)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
 #else

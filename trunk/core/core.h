@@ -1,8 +1,8 @@
 /*	$Csoft: engine.h,v 1.102 2005/10/02 09:41:08 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_H_
-#define _AGAR_CORE_H_
+#ifndef _AGAR_CORE_CORE_H_
+#define _AGAR_CORE_CORE_H_
 
 #include <agar/config/have_opengl.h>
 #include <agar/config/enable_nls.h>
@@ -14,19 +14,24 @@
 #include <agar/config/have_format_attribute.h>
 #include <agar/config/have_nonnull_attribute.h>
 #include <agar/config/map.h>
+#include <agar/config/bsd_source_needed.h>
+#include <agar/config/bsd_types_needed.h>
+#include <agar/config/have_sys_types_h.h>
 
+#if defined(BSD_SOURCE_NEEDED)
 #ifndef _BSD_SOURCE
-#define _BSD_SOURCE	/* For u_* types */
+#define _BSD_SOURCE
 #endif
-
-#include <agar/core/threads.h>
-#include <sys/types.h>
-
-#ifdef __MINGW32__
+#elif defined(BSD_TYPES_NEEDED)
 typedef unsigned int u_int;
 typedef unsigned char u_char;
 typedef unsigned long u_long;
 #endif
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+#include <agar/core/threads.h>
 
 #include <SDL.h>
 #include <SDL_endian.h>
@@ -54,6 +59,16 @@ typedef unsigned long u_long;
 #define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
 #else
 #define NONNULL_ATTRIBUTE(a)
+#endif
+
+#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+# if defined(__cplusplus)
+#  define __BEGIN_DECLS	extern "C" {
+#  define __END_DECLS	}
+# else
+#  define __BEGIN_DECLS
+#  define __END_DECLS
+# endif
 #endif
 
 #include <agar/core/error.h>
@@ -122,53 +137,5 @@ typedef unsigned long u_long;
 #define AG_PATHSEP "/"
 #endif
 
-#include "begin_code.h"
-
-extern const char *agProgName;
-extern AG_Object *agWorld;
-extern AG_Mutex agLinkageLock;
-extern AG_Mutex agTimingLock;
-
-#define AG_LockLinkage() AG_MutexLock(&agLinkageLock)
-#define AG_UnlockLinkage() AG_MutexUnlock(&agLinkageLock)
-
-#define AG_LockTiming() AG_MutexLock(&agTimingLock)
-#define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
-
-#define AG_VIDEO_HWSURFACE	0x001
-#define AG_VIDEO_ASYNCBLIT	0x002
-#define AG_VIDEO_ANYFORMAT	0x004
-#define AG_VIDEO_HWPALETTE	0x008
-#define AG_VIDEO_DOUBLEBUF	0x010
-#define AG_VIDEO_FULLSCREEN	0x020
-#define AG_VIDEO_RESIZABLE	0x040
-#define AG_VIDEO_NOFRAME	0x080
-#define AG_VIDEO_BGPOPUPMENU	0x100
-#define AG_VIDEO_OPENGL		0x200
-#define AG_VIDEO_OPENGL_OR_SDL	0x400
-
-#define AG_FORCE_UNICODE	0x01
-#define AG_FORCE_JOYSTICK	0x02
-
-#define AG_INIT_DEBUG_SERVER	0x01
-#define AG_INIT_RCS		0x02
-
-#define AG_CONFIG_FULLSCREEN	0x01
-#define AG_CONFIG_GL		0x02
-#define AG_CONFIG_RESOLUTION	0x04
-#define AG_CONFIG_DIRECTORIES	0x08
-#define AG_CONFIG_ALL		0xff
-
-__BEGIN_DECLS
-int	 AG_InitCore(const char *, u_int);
-int	 AG_InitVideo(int, int, int, u_int);
-int	 AG_InitInput(u_int);
-int	 AG_InitNetwork(u_int);
-int	 AG_InitConfigWin(u_int);
-void	 AG_AtExitFunc(void (*)(void));
-void	 AG_Quit(void);
-void	 AG_Destroy(void);
-__END_DECLS
-
-#include "close_code.h"
-#endif	/* !_AGAR_CORE_H_ */
+#include <agar/core/core_init.h>
+#endif /* !_AGAR_CORE_CORE_H_ */
