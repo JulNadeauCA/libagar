@@ -86,8 +86,8 @@ typedef struct ag_widget {
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	u_int nsurfaces;
 #ifdef HAVE_OPENGL
-	GLuint *textures;		/* Cached OpenGL textures */
-	GLfloat	*texcoords;		/* Cached texture coordinates */
+	u_int *textures;		/* Cached OpenGL textures */
+	float *texcoords;		/* Cached texture coordinates */
 #endif
 	AG_Mutex bindings_lock;
 	SLIST_HEAD(, ag_widget_binding) bindings;	/* Variable bindings */
