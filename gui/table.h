@@ -55,7 +55,7 @@ typedef struct ag_table_cell {
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
 	SDL_Surface *(*fnSu)(void *, int, int); /* For AG_CELL_FN_SURFACE */
-	void *(*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TEXT */
+	void (*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TEXT */
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
 } AG_TableCell;
@@ -67,7 +67,6 @@ typedef struct ag_table_col {
 #define AG_TABLE_COL_FILL	 0x01
 #define AG_TABLE_SORT_ASCENDING	 0x02
 #define AG_TABLE_SORT_DESCENDING 0x04
-#define AG_TABLE_POLL		 0x08
 	int selected;			/* Entire column is selected */
 	int w;				/* Width in pixel */
 	int x;				/* Current position */
@@ -84,6 +83,7 @@ typedef struct ag_table {
 #define AG_TABLE_MULTI		0x01	/* Multiple selections (ctrl/shift) */
 #define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
+#define AG_TABLE_POLL		0x08	/* Table is polled */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
 	enum ag_table_selmode {
 		AG_TABLE_SEL_ROWS,	/* Select entire rows */

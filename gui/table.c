@@ -192,6 +192,7 @@ AG_TableScale(void *p, int w, int h)
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 
 	AG_TableSizeFillCols(t);
+	AG_TableUpdateScrollbars(t);
 }
 
 static __inline__ void
@@ -430,7 +431,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 {
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
-	
+
 	t->mVis = AGWIDGET(t)->h / t->row_h;
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
@@ -609,9 +610,7 @@ AG_TableEnd(AG_Table *t)
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
-	if (t->flags & AG_TABLE_POLL) {
-		AG_TableUpdateScrollbars(t);
-	}
+	AG_TableUpdateScrollbars(t);
 	AG_MutexUnlock(&t->lock);
 }
 
@@ -1083,7 +1082,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		AG_TableCol *tc = &t->cols[n];
 		AG_TableCell *c = &t->cells[t->m][n];
 		char *s = strsep(&sp, ":"), *sc;
-		int ptr = 0, lflag = 0;
+		int ptr = 0, lflag = 0, ptr_long = 0;
 		int infmt = 0;
 
 		AG_TableInitCell(t, c);
@@ -1093,8 +1092,11 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				infmt = 1;
 				continue;
 			}
-			if (*sc == '*' || *sc == '[') {
+			if (*sc == '*' && sc[1] != '\0') {
 				ptr++;
+			} else if (*sc == '[' && sc[1] != '\0') {
+				ptr_long++;
+				break;
 			} else if (*sc == 'l') {
 				lflag++;
 			} else if (infmt && strchr("sdiufgp]", *sc) != NULL) {
@@ -1111,6 +1113,30 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 		if (ptr) {
 			c->data.p = va_arg(ap, void *);
+		} else if (ptr_long) {
+			sc++;
+			c->data.p = va_arg(ap, void *);
+			if (sc[0] == 's') {
+				if (sc[1] == '3' && sc[2] == '2') {
+					c->type = AG_CELL_PSINT32;
+				} else if (s[1] == '1' && sc[2] == '6') {
+					c->type = AG_CELL_PSINT16;
+				} else if (s[1] == '8') {
+					c->type = AG_CELL_PSINT8;
+				}
+			} else if (sc[0] == 'u') {
+				if (sc[1] == '3' && sc[2] == '2') {
+					c->type = AG_CELL_PUINT32;
+				} else if (s[1] == '1' && sc[2] == '6') {
+					c->type = AG_CELL_PUINT16;
+				} else if (s[1] == '8') {
+					c->type = AG_CELL_PUINT8;
+				}
+			} else if (sc[0] == 'F' && sc[1] == 't') {
+				c->type = AG_CELL_FN_TXT;
+				c->fnTxt = c->data.p;
+				c->data.p = c;
+			}
 		}
 		switch (sc[0]) {
 		case 's':
@@ -1193,25 +1219,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				}
 			}
 			break;
-		case '[':
-			if (sc[1] == 's') {
-				if (sc[2] == '3' && sc[3] == '2') {
-					c->type = AG_CELL_PSINT32;
-				} else if (s[2] == '1' && sc[3] == '6') {
-					c->type = AG_CELL_PSINT16;
-				} else if (s[2] == '8') {
-					c->type = AG_CELL_PSINT8;
-				}
-			} else if (sc[1] == 'u') {
-				if (sc[2] == '3' && sc[3] == '2') {
-					c->type = AG_CELL_PUINT32;
-				} else if (s[2] == '1' && sc[3] == '6') {
-					c->type = AG_CELL_PUINT16;
-				} else if (s[2] == '8') {
-					c->type = AG_CELL_PUINT8;
-				}
-			}
-			break;
 		case 'p':
 			c->type = AG_CELL_POINTER;
 			c->data.p = va_arg(ap, void *);
@@ -1221,9 +1228,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 	}
 	va_end(ap);
-	if ((t->flags & AG_TABLE_POLL) == 0) {
-		AG_TableUpdateScrollbars(t);
-	}
 	return (t->m++);
 }
 
