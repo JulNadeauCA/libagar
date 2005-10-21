@@ -308,6 +308,7 @@ AG_ViewDestroy(void)
 		Free(win, M_OBJECT);
 	}
 
+	SDL_FreeSurface(agView->stmpl);
 	Free(agView->dirty, M_VIEW);
 	AG_MutexDestroy(&agView->lock);
 	Free(agView, M_VIEW);

@@ -153,6 +153,9 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
 	case AG_PROP_STRING:
+		if (modify) {
+			Free(nprop->data.s, 0);
+		}
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
 		break;
