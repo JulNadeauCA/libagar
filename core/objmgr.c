@@ -352,7 +352,6 @@ export_object(AG_Event *event)
 
 	AG_SetString(agConfig, "save-path", "%s", save_path);
 	ob->save_pfx = pfx_save;
-	AG_ViewDetach(win);
 	
 	if (paged_in)
 		AG_ObjectFreeData(ob);
@@ -361,16 +360,22 @@ export_object(AG_Event *event)
 void
 AG_ObjMgrSaveTo(void *p)
 {
+	char ext[AG_OBJECT_TYPE_MAX+3];
 	AG_Object *ob = p;
 	AG_Window *win;
 	AG_FileDlg *fd;
 
+	ext[0] = '*';
+	ext[1] = '.';
+	strlcpy(&ext[2], ob->type, sizeof(ext)-2);
+
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE);
+	AG_FileDlgAddType(fd, _("Agar object file"), ext, NULL, NULL);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
-	AG_SetEvent(fd, "file-validated", export_object, "%p,%p", ob, win);
+	AG_SetEvent(fd, "file-chosen", export_object, "%p,%p", ob, win);
 	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
 
 	AG_WindowShow(win);
