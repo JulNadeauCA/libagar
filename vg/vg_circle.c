@@ -28,11 +28,6 @@
 
 #include <core/core.h>
 
-#ifdef EDITION
-#include <game/map/mapview.h>
-#include <game/map/tool.h>
-#endif
-
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
@@ -98,96 +93,3 @@ const VG_ElementOps vgCircleOps = {
 	extent,
 	intsect
 };
-
-#ifdef EDITION
-static VG_Element *cur_circle;
-static VG_Vtx *cur_radius;
-static int seq;
-
-static void
-circle_AG_MaptoolInit(void *p)
-{
-	AG_MaptoolPushStatus(p, _("Specify the circle's center point."));
-	seq = 0;
-	cur_circle = NULL;
-	cur_radius = NULL;
-}
-
-static int
-circle_mousemotion(void *p, int xmap, int ymap, int xrel, int yrel, int b)
-{
-	VG *vg = TOOL(p)->p;
-	double x, y;
-	
-	VG_Map2Vec(vg, xmap, ymap, &x, &y);
-
-	if (cur_radius != NULL) {
-		cur_radius->x = x;
-		cur_radius->y = y;
-		cur_circle->vg_circle.radius =
-		    sqrt(pow(x-vg->origin[2].x,2) +
-		         pow(y-vg->origin[2].y,2));
-	} else {
-		vg->origin[2].x = x;
-		vg->origin[2].y = y;
-		vg->redraw++;
-	}
-	vg->origin[1].x = x;
-	vg->origin[1].y = y;
-	return (1);
-}
-
-static int
-circle_mousebuttondown(void *t, int xmap, int ymap, int btn)
-{
-	VG *vg = TOOL(t)->p;
-	double vx, vy;
-
-	switch (btn) {
-	case 1:
-		if (seq++ == 0) {
-			cur_circle = VG_Begin(vg, VG_CIRCLE);
-			VG_Map2Vec(vg, xmap, ymap, &vx, &vy);
-			VG_Vertex2(vg, vx, vy);
-			cur_radius = VG_Vertex2(vg, vx, vy);
-			VG_End(vg);
-
-			AG_MaptoolPushStatus(t, _("Specify the circle's radius "
-			                      "or [undo circle]."));
-		} else {
-			goto finish;
-		}
-		break;
-	default:
-		if (cur_circle != NULL) {
-			VG_DestroyElement(vg, cur_circle);
-		}
-		goto finish;
-	}
-finish:
-	cur_circle = NULL;
-	cur_radius = NULL;
-	seq = 0;
-	AG_MaptoolPopStatus(t);
-	return (1);
-}
-
-const AG_MaptoolOps vgCircleTool = {
-	"Circles", N_("Draw circles."),
-	VGCIRCLES_ICON,
-	sizeof(AG_Maptool),
-	0,
-	circle_AG_MaptoolInit,
-	NULL,			/* destroy */
-	NULL,			/* pane */
-	NULL,			/* edit */
-	NULL,			/* cursor */
-	NULL,			/* effect */
-
-	circle_mousemotion,
-	circle_mousebuttondown,
-	NULL,			/* mousebuttonup */
-	NULL,			/* keydown */
-	NULL			/* keyup */
-};
-#endif /* EDITION */
