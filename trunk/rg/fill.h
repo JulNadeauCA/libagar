@@ -33,9 +33,11 @@ struct rg_fill_feature {
 			int tex_yoffs;
 		} pattern;
 	} args;
+#ifndef _AGAR_RG_PUBLIC_H_
 #define f_solid args.solid
 #define f_gradient args.gradient
 #define f_pattern args.pattern
+#endif
 };
 
 __BEGIN_DECLS

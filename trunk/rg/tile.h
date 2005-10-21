@@ -38,9 +38,11 @@ typedef struct rg_tile_element {
 			float scale;
 		} sketch;
 	} data;
+#ifndef _AGAR_RG_PUBLIC_H_
 #define tel_feature data.feature
 #define tel_pixmap  data.pixmap
 #define tel_sketch  data.sketch
+#endif
 	TAILQ_ENTRY(rg_tile_element) elements;
 } RG_TileElement;
 

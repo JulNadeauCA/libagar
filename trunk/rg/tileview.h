@@ -205,12 +205,13 @@ typedef struct rg_tileview {
 			int nx, ny;			/* Current position */
 		} attrs;
 	} sargs;
+#ifndef _AGAR_RG_PUBLIC_H_
 #define tv_feature sargs.feature
 #define tv_sketch  sargs.sketch
 #define tv_pixmap  sargs.pixmap
 #define tv_tile	   sargs.tile
 #define tv_attrs   sargs.attrs
-
+#endif
 	struct {
 		Uint8 r, g, b, a;		/* Current color */
 		Uint32 pc;			/* (for binding controls) */
@@ -221,8 +222,10 @@ typedef struct rg_tileview {
 } RG_Tileview;
 
 #define RG_TILEVIEW_TOOL(p) ((RG_TileviewTool *)p)
-#define RG_TILEVIEW_SCALED_X(tv, x) (AGWIDGET(tv)->cx + (tv)->xoffs + (x)*(tv)->pxsz)
-#define RG_TILEVIEW_SCALED_Y(tv, x) (AGWIDGET(tv)->cy + (tv)->yoffs + (y)*(tv)->pxsz)
+#define RG_TILEVIEW_SCALED_X(tv, x) (AGWIDGET(tv)->cx + (tv)->xoffs + \
+    (x)*(tv)->pxsz)
+#define RG_TILEVIEW_SCALED_Y(tv, x) (AGWIDGET(tv)->cy + (tv)->yoffs + \
+    (y)*(tv)->pxsz)
 
 __BEGIN_DECLS
 RG_Tileview	*RG_TileviewNew(void *, RG_Tileset *, int);
@@ -249,14 +252,11 @@ void RG_TileviewCircle2o(RG_Tileview *, int, int, int);
 void RG_TileviewHLine(RG_Tileview *, int, int, int);
 void RG_TileviewVLine(RG_Tileview *, int, int, int);
 
-__inline__ void RG_TileviewScaledPixel(RG_Tileview *, int, int, Uint8,
+__inline__ void   RG_TileviewScaledPixel(RG_Tileview *, int, int, Uint8,
 		                      Uint8, Uint8);
-
-RG_TileviewCtrl *RG_TileviewAddCtrl(RG_Tileview *,
-			                   enum rg_tileview_ctrl_type,
-					   const char *, ...);
-void		      RG_TileviewDelCtrl(RG_Tileview *,
-				           RG_TileviewCtrl *);
+RG_TileviewCtrl  *RG_TileviewAddCtrl(RG_Tileview *, enum rg_tileview_ctrl_type,
+			             const char *, ...);
+void		  RG_TileviewDelCtrl(RG_Tileview *, RG_TileviewCtrl *);
 
 __inline__ int	  RG_TileviewInt(RG_TileviewCtrl *, int);
 __inline__ void	  RG_TileviewSetInt(RG_TileviewCtrl *, int, int);
@@ -265,12 +265,11 @@ __inline__ void	  RG_TileviewSetFloat(RG_TileviewCtrl *, int, float);
 __inline__ double RG_TileviewDouble(RG_TileviewCtrl *, int);
 __inline__ void	  RG_TileviewSetDouble(RG_TileviewCtrl *, int, double);
 
-#define RG_TileviewUint(ctrl,nval)	(u_int)RG_TileviewInt((ctrl),(nval))
-#define RG_TileviewSetUint(tv,nval,v)	RG_TileviewSetInt((tv),(nval),(u_int)(v))
+#define RG_TileviewUint(ctrl,nval) (u_int)RG_TileviewInt((ctrl),(nval))
+#define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(u_int)(v))
 
 void RG_TileviewSelectTool(RG_Tileview *, RG_TileviewTool *);
 void RG_TileviewUnselectTool(RG_Tileview *);
-
 void RG_TileviewGenericMenu(RG_Tileview *, AG_MenuItem *);
 __END_DECLS
 

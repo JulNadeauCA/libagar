@@ -189,12 +189,13 @@ typedef struct vg_element {
 		struct vg_mask_args vg_mask;
 		struct vg_polygon_args vg_polygon;
 	} vg_args;
+#ifndef _AGAR_VG_PUBLIC_H_
 #define vg_circle   vg_args.vg_circle
 #define vg_arc	    vg_args.vg_arc
 #define vg_text	    vg_args.vg_text
 #define vg_mask	    vg_args.vg_mask
 #define vg_polygon  vg_args.vg_polygon
-
+#endif
 	TAILQ_ENTRY(vg_element) vgbmbs;	/* Entry in block element list */
 	TAILQ_ENTRY(vg_element) vges;	/* Entry in global element list */
 } VG_Element;
