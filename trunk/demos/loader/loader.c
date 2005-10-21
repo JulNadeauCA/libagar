@@ -6,11 +6,8 @@
  * AG_FileDlg.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
-
-#include <agar/gui/gui.h>
+#include <agar/core.h>
+#include <agar/gui.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -31,7 +28,7 @@ CreateWindow(void)
 
 	win = AG_WindowNew(0);
 
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	fd = AG_FileDlgNew(win, 0);
 	AG_FileDlgSetDirectory(fd, "/");
 	AG_FileDlgSetFilename(fd, "foo.foo");
 	AG_FileDlgAddType(fd, "Foo file", "*.foo", LoadFile, NULL);
