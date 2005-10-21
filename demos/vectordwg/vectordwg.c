@@ -56,7 +56,7 @@ CreateDrawing(void)
 	 * From this point on, it is safe to reference the raster surface
 	 * using vg->su.
 	 */
-	VG_Scale(vg, 20.0, 20.0, 1.0);
+	VG_Scale(vg, 20.0, 20.0, 15.0);
 
 	/* Create a thick green line style. */
 	bold = VG_CreateStyle(vg, VG_LINE_STYLE, "bold");
