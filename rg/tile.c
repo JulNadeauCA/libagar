@@ -31,9 +31,6 @@
 #include <core/config.h>
 #include <core/objmgr.h>
 
-#include <game/map/map.h>
-#include <game/map/mapview.h>
-
 #include <core/loaders/surface.h>
 #include <core/loaders/xcf.h>
 
@@ -158,8 +155,8 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, u_int flags,
 		slayers = NULL;
 	}
 
-	nw = w/AGTILESZ + 1;
-	nh = h/AGTILESZ + 1;
+	nw = w/RG_TILESZ + 1;
+	nh = h/RG_TILESZ + 1;
 	t->attrs = Realloc(t->attrs, nw*nh*sizeof(u_int));
 	t->layers = Realloc(t->layers , nw*nh*sizeof(int));
 	memset(t->attrs, 0, nw*nh*sizeof(u_int));
@@ -1164,7 +1161,7 @@ import_images(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", import_xcf,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
@@ -1277,7 +1274,7 @@ attach_pixmap_dlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Attach existing pixmap"));
 
 	tl = AG_TlistNew(win, 0);
-	AG_TlistSetItemHeight(tl, AGTILESZ);
+	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 
 	TAILQ_FOREACH(px, &tv->ts->pixmaps, pixmaps) {
@@ -1355,7 +1352,7 @@ attach_sketch_dlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Attach existing sketch"));
 
 	tl = AG_TlistNew(win, 0);
-	AG_TlistSetItemHeight(tl, AGTILESZ);
+	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 
 	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
@@ -1471,7 +1468,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(WALKABILITY_ICON),
 		    _("%sWalkable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == AG_NITEM_BLOCK) ? "* " : "");
+		     tv->edit_attr == RG_NITEM_BLOCK) ? "* " : "");
 		it->class = "walkable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[2];
@@ -1479,7 +1476,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(CLIMBABILITY_ICON),
 		    _("%sClimbable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == AG_NITEM_CLIMBABLE) ? "* " : "");
+		     tv->edit_attr == RG_NITEM_CLIMBABLE) ? "* " : "");
 		it->class = "climbable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[3];
@@ -1487,7 +1484,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(JUMPABILITY_ICON),
 		    _("%sJumpable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == AG_NITEM_JUMPABLE) ? "* " : "");
+		     tv->edit_attr == RG_NITEM_JUMPABLE) ? "* " : "");
 		it->class = "jumpable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[4];
@@ -1495,7 +1492,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(SLIPPAGE_ICON),
 		    _("%sSlippery"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == AG_NITEM_SLIPPERY) ? "* " : "");
+		     tv->edit_attr == RG_NITEM_SLIPPERY) ? "* " : "");
 		it->class = "slippery-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[5];
@@ -1627,19 +1624,19 @@ edit_element(AG_Event *event)
 	} else if (strcmp(it->class, "walkable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = AG_NITEM_BLOCK;
+		tv->edit_attr = RG_NITEM_BLOCK;
 	} else if (strcmp(it->class, "climbable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = AG_NITEM_CLIMBABLE;
+		tv->edit_attr = RG_NITEM_CLIMBABLE;
 	} else if (strcmp(it->class, "jumpable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = AG_NITEM_JUMPABLE;
+		tv->edit_attr = RG_NITEM_JUMPABLE;
 	} else if (strcmp(it->class, "slippery-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = AG_NITEM_SLIPPERY;
+		tv->edit_attr = RG_NITEM_SLIPPERY;
 	} else if (strcmp(it->class, "layers") == 0) {
 		tv->state = RG_TILEVIEW_LAYERS_EDIT;
 		tv->edit_mode = 1;
@@ -1909,7 +1906,7 @@ export_image_dlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);

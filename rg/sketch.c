@@ -28,6 +28,8 @@
 
 #include <core/core.h>
 
+#include <vg/vg.h>
+
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/hsvpal.h>
@@ -73,20 +75,20 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 {
 	VG *vg = sk->vg;
 	VG_Element *vge;
-	double xoffs = (float)x/(float)AGTILESZ/scale;
-	double yoffs = (float)y/(float)AGTILESZ/scale;
+	double xoffs = (float)x/(float)RG_TILESZ/scale;
+	double yoffs = (float)y/(float)RG_TILESZ/scale;
 	Uint32 i;
 	double vw, vh;
 
 	if (w == -1) {
 		vw = vg->w;
 	} else {
-		vw = (float)w/(float)AGTILESZ/scale;
+		vw = (float)w/(float)RG_TILESZ/scale;
 	}
 	if (h == -1) {
 		vh = vg->h;
 	} else {
-		vh = (float)h/(float)AGTILESZ/scale;
+		vh = (float)h/(float)RG_TILESZ/scale;
 	}
 
 	VG_Scale(vg, vw, vh, scale);
@@ -122,7 +124,7 @@ RG_SketchLoad(RG_Sketch *sk, AG_Netbuf *buf)
 	sk->flags = (int)AG_ReadUint32(buf);
 	vgflags = (int)AG_ReadUint32(buf);
 
-	sk->vg = VG_New(NULL, vgflags);
+	sk->vg = VG_New(vgflags);
 	if (VG_Load(sk->vg, buf) == -1) {
 		VG_Destroy(sk->vg);
 		Free(sk->vg, M_VG);
@@ -203,13 +205,10 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_Window *win;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
-	AG_Combo *com;
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Sketch %s"), sk->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
-
-	com = VG_NewLayerSelector(win, vg);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);

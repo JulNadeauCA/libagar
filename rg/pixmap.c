@@ -31,8 +31,6 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <game/map/map.h>
-
 #include <core/loaders/surface.h>
 
 #include <gui/cursors.h>
@@ -376,7 +374,7 @@ insert_brush_dlg(AG_Event *event)
 		AG_LabelNew(bo, AG_LABEL_STATIC, _("Source pixmap:"));
 
 		tl = AG_TlistNew(bo, AG_TLIST_POLL);
-		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_TlistSetItemHeight(tl, RG_TILESZ);
 		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_SetEvent(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
 		AG_SetEvent(tl, "tlist-selected", update_bropts, "%p", tb_name);
@@ -490,7 +488,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_Tlist *tl;
 
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
-		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_TlistSetItemHeight(tl, RG_TILESZ);
 		AG_SetEvent(tl, "tlist-poll", poll_brushes, "%p", px);
 		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);

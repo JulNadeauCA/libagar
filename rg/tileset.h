@@ -23,12 +23,24 @@ struct rg_texture;
 
 #include "begin_code.h"
 
-#define TILESET_TEMPLATE_MAX 24
+#ifndef RG_TILESZ
+#define RG_TILESZ 32
+#endif
+
+#define RG_TEMPLATE_NAME_MAX 24
+#define RG_TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
+
+/* XXX Sync with <game/map/map.h> */
+#define RG_NITEM_BLOCK		0x001	/* Tile block */
+#define RG_NITEM_CLIMBABLE	0x002	/* Surface is climbable */
+#define RG_NITEM_SLIPPERY	0x004	/* Surface is slippery */
+#define RG_NITEM_JUMPABLE	0x008	/* Element is jumpable */
+
 
 typedef struct rg_tileset {
 	struct ag_object obj;
 	AG_Mutex lock;
-	char template[TILESET_TEMPLATE_MAX];
+	char template[RG_TEMPLATE_NAME_MAX];
 	SDL_PixelFormat *fmt;
 	SDL_Surface *icon;
 	int flags;
@@ -40,8 +52,6 @@ typedef struct rg_tileset {
 	TAILQ_HEAD(, rg_anim) animations;
 	TAILQ_HEAD(, rg_texture) textures;
 } RG_Tileset;
-
-#define RG_TILESET_NAME_MAX 32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
 
 __BEGIN_DECLS
 void	 AG_InitRG(void);
