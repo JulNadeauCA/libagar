@@ -1,8 +1,9 @@
 /*	$Csoft: gui.h,v 1.6 2005/10/01 09:51:02 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_GUI_H_
-#define _AGAR_WIDGET_GUI_H_
+#ifndef _AGAR_GUI_H_
+#define _AGAR_GUI_H_
+#include <agar/core/core_begin.h>
 
 #include <agar/gui/bitmap.h>
 #include <agar/gui/box.h>
@@ -13,6 +14,7 @@
 #include <agar/gui/fixed.h>
 #include <agar/gui/fspinbutton.h>
 #include <agar/gui/graph.h>
+#include <agar/gui/glview.h>
 #include <agar/gui/hbox.h>
 #include <agar/gui/hpane.h>
 #include <agar/gui/hsvpal.h>
@@ -40,4 +42,5 @@
 #include <agar/gui/vbox.h>
 #include <agar/gui/vpane.h>
 
-#endif /* _AGAR_WIDGET_GUI_H_ */
+#include <agar/core/core_close.h>
+#endif /* _AGAR_GUI_H_ */

@@ -4,7 +4,7 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-int AG_XCFLoad(AG_Netbuf *, off_t, AG_Gfx *);
+int AG_XCFLoad(AG_Netbuf *, off_t, struct ag_gfx *);
 __END_DECLS
 
 #include "close_code.h"

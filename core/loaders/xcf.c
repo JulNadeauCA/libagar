@@ -636,7 +636,7 @@ xcf_insert_surface(AG_Gfx *gfx, SDL_Surface *su, const char *name)
 }
 
 int
-AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, AG_Gfx *gfx)
+AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
 {
 	char magic[XCF_MAGIC_LEN];
 	struct xcf_header *head;

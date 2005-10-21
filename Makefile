@@ -61,6 +61,15 @@ install-includes:
 		    ${FIND} . -type d \! -name CVS \
 		    -exec ${SH} mk/install-includes.sh "{}" \
 		    "${INCLDIR}/{}" \;); \
+		echo "${INSTALL_INCL} gui.h ${INCLPDIR}/gui.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui.h ${INCLPDIR}/gui.h; \
+		echo "${INSTALL_INCL} core_pub.h ${INCLPDIR}/core.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h ${INCLPDIR}/core.h; \
+	else \
+		echo "${INSTALL_INCL} gui/gui.h ${INCLPDIR}/gui.h"; \
+		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLPDIR}/gui.h; \
+		echo "${INSTALL_INCL} core/core_pub.h ${INCLPDIR}/core.h"; \
+		${SUDO} ${INSTALL_INCL} core/core_pub.h ${INCLPDIR}/core.h; \
 	fi
 
 deinstall-includes:

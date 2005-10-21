@@ -4,6 +4,8 @@
 #ifndef _AGAR_RCSMGR_H_
 #define _AGAR_RCSMGR_H_
 
+#include <agar/config/network.h>
+
 #include "begin_code.h"
 
 extern char agRcsHostname[64];
