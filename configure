@@ -601,7 +601,6 @@ fi
 echo -n "checking for BSD types..."
 echo -n "checking for BSD types..." >> config.log
 cat << EOT > conftest.c
-#include <sys/types.h>
 #include <stdio.h>
 int main(int argc, char *argv[]) {
 	u_int foo = 0;
@@ -639,7 +638,6 @@ cat << EOT > conftest.c
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
-#include <sys/types.h>
 #include <stdio.h>
 int main(int argc, char *argv[]) {
 	u_int foo = 0;
@@ -676,6 +674,8 @@ echo "#ifndef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
 echo "#define BSD_TYPES_NEEDED \"$BSD_TYPES_NEEDED\"" >> config/bsd_types_needed.h
 echo "#endif" >> config/bsd_types_needed.h
 else
+CFLAGS="${CFLAGS} -D_BSD_SOURCE"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
 echo "#undef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
 fi;
 else
