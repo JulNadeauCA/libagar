@@ -7,17 +7,23 @@
 #include <agar/config/have_pthreads_xopen.h>
 
 #ifdef HAVE_PTHREADS
-#if defined(HAVE_PTHREADS_XOPEN)
-#define _XOPEN_SOURCE 500
-#include <pthread.h>
-#include <signal.h>
-#undef _XOPEN_SOURCE
+# if defined(HAVE_PTHREADS_XOPEN)
+#  ifndef _XOPEN_SOURCE
+#   define _XOPEN_SOURCE 500
+#   define _AGAR_DEFINED_XOPEN_SOURCE_
+#  endif
+#  include <pthread.h>
+#  include <signal.h>
+#  ifdef _AGAR_DEFINED_XOPEN_SOURCE
+#   undef _XOPEN_SOURCE
+#   undef _AGAR_DEFINED_XOPEN_SOURCE
+#  endif
+# else
+#  include <pthread.h>
+#  include <signal.h>
+# endif
 #else
-#include <pthread.h>
-#include <signal.h>
-#endif
-#else
-#error "THREADS requires POSIX threads"
+# error "THREADS requires POSIX threads"
 #endif
 
 typedef pthread_mutex_t AG_Mutex;
