@@ -224,7 +224,7 @@ void			 AG_ViewCapture(void);
 __inline__ void		 AG_FlipSurface(Uint8 *, int, int);
 
 #ifdef HAVE_OPENGL
-GLuint		 AG_SurfaceTexture(SDL_Surface *, GLfloat *);
+u_int		 AG_SurfaceTexture(SDL_Surface *, float *);
 void		 AG_UpdateTexture(SDL_Surface *, int);
 SDL_Surface	*AG_CaptureGLView(void);
 #endif
