@@ -6,7 +6,7 @@
  * a simple sketch.
  */
 
-#include <core/core.h>
+#include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/vg.h>
 
