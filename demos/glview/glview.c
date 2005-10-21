@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <GL/gl.h>
 #include <GL/glu.h>
 
 static GLdouble spin = 0.0, vx = 1.0, vz = -5.0;
