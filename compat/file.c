@@ -72,13 +72,13 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	if (attrs & FILE_ATTRIBUTE_REPARSE_PT) i->flags |= AG_FILE_REPARSE_PT;
 	
 	if ((f = fopen(path, "rb")) != NULL) {
-		i->perms |= AG_FILE_READABLE;
 		fclose(f);
+		i->perms |= AG_FILE_READABLE;
 	}
 	if (((attrs & FILE_ATTRIBUTE_READONLY) == 0) &&
-	    (f = fopen(path, "wb")) != NULL) {
-		i->perms |= AG_FILE_WRITEABLE;
+	    (f = fopen(path, "a")) != NULL) {
 		fclose(f);
+		i->perms |= AG_FILE_WRITEABLE;
 	}
 	return (0);
 }
