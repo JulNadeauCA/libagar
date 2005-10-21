@@ -1,14 +1,13 @@
 /*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
-#include <agar/core/objmgr.h>
+/*
+ * This application demonstrates the use of Agar's graphical
+ * object manager.
+ */
 
-#include <agar/game/map/mapedit.h>
-
-#include <agar/gui/gui.h>
+#include <agar/core.h>
+#include <agar/gui.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -83,18 +82,15 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
-	{
-		extern int agObjectIgnoreDataErrors;
-		extern int agObjectIgnoreUnknownObjs;
-		
-		AG_MapEditorInit();
-		agObjectIgnoreDataErrors = 1;
-		agObjectIgnoreUnknownObjs = 1;
-		AG_ObjectLoad(agWorld);
-		agObjectIgnoreDataErrors = 0;
-		agObjectIgnoreUnknownObjs = 0;
-	}
+	/* Reload the previous state. */
+	AG_ObjectLoad(agWorld);
 
+	/* Initialize the object manager. */
+	AG_ObjMgrInit();
+
+	/* Show the object manager window. */
+	AG_WindowShow(AG_ObjMgrWindow());
+	
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);

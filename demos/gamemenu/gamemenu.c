@@ -8,11 +8,8 @@
  * and AG_Box to position and size widgets.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
-
-#include <agar/gui/gui.h>
+#include <agar/core.h>
+#include <agar/gui.h>
 
 #include <string.h>
 #include <unistd.h>

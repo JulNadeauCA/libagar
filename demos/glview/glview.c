@@ -7,12 +7,8 @@
  * to have been compiled with OpenGL support.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
-
-#include <agar/gui/gui.h>
-#include <agar/gui/glview.h>	/* This is a nonstandard widget */
+#include <agar/core.h>
+#include <agar/gui.h>
 
 #include <string.h>
 #include <unistd.h>

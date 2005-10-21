@@ -6,12 +6,9 @@
  * a simple sketch.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
-
-#include <agar/gui/gui.h>
-#include <agar/vg/vg.h>
+#include <core/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
 
 #include <string.h>
 #include <unistd.h>

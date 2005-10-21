@@ -8,13 +8,9 @@
  * focus, it can receive keyboard events.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/config.h>
-#include <agar/core/view.h>
+#include <agar/core.h>
+#include <agar/gui.h>
 
-#include <agar/gui/gui.h>
-
-#include <string.h>
 #include <unistd.h>
 
 static void
@@ -37,7 +33,7 @@ mousemotion(AG_Event *event)
 			 */
 			AG_WindowFocus(AG_WidgetParentWindow(w));
 			AG_WidgetFocus(w);
-			dprintf("%s: focused\n", AGOBJECT(w)->name);
+			printf("%s: focused\n", AGOBJECT(w)->name);
 		}
 	} else {
 		if (w->flags & AG_WIDGET_FOCUSED) {
@@ -49,7 +45,7 @@ mousemotion(AG_Event *event)
 			 * of the window list holds focus).
 			 */
 			AG_WidgetUnfocus(w);
-			dprintf("%s: unfocused\n", AGOBJECT(w)->name);
+			printf("%s: unfocused\n", AGOBJECT(w)->name);
 		}
 	}
 }
@@ -60,7 +56,7 @@ keydown(AG_Event *event)
 	AG_Widget *w = AG_SELF();
 	int kb = AG_INT(1);
 
-	dprintf("%s: key %d\n", AGOBJECT(w)->name, kb);
+	printf("%s: key %d\n", AGOBJECT(w)->name, kb);
 }
 
 static void
