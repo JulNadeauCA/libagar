@@ -641,8 +641,8 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	SDL_FreeSurface(texsu);
 }
 
-GLuint
-AG_SurfaceTexture(SDL_Surface *sourcesu, GLfloat *texcoord)
+u_int
+AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 {
 	SDL_Surface *texsu;
 	GLuint texture;
