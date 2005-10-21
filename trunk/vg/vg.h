@@ -156,7 +156,7 @@ typedef struct vg_style {
 } VG_Style;
 
 typedef struct vg_matrix {
-	double m[3][3];
+	double m[4][4];
 } VG_Matrix;
 
 typedef struct vg_element {
