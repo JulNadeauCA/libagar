@@ -12,8 +12,8 @@ struct ag_gfx;
 typedef struct ag_anim {
 	SDL_Surface **frames;
 #ifdef HAVE_OPENGL
-	GLuint *textures;
-	GLfloat texcoords[4];
+	u_int *textures;
+	float texcoords[4];
 #endif
 	Uint32 nframes;
 	Uint32 maxframes;
@@ -23,8 +23,8 @@ typedef struct ag_anim {
 typedef struct ag_cached_sprite {
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
-	GLuint texture;
-	GLfloat texcoords[4];
+	u_int texture;
+	float texcoords[4];
 #endif
 	Uint32 last_drawn;			/* Time last draw occured */
 	struct ag_transformq transforms;	/* Applied transforms */
@@ -61,8 +61,8 @@ typedef struct ag_sprite {
 	u_int *attrs;				/* Default node attributes */
 	int *layers;				/* Node layer offsets */
 #ifdef HAVE_OPENGL
-	GLuint texture;
-	GLfloat texcoords[4];
+	u_int texture;
+	float texcoords[4];
 #endif
 	SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
 } AG_Sprite;
