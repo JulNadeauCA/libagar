@@ -220,8 +220,8 @@ static void
 toggle_attrib(RG_Tileview *tv, int sx, int sy)
 {
 	RG_Tile *t = tv->tile;
-	int nx = sx/AGTILESZ;
-	int ny = sy/AGTILESZ;
+	int nx = sx/RG_TILESZ;
+	int ny = sy/RG_TILESZ;
 	u_int *a;
 	
 	if (nx < 0 || nx >= t->nw ||
@@ -246,8 +246,8 @@ static void
 increment_layer(RG_Tileview *tv, int sx, int sy, int inc)
 {
 	RG_Tile *t = tv->tile;
-	int nx = sx/AGTILESZ;
-	int ny = sy/AGTILESZ;
+	int nx = sx/RG_TILESZ;
+	int ny = sy/RG_TILESZ;
 	int *a;
 
 	if (nx < 0 || nx >= t->nw ||
@@ -742,8 +742,8 @@ mousemotion(AG_Event *event)
 				    sy - tv->yorig,
 				    0, 0, &vxrel, &vyrel);
 				RG_SketchMotion(tv, tel,
-				    vx/AGTILESZ, vy/AGTILESZ,
-				    vxrel/AGTILESZ, vyrel/AGTILESZ,
+				    vx/RG_TILESZ, vy/RG_TILESZ,
+				    vxrel/RG_TILESZ, vyrel/RG_TILESZ,
 				    state);
 			}
 			break;
@@ -1577,6 +1577,66 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g,
 	AG_WidgetUpdateSurface(tv, 0);
 }
 
+/* XXX Sync with game/map/map.c */
+static void
+RG_AttrColor(u_int flag, int state, Uint8 *c)
+{
+	switch (flag) {
+	case RG_NITEM_BLOCK:
+		if (state) {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 255;
+			c[2] = 0;
+			c[3] = 32;
+		}
+		break;
+	case RG_NITEM_CLIMBABLE:
+		if (state) {
+			c[0] = 255;
+			c[1] = 255;
+			c[2] = 0;
+			c[3] = 64;
+		} else {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 32;
+		}
+		break;
+	case RG_NITEM_SLIPPERY:
+		if (state) {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 255;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 0;
+		}
+		break;
+	case RG_NITEM_JUMPABLE:
+		if (state) {
+			c[0] = 255;
+			c[1] = 0;
+			c[2] = 255;
+			c[3] = 64;
+		} else {
+			c[0] = 0;
+			c[1] = 0;
+			c[2] = 0;
+			c[3] = 0;
+		}
+		break;
+	}
+}
+
 void
 RG_TileviewDraw(void *p)
 {
@@ -1662,9 +1722,9 @@ RG_TileviewDraw(void *p)
 #endif
 	RG_TileviewColor4i(tv, 255, 255, 255, 32);
 	if ((tv->flags & RG_TILEVIEW_NO_GRID) == 0) {
-		for (y = 0; y < t->su->h; y += AGTILESZ)
+		for (y = 0; y < t->su->h; y += RG_TILESZ)
 			RG_TileviewHLine(tv, 0, t->su->w, y);
-		for (x = 0; x < t->su->w; x += AGTILESZ)
+		for (x = 0; x < t->su->w; x += RG_TILESZ)
 			RG_TileviewVLine(tv, x, 0, t->su->h);
 	}
 
@@ -1679,7 +1739,7 @@ RG_TileviewDraw(void *p)
 	switch (tv->state) {
 	case RG_TILEVIEW_ATTRIB_EDIT:
 		{
-			int tsz = AGTILESZ*tv->pxsz;
+			int tsz = RG_TILESZ*tv->pxsz;
 			int tw = t->su->w*tv->pxsz;
 			int th = t->su->h*tv->pxsz;
 			int nx, ny;
@@ -1696,7 +1756,7 @@ RG_TileviewDraw(void *p)
 					int h = tsz;
 					int d;
 
-					AG_NitemAttrColor(tv->edit_attr,
+					RG_AttrColor(tv->edit_attr,
 					    (RG_TILE_ATTR2(t,nx,ny) &
 					     tv->edit_attr), c);
 
@@ -1722,7 +1782,7 @@ RG_TileviewDraw(void *p)
 		break;
 	case RG_TILEVIEW_LAYERS_EDIT:
 		{
-			int tsz = AGTILESZ*tv->pxsz;
+			int tsz = RG_TILESZ*tv->pxsz;
 			int tw = t->su->w*tv->pxsz;
 			int th = t->su->h*tv->pxsz;
 			char text[16];

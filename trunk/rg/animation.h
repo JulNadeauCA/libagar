@@ -43,7 +43,7 @@ typedef struct rg_anim_frame {
 	u_int delay;
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
-	GLuint texture;
+	u_int texture;
 #endif
 } RG_AnimFrame;
 

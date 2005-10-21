@@ -29,8 +29,6 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <game/map/map.h>
-
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/tlist.h>

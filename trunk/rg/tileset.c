@@ -30,8 +30,6 @@
 #include <core/view.h>
 #include <core/typesw.h>
 
-#include <game/map/map.h>
-
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/tlist.h>
@@ -289,7 +287,6 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	ntiles = AG_ReadUint32(buf);
 	dprintf("%u tiles\n", ntiles);
 	for (i = 0; i < ntiles; i++) {
-		AG_Map *cMap;
 		char name[RG_TILE_NAME_MAX];
 		RG_Tile *t;
 		
@@ -765,8 +762,8 @@ static char ins_tile_name[RG_TILE_NAME_MAX];
 static char ins_tile_class[RG_TILE_CLASS_MAX];
 static char ins_texture_name[RG_TEXTURE_NAME_MAX];
 static char ins_anim_name[RG_TILE_NAME_MAX];
-static int ins_tile_w = AGTILESZ;
-static int ins_tile_h = AGTILESZ;
+static int ins_tile_w = RG_TILESZ;
+static int ins_tile_h = RG_TILESZ;
 static int ins_alpha = 0;
 static int ins_colorkey = 1;
 static enum ag_gfx_snap_mode ins_snap_mode = AG_GFX_SNAP_NOT;
@@ -834,23 +831,23 @@ tryname2:
 		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
 		RG_TILE_LAYER2(t,0,0) = +2;
 		RG_TILE_LAYER2(t,0,1) = +1;
-		RG_TILE_ATTR2(t,0,1) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,1) = RG_NITEM_BLOCK;
 	} else if (strcmp(ts->template, "Terrain") == 0) {
 		RG_TileScale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
 		AG_SpriteSetOrigin(&gfx->sprites[t->s], 24, 24);
 		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
-		RG_TILE_ATTR2(t,0,0) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,1,0) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,2,0) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,0) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,1) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,2) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,3) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,1) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,2) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,3) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,1,3) = AG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,2,3) = AG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,0) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,1,0) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,2,0) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,0) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,1) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,2) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,3) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,1) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,2) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,3,3) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,1,3) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,2,3) = RG_NITEM_BLOCK;
 	} else {
 		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags,
 		    SDL_ALPHA_OPAQUE);
