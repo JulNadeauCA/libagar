@@ -1,8 +1,8 @@
 /*	$Csoft: engine.h,v 1.102 2005/10/02 09:41:08 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_PUB_H_
-#define _AGAR_CORE_PUB_H_
+#ifndef _AGAR_CORE_PUBLIC_H_
+#define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
 #include <agar/core/loaders/netbuf.h>
@@ -28,4 +28,4 @@
 #include <agar/core/core_init.h>
 
 #include <agar/core/core_close.h>
-#endif /* _AGAR_CORE_PUB_H_ */
+#endif
