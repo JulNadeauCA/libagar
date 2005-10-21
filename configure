@@ -635,10 +635,7 @@ if [ "${HAVE_BSD_TYPES}" != "yes" ]; then
 echo -n "checking whether _BSD_SOURCE is needed..."
 echo -n "checking whether _BSD_SOURCE is needed..." >> config.log
 cat << EOT > conftest.c
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
-#endif
-#include <stdio.h>
+#include <sys/types.h>
 int main(int argc, char *argv[]) {
 	u_int foo = 0;
 	u_long bar = 0;
@@ -648,7 +645,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+$CC $CFLAGS -D_BSD_SOURCE -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
@@ -668,7 +665,7 @@ else
 
 	echo "no"
 fi
-if [ ${BSD_SOURCE_NEEDED} != "yes" ]; then
+if [ "${BSD_SOURCE_NEEDED}" != "yes" ]; then
 echo "#undef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
 echo "#ifndef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
 echo "#define BSD_TYPES_NEEDED \"$BSD_TYPES_NEEDED\"" >> config/bsd_types_needed.h
