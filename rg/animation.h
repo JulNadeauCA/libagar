@@ -32,9 +32,11 @@ typedef struct rg_anim_insn {
 			int theta;		/* Angle of rotation */
 		} rotPx;
 	} args;
+#ifndef _AGAR_RG_PUBLIC_H_
 #define in_tile args.tile
 #define in_disPx args.disPx
 #define in_rotPx args.rotPx
+#endif
 	TAILQ_ENTRY(rg_anim_insn) insns;
 } RG_AnimInsn;
 
