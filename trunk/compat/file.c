@@ -37,22 +37,28 @@
 #include <errno.h>
 #endif
 
+#include <stdio.h>
+
 #include <core/core.h>
 #include <compat/file.h>
 
+#ifdef WIN32
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
-#ifdef WIN32
 	DWORD attrs, type;
+	FILE *f;
 	
-	if ((attrs=GetFileAttributes(path))==INVALID_FILE_ATTRIBUTES) {
+	if ((attrs = GetFileAttributes(path)) == INVALID_FILE_ATTRIBUTES) {
 		AG_SetError("%s: cannot get attrs", path);
 		return (-1);
 	}
 	i->flags = 0;
+	i->perms = 0;
+
 	if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
 		i->type = AG_FILE_DIRECTORY;
+		i->perms |= AG_FILE_EXECUTABLE;
 	} else {
 		i->type = AG_FILE_REGULAR;
 	}
@@ -60,19 +66,30 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	if (attrs & FILE_ATTRIBUTE_COMPRESSED) i->flags |= AG_FILE_COMPRESSED;
 	if (attrs & FILE_ATTRIBUTE_ENCRYPTED) i->flags |= AG_FILE_ENCRYPTED;
 	if (attrs & FILE_ATTRIBUTE_HIDDEN) i->flags |= AG_FILE_HIDDEN;
-	if (attrs & FILE_ATTRIBUTE_READONLY) i->flags |= AG_FILE_READONLY;
 	if (attrs & FILE_ATTRIBUTE_SPARSE_FILE) i->flags |= AG_FILE_SPARSE;
 	if (attrs & FILE_ATTRIBUTE_SYSTEM) i->flags |= AG_FILE_SYSTEM;
 	if (attrs & FILE_ATTRIBUTE_TEMPORARY) i->flags |= AG_FILE_TEMPORARY;
-	if (attrs & FILE_ATTRIBUTE_REPARSE_POINT)
-		i->flags |= AG_FILE_REPARSE_POINT;
-	if (attrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)
-		i->flags |= AG_FILE_NOT_CONTENT_IDX;
+	if (attrs & FILE_ATTRIBUTE_REPARSE_PT) i->flags |= AG_FILE_REPARSE_PT;
+	
+	if ((f = fopen(path, "rb")) != NULL) {
+		i->perms |= AG_FILE_READABLE;
+		fclose(f);
+	}
+	if (((attrs & FILE_ATTRIBUTE_READONLY) == 0) &&
+	    (f = fopen(path, "wb")) != NULL) {
+		i->perms |= AG_FILE_WRITEABLE;
+		fclose(f);
+	}
 	return (0);
+}
 
 #else /* !WIN32 */
 
+int
+AG_GetFileInfo(const char *path, AG_FileInfo *i)
+{
 	struct stat sb;
+	FILE *f;
 
 	if (stat(path, &sb) == -1) {
 		AG_SetError("%s: %s", path, strerror(errno));
@@ -80,6 +97,8 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	}
 	i->type = AG_FILE_REGULAR;
 	i->flags = 0;
+	i->perms = 0;
+
 	if ((sb.st_mode & S_IFDIR)==S_IFDIR) {
 		i->type = AG_FILE_DIRECTORY;
 	} else if ((sb.st_mode & S_IFLNK)==S_IFLNK) {
@@ -95,10 +114,23 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	}
 	if ((sb.st_mode & S_ISUID)==S_ISUID) i->flags |= AG_FILE_SUID;
 	if ((sb.st_mode & S_ISGID)==S_ISGID) i->flags |= AG_FILE_SGID;
+
+	if ((f = fopen(path, "rb")) != NULL) {
+		i->perms |= AG_FILE_READABLE;
+		if (i->type == AG_FILE_DIRECTORY) {
+			/* XXX verify this */
+			i->perms |= AG_FILE_EXECUTABLE;
+		}
+		fclose(f);
+	}
+	if ((f = fopen(path, "wb")) != NULL) {
+		i->perms |= AG_FILE_WRITEABLE;
+		fclose(f);
+	}
 	return (0);
+}
 
 #endif /* WIN32 */
-}
 
 int
 AG_FileExists(const char *path)
