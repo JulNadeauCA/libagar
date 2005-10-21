@@ -9,17 +9,9 @@
 # include <agar/config/have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
-#ifndef BSD_SOURCE_NEEDED
-# include <agar/config/bsd_source_needed.h>
-# define _AGAR_BSD_SOURCE_NEEDED_
-#endif
 #ifndef BSD_TYPES_NEEDED
 # include <agar/config/bsd_types_needed.h>
 # define _AGAR_BSD_TYPES_NEEDED_
-#endif
-#ifndef HAVE_OPENGL
-# include <agar/config/have_opengl.h>
-# define _AGAR_HAVE_OPENGL_
 #endif
 #ifndef HAVE_BOUNDED_ATTRIBUTE
 # include <agar/config/have_bounded_attribute.h>
@@ -34,30 +26,19 @@
 # define _AGAR_HAVE_NONNULL_ATTRIBUTE_
 #endif
 
-#if defined(BSD_SOURCE_NEEDED)
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
-#endif
-#elif defined(BSD_TYPES_NEEDED)
-typedef unsigned int u_int;
-typedef unsigned char u_char;
-typedef unsigned long u_long;
-#endif
+#include <agar/core/threads.h>
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-
-#include <agar/core/threads.h>
+#ifdef BSD_TYPES_NEEDED
+#define u_char unsigned char
+#define u_int unsigned int
+#define u_long unsigned long
+#define _AGAR_DEFINED_BSD_TYPES_
+#endif
 
 #include <SDL.h>
-
-#ifdef HAVE_OPENGL
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-#endif
 
 #ifdef HAVE_BOUNDED_ATTRIBUTE
 #define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
