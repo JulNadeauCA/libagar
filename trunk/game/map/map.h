@@ -33,11 +33,11 @@ typedef struct ag_nitem {
 	enum ag_nitem_type type;	/* Type of element */
 	
 	u_int flags;
-#define AG_NITEM_BLOCK	0x001	/* Tile block */
+#define AG_NITEM_BLOCK		0x001	/* Tile block */
 #define AG_NITEM_CLIMBABLE	0x002	/* Surface is climbable */
 #define AG_NITEM_SLIPPERY	0x004	/* Surface is slippery */
 #define AG_NITEM_JUMPABLE	0x008	/* Element is jumpable */
-#define AG_NITEM_NOSAVE	0x100	/* Non persistent */
+#define AG_NITEM_NOSAVE		0x100	/* Non persistent */
 #define AG_NITEM_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
 #define AG_NITEM_SELECTED	0x400	/* Selection (for editor) */
 
