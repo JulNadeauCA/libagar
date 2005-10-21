@@ -8,7 +8,8 @@ SUBDIR=	gamemenu \
 	objmgr \
 	focusing \
 	vectordwg \
-	loader
+	loader \
+	table
 
 all: configure all-subdir
 clean: prereq clean-subdir
