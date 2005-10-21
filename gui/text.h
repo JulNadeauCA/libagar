@@ -26,8 +26,8 @@ typedef struct ag_glyph {
 	Uint32 nrefs;			/* Reference count */
 	SDL_Surface *su;		/* Rendered surface */
 #ifdef HAVE_OPENGL
-	GLuint texture;			/* Rendered texture */
-	GLfloat texcoord[4];
+	u_int texture;			/* Rendered texture */
+	float texcoord[4];
 #endif
 	SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
