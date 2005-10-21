@@ -28,6 +28,8 @@ typedef struct ag_file_dlg {
 	int flags;
 #define AG_FILEDLG_MULTI	0x01	/* Return a set of files */
 #define AG_FILEDLG_CLOSEWIN	0x02	/* Close the parent window when done */
+#define AG_FILEDLG_LOAD		0x04	/* File must exist and be readable */
+#define AG_FILEDLG_SAVE		0x08	/* File must be writeable */
 
 	char cwd[MAXPATHLEN];			/* Current working directory */
 	char cfile[MAXPATHLEN];			/* Current file path */
