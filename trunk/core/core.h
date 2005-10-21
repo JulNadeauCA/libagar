@@ -14,24 +14,19 @@
 #include <agar/config/have_format_attribute.h>
 #include <agar/config/have_nonnull_attribute.h>
 #include <agar/config/map.h>
-#include <agar/config/bsd_source_needed.h>
 #include <agar/config/bsd_types_needed.h>
 #include <agar/config/have_sys_types_h.h>
 
-#if defined(BSD_SOURCE_NEEDED)
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
+#include <agar/core/threads.h>
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
 #endif
-#elif defined(BSD_TYPES_NEEDED)
+#ifdef BSD_TYPES_NEEDED
 typedef unsigned int u_int;
 typedef unsigned char u_char;
 typedef unsigned long u_long;
 #endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-#include <agar/core/threads.h>
 
 #include <SDL.h>
 #include <SDL_endian.h>

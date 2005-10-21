@@ -1,6 +1,13 @@
 /*	$Csoft$	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_DEFINED_BSD_TYPES_
+# undef _AGAR_DEFINED_BSD_TYPES_
+# undef u_char
+# undef u_int
+# undef u_long
+#endif
+
 #ifdef _AGAR_DEFINED_CC_DECLS_
 # undef _AGAR_DEFINED_CC_DECLS_
 # undef __BEGIN_DECLS
@@ -18,17 +25,9 @@
 # undef _AGAR_HAVE_SYS_TYPES_H_
 # undef HAVE_SYS_TYPES_H
 #endif
-#ifdef _AGAR_BSD_SOURCE_NEEDED_
-# undef _AGAR_BSD_SOURCE_NEEDED_
-# undef BSD_SOURCE_NEEDED
-#endif
 #ifdef _AGAR_BSD_TYPES_NEEDED_
 # undef _AGAR_BSD_TYPES_NEEDED_
 # undef BSD_TYPES_NEEDED
-#endif
-#ifdef _AGAR_HAVE_OPENGL_
-# undef _AGAR_HAVE_OPENGL_
-# undef HAVE_OPENGL
 #endif
 #ifdef _AGAR_HAVE_BOUNDED_ATTRIBUTE_
 # undef _AGAR_HAVE_BOUNDED_ATTRIBUTE_
