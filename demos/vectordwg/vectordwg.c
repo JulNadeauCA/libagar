@@ -49,7 +49,7 @@ CreateDrawing(void)
 	 * Create a new vector graphics object with antialiasing enabled,
 	 * a visible origin and a visible grid.
 	 */
-	vg = VG_New(NULL, VG_ANTIALIAS|VG_VISORIGIN);
+	vg = VG_New(VG_ANTIALIAS|VG_VISORIGIN);
 
 	/*
 	 * Scale the drawing to 20x20 units with a scaling factor of 1.
