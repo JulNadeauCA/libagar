@@ -10,16 +10,23 @@ SUBDIR=	gamemenu \
 	vectordwg \
 	loader
 
-all: prereq all-subdir
+all: configure all-subdir
 clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir
 install: install-subdir
 deinstall: deinstall-subdir
 depend: depend-subdir
 
+configure:
+	for D in ${SUBDIR}; do \
+		echo "==> $$D"; \
+		(cd $$D && ./configure); \
+	done
+
 prereq:
 	for D in ${SUBDIR}; do \
-		(cd $$D && touch Makefile.config); \
+		echo "==> $$D"; \
+		touch $$D/Makefile.config; \
 	done
 
 .PHONY: clean cleandir install deinstall depend
