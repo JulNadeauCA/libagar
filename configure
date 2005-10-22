@@ -289,9 +289,9 @@ LIBDIR="\"$PREFIX/lib\""
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR" $LIBDIR >> config/libdir.h
 echo "#endif" >> config/libdir.h
-INCLDIR="\${PREFIX}/include/agar/agar"
+INCLDIR="\${PREFIX}/include/agar/agar/agar"
 echo "INCLDIR=$INCLDIR" >> Makefile.config
-INCLDIR="\"$PREFIX/include/agar/agar\""
+INCLDIR="\"$PREFIX/include/agar/agar/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif" >> config/incldir.h
@@ -338,8 +338,38 @@ if [ $? != 0 ]; then
     exit 1
 fi
 echo "yes"
-
 rm -f cc-test cc-test.c
+TEST_CFLAGS=""
+echo -n "checking for compiler warnings..."
+echo -n "checking for compiler warnings..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[]) { return (0); }
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
+echo "#define HAVE_CC_WARNINGS" $HAVE_CC_WARNINGS >> config/have_cc_warnings.h
+echo "#endif" >> config/have_cc_warnings.h
+
+	HAVE_CC_WARNINGS=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
+
+	echo "no"
+fi
+if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
+TEST_CFLAGS="-Wall -Werror"
+fi;
 echo -n "checking for floating point types..."
 echo -n "checking for floating point types..." >> config.log
 cat << EOT > conftest.c
@@ -356,9 +386,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -368,9 +398,116 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> config/have_ieee754.h
 echo "#endif" >> config/have_ieee754.h
 
+	HAVE_IEEE754=yes
+
 	echo "yes"
 else
-    echo "#undef HAVE_IEEE754" > config/have_ieee754.h
+	echo "#undef HAVE_IEEE754" > config/have_ieee754.h
+
+	echo "no"
+fi
+echo -n "checking __bounded__ attribute..."
+echo -n "checking __bounded__ attribute..." >> config.log
+cat << EOT > conftest.c
+void foo(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
+void foo(char *a, int c) { }
+int main(int argc, char *argv[])
+{
+	char buf[32];
+	foo(buf, sizeof(buf));
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE" $HAVE_BOUNDED_ATTRIBUTE >> config/have_bounded_attribute.h
+echo "#endif" >> config/have_bounded_attribute.h
+
+	HAVE_BOUNDED_ATTRIBUTE=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+
+	echo "no"
+fi
+echo -n "checking __format__ attribute..."
+echo -n "checking __format__ attribute..." >> config.log
+cat << EOT > conftest.c
+#include <stdarg.h>
+void foo1(char *, ...)
+     __attribute__((__format__ (printf, 1, 2)));
+void foo2(char *, ...)
+     __attribute__((__format__ (__printf__, 1, 2)))
+     __attribute__((__nonnull__ (1)));
+void foo1(char *a, ...) {}
+void foo2(char *a, ...) {}
+int main(int argc, char *argv[])
+{
+	foo1("foo %s", "bar");
+	foo2("foo %d", 1);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE" $HAVE_FORMAT_ATTRIBUTE >> config/have_format_attribute.h
+echo "#endif" >> config/have_format_attribute.h
+
+	HAVE_FORMAT_ATTRIBUTE=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+
+	echo "no"
+fi
+echo -n "checking __nonnull__ attribute..."
+echo -n "checking __nonnull__ attribute..." >> config.log
+cat << EOT > conftest.c
+void foo(char *) __attribute__((__nonnull__ (1)));
+void foo(char *a) { }
+int main(int argc, char *argv[])
+{
+	foo("foo");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+echo "#define HAVE_NONNULL_ATTRIBUTE" $HAVE_NONNULL_ATTRIBUTE >> config/have_nonnull_attribute.h
+echo "#endif" >> config/have_nonnull_attribute.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 
 	echo "no"
 fi
@@ -388,9 +525,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -403,126 +540,6 @@ echo "#endif" >> config/have_long_double.h
 	echo "yes"
 else
     echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
-
-	echo "no"
-fi
-echo -n "checking __bounded__ attribute..."
-echo -n "checking __bounded__ attribute..." >> config.log
-cat << EOT > conftest.c
-void foo(char *, int)
-	 __attribute__ ((__bounded__(__string__,1,2)));
-
-void
-foo(char *a, int c)
-{
-}
-
-int
-main(int argc, char *argv[])
-{
-	char buf[32];
-
-	foo(buf, sizeof(buf));
-	return (0);
-}
-
-EOT
-compile="ok"
-$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
-echo "#define HAVE_BOUNDED_ATTRIBUTE" $HAVE_BOUNDED_ATTRIBUTE >> config/have_bounded_attribute.h
-echo "#endif" >> config/have_bounded_attribute.h
-
-	echo "yes"
-else
-    echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
-
-	echo "no"
-fi
-echo -n "checking __format__ attribute..."
-echo -n "checking __format__ attribute..." >> config.log
-cat << EOT > conftest.c
-#include <stdarg.h>
-
-void foo1(char *, ...)
-     __attribute__((__format__ (printf, 1, 2)));
-void foo2(char *, ...)
-     __attribute__((__format__ (__printf__, 1, 2)))
-     __attribute__((__nonnull__ (1)));
-
-void foo1(char *a, ...) {}
-void foo2(char *a, ...) {}
-
-int
-main(int argc, char *argv[])
-{
-	foo1("foo %s", "bar");
-	foo2("foo %d", 1);
-	return (0);
-}
-
-EOT
-compile="ok"
-$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
-echo "#define HAVE_FORMAT_ATTRIBUTE" $HAVE_FORMAT_ATTRIBUTE >> config/have_format_attribute.h
-echo "#endif" >> config/have_format_attribute.h
-
-	echo "yes"
-else
-    echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
-
-	echo "no"
-fi
-echo -n "checking __nonnull__ attribute..."
-echo -n "checking __nonnull__ attribute..." >> config.log
-cat << EOT > conftest.c
-void foo(char *)
-     __attribute__((__nonnull__ (1)));
-
-void
-foo(char *a)
-{
-}
-
-int
-main(int argc, char *argv[])
-{
-	foo("foo");
-	return (0);
-}
-
-EOT
-compile="ok"
-$CC $CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
-echo "#define HAVE_NONNULL_ATTRIBUTE" $HAVE_NONNULL_ATTRIBUTE >> config/have_nonnull_attribute.h
-echo "#endif" >> config/have_nonnull_attribute.h
-
-	echo "yes"
-else
-    echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 
 	echo "no"
 fi
@@ -544,9 +561,9 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -559,6 +576,42 @@ echo "#endif" >> config/have_cygwin.h
 	echo "yes"
 else
     echo "#undef HAVE_CYGWIN" > config/have_cygwin.h
+
+	echo "no"
+fi
+echo -n "checking for mingw environment..."
+echo -n "checking for mingw environment..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <windows.h>
+
+int
+main(int argc, char *argv[]) {
+	struct stat sb;
+	DWORD rv;
+	rv = GetFileAttributes("foo");
+	stat("foo", &sb);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_MINGW" > config/have_mingw.h
+echo "#define HAVE_MINGW" $HAVE_MINGW >> config/have_mingw.h
+echo "#endif" >> config/have_mingw.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_MINGW" > config/have_mingw.h
 
 	echo "no"
 fi
@@ -578,9 +631,9 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -611,9 +664,9 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -645,9 +698,9 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS -D_BSD_SOURCE -o conftest conftest.c  2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -D_BSD_SOURCE -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -693,9 +746,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -721,15 +774,15 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-$CC $CFLAGS  -o conftest conftest.c  2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "-> compile failed ($?)" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 else
 	compile="ok"
 	./conftest >> config.log
 	if [ $? != 0 ]; then
-		echo "-> execution failed ($?)" >> config.log
+		echo "-> exec failed ($?)" >> config.log
 		free_null_noop="no"
 	else
 		free_null_noop="yes"
@@ -766,9 +819,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -812,9 +865,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -848,9 +901,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -883,9 +936,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -914,9 +967,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -945,9 +998,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -978,9 +1031,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1009,9 +1062,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1040,9 +1093,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1071,9 +1124,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1108,9 +1161,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1156,9 +1209,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1190,9 +1243,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1234,9 +1287,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1266,9 +1319,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1300,9 +1353,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1335,9 +1388,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1370,9 +1423,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1405,9 +1458,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS -o conftest conftest.c 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> config.log
+	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1431,27 +1484,25 @@ cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
-int
-main(int argc, char *argv[])
+void *start_routine(void *arg) { return (NULL); }
+int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
-	pthread_mutexattr_t mutexattr;
 	pthread_t thread;
-	pthread_cond_t cond;
-	pthread_key_t key;
 
 	pthread_mutex_init(&mutex, NULL);
 	pthread_mutex_lock(&mutex);
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_destroy(&mutex);
+	pthread_create(&thread, NULL, start_routine, NULL);
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC $CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1469,7 +1520,7 @@ else
 
 	echo "no"
 fi
-if [ ${HAVE_PTHREADS} = "yes" ]; then
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
 echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
 echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
@@ -1484,27 +1535,25 @@ cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
-int
-main(int argc, char *argv[])
+void *start_routine(void *arg) { return (NULL); }
+int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
-	pthread_mutexattr_t mutexattr;
 	pthread_t thread;
-	pthread_cond_t cond;
-	pthread_key_t key;
 
 	pthread_mutex_init(&mutex, NULL);
 	pthread_mutex_lock(&mutex);
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_destroy(&mutex);
+	pthread_create(&thread, NULL, start_routine, NULL);
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC $CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1522,7 +1571,7 @@ else
 
 	echo "no"
 fi
-if [ ${HAVE_PTHREADS} = "yes" ]; then
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
 echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
 echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
@@ -1557,9 +1606,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1607,9 +1656,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1657,9 +1706,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1787,23 +1836,21 @@ cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
 int main(int argc, char *argv[]) {
-	SDL_Surface su;
-	SDL_TimerID tid;
-	SDL_Color color;
-	SDL_Event event;
-	Uint32 u32;
+	SDL_Surface *su;
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		return (1);
 	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
 	SDL_Quit();
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC $CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -1891,20 +1938,16 @@ cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
 {
-	FT_UInt uint;
-	FT_Bitmap bitmap;
-	FT_Face face;
 	FT_Library library;
-
 	FT_Init_FreeType(&library);
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC $CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -2011,9 +2054,9 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -2109,9 +2152,9 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -2189,9 +2232,9 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-$CC $CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
+	echo "failed ($?)" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
