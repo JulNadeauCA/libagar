@@ -49,41 +49,42 @@ fastclean:
 
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
+	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}/agar
 	${SUDO} env \
 	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	    INSTALL_INCL="${INSTALL_INCL}" \
 	    ${FIND} . -type d \! -name CVS \
-	    -exec ${SH} mk/install-includes.sh "{}" "${INCLDIR}/{}" \;
+	    -exec ${SH} mk/install-includes.sh "{}" "${INCLDIR}/agar/{}" \;
 	@if [ "${SRC}" != "" ]; then \
 		(cd ${SRC} && ${SUDO} env \
 		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 		    INSTALL_INCL="${INSTALL_INCL}" \
 		    ${FIND} . -type d \! -name CVS \
 		    -exec ${SH} mk/install-includes.sh "{}" \
-		    "${INCLDIR}/{}" \;); \
-		echo "${INSTALL_INCL} core_pub.h ${INCLPDIR}/agar/core.h"; \
+		    "${INCLDIR}/agar/{}" \;); \
+		echo "${INSTALL_INCL} core_pub.h ${INCLDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
-		    ${INCLPDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui.h ${INCLPDIR}/agar/gui.h"; \
+		    ${INCLDIR}/agar/core.h; \
+		echo "${INSTALL_INCL} gui.h ${INCLDIR}/agar/gui.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui.h \
-		    ${INCLPDIR}/agar/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h"; \
+		    ${INCLDIR}/agar/gui.h; \
+		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h \
-		    ${INCLPDIR}/agar/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h"; \
+		    ${INCLDIR}/agar/vg.h; \
+		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
-		   ${INCLPDIR}/agar/rg.h; \
+		   ${INCLDIR}/agar/rg.h; \
 	else \
 		echo "${INSTALL_INCL} core/core_pub.h \
-		    ${INCLPDIR}/agar/core.h"; \
+		    ${INCLDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} core/core_pub.h \
-		    ${INCLPDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui/gui.h ${INCLPDIR}/agar/gui.h"; \
-		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLPDIR}/agar/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h"; \
-		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h"; \
-		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h; \
+		    ${INCLDIR}/agar/core.h; \
+		echo "${INSTALL_INCL} gui/gui.h ${INCLDIR}/agar/gui.h"; \
+		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLDIR}/agar/gui.h; \
+		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
+		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
+		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
+		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
 	fi
 
 deinstall-includes:
