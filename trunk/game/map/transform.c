@@ -50,7 +50,7 @@ AG_TransformRotate(struct ag_nitem *r, int angle)
 	Uint32 angles = (Uint32)angle;
 	AG_Transform *tr;
 	SDL_Surface *su;
-	float rad, theta;
+	double rad, theta;
 
 	switch (r->type) {
 	case AG_NITEM_SPRITE:
@@ -63,16 +63,16 @@ AG_TransformRotate(struct ag_nitem *r, int angle)
 		return (NULL);
 	}
 
-	rad = hypotf(
+	rad = hypot(
 	    r->r_gfx.xorigin - su->w/2,
 	    r->r_gfx.yorigin - su->h/2);
-	theta = atan2f(
+	theta = atan2(
 	    r->r_gfx.yorigin - su->w/2,
 	    r->r_gfx.xorigin - su->h/2);
 
 	theta += ((float)angle/360.0)*(2.0*M_PI);
-	r->r_gfx.xorigin = rad*cosf(theta) + su->w/2;
-	r->r_gfx.yorigin = rad*sinf(theta) + su->h/2;
+	r->r_gfx.xorigin = rad*cos(theta) + su->w/2;
+	r->r_gfx.yorigin = rad*sin(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
 		if (tr->type == AG_TRANSFORM_ROTATE) {
