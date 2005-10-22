@@ -81,7 +81,7 @@ intsect(VG *vg, VG_Element *vge, double x, double y)
 	vtx = &vge->vtx[0];
 	VG_Car2Pol(vg, x - vtx->x, y - vtx->y, &rho, &theta);
 
-	return (fabsf(rho - vge->vg_circle.radius));
+	return ((float)fabs(rho - vge->vg_circle.radius));
 }
 
 const VG_ElementOps vgCircleOps = {
