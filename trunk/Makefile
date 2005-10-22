@@ -61,24 +61,29 @@ install-includes:
 		    ${FIND} . -type d \! -name CVS \
 		    -exec ${SH} mk/install-includes.sh "{}" \
 		    "${INCLDIR}/{}" \;); \
-		echo "${INSTALL_INCL} core_pub.h ${INCLPDIR}/core.h"; \
+		echo "${INSTALL_INCL} core_pub.h ${INCLPDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
-		    ${INCLPDIR}/core.h; \
-		echo "${INSTALL_INCL} gui.h ${INCLPDIR}/gui.h"; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui.h ${INCLPDIR}/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/vg.h"; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h ${INCLPDIR}/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/rg.h"; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h ${INCLPDIR}/rg.h; \
+		    ${INCLPDIR}/agar/core.h; \
+		echo "${INSTALL_INCL} gui.h ${INCLPDIR}/agar/gui.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui.h \
+		    ${INCLPDIR}/agar/gui.h; \
+		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h \
+		    ${INCLPDIR}/agar/vg.h; \
+		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
+		   ${INCLPDIR}/agar/rg.h; \
 	else \
-		echo "${INSTALL_INCL} core/core_pub.h ${INCLPDIR}/core.h"; \
-		${SUDO} ${INSTALL_INCL} core/core_pub.h ${INCLPDIR}/core.h; \
-		echo "${INSTALL_INCL} gui/gui.h ${INCLPDIR}/gui.h"; \
-		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLPDIR}/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/vg.h"; \
-		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/rg.h"; \
-		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/rg.h; \
+		echo "${INSTALL_INCL} core/core_pub.h \
+		    ${INCLPDIR}/agar/core.h"; \
+		${SUDO} ${INSTALL_INCL} core/core_pub.h \
+		    ${INCLPDIR}/agar/core.h; \
+		echo "${INSTALL_INCL} gui/gui.h ${INCLPDIR}/agar/gui.h"; \
+		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLPDIR}/agar/gui.h; \
+		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h"; \
+		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLPDIR}/agar/vg.h; \
+		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h"; \
+		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLPDIR}/agar/rg.h; \
 	fi
 
 deinstall-includes:
