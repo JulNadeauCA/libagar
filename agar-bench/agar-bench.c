@@ -1,13 +1,21 @@
 /*	$Csoft: agar-bench.c,v 1.8 2005/10/06 10:29:18 vedge Exp $	*/
 /*	Public domain	*/
 
+#include <agar/core.h>
+
 #include "agar-bench.h"
-#include <agar/core/config.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
 
 extern struct test_ops pixelops_test;
 extern struct test_ops primitives_test;

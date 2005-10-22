@@ -10,15 +10,15 @@ static void *buf1, *buf2;
 static void
 InitBuffers(void)
 {
-	buf1 = Malloc(TESTBUFSIZE, 0);
-	buf2 = Malloc(TESTBUFSIZE, 0);
+	buf1 = malloc(TESTBUFSIZE);
+	buf2 = malloc(TESTBUFSIZE);
 }
 
 static void
 FreeBuffers(void)
 {
-	Free(buf1, 0);
-	Free(buf2, 0);
+	free(buf1);
+	free(buf2);
 }
 
 static void
