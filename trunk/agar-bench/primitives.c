@@ -2,8 +2,6 @@
 /*	Public domain	*/
 
 #include "agar-bench.h"
-
-#include <agar/gui/widget.h>
 #include <agar/gui/primitive.h>
 
 static SDL_Surface *su;
