@@ -289,18 +289,12 @@ LIBDIR="\"$PREFIX/lib\""
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR" $LIBDIR >> config/libdir.h
 echo "#endif" >> config/libdir.h
-INCLDIR="\${PREFIX}/include/agar/agar/agar"
+INCLDIR="\${PREFIX}/include/agar"
 echo "INCLDIR=$INCLDIR" >> Makefile.config
-INCLDIR="\"$PREFIX/include/agar/agar/agar\""
+INCLDIR="\"$PREFIX/include/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif" >> config/incldir.h
-INCLPDIR="\${PREFIX}/include/agar"
-echo "INCLPDIR=$INCLPDIR" >> Makefile.config
-INCLPDIR="\"$PREFIX/include/agar\""
-echo "#ifndef INCLPDIR" > config/inclpdir.h
-echo "#define INCLPDIR" $INCLPDIR >> config/inclpdir.h
-echo "#endif" >> config/inclpdir.h
 MANDIR="\${PREFIX}/share/agar/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
 PSDIR="\${PREFIX}/share/agar/ps"
@@ -2047,8 +2041,8 @@ cat << EOT > conftest.c
 #include <GL/gl.h>
 #endif
 int main(int argc, char *argv[]) {
-	GLdouble d;
 	glFlush();
+	glLoadIdentity();
 	return (0);
 }
 
