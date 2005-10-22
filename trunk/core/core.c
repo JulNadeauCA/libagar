@@ -39,8 +39,6 @@
 #include <core/view.h>
 #include <core/typesw.h>
 
-#include <compat/setenv.h>
-
 #include <gui/primitive.h>
 #include <gui/cursors.h>
 
@@ -136,8 +134,6 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 	char path[MAXPATHLEN];
 	extern int agBgPopupMenu;
 	char *s;
-
-	setenv("SDL_VIDEO_X11_WMCLASS", agProgName, 1);
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
