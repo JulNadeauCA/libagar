@@ -82,7 +82,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--sysconfdir") == 0) {
 			printf("%s\n", SYSCONFDIR);
 		} else if (strcmp(argv[i], "--incldir") == 0) {
-			printf("%s\n", INCLDIR);
+			printf("%s\n", INCLPDIR);
 		} else if (strcmp(argv[i], "--libdir") == 0) {
 			printf("%s\n", LIBDIR);
 		} else if (strcmp(argv[i], "--sharedir") == 0) {
