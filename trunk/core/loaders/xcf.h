@@ -3,6 +3,8 @@
 
 #include "begin_code.h"
 
+struct ag_gfx;
+
 __BEGIN_DECLS
 int AG_XCFLoad(AG_Netbuf *, off_t, struct ag_gfx *);
 __END_DECLS
