@@ -41,6 +41,7 @@
 #include <config/have_opengl.h>
 #include <config/have_jpeg.h>
 #include <config/have_libqnet.h>
+#include <config/have_pthreads.h>
 
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
@@ -62,6 +63,10 @@
 #ifdef HAVE_LIBQNET
 #include <config/libqnet_libs.h>
 #include <config/libqnet_cflags.h>
+#endif
+#ifdef HAVE_PTHREADS
+#include <config/pthreads_libs.h>
+#include <config/pthreads_cflags.h>
 #endif
 
 #include <stdio.h>
@@ -109,6 +114,9 @@ main(int argc, char *argv[])
 #if defined(LIBQNET_CFLAGS) && defined(NETWORK)
 			printf("%s ", LIBQNET_CFLAGS);
 #endif
+#ifdef HAVE_PTHREADS
+			printf("%s ", PTHREADS_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
@@ -136,6 +144,9 @@ main(int argc, char *argv[])
 #endif
 #if defined(LIBQNET_LIBS) && defined(NETWORK)
 			printf("%s ", LIBQNET_LIBS);
+#endif
+#ifdef HAVE_PTHREADS
+			printf("%s ", PTHREADS_LIBS);
 #endif
 			printf("\n");
 		}
