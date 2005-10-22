@@ -163,7 +163,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		msig = strsep(&spec, ":");
 		c0 = strsep(&spec, "-");
 		c1 = strsep(&spec, "-");
-		if (msig == NULL || strcasecmp(msig, "MAP") != 0 ||
+		if (msig == NULL || strcmp(msig, "MAP") != 0 ||
 		    c0 == NULL || c1 == NULL ||
 		    c0[0] == '\0' || c1[0] == '\0') {
 			AG_SetError("Invalid bitmap fontspec");

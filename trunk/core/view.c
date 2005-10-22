@@ -37,10 +37,9 @@
 #endif
 #include <gui/window.h>
 
-#include <sys/types.h>
-
 #include <compat/dir.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -753,7 +752,7 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 			alpha = dA-sA;
 			break;
 		case AG_ALPHA_PYTHAGOREAN:
-			alpha = (int)sqrtf((dA*dA)+(sA*sA));
+			alpha = (int)sqrt((dA*dA)+(sA*sA));
 			break;
 		default:
 			break;
@@ -991,7 +990,7 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	}
 	
 	hv = h/60.0;
-	iv = floorf(hv);
+	iv = floor(hv);
 	var[0] = v * (1 - s);
 	var[1] = v * (1 - s*(hv - iv));
 	var[2] = v * (1 - s*(1 - (hv - iv)));
