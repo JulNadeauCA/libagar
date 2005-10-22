@@ -28,10 +28,6 @@
 
 #include <config/have_vasprintf.h>
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <core/core.h>
 
 #include "vasprintf.h"
