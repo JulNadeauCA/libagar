@@ -635,7 +635,7 @@ if [ "${HAVE_BSD_TYPES}" != "yes" ]; then
 echo -n "checking whether _BSD_SOURCE is needed..."
 echo -n "checking whether _BSD_SOURCE is needed..." >> config.log
 cat << EOT > conftest.c
-#include <sys/types.h>
+#include <stdio.h>
 int main(int argc, char *argv[]) {
 	u_int foo = 0;
 	u_long bar = 0;
