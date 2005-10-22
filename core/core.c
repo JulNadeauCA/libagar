@@ -33,6 +33,7 @@
 #include <config/have_pthreads_xopen.h>
 #include <config/have_pthread_mutex_recursive.h>
 #include <config/have_pthread_mutex_recursive_np.h>
+#include <config/have_sdl_cpuinfo.h>
 
 #include <core/core.h>
 #include <core/config.h>
@@ -56,6 +57,9 @@
 #endif
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
+#endif
+#ifdef HAVE_SDL_CPUINFO
+#include <SDL_cpuinfo.h>
 #endif
 
 #ifdef THREADS
@@ -112,6 +116,7 @@ AG_InitCore(const char *progname, u_int flags)
 	AG_ObjectLoad(agConfig);
 
 	printf("\n");
+#ifdef HAVE_SDL_CPUINFO
 	printf(_("Architecture extensions: "));
 	if (SDL_HasRDTSC()) { printf("RDTSC "); }
 	if (SDL_HasMMX()) { printf("MMX "); }
@@ -122,6 +127,7 @@ AG_InitCore(const char *progname, u_int flags)
 	if (SDL_HasSSE2()) { printf("SSE2 "); }
 	if (SDL_HasAltiVec()) { printf("AltiVec "); }
 	printf(".\n");
+#endif
 
 	agWorld = AG_ObjectNew(NULL, "world");
 	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);

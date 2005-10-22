@@ -30,7 +30,6 @@ typedef unsigned long u_long;
 
 #include <SDL.h>
 #include <SDL_endian.h>
-#include <SDL_cpuinfo.h>
 
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__
