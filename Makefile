@@ -28,6 +28,7 @@ prereq:
 configure:
 	cat configure.in | manuconf > configure
 	chmod 755 configure
+	svn commit -m sync configure
 
 cleandir-config:
 	rm -fr config config.log
