@@ -1,6 +1,9 @@
 /*	$Csoft$	*/
 /*	Public domain	*/
 
+#ifndef _AGAR_CORE_THREADS_H_
+#define _AGAR_CORE_THREADS_H_
+
 #ifdef THREADS
 
 #include <agar/config/have_pthreads.h>
@@ -119,3 +122,5 @@ typedef int AG_Cond;
 #undef HAVE_PTHREADS
 #undef HAVE_PTHREADS_XOPEN
 #endif /* THREADS */
+
+#endif /* _AGAR_CORE_THREADS_H_ */
