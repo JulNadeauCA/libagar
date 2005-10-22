@@ -1559,13 +1559,11 @@ PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-
 void *start_routine(void *arg) { return (NULL); }
 int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
 	pthread_t thread;
-
 	pthread_mutex_init(&mutex, NULL);
 	pthread_mutex_lock(&mutex);
 	pthread_mutex_unlock(&mutex);
@@ -1610,13 +1608,11 @@ PTHREADS_LIBS="-lpthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-
 void *start_routine(void *arg) { return (NULL); }
 int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
 	pthread_t thread;
-
 	pthread_mutex_init(&mutex, NULL);
 	pthread_mutex_lock(&mutex);
 	pthread_mutex_unlock(&mutex);
@@ -1667,12 +1663,10 @@ cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
 	pthread_mutexattr_t mutexattr;
-
 	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&mutex, &mutexattr);
 	return (0);
@@ -1701,28 +1695,30 @@ else
 	echo "no"
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
+PTHREADS_CFLAGS="${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=500"
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
 echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#define HAVE_PTHREADS_XOPEN 1" >> config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
 echo "#endif" >> config/have_pthreads_xopen.h
-echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#define HAVE_PTHREADS_XOPEN 1" >> config/have_pthreads_xopen.h
-echo "#endif" >> config/have_pthreads_xopen.h
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
 else
 echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-fi
+fi;
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
 	pthread_mutexattr_t mutexattr;
-
 	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&mutex, &mutexattr);
 	return (0);
@@ -1752,27 +1748,20 @@ else
 fi
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE 1" >> config/have_pthread_mutex_recursive.h
-echo "#endif" >> config/have_pthread_mutex_recursive.h
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE 1" >> config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
 echo "#endif" >> config/have_pthread_mutex_recursive.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-fi
+fi;
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
 	pthread_mutexattr_t mutexattr;
-
 	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
 	pthread_mutex_init(&mutex, &mutexattr);
 	return (0);
@@ -1802,15 +1791,11 @@ else
 fi
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP 1" >> config/have_pthread_mutex_recursive_np.h
-echo "#endif" >> config/have_pthread_mutex_recursive_np.h
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP 1" >> config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
 echo "#endif" >> config/have_pthread_mutex_recursive_np.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-fi
+fi;
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
