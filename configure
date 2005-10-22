@@ -1872,6 +1872,45 @@ echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
 fi;
+echo -n "checking for SDL cpuinfo functions..."
+echo -n "checking for SDL cpuinfo functions..." >> config.log
+cat << EOT > conftest.c
+#include <SDL.h>
+#include <SDL_cpuinfo.h>
+int main(int argc, char *argv[]) {
+	SDL_HasRDTSC();
+	SDL_HasMMX();
+	SDL_HasMMXExt();
+	SDL_Has3DNow();
+	SDL_Has3DNowExt();
+	SDL_HasSSE();
+	SDL_HasSSE2();
+	SDL_HasAltiVec();
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
+echo "#define HAVE_SDL_CPUINFO" $HAVE_SDL_CPUINFO >> config/have_sdl_cpuinfo.h
+echo "#endif" >> config/have_sdl_cpuinfo.h
+
+	HAVE_SDL_CPUINFO=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
+
+	echo "no"
+fi
 else
 echo "no"
 echo "no" >> config.log
