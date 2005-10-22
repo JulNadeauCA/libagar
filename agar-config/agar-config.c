@@ -31,7 +31,6 @@
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
 #include <config/incldir.h>
-#include <config/inclpdir.h>
 #include <config/libdir.h>
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
@@ -82,7 +81,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--sysconfdir") == 0) {
 			printf("%s\n", SYSCONFDIR);
 		} else if (strcmp(argv[i], "--incldir") == 0) {
-			printf("%s\n", INCLPDIR);
+			printf("%s\n", INCLDIR);
 		} else if (strcmp(argv[i], "--libdir") == 0) {
 			printf("%s\n", LIBDIR);
 		} else if (strcmp(argv[i], "--sharedir") == 0) {
@@ -95,7 +94,7 @@ main(int argc, char *argv[])
 #ifdef BSD_SOURCE_NEEDED
 			printf("-D_BSD_SOURCE ");
 #endif
-			printf("-I%s ", INCLPDIR);
+			printf("-I%s ", INCLDIR);
 #ifdef SDL_CFLAGS
 			printf("%s ", SDL_CFLAGS);
 #endif
