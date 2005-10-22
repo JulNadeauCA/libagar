@@ -1582,7 +1582,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=500 -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600 -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
 	compile="failed"
@@ -1603,7 +1603,7 @@ else
 	echo "no"
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-PTHREADS_CFLAGS="${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=500"
+PTHREADS_CFLAGS="${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
