@@ -646,6 +646,8 @@ else
 	echo "no"
 fi
 if [ "${HAVE_SYS_TYPES_H}" = "yes" ]; then
+echo -n "checking for BSD types..."
+echo -n "checking for BSD types..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -726,6 +728,8 @@ echo "#undef BSD_SOURCE_NEEDED" > config/bsd_source_needed.h
 echo "#undef BSD_TYPES_NEEDED" > config/bsd_types_needed.h
 fi;
 else
+echo -n "checking for BSD types..."
+echo -n "checking for BSD types..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) {
 	u_int foo = 0;
