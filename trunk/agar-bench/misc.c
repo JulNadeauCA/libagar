@@ -9,6 +9,8 @@
 static char buf1[1024];
 static char buf2[1024];
 #define STRING64 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+static float flt = 1.0, dbl = 1.0;
+
 
 static void
 do_vsnprintf(const char *fmt, ...)
@@ -54,6 +56,12 @@ static void T_Snprintf64(void) {
 static void T_Snprintf4(void) {
 	snprintf(buf1, sizeof(buf1), "%d,%d,%s,%s", 1, 1, STRING64, STRING64);
 }
+static void T_Sqrt1(void) {
+	sqrt(flt);
+}
+static void T_Sqrt2(void) {
+	sqrtf(flt);
+}
 
 static struct testfn_ops testfns[] = {
  { "va_list(int)", NULL, NULL, T_Valist },
@@ -65,6 +73,8 @@ static struct testfn_ops testfns[] = {
  { "vsnprintf(%d,%d,%s,%s)", NULL, NULL, T_Vsnprintf4 },
  { "snprintf(64B)", NULL, NULL, T_Snprintf64 },
  { "snprintf(%d,%d,%s,%s)", NULL, NULL, T_Snprintf4 },
+ { "sqrt 1", NULL, NULL, T_Sqrt1 },
+ { "sqrt 2", NULL, NULL, T_Sqrt2 },
 };
 
 struct test_ops misc_test = {
