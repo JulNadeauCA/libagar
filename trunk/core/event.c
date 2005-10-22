@@ -88,11 +88,11 @@ const char *agEvArgTypeNames[] = {
 	"pointer",
 	"string",
 	"char",
-	"u_char",
+	"Uchar",
 	"int",
-	"u_int",
+	"Uint",
 	"long",
-	"u_long",
+	"Ulong",
 	"float",
 	"double"
 };

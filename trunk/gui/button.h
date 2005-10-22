@@ -18,7 +18,7 @@ typedef struct ag_button {
 	struct ag_widget wid;
 	int state;			/* Default state binding */
 	enum ag_button_justify justify;	/* Label justification */
-	u_int flags;
+	Uint flags;
 #define AG_BUTTON_INSENSITIVE	0x01	/* Not responsive */
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
@@ -34,9 +34,9 @@ typedef struct ag_button {
 
 __BEGIN_DECLS
 AG_Button *AG_ButtonNew(void *, const char *);
-AG_Button *AG_ButtonAct(void *, const char *, u_int,
+AG_Button *AG_ButtonAct(void *, const char *, Uint,
 			void (*)(AG_Event *), const char *, ...);
-void	   AG_ButtonInit(AG_Button *, const char *, u_int);
+void	   AG_ButtonInit(AG_Button *, const char *, Uint);
 void	   AG_ButtonDestroy(void *);
 void	   AG_ButtonDraw(void *);
 void	   AG_ButtonScale(void *, int, int);

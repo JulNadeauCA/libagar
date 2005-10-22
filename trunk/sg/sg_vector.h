@@ -1,13 +1,13 @@
 /*	$Csoft$	*/
 /*	Public domain	*/
 
-typedef struct sg_vector { SG_Real *v; u_int n; } SG_Vector;
+typedef struct sg_vector { SG_Real *v; Uint n; } SG_Vector;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3;
 typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
 
 __BEGIN_DECLS
-SG_Vector *SG_VectorNew(u_int);
+SG_Vector *SG_VectorNew(Uint);
 #define	   SG_VectorFree(v) Free((v),M_SG)
 
 __inline__ SG_Real SG_DotProduct(const SG_Vector *, const SG_Vector *);

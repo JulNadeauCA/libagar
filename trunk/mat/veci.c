@@ -35,7 +35,7 @@
 		fatal("different vector length")
 
 veci_t *
-veci_new(u_int n)
+veci_new(Uint n)
 {
 	veci_t *veci;
 

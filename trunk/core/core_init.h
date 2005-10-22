@@ -38,11 +38,11 @@ extern AG_Mutex agTimingLock;
 #define AG_CONFIG_ALL		0xff
 
 __BEGIN_DECLS
-int	 AG_InitCore(const char *, u_int);
-int	 AG_InitVideo(int, int, int, u_int);
-int	 AG_InitInput(u_int);
-int	 AG_InitNetwork(u_int);
-int	 AG_InitConfigWin(u_int);
+int	 AG_InitCore(const char *, Uint);
+int	 AG_InitVideo(int, int, int, Uint);
+int	 AG_InitInput(Uint);
+int	 AG_InitNetwork(Uint);
+int	 AG_InitConfigWin(Uint);
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_Quit(void);
 void	 AG_Destroy(void);

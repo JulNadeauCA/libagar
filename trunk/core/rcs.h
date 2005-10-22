@@ -11,7 +11,7 @@
 extern char agRcsHostname[64];
 extern char agRcsUsername[32];
 extern char agRcsPassword[32];
-extern u_int agRcsPort;
+extern Uint agRcsPort;
 extern int agRcsMode;
 
 enum ag_rcs_status {
@@ -38,10 +38,10 @@ int AG_RcsCommitAll(AG_Object *);
 int AG_RcsImport(AG_Object *);
 int AG_RcsImportAll(AG_Object *);
 
-int AG_RcsGetWorkingRev(AG_Object *, u_int *);
-int AG_RcsSetWorkingRev(AG_Object *, u_int);
+int AG_RcsGetWorkingRev(AG_Object *, Uint *);
+int AG_RcsSetWorkingRev(AG_Object *, Uint);
 enum ag_rcs_status AG_RcsStatus(AG_Object *, const char *, const char *,
-		                char *, char *, u_int *, u_int *);
+		                char *, char *, Uint *, Uint *);
 int AG_RcsLog(const char *, struct ag_tlist *);
 int AG_RcsList(struct ag_tlist *);
 int AG_RcsDelete(const char *);

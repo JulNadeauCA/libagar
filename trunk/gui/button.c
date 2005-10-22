@@ -68,7 +68,7 @@ AG_ButtonNew(void *parent, const char *caption)
 }
 
 AG_Button *
-AG_ButtonAct(void *parent, const char *caption, u_int flags,
+AG_ButtonAct(void *parent, const char *caption, Uint flags,
     void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *btn;
@@ -105,7 +105,7 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 }
 
 void
-AG_ButtonInit(AG_Button *bu, const char *caption, u_int flags)
+AG_ButtonInit(AG_Button *bu, const char *caption, Uint flags)
 {
 	SDL_Surface *label;
 

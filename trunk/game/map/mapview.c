@@ -853,7 +853,7 @@ AG_MapviewUpdateCamera(AG_Mapview *mv)
 }
 
 void
-AG_MapviewSetScale(AG_Mapview *mv, u_int zoom, int adj_offs)
+AG_MapviewSetScale(AG_Mapview *mv, Uint zoom, int adj_offs)
 {
 	int old_tilesz = AGMTILESZ(mv);
 	int x, y;

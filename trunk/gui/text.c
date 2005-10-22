@@ -88,7 +88,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	char name[AG_FONT_NAME_MAX];
 	AG_Font *font;
 	int size = (psize >= 0) ? psize : AG_Int(agConfig, "font.size");
-	u_int flags = (pflags >= 0) ? pflags : AG_Uint(agConfig, "font.flags");
+	Uint flags = (pflags >= 0) ? pflags : AG_Uint(agConfig, "font.flags");
 
 	if (pname != NULL) {
 		strlcpy(name, pname, sizeof(name));
@@ -312,7 +312,7 @@ AG_TextDestroy(void)
 #endif
 }
 
-static __inline__ u_int
+static __inline__ Uint
 hash_glyph(Uint32 ch)
 {
 	return (ch % GLYPH_NBUCKETS);
@@ -324,7 +324,7 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
     Uint32 ch)
 {
 	AG_Glyph *gl;
-	u_int h;
+	Uint h;
 
 	h = hash_glyph(ch);
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
@@ -368,7 +368,7 @@ void
 AG_TextUnusedGlyph(AG_Glyph *gl)
 {
 	if (--gl->nrefs == 0) {
-		u_int h;
+		Uint h;
 
 		h = hash_glyph(gl->ch);
 		SLIST_REMOVE(&agGlyphCache[h].glyphs, gl, ag_glyph, glyphs);
@@ -432,7 +432,7 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 		size_t i, text_len;
 		SDL_Surface *su0, *gsu, *su;
 		SDL_Rect rd;
-		u_int w = 0, h = 0;
+		Uint w = 0, h = 0;
 		Uint32 c;
 
 		/* TODO support for size variants or scaling */
@@ -572,13 +572,13 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 
 /* Prompt the user with a choice of options. */
 AG_Window *
-AG_TextPromptOptions(AG_Button **bOpts, u_int nbOpts, const char *fmt, ...)
+AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 {
 	char text[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_Box *bo;
 	va_list ap;
-	u_int i;
+	Uint i;
 
 	va_start(ap, fmt);
 	vsnprintf(text, sizeof(text), fmt, ap);
@@ -748,7 +748,7 @@ AG_TextParseFontSpec(const char *fontspec)
 	}
 	if ((s = strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		u_int flags = 0;
+		Uint flags = 0;
 
 		for (c = &s[0]; *c != '\0'; c++) {
 			switch (*c) {

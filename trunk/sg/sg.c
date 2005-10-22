@@ -88,7 +88,7 @@ SG_Load(void *obj, AG_Netbuf *buf)
 }
 
 SG_Node *
-SG_AddNode(SG_Node *pNode, const SG_NodeOps *ops, u_int flags)
+SG_AddNode(SG_Node *pNode, const SG_NodeOps *ops, Uint flags)
 {
 	SG_Node *n;
 

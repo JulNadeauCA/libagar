@@ -18,7 +18,7 @@ __BEGIN_DECLS
 void AG_ConfigInit(AG_Config *);
 int  AG_ConfigLoad(void *, AG_Netbuf *);
 int  AG_ConfigSave(void *, AG_Netbuf *);
-void AG_ConfigWindow(AG_Config *, u_int);
+void AG_ConfigWindow(AG_Config *, Uint);
 int  AG_ConfigFile(const char *, const char *, const char *, char *, size_t)
 		   BOUNDED_ATTRIBUTE(__string__, 4, 5);
 void AG_ShowSettings(void);

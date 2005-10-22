@@ -357,7 +357,7 @@ AG_FSpinbuttonDraw(void *p)
 		AG_TextboxPrintf(fsu->input, "%d", *(int *)value);
 		break;
 	case AG_WIDGET_UINT:
-		AG_TextboxPrintf(fsu->input, "%u", *(u_int *)value);
+		AG_TextboxPrintf(fsu->input, "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
 		AG_TextboxPrintf(fsu->input, "%u", *(Uint8 *)value);
@@ -414,7 +414,7 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 		*(int *)value = (int)n;
 		break;
 	case AG_WIDGET_UINT:
-		n = AG_Base2Unit((double)(*(u_int *)value), fsu->unit);
+		n = AG_Base2Unit((double)(*(Uint *)value), fsu->unit);
 		if ((n+inc) < *min) {
 			n = *min;
 		} else if ((n+inc) > *max) {
@@ -422,7 +422,7 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 		} else {
 			n += inc;
 		}
-		*(u_int *)value = (u_int)n;
+		*(Uint *)value = (Uint)n;
 		break;
 	case AG_WIDGET_UINT8:
 		n = AG_Base2Unit((double)(*(Uint8 *)value), fsu->unit);
@@ -474,9 +474,9 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 				(int)nvalue;
 		break;
 	case AG_WIDGET_UINT:
-		*(u_int *)value = nvalue < *min ? (u_int)*min :
-		                  nvalue > *max ? (u_int)*max :
-				  (u_int)nvalue;
+		*(Uint *)value = nvalue < *min ? (Uint)*min :
+		                  nvalue > *max ? (Uint)*max :
+				  (Uint)nvalue;
 		break;
 	case AG_WIDGET_UINT8:
 		*(Uint8 *)value = nvalue < *min ? (Uint8)*min :

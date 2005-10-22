@@ -125,7 +125,7 @@ static void
 set_speed(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
-	u_int factor = AG_INT(2);
+	Uint factor = AG_INT(2);
 
 	av->speed = factor;
 }

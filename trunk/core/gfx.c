@@ -78,7 +78,7 @@ AG_SpriteInit(AG_Gfx *gfx, Uint32 s)
 #endif
 }
 
-u_int
+Uint
 AG_SpriteGetWtiles(AG_Sprite *spr)
 {
 	int w;
@@ -92,7 +92,7 @@ AG_SpriteGetWtiles(AG_Sprite *spr)
 }
 
 void
-AG_SpriteGetNodeAttrs(AG_Sprite *spr, u_int *w, u_int *h)
+AG_SpriteGetNodeAttrs(AG_Sprite *spr, Uint *w, Uint *h)
 {
 	if (spr->su != NULL) {
 		*w = spr->su->w/AGTILESZ;
@@ -344,7 +344,7 @@ AG_GfxAddFragments(AG_Gfx *gfx, SDL_Surface *sprite)
 {
 	char mapname[AG_OBJECT_NAME_MAX];
 	int x, y, mx, my;
-	u_int mw, mh;
+	Uint mw, mh;
 	SDL_Rect sd, rd;
 	AG_Map *fragmap;
 
@@ -661,17 +661,17 @@ AG_GfxLoad(AG_Object *ob)
 		spr->snap_mode = (enum ag_gfx_snap_mode)AG_ReadUint8(buf);
 
 		if (AG_ReadUint8(buf)) {
-			u_int nw, nh;
+			Uint nw, nh;
 			int x, y;
 
 			AG_SpriteGetNodeAttrs(spr, &nw, &nh);
 			dprintf("%s: %d,%d attributes\n", ob->name, nw, nh);
-			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(u_int));
+			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(Uint));
 			spr->layers = Realloc(spr->layers, nw*nh*sizeof(int));
 			for (y = 0; y < nh; y++) {
 				for (x = 0; x < nw; x++) {
 					spr->attrs[y*nw + x] =
-					    (u_int)AG_ReadUint32(buf);
+					    (Uint)AG_ReadUint32(buf);
 					spr->layers[y*nw + x] =
 					    (int)AG_ReadSint32(buf);
 				}
@@ -737,7 +737,7 @@ AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 
 		if (spr->attrs != NULL && spr->layers != NULL) {
 			int x, y;
-			u_int nw, nh;
+			Uint nw, nh;
 
 			AG_WriteUint8(buf, 1);
 			AG_SpriteGetNodeAttrs(spr, &nw, &nh);

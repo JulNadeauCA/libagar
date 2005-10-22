@@ -18,7 +18,7 @@
 typedef struct ag_file_type {
 	const char *descr;			/* Description */
 	char **exts;				/* Filename extensions */
-	u_int nexts;
+	Uint nexts;
 	AG_Event *action;			/* Action (save/load) */
 	TAILQ_ENTRY(ag_file_type) types;
 } AG_FileType;

@@ -40,7 +40,7 @@
 
 #include "tableview.h"
 
-#define ID_INVALID ((u_int)-1)
+#define ID_INVALID ((Uint)-1)
 #define VISROW(tv,i) ((tv)->visible.items[i].row)
 #define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
 
@@ -74,9 +74,9 @@ static AG_TableviewRow *row_get(struct ag_tableview_rowq *, AG_TableviewRowID);
 static void select_all(struct ag_tableview_rowq *);
 static void deselect_all(struct ag_tableview_rowq *);
 static int count_visible_descendants(struct ag_tableview_rowq *, int);
-static void switch_columns(AG_Tableview *, u_int, u_int);
+static void switch_columns(AG_Tableview *, Uint, Uint);
 static int visible(AG_TableviewRow *);
-static void render_dyncolumn(AG_Tableview *, u_int);
+static void render_dyncolumn(AG_Tableview *, Uint);
 static int clicked_header(AG_Tableview *, int, int, Uint32, void *, void *);
 static int clicked_row(AG_Tableview *, int, int, Uint32, void *, void *);
 static int draw_column(AG_Tableview *, int, int, Uint32, void *, void *);
@@ -201,7 +201,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
     const char *label, const char *size)
 {
 	AG_TableviewCol *col = NULL;
-	u_int i;
+	Uint i;
 
 	if (tv->locked || cid == ID_INVALID)
 		return (NULL);
@@ -277,7 +277,7 @@ out:
 void
 AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 {
-	u_int i, ind = -1, valid = 0;
+	Uint i, ind = -1, valid = 0;
 
 	AG_MutexLock(&tv->lock);
 
@@ -297,7 +297,7 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 }
 
 void
-AG_TableviewSetUpdate(AG_Tableview *tv, u_int ms)
+AG_TableviewSetUpdate(AG_Tableview *tv, Uint ms)
 {
 	AG_MutexLock(&tv->lock);
 	tv->visible.redraw_rate = ms;
@@ -309,7 +309,7 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
     AG_TableviewRow *parent, void *userp, AG_TableviewRowID rid, ...)
 {
 	AG_TableviewRow *row;
-	u_int i;
+	Uint i;
 	va_list ap;
 	AG_TableviewColID cid;
 
@@ -405,7 +405,7 @@ tableview_row_destroy(AG_Tableview *tv, AG_TableviewRow *row)
 void
 AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 {
-	u_int i;
+	Uint i;
 	AG_TableviewRow *row1, *row2;
 
 	if (row == NULL)
@@ -575,7 +575,7 @@ void
 AG_TableviewDestroy(void *p)
 {
 	AG_Tableview *tv = p;
-	u_int i;
+	Uint i;
 
 	AG_MutexLock(&tv->lock);
 
@@ -594,7 +594,7 @@ void
 AG_TableviewScale(void *p, int w, int h)
 {
 	AG_Tableview *tv = p;
-	u_int rows_per_view, i;
+	Uint rows_per_view, i;
 
 	AG_MutexLock(&tv->lock);
 
@@ -641,7 +641,7 @@ AG_TableviewScale(void *p, int w, int h)
 	}
 	/* calculate widths for AG_TABLEVIEW_COL_FILL cols */
 	{
-		u_int fill_cols, nonfill_width, fill_width;
+		Uint fill_cols, nonfill_width, fill_width;
 
 		fill_cols = 0;
 		nonfill_width = 0;
@@ -702,7 +702,7 @@ void
 AG_TableviewDraw(void *p)
 {
 	AG_Tableview *tv = p;
-	u_int i;
+	Uint i;
 	int y, update = 0;
 	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
 
@@ -762,7 +762,7 @@ foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
     void *arg2)
 {
 	int x, first_col, col_width;
-	u_int i;
+	Uint i;
 	int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
 	int view_edge = (tv->sbar_h ? AG_WidgetInt(tv->sbar_h, "value") : 0);
 
@@ -809,7 +809,7 @@ view_changed(AG_Tableview *tv)
 	int view_height = AGWIDGET(tv)->h - (tv->sbar_h != NULL ?
 			                   AGWIDGET(tv->sbar_h)->h : 0);
 	int scrolling_area = AGWIDGET(tv->sbar_v)->h - tv->sbar_v->bw*2;
-	u_int i;
+	Uint i;
 
 	/* cancel double clicks if what's under it changes it */
 	tv->dblclicked = 0;
@@ -864,7 +864,7 @@ view_changed_check(AG_Tableview *tv, struct ag_tableview_rowq* in, int depth,
     int filled, int *seen)
 {
 	AG_TableviewRow *row;
-	u_int x = 0;
+	Uint x = 0;
 
 	TAILQ_FOREACH(row, in, siblings) {
 		if (*seen) {
@@ -971,7 +971,7 @@ count_visible_descendants(struct ag_tableview_rowq *in, int i)
 
 /* switch column a with column b */
 static void
-switch_columns(AG_Tableview * tv, u_int a, u_int b)
+switch_columns(AG_Tableview * tv, Uint a, Uint b)
 {
 	AG_TableviewCol col_tmp;
 
@@ -1006,10 +1006,10 @@ visible(AG_TableviewRow *in)
 }
 
 static void
-render_dyncolumn(AG_Tableview *tv, u_int idx)
+render_dyncolumn(AG_Tableview *tv, Uint idx)
 {
 	char *celltext;
-	u_int i, cidx = tv->column[idx].idx;
+	Uint i, cidx = tv->column[idx].idx;
 
 	for (i = 0; i < tv->visible.count; i++) {
 		AG_TableviewRow *row = VISROW(tv,i);
@@ -1076,7 +1076,7 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 	int depth = 0;
 	int ts = tv->row_height/2 + 1;
 	SDLMod modifiers = SDL_GetModState();
-	u_int i, j, row_idx;
+	Uint i, j, row_idx;
 	int px;
 
 	if (x < visible_start || x >= visible_end)
@@ -1193,7 +1193,7 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 {
 	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
 	const int *update = (int *)arg1;
-	u_int j, cidx = tv->column[idx].idx;
+	Uint j, cidx = tv->column[idx].idx;
 	int y;
 
 	/* draw label for this column */
@@ -1281,7 +1281,7 @@ mousebuttonup(AG_Event *event)
 	AG_Tableview *tv = AG_SELF();
 	int coord_x = AG_INT(2), coord_y = AG_INT(3);
 	int left;
-	u_int i;
+	Uint i;
 
 	AG_CancelEvent(tv, "column-resize");
 	AG_CancelEvent(tv, "column-move");
@@ -1400,7 +1400,7 @@ static void
 columnmove(AG_Event *event)
 {
 	AG_Tableview *tv = AG_SELF();
-	u_int col = AG_UINT(1);
+	Uint col = AG_UINT(1);
 	int left = AG_INT(2);
 	int x;
 

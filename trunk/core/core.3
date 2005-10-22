@@ -47,19 +47,19 @@ mode, the font engine and the attachment of input devices.
 .Pp
 .nr nS 1
 .Ft "int"
-.Fn AG_InitCore "const char *progname" "u_int flags"
+.Fn AG_InitCore "const char *progname" "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_InitVideo "int w" "int h" "int depth" "u_int flags"
+.Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_InitInput "u_int flags"
+.Fn AG_InitInput "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_InitNetwork "u_int flags"
+.Fn AG_InitNetwork "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_InitConfigWin "u_int flags"
+.Fn AG_InitConfigWin "Uint flags"
 .Pp
 .Ft "void"
 .Fn AG_AtExitFunc "void (*fn)(void)"

@@ -38,7 +38,7 @@ enum tileview_val_type {
 
 union rg_tileview_val {
 	int i;
-	u_int ui;
+	Uint ui;
 	float f;
 	double d;
 	void *p;
@@ -58,9 +58,9 @@ typedef struct rg_tileview_ctrl {
 
 	enum tileview_val_type	*valtypes;		/* Entry types */
 	union rg_tileview_val	*vals;			/* Values/pointers */
-	u_int			nvals;
+	Uint			nvals;
 	struct rg_tileview_handle *handles;		/* User handles */
-	u_int			  nhandles;
+	Uint			  nhandles;
 
 	VG *vg;					/* For RG_TILEVIEW_VERTEX */
 	VG_Element *vge;
@@ -265,8 +265,8 @@ __inline__ void	  RG_TileviewSetFloat(RG_TileviewCtrl *, int, float);
 __inline__ double RG_TileviewDouble(RG_TileviewCtrl *, int);
 __inline__ void	  RG_TileviewSetDouble(RG_TileviewCtrl *, int, double);
 
-#define RG_TileviewUint(ctrl,nval) (u_int)RG_TileviewInt((ctrl),(nval))
-#define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(u_int)(v))
+#define RG_TileviewUint(ctrl,nval) (Uint)RG_TileviewInt((ctrl),(nval))
+#define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(Uint)(v))
 
 void RG_TileviewSelectTool(RG_Tileview *, RG_TileviewTool *);
 void RG_TileviewUnselectTool(RG_Tileview *);

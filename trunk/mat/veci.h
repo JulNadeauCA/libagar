@@ -13,7 +13,7 @@ struct veci {
 typedef struct veci veci_t;
 
 __BEGIN_DECLS
-veci_t		*veci_new(u_int);
+veci_t		*veci_new(Uint);
 __inline__ void	 veci_set(veci_t *, int);
 __inline__ void	 veci_copy(const veci_t *, veci_t *);
 __inline__ void	 veci_free(veci_t *);

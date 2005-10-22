@@ -734,10 +734,10 @@ VG_Vertex2(VG *vg, double x, double y)
 
 /* Push a series of vertices onto the vertex array. */
 void
-VG_VertexV(VG *vg, const VG_Vtx *svtx, u_int nsvtx)
+VG_VertexV(VG *vg, const VG_Vtx *svtx, Uint nsvtx)
 {
 	VG_Element *vge = vg->cur_vge;
-	u_int i;
+	Uint i;
 	
 	for (i = 0; i < nsvtx; i++) {
 		VG_Vtx *vtx;
@@ -1314,13 +1314,13 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		vge->text_st.flags = (int)AG_ReadUint32(buf);
 
 		/* Load the vertices. */
-		vge->nvtx = (u_int)AG_ReadUint32(buf);
+		vge->nvtx = (Uint)AG_ReadUint32(buf);
 		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx), M_VG);
 		for (j = 0; j < vge->nvtx; j++)
 			AG_ReadVertex(buf, &vge->vtx[j]);
 
 		/* Load the matrices. */
-		vge->ntrans = (u_int)AG_ReadUint32(buf);
+		vge->ntrans = (Uint)AG_ReadUint32(buf);
 		vge->trans = Malloc(vge->ntrans*sizeof(VG_Matrix), M_VG);
 		for (j = 0; j < vge->ntrans; j++)
 			VG_LoadMatrix(&vge->trans[j], buf);

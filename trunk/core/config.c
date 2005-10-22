@@ -268,7 +268,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	
 	agRcsMode = (int)AG_ReadUint8(buf);
 	AG_CopyString(agRcsHostname, buf, sizeof(agRcsHostname));
-	agRcsPort = (u_int)AG_ReadUint16(buf);
+	agRcsPort = (Uint)AG_ReadUint16(buf);
 	AG_CopyString(agRcsUsername, buf, sizeof(agRcsUsername));
 	AG_CopyString(agRcsPassword, buf, sizeof(agRcsPassword));
 
@@ -417,7 +417,7 @@ AG_SaveColorSchemeDlg(AG_Event *event)
 }
 
 void
-AG_ConfigWindow(AG_Config *cfg, u_int flags)
+AG_ConfigWindow(AG_Config *cfg, Uint flags)
 {
 	AG_Window *win;
 	AG_VBox *vb;

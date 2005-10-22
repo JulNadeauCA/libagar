@@ -73,7 +73,7 @@ AG_PixmapFromSurfaceCopy(void *parent, SDL_Surface *su)
 }
 
 AG_Pixmap *
-AG_PixmapFromSurfaceScaled(void *parent, SDL_Surface *su, u_int w, u_int h)
+AG_PixmapFromSurfaceScaled(void *parent, SDL_Surface *su, Uint w, Uint h)
 {
 	AG_Pixmap *px;
 	SDL_Surface *su2;
@@ -110,7 +110,7 @@ AG_PixmapFromXCF(void *parent, const char *path)
 	AG_Pixmap *px;
 	SDL_Surface *su;
 	AG_Netbuf *buf;
-	u_int i;
+	Uint i;
 	
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
@@ -151,7 +151,7 @@ AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
 }
 
 int
-AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, u_int w, u_int h)
+AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 {
 	SDL_Surface *su2;
 	

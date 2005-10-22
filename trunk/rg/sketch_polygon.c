@@ -64,7 +64,7 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 {
 	RG_Texture *tex = NULL;
 	VG_Vtx *vtx = vge->vtx;
-	u_int i, nvtx = vge->nvtx;
+	Uint i, nvtx = vge->nvtx;
 	int x, y, x1, y1, x2, y2;
 	int miny, maxy;
 	int ind1, ind2;

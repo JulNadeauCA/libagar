@@ -350,7 +350,7 @@ AG_MSpinbuttonDraw(void *p)
 		break;
 	case AG_WIDGET_UINT:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
-		    *(u_int *)xvalue, sbu->sep, *(u_int *)yvalue);
+		    *(Uint *)xvalue, sbu->sep, *(Uint *)yvalue);
 		break;
 	case AG_WIDGET_UINT8:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
@@ -399,9 +399,9 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 			*(int *)value += inc;
 		break;
 	case AG_WIDGET_UINT:
-		if (*(u_int *)value+inc >= *min &&
-		    *(u_int *)value+inc <= *max)
-			*(u_int *)value += inc;
+		if (*(Uint *)value+inc >= *min &&
+		    *(Uint *)value+inc <= *max)
+			*(Uint *)value += inc;
 		break;
 	case AG_WIDGET_UINT8:
 		if (*(Uint8 *)value+inc >= *min &&
@@ -474,14 +474,14 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 		break;
 	case AG_WIDGET_UINT:
 		{
-			u_int i = va_arg(ap, unsigned int);
+			Uint i = va_arg(ap, unsigned int);
 
-			if (i < (u_int)*min) {
-				*(u_int *)value = *min;
-			} else if (i > (u_int)*max) {
-				*(u_int *)value = *max;
+			if (i < (Uint)*min) {
+				*(Uint *)value = *min;
+			} else if (i > (Uint)*max) {
+				*(Uint *)value = *max;
 			} else {
-				*(u_int *)value = i;
+				*(Uint *)value = i;
 			}
 		}
 		break;

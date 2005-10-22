@@ -36,7 +36,7 @@
 
 /* Allocate a new, uninitialized matrix of m rows by n columns. */
 mat_t *
-mat_new(u_int m, u_int n)
+mat_new(Uint m, Uint n)
 {
 	mat_t *M;
 
@@ -46,9 +46,9 @@ mat_new(u_int m, u_int n)
 }
 
 void
-mat_alloc_elements(mat_t *M, u_int m, u_int n)
+mat_alloc_elements(mat_t *M, Uint m, Uint n)
 {
-	u_int i;
+	Uint i;
 
 	if (m != 0 && n != 0) {
 		M->mat = Malloc((m+1)*sizeof(double), M_MATH);
@@ -64,7 +64,7 @@ mat_alloc_elements(mat_t *M, u_int m, u_int n)
 
 /* Resize a matrix, leaving any new element uninitialized. */
 void
-mat_resize(mat_t *M, u_int m, u_int n)
+mat_resize(mat_t *M, Uint m, Uint n)
 {
 	mat_free_elements(M);
 	mat_alloc_elements(M, m, n);
@@ -74,7 +74,7 @@ mat_resize(mat_t *M, u_int m, u_int n)
 void
 mat_set(mat_t *M, double v)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++)
 		for (n = 1; n <= M->n; n++)
@@ -85,7 +85,7 @@ mat_set(mat_t *M, double v)
 void
 mat_compose21(mat_t *A, const mat_t *G, const mat_t *B)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= G->m; m++) {
 		for (n = 1; n <= G->n; n++)
@@ -101,7 +101,7 @@ mat_compose21(mat_t *A, const mat_t *G, const mat_t *B)
 void
 mat_compose12(mat_t *A, const mat_t *G, const mat_t *B)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= G->m; m++) {
 		for (n = 1; n <= G->n; n++)
@@ -118,7 +118,7 @@ void
 mat_compose22(mat_t *A, const mat_t *G, const mat_t *B, const mat_t *C,
     const mat_t *D)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= G->m; m++) {
 		for (n = 1; n <= G->n; n++)
@@ -142,7 +142,7 @@ mat_compose22(mat_t *A, const mat_t *G, const mat_t *B, const mat_t *C,
 void
 mat_set_identity(mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	if (!mat_is_square(M))
 		fatal("not a square matrix");
@@ -156,7 +156,7 @@ mat_set_identity(mat_t *M)
 int
 mat_is_ident(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	if (!mat_is_square(M))
 		return (0);
@@ -179,7 +179,7 @@ mat_is_ident(const mat_t *M)
 int
 mat_is_L(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = m+1; n <= M->n; n++) {
@@ -194,7 +194,7 @@ mat_is_L(const mat_t *M)
 int
 mat_is_L_normed(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		if (M->mat[m][m] != 1.0) {
@@ -212,7 +212,7 @@ mat_is_L_normed(const mat_t *M)
 int
 mat_is_L_strict(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = m; n <= M->n; n++) {
@@ -227,7 +227,7 @@ mat_is_L_strict(const mat_t *M)
 int
 mat_is_U(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = m-1; n >= 1; n--) {
@@ -242,7 +242,7 @@ mat_is_U(const mat_t *M)
 int
 mat_is_U_normed(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		if (M->mat[m][m] != 1.0) {
@@ -260,7 +260,7 @@ mat_is_U_normed(const mat_t *M)
 int
 mat_is_U_strict(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = m; n >= 1; n--) {
@@ -275,7 +275,7 @@ mat_is_U_strict(const mat_t *M)
 int
 mat_is_zero(const mat_t *M)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 1; m <= M->m; m++) {
 		for (n = 1; n <= M->n; n++) {
@@ -290,7 +290,7 @@ mat_is_zero(const mat_t *M)
 int
 mat_is_symmetric(const mat_t *A)
 {
-	u_int m, n;
+	Uint m, n;
 
 	if (!mat_is_square(A))
 		return (0);
@@ -308,7 +308,7 @@ mat_is_symmetric(const mat_t *A)
 void
 mat_copy(const mat_t *A, mat_t *B)
 {
-	u_int n, m;
+	Uint n, m;
 	
 	assert_same_dimensions(A, B);
 
@@ -321,7 +321,7 @@ mat_t *
 mat_dup(const mat_t *A)
 {
 	mat_t *B;
-	u_int m, n;
+	Uint m, n;
 
 	B = mat_new(A->m, A->n);
 	for (m = 1; m <= A->m; m++) {
@@ -335,7 +335,7 @@ mat_dup(const mat_t *A)
 void
 mat_sum(const mat_t *A, mat_t *B)
 {
-	u_int n, m;
+	Uint n, m;
 	
 	assert_same_dimensions(A, B);
 
@@ -349,7 +349,7 @@ mat_t *
 mat_dsum(const mat_t *A, const mat_t *B)
 {
 	mat_t *P;
-	u_int m, n;
+	Uint m, n;
 
 	P = mat_new(A->m+B->m, A->n+B->n);
 	for (m = 1; m <= P->m; m++) {
@@ -370,7 +370,7 @@ mat_dsum(const mat_t *A, const mat_t *B)
 mat_t *
 mat_transpose(const mat_t *A, mat_t *At)
 {
-	u_int m, n;
+	Uint m, n;
 	mat_t *T;
 
 	if (At != NULL) {
@@ -396,7 +396,7 @@ double
 mat_trace(const mat_t *A)
 {
 	double sum = 0.0;
-	u_int n;
+	Uint n;
 
 	if (!mat_is_square(A))
 		fatal("not a square matrix");
@@ -417,7 +417,7 @@ mat_trace(const mat_t *A)
 void
 mat_mul(const mat_t *A, const mat_t *B, mat_t *C)
 {
-	u_int i, j, k;
+	Uint i, j, k;
 
 	if (A->n != B->m)
 		fatal("A = %d columns, B = %d rows", A->n, B->m);
@@ -440,7 +440,7 @@ mat_mul(const mat_t *A, const mat_t *B, mat_t *C)
 void
 mat_hmul(const mat_t *A, const mat_t *B, mat_t *C)
 {
-	u_int i, j;
+	Uint i, j;
 
 	assert_same_dimensions(A, B);
 	assert_same_dimensions(B, C);

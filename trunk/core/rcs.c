@@ -45,7 +45,7 @@
 char agRcsHostname[64] = "localhost";
 char agRcsUsername[32] = "anonymous";
 char agRcsPassword[32] = "";
-u_int agRcsPort = 6785;
+Uint agRcsPort = 6785;
 int agRcsMode = 0;
 
 #ifdef NETWORK
@@ -106,7 +106,7 @@ AG_RcsDisconnect(void)
 
 /* Get the working revision of an object. */
 int
-AG_RcsGetWorkingRev(AG_Object *ob, u_int *pRev)
+AG_RcsGetWorkingRev(AG_Object *ob, Uint *pRev)
 {
 	char path[MAXPATHLEN];
 	char buf[12];
@@ -146,7 +146,7 @@ AG_RcsGetWorkingRev(AG_Object *ob, u_int *pRev)
 
 /* Write the working revision of an object. */
 int
-AG_RcsSetWorkingRev(AG_Object *ob, u_int rev)
+AG_RcsSetWorkingRev(AG_Object *ob, Uint rev)
 {
 	char path[MAXPATHLEN];
 	FILE *f;
@@ -168,7 +168,7 @@ AG_RcsSetWorkingRev(AG_Object *ob, u_int rev)
 /* Obtain the RCS status of an object. */
 enum ag_rcs_status
 AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
-    char *name, char *type, u_int *repo_rev, u_int *working_rev)
+    char *name, char *type, Uint *repo_rev, Uint *working_rev)
 {
 	enum ag_rcs_status rv = AG_RCS_UPTODATE;
 	char *buf, *bufp;
@@ -200,7 +200,7 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 		    strcmp(val, digest) != 0) {
 			sum_match = 0;
 		} else if (strcmp(key, "r") == 0) {
-			*repo_rev = (u_int)strtol(val, NULL, 10);
+			*repo_rev = (Uint)strtol(val, NULL, 10);
 		} else if (strcmp(key, "t") == 0 && type != NULL) {
 			strlcpy(type, val, AG_OBJECT_TYPE_MAX);
 		} else if (strcmp(key, "n") == 0 && name != NULL) {
@@ -234,7 +234,7 @@ AG_RcsImport(AG_Object *ob)
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	size_t wrote = 0, len, rv;
-	u_int repo_rev, working_rev;
+	Uint repo_rev, working_rev;
 	FILE *f;
 	enum ag_rcs_status status;
 
@@ -274,7 +274,7 @@ AG_RcsImport(AG_Object *ob)
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
 	    &objdir[1], ob->name, ob->type,
-	    (u_long)len, digest) == -1)
+	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
 	if (client_read(&rcs_client, 12) <= 2 ||
@@ -312,7 +312,7 @@ AG_RcsImport(AG_Object *ob)
 	    _("Object %s successfully imported to repository.\n"
 	      "Size: %lu bytes\n"
 	      "%s\n"),
-	      ob->name, (u_long)wrote,
+	      ob->name, (Ulong)wrote,
 	      &rcs_client.read.buf[2]);
 
 	AG_RcsSetWorkingRev(ob, 1);
@@ -335,7 +335,7 @@ AG_RcsCommit(AG_Object *ob)
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	size_t wrote = 0, len, rv;
-	u_int repo_rev, working_rev;
+	Uint repo_rev, working_rev;
 	FILE *f;
 
 	if (AG_ObjectCopyName(ob, objdir, sizeof(objdir)) == -1 ||
@@ -386,7 +386,7 @@ AG_RcsCommit(AG_Object *ob)
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
 	    &objdir[1], ob->name, ob->type,
-	    (u_long)len, digest) == -1)
+	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
 	if (client_read(&rcs_client, 12) <= 2 ||
@@ -424,7 +424,7 @@ AG_RcsCommit(AG_Object *ob)
 	    _("Object %s successfully committed to repository.\n"
 	      "Size: %lu bytes\n"
 	      "%s\n"),
-	      ob->name, (u_long)wrote,
+	      ob->name, (Ulong)wrote,
 	      &rcs_client.read.buf[2]);
 
 	AG_RcsSetWorkingRev(ob, repo_rev+1);
@@ -447,7 +447,7 @@ AG_RcsUpdate(AG_Object *ob)
 	char objdir[AG_OBJECT_PATH_MAX];
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
-	u_int working_rev, repo_rev;
+	Uint working_rev, repo_rev;
 	struct response *res;
 	size_t len, wrote = 0;
 	FILE *f;
@@ -751,7 +751,7 @@ AG_RcsCheckout(const char *path)
 	char type[AG_OBJECT_TYPE_MAX];
 	char *buf, *s;
 	int i;
-	u_int rev = 0;
+	Uint rev = 0;
 	AG_Object *obj;
 	AG_ObjectType *t;
 
@@ -783,7 +783,7 @@ AG_RcsCheckout(const char *path)
 			strlcpy(digest, val, AG_OBJECT_DIGEST_MAX);
 			break;
 		case 'r':
-			rev = (u_int)strtol(val, NULL, 10);
+			rev = (Uint)strtol(val, NULL, 10);
 			break;
 		case 't':
 			strlcpy(type, val, AG_OBJECT_TYPE_MAX);

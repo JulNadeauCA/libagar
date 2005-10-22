@@ -308,8 +308,8 @@ item = AG_MenuAddItem(menu, "File");
 	AG_MenuAction(item, "Say hello", -1, hello, "%s", "world");
 	AG_MenuSeparator(item);
 	AG_MenuIntBool(item, "Some flag", -1, &someflag, 0);
-	menu_int16_bool(item, "Foo flag", -1, &flags, FOO_FLAG, 0);
-	menu_int16_bool(item, "Bar flag", -1, &flags, BAR_FLAG, 0);
+	menUint16_bool(item, "Foo flag", -1, &flags, FOO_FLAG, 0);
+	menUint16_bool(item, "Bar flag", -1, &flags, BAR_FLAG, 0);
 	AG_MenuSeparator(item);
 	AG_MenuAction(item, "Quit", CLOSE_ICON, quit_app, NULL);
 }

@@ -219,7 +219,7 @@ AG_PersoLoad(void *obj, AG_Netbuf *buf)
 	ps->hp = (int)AG_ReadUint32(buf);
 	ps->maxmp = (int)AG_ReadUint32(buf);
 	ps->mp = (int)AG_ReadUint32(buf);
-	ps->nzuars = (u_int)AG_ReadUint32(buf);
+	ps->nzuars = (Uint)AG_ReadUint32(buf);
 
 	AG_MutexUnlock(&ps->lock);
 	return (0);

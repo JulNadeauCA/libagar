@@ -14,7 +14,7 @@
 typedef struct ag_matview {
 	struct ag_widget wid;
 	struct mat *mat;		/* Matrix to view */
-	u_int flags;
+	Uint flags;
 	int ent_w, ent_h;		/* Size of entry */
 	const char *numfmt;		/* Numerical entry format */
 	int pre_m, pre_n;		/* Prescale dimensions */
@@ -25,10 +25,10 @@ typedef struct ag_matview {
 } AG_Matview;
 
 __BEGIN_DECLS
-AG_Matview *AG_MatviewNew(void *, struct mat *, u_int);
-void	    AG_MatviewInit(AG_Matview *, struct mat *, u_int);
+AG_Matview *AG_MatviewNew(void *, struct mat *, Uint);
+void	    AG_MatviewInit(AG_Matview *, struct mat *, Uint);
 void	    AG_MatviewScale(void *, int, int);
-void	    AG_MatviewPrescale(AG_Matview *, const char *, u_int, u_int);
+void	    AG_MatviewPrescale(AG_Matview *, const char *, Uint, Uint);
 void	    AG_MatviewSetNumericalFmt(AG_Matview *, const char *);
 void	    AG_MatviewDrawNumerical(void *);
 void	    AG_MatviewDrawGreyscale(void *);

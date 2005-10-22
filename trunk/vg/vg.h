@@ -178,9 +178,9 @@ typedef struct vg_element {
 	int mouseover;			/* Mouse overlap flag */
 
 	VG_Vtx	  *vtx;			/* Vertices */
-	u_int	  nvtx;
+	Uint	  nvtx;
 	VG_Matrix *trans;		/* Transformation matrices */
-	u_int     ntrans;
+	Uint     ntrans;
 
 	union {
 		struct vg_circle_args vg_circle;
@@ -243,7 +243,7 @@ typedef struct vg {
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
 
 	int *ints;			/* Used for scan conversion */
-	u_int nints;
+	Uint nints;
 
 	TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
@@ -313,7 +313,7 @@ __inline__ void	 VG_Color(VG *, Uint32);
 __inline__ void	 VG_Color3(VG *, int, int, int);
 __inline__ void	 VG_Color4(VG *, int, int, int, int);
 VG_Vtx		*VG_Vertex2(VG *, double, double);
-void		 VG_VertexV(VG *, const VG_Vtx *, u_int);
+void		 VG_VertexV(VG *, const VG_Vtx *, Uint);
 
 VG_Matrix	*VG_PushIdentity(VG *);
 VG_Matrix	*VG_Translate(VG *, double, double);

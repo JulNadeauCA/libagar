@@ -10,15 +10,15 @@
 
 typedef struct sg_view {
 	struct ag_glview glv;
-	u_int flags;
+	Uint flags;
 #define SG_VIEW_WFILL	0x01
 #define SG_VIEW_HFILL	0x02
 	SG *sg;
 } SG_View;
 
 __BEGIN_DECLS
-SG_View	*SG_ViewNew(void *, SG *, u_int);
-void	 SG_ViewInit(SG_View *, SG *, u_int);
+SG_View	*SG_ViewNew(void *, SG *, Uint);
+void	 SG_ViewInit(SG_View *, SG *, Uint);
 void	 SG_ViewDestroy(void *);
 
 void	 SG_ViewReshape(SG_View *);

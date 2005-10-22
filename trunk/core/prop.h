@@ -62,7 +62,7 @@ void		 AG_PropDestroy(AG_Prop *);
 AG_Prop	*AG_CopyProp(const AG_Prop *);
 AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...);
 AG_Prop	*AG_SetBool(void *, const char *, int);
-AG_Prop	*AG_SetUint(void *, const char *, u_int);
+AG_Prop	*AG_SetUint(void *, const char *, Uint);
 AG_Prop	*AG_SetInt(void *, const char *, int);
 AG_Prop	*AG_SetUint8(void *, const char *, Uint8);
 AG_Prop	*AG_SetSint8(void *, const char *, Sint8);
@@ -81,7 +81,7 @@ AG_Prop	*AG_SetPointer(void *, const char *, void *);
 
 AG_Prop		 *AG_GetProp(void *, const char *, enum ag_prop_type, void *);
 __inline__ int	  AG_Bool(void *, const char *);
-__inline__ u_int  AG_Uint(void *, const char *);
+__inline__ Uint  AG_Uint(void *, const char *);
 __inline__ int	  AG_Int(void *, const char *);
 __inline__ Uint8  AG_Uint8(void *, const char *);
 __inline__ Sint8  AG_Sint8(void *, const char *);

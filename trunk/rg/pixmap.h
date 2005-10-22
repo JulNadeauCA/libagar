@@ -20,7 +20,7 @@ struct rg_pixmap_mod {
 };
 struct rg_pixmap_undoblk {
 	struct rg_pixmap_mod *mods;	/* Undoable modifications */
-	u_int		     nmods;
+	Uint		     nmods;
 };
 
 enum rg_pixmap_blend_mode {
@@ -52,9 +52,9 @@ typedef struct rg_pixmap {
 	int xorig, yorig;		/* Pixmap origin point */
 	struct rg_tileset *ts;		/* Back pointer to tileset */
 	SDL_Surface *su;		/* Pixmap surface */
-	u_int nrefs;			/* Number of tile references */
+	Uint nrefs;			/* Number of tile references */
 	struct rg_pixmap_undoblk *ublks; /* Undo blocks */
-	u_int nublks, curblk;
+	Uint nublks, curblk;
 
 	float h, s, v, a;			/* Current pixel value */
 	struct rg_pixmap_brush *curbrush;	/* Current brush */

@@ -153,7 +153,7 @@ AG_ObjectGetClassInfo(const char *type, AG_ObjectClassInfo *cli)
 	char tpp[AG_OBJECT_TYPE_MAX], *tp = &tpp[0];
 	char tn[AG_OBJECT_TYPE_MAX];
 	char *s;
-	u_int i;
+	Uint i;
 
 	strlcpy(tpp, type, sizeof(tpp));
 	tn[0] = '\0';
@@ -181,7 +181,7 @@ AG_ObjectGetClassInfo(const char *type, AG_ObjectClassInfo *cli)
 void
 AG_ObjectFreeClassinfo(AG_ObjectClassInfo *cli)
 {
-	u_int i;
+	Uint i;
 
 	for (i = 0; i < cli->nclasses; i++) {
 		Free(cli->classes[i], 0);
@@ -1608,7 +1608,7 @@ AG_ObjectRenameUnique(AG_Object *obj)
 	char newname[AG_OBJECT_NAME_MAX];
 	size_t len, i;
 	char *c, *num;
-	u_int n = 0;
+	Uint n = 0;
 
 rename:
 	num = NULL;
@@ -1753,7 +1753,7 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 {
 	const AG_Object *ob = p;
 	char save_path[MAXPATHLEN];
-	u_char buf[BUFSIZ];
+	Uchar buf[BUFSIZ];
 	FILE *f;
 	off_t offs;
 	size_t totlen = 0;
@@ -1775,7 +1775,7 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 
 			MD5Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				MD5Update(&ctx, buf, (u_int)rv);
+				MD5Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
 			MD5End(&ctx, digest);
@@ -1787,7 +1787,7 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 
 			SHA1Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				SHA1Update(&ctx, buf, (u_int)rv);
+				SHA1Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
 			SHA1End(&ctx, digest);
@@ -1799,7 +1799,7 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 
 			RMD160Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				RMD160Update(&ctx, buf, (u_int)rv);
+				RMD160Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
 			RMD160End(&ctx, digest);
@@ -2022,7 +2022,7 @@ poll_events(AG_Event *event)
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		char args[AG_TLIST_LABEL_MAX], arg[16];
-		u_int i;
+		Uint i;
 
 		args[0] = '(';
 		args[1] = '\0';
@@ -2044,14 +2044,14 @@ poll_events(AG_Event *event)
 			case AG_EVARG_UCHAR:
 			case AG_EVARG_CHAR:
 				snprintf(arg, sizeof(arg), "'%c'",
-				    (u_char)ev->argv[i].i);
+				    (Uchar)ev->argv[i].i);
 				break;
 			case AG_EVARG_INT:
 				snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
 				break;
 			case AG_EVARG_UINT:
 				snprintf(arg, sizeof(arg), "%u",
-				    (u_int)ev->argv[i].i);
+				    (Uint)ev->argv[i].i);
 				break;
 			case AG_EVARG_LONG:
 				snprintf(arg, sizeof(arg), "%li",
@@ -2059,7 +2059,7 @@ poll_events(AG_Event *event)
 				break;
 			case AG_EVARG_ULONG:
 				snprintf(arg, sizeof(arg), "%li",
-				    (u_long)ev->argv[i].li);
+				    (Ulong)ev->argv[i].li);
 				break;
 			case AG_EVARG_FLOAT:
 				snprintf(arg, sizeof(arg), "<%g>",
@@ -2140,7 +2140,7 @@ refresh_rcs_status(AG_Event *event)
 	extern const char *agRcsStatusStrings[];
 	enum ag_rcs_status status;
 	size_t len;
-	u_int working_rev, repo_rev;
+	Uint working_rev, repo_rev;
 
 	if (AG_ObjectCopyName(ob, objdir, sizeof(objdir)) == -1 ||
 	    AG_ObjectCopyDigest(ob, &len, digest) == -1) {

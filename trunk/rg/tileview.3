@@ -190,7 +190,7 @@ with the origin at
 .Ft "int"
 .Fn RG_TileviewInt "RG_Tileview *tv" "int nval"
 .Pp
-.Ft "u_int"
+.Ft "Uint"
 .Fn RG_TileviewUint "RG_Tileview *tv" "int nval"
 .Pp
 .Ft "float"
@@ -203,7 +203,7 @@ with the origin at
 .Fn RG_TileviewSetInt "RG_Tileview *tv" "int nval" "int v"
 .Pp
 .Ft "void"
-.Fn RG_TileviewSetUint "RG_Tileview *tv" "int nval" "u_int v"
+.Fn RG_TileviewSetUint "RG_Tileview *tv" "int nval" "Uint v"
 .Pp
 .Ft "void"
 .Fn RG_TileviewSetFloat "RG_Tileview *tv" "int nval" "float v"
@@ -247,7 +247,7 @@ controls the position and radius of a circle.
 The special format string
 .Fa fmt
 and subsequent arguments specify the variables to edit.
-Acceptable sequences include %i (int), %u (u_int), %f (float) and %d (double).
+Acceptable sequences include %i (int), %u (Uint), %f (float) and %d (double).
 Sequences such as %*i specify that the argument is a pointer to the given type.
 .Pp
 The

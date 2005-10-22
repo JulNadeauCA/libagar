@@ -307,7 +307,7 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			*(int **)res = (int *)binding->p1;
 			break;
 		case AG_WIDGET_UINT:
-			*(u_int **)res = (u_int *)binding->p1;
+			*(Uint **)res = (Uint *)binding->p1;
 			break;
 		case AG_WIDGET_UINT8:
 			*(Uint8 **)res = (Uint8 *)binding->p1;
@@ -430,11 +430,11 @@ AG_WidgetInt(void *wid, const char *name)
 	return (rv);
 }
 
-u_int
+Uint
 AG_WidgetUint(void *wid, const char *name)
 {
 	AG_WidgetBinding *b;
-	u_int *i, rv;
+	Uint *i, rv;
 
 	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
 		fatal("%s", AG_GetError());
@@ -643,10 +643,10 @@ AG_WidgetSetInt(void *wid, const char *name, int ni)
 }
 
 void
-AG_WidgetSetUint(void *wid, const char *name, u_int ni)
+AG_WidgetSetUint(void *wid, const char *name, Uint ni)
 {
 	AG_WidgetBinding *binding;
-	u_int *i;
+	Uint *i;
 
 	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
 		fatal("%s", AG_GetError());
@@ -928,7 +928,7 @@ AG_WidgetDestroy(void *p)
 {
 	AG_Widget *wid = p;
 	AG_WidgetBinding *bind, *nbind;
-	u_int i;
+	Uint i;
 
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL)
@@ -1236,7 +1236,7 @@ AG_UnsetCursor(void)
 }
 
 void
-AG_WidgetPushClipRect(void *p, int x, int y, u_int w, u_int h)
+AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
 {
 	AG_Widget *wid = p;
 

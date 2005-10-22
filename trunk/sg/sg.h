@@ -32,7 +32,7 @@ typedef struct sg_node_ops {
 
 typedef struct sg_node {
 	const SG_NodeOps *ops;
-	u_int flags;
+	Uint flags;
 	SG_Matrix4 mTrans;		/* Transformation matrix */
 
 	TAILQ_HEAD(,sg_node) cnodes;	/* Child nodes */
@@ -41,7 +41,7 @@ typedef struct sg_node {
 
 typedef struct sg {
 	struct ag_object obj;
-	u_int flags;
+	Uint flags;
 
 	AG_Mutex lock;
 	SG_Node *root;			/* Parent node */
@@ -55,7 +55,7 @@ void	 SG_Destroy(void *);
 int	 SG_Save(void *, AG_Netbuf *);
 int	 SG_Load(void *, AG_Netbuf *);
 void	*SG_Edit(void *);
-SG_Node	*SG_AddNode(SG_Node *, const SG_NodeOps *, u_int);
+SG_Node	*SG_AddNode(SG_Node *, const SG_NodeOps *, Uint);
 __END_DECLS
 
 #include "close_code.h"

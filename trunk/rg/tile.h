@@ -55,16 +55,16 @@ typedef struct rg_tile {
 	SDL_Surface *su;
 	Sint32 s;			/* Index into gfx array */
 
-	u_int *attrs;			/* Node attributes */
+	Uint *attrs;			/* Node attributes */
 	int *layers;			/* Node layer offsets */
-	u_int nw, nh;			/* Node dimensions */
+	Uint nw, nh;			/* Node dimensions */
 
 	Uint8 flags;
 #define RG_TILE_SRCCOLORKEY	0x01	/* Colorkey source */
 #define RG_TILE_SRCALPHA	0x02	/* Alpha source */
 #define RG_TILE_DIRTY		0x04	/* Mark for redraw */
 	
-	u_int nrefs;			/* Reference count */
+	Uint nrefs;			/* Reference count */
 
 	SDL_Color c;			/* Current color (rgb) */
 	Uint32 pc;			/* Current color (pixel value) */
@@ -91,7 +91,7 @@ struct rg_tileview;
 __BEGIN_DECLS
 void	 	RG_TileInit(RG_Tile *, struct rg_tileset *, const char *);
 void		RG_TileScale(struct rg_tileset *, RG_Tile *, Uint16, Uint16,
-		             u_int, Uint8);
+		             Uint, Uint8);
 void		RG_TileGenerate(RG_Tile *);
 AG_Window  *RG_TileEdit(struct rg_tileset *, RG_Tile *);
 void		RG_TileDestroy(RG_Tile *);

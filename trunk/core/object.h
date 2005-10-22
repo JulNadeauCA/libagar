@@ -43,7 +43,7 @@ typedef struct ag_object_dep {
 typedef struct ag_object_classinfo {
 	char **classes;
 	struct ag_object_type **types;
-	u_int nclasses;
+	Uint nclasses;
 } AG_ObjectClassInfo;
 
 TAILQ_HEAD(ag_objectq, ag_object);
@@ -83,7 +83,7 @@ typedef struct ag_object {
 	AG_Gfx *gfx;
 	AG_Audio *audio;
 	Uint32 data_used;
-	u_int nevents;
+	Uint nevents;
 	TAILQ_HEAD(,ag_event) events;
 	TAILQ_HEAD(,ag_prop) props;
 	CIRCLEQ_HEAD(,ag_timeout) timeouts;

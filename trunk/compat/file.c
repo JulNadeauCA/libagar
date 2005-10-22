@@ -142,7 +142,7 @@ AG_FileExists(const char *path)
 			return (0);
 		} else {
 			AG_SetError("%s: failed (%lu)", path,
-			    (u_long)GetLastError());
+			    (Ulong)GetLastError());
 			return (-1);
 		}
 	} else {

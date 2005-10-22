@@ -66,7 +66,7 @@ static void kbdscroll(AG_Event *);
 #define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 2)
 
 AG_Table *
-AG_TableNew(void *parent, u_int flags)
+AG_TableNew(void *parent, Uint flags)
 {
 	AG_Table *t;
 
@@ -77,7 +77,7 @@ AG_TableNew(void *parent, u_int flags)
 }
 
 AG_Table *
-AG_TablePolled(void *parent, u_int flags, void (*fn)(AG_Event *),
+AG_TablePolled(void *parent, Uint flags, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Table *t;
@@ -93,7 +93,7 @@ AG_TablePolled(void *parent, u_int flags, void (*fn)(AG_Event *),
 }
 
 void
-AG_TableInit(AG_Table *t, u_int flags)
+AG_TableInit(AG_Table *t, Uint flags)
 {
 	AG_WidgetInit(t, "table", &agTableOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL|
@@ -139,7 +139,7 @@ void
 AG_TableDestroy(void *p)
 {
 	AG_Table *t = p;
-	u_int m, n;
+	Uint m, n;
 
 	for (m = 0; m < t->m; m++) {
 		for (n = 0; n < t->n; n++)
@@ -157,7 +157,7 @@ AG_TableDestroy(void *p)
 static void
 AG_TableSizeFillCols(AG_Table *t)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -211,13 +211,13 @@ AG_TablePrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 		snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
 		break;
 	case AG_CELL_PUINT:
-		snprintf(buf, bufsz, c->fmt, *(u_int *)c->data.p);
+		snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
 		break;
 	case AG_CELL_PLONG:
 		snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
 		break;
 	case AG_CELL_PULONG:
-		snprintf(buf, bufsz, c->fmt, *(u_long *)c->data.p);
+		snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
 		break;
 	case AG_CELL_FLOAT:
 		snprintf(buf, bufsz, c->fmt, (float)c->data.f);
@@ -472,7 +472,7 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 }
 
 int
-AG_TablePoolAdd(AG_Table *t, u_int m, u_int n)
+AG_TablePoolAdd(AG_Table *t, Uint m, Uint n)
 {
 	AG_TableCol *tc = &t->cols[n];
 	AG_TableCell *c1 = &t->cells[m][n], *c2;
@@ -483,10 +483,10 @@ AG_TablePoolAdd(AG_Table *t, u_int m, u_int n)
 }
 
 void
-AG_TablePoolFree(AG_Table *t, u_int n)
+AG_TablePoolFree(AG_Table *t, Uint n)
 {
 	AG_TableCol *tc = &t->cols[n];
-	u_int m;
+	Uint m;
 
 	for (m = 0; m < tc->mpool; m++) {
 		AG_TableFreeCell(t, &tc->pool[m]);
@@ -500,7 +500,7 @@ AG_TablePoolFree(AG_Table *t, u_int n)
 void
 AG_TableBegin(AG_Table *t)
 {
-	u_int m, n;
+	Uint m, n;
 
 	AG_MutexLock(&t->lock);
 
@@ -590,7 +590,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 void
 AG_TableEnd(AG_Table *t)
 {
-	u_int n, m, i;
+	Uint n, m, i;
 
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -637,7 +637,7 @@ static void
 column_sel(AG_Table *t, int px)
 {
 	AG_TableCell *c;
-	u_int n;
+	Uint n;
 	int cx;
 	int x = px - (COLUMN_RESIZE_RANGE/2);
 	int multi = multisel(t);
@@ -670,7 +670,7 @@ static void
 cell_sel(AG_Table *t, int mc, int x)
 {
 	AG_TableCell *c;
-	u_int m, n, i;
+	Uint m, n, i;
 
 	if (rangesel(t)) {
 		for (m = 0; m < t->m; m++) {
@@ -789,7 +789,7 @@ mousebuttonup(AG_Event *event)
 	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
-	u_int m, n;
+	Uint m, n;
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
@@ -825,7 +825,7 @@ static int
 column_resize_over(AG_Table *t, int px)
 {
 	int x = px - (COLUMN_RESIZE_RANGE/2);
-	u_int n;
+	Uint n;
 	int cx;
 
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
@@ -852,7 +852,7 @@ mousemotion(AG_Event *event)
 	int m;
 
 	AG_MutexLock(&t->lock);
-	if (t->nResizing >= 0 && (u_int)t->nResizing < t->n) {
+	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
 		if ((t->cols[t->nResizing].w += xrel) < COLUMN_MIN_WIDTH) {
 			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
 		}
@@ -901,9 +901,9 @@ lostfocus(AG_Event *event)
 }
 
 int
-AG_TableRowSelected(AG_Table *t, u_int m)
+AG_TableRowSelected(AG_Table *t, Uint m)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++) {
 		if (t->cells[m][n].selected)
@@ -913,18 +913,18 @@ AG_TableRowSelected(AG_Table *t, u_int m)
 }
 
 void
-AG_TableSelectRow(AG_Table *t, u_int m)
+AG_TableSelectRow(AG_Table *t, Uint m)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++)
 		t->cells[m][n].selected = 1;
 }
 
 void
-AG_TableDeselectRow(AG_Table *t, u_int m)
+AG_TableDeselectRow(AG_Table *t, Uint m)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++)
 		t->cells[m][n].selected = 0;
@@ -933,7 +933,7 @@ AG_TableDeselectRow(AG_Table *t, u_int m)
 void
 AG_TableDeselectAllRows(AG_Table *t)
 {
-	u_int m, n;
+	Uint m, n;
 
 	for (n = 0; n < t->n; n++) {
 		for (m = 0; m < t->m; m++)
@@ -944,7 +944,7 @@ AG_TableDeselectAllRows(AG_Table *t)
 void
 AG_TableSelectAllCols(AG_Table *t)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++)
 		t->cols[n].selected = 1;
@@ -953,7 +953,7 @@ AG_TableSelectAllCols(AG_Table *t)
 void
 AG_TableDeselectAllCols(AG_Table *t)
 {
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < t->n; n++)
 		t->cols[n].selected = 0;
@@ -964,7 +964,7 @@ kbdscroll(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
-	u_int m2, n;
+	Uint m2, n;
 	int m;
 	
 	AG_MutexLock(&t->lock);
@@ -1002,7 +1002,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 {
 	AG_TableCol *tc, *lc;
 	AG_TableCell *c;
-	u_int m, n;
+	Uint m, n;
 
 	AG_MutexLock(&t->lock);
 
@@ -1071,7 +1071,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 {
 	char fmt[64], *sp = &fmt[0];
 	va_list ap;
-	u_int n;
+	Uint n;
 
 	strlcpy(fmt, fmtp, sizeof(fmt));
 
@@ -1197,7 +1197,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->type = AG_CELL_PULONG;
 				} else {
 					c->type = AG_CELL_ULONG;
-					c->data.l = va_arg(ap, u_long);
+					c->data.l = va_arg(ap, Ulong);
 				}
 			}
 			break;
@@ -1235,7 +1235,7 @@ int
 AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 {
 	char txt[AG_TABLE_TXT_MAX];
-	u_int m, n;
+	Uint m, n;
 
 	AG_MutexLock(&t->lock);
 	for (n = 0; n < t->n; n++) {

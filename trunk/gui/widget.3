@@ -262,7 +262,7 @@ direct video agPrim in OpenGL mode.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetPushClipRect "void *widget" "int x" "int y" "u_int w" "u_int h"
+.Fn AG_WidgetPushClipRect "void *widget" "int x" "int y" "Uint w" "Uint h"
 .Pp
 .Ft void
 .Fn AG_WidgetPopClipRect "void *widget"
@@ -445,7 +445,7 @@ is called to override those default bindings.
 .Ft int
 .Fn AG_WidgetInt "void *widget" "const char *binding"
 .Pp
-.Ft "u_int"
+.Ft "Uint"
 .Fn AG_WidgetUint "void *widget" "const char *binding"
 .Pp
 .Ft Uint8
@@ -486,7 +486,7 @@ is called to override those default bindings.
 .Fn AG_WidgetSetInt "void *widget" "const char *binding" "int i"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint "void *widget" "const char *binding" "u_int i"
+.Fn AG_WidgetSetUint "void *widget" "const char *binding" "Uint i"
 .Pp
 .Ft void
 .Fn AG_WidgetSetUint8 "void *widget" "const char *binding" "Uint8 u8"
