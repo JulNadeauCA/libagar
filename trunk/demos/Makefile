@@ -24,13 +24,19 @@ configure:
 		(cd $$D && ./configure); \
 	done
 
+configure-scripts:
+	for D in ${SUBDIR}; do \
+		echo "==> $$D"; \
+		(cd $$D && ${MAKE} configure); \
+	done
+
 prereq:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
 		touch $$D/Makefile.config; \
 	done
 
-.PHONY: clean cleandir install deinstall depend
+.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.subdir.mk
