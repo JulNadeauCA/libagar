@@ -1680,7 +1680,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -D_XOPEN_SOURCE=500 -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=500 -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
 	compile="failed"
