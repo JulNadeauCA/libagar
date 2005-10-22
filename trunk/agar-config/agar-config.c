@@ -36,7 +36,6 @@
 #include <config/ttfdir.h>
 #include <config/localedir.h>
 #include <config/network.h>
-#include <config/bsd_source_needed.h>
 
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
@@ -91,9 +90,6 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--localedir") == 0) {
 			printf("%s\n", LOCALEDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
-#ifdef BSD_SOURCE_NEEDED
-			printf("-D_BSD_SOURCE ");
-#endif
 			printf("-I%s ", INCLDIR);
 #ifdef SDL_CFLAGS
 			printf("%s ", SDL_CFLAGS);
