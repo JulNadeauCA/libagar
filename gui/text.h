@@ -26,7 +26,7 @@ typedef struct ag_glyph {
 	Uint32 nrefs;			/* Reference count */
 	SDL_Surface *su;		/* Rendered surface */
 #ifdef HAVE_OPENGL
-	u_int texture;			/* Rendered texture */
+	Uint texture;			/* Rendered texture */
 	float texcoord[4];
 #endif
 	SLIST_ENTRY(ag_glyph) glyphs;
@@ -40,7 +40,7 @@ typedef struct ag_font {
 	} type;
 	char name[AG_FONT_NAME_MAX];
 	int size;			/* Size in points */
-	u_int flags;
+	Uint flags;
 #define AG_FONT_BOLD		0x01	/* Bold font */
 #define AG_FONT_ITALIC		0x02	/* Italic font */
 #define AG_FONT_UNDERLINE	0x04	/* Underlined */
@@ -76,7 +76,7 @@ void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	       FORMAT_ATTRIBUTE(printf, 3, 4)
 	       NONNULL_ATTRIBUTE(3);
 
-AG_Window *AG_TextPromptOptions(AG_Button **, u_int, const char *, ...)
+AG_Window *AG_TextPromptOptions(AG_Button **, Uint, const char *, ...)
 		         	FORMAT_ATTRIBUTE(printf, 3, 4)
 		          	NONNULL_ATTRIBUTE(3);
 void AG_TextPromptFloat(double *, double, double, const char *,

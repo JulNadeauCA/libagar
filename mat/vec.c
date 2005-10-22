@@ -36,7 +36,7 @@
 		    (A)->m, (B)->m);
 
 vec_t *
-vec_new(u_int n)
+vec_new(Uint n)
 {
 	vec_t *v;
 
@@ -57,7 +57,7 @@ double
 vec_len(const vec_t *a)
 {
 	double sum = 0.0;
-	u_int n;
+	Uint n;
 
 	for (n = 1; n <= a->m; n++) {
 		sum += pow(fabs(a->mat[n][1]), 2);

@@ -32,7 +32,7 @@ enum ag_nitem_type {
 typedef struct ag_nitem {
 	enum ag_nitem_type type;	/* Type of element */
 	
-	u_int flags;
+	Uint flags;
 #define AG_NITEM_BLOCK		0x001	/* Tile block */
 #define AG_NITEM_CLIMBABLE	0x002	/* Surface is climbable */
 #define AG_NITEM_SLIPPERY	0x004	/* Surface is slippery */
@@ -104,7 +104,7 @@ typedef struct ag_map_camera {
 	int flags;
 	int x, y;				/* Position of camera */
 	enum ag_map_camera_alignment alignment;	/* View alignment */
-	u_int zoom;				/* Zoom (%) */
+	Uint zoom;				/* Zoom (%) */
 	int tilesz;				/* Tile size */
 	int pixsz;				/* Scaled pixel size */
 } AG_MapCamera;
@@ -131,20 +131,20 @@ typedef struct ag_mapmod {
 
 typedef struct ag_mapmodblk {
 	AG_MapMod *mods;
-	u_int nmods;
-	u_char cancel;
+	Uint nmods;
+	Uchar cancel;
 } AG_MapModBlk;
 
 typedef struct ag_map {
 	AG_Space space;
 
 	AG_Mutex lock;
-	u_int flags;
+	Uint flags;
 #define AG_MAP_SAVE_CAM0POS	0x01	/* Save the camera 0 position */
 #define AG_MAP_SAVE_CAM0ZOOM	0x02	/* Save the camera 0 zoom factor */
 #define AG_MAP_SAVED_FLAGS	(AG_MAP_SAVE_CAM0POS|AG_MAP_SAVE_CAM0ZOOM)
 
-	u_int mapw, maph;		/* Map geometry */
+	Uint mapw, maph;		/* Map geometry */
 	int cur_layer;			/* Layer being edited */
 	struct {
 		int x, y;		/* Origin coordinates */
@@ -153,13 +153,13 @@ typedef struct ag_map {
 	AG_Node **map;			/* Arrays of nodes */
 	int redraw;			/* Redraw (for tile-based mode) */
 	AG_MapLayer *layers;		/* Layer descriptions */
-	u_int nlayers;
+	Uint nlayers;
 	AG_MapCamera *cameras;		/* Views */
-	u_int ncameras;
+	Uint ncameras;
 	AG_MapModBlk *blks;		/* Saved modifications */
-	u_int nblks;
-	u_int curblk;
-	u_int nmods;
+	Uint nblks;
+	Uint curblk;
+	Uint nmods;
 } AG_Map;
 
 __BEGIN_DECLS
@@ -171,10 +171,10 @@ int	 map_save(void *, AG_Netbuf *);
 void	 map_destroy(void *);
 void	*map_edit(void *);
 
-int	 AG_MapAllocNodes(AG_Map *, u_int, u_int);
+int	 AG_MapAllocNodes(AG_Map *, Uint, Uint);
 void	 AG_MapFreeNodes(AG_Map *);
-int	 AG_MapResize(AG_Map *, u_int, u_int);
-void	 AG_MapSetZoom(AG_Map *, int, u_int);
+int	 AG_MapResize(AG_Map *, Uint, Uint);
+void	 AG_MapSetZoom(AG_Map *, int, Uint);
 int	 AG_MapPushLayer(AG_Map *, const char *);
 void	 AG_MapPopLayer(AG_Map *);
 void	 AG_MapInitLayer(AG_MapLayer *, const char *);
@@ -205,7 +205,7 @@ __inline__ void	 AG_NitemDraw(AG_Map *, AG_Nitem *, int, int, int);
 __inline__ void	 AG_NitemSetSprite(AG_Nitem *, AG_Map *, void *, Uint32);
 __inline__ void	 AG_NitemSetAnim(AG_Nitem *, AG_Map *, void *, Uint32);
 AG_Nitem	*AG_NitemLocate(AG_Map *, int, int, int);
-void		 AG_NitemAttrColor(u_int, int, Uint8 *);
+void		 AG_NitemAttrColor(Uint, int, Uint8 *);
 
 __inline__ void	 AG_NodeInit(AG_Node *);
 int		 AG_NodeLoad(AG_Map *, AG_Netbuf *, AG_Node *);

@@ -37,8 +37,8 @@ enum {
 
 struct ag_malloc_type {
 	size_t msize;
-	u_int nallocs;
-	u_int nfrees;
+	Uint nallocs;
+	Uint nfrees;
 };
 
 __BEGIN_DECLS

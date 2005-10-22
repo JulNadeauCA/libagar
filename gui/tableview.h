@@ -31,7 +31,7 @@ enum {
 
 typedef struct ag_tableview_col {
 	AG_TableviewColID cid;
-	u_int idx;			/* Index into row->cell[] */
+	Uint idx;			/* Index into row->cell[] */
 
 	/* Flags */
 	int mousedown :1;
@@ -95,7 +95,7 @@ typedef struct ag_tableview {
 	int prew, preh;			/* Prescale hint */
 	
 	/* columns */
-	u_int columncount;
+	Uint columncount;
 	struct ag_tableview_col *column;
 	char sortMode;			/* Sort mode (a or b) */
 	
@@ -114,13 +114,13 @@ typedef struct ag_tableview {
 	
 	/* drawing hints */
 	struct {
-		u_int redraw_last;
-		u_int redraw_rate;
+		Uint redraw_last;
+		Uint redraw_rate;
 		int dirty;
-		u_int count;
+		Uint count;
 		struct ag_tableview_rowdocket_item {
 			struct ag_tableview_row *row;
-			u_int depth;
+			Uint depth;
 		} *items;
 	} visible;
 } AG_Tableview;
@@ -157,7 +157,7 @@ AG_Tableview *AG_TableviewNew(void *, int, AG_TableviewDataFn,
 void AG_TableviewInit(AG_Tableview *, int, AG_TableviewDataFn,
 		      AG_TableviewSortFn);
 void AG_TableviewPrescale(AG_Tableview *, const char *, int);
-void AG_TableviewSetUpdate(AG_Tableview *, u_int);
+void AG_TableviewSetUpdate(AG_Tableview *, Uint);
 
 AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
 			            const char *, const char *);

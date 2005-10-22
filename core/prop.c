@@ -179,7 +179,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 }
 
 AG_Prop *
-AG_SetUint(void *ob, const char *key, u_int i)
+AG_SetUint(void *ob, const char *key, Uint i)
 {
 	return (AG_SetProp(ob, key, AG_PROP_UINT, i));
 }
@@ -310,7 +310,7 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 				*(int *)p = prop->data.i;
 				break;
 			case AG_PROP_UINT:
-				*(u_int *)p = prop->data.u;
+				*(Uint *)p = prop->data.u;
 				break;
 			case AG_PROP_UINT8:
 				*(Uint8 *)p = prop->data.u8;
@@ -366,10 +366,10 @@ fail:
 	return (NULL);
 }
 
-u_int
+Uint
 AG_Uint(void *p, const char *key)
 {
-	u_int i;
+	Uint i;
 
 	if (AG_GetProp(p, key, AG_PROP_UINT, &i) == NULL) {
 		fatal("%s", AG_GetError());
@@ -607,7 +607,7 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 			break;
 #endif
 		case AG_PROP_UINT:
-			AG_SetUint(ob, key, (u_int)AG_ReadUint32(buf));
+			AG_SetUint(ob, key, (Uint)AG_ReadUint32(buf));
 			break;
 		case AG_PROP_INT:
 			AG_SetInt(ob, key, (int)AG_ReadSint32(buf));

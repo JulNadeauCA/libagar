@@ -22,11 +22,11 @@ typedef struct ag_display {
 	int opengl;			/* OpenGL rendering? (if available) */
 
 	int rCur;			/* Estimated refresh delay in ms */
-	u_int rNom;			/* Nominal refresh delay */
+	Uint rNom;			/* Nominal refresh delay */
 
 	SDL_Rect *dirty;		/* Video rectangles to update */
-	u_int	 ndirty;
-	u_int  maxdirty;
+	Uint	 ndirty;
+	Uint  maxdirty;
 
 	AG_Mutex lock;
 	struct ag_windowq windows;	/* Windows in view */
@@ -204,7 +204,7 @@ extern const char *agBlendFuncNames[];
 extern SDL_Cursor *agDefaultCursor;
 
 __BEGIN_DECLS
-int		 AG_ViewInit(int, int, int, u_int);
+int		 AG_ViewInit(int, int, int, Uint);
 int		 AG_ResizeDisplay(int, int);
 void		 AG_ViewVideoExpose(void);
 void		 AG_ViewAttach(void *);
@@ -224,7 +224,7 @@ void			 AG_ViewCapture(void);
 __inline__ void		 AG_FlipSurface(Uint8 *, int, int);
 
 #ifdef HAVE_OPENGL
-u_int		 AG_SurfaceTexture(SDL_Surface *, float *);
+Uint		 AG_SurfaceTexture(SDL_Surface *, float *);
 void		 AG_UpdateTexture(SDL_Surface *, int);
 SDL_Surface	*AG_CaptureGLView(void);
 #endif

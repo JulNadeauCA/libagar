@@ -70,7 +70,7 @@ const char *agBlendFuncNames[] = {
 };
 
 int
-AG_ViewInit(int w, int h, int bpp, u_int flags)
+AG_ViewInit(int w, int h, int bpp, Uint flags)
 {
 	Uint32 screenflags = 0;
 	int depth;
@@ -641,7 +641,7 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	SDL_FreeSurface(texsu);
 }
 
-u_int
+Uint
 AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 {
 	SDL_Surface *texsu;
@@ -790,7 +790,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	struct jpeg_compress_struct jcomp;
 	Uint8 *jcopybuf;
 	FILE *fp;
-	u_int seq = 0;
+	Uint seq = 0;
 	int fd;
 	JSAMPROW row[1];
 	int x;

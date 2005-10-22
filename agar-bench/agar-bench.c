@@ -45,7 +45,7 @@ run_tests(AG_Event *event)
 {
 	struct test_ops *test = AG_PTR(1);
 	AG_Table *t = AG_PTR(2);
-	u_int i, j, m;
+	Uint i, j, m;
 	Uint64 t1, t2;
 	Uint64 tTot, tRun;
 	
@@ -125,15 +125,15 @@ poll_test(AG_Event *event)
 			    (double)(fn->clksMax/1e3), fn);
 		} else {
 			AG_TableAddRow(t, "%s:%lu:%lu:%lu:%p", fn->name,
-			    (u_long)fn->clksMin,
-			    (u_long)fn->clksAvg,
-			    (u_long)fn->clksMax, fn);
+			    (Ulong)fn->clksMin,
+			    (Ulong)fn->clksAvg,
+			    (Ulong)fn->clksMax, fn);
 		}
 #else /* !USE_RDTSC */
 		AG_TableAddRow(t, "%s:%luT:%luT:%luT:%p", fn->name,
-		    (u_long)fn->clksMin,
-		    (u_long)fn->clksAvg,
-		    (u_long)fn->clksMax, fn);
+		    (Ulong)fn->clksMin,
+		    (Ulong)fn->clksAvg,
+		    (Ulong)fn->clksMax, fn);
 #endif /* USE_RDTSC */
 	}
 	AG_TableEnd(t);

@@ -18,7 +18,7 @@ typedef struct ag_textbox {
 	SDL_Surface *label_su;			/* Label surface */
 	int	     label_id;			/* Label surface mapping */
 
-	u_int flags;
+	Uint flags;
 #define AG_TEXTBOX_WRITEABLE	 0x01	/* Allow focus/text input */
 #define AG_TEXTBOX_BLINK_ON	 0x02	/* Cursor blink state (internal) */
 #define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */

@@ -47,7 +47,7 @@ AG_FeatureInit(void *p, RG_Tileset *ts, int flags,
 {
 	RG_Feature *ft = p;
 	RG_Feature *oft;
-	u_int featno = 0;
+	Uint featno = 0;
 	
 tryname:
 	snprintf(ft->name, sizeof(ft->name), "%s #%d", ops->type, featno);

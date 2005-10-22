@@ -598,7 +598,7 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	struct rg_pixmap_mod *mod;
 	Uint8 *pSrc;
 	Uint8 r, g, b;
-	u_int v = (pixel & px->su->format->Amask) >>
+	Uint v = (pixel & px->su->format->Amask) >>
 	          px->su->format->Ashift;
 	Uint8 a = (v << px->su->format->Aloss) +
 	          (v >> (8 - (px->su->format->Aloss << 1)));
@@ -682,7 +682,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 	int x, y, dx, dy;
 	
 	if (brsu->format->Amask != 0) {
-		u_int v = (specPx & brsu->format->Amask) >>
+		Uint v = (specPx & brsu->format->Amask) >>
 		          brsu->format->Ashift;
 				
 		specA = (v << brsu->format->Aloss) +
@@ -707,7 +707,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 				continue;
 
 			if (brsu->format->Amask != 0) {
-				u_int v = (brPx & brsu->format->Amask) >>
+				Uint v = (brPx & brsu->format->Amask) >>
 				          brsu->format->Ashift;
 				
 				brA = (v << brsu->format->Aloss) +

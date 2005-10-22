@@ -17,13 +17,13 @@ typedef struct ag_pixmap {
 __BEGIN_DECLS
 AG_Pixmap *AG_PixmapFromSurface(void *, SDL_Surface *);
 AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, SDL_Surface *);
-AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, SDL_Surface *, u_int, u_int);
+AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, SDL_Surface *, Uint, Uint);
 AG_Pixmap *AG_PixmapFromBMP(void *, const char *);
 AG_Pixmap *AG_PixmapFromXCF(void *, const char *);
 
 int	   AG_PixmapAddSurface(AG_Pixmap *, SDL_Surface *);
 int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, SDL_Surface *);
-int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, u_int, u_int);
+int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint, Uint);
 
 void	   AG_PixmapInit(AG_Pixmap *);
 void	   AG_PixmapDestroy(void *);

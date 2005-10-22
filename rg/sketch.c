@@ -458,7 +458,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 	RG_TileviewCtrl *ctrl;
-	u_int i;
+	Uint i;
 
 	vge->selected = 1;
 

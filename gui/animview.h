@@ -18,8 +18,8 @@ typedef struct rg_anim_view {
 	struct ag_widget wid;
 	RG_Anim *anim;
 	float speed;				/* Delay multiplier */
-	u_int frame;				/* Current frame */
-	u_int pre_w, pre_h;			/* Prescale geometry */
+	Uint frame;				/* Current frame */
+	Uint pre_w, pre_h;			/* Prescale geometry */
 	SDL_Rect ranim;				/* Preview rectangle */
 	struct {
 		AG_Button *play;

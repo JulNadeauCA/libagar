@@ -91,7 +91,7 @@ AG_WindowFocusExisting(const char *name)
 }
 
 AG_Window *
-AG_WindowNew(u_int flags)
+AG_WindowNew(Uint flags)
 {
 	AG_Window *win;
 
@@ -105,7 +105,7 @@ AG_WindowNew(u_int flags)
 }
 
 AG_Window *
-AG_WindowNewNamed(u_int flags, const char *fmt, ...)
+AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 {
 	char name[AG_OBJECT_NAME_MAX], *c;
 	AG_Window *win;
@@ -433,7 +433,7 @@ AG_WindowHide(AG_Window *win)
 }
 
 static void
-AG_WindowCountWidgets(AG_Widget *wid, u_int *nwidgets)
+AG_WindowCountWidgets(AG_Widget *wid, Uint *nwidgets)
 {
 	AG_Widget *cwid;
 
@@ -445,7 +445,7 @@ AG_WindowCountWidgets(AG_Widget *wid, u_int *nwidgets)
 }
 
 static void
-AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, u_int *i)
+AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, Uint *i)
 {
 	AG_Widget *cwid;
 
@@ -465,7 +465,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
 	AG_Widget **widgets;
 	AG_Widget *olfocus;
-	u_int nwidgets = 0;
+	Uint nwidgets = 0;
 	int i = 0;
 
 	if ((olfocus = AG_WidgetFindFocused(win)) == NULL) {

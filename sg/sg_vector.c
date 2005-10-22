@@ -30,7 +30,7 @@
 #include "sg.h"
 
 SG_Vector *
-SG_VectorNew(u_int n)
+SG_VectorNew(Uint n)
 {
 	SG_Vector *v;
 
@@ -44,7 +44,7 @@ SG_Real
 SG_DotProduct(const SG_Vector *v1, const SG_Vector *v2)
 {
 	SG_Real p = 0.0;
-	u_int n;
+	Uint n;
 
 #ifdef DEBUG
 	if (v1->n != v2->n) { fatal("vectors of different length"); }
@@ -77,7 +77,7 @@ SG_Real
 SG_Length(const SG_Vector *v)
 {
 	SG_Real len = 0.0;
-	u_int n;
+	Uint n;
 
 	for (n = 0; n < v->n; n++) {
 		len += v->v[n]*v->v[n];

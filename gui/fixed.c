@@ -47,7 +47,7 @@ static AG_WidgetOps agFixedOps = {
 };
 
 AG_Fixed *
-AG_FixedNew(void *parent, u_int flags)
+AG_FixedNew(void *parent, Uint flags)
 {
 	AG_Fixed *bo;
 
@@ -58,7 +58,7 @@ AG_FixedNew(void *parent, u_int flags)
 }
 
 void
-AG_FixedInit(AG_Fixed *fx, u_int flags)
+AG_FixedInit(AG_Fixed *fx, Uint flags)
 {
 	AG_WidgetInit(fx, "fixed", &agFixedOps, 0);
 

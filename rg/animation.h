@@ -19,16 +19,16 @@ typedef struct rg_anim_insn {
 	struct rg_tile *t;		/* Tile reference (for ANIM_*TILE) */
 	struct rg_pixmap *px;		/* Pixmap reference (for ANIM_*PX) */
 	struct rg_sketch *sk;		/* Sketch of path (for ANIM_MOVPX) */
-	u_int delay;			/* Delay in milliseconds */
+	Uint delay;			/* Delay in milliseconds */
 	union {
 		struct {
-			u_int alpha;		/* Per-surface source alpha */
+			Uint alpha;		/* Per-surface source alpha */
 		} tile; 
 		struct {
 		 	int dx, dy;		/* Displacement in pixels */
 		} disPx;
 		struct {
-			u_int x, y;		/* Origin point */
+			Uint x, y;		/* Origin point */
 			int theta;		/* Angle of rotation */
 		} rotPx;
 	} args;
@@ -41,11 +41,11 @@ typedef struct rg_anim_insn {
 } RG_AnimInsn;
 
 typedef struct rg_anim_frame {
-	u_int name;
-	u_int delay;
+	Uint name;
+	Uint delay;
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
-	u_int texture;
+	Uint texture;
 #endif
 } RG_AnimFrame;
 
@@ -54,15 +54,15 @@ typedef struct rg_anim {
 	int flags;
 #define ANIMATION_SRCALPHA	0x01
 #define ANIMATION_SRCCOLORKEY	0x02
-	u_int w, h;
+	Uint w, h;
 	struct rg_tileset *tileset;
-	u_int nrefs;
+	Uint nrefs;
 
 	RG_AnimInsn  *insns;		/* Animation instructions */
-	u_int	     ninsns;
+	Uint	     ninsns;
 	RG_AnimFrame *frames;		/* Generated frames */
-	u_int	     nframes;
-	u_int	     gframe;		/* Current frame (global) */
+	Uint	     nframes;
+	Uint	     gframe;		/* Current frame (global) */
 
 	TAILQ_ENTRY(rg_anim) animations;
 } RG_Anim;
@@ -73,13 +73,13 @@ void RG_AnimDestroy(RG_Anim *);
 int  RG_AnimLoad(RG_Anim *, AG_Netbuf *);
 void RG_AnimSave(RG_Anim *, AG_Netbuf *);
 
-void RG_AnimScale(RG_Anim *, u_int, u_int);
+void RG_AnimScale(RG_Anim *, Uint, Uint);
 void RG_AnimGenerate(RG_Anim *);
 
-u_int	RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
-void	RG_AnimRemoveInsn(RG_Anim *, u_int);
-u_int	RG_AnimInsertFrame(RG_Anim *);
-void	RG_AnimRemoveFrame(RG_Anim *, u_int);
+Uint	RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
+void	RG_AnimRemoveInsn(RG_Anim *, Uint);
+Uint	RG_AnimInsertFrame(RG_Anim *);
+void	RG_AnimRemoveFrame(RG_Anim *, Uint);
 
 AG_Window *RG_AnimEdit(RG_Anim *);
 __END_DECLS

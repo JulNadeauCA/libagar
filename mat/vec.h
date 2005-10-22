@@ -8,7 +8,7 @@
 typedef struct mat vec_t;
 
 __BEGIN_DECLS
-vec_t		*vec_new(u_int);
+vec_t		*vec_new(Uint);
 #define		 vec_resize(v,m) mat_resize((v),(m),1)
 #define		 vec_set(v,val) mat_set((v),(val))
 #define		 vec_free(v) mat_free(v)

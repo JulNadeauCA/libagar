@@ -229,22 +229,22 @@ render_label(VG *vg, VG_Element *vge)
 				ri++;
 				break;
 			case 'o':
-				snprintf(s2, sizeof(s2), "%o", TEXT_ARG(u_int));
+				snprintf(s2, sizeof(s2), "%o", TEXT_ARG(Uint));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
-				snprintf(s2, sizeof(s2), "%u", TEXT_ARG(u_int));
+				snprintf(s2, sizeof(s2), "%u", TEXT_ARG(Uint));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
-				snprintf(s2, sizeof(s2), "%x", TEXT_ARG(u_int));
+				snprintf(s2, sizeof(s2), "%x", TEXT_ARG(Uint));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
-				snprintf(s2, sizeof(s2), "%X", TEXT_ARG(u_int));
+				snprintf(s2, sizeof(s2), "%X", TEXT_ARG(Uint));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;

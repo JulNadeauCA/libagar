@@ -159,7 +159,7 @@ void
 SHA1Pad(SHA1_CTX *context)
 {
 	Uint8 finalcount[8];
-	u_int i;
+	Uint i;
 
 	for (i = 0; i < 8; i++) {
 		finalcount[i] = (Uint8)((context->count >>
@@ -174,7 +174,7 @@ SHA1Pad(SHA1_CTX *context)
 void
 SHA1Final(Uint8 digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 {
-	u_int i;
+	Uint i;
 
 	SHA1Pad(context);
 	if (digest) {

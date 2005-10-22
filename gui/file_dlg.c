@@ -504,7 +504,7 @@ AG_FileDlgDestroy(void *p)
 {
 	AG_FileDlg *fd = p;
 	AG_FileType *ft, *ft2;
-	u_int i;
+	Uint i;
 
 	for (ft = TAILQ_FIRST(&fd->types);
 	     ft != TAILQ_END(&fd->types);

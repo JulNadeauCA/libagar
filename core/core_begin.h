@@ -9,9 +9,9 @@
 # include <agar/config/have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
-#ifndef BSD_TYPES_NEEDED
-# include <agar/config/bsd_types_needed.h>
-# define _AGAR_BSD_TYPES_NEEDED_
+#ifndef HAVE_UNSIGNED_TYPEDEFS
+# include <agar/config/have_unsigned_typedefs.h>
+# define _AGAR_HAVE_UNSIGNED_TYPEDEFS_
 #endif
 #ifndef HAVE_BOUNDED_ATTRIBUTE
 # include <agar/config/have_bounded_attribute.h>
@@ -31,11 +31,10 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef BSD_TYPES_NEEDED
-#define u_char unsigned char
-#define u_int unsigned int
-#define u_long unsigned long
-#define _AGAR_DEFINED_BSD_TYPES_
+#ifndef HAVE_UNSIGNED_TYPEDEFS
+#define Uchar unsigned char
+#define Uint unsigned int
+#define Ulong unsigned long
 #endif
 
 #include <SDL.h>

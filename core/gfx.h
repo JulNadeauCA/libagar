@@ -12,7 +12,7 @@ struct ag_gfx;
 typedef struct ag_anim {
 	SDL_Surface **frames;
 #ifdef HAVE_OPENGL
-	u_int *textures;
+	Uint *textures;
 	float texcoords[4];
 #endif
 	Uint32 nframes;
@@ -23,7 +23,7 @@ typedef struct ag_anim {
 typedef struct ag_cached_sprite {
 	SDL_Surface *su;
 #ifdef HAVE_OPENGL
-	u_int texture;
+	Uint texture;
 	float texcoords[4];
 #endif
 	Uint32 last_drawn;			/* Time last draw occured */
@@ -58,10 +58,10 @@ typedef struct ag_sprite {
 	SDL_Surface *su;
 	int xOrig, yOrig;			/* Origin point */
 	enum ag_gfx_snap_mode snap_mode; 	/* Default snapping mode */
-	u_int *attrs;				/* Default node attributes */
+	Uint *attrs;				/* Default node attributes */
 	int *layers;				/* Node layer offsets */
 #ifdef HAVE_OPENGL
-	u_int texture;
+	Uint texture;
 	float texcoords[4];
 #endif
 	SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
@@ -135,8 +135,8 @@ __inline__ void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, SDL_Surface *);
 __inline__ void	 AG_SpriteSetOrigin(AG_Sprite *, int, int);
 __inline__ void	 AG_SpriteSetSnapMode(AG_Sprite *, enum ag_gfx_snap_mode);
 __inline__ void	 AG_SpriteUpdate(AG_Sprite *);
-__inline__ void	 AG_SpriteGetNodeAttrs(AG_Sprite *, u_int *, u_int *);
-__inline__ u_int AG_SpriteGetWtiles(AG_Sprite *);
+__inline__ void	 AG_SpriteGetNodeAttrs(AG_Sprite *, Uint *, Uint *);
+__inline__ Uint AG_SpriteGetWtiles(AG_Sprite *);
 __END_DECLS
 
 #include "close_code.h"

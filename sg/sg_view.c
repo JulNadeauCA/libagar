@@ -44,7 +44,7 @@ const AG_WidgetOps sgViewOps = {
 };
 
 SG_View	*
-SG_ViewNew(void *parent, SG *sg, u_int flags)
+SG_ViewNew(void *parent, SG *sg, Uint flags)
 {
 	SG_View *sv;
 
@@ -55,9 +55,9 @@ SG_ViewNew(void *parent, SG *sg, u_int flags)
 }
 
 void
-SG_ViewInit(SG_View *sv, SG *sg, u_int flags)
+SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 {
-	u_int glvflags = 0;
+	Uint glvflags = 0;
 
 	if (flags & SG_VIEW_WFILL) { glvflags |= AG_GLVIEW_WFILL; }
 	if (flags & SG_VIEW_HFILL) { glvflags |= AG_GLVIEW_HFILL; }

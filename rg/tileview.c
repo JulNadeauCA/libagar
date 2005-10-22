@@ -222,7 +222,7 @@ toggle_attrib(RG_Tileview *tv, int sx, int sy)
 	RG_Tile *t = tv->tile;
 	int nx = sx/RG_TILESZ;
 	int ny = sy/RG_TILESZ;
-	u_int *a;
+	Uint *a;
 	
 	if (nx < 0 || nx >= t->nw ||
 	    ny < 0 || ny >= t->nh ||
@@ -511,13 +511,13 @@ RG_TileviewSetInt(RG_TileviewCtrl *ctrl, int nval, int v)
 		ctrl->vals[nval].i = v;
 		break;
 	case RG_TILEVIEW_UINT_VAL:
-		ctrl->vals[nval].ui = (u_int)v;
+		ctrl->vals[nval].ui = (Uint)v;
 		break;
 	case RG_TILEVIEW_INT_PTR:
 		*(int *)ctrl->vals[nval].p = v;
 		break;
 	case RG_TILEVIEW_UINT_PTR:
-		*(u_int *)ctrl->vals[nval].p = (u_int)v;
+		*(Uint *)ctrl->vals[nval].p = (Uint)v;
 		break;
 	default:
 		fatal("cannot convert");
@@ -913,7 +913,7 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 				    void *);
 				break;
 			case 'u':
-				INSERT_VALUE(RG_TILEVIEW_UINT_PTR, p, u_int *,
+				INSERT_VALUE(RG_TILEVIEW_UINT_PTR, p, Uint *,
 				    void *);
 				break;
 			case 'f':
@@ -933,7 +933,7 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 			INSERT_VALUE(RG_TILEVIEW_INT_VAL, i, int, int);
 			break;
 		case 'u':
-			INSERT_VALUE(RG_TILEVIEW_UINT_VAL, ui, u_int, int);
+			INSERT_VALUE(RG_TILEVIEW_UINT_VAL, ui, Uint, int);
 			break;
 		case 'f':
 			INSERT_VALUE(RG_TILEVIEW_FLOAT_VAL, f, float, double);
@@ -1368,7 +1368,7 @@ RG_TileviewInt(RG_TileviewCtrl *ctrl, int nval)
 	case RG_TILEVIEW_UINT_VAL:
 		return ((int)ctrl->vals[nval].ui);
 	case RG_TILEVIEW_UINT_PTR:
-		return (*(u_int *)ctrl->vals[nval].p);
+		return (*(Uint *)ctrl->vals[nval].p);
 	default:
 		fatal("cannot convert");
 	}
@@ -1469,8 +1469,8 @@ draw_control(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 		{
 			int x = RG_TileviewInt(ctrl, 0);
 			int y = RG_TileviewInt(ctrl, 1);
-			u_int w = RG_TileviewUint(ctrl, 2);
-			u_int h = RG_TileviewUint(ctrl, 3);
+			Uint w = RG_TileviewUint(ctrl, 2);
+			Uint h = RG_TileviewUint(ctrl, 3);
 
 			RG_TileviewRect2o(tv, x-1, y-1, w+1, h+1);
 
@@ -1516,7 +1516,7 @@ draw_control(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 		{
 			int x = RG_TileviewInt(ctrl, 0);
 			int y = RG_TileviewInt(ctrl, 1);
-			u_int r = RG_TileviewUint(ctrl, 2);
+			Uint r = RG_TileviewUint(ctrl, 2);
 
 			RG_TileviewCircle2o(tv, x, y, r);
 			RG_TileviewPixel2i(tv, x, y);
@@ -1579,7 +1579,7 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g,
 
 /* XXX Sync with game/map/map.c */
 static void
-RG_AttrColor(u_int flag, int state, Uint8 *c)
+RG_AttrColor(Uint flag, int state, Uint8 *c)
 {
 	switch (flag) {
 	case RG_NITEM_BLOCK:

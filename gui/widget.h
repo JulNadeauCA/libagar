@@ -84,9 +84,9 @@ typedef struct ag_widget {
 	SDL_Rect rClipSave;		/* Saved clipping rectangle */
 	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
 	SDL_Surface **surfaces;		/* Registered surfaces */
-	u_int nsurfaces;
+	Uint nsurfaces;
 #ifdef HAVE_OPENGL
-	u_int *textures;		/* Cached OpenGL textures */
+	Uint *textures;		/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
 #endif
 	AG_Mutex bindings_lock;
@@ -132,7 +132,7 @@ __inline__ void	 AG_WidgetUpdateSurface(void *, int);
 
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
-void	 AG_WidgetPushClipRect(void *, int, int, u_int, u_int);
+void	 AG_WidgetPushClipRect(void *, int, int, Uint, Uint);
 void	 AG_WidgetPopClipRect(void *);
 
 __inline__ void	 AG_SetCursor(int);
@@ -180,7 +180,7 @@ __inline__ int	  AG_WidgetCopyBinding(void *, const char *, void *,
 #define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
 #define AG_WidgetBindProp(w,b,o,k) AG_WidgetBind((w),(b),AG_WIDGET_PROP,(o),(k))
 
-__inline__ u_int	 AG_WidgetUint(void *, const char *);
+__inline__ Uint	 AG_WidgetUint(void *, const char *);
 __inline__ int		 AG_WidgetInt(void *, const char *);
 #define			 AG_WidgetBool AG_WidgetInt
 __inline__ Uint8	 AG_WidgetUint8(void *, const char *);
@@ -199,7 +199,7 @@ __inline__ char	  *AG_WidgetString(void *, const char *);
 __inline__ size_t  AG_WidgetCopyString(void *, const char *, char *, size_t)
 		       BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
-__inline__ void	 AG_WidgetSetUint(void *, const char *, u_int);
+__inline__ void	 AG_WidgetSetUint(void *, const char *, Uint);
 __inline__ void	 AG_WidgetSetInt(void *, const char *, int);
 #define		 AG_WidgetSetBool AG_WidgetSetInt
 __inline__ void	 AG_WidgetSetUint8(void *, const char *, Uint8);

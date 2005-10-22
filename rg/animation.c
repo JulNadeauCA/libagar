@@ -76,7 +76,7 @@ RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name,
 }
 
 void
-RG_AnimScale(RG_Anim *ani, u_int w, u_int h)
+RG_AnimScale(RG_Anim *ani, Uint w, Uint h)
 {
 	ani->w = w;
 	ani->h = h;
@@ -84,7 +84,7 @@ RG_AnimScale(RG_Anim *ani, u_int w, u_int h)
 	/* TODO scale existing frames */
 }
 
-u_int
+Uint
 RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 {
 	RG_AnimInsn *insn;
@@ -126,7 +126,7 @@ destroy_insn(RG_AnimInsn *insn)
 }
 
 void
-RG_AnimRemoveInsn(RG_Anim *ani, u_int insn)
+RG_AnimRemoveInsn(RG_Anim *ani, Uint insn)
 {
 	destroy_insn(&ani->insns[insn]);
 	if (insn+1 < ani->ninsns)
@@ -134,7 +134,7 @@ RG_AnimRemoveInsn(RG_Anim *ani, u_int insn)
 		    (--ani->ninsns)*sizeof(RG_AnimInsn));
 }
 
-u_int
+Uint
 RG_AnimInsertFrame(RG_Anim *ani)
 {
 	RG_Tileset *ts = ani->tileset;
@@ -168,7 +168,7 @@ destroy_frame(RG_AnimFrame *fr)
 }
 
 void
-RG_AnimRemoveFrame(RG_Anim *ani, u_int frame)
+RG_AnimRemoveFrame(RG_Anim *ani, Uint frame)
 {
 	destroy_frame(&ani->frames[frame]);
 	if (frame+1 < ani->nframes)
@@ -179,7 +179,7 @@ RG_AnimRemoveFrame(RG_Anim *ani, u_int frame)
 static void
 destroy_frames(RG_Anim *ani)
 {
-	u_int i;
+	Uint i;
 	
 	for (i = 0; i < ani->nframes; i++) {
 		destroy_frame(&ani->frames[i]);
@@ -190,7 +190,7 @@ destroy_frames(RG_Anim *ani)
 void
 RG_AnimDestroy(RG_Anim *ani)
 {
-	u_int i;
+	Uint i;
 
 	for (i = 0; i < ani->ninsns; i++) {
 		destroy_insn(&ani->insns[i]);
@@ -218,13 +218,13 @@ RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 		
 		type = (enum rg_anim_insn_type)AG_ReadUint16(buf);
 		insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
-		insn->delay = (u_int)AG_ReadUint32(buf);
+		insn->delay = (Uint)AG_ReadUint32(buf);
 
 		switch (type) {
 		case RG_ANIM_TILE:
 			AG_CopyString(name, buf, sizeof(name));
 			insn->t = RG_TilesetFindTile(ts, name);
-			insn->in_tile.alpha = (u_int)AG_ReadUint8(buf);
+			insn->in_tile.alpha = (Uint)AG_ReadUint8(buf);
 			break;
 		case RG_ANIM_DISPX:
 			AG_CopyString(name, buf, sizeof(name));
@@ -235,14 +235,14 @@ RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 		case RG_ANIM_ROTPX:
 			AG_CopyString(name, buf, sizeof(name));
 			insn->px = RG_TilesetFindPixmap(ts, name);
-			insn->in_rotPx.x = (u_int)AG_ReadUint16(buf);
-			insn->in_rotPx.y = (u_int)AG_ReadUint16(buf);
+			insn->in_rotPx.x = (Uint)AG_ReadUint16(buf);
+			insn->in_rotPx.y = (Uint)AG_ReadUint16(buf);
 			insn->in_rotPx.theta = (int)AG_ReadUint8(buf);
 			break;
 		}
 	}
 
-	ani->nframes = (u_int)AG_ReadUint32(buf);
+	ani->nframes = (Uint)AG_ReadUint32(buf);
 	ani->frames = Realloc(ani->frames,
 	    ani->nframes*sizeof(RG_AnimFrame));
 	for (i = 0; i < ani->nframes; i++) {
@@ -250,7 +250,7 @@ RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 
 		fr->name = i;
 		fr->su = AG_ReadSurface(buf, ts->fmt);
-		fr->delay = (u_int)AG_ReadUint32(buf);
+		fr->delay = (Uint)AG_ReadUint32(buf);
 	}
 	return (0);
 }
@@ -258,7 +258,7 @@ RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 void
 RG_AnimSave(RG_Anim *ani, AG_Netbuf *buf)
 {
-	u_int i;
+	Uint i;
 	
 	AG_WriteUint16(buf, ani->w);
 	AG_WriteUint16(buf, ani->h);
@@ -300,7 +300,7 @@ RG_AnimSave(RG_Anim *ani, AG_Netbuf *buf)
 void
 RG_AnimGenerate(RG_Anim *ani)
 {
-	u_int i;
+	Uint i;
 
 	destroy_frames(ani);
 
@@ -346,7 +346,7 @@ poll_insns(AG_Event *event)
 	RG_Anim *ani = AG_PTR(1);
 	RG_Tileset *ts = ani->tileset;
 	AG_TlistItem *it;
-	u_int i;
+	Uint i;
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);
@@ -396,7 +396,7 @@ poll_frames(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
 	RG_Tileset *ts = ani->tileset;
-	u_int i;
+	Uint i;
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&ts->lock);

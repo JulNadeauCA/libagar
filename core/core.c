@@ -76,7 +76,7 @@ AG_Mutex agTimingLock;
 int agServerMode = 0;
 
 int
-AG_InitCore(const char *progname, u_int flags)
+AG_InitCore(const char *progname, Uint flags)
 {
 	agProgName = progname;
 
@@ -135,7 +135,7 @@ AG_InitCore(const char *progname, u_int flags)
 }
 
 int
-AG_InitVideo(int w, int h, int bpp, u_int flags)
+AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
 	char path[MAXPATHLEN];
 	extern int agBgPopupMenu;
@@ -222,7 +222,7 @@ AG_InitVideo(int w, int h, int bpp, u_int flags)
 }
 
 int
-AG_InitConfigWin(u_int flags)
+AG_InitConfigWin(Uint flags)
 {
 	AG_ConfigWindow(agConfig, flags);
 	return (0);
@@ -230,7 +230,7 @@ AG_InitConfigWin(u_int flags)
 
 /* Initialize graphics and input devices. */
 int
-AG_InitInput(u_int flags)
+AG_InitInput(Uint flags)
 {
 	extern int agKbdUnicode;			/* config.c */
 	int i, n, njoys;
@@ -253,7 +253,7 @@ AG_InitInput(u_int flags)
 }
 
 int
-AG_InitNetwork(u_int flags)
+AG_InitNetwork(Uint flags)
 {
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 	if ((flags & AG_INIT_DEBUG_SERVER) && agServerMode) {

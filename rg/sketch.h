@@ -17,7 +17,7 @@ struct rg_sketch_mod {
 };
 struct rg_sketch_undoblk {
 	struct rg_sketch_mod *mods;	/* Undoable modifications */
-	u_int		     nmods;
+	Uint		     nmods;
 };
 
 typedef struct rg_sketch {
@@ -25,10 +25,10 @@ typedef struct rg_sketch {
 	int flags;
 	struct rg_tileset *ts;
 	VG *vg;
-	u_int nrefs;
+	Uint nrefs;
 	float h, s, v, a;
 	struct rg_sketch_undoblk *ublks;
-	u_int nublks, curblk;
+	Uint nublks, curblk;
 	TAILQ_ENTRY(rg_sketch) sketches;
 } RG_Sketch;
 

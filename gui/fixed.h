@@ -10,7 +10,7 @@
 
 typedef struct ag_fixed {
 	struct ag_widget wid;
-	u_int flags;
+	Uint flags;
 #define AG_FIXED_WFILL		0x01	/* Expand to fill available width */
 #define AG_FIXED_HFILL		0x02	/* Expand to fill available height */
 #define AG_FIXED_NO_UPDATE	0x04	/* Don't call WINDOW_UPDATE() */
@@ -21,8 +21,8 @@ typedef struct ag_fixed {
 } AG_Fixed;
 
 __BEGIN_DECLS
-AG_Fixed *AG_FixedNew(void *, u_int);
-void	  AG_FixedInit(AG_Fixed *, u_int);
+AG_Fixed *AG_FixedNew(void *, Uint);
+void	  AG_FixedInit(AG_Fixed *, Uint);
 void	  AG_FixedDestroy(void *);
 void	  AG_FixedDrawBg(void *);
 void	  AG_FixedDrawBox(void *);

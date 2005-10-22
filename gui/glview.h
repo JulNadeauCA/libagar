@@ -13,7 +13,7 @@
 
 typedef struct ag_glview {
 	struct ag_widget wid;
-	u_int flags;
+	Uint flags;
 #define AG_GLVIEW_WFILL		0x01
 #define AG_GLVIEW_HFILL		0x02
 #define AG_GLVIEW_NOMODELVIEW	0x04	/* Don't preserve modelview matrix */
@@ -35,8 +35,8 @@ typedef struct ag_glview {
 #define AGGLVIEW(p) ((AG_GLView *)(p))
 
 __BEGIN_DECLS
-AG_GLView *AG_GLViewNew(void *, u_int);
-void	   AG_GLViewInit(AG_GLView *, u_int);
+AG_GLView *AG_GLViewNew(void *, Uint);
+void	   AG_GLViewInit(AG_GLView *, Uint);
 void	   AG_GLViewDestroy(void *);
 void	   AG_GLViewDraw(void *);
 void	   AG_GLViewScale(void *, int, int);

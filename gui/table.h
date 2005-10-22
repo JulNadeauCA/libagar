@@ -72,14 +72,14 @@ typedef struct ag_table_col {
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
 	AG_TableCell *pool;		/* Pool of inactive cells */
-	u_int        mpool;
+	Uint        mpool;
 } AG_TableCol;
 
 struct ag_scrollbar;
 
 typedef struct ag_table {
 	struct ag_widget wid;
-	u_int flags;
+	Uint flags;
 #define AG_TABLE_MULTI		0x01	/* Multiple selections (ctrl/shift) */
 #define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
@@ -102,9 +102,9 @@ typedef struct ag_table {
 	int moffs;			/* Row offset (for poll funciton) */
 	AG_TableCol *cols;		/* Column data */
 	AG_TableCell **cells;		/* Row data */
-	u_int n;			/* Number of columns */
-	u_int m;			/* Number of rows */
-	u_int mVis;			/* Maximum number of visible rows */
+	Uint n;			/* Number of columns */
+	Uint m;			/* Number of rows */
+	Uint mVis;			/* Maximum number of visible rows */
 	int nResizing;			/* Column being resized (or -1) */
 	struct ag_scrollbar *vbar;	/* Vertical scrollbar */
 	struct ag_scrollbar *hbar;	/* Horizontal scrollbar */
@@ -112,18 +112,18 @@ typedef struct ag_table {
 } AG_Table;
 
 __BEGIN_DECLS
-AG_Table *AG_TableNew(void *, u_int);
-AG_Table *AG_TablePolled(void *, u_int, void (*fn)(AG_Event *),
+AG_Table *AG_TableNew(void *, Uint);
+AG_Table *AG_TablePolled(void *, Uint, void (*fn)(AG_Event *),
  			 const char *, ...);
-void	  AG_TableInit(AG_Table *, u_int);
+void	  AG_TableInit(AG_Table *, Uint);
 void	  AG_TableScale(void *, int, int);
 void	  AG_TableDraw(void *);
 void	  AG_TableDestroy(void *);
 void	  AG_TablePrescale(AG_Table *, const char *, int);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
-int	  AG_TablePoolAdd(AG_Table *, u_int, u_int);
-void	  AG_TablePoolFree(AG_Table *, u_int);
+int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
+void	  AG_TablePoolFree(AG_Table *, Uint);
 
 void	  AG_TableClear(AG_Table *);
 void	  AG_TableBegin(AG_Table *);
@@ -133,10 +133,10 @@ void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
 #define	  AG_TableCellSelected(t,m,n) ((t)->cells[m][n].selected)
 
 int	  AG_TableAddRow(AG_Table *, const char *, ...);
-void	  AG_TableSelectRow(AG_Table *, u_int);
-void	  AG_TableDeselectRow(AG_Table *, u_int);
+void	  AG_TableSelectRow(AG_Table *, Uint);
+void	  AG_TableDeselectRow(AG_Table *, Uint);
 void	  AG_TableDeselectAllRows(AG_Table *);
-int	  AG_TableRowSelected(AG_Table *, u_int);
+int	  AG_TableRowSelected(AG_Table *, Uint);
 
 int	  AG_TableAddCol(AG_Table *, const char *, const char *,
 	                 int (*)(const void *, const void *));

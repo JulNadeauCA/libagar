@@ -276,7 +276,7 @@ AG_SpinbuttonDraw(void *p)
 		AG_TextboxPrintf(sbu->input, "%d", *(int *)value);
 		break;
 	case AG_WIDGET_UINT:
-		AG_TextboxPrintf(sbu->input, "%u", *(u_int *)value);
+		AG_TextboxPrintf(sbu->input, "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
 		AG_TextboxPrintf(sbu->input, "%u", *(Uint8 *)value);

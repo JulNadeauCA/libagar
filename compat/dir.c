@@ -81,7 +81,7 @@ AG_MkDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError("%s: cannot create dir (%lu)", dir,
-		    (u_long)GetLastError());
+		    (Ulong)GetLastError());
 		return (-1);
 	}
 #else
@@ -102,7 +102,7 @@ AG_RmDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError("%s: cannot remove dir (%lu)", dir,
-		    (u_long)GetLastError());
+		    (Ulong)GetLastError());
 		return (-1);
 	}
 #else
@@ -123,7 +123,7 @@ AG_ChDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError("%s: cannot set cwd (%lu)", dir,
-		    (u_long)GetLastError());
+		    (Ulong)GetLastError());
 		return (-1);
 	}
 #else
@@ -153,7 +153,7 @@ AG_OpenDir(const char *path)
 
 		if ((h = FindFirstFile("*", &fdata))==INVALID_HANDLE_VALUE) {
 			AG_SetError("Invalid file handle (%lu)",
-			    (u_long)GetLastError());
+			    (Ulong)GetLastError());
 			goto fail;
 		}
 		while (FindNextFile(h, &fdata) != 0) {

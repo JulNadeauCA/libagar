@@ -22,7 +22,7 @@ typedef struct ag_menu_item {
 	SDLMod key_mod;
 	int x, y;			/* Position in parent view */
 	struct ag_menu_item *subitems;	/* Child items */
-	u_int nsubitems;
+	Uint nsubitems;
 	AG_Event *onclick;		/* Raised on click */
 	AG_Event *poll;			/* Raised before the item is drawn */
 
@@ -49,7 +49,7 @@ typedef struct ag_menu_item {
 typedef struct ag_menu {
 	struct ag_widget wid;
 	AG_MenuItem *items;		/* Top-level items */
-	u_int nitems;
+	Uint nitems;
 	int selecting;			/* Selection in progress */
 	AG_MenuItem *sel_item;		/* Selected top-level item */
 	int hspace, vspace;		/* Spacing */

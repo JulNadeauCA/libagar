@@ -19,16 +19,16 @@ typedef struct mat mat_t;
 #endif
 
 struct mat {
-	u_int m, n;		/* Rows (m) and columns (n) */
+	Uint m, n;		/* Rows (m) and columns (n) */
 	double **mat;		/* Matrix elements ([m][n] order) */
 };
 
 __BEGIN_DECLS
-mat_t		*mat_new(u_int, u_int);
+mat_t		*mat_new(Uint, Uint);
 __inline__ void	 mat_free(mat_t *);
-void		 mat_alloc_elements(mat_t *, u_int, u_int);
+void		 mat_alloc_elements(mat_t *, Uint, Uint);
 void		 mat_free_elements(mat_t *);
-__inline__ void	 mat_resize(mat_t *, u_int, u_int);
+__inline__ void	 mat_resize(mat_t *, Uint, Uint);
 void		 mat_set(mat_t *, double);
 void		 mat_copy(const mat_t *, mat_t *);
 __inline__ mat_t *mat_dup(const mat_t *);

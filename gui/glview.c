@@ -54,7 +54,7 @@ const AG_WidgetOps agGLViewOps = {
 };
 
 AG_GLView *
-AG_GLViewNew(void *parent, u_int flags)
+AG_GLViewNew(void *parent, Uint flags)
 {
 	AG_GLView *glv;
 
@@ -109,7 +109,7 @@ GLViewKeydown(AG_Event *event)
 }
 
 void
-AG_GLViewInit(AG_GLView *glv, u_int flags)
+AG_GLViewInit(AG_GLView *glv, Uint flags)
 {
 	AG_WidgetInit(glv, "glview", &agGLViewOps, AG_WIDGET_FOCUSABLE);
 

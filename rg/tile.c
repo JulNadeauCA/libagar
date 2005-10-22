@@ -65,7 +65,7 @@
 static void
 blend_overlay_alpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
-	u_int sx, sy, dx, dy;
+	Uint sx, sy, dx, dy;
 	Uint8 *pSrc, *pDst;
 	Uint8 sR, sG, sB, sA;
 	Uint8 dR, dG, dB, dA;
@@ -136,17 +136,17 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 }
 
 void
-RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, u_int flags,
+RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags,
     Uint8 alpha)
 {
 	Uint32 sflags = SDL_SWSURFACE;
 	int x, y;
 	int nw, nh;
-	u_int *sattrs, *slayers;
+	Uint *sattrs, *slayers;
 
 	if (t->nw > 0 && t->nh > 0) {
-		sattrs = Malloc(t->nw*t->nh*sizeof(u_int), M_RG);
-		memcpy(sattrs, t->attrs, t->nw*t->nh*sizeof(u_int));
+		sattrs = Malloc(t->nw*t->nh*sizeof(Uint), M_RG);
+		memcpy(sattrs, t->attrs, t->nw*t->nh*sizeof(Uint));
 		
 		slayers = Malloc(t->nw*t->nh*sizeof(int), M_RG);
 		memcpy(slayers, t->layers, t->nw*t->nh*sizeof(int));
@@ -157,9 +157,9 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, u_int flags,
 
 	nw = w/RG_TILESZ + 1;
 	nh = h/RG_TILESZ + 1;
-	t->attrs = Realloc(t->attrs, nw*nh*sizeof(u_int));
+	t->attrs = Realloc(t->attrs, nw*nh*sizeof(Uint));
 	t->layers = Realloc(t->layers , nw*nh*sizeof(int));
-	memset(t->attrs, 0, nw*nh*sizeof(u_int));
+	memset(t->attrs, 0, nw*nh*sizeof(Uint));
 	memset(t->layers, 0, nw*nh*sizeof(int));
 
 	if (sattrs != NULL) {
@@ -197,7 +197,7 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, u_int flags,
 
 	/* Initialize the gfx attributes. */
 	Free(RG_TILE_ATTRS(t), M_RG);
-	RG_TILE_ATTRS(t) = Malloc(t->nw*t->nh*sizeof(u_int), M_RG);
+	RG_TILE_ATTRS(t) = Malloc(t->nw*t->nh*sizeof(Uint), M_RG);
 	for (y = 0; y < t->nh; y++) {
 		for (x = 0; x < t->nw; x++)
 			RG_TILE_ATTRS(t)[y*t->nw + x] = t->attrs[y*t->nw + x];
@@ -258,7 +258,7 @@ RG_TileGenerate(RG_Tile *t)
 	if ((t->flags & RG_TILE_SRCALPHA) == 0 &&
 	    (t->flags & RG_TILE_SRCCOLORKEY)) {
 		SDL_Surface *su = t->su;
-		u_int i, size = su->w*su->h;
+		Uint i, size = su->w*su->h;
 		Uint8 *p = su->pixels;
 		Uint8 r, g, b, a;
 
@@ -287,7 +287,7 @@ RG_TileGenerate(RG_Tile *t)
 
 	spr = &AG_SPRITE(t->ts,t->s);
 	AG_SpriteUpdate(spr);
-	memcpy(spr->attrs, t->attrs, t->nw*t->nh*sizeof(u_int));
+	memcpy(spr->attrs, t->attrs, t->nw*t->nh*sizeof(Uint));
 	memcpy(spr->layers, t->layers, t->nw*t->nh*sizeof(int));
 }
 
@@ -295,7 +295,7 @@ static __inline__ void
 gen_element_name(RG_TileElement *tel, RG_Tile *t, const char *fname)
 {
 	RG_TileElement *oel;
-	u_int elno = 0;
+	Uint elno = 0;
 
 tryname:
 	snprintf(tel->name, sizeof(tel->name), "%s <#%u>", fname,
@@ -564,13 +564,13 @@ RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 	spr->snap_mode = (int)AG_ReadUint8(buf);
 	t->s = s;
 
-	t->nw = (u_int)AG_ReadUint32(buf);
-	t->nh = (u_int)AG_ReadUint32(buf);
-	t->attrs = Realloc(t->attrs, t->nw*t->nh*sizeof(u_int));
+	t->nw = (Uint)AG_ReadUint32(buf);
+	t->nh = (Uint)AG_ReadUint32(buf);
+	t->attrs = Realloc(t->attrs, t->nw*t->nh*sizeof(Uint));
 	t->layers = Realloc(t->layers, t->nw*t->nh*sizeof(int));
 	for (y = 0; y < t->nh; y++) {
 		for (x = 0; x < t->nw; x++) {
-			t->attrs[y*t->nw + x] = (u_int)AG_ReadUint32(buf);
+			t->attrs[y*t->nw + x] = (Uint)AG_ReadUint32(buf);
 			t->layers[y*t->nw + x] = (int)AG_ReadSint32(buf);
 		}
 	}
@@ -765,8 +765,8 @@ close_element(RG_Tileview *tv)
 
 	tv->tv_tile.geo_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_RDIMENSIONS,
 	    "%i,%i,%u,%u", 0, 0,
-	    (u_int)t->su->w,
-	    (u_int)t->su->h);
+	    (Uint)t->su->w,
+	    (Uint)t->su->h);
 	tv->tv_tile.geo_ctrl->buttonup =
 	    AG_SetEvent(tv, NULL, geo_ctrl_buttonup, "%p",
 	    tv->tv_tile.geo_ctrl);
@@ -908,8 +908,8 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 			    RG_TILEVIEW_RECTANGLE, "%*i,%*i,%u,%u",
 			    &tel->tel_pixmap.x,
 			    &tel->tel_pixmap.y,
-			    (u_int)tel->tel_pixmap.px->su->w,
-			    (u_int)tel->tel_pixmap.px->su->h);
+			    (Uint)tel->tel_pixmap.px->su->w,
+			    (Uint)tel->tel_pixmap.px->su->h);
 			tv->tv_pixmap.ctrl->buttonup =
 			    AG_SetEvent(tv, NULL, pixmap_ctrl_buttonup, "%p,%p",
 			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
@@ -975,7 +975,7 @@ create_pixmap(AG_Event *event)
 	AG_TlistItem *eit;
 	RG_Pixmap *px;
 	RG_TileElement *tel;
-	u_int pixno = 0;
+	Uint pixno = 0;
 	RG_Pixmap *opx;
 
 	px = Malloc(sizeof(RG_Pixmap), M_RG);
@@ -1025,8 +1025,8 @@ import_xcf(AG_Event *event)
 	RG_Tileset *ts = tv->ts;
 	AG_Netbuf *buf;
 	AG_Object tmpObj;
-	u_int pixno = 0;
-	u_int i;
+	Uint pixno = 0;
+	Uint i;
 
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
@@ -1118,7 +1118,7 @@ import_bmp(AG_Event *event)
 	int into_pixmaps = AG_INT(3);
 	char *path = AG_STRING(4);
 	RG_Pixmap *px;
-	u_int pixno = 0;
+	Uint pixno = 0;
 	RG_Pixmap *opx;
 	SDL_Surface *bmp;
 
@@ -1180,7 +1180,7 @@ create_sketch(AG_Event *event)
 	AG_TlistItem *eit;
 	RG_Sketch *sk, *osk;
 	RG_TileElement *tel;
-	u_int skno = 0;
+	Uint skno = 0;
 
 	sk = Malloc(sizeof(RG_Sketch), M_RG);
 	RG_SketchInit(sk, tv->ts, 0);
@@ -1698,7 +1698,7 @@ resize_tile(AG_Event *event)
 	RG_Tile *t = tv->tile;
 	int w = AG_WidgetInt(msb, "xvalue");
 	int h = AG_WidgetInt(msb, "yvalue");
-	u_int flags = 0;
+	Uint flags = 0;
 
 	if (AG_WidgetBool(ckey_cb, "state"))
 		flags |= RG_TILE_SRCCOLORKEY;

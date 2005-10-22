@@ -82,7 +82,7 @@ typedef struct ag_mapview {
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */
-	u_int mw, mh;			/* Display size (nodes) */
+	Uint mw, mh;			/* Display size (nodes) */
 
 	int cx, cy;			/* Cursor position (nodes) */
 	int cxoffs, cyoffs;		/* Cursor offset (pixels) */
@@ -124,7 +124,7 @@ void	 AG_MapviewDraw(void *);
 void	 AG_MapviewScale(void *, int, int);
 void	 AG_MapviewPrescale(AG_Mapview *, int, int);
 void	 AG_MapviewCenter(AG_Mapview *, int, int);
-void	 AG_MapviewSetScale(AG_Mapview *, u_int, int);
+void	 AG_MapviewSetScale(AG_Mapview *, Uint, int);
 void	 AG_MapviewSetSelection(AG_Mapview *, int, int, int, int);
 int	 AG_MapviewGetSelection(AG_Mapview *, int *, int *, int *, int *);
 void	 AG_MapviewRegDrawCb(AG_Mapview *, void (*)(AG_Mapview *, void *),

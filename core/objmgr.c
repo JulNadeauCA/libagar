@@ -97,7 +97,7 @@ create_obj(AG_Event *event)
 	AG_ViewDetach(dlg_win);
 
 	if (name[0] == '\0') {
-		u_int nameno = 0;
+		Uint nameno = 0;
 		AG_Object *ch;
 		char tname[AG_OBJECT_TYPE_MAX], *s;
 	

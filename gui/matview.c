@@ -53,7 +53,7 @@ static AG_WidgetOps agMatviewOps = {
 };
 
 AG_Matview *
-AG_MatviewNew(void *parent, struct mat *mat, u_int flags)
+AG_MatviewNew(void *parent, struct mat *mat, Uint flags)
 {
 	AG_Matview *mv;
 
@@ -96,7 +96,7 @@ matview_mousebuttondown(AG_Event *event)
 }
 
 void
-AG_MatviewInit(AG_Matview *mv, struct mat *mat, u_int flags)
+AG_MatviewInit(AG_Matview *mv, struct mat *mat, Uint flags)
 {
 	AG_WidgetInit(mv, "matview", &agMatviewOps,
 	    AG_WIDGET_WFILL|AG_WIDGET_HFILL|AG_WIDGET_CLIPPING|
@@ -134,7 +134,7 @@ AG_MatviewSetNumericalFmt(AG_Matview *mv, const char *fmt)
 }
 
 void
-AG_MatviewPrescale(AG_Matview *mv, const char *text, u_int m, u_int n)
+AG_MatviewPrescale(AG_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;
@@ -171,7 +171,7 @@ AG_MatviewDrawNumerical(void *p)
 	char text[8];
 	AG_Matview *mv = p;
 	struct mat *M = mv->mat;
-	u_int m, n;
+	Uint m, n;
 	SDL_Surface *su;
 	int x, y;
 
@@ -209,7 +209,7 @@ AG_MatviewDrawGreyscale(void *p)
 	AG_Matview *mv = p;
 	struct mat *M = mv->mat;
 	SDL_Surface *su;
-	u_int m, n;
+	Uint m, n;
 	int x, y;
 
 	agPrim.box(mv, 0, 0, AGWIDGET(mv)->w, AGWIDGET(mv)->h, -1,
@@ -225,18 +225,18 @@ AG_MatviewDrawGreyscale(void *p)
 			SDL_Rect rd;
 			Uint32 c;
 			Uint8 v8;
-			u_int vi;
+			Uint vi;
 
 			if (dv == HUGE_VAL) {
 				c = SDL_MapRGB(agVideoFmt, 200, 0, 0);
 			} else {
 #if 0
 				if (dv > 0.0) {
-					vi = 30 + ((u_int)(dv) - 30);
+					vi = 30 + ((Uint)(dv) - 30);
 					v8 = vi < 255 ? (Uint8)vi : 255;
 					c = SDL_MapRGB(agVideoFmt, v8, v8, 0);
 				} else {
-					vi = 30 + ((u_int)(fabs(dv)) - 30);
+					vi = 30 + ((Uint)(fabs(dv)) - 30);
 					v8 = vi < 255 ? (Uint8)vi : 255;
 					c = SDL_MapRGB(agVideoFmt, v8, 0, v8);
 				}

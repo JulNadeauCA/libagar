@@ -32,7 +32,7 @@ struct ag_widget;
 typedef struct ag_window {
 	struct ag_widget wid;
 
-	u_int flags;
+	Uint flags;
 #define AG_WINDOW_MODAL		0x00001	/* Place in foreground */
 #define AG_WINDOW_MAXIMIZED	0x00002	/* Window is maximized */
 #define AG_WINDOW_MINIMIZED	0x00004	/* Window is minimized */
@@ -79,8 +79,8 @@ typedef struct ag_window {
 	} while (/*CONSTCOND*/0)
 
 __BEGIN_DECLS
-AG_Window *AG_WindowNew(u_int);
-AG_Window *AG_WindowNewNamed(u_int, const char *, ...)
+AG_Window *AG_WindowNew(Uint);
+AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3);
 
 void	 AG_WindowInit(void *, const char *, int);

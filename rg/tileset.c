@@ -267,7 +267,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 		if (*ftops == NULL) {
 			dprintf("%s: unimplemented feature: %s; "
 			        "skipping %lu bytes.\n", name, type,
-				(u_long)len);
+				(Ulong)len);
 			AG_NetbufSeek(buf, len-4, SEEK_CUR);
 			continue;
 		}
@@ -775,13 +775,13 @@ insert_tile(AG_Event *event)
 	RG_Tileset *ts = AG_PTR(2);
 	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
 	RG_Tile *t;
-	u_int flags = 0;
+	Uint flags = 0;
 
 	if (ins_alpha)		flags |= RG_TILE_SRCALPHA;
 	if (ins_colorkey)	flags |= RG_TILE_SRCCOLORKEY;
 
 	if (ins_tile_name[0] == '\0') {
-		u_int nameno = 0;
+		Uint nameno = 0;
 tryname1:
 		snprintf(ins_tile_name, sizeof(ins_tile_name), _("Tile #%d"),
 		    nameno);
@@ -868,10 +868,10 @@ insert_texture(AG_Event *event)
 	RG_Tileset *ts = AG_PTR(3);
 	AG_Window *win;
 	RG_Texture *tex;
-	u_int flags = 0;
+	Uint flags = 0;
 
 	if (ins_texture_name[0] == '\0') {
-		u_int nameno = 0;
+		Uint nameno = 0;
 tryname1:
 		snprintf(ins_texture_name, sizeof(ins_texture_name),
 		    _("Texture #%d"), nameno);
@@ -938,7 +938,7 @@ insert_anim(AG_Event *event)
 	if (ins_colorkey)	flags |= ANIMATION_SRCCOLORKEY;
 
 	if (ins_anim_name[0] == '\0') {
-		u_int nameno = 0;
+		Uint nameno = 0;
 tryname1:
 		snprintf(ins_anim_name, sizeof(ins_anim_name),
 		    _("Animation #%d"), nameno);

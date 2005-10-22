@@ -224,7 +224,7 @@ AG_NitemDestroy(AG_Map *m, AG_Nitem *r)
 }
 
 void
-AG_NitemAttrColor(u_int flag, int state, Uint8 *c)
+AG_NitemAttrColor(Uint flag, int state, Uint8 *c)
 {
 	switch (flag) {
 	case AG_NITEM_BLOCK:
@@ -284,7 +284,7 @@ AG_NitemAttrColor(u_int flag, int state, Uint8 *c)
 
 /* Allocate and initialize the node map. */
 int
-AG_MapAllocNodes(AG_Map *m, u_int w, u_int h)
+AG_MapAllocNodes(AG_Map *m, Uint w, Uint h)
 {
 	int x, y;
 	
@@ -348,7 +348,7 @@ map_free_cameras(AG_Map *m)
 
 /* Resize a map, initializing new nodes and destroying any excess ones. */
 int
-AG_MapResize(AG_Map *m, u_int w, u_int h)
+AG_MapResize(AG_Map *m, Uint w, Uint h)
 {
 	AG_Map tm;
 	int x, y;
@@ -407,7 +407,7 @@ fail:
 
 /* Set the display scaling factor. */
 void
-AG_MapSetZoom(AG_Map *m, int ncam, u_int zoom)
+AG_MapSetZoom(AG_Map *m, int ncam, Uint zoom)
 {
 	AG_MapCamera *cam = &m->cameras[ncam];
 
@@ -941,7 +941,7 @@ AG_NitemLoad(AG_Map *m, AG_Netbuf *buf, AG_Node *node,
 
 	/* Read the type of reference, flags and the layer#. */
 	type = (enum ag_nitem_type)AG_ReadUint32(buf);
-	flags = (u_int)AG_ReadUint32(buf);
+	flags = (Uint)AG_ReadUint32(buf);
 	layer = AG_ReadUint8(buf);
 	friction = AG_ReadSint8(buf);
 
@@ -1106,7 +1106,7 @@ map_load(void *ob, AG_Netbuf *buf)
 		return (-1);
 
 	AG_MutexLock(&m->lock);
-	m->flags = (u_int)AG_ReadUint32(buf) & AG_MAP_SAVED_FLAGS;
+	m->flags = (Uint)AG_ReadUint32(buf) & AG_MAP_SAVED_FLAGS;
 	w = AG_ReadUint32(buf);
 	h = AG_ReadUint32(buf);
 	origin_x = AG_ReadUint32(buf);
@@ -1116,13 +1116,13 @@ map_load(void *ob, AG_Netbuf *buf)
 		AG_SetError(_("Invalid map geometry."));
 		goto fail;
 	}
-	m->mapw = (u_int)w;
-	m->maph = (u_int)h;
+	m->mapw = (Uint)w;
+	m->maph = (Uint)h;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
 	
 	/* Read the layer information. */
-	if ((m->nlayers = (u_int)AG_ReadUint32(buf)) > AG_MAP_MAXLAYERS) {
+	if ((m->nlayers = (Uint)AG_ReadUint32(buf)) > AG_MAP_MAXLAYERS) {
 		AG_SetError(_("Too many layers."));
 		goto fail;
 	}
@@ -1144,7 +1144,7 @@ map_load(void *ob, AG_Netbuf *buf)
 	m->origin.layer = (int)AG_ReadUint8(buf);
 	
 	/* Read the camera information. */
-	if ((m->ncameras = (u_int)AG_ReadUint32(buf)) > AG_MAP_MAXCAMERAS) {
+	if ((m->ncameras = (Uint)AG_ReadUint32(buf)) > AG_MAP_MAXCAMERAS) {
 		AG_SetError(_("Too many cameras."));
 		goto fail;
 	}
@@ -1166,8 +1166,8 @@ map_load(void *ob, AG_Netbuf *buf)
 		    (enum ag_map_camera_alignment)AG_ReadUint8(buf);
 		
 		if (i > 0 || m->flags & AG_MAP_SAVE_CAM0ZOOM) {
-			cam->zoom = (u_int)AG_ReadUint16(buf);
-			cam->tilesz = (u_int)AG_ReadUint16(buf);
+			cam->zoom = (Uint)AG_ReadUint16(buf);
+			cam->tilesz = (Uint)AG_ReadUint16(buf);
 			cam->pixsz = cam->tilesz/AGTILESZ;
 		} else {
 			cam->zoom = 100;
@@ -1380,10 +1380,10 @@ blit_scaled(AG_Map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
 	Uint8 r1, g1, b1, a1;
 	Uint32 c;
 	int tilesz = m->cameras[cam].tilesz;
-	int xSrc = (u_int)(rs->x*tilesz/AGTILESZ);
-	int ySrc = (u_int)(rs->y*tilesz/AGTILESZ);
-	u_int wSrc = (u_int)(rs->w*tilesz/AGTILESZ);
-	u_int hSrc = (u_int)(rs->h*tilesz/AGTILESZ);
+	int xSrc = (Uint)(rs->x*tilesz/AGTILESZ);
+	int ySrc = (Uint)(rs->y*tilesz/AGTILESZ);
+	Uint wSrc = (Uint)(rs->w*tilesz/AGTILESZ);
+	Uint hSrc = (Uint)(rs->h*tilesz/AGTILESZ);
 	int same_fmt = AG_SamePixelFmt(s, agView->v);
 
 	if (SDL_MUSTLOCK(s)) {
@@ -1436,7 +1436,7 @@ blit_scaled(AG_Map *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
  * entry in the sprite transformation cache, or allocate a new one.
  */
 static __inline__ void
-draw_sprite(AG_Nitem *r, SDL_Surface **pSu, u_int *pTexture)
+draw_sprite(AG_Nitem *r, SDL_Surface **pSu, Uint *pTexture)
 {
 	AG_Sprite *spr = &AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs);
 	AG_CachedSprite *csp;
@@ -1540,7 +1540,7 @@ draw_sprite(AG_Nitem *r, SDL_Surface **pSu, u_int *pTexture)
  * entry in the anim transformation cache, or allocate a new one.
  */
 static void
-draw_anim(AG_Nitem *r, SDL_Surface **pSurface, u_int *pTexture)
+draw_anim(AG_Nitem *r, SDL_Surface **pSurface, Uint *pTexture)
 {
 	AG_Anim *oanim = &AG_ANIM(r->r_anim.obj, r->r_anim.offs);
 	AG_CachedAnim *canim;
@@ -1807,7 +1807,7 @@ AG_NitemDraw(AG_Map *m, AG_Nitem *r, int rx, int ry, int cam)
 	int freesu = 0;
 #endif
 #ifdef HAVE_OPENGL
-	u_int texture = 0;
+	Uint texture = 0;
 	GLfloat texcoord[4];
 #endif
 	SDL_Surface *su;
@@ -2762,7 +2762,7 @@ remove_tileset_refs(AG_Event *event)
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_Object *ts = it->p1;
 	AG_Map *m = mv->map;
-	u_int x, y;
+	Uint x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -2791,7 +2791,7 @@ remove_tile_refs(AG_Event *event)
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_Sprite *spr = it->p1;
 	AG_Map *m = mv->map;
-	u_int x, y;
+	Uint x, y;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
