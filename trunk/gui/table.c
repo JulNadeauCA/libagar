@@ -77,7 +77,7 @@ AG_TableNew(void *parent, Uint flags)
 }
 
 AG_Table *
-AG_TablePolled(void *parent, Uint flags, void (*fn)(AG_Event *),
+AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Table *t;

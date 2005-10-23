@@ -49,18 +49,18 @@ static AG_WidgetOps agStatusbarOps = {
 };
 
 AG_Statusbar *
-AG_StatusbarNew(void *parent)
+AG_StatusbarNew(void *parent, Uint flags)
 {
 	AG_Statusbar *sbar;
 
 	sbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
-	AG_StatusbarInit(sbar);
+	AG_StatusbarInit(sbar, flags);
 	AG_ObjectAttach(parent, sbar);
 	return (sbar);
 }
 
 void
-AG_StatusbarInit(AG_Statusbar *sbar)
+AG_StatusbarInit(AG_Statusbar *sbar, Uint flags)
 {
 	AG_BoxInit(&sbar->box, AG_BOX_VERT, AG_BOX_WFILL);
 	AG_BoxSetPadding(&sbar->box, 2);

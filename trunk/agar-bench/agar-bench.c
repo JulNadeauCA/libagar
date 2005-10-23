@@ -211,7 +211,7 @@ MainWindow(void)
 		struct test_ops *test = tests[i];
 
 		ntab = AG_NotebookAddTab(nb, test->name, AG_BOX_VERT);
-		t = AG_TablePolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+		t = AG_TableNewPolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
 		    poll_test, "%i", i);
 
 		AG_TableAddCol(t, "Test", NULL, NULL);

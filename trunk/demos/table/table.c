@@ -137,7 +137,7 @@ CreatePolledTable(void)
 	AG_WindowSetCaption(win, "Polled Table");
 
 	/* Create a polled table. */
-	table = AG_TablePolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
+	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", "<888888888>", NULL);
 
