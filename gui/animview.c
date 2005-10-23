@@ -204,15 +204,15 @@ RG_AnimviewInit(RG_Animview *av)
 	av->menu_win = NULL;
 	AG_SetTimeout(&av->timer, tick, av, 0);
 	
-	av->btns.play = AG_ButtonNew(av, NULL);
+	av->btns.play = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.play, AGICON(ANIM_PLAY_ICON));
 	AG_SetEvent(av->btns.play, "button-pushed", do_play, "%p", av);
 	
-	av->btns.pause = AG_ButtonNew(av, NULL);
+	av->btns.pause = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.pause, AGICON(ANIM_PAUSE_ICON));
 	AG_SetEvent(av->btns.pause, "button-pushed", do_pause, "%p", av);
 	
-	av->btns.stop = AG_ButtonNew(av, NULL);
+	av->btns.stop = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.stop, AGICON(ANIM_STOP_ICON));
 	AG_SetEvent(av->btns.stop, "button-pushed", do_stop, "%p", av);
 	

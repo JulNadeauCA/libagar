@@ -116,7 +116,7 @@ AG_ToolbarAddButton(AG_Toolbar *tbar, int row, SDL_Surface *icon,
 	if (row < 0 || row > tbar->nrows)
 		fatal("no such row %d", row);
 #endif
-	bu = AG_ButtonNew(tbar->rows[row], NULL);
+	bu = AG_ButtonNew(tbar->rows[row], 0, NULL);
 	AG_ButtonSetSurface(bu, icon);
 	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, sticky);

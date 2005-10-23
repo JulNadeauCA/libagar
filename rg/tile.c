@@ -1288,9 +1288,9 @@ attach_pixmap_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_ButtonAct(bo, _("OK"), 0, attach_pixmap, "%p,%p,%p,%p,%p",
-		    tv, pwin, win, tl_feats, tl);
-		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(bo, 0, _("OK"), attach_pixmap,
+		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
+		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1367,9 +1367,9 @@ attach_sketch_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_ButtonAct(bo, _("OK"), 0, attach_sketch, "%p,%p,%p,%p,%p",
+		AG_ButtonAct(bo, 0, _("OK"), attach_sketch, "%p,%p,%p,%p,%p",
 		    tv, pwin, win, tl_feats, tl);
-		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1777,9 +1777,9 @@ tile_infos(AG_Event *event)
 	
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(box, _("OK"), 0, resize_tile, "%p,%p,%p,%p,%p,%p",
+		AG_ButtonAct(box, 0, _("OK"), resize_tile, "%p,%p,%p,%p,%p,%p",
 		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
-		AG_ButtonAct(box, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -2194,9 +2194,9 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_ObjectAttach(div->box1, tl_feats);
 		AGWIDGET(tl_feats)->flags |= AG_WIDGET_WFILL;
 	
-		btn = AG_ButtonNew(div->box1, _("Edit"));
+		btn = AG_ButtonNew(div->box1, AG_BUTTON_STICKY|AG_BUTTON_WFILL,
+		    _("Edit"));
 		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
-		AG_ButtonSetSticky(btn, 1);
 		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
 		AG_SetEvent(btn, "button-pushed", edit_element, "%p,%p,%p",
 		    tv, tl_feats, win);

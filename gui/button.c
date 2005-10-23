@@ -57,25 +57,25 @@ static void button_keyup(AG_Event *);
 static void button_keydown(AG_Event *);
 
 AG_Button *
-AG_ButtonNew(void *parent, const char *caption)
+AG_ButtonNew(void *parent, Uint flags, const char *caption)
 {
 	AG_Button *btn;
 
 	btn = Malloc(sizeof(AG_Button), M_OBJECT);
-	AG_ButtonInit(btn, caption, 0);
+	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
 	return (btn);
 }
 
 AG_Button *
-AG_ButtonAct(void *parent, const char *caption, Uint flags,
+AG_ButtonAct(void *parent, Uint flags, const char *caption,
     void (*fn)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *btn;
 	AG_Event *ev;
 
 	btn = Malloc(sizeof(AG_Button), M_OBJECT);
-	AG_ButtonInit(btn, caption, flags);
+	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
 
 	ev = AG_SetEvent(btn, "button-pushed", fn, NULL);
@@ -86,7 +86,6 @@ AG_ButtonAct(void *parent, const char *caption, Uint flags,
 	}
 	return (btn);
 }
-
 
 static Uint32
 repeat_expire(void *obj, Uint32 ival, void *arg)
@@ -105,7 +104,7 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 }
 
 void
-AG_ButtonInit(AG_Button *bu, const char *caption, Uint flags)
+AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 {
 	SDL_Surface *label;
 

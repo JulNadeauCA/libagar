@@ -290,11 +290,11 @@ AG_DebugScreenshot(void)
 		AG_Event *ev;
 		AG_Button *bu;
 
-		bu = AG_ButtonNew(hb, _("Connect"));
+		bu = AG_ButtonNew(hb, 0, _("Connect"));
 		ev = AG_SetEvent(bu, "button-pushed", screenshot_connect, NULL);
 		ev->flags |= AG_EVENT_ASYNC;
 		
-		bu = AG_ButtonNew(hb, _("Disconnect"));
+		bu = AG_ButtonNew(hb, 0, _("Disconnect"));
 		ev = AG_SetEvent(bu, "button-pushed", screenshot_disconnect,
 		    NULL);
 		ev->flags |= AG_EVENT_ASYNC;

@@ -26,6 +26,7 @@ typedef struct ag_button {
 #define AG_BUTTON_WFILL		0x10	/* Fill available width */
 #define AG_BUTTON_HFILL		0x20	/* Fill available height */
 #define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
+#define AG_BUTTON_EXPAND	(AG_BUTTON_WFILL|AG_BUTTON_HFILL)
 
 	int padding;			/* Padding in pixels */
 	AG_Timeout delay_to;		/* Delay for triggering repeat mode */
@@ -33,10 +34,10 @@ typedef struct ag_button {
 } AG_Button;
 
 __BEGIN_DECLS
-AG_Button *AG_ButtonNew(void *, const char *);
-AG_Button *AG_ButtonAct(void *, const char *, Uint,
+AG_Button *AG_ButtonNew(void *, Uint, const char *);
+AG_Button *AG_ButtonAct(void *, Uint, const char *,
 			void (*)(AG_Event *), const char *, ...);
-void	   AG_ButtonInit(AG_Button *, const char *, Uint);
+void	   AG_ButtonInit(AG_Button *, Uint, const char *);
 void	   AG_ButtonDestroy(void *);
 void	   AG_ButtonDraw(void *);
 void	   AG_ButtonScale(void *, int, int);

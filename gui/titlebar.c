@@ -113,7 +113,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	AGWIDGET(tbar->label)->flags |= AG_WIDGET_WFILL;
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
-		tbar->maximize_btn = AG_ButtonNew(tbar, NULL);
+		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 		AG_ButtonSetSurface(tbar->maximize_btn,
 		    AG_SPRITE(tbar,AG_TITLEBAR_MAXIMIZE_ICON).su);
@@ -125,7 +125,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	}
 
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
-		tbar->minimize_btn = AG_ButtonNew(tbar, NULL);
+		tbar->minimize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 		AG_ButtonSetSurface(tbar->minimize_btn,
 		    AG_SPRITE(tbar,AG_TITLEBAR_MINIMIZE_ICON).su);
@@ -137,7 +137,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	}
 
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
-		tbar->close_btn = AG_ButtonNew(tbar, NULL);
+		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
 		AG_ButtonSetSurface(tbar->close_btn,
 		    AG_SPRITE(tbar,AG_TITLEBAR_CLOSE_ICON).su);

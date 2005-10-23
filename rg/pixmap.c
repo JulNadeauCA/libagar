@@ -393,10 +393,10 @@ insert_brush_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_ButtonAct(bo, _("OK"), 0, insert_brush,
+		AG_ButtonAct(bo, 0, _("OK"), insert_brush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
 		    cb_oneshot, win);
-		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -492,7 +492,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);
 
-		AG_ButtonAct(ntab, _("Create new brush"), AG_BUTTON_WFILL,
+		AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Create new brush"),
 		    insert_brush_dlg, "%p,%p,%p", tv, px, win);
 	}
 	

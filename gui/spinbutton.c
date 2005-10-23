@@ -202,13 +202,10 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, const char *label)
 	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);
 
-	sbu->incbu = AG_ButtonNew(sbu, "+");
+	sbu->incbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(sbu->incbu, 0);
-	AG_ButtonSetRepeatMode(sbu->incbu, 1);
-
-	sbu->decbu = AG_ButtonNew(sbu, "-");
+	sbu->decbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(sbu->decbu, 0);
-	AG_ButtonSetRepeatMode(sbu->decbu, 1);
 	
 	AG_SetEvent(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", spinbutton_changed, "%p",
