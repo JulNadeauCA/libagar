@@ -10,22 +10,26 @@
 
 typedef struct ag_pixmap {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_PIXMAP_WFILL	0x01
+#define AG_PIXMAP_HFILL	0x02
+#define AG_PIXMAP_EXPAND (AG_PIXMAP_WFILL|AG_PIXMAP_HFILL)
 	int n;				/* Current surface */
 	int s, t;			/* Source coordinates */
 } AG_Pixmap;
 
 __BEGIN_DECLS
-AG_Pixmap *AG_PixmapFromSurface(void *, SDL_Surface *);
-AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, SDL_Surface *);
-AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, SDL_Surface *, Uint, Uint);
-AG_Pixmap *AG_PixmapFromBMP(void *, const char *);
-AG_Pixmap *AG_PixmapFromXCF(void *, const char *);
+AG_Pixmap *AG_PixmapFromSurface(void *, Uint, SDL_Surface *);
+AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, Uint, SDL_Surface *);
+AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, Uint, SDL_Surface *, Uint, Uint);
+AG_Pixmap *AG_PixmapFromBMP(void *, Uint, const char *);
+AG_Pixmap *AG_PixmapFromXCF(void *, Uint, const char *);
 
 int	   AG_PixmapAddSurface(AG_Pixmap *, SDL_Surface *);
 int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, SDL_Surface *);
 int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint, Uint);
 
-void	   AG_PixmapInit(AG_Pixmap *);
+void	   AG_PixmapInit(AG_Pixmap *, Uint);
 void	   AG_PixmapDestroy(void *);
 void	   AG_PixmapDraw(void *);
 void	   AG_PixmapScale(void *, int, int);

@@ -42,7 +42,7 @@ CreateGameMenu(void)
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
 
 	/* Create the background pixmap from bmp file. */
-	px = AG_PixmapFromBMP(fx, "menubg.bmp");
+	px = AG_PixmapFromBMP(fx, 0, "menubg.bmp");
 	AG_FixedMove(fx, px, 0, 0);
 
 	/*

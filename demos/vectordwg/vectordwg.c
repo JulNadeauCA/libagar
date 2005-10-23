@@ -94,7 +94,7 @@ CreateDrawing(void)
 		AG_MFSpinbutton *fsb;
 
 		VG_Rasterize(vg);
-		px = AG_PixmapFromSurface(win, vg->su);
+		px = AG_PixmapFromSurface(win, AG_PIXMAP_EXPAND, vg->su);
 
 		/* Use a timer to rasterize the drawing every 2ms. */
 		AG_SetTimeout(&tUpdate, UpdateDisplay, vg, 0);
