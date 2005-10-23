@@ -469,8 +469,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_FSpinbutton *fsb;
 		AG_Box *hb;
 
-		pal = AG_HSVPalNew(ntab);
-		AGWIDGET(pal)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
 		    &tv->ts->fmt);
 		AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &px->h);
