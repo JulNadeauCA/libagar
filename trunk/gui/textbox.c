@@ -281,7 +281,7 @@ AG_TextboxDraw(void *p)
 	}
 #endif
 
-	for (i = 0; i <= len; i++) {
+	for (i = (tbox->offs<len)?tbox->offs:len-1; i <= len; i++) {
 		AG_Glyph *gl;
 #ifdef UTF8
 		Uint32 c = ucs[i];

@@ -610,8 +610,10 @@ key_right_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod,
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 
-	if (tbox->pos < strlen(s))
+	if (tbox->pos < strlen(s)) {
 		tbox->pos++;
+		tbox->offs++;
+	}
 
 	AG_WidgetUnlockBinding(stringb);
 	return (1);
