@@ -5,7 +5,6 @@
 #define _AGAR_GUI_H_
 #include <agar/core/core_begin.h>
 
-#include <agar/gui/bitmap.h>
 #include <agar/gui/box.h>
 #include <agar/gui/button.h>
 #include <agar/gui/checkbox.h>
