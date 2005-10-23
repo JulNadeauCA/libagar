@@ -65,6 +65,9 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
 	AG_CheckboxInit(cb, flags, label);
 	AG_ObjectAttach(parent, cb);
+	if (flags & AG_CHECKBOX_FOCUS) {
+		AG_WidgetFocus(cb);
+	}
 	return (cb);
 }
 
