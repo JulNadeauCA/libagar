@@ -58,12 +58,12 @@ static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 static void render_palette(AG_HSVPal *);
 
 AG_HSVPal *
-AG_HSVPalNew(void *parent)
+AG_HSVPalNew(void *parent, Uint flags)
 {
 	AG_HSVPal *pal;
 
 	pal = Malloc(sizeof(AG_HSVPal), M_OBJECT);
-	AG_HSVPalInit(pal);
+	AG_HSVPalInit(pal, flags);
 	AG_ObjectAttach(parent, pal);
 	return (pal);
 }
@@ -576,11 +576,15 @@ binding_changed(AG_Event *event)
 }
 
 void
-AG_HSVPalInit(AG_HSVPal *pal)
+AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 {
+	int wflags = AG_WIDGET_FOCUSABLE;
 	int i;
 
-	AG_WidgetInit(pal, "hsvpal", &agHSVPalOps, AG_WIDGET_FOCUSABLE);
+	if (flags & AG_HSVPAL_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_HSVPAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(pal, "hsvpal", &agHSVPalOps, wflags);
 	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);
 	AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &pal->s);
 	AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &pal->v);
@@ -588,7 +592,7 @@ AG_HSVPalInit(AG_HSVPal *pal)
 	AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &pal->pixel);
 	AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER, &agVideoFmt);
 
-	pal->flags = 0;
+	pal->flags = flags;
 	pal->h = 0.0;
 	pal->s = 0.0;
 	pal->v = 0.0;
@@ -734,7 +738,10 @@ AG_HSVPalDraw(void *p)
 	Uint8 r, g, b, a;
 	int x, y;
 	int i;
-	
+
+	if (AGWIDGET(pal)->w < 16 || AGWIDGET(pal)->h < 16)
+		return;
+
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
