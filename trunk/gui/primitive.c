@@ -40,9 +40,13 @@
 AG_PrimitiveOps agPrim;
 
 /* Add to individual RGB components of a pixel. */
+/* TODO use SIMD to compute the components in parallel */
 static __inline__ Uint32
-alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
+AG_ColorShift(Uint32 pixel, Sint8 *shift)
 {
+	Sint8 r = shift[0];
+	Sint8 g = shift[1];
+	Sint8 b = shift[2];
 	Uint32 rv = 0;
 	int v1, v2;
 
@@ -174,30 +178,24 @@ static void
 box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
 	AG_Widget *wid = p;
-	Uint32 lcol, rcol, bcol;
+	Uint32 cLeft, cRight, cBg;
 
-	lcol = (z < 0) ?
-	    alter_color(color, -60, -60, -60) :
-	    alter_color(color, 60, 60, 60);
-	rcol = (z < 0) ?
-	    alter_color(color, 60, 60, 60) :
-	    alter_color(color, -60, -60, -60);
+	cLeft = AG_ColorShift(color, (z<0) ? agLowColorShift:agHighColorShift);
+	cRight = AG_ColorShift(color, (z<0) ? agHighColorShift:agLowColorShift);
 
 	if (AG_WidgetHoldsFocus(wid)) {
-		bcol = (z < 0) ?
-		    alter_color(color, -10, -10, -10) :
-		    alter_color(color, 20, 20, 20);
+		cBg = AG_ColorShift(color, (z < 0) ? agFocusSunkColorShift :
+		                                     agFocusRaisedColorShift);
 	} else {
-		bcol = (z < 0) ?
-		    alter_color(color, -20, -20, -20) :
-		    alter_color(color, 10, 10, 10);
+		cBg = AG_ColorShift(color, (z < 0) ? agNofocusSunkColorShift :
+		                                     agNofocusRaisedColorShift);
 	}
 
-	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, lcol);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, rcol);
-	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, lcol);
-	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, rcol);
+	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, cBg);
+	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, cLeft);
+	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, cRight);
+	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, cLeft);
+	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, cRight);
 }
 
 /* Draw a 3D-style box with dithering. */
@@ -206,103 +204,70 @@ box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
     Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint32 lcol, rcol, bcol, dcol;
 	Uint x, y;
 	int flag = 0;
-
-	lcol = (z < 0) ?
-	    alter_color(c1, -60, -60, -60) :
-	    alter_color(c1, 60, 60, 60);
-	rcol = (z < 0) ?
-	    alter_color(c1, 60, 60, 60) :
-	    alter_color(c1, -60, -60, -60);
-
+	Uint32 cDither;
+	
 	if (AG_WidgetHoldsFocus(wid)) {
-		bcol = (z < 0) ?
-		    alter_color(c1, -10, -10, -10) :
-		    alter_color(c1, 20, 20, 20);
-		dcol = (z < 0) ?
-		    alter_color(c2, -10, -10, -10) :
-		    alter_color(c2, 20, 20, 20);
+		cDither = AG_ColorShift(c2, (z<0) ? agFocusSunkColorShift :
+		                                    agFocusRaisedColorShift);
 	} else {
-		bcol = (z < 0) ?
-		    alter_color(c1, -20, -20, -20) :
-		    alter_color(c1, 10, 10, 10);
-		dcol = (z < 0) ?
-		    alter_color(c2, -20, -20, -20) :
-		    alter_color(c2, 10, 10, 10);
+		cDither = AG_ColorShift(c2, (z<0) ? agNofocusSunkColorShift :
+		                                    agNofocusRaisedColorShift);
 	}
 
-	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
-	for (y = yoffs; y < h-2; y++) {
+	/* XXX inefficient */
+	agPrim.box(p, xoffs, yoffs, w, h, z, c1);
+	for (y = yoffs; y < yoffs+h-2; y++) {
 		flag = !flag;
-		for (x = xoffs+1+flag; x < w-2; x+=2)
-			AG_WidgetPutPixel(wid, x, y, dcol);
+		for (x = xoffs+1+flag; x < xoffs+w-2; x+=2)
+			AG_WidgetPutPixel(wid, x, y, cDither);
 	}
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, lcol);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, rcol);
-	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, lcol);
-	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, rcol);
 }
 
 /* Draw a 3D-style box with chamfered top edges. */
 static void
-box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
+box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
-	Uint32 lcol, rcol;
+	Uint32 cLeft, cRight;
 	int v, e, u;
 	int x, y;
-
-	lcol = (z < 0) ?
-	    alter_color(bcol, -60, -60, -60) :
-	    alter_color(bcol, 60, 60, 60);
-	rcol = (z < 0) ?
-	    alter_color(bcol, 60, 60, 60) :
-	    alter_color(bcol, -60, -60, -60);
+	
+	cLeft = AG_ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
+	cRight = AG_ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
 
 	/* Fill the background except the corners. */
 	agPrim.rect_filled(wid,			/* Body */
-	    r->x + rad,
-	    r->y + rad,
-	    r->w - rad*2,
-	    r->h - rad,
-	    bcol);
+	    r->x + rad,			r->y + rad,
+	    r->w - rad*2,		r->h - rad,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Top */
-	    r->x + rad,
-	    r->y,
-	    r->w - rad*2,
-	    r->h,
-	    bcol);
+	    r->x + rad,			r->y,
+	    r->w - rad*2,		r->h,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Left */
-	    r->x,
-	    r->y + rad,
-	    rad,
-	    r->h - rad,
-	    bcol);
+	    r->x,			r->y + rad,
+	    rad,			r->h - rad,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Right */
-	    r->x + r->w - rad,
-	    r->y + rad,
-	    rad,
-	    r->h - rad,
-	    bcol);
+	    r->x + r->w - rad,		r->y + rad,
+	    rad,			r->h - rad,
+	    cBg);
 
 	/* Draw the three straight lines. */
 	agPrim.hline(wid,				/* Top line */
-	    r->x + rad,
-	    r->x + r->w - rad,
+	    r->x + rad,			r->x + r->w - rad,
 	    r->y,
-	    bcol);
+	    cBg);
 	agPrim.vline(wid,				/* Left line */
 	    r->x,
-	    r->y + rad,
-	    r->y + r->h,
-	    lcol);
+	    r->y + rad,			r->y + r->h,
+	    cLeft);
 	agPrim.vline(wid,				/* Right line */
 	    r->x + r->w - 1,
-	    r->y + rad,
-	    r->y + r->h,
-	    rcol);
+	    r->y + rad,			r->y + r->h,
+	    cRight);
 
 	/* Draw the two chamfered edges using a Bresenham generalization. */
 	v = 2*rad - 1;
@@ -317,40 +282,40 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
 		AG_WidgetPutPixel(wid,
 		    r->x + rad - x,
 		    r->y + rad - y,
-		    lcol);
+		    cLeft);
 		AG_WidgetPutPixel(wid,
 		    r->x + rad - y,
 		    r->y + rad - x,
-		    lcol);
+		    cLeft);
 
 		AG_WidgetPutPixel(wid,
 		    r->x - rad + (r->w - 1) + x,
 		    r->y + rad - y,
-		    rcol);
+		    cRight);
 		AG_WidgetPutPixel(wid,
 		    r->x - rad + (r->w - 1) + y,
 		    r->y + rad - x,
-		    rcol);
+		    cRight);
 		
 		for (i = 0; i < x; i++) {
 			AG_WidgetPutPixel(wid,
 			    r->x + rad - i,
 			    r->y + rad - y,
-			    bcol);
+			    cBg);
 			AG_WidgetPutPixel(wid,
 			    r->x - rad + (r->w - 1) + i,
 			    r->y + rad - y,
-			    bcol);
+			    cBg);
 		}
 		for (i = 0; i < y; i++) {
 			AG_WidgetPutPixel(wid,
 			    r->x + rad - i,
 			    r->y + rad - x,
-			    bcol);
+			    cBg);
 			AG_WidgetPutPixel(wid,
 			    r->x - rad + (r->w - 1) + i,
 			    r->y + rad - x,
-			    bcol);
+			    cBg);
 		}
 
 		e += u;
@@ -370,12 +335,12 @@ static void
 frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	AG_Widget *wid = p;
-	Uint32 shade = alter_color(color, -40, -40, -40);
+	Uint32 c = AG_ColorShift(color, agLowColorShift);
 
 	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, color);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, shade);
+	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, c);
 	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, color);
-	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, shade);
+	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, c);
 }
 
 /* Draw a blended 3D-style frame. */
@@ -473,14 +438,14 @@ circle2_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 	SDL_UnlockSurface(agView->v);
 }
 
-/* Render two lines with +50,50,50 RGB difference. */
+/* Render a 3D-style line. */
 static void
-line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color1)
+line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
-	Uint32 color2 = alter_color(color1, 50, 50, 50);
-
-	agPrim.line(wid, x1, y1, x2, y2, color1);
-	agPrim.line(wid, x1+1, y1+1, x2+1, y2+1, color2);
+	agPrim.line(wid, x1, y1, x2, y2,
+	    AG_ColorShift(color, agHighColorShift));
+	agPrim.line(wid, x1+1, y1+1, x2+1, y2+1,
+	    AG_ColorShift(color, agLowColorShift));
 }
 
 /*
@@ -1218,71 +1183,57 @@ box_dithered_gl(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c1,
 
 /* Draw a 3D-style box with chamfered top edges. */
 static void
-box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
+box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
-	Uint32 lcol, rcol;
+	Uint32 cLeft, cRight;
 	int x, y;
 	int crad;
 	Uint8 r, g, b;
 	int i;
-
-	lcol = (z < 0) ?
-	    alter_color(bcol, -60, -60, -60) :
-	    alter_color(bcol, 60, 60, 60);
-	rcol = (z < 0) ?
-	    alter_color(bcol, 60, 60, 60) :
-	    alter_color(bcol, -60, -60, -60);
+	
+	cLeft = AG_ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
+	cRight = AG_ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
 
 	/* Fill the background except the corners. */
 	agPrim.rect_filled(wid,			/* Body */
-	    rd->x + rad,
-	    rd->y + rad,
-	    rd->w - rad*2,
-	    rd->h - rad,
-	    bcol);
+	    rd->x + rad,	rd->y + rad,
+	    rd->w - rad*2,	rd->h - rad,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Top */
-	    rd->x + rad,
-	    rd->y,
-	    rd->w - rad*2,
-	    rd->h,
-	    bcol);
+	    rd->x + rad,	rd->y,
+	    rd->w - rad*2,	rd->h,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Left */
-	    rd->x,
-	    rd->y + rad,
-	    rad,
-	    rd->h - rad,
-	    bcol);
+	    rd->x,		rd->y + rad,
+	    rad,		rd->h - rad,
+	    cBg);
 	agPrim.rect_filled(wid,			/* Right */
-	    rd->x + rd->w - rad,
-	    rd->y + rad,
-	    rad,
-	    rd->h - rad,
-	    bcol);
+	    rd->x + rd->w - rad,  rd->y + rad,
+	    rad,		  rd->h - rad,
+	    cBg);
 
 	/* Draw the three straight lines. */
 	agPrim.hline(wid,				/* Top line */
-	    rd->x + rad,
-	    rd->x + rd->w - rad,
+	    rd->x + rad,	rd->x + rd->w - rad,
 	    rd->y,
-	    bcol);
+	    cBg);
 	agPrim.vline(wid,				/* Left line */
 	    rd->x,
-	    rd->y + rad,
-	    rd->y + rd->h,
-	    lcol);
+	    rd->y + rad,	rd->y + rd->h,
+	    cLeft);
 	agPrim.vline(wid,				/* Right line */
 	    rd->x + rd->w - 1,
-	    rd->y + rad,
-	    rd->y + rd->h,
-	    rcol);
+	    rd->y + rad,	rd->y + rd->h,
+	    cRight);
 
 	crad = rad/2;
 	x = rd->x;
 	y = rd->y + rad;
 
 	/* Draw the two chamfered edges. */
-	SDL_GetRGB(bcol, agVideoFmt, &r, &g, &b);
+	/* XXX */
+	SDL_GetRGB(cBg, agVideoFmt, &r, &g, &b);
 
 	glPushMatrix();
 	glTranslatef(wid->cx+x, wid->cy+y, 0);
