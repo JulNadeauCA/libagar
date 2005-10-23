@@ -91,7 +91,7 @@ static void columnmove(AG_Event *);
 
 
 AG_Tableview *
-AG_TableviewNew(void *parent, int flags, AG_TableviewDataFn data_callback,
+AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
     AG_TableviewSortFn sort_callback)
 {
 	AG_Tableview *tv;
@@ -103,7 +103,7 @@ AG_TableviewNew(void *parent, int flags, AG_TableviewDataFn data_callback,
 }
 
 void
-AG_TableviewInit(AG_Tableview *tv, int flags, AG_TableviewDataFn data_callback,
+AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
     AG_TableviewSortFn sort_callback)
 {
 	AG_WidgetInit(tv, "tableview", &agTableviewOps,

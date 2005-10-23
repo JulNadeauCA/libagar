@@ -152,9 +152,9 @@ void AG_TableviewDestroy(void *p);
 void AG_TableviewScale(void *, int, int);
 void AG_TableviewDraw(void *);
 
-AG_Tableview *AG_TableviewNew(void *, int, AG_TableviewDataFn,
+AG_Tableview *AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
 		              AG_TableviewSortFn);
-void AG_TableviewInit(AG_Tableview *, int, AG_TableviewDataFn,
+void AG_TableviewInit(AG_Tableview *, Uint, AG_TableviewDataFn,
 		      AG_TableviewSortFn);
 void AG_TableviewPrescale(AG_Tableview *, const char *, int);
 void AG_TableviewSetUpdate(AG_Tableview *, Uint);
