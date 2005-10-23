@@ -83,6 +83,7 @@ CreateWindow(void)
 	btn = AG_ButtonNew(fx1, "Bar");
 	AG_FixedMove(fx1, btn, 0, 32);
 	AG_FixedSize(fx1, btn, 32, 32);
+	AG_ButtonDisable(btn);
 
 	fx2 = AG_FixedNew(fx1, AG_FIXED_BOX);
 	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
