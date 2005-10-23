@@ -217,8 +217,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
     const char *label)
 {
 	AG_WidgetInit(fsu, "fspinbutton", &agFSpinbuttonOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
-
+	    AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &fsu->value);
 	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
 	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);
