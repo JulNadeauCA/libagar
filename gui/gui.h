@@ -23,7 +23,6 @@
 #include <agar/gui/mfspinbutton.h>
 #include <agar/gui/mspinbutton.h>
 #include <agar/gui/notebook.h>
-#include <agar/gui/hsvpal.h>
 #include <agar/gui/pixmap.h>
 #include <agar/gui/radio.h>
 #include <agar/gui/scrollbar.h>
