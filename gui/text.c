@@ -623,8 +623,7 @@ AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
 	
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		fsb = AG_FSpinbuttonNew(vb, unit, _("Number: "));
-		AGWIDGET(fsb)->flags |= AG_WIDGET_WFILL;
+		fsb = AG_FSpinbuttonNew(vb, 0, unit, _("Number: "));
 		AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, fp);
 		AG_FSpinbuttonSetRange(fsb, min, max);
 		AG_SetEvent(fsb, "fspinbutton-return", AGWINDETACH(win));

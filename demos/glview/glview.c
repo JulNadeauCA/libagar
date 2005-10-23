@@ -105,7 +105,7 @@ CreateWindow(void)
 
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		fsb = AG_FSpinbuttonNew(vb, NULL, "Vx:");
+		fsb = AG_FSpinbuttonNew(vb, 0, NULL, "Vx:");
 		AG_WidgetBindDouble(fsb, "value", &vx);
 	}
 

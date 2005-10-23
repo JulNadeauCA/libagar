@@ -233,7 +233,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_Spinbutton *sb;
 		AG_MSpinbutton *msb;
 
-		fsb = AG_FSpinbuttonNew(ntab, NULL, _("Scale: "));
+		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Scale: "));
 		AG_WidgetBind(fsb, "value", AG_WIDGET_FLOAT,
 		    &tel->tel_sketch.scale);
 		AG_FSpinbuttonSetMin(fsb, 0.0001);

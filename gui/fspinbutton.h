@@ -29,15 +29,13 @@ typedef struct ag_fspinbutton {
 } AG_FSpinbutton;
 
 __BEGIN_DECLS
-AG_FSpinbutton *AG_FSpinbuttonNew(void *, const char *, const char *, ...)
-		                  FORMAT_ATTRIBUTE(printf, 3, 4)
-		                  NONNULL_ATTRIBUTE(3);
-
-void	AG_FSpinbuttonInit(AG_FSpinbutton *, const char *, const char *);
-void	AG_FSpinbuttonDestroy(void *);
-void	AG_FSpinbuttonPrescale(AG_FSpinbutton *, const char *);
-void	AG_FSpinbuttonScale(void *, int, int);
-void	AG_FSpinbuttonDraw(void *);
+AG_FSpinbutton *AG_FSpinbuttonNew(void *, Uint, const char *, const char *);
+void		AG_FSpinbuttonInit(AG_FSpinbutton *, Uint, const char *,
+		                   const char *);
+void		AG_FSpinbuttonDestroy(void *);
+void		AG_FSpinbuttonPrescale(AG_FSpinbutton *, const char *);
+void		AG_FSpinbuttonScale(void *, int, int);
+void		AG_FSpinbuttonDraw(void *);
 
 void	AG_FSpinbuttonSetValue(AG_FSpinbutton *, double);
 void	AG_FSpinbuttonAddValue(AG_FSpinbutton *, double);

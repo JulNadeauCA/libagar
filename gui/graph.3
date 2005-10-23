@@ -49,10 +49,10 @@ widget implements a scrollable graph display.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Graph *"
-.Fn AG_GraphNew "void *parent, const char *caption, enum ag_graph_type type" "int flags" "AG_GraphValue yrange"
+.Fn AG_GraphNew "void *parent, enum ag_graph_type type" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_GraphInit "AG_Graph *graph, const char *caption" "enum ag_graph_type type, int flags, AG_GraphValue yrange"
+.Fn AG_GraphInit "AG_Graph *graph" "enum ag_graph_type type, Uint flags"
 .nr nS 0
 .Pp
 The
@@ -64,13 +64,6 @@ widget.
 initializes a
 .Nm
 widget.
-.Fa caption
-is a short description of the graph; it is truncated if its length
-exceeds
-.Dv GRAPH_CAPTION_MAX - 1
-characters.
-.Fa yrange
-is the maximum expected value for which to adjust display.
 The
 .Fa type
 argument is one of:

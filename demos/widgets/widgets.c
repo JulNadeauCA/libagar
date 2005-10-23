@@ -110,7 +110,7 @@ CreateWindow(void)
 	 * variant which handles integer values only and provides no unit
 	 * conversion.
 	 */
-	AG_FSpinbuttonNew(div->box1, "cm", "Real number: ");
+	AG_FSpinbuttonNew(div->box1, 0, "cm", "Real number: ");
 	AG_SpinbuttonNew(div->box1, "Integer: ");
 
 	/*
@@ -198,8 +198,8 @@ CreateWindow(void)
 			int i = 0;
 			
 			/* AG_Graph plots a set of values graphically. */
-			g = AG_GraphNew(ntab, "Graph", AG_GRAPH_LINES, 0, 100);
-			AGWIDGET(g)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+			g = AG_GraphNew(ntab, AG_GRAPH_LINES,
+			    AG_GRAPH_WFILL|AG_GRAPH_HFILL);
 			sinplot = AG_GraphAddItem(g, "sin", 0, 150, 0, 0);
 			cosplot = AG_GraphAddItem(g, "cos", 150, 150, 0, 0);
 			for (f = 0; f < 60; f += 0.3) {

@@ -137,9 +137,9 @@ init_perf_graph(void)
 	    &agIdleAvg);
 	AG_LabelPrescale(label, "XXXms (nom XXXms), XX evnt, XXXms idle");
 
-	agPerfGraph = AG_GraphNew(agPerfWindow, "agar-perf", AG_GRAPH_LINES,
-	    AG_GRAPH_ORIGIN, 100);
-	/* XXX use polling */
+	agPerfGraph = AG_GraphNew(agPerfWindow, AG_GRAPH_LINES,
+	    AG_GRAPH_ORIGIN);
+	/* TODO use polling */
 
 	agPerfFPS = AG_GraphAddItem(agPerfGraph, "refresh", 0, 160, 0, 99);
 	agPerfEvnts = AG_GraphAddItem(agPerfGraph, "event", 0, 0, 180, 99);
