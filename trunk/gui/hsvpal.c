@@ -65,6 +65,9 @@ AG_HSVPalNew(void *parent, Uint flags)
 	pal = Malloc(sizeof(AG_HSVPal), M_OBJECT);
 	AG_HSVPalInit(pal, flags);
 	AG_ObjectAttach(parent, pal);
+	if (flags & AG_HSVPAL_FOCUS) {
+		AG_WidgetFocus(pal);
+	}
 	return (pal);
 }
 
