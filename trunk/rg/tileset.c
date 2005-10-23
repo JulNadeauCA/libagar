@@ -1022,7 +1022,7 @@ insert_tile_dlg(AG_Event *event)
 		AG_TlistAdd(com->list, NULL, "Rock");
 	}
 
-	msb = AG_MSpinbuttonNew(win, "x", _("Size: "));
+	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
@@ -1104,7 +1104,7 @@ insert_anim_dlg(AG_Event *event)
 	AG_SetEvent(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
-	msb = AG_MSpinbuttonNew(win, "x", _("Size:"));
+	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size:"));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);

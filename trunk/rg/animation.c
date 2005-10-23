@@ -493,12 +493,12 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		AG_SpinbuttonSetMax(sb, 255);
 		break;
 	case RG_ANIM_DISPX:
-		msb = AG_MSpinbuttonNew(box, ",", _("Displacement: "));
+		msb = AG_MSpinbuttonNew(box, 0, ",", _("Displacement: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &insn->in_disPx.dx);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &insn->in_disPx.dy);
 		break;
 	case RG_ANIM_ROTPX:
-		msb = AG_MSpinbuttonNew(box, ",", _("Center of rotation: "));
+		msb = AG_MSpinbuttonNew(box, 0, ",", _("Center of rotation: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
 		

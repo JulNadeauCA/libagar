@@ -180,7 +180,8 @@ AG_MapEditorConfig(void *p)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		msb = AG_MSpinbuttonNew(bo, "x", _("Default map geometry: "));
+		msb = AG_MSpinbuttonNew(bo, 0, "x",
+		    _("Default map geometry: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
 		    &agMapDefaultWidth);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
@@ -188,7 +189,8 @@ AG_MapEditorConfig(void *p)
 		AG_MSpinbuttonSetMin(msb, 1);
 		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
 		
-		msb = AG_MSpinbuttonNew(bo, "x", _("Default brush geometry: "));
+		msb = AG_MSpinbuttonNew(bo, 0, "x",
+		    _("Default brush geometry: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
 		    &agMapDefaultBrushWidth);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,

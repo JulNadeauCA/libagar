@@ -117,8 +117,8 @@ CreateWindow(void)
 	 * AG_MFSpinbutton and AG_MSpinbutton are variants used to conveniently
 	 * edit two values, such as 2D coordinates.
 	 */
-	AG_MFSpinbuttonNew(div->box1, "mm", "x", "Dimensions: ");
-	AG_MSpinbuttonNew(div->box1, ",", "Coordinates: ");
+	AG_MFSpinbuttonNew(div->box1, 0, "mm", "x", "Dimensions: ");
+	AG_MSpinbuttonNew(div->box1, 0, ",", "Coordinates: ");
 
 	/*
 	 * AG_Textbox is a single-line text edition widget. It can bind to
