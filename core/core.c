@@ -212,6 +212,19 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
 
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 r, g, b;
+
+		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
+		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
+	} else
+#endif
+	{
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+	}
+
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 	
 	AG_ObjectInit(&agIconMgr, "object", "IconMgr", NULL);
