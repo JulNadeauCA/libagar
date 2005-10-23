@@ -357,9 +357,10 @@ AG_TableDraw(void *p)
 
 	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
-	
-	if (t->poll_ev != NULL)
+
+	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
+	}
 
 	for (n = 0, x = t->xoffs;
 	     n < t->n && x < AGWIDGET(t)->w;
@@ -503,7 +504,6 @@ AG_TableBegin(AG_Table *t)
 	Uint m, n;
 
 	AG_MutexLock(&t->lock);
-
 	/* Copy the existing cells to the column pools and free the table. */
 	for (m = 0; m < t->m; m++) {
 		for (n = 0; n < t->n; n++) {
@@ -596,13 +596,16 @@ AG_TableEnd(AG_Table *t)
 		AG_TableCol *tc = &t->cols[n];
 
 		for (m = 0; m < tc->mpool; m++) {
-			AG_TableCell *cDst = &t->cells[m][n];
 			AG_TableCell *cPool = &tc->pool[m];
 
-			if (AG_TableCompareCells(cDst, cPool) == 0) {
-				cDst->surface = cPool->surface;
-				cDst->selected = cPool->selected;
-				cPool->surface = -1;
+			if (m < t->m) {
+				AG_TableCell *cDst = &t->cells[m][n];
+
+				if (AG_TableCompareCells(cDst, cPool) == 0) {
+					cDst->surface = cPool->surface;
+					cDst->selected = cPool->selected;
+					cPool->surface = -1;
+				}
 			}
 			AG_TableFreeCell(t, cPool);
 		}
