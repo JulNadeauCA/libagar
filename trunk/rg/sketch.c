@@ -247,7 +247,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
 		    tv, tel);
 		
-		sb = AG_SpinbuttonNew(ntab, _("Overall alpha: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Overall alpha: "));
 		AG_SpinbuttonSetRange(sb, 0, 255);
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
 		    &tel->tel_sketch.alpha);
@@ -297,7 +297,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_LabelNewFmt(win, _("Element type: %s"), ops->name);
 	AG_LabelNew(win, AG_LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
 	
-	sb = AG_SpinbuttonNew(win, _("Layer: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
 	AG_SpinbuttonSetMin(sb, 0);
 
@@ -338,16 +338,16 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
 
-		sb = AG_SpinbuttonNew(ntab, _("Stipple pattern: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Stipple pattern: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT16,
 		    &vge->line_st.stipple);
 		
-		sb = AG_SpinbuttonNew(ntab, _("Thickness: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Thickness: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
 		    &vge->line_st.thickness);
 		AG_SpinbuttonSetMin(sb, 1);
 		
-		sb = AG_SpinbuttonNew(ntab, _("Miter length: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Miter length: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
 		    &vge->line_st.miter_len);
 	}

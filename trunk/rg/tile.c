@@ -1752,7 +1752,7 @@ tile_infos(AG_Event *event)
 	AG_WidgetSetInt(msb, "xvalue", t->su->w);
 	AG_WidgetSetInt(msb, "yvalue", t->su->h);
 	
-	alpha_sb = AG_SpinbuttonNew(win, _("Overall alpha: "));
+	alpha_sb = AG_SpinbuttonNew(win, 0, _("Overall alpha: "));
 	AG_SpinbuttonSetRange(alpha_sb, 0, 255);
 	AG_WidgetSetInt(alpha_sb, "value", t->su->format->alpha);
 	

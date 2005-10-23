@@ -111,7 +111,7 @@ CreateWindow(void)
 	 * conversion.
 	 */
 	AG_FSpinbuttonNew(div->box1, 0, "cm", "Real number: ");
-	AG_SpinbuttonNew(div->box1, "Integer: ");
+	AG_SpinbuttonNew(div->box1, 0, "Integer: ");
 
 	/*
 	 * AG_MFSpinbutton and AG_MSpinbutton are variants used to conveniently

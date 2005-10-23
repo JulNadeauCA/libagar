@@ -242,22 +242,22 @@ examine_window(AG_Event *event)
 	AG_LabelNew(win, AG_LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
 	    &pwin->flags);
 
-	sb = AG_SpinbuttonNew(win, _("Widget spacing: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Widget spacing: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->spacing);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = AG_SpinbuttonNew(win, _("Top padding: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Top padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_top);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = AG_SpinbuttonNew(win, _("Bottom padding: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Bottom padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_bot);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 	
-	sb = AG_SpinbuttonNew(win, _("Horizontal padding: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Horizontal padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->xpadding);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);

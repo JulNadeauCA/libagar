@@ -486,7 +486,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		AG_LabelNew(box, AG_LABEL_STATIC, _("Preview:"));
 		AG_ObjectAttach(box, tv);
 		
-		sb = AG_SpinbuttonNew(box, _("Alpha: "));
+		sb = AG_SpinbuttonNew(box, 0, _("Alpha: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT,
 		    &insn->in_tile.alpha);
 		AG_SpinbuttonSetMin(sb, 0);
@@ -502,7 +502,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
 		
-		sb = AG_SpinbuttonNew(box, _("Angle of rotation: "));
+		sb = AG_SpinbuttonNew(box, 0, _("Angle of rotation: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
 		    &insn->in_rotPx.theta);
 		break;
@@ -510,7 +510,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		break;
 	}
 
-	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
+	sb = AG_SpinbuttonNew(box, 0, _("Delay (ms): "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &insn->delay);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);
@@ -535,7 +535,7 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 
 	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_DupSurface(fr->su));
 	
-	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
+	sb = AG_SpinbuttonNew(box, 0, _("Delay (ms): "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);

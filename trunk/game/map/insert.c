@@ -188,7 +188,7 @@ insert_pane(void *p, void *con)
 		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
 
-		sb = AG_SpinbuttonNew(ntab, _("Rotation: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Rotation: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ins->angle);
 		AG_SpinbuttonSetRange(sb, 0, 360);
 		AG_SpinbuttonSetIncrement(sb, 90);
