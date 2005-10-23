@@ -61,7 +61,7 @@ static AG_WidgetOps agBoxOpsWithFrame = {
 };
 
 AG_Box *
-AG_BoxNew(void *parent, enum ag_box_type type, int flags)
+AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 {
 	AG_Box *bo;
 
@@ -72,7 +72,7 @@ AG_BoxNew(void *parent, enum ag_box_type type, int flags)
 }
 
 void
-AG_BoxInit(AG_Box *bo, enum ag_box_type type, int flags)
+AG_BoxInit(AG_Box *bo, enum ag_box_type type, Uint flags)
 {
 	AG_WidgetInit(bo, "box", (flags & AG_BOX_FRAME) ?
 	    &agBoxOpsWithFrame : &agBoxOps, 0);

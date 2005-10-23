@@ -30,8 +30,8 @@ typedef struct ag_box {
 } AG_Box;
 
 __BEGIN_DECLS
-AG_Box	*AG_BoxNew(void *, enum ag_box_type, int);
-void	 AG_BoxInit(AG_Box *, enum ag_box_type, int);
+AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
+void	 AG_BoxInit(AG_Box *, enum ag_box_type, Uint);
 void	 AG_BoxDestroy(void *);
 void	 AG_BoxDraw(void *);
 void	 AG_BoxScale(void *, int, int);
