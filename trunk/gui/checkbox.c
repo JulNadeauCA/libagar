@@ -52,37 +52,31 @@ static AG_WidgetOps agCheckboxOps = {
 	AG_CheckboxScale
 };
 
-#define XSPACING 6
+#define LABEL_SPACING 6
 
 static void checkbox_mousebutton(AG_Event *);
 static void checkbox_keydown(AG_Event *);
 
 AG_Checkbox *
-AG_CheckboxNew(void *parent, const char *fmt, ...)
+AG_CheckboxNew(void *parent, Uint flags, const char *label)
 {
-	char caption[AG_LABEL_MAX];
 	AG_Checkbox *cb;
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(caption, sizeof(caption), fmt, ap);
-	va_end(ap);
 
 	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
-	AG_CheckboxInit(cb, caption);
+	AG_CheckboxInit(cb, flags, label);
 	AG_ObjectAttach(parent, cb);
 	return (cb);
 }
 
 void
-AG_CheckboxInit(AG_Checkbox *cbox, char *caption)
+AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 {
 	AG_WidgetInit(cbox, "checkbox", &agCheckboxOps, AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;
 	cbox->label_su = AG_TextRender(NULL, -1, AG_COLOR(CHECKBOX_TXT_COLOR),
-	    caption);
+	    label);
 	cbox->label_id = AG_WidgetMapSurface(cbox, cbox->label_su);
 	
 	AG_SetEvent(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
@@ -100,7 +94,9 @@ AG_CheckboxDraw(void *p)
 	    AG_WidgetBool(cbox, "state") ? -1 : 1,
 	    AG_COLOR(CHECKBOX_COLOR));
 
-	AG_WidgetBlitSurface(cbox, cbox->label_id, AGWIDGET(cbox)->h+XSPACING, 0);
+	AG_WidgetBlitSurface(cbox, cbox->label_id,
+	    AGWIDGET(cbox)->h + LABEL_SPACING,
+	    0);
 }
 
 static void
@@ -136,7 +132,8 @@ AG_CheckboxScale(void *p, int rw, int rh)
 	if (rh == -1)
 		AGWIDGET(cb)->h = cb->label_su->h;
 	if (rw == -1)
-		AGWIDGET(cb)->w = AGWIDGET(cb)->h + XSPACING + cb->label_su->w;
+		AGWIDGET(cb)->w = AGWIDGET(cb)->h + LABEL_SPACING +
+		    cb->label_su->w;
 }
 
 /* Toggle the checkbox state. */

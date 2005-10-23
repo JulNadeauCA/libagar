@@ -51,7 +51,7 @@ flip_pane(void *p, void *con)
 {
 	AG_Checkbox *cb;
 
-	cb = AG_CheckboxNew(con, _("Flip entire selection"));
+	cb = AG_CheckboxNew(con, 0, _("Flip entire selection"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &multi_ind);
 }
 

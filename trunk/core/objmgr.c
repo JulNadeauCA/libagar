@@ -709,7 +709,7 @@ create_obj_dlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		cb = AG_CheckboxNew(win, _("Edit now"));
+		cb = AG_CheckboxNew(win, 0, _("Edit now"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &edit_on_create);
 	}
 

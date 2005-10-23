@@ -51,10 +51,10 @@ binding.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNew "void *parent" "const char *caption_fmt" "..."
+.Fn AG_CheckboxNew "void *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_CheckboxInit "AG_Checkbox *checkbox" "char *caption"
+.Fn AG_CheckboxInit "AG_Checkbox *checkbox" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
 .Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
@@ -64,17 +64,11 @@ The
 .Fn AG_CheckboxNew
 function allocates, initializes, and attaches a
 .Nm
-widget and accepts a
-.Xr printf 3
-style format string to set the text of the label.
+widget displaying the given text label.
 .Fn AG_CheckboxInit
 initializes a
 .Nm
-widget with the label set to
-.Fa caption .
-If the length of the label string exceeds
-.Dv AG_CHECKBOX_CAPTION_MAX
-- 1, the label is truncated.
+widget.
 .Pp
 The
 .Fn AG_CheckboxToggle

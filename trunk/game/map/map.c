@@ -2232,7 +2232,7 @@ edit_properties(AG_Event *event)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		cbox = AG_CheckboxNew(ntab, _("Smooth scaling"));
+		cbox = AG_CheckboxNew(ntab, 0, _("Smooth scaling"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT,
 		    &agMapSmoothScaling);
 		

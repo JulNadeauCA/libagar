@@ -1027,10 +1027,10 @@ insert_tile_dlg(AG_Event *event)
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = AG_CheckboxNew(win, _("Alpha blending"));
+	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
 	
-	cb = AG_CheckboxNew(win, _("Colorkeying"));
+	cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
 	AG_LabelStatic(win, _("Snapping mode: "));
@@ -1109,10 +1109,10 @@ insert_anim_dlg(AG_Event *event)
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = AG_CheckboxNew(win, _("Alpha blending"));
+	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
 	
-	cb = AG_CheckboxNew(win, _("Colorkey"));
+	cb = AG_CheckboxNew(win, 0, _("Colorkey"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
