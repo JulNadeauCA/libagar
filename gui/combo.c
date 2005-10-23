@@ -231,7 +231,6 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 
 	if ((flags & AG_COMBO_ANY_TEXT) == 0) {
 		com->tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
-		AGWIDGET(com->tbox)->flags &= ~(AG_WIDGET_FOCUSABLE);
 	}
 
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
