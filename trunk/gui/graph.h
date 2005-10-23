@@ -35,10 +35,12 @@ typedef struct ag_graph {
 	struct ag_widget wid;
 
 	enum ag_graph_type type;
-	char caption[AG_LABEL_MAX];
 	int flags;
 #define AG_GRAPH_SCROLL	0x01		/* Scroll if the end is not visible */
 #define AG_GRAPH_ORIGIN	0x02		/* Visible origin */
+#define AG_GRAPH_WFILL	0x04
+#define AG_GRAPH_HFILL	0x08
+#define AG_GRAPH_EXPAND (AG_GRAPH_WFILL|AG_GRAPH_HFILL)
 	AG_GraphValue yrange;		/* Max. value */
 	AG_GraphValue xoffs;		/* Display offset */
 	int origin_y;			/* Origin position (%) */
@@ -46,19 +48,16 @@ typedef struct ag_graph {
 } AG_Graph;
 
 __BEGIN_DECLS
-AG_Graph *AG_GraphNew(void *, const char *, enum ag_graph_type, int,
-	              AG_GraphValue);
-
-AG_GraphItem *AG_GraphAddItem(AG_Graph *, const char *, Uint8, Uint8, Uint8,
-		              Uint32);
-void AG_GraphFreeItems(AG_Graph *);
-
-void AG_GraphInit(AG_Graph *, const char *, enum ag_graph_type, int,
-	          AG_GraphValue);
+AG_Graph *AG_GraphNew(void *, enum ag_graph_type, Uint);
+void AG_GraphInit(AG_Graph *, enum ag_graph_type, Uint);
 void AG_GraphDestroy(void *);
 void AG_GraphDraw(void *);
 void AG_GraphScale(void *, int, int);
 
+AG_GraphItem *AG_GraphAddItem(AG_Graph *, const char *, Uint8, Uint8, Uint8,
+		              Uint32);
+void AG_GraphFreeItems(AG_Graph *);
+void AG_GraphSetRange(AG_Graph *, AG_GraphValue);
 void AG_GraphPlot(AG_GraphItem *, AG_GraphValue);
 __inline__ void AG_GraphScroll(AG_Graph *, int);
 __END_DECLS

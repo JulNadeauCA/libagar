@@ -348,28 +348,28 @@ edit_values(AG_Event *event)
 		AG_WidgetBinding *bAlpha;
 		void *pAlpha;
 
-		fsb = AG_FSpinbuttonNew(win, NULL, _("Hue: "));
+		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Hue: "));
 		AG_FSpinbuttonPrescale(fsb, "000");
 		AG_WidgetCopyBinding(fsb, "value", pal, "hue");
 		AG_FSpinbuttonSetRange(fsb, 0.0, 359.0);
 		AG_FSpinbuttonSetIncrement(fsb, 1);
 		FSpinbuttonSetPrecision(fsb, "f", 0);
 		
-		fsb = AG_FSpinbuttonNew(win, NULL, _("Saturation: "));
+		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Saturation: "));
 		AG_FSpinbuttonPrescale(fsb, "00.00");
 		AG_WidgetCopyBinding(fsb, "value", pal, "saturation");
 		AG_FSpinbuttonSetRange(fsb, 0.0, 1.0);
 		AG_FSpinbuttonSetIncrement(fsb, 0.01);
 		FSpinbuttonSetPrecision(fsb, "f", 2);
 
-		fsb = AG_FSpinbuttonNew(win, NULL, _("Value: "));
+		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Value: "));
 		AG_FSpinbuttonPrescale(fsb, "00.00");
 		AG_WidgetCopyBinding(fsb, "value", pal, "value");
 		AG_FSpinbuttonSetRange(fsb, 0.0, 1.0);
 		AG_FSpinbuttonSetIncrement(fsb, 0.01);
 		FSpinbuttonSetPrecision(fsb, "f", 2);
 
-		fsb = AG_FSpinbuttonNew(win, NULL, _("Alpha: "));
+		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Alpha: "));
 		AG_FSpinbuttonPrescale(fsb, "0.000");
 		AG_WidgetCopyBinding(fsb, "value", pal, "alpha");
 		bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);

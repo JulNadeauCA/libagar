@@ -64,10 +64,10 @@ for integer-only bindings.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_FSpinbutton *"
-.Fn AG_FSpinbuttonNew "void *parent, const char *unit_key" "const char *label_fmt" "..."
+.Fn AG_FSpinbuttonNew "void *parent, Uint flags, const char *conv_unit" "const char *label"
 .Pp
 .Ft void
-.Fn AG_FSpinbuttonInit "AG_FSpinbutton *fsu, const char *unit_key" "const char *label"
+.Fn AG_FSpinbuttonInit "AG_FSpinbutton *fsu, Uint flags, const char *conv_unit" "const char *label"
 .Pp
 .Ft void
 .Fn AG_FSpinbuttonSetValue "AG_FSpinbutton *fsu" "double value"
@@ -88,7 +88,7 @@ for integer-only bindings.
 .Fn AG_FSpinbuttonSetIncrement "AG_FSpinbutton *fsu" "double increment"
 .Pp
 .Ft void
-.Fn AG_FSpinbuttonSelectUnit "AG_FSpinbutton *fsu" "const char *unit_key"
+.Fn AG_FSpinbuttonSelectUnit "AG_FSpinbutton *fsu" "const char *conv_unit"
 .Pp
 .Ft void
 .Fn FSpinbuttonSetPrecision "AG_FSpinbutton *fsu, const char *fmt" "int precision"
@@ -108,7 +108,7 @@ function initializes a
 .Nm
 widget.
 The
-.Fa unit_key
+.Fa conv_unit 
 argument defines the unit system to use (if set to NULL or "identity", no
 conversion is done).
 .Pp

@@ -55,18 +55,12 @@ static AG_WidgetOps agFSpinbuttonOps = {
 };
 
 AG_FSpinbutton *
-AG_FSpinbuttonNew(void *parent, const char *unit, const char *fmt, ...)
+AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
 {
-	char label[AG_LABEL_MAX];
 	AG_FSpinbutton *fsu;
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(label, sizeof(label), fmt, ap);
-	va_end(ap);
 
 	fsu = Malloc(sizeof(AG_FSpinbutton), M_OBJECT);
-	AG_FSpinbuttonInit(fsu, unit, label);
+	AG_FSpinbuttonInit(fsu, flags, unit, label);
 	AG_ObjectAttach(parent, fsu);
 	return (fsu);
 }
@@ -219,7 +213,8 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 }
 
 void
-AG_FSpinbuttonInit(AG_FSpinbutton *fsu, const char *unit, const char *label)
+AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
+    const char *label)
 {
 	AG_WidgetInit(fsu, "fspinbutton", &agFSpinbuttonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);

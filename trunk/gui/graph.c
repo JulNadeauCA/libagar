@@ -60,37 +60,42 @@ static void	graph_focus(AG_Event *);
 static void	graph_resume_scroll(AG_Event *);
 
 AG_Graph *
-AG_GraphNew(void *parent, const char *caption, enum ag_graph_type type, int flags,
-    AG_GraphValue yrange)
+AG_GraphNew(void *parent, enum ag_graph_type type, Uint flags)
 {
 	AG_Graph *graph;
 
 	graph = Malloc(sizeof(AG_Graph), M_OBJECT);
-	AG_GraphInit(graph, caption, type, flags, yrange);
+	AG_GraphInit(graph, type, flags);
 	AG_ObjectAttach(parent, graph);
 	return (graph);
 }
 
 void
-AG_GraphInit(AG_Graph *graph, const char *caption, enum ag_graph_type type,
-    int flags, AG_GraphValue yrange)
+AG_GraphInit(AG_Graph *graph, enum ag_graph_type type, Uint flags)
 {
-	AG_WidgetInit(graph, "graph", &agGraphOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL);
+	Uint wflags = AG_WIDGET_FOCUSABLE;
 
-	strlcpy(graph->caption, caption, sizeof(graph->caption));
+	if (flags & AG_GRAPH_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_GRAPH_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(graph, "graph", &agGraphOps, wflags);
 	graph->type = type;
 	graph->flags = flags;
 	graph->xoffs = 0;
-	graph->yrange = yrange;
 	graph->origin_y = 50;
-	graph->yrange = yrange;
+	graph->yrange = 100;
 	TAILQ_INIT(&graph->items);
 
 	AG_SetEvent(graph, "window-mousemotion", graph_mousemotion, NULL);
 	AG_SetEvent(graph, "window-keydown", graph_key, NULL);
 	AG_SetEvent(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
 	AG_SetEvent(graph, "window-mousebuttondown", graph_focus, NULL);
+}
+
+void
+AG_GraphSetRange(AG_Graph *graph, AG_GraphValue range)
+{
+	graph->yrange = range;
 }
 
 static void
