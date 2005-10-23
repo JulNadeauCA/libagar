@@ -15,6 +15,9 @@ typedef struct ag_hsvpal {
 	int flags;
 #define AG_HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
 #define AG_HSVPAL_DIRTY	0x02		/* Redraw the palette */
+#define AG_HSVPAL_WFILL 0x04
+#define AG_HSVPAL_HFILL 0x08
+#define AG_HSVPAL_EXPAND (AG_HSVPAL_WFILL|AG_HSVPAL_HFILL)
 
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;
@@ -46,8 +49,8 @@ typedef struct ag_hsvpal {
 } AG_HSVPal;
 
 __BEGIN_DECLS
-AG_HSVPal *AG_HSVPalNew(void *);
-void	   AG_HSVPalInit(AG_HSVPal *);
+AG_HSVPal *AG_HSVPalNew(void *, Uint);
+void	   AG_HSVPalInit(AG_HSVPal *, Uint);
 void	   AG_HSVPalScale(void *, int, int);
 void	   AG_HSVPalDraw(void *);
 __END_DECLS
