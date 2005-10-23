@@ -71,13 +71,16 @@ static void keydown(AG_Event *);
 static void keyup(AG_Event *);
 
 AG_Textbox *
-AG_TextboxNew(void *parent, const char *label)
+AG_TextboxNew(void *parent, Uint flags, const char *label)
 {
 	AG_Textbox *textbox;
 
 	textbox = Malloc(sizeof(AG_Textbox), M_OBJECT);
-	AG_TextboxInit(textbox, label);
+	AG_TextboxInit(textbox, flags, label);
 	AG_ObjectAttach(parent, textbox);
+	if (flags & AG_TEXTBOX_FOCUS) {
+		AG_WidgetFocus(textbox);
+	}
 	return (textbox);
 }
 
@@ -179,17 +182,25 @@ lost_focus(AG_Event *event)
 }
 
 void
-AG_TextboxInit(AG_Textbox *tbox, const char *label)
+AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 {
-	AG_WidgetInit(tbox, "textbox", &agTextboxOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	Uint wflags = AG_WIDGET_FOCUSABLE;
+
+	if (flags & AG_TEXTBOX_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(tbox, "textbox", &agTextboxOps, wflags);
 	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 
 	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
-	tbox->flags = AG_TEXTBOX_WRITEABLE|AG_TEXTBOX_BLINK_ON;
+
+	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
+	if ((flags & AG_TEXTBOX_READONLY) == 0)
+		tbox->flags |= AG_TEXTBOX_WRITEABLE;
+
 	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
 	tbox->pos = 0;

@@ -1008,11 +1008,10 @@ insert_tile_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
-	tb = AG_TextboxNew(win, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
 	AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
-	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT, _("Class: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
@@ -1062,12 +1061,11 @@ insert_texture_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
-	tb = AG_TextboxNew(win, _("Name:"));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
 	    sizeof(ins_texture_name));
 	AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p", win,
 	    pwin, ts);
-	AG_WidgetFocus(tb);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{
@@ -1098,11 +1096,10 @@ insert_anim_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
-	tb = AG_TextboxNew(win, _("Name:"));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
 	    sizeof(ins_anim_name));
 	AG_SetEvent(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
-	AG_WidgetFocus(tb);
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size:"));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);

@@ -480,7 +480,8 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	fd->lbCwd = AG_LabelNew(fd, AG_LABEL_POLLED, _("Directory: %s"),
 	    &fd->cwd[0]);
 
-	fd->tbFile = AG_TextboxNew(fd, _("File: "));
+	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+	    _("File: "));
 	fd->comTypes = AG_ComboNew(fd, 0, _("Type: "));
 	AG_TlistPrescale(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistPrescale(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);

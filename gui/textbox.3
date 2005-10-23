@@ -51,10 +51,10 @@ The string may contain UTF-8 encoded characters.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Textbox *"
-.Fn AG_TextboxNew "void *parent" "const char *label"
+.Fn AG_TextboxNew "void *parent" "Uint flags" "const char *label"
 .Pp
 .Ft void
-.Fn AG_TextboxInit "AG_Textbox *textbox" "const char *label"
+.Fn AG_TextboxInit "AG_Textbox *textbox" "Uint flags" "const char *label"
 .Pp
 .Ft void
 .Fn AG_TextboxSetWriteable "AG_Textbox *textbox" "int writeable"
@@ -176,7 +176,7 @@ to a string contained in a fixed-size buffer:
 char name[32];
 AG_Textbox *tb;
 
-tb = AG_TextboxNew(parent, "Name: ");
+tb = AG_TextboxNew(parent, 0, "Name: ");
 AG_WidgetBind(tb, "string", AG_WIDGET_STRING, name, sizeof(name));
 .Ed
 .Pp
@@ -191,7 +191,7 @@ to retrieve a pointer to it:
 AG_Textbox *tb;
 char *value_ptr;
 
-tb = AG_TextboxNew(parent, "Value: ");
+tb = AG_TextboxNew(parent, 0, "Value: ");
 AG_TextboxPrintf(tb, "Foo");
 value_ptr = AG_TextboxDupString(tb);
 .Ed

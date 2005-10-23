@@ -2190,7 +2190,8 @@ AG_ObjectEdit(void *p)
 		char path[AG_OBJECT_PATH_MAX];
 		AG_Textbox *tb_md5, *tb_sha1, *tb_rmd160;
 
-		tbox = AG_TextboxNew(ntab, _("Name: "));
+		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		    _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_SetEvent(tbox, "textbox-return", rename_object, "%p", ob);
 		
@@ -2211,15 +2212,18 @@ AG_ObjectEdit(void *p)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		tb_md5 = AG_TextboxNew(ntab, "MD5: ");
+		tb_md5 = AG_TextboxNew(ntab,
+		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "MD5: ");
 		AG_TextboxPrescale(tb_md5, "888888888888888888888888888888888");
 		tb_md5->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
-		tb_sha1 = AG_TextboxNew(ntab, "SHA1: ");
+		tb_sha1 = AG_TextboxNew(ntab,
+		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "SHA1: ");
 		AG_TextboxPrescale(tb_sha1, "8888888888888888888888888");
 		tb_sha1->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
-		tb_rmd160 = AG_TextboxNew(ntab, "RMD160: ");
+		tb_rmd160 = AG_TextboxNew(ntab,
+		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "RMD160: ");
 		AG_TextboxPrescale(tb_rmd160, "88888888888888888888888");
 		tb_rmd160->flags &= ~(AG_TEXTBOX_WRITEABLE);
 

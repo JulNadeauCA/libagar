@@ -273,8 +273,9 @@ AG_DebugScreenshot(void)
 		AG_LabelPrescale(lab, _("Transmitting frame XXXXXXXXXXX"));
 		AGWIDGET(lab)->flags |= AG_WIDGET_CLIPPING;
 
-		hosttb = AG_TextboxNew(vb, _("Host: "));
-		porttb = AG_TextboxNew(vb, _("Port: "));
+		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		    _("Host: "));
+		porttb = AG_TextboxNew(vb, AG_TEXTBOX_WFILL, _("Port: "));
 
 		sbu = AG_SpinbuttonNew(vb, 0, _("Refresh rate (ms): "));
 		AG_SpinbuttonSetMin(sbu, 1);

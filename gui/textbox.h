@@ -24,6 +24,11 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */
 #define AG_TEXTBOX_ABANDON_FOCUS 0x08	/* Abandon focus on return */
 #define AG_TEXTBOX_COMBO	 0x10	/* Used by AG_Combo */
+#define AG_TEXTBOX_WFILL	 0x20
+#define AG_TEXTBOX_HFILL	 0x40
+#define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_WFILL|AG_TEXTBOX_HFILL)
+#define AG_TEXTBOX_FOCUS	 0x80
+#define AG_TEXTBOX_READONLY	 0x100
 
 	int prew, preh;			/* Prescale */
 	int xpadding, ypadding;		/* Text padding */
@@ -46,13 +51,12 @@ typedef struct ag_textbox {
 } AG_Textbox;
 
 __BEGIN_DECLS
-AG_Textbox *AG_TextboxNew(void *, const char *);
-
-void	 AG_TextboxInit(AG_Textbox *, const char *);
-void	 AG_TextboxDestroy(void *);
-void	 AG_TextboxDraw(void *);
-void	 AG_TextboxPrescale(AG_Textbox *, const char *);
-void	 AG_TextboxScale(void *, int, int);
+AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
+void	    AG_TextboxInit(AG_Textbox *, Uint, const char *);
+void	    AG_TextboxDestroy(void *);
+void	    AG_TextboxDraw(void *);
+void	    AG_TextboxPrescale(AG_Textbox *, const char *);
+void	    AG_TextboxScale(void *, int, int);
 
 void	 AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 char	*AG_TextboxDupString(AG_Textbox *);

@@ -1739,11 +1739,10 @@ tile_infos(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
-	tb = AG_TextboxNew(win, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->name, sizeof(t->name));
-	AG_WidgetFocus(tb);
 
-	tb = AG_TextboxNew(win, _("Class: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL, _("Class: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->clname,
 	    sizeof(t->clname));
 

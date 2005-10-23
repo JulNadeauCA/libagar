@@ -252,7 +252,7 @@ AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;
 	fsu->inc = 1.0;
-	fsu->input = AG_TextboxNew(fsu, label);
+	fsu->input = AG_TextboxNew(fsu, 0, label);
 	fsu->writeable = 1;
 	fsu->sep = sep;
 	AG_MutexInit(&fsu->lock);

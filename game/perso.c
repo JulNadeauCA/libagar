@@ -276,7 +276,8 @@ AG_PersoEdit(void *obj)
 		AG_HBox *hb;
 		AG_ObjectSelector *os;
 
-		tb = AG_TextboxNew(ntab, _("Name: "));
+		tb = AG_TextboxNew(ntab, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		    _("Name: "));
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ps->name,
 		    sizeof(ps->name));
 
