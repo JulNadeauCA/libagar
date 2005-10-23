@@ -61,6 +61,9 @@ AG_GLViewNew(void *parent, Uint flags)
 	glv = Malloc(sizeof(AG_GLView), M_OBJECT);
 	AG_GLViewInit(glv, flags);
 	AG_ObjectAttach(parent, glv);
+	if (flags & AG_GLVIEW_FOCUS) {
+		AG_WidgetFocus(glv);
+	}
 	return (glv);
 }
 
@@ -111,13 +114,15 @@ GLViewKeydown(AG_Event *event)
 void
 AG_GLViewInit(AG_GLView *glv, Uint flags)
 {
-	AG_WidgetInit(glv, "glview", &agGLViewOps, AG_WIDGET_FOCUSABLE);
+	Uint wflags = AG_WIDGET_FOCUSABLE;
+
+	if (flags & AG_GLVIEW_WFILL) wflags |= AG_WIDGET_WFILL;
+	if (flags & AG_GLVIEW_HFILL) wflags |= AG_WIDGET_HFILL;
+
+	AG_WidgetInit(glv, "glview", &agGLViewOps, wflags);
 
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");
-
-	if (flags & AG_GLVIEW_WFILL) AGWIDGET(glv)->flags |= AG_WIDGET_WFILL;
-	if (flags & AG_GLVIEW_HFILL) AGWIDGET(glv)->flags |= AG_WIDGET_HFILL;
 
 	glv->draw_ev = NULL;
 	glv->scale_ev = NULL;
