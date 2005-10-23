@@ -49,7 +49,7 @@ CreateStaticTable(void)
 	 * we wanted to allow multiple selections, or the AG_TABLE_POLL
 	 * flag to update the table periodically.
 	 */
-	table = AG_TableNew(win, 0);
+	table = AG_TableNew(win, AG_TABLE_EXPAND);
 	
 	/*
 	 * Create a column large enough to hold the string "<HIDDEN POINTER>".
@@ -137,7 +137,7 @@ CreatePolledTable(void)
 	AG_WindowSetCaption(win, "Polled Table");
 
 	/* Create a polled table. */
-	table = AG_TablePolled(win, 0, UpdateTable, NULL);
+	table = AG_TablePolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", "<888888888>", NULL);
 
