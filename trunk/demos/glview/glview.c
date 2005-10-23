@@ -99,8 +99,7 @@ CreateWindow(void)
 		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
 		AG_WidgetFocus(glv);
 
-		pal = AG_HSVPalNew(hb);
-		AGWIDGET(pal)->flags |= AG_WIDGET_HFILL;
+		pal = AG_HSVPalNew(hb, AG_HSVPAL_HFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", material);
 	}
 
