@@ -54,7 +54,7 @@ static AG_WidgetOps agFileDlgOps = {
 };
 
 AG_FileDlg *
-AG_FileDlgNew(void *parent, int flags)
+AG_FileDlgNew(void *parent, Uint flags)
 {
 	AG_FileDlg *fd;
 
@@ -456,7 +456,7 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 }
 
 void
-AG_FileDlgInit(AG_FileDlg *fd, int flags)
+AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 {
 	AG_WidgetInit(fd, "file-dlg", &agFileDlgOps,
 	    AG_WIDGET_WFILL|AG_WIDGET_HFILL);
