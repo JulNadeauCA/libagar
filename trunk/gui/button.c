@@ -117,7 +117,7 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), caption);
 	AG_WidgetMapSurface(bu, label);
 
-	bu->flags = 0;
+	bu->flags = flags;
 	bu->state = 0;
 	bu->justify = AG_BUTTON_CENTER;
 	bu->padding = 4;
