@@ -12,7 +12,6 @@ REGISTER("--enable-map",	"Enable maps in Agar-Game [default: yes]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
-REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
@@ -145,13 +144,6 @@ if [ "${enable_histo_units}" = "yes" ]; then
 	HDEFINE(HISTORICAL_UNITS, 1)
 else
 	HUNDEF(HISTORICAL_UNITS)
-fi
-
-# Enable floating point operations by default.
-if [ "${enable_floating_point}" != "no" ]; then
-	HDEFINE(FLOATING_POINT, 1)
-else
-	HUNDEF(FLOATING_POINT)
 fi
 
 # Enable graphical edition by default.
