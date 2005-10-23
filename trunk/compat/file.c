@@ -116,16 +116,16 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	if ((sb.st_mode & S_ISGID)==S_ISGID) i->flags |= AG_FILE_SGID;
 
 	if ((f = fopen(path, "rb")) != NULL) {
+		fclose(f);
 		i->perms |= AG_FILE_READABLE;
 		if (i->type == AG_FILE_DIRECTORY) {
 			/* XXX verify this */
 			i->perms |= AG_FILE_EXECUTABLE;
 		}
-		fclose(f);
 	}
-	if ((f = fopen(path, "wb")) != NULL) {
-		i->perms |= AG_FILE_WRITEABLE;
+	if ((f = fopen(path, "a")) != NULL) {
 		fclose(f);
+		i->perms |= AG_FILE_WRITEABLE;
 	}
 	return (0);
 }
