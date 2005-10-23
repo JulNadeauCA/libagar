@@ -62,10 +62,10 @@ structure.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Combo *"
-.Fn AG_ComboNew "void *parent" "int flags" "const char *format" "..."
+.Fn AG_ComboNew "void *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_ComboInit "AG_Combo *combo" "const char *label" "int flags"
+.Fn AG_ComboInit "AG_Combo *combo" "Uint flags" "const char *label"
 .nr nS 0
 .Pp
 The
@@ -84,14 +84,14 @@ Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define AG_COMBO_POLL	0x01	/* Polled list (AG_TLIST_POLL) */
-#define AG_COMBO_TREE	0x02	/* Tree display (AG_TLIST_TREE) */
+#define AG_COMBO_POLL		0x01	/* Polled list (AG_TLIST_POLL) */
+#define AG_COMBO_TREE		0x02	/* Tree display (AG_TLIST_TREE) */
 #define AG_COMBO_ANY_TEXT	0x04	/* Accept text not matching an item */
 .Ed
 .Sh ITEM SELECTION
 .nr nS 1
 .Ft void
-.Fn combo_select "AG_Combo *combo" "AG_TlistItem *item"
+.Fn AG_ComboSelect "AG_Combo *combo" "AG_TlistItem *item"
 .Pp
 .Ft "AG_TlistItem *"
 .Fn AG_ComboSelectPointer "AG_Combo *combo" "void *ptr"
@@ -101,7 +101,7 @@ include:
 .nr nS 0
 .Pp
 The
-.Fn combo_select
+.Fn AG_ComboSelect
 function sets the selection flag on the given
 .Fa item .
 .Pp
