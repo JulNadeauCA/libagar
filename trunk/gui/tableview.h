@@ -135,14 +135,18 @@ typedef struct ag_tableview {
 #define AG_TABLEVIEW_COL_FILL		0x80	/* Fill remaining space */
 
 /* Flags for AG_TableviewNew() and AG_TableviewInit() */
-#define AG_TABLEVIEW_SELMULTI	 0x01 /* Multiple selections (ctrl/shift) */
-//#define AG_TABLEVIEW_SELSINGLE 0x02
-//#define AG_TABLEVIEW_SELNOCLEAR 0x04
-#define AG_TABLEVIEW_HORIZ	 0x08 /* Can scroll horizontally if needed */
-#define AG_TABLEVIEW_REORDERCOLS 0x10 /* Users may reorder the columns */
-#define AG_TABLEVIEW_NOHEADER	 0x20 /* do not display the header */
-#define AG_TABLEVIEW_NOSORT	 0x40 /* do not sort. header not clickable */
-#define AG_TABLEVIEW_POLLED	 0x80 /* remember selections */
+#define AG_TABLEVIEW_SELMULTI	 0x001 /* Multiple selections (ctrl/shift) */
+#define AG_TABLEVIEW_SELSINGLE	 0x002
+#define AG_TABLEVIEW_SELNOCLEAR	 0x004
+#define AG_TABLEVIEW_HORIZ	 0x008 /* Can scroll horizontally if needed */
+#define AG_TABLEVIEW_REORDERCOLS 0x010 /* Users may reorder the columns */
+#define AG_TABLEVIEW_NOHEADER	 0x020 /* do not display the header */
+#define AG_TABLEVIEW_NOSORT	 0x040 /* do not sort. header not clickable */
+#define AG_TABLEVIEW_POLLED	 0x080 /* remember selections */
+#define AG_TABLEVIEW_WFILL	 0x100
+#define AG_TABLEVIEW_HFILL	 0x200
+#define AG_TABLEVIEW_FOCUS	 0x400
+#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_WFILL|AG_TABLEVIEW_HFILL)
 
 /* Flags for tableview_add_row() */
 #define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */

@@ -99,6 +99,9 @@ AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
 	tv = Malloc(sizeof(AG_Tableview), M_WIDGET);
 	AG_TableviewInit(tv, flags, data_callback, sort_callback);
 	AG_ObjectAttach(parent, tv);
+	if (flags & AG_TABLEVIEW_FOCUS) {
+		AG_WidgetFocus(tv);
+	}
 	return (tv);
 }
 
@@ -106,9 +109,12 @@ void
 AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
     AG_TableviewSortFn sort_callback)
 {
-	AG_WidgetInit(tv, "tableview", &agTableviewOps,
-	  AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
-	  AG_WIDGET_HFILL);
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+
+	if (flags & AG_TABLEVIEW_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_TABLEVIEW_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(tv, "tableview", &agTableviewOps, wflags);
 	AG_MutexInitRecursive(&tv->lock);
 
 	tv->data_callback = data_callback;
