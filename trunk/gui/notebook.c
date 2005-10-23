@@ -50,7 +50,7 @@ static AG_WidgetOps agNotebookOps = {
 #define SPACING 8
 
 AG_Notebook *
-AG_NotebookNew(void *parent, int flags)
+AG_NotebookNew(void *parent, Uint flags)
 {
 	AG_Notebook *nb;
 
@@ -89,7 +89,7 @@ mousebuttondown(AG_Event *event)
 }
 
 void
-AG_NotebookInit(AG_Notebook *nb, int flags)
+AG_NotebookInit(AG_Notebook *nb, Uint flags)
 {
 	AG_WidgetInit(nb, "notebook", &agNotebookOps, 0);
 

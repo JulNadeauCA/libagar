@@ -42,8 +42,8 @@ typedef struct ag_notebook {
 } AG_Notebook;
 
 __BEGIN_DECLS
-AG_Notebook *AG_NotebookNew(void *, int);
-void AG_NotebookInit(AG_Notebook *, int);
+AG_Notebook *AG_NotebookNew(void *, Uint);
+void AG_NotebookInit(AG_Notebook *, Uint);
 void AG_NotebookDestroy(void *);
 void AG_NotebookDraw(void *);
 void AG_NotebookScale(void *, int, int);
