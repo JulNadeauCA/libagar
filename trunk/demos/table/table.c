@@ -8,7 +8,6 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
-#include <agar/compat/arc4random.h>
 
 #include <string.h>
 #include <unistd.h>
