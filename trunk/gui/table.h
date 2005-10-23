@@ -69,6 +69,7 @@ typedef struct ag_table_col {
 #define AG_TABLE_SORT_DESCENDING 0x04
 #define AG_TABLE_WFILL		 0x08
 #define AG_TABLE_HFILL		 0x10
+#define AG_TABLE_FOCUS		 0x20
 #define AG_TABLE_EXPAND		 (AG_TABLE_WFILL|AG_TABLE_HFILL)
 	int selected;			/* Entire column is selected */
 	int w;				/* Width in pixel */

@@ -73,6 +73,9 @@ AG_TableNew(void *parent, Uint flags)
 	t = Malloc(sizeof(AG_Table), M_OBJECT);
 	AG_TableInit(t, flags);
 	AG_ObjectAttach(parent, t);
+	if (flags & AG_TABLE_FOCUS) {
+		AG_WidgetFocus(t);
+	}
 	return (t);
 }
 
