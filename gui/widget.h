@@ -176,9 +176,10 @@ __inline__ int	  AG_WidgetCopyBinding(void *, const char *, void *,
 #define AG_WidgetBindSint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT64,(p))
 #define AG_WidgetBindFloat(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_FLOAT,(p))
 #define AG_WidgetBindDouble(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_DOUBLE,(p))
-#define AG_WidgetBindString(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_STRING,(p))
 #define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
 #define AG_WidgetBindProp(w,b,o,k) AG_WidgetBind((w),(b),AG_WIDGET_PROP,(o),(k))
+#define AG_WidgetBindString(w,b,p,len) AG_WidgetBind((w),(b),AG_WIDGET_STRING,\
+				       (p),(len))
 
 __inline__ Uint	 AG_WidgetUint(void *, const char *);
 __inline__ int		 AG_WidgetInt(void *, const char *);

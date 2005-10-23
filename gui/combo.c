@@ -53,7 +53,7 @@ static AG_WidgetOps agComboOps = {
 };
 
 AG_Combo *
-AG_ComboNew(void *parent, int flags, const char *label)
+AG_ComboNew(void *parent, Uint flags, const char *label)
 {
 	AG_Combo *com;
 
