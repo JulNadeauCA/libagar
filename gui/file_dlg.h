@@ -25,7 +25,7 @@ typedef struct ag_file_type {
 
 typedef struct ag_file_dlg {
 	AG_Widget wid;
-	int flags;
+	Uint flags;
 #define AG_FILEDLG_MULTI	0x01	/* Return a set of files */
 #define AG_FILEDLG_CLOSEWIN	0x02	/* Close the parent window when done */
 #define AG_FILEDLG_LOAD		0x04	/* File must exist and be readable */
@@ -46,8 +46,8 @@ typedef struct ag_file_dlg {
 } AG_FileDlg;
 
 __BEGIN_DECLS
-AG_FileDlg *AG_FileDlgNew(void *, int);
-void AG_FileDlgInit(AG_FileDlg *, int);
+AG_FileDlg *AG_FileDlgNew(void *, Uint);
+void AG_FileDlgInit(AG_FileDlg *, Uint);
 void AG_FileDlgScale(void *, int, int);
 void AG_FileDlgDestroy(void *);
 int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);
