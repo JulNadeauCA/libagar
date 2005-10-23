@@ -231,7 +231,7 @@ AG_TextboxDraw(void *p)
 	AG_Textbox *tbox = p;
 	AG_WidgetBinding *stringb;
 	AG_Font *font;
-	int i, x, y;
+	int i, x, y, offs;
 	size_t len;
 	char *s;
 #ifdef UTF8
@@ -264,32 +264,42 @@ AG_TextboxDraw(void *p)
 
 	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
-
-	agPrim.box(tbox,
-	    x,
-	    0,
-	    AGWIDGET(tbox)->w - x - 1,
-	    AGWIDGET(tbox)->h,
-	    (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) ? -1 : 1,
-	    (tbox->flags & AG_TEXTBOX_WRITEABLE) ? AG_COLOR(TEXTBOX_RW_COLOR) :
-	                                        AG_COLOR(TEXTBOX_RO_COLOR));
+	
+	if (tbox->flags & AG_TEXTBOX_WRITEABLE) {
+		agPrim.box(tbox, x, 0,
+		    AGWIDGET(tbox)->w - x - 1,
+		    AGWIDGET(tbox)->h,
+		    -1,
+		    AG_COLOR(TEXTBOX_COLOR));
+	} else {
+		if (tbox->flags & AG_TEXTBOX_COMBO) {
+			agPrim.box(tbox, x, 0,
+			    AGWIDGET(tbox)->w - x - 1,
+			    AGWIDGET(tbox)->h,
+			    1,
+			    AG_COLOR(TEXTBOX_COLOR));
+		} else {
+			agPrim.box_dithered(tbox, x, 0,
+			    AGWIDGET(tbox)->w - x - 1,
+			    AGWIDGET(tbox)->h,
+			    -1,
+			    AG_COLOR(TEXTBOX_COLOR),
+			    AG_COLOR(DISABLED_COLOR));
+		}
+	}
 
 	x += tbox->xpadding;
-	if (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) {
-		x++;
-		y++;
-	}
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,
-		    GL_REPLACE);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 #endif
 
-	for (i = (tbox->offs<len)?tbox->offs:len-1; i <= len; i++) {
+	offs = tbox->offs < len-1 ? tbox->offs : len-1;
+	for (i = offs; i <= len; i++) {
 		AG_Glyph *gl;
 #ifdef UTF8
 		Uint32 c = ucs[i];
@@ -297,7 +307,7 @@ AG_TextboxDraw(void *p)
 		char c = s[i];
 #endif
 
-		if ((AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) &&
+		if (AGWIDGET_FOCUSED(tbox) &&
 		    tbox->flags & AG_TEXTBOX_BLINK_ON) {
 			if (i == tbox->pos) {
 				agPrim.vline(tbox,
@@ -503,7 +513,7 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 	if (mx <= x) {
 		return (-1);
 	}
-	x += tbox->xpadding + (AGWIDGET(tbox)->flags & AG_WIDGET_FOCUSED) ? 1:0;
+	x += tbox->xpadding + (AGWIDGET_FOCUSED(tbox) ? 1 : 0);
 	y = tbox->ypadding;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);

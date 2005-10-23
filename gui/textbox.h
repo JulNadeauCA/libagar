@@ -23,6 +23,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_BLINK_ON	 0x02	/* Cursor blink state (internal) */
 #define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */
 #define AG_TEXTBOX_ABANDON_FOCUS 0x08	/* Abandon focus on return */
+#define AG_TEXTBOX_COMBO	 0x10	/* Used by AG_Combo */
 
 	int prew, preh;			/* Prescale */
 	int xpadding, ypadding;		/* Text padding */
