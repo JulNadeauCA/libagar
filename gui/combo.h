@@ -26,16 +26,15 @@ typedef struct ag_combo {
 } AG_Combo;
 
 __BEGIN_DECLS
-AG_Combo *AG_ComboNew(void *, int, const char *, ...)
-	         FORMAT_ATTRIBUTE(printf, 3, 4)
-		 NONNULL_ATTRIBUTE(3);
-
-void AG_ComboInit(AG_Combo *, const char *, int);
+AG_Combo *AG_ComboNew(void *, Uint, const char *);
+void AG_ComboInit(AG_Combo *, Uint, const char *);
 void AG_ComboScale(void *, int, int);
 void AG_ComboDestroy(void *);
-void combo_select(AG_Combo *, AG_TlistItem *);
+void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
 AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
 AG_TlistItem *AG_ComboSelectText(AG_Combo *, const char *);
+void AG_ComboSetButtonText(AG_Combo *, const char *);
+void AG_ComboSetButtonSurface(AG_Combo *, SDL_Surface *);
 __END_DECLS
 
 #include "close_code.h"

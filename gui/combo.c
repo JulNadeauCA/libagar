@@ -53,18 +53,12 @@ static AG_WidgetOps agComboOps = {
 };
 
 AG_Combo *
-AG_ComboNew(void *parent, int flags, const char *fmt, ...)
+AG_ComboNew(void *parent, int flags, const char *label)
 {
-	char label[AG_LABEL_MAX];
 	AG_Combo *com;
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(label, sizeof(label), fmt, ap);
-	va_end(ap);
 
 	com = Malloc(sizeof(AG_Combo), M_OBJECT);
-	AG_ComboInit(com, label, flags);
+	AG_ComboInit(com, flags, label);
 	AG_ObjectAttach(parent, com);
 	return (com);
 }
@@ -151,7 +145,7 @@ AG_ComboSelectText(AG_Combo *com, const char *text)
 }
 
 void
-combo_select(AG_Combo *com, AG_TlistItem *it)
+AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 {
 	AG_MutexLock(&com->list->lock);
 	AG_TextboxPrintf(com->tbox, "%s", it->text);
@@ -222,7 +216,7 @@ combo_mousebuttonup(AG_Event *event)
 #endif
 
 void
-AG_ComboInit(AG_Combo *com, const char *label, int flags)
+AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 {
 	AG_WidgetInit(com, "combo", &agComboOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
@@ -254,6 +248,18 @@ AG_ComboInit(AG_Combo *com, const char *label, int flags)
 #if 0
 	AG_SetEvent(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
 #endif
+}
+
+void
+AG_ComboSetButtonText(AG_Combo *com, const char *text)
+{
+	AG_ButtonPrintf(com->button, "%s", text);
+}
+
+void
+AG_ComboSetButtonSurface(AG_Combo *com, SDL_Surface *su)
+{
+	AG_ButtonSetSurface(com->button, su);
 }
 
 void
