@@ -84,11 +84,17 @@ AG_TextboxNew(void *parent, const char *label)
 static int
 process_key(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
+	AG_WidgetBinding *stringb;
+	char *s;
 	int i;
 	int rv = 0;
 
 	if (keysym == SDLK_RETURN)
 		return (0);
+
+	stringb = AG_WidgetGetBinding(tb, "string", &s);
+	if (tb->pos > stringb->size)
+		goto out;
 
 	for (i = 0;; i++) {
 		const struct ag_keycode *kcode = &agKeyCodes[i];
@@ -109,6 +115,8 @@ process_key(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 			break;
 		}
 	}
+out:
+	AG_WidgetUnlockBinding(stringb);
 	return (rv);
 }
 

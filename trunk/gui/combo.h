@@ -14,7 +14,7 @@
 
 typedef struct ag_combo {
 	struct ag_widget wid;
-	int flags;
+	Uint flags;
 #define AG_COMBO_POLL	  0x01		/* Polled list */
 #define AG_COMBO_TREE	  0x02		/* Tree display */
 #define AG_COMBO_ANY_TEXT 0x04		/* Accept text not matching an item */
