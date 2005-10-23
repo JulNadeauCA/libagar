@@ -307,15 +307,14 @@ AG_TextboxDraw(void *p)
 		char c = s[i];
 #endif
 
-		if (AGWIDGET_FOCUSED(tbox) &&
-		    tbox->flags & AG_TEXTBOX_BLINK_ON) {
-			if (i == tbox->pos) {
-				agPrim.vline(tbox,
-				    x,
-				    y + 1,
-				    y + agTextFontHeight - 2,
-				    AG_COLOR(TEXTBOX_CURSOR_COLOR));
-			}
+		if (i == tbox->pos &&
+		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
+		    (tbox->flags & AG_TEXTBOX_WRITEABLE) &&
+		    AGWIDGET_FOCUSED(tbox)) {
+			agPrim.vline(tbox,
+			    x, (y + 1),
+			    (y + agTextFontHeight - 2),
+			    AG_COLOR(TEXTBOX_CURSOR_COLOR));
 		}
 		if (i == len)
 			break;
