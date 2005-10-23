@@ -144,7 +144,7 @@ CreateWindow(void)
 		/*
 		 * AG_Statusbar displays a label (either static or polled).
 		 */
-		st = AG_StatusbarNew(div->box1);
+		st = AG_StatusbarNew(div->box1, 0);
 		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
 		    &value);
 	}

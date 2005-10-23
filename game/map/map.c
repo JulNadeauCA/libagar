@@ -2839,7 +2839,7 @@ map_edit(void *p)
 	toolbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
 	AG_ToolbarInit(toolbar, AG_TOOLBAR_VERT, 2, 0);
 	statbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
-	AG_StatusbarInit(statbar);
+	AG_StatusbarInit(statbar, 0);
 	
 	mv = Malloc(sizeof(AG_Mapview), M_WIDGET);
 	AG_MapviewInit(mv, m, flags, toolbar, statbar);
