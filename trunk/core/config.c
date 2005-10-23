@@ -526,25 +526,27 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 
 		tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 
-		tbox = AG_TextboxNew(tab, _("Data save dir: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		    _("Data save dir: "));
 		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "save-path");
 	
-		tbox = AG_TextboxNew(tab, _("Data load path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		    _("Data load path: "));
 		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "load-path");
 	
-		tbox = AG_TextboxNew(tab, _("Font path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL, _("Font path: "));
 		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "font-path");
 		
-		tbox = AG_TextboxNew(tab, _("Den path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL, _("Den path: "));
 		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s", "den-path");
@@ -599,7 +601,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
 
-		tb = AG_TextboxNew(tab, _("Server hostname: "));
+		tb = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		    _("Server hostname: "));
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
 		    sizeof(agRcsHostname));
 	
@@ -611,11 +614,13 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_WFILL|
 				                   AG_BOX_HOMOGENOUS);
 		{
-			tb = AG_TextboxNew(box, _("Username: "));
+			tb = AG_TextboxNew(box, AG_TEXTBOX_WFILL,
+			    _("Username: "));
 			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
 			    agRcsUsername, sizeof(agRcsUsername));
 
-			tb = AG_TextboxNew(box, _("Password: "));
+			tb = AG_TextboxNew(box, AG_TEXTBOX_WFILL,
+			    _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
 			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
 			    agRcsPassword, sizeof(agRcsPassword));

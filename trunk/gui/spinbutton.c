@@ -190,7 +190,7 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	sbu->min = 0;
 	sbu->max = 0;
 	AG_MutexInit(&sbu->lock);
-	sbu->input = AG_TextboxNew(sbu, label);
+	sbu->input = AG_TextboxNew(sbu, 0, label);
 
 	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);

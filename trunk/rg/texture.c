@@ -206,7 +206,7 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_WindowSetCaption(win, "%s", tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	tb = AG_TextboxNew(win, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
 	    sizeof(tex->name));
 

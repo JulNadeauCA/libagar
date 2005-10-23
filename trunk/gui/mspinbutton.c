@@ -240,7 +240,7 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	sbu->sep = sep;
 	AG_MutexInit(&sbu->lock);
 	
-	sbu->input = AG_TextboxNew(sbu, label);
+	sbu->input = AG_TextboxNew(sbu, 0, label);
 	AG_SetEvent(sbu->input, "textbox-return", mspinbutton_return,
 	    "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", mspinbutton_textchg,

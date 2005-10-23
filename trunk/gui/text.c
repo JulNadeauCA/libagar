@@ -661,17 +661,13 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	
 	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
 	{
-		tb = AG_TextboxNew(vb, NULL);
-		AGWIDGET(tb)->flags |= AG_WIDGET_WFILL;
+		tb = AG_TextboxNew(vb, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, NULL);
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, sp, len);
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
-
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
 	AG_ButtonAct(vb, 0, _("Ok"), AGWINDETACH(win));
-
 	AG_WindowShow(win);
-	AG_WidgetFocus(tb);
 }
 
 /* Prompt the user for a string. */
@@ -696,10 +692,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		tb = AG_TextboxNew(bo, NULL);
-		AGWIDGET(tb)->flags |= AG_WIDGET_WFILL;
-		AG_WidgetFocus(tb);
-
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,

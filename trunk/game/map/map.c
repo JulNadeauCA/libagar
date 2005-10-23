@@ -3006,7 +3006,8 @@ map_edit(void *p)
 
 			box_h = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_WFILL);
 			{
-				tb = AG_TextboxNew(box_h, _("Name: "));
+				tb = AG_TextboxNew(box_h, AG_TEXTBOX_WFILL,
+				    _("Name: "));
 				AG_SetEvent(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 			}

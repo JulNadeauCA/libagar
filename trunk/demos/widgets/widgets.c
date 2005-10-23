@@ -124,7 +124,7 @@ CreateWindow(void)
 	 * AG_Textbox is a single-line text edition widget. It can bind to
 	 * a sized buffer containing a string.
 	 */
-	AG_TextboxNew(div->box1, "Enter text: ");
+	AG_TextboxNew(div->box1, AG_TEXTBOX_WFILL, "Enter text: ");
 
 	{
 		static int value = 127;

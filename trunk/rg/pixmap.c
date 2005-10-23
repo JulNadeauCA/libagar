@@ -362,7 +362,7 @@ insert_brush_dlg(AG_Event *event)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	tb_name = Malloc(sizeof(AG_Textbox), M_OBJECT);
-	AG_TextboxInit(tb_name, _("Name: "));
+	AG_TextboxInit(tb_name, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	
 	cb_oneshot = Malloc(sizeof(AG_Checkbox), M_OBJECT);
 	AG_CheckboxInit(cb_oneshot, 0, _("One-shot"));
@@ -378,7 +378,6 @@ insert_brush_dlg(AG_Event *event)
 		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_SetEvent(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
 		AG_SetEvent(tl, "tlist-selected", update_bropts, "%p", tb_name);
-		AG_WidgetFocus(tl);
 	}
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);

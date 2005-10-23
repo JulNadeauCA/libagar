@@ -687,8 +687,8 @@ create_obj_dlg(AG_Event *event)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
 		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->type);
-		tb = AG_TextboxNew(bo, _("Name: "));
-		AG_WidgetFocus(tb);
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		    _("Name: "));
 	}
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
