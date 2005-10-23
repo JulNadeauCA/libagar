@@ -134,7 +134,7 @@ AG_ColorsInit(void)
 	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
 	agColors[BUTTON_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[BUTTON_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 240, 240, 240);
-	agColors[BUTTON_DIS_COLOR] = SDL_MapRGB(agVideoFmt, 110, 110, 110);
+	agColors[BUTTON_DIS_COLOR] = SDL_MapRGB(agVideoFmt, 160, 160, 160);
 	agColors[CHECKBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[CHECKBOX_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[GRAPH_BG_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);

@@ -8,6 +8,8 @@
 typedef struct ag_primitive_ops {
 	void	(*box)(void *, int, int, int, int, int, Uint32);
 	void	(*box_chamfered)(void *, SDL_Rect *, int, int, Uint32);
+	void	(*box_dithered)(void *, int, int, int, int, int, Uint32,
+			        Uint32);
 	void	(*frame)(void *, int, int, int, int, Uint32);
 	void	(*frame_blended)(void *, int, int, int, int, Uint8 [4],
 		                 enum ag_blend_func);

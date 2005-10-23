@@ -165,11 +165,12 @@ AG_ButtonDraw(void *p)
 		return;
 
 	pressed = AG_WidgetBool(bu, "state");
-	if (bu->flags & AG_BUTTON_INSENSITIVE) {
-		agPrim.box(bu,
+	if (bu->flags & AG_BUTTON_DISABLED) {
+		agPrim.box_dithered(bu,
 		    0, 0,
 		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
-		    -1,
+		    pressed ? -1 : 1,
+		    AG_COLOR(BUTTON_COLOR),
 		    AG_COLOR(BUTTON_DIS_COLOR));
 	} else {
 		agPrim.box(bu,
@@ -210,7 +211,7 @@ button_mousemotion(AG_Event *event)
 	int y = AG_INT(2);
 	int *pressed;
 
-	if (bu->flags & AG_BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
 
 	stateb = AG_WidgetGetBinding(bu, "state", &pressed);
@@ -239,7 +240,7 @@ button_mousebuttondown(AG_Event *event)
 	AG_WidgetBinding *stateb;
 	int *pushed;
 	
-	if (bu->flags & AG_BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
 
 	AG_WidgetFocus(bu);
@@ -278,7 +279,7 @@ button_mousebuttonup(AG_Event *event)
 		AG_DelTimeout(bu, &bu->delay_to);
 	}
 	
-	if ((bu->flags & AG_BUTTON_INSENSITIVE) ||
+	if ((bu->flags & AG_BUTTON_DISABLED) ||
 	    x < 0 || y < 0 ||
 	    x > AGWIDGET(bu)->w || y > AGWIDGET(bu)->h) {
 		return;
@@ -301,7 +302,7 @@ button_keydown(AG_Event *event)
 	AG_Button *bu = AG_SELF();
 	int keysym = AG_INT(1);
 	
-	if (bu->flags & AG_BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
@@ -321,7 +322,7 @@ button_keyup(AG_Event *event)
 	AG_Button *bu = AG_SELF();
 	int keysym = AG_INT(1);
 	
-	if (bu->flags & AG_BUTTON_INSENSITIVE)
+	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
 	
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -338,13 +339,13 @@ button_keyup(AG_Event *event)
 void
 AG_ButtonEnable(AG_Button *bu)
 {
-	bu->flags &= ~(AG_BUTTON_INSENSITIVE);
+	bu->flags &= ~(AG_BUTTON_DISABLED);
 }
 
 void
 AG_ButtonDisable(AG_Button *bu)
 {
-	bu->flags |= (AG_BUTTON_INSENSITIVE);
+	bu->flags |= (AG_BUTTON_DISABLED);
 }
 
 void
