@@ -73,7 +73,7 @@ void
 AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type)
 {
 	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP);
+	    AG_WIDGET_UNFOCUSED_BUTTONUP|AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &sb->value);
 	AG_WidgetBind(sb, "min", AG_WIDGET_INT, &sb->min);
 	AG_WidgetBind(sb, "max", AG_WIDGET_INT, &sb->max);

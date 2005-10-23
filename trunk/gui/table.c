@@ -651,8 +651,9 @@ column_sel(AG_Table *t, int px)
 
 		if (x > cx && x < x2) {
 			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
-				if (t->nResizing == -1)
+				if (t->nResizing == -1) {
 					t->nResizing = n;
+				}
 			} else {
 				if (multi) {
 					tc->selected = !tc->selected;
@@ -716,6 +717,9 @@ cell_popup(AG_Table *t, int mc, int x)
 static __inline__ int
 column_over(AG_Table *t, int y)
 {
+	if (y <= t->row_h) {
+		return (-1);
+	}
 	return (AG_WidgetInt(t->vbar, "value") + y/t->row_h - 1);
 }
 
@@ -831,6 +835,9 @@ column_resize_over(AG_Table *t, int px)
 	Uint n;
 	int cx;
 
+	if (px > (AGWIDGET(t)->w - AGWIDGET(t->vbar)->w)) {
+		return (0);
+	}
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
 		int x2 = cx + t->cols[n].w;
 
