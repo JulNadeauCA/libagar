@@ -73,6 +73,9 @@ AG_TlistNew(void *parent, Uint flags)
 	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl, flags);
 	AG_ObjectAttach(parent, tl);
+	if (flags & AG_TLIST_FOCUS) {
+		AG_WidgetFocus(tl);
+	}
 	return (tl);
 }
 
@@ -169,9 +172,12 @@ lost_focus(AG_Event *event)
 void
 AG_TlistInit(AG_Tlist *tl, Uint flags)
 {
-	AG_WidgetInit(tl, "tlist", &agTlistOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
-	    AG_WIDGET_HFILL);
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+
+	if (flags & AG_TLIST_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_TLIST_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(tl, "tlist", &agTlistOps, wflags);
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
 
 	tl->flags = flags;

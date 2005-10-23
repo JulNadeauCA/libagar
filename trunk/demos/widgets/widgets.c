@@ -232,7 +232,7 @@ CreateWindow(void)
 			 * For flat, polled lists, it is more efficient to use
 			 * an AG_Table with a single column, however.
 			 */
-			tl = AG_TlistNew(ntab, 0);
+			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 			AG_TlistAdd(tl, NULL, "Foo");
 			AG_TlistAdd(tl, NULL, "Bar");
 			AG_TlistAdd(tl, NULL, "Baz");

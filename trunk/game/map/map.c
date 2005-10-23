@@ -2257,7 +2257,8 @@ edit_properties(AG_Event *event)
 	{
 		AG_Tlist *tl;
 
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
+		                       AG_TLIST_EXPAND);
 		AGWIDGET(tl)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
 		AG_SetEvent(tl, "tlist-poll", poll_undo, "%p", mv->map);
 	}
@@ -2927,7 +2928,8 @@ map_edit(void *p)
 					        AG_NOTEBOOK_WFILL);
 		ntab = AG_NotebookAddTab(nb, _("Library"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
+			                       AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_libs, "%p", agWorld);
 			AG_SetEvent(tl, "tlist-changed", select_lib, "%p", mv);
 			mv->lib_tl = tl;
@@ -2951,7 +2953,8 @@ map_edit(void *p)
 		}
 		ntab = AG_NotebookAddTab(nb, _("Objects"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE);
+			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
+			                       AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_actors, "%p", mv);
 //			AG_SetEvent(tl, "tlist-changed", select_obj, "%p", mv);
 			mv->objs_tl = tl;
@@ -2972,7 +2975,8 @@ map_edit(void *p)
 		{
 			AG_Textbox *tb;
 
-			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL|
+			                                  AG_TLIST_EXPAND);
 			AG_TlistSetItemHeight(mv->layers_tl, AGTILESZ);
 			AG_SetEvent(mv->layers_tl, "tlist-poll", poll_layers,
 			    "%p", m);

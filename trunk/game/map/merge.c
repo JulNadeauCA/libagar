@@ -117,7 +117,7 @@ merge_init(AG_Maptool *t)
 		AG_SetEvent(bu, "button-pushed", merge_remove_brush, NULL);
 	}
 
-	brushes_tl = AG_TlistNew(win, AG_TLIST_MULTI);
+	brushes_tl = AG_TlistNew(win, AG_TLIST_MULTI|AG_TLIST_EXPAND);
 }
 
 static void

@@ -1499,20 +1499,21 @@ RG_TilesetEdit(void *p)
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 
 	tl_tiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl_tiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
+	AG_TlistInit(tl_tiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+		               AG_TLIST_EXPAND);
 	AG_TlistPrescale(tl_tiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
 	
 	tl_art = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl_art, AG_TLIST_POLL);
+	AG_TlistInit(tl_art, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl_art, "tlist-poll", poll_graphics, "%p", ts);
 	
 	tl_textures = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl_textures, AG_TLIST_POLL);
+	AG_TlistInit(tl_textures, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl_textures, "tlist-poll", poll_textures, "%p", ts);
 
 	tl_anims = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl_anims, AG_TLIST_POLL);
+	AG_TlistInit(tl_anims, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl_anims, "tlist-poll", poll_anims, "%p", ts);
 
 	com = AG_ComboNew(win, AG_COMBO_WFILL, _("Template: "));

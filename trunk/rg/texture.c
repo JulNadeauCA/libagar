@@ -217,7 +217,7 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_ComboSelectText(com, tex->tileset);
 	AG_TextboxPrintf(com->tbox, "%s", tex->tileset);
 
-	tl = AG_TlistNew(win, AG_TLIST_POLL);
+	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", poll_src_tiles, "%p", tex);
 	AG_SetEvent(tl, "tlist-selected", select_src_tile, "%p", tex);
 	AG_TlistSelectText(tl, tex->tile);

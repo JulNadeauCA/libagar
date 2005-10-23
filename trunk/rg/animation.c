@@ -650,7 +650,7 @@ RG_AnimEdit(RG_Anim *ani)
 		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
 		{
 			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
-			tl = AG_TlistNew(box_v, AG_TLIST_POLL);
+			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_insns, "%p", ani);
 
 			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
@@ -670,7 +670,7 @@ RG_AnimEdit(RG_Anim *ani)
 		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
 		{
 			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
-			tl = AG_TlistNew(box_v, AG_TLIST_POLL);
+			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_frames, "%p", ani);
 
 			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
