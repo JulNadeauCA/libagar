@@ -2846,7 +2846,7 @@ map_edit(void *p)
 	AG_MapviewPrescale(mv, 2, 2);
 	AG_SetEvent(mv, "mapview-dblclick", noderef_edit, NULL);
 	
-	menu = AG_MenuNew(win);
+	menu = AG_MenuNew(win, AG_MENU_WFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
 		AG_ObjMgrGenericMenu(pitem, m);

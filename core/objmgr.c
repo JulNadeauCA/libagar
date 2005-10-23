@@ -845,7 +845,7 @@ AG_ObjMgrWindow(void)
 	AG_SetEvent(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
 
-	me = AG_MenuNew(win);
+	me = AG_MenuNew(win, AG_MENU_WFILL);
 	mi = AG_MenuAddItem(me, _("File"));
 	{
 		int i;

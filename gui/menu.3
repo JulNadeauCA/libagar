@@ -52,10 +52,10 @@ values.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Menu *"
-.Fn AG_MenuNew "void *parent"
+.Fn AG_MenuNew "void *parent" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_MenuInit "AG_Menu *menu"
+.Fn AG_MenuInit "AG_Menu *menu" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_MenuExpand "AG_Menu *menu" "AG_MenuItem *item" "int x" "int y"

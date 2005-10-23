@@ -392,7 +392,7 @@ AG_DebugServerWindow(void)
 	AG_TlistInit(tl, AG_TLIST_POLL);
 	AG_SetEvent(tl, "tlist-poll", poll_clients, NULL);
 	
-	me = AG_MenuNew(win);
+	me = AG_MenuNew(win, AG_MENU_WFILL);
 	mi = AG_MenuAddItem(me, _("Server"));
 	AG_MenuAction(mi, _("Start server"), -1, start_server, "%p", tl);
 	AG_MenuAction(mi, _("Stop server"), -1, stop_server, "%p", tl);

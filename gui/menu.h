@@ -48,6 +48,10 @@ typedef struct ag_menu_item {
 
 typedef struct ag_menu {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_MENU_WFILL	0x01
+#define AG_MENU_HFILL	0x02
+#define AG_MENU_EXPAND	(AG_MENU_WFILL|AG_MENU_HFILL)
 	AG_MenuItem *items;		/* Top-level items */
 	Uint nitems;
 	int selecting;			/* Selection in progress */
@@ -66,8 +70,8 @@ typedef struct ag_menu_view {
 } AG_MenuView;
 
 __BEGIN_DECLS
-AG_Menu	  *AG_MenuNew(void *);
-void	   AG_MenuInit(AG_Menu *);
+AG_Menu	  *AG_MenuNew(void *, Uint);
+void	   AG_MenuInit(AG_Menu *, Uint);
 void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
 void 	   AG_MenuDestroy(void *);

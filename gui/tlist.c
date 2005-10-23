@@ -1127,7 +1127,7 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	tp->panel = NULL;
 
 	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(tp->menu);
+	AG_MenuInit(tp->menu, 0);
 
 	tp->item = AG_MenuAddItem(tp->menu, iclass);
 
