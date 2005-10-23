@@ -19,7 +19,7 @@ typedef struct ag_button {
 	int state;			/* Default state binding */
 	enum ag_button_justify justify;	/* Label justification */
 	Uint flags;
-#define AG_BUTTON_INSENSITIVE	0x01	/* Not responsive */
+#define AG_BUTTON_DISABLED	0x01	/* Button is insensitive */
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */

@@ -200,6 +200,51 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, rcol);
 }
 
+/* Draw a 3D-style box with dithering. */
+static void
+box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
+    Uint32 c1, Uint32 c2)
+{
+	AG_Widget *wid = p;
+	Uint32 lcol, rcol, bcol, dcol;
+	Uint x, y;
+	int flag = 0;
+
+	lcol = (z < 0) ?
+	    alter_color(c1, -60, -60, -60) :
+	    alter_color(c1, 60, 60, 60);
+	rcol = (z < 0) ?
+	    alter_color(c1, 60, 60, 60) :
+	    alter_color(c1, -60, -60, -60);
+
+	if (AG_WidgetHoldsFocus(wid)) {
+		bcol = (z < 0) ?
+		    alter_color(c1, -10, -10, -10) :
+		    alter_color(c1, 20, 20, 20);
+		dcol = (z < 0) ?
+		    alter_color(c2, -10, -10, -10) :
+		    alter_color(c2, 20, 20, 20);
+	} else {
+		bcol = (z < 0) ?
+		    alter_color(c1, -20, -20, -20) :
+		    alter_color(c1, 10, 10, 10);
+		dcol = (z < 0) ?
+		    alter_color(c2, -20, -20, -20) :
+		    alter_color(c2, 10, 10, 10);
+	}
+
+	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
+	for (y = yoffs; y < h-2; y++) {
+		flag = !flag;
+		for (x = xoffs+1+flag; x < w-2; x+=2)
+			AG_WidgetPutPixel(wid, x, y, dcol);
+	}
+	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, lcol);
+	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, rcol);
+	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, lcol);
+	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, rcol);
+}
+
 /* Draw a 3D-style box with chamfered top edges. */
 static void
 box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
@@ -1164,6 +1209,13 @@ rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
 	}
 }
 
+static void
+box_dithered_gl(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c1,
+    Uint32 c2)
+{
+	/* TODO */
+}
+
 /* Draw a 3D-style box with chamfered top edges. */
 static void
 box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 bcol)
@@ -1317,6 +1369,7 @@ AG_InitPrimitives(void)
 		agPrim.circle = circle_opengl;
 		agPrim.circle2 = circle2_opengl;
 		agPrim.box_chamfered = box_chamfered_gl;
+		agPrim.box_dithered = box_dithered_gl;
 		agPrim.arrow_up = arrow_up_gl;
 		agPrim.arrow_down = arrow_down_gl;
 		agPrim.arrow_left = arrow_left_gl;
@@ -1331,6 +1384,7 @@ AG_InitPrimitives(void)
 		agPrim.circle = circle_bresenham;
 		agPrim.circle2 = circle2_bresenham;
 		agPrim.box_chamfered = box_chamfered;
+		agPrim.box_dithered = box_dithered;
 		agPrim.arrow_up = arrow_up;
 		agPrim.arrow_down = arrow_down;
 		agPrim.arrow_left = arrow_left;
