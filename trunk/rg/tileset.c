@@ -1033,7 +1033,7 @@ insert_tile_dlg(AG_Event *event)
 	cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
-	AG_LabelStatic(win, _("Snapping mode: "));
+	AG_LabelNewStatic(win, _("Snapping mode: "));
 	rad = AG_RadioNew(win, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
 

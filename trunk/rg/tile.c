@@ -1766,14 +1766,14 @@ tile_infos(AG_Event *event)
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelStatic(win, _("Snapping mode: "));
+	AG_LabelNewStatic(win, _("Snapping mode: "));
 	rad = AG_RadioNew(win, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 	    &AG_SPRITE(t->ts,t->s).snap_mode);
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelStaticF(win, _("Maps to sprite: #%u."), t->s);
+	AG_LabelNewFmt(win, _("Maps to sprite: #%u."), t->s);
 	
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
 	{

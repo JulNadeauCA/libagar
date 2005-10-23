@@ -52,10 +52,10 @@ widget displays single-line or multi-line text.
 .Fn AG_LabelNew "void *parent" "enum ag_label_type type" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_LabelStatic "void *parent" "const char *text"
+.Fn AG_LabelNewStatic "void *parent" "const char *text"
 .Pp
 .Ft "void"
-.Fn AG_LabelStaticF "void *parent" "const char *fmt" "..."
+.Fn AG_LabelNewFmt "void *parent" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "const char *text"
@@ -77,9 +77,9 @@ enum ag_label_type {
 .Ed
 .Pp
 The functions
-.Fn AG_LabelStatic
+.Fn AG_LabelNewStatic
 and
-.Fn AG_LabelStaticF
+.Fn AG_LabelNewFmt
 are alternate constructors optimized for static labels.
 .Pp
 For
