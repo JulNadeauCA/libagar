@@ -8,6 +8,7 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/compat/arc4random.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -16,8 +17,8 @@
 static int
 my_sort_fn(const void *p1, const void *p2)
 {
-	AG_TableCell *c1 = p1;
-	AG_TableCell *c2 = p2;
+	const AG_TableCell *c1 = p1;
+	const AG_TableCell *c2 = p2;
 
 	return (c1->data.i - c2->data.i);
 }
@@ -36,13 +37,13 @@ my_custom_cell_txt_fn(void *p, char *s, size_t len)
 static void
 CreateStaticTable(void)
 {
-	static Uint32 foo32 = 1234;
 	AG_Window *win;
 	AG_Button *btn;
 	AG_Table *table;
 	int i;
 
 	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Static Table");
 
 	/*
 	 * Create the table. We could have used the AG_TABLE_MULTI flag if
@@ -103,6 +104,52 @@ CreateStaticTable(void)
 	AG_WindowShow(win);
 }
 
+static void
+UpdateTable(AG_Event *event)
+{
+	AG_Table *t = AG_SELF();
+	static int prev = 0;
+	static int dir = +1;
+	int i;
+
+	AG_TableBegin(t);
+	for (i = 0; i < prev; i++) {
+		AG_TableAddRow(t, "%d:%u", i, (unsigned)SDL_GetTicks());
+	}
+	AG_TableEnd(t);
+
+	if (dir < 0) {
+		if (--prev < 0) { prev = 0; dir = +1; }
+	} else {
+		if (++prev > 100) { prev = 100; dir = -1; }
+	}
+}
+
+/* This function creates a polled table. */
+static void
+CreatePolledTable(void)
+{
+	AG_Window *win;
+	AG_Button *btn;
+	AG_Table *table;
+	int i;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Polled Table");
+
+	/* Create a polled table. */
+	table = AG_TablePolled(win, 0, UpdateTable, NULL);
+	AG_TableAddCol(table, "Foo", "<8888>", NULL);
+	AG_TableAddCol(table, "Bar", "<888888888>", NULL);
+
+	AG_WindowShow(win);
+	AG_WindowSetGeometry(win,
+	    agView->w/2 - 320/3,
+	    agView->h/2 - 240/3,
+	    320, 240);
+	AG_WindowShow(win);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -157,6 +204,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
 	CreateStaticTable();
+	CreatePolledTable();
 
 	AG_EventLoop();
 	AG_Destroy();
