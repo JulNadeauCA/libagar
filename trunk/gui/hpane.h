@@ -26,8 +26,8 @@ typedef struct ag_hpane {
 } AG_HPane;
 
 __BEGIN_DECLS
-AG_HPane	*AG_HPaneNew(void *, int);
-void		 AG_HPaneInit(AG_HPane *, int);
+AG_HPane	*AG_HPaneNew(void *, Uint);
+void		 AG_HPaneInit(AG_HPane *, Uint);
 void		 AG_HPaneDraw(void *);
 void		 AG_HPaneScale(void *, int, int);
 AG_HPaneDiv	*AG_HPaneAddDiv(AG_HPane *, enum ag_box_type, int,
