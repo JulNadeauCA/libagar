@@ -49,7 +49,7 @@ static AG_WidgetOps agHPaneOps = {
 };
 
 AG_HPane *
-AG_HPaneNew(void *parent, int flags)
+AG_HPaneNew(void *parent, Uint flags)
 {
 	AG_HPane *pa;
 
@@ -162,7 +162,7 @@ mousebuttonup(AG_Event *event)
 }
 
 void
-AG_HPaneInit(AG_HPane *pa, int flags)
+AG_HPaneInit(AG_HPane *pa, Uint flags)
 {
 	int boxflags = 0;
 
