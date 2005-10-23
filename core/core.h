@@ -7,7 +7,6 @@
 #include <agar/config/have_opengl.h>
 #include <agar/config/enable_nls.h>
 #include <agar/config/threads.h>
-#include <agar/config/floating_point.h>
 #include <agar/config/edition.h>
 #include <agar/config/network.h>
 #include <agar/config/have_bounded_attribute.h>
