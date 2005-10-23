@@ -12,6 +12,7 @@
 #define AG_BOX_WFILL		0x02	/* Expand to fill available width */
 #define AG_BOX_HFILL		0x04	/* Expand to fill available height */
 #define AG_BOX_FRAME		0x08	/* Display a frame */
+#define AG_BOX_EXPAND		(AG_BOX_WFILL|AG_BOX_HFILL)
 
 enum ag_box_type {
 	AG_BOX_HORIZ,

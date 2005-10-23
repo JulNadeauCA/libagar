@@ -161,7 +161,7 @@ mspinbutton_return(AG_Event *event)
 	AG_WidgetUnlockBinding(stringb);
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
-	AGWIDGET(sbu->input)->flags &= ~(AG_WIDGET_FOCUSED);
+	AG_WidgetUnfocus(sbu->input);
 }
 
 static void
@@ -338,7 +338,7 @@ AG_MSpinbuttonDraw(void *p)
 	AG_WidgetBinding *xvalueb, *yvalueb;
 	void *xvalue, *yvalue;
 
-	if (AGWIDGET(sbu->input)->flags & AG_WIDGET_FOCUSED)
+	if (AGWIDGET_FOCUSED(sbu->input))
 		return;
 
 	xvalueb = AG_WidgetGetBinding(sbu, "xvalue", &xvalue);

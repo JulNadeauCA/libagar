@@ -21,6 +21,7 @@ typedef struct ag_vpane {
 	int flags;
 #define AG_VPANE_WFILL	0x01		/* Expand to fill available width */
 #define AG_VPANE_HFILL	0x02		/* Expand to fill available height */
+#define AG_VPANE_EXPAND (AG_VPANE_WFILL|AG_VPANE_HFILL)
 	TAILQ_HEAD(, ag_vpane_div) divs;
 } AG_VPane;
 

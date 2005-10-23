@@ -155,7 +155,7 @@ spinbutton_return(AG_Event *event)
 	AG_WidgetBinding *stringb;
 
 	AG_PostEvent(NULL, sbu, "spinbutton-return", NULL);
-	AGWIDGET(sbu->input)->flags &= ~(AG_WIDGET_FOCUSED);
+	AG_WidgetUnfocus(sbu->input);
 }
 
 static void
@@ -267,8 +267,10 @@ AG_SpinbuttonDraw(void *p)
 	AG_WidgetBinding *valueb;
 	void *value;
 
-	if (AGWIDGET(sbu->input)->flags & AG_WIDGET_FOCUSED)
+	if (AGWIDGET_FOCUSED(sbu->input)) {
+		/* The value is being edited. */
 		return;
+	}
 
 	valueb = AG_WidgetGetBinding(sbu, "value", &value);
 	switch (valueb->type) {

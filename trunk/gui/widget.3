@@ -176,7 +176,7 @@ parent container.
 .Sh FOCUS STATE
 .nr nS 1
 .Ft "int"
-.Fn AG_WidgetHoldsFocus "void *widget"
+.Fn AGWIDGET_FOCUSED "void *widget"
 .Pp
 .Ft "void"
 .Fn AG_WidgetFocus "void *widget"
@@ -189,9 +189,8 @@ parent container.
 .nr nS 0
 .Pp
 The
-.Fn AG_WidgetHoldsFocus
-function returns 1 if a widget (as well as its parents) holds the keyboard
-and mousemotion focus.
+.Fn AGWIDGET_FOCUSED
+macro returns 1 if a widget holds focus inside of its parent.
 .Pp
 The
 .Fn AG_WidgetFocus

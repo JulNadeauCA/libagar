@@ -171,7 +171,7 @@ AG_ButtonDraw(void *p)
 		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
 		    pressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR),
-		    AG_COLOR(BUTTON_DIS_COLOR));
+		    AG_COLOR(DISABLED_COLOR));
 	} else {
 		agPrim.box(bu,
 		    0, 0,

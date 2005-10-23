@@ -13,6 +13,7 @@ typedef struct ag_vbox {
 #define AG_VBOX_HOMOGENOUS	AG_BOX_HOMOGENOUS
 #define AG_VBOX_WFILL		AG_BOX_WFILL
 #define AG_VBOX_HFILL		AG_BOX_HFILL
+#define AG_VBOX_EXPAND		(AG_BOX_WFILL|AG_BOX_HFILL)
 
 #define AG_VBoxNew(p, fl) (AG_VBox *)AG_BoxNew((p), AG_BOX_VERT, (fl))
 #define AG_VBoxInit(b, fl) AG_BoxInit((AG_Box *)(b), AG_BOX_VERT, (fl))

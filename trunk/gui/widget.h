@@ -77,6 +77,8 @@ typedef struct ag_widget {
 #define AG_WIDGET_HFILL			0x080 /* Expand to fill height */
 #define AG_WIDGET_EXCEDENT		0x100 /* Used internally for scaling */
 #define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
+#define AG_WIDGET_DISABLED		0x400 /* Don't respond to input */
+#define AG_WIDGET_EXPAND		(AG_WIDGET_WFILL|AG_WIDGET_HFILL)
 
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
@@ -99,6 +101,8 @@ typedef struct ag_widget {
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
+#define AGWIDGET_FOCUSED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
+#define AGWIDGET_DISABLED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
 
 struct ag_window;
 
@@ -120,7 +124,6 @@ void		 AG_WidgetSetType(void *, const char *);
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
 AG_Widget	*AG_WidgetFindFocused(void *);
-__inline__ int	 AG_WidgetHoldsFocus(void *);
 __inline__ int	 AG_WidgetRelativeArea(void *, int, int);
 __inline__ int	 AG_WidgetArea(void *, int, int);
 void		 AG_WidgetUpdateCoords(void *, int, int);
