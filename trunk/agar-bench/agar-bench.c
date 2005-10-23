@@ -222,15 +222,15 @@ MainWindow(void)
 	
 		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			btn = AG_ButtonNew(hbox, "Run tests");
+			btn = AG_ButtonNew(hbox, 0, "Run tests");
 			AG_SetEvent(btn, "button-pushed", run_tests,
 			    "%p,%p", test, t);
 	
-			btn = AG_ButtonNew(hbox, "Save results");
+			btn = AG_ButtonNew(hbox, 0, "Save results");
 			AG_SetEvent(btn, "button-pushed", SaveToFileDlg,
 			    "%p,%p", test, t);
 	
-			btn = AG_ButtonNew(hbox, "Quit");
+			btn = AG_ButtonNew(hbox, 0, "Quit");
 			AG_SetEvent(btn, "button-pushed", QuitApp, NULL);
 		}
 	

@@ -143,8 +143,7 @@ AG_UComboInit(AG_UCombo *com)
 	com->panel = NULL;
 	com->saved_h = 0;
 
-	com->button = AG_ButtonNew(com, "...");
-	AG_ButtonSetSticky(com->button, 1);
+	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _("..."));
 	AG_ButtonSetPadding(com->button, 1);
 	AG_SetEvent(com->button, "button-pushed", ucombo_expand, "%p", com);
 	

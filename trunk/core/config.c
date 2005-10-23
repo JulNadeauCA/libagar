@@ -583,9 +583,9 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		}
 		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			AG_ButtonAct(hb, _("Load scheme"), 0,
+			AG_ButtonAct(hb, 0, _("Load scheme"),
 			    AG_LoadColorSchemeDlg, NULL);
-			AG_ButtonAct(hb, _("Save scheme"), 0,
+			AG_ButtonAct(hb, 0, _("Save scheme"),
 			    AG_SaveColorSchemeDlg, NULL);
 		}
 	}
@@ -638,8 +638,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
-		AG_ButtonAct(hb, _("Close"), 0, AGWINHIDE(win));
-		AG_ButtonAct(hb, _("Save"), 0, save_config, NULL);
+		AG_ButtonAct(hb, 0, _("Close"), AGWINHIDE(win));
+		AG_ButtonAct(hb, 0, _("Save"), save_config, NULL);
 	}
 	agConfig->window = win;
 }

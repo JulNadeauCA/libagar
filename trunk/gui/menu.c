@@ -392,7 +392,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar,
 	AG_Button *bu;
 	AG_Event *btn_ev;
 	
-	bu = AG_ButtonNew(tbar->rows[0], NULL);
+	bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
 	AG_ButtonSetSurface(bu, AGICON(icon));
 	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);

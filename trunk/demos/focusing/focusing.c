@@ -77,10 +77,10 @@ CreateWindow(void)
 	win = AG_WindowNew(0);
 	fx1 = AG_FixedNew(win, AG_FIXED_WFILL|AG_FIXED_HFILL);
 
-	btn = AG_ButtonNew(fx1, "Foo");
+	btn = AG_ButtonNew(fx1, 0, "Foo");
 	AG_FixedMove(fx1, btn, 0, 0);
 	AG_FixedSize(fx1, btn, 32, 32);
-	btn = AG_ButtonNew(fx1, "Bar");
+	btn = AG_ButtonNew(fx1, 0, "Bar");
 	AG_FixedMove(fx1, btn, 0, 32);
 	AG_FixedSize(fx1, btn, 32, 32);
 	AG_ButtonDisable(btn);

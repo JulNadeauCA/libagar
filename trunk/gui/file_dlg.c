@@ -205,9 +205,9 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	AG_LabelStaticF(win, _("Do you want to replace it?"));
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
-		AG_ButtonAct(hb, _("Replace"), 0, AG_ReplaceFileEv,
-		    "%p,%p,%p", fd, win, pwin);
-		AG_ButtonAct(hb, _("Cancel"), AG_BUTTON_FOCUS,
+		AG_ButtonAct(hb, 0, _("Replace"),
+		    AG_ReplaceFileEv, "%p,%p,%p", fd, win, pwin);
+		AG_ButtonAct(hb, AG_BUTTON_FOCUS, _("Cancel"),
 		    AGWINDETACH(win));
 	}
 	AG_WindowAttach(pwin, win);
@@ -485,8 +485,8 @@ AG_FileDlgInit(AG_FileDlg *fd, int flags)
 	AG_TlistPrescale(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistPrescale(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 
-	fd->btnOk = AG_ButtonNew(fd, _("OK"));
-	fd->btnCancel = AG_ButtonNew(fd, _("Cancel"));
+	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
+	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
 
 	AG_SetEvent(fd, "widget-shown", AG_ShownEv, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", AG_DirSelectedEv, "%p", fd);

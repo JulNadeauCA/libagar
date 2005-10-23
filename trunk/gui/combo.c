@@ -226,8 +226,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 
 	com->tbox = AG_TextboxNew(com, label);
 	com->tbox->flags |= AG_TEXTBOX_COMBO;
-	com->button = AG_ButtonNew(com, " ... ");
-	AG_ButtonSetSticky(com->button, 1);
+	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 1);
 
 	if ((flags & AG_COMBO_ANY_TEXT) == 0) {

@@ -715,12 +715,12 @@ create_obj_dlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		AG_ButtonAct(bo, _("OK"), 0, create_obj, "%p,%p,%p,%p",
+		AG_ButtonAct(bo, 0, _("OK"), create_obj, "%p,%p,%p,%p",
 		    t, tb, pobj_tl, win);
 		AG_SetEvent(tb, "textbox-return", create_obj, "%p,%p,%p,%p",
 		    t, tb, pobj_tl, win);
 		
-		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1038,7 +1038,7 @@ AG_ObjMgrWindow(void)
 			    -1, rename_repo_dlg, "%p", tl);
 		}
 
-		btn = AG_ButtonAct(ntab, _("Refresh listing"), AG_BUTTON_WFILL,
+		btn = AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Refresh listing"),
 		    update_repo_listing, "%p", tl);
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
@@ -1100,8 +1100,8 @@ AG_ObjMgrQuitDlg(void *obj)
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);
 	{
-		AG_ButtonAct(bo, _("Quit"), 0, objmgr_quit, NULL);
-		AG_ButtonAct(bo, _("Cancel"), AG_BUTTON_FOCUS,
+		AG_ButtonAct(bo, 0, _("Quit"), objmgr_quit, NULL);
+		AG_ButtonAct(bo, AG_BUTTON_FOCUS, _("Cancel"),
 		    quit_cancel, "%p", win);
 	}
 	AG_WindowShow(win);

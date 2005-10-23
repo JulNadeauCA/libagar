@@ -96,7 +96,7 @@ merge_init(AG_Maptool *t)
 		tb = AG_TextboxNew(hb, _("Name: "));
 		AG_SetEvent(tb, "textbox-return", merge_create_brush, "%p", tb);
 
-		bu = AG_ButtonNew(hb, _("Create"));
+		bu = AG_ButtonNew(hb, 0, _("Create"));
 		AG_ButtonSetPadding(bu, 6);			/* Align */
 		AG_ButtonSetFocusable(bu, 0);
 		AG_SetEvent(bu, "button-pushed", merge_create_brush, "%p", tb);
@@ -105,14 +105,14 @@ merge_init(AG_Maptool *t)
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
 #if 0
-		bu = AG_ButtonNew(hb, _("Load set"));
+		bu = AG_ButtonNew(hb, 0, _("Load set"));
 		AG_SetEvent(bu, "button-pushed", merge_load_brush_set, NULL);
-		bu = AG_ButtonNew(hb, _("Save set"));
+		bu = AG_ButtonNew(hb, 0, _("Save set"));
 		AG_SetEvent(bu, "button-pushed", merge_save_brush_set, NULL);
 #endif
-		bu = AG_ButtonNew(hb, _("Edit"));
+		bu = AG_ButtonNew(hb, 0, _("Edit"));
 		AG_SetEvent(bu, "button-pushed", merge_edit_brush, "%p", win);
-		bu = AG_ButtonNew(hb, _("Remove"));
+		bu = AG_ButtonNew(hb, 0, _("Remove"));
 		AG_SetEvent(bu, "button-pushed", merge_remove_brush, NULL);
 	}
 

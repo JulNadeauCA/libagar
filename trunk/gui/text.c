@@ -531,7 +531,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	AG_ButtonAct(vb, _("Ok"), AG_BUTTON_FOCUS, AGWINDETACH(win));
+	AG_ButtonAct(vb, AG_BUTTON_FOCUS, _("Ok"), AGWINDETACH(win));
 
 	AG_WindowShow(win);
 }
@@ -593,7 +593,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	for (i = 0; i < nbOpts; i++) {
-		bOpts[i] = AG_ButtonNew(bo, "XXXXXXXXXXX");
+		bOpts[i] = AG_ButtonNew(bo, 0, "XXXXXXXXXXX");
 	}
 	AG_WindowShow(win);
 	return (win);
@@ -631,7 +631,7 @@ AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
 	}
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	AG_ButtonAct(vb, _("Ok"), 0, AGWINDETACH(win));
+	AG_ButtonAct(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	/* TODO test type */
 
@@ -669,7 +669,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	}
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_WFILL|AG_VBOX_HFILL);
-	AG_ButtonAct(vb, _("Ok"), 0, AGWINDETACH(win));
+	AG_ButtonAct(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	AG_WindowShow(win);
 	AG_WidgetFocus(tb);
@@ -710,14 +710,14 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
 	{
-		btn = AG_ButtonNew(bo, _("Ok"));
+		btn = AG_ButtonNew(bo, 0, _("Ok"));
 		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
 		    &tb->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
-		AG_ButtonAct(bo, _("Cancel"), 0, AGWINDETACH(win));
+		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowShow(win);

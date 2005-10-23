@@ -50,13 +50,13 @@ an image.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Button *"
-.Fn AG_ButtonNew "void *parent" "char *caption"
+.Fn AG_ButtonNew "void *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "AG_Button *"
-.Fn AG_ButtonAct "void *parent" "char *caption" "Uint flags" "const char *fmt" "..."
+.Fn AG_ButtonAct "void *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft void
-.Fn AG_ButtonInit "AG_Button *button" "char *caption" "Uint flags"
+.Fn AG_ButtonInit "AG_Button *button" "Uint flags" "char *caption"
 .Pp
 .Ft void
 .Fn AG_ButtonEnable "AG_Button *button"
@@ -115,11 +115,10 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Bd -literal
-#define AG_BUTTON_INSENSITIVE	0x01	/* Not responsive */
+#define AG_BUTTON_DISABLED	0x01	/* Button is insensitive */
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
+#define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
-#define AG_BUTTON_WFILL		0x10	/* Fill available width */
-#define AG_BUTTON_HFILL		0x20	/* Fill available height */
 #define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
 .Ed
 .Pp
@@ -245,7 +244,7 @@ hello(AG_Event *event)
 
 AG_Button *btn;
 
-btn = AG_ButtonNew(parent, "Hello");
+btn = AG_ButtonNew(parent, 0, "Hello");
 AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
 .Ed
 .Sh SEE ALSO

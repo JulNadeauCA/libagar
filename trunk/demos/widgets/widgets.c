@@ -71,7 +71,7 @@ CreateWindow(void)
 		 * value or a flag.
 		 */
 		for (i = 0; i < 5; i++)
-			AG_ButtonNew(hbox, "x");
+			AG_ButtonNew(hbox, 0, "x");
 	}
 
 	/*

@@ -58,16 +58,16 @@ CreateGameMenu(void)
 	 * Create a series of 32x32 buttons at the right. We initially attach
 	 * the buttons to the container, so we must use AG_FixedMove().
 	 */
-	btn = AG_ButtonNew(fx, "A");
+	btn = AG_ButtonNew(fx, 0, "A");
 	AG_FixedMove(fx, btn, 204, 48);
 	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, "B");
+	btn = AG_ButtonNew(fx, 0, "B");
 	AG_FixedMove(fx, btn, 204+64, 48);
 	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, "C");
+	btn = AG_ButtonNew(fx, 0, "C");
 	AG_FixedMove(fx, btn, 204+128, 48);
 	AG_FixedSize(fx, btn, 32, 32);
-	btn = AG_ButtonNew(fx, "D");
+	btn = AG_ButtonNew(fx, 0, "D");
 	AG_FixedMove(fx, btn, 204+192, 48);
 	AG_FixedSize(fx, btn, 32, 32);
 
