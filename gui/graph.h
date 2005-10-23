@@ -40,6 +40,7 @@ typedef struct ag_graph {
 #define AG_GRAPH_ORIGIN	0x02		/* Visible origin */
 #define AG_GRAPH_WFILL	0x04
 #define AG_GRAPH_HFILL	0x08
+#define AG_GRAPH_FOCUS	0x10
 #define AG_GRAPH_EXPAND (AG_GRAPH_WFILL|AG_GRAPH_HFILL)
 	AG_GraphValue yrange;		/* Max. value */
 	AG_GraphValue xoffs;		/* Display offset */

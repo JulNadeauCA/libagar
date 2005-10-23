@@ -67,6 +67,9 @@ AG_GraphNew(void *parent, enum ag_graph_type type, Uint flags)
 	graph = Malloc(sizeof(AG_Graph), M_OBJECT);
 	AG_GraphInit(graph, type, flags);
 	AG_ObjectAttach(parent, graph);
+	if (flags & AG_GRAPH_FOCUS) {
+		AG_WidgetFocus(graph);
+	}
 	return (graph);
 }
 
