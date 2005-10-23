@@ -294,7 +294,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
 
 	ops = vgElementTypes[vge->type];
-	AG_LabelStaticF(win, _("Element type: %s"), ops->name);
+	AG_LabelNewFmt(win, _("Element type: %s"), ops->name);
 	AG_LabelNew(win, AG_LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
 	
 	sb = AG_SpinbuttonNew(win, _("Layer: "));
@@ -329,11 +329,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 			NULL
 		};
 	
-		AG_LabelStatic(ntab, _("Line style: "));
+		AG_LabelNewStatic(ntab, _("Line style: "));
 		rad = AG_RadioNew(ntab, line_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
 		
-		AG_LabelStatic(ntab, _("Endpoint style: "));
+		AG_LabelNewStatic(ntab, _("Endpoint style: "));
 		rad = AG_RadioNew(ntab, endpoint_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
@@ -361,11 +361,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 		RG_TextureSelector *texsel;
 
-		AG_LabelStatic(ntab, _("Filling style: "));
+		AG_LabelNewStatic(ntab, _("Filling style: "));
 		rad = AG_RadioNew(ntab, fill_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
 			
-		AG_LabelStatic(ntab, _("Texture: "));
+		AG_LabelNewStatic(ntab, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		AGWIDGET(texsel)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
 		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,

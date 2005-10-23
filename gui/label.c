@@ -102,7 +102,7 @@ AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 
 /* Alternate constructor for static labels. */
 void
-AG_LabelStatic(void *parent, const char *text)
+AG_LabelNewStatic(void *parent, const char *text)
 {
 	AG_Label *label;
 	
@@ -113,7 +113,7 @@ AG_LabelStatic(void *parent, const char *text)
 
 /* Alternate constructor for static labels. */
 void
-AG_LabelStaticF(void *parent, const char *fmt, ...)
+AG_LabelNewFmt(void *parent, const char *fmt, ...)
 {
 	char buf[AG_LABEL_MAX];
 	AG_Label *label;

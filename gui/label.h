@@ -33,8 +33,8 @@ typedef struct ag_label {
 
 __BEGIN_DECLS
 AG_Label	*AG_LabelNew(void *, enum ag_label_type, const char *, ...);
-__inline__ void  AG_LabelStatic(void *, const char *);
-void		 AG_LabelStaticF(void *, const char *, ...);
+__inline__ void  AG_LabelNewStatic(void *, const char *);
+void		 AG_LabelNewFmt(void *, const char *, ...);
 
 void	 AG_LabelInit(AG_Label *, enum ag_label_type, const char *);
 void 	 AG_LabelDestroy(void *);

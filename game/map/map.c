@@ -2646,7 +2646,7 @@ noderef_edit(AG_Event *event)
 	AG_WindowSetCaption(win, _("Node reference"));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
-	AG_LabelStaticF(win, _("Type: %s"),
+	AG_LabelNewFmt(win, _("Type: %s"),
 	    (r->type == AG_NITEM_SPRITE) ? _("Sprite") :
 	    (r->type == AG_NITEM_ANIM) ? _("Animation") :
 	    (r->type == AG_NITEM_WARP) ? _("Warp point") : "?");

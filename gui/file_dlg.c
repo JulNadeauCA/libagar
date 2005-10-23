@@ -202,7 +202,7 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_LabelStaticF(win, _("Do you want to replace it?"));
+	AG_LabelNewFmt(win, _("Do you want to replace it?"));
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 	{
 		AG_ButtonAct(hb, 0, _("Replace"),
