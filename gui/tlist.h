@@ -45,7 +45,7 @@ TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item);
 
 typedef struct ag_tlist {
 	struct ag_widget wid;
-	int flags;
+	Uint flags;
 #define AG_TLIST_MULTI		0x01	/* Multiple selections (ctrl/shift) */
 #define AG_TLIST_MULTITOGGLE	0x02	/* Multiple toggle-style selections */
 #define AG_TLIST_POLL		0x04	/* Generate tlist-poll events */
@@ -76,8 +76,8 @@ typedef struct ag_tlist {
 	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL)
 
 __BEGIN_DECLS
-AG_Tlist *AG_TlistNew(void *, int);
-void	  AG_TlistInit(AG_Tlist *, int);
+AG_Tlist *AG_TlistNew(void *, Uint);
+void	  AG_TlistInit(AG_Tlist *, Uint);
 void	  AG_TlistScale(void *, int, int);
 void	  AG_TlistDraw(void *);
 void	  AG_TlistDestroy(void *);

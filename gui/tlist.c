@@ -66,7 +66,7 @@ static void set_icon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
 static void update_scrollbar(AG_Tlist *);
 
 AG_Tlist *
-AG_TlistNew(void *parent, int flags)
+AG_TlistNew(void *parent, Uint flags)
 {
 	AG_Tlist *tl;
 
@@ -167,7 +167,7 @@ lost_focus(AG_Event *event)
 }
 
 void
-AG_TlistInit(AG_Tlist *tl, int flags)
+AG_TlistInit(AG_Tlist *tl, Uint flags)
 {
 	AG_WidgetInit(tl, "tlist", &agTlistOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
