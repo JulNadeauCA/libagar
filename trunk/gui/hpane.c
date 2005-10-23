@@ -164,7 +164,7 @@ mousebuttonup(AG_Event *event)
 void
 AG_HPaneInit(AG_HPane *pa, Uint flags)
 {
-	int boxflags = 0;
+	Uint boxflags = 0;
 
 	if (flags & AG_HPANE_WFILL) boxflags |= AG_BOX_WFILL;
 	if (flags & AG_HPANE_HFILL) boxflags |= AG_BOX_HFILL;
