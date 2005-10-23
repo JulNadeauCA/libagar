@@ -473,7 +473,8 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
 		RG_TileviewInit(tv, ani->tileset, 0);
 
-		com = AG_ComboNew(box, AG_COMBO_POLL, _("Tile: "));
+		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_WFILL|
+		                       AG_COMBO_FOCUS, _("Tile: "));
 		AG_SetEvent(com, "combo-selected", select_insn_tile,
 		    "%p,%p,%p", ani, insn, tv);
 		AG_SetEvent(com->list, "tlist-poll", poll_tiles,

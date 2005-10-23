@@ -149,7 +149,8 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Polygon"));
 
-	com = AG_ComboNew(win, AG_COMBO_POLL, _("Sketch: "));
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL|AG_COMBO_FOCUS,
+	    _("Sketch: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
 	AG_SetEvent(com, "combo-selected", select_sketch, "%p,%p", sproj,
 	    tv->tile);

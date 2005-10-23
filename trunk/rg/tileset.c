@@ -1013,7 +1013,7 @@ insert_tile_dlg(AG_Event *event)
 	    sizeof(ins_tile_name));
 	AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
 
-	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT, _("Class: "));
+	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_WFILL, _("Class: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
 	    sizeof(ins_tile_class));
 	if (strcmp(ts->template, "Terrain") == 0) {
@@ -1515,7 +1515,7 @@ RG_TilesetEdit(void *p)
 	AG_TlistInit(tl_anims, AG_TLIST_POLL);
 	AG_SetEvent(tl_anims, "tlist-poll", poll_anims, "%p", ts);
 
-	com = AG_ComboNew(win, 0, _("Template: "));
+	com = AG_ComboNew(win, AG_COMBO_WFILL, _("Template: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->template,
 	    sizeof(ts->template));
 	AG_TlistAdd(com->list, NULL, "Perso");

@@ -262,7 +262,7 @@ AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
 	strlcat(fsu->format, "%g", sizeof(fsu->format));
 	
 	if (unit != NULL) {
-		fsu->units = AG_UComboNew(fsu);
+		fsu->units = AG_UComboNew(fsu, 0);
 		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
 		init_unit_system(fsu, unit);

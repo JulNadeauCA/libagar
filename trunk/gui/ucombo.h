@@ -13,6 +13,11 @@
 
 typedef struct ag_ucombo {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_UCOMBO_WFILL	  0x01
+#define AG_UCOMBO_HFILL	  0x02
+#define AG_UCOMBO_FOCUS	  0x04
+#define AG_UCOMBO_EXPAND  (AG_UCOMBO_WFILL|AG_UCOMBO_HFILL)
 	AG_Button *button;		/* Selection button */
 	AG_Tlist *list;			/* Item list */
 	AG_Window *panel;
@@ -20,8 +25,8 @@ typedef struct ag_ucombo {
 } AG_UCombo;
 
 __BEGIN_DECLS
-AG_UCombo *AG_UComboNew(void *);
-void	   AG_UComboInit(AG_UCombo *);
+AG_UCombo *AG_UComboNew(void *, Uint);
+void	   AG_UComboInit(AG_UCombo *, Uint);
 void	   AG_UComboScale(void *, int, int);
 void	   AG_UComboDestroy(void *);
 __END_DECLS
