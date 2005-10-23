@@ -302,7 +302,7 @@ AG_EventProcess(SDL_Event *ev)
 			int x, y;
 
 			me = Malloc(sizeof(AG_Menu), M_OBJECT);
-			AG_MenuInit(me);
+			AG_MenuInit(me, 0);
 			mi = me->sel_item = AG_MenuAddItem(me, NULL);
 
 			TAILQ_FOREACH_REVERSE(win, &agView->windows,

@@ -137,7 +137,7 @@ open_menu(RG_Animview *av, int x, int y)
 		close_menu(av);
 	
 	av->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(av->menu);
+	AG_MenuInit(av->menu, 0);
 	av->menu_item = av->menu->sel_item = AG_MenuAddItem(av->menu, NULL);
 	{
 		AG_MenuItem *m_speed;

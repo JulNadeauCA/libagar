@@ -1133,7 +1133,7 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_PixmapCloseMenu(tv);
 
 	me = tv->tv_pixmap.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(me);
+	AG_MenuInit(me, 0);
 
 	mi = tv->tv_pixmap.menu_item = AG_MenuAddItem(me, NULL);
 	{

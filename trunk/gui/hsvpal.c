@@ -462,7 +462,7 @@ open_menu(AG_HSVPal *pal)
 		close_menu(pal);
 
 	pal->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(pal->menu);
+	AG_MenuInit(pal->menu, 0);
 
 	pal->menu_item = AG_MenuAddItem(pal->menu, NULL);
 	{

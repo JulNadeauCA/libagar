@@ -51,12 +51,12 @@ static AG_WidgetOps agMenuOps = {
 };
 
 AG_Menu *
-AG_MenuNew(void *parent)
+AG_MenuNew(void *parent, Uint flags)
 {
 	AG_Menu *m;
 
 	m = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(m);
+	AG_MenuInit(m, flags);
 	AG_ObjectAttach(parent, m);
 	return (m);
 }
@@ -220,12 +220,14 @@ attached(AG_Event *event)
 }
 
 void
-AG_MenuInit(AG_Menu *m)
+AG_MenuInit(AG_Menu *m, Uint flags)
 {
-	AG_WidgetInit(m, "AGMenu", &agMenuOps,
-	    AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_MOTION|
-	    AG_WIDGET_UNFOCUSED_BUTTONUP);
+	Uint wflags = AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP;
 
+	if (flags & AG_MENU_WFILL) { wflags |= AG_MENU_WFILL; }
+	if (flags & AG_MENU_HFILL) { wflags |= AG_MENU_HFILL; }
+
+	AG_WidgetInit(m, "AGMenu", &agMenuOps, wflags);
 	m->items = Malloc(sizeof(AG_MenuItem), M_WIDGET);
 	m->nitems = 0;
 	m->vspace = 5;

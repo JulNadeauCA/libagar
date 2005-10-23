@@ -762,7 +762,7 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_SketchCloseMenu(tv);
 
 	me = tv->tv_sketch.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(me);
+	AG_MenuInit(me, 0);
 
 	mi = tv->tv_sketch.menu_item = AG_MenuAddItem(me, NULL);
 	{

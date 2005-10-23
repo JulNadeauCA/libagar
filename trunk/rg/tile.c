@@ -2091,7 +2091,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	    ts, t, win, tv);
 	feature_menus(tv, tl_feats, win);
 	
-	me = AG_MenuNew(win);
+	me = AG_MenuNew(win, AG_MENU_WFILL);
 
 	tbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
 	AG_ToolbarInit(tbar, AG_TOOLBAR_HORIZ, 1, 0);
@@ -2235,7 +2235,7 @@ RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_TileCloseMenu(tv);
 
 	tv->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(tv->menu);
+	AG_MenuInit(tv->menu, 0);
 
 	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
 	{

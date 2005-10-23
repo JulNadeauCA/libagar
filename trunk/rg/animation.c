@@ -641,7 +641,7 @@ RG_AnimEdit(RG_Anim *ani)
 	AG_WindowSetCaption(win, _("Animation: %s"), ani->name);
 	AG_SetEvent(win, "window-close", close_animation, "%p,%p", ts, ani);
 	
-	me = AG_MenuNew(win);
+	me = AG_MenuNew(win, AG_MENU_WFILL);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 	nt = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
