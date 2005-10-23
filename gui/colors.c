@@ -33,12 +33,19 @@
 
 const AG_Version agColorSchemeVer = {
 	"agar color scheme",
-	0, 0
+	1, 0
 };
 
 Uint32 agColors[LAST_COLOR];
 Uint32 agColorsBorder[7];
 int    agColorsBorderSize = 7;
+
+Sint8  agFocusSunkColorShift[3] = { 10, 10, 0 };
+Sint8  agFocusRaisedColorShift[3] = { 30, 30, 20 };
+Sint8  agNofocusSunkColorShift[3] = { -20, -20, -20 };
+Sint8  agNofocusRaisedColorShift[3] = { 10, 10, 10 };
+Sint8  agHighColorShift[3] = { 50, 50, 50 };
+Sint8  agLowColorShift[3] = { -50, -50, -50 };
 
 const char *agColorNames[] = {
 	N_("Background"),
@@ -53,7 +60,7 @@ const char *agColorNames[] = {
 	N_("Titlebar caption"),
 	N_("Button"),
 	N_("Button text"),
-	N_("Button (disabled)"),
+	N_("Disabled widget"),
 	N_("Checkbox"),
 	N_("Checkbox text"),
 	N_("Graph"),
@@ -87,8 +94,7 @@ const char *agColorNames[] = {
 	N_("Tableview cell text"),
 	N_("Tableview line"),
 	N_("Tableview selection"),
-	N_("Textbox (read/write)"),
-	N_("Textbox (read-only)"),
+	N_("Textbox"),
 	N_("Textbox text"),
 	N_("Textbox cursor"),
 	N_("Tlist text"),
@@ -134,7 +140,7 @@ AG_ColorsInit(void)
 	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
 	agColors[BUTTON_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[BUTTON_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 240, 240, 240);
-	agColors[BUTTON_DIS_COLOR] = SDL_MapRGB(agVideoFmt, 160, 160, 160);
+	agColors[DISABLED_COLOR] = SDL_MapRGB(agVideoFmt, 160, 160, 160);
 	agColors[CHECKBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[CHECKBOX_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[GRAPH_BG_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
@@ -168,8 +174,7 @@ AG_ColorsInit(void)
 	agColors[TABLEVIEW_CTXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TABLEVIEW_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
-	agColors[TEXTBOX_RW_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
-	agColors[TEXTBOX_RO_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[TEXTBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
 	agColors[TEXTBOX_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 251, 255, 197);
 	agColors[TLIST_TXT_COLOR] = agColors[TEXT_COLOR];
@@ -208,6 +213,18 @@ AG_ColorsInit(void)
 	agColorsBorder[6] = SDL_MapRGB(agVideoFmt, 0, 255, 0);
 }
 
+#define AG_WriteRGBShift(buf,v) do {	\
+	AG_WriteSint8((buf), (v)[0]);	\
+	AG_WriteSint8((buf), (v)[1]);	\
+	AG_WriteSint8((buf), (v)[2]);	\
+} while (0)
+
+#define AG_ReadRGBShift(buf,v) do {	\
+	(v)[0] = AG_ReadSint8(buf);	\
+	(v)[1] = AG_ReadSint8(buf);	\
+	(v)[2] = AG_ReadSint8(buf);	\
+} while (0)
+
 int
 AG_ColorsLoad(const char *file)
 {
@@ -218,14 +235,22 @@ AG_ColorsLoad(const char *file)
 	    AG_ReadVersion(buf, &agColorSchemeVer, NULL) == -1)
 		return (-1);
 
-	ncolors = (int)AG_ReadUint32(buf);
+	ncolors = (int)AG_ReadUint16(buf);
 	for (i = 0; i < ncolors; i++)
 		agColors[i] = AG_ReadColor(buf, agVideoFmt);
 
-	ncolors = (int)AG_ReadUint32(buf);
+	ncolors = (int)AG_ReadUint8(buf);
 	for (i = 0; i < ncolors; i++)
 		agColorsBorder[i] = AG_ReadColor(buf, agVideoFmt);
-	
+
+	AG_ReadUint8(buf);
+	AG_ReadRGBShift(buf, agFocusSunkColorShift);
+	AG_ReadRGBShift(buf, agFocusRaisedColorShift);
+	AG_ReadRGBShift(buf, agNofocusSunkColorShift);
+	AG_ReadRGBShift(buf, agNofocusRaisedColorShift);
+	AG_ReadRGBShift(buf, agHighColorShift);
+	AG_ReadRGBShift(buf, agLowColorShift);
+
 	AG_NetbufClose(buf);
 	return (0);
 }
@@ -241,14 +266,22 @@ AG_ColorsSave(const char *file)
 	}
 	AG_WriteVersion(buf, &agColorSchemeVer);
 
-	AG_WriteUint32(buf, LAST_COLOR);
+	AG_WriteUint16(buf, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {
 		AG_WriteColor(buf, agVideoFmt, agColors[i]);
 	}
-	AG_WriteUint32(buf, (Uint32)agColorsBorderSize);
+	AG_WriteUint8(buf, (Uint8)agColorsBorderSize);
 	for (i = 0; i < agColorsBorderSize; i++) {
 		AG_WriteColor(buf, agVideoFmt, agColorsBorder[i]);
 	}
+
+	AG_WriteUint8(buf, 6);
+	AG_WriteRGBShift(buf, agFocusSunkColorShift);
+	AG_WriteRGBShift(buf, agFocusRaisedColorShift);
+	AG_WriteRGBShift(buf, agNofocusSunkColorShift);
+	AG_WriteRGBShift(buf, agNofocusRaisedColorShift);
+	AG_WriteRGBShift(buf, agHighColorShift);
+	AG_WriteRGBShift(buf, agLowColorShift);
 	
 	AG_NetbufClose(buf);
 	return (0);

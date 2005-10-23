@@ -18,7 +18,7 @@ enum {
 	TITLEBAR_CAPTION_COLOR,
 	BUTTON_COLOR,
 	BUTTON_TXT_COLOR,
-	BUTTON_DIS_COLOR,
+	DISABLED_COLOR,
 	CHECKBOX_COLOR,
 	CHECKBOX_TXT_COLOR,
 	GRAPH_BG_COLOR,
@@ -52,8 +52,7 @@ enum {
 	TABLEVIEW_CTXT_COLOR,
 	TABLEVIEW_LINE_COLOR,
 	TABLEVIEW_SEL_COLOR,
-	TEXTBOX_RW_COLOR,
-	TEXTBOX_RO_COLOR,
+	TEXTBOX_COLOR,
 	TEXTBOX_TXT_COLOR,
 	TEXTBOX_CURSOR_COLOR,
 	TLIST_TXT_COLOR,
@@ -89,6 +88,13 @@ extern Uint32 agColors[LAST_COLOR];
 extern Uint32 agColorsBorder[];
 extern int agColorsBorderSize;
 extern const char *agColorNames[];
+
+extern Sint8 agFocusSunkColorShift[3];
+extern Sint8 agFocusRaisedColorShift[3];
+extern Sint8 agNofocusSunkColorShift[3];
+extern Sint8 agNofocusRaisedColorShift[3];
+extern Sint8 agHighColorShift[3];
+extern Sint8 agLowColorShift[3];
 
 #define AG_COLOR(idx) agColors[idx]
 
