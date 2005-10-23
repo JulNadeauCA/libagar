@@ -40,7 +40,7 @@
 #include <gui/label.h>
 #include <gui/combo.h>
 #include <gui/notebook.h>
-#include <gui/bitmap.h>
+#include <gui/pixmap.h>
 #include <gui/animview.h>
 #include <gui/separator.h>
 
@@ -523,7 +523,7 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
 	AG_Widget *child;
 	AG_Spinbutton *sb;
-	AG_Bitmap *bmp;
+	AG_Pixmap *pix;
 
 	AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
@@ -533,8 +533,7 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	
 	ani->gframe = fr->name;
 
-	bmp = AG_BitmapNew(box);
-	AG_BitmapSetSurface(bmp, AG_DupSurface(fr->su));
+	pix = AG_PixmapFromSurfaceCopy(box, AG_DupSurface(fr->su));
 	
 	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
