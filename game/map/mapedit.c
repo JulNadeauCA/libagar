@@ -165,7 +165,7 @@ AG_MapEditorConfig(void *p)
 		cb = AG_CheckboxNew(bo,0 , _("Moving tiles"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agMapviewAnimatedBg);
 
-		sb = AG_SpinbuttonNew(bo, _("Tile size: "));
+		sb = AG_SpinbuttonNew(bo, 0, _("Tile size: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &agMapviewBgTileSize);
 		AG_SpinbuttonSetMin(sb, 2);
 		AG_SpinbuttonSetMax(sb, 16384);

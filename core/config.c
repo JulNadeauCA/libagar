@@ -470,13 +470,13 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			AG_MSpinbuttonSetRange(msb, 320, 4096);
 		}
 		
-		sbu = AG_SpinbuttonNew(tab, _("Screenshot quality (%%): "));
+		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
 		    &agScreenshotQuality);
 		AG_SpinbuttonSetMin(sbu, 1);
 		AG_SpinbuttonSetMax(sbu, 100);
 	
-		sbu = AG_SpinbuttonNew(tab, _("Idling threshold (ms): "));
+		sbu = AG_SpinbuttonNew(tab, 0, _("Idling threshold (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agIdleThresh);
 		AG_SpinbuttonSetMin(sbu, 0);
 		AG_SpinbuttonSetMax(sbu, 255);
@@ -497,25 +497,25 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextBidi);
 		
-		sbu = AG_SpinbuttonNew(tab,
-		    _("Mouse double click delay (ms): "));
+		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
 		    &agMouseDblclickDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
-		sbu = AG_SpinbuttonNew(tab, _("Mouse spin delay (ms): "));
+		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin delay (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 
-		sbu = AG_SpinbuttonNew(tab, _("Mouse spin interval (ms): "));
+		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin interval (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinIval);
 		AG_SpinbuttonSetMin(sbu, 1);
 
-		sbu = AG_SpinbuttonNew(tab, _("Keyboard repeat delay (ms): "));
+		sbu = AG_SpinbuttonNew(tab, 0,
+		    _("Keyboard repeat delay (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
-		sbu = AG_SpinbuttonNew(tab,
+		sbu = AG_SpinbuttonNew(tab, 0,
 		    _("Keyboard repeat interval (ms): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdRepeat);
 		AG_SpinbuttonSetMin(sbu, 1);
@@ -603,7 +603,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
 		    sizeof(agRcsHostname));
 	
-		sb = AG_SpinbuttonNew(tab, _("Server port: "));
+		sb = AG_SpinbuttonNew(tab, 0, _("Server port: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &agRcsPort);
 
 		AG_SeparatorNew(tab, AG_SEPARATOR_HORIZ);

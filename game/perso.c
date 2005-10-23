@@ -288,30 +288,30 @@ AG_PersoEdit(void *obj)
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		sbu = AG_SpinbuttonNew(ntab, _("Level: "));
+		sbu = AG_SpinbuttonNew(ntab, 0, _("Level: "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_SINT32, &ps->level);
 
-		sbu = AG_SpinbuttonNew(ntab, _("Experience: "));
+		sbu = AG_SpinbuttonNew(ntab, 0, _("Experience: "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_UINT32, &ps->exp);
 
-		sbu = AG_SpinbuttonNew(ntab, _("Zuars: "));
+		sbu = AG_SpinbuttonNew(ntab, 0, _("Zuars: "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_UINT32, &ps->nzuars);
 
 		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			sbu = AG_SpinbuttonNew(hb, _("HP: "));
+			sbu = AG_SpinbuttonNew(hb, 0, _("HP: "));
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->hp);
 			
-			sbu = AG_SpinbuttonNew(hb, " / ");
+			sbu = AG_SpinbuttonNew(hb, 0, " / ");
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->maxhp);
 		}
 		
 		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
-			sbu = AG_SpinbuttonNew(hb, _("MP: "));
+			sbu = AG_SpinbuttonNew(hb, 0, _("MP: "));
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->mp);
 			
-			sbu = AG_SpinbuttonNew(hb, " / ");
+			sbu = AG_SpinbuttonNew(hb, 0, " / ");
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->maxmp);
 		}
 	}

@@ -276,7 +276,7 @@ AG_DebugScreenshot(void)
 		hosttb = AG_TextboxNew(vb, _("Host: "));
 		porttb = AG_TextboxNew(vb, _("Port: "));
 
-		sbu = AG_SpinbuttonNew(vb, _("Refresh rate (ms): "));
+		sbu = AG_SpinbuttonNew(vb, 0, _("Refresh rate (ms): "));
 		AG_SpinbuttonSetMin(sbu, 1);
 		AG_WidgetBindMp(sbu, "value", &xmit_lock, AG_WIDGET_INT,
 		    &xmit_delay);

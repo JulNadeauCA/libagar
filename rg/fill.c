@@ -180,7 +180,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 			    &f->f_gradient.c2);
 		}
 		
-		sb = AG_SpinbuttonNew(box, _("Overall alpha: "));
+		sb = AG_SpinbuttonNew(box, 0, _("Overall alpha: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &f->alpha);
 		AG_SpinbuttonSetRange(sb, 0, 255);
 		AG_SpinbuttonSetIncrement(sb, 5);

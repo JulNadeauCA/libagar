@@ -173,7 +173,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 			    &sproj->color);
 		}
 
-		sb = AG_SpinbuttonNew(box, _("Overall alpha: "));
+		sb = AG_SpinbuttonNew(box, 0, _("Overall alpha: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &sproj->alpha);
 		AG_SpinbuttonSetRange(sb, 0, 255);
 		AG_SpinbuttonSetIncrement(sb, 5);

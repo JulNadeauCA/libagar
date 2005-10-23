@@ -2196,7 +2196,7 @@ edit_properties(AG_Event *event)
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &m->origin.y);
 		AG_MSpinbuttonSetRange(msb, 0, AG_MAP_MAXWIDTH);
 
-		sb = AG_SpinbuttonNew(ntab, _("Origin layer: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Origin layer: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &m->origin.layer);
 	}
 
@@ -2213,10 +2213,10 @@ edit_properties(AG_Event *event)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &AGMCAM(mv).x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &AGMCAM(mv).y);
 		
-		sb = AG_SpinbuttonNew(ntab, _("Zoom factor: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Zoom factor: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMCAM(mv).zoom);
 		
-		sb = AG_SpinbuttonNew(ntab, _("Tile size: "));
+		sb = AG_SpinbuttonNew(ntab, 0, _("Tile size: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMTILESZ(mv));
 	
 		msb = AG_MSpinbuttonNew(ntab, 0, ",",
@@ -2675,10 +2675,10 @@ noderef_edit(AG_Event *event)
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	sb = AG_SpinbuttonNew(win, _("Layer: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &r->layer);
 
-	sb = AG_SpinbuttonNew(win, _("Friction: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Friction: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_SINT8, &r->friction);
 
 	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {

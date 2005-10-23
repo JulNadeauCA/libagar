@@ -240,7 +240,7 @@ RG_TextureEdit(RG_Texture *tex)
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->blend_func);
 	}
 
-	sb = AG_SpinbuttonNew(win, _("Overall alpha: "));
+	sb = AG_SpinbuttonNew(win, 0, _("Overall alpha: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &tex->alpha);
 	return (win);
 }

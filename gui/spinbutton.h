@@ -23,14 +23,11 @@ typedef struct ag_spinbutton {
 } AG_Spinbutton;
 
 __BEGIN_DECLS
-AG_Spinbutton *AG_SpinbuttonNew(void *, const char *, ...)
-		 	        FORMAT_ATTRIBUTE(printf, 2, 3)
-			        NONNULL_ATTRIBUTE(2);
-
-void	AG_SpinbuttonInit(AG_Spinbutton *, const char *);
-void	AG_SpinbuttonDestroy(void *);
-void	AG_SpinbuttonScale(void *, int, int);
-void	AG_SpinbuttonDraw(void *);
+AG_Spinbutton	*AG_SpinbuttonNew(void *, Uint, const char *);
+void		 AG_SpinbuttonInit(AG_Spinbutton *, Uint, const char *);
+void		 AG_SpinbuttonDestroy(void *);
+void		 AG_SpinbuttonScale(void *, int, int);
+void		 AG_SpinbuttonDraw(void *);
 
 void	AG_SpinbuttonAddValue(AG_Spinbutton *, int);
 void	AG_SpinbuttonSetValue(AG_Spinbutton *, ...);
