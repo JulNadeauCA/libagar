@@ -15,6 +15,11 @@ enum ag_scrollbar_type {
 
 typedef struct ag_scrollbar {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_SCROLLBAR_WFILL	0x01
+#define AG_SCROLLBAR_HFILL	0x02
+#define AG_SCROLLBAR_FOCUSABLE	0x04
+#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_WFILL|AG_SCROLLBAR_HFILL)
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
 	enum ag_scrollbar_type type;
@@ -25,8 +30,8 @@ typedef struct ag_scrollbar {
 } AG_Scrollbar;
 
 __BEGIN_DECLS
-AG_Scrollbar	*AG_ScrollbarNew(void *, enum ag_scrollbar_type);
-void		 AG_ScrollbarInit(AG_Scrollbar *, enum ag_scrollbar_type);
+AG_Scrollbar	*AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
+void		 AG_ScrollbarInit(AG_Scrollbar *, enum ag_scrollbar_type, Uint);
 void		 AG_ScrollbarScale(void *, int, int);
 void		 AG_ScrollbarDraw(void *);
 __inline__ void	 AG_ScrollbarSetBarSize(AG_Scrollbar *, int);

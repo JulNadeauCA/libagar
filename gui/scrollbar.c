@@ -59,25 +59,30 @@ static void mousebuttondown(AG_Event *);
 static void mousemotion(AG_Event *);
 
 AG_Scrollbar *
-AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type)
+AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
 	AG_Scrollbar *sb;
 
 	sb = Malloc(sizeof(AG_Scrollbar), M_WIDGET);
-	AG_ScrollbarInit(sb, type);
+	AG_ScrollbarInit(sb, type, flags);
 	AG_ObjectAttach(parent, sb);
 	return (sb);
 }
 
 void
-AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type)
+AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 {
-	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps,
-	    AG_WIDGET_UNFOCUSED_BUTTONUP|AG_WIDGET_UNFOCUSED_MOTION);
+	Uint wflags = AG_WIDGET_UNFOCUSED_BUTTONUP|AG_WIDGET_UNFOCUSED_MOTION;
+
+	if (flags & AG_SCROLLBAR_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_SCROLLBAR_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps, wflags);
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &sb->value);
 	AG_WidgetBind(sb, "min", AG_WIDGET_INT, &sb->min);
 	AG_WidgetBind(sb, "max", AG_WIDGET_INT, &sb->max);
 
+	sb->flags = flags;
 	sb->value = 0;
 	sb->min = 0;
 	sb->max = 0;

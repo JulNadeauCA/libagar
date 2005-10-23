@@ -135,9 +135,9 @@ AG_TableviewInit(AG_Tableview *tv, int flags, AG_TableviewDataFn data_callback,
 	tv->head_height = tv->header ? agTextFontHeight : 0;
 	tv->row_height = agTextFontHeight+2;
 	tv->dblclicked = 0;
-	tv->sbar_v = AG_ScrollbarNew(tv, AG_SCROLLBAR_VERT);
+	tv->sbar_v = AG_ScrollbarNew(tv, AG_SCROLLBAR_VERT, 0);
 	tv->sbar_h = (flags & AG_TABLEVIEW_HORIZ) ?
-		AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ) : NULL;
+	    AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ, 0) : NULL;
 	//tv->editbox = NULL;
 
 	AG_WidgetSetInt(tv->sbar_v, "min", 0);

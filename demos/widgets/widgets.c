@@ -133,10 +133,10 @@ CreateWindow(void)
 
 		/*
 		 * AG_Scrollbar provides three bindings, "value", "min" and
-		 * "max".
+		 * "max". Note that this widget is not focusable by default.
 		 */
-		sb = AG_ScrollbarNew(div->box1, AG_SCROLLBAR_HORIZ);
-		AGWIDGET(sb)->flags |= AG_WIDGET_WFILL|AG_WIDGET_FOCUSABLE;
+		sb = AG_ScrollbarNew(div->box1, AG_SCROLLBAR_HORIZ,
+		    AG_SCROLLBAR_WFILL|AG_SCROLLBAR_FOCUSABLE);
 		AG_WidgetSetInt(sb, "min", 0);
 		AG_WidgetSetInt(sb, "max", 255);
 		AG_WidgetBindInt(sb, "value", &value);

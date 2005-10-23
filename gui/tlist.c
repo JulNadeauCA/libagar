@@ -183,7 +183,7 @@ AG_TlistInit(AG_Tlist *tl, int flags)
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
-	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT);
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
 	tl->compare_fn = AG_TlistComparePtrs;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
