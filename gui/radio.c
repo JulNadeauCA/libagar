@@ -65,26 +65,30 @@ static void radio_event(AG_Event *);
 static void mousemotion(AG_Event *);
 
 AG_Radio *
-AG_RadioNew(void *parent, const char **items)
+AG_RadioNew(void *parent, Uint flags, const char **items)
 {
 	AG_Radio *rad;
 
 	rad = Malloc(sizeof(AG_Radio), M_OBJECT);
-	AG_RadioInit(rad, items);
+	AG_RadioInit(rad, flags, items);
 	AG_ObjectAttach(parent, rad);
 	return (rad);
 }
 
 void
-AG_RadioInit(AG_Radio *rad, const char **items)
+AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 {
+	Uint wflags = AG_WIDGET_FOCUSABLE;
 	const char *s, **itemsp = items;
 	int i;
 
-	AG_WidgetInit(rad, "radio", &agRadioOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	if (flags & AG_RADIO_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_RADIO_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(rad, "radio", &agRadioOps, wflags);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
+	rad->flags = flags;
 	rad->value = -1;
 	rad->max_w = 0;
 	rad->oversel = -1;

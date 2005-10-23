@@ -383,7 +383,7 @@ insert_brush_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		rad_types = AG_RadioNew(bo, types);
+		rad_types = AG_RadioNew(bo, AG_RADIO_EXPAND, types);
 		AG_WidgetSetInt(rad_types, "value", 0);
 		AG_ObjectAttach(bo, tb_name);
 		AG_ObjectAttach(bo, cb_oneshot);
@@ -509,7 +509,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_Checkbox *cb;
 
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Blending method:"));
-		rad = AG_RadioNew(ntab, blend_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_EXPAND, blend_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &px->blend_mode);
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);

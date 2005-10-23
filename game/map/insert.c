@@ -182,7 +182,7 @@ insert_pane(void *p, void *con)
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
-		rad = AG_RadioNew(ntab, agGfxSnapNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, agGfxSnapNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));

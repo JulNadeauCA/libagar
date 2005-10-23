@@ -1034,7 +1034,7 @@ insert_tile_dlg(AG_Event *event)
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, agGfxSnapNames);
+	rad = AG_RadioNew(win, AG_RADIO_WFILL, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
