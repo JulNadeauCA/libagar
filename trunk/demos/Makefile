@@ -9,7 +9,8 @@ SUBDIR=	gamemenu \
 	focusing \
 	vectordwg \
 	loader \
-	table
+	table \
+	textbox
 
 all: configure all-subdir
 clean: prereq clean-subdir
