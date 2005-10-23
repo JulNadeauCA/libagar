@@ -10,7 +10,8 @@ SUBDIR=	gamemenu \
 	vectordwg \
 	loader \
 	table \
-	textbox
+	textbox \
+	widgets
 
 all: configure all-subdir
 clean: prereq clean-subdir
