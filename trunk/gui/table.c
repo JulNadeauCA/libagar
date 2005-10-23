@@ -114,8 +114,8 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->col_h = agTextFontHeight+4;
 	t->prew = 128;
 	t->preh = 64;
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT);
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ);
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
 	t->poll_ev = NULL;
 	t->nResizing = -1;
 

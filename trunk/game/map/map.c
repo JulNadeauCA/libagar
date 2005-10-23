@@ -3016,12 +3016,12 @@ map_edit(void *p)
 		
 		AG_SeparatorNew(hdiv->box1, AG_SEPARATOR_HORIZ);
 		
-		vbar = AG_ScrollbarNew(hdiv->box2, AG_SCROLLBAR_VERT);
+		vbar = AG_ScrollbarNew(hdiv->box2, AG_SCROLLBAR_VERT, 0);
 		box_v = AG_BoxNew(hdiv->box2, AG_BOX_VERT, AG_BOX_WFILL|
 		                                           AG_BOX_HFILL);
 		{
 			AG_ObjectAttach(box_v, mv);
-			hbar = AG_ScrollbarNew(box_v, AG_SCROLLBAR_HORIZ);
+			hbar = AG_ScrollbarNew(box_v, AG_SCROLLBAR_HORIZ, 0);
 		}
 		AG_ObjectAttach(hdiv->box2, toolbar);
 	}

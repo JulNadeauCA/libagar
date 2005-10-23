@@ -105,8 +105,8 @@ AG_MatviewInit(AG_Matview *mv, struct mat *mat, Uint flags)
 	mv->flags = flags;
 	mv->hspace = 2;
 	mv->vspace = 2;
-	mv->hbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ);
-	mv->vbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_VERT);
+	mv->hbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ, 0);
+	mv->vbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_VERT, 0);
 	mv->xoffs = 0;
 	mv->yoffs = 0;
 	mv->scale = 4;
