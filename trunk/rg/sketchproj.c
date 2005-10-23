@@ -166,9 +166,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 		nb = AG_NotebookNew(box, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 		ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 		{
-			hsv1 = AG_HSVPalNew(ntab);
-			AGWIDGET(hsv1)->flags |= AG_WIDGET_WFILL|
-			                       AG_WIDGET_HFILL;
+			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 			AG_WidgetBind(hsv1, "pixel-format", AG_WIDGET_POINTER,
 			    &tv->ts->fmt);
 			AG_WidgetBind(hsv1, "pixel", AG_WIDGET_UINT32,
