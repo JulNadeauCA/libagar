@@ -61,6 +61,9 @@ AG_FileDlgNew(void *parent, Uint flags)
 	fd = Malloc(sizeof(AG_FileDlg), M_OBJECT);
 	AG_FileDlgInit(fd, flags);
 	AG_ObjectAttach(parent, fd);
+	if (fd->flags & AG_FILEDLG_FOCUS) {
+		AG_WidgetFocus(fd);
+	}
 	return (fd);
 }
 
@@ -458,8 +461,12 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 void
 AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 {
-	AG_WidgetInit(fd, "file-dlg", &agFileDlgOps,
-	    AG_WIDGET_WFILL|AG_WIDGET_HFILL);
+	Uint wflags = 0;
+
+	if (flags & AG_FILEDLG_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_FILEDLG_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(fd, "file-dlg", &agFileDlgOps, wflags);
 	fd->flags = flags;
 	fd->cfile[0] = '\0';
 	if ((getcwd(fd->cwd, sizeof(fd->cwd))) == NULL) {

@@ -30,6 +30,10 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_CLOSEWIN	0x02	/* Close the parent window when done */
 #define AG_FILEDLG_LOAD		0x04	/* File must exist and be readable */
 #define AG_FILEDLG_SAVE		0x08	/* File must be writeable */
+#define AG_FILEDLG_WFILL	0x10
+#define AG_FILEDLG_HFILL	0x20
+#define AG_FILEDLG_FOCUS	0x40
+#define AG_FILEDLG_EXPAND	(AG_FILEDLG_WFILL|AG_FILEDLG_HFILL)
 
 	char cwd[MAXPATHLEN];			/* Current working directory */
 	char cfile[MAXPATHLEN];			/* Current file path */
