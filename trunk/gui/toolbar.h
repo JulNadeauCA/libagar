@@ -33,8 +33,8 @@ typedef struct ag_toolbar {
 } AG_Toolbar;
 
 __BEGIN_DECLS
-AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, int);
-void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, int);
+AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, Uint);
+void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarScale(void *, int, int);
 void	 	 AG_ToolbarDestroy(void *);
 AG_Button	*AG_ToolbarAddButton(AG_Toolbar *, int, SDL_Surface *, int,

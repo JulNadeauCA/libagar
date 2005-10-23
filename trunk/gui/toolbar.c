@@ -53,7 +53,7 @@ static AG_WidgetOps agToolbarOps = {
 };
 
 AG_Toolbar *
-AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nrows, int flags)
+AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nrows, Uint flags)
 {
 	AG_Toolbar *tbar;
 
@@ -64,7 +64,8 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nrows, int flags)
 }
 
 void
-AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows, int flags)
+AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows,
+    Uint flags)
 {
 	int i;
 	
