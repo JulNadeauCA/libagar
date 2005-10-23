@@ -240,7 +240,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	}
 
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(com->list, 0);
+	AG_TlistInit(com->list, AG_TLIST_EXPAND);
 	
 	if (flags & AG_COMBO_TREE)	
 		com->list->flags |= AG_TLIST_TREE;

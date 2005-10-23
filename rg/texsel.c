@@ -89,7 +89,7 @@ select_texture(AG_Event *event)
 void
 RG_TextureSelectorInit(RG_TextureSelector *ts, RG_Tileset *tset, int flags)
 {
-	AG_TlistInit(&ts->tl, AG_TLIST_POLL);
+	AG_TlistInit(&ts->tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_TlistSetItemHeight(&ts->tl, RG_TILESZ);
 	AG_SetEvent(&ts->tl, "tlist-poll", poll_textures, NULL);
 	AG_SetEvent(&ts->tl, "tlist-selected", select_texture, NULL);

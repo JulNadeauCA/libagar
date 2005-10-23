@@ -479,9 +479,9 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	    AG_BOX_VERT, AG_BOX_HFILL,
 	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_WFILL);
 	{
-		fd->tlDirs = AG_TlistNew(fd->hDiv->box1, 0);
-		fd->tlFiles = AG_TlistNew(fd->hDiv->box2,
-		    (flags&AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0);
+		fd->tlDirs = AG_TlistNew(fd->hDiv->box1, AG_TLIST_EXPAND);
+		fd->tlFiles = AG_TlistNew(fd->hDiv->box2, AG_TLIST_EXPAND|
+		    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
 	}
 
 	fd->lbCwd = AG_LabelNew(fd, AG_LABEL_POLLED, _("Directory: %s"),

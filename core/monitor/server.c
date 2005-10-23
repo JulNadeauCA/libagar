@@ -389,7 +389,7 @@ AG_DebugServerWindow(void)
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
 	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl, AG_TLIST_POLL);
+	AG_TlistInit(tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", poll_clients, NULL);
 	
 	me = AG_MenuNew(win, AG_MENU_WFILL);

@@ -1273,7 +1273,7 @@ attach_pixmap_dlg(AG_Event *event)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing pixmap"));
 
-	tl = AG_TlistNew(win, 0);
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 
@@ -1351,7 +1351,7 @@ attach_sketch_dlg(AG_Event *event)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing sketch"));
 
-	tl = AG_TlistNew(win, 0);
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 
@@ -2083,7 +2083,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	}
 	
 	tl_feats = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE);
+	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
 	AGWIDGET(tl_feats)->flags &= ~(AG_WIDGET_WFILL);
 	AG_TlistPrescale(tl_feats, _("FEATURE #00 <#00>"), 5);
 	AG_SetEvent(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p",

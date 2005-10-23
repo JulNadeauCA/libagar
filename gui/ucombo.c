@@ -155,7 +155,7 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 	AG_SetEvent(com->button, "button-pushed", ucombo_expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(com->list, 0);
+	AG_TlistInit(com->list, AG_TLIST_EXPAND);
 	AG_SetEvent(com->list, "tlist-changed", ucombo_selected, "%p", com);
 }
 

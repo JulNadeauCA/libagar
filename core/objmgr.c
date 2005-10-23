@@ -699,7 +699,8 @@ create_obj_dlg(AG_Event *event)
 	{
 		AG_LabelNew(bo, AG_LABEL_STATIC, _("Parent object:"));
 
-		pobj_tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_TREE);
+		pobj_tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_TREE|
+		                          AG_TLIST_EXPAND);
 		AG_TlistPrescale(pobj_tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_WidgetBind(pobj_tl, "selected", AG_WIDGET_POINTER,
 		    &current_pobj);
@@ -839,7 +840,8 @@ AG_ObjMgrWindow(void)
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
 	objs_tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(objs_tl, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE);
+	AG_TlistInit(objs_tl, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+	                      AG_TLIST_EXPAND);
 	AG_TlistPrescale(objs_tl, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(objs_tl, "tlist-poll", poll_objs, "%p,%p", agWorld, NULL);
 	AG_SetEvent(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
@@ -1024,7 +1026,8 @@ AG_ObjMgrWindow(void)
 		AG_Button *btn;
 		AG_MenuItem *pop;
 
-		tl = AG_TlistNew(ntab, AG_TLIST_MULTI|AG_TLIST_TREE);
+		tl = AG_TlistNew(ntab, AG_TLIST_MULTI|AG_TLIST_TREE|
+		                       AG_TLIST_EXPAND);
 		AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
 		pop = AG_TlistSetPopup(tl, "object");
 		{

@@ -561,7 +561,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		
 		hb = AG_HBoxNew(tab, AG_HBOX_WFILL|AG_HBOX_HFILL);
 		{
-			tl = AG_TlistNew(hb, 0);
+			tl = AG_TlistNew(hb, AG_TLIST_EXPAND);
 			AGWIDGET(tl)->flags &= ~AG_WIDGET_WFILL;
 			for (i = 0; i < LAST_COLOR; i++) {
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));

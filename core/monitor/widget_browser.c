@@ -262,7 +262,7 @@ examine_window(AG_Event *event)
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
 
-	tl = AG_TlistNew(win, AG_TLIST_TREE|AG_TLIST_POLL);
+	tl = AG_TlistNew(win, AG_TLIST_TREE|AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", poll_widgets, "%p", pwin);
 	AG_SetEvent(tl, "tlist-dblclick", examine_widget, "%p,%p", tl, pwin);
 
@@ -287,7 +287,7 @@ AG_DebugWidgetBrowser(void)
 	AG_WindowSetCaption(win, _("Window stack"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	tl = AG_TlistNew(win, AG_TLIST_POLL);
+	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS);
 	AG_SetEvent(tl, "tlist-poll", poll_windows, NULL);
 	AG_SetEvent(tl, "tlist-dblclick", examine_window, "%p", tl);
 

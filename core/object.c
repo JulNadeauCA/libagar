@@ -2246,7 +2246,7 @@ AG_ObjectEdit(void *p)
 		lb_status = AG_LabelNew(ntab, AG_LABEL_STATIC, "...");
 
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Revision history:"));
-		tl = AG_TlistNew(ntab, 0);
+		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
 		btn = AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Refresh status"),
 		    refresh_rcs_status, "%p,%p,%p", ob, lb_status, tl);
@@ -2258,27 +2258,27 @@ AG_ObjectEdit(void *p)
 
 	ntab = AG_NotebookAddTab(nb, _("Deps"), AG_BOX_VERT);
 	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistPrescale(tl, "XXXXXXXXXXXX", 6);
 		AG_SetEvent(tl, "tlist-poll", poll_deps, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, AGTILESZ);
 		AG_SetEvent(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Events"), AG_BOX_VERT);
 	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", poll_events, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Properties"), AG_BOX_VERT);
 	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL);
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", poll_props, "%p", ob);
 	}
 	return (win);
