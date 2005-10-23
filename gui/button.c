@@ -64,6 +64,10 @@ AG_ButtonNew(void *parent, Uint flags, const char *caption)
 	btn = Malloc(sizeof(AG_Button), M_OBJECT);
 	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
+
+	if (flags & AG_BUTTON_FOCUS) {
+		AG_WidgetFocus(btn);
+	}
 	return (btn);
 }
 
