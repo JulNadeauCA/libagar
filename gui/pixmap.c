@@ -69,6 +69,7 @@ AG_PixmapFromSurfaceCopy(void *parent, SDL_Surface *su)
 	AG_PixmapInit(px);
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, AG_DupSurface(su));
+	/* XXX leak */
 	return (px);
 }
 
