@@ -301,7 +301,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
 	AG_SpinbuttonSetMin(sb, 0);
 
-	com = AG_ComboNew(win, AG_COMBO_POLL, _("Style: "));
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL, _("Style: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_styles, "%p", vg);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);

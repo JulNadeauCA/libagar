@@ -89,14 +89,14 @@ CreateWindow(void)
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist widget).
 	 */
-	com = AG_ComboNew(div->box1, 0, "Combo: ");
+	com = AG_ComboNew(div->box1, AG_COMBO_WFILL, "Combo: ");
 
 	/*
 	 * AG_UCombo is a variant of AG_Combo which looks like a single 
 	 * button. It is used by the AG_FSpinbutton widget to set the
 	 * conversion unit, for instance.
 	 */
-	ucom = AG_UComboNew(div->box1);
+	ucom = AG_UComboNew(div->box1, AG_COMBO_WFILL);
 
 	/* Populate both combo widgets. */
 	for (i = 0; i < 50; i++) {

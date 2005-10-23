@@ -49,13 +49,16 @@ static AG_WidgetOps agUComboOps = {
 };
 
 AG_UCombo *
-AG_UComboNew(void *parent)
+AG_UComboNew(void *parent, Uint flags)
 {
 	AG_UCombo *com;
 
 	com = Malloc(sizeof(AG_UCombo), M_OBJECT);
-	AG_UComboInit(com);
+	AG_UComboInit(com, flags);
 	AG_ObjectAttach(parent, com);
+	if (flags & AG_UCOMBO_FOCUS) {
+		AG_WidgetFocus(com);
+	}
 	return (com);
 }
 
@@ -136,10 +139,14 @@ ucombo_selected(AG_Event *event)
 }
 
 void
-AG_UComboInit(AG_UCombo *com)
+AG_UComboInit(AG_UCombo *com, Uint flags)
 {
-	AG_WidgetInit(com, "ucombo", &agUComboOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP;
+
+	if (flags & AG_UCOMBO_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_UCOMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(com, "ucombo", &agUComboOps, wflags);
 	com->panel = NULL;
 	com->saved_h = 0;
 

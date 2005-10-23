@@ -154,10 +154,11 @@ bound(AG_Event *event)
 }
 
 void
-AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags, void *pobj,
-    void *root)
+AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
+    void *pobj, void *root)
 {
-	AG_ComboInit(&os->com, AG_COMBO_POLL|AG_COMBO_TREE, label);
+	AG_ComboInit(&os->com, AG_COMBO_POLL|AG_COMBO_TREE|AG_COMBO_WFILL,
+	    label);
 	AG_ObjectSetType(os, "combo.objsel");
 
 	os->flags = flags;

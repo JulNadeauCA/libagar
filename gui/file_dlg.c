@@ -482,7 +482,7 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 
 	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
 	    _("File: "));
-	fd->comTypes = AG_ComboNew(fd, 0, _("Type: "));
+	fd->comTypes = AG_ComboNew(fd, AG_COMBO_WFILL, _("Type: "));
 	AG_TlistPrescale(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistPrescale(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 

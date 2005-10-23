@@ -60,6 +60,9 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	com = Malloc(sizeof(AG_Combo), M_OBJECT);
 	AG_ComboInit(com, flags, label);
 	AG_ObjectAttach(parent, com);
+	if (flags & AG_COMBO_FOCUS) {
+		AG_WidgetFocus(com);
+	}
 	return (com);
 }
 
@@ -218,8 +221,12 @@ combo_mousebuttonup(AG_Event *event)
 void
 AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 {
-	AG_WidgetInit(com, "combo", &agComboOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_UNFOCUSED_BUTTONUP);
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP;
+
+	if (flags & AG_COMBO_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_COMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(com, "combo", &agComboOps, wflags);
 	com->panel = NULL;
 	com->flags = flags;
 	com->saved_h = 0;

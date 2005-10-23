@@ -231,7 +231,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	AG_MutexInit(&fsu->lock);
 	
 	if (unit != NULL) {
-		fsu->units = AG_UComboNew(fsu);
+		fsu->units = AG_UComboNew(fsu, 0);
 		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
 		init_unit_system(fsu, unit);

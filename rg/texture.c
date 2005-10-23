@@ -210,7 +210,8 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
 	    sizeof(tex->name));
 
-	com = AG_ComboNew(win, AG_COMBO_POLL, _("Tileset: "));
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL|AG_COMBO_FOCUS,
+	    _("Tileset: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_tilesets, NULL);
 	AG_SetEvent(com, "combo-selected", select_tileset, "%p", tex);
 	AG_ComboSelectText(com, tex->tileset);
