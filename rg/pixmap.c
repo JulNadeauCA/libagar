@@ -365,7 +365,7 @@ insert_brush_dlg(AG_Event *event)
 	AG_TextboxInit(tb_name, _("Name: "));
 	
 	cb_oneshot = Malloc(sizeof(AG_Checkbox), M_OBJECT);
-	AG_CheckboxInit(cb_oneshot, _("One-shot"));
+	AG_CheckboxInit(cb_oneshot, 0, _("One-shot"));
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
 	AG_BoxSetPadding(bo, 0);
@@ -478,7 +478,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &px->a);
 	
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-		cb = AG_CheckboxNew(ntab, _("Source pixmap only"));
+		cb = AG_CheckboxNew(ntab, 0, _("Source pixmap only"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
 	}
 
@@ -513,7 +513,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &px->blend_mode);
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-		cb = AG_CheckboxNew(ntab, _("Source pixmap only"));
+		cb = AG_CheckboxNew(ntab, 0, _("Source pixmap only"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
 	}
 

@@ -442,20 +442,20 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
 		if (flags & AG_CONFIG_FULLSCREEN) {
-			cbox = AG_CheckboxNew(tab, _("Full screen"));
+			cbox = AG_CheckboxNew(tab, 0, _("Full screen"));
 			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 			    "view.full-screen");
 			AG_SetEvent(cbox, "checkbox-changed", set_full_screen,
 			    NULL);
 		}
 
-		cbox = AG_CheckboxNew(tab, _("Asynchronous blits"));
+		cbox = AG_CheckboxNew(tab, 0, _("Asynchronous blits"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 		    "view.async-blits");
 		AG_SetEvent(cbox, "checkbox-changed", set_async_blits, NULL);
 
 		if (flags & AG_CONFIG_GL) {
-			cbox = AG_CheckboxNew(tab, _("OpenGL mode"));
+			cbox = AG_CheckboxNew(tab, 0, _("OpenGL mode"));
 			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 			    "view.opengl");
 			AG_SetEvent(cbox, "checkbox-changed", set_opengl, NULL);
@@ -482,21 +482,20 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_SpinbuttonSetMin(sbu, 0);
 		AG_SpinbuttonSetMax(sbu, 255);
 		
-		cbox = AG_CheckboxNew(tab, _("Unrestricted window resize"));
+		cbox = AG_CheckboxNew(tab, 0, _("Unrestricted window resize"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agWindowAnySize);
 	}
 
 	tab = AG_NotebookAddTab(nb, _("Input devices"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, _("Unicode keyboard translation"));
+		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agKbdUnicode);
 		AG_SetEvent(cbox, "checkbox-changed", set_unitrans, NULL);
 
-		cbox = AG_CheckboxNew(tab, _("Input composition"));
+		cbox = AG_CheckboxNew(tab, 0, _("Input composition"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextComposition);
 
-		cbox = AG_CheckboxNew(tab,
-		    _("Right->left (Arabic, Hebrew, ...)"));
+		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextBidi);
 		
 		sbu = AG_SpinbuttonNew(tab,
@@ -598,7 +597,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_Box *box;
 		AG_Checkbox *cb;
 
-		cb = AG_CheckboxNew(tab, _("Enable RCS"));
+		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
 
 		tb = AG_TextboxNew(tab, _("Server hostname: "));
@@ -628,10 +627,10 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 #ifdef DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, _("Debugging"));
+		cbox = AG_CheckboxNew(tab, 0, _("Debugging"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
 
-		cbox = AG_CheckboxNew(tab, _("Debug server mode"));
+		cbox = AG_CheckboxNew(tab, 0, _("Debug server mode"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agServerMode);
 	}
 #endif

@@ -162,7 +162,7 @@ AG_MapEditorConfig(void *p)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	AG_BoxSetSpacing(bo, 5);
 	{
-		cb = AG_CheckboxNew(bo, _("Moving tiles"));
+		cb = AG_CheckboxNew(bo,0 , _("Moving tiles"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agMapviewAnimatedBg);
 
 		sb = AG_SpinbuttonNew(bo, _("Tile size: "));
@@ -173,7 +173,7 @@ AG_MapEditorConfig(void *p)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
 	{
-		cb = AG_CheckboxNew(bo, _("Selection-bounded edition"));
+		cb = AG_CheckboxNew(bo, 0, _("Selection-bounded edition"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT,
 		    &agMapviewEditSelOnly);
 	}

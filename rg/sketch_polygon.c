@@ -182,7 +182,7 @@ edit(void *p)
 	AG_Checkbox *cb;
 
 	win = AG_WindowNew(0);
-	cb = AG_CheckboxNew(win, _("Preview"));
+	cb = AG_CheckboxNew(win, 0, _("Preview"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &pt->preview);
 	return (win);
 }

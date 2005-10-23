@@ -185,7 +185,7 @@ insert_pane(void *p, void *con)
 		rad = AG_RadioNew(ntab, agGfxSnapNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
-		cb = AG_CheckboxNew(ntab, _("Replace mode"));
+		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
 
 		sb = AG_SpinbuttonNew(ntab, _("Rotation: "));

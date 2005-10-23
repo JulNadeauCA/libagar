@@ -80,7 +80,7 @@ ginsert_pane(void *p, void *con)
 	rad = AG_RadioNew(con, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
-	cb = AG_CheckboxNew(con, _("Replace mode"));
+	cb = AG_CheckboxNew(con, 0, _("Replace mode"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
 }
 

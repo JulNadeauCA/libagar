@@ -1758,10 +1758,10 @@ tile_infos(AG_Event *event)
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	ckey_cb = AG_CheckboxNew(win, _("Colorkeying"));
+	ckey_cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
 	AG_WidgetSetInt(ckey_cb, "state", t->flags & RG_TILE_SRCCOLORKEY);
 
-	alpha_cb = AG_CheckboxNew(win, _("Source alpha"));
+	alpha_cb = AG_CheckboxNew(win, 0, _("Source alpha"));
 	AG_WidgetSetInt(alpha_cb, "state", t->flags & RG_TILE_SRCALPHA);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);

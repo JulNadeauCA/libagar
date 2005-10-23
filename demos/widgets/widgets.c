@@ -78,8 +78,8 @@ CreateWindow(void)
 	 * The AG_Checkbox widget is a check box. It can bind to a boolean
 	 * value or a flag.
 	 */
-	AG_CheckboxNew(div->box1, "Checkbox 1");
-	AG_CheckboxNew(div->box1, "Checkbox 2");
+	AG_CheckboxNew(div->box1, 0, "Checkbox 1");
+	AG_CheckboxNew(div->box1, 0, "Checkbox 2");
 
 	/* AG_Separator is a simple visual separator. */
 	AG_SeparatorNew(div->box1, AG_SEPARATOR_HORIZ);
