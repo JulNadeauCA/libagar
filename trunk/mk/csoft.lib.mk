@@ -43,6 +43,7 @@ ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
 
 LIBTOOL?=	${TOP}/mk/libtool/libtool
+LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
 LTCONFIG?=	${TOP}/mk/libtool/ltconfig
 LTCONFIG_GUESS?=${TOP}/mk/libtool/config.guess
 LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
@@ -184,7 +185,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	fi
 
 # Build a Libtool version of the library.
-lib${LIB}.la: ${LIBTOOL} _lib_shobjs ${SHOBJS}
+lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    if [ "${SHOBJS}" = "" ]; then \
 	        export _shobjs=""; \
@@ -255,10 +256,11 @@ clean-lib:
 	fi
 
 cleandir-lib:
-	rm -f ${LIBTOOL} ${LTCONFIG_LOG} config.log Makefile.config .depend
+	rm -f ${LIBTOOL} ${LIBTOOL_COOKIE} ${LTCONFIG_LOG} config.log
+	rm -f Makefile.config .depend
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 
-install-lib: ${LIBTOOL}
+install-lib: ${LIBTOOL_COOKIE}
 	@if [ "${INCL}" != "" ]; then \
 	    if [ ! -d "${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
@@ -316,7 +318,7 @@ install-lib: ${LIBTOOL}
 	    fi; \
 	fi
 
-deinstall-lib: ${LIBTOOL}
+deinstall-lib: ${LIBTOOL_COOKIE}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    if [ "${LIB_STATIC}" = "Yes" ]; then \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
@@ -343,14 +345,19 @@ deinstall-lib: ${LIBTOOL}
 includes:
 	(cd ${TOP} && ${MAKE} install-includes)
 
-${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
+${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
 	    ${SH} ${LTCONFIG} ${LTMAIN_SH}; \
+	    if [ $? != 0 ]; then \
+	    	echo "${LTCONFIG} failed"; \
+	    	exit 1; \
+	    fi; \
 	    if [ ! -f "${LIBTOOL}" ]; then \
 		echo "mv libtool ${LIBTOOL}"; \
 		mv libtool ${LIBTOOL}; \
 	    fi; \
+	    echo "${LIBTOOL}" > ${LIBTOOL_COOKIE}; \
 	fi
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
