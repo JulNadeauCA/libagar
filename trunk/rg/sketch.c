@@ -330,11 +330,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 	
 		AG_LabelNewStatic(ntab, _("Line style: "));
-		rad = AG_RadioNew(ntab, line_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, line_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
 		
 		AG_LabelNewStatic(ntab, _("Endpoint style: "));
-		rad = AG_RadioNew(ntab, endpoint_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, endpoint_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
 
@@ -362,7 +362,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		RG_TextureSelector *texsel;
 
 		AG_LabelNewStatic(ntab, _("Filling style: "));
-		rad = AG_RadioNew(ntab, fill_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, fill_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
 			
 		AG_LabelNewStatic(ntab, _("Texture: "));

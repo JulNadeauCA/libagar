@@ -225,18 +225,18 @@ RG_TextureEdit(RG_Texture *tex)
 	ntab = AG_NotebookAddTab(nb, _("Wrapping"), AG_BOX_VERT);
 	{
 		AG_LabelNewStatic(ntab, _("S-coordinate: "));
-		rad = AG_RadioNew(ntab, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, wrap_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_s);
 		
 		AG_LabelNewStatic(ntab, _("T-coordinate: "));
-		rad = AG_RadioNew(ntab, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, wrap_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_t);
 	}
 
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
 		AG_LabelNewStatic(ntab, _("Blending function: "));
-		rad = AG_RadioNew(ntab, agBlendFuncNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, agBlendFuncNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->blend_func);
 	}
 

@@ -10,6 +10,10 @@
 
 typedef struct ag_radio {
 	struct ag_widget wid;
+	Uint flags;
+#define AG_RADIO_WFILL	0x01
+#define AG_RADIO_HFILL	0x02
+#define AG_RADIO_EXPAND (AG_RADIO_WFILL|AG_RADIO_HFILL)
 	int value;		/* Default value binding */
 	int *labels;		/* Label surface IDs */
 	const char **items;
@@ -20,8 +24,8 @@ typedef struct ag_radio {
 } AG_Radio;
 
 __BEGIN_DECLS
-AG_Radio *AG_RadioNew(void *, const char *[]);
-void	  AG_RadioInit(AG_Radio *, const char *[]);
+AG_Radio *AG_RadioNew(void *, Uint, const char *[]);
+void	  AG_RadioInit(AG_Radio *, Uint, const char *[]);
 void	  AG_RadioDraw(void *);
 void	  AG_RadioScale(void *, int, int);
 void	  AG_RadioDestroy(void *);

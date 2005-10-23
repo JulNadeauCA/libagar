@@ -1767,7 +1767,7 @@ tile_infos(AG_Event *event)
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, agGfxSnapNames);
+	rad = AG_RadioNew(win, AG_RADIO_WFILL, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 	    &AG_SPRITE(t->ts,t->s).snap_mode);
 

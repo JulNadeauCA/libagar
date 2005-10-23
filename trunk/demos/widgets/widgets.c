@@ -219,7 +219,7 @@ CreateWindow(void)
 			 * AG_Radio displays a group of radio buttons. It can
 			 * bind to an integer value.
 			 */
-			rad = AG_RadioNew(ntab, radio_items);
+			rad = AG_RadioNew(ntab, AG_RADIO_WFILL, radio_items);
 			AG_WidgetBindInt(rad, "value", &g->type);
 		}
 		

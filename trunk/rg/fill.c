@@ -150,7 +150,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Fill/gradient"));
 
-	rad = AG_RadioNew(win, modes);
+	rad = AG_RadioNew(win, AG_RADIO_WFILL, modes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &f->type);
 
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
