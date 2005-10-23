@@ -54,18 +54,12 @@ static AG_WidgetOps agMSpinbuttonOps = {
 };
 
 AG_MSpinbutton *
-AG_MSpinbuttonNew(void *parent, const char *sep, const char *fmt, ...)
+AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 {
-	char label[AG_LABEL_MAX];
 	AG_MSpinbutton *sbu;
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(label, sizeof(label), fmt, ap);
-	va_end(ap);
 
 	sbu = Malloc(sizeof(AG_MSpinbutton), M_OBJECT);
-	AG_MSpinbuttonInit(sbu, sep, label);
+	AG_MSpinbuttonInit(sbu, flags, sep, label);
 	AG_ObjectAttach(parent, sbu);
 	return (sbu);
 }
@@ -227,10 +221,11 @@ mspinbutton_right(AG_Event *event)
 }
 
 void
-AG_MSpinbuttonInit(AG_MSpinbutton *sbu, const char *sep, const char *label)
+AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
+    const char *label)
 {
 	AG_WidgetInit(sbu, "mspinbutton", &agMSpinbuttonOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL);
+	    AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(sbu, "xvalue", AG_WIDGET_INT, &sbu->xvalue);
 	AG_WidgetBind(sbu, "yvalue", AG_WIDGET_INT, &sbu->yvalue);
 	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);

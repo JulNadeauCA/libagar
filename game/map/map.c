@@ -2184,14 +2184,14 @@ edit_properties(AG_Event *event)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Map settings"), AG_BOX_VERT);
 	{
-		msb = AG_MSpinbuttonNew(ntab, "x", _("Map size: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, "x", _("Map size: "));
 		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
 		AG_SetEvent(msb, "mspinbutton-return", resize_map, "%p,%p",
 		    m, mv);
 		
-		msb = AG_MSpinbuttonNew(ntab, ",", _("Origin position: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Origin position: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &m->origin.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &m->origin.y);
 		AG_MSpinbuttonSetRange(msb, 0, AG_MAP_MAXWIDTH);
@@ -2202,14 +2202,14 @@ edit_properties(AG_Event *event)
 
 	ntab = AG_NotebookAddTab(nb, _("View"), AG_BOX_VERT);
 	{
-		msb = AG_MSpinbuttonNew(ntab, ",", _("Node offset: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Node offset: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mx);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->my);
 		AG_MSpinbuttonSetRange(msb,
 		   -AG_MAP_MAXWIDTH/2, AG_MAP_MAXWIDTH/2);
 	
 		/* XXX unsafe */
-		msb = AG_MSpinbuttonNew(ntab, ",", _("Camera position: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Camera position: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &AGMCAM(mv).x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &AGMCAM(mv).y);
 		
@@ -2219,13 +2219,13 @@ edit_properties(AG_Event *event)
 		sb = AG_SpinbuttonNew(ntab, _("Tile size: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMTILESZ(mv));
 	
-		msb = AG_MSpinbuttonNew(ntab, ",",
+		msb = AG_MSpinbuttonNew(ntab, 0, ",",
 		    _("Display offset (view): "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->xoffs);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->yoffs);
 		AG_MSpinbuttonSetRange(msb, -AG_MAX_TILESZ, AG_MAX_TILESZ);
 		
-		msb = AG_MSpinbuttonNew(ntab, "x", _("Display area: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, "x", _("Display area: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mw);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->mh);
 		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
@@ -2651,25 +2651,25 @@ noderef_edit(AG_Event *event)
 	    (r->type == AG_NITEM_ANIM) ? _("Animation") :
 	    (r->type == AG_NITEM_WARP) ? _("Warp point") : "?");
 
-	msb = AG_MSpinbuttonNew(win, ",", _("Centering: "));
+	msb = AG_MSpinbuttonNew(win, 0, ",", _("Centering: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xcenter);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ycenter);
 	
-	msb = AG_MSpinbuttonNew(win, ",", _("Motion: "));
+	msb = AG_MSpinbuttonNew(win, 0, ",", _("Motion: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xmotion);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ymotion);
 	
-	msb = AG_MSpinbuttonNew(win, ",", _("Origin: "));
+	msb = AG_MSpinbuttonNew(win, 0, ",", _("Origin: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xorigin);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.yorigin);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	msb = AG_MSpinbuttonNew(win, ",", _("Source coords: "));
+	msb = AG_MSpinbuttonNew(win, 0, ",", _("Source coords: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.x);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.y);
 	
-	msb = AG_MSpinbuttonNew(win, "x", _("Source dims: "));
+	msb = AG_MSpinbuttonNew(win, 0, "x", _("Source dims: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.w);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.h);
 

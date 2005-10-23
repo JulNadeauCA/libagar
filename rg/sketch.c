@@ -241,7 +241,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
 		    tv, tel);
 		
-		msb = AG_MSpinbuttonNew(ntab, ",", _("Coordinates: "));
+		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Coordinates: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &tel->tel_sketch.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &tel->tel_sketch.y);
 		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",

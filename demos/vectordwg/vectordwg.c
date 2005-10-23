@@ -108,7 +108,7 @@ CreateDrawing(void)
 		 * Bind a spinbutton widget directly to the translation
 		 * elements of the translation matrix.
 		 */
-		fsb = AG_MFSpinbuttonNew(win, NULL, ",", "Translation: ");
+		fsb = AG_MFSpinbuttonNew(win, 0, NULL, ",", "Translation: ");
 		AG_WidgetBindDouble(fsb, "xvalue", &pos->m[0][2]);
 		AG_WidgetBindDouble(fsb, "yvalue", &pos->m[1][2]);
 		AG_MFSpinbuttonSetIncrement(fsb, 0.2);

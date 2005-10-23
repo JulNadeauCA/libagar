@@ -462,8 +462,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		}
 	
 		if (flags & AG_CONFIG_RESOLUTION) {
-			msb = AG_MSpinbuttonNew(tab, "x",
-			    _("Default resolution: "));
+			msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
 			AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16,
 			    &agView->w);
 			AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16,

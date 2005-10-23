@@ -1747,7 +1747,7 @@ tile_infos(AG_Event *event)
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->clname,
 	    sizeof(t->clname));
 
-	msb = AG_MSpinbuttonNew(win, "x", _("Size: "));
+	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 	AG_WidgetSetInt(msb, "xvalue", t->su->w);
 	AG_WidgetSetInt(msb, "yvalue", t->su->h);
