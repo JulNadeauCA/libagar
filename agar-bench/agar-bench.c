@@ -211,7 +211,9 @@ MainWindow(void)
 		struct test_ops *test = tests[i];
 
 		ntab = AG_NotebookAddTab(nb, test->name, AG_BOX_VERT);
-		t = AG_TablePolled(ntab, AG_TABLE_MULTI, poll_test, "%i", i);
+		t = AG_TablePolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+		    poll_test, "%i", i);
+
 		AG_TableAddCol(t, "Test", NULL, NULL);
 		AG_TableAddCol(t, "Min", "<88.8888M>", NULL);
 		AG_TableAddCol(t, "Avg", "<88.8888M>", NULL);
