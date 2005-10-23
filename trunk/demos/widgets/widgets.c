@@ -46,7 +46,7 @@ CreateWindow(void)
 	AG_BoxSetPadding(div->box1, 5);
 	{
 		/* The AG_Pixmap widget displays a raster surface. */
-		AG_PixmapFromBMP(div->box1, "agar.bmp");
+		AG_PixmapFromBMP(div->box1, 0, "agar.bmp");
 	
 		/*
 		 * The AG_Label widget provides a simple static or

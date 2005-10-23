@@ -533,7 +533,7 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	
 	ani->gframe = fr->name;
 
-	pix = AG_PixmapFromSurfaceCopy(box, AG_DupSurface(fr->su));
+	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_DupSurface(fr->su));
 	
 	sb = AG_SpinbuttonNew(box, _("Delay (ms): "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
