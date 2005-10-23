@@ -140,7 +140,7 @@ changed(AG_Event *event)
 	AG_PostEvent(NULL, fsu, "fspinbutton-return", NULL);
 
 	if (unfocus)
-		AGWIDGET(fsu->input)->flags &= ~(AG_WIDGET_FOCUSED);
+		AG_WidgetUnfocus(fsu->input);
 }
 
 static void
@@ -340,7 +340,7 @@ AG_FSpinbuttonDraw(void *p)
 	AG_WidgetBinding *valueb;
 	void *value;
 
-	if (AGWIDGET(fsu->input)->flags & AG_WIDGET_FOCUSED)
+	if (AGWIDGET_FOCUSED(fsu->input))
 		return;
 
 	valueb = AG_WidgetGetBinding(fsu, "value", &value);

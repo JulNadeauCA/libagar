@@ -1115,13 +1115,6 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 	}
 }
 
-/* Evaluate to true if a widget is holding focus (inside its parent). */
-int
-AG_WidgetHoldsFocus(void *p)
-{
-	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
-}
-
 /* Clear the AG_WIDGET_FOCUSED bit from a widget and its descendents. */
 void
 AG_WidgetUnfocus(void *p)
@@ -1395,7 +1388,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 {
 	AG_Widget *cwid;
 
-	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetHoldsFocus(wid)) ||
+	if ((AG_WINDOW_FOCUSED(win) && AGWIDGET_FOCUSED(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
@@ -1415,7 +1408,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 {
 	AG_Widget *cwid;
 
-	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetHoldsFocus(wid)) ||
+	if ((AG_WINDOW_FOCUSED(win) && AGWIDGET_FOCUSED(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);

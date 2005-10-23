@@ -95,9 +95,12 @@ AG_TablePolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 void
 AG_TableInit(AG_Table *t, Uint flags)
 {
-	AG_WidgetInit(t, "table", &agTableOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_WFILL|AG_WIDGET_HFILL|
-	    AG_WIDGET_UNFOCUSED_MOTION);
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+
+	if (flags & AG_TABLE_WFILL) { wflags |= AG_WIDGET_WFILL; }
+	if (flags & AG_TABLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
+
+	AG_WidgetInit(t, "table", &agTableOps, wflags);
 	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
@@ -163,7 +166,7 @@ AG_TableSizeFillCols(AG_Table *t)
 		AG_TableCol *tc = &t->cols[n];
 		
 		if (tc->flags & AG_TABLE_COL_FILL) {
-			tc->w = AGWIDGET(t)->w;
+			tc->w = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
 			for (n = 0; n < t->n; n++) {
 				if ((t->cols[n].flags & AG_TABLE_COL_FILL) == 0)
 					tc->w -= t->cols[n].w;

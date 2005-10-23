@@ -63,10 +63,13 @@ typedef struct ag_table_cell {
 typedef struct ag_table_col {
 	char name[AG_TABLE_COL_NAME_MAX];
 	int (*sort_fn)(const void *, const void *);
-	int flags;
+	Uint flags;
 #define AG_TABLE_COL_FILL	 0x01
 #define AG_TABLE_SORT_ASCENDING	 0x02
 #define AG_TABLE_SORT_DESCENDING 0x04
+#define AG_TABLE_WFILL		 0x08
+#define AG_TABLE_HFILL		 0x10
+#define AG_TABLE_EXPAND		 (AG_TABLE_WFILL|AG_TABLE_HFILL)
 	int selected;			/* Entire column is selected */
 	int w;				/* Width in pixel */
 	int x;				/* Current position */

@@ -21,6 +21,7 @@ typedef struct ag_hpane {
 	int flags;
 #define AG_HPANE_WFILL	0x01		/* Expand to fill available width */
 #define AG_HPANE_HFILL	0x02		/* Expand to fill available height */
+#define AG_HPANE_EXPAND (AG_HPANE_WFILL|AG_HPANE_HFILL)
 	TAILQ_HEAD(, ag_hpane_div) divs;
 } AG_HPane;
 
