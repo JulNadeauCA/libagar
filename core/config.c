@@ -192,7 +192,7 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetUint16(cfg, "view.min-w", 320);
 	AG_SetUint16(cfg, "view.min-h", 240);
 	AG_SetUint8(cfg, "view.depth", 32);
-	AG_SetUint(cfg, "view.nominal-fps", 60);
+	AG_SetUint(cfg, "view.nominal-fps", 40);
 	AG_SetBool(cfg, "input.joysticks", 1);
 
 	/* Set the save directory path and create it as needed. */
@@ -321,7 +321,7 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 }
 
 static void
-selected_color(AG_Event *event)
+SelectedColor(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_HSVPal *hsv = AG_PTR(1);
@@ -332,7 +332,7 @@ selected_color(AG_Event *event)
 }
 
 static void
-updated_bg(AG_Event *event)
+UpdatedColor(AG_Event *event)
 {
 	AG_HSVPal *hsv = AG_SELF();
 	AG_Tlist *tl = AG_PTR(1);
@@ -345,8 +345,13 @@ updated_bg(AG_Event *event)
 		if (agView->opengl) {
 			SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-		}
+		} else
 #endif
+		{
+			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+			AG_WidgetDraw(AG_WidgetParentWindow(hsv));
+			SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+		}
 	}
 }
 
@@ -396,6 +401,7 @@ AG_LoadColorSchemeDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Load color scheme..."));
 	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(fd, "colors.acs");
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
 	    AG_LoadColorSchemeFromACS, NULL);
 	AG_WindowShow(win);
@@ -567,14 +573,13 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 				it->p1 = &agColorsBorder[i];
 			}
 
-			hsv = AG_HSVPalNew(hb);
-			AGWIDGET(hsv)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+			hsv = AG_HSVPalNew(hb, AG_HSVPAL_EXPAND);
 			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
 			    &agVideoFmt);
-			AG_SetEvent(hsv, "h-changed", updated_bg, "%p", tl);
-			AG_SetEvent(hsv, "sv-changed", updated_bg, "%p", tl);
-			AG_SetEvent(tl, "tlist-selected", selected_color,
-			    "%p", hsv);
+			AG_SetEvent(hsv, "h-changed", UpdatedColor, "%p", tl);
+			AG_SetEvent(hsv, "sv-changed", UpdatedColor, "%p", tl);
+			AG_SetEvent(tl, "tlist-selected", SelectedColor, "%p",
+			    hsv);
 		}
 		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
 		{
