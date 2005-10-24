@@ -66,7 +66,7 @@ CreateTextbox(void)
 	    sizeof(text_buf));
 
 	/* Use a timer to update the text buffer periodically. */
-	strlcpy(text_buf, "Text buffer contents", sizeof(text_buf));
+	snprintf(text_buf, sizeof(text_buf), "Text buffer contents");
 	AG_SetTimeout(&update_timer, update_text_buffer, NULL, 0);
 	AG_AddTimeout(textbox, &update_timer, 250);
 
