@@ -56,10 +56,9 @@ int agRcsMode = 0;
 #include <errno.h>
 #include <unistd.h>
 
-#include <qnet/qnet.h>
-#include <qnet/client.h>
+#include <agar/net.h>
 
-static struct client rcs_client;
+static AGN_Client rcs_client;
 static int connected = 0;
 const char *agRcsStatusStrings[] = {
 	N_("Error"),
@@ -72,13 +71,13 @@ const char *agRcsStatusStrings[] = {
 void
 AG_RcsInit(void)
 {
-	client_init(&rcs_client, "agar", VERSION);
+	AGN_ClientInit(&rcs_client, "agar", VERSION);
 }
 
 void
 AG_RcsDestroy(void)
 {
-	client_destroy(&rcs_client);
+	AGN_ClientDestroy(&rcs_client);
 }
 
 int
@@ -88,9 +87,9 @@ AG_RcsConnect(void)
 
 	if (++connected == 1) {
 		snprintf(port, sizeof(port), "%u", agRcsPort);
-		if (client_connect(&rcs_client, agRcsHostname, port,
+		if (AGN_ClientConnect(&rcs_client, agRcsHostname, port,
 		    agRcsUsername, agRcsPassword) == -1) {
-			AG_SetError("RCS connection: %s", qerror_get());
+			AG_SetError("RCS connection: %s", AGN_GetError());
 			return (-1);
 		}
 	}
@@ -101,7 +100,7 @@ void
 AG_RcsDisconnect(void)
 {
 	if (--connected == 0)
-		client_disconnect(&rcs_client);
+		AGN_ClientDisconnect(&rcs_client);
 }
 
 /* Get the working revision of an object. */
@@ -176,12 +175,12 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 	int i;
 	char *s;
 	
-	if (client_write(&rcs_client, "rcs-info\nobject-path=%s\n\n",
+	if (AGN_ClientWrite(&rcs_client, "rcs-info\nobject-path=%s\n\n",
 	    &objdir[1]) == -1) {
-		AG_SetError("%s", qerror_get());
+		AG_SetError("%s", AGN_GetError());
 		return (AG_RCS_ERROR);
 	}
-	if (client_read(&rcs_client, 16) <= 2 ||
+	if (AGN_ClientRead(&rcs_client, 16) <= 2 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		return (AG_RCS_UNKNOWN);
@@ -267,7 +266,7 @@ AG_RcsImport(AG_Object *ob)
 		return (-1);
 	}
 
-	if (client_write(&rcs_client, "rcs-commit\n" 
+	if (AGN_ClientWrite(&rcs_client, "rcs-commit\n" 
 	    "object-path=%s\n"
 	    "object-name=%s\n"
 	    "object-type=%s\n"
@@ -277,7 +276,7 @@ AG_RcsImport(AG_Object *ob)
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
-	if (client_read(&rcs_client, 12) <= 2 ||
+	if (AGN_ClientRead(&rcs_client, 12) <= 2 ||
 	    rcs_client.read.buf[0] != '0') {
 		AG_SetError(_("Server refused data: %s"),
 		    &rcs_client.read.buf[2]);
@@ -301,7 +300,7 @@ AG_RcsImport(AG_Object *ob)
 		AG_SetError(_("Upload incomplete"));
 		goto fail_close;
 	}
-	if (client_read(&rcs_client, 32) < 1 ||
+	if (AGN_ClientRead(&rcs_client, 32) < 1 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		AG_SetError(_("Commit failed: %s"), rcs_client.read.buf);
@@ -379,7 +378,7 @@ AG_RcsCommit(AG_Object *ob)
 		return (-1);
 	}
 
-	if (client_write(&rcs_client, "rcs-commit\n" 
+	if (AGN_ClientWrite(&rcs_client, "rcs-commit\n" 
 	    "object-path=%s\n"
 	    "object-name=%s\n"
 	    "object-type=%s\n"
@@ -389,7 +388,7 @@ AG_RcsCommit(AG_Object *ob)
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
-	if (client_read(&rcs_client, 12) <= 2 ||
+	if (AGN_ClientRead(&rcs_client, 12) <= 2 ||
 	    rcs_client.read.buf[0] != '0') {
 		AG_SetError(_("Server refused data: %s"),
 		    &rcs_client.read.buf[2]);
@@ -413,7 +412,7 @@ AG_RcsCommit(AG_Object *ob)
 		AG_SetError(_("Upload incomplete"));
 		goto fail_close;
 	}
-	if (client_read(&rcs_client, 32) < 1 ||
+	if (AGN_ClientRead(&rcs_client, 32) < 1 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		AG_SetError(_("Commit failed: %s"), rcs_client.read.buf);
@@ -448,7 +447,7 @@ AG_RcsUpdate(AG_Object *ob)
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	Uint working_rev, repo_rev;
-	struct response *res;
+	AGN_Response *res;
 	size_t len, wrote = 0;
 	FILE *f;
 	
@@ -492,15 +491,15 @@ AG_RcsUpdate(AG_Object *ob)
 		goto fail;
 	}
 
-	res = client_query_binary(&rcs_client, "rcs-update\n"
-			                       "object-path=%s\n"
-			                       "object-name=%s\n"
-			                       "object-type=%s\n"
-					       "revision=%u\n",
-					       &objdir[1], ob->name, ob->type,
-					       repo_rev);
+	res = AGN_ClientQueryBinary(&rcs_client, "rcs-update\n"
+			                         "object-path=%s\n"
+			                         "object-name=%s\n"
+			                         "object-type=%s\n"
+					         "revision=%u\n",
+					         &objdir[1], ob->name, ob->type,
+					         repo_rev);
 	if (res == NULL || res->argc < 1) {
-		AG_SetError("RCS update error: %s", qerror_get());
+		AG_SetError("RCS update error: %s", AGN_GetError());
 		goto fail;
 	}
 
@@ -518,7 +517,7 @@ AG_RcsUpdate(AG_Object *ob)
 	AG_RcsSetWorkingRev(ob, repo_rev);
 	AG_TextTmsg(AG_MSG_INFO, 1000, "%s: r#%u -> r#%u (%lu bytes)", ob->name,
 	    working_rev, repo_rev, (unsigned long)res->argv_len[0]);
-	response_free(res);
+	AGN_FreeResponse(res);
 	AG_RcsDisconnect();
 
 	/*
@@ -533,7 +532,7 @@ AG_RcsUpdate(AG_Object *ob)
 
 	return (0);
 fail_res:
-	response_free(res);
+	AGN_FreeResponse(res);
 fail:
 	AG_RcsDisconnect();
 	return (-1);
@@ -611,13 +610,13 @@ fail:
 int
 AG_RcsLog(const char *objdir, AG_Tlist *tl)
 {
-	struct response *res;
+	AGN_Response *res;
 	int i;
 
-	res = client_query(&rcs_client, "rcs-log\n"
-				        "object-path=%s\n", &objdir[1]);
+	res = AGN_ClientQuery(&rcs_client, "rcs-log\n"
+	                                   "object-path=%s\n", &objdir[1]);
 	if (res == NULL) {
-		AG_SetError("%s", qerror_get());
+		AG_SetError("%s", AGN_GetError());
 		return (-1);
 	}
 
@@ -643,19 +642,19 @@ AG_RcsLog(const char *objdir, AG_Tlist *tl)
 		}
 		AG_TlistAdd(tl, icon, "[#%s.%s] %s", rev, author, msg);
 	}
-	response_free(res);
+	AGN_FreeResponse(res);
 	return (0);
 }
 
 int
 AG_RcsList(AG_Tlist *tl)
 {
-	struct response *res;
+	AGN_Response *res;
 	AG_TlistItem *it;
 	int i;
 
-	if ((res = client_query(&rcs_client, "rcs-list\n")) == NULL) {
-		AG_SetError("%s", qerror_get());
+	if ((res = AGN_ClientQuery(&rcs_client, "rcs-list\n")) == NULL) {
+		AG_SetError("%s", AGN_GetError());
 		return (-1);
 	}
 	AG_TlistClear(tl);
@@ -697,26 +696,26 @@ AG_RcsList(AG_Tlist *tl)
 	}
 out:
 	AG_TlistRestore(tl);
-	response_free(res);
+	AGN_FreeResponse(res);
 	return (0);
 }
 
 int
 AG_RcsDelete(const char *path)
 {
-	struct response *res;
+	AGN_Response *res;
 
 	if (AG_RcsConnect() == -1)
 		return (-1);
 	
-	res = client_query(&rcs_client, "rcs-delete\n"
-				        "object-path=%s\n", path);
+	res = AGN_ClientQuery(&rcs_client, "rcs-delete\n"
+	                                   "object-path=%s\n", path);
 	if (res == NULL) {
-		AG_SetError("%s", qerror_get());
+		AG_SetError("%s", AGN_GetError());
 		AG_RcsDisconnect();
 		return (-1);
 	}
-	response_free(res);
+	AGN_FreeResponse(res);
 	AG_RcsDisconnect();
 	return (0);
 }
@@ -724,20 +723,20 @@ AG_RcsDelete(const char *path)
 int
 AG_RcsRename(const char *from, const char *to)
 {
-	struct response *res;
+	AGN_Response *res;
 
 	if (AG_RcsConnect() == -1)
 		return (-1);
 	
-	res = client_query(&rcs_client, "rcs-rename\n"
-				        "from-path=%s\n"
-					"to-path=%s\n", from, to);
+	res = AGN_ClientQuery(&rcs_client, "rcs-rename\n"
+	                                   "from-path=%s\n"
+	                                   "to-path=%s\n", from, to);
 	if (res == NULL) {
-		AG_SetError("%s", qerror_get());
+		AG_SetError("%s", AGN_GetError());
 		AG_RcsDisconnect();
 		return (-1);
 	}
-	response_free(res);
+	AGN_FreeResponse(res);
 	AG_RcsDisconnect();
 	return (0);
 }
@@ -759,12 +758,12 @@ AG_RcsCheckout(const char *path)
 		goto fail;
 
 	/* Fetch the object information from the repository. */
-	if (client_write(&rcs_client, "rcs-info\nobject-path=%s\n\n", path)
+	if (AGN_ClientWrite(&rcs_client, "rcs-info\nobject-path=%s\n\n", path)
 	    == -1) {
-		AG_SetError("%s", qerror_get());
+		AG_SetError("%s", AGN_GetError());
 		goto fail;
 	}
-	if (client_read(&rcs_client, 16) <= 2 ||
+	if (AGN_ClientRead(&rcs_client, 16) <= 2 ||
 	    rcs_client.read.buf[0] != '0' ||
 	    rcs_client.read.buf[1] == '\0') {
 		AG_SetError("RCS info: %s", rcs_client.read.buf);
@@ -833,7 +832,8 @@ AG_RcsCheckout(const char *path)
 		}
 	} else {
 		if (strcmp(type, obj->type) != 0) {
-			AG_SetError("%s: existing object of different type (%s)",
+			AG_SetError(
+			    "%s: existing object of different type (%s)",
 			    localpath, obj->type);
 			goto fail;
 		}
