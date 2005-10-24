@@ -1123,14 +1123,14 @@ AG_WindowScale(void *p, int w, int h)
 
 		if (wid->flags & AG_WIDGET_HFILL) {
 			if (strcmp(wid->type, "titlebar") == 0) {
-				wid->w = w;
+				wid->w = w - 1;
 			} else {
-				wid->w = w - win->xpadding*2;
+				wid->w = w - win->xpadding*2 - 1;
 			}
 		}
 		if (wid->flags & AG_WIDGET_VFILL) {
 			wid->h = h - totfixed - win->ypadding_bot -
-			                        win->ypadding_top;
+			                        win->ypadding_top - 2;
 		}
 		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 		y += wid->h;
