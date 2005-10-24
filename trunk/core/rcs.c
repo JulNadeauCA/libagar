@@ -189,9 +189,9 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 
 	buf = &rcs_client.read.buf[2];
 	*repo_rev = 0;
-	while ((s = strsep(&buf, ":")) != NULL) {
-		char *key = strsep(&s, "=");
-		char *val = strsep(&s, "=");
+	while ((s = AG_Strsep(&buf, ":")) != NULL) {
+		char *key = AG_Strsep(&s, "=");
+		char *val = AG_Strsep(&s, "=");
 
 		if (key == NULL || val == NULL)
 			continue;
@@ -623,12 +623,12 @@ AG_RcsLog(const char *objdir, AG_Tlist *tl)
 
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *rev = strsep(&s, ":");
-		char *author = strsep(&s, ":");
-		char *type = strsep(&s, ":");
-		char *name = strsep(&s, ":");
-		char *sum = strsep(&s, ":");
-		char *msg = strsep(&s, ":");
+		char *rev = AG_Strsep(&s, ":");
+		char *author = AG_Strsep(&s, ":");
+		char *type = AG_Strsep(&s, ":");
+		char *name = AG_Strsep(&s, ":");
+		char *sum = AG_Strsep(&s, ":");
+		char *msg = AG_Strsep(&s, ":");
 		AG_ObjectType *t;
 		SDL_Surface *icon = NULL;
 
@@ -666,10 +666,10 @@ AG_RcsList(AG_Tlist *tl)
 
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *name = strsep(&s, ":");
-		char *rev = strsep(&s, ":");
-		char *author = strsep(&s, ":");
-		char *type = strsep(&s, ":");
+		char *name = AG_Strsep(&s, ":");
+		char *rev = AG_Strsep(&s, ":");
+		char *author = AG_Strsep(&s, ":");
+		char *type = AG_Strsep(&s, ":");
 		AG_ObjectType *t;
 		SDL_Surface *icon = NULL;
 		AG_TlistItem *it;
@@ -771,9 +771,9 @@ AG_RcsCheckout(const char *path)
 		goto fail;
 	}
 	buf = &rcs_client.read.buf[2];
-	while ((s = strsep(&buf, ":")) != NULL) {
-		char *key = strsep(&s, "=");
-		char *val = strsep(&s, "=");
+	while ((s = AG_Strsep(&buf, ":")) != NULL) {
+		char *key = AG_Strsep(&s, "=");
+		char *val = AG_Strsep(&s, "=");
 
 		if (key == NULL || val == NULL)
 			continue;

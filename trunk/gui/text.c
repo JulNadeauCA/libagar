@@ -160,9 +160,9 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		AG_NetbufClose(buf);
 
 		spec = AG_SPRITE(font->p,0).name;
-		msig = strsep(&spec, ":");
-		c0 = strsep(&spec, "-");
-		c1 = strsep(&spec, "-");
+		msig = AG_Strsep(&spec, ":");
+		c0 = AG_Strsep(&spec, "-");
+		c1 = AG_Strsep(&spec, "-");
 		if (msig == NULL || strcmp(msig, "MAP") != 0 ||
 		    c0 == NULL || c1 == NULL ||
 		    c0[0] == '\0' || c1[0] == '\0') {
@@ -729,16 +729,16 @@ AG_TextParseFontSpec(const char *fontspec)
 	strlcpy(buf, fontspec, sizeof(buf));
 	fs = &buf[0];
 
-	if ((s = strsep(&fs, ":,/")) != NULL &&
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		AG_SetString(agConfig, "font.face", s);
 		dprintf("set: %s\n", AG_String(agConfig, "font.face"));
 	}
-	if ((s = strsep(&fs, ":,/")) != NULL &&
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		AG_SetInt(agConfig, "font.size", atoi(s));
 	}
-	if ((s = strsep(&fs, ":,/")) != NULL &&
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		Uint flags = 0;
 

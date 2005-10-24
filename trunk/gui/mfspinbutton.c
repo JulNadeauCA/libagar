@@ -127,11 +127,11 @@ mfspinbutton_changed(AG_Event *event)
 	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
 	strlcpy(text, s, sizeof(text));
 
-	if ((s = strsep(&tp, fsu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {
 		AG_MFSpinbuttonSetValue(fsu, "xvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
-	if ((s = strsep(&tp, fsu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {
 		AG_MFSpinbuttonSetValue(fsu, "yvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}

@@ -611,7 +611,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	ft->nexts = 0;
 
 	ds = dexts = Strdup(exts);
-	while ((ext = strsep(&ds, ",;")) != NULL) {
+	while ((ext = AG_Strsep(&ds, ",;")) != NULL) {
 		ft->exts = Realloc(ft->exts, (ft->nexts+1)*sizeof(char *));
 		ft->exts[ft->nexts++] = Strdup(ext);
 	}

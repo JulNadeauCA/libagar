@@ -146,10 +146,10 @@ mspinbutton_return(AG_Event *event)
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
 	strlcpy(text, s, sizeof(text));
 
-	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
 	}
-	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
 	AG_WidgetUnlockBinding(stringb);
@@ -169,10 +169,10 @@ mspinbutton_textchg(AG_Event *event)
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
 	strlcpy(text, s, sizeof(text));
 
-	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
 	}
-	if ((s = strsep(&tp, sbu->sep)) != NULL) {
+	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
 	AG_WidgetUnlockBinding(stringb);

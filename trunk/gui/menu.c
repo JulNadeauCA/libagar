@@ -224,8 +224,8 @@ AG_MenuInit(AG_Menu *m, Uint flags)
 {
 	Uint wflags = AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	if (flags & AG_MENU_HFILL) { wflags |= AG_MENU_HFILL; }
-	if (flags & AG_MENU_VFILL) { wflags |= AG_MENU_VFILL; }
+	if (flags & AG_MENU_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MENU_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(m, "AGMenu", &agMenuOps, wflags);
 	m->items = Malloc(sizeof(AG_MenuItem), M_WIDGET);

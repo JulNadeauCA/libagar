@@ -1097,7 +1097,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
 		AG_TableCell *c = &t->cells[t->m][n];
-		char *s = strsep(&sp, ":"), *sc;
+		char *s = AG_Strsep(&sp, ":"), *sc;
 		int ptr = 0, lflag = 0, ptr_long = 0;
 		int infmt = 0;
 
