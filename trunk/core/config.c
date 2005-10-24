@@ -40,11 +40,6 @@
 #include <compat/dir.h>
 #include <compat/file.h>
 
-#include <game/map/map.h>
-#ifdef EDITION
-#include <game/map/mapedit.h>
-#endif
-
 #include <gui/window.h>
 #include <gui/vbox.h>
 #include <gui/hbox.h>
@@ -70,7 +65,7 @@
 
 const AG_Version agConfigVer = {
 	"agar config",
-	8, 1
+	9, 0
 };
 
 const AG_ObjectOps agConfigOps = {
@@ -271,8 +266,6 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	agRcsPort = (Uint)AG_ReadUint16(buf);
 	AG_CopyString(agRcsUsername, buf, sizeof(agRcsUsername));
 	AG_CopyString(agRcsPassword, buf, sizeof(agRcsPassword));
-
-	AG_MapEditorLoad(buf);
 	return (0);
 }
 
@@ -305,8 +298,6 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 	AG_WriteUint16(buf, (Uint16)agRcsPort);
 	AG_WriteString(buf, agRcsUsername);
 	AG_WriteString(buf, agRcsPassword);
-
-	AG_MapEditorSave(buf);
 
 	if (AG_String(agConfig, "save-path") != NULL) {
 		char path[MAXPATHLEN];

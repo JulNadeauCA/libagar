@@ -39,8 +39,6 @@
 #include <core/typesw.h>
 #include <core/objmgr.h>
 
-#include <game/map/map.h>
-
 #ifdef EDITION
 #include <gui/window.h>
 #include <gui/box.h>
@@ -86,8 +84,6 @@ const AG_ObjectOps agObjectOps = {
 int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
 #define agDebugLvl agObjectDebugLvl
 #endif
-
-extern int agEditMode;
 
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0;   /* Don't fail on unknown object types. */
@@ -2266,7 +2262,7 @@ AG_ObjectEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistSetItemHeight(tl, AGTILESZ);
+		AG_TlistSetItemHeight(tl, AG_GFX_TILESZ);
 		AG_SetEvent(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	

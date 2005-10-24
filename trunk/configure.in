@@ -8,7 +8,6 @@ REGISTER("--with-libqnet",	"Network support [default: check]")
 REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-network",	"Network support [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
-REGISTER("--enable-map",	"Enable maps in Agar-Game [default: yes]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
 REGISTER("--enable-histo-units", "Include historical units [default: no]")
@@ -158,13 +157,6 @@ if [ "${enable_network}" = "yes" ]; then
 	HDEFINE(NETWORK, 1)
 else
 	HUNDEF(NETWORK)
-fi
-
-# Enable map support by default
-if [ "${enable_map}" != "no" ]; then
-	HDEFINE(MAP, 1)
-else
-	HUNDEF(MAP)
 fi
 
 # Support 8/16/24/32bpp video displays by default.

@@ -18,9 +18,9 @@ The Agar core library features an object system which implements event and
 timing facilities, archiving, memory management, dependency keeping and a
 graphical edition framework.
 
-The distribution also includes a vector drawing engine, a map system and
-a flexible image/animation editor which can be built into applications
-such as games, for purposes of retouching, composition and authoring.
+The distribution also includes a vector drawing engine and a graphics
+editor which can be built into applications such as games, for purposes
+of retouching, composition and authoring.
 
 Availability
 ------------
