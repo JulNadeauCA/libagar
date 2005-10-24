@@ -2223,7 +2223,7 @@ else
 
 	echo "no"
 fi
-if [ ${HAVE_AGAR_NET} = "yes" ]; then
+if [ "${HAVE_AGAR_NET}" = "yes" ]; then
 echo "AGAR_NET_CFLAGS=$AGAR_NET_CFLAGS" >> Makefile.config
 echo "AGAR_NET_LIBS=$AGAR_NET_LIBS" >> Makefile.config
 echo "#ifndef AGAR_NET_CFLAGS" > config/agar_net_cflags.h
