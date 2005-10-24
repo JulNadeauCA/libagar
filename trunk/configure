@@ -1533,6 +1533,8 @@ fi;
 fi;
 echo -n "checking for the X/Open Threads Extension..."
 echo -n "checking for the X/Open Threads Extension..." >> config.log
+PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+PTHREADS_XOPEN_LIBS=""
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -1569,8 +1571,6 @@ else
 	echo "no"
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-PTHREADS_XOPEN_LIBS=""
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
 echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
 echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
