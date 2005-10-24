@@ -3,6 +3,7 @@
 #	$Csoft: dist.sh,v 1.17 2004/03/13 09:26:44 vedge Exp $
 
 VER=`grep "HDEFINE(VERSION" configure.in |awk -F\\" '{print $3}' |awk -F\\\ '{print $1}'`
+PHASE=beta
 DISTFILE=agar-${VER}
 HOST=resin.csoft.net
 RUSER=vedge
@@ -33,7 +34,7 @@ gpg -ab ${DISTFILE}.tar.gz
 if [ "$1" = "commit" ]; then
 	echo "uploading"
 	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/snap
-	ssh ${RUSER}@${HOST}"cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
+	ssh ${RUSER}@${HOST}"cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/$PHASE.csoft.org/agar && ls -l www/$PHASE.csoft.org/agar/${DISTFILE}.*"
 
 	echo "notifying agar-announce@"
 	TMP=`mktemp /tmp/agarannounceXXXXXXXX`
@@ -44,13 +45,11 @@ Subject: New Agar release: $VER
 X-Mailer: announce.sh
 X-PGP-Key: 206C63E6
 
-A new Agar release has been uploaded to beta.csoft.org. This is a beta
-release so please help by testing it thoroughly and letting me know of
-any problems you might run into.
+A new Agar release has been uploaded to $PHASE.csoft.org.
 
-	http://beta.csoft.org/agar/agar-$VER.tar.gz
-	http://beta.csoft.org/agar/agar-$VER.tar.gz.asc
-	http://beta.csoft.org/agar/agar-$VER.tar.gz.md5
+	http://$PHASE.csoft.org/agar/agar-$VER.tar.gz
+	http://$PHASE.csoft.org/agar/agar-$VER.tar.gz.asc
+	http://$PHASE.csoft.org/agar/agar-$VER.tar.gz.md5
 
 EOF
 	cat $TMP | ${MAILER}
