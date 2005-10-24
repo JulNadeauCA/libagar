@@ -338,6 +338,7 @@ int main(int argc, char *argv[]) { return (0); }
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -377,6 +378,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -411,6 +413,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -451,6 +454,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -484,6 +488,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -516,6 +521,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -552,6 +558,7 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -588,6 +595,7 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -622,6 +630,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -657,6 +666,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -691,6 +701,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -726,6 +737,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -754,6 +766,7 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -799,6 +812,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -845,6 +859,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -881,6 +896,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -916,6 +932,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -947,6 +964,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -980,6 +998,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1011,6 +1030,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1042,6 +1062,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1073,6 +1094,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1110,6 +1132,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1158,6 +1181,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1192,6 +1216,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1236,6 +1261,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1268,6 +1294,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1302,6 +1329,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1337,6 +1365,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1372,6 +1401,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1407,6 +1437,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -1447,6 +1478,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1498,6 +1530,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1550,6 +1583,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1601,6 +1635,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1644,6 +1679,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1782,6 +1818,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1831,6 +1868,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -1918,6 +1956,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -2027,6 +2066,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -2125,6 +2165,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -2204,6 +2245,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_NET_CFLAGS} -o conftest conftest.c ${AGAR_NET_LIBS}" 2>>config.log
 $CC $CFLAGS $TEST_CFLAGS ${AGAR_NET_CFLAGS} -o conftest conftest.c ${AGAR_NET_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
