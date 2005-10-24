@@ -2191,8 +2191,8 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 		AGAR_NET_LIBS=`${path}/agar-net-config --libs`
 	fi
 done
-echo "checking whether agar-net works..."
-echo "checking whether agar-net works..." >> config.log
+echo -n "checking whether agar-net works..."
+echo -n "checking whether agar-net works..." >> config.log
 cat << EOT > conftest.c
 #include <agar/net.h>
 #include <stdio.h>
