@@ -11,7 +11,8 @@ SUBDIR=	gamemenu \
 	loader \
 	table \
 	textbox \
-	widgets
+	widgets \
+	nopadding
 
 all: configure all-subdir
 clean: prereq clean-subdir
