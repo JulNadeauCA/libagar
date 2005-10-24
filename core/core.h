@@ -12,7 +12,6 @@
 #include <agar/config/have_bounded_attribute.h>
 #include <agar/config/have_format_attribute.h>
 #include <agar/config/have_nonnull_attribute.h>
-#include <agar/config/map.h>
 #include <agar/config/have_sys_types_h.h>
 #include <agar/config/have_unsigned_typedefs.h>
 
