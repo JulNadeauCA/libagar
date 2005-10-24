@@ -40,7 +40,7 @@ Uint32 agColors[LAST_COLOR];
 Uint32 agColorsBorder[7];
 int    agColorsBorderSize = 7;
 
-Sint8  agFocusSunkColorShift[3] = { 10, 10, 0 };
+Sint8  agFocusSunkColorShift[3] = { -10, -10, -20 };
 Sint8  agFocusRaisedColorShift[3] = { 30, 30, 20 };
 Sint8  agNofocusSunkColorShift[3] = { -20, -20, -20 };
 Sint8  agNofocusRaisedColorShift[3] = { 10, 10, 10 };
@@ -129,19 +129,19 @@ void
 AG_ColorsInit(void)
 {
 	agColors[BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
-	agColors[FRAME_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[FRAME_COLOR] = SDL_MapRGB(agVideoFmt, 125, 125, 125);
 	agColors[LINE_COLOR] = SDL_MapRGB(agVideoFmt, 55, 55, 55);
 	agColors[TEXT_COLOR] = SDL_MapRGB(agVideoFmt, 250, 250, 250);
-	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 45, 45, 45);
+	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 82, 82, 82);
 	agColors[WINDOW_HI_COLOR] = SDL_MapRGB(agVideoFmt, 90, 90, 85);
 	agColors[WINDOW_LO_COLOR] = SDL_MapRGB(agVideoFmt, 36, 36, 36);
 	agColors[TITLEBAR_FOCUSED_COLOR] = SDL_MapRGB(agVideoFmt, 40, 50, 60);
 	agColors[TITLEBAR_UNFOCUSED_COLOR] = SDL_MapRGB(agVideoFmt, 35, 35, 35);
 	agColors[TITLEBAR_CAPTION_COLOR] = agColors[TEXT_COLOR];
-	agColors[BUTTON_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[BUTTON_COLOR] = agColors[FRAME_COLOR];
 	agColors[BUTTON_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 240, 240, 240);
 	agColors[DISABLED_COLOR] = SDL_MapRGB(agVideoFmt, 160, 160, 160);
-	agColors[CHECKBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[CHECKBOX_COLOR] = agColors[FRAME_COLOR];
 	agColors[CHECKBOX_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[GRAPH_BG_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
 	agColors[GRAPH_XAXIS_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 50);
@@ -154,8 +154,8 @@ AG_ColorsInit(void)
 	agColors[MENU_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 230, 230, 230);
 	agColors[MENU_SEP1_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
 	agColors[MENU_SEP2_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
-	agColors[NOTEBOOK_BG_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
-	agColors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 70, 70, 70);
+	agColors[NOTEBOOK_BG_COLOR] = agColors[FRAME_COLOR];
+	agColors[NOTEBOOK_SEL_COLOR] = agColors[WINDOW_BG_COLOR];
 	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[RADIO_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 210, 210, 210);
 	agColors[RADIO_OVER_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
@@ -174,7 +174,7 @@ AG_ColorsInit(void)
 	agColors[TABLEVIEW_CTXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TABLEVIEW_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[TABLEVIEW_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
-	agColors[TEXTBOX_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
+	agColors[TEXTBOX_COLOR] = agColors[FRAME_COLOR];
 	agColors[TEXTBOX_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[TEXTBOX_CURSOR_COLOR] = SDL_MapRGB(agVideoFmt, 251, 255, 197);
 	agColors[TLIST_TXT_COLOR] = agColors[TEXT_COLOR];
@@ -194,7 +194,7 @@ AG_ColorsInit(void)
 	agColors[TRANSPARENT_COLOR] = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
 	agColors[HSVPAL_BAR1_COLOR] = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
 	agColors[HSVPAL_BAR2_COLOR] = SDL_MapRGBA(agVideoFmt, 240, 240, 240, 0);
-	agColors[PANE_COLOR] = SDL_MapRGBA(agVideoFmt, 100, 100, 100, 0);
+	agColors[PANE_COLOR] = agColors[FRAME_COLOR];
 	agColors[PANE_CIRCLE_COLOR] = SDL_MapRGBA(agVideoFmt, 170, 170, 170, 0);
 	agColors[MAPVIEW_RSEL_COLOR] = SDL_MapRGB(agVideoFmt, 60, 250, 60);
 	agColors[MAPVIEW_ORIGIN_COLOR] = SDL_MapRGB(agVideoFmt, 150, 150, 0);
