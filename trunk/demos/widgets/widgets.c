@@ -96,7 +96,7 @@ CreateWindow(void)
 	 * button. It is used by the AG_FSpinbutton widget to set the
 	 * conversion unit, for instance.
 	 */
-	ucom = AG_UComboNew(div->box1, AG_COMBO_HFILL);
+	ucom = AG_UComboNew(div->box1, AG_UCOMBO_HFILL);
 
 	/* Populate both combo widgets. */
 	for (i = 0; i < 50; i++) {
