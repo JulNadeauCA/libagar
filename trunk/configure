@@ -2195,6 +2195,7 @@ echo "checking whether agar-net works..."
 echo "checking whether agar-net works..." >> config.log
 cat << EOT > conftest.c
 #include <agar/net.h>
+#include <stdio.h>
 int main(int argc, char *argv[]) {
 	AGN_ServerRegCmd("foo", NULL, NULL);
 	AGN_ServerListen("foo", "1.0", NULL, NULL);
