@@ -150,7 +150,6 @@ echo "    --with-libqnet                 Network support [default: check]"
 echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-network               Network support [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
-echo "    --enable-map                   Enable maps in Agar-Game [default: yes]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-astro-units           Include astronomical units [default: no]"
 echo "    --enable-histo-units           Include historical units [default: no]"
@@ -2329,15 +2328,6 @@ echo "#define NETWORK" $NETWORK >> config/network.h
 echo "#endif" >> config/network.h
 else
 echo "#undef NETWORK" > config/network.h
-fi
-if [ "${enable_map}" != "no" ]
- then
-MAP=1
-echo "#ifndef MAP" > config/map.h
-echo "#define MAP" $MAP >> config/map.h
-echo "#endif" >> config/map.h
-else
-echo "#undef MAP" > config/map.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
