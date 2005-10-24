@@ -16,7 +16,7 @@
 static AG_Timeout tUpdate, tRot;
 double spin = 0.0;
 
-Uint32
+static Uint32
 UpdateDisplay(void *obj, Uint32 ival, void *p)
 {
 	AG_Pixmap *px = obj;
@@ -27,7 +27,7 @@ UpdateDisplay(void *obj, Uint32 ival, void *p)
 	return (ival);
 }
 
-Uint32
+static Uint32
 UpdateRotation(void *obj, Uint32 ival, void *p)
 {
 	VG_Matrix *rot = p;
@@ -37,7 +37,7 @@ UpdateRotation(void *obj, Uint32 ival, void *p)
 	return (ival);
 }
 
-void
+static void
 CreateDrawing(void)
 {
 	AG_Window *win;

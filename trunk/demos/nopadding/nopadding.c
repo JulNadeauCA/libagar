@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 
-void
+static void
 CreateWindow(void)
 {
 	AG_Window *win;
