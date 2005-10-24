@@ -4,6 +4,9 @@
 #ifndef _AGAR_LOADER_TTF_H_
 #define _AGAR_LOADER_TTF_H_
 
+#include <agar/config/have_freetype.h>
+#ifdef HAVE_FREETYPE
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
@@ -77,4 +80,5 @@ SDL_Surface *AG_TTFRenderUnicodeSolid(AG_TTFFont *, const Uint32 *,
 __END_DECLS
 
 #include "close_code.h"
+#endif /* HAVE_FREETYPE */
 #endif /* _AGAR_LOADER_TTF_H_ */
