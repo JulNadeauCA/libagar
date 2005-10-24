@@ -1,11 +1,12 @@
 /*	$Csoft: gfx.h,v 1.41 2005/08/27 04:35:51 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/game/map/transform.h> /* XXX */
+#include <agar/core/gfx_transform.h>
+
+#define AG_GFX_TILESZ	32
 
 #include "begin_code.h"
 
-struct ag_map;
 struct ag_object;
 struct ag_gfx;
 
@@ -77,10 +78,6 @@ typedef struct ag_gfx {
 	AG_AnimCache *canims;		/* Anim transform cache. XXX move */
 	Uint32	      nanims;
 
-	struct ag_map **submaps;		/* Generated maps */
-	Uint32	       nsubmaps;
-	Uint32	     maxsubmaps;
-
 	Uint32 used;			/* Reference count */
 #define AG_GFX_MAX_USED	 (0xffffffff-1)	/* Maximum number of references */
 } AG_Gfx;
@@ -119,8 +116,6 @@ int	 AG_GfxUnused(void *);
 void		 AG_GfxAllocSprites(AG_Gfx *, Uint32);
 void		 AG_GfxAllocAnims(AG_Gfx *, Uint32);
 Uint32		 AG_GfxAddSprite(AG_Gfx *, SDL_Surface *);
-struct ag_map	*AG_GfxAddFragments(AG_Gfx *, SDL_Surface *);
-Uint32		 AG_GfxAddSubmap(AG_Gfx *, struct ag_map *);
 Uint32		 AG_GfxAddAnim(AG_Gfx *);
 Uint32		 AG_GfxAddAnimFrame(AG_Anim *, SDL_Surface *);
 

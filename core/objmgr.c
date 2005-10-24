@@ -32,8 +32,6 @@
 #include <core/timeout.h>
 #include <core/typesw.h>
 
-#include <game/map/mapedit.h>
-
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/vbox.h>
@@ -66,11 +64,11 @@ static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
 static int edit_on_create = 1;
 static void *current_pobj = NULL;
-
 #ifdef NETWORK
 static AG_Timeout repo_timeout;
 #endif
 
+int agEditMode = 0;
 int agObjMgrExiting = 0;
 #ifdef DEBUG
 int agObjMgrHexDiff = 0;
@@ -163,8 +161,7 @@ close_obj_generic(AG_Event *event)
 
 	AG_ViewDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
-	AG_ObjectDelDep(&agMapEditor.pseudo, oent->obj);
-	Free(oent, M_MAPEDIT);
+	Free(oent, M_OBJECT);
 }
 
 void
@@ -182,9 +179,7 @@ AG_ObjMgrOpenGeneric(AG_Object *ob)
 		return;
 	}
 	
-	AG_ObjectAddDep(&agMapEditor.pseudo, ob);
-	
-	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
+	oent = Malloc(sizeof(struct objent), M_OBJECT);
 	oent->obj = ob;
 	oent->win = AG_ObjectEdit(ob);
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
@@ -208,8 +203,7 @@ close_object(struct objent *oent, AG_Window *win, int save)
 	AG_ObjectPageOut(oent->obj, AG_OBJECT_GFX);
 
 	agObjMgrExiting = 0;
-	AG_ObjectDelDep(&agMapEditor.pseudo, oent->obj);
-	Free(oent, M_MAPEDIT);
+	Free(oent, M_OBJECT);
 }
 
 static void
@@ -296,17 +290,17 @@ AG_ObjMgrOpenData(void *p, int new)
 			ob->data_used = AG_OBJECT_DEP_MAX;
 	}
 	if (AG_ObjectPageIn(ob, AG_OBJECT_GFX) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s (gfx): %s", ob->name, AG_GetError());
+		AG_TextMsg(AG_MSG_ERROR, "%s (gfx): %s", ob->name,
+		    AG_GetError());
 		goto fail_data;
 	}
-	AG_ObjectAddDep(&agMapEditor.pseudo, ob);
 
 	if ((win = ob->ops->edit(ob)) == NULL) {
 		goto fail_gfx;
 	}
 	AG_PostEvent(NULL, ob, "edit-open", NULL);
 	
-	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
+	oent = Malloc(sizeof(struct objent), M_OBJECT);
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
@@ -314,7 +308,6 @@ AG_ObjMgrOpenData(void *p, int new)
 	AG_WindowShow(win);
 	return;
 fail_gfx:
-	AG_ObjectDelDep(&agMapEditor.pseudo, ob);
 	AG_ObjectPageOut(ob, AG_OBJECT_GFX);
 fail_data:
 	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
@@ -1119,13 +1112,13 @@ AG_ObjMgrDestroy(void)
 	     oent != TAILQ_END(&dobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		Free(oent, M_MAPEDIT);
+		Free(oent, M_OBJECT);
 	}
 	for (oent = TAILQ_FIRST(&gobjs);
 	     oent != TAILQ_END(&gobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		Free(oent, M_MAPEDIT);
+		Free(oent, M_OBJECT);
 	}
 }
 

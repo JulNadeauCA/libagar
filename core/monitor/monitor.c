@@ -35,9 +35,6 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <game/map/map.h>
-#include <game/map/mapview.h>
-
 #include <gui/window.h>
 #include <gui/menu.h>
 

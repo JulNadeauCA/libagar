@@ -46,12 +46,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef MAP
-#include <game/map/map.h>
-#endif
-#ifdef EDITION
-#include <game/map/mapedit.h>
-#endif
 #ifdef NETWORK
 #include <core/rcs.h>
 #endif
@@ -305,10 +299,6 @@ AG_Destroy(void)
 	if (agAtexitFunc != NULL)
 		agAtexitFunc();
 
-#if defined(MAP) && defined(EDITION)
-	if (agEditMode)
-		AG_ObjectSave(&agMapEditor);
-#endif
 #ifdef NETWORK
 	AG_RcsDestroy();
 #endif

@@ -32,9 +32,7 @@
 #include <core/config.h>
 #include <core/view.h>
 #include <core/math.h>
-#ifdef MAP
-#include <game/map/map.h>
-#endif
+
 #include <gui/window.h>
 
 #include <compat/dir.h>

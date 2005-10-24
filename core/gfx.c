@@ -30,9 +30,6 @@
 #include <core/config.h>
 #include <core/view.h>
 
-#include <game/map/map.h>			/* XXX for fragment maps */
-#include <game/map/mapedit.h>
-
 #include <core/loaders/den.h>
 #include <core/loaders/xcf.h>
 #include <core/loaders/surface.h>
@@ -86,8 +83,8 @@ AG_SpriteGetWtiles(AG_Sprite *spr)
 	if (spr->su == NULL) {
 		return (0);
 	}
-	w = spr->su->w/AGTILESZ;
-	if (w%AGTILESZ > 0) { w++; }
+	w = spr->su->w/AG_GFX_TILESZ;
+	if (w%AG_GFX_TILESZ > 0) { w++; }
 	return (w);
 }
 
@@ -95,10 +92,10 @@ void
 AG_SpriteGetNodeAttrs(AG_Sprite *spr, Uint *w, Uint *h)
 {
 	if (spr->su != NULL) {
-		*w = spr->su->w/AGTILESZ;
-		*h = spr->su->h/AGTILESZ;
-		if ((*w)%AGTILESZ > 0) (*w)++;
-		if ((*h)%AGTILESZ > 0) (*h)++;
+		*w = spr->su->w/AG_GFX_TILESZ;
+		*h = spr->su->h/AG_GFX_TILESZ;
+		if ((*w)%AG_GFX_TILESZ > 0) (*w)++;
+		if ((*h)%AG_GFX_TILESZ > 0) (*h)++;
 	} else {
 		*w = 0;
 		*h = 0;
@@ -338,88 +335,6 @@ out:
 	return (rv);
 }
 
-/* Break a surface into tile-sized fragments and generate a map. */
-AG_Map *
-AG_GfxAddFragments(AG_Gfx *gfx, SDL_Surface *sprite)
-{
-	char mapname[AG_OBJECT_NAME_MAX];
-	int x, y, mx, my;
-	Uint mw, mh;
-	SDL_Rect sd, rd;
-	AG_Map *fragmap;
-
-	sd.w = AGTILESZ;
-	sd.h = AGTILESZ;
-	rd.x = 0;
-	rd.y = 0;
-	mw = sprite->w/AGTILESZ + 1;
-	mh = sprite->h/AGTILESZ + 1;
-
-	fragmap = Malloc(sizeof(AG_Map), M_OBJECT);
-	snprintf(mapname, sizeof(mapname), "f%u", gfx->nsubmaps);
-	AG_MapInit(fragmap, mapname);
-	if (AG_MapAllocNodes(fragmap, mw, mh) == -1)
-		fatal("%s", AG_GetError());
-
-	for (y = 0, my = 0; y < sprite->h; y += AGTILESZ, my++) {
-		for (x = 0, mx = 0; x < sprite->w; x += AGTILESZ, mx++) {
-			SDL_Surface *su;
-			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
-			                                  SDL_RLEACCEL);
-			Uint32 sckflags = sprite->flags & (SDL_SRCCOLORKEY|
-			                                   SDL_RLEACCEL);
-			Uint8 salpha = sprite->format->alpha;
-			Uint32 scolorkey = sprite->format->colorkey;
-			AG_Node *node = &fragmap->map[my][mx];
-			Uint32 nsprite;
-			int fw = AGTILESZ;
-			int fh = AGTILESZ;
-
-			if (sprite->w - x < AGTILESZ)
-				fw = sprite->w - x;
-			if (sprite->h - y < AGTILESZ)
-				fh = sprite->h - y;
-
-			/* Allocate a surface for the fragment. */
-			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
-			    (sprite->flags &
-			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
-			    fw, fh, sprite->format->BitsPerPixel,
-			    sprite->format->Rmask,
-			    sprite->format->Gmask,
-			    sprite->format->Bmask,
-			    sprite->format->Amask);
-			if (su == NULL)
-				fatal("SDL_CreateRGBSurface: %s",
-				    SDL_GetError());
-			
-			/* Copy the fragment as-is. */
-			SDL_SetAlpha(sprite, 0, 0);
-			SDL_SetColorKey(sprite, 0, 0);
-			sd.x = x;
-			sd.y = y;
-			SDL_BlitSurface(sprite, &sd, su, &rd);
-			nsprite = AG_GfxAddSprite(gfx, su);
-			SDL_SetAlpha(sprite, saflags, salpha);
-			SDL_SetColorKey(sprite, sckflags, scolorkey);
-
-			/*
-			 * Enable alpha blending if there are any pixels
-			 * with a non-opaque alpha channel on the surface.
-			 */
-			if (AG_HasTransparency(su))
-				SDL_SetAlpha(su, SDL_SRCALPHA,
-				    su->format->alpha);
-
-			/* Map the sprite as a NULL reference. */
-			AG_NodeAddSprite(fragmap, node, NULL, nsprite);
-		}
-	}
-
-	AG_GfxAddSubmap(gfx, fragmap);
-	return (fragmap);
-}
-
 /* Allocate a gfx structure for a given object. */
 AG_Gfx *
 AG_GfxNew(void *pobj)
@@ -441,9 +356,6 @@ AG_GfxInit(AG_Gfx *gfx)
 	gfx->anims = NULL;
 	gfx->canims = NULL;
 	gfx->nanims = 0;
-	gfx->submaps = NULL;
-	gfx->nsubmaps = 0;
-	gfx->maxsubmaps = 0;
 	gfx->used = 0;
 }
 
@@ -495,15 +407,10 @@ AG_GfxDestroy(AG_Gfx *gfx)
 	for (i = 0; i < gfx->nanims; i++) {
 		AG_AnimDestroy(gfx, i);
 	}
-	for (i = 0; i < gfx->nsubmaps; i++) {
-		AG_ObjectDestroy(gfx->submaps[i]);
-		Free(gfx->submaps[i], M_OBJECT);
-	}
 
 	Free(gfx->sprites, M_GFX);
 	Free(gfx->anims, M_GFX);
 	Free(gfx->canims, M_GFX);
-	Free(gfx->submaps, M_GFX);
 	Free(gfx, M_GFX);
 }
 
@@ -522,24 +429,6 @@ AG_GfxAddAnimFrame(AG_Anim *anim, SDL_Surface *surface)
 	}
 	anim->frames[anim->nframes++] = surface;
 	return (anim->nframes);
-}
-
-/* Allocate a new submap. */
-Uint32
-AG_GfxAddSubmap(AG_Gfx *gfx, AG_Map *m)
-{
-	if (gfx->submaps == NULL) {
-		gfx->maxsubmaps = NSUBMAPS_INIT;
-		gfx->submaps = Malloc(gfx->maxsubmaps*sizeof(AG_Map *),
-		    M_GFX);
-		gfx->nsubmaps = 0;
-	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {
-		gfx->maxsubmaps += NSUBMAPS_GROW;
-		gfx->submaps = Realloc(gfx->submaps,
-		    gfx->maxsubmaps*sizeof(AG_Map *));
-	}
-	gfx->submaps[gfx->nsubmaps] = m;
-	return (gfx->nsubmaps++);
 }
 
 void
