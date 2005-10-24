@@ -4,7 +4,6 @@ TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	gamemenu \
-	glview \
 	objmgr \
 	focusing \
 	vectordwg \
