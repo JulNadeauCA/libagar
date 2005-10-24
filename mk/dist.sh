@@ -33,8 +33,7 @@ gpg -ab ${DISTFILE}.tar.gz
 
 if [ "$1" = "commit" ]; then
 	echo "uploading"
-	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/snap
-	ssh ${RUSER}@${HOST}"cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} www/$PHASE.csoft.org/agar && ls -l www/$PHASE.csoft.org/agar/${DISTFILE}.*"
+	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/$PHASE.csoft.org/agar
 
 	echo "notifying agar-announce@"
 	TMP=`mktemp /tmp/agarannounceXXXXXXXX`
