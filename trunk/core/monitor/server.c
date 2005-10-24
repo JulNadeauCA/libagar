@@ -39,8 +39,7 @@
 #include <core/view.h>
 #include <core/config.h>
 
-#include <qnet/qnet.h>
-#include <qnet/server.h>
+#include <agar/net.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -78,7 +77,7 @@ static AG_Thread serv_th;
 static int server_inited = 0;
 static int jpeg_quality = 75;
 
-void start_server(AG_Event *);
+void AG_MonitorServerStart(AG_Event *);
 
 static void
 my_exit(void)
@@ -128,7 +127,7 @@ auth_password(void *p)
 	if (strcmp(buf, "foo:bar\n") == 0) {
 		return (1);
 	}
-	qerror_set("User/password mismatch");
+	AGN_Seterror("User/password mismatch");
 	return (0);
 }
 
@@ -247,7 +246,7 @@ cmd_surface(struct command *cmd, void *pSu)
 	/* Send the compressed data now that we know its size. */
 	len = (size_t)ftell(ftmp);
 	rewind(ftmp);
-	server_binary_mode(len);
+	AGN_ServerBinaryMode(len);
 	{
 		char sendbuf[BUFSIZ];
 		size_t rv;
@@ -257,7 +256,7 @@ cmd_surface(struct command *cmd, void *pSu)
 		}
 	}
 	fflush(stdout);
-	server_command_mode();
+	AGN_ServerCommandMode();
 	fclose(ftmp);
 	unlink(tmp);
 	
@@ -326,9 +325,9 @@ loop_server(void *p)
 	AG_TextTmsg(AG_MSG_INFO, 1000, _("Now listening on %s:%s..."),
 	    serv_host == NULL ? "*" : serv_host, serv_port);
 
-	if (server_listen("agar", VERSION, serv_host, serv_port) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Server error (%s:%s): %s"), serv_host,
-		    serv_port, strerror(errno));
+	if (AGN_ServerListen("agar", VERSION, serv_host, serv_port) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, _("Server error (%s:%s): %s"),
+		    serv_host, serv_port, strerror(errno));
 	}
 	return (NULL);
 }
@@ -336,14 +335,14 @@ loop_server(void *p)
 static void
 init_server(void)
 {
-	server_regauth("password", auth_password, NULL);
-	server_regerr(handle_error);
+	AGN_ServerRegAuth("password", auth_password, NULL);
+	AGN_ServerSetErrorFn(handle_error);
 
-	server_regcmd("version", cmd_version, NULL);
-	server_regcmd("screen", cmd_surface, agView->v);
-	server_regcmd("view-fmt", cmd_view_fmt, NULL);
-	server_regcmd("refresh", cmd_refresh, NULL);
-	server_regcmd("world", cmd_world, NULL);
+	AGN_ServerRegCmd("version", cmd_version, NULL);
+	AGN_ServerRegCmd("screen", cmd_surface, agView->v);
+	AGN_ServerRegCmd("view-fmt", cmd_view_fmt, NULL);
+	AGN_ServerRegCmd("refresh", cmd_refresh, NULL);
+	AGN_ServerRegCmd("world", cmd_world, NULL);
 
 	server_inited++;
 }
@@ -365,7 +364,7 @@ AG_DebugServerStart(void)
 }
 
 void
-start_server(AG_Event *event)
+AG_MonitorServerStart(AG_Event *event)
 {
 	AG_DebugServerStart();
 }
@@ -394,7 +393,8 @@ AG_DebugServerWindow(void)
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("Server"));
-	AG_MenuAction(mi, _("Start server"), -1, start_server, "%p", tl);
+	AG_MenuAction(mi, _("Start server"), -1, AG_MonitorServerStart, "%p",
+	    tl);
 	AG_MenuAction(mi, _("Stop server"), -1, stop_server, "%p", tl);
 
 	AG_ObjectAttach(win, tl);

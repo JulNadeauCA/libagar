@@ -40,7 +40,6 @@
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
 #include <config/have_jpeg.h>
-#include <config/have_libqnet.h>
 #include <config/have_pthreads.h>
 
 #include <config/sdl_libs.h>
@@ -60,9 +59,9 @@
 #include <config/jpeg_libs.h>
 #include <config/jpeg_cflags.h>
 #endif
-#ifdef HAVE_LIBQNET
-#include <config/libqnet_libs.h>
-#include <config/libqnet_cflags.h>
+#ifdef NETWORK
+#include <config/agar_net_libs.h>
+#include <config/agar_net_cflags.h>
 #endif
 #ifdef HAVE_PTHREADS
 #include <config/pthreads_libs.h>
@@ -111,8 +110,8 @@ main(int argc, char *argv[])
 #ifdef JPEG_CFLAGS
 			printf("%s ", JPEG_CFLAGS);
 #endif
-#if defined(LIBQNET_CFLAGS) && defined(NETWORK)
-			printf("%s ", LIBQNET_CFLAGS);
+#ifdef NETWORK
+			printf("%s ", AGAR_NET_CFLAGS);
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_CFLAGS);
@@ -123,7 +122,7 @@ main(int argc, char *argv[])
 			printf("-lag_core -lag_core_monitor -lag_rg -lag_vg "
 			       "-lag_gui -lag_core_loaders -lag_compat "
 			       "-lag_mat ");
-#if defined(ENABLE_NLS) && !defined(__linux__) /* XXX */
+#if defined(ENABLE_NLS) 
 			printf("-lag_intl ");
 #endif
 #ifdef SDL_LIBS
@@ -141,8 +140,8 @@ main(int argc, char *argv[])
 #ifdef JPEG_LIBS
 			printf("%s ", JPEG_LIBS);
 #endif
-#if defined(LIBQNET_LIBS) && defined(NETWORK)
-			printf("%s ", LIBQNET_LIBS);
+#ifdef NETWORK
+			printf("%s ", AGAR_NET_LIBS);
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);

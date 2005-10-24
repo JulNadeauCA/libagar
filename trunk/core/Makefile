@@ -15,7 +15,8 @@ SRCS=	audio.c config.c core.c error.c event.c gfx.c gfx_transform.c math.c \
 	object.c objmgr.c prop.c rcs.c timeout.c typesw.c view.c
 MAN3=	agar.3 core.3 event.3 gfx.3 object.3 prop.3 timeout.3 view.3
 
-CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
+CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
+	${AGAR_NET_CFLAGS}
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
