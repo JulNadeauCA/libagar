@@ -1567,9 +1567,8 @@ fi;
 echo -n "checking for the X/Open Threads Extension..."
 echo -n "checking for the X/Open Threads Extension..." >> config.log
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-PTHREADS_XOPEN_LIBS=""
+PTHREADS_XOPEN_LIBS="-lpthread"
 cat << EOT > conftest.c
-#include <sys/types.h>
 #include <pthread.h>
 #include <signal.h>
 
