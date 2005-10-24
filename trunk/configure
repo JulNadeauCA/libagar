@@ -146,7 +146,7 @@ echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-freetype                Use FreeType font engine [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
-echo "    --with-network                 Agar-Net support [default: check]"
+echo "    --enable-network               Agar-Net support [default: check]"
 echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
@@ -2207,7 +2207,7 @@ fi;
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
-if [ "${with_network}" != "no" ]
+if [ "${enable_network}" = "yes" ]
  then
 echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..."
 echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..." >> config.log
@@ -2291,7 +2291,11 @@ echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK" $NETWORK >> config/network.h
 echo "#endif" >> config/network.h
 	else
-echo "#undef NETWORK" > config/network.h
+		echo "*"
+		echo "* The --enable-network option requires Agar-Net."
+		echo "* You can download it from http://agar-net.csoft.org/."
+		echo "*"
+		exit 1
 	fi
 else
 echo "#undef NETWORK" > config/network.h
