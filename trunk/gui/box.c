@@ -237,19 +237,19 @@ AG_BoxScale(void *p, int w, int h)
 		switch (bo->type) {
 		case AG_BOX_HORIZ:
 			if (wid->flags & AG_WIDGET_HFILL) {
-				wid->w = w - totfixed - bo->padding*2;
+				wid->w = w - totfixed - bo->padding*2 - 1;
 			}
 			if (wid->flags & AG_WIDGET_VFILL) {
-				wid->h = h - bo->padding*2;
+				wid->h = h - bo->padding*2 - 1;
 			}
 			x += wid->w + bo->spacing;
 			break;
 		case AG_BOX_VERT:
 			if (wid->flags & AG_WIDGET_HFILL) {
-				wid->w = w - bo->padding*2; 
+				wid->w = w - bo->padding*2 - 1;
 			}
 			if (wid->flags & AG_WIDGET_VFILL) {
-				wid->h = h - totfixed - bo->padding*2;
+				wid->h = h - totfixed - bo->padding*2 - 1;
 			}
 			y += wid->h + bo->spacing;
 			break;
