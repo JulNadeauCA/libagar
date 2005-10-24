@@ -9,7 +9,6 @@ SUBDIR=	 agar-config \
 	 gui \
 	 vg \
 	 rg \
-	 game \
 	 mat \
 	 libintl \
 	 po
