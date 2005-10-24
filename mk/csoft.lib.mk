@@ -133,7 +133,7 @@ depend: depend-subdir
 
 # Build the library's object files.
 _lib_objs:
-	@if [ "${LIB}" != "" -a "${OBJS}" = "" \
+	@if [ "${LIB}" != "" -a "${OBJS}" = "" -a "${SRCS}" != "" \
 	      -a "${LIB_STATIC}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
@@ -149,7 +149,7 @@ _lib_objs:
 
 # Build PIC versions of the library's object files.
 _lib_shobjs:
-	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" \
+	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" -a "${SRCS}" != "" \
 	      -a "${LIB_SHARED}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
@@ -166,7 +166,7 @@ _lib_shobjs:
 # Build a static version of the library.
 lib${LIB}.a: _lib_objs ${OBJS}
 	@if [ "${LIB}" != "" -a "${LIB_STATIC}" = "Yes" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
+	    if [ "${OBJS}" = "" -a "${SRCS}" != "" ]; then \
 	        export _objs=""; \
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
@@ -187,7 +187,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 # Build a Libtool version of the library.
 lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
-	    if [ "${SHOBJS}" = "" ]; then \
+	    if [ "${SHOBJS}" = "" -a "${SRCS}" != "" ]; then \
 	        export _shobjs=""; \
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
