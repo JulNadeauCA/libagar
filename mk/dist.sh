@@ -3,7 +3,7 @@
 #	$Csoft: dist.sh,v 1.17 2004/03/13 09:26:44 vedge Exp $
 
 VER=`grep "HDEFINE(VERSION" configure.in |awk -F\\" '{print $3}' |awk -F\\\ '{print $1}'`
-PHASE=beta
+PHASE=stable
 DISTFILE=agar-${VER}
 HOST=resin.csoft.net
 RUSER=vedge
