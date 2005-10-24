@@ -161,7 +161,7 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		if (spr->texture != 0) {
-			glDeleteTextures(1, &spr->texture);
+			glDeleteTextures(1, (GLuint *)&spr->texture);
 			spr->texture = 0;
 		}
 		spr->texcoords[0] = 0.0f;
@@ -231,7 +231,10 @@ AG_SpriteUpdate(AG_Sprite *spr)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		if (spr->texture != 0) {
-			glDeleteTextures(1, &spr->texture);
+			GLuint textures[1];
+
+			textures[0] = (GLuint)spr->texture;
+			glDeleteTextures(1, textures);
 		}
 		spr->texture = (spr->su != NULL) ?
 		    AG_SurfaceTexture(spr->su, &spr->texcoords[0]) : 0;
