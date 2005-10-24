@@ -146,9 +146,8 @@ echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-freetype                Use FreeType font engine [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
-echo "    --with-libqnet                 Network support [default: check]"
+echo "    --with-network                 Agar-Net support [default: check]"
 echo "    --enable-edition               Graphical editors [default: yes]"
-echo "    --enable-network               Network support [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-astro-units           Include astronomical units [default: no]"
@@ -1549,7 +1548,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600 -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
 	compile="failed"
@@ -1570,16 +1569,19 @@ else
 	echo "no"
 fi
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-PTHREADS_CFLAGS="${PTHREADS_CFLAGS} -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
-echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
-echo "#endif" >> config/pthreads_cflags.h
+PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+PTHREADS_XOPEN_LIBS=""
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
 echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
 echo "#endif" >> config/have_pthreads_xopen.h
+echo "#ifndef PTHREADS_XOPEN_CFLAGS" > config/pthreads_xopen_cflags.h
+echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >> config/pthreads_xopen_cflags.h
+echo "#endif" >> config/pthreads_xopen_cflags.h
+echo "#ifndef PTHREADS_XOPEN_LIBS" > config/pthreads_xopen_libs.h
+echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >> config/pthreads_xopen_libs.h
+echo "#endif" >> config/pthreads_xopen_libs.h
 else
 echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 fi;
@@ -2164,46 +2166,44 @@ fi;
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
-if [ "${with_libqnet}" != "no" ]
+if [ "${with_network}" != "no" ]
  then
-echo -n "checking for libqnet (http://libqnet.csoft.org/)..."
-echo -n "checking for libqnet (http://libqnet.csoft.org/)..." >> config.log
-libqnet_version=""
+echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..."
+echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..." >> config.log
+AGAR_NET_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		libqnet_version=`${path}/qnet-config --version`
+	if [ -x "${path}/agar-net-config" ]; then
+		AGAR_NET_VERSION=`${path}/agar-net-config --version`
 	fi
 done
-if [ "${libqnet_version}" != "" ]; then
+if [ "${AGAR_NET_VERSION}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
-LIBQNET_CFLAGS=""
+AGAR_NET_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		LIBQNET_CFLAGS=`${path}/qnet-config --cflags`
+	if [ -x "${path}/agar-net-config" ]; then
+		AGAR_NET_CFLAGS=`${path}/agar-net-config --cflags`
 	fi
 done
-LIBQNET_LIBS=""
+AGAR_NET_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/qnet-config" ]; then
-		LIBQNET_LIBS=`${path}/qnet-config --libs`
+	if [ -x "${path}/agar-net-config" ]; then
+		AGAR_NET_LIBS=`${path}/agar-net-config --libs`
 	fi
 done
-echo "checking whether libqnet works..."
-echo "checking whether libqnet works..." >> config.log
+echo "checking whether agar-net works..."
+echo "checking whether agar-net works..." >> config.log
 cat << EOT > conftest.c
-#include <sys/param.h>
-#include <qnet/qnet.h>
-#include <qnet/server.h>
+#include <agar/net.h>
 int main(int argc, char *argv[]) {
-	server_regcmd("foo", NULL, NULL);
-	server_listen("foo", "1.0", NULL, NULL);
+	AGN_ServerRegCmd("foo", NULL, NULL);
+	AGN_ServerListen("foo", "1.0", NULL, NULL);
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC $CFLAGS $TEST_CFLAGS ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_NET_CFLAGS} -o conftest conftest.c ${AGAR_NET_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
 	compile="failed"
@@ -2211,38 +2211,47 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
-echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
-echo "#endif" >> config/have_libqnet.h
+	echo "#ifndef HAVE_AGAR_NET" > config/have_agar_net.h
+echo "#define HAVE_AGAR_NET" $HAVE_AGAR_NET >> config/have_agar_net.h
+echo "#endif" >> config/have_agar_net.h
 
-	HAVE_LIBQNET=yes
+	HAVE_AGAR_NET=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+	echo "#undef HAVE_AGAR_NET" > config/have_agar_net.h
 
 	echo "no"
 fi
-if [ ${HAVE_LIBQNET} = "yes" ]; then
-echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
-echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
-echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
-echo "#endif" >> config/libqnet_cflags.h
-echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
-echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
-echo "#endif" >> config/libqnet_libs.h
+if [ ${HAVE_AGAR_NET} = "yes" ]; then
+echo "AGAR_NET_CFLAGS=$AGAR_NET_CFLAGS" >> Makefile.config
+echo "AGAR_NET_LIBS=$AGAR_NET_LIBS" >> Makefile.config
+echo "#ifndef AGAR_NET_CFLAGS" > config/agar_net_cflags.h
+echo "#define AGAR_NET_CFLAGS \"$AGAR_NET_CFLAGS\"" >> config/agar_net_cflags.h
+echo "#endif" >> config/agar_net_cflags.h
+echo "#ifndef AGAR_NET_LIBS" > config/agar_net_libs.h
+echo "#define AGAR_NET_LIBS \"$AGAR_NET_LIBS\"" >> config/agar_net_libs.h
+echo "#endif" >> config/agar_net_libs.h
 else
-echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
-echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
+echo "#undef AGAR_NET_CFLAGS" > config/agar_net_cflags.h
+echo "#undef AGAR_NET_LIBS" > config/agar_net_libs.h
 fi;
 else
-echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#undef HAVE_AGAR_NET" > config/have_agar_net.h
 echo "no"
 echo "no" >> config.log
 fi;
+	if [ "${HAVE_AGAR_NET}" = "yes" ]
+ then
+NETWORK=1
+echo "#ifndef NETWORK" > config/network.h
+echo "#define NETWORK" $NETWORK >> config/network.h
+echo "#endif" >> config/network.h
+	else
+echo "#undef NETWORK" > config/network.h
+	fi
 else
-echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#undef NETWORK" > config/network.h
 fi
 if [ "${enable_threads}" = "yes" ]
  then
@@ -2288,15 +2297,6 @@ echo "#define EDITION" $EDITION >> config/edition.h
 echo "#endif" >> config/edition.h
 else
 echo "#undef EDITION" > config/edition.h
-fi
-if [ "${enable_network}" = "yes" ]
- then
-NETWORK=1
-echo "#ifndef NETWORK" > config/network.h
-echo "#define NETWORK" $NETWORK >> config/network.h
-echo "#endif" >> config/network.h
-else
-echo "#undef NETWORK" > config/network.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
