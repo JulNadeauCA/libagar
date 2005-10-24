@@ -1459,7 +1459,7 @@ fi
 echo -n "checking for POSIX threads..."
 echo -n "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
-PTHREADS_LIBS="-pthread"
+PTHREADS_LIBS="-lpthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -1511,7 +1511,7 @@ echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
 echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 else
-PTHREADS_LIBS="-lpthread"
+PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
