@@ -158,7 +158,7 @@ AG_ObjectGetClassInfo(const char *type, AG_ObjectClassInfo *cli)
 	cli->types = Malloc(sizeof(AG_ObjectType *), M_OBJECT);
 	cli->nclasses = 0;
 
-	while ((s = strsep(&tp, ".")) != NULL) {
+	while ((s = AG_Strsep(&tp, ".")) != NULL) {
 		if (tn[0] != '\0') {
 			strlcat(tn, ".", sizeof(tn));
 		}
@@ -744,9 +744,9 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-	for (dir = strsep(&loadpathp, ":");
+	for (dir = AG_Strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = strsep(&loadpathp, ":")) {
+	     dir = AG_Strsep(&loadpathp, ":")) {
 	     	strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
 			strlcat(path, ob->save_pfx, path_len);
@@ -778,9 +778,9 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-	for (dir = strsep(&loadpathp, ":");
+	for (dir = AG_Strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = strsep(&loadpathp, ":")) {
+	     dir = AG_Strsep(&loadpathp, ":")) {
 		char tmp_path[MAXPATHLEN];
 
 	     	strlcpy(tmp_path, dir, sizeof(tmp_path));

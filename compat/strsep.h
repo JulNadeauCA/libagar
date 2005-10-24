@@ -1,8 +1,4 @@
-/*	$Csoft: strsep.h,v 1.3 2002/12/24 10:29:21 vedge Exp $	*/
+/*	$Csoft: AG_Strsep.h,v 1.3 2002/12/24 10:29:21 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/config/have_strsep.h>
-
-#ifndef HAVE_STRSEP
-char	*strsep(char **, const char *);
-#endif
+char *AG_Strsep(char **, const char *);

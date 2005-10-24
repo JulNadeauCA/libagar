@@ -144,9 +144,9 @@ main(int argc, char *argv[])
 		char *s, *fspec = argv[i];
 		char *name = NULL, *langspec = NULL;
 
-		if ((s = strsep(&fspec, ":")) != NULL && s[0] != '\0')
+		if ((s = AG_Strsep(&fspec, ":")) != NULL && s[0] != '\0')
 			name = s;
-		if ((s = strsep(&fspec, ":")) != NULL && s[0] != '\0')
+		if ((s = AG_Strsep(&fspec, ":")) != NULL && s[0] != '\0')
 			langspec = s;
 		if (langspec == NULL)
 			langspec = lang;

@@ -1,5 +1,5 @@
-/*	$Csoft: strsep.c,v 1.5 2003/12/05 01:25:35 vedge Exp $	*/
-/*	$OpenBSD: strsep.c,v 1.3 1997/08/20 04:28:14 millert Exp $	*/
+/*	$Csoft: AG_Strsep.c,v 1.5 2003/12/05 01:25:35 vedge Exp $	*/
+/*	$OpenBSD: AG_Strsep.c,v 1.3 1997/08/20 04:28:14 millert Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -30,11 +30,8 @@
  * SUCH DAMAGE.
  */
 
-#include <config/have_strsep.h>
-
-#ifndef HAVE_STRSEP
-
 #include <core/core.h>
+
 #include "strsep.h"
 
 #include <stdio.h>
@@ -48,10 +45,10 @@
  * On return, *stringp points past the last NUL written (if there might
  * be further tokens), or is NULL (if there are definitely no more tokens).
  *
- * If *stringp is NULL, strsep returns NULL.
+ * If *stringp is NULL, AG_Strsep returns NULL.
  */
 char *
-strsep(char **stringp, const char *delim)
+AG_Strsep(char **stringp, const char *delim)
 {
 	char *s;
 	const char *spanp;
@@ -77,5 +74,3 @@ strsep(char **stringp, const char *delim)
 		} while (sc != 0);
 	}
 }
-
-#endif /* !HAVE_STRSEP */
