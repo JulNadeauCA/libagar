@@ -80,8 +80,8 @@ AG_BoxInit(AG_Box *bo, enum ag_box_type type, Uint flags)
 	bo->type = type;
 	bo->depth = -1;
 
-	if (flags & AG_BOX_WFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_WFILL; }
 	if (flags & AG_BOX_HFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BOX_VFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_VFILL; }
 
 	bo->padding = 2;
 	bo->spacing = 1;
@@ -124,11 +124,11 @@ AG_BoxScale(void *p, int w, int h)
 
 		switch (bo->type) {
 		case AG_BOX_HORIZ:
-			if ((wid->flags & AG_WIDGET_WFILL) == 0)
+			if ((wid->flags & AG_WIDGET_HFILL) == 0)
 				totfixed += wid->w + bo->spacing;
 			break;
 		case AG_BOX_VERT:
-			if ((wid->flags & AG_WIDGET_HFILL) == 0)
+			if ((wid->flags & AG_WIDGET_VFILL) == 0)
 				totfixed += wid->h + bo->spacing;
 			break;
 		}
@@ -236,19 +236,19 @@ AG_BoxScale(void *p, int w, int h)
 		 */
 		switch (bo->type) {
 		case AG_BOX_HORIZ:
-			if (wid->flags & AG_WIDGET_WFILL) {
+			if (wid->flags & AG_WIDGET_HFILL) {
 				wid->w = w - totfixed - bo->padding*2;
 			}
-			if (wid->flags & AG_WIDGET_HFILL) {
+			if (wid->flags & AG_WIDGET_VFILL) {
 				wid->h = h - bo->padding*2;
 			}
 			x += wid->w + bo->spacing;
 			break;
 		case AG_BOX_VERT:
-			if (wid->flags & AG_WIDGET_WFILL) {
+			if (wid->flags & AG_WIDGET_HFILL) {
 				wid->w = w - bo->padding*2; 
 			}
-			if (wid->flags & AG_WIDGET_HFILL) {
+			if (wid->flags & AG_WIDGET_VFILL) {
 				wid->h = h - totfixed - bo->padding*2;
 			}
 			y += wid->h + bo->spacing;

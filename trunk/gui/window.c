@@ -1111,7 +1111,7 @@ AG_WindowScale(void *p, int w, int h)
 	/* Sum the space requested by fixed widgets. */
 	AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 		AGWIDGET_OPS(wid)->scale(wid, -1, -1);
-		if ((wid->flags & AG_WIDGET_HFILL) == 0)
+		if ((wid->flags & AG_WIDGET_VFILL) == 0)
 			totfixed += wid->h + win->spacing;
 	}
 	if (totfixed > win->spacing)
@@ -1121,14 +1121,14 @@ AG_WindowScale(void *p, int w, int h)
 		wid->x = x;
 		wid->y = y;
 
-		if (wid->flags & AG_WIDGET_WFILL) {
+		if (wid->flags & AG_WIDGET_HFILL) {
 			if (strcmp(wid->type, "titlebar") == 0) {
 				wid->w = w;
 			} else {
 				wid->w = w - win->xpadding*2;
 			}
 		}
-		if (wid->flags & AG_WIDGET_HFILL) {
+		if (wid->flags & AG_WIDGET_VFILL) {
 			wid->h = h - totfixed - win->ypadding_bot -
 			                        win->ypadding_top;
 		}

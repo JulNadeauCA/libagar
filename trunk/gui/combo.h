@@ -18,10 +18,10 @@ typedef struct ag_combo {
 #define AG_COMBO_POLL	  0x01		/* Polled list */
 #define AG_COMBO_TREE	  0x02		/* Tree display */
 #define AG_COMBO_ANY_TEXT 0x04		/* Accept text not matching an item */
-#define AG_COMBO_WFILL	  0x08
-#define AG_COMBO_HFILL	  0x10
+#define AG_COMBO_HFILL	  0x08
+#define AG_COMBO_VFILL	  0x10
 #define AG_COMBO_FOCUS	  0x20
-#define AG_COMBO_EXPAND	  (AG_COMBO_WFILL|AG_COMBO_HFILL)
+#define AG_COMBO_EXPAND	  (AG_COMBO_HFILL|AG_COMBO_VFILL)
 
 	AG_Textbox *tbox;		/* Text input */
 	AG_Button *button;		/* [...] button */

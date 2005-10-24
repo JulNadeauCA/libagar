@@ -11,9 +11,9 @@
 typedef struct ag_pixmap {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_PIXMAP_WFILL	0x01
-#define AG_PIXMAP_HFILL	0x02
-#define AG_PIXMAP_EXPAND (AG_PIXMAP_WFILL|AG_PIXMAP_HFILL)
+#define AG_PIXMAP_HFILL	0x01
+#define AG_PIXMAP_VFILL	0x02
+#define AG_PIXMAP_EXPAND (AG_PIXMAP_HFILL|AG_PIXMAP_VFILL)
 	int n;				/* Current surface */
 	int s, t;			/* Source coordinates */
 } AG_Pixmap;

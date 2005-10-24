@@ -2184,13 +2184,13 @@ AG_ObjectEdit(void *p)
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_RIGHT, 1);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Infos"), AG_BOX_VERT);
 	{
 		char path[AG_OBJECT_PATH_MAX];
 		AG_Textbox *tb_md5, *tb_sha1, *tb_rmd160;
 
-		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_SetEvent(tbox, "textbox-return", rename_object, "%p", ob);
@@ -2213,22 +2213,22 @@ AG_ObjectEdit(void *p)
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
 		tb_md5 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "MD5: ");
+		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "MD5: ");
 		AG_TextboxPrescale(tb_md5, "888888888888888888888888888888888");
 		tb_md5->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
 		tb_sha1 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "SHA1: ");
+		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "SHA1: ");
 		AG_TextboxPrescale(tb_sha1, "8888888888888888888888888");
 		tb_sha1->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
 		tb_rmd160 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_WFILL|AG_TEXTBOX_READONLY, "RMD160: ");
+		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "RMD160: ");
 		AG_TextboxPrescale(tb_rmd160, "88888888888888888888888");
 		tb_rmd160->flags &= ~(AG_TEXTBOX_WRITEABLE);
 
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
-					            AG_BOX_WFILL);
+					            AG_BOX_HFILL);
 		{
 			btn = AG_ButtonAct(box, 0, _("Refresh checksums"),
 			    refresh_checksums, "%p,%p,%p,%p", ob, tb_md5,
@@ -2248,7 +2248,7 @@ AG_ObjectEdit(void *p)
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
-		btn = AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Refresh status"),
+		btn = AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Refresh status"),
 		    refresh_rcs_status, "%p,%p,%p", ob, lb_status, tl);
 
 		if (agRcsMode)

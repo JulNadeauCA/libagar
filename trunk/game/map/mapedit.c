@@ -159,7 +159,7 @@ AG_MapEditorConfig(void *p)
 	win = AG_WindowNew(AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, _("Map editor settings"));
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	AG_BoxSetSpacing(bo, 5);
 	{
 		cb = AG_CheckboxNew(bo,0 , _("Moving tiles"));
@@ -171,14 +171,14 @@ AG_MapEditorConfig(void *p)
 		AG_SpinbuttonSetMax(sb, 16384);
 	}
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		cb = AG_CheckboxNew(bo, 0, _("Selection-bounded edition"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT,
 		    &agMapviewEditSelOnly);
 	}
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		msb = AG_MSpinbuttonNew(bo, 0, "x",
 		    _("Default map geometry: "));

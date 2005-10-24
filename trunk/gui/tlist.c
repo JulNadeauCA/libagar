@@ -174,8 +174,8 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	if (flags & AG_TLIST_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_TLIST_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TLIST_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(tl, "tlist", &agTlistOps, wflags);
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);

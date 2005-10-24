@@ -62,7 +62,7 @@ AG_StatusbarNew(void *parent, Uint flags)
 void
 AG_StatusbarInit(AG_Statusbar *sbar, Uint flags)
 {
-	AG_BoxInit(&sbar->box, AG_BOX_VERT, AG_BOX_WFILL);
+	AG_BoxInit(&sbar->box, AG_BOX_VERT, AG_BOX_HFILL);
 	AG_BoxSetPadding(&sbar->box, 2);
 	AG_BoxSetSpacing(&sbar->box, 1);
 	AG_ObjectSetOps(sbar, &agStatusbarOps);

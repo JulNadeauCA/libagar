@@ -11,8 +11,8 @@
 typedef struct ag_fixed {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_FIXED_WFILL		0x01	/* Expand to fill available width */
-#define AG_FIXED_HFILL		0x02	/* Expand to fill available height */
+#define AG_FIXED_HFILL		0x01	/* Expand to fill available width */
+#define AG_FIXED_VFILL		0x02	/* Expand to fill available height */
 #define AG_FIXED_NO_UPDATE	0x04	/* Don't call WINDOW_UPDATE() */
 #define AG_FIXED_FILLBG		0x08	/* Fill background */
 #define AG_FIXED_BOX		0x10	/* Draw a box */

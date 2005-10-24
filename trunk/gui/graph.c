@@ -78,8 +78,8 @@ AG_GraphInit(AG_Graph *graph, enum ag_graph_type type, Uint flags)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE;
 
-	if (flags & AG_GRAPH_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_GRAPH_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_GRAPH_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(graph, "graph", &agGraphOps, wflags);
 	graph->type = type;

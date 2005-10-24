@@ -40,8 +40,8 @@ CreateWindow(void)
 	 */
 	hp = AG_HPaneNew(win, AG_HPANE_EXPAND);
 	div = AG_HPaneAddDiv(hp,
-	    AG_BOX_VERT, AG_BOX_HFILL,
-	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_WFILL);
+	    AG_BOX_VERT, AG_BOX_VFILL,
+	    AG_BOX_VERT, AG_BOX_VFILL|AG_BOX_HFILL);
 	AG_BoxSetSpacing(div->box1, 4);
 	AG_BoxSetPadding(div->box1, 5);
 	{
@@ -63,7 +63,7 @@ CreateWindow(void)
 	 * AG_HBox is a container which aligns its children horizontally. Both
 	 * AG_HBox and AG_VBox are wrappers around AG_Box.
 	 */
-	hbox = AG_HBoxNew(div->box1, AG_HBOX_WFILL|AG_HBOX_HOMOGENOUS);
+	hbox = AG_HBoxNew(div->box1, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
 	{
 		/*
 		 * The AG_Button widget is a simple push-button. It is typically
@@ -89,14 +89,14 @@ CreateWindow(void)
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist widget).
 	 */
-	com = AG_ComboNew(div->box1, AG_COMBO_WFILL, "Combo: ");
+	com = AG_ComboNew(div->box1, AG_COMBO_HFILL, "Combo: ");
 
 	/*
 	 * AG_UCombo is a variant of AG_Combo which looks like a single 
 	 * button. It is used by the AG_FSpinbutton widget to set the
 	 * conversion unit, for instance.
 	 */
-	ucom = AG_UComboNew(div->box1, AG_COMBO_WFILL);
+	ucom = AG_UComboNew(div->box1, AG_COMBO_HFILL);
 
 	/* Populate both combo widgets. */
 	for (i = 0; i < 50; i++) {
@@ -124,7 +124,7 @@ CreateWindow(void)
 	 * AG_Textbox is a single-line text edition widget. It can bind to
 	 * a sized buffer containing a string.
 	 */
-	AG_TextboxNew(div->box1, AG_TEXTBOX_WFILL, "Enter text: ");
+	AG_TextboxNew(div->box1, AG_TEXTBOX_HFILL, "Enter text: ");
 
 	{
 		static int value = 127;
@@ -136,7 +136,7 @@ CreateWindow(void)
 		 * "max". Note that this widget is not focusable by default.
 		 */
 		sb = AG_ScrollbarNew(div->box1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_WFILL|AG_SCROLLBAR_FOCUSABLE);
+		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE);
 		AG_WidgetSetInt(sb, "min", 0);
 		AG_WidgetSetInt(sb, "max", 255);
 		AG_WidgetBindInt(sb, "value", &value);
@@ -199,7 +199,7 @@ CreateWindow(void)
 			
 			/* AG_Graph plots a set of values graphically. */
 			g = AG_GraphNew(ntab, AG_GRAPH_LINES,
-			    AG_GRAPH_WFILL|AG_GRAPH_HFILL);
+			    AG_GRAPH_HFILL|AG_GRAPH_VFILL);
 			sinplot = AG_GraphAddItem(g, "sin", 0, 150, 0, 0);
 			cosplot = AG_GraphAddItem(g, "cos", 150, 150, 0, 0);
 			for (f = 0; f < 60; f += 0.3) {
@@ -219,7 +219,7 @@ CreateWindow(void)
 			 * AG_Radio displays a group of radio buttons. It can
 			 * bind to an integer value.
 			 */
-			rad = AG_RadioNew(ntab, AG_RADIO_WFILL, radio_items);
+			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, radio_items);
 			AG_WidgetBindInt(rad, "value", &g->type);
 		}
 		

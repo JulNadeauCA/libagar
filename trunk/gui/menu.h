@@ -49,9 +49,9 @@ typedef struct ag_menu_item {
 typedef struct ag_menu {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_MENU_WFILL	0x01
-#define AG_MENU_HFILL	0x02
-#define AG_MENU_EXPAND	(AG_MENU_WFILL|AG_MENU_HFILL)
+#define AG_MENU_HFILL	0x01
+#define AG_MENU_VFILL	0x02
+#define AG_MENU_EXPAND	(AG_MENU_HFILL|AG_MENU_VFILL)
 	AG_MenuItem *items;		/* Top-level items */
 	Uint nitems;
 	int selecting;			/* Selection in progress */

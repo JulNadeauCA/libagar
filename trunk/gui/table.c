@@ -100,8 +100,8 @@ AG_TableInit(AG_Table *t, Uint flags)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 
-	if (flags & AG_TABLE_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_TABLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TABLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(t, "table", &agTableOps, wflags);
 	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);

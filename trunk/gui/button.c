@@ -135,8 +135,8 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	AG_SetEvent(bu, "window-keyup", button_keyup, NULL);
 	AG_SetEvent(bu, "window-keydown", button_keydown, NULL);
 
-	if (flags & AG_BUTTON_WFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_WFILL; }
 	if (flags & AG_BUTTON_HFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BUTTON_VFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_VFILL; }
 }
 
 void

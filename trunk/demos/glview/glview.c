@@ -90,20 +90,20 @@ CreateWindow(void)
 
 	win = AG_WindowNew(0);
 	
-	hb = AG_HBoxNew(win, AG_HBOX_WFILL|AG_HBOX_HFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HFILL|AG_HBOX_VFILL);
 	{
-		glv = AG_GLViewNew(hb, AG_GLVIEW_WFILL|AG_GLVIEW_HFILL);
+		glv = AG_GLViewNew(hb, AG_GLVIEW_HFILL|AG_GLVIEW_VFILL);
 
 		AG_GLViewScaleFn(glv, ScaleCube, NULL);
 		AG_GLViewDrawFn(glv, DrawCube, NULL);
 		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
 		AG_WidgetFocus(glv);
 
-		pal = AG_HSVPalNew(hb, AG_HSVPAL_HFILL);
+		pal = AG_HSVPalNew(hb, AG_HSVPAL_VFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", material);
 	}
 
-	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		fsb = AG_FSpinbuttonNew(vb, 0, NULL, "Vx:");
 		AG_WidgetBindDouble(fsb, "value", &vx);

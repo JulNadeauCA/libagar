@@ -74,7 +74,7 @@ edit(void *p)
 	AG_Radio *rad;
 
 	win = AG_WindowNew(0);
-	rad = AG_RadioNew(win, AG_RADIO_WFILL, mode_items);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, mode_items);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &lt->mode);
 	return (win);
 }

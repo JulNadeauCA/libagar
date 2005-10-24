@@ -96,7 +96,7 @@ close_window(AG_Event *event)
 void
 AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
-	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_WFILL);
+	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_HFILL);
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
 	AG_WireGfx(tbar, "gui-pixmaps");
 
@@ -110,7 +110,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	tbar->pressed = 0;
 	tbar->win = NULL;
 	tbar->label = AG_LabelNew(tbar, AG_LABEL_STATIC, _("Untitled"));
-	AGWIDGET(tbar->label)->flags |= AG_WIDGET_WFILL;
+	AGWIDGET(tbar->label)->flags |= AG_WIDGET_HFILL;
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);

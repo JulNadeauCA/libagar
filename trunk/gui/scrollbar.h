@@ -16,11 +16,11 @@ enum ag_scrollbar_type {
 typedef struct ag_scrollbar {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_SCROLLBAR_WFILL	0x01
-#define AG_SCROLLBAR_HFILL	0x02
+#define AG_SCROLLBAR_HFILL	0x01
+#define AG_SCROLLBAR_VFILL	0x02
 #define AG_SCROLLBAR_FOCUSABLE	0x04
 #define AG_SCROLLBAR_FOCUS	0x10
-#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_WFILL|AG_SCROLLBAR_HFILL)
+#define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
 	enum ag_scrollbar_type type;

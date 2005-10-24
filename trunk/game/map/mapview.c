@@ -360,8 +360,8 @@ AG_MapviewInit(AG_Mapview *mv, AG_Map *m, int flags,
     struct ag_toolbar *toolbar, struct ag_statusbar *statbar)
 {
 	AG_WidgetInit(mv, "mapview", &mapview_ops,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
-	    AG_WIDGET_HFILL);
+	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
+	    AG_WIDGET_VFILL);
 
 	mv->flags = (flags | AG_MAPVIEW_CENTER);
 	mv->mode = AG_MAPVIEW_EDITION;

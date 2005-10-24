@@ -11,9 +11,9 @@ typedef struct ag_hbox {
 } AG_HBox;
 
 #define AG_HBOX_HOMOGENOUS	AG_BOX_HOMOGENOUS
-#define AG_HBOX_WFILL		AG_BOX_WFILL
 #define AG_HBOX_HFILL		AG_BOX_HFILL
-#define AG_HBOX_EXPAND		(AG_BOX_WFILL|AG_BOX_HFILL)
+#define AG_HBOX_VFILL		AG_BOX_VFILL
+#define AG_HBOX_EXPAND		(AG_BOX_HFILL|AG_BOX_VFILL)
 
 #define AG_HBoxNew(p, fl) (AG_HBox *)AG_BoxNew((p), AG_BOX_HORIZ, (fl))
 #define AG_HBoxInit(b, fl) AG_BoxInit((AG_Box *)(b), AG_BOX_HORIZ, (fl))

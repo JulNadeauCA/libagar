@@ -52,7 +52,7 @@ CreateTextbox(void)
 	 * Create a textbox with a label displaying "Enter string:". Use the
 	 * `textbox-return' event to catch the return key.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 	    "Enter string: ");
 	AG_SetEvent(textbox, "textbox-return", return_pressed, NULL);
 
@@ -61,7 +61,7 @@ CreateTextbox(void)
 	 * have to pass the size of the buffer along with a pointer to it to
 	 * the AG_WidgetBind() function.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_WFILL, "Edit buffer: ");
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Edit buffer: ");
 	AG_WidgetBind(textbox, "string", AG_WIDGET_STRING, text_buf,
 	    sizeof(text_buf));
 

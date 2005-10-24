@@ -111,8 +111,8 @@ AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	if (flags & AG_TABLEVIEW_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_TABLEVIEW_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TABLEVIEW_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(tv, "tableview", &agTableviewOps, wflags);
 	AG_MutexInitRecursive(&tv->lock);

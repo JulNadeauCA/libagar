@@ -98,8 +98,8 @@ include:
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x008 /* All buttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x010 /* All buttondown events */
 #define AG_WIDGET_CLIPPING		0x020 /* Automatic clipping */
-#define AG_WIDGET_WFILL			0x040 /* Expand to fill width */
-#define AG_WIDGET_HFILL			0x080 /* Expand to fill height */
+#define AG_WIDGET_HFILL			0x040 /* Expand to fill width */
+#define AG_WIDGET_VFILL			0x080 /* Expand to fill height */
 #define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
 .Ed
 .Pp
@@ -125,9 +125,9 @@ and
 .Fn AG_WidgetPopClipRect .
 .Pp
 The
-.Dv AG_WIDGET_WFILL
-and
 .Dv AG_WIDGET_HFILL
+and
+.Dv AG_WIDGET_VFILL
 flags indicate to container widgets that the widget wishes to allocate the
 remaining width or height inside the container area.
 .Pp

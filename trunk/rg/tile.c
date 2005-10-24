@@ -1286,7 +1286,7 @@ attach_pixmap_dlg(AG_Event *event)
 		AG_TlistSetIcon(tl, it, px->su);
 	}
 	
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonAct(bo, 0, _("OK"), attach_pixmap,
 		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
@@ -1365,7 +1365,7 @@ attach_sketch_dlg(AG_Event *event)
 		AG_TlistSetIcon(tl, it, sk->vg->su);
 	}
 	
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonAct(bo, 0, _("OK"), attach_sketch, "%p,%p,%p,%p,%p",
 		    tv, pwin, win, tl_feats, tl);
@@ -1739,10 +1739,10 @@ tile_infos(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->name, sizeof(t->name));
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL, _("Class: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Class: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->clname,
 	    sizeof(t->clname));
 
@@ -1766,7 +1766,7 @@ tile_infos(AG_Event *event)
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_WFILL, agGfxSnapNames);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 	    &AG_SPRITE(t->ts,t->s).snap_mode);
 
@@ -1774,7 +1774,7 @@ tile_infos(AG_Event *event)
 
 	AG_LabelNewFmt(win, _("Maps to sprite: #%u."), t->s);
 	
-	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonAct(box, 0, _("OK"), resize_tile, "%p,%p,%p,%p,%p,%p",
 		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
@@ -2084,13 +2084,13 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	
 	tl_feats = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
-	AGWIDGET(tl_feats)->flags &= ~(AG_WIDGET_WFILL);
+	AGWIDGET(tl_feats)->flags &= ~(AG_WIDGET_HFILL);
 	AG_TlistPrescale(tl_feats, _("FEATURE #00 <#00>"), 5);
 	AG_SetEvent(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p",
 	    ts, t, win, tv);
 	feature_menus(tv, tl_feats, win);
 	
-	me = AG_MenuNew(win, AG_MENU_WFILL);
+	me = AG_MenuNew(win, AG_MENU_HFILL);
 
 	tbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
 	AG_ToolbarInit(tbar, AG_TOOLBAR_HORIZ, 1, 0);
@@ -2185,17 +2185,17 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		/* TODO import */
 	}
 
-	pane = AG_HPaneNew(win, AG_HPANE_HFILL|AG_HPANE_WFILL);
+	pane = AG_HPaneNew(win, AG_HPANE_VFILL|AG_HPANE_HFILL);
 	div = AG_HPaneAddDiv(pane,
-	    AG_BOX_VERT, AG_BOX_HFILL,
-	    AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	    AG_BOX_VERT, AG_BOX_VFILL,
+	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_ObjectAttach(div->box1, tl_feats);
-		AGWIDGET(tl_feats)->flags |= AG_WIDGET_WFILL;
+		AGWIDGET(tl_feats)->flags |= AG_WIDGET_HFILL;
 	
-		btn = AG_ButtonNew(div->box1, AG_BUTTON_STICKY|AG_BUTTON_WFILL,
+		btn = AG_ButtonNew(div->box1, AG_BUTTON_STICKY|AG_BUTTON_HFILL,
 		    _("Edit"));
-		AGWIDGET(btn)->flags |= AG_WIDGET_WFILL;
+		AGWIDGET(btn)->flags |= AG_WIDGET_HFILL;
 		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
 		AG_SetEvent(btn, "button-pushed", edit_element, "%p,%p,%p",
 		    tv, tl_feats, win);
@@ -2205,7 +2205,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_ObjectAttach(div->box2, tbar);
 
 		tv->tel_box = AG_BoxNew(div->box2, AG_BOX_HORIZ,
-		    AG_BOX_WFILL|AG_BOX_HFILL);
+		    AG_BOX_HFILL|AG_BOX_VFILL);
 		AG_ObjectAttach(tv->tel_box, tv);
 		AG_WidgetFocus(tv);
 	}

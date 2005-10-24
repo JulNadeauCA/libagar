@@ -91,9 +91,9 @@ merge_init(AG_Maptool *t)
 
 	win = AG_MaptoolWindow(t, "mapedit-tool-merge");
 
-	hb = AG_HBoxNew(win, AG_HBOX_WFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HFILL);
 	{
-		tb = AG_TextboxNew(hb, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		tb = AG_TextboxNew(hb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 		AG_SetEvent(tb, "textbox-return", merge_create_brush, "%p", tb);
 
@@ -103,7 +103,7 @@ merge_init(AG_Maptool *t)
 		AG_SetEvent(bu, "button-pushed", merge_create_brush, "%p", tb);
 	}
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 #if 0
 		bu = AG_ButtonNew(hb, 0, _("Load set"));

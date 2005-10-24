@@ -166,8 +166,8 @@ AG_HPaneInit(AG_HPane *pa, Uint flags)
 {
 	Uint boxflags = 0;
 
-	if (flags & AG_HPANE_WFILL) boxflags |= AG_BOX_WFILL;
 	if (flags & AG_HPANE_HFILL) boxflags |= AG_BOX_HFILL;
+	if (flags & AG_HPANE_VFILL) boxflags |= AG_BOX_VFILL;
 
 	AG_BoxInit(&pa->box, AG_BOX_HORIZ, boxflags);
 	AG_BoxSetPadding(&pa->box, 0);

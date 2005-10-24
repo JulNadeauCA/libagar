@@ -186,8 +186,8 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE;
 
-	if (flags & AG_TEXTBOX_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TEXTBOX_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(tbox, "textbox", &agTextboxOps, wflags);
 	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,

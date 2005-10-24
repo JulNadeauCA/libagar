@@ -99,7 +99,7 @@ void
 AG_MatviewInit(AG_Matview *mv, struct mat *mat, Uint flags)
 {
 	AG_WidgetInit(mv, "matview", &agMatviewOps,
-	    AG_WIDGET_WFILL|AG_WIDGET_HFILL|AG_WIDGET_CLIPPING|
+	    AG_WIDGET_HFILL|AG_WIDGET_VFILL|AG_WIDGET_CLIPPING|
 	    AG_WIDGET_FOCUSABLE);
 	mv->mat = mat;
 	mv->flags = flags;

@@ -11,8 +11,8 @@
 typedef struct sg_view {
 	struct ag_glview glv;
 	Uint flags;
-#define SG_VIEW_WFILL	0x01
-#define SG_VIEW_HFILL	0x02
+#define SG_VIEW_HFILL	0x01
+#define SG_VIEW_VFILL	0x02
 	SG *sg;
 } SG_View;
 

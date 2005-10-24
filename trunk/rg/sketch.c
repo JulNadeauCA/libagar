@@ -210,7 +210,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_WindowSetCaption(win, _("Sketch %s"), sk->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
 		AG_HSVPal *pal;
@@ -301,10 +301,10 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
 	AG_SpinbuttonSetMin(sb, 0);
 
-	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL, _("Style: "));
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Style: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_styles, "%p", vg);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
 		AG_HSVPal *pal;
@@ -330,11 +330,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 	
 		AG_LabelNewStatic(ntab, _("Line style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, line_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, line_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
 		
 		AG_LabelNewStatic(ntab, _("Endpoint style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, endpoint_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, endpoint_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
 
@@ -362,12 +362,12 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		RG_TextureSelector *texsel;
 
 		AG_LabelNewStatic(ntab, _("Filling style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, fill_styles);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, fill_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
 			
 		AG_LabelNewStatic(ntab, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
-		AGWIDGET(texsel)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AGWIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,
 		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
 	}

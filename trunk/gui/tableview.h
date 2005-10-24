@@ -143,10 +143,10 @@ typedef struct ag_tableview {
 #define AG_TABLEVIEW_NOHEADER	 0x020 /* do not display the header */
 #define AG_TABLEVIEW_NOSORT	 0x040 /* do not sort. header not clickable */
 #define AG_TABLEVIEW_POLLED	 0x080 /* remember selections */
-#define AG_TABLEVIEW_WFILL	 0x100
-#define AG_TABLEVIEW_HFILL	 0x200
+#define AG_TABLEVIEW_HFILL	 0x100
+#define AG_TABLEVIEW_VFILL	 0x200
 #define AG_TABLEVIEW_FOCUS	 0x400
-#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_WFILL|AG_TABLEVIEW_HFILL)
+#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_HFILL|AG_TABLEVIEW_VFILL)
 
 /* Flags for tableview_add_row() */
 #define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */

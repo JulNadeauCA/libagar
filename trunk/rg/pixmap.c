@@ -362,12 +362,12 @@ insert_brush_dlg(AG_Event *event)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	tb_name = Malloc(sizeof(AG_Textbox), M_OBJECT);
-	AG_TextboxInit(tb_name, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	AG_TextboxInit(tb_name, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	
 	cb_oneshot = Malloc(sizeof(AG_Checkbox), M_OBJECT);
 	AG_CheckboxInit(cb_oneshot, 0, _("One-shot"));
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
@@ -380,7 +380,7 @@ insert_brush_dlg(AG_Event *event)
 		AG_SetEvent(tl, "tlist-selected", update_bropts, "%p", tb_name);
 	}
 	
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		rad_types = AG_RadioNew(bo, AG_RADIO_EXPAND, types);
 		AG_WidgetSetInt(rad_types, "value", 0);
@@ -390,7 +390,7 @@ insert_brush_dlg(AG_Event *event)
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonAct(bo, 0, _("OK"), insert_brush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
@@ -460,7 +460,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_WindowSetCaption(win, _("Pixmap %s"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
@@ -491,7 +491,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);
 
-		AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Create new brush"),
+		AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Create new brush"),
 		    insert_brush_dlg, "%p,%p,%p", tv, px, win);
 	}
 	

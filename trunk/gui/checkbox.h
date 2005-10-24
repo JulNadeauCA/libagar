@@ -11,10 +11,10 @@
 typedef struct ag_checkbox {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_CHECKBOX_WFILL	0x01
-#define AG_CHECKBOX_HFILL	0x02
+#define AG_CHECKBOX_HFILL	0x01
+#define AG_CHECKBOX_VFILL	0x02
 #define AG_CHECKBOX_FOCUS	0x04
-#define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_WFILL|AG_CHECKBOX_HFILL)
+#define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
 	int state;
 	SDL_Surface *label_su;
 	int label_id;

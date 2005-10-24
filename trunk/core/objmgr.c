@@ -684,16 +684,16 @@ create_obj_dlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("New %s object"), t->type);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->type);
-		tb = AG_TextboxNew(bo, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 	}
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
@@ -708,13 +708,13 @@ create_obj_dlg(AG_Event *event)
 		    current_pobj);
 	}
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		cb = AG_CheckboxNew(win, 0, _("Edit now"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &edit_on_create);
 	}
 
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonAct(bo, 0, _("OK"), create_obj, "%p,%p,%p,%p",
 		    t, tb, pobj_tl, win);
@@ -847,7 +847,7 @@ AG_ObjMgrWindow(void)
 	AG_SetEvent(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
 
-	me = AG_MenuNew(win, AG_MENU_WFILL);
+	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("File"));
 	{
 		int i;
@@ -939,7 +939,7 @@ AG_ObjMgrWindow(void)
 	AG_MonitorMenu(mi);
 #endif /* DEBUG */
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
 	{
 		AG_MenuItem *mi, *mi2;
@@ -1041,7 +1041,7 @@ AG_ObjMgrWindow(void)
 			    -1, rename_repo_dlg, "%p", tl);
 		}
 
-		btn = AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Refresh listing"),
+		btn = AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Refresh listing"),
 		    update_repo_listing, "%p", tl);
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
@@ -1099,7 +1099,7 @@ AG_ObjMgrQuitDlg(void *obj)
 	AG_LabelNew(win, AG_LABEL_STATIC,
 	    _("Some objects have been modified. Exit application?"));
 
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_WFILL);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);
 	{

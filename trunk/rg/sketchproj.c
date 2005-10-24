@@ -149,14 +149,14 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Polygon"));
 
-	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL|AG_COMBO_FOCUS,
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
 	    _("Sketch: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
 	AG_SetEvent(com, "combo-selected", select_sketch, "%p,%p", sproj,
 	    tv->tile);
 	AG_ComboSelectText(com, sproj->sketch);
 
-	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_HSVPal *hsv1, *hsv2;
 		AG_Spinbutton *sb;
@@ -164,7 +164,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 		AG_NotebookTab *ntab;
 		AG_Box *hb;
 
-		nb = AG_NotebookNew(box, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+		nb = AG_NotebookNew(box, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 		ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);

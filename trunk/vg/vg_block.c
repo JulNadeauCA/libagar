@@ -316,7 +316,7 @@ VG_BlockEditor(VG *vg)
 	                      AG_TLIST_EXPAND|AG_TLIST_FOCUS);
 	AG_SetEvent(tl, "tlist-poll", poll_blocks, "%p", vg);
 
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonAct(bo, 0, _("Destroy"), destroy_block, "%p,%p",
 		    vg, tl);

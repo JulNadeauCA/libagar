@@ -2181,7 +2181,7 @@ edit_properties(AG_Event *event)
 	AG_WindowSetCaption(win, _("Properties of \"%s\""), AGOBJECT(m)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Map settings"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(ntab, 0, "x", _("Map size: "));
@@ -2259,7 +2259,7 @@ edit_properties(AG_Event *event)
 
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 		                       AG_TLIST_EXPAND);
-		AGWIDGET(tl)->flags |= AG_WIDGET_WFILL|AG_WIDGET_HFILL;
+		AGWIDGET(tl)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_SetEvent(tl, "tlist-poll", poll_undo, "%p", mv->map);
 	}
 
@@ -2847,7 +2847,7 @@ map_edit(void *p)
 	AG_MapviewPrescale(mv, 2, 2);
 	AG_SetEvent(mv, "mapview-dblclick", noderef_edit, NULL);
 	
-	menu = AG_MenuNew(win, AG_MENU_WFILL);
+	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
 		AG_ObjMgrGenericMenu(pitem, m);
@@ -2909,23 +2909,23 @@ map_edit(void *p)
 #endif
 	}
 	
-	hpane = AG_HPaneNew(win, AG_HPANE_WFILL|AG_HPANE_HFILL);
+	hpane = AG_HPaneNew(win, AG_HPANE_HFILL|AG_HPANE_VFILL);
 	hdiv = AG_HPaneAddDiv(hpane,
-	    AG_BOX_VERT,  AG_BOX_HFILL,
-	    AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_WFILL);
+	    AG_BOX_VERT,  AG_BOX_VFILL,
+	    AG_BOX_HORIZ, AG_BOX_VFILL|AG_BOX_HFILL);
 	{
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 		AG_Tlist *tl;
 		AG_MenuItem *mi;
 
-		vpane = AG_VPaneNew(hdiv->box1, AG_VPANE_WFILL|AG_VPANE_HFILL);
+		vpane = AG_VPaneNew(hdiv->box1, AG_VPANE_HFILL|AG_VPANE_VFILL);
 		vdiv = AG_VPaneAddDiv(vpane,
-		    AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL,
-		    AG_BOX_VERT, AG_BOX_WFILL);
+		    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL,
+		    AG_BOX_VERT, AG_BOX_HFILL);
 
-		nb = AG_NotebookNew(vdiv->box1, AG_NOTEBOOK_HFILL|
-					        AG_NOTEBOOK_WFILL);
+		nb = AG_NotebookNew(vdiv->box1, AG_NOTEBOOK_VFILL|
+					        AG_NOTEBOOK_HFILL);
 		ntab = AG_NotebookAddTab(nb, _("Library"), AG_BOX_VERT);
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
@@ -3008,22 +3008,22 @@ map_edit(void *p)
 				    m, 1); 
 			}
 
-			box_h = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_WFILL);
+			box_h = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HFILL);
 			{
-				tb = AG_TextboxNew(box_h, AG_TEXTBOX_WFILL,
+				tb = AG_TextboxNew(box_h, AG_TEXTBOX_HFILL,
 				    _("Name: "));
 				AG_SetEvent(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 			}
-			AG_ButtonAct(ntab, AG_BUTTON_WFILL, _("Push"),
+			AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Push"),
 			    push_layer, "%p, %p", m, tb);
 		}
 		
 		AG_SeparatorNew(hdiv->box1, AG_SEPARATOR_HORIZ);
 		
 		vbar = AG_ScrollbarNew(hdiv->box2, AG_SCROLLBAR_VERT, 0);
-		box_v = AG_BoxNew(hdiv->box2, AG_BOX_VERT, AG_BOX_WFILL|
-		                                           AG_BOX_HFILL);
+		box_v = AG_BoxNew(hdiv->box2, AG_BOX_VERT, AG_BOX_HFILL|
+		                                           AG_BOX_VFILL);
 		{
 			AG_ObjectAttach(box_v, mv);
 			hbar = AG_ScrollbarNew(box_v, AG_SCROLLBAR_HORIZ, 0);

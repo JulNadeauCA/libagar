@@ -166,8 +166,8 @@ AG_PixmapInit(AG_Pixmap *px, Uint flags)
 {
 	Uint wflags = AG_WIDGET_CLIPPING;
 
-	if (flags & AG_PIXMAP_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_PIXMAP_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_PIXMAP_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(px, "pixmap", &agPixmapOps, wflags);
 	px->flags = flags;
