@@ -30,7 +30,7 @@ CC?=	cc
 depend:	${DPADD} depend-subdir
 	@echo > .depend
 	@files="${SRCS}"; \
-	if [ "$$files" != "" ]; then \
+	if [ "$$files" != "" -a "$$files" != "none" ]; then \
 	    if [ "${BUILD}" != "" ]; then \
 	    	if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	   	     env CC=${CC} ${MKDEP} -a -l ${MKDEP} ${CFLAGS} -I${BUILD} \
