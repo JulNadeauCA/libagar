@@ -69,7 +69,6 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	if (attrs & FILE_ATTRIBUTE_SPARSE_FILE) i->flags |= AG_FILE_SPARSE;
 	if (attrs & FILE_ATTRIBUTE_SYSTEM) i->flags |= AG_FILE_SYSTEM;
 	if (attrs & FILE_ATTRIBUTE_TEMPORARY) i->flags |= AG_FILE_TEMPORARY;
-	if (attrs & FILE_ATTRIBUTE_REPARSE_PT) i->flags |= AG_FILE_REPARSE_PT;
 	
 	if ((f = fopen(path, "rb")) != NULL) {
 		fclose(f);
