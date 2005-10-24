@@ -108,8 +108,8 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
 
-	if (flags & AG_NOTEBOOK_WFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_WFILL;
 	if (flags & AG_NOTEBOOK_HFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_HFILL;
+	if (flags & AG_NOTEBOOK_VFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_VFILL;
 
 	AG_SetEvent(nb, "window-mousebuttondown", mousebuttondown, NULL);
 }
@@ -194,8 +194,8 @@ AG_NotebookScale(void *p, int w, int h)
 	if ((tab = nb->sel_tab) != NULL) {
 		AGWIDGET(tab)->x = 0;
 		AGWIDGET(tab)->y = nb->bar_h;
-		if (nb->flags & AG_NOTEBOOK_WFILL) nb->cont_w = AGWIDGET(nb)->w;
-		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_h = AGWIDGET(nb)->h;
+		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_w = AGWIDGET(nb)->w;
+		if (nb->flags & AG_NOTEBOOK_VFILL) nb->cont_h = AGWIDGET(nb)->h;
 		AGWIDGET(tab)->w = nb->cont_w;
 		AGWIDGET(tab)->h = nb->cont_h - nb->bar_h;
 		AGWIDGET_OPS(tab)->scale(tab,
@@ -251,7 +251,7 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_NotebookTab *tab;
 
 	tab = Malloc(sizeof(AG_NotebookTab), M_OBJECT);
-	AG_BoxInit((AG_Box *)tab, btype, AG_BOX_WFILL|AG_BOX_HFILL);
+	AG_BoxInit((AG_Box *)tab, btype, AG_BOX_HFILL|AG_BOX_VFILL);
 	if (nb->padding >= 0)
 		AG_BoxSetPadding((AG_Box *)tab, nb->padding);
 	if (nb->spacing >= 0)

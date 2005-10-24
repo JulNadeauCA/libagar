@@ -1008,12 +1008,12 @@ insert_tile_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
 	AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
 
-	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_WFILL, _("Class: "));
+	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
 	    sizeof(ins_tile_class));
 	if (strcmp(ts->template, "Terrain") == 0) {
@@ -1033,10 +1033,10 @@ insert_tile_dlg(AG_Event *event)
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_WFILL, agGfxSnapNames);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, agGfxSnapNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonAct(btnbox, 0, _("OK"), insert_tile, "%p,%p", win, ts);
 		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
@@ -1061,13 +1061,13 @@ insert_texture_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name:"));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
 	    sizeof(ins_texture_name));
 	AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p", win,
 	    pwin, ts);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonAct(btnbox, 0, _("OK"), insert_texture,
 		    "%p,%p,%p", win, pwin, ts);
@@ -1096,7 +1096,7 @@ insert_anim_dlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name:"));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
 	    sizeof(ins_anim_name));
 	AG_SetEvent(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
@@ -1112,7 +1112,7 @@ insert_anim_dlg(AG_Event *event)
 	cb = AG_CheckboxNew(win, 0, _("Colorkey"));
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonAct(btnbox, 0, _("OK"), insert_anim, "%p,%p", win, ts);
 		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
@@ -1516,7 +1516,7 @@ RG_TilesetEdit(void *p)
 	AG_TlistInit(tl_anims, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl_anims, "tlist-poll", poll_anims, "%p", ts);
 
-	com = AG_ComboNew(win, AG_COMBO_WFILL, _("Template: "));
+	com = AG_ComboNew(win, AG_COMBO_HFILL, _("Template: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->template,
 	    sizeof(ts->template));
 	AG_TlistAdd(com->list, NULL, "Perso");
@@ -1536,7 +1536,7 @@ RG_TilesetEdit(void *p)
 		    delete_tiles, "%p,%p", tl_tiles, ts);
 	}
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tl_tiles);
@@ -1544,7 +1544,7 @@ RG_TilesetEdit(void *p)
 		    "%p,%p,%p", ts, tl_tiles, win);
 
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
-		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonAct(bbox, 0, _("Insert"), insert_tile_dlg,
 			    "%p,%p", ts, win);
@@ -1586,7 +1586,7 @@ RG_TilesetEdit(void *p)
 		}
 		
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
-		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonAct(bbox, 0, _("Insert"),
 			    insert_texture_dlg, "%p,%p", ts, win);
@@ -1615,7 +1615,7 @@ RG_TilesetEdit(void *p)
 		}
 		
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
-		    AG_BOX_WFILL|AG_BOX_HOMOGENOUS);
+		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonAct(bbox, 0, _("Insert"),
 			    insert_anim_dlg, "%p,%p", ts, win);

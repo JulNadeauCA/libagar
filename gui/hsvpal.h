@@ -15,10 +15,10 @@ typedef struct ag_hsvpal {
 	int flags;
 #define AG_HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
 #define AG_HSVPAL_DIRTY	0x02		/* Redraw the palette */
-#define AG_HSVPAL_WFILL 0x04
-#define AG_HSVPAL_HFILL 0x08
+#define AG_HSVPAL_HFILL 0x04
+#define AG_HSVPAL_VFILL 0x08
 #define AG_HSVPAL_FOCUS	0x10
-#define AG_HSVPAL_EXPAND (AG_HSVPAL_WFILL|AG_HSVPAL_HFILL)
+#define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;

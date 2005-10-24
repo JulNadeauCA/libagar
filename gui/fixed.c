@@ -63,8 +63,8 @@ AG_FixedInit(AG_Fixed *fx, Uint flags)
 	AG_WidgetInit(fx, "fixed", &agFixedOps, 0);
 
 	fx->flags = flags;
-	if (flags & AG_FIXED_WFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_WFILL; }
 	if (flags & AG_FIXED_HFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_VFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_VFILL; }
 
 	if (flags & AG_FIXED_FILLBG)
 		AGWIDGET_OPS(fx)->draw = AG_FixedDrawBg;
@@ -84,8 +84,8 @@ AG_FixedScale(void *p, int w, int h)
 
 	AGOBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
 		if (w != -1 && h != -1) {
-			if (cw->flags & AG_WIDGET_WFILL) { cw->w = w; }
-			if (cw->flags & AG_WIDGET_HFILL) { cw->h = h; }
+			if (cw->flags & AG_WIDGET_HFILL) { cw->w = w; }
+			if (cw->flags & AG_WIDGET_VFILL) { cw->h = h; }
 		}
 		AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
 	}

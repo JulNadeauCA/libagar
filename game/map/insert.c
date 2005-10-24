@@ -169,7 +169,7 @@ insert_pane(void *p, void *con)
 	}
 	spr = it->p1;
 	
-	nb = AG_NotebookNew(con, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_WFILL);
+	nb = AG_NotebookNew(con, AG_NOTEBOOK_VFILL|AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	mv = ins->mvTmp = AG_MapviewNew(ntab, &ins->mTmp,
 	    AG_MAPVIEW_EDIT|AG_MAPVIEW_GRID, NULL, NULL);
@@ -182,7 +182,7 @@ insert_pane(void *p, void *con)
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, agGfxSnapNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, agGfxSnapNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));

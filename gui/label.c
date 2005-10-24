@@ -169,7 +169,7 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
 		AG_LabelPrescale(label, "XXXXXXXXXXXXXXXXX");
-		AGWIDGET(label)->flags |= AG_WIDGET_WFILL;
+		AGWIDGET(label)->flags |= AG_WIDGET_HFILL;
 		label->surface = -1;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
 		memset(label->poll.ptrs, 0,

@@ -206,7 +206,7 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_LabelNewFmt(win, _("Do you want to replace it?"));
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonAct(hb, 0, _("Replace"),
 		    AG_ReplaceFileEv, "%p,%p,%p", fd, win, pwin);
@@ -463,8 +463,8 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 {
 	Uint wflags = 0;
 
-	if (flags & AG_FILEDLG_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_FILEDLG_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FILEDLG_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(fd, "file-dlg", &agFileDlgOps, wflags);
 	fd->flags = flags;
@@ -474,10 +474,10 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	}
 	TAILQ_INIT(&fd->types);
 
-	fd->hPane = AG_HPaneNew(fd, AG_HPANE_WFILL|AG_HPANE_HFILL);
+	fd->hPane = AG_HPaneNew(fd, AG_HPANE_HFILL|AG_HPANE_VFILL);
 	fd->hDiv = AG_HPaneAddDiv(fd->hPane,
-	    AG_BOX_VERT, AG_BOX_HFILL,
-	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_WFILL);
+	    AG_BOX_VERT, AG_BOX_VFILL,
+	    AG_BOX_VERT, AG_BOX_VFILL|AG_BOX_HFILL);
 	{
 		fd->tlDirs = AG_TlistNew(fd->hDiv->box1, AG_TLIST_EXPAND);
 		fd->tlFiles = AG_TlistNew(fd->hDiv->box2, AG_TLIST_EXPAND|
@@ -487,9 +487,9 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	fd->lbCwd = AG_LabelNew(fd, AG_LABEL_POLLED, _("Directory: %s"),
 	    &fd->cwd[0]);
 
-	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 	    _("File: "));
-	fd->comTypes = AG_ComboNew(fd, AG_COMBO_WFILL, _("Type: "));
+	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistPrescale(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistPrescale(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 

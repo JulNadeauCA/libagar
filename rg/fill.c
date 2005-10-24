@@ -150,10 +150,10 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Fill/gradient"));
 
-	rad = AG_RadioNew(win, AG_RADIO_WFILL, modes);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, modes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &f->type);
 
-	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_WFILL|AG_BOX_HFILL);
+	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_HSVPal *hsv1, *hsv2;
 		AG_Spinbutton *sb;
@@ -161,7 +161,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		AG_NotebookTab *ntab;
 		AG_Box *hb;
 
-		nb = AG_NotebookNew(box, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+		nb = AG_NotebookNew(box, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 		ntab = AG_NotebookAddTab(nb, _("Color A"), AG_BOX_VERT);
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);

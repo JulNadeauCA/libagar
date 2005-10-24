@@ -268,7 +268,7 @@ AG_PersoEdit(void *obj)
 	win = AG_WindowNew(AG_WINDOW_NOVRESIZE);
 	AG_WindowSetCaption(win, _("Character \"%s\""), AGOBJECT(ps)->name);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Informations"), AG_BOX_VERT);
 	{
 		AG_Textbox *tb;
@@ -276,7 +276,7 @@ AG_PersoEdit(void *obj)
 		AG_HBox *hb;
 		AG_ObjectSelector *os;
 
-		tb = AG_TextboxNew(ntab, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		tb = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ps->name,
 		    sizeof(ps->name));
@@ -298,7 +298,7 @@ AG_PersoEdit(void *obj)
 		sbu = AG_SpinbuttonNew(ntab, 0, _("Zuars: "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_UINT32, &ps->nzuars);
 
-		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			sbu = AG_SpinbuttonNew(hb, 0, _("HP: "));
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->hp);
@@ -307,7 +307,7 @@ AG_PersoEdit(void *obj)
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->maxhp);
 		}
 		
-		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		hb = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			sbu = AG_SpinbuttonNew(hb, 0, _("MP: "));
 			AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &ps->mp);

@@ -50,10 +50,10 @@ typedef struct ag_tlist {
 #define AG_TLIST_MULTITOGGLE	0x02	/* Multiple toggle-style selections */
 #define AG_TLIST_POLL		0x04	/* Generate tlist-poll events */
 #define AG_TLIST_TREE		0x10	/* Hack to display trees */
-#define AG_TLIST_WFILL		0x20
-#define AG_TLIST_HFILL		0x40
+#define AG_TLIST_HFILL		0x20
+#define AG_TLIST_VFILL		0x40
 #define AG_TLIST_FOCUS		0x80
-#define AG_TLIST_EXPAND		(AG_TLIST_WFILL|AG_TLIST_HFILL)
+#define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */
 	int prew, preh;			/* Prescale hint */

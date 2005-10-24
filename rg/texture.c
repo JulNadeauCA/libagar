@@ -206,11 +206,11 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_WindowSetCaption(win, "%s", tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
 	    sizeof(tex->name));
 
-	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_WFILL|AG_COMBO_FOCUS,
+	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
 	    _("Tileset: "));
 	AG_SetEvent(com->list, "tlist-poll", poll_tilesets, NULL);
 	AG_SetEvent(com, "combo-selected", select_tileset, "%p", tex);
@@ -222,22 +222,22 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_SetEvent(tl, "tlist-selected", select_src_tile, "%p", tex);
 	AG_TlistSelectText(tl, tex->tile);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Wrapping"), AG_BOX_VERT);
 	{
 		AG_LabelNewStatic(ntab, _("S-coordinate: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrap_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_s);
 		
 		AG_LabelNewStatic(ntab, _("T-coordinate: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrap_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_t);
 	}
 
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
 		AG_LabelNewStatic(ntab, _("Blending function: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_WFILL, agBlendFuncNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, agBlendFuncNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->blend_func);
 	}
 

@@ -11,9 +11,9 @@
 typedef struct ag_radio {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_RADIO_WFILL	0x01
-#define AG_RADIO_HFILL	0x02
-#define AG_RADIO_EXPAND (AG_RADIO_WFILL|AG_RADIO_HFILL)
+#define AG_RADIO_HFILL	0x01
+#define AG_RADIO_VFILL	0x02
+#define AG_RADIO_EXPAND (AG_RADIO_HFILL|AG_RADIO_VFILL)
 	int value;		/* Default value binding */
 	int *labels;		/* Label surface IDs */
 	const char **items;

@@ -75,7 +75,7 @@ CreateWindow(void)
 	AG_Fixed *fx1, *fx2;
 
 	win = AG_WindowNew(0);
-	fx1 = AG_FixedNew(win, AG_FIXED_WFILL|AG_FIXED_HFILL);
+	fx1 = AG_FixedNew(win, AG_FIXED_HFILL|AG_FIXED_VFILL);
 
 	btn = AG_ButtonNew(fx1, 0, "Foo");
 	AG_FixedMove(fx1, btn, 0, 0);

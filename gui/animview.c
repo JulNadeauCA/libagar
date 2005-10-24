@@ -191,8 +191,8 @@ void
 RG_AnimviewInit(RG_Animview *av)
 {
 	AG_WidgetInit(av, "animview", &agAnimviewOps, 0);
-	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_WFILL|
-			       AG_WIDGET_HFILL;
+	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
+			       AG_WIDGET_VFILL;
 	av->pre_w = 64;
 	av->pre_h = 64;
 	av->ranim.x = 0;

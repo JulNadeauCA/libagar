@@ -805,7 +805,7 @@ void
 RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
 {
 	AG_WidgetInit(tv, "tileview", &tileview_ops,
-	    AG_WIDGET_WFILL|AG_WIDGET_HFILL|AG_WIDGET_FOCUSABLE|
+	    AG_WIDGET_HFILL|AG_WIDGET_VFILL|AG_WIDGET_FOCUSABLE|
 	    AG_WIDGET_CLIPPING);
 	tv->ts = ts;
 	tv->tile = NULL;

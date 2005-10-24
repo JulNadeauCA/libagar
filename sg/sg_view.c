@@ -59,8 +59,8 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 {
 	Uint glvflags = 0;
 
-	if (flags & SG_VIEW_WFILL) { glvflags |= AG_GLVIEW_WFILL; }
 	if (flags & SG_VIEW_HFILL) { glvflags |= AG_GLVIEW_HFILL; }
+	if (flags & SG_VIEW_VFILL) { glvflags |= AG_GLVIEW_VFILL; }
 
 	AG_GLViewInit(AGGLVIEW(sv), glvflags);
 	AG_ObjectSetOps(sv, &sgViewOps);

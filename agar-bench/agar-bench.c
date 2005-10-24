@@ -206,7 +206,7 @@ MainWindow(void)
 	win = AG_WindowNewNamed(0, "agar-benchmarks");
 	AG_WindowSetCaption(win, "Agar Benchmarks");
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	for (i = 0; i < ntests; i++) {
 		struct test_ops *test = tests[i];
 
@@ -220,7 +220,7 @@ MainWindow(void)
 		AG_TableAddCol(t, "Max", "<88.8888M>", NULL);
 		AG_TableAddCol(t, NULL, NULL, NULL);
 	
-		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			btn = AG_ButtonNew(hbox, 0, "Run tests");
 			AG_SetEvent(btn, "button-pushed", run_tests,

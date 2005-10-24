@@ -26,10 +26,10 @@ typedef struct ag_notebook {
 	struct ag_widget wid;
 	enum ag_notebook_tab_alignment tab_align;
 	int flags;
-#define AG_NOTEBOOK_WFILL 	0x01	/* Expand to fill available width */
-#define AG_NOTEBOOK_HFILL 	0x02	/* Expand to fill available height */
+#define AG_NOTEBOOK_HFILL 	0x01	/* Expand to fill available width */
+#define AG_NOTEBOOK_VFILL 	0x02	/* Expand to fill available height */
 #define AG_NOTEBOOK_HIDE_TABS	0x04	/* Don't display the tabs. */
-#define AG_NOTEBOOK_EXPAND	(AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL)
+#define AG_NOTEBOOK_EXPAND	(AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL)
 	AG_Mutex lock;
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */

@@ -584,8 +584,8 @@ AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 	int wflags = AG_WIDGET_FOCUSABLE;
 	int i;
 
-	if (flags & AG_HSVPAL_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_HSVPAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_HSVPAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(pal, "hsvpal", &agHSVPalOps, wflags);
 	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);

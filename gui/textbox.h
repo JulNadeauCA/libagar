@@ -24,9 +24,9 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */
 #define AG_TEXTBOX_ABANDON_FOCUS 0x08	/* Abandon focus on return */
 #define AG_TEXTBOX_COMBO	 0x10	/* Used by AG_Combo */
-#define AG_TEXTBOX_WFILL	 0x20
-#define AG_TEXTBOX_HFILL	 0x40
-#define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_WFILL|AG_TEXTBOX_HFILL)
+#define AG_TEXTBOX_HFILL	 0x20
+#define AG_TEXTBOX_VFILL	 0x40
+#define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
 #define AG_TEXTBOX_FOCUS	 0x80
 #define AG_TEXTBOX_READONLY	 0x100
 

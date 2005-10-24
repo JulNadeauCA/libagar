@@ -116,8 +116,8 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE;
 
-	if (flags & AG_GLVIEW_WFILL) wflags |= AG_WIDGET_WFILL;
 	if (flags & AG_GLVIEW_HFILL) wflags |= AG_WIDGET_HFILL;
+	if (flags & AG_GLVIEW_VFILL) wflags |= AG_WIDGET_VFILL;
 
 	AG_WidgetInit(glv, "glview", &agGLViewOps, wflags);
 

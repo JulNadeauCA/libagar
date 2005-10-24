@@ -71,10 +71,10 @@ AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows,
 	
 	switch (type) {
 	case AG_TOOLBAR_HORIZ:
-		AG_BoxInit(&tbar->box, AG_BOX_VERT, AG_BOX_WFILL);
+		AG_BoxInit(&tbar->box, AG_BOX_VERT, AG_BOX_HFILL);
 		break;
 	case AG_TOOLBAR_VERT:
-		AG_BoxInit(&tbar->box, AG_BOX_HORIZ, AG_BOX_HFILL);
+		AG_BoxInit(&tbar->box, AG_BOX_HORIZ, AG_BOX_VFILL);
 		break;
 	}
 	AG_BoxSetPadding(&tbar->box, 1);
@@ -92,11 +92,11 @@ AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows,
 		switch (type) {
 		case AG_TOOLBAR_HORIZ:
 			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_HORIZ,
-			    AG_BOX_WFILL|bflags);
+			    AG_BOX_HFILL|bflags);
 			break;
 		case AG_TOOLBAR_VERT:
 			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_VERT, 
-			    AG_BOX_HFILL|bflags);
+			    AG_BOX_VFILL|bflags);
 			break;
 		}
 		AG_BoxSetPadding(tbar->rows[i], 1);

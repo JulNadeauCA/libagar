@@ -14,10 +14,10 @@
 typedef struct ag_ucombo {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_UCOMBO_WFILL	  0x01
-#define AG_UCOMBO_HFILL	  0x02
+#define AG_UCOMBO_HFILL	  0x01
+#define AG_UCOMBO_VFILL	  0x02
 #define AG_UCOMBO_FOCUS	  0x04
-#define AG_UCOMBO_EXPAND  (AG_UCOMBO_WFILL|AG_UCOMBO_HFILL)
+#define AG_UCOMBO_EXPAND  (AG_UCOMBO_HFILL|AG_UCOMBO_VFILL)
 	AG_Button *button;		/* Selection button */
 	AG_Tlist *list;			/* Item list */
 	AG_Window *panel;

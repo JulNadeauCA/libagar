@@ -132,7 +132,7 @@ examine_widget(AG_Event *event)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Widget info: %s"), AGOBJECT(wid)->name);
 	
-	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		AG_Label *lab;
 

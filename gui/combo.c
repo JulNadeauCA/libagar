@@ -223,8 +223,8 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 {
 	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	if (flags & AG_COMBO_WFILL) { wflags |= AG_WIDGET_WFILL; }
 	if (flags & AG_COMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_COMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(com, "combo", &agComboOps, wflags);
 	com->panel = NULL;

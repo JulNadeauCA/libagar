@@ -438,7 +438,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	win = AG_WindowNewNamed(0, "config-engine-settings");
 	AG_WindowSetCaption(win, _("Agar settings"));
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
 		if (flags & AG_CONFIG_FULLSCREEN) {
@@ -526,27 +526,27 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 
 		tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data save dir: "));
 		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "save-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data load path: "));
 		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "load-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL, _("Font path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
 		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
 		    "font-path");
 		
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_WFILL, _("Den path: "));
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
 		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", set_path, "%s", "den-path");
@@ -559,10 +559,10 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_TlistItem *it;
 		int i;
 		
-		hb = AG_HBoxNew(tab, AG_HBOX_WFILL|AG_HBOX_HFILL);
+		hb = AG_HBoxNew(tab, AG_HBOX_HFILL|AG_HBOX_VFILL);
 		{
 			tl = AG_TlistNew(hb, AG_TLIST_EXPAND);
-			AGWIDGET(tl)->flags &= ~AG_WIDGET_WFILL;
+			AGWIDGET(tl)->flags &= ~AG_WIDGET_HFILL;
 			for (i = 0; i < LAST_COLOR; i++) {
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
 				it->p1 = &agColors[i];
@@ -581,7 +581,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			AG_SetEvent(tl, "tlist-selected", SelectedColor, "%p",
 			    hsv);
 		}
-		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			AG_ButtonAct(hb, 0, _("Load scheme"),
 			    AG_LoadColorSchemeDlg, NULL);
@@ -601,7 +601,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
 
-		tb = AG_TextboxNew(tab, AG_TEXTBOX_WFILL,
+		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Server hostname: "));
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
 		    sizeof(agRcsHostname));
@@ -611,15 +611,15 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 
 		AG_SeparatorNew(tab, AG_SEPARATOR_HORIZ);
 
-		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_WFILL|
+		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_HFILL|
 				                   AG_BOX_HOMOGENOUS);
 		{
-			tb = AG_TextboxNew(box, AG_TEXTBOX_WFILL,
+			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Username: "));
 			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
 			    agRcsUsername, sizeof(agRcsUsername));
 
-			tb = AG_TextboxNew(box, AG_TEXTBOX_WFILL,
+			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
 			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
@@ -639,7 +639,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	}
 #endif
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonAct(hb, 0, _("Close"), AGWINHIDE(win));
 		AG_ButtonAct(hb, 0, _("Save"), save_config, NULL);

@@ -23,10 +23,10 @@ typedef struct ag_button {
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
-#define AG_BUTTON_WFILL		0x10	/* Fill available width */
-#define AG_BUTTON_HFILL		0x20	/* Fill available height */
+#define AG_BUTTON_HFILL		0x10	/* Fill available width */
+#define AG_BUTTON_VFILL		0x20	/* Fill available height */
 #define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
-#define AG_BUTTON_EXPAND	(AG_BUTTON_WFILL|AG_BUTTON_HFILL)
+#define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int padding;			/* Padding in pixels */
 	AG_Timeout delay_to;		/* Delay for triggering repeat mode */

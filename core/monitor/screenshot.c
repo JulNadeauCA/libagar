@@ -265,7 +265,7 @@ AG_DebugScreenshot(void)
 	AG_WindowSetCaption(win, _("Screenshot"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	vb = AG_VBoxNew(win, AG_VBOX_WFILL);
+	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		strlcpy(status, _("Idle"), sizeof(status));
 		lab = AG_LabelNew(vb, AG_LABEL_POLLED, _("Status: %s."),
@@ -273,9 +273,9 @@ AG_DebugScreenshot(void)
 		AG_LabelPrescale(lab, _("Transmitting frame XXXXXXXXXXX"));
 		AGWIDGET(lab)->flags |= AG_WIDGET_CLIPPING;
 
-		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_WFILL|AG_TEXTBOX_FOCUS,
+		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Host: "));
-		porttb = AG_TextboxNew(vb, AG_TEXTBOX_WFILL, _("Port: "));
+		porttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Port: "));
 
 		sbu = AG_SpinbuttonNew(vb, 0, _("Refresh rate (ms): "));
 		AG_SpinbuttonSetMin(sbu, 1);
@@ -286,7 +286,7 @@ AG_DebugScreenshot(void)
 		AG_TextboxPrintf(porttb, "%i", default_port);
 	}
 
-	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_WFILL|AG_HBOX_HFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL|AG_HBOX_VFILL);
 	{
 		AG_Event *ev;
 		AG_Button *bu;

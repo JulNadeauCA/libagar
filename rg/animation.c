@@ -473,7 +473,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
 		RG_TileviewInit(tv, ani->tileset, 0);
 
-		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_WFILL|
+		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL|
 		                       AG_COMBO_FOCUS, _("Tile: "));
 		AG_SetEvent(com, "combo-selected", select_insn_tile,
 		    "%p,%p,%p", ani, insn, tv);
@@ -642,19 +642,19 @@ RG_AnimEdit(RG_Anim *ani)
 	AG_WindowSetCaption(win, _("Animation: %s"), ani->name);
 	AG_SetEvent(win, "window-close", close_animation, "%p,%p", ts, ani);
 	
-	me = AG_MenuNew(win, AG_MENU_WFILL);
+	me = AG_MenuNew(win, AG_MENU_HFILL);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_WFILL|AG_NOTEBOOK_HFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	nt = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
 	{
-		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
+		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_VFILL);
 		{
-			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
+			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_VFILL);
 			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_insns, "%p", ani);
 
 			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
-			    AG_BOX_WFILL|AG_BOX_HFILL);
+			    AG_BOX_HFILL|AG_BOX_VFILL);
 			AG_SetEvent(tl, "tlist-dblclick", select_insn, "%p,%p",
 			    ani, box_data);
 		}
@@ -667,14 +667,14 @@ RG_AnimEdit(RG_Anim *ani)
 	
 	nt = AG_NotebookAddTab(nb, _("Frames"), AG_BOX_VERT);
 	{
-		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_WFILL|AG_BOX_HFILL);
+		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_VFILL);
 		{
-			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_HFILL);
+			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_VFILL);
 			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
 			AG_SetEvent(tl, "tlist-poll", poll_frames, "%p", ani);
 
 			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
-			    AG_BOX_WFILL|AG_BOX_HFILL);
+			    AG_BOX_HFILL|AG_BOX_VFILL);
 			AG_SetEvent(tl, "tlist-dblclick", select_frame, "%p,%p",
 			    ani, box_data);
 		}

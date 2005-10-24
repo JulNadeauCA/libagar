@@ -65,7 +65,7 @@ void
 AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
 {
 	AG_WidgetInit(sep, "separator", &agSeparatorOps,
-	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_WFILL : AG_WIDGET_HFILL);
+	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_HFILL : AG_WIDGET_VFILL);
 	sep->type = type;
 }
 

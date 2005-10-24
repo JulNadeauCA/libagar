@@ -19,9 +19,9 @@ typedef struct ag_vpane_div {
 typedef struct ag_vpane {
 	struct ag_box box;
 	int flags;
-#define AG_VPANE_WFILL	0x01		/* Expand to fill available width */
-#define AG_VPANE_HFILL	0x02		/* Expand to fill available height */
-#define AG_VPANE_EXPAND (AG_VPANE_WFILL|AG_VPANE_HFILL)
+#define AG_VPANE_HFILL	0x01		/* Expand to fill available width */
+#define AG_VPANE_VFILL	0x02		/* Expand to fill available height */
+#define AG_VPANE_EXPAND (AG_VPANE_HFILL|AG_VPANE_VFILL)
 	TAILQ_HEAD(, ag_vpane_div) divs;
 } AG_VPane;
 

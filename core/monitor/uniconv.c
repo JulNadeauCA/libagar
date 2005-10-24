@@ -231,7 +231,7 @@ AG_DebugUnicodeBrowser(void)
 	AG_WindowSetCaption(win, _("Unicode Conversion"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	com = AG_ComboNew(win, AG_COMBO_WFILL|AG_COMBO_FOCUS, _("Range: "));
+	com = AG_ComboNew(win, AG_COMBO_HFILL|AG_COMBO_FOCUS, _("Range: "));
 	for (i = 0; i < nunicode_ranges; i++) {
 		AG_TlistAddPtr(com->list, NULL, unicode_ranges[i].name,
 		    (void *)&unicode_ranges[i]);

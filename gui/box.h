@@ -9,10 +9,10 @@
 #include "begin_code.h"
 
 #define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
-#define AG_BOX_WFILL		0x02	/* Expand to fill available width */
-#define AG_BOX_HFILL		0x04	/* Expand to fill available height */
+#define AG_BOX_HFILL		0x02	/* Expand to fill available width */
+#define AG_BOX_VFILL		0x04	/* Expand to fill available height */
 #define AG_BOX_FRAME		0x08	/* Display a frame */
-#define AG_BOX_EXPAND		(AG_BOX_WFILL|AG_BOX_HFILL)
+#define AG_BOX_EXPAND		(AG_BOX_HFILL|AG_BOX_VFILL)
 
 enum ag_box_type {
 	AG_BOX_HORIZ,
