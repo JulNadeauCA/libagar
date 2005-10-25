@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #endif
 #ifndef HAVE_UNSIGNED_TYPEDEFS
+#define HAVE_UNSIGNED_TYPEDEFS
 typedef unsigned int Uint;
 typedef unsigned char Uchar;
 typedef unsigned long Ulong;
