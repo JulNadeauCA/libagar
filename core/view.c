@@ -198,6 +198,7 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
 		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glShadeModel(GL_FLAT);
 		
 		glEnable(GL_TEXTURE_2D);
 
