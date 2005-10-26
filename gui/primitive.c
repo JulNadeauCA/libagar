@@ -1186,77 +1186,45 @@ static void
 box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
-	Uint32 cLeft, cRight;
-	int x, y;
-	int crad;
 	Uint8 r, g, b;
-	int i;
 	
-	cLeft = AG_ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
-	cRight = AG_ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
-
-	/* Fill the background except the corners. */
-	agPrim.rect_filled(wid,			/* Body */
-	    rd->x + rad,	rd->y + rad,
-	    rd->w - rad*2,	rd->h - rad,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Top */
-	    rd->x + rad,	rd->y,
-	    rd->w - rad*2,	rd->h,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Left */
-	    rd->x,		rd->y + rad,
-	    rad,		rd->h - rad,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Right */
-	    rd->x + rd->w - rad,  rd->y + rad,
-	    rad,		  rd->h - rad,
-	    cBg);
-
-	/* Draw the three straight lines. */
-	agPrim.hline(wid,				/* Top line */
-	    rd->x + rad,	rd->x + rd->w - rad,
-	    rd->y,
-	    cBg);
-	agPrim.vline(wid,				/* Left line */
-	    rd->x,
-	    rd->y + rad,	rd->y + rd->h,
-	    cLeft);
-	agPrim.vline(wid,				/* Right line */
-	    rd->x + rd->w - 1,
-	    rd->y + rad,	rd->y + rd->h,
-	    cRight);
-
-	crad = rad/2;
-	x = rd->x;
-	y = rd->y + rad;
-
-	/* Draw the two chamfered edges. */
-	/* XXX */
-	SDL_GetRGB(cBg, agVideoFmt, &r, &g, &b);
-
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx+x, wid->cy+y, 0);
+	glTranslatef(wid->cx+rd->x, wid->cy+rd->y, 0);
 	glBegin(GL_POLYGON);
 	{
+		SDL_GetRGB(cBg, agVideoFmt, &r, &g, &b);
 		glColor3ub(r, g, b);
-		glVertex2i(rad, -rad);
-		glVertex2i(0, 0);
-		glVertex2i(rad, 0);
+		glVertex2i(0,			rd->h);
+		glVertex2i(0,			rad);
+		glVertex2i(rad,			0);
+		glVertex2i((rd->w - rad),	0);
+		glVertex2i(rd->w,		rad);
+		glVertex2i(rd->w,		rd->h);
 	}
 	glEnd();
-	glPopMatrix();
+	if (z >= 0) {
+		Uint32 cLeft = AG_ColorShift(cBg, agHighColorShift);
+		Uint32 cRight = AG_ColorShift(cBg, agLowColorShift);
 
-	glPushMatrix();
-	glTranslatef(wid->cx+x+rd->w, wid->cy+y, 0);
-	glBegin(GL_POLYGON);
-	{
-		glColor3ub(r, g, b);
-		glVertex2i(-rad, -rad);
-		glVertex2i(0, 0);
-		glVertex2i(-rad, 0);
+		glBegin(GL_LINE_STRIP);
+		{
+			SDL_GetRGB(cLeft, agVideoFmt, &r, &g, &b);
+			glColor3ub(r, g, b);
+			glVertex2i(0, rd->h);
+			glVertex2i(0, rad);
+			glVertex2i(rad, 0);
+		}
+		glEnd();
+		glBegin(GL_LINES);
+		{
+			SDL_GetRGB(cRight, agVideoFmt, &r, &g, &b);
+			glColor3ub(r, g, b);
+			glVertex2i((rd->w - 1), rd->h);
+			glVertex2i((rd->w - 1), rad);
+		}
+		glEnd();
 	}
-	glEnd();
 	glPopMatrix();
 }
 
@@ -1267,15 +1235,15 @@ arrow_up_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	Uint8 r, g, b;
 
 	SDL_GetRGB(c1, agVideoFmt, &r, &g, &b);
-
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(wid->cx, wid->cy, 0);
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
-		glVertex2i(x, y);
-		glVertex2i(x - (h>>1), y+h);
-		glVertex2i(x + (h>>1), y+h);
+		glVertex2i(x,		y - (h>>1));
+		glVertex2i(x - (h>>1),	y + (h>>1));
+		glVertex2i(x + (h>>1),	y + (h>>1));
 	}
 	glEnd();
 	glPopMatrix();
@@ -1284,6 +1252,22 @@ arrow_up_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 static void
 arrow_down_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
+	AG_Widget *wid = p;
+	Uint8 r, g, b;
+
+	SDL_GetRGB(c1, agVideoFmt, &r, &g, &b);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(wid->cx, wid->cy, 0);
+	glBegin(GL_POLYGON);
+	{
+		glColor3ub(r, g, b);
+		glVertex2i(x - (h>>1),	y - (h>>1));
+		glVertex2i(x + (h>>1),	y - (h>>1));
+		glVertex2i(x,		y + (h>>1));
+	}
+	glEnd();
+	glPopMatrix();
 }
 
 static void
