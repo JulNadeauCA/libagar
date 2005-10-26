@@ -390,7 +390,7 @@ AG_LoadColorSchemeDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load color scheme..."));
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "colors.acs");
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
@@ -406,7 +406,7 @@ AG_SaveColorSchemeDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load color scheme..."));
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
 	    AG_SaveColorSchemeToACS, NULL);
