@@ -218,7 +218,7 @@ __inline__ SDL_Surface	*AG_DupSurface(SDL_Surface *);
 void			 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16,
 			                 SDL_Surface **);
 void			 AG_SetAlphaPixels(SDL_Surface *, Uint8);
-void			 AG_DumpSurface(SDL_Surface *, char *);
+int			 AG_DumpSurface(SDL_Surface *, char *);
 __inline__ void		 AG_UpdateRectQ(int, int, int, int);
 void			 AG_ViewCapture(void);
 __inline__ void		 AG_FlipSurface(Uint8 *, int, int);
