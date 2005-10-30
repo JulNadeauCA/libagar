@@ -36,17 +36,17 @@ typedef union evarg {
 #define AG_CHAR(v) (event->argt[v]==AG_EVARG_CHAR?(char)event->argv[v].i:\
     (char)AG_IntMismatch())
 #define AG_UCHAR(v) (event->argt[v]==AG_EVARG_UCHAR?(char)event->argv[v].i:\
-    (Uchar)AG_IntMismatch())
+    (unsigned char)AG_IntMismatch())
 #define AG_INT(v) (event->argt[v]==AG_EVARG_INT?event->argv[v].i:\
     AG_IntMismatch())
-#define AG_UINT(v) (event->argt[v]==AG_EVARG_UINT?(Uint)event->argv[v].i:\
-    (Uint)AG_IntMismatch())
+#define AG_UINT(v) (event->argt[v]==AG_EVARG_UINT?(unsigned)event->argv[v].i:\
+    (unsigned)AG_IntMismatch())
 #define AG_LONG(v) (event->argt[v]==AG_EVARG_LONG?event->argv[v].li:\
     (long)AG_IntMismatch())
-#define AG_ULONG(v) (event->argt[v]==AG_EVARG_ULONG?(Ulong)event->argv[v].li:\
-    (Ulong)AG_IntMismatch())
+#define AG_ULONG(v) (event->argt[v]==AG_EVARG_ULONG?\
+    (unsigned long)event->argv[v].li:(unsigned long)AG_IntMismatch())
 #define AG_FLOAT(v) (event->argt[v]==AG_EVARG_FLOAT?(float)event->argv[v].f:\
-    (Ulong)AG_FloatMismatch())
+    (unsigned long)AG_FloatMismatch())
 #define AG_DOUBLE(v) (event->argt[v]==AG_EVARG_DOUBLE?event->argv[v].f:\
     AG_FloatMismatch())
  
@@ -62,11 +62,11 @@ typedef union evarg {
 #define AG_PTR(v) (event->argv[v].p)
 #define AG_STRING(v) (event->argv[v].s)
 #define AG_CHAR(v) ((char)event->argv[v].i)
-#define AG_UCHAR(v) ((Uchar)event->argv[v].i)
+#define AG_UCHAR(v) ((unsigned char)event->argv[v].i)
 #define AG_INT(v) (event->argv[v].i)
-#define AG_UINT(v) ((Uint)event->argv[v].i)
+#define AG_UINT(v) ((unsigned)event->argv[v].i)
 #define AG_LONG(v) (event->argv[v].li)
-#define AG_ULONG(v) ((Ulong)event->argv[v].li)
+#define AG_ULONG(v) ((unsigned long)event->argv[v].li)
 #define AG_FLOAT(v) ((float)event->argv[v].f)
 #define AG_DOUBLE(v) (event->argv[v].f)
 #define AG_OBJECT_OF_TYPE(v,t) (event->argv[v].p)
