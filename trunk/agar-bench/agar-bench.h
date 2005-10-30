@@ -16,12 +16,12 @@ struct test_ops {
 	char *name;
 	void (*edit)(AG_Window *);
 	struct testfn_ops *funcs;
-	Uint nfuncs;
-	Uint flags;
+	unsigned nfuncs;
+	unsigned flags;
 #define TEST_SDL	0x01		/* SDL-only */
 #define TEST_GL		0x02		/* OpenGL-only */
-	Uint runs;
-	Uint iterations;
+	unsigned runs;
+	unsigned iterations;
 };
 
 extern SDL_Surface *surface, *surface64, *surface128;
