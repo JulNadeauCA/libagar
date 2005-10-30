@@ -774,12 +774,16 @@ AG_ViewCapture(void)
 {
 	char path[MAXPATHLEN];
 	
-	AG_DumpSurface(agView->v, path);
-	AG_TextTmsg(AG_MSG_INFO, 1000, _("Screenshot saved to %s."), path);
+	if (AG_DumpSurface(agView->v, path) == 0) {
+		AG_TextTmsg(AG_MSG_INFO, 1000, _("Screenshot saved to %s."),
+		    path);
+	} else {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	}
 }
 
 /* Dump a surface to a JPEG image. */
-void
+int
 AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 {
 #ifdef HAVE_JPEG
@@ -798,7 +802,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	strlcat(path, AG_PATHSEP, sizeof(path));
 	strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {
-		AG_TextMsg(AG_MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
+		AG_SetError("mkdir %s: %s", path, strerror(errno));
 		return;
 	}
 
@@ -821,8 +825,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 			if (errno == EEXIST) {
 				continue;
 			} else {
-				AG_TextMsg(AG_MSG_ERROR, "open %s: %s", file,
-				    strerror(errno));
+				AG_SetError("%s: %s", file, strerror(errno));
 				goto out;
 			}
 		}
@@ -832,7 +835,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 		strlcpy(path_save, path, MAXPATHLEN);
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "fdopen: %s", strerror(errno));
+		AG_SetError("fdopen: %s", strerror(errno));
 		return;
 	}
 
@@ -880,9 +883,10 @@ out:
 	if (agView->opengl && su != pSu)
 		SDL_FreeSurface(su);
 #endif
-	return;
+	return (0);
 #else
-	AG_TextMsg(AG_MSG_ERROR, _("Screenshot feature requires libjpeg"));
+	AG_SetError(_("Screenshot feature requires libjpeg"));
+	return (-1);
 #endif
 }
 

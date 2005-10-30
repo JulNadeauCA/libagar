@@ -96,7 +96,7 @@ as much as possible.
 .Ft "void"
 .Fn AG_UpdateRectQ "int x" "int y" "int w" "int h"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_DumpSurface "SDL_Surface *su" "char *path_save"
 .Pp
 .nr nS 0
@@ -164,6 +164,8 @@ If the argument is not NULL, the name of the file is copied to
 which must be
 .Dv MAXPATHLEN
 bytes in size.
+.Fn AG_DumpSurface
+returns 0 on success, -1 on failure.
 .Sh PIXEL OPERATIONS
 .nr nS 1
 .Ft "void"
