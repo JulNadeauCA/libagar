@@ -45,9 +45,9 @@ run_tests(AG_Event *event)
 {
 	struct test_ops *test = AG_PTR(1);
 	AG_Table *t = AG_PTR(2);
-	Uint i, j, m;
 	Uint64 t1, t2;
 	Uint64 tTot, tRun;
+	unsigned i, j, m;
 	
 	if ((test->flags & TEST_GL)  && !agView->opengl) {
 		AG_TextMsg(AG_MSG_ERROR, "This test requires OpenGL mode.");
@@ -125,15 +125,15 @@ poll_test(AG_Event *event)
 			    (double)(fn->clksMax/1e3), fn);
 		} else {
 			AG_TableAddRow(t, "%s:%lu:%lu:%lu:%p", fn->name,
-			    (Ulong)fn->clksMin,
-			    (Ulong)fn->clksAvg,
-			    (Ulong)fn->clksMax, fn);
+			    (unsigned long)fn->clksMin,
+			    (unsigned long)fn->clksAvg,
+			    (unsigned long)fn->clksMax, fn);
 		}
 #else /* !USE_RDTSC */
 		AG_TableAddRow(t, "%s:%luT:%luT:%luT:%p", fn->name,
-		    (Ulong)fn->clksMin,
-		    (Ulong)fn->clksAvg,
-		    (Ulong)fn->clksMax, fn);
+		    (unsigned long)fn->clksMin,
+		    (unsigned long)fn->clksAvg,
+		    (unsigned long)fn->clksMax, fn);
 #endif /* USE_RDTSC */
 	}
 	AG_TableEnd(t);
