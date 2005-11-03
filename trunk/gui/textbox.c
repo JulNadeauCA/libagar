@@ -45,6 +45,7 @@
 #include <gui/textbox.h>
 #include <gui/keycodes.h>
 #include <gui/primitive.h>
+#include <gui/unicode.h>
 
 #include <string.h>
 #include <stdarg.h>
