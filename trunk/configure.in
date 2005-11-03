@@ -5,11 +5,8 @@ REGISTER("--with-freetype",	"Use FreeType font engine [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
 REGISTER("--enable-network",	"Agar-Net support [default: check]")
-REGISTER("--enable-edition",	"Graphical editors [default: yes]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
-REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
-REGISTER("--enable-histo-units", "Include historical units [default: no]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
@@ -138,26 +135,14 @@ else
 	HUNDEF(UTF8)
 fi
 
-# Enable astronomical units (constants are too large for some compilers).
-if [ "${enable_astro_units}" = "yes" ]; then
-	HDEFINE(ASTRONOMICAL_UNITS, 1)
-else
-	HUNDEF(ASTRONOMICAL_UNITS)
-fi
+# Disable astronomical units (constants are too large for some compilers).
+HUNDEF(ASTRONOMICAL_UNITS)
 
 # Enable conversion of historical units.
-if [ "${enable_histo_units}" = "yes" ]; then
-	HDEFINE(HISTORICAL_UNITS, 1)
-else
-	HUNDEF(HISTORICAL_UNITS)
-fi
+HDEFINE(HISTORICAL_UNITS, 1)
 
-# Enable graphical edition by default.
-if [ "${enable_edition}" != "no" ]; then
-	HDEFINE(EDITION, 1)
-else
-	HUNDEF(EDITION)
-fi
+# Enable generic edition features. XXX
+HDEFINE(EDITION, 1)
 
 # Support 8/16/24/32bpp video displays by default.
 # Disable unused modes to reduce code size and gain some cycles.
