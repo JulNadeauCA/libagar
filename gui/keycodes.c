@@ -38,6 +38,7 @@
 #include <gui/window.h>
 #include <gui/textbox.h>
 #include <gui/keycodes.h>
+#include <gui/unicode.h>
 
 #ifdef UTF8
 static int key_del_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
