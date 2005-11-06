@@ -244,6 +244,13 @@ clean-lib:
 	    	        echo "rm -f $$F"; \
 	    	        rm -f $$F; \
                     done; \
+                    for F in ${SRCS}; do \
+	    	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	        echo "rm -f $$F"; \
+	    	        rm -f $$F; \
+                    done; \
 		else \
 		    rm -f ${SHOBJS}; \
 		    echo "rm -f ${SHOBJS}"; \
