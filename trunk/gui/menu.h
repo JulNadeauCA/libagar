@@ -60,6 +60,12 @@ typedef struct ag_menu {
 	int itemh;			/* Item height (optimization) */
 } AG_Menu;
 
+typedef struct {
+	AG_Menu *menu;
+	AG_MenuItem *item;
+	AG_Window *win;
+} AG_PopupMenu;
+
 typedef struct ag_menu_view {
 	struct ag_widget wid;
 	AG_Window *panel;
