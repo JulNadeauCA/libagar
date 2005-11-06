@@ -78,18 +78,17 @@ SetIdentity(GLdouble *M, GLenum which)
 }
 
 static void
-GLViewMoved(AG_Event *event)
+widgetmoved(AG_Event *event)
 {
 	AG_GLViewReshape(AG_SELF());
 }
 
 static void
-GLViewButtondown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
 	int button = AG_INT(1);
 
-	dprintf("focus\n");
 	AG_WidgetFocus(glv);
 }
 
@@ -137,7 +136,8 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	SetIdentity(glv->mTexture, GL_TEXTURE);
 	SetIdentity(glv->mColor, GL_COLOR);
 
-	AG_SetEvent(glv, "widget-moved", GLViewMoved, NULL);
+	AG_SetEvent(glv, "widget-moved", widgetmoved, NULL);
+	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
 void
