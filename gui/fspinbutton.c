@@ -228,6 +228,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
+	AG_TextboxPrescale(fsu->input, "888.88");
 	
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
