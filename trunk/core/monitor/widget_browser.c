@@ -287,7 +287,7 @@ AG_DebugWidgetBrowser(void)
 	AG_WindowSetCaption(win, _("Window stack"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS);
+	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", poll_windows, NULL);
 	AG_SetEvent(tl, "tlist-dblclick", examine_window, "%p", tl);
 
