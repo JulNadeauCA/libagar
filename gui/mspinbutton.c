@@ -245,6 +245,7 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	    "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", mspinbutton_textchg,
 	    "%p", sbu);
+	AG_TextboxPrescale(sbu->input, "88888");
 
 	sbu->xdecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(sbu->xdecbu, 0);
