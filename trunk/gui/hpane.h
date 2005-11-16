@@ -32,6 +32,7 @@ void		 AG_HPaneDraw(void *);
 void		 AG_HPaneScale(void *, int, int);
 AG_HPaneDiv	*AG_HPaneAddDiv(AG_HPane *, enum ag_box_type, int,
 		                enum ag_box_type, int);
+AG_HPaneDiv	*AG_HPaneAddDivBoxes(AG_HPane *, AG_Box *, AG_Box *);
 __END_DECLS
 
 #include "close_code.h"

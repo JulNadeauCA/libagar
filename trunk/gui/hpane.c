@@ -80,6 +80,26 @@ AG_HPaneAddDiv(AG_HPane *pa, enum ag_box_type b1type, int b1flags,
 	return (div);
 }
 
+AG_HPaneDiv *
+AG_HPaneAddDivBoxes(AG_HPane *pa, AG_Box *box1, AG_Box *box2)
+{
+	AG_HPaneDiv *div;
+
+	div = Malloc(sizeof(AG_HPaneDiv), M_WIDGET);
+	div->moving = 0;
+	div->x = 0;
+	div->box1 = box1;
+	div->box2 = box2;
+	AG_BoxSetPadding(div->box1, 0);
+	AG_BoxSetPadding(div->box2, 0);
+	AG_BoxSetSpacing(div->box1, 0);
+	AG_BoxSetSpacing(div->box2, 0);
+	TAILQ_INSERT_TAIL(&pa->divs, div, divs);
+	AG_ObjectAttach(pa, box1);
+	AG_ObjectAttach(pa, box2);
+	return (div);
+}
+
 static __inline__ int
 OverDivControl(AG_HPaneDiv *div, int x)
 {
