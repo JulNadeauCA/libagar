@@ -17,10 +17,10 @@ CreateWindow(void)
 {
 	AG_Window *win;
 	AG_HBox *hbox;
-	AG_HPane *hp;
-	AG_HPaneDiv *div;
+	AG_Pane *pane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
+	AG_Box *div1, *div2;
 	int i;
 
 	/*
@@ -31,22 +31,20 @@ CreateWindow(void)
 	AG_WindowSetCaption(win, "Widgets demo");
 	
 	/*
-	 * AG_VPane provides two AG_Box containers, aligned vertically, which
-	 * can be resized using a control placed in the middle. Multiple
-	 * divisions are allowed. Widgets can attach to div->box1 and div->box2.
+	 * AG_Pane provides two AG_Box containers which can be resized using
+	 * a control placed in the middle.
 	 *
-	 * An AG_HPane widget is also available for resizing two containers
-	 * aligned horizontally.
+	 * The AG_MPane widget also provides a set of preconfigured layouts
+	 * for multiple pane views.
 	 */
-	hp = AG_HPaneNew(win, AG_HPANE_EXPAND);
-	div = AG_HPaneAddDiv(hp,
-	    AG_BOX_VERT, AG_BOX_VFILL,
-	    AG_BOX_VERT, AG_BOX_VFILL|AG_BOX_HFILL);
-	AG_BoxSetSpacing(div->box1, 4);
-	AG_BoxSetPadding(div->box1, 5);
+	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
+	div1 = pane->div[0];
+	div2 = pane->div[1];
+	AG_BoxSetSpacing(div1, 4);
+	AG_BoxSetPadding(div2, 5);
 	{
 		/* The AG_Pixmap widget displays a raster surface. */
-		AG_PixmapFromBMP(div->box1, 0, "agar.bmp");
+		AG_PixmapFromBMP(div1, 0, "agar.bmp");
 	
 		/*
 		 * The AG_Label widget provides a simple static or
@@ -54,16 +52,16 @@ CreateWindow(void)
 		 * a specific type of format string to deal with
 		 * pointer alignment issues.
 		 */
-		AG_LabelNewStatic(div->box1, "This is a static label");
-		AG_LabelNew(div->box2, AG_LABEL_POLLED,
-		    "This is a polled label (x=%i)", &div->x);
+		AG_LabelNewStatic(div1, "This is a static label");
+		AG_LabelNew(div2, AG_LABEL_POLLED,
+		    "This is a polled label (x=%i)", &pane->dx);
 	}
 
 	/*
 	 * AG_HBox is a container which aligns its children horizontally. Both
 	 * AG_HBox and AG_VBox are wrappers around AG_Box.
 	 */
-	hbox = AG_HBoxNew(div->box1, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
+	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
 	{
 		/*
 		 * The AG_Button widget is a simple push-button. It is typically
@@ -78,25 +76,25 @@ CreateWindow(void)
 	 * The AG_Checkbox widget is a check box. It can bind to a boolean
 	 * value or a flag.
 	 */
-	AG_CheckboxNew(div->box1, 0, "Checkbox 1");
-	AG_CheckboxNew(div->box1, 0, "Checkbox 2");
+	AG_CheckboxNew(div1, 0, "Checkbox 1");
+	AG_CheckboxNew(div1, 0, "Checkbox 2");
 
 	/* AG_Separator is a simple visual separator. */
-	AG_SeparatorNew(div->box1, AG_SEPARATOR_HORIZ);
+	AG_SeparatorNew(div1, AG_SEPARATOR_HORIZ);
 
 	/*
 	 * The AG_Combo widget is a textbox widget with a expander button next
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist widget).
 	 */
-	com = AG_ComboNew(div->box1, AG_COMBO_HFILL, "Combo: ");
+	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
 
 	/*
 	 * AG_UCombo is a variant of AG_Combo which looks like a single 
 	 * button. It is used by the AG_FSpinbutton widget to set the
 	 * conversion unit, for instance.
 	 */
-	ucom = AG_UComboNew(div->box1, AG_UCOMBO_HFILL);
+	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
 
 	/* Populate both combo widgets. */
 	for (i = 0; i < 50; i++) {
@@ -110,21 +108,21 @@ CreateWindow(void)
 	 * variant which handles integer values only and provides no unit
 	 * conversion.
 	 */
-	AG_FSpinbuttonNew(div->box1, 0, "cm", "Real number: ");
-	AG_SpinbuttonNew(div->box1, 0, "Integer: ");
+	AG_FSpinbuttonNew(div1, 0, "cm", "Real number: ");
+	AG_SpinbuttonNew(div1, 0, "Integer: ");
 
 	/*
 	 * AG_MFSpinbutton and AG_MSpinbutton are variants used to conveniently
 	 * edit two values, such as 2D coordinates.
 	 */
-	AG_MFSpinbuttonNew(div->box1, 0, "mm", "x", "Dimensions: ");
-	AG_MSpinbuttonNew(div->box1, 0, ",", "Coordinates: ");
+	AG_MFSpinbuttonNew(div1, 0, "mm", "x", "Dimensions: ");
+	AG_MSpinbuttonNew(div1, 0, ",", "Coordinates: ");
 
 	/*
 	 * AG_Textbox is a single-line text edition widget. It can bind to
 	 * a sized buffer containing a string.
 	 */
-	AG_TextboxNew(div->box1, AG_TEXTBOX_HFILL, "Enter text: ");
+	AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
 
 	{
 		static int value = 127;
@@ -135,7 +133,7 @@ CreateWindow(void)
 		 * AG_Scrollbar provides three bindings, "value", "min" and
 		 * "max". Note that this widget is not focusable by default.
 		 */
-		sb = AG_ScrollbarNew(div->box1, AG_SCROLLBAR_HORIZ,
+		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
 		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE);
 		AG_WidgetSetInt(sb, "min", 0);
 		AG_WidgetSetInt(sb, "max", 255);
@@ -144,7 +142,7 @@ CreateWindow(void)
 		/*
 		 * AG_Statusbar displays a label (either static or polled).
 		 */
-		st = AG_StatusbarNew(div->box1, 0);
+		st = AG_StatusbarNew(div1, 0);
 		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
 		    &value);
 	}
@@ -158,7 +156,7 @@ CreateWindow(void)
 		AG_NotebookTab *ntab;
 		AG_Table *table;
 
-		nb = AG_NotebookNew(div->box2, AG_NOTEBOOK_EXPAND);
+		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
 		ntab = AG_NotebookAddTab(nb, "Color", AG_BOX_VERT);
 		{
