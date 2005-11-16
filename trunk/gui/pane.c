@@ -272,8 +272,8 @@ AG_PaneScale(void *p, int w, int h)
 			AG_Widget *div = AGWIDGET(pa->div[i]);
 
 			AGWIDGET_OPS(div)->scale(div, -1, -1);
-			pa->minw[i] = div->w;
-			pa->minh[i] = div->h;
+			if (pa->minw[i] == -1) pa->minw[i] = div->w;
+			if (pa->minh[i] == -1) pa->minh[i] = div->h;
 			if (div->w > maxw) { maxw = div->w; }
 			if (div->h > maxh) { maxh = div->h; }
 			switch (pa->type) {
@@ -309,7 +309,9 @@ AG_PaneScale(void *p, int w, int h)
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
 		if (pa->rx == -1) {
-			if (pa->flags & AG_PANE_DIV1FILL) {
+			if (pa->flags & AG_PANE_DIV) {
+				pa->dx = AGWIDGET(pa)->w/2;
+			} else if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = AGWIDGET(pa)->w - pa->minw[1];
 			} else {
 				pa->dx = pa->minw[0];
@@ -323,11 +325,11 @@ AG_PaneScale(void *p, int w, int h)
 			}
 		}
 		if (pa->dx < pa->minw[0]) {
-			pa->dx = pa->minw[0];
+			pa->rx = pa->dx = pa->minw[0];
 		} else if (pa->dx > (AGWIDGET(pa)->w - pa->dw)) {
-			pa->dx = AGWIDGET(pa)->w - pa->dw;
+			pa->rx = pa->dx = AGWIDGET(pa)->w - pa->dw;
 		} else if (pa->dx > (AGWIDGET(pa)->w - pa->minw[1])) {
-			pa->dx = AGWIDGET(pa)->w - pa->minw[1];
+			pa->rx = pa->dx = AGWIDGET(pa)->w - pa->minw[1];
 		}
     		w1->w = pa->dx;
 		w1->h = h;
@@ -340,7 +342,9 @@ AG_PaneScale(void *p, int w, int h)
 		break;
 	case AG_PANE_VERT:
 		if (pa->rx == -1) {
-			if (pa->flags & AG_PANE_DIV1FILL) {
+			if (pa->flags & AG_PANE_DIV) {
+				pa->dx = AGWIDGET(pa)->h/2;
+			} else if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = AGWIDGET(pa)->h - pa->minh[1];
 			} else {
 				pa->dx = pa->minh[0];
@@ -354,11 +358,11 @@ AG_PaneScale(void *p, int w, int h)
 			}
 		}
 		if (pa->dx < pa->minh[0]) {
-			pa->dx = pa->minh[0];
+			pa->rx = pa->dx = pa->minh[0];
 		} else if (pa->dx > (AGWIDGET(pa)->h - pa->dw)) {
-			pa->dx = AGWIDGET(pa)->h - pa->dw;
+			pa->rx = pa->dx = AGWIDGET(pa)->h - pa->dw;
 		} else if (pa->dx > (AGWIDGET(pa)->h - pa->minh[1])) {
-			pa->dx = AGWIDGET(pa)->h - pa->minh[1];
+			pa->rx = pa->dx = AGWIDGET(pa)->h - pa->minh[1];
 		}
 		w1->w = w;
 		w1->h = pa->dx;
