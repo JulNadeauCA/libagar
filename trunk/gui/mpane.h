@@ -28,9 +28,10 @@ typedef struct ag_mpane {
 	struct ag_box box;
 	enum ag_mpane_layout layout;
 	Uint flags;
-#define AG_MPANE_HFILL 0x01		/* Expand to fill available width */
-#define AG_MPANE_VFILL 0x02		/* Expand to fill available height */
-#define AG_MPANE_FRAMES 0x04		/* Draw pane backgrounds */
+#define AG_MPANE_HFILL		0x01	/* Expand to fill available width */
+#define AG_MPANE_VFILL		0x02	/* Expand to fill available height */
+#define AG_MPANE_FRAMES		0x04	/* Draw pane backgrounds */
+#define AG_MPANE_FORCE_DIV	0x08	/* Always divide in two */
 #define AG_MPANE_EXPAND (AG_MPANE_HFILL|AG_MPANE_VFILL)
 	struct ag_box *panes[4];
 	Uint          npanes;
