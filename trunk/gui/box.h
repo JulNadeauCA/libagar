@@ -40,6 +40,7 @@ void	 AG_BoxSetHomogenous(AG_Box *, int);
 void	 AG_BoxSetPadding(AG_Box *, int);
 void	 AG_BoxSetSpacing(AG_Box *, int);
 void	 AG_BoxSetDepth(AG_Box *, int);
+void	 AG_BoxSetType(AG_Box *, enum ag_box_type);
 __END_DECLS
 
 #include "close_code.h"

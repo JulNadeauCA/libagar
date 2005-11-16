@@ -291,3 +291,13 @@ AG_BoxSetDepth(AG_Box *bo, int depth)
 	bo->depth = depth;
 	AG_MutexUnlock(&bo->lock);
 }
+
+void
+AG_BoxSetType(AG_Box *bo, enum ag_box_type type)
+{
+	AG_MutexLock(&bo->lock);
+	bo->type = type;
+	AG_BoxScale(bo, -1, -1);
+	AG_BoxScale(bo, AGWIDGET(bo)->w, AGWIDGET(bo)->h);
+	AG_MutexUnlock(&bo->lock);
+}
