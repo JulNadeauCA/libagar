@@ -80,6 +80,24 @@ AG_VPaneAddDiv(AG_VPane *pa, enum ag_box_type b1type, int b1flags,
 	return (div);
 }
 
+AG_VPaneDiv *
+AG_VPaneAddDivBoxes(AG_VPane *pa, AG_Box *box1, AG_Box *box2)
+{
+	AG_VPaneDiv *div;
+
+	div = Malloc(sizeof(AG_VPaneDiv), M_WIDGET);
+	div->moving = 0;
+	div->y = 0;
+	div->box1 = box1;
+	div->box2 = box2;
+	AG_BoxSetPadding(div->box1, 0);
+	AG_BoxSetPadding(div->box2, 0);
+	AG_BoxSetSpacing(div->box1, 0);
+	AG_BoxSetSpacing(div->box2, 0);
+	TAILQ_INSERT_TAIL(&pa->divs, div, divs);
+	return (div);
+}
+
 static __inline__ int
 OverDivControl(AG_VPaneDiv *div, int y)
 {
