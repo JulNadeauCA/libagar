@@ -227,8 +227,8 @@ AG_GLViewScale(void *p, int w, int h)
 	AG_GLView *glv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(glv)->w = 256;		/* XXX */
-		AGWIDGET(glv)->h = 256;
+		AGWIDGET(glv)->w = 32;		/* XXX */
+		AGWIDGET(glv)->h = 32;
 		AG_GLViewReshape(glv);
 		return;
 	}
