@@ -1292,7 +1292,8 @@ AG_WidgetDraw(void *p)
 	if (wid->flags & AG_WIDGET_HIDE)
 		return;
 
-	if (AGWIDGET_OPS(wid)->draw != NULL && !widget_occulted(wid)) {
+	if (AGWIDGET_OPS(wid)->draw != NULL && !widget_occulted(wid) &&
+	    AGWIDGET(wid)->w > 0 && AGWIDGET(wid)->h > 0) {
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
 		}
