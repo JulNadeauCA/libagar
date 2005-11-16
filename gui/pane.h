@@ -25,6 +25,7 @@ typedef struct ag_pane {
 #define AG_PANE_FORCE_DIV1FILL	0x10	/* Enforce div1 expansion */
 #define AG_PANE_FORCE_DIV2FILL	0x20	/* Enforce div2 expansion */
 #define AG_PANE_DIV		0x40	/* Initially divide area in two */
+#define AG_PANE_FORCE_DIV	0x80	/* Force divide area in two */
 #define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
 
 	AG_Box *div[2];			/* Division containers */

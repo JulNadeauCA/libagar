@@ -318,7 +318,9 @@ AG_PaneScale(void *p, int w, int h)
 			}
 			pa->rx = pa->dx;
 		} else {
-			if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+			if (pa->flags & AG_PANE_FORCE_DIV) {
+				pa->dx = AGWIDGET(pa)->w/2;
+			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
 				pa->dx = AGWIDGET(pa)->w - pa->minw[1];
 			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
 				pa->dx = pa->minw[0];
@@ -351,7 +353,9 @@ AG_PaneScale(void *p, int w, int h)
 			}
 			pa->rx = pa->dx;
 		} else {
-			if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+			if (pa->flags & AG_PANE_FORCE_DIV) {
+				pa->dx = AGWIDGET(pa)->h/2;
+			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
 				pa->dx = AGWIDGET(pa)->h - pa->minh[1];
 			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
 				pa->dx = pa->minh[0];

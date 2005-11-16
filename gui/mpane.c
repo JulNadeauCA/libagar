@@ -65,6 +65,7 @@ AG_MPaneInit(AG_MPane *mp, enum ag_mpane_layout lay, Uint flags)
 		AG_BoxSetSpacing(mp->panes[i], 0);
 		AG_BoxSetPadding(mp->panes[i], 0);
 	}
+	mp->flags = flags;
 	mp->npanes = 0;
 	AG_MPaneSetLayout(mp, lay);
 }
@@ -73,6 +74,10 @@ void
 AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 {
 	AG_Pane *vp, *hp, *dp;
+	Uint pflags = AG_PANE_EXPAND|AG_PANE_DIV;
+
+	if (mp->flags & AG_MPANE_FORCE_DIV)
+		pflags |= AG_PANE_FORCE_DIV;
 
 	AG_ObjectFreeChildren(AGOBJECT(mp));
 
@@ -83,57 +88,51 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 		mp->npanes = 1;
 		break;
 	case AG_MPANE2H:
-		vp = AG_PaneNew(mp, AG_PANE_VERT, AG_PANE_EXPAND|AG_PANE_DIV);
+		vp = AG_PaneNew(mp, AG_PANE_VERT, pflags);
 		AG_PaneAttachBoxes(vp, mp->panes[0], mp->panes[1]);
 		mp->npanes = 2;
 		break;
 	case AG_MPANE2V:
-		hp = AG_PaneNew(mp, AG_PANE_HORIZ, AG_PANE_EXPAND|AG_PANE_DIV);
+		hp = AG_PaneNew(mp, AG_PANE_HORIZ, pflags);
 		AG_PaneAttachBoxes(hp, mp->panes[0], mp->panes[1]);
 		mp->npanes = 2;
 		break;
 	case AG_MPANE2L1R:
-		hp = AG_PaneNew(mp, AG_PANE_HORIZ, AG_PANE_EXPAND|AG_PANE_DIV);
-		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT, AG_PANE_EXPAND|
-		                                          AG_PANE_DIV);
+		hp = AG_PaneNew(mp, AG_PANE_HORIZ, pflags);
+		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT, pflags);
 		AG_PaneAttachBox(vp, 0, mp->panes[0]);
 		AG_PaneAttachBox(vp, 1, mp->panes[1]);
 		AG_PaneAttachBox(hp, 1, mp->panes[2]);
 		mp->npanes = 3;
 		break;
 	case AG_MPANE1L2R:
-		hp = AG_PaneNew(mp, AG_PANE_HORIZ, AG_PANE_EXPAND|AG_PANE_DIV);
-		vp = AG_PaneNew(hp->div[1], AG_PANE_VERT, AG_PANE_EXPAND|
-		                                          AG_PANE_DIV);
+		hp = AG_PaneNew(mp, AG_PANE_HORIZ, pflags);
+		vp = AG_PaneNew(hp->div[1], AG_PANE_VERT, pflags);
 		AG_PaneAttachBox(hp, 0, mp->panes[0]);
 		AG_PaneAttachBox(vp, 0, mp->panes[1]);
 		AG_PaneAttachBox(vp, 1, mp->panes[2]);
 		mp->npanes = 3;
 		break;
 	case AG_MPANE2T1B:
-		vp = AG_PaneNew(mp, AG_PANE_VERT, AG_PANE_EXPAND|AG_PANE_DIV);
-		hp = AG_PaneNew(vp->div[0], AG_PANE_HORIZ, AG_PANE_EXPAND|
-		                                           AG_PANE_DIV);
+		vp = AG_PaneNew(mp, AG_PANE_VERT, pflags);
+		hp = AG_PaneNew(vp->div[0], AG_PANE_HORIZ, pflags);
 		AG_PaneAttachBox(hp, 0, mp->panes[0]);
 		AG_PaneAttachBox(hp, 1, mp->panes[1]);
 		AG_PaneAttachBox(vp, 1, mp->panes[2]);
 		mp->npanes = 3;
 		break;
 	case AG_MPANE1T2B:
-		vp = AG_PaneNew(mp, AG_PANE_VERT, AG_PANE_EXPAND|AG_PANE_DIV);
-		hp = AG_PaneNew(vp->div[1], AG_PANE_HORIZ, AG_PANE_EXPAND|
-		                                           AG_PANE_DIV);
+		vp = AG_PaneNew(mp, AG_PANE_VERT, pflags);
+		hp = AG_PaneNew(vp->div[1], AG_PANE_HORIZ, pflags);
 		AG_PaneAttachBox(vp, 0, mp->panes[0]);
 		AG_PaneAttachBox(hp, 0, mp->panes[1]);
 		AG_PaneAttachBox(hp, 1, mp->panes[2]);
 		mp->npanes = 3;
 		break;
 	case AG_MPANE3L1R:
-		hp = AG_PaneNew(mp, AG_PANE_HORIZ, AG_PANE_EXPAND|AG_PANE_DIV);
-		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT, AG_PANE_EXPAND|
-		                                          AG_PANE_DIV);
-		dp = AG_PaneNew(vp->div[1], AG_PANE_VERT, AG_PANE_EXPAND|
-		                                          AG_PANE_DIV);
+		hp = AG_PaneNew(mp, AG_PANE_HORIZ, pflags);
+		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT, pflags);
+		dp = AG_PaneNew(vp->div[1], AG_PANE_VERT, pflags);
 		AG_PaneAttachBox(vp, 0, mp->panes[0]);
 		AG_PaneAttachBox(dp, 0, mp->panes[1]);
 		AG_PaneAttachBox(dp, 1, mp->panes[2]);
@@ -141,11 +140,9 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 		mp->npanes = 4;
 		break;
 	case AG_MPANE4:
-		hp = AG_PaneNew(mp, AG_PANE_VERT, AG_PANE_EXPAND|AG_PANE_DIV);
-		vp = AG_PaneNew(hp->div[0], AG_PANE_HORIZ, AG_PANE_EXPAND|
-		                                           AG_PANE_DIV);
-		dp = AG_PaneNew(hp->div[1], AG_PANE_HORIZ, AG_PANE_EXPAND|
-		                                           AG_PANE_DIV);
+		hp = AG_PaneNew(mp, AG_PANE_VERT, pflags);
+		vp = AG_PaneNew(hp->div[0], AG_PANE_HORIZ, pflags);
+		dp = AG_PaneNew(hp->div[1], AG_PANE_HORIZ, pflags);
 		AG_PaneAttachBox(vp, 0, mp->panes[0]);
 		AG_PaneAttachBox(vp, 1, mp->panes[1]);
 		AG_PaneAttachBox(dp, 0, mp->panes[2]);
