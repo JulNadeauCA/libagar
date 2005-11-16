@@ -21,8 +21,10 @@
 #include <agar/gui/label.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/mfspinbutton.h>
+#include <agar/gui/mpane.h>
 #include <agar/gui/mspinbutton.h>
 #include <agar/gui/notebook.h>
+#include <agar/gui/pane.h>
 #include <agar/gui/pixmap.h>
 #include <agar/gui/radio.h>
 #include <agar/gui/scrollbar.h>
