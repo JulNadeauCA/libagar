@@ -15,13 +15,15 @@ enum ag_pane_type {
 };
 
 typedef struct ag_pane {
-	struct ag_box box;
+	struct ag_widget wid;
 	enum ag_pane_type type;
 	int flags;
 #define AG_PANE_HFILL		0x01
 #define AG_PANE_VFILL		0x02
-#define AG_PANE_DIV1_FILL	0x04
-#define AG_PANE_DIV2_FILL	0x08
+#define AG_PANE_DIV1FILL	0x04	/* Expand div1 (default is div2) */
+#define AG_PANE_FRAME		0x08	/* Display frames for each division */
+#define AG_PANE_FORCE_DIV1FILL	0x10	/* Enforce div1 expansion */
+#define AG_PANE_FORCE_DIV2FILL	0x20	/* Enforce div2 expansion */
 #define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
 
 	AG_Box *div[2];			/* Division containers */
@@ -37,7 +39,8 @@ AG_Pane		*AG_PaneNew(void *, enum ag_pane_type, Uint);
 void		 AG_PaneInit(AG_Pane *, enum ag_pane_type, Uint);
 void		 AG_PaneDraw(void *);
 void		 AG_PaneScale(void *, int, int);
-void		 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
+void		 AG_PaneAttachBox(AG_Pane *, int, AG_Box *);
+__inline__ void	 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
 __inline__ void	 AG_PaneSetDividerWidth(AG_Pane *, int);
 __inline__ void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
 int		 AG_PaneMoveDivider(AG_Pane *, int);

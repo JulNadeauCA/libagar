@@ -39,7 +39,7 @@ static AG_WidgetOps agPaneOps = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		AG_BoxDestroy,
+		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
@@ -62,8 +62,8 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 static __inline__ int
 OverDivControl(AG_Pane *pa, int pos)
 {
-	return (pos >= (pa->dx - pa->dw) &&
-	        pos <= (pa->dx + pa->dw));
+	return (pos >= pa->dx &&
+	        pos <= (pa->dx+pa->dw));
 }
 
 static void
@@ -85,40 +85,8 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	AG_Widget *w2 = AGWIDGET(pa->div[1]);
 	AG_Window *pwin;
 
-	switch (pa->type) {
-	case AG_PANE_HORIZ:
-		if (dx < pa->minw[0]) {
-			pa->dx = pa->minw[0];
-		} else if (dx > (AGWIDGET(pa)->w - pa->dw)) {
-			pa->dx = AGWIDGET(pa)->w - pa->dw;
-		} else if (dx > (AGWIDGET(pa)->w - pa->minw[1])) {
-			pa->dx = AGWIDGET(pa)->w - pa->minw[1];
-		} else {
-			pa->dx = dx;
-		}
-		w1->w = pa->dx;
-		AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
-		w2->x = pa->dx + pa->dw;
-		w2->w = AGWIDGET(pa)->w - w1->w - pa->dw;
-		AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
-		break;
-	case AG_PANE_VERT:
-		if (dx < pa->minh[0]) {
-			pa->dx = pa->minh[0];
-		} else if (dx > (AGWIDGET(pa)->h - pa->dw)) {
-			pa->dx = AGWIDGET(pa)->h - pa->dw;
-		} else if (dx > (AGWIDGET(pa)->h - pa->minh[1])) {
-			pa->dx = AGWIDGET(pa)->h - pa->minh[1];
-		} else {
-			pa->dx = dx;
-		}
-		w1->h = pa->dx;
-		AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
-		w2->y = pa->dx + pa->dw;
-		w2->h = AGWIDGET(pa)->h - w1->h - pa->dw;
-		AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
-		break;
-	}
+	pa->dx = dx;
+	AG_PaneScale(pa, AGWIDGET(pa)->w, AGWIDGET(pa)->h);
 	if ((pwin = AG_WidgetParentWindow(pa)) != NULL) {
 		AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x,
 		                            AGWIDGET(pwin)->y);
@@ -180,51 +148,33 @@ MouseButtonUp(AG_Event *event)
 void
 AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
 {
-	Uint boxflags = 0;
-	Uint dflags1 = 0;
-	Uint dflags2 = 0;
+	Uint wflags = 0;
+	int i;
 
-	if (flags & AG_PANE_HFILL) boxflags |= AG_BOX_HFILL;
-	if (flags & AG_PANE_VFILL) boxflags |= AG_BOX_VFILL;
+	if (flags & AG_PANE_HFILL) wflags |= AG_WIDGET_HFILL;
+	if (flags & AG_PANE_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	switch (type) {
-	case AG_PANE_VERT:
-		AG_BoxInit(&pa->box, AG_BOX_VERT, boxflags);
-		dflags1 = AG_BOX_HFILL;
-		dflags2 = AG_BOX_HFILL;
-		if (flags & AG_PANE_DIV1_FILL) { dflags1 |= AG_BOX_VFILL; }
-		if (flags & AG_PANE_DIV2_FILL) { dflags2 |= AG_BOX_VFILL; }
-		break;
-	case AG_PANE_HORIZ:
-		AG_BoxInit(&pa->box, AG_BOX_HORIZ, boxflags);
-		dflags1 = AG_BOX_VFILL;
-		dflags2 = AG_BOX_VFILL;
-		if (flags & AG_PANE_DIV1_FILL) { dflags1 |= AG_BOX_HFILL; }
-		if (flags & AG_PANE_DIV2_FILL) { dflags2 |= AG_BOX_HFILL; }
-		break;
-	}
-	
+	AG_WidgetInit(pa, "pane", &agPaneOps, wflags);
+
 	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 			       AG_WIDGET_UNFOCUSED_MOTION;
 	AG_ObjectSetOps(pa, &agPaneOps);
 
 	pa->type = type;
 	pa->flags = flags;
-	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, dflags1);
-	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, dflags2);
+	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
+	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
 	pa->dx = 0;
 	pa->rx = -1;
 	pa->dmoving = 0;
-	pa->dw = 8;
-	pa->minw[0] = -1; pa->minw[1] = -1;
-	pa->minh[0] = -1; pa->minh[1] = -1;
+	pa->dw = 10;
 
-	AG_BoxSetPadding(&pa->box, 0);
-	AG_BoxSetSpacing(&pa->box, 0);
-	AG_BoxSetPadding(pa->div[0], 0);
-	AG_BoxSetPadding(pa->div[0], 0);
-	AG_BoxSetSpacing(pa->div[1], 0);
-	AG_BoxSetSpacing(pa->div[1], 0);
+	for (i = 0; i < 2; i++) {
+		pa->minw[i] = -1;
+		pa->minh[i] = -1;
+		AG_BoxSetPadding(pa->div[i], 0);
+		AG_BoxSetSpacing(pa->div[i], 0);
+	}
 
 	AG_SetEvent(pa, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(pa, "window-mousebuttonup", MouseButtonUp, NULL);
@@ -245,16 +195,17 @@ AG_PaneSetDivisionMin(AG_Pane *pa, int which, int minw, int minh)
 }
 
 void
+AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
+{
+	AG_ObjectAttach(pa->div[which], box);
+	AGWIDGET(box)->flags |= AG_WIDGET_EXPAND;
+}
+
+void
 AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 {
-	AG_ObjectDetach(pa->div[0]);
-	AG_ObjectDetach(pa->div[1]);
-	AG_ObjectDestroy(pa->div[0]);
-	AG_ObjectDestroy(pa->div[1]);
-	pa->div[0] = box1;
-	pa->div[1] = box2;
-	AG_ObjectAttach(pa, box1);
-	AG_ObjectAttach(pa, box2);
+	AG_PaneAttachBox(pa, 0, box1);
+	AG_PaneAttachBox(pa, 1, box2);
 }
 
 void
@@ -264,6 +215,9 @@ AG_PaneDraw(void *p)
 	AG_Widget *wid;
 	int x, y;
 	int z = pa->dmoving ? -1 : 1;
+
+//	agPrim.rect_filled(pa, 0, 0, AGWIDGET(pa)->w, AGWIDGET(pa)->h,
+//	    AG_COLOR(FRAME_COLOR));
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
@@ -303,55 +257,118 @@ void
 AG_PaneScale(void *p, int w, int h)
 {
 	AG_Pane *pa = p;
-	AG_Widget *wid;
+	AG_Widget *w1 = AGWIDGET(pa->div[0]);
+	AG_Widget *w2 = AGWIDGET(pa->div[1]);
 
 	if (w == -1 || h == -1) {
-		AGWIDGET_OPS(pa->div[0])->scale(pa->div[0], -1, -1);
-		AGWIDGET_OPS(pa->div[0])->scale(pa->div[1], -1, -1);
-		if (pa->minw[0] < 0) { pa->minw[0] = AGWIDGET(pa->div[0])->w; }
-		if (pa->minh[0] < 0) { pa->minh[0] = AGWIDGET(pa->div[0])->h; }
-		if (pa->minw[1] < 0) { pa->minw[1] = AGWIDGET(pa->div[1])->w; }
-		if (pa->minh[1] < 0) { pa->minh[1] = AGWIDGET(pa->div[1])->h; }
+		int maxw = 0, maxh = 0;
+		int dw, dh;
+		int i;
+		
+		AGWIDGET(pa)->w = 0;
+		AGWIDGET(pa)->h = 0;
+
+		for (i = 0; i < 2; i++) {
+			AG_Widget *div = AGWIDGET(pa->div[i]);
+
+			AGWIDGET_OPS(div)->scale(div, -1, -1);
+			pa->minw[i] = div->w;
+			pa->minh[i] = div->h;
+			if (div->w > maxw) { maxw = div->w; }
+			if (div->h > maxh) { maxh = div->h; }
+			switch (pa->type) {
+			case AG_PANE_HORIZ:
+				if ((dh = maxh) > AGWIDGET(pa)->h) {
+					AGWIDGET(pa)->h = dh;
+				}
+				AGWIDGET(pa)->w += div->w;
+				break;
+			case AG_BOX_VERT:
+				if ((dw = maxw) > AGWIDGET(pa)->w) {
+					AGWIDGET(pa)->w = dw;
+				}
+				AGWIDGET(pa)->h += div->h;
+				break;
+			}
+		}
+		switch (pa->type) {
+		case AG_PANE_HORIZ:
+			AGWIDGET(pa)->w += pa->dw + 2;
+			break;
+		case AG_PANE_VERT:
+			AGWIDGET(pa)->h += pa->dw + 2;
+			break;
+		}
+		return;
 	}
-
-	AGOBJECT_FOREACH_CHILD(wid, pa, ag_widget)
-		AGWIDGET_OPS(wid)->scale(wid, w, h);
-
-	AG_BoxScale(pa, w, h);
-
+		
+	AGWIDGET(pa)->w = w;
+	AGWIDGET(pa)->h = h;
+	w1->x = 0;
+	w1->y = 0;
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		AGWIDGET(pa->div[1])->x += pa->dw;
-		AGWIDGET(pa->div[1])->w -= pa->dw;
-		AGWIDGET_OPS(pa->div[0])->scale(pa->div[0],
-		    AGWIDGET(pa->div[0])->w,
-		    AGWIDGET(pa->div[0])->h);
-		AGWIDGET_OPS(pa->div[1])->scale(pa->div[1],
-		    AGWIDGET(pa->div[1])->w,
-		    AGWIDGET(pa->div[1])->h);
-		pa->dx = AGWIDGET(pa->div[1])->x - pa->dw;
+		if (pa->rx == -1) {
+			if (pa->flags & AG_PANE_DIV1FILL) {
+				pa->dx = AGWIDGET(pa)->w - pa->minw[1];
+			} else {
+				pa->dx = pa->minw[0];
+			}
+			pa->rx = pa->dx;
+		} else {
+			if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+				pa->dx = AGWIDGET(pa)->w - pa->minw[1];
+			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
+				pa->dx = pa->minw[0];
+			}
+		}
+		if (pa->dx < pa->minw[0]) {
+			pa->dx = pa->minw[0];
+		} else if (pa->dx > (AGWIDGET(pa)->w - pa->dw)) {
+			pa->dx = AGWIDGET(pa)->w - pa->dw;
+		} else if (pa->dx > (AGWIDGET(pa)->w - pa->minw[1])) {
+			pa->dx = AGWIDGET(pa)->w - pa->minw[1];
+		}
+    		w1->w = pa->dx;
+		w1->h = h;
+		w2->x = pa->dx + pa->dw;
+		w2->y = 0;
+		w2->w = w - pa->dx - pa->dw;
+		w2->h = h;
+		AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
+		AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
 		break;
 	case AG_PANE_VERT:
-		AGWIDGET(pa->div[1])->y += pa->dw;
-		AGWIDGET(pa->div[1])->h -= pa->dw;
-		AGWIDGET_OPS(pa->div[0])->scale(pa->div[0],
-		    AGWIDGET(pa->div[0])->w,
-		    AGWIDGET(pa->div[0])->h);
-		AGWIDGET_OPS(pa->div[1])->scale(pa->div[1],
-		    AGWIDGET(pa->div[1])->w,
-		    AGWIDGET(pa->div[1])->h);
-		pa->dx = AGWIDGET(pa->div[1])->y - pa->dw;
-		if (pa->dx > AGWIDGET(pa)->h - pa->dw) {
-			pa->dx = AGWIDGET(pa)->h - pa->dw;
-			AGWIDGET(pa->div[0])->h -= pa->dw;
-			AGWIDGET_OPS(pa->div[0])->scale(pa->div[0],
-			    AGWIDGET(pa->div[0])->w,
-			    AGWIDGET(pa->div[0])->h);
+		if (pa->rx == -1) {
+			if (pa->flags & AG_PANE_DIV1FILL) {
+				pa->dx = AGWIDGET(pa)->h - pa->minh[1];
+			} else {
+				pa->dx = pa->minh[0];
+			}
+			pa->rx = pa->dx;
+		} else {
+			if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
+				pa->dx = AGWIDGET(pa)->h - pa->minh[1];
+			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
+				pa->dx = pa->minh[0];
+			}
 		}
+		if (pa->dx < pa->minh[0]) {
+			pa->dx = pa->minh[0];
+		} else if (pa->dx > (AGWIDGET(pa)->h - pa->dw)) {
+			pa->dx = AGWIDGET(pa)->h - pa->dw;
+		} else if (pa->dx > (AGWIDGET(pa)->h - pa->minh[1])) {
+			pa->dx = AGWIDGET(pa)->h - pa->minh[1];
+		}
+		w1->w = w;
+		w1->h = pa->dx;
+		w2->x = 0;
+		w2->y = pa->dx + pa->dw;
+		w2->w = w;
+		w2->h = h - pa->dx - pa->dw;
+		AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
+		AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
 		break;
-	}
-	if (pa->rx >= 0) {
-		AG_PaneMoveDivider(pa, pa->rx);
 	}
 }
 
