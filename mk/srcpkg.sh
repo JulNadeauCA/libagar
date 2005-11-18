@@ -20,7 +20,7 @@ rm -fR `find agar-${VER} \( -name .svn \
     -or -name .xvpics \)`
 
 tar -f ${DISTFILE}.tar -c agar-${VER}
-gzip -f9 ${DISTFILE}.tar
+gzip -f ${DISTFILE}.tar
 md5 ${DISTFILE}.tar.gz > ${DISTFILE}.tar.gz.md5
 rmd160 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
