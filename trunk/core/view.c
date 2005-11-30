@@ -139,7 +139,8 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	}
 
 	/* Set the video mode. */
-	agView->v = SDL_SetVideoMode(agView->w, agView->h, 0, screenflags);
+	agView->v = SDL_SetVideoMode(agView->w, agView->h, agView->depth,
+	    screenflags);
 	if (agView->v == NULL) {
 		AG_SetError("Setting %dx%dx%d mode: %s",
 		    agView->w, agView->h, agView->depth, SDL_GetError());
