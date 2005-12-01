@@ -26,16 +26,16 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd May 21, 2005
-.Dt HSVPAL 3
+.Dt AG_HSVPAL 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm hsvpal
+.Nm AG_HSVPal
 .Nd agar HSV color wheel widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/hsvpal.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -52,7 +52,7 @@ on the fly.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -146,9 +146,14 @@ loss of precision.
 In cases where it is desirable to maintain the same hue throughout changes in
 saturation, the color should be stored in HSV format.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Bd -literal
+EasyRGB - http://www.easyrgb.com/
+The HSV color model - http://en.wikipedia.org/wiki/HSV_color_space
+The RGB color model - http://en.wikipedia.org/wiki/RGB_color_model
+.Ed
 .Sh HISTORY
 The
 .Nm

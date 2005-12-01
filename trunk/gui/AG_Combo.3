@@ -26,26 +26,26 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd November 19, 2003
-.Dt COMBO 3
+.Dt AG_COMBO 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm combo
+.Nm AG_Combo
 .Nd agar text input + drop-down menu widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/combo.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
 .Nm
 widget is a composite widget that packs a
-.Xr textbox 3
+.Xr AG_Textbox 3
 widget left to a
-.Xr button 3 ,
+.Xr AG_Button 3 ,
 which causes a
-.Xr tlist 3
+.Xr AG_Tlist 3
 to be displayed when pressed.
 The tlist disappears when an option is selected, and is directly accessed
 as the
@@ -57,7 +57,7 @@ structure.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -145,12 +145,12 @@ flag is not set and the user has entered a string
 which does not match any item in the list.
 .El
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr button 3 ,
-.Xr textbox 3 ,
-.Xr tlist 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_Tlist 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

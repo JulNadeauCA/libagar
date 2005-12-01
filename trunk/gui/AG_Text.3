@@ -35,7 +35,7 @@
 .Nd agar font engine interface
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/text.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -211,7 +211,7 @@ define the acceptable range.
 Unless
 .Fa unit
 is NULL, the argument indicates the unit system to use (as in
-.Xr units 3 ) .
+.Xr AG_Units 3 ) .
 .Sh TROUBLETONS
 Something more sophisticated is needed to deal with unpredictable text surface
 dimensions.
@@ -223,20 +223,21 @@ maintain with translations.
 .Fn AG_TextRenderGlyph
 does not work.
 .Sh SEE ALSO
-.Xr agar 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Config 3 ,
-.Xr button 3 ,
-.Xr combo 3 ,
-.Xr label 3 ,
-.Xr radio 3 ,
-.Xr spinbutton 3 ,
-.Xr statusbar 3 ,
-.Xr fspinbutton 3 ,
-.Xr mfspinbutton 3 ,
-.Xr textbox 3 ,
-.Xr titlebar 3 ,
-.Xr tlist 3 ,
-.Xr widget 3
+.Xr AG_Button 3 ,
+.Xr AG_Combo 3 ,
+.Xr AG_Label 3 ,
+.Xr AG_Radio 3 ,
+.Xr AG_Spinbutton 3 ,
+.Xr AG_Statusbar 3 ,
+.Xr AG_FSpinbutton 3 ,
+.Xr AG_MFSpinbutton 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_Titlebar 3 ,
+.Xr AG_Tlist 3 ,
+.Xr AG_UCombo 3 ,
+.Xr AG_Widget 3
 .Bd -literal
 The FreeType project - http://www.freetype.org/
 Unicode home page - http://www.unicode.org/

@@ -26,16 +26,16 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 20, 2002
-.Dt BUTTON 3
+.Dt AG_BUTTON 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm button
+.Nm AG_Button
 .Nd agar button widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/button.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -44,8 +44,8 @@ widget implements a simple push-button containing a string of text or
 an image.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr AG_ObjectAttach 3 ->
-.Xr widget 3 ->
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -101,7 +101,7 @@ event.
 The
 .Fa fmt
 and following arguments specify an
-.Xr event 3
+.Xr AG_Event 3
 style argument list.
 .Pp
 The
@@ -181,7 +181,7 @@ Repeat mode causes multiple
 .Sq button-pushed
 events to be posted periodically for as long as the button is triggered.
 Repeat mode is useful for things like
-.Xr spinbutton 3 .
+.Xr AG_Spinbutton 3 .
 .Sh EVENTS
 The
 .Nm
@@ -248,9 +248,9 @@ btn = AG_ButtonNew(parent, 0, "Hello");
 AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
 .Ed
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

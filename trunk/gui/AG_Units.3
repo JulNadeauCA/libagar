@@ -35,7 +35,7 @@
 .Nd agar unit conversion facility
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/units.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The Agar
@@ -46,9 +46,9 @@ A numerical coefficient is associated with linear units and a function pointer
 is associated with nonlinear units.
 .Pp
 The
-.Fn fspinbutton
+.Xr AG_FSpinbutton 3
 and
-.Fn mfspinbutton
+.Xr AG_MFSpinbutton 3
 widgets use this interface.
 .Pp
 Units are arranged in unit groups, and Agar's
@@ -183,10 +183,10 @@ using the resistance unit most suitable to its magnitude.
 printf("Resistance = %s", AG_UnitFormat(r, agResistanceUnits));
 .Ed
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr fspinbutton 3 ,
-.Xr mfspinbutton 3 ,
-.Xr widget 3
+.Xr AG_Intro 3 ,
+.Xr AG_FSpinbutton 3 ,
+.Xr AG_MFSpinbutton 3 ,
+.Xr AG_Widget 3
 .Sh HISTORY
 The
 .Nm

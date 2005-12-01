@@ -26,16 +26,16 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 21, 2002
-.Dt TEXTBOX 3
+.Dt AG_TEXTBOX 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm textbox
+.Nm AG_Textbox
 .Nd agar text box widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/textbox.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -46,7 +46,7 @@ The string may contain UTF-8 encoded characters.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -200,11 +200,11 @@ Note that the default binding is limited to
 .Dv AG_TEXTBOX_STRING_MAX
 bytes in size.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr text 3 ,
-.Xr tlist 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Text 3 ,
+.Xr AG_Tlist 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

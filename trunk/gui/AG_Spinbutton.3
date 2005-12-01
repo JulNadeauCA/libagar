@@ -48,17 +48,17 @@ widget binds to an integer value of type
 or
 .Dv [SU]int32 .
 For floating point values, see
-.Xr fspinbutton 3 .
+.Xr AG_FSpinbutton 3 .
 .Pp
 This widget is composed of a
-.Xr textbox 3
+.Xr AG_Textbox 3
 for manually entering the value and a set of
-.Xr button 3
+.Xr AG_Button 3
 widgets to increment or decrement the value.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -178,13 +178,13 @@ The increment value and boundaries are
 .Ft int
 regardless of the binding type.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr button 3 ,
-.Xr fspinbutton 3 ,
-.Xr textbox 3 ,
-.Xr ucombo 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_FSpinbutton 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_UCombo 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

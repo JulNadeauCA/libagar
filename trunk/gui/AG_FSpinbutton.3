@@ -42,24 +42,24 @@ The
 .Nm
 widget edits the value of a floating point or integer value.
 It is composed of a
-.Xr textbox 3
+.Xr AG_Textbox 3
 for manually entering the value,
 an
-.Xr ucombo 3
+.Xr AG_UCombo 3
 for selecting the unit system to use, and two
-.Xr button 3
+.Xr AG_Button 3
 widgets to increment and decrement the value.
 .Pp
 The integer functionality provided by
 .Nm
 is useful for bindings that may take a floating-point or integer value,
 but it is more efficient to use
-.Xr spinbutton 3
+.Xr AG_Spinbutton 3
 for integer-only bindings.
 .Sh INHERITANCE HIERARCHY
 .Pp
-.Xr AG_Objet 3 ->
-.Xr widget 3 ->
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -192,12 +192,16 @@ Unsigned integer value.
 Unsigned 8-bit value.
 .El
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr button 3 ,
-.Xr textbox 3 ,
-.Xr ucombo 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_MFSpinbutton 3 ,
+.Xr AG_MSpinbutton 3 ,
+.Xr AG_Spinbutton 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_Ucombo 3 ,
+.Xr AG_Units 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
