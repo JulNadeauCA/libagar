@@ -10,7 +10,7 @@ LIB_STATIC=	No
 SRCS=	tileset.c tileview.c tile.c feature.c fill.c pixmap.c prim.c sketch.c \
 	sketch_line.c sketch_circle.c sketch_polygon.c animation.c \
 	sketchproj.c texture.c texsel.c
-MAN3=	tileview.3
+MAN3=	RG_Tileview.3
 
 CFLAGS+=${SDL_CFLAGS}
 
