@@ -105,30 +105,6 @@ The meaning of these flags is specific to the font engine being used.
 The
 .Fn AG_TextDestroy
 function frees all resources allocated by the font engine.
-.Sh FONT INFORMATION
-.nr nS 1
-.Ft int
-.Fn text_get_font_height "ttf_font *font"
-.Pp
-.Ft int
-.Fn text_get_font_ascent "ttf_font *font"
-.Pp
-.Ft int
-.Fn text_get_font_descent "ttf_font *font"
-.Pp
-.Ft int
-.Fn text_get_font_line_skip "ttf_font *font"
-.Pp
-.nr nS 0
-These functions return information specific to a given font.
-.Fn text_get_font_height
-returns the total height of the font in pixels.
-.Fn text_get_font_ascent
-returns the offset from the baseline to the top of the font.
-.Fn text_get_font_descent
-returns the offset from the baseline to the bottom of the font.
-.Fn text_get_font_line_skip
-returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
