@@ -927,11 +927,17 @@ AG_ObjectLoad(void *p)
 	 */
 	if (AG_ObjectReloadData(ob) == -1)
 		goto fail;
-
+	
+	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
+		AG_ObjMgrReopen(ob);
+	}
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
+	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
+		AG_ObjMgrReopen(ob);
+	}
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
@@ -1171,17 +1177,11 @@ AG_ObjectLoadGeneric(void *p)
 	}
 
 	AG_NetbufClose(buf);
-	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
-		AG_ObjMgrReopen(ob);
-	}
 	return (0);
 fail:
 	AG_ObjectFreeData(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_NetbufClose(buf);
-	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
-		AG_ObjMgrReopen(ob);
-	}
 	return (-1);
 }
 
