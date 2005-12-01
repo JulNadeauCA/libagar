@@ -43,6 +43,7 @@ $BUILD = '';
 	'^configure\.in$',
 	'^ltconfig$',
 	'^ltmain\.sh$',
+	'^manlinks\.pl$',
 	'^hstrip\.pl$'
 );
 
