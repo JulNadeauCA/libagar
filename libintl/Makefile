@@ -8,7 +8,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 
 SRCS=	gettext.c textdomain.c
-MAN3=	gettext.3
+#MAN3=	gettext.3
 
 CFLAGS+=${SDL_CFLAGS}
 
