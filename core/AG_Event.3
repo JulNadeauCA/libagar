@@ -107,13 +107,11 @@ to relinquish the CPU.
 SDL events are translated to
 .Nm
 structures, which are sent to the relevant subsystems, such as the
-.Xr window 3
-system for GUI events and
-.Xr input 3
-for generic input events.
+.Xr AG_Window 3
+system for GUI events.
 .It Timeouts
 The
-.Xr timeout 3
+.Xr AG_Timeout 3
 system performs tasks specific to the timing schemes in use.
 Under the default timing scheme, timeouts with a timestamp exceeding the
 current time (as given by
@@ -282,7 +280,7 @@ and possibly manipulate its entries directly.
 For example, the
 .Fn AG_MenuAction
 function of the
-.Xr menu 3
+.Xr AG_Menu 3
 widget accepts a pointer to an event handler function, followed by an
 .Fn AG_SetEvent
 style format string and a variable list of arguments.
@@ -329,9 +327,9 @@ argument which is a character from an
 .Fn AG_SetEvent
 style format string.
 .Sh SEE ALSO
-.Xr agar 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
-.Xr timeout 3
+.Xr AG_Timeout 3
 .Sh HISTORY
 The
 .Nm
