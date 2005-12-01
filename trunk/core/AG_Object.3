@@ -138,7 +138,7 @@ operation initializes an
 instance.
 .Fn reinit
 is reponsible for releasing data dynamically allocated by the AG_Object (eg.
-.Xr map 3
+.Xr AG_Map 3
 nodes).
 .Fn reinit
 is invoked prior to rereading an AG_Object's data from disk, as part of an
@@ -171,18 +171,27 @@ If the compile-time option
 is defined, the
 .Fn edit
 operation is responsible for creating a new edition window for the object's
-dynamic data (for example, the
-.Xr map 3
-object creates a
-.Xr mapview 3
-widget in edit mode).
+dynamic data.
+For example, in the Agar-Game library, the
+.Xr AG_Map 3
+object creates an
+.Xr AG_Mapview 3
+widget and this constitutes the framework for the level editor.
+In the Agar-SG library, the
+.Xr SG 3
+(scene graph) object creates a
+.Xr SG_View 3
+widget (a derivate of
+.Xr AG_GLView 3 )
+to display the scene.
+.Pp
 If other windows are to be created as part of this instance's edition process,
 they should be attached to the main edition window using
 .Xr AG_WindowAttach 3 .
 The
 .Fn edit
 operation can also return other types of widgets, such as a
-.Xr box 3
+.Xr AG_Box 3
 container.
 .Pp
 The following public
@@ -204,7 +213,7 @@ flags are defined:
 The
 .Dv AG_OBJECT_RELOAD_PROPS
 flag prevents the
-.Xr prop 3
+.Xr AG_Prop 3
 table from being cleared as part of a load operation.
 .Dv AG_OBJECT_NON_PERSISTENT
 prevents this instance and its children from being archived.
@@ -249,7 +258,7 @@ functions respectively link and unlink an object instance against another.
 Prior to detaching the object,
 .Fn AG_ObjectDetach
 cancels scheduled
-.Xr timeout 3
+.Xr AG_Timeout 3
 events (that do not have the
 .Dv AG_TIMEOUT_DETACHABLE
 flag set).
@@ -390,7 +399,7 @@ function is called to free all resources reserved by the given object instance,
 including its children (assuming that they are not currently in use).
 .Fn AG_ObjectDestroy
 also cancels any
-.Xr timeout 3
+.Xr AG_Timeout 3
 event scheduled for future execution.
 To permit static allocation,
 .Fn AG_ObjectDestroy
@@ -430,16 +439,20 @@ operation of
 (if there is one) in order to free dynamic data, and clears the
 .Dv AG_OBJECT_DATA_RESIDENT
 flag.
-The
+For example, in the Agar-SG library, the
 .Va reinit
 operation of
-.Xr map 3 ,
-for example, frees the contents of all nodes of the map.
+.Xr SG 3 ,
+destroys all the nodes in the graph, such that the
+.Fn load
+and
+.Fn destroy
+operations do not need to.
 .Pp
 The
 .Fn AG_ObjectFreeZerodeps
-function clears any dependency table entry that has a reference count of zero
-for the given object and its children.
+function is used in situations where it is necessary to remove dependencies
+that have a reference count of zero for the given object (and its children).
 Dependencies with a reference count of zero only occur in objects that have the
 .Dv AG_OBJECT_PRESERVE_DEPS
 flag set.
@@ -495,7 +508,7 @@ performs the following operations, in order:
 .Bl -enum
 .It
 Cancel scheduled
-.Xr timeout 3
+.Xr AG_Timeout 3
 events (that don't have the
 .Dv AG_TIMEOUT_LOADABLE
 flag set).

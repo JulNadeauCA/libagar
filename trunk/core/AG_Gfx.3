@@ -42,26 +42,19 @@ The Agar
 .Nm
 interface manages the storage of graphical information, such as images and
 animations.
+It is generally associated with an
+.Fn AG_Object 3 .
 The
 .Fn AG_GfxNew
 function is used to allocate and initialize a
 .Va gfx
 structure.
-The
-.Nm
-structure provides arrays of images, animations and maps.
-For example, references to sprites on a two-dimensional
-.Xr map 3
-consist of a pointer to a given object and an index into the
-.Va sprites
-array of its associated
-.Va gfx
-structure.
+This structure includes an array of pixmaps and an array of animations.
 .Pp
-It is possible to use an object's graphics without having to load its
-dynamic data into memory.
-Graphical information is saved in such a way that it is possible to load
-specific elements quickly.
+It is possible to use an object's graphics resourecs without having to load
+the object's data into memory.
+Graphical information is saved in such a way that it is possible to quickly
+load individual elements.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Gfx *"
@@ -100,7 +93,7 @@ if it reaches 0.
 The
 .Fn AG_WireGfx
 function permanently wires graphics from the given
-.Xr den 5
+.Xr AG_DEN 5
 archive file into memory.
 The archive should be located in one of the 
 .Sq den-path
@@ -162,8 +155,7 @@ The
 function allocates a new animation structure.
 The frames must be allocated manually.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr map 3 ,
+.Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
 .Xr SDL_Surface 3
 .Sh HISTORY

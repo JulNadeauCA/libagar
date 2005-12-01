@@ -43,7 +43,7 @@
 .Pp
 These functions are responsible for the initialization of Agar's internals,
 the initialization of SDL (and possibly OpenGL), the selection of the video
-mode, the font engine and the attachment of input devices.
+mode, the font engine and other subsystems.
 .Pp
 .nr nS 1
 .Ft "int"
@@ -119,13 +119,10 @@ The
 .Fn AG_Destroy
 function immediately frees all resources allocated by Agar.
 .Sh SEE ALSO
-.Xr object 3 ,
-.Xr input 3 ,
-.Xr map 3 ,
-.Xr view 3 ,
-.Xr vg 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Object 3 ,
+.Xr AG_View 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Pp
 .Bd -literal
 http://www.libsdl.org/
