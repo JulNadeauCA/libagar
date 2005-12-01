@@ -147,11 +147,8 @@ echo "    --with-freetype                Use FreeType font engine [default: chec
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
 echo "    --enable-network               Agar-Net support [default: check]"
-echo "    --enable-edition               Graphical editors [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
-echo "    --enable-astro-units           Include astronomical units [default: no]"
-echo "    --enable-histo-units           Include historical units [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
@@ -294,7 +291,7 @@ echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif" >> config/incldir.h
 MANDIR="\${PREFIX}/share/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
-PSDIR="\${PREFIX}/share/agar/ps"
+PSDIR="\${PREFIX}/share/agar/doc"
 echo "PSDIR=$PSDIR" >> Makefile.config
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
@@ -2318,33 +2315,15 @@ echo "#endif" >> config/utf8.h
 else
 echo "#undef UTF8" > config/utf8.h
 fi
-if [ "${enable_astro_units}" = "yes" ]
- then
-ASTRONOMICAL_UNITS=1
-echo "#ifndef ASTRONOMICAL_UNITS" > config/astronomical_units.h
-echo "#define ASTRONOMICAL_UNITS" $ASTRONOMICAL_UNITS >> config/astronomical_units.h
-echo "#endif" >> config/astronomical_units.h
-else
 echo "#undef ASTRONOMICAL_UNITS" > config/astronomical_units.h
-fi
-if [ "${enable_histo_units}" = "yes" ]
- then
 HISTORICAL_UNITS=1
 echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS" $HISTORICAL_UNITS >> config/historical_units.h
 echo "#endif" >> config/historical_units.h
-else
-echo "#undef HISTORICAL_UNITS" > config/historical_units.h
-fi
-if [ "${enable_edition}" != "no" ]
- then
 EDITION=1
 echo "#ifndef EDITION" > config/edition.h
 echo "#define EDITION" $EDITION >> config/edition.h
 echo "#endif" >> config/edition.h
-else
-echo "#undef EDITION" > config/edition.h
-fi
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP=1
