@@ -292,7 +292,7 @@ INCLDIR="\"$PREFIX/include/agar\""
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR" $INCLDIR >> config/incldir.h
 echo "#endif" >> config/incldir.h
-MANDIR="\${PREFIX}/share/agar/man"
+MANDIR="\${PREFIX}/share/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
 PSDIR="\${PREFIX}/share/agar/ps"
 echo "PSDIR=$PSDIR" >> Makefile.config
