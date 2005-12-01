@@ -9,7 +9,7 @@ while (<STDIN>) {
 	if (/^\.nr nS 1/) { $ns = 1; }
 	elsif (/^\.nr nS 0/ || /^\.\\" NOMANLINK/) { $ns = 0; }
 	next unless $ns;
-	if (/^\.Fn ([\w\-]+)\s+/ && $1 ne $man) {
+	if (/^\.Fn ([\w\-]+)\s+/ && "$1.3" ne $man) {
 		print "MANLINKS+=$man:$1.3\n";
 	}
 }
