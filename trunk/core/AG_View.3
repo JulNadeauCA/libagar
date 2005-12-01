@@ -26,13 +26,13 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 23, 2002
-.Dt VIEW 3
+.Dt AG_VIEW 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm view
-.Nd agar graphic management interface
+.Nm AG_View
+.Nd agar display interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -307,8 +307,8 @@ functions looks for a window identified by
 .Fa name
 and return NULL if there is no such window.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr window 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Window 3 ,
 .Xr SDL_SetVideoMode 3 ,
 .Xr SDL_CreateRGBSurface 3
 .Xr SDL_Surface 3 ,

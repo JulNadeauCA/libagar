@@ -28,16 +28,16 @@
 .\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
 .\"
 .Dd NOVEMBER 26, 2001
-.Dt AGAR 3
+.Dt AG_CORE 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm core
+.Nm AG_Core
 .Nd agar core initialization and globals
 .Sh SYNOPSIS
 .Bd -literal
-#include <core/core.h>
+#include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
 .Pp
@@ -68,7 +68,7 @@ mode, the font engine and the attachment of input devices.
 .Fn AG_Quit "void"
 .Pp
 .Ft "void"
-.Fn AG_destroy "void"
+.Fn AG_Destroy "void"
 .nr nS 0
 .Pp
 The

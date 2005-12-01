@@ -28,102 +28,101 @@
 .\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
 .\"
 .Dd NOVEMBER 26, 2001
-.Dt AGAR 3
+.Dt AG_INTRO 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm agar
-.Nd agar manual index
+.Nm AG_Intro
+.Nd agar introduction
 .Sh DESCRIPTION
-The
-.Nm
-library is a highly portable graphical toolkit and application framework. This
-manual documents the programming interfaces offered by the Agar subsystems.
+Agar is a portable and window-system independent graphics toolkit for SDL
+and OpenGL. In addition to a fully functional GUI toolkit, a set of separate
+higher-level graphics libraries are included in the distribution.
 .Pp
 .Sh CORE AGAR LIBRARY
 .Bl -tag -width "position " -compact
-.It Xr core 3
+.It Xr AG_Core 3
 Core Agar library initialization.
-.It Xr event 3
-Event handling for objects.
-.It Xr gfx 3
+.It Xr AG_Gfx 3
 Graphic resource management.
-.It Xr input 3
-Input device management.
 .It Xr AG_Object 3
 Object linkage, memory management, persistence, dependencies and events.
-.It Xr prop 3
+.It Xr AG_Event 3
+Event handling for objects.
+.It Xr AG_Prop 3
 Generic runtime properties for objects.
-.It Xr view 3
+.It Xr AG_View 3
 Interface to the graphics display.
+.It Xr AG_Timeout 3
+Timing-related routines.
 .El
-.Sh RASTER GRAPHICS LIBRARY
+.Sh RASTER GRAPHICS LIBRARY (RG)
 .Bl -tag -width "tileview(3) " -compact
-.It Xr tileview 3
-Tile display and edition.
+.It Xr RG_Tileview
+Display and edition of 2D vector and raster graphics.
 .El
 .Sh USER INTERFACE RELATED
 .Bl -tag -width "window(3) " -compact
-.It Xr text 3
+.It Xr AG_Text 3
 High-level interface to font engine (ie. FreeType).
-.It Xr units 3
+.It Xr AG_Units 3
 Conversion between different unit systems.
-.It Xr widget 3
+.It Xr AG_Widget 3
 Generic widget interface.
-.It Xr window 3
+.It Xr AG_Window 3
 Basic window widget; interface to built-in window manager.
 .El
 .Sh STANDARD WIDGETS
 .Bl -tag -width "fspinbutton(3) " -compact
-.It Xr pixmap 3
+.It Xr AG_Pixmap 3
 Displays arbitrary surfaces.
-.It Xr box 3
+.It Xr AG_Box 3
 Horizontal/vertical widget container.
-.It Xr button 3
+.It Xr AG_Button 3
 Generic push-button widget (boolean bindings).
-.It Xr checkbox 3
+.It Xr AG_Checkbox 3
 Generic checkbox widget (boolean bindings).
-.It Xr combo 3
+.It Xr AG_Combo 3
 Text input/drop-down menu widget.
-.It Xr fspinbutton 3
+.It Xr AG_FSpinbutton 3
 Spinbutton with unit conversion (floating point bindings).
-.It Xr graph 3
+.It Xr AG_Graph 3
 Plot a set of integral values.
-.It Xr hbox 3
+.It Xr AG_HBox 3
 Alternate interface to
-.Xr box 3 .
-.It Xr hsvpal 3
+.Xr AG_Box 3 .
+.It Xr AG_HSVPal 3
 Hue/saturation/value color picker widget.
-.It Xr label 3
+.It Xr AG_Label 3
 Display a string of text (static or polled).
-.It Xr mfspinbutton 3
+.It Xr AG_MFSpinbutton 3
 Spinbutton widget for tuples.
-.It Xr palette 3
+.It Xr AG_Palette 3
 Edit a RGB color value (Uint32/SDL_PixelFormat bindings). Obsoleted
 by
-.Xr hsvpal 3 ) .
-.It Xr radio 3
+.Xr AG_HSVPal 3 ) .
+.It Xr AG_Radio 3
 Simple radio group widget (integral bindings).
-.It Xr scrollbar 3
+.It Xr AG_Scrollbar 3
 Horizontal or vertical scrollbar (integral range and value bindings).
-.It Xr spinbutton 3
+.It Xr AG_Spinbutton 3
 Spinbutton widget for integer values (integral bindings).
-.It Xr tableview 3
+.It Xr AG_Tableview 3
 Table display widget (either static or polled; trees supported).
-.It Xr textbox 3
+.It Xr AG_Textbox 3
 Text edition widget (string bindings, UTF-8 supported).
-.It Xr tlist 3
+.It Xr AG_Tlist 3
 Tree/list widget (either static or polled).
-.It Xr toolbar 3
+.It Xr AG_Toolbar 3
 Button container specialized for use as a toolbar.
-.It Xr ucombo 3
+.It Xr AG_UCombo 3
 Variant of
-.Xr combo 3
+.Xr AG_Combo 3
 which displays a button instead of a text input.
-.It Xr vbox 3
+.It Xr AG_VBox 3
 Alternate interface to
-.Xr box 3 .
+.Xr AG_Box 3 .
 .El
 .Bd -literal
 http://www.libsdl.org/
