@@ -27,5 +27,6 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_Graph.3 AG_Checkbox.3 AG_Label.3 AG_Radio.3 \
 
 CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 
+include .manlinks.mk
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
