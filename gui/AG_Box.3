@@ -1,4 +1,4 @@
-.\"	$Csoft: vbox.3,v 1.5 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: box.3,v 1.8 2005/03/09 06:39:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -26,90 +26,104 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd June 10, 2003
-.Dt VBOX 3
+.Dt AG_BOX 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm vbox
-.Nd agar vertical container widget
+.Nm AG_Box
+.Nd agar general container widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/vbox.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
 .Nm
-widget is a variant of
-.Xr box 3
-which packs its children vertically.
+widget packs its children horizontally or vertically.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
-.Xr box 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "AG_VBox *"
-.Fn AG_VBoxNew "void *parent" "int flags"
+.Ft "AG_Box *"
+.Fn AG_BoxNew "void *parent" "enum ag_box_type type" "int flags"
 .Pp
 .Ft "void"
-.Fn AG_VBoxInit "AG_VBox *box" "int flags"
+.Fn AG_BoxInit "AG_Box *box" "enum ag_box_type type" "int flags"
 .Pp
 .Ft void
-.Fn AG_VBoxSetHomogenous "AG_VBox *box" "int homogenous"
+.Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
 .Pp
 .Ft void
-.Fn AG_VBoxSetPadding "AG_VBox *box" "int padding"
+.Fn AG_BoxSetPadding "AG_Box *box" "int padding"
 .Pp
 .Ft void
-.Fn AG_VBoxSetSpacing "AG_Box *vbox" "int spacing"
+.Fn AG_BoxSetSpacing "AG_Box *box" "int spacing"
+.Pp
+.Ft void
+.Fn AG_BoxSetDepth "AG_Box *box" "int depth"
 .nr nS 0
 .Pp
 The
-.Fn AG_VBoxNew
+.Fn AG_BoxNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn AG_VBoxInit
+.Fn AG_BoxInit
 initializes a
 .Nm
 widget.
+.Fa type
+defines whether child widgets are packed horizontally:
+.Bd -literal
+enum ag_box_type {
+	AG_BOX_HORIZ,
+	AG_BOX_VERT
+};
+.Ed
+.Pp
 Acceptable
 .Fa flags
 include:
 .Bd -literal
-#define AG_VBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
-#define AG_VBOX_HFILL       AG_BOX_HFILL       /* Fill remaining width */
-#define AG_VBOX_VFILL       AG_BOX_VFILL       /* Fill remaining height */
+#define AG_BOX_HOMOGENOUS  0x01    /* Divide space evenly */
+#define AG_BOX_HFILL       0x02    /* Fill container's remaining width */
+#define AG_BOX_VFILL       0x04    /* Fill container's remaining height */
+#define AG_BOX_FRAME	0x08	/* Display a frame */
 .Ed
 .Pp
 The
-.Fn AG_VBoxSetHomogenous
+.Fn AG_BoxSetHomogenous
 function sets/clears the
-.Dv AG_VBOX_HOMOGENOUS
+.Dv AG_BOX_HOMOGENOUS
 flag, which controls whether available space is divided evenly between widgets.
 .Pp
 The
-.Fn AG_VBoxSetPadding
+.Fn AG_BoxSetPadding
 function sets the padding around the group of child widgets to
 .Fa padding
 pixels.
-.Fn AG_VBoxSetSpacing
+.Fn AG_BoxSetSpacing
 sets the spacing between individual child widgets to
 .Fa spacing
 pixels.
+.Pp
+Assuming that the
+.Dv AG_BOX_FRAME
+flag was given,
+.Fn AG_BoxSetDepth
+sets the depth of the frame.
 .Sh EVENTS
 The
 .Nm
 widget neither reacts to nor generates any event.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr box 3 ,
-.Xr hbox 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

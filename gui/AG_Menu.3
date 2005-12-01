@@ -26,16 +26,16 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd May 30, 2005
-.Dt MENU 3
+.Dt AG_MENU 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm menu
+.Nm AG_Menu
 .Nd agar menu widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/menu.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -47,7 +47,7 @@ values.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -315,14 +315,14 @@ item = AG_MenuAddItem(menu, "File");
 }
 .Ed
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr event 3 ,
-.Xr button 3 ,
-.Xr toolbar 3 ,
-.Xr tableview 3 ,
-.Xr tlist 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_Toolbar 3 ,
+.Xr AG_Tableview 3 ,
+.Xr AG_Tlist 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

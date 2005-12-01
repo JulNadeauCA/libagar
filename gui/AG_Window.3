@@ -26,37 +26,36 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 21, 2002
-.Dt WINDOW 3
+.Dt AG_WINDOW 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm window
+.Nm AG_Window
 .Nd agar window system
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/widget.h>
-#include <agar/gui/window.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
 .Nm
 object implements a mobile, resizable container for widgets; it is
 itself derived from the
-.Xr widget 3
+.Xr AG_Widget 3
 structure and attached to a
-.Xr view 3 .
+.Xr AG_View 3 .
 Currently there is only one view; multiple views will be supported when
 SDL implements multiple displays.
 .Pp
 The container behavior of a
 .Nm
 is much like a
-.Xr vbox 3 .
+.Xr AG_VBox 3 .
 Unless the
 .Dv AG_WINDOW_NOTITLE
 flag is set, a
-.Xr titlebar 3
+.Xr AG_Titlebar 3
 widget is attached to the window at creation time.
 .Pp
 Initially, the window's widgets are queried for a default, minimum size, and
@@ -64,7 +63,7 @@ the window is sized accordingly.
 After this initial sizing, widget containers may scale widgets to any size.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -175,7 +174,7 @@ For widgets that are attached to container widgets, it is the container
 widgets that define spacing, as well as other aspects of widget
 organization.
 For instance, the
-.Xr box 3
+.Xr AG_Box 3
 container widget provides a
 .Fn AG_BoxSetSpacing
 function .
@@ -343,8 +342,8 @@ The window is now visible.
 The window is no longer visible.
 .El
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr widget 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3
 .Sh HISTORY
 The
 .Nm

@@ -1,4 +1,4 @@
-.\"	$Csoft: hbox.3,v 1.5 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: graph.3,v 1.23 2005/05/11 09:59:33 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -25,91 +25,117 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd June 10, 2003
-.Dt HBOX 3
+.Dd August 20, 2002
+.Dt AG_GRAPH 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm hbox
-.Nd agar horizontal container widget
+.Nm AG_Graph
+.Nd agar graphic widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/hbox.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
 .Nm
-widget is a variant of
-.Xr box 3
-which packs its children horizontally.
+widget implements a scrollable graph display.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
-.Xr box 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "AG_HBox *"
-.Fn AG_HBoxNew "void *parent" "int flags"
-.Pp
-.Ft "void"
-.Fn AG_HBoxInit "AG_HBox *box" "int flags"
+.Ft "AG_Graph *"
+.Fn AG_GraphNew "void *parent, enum ag_graph_type type" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_HBoxSetHomogenous "AG_HBox *box" "int homogenous"
-.Pp
-.Ft void
-.Fn AG_HBoxSetPadding "AG_HBox *box" "int padding"
-.Pp
-.Ft void
-.Fn AG_HBoxSetSpacing "AG_Box *hbox" "int spacing"
+.Fn AG_GraphInit "AG_Graph *graph" "enum ag_graph_type type, Uint flags"
 .nr nS 0
 .Pp
 The
-.Fn AG_HBoxNew
+.Fn AG_GraphNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn AG_HBoxInit
+.Fn AG_GraphInit
 initializes a
 .Nm
 widget.
-Acceptable
-.Fa flags
-include:
+The
+.Fa type
+argument is one of:
 .Bd -literal
-#define AG_HBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
-#define AG_HBOX_HFILL       AG_BOX_HFILL       /* Fill remaining width */
-#define AG_HBOX_VFILL       AG_BOX_VFILL       /* Fill remaining height */
+enum ag_graph_type {
+	AG_GRAPH_POINTS,   /* Dots */
+	AG_GRAPH_LINES     /* Lines */
+} type;
 .Ed
 .Pp
 The
-.Fn AG_HBoxSetHomogenous
-function sets/clears the
-.Dv AG_HBOX_HOMOGENOUS
-flag, which controls whether available space is divided evenly between widgets.
+.Fa flags
+may include:
+.Bd -literal
+#define AG_GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
+#define AG_GRAPH_ORIGIN  0x02   /* Visible origin */
+.Ed
+.Sh PLOTTING
+.nr nS 1
+.Ft "AG_GraphItem *"
+.Fn AG_GraphAddItem "AG_Graph *graph, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
+.Pp
+.Ft void
+.Fn AG_GraphPlot "AG_GraphItem *item" "AG_GraphValue val"
+.nr nS 0
 .Pp
 The
-.Fn AG_HBoxSetPadding
-function sets the padding around the group of child widgets to
-.Fa padding
-pixels.
-.Fn AG_HBoxSetSpacing
-sets the spacing between individual child widgets to
-.Fa spacing
-pixels.
+.Fn AG_GraphAddItem
+function inserts a new item into
+.Fa graph .
+If the length of
+.Fa name
+exceeds
+.Dv GRAPH_ITEM_NAME_MAX - 1
+bytes, the string is truncated.
+The
+.Fa r ,
+.Fa g ,
+.Fa b
+triplet composes a color to visually identify the item.
+.Fa limit
+is the maximum number of points (if 0, the maximum is implicitely 0xffffffff-1).
+.Pp
+The
+.Fn AG_GraphPlot
+function adds a value
+.Fa val
+to the graph item
+.Fa item .
 .Sh EVENTS
 The
 .Nm
-widget neither reacts to nor generates any event.
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown"
+.It window-mousemotion
+Scroll (x motion) or change the origin position (y motion).
+.It window-keydown
+Key 0 moves to offset 0, left key scrolls left, right key scrolls right,
+.It window-mousebuttonup
+Stop moving.
+.It window-mousebuttondown
+Start moving.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr box 3 ,
-.Xr vbox 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

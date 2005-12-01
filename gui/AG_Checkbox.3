@@ -1,4 +1,4 @@
-.\"	$Csoft: radio.3,v 1.15 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.17 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -25,57 +25,63 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 21, 2002
-.Dt RADIO 3
+.Dd August 20, 2002
+.Dt AG_CHECKBOX 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm radio
-.Nd agar radio group widget
+.Nm AG_Checkbox
+.Nd agar checkbox widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/gui/radio.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a group of radio buttons.
+widget displays a string of text next to a button used to trigger an
+.Ft int
+binding.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft AG_Radio *
-.Fn AG_RadioNew "void *parent" "Uint flags" "const char *items[]"
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNew "void *parent" "Uint flags" "const char *label"
 .Pp
-.Ft void
-.Fn AG_RadioInit "AG_Radio *radio" "Uint flags" "const char *items[]"
+.Ft "void"
+.Fn AG_CheckboxInit "AG_Checkbox *checkbox" "Uint flags" "const char *label"
+.Pp
+.Ft "void"
+.Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
 .nr nS 0
 .Pp
 The
-.Fn AG_RadioNew
+.Fn AG_CheckboxNew
 function allocates, initializes, and attaches a
 .Nm
-widget.
-The
-.Fn AG_RadioInit
-function initializes a
+widget displaying the given text label.
+.Fn AG_CheckboxInit
+initializes a
 .Nm
-group.
+widget.
+.Pp
 The
-.Fa items
-argument is a null-terminated array of strings.
+.Fn AG_CheckboxToggle
+function inverts the current state of
+.Fa checkbox .
 .Sh BINDINGS
 The
 .Nm
 widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "int *value"
-.It Va int *value
-Index of selected item, or -1 if there is no selection.
+.It Va int *state
+State (1=enabled, 0=disabled).
 .El
 .Sh EVENTS
 The
@@ -84,12 +90,12 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Select a radio item.
+Trigger the state if button is 1, otherwise only give focus to the widget.
 .It window-keydown
-.Dv SDLK_DOWN
-moves selection downards.
-.Dv SDLK_UP
-moves selection upwards.
+Trigger the state if key is
+.Dv SDLK_RETURN
+or
+.Dv SDLK_SPACE .
 .El
 .Pp
 The
@@ -97,17 +103,18 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -width 2n
-.It Fn radio-changed "int index"
-Selection changed to item at index
-.Fa index .
+.It Fn checkbox-changed "int state"
+Checkbox state changed (1=enabled, 0=disabled).
 The
-.Sq value
-binding remains locked throughout the event handler's execution.
+.Sq state
+binding remains locked during the event handler's execution.
 .El
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_Radio 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm

@@ -44,7 +44,7 @@ widget represents a single value inside a fixed range.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr AG_Object 3 ->
-.Xr widget 3 ->
+.Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
@@ -83,9 +83,9 @@ function sets the size of the scrollbar to
 .Fa size ,
 which is usually calculated from the visible area of whatever is being
 scrolled (such as the number of visible items of a
-.Xr tlist 3
+.Xr AG_Tlist 3
 widget or the amount nodes in the visible area of a
-.Xr map 3 ) .
+.Xr AG_Map 3 ) .
 .Fn AG_ScrollbarGetBarSize
 returns the current size of the scrollbar in
 .Fa sizep .
@@ -124,9 +124,9 @@ The scrollbar's value has changed to
 .Fa new_value .
 .El
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr widget 3 ,
-.Xr window 3
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
