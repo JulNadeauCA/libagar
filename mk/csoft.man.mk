@@ -526,8 +526,8 @@ install-man:
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
-		echo "ln -fs man$$MS/$$MPG man$$MS/$$MLNK"; \
-		${SUDO} ln -fs man$$MS/$$MPG man$$MS/$$MLNK; \
+		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
+		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
 	    done); \
 	fi
 

@@ -14,5 +14,6 @@ MAN3=	RG_Tileview.3
 
 CFLAGS+=${SDL_CFLAGS}
 
+include .manlinks.mk
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
