@@ -45,7 +45,9 @@ CATMAN7?=""
 CATMAN8?=""
 CATMAN9?=""
 MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
+MANLINKS?=
 NOMAN?=
+NOMANLINKS?=
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
@@ -518,6 +520,16 @@ install-man:
 		done; \
 	    fi; \
 	fi
+	@if [ "${NOMANLINKS}" != "yes" -a "${MANLINKS}" != "" ]; then \
+	    (cd ${MANDIR} && \
+	     for L in ${MANLINKS}; do \
+	        MPG=`echo $$L | sed 's/:.*//'`; \
+	        MLNK=`echo $$L | sed 's/.*://'`; \
+		MS=`echo $$L | sed 's/.*\.//'`; \
+		echo "ln -fs man$$MS/$$MPG man$$MS/$$MLNK"; \
+		${SUDO} ln -fs man$$MS/$$MPG man$$MS/$$MLNK; \
+	    done); \
+	fi
 
 man:
 	@if [ "${MAN}" != "" ]; then \
@@ -528,8 +540,15 @@ man:
 		exit 1; \
 	fi
 
+manlinks: Makefile
+	echo -n > .manlinks.mk
+	for F in ${MAN3}; do \
+		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+	done
+
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-man clean-man
-.PHONY: man performat-man install-man-dirs
+.PHONY: man preformat-man install-man-dirs manlinks
 
 include ${TOP}/mk/csoft.common.mk
