@@ -26,12 +26,12 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd May 9, 2004
-.Dt TIMEOUT 3
+.Dt AG_TIMEOUT 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm timeout
+.Nm AG_Timeout
 .Nd agar timer facility
 .Sh SYNOPSIS
 .Bd -literal
@@ -62,7 +62,7 @@ If the callback function returns a non-zero value, the timeout is automatically
 rescheduled to occur in t+n ticks.
 .Pp
 The
-.Xr event 3
+.Xr AG_Event 3
 interface uses
 .Nm
 internally to implement timing-related events (registered using
@@ -214,8 +214,8 @@ The flags
 .Dv AG_TIMEOUT_LOADABLE
 have confusing names.
 .Sh SEE ALSO
-.Xr agar 3 ,
-.Xr event 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Event 3 ,
 .Xr AG_Object 3 ,
 .Xr SDL_GetTicks 3
 .Rs
