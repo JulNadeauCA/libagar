@@ -58,14 +58,16 @@ Interface to the graphics display.
 Timing-related routines.
 .El
 .Sh RASTER GRAPHICS LIBRARY (RG)
-.Bl -tag -width "tileview(3) " -compact
+.Bl -tag -width "RG_Animview (3) " -compact
+.It Xr RG_Animview 3
+Display of animations.
 .It Xr RG_Tileview 3
 Display and edition of 2D vector and raster graphics.
 .El
 .Sh USER INTERFACE RELATED
-.Bl -tag -width "window(3) " -compact
+.Bl -tag -width "AG_Window(3) " -compact
 .It Xr AG_Text 3
-High-level interface to font engine (ie. FreeType).
+High-level interface to font engine (FreeType or bitmap).
 .It Xr AG_Units 3
 Conversion between different unit systems.
 .It Xr AG_Widget 3
@@ -74,9 +76,7 @@ Generic widget interface.
 Basic window widget; interface to built-in window manager.
 .El
 .Sh STANDARD WIDGETS
-.Bl -tag -width "fspinbutton(3) " -compact
-.It Xr AG_Pixmap 3
-Displays arbitrary surfaces.
+.Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
 Horizontal/vertical widget container.
 .It Xr AG_Button 3
@@ -85,8 +85,14 @@ Generic push-button widget (boolean bindings).
 Generic checkbox widget (boolean bindings).
 .It Xr AG_Combo 3
 Text input/drop-down menu widget.
+.It Xr AG_FileDlg 3
+File selection widget.
+.It Xr AG_Fixed 3
+Container for fixed position/geometry widgets.
 .It Xr AG_FSpinbutton 3
-Spinbutton with unit conversion (floating point bindings).
+Spinbutton (real value with unit conversion).
+.It Xr AG_GLView 3
+OpenGL context widget.
 .It Xr AG_Graph 3
 Plot a set of integral values.
 .It Xr AG_HBox 3
@@ -97,25 +103,49 @@ Hue/saturation/value color picker widget.
 .It Xr AG_Label 3
 Display a string of text (static or polled).
 .It Xr AG_MFSpinbutton 3
-Spinbutton widget for tuples.
+Spinbutton widget for tuples (real-valued).
+.It Xr AG_MPane 3
+Standard single, dual, triple and quad paned view.
+.It Xr AG_MSpinbutton 3
+Spinbutton widget for tuples (integer-only).
+.It Xr AG_Matview 3
+Matrix viewer widget.
+.It Xr AG_Menu 3
+Menu widget.
+.It Xr AG_Notebook 3
+Notebook widget.
+.It Xr AG_ObjectSelector 3
+Selector for
+.Xr AG_Object 3
+trees.
 .It Xr AG_Palette 3
 Edit a RGB color value (Uint32/SDL_PixelFormat bindings). Obsoleted
 by
-.Xr AG_HSVPal 3 ) .
+.Xr AG_HSVPal 3 .
+.It Xr AG_Pane 3
+Dual paned view.
+.It Xr AG_Pixmap 3
+Displays arbitrary surfaces.
 .It Xr AG_Radio 3
-Simple radio group widget (integral bindings).
+Simple radio group widget (integer bindings).
 .It Xr AG_Scrollbar 3
 Horizontal or vertical scrollbar (integral range and value bindings).
+.It Xr AG_Separator 3
+Cosmetic separator widget.
 .It Xr AG_Spinbutton 3
-Spinbutton widget for integer values (integral bindings).
+Spinbutton widget for integer values.
+.It Xr AG_Statusbar 3
+Specialized statusbar widget.
+.It Xr AG_Table 3
+Table display widget (best for polling; no trees).
 .It Xr AG_Tableview 3
-Table display widget (either static or polled; trees supported).
+Table display widget with tree support (static/dynamic cells).
 .It Xr AG_Textbox 3
 Text edition widget (string bindings, UTF-8 supported).
 .It Xr AG_Tlist 3
 Tree/list widget (either static or polled).
 .It Xr AG_Toolbar 3
-Button container specialized for use as a toolbar.
+Specialized button container for toolbars.
 .It Xr AG_UCombo 3
 Variant of
 .Xr AG_Combo 3
@@ -124,7 +154,3 @@ which displays a button instead of a text input.
 Alternate interface to
 .Xr AG_Box 3 .
 .El
-.Bd -literal
-http://www.libsdl.org/
-http://www.opengl.org/
-.Ed
