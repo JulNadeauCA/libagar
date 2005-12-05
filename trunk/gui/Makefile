@@ -17,7 +17,7 @@ SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
 	tableview.c separator.c colors.c cursors.c notebook.c pixmap.c \
-	animview.c file_dlg.c hpane.c vpane.c objsel.c matview.c fixed.c \
+	animview.c file_dlg.c hpane.c vpane.c objsel.c fixed.c \
 	table.c glview.c unicode.c ucslcpy.c ucslcat.c ucssep.c mpane.c pane.c
 MAN3=	AG_Widget.3 AG_Button.3 AG_Graph.3 AG_Checkbox.3 AG_Label.3 AG_Radio.3 \
 	AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 AG_Tlist.3 AG_Text.3 AG_Box.3 \
