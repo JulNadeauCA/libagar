@@ -66,7 +66,10 @@ void
 AG_DestroyError(void)
 {
 #ifdef THREADS
+#if 0
+	/* XXX uninitialized warnings */
 	AG_ThreadKeyDelete(agErrorKey);
+#endif
 #else
 	Free(agErrorKey, 0);
 #endif
