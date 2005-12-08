@@ -32,7 +32,7 @@
 #include "vg_primitive.h"
 
 void
-VG_Origin(VG *vg, int o, double ox, double oy)
+VG_Origin(VG *vg, int o, float ox, float oy)
 {
 	VG_Element *vge;
 	VG_Block *vgb;

@@ -38,7 +38,7 @@
 
 const AG_Version vgVer = {
 	"agar vg",
-	5, 0
+	6, 0
 };
 
 extern const VG_ElementOps vgPointsOps;
@@ -249,21 +249,21 @@ VG_DestroyElement(VG *vg, VG_Element *vge)
 
 /* Set the default scale factor. */
 void
-VG_DefaultScale(VG *vg, double scale)
+VG_DefaultScale(VG *vg, float scale)
 {
 	vg->default_scale = scale;
 }
 
 /* Set the default scale factor. */
 void
-VG_SetGridGap(VG *vg, double gap)
+VG_SetGridGap(VG *vg, float gap)
 {
 	vg->grid_gap = gap;
 }
 
 /* Adjust the vg bounding box and scaling factor. */
 void
-VG_Scale(VG *vg, double w, double h, double scale)
+VG_Scale(VG *vg, float w, float h, float scale)
 {
 	int pw = (int)(w*scale);
 	int ph = (int)(h*scale);
@@ -414,9 +414,9 @@ int
 VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2,
     VG_Rect *ixion)
 {
-	double r1xmin, r1xmax, r1ymin, r1ymax;
-	double r2xmin, r2xmax, r2ymin, r2ymax;
-	double ixw, ixh;
+	float r1xmin, r1xmax, r1ymin, r1ymax;
+	float r2xmin, r2xmax, r2ymin, r2ymax;
+	float ixw, ixh;
 
 	r1xmin = r1->x;
 	r1ymin = r1->y;
@@ -460,7 +460,7 @@ VG_RasterizeElement(VG *vg, VG_Element *vge)
 	VG_Rect r1, r2;
 	Uint32 color_save = 0;			/* XXX -Wuninitialized */
 
-	if (!vge->drawn) {
+	if (!vge->drawn || 1) {
 		if (vge->mouseover) {
 			Uint8 r, g, b;
 
@@ -535,9 +535,9 @@ VG_Rasterize(VG *vg)
  * The vg must be locked.
  */
 void
-VG_VLength(VG *vg, int len, double *vlen)
+VG_VLength(VG *vg, int len, float *vlen)
 {
-	*vlen = (double)(len/vg->scale);
+	*vlen = (float)(len/vg->scale);
 }
 
 /*
@@ -546,11 +546,11 @@ VG_VLength(VG *vg, int len, double *vlen)
  * The vg must be locked.
  */
 void
-VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
-    double *vy)
+VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, float *vx,
+    float *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale - vg->origin[0].x;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale - vg->origin[0].y;
+	*vx = (float)rx/vg->scale + (float)xoff/vg->scale - vg->origin[0].x;
+	*vy = (float)ry/vg->scale + (float)yoff/vg->scale - vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
@@ -563,11 +563,11 @@ VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
  * The vg must be locked.
  */
 void
-VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
-    double *vy)
+VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, float *vx,
+    float *vy)
 {
-	*vx = (double)rx/vg->scale + (double)xoff/vg->scale;
-	*vy = (double)ry/vg->scale + (double)yoff/vg->scale;
+	*vx = (float)rx/vg->scale + (float)xoff/vg->scale;
+	*vy = (float)ry/vg->scale + (float)yoff/vg->scale;
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
@@ -578,7 +578,7 @@ VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, double *vx,
  * The vg must be locked.
  */
 void
-VG_Rcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
+VG_Rcoords2(VG *vg, float vx, float vy, int *rx, int *ry)
 {
 	*rx = (int)(vx*vg->scale) + (int)(vg->origin[0].x*vg->scale);
 	*ry = (int)(vy*vg->scale) + (int)(vg->origin[0].y*vg->scale);
@@ -589,7 +589,7 @@ VG_Rcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-VG_AbsRcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
+VG_AbsRcoords2(VG *vg, float vx, float vy, int *rx, int *ry)
 {
 	*rx = (int)(vx*vg->scale);
 	*ry = (int)(vy*vg->scale);
@@ -600,7 +600,7 @@ VG_AbsRcoords2(VG *vg, double vx, double vy, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-VG_Rcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
+VG_Rcoords2d(VG *vg, float vx, float vy, float *rx, float *ry)
 {
 	*rx = vx*vg->scale + vg->origin[0].x*vg->scale;
 	*ry = vy*vg->scale + vg->origin[0].y*vg->scale;
@@ -613,7 +613,7 @@ VG_Rcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, double *rx, double *ry)
+VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, float *rx, float *ry)
 {
 	VG_Vtx c;
 	VG_Matrix m;
@@ -635,7 +635,7 @@ VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, double *rx, double *ry)
 void
 VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
 {
-	double x, y;
+	float x, y;
 
 	VG_VtxCoords2d(vg, vge, vi, &x, &y);
 	if (rx != NULL)	*rx = (int)x;
@@ -647,7 +647,7 @@ VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
  * The vg must be locked.
  */
 void
-VG_AbsRcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
+VG_AbsRcoords2d(VG *vg, float vx, float vy, float *rx, float *ry)
 {
 	*rx = vx*vg->scale;
 	*ry = vy*vg->scale;
@@ -658,7 +658,7 @@ VG_AbsRcoords2d(VG *vg, double vx, double vy, double *rx, double *ry)
  * The vg must be locked.
  */
 void
-VG_RLength(VG *vg, double len, int *rlen)
+VG_RLength(VG *vg, float len, int *rlen)
 {
 	*rlen = (int)(len*vg->scale);
 }
@@ -720,7 +720,7 @@ VG_PopMatrix(VG *vg)
 
 /* Push a 2D vertex onto the vertex array. */
 VG_Vtx *
-VG_Vertex2(VG *vg, double x, double y)
+VG_Vertex2(VG *vg, float x, float y)
 {
 	VG_Vtx *vtx;
 
@@ -752,8 +752,8 @@ VG_VertexV(VG *vg, const VG_Vtx *svtx, Uint nsvtx)
 void
 VG_MultMatrixByVector(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
 {
-	double ax = a->x;
-	double ay = a->y;
+	float ax = a->x;
+	float ay = a->y;
 
 	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
 	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
@@ -803,7 +803,7 @@ VG_PushIdentity(VG *vg)
 }
 
 void
-VG_LoadTranslate(VG_Matrix *m, double x, double y)
+VG_LoadTranslate(VG_Matrix *m, float x, float y)
 {
 	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = x;
 	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = y;
@@ -811,7 +811,7 @@ VG_LoadTranslate(VG_Matrix *m, double x, double y)
 }
 
 VG_Matrix *
-VG_Translate(VG *vg, double x, double y)
+VG_Translate(VG *vg, float x, float y)
 {
 	VG_Matrix *m;
 
@@ -821,11 +821,11 @@ VG_Translate(VG *vg, double x, double y)
 }
 
 void
-VG_LoadRotate(VG_Matrix *m, double tdeg)
+VG_LoadRotate(VG_Matrix *m, float tdeg)
 {
-	double theta = (tdeg/360.0)*(2.0*M_PI);
-	double rcos = cos(theta);
-	double rsin = sin(theta);
+	float theta = (tdeg/360.0)*(2.0*M_PI);
+	float rcos = cosf(theta);
+	float rsin = sinf(theta);
 
 	m->m[0][0] = +rcos;
 	m->m[0][1] = -rsin;
@@ -839,7 +839,7 @@ VG_LoadRotate(VG_Matrix *m, double tdeg)
 }
 
 VG_Matrix *
-VG_Rotate(VG *vg, double tdeg)
+VG_Rotate(VG *vg, float tdeg)
 {
 	VG_Matrix *m;
 
@@ -980,7 +980,7 @@ VG_SaveMatrix(VG_Matrix *A, AG_Netbuf *buf)
 
 	for (m = 0; m < 3; m++) {
 		for (n = 0; n < 3; n++)
-			AG_WriteDouble(buf, A->m[m][n]);
+			AG_WriteFloat(buf, A->m[m][n]);
 	}
 }
 
@@ -991,7 +991,7 @@ VG_LoadMatrix(VG_Matrix *A, AG_Netbuf *buf)
 
 	for (m = 0; m < 3; m++) {
 		for (n = 0; n < 3; n++)
-			A->m[m][n] = AG_ReadDouble(buf);
+			A->m[m][n] = AG_ReadFloat(buf);
 	}
 }
 
@@ -1011,15 +1011,15 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 
 	AG_WriteString(buf, vg->name);
 	AG_WriteUint32(buf, (Uint32)vg->flags);
-	AG_WriteDouble(buf, vg->w);
-	AG_WriteDouble(buf, vg->h);
-	AG_WriteDouble(buf, vg->scale);
-	AG_WriteDouble(buf, vg->default_scale);
+	AG_WriteFloat(buf, vg->w);
+	AG_WriteFloat(buf, vg->h);
+	AG_WriteFloat(buf, vg->scale);
+	AG_WriteFloat(buf, vg->default_scale);
 	AG_WriteColor(buf, vg->fmt, vg->fill_color);
 	AG_WriteColor(buf, vg->fmt, vg->grid_color);
 	AG_WriteColor(buf, vg->fmt, vg->selection_color);
 	AG_WriteColor(buf, vg->fmt, vg->mouseover_color);
-	AG_WriteDouble(buf, vg->grid_gap);
+	AG_WriteFloat(buf, vg->grid_gap);
 	AG_WriteUint32(buf, (Uint32)vg->cur_layer);
 
 	/* Save the origin points. */
@@ -1052,7 +1052,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		AG_WriteUint32(buf, (Uint32)vgb->flags);
 		AG_WriteVertex(buf, &vgb->pos);
 		AG_WriteVertex(buf, &vgb->origin);
-		AG_WriteDouble(buf, vgb->theta);
+		AG_WriteFloat(buf, vgb->theta);
 		nblocks++;
 	}
 	AG_PwriteUint32(buf, nblocks, nblocks_offs);
@@ -1132,14 +1132,14 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		/* Save element specific data. */
 		switch (vge->type) {
 		case VG_CIRCLE:
-			AG_WriteDouble(buf, vge->vg_circle.radius);
+			AG_WriteFloat(buf, vge->vg_circle.radius);
 			break;
 		case VG_ARC:
 		case VG_ELLIPSE:
-			AG_WriteDouble(buf, vge->vg_arc.w);
-			AG_WriteDouble(buf, vge->vg_arc.h);
-			AG_WriteDouble(buf, vge->vg_arc.s);
-			AG_WriteDouble(buf, vge->vg_arc.e);
+			AG_WriteFloat(buf, vge->vg_arc.w);
+			AG_WriteFloat(buf, vge->vg_arc.h);
+			AG_WriteFloat(buf, vge->vg_arc.s);
+			AG_WriteFloat(buf, vge->vg_arc.e);
 			break;
 		case VG_TEXT:
 			if (vge->vg_text.su != NULL) {
@@ -1147,7 +1147,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 				vge->vg_text.su = NULL;
 			}
 			AG_WriteString(buf, vge->vg_text.text);
-			AG_WriteDouble(buf, vge->vg_text.angle);
+			AG_WriteFloat(buf, vge->vg_text.angle);
 			AG_WriteUint8(buf, (Uint8)vge->vg_text.align);
 			break;
 		case VG_MASK:
@@ -1177,15 +1177,15 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	AG_MutexLock(&vg->lock);
 	AG_CopyString(vg->name, buf, sizeof(vg->name));
 	vg->flags = AG_ReadUint32(buf);
-	vg->w = AG_ReadDouble(buf);
-	vg->h = AG_ReadDouble(buf);
-	vg->scale = AG_ReadDouble(buf);
-	vg->default_scale = AG_ReadDouble(buf);
+	vg->w = AG_ReadFloat(buf);
+	vg->h = AG_ReadFloat(buf);
+	vg->scale = AG_ReadFloat(buf);
+	vg->default_scale = AG_ReadFloat(buf);
 	vg->fill_color = AG_ReadColor(buf, vg->fmt);
 	vg->grid_color = AG_ReadColor(buf, vg->fmt);
 	vg->selection_color = AG_ReadColor(buf, vg->fmt);
 	vg->mouseover_color = AG_ReadColor(buf, vg->fmt);
-	vg->grid_gap = AG_ReadDouble(buf);
+	vg->grid_gap = AG_ReadFloat(buf);
 	vg->cur_layer = (int)AG_ReadUint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
@@ -1235,7 +1235,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		vgb->flags = (int)AG_ReadUint32(buf);
 		AG_ReadVertex(buf, &vgb->pos);
 		AG_ReadVertex(buf, &vgb->origin);
-		vgb->theta = AG_ReadDouble(buf);
+		vgb->theta = AG_ReadFloat(buf);
 		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
@@ -1352,7 +1352,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 				VG_DestroyElement(vg, vge);
 				goto fail;
 			}
-			vge->vg_circle.radius = AG_ReadDouble(buf);
+			vge->vg_circle.radius = AG_ReadFloat(buf);
 			break;
 		case VG_ARC:
 		case VG_ELLIPSE:
@@ -1361,10 +1361,10 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 				VG_DestroyElement(vg, vge);
 				goto fail;
 			}
-			vge->vg_arc.w = AG_ReadDouble(buf);
-			vge->vg_arc.h = AG_ReadDouble(buf);
-			vge->vg_arc.s = AG_ReadDouble(buf);
-			vge->vg_arc.e = AG_ReadDouble(buf);
+			vge->vg_arc.w = AG_ReadFloat(buf);
+			vge->vg_arc.h = AG_ReadFloat(buf);
+			vge->vg_arc.s = AG_ReadFloat(buf);
+			vge->vg_arc.e = AG_ReadFloat(buf);
 			break;
 		case VG_TEXT:
 			if (vge->nvtx < 1) {
@@ -1374,7 +1374,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 			}
 			AG_CopyString(vge->vg_text.text, buf,
 			    sizeof(vge->vg_text.text));
-			vge->vg_text.angle = AG_ReadDouble(buf);
+			vge->vg_text.angle = AG_ReadFloat(buf);
 			vge->vg_text.align = AG_ReadUint8(buf);
 			break;
 		case VG_MASK:

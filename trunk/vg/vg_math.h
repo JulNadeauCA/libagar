@@ -8,10 +8,10 @@
 #include <agar/compat/math.h>
 
 __BEGIN_DECLS
-__inline__ double VG_Rad2Deg(double);
-__inline__ double VG_Deg2Rad(double);
-__inline__ void VG_Car2Pol(struct vg *, double, double, double *, double *);
-__inline__ void VG_Pol2Car(struct vg *, double, double, double *, double *);
+__inline__ float VG_Rad2Deg(float);
+__inline__ float VG_Deg2Rad(float);
+__inline__ void VG_Car2Pol(struct vg *, float, float, float *, float *);
+__inline__ void VG_Pol2Car(struct vg *, float, float, float *, float *);
 __END_DECLS
 
 #include "close_code.h"

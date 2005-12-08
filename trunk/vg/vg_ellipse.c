@@ -42,7 +42,7 @@ init(VG *vg, VG_Element *vge)
 }
 
 void
-VG_EllipseExtent(VG *vg, double w, double h)
+VG_EllipseExtent(VG *vg, float w, float h)
 {
 	VG_Element *vge = vg->cur_vge;
 
@@ -51,7 +51,7 @@ VG_EllipseExtent(VG *vg, double w, double h)
 }
 
 void
-VG_EllipseArc(VG *vg, double s, double e)
+VG_EllipseArc(VG *vg, float s, float e)
 {
 	VG_Element *vge = vg->cur_vge;
 
@@ -84,7 +84,7 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, float x, float y)
 {
 	return (FLT_MAX);
 }

@@ -39,21 +39,21 @@
 #include "vg_primitive.h"
 
 static void
-snap_to_grid(VG *vg, double *x, double *y)
+snap_to_grid(VG *vg, float *x, float *y)
 {
-	double gx, gy;
-	double xoff, yoff;
+	float gx, gy;
+	float xoff, yoff;
 	int xsign = *x >= 0 ? 1 : -1;
 	int ysign = *y >= 0 ? 1 : -1;
 
 	/* XXX bletcherous */
-	for (gx = 0; gx <= fabs(*x)-vg->grid_gap; gx += vg->grid_gap)
+	for (gx = 0; gx <= fabsf(*x)-vg->grid_gap; gx += vg->grid_gap)
 	    ;;
-	for (gy = 0; gy <= fabs(*y)-vg->grid_gap; gy += vg->grid_gap)
+	for (gy = 0; gy <= fabsf(*y)-vg->grid_gap; gy += vg->grid_gap)
 	    ;;
 
-	xoff = fabs(*x) - gx;
-	yoff = fabs(*y) - gy;
+	xoff = fabsf(*x) - gx;
+	yoff = fabsf(*y) - gy;
 
 	if (xsign == 1) {
 		xoff = *x - gx;
@@ -61,7 +61,7 @@ snap_to_grid(VG *vg, double *x, double *y)
 		if (xoff > vg->grid_gap/2)
 			*x += vg->grid_gap;
 	} else {
-		xoff = fabs(*x) - gx;
+		xoff = fabsf(*x) - gx;
 		*x = -gx;
 		if (xoff > vg->grid_gap/2)
 			*x -= vg->grid_gap;
@@ -73,7 +73,7 @@ snap_to_grid(VG *vg, double *x, double *y)
 		if (yoff > vg->grid_gap/2)
 			*y += vg->grid_gap;
 	} else {
-		yoff = fabs(*y) - gy;
+		yoff = fabsf(*y) - gy;
 		*y = -gy;
 		if (yoff > vg->grid_gap/2)
 			*y -= vg->grid_gap;
@@ -81,7 +81,7 @@ snap_to_grid(VG *vg, double *x, double *y)
 }
 
 static void
-snap_to_endpoint(VG *vg, double *x, double *y)
+snap_to_endpoint(VG *vg, float *x, float *y)
 {
 	VG_Element *vge;
 	VG_Vtx *vtx;
@@ -103,7 +103,7 @@ snap_to_endpoint(VG *vg, double *x, double *y)
 }
 
 void
-VG_SnapPoint(VG *vg, double *x, double *y)
+VG_SnapPoint(VG *vg, float *x, float *y)
 {
 	switch (vg->snap_mode) {
 	case VG_NEAREST_INTEGER:
@@ -136,9 +136,11 @@ VG_DrawGrid(VG *vg)
 	int rlen;
 
 	VG_RLength(vg, vg->grid_gap, &rlen);
-
-	for (y = 0; y < vg->su->h; y += rlen) {
-		for (x = 0; x < vg->su->w; x += rlen) {
+	if (vg->su->w <= rlen || vg->su->h <= rlen) {
+		return;
+	}
+	for (y = 0; (y+rlen) < vg->su->h; y += rlen) {
+		for (x = 0; (x+rlen) < vg->su->w; x += rlen) {
 			VG_PutPixel(vg, x, y, vg->grid_color);
 		}
 	}

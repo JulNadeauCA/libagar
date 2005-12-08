@@ -67,7 +67,7 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, float x, float y)
 {
 	if (vge->nvtx >= 1) {
 		VG_Vtx *vtx = &vge->vtx[0];

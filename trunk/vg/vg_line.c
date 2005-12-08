@@ -38,7 +38,7 @@ VG_DrawLineSegments(VG *vg, VG_Element *vge)
 
 	for (i = 0; i < vge->nvtx-1; i += 2) {
 		if (vg->flags & VG_ANTIALIAS) {
-			double x1, y1, x2, y2;
+			float x1, y1, x2, y2;
 
 			VG_VtxCoords2d(vg, vge, i, &x1, &y1);
 			VG_VtxCoords2d(vg, vge, i+1, &x2, &y2);
@@ -60,7 +60,7 @@ VG_DrawLineStrip(VG *vg, VG_Element *vge)
 	int i;
 
 	if (vg->flags & VG_ANTIALIAS) {
-		double x1, y1, x2, y2;
+		float x1, y1, x2, y2;
 
 		VG_VtxCoords2d(vg, vge, 0, &x1, &y1);
 		for (i = 1; i < vge->nvtx; i++) {
@@ -87,8 +87,8 @@ void
 VG_DrawLineLoop(VG *vg, VG_Element *vge)
 {
 	if (vg->flags & VG_ANTIALIAS) {
-		double x1, y1, x2, y2;
-		double x0, y0;
+		float x1, y1, x2, y2;
+		float x0, y0;
 		int i;
 
 		VG_VtxCoords2d(vg, vge, 0, &x1, &y1);
@@ -124,8 +124,8 @@ VG_DrawLineLoop(VG *vg, VG_Element *vge)
 static void
 VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
-	double xmin, xmax;
-	double ymin, ymax;
+	float xmin, xmax;
+	float ymin, ymax;
 	int i;
 
 	xmin = xmax = vge->vtx[0].x;
@@ -159,7 +159,7 @@ VG_ClosestLinePoint(VG *vg, int x1, int y1, int x2, int y2, int mx, int my)
 	int xend, yend;
 	int xdir, ydir;
 	float closest = DBL_MAX;
-	double theta, rho;
+	float theta, rho;
 
 	dx = abs(x2-x1);
 	dy = abs(y2-y1);
@@ -271,11 +271,10 @@ VG_ClosestLinePoint(VG *vg, int x1, int y1, int x2, int y2, int mx, int my)
 }
 
 float
-VG_LineIntersect(VG *vg, VG_Element *vge, double x, double y)
+VG_LineIntersect(VG *vg, VG_Element *vge, float x, float y)
 {
 	int mx = VG_RASX(vg,x);
 	int my = VG_RASX(vg,y);
-	double rho, theta;
 	float d, min_distance = FLT_MAX;
 	VG_Vtx v1, v2;
 	int x1, y1, x2, y2, x0, y0;

@@ -235,11 +235,11 @@ VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 
 /* Render an anti-aliased line. */
 void
-VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
-    double y2p, int thick, Uint32 color)
+VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
+    int thick, Uint32 color)
 {
-	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
-	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
+	float x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
+	float grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
 	    lum1, lum2, ipart;
 	int x, y, ix1, ix2, iy1, iy2;
 	Uint32 c1, c2;
@@ -252,9 +252,9 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 
 	SDL_GetRGBA(color, vg->fmt, &r, &g, &b, &a);
 
-	if (fabs(xd) > fabs(yd)) {			/* Horizontal */
+	if (fabsf(xd) > fabsf(yd)) {			/* Horizontal */
 		if (x1 > x2) {
-			double tmp;
+			float tmp;
 			
 			tmp = x1; x1 = x2; x2 = tmp;
 			tmp = y1; y1 = y2; y2 = tmp;
@@ -305,7 +305,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 			lum2 = AG_Fracf(yf);
 
 			if (thick == 1) {
-				focus = (1.0 - fabs((lum1 - lum2)));
+				focus = (1.0 - fabsf((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
@@ -333,7 +333,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 		}
 	} else {					/* Vertical */
 		if (y1 > y2) {
-			double tmp;
+			float tmp;
 
 			tmp = x1; x1 = x2; x2 = tmp;
 			tmp = y1; y1 = y2; y2 = tmp;
@@ -382,7 +382,7 @@ VG_WuLinePrimitive(VG *vg, double x1p, double y1p, double x2p,
 			lum2 = AG_Fracf(xf);
 
 			if (thick == 1) {
-				focus = (1.0 - fabs((lum1 - lum2)));
+				focus = (1.0 - fabsf((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,

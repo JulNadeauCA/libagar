@@ -39,13 +39,13 @@ init(VG *vg, VG_Element *vge)
 }
 
 void
-VG_CircleRadius(VG *vg, double radius)
+VG_CircleRadius(VG *vg, float radius)
 {
 	vg->cur_vge->vg_circle.radius = radius;
 }
 
 void
-VG_CircleDiameter(VG *vg, double diameter)
+VG_CircleDiameter(VG *vg, float diameter)
 {
 	vg->cur_vge->vg_circle.radius = diameter/2;
 }
@@ -70,18 +70,21 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, float x, float y)
 {
-	double rho, theta;
+	float rho, theta;
 	VG_Vtx *vtx;
 
 	if (vge->nvtx < 1) {
 		return (FLT_MAX);
 	}
 	vtx = &vge->vtx[0];
-	VG_Car2Pol(vg, x - vtx->x, y - vtx->y, &rho, &theta);
+	VG_Car2Pol(vg,
+	    x - vtx->x,
+	    y - vtx->y,
+	    &rho, &theta);
 
-	return ((float)fabs(rho - vge->vg_circle.radius));
+	return (fabsf(rho - vge->vg_circle.radius));
 }
 
 const VG_ElementOps vgCircleOps = {

@@ -60,7 +60,7 @@ VG_TextAlignment(VG *vg, enum vg_alignment align)
 
 /* Specify the angle relative to the central vertex. */
 void
-VG_TextAngle(VG *vg, double angle)
+VG_TextAngle(VG *vg, float angle)
 {
 	vg->cur_vge->vg_text.angle = angle;
 }
@@ -266,7 +266,7 @@ render_label(VG *vg, VG_Element *vge)
 				break;
 			case 'f':
 				snprintf(s2, sizeof(s2), "%.2f",
-				    TEXT_ARG(double));
+				    TEXT_ARG(float));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
@@ -326,7 +326,7 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, double x, double y)
+intsect(VG *vg, VG_Element *vge, float x, float y)
 {
 	if (vge->nvtx < 1)
 		return (FLT_MAX);

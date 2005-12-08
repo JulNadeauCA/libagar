@@ -6,13 +6,13 @@
 #include "begin_code.h"
 		
 struct vg_ellipse_args {
-	double w, h;		/* Geometry */
-	double s, e;		/* Start/end angles (degrees) */
+	float w, h;		/* Geometry */
+	float s, e;		/* Start/end angles (degrees) */
 };
 
 __BEGIN_DECLS
-__inline__ void	VG_EllipseExtent(struct vg *, double, double);
-__inline__ void VG_EllipseArc(struct vg *, double, double);
+__inline__ void	VG_EllipseExtent(struct vg *, float, float);
+__inline__ void VG_EllipseArc(struct vg *, float, float);
 __END_DECLS
 
 #include "close_code.h"

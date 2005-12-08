@@ -31,32 +31,32 @@
 #include "vg.h"
 
 /* Convert radians to degrees. */
-double
-VG_Rad2Deg(double theta)
+float
+VG_Rad2Deg(float theta)
 {
     return (theta/(2.0*M_PI)*360.0);
 }
 
 /* Convert degrees to radians. */
-double
-VG_Deg2Rad(double theta)
+float
+VG_Deg2Rad(float theta)
 {
     return ((theta/360.0)*(2.0*M_PI));
 }
 
 /* Convert Cartesian to polar coordinates. */
 void
-VG_Car2Pol(VG *vg, double x, double y, double *rho, double *theta)
+VG_Car2Pol(VG *vg, float x, float y, float *rho, float *theta)
 {
-	*rho = hypot(x, y);
-	*theta = atan2(y, x);
+	*rho = hypotf(x, y);
+	*theta = atan2f(y, x);
 }
 
 /* Convert polar to Cartesian coordinates. */
 void
-VG_Pol2Car(VG *vg, double r, double theta, double *x, double *y)
+VG_Pol2Car(VG *vg, float r, float theta, float *x, float *y)
 {
-	*x = r*cos(theta);
-	*y = r*sin(theta);
+	*x = r*cosf(theta);
+	*y = r*sinf(theta);
 }
 
