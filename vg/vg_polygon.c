@@ -135,8 +135,8 @@ render(VG *vg, VG_Element *vge)
 static void
 extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
-	double xmin = 0, xmax = 0;
-	double ymin = 0, ymax = 0;
+	float xmin = 0, xmax = 0;
+	float ymin = 0, ymax = 0;
 	int i;
 
 	xmin = vge->vtx[0].x;

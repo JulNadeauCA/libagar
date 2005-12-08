@@ -11,7 +11,7 @@
 struct vg_text_args {
 	SDL_Surface *su;		/* Text surface */
 	char text[VG_TEXT_MAX];		/* Text buffer */
-	double angle;			/* Angle of rotation (deg) */
+	float angle;			/* Angle of rotation (deg) */
 	enum vg_alignment align;	/* Alignment around vertex */
 	void *ptrs[VG_TEXT_MAX_PTRS];	/* Pointers (for polling) */
 	int  nptrs;
@@ -19,7 +19,7 @@ struct vg_text_args {
 
 __BEGIN_DECLS
 void	VG_TextAlignment(struct vg *, enum vg_alignment);
-void	VG_TextAngle(struct vg *, double);
+void	VG_TextAngle(struct vg *, float);
 void	VG_Printf(struct vg *, const char *, ...);
 void	VG_PrintfP(struct vg *, const char *, ...);
 __END_DECLS

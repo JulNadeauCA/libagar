@@ -6,12 +6,12 @@
 #include "begin_code.h"
 		
 struct vg_circle_args {
-	double radius;
+	float radius;
 };
 
 __BEGIN_DECLS
-__inline__ void	VG_CircleRadius(struct vg *, double);
-__inline__ void	VG_CircleDiameter(struct vg *, double);
+__inline__ void	VG_CircleRadius(struct vg *, float);
+__inline__ void	VG_CircleDiameter(struct vg *, float);
 __END_DECLS
 
 #include "close_code.h"

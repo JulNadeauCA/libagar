@@ -89,8 +89,7 @@ VG_GetBlock(VG *vg, const char *name)
 
 /* Displace the elements associated with a block. */
 void
-VG_MoveBlock(VG *vg, VG_Block *vgb, double x, double y,
-    int layer)
+VG_MoveBlock(VG *vg, VG_Block *vgb, float x, float y, int layer)
 {
 	VG_Element *vge;
 	int i;
@@ -111,14 +110,14 @@ VG_MoveBlock(VG *vg, VG_Block *vgb, double x, double y,
 
 /* Modify a block's angle of rotation. */
 void
-VG_BlockTheta(VG *vg, VG_Block *vgb, double theta)
+VG_BlockTheta(VG *vg, VG_Block *vgb, float theta)
 {
 	vgb->theta = theta;
 }
 
 /* Apply a rotation transformation on a block. */
 void
-VG_RotateBlock(VG *vg, VG_Block *vgb, double theta)
+VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 {
 	VG_Block *block_save;
 	VG_Element *vge;
@@ -129,8 +128,8 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, double theta)
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
 		for (i = 0; i < vge->nvtx; i++) {
-			double r, theta;
-			double x, y;
+			float r, theta;
+			float x, y;
 
 			VG_Abs2Rel(vg, &vge->vtx[i], &x, &y);
 			VG_Car2Pol(vg, x, y, &r, &theta);
@@ -147,8 +146,8 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, double theta)
 void
 VG_BlockExtent(VG *vg, VG_Block *vgb, VG_Rect *ext)
 {
-	double xmin = vgb->pos.x, xmax = vgb->pos.x;
-	double ymin = vgb->pos.y, ymax = vgb->pos.y;
+	float xmin = vgb->pos.x, xmax = vgb->pos.x;
+	float ymin = vgb->pos.y, ymax = vgb->pos.y;
 	VG_Element *vge;
 	VG_Rect r;
 
@@ -171,7 +170,7 @@ VG_BlockExtent(VG *vg, VG_Block *vgb, VG_Rect *ext)
 
 /* Convert absolute coordinates to block relative coordinates. */
 void
-VG_Abs2Rel(VG *vg, const VG_Vtx *vtx, double *x, double *y)
+VG_Abs2Rel(VG *vg, const VG_Vtx *vtx, float *x, float *y)
 {
 	*x = vtx->x;
 	*y = vtx->y;
@@ -184,7 +183,7 @@ VG_Abs2Rel(VG *vg, const VG_Vtx *vtx, double *x, double *y)
 
 /* Convert block relative coordinates to absolute coordinates. */
 void
-VG_Rel2Abs(VG *vg, double x, double y, VG_Vtx *vtx)
+VG_Rel2Abs(VG *vg, float x, float y, VG_Vtx *vtx)
 {
 	vtx->x = x;
 	vtx->y = y;

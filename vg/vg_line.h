@@ -9,7 +9,7 @@ __BEGIN_DECLS
 void VG_DrawLineSegments(struct vg *, struct vg_element *);
 void VG_DrawLineStrip(struct vg *, struct vg_element *);
 void VG_DrawLineLoop(struct vg *, struct vg_element *);
-float VG_LineIntersect(struct vg *, struct vg_element *, double, double);
+float VG_LineIntersect(struct vg *, struct vg_element *, float, float);
 __END_DECLS
 
 #include "close_code.h"

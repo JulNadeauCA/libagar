@@ -15,8 +15,8 @@ void		VG_ArcPrimitive(VG *, int, int, int, int, int, int,
 		                 Uint32);
 void		VG_LinePrimitive(VG *, int, int, int, int, Uint32);
 __inline__ void VG_HLinePrimitive(VG *, int, int, int, Uint32);
-void		VG_WuLinePrimitive(VG *, double, double, double,
-		                    double, int, Uint32);
+void		VG_WuLinePrimitive(VG *, float, float, float,
+		                    float, int, Uint32);
 __inline__ void	VG_RectPrimitive(VG *, int, int, int, int, Uint32);
 __END_DECLS
 

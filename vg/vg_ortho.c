@@ -36,7 +36,7 @@
 #include "vg_primitive.h"
 
 void
-VG_RestrictOrtho(VG *vg, double *x, double *y)
+VG_RestrictOrtho(VG *vg, float *x, float *y)
 {
 	switch (vg->ortho_mode) {
 	case VG_HORIZ_ORTHO:

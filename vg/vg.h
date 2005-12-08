@@ -32,12 +32,12 @@ enum vg_alignment {
 };
 
 typedef struct vg_vertex {
-	double x, y;
+	float x, y;
 } VG_Vtx;
 
 typedef struct vg_rect {
-	double x, y;
-	double w, h;
+	float x, y;
+	float w, h;
 } VG_Rect;
 
 struct vg;
@@ -88,7 +88,7 @@ typedef struct vg_element_ops {
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, VG_Rect *);
-	float (*intsect)(struct vg*, struct vg_element *, double, double);
+	float (*intsect)(struct vg*, struct vg_element *, float, float);
 } VG_ElementOps;
 
 typedef struct vg_layer {
@@ -156,7 +156,7 @@ typedef struct vg_style {
 } VG_Style;
 
 typedef struct vg_matrix {
-	double m[4][4];
+	float m[4][4];
 } VG_Matrix;
 
 typedef struct vg_element {
@@ -214,10 +214,10 @@ typedef struct vg {
 
 	AG_Mutex lock;
 	int redraw;			/* Global redraw */
-	double w, h;			/* Bounding box */
-	double scale;			/* Scaling factor */
-	double default_scale;		/* Default scaling factor */
-	double grid_gap;		/* Grid size */
+	float w, h;			/* Bounding box */
+	float scale;			/* Scaling factor */
+	float default_scale;		/* Default scaling factor */
+	float grid_gap;		/* Grid size */
 
 	Uint32 fill_color;		/* Background color */
 	Uint32 grid_color;		/* Grid color */
@@ -253,9 +253,9 @@ typedef struct vg {
 #define VG_RASXF(vg,cx) ((cx)*(vg)->scale + (vg)->origin[0].x*(vg)->scale)
 #define VG_RASYF(vg,cy) ((cy)*(vg)->scale + (vg)->origin[0].y*(vg)->scale)
 #define VG_RASLENF(vg,i) ((i)*(vg)->scale)
-#define VG_VECXF(vg,rx) ((rx)/(vg)->scale - (vg)->origin[0].x)
-#define VG_VECYF(vg,ry) ((ry)/(vg)->scale - (vg)->origin[0].y)
-#define VG_VECLENF(vg,ry) ((ry)/(vg)->scale)
+#define VG_VECXF(vg,rx) (((float)(rx))/(vg)->scale - (vg)->origin[0].x)
+#define VG_VECYF(vg,ry) (((float)(ry))/(vg)->scale - (vg)->origin[0].y)
+#define VG_VECLENF(vg,ry) (((float)(ry))/(vg)->scale)
 
 #define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale) + \
                        (int)((vg)->origin[0].x*(vg)->scale))
@@ -273,22 +273,22 @@ void	 VG_Destroy(VG *);
 void	 VG_Save(VG *, AG_Netbuf *);
 int	 VG_Load(VG *, AG_Netbuf *);
 
-void		 VG_Scale(VG *, double, double, double);
-__inline__ void	 VG_DefaultScale(VG *, double);
-__inline__ void	 VG_SetGridGap(VG *, double);
+void		 VG_Scale(VG *, float, float, float);
+__inline__ void	 VG_DefaultScale(VG *, float);
+__inline__ void	 VG_SetGridGap(VG *, float);
 void		 VG_Rasterize(VG *);
 void		 VG_RasterizeElement(VG *, VG_Element *);
 
-__inline__ void	 VG_Vcoords2(VG *, int, int, int, int, double *, double *);
-__inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, double *, double *);
-__inline__ void  VG_Rcoords2(VG *, double, double, int *, int *);
-__inline__ void	 VG_AbsRcoords2(VG *, double, double, int *, int *);
-__inline__ void  VG_Rcoords2d(VG *, double, double, double *, double *);
-__inline__ void	 VG_AbsRcoords2d(VG *, double, double, double *, double *);
-__inline__ void	 VG_VtxCoords2d(VG *, VG_Element *, int, double *, double *);
+__inline__ void	 VG_Vcoords2(VG *, int, int, int, int, float *, float *);
+__inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, float *, float *);
+__inline__ void  VG_Rcoords2(VG *, float, float, int *, int *);
+__inline__ void	 VG_AbsRcoords2(VG *, float, float, int *, int *);
+__inline__ void  VG_Rcoords2d(VG *, float, float, float *, float *);
+__inline__ void	 VG_AbsRcoords2d(VG *, float, float, float *, float *);
+__inline__ void	 VG_VtxCoords2d(VG *, VG_Element *, int, float *, float *);
 __inline__ void	 VG_VtxCoords2i(VG *, VG_Element *, int, int *, int *);
-__inline__ void  VG_RLength(VG *, double, int *);
-void		 VG_VLength(VG *, int, double *);
+__inline__ void  VG_RLength(VG *, float, int *);
+void		 VG_VLength(VG *, int, float *);
 
 VG_Vtx		     *VG_PopVertex(VG *);
 __inline__ VG_Vtx    *VG_AllocVertex(VG_Element *);
@@ -312,16 +312,16 @@ __inline__ void	 VG_SetLayer(VG *, int);
 __inline__ void	 VG_Color(VG *, Uint32);
 __inline__ void	 VG_Color3(VG *, int, int, int);
 __inline__ void	 VG_Color4(VG *, int, int, int, int);
-VG_Vtx		*VG_Vertex2(VG *, double, double);
+VG_Vtx		*VG_Vertex2(VG *, float, float);
 void		 VG_VertexV(VG *, const VG_Vtx *, Uint);
 
 VG_Matrix	*VG_PushIdentity(VG *);
-VG_Matrix	*VG_Translate(VG *, double, double);
-VG_Matrix	*VG_Rotate(VG *, double);
+VG_Matrix	*VG_Translate(VG *, float, float);
+VG_Matrix	*VG_Rotate(VG *, float);
 
 void VG_LoadIdentity(VG_Matrix *);
-void VG_LoadTranslate(VG_Matrix *, double, double);
-void VG_LoadRotate(VG_Matrix *, double);
+void VG_LoadTranslate(VG_Matrix *, float, float);
+void VG_LoadRotate(VG_Matrix *, float);
 void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
 void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
 __inline__ void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
