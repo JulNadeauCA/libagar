@@ -2069,10 +2069,9 @@ poll_events(AG_Event *event)
 			strlcat(args, arg, sizeof(args));
 			if (i < ev->argc-1) {
 				strlcat(args, ", ", sizeof(args));
-			} else {
-				strlcat(args, ")", sizeof(args));
 			}
 		}
+		strlcat(args, ")", sizeof(args));
 
 		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev,
 		    (ev->flags & AG_EVENT_ASYNC) ? " <async>" : "",
