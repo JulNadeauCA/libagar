@@ -187,7 +187,7 @@ RG_SketchProjApply(void *p, RG_Tile *t, int fx, int fy)
 {
 	struct rg_sketchproj *sproj = p;
 	SDL_Surface *sDst = t->su;
-	double x1, y1, x2, y2;
+	float x1, y1, x2, y2;
 	VG *vg;
 	VG_Element *vge;
 	RG_TileElement *ske;
