@@ -353,7 +353,7 @@ mousebuttondown(AG_Event *event)
 		    sketch_coincident(tel, sx, sy)))
 		{
 			RG_Sketch *sk = tv->tv_sketch.sk;
-			double vx, vy;
+			float vx, vy;
 
 			vx = VG_VECXF(sk->vg, sx - tel->tel_sketch.x);
 			vy = VG_VECYF(sk->vg, sy - tel->tel_sketch.y);
@@ -459,7 +459,7 @@ mousebuttonup(AG_Event *event)
 					RG_TileElement *tel =
 					    tv->tv_sketch.tel;
 					RG_Sketch *sk = tel->tel_sketch.sk;
-					double vx, vy;
+					float vx, vy;
 				
 					VG_Vcoords2(tel->tel_sketch.sk->vg,
 					    tv->xms - tel->tel_sketch.x,
@@ -731,7 +731,7 @@ mousemotion(AG_Event *event)
 		case RG_TILEVIEW_SKETCH_EDIT:
 			{
 				RG_TileElement *tel = tv->tv_sketch.tel;
-				double vx, vy, vxrel, vyrel;
+				float vx, vy, vxrel, vyrel;
 
 				VG_Vcoords2(tel->tel_sketch.sk->vg,
 				    sx - tel->tel_sketch.x,
@@ -1500,8 +1500,8 @@ draw_control(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 		break;
 	case RG_TILEVIEW_VERTEX:
 		{
-			double x = RG_TileviewDouble(ctrl, 0);
-			double y = RG_TileviewDouble(ctrl, 1);
+			float x = RG_TileviewDouble(ctrl, 0);
+			float y = RG_TileviewDouble(ctrl, 1);
 
 			ctrl->handles[0].x = VG_RASXF(ctrl->vg,x);
 			ctrl->handles[0].y = VG_RASYF(ctrl->vg,y);
