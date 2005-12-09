@@ -8,7 +8,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	Yes
 
 SRCS=	color.c den.c integral.c netbuf.c real.c string.c surface.c ttf.c \
-	version.c vertex.c xcf.c
+	version.c xcf.c
 
 MAN3=	AG_Version.3
 MAN5=	AG_XCF.5 AG_DEN.5
