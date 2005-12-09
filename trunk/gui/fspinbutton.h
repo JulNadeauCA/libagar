@@ -12,6 +12,9 @@
 
 #include "begin_code.h"
 
+#define AG_FSPINBUTTON_NOHFILL	0x01
+#define AG_FSPINBUTTON_VFILL	0x02
+
 typedef struct ag_fspinbutton {
 	struct ag_widget wid;
 

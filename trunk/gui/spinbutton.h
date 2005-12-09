@@ -10,6 +10,9 @@
 
 #include "begin_code.h"
 
+#define AG_SPINBUTTON_NOHFILL	0x01
+#define AG_SPINBUTTON_VFILL	0x02
+
 typedef struct ag_spinbutton {
 	struct ag_widget wid;
 	int value;			/* Default value binding */

@@ -12,6 +12,9 @@
 
 #include "begin_code.h"
 
+#define AG_MFSPINBUTTON_NOHFILL	0x01
+#define AG_MFSPINBUTTON_VFILL	0x02
+
 typedef struct ag_mfspinbutton {
 	struct ag_widget wid;
 	AG_Mutex lock;

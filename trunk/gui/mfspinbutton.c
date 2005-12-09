@@ -242,8 +242,12 @@ void
 AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
     const char *sep, const char *label)
 {
-	AG_WidgetInit(fsu, "mfspinbutton", &agMFSpinbuttonOps,
-	    AG_WIDGET_FOCUSABLE);
+	Uint wflags = AG_WIDGET_FOCUSABLE;
+
+	if ((flags & AG_MFSPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_MFSPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
+
+	AG_WidgetInit(fsu, "mfspinbutton", &agMFSpinbuttonOps, wflags);
 	AG_WidgetBind(fsu, "xvalue", AG_WIDGET_DOUBLE, &fsu->xvalue);
 	AG_WidgetBind(fsu, "yvalue", AG_WIDGET_DOUBLE, &fsu->yvalue);
 	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
