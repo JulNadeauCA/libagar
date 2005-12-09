@@ -10,6 +10,9 @@
 
 #include "begin_code.h"
 
+#define AG_MSPINBUTTON_NOHFILL	0x01
+#define AG_MSPINBUTTON_VFILL	0x02
+
 typedef struct ag_mspinbutton {
 	struct ag_widget wid;
 	const char *sep;			/* x/y value separator */
