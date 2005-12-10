@@ -266,8 +266,9 @@ clean-lib:
 
 cleandir-lib:
 	rm -f ${LIBTOOL} ${LIBTOOL_COOKIE} ${LTCONFIG_LOG} config.log
-	rm -f Makefile.config .depend
+	rm -f .depend
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
+	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
 
 install-lib: ${LIBTOOL_COOKIE}
 	@if [ "${INCL}" != "" -a "${INCL}" != "none" ]; then \
