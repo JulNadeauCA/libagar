@@ -32,8 +32,6 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
-#include <core/loaders/vertex.h>
-
 #include <string.h>
 
 const AG_Version vgVer = {
@@ -1025,7 +1023,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 	/* Save the origin points. */
 	AG_WriteUint32(buf, vg->norigin);
 	for (i = 0; i < vg->norigin; i++) {
-		AG_WriteVertex(buf, &vg->origin[i]);
+		VG_WriteVertex(buf, &vg->origin[i]);
 		AG_WriteFloat(buf, vg->origin_radius[i]);
 		AG_WriteColor(buf, vg->fmt, vg->origin_color[i]);
 	}
@@ -1050,8 +1048,8 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 
 		AG_WriteString(buf, vgb->name);
 		AG_WriteUint32(buf, (Uint32)vgb->flags);
-		AG_WriteVertex(buf, &vgb->pos);
-		AG_WriteVertex(buf, &vgb->origin);
+		VG_WriteVertex(buf, &vgb->pos);
+		VG_WriteVertex(buf, &vgb->origin);
 		AG_WriteFloat(buf, vgb->theta);
 		nblocks++;
 	}
@@ -1122,7 +1120,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		/* Save the vertices. */
 		AG_WriteUint32(buf, (Uint32)vge->nvtx);
 		for (i = 0; i < vge->nvtx; i++)
-			AG_WriteVertex(buf, &vge->vtx[i]);
+			VG_WriteVertex(buf, &vge->vtx[i]);
 		
 		/* Save the transformation matrices. */
 		AG_WriteUint32(buf, (Uint32)vge->ntrans);
@@ -1203,7 +1201,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32));
 	vg->norigin = norigin;
 	for (i = 0; i < vg->norigin; i++) {
-		AG_ReadVertex(buf, &vg->origin[i]);
+		VG_ReadVertex(buf, &vg->origin[i]);
 		vg->origin_radius[i] = AG_ReadFloat(buf);
 		vg->origin_color[i] = AG_ReadColor(buf, vg->fmt);
 	}
@@ -1233,8 +1231,8 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		vgb = Malloc(sizeof(VG_Block), M_VG);
 		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
 		vgb->flags = (int)AG_ReadUint32(buf);
-		AG_ReadVertex(buf, &vgb->pos);
-		AG_ReadVertex(buf, &vgb->origin);
+		VG_ReadVertex(buf, &vgb->pos);
+		VG_ReadVertex(buf, &vgb->origin);
 		vgb->theta = AG_ReadFloat(buf);
 		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
@@ -1317,7 +1315,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		vge->nvtx = (Uint)AG_ReadUint32(buf);
 		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx), M_VG);
 		for (j = 0; j < vge->nvtx; j++)
-			AG_ReadVertex(buf, &vge->vtx[j]);
+			VG_ReadVertex(buf, &vge->vtx[j]);
 
 		/* Load the matrices. */
 		vge->ntrans = (Uint)AG_ReadUint32(buf);
@@ -1397,3 +1395,16 @@ fail:
 	return (-1);
 }
 
+void
+VG_WriteVertex(AG_Netbuf *buf, VG_Vtx *vtx)
+{
+	AG_WriteFloat(buf, vtx->x);
+	AG_WriteFloat(buf, vtx->y);
+}
+
+void
+VG_ReadVertex(AG_Netbuf *buf, VG_Vtx *vtx)
+{
+	vtx->x = AG_ReadFloat(buf);
+	vtx->y = AG_ReadFloat(buf);
+}

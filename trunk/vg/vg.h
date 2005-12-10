@@ -294,6 +294,8 @@ VG_Vtx		     *VG_PopVertex(VG *);
 __inline__ VG_Vtx    *VG_AllocVertex(VG_Element *);
 __inline__ VG_Matrix *VG_AllocMatrix(VG_Element *);
 VG_Matrix	     *VG_PopMatrix(VG *);
+void		      VG_WriteVertex(AG_Netbuf *, VG_Vtx *);
+void		      VG_ReadVertex(AG_Netbuf *, VG_Vtx *);
 
 VG_Layer	*VG_PushLayer(VG *, const char *);
 __inline__ void	 VG_PopLayer(VG *);
