@@ -230,8 +230,9 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f core *.core config.log Makefile.config .depend
+	rm -f core *.core config.log .depend
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
+	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
 
 install-prog:
 	@if [ ! -e "${BINDIR}" ]; then \
