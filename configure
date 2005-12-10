@@ -171,6 +171,7 @@ mkdir config 1>/dev/null 2>&1
 
 if [ "${with_manpages}" = "no" ]; then
     echo "NOMAN=yes" >> Makefile.config
+    echo "NOMANLINKS=yes" >> Makefile.config
 fi
 if [ "${with_docs}" = "no" ]; then
     echo "NODOC=yes" >> Makefile.config
