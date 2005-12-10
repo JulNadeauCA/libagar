@@ -336,8 +336,9 @@ AG_EventProcess(SDL_Event *ev)
 
 			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 				if (gk->keysym == ev->key.keysym.sym &&
-				    (gk->keymod == 0 ||
-				     ev->key.keysym.mod & gk->keymod))
+				    ((gk->keymod == KMOD_NONE &&
+				      ev->key.keysym.mod == KMOD_NONE) ||
+				      ev->key.keysym.mod & gk->keymod))
 					gk->fn();
 			}
 		}
