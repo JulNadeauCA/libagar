@@ -113,6 +113,8 @@ AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, int, Uint16 *,
 AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
 				 Uint32, int, AG_Mutex *);
 
+#define AG_MenuNode(mi,name,icon) AG_MenuAction((mi),(name),(icon),NULL,NULL)
+
 #define AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)
 #define AG_MenuInt8Bool(mi,t,i,p,inv) \
