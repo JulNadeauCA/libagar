@@ -81,12 +81,12 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 	double vw, vh;
 
 	if (w == -1) {
-		vw = vg->w;
+		vw = vg->rDst.w;
 	} else {
 		vw = (float)w/(float)RG_TILESZ/scale;
 	}
 	if (h == -1) {
-		vh = vg->h;
+		vh = vg->rDst.h;
 	} else {
 		vh = (float)h/(float)RG_TILESZ/scale;
 	}
@@ -161,16 +161,12 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 		VG_DrawExtents(vg);
 #endif
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		vge->drawn = 0;
-	}
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		switch (vge->type) {
 		case VG_POLYGON:
 			RG_SketchDrawPolygon(t, vg, vge);
-			vge->drawn = 1;
 			break;
 		default:
-			VG_RasterizeElement(vg, vge);
+			VG_Rasterize(vg);
 			break;
 		}
 	}
