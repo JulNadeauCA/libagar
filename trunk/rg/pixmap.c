@@ -1124,7 +1124,6 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 void
 RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	RG_Pixmap *px = tv->tv_pixmap.px;
 	AG_Menu *me;
 	AG_MenuItem *mi;
 	
