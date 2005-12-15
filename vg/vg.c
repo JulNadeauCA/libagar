@@ -86,33 +86,42 @@ VG_Init(VG *vg, int flags)
 	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i, x, y;
 
-	if (flags & VG_ALPHA)		sflags |= SDL_SRCALPHA;
-	if (flags & VG_COLORKEY)	sflags |= SDL_SRCCOLORKEY;
-	if (flags & VG_RLEACCEL)	sflags |= SDL_RLEACCEL;
 
 	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
 	vg->redraw = 1;
-	vg->w = 0;
-	vg->h = 0;
 	vg->scale = 1;
-	vg->su = SDL_CreateRGBSurface(sflags, 16, 16, 32,
+
+	if (flags & VG_DIRECT) {
+		vg->su = agView->v;
+		vg->fmt = agVideoFmt;
+	} else {
+		if (flags & VG_ALPHA)		sflags |= SDL_SRCALPHA;
+		if (flags & VG_COLORKEY)	sflags |= SDL_SRCCOLORKEY;
+		if (flags & VG_RLEACCEL)	sflags |= SDL_RLEACCEL;
+
+		vg->su = SDL_CreateRGBSurface(sflags, 16, 16, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	    0xff000000,
-	    0x00ff0000,
-	    0x0000ff00,
-	    (flags & VG_ALPHA) ? 0x000000ff : 0x0
+		    0xff000000,
+		    0x00ff0000,
+		    0x0000ff00,
+		    (flags & VG_ALPHA) ? 0x000000ff : 0x0
 #else
-	    0x000000ff,
-	    0x0000ff00,
-	    0x00ff0000,
-	    (flags & VG_ALPHA) ? 0xff000000 : 0x0
+		    0x000000ff,
+		    0x0000ff00,
+		    0x00ff0000,
+		    (flags & VG_ALPHA) ? 0xff000000 : 0x0
 #endif
-	);
-	if (vg->su == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		);
+		if (vg->su == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+		vg->fmt = vg->su->format;
 	}
-	vg->fmt = vg->su->format;
+	vg->rDst.x = 0;
+	vg->rDst.y = 0;
+	vg->rDst.w = 32;
+	vg->rDst.h = 32;
 	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
 	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
@@ -261,37 +270,36 @@ VG_SetGridGap(VG *vg, float gap)
 
 /* Adjust the vg bounding box and scaling factor. */
 void
-VG_Scale(VG *vg, float w, float h, float scale)
+VG_Scale(VG *vg, int w, int h, float scale)
 {
-	int pw = (int)(w*scale);
-	int ph = (int)(h*scale);
-	int mw, mh, y;
-	Uint32 Rmask = vg->fmt->Rmask;
-	Uint32 Gmask = vg->fmt->Gmask;
-	Uint32 Bmask = vg->fmt->Bmask;
-	Uint32 Amask = vg->fmt->Amask;
-	int depth = vg->fmt->BitsPerPixel;
-	Uint32 colorkey = vg->fmt->colorkey;
-	Uint8 alpha = vg->fmt->alpha;
-	Uint32 sFlags = vg->su->flags & (SDL_SWSURFACE|SDL_SRCALPHA|
-	                                 SDL_SRCCOLORKEY|SDL_RLEACCEL);
-
 #ifdef DEBUG
-	if (scale < 0.0)
-		fatal("neg scale");
+	if (scale < 0.0) { fatal("neg scale"); }
 #endif
-
-	SDL_FreeSurface(vg->su);
-
 	vg->scale = scale;
-	vg->w = w;
-	vg->h = h;
+	vg->rDst.w = w;
+	vg->rDst.h = h;
 
-	if ((vg->su = SDL_CreateRGBSurface(sFlags, pw, ph, depth,
-	    Rmask, Gmask, Bmask, Amask)) == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if ((vg->flags & VG_DIRECT) == 0) {
+		Uint32 Rmask = vg->fmt->Rmask;
+		Uint32 Gmask = vg->fmt->Gmask;
+		Uint32 Bmask = vg->fmt->Bmask;
+		Uint32 Amask = vg->fmt->Amask;
+		int depth = vg->fmt->BitsPerPixel;
+		Uint32 colorkey = vg->fmt->colorkey;
+		Uint8 alpha = vg->fmt->alpha;
+		Uint32 sFlags = vg->su->flags & (SDL_SWSURFACE|SDL_SRCALPHA|
+		                                 SDL_SRCCOLORKEY|SDL_RLEACCEL);
+
+		SDL_FreeSurface(vg->su);
+		if ((vg->su = SDL_CreateRGBSurface(sFlags,
+		    vg->rDst.w, vg->rDst.h, depth,
+		    Rmask, Gmask, Bmask, Amask)) == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+		vg->fmt = vg->su->format;
+		if (vg->rDst.x >= vg->su->w) { vg->rDst.x = vg->su->w-1; }
+		if (vg->rDst.y >= vg->su->h) { vg->rDst.y = vg->su->h-1; }
 	}
-	vg->fmt = vg->su->format;
 	vg->redraw++;
 }
 
@@ -310,7 +318,6 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->type = eltype;
 	vge->style = NULL;
 	vge->layer = vg->cur_layer;
-	vge->drawn = 0;
 	vge->selected = 0;
 	vge->mouseover = 0;
 	vge->vtx = NULL;
@@ -409,8 +416,7 @@ VG_DrawExtents(VG *vg)
 
 /* Evaluate the intersection between two rectangles. */
 int
-VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2,
-    VG_Rect *ixion)
+VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2, VG_Rect *ixion)
 {
 	float r1xmin, r1xmax, r1ymin, r1ymax;
 	float r2xmin, r2xmax, r2ymin, r2ymax;
@@ -447,18 +453,28 @@ VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2,
 	return (ixw > 0 && ixh > 0);
 }
 
-/*
- * Rasterize an element as well as other overlapping elements.
- * The vg must be locked.
- */
+/* Rasterize elements marked dirty and update the affected tiles. */
 void
-VG_RasterizeElement(VG *vg, VG_Element *vge)
+VG_Rasterize(VG *vg)
 {
-	VG_Element *ovge;
-	VG_Rect r1, r2;
 	Uint32 color_save = 0;			/* XXX -Wuninitialized */
+	VG_Element *vge;
+	VG_Block *vgb;
+	int i;
 
-	if (!vge->drawn || 1) {
+	AG_MutexLock(&vg->lock);
+	vg->redraw = 0;
+
+	if ((vg->flags & VG_DIRECT) == 0) {
+		SDL_FillRect(vg->su, NULL, vg->fill_color);
+		if (vg->flags & VG_VISGRID)
+			VG_DrawGrid(vg);
+	}
+#ifdef DEBUG
+	if (vg->flags & VG_VISBBOXES)
+		VG_DrawExtents(vg);
+#endif
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		if (vge->mouseover) {
 			Uint8 r, g, b;
 
@@ -477,54 +493,13 @@ VG_RasterizeElement(VG *vg, VG_Element *vge)
 		}
 
 		vge->ops->draw(vg, vge);
-		vge->drawn = 1;
-		
+
 		if (vge->mouseover)
 			vge->color = color_save;
-	}
-	if (vge->ops->bbox != NULL) {
-		vge->ops->bbox(vg, vge, &r1);
-		TAILQ_FOREACH(ovge, &vg->vges, vges) {
-			if (ovge->drawn || ovge == vge ||
-			    ovge->ops->bbox == NULL) {
-				continue;
-			}
-			ovge->ops->bbox(vg, ovge, &r2);
-			if (VG_Rintersect(vg, &r1, &r2, NULL))
-				VG_RasterizeElement(vg, ovge);
-		}
-	}
-}
-
-/* Rasterize elements marked dirty and update the affected tiles. */
-void
-VG_Rasterize(VG *vg)
-{
-	VG_Element *vge;
-	VG_Block *vgb;
-	int i;
-
-	AG_MutexLock(&vg->lock);
-
-	SDL_FillRect(vg->su, NULL, vg->fill_color);
-
-	if (vg->flags & VG_VISGRID)
-		VG_DrawGrid(vg);
-#ifdef DEBUG
-	if (vg->flags & VG_VISBBOXES)
-		VG_DrawExtents(vg);
-#endif
-	
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		vge->drawn = 0;
-	}
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		VG_RasterizeElement(vg, vge);
 	}
 	if (vg->flags & VG_VISORIGIN)
 		VG_DrawOrigin(vg);
 
-	vg->redraw = 0;
 	AG_MutexUnlock(&vg->lock);
 }
 
@@ -1009,8 +984,6 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 
 	AG_WriteString(buf, vg->name);
 	AG_WriteUint32(buf, (Uint32)vg->flags);
-	AG_WriteFloat(buf, vg->w);
-	AG_WriteFloat(buf, vg->h);
 	AG_WriteFloat(buf, vg->scale);
 	AG_WriteFloat(buf, vg->default_scale);
 	AG_WriteColor(buf, vg->fmt, vg->fill_color);
@@ -1175,8 +1148,6 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	AG_MutexLock(&vg->lock);
 	AG_CopyString(vg->name, buf, sizeof(vg->name));
 	vg->flags = AG_ReadUint32(buf);
-	vg->w = AG_ReadFloat(buf);
-	vg->h = AG_ReadFloat(buf);
 	vg->scale = AG_ReadFloat(buf);
 	vg->default_scale = AG_ReadFloat(buf);
 	vg->fill_color = AG_ReadColor(buf, vg->fmt);
@@ -1187,9 +1158,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	vg->cur_layer = (int)AG_ReadUint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
-	dprintf("%s: bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
-	    vg->scale);
-	VG_Scale(vg, vg->w, vg->h, vg->scale);
+	VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale);
 
 	/* Read the origin points. */
 	if ((norigin = AG_ReadUint32(buf)) < 1) {
