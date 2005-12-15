@@ -126,7 +126,6 @@ VG_Printf(VG *vg, const char *fmt, ...)
 		SDL_FreeSurface(vge->vg_text.su);
 		vge->vg_text.su = NULL;
 	}
-	vge->redraw++;
 	vg->redraw++;
 }
 
@@ -309,6 +308,8 @@ render(VG *vg, VG_Element *vge)
 	
 	render_label(vg, vge);
 	align_text(vg, vge, &rd.x, &rd.y);
+	rd.x += vg->rDst.x;
+	rd.y += vg->rDst.y;
 	SDL_BlitSurface(vge->vg_text.su, NULL, vg->su, &rd);
 }
 

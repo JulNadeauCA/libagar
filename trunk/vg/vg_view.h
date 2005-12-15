@@ -5,6 +5,7 @@
 #define _AGAR_VG_VIEW_H_
 
 #include <agar/gui/widget.h>
+#include <agar/gui/menu.h>
 #include <agar/vg/vg.h>
 #include <agar/vg/vg_tool.h>
 
@@ -31,7 +32,8 @@ typedef struct vg_view {
 	VG_Tool *curtool;			/* Selected tool */
 	VG_Tool *deftool;			/* Default tool if any */
 	TAILQ_HEAD(, vg_tool) tools;		/* Map edition tools */
-	char status[128];
+	char status[128];			/* Status text buffer */
+	AG_PopupMenu popup;			/* General purpose popup menu */
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))

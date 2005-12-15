@@ -129,19 +129,32 @@ VG_SetSnapMode(VG *vg, enum vg_snap_mode mode)
 	vg->snap_mode = mode;
 }
 
+/* XXX cache inefficient */
 void
 VG_DrawGrid(VG *vg)
 {
-	int x, y;
+	int x, y, xoffs, yoffs;
 	int rlen;
 
 	VG_RLength(vg, vg->grid_gap, &rlen);
-	if (vg->su->w <= rlen || vg->su->h <= rlen) {
-		return;
-	}
-	for (y = 0; (y+rlen) < vg->su->h; y += rlen) {
-		for (x = 0; (x+rlen) < vg->su->w; x += rlen) {
-			VG_PutPixel(vg, x, y, vg->grid_color);
+	xoffs = vg->rDst.x % rlen;
+	yoffs = vg->rDst.y % rlen;
+	
+	if (vg->flags & VG_DIRECT) {
+		for (y = yoffs; (y+rlen) < vg->su->h; y += rlen) {
+			for (x = xoffs; (x+rlen) < vg->su->w; x += rlen)
+				VG_PutPixel(vg, x, y, vg->grid_color);
+		}
+	} else {
+		int x2 = vg->rDst.x+vg->rDst.w;
+		int y2 = vg->rDst.y+vg->rDst.h;
+
+		if (vg->rDst.w <= rlen || vg->rDst.h <= rlen) {
+			return;
+		}
+		for (y = vg->rDst.y; (y+rlen) < y2; y += rlen) {
+			for (x = vg->rDst.x; (x+rlen) < x2; x += rlen)
+				VG_PutPixel(vg, x, y, vg->grid_color);
 		}
 	}
 }

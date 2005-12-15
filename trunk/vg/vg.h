@@ -172,8 +172,6 @@ typedef struct vg_element {
 	VG_TextStyle text_st;		/* Effective text style */
 	Uint32 color;			/* Effective foreground color */
 	int layer;			/* Associated layer */
-
-	int redraw, drawn;		/* Element needs to be redrawn */
 	int selected;			/* Multiple selection flag */
 	int mouseover;			/* Mouse overlap flag */
 
@@ -203,21 +201,21 @@ typedef struct vg_element {
 typedef struct vg {
 	char name[VG_NAME_MAX];		/* Name of drawing */
 	int flags;
-#define VG_ANTIALIAS	0x01		/* Anti-alias where possible */
-#define VG_HWSURFACE	0x02		/* Prefer video memory for fragments */
-#define VG_VISORIGIN	0x04		/* Display the origin points */
-#define VG_VISGRID	0x08		/* Display the grid */
-#define VG_VISBBOXES	0x10		/* Display bounding boxes (debug) */
-#define VG_ALPHA	0x20		/* Enable alpha channel */
-#define VG_COLORKEY	0x40		/* Enable colorkey */
-#define VG_RLEACCEL	0x80		/* Enable RLE acceleration */
+#define VG_ANTIALIAS	0x001		/* Anti-alias where possible */
+#define VG_HWSURFACE	0x002		/* Prefer video memory for fragments */
+#define VG_VISORIGIN	0x004		/* Display the origin points */
+#define VG_VISGRID	0x008		/* Display the grid */
+#define VG_VISBBOXES	0x010		/* Display bounding boxes (debug) */
+#define VG_ALPHA	0x020		/* Enable alpha channel */
+#define VG_COLORKEY	0x040		/* Enable colorkey */
+#define VG_RLEACCEL	0x080		/* Enable RLE acceleration */
+#define VG_DIRECT	0x100		/* Render directly to display */
 
 	AG_Mutex lock;
 	int redraw;			/* Global redraw */
-	float w, h;			/* Bounding box */
 	float scale;			/* Scaling factor */
 	float default_scale;		/* Default scaling factor */
-	float grid_gap;		/* Grid size */
+	float grid_gap;			/* Grid size */
 
 	Uint32 fill_color;		/* Background color */
 	Uint32 grid_color;		/* Grid color */
@@ -241,6 +239,7 @@ typedef struct vg {
 
 	SDL_Surface *su;		/* Raster surface */
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
+	SDL_Rect rDst;			/* Rendering window */
 
 	int *ints;			/* Used for scan conversion */
 	Uint nints;
@@ -273,11 +272,10 @@ void	 VG_Destroy(VG *);
 void	 VG_Save(VG *, AG_Netbuf *);
 int	 VG_Load(VG *, AG_Netbuf *);
 
-void		 VG_Scale(VG *, float, float, float);
+void		 VG_Scale(VG *, int, int, float);
 __inline__ void	 VG_DefaultScale(VG *, float);
 __inline__ void	 VG_SetGridGap(VG *, float);
-void		 VG_Rasterize(VG *);
-void		 VG_RasterizeElement(VG *, VG_Element *);
+__inline__ void	 VG_Rasterize(VG *);
 
 __inline__ void	 VG_Vcoords2(VG *, int, int, int, int, float *, float *);
 __inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, float *, float *);

@@ -126,11 +126,11 @@ VG_ViewButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_Scale(vg, vg->w, vg->h, vg->scale-1.0);
-		break;
+		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale-1.0);
+		goto out;
 	case SDL_BUTTON_WHEELUP:
-		VG_Scale(vg, vg->w, vg->h, vg->scale+1.0);
-		break;
+		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale+1.0);
+		goto out;
 	default:
 		break;
 	}
@@ -154,6 +154,10 @@ VG_ViewButtonDown(AG_Event *event)
 	    vv->deftool->ops->mousebuttondown(vv->deftool, x, y, button) == 1) {
 		goto out;
 	}
+	printf("xy=%f,%f\n", x, y);
+	if (vv->btndown_ev != NULL)
+		AG_PostEvent(NULL, vv, vv->btndown_ev->name, "%i,%f,%f", button,
+		    x, y);
 out:
 	AG_MutexUnlock(&vg->lock);
 }
@@ -193,10 +197,13 @@ VG_ViewButtonUp(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:
 		vv->mouse.panning = 0;
-		break;
+		goto out;
 	default:
 		break;
 	}
+	if (vv->btnup_ev != NULL)
+		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f", button,
+		    x, y);
 out:
 	AG_MutexUnlock(&vg->lock);
 }
@@ -271,7 +278,7 @@ VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 void
 VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
-	vv->btndown_ev = AG_SetEvent(vv, "window-mousebuttondown", fn, NULL);
+	vv->btndown_ev = AG_SetEvent(vv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btndown_ev, fmt);
 }
 
@@ -301,6 +308,7 @@ VG_ViewScale(void *p, int w, int h)
 	}
 	AGWIDGET(vv)->w = w;
 	AGWIDGET(vv)->h = h;
+	VG_Scale(vv->vg, w, h, vv->vg->scale);
 }
 
 void
@@ -310,8 +318,16 @@ VG_ViewDraw(void *p)
 	VG *vg = vv->vg;
 	SDL_Surface *status;
 
-	VG_Rasterize(vg);
-	AG_WidgetBlit(vv, vg->su, vv->x, vv->y);
+	if (vg->flags & VG_DIRECT) {
+		vg->rDst.x = AGWIDGET(vv)->cx+vv->x;
+		vg->rDst.y = AGWIDGET(vv)->cy+vv->y;
+		VG_Rasterize(vg);
+		if (vg->flags & VG_VISGRID)
+			VG_DrawGrid(vg);
+	} else {
+		VG_Rasterize(vg);
+		AG_WidgetBlit(vv, vg->su, vv->x, vv->y);
+	}
 
 	if (vv->draw_ev != NULL)
 		vv->draw_ev->handler(vv->draw_ev);

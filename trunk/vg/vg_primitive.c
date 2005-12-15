@@ -34,6 +34,8 @@
 #include "vg_math.h"
 #include "vg_primitive.h"
 
+#include <string.h>
+
 void
 VG_PutPixel(VG *vg, int x, int y, Uint32 c)
 {
@@ -41,16 +43,40 @@ VG_PutPixel(VG *vg, int x, int y, Uint32 c)
 
 	if (AG_CLIPPED_PIXEL(vg->su, x, y))
 		return;
+	
+	d = (Uint8 *)vg->su->pixels + y*vg->su->pitch +
+	    x*vg->fmt->BytesPerPixel;
 
-	d = (Uint8 *)vg->su->pixels + y*vg->su->pitch + (x<<2);
-	*(Uint32 *)d = c;
+	switch (vg->fmt->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)d = c;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		d[0] = (c>>16) & 0xff;
+		d[1] = (c>>8) & 0xff;
+		d[2] = c & 0xff;	
+#else
+		d[2] = (c>>16) & 0xff;
+		d[1] = (c>>8) & 0xff;
+		d[0] = c & 0xff;	
+#endif
+		break;
+	case 2:
+		*(Uint16 *)d = c;
+		break;
+	case 1:
+		*d = c;
+		break;
+	}
 }
 
 /* Render a circle using a modified Bresenham line algorithm. */
 void
-VG_CirclePrimitive(VG *vg, int rx, int ry, int radius, Uint32 color)
+VG_CirclePrimitive(VG *vg, int px, int py, int radius, Uint32 color)
 {
-	SDL_Surface *su = vg->su;
+	int rx = vg->rDst.x+px;
+	int ry = vg->rDst.y+py;
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
@@ -112,25 +138,60 @@ VG_ArcPrimitive(VG *vg, int cx, int cy, int w, int h, int a1, int a2,
 
 /* Draw a horizontal line segment. */
 void
-VG_HLinePrimitive(VG *vg, int x1, int x2, int y, Uint32 c)
+VG_HLinePrimitive(VG *vg, int px1, int px2, int py, Uint32 c)
 {
 	SDL_Surface *su = vg->su;
-	int x, xtmp;
 	Uint8 *pDst, *pEnd;
-	int dx;
+	int x1 = vg->rDst.x+px1;
+	int x2 = vg->rDst.x+px2;
+	int y = vg->rDst.y+py;
+	int x, dx;
 
 	if (y >= su->h || y < 0) { return; }
 	if (x1 >= su->w) { x1 = su->w - 1; } else if (x1 < 0) { x1 = 0; }
 	if (x2 >= su->w) { x2 = su->w - 1; } else if (x2 < 0) { x2 = 0; }
-	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
+	if (x1 > x2) { int xTmp; xTmp = x2; x2 = x1; x1 = xTmp; }
 	dx = x2 - x1;
 
-	pDst = (Uint8 *)su->pixels + y*su->pitch + ((x1)<<2);
-	pEnd = pDst + (dx<<2);
-	while (pDst < pEnd) {
-		*(Uint32 *)pDst = c;
-		pDst += 4;
+	SDL_LockSurface(su);
+	switch (su->format->BytesPerPixel) {
+	case 4:
+		pDst = (Uint8 *)su->pixels + y*su->pitch + (x1<<2);
+		pEnd = pDst + (dx<<2);
+		while (pDst < pEnd) {
+			*(Uint32 *)pDst = c;
+			pDst += 4;
+		}
+		break;
+	case 3:
+		pDst = (Uint8 *)su->pixels + y*su->pitch + x1*3;
+		pEnd = pDst + dx*3;
+		while (pDst < pEnd) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pDst[0] = (c >>16) & 0xff;
+			pDst[1] = (c >>8) & 0xff;
+			pDst[2] = c & 0xff;
+#else
+			pDst[2] = (c>>16) & 0xff;
+			pDst[1] = (c>>8) & 0xff;
+			pDst[0] = c & 0xff;
+#endif
+			pDst += 3;
+		}
+		break;
+	case 2:
+		pDst = (Uint8 *)su->pixels + y*su->pitch + (x1<<1);
+		pEnd = pDst + (dx<<1);
+		while (pDst < pEnd) {
+			*(Uint16 *)pDst = c;
+			pDst += 2;
+		}
+		break;
+	case 1:
+		memset(((Uint8 *)su->pixels + y*su->pitch + x1), c, dx);
+		break;
 	}
+	SDL_UnlockSurface(su);
 }
 
 /*
@@ -138,14 +199,17 @@ VG_HLinePrimitive(VG *vg, int x1, int x2, int y, Uint32 c)
  * presented by Foley & Van Dam [1990].
  */
 void
-VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
+VG_LinePrimitive(VG *vg, int px1, int py1, int px2, int py2, Uint32 color)
 {
-	SDL_Surface *su = vg->su;
+	int x1 = vg->rDst.x+px1;
+	int y1 = vg->rDst.y+py1;
+	int x2 = vg->rDst.x+px2;
+	int y2 = vg->rDst.y+py2;
 	int dx, dy;
 	int inc1, inc2;
 	int d, x, y;
-	int xend, yend;
-	int xdir, ydir;
+	int xEnd, yEnd;
+	int xDir, yDir;
 
 	dx = abs(x2-x1);
 	dy = abs(y2-y1);
@@ -157,18 +221,18 @@ VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 		if (x1 > x2) {
 			x = x2;
 			y = y2;
-			ydir = -1;
-			xend = x1;
+			yDir = -1;
+			xEnd = x1;
 		} else {
 			x = x1;
 			y = y1;
-			ydir = 1;
-			xend = x2;
+			yDir = 1;
+			xEnd = x2;
 		}
 		VG_PutPixel(vg, x, y, color);
 
-		if (((y2-y1)*ydir) > 0) {
-			while (x < xend) {
+		if (((y2-y1)*yDir) > 0) {
+			while (x < xEnd) {
 				x++;
 				if (d < 0) {
 					d += inc1;
@@ -179,7 +243,7 @@ VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 				VG_PutPixel(vg, x, y, color);
 			}
 		} else {
-			while (x < xend) {
+			while (x < xEnd) {
 				x++;
 				if (d < 0) {
 					d += inc1;
@@ -197,18 +261,18 @@ VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 		if (y1 > y2) {
 			y = y2;
 			x = x2;
-			yend = y1;
-			xdir = -1;
+			yEnd = y1;
+			xDir = -1;
 		} else {
 			y = y1;
 			x = x1;
-			yend = y2;
-			xdir = 1;
+			yEnd = y2;
+			xDir = 1;
 		}
 		VG_PutPixel(vg, x, y, color);
 
-		if (((x2-x1)*xdir) > 0) {
-			while (y < yend) {
+		if (((x2-x1)*xDir) > 0) {
+			while (y < yEnd) {
 				y++;
 				if (d < 0) {
 					d += inc1;
@@ -219,7 +283,7 @@ VG_LinePrimitive(VG *vg, int x1, int y1, int x2, int y2, Uint32 color)
 				VG_PutPixel(vg, x, y, color);
 			}
 		} else {
-			while (y < yend) {
+			while (y < yEnd) {
 				y++;
 				if (d < 0) {
 					d += inc1;
@@ -239,7 +303,7 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
     int thick, Uint32 color)
 {
 	float x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
-	float grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
+	float grad, xd, yd, length, xm, ym, xgap, ygap, xEnd, yEnd, xf, yf,
 	    lum1, lum2, ipart;
 	int x, y, ix1, ix2, iy1, iy2;
 	Uint32 c1, c2;
@@ -265,34 +329,34 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		grad = yd/xd;
 
 		/* End point 1 */
-		xend = AG_Truncf(x1+0.5f);
-		yend = y1 + grad*(xend-x1);
+		xEnd = AG_Truncf(x1+0.5f);
+		yEnd = y1 + grad*(xEnd-x1);
 
 		xgap = AG_FracInvf(x1+0.5f);
 
-		ix1 = (int)xend;
-		iy1 = (int)(yend+0.5f);
+		ix1 = (int)xEnd;
+		iy1 = (int)(yEnd+0.5f);
 
-		lum1 = AG_FracInvf(yend)*xgap;
-		lum2 = AG_Fracf(yend)*xgap;
+		lum1 = AG_FracInvf(yEnd)*xgap;
+		lum2 = AG_Fracf(yEnd)*xgap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
 		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 
-		yf = yend+grad;
+		yf = yEnd+grad;
 
 		/* End point 2 */
-		xend = AG_Truncf(x2+0.5f);
-		yend = y2 + grad*(xend-x2);
+		xEnd = AG_Truncf(x2+0.5f);
+		yEnd = y2 + grad*(xEnd-x2);
 
 		xgap = AG_FracInvf(x2-0.5f);
 
-		ix2 = (int)xend;
-		iy2 = (int)yend;
+		ix2 = (int)xEnd;
+		iy2 = (int)yEnd;
 
-		lum1 = AG_FracInvf(yend)*xgap;
-		lum2 = AG_Fracf(yend)*xgap;
+		lum1 = AG_FracInvf(yEnd)*xgap;
+		lum2 = AG_Fracf(yEnd)*xgap;
 
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
@@ -343,34 +407,34 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		grad = xd/yd;
 
 		/* End point 1 */
-		yend = AG_Truncf(y1+0.5f);
-		xend = x1 + grad*(yend-y1);
+		yEnd = AG_Truncf(y1+0.5f);
+		xEnd = x1 + grad*(yEnd-y1);
 
 		ygap = AG_FracInvf(y1+0.5f);
 
-		iy1 = (int)yend;
-		ix1 = (int)(xend+0.5f);
+		iy1 = (int)yEnd;
+		ix1 = (int)(xEnd+0.5f);
 
-		lum1 = AG_FracInvf(yend)*ygap;
-		lum2 = AG_Fracf(yend)*ygap;
+		lum1 = AG_FracInvf(yEnd)*ygap;
+		lum2 = AG_Fracf(yEnd)*ygap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
 		    (Uint8)(lum2*255), AG_ALPHA_OVERLAY);
 		
-		xf = xend + grad;
+		xf = xEnd + grad;
 
 		/* End point 2 */
-		yend = AG_Truncf(y2+0.5f);
-		xend = x2 + grad*(yend-y2);
+		yEnd = AG_Truncf(y2+0.5f);
+		xEnd = x2 + grad*(yEnd-y2);
 
 		xgap = AG_FracInvf(y2-0.5f);
 
-		iy2 = (int)yend;
-		ix2 = (int)xend;
+		iy2 = (int)yEnd;
+		ix2 = (int)xEnd;
 
-		lum1 = AG_FracInvf(yend)*xgap;
-		lum2 = AG_Fracf(yend)*xgap;
+		lum1 = AG_FracInvf(yEnd)*xgap;
+		lum2 = AG_Fracf(yEnd)*xgap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
@@ -415,8 +479,8 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 void
 VG_RectPrimitive(VG *vg, int x, int y, int w, int h, Uint32 color)
 {
-	VG_LinePrimitive(vg, x, y, x+w, y, color);
+	VG_HLinePrimitive(vg, x, x+w, y, color);
 	VG_LinePrimitive(vg, x, y, x, y+h, color);
-	VG_LinePrimitive(vg, x, y+h, x+w, y+h, color);
+	VG_HLinePrimitive(vg, x, x+w, y+h, color);
 	VG_LinePrimitive(vg, x+w, y, x+w, y+h, color);
 }
