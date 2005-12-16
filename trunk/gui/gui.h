@@ -9,6 +9,7 @@
 #include <agar/gui/button.h>
 #include <agar/gui/checkbox.h>
 #include <agar/gui/combo.h>
+#include <agar/gui/console.h>
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/fixed.h>
 #include <agar/gui/fspinbutton.h>
