@@ -154,7 +154,6 @@ VG_ViewButtonDown(AG_Event *event)
 	    vv->deftool->ops->mousebuttondown(vv->deftool, x, y, button) == 1) {
 		goto out;
 	}
-	printf("xy=%f,%f\n", x, y);
 	if (vv->btndown_ev != NULL)
 		AG_PostEvent(NULL, vv, vv->btndown_ev->name, "%i,%f,%f", button,
 		    x, y);
