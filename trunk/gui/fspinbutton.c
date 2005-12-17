@@ -79,23 +79,77 @@ binding_changed(AG_Event *event)
 		case AG_WIDGET_DOUBLE:
 			fsu->min = -DBL_MAX+1;
 			fsu->max = DBL_MAX-1;
+			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_FLOAT:
 			fsu->min = -FLT_MAX+1;
 			fsu->max = FLT_MAX-1;
+			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_INT:
 			fsu->min = INT_MIN+1;
 			fsu->max = INT_MAX-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
 		case AG_WIDGET_UINT:
 			fsu->min = 0;
 			fsu->max = UINT_MAX-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
 		case AG_WIDGET_UINT8:
 			fsu->min = 0;
 			fsu->max = 0xffU;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
+		case AG_WIDGET_SINT8:
+			fsu->min = -0x7f+1;
+			fsu->max =  0x7f-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+		case AG_WIDGET_UINT16:
+			fsu->min = 0;
+			fsu->max = 0xffffU;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+		case AG_WIDGET_SINT16:
+			fsu->min = -0x7fff+1;
+			fsu->max =  0x7fff-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+		case AG_WIDGET_UINT32:
+			fsu->min = 0;
+			fsu->max = 0xffffffffU;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+		case AG_WIDGET_SINT32:
+			fsu->min = -0x7fffffff+1;
+			fsu->max =  0x7fffffff-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+#ifdef SDL_HAS_64BIT_TYPE
+		case AG_WIDGET_UINT64:
+			fsu->min = 0;
+			fsu->max = 0xffffffffffffffffU;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+		case AG_WIDGET_SINT64:
+			fsu->min = -0x7fffffffffffffff+1;
+			fsu->max =  0x7fffffffffffffff-1;
+			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
+			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			break;
+#endif
 		}
 		AG_MutexUnlock(&fsu->lock);
 	}
@@ -124,17 +178,44 @@ changed(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_WidgetBinding *stringb;
+	AG_WidgetBinding *stringb, *valueb;
 	char *s;
+	void *value;
 
+	valueb = AG_WidgetGetBinding(fsu, "value", &value);
 	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
-	AG_FSpinbuttonSetValue(fsu, AG_Unit2Base(strtod(s, NULL), fsu->unit));
+
+	switch (valueb->vtype) {
+	case AG_WIDGET_DOUBLE:
+	case AG_WIDGET_FLOAT:
+		AG_FSpinbuttonSetValue(fsu,
+		    AG_Unit2Base(strtod(s, NULL), fsu->unit));
+		break;
+	case AG_WIDGET_INT:
+	case AG_WIDGET_UINT:
+	case AG_WIDGET_UINT8:
+	case AG_WIDGET_SINT8:
+	case AG_WIDGET_UINT16:
+	case AG_WIDGET_SINT16:
+	case AG_WIDGET_UINT32:
+	case AG_WIDGET_SINT32:
+		AG_FSpinbuttonSetValue(fsu, (double)strtol(s, NULL, 10));
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:
+	case AG_WIDGET_SINT64:
+		AG_FSpinbuttonSetValue(fsu, (double)strtoll(s, NULL, 10));
+		break;
+#endif
+	}
+
 	AG_WidgetUnlockBinding(stringb);
+	AG_WidgetUnlockBinding(valueb);
 
-	AG_PostEvent(NULL, fsu, "fspinbutton-return", NULL);
-
-	if (unfocus)
+	if (unfocus) {
 		AG_WidgetUnfocus(fsu->input);
+	}
+	AG_PostEvent(NULL, fsu, "fspinbutton-return", NULL);
 }
 
 static void
@@ -228,7 +309,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNew(fsu, 0, label);
+	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, label);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
@@ -358,11 +439,47 @@ AG_FSpinbuttonDraw(void *p)
 	case AG_WIDGET_UINT8:
 		AG_TextboxPrintf(fsu->input, "%u", *(Uint8 *)value);
 		break;
+	case AG_WIDGET_SINT8:
+		AG_TextboxPrintf(fsu->input, "%d", *(Sint8 *)value);
+		break;
+	case AG_WIDGET_UINT16:
+		AG_TextboxPrintf(fsu->input, "%u", *(Uint16 *)value);
+		break;
+	case AG_WIDGET_SINT16:
+		AG_TextboxPrintf(fsu->input, "%d", *(Sint16 *)value);
+		break;
+	case AG_WIDGET_UINT32:
+		AG_TextboxPrintf(fsu->input, "%u", *(Uint32 *)value);
+		break;
+	case AG_WIDGET_SINT32:
+		AG_TextboxPrintf(fsu->input, "%d", *(Sint32 *)value);
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:
+		AG_TextboxPrintf(fsu->input, "%lld", *(Uint64 *)value);
+		break;
+	case AG_WIDGET_SINT64:
+		AG_TextboxPrintf(fsu->input, "%lld", *(Sint64 *)value);
+		break;
+#endif
 	}
 	AG_WidgetUnlockBinding(valueb);
 }
 
-/* Add to the value; the fspinbutton must be locked. */
+#define ADD_CONVERTED(TYPE) do { \
+	n = (double)(*(TYPE *)value); \
+	if ((n+inc) < *min) { n = *min; } \
+	else if ((n+inc) > *max) { n = *(max); } \
+	else { n += inc; } \
+	*(TYPE *)value = (TYPE)n; \
+} while (0)
+#define ADD_REAL(TYPE) do { \
+	n = AG_Base2Unit(*(TYPE *)value, fsu->unit); \
+	if ((n+inc) < *min) { n = *min; } \
+	else if ((n+inc) > *max) { n = *(max); } \
+	else { n += inc; } \
+	*(TYPE *)value = AG_Unit2Base(n, fsu->unit); \
+} while (0)
 void
 AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 {
@@ -376,61 +493,20 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
-	case AG_WIDGET_DOUBLE:
-		n = AG_Base2Unit(*(double *)value, fsu->unit);
-		if ((n+inc) < *min) {
-			n = *min;
-		} else if ((n+inc) > *max) {
-			n = *max;
-		} else {
-			n += inc;
-		}
-		*(double *)value = AG_Unit2Base(n, fsu->unit);
-		break;
-	case AG_WIDGET_FLOAT:
-		n = AG_Base2Unit(*(float *)value, fsu->unit);
-		if ((n+inc) < *min) {
-			n = *min;
-		} else if ((n+inc) > *max) {
-			n = *max;
-		} else {
-			n += inc;
-		}
-		*(float *)value = AG_Unit2Base(n, fsu->unit);
-		break;
-	case AG_WIDGET_INT:
-		n = AG_Base2Unit((double)(*(int *)value), fsu->unit);
-		if ((n+inc) < *min) {
-			n = *min;
-		} else if ((n+inc) > *max) {
-			n = *max;
-		} else {
-			n += inc;
-		}
-		*(int *)value = (int)n;
-		break;
-	case AG_WIDGET_UINT:
-		n = AG_Base2Unit((double)(*(Uint *)value), fsu->unit);
-		if ((n+inc) < *min) {
-			n = *min;
-		} else if ((n+inc) > *max) {
-			n = *max;
-		} else {
-			n += inc;
-		}
-		*(Uint *)value = (Uint)n;
-		break;
-	case AG_WIDGET_UINT8:
-		n = AG_Base2Unit((double)(*(Uint8 *)value), fsu->unit);
-		if ((n+inc) < *min) {
-			n = *min;
-		} else if ((n+inc) > *max) {
-			n = *max;
-		} else {
-			n += inc;
-		}
-		*(Uint8 *)value = (Uint8)n;
-		break;
+	case AG_WIDGET_DOUBLE:	ADD_REAL(double);	break;
+	case AG_WIDGET_FLOAT:	ADD_REAL(float);	break;
+	case AG_WIDGET_INT:	ADD_CONVERTED(int);	break;
+	case AG_WIDGET_UINT:	ADD_CONVERTED(Uint);	break;
+	case AG_WIDGET_UINT8:	ADD_CONVERTED(Uint8);	break;
+	case AG_WIDGET_SINT8:	ADD_CONVERTED(Sint8);	break;
+	case AG_WIDGET_UINT16:	ADD_CONVERTED(Uint16);	break;
+	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
+	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
+	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
+	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
+#endif
 	default:
 		break;
 	}
@@ -441,7 +517,17 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
 }
+#undef ADD_INCREMENT
+#undef ADD_REAL
+#undef ADD_CONVERTED
 
+#define ASSIGN_VALUE(TYPE) *(TYPE *)value = nvalue < *min ? *min : \
+    nvalue > *max ? *max : nvalue
+#define CONV_VALUE(TYPE) \
+    *(TYPE *)value = nvalue < *min ? (TYPE)(*min) : \
+     nvalue > *max ? (TYPE)(*max) : (TYPE)nvalue
+
+/* TODO int types directly */
 void
 AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 {
@@ -454,31 +540,20 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
-	case AG_WIDGET_DOUBLE:
-		*(double *)value = nvalue < *min ? *min :
-		                   nvalue > *max ? *max :
-				   nvalue;
-		break;
-	case AG_WIDGET_FLOAT:
-		*(float *)value = nvalue < *min ? *min :
-		                  nvalue > *max ? *max :
-				  nvalue;
-		break;
-	case AG_WIDGET_INT:
-		*(int *)value = nvalue < *min ? (int)*min :
-		                nvalue > *max ? (int)*max :
-				(int)nvalue;
-		break;
-	case AG_WIDGET_UINT:
-		*(Uint *)value = nvalue < *min ? (Uint)*min :
-		                  nvalue > *max ? (Uint)*max :
-				  (Uint)nvalue;
-		break;
-	case AG_WIDGET_UINT8:
-		*(Uint8 *)value = nvalue < *min ? (Uint8)*min :
-		                  nvalue > *max ? (Uint8)*max :
-				  (Uint8)nvalue;
-		break;
+	case AG_WIDGET_DOUBLE:	ASSIGN_VALUE(double);	break;
+	case AG_WIDGET_FLOAT:	ASSIGN_VALUE(float);	break;
+	case AG_WIDGET_INT:	CONV_VALUE(int);	break;
+	case AG_WIDGET_UINT:	CONV_VALUE(Uint);	break;
+	case AG_WIDGET_UINT8:	CONV_VALUE(Uint8);	break;
+	case AG_WIDGET_SINT8:	CONV_VALUE(Sint8);	break;
+	case AG_WIDGET_UINT16:	CONV_VALUE(Uint16);	break;
+	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
+	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
+	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:	CONV_VALUE(Uint64);	break;
+	case AG_WIDGET_SINT64:	CONV_VALUE(Sint64);	break;
+#endif
 	}
 
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
@@ -488,13 +563,16 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
 }
+#undef ASSIGN_VALUE
+#undef CONV_VALUE
 
 void
 AG_FSpinbuttonSetMin(AG_FSpinbutton *fsu, double nmin)
 {
 	AG_WidgetBinding *minb;
 	void *min;
-	
+
+	/* TODO allow integer min/max bindings */
 	minb = AG_WidgetGetBinding(fsu, "min", &min);
 	switch (minb->vtype) {
 	case AG_WIDGET_DOUBLE:
@@ -513,6 +591,7 @@ AG_FSpinbuttonSetMax(AG_FSpinbutton *fsu, double nmax)
 	AG_WidgetBinding *maxb;
 	void *max;
 	
+	/* TODO allow integer min/max bindings */
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 	switch (maxb->vtype) {
 	case AG_WIDGET_DOUBLE:
