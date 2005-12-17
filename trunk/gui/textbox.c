@@ -86,15 +86,37 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 }
 
 static int
-process_key(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
+AG_TextboxProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod,
+    Uint32 unicode)
 {
 	AG_WidgetBinding *stringb;
 	char *s;
-	int i;
-	int rv = 0;
+	int i, rv = 0;
 
 	if (keysym == SDLK_RETURN)
 		return (0);
+
+	if (keymod == KMOD_NONE && isprint((int)keysym)) {
+		if ((tb->flags & AG_TEXTBOX_INT_ONLY)) {
+			if (keysym != SDLK_MINUS &&
+			    keysym != SDLK_PLUS &&
+			    !isdigit((int)keysym)) {
+				return (0);
+			}
+		} else if ((tb->flags & AG_TEXTBOX_FLT_ONLY)) {
+			if (keysym != SDLK_PLUS &&
+			    keysym != SDLK_MINUS &&
+			    keysym != SDLK_PERIOD &&
+			    keysym != SDLK_e &&
+			    keysym != SDLK_i &&
+			    keysym != SDLK_n &&
+			    keysym != SDLK_f &&
+			    keysym != SDLK_a &&
+			    !isdigit((int)keysym)) {
+				return (0);
+			}
+		}
+	}
 
 	stringb = AG_WidgetGetBinding(tb, "string", &s);
 	if (tb->pos > stringb->size)
@@ -129,7 +151,7 @@ repeat_expire(void *obj, Uint32 ival, void *arg)
 {
 	AG_Textbox *tb = obj;
 
-	if (process_key(tb, tb->repeat.key, tb->repeat.mod,
+	if (AG_TextboxProcessKey(tb, tb->repeat.key, tb->repeat.mod,
 	    tb->repeat.unicode) == 0) {
 		return (0);
 	}
@@ -477,7 +499,7 @@ keydown(AG_Event *event)
 
 	AG_LockTimeouts(tbox);
 	AG_DelTimeout(tbox, &tbox->repeat_to);
-	if (process_key(tbox, keysym, keymod, unicode) == 1) {
+	if (AG_TextboxProcessKey(tbox, keysym, keymod, unicode) == 1) {
 		AG_ReplaceTimeout(tbox, &tbox->delay_to, agKbdDelay);
 	} else {
 		AG_DelTimeout(tbox, &tbox->delay_to);
