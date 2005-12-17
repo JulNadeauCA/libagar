@@ -54,9 +54,9 @@ enum ag_button_which {
 	AG_BUTTON_SCROLL
 };
 
-static void mousebuttonup(AG_Event *);
-static void mousebuttondown(AG_Event *);
-static void mousemotion(AG_Event *);
+static void MouseButtonUp(AG_Event *);
+static void MouseButtonDown(AG_Event *);
+static void MouseMotion(AG_Event *);
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
@@ -81,27 +81,29 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 	if (flags & AG_SCROLLBAR_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps, wflags);
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &sb->value);
-	AG_WidgetBind(sb, "min", AG_WIDGET_INT, &sb->min);
-	AG_WidgetBind(sb, "max", AG_WIDGET_INT, &sb->max);
+	AG_WidgetBindInt(sb, "value", &sb->value);
+	AG_WidgetBindInt(sb, "min", &sb->min);
+	AG_WidgetBindInt(sb, "max", &sb->max);
+	AG_WidgetBindInt(sb, "visible", &sb->visible);
 
 	sb->flags = flags;
 	sb->value = 0;
 	sb->min = 0;
 	sb->max = 0;
+	sb->visible = 0;
 	sb->type = type;
 	sb->curbutton = AG_BUTTON_NONE;
 	sb->bw = 15;				/* XXX resolution-dependent */
 	sb->barSz = 30;
 	sb->arrowSz = 9;
 
-	AG_SetEvent(sb, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(sb, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(sb, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -112,42 +114,32 @@ mousebuttonup(AG_Event *event)
 static void
 AG_ScrollbarMove(AG_Scrollbar *sb, int x, int totalsize)
 {
-	const int scrolling_area = totalsize - (sb->bw*2);
+	const int scrArea = totalsize - (sb->bw*2);
 	int min, max;
 
-	if (sb->curbutton != AG_BUTTON_SCROLL)
-		return;
-	if (sb->barSz == -1)
-		return;
+	if (sb->curbutton != AG_BUTTON_SCROLL) { return; }
+	if (sb->barSz == -1) { return; }
 		
 	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max");
-	
+	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
 	if (max < min)
 		return;
 	
-	/* mouse below min */
-	if (x <= sb->bw) {
+	if (x <= sb->bw) {				/* Below min */
 		AG_WidgetSetInt(sb, "value", min);
-	}
-	/* mouse above max */
-	else if (x >= sb->bw + scrolling_area) {
+	} else if (x >= sb->bw + scrArea) {		/* Above max */
 		AG_WidgetSetInt(sb, "value", max);
-	}
-	/* mouse between */
-	else {
-		int nx = x - sb->bw;
-
-		AG_WidgetSetInt(sb, "value", nx*(max-min+1)/scrolling_area);
+	} else {					/* Between */
+		AG_WidgetSetInt(sb, "value",
+		    (x - sb->bw)*(max-min+1) / scrArea);
 	}
 	
-	/* generate an event */
 	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i",
-		AG_WidgetInt(sb, "value"));
+	    AG_WidgetInt(sb, "value"));
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
@@ -160,7 +152,7 @@ mousebuttondown(AG_Event *event)
 		return;
 
 	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max");
+	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
 	value = AG_WidgetInt(sb, "value");
 
 	if (max < min)
@@ -168,31 +160,28 @@ mousebuttondown(AG_Event *event)
 	
 	AG_WidgetFocus(sb);
 	
-	/* click on the up button */
-	if (x <= sb->bw) {
+	if (x <= sb->bw) {				/* Up button */
 		sb->curbutton = AG_BUTTON_UP;
-		if (value > min) 
+		if (value > min) {
 			AG_WidgetSetInt(sb, "value", value - 1);
-	}
-	/* click on the down button */
-	else if (x >= totalsize - sb->bw) {
+		}
+	} else if (x >= totalsize - sb->bw) {		/* Down button */
 		sb->curbutton = AG_BUTTON_DOWN;
-		if (value < max)
+		if (value < max) {
 			AG_WidgetSetInt(sb, "value", value + 1);
-	}
-	/* click in between */
-	else {
+		}
+	} else {					/* In between */
 		sb->curbutton = AG_BUTTON_SCROLL;
 		AG_ScrollbarMove(sb, x, totalsize);
 	}
 	
-	/* generate an event if value changed */
+	/* Generate an event if value changed. */
 	if (value != (nvalue = AG_WidgetInt(sb, "value")))
 		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nvalue);
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
@@ -241,23 +230,24 @@ AG_ScrollbarDraw(void *p)
 	int w, h, x, y;
 	int maxcoord;
 
-	if ((max = AG_WidgetInt(sb, "max")) == 0 ||
+	if ((max = (AG_WidgetInt(sb,"max") - AG_WidgetInt(sb,"visible")))== 0 ||
 	     max < (min = AG_WidgetInt(sb, "min"))) {
 		return;
 	}
 	value = AG_WidgetInt(sb, "value");
 	
-	if (AGWIDGET(sb)->w < sb->bw ||
-	    AGWIDGET(sb)->w < sb->bw)
+	if (AGWIDGET(sb)->w < sb->bw || AGWIDGET(sb)->w < sb->bw)
 		return;
 
-#ifdef DEBUG
-	if (value < min || value > max) {
-		dprintf("invalid value: min=%d, value=%d, max=%d\n", min,
-		    value, max);
-		return;
+	if (value < min) {
+		value = min;
+		AG_WidgetSetInt(sb, "value", min);
 	}
-#endif
+	if (value > max) {
+		value = max-1;
+		AG_WidgetSetInt(sb, "value", max-1);
+	}
+	
 	agPrim.box(sb, 0, 0, AGWIDGET(sb)->w, AGWIDGET(sb)->h, -1,
 	    AG_COLOR(SCROLLBAR_COLOR));
 
