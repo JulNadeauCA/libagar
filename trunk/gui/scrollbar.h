@@ -23,6 +23,7 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
+	int visible;			/* Number of visible items */
 	enum ag_scrollbar_type type;
 	int bw;				/* Scroll button size */
 	int curbutton;			/* Button held */
