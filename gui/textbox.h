@@ -19,16 +19,18 @@ typedef struct ag_textbox {
 	int	     label_id;			/* Label surface mapping */
 
 	Uint flags;
-#define AG_TEXTBOX_WRITEABLE	 0x01	/* Allow focus/text input */
-#define AG_TEXTBOX_BLINK_ON	 0x02	/* Cursor blink state (internal) */
-#define AG_TEXTBOX_PASSWORD	 0x04	/* Password (hidden) input */
-#define AG_TEXTBOX_ABANDON_FOCUS 0x08	/* Abandon focus on return */
-#define AG_TEXTBOX_COMBO	 0x10	/* Used by AG_Combo */
-#define AG_TEXTBOX_HFILL	 0x20
-#define AG_TEXTBOX_VFILL	 0x40
+#define AG_TEXTBOX_WRITEABLE	 0x001	/* Allow focus/text input */
+#define AG_TEXTBOX_BLINK_ON	 0x002	/* Cursor blink state (internal) */
+#define AG_TEXTBOX_PASSWORD	 0x004	/* Password (hidden) input */
+#define AG_TEXTBOX_ABANDON_FOCUS 0x008	/* Abandon focus on return */
+#define AG_TEXTBOX_COMBO	 0x010	/* Used by AG_Combo */
+#define AG_TEXTBOX_HFILL	 0x020
+#define AG_TEXTBOX_VFILL	 0x040
 #define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
-#define AG_TEXTBOX_FOCUS	 0x80
-#define AG_TEXTBOX_READONLY	 0x100
+#define AG_TEXTBOX_FOCUS	 0x080
+#define AG_TEXTBOX_READONLY	 0x100	/* Text is read-only */
+#define AG_TEXTBOX_INT_ONLY	 0x200	/* Accepts only valid strtol() input */
+#define AG_TEXTBOX_FLT_ONLY	 0x400	/* Accepts only valid strtof() input */
 
 	int prew, preh;			/* Prescale */
 	int xpadding, ypadding;		/* Text padding */
