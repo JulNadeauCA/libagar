@@ -163,7 +163,8 @@ typedef struct vg_element {
 	enum vg_element_type type;
 	const VG_ElementOps *ops;
 	int flags;
-#define VG_ELEMENT_NOSAVE 0x01		/* Don't save with drawing */
+#define VG_ELEMENT_NOSAVE 0x01			/* Don't save with drawing */
+#define VG_ELEMENT_IGNORE_BLK_COLOR 0x02	/* Ignore block color */
 
 	VG_Block *block;		/* Back pointer to block */
 	VG_Style *style;		/* Default element style */
@@ -237,6 +238,9 @@ typedef struct vg {
 	enum vg_snap_mode  snap_mode;	/* Positional restriction */
 	enum vg_ortho_mode ortho_mode;	/* Orthogonal restriction */
 
+	AG_Event *preRasterEv;		/* Raised prior to drawing */
+	AG_Event *postRasterEv;		/* Raised after drawing */
+
 	SDL_Surface *su;		/* Raster surface */
 	SDL_PixelFormat *fmt;		/* Raster pixel format */
 	SDL_Rect rDst;			/* Rendering window */
@@ -272,6 +276,8 @@ void	 VG_Destroy(VG *);
 void	 VG_Save(VG *, AG_Netbuf *);
 int	 VG_Load(VG *, AG_Netbuf *);
 
+void	 	 VG_PreRasterFn(VG *, void *, AG_EventFn, const char *, ...);
+void	 	 VG_PostRasterFn(VG *, void *, AG_EventFn, const char *, ...);
 void		 VG_Scale(VG *, int, int, float);
 __inline__ void	 VG_DefaultScale(VG *, float);
 __inline__ void	 VG_SetGridGap(VG *, float);
