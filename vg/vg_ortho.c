@@ -41,6 +41,7 @@ VG_RestrictOrtho(VG *vg, float *x, float *y)
 	switch (vg->ortho_mode) {
 	case VG_HORIZ_ORTHO:
 	case VG_VERT_ORTHO:
+		/* TODO */
 		break;
 	case VG_NO_ORTHO:
 	default:

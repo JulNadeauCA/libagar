@@ -252,8 +252,8 @@ typedef struct vg {
 #define VG_RASXF(vg,cx) ((cx)*(vg)->scale + (vg)->origin[0].x*(vg)->scale)
 #define VG_RASYF(vg,cy) ((cy)*(vg)->scale + (vg)->origin[0].y*(vg)->scale)
 #define VG_RASLENF(vg,i) ((i)*(vg)->scale)
-#define VG_VECXF(vg,rx) (((float)(rx))/(vg)->scale - (vg)->origin[0].x)
-#define VG_VECYF(vg,ry) (((float)(ry))/(vg)->scale - (vg)->origin[0].y)
+#define VG_VECXF(vg,rx) VG_VcoordX((vg),(rx))
+#define VG_VECYF(vg,ry) VG_VcoordY((vg),(ry))
 #define VG_VECLENF(vg,ry) (((float)(ry))/(vg)->scale)
 
 #define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale) + \
@@ -277,8 +277,10 @@ __inline__ void	 VG_DefaultScale(VG *, float);
 __inline__ void	 VG_SetGridGap(VG *, float);
 __inline__ void	 VG_Rasterize(VG *);
 
-__inline__ void	 VG_Vcoords2(VG *, int, int, int, int, float *, float *);
-__inline__ void	 VG_AbsVcoords2(VG *, int, int, int, int, float *, float *);
+__inline__ void	 VG_Vcoords2(VG *, int, int, float *, float *);
+__inline__ void	 VG_AbsVcoords2(VG *, int, int, float *, float *);
+__inline__ float VG_VcoordX(VG *, int);
+__inline__ float VG_VcoordY(VG *, int);
 __inline__ void  VG_Rcoords2(VG *, float, float, int *, int *);
 __inline__ void	 VG_AbsRcoords2(VG *, float, float, int *, int *);
 __inline__ void  VG_Rcoords2d(VG *, float, float, float *, float *);
