@@ -39,49 +39,24 @@
 #include "vg_primitive.h"
 
 static void
-snap_to_grid(VG *vg, float *x, float *y)
+VG_SnapToGrid(VG *vg, float *x, float *y)
 {
-	float gx, gy;
-	float xoff, yoff;
-	int xsign = *x >= 0 ? 1 : -1;
-	int ysign = *y >= 0 ? 1 : -1;
+	float r;
 
-	/* XXX bletcherous */
-	for (gx = 0; gx <= fabsf(*x)-vg->grid_gap; gx += vg->grid_gap)
-	    ;;
-	for (gy = 0; gy <= fabsf(*y)-vg->grid_gap; gy += vg->grid_gap)
-	    ;;
-
-	xoff = fabsf(*x) - gx;
-	yoff = fabsf(*y) - gy;
-
-	if (xsign == 1) {
-		xoff = *x - gx;
-		*x = gx;
-		if (xoff > vg->grid_gap/2)
-			*x += vg->grid_gap;
-	} else {
-		xoff = fabsf(*x) - gx;
-		*x = -gx;
-		if (xoff > vg->grid_gap/2)
-			*x -= vg->grid_gap;
+	if (x != NULL) {
+		r = remainderf(*x, vg->grid_gap);
+		*x -= r;
+		if (r > 0.5) { *x += vg->grid_gap; }
 	}
-
-	if (ysign == 1) {
-		yoff = *y - gy;
-		*y = gy;
-		if (yoff > vg->grid_gap/2)
-			*y += vg->grid_gap;
-	} else {
-		yoff = fabsf(*y) - gy;
-		*y = -gy;
-		if (yoff > vg->grid_gap/2)
-			*y -= vg->grid_gap;
+	if (y != NULL) {
+		r = remainderf(*y, vg->grid_gap);
+		*y -= r;
+		if (r > 0.5) { *y += vg->grid_gap; }
 	}
 }
 
 static void
-snap_to_endpoint(VG *vg, float *x, float *y)
+VG_SnapToEndpoint(VG *vg, float *x, float *y)
 {
 	VG_Element *vge;
 	VG_Vtx *vtx;
@@ -90,14 +65,7 @@ snap_to_endpoint(VG *vg, float *x, float *y)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < vge->nvtx; i++) {
 			vtx = &vge->vtx[i];
-
-			/* XXX */
-			if (*x > vtx->x - 0.5 && *x < vtx->x + 0.5 &&
-			    *y > vtx->y - 0.5 && *y < vtx->y + 0.5) {
-				*x = vtx->x;
-				*y = vtx->y;
-				break;
-			}
+			/* TODO */
 		}
 	}
 }
@@ -107,14 +75,14 @@ VG_SnapPoint(VG *vg, float *x, float *y)
 {
 	switch (vg->snap_mode) {
 	case VG_NEAREST_INTEGER:
-		*x = rint(*x);
-		*y = rint(*y);
+		if (x != NULL) *x = rint(*x);
+		if (y != NULL) *y = rint(*y);
 		break;
 	case VG_GRID:
-		snap_to_grid(vg, x, y);
+		VG_SnapToGrid(vg, x, y);
 		break;
 	case VG_ENDPOINT:
-		snap_to_endpoint(vg, x, y);
+		VG_SnapToEndpoint(vg, x, y);
 		break;
 	case VG_FREE_POSITIONING:
 		break;

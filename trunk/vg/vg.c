@@ -519,11 +519,10 @@ VG_VLength(VG *vg, int len, float *vlen)
  * The vg must be locked.
  */
 void
-VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, float *vx,
-    float *vy)
+VG_Vcoords2(VG *vg, int rx, int ry, float *vx, float *vy)
 {
-	*vx = (float)rx/vg->scale + (float)xoff/vg->scale - vg->origin[0].x;
-	*vy = (float)ry/vg->scale + (float)yoff/vg->scale - vg->origin[0].y;
+	*vx = (float)rx/vg->scale - vg->origin[0].x;
+	*vy = (float)ry/vg->scale - vg->origin[0].y;
 	
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
@@ -531,16 +530,41 @@ VG_Vcoords2(VG *vg, int rx, int ry, int xoff, int yoff, float *vx,
 		VG_RestrictOrtho(vg, vx, vy);
 }
 
+float
+VG_VcoordX(VG *vg, int rx)
+{
+	float vx = (float)rx/vg->scale - vg->origin[0].x;
+	
+	if (vg->snap_mode != VG_FREE_POSITIONING)
+		VG_SnapPoint(vg, &vx, NULL);
+	if (vg->ortho_mode != VG_NO_ORTHO) {
+		VG_RestrictOrtho(vg, &vx, NULL);
+	}
+	return (vx);
+}
+
+float
+VG_VcoordY(VG *vg, int ry)
+{
+	float vy = (float)ry/vg->scale - vg->origin[0].y;
+	
+	if (vg->snap_mode != VG_FREE_POSITIONING)
+		VG_SnapPoint(vg, NULL, &vy);
+	if (vg->ortho_mode != VG_NO_ORTHO) {
+		VG_RestrictOrtho(vg, NULL, &vy);
+	}
+	return (vy);
+}
+
 /*
  * Translate tile coordinates to absolute vg coordinates.
  * The vg must be locked.
  */
 void
-VG_AbsVcoords2(VG *vg, int rx, int ry, int xoff, int yoff, float *vx,
-    float *vy)
+VG_AbsVcoords2(VG *vg, int rx, int ry, float *vx, float *vy)
 {
-	*vx = (float)rx/vg->scale + (float)xoff/vg->scale;
-	*vy = (float)ry/vg->scale + (float)yoff/vg->scale;
+	*vx = (float)rx/vg->scale;
+	*vy = (float)ry/vg->scale;
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		VG_SnapPoint(vg, vx, vy);
