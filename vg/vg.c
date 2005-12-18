@@ -138,6 +138,8 @@ VG_Init(VG *vg, int flags)
 	VG_PushLayer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
 	vg->ortho_mode = VG_NO_ORTHO;
+	vg->preRasterEv = NULL;
+	vg->postRasterEv = NULL;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
@@ -159,6 +161,20 @@ VG_Init(VG *vg, int flags)
 
 	vg->ints = NULL;
 	vg->nints = 0;
+}
+
+void
+VG_PreRasterFn(VG *vg, void *obj, AG_EventFn fn, const char *fmt, ...)
+{
+	vg->preRasterEv = AG_SetEvent(obj, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(vg->preRasterEv, fmt);
+}
+
+void
+VG_PostRasterFn(VG *vg, void *obj, AG_EventFn fn, const char *fmt, ...)
+{
+	vg->postRasterEv = AG_SetEvent(obj, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(vg->postRasterEv, fmt);
 }
 
 void
@@ -465,6 +481,9 @@ VG_Rasterize(VG *vg)
 	AG_MutexLock(&vg->lock);
 	vg->redraw = 0;
 
+	if (vg->preRasterEv != NULL)
+		vg->preRasterEv->handler(vg->preRasterEv);
+
 	if ((vg->flags & VG_DIRECT) == 0) {
 		SDL_FillRect(vg->su, NULL, vg->fill_color);
 		if (vg->flags & VG_VISGRID)
@@ -499,7 +518,10 @@ VG_Rasterize(VG *vg)
 	}
 	if (vg->flags & VG_VISORIGIN)
 		VG_DrawOrigin(vg);
-
+	
+	if (vg->postRasterEv != NULL) {
+		vg->postRasterEv->handler(vg->postRasterEv);
+	}
 	AG_MutexUnlock(&vg->lock);
 }
 
