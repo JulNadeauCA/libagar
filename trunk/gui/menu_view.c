@@ -277,7 +277,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 	mview->panel = panel;
 	mview->pmenu = pmenu;
 	mview->pitem = pitem;
-	mview->hspace = 6;
+	mview->hspace = 8;
 	mview->vpadding = 4;
 
 	/* XXX */
@@ -343,8 +343,8 @@ AG_MenuViewDraw(void *p)
 				    m->itemh, m->itemh-2, c, AG_ALPHA_SRC);
 			}
 		}
-		
-		x = m->itemh + mview->hspace*2;
+		if (pitem->flags & AG_MENU_ITEM_ICONS)
+			x += m->itemh+mview->hspace;
 
 		if (subitem->label != -1) {
 			SDL_Surface *lbl = AGWIDGET_SURFACE(m,subitem->label);
@@ -391,12 +391,13 @@ AG_MenuViewScale(void *p, int w, int h)
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
 			AG_MenuItem *subitem = &pitem->subitems[i];
-			int req_w = mview->hspace*2;
+			int req_w = mview->hspace;
 
 			if (subitem->icon != -1) {
 				req_w += AGWIDGET_SURFACE(m,subitem->icon)->w;
 			}
-			req_w += m->itemh;
+			if (pitem->flags & AG_MENU_ITEM_ICONS)
+				req_w += m->itemh+mview->hspace;
 		
 			if (subitem->label != -1) {
 				req_w += AGWIDGET_SURFACE(m,subitem->label)->w +

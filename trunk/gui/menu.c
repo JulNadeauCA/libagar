@@ -265,6 +265,7 @@ AG_MenuAddItem(AG_Menu *m, const char *text)
 	mitem->pmenu = m;
 	mitem->sel_subitem = NULL;
 	mitem->pitem = NULL;
+	mitem->flags = 0;
 	return (mitem);
 }
 
@@ -302,12 +303,17 @@ add_subitem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->bind_invert = 0;
 	mi->bind_lock = NULL;
 	mi->text = text;
-	mi->icon = (icon != NULL) ?
-	    AG_WidgetMapSurface(m, AG_DupSurface(icon)) : -1;
 	mi->label = (text != NULL) ?
 	    AG_WidgetMapSurface(m, AG_TextRender(NULL, -1,
 	    AG_COLOR(MENU_TXT_COLOR), text)) : -1;
 	mi->state = -1;
+	mi->flags = 0;
+	if (icon != NULL) {
+		pitem->flags |= AG_MENU_ITEM_ICONS;
+		mi->icon = AG_WidgetMapSurface(m, AG_DupSurface(icon));
+	} else {
+		mi->icon = -1;
+	}
 	return (mi);
 }
 
