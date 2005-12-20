@@ -25,6 +25,8 @@ typedef struct ag_menu_item {
 	Uint nsubitems;
 	AG_Event *onclick;		/* Raised on click */
 	AG_Event *poll;			/* Raised before the item is drawn */
+	Uint flags;
+#define AG_MENU_ITEM_ICONS	0x01	/* Some of the subitems have icons */
 
 	enum ag_menu_binding {
 		AG_MENU_NO_BINDING,
