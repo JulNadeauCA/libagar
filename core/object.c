@@ -137,10 +137,17 @@ AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 }
 
 int
-AG_ObjectSubclass(AG_Object *ob, const char *clname, size_t size)
+AG_ObjectSubclass(AG_Object *ob, const char *type)
 {
-	return (strncmp(ob->type, clname, size) == 0 &&
-	        (ob->type[size] == '.' || ob->type[size] == '\0'));
+	const char *c, *t;
+
+	for (c = &ob->type[0], t = &type[0];
+	     *c != '\0';
+	     c++, t++) {
+		if ((*c == '.' && *t == '\0')) { return (1); }
+		if (*c != *t) { return (0); }
+	}
+	return (1);
 }
 
 void
@@ -1993,15 +2000,14 @@ poll_gfx(AG_Event *event)
 static void
 poll_props(AG_Event *event)
 {
+	char val[AG_TLIST_LABEL_MAX];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 	AG_Prop *prop;
 	
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		char val[AG_TLIST_LABEL_MAX];
-
-		AG_PropPrint(val, sizeof(val), prop);
+		AG_PropPrint(val, sizeof(val), ob, prop->key);
 		AG_TlistAdd(tl, NULL, "%s = %s", prop->key, val);
 	}
 	AG_TlistRestore(tl);
