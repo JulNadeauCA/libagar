@@ -439,10 +439,24 @@ AG_LabelDrawPolled(AG_Label *label)
 				break;
 			case 'f':
 				snprintf(s2, sizeof(s2), "%.2f",
+				    LABEL_ARG(float));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'F':
+				snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(double));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
+#if 0
+			case 'G':
+				snprintf(s2, sizeof(s2), "%.2f",
+				    LABEL_ARG(long double));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+#endif
 			case '[':
 				for (i = 0; i < nfmts; i++) {
 					if (strncmp(fmts[i].fmt, fmtp+2,
