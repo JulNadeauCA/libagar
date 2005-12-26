@@ -89,7 +89,6 @@ VG_Init(VG *vg, int flags)
 
 	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
-	vg->redraw = 1;
 	vg->scale = 1;
 
 	if (flags & VG_DIRECT) {
@@ -267,7 +266,6 @@ VG_DestroyElement(VG *vg, VG_Element *vge)
 
 	TAILQ_REMOVE(&vg->vges, vge, vges);
 	VG_FreeElement(vg, vge);
-	vg->redraw++;
 }
 
 /* Set the default scale factor. */
@@ -316,7 +314,6 @@ VG_Scale(VG *vg, int w, int h, float scale)
 		if (vg->rDst.x >= vg->su->w) { vg->rDst.x = vg->su->w-1; }
 		if (vg->rDst.y >= vg->su->h) { vg->rDst.y = vg->su->h-1; }
 	}
-	vg->redraw++;
 }
 
 /*
@@ -371,7 +368,6 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 		vge->ops->init(vg, vge);
 
 	vg->cur_vge = vge;
-	vg->redraw++;
 	AG_MutexUnlock(&vg->lock);
 	return (vge);
 }
@@ -479,7 +475,6 @@ VG_Rasterize(VG *vg)
 	int i;
 
 	AG_MutexLock(&vg->lock);
-	vg->redraw = 0;
 
 	if (vg->preRasterEv != NULL)
 		vg->preRasterEv->handler(vg->preRasterEv);
@@ -717,7 +712,6 @@ VG_PopVertex(VG *vg)
 		fatal("neg nvtx");
 #endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(VG_Vtx));
-	vg->redraw++;
 	return ((vge->nvtx > 0) ? &vge->vtx[vge->nvtx-1] : NULL);
 }
 
@@ -733,7 +727,6 @@ VG_PopMatrix(VG *vg)
 		fatal("neg ntrans");
 #endif
 	vge->trans = Realloc(vge->trans, (--vge->ntrans)*sizeof(VG_Matrix));
-	vg->redraw++;
 	return ((vge->ntrans > 0) ? &vge->trans[vge->ntrans-1] : NULL);
 }
 
@@ -747,8 +740,41 @@ VG_Vertex2(VG *vg, float x, float y)
 	vtx->x = x;
 	vtx->y = y;
 	VG_BlockOffset(vg, vtx);
-	vg->redraw++;
 	return (vtx);
+}
+
+/*
+ * Push a vertex at the intersection point between a given line (x1,y1,x2,y2)
+ * and a vertical line at x.
+ */
+VG_Vtx *
+VG_VertexVint2(VG *vg, float x, float px1, float py1, float px2, float py2)
+{
+	float x1 = px1, x2 = px2;
+	float y1 = py1, y2 = py2;
+	float m, x3 = x1;
+	VG_Vtx *vtx;
+
+	if (y1 < y2) { m = y1; y1 = y2; y2 = m; x3 = x2; }
+	if (x1 < x2) { m = x1; x1 = x2; x2 = m; }
+	m = fabsf(y2-y1)/fabsf(x2-x1);
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x;
+	vtx->y = m*(x - x3);
+	VG_BlockOffset(vg, vtx);
+	return (vtx);
+}
+
+/*
+ * Push a vertical line onto the vertex array with endpoints at (x,y) and
+ * the intersection point with a given line (x1,y1,x2,y2).
+ */
+void
+VG_VintVLine2(VG *vg, float x, float y, float x1, float y1, float x2, float y2)
+{
+	VG_VertexVint2(vg, x, x1, y1, x2, y2);
+	VG_Vertex2(vg, x, y);
 }
 
 /* Push a series of vertices onto the vertex array. */
@@ -765,7 +791,55 @@ VG_VertexV(VG *vg, const VG_Vtx *svtx, Uint nsvtx)
 		memcpy(vtx, &svtx[i], sizeof(VG_Vtx));
 		VG_BlockOffset(vg, vtx);
 	}
-	vg->redraw++;
+}
+
+/* Push two vertices onto the vertex array. */
+void
+VG_Line(VG *vg, float x1, float y1, float x2, float y2)
+{
+	VG_Vtx *vtx;
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x1;
+	vtx->y = y1;
+	VG_BlockOffset(vg, vtx);
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x2;
+	vtx->y = y2;
+	VG_BlockOffset(vg, vtx);
+}
+
+/* Push the two endpoints of a vertical line onto the vertex array. */
+void
+VG_VLine(VG *vg, float x, float y1, float y2)
+{
+	VG_Vtx *vtx;
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x;
+	vtx->y = y1;
+	VG_BlockOffset(vg, vtx);
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x;
+	vtx->y = y2;
+	VG_BlockOffset(vg, vtx);
+}
+
+/* Push the two endpoints of a horizontal line onto the vertex array. */
+void
+VG_HLine(VG *vg, float x1, float x2, float y)
+{
+	VG_Vtx *vtx;
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x1;
+	vtx->y = y;
+	VG_BlockOffset(vg, vtx);
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x2;
+	vtx->y = y;
+	VG_BlockOffset(vg, vtx);
 }
 
 void
@@ -943,7 +1017,6 @@ void
 VG_Color(VG *vg, Uint32 color)
 {
 	vg->cur_vge->color = color;
-	vg->redraw++;
 }
 
 /* Specify the color of the current element (RGB triplet). */
@@ -951,7 +1024,6 @@ void
 VG_Color3(VG *vg, int r, int g, int b)
 {
 	vg->cur_vge->color = SDL_MapRGB(vg->fmt, r, g, b);
-	vg->redraw++;
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
@@ -959,7 +1031,6 @@ void
 VG_Color4(VG *vg, int r, int g, int b, int a)
 {
 	vg->cur_vge->color = SDL_MapRGBA(vg->fmt, r, g, b, a);
-	vg->redraw++;
 }
 
 /* Push a new layer onto the layer stack. */
@@ -972,13 +1043,10 @@ VG_PushLayer(VG *vg, const char *name)
 	                                 sizeof(VG_Layer));
 	vgl = &vg->layers[vg->nlayers];
 	vg->nlayers++;
-
 	strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
 	vgl->color = SDL_MapRGB(vg->fmt, 255, 255, 255);
-	
-	vg->redraw++;
 	return (vgl);
 }
 
@@ -988,8 +1056,6 @@ VG_PopLayer(VG *vg)
 {
 	if (--vg->nlayers < 1)
 		vg->nlayers = 1;
-	
-	vg->redraw++;
 }
 
 static void
@@ -1400,12 +1466,9 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 		}
 		VG_End(vg);
 	}
-
-	vg->redraw = 1;
 	AG_MutexUnlock(&vg->lock);
 	return (0);
 fail:
-	vg->redraw = 1;
 	AG_MutexUnlock(&vg->lock);
 	return (-1);
 }

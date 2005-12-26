@@ -213,7 +213,6 @@ typedef struct vg {
 #define VG_DIRECT	0x100		/* Render directly to display */
 
 	AG_Mutex lock;
-	int redraw;			/* Global redraw */
 	float scale;			/* Scaling factor */
 	float default_scale;		/* Default scaling factor */
 	float grid_gap;			/* Grid size */
@@ -259,6 +258,8 @@ typedef struct vg {
 #define VG_VECXF(vg,rx) VG_VcoordX((vg),(rx))
 #define VG_VECYF(vg,ry) VG_VcoordY((vg),(ry))
 #define VG_VECLENF(vg,ry) (((float)(ry))/(vg)->scale)
+#define VG_VECXF_NOSNAP(vg,rx) ((rx)/(vg)->scale - (vg)->origin[0].x)
+#define VG_VECYF_NOSNAP(vg,ry) ((ry)/(vg)->scale - (vg)->origin[0].y)
 
 #define VG_RASX(vg,cx) ((int)((cx)*(vg)->scale) + \
                        (int)((vg)->origin[0].x*(vg)->scale))
@@ -316,12 +317,19 @@ int	   	   VG_Rintersect(VG *, VG_Rect *, VG_Rect *, VG_Rect *);
 VG_Style	*VG_CreateStyle(VG *, enum vg_style_type, const char *);
 int		 VG_SetStyle(VG *, const char *);
  
-__inline__ void	 VG_SetLayer(VG *, int);
-__inline__ void	 VG_Color(VG *, Uint32);
-__inline__ void	 VG_Color3(VG *, int, int, int);
-__inline__ void	 VG_Color4(VG *, int, int, int, int);
-VG_Vtx		*VG_Vertex2(VG *, float, float);
-void		 VG_VertexV(VG *, const VG_Vtx *, Uint);
+__inline__ void		 VG_SetLayer(VG *, int);
+__inline__ void		 VG_Color(VG *, Uint32);
+__inline__ void		 VG_Color3(VG *, int r, int g, int b);
+__inline__ void		 VG_Color4(VG *, int r, int g, int b, int a);
+__inline__ VG_Vtx	*VG_Vertex2(VG *, float x, float y);
+void	 		 VG_VertexV(VG *, const VG_Vtx *, Uint);
+VG_Vtx			*VG_VertexVint2(VG *, float x, float x1, float y1,
+			                float x2, float y2);
+__inline__ void		 VG_Line(VG *, float x1, float y1, float x2, float y2);
+__inline__ void		 VG_VLine(VG *, float x, float y1, float y2);
+__inline__ void		 VG_HLine(VG *, float x1, float x2, float y);
+__inline__ void		 VG_VintVLine2(VG *, float x, float y, float x1,
+			               float y1, float x2, float y2);
 
 VG_Matrix	*VG_PushIdentity(VG *);
 VG_Matrix	*VG_Translate(VG *, float, float);

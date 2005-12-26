@@ -105,7 +105,6 @@ VG_MoveBlock(VG *vg, VG_Block *vgb, float x, float y, int layer)
 	
 	vgb->pos.x = x;
 	vgb->pos.y = y;
-	vg->redraw++;
 }
 
 /* Modify a block's angle of rotation. */
@@ -139,7 +138,6 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 		}
 	}
 	VG_SelectBlock(vg, block_save);
-	vg->redraw++;
 }
 
 /* Calculate the collective extent of the elements in a block. */
@@ -209,7 +207,6 @@ VG_DestroyBlock(VG *vg, VG_Block *vgb)
 	}
 	TAILQ_REMOVE(&vg->blocks, vgb, vgbs);
 	Free(vgb, M_VG);
-	vg->redraw = 1;
 }
 
 /* Destroy all elements associated with a block. */
@@ -226,7 +223,6 @@ VG_ClearBlock(VG *vg, VG_Block *vgb)
 		VG_FreeElement(vg, vge);
 	}
 	TAILQ_INIT(&vgb->vges);
-	vg->redraw = 1;
 }
 
 /* Generate absolute vg coordinates for a vertex that's part of a block. */

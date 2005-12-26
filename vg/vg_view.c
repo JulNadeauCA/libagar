@@ -52,8 +52,10 @@ const AG_WidgetOps vgViewOps = {
 	VG_ViewScale
 };
 
-#define VG_VIEW_X(vv,px) VG_VECXF((vv)->vg,(px)-(vv)->x)
-#define VG_VIEW_Y(vv,py) VG_VECYF((vv)->vg,(py)-(vv)->y)
+#define VG_VIEW_X(vv,px) VG_VECXF_NOSNAP((vv)->vg,(px)-(vv)->x)
+#define VG_VIEW_Y(vv,py) VG_VECYF_NOSNAP((vv)->vg,(py)-(vv)->y)
+#define VG_VIEW_X_SNAP(vv,px) VG_VECXF((vv)->vg,(px)-(vv)->x)
+#define VG_VIEW_Y_SNAP(vv,py) VG_VECYF((vv)->vg,(py)-(vv)->y)
 #define VG_VIEW_LEN(vv,len) VG_VECLENF((vv)->vg,(len))
 
 VG_View *
@@ -74,35 +76,40 @@ static void
 VG_ViewMotion(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
+	VG_Tool *tool = VG_CURTOOL(vv);
 	VG *vg = vv->vg;
-	float x = VG_VIEW_X(vv,AG_INT(1));
-	float y = VG_VIEW_Y(vv,AG_INT(2));
+	float x, y;
+	float xrel = AG_INT(3);
+	float yrel = AG_INT(4);
 	int state = AG_INT(5);
-	float xrel, yrel;
 	
 	AG_MutexLock(&vg->lock);
 	if (vv->mouse.panning) {
-		vv->x += AG_INT(3);
-		vv->y += AG_INT(4);
+		vv->x += xrel;
+		vv->y += yrel;
 		goto out;
 	}
-	xrel = VG_VIEW_LEN(vv,AG_INT(3));
-	yrel = VG_VIEW_LEN(vv,AG_INT(4));
-	if (vv->curtool != NULL &&
-	    vv->curtool->ops->mousemotion != NULL &&
-	    vv->curtool->ops->mousemotion(vv->curtool, x, y, xrel, yrel, state)
-	    == 1) {
-		goto out;
-	}
-	if (vv->deftool != NULL &&
-	    vv->deftool->ops->mousemotion != NULL &&
-	    vv->deftool->ops->mousemotion(vv->deftool, x, y, xrel, yrel, state)
-	      == 1) {
-		goto out;
+	if (tool != NULL && tool->ops->mousemotion != NULL) {
+		if (tool->ops->flags & VG_MOUSEMOTION_NOSNAP) {
+			x = VG_VIEW_X(vv,AG_INT(1));
+			y = VG_VIEW_Y(vv,AG_INT(2));
+		} else {
+			x = VG_VIEW_X_SNAP(vv,AG_INT(1));
+			y = VG_VIEW_Y_SNAP(vv,AG_INT(2));
+		}
+		if (tool->ops->mousemotion(tool, x, y,
+		    VG_VIEW_LEN(vv,xrel), VG_VIEW_LEN(vv,yrel), state) == 1) {
+			vv->mouse.x = x;
+			vv->mouse.y = y;
+			goto out;
+		}
+		vv->mouse.x = x;
+		vv->mouse.y = y;
+	} else {
+		vv->mouse.x = VG_VIEW_X(vv,AG_INT(1));
+		vv->mouse.y = VG_VIEW_Y(vv,AG_INT(2));
 	}
 out:
-	vv->mouse.x = x;
-	vv->mouse.y = y;
 	AG_MutexUnlock(&vg->lock);
 }
 
@@ -111,11 +118,12 @@ VG_ViewButtonDown(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG *vg = vv->vg;
+	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
+	VG_ToolMouseBinding *mb;
 	float x = VG_VIEW_X(vv,AG_INT(2));
 	float y = VG_VIEW_Y(vv,AG_INT(3));
-	VG_ToolMouseBinding *mb;
-	VG_Tool *tool;
+	float xSn, ySn;
 	
 	AG_WidgetFocus(vv);
 	AG_MutexLock(&vg->lock);
@@ -134,10 +142,16 @@ VG_ViewButtonDown(AG_Event *event)
 	default:
 		break;
 	}
-	if (vv->curtool != NULL &&
-	    vv->curtool->ops->mousebuttondown != NULL &&
-	    vv->curtool->ops->mousebuttondown(vv->curtool, x, y, button) == 1) {
-		goto out;
+	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
+		if (tool->ops->flags & VG_BUTTONDOWN_NOSNAP) {
+			xSn = x;
+			ySn = y;
+		} else {
+			xSn = VG_VIEW_X_SNAP(vv,AG_INT(2));
+			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
+		}
+		if (tool->ops->mousebuttondown(tool, xSn, ySn, button) == 1)
+			goto out;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
 		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
@@ -148,11 +162,6 @@ VG_ViewButtonDown(AG_Event *event)
 			if (mb->func(tool, button, 1, x, y, mb->arg) == 1)
 				goto out;
 		}
-	}
-	if (vv->deftool != NULL &&
-	    vv->deftool->ops->mousebuttondown != NULL &&
-	    vv->deftool->ops->mousebuttondown(vv->deftool, x, y, button) == 1) {
-		goto out;
 	}
 	if (vv->btndown_ev != NULL)
 		AG_PostEvent(NULL, vv, vv->btndown_ev->name, "%i,%f,%f", button,
@@ -166,17 +175,24 @@ VG_ViewButtonUp(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG *vg = vv->vg;
+	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
 	float x = VG_VIEW_X(vv,AG_INT(2));
 	float y = VG_VIEW_Y(vv,AG_INT(3));
+	float xSn, ySn;
 	VG_ToolMouseBinding *mb;
-	VG_Tool *tool;
 
 	AG_MutexLock(&vg->lock);
-	if (vv->curtool != NULL &&
-	    vv->curtool->ops->mousebuttonup != NULL &&
-	    vv->curtool->ops->mousebuttonup(vv->curtool, x, y, button) == 1) {
-		goto out;
+	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
+		if (tool->ops->flags & VG_BUTTONUP_NOSNAP) {
+			xSn = x;
+			ySn = y;
+		} else {
+			xSn = VG_VIEW_X_SNAP(vv,AG_INT(2));
+			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
+		}
+		if (tool->ops->mousebuttonup(tool, xSn, ySn, button) == 1)
+			goto out;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
 		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
@@ -187,11 +203,6 @@ VG_ViewButtonUp(AG_Event *event)
 			if (mb->func(tool, button, 0, x, y, mb->arg) == 1)
 				goto out;
 		}
-	}
-	if (vv->deftool != NULL &&
-	    vv->deftool->ops->mousebuttonup != NULL &&
-	    vv->deftool->ops->mousebuttonup(vv->deftool, x, y, button) == 1) {
-		goto out;
 	}
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:

@@ -126,7 +126,6 @@ VG_Printf(VG *vg, const char *fmt, ...)
 		SDL_FreeSurface(vge->vg_text.su);
 		vge->vg_text.su = NULL;
 	}
-	vg->redraw++;
 }
 
 #define TEXT_ARG(_type) (*(_type *)vge->vg_text.ptrs[ri])
