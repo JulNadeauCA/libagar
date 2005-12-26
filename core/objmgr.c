@@ -315,7 +315,7 @@ fail_data:
 }
 
 static void
-export_object(AG_Event *event)
+ExportObject(AG_Event *event)
 {
 	char save_path[MAXPATHLEN];
 	AG_Object *ob = AG_PTR(1);
@@ -324,6 +324,7 @@ export_object(AG_Event *event)
 	char *pfx_save = ob->save_pfx;
 	int paged_in = 0;
 
+	/* Load the object temporarily if it is non-resident. */
 	if ((ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
 		if (AG_ObjectLoadData(ob) == -1) {
 			/* XXX hack */
@@ -346,12 +347,46 @@ export_object(AG_Event *event)
 	AG_SetString(agConfig, "save-path", "%s", save_path);
 	ob->save_pfx = pfx_save;
 	
-	if (paged_in)
-		AG_ObjectFreeData(ob);
+	if (paged_in) { AG_ObjectFreeData(ob); }
+}
+
+static void
+ImportObject(AG_Event *event)
+{
+	char load_path[MAXPATHLEN];
+	AG_Object *ob = AG_PTR(1);
+	AG_Window *win = AG_PTR(2);
+	char *path = AG_STRING(3);
+	char *pfx_save = ob->save_pfx;
+	int paged_in = 0;
+
+	/* Load the object temporarily if it is non-resident. */
+	if ((ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
+		if (AG_ObjectLoadData(ob) == -1) {
+			ob->flags |= AG_OBJECT_DATA_RESIDENT;	/* XXX */
+		}
+		paged_in = 1;
+	}
+
+	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
+	AG_SetString(agConfig, "load-path", "%s", path);
+	ob->save_pfx = NULL;
+
+	if (AG_ObjectLoad(ob) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
+	} else {
+		AG_TextTmsg(AG_MSG_INFO, 1000,
+		    _("Object `%s' was imported successfully."), ob->name);
+	}
+
+	AG_SetString(agConfig, "load-path", "%s", load_path);
+	ob->save_pfx = pfx_save;
+	
+	if (paged_in) { AG_ObjectFreeData(ob); }
 }
 
 void
-AG_ObjMgrSaveTo(void *p)
+AG_ObjMgrSaveTo(void *p, const char *name)
 {
 	char ext[AG_OBJECT_TYPE_MAX+3];
 	AG_Object *ob = p;
@@ -364,11 +399,37 @@ AG_ObjMgrSaveTo(void *p)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE);
-	AG_FileDlgAddType(fd, _("Agar object file"), ext, NULL, NULL);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE|
+	                        AG_FILEDLG_EXPAND);
+	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
-	AG_SetEvent(fd, "file-chosen", export_object, "%p,%p", ob, win);
+	AG_SetEvent(fd, "file-chosen", ExportObject, "%p,%p", ob, win);
+	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
+
+	AG_WindowShow(win);
+}
+
+void
+AG_ObjMgrLoadFrom(void *p, const char *name)
+{
+	char ext[AG_OBJECT_TYPE_MAX+3];
+	AG_Object *ob = p;
+	AG_Window *win;
+	AG_FileDlg *fd;
+
+	ext[0] = '*';
+	ext[1] = '.';
+	strlcpy(&ext[2], ob->type, sizeof(ext)-2);
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|
+	                        AG_FILEDLG_EXPAND);
+	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
+	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
+	AG_SetEvent(fd, "file-chosen", ImportObject, "%p,%p", ob, win);
 	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
 
 	AG_WindowShow(win);
@@ -432,7 +493,7 @@ obj_op(AG_Event *event)
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				AG_ObjMgrSaveTo(ob);
+				AG_ObjMgrSaveTo(ob, _("Agar object file"));
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -534,7 +595,7 @@ obj_op(AG_Event *event)
 }
 
 static void
-generic_save(AG_Event *event)
+AG_ObjMgrGenericSave(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -542,15 +603,35 @@ generic_save(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, _("Save failed: %s: %s"), ob->name,
 		    AG_GetError());
 	} else {
-		AG_TextTmsg(AG_MSG_INFO, 1000,
-		    _("Object `%s' saved successfully."), ob->name);
+		AG_TextTmsg(AG_MSG_INFO, 1000, _("`%s' saved successfully."),
+		    ob->name);
 	}
 }
 
 static void
-generic_save_to(AG_Event *event)
+AG_ObjMgrGenericLoad(AG_Event *event)
 {
-	AG_ObjMgrSaveTo(AG_PTR(1));
+	AG_Object *ob = AG_PTR(1);
+
+	if (AG_ObjectLoad(ob) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, _("Load failed: %s: %s"), ob->name,
+		    AG_GetError());
+	} else {
+		AG_TextTmsg(AG_MSG_INFO, 1000, _("`%s' loaded successfully."),
+		    ob->name);
+	}
+}
+
+static void
+AG_ObjMgrGenericSaveTo(AG_Event *event)
+{
+	AG_ObjMgrSaveTo(AG_PTR(1), _("Agar object file"));
+}
+
+static void
+AG_ObjMgrGenericLoadFrom(AG_Event *event)
+{
+	AG_ObjMgrLoadFrom(AG_PTR(1), _("Agar object file"));
 }
 
 void
@@ -559,9 +640,22 @@ AG_ObjMgrGenericMenu(void *menup, void *obj)
 	AG_MenuItem *pitem = menup;
 
 	AG_MenuAction(pitem, _("Save"), OBJSAVE_ICON,
-	    generic_save, "%p", obj);
-	AG_MenuAction(pitem, _("Save to..."), OBJSAVE_ICON,
-	    generic_save_to, "%p", obj);
+	    AG_ObjMgrGenericSave, "%p", obj);
+	AG_MenuAction(pitem, _("Load"), OBJLOAD_ICON,
+	    AG_ObjMgrGenericLoad, "%p", obj);
+	AG_MenuAction(pitem, _("Export to..."), OBJSAVE_ICON,
+	    AG_ObjMgrGenericSaveTo, "%p", obj);
+	AG_MenuAction(pitem, _("Import from..."), OBJLOAD_ICON,
+	    AG_ObjMgrGenericLoadFrom, "%p", obj);
+
+	AG_MenuSeparator(pitem);
+
+	AG_MenuIntFlags(pitem, _("Persistence"), OBJLOAD_ICON,
+	    &AGOBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
+	AG_MenuIntFlags(pitem, _("Destructible"), TRASH_ICON,
+	    &AGOBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
+	AG_MenuIntFlags(pitem, _("Editable"), OBJ_ICON,
+	    &AGOBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
 /* Display the object tree. */

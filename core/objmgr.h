@@ -16,7 +16,8 @@ void		  AG_ObjMgrOpenData(void *, int);
 void		  AG_ObjMgrCloseData(void *);
 void		  AG_ObjMgrOpenGeneric(AG_Object *);
 void		  AG_ObjMgrQuitDlg(void *);
-void		  AG_ObjMgrSaveTo(void *);
+void		  AG_ObjMgrSaveTo(void *, const char *);
+void		  AG_ObjMgrLoadFrom(void *, const char *);
 void		  AG_ObjMgrGenericMenu(void *, void *);
 __END_DECLS
 
