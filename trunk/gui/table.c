@@ -542,7 +542,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 		return (c1->data.l - c2->data.l);
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
-		return (c1->data.f - c2->data.f);
+		return (c1->data.f != c2->data.f);
 #ifdef SDL_HAS_64BIT_TYPE
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
