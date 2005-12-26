@@ -195,7 +195,6 @@ AG_ConsoleLine *
 AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
-	va_list args;
 
 	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
 				           sizeof(AG_ConsoleLine));
