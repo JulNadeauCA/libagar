@@ -78,8 +78,10 @@ typedef struct ag_widget {
 #define AG_WIDGET_EXCEDENT		0x100 /* Used internally for scaling */
 #define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x400 /* Don't respond to input */
+#define AG_WIDGET_STATIC		0x800 /* Use the redraw flag method */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
+	int redraw;			/* Redraw this widget (optimization) */
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
@@ -88,7 +90,7 @@ typedef struct ag_widget {
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	Uint nsurfaces;
 #ifdef HAVE_OPENGL
-	Uint *textures;		/* Cached OpenGL textures */
+	Uint *textures;			/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
 #endif
 	AG_Mutex bindings_lock;
@@ -103,6 +105,7 @@ typedef struct ag_widget {
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
 #define AGWIDGET_FOCUSED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AGWIDGET_DISABLED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
+#define AG_WidgetRedraw(wi)		AGWIDGET(wi)->redraw++
 
 struct ag_window;
 
@@ -184,7 +187,7 @@ __inline__ int	  AG_WidgetCopyBinding(void *, const char *, void *,
 #define AG_WidgetBindString(w,b,p,len) AG_WidgetBind((w),(b),AG_WIDGET_STRING,\
 				       (p),(len))
 
-__inline__ Uint	 AG_WidgetUint(void *, const char *);
+__inline__ Uint	 	 AG_WidgetUint(void *, const char *);
 __inline__ int		 AG_WidgetInt(void *, const char *);
 #define			 AG_WidgetBool AG_WidgetInt
 __inline__ Uint8	 AG_WidgetUint8(void *, const char *);
