@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+extern const AG_ObjectOps agObjectOps;
 AG_ObjectType *agTypes = NULL;
 int agnTypes = 0;
 
@@ -38,8 +39,6 @@ int agnTypes = 0;
 void
 AG_InitTypeSw(void)
 {
-	extern const AG_ObjectOps agObjectOps, agMapOps, agPersoOps;
-
 	agTypes = Malloc(sizeof(AG_ObjectType), M_TYPESW);
 	agnTypes = 0;
 	AG_RegisterType("object", sizeof(AG_Object), &agObjectOps, OBJ_ICON);
@@ -61,7 +60,7 @@ AG_RegisterType(const char *type, size_t size, const AG_ObjectOps *ops,
 	ntype = &agTypes[agnTypes++];
 	strlcpy(ntype->type, type, sizeof(ntype->type));
 	ntype->size = size;
-	ntype->ops = ops;
+	ntype->ops = ops != NULL ? ops : &agObjectOps;
 	ntype->icon = icon;
 }
 
