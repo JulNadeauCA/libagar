@@ -86,6 +86,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 
 	strlcpy(wid->type, type, sizeof(wid->type));
 	wid->flags = flags;
+	wid->redraw = 1;
 	wid->cx = -1;
 	wid->cy = -1;
 	wid->x = -1;
@@ -1292,7 +1293,8 @@ AG_WidgetDraw(void *p)
 	if (wid->flags & AG_WIDGET_HIDE)
 		return;
 
-	if (AGWIDGET_OPS(wid)->draw != NULL && !widget_occulted(wid) &&
+	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
+	    !widget_occulted(wid) && AGWIDGET_OPS(wid)->draw != NULL &&
 	    AGWIDGET(wid)->w > 0 && AGWIDGET(wid)->h > 0) {
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
@@ -1301,6 +1303,8 @@ AG_WidgetDraw(void *p)
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPopClipRect(wid);
 		}
+		if (wid->flags & AG_WIDGET_STATIC)
+			wid->redraw = 0;
 	}
 
 	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
