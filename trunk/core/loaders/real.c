@@ -70,3 +70,26 @@ AG_PwriteDouble(AG_Netbuf *buf, double f, off_t offs)
 	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
 }
 
+
+#ifdef HAVE_LONG_DOUBLE
+long double
+AG_ReadLongDouble(AG_Netbuf *buf)
+{
+	long double f;
+
+	AG_NetbufRead(&f, sizeof(f), 1, buf);
+	return (f);
+}
+
+void
+AG_WriteLongDouble(AG_Netbuf *buf, long double f)
+{
+	AG_NetbufWrite(&f, sizeof(f), 1, buf);
+}
+
+void
+AG_PwriteLongDouble(AG_Netbuf *buf, long double f, off_t offs)
+{
+	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
+}
+#endif /* HAVE_LONG_DOUBLE */
