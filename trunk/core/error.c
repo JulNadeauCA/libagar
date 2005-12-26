@@ -126,19 +126,18 @@ AG_Malloc(size_t len, int type)
 }
 
 void *
-AG_Realloc(void *oldp, size_t len)
+AG_Realloc(void *pOld, size_t len)
 {
-	void *newp;
+	void *pNew;
 
-	/* XXX redundant with most reallocs */
-	if (oldp == NULL) {
-		if ((newp = malloc(len)) == NULL)
+	if (pOld == NULL) {
+		if ((pNew= malloc(len)) == NULL)
 			fatal("malloc");
 	} else {
-		if ((newp = realloc(oldp, len)) == NULL)
+		if ((pNew= realloc(pOld, len)) == NULL)
 			fatal("realloc");
 	}
-	return (newp);
+	return (pNew);
 }
 
 void
