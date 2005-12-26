@@ -44,8 +44,8 @@ const AG_Version prop_ver = {
 #define DEBUG_STATE	0x01
 #define DEBUG_SET	0x02
 
-int	prop_debug = 0;
-#define agDebugLvl prop_debug
+int	agPropDebugLvl = 0;
+#define agDebugLvl agPropDebugLvl
 #endif
 
 /* Return the copy of a property. */
@@ -72,111 +72,89 @@ AG_CopyProp(const AG_Prop *prop)
 	return (0);
 }
 
-/* Modify a property, or create a new one if it does not exist. */
+#undef PROP_SET
+#define PROP_SET(fn,v,type,argtype) do { \
+	if (prop->writeFn.fn != NULL) { \
+		prop->data.v = (type)prop->writeFn.fn(ob, prop, \
+		    va_arg(ap, argtype)); \
+	} else { \
+		prop->data.v = va_arg(ap, argtype); \
+	} \
+} while (0)
+
+/* Create a new property, or modify an existing one. */
 AG_Prop *
 AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 {
 	AG_Object *ob = p;
-	AG_Prop *nprop = NULL, *oprop;
+	AG_Prop *prop;
 	int modify = 0;
 	va_list ap;
 
-	TAILQ_FOREACH(oprop, &ob->props, props) {
-		if (oprop->type == type &&
-		    strcmp(oprop->key, key) == 0) {
-			nprop = oprop;
+	TAILQ_FOREACH(prop, &ob->props, props) {
+		if (prop->type == type &&
+		    strcmp(prop->key, key) == 0)
 			break;
-		}
 	}
-	if (nprop == NULL) {
-		nprop = Malloc(sizeof(AG_Prop), M_PROP);
-		strlcpy(nprop->key, key, sizeof(nprop->key));
-		nprop->type = type;
+	if (prop == NULL) {
+		prop = Malloc(sizeof(AG_Prop), M_PROP);
+		strlcpy(prop->key, key, sizeof(prop->key));
+		prop->type = type;
+		prop->writeFn.wUint = NULL;
+		prop->readFn.rUint = NULL;
+		debug_n(DEBUG_SET, "%s: (new) => ", key);
 	} else {
 		modify++;
 	}
 
 	va_start(ap, type);
 	switch (type) {
-	case AG_PROP_UINT:
-		nprop->data.u = va_arg(ap, unsigned int);
-		debug(DEBUG_SET, "uint %s: %u\n", key, nprop->data.u);
-		break;
-	case AG_PROP_INT:
-		nprop->data.i = va_arg(ap, int);
-		debug(DEBUG_SET, "int %s: %d\n", key, nprop->data.i);
-		break;
-	case AG_PROP_BOOL:
-		nprop->data.i = va_arg(ap, int);		/* Promoted */
-		debug(DEBUG_SET, "bool %s: %d\n", key, nprop->data.i);
-		break;
-	case AG_PROP_UINT8:
-		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u8 %s: %u\n", key, nprop->data.u8);
-		break;
-	case AG_PROP_SINT8:
-		nprop->data.s8 = (Sint8)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "s8 %s: %d\n", key, nprop->data.s8);
-		break;
-	case AG_PROP_UINT16:
-		nprop->data.u16 = (Uint16)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u16 %s: %u\n", key, nprop->data.u16);
-		break;
-	case AG_PROP_SINT16:
-		nprop->data.s16 = (Sint16)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "s16 %s: %d\n", key, nprop->data.s16);
-		break;
-	case AG_PROP_UINT32:
-		nprop->data.u32 = va_arg(ap, Uint32);
-		debug(DEBUG_SET, "u32 %s: %u\n", key, nprop->data.u32);
-		break;
-	case AG_PROP_SINT32:
-		nprop->data.s32 = va_arg(ap, Sint32);
-		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
-		break;
-#ifdef SDL_HAS_64BIT_TYPE
-	case AG_PROP_UINT64:
-		nprop->data.u64 = va_arg(ap, Uint64);
-		debug(DEBUG_SET, "u64 %s: %llu\n", key, nprop->data.u64);
-		break;
-	case AG_PROP_SINT64:
-		nprop->data.s64 = va_arg(ap, Sint64);
-		debug(DEBUG_SET, "s64 %s: %lld\n", key, nprop->data.s64);
+	case AG_PROP_UINT:	PROP_SET(wUint, u, Uint, Uint);		break;
+	case AG_PROP_INT:	PROP_SET(wUint, i, int, int);		break;
+	case AG_PROP_BOOL:	PROP_SET(wBool, i, int, int);		break;
+	case AG_PROP_FLOAT:	PROP_SET(wFloat, f, float, double);	break;
+	case AG_PROP_DOUBLE:	PROP_SET(wDouble, d, double, double);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_PROP_LONG_DOUBLE:
+		PROP_SET(wLongDouble, ld, long double, long double);
 		break;
 #endif
-	case AG_PROP_FLOAT:
-		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
-		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
-		break;
-	case AG_PROP_DOUBLE:
-		nprop->data.d = va_arg(ap, double);
-		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
-		break;
 	case AG_PROP_STRING:
 		if (modify) {
-			Free(nprop->data.s, 0);
+			char *old_s = prop->data.s;
+			PROP_SET(wString, s, char *, char *);
+			if (prop->data.s != old_s) { Free(old_s, 0); }
+		} else {
+			PROP_SET(wString, s, char *, char *);
 		}
-		nprop->data.s = va_arg(ap, char *);
-		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
 		break;
-	case AG_PROP_POINTER:
-		nprop->data.p = va_arg(ap, void *);
-		debug(DEBUG_SET, "pointer %s: %p\n", key, nprop->data.p);
-		break;
+	case AG_PROP_POINTER:	PROP_SET(wPointer, p, void *, void *);	break;
+	case AG_PROP_UINT8:	PROP_SET(wUint8, u8, Uint8, int);	break;
+	case AG_PROP_SINT8:	PROP_SET(wSint8, s8, Sint8, int);	break;
+	case AG_PROP_UINT16:	PROP_SET(wUint16, u16, Uint16, int);	break;
+	case AG_PROP_SINT16:	PROP_SET(wSint16, s16, Sint16, int);	break;
+	case AG_PROP_UINT32:	PROP_SET(wUint32, u32, Uint32, int);	break;
+	case AG_PROP_SINT32:	PROP_SET(wSint32, s32, Sint32, int);	break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_PROP_UINT64:	PROP_SET(wUint64, u64, Uint64, int);	break;
+	case AG_PROP_SINT64:	PROP_SET(wSint64, s64, Sint64, int);	break;
+#endif
 	default:
-		fatal("unimplemented prop type: %d", type);
+		fatal("bad prop type: %d", type);
 	}
 	va_end(ap);
 
 	AG_MutexLock(&ob->lock);
 	if (!modify) {
-		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
+		TAILQ_INSERT_TAIL(&ob->props, prop, props);
+		AG_PostEvent(NULL, ob, "prop-added", "%p", prop);
 	} else {
-		AG_PostEvent(NULL, ob, "prop-modified", "%p", nprop);
+		AG_PostEvent(NULL, ob, "prop-modified", "%p", prop);
 	}
 	AG_MutexUnlock(&ob->lock);
-	return (nprop);
+	return (prop);
 }
+#undef PROP_SET
 
 AG_Prop *
 AG_SetUint(void *ob, const char *key, Uint i)
@@ -252,6 +230,14 @@ AG_SetDouble(void *ob, const char *key, double d)
 	return (AG_SetProp(ob, key, AG_PROP_DOUBLE, d));
 }
 
+#ifdef HAVE_LONG_DOUBLE
+AG_Prop *
+AG_SetLongDouble(void *ob, const char *key, long double d)
+{
+	return (AG_SetProp(ob, key, AG_PROP_LONG_DOUBLE, d));
+}
+#endif /* HAVE_LONG_DOUBLE */
+
 AG_Prop *
 AG_SetString(void *ob, const char *key, const char *fmt, ...)
 {
@@ -261,7 +247,6 @@ AG_SetString(void *ob, const char *key, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vasprintf(&s, fmt, ap);
 	va_end(ap);
-
 	return (AG_SetProp(ob, key, AG_PROP_STRING, s));
 }
 
@@ -289,6 +274,20 @@ AG_UnlockProps(void *p)
 	AG_MutexUnlock(&AGOBJECT(p)->lock);
 }
 
+#undef PROP_GET
+#define PROP_GET(fn,v,type) do { \
+	if (prop->readFn.fn != NULL) { \
+		if (p != NULL) { \
+			*(type *)p = prop->readFn.fn(ob, prop); \
+		} else { \
+			prop->data.v = prop->readFn.fn(ob, prop); \
+		} \
+	} else { \
+		if (p != NULL) \
+			*(type *)p = (type)prop->data.v; \
+	} \
+} while (0)
+
 /* Return a pointer to the data of a property. */
 AG_Prop *
 AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
@@ -298,69 +297,42 @@ AG_GetProp(void *obp, const char *key, enum ag_prop_type t, void *p)
 
 	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		if (strcmp(key, prop->key) != 0)
-			continue;
-		if (t != AG_PROP_ANY && t != prop->type)
-			continue;
-
-		if (p != NULL) {
-			switch (prop->type) {
-			case AG_PROP_INT:
-			case AG_PROP_BOOL:
-				*(int *)p = prop->data.i;
-				break;
-			case AG_PROP_UINT:
-				*(Uint *)p = prop->data.u;
-				break;
-			case AG_PROP_UINT8:
-				*(Uint8 *)p = prop->data.u8;
-				break;
-			case AG_PROP_SINT8:
-				*(Sint8 *)p = prop->data.s8;
-				break;
-			case AG_PROP_UINT16:
-				*(Uint16 *)p = prop->data.u16;
-				break;
-			case AG_PROP_SINT16:
-				*(Sint16 *)p = prop->data.s16;
-				break;
-			case AG_PROP_UINT32:
-				*(Uint32 *)p = prop->data.u32;
-				break;
-			case AG_PROP_SINT32:
-				*(Sint32 *)p = prop->data.s32;
-				break;
+		if (strcmp(key, prop->key) != 0) { continue; }
+		if (t != AG_PROP_ANY && t != prop->type) { continue; }
+		switch (prop->type) {
+		case AG_PROP_INT: 	PROP_GET(rInt, i, int);		break;
+		case AG_PROP_BOOL:	PROP_GET(rBool, i, int);	break;
+		case AG_PROP_UINT:	PROP_GET(rUint, u, unsigned);	break;
+		case AG_PROP_UINT8:	PROP_GET(rUint8, u8, Uint8);	break;
+		case AG_PROP_SINT8:	PROP_GET(rSint8, s8, Sint8);	break;
+		case AG_PROP_UINT16:	PROP_GET(rUint16, u16, Uint16);	break;
+		case AG_PROP_SINT16:	PROP_GET(rSint16, s16, Sint16);	break;
+		case AG_PROP_UINT32:	PROP_GET(rUint32, u32, Uint32);	break;
+		case AG_PROP_SINT32:	PROP_GET(rSint32, s32, Sint32);	break;
 #ifdef SDL_HAS_64BIT_TYPE
-			case AG_PROP_UINT64:
-				*(Uint64 *)p = prop->data.u64;
-				break;
-			case AG_PROP_SINT64:
-				*(Sint64 *)p = prop->data.s64;
-				break;
+		case AG_PROP_UINT64:	PROP_GET(rUint64, u64, Uint64);	break;
+		case AG_PROP_SINT64:	PROP_GET(rSint64, s64, Sint64);	break;
 #endif
-			case AG_PROP_FLOAT:
-				*(float *)p = prop->data.f;
-				break;
-			case AG_PROP_DOUBLE:
-				*(double *)p = prop->data.d;
-				break;
-			case AG_PROP_STRING:
-				*(char **)p = prop->data.s;
-				break;
-			case AG_PROP_POINTER:
-				*(void **)p = prop->data.p;
-				break;
-			default:
-				AG_SetError("Unimplemented prop type (%d)",
-				    prop->type);
-				goto fail;
-			}
+		case AG_PROP_FLOAT:	PROP_GET(rFloat, f, float);	break;
+		case AG_PROP_DOUBLE:	PROP_GET(rDouble, d, double);	break;
+#ifdef HAVE_LONG_DOUBLE
+		case AG_PROP_LONG_DOUBLE:
+			PROP_GET(rLongDouble, ld, long double);
+			break;
+#endif
+		case AG_PROP_STRING:	PROP_GET(rString, s, char *);	break;
+		case AG_PROP_POINTER:	PROP_GET(rPointer, p, void *);	break;
+		default:
+			AG_SetError("bad prop %d", prop->type);
+			goto fail;
 		}
+out:
 		AG_MutexUnlock(&ob->lock);
 		return (prop);
 	}
 
-	AG_SetError(_("%s has no `%s' property (type %d)."), ob->name, key, t);
+	AG_SetError(_("Object %s has no `%s' property (%d)."), ob->name, key,
+	    t);
 fail:
 	AG_MutexUnlock(&ob->lock);
 	return (NULL);
@@ -511,6 +483,19 @@ AG_Double(void *p, const char *key)
 	return (d);
 }
 
+#ifdef HAVE_LONG_DOUBLE
+long double
+AG_LongDouble(void *p, const char *key)
+{
+	long double d;
+
+	if (AG_GetProp(p, key, AG_PROP_LONG_DOUBLE, &d) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	return (d);
+}
+#endif /* HAVE_LONG_DOUBLE */
+
 /* The object must be locked. */
 char *
 AG_String(void *p, const char *key)
@@ -569,13 +554,11 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 		Uint32 t;
 
 		if (AG_CopyString(key, buf, sizeof(key)) >= sizeof(key)) {
-			AG_SetError(_("The prop key too big."));
+			AG_SetError("key %lu >= %lu", strlen(key), sizeof(key));
 			goto fail;
 		}
 		t = AG_ReadUint32(buf);
 		
-		debug(DEBUG_STATE, "prop %s (%d)\n", key, t);
-	
 		switch (t) {
 		case AG_PROP_BOOL:
 			AG_SetBool(ob, key, (int)AG_ReadUint8(buf));
@@ -619,23 +602,31 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 		case AG_PROP_DOUBLE:
 			AG_SetDouble(ob, key, AG_ReadDouble(buf));
 			break;
+# ifdef HAVE_LONG_DOUBLE
+		case AG_PROP_LONG_DOUBLE:
+			AG_SetDouble(ob, key, AG_ReadLongDouble(buf));
+			break;
+# endif
 #endif
 		case AG_PROP_STRING:
 			{
 				char *s;
 
 				s = AG_ReadString(buf);
-				if (strlen(s) >= AG_PROP_STRING_MAX) {
-					AG_SetError(_("String too big."));
+#ifdef AG_PROP_STRING_LIMIT
+				if (strlen(s) >= AG_PROP_STRING_LIMIT) {
+					AG_SetError("prop string %lu >= %lu",
+					    strlen(s), AG_PROP_STRING_LIMIT);
 					Free(s, 0);
 					goto fail;
 				}
+#endif
 				AG_SetString(ob, key, "%s", s);
 				Free(s, 0);
 			}
 			break;
 		default:
-			AG_SetError(_("Cannot load prop of type 0x%x."), t);
+			AG_SetError(_("Cannot load property of type %d."), t);
 			goto fail;
 		}
 	}
@@ -710,6 +701,11 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		case AG_PROP_DOUBLE:
 			AG_WriteDouble(buf, prop->data.d);
 			break;
+# ifdef HAVE_LONG_DOUBLE
+		case AG_PROP_LONG_DOUBLE:
+			AG_WriteLongDouble(buf, prop->data.ld);
+			break;
+# endif
 #endif
 		case AG_PROP_STRING:
 			AG_WriteString(buf, prop->data.s);
@@ -717,7 +713,7 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		case AG_PROP_POINTER:
 			break;
 		default:
-			AG_SetError("Property of type %d cannot be saved",
+			AG_SetError(_("Property of type %d cannot be saved."),
 			    prop->type);
 			goto fail;
 		}
@@ -742,58 +738,44 @@ AG_PropDestroy(AG_Prop *prop)
 }
 
 void
-AG_PropPrint(char *s, size_t len, AG_Prop *prop)
+AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 {
-	switch (prop->type) {
-	case AG_PROP_UINT:
-		snprintf(s, len, "%u", prop->data.u);
-		break;
-	case AG_PROP_INT:
-		snprintf(s, len, "%d", prop->data.i);
-		break;
-	case AG_PROP_UINT8:
-		snprintf(s, len, "%u", prop->data.u8);
-		break;
-	case AG_PROP_SINT8:
-		snprintf(s, len, "%d", prop->data.s8);
-		break;
-	case AG_PROP_UINT16:
-		snprintf(s, len, "%u", prop->data.u16);
-		break;
-	case AG_PROP_SINT16:
-		snprintf(s, len, "%d", prop->data.s16);
-		break;
+	AG_Prop *pr;
+
+	pr = AG_GetProp(obj, pname, AG_PROP_ANY, NULL);
+	if (pr == NULL) {
+		strlcpy(s, "(?prop)", len);
+		return;
+	}
+	switch (pr->type) {
+	case AG_PROP_UINT:	snprintf(s, len, "%u", pr->data.u);	break;
+	case AG_PROP_INT:	snprintf(s, len, "%d", pr->data.i);	break;
+	case AG_PROP_UINT8:	snprintf(s, len, "%u", pr->data.u8);	break;
+	case AG_PROP_SINT8:	snprintf(s, len, "%d", pr->data.s8);	break;
+	case AG_PROP_UINT16:	snprintf(s, len, "%u", pr->data.u16);	break;
+	case AG_PROP_SINT16:	snprintf(s, len, "%d", pr->data.s16);	break;
 	case AG_PROP_UINT32:
-		snprintf(s, len, "%u", prop->data.u32);
+		snprintf(s, len, "%lu", (unsigned long)pr->data.u32);
 		break;
 	case AG_PROP_SINT32:
-		snprintf(s, len, "%d", prop->data.s32);
+		snprintf(s, len, "%ld", (long)pr->data.s32);
 		break;
 #ifdef SDL_HAS_64BIT_TYPE
-	case AG_PROP_UINT64:
-		snprintf(s, len, "%llu", prop->data.u64);
-		break;
-	case AG_PROP_SINT64:
-		snprintf(s, len, "%lld", prop->data.s64);
-		break;
+	case AG_PROP_UINT64:	snprintf(s, len, "%llu", pr->data.u64);	break;
+	case AG_PROP_SINT64:	snprintf(s, len, "%lld", pr->data.s64);	break;
+#endif	
+	case AG_PROP_FLOAT:	snprintf(s, len, "%f", pr->data.f);	break;
+	case AG_PROP_DOUBLE:	snprintf(s, len, "%f", pr->data.d);	break;
+#ifdef HAVE_LONG_DOUBLE
+	case AG_PROP_LONG_DOUBLE: snprintf(s, len, "%Lf", pr->data.ld); break;
 #endif
-	case AG_PROP_FLOAT:
-		snprintf(s, len, "%f", prop->data.f);
-		break;
-	case AG_PROP_DOUBLE:
-		snprintf(s, len, "%f", prop->data.d);
-		break;
-	case AG_PROP_STRING:
-		strlcpy(s, prop->data.s, len);
-		break;
-	case AG_PROP_POINTER:
-		snprintf(s, len, "%p", prop->data.p);
-		break;
+	case AG_PROP_STRING:	snprintf(s, len, "\"%s\"", pr->data.s);	break;
+	case AG_PROP_POINTER:	snprintf(s, len, "->%p", pr->data.p);	break;
 	case AG_PROP_BOOL:
-		strlcpy(s, prop->data.i ? "true" : "false", len);
+		strlcpy(s, pr->data.i ? "true" : "false", len);
 		break;
 	default:
-		snprintf(s, len, "?");
+		strlcat(s, "(?prop-type)", len);
 		break;
 	}
 }
