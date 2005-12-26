@@ -120,10 +120,9 @@ enum ag_object_checksum_alg {
 		NULL						\
 	}
 
-#define AGOBJECT(ob)		 ((struct ag_object *)(ob))
-#define AGOBJECT_TYPE(ob, t)	 (strcmp(AGOBJECT(ob)->type,(t))==0)
-#define AGOBJECT_SUBCLASS(ob, t) AG_ObjectSubclass(AGOBJECT(ob), t, \
-				  sizeof(t)-1)
+#define AGOBJECT(ob)		((struct ag_object *)(ob))
+#define AGOBJECT_TYPE(ob, t)	(strcmp(AGOBJECT(ob)->type,(t))==0)
+#define AGOBJECT_SUBCLASS(ob,t)	AG_ObjectSubclass(AGOBJECT(ob),(t))
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -173,7 +172,7 @@ void		 AG_ObjectSetOps(void *, const void *);
 
 __inline__ SDL_Surface	*AG_ObjectIcon(void *);
 
-__inline__ int AG_ObjectSubclass(AG_Object *, const char *, size_t);
+__inline__ int AG_ObjectSubclass(AG_Object *, const char *);
 void	       AG_ObjectGetClassInfo(const char *, AG_ObjectClassInfo *);
 void	       AG_ObjectFreeClassinfo(AG_ObjectClassInfo *);
 
