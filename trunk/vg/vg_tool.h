@@ -14,6 +14,12 @@ typedef struct vg_tool_ops {
 	int icon;
 	size_t len;
 	Uint flags;
+#define VG_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */
+#define VG_BUTTONUP_NOSNAP	0x02	/* Ignore snapping in buttonup */
+#define VG_BUTTONDOWN_NOSNAP	0x04	/* Ignore snapping in buttondown */
+#define VG_BUTTON_NOSNAP	(VG_BUTTONUP_NOSNAP|VG_BUTTONDOWN_NOSNAP)
+#define VG_NOSNAP		(VG_BUTTON_NOSNAP|VG_MOUSEMOTION_NOSNAP)
+
 	void (*init)(void *);
 	void (*destroy)(void *);
 	void (*edit)(void *, void *);
@@ -55,6 +61,9 @@ typedef struct vg_tool_mousebinding {
 } VG_ToolMouseBinding;
 
 #define VGTOOL(t) ((VG_Tool *)(t))
+#define VG_CURTOOL(vv) \
+    (vv)->curtool != NULL ? (vv)->curtool : \
+    (vv)->deftool != NULL ? (vv)->deftool : NULL
 
 __BEGIN_DECLS
 void		 VG_ToolInit(VG_Tool *);
