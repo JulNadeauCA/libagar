@@ -11,7 +11,8 @@ SUBDIR=	gamemenu \
 	table \
 	textbox \
 	widgets \
-	nopadding
+	nopadding \
+	objprops
 
 all: configure all-subdir
 clean: prereq clean-subdir
