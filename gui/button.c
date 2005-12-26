@@ -233,6 +233,7 @@ button_mousemotion(AG_Event *event)
 		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
 	}
 	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -247,6 +248,7 @@ button_mousebuttondown(AG_Event *event)
 		return;
 
 	AG_WidgetFocus(bu);
+	AG_WidgetRedraw(bu);
 
 	if (button != SDL_BUTTON_LEFT)
 		return;
@@ -297,6 +299,7 @@ button_mousebuttonup(AG_Event *event)
 		AG_WidgetBindingChanged(stateb);
 	}
 	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -317,6 +320,7 @@ button_keydown(AG_Event *event)
 			AG_ReplaceTimeout(bu, &bu->delay_to, 800);
 		}
 	}
+	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -337,24 +341,28 @@ button_keyup(AG_Event *event)
 		AG_WidgetSetBool(bu, "state", 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 	}
+	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonEnable(AG_Button *bu)
 {
 	bu->flags &= ~(AG_BUTTON_DISABLED);
+	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonDisable(AG_Button *bu)
 {
 	bu->flags |= (AG_BUTTON_DISABLED);
+	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonSetPadding(AG_Button *bu, int padding)
 {
 	bu->padding = padding;
+	AG_WidgetRedraw(bu);
 }
 
 void
@@ -383,12 +391,14 @@ void
 AG_ButtonSetJustification(AG_Button *bu, enum ag_button_justify jus)
 {
 	bu->justify = jus;
+	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonSetSurface(AG_Button *bu, SDL_Surface *su)
 {
 	AG_WidgetReplaceSurface(bu, 0, su);
+	AG_WidgetRedraw(bu);
 }
 
 void
@@ -415,5 +425,7 @@ AG_ButtonPrintf(AG_Button *bu, const char *fmt, ...)
 
 	AG_WidgetReplaceSurface(bu, 0,
 	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), buf));
+	
+	AG_WidgetRedraw(bu);
 }
 
