@@ -88,6 +88,15 @@ combo_collapse(AG_Combo *com)
 }
 
 static void
+combo_modal_close(AG_Event *event)
+{
+	AG_Combo *com = AG_PTR(1);
+
+	if (com->panel != NULL)
+		combo_collapse(com);
+}
+
+static void
 combo_expand(AG_Event *event)
 {
 	AG_Combo *com = AG_PTR(1);
@@ -111,6 +120,9 @@ combo_expand(AG_Event *event)
 			panel->w = agView->w - panel->x;
 		if (panel->y+panel->h > agView->h)
 			panel->h = agView->h - panel->y;
+		
+		AG_SetEvent(panel, "window-modal-close", combo_modal_close,
+		    "%p", com);
 
 		AG_WINDOW_UPDATE(panel);
 		AG_WindowShow(com->panel);
@@ -204,24 +216,10 @@ combo_return(AG_Event *event)
 	AG_MutexUnlock(&com->list->lock);
 }
 
-#if 0
-static void
-combo_mousebuttonup(AG_Event *event)
-{
-	AG_Combo *com = AG_SELF();
-/*	int button = AG_INT(1); */
-	int x = AGWIDGET(com)->cx + argv[2].i;
-	int y = AGWIDGET(com)->cy + argv[3].i;
-
-	if (com->panel != NULL && !AG_WidgetArea(com->panel, x, y))
-		combo_collapse(com);
-}
-#endif
-
 void
 AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP;
+	Uint wflags = AG_WIDGET_FOCUSABLE;
 
 	if (flags & AG_COMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_COMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -235,24 +233,18 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 1);
 
-	if ((flags & AG_COMBO_ANY_TEXT) == 0) {
+	if ((flags & AG_COMBO_ANY_TEXT) == 0)
 		com->tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
-	}
 
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(com->list, AG_TLIST_EXPAND);
 	
-	if (flags & AG_COMBO_TREE)	
-		com->list->flags |= AG_TLIST_TREE;
-	if (flags & AG_COMBO_POLL)
-		com->list->flags |= AG_TLIST_POLL;
+	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
+	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
 
 	AG_SetEvent(com->button, "button-pushed", combo_expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", combo_selected, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", combo_return, "%p", com);
-#if 0
-	AG_SetEvent(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
-#endif
 }
 
 void

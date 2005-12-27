@@ -651,9 +651,18 @@ AG_WindowEvent(SDL_Event *ev)
 
 	/* Process the input events. */
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
-		if (agView->modal_win != NULL &&
-		    win != agView->modal_win) {
-			continue;
+		if (agView->modal_win != NULL) {
+			if (win == agView->modal_win) {
+				if ((ev->type == SDL_MOUSEBUTTONDOWN) &&
+				    !AG_WidgetArea(win, ev->button.x,
+				    ev->button.y)) {
+					AG_PostEvent(NULL, win,
+					    "window-modal-close", NULL);
+					goto out;
+				}
+			} else {
+				continue;
+			}
 		}
 		AG_MutexLock(&win->lock);
 		if (!win->visible) {
