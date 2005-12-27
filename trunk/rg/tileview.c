@@ -464,7 +464,7 @@ mousebuttonup(AG_Event *event)
 					VG_Vcoords2(tel->tel_sketch.sk->vg,
 					    tv->xms - tel->tel_sketch.x,
 					    tv->yms - tel->tel_sketch.y,
-					    0, 0, &vx, &vy);
+					    &vx, &vy);
 
 					RG_SketchButtonup(tv, tel, vx, vy,
 					    button);
@@ -736,11 +736,11 @@ mousemotion(AG_Event *event)
 				VG_Vcoords2(tel->tel_sketch.sk->vg,
 				    sx - tel->tel_sketch.x,
 				    sy - tel->tel_sketch.y,
-				    0, 0, &vx, &vy);
+				    &vx, &vy);
 				VG_Vcoords2(tel->tel_sketch.sk->vg,
 				    sx - tv->xorig,
 				    sy - tv->yorig,
-				    0, 0, &vxrel, &vyrel);
+				    &vxrel, &vyrel);
 				RG_SketchMotion(tv, tel,
 				    vx/RG_TILESZ, vy/RG_TILESZ,
 				    vxrel/RG_TILESZ, vyrel/RG_TILESZ,
@@ -1653,13 +1653,9 @@ RG_TileviewDraw(void *p)
 
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
 		RG_Sketch *sk = tv->tv_sketch.sk;
-		int nredraw = sk->vg->redraw - 1;
 
 		VG_Rasterize(sk->vg);
 		t->flags |= RG_TILE_DIRTY;
-
-		/* Multiple tileviews may be rendering the same sketch. */
-		sk->vg->redraw = nredraw;
 	}
 	if (tv->flags & RG_TILEVIEW_READONLY) {
 		RG_TileGenerate(t);

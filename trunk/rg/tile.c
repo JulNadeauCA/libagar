@@ -1664,7 +1664,6 @@ delete_element(AG_Event *event)
 
 		RG_SketchUnselect(tv, tv->tv_sketch.tel, vge);
 		VG_DestroyElement(vg, vge);
-		vg->redraw++;
 		return;
 	}
 

@@ -240,7 +240,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
 	if (pt->vtx != NULL) {
 		pt->vtx->x = x;
 		pt->vtx->y = y;
-		sk->vg->redraw++;
 	}
 }
 

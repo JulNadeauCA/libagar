@@ -108,7 +108,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
 		sk->vg->origin[2].x = x;
 		sk->vg->origin[2].y = y;
 	}
-	sk->vg->redraw++;
 }
 
 RG_TileviewSketchToolOps sketch_circle_ops = {
