@@ -38,11 +38,25 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The agar
+Each
+.Xr AG_Object 3
+has a set of generic properties, which are persistent by default.
+The
 .Nm
-interface operates on a generic property table associated with an
-.Xr AG_Object 3 .
-Generic properties can store the following types:
+interface allows the reading and writing of the property values.
+All of the Agar widgets which provide bindings
+(see
+.Xr AG_Widget 3 )
+can bind to properties with compatible types.
+.Pp
+Specialized "read" and "write" functions can be defined on a per-property
+basis, or on a per-object basis to allow properties of arbitrary types to
+be defined dynamically by the object.
+This allows, for example, some properties of an object to be read and written
+over a network connection.
+.Pp
+The Agar core library implements properties for the following primitive
+types:
 .Pp
 .Bd -literal
 enum ag_prop_type {
@@ -54,13 +68,13 @@ enum ag_prop_type {
 	AG_PROP_SINT16,
 	AG_PROP_UINT32,
 	AG_PROP_SINT32,
-	AG_PROP_UINT64,		/* Unused */
-	AG_PROP_SINT64,		/* Unused */
+	AG_PROP_UINT64,		/* Optional */
+	AG_PROP_SINT64,		/* Optional */
 	AG_PROP_FLOAT,		/* IEEE 754 encoding */
 	AG_PROP_DOUBLE,		/* IEEE 754 encoding */
-	AG_PROP_LONG_DOUBLE,	/* Unused */
+	AG_PROP_LONG_DOUBLE,	/* Optional */
 	AG_PROP_STRING,
-	AG_PROP_POINTER,		/* Not persistent */
+	AG_PROP_POINTER,	/* Not persistent */
 	AG_PROP_BOOL,
 	AG_PROP_ANY
 } type;
@@ -106,11 +120,20 @@ enum ag_prop_type {
 .Ft Sint32
 .Fn AG_Sint32 "void *obj" "const char *key"
 .Pp
+.Ft Uint64
+.Fn AG_Uint64 "void *obj" "const char *key"
+.Pp
+.Ft Sint64
+.Fn AG_Sint64 "void *obj" "const char *key"
+.Pp
 .Ft float
 .Fn AG_Float "void *obj" "const char *key"
 .Pp
 .Ft double
 .Fn AG_Double "void *obj" "const char *key"
+.Pp
+.Ft "long double"
+.Fn AG_LongDouble "void *obj" "const char *key"
 .Pp
 .Ft "char *"
 .Fn AG_String "void *obj" "const char *key"
@@ -150,10 +173,18 @@ and
 functions acquire/release the recursive mutex which is associated with an
 object's properties.
 .Pp
-The other data access functions look for a property named
+The
+.Fn AG_(Type)
+functions all look for a property named
 .Fa key
-and return the associated value, raising a fatal condition if there is no
-match.
+and return the associated value, raising a fatal condition if there is
+no match.
+Note that
+.Fn AG_Uint64 ,
+.Fn AG_Sint64
+and
+.Fn AG_LongDouble
+are not available on all platforms.
 .Pp
 .Fn AG_String
 returns a copy of the string.
@@ -196,13 +227,19 @@ NUL-terminating the result.
 .Fn AG_SetSint32 "void *obj" "const char *key" "Sint32 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetSint32 "void *obj" "const char *key" "Sint32 value"
+.Fn AG_SetUint64 "void *obj" "const char *key" "Uint64 value"
+.Pp
+.Ft "AG_Prop *"
+.Fn AG_SetSint64 "void *obj" "const char *key" "Sint64 value"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetFloat "void *obj" "const char *key" "float value"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetDouble "void *obj" "const char *key" "double value"
+.Pp
+.Ft "AG_Prop *"
+.Fn AG_SetLongDouble "void *obj" "const char *key" "long double value"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetString "void *obj" "const char *key" "const char *fmt" "..."
@@ -223,14 +260,22 @@ If the
 .Fa key
 does not match an existing property, a new one is created.
 .Pp
-The other data write functions look for a property named
+The
+.Fn AG_Set(Type)
+functions all look for a property named
 .Fa key
 and set its value to
 .Fa value ,
 returning a pointer to the modified property.
 If the
 .Fa key
-does not match an existing property, a new one is created.
+does not match any existing property, a new one is created.
+Again, please note that
+.Fn AG_SetUint64 ,
+.Fn AG_SetSint64
+and
+.Fn AG_SetLongDouble
+are not available on all platforms.
 .Sh SAVING/LOADING
 .nr nS 1
 .Ft int
@@ -248,10 +293,137 @@ and
 .Fn AG_PropSave
 saves an object's property table in machine-independent format to
 .Fa fd .
+Properties which are marked non-persistent
+(such as all properties of type
+.Dv AG_PROP_POINTER )
+are ignored by these functions.
+.Sh READ/WRITE OPERATIONS
+.nr nS 1
+.Ft void
+.Fn AG_SetUintWrFn "AG_Prop *prop, Uint (*fn)(void *, AG_Prop *, Uint)"
+.Pp
+.Ft void
+.Fn AG_SetIntWrFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *, int)"
+.Pp
+.Ft void
+.Fn AG_SetBoolWrFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *, int)"
+.Pp
+.Ft void
+.Fn AG_SetUint8WrFn "AG_Prop *prop, Uint8 (*fn)(void *, AG_Prop *, Uint8)"
+.Pp
+.Ft void
+.Fn AG_SetSint8WrFn "AG_Prop *prop, Sint8 (*fn)(void *, AG_Prop *, Sint8)"
+.Pp
+.Ft void
+.Fn AG_SetUint16WrFn "AG_Prop *prop, Uint16 (*fn)(void *, AG_Prop *, Uint16)"
+.Pp
+.Ft void
+.Fn AG_SetSint16WrFn "AG_Prop *prop, Sint16 (*fn)(void *, AG_Prop *, Sint16)"
+.Pp
+.Ft void
+.Fn AG_SetUint32WrFn "AG_Prop *prop, Uint32 (*fn)(void *, AG_Prop *, Uint32)"
+.Pp
+.Ft void
+.Fn AG_SetSint32WrFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *, Sint32)"
+.Pp
+.Ft void
+.Fn AG_SetUint64WrFn "AG_Prop *prop, Uint64 (*fn)(void *, AG_Prop *, Uint64)"
+.Pp
+.Ft void
+.Fn AG_SetSint64WrFn "AG_Prop *prop, Sint64 (*fn)(void *, AG_Prop *, Sint64)"
+.Pp
+.Ft void
+.Fn AG_SetFloatWrFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *, float)"
+.Pp
+.Ft void
+.Fn AG_SetDoubleWrFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *, double)"
+.Pp
+.Ft void
+.Fn AG_SetLongDoubleWrFn "AG_Prop *prop, long double (*fn)(void *, AG_Prop *, long double)"
+.Pp
+.Ft void
+.Fn AG_SetStringWrFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *, char *)"
+.Pp
+.Ft void
+.Fn AG_SetPointerWrFn "AG_Prop *prop, void *(*fn)(void *, AG_Prop *, void *)"
+.Pp
+.Ft void
+.Fn AG_SetUintRdFn "AG_Prop *prop, Uint (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetIntRdFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetBoolRdFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetUint8RdFn "AG_Prop *prop, Uint8 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetSint8RdFn "AG_Prop *prop, Sint8 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetUint16RdFn "AG_Prop *prop, Uint16 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetSint16RdFn "AG_Prop *prop, Sint16 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetUint32RdFn "AG_Prop *prop, Uint32 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetSint32RdFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetUint64RdFn "AG_Prop *prop, Uint64 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetSint64RdFn "AG_Prop *prop, Sint64 (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetFloatRdFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetDoubleRdFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetLongDoubleRdFn "AG_Prop *prop, long double (*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetStringRdFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *)"
+.Pp
+.Ft void
+.Fn AG_SetPointerRdFn "AG_Prop *prop, void *(*fn)(void *, AG_Prop *)"
+.Pp
+.nr nS 0
+All
+.Fn AG_Set(Type)WrFn
+functions assign a specific write-function to the given property.
+The write operation is invoked whenever the
+.Fn AG_SetProp
+function attempts to modify the given property.
+The new value is passed as the third argument to the write-function, and the
+value returned by the function is assigned to the property.
+To preserve the current value, the write-function can read the current value
+directly from the
+.Nm
+argument and return it.
+.Pp
+Similarly, the set of
+.Fn AG_Set(Type)RdFn
+functions define a specific read-function to return the value of a given
+property whenever it is requested by
+.Fn AG_GetProp .
+.Pp
+The first argument to the read and write functions is always a pointer to
+the object which contains the given property.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3
 .Sh HISTORY
 The
 .Nm
-interface first appeared in Agar 1.0
+interface first appeared in Agar 1.0.
+Support for property-specific and object-specific read/write operations first
+appeared in 1.1.
+Support for 64-bit types and long double was also added in 1.1.

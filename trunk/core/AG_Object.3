@@ -600,6 +600,12 @@ The linkage lock is held during the execution of the event handler.
 This event originates from the previous parent.
 .It Fn renamed "void"
 The object's name has changed.
+.It Fn prop-added "AG_Prop *prop"
+A new
+.Xr AG_Prop 3
+property has been added.
+.It Fn prop-modified "AG_Prop *prop"
+The value of the given property has been modified.
 .El
 .Sh NOTES
 If the maximum number of references,
