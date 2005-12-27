@@ -105,8 +105,7 @@ combo_expand(AG_Event *event)
 	if (expand) {						/* Expand */
 		AG_Widget *panel;
 
-		com->panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_MODAL|
-		                          AG_WINDOW_NOBORDERS);
+		com->panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_MODAL);
 		panel = AGWIDGET(com->panel);
 		AG_ObjectAttach(com->panel, com->list);
 
