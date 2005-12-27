@@ -99,7 +99,6 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 			vge->vtx[i].y += yoffs;
 		}
 	}
-	vg->redraw++;
 }
 
 void
@@ -130,7 +129,6 @@ RG_SketchLoad(RG_Sketch *sk, AG_Netbuf *buf)
 		Free(sk->vg, M_VG);
 		return (-1);
 	}
-	sk->vg->redraw++;
 	VG_Rasterize(sk->vg);
 	return (0);
 }
@@ -417,14 +415,6 @@ RG_SketchRedo(RG_Tileview *tv, RG_TileElement *tel)
 }
 
 static void
-redraw_sketch(AG_Event *event)
-{
-	VG *vg = AG_PTR(1);
-
-	vg->redraw++;
-}
-
-static void
 update_circle_radius(AG_Event *event)
 {
 	VG *vg = AG_PTR(1);
@@ -466,8 +456,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 			    "%*d,%*d", &vge->vtx[i].x, &vge->vtx[i].y);
 			ctrl->vg = vg;
 			ctrl->vge = vge;
-			ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch,
-			    "%p", vg);
+			ctrl->buttonup = NULL;
 		}
 		break;
 	case VG_CIRCLE:
@@ -475,7 +464,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 		    &vge->vtx[0].x, &vge->vtx[0].y);
 		ctrl->vg = vg;
 		ctrl->vge = vge;
-		ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->buttonup = NULL;
 		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_vertex,
 		    "%p,%p", vg, vge);
 		
@@ -483,7 +472,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 		    &vge->vtx[1].x, &vge->vtx[1].y);
 		ctrl->vg = vg;
 		ctrl->vge = vge;
-		ctrl->buttonup = AG_SetEvent(tv, NULL, redraw_sketch, "%p", vg);
+		ctrl->buttonup = NULL;
 		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_radius,
 		    "%p,%p", vg, vge);
 		break;
@@ -594,7 +583,6 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 					AG_WidgetFocus(tv);
 				}
 			}
-			vg->redraw++;
 		}
 	}
 }
@@ -650,7 +638,6 @@ RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
 		}
 		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
 			closest_vge->mouseover = 1;
-			vg->redraw++;
 		}
 	}
 }
@@ -697,7 +684,6 @@ RG_SketchKeyDown(RG_Tileview *tv, RG_TileElement *tel, int keysym,
 			if (vge->selected) {
 				RG_SketchUnselect(tv, tel, vge);
 				VG_DestroyElement(vg, vge);
-				vg->redraw++;
 			}
 		}
 		break;

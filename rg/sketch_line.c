@@ -131,7 +131,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
 	if (lt->cur_line != NULL) {
 		lt->cur_vtx->x = x;
 		lt->cur_vtx->y = y;
-		sk->vg->redraw++;
 	}
 }
 
