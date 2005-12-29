@@ -485,7 +485,7 @@ AG_ObjectDetach(void *childp)
 
 /* Traverse the object tree using a pathname. */
 static void *
-AG_ObjectFindChild(const AG_Object *parent, const char *name)
+AG_ObjectSearchPath(const AG_Object *parent, const char *name)
 {
 	char node_name[AG_OBJECT_PATH_MAX];
 	void *rv;
@@ -502,7 +502,7 @@ AG_ObjectFindChild(const AG_Object *parent, const char *name)
 			continue;
 
 		if ((s = strchr(name, '/')) != NULL) {
-			rv = AG_ObjectFindChild(child, &s[1]);
+			rv = AG_ObjectSearchPath(child, &s[1]);
 			if (rv != NULL) {
 				return (rv);
 			} else {
@@ -512,6 +512,19 @@ AG_ObjectFindChild(const AG_Object *parent, const char *name)
 		return (child);
 	}
 	return (NULL);
+}
+
+void *
+AG_ObjectFindChild(void *p, const char *name)
+{
+	AG_Object *pObj = p;
+	AG_Object *cObj;
+
+	AGOBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
+		if (strcmp(cObj->name, name) == 0)
+			break;
+	}
+	return (cObj);
 }
 
 /* Search for the named object (absolute path). */
@@ -528,7 +541,7 @@ AG_ObjectFind(const char *name)
 		return (agWorld);
 	
 	AG_LockLinkage();
-	rv = AG_ObjectFindChild(agWorld, &name[1]);
+	rv = AG_ObjectSearchPath(agWorld, &name[1]);
 	AG_UnlockLinkage();
 
 	if (rv == NULL) {
@@ -553,7 +566,7 @@ AG_ObjectFindF(const char *fmt, ...)
 		fatal("not an absolute path: `%s'", path);
 #endif
 	AG_LockLinkage();
-	rv = AG_ObjectFindChild(agWorld, &path[1]);
+	rv = AG_ObjectSearchPath(agWorld, &path[1]);
 	AG_UnlockLinkage();
 
 	if (rv == NULL) {
