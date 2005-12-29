@@ -333,10 +333,11 @@ AG_ScrollbarDraw(void *p)
 		SDL_Surface *txt;
 		char label[32];
 
-		snprintf(label, sizeof(label), "%d\n%d\n%d\n",
-		    value, min, max);
+		snprintf(label, sizeof(label), "%d/%d/%d", value, min, max);
 		txt = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), label);
-		AG_WidgetBlit(sb, txt, 0, 0);
+		AG_WidgetBlit(sb, txt,
+		    AGWIDGET(sb)->w/2 - txt->w/2,
+		    AGWIDGET(sb)->h/2 - txt->h/2);
 		SDL_FreeSurface(txt);
 		    
 	}
