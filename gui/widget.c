@@ -33,6 +33,7 @@
 #include <gui/widget.h>
 #include <gui/window.h>
 #include <gui/cursors.h>
+#include <gui/menu.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -95,6 +96,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	wid->h = -1;
 	wid->style = NULL;
 	SLIST_INIT(&wid->bindings);
+	SLIST_INIT(&wid->menus);
 	AG_MutexInitRecursive(&wid->bindings_lock);
 
 	wid->nsurfaces = 0;
@@ -928,9 +930,17 @@ void
 AG_WidgetDestroy(void *p)
 {
 	AG_Widget *wid = p;
+	AG_PopupMenu *pm, *pm2;
 	AG_WidgetBinding *bind, *nbind;
 	Uint i;
-
+	
+	for (pm = SLIST_FIRST(&wid->menus);
+	     pm != SLIST_END(&wid->menus);
+	     pm = pm2) {
+		pm2 = SLIST_NEXT(pm, menus);
+		AG_PopupDestroy(pm);
+		Free(pm, M_WIDGET);
+	}
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL)
 			SDL_FreeSurface(wid->surfaces[i]);
