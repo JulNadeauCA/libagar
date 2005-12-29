@@ -165,6 +165,7 @@ void		*AG_ObjectFind(const char *);
 void		*AG_ObjectFindF(const char *, ...);
 __inline__ void	*AG_ObjectRoot(const void *);
 __inline__ void *AG_ObjectFindParent(void *, const char *, const char *);
+__inline__ void	*AG_ObjectFindChild(void *, const char *);
 int		 AG_ObjectInUse(const void *);
 void		 AG_ObjectSetType(void *, const char *);
 void		 AG_ObjectSetName(void *, const char *);
