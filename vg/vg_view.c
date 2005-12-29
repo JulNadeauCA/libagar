@@ -240,10 +240,6 @@ VG_ViewInit(VG_View *vv, VG *vg, Uint flags)
 	vv->y = 0;
 	vv->status[0] = '\0';
 
-	vv->popup.menu = NULL;
-	vv->popup.win = NULL;
-	vv->popup.item = NULL;
-
 	vv->mouse.x = 0;
 	vv->mouse.y = 0;
 	vv->mouse.panning = 0;
