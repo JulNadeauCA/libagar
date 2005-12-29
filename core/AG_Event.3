@@ -55,36 +55,26 @@ number of
 using
 .Fn AG_SchedEvent .
 .Pp
-The prototype for event handler functions looks like:
+Event handler functions are declared as:
 .Pp
 .nr nS 1
 .\" NOMANLINK
 .Ft void
-.Fn foo "int argc" "union evarg *argv"
+.Fn my_event_handler "AG_Event *event"
 .nr nS 0
 .Pp
-The
-.Fa argv
-argument is a pointer to an array of
-.Fa argc
-unions, defined as:
-.Bd -literal
-typedef union evarg {
-	void	*p;
-	char	*s;
-	char	 c;
-	int	 i;
-	long int li;
-	double	 f;
-} *evargs;
-.Ed
-.Pp
-.Va argv[0]
-always points to the
-.Xr AG_Object 3
-which is the receiver of the event.
-.Va argv[argc]
-always points to the sender of the event (or NULL).
+The event arguments can be retrieved using macros such as
+.Fn AG_INT
+and
+.Fn AG_PTR ,
+or directly from the
+.Fa event
+structure.
+Two special arguments are
+.Fn AG_SELF
+(the object receiving the event) and
+.Fn AG_SENDER
+(the object sending the event, if applicable).
 .Pp
 The
 .Nm
@@ -139,7 +129,7 @@ are expired.
 .Fn AG_CancelEvent "void *obj" "const char *event_name"
 .Pp
 .Ft "void"
-.Fn AG_ForwardEvent "void *rcvr" "const char *event_name" "int argc" "union evarg *argv"
+.Fn AG_ForwardEvent "void *rcvr" "AG_Event *event"
 .nr nS 0
 .Pp
 The
@@ -244,7 +234,6 @@ The
 .Fn AG_ForwardEvent
 function relays the given event to object
 .Fa obj .
-This function is usually called from an event handler.
 .Sh EVENT FLAGS
 .Pp
 Acceptable flags for the
