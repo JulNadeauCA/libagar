@@ -33,7 +33,6 @@ typedef struct vg_view {
 	VG_Tool *deftool;			/* Default tool if any */
 	TAILQ_HEAD(, vg_tool) tools;		/* Map edition tools */
 	char status[128];			/* Status text buffer */
-	AG_PopupMenu popup;			/* General purpose popup menu */
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))
