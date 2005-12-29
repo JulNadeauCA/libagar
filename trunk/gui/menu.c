@@ -614,3 +614,51 @@ AG_MenuScale(void *p, int w, int h)
 	}
 }
 
+AG_PopupMenu *
+AG_PopupNew(void *pwid)
+{
+	AG_Widget *wid = pwid;
+	AG_PopupMenu *pm;
+
+	pm = Malloc(sizeof(AG_PopupMenu), M_WIDGET);
+	pm->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(pm->menu, 0);
+	pm->item = pm->menu->sel_item = AG_MenuAddItem(pm->menu, NULL);
+	pm->win = NULL;
+	SLIST_INSERT_HEAD(&wid->menus, pm, menus);
+	return (pm);
+}
+
+void
+AG_PopupShow(AG_PopupMenu *pm)
+{
+	int x, y;
+
+	AG_PopupHide(pm);
+	SDL_GetMouseState(&x, &y);
+	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
+}
+
+void
+AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)
+{
+	AG_PopupHide(pm);
+	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
+}
+
+void
+AG_PopupHide(AG_PopupMenu *pm)
+{
+	if (pm->win != NULL) {
+		AG_MenuCollapse(pm->menu, pm->item);
+		pm->win = NULL;
+	}
+}
+
+void
+AG_PopupDestroy(AG_PopupMenu *pm)
+{
+	AG_MenuCollapse(pm->menu, pm->item);
+	AG_ObjectDestroy(pm->menu);
+	Free(pm->menu, M_OBJECT);
+}

@@ -62,10 +62,11 @@ typedef struct ag_menu {
 	int itemh;			/* Item height (optimization) */
 } AG_Menu;
 
-typedef struct {
+typedef struct ag_popup_menu {
 	AG_Menu *menu;
 	AG_MenuItem *item;
 	AG_Window *win;
+	SLIST_ENTRY(ag_popup_menu) menus;
 } AG_PopupMenu;
 
 typedef struct ag_menu_view {
@@ -83,6 +84,12 @@ void	   AG_MenuInit(AG_Menu *, Uint);
 void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
 void 	   AG_MenuDestroy(void *);
+
+AG_PopupMenu	*AG_PopupNew(void *);
+__inline__ void	 AG_PopupShow(AG_PopupMenu *);
+__inline__ void	 AG_PopupShowAt(AG_PopupMenu *, int, int);
+__inline__ void	 AG_PopupHide(AG_PopupMenu *);
+void		 AG_PopupDestroy(AG_PopupMenu *);
 
 AG_MenuItem *AG_MenuAddItem(AG_Menu *, const char *);
 void	     AG_MenuFreeItems(AG_Menu *);
