@@ -7,6 +7,10 @@
 
 #include <agar/compat/math.h>
 
+#define VG_DotProd2(ax,ay,bx,by) ((ax)*(bx) + (ay)*(by))
+#define VG_Norm2(ax,ay) sqrtf(VG_DotProd2((ax),(ay),(ax),(ay)))
+#define VG_Distance2(ax,ay,bx,by) VG_Norm2((float)((ax)-(bx)),(float)((ay)-(by)))
+
 __BEGIN_DECLS
 __inline__ float VG_Rad2Deg(float);
 __inline__ float VG_Deg2Rad(float);
