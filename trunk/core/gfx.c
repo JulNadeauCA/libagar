@@ -538,7 +538,6 @@ AG_GfxLoad(AG_Object *ob)
 	AG_ReadUint32(buf);				/* Pad: flags */
 
 	AG_GfxAllocSprites(gfx, AG_ReadUint32(buf));
-	dprintf("%s: %d sprites\n", ob->name, gfx->nsprites);
 	for (i = 0; i < gfx->nsprites; i++) {
 		AG_Sprite *spr = &gfx->sprites[i];
 
@@ -576,7 +575,6 @@ AG_GfxLoad(AG_Object *ob)
 	}
 
 	AG_GfxAllocAnims(gfx, AG_ReadUint32(buf));
-	dprintf("%s: %d anims\n", ob->name, gfx->nanims);
 	for (i = 0; i < gfx->nanims; i++) {
 		AG_Anim *anim = &gfx->anims[i];
 
@@ -610,8 +608,6 @@ AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 	}
 
 	AG_WriteUint32(buf, 0);				/* Pad: flags */
-
-	dprintf("%s: saving %d sprites\n", ob->name, gfx->nsprites);
 	AG_WriteUint32(buf, gfx->nsprites);
 	for (i = 0; i < gfx->nsprites; i++) {
 		AG_Sprite *spr = &gfx->sprites[i];
@@ -646,7 +642,6 @@ AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 		}
 	}
 
-	dprintf("%s: saving %d anims\n", ob->name, gfx->nsprites);
 	AG_WriteUint32(buf, gfx->nanims);
 	for (i = 0; i < gfx->nanims; i++) {
 		AG_Anim *anim = &gfx->anims[i];
