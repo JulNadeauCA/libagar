@@ -177,8 +177,8 @@ AG_WidgetBindingType(AG_WidgetBinding *binding)
 
 	switch (binding->type) {
 	case AG_WIDGET_PROP:
-		if ((prop = AG_GetProp(binding->p1, (char *)binding->p2,
-		    AG_PROP_ANY, NULL)) == NULL) {
+		if ((prop = AG_GetProp(binding->p1, (char *)binding->p2, -1,
+		    NULL)) == NULL) {
 			fatal("%s", AG_GetError());
 		}
 		switch (prop->type) {
@@ -352,7 +352,7 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			break;
 		case AG_WIDGET_PROP:			/* Convert */
 			if ((prop = AG_GetProp(binding->p1,
-			    (char *)binding->p2, AG_PROP_ANY, NULL)) == NULL) {
+			    (char *)binding->p2, -1, NULL)) == NULL) {
 				fatal("%s", AG_GetError());
 			}
 			switch (prop->type) {
@@ -842,7 +842,7 @@ AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 		char *name = (char *)bind->p2;
 		AG_Prop *prop;
 
-		prop = AG_GetProp(pobj, name, AG_PROP_ANY, NULL);
+		prop = AG_GetProp(pobj, name, -1, NULL);
 		AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
 	}
 }
