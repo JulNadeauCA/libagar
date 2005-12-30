@@ -8,6 +8,7 @@
 
 #include "begin_code.h"
 
+#define AG_PROP_PATH_MAX	(AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX)
 #define AG_PROP_KEY_MAX		64
 #if 0
 #define AG_PROP_STRING_LIMIT	65536
@@ -29,8 +30,7 @@ enum ag_prop_type {
 	AG_PROP_LONG_DOUBLE,	/* Optional */
 	AG_PROP_STRING,
 	AG_PROP_POINTER,
-	AG_PROP_BOOL,
-	AG_PROP_ANY
+	AG_PROP_BOOL
 };
 
 typedef struct ag_prop {
@@ -169,7 +169,13 @@ AG_Prop		 	*AG_SetString(void *, const char *, const char *, ...)
 			 	      FORMAT_ATTRIBUTE(printf, 3, 4)
 			 	      NONNULL_ATTRIBUTE(3);
 
-AG_Prop		 *AG_GetProp(void *, const char *, enum ag_prop_type, void *);
+AG_Prop		 *AG_GetProp(void *, const char *, int, void *);
+AG_Prop		 *AG_FindProp(const char *, int, void *);
+void		  AG_PropPrint(char *, size_t, void *, const char *)
+		               BOUNDED_ATTRIBUTE(__string__, 1, 2);
+__inline__ int	  AG_PropPath(char *, size_t, const void *, const char *)
+		              BOUNDED_ATTRIBUTE(__string__, 1, 2);
+
 __inline__ int	  AG_Bool(void *, const char *);
 __inline__ Uint   AG_Uint(void *, const char *);
 __inline__ int	  AG_Int(void *, const char *);
@@ -185,13 +191,31 @@ __inline__ float  AG_Float(void *, const char *);
 __inline__ double AG_Double(void *, const char *);
 __inline__ void	 *AG_Pointer(void *, const char *);
 __inline__ char	 *AG_String(void *, const char *);
-size_t		  AG_StringCopy(void *, const char *, char *, size_t)
+__inline__ size_t AG_StringCopy(void *, const char *, char *, size_t)
 		                BOUNDED_ATTRIBUTE(__string__, 3, 4);
-void		  AG_PropPrint(char *, size_t, void *, const char *)
-		               BOUNDED_ATTRIBUTE(__string__, 1, 2);
+
+__inline__ int	  AG_FindBool(const char *);
+__inline__ Uint   AG_FindUint(const char *);
+__inline__ int	  AG_FindInt(const char *);
+__inline__ Uint8  AG_FindUint8(const char *);
+__inline__ Sint8  AG_FindSint8(const char *);
+__inline__ Uint16 AG_FindUint16(const char *);
+__inline__ Sint16 AG_FindSint16(const char *);
+__inline__ Uint32 AG_FindUint32(const char *);
+__inline__ Sint32 AG_FindSint32(const char *);
+__inline__ Uint64 AG_FindUint64(const char *);
+__inline__ Sint64 AG_FindSint64(const char *);
+__inline__ float  AG_FindFloat(const char *);
+__inline__ double AG_FindDouble(const char *);
+__inline__ void	 *AG_FindPointer(const char *);
+__inline__ char	 *AG_FindString(const char *);
+__inline__ size_t AG_FindStringCopy(const char *, char *, size_t)
+		                    BOUNDED_ATTRIBUTE(__string__, 3, 4);
+
 #ifdef HAVE_LONG_DOUBLE
 __inline__ AG_Prop    *AG_SetLongDouble(void *, const char *, long double);
 __inline__ long double AG_LongDouble(void *, const char *);
+__inline__ long double AG_FindLongDouble(const char *);
 #endif
 __END_DECLS
 
