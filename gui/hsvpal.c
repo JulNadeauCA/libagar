@@ -408,6 +408,8 @@ complementary(AG_Event *event)
 	AG_WidgetSetFloat(pal, "hue", ((int)hue+180) % 359);
 	update_pixel_from_hsva(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(NULL, pal, "h-changed", NULL);
+	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
@@ -432,6 +434,8 @@ paste_color(AG_Event *event)
 	AG_WidgetSetFloat(pal, "alpha", cA);
 	update_pixel_from_hsva(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(NULL, pal, "h-changed", NULL);
+	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
@@ -443,6 +447,8 @@ invert_saturation(AG_Event *event)
 	    1.0 - AG_WidgetFloat(pal, "saturation"));
 	update_pixel_from_hsva(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(NULL, pal, "h-changed", NULL);
+	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
@@ -454,6 +460,8 @@ invert_value(AG_Event *event)
 	    1.0 - AG_WidgetFloat(pal, "value"));
 	update_pixel_from_hsva(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
+	AG_PostEvent(NULL, pal, "h-changed", NULL);
+	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
