@@ -80,6 +80,8 @@ typedef struct ag_tlist {
 	    (it) = TAILQ_NEXT((it), cobjs),				\
 	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL)
 
+#define AG_TLIST_ITEM(n) AG_TlistSelectedItemPtr(AG_PTR(n))
+
 __BEGIN_DECLS
 AG_Tlist *AG_TlistNew(void *, Uint);
 void	  AG_TlistInit(AG_Tlist *, Uint);
@@ -109,6 +111,7 @@ AG_TlistItem	*AG_TlistSelectText(AG_Tlist *, const char *);
 void		 AG_TlistDeselectAll(AG_Tlist *);
 AG_TlistItem	*AG_TlistFindByIndex(AG_Tlist *, int);
 AG_TlistItem	*AG_TlistSelectedItem(AG_Tlist *);
+void		*AG_TlistSelectedItemPtr(AG_Tlist *);
 void		*AG_TlistFindPtr(AG_Tlist *);
 AG_TlistItem	*AG_TlistFindText(AG_Tlist *, const char *);
 AG_TlistItem	*AG_TlistFirstItem(AG_Tlist *);
