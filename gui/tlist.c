@@ -191,11 +191,11 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	tl->nvisitems = 0;
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
 	tl->compare_fn = AG_TlistComparePtrs;
+	tl->prew = tl->item_h + 5;
+	tl->preh = tl->item_h + 2;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
-	
-	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
 
 	AG_SetEvent(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
 	AG_SetEvent(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
@@ -1016,6 +1016,18 @@ AG_TlistSelectedItem(AG_Tlist *tl)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected)
 			return (it);
+	}
+	return (NULL);
+}
+
+void *
+AG_TlistSelectedItemPtr(AG_Tlist *tl)
+{
+	AG_TlistItem *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected)
+			return (it->p1);
 	}
 	return (NULL);
 }
