@@ -574,14 +574,13 @@ AG_WindowFocus(AG_Window *win)
 	if (win != NULL && lastwin == win) 		/* Already focused? */
 		return;
 
-	if (lastwin != NULL)
+	if (lastwin != NULL) {
 		AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
-
+		if (lastwin->flags & AG_WINDOW_KEEPABOVE)
+			return;
+	}
 	if (win != NULL) {
-		/*
-		 * Move the new window to tail, so the rendering functions
-		 * don't have to traverse the list backwards.
-		 */
+		/* Move to tail (rendered last) */
 		TAILQ_REMOVE(&agView->windows, win, windows);
 		TAILQ_INSERT_TAIL(&agView->windows, win, windows);
 	}
