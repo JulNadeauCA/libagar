@@ -8,7 +8,7 @@
 enum ag_netbuf_endian {
 	AG_NETBUF_BIG_ENDIAN,
 	AG_NETBUF_LITTLE_ENDIAN
-} endian;
+};
 
 typedef struct ag_netbuf {
 	char *path;
