@@ -129,6 +129,12 @@ enum ag_object_checksum_alg {
 	    (var) != (struct type *)TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct type *)TAILQ_NEXT(AGOBJECT(var), cobjs))
 
+#define AGOBJECT_FOREACH_CLASS(var, ob, type, subclass)			\
+	AGOBJECT_FOREACH_CHILD(var,ob,type)				\
+		if (!AGOBJECT_SUBCLASS(var,(subclass))) {		\
+			continue;					\
+		} else
+
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
 	for((var) = (struct type *)TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
