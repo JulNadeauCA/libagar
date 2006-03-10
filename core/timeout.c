@@ -136,6 +136,34 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 	AG_UnlockTimeouts(ob);
 }
 
+/*
+ * Block the calling thread until the given timeout executes, or the
+ * given timeout (given in SDL_Delay() ticks) is exceeded.
+ */
+int
+AG_TimeoutWait(void *p, AG_Timeout *to, Uint32 timeout)
+{
+	AG_Object *ob = p, *tob;
+	AG_Timeout *oto;
+	Uint32 elapsed = 0;
+	
+	if (ob == NULL)
+		ob = agWorld;
+wait:
+	if (timeout > 0 && ++elapsed >= timeout) {
+		AG_SetError(_("Timeout after %u ticks"), (Uint)elapsed);
+		return (-1);
+	}
+	SDL_Delay(1);
+	AG_LockTimeouts(ob);
+	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
+		if (oto == to)
+			goto wait;
+	}
+	AG_UnlockTimeouts(ob);
+	return (0);
+}
+
 void
 AG_LockTimeouts(void *p)
 {
