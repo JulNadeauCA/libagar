@@ -33,7 +33,7 @@
 #include "vg_math.h"
 
 static void
-init(VG *vg, VG_Element *vge)
+VG_EllipseInit(VG *vg, VG_Element *vge)
 {
 	vge->vg_arc.w = 1;
 	vge->vg_arc.h = 1;
@@ -42,7 +42,7 @@ init(VG *vg, VG_Element *vge)
 }
 
 void
-VG_EllipseExtent(VG *vg, float w, float h)
+VG_EllipseBox(VG *vg, float w, float h)
 {
 	VG_Element *vge = vg->cur_vge;
 
@@ -60,7 +60,7 @@ VG_EllipseArc(VG *vg, float s, float e)
 }
 
 static void
-render(VG *vg, VG_Element *vge)
+VG_EllipseRender(VG *vg, VG_Element *vge)
 {
 	int x, y;
 	int w, h;
@@ -75,7 +75,7 @@ render(VG *vg, VG_Element *vge)
 }
 
 static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_EllipseExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
@@ -84,28 +84,29 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, float x, float y)
+VG_EllipseIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
+	/* TODO */
 	return (FLT_MAX);
 }
 
 const VG_ElementOps vgEllipseOps = {
 	N_("Ellipse"),
 	VGCIRCLES_ICON,
-	init,
+	VG_EllipseInit,
 	NULL,
-	render,
-	extent,
-	intsect
+	VG_EllipseRender,
+	VG_EllipseExtent,
+	VG_EllipseIntersect
 };
 
 const VG_ElementOps vgArcOps = {
 	N_("Arc"),
 	VGCIRCLES_ICON,
-	init,
+	VG_EllipseInit,
 	NULL,
-	render,
-	extent,
-	intsect
+	VG_EllipseRender,
+	VG_EllipseExtent,
+	VG_EllipseIntersect
 };
 

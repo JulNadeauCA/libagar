@@ -37,6 +37,7 @@ struct ag_window  *VG_BlockEditor(struct vg *);
 void		   VG_BlockExtent(struct vg *, VG_Block *, VG_Rect *);
 __inline__ void	   VG_Abs2Rel(struct vg *, const VG_Vtx *, float *, float *);
 __inline__ void	   VG_Rel2Abs(struct vg *, float, float, VG_Vtx *);
+VG_Block	  *VG_BlockClosest(struct vg *, float, float);
 __END_DECLS
 
 #include "close_code.h"

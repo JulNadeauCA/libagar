@@ -11,7 +11,7 @@ struct vg_ellipse_args {
 };
 
 __BEGIN_DECLS
-__inline__ void	VG_EllipseExtent(struct vg *, float, float);
+__inline__ void VG_EllipseBox(struct vg *, float, float);
 __inline__ void VG_EllipseArc(struct vg *, float, float);
 __END_DECLS
 

@@ -35,7 +35,7 @@
 #include <string.h>
 
 static void
-init(VG *vg, VG_Element *vge)
+VG_TextInit(VG *vg, VG_Element *vge)
 {
 	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
@@ -45,7 +45,7 @@ init(VG *vg, VG_Element *vge)
 }
 
 static void
-destroy(VG *vg, VG_Element *vge)
+VG_TextDestroy(VG *vg, VG_Element *vge)
 {
 	if (vge->vg_text.su != NULL)
 		SDL_FreeSurface(vge->vg_text.su);
@@ -196,7 +196,7 @@ align_text(VG *vg, VG_Element *vge, Sint16 *x, Sint16 *y)
 }
 
 static void
-render_label(VG *vg, VG_Element *vge)
+VG_TextRenderLabel(VG *vg, VG_Element *vge)
 {
 	char s[VG_TEXT_MAX];
 	char s2[32];
@@ -301,11 +301,11 @@ render_label(VG *vg, VG_Element *vge)
 }
 
 static void
-render(VG *vg, VG_Element *vge)
+VG_TextRender(VG *vg, VG_Element *vge)
 {
 	SDL_Rect rd;
 	
-	render_label(vg, vge);
+	VG_TextRenderLabel(vg, vge);
 	align_text(vg, vge, &rd.x, &rd.y);
 	rd.x += vg->rDst.x;
 	rd.y += vg->rDst.y;
@@ -313,11 +313,11 @@ render(VG *vg, VG_Element *vge)
 }
 
 static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_TextExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	Sint16 rx, ry;
 
-	render_label(vg, vge);
+	VG_TextRenderLabel(vg, vge);
 	align_text(vg, vge, &rx, &ry);
 	r->x = VG_VECXF(vg,rx);
 	r->y = VG_VECYF(vg,ry);
@@ -326,24 +326,25 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, float x, float y)
+VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
-	if (vge->nvtx < 1)
+	float d;
+
+	if (vge->nvtx < 1 || vge->vg_text.su == NULL)
 		return (FLT_MAX);
 
-	if (vge->vg_text.su != NULL) {
-		return (x - vge->vtx[0].x) + (y - vge->vtx[0].y);
-	} else {
-		return (FLT_MAX);
-	}
+	d = VG_Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
+	*x = vge->vtx[0].x;
+	*y = vge->vtx[0].y;
+	return (d);
 }
 
 const VG_ElementOps vgTextOps = {
 	N_("Text string"),
 	VGTEXT_ICON,
-	init,
-	destroy,
-	render,
-	extent,
-	intsect
+	VG_TextInit,
+	VG_TextDestroy,
+	VG_TextRender,
+	VG_TextExtent,
+	VG_TextIntersect	
 };

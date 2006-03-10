@@ -32,7 +32,7 @@
 #include "vg_primitive.h"
 
 static void
-init(VG *vg, VG_Element *vge)
+VG_PolygonInit(VG *vg, VG_Element *vge)
 {
 	vge->vg_polygon.outline = 0;
 }
@@ -44,7 +44,7 @@ compare_ints(const void *p1, const void *p2)
 }
 
 static void
-render(VG *vg, VG_Element *vge)
+VG_PolygonRender(VG *vg, VG_Element *vge)
 {
 	int i;
 	int x, y, x1, y1, x2, y2;
@@ -126,37 +126,12 @@ render(VG *vg, VG_Element *vge)
 	}
 }
 
-static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
-{
-	float xmin = 0, xmax = 0;
-	float ymin = 0, ymax = 0;
-	int i;
-
-	xmin = vge->vtx[0].x;
-	ymin = vge->vtx[0].y;
-	for (i = 0; i < vge->nvtx; i++) {
-		if (vge->vtx[i].x < xmin)
-			xmin = vge->vtx[i].x;
-		if (vge->vtx[i].y < ymin)
-			ymin = vge->vtx[i].y;
-		if (vge->vtx[i].x > xmax)
-			xmax = vge->vtx[i].x;
-		if (vge->vtx[i].y > ymax)
-			ymax = vge->vtx[i].y;
-	}
-	r->x = xmin;
-	r->y = ymin;
-	r->w = xmax-xmin;
-	r->h = ymax-ymin;
-}
-
 const VG_ElementOps vgPolygonOps = {
 	N_("Polygon"),
 	RG_POLYGON_ICON,
-	init,
+	VG_PolygonInit,
 	NULL,				/* destroy */
-	render,
-	extent,
-	VG_LineIntersect
+	VG_PolygonRender,
+	VG_LineExtent,			/* (same as line loop) */
+	VG_LineIntersect		/* (same as line loop) */
 };

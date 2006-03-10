@@ -121,7 +121,7 @@ VG_DrawLineLoop(VG *vg, VG_Element *vge)
 	}
 }
 
-static void
+void
 VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	float xmin, xmax;
@@ -142,77 +142,129 @@ VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 	r->h = ymax-ymin;
 }
 
-float
-VG_ClosestLine2PointLen(VG *vg, int Ax, int Ay, int Bx, int By, int Px, int Py)
+static __inline__ float
+VG_LineMagnitude(float Ax, float Ay, float Bx, float By)
 {
-	float Vx = (float)(Bx - Ax);
-	float Vy = (float)(By - Ay);
-	float Wx = (float)(Px - Ax);
-	float Wy = (float)(Py - Ay);
-	float Ux, Uy;
-	float c1, c2, b;
+	float vx = Bx - Ax;
+	float vy = By - Ay;
 
-	c1 = VG_DotProd2(Wx,Wy, Vx,Vy);
-	if (c1 <= 0.0) { return (VG_Distance2(Px,Py, Ax,Ay)); }
-	c2 = VG_DotProd2(Vx,Vy, Vx,Vy);
-	if (c2 <= 0.0) { return (VG_Distance2(Px,Py, Bx,By)); }
-	b = c1/c2;
-	Ux = Ax + b*Vx;
-	Uy = Ay + b*Vy;
-	return (VG_Distance2(Px,Py, Ux,Uy));
+	return (sqrtf(vx*vx + vy*vy));
 }
 
 float
-VG_LineIntersect(VG *vg, VG_Element *vge, float x, float y)
+VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
+    float *Px, float *Py)
+{
+	float mag, u;
+	float xInt, yInt;
+
+	mag = VG_LineMagnitude(Bx, By, Ax, Ay);
+	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
+	if (u < 0.0) {
+		xInt = Ax;
+		yInt = Ay;
+	} else if (u > 1.0) {
+		xInt = Bx;
+		yInt = By;
+	} else {
+		xInt = Ax + u*(Bx - Ax);
+		yInt = Ay + u*(By - Ay);
+	}
+	mag = VG_LineMagnitude(*Px, *Py, xInt, yInt);
+	*Px = xInt;
+	*Py = yInt;
+	return (mag);
+}
+
+float
+VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d, dMin = FLT_MAX;
 	VG_Vtx v1, v2;
 	float Ax, Ay, Bx, By, Cx, Cy;
+	float ix, iy, mx = 0.0, my = 0.0;
 	int i;
 
 	switch (vge->type) {
 	case VG_LINE_STRIP:
-		VG_VtxCoords2d(vg, vge, 0, &Ax,&Ay);
+		Ax = vge->vtx[0].x;
+		Ay = vge->vtx[0].y;
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, vge, i, &Bx,&By);
-
-			d = VG_ClosestLine2PointLen(vg, Ax,Ay, Bx,By, x,y);
-			if (d < dMin) { dMin = d; }
-
+			Bx = vge->vtx[i].x;
+			By = vge->vtx[i].y;
+			ix = *x;
+			iy = *y;
+			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
+			if (d < dMin) {
+				dMin = d;
+				mx = ix;
+				my = iy;
+			}
 			Ax = Bx;
 			Ay = By;
+		}
+		if (dMin < FLT_MAX) {
+			*x = mx;
+			*y = my;
 		}
 		break;
 	case VG_LINES:
 		for (i = 0; i < vge->nvtx-1; i+=2) {
-			VG_VtxCoords2d(vg, vge, i, &Ax,&Ay);
-			VG_VtxCoords2d(vg, vge, i+1, &Bx,&By);
-
-			d = VG_ClosestLine2PointLen(vg, Ax,Ay, Bx,By, x,y);
-			if (d < dMin ) { dMin = d; }
+			Ax = vge->vtx[i].x;
+			Ay = vge->vtx[i].y;
+			Bx = vge->vtx[i+1].x;
+			By = vge->vtx[i+1].y;
+			ix = *x;
+			iy = *y;
+			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
+			if (d < dMin) {
+				dMin = d;
+				mx = ix;
+				my = iy;
+			}
+		}
+		if (dMin < FLT_MAX) {
+			*x = mx;
+			*y = my;
 		}
 		break;
 	case VG_LINE_LOOP:
 	case VG_POLYGON:
-		VG_VtxCoords2d(vg, vge, 0, &Ax,&Ay);
-		Cx = Ax;
-		Cy = Ay;
+		Cx = Ax = vge->vtx[0].x;
+		Cy = Ay = vge->vtx[0].y;
 		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, vge, i, &Bx,&By);
+			Bx = vge->vtx[i].x;
+			By = vge->vtx[i].y;
 
-			d = VG_ClosestLine2PointLen(vg, Ax,Ay, Bx,By, x,y);
-			if (d < dMin ) { dMin = d; }
-			
+			ix = *x;
+			iy = *y;
+			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
+			if (d < dMin) {
+				dMin = d;
+				mx = ix;
+				my = iy;
+			}
 			Ax = Bx;
 			Ay = By;
 		}
-		d = VG_ClosestLine2PointLen(vg, Cx,Cy, Ax,Ay, x,y);
-		if (d < dMin) { dMin = d; }
+
+		ix = *x;
+		iy = *y;
+		d = VG_ClosestLinePoint(vg, Cx,Cy, Ax,Ay, &ix,&iy);
+		if (d < dMin) {
+			dMin = d;
+			mx = ix;
+			my = iy;
+		}
+		if (dMin < FLT_MAX) {
+			*x = mx;
+			*y = my;
+		}
 		break;
 	default:
 		break;
 	}
-	return (dMin/vg->scale);
+	return (dMin);
 }
 
 const VG_ElementOps vgLinesOps = {

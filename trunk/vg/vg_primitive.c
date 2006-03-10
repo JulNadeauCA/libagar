@@ -147,10 +147,24 @@ VG_HLinePrimitive(VG *vg, int px1, int px2, int py, Uint32 c)
 	int y = vg->rDst.y+py;
 	int x, dx;
 
-	if (y >= su->h || y < 0) { return; }
-	if (x1 >= su->w) { x1 = su->w - 1; } else if (x1 < 0) { x1 = 0; }
-	if (x2 >= su->w) { x2 = su->w - 1; } else if (x2 < 0) { x2 = 0; }
-	if (x1 > x2) { int xTmp; xTmp = x2; x2 = x1; x1 = xTmp; }
+	if (y >= su->clip_rect.y+su->clip_rect.h || y < su->clip_rect.y) {
+		return;
+	}
+	if (x1 > x2) {
+		int xTmp = x2;
+		x2 = x1;
+		x1 = xTmp;
+	}
+	if (x1 >= su->clip_rect.x+su->clip_rect.w) {
+		x1 = su->clip_rect.x + su->clip_rect.w - 1;
+	} else if (x1 <= su->clip_rect.x) {
+		x1 = su->clip_rect.x + 1;
+	}
+	if (x2 >= su->clip_rect.x+su->clip_rect.w) {
+		x2 = su->clip_rect.x + su->clip_rect.w - 1;
+	} else if (x2 <= su->clip_rect.x) {
+		x2 = su->clip_rect.x + 1;
+	}
 	dx = x2 - x1;
 
 	SDL_LockSurface(su);

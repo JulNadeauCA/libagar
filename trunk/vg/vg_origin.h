@@ -8,6 +8,7 @@
 #define VG_NORIGINS 3
 
 __BEGIN_DECLS
+int		VG_AddOrigin(struct vg *, float, float, float, Uint32);
 void		VG_Origin(struct vg *, int, float, float);
 void		VG_OriginColor(struct vg *, int, int, int, int);
 void		VG_OriginRadius(struct vg *, int, float);
