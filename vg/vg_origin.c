@@ -31,6 +31,26 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
+int
+VG_AddOrigin(VG *vg, float x, float y, float radius, Uint32 color)
+{
+	int o;
+
+	vg->origin = Realloc(vg->origin,
+	    (vg->norigin+1)*sizeof(VG_Vtx));
+	vg->origin_radius = Realloc(vg->origin_radius,
+	    (vg->norigin+1)*sizeof(float));
+	vg->origin_color = Realloc(vg->origin_color,
+	    (vg->norigin+1)*sizeof(Uint32));
+
+	o = vg->norigin++;
+	vg->origin[o].x = x;
+	vg->origin[o].y = y;
+	vg->origin_radius[o] = radius;
+	vg->origin_color[o] = color;
+	return (o);
+}
+
 void
 VG_Origin(VG *vg, int o, float ox, float oy)
 {

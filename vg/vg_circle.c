@@ -33,7 +33,7 @@
 #include "vg_math.h"
 
 static void
-init(VG *vg, VG_Element *vge)
+VG_CircleInit(VG *vg, VG_Element *vge)
 {
 	vge->vg_circle.radius = 0.025;
 }
@@ -51,7 +51,7 @@ VG_CircleDiameter(VG *vg, float diameter)
 }
 
 static void
-render(VG *vg, VG_Element *vge)
+VG_CircleRender(VG *vg, VG_Element *vge)
 {
 	int rx, ry, radius;
 
@@ -61,7 +61,7 @@ render(VG *vg, VG_Element *vge)
 }
 
 static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_CircleExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
@@ -70,29 +70,25 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, float x, float y)
+VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float rho, theta;
-	VG_Vtx *vtx;
+	float d;
 
 	if (vge->nvtx < 1) {
 		return (FLT_MAX);
 	}
-	vtx = &vge->vtx[0];
-	VG_Car2Pol(vg,
-	    x - vtx->x,
-	    y - vtx->y,
-	    &rho, &theta);
-
-	return (fabsf(rho - vge->vg_circle.radius));
+	d = VG_Distance2(vge->vtx[0].x, vge->vtx[0].y, *x, *y) -
+	    vge->vg_circle.radius;
+	return (d);
 }
 
 const VG_ElementOps vgCircleOps = {
 	N_("Circle"),
 	VGCIRCLES_ICON,
-	init,
+	VG_CircleInit,
 	NULL,
-	render,
-	extent,
-	intsect
+	VG_CircleRender,
+	VG_CircleExtent,
+	VG_CircleIntersect	
 };

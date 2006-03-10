@@ -9,8 +9,10 @@ __BEGIN_DECLS
 void VG_DrawLineSegments(struct vg *, struct vg_element *);
 void VG_DrawLineStrip(struct vg *, struct vg_element *);
 void VG_DrawLineLoop(struct vg *, struct vg_element *);
-float VG_LineIntersect(struct vg *, struct vg_element *, float, float);
-float VG_ClosestLine2PointLen(struct vg *, int, int, int, int, int, int);
+void VG_LineExtent(struct vg *, struct vg_element *, struct vg_rect *);
+float VG_LineIntersect(struct vg *, struct vg_element *, float *, float *);
+float VG_ClosestLinePoint(struct vg *, float, float, float, float, float *, 
+                          float *);
 __END_DECLS
 
 #include "close_code.h"

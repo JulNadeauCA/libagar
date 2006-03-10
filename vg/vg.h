@@ -88,7 +88,7 @@ typedef struct vg_element_ops {
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, VG_Rect *);
-	float (*intsect)(struct vg*, struct vg_element *, float, float);
+	float (*intsect)(struct vg*, struct vg_element *, float *, float *);
 } VG_ElementOps;
 
 typedef struct vg_layer {

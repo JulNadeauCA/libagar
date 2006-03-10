@@ -32,7 +32,7 @@
 #include "vg_primitive.h"
 
 static void
-render(VG *vg, VG_Element *vge)
+VG_PointRender(VG *vg, VG_Element *vge)
 {
 	VG_Vtx *vtx;
 	int rx, ry;
@@ -49,7 +49,7 @@ render(VG *vg, VG_Element *vge)
 }
 
 static void
-extent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_PointExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	if (vge->nvtx >= 1) {
 		VG_Vtx *vtx = &vge->vtx[0];
@@ -67,11 +67,13 @@ extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-intsect(VG *vg, VG_Element *vge, float x, float y)
+VG_PointIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	if (vge->nvtx >= 1) {
-		VG_Vtx *vtx = &vge->vtx[0];
-		return (vtx->x - x) + (vtx->y - y);
+		float d = VG_Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
+		*x = vge->vtx[0].x;
+		*y = vge->vtx[0].y;
+		return (d);
 	} else {
 		return (FLT_MAX);
 	}
@@ -82,7 +84,7 @@ const VG_ElementOps vgPointsOps = {
 	VGPOINTS_ICON,
 	NULL,
 	NULL,
-	render,
-	extent,
-	intsect
+	VG_PointRender,
+	VG_PointExtent,
+	VG_PointIntersect
 };

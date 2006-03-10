@@ -235,6 +235,41 @@ VG_BlockOffset(VG *vg, VG_Vtx *vtx)
 	}
 }
 
+/* Return the block closest to the given coordinates. */
+VG_Block *
+VG_BlockClosest(VG *vg, float x, float y)
+{
+	VG_Element *vge;
+	float closest_idx = FLT_MAX, idx;
+	VG_Element *closest_vge = NULL;
+	float ix, iy;
+#if 0
+	int o = VG_NORIGINS;
+#endif
+
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		if (vge->ops->intsect == NULL || vge->block == NULL) {
+			continue;
+		}
+		ix = x;
+		iy = y;
+		idx = vge->ops->intsect(vg, vge, &ix, &iy);
+		if (idx < closest_idx) {
+			closest_idx = idx;
+			closest_vge = vge;
+		}
+#if 0
+		if (o >= vg->norigin) {
+			VG_AddOrigin(vg, 0.0, 0.0, 0.125,
+			    SDL_MapRGB(vg->fmt, 200, 0, 0));
+		}
+		VG_Origin(vg, o, vg->origin[0].x+ix, vg->origin[0].y+iy);
+		o++;
+#endif
+	}
+	return (closest_vge != NULL ? closest_vge->block : NULL);
+}
+
 #ifdef EDITION
 
 static void
