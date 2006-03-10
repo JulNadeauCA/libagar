@@ -551,12 +551,13 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			if (vge->ops->intsect != NULL) {
-				idx = vge->ops->intsect(vg, vge, x, y);
+				float ix = (float)x;
+				float iy = (float)y;
+
+				idx = vge->ops->intsect(vg, vge, &ix, &iy);
 				if (idx < closest_idx) {
 					closest_idx = idx;
 					closest_vge = vge;
-					if (idx == 0)
-						break;
 				}
 			}
 		}
@@ -627,12 +628,13 @@ RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			vge->mouseover = 0;
 			if (vge->ops->intsect != NULL) {
-				idx = vge->ops->intsect(vg, vge, x, y);
+				float ix = (float)x;
+				float iy = (float)y;
+
+				idx = vge->ops->intsect(vg, vge, &ix, &iy);
 				if (idx < closest_idx) {
 					closest_idx = idx;
 					closest_vge = vge;
-					if (idx == 0)
-						break;
 				}
 			}
 		}
