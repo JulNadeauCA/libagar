@@ -28,6 +28,7 @@ int	AG_TimeoutIsScheduled(void *, AG_Timeout *);
 #define AG_AddTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt), 0)
 #define AG_ReplaceTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt), 1)
 void	AG_DelTimeout(void *, AG_Timeout *);
+int	AG_TimeoutWait(void *, AG_Timeout *, Uint32);
 
 __inline__ void AG_ProcessTimeout(Uint32);
 __inline__ void AG_LockTimeouts(void *);
