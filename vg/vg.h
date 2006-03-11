@@ -53,7 +53,7 @@ struct vg_element;
 
 #include <agar/vg/vg_line.h>
 #include <agar/vg/vg_circle.h>
-#include <agar/vg/vg_ellipse.h>
+#include <agar/vg/vg_arc.h>
 #include <agar/vg/vg_text.h>
 #include <agar/vg/vg_mask.h>
 #include <agar/vg/vg_polygon.h>
@@ -183,7 +183,7 @@ typedef struct vg_element {
 
 	union {
 		struct vg_circle_args vg_circle;
-		struct vg_ellipse_args vg_arc;
+		struct vg_arc_args vg_arc;
 		struct vg_text_args vg_text;
 		struct vg_mask_args vg_mask;
 		struct vg_polygon_args vg_polygon;
