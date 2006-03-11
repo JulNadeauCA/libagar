@@ -33,16 +33,16 @@
 #include "vg_math.h"
 
 static void
-VG_EllipseInit(VG *vg, VG_Element *vge)
+VG_ArcInit(VG *vg, VG_Element *vge)
 {
-	vge->vg_arc.w = 1;
-	vge->vg_arc.h = 1;
-	vge->vg_arc.s = 0;
-	vge->vg_arc.e = 360;
+	vge->vg_arc.w = 1.0;
+	vge->vg_arc.h = 1.0;
+	vge->vg_arc.s = 0.0;
+	vge->vg_arc.e = 360.0;
 }
 
 void
-VG_EllipseBox(VG *vg, float w, float h)
+VG_ArcBox(VG *vg, float w, float h)
 {
 	VG_Element *vge = vg->cur_vge;
 
@@ -51,7 +51,7 @@ VG_EllipseBox(VG *vg, float w, float h)
 }
 
 void
-VG_EllipseArc(VG *vg, float s, float e)
+VG_ArcRange(VG *vg, float s, float e)
 {
 	VG_Element *vge = vg->cur_vge;
 
@@ -59,8 +59,13 @@ VG_EllipseArc(VG *vg, float s, float e)
 	vge->vg_arc.e = e;
 }
 
+void
+VG_Arc3Points(VG *vg, VG_Vtx v[3])
+{
+}
+
 static void
-VG_EllipseRender(VG *vg, VG_Element *vge)
+VG_ArcRender(VG *vg, VG_Element *vge)
 {
 	int x, y;
 	int w, h;
@@ -69,13 +74,12 @@ VG_EllipseRender(VG *vg, VG_Element *vge)
 	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
 	VG_RLength(vg, vge->vg_arc.w, &w);
 	VG_RLength(vg, vge->vg_arc.h, &h);
-	VG_RLength(vg, vge->vg_arc.s, &s);
-	VG_RLength(vg, vge->vg_arc.e, &e);
-	VG_ArcPrimitive(vg, x, y, w, h, s, e, vge->color);
+	VG_ArcPrimitive(vg, x, y, w, h, (int)vge->vg_arc.s, (int)vge->vg_arc.e,
+	    vge->color);
 }
 
 static void
-VG_EllipseExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_ArcExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
@@ -84,29 +88,29 @@ VG_EllipseExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-VG_EllipseIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+VG_ArcIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	/* TODO */
 	return (FLT_MAX);
 }
 
-const VG_ElementOps vgEllipseOps = {
-	N_("Ellipse"),
-	VGCIRCLES_ICON,
-	VG_EllipseInit,
-	NULL,
-	VG_EllipseRender,
-	VG_EllipseExtent,
-	VG_EllipseIntersect
-};
-
 const VG_ElementOps vgArcOps = {
 	N_("Arc"),
 	VGCIRCLES_ICON,
-	VG_EllipseInit,
+	VG_ArcInit,
 	NULL,
-	VG_EllipseRender,
-	VG_EllipseExtent,
-	VG_EllipseIntersect
+	VG_ArcRender,
+	VG_ArcExtent,
+	VG_ArcIntersect
+};
+
+const VG_ElementOps vgEllipseOps = {
+	N_("Ellipse"),
+	VGCIRCLES_ICON,
+	VG_ArcInit,
+	NULL,
+	VG_ArcRender,
+	VG_ArcExtent,
+	VG_ArcIntersect
 };
 
