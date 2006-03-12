@@ -27,6 +27,7 @@ typedef struct ag_menu_item {
 	AG_Event *poll;			/* Raised before the item is drawn */
 	Uint flags;
 #define AG_MENU_ITEM_ICONS	0x01	/* Some of the subitems have icons */
+#define AG_MENU_ITEM_NOSELECT	0x02	/* Item is non-selectable */
 
 	enum ag_menu_binding {
 		AG_MENU_NO_BINDING,
@@ -139,6 +140,8 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
 	AG_MenuInt32FlagsMp((mi),(t),(i),(fp),(fl),(inv),NULL)
 
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
+AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...);
+
 void AG_MenuViewInit(void *, AG_Window *, AG_Menu *, AG_MenuItem *);
 void AG_MenuViewDraw(void *);
 void AG_MenuViewScale(void *, int, int);
