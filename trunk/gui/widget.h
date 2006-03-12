@@ -41,7 +41,11 @@ enum ag_widget_binding_type {
 	AG_WIDGET_DOUBLE,
 	AG_WIDGET_STRING,
 	AG_WIDGET_POINTER,
-	AG_WIDGET_PROP
+	AG_WIDGET_PROP,
+	AG_WIDGET_FLAG,
+	AG_WIDGET_FLAG8,
+	AG_WIDGET_FLAG16,
+	AG_WIDGET_FLAG32
 };
 
 enum ag_widget_sizespec {
