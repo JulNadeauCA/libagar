@@ -109,7 +109,8 @@ mousemotion(AG_Event *event)
 			    subitem->nsubitems == 0) {
 				goto selnone;
 			}
-			if (pitem->sel_subitem != subitem) {
+			if (pitem->sel_subitem != subitem &&
+			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
 				select_subitem(pitem, subitem);
 			}
 			return;

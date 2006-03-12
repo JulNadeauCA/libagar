@@ -33,6 +33,7 @@
 
 #include <gui/window.h>
 #include <gui/primitive.h>
+#include <gui/label.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -346,7 +347,27 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *text)
 AG_MenuItem *
 AG_MenuSeparator(AG_MenuItem *pitem)
 {
-	return (add_subitem(pitem, NULL, NULL, 0, 0));
+	AG_MenuItem *mi;
+
+	mi = add_subitem(pitem, NULL, NULL, 0, 0);
+	mi->flags |= AG_MENU_ITEM_NOSELECT;
+	return (mi);
+}
+
+AG_MenuItem *
+AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
+{
+	char text[AG_LABEL_MAX];
+	AG_MenuItem *mi;
+	va_list ap;
+	
+	va_start(ap, fmt);
+	vsnprintf(text, sizeof(text), fmt, ap);
+	va_end(ap);
+
+	mi = add_subitem(pitem, text, NULL, 0, 0);
+	mi->flags |= AG_MENU_ITEM_NOSELECT;
+	return (mi);
 }
 
 AG_MenuItem *
