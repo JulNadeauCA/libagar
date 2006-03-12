@@ -330,6 +330,8 @@ __inline__ void		 VG_VLine(VG *, float x, float y1, float y2);
 __inline__ void		 VG_HLine(VG *, float x1, float x2, float y);
 __inline__ void		 VG_VintVLine2(VG *, float x, float y, float x1,
 			               float y1, float x2, float y2);
+__inline__ void		 VG_Rectangle(VG *, float x1, float y1, float x2,
+			              float y2);
 
 VG_Matrix	*VG_PushIdentity(VG *);
 VG_Matrix	*VG_Translate(VG *, float, float);
