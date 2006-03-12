@@ -843,6 +843,33 @@ VG_HLine(VG *vg, float x1, float x2, float y)
 }
 
 void
+VG_Rectangle(VG *vg, float x1, float y1, float x2, float y2)
+{
+	VG_Vtx *vtx;
+
+	VG_Begin(vg, VG_LINE_LOOP);
+
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x1;
+	vtx->y = y1;
+	VG_BlockOffset(vg, vtx);
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x2;
+	vtx->y = y1;
+	VG_BlockOffset(vg, vtx);
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x2;
+	vtx->y = y2;
+	VG_BlockOffset(vg, vtx);
+	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx->x = x1;
+	vtx->y = y2;
+	VG_BlockOffset(vg, vtx);
+	
+	VG_End(vg);
+}
+
+void
 VG_MultMatrixByVector(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
 {
 	float ax = a->x;
