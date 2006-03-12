@@ -61,8 +61,10 @@ typedef struct ag_widget_binding {
 	int type;
 	int vtype;
 	AG_Mutex *mutex;	
-	void *p1, *p2;
-	size_t size;
+	void *p1;				/* Pointer to variable */
+	void *p2;				/* For property bindings */
+	size_t size;				/* Size for string bindings */
+	Uint32 bitmask;				/* Bitmask for flag bindings */
 	SLIST_ENTRY(ag_widget_binding) bindings;
 } AG_WidgetBinding;
 

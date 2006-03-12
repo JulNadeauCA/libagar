@@ -131,6 +131,7 @@ AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 	b1->p1 = b2->p1;
 	b1->p2 = b2->p2;
 	b1->size = b2->size;
+	b1->bitmask = b2->bitmask;
 	AG_WidgetUnlockBinding(b2);
 	AG_WidgetUnlockBinding(b1);
 	return (0);
@@ -230,6 +231,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	AG_WidgetBinding *binding;
 	void *p1, *p2 = NULL;
 	size_t size = 0;
+	Uint32 bitmask = 0;
 	va_list ap;
 
 	va_start(ap, type);
@@ -241,6 +243,22 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	case AG_WIDGET_STRING:
 		p1 = va_arg(ap, char *);
 		size = va_arg(ap, size_t);
+		break;
+	case AG_WIDGET_FLAG:
+		p1 = va_arg(ap, void *);
+		bitmask = va_arg(ap, Uint);
+		break;
+	case AG_WIDGET_FLAG8:
+		p1 = va_arg(ap, void *);
+		bitmask = (Uint8)va_arg(ap, Uint);
+		break;
+	case AG_WIDGET_FLAG16:
+		p1 = va_arg(ap, void *);
+		bitmask = (Uint16)va_arg(ap, Uint);
+		break;
+	case AG_WIDGET_FLAG32:
+		p1 = va_arg(ap, void *);
+		bitmask = (Uint32)va_arg(ap, Uint);
 		break;
 	default:
 		p1 = va_arg(ap, void *);
@@ -255,6 +273,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 			binding->p1 = p1;
 			binding->p2 = p2;
 			binding->size = size;
+			binding->bitmask = bitmask;
 			binding->vtype = AG_WidgetBindingType(binding);
 
 			AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
@@ -269,6 +288,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	binding->p1 = p1;
 	binding->p2 = p2;
 	binding->size = size;
+	binding->bitmask = bitmask;
 	binding->mutex = NULL;
 	binding->vtype = AG_WidgetBindingType(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);

@@ -255,11 +255,17 @@ argument specifying a mutex to acquire prior to reading or writing the data.
 .nr nS 1
 .Ft "void"
 .Fn AG_MenuSeparator "AG_MenuItem *item"
+.Pp
+.Ft "void"
+.Fn AG_MenuSection "AG_MenuItem *item" "const char *text" "..."
 .nr nS 0
 .Pp
 The
 .Fn AG_MenuSeparator
 function inserts a horizontal menu separator.
+.Pp
+.Fn AG_MenuSection
+creates a non-selectable item displaying the given text.
 .Sh EVENTS
 The
 .Nm
