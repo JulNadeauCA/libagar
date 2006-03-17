@@ -54,6 +54,7 @@ void	   VG_ViewMotionFn(VG_View *, AG_EventFn, const char *, ...);
 
 void	   VG_ViewSelectTool(VG_View *, VG_Tool *, void *);
 VG_Tool	  *VG_ViewFindTool(VG_View *, const char *);
+VG_Tool	  *VG_ViewFindToolByOps(VG_View *, const VG_ToolOps *);
 VG_Tool	  *VG_ViewRegTool(VG_View *, const VG_ToolOps *, void *);
 void	   VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
 __END_DECLS

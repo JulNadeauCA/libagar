@@ -424,6 +424,18 @@ VG_ViewFindTool(VG_View *vv, const char *name)
 }
 
 VG_Tool *
+VG_ViewFindToolByOps(VG_View *vv, const VG_ToolOps *ops)
+{
+	VG_Tool *tool;
+
+	TAILQ_FOREACH(tool, &vv->tools, tools) {
+		if (tool->ops == ops)
+			return (tool);
+	}
+	return (NULL);
+}
+
+VG_Tool *
 VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 {
 	VG_Tool *t;
