@@ -573,7 +573,7 @@ AG_EventAsyncHandler(void *p)
  * Event handler invocations may be nested. However, the event handler table
  * of the object should not be modified while in event context (XXX)
  */
-int
+void
 AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 {
 	AG_Object *sndr = sp;
@@ -585,60 +585,54 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 
 	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(evname, ev->name) == 0)
-			break;
-	}
-	if (ev == NULL)
-		goto fail;
+		if (strcmp(evname, ev->name) != 0)
+			continue;
 #ifdef THREADS
-	if (ev->flags & AG_EVENT_ASYNC) {
-		AG_Thread th;
-		AG_Event *nev;
+		if (ev->flags & AG_EVENT_ASYNC) {
+			AG_Thread th;
+			AG_Event *nev;
 
-		/* TODO allocate from an per-object pool */
-		nev = Malloc(sizeof(AG_Event), M_EVENT);
-		memcpy(nev, ev, sizeof(AG_Event));
-		AG_EVENT_GET_ARGS(nev, fmt);
-		nev->argv[nev->argc].p = sndr;
-		nev->argt[nev->argc] = AG_EVARG_POINTER;
-		nev->argn[nev->argc] = "_sender";
-		AG_ThreadCreate(&th, NULL, AG_EventAsyncHandler, nev);
-	} else
+			/* TODO allocate from an per-object pool */
+			nev = Malloc(sizeof(AG_Event), M_EVENT);
+			memcpy(nev, ev, sizeof(AG_Event));
+			AG_EVENT_GET_ARGS(nev, fmt);
+			nev->argv[nev->argc].p = sndr;
+			nev->argt[nev->argc] = AG_EVARG_POINTER;
+			nev->argn[nev->argc] = "_sender";
+			AG_ThreadCreate(&th, NULL, AG_EventAsyncHandler, nev);
+		} else
 #endif /* THREADS */
-	{
-		AG_Event tmpev;
-		va_list ap;
+		{
+			AG_Event tmpev;
+			va_list ap;
 
-		/* Construct the argument vector. */
-		memcpy(&tmpev, ev, sizeof(AG_Event));
-		AG_EVENT_GET_ARGS(&tmpev, fmt);
-		tmpev.argv[tmpev.argc].p = sndr;
-		tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
-		tmpev.argn[tmpev.argc] = "_sender";
+			/* Construct the argument vector. */
+			memcpy(&tmpev, ev, sizeof(AG_Event));
+			AG_EVENT_GET_ARGS(&tmpev, fmt);
+			tmpev.argv[tmpev.argc].p = sndr;
+			tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
+			tmpev.argn[tmpev.argc] = "_sender";
 
-		/* Propagate event to children. */
-		if (tmpev.flags & AG_EVENT_PROPAGATE) {
-			AG_Object *cobj;
+			/* Propagate event to children. */
+			if (tmpev.flags & AG_EVENT_PROPAGATE) {
+				AG_Object *cobj;
 			
-			debug(DEBUG_PROPAGATION, "%s: propagate %s (post)\n",
-			    rcvr->name, evname);
-			AG_LockLinkage();
-			AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-				AG_EventRelay(cobj, &tmpev);
+				debug(DEBUG_PROPAGATION,
+				    "%s: propagate %s (post)\n",
+				    rcvr->name, evname);
+				AG_LockLinkage();
+				AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
+					AG_EventRelay(cobj, &tmpev);
+				}
+				AG_UnlockLinkage();
 			}
-			AG_UnlockLinkage();
+
+			/* Invoke the event handler function. */
+			if (tmpev.handler != NULL)
+				tmpev.handler(&tmpev);
 		}
-
-		/* Invoke the event handler function. */
-		if (tmpev.handler != NULL)
-			tmpev.handler(&tmpev);
 	}
-
 	AG_MutexUnlock(&rcvr->lock);
-	return (1);
-fail:
-	AG_MutexUnlock(&rcvr->lock);
-	return (0);
 }
 
 /*
@@ -762,11 +756,10 @@ AG_ExecEvent(void *p, const char *evname)
 
 	AG_MutexLock(&ob->lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(ev->name, evname) == 0)
-			break;
+		if (ev->handler != NULL)
+			ev->handler(ev);
 	}
-	if (ev != NULL && ev->handler != NULL)
-		ev->handler(ev);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /*
