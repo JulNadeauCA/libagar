@@ -781,6 +781,9 @@ mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
+		if ((m = column_over(t, y)) >= (int)t->m) {
+			goto out;
+		}
 		if (m < 0) {
 			column_popup(t, x);
 		} else {

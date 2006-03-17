@@ -779,7 +779,8 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 		Uint32 t;
 
 		if (AG_CopyString(key, buf, sizeof(key)) >= sizeof(key)) {
-			AG_SetError("key %lu >= %lu", strlen(key), sizeof(key));
+			AG_SetError("key %lu >= %lu", (Ulong)strlen(key),
+			    (Ulong)sizeof(key));
 			goto fail;
 		}
 		t = AG_ReadUint32(buf);
