@@ -139,13 +139,13 @@ binding_changed(AG_Event *event)
 #ifdef SDL_HAS_64BIT_TYPE
 		case AG_WIDGET_UINT64:
 			fsu->min = 0;
-			fsu->max = 0xffffffffffffffffU;
+			fsu->max = 0xffffffffffffffffULL;
 			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
 		case AG_WIDGET_SINT64:
-			fsu->min = -0x7fffffffffffffff+1;
-			fsu->max =  0x7fffffffffffffff-1;
+			fsu->min = -0x7fffffffffffffffULL+1;
+			fsu->max =  0x7fffffffffffffffULL-1;
 			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
