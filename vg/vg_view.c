@@ -327,6 +327,9 @@ VG_ViewDraw(void *p)
 	VG_View *vv = p;
 	VG *vg = vv->vg;
 	SDL_Surface *status;
+	
+	if (vv->draw_ev != NULL)
+		vv->draw_ev->handler(vv->draw_ev);
 
 	if (vg->flags & VG_DIRECT) {
 		vg->rDst.x = AGWIDGET(vv)->cx+vv->x;
@@ -338,9 +341,6 @@ VG_ViewDraw(void *p)
 		VG_Rasterize(vg);
 		AG_WidgetBlit(vv, vg->su, vv->x, vv->y);
 	}
-
-	if (vv->draw_ev != NULL)
-		vv->draw_ev->handler(vv->draw_ev);
 
 	status = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), vv->status);
 	AG_WidgetBlit(vv, status, 0, AGWIDGET(vv)->h - status->h);
