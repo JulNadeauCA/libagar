@@ -1458,17 +1458,26 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
     int x, int y)
 {
 	AG_Widget *cwid;
-	int warea;
+	AG_Event *ev;
 
 	/* Search for a better match. */
 	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		if (AG_WidgetMouseButtonDown(win, cwid, button, x, y))
 			return (1);
 	}
-	warea = AG_WidgetArea(wid, x, y);
-	AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
-	    button, x-wid->cx, y-wid->cy);
-	return (warea);
+	if (!AG_WidgetArea(wid, x, y)) {
+		return (0);
+	}
+	TAILQ_FOREACH(ev, &AGOBJECT(wid)->events, events) {
+		if (strcmp(ev->name, "window-mousebuttondown") == 0)
+			break;
+	}
+	if (ev != NULL) {
+		AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
+		    button, x-wid->cx, y-wid->cy);
+		return (1);
+	}
+	return (0);
 }
 
 /* Search for a focused widget inside a window. */
