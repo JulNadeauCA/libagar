@@ -141,7 +141,7 @@ The
 and
 .Fn AG_TextPrescaleUnicode
 functions return the expected surface dimensions for the given text.
-.Sh MESSAGES AND USER INPUT
+.Sh CANNED DIALOGS
 .nr nS 1
 .Ft "void"
 .Fn AG_TextMsg "enum ag_text_msg_title title" "const char *format" "..."
@@ -150,7 +150,10 @@ functions return the expected surface dimensions for the given text.
 .Fn AG_TextTmsg "enum ag_text_msg_title title" "Uint32 expire" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_TextPromptFloat "enum text_float_type type" "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
+.Fn AG_TextEditFloat "enum text_float_type type" "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_TextEditString "char **buf" "size_t len" "const char *format" "..."
 .nr nS 0
 .Pp
 The
@@ -174,9 +177,8 @@ enum ag_text_msg_title {
 .Ed
 .Pp
 The
-.Fn AG_TextPromptFloat
-function displays a window prompting the user to enter a floating-point
-value.
+.Fn AG_TextEditFloat
+function displays a dialog asking for a floating-point value.
 The
 .Fa fp
 argument is a pointer to the variable, while
@@ -188,6 +190,16 @@ Unless
 .Fa unit
 is NULL, the argument indicates the unit system to use (as in
 .Xr AG_Units 3 ) .
+.Pp
+Similarly,
+.Fn AG_TextEditString
+displays a dialog asking for a string, where
+.Fa buf
+is a pointer to the string buffer, and
+.Fa len
+is the size of the buffer.
+
+
 .Sh TROUBLETONS
 Something more sophisticated is needed to deal with unpredictable text surface
 dimensions.
