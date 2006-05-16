@@ -76,18 +76,21 @@ void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	       FORMAT_ATTRIBUTE(printf, 3, 4)
 	       NONNULL_ATTRIBUTE(3);
 
-AG_Window *AG_TextPromptOptions(AG_Button **, Uint, const char *, ...)
-		         	FORMAT_ATTRIBUTE(printf, 3, 4)
-		          	NONNULL_ATTRIBUTE(3);
-void AG_TextPromptFloat(double *, double, double, const char *,
-		        const char *, ...)
-		        FORMAT_ATTRIBUTE(printf, 5, 6)
-		        NONNULL_ATTRIBUTE(5);
+void AG_TextEditFloat(double *, double, double, const char *,
+		      const char *, ...)
+		      FORMAT_ATTRIBUTE(printf, 5, 6)
+		      NONNULL_ATTRIBUTE(5);
 void AG_TextEditString(char **, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf, 3, 4)
 		       NONNULL_ATTRIBUTE(3);
+
+AG_Window *AG_TextPromptOptions(AG_Button **, Uint, const char *, ...)
+		         	FORMAT_ATTRIBUTE(printf, 3, 4)
+		          	NONNULL_ATTRIBUTE(3);
 void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
+void AG_TextPromptDouble(const char *, const char *, double, double,
+			 void (*)(AG_Event *), const char *, ...);
 
 AG_Glyph *AG_TextRenderGlyph(const char *, int, Uint32, Uint32);
 void	  AG_TextUnusedGlyph(AG_Glyph *);
