@@ -601,7 +601,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 
 /* Prompt the user for a floating-point value. */
 void
-AG_TextPromptFloat(double *fp, double min, double max, const char *unit,
+AG_TextEditFloat(double *fp, double min, double max, const char *unit,
     const char *format, ...)
 {
 	char msg[AG_LABEL_MAX];
