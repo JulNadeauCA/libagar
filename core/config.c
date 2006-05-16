@@ -545,15 +545,20 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
+		AG_HPane *pane;
+		AG_HPaneDiv *div;
 		AG_HSVPal *hsv;
 		AG_Tlist *tl;
 		AG_TlistItem *it;
 		int i;
-		
-		hb = AG_HBoxNew(tab, AG_HBOX_HFILL|AG_HBOX_VFILL);
+	
+		pane = AG_HPaneNew(tab, AG_HPANE_EXPAND);
+		div = AG_HPaneAddDiv(pane,
+		    AG_BOX_VERT, AG_BOX_VFILL,
+		    AG_BOX_HORIZ, AG_BOX_EXPAND);
 		{
-			tl = AG_TlistNew(hb, AG_TLIST_EXPAND);
-			AGWIDGET(tl)->flags &= ~AG_WIDGET_HFILL;
+			tl = AG_TlistNew(div->box1, AG_TLIST_EXPAND);
+			AG_TlistPrescale(tl, "Tileview text background", 10);
 			for (i = 0; i < LAST_COLOR; i++) {
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
 				it->p1 = &agColors[i];
@@ -564,7 +569,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 				it->p1 = &agColorsBorder[i];
 			}
 
-			hsv = AG_HSVPalNew(hb, AG_HSVPAL_EXPAND);
+			hsv = AG_HSVPalNew(div->box2, AG_HSVPAL_EXPAND);
 			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
 			    &agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", UpdatedColor, "%p", tl);
