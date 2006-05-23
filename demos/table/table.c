@@ -70,15 +70,16 @@ CreateStaticTable(void)
 
 	/*
 	 * The AG_TableAddRow() function accepts a format string which specifies
-	 * the type of the following arguments. Columns can have cells of different
-	 * types, assuming that the sorting function knows about them.
+	 * the type of the following arguments. Columns can have cells of
+	 * different types, but the sorting function must handle them.
 	 */
 	for (i = 0; i < 20; i++) {
 		/* Display a string and two integers. */
 		AG_TableAddRow(table, "%s:%d:%d", "Foo", i, i*2);
 		
 		/* Display a string and two floating point numbers. */
-		AG_TableAddRow(table, "%s:%.03f:%g", "Bar", 1.0/(float)i, 2.0/3.0);
+		AG_TableAddRow(table, "%s:%.03f:%g", "Bar", 1.0/(float)i,
+		    2.0/3.0);
 		
 		/* Provide a custom cell function that returns text. */
 		AG_TableAddRow(table, "%s:%d:%[Ft]", "Baz", 1,
