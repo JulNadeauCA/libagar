@@ -602,6 +602,10 @@ AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 	AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &pal->a);
 	AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &pal->pixel);
 	AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER, &agVideoFmt);
+/*	AG_WidgetBind(pal, "red", AG_WIDGET_FLOAT, &pal->r); */
+/*	AG_WidgetBind(pal, "green", AG_WIDGET_FLOAT, &pal->g); */
+/*	AG_WidgetBind(pal, "blue", AG_WIDGET_FLOAT, &pal->b); */
+/*	AG_WidgetBind(pal, "RGBAv", AG_WIDGET_FLOAT, &pal->rgbav); */
 
 	pal->flags = flags;
 	pal->h = 0.0;

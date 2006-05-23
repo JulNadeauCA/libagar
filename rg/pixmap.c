@@ -246,14 +246,14 @@ poll_brushes(AG_Event *event)
 
 	AG_TlistClear(tl);
 	it = AG_TlistAdd(tl, NULL, _("(none)"));
-	it->class = "brush";
+	it->cat = "brush";
 	it->p1 = NULL;
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
 		it = AG_TlistAdd(tl, NULL, "%s%s %s%s",
 		    (br == px->curbrush) ? "*" : "", br->name,
 		    (br->flags & RG_PIXMAP_BRUSH_ONESHOT) ? _("one-shot ") : "",
 		    (br->type == RG_PIXMAP_BRUSH_RGB) ? _("rgb") : _("mono"));
-		it->class = "brush";
+		it->cat = "brush";
 		it->p1 = br;
 		AG_TlistSetIcon(tl, it, br->px->su);
 	}
@@ -288,7 +288,7 @@ poll_pixmaps(AG_Event *event)
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		it = AG_TlistAdd(tl, NULL, "%s (%u refs)", px->name,
 		    px->nrefs);
-		it->class = "pixmap";
+		it->cat = "pixmap";
 		it->p1 = px;
 		AG_TlistSetIcon(tl, it, px->su);
 	}

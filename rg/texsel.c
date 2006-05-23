@@ -60,7 +60,7 @@ poll_textures(AG_Event *event)
 		     != NULL) {
 			it = AG_TlistAdd(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
-			it->class = "texture";
+			it->cat = "texture";
 			it->p1 = tex;
 			AG_TlistSetIcon(tl, it, t->su);
 		}

@@ -673,7 +673,7 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 	}
 	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);
 	it->depth = depth;
-	it->class = "object";
+	it->cat = "object";
 
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;

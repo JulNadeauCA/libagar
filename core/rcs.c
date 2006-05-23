@@ -660,7 +660,7 @@ AG_RcsList(AG_Tlist *tl)
 	AG_TlistClear(tl);
 	it = AG_TlistAdd(tl, NULL, "/");
 	it->flags |= AG_TLIST_HAS_CHILDREN;
-	it->class = "object";
+	it->cat = "object";
 	it->depth = 0;
 
 	for (i = 0; i < res->argc; i++) {
@@ -691,7 +691,7 @@ AG_RcsList(AG_Tlist *tl)
 		}
 
 		it = AG_TlistAdd(tl, icon, "%s", &name[1]);
-		it->class = "object";
+		it->cat = "object";
 		it->depth = depth;
 	}
 out:

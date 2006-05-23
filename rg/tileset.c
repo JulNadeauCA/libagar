@@ -596,14 +596,14 @@ poll_graphics(AG_Event *event)
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]",
 		    px->name, px->su->w, px->su->h, px->nrefs);
 		it->p1 = px;
-		it->class = "pixmap";
+		it->cat = "pixmap";
 		AG_TlistSetIcon(tl, it, px->su);
 	}
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		it = AG_TlistAdd(tl, NULL,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
 		    sk->vg->su->h, sk->vg->scale*100.0, sk->nrefs);
-		it->class = "sketch";
+		it->cat = "sketch";
 		it->p1 = sk;
 		AG_TlistSetIcon(tl, it, sk->vg->su);
 	}
@@ -635,7 +635,7 @@ poll_textures(AG_Event *event)
 			it = AG_TlistAdd(tl, NULL, "%s (<%s:%s>?)",
 			    tex->name, tex->tileset, tex->tile);
 		}
-		it->class = "texture";
+		it->cat = "texture";
 		it->p1 = tex;
 	}
 	AG_MutexUnlock(&ts->lock);
@@ -657,7 +657,7 @@ poll_anims(AG_Event *event)
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u) [#%u]", ani->name,
 		    ani->w, ani->h, ani->nrefs);
 		it->p1 = ani;
-		it->class = "anim";
+		it->cat = "anim";
 	}
 	
 	AG_MutexUnlock(&ts->lock);
@@ -679,7 +679,7 @@ poll_tiles(AG_Event *event)
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
 		it->depth = 0;
-		it->class = "tile";
+		it->cat = "tile";
 		it->p1 = t;
 		AG_TlistSetIcon(tl, it, t->su);
 
@@ -703,7 +703,7 @@ poll_tiles(AG_Event *event)
 					    tel->tel_feature.y,
 					    tel->visible ? "" : "(invisible)");
 					it->depth = 1;
-					it->class = "tile-feature";
+					it->cat = "tile-feature";
 					it->p1 = tel;
 
 					TAILQ_FOREACH(fts, &ft->sketches,
@@ -716,7 +716,7 @@ poll_tiles(AG_Event *event)
 						    fts->visible ? "" :
 						    "(invisible)");
 						it->depth = 2;
-						it->class = "feature-sketch";
+						it->cat = "feature-sketch";
 						it->p1 = fts;
 					}
 				}
@@ -731,7 +731,7 @@ poll_tiles(AG_Event *event)
 					    tel->tel_pixmap.px->su->h,
 					    tel->visible ? "" : "(invisible)");
 					it->depth = 1;
-					it->class = "tile-pixmap";
+					it->cat = "tile-pixmap";
 					it->p1 = tel;
 					AG_TlistSetIcon(tl, it, px->su);
 				}
@@ -747,7 +747,7 @@ poll_tiles(AG_Event *event)
 					    tel->tel_sketch.sk->vg->su->h,
 					    tel->visible ? "" : "(invisible)");
 					it->depth = 1;
-					it->class = "tile-pixmap";
+					it->cat = "tile-pixmap";
 					it->p1 = tel;
 				}
 				break;
@@ -1259,7 +1259,7 @@ edit_tiles(AG_Event *event)
 	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected ||
-		    strcmp(it->class, "tile") != 0) {
+		    strcmp(it->cat, "tile") != 0) {
 			continue;
 		}
 		if ((win = RG_TileEdit(ts, (RG_Tile *)it->p1)) != NULL) {
@@ -1282,7 +1282,7 @@ edit_anims(AG_Event *event)
 	AG_MutexLock(&ts->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected ||
-		    strcmp(it->class, "anim") != 0) {
+		    strcmp(it->cat, "anim") != 0) {
 			continue;
 		}
 		if ((win = RG_AnimEdit((RG_Anim *)it->p1))
