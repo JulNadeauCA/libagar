@@ -48,6 +48,18 @@ int	agPropDebugLvl = 0;
 #define agDebugLvl agPropDebugLvl
 #endif
 
+#if 0
+AG_PropOps *agPropOps = NULL;
+Uint        agPropOpsCnt = 0;
+
+void
+AG_PropRegister(const AG_PropOps *ops)
+{
+	agPropOps = Realloc(agPropOps, (agPropOpsCnt+1)*sizeof(AG_PropOps *));
+	agPropOps[agPropOpsCnt++] = ops;
+}
+#endif
+
 /* Return the copy of a property. */
 AG_Prop *
 AG_CopyProp(const AG_Prop *prop)

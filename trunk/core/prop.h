@@ -10,28 +10,43 @@
 
 #define AG_PROP_PATH_MAX	(AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX)
 #define AG_PROP_KEY_MAX		64
-#if 0
-#define AG_PROP_STRING_LIMIT	65536
-#endif
+/* #define AG_PROP_STRING_LIMIT	65536 */
 
 enum ag_prop_type {
-	AG_PROP_UINT,
-	AG_PROP_INT,
-	AG_PROP_UINT8,
-	AG_PROP_SINT8,
-	AG_PROP_UINT16,
-	AG_PROP_SINT16,
-	AG_PROP_UINT32,
-	AG_PROP_SINT32,
-	AG_PROP_UINT64,		/* Optional */
-	AG_PROP_SINT64,		/* Optional */
-	AG_PROP_FLOAT,		/* IEEE 754 encoding required */
-	AG_PROP_DOUBLE,		/* IEEE 754 encoding required */
-	AG_PROP_LONG_DOUBLE,	/* Optional */
-	AG_PROP_STRING,
-	AG_PROP_POINTER,
-	AG_PROP_BOOL
+	AG_PROP_UINT		= 0,
+	AG_PROP_INT		= 1,
+	AG_PROP_UINT8		= 2,
+	AG_PROP_SINT8		= 3,
+	AG_PROP_UINT16		= 4,
+	AG_PROP_SINT16		= 5,
+	AG_PROP_UINT32		= 6,
+	AG_PROP_SINT32		= 7,
+	AG_PROP_UINT64		= 8,	/* Optional */
+	AG_PROP_SINT64		= 9,	/* Optional */
+	AG_PROP_FLOAT		= 10,
+	AG_PROP_DOUBLE		= 11,
+	AG_PROP_LONG_DOUBLE	= 12,	/* Optional */
+	AG_PROP_STRING		= 13,
+	AG_PROP_POINTER		= 14,
+	AG_PROP_BOOL		= 15,
+	AG_PROP_EXT_FIRST	= 100,		/* Official extensions */
+	AG_PROP_EXT_LAST	= 10000,
+	AG_PROP_PVT_START	= 10001,	/* Application extensions */
+	AG_PROP_PVT_END		= 65535
 };
+
+#if 0
+struct ag_prop_ops {
+	enum ag_prop_type type;
+	const char *descr;
+	void (*set_val)(void *obj, AG_Prop *prop, void *arg);
+	void *(*get_val)(void *obj, AG_Prop *prop);
+	void (*print_val)(char *buf, size_t len, void *obj, AG_Prop *prop);
+	int (*compare)(AG_Prop *, AG_Prop *);
+	void *(*load)(void *obj, AG_Prop *, AG_Netbuf *);
+	void (*save)(void *obj, AG_Prop *, AG_Netbuf *);
+} AG_PropOps;
+#endif
 
 typedef struct ag_prop {
 	char key[AG_PROP_KEY_MAX];
@@ -210,7 +225,7 @@ __inline__ double AG_FindDouble(const char *);
 __inline__ void	 *AG_FindPointer(const char *);
 __inline__ char	 *AG_FindString(const char *);
 __inline__ size_t AG_FindStringCopy(const char *, char *, size_t)
-		                    BOUNDED_ATTRIBUTE(__string__, 2, 3);
+		                    BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
 #ifdef HAVE_LONG_DOUBLE
 __inline__ AG_Prop    *AG_SetLongDouble(void *, const char *, long double);
