@@ -26,7 +26,7 @@ typedef struct ag_tlist_item {
 	SDL_Surface *iconsrc;			/* Source icon (or NULL) */
 	int icon;				/* Cached icon surface */
 	void *p1;				/* User-supplied pointer */
-	const char *class;			/* User-supplied class */
+	const char *cat;			/* User-supplied category */
 	char text[AG_TLIST_LABEL_MAX];		/* Label text */
 	int label;				/* Cached label surface */
 	union evarg argv[AG_TLIST_ARGS_MAX];	/* Item arguments */

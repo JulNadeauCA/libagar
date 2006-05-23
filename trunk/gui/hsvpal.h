@@ -21,7 +21,7 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
-	Uint32 pixel;
+	Uint32 pixel;			/* Calculated pixel */
 	SDL_Rect rAlpha;		/* Alpha selector rectangle */
 	SDL_Surface *surface;		/* Cached surface */
 	int selcircle_r;		/* Radius of selection circles */

@@ -125,14 +125,14 @@ AG_RefreshListing(AG_FileDlg *fd)
 	for (i = 0; i < ndirs; i++) {
 		it = AG_TlistAdd(fd->tlDirs, AGICON(DIRECTORY_ICON),
 		    "%s", dirs[i]);
-		it->class = "dir";
+		it->cat = "dir";
 		it->p1 = (void *)i;
 		Free(dirs[i], M_WIDGET);
 	}
 	for (i = 0; i < nfiles; i++) {
 		it = AG_TlistAdd(fd->tlFiles, AGICON(FILE_ICON),
 		    "%s", files[i]);
-		it->class = "file";
+		it->cat = "file";
 		it->p1 = (void *)i;
 		Free(files[i], M_WIDGET);
 	}

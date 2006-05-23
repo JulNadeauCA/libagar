@@ -97,7 +97,7 @@ poll_clients(AG_Event *event)
 		it = AG_TlistAdd(tl, NULL, "%s (%s): %s", cl->name,
 		    cl->hostname, cl->version);
 		it->p1 = cl;
-		it->class = "client";
+		it->cat = "client";
 		
 	}
 	AG_TlistRestore(tl);

@@ -120,7 +120,7 @@ poll_sketches(AG_Event *event)
 		}
 		it = AG_TlistAdd(tl, NULL, "%s", tel->name);
 		it->p1 = tel;
-		it->class = "tile-sketch";
+		it->cat = "tile-sketch";
 		AG_TlistSetIcon(tl, it, tel->tel_sketch.sk->vg->su);
 	}
 	AG_MutexUnlock(&ts->lock);

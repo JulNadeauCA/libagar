@@ -480,8 +480,8 @@ AG_TlistComparePtrsAndClasses(const AG_TlistItem *it1,
     const AG_TlistItem *it2)
 {
 	return ((it1->p1 == it2->p1) &&
-	        (it1->class != NULL && it2->class != NULL &&
-		 (strcmp(it1->class, it2->class) == 0)));
+	        (it1->cat != NULL && it2->cat!= NULL &&
+		 (strcmp(it1->cat, it2->cat) == 0)));
 }
 
 void
@@ -549,7 +549,7 @@ allocate_item(AG_Tlist *tl, SDL_Surface *iconsrc)
 
 	it = Malloc(sizeof(AG_TlistItem), M_WIDGET);
 	it->selected = 0;
-	it->class = "";
+	it->cat = "";
 	it->depth = 0;
 	it->flags = 0;
 	it->icon = -1;
@@ -908,7 +908,7 @@ tlist_mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
-		if (ti->class != NULL) {
+		if (ti->cat != NULL) {
 			struct ag_tlist_popup *tp;
 	
 			AG_WidgetFocus(tl);
@@ -921,7 +921,7 @@ tlist_mousebuttondown(AG_Event *event)
 			}
 	
 			TAILQ_FOREACH(tp, &tl->popups, popups) {
-				if (strcmp(tp->iclass, ti->class) == 0)
+				if (strcmp(tp->iclass, ti->cat) == 0)
 					break;
 			}
 			if (tp != NULL) {

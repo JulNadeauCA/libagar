@@ -64,7 +64,7 @@ poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
 
 	it = AG_TlistAddPtr(tl, NULL, text, win);
 	it->depth = depth;
-	it->class = "window";
+	it->cat = "window";
 
 	TAILQ_FOREACH(subwin, &win->subwins, swins)
 		poll_windows_do(tl, subwin, depth+1);
@@ -173,7 +173,7 @@ poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	}
 	it = AG_TlistAddPtr(widtl, NULL, text, wid);
 	it->depth = depth;
-	it->class = "widget";
+	it->cat = "widget";
 	
 	if (!TAILQ_EMPTY(&AGOBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;

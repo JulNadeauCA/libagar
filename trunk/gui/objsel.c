@@ -76,7 +76,7 @@ find_objs(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
 	    (pob->flags & AG_OBJECT_DATA_RESIDENT) ? " (resident)" : "");
 	it->depth = depth;
-	it->class = "object";
+	it->cat = "object";
 	it->p1 = pob;
 
 	if (!TAILQ_EMPTY(&pob->children)) {

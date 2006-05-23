@@ -1004,7 +1004,7 @@ tryname:
 	TAILQ_FOREACH(eit, &tl_feats->items, items) {
 		RG_TileElement *tel;
 
-		if (strcmp(eit->class, "pixmap") != 0) {
+		if (strcmp(eit->cat, "pixmap") != 0) {
 			continue;
 		}
 		tel = eit->p1;
@@ -1208,7 +1208,7 @@ tryname:
 	TAILQ_FOREACH(eit, &tl_feats->items, items) {
 		RG_TileElement *tel;
 
-		if (strcmp(eit->class, "sketch") != 0) {
+		if (strcmp(eit->cat, "sketch") != 0) {
 			continue;
 		}
 		tel = eit->p1;
@@ -1246,7 +1246,7 @@ attach_pixmap(AG_Event *event)
 	TAILQ_FOREACH(it, &tl_feats->items, items) {
 		RG_TileElement *tel;
 
-		if (strcmp(it->class, "pixmap") != 0) {
+		if (strcmp(it->cat, "pixmap") != 0) {
 			continue;
 		}
 		tel = it->p1;
@@ -1324,7 +1324,7 @@ attach_sketch(AG_Event *event)
 	TAILQ_FOREACH(it, &tl_feats->items, items) {
 		RG_TileElement *tel;
 
-		if (strcmp(it->class, "sketch") != 0) {
+		if (strcmp(it->cat, "sketch") != 0) {
 			continue;
 		}
 		tel = it->p1;
@@ -1388,7 +1388,7 @@ select_feature(AG_Tlist *tl_feats, void *fp)
 	TAILQ_FOREACH(eit, &tl_feats->items, items) {
 		RG_TileElement *tel;
 
-		if (strcmp(eit->class, "feature") != 0) {
+		if (strcmp(eit->cat, "feature") != 0) {
 			continue;
 		}
 		tel = eit->p1;
@@ -1453,7 +1453,7 @@ poll_feats(AG_Event *event)
 	AG_MutexLock(&ts->lock);
 	
 	it = AG_TlistAdd(tl, NULL, _("Attributes"));
-	it->class = "attributes";
+	it->cat = "attributes";
 	it->depth = 0;
 	it->flags |= AG_TLIST_HAS_CHILDREN;
 	it->p1 = &attr_names[0];
@@ -1461,7 +1461,7 @@ poll_feats(AG_Event *event)
 	if (AG_TlistVisibleChildren(tl, it)) {
 		it = AG_TlistAdd(tl, AGICON(LAYER_EDITOR_ICON), _("%sLayers"),
 		    (tv->state==RG_TILEVIEW_LAYERS_EDIT) ? "* " : "");
-		it->class = "layers";
+		it->cat = "layers";
 		it->depth = 1;
 		it->p1 = &attr_names[1];
 		
@@ -1469,7 +1469,7 @@ poll_feats(AG_Event *event)
 		    _("%sWalkable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_NITEM_BLOCK) ? "* " : "");
-		it->class = "walkable-attrs";
+		it->cat = "walkable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[2];
 		
@@ -1477,7 +1477,7 @@ poll_feats(AG_Event *event)
 		    _("%sClimbable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_NITEM_CLIMBABLE) ? "* " : "");
-		it->class = "climbable-attrs";
+		it->cat = "climbable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[3];
 		
@@ -1485,7 +1485,7 @@ poll_feats(AG_Event *event)
 		    _("%sJumpable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_NITEM_JUMPABLE) ? "* " : "");
-		it->class = "jumpable-attrs";
+		it->cat = "jumpable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[4];
 		
@@ -1493,7 +1493,7 @@ poll_feats(AG_Event *event)
 		    _("%sSlippery"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_NITEM_SLIPPERY) ? "* " : "");
-		it->class = "slippery-attrs";
+		it->cat = "slippery-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[5];
 	}
@@ -1511,7 +1511,7 @@ poll_feats(AG_Event *event)
 			     tv->tv_feature.ft == ft) ? "* " : "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
-			it->class = "feature";
+			it->cat = "feature";
 			it->p1 = tel;
 			it->depth = 0;
 
@@ -1529,7 +1529,7 @@ poll_feats(AG_Event *event)
 				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
 				    tel->name,
 				    fsk->visible ? "" : _(" (invisible)"));
-				it->class = "feature-sketch";
+				it->cat = "feature-sketch";
 				it->p1 = fsk;
 			}
 
@@ -1540,7 +1540,7 @@ poll_feats(AG_Event *event)
 				     tv->tv_pixmap.px == fpx->px) ? "* ": "",
 				    tel->name, fpx->x, fpx->y,
 				    fpx->visible ? "" : _(" (invisible)"));
-				it->class = "feature-pixmap";
+				it->cat = "feature-pixmap";
 				it->p1 = fpx;
 			}
 		} else if (tel->type == RG_TILE_PIXMAP) {
@@ -1551,7 +1551,7 @@ poll_feats(AG_Event *event)
 			     tv->tv_pixmap.px == px) ? "* ": "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
-			it->class = "pixmap";
+			it->cat = "pixmap";
 			it->p1 = tel;
 			it->depth = 0;
 			AG_TlistSetIcon(tl, it, px->su);
@@ -1565,7 +1565,7 @@ poll_feats(AG_Event *event)
 			     tv->tv_sketch.sk == sk) ? "* ": "",
 			    tel->name,
 			    tel->visible ? "" : _(" (invisible)"));
-			it->class = "sketch";
+			it->cat = "sketch";
 			it->p1 = tel;
 			it->depth = 0;
 			AG_TlistSetIcon(tl, it, sk->vg->su);
@@ -1581,7 +1581,7 @@ poll_feats(AG_Event *event)
 				    AGICON(vgElementTypes[vge->type]->icon),
 				    "%s%s", (vge == vg->cur_vge) ? "* " : "",
 				    vgElementTypes[vge->type]->name);
-				it->class = "sketch-element";
+				it->cat = "sketch-element";
 				it->p1 = vge;
 				it->depth = 1;
 			}
@@ -1613,31 +1613,31 @@ edit_element(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
-	if (strcmp(it->class, "feature") == 0 ||
-	    strcmp(it->class, "pixmap") == 0 ||
-	    strcmp(it->class, "sketch") == 0) {
+	if (strcmp(it->cat, "feature") == 0 ||
+	    strcmp(it->cat, "pixmap") == 0 ||
+	    strcmp(it->cat, "sketch") == 0) {
 		RG_TileElement *tel = it->p1;
 
 		if (tel != NULL) {
 			open_element(tv, tel, pwin);
 		}
-	} else if (strcmp(it->class, "walkable-attrs") == 0) {
+	} else if (strcmp(it->cat, "walkable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
 		tv->edit_attr = RG_NITEM_BLOCK;
-	} else if (strcmp(it->class, "climbable-attrs") == 0) {
+	} else if (strcmp(it->cat, "climbable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
 		tv->edit_attr = RG_NITEM_CLIMBABLE;
-	} else if (strcmp(it->class, "jumpable-attrs") == 0) {
+	} else if (strcmp(it->cat, "jumpable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
 		tv->edit_attr = RG_NITEM_JUMPABLE;
-	} else if (strcmp(it->class, "slippery-attrs") == 0) {
+	} else if (strcmp(it->cat, "slippery-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
 		tv->edit_attr = RG_NITEM_SLIPPERY;
-	} else if (strcmp(it->class, "layers") == 0) {
+	} else if (strcmp(it->cat, "layers") == 0) {
 		tv->state = RG_TILEVIEW_LAYERS_EDIT;
 		tv->edit_mode = 1;
 	}
@@ -1658,7 +1658,7 @@ delete_element(AG_Event *event)
 		return;
 
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT &&
-	    strcmp(it->class, "sketch-element") == 0) {
+	    strcmp(it->cat, "sketch-element") == 0) {
 	    	VG *vg = tv->tv_sketch.sk->vg;
 		VG_Element *vge = (VG_Element *)it->p1;
 
@@ -1673,11 +1673,11 @@ delete_element(AG_Event *event)
 	if (tv->edit_mode)
 		close_element(tv);
 	
-	if (strcmp(it->class, "feature") == 0) {
+	if (strcmp(it->cat, "feature") == 0) {
 		RG_TileDelFeature(t, tel->tel_feature.ft, !detach_only);
-	} else if (strcmp(it->class, "pixmap") == 0) {
+	} else if (strcmp(it->cat, "pixmap") == 0) {
 		RG_TileDelPixmap(t, tel->tel_pixmap.px, !detach_only);
-	} else if (strcmp(it->class, "sketch") == 0) {
+	} else if (strcmp(it->cat, "sketch") == 0) {
 		RG_TileDelSketch(t, tel->tel_sketch.sk, !detach_only);
 	}
 
@@ -1794,9 +1794,9 @@ move_element_up(AG_Event *event)
 	RG_TileElement *tel, *ptel;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL ||
-	    (strcmp(it->class, "feature") != 0 &&
-	     strcmp(it->class, "pixmap") != 0 &&
-	     strcmp(it->class, "sketch") != 0)) {
+	    (strcmp(it->cat, "feature") != 0 &&
+	     strcmp(it->cat, "pixmap") != 0 &&
+	     strcmp(it->cat, "sketch") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -1818,9 +1818,9 @@ move_element_down(AG_Event *event)
 	RG_TileElement *tel, *ntel;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL ||
-	    (strcmp(it->class, "feature") != 0 &&
-	     strcmp(it->class, "pixmap") != 0 &&
-	     strcmp(it->class, "sketch") != 0)) {
+	    (strcmp(it->cat, "feature") != 0 &&
+	     strcmp(it->cat, "pixmap") != 0 &&
+	     strcmp(it->cat, "sketch") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -1841,9 +1841,9 @@ visible_element(AG_Event *event)
 	RG_TileElement *tel, *ntel;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL ||
-	    (strcmp(it->class, "pixmap") != 0 &&
-	     strcmp(it->class, "sketch") != 0 &&
-	     strcmp(it->class, "feature") != 0)) {
+	    (strcmp(it->cat, "pixmap") != 0 &&
+	     strcmp(it->cat, "sketch") != 0 &&
+	     strcmp(it->cat, "feature") != 0)) {
 		return;
 	}
 	tel = it->p1;

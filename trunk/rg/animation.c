@@ -383,7 +383,7 @@ poll_insns(AG_Event *event)
 			break;
 		}
 		it->p1 = insn;
-		it->class = "insn";
+		it->cat = "insn";
 	}
 
 	AG_MutexUnlock(&ts->lock);
@@ -407,7 +407,7 @@ poll_frames(AG_Event *event)
 		it = AG_TlistAdd(tl, NULL, _("Frame %ux%u, %ums"),
 		    fr->su->w, fr->su->h, fr->delay);
 		it->p1 = fr;
-		it->class = "frame";
+		it->cat = "frame";
 		AG_TlistSetIcon(tl, it, fr->su);
 	}
 	AG_MutexUnlock(&ts->lock);
