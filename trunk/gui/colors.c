@@ -166,8 +166,8 @@ AG_ColorsInit(void)
 	agColors[SCROLLBAR_BTN_COLOR] = agColors[BUTTON_COLOR];
 	agColors[SCROLLBAR_ARR1_COLOR] = SDL_MapRGB(agVideoFmt, 200, 200, 200);
 	agColors[SCROLLBAR_ARR2_COLOR] = SDL_MapRGB(agVideoFmt, 158, 158, 158);
-	agColors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(agVideoFmt, 100, 100, 100);
-	agColors[SEPARATOR_LINE2_COLOR] = SDL_MapRGB(agVideoFmt, 25, 25, 25);
+	agColors[SEPARATOR_LINE1_COLOR] = SDL_MapRGB(agVideoFmt, 165, 165, 165);
+	agColors[SEPARATOR_LINE2_COLOR] = SDL_MapRGB(agVideoFmt, 82, 82, 82);
 	agColors[TABLEVIEW_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLEVIEW_HEAD_COLOR] = agColors[FRAME_COLOR];
 	agColors[TABLEVIEW_HTXT_COLOR] = agColors[TEXT_COLOR];
