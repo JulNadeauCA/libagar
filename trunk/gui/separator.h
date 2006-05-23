@@ -16,13 +16,19 @@ enum ag_separator_type {
 typedef struct ag_separator {
 	struct ag_widget wid;
 	enum ag_separator_type type;
+	Uint padding;				/* Padding in pixels */
 } AG_Separator;
 
 __BEGIN_DECLS
 AG_Separator *AG_SeparatorNew(void *, enum ag_separator_type);
+
+#define AG_SeparatorNewHoriz(p) AG_SeparatorNew((p),AG_SEPARATOR_HORIZ)
+#define AG_SeparatorNewVert(p) AG_SeparatorNew((p),AG_SEPARATOR_VERT)
+
 void	      AG_SeparatorInit(AG_Separator *, enum ag_separator_type);
 void	      AG_SeparatorDraw(void *);
 void	      AG_SeparatorScale(void *, int, int);
+void          AG_SeparatorSetPadding(AG_Separator *, Uint);
 __END_DECLS
 
 #include "close_code.h"

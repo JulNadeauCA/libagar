@@ -67,6 +67,7 @@ AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
 	AG_WidgetInit(sep, "separator", &agSeparatorOps,
 	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_HFILL : AG_WIDGET_VFILL);
 	sep->type = type;
+	sep->padding = 4;
 }
 
 void
@@ -75,8 +76,8 @@ AG_SeparatorScale(void *p, int w, int h)
 	AG_Separator *sep = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(sep)->w = 2;
-		AGWIDGET(sep)->h = 2;
+		AGWIDGET(sep)->w = sep->padding*2 + 2;
+		AGWIDGET(sep)->h = sep->padding*2 + 2;
 	}
 }
 
@@ -87,17 +88,22 @@ AG_SeparatorDraw(void *p)
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		agPrim.hline(sep, 0, AGWIDGET(sep)->w, 0,
+		agPrim.hline(sep, 0, AGWIDGET(sep)->w, sep->padding,
 		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.hline(sep, 0, AGWIDGET(sep)->w, 1,
+		agPrim.hline(sep, 0, AGWIDGET(sep)->w, sep->padding+1,
 		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	case AG_SEPARATOR_VERT:
-		agPrim.vline(sep, 0, 0, AGWIDGET(sep)->h,
+		agPrim.vline(sep, sep->padding, 0, AGWIDGET(sep)->h,
 		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.vline(sep, 1, 0, AGWIDGET(sep)->h,
+		agPrim.vline(sep, sep->padding+1, 0, AGWIDGET(sep)->h,
 		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	}
 }
 
+void
+AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
+{
+	sep->padding = pixels;
+}
