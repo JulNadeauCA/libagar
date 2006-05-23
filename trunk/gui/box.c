@@ -71,6 +71,16 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	return (bo);
 }
 
+AG_Box *
+AG_BoxNewHorizPack(void *parent, Uint flags)
+{
+	AG_Box *box;
+
+	box = AG_BoxNew(parent, AG_BOX_HORIZ, flags);
+	box->spacing = 4;
+	return (box);
+}
+
 void
 AG_BoxInit(AG_Box *bo, enum ag_box_type type, Uint flags)
 {
