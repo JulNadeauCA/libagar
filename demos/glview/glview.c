@@ -110,6 +110,7 @@ CreateWindow(void)
 	}
 
 	AG_WindowShow(win);
+	AG_WindowMaximize(win);
 }
 
 int
