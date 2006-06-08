@@ -34,7 +34,6 @@ CreateWindow(void)
 	AG_FileDlgAddType(fd, "Foo file", "*.foo", LoadFile, NULL);
 	AG_FileDlgAddType(fd, "Bar/baz file", "*.bar,*.baz", LoadFile, NULL);
 	
-	AG_WindowMaximize(win);
 	AG_WindowShow(win);
 }
 
