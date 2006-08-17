@@ -804,7 +804,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {
 		AG_SetError("mkdir %s: %s", path, strerror(errno));
-		return;
+		return (-1);
 	}
 
 	if (!agView->opengl || pSu != agView->v) {
@@ -837,7 +837,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
 		AG_SetError("fdopen: %s", strerror(errno));
-		return;
+		return (-1);
 	}
 
 	jcomp.err = jpeg_std_error(&jerrmgr);
