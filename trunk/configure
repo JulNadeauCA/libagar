@@ -2111,23 +2111,23 @@ if [ "${with_jpeg}" != "no" ]
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
 JPEG_CFLAGS=""
-if [ -d "/usr/local/include/jpeglib.h" ]; then
+if [ -f "/usr/local/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/local/include"
 JPEG_LIBS="-L/usr/local/lib -ljpeg"
 fi;
-if [ -d "/usr/X11R6/include/jpeglib.h" ]; then
+if [ -f "/usr/X11R6/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/X11R6/include"
 JPEG_LIBS="-L/usr/X11R6/lib -ljpeg"
 fi;
-if [ -d "/usr/include/jpeglib.h" ]; then
+if [ -f "/usr/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/include"
 JPEG_LIBS="-L/usr/lib -ljpeg"
 fi;
-if [ -d "/opt/local/include/jpeglib.h" ]; then
+if [ -f "/opt/local/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/opt/local/include"
 JPEG_LIBS="-L/opt/local/lib -ljpeg"
 fi;
-if [ -d "/opt/include/jpeglib.h" ]; then
+if [ -f "/opt/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/opt/include"
 JPEG_LIBS="-L/opt/lib -ljpeg"
 fi;
