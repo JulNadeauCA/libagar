@@ -417,19 +417,17 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 	if (agFreetype) {
 		SDL_Surface *su;
 	
-		if (text == NULL || text[0] == '\0') {
-			return (SDL_CreateRGBSurface(SDL_SWSURFACE,
-			    0, 0, 8,
-			    0, 0, 0, 0));
-		}
 		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 			fatal("%s", AG_GetError());
 		}
 		if ((su = AG_TTFRenderUnicodeSolid(font->p, text, NULL, cFg))
-		    == NULL) {
-			fatal("TTF: %s", AG_GetError());
+		    != NULL) {
+			return (su);
+		} else {
+			fprintf(stderr, "FreeType: %s\n", AG_GetError());
+			return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,
+			                             0,0,0,0));
 		}
-		return (su);
 	} else
 #endif /* HAVE_FREETYPE */
 	{
