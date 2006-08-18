@@ -52,7 +52,7 @@ int		 AG_TTFInit(void);
 void		 AG_TTFDestroy(void);
 AG_TTFFont	*AG_TTFOpenFont(const char *, int);
 void		 AG_TTFCloseFont(AG_TTFFont *);
-int		 AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
+__inline__ int	 AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
 
 __inline__ int	 AG_TTFGetFontStyle(AG_TTFFont *);
 __inline__ void	 AG_TTFSetFontStyle(AG_TTFFont *, int);

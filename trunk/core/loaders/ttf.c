@@ -54,9 +54,9 @@
 
 static FT_Library library;
 
-static void ttf_flush_cache(AG_TTFFont *);
-static void ttf_flush_glyph(AG_TTFGlyph *);
-static int ttf_load_glyph(AG_TTFFont *, Uint32, AG_TTFGlyph *, int);
+static void AG_TTFFlushCache(AG_TTFFont *);
+static void AG_TTFFlushGlyph(AG_TTFGlyph *);
+static int AG_TTFLoadGlyph(AG_TTFFont *, Uint32, AG_TTFGlyph *, int);
 
 int
 AG_TTFInit(void)
@@ -163,13 +163,13 @@ fail1:
 void
 AG_TTFCloseFont(AG_TTFFont *font)
 {
-	ttf_flush_cache(font);
+	AG_TTFFlushCache(font);
 	FT_Done_Face(font->face);
 	Free(font, M_LOADER);
 }
 
 static void
-ttf_flush_glyph(AG_TTFGlyph *glyph)
+AG_TTFFlushGlyph(AG_TTFGlyph *glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
@@ -185,20 +185,20 @@ ttf_flush_glyph(AG_TTFGlyph *glyph)
 }
 	
 static void
-ttf_flush_cache(AG_TTFFont *font)
+AG_TTFFlushCache(AG_TTFFont *font)
 {
 	int i, size = sizeof(font->cache) / sizeof(font->cache[0]);
 
 	for (i = 0; i < size; i++) {
 		if (font->cache[i].cached)
-			ttf_flush_glyph(&font->cache[i]);
+			AG_TTFFlushGlyph(&font->cache[i]);
 	}
 	if (font->scratch.cached)
-		ttf_flush_glyph(&font->scratch);
+		AG_TTFFlushGlyph(&font->scratch);
 }
 
 static int
-ttf_load_glyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
+AG_TTFLoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
     int want)
 {
 	FT_Face face;
@@ -283,14 +283,14 @@ ttf_load_glyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
 
 		/* Render the glyph. */
 		if (mono) {
-			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
-				AG_SetError(_("Cannot render mono glyph."));
+			if (FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO) != 0) {
+				AG_SetError("Error glyph 0x%x", (Uint)ch);
 				return (-1);
 			}
 		} else {
-			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
+			if (FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL)
 			    != 0) {
-				AG_SetError(_("Cannot render normal glyph."));
+				AG_SetError("Error norm glyph 0x%x", (Uint)ch);
 				return (-1);
 			}
 		}
@@ -442,20 +442,17 @@ ttf_load_glyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
 int
 AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
 {
-	int retval = 0;
-
 	if (ch < 256) {
 		font->current = &font->cache[ch];
 	} else {
 		if (font->scratch.cached != ch) {
-			ttf_flush_glyph(&font->scratch);
+			AG_TTFFlushGlyph(&font->scratch);
 		}
 		font->current = &font->scratch;
 	}
-	if ((font->current->stored & want) != want) {
-		retval = ttf_load_glyph(font, ch, font->current, want);
-	}
-	return (retval);
+	return (((font->current->stored & want) != want) ?
+	    AG_TTFLoadGlyph(font, ch, font->current, want) :
+	    0);
 }
 
 int
@@ -553,7 +550,7 @@ AG_TTFSizeUnicode(AG_TTFFont *font, const Uint32 *ucs, int *w, int *h)
 	x = 0;
 	for (ch = ucs; *ch != '\0'; ch++) {
 		if (AG_TTFFindGlyph(font, *ch, TTF_CACHED_METRICS) != 0) {
-			return (-1);
+			continue;
 		}
 		glyph = font->current;
 
@@ -600,10 +597,8 @@ AG_TTFSizeUnicode(AG_TTFFont *font, const Uint32 *ucs, int *w, int *h)
 	}
 
 	/* Fill the bounds rectangle. */
-	if (w)
-		*w = (maxx - minx);
-	if (h)
-		*h = (maxy - miny);
+	if (w) { *w = (maxx - minx); }
+	if (h) { *h = (maxy - miny); }
 
 	return (status);
 }
@@ -648,7 +643,7 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 	int xstart;
 
 	if ((AG_TTFSizeUnicode(font, ucs, &w, NULL) < 0) || w== 0) {
-		AG_SetError(_("The text has zero width."));
+		AG_SetError("Zero-width text");
 		return (NULL);
 	}
 	h = font->height;
@@ -709,7 +704,8 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 		}
 		if (AG_TTFFindGlyph(font, *ch,
 		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-		    	goto fail1;
+			fprintf(stderr, "FreeType: %s\n", AG_GetError());
+		    	continue;
 		}
 		glyph = font->current;
 		current = &glyph->bitmap;
@@ -765,7 +761,7 @@ void
 AG_TTFSetFontStyle(AG_TTFFont *font, int style)
 {
 	font->style = style;
-	ttf_flush_cache(font);
+	AG_TTFFlushCache(font);
 }
 
 int
