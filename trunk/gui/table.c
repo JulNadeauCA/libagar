@@ -1155,6 +1155,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->type = AG_CELL_FN_TXT;
 				c->fnTxt = c->data.p;
 				c->data.p = c;
+			} else if (sc[0] == 'F' && sc[1] == 's') {
+				c->type = AG_CELL_FN_SU;
+				c->fnSu = c->data.p;
+				c->data.p = c;
 			}
 		}
 		switch (sc[0]) {
