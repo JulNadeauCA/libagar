@@ -13,13 +13,13 @@
 #define AG_TLIST_LABEL_MAX AG_LABEL_MAX
 #define AG_TLIST_ARGS_MAX 8
 
-struct ag_tlist_popup {
+typedef struct ag_tlist_popup {
 	const char *iclass;		/* Apply to items of this class */
 	AG_Menu *menu;
 	AG_MenuItem *item;
 	AG_Window *panel;
 	TAILQ_ENTRY(ag_tlist_popup) popups;
-};
+} AG_TlistPopup;
 
 typedef struct ag_tlist_item {
 	int selected;				/* Effective selection */

@@ -61,7 +61,7 @@ static void tlist_scrolled(AG_Event *);
 static void free_item(AG_Tlist *, AG_TlistItem *);
 static void select_item(AG_Tlist *, AG_TlistItem *);
 static void unselect_item(AG_Tlist *, AG_TlistItem *);
-static void show_popup(AG_Tlist *, struct ag_tlist_popup *);
+static void show_popup(AG_Tlist *, AG_TlistPopup *);
 static void set_icon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
 static void update_scrollbar(AG_Tlist *);
 
@@ -220,7 +220,7 @@ AG_TlistDestroy(void *p)
 {
 	AG_Tlist *tl = p;
 	AG_TlistItem *it, *nit;
-	struct ag_tlist_popup *tp, *ntp;
+	AG_TlistPopup *tp, *ntp;
 
 	for (it = TAILQ_FIRST(&tl->selitems);
 	     it != TAILQ_END(&tl->selitems);
@@ -909,7 +909,7 @@ tlist_mousebuttondown(AG_Event *event)
 		break;
 	case SDL_BUTTON_RIGHT:
 		if (ti->cat != NULL) {
-			struct ag_tlist_popup *tp;
+			AG_TlistPopup *tp;
 	
 			AG_WidgetFocus(tl);
 		
@@ -1138,9 +1138,9 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 AG_MenuItem *
 AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 {
-	struct ag_tlist_popup *tp;
+	AG_TlistPopup *tp;
 
-	tp = Malloc(sizeof(struct ag_tlist_popup), M_WIDGET);
+	tp = Malloc(sizeof(AG_TlistPopup), M_WIDGET);
 	tp->iclass = iclass;
 	tp->panel = NULL;
 
@@ -1154,7 +1154,7 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 }
 
 static void
-show_popup(AG_Tlist *tl, struct ag_tlist_popup *tp)
+show_popup(AG_Tlist *tl, AG_TlistPopup *tp)
 {
 	AG_Menu *m = tp->menu;
 	int x, y;
