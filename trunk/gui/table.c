@@ -950,6 +950,17 @@ AG_TableDeselectRow(AG_Table *t, Uint m)
 }
 
 void
+AG_TableSelectAllRows(AG_Table *t)
+{
+	Uint m, n;
+
+	for (n = 0; n < t->n; n++) {
+		for (m = 0; m < t->m; m++)
+			t->cells[m][n].selected = 1;
+	}
+}
+
+void
 AG_TableDeselectAllRows(AG_Table *t)
 {
 	Uint m, n;
