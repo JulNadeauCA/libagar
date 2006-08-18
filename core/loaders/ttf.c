@@ -546,6 +546,9 @@ AG_TTFSizeUnicode(AG_TTFFont *font, const Uint32 *ucs, int *w, int *h)
 	minx = maxx = 0;
 	miny = maxy = 0;
 
+	if (ucs == NULL)
+		goto out;
+
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = ucs; *ch != '\0'; ch++) {
@@ -595,7 +598,7 @@ AG_TTFSizeUnicode(AG_TTFFont *font, const Uint32 *ucs, int *w, int *h)
 		if (glyph->maxy > maxy)
 			maxy = glyph->maxy;
 	}
-
+out:
 	/* Fill the bounds rectangle. */
 	if (w) { *w = (maxx - minx); }
 	if (h) { *h = (maxy - miny); }
@@ -642,9 +645,9 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 	int w, h;
 	int xstart;
 
-	if ((AG_TTFSizeUnicode(font, ucs, &w, NULL) < 0) || w== 0) {
-		AG_SetError("Zero-width text");
-		return (NULL);
+	if ((AG_TTFSizeUnicode(font, ucs, &w, NULL) < 0) || w == 0) {
+		/* Zero-width text */
+		return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 	}
 	h = font->height;
 	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
