@@ -23,7 +23,7 @@ SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 MAN3=	AG_Widget.3 AG_Button.3 AG_Graph.3 AG_Checkbox.3 AG_Label.3 AG_Radio.3 \
 	AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 AG_Tlist.3 AG_Text.3 AG_Box.3 \
 	AG_HBox.3 AG_VBox.3 AG_Combo.3 AG_FSpinbutton.3 AG_UCombo.3 \
-	AG_Spinbutton.3 AG_Units.3 AG_HSVPal.3 AG_Menu.3
+	AG_Spinbutton.3 AG_Units.3 AG_HSVPal.3 AG_Menu.3 AG_SizeSpec.3
 
 
 CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
