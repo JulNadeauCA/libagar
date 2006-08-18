@@ -121,7 +121,6 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
 	t->poll_ev = NULL;
 	t->nResizing = -1;
-
 	t->cols = NULL;
 	t->cells = NULL;
 	t->n = 0;
@@ -129,6 +128,7 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->mVis = 0;
 	t->poll_ev = NULL;
 	t->xoffs = 0;
+	SLIST_INIT(&t->popups);
 	
 	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(t, "window-mousebuttonup", mousebuttonup, NULL);
@@ -145,8 +145,18 @@ void
 AG_TableDestroy(void *p)
 {
 	AG_Table *t = p;
+	AG_TablePopup *tp, *tpn;
 	Uint m, n;
-
+	
+	for (tp = SLIST_FIRST(&t->popups);
+	     tp != SLIST_END(&t->popups);
+	     tp = tpn) {
+		tpn = SLIST_NEXT(tp, popups);
+		AG_ObjectDestroy(tp->menu);
+		Free(tp->menu, M_OBJECT);
+		Free(tp, M_WIDGET);
+	}
+	
 	for (m = 0; m < t->m; m++) {
 		for (n = 0; n < t->n; n++)
 			AG_TableFreeCell(t, &t->cells[m][n]);
@@ -463,6 +473,28 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	AG_WidgetUnlockBinding(maxb);
 }
 
+AG_MenuItem *
+AG_TableSetPopup(AG_Table *t, int m, int n)
+{
+	AG_TablePopup *tp;
+
+	SLIST_FOREACH(tp, &t->popups, popups) {
+		if (tp->m == m && tp->n == n) {
+			AG_MenuFreeSubItems(tp->item);
+			return (tp->item);
+		}
+	}
+	tp = Malloc(sizeof(AG_TablePopup), M_WIDGET);
+	tp->m = m;
+	tp->n = n;
+	tp->panel = NULL;
+	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	AG_MenuInit(tp->menu, 0);
+	tp->item = AG_MenuAddItem(tp->menu, "");
+	SLIST_INSERT_HEAD(&t->popups, tp, popups);
+	return (tp->item);
+}
+
 void
 AG_TableRedrawCells(AG_Table *t)
 {
@@ -638,18 +670,50 @@ rangesel(AG_Table *t)
 }
 
 static void
-column_popup(AG_Table *t, int x)
+show_popup(AG_Table *tbl, AG_TablePopup *tp)
 {
+	int x, y;
+
+	AG_MouseGetState(&x, &y);
+	if (tp->panel != NULL) {
+		AG_MenuCollapse(tp->menu, tp->item);
+		tp->panel = NULL;
+	}
+	tp->menu->sel_item = tp->item;
+	tp->panel = AG_MenuExpand(tp->menu, tp->item, x+4, y+4);
+}
+
+static void
+column_popup(AG_Table *t, int px)
+{
+	Uint n;
+	int cx;
+	int x = px - (COLUMN_RESIZE_RANGE/2);
+
+	for (n = 0, cx = t->xoffs; n < t->n; n++) {
+		AG_TableCol *tc = &t->cols[n];
+		int x2 = cx+tc->w;
+		AG_TablePopup *tp;
+
+		if (x > cx && x < x2) {
+			SLIST_FOREACH(tp, &t->popups, popups) {
+				if (tp->m == -1 && tp->n == n) {
+					show_popup(t, tp);
+					return;
+				}
+			}
+		}
+		cx += tc->w;
+	}
 }
 
 static void
 column_sel(AG_Table *t, int px)
 {
 	AG_TableCell *c;
-	Uint n;
-	int cx;
-	int x = px - (COLUMN_RESIZE_RANGE/2);
+	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
 	int multi = multisel(t);
+	Uint n;
 
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -716,8 +780,28 @@ cell_sel(AG_Table *t, int mc, int x)
 }
 
 static void
-cell_popup(AG_Table *t, int mc, int x)
+cell_popup(AG_Table *t, int m, int px)
 {
+	AG_TablePopup *tp;
+	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
+	Uint n;
+
+	for (n = 0, cx = t->xoffs; n < t->n; n++) {
+		AG_TableCol *tc = &t->cols[n];
+		int x2 = cx+tc->w;
+		AG_TablePopup *tp;
+
+		if (x > cx && x < x2) {
+			SLIST_FOREACH(tp, &t->popups, popups) {
+				if ((tp->m == m || tp->m == -1) &&
+				    (tp->n == n || tp->n == -1)) {
+					show_popup(t, tp);
+					return;
+				}
+			}
+		}
+		cx += tc->w;
+	}
 }
 
 static __inline__ int

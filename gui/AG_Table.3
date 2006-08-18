@@ -301,6 +301,9 @@ For pointer and surface cells, the return value is 1 if they differ.
 .nr nS 1
 .Ft "int"
 .Fn AG_TableSaveASCII "AG_Table *tbl" "FILE *f" "char separator"
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
 .nr nS 0
 .Pp
 .Fn AG_TableSaveASCII
@@ -311,6 +314,60 @@ given by the
 .Fa separator
 argument.
 The function returns 0 on success, -1 on failure.
+.Pp
+The
+.Fn AG_TableSetPopup
+function creates a new popup menu associated with a row, column or cell.
+If
+.Fa col
+is a valid index and
+.Fa row
+is -1, the menu is shown when clicking on the header of the given column.
+If
+.Fa col
+is -1 and
+.Fa row
+is a valid index, the menu is shown when clicking on any cell of the given row.
+If
+.Fa col
+and
+.Fa row
+are both valid indices, the menu is shown when clicking on the given cell.
+If both indices are -1, the menu is shown when clicking on any cell.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown"
+.It window-mousemotion
+Process resizing actions in progress.
+.It window-keydown
+By default,
+.Dv SDLK_UP ,
+.Dv SDLK_DOWN ,
+.Dv SDLK_PAGEUP
+and
+.Dv SDLK_PAGEDOWN
+will move the current single-row selection.
+.It window-mousebuttonup
+Stop any resizing action in progress.
+.It window-mousebuttondown
+.Dv SDL_BUTTON_LEFT
+selects the overlapping column, row or cell.
+.Dv SDL_BUTTON_RIGHT
+works similarly, but displays the popup menu associated with the
+selected column or cell, as configured with
+.Fn AG_TableSetPopup .
+.Dv SDL_BUTTON_WHEELUP
+and
+.Dv SDL_BUTTON_WHEELDOWN
+are used to scroll the view of the table.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,

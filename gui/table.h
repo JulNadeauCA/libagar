@@ -4,11 +4,22 @@
 #ifndef _AGAR_WIDGET_TABLE_H_
 #define _AGAR_WIDGET_TABLE_H_
 
+#include <agar/gui/scrollbar.h>
+#include <agar/gui/menu.h>
+
 #include "begin_code.h"
 
 #define AG_TABLE_TXT_MAX 128
 #define AG_TABLE_FMT_MAX 16
 #define AG_TABLE_COL_NAME_MAX 48
+
+typedef struct ag_table_popup {
+	int m, n;				/* Row/column (-1 = all) */
+	AG_Menu *menu;
+	AG_MenuItem *item;
+	AG_Window *panel;
+	SLIST_ENTRY(ag_table_popup) popups;
+} AG_TablePopup;
 
 typedef struct ag_table_cell {
 	enum ag_table_cell_type {
@@ -76,10 +87,8 @@ typedef struct ag_table_col {
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
 	AG_TableCell *pool;		/* Pool of inactive cells */
-	Uint        mpool;
+	Uint         mpool;		/* Number of rows in pool */
 } AG_TableCol;
-
-struct ag_scrollbar;
 
 typedef struct ag_table {
 	struct ag_widget wid;
@@ -106,13 +115,15 @@ typedef struct ag_table {
 	int moffs;			/* Row offset (for poll funciton) */
 	AG_TableCol *cols;		/* Column data */
 	AG_TableCell **cells;		/* Row data */
-	Uint n;			/* Number of columns */
-	Uint m;			/* Number of rows */
+	Uint n;				/* Number of columns */
+	Uint m;				/* Number of rows */
 	Uint mVis;			/* Maximum number of visible rows */
 	int nResizing;			/* Column being resized (or -1) */
-	struct ag_scrollbar *vbar;	/* Vertical scrollbar */
-	struct ag_scrollbar *hbar;	/* Horizontal scrollbar */
+	AG_Scrollbar *vbar;		/* Vertical scrollbar */
+	AG_Scrollbar *hbar;		/* Horizontal scrollbar */
 	AG_Event *poll_ev;		/* Poll event */
+
+	SLIST_HEAD(,ag_table_popup) popups;	/* Popup menus */
 } AG_Table;
 
 __BEGIN_DECLS
@@ -157,8 +168,9 @@ __inline__ void	  AG_TableRedrawCells(AG_Table *);
 __inline__ int	  AG_TableCompareCells(const AG_TableCell *,
 			               const AG_TableCell *);
 
-int	  AG_TableSaveASCII(AG_Table *, FILE *, char);
-void	  AG_TableUpdateScrollbars(AG_Table *);
+int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
+void	     AG_TableUpdateScrollbars(AG_Table *);
+AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 
 __END_DECLS
 
