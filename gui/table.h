@@ -135,10 +135,13 @@ void	  AG_TableEnd(AG_Table *);
 
 void	  AG_TableInitCell(AG_Table *, AG_TableCell *);
 #define	  AG_TableCellSelected(t,m,n) ((t)->cells[m][n].selected)
+#define	  AG_TableSelectCell(t,m,n) ((t)->cells[m][n].selected = 1)
+#define	  AG_TableDeselectCell(t,m,n) ((t)->cells[m][n].selected = 1)
 
 int	  AG_TableAddRow(AG_Table *, const char *, ...);
 void	  AG_TableSelectRow(AG_Table *, Uint);
 void	  AG_TableDeselectRow(AG_Table *, Uint);
+void	  AG_TableSelectAllRows(AG_Table *);
 void	  AG_TableDeselectAllRows(AG_Table *);
 int	  AG_TableRowSelected(AG_Table *, Uint);
 
@@ -146,6 +149,8 @@ int	  AG_TableAddCol(AG_Table *, const char *, const char *,
 	                 int (*)(const void *, const void *));
 void	  AG_TableSelectAllCols(AG_Table *);
 void	  AG_TableDeselectAllCols(AG_Table *);
+#define	  AG_TableSelectCol(t,n) do { (t)->cols[n].selected = 1; } while (0)
+#define	  AG_TableDeselectCol(t,n) do { (t)->cols[n].selected = 0; } while (0)
 #define	  AG_TableColSelected(t,n) ((t)->cols[n].selected)
 
 __inline__ void	  AG_TableRedrawCells(AG_Table *);
