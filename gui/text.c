@@ -415,9 +415,9 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
-		if (text == NULL || text[0] == '\0') {
-			SDL_Surface *su;
+		SDL_Surface *su;
 	
+		if (text == NULL || text[0] == '\0') {
 			return (SDL_CreateRGBSurface(SDL_SWSURFACE,
 			    0, 0, 8,
 			    0, 0, 0, 0));
@@ -425,7 +425,11 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 			fatal("%s", AG_GetError());
 		}
-		return (AG_TTFRenderUnicodeSolid(font->p, text, NULL, cFg));
+		if ((su = AG_TTFRenderUnicodeSolid(font->p, text, NULL, cFg))
+		    == NULL) {
+			fatal("TTF: %s", AG_GetError());
+		}
+		return (su);
 	} else
 #endif /* HAVE_FREETYPE */
 	{
