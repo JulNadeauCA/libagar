@@ -1,0 +1,321 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 26, 2006
+.Dt TABLE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Table
+.Nd agar table display widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui/table.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a set of cells organized in one or more columns.
+Cells can be associated with text, numerical values, pointers to numerical
+values, or custom functions.
+.Nm
+is optimized for tables that must be respecified frequently.
+.Pp
+Individual cells, entire rows or entire columns can be selected indepedently.
+.Pp
+The
+.Xr AG_TableView 3
+widget provides an alternative table API and implementation with tree support,
+where dynamic tables are not needed.
+.Xr AG_Tlist 3
+provides tree support, but no multi-column functionality.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Table *"
+.Fn AG_TableNew "void *parent" "Uint flags"
+.Pp
+.Ft "AG_Table *"
+.Fn AG_TableNewPolled "void *parent" "Uint flags" "void (*event_fn)(AG_Event *)" "const char *event_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableInit "AG_Table *tbl" "Uint flags"
+.nr nS 0
+.Pp
+The
+.Fn AG_TableNew
+function allocates, initializes and attaches a
+.Nm
+widget.
+.Pp
+The
+.Fn AG_TableNewPolled
+variant automatically enables polling and configures the
+.Sq table-poll
+event.
+.Fa event_fn
+is a pointer to the event-handler function responsible for entering the
+values into the table.
+.Fa event_args
+and the following arguments are optional
+.Xr AG_Event 3
+style parameters that will be passed on to
+.Fa event_fn .
+.Pp
+Acceptable values for the
+.Fa flags
+argument include:
+.Bd -literal
+#define AG_TABLE_MULTI		0x01	/* Multiple selections */
+#define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
+#define AG_TABLE_POLL		0x08	/* Table is polled */
+#define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
+.Ed
+.Pp
+The
+.Dv AG_TABLE_MULTI
+flag enables multiple selections when ctrl or shift key is held.
+.Dv AG_TABLE_MULTITOGGLE
+enables multiple selections by default.
+.Dv AG_TABLE_POLL
+triggers the
+.Sq table-poll
+event before the table is drawn.
+.Pp
+.Sh TABLE FUNCTIONS
+.nr nS 1
+.Ft "void"
+.Fn AG_TableBegin "AG_Table *tbl"
+.Pp
+.Ft "void"
+.Fn AG_TableEnd "AG_Table *tbl"
+.nr nS 0
+.Pp
+.Nm
+is aimed at tables with dynamic content that has to be respecified
+frequently.
+To achieve this, rows must be specified between calls to
+.Fn AG_TableBegin
+and
+.Fn AG_TableEnd .
+.Pp
+The
+.Fn AG_TableBegin
+function saves current selection information (to keep selections consistent
+across table respecifications), and clears all rows.
+.Pp
+Since dynamic tables that are respecified periodically usually exhibit high
+temporal coherence,
+.Fn AG_TableBegin
+actually moves existing rows to a pool for possible reuse, to avoid
+unnecessary text rendering (and texture uploads in OpenGL mode).
+.Sh COLUMN FUNCTIONS
+.nr nS 1
+.Ft "int"
+.Fn AG_TableAddCol "AG_Table *tbl" "const char *name" "const char *size_spec" "int (*sort_fn)(const AG_TableCell *, const AG_TableCell *))
+.Pp
+.Ft "void"
+.Fn AG_TableSelectCol "AG_Table *tbl" "int col"
+.Pp
+.Ft "void"
+.Fn AG_TableDeselectCol "AG_Table *tbl" "int col"
+.Pp
+.Ft "void"
+.Fn AG_TableSelectAllCols "AG_Table *tbl"
+.Pp
+.Ft "void"
+.Fn AG_TableDeselectAllCols "AG_Table *tbl"
+.Pp
+.Ft "int"
+.Fn AG_TableColSelected "AG_Table *tbl" "int col"
+.nr nS 0
+.Pp
+The
+.Fn AG_TableAddCol
+function inserts a new column into the table and returns an integer column
+identifier.
+.Fa name
+specifies the text to display in the column header.
+.Fa size_spec
+is an optional size specification (see
+.Xr AG_SizeSpec 3 )
+used in initial sizing of the column.
+The
+.Fa sort_fn
+argument, if not NULL, is the sorting function to use for items of this
+column.
+.Pp
+The
+.Fn AG_TableSelectCol
+and
+.Fn AG_TableDeselectCol
+functions control the selection flag on the given column.
+.Fn AG_TableSelectAllCols
+and
+.Fn AG_TableDeselectAllCols
+set the selection flag on all columns of the table.
+.Fn AG_TableColSelected
+returns 1 if the given column is selected, 0 otherwise.
+.Pp
+Note that the of the column selection flags are independent from the
+selection flag of individual cells; their meaning is application-specific.
+.Pp
+.Sh ROW FUNCTIONS
+.nr nS 1
+.Ft "int"
+.Fn AG_TableAddRow "AG_Table *tbl" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSelectRow "AG_Table *tbl" "Uint row"
+.Pp
+.Ft "void"
+.Fn AG_TableDeselectRow "AG_Table *tbl" "Uint row"
+.Pp
+.Ft "void"
+.Fn AG_TableSelectAllRows "AG_Table *tbl"
+.Pp
+.Ft "void"
+.Fn AG_TableDeselectAllRows "AG_Table *tbl"
+.Pp
+.Ft "void"
+.Fn AG_TableRowSelected "AG_Table *tbl" "Uint row"
+.nr nS 0
+.Pp
+The
+.Fn AG_TableAddRow
+function inserts a new row into the table.
+The
+.Fa fmt
+argument is a colon-separated list of specifiers which define the type
+of individual cells.
+It is possible to mix cells of different types into a same column as long
+as the sorting function of that column can handle them.
+Acceptable specifiers include:
+.Pp
+.Bl -tag -compact -width "%[s8], %[s16], %[s32] "
+.It %s
+Text string
+.It %i, %d
+Signed integer
+.It %li, %ld
+Long integer
+.It %lli, %lld
+Long long integer
+.It %u
+Unsigned integer
+.It %lu
+Unsigned long integer
+.It %llu
+Unsigned long long integer
+.It %[s8], %[s16], %[s32]
+Signed 8-bit, 16-bit or 32-bit value
+.It %[u8], %[u16], %[u32]
+Unsigned 8-bit, 16-bit or 32-bit value
+.It %f, %g
+Floating-point value (precision modifiers like %.03f are accepted)
+.It %p
+User pointer (usually stored in hidden columns)
+.It %[Ft]
+Custom function which returns a string
+.It %[Fs]
+Custom function which returns a surface
+.El
+.Pp
+The functions
+.Fn AG_TableSelectRow
+and
+.Fn AG_TableDeselectRow
+set the selection flag on all cells of the given row.
+.Fn AG_TableSelectAllRows
+and
+.Fn AG_TableDeselectAllRows
+set the selection on all cells of the table.
+.Fn AG_TableRowSelected
+returns 1 if the given row is selected, 0 otherwise.
+.Sh CELL FUNCTIONS
+.nr nS 1
+.Ft "void"
+.Fn AG_TableSelectCell "AG_Table *tbl" "Uint row" "Uint col"
+.Pp
+.Ft "void"
+.Fn AG_TableDeselectCell "AG_Table *tbl" "Uint row" "Uint col"
+.Pp
+.Ft "void"
+.Fn AG_TableCellSelected "AG_Table *tbl" "Uint row" "Uint col"
+.Pp
+.Ft "void"
+.Fn AG_TableCompareCells "const AG_TableCell *c1" "const AG_TableCell *c2"
+.nr nS 0
+.Pp
+.Fn AG_TableSelectCell ,
+.Fn AG_TableDeselectCell
+and
+.Fn AG_TableCellSelected
+control and query the selection flag on an individual cell located at the
+given row and column.
+.Pp
+The
+.Fn AG_TableCompareCells
+function compares cells
+.Fa c1
+and
+.Fa c2 .
+It returns 0 if the contents of the two cells is identical, otherwise the
+returned value depends on the type.
+If the cells have different types, it returns 1.
+If they are text-based, the return value of
+.Xr strcmp 3
+is returned.
+If they are numerical, the difference is returned.
+For pointer and surface cells, the return value is 1 if they differ.
+.Sh MISCELLANEOUS FUNCTIONS
+.nr nS 1
+.Ft "int"
+.Fn AG_TableSaveASCII "AG_Table *tbl" "FILE *f" "char separator"
+.nr nS 0
+.Pp
+.Fn AG_TableSaveASCII
+writes the formatted contents of the table into an ASCII file
+.Fa f .
+Each row is separated by a newline, and cells are separated by the character
+given by the
+.Fa separator
+argument.
+The function returns 0 on success, -1 on failure.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
