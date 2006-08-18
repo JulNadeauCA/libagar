@@ -50,6 +50,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <ctype.h>
 
 const AG_WidgetOps agTextboxOps = {
 	{
