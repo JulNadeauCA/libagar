@@ -1,0 +1,174 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 28, 2006
+.Dt AG_PANE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Pane
+.Nd agar paned container widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget is a dual container widget with a separator that is movable by the user.
+The two partitions are containers of type
+.Xr AG_Box 3 .
+Depending on the application, partitions may or may not be allowed to shrink
+to zero size.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Pane *"
+.Fn AG_PaneNew "void *parent" "enum ag_pane_type type" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_PaneInit "AG_Pane *pane" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_PaneAttachBox "AG_Pane *pane" "int which" "AG_Box *box"
+.Pp
+.Ft "void"
+.Fn AG_PaneAttachBoxes "AG_Pane *pane" "AG_Box *box1" "AG_Box *box2"
+.Pp
+.Ft "void"
+.Fn AG_PaneSetDividerWidth "AG_Pane *pane" "int pixels"
+.Pp
+.Ft "void"
+.Fn AG_PaneSetDivisionMin "AG_Pane *pane" "int which" "int min_w" "int min_h"
+.Pp
+.Ft "int"
+.Fn AG_PaneMoveDivider "AG_Pane *pane" "int dx"
+.nr nS 0
+.Pp
+The
+.Fn AG_PaneNew
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn AG_PaneInit
+initializes a
+.Nm
+widget, where
+.Fa type
+is one of:
+.Bd -literal
+enum ag_pane_type {
+	AG_PANE_HORIZ,
+	AG_PANE_VERT
+};
+.Ed
+.Pp
+The
+.Fa flags
+may include:
+.Bd -literal
+#define AG_PANE_DIV1FILL	0x04	/* Expand div1 (default is div2) */
+#define AG_PANE_FRAME		0x08	/* Decorative frames */
+#define AG_PANE_DIV		0x40	/* Initially divide area in two */
+#define AG_PANE_FORCE_DIV	0x80	/* Force divide area in two */
+.Ed
+.Pp
+By default, the first division will be sized appropriately and the second
+division will expand to fill available space; that behavior can be changed
+with the
+.Dv AG_PANE_DIV1FILL
+flag.
+If
+.Dv AG_PANE_DIV
+is given, space is initially divided by two.
+With
+.Dv AG_PANE_FORCE_DIV ,
+the space is always divided by two and the user cannot move the separator.
+.Pp
+The
+.Dv AG_PANE_FRAME
+flag enables
+.Dv AG_BOX_FRAME
+on the partitions, which draws a frame.
+The depth of the frame can be adjusted by invoking
+.Xr AG_BoxSetDepth 3
+on the partitions.
+.Pp
+By default, the two
+.Xr AG_Box 3
+sub-containers of
+.Nm
+are created automatically.
+.Fn AG_PaneAttachBox
+allows existing boxes to be attached and re-used.
+.Fa which
+must be 0 or 1.
+.Fn AG_PaneAttachBoxes
+is a variant that accepts two box arguments.
+.Pp
+.Fn AG_PaneSetDividerWidth
+sets the width of the divider widget in pixels.
+.Pp
+By default, the user is allowed to move the separator such that one of the
+two partitions can be shrunk to zero.
+.Fn AG_PaneSetDivisionMin
+prevents this by setting a minimal geometry in pixels for the given partition
+.Fa which
+(which must be either 0 or 1).
+.Pp
+The separator can also be moved programmatically with the
+.Fn AG_PaneMoveDivider
+function.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-mousemotion
+.It window-mousebuttonup
+.It window-mousebuttondown
+Move the separator, resizing the partitions.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Box 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.

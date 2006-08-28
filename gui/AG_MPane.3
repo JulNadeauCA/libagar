@@ -1,0 +1,139 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 28, 2006
+.Dt AG_MPANE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_MPane
+.Nd agar multiple paned view widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget divides space into a set of
+.Xr AG_Box 3
+partitions much like the
+.Xr AG_Pane 3
+widget, except that up to 4 partitions are allowed.
+It is possible to switch during different partition layouts at runtime,
+making
+.Nm
+useful for 3D modeling applications.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_MPane *"
+.Fn AG_MPaneNew "void *parent" "enum ag_mpane_layout layout" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_MPaneInit "AG_MPane *mpane" "enum ag_mpane_layout layout" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_MPaneSetLayout "AG_MPane *mpane" "enum ag_mpane_layout layout"
+.nr nS 0
+.Pp
+The
+.Fn AG_MPaneNew
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn AG_MPaneInit
+initializes a
+.Nm
+widget.
+.Pp
+Acceptable values for the
+.Fa layout
+argument include:
+.Bd -literal
+enum ag_mpane_layout {
+	AG_MPANE1,		/* Single view */
+	AG_MPANE2V,		/* Dual views (left/right) */
+	AG_MPANE2H,		/* Dual views (top/bottom) */
+	AG_MPANE2L1R,		/* Two views left, one view right */
+	AG_MPANE1L2R,		/* One view left, two views right */
+	AG_MPANE2T1B,		/* Two views top, one view bottom */
+	AG_MPANE1T2B,		/* One view top, two views bottom */
+	AG_MPANE3L1R,		/* Three views left, one view right */
+	AG_MPANE1L3R,		/* One view left, three views right */
+	AG_MPANE3T1B,		/* Three views top, one view bottom */
+	AG_MPANE1T3B,		/* One view top, three views bottom */
+	AG_MPANE4		/* Four views */
+};
+.Ed
+.Pp
+The
+.Fa flags
+may include:
+.Bd -literal
+#define AG_MPANE_FRAMES    0x04	/* Decorative frames */
+#define AG_MPANE_FORCE_DIV 0x08	/* Always divide (not user-resizable) */
+.Ed
+.Pp
+The
+.Fn AG_MPaneSetLayout
+function changes the current layout, recreating all the
+.Xr AG_Box 3
+partitions from scratch.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-mousemotion
+.It window-mousebuttonup
+.It window-mousebuttondown
+.It window-keyup
+.It window-keydown
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
+.Sh BUGS
+Unlike with
+.Xr AG_Pane 3 ,
+it is impossible to reuse existing containers.
