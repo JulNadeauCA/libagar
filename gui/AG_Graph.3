@@ -42,7 +42,6 @@ The
 .Nm
 widget implements a scrollable graph display.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -67,6 +66,7 @@ widget.
 The
 .Fa type
 argument is one of:
+.Pp
 .Bd -literal
 enum ag_graph_type {
 	AG_GRAPH_POINTS,   /* Dots */
@@ -77,6 +77,7 @@ enum ag_graph_type {
 The
 .Fa flags
 may include:
+.Pp
 .Bd -literal
 #define AG_GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
 #define AG_GRAPH_ORIGIN  0x02   /* Visible origin */

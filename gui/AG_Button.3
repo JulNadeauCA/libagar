@@ -43,7 +43,6 @@ The
 widget implements a simple push-button containing a string of text or
 an image.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -114,6 +113,7 @@ widget displaying the string
 Acceptable values for the
 .Fa flags
 argument include:
+.Pp
 .Bd -literal
 #define AG_BUTTON_DISABLED	0x01	/* Button is insensitive */
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
@@ -231,6 +231,7 @@ The following code fragment creates a button and sets a handler function
 for the
 .Sq button-pushed
 event:
+.Pp
 .Bd -literal -offset indent
 void
 hello(AG_Event *event)

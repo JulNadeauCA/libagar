@@ -120,6 +120,7 @@ since slash is the path name separator.
 If
 .Fa ops
 is not NULL, it should point to the following structure:
+.Pp
 .Bd -literal
 typedef struct ag_object_ops {
 	void (*init)(void *obj, const char *name);	/* Initialize */
@@ -197,6 +198,7 @@ container.
 The following public
 .Nm
 flags are defined:
+.Pp
 .Bd -literal
 #define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x002 /* Never include in saves */
@@ -556,6 +558,7 @@ If the resource is already resident, the reference count is incremented.
 The
 .Fa item
 argument may be one of:
+.Pp
 .Bd -literal
 enum ag_object_page_item {
 	AG_OBJECT_GFX,		/* Graphics */

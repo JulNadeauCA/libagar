@@ -47,20 +47,31 @@ structure and attached to a
 .Xr AG_View 3 .
 Currently there is only one view; multiple views will be supported when
 SDL implements multiple displays.
-.Pp
-The container behavior of a
+By default, the container behavior of
 .Nm
-is much like a
-.Xr AG_VBox 3 .
-Unless the
-.Dv AG_WINDOW_NOTITLE
-flag is set, a
+is similar to
+.Xr AG_VBox 3
+and an
 .Xr AG_Titlebar 3
-widget is attached to the window at creation time.
+is attached to the window at creation time.
 .Pp
-Initially, the window's widgets are queried for a default, minimum size, and
-the window is sized accordingly.
-After this initial sizing, widget containers may scale widgets to any size.
+When a window first becomes visible, its child widgets are queried for a
+default, minimum size and the window is sized to accomodate them as much as
+possible within the current view.
+After this initial sizing, containers can resize their children further.
+.Pp
+Commonly used containers include
+.Xr AG_Box 3 ,
+.Xr AG_VBox 3
+and
+.Xr AG_HBox 3
+for automatic horizontal and vertical packing,
+.Xr AG_Fixed 3
+for explicit pixel-precision packing,
+.Xr AG_Pane 3
+for dual partitions and
+.Xr AG_Notebook 3
+for notebook-style display.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -119,6 +130,7 @@ function initializes a
 .Nm
 structure.
 Acceptable flags include:
+.Pp
 .Bd -literal
 #define AG_WINDOW_MODAL		0x00001	/* Place in foreground */
 #define AG_WINDOW_MAXIMIZED	0x00002	/* Window is maximized */
@@ -150,6 +162,7 @@ The
 function changes the current
 .Sq window-close
 event handler to one of the predefined handlers:
+.Pp
 .Bd -literal
 enum ag_window_close_action {
 	AG_WINDOW_HIDE,
@@ -182,6 +195,7 @@ function .
 The
 .Fn AG_WindowSetPosition
 function requests an initial window position, which may be one of:
+.Pp
 .Bd -literal
 enum ag_window_alignment {
 	AG_WINDOW_UPPER_LEFT,

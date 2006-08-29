@@ -46,7 +46,6 @@ The two partitions are containers of type
 Depending on the application, partitions may or may not be allowed to shrink
 to zero size.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -85,6 +84,7 @@ initializes a
 widget, where
 .Fa type
 is one of:
+.Pp
 .Bd -literal
 enum ag_pane_type {
 	AG_PANE_HORIZ,
@@ -95,6 +95,7 @@ enum ag_pane_type {
 The
 .Fa flags
 may include:
+.Pp
 .Bd -literal
 #define AG_PANE_DIV1FILL	0x04	/* Expand div1 (default is div2) */
 #define AG_PANE_FRAME		0x08	/* Decorative frames */

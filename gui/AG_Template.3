@@ -42,7 +42,6 @@ The
 .Nm
 widget ...
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -68,10 +67,14 @@ widget.
 The
 .Fa flags
 may include:
+.Pp
 .Bd -literal
 #define AG_TEMPLATE_FOO 0x01   /* Foo */
 .Ed
 .Sh EVENTS
+.\" The
+.\" .Nm
+.\" widget neither reacts to nor generates any event.
 The
 .Nm
 widget reacts to the following events:

@@ -44,7 +44,6 @@ widget binds to a NUL-terminated string and allows the user to edit its
 contents.
 The string may contain UTF-8 encoded characters.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -172,6 +171,7 @@ The string was just modified.
 The following code fragment binds a
 .Nm
 to a string contained in a fixed-size buffer:
+.Pp
 .Bd -literal -offset indent
 char name[32];
 AG_Textbox *tb;
@@ -187,6 +187,7 @@ The following code uses
 to set the value of the default binding, and
 .Fn AG_TextboxDupString
 to retrieve a pointer to it:
+.Pp
 .Bd -literal -offset indent
 AG_Textbox *tb;
 char *value_ptr;
