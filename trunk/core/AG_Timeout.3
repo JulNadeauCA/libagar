@@ -180,6 +180,7 @@ interface is thread-safe, but it is important to use
 and
 .Fn AG_UnlockTimeouts
 in constructions such as:
+.Pp
 .Bd -literal
 AG_LockTimeouts(obj);
 if (AG_TimeoutIsScheduled(obj, &timeout)) {

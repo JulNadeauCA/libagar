@@ -77,14 +77,15 @@ widget displaying the given
 The
 .Fa flags
 may include:
+.Pp
 .Bd -literal
-#define RG_TILEVIEW_NO_SCROLLING	0x01	/* Disable right click scrolling */
-#define RG_TILEVIEW_HIDE_CONTROLS	0x02	/* Hide the current controls */
-#define RG_TILEVIEW_NO_TILING	0x04	/* Don't draw background tiling */
-#define RG_TILEVIEW_NO_EXTENT	0x08	/* Hide the extent rectangle */
-#define RG_TILEVIEW_NO_GRID	0x10	/* Hide the tile grid */
-#define RG_TILEVIEW_SET_ATTRIBS	0x20	/* Setting node attributes */
-#define RG_TILEVIEW_READONLY	0x40
+#define RG_TILEVIEW_NO_SCROLLIN   0x01  /* Disable right click scrolling */
+#define RG_TILEVIEW_HIDE_CONTROLS 0x02  /* Hide the current controls */
+#define RG_TILEVIEW_NO_TILING     0x04  /* Don't draw background tiling */
+#define RG_TILEVIEW_NO_EXTENT     0x08  /* Hide the extent rectangle */
+#define RG_TILEVIEW_NO_GRID       0x10  /* Hide the tile grid */
+#define RG_TILEVIEW_SET_ATTRIBS   0x20  /* Setting node attributes */
+#define RG_TILEVIEW_READONLY      0x40
 .Ed
 .Pp
 The
@@ -222,6 +223,7 @@ A control may manipulate multiple integral and floating-point variables.
 The
 .Fn RG_TileviewAddCtrl
 function creates a new graphical control of the given type:
+.Pp
 .Bd -literal
 enum rg_tileview_ctrl_type {
 	RG_TILEVIEW_POINT,			/* Point (x,y) */
@@ -276,6 +278,7 @@ and
 functions select or deselect the current edition tool.
 .Pp
 The generic features of all edition tools are defined by the structure:
+.Pp
 .Bd -literal
 RG_TileviewToolOps {
 	const char *name;		/* Name of tool */
@@ -300,6 +303,7 @@ RG_TileviewToolOps {
 .Pp
 Two specialized derivates are available, one for bitmap-specific tools and
 another for vector-specific tools:
+.Pp
 .Bd -literal
 RG_TileviewBitmapToolOps {
 	RG_TileviewToolOps ops;

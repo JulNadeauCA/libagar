@@ -30,6 +30,7 @@ void	  AG_FixedDrawBox(void *);
 void	  AG_FixedDrawInvBox(void *);
 void	  AG_FixedDrawFrame(void *);
 void	  AG_FixedScale(void *, int, int);
+
 void	  AG_FixedPut(AG_Fixed *, void *, int, int);
 void	  AG_FixedDel(AG_Fixed *, void *);
 void	  AG_FixedSize(AG_Fixed *, void *, int, int);

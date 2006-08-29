@@ -42,7 +42,6 @@ The
 .Nm
 widget packs its children horizontally or vertically.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -78,6 +77,7 @@ initializes a
 widget.
 .Fa type
 defines whether child widgets are packed horizontally:
+.Pp
 .Bd -literal
 enum ag_box_type {
 	AG_BOX_HORIZ,
@@ -88,11 +88,12 @@ enum ag_box_type {
 Acceptable
 .Fa flags
 include:
+.Pp
 .Bd -literal
-#define AG_BOX_HOMOGENOUS  0x01    /* Divide space evenly */
-#define AG_BOX_HFILL       0x02    /* Fill container's remaining width */
-#define AG_BOX_VFILL       0x04    /* Fill container's remaining height */
-#define AG_BOX_FRAME	0x08	/* Display a frame */
+#define AG_BOX_HOMOGENOUS  0x01  /* Divide space evenly */
+#define AG_BOX_HFILL       0x02  /* Fill container's remaining width */
+#define AG_BOX_VFILL       0x04  /* Fill container's remaining height */
+#define AG_BOX_FRAME       0x08  /* Display a frame */
 .Ed
 .Pp
 The

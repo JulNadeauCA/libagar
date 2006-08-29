@@ -162,6 +162,7 @@ base units to the equivalent number of specified units.
 The following code fragment prints the equivalent milliseconds for a given
 .Va n
 number of seconds:
+.Pp
 .Bd -literal -offset indent
 printf("%f seconds = %f milliseconds", n,
     AG_Base2Unit(n, AG_FindUnit("ms")));
@@ -169,6 +170,7 @@ printf("%f seconds = %f milliseconds", n,
 .Pp
 The following code fragment prints the equivalent of 27 degrees Celsius,
 in kilo Kelvins:
+.Pp
 .Bd -literal -offset indent
 const AG_Unit *degC = AG_FindUnit("degC");
 const AG_Unit *kk = AG_FindUnit("kk");
@@ -179,6 +181,7 @@ printf("27C = %fkk", AG_Unit2Unit(27.0, degC, kk));
 This code fragment displays the value of
 .Va r
 using the resistance unit most suitable to its magnitude.
+.Pp
 .Bd -literal -offset indent
 printf("Resistance = %s", AG_UnitFormat(r, agResistanceUnits));
 .Ed

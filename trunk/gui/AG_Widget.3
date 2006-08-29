@@ -73,7 +73,6 @@ are examples of simple widgets.
 The behavior is undefined if one attempts to attach children to such widgets.
 .El
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Nm .
 .Sh INITIALIZATION
@@ -111,7 +110,7 @@ If the flags
 and
 .Dv AG_WIDGET_UNFOCUSED_BUTTONUP
 are set, the widget will always receive
-.Sq window-mousemotion
+.Sq window-mousemotion ,
 and
 .Sq window-mousebuttonup
 events, even if it's not holding focus.
@@ -136,6 +135,7 @@ The
 argument to
 .Fn AG_WidgetInit
 is a pointer to the following structure:
+.Pp
 .Bd -literal
 AG_WidgetOps {
 	const AG_ObjectOps ops;                 /* Object operations */
@@ -397,31 +397,22 @@ draws a filled rectangle of size
 .Fa w ,
 .Fa h .
 .Sh BINDINGS
-The
-.Nm widget
-structure contains a list of pointers to variables which the widget will
-access directly.
-Widget bindings eliminate the need for event handlers for widgets manipulating
-variables of primitive data types.
+Each widget has a list of named
+.Sq bindings ,
+which allow variables of specific types to be read or written by the widget
+directly, eliminating the need for event handler functions in many situations.
+.Pp
 For example, the
 .Xr AG_Scrollbar 3
-widget defines
+widget defines three values named
 .Sq value ,
 .Sq min
 and
-.Sq max
-as bindings to integral or floating point values and
+.Sq max ,
+which may be bound to both integral and floating point variables.
 .Xr AG_Textbox 3
-is associated with a binding of type
-.Dv AG_WIDGET_STRING .
-Whenever the variable changes, the value displayed by the widget is
-updated automatically.
-The widget also writes directly to the variable.
-.Pp
-All widgets provide default bindings, which point to data allocated and
-initialized by the widget itself.
-.Fn AG_WidgetBind
-is called to override those default bindings.
+defines a string value which accepts a pointer to a fixed-size text buffer
+(and the size of that buffer).
 .Pp
 .nr nS 1
 .Ft "AG_WidgetBinding *"
@@ -521,6 +512,7 @@ function either overrides or creates a new binding.
 Correct values for the
 .Fa type
 argument include:
+.Pp
 .Bd -literal
 enum ag_widget_binding_type {
 	AG_WIDGET_NONE,
@@ -655,7 +647,6 @@ A widget binding has been added or modified.
 .Xr AG_Graph 3 ,
 .Xr AG_HBox 3 ,
 .Xr AG_Label 3 ,
-.Xr AG_Mapview 3 ,
 .Xr AG_Radio 3 ,
 .Xr AG_Scrollbar 3 ,
 .Xr AG_Spinbutton 3 ,

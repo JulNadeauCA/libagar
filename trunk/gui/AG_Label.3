@@ -42,7 +42,6 @@ The
 .Nm
 widget displays single-line or multi-line text.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -68,6 +67,7 @@ function allocates, initializes and attaches a
 widget.
 .Fa type
 is one of:
+.Pp
 .Bd -literal
 enum ag_label_type {
 	AG_LABEL_STATIC,		/* Static text */
@@ -171,6 +171,7 @@ widget neither reacts to nor generates any event.
 .Pp
 .Sh EXAMPLES
 The following code snippet creates a window containing a static label:
+.Pp
 .Bd -literal
 {
 	AG_Window *win;

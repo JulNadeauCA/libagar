@@ -50,7 +50,6 @@ making
 .Nm
 useful for 3D modeling applications.
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
@@ -79,6 +78,7 @@ widget.
 Acceptable values for the
 .Fa layout
 argument include:
+.Pp
 .Bd -literal
 enum ag_mpane_layout {
 	AG_MPANE1,		/* Single view */
@@ -99,6 +99,7 @@ enum ag_mpane_layout {
 The
 .Fa flags
 may include:
+.Pp
 .Bd -literal
 #define AG_MPANE_FRAMES    0x04	/* Decorative frames */
 #define AG_MPANE_FORCE_DIV 0x08	/* Always divide (not user-resizable) */
