@@ -1,0 +1,157 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt AG_PIXMAP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Pixmap
+.Nd agar pixmap display widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays an image in pixmap format.
+It is frequently used along with
+.Xr AG_Fixed 3
+to display interface decorations.
+.Pp
+In OpenGL mode, the image surfaces are uploaded to the texture unit as
+they are mapped or updated.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromSurface "void *parent" "Uint flags" "SDL_Surface *src"
+.Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromSurfaceCopy "void *parent" "Uint flags" "SDL_Surface *src"
+.Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromSurfaceScaled "void *parent" "Uint flags" "SDL_Surface *src" "int scaled_width" "int scaled_height"
+.Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromBMP "void *parent" "Uint flags" "const char *path"
+.Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromXCF "void *parent" "Uint flags" "const char *path"
+.Pp
+.nr nS 0
+All of these functions create a new
+.Nm
+with an image obtained from the given source.
+.Pp
+.Fn AG_PixmapFromSurface
+maps an existing
+.Xr SDL_Surface 3 ,
+which must remain valid until the widget is destroyed.
+.Fn AG_PixmapFromSurfaceCopy
+creates a copy of the given
+.Ft SDL_Surface
+that will be freed automatically along with the widget instance.
+.Fn AG_PixmapFromSurfaceScaled
+uses a rescaled copy of the given surface.
+.Pp
+Use
+.Fn AG_PixmapFromBMP
+to load the image from a Windows Bitmap file, or
+.Fn AG_PixmapFromXCF
+to load from a Gimp XCF file.
+.Sh CHANGING SURFACES
+.nr nS 1
+.Ft "int"
+.Fn AG_PixmapAddSurface "AG_Pixmap *pixmap" "SDL_Surface *surface"
+.Pp
+.Ft "int"
+.Fn AG_PixmapAddSurfaceCopy "AG_Pixmap *pixmap" "SDL_Surface *surface"
+.Pp
+.Ft "int"
+.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "SDL_Surface *surface" "int scaled_width" "int scaled_height"
+.Pp
+.Ft "void"
+.Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
+.Ft "void"
+.Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
+.Ft "void"
+.Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap"
+.Pp
+.Ft "void"
+.Fn AG_PixmapSetCoords "AG_Pixmap *pixmap" "int s" "int t"
+.Pp
+.nr nS 0
+The
+.Nm
+widget can map multiple surfaces and switch between them.
+To add a new surface, use
+.Fn AG_PixmapAddSurface ,
+.Fn AG_PixmapAddSurfaceCopy
+or
+.Fn AG_PixmapAddSurfaceScaled .
+.Pp
+.Fn AG_PixmapSetSurface
+changes the currently visible surface to another surface that has been
+previously mapped with
+.Fn AG_PixmapAddSurface* .
+To replace an existing mapped surface, use
+.Fn AG_PixmapReplaceSurface
+with the name of the surface.
+.Pp
+If you need to modify the contents of a previously mapped surface, it is
+necessary to call
+.Fn AG_PixmapUpdateSurface
+when you're done.
+It has no effect in direct video mode, but it causes the texture to be
+re-uploaded to the graphics hardware in OpenGL mode.
+.Pp
+The
+.Fn AG_PixmapSetCoords
+function changes the source coordinates of the active surface.
+The default is [0,0].
+.Sh EVENTS
+The
+.Nm
+widget neither reacts to nor generates any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Fixed 3 ,
+.Xr AG_View 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
