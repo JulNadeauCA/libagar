@@ -80,11 +80,11 @@ The behavior is undefined if one attempts to attach children to such widgets.
 .nr nS 1
 .Ft "void"
 .Fn AG_WidgetInit "void *widget, const char *type, const void *widget_ops" "int flags"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_WidgetInit
-function initializes a generic
+function initializes a
 .Nm
 structure.
 Acceptable
@@ -186,8 +186,8 @@ parent container.
 .Pp
 .Ft "void"
 .Fn AG_WidgetFindFocused "AG_Window *win"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AGWIDGET_FOCUSED
 macro returns 1 if a widget holds focus inside of its parent.
@@ -212,8 +212,8 @@ to it if it was found, or NULL otherwise.
 .Pp
 .Ft int
 .Fn AG_WidgetRelativeArea "void *widget" "int x" "int y"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_WidgetArea
 function returns 1 if absolute view coordinates
@@ -310,8 +310,8 @@ direct video agPrim in OpenGL mode.
 .Pp
 .Ft void
 .Fn agPrim.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_WidgetPushClipRect
 function creates a clipping rectangle over the given area (given in
@@ -422,6 +422,7 @@ All widgets provide default bindings, which point to data allocated and
 initialized by the widget itself.
 .Fn AG_WidgetBind
 is called to override those default bindings.
+.Pp
 .nr nS 1
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetBind "void *widget, const char *binding" "enum ag_widget_binding_type type, ..."
@@ -475,8 +476,7 @@ is called to override those default bindings.
 .Fn AG_WidgetString "void *widget" "const char *binding"
 .Pp
 .Ft size_t
-.Fn AG_WidgetCopyString "void *widget, const char *binding, char *dst" \
-                       "size_t dst_size"
+.Fn AG_WidgetCopyString "void *widget, const char *binding, char *dst" "size_t dst_size"
 .Pp
 .Ft void
 .Fn AG_WidgetSetBool "void *widget" "const char *binding" "int i"
@@ -542,42 +542,38 @@ enum ag_widget_binding_type {
 .Pp
 The meaning of the following arguments depend on the type:
 .Bl -tag -width "AG_WIDGET_STRING "
-.It AG_WIDGET_PROP
-Translate a
+.It Dv AG_WIDGET_PROP
+Translate an
 .Xr AG_Prop 3
 value transparently.
-.Pp
 .Bl -tag -width "const char *key " -compact
-.It "AG_Object *obj"
+.It Ft AG_Object *obj
 Object holding the property.
-.It "const char *key"
+.It Ft const char *key
 Property key.
 .El
-.It AG_WIDGET_STRING
+.It Dv AG_WIDGET_STRING
 Fixed-size, NUL-terminated string.
-.Pp
 .Bl -tag -width "AG_Mutex *lock " -compact
-.It "AG_Mutex *lock"
+.It Ft AG_Mutex *lock
 Lock to acquire, or NULL.
-.It "char *text"
+.It Ft char *text
 Fixed-size, NUL-terminated string.
-.It "size_t bufsize"
+.It Ft size_t bufsize
 Total buffer size in bytes.
 .El
-.Pp
 .Bl -tag -width "AG_Mutex *lock " -compact
-.It "AG_Mutex *lock"
+.It Ft AG_Mutex *lock
 Lock to acquire, or NULL.
-.It "size_t bufsize"
+.It Ft size_t bufsize
 Total buffer size in bytes.
 .El
-.It WIDGET_*
+.It Dv WIDGET_*
 Other types of data.
-.Pp
 .Bl -tag -width "AG_Mutex *lock " -compact
-.It "AG_Mutex *lock"
+.It Ft AG_Mutex *lock
 Lock to acquire, or NULL.
-.It "void *p"
+.It Ft void *p
 Pointer to the data.
 .El
 .El

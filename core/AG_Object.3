@@ -91,8 +91,8 @@ Event processing and scheduling
 .Pp
 .Ft "void"
 .Fn AG_UnlockLinkage "void"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_ObjectNew
 function allocates and initializes a new, generic AG_Object and attaches it to
@@ -343,8 +343,8 @@ acquire and release the world's linkage lock, respectively.
 .Pp
 .Ft "Uint32"
 .Fn AG_ObjectEncodeName "const void *obj" "const void *depobj"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_ObjectInUse
 function returns 1 if the given object is being referenced by another object
@@ -391,8 +391,8 @@ reference).
 .Pp
 .Ft "void"
 .Fn AG_ObjectFreeZerodeps "AG_Object *obj"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_ObjectDestroy
 function is called to free all resources reserved by the given object instance,
@@ -472,8 +472,8 @@ flag set.
 .Pp
 .Ft "int"
 .Fn AG_ObjectPageOut "void *obj" "enum ag_object_page_item item"
-.nr nS 0
 .Pp
+.nr nS 0
 These functions implement archiving of objects (also known as
 "serialization" or "flattening" in object-oriented terminology).
 Persistent information such as size, dependencies and position in the
