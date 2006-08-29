@@ -18,6 +18,7 @@ typedef struct ag_fixed {
 #define AG_FIXED_BOX		0x10	/* Draw a box */
 #define AG_FIXED_INVBOX		0x20	/* Draw a box */
 #define AG_FIXED_FRAME		0x40	/* Draw a frame */
+#define AG_FIXED_EXPAND		(AG_FIXED_HFILL|AG_FIXED_VFILL)
 } AG_Fixed;
 
 __BEGIN_DECLS
