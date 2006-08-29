@@ -305,7 +305,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 }
 
 void
-AG_NotebookSetTabVisiblity(AG_Notebook *nb, int flag)
+AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 {
 	if (flag) {
 		nb->flags &= ~(AG_NOTEBOOK_HIDE_TABS);

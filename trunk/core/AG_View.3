@@ -63,19 +63,22 @@ If the
 property is set,
 .Fn view_init
 will attempt to create an OpenGL rendering context, and the GUI will arrange
-for widgets to be rendered using OpenGL agPrim.
+for widgets to be rendered using OpenGL.
 .Pp
 The
 .Fn AG_ViewDestroy
 function frees resources allocated by the view structure.
+It is invoked automatically by
+.Xr AG_Destroy 3 .
 .Pp
 The
 .Fn AG_SetRefreshRate
-function sets the nominal refresh rate, given in frames/second.
-The default
-.Fn event_loop
-will attempt to draw exactly that number of frames per second and then idle
+function sets the maximum refresh rate, given in frames/second.
+The stock event loop function
+.Xr AG_EventLoop_FixedFPS 3
+will attempt to draw exactly this number of frames per second and then idle
 as much as possible.
+Other event handler functions may ignore this value entirely.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
@@ -108,33 +111,26 @@ The
 .Fn AG_DupSurface
 returns a newly allocated surface containing a copy of
 .Fa src .
-.Pp
-The
 .Fn AG_ScaleSurface
-functions performs pixmap scaling of surface
+returns a copy of
 .Fa src
-to
-.Fa width
-by
-.Fa height
-pixels.
+scaled to the given size in pixels.
 If
 .Fa dst
 is NULL, a new surface is allocated.
 .Pp
-The
 .Fn AG_SamePixelFmt
-function returns 1 if the surfaces
+compares the two surfaces
 .Fa s1
 and
 .Fa s2
-share the same depth, RGBA masks and colorkey.
+and return 1 if they both share the same color depth, RGBA masks and colorkey
+settings.
 .Pp
 The
 .Fn AG_SetAlphaPixels
-function changes the alpha value of all pixels except those with an
-alpha channel of 0, to
-.Fa alpha .
+function changes the alpha component of all pixels with a non-zero alpha
+component.
 .Pp
 If OpenGL support is available,
 .Fn AG_SurfaceTexture
@@ -154,18 +150,19 @@ to the dirty rectangle array the event loop will pass to
 .Xr SDL_UpdateRects 3
 when the display is refreshed.
 .Fn VIEW_UPDATE
-is a no-op if OpenGL is enabled.
+is a no-op if OpenGL mode is in use.
 .Pp
 The
 .Fn AG_DumpSurface
-function encode a JPEG image file from the contents of a surface.
+function encodes a JPEG image file from the contents of a surface.
 If the argument is not NULL, the name of the file is copied to
 .Fa path_save ,
 which must be
 .Dv MAXPATHLEN
 bytes in size.
 .Fn AG_DumpSurface
-returns 0 on success, -1 on failure.
+returns 0 on success and -1 on failure.
+The function always fails if Agar was not compiled with libjpeg support.
 .Sh PIXEL OPERATIONS
 .nr nS 1
 .Ft "void"
@@ -259,8 +256,7 @@ enum ag_blend_func {
 	AG_ALPHA_DST,			/* dA = dA */
 	AG_ALPHA_MEAN,			/* dA = (sA+dA)/2 */
 	AG_ALPHA_SOURCE_MINUS_DST,	/* dA = (sA-dA) */
-	AG_ALPHA_DST_MINUS_SOURCE,	/* dA = (dA-sA) */
-	AG_ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
+	AG_ALPHA_DST_MINUS_SOURCE	/* dA = (dA-sA) */
 };
 .Ed
 .Pp
@@ -289,6 +285,11 @@ at compile-time.
 .Fn AG_FindWindow "char *name"
 .Pp
 .nr nS 0
+The Agar GUI operates on a set of windows which are associated with an
+.Nm .
+For more details, see
+.Xr AG_Window 3 .
+.Pp
 The
 .Fn AG_ViewAttach
 function attaches the window pointed to by
