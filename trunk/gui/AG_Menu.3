@@ -225,14 +225,14 @@ item.
 .Pp
 .nr nS 0
 The
-.Fn menu_*_bool
+.Fn AG_Menu*Bool
 functions create a new item that binds to the given boolean variable.
 If the
 .Fa invert
 parameter is non-zero, the actual value is inverted.
 .Pp
 The
-.Fn menu_*_flags
+.Fn AG_Menu*Flags
 functions create a new item controlling one or more bits inside an integer
 value.
 The
@@ -243,9 +243,9 @@ If
 is non-zero, the bits are inverted.
 .Pp
 The
-.Fn menu_*_bool_mp
+.Fn AG_Menu*BoolMp
 and
-.Fn menu_*_flags_mp
+.Fn AG_Menu*FlagsMp
 variants accept a
 .Ft "AG_Mutex *"
 argument specifying a mutex to acquire prior to reading or writing the data.
