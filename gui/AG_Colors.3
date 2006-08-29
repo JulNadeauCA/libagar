@@ -1,0 +1,162 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 29, 2006
+.Dt AG_COLORS 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Colors
+.Nd agar GUI color manager
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interfaces manages a global array of colors that are shared between visible
+widgets.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn AG_ColorsInit "void"
+.Pp
+.Ft "int"
+.Fn AG_ColorsLoad "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_ColorsSave "const char *path"
+.nr nS 0
+The
+.Fn AG_ColorsInit
+function loads the default Agar color scheme.
+It is automatically invoked by
+.Xr AG_InitVideo 3 .
+.Pp
+The
+.Fn AG_ColorsLoad
+function loads the color scheme from the given Agar color scheme (*.acs) file.
+.Fn AG_ColorsSave
+saves the current color scheme to the given *.acs file.
+.Sh COLOR INDICES
+.Pp
+The widget rendering functions read the colors from the
+.Va agColors[]
+array using the constants below.
+.Bd -literal
+enum {
+	BG_COLOR,
+	FRAME_COLOR,
+	LINE_COLOR,
+	TEXT_COLOR,
+	WINDOW_BG_COLOR,
+	WINDOW_HI_COLOR,
+	WINDOW_LO_COLOR,
+	TITLEBAR_FOCUSED_COLOR,
+	TITLEBAR_UNFOCUSED_COLOR,
+	TITLEBAR_CAPTION_COLOR,
+	BUTTON_COLOR,
+	BUTTON_TXT_COLOR,
+	DISABLED_COLOR,
+	CHECKBOX_COLOR,
+	CHECKBOX_TXT_COLOR,
+	GRAPH_BG_COLOR,
+	GRAPH_XAXIS_COLOR,
+	HSVPAL_CIRCLE_COLOR,
+	HSVPAL_TILE1_COLOR,
+	HSVPAL_TILE2_COLOR,
+	MENU_UNSEL_COLOR,
+	MENU_SEL_COLOR,
+	MENU_OPTION_COLOR,
+	MENU_TXT_COLOR,
+	MENU_SEP1_COLOR,
+	MENU_SEP2_COLOR,
+	NOTEBOOK_BG_COLOR,
+	NOTEBOOK_SEL_COLOR,
+	NOTEBOOK_TXT_COLOR,
+	RADIO_SEL_COLOR,
+	RADIO_OVER_COLOR,
+	RADIO_HI_COLOR,
+	RADIO_LO_COLOR,
+	RADIO_TXT_COLOR,
+	SCROLLBAR_COLOR,
+	SCROLLBAR_BTN_COLOR,
+	SCROLLBAR_ARR1_COLOR,
+	SCROLLBAR_ARR2_COLOR,
+	SEPARATOR_LINE1_COLOR,
+	SEPARATOR_LINE2_COLOR,
+	TABLEVIEW_COLOR,
+	TABLEVIEW_HEAD_COLOR,
+	TABLEVIEW_HTXT_COLOR,
+	TABLEVIEW_CTXT_COLOR,
+	TABLEVIEW_LINE_COLOR,
+	TABLEVIEW_SEL_COLOR,
+	TEXTBOX_COLOR,
+	TEXTBOX_TXT_COLOR,
+	TEXTBOX_CURSOR_COLOR,
+	TLIST_TXT_COLOR,
+	TLIST_BG_COLOR,
+	TLIST_LINE_COLOR,
+	TLIST_SEL_COLOR,
+	MAPVIEW_GRID_COLOR,
+	MAPVIEW_CURSOR_COLOR,
+	MAPVIEW_TILE1_COLOR,
+	MAPVIEW_TILE2_COLOR,
+	MAPVIEW_MSEL_COLOR,
+	MAPVIEW_ESEL_COLOR,
+	TILEVIEW_TILE1_COLOR,
+	TILEVIEW_TILE2_COLOR,
+	TILEVIEW_TEXTBG_COLOR,
+	TILEVIEW_TEXT_COLOR,
+	TRANSPARENT_COLOR,
+	HSVPAL_BAR1_COLOR,
+	HSVPAL_BAR2_COLOR,
+	PANE_COLOR,
+	PANE_CIRCLE_COLOR,
+	MAPVIEW_RSEL_COLOR,
+	MAPVIEW_ORIGIN_COLOR,
+	FOCUS_COLOR,
+	TABLE_COLOR,
+	TABLE_LINE_COLOR,
+	FIXED_BG_COLOR,
+	FIXED_BOX_COLOR,
+	LAST_COLOR
+};
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_View 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0.
+Colors were previously configurable on a per-widget basis, but this was
+changed to reduce memory consumption.
