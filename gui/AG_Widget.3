@@ -235,23 +235,15 @@ children to the video display.
 .Pp
 The
 .Fn agPrim.*
-functions are 2D agPrim (and some higher-level drawing routines)
-specially designed for widgets.
-For a more general vector graphics API, look into OpenGL or
-Agar's
-.Xr VG 3
-library.
+functions implement 2D primitives designed specifically for widgets.
 .Pp
 The coordinates for the
 .Fn agPrim.*
 functions are given in pixels and are
 relative to the parent (container) widget, and the
-.Fa ncolor
-argument is an index into the widget's color array (which is constructed
-from
-.Fn widget_map_color
-and
-.Fn widget_push_color ) .
+.Fa c
+arguments are indices into the global GUI color array (see
+.Xr AG_Colors 3 ).
 .Pp
 Primitive functions are members of the
 .Va agPrim
@@ -637,25 +629,12 @@ A widget binding has been added or modified.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Window 3 ,
-.Xr AG_Bitmap 3 ,
-.Xr AG_Box 3 ,
-.Xr AG_Button 3 ,
-.Xr AG_Checkbox 3 ,
-.Xr AG_Combo 3 ,
-.Xr AG_FSpinbutton 3 ,
-.Xr AG_Graph 3 ,
-.Xr AG_HBox 3 ,
-.Xr AG_Label 3 ,
-.Xr AG_Radio 3 ,
-.Xr AG_Scrollbar 3 ,
-.Xr AG_Spinbutton 3 ,
-.Xr AG_Textbox 3 ,
-.Xr AG_Titlebar 3 ,
-.Xr AG_Tlist 3 ,
-.Xr AG_UCombo 3 ,
-.Xr AG_VBox 3
+.Xr AG_View 3 ,
+.Xr AG_Window 3
 .Sh HISTORY
 The
 .Nm
 interface first appeared in Agar 1.0.
+.Sh BUGS
+Atomic widget binding operations require the use of mutexes, read-write locks
+are not supported.

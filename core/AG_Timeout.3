@@ -209,11 +209,6 @@ always cancels every scheduled timeout.
 .Pp
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
-.Sh TROUBLETONS
-The flags
-.Dv AG_TIMEOUT_DETACHABLE
-.Dv AG_TIMEOUT_LOADABLE
-have confusing names.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
@@ -229,9 +224,7 @@ have confusing names.
 The
 .Nm
 facility first appeared in Agar 1.0.
-The interface was inspired by the OpenBSD
+The interface was modeled after the OpenBSD
 .Xr timeout 9
 API designed by Artur Grabowski and Thomas Nordin.
-The prototype for callbacks is inspired from SDL by Sam Lantinga.
-The implementation uses the algorithms presented by George Varghese and
-Tony Lauck.
+Implementation uses the algorithms presented by George Varghese and Tony Lauck.

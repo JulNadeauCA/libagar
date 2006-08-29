@@ -60,36 +60,41 @@ Event handler functions are declared as:
 .nr nS 1
 .\" NOMANLINK
 .Ft void
-.Fn my_event_handler "AG_Event *event"
+.Fn MyEventHandler "AG_Event *event"
 .Pp
 .nr nS 0
 The event arguments can be retrieved using macros such as
 .Fn AG_INT
 and
-.Fn AG_PTR ,
+.Fn AG_NAMED_INT ,
 or directly from the
 .Fa event
-structure.
+structure where a variable number of arguments is needed.
 Two special arguments are
 .Fn AG_SELF
 (the object receiving the event) and
 .Fn AG_SENDER
 (the object sending the event, if applicable).
+.Sh EVENT LOOP
+The event loop of an Agar application typically waits for events, invokes
+GUI rendering routines and processes timer events.
+Since there is no general solution, developers will often use a custom event
+loop function.
+Agar supports this by providing a simple interface to the GUI and event
+subsystems.
 .Pp
-The
-.Nm
-subsystem also implements the
-.Sq main loop
-used by Agar applications, which performs the following operations:
+Agar also provides a generic event loop function called
+.Fn AG_EventLoop_FixedFPS .
+It performs the following:
+.Pp
 .Bl -tag -width "SDL event processing "
 .It Video updates
-Agar attempts to maintain a stable video refresh rate by periodically
+It attempts to maintain a stable video refresh rate by periodically
 readjusting the delays.
-This allows animations to run at the same speed under different hardware.
 The nominal refresh rate is selected by
 .Xr AG_SetRefreshRate 3 ,
 usually at initialization time.
-If Agar considers that there is enough time left after the refresh cycle, it
+If it considers that there is enough time left after the refresh cycle, it
 invokes 
 .Xr SDL_Delay 3
 to relinquish the CPU.
@@ -235,8 +240,9 @@ The
 function relays the given event to object
 .Fa obj .
 .Sh EVENT FLAGS
-.Pp
-Acceptable flags for the
+Acceptable
+.Va flags
+for the
 .Nm
 structure include:
 .Pp
@@ -262,20 +268,22 @@ is a read-only flag that is set only if an event of this type has been
 previously scheduled for execution by
 .Fn AG_SchedEvent .
 .Sh ARGUMENT MANIPULATION
-.Pp
 In some cases it is desirable for functions to accept a list of event handler
 arguments like
 .Fn AG_SetEvent ,
 and possibly manipulate its entries directly.
 For example, the
-.Fn AG_MenuAction
-function of the
+.Xr AG_MenuAction 3
+function of the GUI widget
 .Xr AG_Menu 3
-widget accepts a pointer to an event handler function, followed by an
+accepts a pointer to an event handler function, followed by an
 .Fn AG_SetEvent
-style format string and a variable list of arguments.
+style format string and a variable list of arguments, making the code
+more understandable.
+.Pp
 The following macros provide an interface for manipulating event handler
-arguments directly.
+arguments directly:
+.Pp
 .nr nS 1
 .Ft void
 .Fn AG_EVENT_INSERT_ARG "AG_Event *ev, va_list ap, MEMBER, TYPE"
@@ -298,8 +306,8 @@ using the given
 argument.
 .Fa MEMBER
 is the name of the
-.Fa "union evarg"
-member (for example "s" for a string).
+.Ft "union evarg"
+member ("p" = pointer, "s" = string, "i" = int, "li" = long int and "f" = double).
 .Pp
 The
 .Fn AG_EVENT_INSERT_VAL

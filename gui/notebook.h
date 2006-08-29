@@ -52,7 +52,7 @@ void AG_NotebookSetSpacing(AG_Notebook *, int);
 void AG_NotebookSetTabAlignment(AG_Notebook *, enum ag_notebook_tab_alignment);
 void AG_NotebookSetTabFontFace(AG_Notebook *, const char *);
 void AG_NotebookSetTabFontSize(AG_Notebook *, int);
-void AG_NotebookSetTabVisiblity(AG_Notebook *, int);
+void AG_NotebookSetTabVisibility(AG_Notebook *, int);
 
 AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,
 		                  enum ag_box_type);

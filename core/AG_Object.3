@@ -38,24 +38,16 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-Agar's
+The Agar object system is implemented around the generic
 .Nm
-layer is responsible for handling:
+structure.
+The object system handles memory management and persistence (ie. loading or
+saving object data to disk/network as needed) and dependency keeping between
+multiple objects organized in a tree structure.
 .Pp
-.Bl -bullet -compact -offset indent
-.It
-Memory management
-.It
-Object archiving (persistence)
-.It
-Interdependencies between multiple objects
-.It
-Object linkage
-.It
-Shared media (eg. graphics, audio)
-.It
-Event processing and scheduling
-.El
+.Nm
+provides a generic event delivery and actions system with support for built-in
+type safety, named arguments and multithreaded events.
 .Pp
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
@@ -115,8 +107,7 @@ Instances of
 characters in
 .Fa name
 are replaced by
-.Sq _ ,
-since slash is the path name separator.
+.Sq _ .
 If
 .Fa ops
 is not NULL, it should point to the following structure:
@@ -137,33 +128,46 @@ The
 operation initializes an
 .Nm
 instance.
+The routine should call
+.Fn AG_ObjectInit
+to initialize the generic part of the object, name the object and set the
+.Ft AG_ObjectOps
+vector.
+.Pp
+The
 .Fn reinit
-is reponsible for releasing data dynamically allocated by the AG_Object (eg.
-.Xr AG_Map 3
-nodes).
-.Fn reinit
-is invoked prior to rereading an AG_Object's data from disk, as part of an
-.Dv AG_OBJECT_DATA
-page out operation.
+operation is invoked prior to rereading an
+.Nm 's
+data from disk, as part of a
+.Sq page out
+operation.
+Typically, the routine releases data that was dynamically allocated by the
+.Nm
+and puts the object back in a consistent state to simplify the
+.Fn load
+operation.
 .Pp
 The
 .Fn destroy
-operation releases all data allocated by the AG_Object, including data allocated
-from
+operation releases all data allocated by the
+.Nm ,
+including data allocated from
 .Fn init .
 The
 .Fn destroy
 operation is invoked from
 .Fn AG_ObjectDestroy .
-It must not free the AG_Object structure, and it does not need to bother about
-placing the AG_Object data back into a consistent state.
+The routine must not free the
+.Nm
+structure itself.
 .Pp
 The
 .Fn load
 and
 .Fn save
-operations are responsible for archiving any persistent AG_Object data
-(see the
+operations are responsible for archiving any persistent
+.Nm
+data (see the
 .Em ARCHIVING AND PAGING
 section for more information).
 .Pp
@@ -226,15 +230,13 @@ and
 with an argument of
 .Dv AG_OBJECT_DATA
 become no-ops.
-.Pp
 The
 .Dv AG_OBJECT_INDESTRUCTIBLE
 flag advises the object editor not to destroy this object instance.
 .Dv AG_OBJECT_READONLY
 advises the object-specific
 .Va edit
-operation that this instance should not be edited.
-.Pp
+operation that this instance should not be modified.
 The
 .Dv AG_OBJECT_REOPEN_ONLOAD
 flag causes the object's edition window
@@ -245,39 +247,37 @@ by
 .Fn AG_ObjectLoad ,
 such that the editor does not need to worry about referencing dynamically
 allocated object substructures that are freed by the load routine.
-.Pp
 The
 .Dv AG_OBJECT_DATA_RESIDENT
 flag is set by the
 .Nm
 system to indicate that the instance's dynamic data is resident.
 .Pp
-The
+Objects are organized in a tree structure.
 .Fn AG_ObjectAttach
-and
+attaches an object to a new parent and
 .Fn AG_ObjectDetach
-functions respectively link and unlink an object instance against another.
+detaches an object from its current parent.
+These operations raise
+.Sq attached
+and
+.Sq detached
+events.
 Prior to detaching the object,
 .Fn AG_ObjectDetach
 cancels scheduled
 .Xr AG_Timeout 3
-events (that do not have the
+events (unless they have the special
 .Dv AG_TIMEOUT_DETACHABLE
 flag set).
-These operations raise
-.Fn attached
-and
-.Fn detached
-events.
 If
 .Fa parent
 is NULL,
 .Fn AG_ObjectAttach
 is a no-op.
 .Pp
-The
 .Fn AG_ObjectAttachPath
-function is a variant of
+is a variant of
 .Fn AG_ObjectAttach
 which looks up the parent using
 .Fa parent_path .
@@ -323,12 +323,14 @@ buffer, returning 0 on success and -1 on failure.
 Since
 .Fn AG_ObjectCopyName
 must perform an inverse traversal of the tree, and an object instance may
-move from one parent to another, the root provides a lock to protect its
+move from one parent to another, there is a global lock protecting the object
 linkage.
+.Pp
 .Fn AG_LockLinkage
 and
 .Fn AG_UnlockLinkage
-acquire and release the world's linkage lock, respectively.
+acquire or release the global object tree lock.
+Unless Agar has been compiled with thread-safety, these functions are no-ops.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
@@ -340,37 +342,37 @@ acquire and release the world's linkage lock, respectively.
 .Ft "void"
 .Fn AG_ObjectDelDep "void *obj" "void *depobj"
 .Pp
-.Ft "int"
-.Fn AG_ObjectFindDep "const void *obj" "Uint32 ind" "AG_Object **objp"
-.Pp
 .Ft "Uint32"
 .Fn AG_ObjectEncodeName "const void *obj" "const void *depobj"
 .Pp
-.nr nS 0
-The
-.Fn AG_ObjectInUse
-function returns 1 if the given object is being referenced by another object
-instance (which is sharing the same root).
+.Ft "int"
+.Fn AG_ObjectFindDep "const void *obj" "Uint32 ind" "AG_Object **objp"
 .Pp
-The
+.nr nS 0
+.Fn AG_ObjectInUse
+returns 1 if the given object is being referenced by another object instance
+or 0 if it isn't.
+.Pp
 .Fn AG_ObjectAddDep
-function either creates a new dependency upon
-.Fa depobj ,
-or increment the reference count if one exists.
+either creates a new dependency upon
+.Fa depobj
+or increments the reference count if one exists.
 .Fn AG_ObjectDelDep
 decrements the reference count upon
-.Fa depobj ,
-removing it if it reaches 0.
+.Fa depobj
+and removes the dependency if the count reaches 0 (unless the object has the
+.Dv AG_OBJECT_PRESERVE_DEPS
+flag set).
 .Pp
-The
-.Fn AG_ObjectFindDep
-function resolves the given dependency.
 .Fn AG_ObjectEncodeName
-serializes an object reference.
+returns a 32-bit integer identifier for the dependency, suitable for writing
+into data files.
+It may return the special values 0 (NULL reference) and 1 (self-reference),
+the meaning of which is object-specific.
 .Pp
-Serialized dependencies are integers which are either indexes into the object's
-dependency table, or the special values 0 (NULL reference) and 1 (self
-reference).
+.Fn AG_ObjectFindDep
+tries to resolve the given 32-bit dependency identifier, return 0 on success
+and -1 on failure.
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
@@ -441,15 +443,6 @@ operation of
 (if there is one) in order to free dynamic data, and clears the
 .Dv AG_OBJECT_DATA_RESIDENT
 flag.
-For example, in the Agar-SG library, the
-.Va reinit
-operation of
-.Xr SG 3 ,
-destroys all the nodes in the graph, such that the
-.Fn load
-and
-.Fn destroy
-operations do not need to.
 .Pp
 The
 .Fn AG_ObjectFreeZerodeps

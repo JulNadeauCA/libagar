@@ -345,7 +345,7 @@ The
 widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "void *selected "
-.It Va void *selected
+.It Ft "void *selected"
 The
 .Va p1
 (user pointer) value of the selected item, or NULL if there is no selection.
@@ -381,14 +381,18 @@ may have been destroyed.
 Item insertion and removal are O(1) operations.
 For n items, lookup and mouse selection handling is O(n), which becomes
 significant when viewing the bottom of lists with large n.
-.Pp
 For polled lists where the item list is rebuilt very frequently, it would
 be much more efficient to store the items in an array, at the cost of O(n)
 removal.
 This would also allow O(1) handling of mouse selections since all items have
 the same height.
-.Pp
 The allocation of items also incur significant overhead with polled lists.
+.Pp
+The
+.Xr AG_Table 3
+widget is a more efficient alternative to
+.Nm
+in many situations, but it does not support trees.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
