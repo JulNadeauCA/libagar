@@ -64,7 +64,6 @@ values.
 .Fn AG_MenuCollapse "AG_Menu *menu" "AG_MenuItem *item"
 .Pp
 .nr nS 0
-.Pp
 The
 .Fn AG_MenuNew
 function allocates, initializes, and attaches a
@@ -99,8 +98,8 @@ function manually destroys the popup window.
 .Pp
 .Ft "void"
 .Fn AG_MenuFreeSubItems "AG_MenuItem *item" 
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_MenuAddItem
 inserts a new top-level menu item with a label displaying the string
@@ -132,8 +131,8 @@ destroys all subitems associated with
 .Pp
 .Ft "void"
 .Fn AG_MenuSetLabel "AG_MenuItem *" "const char *label"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_MenuAction
 function inserts a new action item identified by the string
@@ -258,8 +257,8 @@ argument specifying a mutex to acquire prior to reading or writing the data.
 .Pp
 .Ft "void"
 .Fn AG_MenuSection "AG_MenuItem *item" "const char *text" "..."
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_MenuSeparator
 function inserts a horizontal menu separator.

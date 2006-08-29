@@ -61,8 +61,8 @@ Event handler functions are declared as:
 .\" NOMANLINK
 .Ft void
 .Fn my_event_handler "AG_Event *event"
-.nr nS 0
 .Pp
+.nr nS 0
 The event arguments can be retrieved using macros such as
 .Fn AG_INT
 and
@@ -130,8 +130,8 @@ are expired.
 .Pp
 .Ft "void"
 .Fn AG_ForwardEvent "void *rcvr" "AG_Event *event"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_SetEvent
 function registers a new event handler to service events of type
@@ -284,8 +284,8 @@ arguments directly.
 .Pp
 .Ft void
 .Fn AG_EVENT_PUSH_ARG "va_list ap, char fmt_char, AG_Event *ev"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_EVENT_INSERT_ARG
 macro inserts an argument at the end of the argument vector for

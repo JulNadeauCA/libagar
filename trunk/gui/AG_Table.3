@@ -69,8 +69,8 @@ provides tree support, but no multi-column functionality.
 .Pp
 .Ft "void"
 .Fn AG_TableInit "AG_Table *tbl" "Uint flags"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_TableNew
 function allocates, initializes and attaches a
@@ -118,8 +118,8 @@ event before the table is drawn.
 .Pp
 .Ft "void"
 .Fn AG_TableEnd "AG_Table *tbl"
-.nr nS 0
 .Pp
+.nr nS 0
 .Nm
 is aimed at tables with dynamic content that has to be respecified
 frequently.
@@ -157,8 +157,8 @@ unnecessary text rendering (and texture uploads in OpenGL mode).
 .Pp
 .Ft "int"
 .Fn AG_TableColSelected "AG_Table *tbl" "int col"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_TableAddCol
 function inserts a new column into the table and returns an integer column
@@ -208,8 +208,8 @@ selection flag of individual cells; their meaning is application-specific.
 .Pp
 .Ft "void"
 .Fn AG_TableRowSelected "AG_Table *tbl" "Uint row"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn AG_TableAddRow
 function inserts a new row into the table.
@@ -274,8 +274,8 @@ returns 1 if the given row is selected, 0 otherwise.
 .Pp
 .Ft "void"
 .Fn AG_TableCompareCells "const AG_TableCell *c1" "const AG_TableCell *c2"
-.nr nS 0
 .Pp
+.nr nS 0
 .Fn AG_TableSelectCell ,
 .Fn AG_TableDeselectCell
 and
@@ -304,8 +304,8 @@ For pointer and surface cells, the return value is 1 if they differ.
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
-.nr nS 0
 .Pp
+.nr nS 0
 .Fn AG_TableSaveASCII
 writes the formatted contents of the table into an ASCII file
 .Fa f .
