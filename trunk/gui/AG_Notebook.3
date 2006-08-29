@@ -1,0 +1,176 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 29, 2006
+.Dt AG_NOTEBOOK 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Notebook
+.Nd agar notebook container widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget maintains a set of
+.Xr AG_Box 3
+containers, only one of which is visible at any given time.
+The user can select the visible container by clicking on a tab, or it can
+be selected programmatically.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Notebook *"
+.Fn AG_NotebookNew "void *parent" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_NotebookInit "AG_Notebook *nb" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetPadding "AG_Notebook *nb" "int padding"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetSpacing "AG_Notebook *nb" "int spacing"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetTabAlignment "AG_Notebook *nb" "enum ag_notebook_tab_alignment alignment"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetTabFontFace "AG_Notebook *nb" "const char *font_face"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetTabFontSize "AG_Notebook *nb" "int font_size"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSetTabVisibility "AG_Notebook *nb" "int flag"
+.Pp
+.nr nS 0
+The
+.Fn AG_NotebookNew
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn AG_NotebookInit
+initializes a
+.Nm
+widget.
+.Pp
+The
+.Fa flags
+may include:
+.Pp
+.Bd -literal
+#define AG_NOTEBOOK_HIDE_TABS 0x04    /* Don't display the tabs. */
+.Ed
+.Pp
+.Fn AG_NotebookSetPadding
+and
+.Fn AG_NotebookSetSpacing
+sets the default
+.Xr AG_Box 3
+padding and spacing to use for new tabs.
+.Pp
+By default, tabs are drawn at the top of the widget.
+.Fn AG_NotebookSetTabAlignment
+changes the location of the tabs, where the argument is one of:
+.Pp
+.Bd -literal
+enum ag_notebook_tab_alignment {
+	AG_NOTEBOOK_TABS_TOP,
+	AG_NOTEBOOK_TABS_BOTTOM,
+	AG_NOTEBOOK_TABS_LEFT,
+	AG_NOTEBOOK_TABS_RIGHT
+};
+.Ed
+.Pp
+The font of the text displaying the tab names can be changed with
+.Fn AG_NotebookSetTabFontFace
+and
+.Fn AG_NotebookSetTabFontSize .
+.Pp
+The function
+.Fn AG_NotebookSetTabVisibility
+controls the visibility of the tab header (0 = invisible, 1 = visible).
+.Sh TABS
+.nr nS 0
+.Ft "AG_NotebookTab *"
+.Fn AG_NotebookAddTab "AG_Notebook *nb" "const char *name" "enum ag_box_type type"
+.Pp
+.Ft "void"
+.Fn AG_NotebookDelTab "AG_Notebook *nb" "AG_NotebookTab *tab"
+.Pp
+.Ft "void"
+.Fn AG_NotebookSelectTab "AG_Notebook *nb" "AG_NotebookTab *tab"
+.Pp
+.nr nS 1
+Use the
+.Fn AG_NotebookAddTab
+function to create a new tabbed container.
+The
+.Fa name
+argument will be displayed on the tab header.
+.Fa type
+describes the type of
+.Xr AG_Box 3
+to create.
+To remove an existing tabbed container, call
+.Fn AG_NotebookDelTab .
+.Pp
+The
+.Fn AG_NotebookSelectTab
+function selects the visible container.
+.Sh EVENTS
+.\" The
+.\" .Nm
+.\" widget neither reacts to nor generates any event.
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-mousebuttondown
+Selects new visible container when user clicks on tab.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
