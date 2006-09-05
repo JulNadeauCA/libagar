@@ -216,9 +216,6 @@ AG_PaneDraw(void *p)
 	int x, y;
 	int z = pa->dmoving ? -1 : 1;
 
-//	agPrim.rect_filled(pa, 0, 0, AGWIDGET(pa)->w, AGWIDGET(pa)->h,
-//	    AG_COLOR(FRAME_COLOR));
-
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
 		y = AGWIDGET(pa)->h >> 1;
