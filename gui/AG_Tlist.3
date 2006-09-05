@@ -304,6 +304,30 @@ is locked prior to invoking
 .Fn AG_TlistFirstItem
 or
 .Fn AG_TlistLastItem .
+.Sh POPUP MENUS
+.nr nS 0
+.Ft "AG_MenuItem *"
+.Fn AG_TlistSetPopupFn "AG_Tlist *tlist" "void (*fn)(AG_Event *)" "const char *fn_args" "..."
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_TlistSetPopup "AG_Tlist *tlist" "const char *category"
+.Pp
+.nr nS 1
+The
+.Fn AG_TlistSetPopupFn
+function arranges for the given event handler function
+.Fa fn
+to be invoked with the given arguments whenever the user right-clicks on an
+item on the list.
+A pointer to the selected item is passed as the last argument to this function.
+Typically, the function will use
+.Xr AG_PopupNew 3
+to display a popup menu.
+.Pp
+The
+.Fn AG_TlistSetPopup
+function creates a popup menu that will be displayed when the user right-clicks
+on any item that matches the given category string.
 .Sh EVENTS
 The
 .Nm
@@ -313,7 +337,8 @@ widget reacts to the following events:
 .It window-mousemotion
 Scroll if a mouse button is pressed.
 .It window-mousebuttondown
-Select an item.
+Left button selects an item.
+Right button opens popup menu if any.
 .It window-keydown
 Up/down changes a single selection.
 Pageup/pagedown scrolls 4 items.
