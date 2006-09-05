@@ -215,7 +215,7 @@ AG_EventLoop_FixedFPS(void)
 				agView->rCur = 1;
 			}
 		} else if (SDL_PollEvent(&ev) != 0) {
-			AG_EventProcess(&ev);
+			AG_ProcessEvent(&ev);
 #ifdef DEBUG
 			agEventAvg++;
 #endif
@@ -260,8 +260,8 @@ AG_MouseGetState(int *x, int *y)
 	return (rv);
 }
 
-static void
-AG_EventProcess(SDL_Event *ev)
+void
+AG_ProcessEvent(SDL_Event *ev)
 {
 	extern int agObjMgrExiting;
 	extern int agEditMode;
