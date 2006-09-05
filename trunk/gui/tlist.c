@@ -59,8 +59,8 @@ static void tlist_keydown(AG_Event *);
 static void tlist_keyup(AG_Event *);
 static void tlist_scrolled(AG_Event *);
 static void free_item(AG_Tlist *, AG_TlistItem *);
-static void select_item(AG_Tlist *, AG_TlistItem *);
-static void unselect_item(AG_Tlist *, AG_TlistItem *);
+static void SelectItem(AG_Tlist *, AG_TlistItem *);
+static void DeselectItem(AG_Tlist *, AG_TlistItem *);
 static void show_popup(AG_Tlist *, AG_TlistPopup *);
 static void set_icon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
 static void update_scrollbar(AG_Tlist *);
@@ -97,8 +97,8 @@ key_tick(AG_Event *event)
 			if (it->selected &&
 			    (pit = TAILQ_PREV(it, ag_tlist_itemq, items))
 			     != NULL) {
-				unselect_item(tl, it);
-				select_item(tl, pit);
+				DeselectItem(tl, it);
+				SelectItem(tl, pit);
 #if 1
 				if (--(*offset) < 0) {
 					*offset = 0;
@@ -113,8 +113,8 @@ key_tick(AG_Event *event)
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected &&
 			    (pit = TAILQ_NEXT(it, items)) != NULL) {
-				unselect_item(tl, it);
-				select_item(tl, pit);
+				DeselectItem(tl, it);
+				SelectItem(tl, pit);
 #if 1
 				if (++(*offset) >
 				    tl->nitems - tl->nvisitems) {
@@ -193,6 +193,7 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	tl->compare_fn = AG_TlistComparePtrs;
 	tl->prew = tl->item_h + 5;
 	tl->preh = tl->item_h + 2;
+	tl->popupEv = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
@@ -671,7 +672,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 	}
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->p1 == p) {
-			it->selected++;
+			SelectItem(tl, it);
 			break;
 		}
 	}
@@ -695,7 +696,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->text[0] == text[0] &&
 		    strcmp(it->text, text) == 0) {
-			it->selected++;
+			SelectItem(tl, it);
 			break;
 		}
 	}
@@ -711,7 +712,7 @@ AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
-	it->selected = 1;
+	SelectItem(tl, it);
 	AG_MutexUnlock(&tl->lock);
 }
 
@@ -719,9 +720,7 @@ AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 void
 AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_MutexLock(&tl->lock);
-	it->selected = 0;
-	AG_MutexUnlock(&tl->lock);
+	DeselectItem(tl, it);
 }
 
 /* Set the selection flag on all items. */
@@ -732,7 +731,7 @@ AG_TlistSelectAll(AG_Tlist *tl)
 
 	AG_MutexLock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		it->selected = 1;
+		SelectItem(tl, it);
 	}
 	AG_MutexUnlock(&tl->lock);
 }
@@ -745,36 +744,40 @@ AG_TlistDeselectAll(AG_Tlist *tl)
 
 	AG_MutexLock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		it->selected = 0;
+		DeselectItem(tl, it);
 	}
 	AG_MutexUnlock(&tl->lock);
 }
 
 static void
-select_item(AG_Tlist *tl, AG_TlistItem *it)
+SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
 	AG_WidgetBinding *selectedb;
-	void **selected;
+	void **sel_ptr;
 
-	selectedb = AG_WidgetGetBinding(tl, "selected", &selected);
-	*selected = it->p1;
-	it->selected++;
-	AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
+	selectedb = AG_WidgetGetBinding(tl, "selected", &sel_ptr);
+	*sel_ptr = it->p1;
+	if (!it->selected) {
+		it->selected = 1;
+		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
+	}
 	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
 	AG_WidgetBindingChanged(selectedb);
 	AG_WidgetUnlockBinding(selectedb);
 }
 
 static void
-unselect_item(AG_Tlist *tl, AG_TlistItem *it)
+DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
 	AG_WidgetBinding *selectedb;
-	void **selected;
+	void **sel_ptr;
 
-	selectedb = AG_WidgetGetBinding(tl, "selected", &selected);
-	*selected = NULL;
-	it->selected = 0;
-	AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
+	selectedb = AG_WidgetGetBinding(tl, "selected", &sel_ptr);
+	*sel_ptr = NULL;
+	if (it->selected) {
+		it->selected = 0;
+		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
+	}
 	AG_WidgetBindingChanged(selectedb);
 	AG_WidgetUnlockBinding(selectedb);
 }
@@ -865,8 +868,9 @@ tlist_mousebuttondown(AG_Event *event)
 				TAILQ_FOREACH(oitem, &tl->items, items) {
 					if (i == tind)
 						break;
-					if (i > oind)
-						oitem->selected = 1;
+					if (i > oind) {
+						SelectItem(tl, oitem);
+					}
 					i++;
 				}
 			} else if (oind >= tind) {		  /* Backward */
@@ -874,7 +878,7 @@ tlist_mousebuttondown(AG_Event *event)
 				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
 				    items, ag_tlist_itemq) {
 					if (i <= oind)
-						oitem->selected = 1;
+						SelectItem(tl, oitem);
 					if (i == tind)
 						break;
 					i--;
@@ -887,13 +891,17 @@ tlist_mousebuttondown(AG_Event *event)
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
 		     (SDL_GetModState() & KMOD_CTRL))) {
-		    	ti->selected = !ti->selected;
+			if (ti->selected) {
+				DeselectItem(tl, ti);
+			} else {
+				SelectItem(tl, ti);
+			}
 			break;
 		}
 
 		AG_WidgetFocus(tl);
 		AG_TlistDeselectAll(tl);
-		select_item(tl, ti);
+		SelectItem(tl, ti);
 
 		/* Handle double clicks. */
 		/* XXX compare the args as well as p1 */
@@ -908,7 +916,9 @@ tlist_mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
-		if (ti->cat != NULL) {
+		if (tl->popupEv != NULL) {
+			AG_PostEvent(NULL, tl, tl->popupEv->name, NULL);
+		} else if (ti->cat != NULL) {
 			AG_TlistPopup *tp;
 	
 			AG_WidgetFocus(tl);
@@ -917,9 +927,8 @@ tlist_mousebuttondown(AG_Event *event)
 			    (AG_TLIST_MULTITOGGLE|AG_TLIST_MULTI)) ||
 			    !(SDL_GetModState() & (KMOD_CTRL|KMOD_SHIFT))) {
 				AG_TlistDeselectAll(tl);
-				select_item(tl, ti);
+				SelectItem(tl, ti);
 			}
-	
 			TAILQ_FOREACH(tp, &tl->popups, popups) {
 				if (strcmp(tp->iclass, ti->cat) == 0)
 					break;
@@ -1023,6 +1032,7 @@ AG_TlistSelectedItem(AG_Tlist *tl)
 void *
 AG_TlistSelectedItemPtr(AG_Tlist *tl)
 {
+#if 1
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -1030,6 +1040,9 @@ AG_TlistSelectedItemPtr(AG_Tlist *tl)
 			return (it->p1);
 	}
 	return (NULL);
+#else
+	return (tl->selected);
+#endif
 }
 
 /*
@@ -1132,6 +1145,15 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
 	it->flags |= AG_TLIST_DYNICON;
 	set_icon(tl, it, iconsrc);
+}
+
+void
+AG_TlistSetPopupFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
+{
+	AG_MutexLock(&tl->lock);
+	tl->popupEv = AG_SetEvent(tl, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
+	AG_MutexUnlock(&tl->lock);
 }
 
 /* Create a new popup menu for items of the given class. */
