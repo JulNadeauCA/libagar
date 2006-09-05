@@ -154,7 +154,7 @@ AG_ColorsInit(void)
 	agColors[MENU_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 230, 230, 230);
 	agColors[MENU_SEP1_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
 	agColors[MENU_SEP2_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
-	agColors[NOTEBOOK_BG_COLOR] = agColors[FRAME_COLOR];
+	agColors[NOTEBOOK_BG_COLOR] = agColors[WINDOW_BG_COLOR];
 	agColors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 105, 105, 105);
 	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[RADIO_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 210, 210, 210);
