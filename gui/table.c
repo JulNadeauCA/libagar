@@ -310,7 +310,7 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 	if (c->selected) {		     		 /* TODO col sel */
 		Uint8 c[4] = { 0, 0, 250, 64 };
 
-		agPrim.rect_blended(t, rd->x+1, rd->y+1, rd->w-1, rd->h-1,
+		agPrim.rect_blended(t, rd->x, rd->y, rd->w-1, rd->h-1,
 		    c, AG_ALPHA_SRC);
 	}
 
