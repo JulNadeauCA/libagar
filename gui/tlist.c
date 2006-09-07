@@ -296,7 +296,7 @@ AG_TlistDraw(void *p)
 			int x1 = x + tl->item_h + 2;
 
 			agPrim.rect_filled(tl,
-			    x1, y+1,
+			    x1, y,
 			    AGWIDGET(tl)->w-x1-1,
 			    tl->item_h-1,
 			    AG_COLOR(TLIST_SEL_COLOR));
