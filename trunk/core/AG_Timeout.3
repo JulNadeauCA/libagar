@@ -102,8 +102,8 @@ The
 may contain:
 .Pp
 .Bd -literal
-#define AG_TIMEOUT_DETACHABLE	0x01  /* Don't cancel in AG_ObjectDetach() */
-#define AG_TIMEOUT_LOADABLE	0x02  /* Don't cancel in AG_ObjectLoad() */
+#define AG_TIMEOUT_DETACHABLE 0x01  /* Don't cancel on detach */
+#define AG_TIMEOUT_LOADABLE   0x02  /* Don't cancel on load */
 .Ed
 .Pp
 Flags
