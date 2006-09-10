@@ -34,9 +34,9 @@ typedef struct ag_notebook {
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int tab_rad;			/* Radius for chamfered tab edges */
-	int spacing, padding;
-	const char *tabFontFace;
-	int tabFontSize;
+	int spacing, padding;		/* Spacing for tabs */
+	const char *tabFontFace;	/* Font face for tab text */
+	int tabFontSize;		/* Font size in points */
 	struct ag_notebook_tab *sel_tab;
 	TAILQ_HEAD(,ag_notebook_tab) tabs;
 } AG_Notebook;

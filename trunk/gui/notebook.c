@@ -76,9 +76,10 @@ mousebuttondown(AG_Event *event)
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 			SDL_Surface *label = AGWIDGET_SURFACE(nb,tab->label);
 
+#if 0
 			if (tx+label->w+SPACING*2 > AGWIDGET(nb)->w)
 				break;
-
+#endif
 			if (x >= tx && x < tx+(label->w + SPACING*2)) {
 				AG_NotebookSelectTab(nb, tab);
 				break;
@@ -91,7 +92,7 @@ mousebuttondown(AG_Event *event)
 void
 AG_NotebookInit(AG_Notebook *nb, Uint flags)
 {
-	AG_WidgetInit(nb, "notebook", &agNotebookOps, 0);
+	AG_WidgetInit(nb, "notebook", &agNotebookOps, AG_WIDGET_CLIPPING);
 
 	nb->flags = flags;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
@@ -147,8 +148,18 @@ AG_NotebookDraw(void *p)
 		box.w = AGWIDGET_SURFACE(nb,tab->label)->w + SPACING*2;
 		box.h = nb->bar_h - SPACING;
 
-		if (box.x+box.w > AGWIDGET(nb)->w)
+#if 0
+		if ((box.x+box.w) - AGWIDGET(nb)->w > 0) {
+			box.w = AGWIDGET(nb)->w - box.x;
+			if (box.w < nb->tab_rad<<1) {
+				break;
+			}
+			agPrim.box_chamfered(nb, &box, 1, nb->tab_rad,
+			    AG_COLOR(NOTEBOOK_BG_COLOR));
+			AG_WidgetBlitSurface(nb, nb->lblMore, x+SPACING, y+2);
 			break;
+		}
+#endif
 
 		agPrim.box_chamfered(nb, &box,
 		    nb->sel_tab==tab ? -1 : 1, nb->tab_rad,
