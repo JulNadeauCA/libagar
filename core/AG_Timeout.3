@@ -57,7 +57,7 @@ is a pointer to the object managing the timeout (or NULL),
 is the delay in ticks before the next invocation, and
 .Fa arg
 is the user-supplied pointer passed to
-.Fn timer_add .
+.Fn AG_AddTimeout .
 If the callback function returns a non-zero value, the timeout is automatically
 rescheduled to occur in t+n ticks.
 .Pp
