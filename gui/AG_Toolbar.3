@@ -1,0 +1,167 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2006 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 11, 2006
+.Dt AG_TOOLBAR 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.1
+.Sh NAME
+.Nm AG_Toolbar
+.Nd agar button toolbar widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget is a specialized container for a set of buttons which allows single
+or multiple selections.
+The buttons may be arranged in multiple rows.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Xr AG_Box 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Toolbar *"
+.Fn AG_ToolbarNew "void *parent" "enum ag_toolbar_type" "int nRows" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarInit "AG_Toolbar *toolbar" "enum ag_toolbar_type" "int n_rows" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarRow "AG_Toolbar *toolbar" "int row_name"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ToolbarButton "AG_Toolbar *toolbar" "const char *text" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ToolbarButtonIcon "AG_Toolbar *toolbar" "SDL_Surface *icon" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_ToolbarSeparator "AG_Toolbar *toolbar"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarSelect "AG_Toolbar *toolbar" "AG_Button *button"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarDeselect "AG_Toolbar *toolbar" "AG_Button *button"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarSelectOnly "AG_Toolbar *toolbar" "AG_Button *button"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarSelectAll "AG_Toolbar *toolbar"
+.Pp
+.Ft "void"
+.Fn AG_ToolbarDeselectAll "AG_Toolbar *toolbar"
+.nr nS 0
+The
+.Fn AG_ToolbarNew
+function allocates, initializes, and attaches a
+.Nm
+widget.
+.Fn AG_ToolbarInit
+initializes a
+.Nm
+widget.
+.Pp
+The
+.Fa flags
+may include:
+.Pp
+.Bd -literal
+#define AG_TOOLBAR_HOMOGENOUS   0x01   /* Scale buttons homogenously */
+#define AG_TOOLBAR_STICKY       0x02   /* Single toggle selection */
+#define AG_TOOLBAR_MULTI_STICKY 0x02   /* Multiple toggle selections */
+.Ed
+.Pp
+The
+.Dv AG_TOOLBAR_STICKY
+flag enables the toggle behavior of the buttons, where only one button may
+be enabled at any given time.
+.Dv AG_TOOLBAR_MULTI_STICKY
+enables toggle behavior but allows multiple buttons to be enabled at the
+same time.
+.Pp
+.Fn AG_ToolbarRow
+specifies the row number for all subsequent operations.
+.Pp
+The
+.Fn AG_ToolbarButton
+function creates a new button displaying the given
+.Fa text
+and attaches it to the current row.
+If the
+.Fa enable_default
+argument is 1, the button is enabled by default.
+The arguments
+.Fa fn
+and
+.Fa arg
+specify the event handler function and its arguments in standard
+.Xr AG_Event 3
+format.
+It will be invoked whenever the user clicks on the button.
+.Pp
+The
+.Fn AG_ToolbarButtonIcon
+variant creates a button displaying a given surface instead of a label,
+usually an icon.
+.Pp
+.Fn AG_ToolbarSeparator
+creates a separator of appropriate orientation in the current row.
+.Pp
+The functions
+.Fn AG_ToolbarSelect
+and
+.Fn AG_ToolbarDeselect
+are used to enable or disable a given button.
+.Fn AG_ToolbarSelectOnly
+enables the given button, disabling any other button that is currently active.
+.Fn AG_ToolbarSelectAll
+enables all attached buttons and
+.Fn AG_ToolbarDeselectAll
+disables all attached buttons.
+.Sh EVENTS
+The
+.Nm
+widget neither reacts to nor generates any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Box 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_Event 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.1.
