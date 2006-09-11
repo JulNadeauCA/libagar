@@ -802,13 +802,14 @@ RG_SketchToolbar(RG_Tileview *tv, RG_TileElement *tel)
 	AG_Toolbar *tbar;
 	RG_TileviewTool *tvt;
 
-	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
+	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1,
+	    AG_TOOLBAR_STICKY);
 	TAILQ_FOREACH(tvt, &tv->tools, tools) {
 		if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 			continue;
 		}
-		AG_ToolbarAddButton(tbar, 0, tvt->ops->icon >= 0 ?
-		    AGICON(tvt->ops->icon) : NULL, 1, 0,
+		AG_ToolbarButtonIcon(tbar, tvt->ops->icon >= 0 ?
+		    AGICON(tvt->ops->icon) : NULL, 0,
 		    select_tool_tbar, "%p,%p,%p", tbar, tv, tvt);
 	}
 	return (tbar);

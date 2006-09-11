@@ -384,9 +384,9 @@ RG_FillToolbar(void *p, RG_Tileview *tv)
 	AG_Toolbar *tbar;
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
-	AG_ToolbarAddButton(tbar, 0, AGICON(RG_SWAP_ICON), 0, 0,
+	AG_ToolbarButtonIcon(tbar, AGICON(RG_SWAP_ICON), 0,
 	    swap_gradient, "%p", fi);
-	AG_ToolbarAddButton(tbar, 0, AGICON(RG_INVERT_ICON), 0, 0,
+	AG_ToolbarButtonIcon(tbar, AGICON(RG_INVERT_ICON), 0,
 	    invert_colors, "%p", fi);
 	return (tbar);
 }
