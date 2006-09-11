@@ -135,7 +135,7 @@ snap_to(AG_Event *event)
 	VG *vg = AG_PTR(2);
 	int snap_mode = AG_INT(3);
 
-	AG_ToolbarSelectUnique(tbar, bu);
+	AG_ToolbarSelectOnly(tbar, bu);
 	VG_SetSnapMode(vg, snap_mode);
 }
 

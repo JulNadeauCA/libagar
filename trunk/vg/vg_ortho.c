@@ -63,7 +63,7 @@ select_mode(AG_Event *event)
 	VG *vg = AG_PTR(2);
 	int ortho_mode = AG_INT(3);
 
-	AG_ToolbarSelectUnique(tbar, bu);
+	AG_ToolbarSelectOnly(tbar, bu);
 	VG_OrthoRestrictMode(vg, ortho_mode);
 }
 

@@ -727,7 +727,7 @@ select_tool_tbar(AG_Event *event)
 	RG_Tileview *tv = AG_PTR(2);
 	RG_TileviewTool *tvt = AG_PTR(3);
 
-	AG_ToolbarSelectUnique(tbar, btn);
+	AG_ToolbarSelectOnly(tbar, btn);
 	if (tv->cur_tool == tvt) {
 		RG_TileviewUnselectTool(tv);
 	} else {
