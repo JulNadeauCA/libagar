@@ -55,34 +55,36 @@ static AG_WidgetOps agToolbarOps = {
 AG_Toolbar *
 AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nrows, Uint flags)
 {
-	AG_Toolbar *tbar;
+	AG_Toolbar *bar;
 
-	tbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
-	AG_ToolbarInit(tbar, type, nrows, flags);
-	AG_ObjectAttach(parent, tbar);
-	return (tbar);
+	bar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	AG_ToolbarInit(bar, type, nrows, flags);
+	AG_ObjectAttach(parent, bar);
+	return (bar);
 }
 
 void
-AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows,
+AG_ToolbarInit(AG_Toolbar *bar, enum ag_toolbar_type type, int nrows,
     Uint flags)
 {
 	int i;
 	
 	switch (type) {
 	case AG_TOOLBAR_HORIZ:
-		AG_BoxInit(&tbar->box, AG_BOX_VERT, AG_BOX_HFILL);
+		AG_BoxInit(&bar->box, AG_BOX_VERT, AG_BOX_HFILL);
 		break;
 	case AG_TOOLBAR_VERT:
-		AG_BoxInit(&tbar->box, AG_BOX_HORIZ, AG_BOX_VFILL);
+		AG_BoxInit(&bar->box, AG_BOX_HORIZ, AG_BOX_VFILL);
 		break;
 	}
-	AG_BoxSetPadding(&tbar->box, 1);
-	AG_BoxSetSpacing(&tbar->box, 1);
-	AG_ObjectSetOps(tbar, &agToolbarOps);
+	AG_BoxSetPadding(&bar->box, 1);
+	AG_BoxSetSpacing(&bar->box, 1);
+	AG_ObjectSetOps(bar, &agToolbarOps);
 
-	tbar->type = type;
-	tbar->nrows = 0;
+	bar->flags = flags;
+	bar->type = type;
+	bar->nrows = 0;
+	bar->curRow = 0;
 	for (i = 0; i < nrows && i < AG_TOOLBAR_MAX_ROWS; i++) {
 		int bflags = 0;
 
@@ -91,66 +93,102 @@ AG_ToolbarInit(AG_Toolbar *tbar, enum ag_toolbar_type type, int nrows,
 		}
 		switch (type) {
 		case AG_TOOLBAR_HORIZ:
-			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_HORIZ,
+			bar->rows[i] = AG_BoxNew(&bar->box, AG_BOX_HORIZ,
 			    AG_BOX_HFILL|bflags);
 			break;
 		case AG_TOOLBAR_VERT:
-			tbar->rows[i] = AG_BoxNew(&tbar->box, AG_BOX_VERT, 
+			bar->rows[i] = AG_BoxNew(&bar->box, AG_BOX_VERT, 
 			    AG_BOX_VFILL|bflags);
 			break;
 		}
-		AG_BoxSetPadding(tbar->rows[i], 1);
-		AG_BoxSetSpacing(tbar->rows[i], 1);
-		tbar->nrows++;
+		AG_BoxSetPadding(bar->rows[i], 1);
+		AG_BoxSetSpacing(bar->rows[i], 1);
+		bar->nrows++;
 	}
 }
 
+static void
+StickyUpdate(AG_Event *event)
+{
+	AG_Button *b = AG_SELF();
+	AG_Toolbar *bar = AG_PTR(1);
+
+	AG_ToolbarSelectUnique(bar, b);
+}
+
+void
+AG_ToolbarRow(AG_Toolbar *bar, int row)
+{
+#ifdef DEBUG
+	if (row < 0 || row >= bar->nrows)
+		fatal("no such row %d", row);
+#endif
+	bar->curRow = row;
+}
+
 AG_Button *
-AG_ToolbarAddButton(AG_Toolbar *tbar, int row, SDL_Surface *icon,
-    int sticky, int def, void (*handler)(AG_Event *),
-    const char *fmt, ...)
+AG_ToolbarButtonIcon(AG_Toolbar *bar, SDL_Surface *icon, int def,
+    void (*handler)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *bu;
 	AG_Event *ev;
 
-#ifdef DEBUG
-	if (row < 0 || row > tbar->nrows)
-		fatal("no such row %d", row);
-#endif
-	bu = AG_ButtonNew(tbar->rows[row], 0, NULL);
+	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, NULL);
 	AG_ButtonSetSurface(bu, icon);
 	AG_ButtonSetFocusable(bu, 0);
-	AG_ButtonSetSticky(bu, sticky);
+	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_WidgetSetBool(bu, "state", def);
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	
+	if (bar->flags & AG_TOOLBAR_STICKY) {
+		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+	}
+	return (bu);
+}
+
+AG_Button *
+AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
+    void (*handler)(AG_Event *), const char *fmt, ...)
+{
+	AG_Button *bu;
+	AG_Event *ev;
+
+	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, text);
+	AG_ButtonSetFocusable(bu, 0);
+	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
+	AG_WidgetSetBool(bu, "state", def);
+	
+	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+
+	if (bar->flags & AG_TOOLBAR_STICKY) {
+		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
+	}
 	return (bu);
 }
 
 void
-AG_ToolbarAddSeparator(AG_Toolbar *tbar, int nrow)
+AG_ToolbarSeparator(AG_Toolbar *bar)
 {
-	AG_SeparatorNew(tbar->rows[nrow], tbar->type == AG_TOOLBAR_HORIZ ?
+	AG_SeparatorNew(bar->rows[bar->curRow], bar->type == AG_TOOLBAR_HORIZ ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
 }
 
 void
-AG_ToolbarSelectUnique(AG_Toolbar *tbar, AG_Button *ubu)
+AG_ToolbarSelectUnique(AG_Toolbar *bar, AG_Button *ubu)
 {
 	AG_WidgetBinding *stateb;
 	AG_Button *bu;
 	int i;
 
-	for (i = 0; i < tbar->nrows; i++) {
-		AGOBJECT_FOREACH_CHILD(bu, tbar->rows[i], ag_button) {
+	for (i = 0; i < bar->nrows; i++) {
+		AGOBJECT_FOREACH_CHILD(bu, bar->rows[i], ag_button) {
 			int *state;
 
-			if (bu == ubu) {
-				continue;
-			}
 			stateb = AG_WidgetGetBinding(bu, "state", &state);
-			*state = 0;
+			*state = (bu == ubu);
 			AG_WidgetBindingChanged(stateb);
 			AG_WidgetUnlockBinding(stateb);
 		}

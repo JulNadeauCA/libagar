@@ -28,8 +28,10 @@ typedef struct ag_toolbar {
 	struct ag_toolbar_button *buttons;
 	enum ag_toolbar_type type;
 	int nrows;
+	int curRow;
 	int flags;
-#define AG_TOOLBAR_HOMOGENOUS	0x01
+#define AG_TOOLBAR_HOMOGENOUS	0x01	/* Scale buttons homogenously */
+#define AG_TOOLBAR_STICKY	0x02	/* Single sticky selection */
 } AG_Toolbar;
 
 __BEGIN_DECLS
@@ -37,10 +39,12 @@ AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarScale(void *, int, int);
 void	 	 AG_ToolbarDestroy(void *);
-AG_Button	*AG_ToolbarAddButton(AG_Toolbar *, int, SDL_Surface *, int,
-		                     int, void (*)(AG_Event *),
-				     const char *, ...);
-void		 AG_ToolbarAddSeparator(AG_Toolbar *, int);
+__inline__ void	 AG_ToolbarRow(AG_Toolbar *, int);
+AG_Button	*AG_ToolbarButton(AG_Toolbar *, const char *, int,
+		                  void (*)(AG_Event *), const char *, ...);
+AG_Button	*AG_ToolbarButtonIcon(AG_Toolbar *, SDL_Surface *, int,
+		                      void (*)(AG_Event *), const char *, ...);
+__inline__ void	 AG_ToolbarSeparator(AG_Toolbar *);
 void		 AG_ToolbarSelectUnique(AG_Toolbar *, AG_Button *);
 __END_DECLS
 
