@@ -55,7 +55,7 @@ const AG_WidgetOps agHSVPalOps = {
 
 static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 
-static void render_palette(AG_HSVPal *);
+static void RenderPalette(AG_HSVPal *);
 
 AG_HSVPal *
 AG_HSVPalNew(void *parent, Uint flags)
@@ -71,8 +71,9 @@ AG_HSVPalNew(void *parent, Uint flags)
 	return (pal);
 }
 
+/* Return the 8-bit representation of the current alpha value. */
 static __inline__ Uint8
-get_alpha8(AG_HSVPal *pal)
+GetAlpha8(AG_HSVPal *pal)
 {
 	AG_WidgetBinding *bAlpha;
 	void *pAlpha;
@@ -98,7 +99,7 @@ get_alpha8(AG_HSVPal *pal)
 }
 	
 static __inline__ void
-set_alpha8(AG_HSVPal *pal, Uint8 a)
+SetAlpha8(AG_HSVPal *pal, Uint8 a)
 {
 	AG_WidgetBinding *bAlpha;
 	void *pAlpha;
@@ -122,72 +123,71 @@ set_alpha8(AG_HSVPal *pal, Uint8 a)
 }
 
 static __inline__ void
-update_pixel_from_hsva(AG_HSVPal *pal)
+UpdatePixelFromHSVA(AG_HSVPal *pal)
 {
-	float h, s, v;
 	Uint8 r, g, b, a;
-	AG_WidgetBinding *bFormat, *bRGBAv, *bRGBv;
+	AG_WidgetBinding *bFormat, *bv;
 	SDL_PixelFormat **pFormat;
-	void *pRGBAv, *pRGBv;
+	void *v;
 
-	h = AG_WidgetFloat(pal, "hue");
-	s = AG_WidgetFloat(pal, "saturation");
-	v = AG_WidgetFloat(pal, "value");
-	a = get_alpha8(pal);
+	AG_HSV2RGB(AG_WidgetFloat(pal, "hue"),
+	           AG_WidgetFloat(pal, "saturation"),
+		   AG_WidgetFloat(pal, "value"), &r, &g, &b);
+	a = GetAlpha8(pal);
 	
-	AG_HSV2RGB(h, s, v, &r, &g, &b);
-	
-	if ((bRGBv = AG_WidgetGetBinding(pal, "RGBv", &pRGBv)) != NULL) {
-		if (bRGBv->vtype == AG_WIDGET_FLOAT) {
-			float *RGBf = pRGBv;
-			RGBf[0] = (float)(r/255.0);
-			RGBf[1] = (float)(g/255.0);
-			RGBf[2] = (float)(b/255.0);
-		} else if (bRGBv->vtype == AG_WIDGET_DOUBLE) {
-			double *RGBd = pRGBv;
-			RGBd[0] = (double)(r/255.0);
-			RGBd[1] = (double)(g/255.0);
-			RGBd[2] = (double)(b/255.0);
-		} else if (bRGBv->vtype == AG_WIDGET_INT) {
-			int *RGBi = pRGBv;
-			RGBi[0] = (int)r;
-			RGBi[1] = (int)g;
-			RGBi[2] = (int)b;
-		} else if (bRGBv->vtype == AG_WIDGET_UINT8) {
-			Uint8 *RGBi = pRGBv;
-			RGBi[0] = r;
-			RGBi[1] = g;
-			RGBi[2] = b;
+	if ((bv = AG_WidgetGetBinding(pal, "RGBv", &v)) != NULL) {
+		switch (bv->vtype) {
+		case AG_WIDGET_FLOAT:
+			((float *)v)[0] = (float)r/255.0;
+			((float *)v)[1] = (float)g/255.0;
+			((float *)v)[2] = (float)b/255.0;
+			break;
+		case AG_WIDGET_DOUBLE:
+			((double *)v)[0] = (double)r/255.0;
+			((double *)v)[1] = (double)g/255.0;
+			((double *)v)[2] = (double)b/255.0;
+			break;
+		case AG_WIDGET_INT:
+			((int *)v)[0] = (int)r;
+			((int *)v)[1] = (int)g;
+			((int *)v)[2] = (int)b;
+			break;
+		case AG_WIDGET_UINT8:
+			((Uint8 *)v)[0] = r;
+			((Uint8 *)v)[1] = g;
+			((Uint8 *)v)[2] = b;
+			break;
 		}
-		AG_WidgetUnlockBinding(bRGBv);
+		AG_WidgetUnlockBinding(bv);
 	}
-	if ((bRGBAv = AG_WidgetGetBinding(pal, "RGBAv", &pRGBAv)) != NULL) {
-		if (bRGBAv->vtype == AG_WIDGET_FLOAT) {
-			float *RGBAf = pRGBAv;
-			RGBAf[0] = (float)(r/255.0);
-			RGBAf[1] = (float)(g/255.0);
-			RGBAf[2] = (float)(b/255.0);
-			RGBAf[3] = (float)(a/255.0);
-		} else if (bRGBAv->vtype == AG_WIDGET_DOUBLE) {
-			double *RGBAd = pRGBAv;
-			RGBAd[0] = (double)(r/255.0);
-			RGBAd[1] = (double)(g/255.0);
-			RGBAd[2] = (double)(b/255.0);
-			RGBAd[3] = (double)(a/255.0);
-		} else if (bRGBAv->vtype == AG_WIDGET_INT) {
-			int *RGBAi = pRGBAv;
-			RGBAi[0] = (int)r;
-			RGBAi[1] = (int)g;
-			RGBAi[2] = (int)b;
-			RGBAi[3] = (int)a;
-		} else if (bRGBAv->vtype == AG_WIDGET_UINT8) {
-			Uint8 *RGBAi = pRGBAv;
-			RGBAi[0] = r;
-			RGBAi[1] = g;
-			RGBAi[2] = b;
-			RGBAi[3] = a;
+	if ((bv = AG_WidgetGetBinding(pal, "RGBAv", &v)) != NULL) {
+		switch (bv->vtype) {
+		case AG_WIDGET_FLOAT:
+			((float *)v)[0] = (float)r/255.0;
+			((float *)v)[1] = (float)g/255.0;
+			((float *)v)[2] = (float)b/255.0;
+			((float *)v)[3] = (float)a/255.0;
+			break;
+		case AG_WIDGET_DOUBLE:
+			((double *)v)[0] = (double)r/255.0;
+			((double *)v)[1] = (double)g/255.0;
+			((double *)v)[2] = (double)b/255.0;
+			((double *)v)[3] = (double)a/255.0;
+			break;
+		case AG_WIDGET_INT:
+			((int *)v)[0] = (int)r;
+			((int *)v)[1] = (int)g;
+			((int *)v)[2] = (int)b;
+			((int *)v)[3] = (int)a;
+			break;
+		case AG_WIDGET_UINT8:
+			((Uint8 *)v)[0] = r;
+			((Uint8 *)v)[1] = g;
+			((Uint8 *)v)[2] = b;
+			((Uint8 *)v)[3] = a;
+			break;
 		}
-		AG_WidgetUnlockBinding(bRGBAv);
+		AG_WidgetUnlockBinding(bv);
 	}
 	
 	bFormat = AG_WidgetGetBinding(pal, "pixel-format", &pFormat);
@@ -195,8 +195,8 @@ update_pixel_from_hsva(AG_HSVPal *pal)
 	AG_WidgetUnlockBinding(bFormat);
 }
 
-static __inline__ void
-update_hsv_from_pixel(AG_HSVPal *hsv, Uint32 pixel)
+static void
+UpdateHSVFromPixel(AG_HSVPal *hsv, Uint32 pixel)
 {
 	Uint8 r, g, b, a;
 	float h, s, v;
@@ -209,12 +209,112 @@ update_hsv_from_pixel(AG_HSVPal *hsv, Uint32 pixel)
 	AG_WidgetSetFloat(hsv, "hue", h);
 	AG_WidgetSetFloat(hsv, "saturation", s);
 	AG_WidgetSetFloat(hsv, "value", v);
-	set_alpha8(hsv, a);
+	SetAlpha8(hsv, a);
 	AG_WidgetUnlockBinding(bFormat);
 }
 
-static __inline__ void
-update_h(AG_HSVPal *pal, int x, int y)
+static void
+UpdateHSVFromRGBAv(AG_HSVPal *hsv)
+{
+	AG_WidgetBinding *bRGBAv;
+	void *RGBAv;
+	Uint8 r, g, b, a;
+	float h, s, v;
+
+	if ((bRGBAv = AG_WidgetGetBinding(hsv, "RGBAv", &RGBAv)) == NULL) {
+		return;
+	}
+	switch (bRGBAv->vtype) {
+	case AG_WIDGET_FLOAT:
+		r = (Uint8)(((float *)RGBAv)[0] * 255.0);
+		g = (Uint8)(((float *)RGBAv)[1] * 255.0);
+		b = (Uint8)(((float *)RGBAv)[2] * 255.0);
+		a = (Uint8)(((float *)RGBAv)[3] * 255.0);
+		break;
+	case AG_WIDGET_DOUBLE:
+		r = (Uint8)(((double *)RGBAv)[0] * 255.0);
+		g = (Uint8)(((double *)RGBAv)[1] * 255.0);
+		b = (Uint8)(((double *)RGBAv)[2] * 255.0);
+		a = (Uint8)(((double *)RGBAv)[3] * 255.0);
+		break;
+	case AG_WIDGET_INT:
+		r = (Uint8)(((int *)RGBAv)[0]);
+		g = (Uint8)(((int *)RGBAv)[1]);
+		b = (Uint8)(((int *)RGBAv)[2]);
+		a = (Uint8)(((int *)RGBAv)[3]);
+		break;
+	case AG_WIDGET_UINT8:
+		r = ((Uint8 *)RGBAv)[0];
+		g = ((Uint8 *)RGBAv)[1];
+		b = ((Uint8 *)RGBAv)[2];
+		a = ((Uint8 *)RGBAv)[3];
+		break;
+	default:
+		r = 0;
+		g = 0;
+		b = 0;
+		a = 0;
+		break;
+	}
+
+	AG_RGB2HSV(r, g, b, &h, &s, &v);
+	AG_WidgetSetFloat(hsv, "hue", h);
+	AG_WidgetSetFloat(hsv, "saturation", s);
+	AG_WidgetSetFloat(hsv, "value", v);
+	SetAlpha8(hsv, a);
+	AG_WidgetUnlockBinding(bRGBAv);
+	hsv->flags |= AG_HSVPAL_DIRTY;
+}
+
+static void
+UpdateHSVFromRGBv(AG_HSVPal *hsv)
+{
+	AG_WidgetBinding *bRGBv;
+	void *RGBv;
+	Uint8 r, g, b;
+	float h, s, v;
+
+	if ((bRGBv = AG_WidgetGetBinding(hsv, "RGBv", &RGBv)) == NULL) {
+		return;
+	}
+	switch (bRGBv->vtype) {
+	case AG_WIDGET_FLOAT:
+		r = (Uint8)(((float *)RGBv)[0] * 255.0);
+		g = (Uint8)(((float *)RGBv)[1] * 255.0);
+		b = (Uint8)(((float *)RGBv)[2] * 255.0);
+		break;
+	case AG_WIDGET_DOUBLE:
+		r = (Uint8)(((double *)RGBv)[0] * 255.0);
+		g = (Uint8)(((double *)RGBv)[1] * 255.0);
+		b = (Uint8)(((double *)RGBv)[2] * 255.0);
+		break;
+	case AG_WIDGET_INT:
+		r = (Uint8)(((int *)RGBv)[0]);
+		g = (Uint8)(((int *)RGBv)[1]);
+		b = (Uint8)(((int *)RGBv)[2]);
+		break;
+	case AG_WIDGET_UINT8:
+		r = ((Uint8 *)RGBv)[0];
+		g = ((Uint8 *)RGBv)[1];
+		b = ((Uint8 *)RGBv)[2];
+		break;
+	default:
+		r = 0;
+		g = 0;
+		b = 0;
+		break;
+	}
+
+	AG_RGB2HSV(r, g, b, &h, &s, &v);
+	AG_WidgetSetFloat(hsv, "hue", h);
+	AG_WidgetSetFloat(hsv, "saturation", s);
+	AG_WidgetSetFloat(hsv, "value", v);
+	AG_WidgetUnlockBinding(bRGBv);
+	hsv->flags |= AG_HSVPAL_DIRTY;
+}
+
+static void
+UpdateHue(AG_HSVPal *pal, int x, int y)
 {
 	float h;
 
@@ -224,13 +324,13 @@ update_h(AG_HSVPal *pal, int x, int y)
 	}
 	AG_WidgetSetFloat(pal, "hue", h/(2*M_PI)*360.0);
 
-	update_pixel_from_hsva(pal);
+	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
 }
 
 static void
-update_sv(AG_HSVPal *pal, int ax, int ay)
+UpdateSV(AG_HSVPal *pal, int ax, int ay)
 {
 	float s, v;
 	int x = ax - pal->triangle.x;
@@ -252,13 +352,13 @@ update_sv(AG_HSVPal *pal, int ax, int ay)
 	AG_WidgetSetFloat(pal, "saturation", s);
 	AG_WidgetSetFloat(pal, "value", v);
 
-	update_pixel_from_hsva(pal);
+	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 	pal->flags |= AG_HSVPAL_DIRTY;
 }
 
 static void
-update_a(AG_HSVPal *pal, int x)
+UpdateAlpha(AG_HSVPal *pal, int x)
 {
 	AG_WidgetBinding *bAlpha;
 	void *pAlpha;
@@ -295,12 +395,12 @@ update_a(AG_HSVPal *pal, int x)
 	}
 	AG_WidgetUnlockBinding(bAlpha);
 
-	update_pixel_from_hsva(pal);
+	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "a-changed", NULL);
 }
 
 static void
-close_menu(AG_HSVPal *pal)
+CloseMenu(AG_HSVPal *pal)
 {
 	AG_MenuCollapse(pal->menu, pal->menu_item);
 	AG_ObjectDestroy(pal->menu);
@@ -312,7 +412,7 @@ close_menu(AG_HSVPal *pal)
 }
 
 static void
-show_rgb(AG_Event *event)
+ShowRGBValue(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 	Uint8 r, g, b;
@@ -328,7 +428,7 @@ show_rgb(AG_Event *event)
 
 #if 0
 static void
-edit_values(AG_Event *event)
+EditNumValues(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 	AG_Window *pwin;
@@ -400,20 +500,20 @@ edit_values(AG_Event *event)
 #endif
 
 static void
-complementary(AG_Event *event)
+SetComplementaryColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 	float hue = AG_WidgetFloat(pal, "hue");
 
 	AG_WidgetSetFloat(pal, "hue", ((int)hue+180) % 359);
-	update_pixel_from_hsva(pal);
+	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
-copy_color(AG_Event *event)
+CopyColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 	
@@ -424,7 +524,7 @@ copy_color(AG_Event *event)
 }
 
 static void
-paste_color(AG_Event *event)
+PasteColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 
@@ -432,45 +532,19 @@ paste_color(AG_Event *event)
 	AG_WidgetSetFloat(pal, "saturation", cS);
 	AG_WidgetSetFloat(pal, "value", cV);
 	AG_WidgetSetFloat(pal, "alpha", cA);
-	update_pixel_from_hsva(pal);
+	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
 }
 
 static void
-invert_saturation(AG_Event *event)
-{
-	AG_HSVPal *pal = AG_PTR(1);
-
-	AG_WidgetSetFloat(pal, "saturation",
-	    1.0 - AG_WidgetFloat(pal, "saturation"));
-	update_pixel_from_hsva(pal);
-	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_PostEvent(NULL, pal, "h-changed", NULL);
-	AG_PostEvent(NULL, pal, "sv-changed", NULL);
-}
-
-static void
-invert_value(AG_Event *event)
-{
-	AG_HSVPal *pal = AG_PTR(1);
-
-	AG_WidgetSetFloat(pal, "value",
-	    1.0 - AG_WidgetFloat(pal, "value"));
-	update_pixel_from_hsva(pal);
-	pal->flags |= AG_HSVPAL_DIRTY;
-	AG_PostEvent(NULL, pal, "h-changed", NULL);
-	AG_PostEvent(NULL, pal, "sv-changed", NULL);
-}
-
-static void
-open_menu(AG_HSVPal *pal)
+OpenMenu(AG_HSVPal *pal)
 {
 	int x, y;
 
 	if (pal->menu != NULL)
-		close_menu(pal);
+		CloseMenu(pal);
 
 	pal->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
 	AG_MenuInit(pal->menu, 0);
@@ -479,22 +553,18 @@ open_menu(AG_HSVPal *pal)
 	{
 #if 0
 		AG_MenuAction(pal->menu_item, _("Edit numerically"), -1,
-		    edit_values, "%p", pal);
+		    EditNumValues, "%p", pal);
 
 #endif
 		AG_MenuAction(pal->menu_item, _("Copy"), -1,
-		    copy_color, "%p", pal);
+		    CopyColor, "%p", pal);
 		AG_MenuAction(pal->menu_item, _("Paste"), -1,
-		    paste_color, "%p", pal);
+		    PasteColor, "%p", pal);
 		AG_MenuSeparator(pal->menu_item);
 		AG_MenuAction(pal->menu_item, _("Show RGB value"), -1,
-		    show_rgb, "%p", pal);
+		    ShowRGBValue, "%p", pal);
 		AG_MenuAction(pal->menu_item, _("Complementary color"), -1,
-		    complementary, "%p", pal);
-		AG_MenuAction(pal->menu_item, _("Invert saturation"), -1,
-		    invert_saturation, "%p", pal);
-		AG_MenuAction(pal->menu_item, _("Invert value"), -1,
-		    invert_value, "%p", pal);
+		    SetComplementaryColor, "%p", pal);
 	}
 	pal->menu->sel_item = pal->menu_item;
 	
@@ -514,7 +584,7 @@ mousebuttondown(AG_Event *event)
 	switch (btn) {
 	case SDL_BUTTON_LEFT:
 		if (y > pal->rAlpha.y) {
-			update_a(pal, x);
+			UpdateAlpha(pal, x);
 			pal->state = AG_HSVPAL_SEL_A;
 		} else {
 			x -= pal->circle.x;
@@ -522,10 +592,10 @@ mousebuttondown(AG_Event *event)
 			r = hypot((float)x, (float)y);
 
 			if (r > (float)pal->circle.rin) {
-				update_h(pal, x, y);
+				UpdateHue(pal, x, y);
 				pal->state = AG_HSVPAL_SEL_H;
 			} else {
-				update_sv(pal, AG_INT(2), AG_INT(3));
+				UpdateSV(pal, AG_INT(2), AG_INT(3));
 				pal->state = AG_HSVPAL_SEL_SV;
 			}
 		}
@@ -533,7 +603,7 @@ mousebuttondown(AG_Event *event)
 		break;
 	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
-		open_menu(pal);
+		OpenMenu(pal);
 		break;
 	}
 }
@@ -557,15 +627,15 @@ mousemotion(AG_Event *event)
 	case AG_HSVPAL_SEL_NONE:
 		break;
 	case AG_HSVPAL_SEL_H:
-		update_h(pal,
+		UpdateHue(pal,
 		    x - pal->circle.x,
 		    y - pal->circle.y);
 		break;
 	case AG_HSVPAL_SEL_SV:
-		update_sv(pal, x, y);
+		UpdateSV(pal, x, y);
 		break;
 	case AG_HSVPAL_SEL_A:
-		update_a(pal, x);
+		UpdateAlpha(pal, x);
 		break;
 	}
 }
@@ -581,9 +651,12 @@ binding_changed(AG_Event *event)
 #if 0
 		hsv->flags |= AG_HSVPAL_PIXEL;
 #endif
-		update_hsv_from_pixel(hsv, *(Uint32 *)bind->p1);
+		UpdateHSVFromPixel(hsv, *(Uint32 *)bind->p1);
+	} else if (strcmp(bind->name, "RGBAv") == 0) {
+		UpdateHSVFromRGBAv(hsv);
+	} else if (strcmp(bind->name, "RGBv") == 0) {
+		UpdateHSVFromRGBv(hsv);
 	}
-	
 }
 
 void
@@ -629,7 +702,7 @@ AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 }
 
 static void
-render_palette(AG_HSVPal *pal)
+RenderPalette(AG_HSVPal *pal)
 {
 	float h, cur_h, cur_s, cur_v;
 	Uint32 pc;
@@ -766,7 +839,7 @@ AG_HSVPalDraw(void *p)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		}
 		pal->cTile = SDL_MapRGB(pal->surface->format, 140, 140, 140);
-		render_palette(pal);
+		RenderPalette(pal);
 		AG_WidgetReplaceSurface(pal, 0, pal->surface);
 	}
 
