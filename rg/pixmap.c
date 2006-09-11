@@ -526,11 +526,11 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 	AG_Toolbar *tbar;
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
-	AG_ToolbarAddButton(tbar, 0, AGICON(STAMP_TOOL_ICON), 0, 0,
+	AG_ToolbarButtonIcon(tbar, AGICON(STAMP_TOOL_ICON), 0,
 	    insert_brush_dlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
-	AG_ToolbarAddButton(tbar, 0, AGICON(FLIP_TOOL_ICON), 0, 0,
+	AG_ToolbarButtonIcon(tbar, AGICON(FLIP_TOOL_ICON), 0,
 	    flip_pixmap, "%p,%p", tv, px);
-	AG_ToolbarAddButton(tbar, 0, AGICON(MIRROR_TOOL_ICON), 0, 0,
+	AG_ToolbarButtonIcon(tbar, AGICON(MIRROR_TOOL_ICON), 0,
 	    mirror_pixmap, "%p,%p", tv, px);
 
 	return (tbar);

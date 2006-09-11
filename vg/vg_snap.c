@@ -152,33 +152,30 @@ AG_Toolbar *
 VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 {
 	AG_Toolbar *snbar;
-	AG_Button *bu;
 
-	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
+	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
+	                                        AG_TOOLBAR_STICKY);
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_RINT_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_RINT_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
-	bu = AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_GRID_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_GRID_ICON), 1,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
-	AG_WidgetSetInt(bu, "state", 1);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_ENDPOINT_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_ENDPOINT_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_ENDPOINT_D_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_ENDPOINT_D_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
 
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_CLOSEST_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_CLOSEST_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_CENTERPT_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_CENTERPT_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_MIDDLEPT_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_MIDDLEPT_ICON), 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_INTSECT_AUTO_ICON),
-	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
-	    VG_INTERSECTIONS_AUTO);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_INTSECT_MANUAL_ICON),
-	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
-	    VG_INTERSECTIONS_MANUAL);
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_INTSECT_AUTO_ICON), 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_AUTO);
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_INTSECT_MANUAL_ICON), 0,
+	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_MANUAL);
 	return (snbar);
 }
 

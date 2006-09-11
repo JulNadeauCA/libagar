@@ -71,15 +71,15 @@ AG_Toolbar *
 VG_OrthoRestrictToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 {
 	AG_Toolbar *snbar;
-	AG_Button *bu;
 
-	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS);
-	bu = AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
+	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
+	                                        AG_TOOLBAR_STICKY);
+
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 1,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_NO_ORTHO);
-	AG_WidgetSetInt(bu, "state", 1);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_HORIZ_ORTHO);
-	AG_ToolbarAddButton(snbar, 0, AGICON(SNAP_FREE_ICON), 1, 0,
+	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_VERT_ORTHO);
 
 	return (snbar);
