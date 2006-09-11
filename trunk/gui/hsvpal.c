@@ -792,8 +792,8 @@ AG_HSVPalScale(void *p, int w, int h)
 	int i, y = 0;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(pal)->w = agView->w/5;
-		AGWIDGET(pal)->h = agView->h/3;
+		AGWIDGET(pal)->w = 120;
+		AGWIDGET(pal)->h = 160;
 	}
 	
 	pal->rAlpha.x = 0;
