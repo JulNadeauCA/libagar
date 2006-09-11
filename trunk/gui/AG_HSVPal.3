@@ -48,7 +48,7 @@ The widget can bind to floating-point hue, saturation, value and alpha
 variables.
 It can also bind to a pixel value (and matching
 .Xr SDL_PixelFormat 3 )
-on the fly.
+or an array of RGBA components in integer or floating-point format.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -107,7 +107,8 @@ Acceptable binding types include FLOAT and DOUBLE, INT and UINT8.
 For floating point types, the values are scaled to 0.0-1.0.
 For integral types, the values are scaled to 0-255.
 .It Va void *RGBAv
-Same as above, except that the array also includes the alpha component.
+Same as above, except that the array has 4 elements where the last element
+is the alpha component.
 .El
 .Sh EVENTS
 The
