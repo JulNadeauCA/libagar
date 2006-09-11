@@ -38,40 +38,53 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-Agar widgets are subclasses of
-.Nm ,
-organized in a tree structure.
-Widgets fall under one of three categories:
-.Bl -tag -width "Composite widgets "
-.It Container widgets
-Containers arrange the position and geometry of their children in a specific
-order.
-.Xr AG_HBox 3 ,
-.Xr AG_VBox 3
-and
-.Xr AG_Window 3
-examples of container widgets.
-.It Composite widgets
-Composite widgets create pre-defined child widgets and arrange them in a
-specific manner.
-For example, the
-.Xr AG_Tlist 3
-widget attaches a vertical
-.Xr AG_Scrollbar 3
-to itself.
-Composite widgets can behave like containers as well, like
-.Xr AG_Window 3
-which attaches a
-.Xr AG_Titlebar 3
-widget to itself but accepts other widgets.
-.It Simple widgets
-Simple widgets do not contain any children.
+The Agar
+.Nm
+class is the basic building block for implementing graphical interfaces.
+An Agar graphical interface is a tree of objects derived from this class.
+Every widget occupies a specific rectangle of pixels inside its parent.
+The position and geometry of widgets on the screen is determined by
+recursive transformations.
+.Pp
+Interactive widgets are graphical elements that the user interacts with
+using the mouse or keyboard, for example
 .Xr AG_Button 3
+displays a standard push-button.
+.Pp
+Non-interactive widgets are generally
+.Sq container
+widgets whose sole purpose is to determine the position and geometry of its
+child widgets using specific algorithms, for example
+.Xr AG_Box 3
 and
-.Xr AG_Label 3
-are examples of simple widgets.
-The behavior is undefined if one attempts to attach children to such widgets.
-.El
+.Xr AG_Window 3 .
+.Pp
+It is common for interactive widgets to attach other widgets, for example
+the
+.Xr AG_Table 3
+widget attaches a
+.Xr AG_Scrollbar 3
+widget at a specific position and sets its geometry accordingly.
+.Pp
+Widgets use the
+.Xr AG_Event 3
+system extensively to generate and handle many types of events.
+Many Agar widgets also use
+.Sq bindings
+to directly read/write data of specific types, without the need for using
+events.
+For example, the 
+.Xr AG_FSpinbutton 3
+widget provides a binding called
+.Sq value
+which can be
+.Ft double ,
+.Ft float ,
+.Ft int ,
+.Ft Uint ,
+.Ft Uint8 ,
+etc.
+This technique can significantly reduce GUI-related code bloat in applications.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
