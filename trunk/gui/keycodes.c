@@ -41,46 +41,6 @@
 #include <gui/unicode.h>
 
 #ifdef UTF8
-static int key_del_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_end_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_kill_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_right_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_char_utf8(AG_Textbox *, SDLKey, int, const char *, Uint32);
-#else
-static int key_del_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_end_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_kill_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_right_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_char_ascii(AG_Textbox *, SDLKey, int, const char *, Uint32);
-#endif
-
-static int key_home(AG_Textbox *, SDLKey, int, const char *, Uint32);
-static int key_left(AG_Textbox *, SDLKey, int, const char *, Uint32);
-
-const struct ag_keycode agKeyCodes[] = {
-	{ SDLK_HOME,		0,		key_home,	NULL, 1 },
-	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL, 1 },
-	{ SDLK_LEFT,		0,		key_left,	NULL, 1 },
-#ifdef UTF8
-	{ SDLK_BACKSPACE,	0,		key_del_utf8,	NULL, 1 },
-	{ SDLK_DELETE,		0,		key_del_utf8,	NULL, 1 },
-	{ SDLK_END,		0,		key_end_utf8,	NULL, 1 },
-	{ SDLK_e,		KMOD_CTRL,	key_end_utf8,	NULL, 1 },
-	{ SDLK_k,		KMOD_CTRL,	key_kill_utf8,	NULL, 1 },
-	{ SDLK_RIGHT,		0,		key_right_utf8,	NULL, 1 },
-	{ SDLK_LAST,		0,		key_char_utf8,	NULL, 0 },
-#else
-	{ SDLK_BACKSPACE,	0,		key_del_ascii,	NULL, 1 },
-	{ SDLK_DELETE,		0,		key_del_ascii, NULL, 1 },
-	{ SDLK_END,		0,		key_end_ascii,	NULL, 1 },
-	{ SDLK_e,		KMOD_CTRL,	key_end_ascii,	NULL, 1 },
-	{ SDLK_k,		KMOD_CTRL,	key_kill_ascii,	NULL, 1 },
-	{ SDLK_RIGHT,		0,		key_right_ascii, NULL, 1 },
-	{ SDLK_LAST,		0,		key_char_ascii,	NULL, 0 },
-#endif
-};
-
-#ifdef UTF8
 static struct {
 	Uint32 comp, key, res;
 } compose[] = {
@@ -159,10 +119,11 @@ static struct {
 	{ 0x005e, 0x0057, 0x0174 },  /* LATIN CAPITAL LETTER W */
 };
 static const int ncompose = sizeof(compose) / sizeof(compose[0]);
+extern int agTextComposition;
 #endif /* UTF8 */
 
 static Uint32
-kbdtoupper(Uint32 key)
+ToUpperASCII(Uint32 key)
 {
 	if (isalpha(key)) {
 		return (toupper(key));
@@ -195,37 +156,38 @@ kbdtoupper(Uint32 key)
 }
 
 static __inline__ Uint32
-kbdtolower(Uint32 key)
+ToLowerASCII(Uint32 key)
 {
 	return (tolower(key));
 }
 
 /* Apply modifiers (when not using Unicode keyboard translation). */
 static __inline__ Uint32
-key_apply_mod(Uint32 key, int kmod)
+InputApplyModifiers(Uint32 key, int kmod)
 {
 	if (kmod & KMOD_CAPS) {
 		if (kmod & KMOD_SHIFT) {
-			return (kbdtolower(key));
+			return (ToLowerASCII(key));
 		} else {
-			return (kbdtoupper(key));
+			return (ToUpperASCII(key));
 		}
 	} else {
 		if (kmod & KMOD_SHIFT) {
-			return (kbdtoupper(key));
+			return (ToUpperASCII(key));
 		} else {
 			return (key);
 		}
 	}
 }
 
+/*
+ * UTF-8 Input Routines
+ */
 #ifdef UTF8
 
-/* Perform simple input composition. */
 static int
-key_compose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
+InputCompose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
 {
-	extern int agTextComposition;
 	int i;
 
 	if (!agTextComposition) {
@@ -264,231 +226,157 @@ key_compose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
 	}
 }
 
-/* Insert an Unicode character. */
 static int
-key_char_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod,
-    const char *arg, Uint32 uch)
+InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
 {
 	extern int agKbdUnicode;			/* input/kbd.c */
 	AG_WidgetBinding *stringb;
 	size_t len;
-	Uint32 *ucs;
+	Uint32 *ucs4;
 	char *utf8;
 	Uint32 ins[2];
-	int i, nins;
+	int i, nchars;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
-	len = AG_UCS4Len(ucs);
-
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	len = AG_UCS4Len(ucs4);
+#ifdef DEBUG
+	if (tbox->pos < 0 || tbox->pos > len)
+		fatal("bad position");
+#endif
 	if (agKbdUnicode) {
 		if (uch == 0) {
 			goto skip;
 		}
-		nins = key_compose(tbox, uch, ins);
+		if (agTextComposition) {
+			if ((nchars = InputCompose(tbox, uch, ins)) == 0)
+				goto skip;
+		} else {
+			ins[0] = (Uint32)keysym;
+			nchars = 1;
+		}
 	} else {
-		ins[0] = key_apply_mod((Uint32)keysym, keymod);
-		nins = 1;
+		ins[0] = InputApplyModifiers((Uint32)keysym, keymod);
+		nchars = 1;
 	}
-
+	ucs4 = Realloc(ucs4, (len+nchars+1)*sizeof(Uint32));
+	
 	/* Ensure the new character(s) fit inside the buffer. */
 	/* XXX use utf8 size for space efficiency */
-	if (len+nins >= stringb->size/sizeof(Uint32))
+	if (len+nchars >= stringb->size/sizeof(Uint32)) {
+		dprintf("character does not fit into buffer\n");
 		goto skip;
-
-	if (tbox->pos == len) {
-		/* Append to the end of string */
-		if (agKbdUnicode) {
-			if (uch != 0) {
-				for (i = 0; i < nins; i++) {
-					ucs[len+i] = ins[i];
-				}
-			} else {
-				goto out;
-			}
-		} else if (keysym != 0) {
-			for (i = 0; i < nins; i++)
-				ucs[len+i] = ins[i];
-		} else {
-			goto skip;
-		}
-	} else {
-		Uint32 *p = ucs + tbox->pos;
-		
-		/* Insert at the cursor position in the string. */
-		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
-		if (agKbdUnicode) {
-			if (uch != 0) {
-				for (i = 0; i < nins; i++) {
-					ucs[tbox->pos+i] = ins[i];
-				}
-			} else {
-				goto out;
-			}
-		} else if (keysym != 0) {
-			for (i = 0; i < nins; i++) {
-				ucs[len+i] = ins[i];
-			}
-		} else {
-			goto skip;
-		}
 	}
-out:
-	ucs[len+nins] = '\0';
-	tbox->pos += nins;
-	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
-skip:
-	AG_WidgetBindingChanged(stringb);
-	AG_WidgetUnlockBinding(stringb);
-	free(ucs);
-	return (1);
-}
-
-#else /* !UTF8 */
-
-/* Insert an ASCII character. */
-static int
-key_char_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 unicode)
-{
-	AG_WidgetBinding *stringb;
-	size_t len;
-	Uint32 *ucs;
-	char *s;
-	char c;
-	int i;
-
-	if (keysym == 0 || !isascii(keysym))
-		return (0);
-
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	len = strlen(s);
-	c = (char)key_apply_mod((Uint32)keysym, keymod);
-
-	if ((len+1)+1 >= stringb->size)
-		goto skip;
-
-	if (tbox->pos == len) {		       			/* Append */
-		s[len] = c;
+	if (tbox->pos == len) {					/* Append */
+		dprintf("append at %d/%d\n", (int)tbox->pos, (int)len);
+		if (agKbdUnicode) {
+			if (uch != 0) {
+				for (i = 0; i < nchars; i++)
+					ucs4[len+i] = ins[i];
+			} else {
+				goto out;
+			}
+		} else if (keysym != 0) {
+			for (i = 0; i < nchars; i++)
+				ucs4[len+i] = ins[i];
+		} else {
+			goto skip;
+		}
 	} else {						/* Insert */
-		char *p = &s[tbox->pos];
-		
-		memcpy(&p[1], &p[0], (len - tbox->pos));
-		*p = c;
+		dprintf("insert at %d/%d\n", (int)tbox->pos, (int)len);
+		memmove(&ucs4[tbox->pos+nchars], &ucs4[tbox->pos],
+		       (len - tbox->pos)*sizeof(Uint32));
+		if (agKbdUnicode) {
+			if (uch != 0) {
+				for (i = 0; i < nchars; i++) {
+					ucs4[tbox->pos+i] = ins[i];
+				}
+			} else {
+				goto out;
+			}
+		} else if (keysym != 0) {
+			for (i = 0; i < nchars; i++)
+				ucs4[len+i] = ins[i];
+		} else {
+			goto skip;
+		}
 	}
 out:
-	s[len+1] = '\0';
-	tbox->pos++;
+	dprintf("NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
+	    (int)stringb->size);
+	ucs4[len+nchars] = '\0';
+	tbox->pos += nchars;
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4, stringb->size);
 skip:
 	AG_WidgetBindingChanged(stringb);
 	AG_WidgetUnlockBinding(stringb);
+	free(ucs4);
 	return (1);
 }
 
-#endif /* UTF8 */
-
-#ifdef UTF8
-
 static int
-key_del_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+DeleteUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 unicode)
 {
 	AG_WidgetBinding *stringb;
 	size_t len;
-	Uint32 *ucs;
+	Uint32 *ucs4, *c;
 	char *utf8;
 	int i;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
-	len = AG_UCS4Len(ucs);
-
-	if (tbox->pos == 0 || len == 0)
-		goto out;
-
-	if (tbox->pos == len) {
-		ucs[--tbox->pos] = '\0';
-	} else if (tbox->pos > 0) {
-		/* XXX use memmove */
-		for (i = tbox->pos-1; i < len; i++) {
-			ucs[i] = ucs[i+1];
-		}
-		tbox->pos--;
-	}
-
-	if (tbox->pos == tbox->offs) {
-		if ((tbox->offs -= 4) < 1)
-			tbox->offs = 0;
-	}
-	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
-out:
-	AG_WidgetBindingChanged(stringb);
-	AG_WidgetUnlockBinding(stringb);
-	free(ucs);
-	return (1);
-}
-
-#else /* !UTF8 */
-
-/* Destroy the ASCII character before the cursor. */
-static int
-key_del_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 unicode)
-{
-	AG_WidgetBinding *stringb;
-	size_t len;
-	char *s;
-	int pos = tbox->pos;
-	int i;
-
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	len = strlen(s);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	len = AG_UCS4Len(ucs4);
 
 	if (len == 0)
-		goto out;
-	
-	if (keysym == SDLK_BACKSPACE) {
-		if (pos == 0) {
+		goto skip;
+#ifdef DEBUG
+	if (tbox->pos < 0 || tbox->pos > len)
+		fatal("bad position");
+#endif
+	switch (keysym) {
+	case SDLK_BACKSPACE:
+		if (tbox->pos == 0) {
+			goto skip;
+		}
+		if (tbox->pos == len) { 
+			ucs4[len-1] = '\0';
+			tbox->pos--;
 			goto out;
 		}
-		pos -= 1;
 		tbox->pos--;
+		break;
+	case SDLK_DELETE:
+		if (tbox->pos == len) {
+			ucs4[len-1] = '\0';
+			tbox->pos--;
+			goto out;
+		}
+		break;
+	default:
+		break;
 	}
-
-	if (pos == len) {
-		s[len-1] = '\0';
-		tbox->pos--;
-	} else if (pos >= 0) {
-		memmove(&s[pos], &s[pos+1], len+1);
+	for (c = &ucs4[tbox->pos]; c[1] != '\0'; c++) {
+		*c = c[1];
 	}
+	*c = '\0';
 
 	if (tbox->pos == tbox->offs) {
-		if ((tbox->offs -= 4) < 1)
+		if ((tbox->offs -= 4) < 1)			/* XXX */
 			tbox->offs = 0;
 	}
 out:
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4, stringb->size);
+skip:
 	AG_WidgetBindingChanged(stringb);
 	AG_WidgetUnlockBinding(stringb);
+	free(ucs4);
 	return (1);
 }
-#endif /* UTF8 */
 
-/* Move the cursor to the start of the string. */
 static int
-key_home(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
-{
-	if (tbox->offs > 0) {
-		tbox->offs = 0;
-	}
-	tbox->pos = 0;
-	return (0);
-}
-
-#ifdef UTF8
-/* Move the cursor to the end of the UTF-8 string. */
-static int
-key_end_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+CursorEndUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	AG_WidgetBinding *stringb;
@@ -504,35 +392,15 @@ key_end_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	return (0);
 }
 
-#else /* !UTF8 */
-
-/* Move the cursor to the end of the ASCII string. */
 static int
-key_end_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
-{
-	AG_WidgetBinding *stringb;
-	char *s;
-	
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	tbox->pos = strlen(s);
-	tbox->offs = 0;
-	AG_WidgetUnlockBinding(stringb);
-	return (0);
-}
-#endif /* UTF8 */
-
-#ifdef UTF8
-/* Kill the text after the cursor. */
-/* XXX save to a kill buffer, etc */
-static int
-key_kill_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+KillUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	AG_WidgetBinding *stringb;
 	Uint32 *ucs;
 	char *utf8;
 
+	/* XXX save to a kill buffer, etc */
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
 
@@ -544,43 +412,9 @@ key_kill_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	free(ucs);
 	return (0);
 }
-#else /* !UTF8 */
-/* Kill the text after the cursor. */
-/* XXX save to a kill buffer, etc */
-static int
-key_kill_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
-{
-	AG_WidgetBinding *stringb;
-	char *s;
 
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	s[tbox->pos] = '\0';
-	AG_WidgetBindingChanged(stringb);
-	AG_WidgetUnlockBinding(stringb);
-	return (0);
-}
-#endif
-
-/* Move the cursor to the left. */
 static int
-key_left(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
-{
-	if (--tbox->pos < 1) {
-		tbox->pos = 0;
-	}
-	if (tbox->pos == tbox->offs) {
-		if (--tbox->offs < 0)
-			tbox->offs = 0;
-	}
-	return (1);
-}
-
-#ifdef UTF8
-/* Move the cursor to the right. */
-static int
-key_right_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+CursorRightUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	AG_WidgetBinding *stringb;
@@ -599,11 +433,193 @@ key_right_utf8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	return (1);
 }
 
+static int
+WordBackUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	AG_WidgetBinding *stringb;
+	Uint32 *ucs4, *c;
+	char *utf8;
+
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+
+	if (tbox->pos > 1 && ucs4[tbox->pos-1] == ' ') {
+		tbox->pos -= 2;
+	}
+	for (c = &ucs4[tbox->pos];
+	     c > &ucs4[0] && *c != ' ';
+	     c--, tbox->pos--)
+		;;
+	if (*c == ' ')
+		tbox->pos++;
+
+	AG_WidgetUnlockBinding(stringb);
+	free(ucs4);
+	return (1);
+}
+
+static int
+WordForwUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	AG_WidgetBinding *stringb;
+	Uint32 *ucs4, *c;
+	char *utf8;
+	size_t len;
+
+	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
+	len = AG_UCS4Len(ucs4);
+
+	if (tbox->pos == len) {
+		return (1);
+	}
+	if (len > 1 && ucs4[tbox->pos] == ' ') {
+		tbox->pos++;
+	}
+	for (c = &ucs4[tbox->pos];
+	     *c != '\0' && *c != ' ';
+	     c++, tbox->pos++)
+		;;
+
+	AG_WidgetUnlockBinding(stringb);
+	free(ucs4);
+	return (1);
+}
+
 #else /* !UTF8 */
 
-/* Move the cursor to the right. */
+/*
+ * ASCII Input Routines
+ */
+
 static int
-key_right_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod,
+InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 unicode)
+{
+	AG_WidgetBinding *stringb;
+	size_t len;
+	Uint32 *ucs;
+	char *s, ch;
+
+	if (keysym == 0 || !isascii(keysym))
+		return (0);
+
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
+	len = strlen(s);
+	ch = (char)InputApplyModifiers((Uint32)keysym, keymod);
+#ifdef DEBUG
+	if (tbox->pos < 0 || tbox->pos > len)
+		fatal("bad position");
+#endif
+
+	if ((len+1)+1 >= stringb->size)
+		goto skip;
+
+	if (tbox->pos == len) {		       			/* Append */
+		s[len] = ch;
+	} else {						/* Insert */
+		char *p = &s[tbox->pos];
+		
+		memcpy(&p[1], &p[0], (len - tbox->pos));
+		*p = ch;
+	}
+out:
+	s[len+1] = '\0';
+	tbox->pos++;
+skip:
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
+	return (1);
+}
+
+static int
+DeleteASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 unicode)
+{
+	AG_WidgetBinding *stringb;
+	size_t len;
+	char *s, *c;
+	int i;
+
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
+	len = strlen(s);
+
+	if (len == 0)
+		goto skip;
+#ifdef DEBUG
+	if (tbox->pos < 0 || tbox->pos > len)
+		fatal("bad position");
+#endif
+	switch (keysym) {
+	case SDLK_BACKSPACE:
+		if (tbox->pos == 0) {
+			goto skip;
+		}
+		if (tbox->pos == len) { 
+			s[len-1] = '\0';
+			tbox->pos--;
+			goto out;
+		}
+		tbox->pos--;
+		break;
+	case SDLK_DELETE:
+		if (tbox->pos == len) {
+			s[len-1] = '\0';
+			tbox->pos--;
+			goto out;
+		}
+		break;
+	default:
+		break;
+	}
+	for (c = &s[tbox->pos]; c[1] != '\0'; c++) {
+		*c = c[1];
+	}
+	*c = '\0';
+out:
+	if (tbox->pos == tbox->offs) {
+		if ((tbox->offs -= 4) < 1)			/* XXX */
+			tbox->offs = 0;
+	}
+skip:
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
+	return (1);
+}
+
+static int
+CursorEndASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	AG_WidgetBinding *stringb;
+	char *s;
+	
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
+	tbox->pos = strlen(s);
+	tbox->offs = 0;
+	AG_WidgetUnlockBinding(stringb);
+	return (0);
+}
+
+static int
+KillASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	AG_WidgetBinding *stringb;
+	char *s;
+
+	/* XXX save to a kill buffer, etc */
+	stringb = AG_WidgetGetBinding(tbox, "string", &s);
+	s[tbox->pos] = '\0';
+	AG_WidgetBindingChanged(stringb);
+	AG_WidgetUnlockBinding(stringb);
+	return (0);
+}
+
+static int
+CursorRightASCII(AG_Textbox *tbox, SDLKey keysym, int keymod,
     const char *arg, Uint32 uch)
 {
 	AG_WidgetBinding *stringb;
@@ -620,4 +636,68 @@ key_right_ascii(AG_Textbox *tbox, SDLKey keysym, int keymod,
 	return (1);
 }
 
+static int
+WordBackASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+}
+
+static int
+WordForwASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+}
+
 #endif /* UTF8 */
+
+static int
+CursorHome(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	if (tbox->offs > 0) {
+		tbox->offs = 0;
+	}
+	tbox->pos = 0;
+	return (0);
+}
+
+static int
+CursorLeft(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	if (--tbox->pos < 1) {
+		tbox->pos = 0;
+	}
+	if (tbox->pos == tbox->offs) {
+		if (--tbox->offs < 0)
+			tbox->offs = 0;
+	}
+	return (1);
+}
+
+const struct ag_keycode agKeyCodes[] = {
+	{ SDLK_HOME,		0,		CursorHome,	NULL, 1 },
+	{ SDLK_a,		KMOD_CTRL,	CursorHome,	NULL, 1 },
+	{ SDLK_LEFT,		0,		CursorLeft,	NULL, 1 },
+#ifdef UTF8
+	{ SDLK_BACKSPACE,	0,		DeleteUTF8,	NULL, 1 },
+	{ SDLK_DELETE,		0,		DeleteUTF8,	NULL, 1 },
+	{ SDLK_END,		0,		CursorEndUTF8,	NULL, 1 },
+	{ SDLK_e,		KMOD_CTRL,	CursorEndUTF8,	NULL, 1 },
+	{ SDLK_k,		KMOD_CTRL,	KillUTF8,	NULL, 1 },
+	{ SDLK_b,		KMOD_ALT,	WordBackUTF8,	NULL, 1 },
+	{ SDLK_f,		KMOD_ALT,	WordForwUTF8,	NULL, 1 },
+	{ SDLK_RIGHT,		0,		CursorRightUTF8, NULL, 1 },
+	{ SDLK_LAST,		0,		InsertUTF8,	NULL, 0 },
+#else
+	{ SDLK_BACKSPACE,	0,		DeleteASCII,	NULL, 1 },
+	{ SDLK_DELETE,		0,		DeleteASCII, NULL, 1 },
+	{ SDLK_END,		0,		CursorEndASCII,	NULL, 1 },
+	{ SDLK_e,		KMOD_CTRL,	CursorEndASCII,	NULL, 1 },
+	{ SDLK_k,		KMOD_CTRL,	KillASCII,	NULL, 1 },
+	{ SDLK_b,		KMOD_ALT,	WordBackASCII, NULL, 1 },
+	{ SDLK_f,		KMOD_ALT,	WordForwASCII, NULL, 1 },
+	{ SDLK_RIGHT,		0,		CursorRightASCII, NULL, 1 },
+	{ SDLK_LAST,		0,		InsertASCII,	NULL, 0 },
+#endif
+};

@@ -281,7 +281,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 	mview->hspace = 8;
 	mview->vpadding = 4;
 
-	/* XXX */
+	/* XXX Submenu indicator */
 	AG_WidgetMapSurface(mview, AG_DupSurface(AG_SPRITE(mview,3).su));
 	
 	AG_SetEvent(mview, "window-mousemotion", mousemotion, NULL);
