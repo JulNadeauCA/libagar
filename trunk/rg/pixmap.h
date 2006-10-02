@@ -13,15 +13,17 @@ struct rg_tileview;
 enum rg_pixmap_mod_type {
 	RG_PIXMAP_PIXEL_REPLACE		/* Single pixel replace */
 };
-struct rg_pixmap_mod {
+
+typedef struct rg_pixmap_mod {
 	enum rg_pixmap_mod_type type;
 	Uint16 x, y;			/* Coordinates of pixel in pixmap */
 	Uint32 val;			/* Previous value */
-};
-struct rg_pixmap_undoblk {
+} RG_PixmapMod;
+
+typedef struct rg_pixmap_undoblk {
 	struct rg_pixmap_mod *mods;	/* Undoable modifications */
 	Uint		     nmods;
-};
+} RG_PixmapUndoBlk;
 
 enum rg_pixmap_blend_mode {
 	RG_PIXMAP_OVERLAY_ALPHA,
