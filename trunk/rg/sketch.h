@@ -10,15 +10,16 @@
 enum rg_sketch_mod_type {
 	RG_SKETCH_VERTEX_DISPLACEMENT
 };
-struct rg_sketch_mod {
+typedef struct rg_sketch_mod {
 	enum rg_sketch_mod_type type;
 	VG_Vtx *vtx;			/* Modified vertex */
 	VG_Vtx pvtx;			/* Previous value */
-};
-struct rg_sketch_undoblk {
+} RG_SketchMod;
+
+typedef struct rg_sketch_undoblk {
 	struct rg_sketch_mod *mods;	/* Undoable modifications */
 	Uint		     nmods;
-};
+} RG_SketchUndoBlk;
 
 typedef struct rg_sketch {
 	char name[RG_SKETCH_NAME_MAX];
