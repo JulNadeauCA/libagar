@@ -62,11 +62,11 @@ RG_SketchInit(RG_Sketch *sk, RG_Tileset *ts, int flags)
 	sk->vg = Malloc(sizeof(VG), M_VG);
 	VG_Init(sk->vg, VG_ANTIALIAS|VG_ALPHA);
 
-	sk->ublks = Malloc(sizeof(struct rg_sketch_undoblk), M_RG);
+	sk->ublks = Malloc(sizeof(RG_SketchUndoBlk), M_RG);
 	sk->nublks = 1;
 	sk->curblk = 0;
 	RG_SketchBeginUndoBlk(sk);
-	sk->ublks[0].mods = Malloc(sizeof(struct rg_sketch_mod), M_RG);
+	sk->ublks[0].mods = Malloc(sizeof(RG_SketchMod), M_RG);
 	sk->ublks[0].nmods = 0;
 }
 
@@ -180,7 +180,7 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 }
 
 static void
-update_sketch(AG_Event *event)
+UpdateScale(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_TileElement *tel = AG_PTR(2);
@@ -232,13 +232,13 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		    &tel->tel_sketch.scale);
 		AG_FSpinbuttonSetMin(fsb, 0.0001);
 		AG_FSpinbuttonSetIncrement(fsb, 0.1);
-		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		AG_SetEvent(fsb, "fspinbutton-changed", UpdateScale, "%p,%p",
 		    tv, tel);
 		
 		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Coordinates: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &tel->tel_sketch.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &tel->tel_sketch.y);
-		AG_SetEvent(fsb, "fspinbutton-changed", update_sketch, "%p,%p",
+		AG_SetEvent(fsb, "fspinbutton-changed", UpdateScale, "%p,%p",
 		    tv, tel);
 		
 		sb = AG_SpinbuttonNew(ntab, 0, _("Overall alpha: "));
@@ -251,7 +251,7 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 }
 
 static void
-poll_styles(AG_Event *event)
+PollStyles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	VG *vg = AG_PTR(1);
@@ -296,7 +296,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_SpinbuttonSetMin(sb, 0);
 
 	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Style: "));
-	AG_SetEvent(com->list, "tlist-poll", poll_styles, "%p", vg);
+	AG_SetEvent(com->list, "tlist-poll", PollStyles, "%p", vg);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
@@ -372,7 +372,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 void
 RG_SketchBeginUndoBlk(RG_Sketch *sk)
 {
-	struct rg_sketch_undoblk *ublk;
+	RG_SketchUndoBlk *ublk;
 
 	while (sk->nublks > sk->curblk+1) {
 		ublk = &sk->ublks[sk->nublks-1];
@@ -380,12 +380,11 @@ RG_SketchBeginUndoBlk(RG_Sketch *sk)
 		sk->nublks--;
 	}
 
-	sk->ublks = Realloc(sk->ublks, ++sk->nublks *
-	                    sizeof(struct rg_pixmap_mod));
+	sk->ublks = Realloc(sk->ublks, ++sk->nublks*sizeof(RG_SketchUndoBlk));
 	sk->curblk++;
 
 	ublk = &sk->ublks[sk->curblk];
-	ublk->mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
+	ublk->mods = Malloc(sizeof(RG_SketchMod), M_RG);
 	ublk->nmods = 0;
 }
 
@@ -393,14 +392,14 @@ void
 RG_SketchUndo(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Sketch *sk = tel->tel_sketch.sk;
-	struct rg_sketch_undoblk *ublk = &sk->ublks[sk->curblk];
+	RG_SketchUndoBlk *ublk = &sk->ublks[sk->curblk];
 	int i;
 
 	if (sk->curblk-1 <= 0)
 		return;
 
 	for (i = 0; i < ublk->nmods; i++) {
-		struct rg_sketch_mod *mod = &ublk->mods[i];
+		RG_SketchMod *mod = &ublk->mods[i];
 
 		dprintf("undo mod %p\n", mod);
 	}
@@ -415,7 +414,7 @@ RG_SketchRedo(RG_Tileview *tv, RG_TileElement *tel)
 }
 
 static void
-update_circle_radius(AG_Event *event)
+UpdateCircleRadius(AG_Event *event)
 {
 	VG *vg = AG_PTR(1);
 	VG_Element *vge = AG_PTR(2);
@@ -426,7 +425,7 @@ update_circle_radius(AG_Event *event)
 }
 
 static void
-update_circle_vertex(AG_Event *event)
+UpdateCircleVertex(AG_Event *event)
 {
 	VG *vg = AG_PTR(1);
 	VG_Element *vge = AG_PTR(2);
@@ -465,7 +464,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 		ctrl->vg = vg;
 		ctrl->vge = vge;
 		ctrl->buttonup = NULL;
-		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_vertex,
+		ctrl->motion = AG_SetEvent(tv, NULL, UpdateCircleVertex,
 		    "%p,%p", vg, vge);
 		
 		ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_VERTEX, "%*d,%*d",
@@ -473,7 +472,7 @@ RG_SketchSelect(RG_Tileview *tv, RG_TileElement *tel,
 		ctrl->vg = vg;
 		ctrl->vge = vge;
 		ctrl->buttonup = NULL;
-		ctrl->motion = AG_SetEvent(tv, NULL, update_circle_radius,
+		ctrl->motion = AG_SetEvent(tv, NULL, UpdateCircleRadius,
 		    "%p,%p", vg, vge);
 		break;
 	default:
@@ -711,7 +710,7 @@ RG_SketchKeyUp(RG_Tileview *tv, RG_TileElement *tel, int keysym,
 }
 
 static void
-select_tool(AG_Event *event)
+SelectTool(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_TileviewTool *tvt = AG_PTR(2);
@@ -720,7 +719,7 @@ select_tool(AG_Event *event)
 }
 
 static void
-select_tool_tbar(AG_Event *event)
+SelectToolFromToolbar(AG_Event *event)
 {
 	AG_Button *btn = AG_SELF();
 	AG_Toolbar *tbar = AG_PTR(1);
@@ -760,7 +759,7 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 				continue;
 			}
 			AG_MenuAction(m_tool, _(tvt->ops->name), tvt->ops->icon,
-			    select_tool, "%p,%p", tv, tvt);
+			    SelectTool, "%p,%p", tv, tvt);
 		}
 
 		AG_MenuSeparator(mi);
@@ -810,7 +809,7 @@ RG_SketchToolbar(RG_Tileview *tv, RG_TileElement *tel)
 		}
 		AG_ToolbarButtonIcon(tbar, tvt->ops->icon >= 0 ?
 		    AGICON(tvt->ops->icon) : NULL, 0,
-		    select_tool_tbar, "%p,%p,%p", tbar, tv, tvt);
+		    SelectToolFromToolbar, "%p,%p,%p", tbar, tv, tvt);
 	}
 	return (tbar);
 }
