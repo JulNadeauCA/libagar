@@ -1,7 +1,7 @@
 /*	$Csoft: tileview.c,v 1.56 2005/10/07 07:16:28 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005, 2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -815,6 +815,8 @@ RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
 	tv->pxlen = 0;
 	tv->xoffs = 0;
 	tv->yoffs = 0;
+	tv->xms = 0;
+	tv->yms = 0;
 	tv->scrolling = 0;
 	tv->flags = flags;
 	tv->state = RG_TILEVIEW_TILE_EDIT;
