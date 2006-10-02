@@ -1,7 +1,7 @@
 /*	$Csoft: pixmap.c,v 1.49 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005, 2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -71,7 +71,7 @@ RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 	px->yorig = 0;
 	px->su = NULL;
 	px->nrefs = 0;
-	px->ublks = Malloc(sizeof(struct rg_pixmap_undoblk), M_RG);
+	px->ublks = Malloc(sizeof(RG_PixmapUndoBlk), M_RG);
 	px->nublks = 1;
 	px->curblk = 0;
 
@@ -84,7 +84,7 @@ RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 	TAILQ_INIT(&px->brushes);
 
 	RG_PixmapBeginUndoBlk(px);
-	px->ublks[0].mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
+	px->ublks[0].mods = Malloc(sizeof(RG_PixmapMod), M_RG);
 	px->ublks[0].nmods = 0;
 }
 
@@ -229,15 +229,7 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 }
 
 static void
-update_tv(AG_Event *event)
-{
-	RG_Tileview *tv = AG_PTR(1);
-	
-	tv->tile->flags |= RG_TILE_DIRTY;
-}
-
-static void
-poll_brushes(AG_Event *event)
+PollBrushes(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Pixmap *px = AG_PTR(1);
@@ -261,7 +253,7 @@ poll_brushes(AG_Event *event)
 }
 
 static void
-select_brush(AG_Event *event)
+SelectBrush(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Pixmap *px = AG_PTR(1);
@@ -277,7 +269,7 @@ select_brush(AG_Event *event)
 }
 
 static void
-poll_pixmaps(AG_Event *event)
+PollPixmaps(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -296,7 +288,7 @@ poll_pixmaps(AG_Event *event)
 }
 
 static void
-insert_brush(AG_Event *event)
+CreateBrush(AG_Event *event)
 {
 	RG_Pixmap *px = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -327,7 +319,7 @@ insert_brush(AG_Event *event)
 }
 
 static void
-update_bropts(AG_Event *event)
+UpdateBrushOptions(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Textbox *tb_name = AG_PTR(1);
@@ -341,7 +333,7 @@ update_bropts(AG_Event *event)
 }
 
 static void
-insert_brush_dlg(AG_Event *event)
+CreateBrushDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
@@ -376,8 +368,9 @@ insert_brush_dlg(AG_Event *event)
 		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
 		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
-		AG_SetEvent(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
-		AG_SetEvent(tl, "tlist-selected", update_bropts, "%p", tb_name);
+		AG_SetEvent(tl, "tlist-poll", PollPixmaps, "%p", tv->ts);
+		AG_SetEvent(tl, "tlist-selected", UpdateBrushOptions,
+		    "%p", tb_name);
 	}
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
@@ -392,7 +385,7 @@ insert_brush_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), insert_brush,
+		AG_ButtonAct(bo, 0, _("OK"), CreateBrush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
 		    cb_oneshot, win);
 		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
@@ -403,7 +396,7 @@ insert_brush_dlg(AG_Event *event)
 }
 
 static void
-flip_pixmap(AG_Event *event)
+FlipPixmap(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
@@ -424,7 +417,7 @@ flip_pixmap(AG_Event *event)
 }
 
 static void
-mirror_pixmap(AG_Event *event)
+MirrorPixmap(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
@@ -487,12 +480,12 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
-		AG_SetEvent(tl, "tlist-poll", poll_brushes, "%p", px);
-		AG_SetEvent(tl, "tlist-dblclick", select_brush, "%p", px);
+		AG_SetEvent(tl, "tlist-poll", PollBrushes, "%p", px);
+		AG_SetEvent(tl, "tlist-dblclick", SelectBrush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);
 
 		AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Create new brush"),
-		    insert_brush_dlg, "%p,%p,%p", tv, px, win);
+		    CreateBrushDlg, "%p,%p,%p", tv, px, win);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
@@ -527,11 +520,11 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
 	AG_ToolbarButtonIcon(tbar, AGICON(STAMP_TOOL_ICON), 0,
-	    insert_brush_dlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
+	    CreateBrushDlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
 	AG_ToolbarButtonIcon(tbar, AGICON(FLIP_TOOL_ICON), 0,
-	    flip_pixmap, "%p,%p", tv, px);
+	    FlipPixmap, "%p,%p", tv, px);
 	AG_ToolbarButtonIcon(tbar, AGICON(MIRROR_TOOL_ICON), 0,
-	    mirror_pixmap, "%p,%p", tv, px);
+	    MirrorPixmap, "%p,%p", tv, px);
 
 	return (tbar);
 }
@@ -540,7 +533,7 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 void
 RG_PixmapBeginUndoBlk(RG_Pixmap *px)
 {
-	struct rg_pixmap_undoblk *ublk;
+	RG_PixmapUndoBlk *ublk;
 
 	while (px->nublks > px->curblk+1) {
 		ublk = &px->ublks[px->nublks-1];
@@ -548,12 +541,11 @@ RG_PixmapBeginUndoBlk(RG_Pixmap *px)
 		px->nublks--;
 	}
 
-	px->ublks = Realloc(px->ublks, ++px->nublks *
-	                    sizeof(struct rg_pixmap_mod));
+	px->ublks = Realloc(px->ublks, ++px->nublks*sizeof(RG_PixmapUndoBlk));
 	px->curblk++;
 
 	ublk = &px->ublks[px->curblk];
-	ublk->mods = Malloc(sizeof(struct rg_pixmap_mod), M_RG);
+	ublk->mods = Malloc(sizeof(RG_PixmapMod), M_RG);
 	ublk->nmods = 0;
 }
 
@@ -561,7 +553,7 @@ void
 RG_PixmapUndo(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	struct rg_pixmap_undoblk *ublk = &px->ublks[px->curblk];
+	RG_PixmapUndoBlk *ublk = &px->ublks[px->curblk];
 	int i;
 
 	if (px->curblk-1 <= 0)
@@ -569,7 +561,7 @@ RG_PixmapUndo(RG_Tileview *tv, RG_TileElement *tel)
 
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_LockSurface(tv->scaled); }
 	for (i = 0; i < ublk->nmods; i++) {
-		struct rg_pixmap_mod *mod = &ublk->mods[i];
+		RG_PixmapMod *mod = &ublk->mods[i];
 
 		RG_PutPixel(px->su, mod->x, mod->y, mod->val);
 	}
@@ -592,8 +584,8 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 pixel, int once)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	struct rg_pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
-	struct rg_pixmap_mod *mod;
+	RG_PixmapUndoBlk *ublk = &px->ublks[px->nublks-1];
+	RG_PixmapMod *mod;
 	Uint8 *pSrc;
 	Uint8 r, g, b;
 	Uint v = (pixel & px->su->format->Amask) >>
@@ -613,7 +605,7 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 			return (1);
 	} else {
 		ublk->mods = Realloc(ublk->mods, (ublk->nmods+1) *
-				                  sizeof(struct rg_pixmap_mod));
+				                  sizeof(RG_PixmapMod));
 		mod = &ublk->mods[ublk->nmods++];
 		mod->type = RG_PIXMAP_PIXEL_REPLACE;
 		mod->x = (Uint16)x;
