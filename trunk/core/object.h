@@ -16,8 +16,6 @@
 
 #include "begin_code.h"
 
-struct ag_map;
-struct ag_input;
 struct ag_event;
 
 /* Generic object operation vector */
@@ -83,17 +81,17 @@ typedef struct ag_object {
 	AG_Gfx *gfx;
 	AG_Audio *audio;
 	Uint32 data_used;
-	Uint nevents;
-	TAILQ_HEAD(,ag_event) events;
-	TAILQ_HEAD(,ag_prop) props;
-	CIRCLEQ_HEAD(,ag_timeout) timeouts;
+	Uint nevents;				/* Number of event handlers */
+	TAILQ_HEAD(,ag_event) events;		/* Event handlers */
+	TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
+	CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 
 	/* Uses linkage_lock */
-	TAILQ_HEAD(,ag_object_dep) deps;
-	struct ag_objectq children;
-	void *parent;
-	TAILQ_ENTRY(ag_object) cobjs;	/* Entry in child object queue */
-	TAILQ_ENTRY(ag_object) tobjs;	/* Entry in timeout queue */
+	TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
+	struct ag_objectq children;	 /* Child objects */
+	void *parent;			 /* Back reference to parent object */
+	TAILQ_ENTRY(ag_object) cobjs;	 /* Entry in child object queue */
+	TAILQ_ENTRY(ag_object) tobjs;	 /* Entry in timeout queue */
 } AG_Object;
 
 enum ag_object_page_item {
