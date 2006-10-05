@@ -21,7 +21,6 @@ while (<STDIN>) {
 	next unless $ns;
 	if (/^\.Fn ([\w\-]+)\s+/ &&
 	    $1.'.'.$section ne $man.'.'.$section) {
-		print STDERR "$1.$section => $man.$section\n";
 		print "MANLINKS+=$man.${section}:$1.${section}\n";
 		print "CATLINKS+=$man.cat${section}:$1.cat${section}\n";
 	}

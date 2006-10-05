@@ -569,8 +569,22 @@ manlinks: Makefile
 		done; \
 	fi
 
+all-manlinks:
+	@if [ "${SRC}" != "" ]; then \
+		(cd ${SRC} && \
+		 for DIR in `find . -name .manlinks.mk |sed 's/\/\.manlinks\.mk//'`; do \
+			echo "(cd $$DIR && ${MAKE} manlinks)"; \
+			(cd $$DIR && ${MAKE} manlinks); \
+		done); \
+	else \
+		for DIR in `find . -name .manlinks.mk |sed 's/\/\.manlinks\.mk//'`; do \
+			echo "(cd $$DIR && ${MAKE} manlinks)"; \
+			(cd $$DIR && ${MAKE} manlinks); \
+		done; \
+	fi
+
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-man clean-man
-.PHONY: man preformat-man install-man-dirs manlinks
+.PHONY: man preformat-man install-man-dirs manlinks all-manlinks
 
 include ${TOP}/mk/csoft.common.mk
