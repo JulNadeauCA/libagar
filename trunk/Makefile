@@ -106,3 +106,4 @@ deinstall-includes:
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.subdir.mk
+include ${TOP}/mk/csoft.man.mk
