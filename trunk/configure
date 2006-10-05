@@ -1564,7 +1564,11 @@ fi;
 fi;
 echo -n "checking for the X/Open Threads Extension..."
 echo -n "checking for the X/Open Threads Extension..." >> config.log
+if [ "${SYSTEM}" = "FreeBSD" ]; then
+PTHREADS_XOPEN_CFLAGS=""
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+else
+fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
 cat << EOT > conftest.c
 #include <pthread.h>
@@ -1948,7 +1952,13 @@ int
 main(int argc, char *argv[])
 {
 	FT_Library library;
+	FT_Face face;
+	FT_GlyphSlot glyph;
+
 	FT_Init_FreeType(&library);
+	FT_New_Face(library, "foo", 0, &face);
+	FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO);
+	FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 	return (0);
 }
 
