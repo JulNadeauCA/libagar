@@ -529,6 +529,14 @@ install-man:
 		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
 	    done); \
+	    (cd ${MANDIR} && \
+	     for L in ${CATLINKS}; do \
+	        MPG=`echo $$L | sed 's/:.*//'`; \
+	        MLNK=`echo $$L | sed 's/.*://'`; \
+		MS=`echo $$L | sed 's/.*\.//'`; \
+		echo "ln -fs $$MPG cat$$MS/$$MLNK"; \
+		${SUDO} ln -fs $$MPG cat$$MS/$$MLNK; \
+	    done); \
 	fi
 
 man:
@@ -536,13 +544,21 @@ man:
 		echo "${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}"; \
 		${NROFF} -Tascii -mandoc ${MAN} | ${PAGER}; \
 	else \
-		echo "Usage: ${MAKE} read MAN=(manpage)"; \
+		echo "Usage: ${MAKE} man MAN=(manpage)"; \
 		exit 1; \
 	fi
 
 manlinks: Makefile
 	echo -n > .manlinks.mk
+	for F in ${MAN2}; do \
+		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+	done
 	for F in ${MAN3}; do \
+		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+	done
+	for F in ${MAN9}; do \
 		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
 		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
 	done
