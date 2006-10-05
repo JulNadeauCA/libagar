@@ -550,18 +550,24 @@ man:
 
 manlinks: Makefile
 	echo -n > .manlinks.mk
-	for F in ${MAN2}; do \
-		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
-		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
-	done
-	for F in ${MAN3}; do \
-		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
-		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
-	done
-	for F in ${MAN9}; do \
-		echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
-		cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
-	done
+	@if [ "${MAN2}" != "" ]; then \
+		for F in ${MAN2}; do \
+			echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+			cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+		done; \
+	fi
+	@if [ "${MAN3}" != "" ]; then \
+		for F in ${MAN3}; do \
+			echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+			cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+		done; \
+	fi
+	@if [ "${MAN9}" != "" ]; then \
+		for F in ${MAN9}; do \
+			echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \
+			cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk; \
+		done; \
+	fi
 
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-man clean-man
