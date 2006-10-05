@@ -14,7 +14,6 @@ unless ($man) {
 
 $man =~ s/([\w\-]+)\.(\d)$/$1/;
 $section = $2;
-print STDERR "Creating links to $man($section)\n";
 
 while (<STDIN>) {
 	if (/^\.nr nS 1/) { $ns = 1; }
@@ -22,6 +21,7 @@ while (<STDIN>) {
 	next unless $ns;
 	if (/^\.Fn ([\w\-]+)\s+/ &&
 	    $1.'.'.$section ne $man.'.'.$section) {
+		print STDERR "$1.$section => $man.$section\n";
 		print "MANLINKS+=$man.${section}:$1.${section}\n";
 		print "CATLINKS+=$man.cat${section}:$1.cat${section}\n";
 	}
