@@ -14,7 +14,7 @@ enum ag_transform_type {
 	AG_TRANSFORM_RGB_INVERT
 };
 
-TAILQ_HEAD(ag_transformq, ag_transform);
+typedef TAILQ_HEAD(ag_transformq, ag_transform) AG_TransformQ;
 
 typedef struct ag_transform {
 	enum ag_transform_type	  type;
