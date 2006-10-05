@@ -1566,8 +1566,8 @@ echo -n "checking for the X/Open Threads Extension..."
 echo -n "checking for the X/Open Threads Extension..." >> config.log
 if [ "${SYSTEM}" = "FreeBSD" ]; then
 PTHREADS_XOPEN_CFLAGS=""
-PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
 else
+PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
 fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
 cat << EOT > conftest.c
