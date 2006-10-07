@@ -71,6 +71,15 @@ function allocates, initializes, and attaches a
 widget.
 .Fn AG_FileDlgInit
 initializes an existing instance.
+Acceptable
+.Fa flags
+include:
+.Bd -literal
+#define AG_FILEDLG_MULTI    0x01    /* Return a set of files */
+#define AG_FILEDLG_CLOSEWIN 0x02    /* Close the parent window when done */
+#define AG_FILEDLG_LOAD     0x04    /* File must exist and be readable */
+#define AG_FILEDLG_SAVE	    0x08    /* File must be writeable */
+.Ed
 .Pp
 The working directory can be set manually with the
 .Fn AG_FileDlgSetDirectory
