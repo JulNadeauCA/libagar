@@ -49,6 +49,21 @@ const AG_WidgetOps agPixmapOps = {
 };
 
 AG_Pixmap *
+AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
+{
+	AG_Pixmap *px;
+
+	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	AG_PixmapInit(px, flags|AG_PIXMAP_FORCE_SIZE);
+	AG_ObjectAttach(parent, px);
+	AG_WidgetMapSurface(px,
+	    SDL_CreateRGBSurface(SDL_SWSURFACE, 0, 0, 8, 0,0,0,0));
+	px->pre_w = w;
+	px->pre_h = h;
+	return (px);
+}
+
+AG_Pixmap *
 AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
 {
 	AG_Pixmap *px;
@@ -78,7 +93,7 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
     Uint w, Uint h)
 {
 	AG_Pixmap *px;
-	SDL_Surface *su2;
+	SDL_Surface *su2 = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
 	AG_PixmapInit(px, flags);
@@ -155,10 +170,19 @@ AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
 int
 AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 {
-	SDL_Surface *su2;
+	SDL_Surface *su2 = NULL;
 	
 	AG_ScaleSurface(su, w, h, &su2);
 	return (AG_WidgetMapSurface(px, su2));
+}
+
+void
+AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
+{
+	SDL_Surface *su2 = NULL;
+
+	AG_ScaleSurface(su, w, h, &su2);
+	AG_WidgetReplaceSurface(px, px->n, su2);
 }
 
 void
@@ -174,6 +198,8 @@ AG_PixmapInit(AG_Pixmap *px, Uint flags)
 	px->n = 0;
 	px->s = 0;
 	px->t = 0;
+	px->pre_w = 64;
+	px->pre_h = 64;
 }
 
 void
@@ -182,15 +208,21 @@ AG_PixmapScale(void *p, int rw, int rh)
 	AG_Pixmap *px = p;
 	
 	if (rw == -1 && rh == -1) {
-		if (px->n >= 0) {
+		if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
 			AGWIDGET(px)->w = AGWIDGET_SURFACE(px,px->n)->w;
 			AGWIDGET(px)->h = AGWIDGET_SURFACE(px,px->n)->h;
+		} else {
+			AGWIDGET(px)->w = px->pre_w;
+			AGWIDGET(px)->h = px->pre_h;
 		}
 		return;
 	}
-	if (px->n >= 0) {
+	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
 		AGWIDGET(px)->w = AGWIDGET_SURFACE(px,px->n)->w;
 		AGWIDGET(px)->h = AGWIDGET_SURFACE(px,px->n)->h;
+	} else {
+		AGWIDGET(px)->w = px->pre_w;
+		AGWIDGET(px)->h = px->pre_h;
 	}
 }
 

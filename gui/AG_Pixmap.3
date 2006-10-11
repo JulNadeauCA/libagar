@@ -60,13 +60,16 @@ from a timer with
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Pixmap *"
+.Fn AG_PixmapNew "void *parent" "Uint flags" "Uint width" "Uint height"
+.Pp
+.Ft "AG_Pixmap *"
 .Fn AG_PixmapFromSurface "void *parent" "Uint flags" "SDL_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromSurfaceCopy "void *parent" "Uint flags" "SDL_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceScaled "void *parent" "Uint flags" "SDL_Surface *src" "int scaled_width" "int scaled_height"
+.Fn AG_PixmapFromSurfaceScaled "void *parent" "Uint flags" "SDL_Surface *src" "int width" "int height"
 .Pp
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromBMP "void *parent" "Uint flags" "const char *path"
@@ -75,9 +78,22 @@ from a timer with
 .Fn AG_PixmapFromXCF "void *parent" "Uint flags" "const char *path"
 .Pp
 .nr nS 0
-All of these functions create a new
+The
+.Fn AG_PixmapNew
+function creates a new
+.Nm
+not linked to any surface.
+The initial geometry of the widget is defined by the
+.Fa width
+and
+.Fa height
+parameters.
+.Pp
+The following functions create a new
 .Nm
 with an image obtained from the given source.
+When using these constructors, the geometry of the widget is set to
+that of the source image.
 .Pp
 .Fn AG_PixmapFromSurface
 maps an existing
@@ -104,13 +120,16 @@ to load from a Gimp XCF file.
 .Fn AG_PixmapAddSurfaceCopy "AG_Pixmap *pixmap" "SDL_Surface *surface"
 .Pp
 .Ft "int"
-.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "SDL_Surface *surface" "int scaled_width" "int scaled_height"
+.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "SDL_Surface *surface" "int width" "int height"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
 .Pp
 .Ft "void"
 .Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
+.Ft "void"
+.Fn AG_PixmapReplaceSurfaceScaled "AG_Pixmap *pixmap" "int surface_name" "Uint width" "Uint height"
 .Pp
 .Ft "void"
 .Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap"
@@ -134,6 +153,8 @@ previously mapped with
 .Fn AG_PixmapAddSurface* .
 To replace an existing mapped surface, use
 .Fn AG_PixmapReplaceSurface
+or
+.Fn AG_PixmapReplaceSurfaceScaled
 with the name of the surface.
 .Pp
 If you need to modify the contents of a previously mapped surface, it is
