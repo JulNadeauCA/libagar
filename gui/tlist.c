@@ -1,7 +1,7 @@
 /*	$Csoft: tlist.c,v 1.137 2005/10/02 09:39:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005, 2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -54,16 +54,17 @@ enum {
 	PAGE_INCREMENT = 4
 };
 
-static void tlist_mousebuttondown(AG_Event *);
-static void tlist_keydown(AG_Event *);
-static void tlist_keyup(AG_Event *);
-static void tlist_scrolled(AG_Event *);
-static void free_item(AG_Tlist *, AG_TlistItem *);
+static void mousebuttondown(AG_Event *);
+static void keydown(AG_Event *);
+static void keyup(AG_Event *);
+static void scrolled(AG_Event *);
+
+static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
-static void show_popup(AG_Tlist *, AG_TlistPopup *);
-static void set_icon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
-static void update_scrollbar(AG_Tlist *);
+static void PopupMenu(AG_Tlist *, AG_TlistPopup *);
+static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
+static void UpdateListScrollbar(AG_Tlist *);
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -198,10 +199,10 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 
-	AG_SetEvent(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
-	AG_SetEvent(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
-	AG_SetEvent(tl, "window-keydown", tlist_keydown, NULL);
-	AG_SetEvent(tl, "window-keyup", tlist_keyup, NULL);
+	AG_SetEvent(tl->sbar, "scrollbar-changed", scrolled, "%p", tl);
+	AG_SetEvent(tl, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(tl, "window-keydown", keydown, NULL);
+	AG_SetEvent(tl, "window-keyup", keyup, NULL);
 	AG_SetEvent(tl, "key-tick", key_tick, NULL);
 	AG_SetEvent(tl, "dblclick-expire", dblclick_expire, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", lost_focus, NULL);
@@ -227,13 +228,13 @@ AG_TlistDestroy(void *p)
 	     it != TAILQ_END(&tl->selitems);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, selitems);
-		free_item(tl, it);
+		FreeItem(tl, it);
 	}
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		free_item(tl, it);
+		FreeItem(tl, it);
 	}
 	for (tp = TAILQ_FIRST(&tl->popups);
 	     tp != TAILQ_END(&tl->popups);
@@ -260,7 +261,7 @@ AG_TlistScale(void *p, int w, int h)
 	AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->bw;
 	AGWIDGET(tl->sbar)->y = 0;
 	AG_WidgetScale(tl->sbar, tl->sbar->bw, AGWIDGET(tl)->h);
-	update_scrollbar(tl);
+	UpdateListScrollbar(tl);
 }
 
 void
@@ -353,7 +354,7 @@ AG_TlistDraw(void *p)
 
 /* Adjust the scrollbar offset according to the number of visible items. */
 static void
-update_scrollbar(AG_Tlist *tl)
+UpdateListScrollbar(AG_Tlist *tl)
 {
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
@@ -391,7 +392,7 @@ update_scrollbar(AG_Tlist *tl)
 }
 
 static void
-free_item(AG_Tlist *tl, AG_TlistItem *it)
+FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 {
 	if (it->label != -1) {
 		AG_WidgetUnmapSurface(tl, it->label);
@@ -417,7 +418,7 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	nitems = --tl->nitems;
 	AG_MutexUnlock(&tl->lock);
 
-	free_item(tl, it);
+	FreeItem(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
 	AG_WidgetSetInt(tl->sbar, "max", nitems);
@@ -445,7 +446,7 @@ AG_TlistClear(AG_Tlist *tl)
 		if (it->selected || (it->flags & AG_TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
-			free_item(tl, it);
+			FreeItem(tl, it);
 		}
 	}
 	TAILQ_INIT(&tl->items);
@@ -513,11 +514,11 @@ AG_TlistRestore(AG_Tlist *tl)
 				cit->flags &= ~(AG_TLIST_VISIBLE_CHILDREN);
 			}
 		}
-		free_item(tl, sit);
+		FreeItem(tl, sit);
 	}
 	TAILQ_INIT(&tl->selitems);
 
-	update_scrollbar(tl);
+	UpdateListScrollbar(tl);
 }
 
 /*
@@ -544,7 +545,7 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
  * XXX allocate from a pool, especially for polled items.
  */
 static __inline__ AG_TlistItem *
-allocate_item(AG_Tlist *tl, SDL_Surface *iconsrc)
+AllocItem(AG_Tlist *tl, SDL_Surface *iconsrc)
 {
 	AG_TlistItem *it;
 
@@ -556,7 +557,7 @@ allocate_item(AG_Tlist *tl, SDL_Surface *iconsrc)
 	it->icon = -1;
 	it->label = -1;
 	it->argc = 0;
-	set_icon(tl, it, iconsrc);
+	UpdateItemIcon(tl, it, iconsrc);
 	return (it);
 }
 
@@ -580,7 +581,7 @@ AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
 {
 	AG_TlistItem *it;
 
-	it = allocate_item(tl, iconsrc);
+	it = AllocItem(tl, iconsrc);
 	it->p1 = p1;
 	strlcpy(it->text, text, sizeof(it->text));
 
@@ -594,7 +595,7 @@ AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 	AG_TlistItem *it;
 	va_list args;
 	
-	it = allocate_item(tl, iconsrc);
+	it = AllocItem(tl, iconsrc);
 	it->p1 = NULL;
 
 	va_start(args, fmt);
@@ -649,7 +650,7 @@ AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
 {
 	AG_TlistItem *it;
 
-	it = allocate_item(tl, icon);
+	it = AllocItem(tl, icon);
 	it->p1 = p1;
 	strlcpy(it->text, text, sizeof(it->text));
 
@@ -783,7 +784,7 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 static void
-tlist_mousebuttondown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int button = AG_INT(1);
@@ -847,7 +848,12 @@ tlist_mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_LEFT:
-		/* Handle range selections. */
+		if (ti->flags & AG_TLIST_NO_SELECT) {
+			goto out;
+		}
+		/*
+		 * Handle range selections.
+		 */
 		if ((tl->flags & AG_TLIST_MULTI) &&
 		    (SDL_GetModState() & KMOD_SHIFT)) {
 			AG_TlistItem *oitem;
@@ -886,8 +892,9 @@ tlist_mousebuttondown(AG_Event *event)
 			}
 			break;
 		}
-
-		/* Handle single selections. */
+		/*
+		 * Handle single selections.
+		 */
 		if ((tl->flags & AG_TLIST_MULTITOGGLE) ||
 		    ((tl->flags & AG_TLIST_MULTI) &&
 		     (SDL_GetModState() & KMOD_CTRL))) {
@@ -916,6 +923,9 @@ tlist_mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
+		if (ti->flags & AG_TLIST_NO_POPUP) {
+			goto out;
+		}
 		if (tl->popupEv != NULL) {
 			AG_PostEvent(NULL, tl, tl->popupEv->name, NULL);
 		} else if (ti->cat != NULL) {
@@ -934,7 +944,7 @@ tlist_mousebuttondown(AG_Event *event)
 					break;
 			}
 			if (tp != NULL) {
-				show_popup(tl, tp);
+				PopupMenu(tl, tp);
 				goto out;
 			}
 		}
@@ -945,7 +955,7 @@ out:
 }
 
 static void
-tlist_keydown(AG_Event *event)
+keydown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -965,7 +975,7 @@ tlist_keydown(AG_Event *event)
 }
 
 static void
-tlist_keyup(AG_Event *event)
+keyup(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -989,11 +999,11 @@ tlist_keyup(AG_Event *event)
 }
 
 static void
-tlist_scrolled(AG_Event *event)
+scrolled(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 
-	update_scrollbar(tl);
+	UpdateListScrollbar(tl);
 }
 
 /*
@@ -1119,7 +1129,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 
 /* Update the icon associated with an item. */
 static void
-set_icon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
+UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
 	if (it->flags & AG_TLIST_DYNICON) {
 		if (it->iconsrc != NULL) {
@@ -1144,7 +1154,7 @@ void
 AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
 	it->flags |= AG_TLIST_DYNICON;
-	set_icon(tl, it, iconsrc);
+	UpdateItemIcon(tl, it, iconsrc);
 }
 
 void
@@ -1176,7 +1186,7 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 }
 
 static void
-show_popup(AG_Tlist *tl, AG_TlistPopup *tp)
+PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 {
 	AG_Menu *m = tp->menu;
 	int x, y;
