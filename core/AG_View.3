@@ -114,7 +114,9 @@ returns a newly allocated surface containing a copy of
 .Fn AG_ScaleSurface
 returns a copy of
 .Fa src
-scaled to the given size in pixels.
+scaled to the given size in pixels into
+.Fa dst ,
+which must be either NULL or a pointer to a valid surface.
 If
 .Fa dst
 is NULL, a new surface is allocated.

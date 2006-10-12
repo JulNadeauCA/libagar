@@ -14,7 +14,6 @@ typedef struct ag_object_selector {
 	int flags;
 #define AG_OBJSEL_PAGE_DATA	0x01
 #define AG_OBJSEL_PAGE_GFX	0x02
-#define AG_OBJSEL_PAGE_AUDIO	0x04
 	char type_mask[AG_OBJECT_TYPE_MAX];
 	void *pobj;
 	void *root;
