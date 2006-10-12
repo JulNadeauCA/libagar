@@ -135,18 +135,45 @@ AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 	CIRCLEQ_INIT(&ob->timeouts);
 }
 
-int
-AG_ObjectSubclass(AG_Object *ob, const char *type)
+/* Check if an object's class matches the given pattern (general case). */
+static int
+AG_ObjectIsClassGeneral(AG_Object *obj, const char *cn)
 {
-	const char *c, *t;
+	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
+	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
 
-	for (c = &ob->type[0], t = &type[0];
-	     *c != '\0';
-	     c++, t++) {
-		if ((*c == '.' && *t == '\0')) { return (1); }
-		if (*c != *t) { return (0); }
+	strlcpy(cname, cn, sizeof(cname));
+	strlcpy(nname, obj->type, sizeof(nname));
+	cp = cname;
+	np = nname;
+	while ((c = AG_Strsep(&cp, ":")) != NULL &&
+	       (s = AG_Strsep(&np, ":")) != NULL) {
+		if (c[0] == '*' && c[1] == '\0')
+			continue;
+		if (strcmp(c, s) != 0)
+			return (0);
 	}
 	return (1);
+}
+
+/* Check if an object's class matches the given pattern (common case). */
+int
+AG_ObjectIsClass(void *p, const char *cname)
+{
+	AG_Object *obj = p;
+	const char *c;
+
+	if (cname[0] == '*' && cname[1] == '\0') {
+		return (1);
+	}
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
+			if (c == &cname[0] ||
+			    strncmp(obj->type, cname, c - &cname[0]) == 0)
+				return (1);
+		}
+	}
+	return (AG_ObjectIsClassGeneral(obj, cname));	/* General case */
 }
 
 void
