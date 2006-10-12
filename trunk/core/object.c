@@ -127,7 +127,6 @@ AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
 
 	AG_MutexInitRecursive(&ob->lock);
 	ob->gfx = NULL;
-	ob->audio = NULL;
 	ob->data_used = 0;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
@@ -148,49 +147,6 @@ AG_ObjectSubclass(AG_Object *ob, const char *type)
 		if (*c != *t) { return (0); }
 	}
 	return (1);
-}
-
-void
-AG_ObjectGetClassInfo(const char *type, AG_ObjectClassInfo *cli)
-{
-	char tpp[AG_OBJECT_TYPE_MAX], *tp = &tpp[0];
-	char tn[AG_OBJECT_TYPE_MAX];
-	char *s;
-	Uint i;
-
-	strlcpy(tpp, type, sizeof(tpp));
-	tn[0] = '\0';
-
-	cli->classes = Malloc(sizeof(char *), M_OBJECT);
-	cli->types = Malloc(sizeof(AG_ObjectType *), M_OBJECT);
-	cli->nclasses = 0;
-
-	while ((s = AG_Strsep(&tp, ".")) != NULL) {
-		if (tn[0] != '\0') {
-			strlcat(tn, ".", sizeof(tn));
-		}
-		strlcat(tn, s, sizeof(tn));
-
-		cli->classes = Realloc(cli->classes,
-		    (cli->nclasses+1)*sizeof(char *));
-		cli->types = Realloc(cli->types,
-		    (cli->nclasses+1)*sizeof(AG_ObjectType *));
-		cli->classes[cli->nclasses] = Strdup(s);
-		cli->types[cli->nclasses] = AG_FindType(tn);
-		cli->nclasses++;
-	}
-}
-
-void
-AG_ObjectFreeClassinfo(AG_ObjectClassInfo *cli)
-{
-	Uint i;
-
-	for (i = 0; i < cli->nclasses; i++) {
-		Free(cli->classes[i], 0);
-	}
-	Free(cli->classes, M_OBJECT);
-	Free(cli->types, M_OBJECT);
 }
 
 void
@@ -741,10 +697,6 @@ AG_ObjectDestroy(void *p)
 		AG_GfxDestroy(ob->gfx);
 		ob->gfx = NULL;
 	}
-	if (ob->audio != NULL) {
-		AG_AudioDestroy(ob->audio);
-		ob->audio = NULL;
-	}
 
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
@@ -838,7 +790,6 @@ AG_ObjectPageIn(void *p, enum ag_object_page_item item)
 			ob->gfx->used = AG_GFX_MAX_USED;
 		}
 		break;
-	case AG_OBJECT_AUDIO:
 	case AG_OBJECT_DATA:
 		if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
 			goto out;
@@ -884,8 +835,6 @@ AG_ObjectPageOut(void *p, enum ag_object_page_item item)
 				/* TODO save the gfx part */
 			}
 		}
-		break; 
-	case AG_OBJECT_AUDIO:
 		break; 
 	case AG_OBJECT_DATA:
 		if (ob->flags & AG_OBJECT_NON_PERSISTENT)

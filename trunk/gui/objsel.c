@@ -120,8 +120,6 @@ selected_obj(AG_Event *event)
 			AG_ObjectPageOut(*object, AG_OBJECT_DATA);
 		if (os->flags & AG_OBJSEL_PAGE_GFX)
 			AG_ObjectPageOut(*object, AG_OBJECT_GFX);
-		if (os->flags & AG_OBJSEL_PAGE_AUDIO)
-			AG_ObjectPageOut(*object, AG_OBJECT_AUDIO);
 		
 		AG_ObjectDelDep(os->pobj, *object);
 	}
@@ -133,8 +131,6 @@ selected_obj(AG_Event *event)
 		AG_ObjectPageIn(*object, AG_OBJECT_DATA);
 	if (os->flags & AG_OBJSEL_PAGE_GFX)
 		AG_ObjectPageIn(*object, AG_OBJECT_GFX);
-	if (os->flags & AG_OBJSEL_PAGE_AUDIO)
-		AG_ObjectPageIn(*object, AG_OBJECT_AUDIO);
 
 	AG_WidgetUnlockBinding(objectb);
 }

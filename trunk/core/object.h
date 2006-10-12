@@ -12,7 +12,6 @@
 #include <agar/core/timeout.h>
 #include <agar/core/prop.h>
 #include <agar/core/gfx.h>
-#include <agar/core/audio.h>
 
 #include "begin_code.h"
 
@@ -79,7 +78,6 @@ typedef struct ag_object {
 
 	AG_Mutex lock;
 	AG_Gfx *gfx;
-	AG_Audio *audio;
 	Uint32 data_used;
 	Uint nevents;				/* Number of event handlers */
 	TAILQ_HEAD(,ag_event) events;		/* Event handlers */
@@ -96,7 +94,6 @@ typedef struct ag_object {
 
 enum ag_object_page_item {
 	AG_OBJECT_GFX,		/* Shared graphics */
-	AG_OBJECT_AUDIO,	/* Shared audio samples */
 	AG_OBJECT_DATA		/* Dynamic data */
 };
 
