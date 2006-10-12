@@ -36,13 +36,6 @@ typedef struct ag_object_dep {
 	TAILQ_ENTRY(ag_object_dep) deps;
 } AG_ObjectDep;
 
-/* Structure returned by object_get_classinfo(). */
-typedef struct ag_object_classinfo {
-	char **classes;
-	struct ag_object_type **types;
-	Uint nclasses;
-} AG_ObjectClassInfo;
-
 TAILQ_HEAD(ag_objectq, ag_object);
 
 typedef struct ag_object {
@@ -117,7 +110,6 @@ enum ag_object_checksum_alg {
 
 #define AGOBJECT(ob)		((struct ag_object *)(ob))
 #define AGOBJECT_TYPE(ob, t)	(strcmp(AGOBJECT(ob)->type,(t))==0)
-#define AGOBJECT_SUBCLASS(ob,t)	AG_ObjectSubclass(AGOBJECT(ob),(t))
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -126,7 +118,7 @@ enum ag_object_checksum_alg {
 
 #define AGOBJECT_FOREACH_CLASS(var, ob, type, subclass)			\
 	AGOBJECT_FOREACH_CHILD(var,ob,type)				\
-		if (!AGOBJECT_SUBCLASS(var,(subclass))) {		\
+		if (!AG_ObjectIsClass(var,(subclass))) {		\
 			continue;					\
 		} else
 
@@ -173,10 +165,7 @@ void		 AG_ObjectSetName(void *, const char *);
 void		 AG_ObjectSetOps(void *, const void *);
 
 __inline__ SDL_Surface	*AG_ObjectIcon(void *);
-
-__inline__ int AG_ObjectSubclass(AG_Object *, const char *);
-void	       AG_ObjectGetClassInfo(const char *, AG_ObjectClassInfo *);
-void	       AG_ObjectFreeClassinfo(AG_ObjectClassInfo *);
+__inline__ int		 AG_ObjectIsClass(void *, const char *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
