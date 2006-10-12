@@ -72,13 +72,23 @@ find_objs(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	AG_Object *cob;
 	AG_TlistItem *it;
 	SDL_Surface *icon;
+	int nosel = 0;
+	
+	if (!AG_ObjectIsClass(pob, os->type_mask)) {
+		if (!TAILQ_EMPTY(&pob->children)) {
+			nosel++;
+		} else {
+			return;
+		}
+	}
 
-	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
-	    (pob->flags & AG_OBJECT_DATA_RESIDENT) ? " (resident)" : "");
+	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s", pob->name);
 	it->depth = depth;
 	it->cat = "object";
 	it->p1 = pob;
-
+	if (nosel) {
+		it->flags |= AG_TLIST_NO_SELECT;
+	}
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 		if (AG_ObjectRoot(pob) == pob)
@@ -160,7 +170,8 @@ AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
 	os->flags = flags;
 	os->pobj = pobj;
 	os->root = root;
-	os->type_mask[0] = '\0';
+	os->type_mask[0] = '*';
+	os->type_mask[1] = '\0';
 
 	AG_WidgetBind(os, "object", AG_WIDGET_POINTER, &os->object);
 
