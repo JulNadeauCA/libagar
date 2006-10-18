@@ -1,7 +1,7 @@
 /*	$Csoft: fspinbutton.c,v 1.33 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2003-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -43,6 +43,9 @@
 
 static AG_WidgetOps agFSpinbuttonOps = {
 	{
+		"AG_Widget:AG_FSpinbutton",
+		sizeof(AG_FSpinbutton),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_FSpinbuttonDestroy,

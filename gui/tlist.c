@@ -39,6 +39,9 @@
 
 static AG_WidgetOps agTlistOps = {
 	{
+		"AG_Widget:AG_Tlist",
+		sizeof(AG_Tlist),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_TlistDestroy,

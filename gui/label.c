@@ -37,6 +37,9 @@
 
 const AG_WidgetOps agLabelOps = {
 	{
+		"AG_Widget:AG_Label",
+		sizeof(AG_Label),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_LabelDestroy,
@@ -266,7 +269,7 @@ label_objt(AG_Label *label, char *s, size_t len, int ri)
 {
 	AG_Object *ob = LABEL_ARG(AG_Object *);
 
-	snprintf(s, len, "%s", ob->type);
+	snprintf(s, len, "%s", ob->ops->type);
 }
 
 static void

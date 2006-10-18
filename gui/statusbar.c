@@ -1,7 +1,7 @@
 /*	$Csoft: statusbar.c,v 1.3 2005/09/27 00:25:23 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -37,15 +37,19 @@
 
 static AG_WidgetOps agStatusbarOps = {
 	{
-		NULL,			/* init */
-		NULL,			/* reinit */
+		"AG_Widget:AG_Box:AG_Statusbar",
+		sizeof(AG_Statusbar),
+		{ 0,0 },
+		NULL,				/* init */
+		NULL,				/* reinit */
 		AG_BoxDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,				/* load */
+		NULL,				/* save */
+		NULL				/* edit */
 	},
 	NULL,
 	AG_BoxScale
+
 };
 
 AG_Statusbar *

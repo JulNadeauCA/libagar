@@ -1,7 +1,7 @@
 /*	$Csoft: hsvpal.c,v 1.27 2005/10/07 14:49:30 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -42,6 +42,9 @@
 
 const AG_WidgetOps agHSVPalOps = {
 	{
+		"AG_Widget:AG_HSVPal",
+		sizeof(AG_HSVPal),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,

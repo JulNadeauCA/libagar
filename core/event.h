@@ -50,12 +50,9 @@ typedef union evarg {
 #define AG_DOUBLE(v) (event->argt[v]==AG_EVARG_DOUBLE?event->argv[v].f:\
     AG_FloatMismatch())
  
-#define AG_OBJECT_OF_TYPE(v,t) \
- (AGOBJECT_TYPE(event->argv[v].p,(t))==0)?event->argv[v].p:\
-  AG_ObjectMismatch(AGOBJECT(event->argv[v].p)->type,(t))
 #define AG_OBJECT_OF_CLASS(v,t) \
- (AGOBJECT_TYPE(event->argv[v].p,(t)) == 0)?event->argv[v].p : \
-  AG_ObjectMismatch(AGOBJECT(event->argv[v].p)->type,(t))
+ (AG_ObjectIsClass(event->argv[v].p,(t))==0)?event->argv[v].p:\
+  AG_ObjectMismatch(AGOBJECT(event->argv[v].p)->ops->type,(t))
 
 #else /* !DEBUG */
 

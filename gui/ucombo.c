@@ -1,7 +1,7 @@
 /*	$Csoft: ucombo.c,v 1.16 2005/10/04 17:34:56 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -37,6 +37,9 @@
 
 static AG_WidgetOps agUComboOps = {
 	{
+		"AG_Widget:AG_UCombo",
+		sizeof(AG_UCombo),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_UComboDestroy,

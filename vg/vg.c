@@ -34,10 +34,7 @@
 
 #include <string.h>
 
-const AG_Version vgVer = {
-	"agar vg",
-	6, 0
-};
+const AG_Version vgVer = { 6, 0 };
 
 extern const VG_ElementOps vgPointsOps;
 extern const VG_ElementOps vgLinesOps;
@@ -1117,7 +1114,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 	VG_Element *vge;
 	int i;
 
-	AG_WriteVersion(buf, &vgVer);
+	AG_WriteVersion(buf, "AG_VG", &vgVer);
 
 	AG_MutexLock(&vg->lock);
 
@@ -1281,7 +1278,7 @@ VG_Load(VG *vg, AG_Netbuf *buf)
 	Uint32 norigin, nlayers, nstyles, nelements, nblocks;
 	Uint32 i;
 
-	if (AG_ReadVersion(buf, &vgVer, NULL) != 0)
+	if (AG_ReadVersion(buf, "AG_VG", &vgVer, NULL) != 0)
 		return (-1);
 
 	AG_MutexLock(&vg->lock);

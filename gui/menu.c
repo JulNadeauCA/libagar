@@ -40,6 +40,9 @@
 
 static AG_WidgetOps agMenuOps = {
 	{
+		"AG_Widget:AG_Menu",
+		sizeof(AG_Menu),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_MenuDestroy,

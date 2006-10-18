@@ -42,6 +42,9 @@
 
 static AG_WidgetOps agSpinbuttonOps = {
 	{
+		"AG_Widget:AG_Spinbutton",
+		sizeof(AG_Spinbutton),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_SpinbuttonDestroy,

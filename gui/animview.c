@@ -31,8 +31,13 @@
 
 #include "animview.h"
 
-const AG_WidgetOps agAnimviewOps = {
+/* XXX MOVE TO RG */
+
+const AG_WidgetOps rgAnimviewOps = {
 	{
+		"AG_Widget:RG_Animview",
+		sizeof(RG_Animview),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,
@@ -190,7 +195,7 @@ mousebuttondown(AG_Event *event)
 void
 RG_AnimviewInit(RG_Animview *av)
 {
-	AG_WidgetInit(av, "animview", &agAnimviewOps, 0);
+	AG_WidgetInit(av, "animview", &rgAnimviewOps, 0);
 	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
 			       AG_WIDGET_VFILL;
 	av->pre_w = 64;

@@ -42,6 +42,9 @@
 
 static AG_WidgetOps agTableOps = {
 	{
+		"AG_Widget:AG_Table",
+		sizeof(AG_Table),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_TableDestroy,

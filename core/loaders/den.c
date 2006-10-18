@@ -36,14 +36,12 @@
 
 #include <core/loaders/den.h>
 
-const AG_Version den_ver = {
-	"agar den",
-	0, 0
-};
+const char *agDenMagic = "AG_DEN";
+const AG_Version agDenVer = { 0, 0 };
 
 /* Read a den header and its mappings. */
 static int
-den_read_header(AG_Den *den)
+ReadDenHeader(AG_Den *den)
 {
 	Uint32 i;
 
@@ -138,13 +136,13 @@ AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 
 	switch (mode) {
 	case AG_DEN_READ:
-		if (AG_ReadVersion(den->buf, &den_ver, NULL) == -1 ||
-		    den_read_header(den) == -1) {
+		if (AG_ReadVersion(den->buf, agDenMagic, &agDenVer, NULL)==-1 ||
+		    ReadDenHeader(den) == -1) {
 			goto fail;
 		}
 		break;
 	case AG_DEN_WRITE:
-		AG_WriteVersion(den->buf, &den_ver);
+		AG_WriteVersion(den->buf, agDenMagic, &agDenVer);
 		break;
 	}
 	return (den);

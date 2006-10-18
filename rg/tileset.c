@@ -1,7 +1,7 @@
 /*	$Csoft: tileset.c,v 1.65 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -47,12 +47,10 @@
 #include <ctype.h>
 #include <string.h>
 
-const AG_Version rgTilesetVer = {
-	"agar tileset",
-	7, 0
-};
-
 const AG_ObjectOps rgTilesetOps = {
+	"RG_Tileset",
+	sizeof(RG_Tileset),
+	{ 7, 0 },
 	RG_TilesetInit,
 	RG_TilesetReinit,
 	RG_TilesetDestroy,
@@ -77,7 +75,7 @@ const RG_FeatureOps *feature_tbl[] = {
 void
 AG_InitRG(void)
 {
-	AG_RegisterType("tileset", sizeof(RG_Tileset), &rgTilesetOps,
+	AG_RegisterType("RG_Tileset", sizeof(RG_Tileset), &rgTilesetOps,
 	    TILESET_ICON);
 }
 
@@ -86,7 +84,7 @@ RG_TilesetInit(void *obj, const char *name)
 {
 	RG_Tileset *ts = obj;
 
-	AG_ObjectInit(ts, "tileset", name, &rgTilesetOps);
+	AG_ObjectInit(ts, name, &rgTilesetOps);
 	AGOBJECT(ts)->gfx = AG_GfxNew(ts);
 	AGOBJECT(ts)->gfx->used = 0;
 	AGOBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
@@ -206,7 +204,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations, ntextures;
 	Uint32 i;
 
-	if (AG_ReadVersion(buf, &rgTilesetVer, NULL) != 0)
+	if (AG_ReadVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver, NULL)
+	    != 0)
 		return (-1);
 	
 	AG_MutexLock(&ts->lock);
@@ -386,7 +385,7 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 	RG_Feature *ft;
 	RG_Texture *tex;
 
-	AG_WriteVersion(buf, &rgTilesetVer);
+	AG_WriteVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver);
 
 	AG_MutexLock(&ts->lock);
 
@@ -523,7 +522,7 @@ RG_TilesetResvPixmap(const char *tsname, const char *pxname)
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!AGOBJECT_TYPE(ts, "tileset")) {
+	if (!AGOBJECT_TYPE(ts, "RG_Tileset")) {
 		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}
@@ -548,7 +547,7 @@ RG_TilesetResvTile(const char *tsname, const char *tname)
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!AGOBJECT_TYPE(ts, "tileset")) {
+	if (!AGOBJECT_TYPE(ts, "RG_Tileset")) {
 		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}

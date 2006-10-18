@@ -1,7 +1,7 @@
 /*	$Csoft: objmgr.c,v 1.51 2005/10/04 17:34:50 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2003-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -121,7 +121,7 @@ tryname:
 	if (t->ops->init != NULL) {
 		t->ops->init(nobj, name);
 	} else {
-		AG_ObjectInit(nobj, t->type, name, NULL);
+		AG_ObjectInit(nobj, name, t->ops);
 	}
 	AG_ObjectAttach(pobj, nobj);
 	AG_ObjectUnlinkDatafiles(nobj);
@@ -395,7 +395,7 @@ AG_ObjMgrSaveTo(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->type, sizeof(ext)-2);
+	strlcpy(&ext[2], ob->ops->type, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
@@ -403,7 +403,7 @@ AG_ObjMgrSaveTo(void *p, const char *name)
 	                        AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
-	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
 	AG_SetEvent(fd, "file-chosen", ExportObject, "%p,%p", ob, win);
 	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
 
@@ -420,7 +420,7 @@ AG_ObjMgrLoadFrom(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->type, sizeof(ext)-2);
+	strlcpy(&ext[2], ob->ops->type, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
@@ -428,7 +428,7 @@ AG_ObjMgrLoadFrom(void *p, const char *name)
 	                        AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
-	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->type);
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
 	AG_SetEvent(fd, "file-chosen", ImportObject, "%p,%p", ob, win);
 	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
 

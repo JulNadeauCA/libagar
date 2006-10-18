@@ -33,10 +33,7 @@
 #include "surface.h"
 #include "version.h"
 
-const AG_Version surface_ver = {
-	"agar surface",
-	0, 0
-};
+const AG_Version agSurfaceVer = { 0, 0 };
 
 enum {
 	RAW_ENCODING,
@@ -52,7 +49,7 @@ AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
 	Uint8 *src;
 	int x, y;
 
-	AG_WriteVersion(buf, &surface_ver);
+	AG_WriteVersion(buf, "AG_Surface", &agSurfaceVer);
 	AG_WriteUint32(buf, RAW_ENCODING);
 
 	AG_WriteUint32(buf, su->flags &
@@ -139,7 +136,7 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 	int i;
 	int x, y;
 
-	if (AG_ReadVersion(buf, &surface_ver, NULL) != 0)
+	if (AG_ReadVersion(buf, "AG_Surface", &agSurfaceVer, NULL) != 0)
 		return (NULL);
 
 	encoding = AG_ReadUint32(buf);

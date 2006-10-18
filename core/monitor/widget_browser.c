@@ -164,7 +164,7 @@ poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	AG_TlistItem *it;
 
 	strlcpy(text, AGOBJECT(wid)->name, sizeof(text));
-	if (strcmp(wid->type, "window") == 0) {
+	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *win = (AG_Window *)wid;
 
 		strlcat(text, " (", sizeof(text));

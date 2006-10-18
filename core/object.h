@@ -19,12 +19,16 @@ struct ag_event;
 
 /* Generic object operation vector */
 typedef struct ag_object_ops {
-	void	(*init)(void *, const char *);		/* Initialize */
-	void	(*reinit)(void *);			/* Reinitialize */
-	void	(*destroy)(void *);			/* Free resources */
-	int	(*load)(void *, AG_Netbuf *);		/* Load from network */
-	int	(*save)(void *, AG_Netbuf *);		/* Save to network */
-	void   *(*edit)(void *);			/* Edit object */
+	const char *type;				/* Class name */
+	size_t size;					/* Structure size */
+	AG_Version ver;					/* Version numbers */
+
+	void (*init)(void *, const char *);		/* Initialize */
+	void (*reinit)(void *);				/* Reinitialize */
+	void (*destroy)(void *);			/* Free resources */
+	int (*load)(void *, AG_Netbuf *);		/* Load from network */
+	int (*save)(void *, AG_Netbuf *);		/* Save to network */
+	void *(*edit)(void *);				/* Edit object */
 } AG_ObjectOps;
 
 /* Dependency with respect to another object. */
@@ -39,7 +43,6 @@ typedef struct ag_object_dep {
 TAILQ_HEAD(ag_objectq, ag_object);
 
 typedef struct ag_object {
-	char type[AG_OBJECT_TYPE_MAX];
 	char name[AG_OBJECT_NAME_MAX];
 	char *save_pfx;
 	const AG_ObjectOps *ops;
@@ -96,10 +99,10 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-#define AGOBJECT_INITIALIZER(ob, type, name, pfx, ops) {	\
-		(type),(name),(pfx),(ops),0,			\
+#define AGOBJECT_INITIALIZER(ob, name, pfx, ops) {		\
+		(name),(pfx),(ops),0,				\
 		AG_MUTEX_INITIALIZER,				\
-		NULL, NULL, 0, 0, 				\
+		NULL, 0, 0, 					\
 		TAILQ_HEAD_INITIALIZER((ob)->events),		\
 		TAILQ_HEAD_INITIALIZER((ob)->props),		\
 		CIRCLEQ_HEAD_INITIALIZER((ob)->timeouts),	\
@@ -109,7 +112,7 @@ enum ag_object_checksum_alg {
 	}
 
 #define AGOBJECT(ob)		((struct ag_object *)(ob))
-#define AGOBJECT_TYPE(ob, t)	(strcmp(AGOBJECT(ob)->type,(t))==0)
+#define AGOBJECT_TYPE(ob, t)	(strcmp(AGOBJECT(ob)->ops->type,(t))==0)
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -139,7 +142,7 @@ int	   AG_ObjectAttachPath(const char *, void *);
 void	   AG_ObjectDetach(void *);
 void	   AG_ObjectMove(void *, void *);
 
-void	 AG_ObjectInit(void *, const char *, const char *, const void *);
+void	 AG_ObjectInit(void *, const char *, const void *);
 void	 AG_ObjectFreeData(void *);
 void	 AG_ObjectRemain(void *, int);
 int	 AG_ObjectCopyName(const void *, char *, size_t)
@@ -160,7 +163,6 @@ __inline__ void	*AG_ObjectRoot(const void *);
 __inline__ void *AG_ObjectFindParent(void *, const char *, const char *);
 __inline__ void	*AG_ObjectFindChild(void *, const char *);
 int		 AG_ObjectInUse(const void *);
-void		 AG_ObjectSetType(void *, const char *);
 void		 AG_ObjectSetName(void *, const char *);
 void		 AG_ObjectSetOps(void *, const void *);
 

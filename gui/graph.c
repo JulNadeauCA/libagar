@@ -1,7 +1,7 @@
 /*	$Csoft: graph.c,v 1.56 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -38,6 +38,9 @@
 
 const AG_WidgetOps agGraphOps = {
 	{
+		"AG_Widget:AG_Graph",
+		sizeof(AG_Graph),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_GraphDestroy,

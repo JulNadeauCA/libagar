@@ -1,7 +1,7 @@
 /*	$Csoft: version.c,v 1.14 2005/09/17 07:35:30 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -32,18 +32,18 @@
 #include <stdio.h>
 
 int
-AG_ReadVersion(AG_Netbuf *buf, const AG_Version *ver,
+AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
     AG_Version *rver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
 	size_t nlen;
 	Uint32 major, minor;
 
-	nlen = strlen(ver->name);
+	nlen = strlen(name);
 
 	if (AG_NetbufReadE(nbuf, sizeof(nbuf), 1, buf) < 1 ||
-	    strncmp(nbuf, ver->name, nlen) != 0) {
-		AG_SetError("%s: Bad magic", ver->name);
+	    strncmp(nbuf, name, nlen) != 0) {
+		AG_SetError("%s: Bad magic", name);
 		return (-1);
 	}
 	major = AG_ReadUint32(buf);
@@ -55,23 +55,23 @@ AG_ReadVersion(AG_Netbuf *buf, const AG_Version *ver,
 	}
 	if (major != ver->major) {
 		AG_SetError("%s: Major differs: v%d.%d != %d.%d.",
-		    ver->name, major, minor, ver->major, ver->minor);
+		    name, major, minor, ver->major, ver->minor);
 		return (-1);
 	}
 	if (minor != ver->minor) {
 		fprintf(stderr, "%s: Minor differs: v%d.%d != %d.%d.\n",
-		    ver->name, major, minor, ver->major, ver->minor);
+		    name, major, minor, ver->major, ver->minor);
 	}
 	return (0);
 }
 
 void
-AG_WriteVersion(AG_Netbuf *buf, const AG_Version *ver)
+AG_WriteVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
 
 	memset(nbuf, '!', sizeof(nbuf));
-	strlcpy(nbuf, ver->name, sizeof(nbuf));
+	strlcpy(nbuf, name, sizeof(nbuf));
 	AG_NetbufWrite(nbuf, sizeof(nbuf), 1, buf);
 	AG_WriteUint32(buf, ver->major);
 	AG_WriteUint32(buf, ver->minor);

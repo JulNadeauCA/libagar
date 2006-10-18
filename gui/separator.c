@@ -39,6 +39,9 @@
 
 const AG_WidgetOps agSeparatorOps = {
 	{
+		"AG_Widget:AG_Separator",
+		sizeof(AG_Separator),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,

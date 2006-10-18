@@ -40,33 +40,35 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-interface encodes, or verifies the following structure:
+interface encodes or decodes versioning information.
+This includes a magic string and two 32-bit version numbers:
 .Pp
 .Bd -literal
-AG_Version {
-	char	*name;			/* Signature */
-	Uint32	 vermaj, vermin;	/* Version */
-};
+typedef struct ag_version {
+	Uint32 major, minor;
+} AG_Version;
 .Ed
 .Pp
 The
-.Dv vermaj
-member is incremented whenever a change introduces binary incompatibility
-with previous versions of the data files.
-This is usually avoided by comparing versions when loading, and using padding
-when saving.
+.Fa major
+is incremented whenever a change introduces binary incompatibility with
+previous versions of the data files.
 .Pp
 The
-.Dv vermin
+.Dv minor
 member is incremented whenever a change is made in the data file, but binary
 compatibility is preserved.
+.Pp
+Major changes that would otherwise break binary compatibility can be dealt
+with by increasing only the minor version number and adding compatibility code
+in the loader routine.
 .Sh VERSIONING
 .nr nS 1
 .Ft "int"
-.Fn AG_ReadVersion "AG_Netbuf *buf" "const AG_Version *ver" "AG_Version *rver"
+.Fn AG_ReadVersion "AG_Netbuf *buf" "const char *magic" "const AG_Version *ver" "AG_Version *rver"
 .Pp
 .Ft "void"
-.Fn AG_WriteVersion "AG_Netbuf *buf" "const AG_Version *ver"
+.Fn AG_WriteVersion "AG_Netbuf *buf" "const char *magic" "const AG_Version *ver"
 .Pp
 .nr nS 0
 The

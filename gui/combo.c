@@ -41,6 +41,9 @@
 
 static AG_WidgetOps agComboOps = {
 	{
+		"AG_Widget:AG_Combo",
+		sizeof(AG_Combo),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_ComboDestroy,

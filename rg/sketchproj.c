@@ -1,7 +1,7 @@
 /*	$Csoft: sketchproj.c,v 1.8 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -44,11 +44,7 @@
 #include "tileview.h"
 #include "sketchproj.h"
 
-const AG_Version rgSketchProjVer = {
-	"agar rg sketch projection feature",
-	0, 0
-};
-
+const AG_Version rgSketchProjVer = { 0, 0 };
 const RG_FeatureOps rgSketchProjOps = {
 	"sketchproj",
 	sizeof(struct rg_sketchproj),
@@ -81,7 +77,8 @@ RG_SketchProjLoad(void *p, AG_Netbuf *buf)
 	struct rg_sketchproj *sproj = p;
 	RG_Tileset *ts = RG_FEATURE(sproj)->ts;
 
-	if (AG_ReadVersion(buf, &rgSketchProjVer, NULL) == -1)
+	if (AG_ReadVersion(buf, "RG_Feature:RG_SketchProj", &rgSketchProjVer,
+	    NULL) == -1)
 		return (-1);
 
 	AG_CopyString(sproj->sketch, buf, sizeof(sproj->sketch));
@@ -96,7 +93,7 @@ RG_SketchProjSave(void *p, AG_Netbuf *buf)
 	struct rg_sketchproj *sproj = p;
 	RG_Tileset *ts = RG_FEATURE(sproj)->ts;
 
-	AG_WriteVersion(buf, &rgSketchProjVer);
+	AG_WriteVersion(buf, "RG_Feature:RG_SketchProj", &rgSketchProjVer);
 
 	AG_WriteString(buf, sproj->sketch);
 	AG_WriteUint8(buf, sproj->alpha);

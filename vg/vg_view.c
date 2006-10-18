@@ -1,7 +1,7 @@
 /*	$Csoft: vgview.c,v 1.2 2005/10/06 10:41:50 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -41,6 +41,9 @@
 
 const AG_WidgetOps vgViewOps = {
 	{
+		"AG_Widget:VG_View",
+		sizeof(VG_View),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,

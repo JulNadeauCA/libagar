@@ -36,6 +36,9 @@
 
 static AG_WidgetOps agRadioOps = {
 	{
+		"AG_Widget:AG_Radio",
+		sizeof(AG_Radio),
+		{ 0,0, },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_RadioDestroy,
