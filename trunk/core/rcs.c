@@ -1,7 +1,7 @@
 /*	$Csoft: rcs.c,v 1.14 2005/09/20 13:46:29 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -272,7 +272,7 @@ AG_RcsImport(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->type,
+	    &objdir[1], ob->name, ob->ops->type,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -384,7 +384,7 @@ AG_RcsCommit(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->type,
+	    &objdir[1], ob->name, ob->ops->type,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -485,9 +485,9 @@ AG_RcsUpdate(AG_Object *ob)
 	case AG_RCS_DESYNCH:
 		break;
 	}
-	if (strcmp(type, ob->type) != 0) {
+	if (strcmp(type, ob->ops->type) != 0) {
 		AG_SetError(_("Repository has different object type (%s/%s)"),
-		    type, ob->type);
+		    type, ob->ops->type);
 		goto fail;
 	}
 
@@ -496,8 +496,8 @@ AG_RcsUpdate(AG_Object *ob)
 			                         "object-name=%s\n"
 			                         "object-type=%s\n"
 					         "revision=%u\n",
-					         &objdir[1], ob->name, ob->type,
-					         repo_rev);
+					         &objdir[1], ob->name,
+						 ob->ops->type, repo_rev);
 	if (res == NULL || res->argc < 1) {
 		AG_SetError("RCS update error: %s", AGN_GetError());
 		goto fail;
@@ -814,7 +814,7 @@ AG_RcsCheckout(const char *path)
 		if (t->ops->init != NULL) {
 			t->ops->init(obj, name);
 		} else {
-			AG_ObjectInit(obj, t->type, name, NULL);
+			AG_ObjectInit(obj, name, t->ops);
 		}
 
 		if (AG_ObjectAttachPath(localpath, obj) == -1) {
@@ -831,10 +831,10 @@ AG_RcsCheckout(const char *path)
 			goto fail;
 		}
 	} else {
-		if (strcmp(type, obj->type) != 0) {
+		if (strcmp(type, obj->ops->type) != 0) {
 			AG_SetError(
 			    "%s: existing object of different type (%s)",
-			    localpath, obj->type);
+			    localpath, obj->ops->type);
 			goto fail;
 		}
 	}

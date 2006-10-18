@@ -1,7 +1,7 @@
 /*	$Csoft: textbox.c,v 1.104 2005/10/01 14:15:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -54,6 +54,9 @@
 
 const AG_WidgetOps agTextboxOps = {
 	{
+		"AG_Widget:AG_Textbox",
+		sizeof(AG_Textbox),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,

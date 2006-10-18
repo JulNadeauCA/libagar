@@ -39,6 +39,22 @@
 #include <string.h>
 #include <errno.h>
 
+static AG_WidgetOps agObjectSelectorOps = {
+	{
+		"AG_Widget:AG_Combo:AG_ObjectSelector",
+		sizeof(AG_ObjectSelector),
+		{ 0,0 },
+		NULL,					/* init */
+		NULL,					/* reinit */
+		AG_ComboDestroy,
+		NULL,					/* load */
+		NULL,					/* save */
+		NULL					/* edit */
+	},
+	NULL,						/* draw */
+	AG_ComboScale
+};
+
 AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
@@ -67,11 +83,10 @@ AG_ObjectSelectorSelect(AG_ObjectSelector *os, void *p)
 }
 
 static void
-find_objs(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
+FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 	AG_TlistItem *it;
-	SDL_Surface *icon;
 	int nosel = 0;
 	
 	if (!AG_ObjectIsClass(pob, os->type_mask)) {
@@ -96,26 +111,25 @@ find_objs(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
-			find_objs(os, tl, cob, depth+1);
+			FindObjects(os, tl, cob, depth+1);
 	}
 }
 
 static void
-poll_objs(AG_Event *event)
+PollObjects(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_ObjectSelector *os = AG_PTR(1);
-	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
 	AG_LockLinkage();
-	find_objs(os, tl, os->root, 0);
+	FindObjects(os, tl, os->root, 0);
 	AG_UnlockLinkage();
 	AG_TlistRestore(tl);
 }
 
 static void
-selected_obj(AG_Event *event)
+SelectObject(AG_Event *event)
 {
 	AG_Combo *com = AG_SELF();
 	AG_ObjectSelector *os = AG_PTR(1);
@@ -165,7 +179,7 @@ AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
 {
 	AG_ComboInit(&os->com, AG_COMBO_POLL|AG_COMBO_TREE|AG_COMBO_HFILL,
 	    label);
-	AG_ObjectSetType(os, "combo.objsel");
+	AG_ObjectSetOps(os, &agObjectSelectorOps);
 
 	os->flags = flags;
 	os->pobj = pobj;
@@ -175,8 +189,8 @@ AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
 
 	AG_WidgetBind(os, "object", AG_WIDGET_POINTER, &os->object);
 
-	AG_SetEvent(os->com.list, "tlist-poll", poll_objs, "%p", os);
-	AG_SetEvent(&os->com, "combo-selected", selected_obj, "%p", os);
+	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
+	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
 	AG_SetEvent(os, "widget-bound", bound, NULL);
 }
 

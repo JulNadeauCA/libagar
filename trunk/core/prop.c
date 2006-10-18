@@ -1,7 +1,7 @@
 /*	$Csoft: prop.c,v 1.54 2005/09/27 00:25:17 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -35,10 +35,7 @@
 #include <string.h>
 #include <errno.h>
 
-const AG_Version prop_ver = {
-	"agar property map",
-	2, 0
-};
+const AG_Version agPropTblVer = { 2, 0 };
 
 #ifdef DEBUG
 #define DEBUG_STATE	0x01
@@ -777,7 +774,7 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 	AG_Object *ob = p;
 	Uint32 i, nprops;
 
-	if (AG_ReadVersion(buf, &prop_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, "AG_PropTbl", &agPropTblVer, NULL) == -1)
 		return (-1);
 
 	AG_MutexLock(&ob->lock);
@@ -884,7 +881,7 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 	AG_Prop *prop;
 	Uint8 c;
 	
-	AG_WriteVersion(buf, &prop_ver);
+	AG_WriteVersion(buf, "AG_PropTbl", &agPropTblVer);
 	
 	AG_MutexLock(&ob->lock);
 

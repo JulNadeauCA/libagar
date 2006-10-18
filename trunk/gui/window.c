@@ -1,7 +1,7 @@
 /*	$Csoft: window.c,v 1.275 2005/10/07 07:16:33 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -41,6 +41,9 @@
 
 const AG_WidgetOps agWindowOps = {
 	{
+		"AG_Widget:AG_Window",
+		sizeof(AG_Window),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_WindowDestroy,
@@ -144,7 +147,6 @@ AG_WindowInit(void *p, const char *name, int flags)
 	strlcpy(wname, "win-", sizeof(wname));
 	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
 	AG_WidgetInit(win, "window", &agWindowOps, 0);
-	AG_ObjectSetType(win, "window");
 	AG_ObjectSetName(win, wname);
 	win->flags = flags;
 	win->visible = 0;

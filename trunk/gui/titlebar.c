@@ -38,6 +38,9 @@
 
 const AG_WidgetOps agTitlebarOps = {
 	{
+		"AG_Widget:AG_Box:AG_Titlebar",
+		sizeof(AG_Titlebar),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_BoxDestroy,

@@ -36,6 +36,9 @@
 
 static AG_WidgetOps agBoxOps = {
 	{
+		"AG_Widget:AG_Box",
+		sizeof(AG_Box),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_BoxDestroy,
@@ -49,6 +52,9 @@ static AG_WidgetOps agBoxOps = {
 
 static AG_WidgetOps agBoxOpsWithFrame = {
 	{
+		"AG_Widget:AG_Box",
+		sizeof(AG_Box),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_BoxDestroy,

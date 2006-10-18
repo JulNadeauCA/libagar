@@ -1,7 +1,7 @@
 /*	$Csoft: mfspinbutton.c,v 1.10 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -43,6 +43,9 @@
 
 static AG_WidgetOps agMFSpinbuttonOps = {
 	{
+		"AG_Widget:AG_MFSpinbutton",
+		sizeof(AG_MFSpinbutton),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_MFSpinbuttonDestroy,

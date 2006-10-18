@@ -1,7 +1,7 @@
 /*	$Csoft: tile.c,v 1.91 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -1033,11 +1033,10 @@ import_xcf(AG_Event *event)
 		return;
 	}
 
-	AG_ObjectInit(&tmpObj, "object", "tmp", NULL);
+	AG_ObjectInit(&tmpObj, "tmp", NULL);
 	tmpObj.gfx = AG_GfxNew(&tmpObj);
-	if (AG_XCFLoad(buf, 0, tmpObj.gfx) == -1) {
+	if (AG_XCFLoad(buf, 0, tmpObj.gfx) == -1)
 		goto fail;
-	}
 
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
 		AG_Sprite *spr = &AG_SPRITE(&tmpObj,i);

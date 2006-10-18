@@ -1,7 +1,7 @@
 /*	$Csoft: hpane.c,v 1.10 2005/10/07 01:53:12 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -37,12 +37,15 @@
 
 static AG_WidgetOps agPaneOps = {
 	{
-		NULL,			/* init */
-		NULL,			/* reinit */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		"AG_Widget:AG_Pane",
+		sizeof(AG_Pane),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	AG_PaneDraw,
 	AG_PaneScale

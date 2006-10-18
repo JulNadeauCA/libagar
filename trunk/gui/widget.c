@@ -40,6 +40,9 @@
 
 const AG_WidgetOps agWidgetOps = {
 	{
+		"AG_Widget",
+		sizeof(AG_Widget),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		NULL,		/* destroy */
@@ -82,10 +85,10 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 {
 	AG_Widget *wid = p;
 
-	AG_ObjectInit(wid, "widget", type, wops);
+	AG_ObjectInit(wid, "widget", wops);
 	AGOBJECT(wid)->save_pfx = "/widgets";
 
-	strlcpy(wid->type, type, sizeof(wid->type));
+	strlcpy(wid->type, type, sizeof(wid->type));		/* XXX */
 	wid->flags = flags;
 	wid->redraw = 1;
 	wid->cx = -1;
@@ -1168,11 +1171,11 @@ AG_WidgetParentWindow(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *pwid = wid;
 
-	if (AGOBJECT_TYPE(wid, "window"))
+	if (AGOBJECT_TYPE(wid, "AG_Widget:AG_Window"))
 		return ((AG_Window *)wid);
 
 	while ((pwid = AGOBJECT(pwid)->parent) != NULL) {
-		if (AGOBJECT_TYPE(pwid, "window"))
+		if (AGOBJECT_TYPE(pwid, "AG_Widget:AG_Window"))
 			break;
 	}
 	return ((AG_Window *)pwid);
@@ -1206,7 +1209,7 @@ AG_WidgetFocus(void *p)
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AGOBJECT_TYPE(pwid, "window"))
+		if (AGOBJECT_TYPE(pwid, "AG_Widget:AG_Window"))
 			break;
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
@@ -1229,7 +1232,8 @@ widget_occulted(AG_Widget *wid)
 	AG_Window *owin;
 	AG_Window *wwin;
 
-	if ((wwin = AG_ObjectFindParent(wid, NULL, "window")) == NULL ||
+	if ((wwin = AG_ObjectFindParent(wid, NULL, "AG_Widget:AG_Window"))
+	    == NULL ||
 	    (owin = TAILQ_NEXT(wwin, windows)) == NULL) {
 		return (0);
 	}
@@ -1487,7 +1491,7 @@ AG_WidgetFindFocused(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *cwid, *fwid;
 
-	if (!AGOBJECT_TYPE(wid, "window") &&
+	if (!AGOBJECT_TYPE(wid, "AG_Widget:AG_Window") &&
 	    (wid->flags & AG_WIDGET_FOCUSED) == 0)
 		return (NULL);
 

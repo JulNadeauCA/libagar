@@ -40,6 +40,9 @@
 
 const AG_WidgetOps agConsoleOps = {
 	{
+		"AG_Widget:AG_Console",
+		sizeof(AG_Console),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_ConsoleDestroy,

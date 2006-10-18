@@ -1,7 +1,7 @@
 /*	$Csoft: notebook.c,v 1.10 2005/10/03 04:27:20 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -36,6 +36,9 @@
 
 static AG_WidgetOps agNotebookOps = {
 	{
+		"AG_Widget:AG_Notebook",
+		sizeof(AG_Notebook),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_NotebookDestroy,

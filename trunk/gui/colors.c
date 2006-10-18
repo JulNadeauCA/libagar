@@ -1,7 +1,7 @@
 /*	$Csoft: colors.c,v 1.26 2005/10/02 16:10:36 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -31,10 +31,7 @@
 
 #include "colors.h"
 
-const AG_Version agColorSchemeVer = {
-	"agar color scheme",
-	1, 0
-};
+const AG_Version agColorSchemeVer = { 1, 0 };
 
 Uint32 agColors[LAST_COLOR];
 Uint32 agColorsBorder[7];
@@ -232,7 +229,8 @@ AG_ColorsLoad(const char *file)
 	int i, ncolors;
 
 	if ((buf = AG_NetbufOpen(file, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL ||
-	    AG_ReadVersion(buf, &agColorSchemeVer, NULL) == -1)
+	    AG_ReadVersion(buf, "AG_ColorScheme", &agColorSchemeVer, NULL)
+	    == -1)
 		return (-1);
 
 	ncolors = (int)AG_ReadUint16(buf);
@@ -264,7 +262,7 @@ AG_ColorsSave(const char *file)
 	if ((buf = AG_NetbufOpen(file, "wb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		return (-1);
 	}
-	AG_WriteVersion(buf, &agColorSchemeVer);
+	AG_WriteVersion(buf, "AG_ColorScheme", &agColorSchemeVer);
 
 	AG_WriteUint16(buf, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {

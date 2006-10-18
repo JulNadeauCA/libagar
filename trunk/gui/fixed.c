@@ -1,7 +1,7 @@
 /*	$Csoft: fixed.c,v 1.4 2005/10/03 02:28:02 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -35,6 +35,9 @@
 
 static AG_WidgetOps agFixedOps = {
 	{
+		"AG_Widget:AG_Fixed",
+		sizeof(AG_Fixed),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,

@@ -1,7 +1,7 @@
 /*	$Csoft: gfx.c,v 1.58 2005/09/07 03:56:57 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -510,7 +510,7 @@ AG_GfxUnused(void *p)
 int
 AG_GfxLoad(AG_Object *ob)
 {
-	extern const AG_Version ag_object_ver;
+	extern const AG_ObjectOps agObjectOps;
 	AG_Gfx *gfx = ob->gfx;
 	char path[MAXPATHLEN];
 	AG_Netbuf *buf;
@@ -525,7 +525,7 @@ AG_GfxLoad(AG_Object *ob)
 		return (-1);
 	}
 	
-	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 
 	AG_ReadUint32(buf);				/* Skip data offs */

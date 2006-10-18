@@ -42,6 +42,9 @@
 
 static AG_WidgetOps agFileDlgOps = {
 	{
+		"AG_Widget:AG_FileDlg",
+		sizeof(AG_FileDlg),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_FileDlgDestroy,

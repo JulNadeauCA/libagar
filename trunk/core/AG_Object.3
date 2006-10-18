@@ -38,24 +38,23 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar object system is implemented around the generic
+The Agar object system is implemented around the
 .Nm
 structure.
-The object system handles memory management and persistence (ie. loading or
-saving object data to disk/network as needed) and dependency keeping between
-multiple objects organized in a tree structure.
+The system handles memory management, persistence and interdependencies
+between a set of objects organized in a tree structure.
 .Pp
-.Nm
-provides a generic event delivery and actions system with support for built-in
-type safety, named arguments and multithreaded events.
-.Pp
+A generic event delivery and actions system is also provided, with support
+for type checking, named arguments and multithreaded events.
+Other features of the object system include property tables and object-specific
+timer management.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "AG_Object *"
 .Fn AG_ObjectNew "void *parent" "const char *name"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "void *obj" "const char *type" "const char *name" "const void *ops"
+.Fn AG_ObjectInit "void *obj" "const char *name" "const void *ops"
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "void *new_parent" "void *obj"
@@ -94,72 +93,101 @@ if not NULL.
 The
 .Fn AG_ObjectInit
 function initializes an AG_Object structure.
+The
 .Fa name
-and
-.Fa type
-are truncated if they exceed
+string identifies this object instance.
+It will be truncated if it exceeds
 .Dv AG_OBJECT_NAME_MAX
-and
-.Dv AG_OBJECT_TYPE_MAX
-in length, respectively.
-Instances of
+bytes in length, and any
 .Sq /
-characters in
-.Fa name
-are replaced by
+characters are replaced by
 .Sq _ .
 If
 .Fa ops
-is not NULL, it should point to the following structure:
+is not NULL, it should point to the
+.Ft AG_ObjectOps
+structure, which contains class-specific information:
 .Pp
 .Bd -literal
 typedef struct ag_object_ops {
-	void (*init)(void *obj, const char *name);	/* Initialize */
-	void (*reinit)(void *obj);			/* Free data */
-	void (*destroy)(void *obj);			/* Release */
-	int  (*load)(void *obj, AG_Netbuf *buf);	/* Load data */
-	int  (*save)(void *obj, AG_Netbuf *buf);	/* Save data */
-	void *(*edit)(void *obj);			/* Edit data */
+	const char *name;                          /* Class name */
+	size_t size;                               /* Size of structure */
+	AG_Version ver;                            /* Version numbers */
+
+	void (*init)(void *obj, const char *name); /* Initialize */
+	void (*reinit)(void *obj);                 /* Free data */
+	void (*destroy)(void *obj);                /* Release */
+	int  (*load)(void *obj, AG_Netbuf *buf);   /* Load data */
+	int  (*save)(void *obj, AG_Netbuf *buf);   /* Save data */
+	void *(*edit)(void *obj);                  /* Edit data */
 } AG_ObjectOps;
 .Ed
+.Pp
+The
+.Va name
+member is the name of this class, where subclasses are separated by a
+colon, such as
+.Sq AG_Superclass:AG_Subclass .
+It is implied that the root class is
+.Sq AG_Object ,
+so there is no need to specify it in the string.
+.Pp
+The
+.Va size
+member describes is the amount of memory that will be allocated by the object
+system to hold the structure.
+.Va ver
+contains the version numbers that will be used in data files (see
+.Xr AG_Version 3
+for more details).
 .Pp
 The
 .Fn init
 operation initializes an
 .Nm
-instance.
-The routine should call
-.Fn AG_ObjectInit
-to initialize the generic part of the object, name the object and set the
-.Ft AG_ObjectOps
-vector.
+instance after memory has been allocated for it.
+A subclass object's
+.Fn init
+should invoke the
+.Fn init
+function of its superclass.
+For direct subclasses of
+.Fn AG_Object ,
+this function is
+.Fn AG_ObjectInit .
 .Pp
 The
 .Fn reinit
-operation is invoked prior to rereading an
-.Nm 's
-data from disk, as part of a
-.Sq page out
-operation.
-Typically, the routine releases data that was dynamically allocated by the
-.Nm
-and puts the object back in a consistent state to simplify the
-.Fn load
-operation.
+operation releases any data that was dynamically allocated by the object.
+.Fn reinit
+is invoked by the object system:
+.Pp
+.Bl -bullet -compact
+.It
+Prior to a
+.Fn load ,
+to avoid having to free data from the loader.
+.It
+Subsequent to a
+.Dv PAGE_OUT ,
+to free data no longer being referenced.
+.It
+Prior to a
+.Fn destroy
+operation where the object is being freed.
+.El
 .Pp
 The
 .Fn destroy
-operation releases all data allocated by the
-.Nm ,
-including data allocated from
-.Fn init .
-The
-.Fn destroy
 operation is invoked from
-.Fn AG_ObjectDestroy .
-The routine must not free the
+.Fn AG_ObjectDestroy
+to release any resources that are not handled by
+.Fn reinit .
+Note that
+.Fn destroy
+must not free the
 .Nm
-structure itself.
+object instance structure.
 .Pp
 The
 .Fn load
@@ -175,8 +203,7 @@ If the compile-time option
 .Dv EDITION
 is defined, the
 .Fn edit
-operation is responsible for creating a new edition window for the object's
-dynamic data.
+operation implements graphical edition capabilities.
 For example, in the Agar-Game library, the
 .Xr AG_Map 3
 object creates an
@@ -186,9 +213,7 @@ In the Agar-SG library, the
 .Xr SG 3
 (scene graph) object creates a
 .Xr SG_View 3
-widget (a derivate of
-.Xr AG_GLView 3 )
-to display the scene.
+widget to display the scene.
 .Pp
 If other windows are to be created as part of this instance's edition process,
 they should be attached to the main edition window using

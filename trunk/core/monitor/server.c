@@ -300,7 +300,7 @@ find_objs(struct command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
-	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->type,
+	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->ops->name,
 	    pob->flags, pob->data_used);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {

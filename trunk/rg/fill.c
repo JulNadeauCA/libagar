@@ -43,11 +43,7 @@
 #include "tileview.h"
 #include "fill.h"
 
-const AG_Version rgFillVer = {
-	"agar rg fill feature",
-	0, 0
-};
-
+const AG_Version rgFillVer = { 0, 0, };
 const RG_FeatureOps rgFillOps = {
 	"fill",
 	sizeof(struct rg_fill_feature),
@@ -81,7 +77,7 @@ RG_FillLoad(void *p, AG_Netbuf *buf)
 	struct rg_fill_feature *f = p;
 	RG_Tileset *ts = RG_FEATURE(f)->ts;
 
-	if (AG_ReadVersion(buf, &rgFillVer, NULL) == -1)
+	if (AG_ReadVersion(buf, "RG_Feature:RG_Fill", &rgFillVer, NULL) == -1)
 		return (-1);
 
 	f->type = (enum fill_type)AG_ReadUint8(buf);
@@ -110,7 +106,7 @@ RG_FillSave(void *p, AG_Netbuf *buf)
 	struct rg_fill_feature *f = p;
 	RG_Tileset *ts = RG_FEATURE(f)->ts;
 
-	AG_WriteVersion(buf, &rgFillVer);
+	AG_WriteVersion(buf, "RG_Feature:RG_Fill", &rgFillVer);
 
 	AG_WriteUint8(buf, (Uint8)f->type);
 	switch (f->type) {

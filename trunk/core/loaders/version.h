@@ -6,7 +6,6 @@
 #include "begin_code.h"
 
 typedef struct ag_version {
-	char	*name;
 	Uint32	 major;
 	Uint32	 minor;
 } AG_Version;
@@ -15,8 +14,9 @@ typedef struct ag_version {
 #define AG_VERSION_MAX		(AG_VERSION_NAME_MAX+8)
 
 __BEGIN_DECLS
-int	AG_ReadVersion(AG_Netbuf *, const AG_Version *, AG_Version *);
-void	AG_WriteVersion(AG_Netbuf *, const AG_Version *);
+int	AG_ReadVersion(AG_Netbuf *, const char *, const AG_Version *,
+	               AG_Version *);
+void	AG_WriteVersion(AG_Netbuf *, const char *, const AG_Version *);
 __END_DECLS
 
 #include "close_code.h"

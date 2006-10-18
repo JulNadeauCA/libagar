@@ -1,7 +1,7 @@
 /*	$Csoft: hpane.c,v 1.10 2005/10/07 01:53:12 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -37,6 +37,9 @@
 
 static AG_WidgetOps agHPaneOps = {
 	{
+		"AG_Widget:AG_Box:AG_HPane",
+		sizeof(AG_HPane),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_BoxDestroy,

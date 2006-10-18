@@ -39,6 +39,9 @@
 
 const AG_WidgetOps agButtonOps = {
 	{
+		"AG_Widget:AG_Button",
+		sizeof(AG_Button),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		NULL,		/* destroy XXX */

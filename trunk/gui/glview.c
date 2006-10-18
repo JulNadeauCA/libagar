@@ -1,7 +1,7 @@
 /*	$Csoft: glview.c,v 1.2 2005/10/06 10:41:50 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -42,6 +42,9 @@
 
 const AG_WidgetOps agGLViewOps = {
 	{
+		"AG_Widget:AG_GLView",
+		sizeof(AG_GLView),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		NULL,		/* destroy */

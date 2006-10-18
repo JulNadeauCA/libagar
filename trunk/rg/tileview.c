@@ -1,7 +1,7 @@
 /*	$Csoft: tileview.c,v 1.56 2005/10/07 07:16:28 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005, 2006 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -38,6 +38,9 @@
 
 const AG_WidgetOps tileview_ops = {
 	{
+		"AG_Widget:RG_Tileview",
+		sizeof(RG_Tileview),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		RG_TileviewDestroy,

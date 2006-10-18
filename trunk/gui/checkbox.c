@@ -41,6 +41,9 @@
 
 static AG_WidgetOps agCheckboxOps = {
 	{
+		"AG_Widget:AG_Checkbox",
+		sizeof(AG_Checkbox),
+		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
 		AG_WidgetDestroy,

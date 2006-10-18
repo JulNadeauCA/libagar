@@ -1,7 +1,7 @@
 /*	$Csoft: object.c,v 1.243 2005/10/04 17:34:50 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -60,12 +60,10 @@
 #include <string.h>
 #include <unistd.h>
 
-const AG_Version ag_object_ver = {
-	"agar object",
-	7, 0
-};
-
 const AG_ObjectOps agObjectOps = {
+	"AG_Object",
+	sizeof(AG_Object),
+	{ 7, 0 },
 	NULL,	/* init */
 	NULL,	/* reinit */
 	NULL,	/* destroy */
@@ -95,7 +93,7 @@ AG_ObjectNew(void *parent, const char *name)
 	AG_Object *ob;
 
 	ob = Malloc(sizeof(AG_Object), M_OBJECT);
-	AG_ObjectInit(ob, "object", name, NULL);
+	AG_ObjectInit(ob, name, NULL);
 
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, ob);
@@ -105,12 +103,11 @@ AG_ObjectNew(void *parent, const char *name)
 
 /* Initialize a generic object structure. */
 void
-AG_ObjectInit(void *p, const char *type, const char *name, const void *opsp)
+AG_ObjectInit(void *p, const char *name, const void *opsp)
 {
 	AG_Object *ob = p;
 	char *c;
 
-	strlcpy(ob->type, type, sizeof(ob->type));
 	strlcpy(ob->name, name, sizeof(ob->name));
 
 	/* Prevent ambiguous characters in the name. */
@@ -143,7 +140,7 @@ AG_ObjectIsClassGeneral(AG_Object *obj, const char *cn)
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
 
 	strlcpy(cname, cn, sizeof(cname));
-	strlcpy(nname, obj->type, sizeof(nname));
+	strlcpy(nname, obj->ops->type, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = AG_Strsep(&cp, ":")) != NULL &&
@@ -169,7 +166,7 @@ AG_ObjectIsClass(void *p, const char *cname)
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 			if (c == &cname[0] ||
-			    strncmp(obj->type, cname, c - &cname[0]) == 0)
+			    strncmp(obj->ops->type, cname, c - &cname[0]) == 0)
 				return (1);
 		}
 	}
@@ -306,7 +303,7 @@ AG_ObjectFindParent(void *obj, const char *name, const char *type)
 		if (po == NULL) {
 			return (NULL);
 		}
-		if ((type == NULL || strcmp(po->type, type) == 0) &&
+		if ((type == NULL || strcmp(po->ops->type, type) == 0) &&
 		    (name == NULL || strcmp(po->name, name) == 0)) {
 			return (po);
 		}
@@ -754,14 +751,14 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 		strlcat(path, AG_PATHSEP, path_len);
 		strlcat(path, ob->name, path_len);
 		strlcat(path, ".", path_len);
-		strlcat(path, ob->type, path_len);
+		strlcat(path, ob->ops->type, path_len);
 
 		if (AG_FileExists(path))
 			return (0);
 	}
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
-	    obj_name, AG_PATHSEPC, ob->name, ob->type);
+	    obj_name, AG_PATHSEPC, ob->name, ob->ops->type);
 	return (-1);
 }
 
@@ -1030,7 +1027,7 @@ AG_ObjectLoadGeneric(void *p)
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 	
 	debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
@@ -1102,7 +1099,7 @@ AG_ObjectLoadGeneric(void *p)
 		}
 		if (eob != NULL) {
 			/* XXX free the existing object or ignore */
-			if (strcmp(eob->type, ctype) != 0) {
+			if (strcmp(eob->ops->type, ctype) != 0) {
 				fatal("existing object of different type");
 			}
 			/* XXX ignore */
@@ -1134,13 +1131,11 @@ AG_ObjectLoadGeneric(void *p)
 			if (agTypes[ti].ops->init != NULL) {
 				agTypes[ti].ops->init(child, cname);
 			} else {
-				AG_ObjectInit(child, ctype, cname,
-				    agTypes[ti].ops);
+				AG_ObjectInit(child, cname, agTypes[ti].ops);
 			}
 			AG_ObjectAttach(ob, child);
-			if (AG_ObjectLoadGeneric(child) == -1) {
+			if (AG_ObjectLoadGeneric(child) == -1)
 				goto fail;
-			}
 		}
 #if 0
 		/*
@@ -1212,7 +1207,7 @@ AG_ObjectLoadData(void *p)
 	}
 	debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
 
-	if (AG_ReadVersion(buf, &ag_object_ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 	
 	data_offs = (off_t)AG_ReadUint32(buf);
@@ -1321,7 +1316,7 @@ AG_ObjectSave(void *p)
 	strlcat(save_file, AG_PATHSEP, sizeof(save_file));
 	strlcat(save_file, ob->name, sizeof(save_file));
 	strlcat(save_file, ".", sizeof(save_file));
-	strlcat(save_file, ob->type, sizeof(save_file));
+	strlcat(save_file, ob->ops->type, sizeof(save_file));
 
 	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, save_file);
 
@@ -1331,7 +1326,7 @@ AG_ObjectSave(void *p)
 	    == NULL)
 		goto fail_reinit;
 
-	AG_WriteVersion(buf, &ag_object_ver);
+	AG_WriteVersion(buf, agObjectOps.type, &agObjectOps.ver);
 
 	data_offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
@@ -1366,7 +1361,7 @@ AG_ObjectSave(void *p)
 			continue;
 		}
 		AG_WriteString(buf, child->name);
-		AG_WriteString(buf, child->type);
+		AG_WriteString(buf, child->ops->type);
 		count++;
 	}
 	AG_PwriteUint32(buf, count, count_offs);
@@ -1399,15 +1394,6 @@ fail_lock:
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
-}
-
-/* Override an object's type; thread unsafe. */
-void
-AG_ObjectSetType(void *p, const char *type)
-{
-	AG_Object *ob = p;
-
-	strlcpy(ob->type, type, sizeof(ob->type));
 }
 
 /* Override an object's name; thread unsafe. */
@@ -1670,7 +1656,7 @@ AG_ObjectDuplicate(void *p)
 	AG_ObjectType *t;
 
 	for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++)
-		if (strcmp(ob->type, t->type) == 0)
+		if (strcmp(ob->ops->type, t->type) == 0)
 			break;
 #ifdef DEBUG
 	if (t == &agTypes[agnTypes])
@@ -1684,7 +1670,7 @@ AG_ObjectDuplicate(void *p)
 	if (t->ops->init != NULL) {
 		t->ops->init(dob, ob->name);
 	} else {
-		AG_ObjectInit(dob, ob->type, ob->name, t->ops);
+		AG_ObjectInit(dob, ob->name, t->ops);
 	}
 
 	if (AG_ObjectPageIn(ob, AG_OBJECT_DATA) == -1)
@@ -1731,11 +1717,11 @@ AG_ObjectIcon(void *p)
 		return (NULL);
 	}
 	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].type, obj->type) == 0)
+		if (strcmp(agTypes[i].type, obj->ops->type) == 0)
 			return (agTypes[i].icon >= 0 ? AGICON(agTypes[i].icon) :
 			    NULL);
 	}
-	return (NULL);
+	return (AGICON(OBJ_ICON));
 }
 
 /* Return a cryptographic digest for an object's last saved state. */
@@ -2187,7 +2173,8 @@ AG_ObjectEdit(void *p)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Type: %s"), ob->type);
+		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Class: %s"),
+		    ob->ops->type);
 		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Flags: 0x%x"),
 		    &ob->flags);
 		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Parent: %[obj]"),

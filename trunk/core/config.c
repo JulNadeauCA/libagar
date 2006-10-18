@@ -1,7 +1,7 @@
 /*	$Csoft: config.c,v 1.156 2005/10/04 17:34:50 vedge Exp $	    */
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -63,12 +63,10 @@
 #endif
 #include <unistd.h>
 
-const AG_Version agConfigVer = {
-	"agar config",
-	9, 0
-};
-
 const AG_ObjectOps agConfigOps = {
+	"AG_Config",
+	sizeof(AG_Config),
+	{ 9, 0 },
 	NULL,
 	NULL,
 	NULL,
@@ -173,7 +171,7 @@ AG_ConfigInit(AG_Config *cfg)
 	char udatadir[MAXPATHLEN];
 	struct passwd *pwd;
 
-	AG_ObjectInit(cfg, "object", "config", &agConfigOps);
+	AG_ObjectInit(cfg, "config", &agConfigOps);
 	AGOBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_DATA_RESIDENT;
 	AGOBJECT(cfg)->save_pfx = NULL;
 	cfg->window = NULL;
@@ -239,7 +237,7 @@ AG_ConfigInit(AG_Config *cfg)
 int
 AG_ConfigLoad(void *p, AG_Netbuf *buf)
 {
-	if (AG_ReadVersion(buf, &agConfigVer, NULL) != 0)
+	if (AG_ReadVersion(buf, agConfigOps.type, &agConfigOps.ver, NULL) != 0)
 		return (-1);
 
 #ifdef DEBUG
@@ -272,7 +270,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 int
 AG_ConfigSave(void *p, AG_Netbuf *buf)
 {
-	AG_WriteVersion(buf, &agConfigVer);
+	AG_WriteVersion(buf, agConfigOps.type, &agConfigOps.ver);
 
 #ifdef DEBUG
 	AG_WriteUint8(buf, (Uint8)agDebugLvl);

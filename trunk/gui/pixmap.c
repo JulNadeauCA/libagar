@@ -1,7 +1,7 @@
 /*	$Csoft: pixmap.c,v 1.23 2005/09/27 00:25:22 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -37,6 +37,9 @@
 
 const AG_WidgetOps agPixmapOps = {
 	{
+		"AG_Widget:AG_Pixmap",
+		sizeof(AG_Pixmap),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,
@@ -135,7 +138,7 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	}
 
 	/* XXX hack */
-	AG_ObjectInit(&tmpObj, "object", "tmp", NULL);
+	AG_ObjectInit(&tmpObj, "tmp", NULL);
 	tmpObj.gfx = AG_GfxNew(&tmpObj);
 	if (AG_XCFLoad(buf, 0, tmpObj.gfx) == -1)
 		goto fail;

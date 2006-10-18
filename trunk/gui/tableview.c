@@ -40,22 +40,25 @@
 
 #include "tableview.h"
 
-#define ID_INVALID ((Uint)-1)
-#define VISROW(tv,i) ((tv)->visible.items[i].row)
-#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
-
 static AG_WidgetOps agTableviewOps = {
 	{
-		NULL,		/* init */
-		NULL,		/* reinit */
+		"AG_Widget:AG_Tableview",
+		sizeof(AG_Tableview),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
 		AG_TableviewDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
 	},
 	AG_TableviewDraw,
 	AG_TableviewScale
 };
+
+#define ID_INVALID ((Uint)-1)
+#define VISROW(tv,i) ((tv)->visible.items[i].row)
+#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
 
 /*
  * Worker function for foreach_visible_column()

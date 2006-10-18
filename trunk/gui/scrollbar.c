@@ -1,7 +1,7 @@
 /*	$Csoft: scrollbar.c,v 1.52 2005/10/02 09:39:19 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -36,6 +36,9 @@
 
 const AG_WidgetOps agScrollbarOps = {
 	{
+		"AG_Widget:AG_Scrollbar",
+		sizeof(AG_Scrollbar),
+		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
 		AG_WidgetDestroy,
