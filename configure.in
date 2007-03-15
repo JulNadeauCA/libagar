@@ -14,7 +14,7 @@ REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 
 # Agar version
-HDEFINE(VERSION, "\"1.1\"")
+HDEFINE(VERSION, "\"1.2\"")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
