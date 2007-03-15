@@ -6,7 +6,6 @@ include ${TOP}/Makefile.config
 SUBDIR=	gamemenu \
 	objmgr \
 	focusing \
-	vectordwg \
 	loader \
 	table \
 	textbox \
