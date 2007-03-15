@@ -1,6 +1,6 @@
     _       _       _     ___  
   / _ \   / _ \   / _ \  |  _ \ 
- | |_| | | (_| | | |_| | | |_) |   v1.0
+ | |_| | | (_| | | |_| | | |_) |
  |_| |_|  \__, | |_| |_| |_| |_|
           |___/                 
 
@@ -8,19 +8,22 @@ What is it?
 -----------
 Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
-microbiological work. Agar is also a framework for graphical applications
+microbiological work. Agar is also a toolkit for graphical applications
 using SDL or OpenGL.
 
-Agar is most well-known for its extensive GUI library, which is being used
-by games, game edition tools, CAD and scientific applications.
+Agar is most well-known for its extensive GUI library, Agar-GUI, which is
+being used by games, game edition tools, CAD and scientific applications.
 
-The Agar core library features an object system which implements event and
-timing facilities, archiving, memory management, dependency keeping and a
-graphical edition framework.
+This distribution also includes the Agar-Core library. The main feature of
+Agar-Core is a generic object system which implements event and timing
+facilities, archiving of complex structures with interdependencies, memory
+management, a graphical edition framework and even a specialized revision
+control system.
 
-The distribution also includes a vector drawing engine and a graphics
-editor which can be built into applications such as games, for purposes
-of retouching, composition and authoring.
+Other libraries that rely on Agar-Core/Agar-GUI include Agar-SG (scene
+graph and 3D engine), Agar-VG (vector graphics), Agar-RG (image authoring)
+and more. See the Agar homepage for more information of the available
+libraires.
 
 Availability
 ------------
@@ -35,7 +38,7 @@ For the list of official ports, see http://agar.csoft.org/portable.html.
 
 License
 -------
-Agar is freely distributable under the terms of a BSD license.
+Agar is freely distributable under the terms of a revised BSD license.
 
 Acknowledgements
 ----------------
