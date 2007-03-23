@@ -15,6 +15,7 @@ REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 
 # Agar version
 HDEFINE(VERSION, "\"1.2\"")
+HDEFINE(RELEASE, "\"Crusade of the Underworld Hordes\"")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
