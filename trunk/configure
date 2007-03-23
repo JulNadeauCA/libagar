@@ -260,6 +260,10 @@ VERSION="\"1.2\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif" >> config/version.h
+RELEASE="\"Crusade of the Underworld Hordes\""
+echo "#ifndef RELEASE" > config/release.h
+echo "#define RELEASE" $RELEASE >> config/release.h
+echo "#endif" >> config/release.h
 SHAREDIR="\${PREFIX}/share/agar"
 echo "SHAREDIR=$SHAREDIR" >> Makefile.config
 SHAREDIR="\"$PREFIX/share/agar\""
