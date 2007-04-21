@@ -641,19 +641,19 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SYS_TYPES_H" > config/have_sys_types_h.h
-echo "#define HAVE_SYS_TYPES_H" $HAVE_SYS_TYPES_H >> config/have_sys_types_h.h
-echo "#endif" >> config/have_sys_types_h.h
+	echo "#ifndef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
+echo "#define _MK_HAVE_SYS_TYPES_H" $_MK_HAVE_SYS_TYPES_H >> config/_mk_have_sys_types_h.h
+echo "#endif" >> config/_mk_have_sys_types_h.h
 
-	HAVE_SYS_TYPES_H=yes
+	_MK_HAVE_SYS_TYPES_H=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_SYS_TYPES_H" > config/have_sys_types_h.h
+	echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
 
 	echo "no"
 fi
-if [ "${HAVE_SYS_TYPES_H}" = "yes" ]; then
+if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
 echo -n "checking for unsigned typedefs..."
 echo -n "checking for unsigned typedefs..." >> config.log
 cat << EOT > conftest.c
@@ -677,15 +677,15 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_UNSIGNED_TYPEDEFS" > config/have_unsigned_typedefs.h
-echo "#define HAVE_UNSIGNED_TYPEDEFS" $HAVE_UNSIGNED_TYPEDEFS >> config/have_unsigned_typedefs.h
-echo "#endif" >> config/have_unsigned_typedefs.h
+	echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS" $_MK_HAVE_UNSIGNED_TYPEDEFS >> config/_mk_have_unsigned_typedefs.h
+echo "#endif" >> config/_mk_have_unsigned_typedefs.h
 
-	HAVE_UNSIGNED_TYPEDEFS=yes
+	_MK_HAVE_UNSIGNED_TYPEDEFS=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_UNSIGNED_TYPEDEFS" > config/have_unsigned_typedefs.h
+	echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 
 	echo "no"
 fi
@@ -712,15 +712,15 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_UNSIGNED_TYPEDEFS" > config/have_unsigned_typedefs.h
-echo "#define HAVE_UNSIGNED_TYPEDEFS" $HAVE_UNSIGNED_TYPEDEFS >> config/have_unsigned_typedefs.h
-echo "#endif" >> config/have_unsigned_typedefs.h
+	echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS" $_MK_HAVE_UNSIGNED_TYPEDEFS >> config/_mk_have_unsigned_typedefs.h
+echo "#endif" >> config/_mk_have_unsigned_typedefs.h
 
-	HAVE_UNSIGNED_TYPEDEFS=yes
+	_MK_HAVE_UNSIGNED_TYPEDEFS=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_UNSIGNED_TYPEDEFS" > config/have_unsigned_typedefs.h
+	echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 
 	echo "no"
 fi
