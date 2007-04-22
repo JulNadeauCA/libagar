@@ -996,8 +996,12 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 		snprintf(s, len, "%ld", (long)pr->data.s32);
 		break;
 #ifdef SDL_HAS_64BIT_TYPE
-	case AG_PROP_UINT64:	snprintf(s, len, "%llu", pr->data.u64);	break;
-	case AG_PROP_SINT64:	snprintf(s, len, "%lld", pr->data.s64);	break;
+	case AG_PROP_UINT64:	snprintf(s, len, "%llu",
+				(unsigned long long)pr->data.u64);
+				break;
+	case AG_PROP_SINT64:	snprintf(s, len, "%lld",
+				(long long)pr->data.s64);
+				break;
 #endif	
 	case AG_PROP_FLOAT:	snprintf(s, len, "%f", pr->data.f);	break;
 	case AG_PROP_DOUBLE:	snprintf(s, len, "%f", pr->data.d);	break;
