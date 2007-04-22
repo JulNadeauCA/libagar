@@ -347,31 +347,36 @@ AG_LabelDrawPolled(AG_Label *label)
 					case 'd':
 					case 'i':
 						snprintf(s2, sizeof(s2),
-						    "%lld", LABEL_ARG(Sint64));
+						    "%lld", (long long)
+						    LABEL_ARG(Sint64));
 						strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'o':
 						snprintf(s2, sizeof(s2),
-						    "%llo", LABEL_ARG(Uint64));
+						    "%llo", (unsigned long long)
+						    LABEL_ARG(Uint64));
 						strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'u':
 						snprintf(s2, sizeof(s2),
-						    "%llu", LABEL_ARG(Uint64));
+						    "%llu", (unsigned long long)
+						    LABEL_ARG(Uint64));
 						strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'x':
 						snprintf(s2, sizeof(s2),
-						    "%llx", LABEL_ARG(Uint64));
+						    "%llx", (unsigned long long)
+						    LABEL_ARG(Uint64));
 						strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'X':
 						snprintf(s2, sizeof(s2),
-						    "%llX", LABEL_ARG(Uint64));
+						    "%llX", (unsigned long long)
+						    LABEL_ARG(Uint64));
 						strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
