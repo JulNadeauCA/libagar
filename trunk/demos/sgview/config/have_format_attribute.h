@@ -1,3 +1,0 @@
-#ifndef HAVE_FORMAT_ATTRIBUTE
-#define HAVE_FORMAT_ATTRIBUTE
-#endif
