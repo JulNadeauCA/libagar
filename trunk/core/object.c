@@ -123,7 +123,6 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 	ob->nevents = 0;
 
 	AG_MutexInitRecursive(&ob->lock);
-	ob->gfx = NULL;
 	ob->data_used = 0;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
@@ -183,14 +182,6 @@ AG_ObjectRemain(void *p, int flags)
 		ob->data_used = AG_OBJECT_DEP_MAX;
 	} else {
 		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
-	}
-	if (flags & AG_OBJECT_REMAIN_GFX) {
-		ob->flags |= AG_OBJECT_REMAIN_GFX;
-		if (ob->gfx != NULL) {
-			ob->gfx->used = AG_GFX_MAX_USED;
-		}
-	} else {
-		ob->flags &= ~AG_OBJECT_REMAIN_GFX;
 	}
 }
 
@@ -802,18 +793,6 @@ AG_ObjectPageIn(void *p, enum ag_object_page_item item)
 	AG_MutexLock(&ob->lock);
 
 	switch (item) {
-	case AG_OBJECT_GFX:
-		if (ob->gfx == NULL) {
-			ob->gfx = AG_GfxNew(ob);
-		}
-		if (ob->gfx->used == 0 &&
-		    AG_GfxLoad(ob) == -1) {
-			goto fail;
-		}
-		if (++ob->gfx->used > AG_GFX_MAX_USED) {
-			ob->gfx->used = AG_GFX_MAX_USED;
-		}
-		break;
 	case AG_OBJECT_DATA:
 		if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
 			goto out;
@@ -851,15 +830,6 @@ AG_ObjectPageOut(void *p, enum ag_object_page_item item)
 	AG_MutexLock(&ob->lock);
 	
 	switch (item) {
-	case AG_OBJECT_GFX:
-		if (ob->gfx != NULL && ob->gfx->used != AG_GFX_MAX_USED) {
-			if (--ob->gfx->used == 0) {
-				AG_GfxAllocSprites(ob->gfx, 0);
-				AG_GfxAllocAnims(ob->gfx, 0);
-				/* TODO save the gfx part */
-			}
-		}
-		break; 
 	case AG_OBJECT_DATA:
 		if (ob->flags & AG_OBJECT_NON_PERSISTENT)
 			goto done;
@@ -2243,7 +2213,7 @@ AG_ObjectEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistSetItemHeight(tl, AG_GFX_TILESZ);
+		AG_TlistSetItemHeight(tl, 16);
 		AG_SetEvent(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	
