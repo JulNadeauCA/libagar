@@ -3,8 +3,6 @@
 
 #include <agar/core/gfx_transform.h>
 
-#define AG_GFX_TILESZ	32
-
 #include "begin_code.h"
 
 struct ag_object;
@@ -100,7 +98,7 @@ typedef struct ag_gfx {
 #define AG_SPRITE_ATTRS(s) (AG_SPRITE((s)->ts,(s)->s).attrs)
 #define AG_SPRITE_LAYERS(s) (AG_SPRITE((s)->ts,(s)->s).layers)
 
-extern const char *agGfxSnapNames[];
+extern const char *mapSnapModeNames[];
 
 __BEGIN_DECLS
 AG_Gfx	*AG_GfxNew(void *);

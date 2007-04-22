@@ -55,14 +55,14 @@ refsel_update(MAP_View *mv, int xRel, int yRel)
 				r->r_gfx.xcenter += xRel;
 				r->r_gfx.ycenter += yRel;
 
-				if (xRel > 0 && r->r_gfx.xcenter > AGTILESZ) {
-					r->r_gfx.xcenter = AGTILESZ;
+				if (xRel > 0 && r->r_gfx.xcenter > MAPTILESZ) {
+					r->r_gfx.xcenter = MAPTILESZ;
 				} else if (xRel<0 && r->r_gfx.xcenter < 0) {
 					r->r_gfx.xcenter = 0;
 				}
 				
-				if (yRel > 0 && r->r_gfx.ycenter > AGTILESZ) {
-					r->r_gfx.ycenter = AGTILESZ;
+				if (yRel > 0 && r->r_gfx.ycenter > MAPTILESZ) {
+					r->r_gfx.ycenter = MAPTILESZ;
 				} else if (yRel < 0 && r->r_gfx.ycenter < 0) {
 					r->r_gfx.ycenter = 0;
 				}
