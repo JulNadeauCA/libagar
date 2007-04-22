@@ -1,0 +1,187 @@
+.\"
+.\" Copyright (c) 2006-2007 Hypertriton, Inc.
+.\" <http://www.hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 22, 2006
+.Dt SG_MATRIX 3
+.Os
+.ds vT Agar-SG API Reference
+.ds oS Agar-SG 1.0
+.Sh NAME
+.Nm SG_Matrix
+.Nd agar-sg matrix functions
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface provides basic functions for manipulating 4x4 transformation
+matrices.
+.Sh INITIALIZATION/COPY
+.nr nS 1
+.Ft "SG_Matrix"
+.Fn SG_MatrixIdentity "void"
+.Pp
+.Ft "void"
+.Fn SG_MatrixIdentityv "SG_Matrix *A"
+.Pp
+.Ft "SG_Matrix"
+.Fn SG_MATRIX_ZERO "void"
+.Pp
+.Ft "SG_Matrix"
+.Fn SG_MATRIX_IDENTITY "void"
+.Pp
+.Ft "void"
+.Fn SG_MatrixCopy "SG_Matrix *dst" "const SG_Matrix *src"
+.Pp
+.Ft "void"
+.Fn SG_MatrixToFloats "float *fv" "const SG_Matrix *src"
+.Pp
+.Ft "void"
+.Fn SG_MatrixToDoubles "double *dv" "const SG_Matrix *src"
+.nr nS 0
+.Pp
+The
+.Fn SG_MatrixIdentity
+function returns the identity matrix.
+.Fn SG_MatrixIdentityv
+copies the identity matrix into
+.Fa A .
+.Pp
+.Fn SG_MATRIX_ZERO
+and
+.Fn SG_MATRIX_IDENTITY
+are static initializers for the zero and identity matrices, respectively.
+.Pp
+The
+.Fn SG_MatrixCopy
+function copies the matrix
+.Fa src
+into
+.Fa dst .
+Functions
+.Fn SG_MatrixToFloats
+and
+.Fn SG_MatrixToDoubles
+copies the elements of matrix
+.Fa src
+into an array of 4
+.Ft float
+or
+.Ft double
+values.
+.Sh MATRIX MULTIPLICATION
+.nr nS 1
+.Ft "SG_Matrix"
+.Fn SG_MatrixMult "SG_Matrix A" "SG_Matrix B"
+.Pp
+.Ft "void"
+.Fn SG_MatrixMultv "SG_Matrix *A" "const SG_Matrix *B"
+.Pp
+.Ft "void"
+.Fn SG_MatrixMultpv "SG_Matrix *C" "const SG_Matrix *A" "const SG_Matrix *B"
+.Pp
+.Ft "SG_Vector "
+.Fn SG_MatrixMultVector "SG_Matrix A" "SG_Vector v"
+.Pp
+.Ft "SG_Vector "
+.Fn SG_MatrixMultVectorp "const SG_Matrix *A" "const SG_Vector *v"
+.Pp
+.Ft "void"
+.Fn SG_MatrixMultVectorv "SG_Vector *v" "const SG_Matrix *A"
+.nr nS 0
+.Pp
+.Fn SG_MatrixMult ,
+.Fn SG_MatrixMultv
+and
+.Fn SG_MatrixMultpv
+return the product of two matrices
+.Fa A
+and
+.Fa B .
+.Fn SG_MatrixMultv
+returns the product
+.Fa AB
+into
+.Fa A .
+.Fn SG_MatrixMultv
+returns the product
+.Fa AB
+into
+.Fa C .
+.Pp
+The
+.Fn SG_MatrixMultVector ,
+.Fn SG_MatrixMultVectorp
+and
+.Fn SG_MatrixMultVectorv
+functions compute the product of matrix
+.Fa A
+and vector
+.Fa v .
+.Sh TRANSPOSITION, INVERSION
+.nr nS 1
+.Ft "SG_Matrix"
+.Fn SG_MatrixTranspose "SG_Matrix A"
+.Pp
+.Ft "int"
+.Fn SG_MatrixInvert "const SG_Matrix *A" "const SG_Matrix *Ainv"
+.nr nS 0
+.Pp
+The
+.Fn SG_MatrixTranspose
+function returns the transpose of
+.Fa A .
+.Pp
+The
+.Fn SG_MatrixInvert
+function returns the inverse of matrix
+.Fa A 
+into
+.Fa Ainv
+(if there is one).
+If
+.Fa A
+is non-invertible, -1 is returned.
+
+.Sh FOO
+.Pp
+FOO DESCRIPTION
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn SG_FooBar "SG_Foo *"
+.nr nS 0
+.Pp
+The
+.Fn SG_FooBar
+function does FOO.
+.Sh SEE ALSO
+.Xr SG 3
+.Sh HISTORY
+The
+.Nm
+node first appeared in Agar-SG 1.0.
