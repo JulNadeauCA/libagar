@@ -145,7 +145,7 @@ ginsert_effect(void *p, MAP_Node *n)
 	return (1);
 }
 
-const MAP_ToolOps agMapGInsertOps = {
+const MAP_ToolOps mapGInsertOps = {
 	"Ginsert", N_("Insert geometrical object"),
 	STAMP_TOOL_ICON,
 	sizeof(struct ginsert_tool),
@@ -156,7 +156,6 @@ const MAP_ToolOps agMapGInsertOps = {
 	NULL,				/* edit */
 	ginsert_cursor,
 	ginsert_effect,
-
 	ginsert_mousemotion,
 	NULL,
 	NULL,				/* mousebuttonup */

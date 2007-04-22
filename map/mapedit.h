@@ -17,7 +17,7 @@ typedef struct map_editor {
 	AG_Object pseudo;	/* Pseudo-object (for depkeeping) */
 } MAP_Editor;
 
-extern MAP_Editor agMapEditor;
+extern MAP_Editor mapEditor;
 extern int agEditMode;
 
 __BEGIN_DECLS

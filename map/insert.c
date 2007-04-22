@@ -168,10 +168,10 @@ insert_pane(void *p, void *con)
 	nb = AG_NotebookNew(con, AG_NOTEBOOK_VFILL|AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	mv = ins->mvTmp = MAP_ViewNew(ntab, &ins->mTmp,
-	    AG_MAPVIEW_EDIT|AG_MAPVIEW_GRID, NULL, NULL);
+	    MAP_VIEW_EDIT|MAP_VIEW_GRID, NULL, NULL);
 	MAP_ViewPrescale(mv, 7, 7);
 	MAP_ViewSelectTool(mv,
-	    MAP_ViewRegTool(mv, &agMapNodeselOps, &ins->mTmp),
+	    MAP_ViewRegTool(mv, &mapNodeselOps, &ins->mTmp),
 	    &ins->mTmp);
 	generate_map(ins, spr);
 	
@@ -363,7 +363,7 @@ insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 	return (0);
 }
 
-const MAP_ToolOps agMapInsertOps = {
+const MAP_ToolOps mapInsertOps = {
 	"Insert", N_("Insert node element"),
 	STAMP_TOOL_ICON,
 	sizeof(struct map_insert_tool),
@@ -374,7 +374,6 @@ const MAP_ToolOps agMapInsertOps = {
 	NULL,				/* edit */
 	insert_cursor,
 	insert_effect,
-
 	insert_mousemotion,
 	insert_mousebuttondown,
 	NULL,				/* mousebuttonup */

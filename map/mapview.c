@@ -67,11 +67,11 @@ enum {
 	ZOOM_GRID_MIN =	 20	/* Min zoom factor for showing the grid (%) */
 };
 
-int	agMapviewBg = 1;		/* Background tiles enable */
-int	agMapviewAnimatedBg = 1;	/* Background tiles moving */
-int	agMapviewBgTileSize = 8;	/* Background tile size */
-int	agMapviewEditSelOnly = 0;	/* Restrict edition to selection */
-int	agMapviewZoomInc = 8;
+int	mapViewBg = 1;		/* Background tiles enable */
+int	mapViewAnimatedBg = 1;	/* Background tiles moving */
+int	mapViewBgTileSize = 8;	/* Background tile size */
+int	mapViewEditSelOnly = 0;	/* Restrict edition to selection */
+int	mapViewZoomInc = 8;
 
 
 static void lost_focus(AG_Event *);
@@ -577,7 +577,7 @@ MAP_ViewDraw(void *p)
 		rtiling.y = 0;
 		rtiling.w = AGWIDGET(mv)->w;
 		rtiling.h = AGWIDGET(mv)->h;
-		agPrim.tiling(mv, rtiling, agMapviewBgTileSize, 0,
+		agPrim.tiling(mv, rtiling, mapViewBgTileSize, 0,
 		    AG_COLOR(MAPVIEW_TILE1_COLOR),
 		    AG_COLOR(MAPVIEW_TILE2_COLOR));
 	}
@@ -875,7 +875,7 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 static __inline__ int
 inside_nodesel(MAP_View *mv, int x, int y)
 {
-	return (!agMapviewEditSelOnly || !mv->esel.set ||
+	return (!mapViewEditSelOnly || !mv->esel.set ||
 	    (x >= mv->esel.x &&
 	     y >= mv->esel.y &&
 	     x <  mv->esel.x + mv->esel.w &&
@@ -1113,7 +1113,7 @@ mousebuttondown(AG_Event *event)
 			int nx, ny;
 			
 			if (mv->curtool != NULL &&
-			    mv->curtool->ops == &agMapNodeselOps &&
+			    mv->curtool->ops == &mapNodeselOps &&
 			    (mv->flags & MAP_VIEW_NO_NODESEL) == 0) {
 				MAP_NodeselBegin(mv);
 				goto out;
@@ -1134,7 +1134,7 @@ mousebuttondown(AG_Event *event)
 				}
 			}
 			if (mv->curtool != NULL &&
-			    mv->curtool->ops == &agMapRefselOps &&
+			    mv->curtool->ops == &mapRefselOps &&
 			    (r = MAP_ItemLocate(m, mv->mouse.xmap,
 			    mv->mouse.ymap, mv->cam)) != NULL) {
 				if (r->flags & MAP_ITEM_SELECTED) {
@@ -1170,15 +1170,13 @@ mousebuttondown(AG_Event *event)
 		goto out;
 	case SDL_BUTTON_WHEELDOWN:
 		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
-			MAP_ViewSetScale(mv, AGMZOOM(mv) - agMapviewZoomInc,
-			    1);
+			MAP_ViewSetScale(mv, AGMZOOM(mv) - mapViewZoomInc, 1);
 			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
 		}
 		break;
 	case SDL_BUTTON_WHEELUP:
 		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
-			MAP_ViewSetScale(mv, AGMZOOM(mv) + agMapviewZoomInc,
-			    1);
+			MAP_ViewSetScale(mv, AGMZOOM(mv) + mapViewZoomInc, 1);
 			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
 		}
 		break;

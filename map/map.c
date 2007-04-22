@@ -65,7 +65,7 @@
 
 #include <string.h>
 
-const AG_ObjectOps agMapOps = {
+const AG_ObjectOps mapOps = {
 	"MAP",
 	sizeof(MAP),
 	{ 11, 0 },
@@ -81,7 +81,7 @@ const AG_ObjectOps agMapOps = {
 #endif
 };
 
-int agMapSmoothScaling = 0;
+int mapSmoothScaling = 0;
 
 static void MAP_InitModBlk(MAP_ModBlk *);
 static void MAP_FreeModBlk(MAP *, MAP_ModBlk *);
@@ -420,7 +420,7 @@ MAP_InitSubsystem(void)
 {
 	extern const AG_ObjectOps agActorOps;
 
-	AG_RegisterType("MAP", sizeof(MAP), &agMapOps, MAP_ICON);
+	AG_RegisterType("MAP", sizeof(MAP), &mapOps, MAP_ICON);
 	AG_RegisterType("MAP_Actor", sizeof(MAP_Actor), &agActorOps, OBJ_ICON);
 }
 
@@ -486,7 +486,7 @@ MAP_Init(void *obj, const char *name)
 {
 	MAP *m = obj;
 
-	AG_ObjectInit(m, name, &agMapOps);
+	AG_ObjectInit(m, name, &mapOps);
 	m->flags = 0;
 	m->redraw = 0;
 	m->mapw = 0;
@@ -508,12 +508,12 @@ MAP_Init(void *obj, const char *name)
 
 #ifdef EDITION
 	if (agEditMode) {
-		extern int agMapDefaultWidth;
-		extern int agMapDefaultHeight;
+		extern int mapDefaultWidth;
+		extern int mapDefaultHeight;
 
-		MAP_AllocNodes(m, agMapDefaultWidth, agMapDefaultHeight);
-		m->origin.x = agMapDefaultWidth/2;
-		m->origin.y = agMapDefaultHeight/2;
+		MAP_AllocNodes(m, mapDefaultWidth, mapDefaultHeight);
+		m->origin.x = mapDefaultWidth/2;
+		m->origin.y = mapDefaultHeight/2;
 	}
 #endif
 }
@@ -1146,7 +1146,7 @@ MAP_Load(void *ob, AG_Netbuf *buf)
 	int i, x, y;
 	MAP_Actor *a;
 	
-	if (AG_ReadVersion(buf, agMapOps.type, &agMapOps.ver, NULL) != 0)
+	if (AG_ReadVersion(buf, mapOps.type, &mapOps.ver, NULL) != 0)
 		return (-1);
 
 	AG_MutexLock(&m->lock);
@@ -1347,7 +1347,7 @@ MAP_Save(void *p, AG_Netbuf *buf)
 	MAP_Actor *a;
 	int i, x, y;
 	
-	AG_WriteVersion(buf, agMapOps.type, &agMapOps.ver);
+	AG_WriteVersion(buf, mapOps.type, &mapOps.ver);
 	
 	AG_MutexLock(&m->lock);
 	
@@ -2356,8 +2356,7 @@ edit_properties(AG_Event *event)
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
 		cbox = AG_CheckboxNew(ntab, 0, _("Smooth scaling"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT,
-		    &agMapSmoothScaling);
+		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &mapSmoothScaling);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		
@@ -2473,8 +2472,8 @@ select_lib(AG_Event *event)
 
 	if (state == 0) {
 		if (mv->curtool != NULL &&
-		    (mv->curtool->ops == &agMapInsertOps ||
-		     mv->curtool->ops == &agMapGInsertOps))
+		    (mv->curtool->ops == &mapInsertOps ||
+		     mv->curtool->ops == &mapGInsertOps))
 		    	MAP_ViewSelectTool(mv, NULL, NULL);
 	} else {
 		if (strcmp(it->cat, "tile") == 0) {
@@ -2818,10 +2817,10 @@ edit_prop_mode(AG_Event *event)
 	int flag = AG_INT(2);
 
 	if (flag != 0) {
-		mv->mode = AG_MAPVIEW_EDIT_ATTRS;
+		mv->mode = MAP_VIEW_EDIT_ATTRS;
 		mv->edit_attr = flag;
 	} else {
-		mv->mode = AG_MAPVIEW_EDIT;
+		mv->mode = MAP_VIEW_EDIT;
 	}
 }
 
@@ -2952,10 +2951,10 @@ MAP_Edit(void *p)
 	AG_VPane *vpane;
 	AG_VPaneDiv *vdiv;
 	MAP_Tool *tool;
-	int flags = AG_MAPVIEW_GRID;
+	int flags = MAP_VIEW_GRID;
 
 	if ((AGOBJECT(m)->flags & AG_OBJECT_READONLY) == 0)
-		flags |= AG_MAPVIEW_EDIT;
+		flags |= MAP_VIEW_EDIT;
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", AGOBJECT(m)->name);
@@ -3008,7 +3007,7 @@ MAP_Edit(void *p)
 
 	pitem = AG_MenuAddItem(menu, _("View"));
 	{
-		extern int agMapviewAnimatedBg;
+		extern int mapViewAnimatedBg;
 
 		AG_MenuAction(pitem, _("Create view..."), NEW_VIEW_ICON,
 		    create_view, "%p, %p", mv, win);
@@ -3019,16 +3018,16 @@ MAP_Edit(void *p)
 		AG_MenuSeparator(pitem);
 
 		AG_MenuIntFlags(pitem, _("Show grid"), GRID_ICON,
-		    &mv->flags, AG_MAPVIEW_GRID, 0);
+		    &mv->flags, MAP_VIEW_GRID, 0);
 		AG_MenuIntFlags(pitem, _("Show background"), GRID_ICON,
-		    &mv->flags, AG_MAPVIEW_NO_BG, 1);
+		    &mv->flags, MAP_VIEW_NO_BG, 1);
 		AG_MenuIntBool(pitem, _("Animate background"), GRID_ICON,
-		    &agMapviewAnimatedBg, 0);
+		    &mapViewAnimatedBg, 0);
 		AG_MenuIntFlags(pitem, _("Show map origin"), VGORIGIN_ICON,
-		    &mv->flags, AG_MAPVIEW_SHOW_ORIGIN, 0);
+		    &mv->flags, MAP_VIEW_SHOW_ORIGIN, 0);
 #ifdef DEBUG
 		AG_MenuIntFlags(pitem, _("Show element offsets"), GRID_ICON,
-		    &mv->flags, AG_MAPVIEW_SHOW_OFFSETS, 0);
+		    &mv->flags, MAP_VIEW_SHOW_OFFSETS, 0);
 #endif
 	}
 	
@@ -3157,14 +3156,14 @@ MAP_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("Tools"));
 	{
 		const MAP_ToolOps *ops[] = {
-			&agMapNodeselOps,
-			&agMapRefselOps,
-			&agMapFillOps,
-			&agMapEraserOps,
-			&agMapFlipOps,
-			&agMapInvertOps,
-			&agMapInsertOps,
-			&agMapGInsertOps
+			&mapNodeselOps,
+			&mapRefselOps,
+			&mapFillOps,
+			&mapEraserOps,
+			&mapFlipOps,
+			&mapInvertOps,
+			&mapInsertOps,
+			&mapGInsertOps
 		};
 		const int nops = sizeof(ops) / sizeof(ops[0]);
 		MAP_Tool *t;
