@@ -1,0 +1,377 @@
+/*
+ * Copyright (c) 2006-2007 Hypertriton, Inc.
+ * <http://www.hypertriton.com/>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <agar/core/core.h>
+#include <agar/gui/gui.h>
+
+#include "sg.h"
+#include "sg_gui.h"
+
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+const AG_Version sgCameraVer = { 0, 0 };
+
+SG_Camera *
+SG_CameraNew(void *pnode, const char *name)
+{
+	SG_Camera *cam;
+
+	cam = Malloc(sizeof(struct sg_camera), M_SG);
+	SG_CameraInit(cam, name);
+	SG_NodeAttach(pnode, cam);
+	return (cam);
+}
+
+void
+SG_CameraInit(void *p, const char *name)
+{
+	SG_Camera *cam = p;
+
+	SG_NodeInit(cam, name, &sgCameraOps, 0);
+	cam->flags = 0;
+	cam->pmode = SG_CAMERA_PERSPECTIVE;
+	cam->aspect = 1.0;
+	cam->zNear = 0.001;
+	cam->zFar = 300.0;
+	cam->fovY = 60.0;
+	cam->polyFace.mode = SG_CAMERA_SMOOTH_SHADED;
+	cam->polyFace.cull = 0;
+	cam->polyBack.mode = SG_CAMERA_WIREFRAME;
+	cam->polyBack.cull = 0;
+#ifdef DEBUG
+	cam->rotSpeed = 0.1;
+#endif
+}
+
+int
+SG_CameraLoad(void *p, AG_Netbuf *buf)
+{
+	SG_Camera *cam = p;
+	
+	if (AG_ReadVersion(buf, "SG_Camera", &sgCameraVer, NULL) != 0)
+		return (-1);
+
+	cam->flags = (Uint)AG_ReadUint32(buf);
+	cam->pmode = (enum sg_camera_pmode)AG_ReadUint8(buf);
+	cam->fovY = SG_ReadReal(buf);
+	cam->aspect = SG_ReadReal(buf);
+	cam->zNear = SG_ReadReal(buf);
+	cam->zFar = SG_ReadReal(buf);
+	cam->polyFace.mode = (int)AG_ReadUint8(buf);
+	cam->polyFace.cull = (int)AG_ReadUint8(buf);
+	cam->polyBack.mode = (int)AG_ReadUint8(buf);
+	cam->polyBack.cull = (int)AG_ReadUint8(buf);
+	return (0);
+}
+
+int
+SG_CameraSave(void *p, AG_Netbuf *buf)
+{
+	SG_Camera *cam = p;
+
+	AG_WriteVersion(buf, "SG_Camera", &sgCameraVer);
+	AG_WriteUint32(buf, (Uint32)cam->flags);
+	AG_WriteUint8(buf, (Uint8)cam->pmode);
+	SG_WriteReal(buf, cam->fovY);
+	SG_WriteReal(buf, cam->aspect);
+	SG_WriteReal(buf, cam->zNear);
+	SG_WriteReal(buf, cam->zFar);
+
+	AG_WriteUint8(buf, (Uint8)cam->polyFace.mode);
+	AG_WriteUint8(buf, (Uint8)cam->polyFace.cull);
+	AG_WriteUint8(buf, (Uint8)cam->polyBack.mode);
+	AG_WriteUint8(buf, (Uint8)cam->polyBack.cull);
+	return (0);
+}
+
+/* Multiply the current matrix by the camera's projection matrix. */
+void
+SG_CameraProject(SG_Camera *cam)
+{
+	GLdouble yMin, yMax;
+
+	switch (cam->pmode) {
+	case SG_CAMERA_PERSPECTIVE:
+		yMax = cam->zNear*SG_Tan(SG_Radians(cam->fovY/2.0));
+		yMin = -yMax;
+		glFrustum(yMin*cam->aspect, yMax*cam->aspect,
+		    yMin, yMax,
+		    cam->zNear, cam->zFar);
+		break;
+	case SG_CAMERA_ORTHOGRAPHIC:
+		{
+			SG_Real zoom;
+			SG_Vector t;
+
+			SG_MatrixGetTranslation(&SGNODE(cam)->T, &t);
+			zoom = -SG_Fabs(t.z);
+			glOrtho(-1.0+zoom, 1.0-zoom, -1.0+zoom, 1.0-zoom,
+			    -1.0/cam->zNear, cam->zFar);
+		}
+		break;
+	case SG_CAMERA_USER_PROJ:
+		SG_MultMatrixGL(&cam->userProj);
+		break;
+	}
+}
+
+/* Apply the viewing transformation for a camera. */
+void
+SG_CameraSetup(SG_Camera *cam)
+{
+	SG_Matrix T;
+
+	SG_GetNodeTransform(cam, &T);
+//	T = SG_MatrixTransposep(&T);
+//	SG_MultMatrixGL(&T);
+	SG_TranslateGL(T.m[0][3], T.m[1][3], T.m[2][3]);
+	printf("translate %f,%f,%f\n", T.m[0][3], T.m[1][3], T.m[2][3]);
+
+#ifdef DEBUG
+	{
+		static SG_Real iRot = 0.0, jRot = 0.0, kRot = 0.0;
+
+		if (cam->flags & SG_CAMERA_ROT_I) {
+			SG_RotateVecGL(iRot, SG_I);
+			iRot += cam->rotSpeed;
+		}
+		if (cam->flags & SG_CAMERA_ROT_J) {
+			SG_RotateVecGL(jRot, SG_J);
+			jRot += cam->rotSpeed;
+		}
+		if (cam->flags & SG_CAMERA_ROT_K) {
+			SG_RotateVecGL(kRot, SG_K);
+			kRot += cam->rotSpeed;
+		}
+	}
+#endif
+}
+
+/* Return the projection matrix for a camera. */
+void
+SG_CameraGetProjection(SG_Camera *cam, SG_Matrix *M)
+{
+	glPushAttrib(GL_TRANSFORM_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	SG_CameraProject(cam);
+	SG_GetMatrixGL(GL_PROJECTION_MATRIX, M);
+	glPopMatrix();
+	glPopAttrib();
+}
+
+void
+SG_CameraSetPerspective(SG_Camera *cam, SG_Real fovY, SG_Real aspect)
+{
+	cam->pmode = SG_CAMERA_PERSPECTIVE;
+	cam->fovY = fovY;
+	cam->aspect = aspect;
+}
+	
+void
+SG_CameraSetOrthographic(SG_Camera *cam)
+{
+	cam->pmode = SG_CAMERA_ORTHOGRAPHIC;
+}
+
+void
+SG_CameraSetClipPlanes(SG_Camera *cam, SG_Real zNear, SG_Real zFar)
+{
+	cam->zNear = zNear;
+	cam->zFar = zFar;
+}
+
+void
+SG_CameraSetUser(SG_Camera *cam, const SG_Matrix *P)
+{
+	SG_MatrixCopy(&cam->userProj, P);
+}
+
+static void
+UpdateProjection(AG_Event *event)
+{
+	SG_View *sv = AG_PTR(1);
+
+	SG_ViewUpdateProjection(sv);
+}
+
+void
+SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
+{
+	SG_Camera *cam = p;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	AG_FSpinbutton *fsb;
+	AG_Radio *rad;
+	AG_Checkbox *cb;
+	const char *rasModes[] = {
+		N_("Points"),
+		N_("Wireframe"),
+		N_("Flat shaded"),
+		N_("Smooth shaded"),
+		NULL
+	};
+
+	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
+	ntab = AG_NotebookAddTab(nb, _("Proj"), AG_BOX_VERT);
+	{
+		const char *projModes[] = {
+			N_("Perspective"),
+			N_("Orthographic"),
+			NULL
+		};
+		AG_Box *vbox, *sbox;
+
+		sbox = AG_BoxNewVert(ntab, AG_BOX_EXPAND);
+
+		rad = AG_RadioNew(sbox, 0, projModes);
+		AG_WidgetBindInt(rad, "value", &cam->pmode);
+		AG_SetEvent(rad, "radio-changed", UpdateProjection, "%p", sgv);
+	
+		AG_SeparatorNewHoriz(sbox);
+		
+		vbox = AG_BoxNewVert(sbox, AG_BOX_HFILL);
+		{
+			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			    _("Field of View: "));
+			SG_WidgetBindReal(fsb, "value", &cam->fovY);
+			AG_SetEvent(fsb, "fspinbutton-changed",
+			    UpdateProjection, "%p", sgv);
+
+			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			    _("Aspect Ratio: "));
+			SG_WidgetBindReal(fsb, "value", &cam->aspect);
+			AG_SetEvent(fsb, "fspinbutton-changed",
+			    UpdateProjection, "%p", sgv);
+
+			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			    _("Near Plane: "));
+			SG_WidgetBindReal(fsb, "value", &cam->zNear);
+			AG_SetEvent(fsb, "fspinbutton-changed",
+			    UpdateProjection, "%p", sgv);
+
+			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			    _("Far Plane: "));
+			SG_WidgetBindReal(fsb, "value", &cam->zFar);
+			AG_SetEvent(fsb, "fspinbutton-changed",
+			    UpdateProjection, "%p", sgv);
+		}
+	}
+	ntab = AG_NotebookAddTab(nb, _("Pos"), AG_BOX_VERT);
+	{
+		SG_EditTranslate3(ntab, _("Eye coordinates: "),
+		    &SGNODE(cam)->T);
+	}
+	ntab = AG_NotebookAddTab(nb, _("Polygons"), AG_BOX_VERT);
+	{
+		AG_LabelNewStatic(ntab, _("Front-facing:"));
+		rad = AG_RadioNew(ntab, 0, rasModes);
+		AG_WidgetBindInt(rad, "value", &cam->polyFace.mode);
+		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
+		AG_WidgetBindInt(cb, "state", &cam->polyFace.cull);
+		
+		AG_SeparatorNewHoriz(ntab);
+		
+		AG_LabelNewStatic(ntab, _("Back-facing:"));
+		rad = AG_RadioNew(ntab, 0, rasModes);
+		AG_WidgetBindInt(rad, "value", &cam->polyBack.mode);
+		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
+		AG_WidgetBindInt(cb, "state", &cam->polyBack.cull);
+	}
+}
+
+static void
+SetRotationSpeed(AG_Event *event)
+{
+	SG_Camera *cam = AG_PTR(1);
+	SG_Real speed = AG_FLOAT(2);
+
+	cam->rotSpeed = speed;
+}
+
+void
+SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
+{
+	SG_Camera *cam = obj;
+
+//	AG_MenuAction(m, _("Camera parameters..."), OBJEDIT_ICON,
+//	    EditCameraParams, "%p,%p", cam, sgv);
+#ifdef DEBUG
+
+	{
+		AG_MenuItem *mRot;
+
+		mRot = AG_MenuNode(m, _("Artificial rotation"), ANIM_PLAY_ICON);
+		AG_MenuIntFlags(mRot, _("Rotate around i"), RIGHT_ARROW_ICON,
+		    &cam->flags, SG_CAMERA_ROT_I, 0);
+		AG_MenuIntFlags(mRot, _("Rotate around j"), RIGHT_ARROW_ICON,
+		    &cam->flags, SG_CAMERA_ROT_J, 0);
+		AG_MenuIntFlags(mRot, _("Rotate around k"), RIGHT_ARROW_ICON,
+		    &cam->flags, SG_CAMERA_ROT_K, 0);
+		AG_MenuSeparator(mRot);
+		AG_MenuAction(mRot, _("Invert direction"), LEFT_ARROW_ICON,
+		    SetRotationSpeed, "%p,%f", cam, -cam->rotSpeed);
+		AG_MenuSeparator(mRot);
+		AG_MenuAction(mRot, _("Very slow"), ANIM_PLAY_ICON,
+		    SetRotationSpeed, "%p,%f", cam, 0.1);
+		AG_MenuAction(mRot, _("Slow"), ANIM_PLAY_ICON,
+		    SetRotationSpeed, "%p,%f", cam, 0.2);
+		AG_MenuAction(mRot, _("Medium"), ANIM_PLAY_ICON,
+		    SetRotationSpeed, "%p,%f", cam, 1.0);
+		AG_MenuAction(mRot, _("Fast"), ANIM_PLAY_ICON,
+		    SetRotationSpeed, "%p,%f", cam, 3.0);
+		AG_MenuAction(mRot, _("Very fast"), ANIM_PLAY_ICON,
+		    SetRotationSpeed, "%p,%f", cam, 6.0);
+	}
+#endif
+}
+
+SG_Vector
+SG_CameraVector(SG_Camera *cam)
+{
+	SG_Vector v = SG_K;		/* Rotate k by convention. */
+	SG_Matrix T;
+
+	SG_GetNodeTransform(cam, &T);
+	SG_MatrixMultVectorv(&v, &T);
+	SG_VectorNormv(&v);
+	return (v);
+}
+
+SG_NodeOps sgCameraOps = {
+	"Camera",
+	sizeof(SG_Camera),
+	0,
+	SG_CameraInit,
+	NULL,		/* destroy */
+	SG_CameraLoad,
+	SG_CameraSave,
+	SG_CameraEdit,
+	SG_CameraMenu,
+	NULL,		/* menuClass */
+	NULL		/* draw */
+};
