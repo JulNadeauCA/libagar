@@ -1,0 +1,36 @@
+Machine: x86_64
+Release: 2.6.17-gentoo-r4
+System: Linux
+checking for a usable C compiler...checking for compiler warnings.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar  -Wall -Werror -o conftest conftest.c 
+ok
+checking for floating point types.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror  -o conftest conftest.c 
+ok
+checking __bounded__ attribute.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror  -o conftest conftest.c 
+conftest.c:1: warning: `__bounded__' attribute directive ignored
+failed (0)
+checking __format__ attribute.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror  -o conftest conftest.c 
+ok
+checking __nonnull__ attribute.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror -Wall -Werror -o conftest conftest.c
+ok
+checking for long double.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror -o conftest conftest.c
+ok
+checking for cygwin environment.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror -mcygwin -o conftest conftest.c
+cc1: error: invalid option `cygwin'
+-> failed (0)
+checking for mingw environment.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror  -o conftest conftest.c
+conftest.c:3:21: windows.h: No such file or directory
+conftest.c: In function `main':
+conftest.c:8: error: `DWORD' undeclared (first use in this function)
+conftest.c:8: error: (Each undeclared identifier is reported only once
+conftest.c:8: error: for each function it appears in.)
+conftest.c:8: error: syntax error before "rv"
+conftest.c:9: error: `rv' undeclared (first use in this function)
+conftest.c:9: warning: implicit declaration of function `GetFileAttributes'
+-> failed (0)
+checking for Agar (http://agar.csoft.org/)...yes
+checking whether Agar works.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror -I/usr/local/include/agar -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/freetype2 -I/usr/X11R6/include -I/usr/include   -o conftest conftest.c -L/usr/local/lib -lag_core -lag_core_monitor -lag_rg -lag_vg -lag_gui -lag_core_loaders -lag_compat -lag_mat -lSDL -lpthread -lfreetype -lz -L/usr/X11R6/lib -lGL -lm -L/usr/lib -ljpeg -lpthread 
+ok
+checking for Agar-Sg (http://agar-sg.csoft.org/)...yes
+checking whether agar-sg works.../usr/x86_64-pc-linux-gnu/gcc-bin/3.4.6/gcc -O2 -g -pipe -march=k8  -I/home/vedge/src/agar -Wall -Werror -I/usr/local/include/agar -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/freetype2 -I/usr/X11R6/include -I/usr/include   -I/usr/local/include/agar  -o conftest conftest.c -L/usr/local/lib -lGLU -lag_sg -lag_sgimport -L/usr/local/lib -lag_core -lag_core_monitor -lag_rg -lag_vg -lag_gui -lag_core_loaders -lag_compat -lag_mat -lSDL -lpthread -lfreetype -lz -L/usr/X11R6/lib -lGL -lm -L/usr/lib -ljpeg -lpthread 
+ok
+Don't forget to run "make depend".
