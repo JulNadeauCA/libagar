@@ -89,14 +89,14 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 			return (0);
 	}
 
-	MAP_modBegin(m);
+	MAP_ModBegin(m);
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
 			MAP_Node *node = &m->map[y][x];
 			MAP_Item *nref;
 
-			MAP_modNodeChg(m, x, y);
+			MAP_ModNodeChg(m, x, y);
 			
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer != m->cur_layer)
@@ -113,7 +113,7 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 		}
 	}
 
-	MAP_modEnd(m);
+	MAP_ModEnd(m);
 	return (1);
 }
 

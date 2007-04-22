@@ -104,7 +104,7 @@ MAP_NodeselBeginMove(MAP_View *mv)
 	if (MAP_PushLayer(mSrc, _("(Floating selection)")) == -1)
 		goto fail;
 
-	MAP_modBegin(mSrc);
+	MAP_ModBegin(mSrc);
 
 	for (y = 0, sy = mv->esel.y;
 	     y < mv->esel.h;
@@ -115,7 +115,7 @@ MAP_NodeselBeginMove(MAP_View *mv)
 			MAP_Node *nSrc = &mSrc->map[sy][sx];
 			MAP_Node *nTmp = &mTmp->map[y][x];
 
-			MAP_modNodeChg(mSrc, sx, sy);
+			MAP_ModNodeChg(mSrc, sx, sy);
 
 			MAP_NodeCopy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
 			MAP_NodeSwapLayers(mSrc, nSrc, mSrc->cur_layer,
@@ -161,7 +161,7 @@ MAP_NodeselUpdateMove(MAP_View *mv, int xRel, int yRel)
 			MAP_Node *nTmp = &mTmp->map[y][x];
 			MAP_Node *nDst = &mDst->map[dy][dx];
 	
-			MAP_modNodeChg(mDst, dx, dy);
+			MAP_ModNodeChg(mDst, dx, dy);
 			MAP_NodeCopy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
 		}
 	}
@@ -194,7 +194,7 @@ MAP_NodeselEndMove(MAP_View *mv)
 	}
 
 	MAP_PopLayer(mDst);
-	MAP_modEnd(mDst);
+	MAP_ModEnd(mDst);
 	
 	MAP_Reinit(mTmp);
 	MAP_Destroy(mTmp);

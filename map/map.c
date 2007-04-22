@@ -83,8 +83,8 @@ const AG_ObjectOps agMapOps = {
 
 int agMapSmoothScaling = 0;
 
-static void init_mapmod_blk(MAP_ModBlk *);
-static void free_mapmod_blk(MAP *, MAP_ModBlk *);
+static void MAP_InitModBlk(MAP_ModBlk *);
+static void MAP_FreeModBlk(MAP *, MAP_ModBlk *);
 
 void
 MAP_NodeInit(MAP_Node *node)
@@ -102,7 +102,7 @@ MAP_NodeDestroy(MAP *m, MAP_Node *node)
 	     r = nr) {
 		nr = TAILQ_NEXT(r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP_NITEM);
+		Free(r, M_MAP);
 	}
 }
 
@@ -122,7 +122,7 @@ MAP_ItemInit(MAP_Item *r, enum map_item_type type)
 	r->r_gfx.yorigin = 0;
 
 	switch (type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		r->r_sprite.obj = NULL;
 		r->r_sprite.offs = 0;
 		r->r_gfx.rs.x = 0;
@@ -130,11 +130,11 @@ MAP_ItemInit(MAP_Item *r, enum map_item_type type)
 		r->r_gfx.rs.w = 0;
 		r->r_gfx.rs.h = 0;
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		r->r_anim.obj = NULL;
 		r->r_anim.offs = 0;
 		break;
-	case AG_NITEM_WARP:
+	case MAP_ITEM_WARP:
 		r->r_warp.map = NULL;
 		r->r_warp.x = 0;
 		r->r_warp.y = 0;
@@ -205,13 +205,13 @@ MAP_ItemDestroy(MAP *m, MAP_Item *r)
 	}
 
 	switch (r->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		MAP_ItemSetSprite(r, m, NULL, 0);
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		MAP_ItemSetAnim(r, m, NULL, 0);
 		break;
-	case AG_NITEM_WARP:
+	case MAP_ITEM_WARP:
 		Free(r->r_warp.map, 0);
 		break;
 	default:
@@ -223,7 +223,7 @@ void
 MAP_ItemAttrColor(Uint flag, int state, Uint8 *c)
 {
 	switch (flag) {
-	case AG_NITEM_BLOCK:
+	case MAP_ITEM_BLOCK:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;
@@ -236,7 +236,7 @@ MAP_ItemAttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case AG_NITEM_CLIMBABLE:
+	case MAP_ITEM_CLIMBABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 255;
@@ -249,7 +249,7 @@ MAP_ItemAttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case AG_NITEM_SLIPPERY:
+	case MAP_ITEM_SLIPPERY:
 		if (state) {
 			c[0] = 0;
 			c[1] = 0;
@@ -262,7 +262,7 @@ MAP_ItemAttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 0;
 		}
 		break;
-	case AG_NITEM_JUMPABLE:
+	case MAP_ITEM_JUMPABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;
@@ -327,7 +327,7 @@ MAP_FreeNodes(MAP *m)
 }
 
 static void
-map_free_layers(MAP *m)
+MAP_FreeLayers(MAP *m)
 {
 	m->layers = Realloc(m->layers, 1*sizeof(MAP_Layer));
 	m->nlayers = 1;
@@ -335,7 +335,7 @@ map_free_layers(MAP *m)
 }
 
 static void
-map_free_cameras(MAP *m)
+MAP_FreeCameras(MAP *m)
 {
 	m->cameras = Realloc(m->cameras , 1*sizeof(MAP_Camera));
 	m->ncameras = 1;
@@ -475,10 +475,10 @@ MAP_InitModBlks(MAP *m)
 {
 	m->blks = Malloc(sizeof(MAP_ModBlk), M_MAP);
 	m->nblks = 1;
-	init_mapmod_blk(&m->blks[0]);
+	MAP_InitModBlk(&m->blks[0]);
 	m->curblk = 0;
 	m->nmods = 0;
-	MAP_modBegin(m);
+	MAP_ModBegin(m);
 }
 
 void
@@ -587,8 +587,8 @@ MAP_NodeAddSprite(MAP *map, MAP_Node *node, void *p, Uint32 offs)
 	AG_Object *pobj = p;
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP_NITEM);
-	MAP_ItemInit(r, AG_NITEM_SPRITE);
+	r = Malloc(sizeof(MAP_Item), M_MAP);
+	MAP_ItemInit(r, MAP_ITEM_SPRITE);
 	MAP_ItemSetSprite(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
@@ -633,8 +633,8 @@ MAP_NodeAddAnim(MAP *map, MAP_Node *node, void *pobj, Uint32 offs)
 {
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP_NITEM);
-	MAP_ItemInit(r, AG_NITEM_ANIM);
+	r = Malloc(sizeof(MAP_Item), M_MAP);
+	MAP_ItemInit(r, MAP_ITEM_ANIM);
 	MAP_ItemSetAnim(r, map, pobj, offs);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	return (r);
@@ -650,8 +650,8 @@ MAP_NodeAddWarpPoint(MAP *map, MAP_Node *node, const char *mapname,
 {
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP_NITEM);
-	MAP_ItemInit(r, AG_NITEM_WARP);
+	r = Malloc(sizeof(MAP_Item), M_MAP);
+	MAP_ItemInit(r, MAP_ITEM_WARP);
 	r->r_warp.map = Strdup(mapname);
 	r->r_warp.x = x;
 	r->r_warp.y = y;
@@ -665,8 +665,8 @@ MAP_NodeAddWarpPoint(MAP *map, MAP_Node *node, const char *mapname,
  * specified layer.
  */
 void
-MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r,
-    MAP *dm, MAP_Node *dn, int dlayer)
+MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r, MAP *dm, MAP_Node *dn,
+    int dlayer)
 {
 	AG_MutexLock(&sm->lock);
 	AG_MutexLock(&dm->lock);
@@ -678,11 +678,11 @@ MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r,
 		r->layer = dlayer;
 
 	switch (r->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		AG_ObjectDelDep(sm, r->r_sprite.obj);
 		AG_ObjectAddDep(dm, r->r_sprite.obj);
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		AG_ObjectDelDep(sm, r->r_anim.obj);
 		AG_ObjectAddDep(dm, r->r_anim.obj);
 		break;
@@ -700,8 +700,8 @@ MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r,
  * the copy with dlayer (or the original layer, if dlayer is -1).
  */
 void
-MAP_NodeCopy(MAP *sm, MAP_Node *sn, int slayer,
-    MAP *dm, MAP_Node *dn, int dlayer)
+MAP_NodeCopy(MAP *sm, MAP_Node *sn, int slayer, MAP *dm, MAP_Node *dn,
+    int dlayer)
 {
 	MAP_Item *sr;
 
@@ -725,8 +725,7 @@ MAP_NodeCopy(MAP *sm, MAP_Node *sn, int slayer,
  * Both the source and destination maps must be locked.
  */
 MAP_Item *
-MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn,
-    int dlayer)
+MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 {
 	AG_Transform *trans;
 	MAP_NodeMask *mask;
@@ -734,7 +733,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn,
 
 	/* Allocate a new noderef with the same data. */
 	switch (sr->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		dr = MAP_NodeAddSprite(dm, dn, sr->r_sprite.obj,
 		    sr->r_sprite.offs);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
@@ -745,7 +744,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn,
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		dr = MAP_NodeAddAnim(dm, dn, sr->r_anim.obj, sr->r_anim.offs);
 		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
 		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
@@ -755,7 +754,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn,
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
 		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
 		break;
-	case AG_NITEM_WARP:
+	case MAP_ITEM_WARP:
 		dr = MAP_NodeAddWarpPoint(dm, dn, sr->r_warp.map, sr->r_warp.x,
 		    sr->r_warp.y, sr->r_warp.dir);
 		break;
@@ -793,7 +792,7 @@ MAP_NodeDelItem(MAP *m, MAP_Node *node, MAP_Item *r)
 	AG_MutexLock(&m->lock);
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
 	MAP_ItemDestroy(m, r);
-	Free(r, M_MAP_NITEM);
+	Free(r, M_MAP);
 	AG_MutexUnlock(&m->lock);
 }
 
@@ -815,7 +814,7 @@ MAP_NodeRemoveAll(MAP *m, MAP_Node *node, int layer)
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP_NITEM);
+		Free(r, M_MAP);
 	}
 
 	AG_MutexUnlock(&m->lock);
@@ -900,12 +899,12 @@ MAP_Reinit(void *p)
 	if (m->map != NULL)
 		MAP_FreeNodes(m);
 	if (m->layers != NULL)
-		map_free_layers(m);
+		MAP_FreeLayers(m);
 	if (m->cameras != NULL)
-		map_free_cameras(m);
+		MAP_FreeCameras(m);
 	
 	for (i = 0; i < m->nblks; i++) {
-		free_mapmod_blk(m, &m->blks[i]);
+		MAP_FreeModBlk(m, &m->blks[i]);
 	}
 	Free(m->blks, M_MAP);
 	MAP_InitModBlks(m);
@@ -948,7 +947,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 
 	/* Read the reference data. */
 	switch (type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		{
 			SDL_Rect rs;
 
@@ -974,7 +973,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 			(*r)->r_gfx.rs.h = AG_ReadUint16(buf);
 		}
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		{
 			ref = AG_ReadUint32(buf);
 			offs = AG_ReadUint32(buf);
@@ -998,7 +997,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 			(*r)->r_gfx.rs.h = AG_ReadUint16(buf);
 		}
 		break;
-	case AG_NITEM_WARP:
+	case MAP_ITEM_WARP:
 		{
 			char map_id[AG_OBJECT_NAME_MAX];
 			Uint32 ox, oy;
@@ -1029,7 +1028,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 	}
 
 	/* Read the transforms. */
-	if ((ntrans = AG_ReadUint32(buf)) > AG_NITEM_MAXTRANSFORMS) {
+	if ((ntrans = AG_ReadUint32(buf)) > MAP_ITEM_MAXTRANSFORMS) {
 		AG_SetError(_("Too many transforms."));
 		goto fail;
 	}
@@ -1046,7 +1045,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 	}
 	
 	/* Read the node masks. */
-	if ((nmasks = AG_ReadUint32(buf)) > AG_NITEM_MAXMASKS) {
+	if ((nmasks = AG_ReadUint32(buf)) > MAP_ITEM_MAXMASKS) {
 		AG_SetError(_("Too many node masks."));
 		goto fail;
 	}
@@ -1065,7 +1064,7 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 fail:
 	if (*r != NULL) {
 		MAP_ItemDestroy(m, *r);
-		Free(*r, M_MAP_NITEM);
+		Free(*r, M_MAP);
 		*r = NULL;
 	}
 	return (-1);
@@ -1272,15 +1271,15 @@ MAP_ItemSave(MAP *m, AG_Netbuf *buf, MAP_Item *r)
 
 	/* Save the reference. */
 	switch (r->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 		AG_WriteUint32(buf, AG_ObjectEncodeName(m, r->r_sprite.obj));
 		AG_WriteUint32(buf, r->r_sprite.offs);
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		AG_WriteUint32(buf, AG_ObjectEncodeName(m, r->r_anim.obj));
 		AG_WriteUint32(buf, r->r_anim.offs);
 		break;
-	case AG_NITEM_WARP:
+	case MAP_ITEM_WARP:
 		AG_WriteString(buf, r->r_warp.map);
 		AG_WriteUint32(buf, (Uint32)r->r_warp.x);
 		AG_WriteUint32(buf, (Uint32)r->r_warp.y);
@@ -1290,7 +1289,7 @@ MAP_ItemSave(MAP *m, AG_Netbuf *buf, MAP_Item *r)
 		dprintf("not saving %d node\n", r->type);
 		break;
 	}
-	if (r->type == AG_NITEM_SPRITE || r->type == AG_NITEM_ANIM) {
+	if (r->type == MAP_ITEM_SPRITE || r->type == MAP_ITEM_ANIM) {
 		AG_WriteSint16(buf, r->r_gfx.xcenter);
 		AG_WriteSint16(buf, r->r_gfx.ycenter);
 		AG_WriteSint16(buf, r->r_gfx.xmotion);
@@ -1332,7 +1331,7 @@ MAP_NodeSave(MAP *m, AG_Netbuf *buf, MAP_Node *node)
 	nrefs_offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		if (r->flags & AG_NITEM_NOSAVE) {
+		if (r->flags & MAP_ITEM_NOSAVE) {
 			continue;
 		}
 		MAP_ItemSave(m, buf, r);
@@ -1719,7 +1718,7 @@ locate_noderef(MAP *m, MAP_Node *node, int xoffs, int yoffs,
 			continue;
 		}
 		switch (r->type) {
-		case AG_NITEM_SPRITE:
+		case MAP_ITEM_SPRITE:
 			if (MAP_ItemExtent(m, r, &rExt, ncam) == 0 &&
 			    xoffs+xd >= rExt.x && xoffs+xd < rExt.x+rExt.w &&
 			    yoffs+yd >= rExt.y && yoffs+yd < rExt.y+rExt.h) {
@@ -1854,7 +1853,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 	int tilesz = m->cameras[cam].tilesz;
 
 	switch (r->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_SPRITE:
 #if defined(DEBUG) || defined(EDITION)
 		if (AG_BAD_SPRITE(r->r_sprite.obj,r->r_sprite.offs)) {
 			snprintf(num, sizeof(num), "(s%u)", r->r_sprite.offs);
@@ -1870,7 +1869,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 		draw_sprite(r, &su, NULL);
 #endif
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 #if defined(DEBUG) || defined(EDITION)
 		if (r->r_anim.obj->gfx == NULL ||
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
@@ -1978,7 +1977,7 @@ draw:
 }
 
 static void
-init_mapmod_blk(MAP_ModBlk *blk)
+MAP_InitModBlk(MAP_ModBlk *blk)
 {
 	blk->mods = Malloc(sizeof(MAP_Mod), M_RG);
 	blk->nmods = 0;
@@ -1986,7 +1985,7 @@ init_mapmod_blk(MAP_ModBlk *blk)
 }
 
 static void
-free_mapmod_blk(MAP *m, MAP_ModBlk *blk)
+MAP_FreeModBlk(MAP *m, MAP_ModBlk *blk)
 {
 	int i;
 
@@ -2007,23 +2006,23 @@ free_mapmod_blk(MAP *m, MAP_ModBlk *blk)
 
 /* Create a new undo block at the current level. */
 void
-MAP_modBegin(MAP *m)
+MAP_ModBegin(MAP *m)
 {
 	MAP_ModBlk *blk;
 
 	/* Destroy blocks at upper levels. */
 	while (m->nblks > m->curblk+1)
-		free_mapmod_blk(m, &m->blks[--m->nblks]);
+		MAP_FreeModBlk(m, &m->blks[--m->nblks]);
 
 	m->blks = Realloc(m->blks, (++m->nblks)*sizeof(MAP_Mod));
 	m->curblk++;
 		
 	blk = &m->blks[m->curblk];
-	init_mapmod_blk(&m->blks[m->curblk]);
+	MAP_InitModBlk(&m->blks[m->curblk]);
 }
 
 void
-MAP_modCancel(MAP *m)
+MAP_ModCancel(MAP *m)
 {
 	MAP_ModBlk *blk = &m->blks[m->curblk];
 
@@ -2031,12 +2030,12 @@ MAP_modCancel(MAP *m)
 }
 
 void
-MAP_modEnd(MAP *m)
+MAP_ModEnd(MAP *m)
 {
 	MAP_ModBlk *blk = &m->blks[m->curblk];
 	
 	if (blk->nmods == 0 || blk->cancel == 1) {
-		free_mapmod_blk(m, blk);
+		MAP_FreeModBlk(m, blk);
 		m->nblks--;
 		m->curblk--;
 	}
@@ -2072,7 +2071,7 @@ MAP_Undo(MAP *m)
 			break;
 		}
 	}
-	free_mapmod_blk(m, blk);
+	MAP_FreeModBlk(m, blk);
 	m->nblks--;
 	m->curblk--;
 }
@@ -2084,7 +2083,7 @@ MAP_Redo(MAP *m)
 }
 
 void
-MAP_modNodeChg(MAP *m, int x, int y)
+MAP_ModNodeChg(MAP *m, int x, int y)
 {
 	MAP_Node *node = &m->map[y][x];
 	MAP_ModBlk *blk = &m->blks[m->nblks-1];
@@ -2112,7 +2111,7 @@ MAP_modNodeChg(MAP *m, int x, int y)
 }
 
 void
-MAP_modLayerAdd(MAP *m, int l)
+MAP_ModLayerAdd(MAP *m, int l)
 {
 }
 
@@ -2619,7 +2618,7 @@ delete_layer(AG_Event *event)
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
 					MAP_ItemDestroy(m, r);
-					Free(r, M_MAP_NITEM);
+					Free(r, M_MAP);
 				} else if (r->layer > nlayer) {
 					r->layer--;
 				}
@@ -2654,7 +2653,7 @@ clear_layer(AG_Event *event)
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
 					MAP_ItemDestroy(m, r);
-					Free(r, M_MAP_NITEM);
+					Free(r, M_MAP);
 				}
 			}
 		}
@@ -2772,9 +2771,9 @@ noderef_edit(AG_Event *event)
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
 	AG_LabelNewFmt(win, _("Type: %s"),
-	    (r->type == AG_NITEM_SPRITE) ? _("Sprite") :
-	    (r->type == AG_NITEM_ANIM) ? _("Animation") :
-	    (r->type == AG_NITEM_WARP) ? _("Warp point") : "?");
+	    (r->type == MAP_ITEM_SPRITE) ? _("Sprite") :
+	    (r->type == MAP_ITEM_ANIM) ? _("Animation") :
+	    (r->type == MAP_ITEM_WARP) ? _("Warp point") : "?");
 
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Centering: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xcenter);
@@ -2898,9 +2897,9 @@ remove_tileset_refs(AG_Event *event)
 			     r != TAILQ_END(&n->nrefs);
 			     r = r2) {
 				r2 = TAILQ_NEXT(r, nrefs);
-				if ((r->type == AG_NITEM_SPRITE &&
+				if ((r->type == MAP_ITEM_SPRITE &&
 				     r->r_sprite.obj == ts) ||
-				    (r->type == AG_NITEM_ANIM &&
+				    (r->type == MAP_ITEM_ANIM &&
 				     r->r_anim.obj == ts))
 					MAP_NodeDelItem(m, n, r);
 			}
@@ -2927,7 +2926,7 @@ remove_tile_refs(AG_Event *event)
 			     r != TAILQ_END(&n->nrefs);
 			     r = r2) {
 				r2 = TAILQ_NEXT(r, nrefs);
-				if ((r->type == AG_NITEM_SPRITE &&
+				if ((r->type == MAP_ITEM_SPRITE &&
 				     r->r_sprite.obj == spr->pgfx->pobj &&
 				     r->r_sprite.offs == spr->index))
 					MAP_NodeDelItem(m, n, r);
@@ -2998,13 +2997,13 @@ MAP_Edit(void *p)
 		    edit_prop_mode, "%p,%i", mv, 0);
 
 		AG_MenuAction(pitem, _("Walkability"), WALKABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, AG_NITEM_BLOCK);
+		    edit_prop_mode, "%p,%i", mv, MAP_ITEM_BLOCK);
 		AG_MenuAction(pitem, _("Climbability"), CLIMBABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, AG_NITEM_CLIMBABLE);
+		    edit_prop_mode, "%p,%i", mv, MAP_ITEM_CLIMBABLE);
 		AG_MenuAction(pitem, _("Jumpability"), JUMPABILITY_ICON,
-		    edit_prop_mode, "%p,%i", mv, AG_NITEM_JUMPABLE);
+		    edit_prop_mode, "%p,%i", mv, MAP_ITEM_JUMPABLE);
 		AG_MenuAction(pitem, _("Slippery"), SLIPPAGE_ICON,
-		    edit_prop_mode, "%p,%i", mv, AG_NITEM_SLIPPERY);
+		    edit_prop_mode, "%p,%i", mv, MAP_ITEM_SLIPPERY);
 	}
 
 	pitem = AG_MenuAddItem(menu, _("View"));
