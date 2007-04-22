@@ -43,6 +43,9 @@
 
 #include <jpeglib.h>
 
+/* Silly SDL tries to redefine this */
+#undef HAVE_STDLIB_H
+
 #include <core/core.h>
 #include <core/view.h>
 

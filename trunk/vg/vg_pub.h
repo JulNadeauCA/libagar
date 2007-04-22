@@ -3,6 +3,7 @@
 
 #ifndef _AGAR_VG_PUBLIC_H_
 #define _AGAR_VG_PUBLIC_H_
+#define _AGAR_VG_PUBLIC
 #include <agar/core/core_begin.h>
 #include <agar/gui/window.h>
 #include <agar/vg/vg.h>

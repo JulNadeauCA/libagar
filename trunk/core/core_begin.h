@@ -5,12 +5,12 @@
 # include <agar/config/threads.h>
 # define _AGAR_THREADS_
 #endif
-#ifndef HAVE_SYS_TYPES_H
-# include <agar/config/have_sys_types_h.h>
+#ifndef _AGAR_HAVE_SYS_TYPES_H
+# include <agar/config/_mk_have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
-#ifndef HAVE_UNSIGNED_TYPEDEFS
-# include <agar/config/have_unsigned_typedefs.h>
+#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
+# include <agar/config/_mk_have_unsigned_typedefs.h>
 # define _AGAR_HAVE_UNSIGNED_TYPEDEFS_
 #endif
 #ifndef HAVE_BOUNDED_ATTRIBUTE
@@ -28,10 +28,10 @@
 
 #include <agar/core/threads.h>
 
-#ifdef HAVE_SYS_TYPES_H
+#ifdef _AGAR_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifndef HAVE_UNSIGNED_TYPEDEFS
+#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define Uchar unsigned char
 #define Uint unsigned int
 #define Ulong unsigned long
