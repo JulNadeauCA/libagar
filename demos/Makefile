@@ -13,6 +13,10 @@ SUBDIR=	gamemenu \
 	nopadding \
 	objprops
 
+SUBDIR+=sgview \
+	linear \
+	lorenz
+
 all: configure all-subdir
 clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir

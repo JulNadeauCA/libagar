@@ -1,0 +1,1 @@
+#undef ENABLE_NLS
