@@ -14,30 +14,30 @@
 #define AG_MAP_MAXLAYERNAME	128
 #define AG_MAP_MAXCAMERANAME	128
 #define AG_NODE_MAXITEMS	32767
-#define AG_NITEM_MAXTRANSFORMS	16384
-#define AG_NITEM_MAXMASKS	16384
+#define MAP_ITEM_MAXTRANSFORMS	16384
+#define MAP_ITEM_MAXMASKS	16384
 
 #include <agar/map/nodemask.h>
 
 #include "begin_code.h"
 
 enum map_item_type {
-	AG_NITEM_SPRITE,	/* Reference to a sprite */
-	AG_NITEM_ANIM,		/* Reference to an animation */
-	AG_NITEM_WARP		/* Reference to another location */
+	MAP_ITEM_SPRITE,	/* Reference to a sprite */
+	MAP_ITEM_ANIM,		/* Reference to an animation */
+	MAP_ITEM_WARP		/* Reference to another location */
 };
 
 typedef struct map_item {
 	enum map_item_type type;	/* Type of element */
 	
 	Uint flags;
-#define AG_NITEM_BLOCK		0x001	/* Tile block */
-#define AG_NITEM_CLIMBABLE	0x002	/* Surface is climbable */
-#define AG_NITEM_SLIPPERY	0x004	/* Surface is slippery */
-#define AG_NITEM_JUMPABLE	0x008	/* Element is jumpable */
-#define AG_NITEM_NOSAVE		0x100	/* Non persistent */
-#define AG_NITEM_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
-#define AG_NITEM_SELECTED	0x400	/* Selection (for editor) */
+#define MAP_ITEM_BLOCK		0x001	/* Tile block */
+#define MAP_ITEM_CLIMBABLE	0x002	/* Surface is climbable */
+#define MAP_ITEM_SLIPPERY	0x004	/* Surface is slippery */
+#define MAP_ITEM_JUMPABLE	0x008	/* Element is jumpable */
+#define MAP_ITEM_NOSAVE		0x100	/* Non persistent */
+#define MAP_ITEM_MOUSEOVER	0x200	/* Mouse overlap (for editor) */
+#define MAP_ITEM_SELECTED	0x400	/* Selection (for editor) */
 
 	Sint8 friction;			/* Coefficient of friction */
 	Uint8 layer;			/* Associated layer */
@@ -185,11 +185,11 @@ void	 MAP_InitCamera(MAP_Camera *, const char *);
 void	 MAP_InitModBlks(MAP *);
 int	 MAP_AddCamera(MAP *, const char *);
 
-void	 MAP_modBegin(MAP *);
-void	 MAP_modEnd(MAP *);
-void	 MAP_modCancel(MAP *);
-void	 MAP_modNodeChg(MAP *, int, int);
-void	 MAP_modLayerAdd(MAP *, int);
+void	 MAP_ModBegin(MAP *);
+void	 MAP_ModEnd(MAP *);
+void	 MAP_ModCancel(MAP *);
+void	 MAP_ModNodeChg(MAP *, int, int);
+void	 MAP_ModLayerAdd(MAP *, int);
 void	 MAP_Undo(MAP *);
 void	 MAP_Redo(MAP *);
 

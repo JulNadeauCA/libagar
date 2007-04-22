@@ -644,7 +644,7 @@ draw_layer:
 					    AG_ALPHA_OVERLAY);
 				}
 
-				if ((nref->flags & AG_NITEM_SELECTED) &&
+				if ((nref->flags & MAP_ITEM_SELECTED) &&
 				    MAP_ItemExtent(m, nref, &rExtent, mv->cam)
 				    == 0) {
 					agPrim.rect_outlined(mv,
@@ -891,8 +891,8 @@ toggle_attrib(MAP_View *mv)
 	if (mv->attr_x == mv->cx && mv->attr_y == mv->cy)
 		return;
 
-	MAP_modBegin(mv->map);
-	MAP_modNodeChg(mv->map, mv->cx, mv->cy);
+	MAP_ModBegin(mv->map);
+	MAP_ModNodeChg(mv->map, mv->cx, mv->cy);
 
 	node = &mv->map->map[mv->cy][mv->cx];
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
@@ -906,7 +906,7 @@ toggle_attrib(MAP_View *mv)
 		}
 	}
 
-	MAP_modEnd(mv->map);
+	MAP_ModEnd(mv->map);
 
 	mv->attr_x = mv->cx;
 	mv->attr_y = mv->cy;
@@ -1128,7 +1128,7 @@ mousebuttondown(AG_Event *event)
 						TAILQ_FOREACH(r, &node->nrefs,
 						    nrefs) {
 							r->flags &=
-							   ~(AG_NITEM_SELECTED);
+							   ~(MAP_ITEM_SELECTED);
 						}
 					}
 				}
@@ -1137,10 +1137,10 @@ mousebuttondown(AG_Event *event)
 			    mv->curtool->ops == &agMapRefselOps &&
 			    (r = MAP_ItemLocate(m, mv->mouse.xmap,
 			    mv->mouse.ymap, mv->cam)) != NULL) {
-				if (r->flags & AG_NITEM_SELECTED) {
-					r->flags &= ~(AG_NITEM_SELECTED);
+				if (r->flags & MAP_ITEM_SELECTED) {
+					r->flags &= ~(MAP_ITEM_SELECTED);
 				} else {
-					r->flags |= AG_NITEM_SELECTED;
+					r->flags |= MAP_ITEM_SELECTED;
 					mv->rsel.moving = 1;
 				}
 			}
@@ -1411,7 +1411,7 @@ key_down(AG_Event *event)
 	case SDLK_w:
 		if (mv->mode == AG_MAPVIEW_EDITION) {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
-			mv->edit_attr = AG_NITEM_BLOCK;
+			mv->edit_attr = MAP_ITEM_BLOCK;
 		} else {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
 		}
@@ -1419,7 +1419,7 @@ key_down(AG_Event *event)
 	case SDLK_c:
 		if (mv->mode == AG_MAPVIEW_EDITION) {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
-			mv->edit_attr = AG_NITEM_CLIMBABLE;
+			mv->edit_attr = MAP_ITEM_CLIMBABLE;
 		} else {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
 		}
@@ -1427,7 +1427,7 @@ key_down(AG_Event *event)
 	case SDLK_s:
 		if (mv->mode == AG_MAPVIEW_EDITION) {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
-			mv->edit_attr = AG_NITEM_SLIPPERY;
+			mv->edit_attr = MAP_ITEM_SLIPPERY;
 		} else {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
 		}
@@ -1435,7 +1435,7 @@ key_down(AG_Event *event)
 	case SDLK_j:
 		if (mv->mode == AG_MAPVIEW_EDITION) {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
-			mv->edit_attr = AG_NITEM_JUMPABLE;
+			mv->edit_attr = MAP_ITEM_JUMPABLE;
 		} else {
 			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
 		}

@@ -49,7 +49,7 @@ refsel_update(MAP_View *mv, int xRel, int yRel)
 			MAP_Node *node = &m->map[ny][nx];
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if ((r->flags & AG_NITEM_SELECTED) == 0) {
+				if ((r->flags & MAP_ITEM_SELECTED) == 0) {
 					continue;
 				}
 				r->r_gfx.xcenter += xRel;

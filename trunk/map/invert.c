@@ -43,7 +43,7 @@ init(void *p)
 static int
 mousebuttondown(void *p, int x, int y, int btn)
 {
-	MAP_modBegin(TOOL(p)->mv->map);
+	MAP_ModBegin(TOOL(p)->mv->map);
 	return (0);
 }
 
@@ -55,9 +55,9 @@ mousebuttonup(void *p, int x, int y, int btn)
 	MAP *m = mv->map;
 
 	if (m->nmods == 0) {
-		MAP_modCancel(m);
+		MAP_ModCancel(m);
 	}
-	MAP_modEnd(m);
+	MAP_ModEnd(m);
 	return (0);
 }
 
@@ -70,7 +70,7 @@ effect(void *p, MAP_Node *n)
 	AG_Transform *trans;
 	int nmods = 0;
 
-	MAP_modNodeChg(m, mv->cx, mv->cy);
+	MAP_ModNodeChg(m, mv->cx, mv->cy);
 
 	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		if (nref->layer != m->cur_layer)

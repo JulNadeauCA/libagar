@@ -357,7 +357,7 @@ MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 			r->r_gfx.xmotion = a->g_map.xmot;
 			r->r_gfx.ymotion = a->g_map.ymot;
 			r->flags |= spr->attrs[n];
-			r->flags |= AG_NITEM_NOSAVE;
+			r->flags |= MAP_ITEM_NOSAVE;
 
 			l = l0 + spr->layers[n];
 			if (l < 0) {

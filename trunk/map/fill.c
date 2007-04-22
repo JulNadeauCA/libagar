@@ -96,7 +96,7 @@ effect(void *p, MAP_Node *n)
 	Uint8 byte = 0;
 
 	MAP_ViewGetSelection(mv, &dx, &dy, &dw, &dh);
-	MAP_modBegin(m);
+	MAP_ModBegin(m);
 
 	switch (fi->mode) {
 	case FILL_FROM_CLIPBRD:
@@ -110,7 +110,7 @@ effect(void *p, MAP_Node *n)
 				MAP_Node *dn = &m->map[y][x];
 				MAP_Item *r;
 
-				MAP_modNodeChg(m, x, y);
+				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, dn, m->cur_layer);
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					MAP_NodeCopyItem(r, m, dn, m->cur_layer);
@@ -136,11 +136,10 @@ effect(void *p, MAP_Node *n)
 				MAP_Node *n = &m->map[y][x];
 				MAP_Item *r;
 
-				MAP_modNodeChg(m, x, y);
+				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, n, m->cur_layer);
-				r = Malloc(sizeof(MAP_Item),
-				    M_MAP_NITEM);
-				MAP_ItemInit(r, AG_NITEM_SPRITE);
+				r = Malloc(sizeof(MAP_Item), M_MAP);
+				MAP_ItemInit(r, MAP_ITEM_SPRITE);
 				MAP_ItemSetSprite(r, m, spr->pgfx->pobj,
 				    spr->index);
 				MAP_ItemSetLayer(r, m->cur_layer);
@@ -185,14 +184,14 @@ effect(void *p, MAP_Node *n)
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
-				MAP_modNodeChg(m, x, y);
+				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, &m->map[y][x],
 				    m->cur_layer);
 			}
 		}
 		break;
 	}
-	MAP_modEnd(m);
+	MAP_ModEnd(m);
 	return (1);
 }
 

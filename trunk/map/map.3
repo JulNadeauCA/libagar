@@ -53,18 +53,18 @@ playing samples from nearby audio elements.
 .Pp
 Four types of references are currently defined:
 .Pp
-.Bl -tag -width "AG_NITEM_SPRITE " -compact
-.It AG_NITEM_SPRITE
+.Bl -tag -width "MAP_ITEM_SPRITE " -compact
+.It MAP_ITEM_SPRITE
 Pointer to a static image of arbitrary size.
 Visible elements of this type are drawn only when the
 .Va redraw
 flag of the parent map is set.
-.It AG_NITEM_ANIM
+.It MAP_ITEM_ANIM
 Pointer to an animation of arbitrary size.
 Visible elements of this type are redrawn every
 .Va n
 milliseconds (possibly by another thread on a multiprocessor system).
-.It AG_NITEM_WARP
+.It MAP_ITEM_WARP
 Pointer to a node residing another map.
 Actors coming in contact with this type of element are transported to
 coordinates
@@ -234,9 +234,9 @@ and
 associate a new sprite or animation to the element
 .Fa r
 (of type
-.Dv AG_NITEM_SPRITE
+.Dv MAP_ITEM_SPRITE
 or
-.Dv AG_NITEM_ANIM ) .
+.Dv MAP_ITEM_ANIM ) .
 Unless
 .Fa object
 is NULL, a dependency of type
@@ -348,7 +348,7 @@ destination map.
 The node operation functions should probably use a state variable instead of
 arguments for the layer number.
 .Pp
-.Dv AG_NITEM_WARP
+.Dv MAP_ITEM_WARP
 could probably be replaced by a "warp" object.
 .Pp
 The

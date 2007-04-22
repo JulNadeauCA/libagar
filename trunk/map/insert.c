@@ -116,8 +116,8 @@ generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
 			dw = spr->su->w - sx;
 			dh = spr->su->h - sy;
 
-			r = Malloc(sizeof(MAP_Item), M_MAP_NITEM);
-			MAP_ItemInit(r, AG_NITEM_SPRITE);
+			r = Malloc(sizeof(MAP_Item), M_MAP);
+			MAP_ItemInit(r, MAP_ITEM_SPRITE);
 			MAP_ItemSetSprite(r, &ins->mTmp, spr->pgfx->pobj,
 			    spr->index);
 
@@ -227,7 +227,7 @@ insert_effect(void *p, MAP_Node *node)
 		dy0 = mv->cy - mSrc->origin.y;
 	}
 
-	MAP_modBegin(mDst);
+	MAP_ModBegin(mDst);
 	for (sy = sy0, dy = dy0;
 	     sy <= sy1 && dy < mDst->maph;
 	     sy++, dy++) {
@@ -244,7 +244,7 @@ insert_effect(void *p, MAP_Node *node)
 			sn = &mSrc->map[sy][sx]; 
 			dn = &mDst->map[dy][dx];
 			
-			MAP_modNodeChg(mDst, dx, dy);
+			MAP_ModNodeChg(mDst, dx, dy);
 
 			if (ins->replace_mode) {
 				MAP_NodeRemoveAll(mDst, dn, mDst->cur_layer);
@@ -254,7 +254,7 @@ insert_effect(void *p, MAP_Node *node)
 				r2->layer += mDst->cur_layer;
 				while (r2->layer >= mDst->nlayers) {
 					if (MAP_PushLayer(mDst, "") == 0)
-						MAP_modLayerAdd(mDst,
+						MAP_ModLayerAdd(mDst,
 						    mDst->nlayers - 1);
 				}
 				if (ins->snap_mode == AG_GFX_SNAP_NOT) {
@@ -266,7 +266,7 @@ insert_effect(void *p, MAP_Node *node)
 			}
 		}
 	}
-	MAP_modEnd(mDst);
+	MAP_ModEnd(mDst);
 	return (1);
 }
 

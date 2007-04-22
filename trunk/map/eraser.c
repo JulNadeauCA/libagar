@@ -51,10 +51,10 @@ delete_noderefs(MAP_Tool *t, SDLKey key, int state, void *arg)
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 				if (r->layer != m->cur_layer ||
-				    r->flags & AG_NITEM_NOSAVE) {
+				    r->flags & MAP_ITEM_NOSAVE) {
 					continue;
 				}
-				if (r->flags & AG_NITEM_SELECTED)
+				if (r->flags & MAP_ITEM_SELECTED)
 					MAP_NodeDelItem(m, node, r);
 			}
 		}
@@ -85,7 +85,7 @@ eraser_pane(void *p, void *con)
 static int
 mousebuttondown(void *p, int x, int y, int btn)
 {
-	MAP_modBegin(TOOL(p)->mv->map);
+	MAP_ModBegin(TOOL(p)->mv->map);
 	return (0);
 }
 
@@ -97,9 +97,9 @@ mousebuttonup(void *p, int x, int y, int btn)
 	MAP *m = mv->map;
 
 	if (m->nmods == 0) {
-		MAP_modCancel(m);
+		MAP_ModCancel(m);
 	}
-	MAP_modEnd(m);
+	MAP_ModEnd(m);
 	return (0);
 }
 
@@ -112,7 +112,7 @@ eraser_effect(void *p, MAP_Node *n)
 	MAP_Item *r;
 	int nmods = 0;
 
-	MAP_modNodeChg(m, mv->cx, mv->cy);
+	MAP_ModNodeChg(m, mv->cx, mv->cy);
 
 	TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 		if (!all_layers &&
@@ -121,7 +121,7 @@ eraser_effect(void *p, MAP_Node *n)
 
 		TAILQ_REMOVE(&n->nrefs, r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP_NITEM);
+		Free(r, M_MAP);
 		nmods++;
 
 		if (!erase_all)
