@@ -409,7 +409,7 @@ MAP_SetZoom(MAP *m, int ncam, Uint zoom)
 
 	AG_MutexLock(&m->lock);
 	cam->zoom = zoom;
-	if ((cam->tilesz = cam->zoom*AGTILESZ/100) > AG_MAX_TILESZ) {
+	if ((cam->tilesz = cam->zoom*MAPTILESZ/100) > AG_MAX_TILESZ) {
 		cam->tilesz = AG_MAX_TILESZ;
 	}
 	AG_MutexUnlock(&m->lock);
@@ -457,7 +457,7 @@ MAP_InitCamera(MAP_Camera *cam, const char *name)
 	cam->flags = 0;
 	cam->alignment = AG_MAP_CENTER;
 	cam->zoom = 100;
-	cam->tilesz = AGTILESZ;
+	cam->tilesz = MAPTILESZ;
 	cam->pixsz = 1;
 }
 
@@ -1212,10 +1212,10 @@ MAP_Load(void *ob, AG_Netbuf *buf)
 		if (i > 0 || m->flags & AG_MAP_SAVE_CAM0ZOOM) {
 			cam->zoom = (Uint)AG_ReadUint16(buf);
 			cam->tilesz = (Uint)AG_ReadUint16(buf);
-			cam->pixsz = cam->tilesz/AGTILESZ;
+			cam->pixsz = cam->tilesz/MAPTILESZ;
 		} else {
 			cam->zoom = 100;
-			cam->tilesz = AGTILESZ;
+			cam->tilesz = MAPTILESZ;
 			cam->pixsz = 1;
 		}
 
@@ -1419,10 +1419,10 @@ blit_scaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
 	Uint8 r1, g1, b1, a1;
 	Uint32 c;
 	int tilesz = m->cameras[cam].tilesz;
-	int xSrc = (Uint)(rs->x*tilesz/AGTILESZ);
-	int ySrc = (Uint)(rs->y*tilesz/AGTILESZ);
-	Uint wSrc = (Uint)(rs->w*tilesz/AGTILESZ);
-	Uint hSrc = (Uint)(rs->h*tilesz/AGTILESZ);
+	int xSrc = (Uint)(rs->x*tilesz/MAPTILESZ);
+	int ySrc = (Uint)(rs->y*tilesz/MAPTILESZ);
+	Uint wSrc = (Uint)(rs->w*tilesz/MAPTILESZ);
+	Uint hSrc = (Uint)(rs->h*tilesz/MAPTILESZ);
 	int same_fmt = AG_SamePixelFmt(s, agView->v);
 
 	if (SDL_MUSTLOCK(s)) {
@@ -1431,11 +1431,11 @@ blit_scaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry,
 	SDL_LockSurface(agView->v);
 	
 	for (y = 0; y < hSrc; y++) {
-		if ((sy = (y+ySrc)*AGTILESZ/tilesz) >= s->h)
+		if ((sy = (y+ySrc)*MAPTILESZ/tilesz) >= s->h)
 			break;
 
 		for (x = 0; x < wSrc; x++) {
-			if ((sx = (x+xSrc)*AGTILESZ/tilesz) >= s->w)
+			if ((sx = (x+xSrc)*MAPTILESZ/tilesz) >= s->w)
 				break;
 		
 			c = AG_GET_PIXEL(s, (Uint8 *)s->pixels +
@@ -1815,16 +1815,16 @@ MAP_ItemExtent(MAP *m, MAP_Item *r, SDL_Rect *rd, int cam)
 	if (AG_BAD_SPRITE(r->r_sprite.obj, r->r_sprite.offs))
 		return (-1);
 
-	if (tilesz != AGTILESZ) {
-		rd->x = r->r_gfx.xcenter*tilesz/AGTILESZ +
-		        r->r_gfx.xmotion*tilesz/AGTILESZ -
-			r->r_gfx.xorigin*tilesz/AGTILESZ;
-		rd->y = r->r_gfx.ycenter*tilesz/AGTILESZ +
-		        r->r_gfx.ymotion*tilesz/AGTILESZ -
-			r->r_gfx.yorigin*tilesz/AGTILESZ;
+	if (tilesz != MAPTILESZ) {
+		rd->x = r->r_gfx.xcenter*tilesz/MAPTILESZ +
+		        r->r_gfx.xmotion*tilesz/MAPTILESZ -
+			r->r_gfx.xorigin*tilesz/MAPTILESZ;
+		rd->y = r->r_gfx.ycenter*tilesz/MAPTILESZ +
+		        r->r_gfx.ymotion*tilesz/MAPTILESZ -
+			r->r_gfx.yorigin*tilesz/MAPTILESZ;
 
-		rd->w = r->r_gfx.rs.w*tilesz/AGTILESZ;
-		rd->h = r->r_gfx.rs.h*tilesz/AGTILESZ;
+		rd->w = r->r_gfx.rs.w*tilesz/MAPTILESZ;
+		rd->h = r->r_gfx.rs.h*tilesz/MAPTILESZ;
 	} else {
 		rd->x = r->r_gfx.xcenter + r->r_gfx.xmotion - r->r_gfx.xorigin;
 		rd->y = r->r_gfx.ycenter + r->r_gfx.ymotion - r->r_gfx.yorigin;
@@ -1892,13 +1892,13 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 
 draw:
 	if (!agView->opengl) {
-		if (tilesz != AGTILESZ) {
-			int dx = rx + r->r_gfx.xcenter*tilesz/AGTILESZ +
-			         r->r_gfx.xmotion*tilesz/AGTILESZ -
-				 r->r_gfx.xorigin*tilesz/AGTILESZ;
-			int dy = ry + r->r_gfx.ycenter*tilesz/AGTILESZ +
-			         r->r_gfx.ymotion*tilesz/AGTILESZ -
-				 r->r_gfx.yorigin*tilesz/AGTILESZ;
+		if (tilesz != MAPTILESZ) {
+			int dx = rx + r->r_gfx.xcenter*tilesz/MAPTILESZ +
+			         r->r_gfx.xmotion*tilesz/MAPTILESZ -
+				 r->r_gfx.xorigin*tilesz/MAPTILESZ;
+			int dy = ry + r->r_gfx.ycenter*tilesz/MAPTILESZ +
+			         r->r_gfx.ymotion*tilesz/MAPTILESZ -
+				 r->r_gfx.yorigin*tilesz/MAPTILESZ;
 
 			blit_scaled(m, su, &r->r_gfx.rs, dx, dy, cam);
 		} else {
@@ -1935,20 +1935,20 @@ draw:
 			                       AG_PowOf2i(r->r_gfx.rs.h);
 		}
 		
-		if (tilesz != AGTILESZ) {
-			rd.x = rx + r->r_gfx.xcenter*tilesz/AGTILESZ +
-			    r->r_gfx.xmotion*tilesz/AGTILESZ -
-			    r->r_gfx.xorigin*tilesz/AGTILESZ;
-			rd.y = ry + r->r_gfx.ycenter*tilesz/AGTILESZ +
-			    r->r_gfx.ymotion*tilesz/AGTILESZ -
-			    r->r_gfx.yorigin*tilesz/AGTILESZ;
-			rd.w = su->w*tilesz/AGTILESZ;
-			rd.h = su->h*tilesz/AGTILESZ;
+		if (tilesz != MAPTILESZ) {
+			rd.x = rx + r->r_gfx.xcenter*tilesz/MAPTILESZ +
+			    r->r_gfx.xmotion*tilesz/MAPTILESZ -
+			    r->r_gfx.xorigin*tilesz/MAPTILESZ;
+			rd.y = ry + r->r_gfx.ycenter*tilesz/MAPTILESZ +
+			    r->r_gfx.ymotion*tilesz/MAPTILESZ -
+			    r->r_gfx.yorigin*tilesz/MAPTILESZ;
+			rd.w = su->w*tilesz/MAPTILESZ;
+			rd.h = su->h*tilesz/MAPTILESZ;
 		} else {
 			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
-			    r->r_gfx.xorigin*tilesz/AGTILESZ;
+			    r->r_gfx.xorigin*tilesz/MAPTILESZ;
 			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
-			    r->r_gfx.yorigin*tilesz/AGTILESZ;
+			    r->r_gfx.yorigin*tilesz/MAPTILESZ;
 			rd.w = su->w;
 			rd.h = su->h;
 		}
@@ -2126,12 +2126,12 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	SDL_Rect sd, rd;
 	MAP *fragmap;
 
-	sd.w = AGTILESZ;
-	sd.h = AGTILESZ;
+	sd.w = MAPTILESZ;
+	sd.h = MAPTILESZ;
 	rd.x = 0;
 	rd.y = 0;
-	mw = sprite->w/AGTILESZ + 1;
-	mh = sprite->h/AGTILESZ + 1;
+	mw = sprite->w/MAPTILESZ + 1;
+	mh = sprite->h/MAPTILESZ + 1;
 
 	fragmap = Malloc(sizeof(MAP), M_OBJECT);
 	snprintf(mapname, sizeof(mapname), "f%u", gfx->nsubmaps);
@@ -2139,8 +2139,8 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
 		fatal("%s", AG_GetError());
 
-	for (y = 0, my = 0; y < sprite->h; y += AGTILESZ, my++) {
-		for (x = 0, mx = 0; x < sprite->w; x += AGTILESZ, mx++) {
+	for (y = 0, my = 0; y < sprite->h; y += MAPTILESZ, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += MAPTILESZ, mx++) {
 			SDL_Surface *su;
 			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
 			                                  SDL_RLEACCEL);
@@ -2150,12 +2150,12 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 			Uint32 scolorkey = sprite->format->colorkey;
 			MAP_Node *node = &fragmap->map[my][mx];
 			Uint32 nsprite;
-			int fw = AGTILESZ;
-			int fh = AGTILESZ;
+			int fw = MAPTILESZ;
+			int fh = MAPTILESZ;
 
-			if (sprite->w - x < AGTILESZ)
+			if (sprite->w - x < MAPTILESZ)
 				fw = sprite->w - x;
-			if (sprite->h - y < AGTILESZ)
+			if (sprite->h - y < MAPTILESZ)
 				fh = sprite->h - y;
 
 			/* Allocate a surface for the fragment. */
@@ -3099,7 +3099,7 @@ MAP_Edit(void *p)
 
 			mv->layers_tl = AG_TlistNew(ntab, AG_TLIST_POLL|
 			                                  AG_TLIST_EXPAND);
-			AG_TlistSetItemHeight(mv->layers_tl, AGTILESZ);
+			AG_TlistSetItemHeight(mv->layers_tl, MAPTILESZ);
 			AG_SetEvent(mv->layers_tl, "tlist-poll", poll_layers,
 			    "%p", m);
 			AG_SetEvent(mv->layers_tl, "tlist-dblclick",

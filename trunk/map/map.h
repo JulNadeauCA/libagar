@@ -4,7 +4,7 @@
 #ifndef _AGAR_MAP_H_
 #define _AGAR_MAP_H_
 
-#define AGTILESZ 16			/* Default tile size in pixels */
+#define MAPTILESZ 16		/* Default tile size in pixels */
 
 #define AG_MAX_TILESZ		16384
 #define AG_MAP_MAXWIDTH		32767

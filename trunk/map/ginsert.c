@@ -72,7 +72,7 @@ ginsert_pane(void *p, void *con)
 	}
 	
 	AG_LabelNew(con, AG_LABEL_STATIC, _("Snap to: "));
-	rad = AG_RadioNew(con, AG_RADIO_HFILL, agGfxSnapNames);
+	rad = AG_RadioNew(con, AG_RADIO_HFILL, mapSnapModeNames);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 	cb = AG_CheckboxNew(con, 0, _("Replace mode"));

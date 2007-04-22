@@ -145,8 +145,8 @@ effect(void *p, MAP_Node *n)
 				MAP_ItemSetLayer(r, m->cur_layer);
 				r->r_gfx.xorigin = spr->xOrig;
 				r->r_gfx.yorigin = spr->yOrig;
-				r->r_gfx.xcenter = AGTILESZ/2;
-				r->r_gfx.ycenter = AGTILESZ/2;
+				r->r_gfx.xcenter = MAPTILESZ/2;
+				r->r_gfx.ycenter = MAPTILESZ/2;
 				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 	
 #if 0

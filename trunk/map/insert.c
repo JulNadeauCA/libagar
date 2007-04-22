@@ -75,8 +75,8 @@ snap_sprite(struct map_insert_tool *ins, MAP_Item *r, AG_Sprite *spr)
 
 	switch (ins->snap_mode) {
 	case AG_GFX_SNAP_NOT:
-		r->r_gfx.xcenter += mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
-		r->r_gfx.ycenter += mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
+		r->r_gfx.xcenter += mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
+		r->r_gfx.ycenter += mv->cyoffs*MAPTILESZ/AGMTILESZ(mv);
 		break;
 	default:
 		break;
@@ -88,22 +88,22 @@ static void
 generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
 {
 	int sy, sx, dx, dy;
-	int sw = spr->su->w/AGTILESZ;
-	int sh = spr->su->h/AGTILESZ;
+	int sw = spr->su->w/MAPTILESZ;
+	int sh = spr->su->h/MAPTILESZ;
 	int nw, nh;
 
-	if (spr->su->w%AGTILESZ > 0) sw++;
-	if (spr->su->h%AGTILESZ > 0) sh++;
+	if (spr->su->w%MAPTILESZ > 0) sw++;
+	if (spr->su->h%MAPTILESZ > 0) sh++;
 
 	MAP_AllocNodes(&ins->mTmp, sw, sh);
-	ins->mTmp.origin.x = spr->xOrig/AGTILESZ;
-	ins->mTmp.origin.y = spr->yOrig/AGTILESZ;
+	ins->mTmp.origin.x = spr->xOrig/MAPTILESZ;
+	ins->mTmp.origin.y = spr->yOrig/MAPTILESZ;
 	for (sy = 0, dy = 0;
 	     sy < spr->su->h;
-	     sy += AGTILESZ, dy++) {
+	     sy += MAPTILESZ, dy++) {
 		for (sx = 0, dx = 0;
 		     sx < spr->su->w;
-		     sx += AGTILESZ, dx++) {
+		     sx += MAPTILESZ, dx++) {
 			MAP_Node *dn;
 			MAP_Item *r;
 			int dw, dh, nlayer;
@@ -121,10 +121,10 @@ generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
 			MAP_ItemSetSprite(r, &ins->mTmp, spr->pgfx->pobj,
 			    spr->index);
 
-			r->r_gfx.rs.x = dx*AGTILESZ;
-			r->r_gfx.rs.y = dy*AGTILESZ;
-			r->r_gfx.rs.w = (dw >= AGTILESZ) ? AGTILESZ : dw;
-			r->r_gfx.rs.h = (dh >= AGTILESZ) ? AGTILESZ : dh;
+			r->r_gfx.rs.x = dx*MAPTILESZ;
+			r->r_gfx.rs.y = dy*MAPTILESZ;
+			r->r_gfx.rs.w = (dw >= MAPTILESZ) ? MAPTILESZ : dw;
+			r->r_gfx.rs.h = (dh >= MAPTILESZ) ? MAPTILESZ : dh;
 			r->flags |= AG_SPRITE_ATTR2(spr,dx,dy);
 
 			nlayer = AG_SPRITE_LAYER2(spr,dx,dy);
@@ -178,7 +178,7 @@ insert_pane(void *p, void *con)
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, agGfxSnapNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, mapSnapModeNames);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));
@@ -259,9 +259,9 @@ insert_effect(void *p, MAP_Node *node)
 				}
 				if (ins->snap_mode == AG_GFX_SNAP_NOT) {
 					r2->r_gfx.xcenter +=
-					    mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
+					    mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
 					r2->r_gfx.ycenter +=
-					    mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
+					    mv->cyoffs*MAPTILESZ/AGMTILESZ(mv);
 				}
 			}
 		}
@@ -311,8 +311,8 @@ insert_cursor(void *p, SDL_Rect *rd)
 		dy0 = AGWIDGET(mv)->cy + rd->y - mSrc->origin.y*AGMTILESZ(mv);
 	}
 	if (ins->snap_mode == AG_GFX_SNAP_NOT) {
-		dx0 += mv->cxoffs*AGTILESZ/AGMTILESZ(mv);
-		dy0 += mv->cyoffs*AGTILESZ/AGMTILESZ(mv);
+		dx0 += mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
+		dy0 += mv->cyoffs*MAPTILESZ/AGMTILESZ(mv);
 	}
 	for (sy = sy0, dy = dy0; sy <= sy1; sy++, dy += AGMTILESZ(mv)) {
 		for (sx = sx0, dx = dx0; sx <= sx1; sx++, dx += AGMTILESZ(mv)) {

@@ -253,29 +253,29 @@ MAP_ActorMoveSprite(void *obj, int xo, int yo)
 					
 				switch (a->g_map.da) {
 				case 0:
-					if (a->g_map.xmot < -AGTILESZ/2) {
-						a->g_map.xmot = +AGTILESZ/2;
+					if (a->g_map.xmot < -MAPTILESZ/2) {
+						a->g_map.xmot = +MAPTILESZ/2;
 						move_nodes(a, -1, 0);
 						goto out;
 					}
 					break;
 				case 90:
-					if (a->g_map.ymot < -AGTILESZ/2) {
-						a->g_map.ymot = +AGTILESZ/2;
+					if (a->g_map.ymot < -MAPTILESZ/2) {
+						a->g_map.ymot = +MAPTILESZ/2;
 						move_nodes(a, 0, -1);
 						goto out;
 					}
 					break;
 				case 180:
-					if (a->g_map.xmot > +AGTILESZ/2) {
-						a->g_map.xmot = -AGTILESZ/2;
+					if (a->g_map.xmot > +MAPTILESZ/2) {
+						a->g_map.xmot = -MAPTILESZ/2;
 						move_nodes(a, +1, 0);
 						goto out;
 					}
 					break;
 				case 270:
-					if (a->g_map.ymot > +AGTILESZ/2) {
-						a->g_map.ymot = -AGTILESZ/2;
+					if (a->g_map.ymot > +MAPTILESZ/2) {
+						a->g_map.ymot = -MAPTILESZ/2;
 						move_nodes(a, 0, +1);
 						goto out;
 					}
@@ -324,17 +324,17 @@ MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 	}
 	spr = &gfx->sprites[offs];
 	su = spr->su;
-	dx0 = x - spr->xOrig/AGTILESZ;
-	dy0 = y - spr->yOrig/AGTILESZ;
-	xorig = spr->xOrig%AGTILESZ;
-	yorig = spr->yOrig%AGTILESZ;
+	dx0 = x - spr->xOrig/MAPTILESZ;
+	dy0 = y - spr->yOrig/MAPTILESZ;
+	xorig = spr->xOrig%MAPTILESZ;
+	yorig = spr->yOrig%MAPTILESZ;
 
 	for (sy = 0, dy = dy0;
 	     sy < su->h;
-	     sy += AGTILESZ, dy++) {
+	     sy += MAPTILESZ, dy++) {
 		for (sx = 0, dx = dx0;
 		     sx < su->w;
-		     sx += AGTILESZ, dx++) {
+		     sx += MAPTILESZ, dx++) {
 			MAP_Node *dn;
 			MAP_Item *r;
 
@@ -348,12 +348,12 @@ MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 			r->p = obj;
 			r->r_gfx.rs.x = sx;
 			r->r_gfx.rs.y = sy;
-			r->r_gfx.rs.w = AGTILESZ;
-			r->r_gfx.rs.h = AGTILESZ;
+			r->r_gfx.rs.w = MAPTILESZ;
+			r->r_gfx.rs.h = MAPTILESZ;
 			r->r_gfx.xorigin = xorig;
 			r->r_gfx.yorigin = yorig;
-			r->r_gfx.xcenter = AGTILESZ/2;
-			r->r_gfx.ycenter = AGTILESZ/2;
+			r->r_gfx.xcenter = MAPTILESZ/2;
+			r->r_gfx.ycenter = MAPTILESZ/2;
 			r->r_gfx.xmotion = a->g_map.xmot;
 			r->r_gfx.ymotion = a->g_map.ymot;
 			r->flags |= spr->attrs[n];

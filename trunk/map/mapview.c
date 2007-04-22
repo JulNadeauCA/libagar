@@ -554,7 +554,7 @@ MAP_ViewDraw(void *p)
 	GLfloat texenvmode;
 #endif
 
-	if (AGWIDGET(mv)->w < AGTILESZ || AGWIDGET(mv)->h < AGTILESZ)
+	if (AGWIDGET(mv)->w < MAPTILESZ || AGWIDGET(mv)->h < MAPTILESZ)
 		return;
 
 	if (AGWIDGET(mv)->flags & AG_WIDGET_FOCUSED)
@@ -849,8 +849,8 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	else if (zoom > ZOOM_MAX) { zoom = ZOOM_MAX; }
 	
 	AGMZOOM(mv) = zoom;
-	AGMTILESZ(mv) = zoom*AGTILESZ/100;
-	AGMPIXSZ(mv) = AGMTILESZ(mv)/AGTILESZ;
+	AGMTILESZ(mv) = zoom*MAPTILESZ/100;
+	AGMPIXSZ(mv) = AGMTILESZ(mv)/MAPTILESZ;
 
 	if (AGMTILESZ(mv) > AG_MAX_TILESZ)
 		AGMTILESZ(mv) = AG_MAX_TILESZ;
@@ -1449,8 +1449,8 @@ MAP_ViewScale(void *p, int rw, int rh)
 	MAP_View *mv = p;
 
 	if (rw == -1 && rh == -1) {
-		AGWIDGET(mv)->w = mv->prew*AGTILESZ;
-		AGWIDGET(mv)->h = mv->preh*AGTILESZ;
+		AGWIDGET(mv)->w = mv->prew*MAPTILESZ;
+		AGWIDGET(mv)->h = mv->preh*MAPTILESZ;
 		if (mv->hbar != NULL) {
 			AGWIDGET_OPS(mv->hbar)->scale(mv->hbar, -1, -1);
 		}

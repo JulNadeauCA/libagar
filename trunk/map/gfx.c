@@ -1,7 +1,7 @@
 /*	$Csoft: gfx.c,v 1.58 2005/09/07 03:56:57 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -44,7 +44,7 @@ enum {
 	NSUBMAPS_GROW =	4
 };
 
-const char *agGfxSnapNames[] = {
+const char *mapSnapModeNames[] = {
 	N_("Free positioning"),
 	N_("Snap to grid"),
 	NULL
@@ -83,8 +83,8 @@ AG_SpriteGetWtiles(AG_Sprite *spr)
 	if (spr->su == NULL) {
 		return (0);
 	}
-	w = spr->su->w/AG_GFX_TILESZ;
-	if (w%AG_GFX_TILESZ > 0) { w++; }
+	w = spr->su->w/MAPTILESZ;
+	if (w%MAPTILESZ > 0) { w++; }
 	return (w);
 }
 
@@ -92,10 +92,10 @@ void
 AG_SpriteGetNodeAttrs(AG_Sprite *spr, Uint *w, Uint *h)
 {
 	if (spr->su != NULL) {
-		*w = spr->su->w/AG_GFX_TILESZ;
-		*h = spr->su->h/AG_GFX_TILESZ;
-		if ((*w)%AG_GFX_TILESZ > 0) (*w)++;
-		if ((*h)%AG_GFX_TILESZ > 0) (*h)++;
+		*w = spr->su->w/MAPTILESZ;
+		*h = spr->su->h/MAPTILESZ;
+		if ((*w)%MAPTILESZ > 0) (*w)++;
+		if ((*h)%MAPTILESZ > 0) (*h)++;
 	} else {
 		*w = 0;
 		*h = 0;
@@ -103,7 +103,7 @@ AG_SpriteGetNodeAttrs(AG_Sprite *spr, Uint *w, Uint *h)
 }
 
 static __inline__ void
-sprite_free_transforms(AG_Sprite *spr)
+MAP_FreeSpriteTransforms(AG_Sprite *spr)
 {
 	AG_CachedSprite *csprite, *ncsprite;
 	AG_Transform *trans, *ntrans;
@@ -170,7 +170,7 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 		spr->texcoords[3] = 0.0f;
 	}
 #endif
-	sprite_free_transforms(spr);
+	MAP_FreeSpriteTransforms(spr);
 }
 
 void
@@ -227,7 +227,7 @@ AG_SpriteSetOrigin(AG_Sprite *spr, int x, int y)
 void
 AG_SpriteUpdate(AG_Sprite *spr)
 {
-	sprite_free_transforms(spr);
+	MAP_FreeSpriteTransforms(spr);
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		if (spr->texture != 0) {
