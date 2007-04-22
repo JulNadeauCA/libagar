@@ -11,7 +11,9 @@ XCF=	map-edition.xcf \
 	eda.xcf \
 	rg.xcf \
 	anim.xcf \
-	symbols.xcf
+	symbols.xcf \
+	arrow.xcf \
+	window.xcf
 
 DEN=		core-icons.den
 DEN_NAME=	"Agar Core Icons"
