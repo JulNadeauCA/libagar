@@ -86,7 +86,7 @@ effect(void *p, MAP_Node *n)
 	struct rg_fill_tool *fi = p;
 	MAP_View *mv = TOOL(fi)->mv;
 	MAP *m = mv->map;
-	MAP *copybuf = &agMapEditor.copybuf;
+	MAP *copybuf = &mapEditor.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = m->mapw, dh = m->maph;
 	int x, y, angle = 0, i = 0;
@@ -195,7 +195,7 @@ effect(void *p, MAP_Node *n)
 	return (1);
 }
 
-const MAP_ToolOps agMapFillOps = {
+const MAP_ToolOps mapFillOps = {
 	"Fill", N_("Clear/fill layer"),
 	FILL_TOOL_ICON,
 	sizeof(struct rg_fill_tool),
@@ -206,7 +206,6 @@ const MAP_ToolOps agMapFillOps = {
 	NULL,			/* edit */
 	NULL,			/* cursor */
 	effect,
-	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */

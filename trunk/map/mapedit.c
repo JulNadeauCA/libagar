@@ -39,7 +39,7 @@
 #include "map.h"
 #include "mapedit.h"
 
-const AG_ObjectOps agMapEditorOps = {
+const AG_ObjectOps mapEditorOps = {
 	"MAP_Editor",
 	sizeof(AG_Object),
 	{ 0, 0 },
@@ -51,7 +51,7 @@ const AG_ObjectOps agMapEditorOps = {
 	NULL				/* edit */
 };
 
-const AG_ObjectOps agMapEditorPseudoOps = {
+const AG_ObjectOps mapEditorPseudoOps = {
 	"MAP_EditorPseudo",
 	sizeof(AG_Object),
 	{ 0, 0 },
@@ -64,51 +64,50 @@ const AG_ObjectOps agMapEditorPseudoOps = {
 };
 
 extern int agEditMode;
-extern int agMapviewAnimatedBg, agMapviewBgTileSize;
-extern int agMapviewEditSelOnly;
+extern int mapViewAnimatedBg, mapViewBgTileSize;
+extern int mapViewEditSelOnly;
 
-MAP_Editor agMapEditor;
+MAP_Editor mapEditor;
 
-int agMapDefaultWidth = 9;		/* Default map geometry */
-int agMapDefaultHeight = 9;
-int agMapDefaultBrushWidth = 9;		/* Default brush geometry */
-int agMapDefaultBrushHeight = 9;
+int mapDefaultWidth = 9;		/* Default map geometry */
+int mapDefaultHeight = 9;
+int mapDefaultBrushWidth = 9;		/* Default brush geometry */
+int mapDefaultBrushHeight = 9;
 
 void
 MAP_EditorInit(void)
 {
-	AG_ObjectInit(&agMapEditor, "map-editor", &agMapEditorOps);
-	AGOBJECT(&agMapEditor)->flags |= (AG_OBJECT_RELOAD_PROPS|
-	                                   AG_OBJECT_STATIC);
-	AGOBJECT(&agMapEditor)->save_pfx = "/map-editor";
+	AG_ObjectInit(&mapEditor, "map-editor", &mapEditorOps);
+	AGOBJECT(&mapEditor)->flags |= (AG_OBJECT_RELOAD_PROPS|
+	                                AG_OBJECT_STATIC);
+	AGOBJECT(&mapEditor)->save_pfx = "/map-editor";
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	AG_ObjectInit(&agMapEditor.pseudo, "map-editor-pseudo",
-	    &agMapEditorPseudoOps);
-	AGOBJECT(&agMapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
-				                  AG_OBJECT_STATIC|
-	                                          AG_OBJECT_INDESTRUCTIBLE);
-	AG_ObjectAttach(agWorld, &agMapEditor.pseudo);
+	AG_ObjectInit(&mapEditor.pseudo, "map-editor-ref", &mapEditorPseudoOps);
+	AGOBJECT(&mapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
+				               AG_OBJECT_STATIC|
+	                                       AG_OBJECT_INDESTRUCTIBLE);
+	AG_ObjectAttach(agWorld, &mapEditor.pseudo);
 
 	/*
 	 * Allocate the copy/paste buffer.
 	 * Use AG_OBJECT_READONLY to avoid circular reference in case a user
 	 * attempts to paste contents of the copy buffer into itself.
 	 */
-	MAP_Init(&agMapEditor.copybuf, "copybuf");
-	AGOBJECT(&agMapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
+	MAP_Init(&mapEditor.copybuf, "copybuf");
+	AGOBJECT(&mapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
 				               AG_OBJECT_STATIC|
 	                                       AG_OBJECT_INDESTRUCTIBLE|
 					       AG_OBJECT_READONLY);
-	AG_ObjectAttach(&agMapEditor.pseudo, &agMapEditor.copybuf);
+	AG_ObjectAttach(&mapEditor.pseudo, &mapEditor.copybuf);
 
 	agEditMode = 1;
 
 	/* Initialize the default tunables. */
-	AG_SetUint32(&agMapEditor, "default-map-width", 12);
-	AG_SetUint32(&agMapEditor, "default-map-height", 8);
-	AG_SetUint32(&agMapEditor, "default-brush-width", 5);
-	AG_SetUint32(&agMapEditor, "default-brush-height", 5);
+	AG_SetUint32(&mapEditor, "default-map-width", 12);
+	AG_SetUint32(&mapEditor, "default-map-height", 8);
+	AG_SetUint32(&mapEditor, "default-brush-width", 5);
+	AG_SetUint32(&mapEditor, "default-brush-height", 5);
 
 	/* Initialize the object manager. */
 	AG_ObjMgrInit();
@@ -118,36 +117,36 @@ MAP_EditorInit(void)
 void
 MAP_EditorDestroy(void *p)
 {
-	MAP_Destroy(&agMapEditor.copybuf);
+	MAP_Destroy(&mapEditor.copybuf);
 	AG_ObjMgrDestroy();
 }
 
 void
 MAP_EditorSave(AG_Netbuf *buf)
 {
-	AG_WriteUint8(buf, 0);				/* Pad: agMapviewBg */
-	AG_WriteUint8(buf, (Uint8)agMapviewAnimatedBg);
-	AG_WriteUint16(buf, (Uint16)agMapviewBgTileSize);
-	AG_WriteUint8(buf, (Uint8)agMapviewEditSelOnly);
+	AG_WriteUint8(buf, 0);				/* Pad: mapViewBg */
+	AG_WriteUint8(buf, (Uint8)mapViewAnimatedBg);
+	AG_WriteUint16(buf, (Uint16)mapViewBgTileSize);
+	AG_WriteUint8(buf, (Uint8)mapViewEditSelOnly);
 
-	AG_WriteUint16(buf, (Uint16)agMapDefaultWidth);
-	AG_WriteUint16(buf, (Uint16)agMapDefaultHeight);
-	AG_WriteUint16(buf, (Uint16)agMapDefaultBrushWidth);
-	AG_WriteUint16(buf, (Uint16)agMapDefaultBrushHeight);
+	AG_WriteUint16(buf, (Uint16)mapDefaultWidth);
+	AG_WriteUint16(buf, (Uint16)mapDefaultHeight);
+	AG_WriteUint16(buf, (Uint16)mapDefaultBrushWidth);
+	AG_WriteUint16(buf, (Uint16)mapDefaultBrushHeight);
 }
 
 void
 MAP_EditorLoad(AG_Netbuf *buf)
 {
-	AG_ReadUint8(buf);				/* Pad: agMapviewBg */
-	agMapviewAnimatedBg = (int)AG_ReadUint8(buf);
-	agMapviewBgTileSize = (int)AG_ReadUint16(buf);
-	agMapviewEditSelOnly = (int)AG_ReadUint8(buf);
+	AG_ReadUint8(buf);				/* Pad: mapViewBg */
+	mapViewAnimatedBg = (int)AG_ReadUint8(buf);
+	mapViewBgTileSize = (int)AG_ReadUint16(buf);
+	mapViewEditSelOnly = (int)AG_ReadUint8(buf);
 
-	agMapDefaultWidth = (int)AG_ReadUint16(buf);
-	agMapDefaultHeight = (int)AG_ReadUint16(buf);
-	agMapDefaultBrushWidth = (int)AG_ReadUint16(buf);
-	agMapDefaultBrushHeight = (int)AG_ReadUint16(buf);
+	mapDefaultWidth = (int)AG_ReadUint16(buf);
+	mapDefaultHeight = (int)AG_ReadUint16(buf);
+	mapDefaultBrushWidth = (int)AG_ReadUint16(buf);
+	mapDefaultBrushHeight = (int)AG_ReadUint16(buf);
 }
 
 void *
@@ -166,10 +165,10 @@ MAP_EditorConfig(void *p)
 	AG_BoxSetSpacing(bo, 5);
 	{
 		cb = AG_CheckboxNew(bo,0 , _("Moving tiles"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agMapviewAnimatedBg);
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &mapViewAnimatedBg);
 
 		sb = AG_SpinbuttonNew(bo, 0, _("Tile size: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &agMapviewBgTileSize);
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &mapViewBgTileSize);
 		AG_SpinbuttonSetMin(sb, 2);
 		AG_SpinbuttonSetMax(sb, 16384);
 	}
@@ -177,27 +176,24 @@ MAP_EditorConfig(void *p)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		cb = AG_CheckboxNew(bo, 0, _("Selection-bounded edition"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT,
-		    &agMapviewEditSelOnly);
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &mapViewEditSelOnly);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		msb = AG_MSpinbuttonNew(bo, 0, "x",
 		    _("Default map geometry: "));
-		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
-		    &agMapDefaultWidth);
-		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
-		    &agMapDefaultHeight);
+		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mapDefaultWidth);
+		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mapDefaultHeight);
 		AG_MSpinbuttonSetMin(msb, 1);
 		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
 		
 		msb = AG_MSpinbuttonNew(bo, 0, "x",
 		    _("Default brush geometry: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT,
-		    &agMapDefaultBrushWidth);
+		    &mapDefaultBrushWidth);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
-		    &agMapDefaultBrushHeight);
+		    &mapDefaultBrushHeight);
 		AG_MSpinbuttonSetMin(msb, 1);
 		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
 	}

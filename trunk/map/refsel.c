@@ -79,7 +79,7 @@ refsel_init(void *p)
 	      "multiple elements."));
 }
 
-const MAP_ToolOps agMapRefselOps = {
+const MAP_ToolOps mapRefselOps = {
 	"Refsel", N_("Select Node Elements"),
 	SELECT_REF_ICON,
 	sizeof(MAP_Tool),
@@ -90,7 +90,6 @@ const MAP_ToolOps agMapRefselOps = {
 	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */

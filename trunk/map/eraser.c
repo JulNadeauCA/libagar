@@ -140,7 +140,7 @@ eraser_cursor(void *p, SDL_Rect *rd)
 	return (1);
 }
 
-const MAP_ToolOps agMapEraserOps = {
+const MAP_ToolOps mapEraserOps = {
 	"Eraser", N_("Remove node elements."),
 	ERASER_TOOL_ICON,
 	sizeof(MAP_Tool),
@@ -151,7 +151,6 @@ const MAP_ToolOps agMapEraserOps = {
 	NULL,			/* edit */
 	eraser_cursor,
 	eraser_effect,
-
 	NULL,			/* mousemotion */
 	mousebuttondown,
 	mousebuttonup,

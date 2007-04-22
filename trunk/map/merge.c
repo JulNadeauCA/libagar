@@ -160,10 +160,10 @@ merge_create_brush(AG_Event *event)
 
 	m = MAP_New(NULL, m_name);
 	if (AG_ObjectLoad(m) == -1) {
-		extern int agMapDefaultBrushWidth, agMapDefaultBrushHeight;
+		extern int mapDefaultBrushWidth, mapDefaultBrushHeight;
 
-		if (MAP_AllocNodes(m, agMapDefaultBrushWidth,
-		    agMapDefaultBrushHeight) == -1) {
+		if (MAP_AllocNodes(m, mapDefaultBrushWidth,
+		    mapDefaultBrushHeight) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "MAP_AllocNodes: %s",
 			    AG_GetError());
 			goto fail;
@@ -200,7 +200,7 @@ merge_edit_brush(AG_Event *event)
 			continue;
 
 		tbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
-		MAP_ViewNew(win, brush, AG_MAPVIEW_EDIT|AG_MAPVIEW_GRID|
+		MAP_ViewNew(win, brush, MAP_VIEW_EDIT|MAP_VIEW_GRID|
 		                        MAPVIEW_PROPS, tbar, NULL);
 		AG_WindowAttach(pwin, win);
 		AG_WindowShow(win);
@@ -377,15 +377,15 @@ merge_cursor(MAP_Tool *t, SDL_Rect *rd)
 	return (rv);
 }
 
-const MAP_Tool merge_tool = {
-	"merge",
-	N_("Merge Pattern"),
-	MERGE_TOOL_ICON, -1,
+const MAP_Tool mapMergeOps = {
+	"Merge", N_("Merge Pattern"),
+	MERGE_TOOL_ICON,
+	sizeof(MAP_Tool),
 	0,
 	merge_init,
 	merge_destroy,
-	merge_load,
-	merge_save,
+	NULL,			/* pane */
+	NULL,			/* edit */
 	merge_cursor,
 	merge_effect,
 	NULL,			/* mousemotion */

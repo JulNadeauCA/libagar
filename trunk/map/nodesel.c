@@ -206,7 +206,7 @@ int
 MAP_NodeselCopy(MAP_Tool *t, SDLKey key, int state, void *arg)
 {
 	MAP_View *mv = t->mv;
-	MAP *copybuf = &agMapEditor.copybuf;
+	MAP *copybuf = &mapEditor.copybuf;
 	MAP *m = mv->map;
 	int sx, sy, dx, dy;
 
@@ -239,7 +239,7 @@ int
 MAP_NodeselPaste(MAP_Tool *t, SDLKey key, int state, void *arg)
 {
 	MAP_View *mv = t->mv;
-	MAP *copybuf = &agMapEditor.copybuf;
+	MAP *copybuf = &mapEditor.copybuf;
 	MAP *m = mv->map;
 	int sx, sy, dx, dy;
 	
@@ -325,7 +325,7 @@ nodesel_init(void *p)
 	       "elements."));
 }
 
-const MAP_ToolOps agMapNodeselOps = {
+const MAP_ToolOps mapNodeselOps = {
 	"Nodesel", N_("Select node(s)"),
 	SELECT_NODE_ICON,
 	sizeof(MAP_Tool),
@@ -336,7 +336,6 @@ const MAP_ToolOps agMapNodeselOps = {
 	NULL,			/* edit */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-
 	NULL,			/* mousemotion */
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */

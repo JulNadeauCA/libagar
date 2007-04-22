@@ -109,7 +109,7 @@ cursor(void *p, SDL_Rect *rd)
 	return (1);
 }
 
-const MAP_ToolOps agMapInvertOps = {
+const MAP_ToolOps mapInvertOps = {
 	"Invert", N_("Invert sprite color"),
 	INVERT_TOOL_ICON,
 	sizeof(MAP_Tool),
@@ -120,7 +120,6 @@ const MAP_ToolOps agMapInvertOps = {
 	NULL,			/* edit */
 	cursor,
 	effect,
-	
 	NULL,			/* mousemotion */
 	mousebuttondown,
 	mousebuttonup,

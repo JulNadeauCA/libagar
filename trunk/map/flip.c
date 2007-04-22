@@ -127,7 +127,7 @@ flip_cursor(void *p, SDL_Rect *rd)
 	return (1);
 }
 
-const MAP_ToolOps agMapFlipOps = {
+const MAP_ToolOps mapFlipOps = {
 	"Flip", N_("Flip/mirror node element"),
 	FLIP_TOOL_ICON,
 	sizeof(MAP_Tool),
@@ -138,7 +138,6 @@ const MAP_ToolOps agMapFlipOps = {
 	NULL,			/* edit */
 	flip_cursor,
 	NULL,			/* effect */
-
 	NULL,			/* mousemotion */
 	flip_mousebuttondown,
 	NULL,			/* mousebuttonup */
