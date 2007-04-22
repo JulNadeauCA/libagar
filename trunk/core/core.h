@@ -86,7 +86,7 @@ typedef unsigned long Ulong;
 
 #include <agar/core/object.h>
 #include <agar/core/event.h>
-#include <agar/core/icons.h>
+#include <agar/core/iconmgr.h>
 
 #include <agar/gui/text.h>
 
