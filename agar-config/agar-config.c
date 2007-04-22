@@ -1,7 +1,7 @@
 /*	$Csoft: agar-config.c,v 1.18 2005/09/18 04:59:10 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005, 2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -27,6 +27,7 @@
  */
 
 #include <config/version.h>
+#include <config/release.h>
 #include <config/enable_nls.h>
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
@@ -79,6 +80,8 @@ main(int argc, char *argv[])
 	for (i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "--version") == 0) {
 			printf("%s\n", VERSION);
+		} else if (strcmp(argv[i], "--release") == 0) {
+			printf("%s\n", RELEASE);
 		} else if (strcmp(argv[i], "--prefix") == 0) {
 			printf("%s\n", PREFIX);
 		} else if (strcmp(argv[i], "--sysconfdir") == 0) {
@@ -151,7 +154,8 @@ main(int argc, char *argv[])
 	}
 	if (i <= 1) {
 		fprintf(stderr,
-		    "Usage: %s [--version] [--prefix] [--sysconfdir] "
+		    "Usage: %s [--version] [--release] [--prefix] "
+		    "[--sysconfdir] "
 		    "[--incldir] [--libdir] [--sharedir] [--ttfdir] "
 		    "[--localedir] [--cflags] [--libs]\n", argv[0]);
 		return (1);
