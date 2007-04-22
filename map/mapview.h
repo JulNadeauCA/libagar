@@ -29,22 +29,22 @@ typedef struct map_view {
 	AG_Widget wid;
 
 	int flags;
-#define AG_MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
-#define AG_MAPVIEW_GRID		0x002	/* Display the grid */
-#define AG_MAPVIEW_CENTER	0x004	/* Request initial centering */
-#define AG_MAPVIEW_NO_CURSOR	0x008	/* Disable the cursor */
-#define AG_MAPVIEW_NO_BMPSCALE	0x010	/* Disable bitmap scaling */
-#define AG_MAPVIEW_NO_BG	0x020	/* Disable background tiles */ 
-#define AG_MAPVIEW_NO_NODESEL	0x040	/* Disable node selections */
-#define AG_MAPVIEW_SET_ATTRS	0x080	/* Setting node attributes */
-#define AG_MAPVIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
-#define AG_MAPVIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
+#define MAP_VIEW_EDIT		0x001	/* Mouse/keyboard edition */
+#define MAP_VIEW_GRID		0x002	/* Display the grid */
+#define MAP_VIEW_CENTER	0x004	/* Request initial centering */
+#define MAP_VIEW_NO_CURSOR	0x008	/* Disable the cursor */
+#define MAP_VIEW_NO_BMPSCALE	0x010	/* Disable bitmap scaling */
+#define MAP_VIEW_NO_BG	0x020	/* Disable background tiles */ 
+#define MAP_VIEW_NO_NODESEL	0x040	/* Disable node selections */
+#define MAP_VIEW_SET_ATTRS	0x080	/* Setting node attributes */
+#define MAP_VIEW_SHOW_OFFSETS	0x100	/* Show element tile offsets */
+#define MAP_VIEW_SHOW_ORIGIN	0x200	/* Show map origin node */
 
 	enum map_view_mode {
-		AG_MAPVIEW_EDITION,	/* Default edition mode */
-		AG_MAPVIEW_EDIT_ATTRS,	/* Editing node attributes */
-		AG_MAPVIEW_EDIT_ORIGIN,	/* Moving origin node */
-		AG_MAPVIEW_PLAY		/* Playing mode */
+		MAP_VIEW_EDITION,	/* Default edition mode */
+		MAP_VIEW_EDIT_ATTRS,	/* Editing node attributes */
+		MAP_VIEW_EDIT_ORIGIN,	/* Moving origin node */
+		MAP_VIEW_PLAY		/* Playing mode */
 	} mode;
 
 	int edit_attr;			/* Attribute being edited */
