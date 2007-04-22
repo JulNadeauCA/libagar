@@ -31,25 +31,21 @@
 .Dt MAP 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.3
 .Sh NAME
-.Nm map
-.Nd agar 2D multi-level maps
+.Nm MAP
+.Nd agar two-dimensional map
 .Sh SYNOPSIS
 .Fd #include <agar/map/map.h>
 .Sh DESCRIPTION
 The
 .Nm
-interface implements a 2D map of fixed-size nodes arranged into multiple
-planes.
+interface implements a 2D map of fixed-size nodes arranged into
+multiple planes.
 .Nm
 is suitable for 2D overhead, isometric and platform graphics.
-Each nodes contains a stack of elements (such as references to 2D graphics
-fragments and animations).
-.Pp
-In a game, for example, the rendering of a scene might be achieved by
-blitting the graphical references in the vicinity, while the audio system is
-playing samples from nearby audio elements.
+Each nodes contains a stack of items (usually references to 2D graphic
+fragments).
 .Pp
 Four types of references are currently defined:
 .Pp
@@ -357,7 +353,7 @@ and
 .Dv NITEM_BIO
 flags could be replaced by a special type of reference for such attributes.
 .Sh SEE ALSO
-.Xr agar 3 ,
+.Xr MAP_View 3 ,
 .Xr AG_Object 3
 .Sh HISTORY
 The

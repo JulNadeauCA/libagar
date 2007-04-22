@@ -347,8 +347,8 @@ MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
 	    AG_WIDGET_VFILL);
 
-	mv->flags = (flags | AG_MAPVIEW_CENTER);
-	mv->mode = AG_MAPVIEW_EDITION;
+	mv->flags = (flags | MAP_VIEW_CENTER);
+	mv->mode = MAP_VIEW_EDITION;
 	mv->edit_attr = 0;
 	mv->map = m;
 	mv->actor = NULL;
@@ -565,12 +565,12 @@ MAP_ViewDraw(void *p)
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
 	
-	if (mv->flags & AG_MAPVIEW_CENTER) {
-		mv->flags &= ~(AG_MAPVIEW_CENTER);
+	if (mv->flags & MAP_VIEW_CENTER) {
+		mv->flags &= ~(MAP_VIEW_CENTER);
 		center_to_origin(mv);
 	}
 
-	if ((mv->flags & AG_MAPVIEW_NO_BG) == 0) {
+	if ((mv->flags & MAP_VIEW_NO_BG) == 0) {
 		SDL_Rect rtiling;
 
 		rtiling.x = 0;
@@ -622,7 +622,7 @@ draw_layer:
 				    mv->cam);
 
 #ifdef DEBUG
-				if (mv->flags & AG_MAPVIEW_SHOW_OFFSETS) {
+				if (mv->flags & MAP_VIEW_SHOW_OFFSETS) {
 					agPrim.line(mv, rx, ry,
 					    (rx+nref->r_gfx.xcenter +
 					     nref->r_gfx.xmotion -
@@ -634,7 +634,7 @@ draw_layer:
 				}
 #endif /* DEBUG */
 				if ((nref->layer == m->cur_layer) &&
-				    (mv->mode == AG_MAPVIEW_EDIT_ATTRS)) {
+				    (mv->mode == MAP_VIEW_EDIT_ATTRS)) {
 					Uint8 c[4];
 
 					MAP_ItemAttrColor(mv->edit_attr,
@@ -659,7 +659,7 @@ draw_layer:
 			if (!agEditMode)
 				continue;
 				
-			if ((mv->flags & AG_MAPVIEW_SHOW_ORIGIN) &&
+			if ((mv->flags & MAP_VIEW_SHOW_ORIGIN) &&
 			    (mx == m->origin.x && my == m->origin.y)) {
 				int t2 = AGMTILESZ(mv)/2;
 			
@@ -700,7 +700,7 @@ next_layer:
 
 #ifdef EDITION
 	/* Draw the node grid. */
-	if (mv->flags & AG_MAPVIEW_GRID) {
+	if (mv->flags & MAP_VIEW_GRID) {
 		int rx2 = rx;
 
 		for (; ry >= mv->yoffs; ry -= AGMTILESZ(mv)) {
@@ -725,8 +725,8 @@ next_layer:
 	}
 
 	/* Draw the cursor for the current tool. */
-	if ((mv->flags & AG_MAPVIEW_EDIT) && (mv->mode == AG_MAPVIEW_EDITION) &&
-	    (mv->flags & AG_MAPVIEW_NO_CURSOR) == 0 &&
+	if ((mv->flags & MAP_VIEW_EDIT) && (mv->mode == MAP_VIEW_EDITION) &&
+	    (mv->flags & MAP_VIEW_NO_CURSOR) == 0 &&
 	    (mv->cx != -1 && mv->cy != -1)) {
 		draw_cursor(mv);
 	}
@@ -935,16 +935,16 @@ mousemotion(AG_Event *event)
 	mv->mouse.xmap = xmap;
 	mv->mouse.ymap = ymap;
 
-	if (mv->flags & AG_MAPVIEW_EDIT) {
+	if (mv->flags & MAP_VIEW_EDIT) {
 		if (state & SDL_BUTTON(1) &&
 		    mv->cx != -1 && mv->cy != -1 &&
 		    (x != mv->mouse.x || y != mv->mouse.y) &&
 		    (inside_nodesel(mv, mv->cx, mv->cy))) {
-			if (mv->flags & AG_MAPVIEW_SET_ATTRS) {
+			if (mv->flags & MAP_VIEW_SET_ATTRS) {
 				toggle_attrib(mv);
 				goto out;
 			}
-			if (mv->mode == AG_MAPVIEW_EDIT_ORIGIN) {
+			if (mv->mode == MAP_VIEW_EDIT_ORIGIN) {
 				mv->map->origin.x = mv->cx;
 				mv->map->origin.y = mv->cy;
 				mv->map->origin.layer = mv->map->cur_layer;
@@ -1033,21 +1033,21 @@ mousebuttondown(AG_Event *event)
 	      mv->mouse.xmap, mv->mouse.ymap, button) == -1)
 		goto out;
 
-	if ((mv->flags & AG_MAPVIEW_EDIT) &&
+	if ((mv->flags & MAP_VIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
-		if (mv->mode == AG_MAPVIEW_EDIT_ATTRS &&
+		if (mv->mode == MAP_VIEW_EDIT_ATTRS &&
 		    button == SDL_BUTTON_LEFT) {
-			mv->flags |= AG_MAPVIEW_SET_ATTRS;
+			mv->flags |= MAP_VIEW_SET_ATTRS;
 			mv->attr_x = -1;
 			mv->attr_y = -1;
 			toggle_attrib(mv);
 			goto out;
 		}
-		if (mv->flags & AG_MAPVIEW_SHOW_ORIGIN &&
+		if (mv->flags & MAP_VIEW_SHOW_ORIGIN &&
 		    button == SDL_BUTTON_LEFT &&
 		    mv->cx == m->origin.x &&
 		    mv->cy == m->origin.y) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ORIGIN);
+			MAP_ViewSetMode(mv, MAP_VIEW_EDIT_ORIGIN);
 			goto out;
 		}
 		if (mv->curtool != NULL) {
@@ -1114,7 +1114,7 @@ mousebuttondown(AG_Event *event)
 			
 			if (mv->curtool != NULL &&
 			    mv->curtool->ops == &agMapNodeselOps &&
-			    (mv->flags & AG_MAPVIEW_NO_NODESEL) == 0) {
+			    (mv->flags & MAP_VIEW_NO_NODESEL) == 0) {
 				MAP_NodeselBegin(mv);
 				goto out;
 			}
@@ -1159,7 +1159,7 @@ mousebuttondown(AG_Event *event)
 		break;
 	case SDL_BUTTON_MIDDLE:
 		/* TODO menu */
-		if ((mv->flags & AG_MAPVIEW_EDIT) == 0 ||
+		if ((mv->flags & MAP_VIEW_EDIT) == 0 ||
 		    mv->curtool == NULL) {
 		    	mv->mouse.scrolling++;
 			break;
@@ -1169,14 +1169,14 @@ mousebuttondown(AG_Event *event)
 		mv->mouse.scrolling++;
 		goto out;
 	case SDL_BUTTON_WHEELDOWN:
-		if ((mv->flags & AG_MAPVIEW_NO_BMPSCALE) == 0) {
+		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
 			MAP_ViewSetScale(mv, AGMZOOM(mv) - agMapviewZoomInc,
 			    1);
 			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
 		}
 		break;
 	case SDL_BUTTON_WHEELUP:
-		if ((mv->flags & AG_MAPVIEW_NO_BMPSCALE) == 0) {
+		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
 			MAP_ViewSetScale(mv, AGMZOOM(mv) + agMapviewZoomInc,
 			    1);
 			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
@@ -1200,7 +1200,7 @@ mousebuttonup(AG_Event *event)
 	AG_MutexLock(&m->lock);
 	get_node_coords(mv, &x, &y);
 
-	mv->flags &= ~(AG_MAPVIEW_SET_ATTRS);
+	mv->flags &= ~(MAP_VIEW_SET_ATTRS);
 	
 	if (mv->actor != NULL &&
 	    AGACTOR_OPS(mv->actor)->mousebuttonup != NULL) {
@@ -1211,10 +1211,10 @@ mousebuttonup(AG_Event *event)
 			goto out;
 	}
 
-	if ((mv->flags & AG_MAPVIEW_EDIT) &&
+	if ((mv->flags & MAP_VIEW_EDIT) &&
 	    (mv->cx >= 0 && mv->cy >= 0)) {
-	    	if (mv->mode == AG_MAPVIEW_EDIT_ORIGIN) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
+	    	if (mv->mode == MAP_VIEW_EDIT_ORIGIN) {
+			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
 		}
 		if (mv->curtool != NULL) {
 			if (mv->curtool->ops->mousebuttonup != NULL &&
@@ -1299,7 +1299,7 @@ key_up(AG_Event *event)
 			goto out;
 	}
 	
-	if (mv->flags & AG_MAPVIEW_EDIT &&
+	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keyup != NULL &&
 	    mv->curtool->ops->keyup(mv->curtool, keysym, keymod) == 1)
@@ -1313,7 +1313,7 @@ key_up(AG_Event *event)
 			    (kbinding->mod == KMOD_NONE ||
 			     keymod & kbinding->mod)) {
 				if (kbinding->edit &&
-				   (((mv->flags & AG_MAPVIEW_EDIT) == 0) ||
+				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((AGOBJECT(mv->map)->flags &
 				      AG_OBJECT_READONLY)))) {
 					continue;
@@ -1346,7 +1346,7 @@ key_down(AG_Event *event)
 			goto out;
 	}
 	
-	if (mv->flags & AG_MAPVIEW_EDIT &&
+	if (mv->flags & MAP_VIEW_EDIT &&
 	    mv->curtool != NULL &&
 	    mv->curtool->ops->keydown != NULL &&
 	    mv->curtool->ops->keydown(mv->curtool, keysym, keymod) == 1)
@@ -1360,7 +1360,7 @@ key_down(AG_Event *event)
 			    (kbinding->mod == KMOD_NONE ||
 			     keymod & kbinding->mod)) {
 				if (kbinding->edit &&
-				   (((mv->flags & AG_MAPVIEW_EDIT) == 0) ||
+				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
 				    ((AGOBJECT(mv->map)->flags &
 				      AG_OBJECT_READONLY)))) {
 					continue;
@@ -1386,7 +1386,7 @@ key_down(AG_Event *event)
 		break;
 	case SDLK_1:
 	case SDLK_0:
-		if ((mv->flags & AG_MAPVIEW_NO_BMPSCALE) == 0) {
+		if ((mv->flags & MAP_VIEW_NO_BMPSCALE) == 0) {
 			MAP_ViewSetScale(mv, 100, 1);
 			MAP_ViewStatus(mv, _("%d%% zoom"), AGMZOOM(mv));
 		}
@@ -1395,49 +1395,49 @@ key_down(AG_Event *event)
 		center_to_origin(mv);
 		break;
 	case SDLK_g:
-		if (mv->flags & AG_MAPVIEW_GRID) {
-			mv->flags &= ~(AG_MAPVIEW_GRID);
+		if (mv->flags & MAP_VIEW_GRID) {
+			mv->flags &= ~(MAP_VIEW_GRID);
 		} else {
-			mv->flags |= AG_MAPVIEW_GRID;
+			mv->flags |= MAP_VIEW_GRID;
 		}
 		break;
 	case SDLK_b:
-		if (mv->flags & AG_MAPVIEW_NO_BG) {
-			mv->flags &= ~(AG_MAPVIEW_NO_BG);
+		if (mv->flags & MAP_VIEW_NO_BG) {
+			mv->flags &= ~(MAP_VIEW_NO_BG);
 		} else {
-			mv->flags |= AG_MAPVIEW_NO_BG;
+			mv->flags |= MAP_VIEW_NO_BG;
 		}
 		break;
 	case SDLK_w:
-		if (mv->mode == AG_MAPVIEW_EDITION) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
+		if (mv->mode == MAP_VIEW_EDITION) {
+			MAP_ViewSetMode(mv, MAP_VIEW_EDIT_ATTRS);
 			mv->edit_attr = MAP_ITEM_BLOCK;
 		} else {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
+			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
 		}
 		break;
 	case SDLK_c:
-		if (mv->mode == AG_MAPVIEW_EDITION) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
+		if (mv->mode == MAP_VIEW_EDITION) {
+			MAP_ViewSetMode(mv, MAP_VIEW_EDIT_ATTRS);
 			mv->edit_attr = MAP_ITEM_CLIMBABLE;
 		} else {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
+			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
 		}
 		break;
 	case SDLK_s:
-		if (mv->mode == AG_MAPVIEW_EDITION) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
+		if (mv->mode == MAP_VIEW_EDITION) {
+			MAP_ViewSetMode(mv, MAP_VIEW_EDIT_ATTRS);
 			mv->edit_attr = MAP_ITEM_SLIPPERY;
 		} else {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
+			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
 		}
 		break;
 	case SDLK_j:
-		if (mv->mode == AG_MAPVIEW_EDITION) {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDIT_ATTRS);
+		if (mv->mode == MAP_VIEW_EDITION) {
+			MAP_ViewSetMode(mv, MAP_VIEW_EDIT_ATTRS);
 			mv->edit_attr = MAP_ITEM_JUMPABLE;
 		} else {
-			MAP_ViewSetMode(mv, AG_MAPVIEW_EDITION);
+			MAP_ViewSetMode(mv, MAP_VIEW_EDITION);
 		}
 		break;
 	}
