@@ -4,14 +4,21 @@ TOP=	.
 include ${TOP}/Makefile.config
 
 SUBDIR=	 agar-config \
+	 agar-sg-config \
+	 agar-map-config \
 	 compat \
 	 core \
 	 gui \
 	 vg \
 	 rg \
+	 sg \
+	 map \
 	 mat \
 	 libintl \
 	 po
+
+#SUBDIR+=net \
+#	agar-net-config
 
 all: all-subdir
 clean: clean-subdir
@@ -74,6 +81,9 @@ install-includes:
 		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
 		   ${INCLDIR}/agar/rg.h; \
+		echo "${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/sg/sg_pub.h \
+		   ${INCLDIR}/agar/sg.h; \
 	else \
 		echo "${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h"; \
@@ -85,6 +95,8 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
 		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
+		echo "${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h"; \
+		${SUDO} ${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h; \
 	fi
 
 deinstall-includes:
