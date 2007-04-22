@@ -46,8 +46,8 @@ between a set of objects organized in a tree structure.
 .Pp
 A generic event delivery and actions system is also provided, with support
 for type checking, named arguments and multithreaded events.
-Other features of the object system include property tables and object-specific
-timer management.
+Other features of the object system include property tables and timer
+facilities.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "AG_Object *"
@@ -238,7 +238,6 @@ flags are defined:
 #define AG_OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
 #define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
 #define AG_OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
-#define AG_OBJECT_REMAIN_GFX     0x800 /* Keep graphics resident */
 .Ed
 .Pp
 The
@@ -579,7 +578,6 @@ argument may be one of:
 .Pp
 .Bd -literal
 enum ag_object_page_item {
-	AG_OBJECT_GFX,		/* Graphics */
 	AG_OBJECT_DATA		/* Object data */
 };
 .Ed

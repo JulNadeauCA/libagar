@@ -11,7 +11,6 @@
 
 #include <agar/core/timeout.h>
 #include <agar/core/prop.h>
-#include <agar/core/gfx.h>
 
 #include "begin_code.h"
 
@@ -57,23 +56,19 @@ typedef struct ag_object {
 #define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by AG_ObjectLoad() */
 #define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by AG_ObjectLoad() */
 #define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Close and reopen editor on load */
-#define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep dynamic data resident */
-#define AG_OBJECT_REMAIN_GFX	 0x800	/* Keep graphics resident */
+#define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep user data resident */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
 				 AG_OBJECT_READONLY|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
-				 AG_OBJECT_REMAIN_DATA|\
-				 AG_OBJECT_REMAIN_GFX)
+				 AG_OBJECT_REMAIN_DATA)
 #define AG_OBJECT_DUPED_FLAGS	(AG_OBJECT_SAVED_FLAGS|\
 				 AG_OBJECT_NON_PERSISTENT|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
-				 AG_OBJECT_REMAIN_DATA|\
-				 AG_OBJECT_REMAIN_GFX)
+				 AG_OBJECT_REMAIN_DATA)
 
 	AG_Mutex lock;
-	AG_Gfx *gfx;
 	Uint32 data_used;
 	Uint nevents;				/* Number of event handlers */
 	TAILQ_HEAD(,ag_event) events;		/* Event handlers */
@@ -89,8 +84,7 @@ typedef struct ag_object {
 } AG_Object;
 
 enum ag_object_page_item {
-	AG_OBJECT_GFX,		/* Shared graphics */
-	AG_OBJECT_DATA		/* Dynamic data */
+	AG_OBJECT_DATA			/* User data */
 };
 
 enum ag_object_checksum_alg {
