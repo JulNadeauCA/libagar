@@ -21,7 +21,7 @@
 #include <agar/core/error_pub.h>
 #include <agar/core/config.h>
 #include <agar/core/view.h>
-#include <agar/core/icons.h>
+#include <agar/core/iconmgr.h>
 #include <agar/core/objmgr.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
