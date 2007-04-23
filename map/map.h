@@ -6,14 +6,14 @@
 
 #define MAPTILESZ 16		/* Default tile size in pixels */
 
-#define AG_MAX_TILESZ		16384
-#define AG_MAP_MAXWIDTH		32767
-#define AG_MAP_MAXHEIGHT	32767
-#define AG_MAP_MAXLAYERS	256
-#define AG_MAP_MAXCAMERAS	256
-#define AG_MAP_MAXLAYERNAME	128
-#define AG_MAP_MAXCAMERANAME	128
-#define AG_NODE_MAXITEMS	32767
+#define MAP_TILESZ_MAX		16384
+#define MAP_WIDTH_MAX		32767
+#define MAP_HEIGHT_MAX		32767
+#define MAP_LAYERS_MAX		256
+#define MAP_CAMERAS_MAX		256
+#define MAP_LAYER_NAME_MAX	128
+#define MAP_CAMERA_NAME_MAX	128
+#define MAP_NODE_ITEMS_MAX	32767
 #define MAP_ITEM_MAXTRANSFORMS	16384
 #define MAP_ITEM_MAXMASKS	16384
 
@@ -79,7 +79,7 @@ typedef struct map_node {
 } MAP_Node;
 
 typedef struct map_layer {
-	char name[AG_MAP_MAXLAYERNAME];
+	char name[MAP_LAYER_NAME_MAX];
 	int visible;				/* Show/hide flag */
 	Sint16 xinc, yinc;			/* Rendering direction */
 	Uint8 alpha;				/* Transparency value */
@@ -98,7 +98,7 @@ enum map_camera_alignment {
 };
 
 typedef struct map_camera {
-	char name[AG_MAP_MAXCAMERANAME];
+	char name[MAP_CAMERA_NAME_MAX];
 	int flags;
 	int x, y;				/* Position of camera */
 	enum map_camera_alignment alignment;	/* View alignment */
@@ -136,7 +136,7 @@ typedef struct map_mod_blk {
 struct map_actor;
 
 typedef struct map {
-	AG_Object obj;
+	struct ag_object obj;
 
 	AG_Mutex lock;
 	Uint flags;

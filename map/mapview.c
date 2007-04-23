@@ -852,8 +852,8 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	AGMTILESZ(mv) = zoom*MAPTILESZ/100;
 	AGMPIXSZ(mv) = AGMTILESZ(mv)/MAPTILESZ;
 
-	if (AGMTILESZ(mv) > AG_MAX_TILESZ)
-		AGMTILESZ(mv) = AG_MAX_TILESZ;
+	if (AGMTILESZ(mv) > MAP_TILESZ_MAX)
+		AGMTILESZ(mv) = MAP_TILESZ_MAX;
 
 	mv->mw = AGWIDGET(mv)->w/AGMTILESZ(mv) + 2;
 	mv->mh = AGWIDGET(mv)->h/AGMTILESZ(mv) + 2;

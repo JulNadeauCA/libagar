@@ -91,9 +91,9 @@ effect(void *p, MAP_Node *n)
 	int dw = m->mapw, dh = m->maph;
 	int x, y, angle = 0, i = 0;
 	AG_TlistItem *it;
-	AG_Sprite *spr;
 	Uint32 rand = 0;
 	Uint8 byte = 0;
+	RG_Tile *tile;
 
 	MAP_ViewGetSelection(mv, &dx, &dy, &dw, &dh);
 	MAP_ModBegin(m);
@@ -113,7 +113,8 @@ effect(void *p, MAP_Node *n)
 				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, dn, m->cur_layer);
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
-					MAP_NodeCopyItem(r, m, dn, m->cur_layer);
+					MAP_NodeCopyItem(r, m, dn,
+					    m->cur_layer);
 				}
 				if (++sx >= copybuf->mapw)
 					sx = 0;
@@ -129,8 +130,8 @@ effect(void *p, MAP_Node *n)
 		    strcmp(it->cat, "tile") != 0) {
 			break;
 		}
-		spr = it->p1;
-		
+		tile = it->p1;
+#if 0
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
 				MAP_Node *n = &m->map[y][x];
@@ -149,7 +150,6 @@ effect(void *p, MAP_Node *n)
 				r->r_gfx.ycenter = MAPTILESZ/2;
 				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
 	
-#if 0
 				if (fi->randomize_angle) {
 					switch (i++) {
 					case 0:
@@ -177,9 +177,9 @@ effect(void *p, MAP_Node *n)
 						AG_TransformRotate(r, 270);
 					}
 				}
-#endif
 			}
 		}
+#endif
 		break;
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {

@@ -458,9 +458,10 @@ AG_GfxAddAnim(AG_Gfx *gfx)
 	return (gfx->nanims++);
 }
 
+#if 0
 /* Load static graphics from a den archive. Used for widgets and such. */
 int
-AG_WireGfx(void *p, const char *name)
+AG_GfxLoadFromDEN(void *p, const char *name)
 {
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
@@ -484,6 +485,7 @@ AG_WireGfx(void *p, const char *name)
 	AG_DenClose(den);
 	return (0);
 }
+#endif
 
 void
 AG_GfxUsed(void *p)
@@ -652,4 +654,52 @@ AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 			AG_WriteSurface(buf, anim->frames[j]);
 	}
 	return (0);
+}
+
+static void
+poll_gfx(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
+	AG_Gfx *gfx = ob->gfx;
+	AG_TlistItem *it;
+	Uint32 i;
+
+	if (gfx == NULL)
+		return;
+	
+	AG_TlistClear(tl);
+	AG_TlistAdd(tl, NULL, "(%u references)", gfx->used);
+	for (i = 0; i < gfx->nsprites; i++) {
+		AG_Sprite *spr = &gfx->sprites[i];
+		SDL_Surface *su = spr->su;
+		AG_CachedSprite *csp;
+
+		if (su != NULL) {
+			it = AG_TlistAdd(tl, su, "%u. %s - %ux%ux%u (%s)", i,
+			    spr->name, su->w, su->h, su->format->BitsPerPixel,
+			    agGfxSnapNames[spr->snap_mode]);
+		} else {
+			it = AG_TlistAdd(tl, su, "%u. (null)", i);
+		}
+		it->p1 = spr;
+		it->depth = 0;
+
+		if (!SLIST_EMPTY(&spr->csprites)) {
+			it->flags |= AG_TLIST_HAS_CHILDREN;
+		}
+		SLIST_FOREACH(csp, &spr->csprites, sprites) {
+			char label[AG_TLIST_LABEL_MAX];
+			AG_TlistItem *it;
+
+			snprintf(label, sizeof(label), "%u ticks\n",
+			    csp->last_drawn);
+			AG_TransformPrint(&csp->transforms, label,
+			    sizeof(label));
+
+			it = AG_TlistAddPtr(tl, csp->su, label, csp);
+			it->depth = 1;
+		}
+	}
+	AG_TlistRestore(tl);
 }
