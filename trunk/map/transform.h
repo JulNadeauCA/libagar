@@ -1,8 +1,8 @@
 /*	$Csoft: transform.h,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_GFX_TRANSFORM_H_
-#define _AGAR_GFX_TRANSFORM_H_
+#ifndef _AGAR_MAP_GFX_TRANSFORM_H_
+#define _AGAR_MAP_GFX_TRANSFORM_H_
 #include "begin_code.h"
 
 #define AG_TRANSFORM_MAX_ARGS	64
@@ -47,4 +47,4 @@ AG_Transform   *AG_TransformRotate(struct ag_nitem *, int);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_GFX_TRANSFORM_H_ */
+#endif	/* _AGAR_MAP_GFX_TRANSFORM_H_ */

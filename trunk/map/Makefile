@@ -8,7 +8,8 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 
 SRCS=	fill.c flip.c invert.c map.c mapedit.c mapview.c nodemask.c \
-	nodesel.c refsel.c tool.c insert.c ginsert.c eraser.c actor.c
+	nodesel.c refsel.c tool.c insert.c ginsert.c eraser.c actor.c \
+	transform.c
 MAN3=	MAP.3 MAP_View.3
 
 CFLAGS+=${SDL_CFLAGS}

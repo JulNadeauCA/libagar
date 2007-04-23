@@ -186,7 +186,7 @@ MAP_EditorConfig(void *p)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mapDefaultWidth);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mapDefaultHeight);
 		AG_MSpinbuttonSetMin(msb, 1);
-		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
+		AG_MSpinbuttonSetMax(msb, MAP_WIDTH_MAX);
 		
 		msb = AG_MSpinbuttonNew(bo, 0, "x",
 		    _("Default brush geometry: "));
@@ -195,7 +195,7 @@ MAP_EditorConfig(void *p)
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT,
 		    &mapDefaultBrushHeight);
 		AG_MSpinbuttonSetMin(msb, 1);
-		AG_MSpinbuttonSetMax(msb, AG_MAP_MAXWIDTH);
+		AG_MSpinbuttonSetMax(msb, MAP_WIDTH_MAX);
 	}
 	return (win);
 }

@@ -284,9 +284,9 @@ MAP_AllocNodes(MAP *m, Uint w, Uint h)
 {
 	int x, y;
 	
-	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
+	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
 		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
-		    AG_MAP_MAXWIDTH, AG_MAP_MAXHEIGHT);
+		    MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
 		return (-1);
 	}
 
@@ -349,9 +349,9 @@ MAP_Resize(MAP *m, Uint w, Uint h)
 	MAP tm;
 	int x, y;
 
-	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT) {
+	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX) {
 		AG_SetError(_("%ux%u nodes exceed %ux%u."), w, h,
-		    AG_MAP_MAXWIDTH, AG_MAP_MAXHEIGHT);
+		    MAP_WIDTH_MAX, MAP_HEIGHT_MAX);
 		return (-1);
 	}
 
@@ -409,8 +409,8 @@ MAP_SetZoom(MAP *m, int ncam, Uint zoom)
 
 	AG_MutexLock(&m->lock);
 	cam->zoom = zoom;
-	if ((cam->tilesz = cam->zoom*MAPTILESZ/100) > AG_MAX_TILESZ) {
-		cam->tilesz = AG_MAX_TILESZ;
+	if ((cam->tilesz = cam->zoom*MAPTILESZ/100) > MAP_TILESZ_MAX) {
+		cam->tilesz = MAP_TILESZ_MAX;
 	}
 	AG_MutexUnlock(&m->lock);
 }
@@ -522,7 +522,7 @@ MAP_Init(void *obj, const char *name)
 int
 MAP_PushLayer(MAP *m, const char *name)
 {
-	char layname[AG_MAP_MAXLAYERNAME];
+	char layname[MAP_LAYER_NAME_MAX];
 
 	if (name[0] == '\0') {
 		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
@@ -530,7 +530,7 @@ MAP_PushLayer(MAP *m, const char *name)
 		strlcpy(layname, name, sizeof(layname));
 	}
 
-	if (m->nlayers+1 > AG_MAP_MAXLAYERS) {
+	if (m->nlayers+1 > MAP_LAYERS_MAX) {
 		AG_SetError(_("Too many layers."));
 		return (-1);
 	}
@@ -1010,8 +1010,8 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node,
 			}
 			ox = (int)AG_ReadUint32(buf);
 			oy = (int)AG_ReadUint32(buf);
-			if (ox < 0 || ox > AG_MAP_MAXWIDTH || 
-			    ox < 0 || oy > AG_MAP_MAXHEIGHT) {
+			if (ox < 0 || ox > MAP_WIDTH_MAX || 
+			    ox < 0 || oy > MAP_HEIGHT_MAX) {
 				AG_SetError(_("Invalid warp coordinates."));
 				return (-1);
 			}
@@ -1077,7 +1077,7 @@ MAP_NodeLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node)
 	MAP_Item *r;
 	int i;
 	
-	if ((nrefs = AG_ReadUint32(buf)) > AG_NODE_MAXITEMS) {
+	if ((nrefs = AG_ReadUint32(buf)) > MAP_NODE_ITEMS_MAX) {
 		AG_SetError(_("Too many noderefs."));
 		return (-1);
 	}
@@ -1155,8 +1155,8 @@ MAP_Load(void *ob, AG_Netbuf *buf)
 	h = AG_ReadUint32(buf);
 	origin_x = AG_ReadUint32(buf);
 	origin_y = AG_ReadUint32(buf);
-	if (w > AG_MAP_MAXWIDTH || h > AG_MAP_MAXHEIGHT ||
-	    origin_x > AG_MAP_MAXWIDTH || origin_y > AG_MAP_MAXHEIGHT) {
+	if (w > MAP_WIDTH_MAX || h > MAP_HEIGHT_MAX ||
+	    origin_x > MAP_WIDTH_MAX || origin_y > MAP_HEIGHT_MAX) {
 		AG_SetError(_("Invalid map geometry."));
 		goto fail;
 	}
@@ -1166,7 +1166,7 @@ MAP_Load(void *ob, AG_Netbuf *buf)
 	m->origin.y = (int)origin_y;
 	
 	/* Read the layer information. */
-	if ((m->nlayers = (Uint)AG_ReadUint32(buf)) > AG_MAP_MAXLAYERS) {
+	if ((m->nlayers = (Uint)AG_ReadUint32(buf)) > MAP_LAYERS_MAX) {
 		AG_SetError(_("Too many layers."));
 		goto fail;
 	}
@@ -1188,7 +1188,7 @@ MAP_Load(void *ob, AG_Netbuf *buf)
 	m->origin.layer = (int)AG_ReadUint8(buf);
 	
 	/* Read the camera information. */
-	if ((m->ncameras = (Uint)AG_ReadUint32(buf)) > AG_MAP_MAXCAMERAS) {
+	if ((m->ncameras = (Uint)AG_ReadUint32(buf)) > MAP_CAMERAS_MAX) {
 		AG_SetError(_("Too many cameras."));
 		goto fail;
 	}
@@ -2308,7 +2308,7 @@ edit_properties(AG_Event *event)
 	ntab = AG_NotebookAddTab(nb, _("Map settings"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(ntab, 0, "x", _("Map size: "));
-		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
+		AG_MSpinbuttonSetRange(msb, 1, MAP_WIDTH_MAX);
 		msb->xvalue = m->mapw;
 		msb->yvalue = m->maph;
 		AG_SetEvent(msb, "mspinbutton-return", resize_map, "%p,%p",
@@ -2317,7 +2317,7 @@ edit_properties(AG_Event *event)
 		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Origin position: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &m->origin.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &m->origin.y);
-		AG_MSpinbuttonSetRange(msb, 0, AG_MAP_MAXWIDTH);
+		AG_MSpinbuttonSetRange(msb, 0, MAP_WIDTH_MAX);
 
 		sb = AG_SpinbuttonNew(ntab, 0, _("Origin layer: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &m->origin.layer);
@@ -2329,7 +2329,7 @@ edit_properties(AG_Event *event)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mx);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->my);
 		AG_MSpinbuttonSetRange(msb,
-		   -AG_MAP_MAXWIDTH/2, AG_MAP_MAXWIDTH/2);
+		   -MAP_WIDTH_MAX/2, MAP_WIDTH_MAX/2);
 	
 		/* XXX unsafe */
 		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Camera position: "));
@@ -2346,12 +2346,12 @@ edit_properties(AG_Event *event)
 		    _("Display offset (view): "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->xoffs);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->yoffs);
-		AG_MSpinbuttonSetRange(msb, -AG_MAX_TILESZ, AG_MAX_TILESZ);
+		AG_MSpinbuttonSetRange(msb, -MAP_TILESZ_MAX, MAP_TILESZ_MAX);
 		
 		msb = AG_MSpinbuttonNew(ntab, 0, "x", _("Display area: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &mv->mw);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &mv->mh);
-		AG_MSpinbuttonSetRange(msb, 1, AG_MAP_MAXWIDTH);
+		AG_MSpinbuttonSetRange(msb, 1, MAP_WIDTH_MAX);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
@@ -2403,32 +2403,28 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 	if (AGOBJECT_TYPE(pob, "tileset")) {
 		AG_Object *ts = (AG_Object *)pob;
 		AG_TlistItem *sit, *fit;
+		RG_Tile *tile;
 		int i;
 
 		it->cat = "tileset";
 
 		AG_MutexLock(&ts->lock);
-		
-		if (ts->gfx != NULL &&
-		    (ts->gfx->nsprites > 0 ||
-		     ts->gfx->nanims > 0)) {
+
+		if (!TAILQ_EMPTY(&ts->tiles)) {
 			it->flags |= AG_TLIST_HAS_CHILDREN;
 		}
 		if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 		    AG_TlistVisibleChildren(tl, it)) {
-			for (i = 0; i < ts->gfx->nsprites; i++) {
-				AG_Sprite *spr = &AG_SPRITE(ts,i);
-				int x, y;
-			
-				if (spr->su == NULL) {
+			TAILQ_FOREACH(tile, &ts->tiles, tiles) {
+				if (tile->su == NULL) {
 					continue;
 				}
 				sit = AG_TlistAdd(tl, NULL, "%s (%ux%u)",
-				    spr->name, spr->su->w, spr->su->h);
+				    t->name, t->su->w, t->su->h);
 				sit->depth = depth+1;
 				sit->cat = "tile";
-				sit->p1 = spr;
-				AG_TlistSetIcon(tl, sit, spr->su);
+				sit->p1 = t;
+				AG_TlistSetIcon(tl, sit, t->su);
 			}
 		}
 		AG_MutexUnlock(&ts->lock);
@@ -2662,7 +2658,7 @@ clear_layer(AG_Event *event)
 static void
 move_layer(AG_Event *event)
 {
-	char tmp[AG_MAP_MAXLAYERNAME];
+	char tmp[MAP_LAYER_NAME_MAX];
 	AG_Tlist *tl = AG_PTR(1);
 	MAP *m = AG_PTR(2);
 	int movedown = AG_INT(3);
@@ -2733,7 +2729,7 @@ mask_layer_menu(AG_Event *event)
 static void
 push_layer(AG_Event *event)
 {
-	char name[AG_MAP_MAXLAYERNAME];
+	char name[MAP_LAYER_NAME_MAX];
 	MAP *m = AG_PTR(1);
 	AG_Textbox *tb = AG_PTR(2);
 	

@@ -1,7 +1,7 @@
 /*	$Csoft: gfx.h,v 1.41 2005/08/27 04:35:51 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/core/gfx_transform.h>
+#include <agar/map/gfx_transform.h>
 
 #include "begin_code.h"
 
@@ -105,11 +105,11 @@ AG_Gfx	*AG_GfxNew(void *);
 void	 AG_GfxInit(AG_Gfx *);
 void	 AG_GfxDestroy(AG_Gfx *);
 int	 AG_HasTransparency(SDL_Surface *);
-int	 AG_WireGfx(void *, const char *);
 int	 AG_GfxLoad(struct ag_object *);
 int	 AG_GfxSave(struct ag_object *, AG_Netbuf *);
 void	 AG_GfxUsed(void *);
 int	 AG_GfxUnused(void *);
+int	 AG_GfxLoadFromDEN(void *, const char *);
 
 void		 AG_GfxAllocSprites(AG_Gfx *, Uint32);
 void		 AG_GfxAllocAnims(AG_Gfx *, Uint32);
