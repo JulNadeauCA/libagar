@@ -32,24 +32,24 @@
 #include <stdarg.h>
 #include <string.h>
 
-const struct ag_transform_ent agTransforms[];
-const int agnTransforms;
+const struct map_transform_ent mapTransforms[];
+const int mapTransformsCount;
 
 #if 0
 /*
  * Add a new rotate transformation or update an existing one. If angle is 0,
  * any existing rotation is removed.
  */
-AG_Transform *
-AG_TransformRotate(struct ag_nitem *r, int angle)
+MAP_Transform *
+MAP_TransformRotate(struct map_item *r, int angle)
 {
 	Uint32 angles = (Uint32)angle;
-	AG_Transform *tr;
+	MAP_Transform *tr;
 	SDL_Surface *su;
 	double rad, theta;
 
 	switch (r->type) {
-	case AG_NITEM_SPRITE:
+	case MAP_ITEM_TILE:
 		su = AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
 		break;
 	case AG_NITEM_ANIM:
@@ -71,7 +71,7 @@ AG_TransformRotate(struct ag_nitem *r, int angle)
 	r->r_gfx.yorigin = rad*sin(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
-		if (tr->type == AG_TRANSFORM_ROTATE) {
+		if (tr->type == MAP_TRANSFORM_ROTATE) {
 			if (angle == 0) {
 				TAILQ_REMOVE(&r->transforms, tr, transforms);
 				Free(tr, M_NODEXFORM);
@@ -84,7 +84,7 @@ AG_TransformRotate(struct ag_nitem *r, int angle)
 		return (NULL);
 	}
 	if (tr == NULL) {
-		tr = AG_TransformNew(AG_TRANSFORM_ROTATE, 1, &angles);
+		tr = MAP_TransformNew(MAP_TRANSFORM_ROTATE, 1, &angles);
 		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
 	} else {
 		tr->args[0] = angles;
@@ -93,13 +93,13 @@ AG_TransformRotate(struct ag_nitem *r, int angle)
 }
 #endif
 
-AG_Transform *
-AG_TransformNew(enum ag_transform_type type, int nargs, Uint32 *args)
+MAP_Transform *
+MAP_TransformNew(enum map_transform_type type, int nargs, Uint32 *args)
 {
-	AG_Transform *trans;
+	MAP_Transform *trans;
 
-	trans = Malloc(sizeof(AG_Transform), M_NODEXFORM);
-	if (AG_TransformInit(trans, type, nargs, args) == -1) {
+	trans = Malloc(sizeof(MAP_Transform), M_NODEXFORM);
+	if (MAP_TransformInit(trans, type, nargs, args) == -1) {
 		Free(trans, M_NODEXFORM);
 		return (NULL);
 	}
@@ -107,17 +107,17 @@ AG_TransformNew(enum ag_transform_type type, int nargs, Uint32 *args)
 }
 
 int
-AG_TransformInit(AG_Transform *trans, enum ag_transform_type type,
+MAP_TransformInit(MAP_Transform *trans, enum map_transform_type type,
     int nargs, Uint32 *args)
 {
 	int i;
 
-	if (nargs > AG_TRANSFORM_MAX_ARGS) {
+	if (nargs > MAP_TRANSFORM_MAX_ARGS) {
 		AG_SetError(_("Too many transform args."));
 		return (-1);
 	}
 
-	memset(trans, 0, sizeof(AG_Transform));
+	memset(trans, 0, sizeof(MAP_Transform));
 	trans->type = type;
 	trans->func = NULL;
 	trans->nargs = nargs;
@@ -128,9 +128,9 @@ AG_TransformInit(AG_Transform *trans, enum ag_transform_type type,
 		trans->args = NULL;
 	}
 
-	for (i = 0; i < agnTransforms; i++) {
-		if (agTransforms[i].type == type) {
-			trans->func = agTransforms[i].func;
+	for (i = 0; i < mapTransformsCount; i++) {
+		if (mapTransforms[i].type == type) {
+			trans->func = mapTransforms[i].func;
 			break;
 		}
 	}
@@ -138,14 +138,14 @@ AG_TransformInit(AG_Transform *trans, enum ag_transform_type type,
 }
 
 void
-AG_TransformDestroy(AG_Transform *trans)
+MAP_TransformDestroy(MAP_Transform *trans)
 {
 	Free(trans->args, M_NODEXFORM);
 	Free(trans, M_NODEXFORM);
 }
 
 int
-AG_TransformCompare(const AG_Transform *tr1, const AG_Transform *tr2)
+MAP_TransformCompare(const MAP_Transform *tr1, const MAP_Transform *tr2)
 {
 	return (tr1->type == tr2->type &&
 	        tr1->nargs == tr2->nargs &&
@@ -154,14 +154,14 @@ AG_TransformCompare(const AG_Transform *tr1, const AG_Transform *tr2)
 }
 
 int
-AG_TransformLoad(AG_Netbuf *buf, AG_Transform *trans)
+MAP_TransformLoad(AG_Netbuf *buf, MAP_Transform *trans)
 {
 	int i;
 
 	trans->type = AG_ReadUint8(buf);
 	trans->func = NULL;
 	trans->nargs = (int)AG_ReadUint8(buf);
-	if (trans->nargs > AG_TRANSFORM_MAX_ARGS) {
+	if (trans->nargs > MAP_TRANSFORM_MAX_ARGS) {
 		AG_SetError(_("Too many transform args."));
 		return (-1);
 	}
@@ -172,9 +172,9 @@ AG_TransformLoad(AG_Netbuf *buf, AG_Transform *trans)
 		trans->args[i] = AG_ReadUint32(buf);
 
 	/* Look for a matching algorithm. */
-	for (i = 0; i < agnTransforms; i++) {
-		if (agTransforms[i].type == trans->type) {
-			trans->func = agTransforms[i].func;
+	for (i = 0; i < mapTransformsCount; i++) {
+		if (mapTransforms[i].type == trans->type) {
+			trans->func = mapTransforms[i].func;
 			break;
 		}
 	}
@@ -186,7 +186,7 @@ AG_TransformLoad(AG_Netbuf *buf, AG_Transform *trans)
 }
 
 void
-AG_TransformSave(AG_Netbuf *buf, const AG_Transform *trans)
+MAP_TransformSave(AG_Netbuf *buf, const MAP_Transform *trans)
 {
 	int i;
 
@@ -293,21 +293,22 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 
 /* Print the transform chain. */
 void
-AG_TransformPrint(const struct ag_transformq *transq, char *buf, size_t buf_size)
+MAP_TransformPrint(const struct map_transformq *transq, char *buf,
+    size_t buf_size)
 {
-	extern const struct ag_transform_ent agTransforms[];
-	extern const int agnTransforms;
-	AG_Transform *tr;
+	extern const struct map_transform_ent mapTransforms[];
+	extern const int mapTransformsCount;
+	MAP_Transform *tr;
 	int i, j;
 
 	TAILQ_FOREACH(tr, transq, transforms) {
-		for (i = 0; i < agnTransforms; i++) {
-			if (agTransforms[i].type == tr->type)
+		for (i = 0; i < mapTransformsCount; i++) {
+			if (mapTransforms[i].type == tr->type)
 				break;
 		}
-		if (i < agnTransforms) {
+		if (i < mapTransformsCount) {
 			strlcat(buf, "+", buf_size);
-			strlcat(buf, agTransforms[i].name, buf_size);
+			strlcat(buf, mapTransforms[i].name, buf_size);
 			for (j = 0; j < tr->nargs; j++) {
 				char num[32];
 
@@ -342,11 +343,11 @@ rgbinvert(SDL_Surface *su, int argc, Uint32 *argv)
 	return (su);
 }
 
-const struct ag_transform_ent agTransforms[] = {
-	{ "mirror",	AG_TRANSFORM_MIRROR,		mirror },
-	{ "flip",	AG_TRANSFORM_FLIP,		flip },
-	{ "rotate",	AG_TRANSFORM_ROTATE,		rotate },
-	{ "rgb-invert",	AG_TRANSFORM_RGB_INVERT,	rgbinvert }
+const struct map_transform_ent mapTransforms[] = {
+	{ "mirror",	MAP_TRANSFORM_MIRROR,		mirror },
+	{ "flip",	MAP_TRANSFORM_FLIP,		flip },
+	{ "rotate",	MAP_TRANSFORM_ROTATE,		rotate },
+	{ "rgb-invert",	MAP_TRANSFORM_RGB_INVERT,	rgbinvert }
 };
-const int agnTransforms = sizeof(agTransforms) / sizeof(agTransforms[0]);
+const int mapTransformsCount = sizeof(mapTransforms) / sizeof(mapTransforms[0]);
 
