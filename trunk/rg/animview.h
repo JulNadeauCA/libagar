@@ -8,7 +8,8 @@
 #include <agar/gui/button.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/window.h>
-#include <agar/rg/animation.h>
+
+#include <agar/rg/tileset.h>
 
 #include "begin_code.h"
 
