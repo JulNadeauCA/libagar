@@ -14,16 +14,25 @@ using SDL or OpenGL.
 Agar is most well-known for its extensive GUI library, Agar-GUI, which is
 being used by games, game edition tools, CAD and scientific applications.
 
-This distribution also includes the Agar-Core library. The main feature of
-Agar-Core is a generic object system which implements event and timing
-facilities, archiving of complex structures with interdependencies, memory
-management, a graphical edition framework and even a specialized revision
-control system.
+Included in this distribution is the core Agar library (Agar-Core) which
+focuses on an object system providing archiving (virtual filesystem),
+events/timers, dependency management and memory management. Optional
+features of Agar-Core include graphical edition facilities and a network
+revision control system specific to Agar objects (used for faciliating
+team development of complex datasets).
 
-Other libraries that rely on Agar-Core/Agar-GUI include Agar-SG (scene
-graph and 3D engine), Agar-VG (vector graphics), Agar-RG (image authoring)
-and more. See the Agar homepage for more information of the available
-libraires.
+This distribution also includes a number of extra libraries that rely
+on Agar-Core, listed below:
+
+Name		Description			Libraries
+----		-----------			---------
+Agar-Core	Object system			`agar-config --libs`
+Agar-GUI	Graphical user interface	`agar-config --libs`
+Agar-MAP	2D game levels (w/ edition)	`agar-map-config --libs`
+Agar-NET	Networking facilities		`agar-net-config --libs`
+Agar-RG		2D graphic rendering/edition	`agar-rg-config --libs`
+Agar-SG		3D engine (scene graph)		`agar-sg-config --libs`
+Agar-VG		Vector display engine		`agar-vg-config --libs`
 
 Availability
 ------------
