@@ -200,7 +200,6 @@ close_object(struct objent *oent, AG_Window *win, int save)
 		agObjMgrExiting = 1;
 	}
 	AG_ObjectPageOut(oent->obj, AG_OBJECT_DATA);
-	AG_ObjectPageOut(oent->obj, AG_OBJECT_GFX);
 
 	agObjMgrExiting = 0;
 	Free(oent, M_OBJECT);
@@ -289,14 +288,8 @@ AG_ObjMgrOpenData(void *p, int new)
 		if (++ob->data_used > AG_OBJECT_DEP_MAX)
 			ob->data_used = AG_OBJECT_DEP_MAX;
 	}
-	if (AG_ObjectPageIn(ob, AG_OBJECT_GFX) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s (gfx): %s", ob->name,
-		    AG_GetError());
-		goto fail_data;
-	}
-
 	if ((win = ob->ops->edit(ob)) == NULL) {
-		goto fail_gfx;
+		goto fail;
 	}
 	AG_PostEvent(NULL, ob, "edit-open", NULL);
 	
@@ -307,9 +300,7 @@ AG_ObjMgrOpenData(void *p, int new)
 	AG_SetEvent(win, "window-close", close_object_dlg, "%p", oent);
 	AG_WindowShow(win);
 	return;
-fail_gfx:
-	AG_ObjectPageOut(ob, AG_OBJECT_GFX);
-fail_data:
+fail:
 	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
 	return;
 }

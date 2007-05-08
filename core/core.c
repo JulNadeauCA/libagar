@@ -63,7 +63,6 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 const char *agProgName = "";
 AG_Config *agConfig;
 AG_Object *agWorld;
-AG_Object agIconMgr;
 void (*agAtexitFunc)(void) = NULL;
 AG_Mutex agLinkageLock;
 AG_Mutex agTimingLock;
@@ -220,10 +219,10 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
-	
-	AG_ObjectInit(&agIconMgr, "_iconmgr", NULL);
-	if (AG_WireGfx(&agIconMgr, "core-icons") == -1) {
-		fatal("icons: %s", AG_GetError());
+
+	AG_IconMgrInit(&agIconMgr, "core-icons");
+	if (AG_IconMgrLoadFromDenXCF(&agIconMgr, "core-icons") == -1) {
+		fatal("Unable to load icons: %s", AG_GetError());
 	}
 	return (0);
 }
@@ -312,6 +311,8 @@ AG_Destroy(void)
 
 	AG_ObjectDestroy(agConfig);
 	Free(agConfig, M_OBJECT);
+	
+	AG_ObjectDestroy(&agIconMgr);
 
 /*	AG_MutexDestroy(&agLinkageLock); */
 	AG_MutexDestroy(&agTimingLock);

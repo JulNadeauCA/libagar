@@ -202,12 +202,6 @@ AG_ObjectFreeData(void *p)
 		}
 		ob->flags &= ~(AG_OBJECT_DATA_RESIDENT);
 	}
-#if 0
-	if (ob->gfx != NULL) {
-		AG_GfxAllocSprites(ob->gfx, 0);
-		AG_GfxAllocAnims(ob->gfx, 0);
-	}
-#endif
 }
 
 /* Recursive function to construct absolute object names. */
@@ -708,11 +702,6 @@ AG_ObjectDestroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 
-	if (ob->gfx != NULL) {
-		AG_GfxDestroy(ob->gfx);
-		ob->gfx = NULL;
-	}
-
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);
@@ -1012,9 +1001,8 @@ AG_ObjectLoadGeneric(void *p)
 	}
 	AG_ObjectFreeDeps(ob);
 
-	/* Skip the data and gfx offsets. */
-	AG_ReadUint32(buf);
-	AG_ReadUint32(buf);
+	AG_ReadUint32(buf);			/* Ignore data offset */
+	AG_ReadUint32(buf);			/* Gfx offset (unused) */
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
@@ -1180,8 +1168,8 @@ AG_ObjectLoadData(void *p)
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 	
-	data_offs = (off_t)AG_ReadUint32(buf);
-	AG_ReadUint32(buf);				/* Skip gfx offs */
+	data_offs = (off_t)AG_ReadUint32(buf);		/* User data offset */
+	AG_ReadUint32(buf);			     /* Gfx offset (unused) */
 	AG_NetbufSeek(buf, data_offs, SEEK_SET);
 
 	if (ob->ops->load != NULL &&
@@ -1243,7 +1231,7 @@ AG_ObjectSave(void *p)
 	AG_Object *ob = p;
 	AG_Netbuf *buf;
 	AG_Object *child;
-	off_t count_offs, data_offs, gfx_offs;
+	off_t count_offs, data_offs;
 	Uint32 count;
 	AG_ObjectDep *dep;
 	int was_resident;
@@ -1300,8 +1288,7 @@ AG_ObjectSave(void *p)
 
 	data_offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
-	gfx_offs = AG_NetbufTell(buf);
-	AG_WriteUint32(buf, 0);
+	AG_WriteUint32(buf, 0);			/* Skip gfx offs */
 
 	AG_WriteUint32(buf, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
@@ -1336,15 +1323,10 @@ AG_ObjectSave(void *p)
 	}
 	AG_PwriteUint32(buf, count, count_offs);
 
-	/* Save the object data. */
+	/* Save the user data. */
 	AG_PwriteUint32(buf, AG_NetbufTell(buf), data_offs);
 	if (ob->ops->save != NULL &&
 	    ob->ops->save(ob, buf) == -1)
-		goto fail;
-
-	/* Save the object graphics. */
-	AG_PwriteUint32(buf, AG_NetbufTell(buf), gfx_offs);
-	if (AG_GfxSave(ob, buf) == -1)
 		goto fail;
 
 	AG_NetbufFlush(buf);
@@ -1895,54 +1877,6 @@ poll_deps(AG_Event *event)
 }
 
 static void
-poll_gfx(AG_Event *event)
-{
-	AG_Tlist *tl = AG_SELF();
-	AG_Object *ob = AG_PTR(1);
-	AG_Gfx *gfx = ob->gfx;
-	AG_TlistItem *it;
-	Uint32 i;
-
-	if (gfx == NULL)
-		return;
-	
-	AG_TlistClear(tl);
-	AG_TlistAdd(tl, NULL, "(%u references)", gfx->used);
-	for (i = 0; i < gfx->nsprites; i++) {
-		AG_Sprite *spr = &gfx->sprites[i];
-		SDL_Surface *su = spr->su;
-		AG_CachedSprite *csp;
-
-		if (su != NULL) {
-			it = AG_TlistAdd(tl, su, "%u. %s - %ux%ux%u (%s)", i,
-			    spr->name, su->w, su->h, su->format->BitsPerPixel,
-			    agGfxSnapNames[spr->snap_mode]);
-		} else {
-			it = AG_TlistAdd(tl, su, "%u. (null)", i);
-		}
-		it->p1 = spr;
-		it->depth = 0;
-
-		if (!SLIST_EMPTY(&spr->csprites)) {
-			it->flags |= AG_TLIST_HAS_CHILDREN;
-		}
-		SLIST_FOREACH(csp, &spr->csprites, sprites) {
-			char label[AG_TLIST_LABEL_MAX];
-			AG_TlistItem *it;
-
-			snprintf(label, sizeof(label), "%u ticks\n",
-			    csp->last_drawn);
-			AG_TransformPrint(&csp->transforms, label,
-			    sizeof(label));
-
-			it = AG_TlistAddPtr(tl, csp->su, label, csp);
-			it->depth = 1;
-		}
-	}
-	AG_TlistRestore(tl);
-}
-
-static void
 poll_props(AG_Event *event)
 {
 	char val[AG_TLIST_LABEL_MAX];
@@ -2208,13 +2142,6 @@ AG_ObjectEdit(void *p)
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistPrescale(tl, "XXXXXXXXXXXX", 6);
 		AG_SetEvent(tl, "tlist-poll", poll_deps, "%p", ob);
-	}
-	
-	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
-	{
-		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistSetItemHeight(tl, 16);
-		AG_SetEvent(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Events"), AG_BOX_VERT);

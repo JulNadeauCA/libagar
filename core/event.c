@@ -157,7 +157,6 @@ AG_EventLoop_FixedFPS(void)
 	extern struct ag_objectq agTimeoutObjQ;
 	SDL_Event ev;
 	AG_Window *win;
-	AG_Gfx *gfx;
 	Uint32 Tr1, Tr2 = 0;
 
 #ifdef DEBUG

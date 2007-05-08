@@ -159,7 +159,6 @@ enum {
 
 static SDL_Surface *xcf_convert_layer(AG_Netbuf *, Uint32, struct xcf_header *, 
 		                      struct xcf_layer *);
-static int xcf_insert_surface(AG_Gfx *, SDL_Surface *, const char *);
 static Uint8 *xcf_read_tile(struct xcf_header *, AG_Netbuf *, Uint32, int, int,
 		            int);
 static void xcf_read_property(AG_Netbuf *, struct xcf_prop *);
@@ -629,14 +628,13 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	return (su);
 }
 
-static int
-xcf_insert_surface(AG_Gfx *gfx, SDL_Surface *su, const char *name)
-{
-	return (0);
-}
-
+/*
+ * Load a set of surfaces from an XCF file. The add_layer_fn callback function
+ * is passed the converted surface for each layer in the file.
+ */
 int
-AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
+AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
+    void (*add_layer_fn)(SDL_Surface *, const char *, void *), void *arg)
 {
 	char magic[XCF_MAGIC_LEN];
 	struct xcf_header *head;
@@ -647,7 +645,7 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
 	AG_NetbufSeek(buf, xcf_offs, SEEK_SET);
 
 	if (AG_NetbufReadE(magic, sizeof(magic), 1, buf) < 1) {
-		AG_SetError(_("Cannot read XCF magic."));
+		AG_SetError("Cannot read XCF magic.");
 		return (-1);
 	}
 	if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) != 0) {
@@ -660,7 +658,7 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
 	head->w = AG_ReadUint32(buf);
 	head->h = AG_ReadUint32(buf);
 	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
-		AG_SetError(_("Nonsense XCF geometry: %ux%u."), head->w, head->h);
+		AG_SetError("Bad XCF geometry: %ux%u", head->w, head->h);
 		Free(head, M_LOADER);
 		return (-1);
 	}
@@ -716,7 +714,6 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
 	for (i = offsets; i > 0; i--) {
 		struct xcf_layer *layer;
 		struct xcf_prop prop;
-		AG_Sprite *spr;
 		Uint32 sname;
 		SDL_Surface *su;
 
@@ -761,10 +758,7 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs, struct ag_gfx *gfx)
 			return (-1);
 		}
 
-		sname = AG_GfxAddSprite(gfx, su);
-		spr = &gfx->sprites[sname];
-		strlcpy(spr->name, layer->name, sizeof(spr->name));
-
+		add_layer_fn(su, layer->name, arg);
 		Free(layer->name, 0);
 		Free(layer, M_LOADER);
 	}
