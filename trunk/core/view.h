@@ -237,6 +237,8 @@ __inline__ void	  AG_BlendPixelRGBA(SDL_Surface *, Uint8 *,
 			  	    enum ag_blend_func);
 void		  AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
 void		  AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
+
+__inline__ void	  AG_CopySurfaceAsIs(SDL_Surface *, SDL_Surface *);
 __END_DECLS
 
 #include "close_code.h"

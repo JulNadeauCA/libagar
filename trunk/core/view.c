@@ -1013,3 +1013,19 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	*b = vB*255;
 }
 
+void
+AG_CopySurfaceAsIs(SDL_Surface *sSrc, SDL_Surface *sDst)
+{
+	Uint32 svaflags, svcflags, svcolorkey;
+	Uint8 svalpha;
+
+	svaflags = sSrc->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
+	svalpha = sSrc->format->alpha;
+	svcflags = sSrc->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+	svcolorkey = sSrc->format->colorkey;
+	SDL_SetAlpha(sSrc, 0, 0);
+	SDL_SetColorKey(sSrc, 0, 0);
+	SDL_BlitSurface(sSrc, NULL, sDst, NULL);
+	SDL_SetColorKey(sSrc, svcflags, svcolorkey);
+	SDL_SetAlpha(sSrc, svaflags, svalpha);
+}
