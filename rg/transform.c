@@ -1,7 +1,7 @@
 /*	$Csoft: transform.c,v 1.5 2005/07/16 15:55:34 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2002-2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -29,22 +29,24 @@
 #include <core/core.h>
 #include <core/view.h>
 
+#include "tileset.h"
+
 #include <stdarg.h>
 #include <string.h>
 
-const struct map_transform_ent mapTransforms[];
-const int mapTransformsCount;
+const struct rg_transform_ops rgTransforms[];
+const int rgTransformsCount;
 
 #if 0
 /*
  * Add a new rotate transformation or update an existing one. If angle is 0,
  * any existing rotation is removed.
  */
-MAP_Transform *
-MAP_TransformRotate(struct map_item *r, int angle)
+RG_Transform *
+RG_TransformRotate(struct map_item *r, int angle)
 {
 	Uint32 angles = (Uint32)angle;
-	MAP_Transform *tr;
+	RG_Transform *tr;
 	SDL_Surface *su;
 	double rad, theta;
 
@@ -52,7 +54,7 @@ MAP_TransformRotate(struct map_item *r, int angle)
 	case MAP_ITEM_TILE:
 		su = AG_SPRITE(r->r_sprite.obj,r->r_sprite.offs).su;
 		break;
-	case AG_NITEM_ANIM:
+	case MAP_ITEM_ANIM:
 		su = AG_ANIM_FRAME(r, &AG_ANIM(r->r_anim.obj,r->r_anim.offs));
 		break;
 	default:
@@ -71,10 +73,10 @@ MAP_TransformRotate(struct map_item *r, int angle)
 	r->r_gfx.yorigin = rad*sin(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
-		if (tr->type == MAP_TRANSFORM_ROTATE) {
+		if (tr->type == RG_TRANSFORM_ROTATE) {
 			if (angle == 0) {
 				TAILQ_REMOVE(&r->transforms, tr, transforms);
-				Free(tr, M_NODEXFORM);
+				Free(tr, M_RG);
 				return (NULL);
 			}
 			break;
@@ -84,7 +86,7 @@ MAP_TransformRotate(struct map_item *r, int angle)
 		return (NULL);
 	}
 	if (tr == NULL) {
-		tr = MAP_TransformNew(MAP_TRANSFORM_ROTATE, 1, &angles);
+		tr = RG_TransformNew(RG_TRANSFORM_ROTATE, 1, &angles);
 		TAILQ_INSERT_TAIL(&r->transforms, tr, transforms);
 	} else {
 		tr->args[0] = angles;
@@ -93,44 +95,44 @@ MAP_TransformRotate(struct map_item *r, int angle)
 }
 #endif
 
-MAP_Transform *
-MAP_TransformNew(enum map_transform_type type, int nargs, Uint32 *args)
+RG_Transform *
+RG_TransformNew(enum rg_transform_type type, int nargs, Uint32 *args)
 {
-	MAP_Transform *trans;
+	RG_Transform *xf;
 
-	trans = Malloc(sizeof(MAP_Transform), M_NODEXFORM);
-	if (MAP_TransformInit(trans, type, nargs, args) == -1) {
-		Free(trans, M_NODEXFORM);
+	xf = Malloc(sizeof(RG_Transform), M_RG);
+	if (RG_TransformInit(xf, type, nargs, args) == -1) {
+		Free(xf, M_RG);
 		return (NULL);
 	}
-	return (trans);
+	return (xf);
 }
 
 int
-MAP_TransformInit(MAP_Transform *trans, enum map_transform_type type,
-    int nargs, Uint32 *args)
+RG_TransformInit(RG_Transform *xf, enum rg_transform_type type, int nargs,
+    Uint32 *args)
 {
 	int i;
 
-	if (nargs > MAP_TRANSFORM_MAX_ARGS) {
-		AG_SetError(_("Too many transform args."));
+	if (nargs > RG_TRANSFORM_MAX_ARGS) {
+		AG_SetError("Too many transform args");
 		return (-1);
 	}
 
-	memset(trans, 0, sizeof(MAP_Transform));
-	trans->type = type;
-	trans->func = NULL;
-	trans->nargs = nargs;
+	memset(xf, 0, sizeof(RG_Transform));
+	xf->type = type;
+	xf->func = NULL;
+	xf->nargs = nargs;
 	if (nargs > 0) {
-		trans->args = Malloc(nargs * sizeof(Uint32), M_NODEXFORM);
-		memcpy(trans->args, args, nargs * sizeof(Uint32));
+		xf->args = Malloc(nargs * sizeof(Uint32), M_RG);
+		memcpy(xf->args, args, nargs * sizeof(Uint32));
 	} else {
-		trans->args = NULL;
+		xf->args = NULL;
 	}
 
-	for (i = 0; i < mapTransformsCount; i++) {
-		if (mapTransforms[i].type == type) {
-			trans->func = mapTransforms[i].func;
+	for (i = 0; i < rgTransformsCount; i++) {
+		if (rgTransforms[i].type == type) {
+			xf->func = rgTransforms[i].func;
 			break;
 		}
 	}
@@ -138,74 +140,174 @@ MAP_TransformInit(MAP_Transform *trans, enum map_transform_type type,
 }
 
 void
-MAP_TransformDestroy(MAP_Transform *trans)
+RG_TransformChainInit(RG_TransformChain *xchain)
 {
-	Free(trans->args, M_NODEXFORM);
-	Free(trans, M_NODEXFORM);
+	TAILQ_INIT(xchain);
 }
 
 int
-MAP_TransformCompare(const MAP_Transform *tr1, const MAP_Transform *tr2)
+RG_TransformChainLoad(AG_Netbuf *buf, RG_TransformChain *xchain)
 {
-	return (tr1->type == tr2->type &&
-	        tr1->nargs == tr2->nargs &&
-		(tr1->nargs == 0 ||
-		 memcmp(tr1->args, tr2->args, tr1->nargs*sizeof(Uint32)) == 0));
+	Uint32 i, count = 0;
+
+	if ((count = AG_ReadUint32(buf)) > RG_TRANSFORM_CHAIN_MAX) {
+		AG_SetError("Too many transforms in chain: %u", (Uint)count);
+		return (-1);
+	}
+	for (i = 0; i < count; i++) {
+		RG_Transform *xf;
+
+		xf = Malloc(sizeof(RG_Transform), M_RG);
+		RG_TransformInit(xf, 0, 0, NULL);
+		if (RG_TransformLoad(buf, xf) == -1) {
+			Free(xf, M_RG);
+			return (-1);
+		}
+		TAILQ_INSERT_TAIL(xchain, xf, transforms);
+	}
+	return (0);
+}
+
+void
+RG_TransformChainSave(AG_Netbuf *buf, const RG_TransformChain *xchain)
+{
+	RG_Transform *xf;
+	Uint32 count = 0;
+	off_t offs;
+
+	offs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);
+	TAILQ_FOREACH(xf, xchain, transforms) {
+		RG_TransformSave(buf, xf);
+		count++;
+	}
+	AG_PwriteUint32(buf, count, offs);
+}
+
+void
+RG_TransformChainDestroy(RG_TransformChain *xchain)
+{
+	RG_Transform *xf, *xf_next;
+	
+	for (xf = TAILQ_FIRST(xchain);
+	     xf != TAILQ_END(xchain);
+	     xf = xf_next) {
+		xf_next = TAILQ_NEXT(xf, transforms);
+		RG_TransformDestroy(xf);
+		Free(xf, M_RG);
+	}
+}
+
+void
+RG_TransformChainPrint(const RG_TransformChain *xchain, char *buf,
+    size_t buf_size)
+{
+	extern const struct rg_transform_ops rgTransforms[];
+	extern const int rgTransformsCount;
+	RG_Transform *tr;
+	int i, j;
+
+	TAILQ_FOREACH(tr, xchain, transforms) {
+		for (i = 0; i < rgTransformsCount; i++) {
+			if (rgTransforms[i].type == tr->type)
+				break;
+		}
+		if (i < rgTransformsCount) {
+			strlcat(buf, "+", buf_size);
+			strlcat(buf, rgTransforms[i].name, buf_size);
+			for (j = 0; j < tr->nargs; j++) {
+				char num[32];
+
+				snprintf(num, sizeof(num), "(%lu)",
+				    (unsigned long)tr->args[i]);
+				strlcat(buf, num, buf_size);
+			}
+		}
+	}
+	if (!TAILQ_EMPTY(xchain))
+		strlcat(buf, "\n", buf_size);
+}
+
+void
+RG_TransformChainDup(const RG_TransformChain *xc, RG_TransformChain *xc_dup)
+{
+	RG_Transform *xf, *xf_dup;
+
+	TAILQ_FOREACH(xf, xc, transforms) {
+		xf_dup = Malloc(sizeof(RG_Transform), M_RG);
+		RG_TransformInit(xf_dup, xf->type, xf->nargs, xf->args);
+		TAILQ_INSERT_TAIL(xc_dup, xf_dup, transforms);
+	}
+}
+
+void
+RG_TransformDestroy(RG_Transform *xf)
+{
+	Free(xf->args, M_RG);
 }
 
 int
-MAP_TransformLoad(AG_Netbuf *buf, MAP_Transform *trans)
+RG_TransformCompare(const RG_Transform *xf1, const RG_Transform *xf2)
+{
+	return (xf1->type == xf2->type &&
+	        xf1->nargs == xf2->nargs &&
+		(xf1->nargs == 0 ||
+		 memcmp(xf1->args, xf2->args, xf1->nargs*sizeof(Uint32)) == 0));
+}
+
+int
+RG_TransformLoad(AG_Netbuf *buf, RG_Transform *xf)
 {
 	int i;
 
-	trans->type = AG_ReadUint8(buf);
-	trans->func = NULL;
-	trans->nargs = (int)AG_ReadUint8(buf);
-	if (trans->nargs > MAP_TRANSFORM_MAX_ARGS) {
-		AG_SetError(_("Too many transform args."));
+	xf->type = AG_ReadUint8(buf);
+	xf->func = NULL;
+	xf->nargs = (int)AG_ReadUint8(buf);
+	if (xf->nargs > RG_TRANSFORM_MAX_ARGS) {
+		AG_SetError("Too many transform args: %u", (Uint)xf->nargs);
 		return (-1);
 	}
 
-	Free(trans->args, M_NODEXFORM);
-	trans->args = Malloc(trans->nargs * sizeof(Uint32), M_NODEXFORM);
-	for (i = 0; i < trans->nargs; i++)
-		trans->args[i] = AG_ReadUint32(buf);
+	Free(xf->args, M_RG);
+	xf->args = Malloc(xf->nargs * sizeof(Uint32), M_RG);
+	for (i = 0; i < xf->nargs; i++)
+		xf->args[i] = AG_ReadUint32(buf);
 
 	/* Look for a matching algorithm. */
-	for (i = 0; i < mapTransformsCount; i++) {
-		if (mapTransforms[i].type == trans->type) {
-			trans->func = mapTransforms[i].func;
+	for (i = 0; i < rgTransformsCount; i++) {
+		if (rgTransforms[i].type == xf->type) {
+			xf->func = rgTransforms[i].func;
 			break;
 		}
 	}
-	if (trans->func == NULL) {
-		AG_SetError(_("Unknown transform algorithm."));
+	if (xf->func == NULL) {
+		AG_SetError("Unimplemented transform: %u", (Uint)xf->type);
 		return (-1);
 	}
 	return (0);
 }
 
 void
-MAP_TransformSave(AG_Netbuf *buf, const MAP_Transform *trans)
+RG_TransformSave(AG_Netbuf *buf, const RG_Transform *xf)
 {
 	int i;
 
-	AG_WriteUint8(buf, trans->type);
-	AG_WriteUint8(buf, trans->nargs);
+	AG_WriteUint8(buf, xf->type);
+	AG_WriteUint8(buf, xf->nargs);
 
-	for (i = 0; i < trans->nargs; i++)
-		AG_WriteUint32(buf, trans->args[i]);
+	for (i = 0; i < xf->nargs; i++)
+		AG_WriteUint32(buf, xf->args[i]);
 }
 
 /* Flip a surface horizontally. */
 static SDL_Surface *
-mirror(SDL_Surface *su, int argc, Uint32 *argv)
+RG_TransformMirror(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	Uint8 *row, *rowp;
 	Uint8 *fb = su->pixels;
 	int x, y;
 
-	row = Malloc(su->pitch, M_NODEXFORM);
+	row = Malloc(su->pitch, M_RG);
 	for (y = 0; y < su->h; y++) {
 		memcpy(row, fb, su->pitch);
 		rowp = row + su->pitch - su->format->BytesPerPixel;
@@ -215,20 +317,20 @@ mirror(SDL_Surface *su, int argc, Uint32 *argv)
 			rowp -= su->format->BytesPerPixel;
 		}
 	}
-	Free(row, M_NODEXFORM);
+	Free(row, M_RG);
 	return (su);
 }
 
 /* Flip a surface vertically. */
 static SDL_Surface *
-flip(SDL_Surface *su, int argc, Uint32 *argv)
+RG_TransformFlip(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	size_t totsize = su->h*su->pitch;
 	Uint8 *row, *rowbuf;
 	Uint8 *fb = su->pixels;
 	int y;
 
-	rowbuf = Malloc(totsize, M_NODEXFORM);
+	rowbuf = Malloc(totsize, M_RG);
 	memcpy(rowbuf, fb, totsize);
 	row = rowbuf + totsize - su->pitch;
 	for (y = 0; y < su->h; y++) {
@@ -236,13 +338,13 @@ flip(SDL_Surface *su, int argc, Uint32 *argv)
 		row -= su->pitch;
 		fb += su->pitch;
 	}
-	Free(rowbuf, M_NODEXFORM);
+	Free(rowbuf, M_RG);
 	return (su);
 }
 
 /* Rotate a surface by the given number of degrees. */
 static SDL_Surface *
-rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
+RG_TransformRotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 {
 	SDL_Surface *sNew;
 	Uint32 theta = argv[0];
@@ -287,44 +389,16 @@ rotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 			}
 		}
 		break;
+	default:
+		/* TODO */
+		break;
 	}
 	return (sNew);
 }
 
-/* Print the transform chain. */
-void
-MAP_TransformPrint(const struct map_transformq *transq, char *buf,
-    size_t buf_size)
-{
-	extern const struct map_transform_ent mapTransforms[];
-	extern const int mapTransformsCount;
-	MAP_Transform *tr;
-	int i, j;
-
-	TAILQ_FOREACH(tr, transq, transforms) {
-		for (i = 0; i < mapTransformsCount; i++) {
-			if (mapTransforms[i].type == tr->type)
-				break;
-		}
-		if (i < mapTransformsCount) {
-			strlcat(buf, "+", buf_size);
-			strlcat(buf, mapTransforms[i].name, buf_size);
-			for (j = 0; j < tr->nargs; j++) {
-				char num[32];
-
-				snprintf(num, sizeof(num), "(%lu)",
-				    (unsigned long)tr->args[i]);
-				strlcat(buf, num, buf_size);
-			}
-		}
-	}
-	if (!TAILQ_EMPTY(transq))
-		strlcat(buf, "\n", buf_size);
-}
-
 /* Invert the colors of a surface. */
 static SDL_Surface *
-rgbinvert(SDL_Surface *su, int argc, Uint32 *argv)
+RG_TransformInvertRGB(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	size_t size = su->w*su->h;
 	Uint8 *p = su->pixels;
@@ -343,11 +417,11 @@ rgbinvert(SDL_Surface *su, int argc, Uint32 *argv)
 	return (su);
 }
 
-const struct map_transform_ent mapTransforms[] = {
-	{ "mirror",	MAP_TRANSFORM_MIRROR,		mirror },
-	{ "flip",	MAP_TRANSFORM_FLIP,		flip },
-	{ "rotate",	MAP_TRANSFORM_ROTATE,		rotate },
-	{ "rgb-invert",	MAP_TRANSFORM_RGB_INVERT,	rgbinvert }
+const struct rg_transform_ops rgTransforms[] = {
+	{ "mirror",	RG_TRANSFORM_MIRROR,		RG_TransformMirror },
+	{ "flip",	RG_TRANSFORM_FLIP,		RG_TransformFlip },
+	{ "rotate",	RG_TRANSFORM_ROTATE,		RG_TransformRotate },
+	{ "rgb-invert",	RG_TRANSFORM_RGB_INVERT,	RG_TransformInvertRGB }
 };
-const int mapTransformsCount = sizeof(mapTransforms) / sizeof(mapTransforms[0]);
+const int rgTransformsCount = sizeof(rgTransforms) / sizeof(rgTransforms[0]);
 

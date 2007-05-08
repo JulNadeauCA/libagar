@@ -1,7 +1,7 @@
 /*	$Csoft: tileset.c,v 1.65 2005/10/04 17:34:53 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
+ * Copyright (c) 2004-2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -50,7 +50,7 @@
 const AG_ObjectOps rgTilesetOps = {
 	"RG_Tileset",
 	sizeof(RG_Tileset),
-	{ 7, 0 },
+	{ 8, 0 },
 	RG_TilesetInit,
 	RG_TilesetReinit,
 	RG_TilesetDestroy,
@@ -71,9 +71,10 @@ const RG_FeatureOps *feature_tbl[] = {
 	&rgSketchProjOps,
 	NULL
 };
+extern const char *rgTileSnapModes[];
 
 void
-AG_InitRG(void)
+RG_InitSubsystem(void)
 {
 	AG_RegisterType("RG_Tileset", sizeof(RG_Tileset), &rgTilesetOps,
 	    TILESET_ICON);
@@ -85,8 +86,8 @@ RG_TilesetInit(void *obj, const char *name)
 	RG_Tileset *ts = obj;
 
 	AG_ObjectInit(ts, name, &rgTilesetOps);
-	AGOBJECT(ts)->gfx = AG_GfxNew(ts);
-	AGOBJECT(ts)->gfx->used = 0;
+
+	/* Restart the graphical editor on load. */
 	AGOBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 
 	AG_MutexInitRecursive(&ts->lock);
@@ -110,8 +111,11 @@ RG_TilesetInit(void *obj, const char *name)
 	}
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
-	ts->max_sprites = 0;
 	ts->template[0] = '\0';
+	ts->tiletbl = Malloc(sizeof(RG_Tile *), M_RG);
+	ts->ntiletbl = 0;
+	ts->animtbl = Malloc(sizeof(RG_Anim *), M_RG);
+	ts->nanimtbl = 0;
 }
 
 void
@@ -124,6 +128,7 @@ RG_TilesetReinit(void *obj)
 	RG_Feature *ft, *nft;
 	RG_Anim *ani, *nani;
 	RG_Texture *tex, *ntex;
+	int i;
 
 	AG_MutexLock(&ts->lock);
 	
@@ -134,13 +139,6 @@ RG_TilesetReinit(void *obj)
 		RG_TileDestroy(t);
 		Free(t, M_RG);
 	}
-
-#if 0
-	ts->max_sprites = 0;
-	AG_GfxAllocSprites(AGOBJECT(ts)->gfx, 0);
-	AG_GfxAllocAnims(AGOBJECT(ts)->gfx, 0);
-#endif
-
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
@@ -183,6 +181,12 @@ RG_TilesetReinit(void *obj)
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
+
+	ts->tiletbl = Realloc(ts->tiletbl, sizeof(RG_Tile *));
+	ts->ntiletbl = 0;
+	ts->animtbl = Realloc(ts->animtbl, sizeof(RG_Anim *));
+	ts->nanimtbl = 0;
+
 	AG_MutexUnlock(&ts->lock);
 }
 
@@ -193,16 +197,16 @@ RG_TilesetDestroy(void *obj)
 
 	AG_MutexDestroy(&ts->lock);
 	SDL_FreeSurface(ts->icon);
+	Free(ts->tiletbl, M_RG);
+	Free(ts->animtbl, M_RG);
 }
 
 int
 RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 {
 	RG_Tileset *ts = obj;
-	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
 	RG_Pixmap *px;
-	Uint32 nsketches, npixmaps, nfeatures, ntiles, nanimations, ntextures;
-	Uint32 i;
+	Uint32 count, i;
 
 	if (AG_ReadVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver, NULL)
 	    != 0)
@@ -211,14 +215,10 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	AG_MutexLock(&ts->lock);
 	AG_CopyString(ts->template, buf, sizeof(ts->template));
 	ts->flags = AG_ReadUint32(buf);
-	ts->max_sprites = AG_ReadUint32(buf);
-
-	/* Resize the graphics array. */
-	AG_GfxAllocSprites(gfx, ts->max_sprites);
 
 	/* Load the vectorial sketches. */
-	nsketches = AG_ReadUint32(buf);
-	for (i = 0; i < nsketches; i++) {
+	count = AG_ReadUint32(buf);
+	for (i = 0; i < count; i++) {
 		RG_Sketch *sk;
 
 		sk = Malloc(sizeof(RG_Sketch), M_RG);
@@ -231,8 +231,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 
 	/* Load the pixmaps. */
-	npixmaps = AG_ReadUint32(buf);
-	for (i = 0; i < npixmaps; i++) {
+	count = AG_ReadUint32(buf);
+	for (i = 0; i < count; i++) {
 		RG_Pixmap *px;
 
 		px = Malloc(sizeof(RG_Pixmap), M_RG);
@@ -245,8 +245,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 
 	/* Load the features. */
-	nfeatures = AG_ReadUint32(buf);
-	for (i = 0; i < nfeatures; i++) {
+	count = AG_ReadUint32(buf);
+	for (i = 0; i < count; i++) {
 		const RG_FeatureOps **ftops;
 		char name[RG_FEATURE_NAME_MAX];
 		char type[RG_FEATURE_TYPE_MAX];
@@ -283,9 +283,9 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 	
 	/* Load the tiles. */
-	ntiles = AG_ReadUint32(buf);
-	dprintf("%u tiles\n", ntiles);
-	for (i = 0; i < ntiles; i++) {
+	count = AG_ReadUint32(buf);
+	dprintf("%u tiles\n", count);
+	for (i = 0; i < count; i++) {
 		char name[RG_TILE_NAME_MAX];
 		RG_Tile *t;
 		
@@ -308,8 +308,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 
 	/* Load the animation information. */
-	nanimations = AG_ReadUint32(buf);
-	for (i = 0; i < nanimations; i++) {
+	count = AG_ReadUint32(buf);
+	for (i = 0; i < count; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 		RG_Anim *ani;
 		int flags;
@@ -327,8 +327,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 	
 	/* Load the textures. */
-	ntextures = AG_ReadUint32(buf);
-	for (i = 0; i < ntextures; i++) {
+	count = AG_ReadUint32(buf);
+	for (i = 0; i < count; i++) {
 		char name[RG_TEXTURE_NAME_MAX];
 		RG_Texture *tex;
 		
@@ -343,6 +343,45 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 		TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
 	}
 
+	/* Load and resolve the static tile and animation mappings. */
+	count = AG_ReadUint32(buf);
+	printf("alloc: %u tiles\n", (Uint)count);
+	ts->tiletbl = Realloc(ts->tiletbl, MIN(count,1)*sizeof(RG_Tile *));
+	for (i = 0; i < count; i++) {
+		char name[RG_TILE_NAME_MAX];
+
+		AG_CopyString(name, buf, sizeof(name));
+		printf("tile mapping %u: <%s>\n", i, name);
+		if (name[0] == '\0') {
+			ts->tiletbl[i] = NULL;
+		} else {
+			if ((ts->tiletbl[i] = RG_TilesetFindTile(ts, name))
+			    == NULL) {
+				fatal("%s: bad tile mapping: %s (%u)",
+				    AGOBJECT(ts)->name, name, (Uint)i);
+			}
+		}
+	}
+	count = AG_ReadUint32(buf);
+	printf("alloc: %u anims\n", (Uint)count);
+	ts->animtbl = Realloc(ts->animtbl, MIN(count,1)*sizeof(RG_Anim *));
+#if 0
+	for (i = 0; i < count; i++) {
+		char name[RG_ANIMATION_NAME_MAX];
+
+		AG_CopyString(name, buf, sizeof(name));
+		printf("anim mapping %u: <%s>\n", i, name);
+		if (name[0] == '\0') {
+			ts->animtbl[i] = NULL;
+		} else {
+			if ((ts->animtbl[i] = RG_TilesetFindAnim(ts, name))
+			    == NULL) {
+				fatal("%s: bad anim mapping: %s (%u)",
+				    AGOBJECT(ts)->name, name, (Uint)i);
+			}
+		}
+	}
+#endif
 	/* Resolve the pixmap brush references. */
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		struct rg_pixmap_brush *pbr;
@@ -374,10 +413,8 @@ int
 RG_TilesetSave(void *obj, AG_Netbuf *buf)
 {
 	RG_Tileset *ts = obj;
-	Uint32 nsketches = 0, npixmaps = 0, ntiles = 0, nfeatures = 0,
-	       nanims = 0, ntextures = 0;
-	off_t nsketches_offs, npixmaps_offs, ntiles_offs, nfeatures_offs,
-	      nanims_offs, ntextures_offs;
+	Uint32 count, i;
+	off_t offs;
 	RG_Sketch *sk;
 	RG_Pixmap *px;
 	RG_Anim *ani;
@@ -386,33 +423,33 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 	RG_Texture *tex;
 
 	AG_WriteVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver);
-
 	AG_MutexLock(&ts->lock);
-
 	AG_WriteString(buf, ts->template);
 	AG_WriteUint32(buf, ts->flags);
-	AG_WriteUint32(buf, ts->max_sprites);
 
 	/* Save the vectorial sketches. */
-	nsketches_offs = AG_NetbufTell(buf);
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		RG_SketchSave(sk, buf);
-		nsketches++;
+		count++;
 	}
-	AG_PwriteUint32(buf, nsketches, nsketches_offs);
+	AG_PwriteUint32(buf, count, offs);
 
 	/* Save the pixmaps. */
-	npixmaps_offs = AG_NetbufTell(buf);
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		RG_PixmapSave(px, buf);
-		npixmaps++;
+		count++;
 	}
-	AG_PwriteUint32(buf, npixmaps, npixmaps_offs);
+	AG_PwriteUint32(buf, count, offs);
 
 	/* Save the features. */
-	nfeatures_offs = AG_NetbufTell(buf);
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ft, &ts->features, features) {
 		off_t ftsize_offs;
@@ -428,41 +465,56 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 		AG_PwriteUint32(buf, AG_NetbufTell(buf) - ftsize_offs,
 		    ftsize_offs);
 
-		nfeatures++;
+		count++;
 	}
-	AG_PwriteUint32(buf, nfeatures, nfeatures_offs);
+	AG_PwriteUint32(buf, count, offs);
 	
 	/* Save the tiles. */
-	ntiles_offs = AG_NetbufTell(buf);
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		RG_TileSave(t, buf);
-		ntiles++;
+		count++;
 	}
-	AG_PwriteUint32(buf, ntiles, ntiles_offs);
-	dprintf("saved %u tiles\n", ntiles);
+	AG_PwriteUint32(buf, count, offs);
+	dprintf("saved %u tiles\n", count);
 	
 	/* Save the animation information. */
-	nanims_offs = AG_NetbufTell(buf);
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
 		AG_WriteString(buf, ani->name);
 		AG_WriteUint32(buf, (Uint32)ani->flags);
 		RG_AnimSave(ani, buf);
-		nanims++;
+		count++;
 	}
-	AG_PwriteUint32(buf, nanims, nanims_offs);
+	AG_PwriteUint32(buf, count, offs);
 	
-	/* Save the textures . */
-	ntextures_offs = AG_NetbufTell(buf);
+	/* Save the textures. */
+	count = 0;
+	offs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
 		AG_WriteString(buf, tex->name);
 		RG_TextureSave(tex, buf);
-		ntextures++;
+		count++;
 	}
-	AG_PwriteUint32(buf, ntextures, ntextures_offs);
-	
+	AG_PwriteUint32(buf, count, offs);
+
+	/* Save the static tile and animation mappings. */
+	AG_WriteUint32(buf, ts->ntiletbl);
+	for (i = 0; i < ts->ntiletbl; i++) {
+		AG_WriteString(buf, (ts->tiletbl[i]->name != NULL) ?
+		                     ts->tiletbl[i]->name : "");
+	}
+	AG_WriteUint32(buf, ts->nanimtbl);
+	for (i = 0; i < ts->nanimtbl; i++) {
+		AG_WriteString(buf, (ts->animtbl[i]->name != NULL) ?
+		                     ts->animtbl[i]->name : "");
+	}
+
 	AG_MutexUnlock(&ts->lock);
 	return (0);
 }
@@ -577,10 +629,36 @@ RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 	return (ani);
 }
 
+/* Lookup a tile by ID. */
+int
+RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)
+{
+	if (id >= ts->ntiletbl || ts->tiletbl[id] == NULL) {
+		AG_SetError("%s: no such tile: %u", AGOBJECT(ts)->name,
+		    (Uint)id);
+		return (-1);
+	}
+	*t = ts->tiletbl[id];
+	return (0);
+}
+
+/* Lookup an animation by ID. */
+int
+RG_LookupAnim(RG_Tileset *ts, Uint32 id, RG_Anim **anim)
+{
+	if (id >= ts->nanimtbl || ts->animtbl[id] == NULL) {
+		AG_SetError("%s: no such anim: %u", AGOBJECT(ts)->name,
+		    (Uint)id);
+		return (-1);
+	}
+	*anim = ts->animtbl[id];
+	return (0);
+}
+
 #ifdef EDITION
 
 static void
-poll_graphics(AG_Event *event)
+PollGraphics(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -612,7 +690,7 @@ poll_graphics(AG_Event *event)
 }
 
 static void
-poll_textures(AG_Event *event)
+PollTextures(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -642,7 +720,7 @@ poll_textures(AG_Event *event)
 }
 
 static void
-poll_anims(AG_Event *event)
+PollAnims(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -664,7 +742,7 @@ poll_anims(AG_Event *event)
 }
 
 static void
-poll_tiles(AG_Event *event)
+PollTiles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -765,14 +843,87 @@ static int ins_tile_w = RG_TILESZ;
 static int ins_tile_h = RG_TILESZ;
 static int ins_alpha = 0;
 static int ins_colorkey = 1;
-static enum ag_gfx_snap_mode ins_snap_mode = AG_GFX_SNAP_NOT;
+static enum rg_snap_mode ins_snap_mode = RG_SNAP_NONE;
+
+static int
+InsertTileMapping(RG_Tileset *ts, RG_Tile *t, Uint32 *id)
+{
+	Uint32 i;
+
+	/* Try to recycle NULL ids if we reach the threshold. */
+	if (ts->ntiletbl >= RG_TILE_ID_MINREUSE) {
+		for (i = 0; i < ts->ntiletbl; i++) {
+			if (ts->tiletbl[i] != NULL) {
+				continue;
+			}
+			ts->tiletbl[i] = t;
+			if (id != NULL) { *id = i; }
+			return (0);
+		}
+	}
+	if ((ts->ntiletbl+1) >= RG_TILE_ID_MAX) {
+		AG_SetError("Out of tile ID space");
+		return (-1);
+	}
+	ts->tiletbl = Realloc(ts->tiletbl, (ts->ntiletbl+1)*sizeof(RG_Tile *));
+	ts->tiletbl[ts->ntiletbl] = t;
+	if (id != NULL) { *id = ts->ntiletbl++; }
+	return (0);
+}
+
+static int
+InsertAnimMapping(RG_Tileset *ts, RG_Anim *anim, Uint32 *id)
+{
+	Uint32 i;
+
+	/* Try to recycle NULL ids if we reach the threshold. */
+	if (ts->nanimtbl >= RG_ANIM_ID_MINREUSE) {
+		for (i = 0; i < ts->nanimtbl; i++) {
+			if (ts->animtbl[i] != NULL) {
+				continue;
+			}
+			ts->animtbl[i] = anim;
+			if (id != NULL) { *id = i; }
+			return (0);
+		}
+	}
+	if ((ts->nanimtbl+1) >= RG_ANIM_ID_MAX) {
+		AG_SetError("Out of anim ID space");
+		return (-1);
+	}
+	ts->animtbl = Realloc(ts->animtbl, (ts->nanimtbl+1)*sizeof(RG_Anim *));
+	ts->animtbl[ts->nanimtbl] = anim;
+	if (id != NULL) { *id = ts->nanimtbl++; }
+	return (0);
+}
+
+static __inline__ void
+RemoveTileMappings(RG_Tileset *ts, RG_Tile *t)
+{
+	Uint32 i;
+
+	for (i = 0; i < ts->ntiletbl; i++) {
+		if (ts->tiletbl[i] == t)
+			ts->tiletbl[i] = NULL;
+	}
+}
+
+static __inline__ void
+RemoveAnimMappings(RG_Tileset *ts, RG_Anim *anim)
+{
+	Uint32 i;
+
+	for (i = 0; i < ts->nanimtbl; i++) {
+		if (ts->animtbl[i] == anim)
+			ts->animtbl[i] = NULL;
+	}
+}
 
 static void
-insert_tile(AG_Event *event)
+InsertTile(AG_Event *event)
 {
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileset *ts = AG_PTR(2);
-	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
 	RG_Tile *t;
 	Uint flags = 0;
 
@@ -826,41 +977,50 @@ tryname2:
 	RG_TileInit(t, ts, ins_tile_name);
 	if (strcmp(ts->template, "Perso") == 0) {
 		RG_TileScale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
-		AG_SpriteSetOrigin(&gfx->sprites[t->s], 8, 31);
-		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
+		t->xOrig = 8;
+		t->yOrig = 31;
+		t->snap_mode = RG_SNAP_TO_GRID;
 		RG_TILE_LAYER2(t,0,0) = +2;
 		RG_TILE_LAYER2(t,0,1) = +1;
-		RG_TILE_ATTR2(t,0,1) = RG_NITEM_BLOCK;
+		RG_TILE_ATTR2(t,0,1) = RG_TILE_BLOCK;
 	} else if (strcmp(ts->template, "Terrain") == 0) {
 		RG_TileScale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
-		AG_SpriteSetOrigin(&gfx->sprites[t->s], 24, 24);
-		AG_SPRITE(t->ts,t->s).snap_mode = AG_GFX_SNAP_TO_GRID;
-		RG_TILE_ATTR2(t,0,0) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,1,0) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,2,0) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,0) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,1) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,2) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,0,3) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,1) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,2) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,3,3) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,1,3) = RG_NITEM_BLOCK;
-		RG_TILE_ATTR2(t,2,3) = RG_NITEM_BLOCK;
+		t->xOrig = 24;
+		t->yOrig = 24;
+		t->snap_mode = RG_SNAP_TO_GRID;
+		RG_TILE_ATTR2(t,0,0) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,1,0) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,2,0) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,3,0) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,0,1) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,0,2) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,0,3) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,3,1) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,3,2) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,3,3) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,1,3) = RG_TILE_BLOCK;
+		RG_TILE_ATTR2(t,2,3) = RG_TILE_BLOCK;
 	} else {
 		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags,
 		    SDL_ALPHA_OPAQUE);
-		AG_SpriteSetOrigin(&gfx->sprites[t->s], t->su->w/2, t->su->h/2);
-		AG_SPRITE(t->ts,t->s).snap_mode = ins_snap_mode;
+		t->xOrig = t->su->w/2;
+		t->yOrig = t->su->h/2;
+		t->snap_mode = ins_snap_mode;
 	}
-	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
-
+	if (InsertTileMapping(ts, t, &t->main_id) == 0) {
+		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
+	} else {
+		RG_TileDestroy(t);
+		Free(t, M_RG);
+		AG_TextMsg(AG_MSG_ERROR, _("Failed to create item: %s"),
+		    AG_GetError());
+	}
 	ins_tile_name[0] = '\0';
 	AG_ViewDetach(pwin);
 }
 
 static void
-insert_texture(AG_Event *event)
+InsertTexture(AG_Event *event)
 {
 	AG_Window *dlgwin = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -926,15 +1086,15 @@ tryname2:
 }
 
 static void
-insert_anim(AG_Event *event)
+InsertAnim(AG_Event *event)
 {
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileset *ts = AG_PTR(2);
 	RG_Anim *ani;
 	int flags = 0;
 
-	if (ins_alpha)		flags |= ANIMATION_SRCALPHA;
-	if (ins_colorkey)	flags |= ANIMATION_SRCCOLORKEY;
+	if (ins_alpha)		flags |= RG_ANIM_SRCALPHA;
+	if (ins_colorkey)	flags |= RG_ANIM_SRCCOLORKEY;
 
 	if (ins_anim_name[0] == '\0') {
 		Uint nameno = 0;
@@ -982,14 +1142,20 @@ tryname2:
 	ani = Malloc(sizeof(RG_Anim), M_RG);
 	RG_AnimInit(ani, ts, ins_anim_name, flags);
 	RG_AnimScale(ani, ins_tile_w, ins_tile_h);
-	TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
-
+	if (InsertAnimMapping(ts, ani, &ani->main_id) == 0) {
+		TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
+	} else {
+		RG_AnimDestroy(ani);
+		Free(ani, M_RG);
+		AG_TextMsg(AG_MSG_ERROR, _("Failed to create item: %s"),
+		    AG_GetError());
+	}
 	ins_anim_name[0] = '\0';
 	AG_ViewDetach(pwin);
 }
 
 static void
-insert_tile_dlg(AG_Event *event)
+InsertTileDlg(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1010,7 +1176,7 @@ insert_tile_dlg(AG_Event *event)
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
 	    sizeof(ins_tile_name));
-	AG_SetEvent(tb, "textbox-return", insert_tile, "%p,%p", win, ts);
+	AG_SetEvent(tb, "textbox-return", InsertTile, "%p,%p", win, ts);
 
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
@@ -1032,12 +1198,12 @@ insert_tile_dlg(AG_Event *event)
 	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
 	
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, agGfxSnapNames);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), insert_tile, "%p,%p", win, ts);
+		AG_ButtonAct(btnbox, 0, _("OK"), InsertTile, "%p,%p", win, ts);
 		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
@@ -1046,7 +1212,7 @@ insert_tile_dlg(AG_Event *event)
 }
 
 static void
-insert_texture_dlg(AG_Event *event)
+InsertTextureDlg(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1063,12 +1229,12 @@ insert_texture_dlg(AG_Event *event)
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
 	    sizeof(ins_texture_name));
-	AG_SetEvent(tb, "textbox-return", insert_texture, "%p,%p,%p", win,
+	AG_SetEvent(tb, "textbox-return", InsertTexture, "%p,%p,%p", win,
 	    pwin, ts);
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), insert_texture,
+		AG_ButtonAct(btnbox, 0, _("OK"), InsertTexture,
 		    "%p,%p,%p", win, pwin, ts);
 		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -1078,7 +1244,7 @@ insert_texture_dlg(AG_Event *event)
 }
 
 static void
-insert_anim_dlg(AG_Event *event)
+InsertAnimDlg(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1098,7 +1264,7 @@ insert_anim_dlg(AG_Event *event)
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
 	    sizeof(ins_anim_name));
-	AG_SetEvent(tb, "textbox-return", insert_anim, "%p,%p", win, ts);
+	AG_SetEvent(tb, "textbox-return", InsertAnim, "%p,%p", win, ts);
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size:"));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
@@ -1113,7 +1279,7 @@ insert_anim_dlg(AG_Event *event)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), insert_anim, "%p,%p", win, ts);
+		AG_ButtonAct(btnbox, 0, _("OK"), InsertAnim, "%p,%p", win, ts);
 		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
@@ -1122,7 +1288,7 @@ insert_anim_dlg(AG_Event *event)
 }
 
 static void
-delete_tiles(AG_Event *event)
+DeleteSelTiles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	RG_Tileset *ts = AG_PTR(2);
@@ -1141,25 +1307,15 @@ delete_tiles(AG_Event *event)
 			continue;
 		}
 		TAILQ_REMOVE(&ts->tiles, t, tiles);
+		RemoveTileMappings(ts, t);
+		RG_TileDestroy(t);
 		Free(t, M_RG);
 	}
 	AG_MutexUnlock(&ts->lock);
 }
 
-int
-RG_TilesetInsertSprite(RG_Tileset *ts, SDL_Surface *su)
-{
-	int s;
-
-	s = AG_GfxAddSprite(AGOBJECT(ts)->gfx, su);
-	if (s >= ts->max_sprites) {
-		ts->max_sprites = s+1;
-	}
-	return (s);
-}
-
 static void
-dup_tile(RG_Tileset *ts, RG_Tile *t1)
+TileDup(RG_Tileset *ts, RG_Tile *t1)
 {
 	char name[RG_TILE_NAME_MAX];
 	RG_Tile *t2;
@@ -1177,15 +1333,16 @@ tryname1:
 	RG_TileScale(ts, t2, t1->su->w, t1->su->h, t1->flags,
 	    t1->su->format->alpha);
 	strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
+
+	t2->xOrig = t1->xOrig;
+	t2->yOrig = t1->yOrig;
+	t2->snap_mode = t1->snap_mode;
 	for (y = 0; y < t1->nh; y++) {
 		for (x = 0; x < t1->nw; x++) {
 			t2->attrs[y*t1->nw+x] = t1->attrs[y*t1->nw+x];
 			t2->layers[y*t1->nw+x] = t1->layers[y*t1->nw+x];
 		}
 	}
-	AG_SPRITE(ts,t2->s).xOrig = AG_SPRITE(ts,t1->s).xOrig;
-	AG_SPRITE(ts,t2->s).yOrig = AG_SPRITE(ts,t1->s).yOrig;
-	AG_SPRITE(ts,t2->s).snap_mode = AG_SPRITE(ts,t1->s).snap_mode;
 	
 	TAILQ_FOREACH(e1, &t1->elements, elements) {
 		RG_TileElement *e2;
@@ -1228,7 +1385,7 @@ tryname2:
 }
 
 static void
-dup_tiles(AG_Event *event)
+DupSelTiles(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1241,13 +1398,13 @@ dup_tiles(AG_Event *event)
 		if (!it->selected) {
 			continue;
 		}
-		dup_tile(ts, t);
+		TileDup(ts, t);
 	}
 	AG_MutexUnlock(&ts->lock);
 }
 
 static void
-edit_tiles(AG_Event *event)
+EditSelTiles(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1270,7 +1427,7 @@ edit_tiles(AG_Event *event)
 }
 
 static void
-edit_anims(AG_Event *event)
+EditSelAnims(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1294,7 +1451,7 @@ edit_anims(AG_Event *event)
 }
 
 static void
-edit_textures(AG_Event *event)
+EditSelTextures(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1316,7 +1473,7 @@ edit_textures(AG_Event *event)
 }
 
 static void
-delete_pixmap(AG_Event *event)
+DeleteSelPixmaps(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl_art = AG_PTR(2);
@@ -1338,7 +1495,7 @@ delete_pixmap(AG_Event *event)
 }
 
 static void
-delete_anim(AG_Event *event)
+DeleteSelAnims(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl_anims = AG_PTR(2);
@@ -1354,13 +1511,14 @@ delete_anim(AG_Event *event)
 			return;
 		}
 		TAILQ_REMOVE(&ts->animations, ani, animations);
+		RemoveAnimMappings(ts, ani);
 		RG_AnimDestroy(ani);
 		Free(ani, M_RG);
 	}
 }
 
 static void
-delete_sketch(AG_Event *event)
+DeleteSelSketches(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl_art = AG_PTR(2);
@@ -1382,7 +1540,7 @@ delete_sketch(AG_Event *event)
 }
 
 static void
-delete_textures(AG_Event *event)
+DeleteSelTextures(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl_textures = AG_PTR(2);
@@ -1401,7 +1559,7 @@ delete_textures(AG_Event *event)
 }
 
 static void
-duplicate_pixmap(AG_Event *event)
+DupSelPixmaps(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	AG_Tlist *tl_art = AG_PTR(2);
@@ -1436,7 +1594,7 @@ tryname:
 }
 
 static void
-select_template(AG_Event *event)
+SelectTemplate(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 
@@ -1444,16 +1602,12 @@ select_template(AG_Event *event)
 
 	if (strcmp(ts->template, "Perso") == 0) {
 		const char *tiles[] = {
-			"Idle-N",
-			"Idle-S",
-			"Idle-W",
-			"Idle-E"
+			"Idle-N", "Idle-S",
+			"Idle-W", "Idle-E"
 		};
 		const char *anims[] = {
-			"Walk-N",
-			"Walk-S",
-			"Walk-W",
-			"Walk-E"
+			"Walk-N", "Walk-S",
+			"Walk-W", "Walk-E"
 		};
 		const int ntiles = sizeof(tiles)/sizeof(tiles[0]);
 		const int nanims = sizeof(anims)/sizeof(anims[0]);
@@ -1470,11 +1624,70 @@ select_template(AG_Event *event)
 		}
 		for (i = 0; i < nanims; i++) {
 			a = Malloc(sizeof(RG_Anim), M_RG);
-			RG_AnimInit(a, ts, anims[i], ANIMATION_SRCCOLORKEY);
+			RG_AnimInit(a, ts, anims[i], RG_ANIM_SRCCOLORKEY);
 			RG_AnimScale(a, 16, 32);
 			TAILQ_INSERT_TAIL(&ts->animations, a, animations);
 		}
 	}
+}
+
+static void
+PollTileTbl(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
+	AG_TlistItem *it;
+	Uint32 i;
+
+	AG_TlistClear(tl);
+	AG_MutexLock(&ts->lock);
+	for (i = 0; i < ts->ntiletbl; i++) {
+		if (ts->tiletbl[i] == NULL) {
+			it = AG_TlistAdd(tl, NULL, "%u. NULL", (Uint)i);
+			it->cat = "";
+		} else {
+			RG_Tile *t = ts->tiletbl[i];
+			
+			it = AG_TlistAdd(tl, NULL, "%u. %s (%ux%u)", (Uint)i,
+			    t->name, t->su->w, t->su->h);
+			it->cat = "tileid";
+			it->p1 = t;
+			AG_TlistSetIcon(tl, it, t->su);
+		}
+	}
+	AG_TlistRestore(tl);
+	AG_MutexUnlock(&ts->lock);
+}
+
+static void
+PollAnimTbl(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	RG_Tileset *ts = AG_PTR(1);
+	AG_TlistItem *it;
+	Uint32 i;
+
+	AG_TlistClear(tl);
+	AG_MutexLock(&ts->lock);
+	for (i = 0; i < ts->nanimtbl; i++) {
+		if (ts->animtbl[i] == NULL) {
+			it = AG_TlistAdd(tl, NULL, "%u. NULL", (Uint)i);
+			it->cat = "";
+		} else {
+			RG_Anim *anim = ts->animtbl[i];
+			
+			it = AG_TlistAdd(tl, NULL, "%u. %s (%ux%u)", (Uint)i,
+			    anim->name, anim->w, anim->h);
+			it->cat = "animid";
+			it->p1 = anim;
+#if 0
+			if (anim->nframes > 0)
+				AG_TlistSetIcon(tl, it, anim->frames[0].su)
+#endif
+		}
+	}
+	AG_TlistRestore(tl);
+	AG_MutexUnlock(&ts->lock);
 }
 
 void *
@@ -1483,6 +1696,7 @@ RG_TilesetEdit(void *p)
 	RG_Tileset *ts = p;
 	AG_Window *win;
 	AG_Tlist *tl_tiles, *tl_art, *tl_anims, *tl_textures;
+	AG_Tlist *tl_tiletbl, *tl_animtbl;
 	AG_Box *box, *hbox, *bbox;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
@@ -1501,55 +1715,63 @@ RG_TilesetEdit(void *p)
 	AG_TlistInit(tl_tiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 		               AG_TLIST_EXPAND);
 	AG_TlistPrescale(tl_tiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
-	AG_SetEvent(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
+	AG_SetEvent(tl_tiles, "tlist-poll", PollTiles, "%p", ts);
 	
 	tl_art = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_art, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl_art, "tlist-poll", poll_graphics, "%p", ts);
+	AG_SetEvent(tl_art, "tlist-poll", PollGraphics, "%p", ts);
 	
 	tl_textures = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_textures, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl_textures, "tlist-poll", poll_textures, "%p", ts);
+	AG_SetEvent(tl_textures, "tlist-poll", PollTextures, "%p", ts);
 
 	tl_anims = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_anims, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl_anims, "tlist-poll", poll_anims, "%p", ts);
+	AG_SetEvent(tl_anims, "tlist-poll", PollAnims, "%p", ts);
+	
+	tl_tiletbl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_tiletbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	AG_SetEvent(tl_tiletbl, "tlist-poll", PollTileTbl, "%p", ts);
+	
+	tl_animtbl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl_animtbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	AG_SetEvent(tl_animtbl, "tlist-poll", PollAnimTbl, "%p", ts);
 
 	com = AG_ComboNew(win, AG_COMBO_HFILL, _("Template: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->template,
 	    sizeof(ts->template));
 	AG_TlistAdd(com->list, NULL, "Perso");
 	AG_TlistAdd(com->list, NULL, "Terrain");
-	AG_SetEvent(com, "combo-selected", select_template, "%p", ts);
+	AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);
 
 	mi = AG_TlistSetPopup(tl_tiles, "tile");
 	{
 		AG_MenuAction(mi, _("Edit tiles..."), OBJEDIT_ICON,
-		    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
+		    EditSelTiles, "%p,%p,%p", ts, tl_tiles, win);
 		AG_MenuSeparator(mi);
 		AG_MenuAction(mi, _("Duplicate tiles"),
 		    OBJDUP_ICON,
-		    dup_tiles, "%p,%p", ts, tl_tiles);
+		    DupSelTiles, "%p,%p", ts, tl_tiles);
 		AG_MenuSeparator(mi);
 		AG_MenuAction(mi, _("Delete tiles"), TRASH_ICON,
-		    delete_tiles, "%p,%p", tl_tiles, ts);
+		    DeleteSelTiles, "%p,%p", tl_tiles, ts);
 	}
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tl_tiles);
-		AG_SetEvent(tl_tiles, "tlist-dblclick", edit_tiles,
+		AG_SetEvent(tl_tiles, "tlist-dblclick", EditSelTiles,
 		    "%p,%p,%p", ts, tl_tiles, win);
 
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			AG_ButtonAct(bbox, 0, _("Insert"), insert_tile_dlg,
+			AG_ButtonAct(bbox, 0, _("Insert"), InsertTileDlg,
 			    "%p,%p", ts, win);
-			AG_ButtonAct(bbox, 0, _("Edit"), edit_tiles,
+			AG_ButtonAct(bbox, 0, _("Edit"), EditSelTiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
-			AG_ButtonAct(bbox, 0, _("Delete"), delete_tiles,
+			AG_ButtonAct(bbox, 0, _("Delete"), DeleteSelTiles,
 			    "%p,%p", tl_tiles, ts);
 		}
 	}
@@ -1561,16 +1783,14 @@ RG_TilesetEdit(void *p)
 		mi = AG_TlistSetPopup(tl_art, "pixmap");
 		{
 			AG_MenuAction(mi, _("Delete pixmap"), TRASH_ICON,
-			    delete_pixmap, "%p,%p", ts, tl_art);
-			
+			    DeleteSelPixmaps, "%p,%p", ts, tl_art);
 			AG_MenuAction(mi, _("Duplicate pixmap"), OBJDUP_ICON,
-			    duplicate_pixmap, "%p,%p", ts, tl_art);
+			    DupSelPixmaps, "%p,%p", ts, tl_art);
 		}
-
 		mi = AG_TlistSetPopup(tl_art, "sketch");
 		{
 			AG_MenuAction(mi, _("Delete sketch"), TRASH_ICON,
-			    delete_sketch, "%p,%p", ts, tl_art);
+			    DeleteSelSketches, "%p,%p", ts, tl_art);
 		}
 	}
 	
@@ -1581,21 +1801,21 @@ RG_TilesetEdit(void *p)
 		mi = AG_TlistSetPopup(tl_textures, "texture");
 		{
 			AG_MenuAction(mi, _("Delete texture"), TRASH_ICON,
-			    delete_textures, "%p,%p", ts, tl_textures);
+			    DeleteSelTextures, "%p,%p", ts, tl_textures);
 		}
 		
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonAct(bbox, 0, _("Insert"),
-			    insert_texture_dlg, "%p,%p", ts, win);
+			    InsertTextureDlg, "%p,%p", ts, win);
 			AG_ButtonAct(bbox, 0, _("Edit"),
-			    edit_textures, "%p,%p,%p", ts, tl_textures, win);
+			    EditSelTextures, "%p,%p,%p", ts, tl_textures, win);
 			AG_ButtonAct(bbox, 0, _("Delete"),
-			    delete_textures, "%p,%p", ts, tl_textures);
+			    DeleteSelTextures, "%p,%p", ts, tl_textures);
 		}
 		
-		AG_SetEvent(tl_textures, "tlist-dblclick", edit_textures,
+		AG_SetEvent(tl_textures, "tlist-dblclick", EditSelTextures,
 		    "%p,%p,%p", ts, tl_textures, win);
 	}
 	
@@ -1603,26 +1823,54 @@ RG_TilesetEdit(void *p)
 	{
 		AG_ObjectAttach(ntab, tl_anims);
 		AG_SetEvent(tl_anims, "tlist-dblclick",
-		    edit_anims, "%p,%p,%p", ts, tl_anims, win);
+		    EditSelAnims, "%p,%p,%p", ts, tl_anims, win);
 		
 		mi = AG_TlistSetPopup(tl_anims, "anim");
 		{
 			AG_MenuAction(mi, _("Edit animation"), EDIT_ICON,
-			    edit_anims, "%p,%p,%p", ts, tl_anims, win);
+			    EditSelAnims, "%p,%p,%p", ts, tl_anims, win);
 			AG_MenuAction(mi, _("Delete animation"), TRASH_ICON,
-			    delete_anim, "%p,%p", ts, tl_anims);
+			    DeleteSelAnims, "%p,%p", ts, tl_anims);
 		}
 		
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonAct(bbox, 0, _("Insert"),
-			    insert_anim_dlg, "%p,%p", ts, win);
+			    InsertAnimDlg, "%p,%p", ts, win);
 			AG_ButtonAct(bbox, 0, _("Edit"),
-			    edit_anims, "%p,%p,%p", ts, tl_anims, win);
+			    EditSelAnims, "%p,%p,%p", ts, tl_anims, win);
 			AG_ButtonAct(bbox, 0, _("Delete"),
-			    delete_anim, "%p,%p", ts, tl_anims);
+			    DeleteSelAnims, "%p,%p", ts, tl_anims);
 		}
+	}
+
+	ntab = AG_NotebookAddTab(nb, _("Tile IDs"), AG_BOX_VERT);
+	{
+		AG_ObjectAttach(ntab, tl_tiletbl);
+#if 0
+		mi = AG_TlistSetPopup(tl_tiletbl, "tileid");
+		AG_MenuAction(mi, _("Invalidate mapping"), TRASH_ICON,
+		    InvalidateTileIDs, "%p,%p", ts, tl_tiletbl);
+		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
+		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		AG_ButtonAct(bbox, 0, _("Invalidate"),
+		    InvalidateTileIDs, "%p,%p", ts, tl_tiletbl);
+#endif
+	}
+	
+	ntab = AG_NotebookAddTab(nb, _("Anim IDs"), AG_BOX_VERT);
+	{
+		AG_ObjectAttach(ntab, tl_animtbl);
+#if 0
+		mi = AG_TlistSetPopup(tl_animtbl, "animid");
+		AG_MenuAction(mi, _("Invalidate mapping"), TRASH_ICON,
+		    InvalidateAnimIDs, "%p,%p", ts, tl_animtbl);
+		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
+		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		AG_ButtonAct(bbox, 0, _("Invalidate"),
+		    InvalidateAnimIDs, "%p,%p", ts, tl_animtbl);
+#endif
 	}
 	return (win);
 }

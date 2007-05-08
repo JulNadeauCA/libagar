@@ -1,8 +1,8 @@
 /*	$Csoft: animview.h,v 1.1 2005/03/24 04:02:07 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_WIDGET_ANIMVIEW_H_
-#define _AGAR_WIDGET_ANIMVIEW_H_
+#ifndef _AGAR_RG_ANIMVIEW_H_
+#define _AGAR_RG_ANIMVIEW_H_
 
 #include <agar/gui/widget.h>
 #include <agar/gui/button.h>
@@ -12,8 +12,6 @@
 #include <agar/rg/tileset.h>
 
 #include "begin_code.h"
-
-/* XXX move to librg */
 
 typedef struct rg_anim_view {
 	struct ag_widget wid;
@@ -44,4 +42,4 @@ void		 RG_AnimviewSetAnimation(RG_Animview *, RG_Anim *);
 __END_DECLS
 
 #include "close_code.h"
-#endif /* _AGAR_WIDGET_ANIMVIEW_H */
+#endif /* _AGAR_RG_ANIMVIEW_H */

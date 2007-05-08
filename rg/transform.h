@@ -1,50 +1,54 @@
 /*	$Csoft: transform.h,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_MAP_TRANSFORM_H_
-#define _AGAR_MAP_TRANSFORM_H_
+#ifndef _AGAR_RG_TRANSFORM_H_
+#define _AGAR_RG_TRANSFORM_H_
 #include "begin_code.h"
 
-#define MAP_TRANSFORM_MAX_ARGS	64
+#define RG_TRANSFORM_MAX_ARGS	64	/* Max transform args */
+#define RG_TRANSFORM_CHAIN_MAX	1000	/* Max transform chain entries */
 
-enum map_transform_type {
-	MAP_TRANSFORM_MIRROR,
-	MAP_TRANSFORM_FLIP,
-	MAP_TRANSFORM_ROTATE,
-	MAP_TRANSFORM_RGB_INVERT
+enum rg_transform_type {
+	RG_TRANSFORM_MIRROR,
+	RG_TRANSFORM_FLIP,
+	RG_TRANSFORM_ROTATE,
+	RG_TRANSFORM_RGB_INVERT
 };
 
-TAILQ_HEAD(map_transformq, map_transform);
+typedef TAILQ_HEAD(rg_transformq, rg_transform) RG_TransformChain;
 
-typedef struct map_transform {
-	enum map_transform_type type;
+typedef struct rg_transform {
+	enum rg_transform_type type;
 	SDL_Surface *(*func)(SDL_Surface *, int, Uint32 *);
 	Uint32 *args;
 	int nargs;
-	TAILQ_ENTRY(map_transform) transforms;
-} MAP_Transform;
+	TAILQ_ENTRY(rg_transform) transforms;
+} RG_Transform;
 
-struct map_transform_ent {
+struct rg_transform_ops {
 	char *name;
-	enum map_transform_type type;
+	enum rg_transform_type type;
 	SDL_Surface *(*func)(SDL_Surface *, int, Uint32 *);
 };
 
-struct map_item;
-
 __BEGIN_DECLS
-MAP_Transform *MAP_TransformNew(enum map_transform_type, int, Uint32 *);
-int	       MAP_TransformInit(MAP_Transform *, enum map_transform_type, int,
-		                  Uint32 *);
-int	       MAP_TransformLoad(AG_Netbuf *, MAP_Transform *);
-void	       MAP_TransformSave(AG_Netbuf *, const MAP_Transform *);
-void	       MAP_TransformDestroy(MAP_Transform *);
-__inline__ int MAP_TransformCompare(const MAP_Transform *,
-		                    const MAP_Transform *);
-void	       MAP_TransformPrint(const struct map_transformq *, char *, size_t)
-		                  BOUNDED_ATTRIBUTE(__string__, 2, 3);
-MAP_Transform *MAP_TransformRotate(struct map_item *, int);
+RG_Transform	*RG_TransformNew(enum rg_transform_type, int, Uint32 *);
+int		 RG_TransformInit(RG_Transform *, enum rg_transform_type, int,
+		                 Uint32 *);
+int		 RG_TransformLoad(AG_Netbuf *, RG_Transform *);
+void		 RG_TransformSave(AG_Netbuf *, const RG_Transform *);
+void		 RG_TransformDestroy(RG_Transform *);
+__inline__ int	 RG_TransformCompare(const RG_Transform *,
+		                     const RG_Transform *);
+
+void	 RG_TransformChainInit(RG_TransformChain *);
+int	 RG_TransformChainLoad(AG_Netbuf *, RG_TransformChain *);
+void	 RG_TransformChainSave(AG_Netbuf *, const RG_TransformChain *);
+void	 RG_TransformChainDestroy(RG_TransformChain *);
+void	 RG_TransformChainPrint(const RG_TransformChain *, char *, size_t)
+	                        BOUNDED_ATTRIBUTE(__string__, 2, 3);
+void	 RG_TransformChainDup(const RG_TransformChain *, RG_TransformChain *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_MAP_TRANSFORM_H_ */
+#endif	/* _AGAR_RG_TRANSFORM_H_ */

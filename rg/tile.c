@@ -1,7 +1,7 @@
 /*	$Csoft: tile.c,v 1.91 2005/10/07 07:16:27 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
+ * Copyright (c) 2005-2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -58,12 +58,18 @@
 
 #include <string.h>
 
+const char *rgTileSnapModes[] = {
+	N_("No snapping"),
+	N_("Snap to grid"),
+	NULL
+};
+
 /*
  * Blend a pixmap with the tile; add the source alpha to the destination
  * alpha of each pixel.
  */
 static void
-blend_overlay_alpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
+BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
 	Uint sx, sy, dx, dy;
 	Uint8 *pSrc, *pDst;
@@ -111,7 +117,7 @@ blend_overlay_alpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 }
 
 static void
-blend_normal(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
+BlendSDL(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
 	SDL_BlitSurface(su, NULL, t->su, rd);
 }
@@ -121,18 +127,21 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 {
 	strlcpy(t->name, name, sizeof(t->name));
 	t->clname[0] = '\0';
+	t->main_id = 0;
 	t->flags = 0;
 	t->su = NULL;
 	t->ts = ts;
 	t->nrefs = 0;
-	t->blend_fn = blend_overlay_alpha;
-	t->s = -1;
+	t->blend_fn = BlendOverlayAlpha;
+#if 0
+	t->blend_fn = BlendSDL;
+#endif
 	t->attrs = NULL;
 	t->layers = NULL;
 	t->nw = 0;
 	t->nh = 0;
 	TAILQ_INIT(&t->elements);
-	AG_GfxUsed(ts);
+	SLIST_INIT(&t->vars);
 }
 
 void
@@ -162,6 +171,7 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags,
 	memset(t->attrs, 0, nw*nh*sizeof(Uint));
 	memset(t->layers, 0, nw*nh*sizeof(int));
 
+	/* Recover the previous attributes. */
 	if (sattrs != NULL) {
 		for (y = 0; y < t->nh; y++) {
 			for (x = 0; x < t->nw; x++)
@@ -179,35 +189,13 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags,
 	t->nh = nh;
 
 	if (flags & RG_TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
-	if (flags & RG_TILE_SRCALPHA)	sflags |= SDL_SRCALPHA;
+	if (flags & RG_TILE_SRCALPHA)		sflags |= SDL_SRCALPHA;
 
 	t->flags = flags|RG_TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
 	if (t->su == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-
-	if (t->s == -1) {
-		t->s = RG_TilesetInsertSprite(ts, t->su);
-	} else {
-		AG_SpriteSetSurface(AGOBJECT(ts)->gfx, t->s, t->su);
-	}
-	AG_SpriteSetName(AGOBJECT(ts)->gfx, t->s, t->name);
-	AG_SpriteSetClass(AGOBJECT(ts)->gfx, t->s, t->clname);
-
-	/* Initialize the gfx attributes. */
-	Free(RG_TILE_ATTRS(t), M_RG);
-	RG_TILE_ATTRS(t) = Malloc(t->nw*t->nh*sizeof(Uint), M_RG);
-	for (y = 0; y < t->nh; y++) {
-		for (x = 0; x < t->nw; x++)
-			RG_TILE_ATTRS(t)[y*t->nw + x] = t->attrs[y*t->nw + x];
-	}
-	Free(RG_TILE_LAYERS(t), M_RG);
-	RG_TILE_LAYERS(t) = Malloc(t->nw*t->nh*sizeof(int), M_RG);
-	for (y = 0; y < t->nh; y++) {
-		for (x = 0; x < t->nw; x++)
-			RG_TILE_LAYERS(t)[y*t->nw + x] = t->layers[y*t->nw + x];
-	}
 }
 
 void
@@ -215,7 +203,6 @@ RG_TileGenerate(RG_Tile *t)
 {
 	RG_TileElement *tel;
 	SDL_Rect rd, sd;
-	AG_Sprite *spr;
 	
 	SDL_SetAlpha(t->su, SDL_SRCALPHA, t->ts->fmt->alpha);
 
@@ -284,15 +271,10 @@ RG_TileGenerate(RG_Tile *t)
 	} else {
 		SDL_SetColorKey(t->su, SDL_SRCCOLORKEY, t->ts->fmt->colorkey);
 	}
-
-	spr = &AG_SPRITE(t->ts,t->s);
-	AG_SpriteUpdate(spr);
-	memcpy(spr->attrs, t->attrs, t->nw*t->nh*sizeof(Uint));
-	memcpy(spr->layers, t->layers, t->nw*t->nh*sizeof(int));
 }
 
 static __inline__ void
-gen_element_name(RG_TileElement *tel, RG_Tile *t, const char *fname)
+GenerateElementName(RG_TileElement *tel, RG_Tile *t, const char *fname)
 {
 	RG_TileElement *oel;
 	Uint elno = 0;
@@ -332,7 +314,7 @@ RG_TileAddFeature(RG_Tile *t, const char *name, void *ft, int x, int y)
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
-		gen_element_name(tel, t, RG_FEATURE(ft)->name);
+		GenerateElementName(tel, t, RG_FEATURE(ft)->name);
 	}
 	tel->type = RG_TILE_FEATURE;
 	tel->visible = 1;
@@ -370,8 +352,7 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 }
 
 RG_TileElement *
-RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px,
-    int x, int y)
+RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px, int x, int y)
 {
 	RG_TileElement *tel;
 
@@ -379,7 +360,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px,
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
-		gen_element_name(tel, t, px->name);
+		GenerateElementName(tel, t, px->name);
 	}
 	tel->type = RG_TILE_PIXMAP;
 	tel->visible = 1;
@@ -395,8 +376,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px,
 }
 
 RG_TileElement *
-RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk,
-    int x, int y)
+RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 {
 	RG_TileElement *tel;
 
@@ -404,7 +384,7 @@ RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk,
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
-		gen_element_name(tel, t, sk->name);
+		GenerateElementName(tel, t, sk->name);
 	}
 	tel->type = RG_TILE_SKETCH;
 	tel->visible = 1;
@@ -477,11 +457,9 @@ RG_TileSave(RG_Tile *t, AG_Netbuf *buf)
 	AG_WriteUint8(buf, t->flags & ~RG_TILE_DIRTY);
 	AG_WriteSurface(buf, t->su);
 	
-	AG_WriteUint32(buf, 1);				/* Pad: nsprites */
-	AG_WriteSint32(buf, t->s);
-	AG_WriteSint16(buf, (Sint16)AG_SPRITE(t->ts,t->s).xOrig);
-	AG_WriteSint16(buf, (Sint16)AG_SPRITE(t->ts,t->s).yOrig);
-	AG_WriteUint8(buf, (Uint8)AG_SPRITE(t->ts,t->s).snap_mode);
+	AG_WriteSint16(buf, (Sint16)t->xOrig);
+	AG_WriteSint16(buf, (Sint16)t->yOrig);
+	AG_WriteUint8(buf, (Uint8)t->snap_mode);
 
 	AG_WriteUint32(buf, (Uint32)t->nw);
 	AG_WriteUint32(buf, (Uint32)t->nh);
@@ -541,8 +519,6 @@ int
 RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 {
 	RG_Tileset *ts = t->ts;
-	AG_Gfx *gfx = AGOBJECT(ts)->gfx;
-	AG_Sprite *spr;
 	Uint32 i, nelements;
 	Sint32 s;
 	Uint8 flags;
@@ -551,18 +527,9 @@ RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 	t->flags = AG_ReadUint8(buf);
 	t->su = AG_ReadSurface(buf, ts->fmt);
 
-	AG_ReadUint32(buf);				/* Pad: nsprites */
-	s = AG_ReadSint32(buf);
-	dprintf("%s: sprite index = %d\n", t->name, s);
-	if (s < 0 || (s >= gfx->nsprites)) {
-		AG_SetError("Bogus sprite index: %d", s);
-		return (-1);
-	}
-	spr = &gfx->sprites[s];
-	spr->xOrig = (int)AG_ReadSint16(buf);
-	spr->yOrig = (int)AG_ReadSint16(buf);
-	spr->snap_mode = (int)AG_ReadUint8(buf);
-	t->s = s;
+	t->xOrig = (int)AG_ReadSint16(buf);
+	t->yOrig = (int)AG_ReadSint16(buf);
+	t->snap_mode = (int)AG_ReadUint8(buf);
 
 	t->nw = (Uint)AG_ReadUint32(buf);
 	t->nh = (Uint)AG_ReadUint32(buf);
@@ -674,27 +641,31 @@ RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 void
 RG_TileDestroy(RG_Tile *t)
 {
-	AG_Object *map;
-	int i;
+	RG_TileElement *tel, *tel_next;
+	RG_TileVariant *var, *var_next;
 
-	if (t->s >= 0) {
-#if 0
-		AG_SpriteDestroy(AGOBJECT(t->ts)->gfx, t->s);
-#endif
-		AG_GfxUnused(t->ts);
-		t->s = -1;
-		t->nw = 0;
-		t->nh = 0;
-		Free(t->attrs, 0);
-		Free(t->layers, 0);
+	Free(t->attrs, 0);
+	Free(t->layers, 0);
+	SDL_FreeSurface(t->su);
+	
+	for (tel = TAILQ_FIRST(&t->elements);
+	     tel != TAILQ_END(&t->elements);
+	     tel = tel_next) {
+		tel_next = TAILQ_NEXT(tel, elements);
+		Free(tel, M_RG);
 	}
-	t->su = NULL;
+	for (var = SLIST_FIRST(&t->vars);
+	     var != SLIST_END(&t->vars);
+	     var = var_next) {
+		var_next = SLIST_NEXT(var, vars);
+		Free(var, M_RG);
+	}
 }
 
 #ifdef EDITION
 
 static void
-geo_ctrl_buttonup(AG_Event *event)
+GeoCtrlButtonUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
@@ -710,7 +681,7 @@ geo_ctrl_buttonup(AG_Event *event)
 }
 
 static void
-close_element(RG_Tileview *tv)
+CloseElement(RG_Tileview *tv)
 {
 	RG_TileviewCtrl *ctrl, *nctrl;
 	RG_Tile *t = tv->tile;
@@ -768,13 +739,11 @@ close_element(RG_Tileview *tv)
 	    (Uint)t->su->w,
 	    (Uint)t->su->h);
 	tv->tv_tile.geo_ctrl->buttonup =
-	    AG_SetEvent(tv, NULL, geo_ctrl_buttonup, "%p",
+	    AG_SetEvent(tv, NULL, GeoCtrlButtonUp, "%p",
 	    tv->tv_tile.geo_ctrl);
 
 	tv->tv_tile.orig_ctrl = RG_TileviewAddCtrl(tv, RG_TILEVIEW_POINT,
-	    "%*i,%*i",
-	    &AG_SPRITE(tv->ts,t->s).xOrig,
-	    &AG_SPRITE(tv->ts,t->s).yOrig);
+	    "%*i,%*i", &t->xOrig, &t->yOrig);
 
 	tv->tv_tile.orig_ctrl->cIna.r = 0;
 	tv->tv_tile.orig_ctrl->cIna.g = 255;
@@ -805,17 +774,17 @@ close_element(RG_Tileview *tv)
 }
 
 static void
-element_closed(AG_Event *event)
+ElementClosedEv(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	RG_Tileview *tv = AG_PTR(1);
 
 	if (tv->edit_mode)
-		close_element(tv);
+		CloseElement(tv);
 }
 
 static void
-pixmap_ctrl_buttonup(AG_Event *event)
+PixmapCtrlButtonUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
@@ -831,7 +800,7 @@ pixmap_ctrl_buttonup(AG_Event *event)
 }
 
 static void
-sketch_ctrl_buttonup(AG_Event *event)
+SketchCtrlButtonUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	RG_TileviewCtrl *ctrl = AG_PTR(1);
@@ -849,7 +818,7 @@ sketch_ctrl_buttonup(AG_Event *event)
 }
 
 static void
-open_element(RG_Tileview *tv, RG_TileElement *tel,
+OpenElement(RG_Tileview *tv, RG_TileElement *tel,
     AG_Window *pwin)
 {
 	if (tv->state == RG_TILEVIEW_TILE_EDIT) {
@@ -882,8 +851,8 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 				AG_WindowShow(win);
 
 				tv->tv_feature.win = win;
-				AG_SetEvent(win, "window-close", element_closed,
-				    "%p", tv);
+				AG_SetEvent(win, "window-close",
+				    ElementClosedEv, "%p", tv);
 				
 				agView->focus_win = pwin;
 				AG_WidgetFocus(tv);
@@ -911,7 +880,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 			    (Uint)tel->tel_pixmap.px->su->w,
 			    (Uint)tel->tel_pixmap.px->su->h);
 			tv->tv_pixmap.ctrl->buttonup =
-			    AG_SetEvent(tv, NULL, pixmap_ctrl_buttonup, "%p,%p",
+			    AG_SetEvent(tv, NULL, PixmapCtrlButtonUp, "%p,%p",
 			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
 			tv->tv_pixmap.state = RG_TVPIXMAP_IDLE;
 			tv->tv_pixmap.win = win = RG_PixmapEdit(tv, tel);
@@ -921,7 +890,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 
 			AG_WindowAttach(pwin, win);
 			AG_WindowShow(win);
-			AG_SetEvent(win, "window-close", element_closed,
+			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
 			agView->focus_win = pwin;
 			AG_WidgetFocus(tv);
@@ -944,7 +913,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 			    tel->tel_sketch.sk->vg->su->w,
 			    tel->tel_sketch.sk->vg->su->h);
 			tv->tv_sketch.ctrl->buttonup =
-			    AG_SetEvent(tv, NULL, sketch_ctrl_buttonup, "%p,%p",
+			    AG_SetEvent(tv, NULL, SketchCtrlButtonUp, "%p,%p",
 			    tv->tv_sketch.ctrl, tel);
 			tv->tv_sketch.win = win = RG_SketchEdit(tv, tel);
 			tv->tv_sketch.menu = NULL;
@@ -953,7 +922,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 
 			AG_WindowAttach(pwin, win);
 			AG_WindowShow(win);
-			AG_SetEvent(win, "window-close", element_closed,
+			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
 			agView->focus_win = pwin;
 			AG_WidgetFocus(tv);
@@ -967,7 +936,7 @@ open_element(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 static void
-create_pixmap(AG_Event *event)
+CreatePixmap(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -995,8 +964,8 @@ tryname:
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
 
 	tel = RG_TileAddPixmap(tv->tile, NULL, px, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
 	AG_PostEvent(NULL, tl_feats, "tlist-poll", NULL);
@@ -1015,8 +984,9 @@ tryname:
 	}
 }
 
+#if 0
 static void
-import_xcf(AG_Event *event)
+ImportFromXCF(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl_feats = AG_PTR(2);
@@ -1108,9 +1078,10 @@ fail:
 	AG_NetbufClose(buf);
 	AG_ObjectDestroy(&tmpObj);
 }
+#endif
 
 static void
-import_bmp(AG_Event *event)
+ImportFromBMP(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl_feats = AG_PTR(2);
@@ -1138,17 +1109,14 @@ tryname:
 		pixno++;
 		goto tryname;
 	}
-
 	px->su = SDL_ConvertSurface(bmp, tv->ts->fmt, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
-
 	RG_TileAddPixmap(tv->tile, NULL, px, 0, 0);
-
 	SDL_FreeSurface(bmp);
 }
 
 static void
-import_images(AG_Event *event)
+ImportImageDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1162,16 +1130,18 @@ import_images(AG_Event *event)
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
-	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", import_xcf,
+#if 0
+	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", ImportFromXCF,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
-	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", import_bmp,
+#endif
+	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ImportFromBMP,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
 	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);
 }
 
 static void
-create_sketch(AG_Event *event)
+CreateSketch(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1198,8 +1168,8 @@ tryname:
 	TAILQ_INSERT_TAIL(&tv->ts->sketches, sk, sketches);
 	tel = RG_TileAddSketch(tv->tile, NULL, sk, 0, 0);
 	tv->tile->flags |= RG_TILE_DIRTY;
-	close_element(tv);
-	open_element(tv, tel, pwin);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
 	AG_PostEvent(NULL, tl_feats, "tlist-poll", NULL);
@@ -1219,7 +1189,7 @@ tryname:
 }
 
 static void
-attach_pixmap(AG_Event *event)
+AttachPixmap(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1236,8 +1206,8 @@ attach_pixmap(AG_Event *event)
 	px = it->p1;
 
 	tel = RG_TileAddPixmap(tv->tile, NULL, px, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
 	AG_PostEvent(NULL, tl_feats, "tlist-poll", NULL);
@@ -1259,7 +1229,7 @@ attach_pixmap(AG_Event *event)
 }
 
 static void
-attach_pixmap_dlg(AG_Event *event)
+AttachPixmapDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1287,7 +1257,7 @@ attach_pixmap_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), attach_pixmap,
+		AG_ButtonAct(bo, 0, _("OK"), AttachPixmap,
 		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
 		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -1297,7 +1267,7 @@ attach_pixmap_dlg(AG_Event *event)
 }
 
 static void
-attach_sketch(AG_Event *event)
+AttachSketch(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1314,8 +1284,8 @@ attach_sketch(AG_Event *event)
 	sk = it->p1;
 
 	tel = RG_TileAddSketch(tv->tile, NULL, sk, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
 	AG_PostEvent(NULL, tl_feats, "tlist-poll", NULL);
@@ -1337,7 +1307,7 @@ attach_sketch(AG_Event *event)
 }
 
 static void
-attach_sketch_dlg(AG_Event *event)
+AttachSketchDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1366,7 +1336,7 @@ attach_sketch_dlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), attach_sketch, "%p,%p,%p,%p,%p",
+		AG_ButtonAct(bo, 0, _("OK"), AttachSketch, "%p,%p,%p,%p,%p",
 		    tv, pwin, win, tl_feats, tl);
 		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -1376,7 +1346,7 @@ attach_sketch_dlg(AG_Event *event)
 }
 
 static void
-select_feature(AG_Tlist *tl_feats, void *fp)
+SelectFeature(AG_Tlist *tl_feats, void *fp)
 {
 	RG_Feature *feat = fp;
 	AG_TlistItem *eit;
@@ -1399,7 +1369,7 @@ select_feature(AG_Tlist *tl_feats, void *fp)
 }
 
 static void
-insert_fill(AG_Event *event)
+AddFillFeature(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1412,13 +1382,13 @@ insert_fill(AG_Event *event)
 	RG_FillInit(fill, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, RG_FEATURE(fill), features);
 	tel = RG_TileAddFeature(tv->tile, NULL, fill, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
-	select_feature(tl_feats, fill);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
+	SelectFeature(tl_feats, fill);
 }
 
 static void
-insert_sketchproj(AG_Event *event)
+AddSketchProjFeature(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1431,13 +1401,13 @@ insert_sketchproj(AG_Event *event)
 	RG_SketchProjInit(sproj, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, RG_FEATURE(sproj), features);
 	tel = RG_TileAddFeature(tv->tile, NULL, sproj, 0, 0);
-	close_element(tv);
-	open_element(tv, tel, pwin);
-	select_feature(tl_feats, sproj);
+	CloseElement(tv);
+	OpenElement(tv, tel, pwin);
+	SelectFeature(tl_feats, sproj);
 }
 
 static void
-poll_feats(AG_Event *event)
+PollFeatures(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -1467,7 +1437,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(WALKABILITY_ICON),
 		    _("%sWalkable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == RG_NITEM_BLOCK) ? "* " : "");
+		     tv->edit_attr == RG_TILE_BLOCK) ? "* " : "");
 		it->cat = "walkable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[2];
@@ -1475,7 +1445,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(CLIMBABILITY_ICON),
 		    _("%sClimbable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == RG_NITEM_CLIMBABLE) ? "* " : "");
+		     tv->edit_attr == RG_TILE_CLIMBABLE) ? "* " : "");
 		it->cat = "climbable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[3];
@@ -1483,7 +1453,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(JUMPABILITY_ICON),
 		    _("%sJumpable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == RG_NITEM_JUMPABLE) ? "* " : "");
+		     tv->edit_attr == RG_TILE_JUMPABLE) ? "* " : "");
 		it->cat = "jumpable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[4];
@@ -1491,7 +1461,7 @@ poll_feats(AG_Event *event)
 		it = AG_TlistAdd(tl, AGICON(SLIPPAGE_ICON),
 		    _("%sSlippery"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
-		     tv->edit_attr == RG_NITEM_SLIPPERY) ? "* " : "");
+		     tv->edit_attr == RG_TILE_SLIPPERY) ? "* " : "");
 		it->cat = "slippery-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[5];
@@ -1592,7 +1562,7 @@ poll_feats(AG_Event *event)
 }
 
 static void
-edit_element(AG_Event *event)
+EditElement(AG_Event *event)
 {
 	AG_Widget *sndr = AG_SELF();
 	RG_Tileview *tv = AG_PTR(1);
@@ -1603,11 +1573,11 @@ edit_element(AG_Event *event)
 	AG_TlistItem *it;
 	
 	if (strcmp(sndr->type, "button") == 0 && !tv->edit_mode) {
-		close_element(tv);
+		CloseElement(tv);
 		return;
 	}
 	
-	close_element(tv);
+	CloseElement(tv);
 	
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
@@ -1618,24 +1588,24 @@ edit_element(AG_Event *event)
 		RG_TileElement *tel = it->p1;
 
 		if (tel != NULL) {
-			open_element(tv, tel, pwin);
+			OpenElement(tv, tel, pwin);
 		}
 	} else if (strcmp(it->cat, "walkable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = RG_NITEM_BLOCK;
+		tv->edit_attr = RG_TILE_BLOCK;
 	} else if (strcmp(it->cat, "climbable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = RG_NITEM_CLIMBABLE;
+		tv->edit_attr = RG_TILE_CLIMBABLE;
 	} else if (strcmp(it->cat, "jumpable-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = RG_NITEM_JUMPABLE;
+		tv->edit_attr = RG_TILE_JUMPABLE;
 	} else if (strcmp(it->cat, "slippery-attrs") == 0) {
 		tv->state = RG_TILEVIEW_ATTRIB_EDIT;
 		tv->edit_mode = 1;
-		tv->edit_attr = RG_NITEM_SLIPPERY;
+		tv->edit_attr = RG_TILE_SLIPPERY;
 	} else if (strcmp(it->cat, "layers") == 0) {
 		tv->state = RG_TILEVIEW_LAYERS_EDIT;
 		tv->edit_mode = 1;
@@ -1643,7 +1613,7 @@ edit_element(AG_Event *event)
 }
 
 static void
-delete_element(AG_Event *event)
+DeleteElement(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	RG_Tileset *ts = tv->ts;
@@ -1659,7 +1629,7 @@ delete_element(AG_Event *event)
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT &&
 	    strcmp(it->cat, "sketch-element") == 0) {
 	    	VG *vg = tv->tv_sketch.sk->vg;
-		VG_Element *vge = (VG_Element *)it->p1;
+		VG_Element *vge = it->p1;
 
 		RG_SketchUnselect(tv, tv->tv_sketch.tel, vge);
 		VG_DestroyElement(vg, vge);
@@ -1670,7 +1640,7 @@ delete_element(AG_Event *event)
 
 	/* XXX check that it's the element being deleted */
 	if (tv->edit_mode)
-		close_element(tv);
+		CloseElement(tv);
 	
 	if (strcmp(it->cat, "feature") == 0) {
 		RG_TileDelFeature(t, tel->tel_feature.ft, !detach_only);
@@ -1684,7 +1654,7 @@ delete_element(AG_Event *event)
 }
 
 static void
-resize_tile(AG_Event *event)
+ResizeTile(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_MSpinbutton *msb = AG_PTR(2);
@@ -1715,7 +1685,7 @@ resize_tile(AG_Event *event)
 }
 
 static void
-tile_infos(AG_Event *event)
+TileSettingsDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -1764,17 +1734,14 @@ tile_infos(AG_Event *event)
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
 	AG_LabelNewStatic(win, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, agGfxSnapNames);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT,
-	    &AG_SPRITE(t->ts,t->s).snap_mode);
+	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &t->snap_mode);
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelNewFmt(win, _("Maps to sprite: #%u."), t->s);
-	
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(box, 0, _("OK"), resize_tile, "%p,%p,%p,%p,%p,%p",
+		AG_ButtonAct(box, 0, _("OK"), ResizeTile, "%p,%p,%p,%p,%p,%p",
 		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
 		AG_ButtonAct(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -1784,7 +1751,7 @@ tile_infos(AG_Event *event)
 }
 
 static void
-move_element_up(AG_Event *event)
+MoveElementUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1808,7 +1775,7 @@ move_element_up(AG_Event *event)
 }
 
 static void
-move_element_down(AG_Event *event)
+MoveElementDown(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1831,7 +1798,7 @@ move_element_down(AG_Event *event)
 }
 
 static void
-visible_element(AG_Event *event)
+ToggleElementVisibility(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -1851,7 +1818,7 @@ visible_element(AG_Event *event)
 }
 
 static void
-tile_undo(AG_Event *event)
+Undo(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 
@@ -1865,7 +1832,7 @@ tile_undo(AG_Event *event)
 }
 
 static void
-tile_redo(AG_Event *event)
+Redo(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 
@@ -1879,7 +1846,7 @@ tile_redo(AG_Event *event)
 }
 
 static void
-export_bmp(AG_Event *event)
+ExportBMP(AG_Event *event)
 {
 	RG_Tile *t = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -1893,7 +1860,7 @@ export_bmp(AG_Event *event)
 }
 
 static void
-export_image_dlg(AG_Event *event)
+ExportImageDlg(AG_Event *event)
 {
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileview *tv = AG_PTR(2);
@@ -1906,100 +1873,100 @@ export_image_dlg(AG_Event *event)
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
-	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", export_bmp, "%p", t);
+	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ExportBMP, "%p", t);
 	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);
 }
 
 static void
-feature_menus(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
+InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 {
 	AG_MenuItem *mi;
 
 	mi = AG_TlistSetPopup(tl, "feature");
 	{
 		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl);
+		    ToggleElementVisibility, "%p,%p", tv, tl);
 #if 0
 		AG_MenuAction(mi, _("Edit feature"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl, win);
+		    EditElement, "%p,%p,%p", tv, tl, win);
 #endif
 		AG_MenuSeparator(mi);
 
 		AG_MenuAction(mi, _("Detach feature"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 1);
+		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 		AG_MenuAction(mi, _("Destroy feature"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 0);
+		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 
 		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl);
+		    MoveElementUp, "%p,%p", tv, tl);
 		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl);
+		    MoveElementDown, "%p,%p", tv, tl);
 	}
 
 	mi = AG_TlistSetPopup(tl, "pixmap");
 	{
 		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl);
+		    ToggleElementVisibility, "%p,%p", tv, tl);
 
 		AG_MenuSeparator(mi);
 #if 0
 		AG_MenuAction(mi, _("Edit pixmap"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl, win);
+		    EditElement, "%p,%p,%p", tv, tl, win);
 #endif
 		AG_MenuAction(mi, _("Detach pixmap"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 1);
+		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 		AG_MenuAction(mi, _("Destroy pixmap"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 0);
+		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 		
 		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl);
+		    MoveElementUp, "%p,%p", tv, tl);
 		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl);
+		    MoveElementDown, "%p,%p", tv, tl);
 	}
 	
 	mi = AG_TlistSetPopup(tl, "sketch");
 	{
 		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
-		    visible_element, "%p,%p", tv, tl);
+		    ToggleElementVisibility, "%p,%p", tv, tl);
 
 		AG_MenuSeparator(mi);
 
 		AG_MenuAction(mi, _("Edit sketch"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl, win);
+		    EditElement, "%p,%p,%p", tv, tl, win);
 		
 		AG_MenuAction(mi, _("Detach sketch"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 1);
+		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 		
 		AG_MenuAction(mi, _("Destroy sketch"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 0);
+		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 		
 		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, tl);
+		    MoveElementUp, "%p,%p", tv, tl);
 
 		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, tl);
+		    MoveElementDown, "%p,%p", tv, tl);
 	}
 	
 	mi = AG_TlistSetPopup(tl, "sketch-element");
 	{
 		AG_MenuAction(mi, _("Edit sketch element"), OBJEDIT_ICON,
-		    edit_element, "%p,%p,%p", tv, tl, win);
+		    EditElement, "%p,%p,%p", tv, tl, win);
 		
 		AG_MenuAction(mi, _("Delete sketch element"), TRASH_ICON,
-		    delete_element, "%p,%p,%i", tv, tl, 1);
+		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 #if 0
 		AG_MenuSeparator(mi);
 		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
@@ -2014,20 +1981,7 @@ feature_menus(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 }
 
 static void
-edit_attrib(AG_Event *event)
-{
-	RG_Tileview *tv = AG_PTR(1);
-	AG_Window *win = AG_PTR(2);
-	int attr = AG_INT(3);
-
-	close_element(tv);
-	tv->state = RG_TILEVIEW_ATTRIB_EDIT;
-	tv->edit_mode = 1;
-	tv->edit_attr = attr;
-}
-
-static void
-create_view(AG_Event *event)
+CreateView(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	RG_Tile *t = AG_PTR(2);
@@ -2084,9 +2038,9 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
 	AGWIDGET(tl_feats)->flags &= ~(AG_WIDGET_HFILL);
 	AG_TlistPrescale(tl_feats, _("FEATURE #00 <#00>"), 5);
-	AG_SetEvent(tl_feats, "tlist-poll", poll_feats, "%p,%p,%p,%p",
+	AG_SetEvent(tl_feats, "tlist-poll", PollFeatures, "%p,%p,%p,%p",
 	    ts, t, win, tv);
-	feature_menus(tv, tl_feats, win);
+	InitTileFeatureMenu(tv, tl_feats, win);
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 
@@ -2101,14 +2055,14 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		
 		AG_MenuTool(mi, tbar, _("Import images into pixmaps..."),
 		    RG_PIXMAP_ICON, 0, 0,
-		    import_images, "%p,%p,%p,%i", tv, win, tl_feats, 1);
+		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 1);
 		
 		AG_MenuTool(mi, tbar, _("Import images into tiles..."),
 		    RG_PIXMAP_ICON, 0, 0,
-		    import_images, "%p,%p,%p,%i", tv, win, tl_feats, 0);
+		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 0);
 	
 		AG_MenuAction(mi, _("Export to image file..."), OBJSAVE_ICON,
-		    export_image_dlg, "%p,%p", win, tv);
+		    ExportImageDlg, "%p,%p", win, tv);
 		
 		AG_MenuSeparator(mi);
 		
@@ -2120,26 +2074,26 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
 		AG_MenuActionKb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
-		    tile_undo, "%p", tv);
+		    Undo, "%p", tv);
 		AG_MenuActionKb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
-		    tile_redo, "%p", tv);
+		    Redo, "%p", tv);
 
 		AG_MenuSeparator(mi);
 
 		AG_MenuAction(mi, _("Tile settings..."),
 		    RG_PIXMAP_RESIZE_ICON,
-		    tile_infos, "%p,%p", tv, win);
+		    TileSettingsDlg, "%p,%p", tv, win);
 	}
 
 	mi = AG_MenuAddItem(me, _("Features"));
 	{
 		AG_MenuTool(mi, tbar, _("Fill"), RG_FILL_ICON,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
-		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
+		    AddFillFeature, "%p,%p,%p", tv, win, tl_feats);
 		
 		AG_MenuActionKb(mi, _("Sketch projection"), RG_SKETCH_PROJ_ICON,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
-		    insert_sketchproj, "%p,%p,%p", tv, win, tl_feats);
+		    AddSketchProjFeature, "%p,%p,%p", tv, win, tl_feats);
 
 		AG_MenuSeparator(mi);
 
@@ -2156,29 +2110,29 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	mi = AG_MenuAddItem(me, _("View"));
 	{
 		AG_MenuAction(mi, _("Create view..."), NEW_VIEW_ICON,
-		    create_view, "%p,%p,%p", tv->ts, tv->tile, win);
+		    CreateView, "%p,%p,%p", tv->ts, tv->tile, win);
 	}
 
 	mi = AG_MenuAddItem(me, _("Pixmaps"));
 	{
 		AG_MenuTool(mi, tbar, _("Create pixmap"), RG_PIXMAP_ICON,
 		    0, 0,
-		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
+		    CreatePixmap, "%p,%p,%p", tv, win, tl_feats);
 		
 		AG_MenuAction(mi, _("Attach existing pixmap..."),
 		    RG_PIXMAP_ATTACH_ICON,
-		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
+		    AttachPixmapDlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Sketches"));
 	{
 		AG_MenuTool(mi, tbar, _("Create sketch..."), RG_SKETCH_ICON,
 		    0, 0,
-		    create_sketch, "%p,%p,%p", tv, win, tl_feats);
+		    CreateSketch, "%p,%p,%p", tv, win, tl_feats);
 		
 		AG_MenuAction(mi, _("Attach sketch..."),
 		    RG_SKETCH_ATTACH_ICON,
-		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
+		    AttachSketchDlg, "%p,%p,%p", tv, win, tl_feats);
 
 		/* TODO import */
 	}
@@ -2195,9 +2149,9 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    _("Edit"));
 		AGWIDGET(btn)->flags |= AG_WIDGET_HFILL;
 		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
-		AG_SetEvent(btn, "button-pushed", edit_element, "%p,%p,%p",
+		AG_SetEvent(btn, "button-pushed", EditElement, "%p,%p,%p",
 		    tv, tl_feats, win);
-		AG_SetEvent(tl_feats, "tlist-dblclick", edit_element,
+		AG_SetEvent(tl_feats, "tlist-dblclick", EditElement,
 		    "%p,%p,%p", tv, tl_feats, win);
 
 		AG_ObjectAttach(div->box2, tbar);
@@ -2209,7 +2163,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	}
 
 	/* Set the tile edition mode. */
-	close_element(tv);
+	CloseElement(tv);
 
 	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win,

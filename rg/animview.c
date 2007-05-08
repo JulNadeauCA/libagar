@@ -31,8 +31,6 @@
 
 #include "animview.h"
 
-/* XXX MOVE TO RG */
-
 const AG_WidgetOps rgAnimviewOps = {
 	{
 		"AG_Widget:RG_Animview",
@@ -61,7 +59,7 @@ RG_AnimviewNew(void *parent)
 }
 
 static void
-do_play(AG_Event *event)
+Play(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
 
@@ -72,7 +70,7 @@ do_play(AG_Event *event)
 }
 
 static void
-do_pause(AG_Event *event)
+Pause(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
 	
@@ -83,7 +81,7 @@ do_pause(AG_Event *event)
 }
 
 static void
-do_stop(AG_Event *event)
+Stop(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
 	
@@ -96,7 +94,7 @@ do_stop(AG_Event *event)
 }
 
 static Uint32
-tick(void *p, Uint32 ival, void *arg)
+TickFrame(void *p, Uint32 ival, void *arg)
 {
 	RG_Animview *av = p;
 
@@ -116,7 +114,7 @@ tick(void *p, Uint32 ival, void *arg)
 }
 
 static void
-close_menu(RG_Animview *av)
+CloseMenu(RG_Animview *av)
 {
 	AG_MenuCollapse(av->menu, av->menu_item);
 	AG_ObjectDestroy(av->menu);
@@ -127,7 +125,7 @@ close_menu(RG_Animview *av)
 }
 
 static void
-set_speed(AG_Event *event)
+SetSpeed(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
 	Uint factor = AG_INT(2);
@@ -136,10 +134,10 @@ set_speed(AG_Event *event)
 }
 
 static void
-open_menu(RG_Animview *av, int x, int y)
+OpenMenu(RG_Animview *av, int x, int y)
 {
 	if (av->menu != NULL)
-		close_menu(av);
+		CloseMenu(av);
 	
 	av->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
 	AG_MenuInit(av->menu, 0);
@@ -148,30 +146,30 @@ open_menu(RG_Animview *av, int x, int y)
 		AG_MenuItem *m_speed;
 
 		AG_MenuAction(av->menu_item, _("Play"), ANIM_PLAY_ICON,
-		    do_play, "%p", av);
+		    Play, "%p", av);
 		AG_MenuAction(av->menu_item, _("Pause"), ANIM_PAUSE_ICON,
-		    do_pause, "%p", av);
+		    Pause, "%p", av);
 		AG_MenuAction(av->menu_item, _("Stop"), ANIM_STOP_ICON,
-		    do_stop, "%p", av);
+		    Stop, "%p", av);
 
 		AG_MenuSeparator(av->menu_item);
 		m_speed = AG_MenuAction(av->menu_item, _("Playback speed"),
 		    -1, NULL, NULL);
 		{
 			AG_MenuAction(m_speed, _("Quadruple"), -1,
-			    set_speed, "%p, %i", av, 400);
+			    SetSpeed, "%p, %i", av, 400);
 			AG_MenuAction(m_speed, _("Triple"), -1,
-			    set_speed, "%p, %i", av, 300);
+			    SetSpeed, "%p, %i", av, 300);
 			AG_MenuAction(m_speed, _("Double"), -1,
-			    set_speed, "%p, %i", av, 200);
+			    SetSpeed, "%p, %i", av, 200);
 			AG_MenuAction(m_speed, _("Normal"), -1,
-			    set_speed, "%p, %i", av, 100);
+			    SetSpeed, "%p, %i", av, 100);
 			AG_MenuAction(m_speed, _("Half"), -1,
-			    set_speed, "%p, %i", av, 50);
+			    SetSpeed, "%p, %i", av, 50);
 			AG_MenuAction(m_speed, _("One third"), -1,
-			    set_speed, "%p, %i", av, 33);
+			    SetSpeed, "%p, %i", av, 33);
 			AG_MenuAction(m_speed, _("One quarter"), -1,
-			    set_speed, "%p, %i", av, 25);
+			    SetSpeed, "%p, %i", av, 25);
 		}
 	}
 
@@ -188,7 +186,7 @@ mousebuttondown(AG_Event *event)
 
 	if (button == SDL_BUTTON_RIGHT &&
 	    y < AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h) {
-		open_menu(av, AGWIDGET(av)->cx+x, AGWIDGET(av)->cy+y);
+		OpenMenu(av, AGWIDGET(av)->cx+x, AGWIDGET(av)->cy+y);
 	}
 }
 
@@ -207,19 +205,19 @@ RG_AnimviewInit(RG_Animview *av)
 	av->speed = 100;
 	av->menu = NULL;
 	av->menu_win = NULL;
-	AG_SetTimeout(&av->timer, tick, av, 0);
+	AG_SetTimeout(&av->timer, TickFrame, av, 0);
 	
 	av->btns.play = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.play, AGICON(ANIM_PLAY_ICON));
-	AG_SetEvent(av->btns.play, "button-pushed", do_play, "%p", av);
+	AG_SetEvent(av->btns.play, "button-pushed", Play, "%p", av);
 	
 	av->btns.pause = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.pause, AGICON(ANIM_PAUSE_ICON));
-	AG_SetEvent(av->btns.pause, "button-pushed", do_pause, "%p", av);
+	AG_SetEvent(av->btns.pause, "button-pushed", Pause, "%p", av);
 	
 	av->btns.stop = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSetSurface(av->btns.stop, AGICON(ANIM_STOP_ICON));
-	AG_SetEvent(av->btns.stop, "button-pushed", do_stop, "%p", av);
+	AG_SetEvent(av->btns.stop, "button-pushed", Stop, "%p", av);
 	
 	AG_ButtonEnable(av->btns.play);
 	AG_ButtonDisable(av->btns.pause);

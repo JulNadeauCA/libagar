@@ -5,7 +5,8 @@
 #define _AGAR_RG_ANIMATION_H_
 #include "begin_code.h"
 
-#define RG_ANIMATION_NAME_MAX 32
+#define RG_ANIMATION_NAME_MAX	32
+#define RG_ANIMATION_FRAMES_MAX	(0xffffffff-1)
 
 enum rg_anim_insn_type {
 	RG_ANIM_TILE,			/* Replace/blend with prev tile */
@@ -14,6 +15,7 @@ enum rg_anim_insn_type {
 };
 #define RG_ANIM_LAST (RG_ANIM_ROTPX+1)
 
+/* Source animation instruction */
 typedef struct rg_anim_insn {
 	enum rg_anim_insn_type type;
 	struct rg_tile *t;		/* Tile reference (for ANIM_*TILE) */
@@ -40,6 +42,7 @@ typedef struct rg_anim_insn {
 	TAILQ_ENTRY(rg_anim_insn) insns;
 } RG_AnimInsn;
 
+/* Generated animation frame */
 typedef struct rg_anim_frame {
 	Uint name;
 	Uint delay;
@@ -49,23 +52,41 @@ typedef struct rg_anim_frame {
 #endif
 } RG_AnimFrame;
 
+/* Animation structure */
 typedef struct rg_anim {
-	char name[RG_ANIMATION_NAME_MAX];
+	char name[RG_ANIMATION_NAME_MAX];	/* User identifier */
+	Uint32 main_id;				/* Default ID mapping */
 	int flags;
-#define ANIMATION_SRCALPHA	0x01
-#define ANIMATION_SRCCOLORKEY	0x02
-	Uint w, h;
-	struct rg_tileset *tileset;
-	Uint nrefs;
+#define RG_ANIM_SRCALPHA	0x01
+#define RG_ANIM_SRCCOLORKEY	0x02
+#define RG_ANIM_DUPED_FLAGS	(RG_ANIM_SRCALPHA|RG_ANIM_SRCCOLORKEY)
+	Uint w, h;				/* Sprite geometry */
+	struct rg_tileset *tileset;		/* Parent tileset */
+	Uint nrefs;				/* Reference count */
 
-	RG_AnimInsn  *insns;		/* Animation instructions */
+	RG_AnimInsn  *insns;			/* Animation instructions */
 	Uint	     ninsns;
-	RG_AnimFrame *frames;		/* Generated frames */
+	RG_AnimFrame *frames;			/* Generated frames */
 	Uint	     nframes;
-	Uint	     gframe;		/* Current frame (global) */
+	Uint	     gframe;			/* Current frame (global) */
 
+	SLIST_HEAD(,rg_anim_variant) vars;	/* Transformed variants */
 	TAILQ_ENTRY(rg_anim) animations;
 } RG_Anim;
+
+/* Cached, transformed animation variant */
+typedef struct rg_anim_variant {
+	RG_TransformChain transforms;		/* Applied transforms */
+	RG_Anim *anim;				/* Transformed anim */
+	Uint32 last_drawn;			/* Time last draw occured */
+	SLIST_ENTRY(rg_anim_variant) vars;
+} RG_AnimVariant;
+
+#ifdef DEBUG
+#define RG_ANIM_FRAME(anim,frame) RG_AnimGetFrame((anim),(frame))
+#else
+#define RG_ANIM_FRAME(anim,frame) &(anim)->frames[frame]
+#endif
 
 __BEGIN_DECLS
 void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, int);
@@ -75,11 +96,12 @@ void RG_AnimSave(RG_Anim *, AG_Netbuf *);
 
 void RG_AnimScale(RG_Anim *, Uint, Uint);
 void RG_AnimGenerate(RG_Anim *);
+Uint RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
+void RG_AnimRemoveInsn(RG_Anim *, Uint);
 
-Uint	RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
-void	RG_AnimRemoveInsn(RG_Anim *, Uint);
-Uint	RG_AnimInsertFrame(RG_Anim *);
-void	RG_AnimRemoveFrame(RG_Anim *, Uint);
+Uint			 RG_AnimInsertFrame(RG_Anim *, SDL_Surface *);
+void			 RG_AnimRemoveFrame(RG_Anim *, Uint);
+__inline__ RG_AnimFrame	*RG_AnimGetFrame(RG_Anim *, Uint);
 
 AG_Window *RG_AnimEdit(RG_Anim *);
 __END_DECLS
