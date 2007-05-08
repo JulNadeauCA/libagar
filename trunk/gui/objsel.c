@@ -140,22 +140,19 @@ SelectObject(AG_Event *event)
 	objectb = AG_WidgetGetBinding(os, "object", &object);
 
 	if (*object != NULL) {
-		if (os->flags & AG_OBJSEL_PAGE_DATA)
+		if (os->flags & AG_OBJSEL_PAGE_DATA) {
 			AG_ObjectPageOut(*object, AG_OBJECT_DATA);
-		if (os->flags & AG_OBJSEL_PAGE_GFX)
-			AG_ObjectPageOut(*object, AG_OBJECT_GFX);
-		
+		}
 		AG_ObjectDelDep(os->pobj, *object);
 	}
 
 	*object = it->p1;
 
 	AG_ObjectAddDep(os->pobj, *object);
-	if (os->flags & AG_OBJSEL_PAGE_DATA)
-		AG_ObjectPageIn(*object, AG_OBJECT_DATA);
-	if (os->flags & AG_OBJSEL_PAGE_GFX)
-		AG_ObjectPageIn(*object, AG_OBJECT_GFX);
 
+	if (os->flags & AG_OBJSEL_PAGE_DATA) {
+		AG_ObjectPageIn(*object, AG_OBJECT_DATA);
+	}
 	AG_WidgetUnlockBinding(objectb);
 }
 

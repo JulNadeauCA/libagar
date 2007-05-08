@@ -27,7 +27,9 @@ AG_Pixmap *AG_PixmapFromSurface(void *, Uint, SDL_Surface *);
 AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, Uint, SDL_Surface *);
 AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, Uint, SDL_Surface *, Uint, Uint);
 AG_Pixmap *AG_PixmapFromBMP(void *, Uint, const char *);
+#if 0
 AG_Pixmap *AG_PixmapFromXCF(void *, Uint, const char *);
+#endif
 
 void	   AG_PixmapInit(AG_Pixmap *, Uint);
 void	   AG_PixmapDestroy(void *);

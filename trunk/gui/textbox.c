@@ -371,7 +371,7 @@ AG_TextboxDraw(void *p)
 #ifdef HAVE_FREETYPE
 			if (agFreetype) {
 				FT_Bitmap *ftbmp;
-				AG_TTFFont *ttf = font->p;
+				AG_TTFFont *ttf = font->ttf;
 				AG_TTFGlyph *glyph;
 				int xglyph, yglyph;
 				Uint8 *src;
@@ -568,34 +568,50 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 		}
 		
 		ch = (Uint32)s[i];
+		switch (font->type) {
 #ifdef HAVE_FREETYPE
-		if (agFreetype) {
-			AG_TTFFont *ttf = font->p;
-			FT_Bitmap *ftbmp;
-			AG_TTFGlyph *glyph;
+		case AG_FONT_VECTOR:
+			{
+				AG_TTFFont *ttf = font->ttf;
+				FT_Bitmap *ftbmp;
+				AG_TTFGlyph *glyph;
 
-			if (AG_TTFFindGlyph(ttf, ch,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-				continue;
+				if (AG_TTFFindGlyph(ttf, ch,
+				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP)
+				    != 0) {
+					continue;
+				}
+				glyph = ttf->current;
+				ftbmp = &glyph->bitmap;
+				x1 = x + glyph->minx + ftbmp->width;
+				if (i == 0 && glyph->minx < 0) {
+					x -= glyph->minx;
+				}
+				if (x1 >= AGWIDGET(tbox)->w) {
+					continue;
+				}
+				if (mx >= x && mx < x1) {
+					*pos = i;
+					goto in;
+				}
+				x += glyph->advance;
 			}
-			glyph = ttf->current;
-			ftbmp = &glyph->bitmap;
-			x1 = x + glyph->minx + ftbmp->width;
-			if (i == 0 && glyph->minx < 0) { x -= glyph->minx; }
-			if (x1 >= AGWIDGET(tbox)->w) { continue; }
-			if (mx >= x && mx < x1) { *pos = i; goto in; }
-			x += glyph->advance;
-		} else
+			break;
 #endif /* HAVE_FREETYPE */
-		{
-			AG_Glyph *gl;
+		case AG_FONT_BITMAP:
+			{
+				AG_Glyph *gl;
 			
-			gl = AG_TextRenderGlyph(NULL, -1, 0, ch);
-			x1 = x + gl->su->w;
-			if (x1 >= AGWIDGET(tbox)->w) { continue; }
-			if (mx >= x && mx < x1) { *pos = i; goto in; }
-			x += gl->su->w;
-			AG_TextUnusedGlyph(gl);
+				gl = AG_TextRenderGlyph(NULL, -1, 0, ch);
+				x1 = x + gl->su->w;
+				if (x1 >= AGWIDGET(tbox)->w) { continue; }
+				if (mx >= x && mx < x1) { *pos = i; goto in; }
+				x += gl->su->w;
+				AG_TextUnusedGlyph(gl);
+			}
+			break;
+		default:
+			fatal("Unknown font format");
 		}
 	}
 	AG_WidgetUnlockBinding(stringb);

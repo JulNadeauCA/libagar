@@ -123,6 +123,7 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 	return (px);
 }
 
+#if 0
 AG_Pixmap *
 AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 {
@@ -157,6 +158,7 @@ fail:
 	AG_ObjectDestroy(&tmpObj);
 	return (NULL);
 }
+#endif
 
 int
 AG_PixmapAddSurface(AG_Pixmap *px, SDL_Surface *su)
