@@ -14,15 +14,16 @@
 #define MAP_LAYER_NAME_MAX	128
 #define MAP_CAMERA_NAME_MAX	128
 #define MAP_NODE_ITEMS_MAX	32767
-#define MAP_ITEM_MAXTRANSFORMS	16384
 #define MAP_ITEM_MAXMASKS	16384
 
 #include <agar/map/nodemask.h>
 
+#include <agar/rg/tileset.h>
+
 #include "begin_code.h"
 
 enum map_item_type {
-	MAP_ITEM_SPRITE,	/* Reference to a sprite */
+	MAP_ITEM_TILE,		/* Reference to a tile */
 	MAP_ITEM_ANIM,		/* Reference to an animation */
 	MAP_ITEM_WARP		/* Reference to another location */
 };
@@ -51,12 +52,13 @@ typedef struct map_item {
 	} r_gfx;
 	union {
 		struct {
-			AG_Object *obj;		/* Gfx object */
-			Uint32 offs;		/* Sprite index */
-		} sprite;
+			RG_Tileset *obj;	/* Tileset object */
+			Uint32 id;		/* Tile ID */
+		} tile;
 		struct {
-			AG_Object *obj;		/* Gfx object */
-			Uint32 offs;		/* Anim index */
+			RG_Tileset *obj;	/* Tileset object */
+			Uint32 id;		/* Animation ID */
+			Uint *curframe;		/* Current frame number */
 		} anim;
 		struct {
 			char *map;		/* Map identifier */
@@ -64,10 +66,10 @@ typedef struct map_item {
 			Uint8 dir;		/* Default direction */
 		} warp;
 	} nref;
-	struct ag_transformq transforms;	/* Transformations to apply */
-	struct map_nodemaskq masks;		/* Collision detection masks */
+	RG_TransformChain transforms;		/* Graphical transformations */
+	MAP_NodeMaskQ masks;			/* Collision detection masks */
 	TAILQ_ENTRY(map_item) nrefs;		/* Node's reference stack */
-#define r_sprite	nref.sprite
+#define r_tile		nref.tile
 #define r_anim		nref.anim
 #define r_warp		nref.warp
 } MAP_Item;
@@ -148,7 +150,7 @@ typedef struct map {
 	int cur_layer;			/* Layer being edited */
 	struct {
 		int x, y;		/* Origin coordinates */
-		int layer;		/* Default sprite layer */
+		int layer;		/* Default tile layer */
 	} origin;
 	MAP_Node **map;			/* Arrays of nodes */
 	int redraw;			/* Redraw (for tile-based mode) */
@@ -205,8 +207,8 @@ int		 MAP_ItemLoad(MAP *, AG_Netbuf *, MAP_Node *,
 void	 	 MAP_ItemSave(MAP *, AG_Netbuf *, MAP_Item *);
 __inline__ int	 MAP_ItemExtent(MAP *, MAP_Item *, SDL_Rect *, int);
 __inline__ void	 MAP_ItemDraw(MAP *, MAP_Item *, int, int, int);
-__inline__ void	 MAP_ItemSetSprite(MAP_Item *, MAP *, void *, Uint32);
-__inline__ void	 MAP_ItemSetAnim(MAP_Item *, MAP *, void *, Uint32);
+__inline__ void	 MAP_ItemSetTile(MAP_Item *, MAP *, RG_Tileset *, Uint32);
+__inline__ void	 MAP_ItemSetAnim(MAP_Item *, MAP *, RG_Tileset *, Uint32);
 MAP_Item	*MAP_ItemLocate(MAP *, int, int, int);
 void		 MAP_ItemAttrColor(Uint, int, Uint8 *);
 
@@ -228,13 +230,13 @@ void		 MAP_NodeMoveItemToHead(MAP_Node *, MAP_Item *);
 void		 MAP_NodeDelItem(MAP *, MAP_Node *, MAP_Item *);
 void		 MAP_NodeSwapLayers(MAP *, MAP_Node *, int, int);
 
-MAP_Item	*MAP_NodeAddSprite(MAP *, MAP_Node *, void *, Uint32);
-MAP_Item	*MAP_NodeAddAnim(MAP *, MAP_Node *, void *, Uint32);
+MAP_Item	*MAP_NodeAddTile(MAP *, MAP_Node *, RG_Tileset *, Uint32);
+MAP_Item	*MAP_NodeAddAnim(MAP *, MAP_Node *, RG_Tileset *, Uint32);
 MAP_Item	*MAP_NodeAddWarpPoint(MAP *, MAP_Node *, const char *, int,
 		                     int, Uint8);
 
-void	 	 AG_AttachActor(MAP *, struct map_actor *);
-void	 	 AG_DetachActor(MAP *, struct map_actor *);
+void	 	 MAP_AttachActor(MAP *, struct map_actor *);
+void	 	 MAP_DetachActor(MAP *, struct map_actor *);
 __END_DECLS
 
 #include "close_code.h"

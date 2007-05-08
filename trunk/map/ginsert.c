@@ -42,7 +42,7 @@
 
 struct ginsert_tool {
 	MAP_Tool tool;
-	enum ag_gfx_snap_mode snap_mode;
+	enum rg_snap_mode snap_mode;
 	int replace_mode;
 };
 
@@ -51,7 +51,7 @@ ginsert_init(void *p)
 {
 	struct ginsert_tool *ins = p;
 
-	ins->snap_mode = AG_GFX_SNAP_NOT;
+	ins->snap_mode = RG_SNAP_NONE;
 	ins->replace_mode = 0;
 
 	MAP_ToolPushStatus(ins, _("Select position on map ($(L)=Insert)"));
@@ -72,7 +72,7 @@ ginsert_pane(void *p, void *con)
 	}
 	
 	AG_LabelNew(con, AG_LABEL_STATIC, _("Snap to: "));
-	rad = AG_RadioNew(con, AG_RADIO_HFILL, mapSnapModeNames);
+	rad = AG_RadioNew(con, AG_RADIO_HFILL, rgTileSnapModes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 	cb = AG_CheckboxNew(con, 0, _("Replace mode"));
@@ -133,14 +133,14 @@ ginsert_effect(void *p, MAP_Node *n)
 	if (go->parent != NULL) {
 		dprintf("detaching from %s\n", AGOBJECT(go->parent)->name);
 		TAILQ_REMOVE(&go->parent->actors, go, actors);
-		AG_DetachActor(go->parent, go);
+		MAP_DetachActor(go->parent, go);
 	}
 	go->g_map.x = mv->cx;
 	go->g_map.y = mv->cy;
 	go->g_map.l0 = m->cur_layer;
 	go->g_map.l1 = m->cur_layer;
 	
-	AG_AttachActor(m, go);
+	MAP_AttachActor(m, go);
 	TAILQ_INSERT_TAIL(&go->parent->actors, go, actors);
 	return (1);
 }

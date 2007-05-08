@@ -67,7 +67,7 @@ effect(void *p, MAP_Node *n)
 	MAP_View *mv = TOOL(p)->mv;
 	MAP *m = mv->map;
 	MAP_Item *nref;
-	AG_Transform *trans;
+	RG_Transform *xf;
 	int nmods = 0;
 
 	MAP_ModNodeChg(m, mv->cx, mv->cy);
@@ -78,22 +78,22 @@ effect(void *p, MAP_Node *n)
 		
 		nmods++;
 
-		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
-			if (trans->type == AG_TRANSFORM_RGB_INVERT) {
-				TAILQ_REMOVE(&nref->transforms, trans,
+		TAILQ_FOREACH(xf, &nref->transforms, transforms) {
+			if (xf->type == RG_TRANSFORM_RGB_INVERT) {
+				TAILQ_REMOVE(&nref->transforms, xf,
 				    transforms);
 				break;
 			}
 		}
-		if (trans != NULL)
+		if (xf != NULL)
 			continue;
 
-		if ((trans = AG_TransformNew(AG_TRANSFORM_RGB_INVERT, 0, NULL))
+		if ((xf = RG_TransformNew(RG_TRANSFORM_RGB_INVERT, 0, NULL))
 		    == NULL) {
 			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 			continue;
 		}
-		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
+		TAILQ_INSERT_TAIL(&nref->transforms, xf, transforms);
 		break;
 	}
 	return (nmods);
@@ -110,7 +110,7 @@ cursor(void *p, SDL_Rect *rd)
 }
 
 const MAP_ToolOps mapInvertOps = {
-	"Invert", N_("Invert sprite color"),
+	"Invert", N_("Invert RGB values of tile"),
 	INVERT_TOOL_ICON,
 	sizeof(MAP_Tool),
 	0,

@@ -1028,8 +1028,8 @@ mousebuttondown(AG_Event *event)
 	mv->mouse.ymap_rel = 0;
 	
 	if (mv->actor != NULL &&
-	    AGACTOR_OPS(mv->actor)->mousebuttondown != NULL &&
-	    AGACTOR_OPS(mv->actor)->mousebuttondown(mv->actor,
+	    MAP_ACTOR_OPS(mv->actor)->mousebuttondown != NULL &&
+	    MAP_ACTOR_OPS(mv->actor)->mousebuttondown(mv->actor,
 	      mv->mouse.xmap, mv->mouse.ymap, button) == -1)
 		goto out;
 
@@ -1201,10 +1201,10 @@ mousebuttonup(AG_Event *event)
 	mv->flags &= ~(MAP_VIEW_SET_ATTRS);
 	
 	if (mv->actor != NULL &&
-	    AGACTOR_OPS(mv->actor)->mousebuttonup != NULL) {
+	    MAP_ACTOR_OPS(mv->actor)->mousebuttonup != NULL) {
 		x = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
 		y = mv->cy*AGMTILESZ(mv) + mv->cyoffs;
-		if (AGACTOR_OPS(mv->actor)->mousebuttonup(mv->actor, x, y,
+		if (MAP_ACTOR_OPS(mv->actor)->mousebuttonup(mv->actor, x, y,
 		    button) == -1)
 			goto out;
 	}
@@ -1291,8 +1291,8 @@ key_up(AG_Event *event)
 	AG_MutexLock(&mv->map->lock);
 
 	if (mv->actor != NULL &&
-	    AGACTOR_OPS(mv->actor)->keyup != NULL) {
-		if (AGACTOR_OPS(mv->actor)->keyup(mv->actor, keysym, keymod)
+	    MAP_ACTOR_OPS(mv->actor)->keyup != NULL) {
+		if (MAP_ACTOR_OPS(mv->actor)->keyup(mv->actor, keysym, keymod)
 		    == -1)
 			goto out;
 	}
@@ -1338,8 +1338,8 @@ key_down(AG_Event *event)
 	AG_MutexLock(&mv->map->lock);
 
 	if (mv->actor != NULL &&
-	    AGACTOR_OPS(mv->actor)->keydown != NULL) {
-		if (AGACTOR_OPS(mv->actor)->keydown(mv->actor, keysym, keymod)
+	    MAP_ACTOR_OPS(mv->actor)->keydown != NULL) {
+		if (MAP_ACTOR_OPS(mv->actor)->keydown(mv->actor, keysym, keymod)
 		    == -1)
 			goto out;
 	}

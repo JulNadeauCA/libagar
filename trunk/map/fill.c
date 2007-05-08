@@ -140,7 +140,7 @@ effect(void *p, MAP_Node *n)
 				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, n, m->cur_layer);
 				r = Malloc(sizeof(MAP_Item), M_MAP);
-				MAP_ItemInit(r, MAP_ITEM_SPRITE);
+				MAP_ItemInit(r, MAP_ITEM_TILE);
 				MAP_ItemSetSprite(r, m, spr->pgfx->pobj,
 				    spr->index);
 				MAP_ItemSetLayer(r, m->cur_layer);
@@ -168,13 +168,13 @@ effect(void *p, MAP_Node *n)
 						break;
 					}
 					if (byte < 60) {
-						AG_TransformRotate(r, 0);
+						RG_TransformRotate(r, 0);
 					} else if (byte < 120) {
-						AG_TransformRotate(r, 90);
+						RG_TransformRotate(r, 90);
 					} else if (byte < 180) {
-						AG_TransformRotate(r, 180);
+						RG_TransformRotate(r, 180);
 					} else if (byte < 240) {
-						AG_TransformRotate(r, 270);
+						RG_TransformRotate(r, 270);
 					}
 				}
 			}

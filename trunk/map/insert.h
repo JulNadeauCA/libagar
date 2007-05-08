@@ -8,7 +8,7 @@ struct map_tool;
 
 struct map_insert_tool {
 	struct map_tool tool;
-	enum ag_gfx_snap_mode snap_mode;
+	enum rg_snap_mode snap_mode;
 	int replace_mode;
 	int angle;
 	struct map mTmp;

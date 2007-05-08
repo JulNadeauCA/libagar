@@ -106,7 +106,7 @@ static __inline__ void
 MAP_FreeSpriteTransforms(AG_Sprite *spr)
 {
 	AG_CachedSprite *csprite, *ncsprite;
-	AG_Transform *trans, *ntrans;
+	MAP_Transform *trans, *ntrans;
 
 	for (csprite = SLIST_FIRST(&spr->csprites);
 	     csprite != SLIST_END(&spr->csprites);
@@ -116,7 +116,7 @@ MAP_FreeSpriteTransforms(AG_Sprite *spr)
 		     trans != TAILQ_END(&csprite->transforms);
 		     trans = ntrans) {
 			ntrans = TAILQ_NEXT(trans, transforms);
-			AG_TransformDestroy(trans);
+			MAP_TransformDestroy(trans);
 		}
 		SDL_FreeSurface(csprite->su);
 		Free(csprite, M_GFX);
@@ -378,7 +378,7 @@ AG_AnimDestroy(AG_Gfx *gfx, Uint32 name)
 {
 	AG_AnimCache *animcl = &gfx->canims[name];
 	AG_CachedAnim *canim, *ncanim;
-	AG_Transform *trans, *ntrans;
+	MAP_Transform *trans, *ntrans;
 
 	for (canim = SLIST_FIRST(&animcl->anims);
 	     canim != SLIST_END(&animcl->anims);
@@ -388,7 +388,7 @@ AG_AnimDestroy(AG_Gfx *gfx, Uint32 name)
 		     trans != TAILQ_END(&canim->transforms);
 		     trans = ntrans) {
 			ntrans = TAILQ_NEXT(trans, transforms);
-			AG_TransformDestroy(trans);
+			MAP_TransformDestroy(trans);
 		}
 		destroy_anim(canim->anim);
 		Free(canim, M_GFX);
@@ -694,7 +694,7 @@ poll_gfx(AG_Event *event)
 
 			snprintf(label, sizeof(label), "%u ticks\n",
 			    csp->last_drawn);
-			AG_TransformPrint(&csp->transforms, label,
+			MAP_TransformPrint(&csp->transforms, label,
 			    sizeof(label));
 
 			it = AG_TlistAddPtr(tl, csp->su, label, csp);
