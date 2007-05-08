@@ -9,7 +9,7 @@ LIB=		ag_gui
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SHARESRC=	gui-pixmaps.den
+#SHARESRC=	gui-pixmaps.den
 
 SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	textbox.c keycodes.c keysyms.c primitive.c radio.c graph.c \

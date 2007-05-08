@@ -26,12 +26,6 @@ typedef struct ag_titlebar {
 	AG_Button *maximize_btn;
 } AG_Titlebar;
 
-enum {
-	AG_TITLEBAR_CLOSE_ICON,
-	AG_TITLEBAR_MINIMIZE_ICON,
-	AG_TITLEBAR_MAXIMIZE_ICON,
-};
-
 __BEGIN_DECLS
 AG_Titlebar *AG_TitlebarNew(void *, int);
 void	     AG_TitlebarInit(AG_Titlebar *, int);

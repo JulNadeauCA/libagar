@@ -101,7 +101,6 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_HFILL);
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
-	AG_WireGfx(tbar, "gui-pixmaps");
 
 	AG_BoxSetPadding(&tbar->hb, 5);
 	AG_BoxSetSpacing(&tbar->hb, 0);
@@ -119,7 +118,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 		AG_ButtonSetSurface(tbar->maximize_btn,
-		    AG_SPRITE(tbar,AG_TITLEBAR_MAXIMIZE_ICON).su);
+		    AGICON(GUI_SHOW_WINDOW_ICON));
 		AG_ButtonSetPadding(tbar->maximize_btn, 1);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
 		    maximize_window, "%p", tbar);
@@ -131,7 +130,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->minimize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 		AG_ButtonSetSurface(tbar->minimize_btn,
-		    AG_SPRITE(tbar,AG_TITLEBAR_MINIMIZE_ICON).su);
+		    AGICON(GUI_HIDE_WINDOW_ICON));
 		AG_ButtonSetPadding(tbar->minimize_btn, 1);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
 		    minimize_window, "%p", tbar);
@@ -142,8 +141,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
-		AG_ButtonSetSurface(tbar->close_btn,
-		    AG_SPRITE(tbar,AG_TITLEBAR_CLOSE_ICON).su);
+		AG_ButtonSetSurface(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
 		AG_ButtonSetPadding(tbar->close_btn, 1);
 		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);

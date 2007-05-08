@@ -276,7 +276,6 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 
 	AG_WidgetInit(mview, "AGMenuView", &agMenuViewOps,
 	    AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP);
-	AG_WireGfx(mview, "gui-pixmaps");
 
 	mview->panel = panel;
 	mview->pmenu = pmenu;
@@ -284,13 +283,12 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 	mview->hspace = 8;
 	mview->vpadding = 4;
 
-	/* XXX Submenu indicator */
-	AG_WidgetMapSurface(mview, AG_DupSurface(AG_SPRITE(mview,3).su));
-	
 	AG_SetEvent(mview, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(mview, "window-mousebuttonup", mousebuttonup, NULL);
 
 	AG_SetTimeout(&mview->submenu_to, submenu_timeout, NULL, 0);
+
+	AG_WidgetMapSurface(mview, AG_DupSurface(AGICON(GUI_ARROW_ICON)));
 }
 
 #define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
@@ -375,7 +373,7 @@ AG_MenuViewDraw(void *p)
 		if (subitem->nsubitems > 0) {
 			AG_WidgetBlitSurface(mview, 0,
 			    x,
-			    y + m->itemh/2 - AGWIDGET_SURFACE(mview,0)->h/2 -1);
+			    y + m->itemh/2 - AGICON(GUI_ARROW_ICON)->h/2 -1);
 		}
 		y += m->itemh;
 	}
@@ -408,7 +406,7 @@ AG_MenuViewScale(void *p, int w, int h)
 				    mview->hspace;
 			}
 			if (subitem->nsubitems > 0) {
-				req_w += AGWIDGET_SURFACE(mview,0)->w +
+				req_w += AGICON(GUI_ARROW_ICON)->w +
 				    mview->hspace;
 			}
 			if (req_w > AGWIDGET(mview)->w) {

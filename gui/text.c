@@ -53,6 +53,18 @@
 #include <errno.h>
 #include <ctype.h>
 
+const AG_ObjectOps agFontOps = {
+	"AG_Font",
+	sizeof(AG_Font),
+	{ 0, 0 },
+	NULL,		/* init */
+	NULL,		/* reinit */
+	AG_FontDestroy,
+	NULL,		/* load */
+	NULL,		/* save */
+	NULL,		/* edit */
+};
+
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextFontHeight = 0;		/* Default font height (px) */
@@ -81,33 +93,73 @@ static struct {
 
 static AG_Timeout text_timeout;		/* Timer for AG_TextTmsg() */
 
+/* Load an individual glyph from a bitmap font file. */
+static void
+AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
+{
+	AG_Font *font = p;
+
+	if (font->nglyphs == 0) {
+		strlcpy(font->bspec, lbl, sizeof(font->bspec));
+	}
+	font->bglyphs = Realloc(font->bglyphs,
+	                        (font->nglyphs+1)*sizeof(SDL_Surface *));
+	font->bglyphs[font->nglyphs++] = su;
+}
+
+void
+AG_FontDestroy(void *p)
+{
+	AG_Font *font = p;
+	int i;
+
+	if (!agFreetype) {
+		for (i = 0; i < font->nglyphs; i++) {
+			SDL_FreeSurface(font->bglyphs[i]);
+		}
+		Free(font->bglyphs, M_TEXT);
+	}
+}
+
 AG_Font *
 AG_FetchFont(const char *pname, int psize, int pflags)
 {
 	char path[MAXPATHLEN];
-	char name[AG_FONT_NAME_MAX];
+	char name[AG_OBJECT_NAME_MAX];
+	char name_obj[AG_OBJECT_NAME_MAX];
 	AG_Font *font;
 	int size = (psize >= 0) ? psize : AG_Int(agConfig, "font.size");
 	Uint flags = (pflags >= 0) ? pflags : AG_Uint(agConfig, "font.flags");
+	char *c;
 
 	if (pname != NULL) {
 		strlcpy(name, pname, sizeof(name));
 	} else {
 		AG_StringCopy(agConfig, "font.face", name, sizeof(name));
 	}
+	memcpy(name_obj, name, sizeof(name_obj));
+	for (c = &name_obj[0]; *c != '\0'; c++) {
+		if (*c == '.')
+			*c = '_';
+	}
 
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
+#if 0
+		printf("font size: %d == %d\n", font->size, size);
+		printf("font flags: 0x%x == 0x%x\n", font->flags, flags);
+		printf("font name: `%s' == `%s'\n", AGOBJECT(font)->name, name);
+#endif
 		if (font->size == size &&
 		    font->flags == flags &&
-		    strcmp(font->name, name) == 0)
+		    strcmp(AGOBJECT(font)->name, name_obj) == 0)
 			break;
 	}
 	if (font != NULL)
 		goto out;
 
 	font = Malloc(sizeof(AG_Font), M_TEXT);
-	strlcpy(font->name, name, sizeof(font->name));
+	AG_ObjectInit(font, name, &agFontOps);
 	font->size = size;
 	font->flags = flags;
 	font->c0 = 0;
@@ -120,64 +172,67 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
 		goto fail;
 
-	dprintf("Loading %s\n", path);
+	dprintf("Loading font: %s\n", path);
 
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
 		int tflags = 0;
 
 		dprintf("<%s>: Vector (%d pts)\n", name, size);
-		if ((font->p = AG_TTFOpenFont(path, size)) == NULL) {
+		if ((font->ttf = AG_TTFOpenFont(path, size)) == NULL) {
 			goto fail;
 		}
 		if (flags & AG_FONT_BOLD)	{ tflags|=TTF_STYLE_BOLD; }
 		if (flags & AG_FONT_ITALIC)	{ tflags|=TTF_STYLE_ITALIC; }
 		if (flags & AG_FONT_UNDERLINE)	{ tflags|=TTF_STYLE_UNDERLINE; }
-		AG_TTFSetFontStyle(font->p, tflags);
+		AG_TTFSetFontStyle(font->ttf, tflags);
 
 		font->type = AG_FONT_VECTOR;
-		font->height = AG_TTFHeight(font->p);
-		font->ascent = AG_TTFAscent(font->p);
-		font->descent = AG_TTFDescent(font->p);
-		font->lineskip = AG_TTFLineSkip(font->p);
+		font->height = AG_TTFHeight(font->ttf);
+		font->ascent = AG_TTFAscent(font->ttf);
+		font->descent = AG_TTFDescent(font->ttf);
+		font->lineskip = AG_TTFLineSkip(font->ttf);
 	} else
 #endif
 	{
-		char *spec;
+		char *s;
 		char *msig, *c0, *c1, *flags;
-		AG_Object *fobj;
 		AG_Netbuf *buf;
 		
 		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
 		    == NULL) {
 			goto fail;
 		}
-		font->p = fobj = AG_ObjectNew(NULL, "font");
-		fobj->gfx = AG_GfxNew(fobj);
-		if (AG_XCFLoad(buf, 0, fobj->gfx) == -1) {
-			goto fail_bmp;
+
+		font->type = AG_FONT_BITMAP;
+		font->bglyphs = Malloc(32*sizeof(SDL_Surface *), M_TEXT);
+		font->nglyphs = 0;
+
+		if (AG_XCFLoad(buf, 0, AG_LoadBitmapGlyph, font) == -1) {
+			goto fail;
 		}
 		AG_NetbufClose(buf);
 
-		spec = AG_SPRITE(font->p,0).name;
-		msig = AG_Strsep(&spec, ":");
-		c0 = AG_Strsep(&spec, "-");
-		c1 = AG_Strsep(&spec, "-");
-		if (msig == NULL || strcmp(msig, "MAP") != 0 ||
+		/* Get the range of characters from the "MAP:x-y" string. */
+		s = font->bspec;
+		msig = AG_Strsep(&s, ":");
+		c0 = AG_Strsep(&s, "-");
+		c1 = AG_Strsep(&s, "-");
+		if (font->nglyphs < 1 ||
+		    msig == NULL || strcmp(msig, "MAP") != 0 ||
 		    c0 == NULL || c1 == NULL ||
 		    c0[0] == '\0' || c1[0] == '\0') {
-			AG_SetError("Invalid bitmap fontspec");
-			goto fail_bmp;
+			AG_SetError("Missing bitmap fontspec");
+			goto fail;
 		}
 		font->c0 = (Uint32)strtol(c0, NULL, 10);
 		font->c1 = (Uint32)strtol(c1, NULL, 10);
-		if (AGOBJECT(font->p)->gfx->nsprites < (font->c1-font->c0)) {
+		if (font->nglyphs < (font->c1 - font->c0)) {
 			AG_SetError("Inconsistent bitmap fontspec");
-			goto fail_bmp;
+			goto fail;
 		}
 
-		font->type = AG_FONT_BITMAP;
-		font->height = AG_SPRITE(font->p,0).su->h;
+		font->height = font->bglyphs[0]->h;
 		font->ascent = font->height;
 		font->descent = 0;
 		font->lineskip = font->height+2;
@@ -190,11 +245,9 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 out:
 	AG_MutexUnlock(&agTextLock);
 	return (font);
-fail_bmp:
-	AG_ObjectDestroy(font->p);
-	Free(font->p, M_OBJECT);
 fail:
 	AG_MutexUnlock(&agTextLock);
+	AG_ObjectDestroy(font);
 	Free(font, M_TEXT);
 	return (NULL);
 }
@@ -265,7 +318,7 @@ free_glyph(AG_Glyph *gl)
 void
 AG_TextDestroy(void)
 {
-	AG_Font *fon, *nextfon;
+	AG_Font *font, *nextfont;
 #ifdef DEBUG
 	int maxbucketsz = 0;
 #endif
@@ -291,20 +344,16 @@ AG_TextDestroy(void)
 #endif
 	}
 	
-	for (fon = SLIST_FIRST(&fonts);
-	     fon != SLIST_END(&fonts);
-	     fon = nextfon) {
-		nextfon = SLIST_NEXT(fon, fonts);
+	for (font = SLIST_FIRST(&fonts);
+	     font != SLIST_END(&fonts);
+	     font = nextfont) {
+		nextfont = SLIST_NEXT(font, fonts);
 #ifdef HAVE_FREETYPE
-		if (agFreetype) {
-			AG_TTFCloseFont(fon->p);
-		} else
+		if (font->type == AG_FONT_VECTOR)
+			AG_TTFCloseFont(font->ttf);
 #endif
-		{
-			AG_ObjectDestroy(fon->p);
-			Free(fon->p, M_OBJECT);
-		}
-		Free(fon, M_TEXT);
+		AG_ObjectDestroy(font);
+		Free(font, M_TEXT);
 	}
 #ifdef HAVE_FREETYPE
 	if (agFreetype)
@@ -401,9 +450,9 @@ AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
 		c = toupper(c);
 	}
 	if (c < font->c0 || c > font->c1) {
-		return (AG_SPRITE(font->p,0).su);
+		return (font->bglyphs[0]);
 	}
-	return (AG_SPRITE(font->p,(c - font->c0 + 1)).su);
+	return (font->bglyphs[c - font->c0 + 1]);
 }
 
 /* Render an UCS-4 text string onto a newly allocated surface. */
@@ -412,15 +461,15 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
     const Uint32 *text)
 {
 	AG_Font *font;
-
-#ifdef HAVE_FREETYPE
-	if (agFreetype) {
-		SDL_Surface *su;
+	SDL_Surface *su;
 	
-		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
-			fatal("%s", AG_GetError());
-		}
-		if ((su = AG_TTFRenderUnicodeSolid(font->p, text, NULL, cFg))
+	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
+		fatal("%s", AG_GetError());
+	}
+	switch (font->type) {
+#ifdef HAVE_FREETYPE
+	case AG_FONT_VECTOR:
+		if ((su = AG_TTFRenderUnicodeSolid(font->ttf, text, NULL, cFg))
 		    != NULL) {
 			return (su);
 		} else {
@@ -428,57 +477,60 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 			return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,
 			                             0,0,0,0));
 		}
-	} else
-#endif /* HAVE_FREETYPE */
-	{
-		size_t i, text_len;
-		SDL_Surface *su0, *gsu, *su;
-		SDL_Rect rd;
-		Uint w = 0, h = 0;
-		Uint32 c;
+		break;
+#endif
+	case AG_FONT_BITMAP:
+		{
+			size_t i, text_len;
+			SDL_Surface *gsu;
+			SDL_Rect rd;
+			Uint w = 0, h = 0;
+			Uint32 c;
 
-		/* TODO support for size variants or scaling */
-		if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
-			fatal("%s", AG_GetError());
-		}
-		su0 = AG_SPRITE(font->p,0).su;
+			/* Figure out the required surface dimensions. */
+			text_len = AG_UCS4Len(text);
+			for (i = 0; i < text_len; i++) {
+				c = text[i];
+				gsu = AG_TextBitmapGlyph(font, text[i]);
+				w += gsu->w;
+				h = MAX(h,gsu->h);
+			}
 
-		/* Figure out the required surface dimensions. */
-		text_len = AG_UCS4Len(text);
-		for (i = 0; i < text_len; i++) {
-			c = text[i];
-			gsu = AG_TextBitmapGlyph(font, text[i]);
-			w += gsu->w;
-			h = MAX(h,gsu->h);
-		}
+			/* Allocate the final surface. */
+			su = SDL_CreateRGBSurface(SDL_SWSURFACE,
+			    w, h, 32,
+			    agSurfaceFmt->Rmask,
+			    agSurfaceFmt->Gmask,
+			    agSurfaceFmt->Bmask,
+			    0);
+			if (su == NULL)
+				fatal("SDL_CreateRGBSurface: %s",
+				    SDL_GetError());
 
-		/* Allocate the final surface. */
-		su = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		    w, h, 32,
-		    agSurfaceFmt->Rmask,
-		    agSurfaceFmt->Gmask,
-		    agSurfaceFmt->Bmask,
-		    0);
-		if (su == NULL)
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-
-		/* Blit the glyphs. */
-		rd.x = 0;
-		rd.y = 0;
-		for (i = 0; i < text_len; i++) {
-			gsu = AG_TextBitmapGlyph(font, text[i]);
-			rd.w = gsu->w;
-			rd.h = gsu->h;
-			SDL_BlitSurface(gsu, NULL, su, &rd);
-			rd.x += gsu->w;
-		}
+			/* Blit the glyphs. */
+			rd.x = 0;
+			rd.y = 0;
+			for (i = 0; i < text_len; i++) {
+				gsu = AG_TextBitmapGlyph(font, text[i]);
+				rd.w = gsu->w;
+				rd.h = gsu->h;
+				SDL_BlitSurface(gsu, NULL, su, &rd);
+				rd.x += gsu->w;
+			}
 		
-		SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
-		    0);
-		SDL_SetAlpha(su, su0->flags&(SDL_SRCALPHA|SDL_RLEACCEL),
-		    su0->format->alpha);
+			SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
+			    0);
+			SDL_SetAlpha(su,
+			    font->bglyphs[0]->flags&(SDL_SRCALPHA|SDL_RLEACCEL),
+			    font->bglyphs[0]->format->alpha);
 
-		return (su);
+			return (su);
+		}
+		break;
+	default:
+		fprintf(stderr, "Cannot render font: %s\n",
+		    AGOBJECT(font)->name);
+		return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 	}
 }
 
@@ -754,3 +806,4 @@ AG_TextParseFontSpec(const char *fontspec)
 		AG_SetUint(agConfig, "font.flags", flags);
 	}
 }
+
