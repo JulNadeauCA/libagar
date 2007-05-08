@@ -50,7 +50,7 @@ insert_init(void *p)
 {
 	struct map_insert_tool *ins = p;
 
-	ins->snap_mode = AG_GFX_SNAP_NOT;
+	ins->snap_mode = RG_SNAP_NONE;
 	ins->replace_mode = 0;
 	ins->angle = 0;
 	MAP_Init(&ins->mTmp, "tmp");
@@ -68,41 +68,43 @@ insert_destroy(void *p)
 	MAP_Destroy(&ins->mTmp);
 }
 
+#if 0
 static void
-snap_sprite(struct map_insert_tool *ins, MAP_Item *r, AG_Sprite *spr)
+SnapTile(struct map_insert_tool *ins, MAP_Item *r, RG_Tile *tile)
 {
 	MAP_View *mv = TOOL(ins)->mv;
 
 	switch (ins->snap_mode) {
-	case AG_GFX_SNAP_NOT:
+	case RG_SNAP_NONE:
 		r->r_gfx.xcenter += mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
 		r->r_gfx.ycenter += mv->cyoffs*MAPTILESZ/AGMTILESZ(mv);
 		break;
 	default:
 		break;
 	}
-
 }
+#endif
 
+#if 0
 static void
-generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
+GenerateMapForTile(struct map_insert_tool *ins, RG_Tile *tile)
 {
 	int sy, sx, dx, dy;
-	int sw = spr->su->w/MAPTILESZ;
-	int sh = spr->su->h/MAPTILESZ;
+	int sw = tile->su->w/MAPTILESZ;
+	int sh = tile->su->h/MAPTILESZ;
 	int nw, nh;
 
-	if (spr->su->w%MAPTILESZ > 0) sw++;
-	if (spr->su->h%MAPTILESZ > 0) sh++;
+	if (tile->su->w%MAPTILESZ > 0) sw++;
+	if (tile->su->h%MAPTILESZ > 0) sh++;
 
 	MAP_AllocNodes(&ins->mTmp, sw, sh);
-	ins->mTmp.origin.x = spr->xOrig/MAPTILESZ;
-	ins->mTmp.origin.y = spr->yOrig/MAPTILESZ;
+	ins->mTmp.origin.x = tile->xOrig/MAPTILESZ;
+	ins->mTmp.origin.y = tile->yOrig/MAPTILESZ;
 	for (sy = 0, dy = 0;
-	     sy < spr->su->h;
+	     sy < tile->su->h;
 	     sy += MAPTILESZ, dy++) {
 		for (sx = 0, dx = 0;
-		     sx < spr->su->w;
+		     sx < tile->su->w;
 		     sx += MAPTILESZ, dx++) {
 			MAP_Node *dn;
 			MAP_Item *r;
@@ -113,11 +115,11 @@ generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
 				continue;
 
 			dn = &ins->mTmp.map[dy][dx];
-			dw = spr->su->w - sx;
-			dh = spr->su->h - sy;
+			dw = tile->su->w - sx;
+			dh = tile->su->h - sy;
 
 			r = Malloc(sizeof(MAP_Item), M_MAP);
-			MAP_ItemInit(r, MAP_ITEM_SPRITE);
+			MAP_ItemInit(r, MAP_ITEM_TILE);
 			MAP_ItemSetSprite(r, &ins->mTmp, spr->pgfx->pobj,
 			    spr->index);
 
@@ -137,12 +139,13 @@ generate_map(struct map_insert_tool *ins, AG_Sprite *spr)
 			r->layer = nlayer;
 			
 			/* XXX also need to rotate the whole map */
-	//		AG_TransformRotate(r, ins->angle);
+			RG_TransformRotate(r, ins->angle);
 
 			TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 		}
 	}
 }
+#endif
 
 static void
 insert_pane(void *p, void *con)
@@ -155,7 +158,7 @@ insert_pane(void *p, void *con)
 	AG_TlistItem *it;
 	MAP_View *mvMain = TOOL(ins)->mv;
 	MAP_View *mv;
-	AG_Sprite *spr;
+	RG_Tile *tile;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
@@ -163,7 +166,7 @@ insert_pane(void *p, void *con)
 	     strcmp(it->cat, "tile") != 0) {
 		return;
 	}
-	spr = it->p1;
+	tile = it->p1;
 	
 	nb = AG_NotebookNew(con, AG_NOTEBOOK_VFILL|AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
@@ -173,12 +176,14 @@ insert_pane(void *p, void *con)
 	MAP_ViewSelectTool(mv,
 	    MAP_ViewRegTool(mv, &mapNodeselOps, &ins->mTmp),
 	    &ins->mTmp);
-	generate_map(ins, spr);
-	
+#if 0
+	GenerateMapForTile(ins, tile);
+#endif
+
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
 		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, mapSnapModeNames);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, rgTileSnapModes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 
 		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));
@@ -191,6 +196,7 @@ insert_pane(void *p, void *con)
 	}
 }
 
+#if 0
 static int
 insert_effect(void *p, MAP_Node *node)
 {
@@ -202,14 +208,14 @@ insert_effect(void *p, MAP_Node *node)
 	int dx, dy, dx0, dy0;
 	int l;
 	AG_TlistItem *it;
-	AG_Sprite *spr;
+	RG_Tile *tile;
 	
 	if (mv->lib_tl == NULL ||
 	    (it = AG_TlistSelectedItem(mv->lib_tl)) == 0 ||
 	    strcmp(it->cat, "tile") != 0) {
 		return (1);
 	}
-	spr = it->p1;
+	tile = it->p1;
 
 	if (ins->mvTmp->esel.set) {
 		sx0 = ins->mvTmp->esel.x;
@@ -257,7 +263,7 @@ insert_effect(void *p, MAP_Node *node)
 						MAP_ModLayerAdd(mDst,
 						    mDst->nlayers - 1);
 				}
-				if (ins->snap_mode == AG_GFX_SNAP_NOT) {
+				if (ins->snap_mode == RG_SNAP_NONE) {
 					r2->r_gfx.xcenter +=
 					    mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
 					r2->r_gfx.ycenter +=
@@ -269,6 +275,7 @@ insert_effect(void *p, MAP_Node *node)
 	MAP_ModEnd(mDst);
 	return (1);
 }
+#endif
 
 static int
 insert_cursor(void *p, SDL_Rect *rd)
@@ -277,7 +284,7 @@ insert_cursor(void *p, SDL_Rect *rd)
 	MAP_View *mv = TOOL(ins)->mv;
 	MAP *mSrc = &ins->mTmp;
 	AG_TlistItem *it;
-	AG_Sprite *spr;
+	RG_Tile *tile;
 	int sx0, sy0, sx1, sy1;
 	int dx0, dy0, dx1, dy1;
 	int dx, dy, sx, sy;
@@ -285,11 +292,11 @@ insert_cursor(void *p, SDL_Rect *rd)
 	if (mv->lib_tl == NULL ||
 	   (it = AG_TlistSelectedItem(mv->lib_tl)) == NULL ||
 	   strcmp(it->cat, "tile") != 0 ||
-	   (spr = it->p1) == NULL || spr->su == NULL) {
+	   (tile = it->p1) == NULL || tile->su == NULL) {
 		return (-1);
 	}
 
-	if (ins->snap_mode == AG_GFX_SNAP_NOT) {
+	if (ins->snap_mode == RG_SNAP_NONE) {
 		agPrim.rect_outlined(mv, rd->x+1, rd->y+1,
 		    AGMTILESZ(mv)-1, AGMTILESZ(mv)-1,
 		    AG_COLOR(MAPVIEW_GRID_COLOR));
@@ -310,7 +317,7 @@ insert_cursor(void *p, SDL_Rect *rd)
 		dx0 = AGWIDGET(mv)->cx + rd->x - mSrc->origin.x*AGMTILESZ(mv);
 		dy0 = AGWIDGET(mv)->cy + rd->y - mSrc->origin.y*AGMTILESZ(mv);
 	}
-	if (ins->snap_mode == AG_GFX_SNAP_NOT) {
+	if (ins->snap_mode == RG_SNAP_NONE) {
 		dx0 += mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);
 		dy0 += mv->cyoffs*MAPTILESZ/AGMTILESZ(mv);
 	}
@@ -373,7 +380,11 @@ const MAP_ToolOps mapInsertOps = {
 	insert_pane,
 	NULL,				/* edit */
 	insert_cursor,
+#if 0
 	insert_effect,
+#else
+	NULL,
+#endif
 	insert_mousemotion,
 	insert_mousebuttondown,
 	NULL,				/* mousebuttonup */

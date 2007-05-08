@@ -34,7 +34,7 @@
 #include "map.h"
 #include "mapedit.h"
 
-static int multi_ind = 0;
+static int mapFlipSelection = 0;
 
 static void
 flip_init(void *p)
@@ -49,25 +49,25 @@ flip_pane(void *p, void *con)
 	AG_Checkbox *cb;
 
 	cb = AG_CheckboxNew(con, 0, _("Flip entire selection"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &multi_ind);
+	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &mapFlipSelection);
 }
 
 static void
-toggle_transform(MAP_Item *nref, int type)
+ToggleXform(MAP_Item *mi, int type)
 {
-	AG_Transform *trans;
+	RG_Transform *xf;
 
-	TAILQ_FOREACH(trans, &nref->transforms, transforms) {
-		if (trans->type == type) {
-			TAILQ_REMOVE(&nref->transforms, trans, transforms);
+	TAILQ_FOREACH(xf, &mi->transforms, transforms) {
+		if (xf->type == type) {
+			TAILQ_REMOVE(&mi->transforms, xf, transforms);
 			return;
 		}
 	}
-	if ((trans = AG_TransformNew(type, 0, NULL)) == NULL) {
+	if ((xf = RG_TransformNew(type, 0, NULL)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		return;
 	}
-	TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
+	TAILQ_INSERT_TAIL(&mi->transforms, xf, transforms);
 }
 
 static int
@@ -82,7 +82,7 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 	int h = 1;
 	int x, y;
 
-	if (!multi_ind ||
+	if (!mapFlipSelection ||
 	    MAP_ViewGetSelection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= m->mapw ||
 		    sely < 0 || sely >= m->maph)
@@ -103,11 +103,9 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 					continue;
 
 				if (b == SDL_BUTTON_LEFT) {
-					toggle_transform(nref,
-					    AG_TRANSFORM_MIRROR);
+					ToggleXform(nref, RG_TRANSFORM_MIRROR);
 				} else if (b == SDL_BUTTON_RIGHT) {
-					toggle_transform(nref,
-					    AG_TRANSFORM_FLIP);
+					ToggleXform(nref, RG_TRANSFORM_FLIP);
 				}
 			}
 		}

@@ -49,10 +49,12 @@ MAP_NodeMaskInit(MAP_NodeMask *mask, enum map_nodemask_type type)
 	mask->scale = 1;
 
 	switch (type) {
+#if 0
 	case AG_NODEMASK_BITMAP:
 		mask->nm_bitmap.obj = NULL;
 		mask->nm_bitmap.offs = 0;
 		break;
+#endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
 		mask->nm_poly.vertices = NULL;
@@ -65,12 +67,14 @@ void
 MAP_NodeMaskDestroy(MAP *m, MAP_NodeMask *mask)
 {
 	switch (mask->type) {
+#if 0
 	case AG_NODEMASK_BITMAP:
 		if (mask->nm_bitmap.obj != NULL) {
 			AG_ObjectDelDep(m, mask->nm_bitmap.obj);
 			AG_ObjectPageOut(mask->nm_bitmap.obj, AG_OBJECT_GFX);
 		}
 		break;
+#endif
 	case AG_NODEMASK_RECTANGLE:
 	case AG_NODEMASK_POLYGON:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
@@ -90,6 +94,7 @@ MAP_NodeMaskLoad(MAP *m, AG_Netbuf *buf, MAP_NodeMask *mask)
 	mask->scale = (int)AG_ReadSint16(buf);
 
 	switch (mask->type) {
+#if 0
 	case AG_NODEMASK_BITMAP:
 		objref = AG_ReadUint32(buf);
 		offs = AG_ReadUint32(buf);
@@ -98,6 +103,7 @@ MAP_NodeMaskLoad(MAP *m, AG_Netbuf *buf, MAP_NodeMask *mask)
 		}
 		MAP_NodeMaskBitmap(m, mask, pobj, offs);
 		break;
+#endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
@@ -121,11 +127,13 @@ MAP_NodeMaskSave(MAP *m, AG_Netbuf *buf, const MAP_NodeMask *mask)
 	AG_WriteSint16(buf, (Sint16)mask->scale);
 
 	switch (mask->type) {
+#if 0
 	case AG_NODEMASK_BITMAP:
 		AG_WriteUint32(buf, AG_ObjectEncodeName(m,
 		    mask->nm_bitmap.obj));
 		AG_WriteUint32(buf, mask->nm_bitmap.offs);
 		break;
+#endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
 		AG_WriteUint32(buf, mask->nm_poly.nvertices);
@@ -144,10 +152,12 @@ MAP_NodeMaskCopy(const MAP_NodeMask *smask, MAP *m,
 	dmask->scale = smask->scale;
 
 	switch (smask->type) {
+#if 0
 	case AG_NODEMASK_BITMAP:
 		MAP_NodeMaskBitmap(m, dmask, smask->nm_bitmap.obj,
 		    smask->nm_bitmap.offs);
 		break;
+#endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
 		Free(dmask->nm_poly.vertices, M_NODEMASK);
@@ -166,6 +176,7 @@ MAP_NodeMaskCopy(const MAP_NodeMask *smask, MAP *m,
 	}
 }
 
+#if 0
 void
 MAP_NodeMaskBitmap(MAP *m, MAP_NodeMask *mask, void *pobj, Uint32 offs)
 {
@@ -178,6 +189,7 @@ MAP_NodeMaskBitmap(MAP *m, MAP_NodeMask *mask, void *pobj, Uint32 offs)
 	mask->nm_bitmap.obj = pobj;
 	mask->nm_bitmap.offs = offs;
 }
+#endif
 
 void
 MAP_NodeMaskVertex(MAP_NodeMask *mask, Uint32 x, Uint32 y)

@@ -52,8 +52,8 @@ typedef struct map_actor {
 	TAILQ_ENTRY(map_actor) actors;
 } MAP_Actor;
 
-#define AGACTOR(ob) ((MAP_Actor *)(ob))
-#define AGACTOR_OPS(ob) ((MAP_ActorOps *)AGOBJECT(ob)->ops)
+#define MAP_ACTOR(ob) ((MAP_Actor *)(ob))
+#define MAP_ACTOR_OPS(ob) ((MAP_ActorOps *)AGOBJECT(ob)->ops)
 
 __BEGIN_DECLS
 void	MAP_ActorInit(void *, const char *);
@@ -64,10 +64,12 @@ int	MAP_ActorSave(void *, AG_Netbuf *);
 void   *MAP_ActorEdit(void *);
 void	MAP_ActorUpdate(void *);
 
-int	MAP_ActorMapSprite(void *, int, int, int, void *, const char *);
-void	MAP_ActorUnmapSprite(void *);
-void	MAP_ActorMoveSprite(void *, int, int);
-__inline__ int MAP_ActorSetSprite(void *, int, int, int, void *, const char *);
+__inline__ int	MAP_ActorSetTile(void *, int, int, int, RG_Tileset *,
+		                 const char *);
+int		MAP_ActorMapTiles(void *, int, int, int, RG_Tileset *,
+		                  const char *);
+void		MAP_ActorUnmapTiles(void *);
+void		MAP_ActorMoveTiles(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"

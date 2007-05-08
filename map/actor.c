@@ -108,7 +108,7 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 		    AGOBJECT(a->parent)->name);
 		m = a->parent;
 		AG_MutexLock(&m->lock);
-		AG_DetachActor(m, a);
+		MAP_DetachActor(m, a);
 	} else {
 		m = NULL;
 	}
@@ -140,7 +140,7 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 	}
 #if 0
 	if (m != NULL) {
-		AG_DetachActor(m, a);
+		MAP_DetachActor(m, a);
 		dprintf("reattached %s to %s\n", AGOBJECT(a)->name,
 		    AGOBJECT(m)->name);
 		AG_MutexUnlock(&m->lock);
@@ -225,7 +225,7 @@ move_nodes(MAP_Actor *a, int xo, int yo)
 }
 
 void
-MAP_ActorMoveSprite(void *obj, int xo, int yo)
+MAP_ActorMoveTiles(void *obj, int xo, int yo)
 {
 	MAP_Actor *a = obj;
 	MAP *m = a->parent;
@@ -289,51 +289,42 @@ out:
 }
 
 int
-MAP_ActorSetSprite(void *obj, int x, int y, int l0, void *gfx_obj,
+MAP_ActorSetTile(void *obj, int x, int y, int l0, RG_Tileset *ts,
     const char *name)
 {
 	MAP_Actor *a = obj;
 
-	MAP_ActorUnmapSprite(a);
-	return (MAP_ActorMapSprite(a, x, y, l0, gfx_obj, name));
+	MAP_ActorUnmapTiles(a);
+	return (MAP_ActorMapTiles(a, x, y, l0, ts, name));
 }
 
 int
-MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
+MAP_ActorMapTiles(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
     const char *name)
 {
 	MAP_Actor *a = obj;
 	MAP *m = a->parent;
-	AG_Gfx *gfx;
-	Uint32 offs;
-	AG_Sprite *spr;
+	RG_Tile *tile;
 	int x = a->g_map.x + X0;
 	int y = a->g_map.y + Y0;
 	int l0 = a->g_map.l0 + L0, l;
 	int sx, sy, dx, dy;
 	int dx0, dy0, xorig, yorig;
-	SDL_Surface *su;
 	int n = 0;
 
-	if (gfx_obj == NULL || (gfx = AGOBJECT(gfx_obj)->gfx) == NULL) {
-		AG_SetError("NULL gfx");
+	if ((tile = RG_TilesetFindTile(ts, name)) == NULL) {
 		return (-1);
 	}
-	if (!AG_SpriteFind(gfx, name, &offs)) {
-		return (-1);
-	}
-	spr = &gfx->sprites[offs];
-	su = spr->su;
-	dx0 = x - spr->xOrig/MAPTILESZ;
-	dy0 = y - spr->yOrig/MAPTILESZ;
-	xorig = spr->xOrig%MAPTILESZ;
-	yorig = spr->yOrig%MAPTILESZ;
+	dx0 = x - tile->xOrig/MAPTILESZ;
+	dy0 = y - tile->yOrig/MAPTILESZ;
+	xorig = tile->xOrig%MAPTILESZ;
+	yorig = tile->yOrig%MAPTILESZ;
 
 	for (sy = 0, dy = dy0;
-	     sy < su->h;
+	     sy < tile->su->h;
 	     sy += MAPTILESZ, dy++) {
 		for (sx = 0, dx = dx0;
-		     sx < su->w;
+		     sx < tile->su->w;
 		     sx += MAPTILESZ, dx++) {
 			MAP_Node *dn;
 			MAP_Item *r;
@@ -344,7 +335,7 @@ MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 			}
 			dn = &m->map[dy][dx];
 
-			r = MAP_NodeAddSprite(m, dn, gfx_obj, offs);
+			r = MAP_NodeAddTile(m, dn, ts, tile->main_id);
 			r->p = obj;
 			r->r_gfx.rs.x = sx;
 			r->r_gfx.rs.y = sy;
@@ -356,16 +347,15 @@ MAP_ActorMapSprite(void *obj, int X0, int Y0, int L0, void *gfx_obj,
 			r->r_gfx.ycenter = MAPTILESZ/2;
 			r->r_gfx.xmotion = a->g_map.xmot;
 			r->r_gfx.ymotion = a->g_map.ymot;
-			r->flags |= spr->attrs[n];
+			r->flags |= tile->attrs[n];
 			r->flags |= MAP_ITEM_NOSAVE;
 
-			l = l0 + spr->layers[n];
+			l = l0 + tile->layers[n];
 			if (l < 0) {
 				l = 0;
 			} else {
-				while (m->nlayers <= l) {
+				while (m->nlayers <= l)
 					MAP_PushLayer(m, "");
-				}
 			}
 			r->layer = l;
 	
@@ -383,7 +373,7 @@ out:
 }
 
 void
-MAP_ActorUnmapSprite(void *obj)
+MAP_ActorUnmapTiles(void *obj)
 {
 	MAP_Actor *a = obj;
 	MAP *m = a->parent;

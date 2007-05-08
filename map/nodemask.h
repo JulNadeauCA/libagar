@@ -7,13 +7,15 @@
 
 struct map;
 
-enum map_nodemask_type {
+#if 0
 	AG_NODEMASK_BITMAP,		/* Bitmap (pixel-perfect at 1:1) */
+#endif
+enum map_nodemask_type {
 	AG_NODEMASK_POLYGON,		/* Simple polygon */
 	AG_NODEMASK_RECTANGLE		/* Rectangular region */
 };
 
-TAILQ_HEAD(map_nodemaskq, map_nodemask);
+typedef TAILQ_HEAD(map_nodemaskq, map_nodemask) MAP_NodeMaskQ;
 
 typedef struct map_nodemask {
 	enum map_nodemask_type type;
@@ -43,7 +45,9 @@ void	 MAP_NodeMaskDestroy(struct map *, MAP_NodeMask *);
 void	 MAP_NodeMaskCopy(const MAP_NodeMask *, struct map *,
 	               MAP_NodeMask *);
 
+#if 0
 void	 MAP_NodeMaskBitmap(struct map *, MAP_NodeMask *, void *, Uint32);
+#endif
 void	 MAP_NodeMaskVertex(MAP_NodeMask *, Uint32, Uint32);
 int	 MAP_NodeMaskIntersect(const MAP_NodeMask *, const MAP_NodeMask *);
 __END_DECLS

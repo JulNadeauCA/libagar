@@ -49,8 +49,8 @@ fragments).
 .Pp
 Four types of references are currently defined:
 .Pp
-.Bl -tag -width "MAP_ITEM_SPRITE " -compact
-.It MAP_ITEM_SPRITE
+.Bl -tag -width "MAP_ITEM_TILE " -compact
+.It MAP_ITEM_TILE
 Pointer to a static image of arbitrary size.
 Visible elements of this type are drawn only when the
 .Va redraw
@@ -230,7 +230,7 @@ and
 associate a new sprite or animation to the element
 .Fa r
 (of type
-.Dv MAP_ITEM_SPRITE
+.Dv MAP_ITEM_TILE
 or
 .Dv MAP_ITEM_ANIM ) .
 Unless
