@@ -1,8 +1,8 @@
 /*	$Csoft: icons.h,v 1.26 2005/09/19 07:13:36 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_ICONS_H_
-#define _AGAR_ICONS_H_
+#ifndef _AGAR_ICONMGR_H_
+#define _AGAR_ICONMGR_H_
 #include "begin_code.h"
 
 enum {
@@ -122,7 +122,6 @@ enum {
 	RG_INVERT_ICON,
 	RG_CONTROLS_ICON,
 	RG_PROPS_ICON,
-
 	WALKABILITY_ICON,
 	CLIMBABILITY_ICON,
 	JUMPABILITY_ICON,
@@ -141,11 +140,38 @@ enum {
 	LEFT_BUTTON_SYMBOL,
 	MID_BUTTON_SYMBOL,
 	RIGHT_BUTTON_SYMBOL,
-	CTRL_SYMBOL
+	CTRL_SYMBOL,
+
+	/* arrow.xcf */
+	GUI_ARROW_ICON,
+
+	/* window.xcf */
+	GUI_CLOSE_ICON,
+	GUI_HIDE_WINDOW_ICON,
+	GUI_SHOW_WINDOW_ICON,
+
+	LAST_ICON
 };
 
-extern AG_Object agIconMgr;
-#define AGICON(n) ((n >= 0) ? AG_SPRITE(&agIconMgr,(n)).su : NULL)
+typedef struct ag_icon_mgr {
+	struct ag_object obj;
+	SDL_Surface **icons;
+	Uint nicons;
+} AG_IconMgr;
+
+extern AG_IconMgr agIconMgr;
+
+#ifdef DEBUG
+#define AGICON(n) ((n>=0 && n<LAST_ICON) ? agIconMgr.icons[n] : NULL)
+#else
+#define AGICON(n) agIconMgr.icons[n]
+#endif
+
+__BEGIN_DECLS
+void AG_IconMgrInit(void *, const char *);
+int AG_IconMgrLoadFromDenXCF(AG_IconMgr *, const char *);
+void AG_IconMgrDestroy(void *);
+__END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_ICONS_H_ */
+#endif	/* _AGAR_ICONMGR_H_ */
