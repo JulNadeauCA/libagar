@@ -1587,7 +1587,7 @@ static void
 RG_AttrColor(Uint flag, int state, Uint8 *c)
 {
 	switch (flag) {
-	case RG_NITEM_BLOCK:
+	case RG_TILE_BLOCK:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;
@@ -1600,7 +1600,7 @@ RG_AttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case RG_NITEM_CLIMBABLE:
+	case RG_TILE_CLIMBABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 255;
@@ -1613,7 +1613,7 @@ RG_AttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 32;
 		}
 		break;
-	case RG_NITEM_SLIPPERY:
+	case RG_TILE_SLIPPERY:
 		if (state) {
 			c[0] = 0;
 			c[1] = 0;
@@ -1626,7 +1626,7 @@ RG_AttrColor(Uint flag, int state, Uint8 *c)
 			c[3] = 0;
 		}
 		break;
-	case RG_NITEM_JUMPABLE:
+	case RG_TILE_JUMPABLE:
 		if (state) {
 			c[0] = 255;
 			c[1] = 0;

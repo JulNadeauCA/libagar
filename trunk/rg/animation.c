@@ -41,11 +41,11 @@
 #include <gui/combo.h>
 #include <gui/notebook.h>
 #include <gui/pixmap.h>
-#include <gui/animview.h>
 #include <gui/separator.h>
 
 #include "tileset.h"
 #include "tileview.h"
+#include "animview.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -57,10 +57,10 @@ static const char *insn_names[] = {
 };
 
 void
-RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name,
-    int flags)
+RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name, int flags)
 {
 	strlcpy(ani->name, name, sizeof(ani->name));
+	ani->main_id = 0;
 	ani->flags = flags;
 	ani->w = 0;
 	ani->h = 0;
@@ -135,26 +135,35 @@ RG_AnimRemoveInsn(RG_Anim *ani, Uint insn)
 }
 
 Uint
-RG_AnimInsertFrame(RG_Anim *ani)
+RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 {
 	RG_Tileset *ts = ani->tileset;
 	Uint32 sflags = SDL_SWSURFACE;
 	RG_AnimFrame *fr;
-	
-	if (ani->flags & ANIMATION_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
-	if (ani->flags & ANIMATION_SRCALPHA)	sflags |= SDL_SRCALPHA;
+
+#if defined(DEBUG) || defined(EDITION)
+	if ((ani->nframes+1) >= RG_ANIMATION_FRAMES_MAX)
+		fatal("%s: too many frames", ani->name);
+#endif
+
+	if (ani->flags & RG_ANIM_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
+	if (ani->flags & RG_ANIM_SRCALPHA)	sflags |= SDL_SRCALPHA;
 
 	ani->frames = Realloc(ani->frames,
 	    (ani->nframes+1)*sizeof(RG_AnimFrame));
 	fr = &ani->frames[ani->nframes];
-	fr->su = SDL_CreateRGBSurface(sflags, ani->w, ani->h,
-	    ts->fmt->BitsPerPixel,
-	    ts->fmt->Rmask,
-	    ts->fmt->Gmask,
-	    ts->fmt->Bmask,
-	    ts->fmt->Amask);
-	if (fr->su == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if (sNew != NULL) {
+		fr->su = sNew;
+	} else {
+		fr->su = SDL_CreateRGBSurface(sflags, ani->w, ani->h,
+		    ts->fmt->BitsPerPixel,
+		    ts->fmt->Rmask,
+		    ts->fmt->Gmask,
+		    ts->fmt->Bmask,
+		    ts->fmt->Amask);
+		if (fr->su == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
 	}
 	fr->delay = 0;
 	fr->name = ani->nframes++;
@@ -174,6 +183,15 @@ RG_AnimRemoveFrame(RG_Anim *ani, Uint frame)
 	if (frame+1 < ani->nframes)
 		memmove(&ani->frames[frame], &ani->frames[frame+1],
 		    (--ani->nframes)*sizeof(RG_AnimFrame));
+}
+
+RG_AnimFrame *
+RG_AnimGetFrame(RG_Anim *anim, Uint frame)
+{
+	if (frame >= anim->nframes) {
+		fatal("%s: no such frame %u", anim->name, frame);
+	}
+	return (&anim->frames[frame]);
 }
 
 static void
@@ -311,7 +329,7 @@ RG_AnimGenerate(RG_Anim *ani)
 		switch (insn->type) {
 		case RG_ANIM_TILE:
 			if (insn->t != NULL && insn->t->su != NULL) {
-				fr = &ani->frames[RG_AnimInsertFrame(ani)];
+				fr = &ani->frames[RG_AnimInsertFrame(ani,NULL)];
 				AG_ScaleSurface(insn->t->su, ani->w, ani->h,
 				    &fr->su);
 				fr->delay = insn->delay;
