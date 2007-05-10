@@ -28,8 +28,6 @@ CreateWindow(void)
 	sg = SG_New(agWorld, "scene");
 	AGOBJECT(sg)->flags |= AG_OBJECT_DATA_RESIDENT;
 	AGOBJECT(sg)->data_used = 1;
-	AGOBJECT(sg)->gfx = AG_GfxNew(sg);
-	AGOBJECT(sg)->gfx->used = 1;
 	
 	s1 = SG_SphereNew(sg->root, "Sphere A");
 	for (i = 0; i < 60; i++) {

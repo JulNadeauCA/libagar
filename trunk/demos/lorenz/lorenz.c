@@ -7,6 +7,7 @@
 #include <agar/gui.h>
 #include <agar/sg.h>
 #include <agar/sg/sg_view.h>
+#include <agar/sg/sg_gui.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -17,18 +18,18 @@ SG_Real r = 28.0;
 SG_Real sigma = 10.0;
 SG_Real b = 8.0/3.0;
 SG_Real h = 0.01;
-SG_Real spinX = 0.0, spinY = 0.0, spinZ = 0.0;
+SG_Real spinX = 0.0, spinY = 0.0005, spinZ = 0.0;
 SG_Node *node;
 int iter = 1, iteriter = 10;
 
 static void
-LorenzPlot(void *pNode)
+LorenzPlot(void *pNode, SG_View *sgv)
 {
 	SG_Node *node = pNode;
-	SG_Vector p = SG_VECTOR(0.0, 30.0, -100.0);
+	SG_Vector p = SG_VECTOR(0.0, 1.0, -1.0);
 	SG_Color color;
 	int i;
-
+	
 	SG_Begin(SG_LINE_STRIP);
 	for (i = 0; i < iter; i++) {
 		color.b = color.g = 0.2 + 0.8*(SG_Real)i/(SG_Real)iter;
@@ -41,8 +42,6 @@ LorenzPlot(void *pNode)
 	}
 	SG_End();
 	
-	SG_MatrixIdentityv(&node->T);
-	SG_Translate3(node, 0.0, 0.0, 50.0);
 	SG_RotateEul(node, spinX, spinY, spinZ);
 	iter += iteriter;
 }
@@ -81,30 +80,32 @@ SettingsWin(void)
 	AG_WidgetBindInt(sb, "value", &iteriter);
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "r:");
-	AG_WidgetBindDouble(fsb, "value", &r);
+	AG_FSpinbuttonSetIncrement(fsb, 0.001);
+	SG_WidgetBindReal(fsb, "value", &r);
 	
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "sigma:");
-	AG_WidgetBindDouble(fsb, "value", &sigma);
+	AG_FSpinbuttonSetIncrement(fsb, 0.001);
+	SG_WidgetBindReal(fsb, "value", &sigma);
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "h:");
 	AG_FSpinbuttonSetIncrement(fsb, 0.001);
+	SG_WidgetBindReal(fsb, "value", &h);
 
-	AG_WidgetBindDouble(fsb, "value", &h);
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "b:");
 	AG_FSpinbuttonSetIncrement(fsb, 0.01);
-	AG_WidgetBindDouble(fsb, "value", &b);
+	SG_WidgetBindReal(fsb, "value", &b);
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Pitch:");
-	AG_FSpinbuttonSetIncrement(fsb, 5.0);
-	AG_WidgetBindDouble(fsb, "value", &spinX);
+	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
+	SG_WidgetBindReal(fsb, "value", &spinX);
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Yaw:");
-	AG_FSpinbuttonSetIncrement(fsb, 5.0);
-	AG_WidgetBindDouble(fsb, "value", &spinY);
+	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
+	SG_WidgetBindReal(fsb, "value", &spinY);
 	
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Roll:");
-	AG_FSpinbuttonSetIncrement(fsb, 5.0);
-	AG_WidgetBindDouble(fsb, "value", &spinZ);
+	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
+	SG_WidgetBindReal(fsb, "value", &spinZ);
 	
 	AG_WindowShow(win);
 }
@@ -116,6 +117,7 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	SG_View *sv;
 	SG_Node *node;
+	SG_Camera *cam0;
 	SG *sg;
 	char *s;
 
@@ -137,10 +139,13 @@ main(int argc, char *argv[])
 
 	sg = SG_New(agWorld, "scene");
 	node = SG_NodeAdd(sg->root, "lorenz", &LorenzOps, 0);
+	if ((cam0 = SG_FindNode(sg, "Camera0")) != NULL) {
+		SG_Translate3(cam0, 0.0, 0.0, -100.0);
+	}
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Lorenz Attractor");
-	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
+	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND|SG_VIEW_NO_LIGHTING);
 	AG_WindowSetGeometry(win, 64, 0, agView->w-64, agView->h);
 	AG_WindowShow(win);
 
