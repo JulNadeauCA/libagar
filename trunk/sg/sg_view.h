@@ -29,6 +29,27 @@ typedef struct sg_view {
 	} mouse;
 	AG_PopupMenu popup;		/* Popup menu for context */
 	AG_Widget *editPane;		/* Edit container */
+
+	SG_Real rot_yaw_incr;		/* Base yaw increment */
+	SG_Real rot_pitch_incr;		/* Base pitch increment */
+	SG_Real rot_roll_incr;		/* Base roll increment */
+	SG_Real trans_x_incr;		/* Base translation increment */
+	SG_Real trans_y_incr;
+	SG_Real trans_z_incr;
+
+	int rot_vel_min;		/* Rotation speed */
+	int rot_vel_accel;
+	int rot_vel_max;
+	int trans_vel_min;		/* Translation speed */
+	int trans_vel_accel;
+	int trans_vel_max;
+
+	/* Internals used for rotation */
+	SG_Real trans_x, trans_y, trans_z;
+	SG_Real rot_yaw, rot_pitch, rot_roll;
+	AG_Timeout to_rot_yaw, to_rot_pitch, to_rot_roll;
+	AG_Timeout to_trans_x, to_trans_y, to_trans_z;
+	AG_Timeout to_move;
 } SG_View;
 
 __BEGIN_DECLS

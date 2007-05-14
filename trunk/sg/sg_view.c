@@ -124,9 +124,26 @@ SG_ViewUnProject(SG_View *sv, SG_Vector w, SG_Real zNear, SG_Real zFar,
 	return (0);
 }
 
+static void
+ViewOverlay(AG_Event *event)
+{
+	char text[1024];
+	SG_View *sv = AG_PTR(1);
+	SDL_Surface *su;
+	SG_Vector v;
+
+	v = SG_NodePos(sv->cam);
+
+	snprintf(text, sizeof(text), "%s (%f,%f,%f)",
+	    SGNODE(sv->cam)->name, v.x, v.y, v.z);
+
+	su = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), text);
+	AG_WidgetBlit(sv, su, 0, AGWIDGET(sv)->h - su->h);
+	SDL_FreeSurface(su);
+}
 
 static void
-DrawEv(AG_Event *event)
+ViewDraw(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 
@@ -194,21 +211,19 @@ DrawEv(AG_Event *event)
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 
-#if 0
 		SG_FOREACH_NODE_CLASS(lt, sv->sg, sg_light, "Light:*") {
 			if (lt->light != GL_INVALID_ENUM)
-				SG_LightSetup(lt);
+				SG_LightSetup(lt, sv);
 		}
-#endif
 		glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 1.0);
 	}
 
 	/* Render the scene. */
-	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);
 	SG_RenderNode(sv->sg, SGNODE(sv->sg->root), sv);
 	glPopMatrix();
-	
+
 	if ((sv->flags & SG_VIEW_NO_LIGHTING) == 0) {
 		glPopAttrib();
 	}
@@ -216,7 +231,7 @@ DrawEv(AG_Event *event)
 }
 
 static void
-ScaleEv(AG_Event *event)
+ViewScale(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 
@@ -227,15 +242,8 @@ ScaleEv(AG_Event *event)
 static void
 RotateCameraByMouse(SG_View *sv, int x, int y)
 {
-	SG_Real dPitch = 0.01*(SG_Real)y;
-	SG_Real dYaw = 0.01*(SG_Real)x;
-	SG_Matrix *T = &SGNODE(sv->cam)->T;
-	SG_Vector pos = SG_NodePos(sv->cam);
-
-	SG_MatrixTranslatev(T, SG_VectorMirror(pos,1,1,1));
-	SG_MatrixRotatev(T, dPitch, SG_I);
-	SG_MatrixRotatev(T, dYaw, SG_J);
-	SG_MatrixTranslatev(T, pos);
+	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, SG_I);
+	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, SG_J);
 }
 
 static void
@@ -244,15 +252,15 @@ MoveCameraByMouse(SG_View *sv, int xrel, int yrel, int zrel)
 	SG_Vector m;
 	SG_Matrix *T = &SGNODE(sv->cam)->T;
 	
-	m.x = sv->mouse.tsens.x*((SG_Real)xrel);
-	m.y = sv->mouse.tsens.y*(-(SG_Real)yrel);
-	m.z = sv->mouse.tsens.z*((SG_Real)zrel);
+	m.x = sv->mouse.tsens.x*(-(SG_Real)xrel);
+	m.y = sv->mouse.tsens.y*((SG_Real)yrel);
+	m.z = sv->mouse.tsens.z*(-(SG_Real)zrel);
 
 	/* Translate along the global axis, not the camera axis. */
-	T->m[0][3] += m.x;
-	T->m[1][3] += m.y;
-	T->m[2][3] += m.z;
-#if 0
+//	T->m[0][3] += m.x;
+//	T->m[1][3] += m.y;
+//	T->m[2][3] += m.z;
+#if 1
 	/* Translate along the local camera axis. */
 	SG_MatrixTranslatev(&SGNODE(sv->cam)->T, m);
 #endif
@@ -263,7 +271,7 @@ MoveCameraByMouse(SG_View *sv, int xrel, int yrel, int zrel)
 }
 
 static void
-MotionEv(AG_Event *event)
+ViewMotion(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 	int x = AG_INT(2);
@@ -279,6 +287,15 @@ MotionEv(AG_Event *event)
 			MoveCameraByMouse(sv, xrel, yrel, 0);
 		}
 	}
+}
+
+static void
+ViewSwitchCamera(AG_Event *event)
+{
+	SG_View *sv = AG_PTR(1);
+	SG_Camera *cam = AG_PTR(2);
+
+	sv->cam = cam;
 }
 
 static void
@@ -306,7 +323,7 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 
 	sv->popup.item = AG_MenuAddItem(sv->popup.menu, NULL);
 	{
-		AG_MenuItem *mOvl;
+		AG_MenuItem *mOvl, *mCam;
 
 		AG_MenuIntFlags(sv->popup.item, _("Lighting"),
 		    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
@@ -327,6 +344,22 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 			AG_MenuIntFlags(mOvl, _("Vertex normals"),
 			    UP_ARROW_ICON,
 			    &sg->flags, SG_OVERLAY_VNORMALS, 0);
+		}
+		AG_MenuSeparator(sv->popup.item);
+		AG_MenuSeparator(sv->popup.item);
+		AG_MenuSeparator(sv->popup.item);
+		AG_MenuSeparator(sv->popup.item);
+		mCam = AG_MenuNode(sv->popup.item, _("Switch to camera"), -1);
+		{
+			AG_MenuItem *mi;
+			SG_Camera *cam;
+
+			SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera") {
+				mi = AG_MenuAction(mCam, SGNODE(cam)->name,
+				    OBJ_ICON,
+				    ViewSwitchCamera, "%p,%p", sv, cam);
+				mi->state = (cam == sv->cam);
+			}
 		}
 	}
 	sv->popup.menu->sel_item = sv->popup.item;
@@ -357,7 +390,107 @@ SelectByMouse(SG_View *sv, int x, int y)
 }
 
 static void
-ButtondownEv(AG_Event *event)
+ViewKeydown(AG_Event *event)
+{
+	SG_View *sv = AG_PTR(1);
+	int keysym = AG_INT(2);
+	int kmod = AG_INT(3);
+	int unicode = AG_INT(4);
+
+	switch (keysym) {
+	case SDLK_LEFT:
+		if (kmod & KMOD_CTRL) {
+			sv->rot_yaw = -sv->rot_yaw_incr;
+			AG_ReplaceTimeout(sv, &sv->to_rot_yaw, sv->rot_vel_min);
+		} else {
+			sv->trans_x = -sv->trans_x_incr;
+			AG_ReplaceTimeout(sv, &sv->to_trans_x,
+			                  sv->trans_vel_min);
+		}
+		break;
+	case SDLK_RIGHT:
+		if (kmod & KMOD_CTRL) {
+			sv->rot_yaw = +sv->rot_yaw_incr;
+			AG_ReplaceTimeout(sv, &sv->to_rot_yaw, sv->rot_vel_min);
+		} else {
+			sv->trans_x = +sv->trans_x_incr;
+			AG_ReplaceTimeout(sv, &sv->to_trans_x,
+			                  sv->trans_vel_min);
+		}
+		break;
+	case SDLK_UP:
+		if (kmod & KMOD_CTRL) {
+			sv->rot_pitch = -sv->rot_pitch_incr;
+			AG_ReplaceTimeout(sv, &sv->to_rot_pitch,
+			                  sv->rot_vel_min);
+		} else {
+			sv->trans_y = +sv->trans_y_incr;
+			AG_ReplaceTimeout(sv, &sv->to_trans_y,
+			                  sv->trans_vel_min);
+		}
+		break;
+	case SDLK_DOWN:
+		if (kmod & KMOD_CTRL) {
+			sv->rot_pitch = +sv->rot_pitch_incr;
+			AG_ReplaceTimeout(sv, &sv->to_rot_pitch,
+			                  sv->rot_vel_min);
+		} else {
+			sv->trans_y = -sv->trans_y_incr;
+			AG_ReplaceTimeout(sv, &sv->to_trans_y,
+			                  sv->trans_vel_min);
+		}
+		break;
+	case SDLK_PAGEUP:
+		sv->trans_z = -sv->trans_z_incr;
+		AG_ReplaceTimeout(sv, &sv->to_trans_z, sv->trans_vel_min);
+		break;
+	case SDLK_PAGEDOWN:
+		sv->trans_z = +sv->trans_z_incr;
+		AG_ReplaceTimeout(sv, &sv->to_trans_z, sv->trans_vel_min);
+		break;
+	case SDLK_DELETE:
+		sv->rot_roll = -sv->rot_roll_incr;
+		AG_ReplaceTimeout(sv, &sv->to_rot_roll, sv->rot_vel_min);
+		break;
+	case SDLK_END:
+		sv->rot_roll = +sv->rot_roll_incr;
+		AG_ReplaceTimeout(sv, &sv->to_rot_roll, sv->rot_vel_min);
+		break;
+	}
+}
+
+static void
+ViewKeyup(AG_Event *event)
+{
+	SG_View *sv = AG_PTR(1);
+	int keysym = AG_INT(2);
+	int keymode = AG_INT(3);
+	int unicode = AG_INT(4);
+
+	switch (keysym) {
+	case SDLK_LEFT:
+	case SDLK_RIGHT:
+		AG_DelTimeout(sv, &sv->to_rot_yaw);
+		AG_DelTimeout(sv, &sv->to_trans_x);
+		break;
+	case SDLK_UP:
+	case SDLK_DOWN:
+		AG_DelTimeout(sv, &sv->to_rot_pitch);
+		AG_DelTimeout(sv, &sv->to_trans_y);
+		break;
+	case SDLK_PAGEUP:
+	case SDLK_PAGEDOWN:
+		AG_DelTimeout(sv, &sv->to_trans_z);
+		break;
+	case SDLK_DELETE:
+	case SDLK_END:
+		AG_DelTimeout(sv, &sv->to_rot_roll);
+		break;
+	}
+}
+
+static void
+ViewButtondown(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 	int button = AG_INT(2);
@@ -402,6 +535,57 @@ SG_ViewAttached(AG_Event *event)
 	SG_ViewSetCamera(sv, cam);
 }
 
+static Uint32
+RotateYawTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+
+	SG_Rotatev(sv->cam, sv->rot_yaw, SG_J);
+	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
+}
+
+static Uint32
+RotatePitchTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+
+	SG_Rotatev(sv->cam, sv->rot_pitch, SG_I);
+	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
+}
+
+static Uint32
+RotateRollTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+
+	SG_Rotatev(sv->cam, sv->rot_roll, SG_K);
+	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
+}
+
+static Uint32
+TranslateXTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+	SG_TranslateX(sv->cam, sv->trans_x);
+	return (ival > sv->trans_vel_max ? ival-sv->trans_vel_accel : ival);
+}
+
+static Uint32
+TranslateYTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+	SG_TranslateY(sv->cam, sv->trans_y);
+	return (ival > sv->trans_vel_max ? ival-sv->trans_vel_accel : ival);
+}
+
+static Uint32
+TranslateZTimeout(void *obj, Uint32 ival, void *arg)
+{
+	SG_View *sv = obj;
+	SG_TranslateZ(sv->cam, sv->trans_z);
+	return (ival > sv->trans_vel_max ? ival-sv->trans_vel_accel : ival);
+}
+
 void
 SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 {
@@ -411,10 +595,13 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 	if (flags & SG_VIEW_VFILL) { glvflags |= AG_GLVIEW_VFILL; }
 
 	AG_GLViewInit(AGGLVIEW(sv), glvflags);
-	AG_GLViewDrawFn(AGGLVIEW(sv), DrawEv, "%p", sv);
-	AG_GLViewScaleFn(AGGLVIEW(sv), ScaleEv, "%p", sv);
-	AG_GLViewMotionFn(AGGLVIEW(sv), MotionEv, "%p", sv);
-	AG_GLViewButtondownFn(AGGLVIEW(sv), ButtondownEv, "%p", sv);
+	AG_GLViewDrawFn(AGGLVIEW(sv), ViewDraw, "%p", sv);
+	AG_GLViewOverlayFn(AGGLVIEW(sv), ViewOverlay, "%p", sv);
+	AG_GLViewScaleFn(AGGLVIEW(sv), ViewScale, "%p", sv);
+	AG_GLViewMotionFn(AGGLVIEW(sv), ViewMotion, "%p", sv);
+	AG_GLViewButtondownFn(AGGLVIEW(sv), ViewButtondown, "%p", sv);
+	AG_GLViewKeydownFn(AGGLVIEW(sv), ViewKeydown, "%p", sv);
+	AG_GLViewKeyupFn(AGGLVIEW(sv), ViewKeyup, "%p", sv);
 	AG_ObjectSetOps(sv, &sgViewOps);
 
 	sv->flags = flags;
@@ -427,8 +614,29 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 
 	AG_SetEvent(sv, "attached", SG_ViewAttached, NULL);
 
-	sv->mouse.rsens = SG_VECTOR(0.23, 0.13, 0.0);
+	sv->mouse.rsens = SG_VECTOR(0.002, 0.002, 0.002);
 	sv->mouse.tsens = SG_VECTOR(0.01, 0.01, 0.5);
+
+	sv->rot_vel_min = 30;
+	sv->rot_vel_accel = 1;
+	sv->rot_vel_max = 10;
+	sv->trans_vel_min = 20;
+	sv->trans_vel_accel = 1;
+	sv->trans_vel_max = 5;
+
+	sv->rot_yaw_incr = 0.05;
+	sv->rot_pitch_incr = 0.05;
+	sv->rot_roll_incr = 0.05;
+	sv->trans_x_incr = 0.1;
+	sv->trans_y_incr = 0.1;
+	sv->trans_z_incr = 0.1;
+
+	AG_SetTimeout(&sv->to_rot_yaw, RotateYawTimeout, NULL, 0);
+	AG_SetTimeout(&sv->to_rot_pitch, RotatePitchTimeout, NULL, 0);
+	AG_SetTimeout(&sv->to_rot_roll, RotateRollTimeout, NULL, 0);
+	AG_SetTimeout(&sv->to_trans_x, TranslateXTimeout, NULL, 0);
+	AG_SetTimeout(&sv->to_trans_y, TranslateYTimeout, NULL, 0);
+	AG_SetTimeout(&sv->to_trans_z, TranslateZTimeout, NULL, 0);
 }
 
 void
