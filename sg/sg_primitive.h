@@ -3,7 +3,7 @@
 
 __BEGIN_DECLS
 #define SG_Begin(p) glBegin(p)
-#define SG_End(p) glEnd()
+#define SG_End() glEnd()
 
 #define SG_POINTS GL_POINTS
 #define SG_LINES GL_LINES
@@ -26,7 +26,9 @@ __BEGIN_DECLS
 #define SG_Normal3(x,y,z) glNormal3d((x),(y),(z))
 #define SG_Normal3v(v) glNormal3dv((GLdouble *)(void *)(v))
 #define SG_Color3v(c) glColor3d((c)->r,(c)->g,(c)->b)
+#define SG_Color3(c) glColor3d((c).r,(c).g,(c).b)
 #define SG_Color4v(c) glColor4d((c)->r,(c)->g,(c)->b,(c)->a)
+#define SG_Color4(c) glColor4d((c).r,(c).g,(c).b,(c).a)
 #define SG_TexCoord1(s) glTexCoord1d((s))
 #define SG_TexCoord2(s,t) glTexCoord2d((s),(t))
 #define SG_TexCoord3(s,t,r) glTexCoord3d((s),(t),(r))
@@ -50,7 +52,9 @@ __BEGIN_DECLS
 #define SG_Normal3(x,y,z) glNormal3f((x),(y),(z))
 #define SG_Normal3v(v) glNormal3fv((GLfloat *)(void *)(v))
 #define SG_Color3v(c) glColor3f((c)->r,(c)->g,(c)->b)
+#define SG_Color3(c) glColor3f((c).r,(c).g,(c).b)
 #define SG_Color4v(c) glColor4f((c)->r,(c)->g,(c)->b,(c)->a)
+#define SG_Color4(c) glColor4f((c).r,(c).g,(c).b,(c).a)
 #define SG_TexCoord1(s) glTexCoord1f((s))
 #define SG_TexCoord2(s,t) glTexCoord2f((s),(t))
 #define SG_TexCoord3(s,t,r) glTexCoord3f((s),(t),(r))
