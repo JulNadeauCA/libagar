@@ -76,8 +76,7 @@ extern const char *rgTileSnapModes[];
 void
 RG_InitSubsystem(void)
 {
-	AG_RegisterType("RG_Tileset", sizeof(RG_Tileset), &rgTilesetOps,
-	    TILESET_ICON);
+	AG_RegisterType(&rgTilesetOps, TILESET_ICON);
 }
 
 void
@@ -116,6 +115,8 @@ RG_TilesetInit(void *obj, const char *name)
 	ts->ntiletbl = 0;
 	ts->animtbl = Malloc(sizeof(RG_Anim *), M_RG);
 	ts->nanimtbl = 0;
+	ts->tiletbl = NULL;
+	ts->animtbl = NULL;
 }
 
 void
@@ -347,6 +348,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	count = AG_ReadUint32(buf);
 	printf("alloc: %u tiles\n", (Uint)count);
 	ts->tiletbl = Realloc(ts->tiletbl, MIN(count,1)*sizeof(RG_Tile *));
+//	ts->tiletbl = Malloc(MIN(count,1)*sizeof(RG_Tile *), M_RG);
 	for (i = 0; i < count; i++) {
 		char name[RG_TILE_NAME_MAX];
 
@@ -365,7 +367,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	count = AG_ReadUint32(buf);
 	printf("alloc: %u anims\n", (Uint)count);
 	ts->animtbl = Realloc(ts->animtbl, MIN(count,1)*sizeof(RG_Anim *));
-#if 0
+//	ts->animtbl = Malloc(MIN(count,1)*sizeof(RG_Anim *), M_RG);
 	for (i = 0; i < count; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 
@@ -381,7 +383,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 			}
 		}
 	}
-#endif
+
 	/* Resolve the pixmap brush references. */
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		struct rg_pixmap_brush *pbr;
