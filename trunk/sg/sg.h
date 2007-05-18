@@ -85,7 +85,7 @@ typedef struct sg_node {
 	TAILQ_HEAD(,sg_node) cnodes;	/* Siblings */
 	TAILQ_ENTRY(sg_node) sgnodes;	/* Entry in parent list */
 	TAILQ_ENTRY(sg_node) nodes;	/* Entry in flat list */
-	SLIST_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */
+	TAILQ_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */
 } SG_Node;
 
 typedef struct sg {
@@ -138,6 +138,7 @@ extern Uint         sgElementsCnt;
 #include <agar/sg/sg_solid.h>
 #include <agar/sg/sg_sphere.h>
 #include <agar/sg/sg_box.h>
+#include <agar/sg/sg_voxel.h>
 
 __BEGIN_DECLS
 int	 SG_InitEngine(void);
@@ -163,6 +164,7 @@ int		 SG_NodeLoad(SG *, SG_Node **, AG_Netbuf *);
 SG_Node 	*SG_SearchNodes(SG_Node *, const char *);
 void		*SG_FindNode(SG *, const char *);
 void		 SG_GetNodeTransform(void *, SG_Matrix *);
+void		 SG_GetNodeTransformInverse(void *, SG_Matrix *);
 SG_Vector	 SG_NodePos(void *);
 SG_Vector	 SG_NodeDir(void *);
 __END_DECLS

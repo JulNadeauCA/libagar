@@ -28,7 +28,8 @@ typedef struct sg_camera {
 	SG_Real fovY;				/* Field of view (degrees) */
 	SG_Real aspect;				/* Aspect ratio */
 	SG_Real zNear, zFar;			/* Clipping planes */
-	SG_Matrix userProj;			/* User projection matrix */
+	SG_Matrix userProj;			/* User projection matrix
+						   (column-major) */
 #ifdef DEBUG
 	SG_Real rotSpeed;
 #endif
@@ -52,4 +53,5 @@ __inline__ void	 SG_CameraSetUser(SG_Camera *, const SG_Matrix *);
 __inline__ void	 SG_CameraSetClipPlanes(SG_Camera *, SG_Real, SG_Real);
 __inline__ void	 SG_CameraSetup(SG_Camera *);
 SG_Vector	 SG_CameraVector(SG_Camera *);
+void		 SG_CameraDraw(void *, SG_View *);
 __END_DECLS

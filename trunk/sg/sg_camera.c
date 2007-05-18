@@ -144,11 +144,9 @@ SG_CameraSetup(SG_Camera *cam)
 {
 	SG_Matrix T;
 
-	SG_GetNodeTransform(cam, &T);
-//	T = SG_MatrixTransposep(&T);
-//	SG_MultMatrixGL(&T);
-	SG_TranslateGL(T.m[0][3], T.m[1][3], T.m[2][3]);
-	printf("translate %f,%f,%f\n", T.m[0][3], T.m[1][3], T.m[2][3]);
+	SG_GetNodeTransformInverse(cam, &T);
+	SG_MatrixTransposev(&T);		/* OpenGL is column-major */
+	SG_MultMatrixGL(&T);
 
 #ifdef DEBUG
 	{
@@ -180,6 +178,7 @@ SG_CameraGetProjection(SG_Camera *cam, SG_Matrix *M)
 	glLoadIdentity();
 	SG_CameraProject(cam);
 	SG_GetMatrixGL(GL_PROJECTION_MATRIX, M);
+	SG_MatrixTransposev(M);
 	glPopMatrix();
 	glPopAttrib();
 }
@@ -208,7 +207,7 @@ SG_CameraSetClipPlanes(SG_Camera *cam, SG_Real zNear, SG_Real zFar)
 void
 SG_CameraSetUser(SG_Camera *cam, const SG_Matrix *P)
 {
-	SG_MatrixCopy(&cam->userProj, P);
+	cam->userProj = SG_MatrixTransposep(P);
 }
 
 static void
@@ -350,6 +349,21 @@ SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 #endif
 }
 
+void
+SG_CameraDraw(void *cam, SG_View *sgv)
+{
+	GLUquadricObj *qo;
+
+	if (cam == sgv->cam)
+		return;
+
+	qo = (GLUquadricObj *)gluNewQuadric();
+	gluQuadricDrawStyle(qo, GLU_FILL);
+	gluQuadricNormals(qo, GLU_SMOOTH);
+	gluCylinder(qo, 0.0, 1.0, 3.0, 8, 4);
+	gluDeleteQuadric(qo);
+}
+
 SG_Vector
 SG_CameraVector(SG_Camera *cam)
 {
@@ -373,5 +387,5 @@ SG_NodeOps sgCameraOps = {
 	SG_CameraEdit,
 	SG_CameraMenu,
 	NULL,		/* menuClass */
-	NULL		/* draw */
+	SG_CameraDraw
 };
