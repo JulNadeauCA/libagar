@@ -109,7 +109,7 @@ SK_NodeOfClass(SK_Node *node, const char *cname)
 int
 SK_InitEngine(void)
 {
-	AG_RegisterType("SK", sizeof(SK), &skOps, DRAWING_ICON);
+	AG_RegisterType(&skOps, DRAWING_ICON);
 
 	SK_NodeRegister(&skDummyOps);
 #if 0

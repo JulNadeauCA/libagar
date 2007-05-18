@@ -110,9 +110,8 @@ SG_InitEngine(void)
 {
 	extern AG_ObjectOps sgMaterialOps;
 
-	AG_RegisterType("SG", sizeof(SG), &sgOps, MAP_ICON);
-	AG_RegisterType("SG_Material", sizeof(SG_Material), &sgMaterialOps,
-	    RG_TILING_ICON);
+	AG_RegisterType(&sgOps, MAP_ICON);
+	AG_RegisterType(&sgMaterialOps, RG_TILING_ICON);
 
 	SG_NodeRegister(&sgDummyOps);
 	SG_NodeRegister(&sgPointOps);
@@ -148,11 +147,14 @@ static void
 SG_Attached(AG_Event *event)
 {
 	SG *sg = AG_SELF();
-	SG_Camera *cam0;
+	SG_Camera *cam;
 	SG_Light *lt0;
 
-	cam0 = SG_CameraNew(sg->root, "Camera0");
-	SG_Translate3(cam0, 0.0, 0.0, -10.0);
+	cam = SG_CameraNew(sg->root, "Camera0");
+	SG_Translate3(cam, 0.0, 0.0, -10.0);
+	
+	cam = SG_CameraNew(sg->root, "Camera1");
+	SG_Translate3(cam, -1.0, 0.0, -10.0);
 	
 	lt0 = SG_LightNew(sg->root, "Light0");
 	SG_Translate3(lt0, 20.0, 20.0, 20.0);
@@ -217,7 +219,10 @@ SG_FreeNode(SG *sg, SG_Node *node)
 		}
 		Free(n1, M_SG);
 	}
-	TAILQ_INIT(&node->cnodes);
+	if (node->ops->destroy != NULL) {
+		node->ops->destroy(node);
+	}
+	Free(node, M_SG);
 }
 
 void
@@ -398,30 +403,54 @@ SG_FindNode(SG *sg, const char *name)
 }
 
 /*
- * Compute the product of the transform matrices of the given node and its
- * parents in order. T is initialized to identity.
+ * Compute the product of the transform matrices of the given node
+ * and its parents.
  */
 void
 SG_GetNodeTransform(void *p, SG_Matrix *T)
 {
 	SG_Node *node = p;
 	SG_Node *cnode = node;
-	SLIST_HEAD(,sg_node) rnodes = SLIST_HEAD_INITIALIZER(&rnodes);
+	TAILQ_HEAD(,sg_node) rnodes = TAILQ_HEAD_INITIALIZER(rnodes);
 
-	/*
-	 * Build a list of parent nodes and multiply their matrices in order
-	 * (ugly but faster than computing the product of their inverses).
-	 */
+	SG_MatrixIdentityv(T);
+
 	while (cnode != NULL) {
-		SLIST_INSERT_HEAD(&rnodes, cnode, rnodes);
+		TAILQ_INSERT_TAIL(&rnodes, cnode, rnodes);
 		if (cnode->pNode == NULL) {
 			break;
 		}
 		cnode = cnode->pNode;
 	}
-	SG_MatrixIdentityv(T);
-	SLIST_FOREACH(cnode, &rnodes, rnodes) {
+	TAILQ_FOREACH(cnode, &rnodes, rnodes)
 		SG_MatrixMultv(T, &cnode->T);
+}
+
+/*
+ * Compute the product of the inverse transform matrices of the given node
+ * and its parents.
+ */
+void
+SG_GetNodeTransformInverse(void *p, SG_Matrix *T)
+{
+	SG_Node *node = p;
+	SG_Node *cnode = node;
+	TAILQ_HEAD(,sg_node) rnodes = TAILQ_HEAD_INITIALIZER(rnodes);
+
+	SG_MatrixIdentityv(T);
+
+	while (cnode != NULL) {
+		TAILQ_INSERT_TAIL(&rnodes, cnode, rnodes);
+		if (cnode->pNode == NULL) {
+			break;
+		}
+		cnode = cnode->pNode;
+	}
+	TAILQ_FOREACH(cnode, &rnodes, rnodes) {
+		SG_Matrix Tinv;
+
+		Tinv = SG_MatrixInvertCramerp(&cnode->T);
+		SG_MatrixMultv(T, &Tinv);
 	}
 }
 
@@ -430,9 +459,9 @@ SG_NodePos(void *p)
 {
 	SG_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = SG_K;				/* Convention */
+	SG_Vector v = SG_VECTOR(0.0, 0.0, 0.0);
 	
-	SG_GetNodeTransform(node, &T);
+	SG_GetNodeTransformInverse(node, &T);
 	SG_MatrixMultVectorv(&v, &T);
 	return (v);
 }
@@ -458,7 +487,9 @@ SG_NodeAttach(void *ppNode, void *pcNode)
 	cNode->sg = pNode->sg;
 	cNode->pNode = pNode;
 	TAILQ_INSERT_TAIL(&pNode->cnodes, cNode, sgnodes);
-	TAILQ_INSERT_TAIL(&pNode->sg->nodes, cNode, nodes);
+	if (pNode->sg != NULL) {
+		TAILQ_INSERT_TAIL(&pNode->sg->nodes, cNode, nodes);
+	}
 }
 
 void
@@ -468,7 +499,9 @@ SG_NodeDetach(void *ppNode, void *pcNode)
 	SG_Node *cNode = pcNode;
 
 	TAILQ_REMOVE(&pNode->cnodes, cNode, sgnodes);
-	TAILQ_REMOVE(&pNode->sg->nodes, cNode, nodes);
+	if (pNode->sg != NULL) {
+		TAILQ_REMOVE(&pNode->sg->nodes, cNode, nodes);
+	}
 	cNode->sg = NULL;
 	cNode->pNode = NULL;
 }
@@ -487,14 +520,12 @@ SG_NodeAdd(void *pNode, const char *name, const SG_NodeOps *ops, Uint flags)
 void
 SG_RenderNode(SG *sg, SG_Node *node, SG_View *view)
 {
-	SG_Matrix Tsave;
+	SG_Matrix Tsave, T;
 	SG_Node *cnode;
 
-	if (strcmp(node->ops->name, "Light") == 0)
-		return;
-
 	SG_GetMatrixGL(GL_MODELVIEW_MATRIX, &Tsave);
-	SG_MultMatrixGL(&node->T);
+	T = SG_MatrixTransposep(&node->T);	/* OpenGL is column-major */
+	SG_MultMatrixGL(&T);
 	if (node->ops->draw != NULL) {
 		node->ops->draw(node, view);
 	}
