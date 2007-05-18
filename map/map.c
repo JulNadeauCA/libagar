@@ -90,10 +90,10 @@ static void MAP_FreeModBlk(MAP *, MAP_ModBlk *);
 void
 MAP_InitSubsystem(void)
 {
-	extern const AG_ObjectOps agActorOps;
+	extern const AG_ObjectOps mapActorOps;
 
-	AG_RegisterType("MAP", sizeof(MAP), &mapOps, MAP_ICON);
-	AG_RegisterType("MAP_Actor", sizeof(MAP_Actor), &agActorOps, OBJ_ICON);
+	AG_RegisterType(&mapOps, MAP_ICON);
+	AG_RegisterType(&mapActorOps, OBJ_ICON);
 }
 
 void

@@ -39,7 +39,7 @@
 
 #include "actor.h"
 
-const AG_ObjectOps agActorOps = {
+const AG_ObjectOps mapActorOps = {
 	"MAP_Actor",
 	sizeof(MAP_Actor),
 	{ 0, 0 },
@@ -60,7 +60,7 @@ MAP_ActorInit(void *obj, const char *name)
 {
 	MAP_Actor *a = obj;
 
-	AG_ObjectInit(a, name, &agActorOps);
+	AG_ObjectInit(a, name, &mapActorOps);
 	AG_ObjectRemain(a, AG_OBJECT_REMAIN_DATA);
 	AG_MutexInitRecursive(&a->lock);
 	a->flags = 0;
@@ -98,7 +98,7 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 #if 0
 	MAP *m;
 #endif
-	if (AG_ReadVersion(buf, agActorOps.type, &agActorOps.ver, NULL) != 0)
+	if (AG_ReadVersion(buf, mapActorOps.type, &mapActorOps.ver, NULL) != 0)
 		return (-1);
 
 	AG_MutexLock(&a->lock);
@@ -155,7 +155,7 @@ MAP_ActorSave(void *obj, AG_Netbuf *buf)
 {
 	MAP_Actor *a = obj;
 
-	AG_WriteVersion(buf, agActorOps.type, &agActorOps.ver);
+	AG_WriteVersion(buf, mapActorOps.type, &mapActorOps.ver);
 
 	AG_MutexLock(&a->lock);
 	AG_WriteUint32(buf, (Uint32)a->type);
