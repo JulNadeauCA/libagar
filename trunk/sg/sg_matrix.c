@@ -33,6 +33,9 @@
 
 #include <string.h>
 
+#undef MSWAP
+#define MSWAP(M,a1,a2,b1,b2) { tmp=(M)->m[a1][a2]; (M)->m[a1][a2]=(M)->m[b1][b2]; (M)->m[b1][b2]=tmp; }
+
 void
 SG_MatrixPrint(SG_Matrix *A)
 {
@@ -277,6 +280,137 @@ SG_MatrixDirection(const SG_Matrix *M, SG_Vector *x, SG_Vector *y, SG_Vector *z)
 	}
 }
 
+#if 0
+int
+SG_MatrixInvertCramerSIMD(const SG_Matrix *A, SG_Matrix *Ainv)
+{
+	__m128 minor0, minor1, minor2, minor3;
+	__m128 row0, row1, row2, row3;
+	__m128 det, tmp1;
+
+	tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src)),
+	                                       (__m64*)(src+4));
+	row1 = _mm_loadh_pi(_mm_loadl_pi(row1, (__m64*)(src+8)),
+	                                       (__m64*)(src+12));
+	row0 = _mm_shuffle_ps(tmp1, row1, 0x88);
+	row1 = _mm_shuffle_ps(row1, tmp1, 0xdd);
+	
+	tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src+2)),
+	                                       (__m64*)(src+6));
+	row3 = _mm_loadh_pi(_mm_loadl_pi(row3, (__m64*)(src+10)),
+	                                       (__m64*)(src+14));
+	
+	row2 = _mm_shuffle_ps(tmp1, row3, 0x88);
+	row3 = _mm_shuffle_ps(row3, tmp1, 0xdd);
+
+	tmp1 = _mm_mul_ps(row2, row3);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+
+	...
+}
+#endif
+
+/*
+ * Invert a 4x4 matrix using Cramer's rule. Assume that the matrix
+ * is non-singular up to machine precision, or division by zero will
+ * occur.
+ */
+SG_Matrix
+SG_MatrixInvertCramerp(const SG_Matrix *A)
+{
+	SG_Matrix Ainv;
+	SG_Real tmp[12];
+	SG_Real src[16];
+	SG_Real det;
+	int i, j;
+
+	/* Transpose matrix into flat array */
+	for (i = 0; i < 4; i++) {
+		src[i]		= A->m[i][0];
+		src[i+4]	= A->m[i][1];
+		src[i+8]	= A->m[i][2];
+		src[i+12]	= A->m[i][3];
+	}
+
+	/* Compute pairs for first 8 elements (cofactors) */
+	tmp[0]	= src[10] * src[15];
+	tmp[1]	= src[11] * src[14];
+	tmp[2]	= src[ 9] * src[15];
+	tmp[3]	= src[11] * src[13];
+	tmp[4]	= src[ 9] * src[14];
+	tmp[5]	= src[10] * src[13];
+	tmp[6]	= src[ 8] * src[15];
+	tmp[7]	= src[11] * src[12];
+	tmp[8]	= src[ 8] * src[14];
+	tmp[9]	= src[10] * src[12];
+	tmp[10]	= src[ 8] * src[13];
+	tmp[11]	= src[ 9] * src[12];
+
+	/* Compute first 8 elements (cofactors) */
+	Ainv.m[0][0]  = tmp[ 0]*src[ 5] + tmp[ 3]*src[ 6] + tmp[ 4]*src[ 7];
+	Ainv.m[0][0] -= tmp[ 1]*src[ 5] + tmp[ 2]*src[ 6] + tmp[ 5]*src[ 7];
+	Ainv.m[0][1]  = tmp[ 1]*src[ 4] + tmp[ 6]*src[ 6] + tmp[ 9]*src[ 7];
+	Ainv.m[0][1] -= tmp[ 0]*src[ 4] + tmp[ 7]*src[ 6] + tmp[ 8]*src[ 7];
+	Ainv.m[0][2]  = tmp[ 2]*src[ 4] + tmp[ 7]*src[ 5] + tmp[10]*src[ 7];
+	Ainv.m[0][2] -= tmp[ 3]*src[ 4] + tmp[ 6]*src[ 5] + tmp[11]*src[ 7];
+	Ainv.m[0][3]  = tmp[ 5]*src[ 4] + tmp[ 8]*src[ 5] + tmp[11]*src[ 6];
+	Ainv.m[0][3] -= tmp[ 4]*src[ 4] + tmp[ 9]*src[ 5] + tmp[10]*src[ 6];
+	Ainv.m[1][0]  = tmp[ 1]*src[ 1] + tmp[ 2]*src[ 2] + tmp[ 5]*src[ 3];
+	Ainv.m[1][0] -= tmp[ 0]*src[ 1] + tmp[ 3]*src[ 2] + tmp[ 4]*src[ 3];
+	Ainv.m[1][1]  = tmp[ 0]*src[ 0] + tmp[ 7]*src[ 2] + tmp[ 8]*src[ 3];
+	Ainv.m[1][1] -= tmp[ 1]*src[ 0] + tmp[ 6]*src[ 2] + tmp[ 9]*src[ 3];
+	Ainv.m[1][2]  = tmp[ 3]*src[ 0] + tmp[ 6]*src[ 1] + tmp[11]*src[ 3];
+	Ainv.m[1][2] -= tmp[ 2]*src[ 0] + tmp[ 7]*src[ 1] + tmp[10]*src[ 3];
+	Ainv.m[1][3]  = tmp[ 4]*src[ 0] + tmp[ 9]*src[ 1] + tmp[10]*src[ 2];
+	Ainv.m[1][3] -= tmp[ 5]*src[ 0] + tmp[ 8]*src[ 1] + tmp[11]*src[ 2];
+
+	/* Compute pairs for second 8 elements (cofactors) */
+	tmp[ 0] = src[2]*src[7];
+	tmp[ 1] = src[3]*src[6];
+	tmp[ 2] = src[1]*src[7];
+	tmp[ 3] = src[3]*src[5];
+	tmp[ 4] = src[1]*src[6];
+	tmp[ 5] = src[2]*src[5];
+	tmp[ 6] = src[0]*src[7];
+	tmp[ 7] = src[3]*src[4];
+	tmp[ 8] = src[0]*src[6];
+	tmp[ 9] = src[2]*src[4];
+	tmp[10] = src[0]*src[5];
+	tmp[11] = src[1]*src[4];
+
+	/* Compute second 8 elements (cofactors) */
+	Ainv.m[2][0]  = tmp[ 0]*src[13] + tmp[ 3]*src[14] + tmp[ 4]*src[15];
+	Ainv.m[2][0] -= tmp[ 1]*src[13] + tmp[ 2]*src[14] + tmp[ 5]*src[15];
+	Ainv.m[2][1]  = tmp[ 1]*src[12] + tmp[ 6]*src[14] + tmp[ 9]*src[15];
+	Ainv.m[2][1] -= tmp[ 0]*src[12] + tmp[ 7]*src[14] + tmp[ 8]*src[15];
+	Ainv.m[2][2]  = tmp[ 2]*src[12] + tmp[ 7]*src[13] + tmp[10]*src[15];
+	Ainv.m[2][2] -= tmp[ 3]*src[12] + tmp[ 6]*src[13] + tmp[11]*src[15];
+	Ainv.m[2][3]  = tmp[ 5]*src[12] + tmp[ 8]*src[13] + tmp[11]*src[14];
+	Ainv.m[2][3] -= tmp[ 4]*src[12] + tmp[ 9]*src[13] + tmp[10]*src[14];
+	Ainv.m[3][0]  = tmp[ 2]*src[10] + tmp[ 5]*src[11] + tmp[ 1]*src[ 9];
+	Ainv.m[3][0] -= tmp[ 4]*src[11] + tmp[ 0]*src[ 9] + tmp[ 3]*src[10];
+	Ainv.m[3][1]  = tmp[ 8]*src[11] + tmp[ 0]*src[ 8] + tmp[ 7]*src[10];
+	Ainv.m[3][1] -= tmp[ 6]*src[10] + tmp[ 9]*src[11] + tmp[ 1]*src[ 8];
+	Ainv.m[3][2]  = tmp[ 6]*src[ 9] + tmp[11]*src[11] + tmp[ 3]*src[ 8];
+	Ainv.m[3][2] -= tmp[10]*src[11] + tmp[ 2]*src[ 8] + tmp[ 7]*src[ 9];
+	Ainv.m[3][3]  = tmp[10]*src[10] + tmp[ 4]*src[ 8] + tmp[ 9]*src[ 9];
+	Ainv.m[3][3] -= tmp[ 8]*src[ 9] + tmp[11]*src[10] + tmp[ 5]*src[ 8];
+
+	/* Compute determinant */
+	det = src[0]*Ainv.m[0][0] +
+	      src[1]*Ainv.m[0][1] +
+	      src[2]*Ainv.m[0][2] +
+	      src[3]*Ainv.m[0][3];
+
+	/* Compute inverse */
+	det = 1.0/det;
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++)
+			Ainv.m[i][j] *= det;
+	}
+	return (Ainv);
+}
+
 /* Return the inverse of matrix A into Ainv. */
 int
 SG_MatrixInvert(const SG_Matrix *A, SG_Matrix *Ainv)
@@ -306,10 +440,12 @@ SG_MatrixInvert(const SG_Matrix *A, SG_Matrix *Ainv)
 				Ainv->m[swap][o] = t;
 			}
 		}
+#if 1
 		if (SG_Fabs(Tmp.m[n][n] - 0.0) < 1e-12) { /* XXX arbitrary */
 			AG_SetError("Matrix singular to 1e-12");
 			return (-1);
 		}
+#endif
 
 		t = Tmp.m[n][n];
 		for (o = 0; o < 4; o++) {
@@ -333,28 +469,98 @@ SG_Matrix
 SG_MatrixTranspose(SG_Matrix M)
 {
 	SG_Matrix T;
-	int i, j;
 
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			T.m[i][j] = M.m[j][i];
-		}
-	}
+	T.m[0][0] = M.m[0][0];
+	T.m[1][0] = M.m[0][1];
+	T.m[2][0] = M.m[0][2];
+	T.m[3][0] = M.m[0][3];
+	T.m[0][1] = M.m[1][0];
+	T.m[1][1] = M.m[1][1];
+	T.m[2][1] = M.m[1][2];
+	T.m[3][1] = M.m[1][3];
+	T.m[0][2] = M.m[2][0];
+	T.m[1][2] = M.m[2][1];
+	T.m[2][2] = M.m[2][2];
+	T.m[3][2] = M.m[2][3];
+	T.m[0][3] = M.m[3][0];
+	T.m[1][3] = M.m[3][1];
+	T.m[2][3] = M.m[3][2];
+	T.m[3][3] = M.m[3][3];
 	return (T);
 }
 
 SG_Matrix
-SG_MatrixTransposep(SG_Matrix *M)
+SG_MatrixTransposep(const SG_Matrix *M)
 {
 	SG_Matrix T;
-	int i, j;
 
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			T.m[i][j] = M->m[j][i];
-		}
-	}
+	T.m[0][0] = M->m[0][0];
+	T.m[1][0] = M->m[0][1];
+	T.m[2][0] = M->m[0][2];
+	T.m[3][0] = M->m[0][3];
+	T.m[0][1] = M->m[1][0];
+	T.m[1][1] = M->m[1][1];
+	T.m[2][1] = M->m[1][2];
+	T.m[3][1] = M->m[1][3];
+	T.m[0][2] = M->m[2][0];
+	T.m[1][2] = M->m[2][1];
+	T.m[2][2] = M->m[2][2];
+	T.m[3][2] = M->m[2][3];
+	T.m[0][3] = M->m[3][0];
+	T.m[1][3] = M->m[3][1];
+	T.m[2][3] = M->m[3][2];
+	T.m[3][3] = M->m[3][3];
 	return (T);
+}
+
+void
+SG_MatrixTransposev(SG_Matrix *M)
+{
+	SG_Matrix T;
+
+	T.m[0][0] = M->m[0][0];
+	T.m[1][0] = M->m[0][1];
+	T.m[2][0] = M->m[0][2];
+	T.m[3][0] = M->m[0][3];
+	T.m[0][1] = M->m[1][0];
+	T.m[1][1] = M->m[1][1];
+	T.m[2][1] = M->m[1][2];
+	T.m[3][1] = M->m[1][3];
+	T.m[0][2] = M->m[2][0];
+	T.m[1][2] = M->m[2][1];
+	T.m[2][2] = M->m[2][2];
+	T.m[3][2] = M->m[2][3];
+	T.m[0][3] = M->m[3][0];
+	T.m[1][3] = M->m[3][1];
+	T.m[2][3] = M->m[3][2];
+	T.m[3][3] = M->m[3][3];
+	SG_MatrixCopy(M, &T);
+}
+
+void
+SG_MatrixDiagonalSwap(SG_Matrix *M)
+{
+	SG_Real tmp;
+
+//	MSWAP(M, 0,0, 0,0);
+	MSWAP(M, 1,0, 0,1);
+	MSWAP(M, 2,0, 0,2);
+	MSWAP(M, 3,0, 0,3);
+	
+	MSWAP(M, 0,1, 1,0);
+//	MSWAP(M, 1,1, 1,1);
+	MSWAP(M, 2,1, 1,2);
+	MSWAP(M, 3,1, 1,3);
+
+	MSWAP(M, 0,2, 2,0);
+	MSWAP(M, 1,2, 2,1);
+//	MSWAP(M, 2,2, 2,2);
+	MSWAP(M, 3,2, 2,3);
+
+	MSWAP(M, 0,3, 3,0);
+	MSWAP(M, 1,3, 3,1);
+	MSWAP(M, 2,3, 3,2);
+//	MSWAP(M, 3,3, 3,3);
 }
 
 /* Extract the roll, pitch and yaw angles from a rotation matrix R. */
