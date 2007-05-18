@@ -99,10 +99,10 @@ create_obj(AG_Event *event)
 		AG_Object *ch;
 		char tname[AG_OBJECT_TYPE_MAX], *s;
 	
-		if ((s = strrchr(t->type, '.')) != NULL && s[1] != '\0') {
+		if ((s = strrchr(t->ops->type, '.')) != NULL && s[1] != '\0') {
 			strlcpy(tname, &s[1], sizeof(tname));
 		} else {
-			strlcpy(tname, t->type, sizeof(tname));
+			strlcpy(tname, t->ops->type, sizeof(tname));
 		}
 		tname[0] = (char)toupper(tname[0]);
 tryname:
@@ -117,7 +117,7 @@ tryname:
 		}
 	}
 
-	nobj = Malloc(t->size, M_OBJECT);
+	nobj = Malloc(t->ops->size, M_OBJECT);
 	if (t->ops->init != NULL) {
 		t->ops->init(nobj, name);
 	} else {
@@ -759,12 +759,12 @@ create_obj_dlg(AG_Event *event)
 	AG_Checkbox *cb;
 
 	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
-	AG_WindowSetCaption(win, _("New %s object"), t->type);
+	AG_WindowSetCaption(win, _("New %s object"), t->ops->type);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->type);
+		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->ops->type);
 		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 	}
@@ -936,7 +936,7 @@ AG_ObjMgrWindow(void)
 			char label[32];
 			AG_ObjectType *t = &agTypes[i];
 
-			strlcpy(label, t->type, sizeof(label));
+			strlcpy(label, t->ops->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, t->icon,
 			    create_obj_dlg, "%p,%p", t, win);

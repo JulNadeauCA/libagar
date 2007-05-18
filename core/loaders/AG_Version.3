@@ -29,7 +29,7 @@
 .Dt AG_VERSION 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.3
 .Sh NAME
 .Nm AG_Version
 .Nd agar data file versioning
@@ -70,6 +70,12 @@ in the loader routine.
 .Ft "void"
 .Fn AG_WriteVersion "AG_Netbuf *buf" "const char *magic" "const AG_Version *ver"
 .Pp
+.Ft "int"
+.Fn AG_ReadObjectVersion "AG_Netbuf *buf" "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_WriteObjectVersion "AG_Netbuf *buf" "const AG_Object *obj"
+.Pp
 .nr nS 0
 The
 .Fn AG_ReadVersion
@@ -90,6 +96,16 @@ function writes version information from the structure
 .Fa ver
 to
 .Fa buf .
+.Pp
+The
+.Fn AG_ReadObjectVersion
+and
+.Fn AG_WriteObjectVersion
+variants use the version information contained in the
+.Ft AG_ObjectOps
+structure of
+.Xr AG_Object 3 ,
+using the name of the object class as a signature.
 .Sh SEE ALSO
 .Xr AG_Intro 3
 .Sh HISTORY

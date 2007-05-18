@@ -1069,7 +1069,7 @@ AG_ObjectLoadGeneric(void *p)
 			}
 		} else {
 		 	for (ti = 0; ti < agnTypes; ti++) {
-				if (strcmp(agTypes[ti].type, ctype) == 0)
+				if (strcmp(agTypes[ti].ops->type, ctype) == 0)
 					break;
 			}
 			if (ti == agnTypes) {
@@ -1085,7 +1085,7 @@ AG_ObjectLoadGeneric(void *p)
 				goto fail;
 			}
 
-			child = Malloc(agTypes[ti].size, M_OBJECT);
+			child = Malloc(agTypes[ti].ops->size, M_OBJECT);
 			if (agTypes[ti].ops->init != NULL) {
 				agTypes[ti].ops->init(child, cname);
 			} else {
@@ -1608,13 +1608,13 @@ AG_ObjectDuplicate(void *p)
 	AG_ObjectType *t;
 
 	for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++)
-		if (strcmp(ob->ops->type, t->type) == 0)
+		if (strcmp(ob->ops->type, t->ops->type) == 0)
 			break;
 #ifdef DEBUG
 	if (t == &agTypes[agnTypes])
 		fatal("unrecognized object type");
 #endif
-	dob = Malloc(t->size, M_OBJECT);
+	dob = Malloc(t->ops->size, M_OBJECT);
 
 	AG_MutexLock(&ob->lock);
 
@@ -1669,7 +1669,7 @@ AG_ObjectIcon(void *p)
 		return (NULL);
 	}
 	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].type, obj->ops->type) == 0)
+		if (strcmp(agTypes[i].ops->type, obj->ops->type) == 0)
 			return (agTypes[i].icon >= 0 ? AGICON(agTypes[i].icon) :
 			    NULL);
 	}
