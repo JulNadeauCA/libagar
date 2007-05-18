@@ -68,7 +68,7 @@ SG_MaterialNew(void *parent, const char *name)
 
 	mat = Malloc(sizeof(SG_Material), M_OBJECT);
 	SG_MaterialInit(mat, name);
-	AG_ObjectAttach(parent, mat);
+	SG_NodeAttach(parent, mat);
 	return (mat);
 }
 
