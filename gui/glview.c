@@ -127,6 +127,7 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 		fatal("widget requires OpenGL mode");
 
 	glv->draw_ev = NULL;
+	glv->overlay_ev = NULL;
 	glv->scale_ev = NULL;
 	glv->keydown_ev = NULL;
 	glv->btndown_ev = NULL;
@@ -153,6 +154,13 @@ AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
+}
+
+void
+AG_GLViewOverlayFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
+{
+	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(glv->overlay_ev, fmt);
 }
 
 void
@@ -211,7 +219,7 @@ AG_GLViewReshape(AG_GLView *glv)
 	
 	glLoadIdentity();
 	if (glv->scale_ev != NULL) {
-		glv->scale_ev->handler(glv->draw_ev);
+		glv->scale_ev->handler(glv->scale_ev);
 	}
 	glGetDoublev(GL_PROJECTION_MATRIX, glv->mProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, glv->mModelview);
@@ -281,6 +289,9 @@ AG_GLViewDraw(void *p)
 	glPopMatrix();
 	
 	glViewport(0, 0, agView->w, agView->h);
+	
+	if (glv->overlay_ev != NULL)
+		glv->overlay_ev->handler(glv->overlay_ev);
 }
 
 #endif /* HAVE_OPENGL */
