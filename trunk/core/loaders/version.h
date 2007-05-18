@@ -17,6 +17,8 @@ __BEGIN_DECLS
 int	AG_ReadVersion(AG_Netbuf *, const char *, const AG_Version *,
 	               AG_Version *);
 void	AG_WriteVersion(AG_Netbuf *, const char *, const AG_Version *);
+int	AG_ReadObjectVersion(AG_Netbuf *, void *, AG_Version *);
+void	AG_WriteObjectVersion(AG_Netbuf *, void *);
 __END_DECLS
 
 #include "close_code.h"

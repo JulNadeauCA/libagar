@@ -41,7 +41,7 @@ AG_InitTypeSw(void)
 {
 	agTypes = Malloc(sizeof(AG_ObjectType), M_TYPESW);
 	agnTypes = 0;
-	AG_RegisterType("object", sizeof(AG_Object), &agObjectOps, OBJ_ICON);
+	AG_RegisterType(&agObjectOps, OBJ_ICON);
 }
 
 void
@@ -51,15 +51,12 @@ AG_DestroyTypeSw(void)
 }
 
 void
-AG_RegisterType(const char *type, size_t size, const AG_ObjectOps *ops,
-    int icon)
+AG_RegisterType(const AG_ObjectOps *ops, int icon)
 {
 	AG_ObjectType *ntype;
 
 	agTypes = Realloc(agTypes, (agnTypes+1)*sizeof(AG_ObjectType));
 	ntype = &agTypes[agnTypes++];
-	strlcpy(ntype->type, type, sizeof(ntype->type));
-	ntype->size = size;
 	ntype->ops = ops != NULL ? ops : &agObjectOps;
 	ntype->icon = icon;
 }
@@ -70,7 +67,7 @@ AG_FindType(const char *type)
 	int i;
 
 	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].type, type) == 0)
+		if (strcmp(agTypes[i].ops->type, type) == 0)
 			return (&agTypes[i]);
 	}
 	return (NULL);
