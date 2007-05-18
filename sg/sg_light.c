@@ -109,15 +109,14 @@ SG_LightInit(void *p, const char *name)
 	lt->ambient = SG_ColorRGB(0.0, 0.0, 0.0);
 	lt->diffuse = SG_ColorRGB(1.0, 1.0, 1.0);
 	lt->specular = SG_ColorRGB(1.0, 1.0, 1.0);
-	lt->spot_exponent = 0.0;
+	lt->spot_exponent = 3.0;
 	lt->spot_cutoff = 180.0;
 	lt->Kc = 1.0;
 	lt->Kl = 0.0;
 	lt->Kq = 0.0;
 	lt->cyl = (GLUquadricObj *)gluNewQuadric();
-	gluQuadricDrawStyle(lt->cyl, GLU_LINE);
+	gluQuadricDrawStyle(lt->cyl, GLU_FILL);
 	gluQuadricNormals(lt->cyl, GLU_SMOOTH);
-	gluQuadricOrientation(lt->cyl, GLU_INSIDE);
 }
 
 void
@@ -195,11 +194,30 @@ void
 SG_LightDraw(void *p, SG_View *view)
 {
 	SG_Light *lt = p;
-	float pos[4] = { 0.0, 0.0, 0.0, 1.0 };
-	SG_Vector dir = SG_NodeDir(lt);
+
+	return;
+
+	if (lt->spot_cutoff == 180.0) {
+		gluSphere(lt->cyl, 0.125, 4, 4);
+	} else {
+		gluCylinder(lt->cyl, 0.125, 0.125, 1.0, 4, 3); 
+	}
+}
+
+void
+SG_LightSetup(SG_Light *lt, SG_View *view)
+{
+	SG_Vector v;
+	GLfloat posf[4];
+	GLfloat dirf[4];
 
 	glEnable(lt->light);
-	glLightfv(lt->light, GL_POSITION, pos);
+	v = SG_NodePos(lt);
+	posf[0] = v.x;
+	posf[1] = v.y;
+	posf[2] = v.z;
+	posf[3] = 1.0;
+	glLightfv(lt->light, GL_POSITION, posf);
 
 #ifdef SG_DOUBLE_PRECISION
 	{
@@ -215,9 +233,12 @@ SG_LightDraw(void *p, SG_View *view)
 		glLightfv(lt->light, GL_SPECULAR, specular);
 
 		if (lt->spot_cutoff != 180.0) {
-			GLfloat fDir[3] = { dir.x, dir.y, dir.z };
-
-			glLightfv(lt->light, GL_SPOT_DIRECTION, fDir);
+			v = SG_NodeDir(lt);
+			dirf[0] = v.x;
+			dirf[1] = v.y;
+			dirf[2] = v.z;
+			dirf[3] = 1.0;
+			glLightfv(lt->light, GL_SPOT_DIRECTION, dirf);
 		}
 	}
 #else
@@ -225,7 +246,7 @@ SG_LightDraw(void *p, SG_View *view)
 	glLightfv(lt->light, GL_DIFFUSE, (GLfloat *)&lt->diffuse);
 	glLightfv(lt->light, GL_SPECULAR, (GLfloat *)&lt->specular);
 	if (lt->spot_cutoff != 180.0) {
-		glLightfv(lt->light, GL_SPOT_DIRECTION, (GLfloat *)&dir);
+		glLightfv(lt->light, GL_SPOT_DIRECTION, dirf);
 	}
 #endif
 	glLightf(lt->light, GL_SPOT_EXPONENT, (GLfloat)lt->spot_exponent);
@@ -233,12 +254,6 @@ SG_LightDraw(void *p, SG_View *view)
 	glLightf(lt->light, GL_CONSTANT_ATTENUATION, (GLfloat)lt->Kc);
 	glLightf(lt->light, GL_LINEAR_ATTENUATION, (GLfloat)lt->Kl);
 	glLightf(lt->light, GL_QUADRATIC_ATTENUATION, (GLfloat)lt->Kq);
-
-	if (lt->spot_cutoff == 180.0) {
-		gluSphere(lt->cyl, 0.125, 4, 4);
-	} else {
-		gluCylinder(lt->cyl, 0.125, 0.125, 1.0, 4, 3); 
-	}
 }
 
 static void
@@ -262,20 +277,22 @@ SG_LightEdit(void *p, AG_Widget *box, SG_View *sgv)
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("Src"), AG_BOX_VERT);
 	{
-		SG_EditTranslate4(ntab, _("Position: "), &SGNODE(lt)->T);
+		SG_EditTranslate3(ntab, _("Position: "), &SGNODE(lt)->T);
 		SG_SpinInt(ntab, _("Priority: "), &lt->pri);
 		AG_SeparatorNewHoriz(ntab);
 		AG_LabelNewFmt(ntab, _("Using: GL_LIGHT%i"),
 		    (int)(lt->light - GL_LIGHT0));
 		AG_SeparatorNewHoriz(ntab);
-		SG_SpinRealInc(ntab, _("Cutoff angle: "), &lt->spot_cutoff,1.0);
-		SG_SpinReal(ntab, _("Spot exponent: "), &lt->spot_exponent);
+		SG_SpinRealInc(ntab, _("Cutoff angle: "), &lt->spot_cutoff,
+		                                          1.0);
+		SG_SpinRealInc(ntab, _("Spot exponent: "), &lt->spot_exponent,
+		                                           0.1);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Attenuation"), AG_BOX_VERT);
 	{
-		SG_SpinReal(ntab, _("Constant: "), &lt->Kc);
-		SG_SpinReal(ntab, _("Linear: "), &lt->Kl);
-		SG_SpinReal(ntab, _("Quadratic: "), &lt->Kq);
+		SG_SpinRealInc(ntab, _("Constant: "), &lt->Kc, 0.01);
+		SG_SpinRealInc(ntab, _("Linear: "), &lt->Kl, 0.001);
+		SG_SpinRealInc(ntab, _("Quadratic: "), &lt->Kq, 0.00001);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{

@@ -34,7 +34,7 @@ void		 SG_LightInit(void *, const char *);
 void		 SG_LightDestroy(void *);
 int		 SG_LightLoad(void *, AG_Netbuf *);
 int		 SG_LightSave(void *, AG_Netbuf *);
-__inline__ void	 SG_LightSetup(SG_Light *);
+void	 	 SG_LightSetup(SG_Light *, SG_View *);
 void		 SG_LightAlloc(SG_Light *, int);
 void		 SG_LightDraw(void *, SG_View *);
 void		 SG_LightEdit(void *, AG_Widget *, SG_View *);
