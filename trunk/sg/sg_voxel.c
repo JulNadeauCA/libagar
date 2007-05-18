@@ -104,10 +104,11 @@ fail_mem:
 }
 
 void
-SG_VoxelSet3(SG_Voxel *vol, Uint x, Uint y, Uint z, SG_Real v)
+SG_VoxelSet3(SG_Voxel *vol, int x, int y, int z, SG_Real v)
 {
-	if (x >= vol->w || y >= vol->h || z >= vol->d) {
-		fprintf(stderr, "VoxelSet3: Illegal cell %u,%u,%u\n",
+	if (x < 0 || y < 0 || z < 0 ||
+	    x >= (int)vol->w || y >= (int)vol->h || z >= (int)vol->d) {
+		fprintf(stderr, "VoxelSet3: Illegal cell %d,%d,%d\n",
 		    x, y, z);
 	} else {
 		vol->map[x][y][z] = v;
@@ -167,6 +168,7 @@ SG_VoxelDraw(void *pNode, SG_View *sgv)
 	for (x = 0; x < vol->w; x++) {
 		for (y = 0; y < vol->h; y++) {
 			for (z = 0; z < vol->d; z++) {
+				SG_Color color;
 				SG_Real c;
 			
 				c = vol->map[x][y][z];
@@ -176,13 +178,12 @@ SG_VoxelDraw(void *pNode, SG_View *sgv)
 				}
 				glPushMatrix();
 				glTranslatef(x, y, z);
-		
+
+				color = SG_ColorRGB(0.0,c,0.0);
 				SG_Begin(SG_QUADS);
-				if (c > 0.0) {
-					SG_Color3(SG_ColorRGB(c,0.0,0.0));
-				} else {
-					SG_Color3(SG_ColorRGB(0.0,0.0,c));
-				}
+				SG_MaterialColor(GL_FRONT, GL_AMBIENT, &color);
+				SG_MaterialColor(GL_FRONT, GL_DIFFUSE, &color);
+				SG_MaterialColor(GL_FRONT, GL_SPECULAR, &color);
 				SG_Normal3(0.0, -1.0, 0.0);	/* TOP */
 				SG_Vertex3v(&p[7]);
 				SG_Vertex3v(&p[6]);

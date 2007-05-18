@@ -18,5 +18,5 @@ void SG_VoxelDraw(void *, SG_View *);
 
 void SG_VoxelAlloc3(SG_Voxel *, Uint, Uint, Uint);
 __inline__ void SG_VoxelReset(SG_Voxel *, SG_Real);
-__inline__ void SG_VoxelSet3(SG_Voxel *, Uint, Uint, Uint, SG_Real);
+__inline__ void SG_VoxelSet3(SG_Voxel *, int, int, int, SG_Real);
 __END_DECLS
