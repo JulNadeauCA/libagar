@@ -18,14 +18,17 @@ void		SG_MatrixToFloats(float *, const SG_Matrix *);
 void		SG_MatrixToDoubles(double *, const SG_Matrix *);
 void		SG_MatrixDirection(const SG_Matrix *, SG_Vector *, SG_Vector *,
 		                   SG_Vector *);
-SG_Matrix	SG_MatrixTranspose(SG_Matrix);
-SG_Matrix	SG_MatrixTransposep(SG_Matrix *);
+__inline__ SG_Matrix	SG_MatrixTranspose(SG_Matrix);
+__inline__ SG_Matrix	SG_MatrixTransposep(const SG_Matrix *);
+__inline__ void		SG_MatrixTransposev(SG_Matrix *);
+__inline__ void		SG_MatrixDiagonalSwap(SG_Matrix *);
 
 __inline__ SG_Matrix	SG_MatrixMult(SG_Matrix, SG_Matrix);
 __inline__ void		SG_MatrixMultv(SG_Matrix *, const SG_Matrix *);
 __inline__ void		SG_MatrixMultpv(SG_Matrix *, const SG_Matrix *,
 			                const SG_Matrix *);
 int			SG_MatrixInvert(const SG_Matrix *, SG_Matrix *);
+SG_Matrix		SG_MatrixInvertCramerp(const SG_Matrix *);
 
 __inline__ SG_Vector	SG_MatrixMultVector(SG_Matrix, SG_Vector);
 __inline__ SG_Vector	SG_MatrixMultVectorp(const SG_Matrix *,
