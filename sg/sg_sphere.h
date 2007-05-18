@@ -3,7 +3,6 @@
 
 typedef struct sg_sphere {
 	struct sg_object obj;
-	SG_Real radius;		/* Radius of sphere */
 	int tesslvl;		/* Tesselation level */
 } SG_Sphere;
 

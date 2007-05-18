@@ -31,9 +31,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-
 #define X 0.525731112119133606
 #define Z 0.850650808352039932
 
@@ -68,7 +65,6 @@ SG_SphereInit(void *p, const char *name)
 
 	SG_ObjectInit(sph, name);
 	SGNODE(sph)->ops = &sgSphereOps;
-	sph->radius = 1.0;
 	sph->tesslvl = 1;
 	SG_SphereGen(sph);
 }
@@ -81,13 +77,7 @@ SG_SphereLoad(void *p, AG_Netbuf *buf)
 	if (SG_ObjectLoad(sph, buf) == -1) {
 		return (-1);
 	}
-	sph->radius = SG_ReadReal(buf);
 	sph->tesslvl = AG_ReadUint16(buf);
-
-	if (sph->radius <= 0.0) {
-		AG_SetError("Sphere has <=0 radius");
-		return (-1);
-	}
 	return (0);
 }
 
@@ -99,7 +89,6 @@ SG_SphereSave(void *p, AG_Netbuf *buf)
 	if (SG_ObjectSave(sph, buf) == -1) {
 		return (-1);
 	}
-	SG_WriteReal(buf, sph->radius);
 	AG_WriteUint16(buf, sph->tesslvl);
 	return (0);
 }
@@ -118,7 +107,6 @@ SG_SphereEdit(void *p, AG_Widget *box, SG_View *sgv)
 
 	SG_ObjectEdit(p, box, sgv);
 
-	SG_SpinReal(box, _("Radius"), &sph->radius);
 	SG_SpinInt(box, _("Subdivisions"), &sph->tesslvl);
 	btn = AG_ButtonAct(box, AG_BUTTON_HFILL, _("Generate"),
 	    Generate, "%p", sph);
@@ -185,6 +173,8 @@ SG_SphereDraw(void *p, SG_View *view)
 	d = SG_VectorDistance(SG_NodePos(view->cam),
 	                      SG_NodePos(sph));
 
+	printf("d = %f\n", d);
+
 	if (d < 2.0) { lod = 4; }
 	else if (d < 5.0) { lod = 3; } 
 	else if (d < 20.0) { lod = 2; } 
@@ -194,7 +184,6 @@ SG_SphereDraw(void *p, SG_View *view)
 	if (lod != sph->tesslvl) {
 		sph->tesslvl = lod;
 		SG_SphereGen(sph);
-		dprintf("%s: dist=%f, lod=%d\n", SGNODE(sph)->name, d, lod);
 	}
 	SG_ObjectDraw(sph, view);
 }
