@@ -1,0 +1,772 @@
+/*	$Csoft: matview.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
+
+/*
+ * Copyright (c) 2005 CubeSoft Communications, Inc.
+ * <http://www.csoft.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <agar/core/core.h>
+#include <agar/core/view.h>
+
+#include "sc_plotter.h"
+
+#include <agar/gui/gui.h>
+#include <agar/gui/primitive.h>
+
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
+
+static AG_WidgetOps scPlotterOps = {
+	{
+		"AG_Widget:SC_Plotter",
+		sizeof(SC_Plotter),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		NULL,			/* destroy */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	SC_PlotterDraw,
+	SC_PlotterScale
+};
+
+SC_Plotter *
+SC_PlotterNew(void *parent, Uint flags)
+{
+	SC_Plotter *pl;
+
+	pl = Malloc(sizeof(SC_Plotter), M_OBJECT);
+	SC_PlotterInit(pl, flags);
+	AG_ObjectAttach(parent, pl);
+	return (pl);
+}
+
+static void
+Keydown(AG_Event *event)
+{
+	SC_Plotter *ptr = AG_SELF();
+	int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case SDLK_0:
+	case SDLK_1:
+		ptr->yScale = 1.0;
+		break;
+	case SDLK_EQUALS:
+		ptr->yScale += 0.125;
+		break;
+	case SDLK_MINUS:
+		ptr->yScale -= 0.125;
+		break;
+	}
+	if (ptr->yScale <= 0.125) { ptr->yScale = 0.125; }
+}
+
+static __inline__ int
+MouseOverPlotItem(SC_Plotter *ptr, SC_Plot *pl, int x, int y)
+{
+	SDL_Surface *lbl;
+	
+	if (pl->label < 0) { return (0); }
+	lbl = AGWIDGET_SURFACE(ptr,pl->label);
+	return (x >= pl->xLabel && x <= (pl->xLabel + lbl->w) &&
+	        y >= pl->yLabel && y <= (pl->yLabel + lbl->h));
+}
+
+static void
+Mousemotion(AG_Event *event)
+{
+	SC_Plotter *ptr = AG_SELF();
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+	int dx = AG_INT(3);
+	int dy = AG_INT(4);
+	int state = AG_INT(5);
+	SC_Plot *pl;
+
+	if (!AG_WidgetRelativeArea(ptr, x, y))
+		return;
+
+	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		if (pl->flags & SC_PLOT_SELECTED &&
+		    state & SDL_BUTTON_LEFT) {
+			pl->yOffs += dy;
+		}
+		if (MouseOverPlotItem(ptr, pl, x, y)) {
+			pl->flags |= SC_PLOT_MOUSEOVER;
+		} else {
+			pl->flags &= ~SC_PLOT_MOUSEOVER;
+		}
+	}
+}
+
+#if 0
+static void
+Buttonup(AG_Event *event)
+{
+	SC_Plotter *ptr = AG_SELF();
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+	SC_Plot *pl;
+
+	switch (button) {
+	case SDL_BUTTON_LEFT:
+		TAILQ_FOREACH(pl, &ptr->plots, plots) {
+			pl->flags &= ~SC_PLOT_DRAGGING;
+		}
+		break;
+	}
+}
+#endif
+
+void
+SC_PlotUpdateLabel(SC_Plotter *ptr, SC_Plot *pl)
+{
+	if (pl->label >= 0) {
+		AG_WidgetUnmapSurface(ptr, pl->label);
+	}
+	pl->label = (pl->label_txt != NULL) ? AG_WidgetMapSurface(ptr,
+	    AG_TextRender(ptr->fontFace, ptr->fontSize, pl->color,
+	    pl->label_txt)) : -1;
+}
+
+static void
+UpdateLabel(AG_Event *event)
+{
+	SC_PlotUpdateLabel(AG_PTR(1), AG_PTR(2));
+}
+
+static void
+UpdatePlotTbl(AG_Event *event)
+{
+	AG_Table *tbl = AG_SELF();
+	SC_Plotter *ptr = AG_PTR(1);
+	SC_Plot *pl = AG_PTR(2);
+	Uint i, j;
+
+	AG_TableBegin(tbl);
+	for (i = 0; i < pl->n; i++) {
+		if (pl->type == SC_PLOT_VECTORS) {
+			SC_Vector *v = pl->data.v[i];
+			for (j = 1; j <= v->m; j++) {
+				AG_TableAddRow(tbl, "%u[%u]:%f", i, j,
+				    v->mat[j][1]);
+			}
+		} else {
+			AG_TableAddRow(tbl, "%u:%f", pl->data.r[i]);
+		}
+	}
+	AG_TableEnd(tbl);
+}
+
+AG_Window *
+SC_PlotSettings(SC_Plotter *ptr, SC_Plot *pl)
+{
+	AG_Window *win;
+	AG_Notebook *nb;
+	AG_NotebookTab *ntab;
+	const char *type_names[] = {
+		N_("Points"),
+		N_("Linear interpolation"),
+		N_("Cubic spline interpolation"),
+		NULL
+	};
+
+	if ((win = AG_WindowNewNamed(0, "plotter%p-%p", ptr, pl)) == NULL) {
+		return (NULL);
+	}
+	AG_WindowSetCaption(win, _("Plot settings"));
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
+
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
+	ntab = AG_NotebookAddTab(nb, _("Trace"), AG_BOX_VERT);
+	{
+		AG_MFSpinbutton *mfsb;
+		AG_FSpinbutton *fsb;
+		AG_Radio *rad;
+
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, type_names);
+		AG_WidgetBindInt(rad, "value", &pl->type);
+		
+		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("X-offset: "));
+		AG_WidgetBindInt(fsb, "value", &pl->xOffs);
+		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("Y-offset: "));
+		AG_WidgetBindInt(fsb, "value", &pl->yOffs);
+		AG_FSpinbuttonSetIncrement(fsb, 5.0);
+		
+		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("X-scale: "));
+		AG_WidgetBindInt(fsb, "value", &pl->xScale);
+		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Y-scale: "));
+		AG_WidgetBindInt(fsb, "value", &pl->yScale);
+	}
+	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
+	{
+		AG_HSVPal *pal;
+
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
+		AG_WidgetBindPointer(pal, "pixel-format", &agVideoFmt);
+		AG_WidgetBindUint32(pal, "pixel", &pl->color);
+		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p,%p", ptr, pl);
+		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p,%p", ptr, pl);
+	}
+	ntab = AG_NotebookAddTab(nb, _("Table"), AG_BOX_VERT);
+	{
+		AG_Table *tbl;
+
+		tbl = AG_TableNewPolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+		    UpdatePlotTbl, "%p,%p", ptr, pl);
+		AG_TableAddCol(tbl, _("#"), "<88888>", NULL);
+		AG_TableAddCol(tbl, _("Value"), NULL, NULL);
+	}
+	AG_WindowShow(win);
+	return (win);
+}
+
+static void
+ShowPlotSettings(AG_Event *event)
+{
+	SC_Plotter *ptr = AG_PTR(1);
+	SC_Plot *pl = AG_PTR(2);
+
+	SC_PlotSettings(ptr, pl);
+}
+
+static void
+Buttondown(AG_Event *event)
+{
+	SC_Plotter *ptr = AG_SELF();
+	SC_Plot *pl, *opl;
+	int button = AG_INT(1);
+	int x = AG_INT(2);
+	int y = AG_INT(3);
+	SDLMod mod = SDL_GetModState();
+
+	switch (button) {
+	case SDL_BUTTON_LEFT:
+		AG_WidgetFocus(ptr);
+		if (mod & (KMOD_CTRL|KMOD_SHIFT)) {
+			TAILQ_FOREACH(pl, &ptr->plots, plots) {
+				if (!MouseOverPlotItem(ptr, pl, x, y)) {
+					continue;
+				}
+				if (pl->flags & SC_PLOT_SELECTED) {
+					pl->flags &= ~SC_PLOT_SELECTED;
+				} else {
+					pl->flags |= SC_PLOT_SELECTED;
+				}
+			}
+		} else {
+			TAILQ_FOREACH(pl, &ptr->plots, plots) {
+				if (MouseOverPlotItem(ptr, pl, x, y))
+					break;
+			}
+			if (pl != NULL) {
+				TAILQ_FOREACH(opl, &ptr->plots, plots) {
+					opl->flags &= ~SC_PLOT_SELECTED;
+				}
+				pl->flags |= SC_PLOT_SELECTED;
+			}
+		}
+		break;
+	case SDL_BUTTON_RIGHT:
+		AG_WidgetFocus(ptr);
+		TAILQ_FOREACH(pl, &ptr->plots, plots) {
+			if (MouseOverPlotItem(ptr, pl, x, y)) {
+				AG_PopupMenu *pm;
+
+				pm = AG_PopupNew(ptr);
+				AG_MenuAction(pm->item, _("Plot settings"), -1,
+				    ShowPlotSettings, "%p,%p", ptr, pl);
+				AG_PopupShow(pm);
+				break;
+			}
+		}
+		break;
+	case SDL_BUTTON_WHEELDOWN:
+		TAILQ_FOREACH(pl, &ptr->plots, plots) {
+			if (! (pl->flags & SC_PLOT_SELECTED)) { continue; }
+			pl->yScale -= 0.250;
+		}
+		break;
+	case SDL_BUTTON_WHEELUP:
+		TAILQ_FOREACH(pl, &ptr->plots, plots) {
+			if (! (pl->flags & SC_PLOT_SELECTED)) { continue; }
+			pl->yScale += 0.250;
+		}
+		break;
+	default:
+		break;
+	}
+	if (ptr->xScale <= 0.0625) { ptr->xScale = 0.0625; }
+	if (ptr->yScale <= 0.0625) { ptr->yScale = 0.0625; }
+}
+
+static void
+UpdateXBar(AG_Event *event)
+{
+	AG_Scrollbar *sbar = AG_SELF();
+	SC_Plotter *ptr = AG_PTR(1);
+	int value = AG_INT(2);
+
+	if (value >= ptr->xMax - AGWIDGET(ptr)->w) {
+		ptr->flags |= SC_PLOTTER_SCROLL;
+	} else {
+		ptr->flags &= ~SC_PLOTTER_SCROLL;
+	}
+}
+
+void
+SC_PlotterInit(SC_Plotter *ptr, Uint flags)
+{
+	Uint wflags = AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
+	int i;
+
+	if (flags & SC_PLOTTER_HFILL) wflags |= AG_WIDGET_HFILL;
+	if (flags & SC_PLOTTER_VFILL) wflags |= AG_WIDGET_VFILL;
+
+	AG_WidgetInit(ptr, "plotter", &scPlotterOps, wflags);
+	ptr->type = SC_PLOT_2D;
+	ptr->flags = flags;
+	ptr->xMax = 0;
+	ptr->yMin = 0.0;
+	ptr->yMax = 0.0;
+	ptr->vMin = SC_VectorNewZero(3);
+	ptr->vMax = SC_VectorNewZero(3);
+	ptr->xOffs = 0;
+	ptr->yOffs = 0;
+	ptr->wPre = 128;
+	ptr->hPre = 64;
+	ptr->xScale = 1.0;
+	ptr->yScale = 1.0;
+	ptr->fontFace = NULL;
+	ptr->fontSize = -1;
+	TAILQ_INIT(&ptr->plots);
+
+	ptr->curColor = 0;
+	ptr->colors[0] = SDL_MapRGB(agVideoFmt, 255, 255, 255);
+	ptr->colors[1] = SDL_MapRGB(agVideoFmt, 0, 250, 0); 
+	ptr->colors[2] = SDL_MapRGB(agVideoFmt, 250, 250, 0);
+	ptr->colors[3] = SDL_MapRGB(agVideoFmt, 0, 118, 163);
+	ptr->colors[4] = SDL_MapRGB(agVideoFmt, 175, 143, 44);
+	ptr->colors[5] = SDL_MapRGB(agVideoFmt, 169, 172, 182);
+	ptr->colors[6] = SDL_MapRGB(agVideoFmt, 255, 255, 255);
+	ptr->colors[7] = SDL_MapRGB(agVideoFmt, 59, 122, 87);
+	ptr->colors[8] = SDL_MapRGB(agVideoFmt, 163, 151, 180);
+	ptr->colors[9] = SDL_MapRGB(agVideoFmt, 249, 234, 243);
+	ptr->colors[10] = SDL_MapRGB(agVideoFmt, 157, 229, 255);
+	ptr->colors[11] = SDL_MapRGB(agVideoFmt, 223, 190, 111);
+	ptr->colors[12] = SDL_MapRGB(agVideoFmt, 79, 168, 61);
+	ptr->colors[13] = SDL_MapRGB(agVideoFmt, 234, 147, 115);
+	ptr->colors[14] = SDL_MapRGB(agVideoFmt, 127, 255, 212);
+	ptr->colors[15] = SDL_MapRGB(agVideoFmt, 218, 99, 4);
+	
+	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
+	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
+	AG_WidgetBind(ptr->hbar, "value", AG_WIDGET_INT, &ptr->xOffs);
+	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &AGWIDGET(ptr)->w);
+	AG_WidgetBind(ptr->hbar, "max", AG_WIDGET_INT, &ptr->xMax);
+	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
+
+	AG_WidgetBind(ptr->vbar, "value", AG_WIDGET_INT, &ptr->yOffs);
+//	AG_WidgetBind(ptr->vbar, "max", AG_WIDGET_INT, &ptr->yMax);
+	AG_WidgetSetInt(ptr->hbar, "min", 0);
+	AG_WidgetSetInt(ptr->vbar, "min", 0);
+
+	AG_SetEvent(ptr, "window-keydown", Keydown, NULL);
+	AG_SetEvent(ptr, "window-mousebuttondown", Buttondown, NULL);
+//	AG_SetEvent(ptr, "window-mousebuttonup", Buttonup, NULL);
+	AG_SetEvent(ptr, "window-mousemotion", Mousemotion, NULL);
+}
+
+void
+SC_PlotterPrescale(SC_Plotter *ptr, Uint w, Uint h)
+{
+	ptr->wPre = w;
+	ptr->hPre = h;
+}
+
+void
+SC_PlotterScale(void *p, int w, int h)
+{
+	SC_Plotter *ptr = p;
+	SC_Plot *pl;
+
+	if (w == -1 && h == -1) {
+		AGWIDGET(ptr)->w = ptr->wPre;
+		AGWIDGET(ptr)->h = ptr->hPre;
+		return;
+	}
+
+	AGWIDGET(ptr->hbar)->x = 0;
+	AGWIDGET(ptr->hbar)->y = AGWIDGET(ptr)->h - ptr->hbar->bw;
+	AGWIDGET(ptr->hbar)->w = AGWIDGET(ptr)->w;
+	AGWIDGET(ptr->hbar)->h = ptr->hbar->bw;
+
+	AGWIDGET(ptr->vbar)->x = AGWIDGET(ptr)->w - ptr->vbar->bw;
+	AGWIDGET(ptr->vbar)->y = ptr->vbar->bw;
+	AGWIDGET(ptr->vbar)->w = ptr->vbar->bw;
+	AGWIDGET(ptr->vbar)->h = AGWIDGET(ptr)->h - ptr->vbar->bw;
+#if 0	
+	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		SDL_Surface *lbl;
+		
+		if (pl->label == -1) { continue; }
+		lbl = AGWIDGET_SURFACE(ptr,pl->label);
+		if (pl->xLabel+lbl->w > w) { pl->xLabel = w - lbl->w; }
+		if (pl->yLabel+lbl->h > h) { pl->yLabel = h - lbl->h; }
+	}
+#endif
+}
+
+static __inline__ SC_Real
+SC_PlotterScaleReal(SC_Plotter *ptr, SC_Plot *pl, SC_Real r)
+{
+	return ((float)r*(ptr->yScale*pl->yScale));
+}
+
+void
+SC_PlotterDraw(void *p)
+{
+	SC_Plotter *ptr = p;
+	SC_Plot *pl;
+	int y0 = AGWIDGET(ptr)->h/2;
+	Uint i;
+
+	agPrim.box(ptr, 0, 0, AGWIDGET(ptr)->w, AGWIDGET(ptr)->h, -1,
+	    AG_COLOR(BG_COLOR));
+	agPrim.hline(ptr, 1, AGWIDGET(ptr)->w-2, y0, ptr->colors[0]);
+	agPrim.vline(ptr, ptr->xMax-1, 1, AGWIDGET(ptr)->h-2, ptr->colors[0]);
+
+	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		int x = pl->xOffs - ptr->xOffs;
+		int y, py = y0+pl->yOffs+ptr->yOffs;
+
+		if (pl->label >= 0) {
+			SDL_Surface *lbl = AGWIDGET_SURFACE(ptr,pl->label);
+
+			if (pl->flags & SC_PLOT_SELECTED) {
+				agPrim.rect_outlined(ptr,
+				    pl->xLabel-2, pl->yLabel-2,
+				    lbl->w+4, lbl->h+4,
+				    pl->color);
+			} else if (pl->flags & SC_PLOT_MOUSEOVER) {
+				agPrim.rect_outlined(ptr,
+				    pl->xLabel-2, pl->yLabel-2,
+				    lbl->w+4, lbl->h+4,
+				    AG_COLOR(TEXT_COLOR));
+			}
+			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
+			    pl->yLabel);
+		}
+		switch (pl->type) {
+		case SC_PLOT_POINTS:
+			for (i = 0; i < pl->n; i++, x++) {
+				if (x < 0) { continue; }
+				y = SC_PlotterScaleReal(ptr, pl, pl->data.r[i]);
+				AG_WidgetPutPixel(ptr, x,
+				    y0 - y + pl->yOffs + ptr->yOffs,
+				    pl->color);
+				if (x > AGWIDGET(ptr)->w) { break; }
+			}
+			break;
+		case SC_PLOT_LINEAR:
+			for (i = 0; i < pl->n; i++, x++) {
+				if (x < 0) { continue; }
+				y = SC_PlotterScaleReal(ptr, pl, pl->data.r[i]);
+				agPrim.line(ptr, x-1, py, x,
+				    y0 - y + pl->yOffs + ptr->yOffs,
+				    pl->color);
+				py = y0 - y + pl->yOffs + ptr->yOffs;
+				if (x > AGWIDGET(ptr)->w) { break; }
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void
+SC_PlotReal(SC_Plotter *ptr, SC_Plot *pl, SC_Real v)
+{
+	pl->data.r = Realloc(pl->data.r, (pl->n+1)*sizeof(SC_Real));
+	pl->data.r[pl->n] = v;
+	if (++pl->n > ptr->xMax) { ptr->xMax = pl->n; }
+	if (v > ptr->yMax) { ptr->yMax = v; }
+	if (v < ptr->yMin) { ptr->yMin = v; }
+}
+
+void
+SC_PlotRealv(SC_Plotter *ptr, SC_Plot *pl, Uint n, const SC_Real *vp)
+{
+	Uint i;
+
+	pl->data.r = Realloc(pl->data.r, (pl->n+n)*sizeof(SC_Real));
+	memcpy(&pl->data.r[pl->n], vp, n*sizeof(SC_Real));
+	if ((pl->n += n) > ptr->xMax) { ptr->xMax = pl->n; }
+	for (i = 0; i < n; i++) {
+		if (vp[i] > ptr->yMax) { ptr->yMax = vp[i]; }
+		if (vp[i] < ptr->yMin) { ptr->yMin = vp[i]; }
+	}
+}
+
+void
+SC_PlotVector(SC_Plotter *ptr, SC_Plot *pl, const SC_Vector *v)
+{
+	pl->data.v = Realloc(pl->data.v, (pl->n+1)*sizeof(SC_Vector));
+	pl->data.v[pl->n] = SC_VectorNew(v->n);
+	SC_VectorMinimum(ptr->vMin, ptr->vMin, v);
+	SC_VectorMaximum(ptr->vMax, ptr->vMax, v);
+	SC_VectorCopy(v, pl->data.v[pl->n]);
+	pl->n++;
+}
+
+void
+SC_PlotVectorv(SC_Plotter *ptr, SC_Plot *pl, Uint n, const SC_Vector **vp)
+{
+	Uint i;
+
+	pl->data.v = Realloc(pl->data.v, (pl->n+n)*sizeof(SC_Vector));
+	for (i = 0; i < n; i++) {
+		pl->data.v[pl->n+i] = SC_VectorNew(vp[i]->n);
+		SC_VectorMinimum(ptr->vMin, ptr->vMin, vp[i]);
+		SC_VectorMaximum(ptr->vMax, ptr->vMax, vp[i]);
+		SC_VectorCopy(vp[i], pl->data.v[pl->n+i]);
+	}
+	pl->n += n;
+}
+
+static __inline__ void
+SC_PlotDerivative(SC_Plotter *ptr, SC_Plot *dp)
+{
+	SC_Plot *p = dp->src.plot;
+
+	if (p->n >= 2) {
+		SC_PlotReal(ptr, dp,
+		    p->data.r[p->n-1] - p->data.r[p->n-2]);
+	} else {
+		SC_PlotReal(ptr, dp, p->data.r[p->n-1]);
+	}
+}
+
+static __inline__ SC_Real
+SC_PlotPropVal(SC_Plotter *ptr, SC_Plot *pl)
+{
+	AG_Prop *prop;
+
+	if ((prop = AG_FindProp(pl->src.prop, -1, NULL)) == NULL) {
+		printf("%s\n", AG_GetError());
+		return (0.0);
+	}
+	switch (prop->type) {
+	case AG_PROP_FLOAT:	return ((SC_Real)prop->data.f);
+	case AG_PROP_DOUBLE:	return ((SC_Real)prop->data.d);
+	case AG_PROP_INT:	return ((SC_Real)prop->data.i);
+	case AG_PROP_UINT:	return ((SC_Real)prop->data.u);
+	}
+	return (0.0);
+}
+
+void
+SC_PlotterUpdate(SC_Plotter *ptr)
+{
+	void *p;
+	SC_Plot *pl;
+
+	TAILQ_FOREACH(pl, &ptr->plots, plots) {
+		switch (pl->src_type) {
+		case SC_PLOT_MANUALLY:
+			break;
+		case SC_PLOT_FROM_PROP:
+			SC_PlotReal(ptr, pl, SC_PlotPropVal(ptr, pl));
+			break;
+		case SC_PLOT_FROM_REAL:
+			SC_PlotReal(ptr, pl, *pl->src.real);
+			break;
+		case SC_PLOT_FROM_INT:
+			SC_PlotReal(ptr, pl, (SC_Real)(*pl->src.integer));
+			break;
+		case SC_PLOT_FROM_COMPONENT:
+			if (!SC_MatrixEntryExists(pl->src.com.A,
+			    pl->src.com.i, pl->src.com.j)) {
+				break;
+			}
+			SC_PlotReal(ptr, pl, pl->src.com.A->mat[pl->src.com.i]
+			                                       [pl->src.com.j]);
+			break;
+		case SC_PLOT_DERIVATIVE:
+			SC_PlotDerivative(ptr, pl);
+			break;
+		default:
+			break;
+		}
+	}
+	if (ptr->flags & SC_PLOTTER_SCROLL)
+		ptr->xOffs++;
+}
+
+SC_Plot *
+SC_PlotNew(SC_Plotter *ptr, enum sc_plot_type type)
+{
+	SC_Plot *pl, *pl2;
+	
+	pl = Malloc(sizeof(SC_Plot), M_WIDGET);
+	pl->flags = SC_PLOT_DERIVATIVE;
+	pl->type = type;
+	pl->data.r = NULL;
+	pl->n = 0;
+	pl->src_type = SC_PLOT_MANUALLY;
+	pl->label = -1;
+	pl->label_txt[0] = '\0';
+	pl->color = ptr->colors[ptr->curColor++];
+	pl->xOffs = 0;
+	pl->yOffs = 0;
+	pl->xScale = 1.0;
+	pl->yScale = 1.0;
+	pl->xLabel = 5;
+	pl->yLabel = 5;
+	TAILQ_FOREACH(pl2, &ptr->plots, plots) {
+		if (pl2->label == -1) { continue; }
+		pl->xLabel += AGWIDGET_SURFACE(ptr,pl2->label)->w + 5;
+	}
+	TAILQ_INSERT_TAIL(&ptr->plots, pl, plots);
+
+	if (ptr->curColor >= SC_PLOTTER_NDEFCOLORS) {
+		ptr->curColor = 0;
+	}
+	return (pl);
+}
+
+SC_Plot *
+SC_PlotFromDerivative(SC_Plotter *ptr, enum sc_plot_type type, SC_Plot *plot)
+{
+	SC_Plot *pl;
+
+	pl = SC_PlotNew(ptr, type);
+	pl->src_type = SC_PLOT_DERIVATIVE;
+	pl->src.plot = plot;
+	SC_PlotSetLabel(ptr, pl, "%s'", plot->label_txt);
+	return (pl);
+}
+
+SC_Plot *
+SC_PlotFromProp(SC_Plotter *ptr, enum sc_plot_type type, const char *label,
+    const char *prop)
+{
+	SC_Plot *pl;
+
+	pl = SC_PlotNew(ptr, type);
+	pl->src_type = SC_PLOT_FROM_PROP;
+	pl->src.prop = Strdup(prop);
+	SC_PlotSetLabel(ptr, pl, "%s", label);
+	return (pl);
+}
+
+SC_Plot *
+SC_PlotFromReal(SC_Plotter *ptr, enum sc_plot_type type, const char *label,
+    SC_Real *p)
+{
+	SC_Plot *pl;
+
+	pl = SC_PlotNew(ptr, type);
+	pl->src_type = SC_PLOT_FROM_REAL;
+	pl->src.real = p;
+	SC_PlotSetLabel(ptr, pl, "%s", label);
+	return (pl);
+}
+
+
+SC_Plot *
+SC_PlotFromInt(SC_Plotter *ptr, enum sc_plot_type type, const char *label,
+    int *ip)
+{
+	SC_Plot *pl;
+
+	pl = SC_PlotNew(ptr, type);
+	pl->src_type = SC_PLOT_FROM_INT;
+	pl->src.integer = ip;
+	SC_PlotSetLabel(ptr, pl, "%s", label);
+	return (pl);
+}
+
+void
+SC_PlotSetColor(SC_Plotter *ptr, SC_Plot *pl, Uint8 r, Uint8 g, Uint8 b)
+{
+	pl->color = SDL_MapRGB(agVideoFmt, r, g, b);
+}
+
+void
+SC_PlotSetLabel(SC_Plotter *ptr, SC_Plot *pl, const char *fmt, ...)
+{
+	va_list args;
+	
+	va_start(args, fmt);
+	vsnprintf(pl->label_txt, sizeof(pl->label_txt), fmt, args);
+	va_end(args);
+
+	SC_PlotUpdateLabel(ptr, pl);
+}
+
+void
+SC_PlotSetScale(SC_Plot *pl, float xScale, float yScale)
+{
+	if (xScale > 0.0) { pl->xScale = xScale; }
+	if (yScale > 0.0) { pl->yScale = yScale; }
+}
+
+void
+SC_PlotSetXoffs(SC_Plot *pl, int xOffs)
+{
+	pl->xOffs = xOffs;
+}
+
+void
+SC_PlotSetYoffs(SC_Plot *pl, int yOffs)
+{
+	pl->yOffs = yOffs;
+}
+
+void
+SC_PlotterSetDefaultFont(SC_Plotter *ptr, const char *face, int size)
+{
+	ptr->fontFace = face;
+	ptr->fontSize = size;
+}
+
+void
+SC_PlotterSetDefaultColor(SC_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
+{
+	ptr->colors[i] = SDL_MapRGB(agVideoFmt, r, g, b);
+}
+
+void
+SC_PlotterSetDefaultScale(SC_Plotter *ptr, float xScale, float yScale)
+{
+	ptr->xScale = xScale;
+	ptr->yScale = yScale;
+}

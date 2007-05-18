@@ -5,6 +5,7 @@ include ${TOP}/Makefile.config
 
 SUBDIR=	 agar-config \
 	 agar-sg-config \
+	 agar-sc-config \
 	 agar-map-config \
 	 compat \
 	 core \
@@ -14,6 +15,7 @@ SUBDIR=	 agar-config \
 	 sg \
 	 map \
 	 mat \
+	 sc \
 	 libintl \
 	 po
 
