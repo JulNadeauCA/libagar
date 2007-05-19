@@ -419,6 +419,9 @@ SC_PlotterScale(void *p, int w, int h)
 	if (w == -1 && h == -1) {
 		AGWIDGET(ptr)->w = ptr->wPre;
 		AGWIDGET(ptr)->h = ptr->hPre;
+		if (ptr->flags & SC_PLOTTER_SCROLL) {
+			ptr->xOffs = 0;
+		}
 		return;
 	}
 
@@ -458,7 +461,7 @@ SC_PlotterDraw(void *p)
 	Uint i;
 
 	agPrim.box(ptr, 0, 0, AGWIDGET(ptr)->w, AGWIDGET(ptr)->h, -1,
-	    AG_COLOR(BG_COLOR));
+	    AG_COLOR(GRAPH_BG_COLOR));
 	agPrim.hline(ptr, 1, AGWIDGET(ptr)->w-2, y0, ptr->colors[0]);
 	agPrim.vline(ptr, ptr->xMax-1, 1, AGWIDGET(ptr)->h-2, ptr->colors[0]);
 
