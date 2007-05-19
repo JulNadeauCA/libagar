@@ -639,7 +639,7 @@ SC_PlotNew(SC_Plotter *ptr, enum sc_plot_type type)
 	SC_Plot *pl, *pl2;
 	
 	pl = Malloc(sizeof(SC_Plot), M_WIDGET);
-	pl->flags = SC_PLOT_DERIVATIVE;
+	pl->flags = 0;
 	pl->type = type;
 	pl->data.r = NULL;
 	pl->n = 0;
