@@ -1,23 +1,22 @@
 
 Prerequisites
 -------------
-Agar requires the Software DirectMedia Layer (http://www.libsdl.org) as
-well as the FreeType library (http://www.freetype.org).
+Agar requires the Software DirectMedia Layer (http://www.libsdl.org/)
+library.
 
 Options
 -------
-- The experimental GL mode (-g) requires an OpenGL library.
+- The FreeType library (http://www.freetype.org/) is required for high
+  quality font rendering. If compiled without FreeType, Agar will revert
+  to a simple bitmap font engine.
 
-- The video playback option requires the smpeg library, available from
-  http://www.icculus.org/smpeg/.
+- The GL rendering mode requires OpenGL.
 
-- The screenshot feature (F9) requires the jpeg library, available from
+- The screenshot feature requires the jpeg library, available from
   ftp://ftp.uu.net/graphics/jpeg/.
 
-- Threads support (--enable-threads) requires POSIX threads.
-
-- Network support requires the libqnet library, available from:
-  http://libqnet.csoft.org/.
+- Threads support (--enable-threads) requires a POSIX threads interface
+  which conforms to SUSv2 (ie. recursive mutexes are needed).
 
 Installation
 ------------
