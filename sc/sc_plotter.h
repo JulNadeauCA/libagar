@@ -51,7 +51,7 @@ typedef struct sc_plot {
 	char label_txt[32];		/* Label text */
 	int label;			/* Label surface handle */
 	Uint32 color;			/* Plot color */
-	float xScale, yScale;		/* Scaling factors */
+	SC_Real xScale, yScale;		/* Scaling factors */
 	int xOffs, yOffs;		/* Offset in display */
 	int xLabel, yLabel;		/* Item position */
 	TAILQ_ENTRY(sc_plot) plots;
@@ -76,7 +76,7 @@ typedef struct sc_plotter {
 	SC_Vector *vMin, *vMax;		/* Extrema for vector plots */
 	int xOffs, yOffs;		/* Display offset */
 	int wPre, hPre;			/* Prescale dimensions */
-	float xScale, yScale;		/* Scaling factors */
+	SC_Real xScale, yScale;		/* Scaling factors */
 	const char *fontFace;		/* Default font face (or NULL) */
 	int fontSize;			/* Default font size (or -1) */
 	Uint32 colors[SC_PLOTTER_NDEFCOLORS];	/* Default plot color */
@@ -95,7 +95,7 @@ void		 SC_PlotterUpdate(SC_Plotter *);
 __inline__ void	 SC_PlotterSetDefaultFont(SC_Plotter *, const char *, int);
 __inline__ void	 SC_PlotterSetDefaultColor(SC_Plotter *, int, Uint8, Uint8,
 		                           Uint8);
-__inline__ void	 SC_PlotterSetDefaultScale(SC_Plotter *, float, float);
+__inline__ void	 SC_PlotterSetDefaultScale(SC_Plotter *, SC_Real, SC_Real);
 
 SC_Plot		*SC_PlotNew(SC_Plotter *, enum sc_plot_type);
 SC_Plot		*SC_PlotFromProp(SC_Plotter *, enum sc_plot_type, const char *,
@@ -111,7 +111,7 @@ AG_Window	*SC_PlotSettings(SC_Plotter *, SC_Plot *);
 __inline__ void	 SC_PlotSetColor(SC_Plotter *, SC_Plot *, Uint8, Uint8, Uint8);
 void	 	 SC_PlotSetLabel(SC_Plotter *, SC_Plot *, const char *, ...);
 void	 	 SC_PlotUpdateLabel(SC_Plotter *, SC_Plot *);
-__inline__ void	 SC_PlotSetScale(SC_Plot *, float, float);
+__inline__ void	 SC_PlotSetScale(SC_Plot *, SC_Real, SC_Real);
 __inline__ void	 SC_PlotSetXoffs(SC_Plot *, int);
 __inline__ void	 SC_PlotSetYoffs(SC_Plot *, int);
 __inline__ void	 SC_PlotReal(SC_Plotter *, SC_Plot *, SC_Real);
