@@ -1,11 +1,6 @@
 /*	$Csoft: mat.h,v 1.6 2005/09/12 10:06:42 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef DEBUG
-#include <agar/sc/config/debug.h>
-#define _AGAR_SC_DEFINED_DEBUG_
-#endif
-
 typedef struct sc_matrix {
 	Uint m, n;
 	SC_Real **mat;
@@ -104,8 +99,3 @@ void		 SC_MatrixPrint(const SC_Matrix *);
 void		 SC_MatrixTest(void);
 #endif
 __END_DECLS
-
-#ifdef _AGAR_SC_DEFINED_DEBUG_
-# undef _AGAR_SC_DEFINED_DEBUG_
-# undef DEBUG
-#endif

@@ -30,6 +30,7 @@
 #include <agar/gui/box.h>
 
 #include "sc_pvt.h"
+#include "sc_gui.h"
 
 AG_FSpinbutton *
 SC_SpinReal(void *parent, const char *label, SC_Real *pv, SC_Real incr)
