@@ -640,12 +640,16 @@ static int
 WordBackASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
+	/* TODO */
+	return (1);
 }
 
 static int
 WordForwASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
+	/* TODO */
+	return (1);
 }
 
 #endif /* UTF8 */
