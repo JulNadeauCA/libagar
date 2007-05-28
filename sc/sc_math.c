@@ -52,12 +52,12 @@ SC_ReadReal(AG_Netbuf *buf)
 }
 
 void
-SC_CopyReal(AG_Netbuf *buf, SC_Real *rv)
+SC_CopyReal(AG_Netbuf *buf, SC_Real *pv)
 {
-	double rv;
+	double v;
 
-	AG_NetbufRead(&rv, sizeof(double), 1, buf);
-	*rv = (SC_Real)rv;
+	AG_NetbufRead(&v, sizeof(double), 1, buf);
+	*pv = (SC_Real)v;
 }
 
 void
