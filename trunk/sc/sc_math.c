@@ -33,13 +33,13 @@
 SC_Real
 SC_Rad2Deg(SC_Real theta)
 {
-	return (theta/(2.0*M_PI)*360.0);
+	return (theta/(2.0*SC_PI)*360.0);
 }
 
 SC_Real
 SC_Deg2Rad(SC_Real theta)
 {
-	return ((theta/360.0)*(2.0*M_PI));
+	return ((theta/360.0)*(2.0*SC_PI));
 }
 
 SC_Real

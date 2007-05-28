@@ -38,6 +38,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "sc_gui.h"
+
 static AG_WidgetOps scPlotterOps = {
 	{
 		"AG_Widget:SC_Plotter",
@@ -212,17 +214,19 @@ SC_PlotSettings(SC_Plotter *ptr, SC_Plot *pl)
 
 		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, type_names);
 		AG_WidgetBindInt(rad, "value", &pl->type);
-		
+	
+		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("X-scale: "));
+		SC_WidgetBindReal(fsb, "value", &pl->xScale);
+		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Y-scale: "));
+		SC_WidgetBindReal(fsb, "value", &pl->yScale);
+	
+		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
+	
 		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("X-offset: "));
 		AG_WidgetBindInt(fsb, "value", &pl->xOffs);
 		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("Y-offset: "));
 		AG_WidgetBindInt(fsb, "value", &pl->yOffs);
 		AG_FSpinbuttonSetIncrement(fsb, 5.0);
-		
-		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("X-scale: "));
-		AG_WidgetBindInt(fsb, "value", &pl->xScale);
-		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Y-scale: "));
-		AG_WidgetBindInt(fsb, "value", &pl->yScale);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
@@ -449,7 +453,7 @@ SC_PlotterScale(void *p, int w, int h)
 static __inline__ SC_Real
 SC_PlotterScaleReal(SC_Plotter *ptr, SC_Plot *pl, SC_Real r)
 {
-	return ((float)r*(ptr->yScale*pl->yScale));
+	return (r*(ptr->yScale*pl->yScale));
 }
 
 void
@@ -736,7 +740,7 @@ SC_PlotSetLabel(SC_Plotter *ptr, SC_Plot *pl, const char *fmt, ...)
 }
 
 void
-SC_PlotSetScale(SC_Plot *pl, float xScale, float yScale)
+SC_PlotSetScale(SC_Plot *pl, SC_Real xScale, SC_Real yScale)
 {
 	if (xScale > 0.0) { pl->xScale = xScale; }
 	if (yScale > 0.0) { pl->yScale = yScale; }
@@ -768,7 +772,7 @@ SC_PlotterSetDefaultColor(SC_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
 }
 
 void
-SC_PlotterSetDefaultScale(SC_Plotter *ptr, float xScale, float yScale)
+SC_PlotterSetDefaultScale(SC_Plotter *ptr, SC_Real xScale, SC_Real yScale)
 {
 	ptr->xScale = xScale;
 	ptr->yScale = yScale;
