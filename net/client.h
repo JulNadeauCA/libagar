@@ -3,8 +3,6 @@
 #ifndef _AGAR_NET_CLIENT_H_
 #define _AGAR_NET_CLIENT_H_
 
-#include <sys/types.h>
-
 #define AGN_HOSTNAME_MAX	256
 #define AGN_PORTNUM_MAX		16
 #define AGN_USERNAME_MAX	48

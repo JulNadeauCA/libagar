@@ -37,6 +37,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/network.h>
+#ifdef NETWORK
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -86,3 +89,4 @@ AGN_Fgetln(FILE *fp, size_t *len)
 	return (buf);
 }
 
+#endif /* NETWORK */

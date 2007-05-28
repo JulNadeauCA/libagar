@@ -1,6 +1,9 @@
 /*	$Csoft: error.c,v 1.1.1.1 2005/01/29 01:06:08 vedge Exp $	*/
 /*	Public domain	*/
 
+#include <agar/config/network.h>
+#ifdef NETWORK
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -54,3 +57,5 @@ AGN_Realloc(void *p, size_t size)
 	}
 	return (rp);
 }
+
+#endif /* NETWORK */
