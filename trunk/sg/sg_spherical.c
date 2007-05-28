@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include "sg.h"
 
@@ -48,3 +51,5 @@ SG_CartToSph(SG_Vector v)
 	s.r = SG_Sqrt(xy2 + v.z*v.z);
 	return (s);
 }
+
+#endif /* HAVE_OPENGL */

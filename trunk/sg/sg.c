@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/objmgr.h>
 #include <agar/core/typesw.h>
@@ -535,3 +538,4 @@ SG_RenderNode(SG *sg, SG_Node *node, SG_View *view)
 	SG_LoadMatrixGL(&Tsave);
 }
 
+#endif /* HAVE_OPENGL */

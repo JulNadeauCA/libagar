@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 
 #include "sg.h"
@@ -669,3 +672,5 @@ void
 SG_ViewMotionFn(SG_View *sv, AG_EventFn fn, const char *fmt, ...)
 {
 }
+
+#endif /* HAVE_OPENGL */

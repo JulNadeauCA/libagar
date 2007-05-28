@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include "sg.h"
 
@@ -126,3 +129,5 @@ SG_SolidBox2(SG_Vector p1, SG_Vector p2)
 	glVertex3d(p2.x, p2.y, p2.z);
 	glEnd();
 }
+
+#endif /* HAVE_OPENGL */

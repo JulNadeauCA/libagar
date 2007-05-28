@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/objmgr.h>
 #include <agar/gui/gui.h>
@@ -466,3 +469,5 @@ SG_Edit(void *p)
 	AG_WidgetFocus(sv);
 	return (win);
 }
+
+#endif /* HAVE_OPENGL */

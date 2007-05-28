@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/view.h>
 #include <agar/gui/window.h>
@@ -153,3 +156,5 @@ SK_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 	SLIST_REMOVE(&tool->kbindings, kb, sk_tool_keybinding, kbindings);
 	Free(kb, M_MAPEDIT);
 }
+
+#endif /* HAVE_OPENGL */

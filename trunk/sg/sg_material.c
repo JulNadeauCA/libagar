@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/math.h>
 
@@ -346,3 +349,5 @@ void
 SG_MaterialUnbind(SG_Material *mat, SG_View *view)
 {
 }
+
+#endif /* HAVE_OPENGL */
