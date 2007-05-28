@@ -24,7 +24,6 @@
  */
 
 #include <agar/core/core.h>
-#include <agar/core/objmgr.h>
 #include <agar/gui/spinbutton.h>
 #include <agar/gui/fspinbutton.h>
 #include <agar/gui/label.h>
