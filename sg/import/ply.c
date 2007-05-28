@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/network.h>
+#ifdef NETWORK
+
 #include <agar/core/core.h>
 #include <agar/sg/sg.h>
 #include "ply.h"
@@ -487,3 +490,5 @@ fail:
 	PLY_Free(&ply);
 	return (-1);
 }
+
+#endif /* NETWORK */
