@@ -26,6 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/network.h>
+#ifdef NETWORK
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -650,3 +653,5 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 	}
 	return (0);
 }
+
+#endif /* NETWORK */

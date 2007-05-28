@@ -26,6 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/network.h>
+#ifdef NETWORK
+
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -130,3 +133,5 @@ AGN_DestroyCommand(AGN_Command *cmd)
 	}
 	free(cmd->args);
 }
+
+#endif /* NETWORK */
