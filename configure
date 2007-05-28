@@ -146,7 +146,6 @@ echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-freetype                Use FreeType font engine [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
-echo "    --enable-network               Agar-Net support [default: check]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
@@ -154,6 +153,7 @@ echo "    --enable-16bpp                 Support for 16 bpp display [default: ye
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
 echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
 echo "    --enable-warnings              Suggested compiler warnings [default: no]"
+echo "    --enable-network               Build Agar-NET library [default: check]"
 exit 1
 fi
 
@@ -2220,94 +2220,10 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
 if [ "${enable_network}" = "yes" ]
  then
-echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..."
-echo -n "checking for Agar-Net (http://agar-net.csoft.org/)..." >> config.log
-AGAR_NET_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/agar-net-config" ]; then
-		AGAR_NET_VERSION=`${path}/agar-net-config --version`
-	fi
-done
-if [ "${AGAR_NET_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-AGAR_NET_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/agar-net-config" ]; then
-		AGAR_NET_CFLAGS=`${path}/agar-net-config --cflags`
-	fi
-done
-AGAR_NET_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/agar-net-config" ]; then
-		AGAR_NET_LIBS=`${path}/agar-net-config --libs`
-	fi
-done
-echo -n "checking whether agar-net works..."
-echo -n "checking whether agar-net works..." >> config.log
-cat << EOT > conftest.c
-#include <agar/net.h>
-#include <stdio.h>
-int main(int argc, char *argv[]) {
-	AGN_ServerRegCmd("foo", NULL, NULL);
-	AGN_ServerListen("foo", "1.0", NULL, NULL);
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_NET_CFLAGS} -o conftest conftest.c ${AGAR_NET_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_NET_CFLAGS} -o conftest conftest.c ${AGAR_NET_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_AGAR_NET" > config/have_agar_net.h
-echo "#define HAVE_AGAR_NET" $HAVE_AGAR_NET >> config/have_agar_net.h
-echo "#endif" >> config/have_agar_net.h
-
-	HAVE_AGAR_NET=yes
-
-	echo "yes"
-else
-	echo "#undef HAVE_AGAR_NET" > config/have_agar_net.h
-
-	echo "no"
-fi
-if [ "${HAVE_AGAR_NET}" = "yes" ]; then
-echo "AGAR_NET_CFLAGS=$AGAR_NET_CFLAGS" >> Makefile.config
-echo "AGAR_NET_LIBS=$AGAR_NET_LIBS" >> Makefile.config
-echo "#ifndef AGAR_NET_CFLAGS" > config/agar_net_cflags.h
-echo "#define AGAR_NET_CFLAGS \"$AGAR_NET_CFLAGS\"" >> config/agar_net_cflags.h
-echo "#endif" >> config/agar_net_cflags.h
-echo "#ifndef AGAR_NET_LIBS" > config/agar_net_libs.h
-echo "#define AGAR_NET_LIBS \"$AGAR_NET_LIBS\"" >> config/agar_net_libs.h
-echo "#endif" >> config/agar_net_libs.h
-else
-echo "#undef AGAR_NET_CFLAGS" > config/agar_net_cflags.h
-echo "#undef AGAR_NET_LIBS" > config/agar_net_libs.h
-fi;
-else
-echo "#undef HAVE_AGAR_NET" > config/have_agar_net.h
-echo "no"
-echo "no" >> config.log
-fi;
-	if [ "${HAVE_AGAR_NET}" = "yes" ]
- then
 NETWORK=1
 echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK" $NETWORK >> config/network.h
 echo "#endif" >> config/network.h
-	else
-		echo "*"
-		echo "* The --enable-network option requires Agar-Net."
-		echo "* You can download it from http://agar-net.csoft.org/."
-		echo "*"
-		exit 1
-	fi
 else
 echo "#undef NETWORK" > config/network.h
 fi
