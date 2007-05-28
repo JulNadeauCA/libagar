@@ -45,27 +45,27 @@ SC_Deg2Rad(SC_Real theta)
 SC_Real
 SC_ReadReal(AG_Netbuf *buf)
 {
-	long double ld;
+	double rv;
 
-	AG_NetbufRead(&ld, sizeof(long double), 1, buf);
-	return ((SC_Real)ld);
+	AG_NetbufRead(&rv, sizeof(double), 1, buf);
+	return ((SC_Real)rv);
 }
 
 void
 SC_CopyReal(AG_Netbuf *buf, SC_Real *rv)
 {
-	long double ld;
+	double rv;
 
-	AG_NetbufRead(&ld, sizeof(ld), 1, buf);
-	*rv = (SC_Real)ld;
+	AG_NetbufRead(&rv, sizeof(double), 1, buf);
+	*rv = (SC_Real)rv;
 }
 
 void
 SC_WriteReal(AG_Netbuf *buf, SC_Real v)
 {
-	long double ld = (long double)v;
+	double rv = (double)v;
 
-	AG_NetbufWrite(&ld, sizeof(long double), 1, buf);
+	AG_NetbufWrite(&rv, sizeof(double), 1, buf);
 }
 
 SC_Range
@@ -73,30 +73,26 @@ SC_ReadRange(AG_Netbuf *buf)
 {
 	SC_Range r;
 
-	AG_NetbufRead(&r.min, sizeof(long double), 1, buf);
-	AG_NetbufRead(&r.typ, sizeof(long double), 1, buf);
-	AG_NetbufRead(&r.max, sizeof(long double), 1, buf);
+	r.min = SC_ReadReal(buf);
+	r.typ = SC_ReadReal(buf);
+	r.max = SC_ReadReal(buf);
 	return (r);
 }
 
 void
 SC_CopyRange(AG_Netbuf *buf, SC_Range *r)
 {
-	AG_NetbufRead(&r->min, sizeof(long double), 1, buf);
-	AG_NetbufRead(&r->typ, sizeof(long double), 1, buf);
-	AG_NetbufRead(&r->max, sizeof(long double), 1, buf);
+	r->min = SC_ReadReal(buf);
+	r->typ = SC_ReadReal(buf);
+	r->max = SC_ReadReal(buf);
 }
 
 void
 SC_WriteRange(AG_Netbuf *buf, SC_Range r)
 {
-	long double min = (long double)r.min;
-	long double typ = (long double)r.typ;
-	long double max = (long double)r.max;
-
-	AG_NetbufWrite(&min, sizeof(long double), 1, buf);
-	AG_NetbufWrite(&typ, sizeof(long double), 1, buf);
-	AG_NetbufWrite(&max, sizeof(long double), 1, buf);
+	SC_WriteReal(buf, r.min);
+	SC_WriteReal(buf, r.typ);
+	SC_WriteReal(buf, r.max);
 }
 
 SC_QTimeRange
