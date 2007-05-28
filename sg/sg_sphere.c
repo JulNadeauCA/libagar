@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 
 #include "sg.h"
@@ -201,3 +204,5 @@ SG_NodeOps sgSphereOps = {
 	NULL,			/* menuClass */
 	SG_SphereDraw
 };
+
+#endif /* HAVE_OPENGL */

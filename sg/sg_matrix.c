@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 
 #include "sg.h"
@@ -900,3 +903,5 @@ SG_GetMatrixGL(int which, SG_Matrix *M)
 	M->m[2][3] = f[3][2];
 	M->m[3][3] = f[3][3];
 }
+
+#endif /* HAVE_OPENGL */

@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/objmgr.h>
 #include <agar/gui/gui.h>
@@ -310,3 +313,4 @@ SK_Edit(void *p)
 }
 
 #endif /* EDITION */
+#endif /* HAVE_OPENGL */

@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/gui/spinbutton.h>
 #include <agar/gui/fspinbutton.h>
@@ -238,3 +241,4 @@ SG_EditScale4(void *parent, const char *label, SG_Matrix *T)
 	return (box);
 }
 
+#endif /* HAVE_OPENGL */

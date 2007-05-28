@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/gui/objsel.h>
 
@@ -1029,3 +1032,5 @@ SG_NodeOps sgObjectOps = {
 	NULL,			/* menuClass */
 	SG_ObjectDraw
 };
+
+#endif /* HAVE_OPENGL */

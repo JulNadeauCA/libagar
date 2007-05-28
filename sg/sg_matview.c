@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/core/view.h>
 
@@ -261,3 +264,4 @@ AG_MatviewDrawGreyscale(void *p)
 	}
 }
 
+#endif /* HAVE_OPENGL */

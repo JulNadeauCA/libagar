@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include "sg.h"
 
@@ -557,3 +560,4 @@ SG_WriteVectorf(AG_Netbuf *buf, SG_Vector *v)
 	AG_WriteFloat(buf, (float)v->z);
 }
 
+#endif /* HAVE_OPENGL */

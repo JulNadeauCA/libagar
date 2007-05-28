@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include "sg.h"
 
@@ -76,3 +79,5 @@ SG_OctreeBuildNode(SG *sg, SG_Octree *oct, SG_Vector min, SG_Vector max)
 		}
 	}
 }
+
+#endif /* HAVE_OPENGL */

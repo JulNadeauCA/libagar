@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 
@@ -338,3 +341,5 @@ SG_NodeOps sgLightOps = {
 	NULL,		/* menuClass */
 	SG_LightDraw
 };
+
+#endif /* HAVE_OPENGL */

@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
+
 #include <agar/core/core.h>
 #include "sg.h"
 #include "sg_gui.h"
@@ -128,3 +131,5 @@ SG_NodeOps sgSolidOps = {
 	NULL,			/* menuClass */
 	SG_SolidDraw
 };
+
+#endif /* HAVE_OPENGL */
