@@ -3,6 +3,5 @@
 
 #ifndef _AGAR_SC_PVT_H_
 #define _AGAR_SC_PVT_H_
-#include <agar/config/debug.h>
 #include "sc.h"
 #endif
