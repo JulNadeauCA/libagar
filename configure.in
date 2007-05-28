@@ -4,7 +4,6 @@
 REGISTER("--with-freetype",	"Use FreeType font engine [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
-REGISTER("--enable-network",	"Agar-Net support [default: check]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
@@ -12,6 +11,7 @@ REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
+REGISTER("--enable-network",	"Build Agar-NET library [default: check]")
 
 # Agar version
 HDEFINE(VERSION, "\"1.2\"")
@@ -106,18 +106,9 @@ else
 	HUNDEF(HAVE_JPEG)
 fi
 
-# Enable network support if agar-net is found.
+# Enable network support if requested.
 if [ "${enable_network}" = "yes" ]; then
-	CHECK(agar-net)
-	if [ "${HAVE_AGAR_NET}" = "yes" ]; then
-		HDEFINE(NETWORK, 1)
-	else
-		echo "*"
-		echo "* The --enable-network option requires Agar-Net."
-		echo "* You can download it from http://agar-net.csoft.org/."
-		echo "*"
-		exit 1
-	fi
+	HDEFINE(NETWORK, 1)
 else
 	HUNDEF(NETWORK)
 fi
