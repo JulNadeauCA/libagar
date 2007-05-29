@@ -47,6 +47,7 @@ typedef struct sc_plot {
 #define SC_PLOT_SELECTED	0x01
 #define SC_PLOT_MOUSEOVER	0x02
 #define SC_PLOT_DRAGGING	0x04
+#define SC_PLOT_HIDDEN		0x08
 
 	char label_txt[32];		/* Label text */
 	int label;			/* Label surface handle */
