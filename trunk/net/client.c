@@ -29,6 +29,8 @@
 #include <agar/config/network.h>
 #ifdef NETWORK
 
+#include <core/core.h>
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -168,7 +170,7 @@ sendreq:
 	}
 
 	/* Parse the list/item size specification. */
-	res = Malloc(sizeof(AGC_Result));
+	res = Malloc(sizeof(AGC_Result), M_NETBUF);
 	bufp = &client->read.buf[2];
 	for (i = 0; (s = strsep(&bufp, ":")) != NULL; i++) {
 		if (s[0] == '\0') {
@@ -176,14 +178,14 @@ sendreq:
 		}
 		if (AGN_ParseItemCount(s, &count) == -1) {
 			if (i == 0) {
-				free(res);
+				Free(res, M_NETBUF);
 			} else {
 				for (i = 0; i < res->argc; i++) {
-					free(res->argv[i]);
+					Free(res->argv[i], M_NETBUF);
 				}
 				if (res->argv != NULL) {
-					free(res->argv);
-					free(res->argv_len);
+					Free(res->argv, M_NETBUF);
+					Free(res->argv_len, M_NETBUF);
 				}
 			}
 			return (NULL);
@@ -196,11 +198,13 @@ sendreq:
 				res->argv_len = NULL;
 				return (res);
 			} else {
-				res->argv = Malloc(count * sizeof(char *));
-				res->argv_len = Malloc(count * sizeof(size_t));
+				res->argv = Malloc(count * sizeof(char *),
+				    M_NETBUF);
+				res->argv_len = Malloc(count * sizeof(size_t),
+				    M_NETBUF);
 			}
 		} else {
-			res->argv[i-1] = Malloc(count);
+			res->argv[i-1] = Malloc(count, M_NETBUF);
 			res->argv_len[i-1] = count;
 			totsz += count;
 		}
@@ -281,11 +285,11 @@ sendreq:
 	binsize = atoi(sizbuf);
 
 	/* Allocate the response structure. */
-	res = Malloc(sizeof(AGC_Result));
-	res->argv = Malloc(sizeof(char *));
-	res->argv_len = Malloc(sizeof(size_t));
+	res = Malloc(sizeof(AGC_Result), M_NETBUF);
+	res->argv = Malloc(sizeof(char *), M_NETBUF);
+	res->argv_len = Malloc(sizeof(size_t), M_NETBUF);
 	res->argc = 1;
-	res->argv[0] = dst = Malloc(binsize);
+	res->argv[0] = dst = Malloc(binsize, M_NETBUF);
 	res->argv_len[0] = binsize;
 
 	/* Read the binary data. */
@@ -311,10 +315,10 @@ readbin:
 	printf("downloaded %lu bytes\n", (u_long)binread);
 	return (res);
 fail:
-	free(res->argv[0]);
-	free(res->argv_len);
-	free(res->argv);
-	free(res);
+	Free(res->argv[0], M_NETBUF);
+	Free(res->argv_len, M_NETBUF);
+	Free(res->argv, M_NETBUF);
+	Free(res, M_NETBUF);
 	return (NULL);
 }
 
@@ -325,14 +329,14 @@ AGC_FreeResult(AGC_Result *res)
 
 	if (res->argv != NULL) {
 		for (i = 0; i < res->argc; i++) {
-			free(res->argv[i]);
+			Free(res->argv[i], M_NETBUF);
 		}
-		free(res->argv);
+		Free(res->argv, M_NETBUF);
 	}
 	if (res->argv_len != NULL) {
-		free(res->argv_len);
+		Free(res->argv_len, M_NETBUF);
 	}
-	free(res);
+	Free(res, M_NETBUF);
 }
 
 /* Destroy the current server connection and establish a new one. */
@@ -612,7 +616,7 @@ AGC_Init(AGC_Session *client, const char *name, const char *ver)
 	client->pass[0] = '\0';
 	client->sock = -1;
 
-	client->read.buf = Malloc(RDBUF_INIT);
+	client->read.buf = Malloc(RDBUF_INIT, M_NETBUF);
 	client->read.maxlen = RDBUF_INIT;
 	client->read.len = 0;
 	client->server_proto[0] = '\0';
@@ -626,7 +630,7 @@ void
 AGC_Destroy(AGC_Session *client)
 {
 	AGC_Disconnect(client);
-	free(client->read.buf);
+	Free(client->read.buf, M_NETBUF);
 }
 
 #endif /* NETWORK */

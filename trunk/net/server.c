@@ -29,6 +29,8 @@
 #include <agar/config/network.h>
 #ifdef NETWORK
 
+#include <core/core.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -54,7 +56,6 @@
 
 #include "net.h"
 #include "sockunion.h"
-#include "server.h"
 #include "fgetln.h"
 
 #define MAX_SERVER_SOCKS 64
@@ -119,8 +120,8 @@ AGN_ServerEndList(void)
 	fgets(ack, 2, stdin);
 
 	if (nlist_items > 0) {
-		free(list_items);
-		free(list_itemsz);
+		Free(list_items, M_NETBUF);
+		Free(list_itemsz, M_NETBUF);
 		list_items = NULL;
 		list_itemsz = NULL;
 		nlist_items = 0;
@@ -131,8 +132,8 @@ void
 AGN_ServerListItem(void *buf, size_t len)
 {
 	if (nlist_items == 0) {
-		list_items = Malloc(sizeof(void *));
-		list_itemsz = Malloc(sizeof(size_t));
+		list_items = Malloc(sizeof(void *), M_NETBUF);
+		list_itemsz = Malloc(sizeof(size_t), M_NETBUF);
 	} else {
 		list_items = Realloc(list_items,
 		    (nlist_items+1)*sizeof(void *));
@@ -313,7 +314,7 @@ AGN_QueryLoop(void)
 			if (strlcpy(ncmd.name, buf, sizeof(ncmd.name)) >=
 			    sizeof(ncmd.name)) {
 				AGN_DestroyCommand(&ncmd);
-				free(lbuf);
+				Free(lbuf, M_NETBUF);
 				AGN_ServerDie(1, "command name too big");
 			}
 		} else if ((value = strchr(buf, '=')) != NULL) {
@@ -325,14 +326,14 @@ AGN_QueryLoop(void)
 			ncmd.args = Realloc(ncmd.args,
 			    ++ncmd.nargs * sizeof(AGN_CommandArg));
 			narg = &ncmd.args[ncmd.nargs-1];
-			narg->value = strdup(value+1);
+			narg->value = Strdup(value+1);
 			narg->size = sizeof(value);
 
 			*value = '\0';
 			if (strlcpy(narg->key, buf, sizeof(narg->key)) >=
 			    sizeof(narg->key)) {
 				AGN_DestroyCommand(&ncmd);
-				free(lbuf);
+				Free(lbuf, M_NETBUF);
 				AGN_ServerDie(1, "command key is too big");
 			}
 		} else {
@@ -342,7 +343,7 @@ AGN_QueryLoop(void)
 		}
 
 		if (lbuf != NULL) {
-			free(lbuf);
+			Free(lbuf, M_NETBUF);
 			lbuf = NULL;
 		}
 	}
