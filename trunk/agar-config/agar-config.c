@@ -118,7 +118,10 @@ main(int argc, char *argv[])
 			printf("-lag_core -lag_core_monitor -lag_rg -lag_vg "
 			       "-lag_gui -lag_core_loaders -lag_compat "
 			       "-lag_mat ");
-#if defined(ENABLE_NLS) 
+#ifdef NETWORK
+			printf("-lag_net ");
+#endif
+#ifdef ENABLE_NLS
 			printf("-lag_intl ");
 #endif
 #ifdef SDL_LIBS
