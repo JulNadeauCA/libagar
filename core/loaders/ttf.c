@@ -283,12 +283,12 @@ AG_TTFLoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached,
 
 		/* Render the glyph. */
 		if (mono) {
-			if (FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO) != 0) {
+			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
 				AG_SetError("Error glyph 0x%x", (Uint)ch);
 				return (-1);
 			}
 		} else {
-			if (FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL)
+			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
 			    != 0) {
 				AG_SetError("Error norm glyph 0x%x", (Uint)ch);
 				return (-1);
