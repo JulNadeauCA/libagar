@@ -304,7 +304,11 @@ Buttondown(AG_Event *event)
 				AG_PopupMenu *pm;
 
 				pm = AG_PopupNew(ptr);
-				AG_MenuAction(pm->item, _("Plot settings"), -1,
+				AG_MenuIntFlags(pm->item, _("Display plot"),
+				    OBJ_ICON,
+				    &pl->flags, SC_PLOT_HIDDEN, 1);
+				AG_MenuAction(pm->item, _("Plot settings"),
+				    OBJ_ICON,
 				    ShowPlotSettings, "%p,%p", ptr, pl);
 				AG_PopupShow(pm);
 				break;
@@ -489,6 +493,9 @@ SC_PlotterDraw(void *p)
 			}
 			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
 			    pl->yLabel);
+		}
+		if (pl->flags & SC_PLOT_HIDDEN) {
+			continue;
 		}
 		switch (pl->type) {
 		case SC_PLOT_POINTS:
