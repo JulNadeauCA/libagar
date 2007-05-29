@@ -269,7 +269,9 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		goto skip;
 	}
 	if (tbox->pos == len) {					/* Append */
+#if 0
 		dprintf("append at %d/%d\n", (int)tbox->pos, (int)len);
+#endif
 		if (agKbdUnicode) {
 			if (uch != 0) {
 				for (i = 0; i < nchars; i++)
@@ -284,7 +286,9 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 			goto skip;
 		}
 	} else {						/* Insert */
+#if 0
 		dprintf("insert at %d/%d\n", (int)tbox->pos, (int)len);
+#endif
 		memmove(&ucs4[tbox->pos+nchars], &ucs4[tbox->pos],
 		       (len - tbox->pos)*sizeof(Uint32));
 		if (agKbdUnicode) {
@@ -303,8 +307,10 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		}
 	}
 out:
+#if 0
 	dprintf("NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
 	    (int)stringb->size);
+#endif
 	ucs4[len+nchars] = '\0';
 	tbox->pos += nchars;
 	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4, stringb->size);
