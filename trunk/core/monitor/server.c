@@ -39,7 +39,7 @@
 #include <core/view.h>
 #include <core/config.h>
 
-#include <agar/net.h>
+#include <agar/net/net.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -127,7 +127,7 @@ auth_password(void *p)
 	if (strcmp(buf, "foo:bar\n") == 0) {
 		return (1);
 	}
-	AGN_Seterror("User/password mismatch");
+	AGN_SetError("User/password mismatch");
 	return (0);
 }
 
@@ -138,7 +138,7 @@ handle_error(void)
 }
 
 static int
-cmd_version(struct command *cmd, void *p)
+cmd_version(AGN_Command *cmd, void *p)
 {
 	char hostname[128];
 
@@ -161,7 +161,7 @@ output_msg(j_common_ptr jcomp)
 }
 
 static int
-cmd_surface(struct command *cmd, void *pSu)
+cmd_surface(AGN_Command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
 	static struct jpeg_error_mgr jerrmgr;
@@ -270,7 +270,7 @@ cmd_surface(struct command *cmd, void *pSu)
 }
 
 static int
-cmd_view_fmt(struct command *cmd, void *p)
+cmd_view_fmt(AGN_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
@@ -287,7 +287,7 @@ cmd_view_fmt(struct command *cmd, void *p)
 }
 
 static int
-cmd_refresh(struct command *cmd, void *p)
+cmd_refresh(AGN_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %d:%d\n", agView->rCur, agView->rNom);
@@ -296,11 +296,11 @@ cmd_refresh(struct command *cmd, void *p)
 }
 
 static void
-find_objs(struct command *cmd, AG_Object *pob, int depth)
+find_objs(AGN_Command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
-	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->ops->name,
+	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->ops->type,
 	    pob->flags, pob->data_used);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
@@ -309,7 +309,7 @@ find_objs(struct command *cmd, AG_Object *pob, int depth)
 }
 
 static int
-cmd_world(struct command *cmd, void *p)
+cmd_world(AGN_Command *cmd, void *p)
 {
 	AG_LockLinkage();
 	fputs("0 ", stdout);
