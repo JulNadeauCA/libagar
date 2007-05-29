@@ -2243,19 +2243,22 @@ if [ "${enable_network}" != "no" ]
 echo -n "checking for a getaddrinfo() function..."
 echo -n "checking for a getaddrinfo() function..." >> config.log
 cat << EOT > conftest.c
-#include <stdio.h>
-#include <stdarg.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 int
 main(int argc, char *argv[])
 {
 	struct addrinfo hints, *res0;
+	const char *s;
 	int rv;
 
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	rv = getaddrinfo("hostname", "port", &hints, &res0);
+	s = gai_strerror(rv);
 	freeaddrinfo(res0);
 	return (0);
 }
