@@ -29,6 +29,8 @@
 #include <agar/config/network.h>
 #ifdef NETWORK
 
+#include <core/core.h>
+
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -117,7 +119,7 @@ AGN_CommandCopyString(char *dst, AGN_Command *cmd, const char *key,
 void
 AGN_InitCommand(AGN_Command *cmd)
 {
-	cmd->args = Malloc(sizeof(AGN_CommandArg));
+	cmd->args = Malloc(sizeof(AGN_CommandArg), M_NETBUF);
 	cmd->nargs = 0;
 }
 
@@ -129,9 +131,9 @@ AGN_DestroyCommand(AGN_Command *cmd)
 	for (i = 0; i < cmd->nargs; i++) {
 		AGN_CommandArg *arg = &cmd->args[i];
 
-		free(arg->value);
+		Free(arg->value, 0);
 	}
-	free(cmd->args);
+	Free(cmd->args, M_NETBUF);
 }
 
 #endif /* NETWORK */
