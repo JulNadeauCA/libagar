@@ -2156,8 +2156,8 @@ fi;
 if [ "${JPEG_CFLAGS}" != "" ]; then
 echo "ok"
 echo "ok" >> config.log
-echo "checking whether libjpeg works..."
-echo "checking whether libjpeg works..." >> config.log
+echo -n "checking whether libjpeg works..."
+echo -n "checking whether libjpeg works..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <jpeglib.h>
