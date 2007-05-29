@@ -56,6 +56,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #ifdef HAVE_JPEG
 #include <jpeglib.h>
@@ -167,21 +168,17 @@ cmd_surface(AGN_Command *cmd, void *pSu)
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
 	char tmp[sizeof("/tmp/")+FILENAME_MAX];
-	SDL_Surface *su;
+	SDL_Surface *su = pSu;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;
 	size_t l, len;
 	FILE *ftmp;
 	int fd;
 
-	if (!agView->opengl || pSu != agView->v) {
-		su = pSu;
-	} else {
 #ifdef HAVE_OPENGL
+	if (agView->opengl && pSu == agView->v)
 		su = AG_CaptureGLView();
 #endif
-	}
-
 	jcomp.err = jpeg_std_error(&jerrmgr);
 	jerrmgr.error_exit = error_exit;
 	jerrmgr.output_message = output_msg;
@@ -195,11 +192,19 @@ cmd_surface(AGN_Command *cmd, void *pSu)
 	jpeg_set_defaults(&jcomp);
 	jpeg_set_quality(&jcomp, jpeg_quality, TRUE);
 
+#ifdef HAVE_MKSTEMP
 	strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
 	if ((fd = mkstemp(tmp)) == -1) {
 		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
 		return (-1);
 	}
+#else
+	strlcpy(tmp, ".agarsurface.tmp", sizeof(tmp));
+	if ((fd = open(tmp, O_RDWR|O_CREAT|O_EXCL)) == -1) {
+		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
+		return (-1);
+	}
+#endif
 	if ((ftmp = fdopen(fd, "r+")) == NULL) {
 		AG_SetError("fdopen %s: %s", tmp, strerror(errno));
 		return (-1);
