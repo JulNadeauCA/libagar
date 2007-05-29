@@ -536,10 +536,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> config/have_long_double.h
 echo "#endif" >> config/have_long_double.h
 
+	HAVE_LONG_DOUBLE="yes"
 	echo "yes"
 else
     echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
 
+	HAVE_LONG_DOUBLE="no"
 	echo "no"
 fi
 echo -n "checking for cygwin environment..."
@@ -752,10 +754,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> config/have_progname.h
 echo "#endif" >> config/have_progname.h
 
+	HAVE_PROGNAME="yes"
 	echo "yes"
 else
     echo "#undef HAVE_PROGNAME" > config/have_progname.h
 
+	HAVE_PROGNAME="no"
 	echo "no"
 fi
 echo -n "checking for free(NULL) is a no-op..."
@@ -874,10 +878,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> config/have_gethostname.h
 echo "#endif" >> config/have_gethostname.h
 
+	HAVE_GETHOSTNAME="yes"
 	echo "yes"
 else
     echo "#undef HAVE_GETHOSTNAME" > config/have_gethostname.h
 
+	HAVE_GETHOSTNAME="no"
 	echo "no"
 fi
 echo -n "checking for a getpwuid() function..."
@@ -911,10 +917,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_GETPWUID" $HAVE_GETPWUID >> config/have_getpwuid.h
 echo "#endif" >> config/have_getpwuid.h
 
+	HAVE_GETPWUID="yes"
 	echo "yes"
 else
     echo "#undef HAVE_GETPWUID" > config/have_getpwuid.h
 
+	HAVE_GETPWUID="no"
 	echo "no"
 fi
 echo -n "checking for a getuid() function..."
@@ -947,10 +955,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_GETUID" $HAVE_GETUID >> config/have_getuid.h
 echo "#endif" >> config/have_getuid.h
 
+	HAVE_GETUID="yes"
 	echo "yes"
 else
     echo "#undef HAVE_GETUID" > config/have_getuid.h
 
+	HAVE_GETUID="no"
 	echo "no"
 fi
 echo -n "checking for a getenv() function..."
@@ -979,10 +989,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_GETENV" $HAVE_GETENV >> config/have_getenv.h
 echo "#endif" >> config/have_getenv.h
 
+	HAVE_GETENV="yes"
 	echo "yes"
 else
     echo "#undef HAVE_GETENV" > config/have_getenv.h
 
+	HAVE_GETENV="no"
 	echo "no"
 fi
 echo -n "checking for setenv() and unsetenv() functions..."
@@ -1013,10 +1025,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_SETENV" $HAVE_SETENV >> config/have_setenv.h
 echo "#endif" >> config/have_setenv.h
 
+	HAVE_SETENV="yes"
 	echo "yes"
 else
     echo "#undef HAVE_SETENV" > config/have_setenv.h
 
+	HAVE_SETENV="no"
 	echo "no"
 fi
 echo -n "checking for a strsep() function..."
@@ -1045,10 +1059,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
 echo "#endif" >> config/have_strsep.h
 
+	HAVE_STRSEP="yes"
 	echo "yes"
 else
     echo "#undef HAVE_STRSEP" > config/have_strsep.h
 
+	HAVE_STRSEP="no"
 	echo "no"
 fi
 echo -n "checking for a strlcat() function..."
@@ -1077,10 +1093,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> config/have_strlcat.h
 echo "#endif" >> config/have_strlcat.h
 
+	HAVE_STRLCAT="yes"
 	echo "yes"
 else
     echo "#undef HAVE_STRLCAT" > config/have_strlcat.h
 
+	HAVE_STRLCAT="no"
 	echo "no"
 fi
 echo -n "checking for a strlcpy() function..."
@@ -1109,10 +1127,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> config/have_strlcpy.h
 echo "#endif" >> config/have_strlcpy.h
 
+	HAVE_STRLCPY="yes"
 	echo "yes"
 else
     echo "#undef HAVE_STRLCPY" > config/have_strlcpy.h
 
+	HAVE_STRLCPY="no"
 	echo "no"
 fi
 echo -n "checking for an asprintf() function..."
@@ -1147,10 +1167,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> config/have_asprintf.h
 echo "#endif" >> config/have_asprintf.h
 
+	HAVE_ASPRINTF="yes"
 	echo "yes"
 else
     echo "#undef HAVE_ASPRINTF" > config/have_asprintf.h
 
+	HAVE_ASPRINTF="no"
 	echo "no"
 fi
 echo -n "checking for a vasprintf() function..."
@@ -1196,10 +1218,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> config/have_vasprintf.h
 echo "#endif" >> config/have_vasprintf.h
 
+	HAVE_VASPRINTF="yes"
 	echo "yes"
 else
     echo "#undef HAVE_VASPRINTF" > config/have_vasprintf.h
 
+	HAVE_VASPRINTF="no"
 	echo "no"
 fi
 echo -n "checking for a snprintf() function..."
@@ -1231,10 +1255,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> config/have_snprintf.h
 echo "#endif" >> config/have_snprintf.h
 
+	HAVE_SNPRINTF="yes"
 	echo "yes"
 else
     echo "#undef HAVE_SNPRINTF" > config/have_snprintf.h
 
+	HAVE_SNPRINTF="no"
 	echo "no"
 fi
 echo -n "checking for a vsnprintf() function..."
@@ -1276,10 +1302,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> config/have_vsnprintf.h
 echo "#endif" >> config/have_vsnprintf.h
 
+	HAVE_VSNPRINTF="yes"
 	echo "yes"
 else
     echo "#undef HAVE_VSNPRINTF" > config/have_vsnprintf.h
 
+	HAVE_VSNPRINTF="no"
 	echo "no"
 fi
 echo -n "checking for a setlocale() function..."
@@ -1309,10 +1337,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> config/have_setlocale.h
 echo "#endif" >> config/have_setlocale.h
 
+	HAVE_SETLOCALE="yes"
 	echo "yes"
 else
     echo "#undef HAVE_SETLOCALE" > config/have_setlocale.h
 
+	HAVE_SETLOCALE="no"
 	echo "no"
 fi
 echo -n "checking for the arc4random() random number generator..."
@@ -1344,10 +1374,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_ARC4RANDOM" $HAVE_ARC4RANDOM >> config/have_arc4random.h
 echo "#endif" >> config/have_arc4random.h
 
+	HAVE_ARC4RANDOM="yes"
 	echo "yes"
 else
     echo "#undef HAVE_ARC4RANDOM" > config/have_arc4random.h
 
+	HAVE_ARC4RANDOM="no"
 	echo "no"
 fi
 echo -n "checking for MD5 functions..."
@@ -1380,10 +1412,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_MD5" $HAVE_MD5 >> config/have_md5.h
 echo "#endif" >> config/have_md5.h
 
+	HAVE_MD5="yes"
 	echo "yes"
 else
     echo "#undef HAVE_MD5" > config/have_md5.h
 
+	HAVE_MD5="no"
 	echo "no"
 fi
 echo -n "checking for SHA1 functions..."
@@ -1416,10 +1450,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_SHA1" $HAVE_SHA1 >> config/have_sha1.h
 echo "#endif" >> config/have_sha1.h
 
+	HAVE_SHA1="yes"
 	echo "yes"
 else
     echo "#undef HAVE_SHA1" > config/have_sha1.h
 
+	HAVE_SHA1="no"
 	echo "no"
 fi
 echo -n "checking for RMD160 functions..."
@@ -1452,10 +1488,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_RMD160" $HAVE_RMD160 >> config/have_rmd160.h
 echo "#endif" >> config/have_rmd160.h
 
+	HAVE_RMD160="yes"
 	echo "yes"
 else
     echo "#undef HAVE_RMD160" > config/have_rmd160.h
 
+	HAVE_RMD160="no"
 	echo "no"
 fi
 echo -n "checking for POSIX threads..."
@@ -2278,10 +2316,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_GETADDRINFO" $HAVE_GETADDRINFO >> config/have_getaddrinfo.h
 echo "#endif" >> config/have_getaddrinfo.h
 
+	HAVE_GETADDRINFO="yes"
 	echo "yes"
 else
     echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
 
+	HAVE_GETADDRINFO="no"
 	echo "no"
 fi
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
