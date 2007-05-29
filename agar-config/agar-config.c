@@ -60,10 +60,6 @@
 #include <config/jpeg_libs.h>
 #include <config/jpeg_cflags.h>
 #endif
-#ifdef NETWORK
-#include <config/agar_net_libs.h>
-#include <config/agar_net_cflags.h>
-#endif
 #ifdef HAVE_PTHREADS
 #include <config/pthreads_libs.h>
 #include <config/pthreads_cflags.h>
@@ -113,9 +109,6 @@ main(int argc, char *argv[])
 #ifdef JPEG_CFLAGS
 			printf("%s ", JPEG_CFLAGS);
 #endif
-#ifdef NETWORK
-			printf("%s ", AGAR_NET_CFLAGS);
-#endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_CFLAGS);
 #endif
@@ -142,9 +135,6 @@ main(int argc, char *argv[])
 #endif
 #ifdef JPEG_LIBS
 			printf("%s ", JPEG_LIBS);
-#endif
-#ifdef NETWORK
-			printf("%s ", AGAR_NET_LIBS);
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);
