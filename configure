@@ -2115,6 +2115,15 @@ fi;
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
+	else
+		if [ "${with_gl}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-gl was requested, but OpenGL was not"
+			echo "* found on this system."
+			echo "*"
+			exit 1
+		fi
 	fi
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
@@ -2215,15 +2224,79 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 echo "no"
 echo "no" >> config.log
 fi;
+	if [ "${HAVE_JPEG}" != "yes" ]
+ then
+		if [ "${with_jpeg}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-jpeg was requested, but libjpeg was not"
+			echo "* found on this system."
+			echo "*"
+			exit 1
+		fi
+	fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
-if [ "${enable_network}" = "yes" ]
+if [ "${enable_network}" != "no" ]
+ then
+echo -n "checking for a getaddrinfo() function..."
+echo -n "checking for a getaddrinfo() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <stdarg.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct addrinfo hints, *res0;
+	int rv;
+
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	rv = getaddrinfo("hostname", "port", &hints, &res0);
+	freeaddrinfo(res0);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+echo "#define HAVE_GETADDRINFO" $HAVE_GETADDRINFO >> config/have_getaddrinfo.h
+echo "#endif" >> config/have_getaddrinfo.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+
+	echo "no"
+fi
+	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 NETWORK=1
 echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK" $NETWORK >> config/network.h
 echo "#endif" >> config/network.h
+	else
+		if [ "${enable_network}" = "yes" ]
+ then
+			echo "*"
+			echo "* --enable-network was requested, but this system"
+			echo "* does not support getaddrinfo()."
+			echo "*"
+			exit 1
+		fi
+	fi
 else
 echo "#undef NETWORK" > config/network.h
 fi
