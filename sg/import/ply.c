@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/network.h>
-#ifdef NETWORK
+#include <agar/config/have_opengl.h>
+#ifdef HAVE_OPENGL
 
 #include <agar/core/core.h>
 #include <agar/sg/sg.h>
@@ -491,4 +491,4 @@ fail:
 	return (-1);
 }
 
-#endif /* NETWORK */
+#endif /* HAVE_OPENGL */
