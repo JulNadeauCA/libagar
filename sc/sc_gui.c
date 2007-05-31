@@ -38,11 +38,7 @@ SC_SpinReal(void *parent, const char *label, SC_Real *pv, SC_Real incr)
 	AG_FSpinbutton *fsb;
 
 	fsb = AG_FSpinbuttonNew(parent, 0, NULL, label);
-#ifdef SC_DOUBLE_PRECISION
-	AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, pv);
-#else
-	AG_WidgetBind(fsb, "value", AG_WIDGET_FLOAT, pv);
-#endif
+	AG_WidgetBind(fsb, "value", SC_WIDGET_REAL, pv);
 	AG_FSpinbuttonSetIncrement(fsb, incr);
 	return (fsb);
 }
