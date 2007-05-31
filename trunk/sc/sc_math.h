@@ -93,7 +93,7 @@ typedef struct sc_qtime_range {
 # define SC_Atan2(y,x) atan2(y,x)
 # define SC_Fabs(x) fabs(x)
 # define SC_Pow(x,y) pow((x),(y))
-#elif (SC_PRECISION == SC_FLOAT)
+#else
 # define SC_Sqrt(r) sqrtf(r)
 # define SC_Sin(x) sinf(x)
 # define SC_Cos(x) cosf(x)

@@ -5,10 +5,13 @@
 #define _SC_GUI_H_
 #include <agar/gui/gui.h>
 
-#ifdef SC_DOUBLE_PRECISION
-#define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_DOUBLE,(p))
+#if SC_PRECISION == SC_LONG_DOUBLE
+# define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_LONG_DOUBLE,\
+                                                (p))
+#elif SC_PRECISION == SC_DOUBLE
+# define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_DOUBLE,(p))
 #else
-#define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_FLOAT,(p))
+# define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_FLOAT,(p))
 #endif
 
 __BEGIN_DECLS
