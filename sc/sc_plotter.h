@@ -11,7 +11,26 @@
 
 #include "begin_code.h"
 
-#define SC_PLOTTER_NDEFCOLORS 16
+#define SC_PLOTTER_NDEFCOLORS	16
+#define SC_PLOTTER_LABEL_MAX	64
+
+struct sc_plotter;
+
+enum sc_plot_label_type {
+	SC_LABEL_X,				/* Refers to an x value */
+	SC_LABEL_Y,				/* Refers to an y value */
+	SC_LABEL_FREE,				/* Free placement in graph */
+	SC_LABEL_OVERLAY,			/* Overlay on widget */
+};
+
+typedef struct sc_plot_label {
+	char text[SC_PLOTTER_LABEL_MAX];	/* Label text */
+	int  text_surface;			/* Text surface handle */
+	enum sc_plot_label_type type;		/* Packing alignment */
+	Uint x;					/* X position (or -1) */
+	Uint y;					/* Y position (or -1) */
+	TAILQ_ENTRY(sc_plot_label) labels;
+} SC_PlotLabel;
 
 typedef struct sc_plot {
 	enum sc_plot_type {
@@ -42,6 +61,7 @@ typedef struct sc_plot {
 		SC_Real	*r;		/* Real points */
 		SC_Vector **v;		/* Real vectors */
 	} data;
+	struct sc_plotter *plotter;	/* Back pointer to plotter */
 	Uint n;				/* Number of points */
 	Uint flags;
 #define SC_PLOT_SELECTED	0x01
@@ -55,6 +75,7 @@ typedef struct sc_plot {
 	SC_Real xScale, yScale;		/* Scaling factors */
 	int xOffs, yOffs;		/* Offset in display */
 	int xLabel, yLabel;		/* Item position */
+	TAILQ_HEAD(,sc_plot_label) labels; /* User labels */
 	TAILQ_ENTRY(sc_plot) plots;
 } SC_Plot;
 
@@ -99,6 +120,15 @@ __inline__ void	 SC_PlotterSetDefaultColor(SC_Plotter *, int, Uint8, Uint8,
 __inline__ void	 SC_PlotterSetDefaultScale(SC_Plotter *, SC_Real, SC_Real);
 
 SC_Plot		*SC_PlotNew(SC_Plotter *, enum sc_plot_type);
+
+SC_PlotLabel	*SC_PlotLabelNew(SC_Plot *, enum sc_plot_label_type,
+		                 Uint, Uint, const char *, ...);
+void		 SC_PlotLabelSetText(SC_Plot *, SC_PlotLabel *, const char *,
+		                     ...);
+SC_PlotLabel	*SC_PlotLabelReplace(SC_Plot *, enum sc_plot_label_type,
+		                     Uint, Uint, const char *, ...);
+
+void		 SC_PlotClear(SC_Plot *);
 SC_Plot		*SC_PlotFromProp(SC_Plotter *, enum sc_plot_type, const char *,
 		                 const char *);
 SC_Plot		*SC_PlotFromReal(SC_Plotter *, enum sc_plot_type, const char *,
@@ -108,18 +138,17 @@ SC_Plot		*SC_PlotFromInt(SC_Plotter *, enum sc_plot_type, const char *,
 SC_Plot		*SC_PlotFromDerivative(SC_Plotter *, enum sc_plot_type,
 		                       SC_Plot *);
 
-AG_Window	*SC_PlotSettings(SC_Plotter *, SC_Plot *);
-__inline__ void	 SC_PlotSetColor(SC_Plotter *, SC_Plot *, Uint8, Uint8, Uint8);
-void	 	 SC_PlotSetLabel(SC_Plotter *, SC_Plot *, const char *, ...);
-void	 	 SC_PlotUpdateLabel(SC_Plotter *, SC_Plot *);
+AG_Window	*SC_PlotSettings(SC_Plot *);
+__inline__ void	 SC_PlotSetColor(SC_Plot *, Uint8, Uint8, Uint8);
+void	 	 SC_PlotSetLabel(SC_Plot *, const char *, ...);
+void	 	 SC_PlotUpdateLabel(SC_Plot *);
 __inline__ void	 SC_PlotSetScale(SC_Plot *, SC_Real, SC_Real);
 __inline__ void	 SC_PlotSetXoffs(SC_Plot *, int);
 __inline__ void	 SC_PlotSetYoffs(SC_Plot *, int);
-__inline__ void	 SC_PlotReal(SC_Plotter *, SC_Plot *, SC_Real);
-void	 	 SC_PlotRealv(SC_Plotter *, SC_Plot *, Uint, const SC_Real *);
-__inline__ void	 SC_PlotVector(SC_Plotter *, SC_Plot *, const SC_Vector *);
-void		 SC_PlotVectorv(SC_Plotter *, SC_Plot *, Uint,
-		                const SC_Vector **);
+__inline__ void	 SC_PlotReal(SC_Plot *, SC_Real);
+void	 	 SC_PlotRealv(SC_Plot *, Uint, const SC_Real *);
+__inline__ void	 SC_PlotVector(SC_Plot *, const SC_Vector *);
+void		 SC_PlotVectorv(SC_Plot *, Uint, const SC_Vector **);
 __END_DECLS
 
 #include "close_code.h"
