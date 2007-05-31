@@ -87,6 +87,12 @@ Other event handler functions may ignore this value entirely.
 .Ft "void"
 .Fn AG_ScaleSurface "SDL_Surface *src" "Uint16 width" "Uint16 height" "SDL_Surface **dst"
 .Pp
+.Ft "Uint32"
+.Fn AG_VideoPixel "Uint32 c"
+.Pp
+.Ft "Uint32"
+.Fn AG_SurfacePixel "Uint32 c"
+.Pp
 .Ft "int"
 .Fn AG_SamePixelFmt "SDL_Surface *s1" "SDL_Surface *s2"
 .Pp
@@ -120,6 +126,15 @@ which must be either NULL or a pointer to a valid surface.
 If
 .Fa dst
 is NULL, a new surface is allocated.
+.Pp
+The
+.Fn AG_VideoPixel
+function converts the given pixel value
+.Fa c
+from reference surface format (agSurfaceFmt) to video display
+format (agVideoFmt).
+.Fn AG_SurfacePixel
+does the opposite.
 .Pp
 .Fn AG_SamePixelFmt
 compares the two surfaces
