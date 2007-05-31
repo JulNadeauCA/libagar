@@ -229,6 +229,8 @@ void		 AG_UpdateTexture(SDL_Surface *, int);
 SDL_Surface	*AG_CaptureGLView(void);
 #endif
 
+__inline__ Uint32 AG_VideoPixel(Uint32);
+__inline__ Uint32 AG_SurfacePixel(Uint32);
 __inline__ int	  AG_SamePixelFmt(SDL_Surface *, SDL_Surface *);
 __inline__ Uint32 AG_GetPixel(SDL_Surface *, Uint8 *);
 __inline__ void	  AG_PutPixel(SDL_Surface *, Uint8 *, Uint32);

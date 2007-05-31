@@ -462,6 +462,26 @@ AG_DupSurface(SDL_Surface *ss)
 	return (rs);
 }
 
+/* Convert a pixel from agSurfaceFormat to agVideoFormat. */
+Uint32
+AG_VideoPixel(Uint32 c)
+{
+	Uint8 r, g, b;
+
+	SDL_GetRGB(c, agSurfaceFmt, &r, &g, &b);
+	return (SDL_MapRGB(agVideoFmt, r, g, b));
+}
+
+/* Convert a pixel from agVideoFormat to agSurfaceFormat. */
+Uint32
+AG_SurfacePixel(Uint32 c)
+{
+	Uint8 r, g, b;
+
+	SDL_GetRGB(c, agVideoFmt, &r, &g, &b);
+	return (SDL_MapRGB(agSurfaceFmt, r, g, b));
+}
+
 int
 AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
 {
