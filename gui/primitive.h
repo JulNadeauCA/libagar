@@ -6,34 +6,43 @@
 #include "begin_code.h"
 
 typedef struct ag_primitive_ops {
-	void	(*box)(void *, int, int, int, int, int, Uint32);
-	void	(*box_chamfered)(void *, SDL_Rect *, int, int, Uint32);
-	void	(*box_dithered)(void *, int, int, int, int, int, Uint32,
-			        Uint32);
-	void	(*frame)(void *, int, int, int, int, Uint32);
-	void	(*frame_blended)(void *, int, int, int, int, Uint8 [4],
-		                 enum ag_blend_func);
-	void	(*circle)(void *, int, int, int, Uint32);
-	void	(*circle2)(void *, int, int, int, Uint32);
-	void	(*line)(void *, int, int, int, int, Uint32);
-	void	(*line2)(void *, int, int, int, int, Uint32);
-	void	(*line_blended)(void *, int, int, int, int, Uint8 [4],
-		                enum ag_blend_func);
-	void	(*hline)(void *, int, int, int, Uint32);
-	void	(*vline)(void *, int, int, int, Uint32);
-	void	(*rect_outlined)(void *, int, int, int, int, Uint32);
-	void	(*rect_filled)(void *, int, int, int, int, Uint32);
-	void	(*rect_blended)(void *, int, int, int, int, Uint8[4],
-	                        enum ag_blend_func);
-	void	(*plus)(void *, int, int, int, int, Uint8 [4],
-			enum ag_blend_func);
-	void	(*minus)(void *, int, int, int, int, Uint8 [4],
-			 enum ag_blend_func);
-	void	(*tiling)(void *, SDL_Rect, int, int, Uint32, Uint32);
-	void	(*arrow_up)(void *, int, int, int, Uint32, Uint32);
-	void	(*arrow_down)(void *, int, int, int, Uint32, Uint32);
-	void	(*arrow_left)(void *, int, int, int, Uint32, Uint32);
-	void	(*arrow_right)(void *, int, int, int, Uint32, Uint32);
+	void	(*box)(void *, int x, int y, int w, int h, int depth,
+		       Uint32 color);
+	void	(*box_chamfered)(void *, SDL_Rect *rBox, int depth, int radius,
+		                 Uint32 color);
+	void	(*box_dithered)(void *, int x, int y, int w, int h, int depth,
+		                Uint32 color1, Uint32 color2);
+	void	(*frame)(void *, int x, int y, int w, int h, Uint32 color);
+	void	(*frame_blended)(void *, int x, int y, int w, int h,
+		                 Uint8 color[4], enum ag_blend_func fn);
+	void	(*circle)(void *, int x, int y, int radius, Uint32);
+	void	(*circle2)(void *, int x, int y, int radius, Uint32);
+	void	(*line)(void *, int x1, int y1, int x2, int y2, Uint32 color);
+	void	(*line2)(void *, int x1, int y1, int x2, int y2, Uint32 color);
+	void	(*line_blended)(void *, int x1, int y1, int x2, int y2,
+		                Uint8 color[4], enum ag_blend_func fn);
+	void	(*hline)(void *, int x1, int x2, int y, Uint32);
+	void	(*vline)(void *, int x, int y1, int y2, Uint32);
+	void	(*rect_outlined)(void *, int x, int y, int w, int h,
+		                 Uint32 color);
+	void	(*rect_filled)(void *, int x, int y, int w, int h,
+		               Uint32 color);
+	void	(*rect_blended)(void *, int x, int y, int w, int h,
+			        Uint8 color[4], enum ag_blend_func fn);
+	void	(*plus)(void *, int x, int y, int w, int h, Uint8 color[4],
+			enum ag_blend_func fn);
+	void	(*minus)(void *, int x, int y, int w, int h, Uint8 color[4],
+			 enum ag_blend_func fn);
+	void	(*tiling)(void *, SDL_Rect rd, int tileSize, int scrollOffset,
+		          Uint32 color1, Uint32 color2);
+	void	(*arrow_up)(void *, int x, int y, int len,
+		            Uint32 color1, Uint32 color2);
+	void	(*arrow_down)(void *, int x, int y, int len,
+		              Uint32 color1, Uint32 color2);
+	void	(*arrow_left)(void *, int x, int y, int len,
+			      Uint32 color1, Uint32 color2);
+	void	(*arrow_right)(void *, int x, int y, int len,
+		               Uint32 color1, Uint32 color2);
 } AG_PrimitiveOps;
 
 extern AG_PrimitiveOps agPrim;
