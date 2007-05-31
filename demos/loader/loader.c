@@ -28,7 +28,7 @@ CreateWindow(void)
 
 	win = AG_WindowNew(0);
 
-	fd = AG_FileDlgNew(win, 0);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(fd, "/");
 	AG_FileDlgSetFilename(fd, "foo.foo");
 	AG_FileDlgAddType(fd, "Foo file", "*.foo", LoadFile, NULL);
