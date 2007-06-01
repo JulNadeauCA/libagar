@@ -306,6 +306,7 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 	}
 }
 
+#ifdef DEBUG
 static void
 SetRotationSpeed(AG_Event *event)
 {
@@ -314,6 +315,7 @@ SetRotationSpeed(AG_Event *event)
 
 	cam->rotSpeed = speed;
 }
+#endif
 
 void
 SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
