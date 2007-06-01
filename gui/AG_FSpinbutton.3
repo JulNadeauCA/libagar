@@ -90,10 +90,10 @@ for integer-only bindings.
 .Fn AG_FSpinbuttonSelectUnit "AG_FSpinbutton *fsu" "const char *conv_unit"
 .Pp
 .Ft void
-.Fn FSpinbuttonSetPrecision "AG_FSpinbutton *fsu, const char *fmt" "int precision"
+.Fn AG_FSpinbuttonSetPrecision "AG_FSpinbutton *fsu, const char *fmt" "int precision"
 .Pp
 .Ft void
-.Fn FSpinbuttonSetWriteable "AG_FSpinbutton *fsu" "int writeable"
+.Fn AG_FSpinbuttonSetWriteable "AG_FSpinbutton *fsu" "int writeable"
 .Pp
 .nr nS 0
 The
@@ -140,13 +140,15 @@ function defines the step value (given in selected units) for the
 changes the current conversion unit.
 .Pp
 The
-.Fn FSpinbuttonSetPrecision
+.Fn AG_FSpinbuttonSetPrecision
 function selects the preferred style and precision for printing.
 The default is
 .Sq %.2f .
 .Pp
-.Fn FSpinbuttonSetWriteable
-sets the writeability flag.
+.Fn AG_FSpinbuttonSetWriteable
+sets the writeability flag, also accessible as the
+.Va writeable
+member of the structure.
 .Sh EVENTS
 The
 .Nm
