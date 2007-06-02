@@ -779,6 +779,18 @@ SG_MatrixScale2(SG_Matrix *M, SG_Real x, SG_Real y)
 	SG_MatrixMultv(M, &S);
 }
 
+void
+SG_MatrixUniScale(SG_Matrix *M, SG_Real r)
+{
+	SG_Matrix S;
+
+	S.m[0][0] = r;   S.m[0][1] = 0.0; S.m[0][2] = 0.0; S.m[0][3] = 0.0;
+	S.m[1][0] = 0.0; S.m[1][1] = r;   S.m[1][2] = 0.0; S.m[1][3] = 0.0;
+	S.m[2][0] = 0.0; S.m[2][1] = 0.0; S.m[2][2] = r;   S.m[2][3] = 0.0;
+	S.m[3][0] = 0.0; S.m[3][1] = 0.0; S.m[3][2] = 0.0; S.m[3][3] = 1.0;
+	SG_MatrixMultv(M, &S);
+}
+
 SG_Matrix
 SG_ReadMatrix(AG_Netbuf *buf)
 {
