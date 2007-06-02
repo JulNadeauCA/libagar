@@ -27,6 +27,7 @@
  */
 
 #include <config/version.h>
+#include <config/debug.h>
 #include <config/release.h>
 #include <config/enable_nls.h>
 #include <config/prefix.h>
