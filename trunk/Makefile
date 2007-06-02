@@ -15,7 +15,6 @@ SUBDIR=	 agar-config \
 	 rg \
 	 sg \
 	 map \
-	 mat \
 	 sc \
 	 net \
 	 libintl \
