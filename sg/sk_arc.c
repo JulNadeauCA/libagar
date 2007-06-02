@@ -23,6 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <agar/config/edition.h>
 #include <agar/config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
