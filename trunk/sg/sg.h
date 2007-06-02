@@ -3,23 +3,7 @@
 
 #ifndef _AGAR_SG_H_
 #define _AGAR_SG_H_
-
-#ifndef _AGAR_SG_PUBLIC
-#include <config/edition.h>
-#endif
-#include <agar/config/_mk_have_sys_types_h.h>
-
-#if 0
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
-#define _MK_HAVE_UNSIGNED_TYPEDEFS
-typedef unsigned int Uint;
-typedef unsigned char Uchar;
-typedef unsigned long Ulong;
-#endif
-#endif
+#include <agar/core/core_begin.h>
 
 #include "begin_code.h"
 
@@ -170,4 +154,6 @@ SG_Vector	 SG_NodeDir(void *);
 __END_DECLS
 
 #include "close_code.h"
+
+#include <agar/core/core_close.h>
 #endif /* _AGAR_SG_H_ */
