@@ -31,8 +31,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
-
 SG_Voxel *
 SG_VoxelNew(void *pNode, const char *name)
 {

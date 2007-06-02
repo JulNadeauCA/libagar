@@ -29,9 +29,6 @@
 #include <agar/core/core.h>
 #include "sg.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 static GLenum sgGLprimitives[] = {
 	GL_POINTS,
 	GL_LINES,

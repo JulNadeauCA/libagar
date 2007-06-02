@@ -32,9 +32,6 @@
 
 #include "sk.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #include <string.h>
 #include <math.h>
 

@@ -32,9 +32,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 const AG_Version sgCameraVer = { 0, 0 };
 
 SG_Camera *

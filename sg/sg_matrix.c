@@ -31,9 +31,6 @@
 #include "sg.h"
 #include "sg_bitstring.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #include <string.h>
 
 #undef MSWAP
