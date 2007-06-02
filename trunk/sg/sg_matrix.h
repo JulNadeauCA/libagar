@@ -56,6 +56,7 @@ void			SG_MatrixTranslateY(SG_Matrix *, SG_Real);
 void			SG_MatrixTranslateZ(SG_Matrix *, SG_Real);
 void			SG_MatrixScalev(SG_Matrix *, SG_Vector);
 void			SG_MatrixScale2(SG_Matrix *, SG_Real, SG_Real);
+void			SG_MatrixUniScale(SG_Matrix *, SG_Real);
 
 #define SG_Rotatev(n,a,v) SG_MatrixRotatev(&SGNODE(n)->T,(a),(v))
 #define SG_RotateXv(n,a) SG_MatrixRotateXv(&SGNODE(n)->T,(a))
@@ -76,6 +77,7 @@ void			SG_MatrixScale2(SG_Matrix *, SG_Real, SG_Real);
 #define SG_TranslateY(n,t) SG_MatrixTranslateY(&SGNODE(n)->T,(t))
 #define SG_TranslateZ(n,t) SG_MatrixTranslateZ(&SGNODE(n)->T,(t))
 #define SG_Scalev(n,v) SG_MatrixScalev(&SGNODE(n)->T,(v))
+#define SG_UniScale(n,r) SG_MatrixUniScale(&SGNODE(n)->T,(r))
 #define SG_Identity(n) SG_MatrixIdentityv(&SGNODE(n)->T)
 
 __inline__ void		SG_MatrixGetTranslation(const SG_Matrix *, SG_Vector *);
