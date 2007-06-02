@@ -30,9 +30,6 @@
 
 #include "sg.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 const AG_WidgetOps sgViewOps = {
 	{
 		"AG_Widget:AG_GLView:SG_View",

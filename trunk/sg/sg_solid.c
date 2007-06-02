@@ -30,9 +30,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #include <string.h>
 
 SG_Solid *

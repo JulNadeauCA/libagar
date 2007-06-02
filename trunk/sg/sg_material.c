@@ -32,7 +32,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
 #if 0
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>

@@ -31,9 +31,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #define X 0.525731112119133606
 #define Z 0.850650808352039932
 

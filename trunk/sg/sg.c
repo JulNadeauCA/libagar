@@ -33,9 +33,6 @@
 
 #include "sg.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #if 0
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>

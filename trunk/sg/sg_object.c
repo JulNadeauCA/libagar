@@ -32,9 +32,6 @@
 #include "sg.h"
 #include "sg_gui.h"
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 #include <string.h>
 
 const AG_Version sgObjectVer = { 0, 0 };
