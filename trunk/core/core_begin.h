@@ -26,7 +26,7 @@
 # define _AGAR_HAVE_NONNULL_ATTRIBUTE_
 #endif
 
-#include <agar/core/threads.h>
+#include <agar/core/threads.h>	/* For thread types in headers */
 
 #ifdef _AGAR_HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -37,7 +37,7 @@
 #define Ulong unsigned long
 #endif
 
-#include <SDL.h>
+#include <SDL.h>		/* For SDL types in headers */
 
 #ifdef HAVE_BOUNDED_ATTRIBUTE
 #define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

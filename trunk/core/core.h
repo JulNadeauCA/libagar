@@ -12,11 +12,8 @@
 #include <agar/config/have_bounded_attribute.h>
 #include <agar/config/have_format_attribute.h>
 #include <agar/config/have_nonnull_attribute.h>
-#include <agar/config/_mk_have_unsigned_typedefs.h>
 
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#include <agar/config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define _MK_HAVE_UNSIGNED_TYPEDEFS
 typedef unsigned int Uint;
@@ -30,12 +27,17 @@ typedef unsigned long Ulong;
 #include <SDL_endian.h>
 
 #include <agar/config/_mk_have_sys_types_h.h>
+#ifdef _MK_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__
 #  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
 # else
 #  include <GL/gl.h>
+#  include <GL/glu.h>
 # endif
 #endif
 
