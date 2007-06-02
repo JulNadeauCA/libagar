@@ -87,6 +87,9 @@ install-includes:
 		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/net/net_pub.h \
 		   ${INCLDIR}/agar/net.h; \
+		echo "${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/map/map_pub.h \
+		   ${INCLDIR}/agar/map.h; \
 	else \
 		echo "${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h"; \
@@ -102,6 +105,8 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h; \
 		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
+		echo "${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h"; \
+		${SUDO} ${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h; \
 	fi
 
 deinstall-includes:
