@@ -36,8 +36,10 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#if 0
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>
+#endif
 
 #include <math.h>
 #include <string.h>
