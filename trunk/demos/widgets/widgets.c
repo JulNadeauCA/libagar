@@ -40,8 +40,6 @@ CreateWindow(void)
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	div1 = pane->div[0];
 	div2 = pane->div[1];
-	AG_BoxSetSpacing(div1, 4);
-	AG_BoxSetPadding(div2, 5);
 	{
 		/* The AG_Pixmap widget displays a raster surface. */
 		AG_PixmapFromBMP(div1, 0, "agar.bmp");
