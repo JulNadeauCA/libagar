@@ -576,7 +576,7 @@ RG_TilesetResvPixmap(const char *tsname, const char *pxname)
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!AGOBJECT_TYPE(ts, "RG_Tileset")) {
+	if (!AG_ObjectIsClass(ts, "RG_Tileset:*")) {
 		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}
@@ -601,7 +601,7 @@ RG_TilesetResvTile(const char *tsname, const char *tname)
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
-	if (!AGOBJECT_TYPE(ts, "RG_Tileset")) {
+	if (!AG_ObjectIsClass(ts, "RG_Tileset:*")) {
 		AG_SetError("%s: not a tileset", tsname);
 		return (NULL);
 	}

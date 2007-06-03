@@ -108,7 +108,7 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 	AG_Object *cob;
 	AG_TlistItem *it;
 	
-	if (AGOBJECT_TYPE(pob, "RG_Tileset")) {
+	if (AG_ObjectIsClass(pob, "RG_Tileset:*")) {
 		it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
 		    (pob->flags & AG_OBJECT_DATA_RESIDENT) ?
 		    _(" (resident)") : "");
@@ -143,7 +143,7 @@ poll_src_tiles(AG_Event *event)
 	AG_TlistClear(tl);
 	if (tex->tileset[0] != '\0' &&
 	    (ts = AG_ObjectFind(tex->tileset)) != NULL &&
-	    AGOBJECT_TYPE(ts, "RG_Tileset")) {
+	    AG_ObjectIsClass(ts, "RG_Tileset:*")) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
 			it = AG_TlistAdd(tl, NULL, t->name);
 			it->p1 = t;
