@@ -161,6 +161,7 @@ mkdir config 1>/dev/null 2>&1
 
 if [ "${with_manpages}" = "no" ]; then
     echo "NOMAN=yes" >> Makefile.config
+    echo "NOMANLINKS=yes" >> Makefile.config
 fi
 if [ "${with_docs}" = "no" ]; then
     echo "NODOC=yes" >> Makefile.config
@@ -291,6 +292,7 @@ int main(int argc, char *argv[]) { return (0); }
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -330,6 +332,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -364,6 +367,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -404,6 +408,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -437,6 +442,7 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -469,6 +475,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -481,10 +488,12 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> config/have_long_double.h
 echo "#endif" >> config/have_long_double.h
 
+	HAVE_LONG_DOUBLE="yes"
 	echo "yes"
 else
     echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
 
+	HAVE_LONG_DOUBLE="no"
 	echo "no"
 fi
 echo -n "checking for cygwin environment..."
@@ -505,6 +514,7 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -541,6 +551,7 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
@@ -563,8 +574,8 @@ if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
 	echo "CFLAGS=$CFLAGS" >> Makefile.config
 fi
-echo -n "checking for Agar (http://agar.csoft.org/)..."
-echo -n "checking for Agar (http://agar.csoft.org/)..." >> config.log
+echo -n "checking for Agar (http://hypertriton.com/agar/)..."
+echo -n "checking for Agar (http://hypertriton.com/agar/)..." >> config.log
 agar_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/agar-config" ]; then
@@ -621,6 +632,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -708,6 +720,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
@@ -740,6 +753,89 @@ echo "#endif" >> config/opengl_libs.h
 else
 echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#undef OPENGL_LIBS" > config/opengl_libs.h
+fi;
+echo -n "checking for GLU (http://www.opengl.org)..."
+echo -n "checking for GLU (http://www.opengl.org)..." >> config.log
+if [ "$SYSTEM" = "Darwin" ]; then
+GLU_CFLAGS=""
+GLU_LIBS=""
+else
+GLU_CFLAGS=""
+if [ -d "/usr/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11"
+fi;
+if [ -d "/usr/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11R6"
+fi;
+if [ -d "/usr/local/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11/include"
+fi;
+if [ -d "/usr/local/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11R6/include"
+fi;
+if [ -d "/usr/local/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11"
+fi;
+if [ -d "/usr/local/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11R6"
+fi;
+if [ -d "/usr/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11/include"
+fi;
+if [ -d "/usr/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11R6/include"
+fi;
+GLU_LIBS="${GLU_LIBS} -lGLU"
+fi;
+cat << EOT > conftest.c
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+int main(int argc, char *argv[]) {
+	GLUquadric *qd;
+	qd = gluNewQuadric();
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GLU" > config/have_glu.h
+echo "#define HAVE_GLU" $HAVE_GLU >> config/have_glu.h
+echo "#endif" >> config/have_glu.h
+
+	HAVE_GLU=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_GLU" > config/have_glu.h
+
+	echo "no"
+fi
+if [ "${HAVE_GLU}" = "yes" ]; then
+echo "GLU_CFLAGS=$GLU_CFLAGS" >> Makefile.config
+echo "GLU_LIBS=$GLU_LIBS" >> Makefile.config
+echo "#ifndef GLU_CFLAGS" > config/glu_cflags.h
+echo "#define GLU_CFLAGS \"$GLU_CFLAGS\"" >> config/glu_cflags.h
+echo "#endif" >> config/glu_cflags.h
+echo "#ifndef GLU_LIBS" > config/glu_libs.h
+echo "#define GLU_LIBS \"$GLU_LIBS\"" >> config/glu_libs.h
+echo "#endif" >> config/glu_libs.h
+else
+echo "#undef GLU_CFLAGS" > config/glu_cflags.h
+echo "#undef GLU_LIBS" > config/glu_libs.h
 fi;
 if [ "${HAVE_AGAR}" != "yes" -o "${HAVE_OPENGL}" != "yes" ]
  then

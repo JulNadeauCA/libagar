@@ -21,14 +21,17 @@ CreateWindow(void)
 	SG_View *sv;
 	AG_HBox *hb;
 	SG_Sphere *s1, *s2;
+	SG_Light *lt;
 	SG *sg;
 	int i;
-	float angle = 60.0;
+	SG_Real angle = 60.0;
 
+	/* Create a new scene graph. */
 	sg = SG_New(agWorld, "scene");
 	AGOBJECT(sg)->flags |= AG_OBJECT_DATA_RESIDENT;
 	AGOBJECT(sg)->data_used = 1;
-	
+
+	/* Create a bunch of spheres. */
 	s1 = SG_SphereNew(sg->root, "Sphere A");
 	for (i = 0; i < 60; i++) {
 		s2 = SG_SphereNew(s1, "Sphere B");
@@ -37,26 +40,26 @@ CreateWindow(void)
 		SG_Translate3(s1, 2.0, 0.4, 0.0);
 		angle -= 0.4;
 	}
-#if 1
+	
+	/* Create a light source. */
+	lt = SG_LightNew(sg->root, "MyLight");
+	SG_Translate3(lt, 5.0, 3.0, 2.0);
+	lt->Kc = 0.5;				/* Set constant attenuation */
+	lt->Kl = 0.05;				/* Set linear attenuation */
+
+	/* Create a window containing a SG_View widget. */
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Scene");
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
-	//sv->cam->eye = SG_VECTOR(108.0, 249.0, -2.5);
-	//sv->cam->pitch = 64.0;
-	//sv->cam->yaw = 270.0;
-	sv->cam->zFar = 1000.0;
+
+	/* Move the camera. */
+	SG_Translate3(sv->cam, -10.0, 10.0, -30.0);
+
+	/* Rotate the camera 180 degrees about the I axis. */
+	SG_Rotatevd(sv->cam, 180.0, SG_I);
 
 	AG_WindowSetGeometry(win, 120, 0, agView->w-120, agView->h);
 	AG_WindowShow(win);
-#endif
-	{
-		SG_Light *lt;
-
-		lt = SG_LightNew(sg->root, "Light0");
-		SG_Translate3(lt, 5.0, 3.0, 2.0);
-		lt->Kc = 0.5;
-		lt->Kl = 0.05;
-	}
 }
 
 int
