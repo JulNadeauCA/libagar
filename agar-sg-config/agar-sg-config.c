@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lGLU -lag_sg -lag_sgimport");
+			printf("-lag_sg -lag_sgimport");
 			printf("\n");
 		}
 	}
