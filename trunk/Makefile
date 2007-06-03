@@ -4,19 +4,15 @@ TOP=	.
 include ${TOP}/Makefile.config
 
 SUBDIR=	 agar-config \
-	 agar-sg-config \
-	 agar-sc-config \
-	 agar-map-config \
-	 agar-net-config \
 	 compat \
 	 core \
 	 gui \
-	 vg \
-	 rg \
-	 sg \
-	 map \
-	 sc \
-	 net \
+	 vg agar-vg-config \
+	 rg agar-rg-config \
+	 sg agar-sg-config \
+	 map agar-map-config \
+	 sc agar-sc-config \
+	 net agar-net-config \
 	 libintl \
 	 po
 
