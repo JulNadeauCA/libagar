@@ -91,7 +91,7 @@ This technique can significantly reduce GUI-related code bloat in applications.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn AG_WidgetInit "void *widget, const char *type, const void *widget_ops" "int flags"
+.Fn AG_WidgetInit "AG_Widget *widget, const char *type, const AG_Widget *widget_ops" "int flags"
 .Pp
 .nr nS 0
 The
@@ -189,13 +189,13 @@ parent container.
 .Sh FOCUS STATE
 .nr nS 1
 .Ft "int"
-.Fn AGWIDGET_FOCUSED "void *widget"
+.Fn AGWIDGET_FOCUSED "AG_Widget *widget"
 .Pp
 .Ft "void"
-.Fn AG_WidgetFocus "void *widget"
+.Fn AG_WidgetFocus "AG_Widget *widget"
 .Pp
 .Ft "void"
-.Fn AG_WidgetUnfocus "void *widget"
+.Fn AG_WidgetUnfocus "AG_Widget *widget"
 .Pp
 .Ft "void"
 .Fn AG_WidgetFindFocused "AG_Window *win"
@@ -221,10 +221,10 @@ to it if it was found, or NULL otherwise.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
-.Fn AG_WidgetArea "void *widget" "int x" "int y"
+.Fn AG_WidgetArea "AG_Widget *widget" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetRelativeArea "void *widget" "int x" "int y"
+.Fn AG_WidgetRelativeArea "AG_Widget *widget" "int x" "int y"
 .Pp
 .nr nS 0
 The
@@ -240,6 +240,79 @@ evaluates to 1 if widget-relative view coordinates
 and
 .Fa y
 are inside the widget area.
+.Sh BLITTING SURFACES
+.nr nS 1
+.Ft void
+.Fn AG_WidgetBlit "AG_Widget *widget" "SDL_Surface *src" "int x" "int y"
+.Pp
+.Ft int
+.Fn AG_WidgetMapSurface "AG_Widget *widget" "SDL_Surface *su"
+.Pp
+.Ft void
+.Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
+.Pp
+.Ft void
+.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
+.Pp
+.Ft void
+.Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
+.Pp
+.Ft void
+.Fn AG_WidgetBlitFrom "void *dstWidget" "void *srcWidget" "int surface_id" "SDL_Rect *rs" "int x" "int y"
+.Pp
+.Ft void
+.Fn AG_WidgetBlitSurface "AG_Widget *widget" "int surface_id" "int x" "int y"
+.Pp
+.nr nS 0
+The
+.Fn AG_WidgetBlit
+function performs a software->hardware blit from the SDL surface
+.Fa src
+to the video display at the given widget coordinates.
+.Pp
+Software to hardware blits are slow, so the
+.Fn AG_WidgetMapSurface
+interface provides a way to take advantage of hardware->hardware blits.
+If a texture unit is available, this function causes the given surface
+to be uploaded to the graphics hardware and a per-widget surface handle
+is returned.
+.Fn AG_WidgetUnmapSurface
+destroys the given surface mapping.
+.Pp
+.Fn AG_WidgetReplaceSurface
+replaces the contents of a previously-mapped surface with the contents of
+.Fa newSurface .
+.Pp
+The
+.Fn AG_WidgetUpdateSurface
+function should be invoked whenever a mapped surface is changed.
+If hardware surfaces are supported, it will cause an upload of the software
+surface to the hardware (otherwise it is a no-op).
+.Pp
+The
+.Fn AG_WidgetBlitFrom
+function renders a previously mapped (possibly hardware) surface from the
+source widget
+.Fa srcWidget
+(using source rectangle
+.Fa rs )
+onto the destination widget
+.Fa dstWidget ,
+at coordinates
+.Fa x ,
+.Fa y .
+.Pp
+The
+.Fn AG_WidgetBlitSurface
+variant invokes
+.Fa AG_WidgetBlitFrom
+with the same argument for both
+.Fa srcWidget
+and
+.Fa dstWidget
+(and
+.Fa rs
+set to NULL).
 .Sh RENDERING AND PRIMITIVES
 The
 .Va draw
@@ -266,55 +339,52 @@ direct video agPrim in OpenGL mode.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetPushClipRect "void *widget" "int x" "int y" "Uint w" "Uint h"
+.Fn AG_WidgetPushClipRect "AG_Widget *widget" "int x" "int y" "Uint w" "Uint h"
 .Pp
 .Ft void
-.Fn AG_WidgetPopClipRect "void *widget"
+.Fn AG_WidgetPopClipRect "AG_Widget *widget"
 .Pp
 .Ft void
-.Fn AG_WidgetPushCursor "void *widget" "int cursor"
+.Fn AG_WidgetPushCursor "AG_Widget *widget" "int cursor"
 .Pp
 .Ft void
-.Fn AG_WidgetPopCursor "void *widget"
+.Fn AG_WidgetPopCursor "AG_Widget *widget"
 .Pp
 .Ft void
-.Fn AG_WidgetBlit "void *widget" "SDL_Surface *src" "int x" "int y"
+.Fn AG_WidgetPutPixel "AG_Widget *widget" "int x" "int y" "Uint32 color"
 .Pp
 .Ft void
-.Fn AG_WidgetPutPixel "void *widget" "int x" "int y" "Uint32 color"
+.Fn agPrim.box "AG_Widget *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.box "void *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
+.Fn agPrim.box_chamfered "AG_Widget *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
+.Fn agPrim.frame "AG_Widget *widget" "int x" "int y" "int w" "int h" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.frame "void *widget" "int x" "int y" "int w" "int h" "Uint32 c"
+.Fn agPrim.circle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.circle "void *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn agPrim.circle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.circle2 "void *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn agPrim.line "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.line "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn agPrim.line2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn agPrim.hline "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.hline "void *widget" "int x1" "int x2" "int y" "Uint32 c"
+.Fn agPrim.vline "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.vline "void *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Fn agPrim.rect_outlined "AG_Widget *widget, int x, int y, int w, int h" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.rect_outlined "void *widget, int x, int y, int w, int h" "Uint32 c"
-.Pp
-.Ft void
-.Fn agPrim.rect_filled "void *widget, int x, int y, int w, int h" "Uint32 c"
+.Fn agPrim.rect_filled "AG_Widget *widget, int x, int y, int w, int h" "Uint32 c"
 .Pp
 .nr nS 0
 The
@@ -339,13 +409,6 @@ The
 .Fn AG_WidgetPopCursor
 restores the previously saved cursor.
 .Pp
-The
-.Fn AG_WidgetBlit
-function performs a surface blit from
-.Fa src
-to the video display at the given widget coordinates.
-.Pp
-The
 .Fn AG_WidgetPutPixel
 function writes a pixel of value
 .Fa color
@@ -421,10 +484,10 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Pp
 .nr nS 1
 .Ft "AG_WidgetBinding *"
-.Fn AG_WidgetBind "void *widget, const char *binding" "enum ag_widget_binding_type type, ..."
+.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_widget_binding_type type, ..."
 .Pp
 .Ft "AG_WidgetBinding *"
-.Fn AG_WidgetGetBinding "void *widget" "const char *binding" "void *res"
+.Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
 .Pp
 .Ft "int"
 .Fn AG_WidgetCopyBinding "void *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
@@ -436,79 +499,79 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetUnlockBinding "AG_WidgetBinding *binding"
 .Pp
 .Ft int
-.Fn AG_WidgetBool "void *widget" "const char *binding"
+.Fn AG_WidgetBool "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft int
-.Fn AG_WidgetInt "void *widget" "const char *binding"
+.Fn AG_WidgetInt "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft "Uint"
-.Fn AG_WidgetUint "void *widget" "const char *binding"
+.Fn AG_WidgetUint "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Uint8
-.Fn AG_WidgetUint8 "void *widget" "const char *binding"
+.Fn AG_WidgetUint8 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Sint8
-.Fn AG_WidgetSint8 "void *widget" "const char *binding"
+.Fn AG_WidgetSint8 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Uint16
-.Fn AG_WidgetUint16 "void *widget" "const char *binding"
+.Fn AG_WidgetUint16 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Sint16
-.Fn AG_WidgetSint16 "void *widget" "const char *binding"
+.Fn AG_WidgetSint16 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Uint32
-.Fn AG_WidgetUint32 "void *widget" "const char *binding"
+.Fn AG_WidgetUint32 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft Sint32
-.Fn AG_WidgetSint32 "void *widget" "const char *binding"
+.Fn AG_WidgetSint32 "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft float
-.Fn AG_WidgetFloat "void *widget" "const char *binding"
+.Fn AG_WidgetFloat "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft double
-.Fn AG_WidgetDouble "void *widget" "const char *binding"
+.Fn AG_WidgetDouble "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft "char *"
-.Fn AG_WidgetString "void *widget" "const char *binding"
+.Fn AG_WidgetString "AG_Widget *widget" "const char *binding"
 .Pp
 .Ft size_t
-.Fn AG_WidgetCopyString "void *widget, const char *binding, char *dst" "size_t dst_size"
+.Fn AG_WidgetCopyString "AG_Widget *widget, const char *binding, char *dst" "size_t dst_size"
 .Pp
 .Ft void
-.Fn AG_WidgetSetBool "void *widget" "const char *binding" "int i"
+.Fn AG_WidgetSetBool "AG_Widget *widget" "const char *binding" "int i"
 .Pp
 .Ft void
-.Fn AG_WidgetSetInt "void *widget" "const char *binding" "int i"
+.Fn AG_WidgetSetInt "AG_Widget *widget" "const char *binding" "int i"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint "void *widget" "const char *binding" "Uint i"
+.Fn AG_WidgetSetUint "AG_Widget *widget" "const char *binding" "Uint i"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint8 "void *widget" "const char *binding" "Uint8 u8"
+.Fn AG_WidgetSetUint8 "AG_Widget *widget" "const char *binding" "Uint8 u8"
 .Pp
 .Ft void
-.Fn AG_WidgetSetSint8 "void *widget" "const char *binding" "Sint8 u8"
+.Fn AG_WidgetSetSint8 "AG_Widget *widget" "const char *binding" "Sint8 u8"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint16 "void *widget" "const char *binding" "Uint16 u16"
+.Fn AG_WidgetSetUint16 "AG_Widget *widget" "const char *binding" "Uint16 u16"
 .Pp
 .Ft void
-.Fn AG_WidgetSetSint16 "void *widget" "const char *binding" "Sint16 u16"
+.Fn AG_WidgetSetSint16 "AG_Widget *widget" "const char *binding" "Sint16 u16"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint32 "void *widget" "const char *binding" "Uint32 u32"
+.Fn AG_WidgetSetUint32 "AG_Widget *widget" "const char *binding" "Uint32 u32"
 .Pp
 .Ft void
-.Fn AG_WidgetSetSint32 "void *widget" "const char *binding" "Sint32 u32"
+.Fn AG_WidgetSetSint32 "AG_Widget *widget" "const char *binding" "Sint32 u32"
 .Pp
 .Ft void
-.Fn AG_WidgetSetFloat "void *widget" "const char *binding" "float f"
+.Fn AG_WidgetSetFloat "AG_Widget *widget" "const char *binding" "float f"
 .Pp
 .Ft void
-.Fn AG_WidgetSetDouble "void *widget" "const char *binding" "double d"
+.Fn AG_WidgetSetDouble "AG_Widget *widget" "const char *binding" "double d"
 .Pp
 .Ft void
-.Fn AG_WidgetSetString "void *widget" "const char *binding" "const char *s"
+.Fn AG_WidgetSetString "AG_Widget *widget" "const char *binding" "const char *s"
 .Pp
 .nr nS 0
 The
