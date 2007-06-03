@@ -442,6 +442,19 @@ AG_TextRender(const char *fontname, int fontsize, Uint32 color,
 	return (su);
 }
 
+SDL_Surface *
+AG_TextFormat(const char *fontname, int fontsize, Uint32 color,
+    const char *fmt, ...)
+{
+	char *text;
+	va_list args;
+
+	va_start(args, fmt);
+	AG_Vasprintf(&text, fmt, args);
+	va_end(args);
+	return (AG_TextRender(fontname, fontsize, color, text));
+}
+
 static __inline__ SDL_Surface *
 AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
 {
