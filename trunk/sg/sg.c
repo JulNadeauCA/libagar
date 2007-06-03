@@ -155,9 +155,6 @@ SG_Attached(AG_Event *event)
 	cam = SG_CameraNew(sg->root, "Camera0");
 	SG_Translate3(cam, 0.0, 0.0, -10.0);
 	
-	cam = SG_CameraNew(sg->root, "Camera1");
-	SG_Translate3(cam, -1.0, 0.0, -10.0);
-	
 	lt0 = SG_LightNew(sg->root, "Light0");
 	SG_Translate3(lt0, 20.0, 20.0, 20.0);
 }
