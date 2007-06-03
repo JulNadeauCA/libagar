@@ -1088,7 +1088,7 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 
 	AG_ObjectCancelTimeouts(a, 0);		/* XXX hook? */
 
-	if (AGOBJECT_TYPE(m, "map")) {
+	if (AG_ObjectIsClass(m, "MAP:*")) {
 		MAP_ActorUnmapTiles(a);
 	}
 	AG_ObjectDelDep(m, a);
@@ -2195,8 +2195,8 @@ MAP_EditMapSettings(AG_Event *event)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "map-props-%s",
-	    AGOBJECT(m)->name)) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "map-props-%s", AGOBJECT(m)->name))
+	    == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Properties of \"%s\""), AGOBJECT(m)->name);
@@ -2298,7 +2298,7 @@ MAP_PollLibsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	it->p1 = pob;
 	it->depth = depth;
 
-	if (AGOBJECT_TYPE(pob, "tileset")) {
+	if (AG_ObjectIsClass(pob, "RG_Tileset:*")) {
 		RG_Tileset *ts = (RG_Tileset *)pob;
 		AG_TlistItem *sit, *fit;
 		RG_Tile *tile;

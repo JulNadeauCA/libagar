@@ -1171,11 +1171,11 @@ AG_WidgetParentWindow(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *pwid = wid;
 
-	if (AGOBJECT_TYPE(wid, "AG_Widget:AG_Window"))
+	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*"))
 		return ((AG_Window *)wid);
 
 	while ((pwid = AGOBJECT(pwid)->parent) != NULL) {
-		if (AGOBJECT_TYPE(pwid, "AG_Widget:AG_Window"))
+		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 	}
 	return ((AG_Window *)pwid);
@@ -1209,7 +1209,7 @@ AG_WidgetFocus(void *p)
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AGOBJECT_TYPE(pwid, "AG_Widget:AG_Window"))
+		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
@@ -1491,7 +1491,7 @@ AG_WidgetFindFocused(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *cwid, *fwid;
 
-	if (!AGOBJECT_TYPE(wid, "AG_Widget:AG_Window") &&
+	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*") &&
 	    (wid->flags & AG_WIDGET_FOCUSED) == 0)
 		return (NULL);
 
