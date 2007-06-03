@@ -92,8 +92,9 @@ fi
 # Enable OpenGL support if an OpenGL library is found.
 if [ "${with_gl}" != "no" ]; then
 	CHECK(opengl)
+	CHECK(glu)
 	if [ "${HAVE_OPENGL}" = "yes" ]; then
-		MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
+		MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS $GLU_CFLAGS")
 	else
 		if [ "${with_gl}" = "yes" ]; then
 			echo "*"
@@ -105,6 +106,7 @@ if [ "${with_gl}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_OPENGL)
+	HUNDEF(HAVE_GLU)
 fi
 
 # Enable JPEG support if libjpeg is found.
