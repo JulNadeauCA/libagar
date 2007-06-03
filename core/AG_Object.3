@@ -42,12 +42,17 @@ The Agar object system is implemented around the
 .Nm
 structure.
 The system handles memory management, persistence and interdependencies
-between a set of objects organized in a tree structure.
+between a set of objects organized in a tree which is organized like a
+virtual file system.
 .Pp
-A generic event delivery and actions system is also provided, with support
-for type checking, named arguments and multithreaded events.
-Other features of the object system include property tables and timer
-facilities.
+The
+.Nm
+interface is also responsible for managing events (see
+.Xr AG_Event 3 ) ,
+timers (see
+.Xr AG_Timeout 3 )
+and generic properties (see
+.Xr AG_Prop 3 ) .
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "AG_Object *"
@@ -82,6 +87,12 @@ facilities.
 .Pp
 .Ft "void"
 .Fn AG_UnlockLinkage "void"
+.Pp
+.Ft "void"
+.Fn AG_ObjectSetName "void *obj" "const char *new_name"
+.Pp
+.Ft "void"
+.Fn AG_ObjectSetOps "void *obj" "const void *ops"
 .Pp
 .nr nS 0
 The
@@ -187,7 +198,7 @@ Note that
 .Fn destroy
 must not free the
 .Nm
-object instance structure.
+structure itself.
 .Pp
 The
 .Fn load
@@ -203,17 +214,7 @@ If the compile-time option
 .Dv EDITION
 is defined, the
 .Fn edit
-operation implements graphical edition capabilities.
-For example, in the Agar-Game library, the
-.Xr AG_Map 3
-object creates an
-.Xr AG_Mapview 3
-widget and this constitutes the framework for the level editor.
-In the Agar-SG library, the
-.Xr SG 3
-(scene graph) object creates a
-.Xr SG_View 3
-widget to display the scene.
+operation create the main user interface window for editing the object data.
 .Pp
 If other windows are to be created as part of this instance's edition process,
 they should be attached to the main edition window using
@@ -349,12 +350,59 @@ Since
 must perform an inverse traversal of the tree, and an object instance may
 move from one parent to another, there is a global lock protecting the object
 linkage.
-.Pp
 .Fn AG_LockLinkage
 and
 .Fn AG_UnlockLinkage
-acquire or release the global object tree lock.
-Unless Agar has been compiled with thread-safety, these functions are no-ops.
+are used to acquire or release this lock (no-ops unless Agar is compiled with
+thread safety).
+.Pp
+.Fn AG_ObjectSetName
+changes the name of the given object.
+.Fn AG_ObjectSetOps
+changes the generic operation vector (pointer to
+.Ft AG_ObjectOps
+structure) associated with the given object.
+.Sh CLASS INFORMATION
+.nr nS 1
+.Ft "int"
+.Fn AG_ObjectIsClass "void *obj" "const char *class_pattern"
+.Pp
+.Fn AGOBJECT_FOREACH_CLASS "void *child_obj" "void *parent_obj" "TYPE type" "const char *class_pattern"
+.Pp
+.Ft "SDL_Surface *"
+.Fn AG_ObjectIcon "void *p"
+.Pp
+.nr nS 0
+The
+.Fn AG_ObjectIsClass
+function returns 1 if the given object's class name matches the given
+.Fa class_pattern ,
+which may contain wildcards such as
+.Sq MyClass:*
+or
+.Sq MyClass:*:MySubclass:* .
+.Pp
+.Fn AGOBJECT_FOREACH_CLASS
+is a convenience macro that iterates
+.Fa child_obj
+(cast to given
+.Fa type )
+over every child object of
+.Fa parent_obj
+with a class matching
+.Fa class_pattern .
+Example:
+.Bd -literal
+struct my_class *my_obj;
+
+AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
+	printf("Object %s is an instance of MyClass\\n",
+	    AGOBJECT(my_obj)->name);
+}
+.Ed
+.Pp
+.Fn AG_ObjectIcon
+returns a surface for the icon associated with the given class.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
@@ -506,14 +554,15 @@ functions of the generic operation vector are responsible for
 archiving of data specific to the type of object at hand.
 Except for direct subclasses of
 .Nm ,
+the
 .Fn load
 and
 .Fn save
-must invoke the
-.Fn _load
+operations of a given class should explicitely invoke the
+.Fn load
 and
-.Fn _save
-routines of their superclass.
+.Fn save
+operations of its superclass.
 .Pp
 The
 .Fn AG_ObjectLoad
