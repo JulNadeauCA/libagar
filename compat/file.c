@@ -89,6 +89,8 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
 	struct stat sb;
 	FILE *f;
+	uid_t uid = geteuid();
+	gid_t gid = getegid();
 
 	if (stat(path, &sb) == -1) {
 		AG_SetError("%s: %s", path, strerror(errno));
@@ -111,20 +113,21 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	} else if ((sb.st_mode & S_IFBLK)==S_IFBLK) {
 		i->type = AG_FILE_DEVICE;
 	}
-	if ((sb.st_mode & S_ISUID)==S_ISUID) i->flags |= AG_FILE_SUID;
-	if ((sb.st_mode & S_ISGID)==S_ISGID) i->flags |= AG_FILE_SGID;
+	if ((sb.st_mode & S_ISUID) == S_ISUID) i->flags |= AG_FILE_SUID;
+	if ((sb.st_mode & S_ISGID) == S_ISGID) i->flags |= AG_FILE_SGID;
 
-	if ((f = fopen(path, "rb")) != NULL) {
-		fclose(f);
-		i->perms |= AG_FILE_READABLE;
-		if (i->type == AG_FILE_DIRECTORY) {
-			/* XXX verify this */
-			i->perms |= AG_FILE_EXECUTABLE;
-		}
-	}
-	if ((f = fopen(path, "a")) != NULL) {
-		fclose(f);
-		i->perms |= AG_FILE_WRITEABLE;
+	if (sb.st_uid == uid) {
+		i->perms |= (sb.st_mode & S_IRUSR) ? AG_FILE_READABLE : 0;
+		i->perms |= (sb.st_mode & S_IWUSR) ? AG_FILE_WRITEABLE : 0;
+		i->perms |= (sb.st_mode & S_IXUSR) ? AG_FILE_EXECUTABLE : 0;
+	} else if (sb.st_gid == gid) {
+		i->perms |= (sb.st_mode & S_IRGRP) ? AG_FILE_READABLE : 0;
+		i->perms |= (sb.st_mode & S_IWGRP) ? AG_FILE_WRITEABLE : 0;
+		i->perms |= (sb.st_mode & S_IXGRP) ? AG_FILE_EXECUTABLE : 0;
+	} else {
+		i->perms |= (sb.st_mode & S_IROTH) ? AG_FILE_READABLE : 0;
+		i->perms |= (sb.st_mode & S_IWOTH) ? AG_FILE_WRITEABLE : 0;
+		i->perms |= (sb.st_mode & S_IXOTH) ? AG_FILE_EXECUTABLE : 0;
 	}
 	return (0);
 }
