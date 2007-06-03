@@ -128,8 +128,7 @@ main(int argc, char *argv[])
 #ifdef DEBUG
 			printf("-lag_core_monitor ");
 #endif
-			printf("-lag_rg -lag_vg -lag_gui -lag_core_loaders "
-			       "-lag_compat ");
+			printf("-lag_gui -lag_core_loaders -lag_compat ");
 #ifdef NETWORK
 			printf("-lag_net ");
 #endif
