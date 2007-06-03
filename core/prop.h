@@ -225,7 +225,7 @@ __inline__ double AG_FindDouble(const char *);
 __inline__ void	 *AG_FindPointer(const char *);
 __inline__ char	 *AG_FindString(const char *);
 __inline__ size_t AG_FindStringCopy(const char *, char *, size_t)
-		                    BOUNDED_ATTRIBUTE(__string__, 3, 4);
+		                    BOUNDED_ATTRIBUTE(__string__, 2, 3);
 
 #ifdef HAVE_LONG_DOUBLE
 __inline__ AG_Prop    *AG_SetLongDouble(void *, const char *, long double);
