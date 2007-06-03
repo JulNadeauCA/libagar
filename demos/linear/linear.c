@@ -9,8 +9,6 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/sg.h>
-#include <agar/sg/sg_view.h>
-#include <agar/sg/sg_gui.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -25,6 +23,7 @@ static SG_Vector u = { 1.0, 0.0, 0.0 };
 static SG_Vector v = { 0.0, 1.0, 0.0 };
 static SG_Vector w = { 0.0, 0.0, 1.0 };
 
+/* Generate the plot. */
 static void
 LinearPlot(SG *sg, void *p)
 {
@@ -54,6 +53,7 @@ LinearPlot(SG *sg, void *p)
 	SG_End();
 }
 
+/* Define a new node type for the linear plot. */
 const SG_NodeOps LinearOps = {
 	"Linear plot",
 	sizeof(SG_Node),
@@ -69,7 +69,7 @@ const SG_NodeOps LinearOps = {
 };
 
 AG_Window *
-SettingsWin(void)
+CreateParameterWindow(void)
 {
 	AG_Window *win;
 	AG_FSpinbutton *fsb;
@@ -153,17 +153,24 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
-	SettingsWin();
+	CreateParameterWindow();
 
+	/* Create the scene. */
 	sg = SG_New(agWorld, "scene");
-	node = SG_NodeAdd(sg->root, "linear", &LinearOps, 0);
-	SG_Translate3(node, 0.0, 10.0, 0.0);
 
+	/* Create an instance of the linear plot object. */
+	node = SG_NodeAdd(sg->root, "MyLinearPlot", &LinearOps, 0);
+
+	/* Create a window with a SG_View. Disable lighting. */
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Linear combinations");
-	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
+	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND|SG_VIEW_NO_LIGHTING);
 	AG_WindowSetGeometry(win, 196, 0, agView->w-196, agView->h);
 	AG_WindowShow(win);
+	
+	/* Reposition the default camera. */
+	SG_Translate3(sv->cam, 0.0, 0.0, -20.0);
+	SG_Rotatevd(sv->cam, 180.0, SG_I);
 
 	AG_EventLoop();
 	AG_Destroy();

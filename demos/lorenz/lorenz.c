@@ -6,13 +6,8 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/sg.h>
-#include <agar/sg/sg_view.h>
-#include <agar/sg/sg_gui.h>
 
-#include <string.h>
-#include <unistd.h>
 #include <math.h>
-#include <stdlib.h>
 
 SG_Real r = 28.0;
 SG_Real sigma = 10.0;
@@ -22,6 +17,7 @@ SG_Real spinX = 0.0, spinY = 0.0005, spinZ = 0.0;
 SG_Node *node;
 int iter = 1, iteriter = 10;
 
+/* Render our plot. */
 static void
 LorenzPlot(void *pNode, SG_View *sgv)
 {
@@ -46,6 +42,7 @@ LorenzPlot(void *pNode, SG_View *sgv)
 	iter += iteriter;
 }
 
+/* Define a new node type for the plot. */
 SG_NodeOps LorenzOps = {
 	"Lorenz attractor",
 	sizeof(SG_Node),
@@ -60,8 +57,9 @@ SG_NodeOps LorenzOps = {
 	LorenzPlot
 };
 
+/* Create the user dialog for editing parameters. */
 AG_Window *
-SettingsWin(void)
+CreateParametersWindow(void)
 {
 	AG_Window *win;
 	AG_FSpinbutton *fsb;
@@ -117,7 +115,6 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	SG_View *sv;
 	SG_Node *node;
-	SG_Camera *cam0;
 	SG *sg;
 	char *s;
 
@@ -135,19 +132,24 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
-	SettingsWin();
+	CreateParametersWindow();
 
+	/* Create the scene. */
 	sg = SG_New(agWorld, "scene");
-	node = SG_NodeAdd(sg->root, "lorenz", &LorenzOps, 0);
-	if ((cam0 = SG_FindNode(sg, "Camera0")) != NULL) {
-		SG_Translate3(cam0, 0.0, 0.0, -100.0);
-	}
 
+	/* Create an instance of the plot object. */
+	node = SG_NodeAdd(sg->root, "MyLorenzAttractor", &LorenzOps, 0);
+
+	/* Create a window with a SG_View. Disable lighting. */
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Lorenz Attractor");
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND|SG_VIEW_NO_LIGHTING);
 	AG_WindowSetGeometry(win, 64, 0, agView->w-64, agView->h);
 	AG_WindowShow(win);
+
+	/* Reposition the default camera. */
+	SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
+	SG_Rotatevd(sv->cam, 180.0, SG_I);
 
 	AG_EventLoop();
 	AG_Destroy();

@@ -2,9 +2,9 @@
 /*	Public domain	*/
 
 /*
- * This program demonstrates the use of Agar's GL context widget, AG_GLView.
- * Obviously, this application requires OpenGL. It is also necessary for Agar
- * to have been compiled with OpenGL support.
+ * This program demonstrates the use of Agar's low-level GL context widget,
+ * AG_GLView. This widget is part of Agar-GUI, and does not require the
+ * higher-level Agar-SG (scene graph) library.
  */
 
 #include <agar/core.h>
@@ -16,18 +16,22 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-static GLdouble spin = 0.0, vx = 1.0, vz = -5.0;
-static GLfloat material[4] = { 1.0, 0.0, 0.0, 1.0 };
+static GLdouble spin = 0.0, vz = -5.0;
+static GLfloat material[4] = { 0.0, 0.5, 0.0, 1.0 };
 
+/* Widget resize callback function. */
 static void
-ScaleCube(AG_Event *event)
+MyScaleFunction(AG_Event *event)
 {
 	glLoadIdentity();
+
+	/* Set a 60 degrees field of view with 1.0 aspect ratio. */
 	gluPerspective(60.0, 1.0, 0.01, 100.0);
 }
 
+/* Draw callback function. */
 static void
-DrawCube(AG_Event *event)
+MyDrawFunction(AG_Event *event)
 {
 	GLUquadric *q;
 	
@@ -41,13 +45,13 @@ DrawCube(AG_Event *event)
 	glPushMatrix();
 	{
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
-		glRotatef(spin, vx, 0.0, 1.0);
+		glRotatef(spin, 1.0, 0.0, 1.0);
 		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 5, 2);
+		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
 		
 		glRotatef(180.0, 0.0, 1.0, 0.0);
 		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 5, 2);
+		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
 	}
 	glPopMatrix();
 	
@@ -59,6 +63,33 @@ DrawCube(AG_Event *event)
 	if (spin > 360.0) { spin -= 360.0; }
 }
 
+/*
+ * Overlay callback function. This type of callback is useful for rendering
+ * things such as status text on top of the OpenGL context.
+ */
+static void
+MyOverlayFunction(AG_Event *event)
+{
+	AG_GLView *glv = AG_SELF();
+	Uint32 myColor = SDL_MapRGB(agVideoFmt, 255, 255, 255);
+	SDL_Surface *myText;
+
+	/* Render a text string using the font engine. */
+	myText = AG_TextFormat(NULL, -1, myColor, "Spin = %f degrees", spin);
+
+	/*
+	 * Blit the text at the lower left of the widget. Note that the
+	 * AG_WidgetMapSurface() interface is much more efficient at this
+	 * (hardware->hardware copy), unless the text changes frequently.
+	 */
+	AG_WidgetBlit(glv, myText,
+	    0,
+	    AGWIDGET(glv)->h - agTextFontHeight);
+
+	SDL_FreeSurface(myText);
+}
+
+/* Mouse click callback function. */
 static void
 Mousebutton(AG_Event *event)
 {
@@ -77,36 +108,34 @@ Mousebutton(AG_Event *event)
 }
 
 static void
-CreateWindow(void)
+CreateMainWindow(void)
 {
 	AG_Window *win;
 	AG_GLView *glv;
 	AG_HBox *hb;
-	AG_VBox *vb;
 	AG_HSVPal *pal;
 	AG_FSpinbutton *fsb;
-
-	SDL_EnableKeyRepeat(250, 50);
 
 	win = AG_WindowNew(0);
 	
 	hb = AG_HBoxNew(win, AG_HBOX_HFILL|AG_HBOX_VFILL);
 	{
-		glv = AG_GLViewNew(hb, AG_GLVIEW_HFILL|AG_GLVIEW_VFILL);
-
-		AG_GLViewScaleFn(glv, ScaleCube, NULL);
-		AG_GLViewDrawFn(glv, DrawCube, NULL);
-		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
+		/* Create the AG_GLView widget. */
+		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
 		AG_WidgetFocus(glv);
 
+		/* Set up our callback functions. */ 
+		AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
+		AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
+		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
+		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
+
+		/*
+		 * Create an HSV palette widget and bind it directly
+		 * to the material color ("RGBAv" binds to 4 floats).
+		 */
 		pal = AG_HSVPalNew(hb, AG_HSVPAL_VFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", material);
-	}
-
-	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	{
-		fsb = AG_FSpinbuttonNew(vb, 0, NULL, "Vx:");
-		AG_WidgetBindDouble(fsb, "value", &vx);
 	}
 
 	AG_WindowShow(win);
@@ -124,7 +153,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGbBt:r:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFbBt:r:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -136,14 +165,6 @@ main(int argc, char *argv[])
 		case 'F':
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
-#ifdef HAVE_OPENGL
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-#endif
 		case 'r':
 			fps = atoi(optarg);
 			break;
@@ -158,7 +179,7 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			printf("%s [-vfFgGbB] [-r fps] [-t fontspec]\n",
+			printf("%s [-vfFbB] [-r fps] [-t fontspec]\n",
 			    agProgName);
 			exit(0);
 		}
@@ -172,12 +193,17 @@ main(int argc, char *argv[])
 	}
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
+
+	/* Configure some useful hotkeys. */
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
+	/* Set a black background. */
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
-	CreateWindow();
+
+	/* Create the main window. */
+	CreateMainWindow();
 
 	AG_EventLoop();
 	AG_Destroy();
