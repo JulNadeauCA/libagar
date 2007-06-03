@@ -2147,9 +2147,92 @@ else
 echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#undef OPENGL_LIBS" > config/opengl_libs.h
 fi;
+echo -n "checking for GLU (http://www.opengl.org)..."
+echo -n "checking for GLU (http://www.opengl.org)..." >> config.log
+if [ "$SYSTEM" = "Darwin" ]; then
+GLU_CFLAGS=""
+GLU_LIBS=""
+else
+GLU_CFLAGS=""
+if [ -d "/usr/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11"
+fi;
+if [ -d "/usr/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/include/X11R6"
+fi;
+if [ -d "/usr/local/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11/include"
+fi;
+if [ -d "/usr/local/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/X11R6/include"
+fi;
+if [ -d "/usr/local/include/X11/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11"
+fi;
+if [ -d "/usr/local/include/X11R6/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/local/include/X11R6"
+fi;
+if [ -d "/usr/X11/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11/include"
+fi;
+if [ -d "/usr/X11R6/include/GL/glu.h" ]; then
+GLU_CFLAGS="-I/usr/X11R6/include"
+fi;
+GLU_LIBS="${GLU_LIBS} -lGLU"
+fi;
+cat << EOT > conftest.c
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+int main(int argc, char *argv[]) {
+	GLUquadric *qd;
+	qd = gluNewQuadric();
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS ${GLU_CFLAGS} -o conftest conftest.c ${GLU_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${GLU_CFLAGS} -o conftest conftest.c ${GLU_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GLU" > config/have_glu.h
+echo "#define HAVE_GLU" $HAVE_GLU >> config/have_glu.h
+echo "#endif" >> config/have_glu.h
+
+	HAVE_GLU=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_GLU" > config/have_glu.h
+
+	echo "no"
+fi
+if [ "${HAVE_GLU}" = "yes" ]; then
+echo "GLU_CFLAGS=$GLU_CFLAGS" >> Makefile.config
+echo "GLU_LIBS=$GLU_LIBS" >> Makefile.config
+echo "#ifndef GLU_CFLAGS" > config/glu_cflags.h
+echo "#define GLU_CFLAGS \"$GLU_CFLAGS\"" >> config/glu_cflags.h
+echo "#endif" >> config/glu_cflags.h
+echo "#ifndef GLU_LIBS" > config/glu_libs.h
+echo "#define GLU_LIBS \"$GLU_LIBS\"" >> config/glu_libs.h
+echo "#endif" >> config/glu_libs.h
+else
+echo "#undef GLU_CFLAGS" > config/glu_cflags.h
+echo "#undef GLU_LIBS" > config/glu_libs.h
+fi;
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
-SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
+SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS $GLU_CFLAGS"
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 	else
 		if [ "${with_gl}" = "yes" ]
@@ -2163,6 +2246,7 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 	fi
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
+echo "#undef HAVE_GLU" > config/have_glu.h
 fi
 if [ "${with_jpeg}" != "no" ]
  then
