@@ -2196,8 +2196,8 @@ int main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS ${GL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${GL_LIBS} ${GLU_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${GL_LIBS} ${GLU_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed ($?)" >> config.log
 	compile="failed"
