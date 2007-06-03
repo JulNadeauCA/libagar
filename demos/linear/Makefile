@@ -7,7 +7,7 @@ PROG=	linear
 SRCS=	linear.c
 
 CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} -I.
-LIBS+=	${AGAR_SG_LIBS} ${AGAR_LIBS}
+LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS}
 
 all: all-subdir ${PROG}
 
