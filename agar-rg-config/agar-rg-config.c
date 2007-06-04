@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lag_rg\n");
+			printf("-lag_rg -lag_vg\n");
 		}
 	}
 	if (i <= 1) {
