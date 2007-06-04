@@ -1059,14 +1059,16 @@ clicked_header(AG_Tableview *tv, int visible_start, int visible_end,
 			tv->column[idx].mousedown = 1;
 	}
 	/* click on the LEFT resize line */
-	else if (tv->column[idx-1].resizable &&
+	else if (idx-1 >= 0 && idx-1 < tv->columncount &&
+	         tv->column[idx-1].resizable &&
 		 idx > 0 &&
 		 x < visible_start+3) {
 		 AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
 		     "%i,%i", idx-1, visible_start - tv->column[idx - 1].w);
 	}
 	/* click on the RIGHT resize line */
-	else if (tv->column[idx].resizable &&
+	else if (idx >= 0 && idx < tv->columncount &&
+	         tv->column[idx].resizable &&
 		 (x > visible_end-3 ||
 		  (idx == tv->columncount-1 && x < visible_end+3))) {
 		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
