@@ -102,7 +102,7 @@ AG_DebugLeakDetector(void)
 	}
 	AG_WindowSetCaption(win, _("Leak detection"));
 	
-	tv = AG_TableviewNew(win, 0, leak_callback, NULL);
+	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, leak_callback, NULL);
 	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
 	AG_TableviewSetUpdate(tv, 250);
 	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
