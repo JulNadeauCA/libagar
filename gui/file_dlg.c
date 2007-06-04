@@ -1,8 +1,7 @@
 /*	$Csoft: file_dlg.c,v 1.11 2005/10/01 14:15:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -225,6 +224,14 @@ AG_ChooseFileDlg(AG_FileDlg *fd)
 {
 	AG_Window *pwin = AG_WidgetParentWindow(fd);
 	AG_FileInfo info;
+	char *s;
+
+	for (s = &fd->cfile[0]; *s != '\0'; s++) {
+		if (!isspace(*s))
+			break;
+	}
+	if (*s == '\0')
+		return;
 
 	if (fd->flags & AG_FILEDLG_LOAD) {
 		if (AG_GetFileInfo(fd->cfile, &info) == -1) {
