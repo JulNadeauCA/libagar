@@ -13,11 +13,31 @@
 #include <unistd.h>
 
 static void
-LoadFile(AG_Event *event)
+LoadBMP(AG_Event *event)
 {
 	char *file = AG_STRING(1);
+	SDL_Surface *bmp;
+	AG_Window *win;
 
-	AG_TextMsg(AG_MSG_INFO, "File: %s", file);
+	/* Load the bitmap file into a SDL surface. */
+	if ((bmp = SDL_LoadBMP(file)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, AG_GetError());
+		return;
+	}
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Image <%s>", file);
+
+	/*
+	 * Add a pixmap widget displaying the bitmap, scaled down to the
+	 * maximum view size if needed.
+	 */
+	AG_PixmapFromSurfaceScaled(win, 0, bmp,
+	    (bmp->w < (agView->w - 16)) ? bmp->w : agView->w - 16,
+	    (bmp->h < (agView->h - 40)) ? bmp->h : agView->h - 40);
+
+	SDL_FreeSurface(bmp);
+	AG_WindowShow(win);
 }
 
 static void
@@ -28,11 +48,14 @@ CreateWindow(void)
 
 	win = AG_WindowNew(0);
 
+	/* Create the file loader widget. */
 	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectory(fd, "/");
-	AG_FileDlgSetFilename(fd, "foo.foo");
-	AG_FileDlgAddType(fd, "Foo file", "*.foo", LoadFile, NULL);
-	AG_FileDlgAddType(fd, "Bar/baz file", "*.bar,*.baz", LoadFile, NULL);
+	
+	/* Set a default filename. */
+	AG_FileDlgSetFilename(fd, "sample.bmp");
+
+	/* Register the loader functions. */
+	AG_FileDlgAddType(fd, "Bitmap file", "*.bmp", LoadBMP, NULL);
 	
 	AG_WindowShow(win);
 }
@@ -43,7 +66,7 @@ main(int argc, char *argv[])
 	int c, i, fps = -1;
 	char *s;
 
-	if (AG_InitCore("focusing-demo", 0) == -1) {
+	if (AG_InitCore("loader-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
@@ -60,20 +83,12 @@ main(int argc, char *argv[])
 		case 'F':
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
-#ifdef HAVE_OPENGL
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-#endif
 		case 'r':
 			fps = atoi(optarg);
 			break;
 		case '?':
 		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
+			printf("%s [-vfF] [-r fps]\n", agProgName);
 			exit(0);
 		}
 	}
