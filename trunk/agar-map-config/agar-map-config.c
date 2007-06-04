@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 			printf("-I%s ", INCLDIR);
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
-			printf("-L%s -lag_map\n", LIBDIR);
+			printf("-L%s -lag_map -lag_rg -lag_vg\n", LIBDIR);
 		}
 	}
 	if (i <= 1) {
