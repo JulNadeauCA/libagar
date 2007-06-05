@@ -68,7 +68,6 @@ static void *current_pobj = NULL;
 static AG_Timeout repo_timeout;
 #endif
 
-int agEditMode = 0;
 int agObjMgrExiting = 0;
 #ifdef DEBUG
 int agObjMgrHexDiff = 0;

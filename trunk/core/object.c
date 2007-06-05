@@ -84,7 +84,8 @@ int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
 #endif
 
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
-int agObjectIgnoreUnknownObjs = 0;   /* Don't fail on unknown object types. */
+int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
+int agObjectExitSavePrompt = 0;	   /* Prompt for save on exit if needed. */
 
 /* Allocate, initialize and attach a generic object. */
 AG_Object *
@@ -1842,6 +1843,16 @@ fail:
 	AG_ObjectUnlinkDatafiles(ob);
 	AG_ObjectSetSavePfx(ob, pfx_save);
 	return (-1);
+}
+
+/*
+ * Enable or disable the automatic "save changes?" prompt on exit, in case
+ * there are unsaved changes in the main tree.
+ */
+void
+AG_ObjectSavePromptOnExit(int flag)
+{
+	agObjectExitSavePrompt = flag;
 }
 
 #ifdef EDITION
