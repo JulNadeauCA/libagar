@@ -68,8 +68,8 @@ static AG_Graph *agPerfGraph;
 static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif	/* DEBUG */
 
-int agIdleThresh = 20;				/* Idling threshold */
-int agBgPopupMenu = 0;				/* Background popup menu */
+int agIdleThresh = 20;			/* Idling threshold */
+int agBgPopupMenu = 0;			/* Background popup menu */
 
 struct ag_global_key {
 	SDLKey keysym;
@@ -263,7 +263,9 @@ void
 AG_ProcessEvent(SDL_Event *ev)
 {
 	extern int agObjMgrExiting;
-	extern int agEditMode;
+#ifdef EDITION
+	extern int agObjectExitSavePrompt;
+#endif
 	AG_Window *win;
 	int rv;
 
@@ -352,7 +354,7 @@ AG_ProcessEvent(SDL_Event *ev)
 		break;
 	case SDL_QUIT:
 #ifdef EDITION
-		if (!agObjMgrExiting && agEditMode &&
+		if (!agObjMgrExiting && agObjectExitSavePrompt &&
 		    AG_ObjectChangedAll(agWorld)) {
 			agObjMgrExiting = 1;
 			AG_ObjMgrQuitDlg(agWorld);
