@@ -131,7 +131,6 @@ effect(void *p, MAP_Node *n)
 			break;
 		}
 		tile = it->p1;
-#if 0
 		for (y = dy; y < dy+dh; y++) {
 			for (x = dx; x < dx+dw; x++) {
 				MAP_Node *n = &m->map[y][x];
@@ -141,11 +140,10 @@ effect(void *p, MAP_Node *n)
 				MAP_NodeRemoveAll(m, n, m->cur_layer);
 				r = Malloc(sizeof(MAP_Item), M_MAP);
 				MAP_ItemInit(r, MAP_ITEM_TILE);
-				MAP_ItemSetSprite(r, m, spr->pgfx->pobj,
-				    spr->index);
+				MAP_ItemSetTile(r, m, tile->ts, tile->main_id);
 				MAP_ItemSetLayer(r, m->cur_layer);
-				r->r_gfx.xorigin = spr->xOrig;
-				r->r_gfx.yorigin = spr->yOrig;
+				r->r_gfx.xorigin = tile->xOrig;
+				r->r_gfx.yorigin = tile->yOrig;
 				r->r_gfx.xcenter = MAPTILESZ/2;
 				r->r_gfx.ycenter = MAPTILESZ/2;
 				TAILQ_INSERT_TAIL(&n->nrefs, r, nrefs);
@@ -167,6 +165,7 @@ effect(void *p, MAP_Node *n)
 						i = 0;
 						break;
 					}
+#if 0
 					if (byte < 60) {
 						RG_TransformRotate(r, 0);
 					} else if (byte < 120) {
@@ -176,10 +175,10 @@ effect(void *p, MAP_Node *n)
 					} else if (byte < 240) {
 						RG_TransformRotate(r, 270);
 					}
+#endif
 				}
 			}
 		}
-#endif
 		break;
 	case FILL_CLEAR:
 		for (y = dy; y < dy+dh; y++) {
