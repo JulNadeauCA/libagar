@@ -18,7 +18,6 @@ typedef struct map_editor {
 } MAP_Editor;
 
 extern MAP_Editor mapEditor;
-extern int agEditMode;
 
 __BEGIN_DECLS
 void	 MAP_EditorInit(void);

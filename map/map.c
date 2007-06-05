@@ -484,9 +484,15 @@ MAP_Init(void *obj, const char *name)
 	MAP_InitModBlks(m);
 
 #ifdef EDITION
-	if (agEditMode) {
+	{
+		extern int mapEditorInited;			/* mapedit.c */
 		extern int mapDefaultWidth;
 		extern int mapDefaultHeight;
+	
+		if (!mapEditorInited) {
+			mapEditorInited = 1;
+			MAP_EditorInit();
+		}
 
 		MAP_AllocNodes(m, mapDefaultWidth, mapDefaultHeight);
 		m->origin.x = mapDefaultWidth/2;

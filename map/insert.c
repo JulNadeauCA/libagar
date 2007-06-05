@@ -85,9 +85,8 @@ SnapTile(struct map_insert_tool *ins, MAP_Item *r, RG_Tile *tile)
 }
 #endif
 
-#if 0
 static void
-GenerateMapForTile(struct map_insert_tool *ins, RG_Tile *tile)
+GenerateTileMap(struct map_insert_tool *ins, RG_Tile *tile)
 {
 	int sy, sx, dx, dy;
 	int sw = tile->su->w/MAPTILESZ;
@@ -120,16 +119,15 @@ GenerateMapForTile(struct map_insert_tool *ins, RG_Tile *tile)
 
 			r = Malloc(sizeof(MAP_Item), M_MAP);
 			MAP_ItemInit(r, MAP_ITEM_TILE);
-			MAP_ItemSetSprite(r, &ins->mTmp, spr->pgfx->pobj,
-			    spr->index);
+			MAP_ItemSetTile(r, &ins->mTmp, tile->ts, tile->main_id);
 
 			r->r_gfx.rs.x = dx*MAPTILESZ;
 			r->r_gfx.rs.y = dy*MAPTILESZ;
 			r->r_gfx.rs.w = (dw >= MAPTILESZ) ? MAPTILESZ : dw;
 			r->r_gfx.rs.h = (dh >= MAPTILESZ) ? MAPTILESZ : dh;
-			r->flags |= AG_SPRITE_ATTR2(spr,dx,dy);
+			r->flags |= RG_TILE_ATTR2(tile,dx,dy);
 
-			nlayer = AG_SPRITE_LAYER2(spr,dx,dy);
+			nlayer = RG_TILE_LAYER2(tile,dx,dy);
 			if (nlayer < 0) {
 				nlayer = 0;
 			} else {
@@ -139,13 +137,12 @@ GenerateMapForTile(struct map_insert_tool *ins, RG_Tile *tile)
 			r->layer = nlayer;
 			
 			/* XXX also need to rotate the whole map */
-			RG_TransformRotate(r, ins->angle);
+	//		RG_TransformRotate(r, ins->angle);
 
 			TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
 		}
 	}
 }
-#endif
 
 static void
 insert_pane(void *p, void *con)
@@ -176,9 +173,7 @@ insert_pane(void *p, void *con)
 	MAP_ViewSelectTool(mv,
 	    MAP_ViewRegTool(mv, &mapNodeselOps, &ins->mTmp),
 	    &ins->mTmp);
-#if 0
-	GenerateMapForTile(ins, tile);
-#endif
+	GenerateTileMap(ins, tile);
 
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
@@ -196,7 +191,6 @@ insert_pane(void *p, void *con)
 	}
 }
 
-#if 0
 static int
 insert_effect(void *p, MAP_Node *node)
 {
@@ -275,7 +269,6 @@ insert_effect(void *p, MAP_Node *node)
 	MAP_ModEnd(mDst);
 	return (1);
 }
-#endif
 
 static int
 insert_cursor(void *p, SDL_Rect *rd)
@@ -380,11 +373,7 @@ const MAP_ToolOps mapInsertOps = {
 	insert_pane,
 	NULL,				/* edit */
 	insert_cursor,
-#if 0
 	insert_effect,
-#else
-	NULL,
-#endif
 	insert_mousemotion,
 	insert_mousebuttondown,
 	NULL,				/* mousebuttonup */

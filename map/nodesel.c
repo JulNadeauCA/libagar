@@ -117,7 +117,8 @@ MAP_NodeselBeginMove(MAP_View *mv)
 
 			MAP_ModNodeChg(mSrc, sx, sy);
 
-			MAP_NodeCopy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp, 0);
+			MAP_NodeCopy(mSrc, nSrc, mSrc->cur_layer, mTmp, nTmp,
+			    0);
 			MAP_NodeSwapLayers(mSrc, nSrc, mSrc->cur_layer,
 			    mSrc->nlayers-1);
 		}

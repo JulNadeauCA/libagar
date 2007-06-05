@@ -1,8 +1,7 @@
 /*	$Csoft: mapedit.c,v 1.6 2005/09/27 00:25:18 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,10 +62,10 @@ const AG_ObjectOps mapEditorPseudoOps = {
 	MAP_EditorConfig	/* edit */
 };
 
-extern int agEditMode;
 extern int mapViewAnimatedBg, mapViewBgTileSize;
 extern int mapViewEditSelOnly;
 
+int mapEditorInited = 0;
 MAP_Editor mapEditor;
 
 int mapDefaultWidth = 9;		/* Default map geometry */
@@ -77,13 +76,13 @@ int mapDefaultBrushHeight = 9;
 void
 MAP_EditorInit(void)
 {
-	AG_ObjectInit(&mapEditor, "map-editor", &mapEditorOps);
+	AG_ObjectInit(&mapEditor, "_mapEditor", &mapEditorOps);
 	AGOBJECT(&mapEditor)->flags |= (AG_OBJECT_RELOAD_PROPS|
 	                                AG_OBJECT_STATIC);
-	AGOBJECT(&mapEditor)->save_pfx = "/map-editor";
+	AGOBJECT(&mapEditor)->save_pfx = "/_mapEditor";
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	AG_ObjectInit(&mapEditor.pseudo, "map-editor-ref", &mapEditorPseudoOps);
+	AG_ObjectInit(&mapEditor.pseudo, "_mapEditor", &mapEditorPseudoOps);
 	AGOBJECT(&mapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
 				               AG_OBJECT_STATIC|
 	                                       AG_OBJECT_INDESTRUCTIBLE);
@@ -94,24 +93,18 @@ MAP_EditorInit(void)
 	 * Use AG_OBJECT_READONLY to avoid circular reference in case a user
 	 * attempts to paste contents of the copy buffer into itself.
 	 */
-	MAP_Init(&mapEditor.copybuf, "copybuf");
+	MAP_Init(&mapEditor.copybuf, "_copyPasteBuffer");
 	AGOBJECT(&mapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
 				               AG_OBJECT_STATIC|
 	                                       AG_OBJECT_INDESTRUCTIBLE|
 					       AG_OBJECT_READONLY);
 	AG_ObjectAttach(&mapEditor.pseudo, &mapEditor.copybuf);
 
-	agEditMode = 1;
-
 	/* Initialize the default tunables. */
 	AG_SetUint32(&mapEditor, "default-map-width", 12);
 	AG_SetUint32(&mapEditor, "default-map-height", 8);
 	AG_SetUint32(&mapEditor, "default-brush-width", 5);
 	AG_SetUint32(&mapEditor, "default-brush-height", 5);
-
-	/* Initialize the object manager. */
-	AG_ObjMgrInit();
-	AG_WindowShow(AG_ObjMgrWindow());
 }
 
 void
@@ -199,3 +192,4 @@ MAP_EditorConfig(void *p)
 	}
 	return (win);
 }
+

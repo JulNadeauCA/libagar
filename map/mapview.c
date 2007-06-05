@@ -534,9 +534,6 @@ center_to_origin(MAP_View *mv)
 void
 MAP_ViewDraw(void *p)
 {
-#ifdef EDITION
-	extern int agEditMode;
-#endif
 	MAP_View *mv = p;
 	MAP_ViewDrawCb *dcb;
 	MAP *m = mv->map;
@@ -656,7 +653,7 @@ draw_layer:
 				}
 			}
 #ifdef EDITION
-			if (!agEditMode)
+			if ((mv->flags & MAP_VIEW_EDIT) == 0)
 				continue;
 				
 			if ((mv->flags & MAP_VIEW_SHOW_ORIGIN) &&
