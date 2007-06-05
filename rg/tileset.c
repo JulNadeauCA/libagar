@@ -111,12 +111,10 @@ RG_TilesetInit(void *obj, const char *name)
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
 	ts->template[0] = '\0';
-	ts->tiletbl = Malloc(sizeof(RG_Tile *), M_RG);
-	ts->ntiletbl = 0;
-	ts->animtbl = Malloc(sizeof(RG_Anim *), M_RG);
-	ts->nanimtbl = 0;
 	ts->tiletbl = NULL;
+	ts->ntiletbl = 0;
 	ts->animtbl = NULL;
+	ts->nanimtbl = 0;
 }
 
 void
@@ -345,11 +343,11 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 	}
 
 	/* Load and resolve the static tile and animation mappings. */
-	count = AG_ReadUint32(buf);
-	printf("alloc: %u tiles\n", (Uint)count);
-	ts->tiletbl = Realloc(ts->tiletbl, MIN(count,1)*sizeof(RG_Tile *));
-//	ts->tiletbl = Malloc(MIN(count,1)*sizeof(RG_Tile *), M_RG);
-	for (i = 0; i < count; i++) {
+	ts->ntiletbl = AG_ReadUint32(buf);
+	printf("%s: tiletbl: %u entries\n", AGOBJECT(ts)->name,
+	    (Uint)ts->ntiletbl);
+	ts->tiletbl = Realloc(ts->tiletbl, ts->ntiletbl*sizeof(RG_Tile *));
+	for (i = 0; i < ts->ntiletbl; i++) {
 		char name[RG_TILE_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
@@ -364,11 +362,11 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 			}
 		}
 	}
-	count = AG_ReadUint32(buf);
-	printf("alloc: %u anims\n", (Uint)count);
-	ts->animtbl = Realloc(ts->animtbl, MIN(count,1)*sizeof(RG_Anim *));
-//	ts->animtbl = Malloc(MIN(count,1)*sizeof(RG_Anim *), M_RG);
-	for (i = 0; i < count; i++) {
+	ts->nanimtbl = AG_ReadUint32(buf);
+	printf("%s: animtbl: %u anims\n", AGOBJECT(ts)->name,
+	    (Uint)ts->nanimtbl);
+	ts->animtbl = Realloc(ts->animtbl, ts->nanimtbl*sizeof(RG_Anim *));
+	for (i = 0; i < ts->nanimtbl; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
