@@ -373,6 +373,18 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_POINTER:
 			*(void ***)res = (void **)binding->p1;
 			break;
+		case AG_WIDGET_FLAG:
+			*(Uint **)res = (Uint *)binding->p1;
+			break;
+		case AG_WIDGET_FLAG8:
+			*(Uint8 **)res = (Uint8 *)binding->p1;
+			break;
+		case AG_WIDGET_FLAG16:
+			*(Uint16 **)res = (Uint16 *)binding->p1;
+			break;
+		case AG_WIDGET_FLAG32:
+			*(Uint32 **)res = (Uint32 *)binding->p1;
+			break;
 		case AG_WIDGET_PROP:			/* Convert */
 			if ((prop = AG_GetProp(binding->p1,
 			    (char *)binding->p2, -1, NULL)) == NULL) {

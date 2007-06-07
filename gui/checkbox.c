@@ -90,15 +90,55 @@ AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 }
 
 void
-AG_CheckboxDraw(void *p)
+AG_CheckboxDraw(void *obj)
 {
-	AG_Checkbox *cbox = p;
-
+	AG_Checkbox *cbox = obj;
+	AG_WidgetBinding *stateb;
+	void *p;
+	int state;
+	
+	stateb = AG_WidgetGetBinding(cbox, "state", &p);
+	switch (stateb->vtype) {
+	case AG_WIDGET_BOOL:
+	case AG_WIDGET_INT:
+	case AG_WIDGET_UINT:
+		state = *(int *)p;
+		break;
+	case AG_WIDGET_FLAG:
+		state = *(int *)p & (int)stateb->bitmask;
+		break;
+	case AG_WIDGET_FLAG8:
+		state = *(Uint8 *)p & (Uint8)stateb->bitmask;
+		break;
+	case AG_WIDGET_FLAG16:
+		state = *(Uint16 *)p & (Uint16)stateb->bitmask;
+		break;
+	case AG_WIDGET_FLAG32:
+		state = *(Uint32 *)p & (Uint32)stateb->bitmask;
+		break;
+	case AG_WIDGET_UINT8:
+	case AG_WIDGET_SINT8:
+		state = *(Uint8 *)p;
+		break;
+	case AG_WIDGET_UINT16:
+	case AG_WIDGET_SINT16:
+		state = *(Uint16 *)p;
+		break;
+	case AG_WIDGET_UINT32:
+	case AG_WIDGET_SINT32:
+		state = *(Uint32 *)p;
+		break;
+	default:
+		state = 0;
+		break;
+	}
 	agPrim.box(cbox,
 	    0, 0,
 	    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
-	    AG_WidgetBool(cbox, "state") ? -1 : 1,
+	    state ? -1 : 1,
 	    AG_COLOR(CHECKBOX_COLOR));
+	AG_WidgetBindingChanged(stateb);
+	AG_WidgetUnlockBinding(stateb);
 
 	AG_WidgetBlitSurface(cbox, cbox->label_id,
 	    AGWIDGET(cbox)->h + LABEL_SPACING,
@@ -147,11 +187,74 @@ void
 AG_CheckboxToggle(AG_Checkbox *cbox)
 {
 	AG_WidgetBinding *stateb;
-	int *state;
+	void *p;
 
-	stateb = AG_WidgetGetBinding(cbox, "state", &state);
-	*state = !(*state);
-	AG_PostEvent(NULL, cbox, "checkbox-changed", "%i", *state);
+	stateb = AG_WidgetGetBinding(cbox, "state", &p);
+	switch (stateb->vtype) {
+	case AG_WIDGET_BOOL:
+	case AG_WIDGET_INT:
+	case AG_WIDGET_UINT:
+		{
+			int *state = (int *)p;
+			*state = !(*state);
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    *state);
+		}
+		break;
+	case AG_WIDGET_FLAG:
+		{
+			int *state = (int *)p;
+			if (*state & (int)stateb->bitmask) {
+				*state &= ~(int)stateb->bitmask;
+			} else {
+				*state |= (int)stateb->bitmask;
+			}
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    (int)*state);
+		}
+		break;
+	case AG_WIDGET_FLAG8:
+		{
+			Uint8 *state = (Uint8 *)p;
+			if (*state & (Uint8)stateb->bitmask) {
+				*state &= ~(Uint8)stateb->bitmask;
+			} else {
+				*state |= (Uint8)stateb->bitmask;
+			}
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    (Uint8)*state);
+		}
+		break;
+	case AG_WIDGET_UINT8:
+	case AG_WIDGET_SINT8:
+		{
+			Uint8 *state = (Uint8 *)p;
+			*state = !(*state);
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    (int)*state);
+		}
+		break;
+	case AG_WIDGET_UINT16:
+	case AG_WIDGET_SINT16:
+		{
+			Uint16 *state = (Uint16 *)p;
+			*state = !(*state);
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    (int)*state);
+		}
+		break;
+	case AG_WIDGET_UINT32:
+	case AG_WIDGET_SINT32:
+		{
+			Uint32 *state = (Uint32 *)p;
+			*state = !(*state);
+			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			    (int)*state);
+		}
+		break;
+	default:
+		break;
+	}
 	AG_WidgetBindingChanged(stateb);
 	AG_WidgetUnlockBinding(stateb);
 }
