@@ -1,8 +1,7 @@
 /*	$Csoft: server.c,v 1.6 2005/09/04 01:57:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/network.h>
-#ifdef NETWORK
+#include <agar/config/server.h>
+#ifdef SERVER
 
 #include <core/core.h>
 
@@ -52,7 +51,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <err.h>
 
 #include "net.h"
 #include "sockunion.h"
@@ -60,58 +58,88 @@
 
 #define MAX_SERVER_SOCKS 64
 
-const char *server_name;
-const char *server_ver;
+const char *nsServerName;		/* Server protocol string */
+const char *nsServerVer;		/* Server version string */
+const char *nsServerHost = NULL;	/* Bind hostname */
+const char *nsServerPort = "6571";	/* Port number/name */
+pid_t nsPID = 0;			/* PID of listening process */
 
-const char *server_host = NULL;
-const char *server_port = "6571";
-pid_t server_pid = 0;
-
-AGN_ServerCmd  *server_cmds = NULL;
-unsigned int   nserver_cmds = 0;
-AGN_ServerAuth *server_auths = NULL;
-unsigned int   nserver_auths = 0;
+NS_Cmd       *server_cmds = NULL;	/* Implemented commands */
+unsigned int nserver_cmds = 0;
+NS_Auth      *server_auths = NULL;	/* Authentication methods */
+unsigned int nserver_auths = 0;
 
 static void (*errhandler)(void) = NULL;
 static void (*cmdcallback)(void) = NULL;
-int callback_secs = 1;
-int callback_usecs = 0;
+int nsCallbackSecs = 1;
+int nsCallbackUsecs = 0;
 
-static void	**list_items;
-static size_t	 *list_itemsz;
-static unsigned int nlist_items;
+static void       **nsListItems;
+static size_t      *nsListItemSize;
+static unsigned int nsListItemCount;
+
+#if defined(HAVE_SYSLOG) || defined(HAVE_VSYSLOG)
+const int nsSyslogLevels[] = {
+	LOG_DEBUG, LOG_INFO, LOG_NOTICE, LOG_WARNING,
+	LOG_ERR, LOG_CRIT, LOG_ALERT, LOG_EMERG
+};
+#else
+const char *nsLogLevelNames[] = {
+	"DEBUG", "INFO", "NOTICE", "WARNING",
+	"ERR", "CRIT", "ALERT", "EMERG"
+};
+#endif
 
 void
-AGN_ServerBeginList(void)
+NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 {
-	list_items = NULL;
-	list_itemsz = NULL;
-	nlist_items = 0;
+	char msg[128];
+	va_list ap;
+
+	va_start(ap, fmt);
+#ifdef HAVE_VSYSLOG
+	vsyslog(nsSyslogLevels[loglvl], fmt, ap)
+#else
+# ifdef HAVE_SYSLOG
+	syslog(nsSyslogLevels[loglvl], "%s", msg);
+# else
+	fprintf(stderr, "[%s] ", nsLogLevelNames[loglvl]);
+	vfprintf(stderr, fmt, ap);
+	fputc('\n', stderr);
+# endif
+#endif
+	va_end(ap);
 }
 
 void
-AGN_ServerEndList(void)
+NS_BeginList(void)
+{
+	nsListItems = NULL;
+	nsListItemSize = NULL;
+	nsListItemCount = 0;
+}
+
+void
+NS_EndList(void)
 {
 	char ack[2];
 	int i;
 	
-	printf("0 %010u:", nlist_items);
-	for (i = 0; i < nlist_items; i++) {
-		printf("%012lu:", (unsigned long)list_itemsz[i]);
+	printf("0 %010u:", nsListItemCount);
+	for (i = 0; i < nsListItemCount; i++) {
+		printf("%012lu:", (unsigned long)nsListItemSize[i]);
 	}
 	fputc('\n', stdout);
 	fgets(ack, 2, stdin);
 	
 	fflush(stdout);
 	setvbuf(stdout, NULL, _IONBF, 0);
-	for (i = 0; i < nlist_items; i++) {
-		void *itembuf = list_items[i];
-		size_t itemsz = list_itemsz[i];
+	for (i = 0; i < nsListItemCount; i++) {
+		void *itembuf = nsListItems[i];
+		size_t itemsz = nsListItemSize[i];
 
 		if (fwrite(itembuf, 1, itemsz, stdout) < itemsz) {
-#ifdef HAVE_SYSLOG
-			syslog(LOG_ERR, "error writing item");
-#endif
+			NS_Log(NS_ERR, "EndList: Write error");
 			exit(1);
 		}
 	}
@@ -119,46 +147,45 @@ AGN_ServerEndList(void)
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	fgets(ack, 2, stdin);
 
-	if (nlist_items > 0) {
-		Free(list_items, M_NETBUF);
-		Free(list_itemsz, M_NETBUF);
-		list_items = NULL;
-		list_itemsz = NULL;
-		nlist_items = 0;
+	if (nsListItemCount > 0) {
+		Free(nsListItems, M_NETBUF);
+		Free(nsListItemSize, M_NETBUF);
+		nsListItems = NULL;
+		nsListItemSize = NULL;
+		nsListItemCount = 0;
 	}
 }
 
 void
-AGN_ServerListItem(void *buf, size_t len)
+NS_ListItem(void *buf, size_t len)
 {
-	if (nlist_items == 0) {
-		list_items = Malloc(sizeof(void *), M_NETBUF);
-		list_itemsz = Malloc(sizeof(size_t), M_NETBUF);
+	if (nsListItemCount == 0) {
+		nsListItems = Malloc(sizeof(void *), M_NETBUF);
+		nsListItemSize = Malloc(sizeof(size_t), M_NETBUF);
 	} else {
-		list_items = Realloc(list_items,
-		    (nlist_items+1)*sizeof(void *));
-		list_itemsz = Realloc(list_itemsz,
-		    (nlist_items+1)*sizeof(size_t));
+		nsListItems = Realloc(nsListItems,
+		    (nsListItemCount+1)*sizeof(void *));
+		nsListItemSize = Realloc(nsListItemSize,
+		    (nsListItemCount+1)*sizeof(size_t));
 	}
-	list_items[nlist_items] = buf;
-	list_itemsz[nlist_items] = len;
-
-	nlist_items++;
+	nsListItems[nsListItemCount] = buf;
+	nsListItemSize[nsListItemCount] = len;
+	nsListItemCount++;
 }
 
 void
-AGN_ServerListString(const char *fmt, ...)
+NS_ListString(const char *fmt, ...)
 {
 	char *buf;
 	va_list ap;
 
 	va_start(ap, fmt);
 	if (vasprintf(&buf, fmt, ap) == -1) {
-		err(1, "vasprintf: out of memory");
+		AG_FatalError("vasprintf: Out of memory");
 	}
 	va_end(ap);
 
-	AGN_ServerListItem(buf, strlen(buf)+1);
+	NS_ListItem(buf, strlen(buf)+1);
 }
 
 /*
@@ -166,27 +193,27 @@ AGN_ServerListString(const char *fmt, ...)
  * request.
  */
 void
-AGN_ServerSetErrorFn(void (*errh)(void))
+NS_SetErrorFn(void (*errh)(void))
 {
 	errhandler = errh;
 }
 
 /* Register a function to execute at every ival secs. */
 void
-AGN_ServerRegCallback(void (*cb)(void), int secs, int usecs)
+NS_RegCallback(void (*cb)(void), int secs, int usecs)
 {
 	cmdcallback = cb;
-	callback_secs = secs;
-	callback_usecs = usecs;
+	nsCallbackSecs = secs;
+	nsCallbackUsecs= usecs;
 }
 
 /* Register a server command. */
 void
-AGN_ServerRegCmd(const char *name, int (*func)(AGN_Command *, void *),
+NS_RegCmd(const char *name, int (*func)(NS_Command *, void *),
     void *arg)
 {
 	server_cmds = Realloc(server_cmds, (nserver_cmds+1) *
-					   sizeof(AGN_ServerCmd));
+					   sizeof(NS_Cmd));
 	server_cmds[nserver_cmds].name = name;
 	server_cmds[nserver_cmds].func = func;
 	server_cmds[nserver_cmds].arg = arg;
@@ -195,10 +222,10 @@ AGN_ServerRegCmd(const char *name, int (*func)(AGN_Command *, void *),
 
 /* Register an authentication method. */
 void
-AGN_ServerRegAuth(const char *name, int (*func)(void *), void *arg)
+NS_RegAuth(const char *name, int (*func)(void *), void *arg)
 {
 	server_auths = Realloc(server_auths, (nserver_auths+1) *
-					     sizeof(AGN_ServerAuth));
+					     sizeof(NS_Auth));
 	server_auths[nserver_auths].name = name;
 	server_auths[nserver_auths].func = func;
 	server_auths[nserver_auths].arg = arg;
@@ -206,7 +233,7 @@ AGN_ServerRegAuth(const char *name, int (*func)(void *), void *arg)
 }
 
 static void
-AGN_ProcessCommand(AGN_Command *ncmd)
+NS_ProcessCommand(NS_Command *ncmd)
 {
 	extern char *__progname;
 	int i;
@@ -218,14 +245,14 @@ AGN_ProcessCommand(AGN_Command *ncmd)
 				if (errhandler != NULL) {
 					errhandler();
 				} else {
-					printf("1 %s\n", AGN_GetError());
+					printf("1 %s\n", AG_GetError());
 				}
 			}
 			fflush(stdout);
 			return;
 		}
 	}
-	AGN_ServerDie(1, "unimplemented command");
+	NS_Die(1, "unimplemented command");
 }
 
 /*
@@ -233,19 +260,19 @@ AGN_ProcessCommand(AGN_Command *ncmd)
  * the client.
  */
 static void
-AGN_QueryLoop(void)
+NS_QueryLoop(void)
 {
 	char tmp[BUFSIZ];
 	char servproto[32];
 	char *buf, *lbuf = NULL, *value, *p;
-	AGN_Command ncmd;
+	NS_Command ncmd;
 	size_t len;
 	ssize_t rv;
 	int seq = 0;
 	int i;
 
-	snprintf(servproto, sizeof(servproto), "%s %s\n", server_name,
-	    server_ver);
+	snprintf(servproto, sizeof(servproto), "%s %s\n",
+	    nsServerName, nsServerVer);
 	fputs(servproto, stdout);
 	fflush(stdout);
 	
@@ -253,7 +280,7 @@ AGN_QueryLoop(void)
 		goto read_failure;
 	}
 	if (strcmp(tmp, servproto) != 0) {
-		AGN_ServerLog(LOG_ERR, "incompatible version: `%s'!=`%s'", tmp,
+		NS_Log(NS_ERR, "incompatible version: `%s'!=`%s'", tmp,
 		    servproto);
 		fputs("Incompatible client version\n", stdout);
 		exit(1);
@@ -277,31 +304,25 @@ AGN_QueryLoop(void)
 			break;
 	}
 	if (i == nserver_auths) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "unknown auth mode: `%s'", tmp);
-#endif
-		fputs("unknown auth mode\n", stdout);
+		NS_Log(NS_NOTICE, "Bad auth mode: `%s'", tmp);
 		exit(1);
 	}
 	fputs("ok-send-auth\n", stdout);
 	fflush(stdout);
 
 	if (server_auths[i].func(server_auths[i].arg) == 0) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "auth error: %s", AGN_GetError());
-#endif
-		printf("auth error: %s\n", AGN_GetError());
+		NS_Log(NS_ERR, "Auth failed: %s", AG_GetError());
 		exit(1);
 	}
 	fputs("ok\n", stdout);
 	fflush(stdout);
 
-	while ((buf = AGN_Fgetln(stdin, &len)) != NULL) {
+	while ((buf = NS_Fgetln(stdin, &len)) != NULL) {
 		if (buf[len-1] == '\n') {
 			buf[len-1] = '\0';
 		} else {
 			if ((lbuf = malloc(len+1)) == NULL) {
-				AGN_ServerDie(1, "malloc line");
+				NS_Die(1, "malloc line");
 			}
 			memcpy(lbuf, buf, len);
 			lbuf[len] = '\0';
@@ -310,21 +331,21 @@ AGN_QueryLoop(void)
 
 		if (seq++ == 0) {
 			/* Initiate a new request. */
-			AGN_InitCommand(&ncmd);
+			NS_InitCommand(&ncmd);
 			if (strlcpy(ncmd.name, buf, sizeof(ncmd.name)) >=
 			    sizeof(ncmd.name)) {
-				AGN_DestroyCommand(&ncmd);
+				NS_DestroyCommand(&ncmd);
 				Free(lbuf, M_NETBUF);
-				AGN_ServerDie(1, "command name too big");
+				NS_Die(1, "command name too big");
 			}
 		} else if ((value = strchr(buf, '=')) != NULL) {
 			/*
 			 * Append an argument to the current request.
 			 */
-			AGN_CommandArg *narg;
+			NS_CommandArg *narg;
 
 			ncmd.args = Realloc(ncmd.args,
-			    ++ncmd.nargs * sizeof(AGN_CommandArg));
+			    ++ncmd.nargs * sizeof(NS_CommandArg));
 			narg = &ncmd.args[ncmd.nargs-1];
 			narg->value = Strdup(value+1);
 			narg->size = sizeof(value);
@@ -332,13 +353,13 @@ AGN_QueryLoop(void)
 			*value = '\0';
 			if (strlcpy(narg->key, buf, sizeof(narg->key)) >=
 			    sizeof(narg->key)) {
-				AGN_DestroyCommand(&ncmd);
+				NS_DestroyCommand(&ncmd);
 				Free(lbuf, M_NETBUF);
-				AGN_ServerDie(1, "command key is too big");
+				NS_Die(1, "command key is too big");
 			}
 		} else {
-			AGN_ProcessCommand(&ncmd);
-			AGN_DestroyCommand(&ncmd);
+			NS_ProcessCommand(&ncmd);
+			NS_DestroyCommand(&ncmd);
 			seq = 0;
 		}
 
@@ -349,21 +370,17 @@ AGN_QueryLoop(void)
 	}
 read_failure:
 	if (ferror(stdin)) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "read from client: %m");
-#endif
+		NS_Log(NS_ERR, "Client read: %s", strerror(errno));
 		exit(1);
 	} else if (feof(stdin)) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "EOF from client");
-#endif
+		NS_Log(NS_ERR, "EOF from client");
 		exit(1);
 	}
 	exit(0);
 }
 
 void
-AGN_ServerDie(int rv, const char *fmt, ...)
+NS_Die(int rv, const char *fmt, ...)
 {
 	char buf[BUFSIZ];
 	va_list ap;
@@ -377,30 +394,12 @@ AGN_ServerDie(int rv, const char *fmt, ...)
 	exit(rv);
 }
 
-void
-AGN_ServerLog(int level, const char *fmt, ...)
-{
-	char buf[BUFSIZ];
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
-
-	fprintf(stderr, "%s\n", buf);
-#ifdef HAVE_SYSLOG
-	syslog(level, "%s", buf);
-#endif
-}
-
 /* Initiate a binary transfer. */
 void
-AGN_ServerBinaryMode(size_t nbytes)
+NS_BinaryMode(size_t nbytes)
 {
 	if (setvbuf(stdout, NULL, _IONBF, 0) == EOF) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "_IONBF stdout: %m");
-#endif
+		NS_Log(NS_ERR, "_IONBF stdout: %s", strerror(errno));
 		exit(1);
 	}
 	printf("0 %012lu\n", (unsigned long)nbytes);
@@ -409,12 +408,10 @@ AGN_ServerBinaryMode(size_t nbytes)
 
 /* Switch back to command mode. */
 void
-AGN_ServerCommandMode(void)
+NS_CommandMode(void)
 {
 	if (setvbuf(stdout, NULL, _IOLBF, 0) == EOF) {
-#ifdef HAVE_SYSLOG
-		syslog(LOG_ERR, "_IOLBF stdout: %m");
-#endif
+		NS_Log(NS_ERR, "_IOLBF stdout: %s", strerror(errno));
 		exit(1);
 	}
 }
@@ -475,14 +472,15 @@ sig_die(int sigraised)
 }
 
 static int
-cmd_quit(AGN_Command *cmd, void *arg)
+cmd_quit(NS_Command *cmd, void *arg)
 {
-	AGN_ServerDie(0, "Kongen leve!\n");
+	NS_Die(0, "Kongen leve!\n");
 	return (0);
 }
 
+/* Main loop of the listening process. */
 int
-AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
+NS_Listen(const char *srvname, const char *srvver, const char *srvhost,
     const char *srvport)
 {
 	struct addrinfo hints, *res, *res0;
@@ -493,21 +491,21 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 	fd_set servfds;
 	struct sigaction sa;
 
-	AGN_ServerRegCmd("quit", cmd_quit, NULL);
+	NS_RegCmd("quit", cmd_quit, NULL);
 
-	server_pid = getpid();
-	server_name = srvname;
-	server_ver = srvver;
-	server_host = srvhost;
-	server_port = srvport;
+	nsPID = getpid();
+	nsServerName = srvname;
+	nsServerVer = srvver;
+	nsServerHost = srvhost;
+	nsServerPort = srvport;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
-	if ((rv = getaddrinfo(server_host, server_port, &hints, &res0))
+	if ((rv = getaddrinfo(nsServerHost, nsServerPort, &hints, &res0))
 	    != 0) {
-		AGN_SetError("%s", gai_strerror(rv));
+		AG_SetError("%s", gai_strerror(rv));
 		return (-1);
 	}
 
@@ -524,9 +522,8 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 		i = 1;
 		if (setsockopt(rv, SOL_SOCKET, SO_REUSEADDR, &i,
 		    (socklen_t)sizeof(i)) == -1) {
-#ifdef HAVE_SYSLOG
-			syslog(LOG_ERR, "SO_REUSEADDR: %m (ignored)");
-#endif
+			NS_Log(NS_ERR, "SO_REUSEADDR: %s (ignored)",
+			    strerror(errno));
 		}
 
 		if (bind(rv, res->ai_addr, res->ai_addrlen) == -1) {
@@ -545,7 +542,7 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 			maxfd = rv;
 	}
 	if (nservsocks == 0) {
-		AGN_SetError("%s: %s", cause, strerror(errno));
+		AG_SetError("%s: %s", cause, strerror(errno));
 		return (-1);
 	}
 	freeaddrinfo(res0);
@@ -568,8 +565,8 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 		fd_set rfds = servfds;
 		struct timeval tv;
 
-		tv.tv_sec = callback_secs;
-		tv.tv_usec = callback_usecs;
+		tv.tv_sec = nsCallbackSecs;
+		tv.tv_usec = nsCallbackUsecs;
 		rv = select(maxfd+1, &rfds, NULL, NULL, &tv);
 		if (rv == 0 && cmdcallback != NULL) {
 			cmdcallback();
@@ -577,7 +574,7 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 			if (errno == EINTR) {
 				continue;
 			}
-			AGN_SetError("select: %s", strerror(errno));
+			AG_SetError("select: %s", strerror(errno));
 			return (-1);
 		}
 
@@ -629,25 +626,22 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 				i = 1;
 				if (setsockopt(0, SOL_SOCKET, SO_OOBINLINE, &i,
 				    sizeof(i)) == -1) {
-#ifdef HAVE_SYSLOG
-					syslog(LOG_ERR,
-					    "SO_OOBINLINE: %m (ignored)");
-#endif
+					NS_Log(NS_ERR,
+					    "SO_OOBINLINE: %s (ignored)",
+					    strerror(errno));
 				}
 				if (fcntl(fileno(stdin), F_SETOWN, getpid())
 				    == -1) {
-#ifdef HAVE_SYSLOG
-					syslog(LOG_ERR,
-					    "fcntl F_SETOWN: %m (ignored)");
-#endif
+					NS_Log(NS_ERR,
+					    "fcntl F_SETOWN: %s (ignored)",
+					    strerror(errno));
 				}
 				if (setvbuf(stdout, NULL, _IOLBF, 0) == EOF) {
-#ifdef HAVE_SYSLOG
-					syslog(LOG_ERR, "_IOLBF stdout: %m");
-#endif
+					NS_Log(NS_ERR, "_IOLBF stdout: %s",
+					    strerror(errno));
 					exit(1);
 				}
-				AGN_QueryLoop();
+				NS_QueryLoop();
 			}
 			close(rv);
 		}
@@ -655,4 +649,4 @@ AGN_ServerListen(const char *srvname, const char *srvver, const char *srvhost,
 	return (0);
 }
 
-#endif /* NETWORK */
+#endif /* SERVER */

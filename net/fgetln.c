@@ -37,8 +37,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/network.h>
-#ifdef NETWORK
+#include <agar/config/server.h>
+#ifdef SERVER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +49,7 @@
 #include "fgetln.h"
 
 char *
-AGN_Fgetln(FILE *fp, size_t *len)
+NS_Fgetln(FILE *fp, size_t *len)
 {
 	static char *buf = NULL;
 	static size_t bufsiz = 0;
@@ -89,4 +89,4 @@ AGN_Fgetln(FILE *fp, size_t *len)
 	return (buf);
 }
 
-#endif /* NETWORK */
+#endif /* SERVER */

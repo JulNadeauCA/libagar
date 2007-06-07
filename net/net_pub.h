@@ -7,6 +7,5 @@
 #include <agar/net/command.h>
 #include <agar/net/client.h>
 #include <agar/net/server.h>
-#include <agar/net/error.h>
 #include <agar/core/core_close.h>
 #endif

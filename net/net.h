@@ -6,6 +6,5 @@
 #include <agar/net/command.h>
 #include <agar/net/client.h>
 #include <agar/net/server.h>
-#include <agar/net/error.h>
 
 #endif /* _AGAR_NET_H_ */

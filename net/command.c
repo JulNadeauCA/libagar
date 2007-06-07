@@ -1,8 +1,7 @@
 /*	$Csoft: command.c,v 1.2 2005/04/26 04:40:42 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003-2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,48 +39,48 @@
 
 #include "net.h"
 
-char *agnCommandErrorString = "";
+char *nsCommandErrorString = "";
 
 char *
-AGN_CommandString(AGN_Command *cmd, const char *key)
+NS_CommandString(NS_Command *cmd, const char *key)
 {
 	int i;
 
 	for (i = 0; i < cmd->nargs; i++) {
-		AGN_CommandArg *arg = &cmd->args[i];
+		NS_CommandArg *arg = &cmd->args[i];
 
 		if (strcmp(arg->key, key) == 0)
 			return (arg->value);
 	}
-	agnCommandErrorString = "missing string argument";
+	nsCommandErrorString = "missing string argument";
 	return (NULL);
 }
 
 int
-AGN_CommandInt(AGN_Command *cmd, const char *key, int *rv)
+NS_CommandInt(NS_Command *cmd, const char *key, int *rv)
 {
 	int i;
 
 	for (i = 0; i < cmd->nargs; i++) {
-		AGN_CommandArg *arg = &cmd->args[i];
+		NS_CommandArg *arg = &cmd->args[i];
 
 		if (strcmp(arg->key, key) == 0) {
 			*rv = atoi(arg->value);
 			return (0);
 		}
 	}
-	agnCommandErrorString = "missing int argument";
+	nsCommandErrorString = "missing int argument";
 	return (-1);
 }
 
 int
-AGN_CommandLong(AGN_Command *cmd, const char *key, long *lp)
+NS_CommandLong(NS_Command *cmd, const char *key, long *lp)
 {
 	long lv;
 	int i;
 
 	for (i = 0; i < cmd->nargs; i++) {
-		AGN_CommandArg *arg = &cmd->args[i];
+		NS_CommandArg *arg = &cmd->args[i];
 
 		if (strcmp(arg->key, key) == 0) {
 			char *ep;
@@ -89,47 +88,47 @@ AGN_CommandLong(AGN_Command *cmd, const char *key, long *lp)
 			errno = 0;
 			lv = strtol((char *)arg->value, &ep, 10);
 			if (((char *)arg->value)[0] == '\0' || *ep != '\0') {
-				agnCommandErrorString = "long arg invalid";
+				nsCommandErrorString = "long arg invalid";
 				return (-1);
 			}
 			if (errno == ERANGE &&
 			    (lv == LONG_MAX || lv == LONG_MIN)) {
-				agnCommandErrorString = "long arg out of range";
+				nsCommandErrorString = "long arg out of range";
 				return (-1);
 			}
 			*lp = lv;
 			return (0);
 		}
 	}
-	agnCommandErrorString = "missing long argument";
+	nsCommandErrorString = "missing long argument";
 	return (-1);
 }
 
 void
-AGN_CommandCopyString(char *dst, AGN_Command *cmd, const char *key,
+NS_CommandCopyString(char *dst, NS_Command *cmd, const char *key,
     size_t dstlen)
 {
 	char *src;
 
-	src = AGN_CommandString(cmd, key);
+	src = NS_CommandString(cmd, key);
 	if (strlcpy(dst, src, dstlen) >= dstlen)
-		agnCommandErrorString = "argument is too big";
+		nsCommandErrorString = "argument is too big";
 }
 
 void
-AGN_InitCommand(AGN_Command *cmd)
+NS_InitCommand(NS_Command *cmd)
 {
-	cmd->args = Malloc(sizeof(AGN_CommandArg), M_NETBUF);
+	cmd->args = Malloc(sizeof(NS_CommandArg), M_NETBUF);
 	cmd->nargs = 0;
 }
 
 void	
-AGN_DestroyCommand(AGN_Command *cmd)
+NS_DestroyCommand(NS_Command *cmd)
 {
 	int i;
 
 	for (i = 0; i < cmd->nargs; i++) {
-		AGN_CommandArg *arg = &cmd->args[i];
+		NS_CommandArg *arg = &cmd->args[i];
 
 		Free(arg->value, 0);
 	}
