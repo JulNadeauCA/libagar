@@ -486,6 +486,66 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_widget_binding_type type, ..."
 .Pp
+.Ft "void"
+.Fn AG_WidgetBindBool "AG_Widget *widget" "const char *binding" "int *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindInt "AG_Widget *widget" "const char *binding" "int *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindUint "AG_Widget *widget" "const char *binding" "Uint *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindUint8 "AG_Widget *widget" "const char *binding" "Uint8 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindSint8 "AG_Widget *widget" "const char *binding" "Sint8 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindUint16 "AG_Widget *widget" "const char *binding" "Uint16 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindSint16 "AG_Widget *widget" "const char *binding" "Sint16 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindUint32 "AG_Widget *widget" "const char *binding" "Uint32 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindSint32 "AG_Widget *widget" "const char *binding" "Sint32 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindUint64 "AG_Widget *widget" "const char *binding" "Uint64 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindSint64 "AG_Widget *widget" "const char *binding" "Sint64 *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindFloat "AG_Widget *widget" "const char *binding" "float *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindDouble "AG_Widget *widget" "const char *binding" "double *p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindPointer "AG_Widget *widget" "const char *binding" "void **p"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindProp "AG_Widget *widget" "const char *binding" "AG_Object *obj" "const char *prop_name"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindString "AG_Widget *widget" "const char *binding" "char *p" "size_t len"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindFlag "AG_Widget *widget" "const char *binding" "int *p" "int bitmask"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindFlag8 "AG_Widget *widget" "const char *binding" "Uint8 *p" "Uint8 bitmask"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindFlag16 "AG_Widget *widget" "const char *binding" "Uint16 *p" "Uint16 bitmask"
+.Pp
+.Ft "void"
+.Fn AG_WidgetBindFlag32 "AG_Widget *widget" "const char *binding" "Uint32 *p" "Uint32 bitmask"
+.Pp
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
 .Pp
@@ -573,6 +633,9 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Ft void
 .Fn AG_WidgetSetString "AG_Widget *widget" "const char *binding" "const char *s"
 .Pp
+.Ft void
+.Fn AG_WidgetSetPointer "AG_Widget *widget" "const char *binding" "void *p"
+.Pp
 .nr nS 0
 The
 .Fn AG_WidgetBind
@@ -593,10 +656,17 @@ enum ag_widget_binding_type {
 	AG_WIDGET_SINT16,
 	AG_WIDGET_UINT32,
 	AG_WIDGET_SINT32,
+	AG_WIDGET_UINT64,
+	AG_WIDGET_SINT64,
 	AG_WIDGET_FLOAT,
 	AG_WIDGET_DOUBLE,
 	AG_WIDGET_STRING,
-	AG_WIDGET_PROP
+	AG_WIDGET_POINTER,
+	AG_WIDGET_PROP,
+	AG_WIDGET_FLAG,
+	AG_WIDGET_FLAG8,
+	AG_WIDGET_FLAG16,
+	AG_WIDGET_FLAG32
 }
 .Ed
 .Pp
@@ -622,13 +692,39 @@ Fixed-size, NUL-terminated string.
 .It Ft size_t bufsize
 Total buffer size in bytes.
 .El
-.Bl -tag -width "AG_Mutex *lock " -compact
-.It Ft AG_Mutex *lock
-Lock to acquire, or NULL.
-.It Ft size_t bufsize
-Total buffer size in bytes.
+.It Dv AG_WIDGET_FLAG
+One or more bits in a natural integer.
+.Bl -tag -width "Uint bitmask " -compact
+.It Ft Uint value
+Flags value.
+.It Ft Uint bitmask
+Bitmask value.
 .El
-.It Dv WIDGET_*
+.It Dv AG_WIDGET_FLAG8
+One or more bits in a 8-bit integer.
+.Bl -tag -width "Uint8 bitmask " -compact
+.It Ft Uint8 value
+Flags value.
+.It Ft Uint8 bitmask
+Bitmask value.
+.El
+.It Dv AG_WIDGET_FLAG16
+One or more bits in a 16-bit integer.
+.Bl -tag -width "Uint16 bitmask " -compact
+.It Ft Uint16 value
+Flags value.
+.It Ft Uint16 bitmask
+Bitmask value.
+.El
+.It Dv AG_WIDGET_FLAG32
+One or more bits in a 32-bit integer.
+.Bl -tag -width "Uint32 bitmask " -compact
+.It Ft Uint32 value
+Flags value.
+.It Ft Uint32 bitmask
+Bitmask value.
+.El
+.It Dv AG_WIDGET_*
 Other types of data.
 .Bl -tag -width "AG_Mutex *lock " -compact
 .It Ft AG_Mutex *lock
