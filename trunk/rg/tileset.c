@@ -181,9 +181,12 @@ RG_TilesetReinit(void *obj)
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
 
-	ts->tiletbl = Realloc(ts->tiletbl, sizeof(RG_Tile *));
+	Free(ts->tiletbl, M_RG);
+	ts->tiletbl = NULL;
+	Free(ts->animtbl, M_RG);
+	ts->animtbl = NULL;
+
 	ts->ntiletbl = 0;
-	ts->animtbl = Realloc(ts->animtbl, sizeof(RG_Anim *));
 	ts->nanimtbl = 0;
 
 	AG_MutexUnlock(&ts->lock);
@@ -363,7 +366,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 		}
 	}
 	ts->nanimtbl = AG_ReadUint32(buf);
-	printf("%s: animtbl: %u anims\n", AGOBJECT(ts)->name,
+	printf("%s: animtbl(%p): %u anims\n", AGOBJECT(ts)->name, ts->animtbl,
 	    (Uint)ts->nanimtbl);
 	ts->animtbl = Realloc(ts->animtbl, ts->nanimtbl*sizeof(RG_Anim *));
 	for (i = 0; i < ts->nanimtbl; i++) {
