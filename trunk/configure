@@ -153,7 +153,8 @@ echo "    --enable-16bpp                 Support for 16 bpp display [default: ye
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
 echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
 echo "    --enable-warnings              Suggested compiler warnings [default: no]"
-echo "    --enable-network               Build Agar-NET library [default: check]"
+echo "    --enable-network               Build network client library [default: check]"
+echo "    --enable-server                Build network server library [default: no]"
 exit 1
 fi
 
@@ -2424,6 +2425,73 @@ echo "#endif" >> config/network.h
 	fi
 else
 echo "#undef NETWORK" > config/network.h
+fi
+if [ "${enable_server}" = "yes" ]
+ then
+echo -n "checking for a getaddrinfo() function..."
+echo -n "checking for a getaddrinfo() function..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct addrinfo hints, *res0;
+	const char *s;
+	int rv;
+
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+	rv = getaddrinfo("hostname", "port", &hints, &res0);
+	s = gai_strerror(rv);
+	freeaddrinfo(res0);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+echo "#define HAVE_GETADDRINFO" $HAVE_GETADDRINFO >> config/have_getaddrinfo.h
+echo "#endif" >> config/have_getaddrinfo.h
+
+	HAVE_GETADDRINFO="yes"
+	echo "yes"
+else
+    echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+
+	HAVE_GETADDRINFO="no"
+	echo "no"
+fi
+	if [ "${HAVE_GETADDRINFO}" = "yes" ]
+ then
+SERVER=1
+echo "#ifndef SERVER" > config/server.h
+echo "#define SERVER" $SERVER >> config/server.h
+echo "#endif" >> config/server.h
+	else
+		if [ "${enable_server}" = "yes" ]
+ then
+			echo "*"
+			echo "* --enable-server was requested, but this system"
+			echo "* does not support getaddrinfo()."
+			echo "*"
+			exit 1
+		fi
+	fi
+else
+echo "#undef SERVER" > config/server.h
 fi
 if [ "${enable_threads}" = "yes" ]
  then
