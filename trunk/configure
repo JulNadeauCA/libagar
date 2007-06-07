@@ -2428,52 +2428,6 @@ echo "#undef NETWORK" > config/network.h
 fi
 if [ "${enable_server}" = "yes" ]
  then
-echo -n "checking for a getaddrinfo() function..."
-echo -n "checking for a getaddrinfo() function..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
-int
-main(int argc, char *argv[])
-{
-	struct addrinfo hints, *res0;
-	const char *s;
-	int rv;
-
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-	rv = getaddrinfo("hostname", "port", &hints, &res0);
-	s = gai_strerror(rv);
-	freeaddrinfo(res0);
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
-echo "#define HAVE_GETADDRINFO" $HAVE_GETADDRINFO >> config/have_getaddrinfo.h
-echo "#endif" >> config/have_getaddrinfo.h
-
-	HAVE_GETADDRINFO="yes"
-	echo "yes"
-else
-    echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
-
-	HAVE_GETADDRINFO="no"
-	echo "no"
-fi
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 SERVER=1
