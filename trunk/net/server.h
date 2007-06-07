@@ -1,46 +1,46 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_NET_PUBLIC
-#ifdef HAVE_SYSLOG
-#include <syslog.h>
-#else
-#define LOG_ERR 1
-#define LOG_DEBUG 2
-#define LOG_INFO 3
-#define LOG_NOTICE 4
-#endif
-#endif /* _AGAR_NET_PUBLIC */
+enum ns_log_lvl {
+	NS_DEBUG,
+	NS_INFO,
+	NS_NOTICE,
+	NS_WARNING,
+	NS_ERR,
+	NS_CRIT,
+	NS_ALERT,
+	NS_EMERG
+};
 
 typedef struct agn_server_cmd {
 	const char *name;
-	int (*func)(AGN_Command *, void *);
+	int (*func)(NS_Command *, void *);
 	void *arg;
-} AGN_ServerCmd;
+} NS_Cmd;
 
 typedef struct agn_server_auth {
 	const char *name;
 	int (*func)(void *);
 	void *arg;
-} AGN_ServerAuth;
+} NS_Auth;
 
 #ifndef _AGAR_NET_PUBLIC
 extern pid_t server_pid;
 #endif
 
 __BEGIN_DECLS
-void	AGN_ServerSetErrorFn(void (*)(void));
-void	AGN_ServerRegCmd(const char *, int (*)(AGN_Command *, void *), void *);
-void	AGN_ServerRegAuth(const char *, int (*)(void *), void *);
-void	AGN_ServerRegCallback(void (*)(void), int, int);
-int	AGN_ServerListen(const char *, const char *, const char *,
+void	NS_Log(enum ns_log_lvl, const char *, ...);
+void	NS_SetErrorFn(void (*)(void));
+void	NS_RegCmd(const char *, int (*)(NS_Command *, void *), void *);
+void	NS_RegAuth(const char *, int (*)(void *), void *);
+void	NS_RegCallback(void (*)(void), int, int);
+int	NS_Listen(const char *, const char *, const char *,
 	                 const char *);
-void	AGN_ServerDie(int, const char *, ...);
-void	AGN_ServerLog(int, const char *, ...);
-void	AGN_ServerBinaryMode(size_t);
-void	AGN_ServerCommandMode(void);
+void	NS_Die(int, const char *, ...);
+void	NS_BinaryMode(size_t);
+void	NS_CommandMode(void);
 
-void	AGN_ServerBeginList(void);
-void	AGN_ServerEndList(void);
-void	AGN_ServerListItem(void *, size_t);
-void	AGN_ServerListString(const char *, ...);
+void	NS_BeginList(void);
+void	NS_EndList(void);
+void	NS_ListItem(void *, size_t);
+void	NS_ListString(const char *, ...);
 __END_DECLS

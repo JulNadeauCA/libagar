@@ -1,4 +1,4 @@
 /*	Public domain	*/
 
-char *AGN_Fgetln(FILE *, size_t *);
+char *NS_Fgetln(FILE *, size_t *);
 

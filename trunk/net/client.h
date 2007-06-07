@@ -8,7 +8,7 @@
 #define AGN_USERNAME_MAX	48
 #define AGN_PASSWORD_MAX	64
 
-typedef struct agc_session {
+typedef struct nc_session {
 	const char *name;
 	char host[AGN_HOSTNAME_MAX];
 	char port[AGN_PORTNUM_MAX];
@@ -22,27 +22,27 @@ typedef struct agc_session {
 	} read;
 	char server_proto[32];
 	char client_proto[32];
-} AGC_Session;
+} NC_Session;
 
-typedef struct agc_result {
+typedef struct nc_result {
 	unsigned int argc;
 	char	**argv;
 	size_t	 *argv_len;
-} AGC_Result;
+} NC_Result;
 
 __BEGIN_DECLS
-void	 	 AGC_Init(AGC_Session *, const char *, const char *);
-void		 AGC_Destroy(AGC_Session *);
-int		 AGC_Connect(AGC_Session *, const char *, const char *,
+void	 	 NC_Init(NC_Session *, const char *, const char *);
+void		 NC_Destroy(NC_Session *);
+int		 NC_Connect(NC_Session *, const char *, const char *,
 		             const char *, const char *);
-int		 AGC_Reconnect(AGC_Session *);
-void	 	 AGC_Disconnect(AGC_Session *);
-ssize_t		 AGC_Read(AGC_Session *, size_t);
-ssize_t		 AGC_ReadBinary(AGC_Session *, size_t);
-int		 AGC_Write(AGC_Session *, const char *, ...);
-AGC_Result	*AGC_Query(AGC_Session *, const char *, ...);
-AGC_Result	*AGC_QueryBinary(AGC_Session *, const char *, ...);
-void		 AGC_FreeResult(AGC_Result *);
+int		 NC_Reconnect(NC_Session *);
+void	 	 NC_Disconnect(NC_Session *);
+ssize_t		 NC_Read(NC_Session *, size_t);
+ssize_t		 NC_ReadBinary(NC_Session *, size_t);
+int		 NC_Write(NC_Session *, const char *, ...);
+NC_Result	*NC_Query(NC_Session *, const char *, ...);
+NC_Result	*NC_QueryBinary(NC_Session *, const char *, ...);
+void		 NC_FreeResult(NC_Result *);
 __END_DECLS
 
 #endif /* _AGAR_NET_CLIENT_H_ */

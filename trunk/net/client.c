@@ -1,8 +1,7 @@
 /*	$Csoft: client.c,v 1.7 2005/09/04 01:57:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004-2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +49,6 @@
 #include <errno.h>
 #include <signal.h>
 #include <pwd.h>
-#include <err.h>
 
 #include "net.h"
 #include "client.h"
@@ -62,12 +60,12 @@ enum {
 	REQBUF_MAX =	4096
 };
 
-int agnClientWarnOnReconnect = 1;	/* Warn on reconnection */
-int agnClientReconnectAttempts = 4;	/* Connection retries */
-int agnClientReconnectIval = 2;		/* Interval between retries (secs) */
+int ncWarnOnReconnect = 1;		/* Warn on reconnection */
+int ncReconnectAttempts = 4;		/* Connection retries */
+int ncReconnectIval = 2;		/* Interval between retries (secs) */
 
 int
-AGC_Write(AGC_Session *client, const char *fmt, ...)
+NC_Write(NC_Session *client, const char *fmt, ...)
 {
 	char req[REQBUF_MAX];
 	ssize_t wrote, len;
@@ -80,17 +78,17 @@ AGC_Write(AGC_Session *client, const char *fmt, ...)
 	len = strlen(req);
 	wrote = write(client->sock, req, len);
 	if (wrote == -1) {
-		AGN_SetError("Write error: %s", strerror(errno));
+		AG_SetError("Write error: %s", strerror(errno));
 		return (-1);
 	} else if (wrote != len) {
-		AGN_SetError("Short write");
+		AG_SetError("Short write");
 		return (-1);
 	}
 	return (0);
 }
 
 static int
-AGN_ParseItemCount(const char *buf, unsigned int *ip)
+ParseItemCount(const char *buf, unsigned int *ip)
 {
 	char numbuf[13];
 	char *endp;
@@ -105,7 +103,7 @@ AGN_ParseItemCount(const char *buf, unsigned int *ip)
 	}
 	if ((errno == ERANGE && (lval == LONG_MAX || lval == LONG_MIN)) ||
 	    (lval > INT_MAX || lval < INT_MIN)) {
-		AGN_SetError("Item count out of range");
+		AG_SetError("Item count out of range");
 		return (-1);
 	}
 	*ip = lval;
@@ -114,7 +112,7 @@ AGN_ParseItemCount(const char *buf, unsigned int *ip)
 
 /* Parse an error message that occured during negotiation. */
 static char *
-AGC_GetServerError(AGC_Session *client)
+GetServerError(NC_Session *client)
 {
 	if (((client->read.buf[0] == '!') || (client->read.buf[0] == '1')) &&
 	    client->read.buf[1] == ' ') {
@@ -123,12 +121,16 @@ AGC_GetServerError(AGC_Session *client)
 	return (client->read.buf);
 }
 
-AGC_Result *
-AGC_Query(AGC_Session *client, const char *fmt, ...)
+/*
+ * Send a query to the server and expect an immediate response consisting
+ * in an array of binary items.
+ */
+NC_Result *
+NC_Query(NC_Session *client, const char *fmt, ...)
 {
 	char req[REQBUF_MAX];
 	char *bufp;
-	AGC_Result *res;
+	NC_Result *res;
 	int i;
 	unsigned int count;
 	va_list ap;
@@ -136,7 +138,7 @@ AGC_Query(AGC_Session *client, const char *fmt, ...)
 	size_t totsz = 0, pos;
 	
 	if (client == NULL) {
-		AGN_SetError("Not connected to server.");
+		AG_SetError("Not connected to server.");
 		return (NULL);
 	}
 
@@ -147,11 +149,11 @@ AGC_Query(AGC_Session *client, const char *fmt, ...)
 
 sendreq:
 	/* Issue the server request. */
-	if (AGC_Write(client, "%s\n", req) == -1) {
+	if (NC_Write(client, "%s\n", req) == -1) {
 		return (NULL);
 	}
-	if (AGC_Read(client, 3) < 1) {
-		if (AGC_Reconnect(client) == 0) {
+	if (NC_Read(client, 3) < 1) {
+		if (NC_Reconnect(client) == 0) {
 			goto sendreq;
 		}
 		return (NULL);
@@ -162,21 +164,21 @@ sendreq:
 		break;
 	case '!':
 	case '1':
-		AGN_SetError("Server error: `%s'", AGC_GetServerError(client));
+		AG_SetError("Server error: `%s'", GetServerError(client));
 		return (NULL);
 	default:
-		AGN_SetError("Illegal server response: `%s'", client->read.buf);
+		AG_SetError("Illegal server response: `%s'", client->read.buf);
 		return (NULL);
 	}
 
 	/* Parse the list/item size specification. */
-	res = Malloc(sizeof(AGC_Result), M_NETBUF);
+	res = Malloc(sizeof(NC_Result), M_NETBUF);
 	bufp = &client->read.buf[2];
 	for (i = 0; (s = strsep(&bufp, ":")) != NULL; i++) {
 		if (s[0] == '\0') {
 			break;
 		}
-		if (AGN_ParseItemCount(s, &count) == -1) {
+		if (ParseItemCount(s, &count) == -1) {
 			if (i == 0) {
 				Free(res, M_NETBUF);
 			} else {
@@ -211,31 +213,35 @@ sendreq:
 	}
 		
 	/* Read the items. */
-	if (AGC_Write(client, "1\n") == -1)
+	if (NC_Write(client, "1\n") == -1)
 		goto fail;
 	
-	if (AGC_ReadBinary(client, totsz) < totsz) {
+	if (NC_ReadBinary(client, totsz) < totsz) {
 		goto fail;
 	}
 	for (i = 0, pos = 0; i < res->argc; i++) {
 		memcpy(res->argv[i], &client->read.buf[pos], res->argv_len[i]);
 		pos += res->argv_len[i];
 	}
-	if (AGC_Write(client, "0\n") == -1) {
+	if (NC_Write(client, "0\n") == -1) {
 		goto fail;
 	}
 	return (res);
 fail:
-	AGC_FreeResult(res);
+	NC_FreeResult(res);
 	return (NULL);
 }
 
-AGC_Result *
-AGC_QueryBinary(AGC_Session *client, const char *fmt, ...)
+/*
+ * Send a query to the server and expect a (possibly slowly delivered)
+ * stream of data in response.
+ */
+NC_Result *
+NC_QueryBinary(NC_Session *client, const char *fmt, ...)
 {
 	char sizbuf[16];
 	char req[REQBUF_MAX];
-	AGC_Result *res;
+	NC_Result *res;
 	size_t binread = 0, binsize;
 	size_t len = 0;
 	char *dst;
@@ -244,7 +250,7 @@ AGC_QueryBinary(AGC_Session *client, const char *fmt, ...)
 	va_list ap;
 
 	if (client == NULL) {
-		AGN_SetError("Not connected to server.");
+		AG_SetError("Not connected to server.");
 		return (NULL);
 	}
 
@@ -253,21 +259,21 @@ AGC_QueryBinary(AGC_Session *client, const char *fmt, ...)
 	vsnprintf(req, sizeof(req), fmt, ap);
 	va_end(ap);
 sendreq:
-	if (AGC_Write(client, "%s\n\n", req) == -1) {
+	if (NC_Write(client, "%s\n\n", req) == -1) {
 		return (NULL);
 	}
-	if ((rv = AGC_Read(client, 15)) < 1) {
-		if (AGC_Reconnect(client) == 0) {
+	if ((rv = NC_Read(client, 15)) < 1) {
+		if (NC_Reconnect(client) == 0) {
 			goto sendreq;
 		}
 		return (NULL);
 	}
 	if (rv < 15) {
-		AGN_SetError("Malformed binary size packet.");
+		AG_SetError("Malformed binary size packet.");
 		return (NULL);
 	}
 	if (client->read.buf[0] != '0') {
-		AGN_SetError("Bad request: %s", client->read.buf);
+		AG_SetError("Bad request: %s", client->read.buf);
 		return (NULL);
 	}
 
@@ -285,7 +291,7 @@ sendreq:
 	binsize = atoi(sizbuf);
 
 	/* Allocate the response structure. */
-	res = Malloc(sizeof(AGC_Result), M_NETBUF);
+	res = Malloc(sizeof(NC_Result), M_NETBUF);
 	res->argv = Malloc(sizeof(char *), M_NETBUF);
 	res->argv_len = Malloc(sizeof(size_t), M_NETBUF);
 	res->argc = 1;
@@ -300,7 +306,7 @@ readbin:
 			if (errno == EINTR) {
 				goto readbin;
 			}
-			AGN_SetError("Read error: %s", strerror(errno));
+			AG_SetError("Read error: %s", strerror(errno));
 			goto fail;
 		} else if (rv == 0) {
 			break;
@@ -309,7 +315,7 @@ readbin:
 		dst += rv;
 	}
 	if (binread < binsize) {
-		AGN_SetError("Incomplete binary response.");
+		AG_SetError("Incomplete binary response.");
 		goto fail;
 	}
 	printf("downloaded %lu bytes\n", (u_long)binread);
@@ -323,7 +329,7 @@ fail:
 }
 
 void
-AGC_FreeResult(AGC_Result *res)
+NC_FreeResult(NC_Result *res)
 {
 	int i;
 
@@ -341,7 +347,7 @@ AGC_FreeResult(AGC_Result *res)
 
 /* Destroy the current server connection and establish a new one. */
 int
-AGC_Reconnect(AGC_Session *client)
+NC_Reconnect(NC_Session *client)
 {
 	char host_save[AGN_HOSTNAME_MAX];
 	char port_save[AGN_PORTNUM_MAX];
@@ -354,29 +360,29 @@ AGC_Reconnect(AGC_Session *client)
 	strlcpy(user_save, client->user, sizeof(user_save));
 	strlcpy(pass_save, client->pass, sizeof(pass_save));
 
-	if (agnClientWarnOnReconnect)
-		fprintf(stderr, "%s: reconnecting...\n", AGN_GetError());
+	if (ncWarnOnReconnect)
+		fprintf(stderr, "%s: reconnecting...\n", AG_GetError());
 
-	AGC_Disconnect(client);
+	NC_Disconnect(client);
 
-	for (try = 0, retries = agnClientReconnectAttempts;
+	for (try = 0, retries = ncReconnectAttempts;
 	     try < retries;
 	     try++) {
-		if (AGC_Connect(client, host_save, port_save, user_save,
+		if (NC_Connect(client, host_save, port_save, user_save,
 		    pass_save) == 0) {
 			break;
 		}
-		sleep(agnClientReconnectIval);
+		sleep(ncReconnectIval);
 	}
 	if (try == retries) {
-		AGN_SetError("Could not reconnect to server.");
+		AG_SetError("Could not reconnect to server.");
 		return (-1);
 	}
 	return (0);
 }
 
 ssize_t
-AGC_Read(AGC_Session *client, size_t nbytes)
+NC_Read(NC_Session *client, size_t nbytes)
 {
 	ssize_t rv;
 	size_t i;
@@ -387,7 +393,7 @@ AGC_Read(AGC_Session *client, size_t nbytes)
 			client->read.maxlen += nbytes+RDBUF_GROW;
 			if ((RDBUF_MAX > 0) &&
 			    (client->read.maxlen > RDBUF_MAX)) {
-				AGN_SetError("Illegal server response");
+				AG_SetError("Illegal server response");
 				return (-1);
 			}
 			client->read.buf = Realloc(client->read.buf,
@@ -397,10 +403,10 @@ AGC_Read(AGC_Session *client, size_t nbytes)
 		rv = read(client->sock, client->read.buf+client->read.len,
 		    nbytes);
 		if (rv == -1) {
-			AGN_SetError("Read error: %s", strerror(errno));
+			AG_SetError("Read error: %s", strerror(errno));
 			return (-1);
 		} else if (rv == 0) {
-			AGN_SetError("EOF from server");
+			AG_SetError("EOF from server");
 			return (-1);
 		}
 		/* XXX add a timeout; server aborts may cause infinite loop. */
@@ -413,12 +419,12 @@ AGC_Read(AGC_Session *client, size_t nbytes)
 		client->read.len += (size_t)rv;
 	}
 
-	AGN_SetError("Illegal server response");
+	AG_SetError("Illegal server response");
 	return (-1);
 }
 
 ssize_t
-AGC_ReadBinary(AGC_Session *client, size_t nbytes)
+NC_ReadBinary(NC_Session *client, size_t nbytes)
 {
 	ssize_t rv;
 	size_t i;
@@ -429,7 +435,7 @@ AGC_ReadBinary(AGC_Session *client, size_t nbytes)
 			client->read.maxlen += nbytes+RDBUF_GROW;
 			if ((RDBUF_MAX > 0) &&
 			    (client->read.maxlen > RDBUF_MAX)) {
-				AGN_SetError("Illegal server response");
+				AG_SetError("Illegal server response");
 				return (-1);
 			}
 			client->read.buf = Realloc(client->read.buf,
@@ -439,10 +445,10 @@ AGC_ReadBinary(AGC_Session *client, size_t nbytes)
 		rv = read(client->sock, client->read.buf+client->read.len,
 		    nbytes);
 		if (rv == -1) {
-			AGN_SetError("Read error: %s", strerror(errno));
+			AG_SetError("Read error: %s", strerror(errno));
 			return (-1);
 		} else if (rv == 0) {
-			AGN_SetError("EOF from server");
+			AG_SetError("EOF from server");
 			return (-1);
 		}
 		client->read.len += (size_t)rv;
@@ -450,24 +456,24 @@ AGC_ReadBinary(AGC_Session *client, size_t nbytes)
 			return (client->read.len);
 	}
 
-	AGN_SetError("Illegal server response");
+	AG_SetError("Illegal server response");
 	return (-1);
 }
 
 static int
-AGC_Auth(AGC_Session *client, const char *user, const char *pass)
+Authenticate(NC_Session *client, const char *user, const char *pass)
 {
-	if (AGC_Write(client, "password\n") == -1 ||
-	    AGC_Read(client, 32) < 1 ||
+	if (NC_Write(client, "password\n") == -1 ||
+	    NC_Read(client, 32) < 1 ||
 	    strcmp(client->read.buf, "ok-send-auth") != 0) {
-		AGN_SetError("Authentication protocol error: `%s'",
+		AG_SetError("Authentication protocol error: `%s'",
 		    client->read.buf);
 		return (-1);
 	}
-	if (AGC_Write(client, "%s:%s\n", user, pass) == -1 ||
-	    AGC_Read(client, 32) < 1 ||
+	if (NC_Write(client, "%s:%s\n", user, pass) == -1 ||
+	    NC_Read(client, 32) < 1 ||
 	    strcmp(client->read.buf, "ok") != 0) {
-		AGN_SetError("Authentication failed");
+		AG_SetError("Authentication failed");
 		return (-1);
 	}
 	return (0);
@@ -476,22 +482,22 @@ AGC_Auth(AGC_Session *client, const char *user, const char *pass)
 
 /* Negotiate the protocol version. */
 static int
-AGC_Negotiate(AGC_Session *client)
+ProtoNegotiate(NC_Session *client)
 {
-	if (AGC_Read(client, 32) < 1) {
-		AGN_SetError("Server did not respond");
+	if (NC_Read(client, 32) < 1) {
+		AG_SetError("Server did not respond");
 		return (-1);
 	}
 	strlcpy(client->server_proto, client->read.buf,
 	    sizeof(client->server_proto));
 
-	if (AGC_Write(client, "%s\n", client->client_proto) == -1 ||
-	    AGC_Read(client, 32) < 1) {
-		AGN_SetError("Server protocol error");
+	if (NC_Write(client, "%s\n", client->client_proto) == -1 ||
+	    NC_Read(client, 32) < 1) {
+		AG_SetError("Server protocol error");
 		return (-1);
 	}
 	if (strncmp(client->read.buf, "auth:", strlen("auth:")) != 0) {
-		AGN_SetError("Server version mismatch");
+		AG_SetError("Server version mismatch");
 		return (-1);
 	}
 	return (0);
@@ -499,7 +505,7 @@ AGC_Negotiate(AGC_Session *client)
 
 /* Establish a connection to the server and authenticate. */
 int
-AGC_Connect(AGC_Session *client, const char *host, const char *port,
+NC_Connect(NC_Session *client, const char *host, const char *port,
     const char *user, const char *pass)
 {
 	char fbuf[1024];
@@ -507,14 +513,15 @@ AGC_Connect(AGC_Session *client, const char *host, const char *port,
 	struct addrinfo hints, *res, *res0;
 	struct passwd *pwd;
 	int s, rv;
-	
+
+	/* Look in ~/.<app-name>rc for the login information. */
 	if (host == NULL || port == NULL || user == NULL || pass == NULL) {
 		char file[MAXPATHLEN];
 		char *s, *fbufp;
 		FILE *f;
 	
 		if ((pwd = getpwuid(getuid())) == NULL) {
-			AGN_SetError("Who are you?");
+			AG_SetError("Who are you?");
 			return (-1);
 		}
 		strlcpy(file, pwd->pw_dir, sizeof(file));
@@ -523,7 +530,7 @@ AGC_Connect(AGC_Session *client, const char *host, const char *port,
 		strlcat(file, "rc", sizeof(file));
 
 		if ((f = fopen(file, "r")) == NULL) {
-			AGN_SetError("%s: %s", file, strerror(errno));
+			AG_SetError("%s: %s", file, strerror(errno));
 			return (-1);
 		}
 		fread(fbuf, sizeof(fbuf), 1, f);
@@ -547,14 +554,14 @@ AGC_Connect(AGC_Session *client, const char *host, const char *port,
 		}
 	}
 
+	/* Connect to the server. */
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
-		AGN_SetError("%s:%s: %s", host, port, gai_strerror(rv));
+		AG_SetError("%s:%s: %s", host, port, gai_strerror(rv));
 		return (-1);
 	}
-
 	for (s = -1, res = res0;
 	     res != NULL;
 	     res = res->ai_next) {
@@ -572,33 +579,33 @@ AGC_Connect(AGC_Session *client, const char *host, const char *port,
 		break;
 	}
 	if (s == -1) {
-		AGN_SetError("%s: %s", cause, strerror(errno));
+		AG_SetError("%s: %s", cause, strerror(errno));
 		goto fail_resolution;
 	}
-
 	client->sock = s;
 	strlcpy(client->host, host, sizeof(client->host));
 	strlcpy(client->port, port, sizeof(client->port));
 	strlcpy(client->user, user, sizeof(client->user));
 	strlcpy(client->pass, pass, sizeof(client->pass));
 
-	if (AGC_Negotiate(client) == -1 ||
-	    AGC_Auth(client, user, pass) == -1) {
-		AGN_SetError("Server error: %s", AGC_GetServerError(client));
+	/* Negotiate the protocol version and authenticate. */
+	if (ProtoNegotiate(client) == -1 ||
+	    Authenticate(client, user, pass) == -1) {
+		AG_SetError("Server error: %s", GetServerError(client));
 		goto fail_close;
 	}
 
 	freeaddrinfo(res0);
 	return (0);
 fail_close:
-	AGC_Disconnect(client);
+	NC_Disconnect(client);
 fail_resolution:
 	freeaddrinfo(res0);
 	return (-1);
 }
 
 void
-AGC_Disconnect(AGC_Session *client)
+NC_Disconnect(NC_Session *client)
 {
 	if (client->sock != -1) {
 		close(client->sock);
@@ -607,7 +614,7 @@ AGC_Disconnect(AGC_Session *client)
 }
 
 void
-AGC_Init(AGC_Session *client, const char *name, const char *ver)
+NC_Init(NC_Session *client, const char *name, const char *ver)
 {
 	client->name = name;
 	client->host[0] = '\0';
@@ -627,9 +634,9 @@ AGC_Init(AGC_Session *client, const char *name, const char *ver)
 }
 
 void
-AGC_Destroy(AGC_Session *client)
+NC_Destroy(NC_Session *client)
 {
-	AGC_Disconnect(client);
+	NC_Disconnect(client);
 	Free(client->read.buf, M_NETBUF);
 }
 
