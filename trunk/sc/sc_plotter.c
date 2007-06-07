@@ -204,7 +204,7 @@ SC_PlotSettings(SC_Plot *pl)
 	if ((win = AG_WindowNewNamed(0, "plotter%p", pl)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Plot settings"));
+	AG_WindowSetCaption(win, _("Plot: <%s>"), pl->label_txt);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
@@ -473,7 +473,7 @@ SC_PlotterDraw(void *p)
 	agPrim.box(ptr, 0, 0, AGWIDGET(ptr)->w, AGWIDGET(ptr)->h, -1,
 	    AG_COLOR(GRAPH_BG_COLOR));
 	agPrim.hline(ptr, 1, AGWIDGET(ptr)->w-2, y0, ptr->colors[0]);
-	agPrim.vline(ptr, ptr->xMax-1, 1, AGWIDGET(ptr)->h-2, ptr->colors[0]);
+	agPrim.vline(ptr, ptr->xMax-1, 30, AGWIDGET(ptr)->h-30, ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
