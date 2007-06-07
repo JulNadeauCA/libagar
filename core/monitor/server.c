@@ -128,7 +128,7 @@ auth_password(void *p)
 	if (strcmp(buf, "foo:bar\n") == 0) {
 		return (1);
 	}
-	AGN_SetError("User/password mismatch");
+	AG_SetError("User/password mismatch");
 	return (0);
 }
 
@@ -139,7 +139,7 @@ handle_error(void)
 }
 
 static int
-cmd_version(AGN_Command *cmd, void *p)
+cmd_version(NS_Command *cmd, void *p)
 {
 	char hostname[128];
 
@@ -162,7 +162,7 @@ output_msg(j_common_ptr jcomp)
 }
 
 static int
-cmd_surface(AGN_Command *cmd, void *pSu)
+cmd_surface(NS_Command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
 	static struct jpeg_error_mgr jerrmgr;
@@ -251,7 +251,7 @@ cmd_surface(AGN_Command *cmd, void *pSu)
 	/* Send the compressed data now that we know its size. */
 	len = (size_t)ftell(ftmp);
 	rewind(ftmp);
-	AGN_ServerBinaryMode(len);
+	NS_BinaryMode(len);
 	{
 		char sendbuf[BUFSIZ];
 		size_t rv;
@@ -261,7 +261,7 @@ cmd_surface(AGN_Command *cmd, void *pSu)
 		}
 	}
 	fflush(stdout);
-	AGN_ServerCommandMode();
+	NS_CommandMode();
 	fclose(ftmp);
 	unlink(tmp);
 	
@@ -275,7 +275,7 @@ cmd_surface(AGN_Command *cmd, void *pSu)
 }
 
 static int
-cmd_view_fmt(AGN_Command *cmd, void *p)
+cmd_view_fmt(NS_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
@@ -292,7 +292,7 @@ cmd_view_fmt(AGN_Command *cmd, void *p)
 }
 
 static int
-cmd_refresh(AGN_Command *cmd, void *p)
+cmd_refresh(NS_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %d:%d\n", agView->rCur, agView->rNom);
@@ -301,7 +301,7 @@ cmd_refresh(AGN_Command *cmd, void *p)
 }
 
 static void
-find_objs(AGN_Command *cmd, AG_Object *pob, int depth)
+find_objs(NS_Command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
@@ -314,7 +314,7 @@ find_objs(AGN_Command *cmd, AG_Object *pob, int depth)
 }
 
 static int
-cmd_world(AGN_Command *cmd, void *p)
+cmd_world(NS_Command *cmd, void *p)
 {
 	AG_LockLinkage();
 	fputs("0 ", stdout);
@@ -330,7 +330,7 @@ loop_server(void *p)
 	AG_TextTmsg(AG_MSG_INFO, 1000, _("Now listening on %s:%s..."),
 	    serv_host == NULL ? "*" : serv_host, serv_port);
 
-	if (AGN_ServerListen("agar", VERSION, serv_host, serv_port) == -1) {
+	if (NS_Listen("agar", VERSION, serv_host, serv_port) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, _("Server error (%s:%s): %s"),
 		    serv_host, serv_port, strerror(errno));
 	}
@@ -340,14 +340,14 @@ loop_server(void *p)
 static void
 init_server(void)
 {
-	AGN_ServerRegAuth("password", auth_password, NULL);
-	AGN_ServerSetErrorFn(handle_error);
+	NS_RegAuth("password", auth_password, NULL);
+	NS_SetErrorFn(handle_error);
 
-	AGN_ServerRegCmd("version", cmd_version, NULL);
-	AGN_ServerRegCmd("screen", cmd_surface, agView->v);
-	AGN_ServerRegCmd("view-fmt", cmd_view_fmt, NULL);
-	AGN_ServerRegCmd("refresh", cmd_refresh, NULL);
-	AGN_ServerRegCmd("world", cmd_world, NULL);
+	NS_RegCmd("version", cmd_version, NULL);
+	NS_RegCmd("screen", cmd_surface, agView->v);
+	NS_RegCmd("view-fmt", cmd_view_fmt, NULL);
+	NS_RegCmd("refresh", cmd_refresh, NULL);
+	NS_RegCmd("world", cmd_world, NULL);
 
 	server_inited++;
 }
