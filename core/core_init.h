@@ -13,6 +13,10 @@ extern AG_Mutex agTimingLock;
 #define AG_LockTiming() AG_MutexLock(&agTimingLock)
 #define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
 
+/* Flags for AG_InitCore() */
+#define AG_CORE_VERBOSE		0x01
+
+/* Flags for AG_InitVideo() */
 #define AG_VIDEO_HWSURFACE	0x001
 #define AG_VIDEO_ASYNCBLIT	0x002
 #define AG_VIDEO_ANYFORMAT	0x004
@@ -25,12 +29,11 @@ extern AG_Mutex agTimingLock;
 #define AG_VIDEO_OPENGL		0x200
 #define AG_VIDEO_OPENGL_OR_SDL	0x400
 
+/* Flags for AG_InitInput() */
 #define AG_FORCE_UNICODE	0x01
 #define AG_FORCE_JOYSTICK	0x02
 
-#define AG_INIT_DEBUG_SERVER	0x01
-#define AG_INIT_RCS		0x02
-
+/* Flags for AG_InitConfigWin() */
 #define AG_CONFIG_FULLSCREEN	0x01
 #define AG_CONFIG_GL		0x02
 #define AG_CONFIG_RESOLUTION	0x04

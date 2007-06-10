@@ -87,6 +87,8 @@ int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectExitSavePrompt = 0;	   /* Prompt for save on exit if needed. */
 
+extern int agVerbose;
+
 /* Allocate, initialize and attach a generic object. */
 AG_Object *
 AG_ObjectNew(void *parent, const char *name)
@@ -989,8 +991,9 @@ AG_ObjectLoadGeneric(void *p)
 	}
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
-	
-	debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
+
+	if (agVerbose)
+		debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
 	
 	/*
 	 * Must free the resident data in order to clear the dependencies.
@@ -1164,7 +1167,8 @@ AG_ObjectLoadData(void *p)
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
+	if (agVerbose)
+		debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
 
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;

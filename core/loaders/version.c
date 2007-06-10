@@ -35,6 +35,7 @@ int
 AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
     AG_Version *rver)
 {
+	extern int agVerbose;			/* core.c */
 	char nbuf[AG_VERSION_NAME_MAX];
 	size_t nlen;
 	Uint32 major, minor;
@@ -58,7 +59,7 @@ AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
 		    name, major, minor, ver->major, ver->minor);
 		return (-1);
 	}
-	if (minor != ver->minor) {
+	if (agVerbose && minor != ver->minor) {
 		fprintf(stderr, "%s: Minor differs: v%d.%d != %d.%d.\n",
 		    name, major, minor, ver->major, ver->minor);
 	}
