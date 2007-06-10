@@ -149,6 +149,7 @@ cmd_version(NS_Command *cmd, void *p)
 	return (0);
 }
 
+#ifdef HAVE_JPEG
 static void
 error_exit(j_common_ptr jcomp)
 {
@@ -160,6 +161,7 @@ output_msg(j_common_ptr jcomp)
 {
 	printf("1 jpeg error\n");
 }
+#endif /* HAVE_JPEG */
 
 static int
 cmd_surface(NS_Command *cmd, void *pSu)
