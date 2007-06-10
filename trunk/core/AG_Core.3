@@ -56,9 +56,6 @@ mode, the font engine and other subsystems.
 .Fn AG_InitInput "Uint flags"
 .Pp
 .Ft "int"
-.Fn AG_InitNetwork "Uint flags"
-.Pp
-.Ft "int"
 .Fn AG_InitConfigWin "Uint flags"
 .Pp
 .Ft "void"
@@ -92,12 +89,6 @@ function sets the video mode, initializes the font engine and GUI.
 The
 .Fn AG_InitInput
 function initializes the input devices.
-.Pp
-The
-.Fn AG_InitNetwork
-function initializes the network facilities, if the
-.Dv NETWORK
-option was enabled at compile-time.
 .Pp
 The
 .Fn AG_InitConfigWin
