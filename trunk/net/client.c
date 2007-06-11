@@ -349,10 +349,10 @@ NC_FreeResult(NC_Result *res)
 int
 NC_Reconnect(NC_Session *client)
 {
-	char host_save[AGN_HOSTNAME_MAX];
-	char port_save[AGN_PORTNUM_MAX];
-	char user_save[AGN_USERNAME_MAX];
-	char pass_save[AGN_PASSWORD_MAX];
+	char host_save[NC_HOSTNAME_MAX];
+	char port_save[NC_PORTNUM_MAX];
+	char user_save[NC_USERNAME_MAX];
+	char pass_save[NC_PASSWORD_MAX];
 	int try, retries;
 
 	strlcpy(host_save, client->host, sizeof(host_save));
