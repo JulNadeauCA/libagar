@@ -1,6 +1,6 @@
 .\"	$Csoft: object.3,v 1.82 2005/09/27 00:25:16 vedge Exp $
 .\"
-.\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+.\" Copyright (c) 2001-2007 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
 .\" All rights reserved.
 .\"
@@ -55,6 +55,7 @@ and generic properties (see
 .Xr AG_Prop 3 ) .
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
+.Pp
 .Ft "AG_Object *"
 .Fn AG_ObjectNew "void *parent" "const char *name"
 .Pp
@@ -364,6 +365,12 @@ changes the generic operation vector (pointer to
 structure) associated with the given object.
 .Sh CLASS INFORMATION
 .nr nS 1
+.Ft "void"
+.Fn AG_RegisterType "const AG_ObjectOps *ops" "int icon"
+.Pp
+.Ft "AG_ObjectType *"
+.Fn AG_FindType "const char *name"
+.Pp
 .Ft "int"
 .Fn AG_ObjectIsClass "void *obj" "const char *class_pattern"
 .Pp
@@ -373,6 +380,36 @@ structure) associated with the given object.
 .Fn AG_ObjectIcon "void *p"
 .Pp
 .nr nS 0
+The
+.Fn AG_RegisterType
+function is used to register a new object class (described by
+.Fa ops )
+with the object type table.
+This table contains all the information needed by
+.Fn AG_ObjectLoad
+to load previously saved objects from disk or network and completely
+recreate them in memory.
+The
+.Fa icon
+argument is an
+.Xr AG_IconMgr 3
+icon name (for example,
+.Dv OBJ_ICON )
+used by
+.Xr AG_ObjMgr 3 .
+.Pp
+The
+.Fn AG_FindType
+function queries the object type table for the given class
+.Fa name
+and returns a pointer to the following structure (or NULL on failure):
+.Bd -literal
+typedef struct ag_object_type {
+	const AG_ObjectOps *ops;
+	int icon;
+} AG_ObjectType;
+.Ed
+.Pp
 The
 .Fn AG_ObjectIsClass
 function returns 1 if the given object's class name matches the given
