@@ -3,17 +3,17 @@
 #ifndef _AGAR_NET_CLIENT_H_
 #define _AGAR_NET_CLIENT_H_
 
-#define AGN_HOSTNAME_MAX	256
-#define AGN_PORTNUM_MAX		16
-#define AGN_USERNAME_MAX	48
-#define AGN_PASSWORD_MAX	64
+#define NC_HOSTNAME_MAX	256
+#define NC_PORTNUM_MAX	16
+#define NC_USERNAME_MAX	48
+#define NC_PASSWORD_MAX	64
 
 typedef struct nc_session {
 	const char *name;
-	char host[AGN_HOSTNAME_MAX];
-	char port[AGN_PORTNUM_MAX];
-	char user[AGN_USERNAME_MAX];
-	char pass[AGN_PASSWORD_MAX];
+	char host[NC_HOSTNAME_MAX];
+	char port[NC_PORTNUM_MAX];
+	char user[NC_USERNAME_MAX];
+	char pass[NC_PASSWORD_MAX];
 	int sock;
 	struct {
 		char *buf;
