@@ -33,9 +33,9 @@ typedef struct ag_label {
 } AG_Label;
 
 __BEGIN_DECLS
-AG_Label	*AG_LabelNew(void *, enum ag_label_type, const char *, ...);
-__inline__ void  AG_LabelNewStatic(void *, const char *);
-void		 AG_LabelNewFmt(void *, const char *, ...);
+AG_Label *AG_LabelNew(void *, enum ag_label_type, const char *, ...);
+AG_Label *AG_LabelNewFmt(void *, const char *, ...);
+__inline__ AG_Label *AG_LabelNewStatic(void *, const char *);
 
 void	 AG_LabelInit(AG_Label *, enum ag_label_type, const char *);
 void 	 AG_LabelDestroy(void *);
