@@ -141,17 +141,19 @@ AG_LabelScale(void *p, int rw, int rh)
 		AG_MutexLock(&lab->lock);
 		if (rw == -1 && rh == -1 && lab->surface != -1) {
 			AGWIDGET(lab)->w =
-			    AGWIDGET_SURFACE(lab,lab->surface)->w;
+			    AGWIDGET_SURFACE(lab,lab->surface)->w +
+			    lab->lPad + lab->rPad;
 			AGWIDGET(lab)->h =
-			    AGWIDGET_SURFACE(lab,lab->surface)->h;
+			    AGWIDGET_SURFACE(lab,lab->surface)->h +
+			    lab->tPad + lab->bPad;
 		}
 		AG_MutexUnlock(&lab->lock);
 		break;
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
 		if (rh == -1 && rh == -1) {
-			AGWIDGET(lab)->w = lab->prew;
-			AGWIDGET(lab)->h = lab->preh;
+			AGWIDGET(lab)->w = lab->wPre + lab->lPad + lab->rPad;
+			AGWIDGET(lab)->h = lab->hPre + lab->tPad + lab->bPad;
 		}
 		break;
 	}
@@ -162,6 +164,10 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 {
 	AG_WidgetInit(label, "label", &agLabelOps, 0);
 	label->type = type;
+	label->lPad = 2;
+	label->rPad = 2;
+	label->tPad = 2;
+	label->bPad = 3;
 
 	switch (type) {
 	case AG_LABEL_STATIC:
@@ -185,7 +191,7 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 void
 AG_LabelPrescale(AG_Label *lab, const char *text)
 {
-	AG_TextPrescale(text, &lab->prew, &lab->preh);
+	AG_TextPrescale(text, &lab->wPre, &lab->hPre);
 }
 
 void
@@ -198,6 +204,15 @@ AG_LabelSetSurface(AG_Label *label, SDL_Surface *su)
 	AG_MutexLock(&label->lock);
 	AG_WidgetReplaceSurface(label, 0, su);
 	AG_MutexUnlock(&label->lock);
+}
+
+void
+AG_LabelSetPadding(AG_Label *label, int lPad, int rPad, int tPad, int bPad)
+{
+	if (lPad != -1) { label->lPad = lPad; }
+	if (rPad != -1) { label->rPad = rPad; }
+	if (tPad != -1) { label->tPad = tPad; }
+	if (bPad != -1) { label->bPad = bPad; }
 }
 
 void
@@ -505,7 +520,8 @@ AG_LabelDraw(void *p)
 	switch (label->type) {
 	case AG_LABEL_STATIC:
 		AG_MutexLock(&label->lock);
-		AG_WidgetBlitSurface(label, label->surface, 0, 0);
+		AG_WidgetBlitSurface(label, label->surface,
+		    label->lPad, label->tPad);
 		AG_MutexUnlock(&label->lock);
 		break;
 	case AG_LABEL_POLLED:

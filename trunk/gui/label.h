@@ -22,7 +22,8 @@ typedef struct ag_label {
 	enum ag_label_type type;
 	AG_Mutex lock;
 	int surface;
-	int prew, preh;
+	int wPre, hPre;				/* Prescale dimensions */
+	int lPad, rPad, tPad, bPad;		/* Label padding */
 	struct {
 		char fmt[AG_LABEL_MAX];
 		void *ptrs[AG_LABEL_MAX_POLLPTRS];
@@ -44,6 +45,11 @@ void	 AG_LabelPrintf(AG_Label *, const char *, ...)
 		        FORMAT_ATTRIBUTE(printf, 2, 3)
 		        NONNULL_ATTRIBUTE(2);
 void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
+void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
+#define	 AG_LabelSetPaddingLeft(lbl,v) AG_LabelSetPadding(lbl,(v),-1,-1,-1)
+#define	 AG_LabelSetPaddingRight(lbl,v) AG_LabelSetPadding(lbl,-1,(v),-1,-1)
+#define	 AG_LabelSetPaddingTop(lbl,v) AG_LabelSetPadding(lbl,-1,-1,(v),-1)
+#define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding(lbl,-1,-1,-1,(v))
 void	 AG_LabelPrescale(AG_Label *, const char *);
 __END_DECLS
 

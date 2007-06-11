@@ -1,6 +1,6 @@
 .\"	$Csoft: textbox.3,v 1.28 2005/04/25 02:19:52 vedge Exp $
 .\"
-.\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+.\" Copyright (c) 2002, 2003, 2004, 2005, 2007 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
 .\" All rights reserved.
 .\"
@@ -42,7 +42,8 @@ The
 .Nm
 widget binds to a NUL-terminated string and allows the user to edit its
 contents.
-The string may contain UTF-8 encoded characters.
+If Agar was compiled with Unicode support, the string may contain UTF-8
+encoded characters.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -79,10 +80,13 @@ widget with the label text set to
 .Pp
 The
 .Fn AG_TextboxSetWriteable
-function controls the writeability of the string.
+function enables (1) or disables (0) writeability of the string.
 .Pp
 .Fn AG_TextboxSetPassword
-controls password (no print) input.
+enables (1) or disables (0) password-type input, where characters are
+substituted for
+.Sq *
+in the display.
 .Pp
 .Fn AG_TextboxPrescale
 requests that the initial geometry of
@@ -177,8 +181,11 @@ char name[32];
 AG_Textbox *tb;
 
 tb = AG_TextboxNew(parent, 0, "Name: ");
-AG_WidgetBind(tb, "string", AG_WIDGET_STRING, name, sizeof(name));
+AG_WidgetBindString(tb, "string", name, sizeof(name));
 .Ed
+.Pp
+If you are using Unicode, you need to plan for a maximum of 4 bytes per
+character in your buffers.
 .Pp
 As is the case with all widgets, a default binding (residing in the widget
 structure) is provided.

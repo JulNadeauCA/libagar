@@ -146,6 +146,9 @@ SDL_Rect *
 .Fn AG_LabelSetSurface "AG_Label *label" "SDL_Surface *su"
 .Pp
 .Ft void
+.Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
+.Pp
+.Ft void
 .Fn AG_LabelPrescale "AG_Label *label" "const char *text"
 .Pp
 .nr nS 0
@@ -158,6 +161,11 @@ labels only).
 The
 .Fn AG_LabelSetSurface
 function uses a copy of the given surface as the label.
+.Pp
+The
+.Fn AG_LabelSetPadding
+function sets the label padding in pixels.
+If a parameter is -1, its current value is preserved.
 .Pp
 The
 .Fn AG_LabelPrescale
