@@ -427,6 +427,7 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 
 /* Render UTF-8 text onto a newly allocated transparent surface. */
 /* XXX use state variables for font spec */
+/* XXX multiline? */
 SDL_Surface *
 AG_TextRender(const char *fontname, int fontsize, Uint32 color,
     const char *text)
