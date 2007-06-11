@@ -104,7 +104,7 @@ AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 }
 
 /* Alternate constructor for static labels. */
-void
+AG_Label *
 AG_LabelNewStatic(void *parent, const char *text)
 {
 	AG_Label *label;
@@ -112,10 +112,11 @@ AG_LabelNewStatic(void *parent, const char *text)
 	label = Malloc(sizeof(AG_Label), M_OBJECT);
 	AG_LabelInit(label, AG_LABEL_STATIC, text);
 	AG_ObjectAttach(parent, label);
+	return (label);
 }
 
 /* Alternate constructor for static labels. */
-void
+AG_Label *
 AG_LabelNewFmt(void *parent, const char *fmt, ...)
 {
 	char buf[AG_LABEL_MAX];
@@ -129,6 +130,7 @@ AG_LabelNewFmt(void *parent, const char *fmt, ...)
 	label = Malloc(sizeof(AG_Label), M_OBJECT);
 	AG_LabelInit(label, AG_LABEL_STATIC, buf);
 	AG_ObjectAttach(parent, label);
+	return (label);
 }
 
 void
@@ -166,8 +168,8 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 	label->type = type;
 	label->lPad = 2;
 	label->rPad = 2;
-	label->tPad = 2;
-	label->bPad = 3;
+	label->tPad = 1;
+	label->bPad = 1;
 
 	switch (type) {
 	case AG_LABEL_STATIC:
@@ -508,7 +510,7 @@ AG_LabelDrawPolled(AG_Label *label)
 
 	/* TODO use AG_WidgetUpdateSurface */
 	ts = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s);
-	AG_WidgetBlit(label, ts, 0, 0);
+	AG_WidgetBlit(label, ts, label->lPad, label->tPad);
 	SDL_FreeSurface(ts);
 }
 
