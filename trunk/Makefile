@@ -30,7 +30,6 @@ prereq:
 configure:
 	cat configure.in | manuconf > configure
 	chmod 755 configure
-	svn commit -m sync configure
 
 cleandir-config:
 	rm -fr config config.log
@@ -124,7 +123,7 @@ deinstall-includes:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: prereq configure clean-config release fastclean
+.PHONY: prereq configure cleandir-config package release fastclean
 .PHONY: install-includes deinstall-includes
 
 include ${TOP}/mk/csoft.common.mk
