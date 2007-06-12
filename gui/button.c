@@ -53,11 +53,13 @@ const AG_WidgetOps agButtonOps = {
 	AG_ButtonScale
 };
 
-static void button_mousemotion(AG_Event *);
-static void button_mousebuttonup(AG_Event *);
-static void button_mousebuttondown(AG_Event *);
-static void button_keyup(AG_Event *);
-static void button_keydown(AG_Event *);
+static int GetState(AG_WidgetBinding *, void *);
+static void SetState(AG_WidgetBinding *, void *, int);
+static void MouseMotion(AG_Event *);
+static void MouseButtonUp(AG_Event *);
+static void MouseButtonDown(AG_Event *);
+static void KeyUp(AG_Event *);
+static void KeyDown(AG_Event *);
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *caption)
@@ -118,7 +120,7 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	/* XXX replace the unfocused motion flag with a timer */
 	AG_WidgetInit(bu, "button", &agButtonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION);
-	AG_WidgetBind(bu, "state", AG_WIDGET_BOOL, &bu->state);
+	AG_WidgetBindBool(bu, "state", &bu->state);
 
 	label = (caption == NULL) ? NULL :
 	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), caption);
@@ -127,16 +129,19 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	bu->flags = flags;
 	bu->state = 0;
 	bu->justify = AG_BUTTON_CENTER;
-	bu->padding = 4;
+	bu->lPad = 4;
+	bu->rPad = 4;
+	bu->tPad = 3;
+	bu->bPad = 3;
 
 	AG_SetTimeout(&bu->repeat_to, repeat_expire, NULL, 0);
 	AG_SetTimeout(&bu->delay_to, delay_expire, NULL, 0);
 
-	AG_SetEvent(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
-	AG_SetEvent(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
-	AG_SetEvent(bu, "window-mousemotion", button_mousemotion, NULL);
-	AG_SetEvent(bu, "window-keyup", button_keyup, NULL);
-	AG_SetEvent(bu, "window-keydown", button_keydown, NULL);
+	AG_SetEvent(bu, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(bu, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(bu, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(bu, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(bu, "window-keydown", KeyDown, NULL);
 
 	if (flags & AG_BUTTON_HFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_HFILL; }
 	if (flags & AG_BUTTON_VFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_VFILL; }
@@ -150,8 +155,8 @@ AG_ButtonScale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		if (label != NULL) {
-			AGWIDGET(bu)->w = label->w + bu->padding*2;
-			AGWIDGET(bu)->h = label->h + bu->padding*2;
+			AGWIDGET(bu)->w = label->w + bu->lPad + bu->rPad;
+			AGWIDGET(bu)->h = label->h + bu->tPad + bu->bPad;
 		} else {
 			AGWIDGET(bu)->w = 1;
 			AGWIDGET(bu)->h = 1;
@@ -163,6 +168,8 @@ void
 AG_ButtonDraw(void *p)
 {
 	AG_Button *bu = p;
+	AG_WidgetBinding *binding;
+	void *pState;
 	SDL_Surface *label = AGWIDGET_SURFACE(bu,0);
 	int x = 0, y = 0;
 	int pressed;
@@ -170,7 +177,10 @@ AG_ButtonDraw(void *p)
 	if (AGWIDGET(bu)->w < 8 || AGWIDGET(bu)->h < 8)
 		return;
 
-	pressed = AG_WidgetBool(bu, "state");
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
+	pressed = GetState(binding, pState);
+	AG_WidgetUnlockBinding(binding);
+
 	if (bu->flags & AG_BUTTON_DISABLED) {
 		agPrim.box_dithered(bu,
 		    0, 0,
@@ -189,13 +199,13 @@ AG_ButtonDraw(void *p)
 	if (label != NULL) {
 		switch (bu->justify) {
 		case AG_BUTTON_LEFT:
-			x = bu->padding;
+			x = bu->lPad;
 			break;
 		case AG_BUTTON_CENTER:
 			x = AGWIDGET(bu)->w/2 - label->w/2;
 			break;
 		case AG_BUTTON_RIGHT:
-			x = AGWIDGET(bu)->w - label->w - bu->padding;
+			x = AGWIDGET(bu)->w - label->w - bu->rPad;
 			break;
 		}
 		y = ((AGWIDGET(bu)->h - label->h)/2) - 1;	/* Middle */
@@ -208,24 +218,109 @@ AG_ButtonDraw(void *p)
 	}
 }
 
+static int
+GetState(AG_WidgetBinding *binding, void *p)
+{
+	switch (binding->vtype) {
+	case AG_WIDGET_BOOL:
+	case AG_WIDGET_INT:
+		return *(int *)p;
+	case AG_WIDGET_UINT8:
+		return (int)(*(Uint8 *)p);
+	case AG_WIDGET_UINT16:
+		return (int)(*(Uint16 *)p);
+	case AG_WIDGET_UINT32:
+		return (int)(*(Uint32 *)p);
+	case AG_WIDGET_FLAG:
+		return (*(int *)p & (int)binding->bitmask);
+	case AG_WIDGET_FLAG8:
+		return (int)(*(Uint8 *)p & (Uint8)binding->bitmask);
+	case AG_WIDGET_FLAG16:
+		return (int)(*(Uint16 *)p & (Uint16)binding->bitmask);
+	case AG_WIDGET_FLAG32:
+		return (int)(*(Uint32 *)p & (Uint32)binding->bitmask);
+	}
+	return (-1);
+}
+
 static void
-button_mousemotion(AG_Event *event)
+SetState(AG_WidgetBinding *binding, void *p, int v)
+{
+	switch (binding->vtype) {
+	case AG_WIDGET_BOOL:
+	case AG_WIDGET_INT:
+		*(int *)p = v;
+		break;
+	case AG_WIDGET_UINT8:
+		*(Uint8 *)p = v;
+		break;
+	case AG_WIDGET_UINT16:
+		*(Uint16 *)p = v;
+		break;
+	case AG_WIDGET_UINT32:
+		*(Uint32 *)p = v;
+		break;
+	case AG_WIDGET_FLAG:
+		{
+			int *state = (int *)p;
+			if (*state & (int)binding->bitmask) {
+				*state &= ~(int)binding->bitmask;
+			} else {
+				*state |= (int)binding->bitmask;
+			}
+		}
+		break;
+	case AG_WIDGET_FLAG8:
+		{
+			Uint8 *state = (Uint8 *)p;
+			if (*state & (Uint8)binding->bitmask) {
+				*state &= ~(Uint8)binding->bitmask;
+			} else {
+				*state |= (Uint8)binding->bitmask;
+			}
+		}
+		break;
+	case AG_WIDGET_FLAG16:
+		{
+			Uint16 *state = (Uint16 *)p;
+			if (*state & (Uint16)binding->bitmask) {
+				*state &= ~(Uint16)binding->bitmask;
+			} else {
+				*state |= (Uint16)binding->bitmask;
+			}
+		}
+		break;
+	case AG_WIDGET_FLAG32:
+		{
+			Uint32 *state = (Uint32 *)p;
+			if (*state & (Uint32)binding->bitmask) {
+				*state &= ~(Uint32)binding->bitmask;
+			} else {
+				*state |= (Uint32)binding->bitmask;
+			}
+		}
+		break;
+	}
+}
+
+static void
+MouseMotion(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
-	AG_WidgetBinding *stateb;
+	AG_WidgetBinding *binding;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
-	int *pressed;
+	void *pState;
 
 	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
 
-	stateb = AG_WidgetGetBinding(bu, "state", &pressed);
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
 	if (!AG_WidgetRelativeArea(bu, x, y)) {
-		if ((bu->flags & AG_BUTTON_STICKY) == 0
-		    && *pressed == 1) {
-			*pressed = 0;
-			AG_WidgetBindingChanged(stateb);
+		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
+		    GetState(binding, pState) == 1) {
+			SetState(binding, pState, 0);
+			AG_WidgetBindingChanged(binding);
 		}
 		if (bu->flags & AG_BUTTON_MOUSEOVER) {
 			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
@@ -235,17 +330,18 @@ button_mousemotion(AG_Event *event)
 		bu->flags |= AG_BUTTON_MOUSEOVER;
 		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
 	}
-	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetUnlockBinding(binding);
 	AG_WidgetRedraw(bu);
 }
 
 static void
-button_mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
-	AG_WidgetBinding *stateb;
-	int *pushed;
+	AG_WidgetBinding *binding;
+	void *pState;
+	int newState;
 	
 	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
@@ -256,15 +352,16 @@ button_mousebuttondown(AG_Event *event)
 	if (button != SDL_BUTTON_LEFT)
 		return;
 	
-	stateb = AG_WidgetGetBinding(bu, "state", &pushed);
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
-		*pushed = 1;
+		SetState(binding, pState, 1);
 	} else {
-		*pushed = !(*pushed);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", *pushed);
+		newState = !GetState(binding, pState);
+		SetState(binding, pState, newState);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
 	}
-	AG_WidgetBindingChanged(stateb);
-	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetBindingChanged(binding);
+	AG_WidgetUnlockBinding(binding);
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->repeat_to);
@@ -273,12 +370,12 @@ button_mousebuttondown(AG_Event *event)
 }
 
 static void
-button_mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
-	AG_WidgetBinding *stateb;
-	int *pushed;
+	AG_WidgetBinding *binding;
+	void *pState;
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 		
@@ -293,57 +390,66 @@ button_mousebuttonup(AG_Event *event)
 		return;
 	}
 	
-	stateb = AG_WidgetGetBinding(bu, "state", &pushed);
-	if (*pushed &&
-	    button == SDL_BUTTON_LEFT &&
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
+	if (GetState(binding, pState) && button == SDL_BUTTON_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
-	    	*pushed = 0;
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", *pushed);
-		AG_WidgetBindingChanged(stateb);
+	    	SetState(binding, pState, 0);
+		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+		AG_WidgetBindingChanged(binding);
 	}
-	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetUnlockBinding(binding);
 	AG_WidgetRedraw(bu);
 }
 
 static void
-button_keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
+	AG_WidgetBinding *binding;
+	void *pState;
 	int keysym = AG_INT(1);
 	
 	if (bu->flags & AG_BUTTON_DISABLED)
 		return;
-
-	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		AG_WidgetSetBool(bu, "state", 1);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
-
-		if (bu->flags & AG_BUTTON_REPEAT) {
-			AG_DelTimeout(bu, &bu->repeat_to);
-			AG_ReplaceTimeout(bu, &bu->delay_to, 800);
-		}
+	if (keysym != SDLK_RETURN &&		/* TODO configurable */
+	    keysym != SDLK_SPACE) {
+		return;
 	}
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
+	SetState(binding, pState, 1);
+	AG_PostEvent(NULL, bu, "button-pushed", "%i", 1);
+
+	if (bu->flags & AG_BUTTON_REPEAT) {
+		AG_DelTimeout(bu, &bu->repeat_to);
+		AG_ReplaceTimeout(bu, &bu->delay_to, 800);
+	}
+	AG_WidgetUnlockBinding(binding);
 	AG_WidgetRedraw(bu);
 }
 
 static void
-button_keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
+	AG_WidgetBinding *binding;
+	void *pState;
 	int keysym = AG_INT(1);
 	
-	if (bu->flags & AG_BUTTON_DISABLED)
+	if (bu->flags & AG_BUTTON_DISABLED) {
 		return;
-	
+	}
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->delay_to);
 		AG_DelTimeout(bu, &bu->repeat_to);
 	}
-
-	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		AG_WidgetSetBool(bu, "state", 0);
-		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
+	if (keysym != SDLK_RETURN &&		/* TODO configurable */
+	    keysym != SDLK_SPACE) {
+		return;
 	}
+	binding = AG_WidgetGetBinding(bu, "state", &pState);
+	SetState(binding, pState, 0);
+	AG_WidgetUnlockBinding(binding);
+	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
 	AG_WidgetRedraw(bu);
 }
 
@@ -362,9 +468,12 @@ AG_ButtonDisable(AG_Button *bu)
 }
 
 void
-AG_ButtonSetPadding(AG_Button *bu, int padding)
+AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
 {
-	bu->padding = padding;
+	if (lPad != -1) { bu->lPad = lPad; }
+	if (rPad != -1) { bu->rPad = rPad; }
+	if (tPad != -1) { bu->tPad = tPad; }
+	if (bPad != -1) { bu->bPad = bPad; }
 	AG_WidgetRedraw(bu);
 }
 

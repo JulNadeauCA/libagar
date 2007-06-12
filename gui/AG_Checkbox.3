@@ -76,29 +76,27 @@ function inverts the current state of
 .Sh BINDINGS
 The
 .Nm
-widget provides the following bindings.
-In all cases, a value of 1 is considered boolean TRUE, and a value of 0
-is considered boolean FALSE.
+widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "FLAGS32 *state "
 .It Va BOOL *state
-State (boolean)
+Value (1/0) of natural integer
 .It Va INT *state
-State (natural integer)
+Value (1/0) of natural integer
 .It Va UINT8 *state
-State (8-bit integer)
+Value (1/0) of 8-bit integer
 .It Va UINT16 *state
-State (16-bit integer)
+Value (1/0) of 16-bit integer
 .It Va UINT32 *state
-State (32-bit integer)
+Value (1/0) of 32-bit integer
 .It Va FLAGS *state
-Flags (natural integer)
+Bits in an int
 .It Va FLAGS8 *state
-Flags (8-bit integer)
+Bits in 8-bit word
 .It Va FLAGS16 *state
-Flags (16-bit integer)
+Bits in 16-bit word
 .It Va FLAGS32 *state
-Flags (32-bit integer)
+Bits in 32-bit word
 .El
 .Sh EVENTS
 The

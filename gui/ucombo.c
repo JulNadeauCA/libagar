@@ -154,7 +154,7 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 	com->saved_h = 0;
 
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _("..."));
-	AG_ButtonSetPadding(com->button, 1);
+	AG_ButtonSetPadding(com->button, 1,1,1,1);
 	AG_SetEvent(com->button, "button-pushed", ucombo_expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);

@@ -255,20 +255,20 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	AG_TextboxPrescale(sbu->input, "88888");
 
 	sbu->xdecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(sbu->xdecbu, 0);
+	AG_ButtonSetPadding(sbu->xdecbu, 1,1,1,1);
 	AG_ButtonSetRepeatMode(sbu->xdecbu, 1);
 	AG_SetEvent(sbu->xdecbu, "button-pushed", mspinbutton_left, "%p", sbu);
 
 	sbu->xincbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(sbu->xincbu, 0);
+	AG_ButtonSetPadding(sbu->xincbu, 1,1,1,1);
 	AG_SetEvent(sbu->xincbu, "button-pushed", mspinbutton_right, "%p", sbu);
 	
 	sbu->ydecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(sbu->ydecbu, 0);
+	AG_ButtonSetPadding(sbu->ydecbu, 1,1,1,1);
 	AG_SetEvent(sbu->ydecbu, "button-pushed", mspinbutton_up, "%p", sbu);
 
 	sbu->yincbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(sbu->yincbu, 0);
+	AG_ButtonSetPadding(sbu->yincbu, 1,1,1,1);
 	AG_SetEvent(sbu->yincbu, "button-pushed", mspinbutton_down, "%p", sbu);
 
 	AG_SetEvent(sbu, "widget-bound", mspinbutton_bound, NULL);

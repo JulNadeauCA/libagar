@@ -168,7 +168,7 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 	label->type = type;
 	label->lPad = 2;
 	label->rPad = 2;
-	label->tPad = 1;
+	label->tPad = 0;
 	label->bPad = 1;
 
 	switch (type) {

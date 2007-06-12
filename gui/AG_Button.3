@@ -40,8 +40,9 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a simple push-button containing a string of text or
-an image.
+widget implements a simple push-button displaying an image or a text label.
+.Nm
+can be used to trigger events, or control a boolean value.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -64,7 +65,7 @@ an image.
 .Fn AG_ButtonDisable "AG_Button *button"
 .Pp
 .Ft void
-.Fn AG_ButtonSetPadding "AG_Button *button" "int padding"
+.Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
 .Pp
 .Ft void
 .Fn AG_ButtonSetFocusable "AG_Button *button" "int focusable"
@@ -140,6 +141,7 @@ widget.
 The
 .Fn AG_ButtonSetPadding
 function sets the padding around the label in pixels.
+If a parameter is -1, its current value is preserved.
 .Pp
 The
 .Fn AG_ButtonSetFocusable
@@ -180,7 +182,7 @@ flag enables or disables repeat mode.
 Repeat mode causes multiple
 .Sq button-pushed
 events to be posted periodically for as long as the button is triggered.
-Repeat mode is useful for things like
+Repeat mode is used notably by
 .Xr AG_Spinbutton 3 .
 .Sh EVENTS
 The
@@ -220,11 +222,29 @@ This is typically is used to display tool tips.
 .Sh BINDINGS
 The
 .Nm
-widget provides the following bindings:
+widget provides the following bindings.
+In all cases, a value of 1 is considered boolean TRUE, and a value of 0
+is considered boolean FALSE.
 .Pp
-.Bl -tag -compact -width "int *state"
-.It Va int *state
-Button state (1=pressed, 0=released)
+.Bl -tag -compact -width "FLAGS32 *state "
+.It Va BOOL *state
+Value (1/0) of natural integer
+.It Va INT *state
+Value (1/0) of natural integer
+.It Va UINT8 *state
+Value (1/0) of 8-bit integer
+.It Va UINT16 *state
+Value (1/0) of 16-bit integer
+.It Va UINT32 *state
+Value (1/0) of 32-bit integer
+.It Va FLAGS *state
+Bits in an int
+.It Va FLAGS8 *state
+Bits in 8-bit word
+.It Va FLAGS16 *state
+Bits in 16-bit word
+.It Va FLAGS32 *state
+Bits in 32-bit word
 .El
 .Sh EXAMPLES
 The following code fragment creates a button and sets a handler function
@@ -237,16 +257,29 @@ void
 hello(AG_Event *event)
 {
 	char *s = AG_STRING(1);
-
 	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
 }
  
 .Li ...
 
-AG_Button *btn;
+{
+	AG_Button *btn;
 
-btn = AG_ButtonNew(parent, 0, "Hello");
-AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
+	btn = AG_ButtonNew(parent, 0, "Hello");
+	AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
+}
+.Ed
+.Pp
+The following code fragment uses buttons to control specific bits in
+a 32-bit word:
+.Bd -literal -offset indent
+AG_Button *btn;
+Uint32 MyFlags = 0;
+
+btn = AG_ButtonNew(parent, AG_BUTTON_STICKY, "Bit 1");
+AG_WidgetBindFlag32(btn, "state", &MyFlags, 0x01);
+btn = AG_ButtonNew(parent, AG_BUTTON_STICKY, "Bit 2");
+AG_WidgetBindFlag32(btn, "state", &MyFlags, 0x02);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

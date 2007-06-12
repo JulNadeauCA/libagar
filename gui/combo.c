@@ -233,7 +233,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 
 	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, label);
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
-	AG_ButtonSetPadding(com->button, 1);
+	AG_ButtonSetPadding(com->button, 1,1,1,1);
 
 	if ((flags & AG_COMBO_ANY_TEXT) == 0)
 		com->tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
