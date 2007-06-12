@@ -28,7 +28,7 @@ typedef struct ag_button {
 #define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
-	int padding;			/* Padding in pixels */
+	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
 	AG_Timeout delay_to;		/* Delay for triggering repeat mode */
 	AG_Timeout repeat_to;		/* Timeout for repeat mode */
 } AG_Button;
@@ -44,7 +44,11 @@ void	   AG_ButtonScale(void *, int, int);
 
 void	   AG_ButtonEnable(AG_Button *);
 void	   AG_ButtonDisable(AG_Button *);
-void	   AG_ButtonSetPadding(AG_Button *, int);
+void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
+#define	AG_ButtonSetPaddingLeft(lbl,v)   AG_ButtonSetPadding(lbl,(v),-1,-1,-1)
+#define	AG_ButtonSetPaddingRight(lbl,v)  AG_ButtonSetPadding(lbl,-1,(v),-1,-1)
+#define AG_ButtonSetPaddingTop(lbl,v)    AG_ButtonSetPadding(lbl,-1,-1,(v),-1)
+#define	AG_ButtonSetPaddingBottom(lbl,v) AG_ButtonSetPadding(lbl,-1,-1,-1,(v))
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonSetJustification(AG_Button *, enum ag_button_justify);

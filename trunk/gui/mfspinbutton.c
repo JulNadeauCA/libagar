@@ -280,20 +280,20 @@ AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
 	}
 
 	fsu->xincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->xincbu, 0);
+	AG_ButtonSetPadding(fsu->xincbu, 1,1,1,1);
 	AG_SetEvent(fsu->xincbu, "button-pushed", mfspinbutton_right,
 	    "%p", fsu);
 
 	fsu->xdecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->xdecbu, 0);
+	AG_ButtonSetPadding(fsu->xdecbu, 1,1,1,1);
 	AG_SetEvent(fsu->xdecbu, "button-pushed", mfspinbutton_left, "%p", fsu);
 
 	fsu->yincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->yincbu, 0);
+	AG_ButtonSetPadding(fsu->yincbu, 1,1,1,1);
 	AG_SetEvent(fsu->yincbu, "button-pushed", mfspinbutton_down, "%p", fsu);
 
 	fsu->ydecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->ydecbu, 0);
+	AG_ButtonSetPadding(fsu->ydecbu, 1,1,1,1);
 	AG_SetEvent(fsu->ydecbu, "button-pushed", mfspinbutton_up, "%p", fsu);
 
 	AG_SetEvent(fsu, "widget-bound", mfspinbutton_bound, NULL);

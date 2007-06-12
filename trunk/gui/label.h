@@ -46,9 +46,9 @@ void	 AG_LabelPrintf(AG_Label *, const char *, ...)
 		        NONNULL_ATTRIBUTE(2);
 void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
-#define	 AG_LabelSetPaddingLeft(lbl,v) AG_LabelSetPadding(lbl,(v),-1,-1,-1)
-#define	 AG_LabelSetPaddingRight(lbl,v) AG_LabelSetPadding(lbl,-1,(v),-1,-1)
-#define	 AG_LabelSetPaddingTop(lbl,v) AG_LabelSetPadding(lbl,-1,-1,(v),-1)
+#define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding(lbl,(v),-1,-1,-1)
+#define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding(lbl,-1,(v),-1,-1)
+#define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding(lbl,-1,-1,(v),-1)
 #define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding(lbl,-1,-1,-1,(v))
 void	 AG_LabelPrescale(AG_Label *, const char *);
 __END_DECLS

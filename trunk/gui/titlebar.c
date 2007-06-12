@@ -119,7 +119,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 		AG_ButtonSetSurface(tbar->maximize_btn,
 		    AGICON(GUI_SHOW_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->maximize_btn, 1);
+		AG_ButtonSetPadding(tbar->maximize_btn, 1,1,1,1);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
 		    maximize_window, "%p", tbar);
 	} else {
@@ -131,7 +131,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 		AG_ButtonSetSurface(tbar->minimize_btn,
 		    AGICON(GUI_HIDE_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->minimize_btn, 1);
+		AG_ButtonSetPadding(tbar->minimize_btn, 1,1,1,1);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
 		    minimize_window, "%p", tbar);
 	} else {
@@ -142,7 +142,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
 		AG_ButtonSetSurface(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
-		AG_ButtonSetPadding(tbar->close_btn, 1);
+		AG_ButtonSetPadding(tbar->close_btn, 1,1,1,1);
 		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);
 	} else {

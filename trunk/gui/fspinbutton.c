@@ -329,9 +329,9 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	}
 
 	fsu->incbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->incbu, 0);
+	AG_ButtonSetPadding(fsu->incbu, 1,1,1,1);
 	fsu->decbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->decbu, 0);
+	AG_ButtonSetPadding(fsu->decbu, 1,1,1,1);
 
 	AG_SetEvent(fsu, "widget-bound", binding_changed, NULL);
 	AG_SetEvent(fsu, "window-keydown", key_pressed, NULL);
