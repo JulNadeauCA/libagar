@@ -93,6 +93,7 @@ AG_ConsoleInit(AG_Console *cons, Uint flags)
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	AG_WidgetBindInt(cons->vBar, "value", &cons->rOffs);
 	AG_WidgetBindInt(cons->vBar, "max", &cons->nLines);
+	AG_MutexInitRecursive(&cons->lock);
 
 	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);
@@ -121,26 +122,28 @@ void
 AG_ConsoleDraw(void *p)
 {
 	AG_Console *cons = p;
+	SDL_Surface *su;
 	Uint r;
 	int y;
 	
 	if (AGWIDGET(cons)->w < 8 || AGWIDGET(cons)->h < 8) { return; }
-	if (cons->rOffs >= cons->nLines) { cons->rOffs = cons->nLines-1; }
 
 	agPrim.box(cons, 0, 0, AGWIDGET(cons)->w, AGWIDGET(cons)->h, -1,
 	    cons->cBg);
 
-	if (cons->nLines == 0)
-		return;
-
+	AG_MutexLock(&cons->lock);
+	if (cons->rOffs >= cons->nLines) {
+		cons->rOffs = cons->nLines-1;
+	}
+	if (cons->nLines == 0) {
+		goto out;
+	}
 	for (r = cons->rOffs, y = cons->padding;
 	     r < cons->nLines && y < AGWIDGET(cons)->h;
 	     r++) {
 		AG_ConsoleLine *ln = &cons->lines[r];
 
 		if (ln->surface == -1) {
-			SDL_Surface *su;
-
 			su = AG_TextRender(ln->fontFace, ln->fontSize, ln->cFg,
 			    ln->text);
 			ln->surface = AG_WidgetMapSurface(cons, su);
@@ -148,6 +151,8 @@ AG_ConsoleDraw(void *p)
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
 		y += AGWIDGET_SURFACE(cons,ln->surface)->h + cons->lineskip;
 	}
+out:
+	AG_MutexUnlock(&cons->lock);
 }
 
 void
@@ -199,6 +204,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
 
+	AG_MutexLock(&cons->lock);
+
 	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
 				           sizeof(AG_ConsoleLine));
 	ln = &cons->lines[cons->nLines++];
@@ -217,6 +224,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->surface = -1;
 	ln->cBg = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
 	ln->cFg = SDL_MapRGB(agVideoFmt, 250, 250, 230);
+	
+	AG_MutexUnlock(&cons->lock);
 	return (ln);
 }
 
@@ -226,11 +235,13 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	AG_ConsoleLine *ln;
 	va_list args;
 
+	AG_MutexLock(&cons->lock);
 	ln = AG_ConsoleAppendLine(cons, NULL);
 	va_start(args, fmt);
 	AG_Vasprintf(&ln->text, fmt, args);
 	va_end(args);
 	ln->len = strlen(ln->text);
+	AG_MutexUnlock(&cons->lock);
 	return (ln);
 }
 
