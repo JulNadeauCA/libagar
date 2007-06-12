@@ -34,6 +34,7 @@ typedef struct ag_console {
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
+	AG_Mutex lock;			/* Lock on buffer content */
 	AG_ConsoleLine *lines;		/* Lines in buffer */
 	Uint nLines;			/* Line count */
 	Uint rOffs;			/* Row display offset */
