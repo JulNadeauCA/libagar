@@ -163,8 +163,17 @@ else
 fi
 
 # Don't enable thread safety unless requested explicitely.
+# XXX should we enable if pthreads found? what would users expect?
 if [ "${enable_threads}" = "yes" ]; then
-	HDEFINE(THREADS, 1)
+	if [ "${HAVE_PTHREADS}" = "yes" ]; then
+		HDEFINE(THREADS, 1)
+	else
+		echo "*"
+		echo "* --enable-threads was requested, but a POSIX threads"
+		echo "* library was not found."
+		echo "*"
+		exit 1
+	if
 else
 	HUNDEF(THREADS)
 fi
