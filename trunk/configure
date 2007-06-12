@@ -2449,10 +2449,19 @@ echo "#undef SERVER" > config/server.h
 fi
 if [ "${enable_threads}" = "yes" ]
  then
+	if [ "${HAVE_PTHREADS}" = "yes" ]
+ then
 THREADS=1
 echo "#ifndef THREADS" > config/threads.h
 echo "#define THREADS" $THREADS >> config/threads.h
 echo "#endif" >> config/threads.h
+	else
+		echo "*"
+		echo "* --enable-threads was requested, but a POSIX threads"
+		echo "* library was not found."
+		echo "*"
+		exit 1
+	if
 else
 echo "#undef THREADS" > config/threads.h
 fi
