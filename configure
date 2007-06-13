@@ -2461,7 +2461,7 @@ echo "#endif" >> config/threads.h
 		echo "* library was not found."
 		echo "*"
 		exit 1
-	if
+	fi
 else
 echo "#undef THREADS" > config/threads.h
 fi
