@@ -173,7 +173,7 @@ if [ "${enable_threads}" = "yes" ]; then
 		echo "* library was not found."
 		echo "*"
 		exit 1
-	if
+	fi
 else
 	HUNDEF(THREADS)
 fi
