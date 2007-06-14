@@ -21,7 +21,7 @@ LoadBMP(AG_Event *event)
 
 	/* Load the bitmap file into a SDL surface. */
 	if ((bmp = SDL_LoadBMP(file)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, AG_GetError());
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, SDL_GetError());
 		return;
 	}
 
