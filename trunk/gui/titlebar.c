@@ -52,8 +52,8 @@ const AG_WidgetOps agTitlebarOps = {
 	AG_BoxScale
 };
 
-static void titlebar_mousebuttondown(AG_Event *);
-static void titlebar_mousebuttonup(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void mousebuttonup(AG_Event *);
 
 AG_Titlebar *
 AG_TitlebarNew(void *parent, int flags)
@@ -102,7 +102,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_HFILL);
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
 
-	AG_BoxSetPadding(&tbar->hb, 5);
+	AG_BoxSetPadding(&tbar->hb, 3);
 	AG_BoxSetSpacing(&tbar->hb, 0);
 
 	AG_WidgetSetType(tbar, "titlebar");
@@ -112,6 +112,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	tbar->pressed = 0;
 	tbar->win = NULL;
 	tbar->label = AG_LabelNew(tbar, AG_LABEL_STATIC, _("Untitled"));
+	AG_LabelSetPadding(tbar->label, 5,0,2,2);
 	AGWIDGET(tbar->label)->flags |= AG_WIDGET_HFILL;
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
@@ -119,7 +120,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 		AG_ButtonSetSurface(tbar->maximize_btn,
 		    AGICON(GUI_SHOW_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->maximize_btn, 1,1,1,1);
+		AG_ButtonSetPadding(tbar->maximize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
 		    maximize_window, "%p", tbar);
 	} else {
@@ -131,7 +132,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 		AG_ButtonSetSurface(tbar->minimize_btn,
 		    AGICON(GUI_HIDE_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->minimize_btn, 1,1,1,1);
+		AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
 		    minimize_window, "%p", tbar);
 	} else {
@@ -142,16 +143,15 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
 		AG_ButtonSetSurface(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
-		AG_ButtonSetPadding(tbar->close_btn, 1,1,1,1);
+		AG_ButtonSetPadding(tbar->close_btn, 0,0,0,0);
 		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);
 	} else {
 		tbar->close_btn = NULL;
 	}
 
-	AG_SetEvent(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
-	    NULL);
-	AG_SetEvent(tbar, "window-mousebuttonup", titlebar_mousebuttonup, NULL);
+	AG_SetEvent(tbar, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(tbar, "window-mousebuttonup", mousebuttonup, NULL);
 }
 
 void
@@ -170,7 +170,7 @@ AG_TitlebarDraw(void *p)
 }
 
 static void
-titlebar_mousebuttondown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_SELF();
 
@@ -184,7 +184,7 @@ titlebar_mousebuttondown(AG_Event *event)
 }
 
 static void
-titlebar_mousebuttonup(AG_Event *event)
+mousebuttonup(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_SELF();
 	
