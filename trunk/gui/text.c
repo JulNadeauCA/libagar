@@ -310,7 +310,7 @@ free_glyph(AG_Glyph *gl)
 	SDL_FreeSurface(gl->su);
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
-		glDeleteTextures(1, &gl->texture);
+		glDeleteTextures(1, (GLuint *)&gl->texture);
 #endif
 	Free(gl, M_TEXT);
 }
@@ -403,7 +403,8 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
 #ifdef HAVE_OPENGL
-		gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
+		if (agView->opengl)
+			gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
 #endif
 		gl->nrefs = 1;
 		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
