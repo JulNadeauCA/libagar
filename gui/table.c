@@ -959,8 +959,12 @@ mousemotion(AG_Event *event)
 
 	AG_MutexLock(&t->lock);
 	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
-		if ((t->cols[t->nResizing].w += xrel) < COLUMN_MIN_WIDTH) {
-			t->cols[t->nResizing].w = COLUMN_MIN_WIDTH;
+		AG_TableCol *rCol = &t->cols[t->nResizing];
+		if ((rCol->w += xrel) < COLUMN_MIN_WIDTH) {
+			rCol->w = COLUMN_MIN_WIDTH;
+		}
+		if ((rCol->x + rCol->w) > AGWIDGET(t)->w) {
+			rCol->w = AGWIDGET(t)->w - rCol->x;
 		}
 		AG_TableSizeFillCols(t);
 		AG_SetCursor(AG_HRESIZE_CURSOR);
