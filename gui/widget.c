@@ -942,7 +942,7 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		if (wid->textures[name] != 0) {
-			glDeleteTextures(1, &wid->textures[name]);
+			glDeleteTextures(1, (GLuint *)&wid->textures[name]);
 		}
 		wid->textures[name] = (su == NULL) ? 0 :
 		    AG_SurfaceTexture(su, &wid->texcoords[name*4]);
@@ -982,7 +982,7 @@ AG_WidgetDestroy(void *p)
 #ifdef HAVE_OPENGL
 		if (agView->opengl &&
 		    wid->textures[i] != 0)
-			glDeleteTextures(1, &wid->textures[i]);
+			glDeleteTextures(1, (GLuint *)&wid->textures[i]);
 #endif
 	}
 	Free(wid->surfaces, M_WIDGET);
