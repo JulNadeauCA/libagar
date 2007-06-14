@@ -164,7 +164,7 @@ AG_LabelScale(void *p, int rw, int rh)
 void
 AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 {
-	AG_WidgetInit(label, "label", &agLabelOps, 0);
+	AG_WidgetInit(label, "label", &agLabelOps, AG_WIDGET_CLIPPING);
 	label->type = type;
 	label->lPad = 2;
 	label->rPad = 2;
