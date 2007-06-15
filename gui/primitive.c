@@ -183,7 +183,7 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	cLeft = AG_ColorShift(color, (z<0) ? agLowColorShift:agHighColorShift);
 	cRight = AG_ColorShift(color, (z<0) ? agHighColorShift:agLowColorShift);
 
-	if (AGWIDGET_FOCUSED(wid)) {
+	if (AG_WidgetFocused(wid)) {
 		cBg = AG_ColorShift(color, (z < 0) ? agFocusSunkColorShift :
 		                                     agFocusRaisedColorShift);
 	} else {
@@ -208,7 +208,7 @@ box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
 	int flag = 0;
 	Uint32 cDither;
 	
-	if (AGWIDGET_FOCUSED(wid)) {
+	if (AG_WidgetFocused(wid)) {
 		cDither = AG_ColorShift(c2, (z<0) ? agFocusSunkColorShift :
 		                                    agFocusRaisedColorShift);
 	} else {

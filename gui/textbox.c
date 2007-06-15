@@ -348,7 +348,7 @@ AG_TextboxDraw(void *p)
 		if (i == tbox->pos &&
 		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
 		    (tbox->flags & AG_TEXTBOX_WRITEABLE) &&
-		    AGWIDGET_FOCUSED(tbox)) {
+		    AG_WidgetFocused(tbox)) {
 			agPrim.vline(tbox,
 			    x, (y + 1),
 			    (y + agTextFontHeight - 2),
@@ -550,7 +550,7 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 	if (mx <= x) {
 		return (-1);
 	}
-	x += tbox->xpadding + (AGWIDGET_FOCUSED(tbox) ? 1 : 0);
+	x += tbox->xpadding + (AG_WidgetFocused(tbox) ? 1 : 0);
 	y = tbox->ypadding;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);

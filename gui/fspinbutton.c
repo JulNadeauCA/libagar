@@ -420,7 +420,7 @@ AG_FSpinbuttonDraw(void *p)
 	AG_WidgetBinding *valueb;
 	void *value;
 
-	if (AGWIDGET_FOCUSED(fsu->input))
+	if (AG_WidgetFocused(fsu->input))
 		return;
 
 	valueb = AG_WidgetGetBinding(fsu, "value", &value);
