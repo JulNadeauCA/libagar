@@ -109,10 +109,11 @@ typedef struct ag_table {
 	int prew, preh;			/* Prescale hint */
 
 	AG_Mutex lock;
+	int wTbl;			/* Width of table display area */
 	int row_h;			/* Row height in pixels */
 	int col_h;			/* Column header height in pixels */
 	int xoffs;			/* Column display offset */
-	int moffs;			/* Row offset (for poll funciton) */
+	int moffs;			/* Row offset (for poll function) */
 	AG_TableCol *cols;		/* Column data */
 	AG_TableCell **cells;		/* Row data */
 	Uint n;				/* Number of columns */
@@ -134,7 +135,7 @@ void	  AG_TableInit(AG_Table *, Uint);
 void	  AG_TableScale(void *, int, int);
 void	  AG_TableDraw(void *);
 void	  AG_TableDestroy(void *);
-void	  AG_TablePrescale(AG_Table *, const char *, int);
+void	  AG_TablePrescale(AG_Table *, int, int);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
