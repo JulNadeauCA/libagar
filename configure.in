@@ -103,6 +103,9 @@ if [ "${with_gl}" != "no" ]; then
 			echo "* found on this system."
 			echo "*"
 			exit 1
+		else
+			HUNDEF(HAVE_OPENGL)
+			HUNDEF(HAVE_GLU)
 		fi
 	fi
 else
@@ -120,6 +123,8 @@ if [ "${with_jpeg}" != "no" ]; then
 			echo "* found on this system."
 			echo "*"
 			exit 1
+		else
+			HUNDEF(HAVE_JPEG)
 		fi
 	fi
 else
@@ -138,6 +143,8 @@ if [ "${enable_network}" != "no" ]; then
 			echo "* does not support getaddrinfo()."
 			echo "*"
 			exit 1
+		else
+			HUNDEF(NETWORK)
 		fi
 	fi
 else
@@ -156,6 +163,8 @@ if [ "${enable_server}" = "yes" ]; then
 			echo "* does not support getaddrinfo()."
 			echo "*"
 			exit 1
+		else
+			HUNDEF(SERVER)
 		fi
 	fi
 else
@@ -186,6 +195,7 @@ else
 fi
 
 # Disable astronomical units (constants are too large for some compilers).
+# TODO test
 HUNDEF(ASTRONOMICAL_UNITS)
 
 # Enable conversion of historical units.

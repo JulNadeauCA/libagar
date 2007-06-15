@@ -2243,6 +2243,9 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 			echo "* found on this system."
 			echo "*"
 			exit 1
+		else
+echo "#undef HAVE_OPENGL" > config/have_opengl.h
+echo "#undef HAVE_GLU" > config/have_glu.h
 		fi
 	fi
 else
@@ -2354,6 +2357,8 @@ fi;
 			echo "* found on this system."
 			echo "*"
 			exit 1
+		else
+echo "#undef HAVE_JPEG" > config/have_jpeg.h
 		fi
 	fi
 else
@@ -2421,6 +2426,8 @@ echo "#endif" >> config/network.h
 			echo "* does not support getaddrinfo()."
 			echo "*"
 			exit 1
+		else
+echo "#undef NETWORK" > config/network.h
 		fi
 	fi
 else
@@ -2442,6 +2449,8 @@ echo "#endif" >> config/server.h
 			echo "* does not support getaddrinfo()."
 			echo "*"
 			exit 1
+		else
+echo "#undef SERVER" > config/server.h
 		fi
 	fi
 else
