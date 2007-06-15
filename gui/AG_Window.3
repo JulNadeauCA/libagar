@@ -1,6 +1,6 @@
 .\"	$Csoft: window.3,v 1.50 2005/10/01 14:15:19 vedge Exp $
 .\"
-.\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
+.\" Copyright (c) 2002, 2003, 2004, 2005, 2007 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
 .\" All rights reserved.
 .\"
@@ -110,6 +110,9 @@ for notebook-style display.
 .Pp
 .Ft void
 .Fn AG_WindowDetach "AG_Window *win" "AG_Window *subwin"
+.Pp
+.Ft void
+.Fn AG_WindowFocus "AG_Window *win"
 .Pp
 .nr nS 0
 The
@@ -241,6 +244,13 @@ function removes
 .Fa win
 from its parent window
 .Fa pwin .
+.Pp
+The
+.Fn AG_WindowFocus
+function sets the focus on the given window.
+If the currently focused window has the
+.Dv AG_WINDOW_KEEPABOVE
+flag set, this function becomes a no-op.
 .Sh VISIBILITY
 .nr nS 1
 .Ft void

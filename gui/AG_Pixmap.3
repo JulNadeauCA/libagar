@@ -60,22 +60,22 @@ from a timer with
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapNew "void *parent" "Uint flags" "Uint width" "Uint height"
+.Fn AG_PixmapNew "AG_Widget *parent" "Uint flags" "Uint width" "Uint height"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurface "void *parent" "Uint flags" "SDL_Surface *src"
+.Fn AG_PixmapFromSurface "AG_Widget *parent" "Uint flags" "SDL_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceCopy "void *parent" "Uint flags" "SDL_Surface *src"
+.Fn AG_PixmapFromSurfaceCopy "AG_Widget *parent" "Uint flags" "SDL_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceScaled "void *parent" "Uint flags" "SDL_Surface *src" "int width" "int height"
+.Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "SDL_Surface *src" "int width" "int height"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromBMP "void *parent" "Uint flags" "const char *path"
+.Fn AG_PixmapFromBMP "AG_Widget *parent" "Uint flags" "const char *path"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromXCF "void *parent" "Uint flags" "const char *path"
+.Fn AG_PixmapFromXCF "AG_Widget *parent" "Uint flags" "const char *path"
 .Pp
 .nr nS 0
 The
