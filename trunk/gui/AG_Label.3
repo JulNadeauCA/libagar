@@ -48,13 +48,13 @@ widget displays single-line or multi-line text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Label *"
-.Fn AG_LabelNew "void *parent" "enum ag_label_type type" "const char *fmt" "..."
+.Fn AG_LabelNew "AG_Widget *parent" "enum ag_label_type type" "const char *fmt" "..."
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewStatic "void *parent" "const char *text"
+.Fn AG_LabelNewStatic "AG_Widget *parent" "const char *text"
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewFmt "void *parent" "const char *fmt" "..."
+.Fn AG_LabelNewFmt "AG_Widget *parent" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "const char *text"
