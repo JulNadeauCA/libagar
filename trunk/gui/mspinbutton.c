@@ -338,7 +338,7 @@ AG_MSpinbuttonDraw(void *p)
 	AG_WidgetBinding *xvalueb, *yvalueb;
 	void *xvalue, *yvalue;
 
-	if (AGWIDGET_FOCUSED(sbu->input))
+	if (AG_WidgetFocused(sbu->input))
 		return;
 
 	xvalueb = AG_WidgetGetBinding(sbu, "xvalue", &xvalue);

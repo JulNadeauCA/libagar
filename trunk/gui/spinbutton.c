@@ -266,7 +266,7 @@ AG_SpinbuttonDraw(void *p)
 	AG_WidgetBinding *valueb;
 	void *value;
 
-	if (AGWIDGET_FOCUSED(sbu->input)) {
+	if (AG_WidgetFocused(sbu->input)) {
 		/* The value is being edited. */
 		return;
 	}
