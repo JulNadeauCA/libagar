@@ -1221,8 +1221,12 @@ AG_WidgetFocus(void *p)
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
+		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*")) {
+			if (wid->flags & AG_WIDGET_FOCUS_PARENT_WIN) {
+				AG_WindowFocus((AG_Window *)pwid);
+			}
 			break;
+		}
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
 			dprintf("parent (%s) is not focusable\n",
@@ -1439,7 +1443,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 {
 	AG_Widget *cwid;
 
-	if ((AG_WINDOW_FOCUSED(win) && AGWIDGET_FOCUSED(wid)) ||
+	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
@@ -1459,7 +1463,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 {
 	AG_Widget *cwid;
 
-	if ((AG_WINDOW_FOCUSED(win) && AGWIDGET_FOCUSED(wid)) ||
+	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);

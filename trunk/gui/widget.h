@@ -19,9 +19,6 @@ typedef struct ag_widget_ops {
 	const AG_ObjectOps ops;
 	void (*draw)(void *);
 	void (*scale)(void *, int, int);
-	void (*scale_default)(void *);
-	void (*scale_minimum)(void *);
-	int (*spacing)(void *, void *);
 } AG_WidgetOps;
 
 enum ag_widget_binding_type {
@@ -75,18 +72,19 @@ typedef struct ag_widget {
 
 	char type[AG_WIDGET_TYPE_MAX];
 	int flags;
-#define AG_WIDGET_FOCUSABLE		0x001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x002 /* Holds focus (optimization) */
-#define AG_WIDGET_UNFOCUSED_MOTION	0x004 /* All mousemotion events */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x008 /* All mousebuttonup events */
-#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x010 /* All mousebuttondown events */
-#define AG_WIDGET_CLIPPING		0x020 /* Automatic clipping */
-#define AG_WIDGET_HFILL			0x040 /* Expand to fill width */
-#define AG_WIDGET_VFILL			0x080 /* Expand to fill height */
-#define AG_WIDGET_EXCEDENT		0x100 /* Used internally for scaling */
-#define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
-#define AG_WIDGET_DISABLED		0x400 /* Don't respond to input */
-#define AG_WIDGET_STATIC		0x800 /* Use the redraw flag method */
+#define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x0002 /* Holds focus (optimization) */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All mousemotion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All mousebuttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All mousebuttondown events */
+#define AG_WIDGET_CLIPPING		0x0020 /* Automatic clipping */
+#define AG_WIDGET_HFILL			0x0040 /* Expand to fill width */
+#define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
+#define AG_WIDGET_EXCEDENT		0x0100 /* Used internally for scaling */
+#define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
+#define AG_WIDGET_DISABLED		0x0400 /* Don't respond to input */
+#define AG_WIDGET_STATIC		0x0800 /* Use the redraw flag method */
+#define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Focus parent win on focus */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int redraw;			/* Redraw this widget (optimization) */
@@ -112,9 +110,11 @@ typedef struct ag_widget {
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
-#define AGWIDGET_FOCUSED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
-#define AGWIDGET_DISABLED(wi)		(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
-#define AG_WidgetRedraw(wi)		AGWIDGET(wi)->redraw++
+
+#define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
+#define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
+#define AG_WidgetEnabled(wi)	!AG_WidgetDisabled(wi)
+#define AG_WidgetRedraw(wi)	AGWIDGET(wi)->redraw++
 
 struct ag_window;
 
