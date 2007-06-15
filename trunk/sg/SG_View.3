@@ -1,0 +1,139 @@
+.\"
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://www.hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 15, 2007
+.Dt SG_VIEW 3
+.Os
+.ds vT Agar-SG API Reference
+.ds oS Agar-SG 1.3
+.Sh NAME
+.Nm SG_View
+.Nd agar 3D scene rendering widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/sg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget renders a
+.Xr SG 3
+scene graph from the point of view of a specified
+.Xr SG_Camera 3
+node.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Xr AG_GLView 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "SG_View *"
+.Fn SG_ViewNew "SG_Node *parent" "const char *name"
+.Pp
+.Ft "void"
+.Fn SG_ViewInit "SG_Node *parent" "const char *name"
+.Pp
+.Ft "void"
+.Fn SG_ViewKeydownFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewKeyupFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewButtondownFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewButtonupFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn SG_ViewMotionFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.nr nS 0
+The
+.Fn SG_ViewNew
+function allocates, initializes, and attaches a
+.Nm
+object.
+.Fn SG_ViewInit
+initializes a
+.Nm
+structure.
+.Pp
+The
+.Fn SG_View*Fn
+functions are used to set up optional callback functions to invoke upon
+specific GUI events.
+.Fn SG_ViewKeydownFn
+and
+.Fn SG_ViewKeyupFn
+set callbacks for
+.Sq window-keydown
+and
+.Sq window-keyup
+events.
+.Fn SG_ViewButtondownFn ,
+.Fn SG_ViewButtonupFn
+and
+.Fn SG_ViewMotionFn
+set callbacks for
+.Sq window-mousebuttondown ,
+.Sq window-mousebuttonup
+and
+.Sq window-mousemotion
+events, respectively.
+.Sh CAMERAS AND PROJECTIONS
+.nr nS 1
+.Ft "void"
+.Fn SG_ViewSetCamera "SG_View *view" "SG_Camera *cam"
+.Pp
+.Ft "void"
+.Fn SG_ViewUnProject "SG_View *view" "SG_Vector w" "SG_Real zNear" "SG_Real zFar" "SG_Vector *vOut"
+.Pp
+.nr nS 0
+The
+.Fn SG_ViewSetCamera
+function changes the current camera of the view.
+.Pp
+The
+.Fn SG_ViewUnProject
+function attempts to invert the current camera projection, returning a 3D vector
+representing world coordinates in
+.Fa vOut
+(actually a half-line from the view plane) given a vector
+.Fa w
+representing raster display coordinates (the
+.Va z
+component is left unchanged).
+.Sh SEE ALSO
+.Xr SG 3 ,
+.Xr SG_Camera 3 ,
+.Xr SG_Matrix 3 ,
+.Xr SG_Vector 3 ,
+.Xr AG_GLView 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.
