@@ -15,7 +15,7 @@ SRCS=	sg.c sg_edit.c sg_math.c sg_vector.c sg_matrix.c sg_view.c \
 	sk.c sk_view.c sk_tool.c sk_dummy.c sk_edit.c sk_point.c \
 	sk_line.c sk_circle.c sk_arc.c
 
-MAN3=	SG.3 SG_Camera.3 SG_Light.3
+MAN3=	SG.3 SG_Camera.3 SG_Light.3 SG_View.3
 CFLAGS+=${SDL_CFLAGS} ${AGAR_CFLAGS}
 
 include .manlinks.mk
