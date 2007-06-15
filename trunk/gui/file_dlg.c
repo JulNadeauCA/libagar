@@ -207,10 +207,10 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_LabelNewFmt(win, _("Do you want to replace it?"));
+	AG_LabelNewFmt(win, _("File %s exists. Overwrite?"), fd->cfile);
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
-		AG_ButtonAct(hb, 0, _("Replace"),
+		AG_ButtonAct(hb, 0, _("Yes"),
 		    AG_ReplaceFileEv, "%p,%p,%p", fd, win, pwin);
 		AG_ButtonAct(hb, AG_BUTTON_FOCUS, _("Cancel"),
 		    AGWINDETACH(win));
