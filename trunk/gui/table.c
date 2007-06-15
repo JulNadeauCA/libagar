@@ -118,8 +118,9 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->selected_cell = NULL;
 	t->row_h = agTextFontHeight+2;
 	t->col_h = agTextFontHeight+4;
-	t->prew = 128;
+	t->prew = -1;				/* Use column size specs */
 	t->preh = 64;
+	t->wTbl = -1;
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
 	t->poll_ev = NULL;
@@ -142,6 +143,13 @@ AG_TableInit(AG_Table *t, Uint flags)
 	AG_SetEvent(t, "widget-hidden", lostfocus, NULL);
 	AG_SetEvent(t, "detached", lostfocus, NULL);
 	AG_SetEvent(t, "kbdscroll", kbdscroll, NULL);
+}
+
+void
+AG_TablePrescale(AG_Table *t, int w, int nrows)
+{
+	if (w != -1) { t->prew = w; }
+	if (nrows != -1) { t->preh = nrows*agTextFontHeight; }
 }
 
 void
@@ -182,7 +190,7 @@ AG_TableSizeFillCols(AG_Table *t)
 		AG_TableCol *tc = &t->cols[n];
 		
 		if (tc->flags & AG_TABLE_COL_FILL) {
-			tc->w = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
+			tc->w = t->wTbl;
 			for (n = 0; n < t->n; n++) {
 				if ((t->cols[n].flags & AG_TABLE_COL_FILL) == 0)
 					tc->w -= t->cols[n].w;
@@ -196,9 +204,23 @@ void
 AG_TableScale(void *p, int w, int h)
 {
 	AG_Table *t = p;
+	int n;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(t)->w = t->prew;
+		if (t->prew != -1) {
+			AGWIDGET(t)->w = t->vbar->bw + 2;
+			for (n = 0; n < t->n; n++) {
+				AG_TableCol *tc = &t->cols[n];
+			
+				if (tc->flags & AG_TABLE_COL_FILL) {
+					AGWIDGET(t)->w += COLUMN_MIN_WIDTH;
+					continue;
+				}
+				AGWIDGET(t)->w += tc->w;
+			}
+		} else {
+			AGWIDGET(t)->w = t->prew;
+		}
 		AGWIDGET(t)->h = t->preh;
 	}
 
@@ -209,6 +231,17 @@ AG_TableScale(void *p, int w, int h)
 	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
 	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
+
+	t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w + 1;
+
+	if (w != -1 && h != -1) {
+		for (n = 0; n < t->n; n++) {
+			AG_TableCol *tc = &t->cols[n];
+	
+			if ((tc->x + tc->w) > (t->wTbl - COLUMN_MIN_WIDTH))
+				tc->w = t->wTbl - tc->x - COLUMN_MIN_WIDTH;
+		}
+	}
 
 	AG_TableSizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
@@ -371,8 +404,7 @@ AG_TableDraw(void *p)
 	if (AGWIDGET(t)->w <= t->vbar->bw || AGWIDGET(t)->h <= t->row_h)
 		return;
 
-	agPrim.box(t, 0, 0, AGWIDGET(t)->w, AGWIDGET(t)->h, -1,
-	    AG_COLOR(TABLE_COLOR));
+	agPrim.box(t, 0, 0, t->wTbl, AGWIDGET(t)->h, -1, AG_COLOR(TABLE_COLOR));
 
 	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
@@ -382,7 +414,7 @@ AG_TableDraw(void *p)
 	}
 
 	for (n = 0, x = t->xoffs;
-	     n < t->n && x < AGWIDGET(t)->w;
+	     n < t->n && x < t->wTbl;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
 		int cw;
@@ -390,10 +422,10 @@ AG_TableDraw(void *p)
 		if (col->w <= 0) {
 			continue;
 		}
-		cw = (x+col->w) < AGWIDGET(t)->w ? col->w: AGWIDGET(t)->w - x;
+		cw = ((x+col->w) < t->wTbl) ? col->w: t->wTbl - x;
 
 		/* Draw the column header and separator. */
-		if (x > 0 && x < AGWIDGET(t)->w) {
+		if (x > 0 && x < t->wTbl) {
 			agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
@@ -412,7 +444,7 @@ AG_TableDraw(void *p)
 		     m++) {
 			SDL_Rect rCell;
 			
-			agPrim.hline(t, 0, AGWIDGET(t)->w, y,
+			agPrim.hline(t, 0, t->wTbl, y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 
 			rCell.x = x;
@@ -422,7 +454,7 @@ AG_TableDraw(void *p)
 			AG_TableDrawCell(t, &t->cells[m][n], &rCell);
 			y += t->row_h;
 		}
-		agPrim.hline(t, 0, AGWIDGET(t)->w, y,
+		agPrim.hline(t, 0, t->wTbl, y,
 		    AG_COLOR(TABLE_LINE_COLOR));
 
 		/* Indicate column selection. */
@@ -925,13 +957,13 @@ keydown(AG_Event *event)
 }
 
 static int
-column_resize_over(AG_Table *t, int px)
+OverColumnResizeControl(AG_Table *t, int px)
 {
 	int x = px - (COLUMN_RESIZE_RANGE/2);
 	Uint n;
 	int cx;
 
-	if (px > (AGWIDGET(t)->w - AGWIDGET(t->vbar)->w)) {
+	if (px > t->wTbl) {
 		return (0);
 	}
 	for (n = 0, cx = t->xoffs; n < t->n; n++) {
@@ -959,18 +991,19 @@ mousemotion(AG_Event *event)
 
 	AG_MutexLock(&t->lock);
 	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
-		AG_TableCol *rCol = &t->cols[t->nResizing];
-		if ((rCol->w += xrel) < COLUMN_MIN_WIDTH) {
-			rCol->w = COLUMN_MIN_WIDTH;
+		AG_TableCol *tc = &t->cols[t->nResizing];
+
+		if ((tc->w += xrel) < COLUMN_MIN_WIDTH) {
+			tc->w = COLUMN_MIN_WIDTH;
 		}
-		if ((rCol->x + rCol->w) > AGWIDGET(t)->w) {
-			rCol->w = AGWIDGET(t)->w - rCol->x;
+		if ((tc->x + tc->w) > (t->wTbl - COLUMN_MIN_WIDTH)) {
+			tc->w = t->wTbl - tc->x - COLUMN_MIN_WIDTH;
 		}
 		AG_TableSizeFillCols(t);
 		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
 		if ((m = column_over(t, y)) == -1 &&
-		    column_resize_over(t, x))
+		    OverColumnResizeControl(t, x))
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
 	AG_MutexUnlock(&t->lock);
@@ -1152,7 +1185,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	if (size_spec != NULL) {
 		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
 		case AG_WIDGET_PERCENT:
-			tc->w = tc->w*AGWIDGET(t)->w/100;
+			tc->w = tc->w*(AGWIDGET(t)->w - t->vbar->bw)/100;
 			break;
 		default:
 			break;
