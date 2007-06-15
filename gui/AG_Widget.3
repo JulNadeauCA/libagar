@@ -104,29 +104,32 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define AG_WIDGET_FOCUSABLE		0x001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x002 /* Holds focus */
-#define AG_WIDGET_UNFOCUSED_MOTION	0x004 /* All motion events */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x008 /* All buttonup events */
-#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x010 /* All buttondown events */
-#define AG_WIDGET_CLIPPING		0x020 /* Automatic clipping */
-#define AG_WIDGET_HFILL			0x040 /* Expand to fill width */
-#define AG_WIDGET_VFILL			0x080 /* Expand to fill height */
-#define AG_WIDGET_HIDE			0x200 /* Don't draw this widget */
+#define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x0002 /* Focused in parent (RO) */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All motion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All buttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All buttondown events */
+#define AG_WIDGET_CLIPPING		0x0020 /* Automatic clipping */
+#define AG_WIDGET_HFILL			0x0040 /* Expand to fill width */
+#define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
+#define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
+#define AG_WIDGET_DISABLED		0x0400 /* Ignore user input (RO) */
+#define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Auto focus parent win */
+#define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 .Ed
 .Pp
-Only widgets with the
+The
 .Dv AG_WIDGET_FOCUSABLE
-flag are able to gain keyboard and mousemotion focus.
-If the flags
-.Dv AG_WIDGET_UNFOCUSED_MOTION
-and
-.Dv AG_WIDGET_UNFOCUSED_BUTTONUP
-are set, the widget will always receive
-.Sq window-mousemotion ,
-and
-.Sq window-mousebuttonup
-events, even if it's not holding focus.
+flag indicates that this widget is able to gain focus
+.Dv AG_WIDGET_FOCUSED
+is a read-only flag indicating the actual focus state.
+The special
+.Dv AG_WIDGET_UNFOCUSED_*
+flags are used to enable unconditional reception of events which are normally
+destined only to focused widgets
+(see the
+.Dq FOCUS STATE
+section below for more details on focus management).
 .Pp
 .Dv AG_WIDGET_CLIPPING
 arranges for a temporary clipping rectangle to surround the widget's
@@ -136,12 +139,34 @@ Widgets can set clipping rectangles over specific areas with
 and
 .Fn AG_WidgetPopClipRect .
 .Pp
-The
+The meaning of the
 .Dv AG_WIDGET_HFILL
 and
 .Dv AG_WIDGET_VFILL
-flags indicate to container widgets that the widget wishes to allocate the
-remaining width or height inside the container area.
+flags is container-widget-specific and indicates that the widget wishes to
+use all remaining space horizontally or vertically inside the container.
+.Pp
+The
+.Dv AG_WIDGET_HIDE
+prevents the widget (and its children) from being drawn.
+.Pp
+The meaning of the
+.Dv AG_WIDGET_DISABLED
+flag is widget-specific.
+Typically, widgets with this flag do not allow user input.
+This flag is read-only and must be set via
+.Fn AG_WidgetDisable
+and
+.Fn AG_WidgetEnable 
+(see
+.Dq INPUT STATE
+section below for more details).
+.Pp
+The
+.Dv AG_WIDGET_FOCUS_PARENT_WIN
+flag indicates that whenever the widget is focused,
+.Xr AG_WindowFocus
+should be invoked automatically on the widget's parent window (if it has one).
 .Pp
 The
 .Fa widget_ops
@@ -150,11 +175,11 @@ argument to
 is a pointer to the following structure:
 .Pp
 .Bd -literal
-AG_WidgetOps {
+typedef struct ag_widget_ops {
 	const AG_ObjectOps ops;                 /* Object operations */
 	void (*draw)(void *p);                  /* Rendering routine */
 	void (*scale)(void *p, int w, int h);   /* Size request routine */
-};
+} AG_WidgetOps;
 .Ed
 .Sh GEOMETRY MANAGEMENT
 The
@@ -186,10 +211,65 @@ arguments of -1.
 .Pp
 Widgets must not make any assumptions about their own position inside their
 parent container.
+.Sh INPUT STATE
+.Pp
+The input state of a widget determines whether the user is allowed to
+modify whatever data the widget is accessing.
+The way it is implemented is widget-specific.
+In the case of read-only type widgets such as
+.Xr AG_Label 3 ,
+the input state is irrelevant.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_WidgetEnable "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_WidgetDisable "AG_Widget *widget"
+.Pp
+.Ft "int"
+.Fn AG_WidgetEnabled "AG_Widget *widget"
+.Pp
+.Ft "int"
+.Fn AG_WidgetDisabled "AG_Widget *widget"
+.Pp
+.nr nS 0
+The
+.Fn AG_WidgetEnable
+function allows
+.Fa widget
+to receive user input.
+.Fn AG_WidgetDisable
+disables user input.
+.Pp
+The
+.Fn AG_WidgetEnabled
+and
+.Fn AG_WidgetDisabled
+macros evaluate whether the given widget is enabled for input.
 .Sh FOCUS STATE
+.Pp
+The focus state of a widget controls both its appearance and enables the
+reception of specific types of events.
+A focused widget (in a currently focused window) will receive mouse events
+.Sq window-mousemotion ,
+.Sq window-mousebuttonup ,
+as well as keyboard events
+.Sq window-keyup
+and
+.Sq window-keydown .
+.Pp
+Note that any widget can still receive those events regardless of focus
+state, using
+.Dv AG_WIDGET_UNFOCUSED_*
+flags, such as
+.Dv AG_WIDGET_UNFOCUSED_MOTION
+and
+.Dv AG_WIDGET_UNFOCUSED_BUTTONUP .
+.Pp
 .nr nS 1
 .Ft "int"
-.Fn AGWIDGET_FOCUSED "AG_Widget *widget"
+.Fn AG_WidgetFocused "AG_Widget *widget"
 .Pp
 .Ft "void"
 .Fn AG_WidgetFocus "AG_Widget *widget"
@@ -202,17 +282,15 @@ parent container.
 .Pp
 .nr nS 0
 The
-.Fn AGWIDGET_FOCUSED
-macro returns 1 if a widget holds focus inside of its parent.
+.Fn AG_WidgetFocused
+macro evaluates to 1 if a widget holds focus inside of its parent.
 .Pp
 The
 .Fn AG_WidgetFocus
 function moves the keyboard/mousemotion focus over the given widget
-(and its parents).
-.Pp
-A widget holding the keyboard/mousemotion focus receives keyboard and
-mousemotion events.
-The widget may also change its appearance depending on its focus state.
+and its parents.
+.Fn AG_WidgetUnfocus
+removes the focus state from the given widget and its children.
 .Pp
 The
 .Fn AG_WidgetFindFocused
@@ -258,7 +336,7 @@ are inside the widget area.
 .Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitFrom "void *dstWidget" "void *srcWidget" "int surface_id" "SDL_Rect *rs" "int x" "int y"
+.Fn AG_WidgetBlitFrom "AG_Widget *dstWidget" "AG_Widget *srcWidget" "int surface_id" "SDL_Rect *rs" "int x" "int y"
 .Pp
 .Ft void
 .Fn AG_WidgetBlitSurface "AG_Widget *widget" "int surface_id" "int x" "int y"
@@ -550,7 +628,7 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
 .Pp
 .Ft "int"
-.Fn AG_WidgetCopyBinding "void *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
+.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
 .Pp
 .Ft void
 .Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
@@ -809,4 +887,4 @@ The
 interface first appeared in Agar 1.0.
 .Sh BUGS
 Atomic widget binding operations require the use of mutexes, read-write locks
-are not supported.
+are not yet supported.
