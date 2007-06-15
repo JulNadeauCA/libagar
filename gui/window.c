@@ -75,24 +75,6 @@ int	 agWindowXOffs = 0;
 int	 agWindowYOffs = 0;
 int	 agWindowAnySize = 0;
 
-static __inline__ int
-AG_WindowFocusExisting(const char *name)
-{
-	AG_Window *owin;
-
-	TAILQ_FOREACH(owin, &agView->windows, windows) {
-		if (strlen(AGOBJECT(owin)->name) >= 4 &&
-		    strcmp(AGOBJECT(owin)->name+4, name) == 0) {
-			AG_WindowShow(owin);
-			if ((owin->flags & AG_WINDOW_DENYFOCUS) == 0) {
-				agView->focus_win = owin;
-			}
-		    	return (1);
-		}
-	}
-	return (0);
-}
-
 AG_Window *
 AG_WindowNew(Uint flags)
 {
@@ -122,7 +104,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 		if (*c == '/')
 			*c = '_';
 	}
-	if (AG_WindowFocusExisting(name)) {
+	if (AG_WindowFocusNamed(name)) {
 		win = NULL;
 		goto out;
 	}
@@ -320,7 +302,6 @@ AG_WindowShownEv(AG_Event *event)
 	int init = (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1);
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
-		agView->focus_win = win;
 		AG_WindowFocus(win);
 	}
 	if (win->flags & AG_WINDOW_MODAL)
@@ -562,30 +543,46 @@ AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
 }
 
 /*
- * Give focus to a window.
- * The view and window must be locked.
+ * Give focus to a window. This will only take effect at the end
+ * of the current event cycle.
  */
 void
 AG_WindowFocus(AG_Window *win)
 {
-	AG_Window *lastwin;
-
-	agView->focus_win != NULL;
-
-	lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
-	if (win != NULL && lastwin == win) 		/* Already focused? */
-		return;
-
-	if (lastwin != NULL) {
-		AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
-		if (lastwin->flags & AG_WINDOW_KEEPABOVE)
-			return;
+	AG_MutexLock(&agView->lock);
+	if (win == NULL) {
+		agView->focus_win = NULL;
+		goto out;
 	}
-	if (win != NULL) {
-		/* Move to tail (rendered last) */
-		TAILQ_REMOVE(&agView->windows, win, windows);
-		TAILQ_INSERT_TAIL(&agView->windows, win, windows);
+	AG_MutexLock(&win->lock);
+	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
+		win->flags |= AG_WINDOW_FOCUSONATTACH;
+		agView->focus_win = win;
 	}
+	AG_MutexUnlock(&win->lock);
+out:	AG_MutexUnlock(&agView->lock);
+}
+
+/* Give focus to a window by name, and show it is if is hidden. */
+int
+AG_WindowFocusNamed(const char *name)
+{
+	AG_Window *owin;
+	int rv = 0;
+
+	AG_MutexLock(&agView->lock);
+	TAILQ_FOREACH(owin, &agView->windows, windows) {
+		if (strlen(AGOBJECT(owin)->name) >= 4 &&
+		    strcmp(AGOBJECT(owin)->name+4, name) == 0) {
+			AG_WindowShow(owin);
+			AG_WindowFocus(owin);
+		    	rv = 1;
+			goto out;
+		}
+	}
+out:
+	AG_MutexUnlock(&agView->lock);
+	return (0);
 }
 
 /*
@@ -610,6 +607,7 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 /*
  * Dispatch events to widgets.
  * The view must be locked, and the window list must be nonempty.
+ * Returns 1 if the event was processed, otherwise 0.
  */
 int
 AG_WindowEvent(SDL_Event *ev)
@@ -620,12 +618,16 @@ AG_WindowEvent(SDL_Event *ev)
 	AG_Widget *wid;
 	int focus_changed = 0;
 	AG_Window *focus_saved = agView->focus_win;
+	int rv = 0;
 	
 	agCursorToSet = NULL;
-		
+
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-		/* Focus on the highest overlapping window. */
+		/*
+		 * Focus on the highest overlapping window, and continue
+		 * with normal processing of the MOUSEBUTTONDOWN event.
+		 */
 		agView->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &agView->windows, windows,
 		    ag_windowq) {
@@ -646,11 +648,15 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
+		/* Terminate any window operation in progress. */
 		agView->winop = AG_WINOP_NONE;
 		break;
 	}
 
-	/* Process the input events. */
+	/*
+	 * Iterate over the visible windows and deliver the appropriate Agar
+	 * events.
+	 */
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
 		if (agView->modal_win != NULL) {
 			if (win == agView->modal_win) {
@@ -659,6 +665,7 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->button.y)) {
 					AG_PostEvent(NULL, win,
 					    "window-modal-close", NULL);
+					rv = 1;
 					goto out;
 				}
 			} else {
@@ -672,6 +679,7 @@ AG_WindowEvent(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
+			/* Process active MOVE or RESIZE operations. */
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->wop_win != win) {
 				AG_MutexUnlock(&win->lock);
@@ -682,6 +690,8 @@ AG_WindowEvent(SDL_Event *ev)
 				break;
 			case AG_WINOP_MOVE:
 				AG_WindowMoveOp(win, &ev->motion);
+				AG_MutexUnlock(&win->lock);
+				rv = 1;
 				goto out;
 			case AG_WINOP_LRESIZE:
 				AG_WindowResizeOp(AG_WINOP_LRESIZE, win,
@@ -695,11 +705,13 @@ AG_WindowEvent(SDL_Event *ev)
 				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
 				    &ev->motion);
 			default:
+				AG_MutexUnlock(&win->lock);
 				goto out;
 			}
 			/*
-			 * Forward to all widgets that either hold focus or have
-			 * the AG_WIDGET_UNFOCUSED_MOTION flag set.
+			 * Forward this MOUSEMOTION to all widgets that either
+			 * hold focus or have the AG_WIDGET_UNFOCUSED_MOTION
+			 * flag set.
 			 */
 			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				AG_WidgetMouseMotion(win, wid,
@@ -707,6 +719,7 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->motion.xrel, ev->motion.yrel,
 				    ev->motion.state);
 			}
+			/* Change the cursor if a RESIZE op is in progress. */
 			if (agCursorToSet == NULL &&
 			    (win->flags & AG_WINDOW_NORESIZE) == 0 &&
 			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
@@ -736,6 +749,8 @@ AG_WindowEvent(SDL_Event *ev)
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
+			/* Terminate active window operations. */
+			/* XXX redundant? */
 			if (agView->winop != AG_WINOP_NONE) {
 				agView->winop = AG_WINOP_NONE;
 				agView->wop_win = NULL;
@@ -750,6 +765,8 @@ AG_WindowEvent(SDL_Event *ev)
 				    ev->button.x, ev->button.y);
 			}
 			if (focus_changed) {
+				AG_MutexUnlock(&win->lock);
+				rv = 1;
 				goto out;
 			}
 			break;
@@ -768,10 +785,14 @@ AG_WindowEvent(SDL_Event *ev)
 				if (AG_WidgetMouseButtonDown(win, wid,
 				    ev->button.button, ev->button.x,
 				    ev->button.y)) {
+					AG_MutexUnlock(&win->lock);
+					rv = 1;
 					goto out;
 				}
 			}
 			if (focus_changed) {
+				AG_MutexUnlock(&win->lock);
+				rv = 1;
 				goto out;
 			}
 			break;
@@ -804,6 +825,8 @@ AG_WindowEvent(SDL_Event *ev)
 			    ev->type == SDL_KEYUP) {
 				AG_WindowCycleFocus(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
+				AG_MutexUnlock(&win->lock);
+				rv = 1;
 				goto out;
 			}
 			if (AG_WINDOW_FOCUSED(win)) {
@@ -824,6 +847,7 @@ AG_WindowEvent(SDL_Event *ev)
 					 * changes the window focus.
 					 */
 					keydown_win = win;
+					rv = 1;
 				} else {
 					dprintf("no focused widget in %s\n",
 					    AGOBJECT(win)->name);
@@ -835,20 +859,37 @@ AG_WindowEvent(SDL_Event *ev)
 	if (agCursorToSet != NULL && SDL_GetCursor() != agCursorToSet) {
 		SDL_SetCursor(agCursorToSet);
 	}
-	return (0);
 out:
-	AG_MutexUnlock(&win->lock);
-
 	/*
+	 * If requested, reorder the window list such that a new window
+	 * holds focus.
+	 * 
 	 * The focus_changed flag is set if there was a focus change
-	 * in reaction to a window operation. The focus_win variable
-	 * may also be changed by window show/hide functions.
+	 * in reaction to a window operation (focus_win can be NULL
+	 * in that case).
 	 */
 	if (focus_changed || agView->focus_win != NULL) {
-		/* Reorder the window list. */
-		AG_WindowFocus(agView->focus_win);
+		AG_Window *lastwin;
+
+		lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
+		if (agView->focus_win != NULL &&
+		    agView->focus_win == lastwin) 	/* Already focused? */
+			goto outf;
+
+		if (lastwin != NULL) {
+			AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
+			if (lastwin->flags & AG_WINDOW_KEEPABOVE)
+				goto outf;
+		}
+		if (agView->focus_win != NULL) {
+			TAILQ_REMOVE(&agView->windows, agView->focus_win,
+			    windows);
+			TAILQ_INSERT_TAIL(&agView->windows, agView->focus_win,
+			    windows);
+		}
 	}
-	return (1);
+outf:
+	return (rv);
 }
 
 /*

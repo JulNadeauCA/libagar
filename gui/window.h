@@ -48,6 +48,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOMAXIMIZE	0x01000	/* Disable maximize button */
 #define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
+#define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 
 	char caption[128];
@@ -110,6 +111,7 @@ int	 AG_WindowToggleVisibility(AG_Window *);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 void	 AG_WindowFocus(AG_Window *);
+int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
 void	 AG_WindowClamp(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
