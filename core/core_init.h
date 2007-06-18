@@ -34,10 +34,10 @@ extern AG_Mutex agTimingLock;
 #define AG_FORCE_JOYSTICK	0x02
 
 /* Flags for AG_InitConfigWin() */
-#define AG_CONFIG_FULLSCREEN	0x01
-#define AG_CONFIG_GL		0x02
-#define AG_CONFIG_RESOLUTION	0x04
-#define AG_CONFIG_DIRECTORIES	0x08
+#define AG_CONFIG_FULLSCREEN	0x01	/* Full-screen option */
+#define AG_CONFIG_GL		0x02	/* OpenGL mode */
+#define AG_CONFIG_RESOLUTION	0x04	/* Display resolution */
+#define AG_CONFIG_DIRECTORIES	0x08	/* Data directories */
 #define AG_CONFIG_ALL		0xff
 
 __BEGIN_DECLS
