@@ -1,4 +1,3 @@
-/*	$Csoft: vg_math.h,v 1.4 2004/05/24 03:32:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef SG_DOUBLE_PRECISION

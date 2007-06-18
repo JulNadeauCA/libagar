@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +22,27 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/core/math.h>
+#include <core/core.h>
+#include <core/math.h>
 
 #include "sg.h"
 #include "sg_gui.h"
+
+#include <gui/window.h>
+#include <gui/notebook.h>
+#include <gui/toolbar.h>
+#include <gui/box.h>
+#include <gui/radio.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/menu.h>
+#include <gui/button.h>
+#include <gui/hsvpal.h>
+#include <gui/pixmap.h>
+#include <gui/file_dlg.h>
 
 #if 0
 #include <Cg/cg.h>
@@ -334,6 +346,10 @@ SG_MaterialEdit(void *obj)
 	return (win);
 }
 
+/*
+ * Set up the material for rendering an object.
+ * Must be called from widget draw context.
+ */
 void
 SG_MaterialBind(SG_Material *mat, SG_View *view)
 {

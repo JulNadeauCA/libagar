@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sg_point {

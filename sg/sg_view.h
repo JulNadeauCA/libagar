@@ -1,11 +1,17 @@
-/*	$Csoft: glview.h,v 1.1 2005/10/04 18:04:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SG_VIEW_H_
 #define _AGAR_SG_VIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/glview.h>
+#include <gui/menu.h>
+#else
+#include <agar/gui/widget.h>
 #include <agar/gui/glview.h>
 #include <agar/gui/menu.h>
+#endif
 
 #include "begin_code.h"
 
@@ -57,7 +63,6 @@ SG_View	*SG_ViewNew(void *, struct sg *, Uint);
 void	 SG_ViewInit(SG_View *, struct sg *, Uint);
 void	 SG_ViewDestroy(void *);
 
-void	 SG_ViewReshape(SG_View *);
 void	 SG_ViewKeydownFn(SG_View *, AG_EventFn, const char *, ...);
 void	 SG_ViewKeyupFn(SG_View *, AG_EventFn, const char *, ...);
 void	 SG_ViewButtondownFn(SG_View *, AG_EventFn, const char *, ...);

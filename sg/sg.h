@@ -1,18 +1,24 @@
-/*	$Csoft: vg.h,v 1.41 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SG_H_
 #define _AGAR_SG_H_
-#include <agar/core/core_begin.h>
-
 #include "begin_code.h"
 
+#ifdef _AGAR_INTERNAL
+#include <sg/sg_math.h>
+#include <sg/sg_vector.h>
+#include <sg/sg_matrix.h>
+#include <sg/sg_quat.h>
+#include <sg/sg_spherical.h>
+#include <sg/sg_plane.h>
+#else
 #include <agar/sg/sg_math.h>
 #include <agar/sg/sg_vector.h>
 #include <agar/sg/sg_matrix.h>
 #include <agar/sg/sg_quat.h>
 #include <agar/sg/sg_spherical.h>
 #include <agar/sg/sg_plane.h>
+#endif
 
 typedef struct sg_color {
 	SG_Real r, g, b, a;
@@ -20,8 +26,13 @@ typedef struct sg_color {
 
 #include "close_code.h"
 
+#ifdef _AGAR_INTERNAL
+#include <sg/sk.h>
+#include <sg/sg_view.h>
+#else
 #include <agar/sg/sk.h>
 #include <agar/sg/sg_view.h>
+#endif
 
 #include "begin_code.h"
 
@@ -79,6 +90,8 @@ typedef struct sg {
 #define SG_OVERLAY_VERTICES	0x02	/* Draw points at vertices */
 #define SG_OVERLAY_VNORMALS	0x04	/* Draw vertex normals */
 #define SG_OVERLAY_FNORMALS	0x08	/* Draw facet normals */
+#define SG_SKIP_UNKNOWN_NODES	0x10	/* Ignore unknown node types in save
+					   (otherwise LoadObject will fail) */
 	AG_Mutex lock;
 	void *tess;			/* GLU tesselator object */
 	struct sg_point *root;		/* Root of graph */
@@ -110,11 +123,24 @@ typedef struct sg {
 extern SG_NodeOps **sgElements;
 extern Uint         sgElementsCnt;
 
+#ifdef _AGAR_INTERNAL
+#include <sg/sg_dummy.h>
+#include <sg/sg_light.h>
+#include <sg/sg_camera.h>
+#include <sg/sg_primitive.h>
+#include <sg/sg_material.h>
+#include <sg/sg_point.h>
+#include <sg/sg_planeobj.h>
+#include <sg/sg_object.h>
+#include <sg/sg_solid.h>
+#include <sg/sg_sphere.h>
+#include <sg/sg_box.h>
+#include <sg/sg_voxel.h>
+#else
 #include <agar/sg/sg_dummy.h>
 #include <agar/sg/sg_light.h>
 #include <agar/sg/sg_camera.h>
 #include <agar/sg/sg_primitive.h>
-
 #include <agar/sg/sg_material.h>
 #include <agar/sg/sg_point.h>
 #include <agar/sg/sg_planeobj.h>
@@ -123,6 +149,7 @@ extern Uint         sgElementsCnt;
 #include <agar/sg/sg_sphere.h>
 #include <agar/sg/sg_box.h>
 #include <agar/sg/sg_voxel.h>
+#endif
 
 __BEGIN_DECLS
 int	 SG_InitEngine(void);
@@ -154,6 +181,4 @@ SG_Vector	 SG_NodeDir(void *);
 __END_DECLS
 
 #include "close_code.h"
-
-#include <agar/core/core_close.h>
 #endif /* _AGAR_SG_H_ */

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +22,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/edition.h>
-#include <agar/config/have_opengl.h>
+/*
+ * Basic circle.
+ */
+
+#include <config/edition.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #include "sk.h"
-#include "sg_gui.h"
 
 SK_Circle *
 SK_CircleNew(void *pnode)
@@ -39,17 +40,17 @@ SK_CircleNew(void *pnode)
 	SK_Circle *circle;
 
 	circle = Malloc(sizeof(SK_Circle), M_SG);
-	SK_CircleInit(circle);
+	SK_CircleInit(circle, SK_GenName(SKNODE(pnode)->sk));
 	SK_NodeAttach(pnode, circle);
 	return (circle);
 }
 
 void
-SK_CircleInit(void *p)
+SK_CircleInit(void *p, Uint32 name)
 {
 	SK_Circle *circle = p;
 
-	SK_NodeInit(circle, &skCircleOps, 0);
+	SK_NodeInit(circle, &skCircleOps, name, 0);
 	circle->color = SG_ColorRGB(0.0, 1.0, 0.0);
 	circle->width = 0.0;
 	circle->r = 0.0f;
@@ -57,24 +58,32 @@ SK_CircleInit(void *p)
 }
 
 int
-SK_CircleLoad(void *p, AG_Netbuf *buf)
+SK_CircleLoad(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Circle *circle = p;
 
 	circle->color = SG_ReadColor(buf);
 	circle->width = SG_ReadReal(buf);
 	circle->r = SG_ReadReal(buf);
+	circle->p = SK_ReadRef(buf, sk, "Point");
+	if (circle->p == NULL) {
+		AG_SetError("Missing center point (%s)", AG_GetError());
+		return (-1);
+	}
+	dprintf("%s: width=%f, r=%f, p=%s\n", SK_NodeName(circle),
+	    circle->width, circle->r, SK_NodeName(circle->p));
 	return (0);
 }
 
 int
-SK_CircleSave(void *p, AG_Netbuf *buf)
+SK_CircleSave(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Circle *circle = p;
 
 	SG_WriteColor(buf, &circle->color);
 	SG_WriteReal(buf, circle->width);
 	SG_WriteReal(buf, circle->r);
+	SK_WriteRef(buf, circle->p);
 	return (0);
 }
 
@@ -171,7 +180,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		return (1);
 	}
 	circle = SK_CircleNew(sk->root);
-	circle->p = SK_PointNew(sk->root);
+	circle->p = SK_PointNew(circle);
 	SK_NodeAddReference(circle, circle->p);
 	SK_Translatev(circle->p, &pos);
 	t->cur_circle = circle;

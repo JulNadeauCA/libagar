@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,13 +22,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/core/objmgr.h>
-#include <agar/core/typesw.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
+#include <core/objmgr.h>
+#include <core/typesw.h>
 
 #include "sg.h"
 
@@ -114,15 +112,17 @@ SG_InitEngine(void)
 
 	AG_RegisterType(&sgOps, MAP_ICON);
 	AG_RegisterType(&sgMaterialOps, RG_TILING_ICON);
-
+	
 	SG_NodeRegister(&sgDummyOps);
 	SG_NodeRegister(&sgPointOps);
+	SG_NodeRegister(&sgPlaneObjOps);
+	SG_NodeRegister(&sgCameraOps);
+	SG_NodeRegister(&sgLightOps);
+
+	SG_NodeRegister(&sgObjectOps);
+	SG_NodeRegister(&sgSolidOps);
 	SG_NodeRegister(&sgSphereOps);
 	SG_NodeRegister(&sgBoxOps);
-	SG_NodeRegister(&sgCameraOps);
-	SG_NodeRegister(&sgPlaneObjOps);
-	SG_NodeRegister(&sgSolidOps);
-	SG_NodeRegister(&sgObjectOps);
 #if 0
 	AG_AtExitFunc(SG_DestroyEngine);
 #endif
@@ -159,6 +159,17 @@ SG_Attached(AG_Event *event)
 	SG_Translate3(lt0, 20.0, 20.0, 20.0);
 }
 
+static void
+SG_InitRoot(SG *sg)
+{
+	sg->root = Malloc(sizeof(SG_Point), M_SG);
+	SG_PointInit(sg->root, "_root");
+	SG_PointSize(sg->root, 3.0);
+	SG_PointColor(sg->root, SG_ColorRGB(0.0, 255.0, 0.0));
+	SGNODE(sg->root)->sg = sg;
+	TAILQ_INSERT_TAIL(&sg->nodes, SGNODE(sg->root), nodes);
+}
+
 void
 SG_Init(void *obj, const char *name)
 {
@@ -176,18 +187,17 @@ SG_Init(void *obj, const char *name)
 	TAILQ_INIT(&sg->nodes);
 	AG_MutexInit(&sg->lock);
 
-	sg->root = Malloc(sizeof(SG_Point), M_SG);
-	SG_PointInit(sg->root, "_root");
-	SG_PointSize(sg->root, 3.0);
-	SG_PointColor(sg->root, SG_ColorRGB(0.0, 255.0, 0.0));
-	SGNODE(sg->root)->sg = sg;
-	TAILQ_INSERT_TAIL(&sg->nodes, SGNODE(sg->root), nodes);
+	SG_InitRoot(sg);
 
+	AG_LockGL();			/* Probably not needed */
 	sg->tess = gluNewTess();
-	AG_SetEvent(sg, "attached", SG_Attached, NULL);
+	AG_UnlockGL();
 
-//	if ((sgCtxCg = cgCreateContext()) == NULL)
-//		fatal("cgCreateContext failed");
+	AG_SetEvent(sg, "attached", SG_Attached, NULL);
+#if 0
+	if ((sgCtxCg = cgCreateContext()) == NULL)
+		fatal("cgCreateContext failed");
+#endif
 }
 
 void
@@ -209,10 +219,12 @@ SG_FreeNode(SG *sg, SG_Node *node)
 {
 	SG_Node *n1, *n2;
 
+	printf("FreeNode: %s\n", node->name);
 	for (n1 = TAILQ_FIRST(&node->cnodes);
 	     n1 != TAILQ_END(&node->cnodes);
 	     n1 = n2) {
 		n2 = TAILQ_NEXT(n1, sgnodes);
+		printf("FreeNode: child (%s)\n", n1->name);
 		if (n1->ops->destroy != NULL) {
 			n1->ops->destroy(n1);
 		}
@@ -231,6 +243,7 @@ SG_Reinit(void *obj)
 
 	SG_FreeNode(sg, SGNODE(sg->root));
 	TAILQ_INIT(&sg->nodes);
+	SG_InitRoot(sg);
 }
 
 void
@@ -238,7 +251,9 @@ SG_Destroy(void *obj)
 {
 	SG *sg = obj;
 
+	AG_LockGL();			/* Probably not needed */
 	gluDeleteTess(sg->tess);
+	AG_UnlockGL();
 }
 
 int
@@ -330,11 +345,17 @@ SG_NodeLoad(SG *sg, SG_Node **rnode, AG_Netbuf *buf)
 			break;
 	}
 	if (i == sgElementsCnt) {
-		fprintf(stderr, "%s: skipping node %s (%s/%luB)\n",
-		    AGOBJECT(sg)->name, name, type, (Ulong)bsize);
-		AG_NetbufSeek(buf, bsize, SEEK_CUR);
-		*rnode = NULL;
-		return (0);
+		if (sg->flags & SG_SKIP_UNKNOWN_NODES) {
+			fprintf(stderr, "%s: skipping node %s (%s/%luB)\n",
+			    AGOBJECT(sg)->name, name, type, (Ulong)bsize);
+			AG_NetbufSeek(buf, bsize, SEEK_CUR);
+			*rnode = NULL;
+			return (0);
+		} else {
+			AG_SetError("%s: Unknown node class: %s (%lu bytes)",
+			    AGOBJECT(sg)->name, type, (Ulong)bsize);
+			return (-1);
+		}
 	}
 	nops = sgElements[i];
 	node = Malloc(nops->size, M_SG);

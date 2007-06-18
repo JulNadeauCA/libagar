@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,18 +22,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "sg.h"
 #include "sg_matview.h"
 
-#include <agar/gui/window.h>
-#include <agar/gui/primitive.h>
-#include <agar/gui/label.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
+#include <gui/label.h>
 
 #include <stdarg.h>
 #include <string.h>

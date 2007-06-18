@@ -1,9 +1,14 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 #ifndef _SG_GUI_H_
 #define _SG_GUI_H_
+
+#ifndef _AGAR_INTERNAL
 #include <agar/gui/gui.h>
+#else
+#include <gui/fspinbutton.h>
+#include <gui/spinbutton.h>
+#endif
 
 #ifdef SG_DOUBLE_PRECISION
 #define SG_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_DOUBLE,(p))

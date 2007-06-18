@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sk_line {
@@ -12,9 +11,9 @@ __BEGIN_DECLS
 extern SK_NodeOps skLineOps;
 
 SK_Line	*SK_LineNew(void *);
-void	 SK_LineInit(void *);
-int	 SK_LineLoad(void *, AG_Netbuf *);
-int	 SK_LineSave(void *, AG_Netbuf *);
+void	 SK_LineInit(void *, Uint32);
+int	 SK_LineLoad(SK *, void *, AG_Netbuf *);
+int	 SK_LineSave(SK *, void *, AG_Netbuf *);
 void	 SK_LineDraw(void *, SK_View *);
 
 void	 SK_LineWidth(SK_Line *, SG_Real);

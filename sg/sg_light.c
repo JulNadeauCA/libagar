@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,11 +22,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
+#include <gui/notebook.h>
+#include <gui/fspinbutton.h>
+#include <gui/hsvpal.h>
+#include <gui/separator.h>
+#include <gui/toolbar.h>
 
 #include "sg.h"
 #include "sg_gui.h"
@@ -114,9 +117,12 @@ SG_LightInit(void *p, const char *name)
 	lt->Kc = 1.0;
 	lt->Kl = 0.0;
 	lt->Kq = 0.0;
+
+	AG_LockGL();				/* Probably not needed */
 	lt->cyl = (GLUquadricObj *)gluNewQuadric();
 	gluQuadricDrawStyle(lt->cyl, GLU_FILL);
 	gluQuadricNormals(lt->cyl, GLU_SMOOTH);
+	AG_UnlockGL();
 }
 
 void
@@ -124,7 +130,9 @@ SG_LightDestroy(void *p)
 {
 	SG_Light *lt = p;
 
+	AG_LockGL();				/* Probably not needed */
 	gluDeleteQuadric(lt->cyl);
+	AG_UnlockGL();
 }
 
 void
@@ -204,6 +212,10 @@ SG_LightDraw(void *p, SG_View *view)
 	}
 }
 
+/*
+ * Set up OpenGL light sources for rendering.
+ * Must be called from widget draw context.
+ */
 void
 SG_LightSetup(SG_Light *lt, SG_View *view)
 {

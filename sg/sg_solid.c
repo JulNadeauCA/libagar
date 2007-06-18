@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,10 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
+#include <core/core.h>
 #include "sg.h"
 #include "sg_gui.h"
 
@@ -93,7 +92,10 @@ SG_SolidSave(void *p, AG_Netbuf *buf)
 	return (0);
 }
 
-/* Build a parallelepiped of given width, height and depth. */
+/*
+ * Build a parallelepiped of given width, height and depth.
+ * Must be called from widget draw context.
+ */
 void
 SG_SolidBox(SG_Solid *sld, SG_Real wd, SG_Real ht, SG_Real dp)
 {

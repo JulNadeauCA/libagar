@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 __BEGIN_DECLS

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +22,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #include "sk.h"
-#include "sg_gui.h"
 
 SK_Dummy *
 SK_DummyNew(void *pnode)
@@ -38,21 +35,21 @@ SK_DummyNew(void *pnode)
 	SK_Dummy *dum;
 
 	dum = Malloc(sizeof(SK_Dummy), M_SG);
-	SK_DummyInit(dum);
+	SK_DummyInit(dum, SK_GenName(SKNODE(pnode)->sk));
 	SK_NodeAttach(pnode, dum);
 	return (dum);
 }
 
 void
-SK_DummyInit(void *p)
+SK_DummyInit(void *p, Uint32 name)
 {
 	SK_Dummy *dum = p;
 
-	SK_NodeInit(dum, &skDummyOps, 0);
+	SK_NodeInit(dum, &skDummyOps, name, 0);
 }
 
 int
-SK_DummyLoad(void *p, AG_Netbuf *buf)
+SK_DummyLoad(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Dummy *dum = p;
 
@@ -61,7 +58,7 @@ SK_DummyLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SK_DummySave(void *p, AG_Netbuf *buf)
+SK_DummySave(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Dummy *dum = p;
 

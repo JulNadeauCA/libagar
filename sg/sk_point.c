@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
- 
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -23,15 +22,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/edition.h>
-#include <agar/config/have_opengl.h>
+#include <config/edition.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #include "sk.h"
-#include "sg_gui.h"
 
 SK_Point *
 SK_PointNew(void *pnode)
@@ -39,33 +36,34 @@ SK_PointNew(void *pnode)
 	SK_Point *pt;
 
 	pt = Malloc(sizeof(SK_Point), M_SG);
-	SK_PointInit(pt);
+	SK_PointInit(pt, SK_GenName(SKNODE(pnode)->sk));
 	SK_NodeAttach(pnode, pt);
 	return (pt);
 }
 
 void
-SK_PointInit(void *p)
+SK_PointInit(void *p, Uint32 name)
 {
 	SK_Point *pt = p;
 
-	SK_NodeInit(pt, &skPointOps, 0);
+	SK_NodeInit(pt, &skPointOps, name, 0);
 	pt->size = 3.0;
 	pt->color = SG_ColorRGB(0.0, 1.0, 0.0);
 }
 
 int
-SK_PointLoad(void *p, AG_Netbuf *buf)
+SK_PointLoad(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Point *pt = p;
 
 	pt->size = SG_ReadReal(buf);
 	pt->color = SG_ReadColor(buf);
+	dprintf("%s: size=%f\n", SK_NodeName(pt), pt->size);
 	return (0);
 }
 
 int
-SK_PointSave(void *p, AG_Netbuf *buf)
+SK_PointSave(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Point *pt = p;
 
@@ -122,7 +120,7 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 	SK_Point *pt;
 
 	pt = Malloc(sizeof(SK_Point), M_OBJECT);
-	SK_PointInit(pt);
+	SK_PointInit(pt, SK_GenName(sk));
 	SK_NodeAttach(sk->root, pt);
 	SG_MatrixTranslate2(&SKNODE(pt)->T, pos.x, pos.y);
 	return (0);

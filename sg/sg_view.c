@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,10 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
 #include "sg.h"
 
@@ -92,11 +91,13 @@ SG_ViewUpdateProjection(SG_View *sv)
 	SG_Matrix P;
 	int m, n;
 
+	AG_LockGL();
 	SG_CameraGetProjection(sv->cam, &P);
 	for (m = 0; m < 4; m++) {
 		for (n = 0; n < 4; n++)
 			AGGLVIEW(sv)->mProjection[(m<<2)+n] = P.m[n][m];
 	}
+	AG_UnlockGL();
 }
 
 int
@@ -235,8 +236,10 @@ ViewScale(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 
+	AG_LockGL();
 	glMatrixMode(GL_PROJECTION);
 	SG_CameraProject(sv->cam);
+	AG_UnlockGL();
 }
 
 static void
