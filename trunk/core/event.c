@@ -1,8 +1,5 @@
-/*	$Csoft: event.c,v 1.222 2005/10/06 03:11:54 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,7 +97,7 @@ const char *agEvArgTypeNames[] = {
 #ifdef DEBUG
 /* XXX remove this once the graph widget implements polling. */
 static __inline__ void
-update_perf_graph(void)
+PerfMonitorUpdate(void)
 {
 	static int einc = 0;
 
@@ -123,7 +120,7 @@ AG_EventShowPerfGraph(void)
 }
 
 static void
-init_perf_graph(void)
+PerfMonitorInit(void)
 {
 	AG_Label *label;
 
@@ -160,7 +157,7 @@ AG_EventLoop_FixedFPS(void)
 	Uint32 Tr1, Tr2 = 0;
 
 #ifdef DEBUG
-	init_perf_graph();
+	PerfMonitorInit();
 #endif
 	Tr1 = SDL_GetTicks();
 	for (;;) {
@@ -168,11 +165,12 @@ AG_EventLoop_FixedFPS(void)
 		if (Tr2-Tr1 >= agView->rNom) {
 			AG_MutexLock(&agView->lock);
 			agView->ndirty = 0;
-
-#if defined(DEBUG) && defined(HAVE_OPENGL)
-			if (agView->opengl)
+#ifdef HAVE_OPENGL
+			if (agView->opengl) {
+				AG_LockGL();
 				glClear(GL_COLOR_BUFFER_BIT|
 				        GL_DEPTH_BUFFER_BIT);
+			}
 #endif
 			TAILQ_FOREACH(win, &agView->windows, windows) {
 				if (!win->visible)
@@ -187,7 +185,6 @@ AG_EventLoop_FixedFPS(void)
 					    AGWIDGET(win)->x, AGWIDGET(win)->y,
 					    AGWIDGET(win)->w, AGWIDGET(win)->h);
 			}
-
 			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
 				if (agView->opengl) {
@@ -201,6 +198,10 @@ AG_EventLoop_FixedFPS(void)
 				}
 				agView->ndirty = 0;
 			}
+#ifdef HAVE_OPENGL
+			if (agView->opengl)
+				AG_UnlockGL();
+#endif
 			AG_MutexUnlock(&agView->lock);
 
 			/* Recalibrate the effective refresh rate. */
@@ -208,7 +209,7 @@ AG_EventLoop_FixedFPS(void)
 			agView->rCur = agView->rNom - (Tr1-Tr2);
 #ifdef DEBUG
 			if (agPerfWindow->visible)
-				update_perf_graph();
+				PerfMonitorUpdate();
 #endif
 			if (agView->rCur < 1) {
 				agView->rCur = 1;
@@ -234,7 +235,7 @@ AG_EventLoop_FixedFPS(void)
 }
 
 static void
-unminimize_window(AG_Event *event)
+UnminimizeWindow(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
@@ -272,12 +273,6 @@ AG_ProcessEvent(SDL_Event *ev)
 	AG_MutexLock(&agView->lock);
 
 	switch (ev->type) {
-	case SDL_VIDEORESIZE:
-		AG_ResizeDisplay(ev->resize.w, ev->resize.h);
-		break;
-	case SDL_VIDEOEXPOSE:
-		AG_ViewVideoExpose();
-		break;
 	case SDL_MOUSEMOTION:
 #ifdef OPENGL_INVERTED_Y
 		if (agView->opengl) {
@@ -314,22 +309,12 @@ AG_ProcessEvent(SDL_Event *ev)
 				}
 				AG_MenuAction(mi, win->caption,
 				    OBJ_ICON,
-				    unminimize_window, "%p", win);
+				    UnminimizeWindow, "%p", win);
 			}
 				
 			AG_MouseGetState(&x, &y);
 			AG_MenuExpand(me, mi, x+4, y+4);
 		}
-		break;
-	case SDL_JOYAXISMOTION:
-	case SDL_JOYBUTTONDOWN:
-	case SDL_JOYBUTTONUP:
-		debug(DEBUG_JOY_EV, "SDL_JOY%s\n",
-		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
-		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
-		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
-		    "???");
-		AG_WindowEvent(ev);
 		break;
 	case SDL_KEYDOWN:
 		{
@@ -351,6 +336,22 @@ AG_ProcessEvent(SDL_Event *ev)
 		    (ev->key.state == SDL_PRESSED) ?
 		    "PRESSED" : "RELEASED");
 		AG_WindowEvent(ev);
+		break;
+	case SDL_JOYAXISMOTION:
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		debug(DEBUG_JOY_EV, "SDL_JOY%s\n",
+		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
+		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
+		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
+		    "???");
+		AG_WindowEvent(ev);
+		break;
+	case SDL_VIDEORESIZE:
+		AG_ResizeDisplay(ev->resize.w, ev->resize.h);
+		break;
+	case SDL_VIDEOEXPOSE:
+		AG_ViewVideoExpose();
 		break;
 	case SDL_QUIT:
 #ifdef EDITION
