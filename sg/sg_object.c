@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +22,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/objsel.h>
+#include <core/core.h>
 
 #include "sg.h"
 #include "sg_gui.h"
+
+#include <gui/table.h>
+#include <gui/objsel.h>
 
 #include <string.h>
 
@@ -643,14 +644,29 @@ SG_ObjectLoad(void *p, AG_Netbuf *buf)
 	SG_Object *so = p;
 	Uint i;
 	
-	if (AG_ReadVersion(buf, "SG:SG_Object", &sgObjectVer, NULL) != 0)
+	if (AG_ReadVersion(buf, "SG:SG_Object", &sgObjectVer, NULL) != 0) {
 		return (-1);
+	}
+	so->flags = AG_ReadUint32(buf);
+	
+	return (0);
+	/* TODO */
 
+	so->vtx = NULL;
 	so->nvtx = (Uint)AG_ReadUint32(buf);
 	so->vtx = Realloc(so->vtx, so->nvtx*sizeof(SG_Vertex));
-//	for (i = 0; i < so->nvtx; i++) {
-//		so->vtx[i] = SG_ReadVertex(buf);
-//	}
+	dprintf("%s: reading %u vertices\n", SGNODE(so)->name, (Uint)so->nvtx);
+	for (i = 0; i < so->nvtx; i++) {
+		SG_Vertex *vtx = &so->vtx[i];
+	
+		vtx->s = SG_ReadReal(buf);
+		vtx->t = SG_ReadReal(buf);
+		vtx->c = SG_ReadColor(buf);
+		SG_ReadVectorv(buf, &vtx->n);
+		SG_ReadVectorv(buf, &vtx->v);
+		vtx->flags = (Uint)AG_ReadUint8(buf);
+	}
+	
 	return (0);
 }
 
@@ -659,14 +675,19 @@ SG_ObjectSave(void *p, AG_Netbuf *buf)
 {
 	SG_Object *so = p;
 	Uint i;
-	Uint nfacets, nedges;
-	off_t nfacets_offs, nedges_offs;
+	off_t offs;
 	SG_Facet *f;
 	SG_Edge *e;
 	
 	AG_WriteVersion(buf, "SG:SG_Object", &sgObjectVer);
 	AG_WriteUint32(buf, (Uint32)so->flags);
+	
+	return (0);
+	/* TODO */
+	
+	/* Save the vertices. */
 	AG_WriteUint32(buf, so->nvtx);
+	dprintf("%s: saving %u vertices\n", SGNODE(so)->name, so->nvtx);
 	for (i = 1; i < so->nvtx; i++) {
 		SG_Vertex *vtx = &so->vtx[i];
 
@@ -677,13 +698,25 @@ SG_ObjectSave(void *p, AG_Netbuf *buf)
 		SG_WriteVector(buf, &vtx->v);
 		AG_WriteUint8(buf, (Uint8)vtx->flags);
 	}
+	
+	dprintf("%s: saving %u edges\n", SGNODE(so)->name, (Uint)so->nedgetbl);
 
-	nfacets_offs = AG_NetbufTell(buf);
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
-	SLIST_FOREACH(f, &so->facets, facets) {
+	/* Save the edge table. */
+	AG_WriteUint32(buf, (Uint32)so->nedgetbl);
+	for (i = 0; i < so->nedgetbl; i++) {
+		SG_EdgeEnt *ee = &so->edgetbl[i];
+		SG_Edge *e;
+		Uint32 count = 0;
 
+		offs = AG_NetbufTell(buf);
+		AG_WriteUint32(buf, 0);
+		SLIST_FOREACH(e, &ee->edges, edges) {
+			AG_WriteUint32(buf, e->v);
+			/* XXX */
+			count++;
+		}
+		AG_PwriteUint32(buf, count, offs);
 	}
-
 	return (0);
 }
 
