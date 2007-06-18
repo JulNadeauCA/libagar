@@ -59,6 +59,7 @@
 
 #include "monitor.h"
 
+static AG_Thread thread;
 static AG_Mutex lock = AG_MUTEX_INITIALIZER;
 static AG_Mutex xmit_lock = AG_MUTEX_INITIALIZER;
 static int default_port = 1173;
@@ -73,18 +74,18 @@ static struct jpeg_error_mgr		 jerrmgr;
 static struct jpeg_compress_struct	 jcomp;
 
 static void
-screenshot_error_exit(j_common_ptr jcomp)
+HandleJpegError(j_common_ptr jcomp)
 {
 	AG_TextMsg(AG_MSG_ERROR, _("A JPEG error has occured."));
 }
 
 static void
-screenshot_output_message(j_common_ptr jcomp)
+OutputJpegMessage(j_common_ptr jcomp)
 {
 }
 
 static void
-screenshot_xmit(int fd)
+XmitLoop(int fd)
 {
 	extern int agScreenshotQuality;
 	int nframe = 0;
@@ -98,8 +99,8 @@ screenshot_xmit(int fd)
 	}
 
 	jcomp.err = jpeg_std_error(&jerrmgr);
-	jerrmgr.error_exit = screenshot_error_exit;
-	jerrmgr.output_message = screenshot_output_message;
+	jerrmgr.error_exit = HandleJpegError;
+	jerrmgr.output_message = OutputJpegMessage;
 	
 	jpeg_create_compress(&jcomp);
 
@@ -174,15 +175,15 @@ screenshot_xmit(int fd)
 	fclose(fp);
 }
 
-static void
-screenshot_connect(AG_Event *event)
+static void *
+XmitThread(void *p)
 {
 	char host[256];
 	char port[32];
 	struct addrinfo hints, *res, *res0;
 	const char *cause = "";
 	int rv;
-	
+
 	AG_MutexLock(&lock);
 
 	if (sock != -1) {
@@ -208,7 +209,7 @@ screenshot_connect(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
 		snprintf(status, sizeof(status), "%s", gai_strerror(rv));
-		goto out2;
+		goto out1;
 	}
 
 	for (sock = -1, res = res0; res != NULL; res = res->ai_next) {
@@ -233,17 +234,26 @@ screenshot_connect(AG_Event *event)
 	}
 
 	snprintf(status, sizeof(status), _("Connected to %s"), host);
-	screenshot_xmit(sock);
+	XmitLoop(sock);
 	close(sock);
 	sock = -1;
 out2:
 	freeaddrinfo(res0);
 out1:
 	AG_MutexUnlock(&lock);
+	AG_ThreadExit(NULL);
 }
 
 static void
-screenshot_disconnect(AG_Event *event)
+Connect(AG_Event *event)
+{
+	if (AG_ThreadCreate(&thread, NULL, XmitThread, NULL) != 0) {
+		AG_TextMsg(AG_MSG_ERROR, "Failed to create thread!");
+	}
+}
+
+static void
+Disconnect(AG_Event *event)
 {
 	AG_MutexLock(&xmit_lock);
 	aflag++;
@@ -295,13 +305,11 @@ AG_DebugScreenshot(void)
 		AG_Button *bu;
 
 		bu = AG_ButtonNew(hb, 0, _("Connect"));
-		ev = AG_SetEvent(bu, "button-pushed", screenshot_connect, NULL);
-		ev->flags |= AG_EVENT_ASYNC;
+		AG_SetEvent(bu, "button-pushed", Connect, NULL);
 		
 		bu = AG_ButtonNew(hb, 0, _("Disconnect"));
-		ev = AG_SetEvent(bu, "button-pushed", screenshot_disconnect,
-		    NULL);
-		ev->flags |= AG_EVENT_ASYNC;
+		ev = AG_SetEvent(bu, "button-pushed", Disconnect, NULL);
+		//ev->flags |= AG_EVENT_ASYNC;
 	}
 	return (win);
 }
