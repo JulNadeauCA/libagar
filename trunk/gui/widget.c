@@ -1,5 +1,3 @@
-/*	$Csoft: widget.c,v 1.129 2005/10/07 07:16:33 vedge Exp $	*/
-
 /*
  * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -30,10 +28,10 @@
 #include <core/view.h>
 #include <core/math.h>
 
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/cursors.h>
-#include <gui/menu.h>
+#include "widget.h"
+#include "window.h"
+#include "cursors.h"
+#include "menu.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -917,10 +915,12 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		GLuint texname;
-	
+
+		AG_LockGL();
 		texname = (su == NULL) ? 0 :
 		    AG_SurfaceTexture(su, &wid->texcoords[idx*4]);
 		wid->textures[idx] = texname;
+		AG_UnlockGL();
 	}
 #endif
 	return (idx);
@@ -941,11 +941,13 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 	wid->surfaces[name] = su;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
+		AG_LockGL();
 		if (wid->textures[name] != 0) {
 			glDeleteTextures(1, (GLuint *)&wid->textures[name]);
 		}
 		wid->textures[name] = (su == NULL) ? 0 :
 		    AG_SurfaceTexture(su, &wid->texcoords[name*4]);
+		AG_UnlockGL();
 	}
 #endif
 }
@@ -980,9 +982,14 @@ AG_WidgetDestroy(void *p)
 		if (wid->surfaces[i] != NULL)
 			SDL_FreeSurface(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
-		if (agView->opengl &&
-		    wid->textures[i] != 0)
-			glDeleteTextures(1, (GLuint *)&wid->textures[i]);
+		if (agView->opengl) {
+			AG_LockGL();
+			if (wid->textures[i] != 0) {
+				glDeleteTextures(1,
+				    (GLuint *)&wid->textures[i]);
+			}
+			AG_UnlockGL();
+		}
 #endif
 	}
 	Free(wid->surfaces, M_WIDGET);
@@ -1004,8 +1011,8 @@ AG_WidgetDestroy(void *p)
 }
 
 /*
- * Perform a fast blit from a source surface to the display, at coordinates
- * relative to the widget; clipping is done.
+ * Perform a software blit from a source surface to the display, at
+ * coordinates relative to the widget, using clipping.
  */
 void
 AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
@@ -1026,6 +1033,8 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
+
+		AG_LockGL();
 
 		texture = AG_SurfaceTexture(srcsu, texcoord);
 
@@ -1067,6 +1076,8 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 		}
 		
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+
+		AG_UnlockGL();
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -1075,8 +1086,8 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 }
 
 /*
- * Perform a fast blit from a registered surface to the display
- * at coordinates relative to the widget; clipping is done.
+ * Perform a hardware or software blit from a registered surface to the display
+ * at coordinates relative to the widget, using clipping.
  */
 void
 AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
@@ -1103,6 +1114,8 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
+
+		AG_LockGL();
 
 		if (rs == NULL) {
 			texcoord = &srcwid->texcoords[name*4];
@@ -1152,8 +1165,9 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			}
 			glBlendFunc(blend_sfactor, blend_dfactor);
 		}
-
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+
+		AG_UnlockGL();
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -1279,6 +1293,10 @@ AG_UnsetCursor(void)
 	agCursorToSet = agDefaultCursor;
 }
 
+/*
+ * Push a clipping rectangle onto the clipping rectangle stack.
+ * This is only safe to call from widget draw context.
+ */
 void
 AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
 {
@@ -1314,6 +1332,10 @@ AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
 	}
 }
 
+/*
+ * Pop a clipping rectangle off the clipping rectangle stack.
+ * This is only safe to call from widget draw context.
+ */
 void
 AG_WidgetPopClipRect(void *p)
 {
@@ -1331,7 +1353,7 @@ AG_WidgetPopClipRect(void *p)
 
 /*
  * Render a widget and its descendents, recursively.
- * The view must be locked.
+ * The view must be locked. In OpenGL mode, GL must be locked as well.
  */
 void
 AG_WidgetDraw(void *p)
