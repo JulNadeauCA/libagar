@@ -1,4 +1,3 @@
-/*	$Csoft: mat.h,v 1.6 2005/09/12 10:06:42 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef struct sc_matrix {

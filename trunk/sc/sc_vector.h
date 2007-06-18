@@ -1,4 +1,3 @@
-/*	$Csoft: vec.h,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef struct sc_matrix SC_Vector;

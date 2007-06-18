@@ -1,8 +1,5 @@
-/*	$Csoft$	*/
-
 /*
- * Copyright (c) 2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #if 0
 static void

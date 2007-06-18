@@ -1,4 +1,3 @@
-/*	$Csoft: vg.h,v 1.41 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SC_H_
@@ -12,25 +11,23 @@
 #define SC_PROP_QTIME	105
 #endif
 
-#include <agar/config/_mk_have_sys_types_h.h>
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
-#define _MK_HAVE_UNSIGNED_TYPEDEFS
-typedef unsigned int Uint;
-typedef unsigned char Uchar;
-typedef unsigned long Ulong;
-#endif
-
 #include "begin_code.h"
 
+#ifdef _AGAR_INTERNAL
+#include <sc/sc_math.h>
+#include <sc/sc_matrix.h>
+#include <sc/sc_vector.h>
+#include <sc/sc_ivector.h>
+#include <sc/sc_gaussj.h>
+#include <sc/sc_lu.h>
+#else
 #include <agar/sc/sc_math.h>
 #include <agar/sc/sc_matrix.h>
 #include <agar/sc/sc_vector.h>
 #include <agar/sc/sc_ivector.h>
 #include <agar/sc/sc_gaussj.h>
 #include <agar/sc/sc_lu.h>
+#endif
 
 __BEGIN_DECLS
 int	SC_Init(Uint);
