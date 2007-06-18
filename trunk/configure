@@ -3,8 +3,7 @@
 # Do not edit!
 # File generated from configure.in by csoft-mk 2.0.
 #
-# Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
-# <http://www.csoft.org>
+# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -109,20 +108,7 @@ fi
 
 if [ "${srcdir}" != "" ]; then
 	echo "concurrent build (source in ${srcdir})"
-#	if [ ! -e "${srcdir}" ]; then
-#		echo "Cannot find source directory: ${srcdir}"
-#		exit 1
-#	fi
-#	if [ ! -e "${srcdir}/configure.in" ]; then
-#		echo "Invalid source directory: ${srcdir}"
-#		exit 1
-#	fi
-#	if [ -e "${srcdir}/config" ]; then
-#		echo "Source directory is already configured: ${srcdir}"
-#		exit 1
-#	fi
 	SRC=${srcdir}
-
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
 		exit 1;
@@ -170,12 +156,39 @@ echo "Release: $RELEASE" >> config.log
 echo "System: $SYSTEM" >> config.log
 mkdir config 1>/dev/null 2>&1
 
-if [ "${with_manpages}" = "no" ]; then
-    echo "NOMAN=yes" >> Makefile.config
-    echo "NOMANLINKS=yes" >> Makefile.config
+HAVE_MANDOC="no"
+NROFF=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/nroff" ]; then
+		NROFF="${path}/nroff"
+	fi
+done
+if [ "${NROFF}" != "" ]; then
+	echo | ${NROFF} -Tmandoc >/dev/null
+	if [ $? == 0 ]; then
+		HAVE_MANDOC="yes"
+	fi
 fi
+if [ "${HAVE_MANDOC}" = "no" ]; then
+	if [ "${with_manpages}" = "yes" ]; then
+		echo "*"
+		echo "* --with-manpages requested, but nroff/mandoc not found."
+		echo "*"
+		exit 1
+	fi
+	echo "HAVE_MANDOC=no" >> Makefile.config
+	echo "NOMAN=yes" >> Makefile.config
+	echo "NOMANLINKS=yes" >> Makefile.config
+else
+	echo "HAVE_MANDOC=yes" >> Makefile.config
+	if [ "${with_manpages}" = "no" ]; then
+		echo "NOMAN=yes" >> Makefile.config
+		echo "NOMANLINKS=yes" >> Makefile.config
+	fi
+fi
+
 if [ "${with_docs}" = "no" ]; then
-    echo "NODOC=yes" >> Makefile.config
+	echo "NODOC=yes" >> Makefile.config
 fi
 if [ "${enable_debug}" = "yes" ]; then
 	echo "LDFLAGS+=-g" >> Makefile.config
