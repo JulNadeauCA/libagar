@@ -4,7 +4,11 @@
 #ifndef _AGAR_RCSMGR_H_
 #define _AGAR_RCSMGR_H_
 
+#ifdef _AGAR_INTERNAL
+#include <config/network.h>
+#else
 #include <agar/config/network.h>
+#endif
 
 #include "begin_code.h"
 

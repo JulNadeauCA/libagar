@@ -4,16 +4,16 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-#include <agar/config/have_opengl.h>
-#include <agar/config/enable_nls.h>
-#include <agar/config/threads.h>
-#include <agar/config/edition.h>
-#include <agar/config/network.h>
-#include <agar/config/have_bounded_attribute.h>
-#include <agar/config/have_format_attribute.h>
-#include <agar/config/have_nonnull_attribute.h>
+#include <config/have_opengl.h>
+#include <config/enable_nls.h>
+#include <config/threads.h>
+#include <config/edition.h>
+#include <config/network.h>
+#include <config/have_bounded_attribute.h>
+#include <config/have_format_attribute.h>
+#include <config/have_nonnull_attribute.h>
 
-#include <agar/config/_mk_have_unsigned_typedefs.h>
+#include <config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define _MK_HAVE_UNSIGNED_TYPEDEFS
 typedef unsigned int Uint;
@@ -21,12 +21,12 @@ typedef unsigned char Uchar;
 typedef unsigned long Ulong;
 #endif
 
-#include <agar/core/threads.h>
+#include <core/threads.h>
 
 #include <SDL.h>
 #include <SDL_endian.h>
 
-#include <agar/config/_mk_have_sys_types_h.h>
+#include <config/_mk_have_sys_types_h.h>
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -67,33 +67,33 @@ typedef unsigned long Ulong;
 # endif
 #endif
 
-#include <agar/core/error.h>
+#include <core/error.h>
 
-#include <agar/compat/queue.h>
-#include <agar/compat/strlcpy.h>
-#include <agar/compat/strlcat.h>
-#include <agar/compat/snprintf.h>
-#include <agar/compat/vsnprintf.h>
-#include <agar/compat/asprintf.h>
-#include <agar/compat/vasprintf.h>
-#include <agar/compat/strsep.h>
-#include <agar/compat/math.h>
+#include <compat/queue.h>
+#include <compat/strlcpy.h>
+#include <compat/strlcat.h>
+#include <compat/snprintf.h>
+#include <compat/vsnprintf.h>
+#include <compat/asprintf.h>
+#include <compat/vasprintf.h>
+#include <compat/strsep.h>
+#include <compat/math.h>
 
-#include <agar/core/loaders/netbuf.h>
-#include <agar/core/loaders/integral.h>
-#include <agar/core/loaders/real.h>
-#include <agar/core/loaders/string.h>
-#include <agar/core/loaders/version.h>
-#include <agar/core/loaders/color.h>
+#include <core/loaders/netbuf.h>
+#include <core/loaders/integral.h>
+#include <core/loaders/real.h>
+#include <core/loaders/string.h>
+#include <core/loaders/version.h>
+#include <core/loaders/color.h>
 
-#include <agar/core/object.h>
-#include <agar/core/event.h>
-#include <agar/core/iconmgr.h>
+#include <core/object.h>
+#include <core/event.h>
+#include <core/iconmgr.h>
 
-#include <agar/gui/text.h>
+#include <gui/text.h>
 
 #ifdef ENABLE_NLS
-# include <agar/libintl/libintl.h>
+# include <libintl/libintl.h>
 # define _(String) gettext(String)
 # define gettext_noop(String) (String)
 # define N_(String) gettext_noop(String)
@@ -133,5 +133,5 @@ typedef unsigned long Ulong;
 #define AG_PATHSEP "/"
 #endif
 
-#include <agar/core/core_init.h>
+#include <core/core_init.h>
 #endif /* !_AGAR_CORE_CORE_H_ */

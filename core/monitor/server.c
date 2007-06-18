@@ -39,7 +39,7 @@
 #include <core/view.h>
 #include <core/config.h>
 
-#include <agar/net/net.h>
+#include <net/net.h>
 
 #include <gui/window.h>
 #include <gui/box.h>

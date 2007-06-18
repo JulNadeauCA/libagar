@@ -4,7 +4,11 @@
 #ifndef _AGAR_PROP_H_
 #define _AGAR_PROP_H_
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_long_double.h>
+#else
 #include <agar/config/have_long_double.h>
+#endif
 
 #include "begin_code.h"
 

@@ -9,8 +9,13 @@
 #define AG_OBJECT_PATH_MAX 1024
 #define AG_OBJECT_DIGEST_MAX 170
 
+#ifdef _AGAR_INTERNAL
+#include <core/timeout.h>
+#include <core/prop.h>
+#else
 #include <agar/core/timeout.h>
 #include <agar/core/prop.h>
+#endif
 
 #include "begin_code.h"
 
@@ -55,7 +60,7 @@ typedef struct ag_object {
 #define AG_OBJECT_READONLY	 0x040	/* Disallow edition (advisory) */
 #define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by AG_ObjectLoad() */
 #define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by AG_ObjectLoad() */
-#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Close and reopen editor on load */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Unsafe to load during edition */
 #define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep user data resident */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\

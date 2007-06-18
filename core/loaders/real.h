@@ -1,7 +1,12 @@
 /*	$Csoft: real.h,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_long_double.h>
+#else
 #include <agar/config/have_long_double.h>
+#endif
+
 #include "begin_code.h"
 __BEGIN_DECLS
 __inline__ float	AG_ReadFloat(AG_Netbuf *);
