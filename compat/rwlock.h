@@ -1,7 +1,11 @@
-/*	$Csoft: rwlock.h,v 1.2 2002/09/16 12:59:04 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
 #include <config/threads.h>
+#else
+#include <agar/config/threads.h>
+#endif
+
 #ifdef THREADS
 
 typedef struct {

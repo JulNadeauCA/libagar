@@ -1,6 +1,4 @@
-/*	$Csoft: md5.h,v 1.4 2005/05/01 00:11:12 vedge Exp $	*/
 /*	$OpenBSD: md5.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
-
 /*
  * This code implements the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
@@ -13,10 +11,21 @@
  * with every copy.
  */
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_md5.h>
+#include <config/_mk_have_sys_types_h.h>
+#include <config/have_bounded_attribute.h>
+#else
 #include <agar/config/have_md5.h>
+#include <agar/config/_mk_have_sys_types_h.h>
+#include <agar/config/have_bounded_attribute.h>
+#endif
+
 #ifdef HAVE_MD5
 
+#ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 #include <md5.h>
 
 #else /* !HAVE_MD5 */
@@ -34,6 +43,14 @@ typedef struct MD5Context {
 	Uint64 count;				/* number of bits, mod 2^64 */
 	Uint8 buffer[MD5_BLOCK_LENGTH];		/* input buffer */
 } MD5_CTX;
+
+#ifndef BOUNDED_ATTRIBUTE
+# ifdef HAVE_BOUNDED_ATTRIBUTE
+#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+# else
+#  define BOUNDED_ATTRIBUTE(t, a, b)
+# endif
+#endif
 
 __BEGIN_DECLS
 void	 MD5Init(MD5_CTX *);

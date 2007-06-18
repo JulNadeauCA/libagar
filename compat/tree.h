@@ -1,6 +1,4 @@
-/*	$Csoft: tree.h,v 1.1 2002/09/09 09:22:19 vedge Exp $	*/
 /*	$OpenBSD: tree.h,v 1.6 2002/06/11 22:09:52 provos Exp $	*/
-
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
