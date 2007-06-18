@@ -1552,6 +1552,8 @@ echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
 echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 else
+echo -n "checking for -pthread..."
+echo -n "checking for -pthread..." >> config.log
 PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
