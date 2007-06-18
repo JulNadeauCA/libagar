@@ -7,8 +7,13 @@
 #include <stdio.h>	/* XXX for fprintf, abort */
 #include <stdlib.h>
 
+#ifdef _AGAR_INTERNAL
+#include <config/debug.h>
+#include <config/free_null_is_a_noop.h>
+#else
 #include <agar/config/debug.h>
 #include <agar/config/free_null_is_a_noop.h>
+#endif
 
 #ifdef __GNUC__
 #define fatal(fmt, args...)						\
@@ -42,7 +47,11 @@
 	va_end((args));						\
 } while (0)
 
+#ifdef _AGAR_INTERNAL
+#include <core/error_pub.h>
+#else
 #include <agar/core/error_pub.h>
+#endif
 
 #ifdef DEBUG
 #ifdef __GNUC__
