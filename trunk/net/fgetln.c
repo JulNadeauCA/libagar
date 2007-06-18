@@ -1,6 +1,3 @@
-/*	$Csoft$	*/
-/*      $NetBSD: fgetln.c,v 1.1.1.1 1999/04/12 07:43:21 crooksa Exp $   */
-
 /*-
  * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -37,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/server.h>
+#include <config/server.h>
 #ifdef SERVER
 
 #include <stdio.h>

@@ -1,7 +1,5 @@
-/*	$Csoft: server.c,v 1.6 2005/09/04 01:57:04 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/server.h>
+#include <config/server.h>
 #ifdef SERVER
 
 #include <core/core.h>

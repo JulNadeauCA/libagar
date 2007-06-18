@@ -1,7 +1,5 @@
-/*	$Csoft: command.c,v 1.2 2005/04/26 04:40:42 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/network.h>
+#include <config/network.h>
 #ifdef NETWORK
 
 #include <core/core.h>
