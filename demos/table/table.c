@@ -101,7 +101,6 @@ CreateStaticTable(void)
 	    agView->w/2 - 320/2,
 	    agView->h/2 - 240/2,
 	    320, 240);
-	AG_WindowShow(win);
 }
 
 static void
@@ -147,7 +146,6 @@ CreatePolledTable(void)
 	    agView->w/2 - 320/3,
 	    agView->h/2 - 240/3,
 	    320, 240);
-	AG_WindowShow(win);
 }
 
 int
