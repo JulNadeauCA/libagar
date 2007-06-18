@@ -102,7 +102,7 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
 	AG_MutexInitRecursive(&agView->lock);
-
+	
 	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
 	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
 	agView->h = h > 0 ? h : AG_Uint16(agConfig, "view.h");
@@ -130,6 +130,7 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 		
 		agView->opengl = 1;
 	}
+	AG_MutexInitRecursive(&agView->lock_gl);
 #endif
 
 	if (agView->w < AG_Uint16(agConfig, "view.min-w") ||
@@ -221,6 +222,9 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	return (0);
 fail:
 	AG_MutexDestroy(&agView->lock);
+#ifdef HAVE_OPENGL
+	AG_MutexDestroy(&agView->lock_gl);
+#endif
 	Free(agView, M_VIEW);
 	agView = NULL;
 	return (-1);
@@ -230,9 +234,9 @@ int
 AG_ResizeDisplay(int w, int h)
 {
 	Uint32 flags = agView->v->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|
-	                                 SDL_HWSURFACE|SDL_ASYNCBLIT|
-					 SDL_HWPALETTE|SDL_RESIZABLE|
-					 SDL_OPENGL);
+	                                   SDL_HWSURFACE|SDL_ASYNCBLIT|
+					   SDL_HWPALETTE|SDL_RESIZABLE|
+					   SDL_OPENGL);
 	AG_Window *win;
 	SDL_Surface *su;
 	int ow, oh;
@@ -289,8 +293,11 @@ AG_ViewVideoExpose(void)
 	}
 
 #ifdef HAVE_OPENGL
-	if (agView->opengl)
+	if (agView->opengl) {
+		AG_LockGL();
 		SDL_GL_SwapBuffers();
+		AG_UnlockGL();
+	}
 #endif
 }
 
@@ -310,6 +317,9 @@ AG_ViewDestroy(void)
 	SDL_FreeSurface(agView->stmpl);
 	Free(agView->dirty, M_VIEW);
 	AG_MutexDestroy(&agView->lock);
+#ifdef HAVE_OPENGL
+	AG_MutexDestroy(&agView->lock_gl);
+#endif
 	Free(agView, M_VIEW);
 	agView = NULL;
 }
@@ -336,13 +346,15 @@ AG_ViewAttach(void *child)
 	AG_Window *win = child;
 	
 	AG_MutexLock(&agView->lock);
-	agView->focus_win = NULL;
 	TAILQ_INSERT_TAIL(&agView->windows, win, windows);
+	if (win->flags & AG_WINDOW_FOCUSONATTACH) {
+		AG_WindowFocus(win);
+	}
 	AG_MutexUnlock(&agView->lock);
 }
 
 static void
-detach_window(AG_Window *win)
+DetachWindow(AG_Window *win)
 {
 	AG_Window *subwin, *nsubwin;
 	AG_Window *owin;
@@ -351,7 +363,7 @@ detach_window(AG_Window *win)
 	     subwin != TAILQ_END(&win->subwins);
 	     subwin = nsubwin) {
 		nsubwin = TAILQ_NEXT(subwin, swins);
-		detach_window(subwin);
+		DetachWindow(subwin);
 	}
 	TAILQ_INIT(&win->subwins);
 	
@@ -375,7 +387,7 @@ void
 AG_ViewDetach(AG_Window *win)
 {
 	AG_MutexLock(&agView->lock);
-	detach_window(win);
+	DetachWindow(win);
 	AG_MutexUnlock(&agView->lock);
 }
 
@@ -619,6 +631,10 @@ AG_SetRefreshRate(int fps)
 
 #ifdef HAVE_OPENGL
 
+/*
+ * Update the contents of an existing OpenGL texture from a given
+ * surface.
+ */
 void
 AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 {
@@ -653,14 +669,20 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
+	AG_LockGL();
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	AG_UnlockGL();
 
 	SDL_FreeSurface(texsu);
 }
 
+/*
+ * Generate an OpenGL texture from a SDL surface.
+ * Returns the texture handle and 4 coordinates into texcoord.
+ */
 Uint
 AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 {
@@ -704,6 +726,7 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 	
 	/* Create the OpenGL texture. */
+	AG_LockGL();
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -711,11 +734,13 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	AG_UnlockGL();
 
 	SDL_FreeSurface(texsu);
 	return (texture);
 }
 
+/* Capture the contents of the OpenGL display into a surface */
 SDL_Surface *
 AG_CaptureGLView(void)
 {
@@ -723,8 +748,12 @@ AG_CaptureGLView(void)
 	SDL_Surface *su;
 
 	pixels = Malloc(agView->w*agView->h*3, M_RG);
+
+	AG_LockGL();
 	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
 	    pixels);
+	AG_UnlockGL();
+
 	AG_FlipSurface(pixels, agView->h, agView->w*3);
 	su = SDL_CreateRGBSurfaceFrom(pixels, agView->w, agView->h, 24,
 	    agView->w*3,
