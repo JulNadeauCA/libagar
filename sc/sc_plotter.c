@@ -1,8 +1,5 @@
-/*	$Csoft: matview.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +23,22 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "sc_plotter.h"
+#include "sc_gui.h"
 
-#include <agar/gui/gui.h>
-#include <agar/gui/primitive.h>
+#include <gui/primitive.h>
+#include <gui/table.h>
+#include <gui/notebook.h>
+#include <gui/separator.h>
+#include <gui/mfspinbutton.h>
+#include <gui/radio.h>
+#include <gui/hsvpal.h>
 
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
-
-#include "sc_gui.h"
 
 static AG_WidgetOps scPlotterOps = {
 	{

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/gui/spinbutton.h>
-#include <agar/gui/fspinbutton.h>
-#include <agar/gui/label.h>
-#include <agar/gui/box.h>
+#include <core/core.h>
 
-#include "sc_pvt.h"
+#include "sc.h"
 #include "sc_gui.h"
+
+#include <gui/label.h>
+#include <gui/box.h>
 
 AG_FSpinbutton *
 SC_SpinReal(void *parent, const char *label, SC_Real *pv, SC_Real incr)

@@ -1,9 +1,8 @@
-/*	$Csoft: gaussj.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include "sc_pvt.h"
+#include "sc.h"
 
 #undef SWAP
 #define SWAP(a,b) { tmp=(a); (a)=(b); (b)=tmp; }

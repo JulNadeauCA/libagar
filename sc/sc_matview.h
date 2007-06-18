@@ -1,13 +1,17 @@
-/*	$Csoft: matview.h,v 1.2 2005/09/11 07:05:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SC_MATVIEW_H_
 #define _AGAR_SC_MATVIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <sc/sc.h>
+#include <gui/widget.h>
+#include <gui/scrollbar.h>
+#else
 #include <agar/sc/sc.h>
-
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
+#endif
 
 #include "begin_code.h"
 

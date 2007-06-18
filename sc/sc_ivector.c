@@ -1,8 +1,7 @@
 /*	$Csoft: veci.c,v 1.3 2005/09/10 05:06:06 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include "sc_pvt.h"
+#include "sc.h"
 
 #define assert_same_length(A, B) \
 	if ((A)->n != (B)->n) \

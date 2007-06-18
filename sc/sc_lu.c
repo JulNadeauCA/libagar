@@ -1,9 +1,8 @@
-/*	$Csoft: lu.c,v 1.4 2005/09/15 02:22:59 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include "sc_pvt.h"
+#include "sc.h"
 
 /*
  * Decompose a square matrix A into a product of the upper-triangular

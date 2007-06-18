@@ -1,8 +1,5 @@
-/*	$Csoft: mat.c,v 1.7 2005/09/14 01:58:31 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include "sc_pvt.h"
+#include "sc.h"
 
 #define assert_same_dimensions(A, B) \
 	if ((A)->m != (B)->m || (A)->n != (B)->n) \

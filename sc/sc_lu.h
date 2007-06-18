@@ -1,4 +1,3 @@
-/*	$Csoft: lu.h,v 1.2 2005/09/10 05:06:06 vedge Exp $	*/
 /*	Public domain	*/
 
 __BEGIN_DECLS

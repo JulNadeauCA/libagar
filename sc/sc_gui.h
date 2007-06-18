@@ -1,9 +1,13 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 #ifndef _SC_GUI_H_
 #define _SC_GUI_H_
+
+#ifndef _AGAR_INTERNAL
 #include <agar/gui/gui.h>
+#else
+#include <gui/fspinbutton.h>
+#endif
 
 #if SC_PRECISION == SC_LONG_DOUBLE
 # define SC_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_LONG_DOUBLE,\

@@ -1,8 +1,5 @@
-/*	$Csoft: matview.c,v 1.5 2005/10/02 09:39:39 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
 #include "sc_matview.h"
 
-#include <agar/gui/window.h>
-#include <agar/gui/primitive.h>
-#include <agar/gui/label.h>
-
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
 
 static AG_WidgetOps agMatviewOps = {
 	{
