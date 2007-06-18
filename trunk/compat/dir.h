@@ -1,4 +1,3 @@
-/*	$Csoft: dir.h,v 1.3 2004/04/24 04:33:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_COMPAT_DIR_H_

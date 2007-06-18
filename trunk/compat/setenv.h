@@ -1,10 +1,12 @@
-/*	$Csoft: setenv.h,v 1.4 2003/03/14 04:16:12 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_setenv.h>
+#else
 #include <agar/config/have_setenv.h>
+#endif
 
 #ifndef HAVE_SETENV
 int	setenv(const char *, const char *, int);
 void	unsetenv(const char *);
 #endif
-

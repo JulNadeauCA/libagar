@@ -1,7 +1,10 @@
-/*	$Csoft: asprintf.h,v 1.6 2003/06/18 00:46:59 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_asprintf.h>
+#else
 #include <agar/config/have_asprintf.h>
+#endif
 
 #ifdef HAVE_ASPRINTF
 # ifdef __linux__

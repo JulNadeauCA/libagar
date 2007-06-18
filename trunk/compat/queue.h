@@ -1,7 +1,5 @@
-/*	$Csoft: queue.h,v 1.3 2003/06/14 00:24:08 vedge Exp $	*/
 /*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
 /*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
-
 /*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.

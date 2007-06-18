@@ -1,4 +1,3 @@
-/*	$Csoft: dir.h,v 1.3 2004/04/24 04:33:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_COMPAT_FILE_H_
@@ -40,4 +39,3 @@ __END_DECLS
 
 #include "close_code.h"
 #endif /* _AGAR_COMPAT_FILE_H_ */
-

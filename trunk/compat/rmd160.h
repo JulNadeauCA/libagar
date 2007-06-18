@@ -1,6 +1,4 @@
-/*	$Csoft: rmd160.h,v 1.2 2005/05/01 00:11:12 vedge Exp $	*/
 /*	$OpenBSD: rmd160.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
-
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -25,11 +23,21 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_rmd160.h>
+#include <config/_mk_have_sys_types_h.h>
+#include <config/have_bounded_attribute.h>
+#else
 #include <agar/config/have_rmd160.h>
+#include <agar/config/_mk_have_sys_types_h.h>
+#include <agar/config/have_bounded_attribute.h>
+#endif
 
 #ifdef HAVE_RMD160
 
+#ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 #include <rmd160.h>
 
 #else /* !HAVE_RMD160 */
@@ -47,6 +55,14 @@ typedef struct RMD160Context {
 	Uint64 count;				/* number of bits, mod 2^64 */
 	Uint8 buffer[RMD160_BLOCK_LENGTH];	/* input buffer */
 } RMD160_CTX;
+
+#ifndef BOUNDED_ATTRIBUTE
+# ifdef HAVE_BOUNDED_ATTRIBUTE
+#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+# else
+#  define BOUNDED_ATTRIBUTE(t, a, b)
+# endif
+#endif
 
 __BEGIN_DECLS
 void	 RMD160Init(RMD160_CTX *);

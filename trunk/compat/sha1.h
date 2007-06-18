@@ -1,17 +1,25 @@
-/*	$Csoft: sha1.h,v 1.2 2005/05/01 00:11:12 vedge Exp $	*/
 /*	$OpenBSD: sha1.h,v 1.23 2004/06/22 01:57:30 jfb Exp $	*/
-
 /*
  * SHA-1 in C
  * By Steve Reid <steve@edmweb.com>
  * 100% Public Domain
  */
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_sha1.h>
+#include <config/_mk_have_sys_types_h.h>
+#include <config/have_bounded_attribute.h>
+#else
 #include <agar/config/have_sha1.h>
+#include <agar/config/_mk_have_sys_types_h.h>
+#include <agar/config/have_bounded_attribute.h>
+#endif
 
 #ifdef HAVE_SHA1
 
+#ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 #include <sha1.h>
 
 #else /* !HAVE_SHA1 */
@@ -29,6 +37,14 @@ typedef struct {
     Uint64 count;
     Uint8 buffer[SHA1_BLOCK_LENGTH];
 } SHA1_CTX;
+
+#ifndef BOUNDED_ATTRIBUTE
+# ifdef HAVE_BOUNDED_ATTRIBUTE
+#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+# else
+#  define BOUNDED_ATTRIBUTE(t, a, b)
+# endif
+#endif
 
 __BEGIN_DECLS
 void SHA1Init(SHA1_CTX *);

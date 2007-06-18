@@ -1,7 +1,10 @@
-/*	$Csoft: math.h,v 1.5 2005/05/19 03:47:20 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_math.h>
+#else
 #include <agar/config/have_math.h>
+#endif
 
 #ifndef _COMPAT_MATH_H
 #define _COMPAT_MATH_H
