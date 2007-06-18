@@ -181,6 +181,42 @@ typedef struct ag_widget_ops {
 	void (*scale)(void *p, int w, int h);   /* Size request routine */
 } AG_WidgetOps;
 .Ed
+.Pp
+The
+.Va draw
+operation (if not NULL) is responsible for rendering the widget
+(see
+.Dq RENDERING AND PRIMITIVES
+below for functions useful in rendering).
+If the current display is in OpenGL mode, the
+.Va draw
+function is able to perform OpenGL calls, although OpenGL code is rarely
+seen in typical widgets, since they generally use the functions described
+in the 
+.Dq RENDERING AND PRIMITIVES
+section, which all provide their own OpenGL/SDL abstraction.
+OpenGL applications
+tend to use
+.Xr AG_GLView 3
+and
+.Xr SG_View 3
+where an OpenGL context is needed.
+.Pp
+It is important to note that most GLs are not thread-safe, so OpenGL
+calls in Agar are protected by a mutex (via
+.Xr AG_LockGL 3
+and
+.Xr AG_UnlockGL 3 ) .
+It is not necessary, however, for widget
+.Va draw
+operations to acquire this mutex since it is done by the event loop.
+.Pp
+The
+.Va scale
+operation requests that the widget sizes (or resizes) itself to the
+given dimensions (see
+.Dq GEOMETRY MANAGEMENT
+below for more details).
 .Sh GEOMETRY MANAGEMENT
 The
 .Va scale
@@ -392,14 +428,14 @@ and
 .Fa rs
 set to NULL).
 .Sh RENDERING AND PRIMITIVES
-The
-.Va draw
-operation, if not NULL, is expected to render the given widget and its
-children to the video display.
 .Pp
 The
 .Fn agPrim.*
 functions implement 2D primitives designed specifically for widgets.
+It important to note that these functions are not safe to invoke anywhere
+outside of widget
+.Va draw
+functions.
 .Pp
 The coordinates for the
 .Fn agPrim.*
@@ -476,6 +512,9 @@ In SDL mode, the temporary rectangle is set by
 In OpenGL mode,
 .Xr glClipPlane 3
 is used.
+It is not safe to call these two functions anywhere outside of a widget
+.Va draw
+operation.
 .Pp
 The
 .Fn AG_WidgetPushCursor
