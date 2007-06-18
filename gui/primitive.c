@@ -1,5 +1,3 @@
-/*	$Csoft: primitive.c,v 1.77 2005/10/02 09:36:38 vedge Exp $	    */
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,13 +27,9 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/label.h>
-#include <gui/tlist.h>
-#include <gui/primitive.h>
-
-#include <string.h>
+#include "widget.h"
+#include "window.h"
+#include "primitive.h"
 
 AG_PrimitiveOps agPrim;
 
@@ -957,6 +951,11 @@ minus(void *p, int x, int y, int w, int h, Uint8 c[4],
 	agPrim.line_blended(wid, x, ycen, x+w, ycen, c, func);
 }
 
+/*
+ * OpenGL versions of the primitives. Note that we do not bother using
+ * LockGL(), so the primitives are not safe to invoke anywhere outside
+ * of widget draw functions.
+ */
 #ifdef HAVE_OPENGL
 static void
 line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)

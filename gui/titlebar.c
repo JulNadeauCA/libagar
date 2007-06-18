@@ -1,5 +1,3 @@
-/*	$Csoft: titlebar.c,v 1.28 2005/10/04 17:34:56 vedge Exp $	*/
-
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,12 +27,9 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-
-#include <string.h>
-
 #include "titlebar.h"
+
+#include "primitive.h"
 
 const AG_WidgetOps agTitlebarOps = {
 	{

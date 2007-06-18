@@ -1,5 +1,3 @@
-/*	$Csoft: checkbox.c,v 1.55 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,9 +29,8 @@
 
 #include "checkbox.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "window.h"
+#include "primitive.h"
 
 #include <stdarg.h>
 #include <string.h>

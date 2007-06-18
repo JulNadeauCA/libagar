@@ -1,5 +1,3 @@
-/*	$Csoft: tableview.c,v 1.41 2005/10/02 09:39:39 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004 John Blitch
  * All rights reserved.
@@ -29,16 +27,13 @@
 #include <core/view.h>
 #include <core/config.h>
 
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/scrollbar.h>
-/* #include <gui/textbox.h> */
+#include "tableview.h"
+
+#include "window.h"
+#include "primitive.h"
 
 #include <string.h>
 #include <stdarg.h>
-
-#include "tableview.h"
 
 static AG_WidgetOps agTableviewOps = {
 	{

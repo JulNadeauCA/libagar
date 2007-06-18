@@ -1,5 +1,3 @@
-/*	$Csoft: scrollbar.c,v 1.52 2005/10/02 09:39:19 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,10 +27,10 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <gui/scrollbar.h>
+#include "scrollbar.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "window.h"
+#include "primitive.h"
 
 const AG_WidgetOps agScrollbarOps = {
 	{

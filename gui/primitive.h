@@ -1,4 +1,3 @@
-/*	$Csoft: primitive.h,v 1.31 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_

@@ -1,5 +1,3 @@
-/*	$Csoft: colors.c,v 1.26 2005/10/02 16:10:36 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>

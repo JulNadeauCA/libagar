@@ -1,4 +1,3 @@
-/*	$Csoft: unicode.h,v 1.9 2005/05/08 09:21:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_

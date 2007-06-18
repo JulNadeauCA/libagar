@@ -1,14 +1,19 @@
-/*	$Csoft: widget.h,v 1.105 2005/10/06 10:38:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_opengl.h>
+#include <gui/style.h>
+#include <gui/colors.h>
+#include <core/view.h>
+#else
 #include <agar/config/have_opengl.h>
-
 #include <agar/gui/style.h>
 #include <agar/gui/colors.h>
 #include <agar/core/view.h>
+#endif
 
 #include "begin_code.h"
 

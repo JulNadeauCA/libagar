@@ -1,11 +1,15 @@
-/*	$Csoft: objsel.h,v 1.1 2005/08/04 06:35:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_OBJSEL_H_
 #define _AGAR_WIDGET_OBJSEL_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/combo.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/combo.h>
+#endif
 
 #include "begin_code.h"
 

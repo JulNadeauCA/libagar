@@ -1,10 +1,13 @@
-/*	$Csoft: button.h,v 1.33 2005/09/27 14:06:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
 #define _AGAR_WIDGET_BUTTON_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

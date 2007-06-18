@@ -1,10 +1,13 @@
-/*	$Csoft: radio.h,v 1.13 2005/05/13 09:21:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
 #define _AGAR_WIDGET_RADIO_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

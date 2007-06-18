@@ -1,5 +1,3 @@
-/*	$Csoft: ucssep.c,v 1.2 2003/08/31 11:58:09 vedge Exp $	*/
-
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -32,7 +30,6 @@
 #include <core/core.h>
 #include "unicode.h"
 
-#include <sys/types.h>
 #include <string.h>
 
 /*

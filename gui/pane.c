@@ -1,5 +1,3 @@
-/*	$Csoft: hpane.c,v 1.10 2005/10/07 01:53:12 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,9 +29,9 @@
 
 #include "pane.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/cursors.h>
+#include "window.h"
+#include "primitive.h"
+#include "cursors.h"
 
 static AG_WidgetOps agPaneOps = {
 	{

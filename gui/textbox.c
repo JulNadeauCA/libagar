@@ -1,5 +1,3 @@
-/*	$Csoft: textbox.c,v 1.104 2005/10/01 14:15:39 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -40,16 +38,14 @@
 #include FT_OUTLINE_H
 #endif
 
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/textbox.h>
-#include <gui/keycodes.h>
-#include <gui/primitive.h>
-#include <gui/unicode.h>
+#include "textbox.h"
+
+#include "keycodes.h"
+#include "primitive.h"
+#include "unicode.h"
 
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <ctype.h>
 
 const AG_WidgetOps agTextboxOps = {

@@ -1,5 +1,3 @@
-/*	$Csoft: mspinbutton.c,v 1.11 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2003-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,13 +29,10 @@
 
 #include "mspinbutton.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "window.h"
 
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 #include <limits.h>
 
 static AG_WidgetOps agMSpinbuttonOps = {

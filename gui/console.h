@@ -1,11 +1,15 @@
-/*	$Csoft: button.h,v 1.33 2005/09/27 14:06:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CONSOLE_H_
 #define _AGAR_WIDGET_CONSOLE_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/scrollbar.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
+#endif
 
 #include "begin_code.h"
 

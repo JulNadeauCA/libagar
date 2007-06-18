@@ -1,5 +1,3 @@
-/*	$Csoft: separator.c,v 1.5 2005/09/27 00:25:23 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,13 +27,10 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <stdarg.h>
-
 #include "separator.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "window.h"
+#include "primitive.h"
 
 const AG_WidgetOps agSeparatorOps = {
 	{

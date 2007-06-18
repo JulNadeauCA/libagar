@@ -1,5 +1,3 @@
-/*	$Csoft: box.c,v 1.14 2005/09/27 00:25:22 vedge Exp $	*/
-
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,8 +29,8 @@
 
 #include "box.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "window.h"
+#include "primitive.h"
 
 static AG_WidgetOps agBoxOps = {
 	{

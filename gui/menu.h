@@ -1,12 +1,17 @@
-/*	$Csoft: menu.h,v 1.10 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
 #define _AGAR_WIDGET_MENU_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/toolbar.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/window.h>
 #include <agar/gui/toolbar.h>
+#endif
 
 #include "begin_code.h"
 

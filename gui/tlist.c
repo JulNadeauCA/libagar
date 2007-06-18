@@ -1,5 +1,3 @@
-/*	$Csoft: tlist.c,v 1.137 2005/10/02 09:39:39 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005, 2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,8 +29,7 @@
 
 #include "tlist.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "primitive.h"
 
 #include <string.h>
 #include <stdarg.h>

@@ -1,5 +1,3 @@
-/*	$Csoft: objsel.c,v 1.4 2005/09/27 00:25:23 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,13 +29,12 @@
 
 #include "objsel.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "window.h"
+#include "primitive.h"
+#include "label.h"
 
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 
 static AG_WidgetOps agObjectSelectorOps = {
 	{

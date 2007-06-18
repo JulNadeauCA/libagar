@@ -1,10 +1,13 @@
-/*	$Csoft: label.h,v 1.26 2005/05/26 06:43:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
 #define _AGAR_WIDGET_LABEL_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

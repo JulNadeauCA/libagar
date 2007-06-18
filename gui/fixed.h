@@ -1,10 +1,13 @@
-/*	$Csoft: fixed.h,v 1.1 2005/09/28 15:46:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FIXED_H_
 #define _AGAR_WIDGET_FIXED_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

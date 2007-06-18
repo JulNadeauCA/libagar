@@ -1,4 +1,3 @@
-/*	$Csoft: keycodes.h,v 1.14 2005/02/07 13:17:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_KEYCODES_H_

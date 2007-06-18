@@ -1,5 +1,3 @@
-/*	$Csoft: keycodes.c,v 1.42 2005/09/27 00:25:22 vedge Exp $	    */
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,14 +29,13 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "widget.h"
+#include "textbox.h"
+#include "keycodes.h"
+#include "unicode.h"
+
 #include <ctype.h>
 #include <string.h>
-
-#include <gui/widget.h>
-#include <gui/window.h>
-#include <gui/textbox.h>
-#include <gui/keycodes.h>
-#include <gui/unicode.h>
 
 #ifdef UTF8
 static struct {

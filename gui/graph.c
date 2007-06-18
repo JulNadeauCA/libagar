@@ -1,5 +1,3 @@
-/*	$Csoft: graph.c,v 1.56 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,12 +27,10 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-
-#include <string.h>
-
 #include "graph.h"
+
+#include "window.h"
+#include "primitive.h"
 
 const AG_WidgetOps agGraphOps = {
 	{

@@ -1,5 +1,3 @@
-/*	$Csoft: label.c,v 1.87 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -33,7 +31,6 @@
 
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 
 const AG_WidgetOps agLabelOps = {
 	{

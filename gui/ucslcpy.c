@@ -1,5 +1,3 @@
-/*	$Csoft: ucslcpy.c,v 1.3 2003/08/31 11:58:09 vedge Exp $	*/
-
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  *
@@ -19,7 +17,6 @@
 #include <core/core.h>
 #include "unicode.h"
 
-#include <sys/types.h>
 #include <string.h>
 
 /*

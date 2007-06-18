@@ -1,5 +1,3 @@
-/*	$Csoft: button.c,v 1.95 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,14 +27,12 @@
 #include <core/core.h>
 #include <core/view.h>
 
+#include "console.h"
+
+#include "primitive.h"
+
 #include <stdarg.h>
 #include <string.h>
-
-#include "button.h"
-
-#include <gui/primitive.h>
-#include <gui/text.h>
-#include <gui/console.h>
 
 const AG_WidgetOps agConsoleOps = {
 	{

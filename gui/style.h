@@ -1,4 +1,3 @@
-/*	$Csoft: style.h,v 1.2 2005/03/09 06:39:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_STYLE_H_

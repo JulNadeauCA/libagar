@@ -1,5 +1,3 @@
-/*	$Csoft: window.c,v 1.275 2005/10/07 07:16:33 vedge Exp $	*/
-
 /*
  * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -30,14 +28,13 @@
 #include <core/config.h>
 #include <core/view.h>
 
-#include <gui/window.h>
-#include <gui/widget.h>
-#include <gui/primitive.h>
-#include <gui/cursors.h>
+#include "window.h"
+
+#include "primitive.h"
+#include "cursors.h"
 
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 
 const AG_WidgetOps agWindowOps = {
 	{
@@ -80,8 +77,9 @@ AG_WindowNew(Uint flags)
 {
 	AG_Window *win;
 
-	AG_MutexLock(&agView->lock);
 	win = Malloc(sizeof(AG_Window), M_OBJECT);
+
+	AG_MutexLock(&agView->lock);			/* XXX needed?? */
 	AG_WindowInit(win, NULL, flags);
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 	AG_ViewAttach(win);

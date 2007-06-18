@@ -1,5 +1,3 @@
-/*	$Csoft: vpane.c,v 1.6 2005/10/07 01:53:12 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,10 +29,9 @@
 
 #include "mpane.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/cursors.h>
-#include <gui/pane.h>
+#include "window.h"
+#include "cursors.h"
+#include "pane.h"
 
 AG_MPane *
 AG_MPaneNew(void *parent, enum ag_mpane_layout lay, Uint flags)

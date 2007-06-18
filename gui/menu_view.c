@@ -1,5 +1,3 @@
-/*	$Csoft: menu_view.c,v 1.27 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,8 +29,7 @@
 
 #include "menu.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "primitive.h"
 
 static AG_WidgetOps agMenuViewOps = {
 	{

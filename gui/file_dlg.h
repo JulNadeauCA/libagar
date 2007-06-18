@@ -1,9 +1,18 @@
-/*	$Csoft: file_dlg.h,v 1.5 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
 #define _AGAR_WIDGET_FILE_DLG_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#include <gui/window.h>
+#include <gui/tlist.h>
+#include <gui/combo.h>
+#include <gui/hpane.h>
+#include <gui/label.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
@@ -12,6 +21,7 @@
 #include <agar/gui/combo.h>
 #include <agar/gui/hpane.h>
 #include <agar/gui/label.h>
+#endif
 
 #include "begin_code.h"
 

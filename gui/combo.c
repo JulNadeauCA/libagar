@@ -1,5 +1,3 @@
-/*	$Csoft: combo.c,v 1.29 2005/10/04 17:34:56 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,13 +29,7 @@
 
 #include "combo.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
-
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
+#include "primitive.h"
 
 static AG_WidgetOps agComboOps = {
 	{
