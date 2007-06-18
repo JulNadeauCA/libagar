@@ -1,4 +1,3 @@
-/*	$Csoft: tileset.h,v 1.13 2005/09/19 01:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -12,8 +11,18 @@ struct rg_feature;
 struct rg_anim;
 struct rg_texture;
 
+#ifdef _AGAR_INTERNAL
+#include <rg/transform.h>
+#include <vg/vg.h>
+#include <rg/tile.h>
+#include <rg/feature.h>
+#include <rg/pixmap.h>
+#include <rg/sketch.h>
+#include <rg/animation.h>
+#include <rg/texture.h>
+#include <rg/prim.h>
+#else
 #include <agar/rg/transform.h>
-
 #include <agar/vg/vg.h>
 #include <agar/rg/tile.h>
 #include <agar/rg/feature.h>
@@ -22,6 +31,7 @@ struct rg_texture;
 #include <agar/rg/animation.h>
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
+#endif
 
 #include "begin_code.h"
 

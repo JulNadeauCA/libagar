@@ -1,4 +1,3 @@
-/*	$Csoft: tile.h,v 1.26 2005/08/22 02:10:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILE_H_

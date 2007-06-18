@@ -1,4 +1,3 @@
-/*	$Csoft: animation.h,v 1.1 2005/03/24 04:02:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_ANIMATION_H_

@@ -1,4 +1,3 @@
-/*	$Csoft: gui.h,v 1.6 2005/10/01 09:51:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PUBLIC_H_

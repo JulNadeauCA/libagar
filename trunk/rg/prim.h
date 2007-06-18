@@ -1,4 +1,3 @@
-/*	$Csoft: prim.h,v 1.6 2005/05/30 01:29:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PRIM_H_

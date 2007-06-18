@@ -1,4 +1,3 @@
-/*	$Csoft: pixmap.h,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_

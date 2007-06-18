@@ -1,8 +1,5 @@
-/*	$Csoft: tileview.c,v 1.56 2005/10/07 07:16:28 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +33,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-const AG_WidgetOps tileview_ops = {
+const AG_WidgetOps rgTileviewOps = {
 	{
 		"AG_Widget:RG_Tileview",
 		sizeof(RG_Tileview),
@@ -101,7 +98,7 @@ move_cursor(RG_Tileview *tv, int x, int y)
 }
 
 static __inline__ int
-cursor_overlap(struct rg_tileview_handle *th, int sx, int sy)
+cursor_overlap(RG_TileviewHandle *th, int sx, int sy)
 {
 	return (sx >= th->x - 2 && sx <= th->x + 2 &&
 	        sy >= th->y - 2 && sy <= th->y + 2);
@@ -311,8 +308,7 @@ mousebuttondown(AG_Event *event)
 	    (tv->flags & RG_TILEVIEW_HIDE_CONTROLS) == 0) {
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
-				struct rg_tileview_handle *th =
-				    &ctrl->handles[i];
+				RG_TileviewHandle *th = &ctrl->handles[i];
 		
 				if (cursor_overlap(th, sx, sy)) {
 					th->enable = 1;
@@ -428,8 +424,7 @@ mousebuttonup(AG_Event *event)
 	case SDL_BUTTON_LEFT:
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
-				struct rg_tileview_handle *th =
-				    &ctrl->handles[i];
+				RG_TileviewHandle *th = &ctrl->handles[i];
 
 				if (th->enable) {
 					th->enable = 0;
@@ -573,7 +568,7 @@ static void
 move_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
     int x2, int y2)
 {
-	struct rg_tileview_handle *th = &ctrl->handles[nhandle];
+	RG_TileviewHandle *th = &ctrl->handles[nhandle];
 	int dx = x2 - tv->xorig;
 	int dy = y2 - tv->yorig;
 	int xoffs = 0;
@@ -699,7 +694,7 @@ mousemotion(AG_Event *event)
 
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 		for (i = 0; i < ctrl->nhandles; i++) {
-			struct rg_tileview_handle *th = &ctrl->handles[i];
+			RG_TileviewHandle *th = &ctrl->handles[i];
 
 			if (th->enable) {
 				move_handle(tv, ctrl, i, sx, sy);
@@ -807,7 +802,7 @@ RG_TileviewSetTile(RG_Tileview *tv, RG_Tile *t)
 void
 RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
 {
-	AG_WidgetInit(tv, "tileview", &tileview_ops,
+	AG_WidgetInit(tv, "tileview", &rgTileviewOps,
 	    AG_WIDGET_HFILL|AG_WIDGET_VFILL|AG_WIDGET_FOCUSABLE|
 	    AG_WIDGET_CLIPPING);
 	tv->ts = ts;
@@ -975,10 +970,10 @@ out:
 		break;
 	}
 	ctrl->handles = (ctrl->nhandles > 0) ?
-	    Malloc(sizeof(struct rg_tileview_handle)*ctrl->nhandles, M_WIDGET) :
+	    Malloc(sizeof(RG_TileviewHandle)*ctrl->nhandles, M_WIDGET) :
 	    NULL;
 	for (i = 0; i < ctrl->nhandles; i++) {
-		struct rg_tileview_handle *th = &ctrl->handles[i];
+		RG_TileviewHandle *th = &ctrl->handles[i];
 
 		th->x = -1;
 		th->y = -1;
@@ -1093,6 +1088,7 @@ RG_TileviewScale(void *p, int rw, int rh)
 	}
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 {
@@ -1147,12 +1143,12 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 		glVertex2i(x2, y2);
 		glVertex2i(x1, y2);
 		glEnd();
-#endif
+#endif /* HAVE_OPENGL */
 	}
 }
 
 static void
-draw_status_text(RG_Tileview *tv, const char *label)
+DrawStatusText(RG_Tileview *tv, const char *label)
 {
 	SDL_Surface *su;
 
@@ -1206,6 +1202,7 @@ RG_TileviewAlpha(RG_Tileview *tv, Uint8 a)
 	tv->c.pc = SDL_MapRGBA(agVideoFmt, tv->c.r, tv->c.g, tv->c.b, a);
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 {
@@ -1249,6 +1246,7 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 	}
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewCircle2o(RG_Tileview *tv, int x0, int y0, int r)
 {
@@ -1282,6 +1280,7 @@ RG_TileviewCircle2o(RG_Tileview *tv, int x0, int y0, int r)
 	RG_TileviewPixel2i(tv, x0+r, y0);
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewVLine(RG_Tileview *tv, int x, int y1, int y2)
 {
@@ -1293,6 +1292,7 @@ RG_TileviewVLine(RG_Tileview *tv, int x, int y1, int y2)
 		RG_TileviewPixel2i(tv, x, y);
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewHLine(RG_Tileview *tv, int x1, int x2, int y)
 {
@@ -1304,6 +1304,7 @@ RG_TileviewHLine(RG_Tileview *tv, int x1, int x2, int y)
 		RG_TileviewPixel2i(tv, x, y);
 }
 
+/* Must be called from widget draw context. */
 void
 RG_TileviewRect2o(RG_Tileview *tv, int x, int y, int w, int h)
 {
@@ -1413,9 +1414,9 @@ RG_TileviewDouble(RG_TileviewCtrl *ctrl, int nval)
 	}
 }
 
+/* Must be called from widget draw context. */
 static void
-draw_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl,
-    struct rg_tileview_handle *th)
+DrawHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, RG_TileviewHandle *th)
 {
 	int x = th->x;
 	int y = th->y;
@@ -1458,8 +1459,9 @@ draw_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl,
 	RG_TileviewPixel2i(tv, x+2, y+1);
 }
 
+/* Must be called from widget draw context. */
 static void
-draw_control(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
+DrawControl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 {
 	int i;
 
@@ -1535,7 +1537,7 @@ draw_control(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 	}
 
 	for (i = 0; i < ctrl->nhandles; i++)
-		draw_handle(tv, ctrl, &ctrl->handles[i]);
+		DrawHandle(tv, ctrl, &ctrl->handles[i]);
 }
 
 /* Plot a scaled pixel on the tileview's cache surface. */
@@ -1582,7 +1584,6 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g,
 	AG_WidgetUpdateSurface(tv, 0);
 }
 
-/* XXX Sync with game/map/map.c */
 static void
 RG_AttrColor(Uint flag, int state, Uint8 *c)
 {
@@ -1778,7 +1779,7 @@ RG_TileviewDraw(void *p)
 			
 			strlcpy(status, _("Editing node attributes"),
 			    sizeof(status));
-			draw_status_text(tv, status);
+			DrawStatusText(tv, status);
 		}
 		break;
 	case RG_TILEVIEW_LAYERS_EDIT:
@@ -1819,18 +1820,18 @@ RG_TileviewDraw(void *p)
 			
 			strlcpy(status, _("Editing node layers"),
 			    sizeof(status));
-			draw_status_text(tv, status);
+			DrawStatusText(tv, status);
 		}
 		break;
 	case RG_TILEVIEW_FEATURE_EDIT:
 		strlcpy(status, _("Editing feature: "), sizeof(status));
 		strlcat(status, tv->tv_feature.ft->name, sizeof(status));
-		draw_status_text(tv, status);
+		DrawStatusText(tv, status);
 		break;
 	case RG_TILEVIEW_SKETCH_EDIT:
 		strlcpy(status, _("Editing sketch: "), sizeof(status));
 		strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
-		draw_status_text(tv, status);
+		DrawStatusText(tv, status);
 		break;
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		{
@@ -1840,7 +1841,7 @@ RG_TileviewDraw(void *p)
 			strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
 			strlcat(status, pixmap_state_names[tv->tv_pixmap.state],
 			    sizeof(status));
-			draw_status_text(tv, status);
+			DrawStatusText(tv, status);
 		}
 		break;
 	default:
@@ -1848,7 +1849,7 @@ RG_TileviewDraw(void *p)
 	}
 	
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
-		draw_control(tv, ctrl);
+		DrawControl(tv, ctrl);
 	}
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
@@ -1882,7 +1883,7 @@ RG_TileviewDestroy(void *p)
 }
 
 static void
-close_tool_win(AG_Event *event)
+CloseToolWindow(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	
@@ -1914,7 +1915,8 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 		AG_WindowSetPosition(tvt->win, AG_WINDOW_LOWER_LEFT, 0);
 		AG_WindowAttach(pwin, tvt->win);
 		AG_WindowShow(tvt->win);
-		AG_SetEvent(tvt->win, "window-close", close_tool_win, "%p", tv);
+		AG_SetEvent(tvt->win, "window-close", CloseToolWindow,
+		    "%p", tv);
 	}
 	
 	tv->cur_tool = tvt;

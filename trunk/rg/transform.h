@@ -1,4 +1,3 @@
-/*	$Csoft: transform.h,v 1.2 2005/04/16 05:58:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TRANSFORM_H_

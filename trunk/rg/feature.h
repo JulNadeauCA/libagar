@@ -1,4 +1,3 @@
-/*	$Csoft: feature.h,v 1.9 2005/03/05 12:13:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FEATURE_H_
