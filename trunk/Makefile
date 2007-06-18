@@ -21,11 +21,8 @@ clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
 install: install-subdir install-includes
 deinstall: deinstall-subdir deinstall-includes
-depend: prereq depend-subdir
+depend: depend-subdir
 regress: regress-subdir
-
-prereq:
-	@if [ ! -e "agar" ]; then ln -s . agar; fi
 
 configure:
 	cat configure.in | manuconf > configure
@@ -123,7 +120,7 @@ deinstall-includes:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: prereq configure cleandir-config package release fastclean
+.PHONY: configure cleandir-config package release fastclean
 .PHONY: install-includes deinstall-includes
 
 include ${TOP}/mk/csoft.common.mk
