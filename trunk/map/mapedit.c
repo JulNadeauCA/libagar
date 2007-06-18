@@ -1,7 +1,5 @@
-/*	$Csoft: mapedit.c,v 1.6 2005/09/27 00:25:18 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,15 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/objmgr.h>
+#include <core/core.h>
+#include <core/objmgr.h>
 
-#include <agar/gui/widget.h>
-#include <agar/gui/window.h>
-#include <agar/gui/box.h>
-#include <agar/gui/checkbox.h>
-#include <agar/gui/spinbutton.h>
-#include <agar/gui/mspinbutton.h>
+#include <gui/widget.h>
+#include <gui/window.h>
+#include <gui/box.h>
+#include <gui/checkbox.h>
+#include <gui/spinbutton.h>
+#include <gui/mspinbutton.h>
 
 #include "map.h"
 #include "mapedit.h"

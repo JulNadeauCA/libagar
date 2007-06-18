@@ -1,8 +1,5 @@
-/*	$Csoft: insert.c,v 1.13 2005/08/29 05:27:28 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,17 +23,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/rg/tileset.h>
+#include <core/core.h>
+#include <rg/tileset.h>
 
-#include <agar/gui/radio.h>
-#include <agar/gui/checkbox.h>
-#include <agar/gui/spinbutton.h>
-#include <agar/gui/label.h>
-#include <agar/gui/tlist.h>
-#include <agar/gui/primitive.h>
-#include <agar/gui/notebook.h>
-#include <agar/gui/combo.h>
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/spinbutton.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
+#include <gui/primitive.h>
+#include <gui/notebook.h>
+#include <gui/combo.h>
 
 #include "map.h"
 #include "mapedit.h"

@@ -1,8 +1,5 @@
-/*	$Csoft: refsel.c,v 1.7 2005/08/27 04:34:06 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
 #include "map.h"
 #include "mapedit.h"
 #include "refsel.h"
 
 void
-refsel_update(MAP_View *mv, int xRel, int yRel)
+MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
 {
 	MAP *m = mv->map;
 	MAP_Item *r;

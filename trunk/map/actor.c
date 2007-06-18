@@ -1,8 +1,5 @@
-/*	$Csoft: actor.c,v 1.1 2005/09/20 13:46:29 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +23,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include <agar/map/map.h>
+#include <map/map.h>
 
-#include <agar/gui/window.h>
-#include <agar/gui/box.h>
-
-#include <errno.h>
-#include <stdarg.h>
-#include <string.h>
+#include <gui/window.h>
+#include <gui/label.h>
 
 #include "actor.h"
 

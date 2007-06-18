@@ -1,8 +1,5 @@
-/*	$Csoft: map.c,v 1.60 2005/10/04 17:34:51 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001-2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1730,7 +1727,7 @@ MAP_ItemExtent(MAP *m, MAP_Item *r, SDL_Rect *rd, int cam)
 
 /*
  * Render a graphical map item to absolute view coordinates rx,ry.
- * The map must be locked.
+ * The map must be locked. Must be called from widget draw context only.
  */
 void
 MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)

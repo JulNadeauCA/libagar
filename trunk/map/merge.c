@@ -1,8 +1,5 @@
-/*	$Csoft: merge.c,v 1.9 2005/10/04 17:34:51 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <agar/gui/window.h>
-#include <agar/gui/hbox.h>
-#include <agar/gui/textbox.h>
-#include <agar/gui/button.h>
-#include <agar/gui/tlist.h>
-#include <agar/gui/toolbar.h>
+#include <gui/window.h>
+#include <gui/hbox.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#include <gui/tlist.h>
+#include <gui/toolbar.h>
 
 #include "map.h"
 #include "mapedit.h"

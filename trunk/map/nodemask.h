@@ -1,4 +1,3 @@
-/*	$Csoft: nodemask.h,v 1.1 2005/04/14 06:19:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_NODEMASK_H_

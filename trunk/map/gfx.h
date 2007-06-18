@@ -1,7 +1,10 @@
-/*	$Csoft: gfx.h,v 1.41 2005/08/27 04:35:51 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+#include <map/gfx_transform.h>
+#else
 #include <agar/map/gfx_transform.h>
+#endif
 
 #include "begin_code.h"
 

@@ -1,13 +1,13 @@
-/*	$Csoft: mapedit.h,v 1.2 2005/09/19 01:25:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_MAPEDIT_H_
 #define _AGAR_MAP_MAPEDIT_H_
 
-#include <agar/map/mapview.h>
-
-#include <agar/gui/window.h>
-#include <agar/gui/button.h>
+#ifdef _AGAR_INTERNAL
+#include <map/mapview.h>
+#include <gui/window.h>
+#include <gui/button.h>
+#endif
 
 #include "begin_code.h"
 

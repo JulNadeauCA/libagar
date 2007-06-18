@@ -1,8 +1,5 @@
-/*	$Csoft: tool.c,v 1.12 2005/10/04 17:34:51 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
-#include <agar/gui/window.h>
+#include <core/core.h>
+#include <core/view.h>
+#include <gui/window.h>
 
 #include "map.h"
 #include "mapview.h"

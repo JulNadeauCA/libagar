@@ -1,4 +1,3 @@
-/*	$Csoft: nodesel.h,v 1.1 2005/07/10 15:42:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_NODESEL_H_
