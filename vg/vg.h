@@ -45,18 +45,31 @@ struct vg_element;
 
 #include "close_code.h"
 
+#ifdef _AGAR_INTERNAL
+#include <vg/vg_math.h>
+#include <vg/vg_snap.h>
+#include <vg/vg_ortho.h>
+#include <vg/vg_origin.h>
+#include <vg/vg_block.h>
+#include <vg/vg_line.h>
+#include <vg/vg_circle.h>
+#include <vg/vg_arc.h>
+#include <vg/vg_text.h>
+#include <vg/vg_mask.h>
+#include <vg/vg_polygon.h>
+#else
 #include <agar/vg/vg_math.h>
 #include <agar/vg/vg_snap.h>
 #include <agar/vg/vg_ortho.h>
 #include <agar/vg/vg_origin.h>
 #include <agar/vg/vg_block.h>
-
 #include <agar/vg/vg_line.h>
 #include <agar/vg/vg_circle.h>
 #include <agar/vg/vg_arc.h>
 #include <agar/vg/vg_text.h>
 #include <agar/vg/vg_mask.h>
 #include <agar/vg/vg_polygon.h>
+#endif
 
 #include "begin_code.h"
 
