@@ -521,23 +521,27 @@ install-man:
 	    fi; \
 	fi
 	@if [ "${NOMANLINKS}" != "yes" -a "${MANLINKS}" != "" ]; then \
-	    (cd ${MANDIR} && \
+		echo "${MAKE} install-manlinks"; \
+		${MAKE} install-manlinks; \
+	fi
+
+install-manlinks:
+	@(cd ${MANDIR} && \
 	     for L in ${MANLINKS}; do \
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
 		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
-	    done); \
-	    (cd ${MANDIR} && \
+	    done)
+	@(cd ${MANDIR} && \
 	     for L in ${CATLINKS}; do \
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
 		MS=`echo $$L | sed 's/.*\.//'`; \
 		echo "ln -fs $$MPG $$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG $$MS/$$MLNK; \
-	    done); \
-	fi
+	    done)
 
 man:
 	@if [ "${MAN}" != "" ]; then \
@@ -584,7 +588,7 @@ all-manlinks:
 	fi
 
 .PHONY: install deinstall clean cleandir regress depend
-.PHONY: install-man clean-man
+.PHONY: install-man install-manlinks clean-man
 .PHONY: man preformat-man install-man-dirs manlinks all-manlinks
 
 include ${TOP}/mk/csoft.common.mk
