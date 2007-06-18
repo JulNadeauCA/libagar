@@ -1,8 +1,5 @@
-/*	$Csoft: text.c,v 1.109 2005/10/04 17:34:56 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,19 +35,19 @@
 #endif
 #include <core/loaders/xcf.h>
 
-#include <gui/window.h>
-#include <gui/vbox.h>
-#include <gui/box.h>
-#include <gui/label.h>
-#include <gui/button.h>
-#include <gui/fspinbutton.h>
-#include <gui/textbox.h>
-#include <gui/keycodes.h>
-#include <gui/unicode.h>
+#include "window.h"
+#include "vbox.h"
+#include "box.h"
+#include "label.h"
+#include "textbox.h"
+#include "button.h"
+#include "ucombo.h"
+#include "fspinbutton.h"
+#include "keycodes.h"
+#include "unicode.h"
 
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <ctype.h>
 
 const AG_ObjectOps agFontOps = {
@@ -305,12 +302,15 @@ AG_TextInit(void)
 }
 
 static void
-free_glyph(AG_Glyph *gl)
+FreeGlyph(AG_Glyph *gl)
 {
 	SDL_FreeSurface(gl->su);
 #ifdef HAVE_OPENGL
-	if (agView->opengl)
+	if (agView->opengl) {
+		AG_LockGL();
 		glDeleteTextures(1, (GLuint *)&gl->texture);
+		AG_UnlockGL();
+	}
 #endif
 	Free(gl, M_TEXT);
 }
@@ -332,7 +332,7 @@ AG_TextDestroy(void)
 		     gl != SLIST_END(&agGlyphCache[i].glyphs);
 		     gl = ngl) {
 			ngl = SLIST_NEXT(gl, glyphs);
-			free_glyph(gl);
+			FreeGlyph(gl);
 #ifdef DEBUG
 			bucketsz++;
 #endif
@@ -403,8 +403,11 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
 #ifdef HAVE_OPENGL
-		if (agView->opengl)
+		if (agView->opengl) {
+			AG_LockGL();
 			gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
+			AG_UnlockGL();
+		}
 #endif
 		gl->nrefs = 1;
 		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
@@ -422,7 +425,7 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 
 		h = hash_glyph(gl->ch);
 		SLIST_REMOVE(&agGlyphCache[h].glyphs, gl, ag_glyph, glyphs);
-		free_glyph(gl);
+		FreeGlyph(gl);
 	}
 }
 
