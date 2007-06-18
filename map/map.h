@@ -1,4 +1,3 @@
-/*	$Csoft: map.h,v 1.20 2005/09/20 13:46:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -16,9 +15,13 @@
 #define MAP_NODE_ITEMS_MAX	32767
 #define MAP_ITEM_MAXMASKS	16384
 
+#ifdef _AGAR_INTERNAL
+#include <map/nodemask.h>
+#include <rg/tileset.h>
+#else
 #include <agar/map/nodemask.h>
-
 #include <agar/rg/tileset.h>
+#endif
 
 #include "begin_code.h"
 

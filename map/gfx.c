@@ -1,8 +1,5 @@
-/*	$Csoft: gfx.c,v 1.58 2005/09/07 03:56:57 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002-2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,10 +157,12 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 	}
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
+		AG_LockGL();
 		if (spr->texture != 0) {
 			glDeleteTextures(1, (GLuint *)&spr->texture);
 			spr->texture = 0;
 		}
+		AG_UnlockGL();
 		spr->texcoords[0] = 0.0f;
 		spr->texcoords[1] = 0.0f;
 		spr->texcoords[2] = 0.0f;
@@ -230,6 +229,7 @@ AG_SpriteUpdate(AG_Sprite *spr)
 	MAP_FreeSpriteTransforms(spr);
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
+		AG_LockGL();
 		if (spr->texture != 0) {
 			GLuint textures[1];
 
@@ -238,6 +238,7 @@ AG_SpriteUpdate(AG_Sprite *spr)
 		}
 		spr->texture = (spr->su != NULL) ?
 		    AG_SurfaceTexture(spr->su, &spr->texcoords[0]) : 0;
+		AG_UnlockGL();
 	}
 #endif
 }

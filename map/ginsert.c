@@ -1,8 +1,5 @@
-/*	$Csoft: ginsert.c,v 1.4 2005/09/20 13:46:31 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/map/actor.h>
-#include <agar/rg/tileset.h>
+#include <core/core.h>
+#include <map/actor.h>
+#include <rg/tileset.h>
 
-#include <agar/gui/radio.h>
-#include <agar/gui/checkbox.h>
-#include <agar/gui/label.h>
-#include <agar/gui/tlist.h>
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/label.h>
+#include <gui/tlist.h>
 
 #include "map.h"
 #include "mapedit.h"

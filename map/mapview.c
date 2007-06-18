@@ -1,8 +1,5 @@
-/*	$Csoft: mapview.c,v 1.50 2005/10/02 09:39:55 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
+#include <core/core.h>
+#include <core/view.h>
 
-#include <agar/gui/window.h>
-#include <agar/gui/primitive.h>
-#include <agar/gui/toolbar.h>
-#include <agar/gui/statusbar.h>
-#include <agar/gui/scrollbar.h>
+#include <gui/window.h>
+#include <gui/primitive.h>
+#include <gui/toolbar.h>
+#include <gui/statusbar.h>
+#include <gui/scrollbar.h>
 
 #include "map.h"
 #include "mapview.h"
@@ -982,11 +979,13 @@ mousemotion(AG_Event *event)
 		MAP_NodeselUpdateMove(mv, mv->cxrel, mv->cyrel);
 	} else if (mv->rsel.moving) {
 		if (abs(mv->mouse.xmap_rel) > AGMPIXSZ(mv)) {
-			refsel_update(mv, mv->mouse.xmap_rel < 0 ? -1 : 1, 0);
+			MAP_UpdateRefSel(mv,
+			    mv->mouse.xmap_rel < 0 ? -1 : 1, 0);
 			mv->mouse.xmap_rel = 0;
 		}
 		if (abs(mv->mouse.ymap_rel) > AGMPIXSZ(mv)) {
-			refsel_update(mv, 0, mv->mouse.ymap_rel < 0 ? -1 : 1);
+			MAP_UpdateRefSel(mv, 0,
+			    mv->mouse.ymap_rel < 0 ? -1 : 1);
 			mv->mouse.ymap_rel = 0;
 		}
 	}

@@ -1,8 +1,5 @@
-/*	$Csoft: eraser.c,v 1.8 2005/08/27 04:34:05 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
+#include <core/core.h>
 
-#include <agar/gui/checkbox.h>
-#include <agar/gui/primitive.h>
+#include <gui/checkbox.h>
+#include <gui/primitive.h>
 
 #include "map.h"
 #include "mapedit.h"

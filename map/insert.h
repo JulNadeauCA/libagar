@@ -1,4 +1,3 @@
-/*	$Csoft: insert.h,v 1.2 2005/08/27 04:34:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
