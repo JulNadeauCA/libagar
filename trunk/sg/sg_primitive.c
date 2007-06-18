@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,10 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
+#include <core/core.h>
 #include "sg.h"
 
 static GLenum sgGLprimitives[] = {
@@ -44,7 +43,10 @@ static GLenum sgGLprimitives[] = {
 
 SG_Vector3 sgMin, sgMax;
 
-/* Render a wireframe box from 2 points. */
+/*
+ * Render a wireframe box from 2 points.
+ * Must be called from widget draw context.
+ */
 void
 SG_WireBox2(SG_Vector p1, SG_Vector p2)
 {
@@ -72,7 +74,10 @@ SG_WireBox2(SG_Vector p1, SG_Vector p2)
 	glEnd();
 }
 
-/* Build a tesselated rectangular surface given a plane and dimensions. */
+/*
+ * Build a tesselated rectangular surface given a plane and dimensions.
+ * Must be called from widget draw context.
+ */
 void
 SG_TessRect3(SG_Plane P, SG_Real w, SG_Real h, SG_Real s)
 {
@@ -100,6 +105,10 @@ SG_TessRect3(SG_Plane P, SG_Real w, SG_Real h, SG_Real s)
 	}
 }
 
+/*
+ * Build a box based on two endpoints.
+ * Must be called from widget draw context.
+ */
 void
 SG_SolidBox2(SG_Vector p1, SG_Vector p2)
 {

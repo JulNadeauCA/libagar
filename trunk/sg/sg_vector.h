@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3;

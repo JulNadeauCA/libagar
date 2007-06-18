@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sg_matrix3 { SG_Real m[3][3]; } SG_Matrix3;

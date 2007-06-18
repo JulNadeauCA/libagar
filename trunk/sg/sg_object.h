@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sg_vertex {
@@ -53,7 +52,7 @@ typedef enum sg_extrude_mode {
 
 #define SGOBJECT(so) ((SG_Object *)(so))
 
-#ifndef _AGAR_SG_PUBLIC
+#ifdef _AGAR_INTERNAL
 #define OBJ_V(so,vnum) (SGOBJECT(so)->vtx[vnum].v)
 #define OBJ_N(so,vnum) (SGOBJECT(so)->vtx[vnum].n)
 #define OBJ_S(so,vnum) (SGOBJECT(so)->vtx[vnum].s)
@@ -74,7 +73,7 @@ typedef enum sg_extrude_mode {
 #define RFACE(e) ((e)->oe->f)
 #define HVTX(e) ((e)->v)
 #define TVTX(e) ((e)->oe->v)
-#endif /* !_AGAR_SG_PUBLIC */
+#endif /* _AGAR_INTERNAL */
 
 __BEGIN_DECLS
 extern SG_NodeOps sgObjectOps;

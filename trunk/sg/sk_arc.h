@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 typedef struct sk_arc {
@@ -13,9 +12,9 @@ __BEGIN_DECLS
 extern SK_NodeOps skArcOps;
 
 SK_Arc	*SK_ArcNew(void *);
-void	 SK_ArcInit(void *);
-int	 SK_ArcLoad(void *, AG_Netbuf *);
-int	 SK_ArcSave(void *, AG_Netbuf *);
+void	 SK_ArcInit(void *, Uint32);
+int	 SK_ArcLoad(SK *, void *, AG_Netbuf *);
+int	 SK_ArcSave(SK *, void *, AG_Netbuf *);
 void	 SK_ArcDraw(void *, SK_View *);
 
 void	 SK_ArcWidth(SK_Arc *, SG_Real);

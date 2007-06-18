@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,13 +22,24 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/edition.h>
-#include <agar/config/have_opengl.h>
+/*
+ * Graphical interface for SK(3) object edition.
+ */
+
+#include <config/edition.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/core/objmgr.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
+#include <core/objmgr.h>
+
+#include <gui/window.h>
+#include <gui/menu.h>
+#include <gui/notebook.h>
+#include <gui/tlist.h>
+#include <gui/pane.h>
+#include <gui/mpane.h>
+#include <gui/file_dlg.h>
 
 #include "sk.h"
 
@@ -159,10 +169,11 @@ FindNodes(AG_Tlist *tl, SK_Node *node, int depth)
 	AG_TlistItem *it;
 	SK_Node *cnode;
 
-	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s", node->ops->name);
+	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s%u", node->ops->name,
+	    node->name);
 	it->depth = depth;
 	it->p1 = node;
-	it->selected = (node->flags & SG_NODE_SELECTED);
+	it->selected = (node->flags & SK_NODE_SELECTED);
 
 	if (!TAILQ_EMPTY(&node->cnodes)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
@@ -178,10 +189,10 @@ static void
 PollNodes(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	SG *sg = AG_PTR(1);
+	SK *sk = AG_PTR(1);
 
 	AG_TlistClear(tl);
-	FindNodes(tl, (SK_Node *)sg->root, 0);
+	FindNodes(tl, (SK_Node *)sk->root, 0);
 	AG_TlistRestore(tl);
 }
 

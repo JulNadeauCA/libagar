@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +22,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/spinbutton.h>
-#include <agar/gui/fspinbutton.h>
-#include <agar/gui/label.h>
-#include <agar/gui/box.h>
+#include <core/core.h>
+#include <gui/spinbutton.h>
+#include <gui/fspinbutton.h>
+#include <gui/label.h>
+#include <gui/box.h>
 
 #include "sg.h"
 #include "sg_gui.h"

@@ -1,11 +1,15 @@
-/*	$Csoft: matview.h,v 1.2 2005/09/11 07:05:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SG_MATVIEW_H_
 #define _AGAR_SG_MATVIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/scrollbar.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
+#endif
 
 #include "begin_code.h"
 
@@ -19,7 +23,7 @@ typedef struct ag_matview {
 	int hspace, vspace;		/* Spacing between entries */
 	int xoffs, yoffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
-	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
+	AG_Scrollbar *hbar, *vbar; /* Display scrollbars */
 } AG_Matview;
 
 __BEGIN_DECLS

@@ -1,12 +1,17 @@
-/*	$Csoft: glview.h,v 1.1 2005/10/04 18:04:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SK_VIEW_H_
 #define _AGAR_SK_VIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/menu.h>
+#include <sg/sk_tool.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/menu.h>
 #include <agar/sg/sk_tool.h>
+#endif
 
 #include "begin_code.h"
 

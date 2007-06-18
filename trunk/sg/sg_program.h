@@ -1,4 +1,3 @@
-/*	$Csoft: perso.h,v 1.22 2005/09/20 13:46:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SG_PROGRAM_H_

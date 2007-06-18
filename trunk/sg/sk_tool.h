@@ -1,4 +1,3 @@
-/*	$Csoft: tool.h,v 1.9 2005/08/01 04:09:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_SK_TOOL_H_

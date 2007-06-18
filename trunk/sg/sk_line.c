@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +22,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/edition.h>
-#include <agar/config/have_opengl.h>
+/*
+ * Basic line segment.
+ */
+
+#include <config/edition.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #include "sk.h"
-#include "sg_gui.h"
 
 SK_Line *
 SK_LineNew(void *pnode)
@@ -39,17 +40,17 @@ SK_LineNew(void *pnode)
 	SK_Line *line;
 
 	line = Malloc(sizeof(SK_Line), M_SG);
-	SK_LineInit(line);
+	SK_LineInit(line, SK_GenName(SKNODE(pnode)->sk));
 	SK_NodeAttach(pnode, line);
 	return (line);
 }
 
 void
-SK_LineInit(void *p)
+SK_LineInit(void *p, Uint32 name)
 {
 	SK_Line *line = p;
 
-	SK_NodeInit(line, &skLineOps, 0);
+	SK_NodeInit(line, &skLineOps, name, 0);
 	line->width = 1.0;
 	line->color = SG_ColorRGB(0.0, 1.0, 0.0);
 	line->p1 = NULL;
@@ -57,22 +58,34 @@ SK_LineInit(void *p)
 }
 
 int
-SK_LineLoad(void *p, AG_Netbuf *buf)
+SK_LineLoad(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Line *line = p;
 
 	line->width = SG_ReadReal(buf);
 	line->color = SG_ReadColor(buf);
+	line->p1 = SK_ReadRef(buf, sk, "Point");
+	line->p2 = SK_ReadRef(buf, sk, "Point");
+	if (line->p1 == NULL || line->p2 == NULL) {
+		AG_SetError("Missing endpoint (%s)", AG_GetError());
+		return (-1);
+	}
+	dprintf("%s: width=%f, p1=%s, p2=%s\n", SK_NodeName(line),
+	    line->width, SK_NodeName(line->p1), SK_NodeName(line->p2));
 	return (0);
 }
 
 int
-SK_LineSave(void *p, AG_Netbuf *buf)
+SK_LineSave(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Line *line = p;
 
 	SG_WriteReal(buf, line->width);
 	SG_WriteColor(buf, &line->color);
+	SK_WriteRef(buf, line->p1);
+	SK_WriteRef(buf, line->p2);
+	dprintf("saving refs: %s,%s\n", SK_NodeName(line->p1),
+	    SK_NodeName(line->p2));
 	return (0);
 }
 
@@ -159,8 +172,8 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		return (1);
 	}
 	line = SK_LineNew(sk->root);
-	line->p1 = SK_PointNew(sk->root);
-	line->p2 = SK_PointNew(sk->root);
+	line->p1 = SK_PointNew(line);
+	line->p2 = SK_PointNew(line);
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);
 	SK_Translatev(line->p1, &pos);

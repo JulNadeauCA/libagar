@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc.
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,11 +22,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/have_opengl.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
+
+#include <gui/notebook.h>
+#include <gui/fspinbutton.h>
+#include <gui/radio.h>
+#include <gui/checkbox.h>
+#include <gui/box.h>
+#include <gui/separator.h>
+#include <gui/label.h>
+#include <gui/menu.h>
 
 #include "sg.h"
 #include "sg_gui.h"
@@ -113,6 +120,7 @@ SG_CameraProject(SG_Camera *cam)
 {
 	GLdouble yMin, yMax;
 
+	AG_LockGL();
 	switch (cam->pmode) {
 	case SG_CAMERA_PERSPECTIVE:
 		yMax = cam->zNear*SG_Tan(SG_Radians(cam->fovY/2.0));
@@ -136,9 +144,13 @@ SG_CameraProject(SG_Camera *cam)
 		SG_MultMatrixGL(&cam->userProj);
 		break;
 	}
+	AG_UnlockGL();
 }
 
-/* Apply the viewing transformation for a camera. */
+/*
+ * Apply the viewing transformation for a camera.
+ * Must be called from widget draw context.
+ */
 void
 SG_CameraSetup(SG_Camera *cam)
 {
@@ -172,6 +184,7 @@ SG_CameraSetup(SG_Camera *cam)
 void
 SG_CameraGetProjection(SG_Camera *cam, SG_Matrix *M)
 {
+	AG_LockGL();
 	glPushAttrib(GL_TRANSFORM_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -181,6 +194,7 @@ SG_CameraGetProjection(SG_Camera *cam, SG_Matrix *M)
 	SG_MatrixTransposev(M);
 	glPopMatrix();
 	glPopAttrib();
+	AG_UnlockGL();
 }
 
 void

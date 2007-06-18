@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_SG_PUBLIC_H_
 #define _AGAR_SG_PUBLIC_H_
-#define _AGAR_SG_PUBLIC
+
 #include <agar/core/core_begin.h>
 #include <agar/sg/sg.h>
 #include <agar/sg/sg_gui.h>
@@ -19,4 +19,4 @@
 # endif
 #endif
 
-#endif
+#endif /* _AGAR_SG_PUBLIC_H_ */

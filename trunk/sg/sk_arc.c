@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc. 
- * <http://www.hypertriton.com/>
+ * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,15 +22,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/config/edition.h>
-#include <agar/config/have_opengl.h>
+#include <config/edition.h>
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
-#include <agar/core/core.h>
-#include <agar/gui/gui.h>
+#include <core/core.h>
 
 #include "sk.h"
-#include "sg_gui.h"
 
 SK_Arc *
 SK_ArcNew(void *pnode)
@@ -39,17 +36,17 @@ SK_ArcNew(void *pnode)
 	SK_Arc *arc;
 
 	arc = Malloc(sizeof(SK_Arc), M_SG);
-	SK_ArcInit(arc);
+	SK_ArcInit(arc, SK_GenName(SKNODE(pnode)->sk));
 	SK_NodeAttach(pnode, arc);
 	return (arc);
 }
 
 void
-SK_ArcInit(void *p)
+SK_ArcInit(void *p, Uint32 name)
 {
 	SK_Arc *arc = p;
 
-	SK_NodeInit(arc, &skArcOps, 0);
+	SK_NodeInit(arc, &skArcOps, name, 0);
 	arc->color = SG_ColorRGB(0.0, 1.0, 0.0);
 	arc->r = 0.0f;
 	arc->p = NULL;
@@ -58,22 +55,38 @@ SK_ArcInit(void *p)
 }
 
 int
-SK_ArcLoad(void *p, AG_Netbuf *buf)
+SK_ArcLoad(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Arc *arc = p;
 
 	arc->color = SG_ReadColor(buf);
 	arc->r = SG_ReadReal(buf);
+	arc->p = SK_ReadRef(buf, sk, "Point");
+	arc->e1 = SK_ReadRef(buf, sk, "Point");
+	arc->e2 = SK_ReadRef(buf, sk, "Point");
+	if (arc->p == NULL) {
+		AG_SetError("Missing center point (%s)", AG_GetError());
+		return (-1);
+	}
+	if (arc->e1 == NULL || arc->e2 == NULL) {
+		AG_SetError("Missing endpoints (%s)", AG_GetError());
+		return (-1);
+	}
+	dprintf("%s: r=%f, p=%s, e1=%s, e2=%s\n", SK_NodeName(arc), arc->r,
+	    SK_NodeName(arc->p), SK_NodeName(arc->e1), SK_NodeName(arc->e2));
 	return (0);
 }
 
 int
-SK_ArcSave(void *p, AG_Netbuf *buf)
+SK_ArcSave(SK *sk, void *p, AG_Netbuf *buf)
 {
 	SK_Arc *arc = p;
 
 	SG_WriteColor(buf, &arc->color);
 	SG_WriteReal(buf, arc->r);
+	SK_WriteRef(buf, arc->p);
+	SK_WriteRef(buf, arc->e1);
+	SK_WriteRef(buf, arc->e2);
 	return (0);
 }
 
