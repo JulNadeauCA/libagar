@@ -1,4 +1,3 @@
-/*	$Csoft: texture.h,v 1.3 2005/06/07 03:05:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TEXTURE_H_

@@ -1,27 +1,29 @@
-/*	$Csoft: texsel.h,v 1.1 2005/05/28 08:39:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TEXSEL_H_
 #define _AGAR_RG_TEXSEL_H_
 
-#include <agar/gui/widget.h>
-#include <agar/gui/tlist.h>
-
+#ifdef _AGAR_INTERNAL
+#include <rg/tileset.h>
+#include <gui/tlist.h>
+#else
 #include <agar/rg/tileset.h>
+#include <agar/gui/tlist.h>
+#endif
 
 #include "begin_code.h"
 
 typedef struct rg_texture_selector {
 	struct ag_tlist tl;
-	RG_Tileset *tset;		   /* Attached tileset */
+	RG_Tileset *tset;		  /* Attached tileset */
 	char texname[RG_TEXTURE_NAME_MAX]; /* Default texture name binding */
 	int flags;
 } RG_TextureSelector;
 
 __BEGIN_DECLS
 RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, int);
-void 		    RG_TextureSelectorInit(RG_TextureSelector *,
-		                           RG_Tileset *, int);
+void 		    RG_TextureSelectorInit(RG_TextureSelector *, RG_Tileset *,
+		                           int);
 void 		    RG_TextureSelectorScale(void *, int, int);
 void		    RG_TextureSelectorDestroy(void *);
 __END_DECLS

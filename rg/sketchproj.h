@@ -1,11 +1,7 @@
-/*	$Csoft: sketchproj.h,v 1.2 2005/05/24 08:39:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCHPROJ_H_
 #define _AGAR_RG_SKETCHPROJ_H_
-
-#include <agar/rg/feature.h>
-
 #include "begin_code.h"
 
 struct rg_sketchproj {

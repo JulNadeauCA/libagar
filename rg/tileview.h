@@ -1,16 +1,23 @@
-/*	$Csoft: tileview.h,v 1.33 2005/09/27 00:25:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILEVIEW_H_
 #define _AGAR_RG_TILEVIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/menu.h>
+#include <gui/toolbar.h>
+#include <gui/box.h>
+#include <rg/tileset.h>
+#include <core/timeout.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/toolbar.h>
 #include <agar/gui/box.h>
-
 #include <agar/rg/tileset.h>
 #include <agar/core/timeout.h>
+#endif
 
 #include "begin_code.h"
 
@@ -44,11 +51,11 @@ union rg_tileview_val {
 	void *p;
 };
 
-struct rg_tileview_handle {
+typedef struct rg_tileview_handle {
 	int x, y;		/* Cached tile coords (set by draw routine) */
 	int over;		/* Mouse overlap */
 	int enable;		/* Mouse selection */
-};
+} RG_TileviewHandle;
 
 typedef struct rg_tileview_ctrl {
 	enum rg_tileview_ctrl_type type;

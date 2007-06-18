@@ -1,8 +1,5 @@
-/*	$Csoft: transform.c,v 1.5 2005/07/16 15:55:34 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002-2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

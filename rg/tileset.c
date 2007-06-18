@@ -1,8 +1,5 @@
-/*	$Csoft: tileset.c,v 1.65 2005/10/04 17:34:53 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004-2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

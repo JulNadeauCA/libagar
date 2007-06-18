@@ -1,4 +1,3 @@
-/*	$Csoft: sketch.h,v 1.8 2005/09/27 00:25:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_

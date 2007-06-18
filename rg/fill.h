@@ -1,11 +1,7 @@
-/*	$Csoft: fill.h,v 1.5 2005/03/06 10:40:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FILL_H_
 #define _AGAR_RG_FILL_H_
-
-#include <agar/rg/feature.h>
-
 #include "begin_code.h"
 
 struct rg_fill_feature {

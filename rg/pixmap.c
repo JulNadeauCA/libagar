@@ -1,8 +1,5 @@
-/*	$Csoft: pixmap.c,v 1.49 2005/10/07 07:16:27 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005, 2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
