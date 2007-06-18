@@ -1,5 +1,3 @@
-/*	$Csoft: glview.c,v 1.2 2005/10/06 10:41:50 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -33,12 +31,9 @@
 #include <core/config.h>
 #include <core/view.h>
 
-#include <stdarg.h>
-
 #include "glview.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include <stdarg.h>
 
 const AG_WidgetOps agGLViewOps = {
 	{
@@ -70,6 +65,7 @@ AG_GLViewNew(void *parent, Uint flags)
 	return (glv);
 }
 
+/* Initialize an OpenGL matrix to identity. GL must be locked. */
 static void
 SetIdentity(GLdouble *M, GLenum which)
 {
@@ -126,6 +122,9 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");
 
+	glv->wPre = 64;
+	glv->hPre = 64;
+
 	glv->draw_ev = NULL;
 	glv->overlay_ev = NULL;
 	glv->scale_ev = NULL;
@@ -135,13 +134,22 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	glv->btnup_ev = NULL;
 	glv->motion_ev = NULL;
 
+	AG_LockGL();
 	SetIdentity(glv->mProjection, GL_PROJECTION);
 	SetIdentity(glv->mModelview, GL_MODELVIEW);
 	SetIdentity(glv->mTexture, GL_TEXTURE);
 	SetIdentity(glv->mColor, GL_COLOR);
+	AG_UnlockGL();
 
 	AG_SetEvent(glv, "widget-moved", widgetmoved, NULL);
 	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
+}
+
+void
+AG_GLViewPrescale(AG_GLView *glv, int w, int h)
+{
+	glv->wPre = w;
+	glv->hPre = h;
 }
 
 void
@@ -212,6 +220,8 @@ AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 void
 AG_GLViewReshape(AG_GLView *glv)
 {
+	AG_LockGL();
+
 	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_COLOR);		glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
@@ -230,6 +240,8 @@ AG_GLViewReshape(AG_GLView *glv)
 	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
 	glMatrixMode(GL_TEXTURE);	glPopMatrix();
 	glMatrixMode(GL_COLOR);		glPopMatrix();
+
+	AG_UnlockGL();
 }
 
 void

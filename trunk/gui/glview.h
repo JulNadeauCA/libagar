@@ -1,14 +1,14 @@
-/*	$Csoft: glview.h,v 1.1 2005/10/04 18:04:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GLVIEW_H_
 #define _AGAR_WIDGET_GLVIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_opengl.h>
+#else
 #include <agar/config/have_opengl.h>
-
+#endif
 #ifdef HAVE_OPENGL
-
-#include <agar/gui/widget.h>
 #include "begin_code.h"
 
 typedef struct ag_glview {
@@ -21,6 +21,8 @@ typedef struct ag_glview {
 #define AG_GLVIEW_NOCOLOR	0x10	/* Don't preserve color matrix */
 #define AG_GLVIEW_FOCUS		0x20
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
+
+	int	  wPre, hPre;			/* Initial geometry */
 
 	AG_Event *draw_ev;			/* Draw callback */
 	AG_Event *overlay_ev;			/* Graphics overlay callback */
@@ -42,6 +44,7 @@ AG_GLView *AG_GLViewNew(void *, Uint);
 void	   AG_GLViewInit(AG_GLView *, Uint);
 void	   AG_GLViewDestroy(void *);
 void	   AG_GLViewDraw(void *);
+void	   AG_GLViewPrescale(AG_GLView *, int, int);
 void	   AG_GLViewScale(void *, int, int);
 void	   AG_GLViewReshape(AG_GLView *);
 void	   AG_GLViewDrawFn(AG_GLView *, AG_EventFn, const char *, ...);
