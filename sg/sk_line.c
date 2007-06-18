@@ -84,8 +84,6 @@ SK_LineSave(SK *sk, void *p, AG_Netbuf *buf)
 	SG_WriteColor(buf, &line->color);
 	SK_WriteRef(buf, line->p1);
 	SK_WriteRef(buf, line->p2);
-	dprintf("saving refs: %s,%s\n", SK_NodeName(line->p1),
-	    SK_NodeName(line->p2));
 	return (0);
 }
 

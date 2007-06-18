@@ -195,7 +195,7 @@ SK_NodeName(void *p)
 	SK_Node *node = p;
 
 	snprintf(name, sizeof(name), "%s%u", node->ops->name, node->name);
-	return (name);
+	return (Strdup(name));
 }
 
 void
@@ -252,6 +252,13 @@ SK_Destroy(void *obj)
 static int
 SK_NodeSaveData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
+	SK_Node *chldNode;
+
+	TAILQ_FOREACH(chldNode, &node->cnodes, sknodes) {
+		if (SK_NodeSaveData(sk, chldNode, buf) == -1)
+			return (-1);
+	}
+	dprintf("%s: saving node data\n", AGOBJECT(sk)->name);
 	if (node->ops->save != NULL &&
 	    node->ops->save(sk, node, buf) == -1) {
 		AG_SetError("NodeSave: %s", AG_GetError());
@@ -303,29 +310,37 @@ SK_Save(void *obj, AG_Netbuf *buf)
 {
 	SK *sk = obj;
 	SK_Node *node;
-	int rv = 0;
 	
 	AG_WriteObjectVersion(buf, sk);
 	AG_MutexLock(&sk->lock);
 
 	/* Save the generic part of all nodes. */
 	AG_WriteUint32(buf, sk->flags);
-	rv = SK_NodeSaveGeneric(sk, SKNODE(sk->root), buf);
+	if (SK_NodeSaveGeneric(sk, SKNODE(sk->root), buf) == -1)
+		goto fail;
 
 	/* Save the data part of all nodes. */
-	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		SK_NodeSaveData(sk, node, buf);
-	}
+	dprintf("%s: saving data part of nodes\n", AGOBJECT(sk)->name);
+	if (SK_NodeSaveData(sk, SKNODE(sk->root), buf) == -1)
+		goto fail;
 
 	AG_MutexUnlock(&sk->lock);
-	return (rv);
+	return (0);
+fail:
+	AG_MutexUnlock(&sk->lock);
+	return (-1);
 }
 
 /* Load the data part of a node. */
 static int
 SK_NodeLoadData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
-	dprintf("%s: loading data\n", SK_NodeName(node));
+	SK_Node *chldNode;
+
+	TAILQ_FOREACH(chldNode, &node->cnodes, sknodes) {
+		if (SK_NodeLoadData(sk, chldNode, buf) == -1)
+			return (-1);
+	}
 	if (node->ops->load != NULL &&
 	    node->ops->load(sk, node, buf) == -1) {
 		AG_SetError("%s: %s: %s", AGOBJECT(sk)->name, SK_NodeName(node),
@@ -384,11 +399,9 @@ SK_NodeLoadGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 			return (-1);
 		}
 		if (cnode != NULL) {
-			dprintf("attaching %s to %s (%u)\n",
-			    cnode->ops->name, node->ops->name, j);
+			dprintf("%s: attaching %s\n",
+			    SK_NodeName(node), SK_NodeName(cnode));
 			SK_NodeAttach(node, cnode);
-		} else {
-			dprintf("ignored subnode %d (%u)\n", nchildren, j);
 		}
 	}
 	*rnode = node;
@@ -425,11 +438,10 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	TAILQ_INSERT_HEAD(&sk->nodes, SKNODE(sk->root), nodes);
 
 	/* Load the data part of all nodes. */
-	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (SK_NodeLoadData(sk, node, buf) == -1)
-			goto fail_reinit;
+	dprintf("%s: load node data\n", AGOBJECT(sk)->name);
+	if (SK_NodeLoadData(sk, SKNODE(sk->root), buf) == -1) {
+		goto fail_reinit;
 	}
-
 	AG_MutexUnlock(&sk->lock);
 	return (0);
 fail_reinit:
@@ -641,7 +653,6 @@ SK_WriteRef(AG_Netbuf *buf, void *pNode)
 {
 	SK_Node *node = pNode;
 
-	dprintf("%s: name `%s'\n", SK_NodeName(node), node->ops->name);
 	AG_WriteString(buf, node->ops->name);
 	AG_WriteUint32(buf, node->name);
 }
