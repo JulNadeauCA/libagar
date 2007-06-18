@@ -4,7 +4,11 @@
 #ifndef _AGAR_VG_SNAP_H_
 #define _AGAR_VG_SNAP_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/toolbar.h>
+#else
 #include <agar/gui/toolbar.h>
+#endif
 
 #include "begin_code.h"
 

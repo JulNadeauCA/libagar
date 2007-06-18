@@ -4,7 +4,11 @@
 #ifndef _AGAR_VG_PRIMITIVE_H_
 #define _AGAR_VG_PRIMITIVE_H_
 
+#ifdef _AGAR_INTERNAL
+#include <core/view.h>
+#else
 #include <agar/core/view.h>
+#endif
 
 #include "begin_code.h"
 

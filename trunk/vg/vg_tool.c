@@ -26,9 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/core.h>
-#include <agar/core/view.h>
-#include <agar/gui/window.h>
+#include <core/core.h>
+#include <core/view.h>
+#include <gui/window.h>
 
 #include "vg.h"
 #include "vg_view.h"
