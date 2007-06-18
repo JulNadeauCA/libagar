@@ -5,6 +5,7 @@
 #define _AGAR_CORE_MATH_H_
 #include "begin_code.h"
 
+#if 0
 typedef Uint32 AG_Fixpt6;
 typedef Uint32 AG_Fixpt8;
 typedef Uint32 AG_Fixpt16;
@@ -70,6 +71,7 @@ typedef Uint32 AG_Fixpt30;
 #define AG_Fix10Div(f1, f2) (((f1) << 10) / (f2))
 #define AG_Fix16Div(f1, f2) (((f1) << 16) / (f2))
 #define AG_Fix30Div(f1, f2) (((f1) << 30) / (f2))
+#endif
 
 __BEGIN_DECLS
 __inline__ int AG_PowOf2i(int);
