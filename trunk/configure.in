@@ -56,7 +56,7 @@ CHECK(sha1)
 CHECK(rmd160)
 CHECK(pthreads)
 
-MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
+MDEFINE(CFLAGS, "$CFLAGS -I$SRC -D_AGAR_INTERNAL")
 if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
 	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
