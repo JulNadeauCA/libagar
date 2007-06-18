@@ -40,8 +40,20 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-layer manages the video display.
-It also implements a series of macros for basic pixel operations.
+interface manages low-level access to video displays, which is represented
+by the
+.Fa AG_Display
+structure.
+Every display manages a list of
+.Xr AG_Window 3
+objects for use by the GUI (see the
+.Dq WINDOW SYSTEM
+section below for more details).
+.Pp
+The
+.Nm
+interface also implements a series of macros for basic pixel operations, and
+a number of utility routines for surface and texture manipulation.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -55,15 +67,16 @@ It also implements a series of macros for basic pixel operations.
 .Pp
 .nr nS 0
 The
-.Fn view_init
+.Fn AG_ViewInit
 function initializes the graphic display if there is one available,
 returning 0 on success and -1 on failure.
 If the
-.Sq view.opengl
-property is set,
-.Fn view_init
+.Va
+flag is set,
+.Fn AG_ViewInit
 will attempt to create an OpenGL rendering context, and the GUI will arrange
-for widgets to be rendered using OpenGL.
+for widgets to be rendered using OpenGL, if OpenGL is available and support
+for it was enabled at compile time.
 .Pp
 The
 .Fn AG_ViewDestroy
@@ -78,7 +91,8 @@ The stock event loop function
 .Xr AG_EventLoop_FixedFPS 3
 will attempt to draw exactly this number of frames per second and then idle
 as much as possible.
-Other event handler functions may ignore this value entirely.
+This value is only advisory, alternate or user-defined event loop functions
+may ignore it entirely.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
@@ -99,9 +113,6 @@ Other event handler functions may ignore this value entirely.
 .Ft "void"
 .Fn AG_SetAlphaPixels "SDL_Surface *surface" "Uint8 alpha"
 .Pp
-.Ft "GLuint"
-.Fn AG_SurfaceTexture "SDL_Surface *src" "GLfloat *texcoord"
-.Pp
 .Ft "void"
 .Fn AG_UpdateRectQ "int x" "int y" "int w" "int h"
 .Pp
@@ -109,10 +120,6 @@ Other event handler functions may ignore this value entirely.
 .Fn AG_DumpSurface "SDL_Surface *su" "char *path_save"
 .Pp
 .nr nS 0
-These functions operate on
-.Xr SDL_Surface 3
-structures.
-.Pp
 The
 .Fn AG_DupSurface
 returns a newly allocated surface containing a copy of
@@ -149,11 +156,6 @@ The
 function changes the alpha component of all pixels with a non-zero alpha
 component.
 .Pp
-If OpenGL support is available,
-.Fn AG_SurfaceTexture
-creates an OpenGL texture from
-.Fa src
-.Pp
 The
 .Fn AG_UpdateRectQ
 function queues the update of a video region.
@@ -171,10 +173,16 @@ is a no-op if OpenGL mode is in use.
 .Pp
 The
 .Fn AG_DumpSurface
-function encodes a JPEG image file from the contents of a surface.
-If the argument is not NULL, the name of the file is copied to
-.Fa path_save ,
-which must be
+function encodes a JPEG image file from the contents of a specified surface
+.Fa su
+(or if
+.Fa su
+is NULL, it uses the contents of the current display).
+The image is saved to the application's data directory, and the resulting
+path is copied to the
+.Fa path_save
+argument (if not NULL),
+which must be at least
 .Dv MAXPATHLEN
 bytes in size.
 .Fn AG_DumpSurface
@@ -287,6 +295,55 @@ behave in a manner similar to
 except that they are optimized for the display surface.
 For instance, support for specific display depths may have been disabled
 at compile-time.
+.Sh OPENGL OPERATIONS
+.Pp
+The following functions are available only if Agar was compiled with OpenGL
+support, and the current application is in OpenGL mode (as indicated by the
+.Va opengl
+flag of the current display).
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_LockGL "void"
+.Pp
+.Ft "void"
+.Fn AG_UnlockGL "void"
+.Pp
+.Ft "GLuint"
+.Fn AG_SurfaceTexture "SDL_Surface *src" "GLfloat *texcoord"
+.Pp
+.Ft "void"
+.Fn AG_UpdateTexture "SDL_Surface *src" "GLuint texture"
+.Pp
+.Ft "SDL_Surface *"
+.Fn AG_CaptureGLView "void"
+.Pp
+.nr nS 0
+The
+.Fn AG_LockGL
+macro acquires the global lock protecting all OpenGL calls.
+.Fn AG_UnlockGL
+releases that lock.
+If either OpenGL support was not compiled into Agar, or the current application
+is not in OpenGL mode, these macros are no-ops.
+.Pp
+The
+.Fn AG_SurfaceTexture
+function creates an OpenGL texture from
+.Fa src
+and returns the OpenGL surface handle.
+If
+.Fa texcoord
+is not NULL, the function returns the texture coordinates (4 float values)
+into it.
+.Fn AG_UpdateTexture
+updates the contents of an existing OpenGL texture by name, from
+the contents of a given SDL surface.
+.Pp
+The
+.Fn AG_CaptureGLView
+function captures the contents of the current OpenGL display into a
+newly-allocated SDL surface and returns it.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
@@ -325,6 +382,10 @@ The
 functions looks for a window identified by
 .Fa name
 and return NULL if there is no such window.
+.Sh BUGS
+.Pp
+Currently only one display is supported, but that will change with future
+SDL versions.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Window 3 ,
