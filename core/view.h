@@ -5,10 +5,17 @@
 #define _AGAR_CORE_VIEW_H_
 #include "begin_code.h"
 
+#ifdef _AGAR_INTERNAL
+#include <config/view_8bpp.h>
+#include <config/view_16bpp.h>
+#include <config/view_24bpp.h>
+#include <config/view_32bpp.h>
+#else
 #include <agar/config/view_8bpp.h>
 #include <agar/config/view_16bpp.h>
 #include <agar/config/view_24bpp.h>
 #include <agar/config/view_32bpp.h>
+#endif
 
 struct ag_window;
 TAILQ_HEAD(ag_windowq, ag_window);
@@ -28,6 +35,7 @@ typedef struct ag_display {
 	Uint	 ndirty;
 	Uint  maxdirty;
 
+	AG_Mutex lock_gl;		/* Lock on OpenGL context */
 	AG_Mutex lock;
 	struct ag_windowq windows;	/* Windows in view */
 	struct ag_windowq detach;	/* Windows to free */
@@ -35,7 +43,6 @@ typedef struct ag_display {
 					   when event processing is done */
 	struct ag_window *wop_win;	/* Window being moved/resized/etc */
 	struct ag_window *modal_win;	/* Modal window (or NULL) */
-
 	enum {
 		AG_WINOP_NONE,
 		AG_WINOP_MOVE,			/* Window movement */
@@ -222,6 +229,14 @@ int			 AG_DumpSurface(SDL_Surface *, char *);
 __inline__ void		 AG_UpdateRectQ(int, int, int, int);
 void			 AG_ViewCapture(void);
 __inline__ void		 AG_FlipSurface(Uint8 *, int, int);
+
+#ifdef HAVE_OPENGL
+#define AG_LockGL()	AG_MutexLock(&agView->lock_gl)
+#define AG_UnlockGL()	AG_MutexUnlock(&agView->lock_gl)
+#else
+#define	AG_LockGL()
+#define	AG_UnlockGL()
+#endif
 
 #ifdef HAVE_OPENGL
 Uint		 AG_SurfaceTexture(SDL_Surface *, float *);
