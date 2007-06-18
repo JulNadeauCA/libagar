@@ -1,12 +1,17 @@
-/*	$Csoft: spinbutton.h,v 1.9 2004/03/26 04:57:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
 #define _AGAR_WIDGET_SPINBUTTON_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
+#endif
 
 #include "begin_code.h"
 

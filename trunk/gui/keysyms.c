@@ -1,4 +1,3 @@
-/*	$Csoft: keysyms.c,v 1.2 2005/02/03 02:15:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <core/core.h>

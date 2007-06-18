@@ -1,12 +1,17 @@
-/*	$Csoft: titlebar.h,v 1.5 2005/03/11 05:13:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
 #define _AGAR_WIDGET_TITLEBAR_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/box.h>
+#include <gui/label.h>
+#include <gui/button.h>
+#else
 #include <agar/gui/box.h>
 #include <agar/gui/label.h>
 #include <agar/gui/button.h>
+#endif
 
 #include "begin_code.h"
 

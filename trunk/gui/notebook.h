@@ -1,11 +1,15 @@
-/*	$Csoft: notebook.h,v 1.4 2005/09/29 02:42:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_NOTEBOOK_H_
 #define _AGAR_WIDGET_NOTEBOOK_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/box.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
+#endif
 
 #include "begin_code.h"
 

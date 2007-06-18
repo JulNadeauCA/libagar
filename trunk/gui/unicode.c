@@ -1,5 +1,3 @@
-/*	$Csoft: unicode.c,v 1.12 2005/05/12 06:38:36 vedge Exp $	*/
-
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -28,12 +26,10 @@
 
 #include <core/core.h>
 
-#include <sys/types.h>
+#include "unicode.h"
 
 #include <string.h>
 #include <stdio.h>
-
-#include "unicode.h"
 
 /* Parse the first byte of a possible UTF8 sequence. */
 static __inline__ int

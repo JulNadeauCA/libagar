@@ -1,13 +1,19 @@
-/*	$Csoft: ucombo.h,v 1.3 2004/09/12 05:52:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_UCOMBO_H_
 #define _AGAR_WIDGET_UCOMBO_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/button.h>
+#include <gui/window.h>
+#include <gui/tlist.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/button.h>
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
+#endif
 
 #include "begin_code.h"
 

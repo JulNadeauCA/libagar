@@ -1,5 +1,3 @@
-/*	$Csoft: file_dlg.c,v 1.11 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
@@ -32,7 +30,8 @@
 #include <compat/file.h>
 
 #include "file_dlg.h"
-#include "hbox.h"
+
+#include <gui/hbox.h>
 
 #include <stdarg.h>
 #include <string.h>

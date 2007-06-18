@@ -1,5 +1,3 @@
-/*	$Csoft: table.c,v 1.16 2005/10/07 01:55:31 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,11 +29,8 @@
 
 #include "table.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/scrollbar.h>
-#include <gui/label.h>
-#include <gui/cursors.h>
+#include "primitive.h"
+#include "cursors.h"
 
 #include <string.h>
 #include <stdarg.h>

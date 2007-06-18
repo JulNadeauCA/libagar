@@ -1,11 +1,15 @@
-/*	$Csoft: text.h,v 1.44 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/button.h>
+#include <gui/window.h>
+#else
 #include <agar/gui/button.h>
 #include <agar/gui/window.h>
+#endif
 
 #include "begin_code.h"
 

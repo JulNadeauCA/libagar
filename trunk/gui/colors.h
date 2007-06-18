@@ -1,4 +1,3 @@
-/*	$Csoft: colors.h,v 1.11 2005/10/02 16:10:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COLORS_H_

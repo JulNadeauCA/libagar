@@ -1,5 +1,3 @@
-/*	$Csoft: hsvpal.c,v 1.27 2005/10/07 14:49:30 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -34,9 +32,8 @@
 
 #include "hsvpal.h"
 
-#include <gui/primitive.h>
-#include <gui/window.h>
-#include <gui/fspinbutton.h>
+#include "primitive.h"
+#include "fspinbutton.h"
 
 #include <string.h>
 

@@ -1,5 +1,3 @@
-/*	$Csoft: notebook.c,v 1.10 2005/10/03 04:27:20 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,8 +29,8 @@
 
 #include "notebook.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "window.h"
+#include "primitive.h"
 
 static AG_WidgetOps agNotebookOps = {
 	{

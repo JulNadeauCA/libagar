@@ -1,10 +1,13 @@
-/*	$Csoft: box.h,v 1.5 2005/03/09 06:39:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BOX_H_
 #define _AGAR_WIDGET_BOX_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

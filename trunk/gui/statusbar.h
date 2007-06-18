@@ -1,12 +1,17 @@
-/*	$Csoft: statusbar.h,v 1.1 2004/03/30 15:50:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_STATUSBAR_H_
 #define _AGAR_WIDGET_STATUSBAR_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/box.h>
+#include <gui/label.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 #include <agar/gui/label.h>
+#endif
 
 #include "begin_code.h"
 

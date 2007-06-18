@@ -1,5 +1,3 @@
-/*	$Csoft: radio.c,v 1.51 2005/10/01 14:15:39 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,8 +29,8 @@
 
 #include "radio.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "window.h"
+#include "primitive.h"
 
 static AG_WidgetOps agRadioOps = {
 	{

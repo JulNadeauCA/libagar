@@ -1,12 +1,17 @@
-/*	$Csoft: tlist.h,v 1.51 2005/08/29 03:13:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
 #define _AGAR_WIDGET_TLIST_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/scrollbar.h>
+#include <gui/menu.h>
+#include <gui/label.h>
+#else
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/label.h>
+#endif
 
 #include "begin_code.h"
 

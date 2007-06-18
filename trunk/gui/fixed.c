@@ -1,5 +1,3 @@
-/*	$Csoft: fixed.c,v 1.4 2005/10/03 02:28:02 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -29,9 +27,10 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <gui/fixed.h>
-#include <gui/window.h>
-#include <gui/primitive.h>
+#include "fixed.h"
+
+#include "window.h"
+#include "primitive.h"
 
 static AG_WidgetOps agFixedOps = {
 	{

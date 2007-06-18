@@ -1,5 +1,3 @@
-/*	$Csoft: cursors.c,v 1.4 2005/09/27 00:25:22 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>

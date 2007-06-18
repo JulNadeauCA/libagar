@@ -1,11 +1,15 @@
-/*	$Csoft: window.h,v 1.96 2005/10/04 17:34:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
 #define _AGAR_WIDGET_WINDOW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/titlebar.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/titlebar.h>
+#endif
 
 #include "begin_code.h"
 

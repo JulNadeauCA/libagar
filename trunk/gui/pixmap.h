@@ -1,10 +1,13 @@
-/*	$Csoft: bitmap.h,v 1.11 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PIXMAP_H_
 #define _AGAR_WIDGET_PIXMAP_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

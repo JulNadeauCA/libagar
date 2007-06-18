@@ -1,4 +1,3 @@
-/*	$Csoft: cursors.h,v 1.4 2005/09/27 00:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CURSORS_H_

@@ -1,5 +1,3 @@
-/*	$Csoft: menu.c,v 1.26 2005/10/04 17:34:56 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,9 +29,8 @@
 
 #include "menu.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "primitive.h"
+#include "label.h"
 
 #include <stdarg.h>
 #include <string.h>

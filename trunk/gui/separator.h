@@ -1,10 +1,13 @@
-/*	$Csoft: separator.h,v 1.1 2005/02/19 09:28:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SEPARATOR_H_
 #define _AGAR_WIDGET_SEPARATOR_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

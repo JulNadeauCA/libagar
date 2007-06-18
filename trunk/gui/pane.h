@@ -1,11 +1,15 @@
-/*	$Csoft: hpane.h,v 1.1 2005/06/10 02:02:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PANE_H_
 #define _AGAR_WIDGET_PANE_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/box.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
+#endif
 
 #include "begin_code.h"
 

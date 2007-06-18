@@ -1,10 +1,13 @@
-/*	$Csoft: scrollbar.h,v 1.15 2005/09/27 00:25:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SCROLLBAR_H_
 #define _AGAR_WIDGET_SCROLLBAR_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#else
 #include <agar/gui/widget.h>
+#endif
 
 #include "begin_code.h"
 

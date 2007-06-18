@@ -1,5 +1,3 @@
-/*	$Csoft: toolbar.c,v 1.12 2005/10/01 14:15:39 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,13 +29,9 @@
 
 #include "toolbar.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/separator.h>
-
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
+#include "window.h"
+#include "primitive.h"
+#include "separator.h"
 
 static AG_WidgetOps agToolbarOps = {
 	{

@@ -1,4 +1,3 @@
-/*	$Csoft: nlunits.c,v 1.1 2004/08/26 06:02:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/historical_units.h>

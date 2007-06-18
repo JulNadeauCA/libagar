@@ -1,5 +1,3 @@
-/*	$Csoft: pixmap.c,v 1.23 2005/09/27 00:25:22 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,9 +29,9 @@
 
 #include <core/loaders/xcf.h>
 
-#include <gui/primitive.h>
-
 #include "pixmap.h"
+
+#include "primitive.h"
 
 const AG_WidgetOps agPixmapOps = {
 	{

@@ -1,11 +1,15 @@
-/*	$Csoft: graph.h,v 1.18 2003/11/21 02:20:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
 #define _AGAR_WIDGET_GRAPH_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/label.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/label.h>
+#endif
 
 #include "begin_code.h"
 

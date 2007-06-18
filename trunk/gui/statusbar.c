@@ -1,5 +1,3 @@
-/*	$Csoft: statusbar.c,v 1.3 2005/09/27 00:25:23 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -32,8 +30,6 @@
 #include "statusbar.h"
 
 #include <stdarg.h>
-#include <string.h>
-#include <errno.h>
 
 static AG_WidgetOps agStatusbarOps = {
 	{

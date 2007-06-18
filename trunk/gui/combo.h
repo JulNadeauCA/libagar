@@ -1,14 +1,21 @@
-/*	$Csoft: combo.h,v 1.10 2005/05/24 08:12:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
 #define _AGAR_WIDGET_COMBO_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#include <gui/window.h>
+#include <gui/tlist.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
+#endif
 
 #include "begin_code.h"
 

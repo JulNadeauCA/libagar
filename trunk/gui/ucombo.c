@@ -1,5 +1,3 @@
-/*	$Csoft: ucombo.c,v 1.16 2005/10/04 17:34:56 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,9 +29,7 @@
 
 #include "ucombo.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
+#include "primitive.h"
 
 static AG_WidgetOps agUComboOps = {
 	{

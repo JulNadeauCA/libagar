@@ -1,5 +1,3 @@
-/*	$Csoft: mfspinbutton.c,v 1.10 2005/10/01 14:15:38 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004-2006 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -31,14 +29,9 @@
 
 #include "mfspinbutton.h"
 
-#include <gui/window.h>
-#include <gui/primitive.h>
-#include <gui/label.h>
-#include <gui/units.h>
+#include "window.h"
 
-#include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 #include <limits.h>
 
 static AG_WidgetOps agMFSpinbuttonOps = {

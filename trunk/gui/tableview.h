@@ -1,10 +1,15 @@
-/*	$Csoft: tableview.h,v 1.16 2005/06/05 20:03:48 twingy Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/label.h>
+#include <gui/scrollbar.h>
+#else
 #include <agar/gui/label.h>
+#include <agar/gui/scrollbar.h>
+#endif
 
 #include "begin_code.h"
 
@@ -70,8 +75,8 @@ typedef struct ag_tableview {
 	struct ag_widget wid;
 	
 	/* child widgets */
-	struct ag_scrollbar *sbar_v;	/* Vertical scrollbar */
-	struct ag_scrollbar *sbar_h;	/* Horizontal scrollbar */
+	AG_Scrollbar *sbar_v;		/* Vertical scrollbar */
+	AG_Scrollbar *sbar_h;		/* Horizontal scrollbar */
 	//AG_Textbox *editbox;		/* Cell edition widget */
 	
 	AG_Mutex lock;

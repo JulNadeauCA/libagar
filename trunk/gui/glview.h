@@ -4,10 +4,13 @@
 #define _AGAR_WIDGET_GLVIEW_H_
 
 #ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
 #include <config/have_opengl.h>
 #else
+#include <agar/gui/widget.h>
 #include <agar/config/have_opengl.h>
 #endif
+
 #ifdef HAVE_OPENGL
 #include "begin_code.h"
 

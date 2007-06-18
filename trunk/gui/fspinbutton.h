@@ -1,14 +1,21 @@
-/*	$Csoft: fspinbutton.h,v 1.12 2005/02/18 11:16:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
 #define _AGAR_WIDGET_FSPINBUTTON_H_
 
+#ifdef _AGAR_INTERNAL
+#include <gui/widget.h>
+#include <gui/textbox.h>
+#include <gui/button.h>
+#include <gui/ucombo.h>
+#include <gui/units.h>
+#else
 #include <agar/gui/widget.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
+#endif
 
 #include "begin_code.h"
 
