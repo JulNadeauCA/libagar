@@ -17,7 +17,7 @@ MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 \
 	AG_Timeout.3 AG_View.3 AG_Config.3
 
 CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
-	${AGAR_NET_CFLAGS} ${PTHREADS_XOPEN_CFLAGS}
+	${PTHREADS_XOPEN_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/csoft.lib.mk
