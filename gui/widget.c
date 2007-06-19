@@ -976,7 +976,6 @@ AG_WidgetDestroy(void *p)
 	     pm = pm2) {
 		pm2 = SLIST_NEXT(pm, menus);
 		AG_PopupDestroy(pm);
-		Free(pm, M_WIDGET);
 	}
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL)
