@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.9 2005/08/21 04:17:29 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -13,5 +11,5 @@ MAN3=	MAP.3 MAP_View.3
 
 CFLAGS+=${SDL_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

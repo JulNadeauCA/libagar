@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.25 2004/05/12 05:34:13 vedge Exp $
-
 TOP=	../..
 include ${TOP}/Makefile.config
 
@@ -12,4 +10,4 @@ SRCS=	leak.c monitor.c screenshot.c server.c timeouts.c uniconv.c \
 
 CFLAGS+=${SDL_CFLAGS} ${JPEG_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
+include ${TOP}/mk/build.lib.mk
