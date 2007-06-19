@@ -111,8 +111,11 @@ function destroys all top-level menu items in
 .Fn AG_MenuFreeSubItems
 destroys all subitems associated with
 .Fa item .
-.Sh ACTION ITEMS
+.Sh MENU ITEMS
 .nr nS 1
+.Ft "AG_MenuItem *"
+.Fn AG_MenuNode "AG_MenuItem *" "const char *text" "int icon"
+.Pp
 .Ft "AG_MenuItem *"
 .Fn AG_MenuAction "AG_MenuItem *" "const char *text" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
@@ -133,15 +136,21 @@ destroys all subitems associated with
 .Pp
 .nr nS 0
 The
-.Fn AG_MenuAction
-function inserts a new action item identified by the string
-.Fa text .
-The
+.Fn AG_MenuNode
+function inserts a new node (no-op) item displaying the given
+.Fa text
+and
 .Fa icon
-parameter is an index into the global
-.Va icons[]
-array (or -1 for no icon).
+(or -1 if none).
+Node items are typically only used to attach subitems.
 .Pp
+The
+.Fn AG_MenuAction
+function inserts a new action item displaying the given
+.Fa text
+and
+.Fa icon
+(or -1 if none).
 When selected, the item will invoke the event handler function
 .Fa fn ,
 with the additional arguments specified in
