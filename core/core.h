@@ -69,7 +69,13 @@ typedef unsigned long Ulong;
 
 #include <core/error.h>
 
+#include <config/_mk_have_sys_queue_h.h>
+#ifdef _MK_HAVE_SYS_QUEUE_H
+#include <sys/queue.h>
+#else
 #include <compat/queue.h>
+#endif
+
 #include <compat/strlcpy.h>
 #include <compat/strlcat.h>
 #include <compat/snprintf.h>
