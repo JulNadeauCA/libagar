@@ -23,7 +23,7 @@ depend: depend-subdir
 regress: regress-subdir
 
 configure:
-	cat configure.in | manuconf > configure
+	cat configure.in | mkconfigure > configure
 	chmod 755 configure
 
 cleandir-config:
