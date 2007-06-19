@@ -679,7 +679,13 @@ AG_PopupHide(AG_PopupMenu *pm)
 void
 AG_PopupDestroy(AG_PopupMenu *pm)
 {
-	AG_MenuCollapse(pm->menu, pm->item);
-	AG_ObjectDestroy(pm->menu);
-	Free(pm->menu, M_OBJECT);
+	if (pm->menu != NULL) {
+		AG_MenuCollapse(pm->menu, pm->item);
+		AG_ObjectDestroy(pm->menu);
+		Free(pm->menu, M_OBJECT);
+	}
+	pm->menu = NULL;
+	pm->item = NULL;
+	pm->win = NULL;
+	Free(pm, M_WIDGET);
 }
