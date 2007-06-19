@@ -43,6 +43,8 @@ typedef struct sk_view {
 	} mouse;
 	SK_Tool *curtool;			/* Selected tool */
 	SK_Tool *deftool;			/* Default tool if any */
+	AG_PopupMenu *popup;			/* Popup menu for context */
+	AG_Widget *editPane;			/* Edit container */
 	TAILQ_HEAD(, sk_tool) tools;		/* Sketching tools */
 } SK_View;
 
@@ -71,6 +73,7 @@ SK_Tool	  *SK_ViewFindTool(SK_View *, const char *);
 SK_Tool	  *SK_ViewFindToolByOps(SK_View *, const SK_ToolOps *);
 SK_Tool	  *SK_ViewRegTool(SK_View *, const SK_ToolOps *, void *);
 void	   SK_ViewSetDefaultTool(SK_View *, SK_Tool *);
+void	   SK_ViewPopupMenu(SK_View *);
 __END_DECLS
 
 #include "close_code.h"

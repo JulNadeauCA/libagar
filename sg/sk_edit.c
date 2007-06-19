@@ -222,6 +222,37 @@ SelectTool(AG_Event *event)
 	SK_ViewSelectTool(skv, tool, NULL);
 }
 
+static void
+EditNode(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Pane *hp = AG_PTR(1);
+	AG_Pane *vp = AG_PTR(2);
+	SK_View *skv = AG_PTR(3);
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_Window *pWin = AG_WidgetParentWindow(skv);
+	SK_Node *node = it->p1;
+	int hPane, wPane;
+
+	if (skv->editPane != NULL) {
+		AG_ObjectDetach(skv->editPane);
+	}
+	if (node->ops->edit == NULL) {
+		return;
+	}
+	skv->editPane = (AG_Widget *)AG_BoxNew(vp->div[1], AG_BOX_VERT,
+	    AG_BOX_EXPAND);
+	node->ops->edit(node, skv->editPane, skv);
+	AG_WidgetScale(vp->div[1], -1, -1);
+	hPane = AGWIDGET(vp->div[1])->h;
+	wPane = AGWIDGET(vp->div[1])->w;
+	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
+	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
+	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
+	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
+	AG_WINDOW_UPDATE(pWin);
+}
+
 void *
 SK_Edit(void *p)
 {
@@ -283,10 +314,6 @@ SK_Edit(void *p)
 		nb = AG_NotebookNew(vp->div[0], AG_NOTEBOOK_EXPAND);
 		mp = AG_MPaneNew(hp->div[1], AG_MPANE1, AG_MPANE_EXPAND);
 		AG_ObjectAttach(mp->panes[0], skv);
-#if 0
-		AG_SetEvent(tl, "tlist-dblclick", EditNode, "%p,%p,%p",
-		    hp, vp, skv);
-#endif
 	
 		ntab = AG_NotebookAddTab(nb, _("Tools"), AG_BOX_VERT);
 		{
@@ -306,10 +333,12 @@ SK_Edit(void *p)
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
-			AG_TlistPrescale(tl, "<Polygon>", 2);
+			AG_TlistPrescale(tl, "<Polygon>", 4);
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sk, skv);
 			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sk);
 			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);
+			AG_SetEvent(tl, "tlist-dblclick", EditNode, "%p,%p,%p",
+			    hp, vp, skv);
 			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 	}

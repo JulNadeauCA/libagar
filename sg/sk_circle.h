@@ -16,6 +16,7 @@ void	   SK_CircleInit(void *, Uint32);
 int	   SK_CircleLoad(SK *, void *, AG_Netbuf *);
 int	   SK_CircleSave(SK *, void *, AG_Netbuf *);
 void	   SK_CircleDraw(void *, SK_View *);
+void	   SK_CircleEdit(void *, AG_Widget *, SK_View *);
 
 void	   SK_CircleWidth(SK_Circle *, SG_Real);
 void	   SK_CircleColor(SK_Circle *, SG_Color);

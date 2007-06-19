@@ -167,8 +167,10 @@ SK_Init(void *obj, const char *name)
 	sk->flags = 0;
 	sk->last_name = 2;
 	TAILQ_INIT(&sk->nodes);
-	AG_MutexInit(&sk->lock);
+	AG_MutexInitRecursive(&sk->lock);
 	SK_InitRoot(sk);
+
+	sk->uLen = AG_FindUnit("mm");
 }
 
 Uint32
@@ -313,9 +315,11 @@ SK_Save(void *obj, AG_Netbuf *buf)
 	
 	AG_WriteObjectVersion(buf, sk);
 	AG_MutexLock(&sk->lock);
+	
+	AG_WriteUint32(buf, sk->flags);
+	AG_WriteString(buf, sk->uLen->key);
 
 	/* Save the generic part of all nodes. */
-	AG_WriteUint32(buf, sk->flags);
 	if (SK_NodeSaveGeneric(sk, SKNODE(sk->root), buf) == -1)
 		goto fail;
 
@@ -411,6 +415,7 @@ SK_NodeLoadGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 int
 SK_Load(void *obj, AG_Netbuf *buf)
 {
+	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
 	SK_Node *node;
 	int rv;
@@ -420,6 +425,11 @@ SK_Load(void *obj, AG_Netbuf *buf)
 
 	AG_MutexLock(&sk->lock);
 	sk->flags = (Uint)AG_ReadUint32(buf);
+	AG_CopyString(unitKey, buf, sizeof(unitKey));
+	if ((sk->uLen = AG_FindUnit(unitKey)) == NULL) {
+		AG_MutexUnlock(&sk->lock);
+		return (-1);
+	}
 
 	/* Free the existing root node. */
 	if (sk->root != NULL) {
@@ -433,18 +443,18 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	 * afterwards to properly resolve interdependencies.
 	 */
 	if (SK_NodeLoadGeneric(sk, (SK_Node **)&sk->root, buf) == -1) {
-		goto fail_reinit;
+		goto fail;
 	}
 	TAILQ_INSERT_HEAD(&sk->nodes, SKNODE(sk->root), nodes);
 
 	/* Load the data part of all nodes. */
 	dprintf("%s: load node data\n", AGOBJECT(sk)->name);
 	if (SK_NodeLoadData(sk, SKNODE(sk->root), buf) == -1) {
-		goto fail_reinit;
+		goto fail;
 	}
 	AG_MutexUnlock(&sk->lock);
 	return (0);
-fail_reinit:
+fail:
 	AG_MutexUnlock(&sk->lock);
 	dprintf("%s: reinitializing\n", AGOBJECT(sk)->name);
 	SK_Reinit(sk);
@@ -668,6 +678,14 @@ SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *type)
 		    type);
 	}
 	return (SK_FindNodeOfType(sk, type, AG_ReadUint32(buf)));
+}
+
+void
+SK_SetLengthUnit(SK *sk, const AG_Unit *unit)
+{
+	AG_MutexLock(&sk->lock);
+	sk->uLen = unit;
+	AG_MutexUnlock(&sk->lock);
 }
 
 #endif /* HAVE_OPENGL */

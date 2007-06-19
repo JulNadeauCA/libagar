@@ -33,6 +33,10 @@
 #include <core/core.h>
 
 #include "sk.h"
+#include "sk_view.h"
+#include "sg_gui.h"
+
+#include <gui/hsvpal.h>
 
 SK_Line *
 SK_LineNew(void *pnode)
@@ -102,6 +106,17 @@ SK_LineDraw(void *p, SK_View *skv)
 }
 
 void
+SK_LineEdit(void *p, AG_Widget *box, SK_View *skv)
+{
+	SK_Line *line = p;
+	AG_HSVPal *pal;
+
+	SG_SpinReal(box, _("Width: "), &line->width);
+	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+	SG_WidgetBindReal(pal, "RGBAv", (void *)&line->color);
+}
+
+void
 SK_LineWidth(SK_Line *line, SG_Real size)
 {
 	line->width = size;
@@ -123,6 +138,7 @@ SK_NodeOps skLineOps = {
 	SK_LineSave,
 	NULL,		/* draw_relative */
 	SK_LineDraw,
+	SK_LineEdit
 };
 
 #ifdef EDITION

@@ -132,6 +132,7 @@ SK_NodeOps skArcOps = {
 	SK_ArcSave,
 	NULL,		/* draw_relative */
 	SK_ArcDraw,
+	NULL,		/* edit */
 };
 
 #ifdef EDITION
