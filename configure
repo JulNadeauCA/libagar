@@ -270,7 +270,7 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
-VERSION="\"1.3-beta\""
+VERSION="\"06182007\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif" >> config/version.h
@@ -741,6 +741,58 @@ else
 	echo "no"
 fi
 fi;
+echo -n "checking for a compatible <sys/queue.h>..."
+echo -n "checking for a compatible <sys/queue.h>..." >> config.log
+cat << EOT > conftest.c
+#include <sys/queue.h>
+
+struct foo { TAILQ_ENTRY(foo) foos; };
+struct bar { CIRCLEQ_ENTRY(bar) bars; };
+TAILQ_HEAD(,foo) fooq = TAILQ_HEAD_INITIALIZER(fooq);
+CIRCLEQ_HEAD(,bar) barq = CIRCLEQ_HEAD_INITIALIZER(barq);
+
+int main(int argc, char *argv[])
+{
+	struct foo foo1;
+	struct bar bar1;
+	struct foo *pfoo;
+	
+	TAILQ_INIT(&fooq);
+	TAILQ_INSERT_HEAD(&fooq, &foo1, foos);
+	TAILQ_FOREACH(pfoo, &fooq, foos) { }
+	TAILQ_REMOVE(&fooq, &foo1, foos);
+
+	CIRCLEQ_INIT(&bar1);
+	CIRCLEQ_INSERT_HEAD(&barq, &bar1, bars);
+	CIRCLEQ_FOREACH(pbar, &barq, bars) { }
+	CIRCLEQ_REMOVE(&barq, &bar1, bars);
+
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+	echo "failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
+echo "#define _MK_HAVE_SYS_QUEUE_H" $_MK_HAVE_SYS_QUEUE_H >> config/_mk_have_sys_queue_h.h
+echo "#endif" >> config/_mk_have_sys_queue_h.h
+
+	_MK_HAVE_SYS_QUEUE_H=yes
+
+	echo "yes"
+else
+	echo "#undef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
+
+	echo "no"
+fi
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c

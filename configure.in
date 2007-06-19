@@ -15,7 +15,7 @@ REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
 
 # Agar version
-HDEFINE(VERSION, "\"1.3-beta\"")
+HDEFINE(VERSION, "\"06182007\"")
 HDEFINE(RELEASE, "\"The Birth of an Era Obscured by Sulfur and Flames\"")
 
 # Installation directories
@@ -34,6 +34,7 @@ MDEFINE(PSDIR, "\${PREFIX}/share/agar/doc")
 
 CHECK(cc)
 CHECK(sys_types)
+CHECK(sys_queue)
 CHECK(progname)
 CHECK(free_null)
 CHECK(math)
