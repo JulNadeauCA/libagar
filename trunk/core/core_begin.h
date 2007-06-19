@@ -9,6 +9,10 @@
 # include <agar/config/_mk_have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
+#ifndef _AGAR_HAVE_SYS_QUEUE_H
+# include <agar/config/_mk_have_sys_queue_h.h>
+# define _AGAR_HAVE_SYS_QUEUE_H_
+#endif
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 # include <agar/config/_mk_have_unsigned_typedefs.h>
 # define _AGAR_HAVE_UNSIGNED_TYPEDEFS_
@@ -79,4 +83,8 @@
 #define AG_PATHSEP "/"
 #endif
 
+#ifdef _AGAR_HAVE_SYS_QUEUE_H
+#include <sys/queue.h>
+#else
 #include <agar/compat/queue.h>
+#endif
