@@ -301,8 +301,8 @@ AG_ProcessEvent(SDL_Event *ev)
 			AG_MenuInit(me, 0);
 			mi = me->sel_item = AG_MenuAddItem(me, NULL);
 
-			TAILQ_FOREACH_REVERSE(win, &agView->windows,
-			    windows, ag_windowq) {
+			TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
+			    windows) {
 				if (strcmp(win->caption, "win-popup")
 				    == 0) {
 					continue;

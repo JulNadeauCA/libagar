@@ -1602,7 +1602,7 @@ MAP_LocateItem(MAP *m, MAP_Node *node, int xoffs, int yoffs, int xd, int yd,
 	SDL_Rect rExt;
 	MAP_Item *r;
 
-	TAILQ_FOREACH_REVERSE(r, &node->nrefs, nrefs, map_itemq) {
+	TAILQ_FOREACH_REVERSE(r, &node->nrefs, map_itemq, nrefs) {
 		if (r->layer != m->cur_layer) {
 			continue;
 		}
