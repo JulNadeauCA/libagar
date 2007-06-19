@@ -19,5 +19,5 @@ MAN3=	SG.3 SG_Camera.3 SG_Light.3 SG_View.3
 CFLAGS+=${SDL_CFLAGS} ${AGAR_CFLAGS}
 
 include .manlinks.mk
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk
