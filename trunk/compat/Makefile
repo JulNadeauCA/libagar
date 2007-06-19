@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.10 2005/05/01 00:11:12 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -13,4 +11,4 @@ SRCS=	setenv.c strlcat.c strlcpy.c strsep.c asprintf.c vasprintf.c \
 
 CFLAGS+=-I.. ${SDL_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
+include ${TOP}/mk/build.lib.mk

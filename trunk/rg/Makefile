@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.13 2005/06/01 09:08:45 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -15,5 +13,5 @@ MAN3=	RG_Tileview.3
 CFLAGS+=${SDL_CFLAGS}
 
 include .manlinks.mk
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.49 2005/09/11 02:33:57 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -44,5 +42,5 @@ prereq:
 
 .PHONY: clean cleandir install deinstall depend configure configure-scripts prereq
 
-include ${TOP}/mk/csoft.common.mk
-include ${TOP}/mk/csoft.subdir.mk
+include ${TOP}/mk/build.common.mk
+include ${TOP}/mk/build.subdir.mk

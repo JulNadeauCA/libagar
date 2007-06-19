@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.4 2004/03/10 16:58:40 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -12,5 +10,5 @@ SRCS=	gettext.c textdomain.c
 
 CFLAGS+=${SDL_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

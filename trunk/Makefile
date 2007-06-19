@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.48 2005/02/03 11:22:11 vedge Exp $
-
 TOP=	.
 include ${TOP}/Makefile.config
 
@@ -123,6 +121,6 @@ deinstall-includes:
 .PHONY: configure cleandir-config package release fastclean
 .PHONY: install-includes deinstall-includes
 
-include ${TOP}/mk/csoft.common.mk
-include ${TOP}/mk/csoft.subdir.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.common.mk
+include ${TOP}/mk/build.subdir.mk
+include ${TOP}/mk/build.man.mk

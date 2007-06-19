@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.97 2005/09/20 13:46:29 vedge Exp $
-
 TOP=..
 include ${TOP}/Makefile.config
 
@@ -20,5 +18,5 @@ CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
 	${PTHREADS_XOPEN_CFLAGS}
 
 include .manlinks.mk
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

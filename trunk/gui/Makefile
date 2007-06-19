@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.90 2005/10/01 09:50:55 vedge Exp $
-
 TOP=	../
 include ${TOP}/Makefile.config
 
@@ -30,5 +28,5 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_Graph.3 AG_Checkbox.3 AG_Label.3 AG_Radio.3 \
 CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 
 include .manlinks.mk
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

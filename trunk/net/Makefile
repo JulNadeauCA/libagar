@@ -11,5 +11,5 @@ SRCS=		command.c server.c client.c fgetln.c
 CFLAGS+=${SDL_CFLAGS} -D_GNU_SOURCE
 
 include .manlinks.mk
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk

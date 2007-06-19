@@ -82,7 +82,7 @@ AG_FindUnit(const char *key)
 			}
 		}
 	}
-	fatal("no such unit: `%s'", key);
+	AG_SetError(_("No such unit: %s"), key);
 	return (NULL);
 }
 

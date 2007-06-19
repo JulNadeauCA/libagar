@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.1 2005/09/27 03:48:57 vedge Exp $
-
 TOP=	../..
 include Makefile.config
 
@@ -17,4 +15,4 @@ configure: configure.in
 
 .PHONY: configure
 
-include ${TOP}/mk/csoft.prog.mk
+include ${TOP}/mk/build.prog.mk

@@ -10,4 +10,4 @@ SRCS=	sc_math.c sc_matrix.c sc_vector.c sc_ivector.c sc_gaussj.c sc_lu.c \
 
 CFLAGS+=${SDL_CFLAGS} ${AGAR_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
+include ${TOP}/mk/build.lib.mk

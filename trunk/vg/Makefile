@@ -1,5 +1,3 @@
-#	$Csoft: Makefile,v 1.12 2004/11/25 02:49:01 vedge Exp $
-
 TOP=	..
 include ${TOP}/Makefile.config
 
@@ -15,5 +13,5 @@ SRCS=	vg.c vg_block.c vg_circle.c vg_arc.c vg_line.c vg_mask.c \
 
 CFLAGS+=${SDL_CFLAGS}
 
-include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/mk/csoft.man.mk
+include ${TOP}/mk/build.lib.mk
+include ${TOP}/mk/build.man.mk
