@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 #
-# Extract manual links from mdoc source.
 # Public domain
+#
+# manlinks.pl: Extract manual links from mdoc source.
 #
 
 my $man = $ARGV[0];
