@@ -756,13 +756,14 @@ int main(int argc, char *argv[])
 	struct foo foo1;
 	struct bar bar1;
 	struct foo *pfoo;
+	struct bar *pbar;
 	
 	TAILQ_INIT(&fooq);
 	TAILQ_INSERT_HEAD(&fooq, &foo1, foos);
 	TAILQ_FOREACH(pfoo, &fooq, foos) { }
 	TAILQ_REMOVE(&fooq, &foo1, foos);
 
-	CIRCLEQ_INIT(&bar1);
+	CIRCLEQ_INIT(&barq);
 	CIRCLEQ_INSERT_HEAD(&barq, &bar1, bars);
 	CIRCLEQ_FOREACH(pbar, &barq, bars) { }
 	CIRCLEQ_REMOVE(&barq, &bar1, bars);
