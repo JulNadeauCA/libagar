@@ -302,72 +302,49 @@ ViewSwitchCamera(AG_Event *event)
 }
 
 static void
-PopupMenuClose(SG_View *sv)
-{
-	AG_MenuCollapse(sv->popup.menu, sv->popup.item);
-	AG_ObjectDestroy(sv->popup.menu);
-	Free(sv->popup.menu, M_OBJECT);
-
-	sv->popup.menu = NULL;
-	sv->popup.item = NULL;
-	sv->popup.win = NULL;
-}
-
-static void
 PopupMenuOpen(SG_View *sv, int x, int y)
 {
 	SG *sg = sv->sg;
+	AG_MenuItem *mRoot, *mOvl, *mCam;
 
-	if (sv->popup.menu != NULL)
-		PopupMenuClose(sv);
+	if (sv->popup != NULL) {
+		AG_PopupDestroy(sv->popup);
+	}
+	sv->popup = AG_PopupNew(sv);
+	mRoot = sv->popup->item;
 
-	sv->popup.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
-	AG_MenuInit(sv->popup.menu, 0);
+	AG_MenuIntFlags(mRoot, _("Lighting"),
+	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
+	AG_MenuIntFlags(mRoot, _("Z-Buffer"),
+	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_DEPTH_TEST, 1);
 
-	sv->popup.item = AG_MenuAddItem(sv->popup.menu, NULL);
+	mOvl = AG_MenuNode(mRoot, _("Overlay"), -1);
 	{
-		AG_MenuItem *mOvl, *mCam;
+		AG_MenuIntFlags(mOvl, _("Wireframe"),
+		    GRID_ICON,
+		    &sg->flags, SG_OVERLAY_WIREFRAME, 0);
+		AG_MenuIntFlags(mOvl, _("Vertices"),
+		    VGPOINTS_ICON,
+		    &sg->flags, SG_OVERLAY_VERTICES, 0);
+		AG_MenuIntFlags(mOvl, _("Facet normals"),
+		    UP_ARROW_ICON,
+		    &sg->flags, SG_OVERLAY_FNORMALS, 0);
+		AG_MenuIntFlags(mOvl, _("Vertex normals"),
+		    UP_ARROW_ICON,
+		    &sg->flags, SG_OVERLAY_VNORMALS, 0);
+	}
+	mCam = AG_MenuNode(mRoot, _("Switch to camera"), -1);
+	{
+		AG_MenuItem *mi;
+		SG_Camera *cam;
 
-		AG_MenuIntFlags(sv->popup.item, _("Lighting"),
-		    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
-		AG_MenuIntFlags(sv->popup.item, _("Z-Buffer"),
-		    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_DEPTH_TEST, 1);
-
-		mOvl = AG_MenuNode(sv->popup.item, _("Overlay"), -1);
-		{
-			AG_MenuIntFlags(mOvl, _("Wireframe"),
-			    GRID_ICON,
-			    &sg->flags, SG_OVERLAY_WIREFRAME, 0);
-			AG_MenuIntFlags(mOvl, _("Vertices"),
-			    VGPOINTS_ICON,
-			    &sg->flags, SG_OVERLAY_VERTICES, 0);
-			AG_MenuIntFlags(mOvl, _("Facet normals"),
-			    UP_ARROW_ICON,
-			    &sg->flags, SG_OVERLAY_FNORMALS, 0);
-			AG_MenuIntFlags(mOvl, _("Vertex normals"),
-			    UP_ARROW_ICON,
-			    &sg->flags, SG_OVERLAY_VNORMALS, 0);
-		}
-		AG_MenuSeparator(sv->popup.item);
-		AG_MenuSeparator(sv->popup.item);
-		AG_MenuSeparator(sv->popup.item);
-		AG_MenuSeparator(sv->popup.item);
-		mCam = AG_MenuNode(sv->popup.item, _("Switch to camera"), -1);
-		{
-			AG_MenuItem *mi;
-			SG_Camera *cam;
-
-			SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera") {
-				mi = AG_MenuAction(mCam, SGNODE(cam)->name,
-				    OBJ_ICON,
-				    ViewSwitchCamera, "%p,%p", sv, cam);
-				mi->state = (cam == sv->cam);
-			}
+		SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera") {
+			mi = AG_MenuAction(mCam, SGNODE(cam)->name, OBJ_ICON,
+			    ViewSwitchCamera, "%p,%p", sv, cam);
+			mi->state = (cam == sv->cam);
 		}
 	}
-	sv->popup.menu->sel_item = sv->popup.item;
-	sv->popup.win = AG_MenuExpand(sv->popup.menu, sv->popup.item,
-	    AGWIDGET(sv)->cx+x, AGWIDGET(sv)->cy+y);
+	AG_PopupShow(sv->popup);
 }
 
 static void
@@ -610,10 +587,8 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 	sv->flags = flags;
 	sv->sg = sg;
 	sv->cam = NULL;
-	sv->popup.menu = NULL;
-	sv->popup.item = NULL;
-	sv->popup.win = NULL;
 	sv->editPane = NULL;
+	sv->popup = NULL;
 
 	AG_SetEvent(sv, "attached", SG_ViewAttached, NULL);
 

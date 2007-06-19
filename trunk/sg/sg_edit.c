@@ -105,11 +105,11 @@ EditNode(AG_Event *event)
 	SG_Node *node = it->p1;
 	int hPane, wPane;
 
-	if (node->ops->edit == NULL) {
-		return;
-	}
 	if (sgv->editPane != NULL) {
 		AG_ObjectDetach(sgv->editPane);
+	}
+	if (node->ops->edit == NULL) {
+		return;
 	}
 	sgv->editPane = (AG_Widget *)AG_BoxNew(vp->div[1], AG_BOX_VERT,
 	    AG_BOX_EXPAND);
