@@ -37,6 +37,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <ctype.h>
 
 static AG_WidgetOps agFileDlgOps = {
 	{
