@@ -33,6 +33,10 @@
 #include <core/core.h>
 
 #include "sk.h"
+#include "sk_view.h"
+#include "sg_gui.h"
+
+#include <gui/hsvpal.h>
 
 SK_Circle *
 SK_CircleNew(void *pnode)
@@ -114,6 +118,18 @@ SK_CircleDraw(void *p, SK_View *skv)
 }
 
 void
+SK_CircleEdit(void *p, AG_Widget *box, SK_View *skv)
+{
+	SK_Circle *circle = p;
+	AG_HSVPal *pal;
+
+	SG_SpinReal(box, _("Radius: "), &circle->r);
+	SG_SpinReal(box, _("Width: "), &circle->width);
+	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+	SG_WidgetBindReal(pal, "RGBAv", (void *)&circle->color);
+}
+
+void
 SK_CircleWidth(SK_Circle *circle, SG_Real size)
 {
 	circle->width = size;
@@ -135,6 +151,7 @@ SK_NodeOps skCircleOps = {
 	SK_CircleSave,
 	NULL,		/* draw_relative */
 	SK_CircleDraw,
+	SK_CircleEdit
 };
 
 #ifdef EDITION

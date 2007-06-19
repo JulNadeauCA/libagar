@@ -33,7 +33,7 @@ typedef struct sg_view {
 		SG_Vector rsens;	/* Rotation sensitivity vector */
 		SG_Vector tsens;	/* Translation sensitivity vector */
 	} mouse;
-	AG_PopupMenu popup;		/* Popup menu for context */
+	AG_PopupMenu *popup;		/* Popup menu for context */
 	AG_Widget *editPane;		/* Edit container */
 
 	SG_Real rot_yaw_incr;		/* Base yaw increment */

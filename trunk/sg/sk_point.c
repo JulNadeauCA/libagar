@@ -29,6 +29,10 @@
 #include <core/core.h>
 
 #include "sk.h"
+#include "sk_view.h"
+#include "sg_gui.h"
+
+#include <gui/hsvpal.h>
 
 SK_Point *
 SK_PointNew(void *pnode)
@@ -93,6 +97,18 @@ SK_PointSize(SK_Point *pt, SG_Real size)
 }
 
 void
+SK_PointEdit(void *p, AG_Widget *box, SK_View *skv)
+{
+	SK_Point *pt = p;
+	AG_HSVPal *pal;
+
+	SG_SpinReal(box, _("Size: "), &pt->size);
+
+	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+	SG_WidgetBindReal(pal, "RGBAv", (void *)&pt->color);
+}
+
+void
 SK_PointColor(SK_Point *pt, SG_Color c)
 {
 	pt->color = c;
@@ -107,7 +123,8 @@ SK_NodeOps skPointOps = {
 	SK_PointLoad,
 	SK_PointSave,
 	SK_PointDraw,
-	NULL		/* draw_absolute */
+	NULL,		/* draw_absolute */
+	SK_PointEdit,
 };
 
 #ifdef EDITION

@@ -7,9 +7,11 @@
 #include <config/edition.h>
 #include <sg/sg.h>
 #include <sg/sk_view.h>
+#include <gui/units.h>
 #else
 #include <agar/sg/sg.h>
 #include <agar/sg/sk_view.h>
+#include <agar/gui/units.h>
 #endif
 
 #include "begin_code.h"
@@ -32,6 +34,7 @@ typedef struct sk_node_ops {
 	int (*save)(struct sk *, void *, AG_Netbuf *);
 	void (*draw_relative)(void *, SK_View *);
 	void (*draw_absolute)(void *, SK_View *);
+	void (*edit)(void *, struct ag_widget *, SK_View *);
 } SK_NodeOps;
 
 typedef struct sk_node {
@@ -77,6 +80,7 @@ typedef struct sk {
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
 	TAILQ_HEAD(,sk_constraint) cgraph;	/* Constraint graph */
+	const AG_Unit *uLen;			/* Length unit */
 } SK;
 
 #define SKNODE(node) ((SK_Node *)(node))
@@ -148,9 +152,9 @@ void		*SK_FindNode(SK *, Uint32);
 void		*SK_FindNodeOfType(SK *, const char *, Uint32);
 Uint32		 SK_GenName(SK *);
 char		*SK_NodeName(void *);
-
 void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
 void		 SK_WriteRef(AG_Netbuf *, void *);
+void		 SK_SetLengthUnit(SK *, const AG_Unit *);
 
 #define	SK_Identity(n) SG_MatrixIdentityv(&SKNODE(n)->T)
 #define	SK_Translate(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(v).x,(v).y)

@@ -139,6 +139,9 @@ SK_ViewButtonDown(AG_Event *event)
 	skv->mouse.last = vPos;
 	
 	switch (button) {
+	case SDL_BUTTON_RIGHT:
+		SK_ViewPopupMenu(skv);
+		break;
 	case SDL_BUTTON_MIDDLE:
 		skv->mouse.panning = 1;
 		break;
@@ -265,6 +268,8 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	skv->deftool = NULL;
 	skv->wPixel = 1.0;
 	skv->hPixel = 1.0;
+	skv->editPane = NULL;
+	skv->popup = NULL;
 	SG_MatrixIdentityv(&skv->mView);
 	SG_MatrixIdentityv(&skv->mProj);
 	TAILQ_INIT(&skv->tools);
@@ -523,6 +528,47 @@ void
 SK_ViewSetDefaultTool(SK_View *skv, SK_Tool *tool)
 {
 	skv->deftool = tool;
+}
+
+static void
+SetLengthUnit(AG_Event *event)
+{
+	SK *sk = AG_PTR(1);
+	char *uname = AG_STRING(2);
+	const AG_Unit *unit;
+
+	dprintf("%s: setting unit to %s\n", AGOBJECT(sk)->name, uname);
+	if ((unit = AG_FindUnit(uname)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "Unknown unit: %s", uname);
+		return;
+	}
+	SK_SetLengthUnit(sk, unit);
+}
+
+void
+SK_ViewPopupMenu(SK_View *skv)
+{
+	SK *sk = skv->sk;
+	AG_MenuItem *node;
+
+	if (skv->popup != NULL) {
+		AG_PopupDestroy(skv->popup);
+	}
+	skv->popup = AG_PopupNew(skv);
+	node = AG_MenuNode(skv->popup->item, _("Unit system"), -1);
+	{
+		AG_MenuAction(node, _("Inches"), -1,
+		    SetLengthUnit, "%p,%s", sk, "in");
+		AG_MenuAction(node, _("Meters"), -1,
+		    SetLengthUnit, "%p,%s", sk, "m");
+		AG_MenuAction(node, _("Centimeters"), -1,
+		    SetLengthUnit, "%p,%s", sk, "cm");
+		AG_MenuAction(node, _("Millimeters"), -1,
+		    SetLengthUnit, "%p,%s", sk, "mm");
+		AG_MenuAction(node, _("Microns"), -1,
+		    SetLengthUnit, "%p,%s", sk, "um");
+	}
+	AG_PopupShow(skv->popup);
 }
 
 #endif /* HAVE_OPENGL */
