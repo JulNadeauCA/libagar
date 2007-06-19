@@ -10,6 +10,8 @@
 #define _AGAR_WIDGET_UNITS_H_
 #include "begin_code.h"
 
+#define AG_UNIT_KEY_MAX	32
+
 typedef struct {
 	char *key;		/* Key */
 	char *abbr;		/* Symbol */
