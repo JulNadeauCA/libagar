@@ -1822,7 +1822,7 @@ echo "#endif" >> config/have_pthread_mutex_recursive_np.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 fi;
-CFLAGS="$CFLAGS -I$SRC -D_AGAR_INTERNAL"
+CFLAGS="$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
  then
