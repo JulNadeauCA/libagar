@@ -882,7 +882,7 @@ mousebuttondown(AG_Event *event)
 			} else if (oind >= tind) {		  /* Backward */
 				i = nitems;
 				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
-				    items, ag_tlist_itemq) {
+				    ag_tlist_itemq, items) {
 					if (i <= oind)
 						SelectItem(tl, oitem);
 					if (i == tind)

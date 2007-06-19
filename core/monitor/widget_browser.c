@@ -78,7 +78,7 @@ poll_windows(AG_Event *event)
 
 	AG_TlistClear(tl);
 	AG_MutexLock(&agView->lock);
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
 		poll_windows_do(tl, win, 0);
 	}
 	AG_MutexUnlock(&agView->lock);

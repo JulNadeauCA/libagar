@@ -31,8 +31,8 @@
  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
  */
 
-#ifndef	_SYS_QUEUE_H_
-#define	_SYS_QUEUE_H_
+#ifndef	_AGAR_COMPAT_QUEUE_H_
+#define	_AGAR_COMPAT_QUEUE_H_
 
 /*
  * This file defines five types of data structures: singly-linked lists, 
@@ -316,7 +316,7 @@ struct {								\
 	    (var) != TAILQ_END(head);					\
 	    (var) = TAILQ_NEXT(var, field))
 
-#define TAILQ_FOREACH_REVERSE(var, head, field, headname)		\
+#define TAILQ_FOREACH_REVERSE(var, head, headname, field)		\
 	for((var) = TAILQ_LAST(head, headname);				\
 	    (var) != TAILQ_END(head);					\
 	    (var) = TAILQ_PREV(var, headname, field))
@@ -495,4 +495,4 @@ struct {								\
 		(elm2)->field.cqe_prev->field.cqe_next = (elm2);	\
 } while (0)
 
-#endif	/* !_SYS_QUEUE_H_ */
+#endif	/* !_AGAR_COMPAT_QUEUE_H_ */

@@ -627,8 +627,8 @@ AG_WindowEvent(SDL_Event *ev)
 		 * with normal processing of the MOUSEBUTTONDOWN event.
 		 */
 		agView->focus_win = NULL;
-		TAILQ_FOREACH_REVERSE(win, &agView->windows, windows,
-		    ag_windowq) {
+		TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
+		    windows) {
 			AG_MutexLock(&win->lock);
 			if (!win->visible ||
 			    !AG_WidgetArea(win, ev->button.x, ev->button.y)) {
@@ -655,7 +655,7 @@ AG_WindowEvent(SDL_Event *ev)
 	 * Iterate over the visible windows and deliver the appropriate Agar
 	 * events.
 	 */
-	TAILQ_FOREACH_REVERSE(win, &agView->windows, windows, ag_windowq) {
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
 		if (agView->modal_win != NULL) {
 			if (win == agView->modal_win) {
 				if ((ev->type == SDL_MOUSEBUTTONDOWN) &&
