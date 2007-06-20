@@ -64,6 +64,9 @@ Single or multiple selections of items are possible.
 .Ft void
 .Fn AG_TlistPrescale "AG_Tlist *tl" "const char *text" "int nitems"
 .Pp
+.Ft void
+.Fn AG_TlistSetDblClickFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
 .nr nS 0
 The
 .Fn AG_TlistNew
@@ -137,6 +140,12 @@ requests sufficient height to display
 .Fa nitems
 items at once, and sufficient width to display an item containing
 .Fa text .
+.Pp
+.Fn AG_TlistSetDblClickFn
+arranges for the given callback
+.Fa fn
+to be invoked with the given arguments (as well as the item pointer) when the
+user double clicks on an item.
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "AG_TlistItem *"
@@ -307,7 +316,7 @@ or
 .Sh POPUP MENUS
 .nr nS 0
 .Ft "AG_MenuItem *"
-.Fn AG_TlistSetPopupFn "AG_Tlist *tlist" "void (*fn)(AG_Event *)" "const char *fn_args" "..."
+.Fn AG_TlistSetPopupFn "AG_Tlist *tlist" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_TlistSetPopup "AG_Tlist *tlist" "const char *category"
@@ -315,7 +324,7 @@ or
 .nr nS 1
 The
 .Fn AG_TlistSetPopupFn
-function arranges for the given event handler function
+function arranges for the given callback
 .Fa fn
 to be invoked with the given arguments whenever the user right-clicks on an
 item on the list.
@@ -358,6 +367,8 @@ was selected.
 .It Fn tlist-dblclick "AG_TlistItem *item"
 The user just double-clicked
 .Fa item .
+Binding to this event is equivalent to using
+.Fn AG_TlistSetDblClickFn .
 .It Fn tlist-poll "void"
 The
 .Dv AG_TLIST_POLL

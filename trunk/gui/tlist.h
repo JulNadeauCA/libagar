@@ -78,6 +78,7 @@ typedef struct ag_tlist {
 	TAILQ_HEAD(,ag_tlist_popup) popups; /* Popup menus */
 	int (*compare_fn)(const AG_TlistItem *, const AG_TlistItem *);
 	AG_Event *popupEv;
+	AG_Event *dblClickEv;
 } AG_Tlist;
 
 /* Traverse the user pointer of tlist items assumed to be of the same type. */
@@ -125,8 +126,9 @@ AG_TlistItem	*AG_TlistFindText(AG_Tlist *, const char *);
 AG_TlistItem	*AG_TlistFirstItem(AG_Tlist *);
 AG_TlistItem	*AG_TlistLastItem(AG_Tlist *);
 AG_MenuItem	*AG_TlistSetPopup(AG_Tlist *, const char *);
-void		 AG_TlistSetPopupFn(AG_Tlist *, void (*)(AG_Event *),
-		                    const char *, ...);
+void		 AG_TlistSetDblClickFn(AG_Tlist *, AG_EventFn, const char *,
+		                       ...);
+void		 AG_TlistSetPopupFn(AG_Tlist *, AG_EventFn, const char *, ...);
 
 void AG_TlistSetCompareFn(AG_Tlist *, int (*)(const AG_TlistItem *,
 		          const AG_TlistItem *));
