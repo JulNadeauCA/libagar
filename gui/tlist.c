@@ -195,6 +195,7 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	tl->prew = tl->item_h + 5;
 	tl->preh = tl->item_h + 2;
 	tl->popupEv = NULL;
+	tl->dblClickEv = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
@@ -914,12 +915,16 @@ mousebuttondown(AG_Event *event)
 		/* XXX compare the args as well as p1 */
 		if (tl->dblclicked != NULL && tl->dblclicked == ti->p1) {
 			AG_CancelEvent(tl, "dblclick-expire");
+			if (tl->dblClickEv != NULL) {
+				AG_PostEvent(NULL, tl, tl->dblClickEv->name,
+				    NULL);
+			}
 			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti->p1);
 			tl->dblclicked = NULL;
 		} else {
 			tl->dblclicked = ti->p1;
 			AG_SchedEvent(NULL, tl, agMouseDblclickDelay,
-			    "dblclick-expire", "%p", ti);
+			    "dblclick-expire", NULL);
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
@@ -1155,6 +1160,16 @@ AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
 	it->flags |= AG_TLIST_DYNICON;
 	UpdateItemIcon(tl, it, iconsrc);
+}
+
+void
+AG_TlistSetDblClickFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt,
+    ...)
+{
+	AG_MutexLock(&tl->lock);
+	tl->dblClickEv = AG_SetEvent(tl, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(tl->dblClickEv, fmt);
+	AG_MutexUnlock(&tl->lock);
 }
 
 void
