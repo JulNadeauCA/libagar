@@ -69,6 +69,9 @@ provides tree support, but no multi-column functionality.
 .Ft "void"
 .Fn AG_TableInit "AG_Table *tbl" "Uint flags"
 .Pp
+.Ft "void"
+.Fn AG_TablePrescale "AG_Table *tbl" "int width" "int nrows"
+.Pp
 .nr nS 0
 The
 .Fn AG_TableNew
@@ -110,6 +113,14 @@ enables multiple selections by default.
 triggers the
 .Sq table-poll
 event before the table is drawn.
+.Pp
+The
+.Fn AG_TablePrescale
+function requests minimum sizing of the table, where
+.Fa width
+is the width in pixels and
+.Fa nrows
+is the number of rows to display.
 .Pp
 .Sh TABLE FUNCTIONS
 .nr nS 1
