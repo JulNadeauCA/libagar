@@ -127,8 +127,12 @@ typedef struct ag_table {
 	AG_Scrollbar *vbar;		/* Vertical scrollbar */
 	AG_Scrollbar *hbar;		/* Horizontal scrollbar */
 	AG_Event *poll_ev;		/* Poll event */
+	AG_Event *dblClickRowEv;	/* Row double click callback */
+	AG_Event *dblClickColEv;	/* Column double click callback */
+	int dblClickedRow;
+	int dblClickedCol;
 
-	SLIST_HEAD(,ag_table_popup) popups;	/* Popup menus */
+	SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
 
 __BEGIN_DECLS
@@ -177,6 +181,8 @@ int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
 void	     AG_TableUpdateScrollbars(AG_Table *);
 AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 
+void	AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void	AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

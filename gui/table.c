@@ -58,6 +58,8 @@ static void keydown(AG_Event *);
 static void keyup(AG_Event *);
 static void lostfocus(AG_Event *);
 static void kbdscroll(AG_Event *);
+static void dblclick_row_expire(AG_Event *);
+static void dblclick_col_expire(AG_Event *);
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
@@ -125,8 +127,12 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->n = 0;
 	t->m = 0;
 	t->mVis = 0;
-	t->poll_ev = NULL;
 	t->xoffs = 0;
+	t->poll_ev = NULL;
+	t->dblClickRowEv = NULL;
+	t->dblClickColEv = NULL;
+	t->dblClickedRow = -1;
+	t->dblClickedCol = -1;
 	SLIST_INIT(&t->popups);
 	
 	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
@@ -138,6 +144,8 @@ AG_TableInit(AG_Table *t, Uint flags)
 	AG_SetEvent(t, "widget-hidden", lostfocus, NULL);
 	AG_SetEvent(t, "detached", lostfocus, NULL);
 	AG_SetEvent(t, "kbdscroll", kbdscroll, NULL);
+	AG_SetEvent(t, "dblclick-row-expire", dblclick_row_expire, NULL);
+	AG_SetEvent(t, "dblclick-col-expire", dblclick_col_expire, NULL);
 }
 
 void
@@ -526,6 +534,24 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 }
 
 void
+AG_TableSetRowDblClickFn(AG_Table *tbl, AG_EventFn ev, const char *fmt, ...)
+{
+	AG_MutexLock(&tbl->lock);
+	tbl->dblClickRowEv = AG_SetEvent(tbl, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(tbl->dblClickRowEv, fmt);
+	AG_MutexUnlock(&tbl->lock);
+}
+
+void
+AG_TableSetColDblClickFn(AG_Table *tbl, AG_EventFn ev, const char *fmt, ...)
+{
+	AG_MutexLock(&tbl->lock);
+	tbl->dblClickColEv = AG_SetEvent(tbl, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(tbl->dblClickColEv, fmt);
+	AG_MutexUnlock(&tbl->lock);
+}
+
+void
 AG_TableRedrawCells(AG_Table *t)
 {
 	AG_MutexLock(&t->lock);
@@ -686,21 +712,21 @@ AG_TableEnd(AG_Table *t)
 }
 
 static __inline__ int
-multisel(AG_Table *t)
+SelectingMultiple(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTITOGGLE) ||
 	        ((t->flags & AG_TABLE_MULTI) && SDL_GetModState() & KMOD_CTRL));
 }
 
 static __inline__ int
-rangesel(AG_Table *t)
+SelectingRange(AG_Table *t)
 {
 	return ((t->flags & AG_TABLE_MULTI) &&
 	        (SDL_GetModState() & KMOD_SHIFT));
 }
 
 static void
-show_popup(AG_Table *tbl, AG_TablePopup *tp)
+ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 {
 	int x, y;
 
@@ -714,7 +740,7 @@ show_popup(AG_Table *tbl, AG_TablePopup *tp)
 }
 
 static void
-column_popup(AG_Table *t, int px)
+ColumnRightClick(AG_Table *t, int px)
 {
 	Uint n;
 	int cx;
@@ -728,7 +754,7 @@ column_popup(AG_Table *t, int px)
 		if (x > cx && x < x2) {
 			SLIST_FOREACH(tp, &t->popups, popups) {
 				if (tp->m == -1 && tp->n == n) {
-					show_popup(t, tp);
+					ShowPopup(t, tp);
 					return;
 				}
 			}
@@ -738,21 +764,21 @@ column_popup(AG_Table *t, int px)
 }
 
 static void
-column_sel(AG_Table *t, int px)
+ColumnLeftClick(AG_Table *tbl, int px)
 {
 	AG_TableCell *c;
-	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
-	int multi = multisel(t);
+	int x = px - (COLUMN_RESIZE_RANGE/2), x1;
+	int multi = SelectingMultiple(tbl);
 	Uint n;
 
-	for (n = 0, cx = t->xoffs; n < t->n; n++) {
-		AG_TableCol *tc = &t->cols[n];
-		int x2 = cx+tc->w;
+	for (n = 0, x1 = tbl->xoffs; n < tbl->n; n++) {
+		AG_TableCol *tc = &tbl->cols[n];
+		int x2 = x1+tc->w;
 
-		if (x > cx && x < x2) {
+		if (x > x1 && x < x2) {
 			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
-				if (t->nResizing == -1) {
-					t->nResizing = n;
+				if (tbl->nResizing == -1) {
+					tbl->nResizing = n;
 				}
 			} else {
 				if (multi) {
@@ -760,57 +786,89 @@ column_sel(AG_Table *t, int px)
 				} else {
 					tc->selected = 1;
 				}
+				if (tbl->dblClickedCol != -1 &&
+				    tbl->dblClickedCol == n) {
+					AG_CancelEvent(tbl,
+					    "dblclick-col-expire");
+					if (tbl->dblClickColEv != NULL) {
+						AG_PostEvent(NULL, tbl,
+						    tbl->dblClickColEv->name,
+						    "%i", n);
+					}
+					AG_PostEvent(NULL, tbl,
+					    "table-dblclick-col", "%i", n);
+					tbl->dblClickedCol = -1;
+				} else {
+					tbl->dblClickedCol = n;
+					AG_SchedEvent(NULL, tbl,
+					    agMouseDblclickDelay,
+					    "dblclick-col-expire", NULL);
+				}
 				goto cont;
 			}
 		}
 		if (!multi)
 			tc->selected = 0;
 cont:
-		cx += tc->w;
+		x1 += tc->w;
 	}
 }
 
 static void
-cell_sel(AG_Table *t, int mc, int x)
+CellLeftClick(AG_Table *tbl, int mc, int x)
 {
 	AG_TableCell *c;
 	Uint m, n, i;
 
-	if (rangesel(t)) {
-		for (m = 0; m < t->m; m++) {
-			if (AG_TableRowSelected(t, m))
+	if (SelectingRange(tbl)) {
+		for (m = 0; m < tbl->m; m++) {
+			if (AG_TableRowSelected(tbl, m))
 				break;
 		}
-		if (m < t->m) {
+		if (m < tbl->m) {
 			if (m < mc) {
 				for (i = m; i <= mc; i++)
-					AG_TableSelectRow(t, i);
+					AG_TableSelectRow(tbl, i);
 			} else if (m > mc) {
 				for (i = mc; i <= m; i++)
-					AG_TableSelectRow(t, i);
+					AG_TableSelectRow(tbl, i);
 			} else {
-				AG_TableSelectRow(t, mc);
+				AG_TableSelectRow(tbl, mc);
 			}
 		}
-	} else if (multisel(t)) {
-		for (n = 0; n < t->n; n++) {
-			c = &t->cells[mc][n];
+	} else if (SelectingMultiple(tbl)) {
+		for (n = 0; n < tbl->n; n++) {
+			c = &tbl->cells[mc][n];
 			c->selected = !c->selected;
-			t->cols[n].selected = 0;
+			tbl->cols[n].selected = 0;
 		}
 	} else {
-		for (m = 0; m < t->m; m++) {
-			for (n = 0; n < t->n; n++) {
-				c = &t->cells[m][n];
+		for (m = 0; m < tbl->m; m++) {
+			for (n = 0; n < tbl->n; n++) {
+				c = &tbl->cells[m][n];
 				c->selected = ((int)m == mc);
-				t->cols[n].selected = 0;
+				tbl->cols[n].selected = 0;
 			}
+		}
+		if (tbl->dblClickedRow != -1 && tbl->dblClickedRow == mc) {
+			AG_CancelEvent(tbl, "dblclick-row-expire");
+			if (tbl->dblClickRowEv != NULL) {
+				AG_PostEvent(NULL, tbl,
+				    tbl->dblClickRowEv->name,
+				    "%i", mc);
+			}
+			AG_PostEvent(NULL, tbl, "table-dblclick-row", "%i", mc);
+			tbl->dblClickedRow = -1;
+		} else {
+			tbl->dblClickedRow = mc;
+			AG_SchedEvent(NULL, tbl, agMouseDblclickDelay,
+			    "dblclick-row-expire", NULL);
 		}
 	}
 }
 
 static void
-cell_popup(AG_Table *t, int m, int px)
+CellRightClick(AG_Table *t, int m, int px)
 {
 	AG_TablePopup *tp;
 	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
@@ -825,7 +883,7 @@ cell_popup(AG_Table *t, int m, int px)
 			SLIST_FOREACH(tp, &t->popups, popups) {
 				if ((tp->m == m || tp->m == -1) &&
 				    (tp->n == n || tp->n == -1)) {
-					show_popup(t, tp);
+					ShowPopup(t, tp);
 					return;
 				}
 			}
@@ -835,7 +893,7 @@ cell_popup(AG_Table *t, int m, int px)
 }
 
 static __inline__ int
-column_over(AG_Table *t, int y)
+OverColumn(AG_Table *t, int y)
 {
 	if (y <= t->row_h) {
 		return (-1);
@@ -884,24 +942,24 @@ mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_LEFT:
-		if ((m = column_over(t, y)) >= (int)t->m) {
+		if ((m = OverColumn(t, y)) >= (int)t->m) {
 			AG_TableDeselectAllRows(t);
 			goto out;
 		}
 		if (m < 0) {
-			column_sel(t, x);
+			ColumnLeftClick(t, x);
 		} else {
-			cell_sel(t, m, x);
+			CellLeftClick(t, m, x);
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
-		if ((m = column_over(t, y)) >= (int)t->m) {
+		if ((m = OverColumn(t, y)) >= (int)t->m) {
 			goto out;
 		}
 		if (m < 0) {
-			column_popup(t, x);
+			ColumnRightClick(t, x);
 		} else {
-			cell_popup(t, m, x);
+			CellRightClick(t, m, x);
 		}
 		break;
 	default:
@@ -997,7 +1055,7 @@ mousemotion(AG_Event *event)
 		AG_TableSizeFillCols(t);
 		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
-		if ((m = column_over(t, y)) == -1 &&
+		if ((m = OverColumn(t, y)) == -1 &&
 		    OverColumnResizeControl(t, x))
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
@@ -1031,7 +1089,8 @@ lostfocus(AG_Event *event)
 
 	AG_MutexLock(&t->lock);
 	AG_CancelEvent(t, "key-tick");
-	AG_CancelEvent(t, "dblclick-expire");
+	AG_CancelEvent(t, "dblclick-row-expire");
+	AG_CancelEvent(t, "dblclick-col-expire");
 	if (t->nResizing >= 0) {
 		t->nResizing = -1;
 	}
@@ -1143,6 +1202,26 @@ kbdscroll(AG_Event *event)
 	}
 	AG_ReschedEvent(t, "kbdscroll", agKbdRepeat);
 	AG_MutexUnlock(&t->lock);
+}
+
+static void
+dblclick_row_expire(AG_Event *event)
+{
+	AG_Table *tbl = AG_SELF();
+
+	AG_MutexLock(&tbl->lock);
+	tbl->dblClickedRow = -1;
+	AG_MutexUnlock(&tbl->lock);
+}
+
+static void
+dblclick_col_expire(AG_Event *event)
+{
+	AG_Table *tbl = AG_SELF();
+
+	AG_MutexLock(&tbl->lock);
+	tbl->dblClickedCol = -1;
+	AG_MutexUnlock(&tbl->lock);
 }
 
 int

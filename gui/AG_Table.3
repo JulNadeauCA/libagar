@@ -72,6 +72,15 @@ provides tree support, but no multi-column functionality.
 .Ft "void"
 .Fn AG_TablePrescale "AG_Table *tbl" "int width" "int nrows"
 .Pp
+.Ft "AG_MenuItem *"
+.Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
+.Pp
+.Ft "void"
+.Fn AG_TableSetRowDblClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
+.Ft "void"
+.Fn AG_TableSetColDblClickFn "AG_Table *tbl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
 .nr nS 0
 The
 .Fn AG_TableNew
@@ -121,6 +130,36 @@ function requests minimum sizing of the table, where
 is the width in pixels and
 .Fa nrows
 is the number of rows to display.
+.Pp
+The
+.Fn AG_TableSetPopup
+function creates a new popup menu associated with a row, column or cell.
+If
+.Fa col
+is a valid index and
+.Fa row
+is -1, the menu is shown when clicking on the header of the given column.
+If
+.Fa col
+is -1 and
+.Fa row
+is a valid index, the menu is shown when clicking on any cell of the given row.
+If
+.Fa col
+and
+.Fa row
+are both valid indices, the menu is shown when clicking on the given cell.
+If both indices are -1, the menu is shown when clicking on any cell.
+.Pp
+The
+.Fn AG_TableSetRowDblClickFn
+and
+.Fn AG_TableSetColDblClickFn
+functions register a callback routine to invoke whenever the user double
+clicks on a row or a column.
+The row or column index (an
+.Ft int )
+is passed to the callback function.
 .Pp
 .Sh TABLE FUNCTIONS
 .nr nS 1
@@ -313,9 +352,6 @@ For pointer and surface cells, the return value is 1 if they differ.
 .Ft "int"
 .Fn AG_TableSaveASCII "AG_Table *tbl" "FILE *f" "char separator"
 .Pp
-.Ft "AG_MenuItem *"
-.Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
-.Pp
 .nr nS 0
 .Fn AG_TableSaveASCII
 writes the formatted contents of the table into an ASCII file
@@ -324,27 +360,9 @@ Each row is separated by a newline, and cells are separated by the character
 given by the
 .Fa separator
 argument.
+Non-text cells are skipped.
 The function returns 0 on success, -1 on failure.
 .Pp
-The
-.Fn AG_TableSetPopup
-function creates a new popup menu associated with a row, column or cell.
-If
-.Fa col
-is a valid index and
-.Fa row
-is -1, the menu is shown when clicking on the header of the given column.
-If
-.Fa col
-is -1 and
-.Fa row
-is a valid index, the menu is shown when clicking on any cell of the given row.
-If
-.Fa col
-and
-.Fa row
-are both valid indices, the menu is shown when clicking on the given cell.
-If both indices are -1, the menu is shown when clicking on any cell.
 .Sh EVENTS
 The
 .Nm
