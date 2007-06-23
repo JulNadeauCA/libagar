@@ -234,7 +234,7 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	AG_MutexLock(&cons->lock);
 	ln = AG_ConsoleAppendLine(cons, NULL);
 	va_start(args, fmt);
-	AG_Vasprintf(&ln->text, fmt, args);
+	Vasprintf(&ln->text, fmt, args);
 	va_end(args);
 	ln->len = strlen(ln->text);
 	AG_MutexUnlock(&cons->lock);
