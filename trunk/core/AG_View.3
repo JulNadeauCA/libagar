@@ -279,9 +279,8 @@ enum ag_blend_func {
 	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
 	AG_ALPHA_SRC,			/* dA = sA */
 	AG_ALPHA_DST,			/* dA = dA */
-	AG_ALPHA_MEAN,			/* dA = (sA+dA)/2 */
-	AG_ALPHA_SOURCE_MINUS_DST,	/* dA = (sA-dA) */
-	AG_ALPHA_DST_MINUS_SOURCE	/* dA = (dA-sA) */
+	AG_ALPHA_ONE_MINUS_DST,		/* dA = 1-dA */
+	AG_ALPHA_ONE_MINUS_SRC		/* dA = 1-sA */
 };
 .Ed
 .Pp
