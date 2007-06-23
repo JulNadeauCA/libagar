@@ -20,13 +20,13 @@ enum ag_label_type {
 	AG_LABEL_POLLED_MT		/* Polling (thread safe) */
 };
 
-typedef struct ag_label_flag {
+struct ag_label_flag {
 	Uint idx;			/* Flag arg in format string */
 	const char *text;		/* Label text */
 	Uint32 v;			/* Bitmask */
 	enum ag_widget_binding_type type;
 	SLIST_ENTRY(ag_label_flag) lflags;
-} AG_LabelFlag;
+};
 
 typedef struct ag_label {
 	struct ag_widget wid;
@@ -78,6 +78,8 @@ void	 AG_LabelPrescale(AG_Label *, Uint, const char *);
 
 void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
 	                 enum ag_widget_binding_type, Uint32);
+#define	 AG_LabelFlag(lbl,i,s,v) \
+	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG,(Uint)(v))
 #define	 AG_LabelFlag8(lbl,i,s,v) \
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG8,(Uint8)(v))
 #define	 AG_LabelFlag16(lbl,i,s,v) \

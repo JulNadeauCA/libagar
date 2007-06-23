@@ -392,7 +392,7 @@ static void
 label_flags(AG_Label *label, char *s, size_t len, int ri)
 {
 	Uint *flags = &LABEL_ARG(Uint);
-	AG_LabelFlag *lfl;
+	struct ag_label_flag *lfl;
 
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
@@ -408,7 +408,7 @@ static void
 label_flags8(AG_Label *label, char *s, size_t len, int ri)
 {
 	Uint8 *flags = &LABEL_ARG(Uint8);
-	AG_LabelFlag *lfl;
+	struct ag_label_flag *lfl;
 
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
@@ -423,7 +423,7 @@ static void
 label_flags16(AG_Label *label, char *s, size_t len, int ri)
 {
 	Uint16 *flags = &LABEL_ARG(Uint16);
-	AG_LabelFlag *lfl;
+	struct ag_label_flag *lfl;
 
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
@@ -438,7 +438,7 @@ static void
 label_flags32(AG_Label *label, char *s, size_t len, int ri)
 {
 	Uint32 *flags = &LABEL_ARG(Uint32);
-	AG_LabelFlag *lfl;
+	struct ag_label_flag *lfl;
 
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
@@ -686,7 +686,7 @@ void
 AG_LabelDestroy(void *p)
 {
 	AG_Label *lbl = p;
-	AG_LabelFlag *lfl, *lflNext;
+	struct ag_label_flag *lfl, *lflNext;
 
 	if (lbl->type == AG_LABEL_STATIC) {
 		AG_MutexDestroy(&lbl->lock);
@@ -705,9 +705,9 @@ void
 AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
     enum ag_widget_binding_type type, Uint32 v)
 {
-	AG_LabelFlag *lfl;
+	struct ag_label_flag *lfl;
 
-	lfl = Malloc(sizeof(AG_LabelFlag), M_WIDGET);
+	lfl = Malloc(sizeof(struct ag_label_flag), M_WIDGET);
 	lfl->idx = idx;
 	lfl->text = text;
 	lfl->type = type;
