@@ -292,7 +292,7 @@ SG_LightEdit(void *p, AG_Widget *box, SG_View *sgv)
 		SG_EditTranslate3(ntab, _("Position: "), &SGNODE(lt)->T);
 		SG_SpinInt(ntab, _("Priority: "), &lt->pri);
 		AG_SeparatorNewHoriz(ntab);
-		AG_LabelNewFmt(ntab, _("Using: GL_LIGHT%i"),
+		AG_LabelNewStatic(ntab, 0, _("Using: GL_LIGHT%i"),
 		    (int)(lt->light - GL_LIGHT0));
 		AG_SeparatorNewHoriz(ntab);
 		SG_SpinRealInc(ntab, _("Cutoff angle: "), &lt->spot_cutoff,

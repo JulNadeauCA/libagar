@@ -109,11 +109,11 @@ void
 SK_LineEdit(void *p, AG_Widget *box, SK_View *skv)
 {
 	SK_Line *line = p;
-	AG_HSVPal *pal;
+//	AG_HSVPal *pal;
 
 	SG_SpinReal(box, _("Width: "), &line->width);
-	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
-	SG_WidgetBindReal(pal, "RGBAv", (void *)&line->color);
+//	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+//	SG_WidgetBindReal(pal, "RGBAv", (void *)&line->color);
 }
 
 void

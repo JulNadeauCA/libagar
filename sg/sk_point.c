@@ -100,12 +100,12 @@ void
 SK_PointEdit(void *p, AG_Widget *box, SK_View *skv)
 {
 	SK_Point *pt = p;
-	AG_HSVPal *pal;
+//	AG_HSVPal *pal;
 
 	SG_SpinReal(box, _("Size: "), &pt->size);
 
-	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
-	SG_WidgetBindReal(pal, "RGBAv", (void *)&pt->color);
+//	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+//	SG_WidgetBindReal(pal, "RGBAv", (void *)&pt->color);
 }
 
 void

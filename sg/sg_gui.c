@@ -97,7 +97,7 @@ SG_EditVector3(void *parent, const char *label, SG_Vector *pv)
 	AG_FSpinbutton *fsb;
 
 	box = AG_BoxNew(parent, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_LabelNewStatic(box, label);
+	AG_LabelNewStatic(box, 0, label);
 
 	fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
 	AG_FSpinbuttonSetIncrement(fsb, 0.5);
@@ -121,7 +121,7 @@ SG_EditVector4(void *parent, const char *label, SG_Vector4 *pv)
 	AG_FSpinbutton *fsb;
 
 	box = AG_BoxNew(parent, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_LabelNewStatic(box, label);
+	AG_LabelNewStatic(box, 0, label);
 
 	fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
 	AG_FSpinbuttonSetIncrement(fsb, 0.5);
@@ -150,7 +150,7 @@ SG_EditMatrix(void *parent, const char *label, SG_Matrix *T)
 
 	vbox = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_EXPAND);
 	if (label != NULL) {
-		AG_LabelNewStatic(vbox, label);
+		AG_LabelNewStatic(vbox, 0, label);
 	}
 	for (j = 0; j < 4; j++) {
 		hbox = AG_BoxNew(vbox, AG_BOX_HORIZ,
@@ -173,7 +173,7 @@ SG_EditTranslate3(void *parent, const char *label, SG_Matrix *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewStatic(box, label);
+		AG_LabelNewStatic(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
 		fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
@@ -192,7 +192,7 @@ SG_EditTranslate4(void *parent, const char *label, SG_Matrix *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewStatic(box, label);
+		AG_LabelNewStatic(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
 		fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
@@ -211,7 +211,7 @@ SG_EditScale3(void *parent, const char *label, SG_Matrix *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewStatic(box, label);
+		AG_LabelNewStatic(box, 0, label);
 	}
 	for (i = 0; i < 3; i++) {
 		fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
@@ -230,7 +230,7 @@ SG_EditScale4(void *parent, const char *label, SG_Matrix *T)
 
 	box = AG_BoxNew(parent, AG_BOX_VERT, AG_BOX_HFILL);
 	if (label != NULL) {
-		AG_LabelNewStatic(box, label);
+		AG_LabelNewStatic(box, 0, label);
 	}
 	for (i = 0; i < 4; i++) {
 		fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);

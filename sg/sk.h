@@ -16,7 +16,8 @@
 
 #include "begin_code.h"
 
-#define SK_TYPE_NAME_MAX 128
+#define SK_TYPE_NAME_MAX 64
+#define SK_NODE_NAME_MAX (SK_TYPE_NAME_MAX+12)
 #define SK_NAME_MAX	 (0xffffffff-1)
 
 struct sk;
@@ -55,19 +56,16 @@ typedef struct sk_node {
 } SK_Node;
 
 typedef struct sk_constraint {
-	enum {
-		SK_COINCIDENT_PP,	/* Point/point coincident */
-		SK_COINCIDENT_PL,	/* Point/line coincident */
-		SK_COINCIDENT_PA,	/* Point/arc coincident */
-		SK_DISTANCE_PP,		/* Point/point distance */
-		SK_DISTANCE_PL,		/* Point/line distance */
-		SK_ANGLE_LL,		/* Line/line angle */
-		SK_PARALLEL_LL,		/* Line/line parallelism */
-		SK_PERPENDICULAR_LL	/* Line/line perpendicularity */
+	enum sk_constraint_type {
+		SK_COINCIDENT,
+		SK_PERPENDICULAR,
+		SK_PARALLEL,
+		SK_DISTANCE,
+		SK_ANGLE,
 	} type;
-	SK_Node *e1;				/* Entity 1 */
-	SK_Node *e2;				/* Entity 2 */
-	TAILQ_ENTRY(sk_constraint) cgraph;	/* Entry in graph */
+	SK_Node *e1;
+	SK_Node *e2;
+	TAILQ_ENTRY(sk_constraint) constraints;
 } SK_Constraint;
 
 typedef struct sk {
@@ -79,7 +77,7 @@ typedef struct sk {
 	Uint32 last_name;			/* Last nodeid (optimization) */
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
-	TAILQ_HEAD(,sk_constraint) cgraph;	/* Constraint graph */
+	TAILQ_HEAD(,sk_constraint) constraints;	/* Constraint graph */
 	const AG_Unit *uLen;			/* Length unit */
 } SK;
 
@@ -106,6 +104,7 @@ typedef struct sk {
 
 extern SK_NodeOps **skElements;
 extern Uint         skElementsCnt;
+extern const char *skConstraintNames[];
 
 #ifdef _AGAR_INTERNAL
 #include <sg/sk_dummy.h>
@@ -152,6 +151,7 @@ void		*SK_FindNode(SK *, Uint32);
 void		*SK_FindNodeOfType(SK *, const char *, Uint32);
 Uint32		 SK_GenName(SK *);
 char		*SK_NodeName(void *);
+char		*SK_NodeNameCopy(void *, char *, size_t);
 void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
 void		 SK_WriteRef(AG_Netbuf *, void *);
 void		 SK_SetLengthUnit(SK *, const AG_Unit *);

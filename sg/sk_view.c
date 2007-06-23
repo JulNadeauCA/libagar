@@ -69,9 +69,6 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 	skv = Malloc(sizeof(SK_View), M_OBJECT);
 	SK_ViewInit(skv, sk, flags);
 	AG_ObjectAttach(parent, sk);
-	if (flags & SK_VIEW_FOCUS) {
-		AG_WidgetFocus(skv);
-	}
 	return (skv);
 }
 
@@ -354,7 +351,6 @@ SK_ViewScale(void *p, int w, int h)
 		AGWIDGET(skv)->w = w;
 		AGWIDGET(skv)->h = h;
 	}
-
 	SG_MatrixIdentityv(&skv->mProj);
 	SK_ViewZoom(skv, 0.0);
 }

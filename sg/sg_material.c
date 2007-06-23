@@ -302,13 +302,13 @@ SG_MaterialEdit(void *obj)
 
 		vbox = AG_BoxNew(ntab, AG_BOX_VERT, 0);
 		{
-			AG_LabelNewStatic(vbox, _("Source: "));
+			AG_LabelNewStaticString(vbox, 0, _("Source: "));
 			rad = AG_RadioNew(vbox, 0, sgBlendModeNames);
 			AG_WidgetBindInt(rad, "value", &mat->blend_src);
 		}
 		vbox = AG_BoxNew(ntab, AG_BOX_VERT, 0);
 		{
-			AG_LabelNewStatic(vbox, _("Target: "));
+			AG_LabelNewStaticString(vbox, 0, _("Target: "));
 			rad = AG_RadioNew(vbox, 0, sgBlendModeNames);
 			AG_WidgetBindInt(rad, "value", &mat->blend_dst);
 		}

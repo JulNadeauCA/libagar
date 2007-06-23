@@ -56,6 +56,14 @@ const AG_ObjectOps skOps = {
 #endif
 };
 
+const char *skConstraintNames[] = {
+	N_("Coincident"),
+	N_("Perpendicular"),
+	N_("Parallel"),
+	N_("Distance"),
+	N_("Angle")
+};
+
 SK_NodeOps **skElements = NULL;
 Uint         skElementsCnt = 0;
 
@@ -166,10 +174,11 @@ SK_Init(void *obj, const char *name)
 	AGOBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sk->flags = 0;
 	sk->last_name = 2;
-	TAILQ_INIT(&sk->nodes);
 	AG_MutexInitRecursive(&sk->lock);
-	SK_InitRoot(sk);
+	TAILQ_INIT(&sk->nodes);
+	TAILQ_INIT(&sk->constraints);
 
+	SK_InitRoot(sk);
 	sk->uLen = AG_FindUnit("mm");
 }
 
@@ -186,18 +195,25 @@ SK_GenName(SK *sk)
 	return (name);
 }
 
-/*
- * Return string representation of a node name.
- * Thread unsafe!
- */
+/* Return string representation of a node name. */
 char *
 SK_NodeName(void *p)
 {
-	static char name[SK_TYPE_NAME_MAX+16];
+	SK_Node *node = p;
+	char *s;
+
+	asprintf(&s, "%s%u", node->ops->name, node->name);
+	return (s);
+}
+
+/* Return string representation of a node name in fixed buffer. */
+char *
+SK_NodeNameCopy(void *p, char *buf, size_t buf_len)
+{
 	SK_Node *node = p;
 
-	snprintf(name, sizeof(name), "%s%u", node->ops->name, node->name);
-	return (Strdup(name));
+	snprintf(buf, buf_len, "%s%u", node->ops->name, node->name);
+	return (buf);
 }
 
 void
@@ -238,12 +254,22 @@ void
 SK_Reinit(void *obj)
 {
 	SK *sk = obj;
+	SK_Constraint *cons, *consNext;
 
 	if (sk->root != NULL) {
 		SK_FreeNode(sk, SKNODE(sk->root));
 	}
 	TAILQ_INIT(&sk->nodes);
+
 	SK_InitRoot(sk);
+
+	for (cons = TAILQ_FIRST(&sk->constraints);
+	     cons != TAILQ_END(&sk->constraints);
+	     cons = consNext) {
+		consNext = TAILQ_NEXT(cons, constraints);
+		Free(cons, M_SG);
+	}
+	TAILQ_INIT(&sk->constraints);
 }
 
 void
@@ -260,7 +286,6 @@ SK_NodeSaveData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 		if (SK_NodeSaveData(sk, chldNode, buf) == -1)
 			return (-1);
 	}
-	dprintf("%s: saving node data\n", AGOBJECT(sk)->name);
 	if (node->ops->save != NULL &&
 	    node->ops->save(sk, node, buf) == -1) {
 		AG_SetError("NodeSave: %s", AG_GetError());
@@ -270,14 +295,13 @@ SK_NodeSaveData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 }
 
 static int
-SK_NodeSaveGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
+SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
 	SK_Node *cnode;
 	Uint32 ncnodes;
 	off_t bsize_offs, ncnodes_offs;
 
 	/* Save generic node information. */
-	dprintf("%s: saving node\n", SK_NodeName(node));
 	AG_WriteString(buf, node->ops->name);
 
 	bsize_offs = AG_NetbufTell(buf);
@@ -292,15 +316,12 @@ SK_NodeSaveGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	ncnodes = 0;
 	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
 	TAILQ_FOREACH(cnode, &node->cnodes, sknodes) {
-		dprintf("%s: saving child: %s\n", SK_NodeName(node),
-		    SK_NodeName(cnode));
-		if (SK_NodeSaveGeneric(sk, cnode, buf) == -1) {
+		if (SK_SaveNodeGeneric(sk, cnode, buf) == -1) {
 			return (-1);
 		}
 		ncnodes++;
 	}
 	AG_PwriteUint32(buf, ncnodes, ncnodes_offs);
-	dprintf("%s: saved %u children\n", SK_NodeName(node), ncnodes);
 
 	/* Save the total block size to allow the loader to skip. */
 	AG_PwriteUint32(buf, AG_NetbufTell(buf)-bsize_offs, bsize_offs);
@@ -312,6 +333,9 @@ SK_Save(void *obj, AG_Netbuf *buf)
 {
 	SK *sk = obj;
 	SK_Node *node;
+	SK_Constraint *cons;
+	Uint32 count;
+	off_t offs;
 	
 	AG_WriteObjectVersion(buf, sk);
 	AG_MutexLock(&sk->lock);
@@ -320,14 +344,24 @@ SK_Save(void *obj, AG_Netbuf *buf)
 	AG_WriteString(buf, sk->uLen->key);
 
 	/* Save the generic part of all nodes. */
-	if (SK_NodeSaveGeneric(sk, SKNODE(sk->root), buf) == -1)
+	if (SK_SaveNodeGeneric(sk, SKNODE(sk->root), buf) == -1)
 		goto fail;
 
 	/* Save the data part of all nodes. */
-	dprintf("%s: saving data part of nodes\n", AGOBJECT(sk)->name);
 	if (SK_NodeSaveData(sk, SKNODE(sk->root), buf) == -1)
 		goto fail;
 
+	/* Save the graph of geometric constraints. */
+	offs = AG_NetbufTell(buf);
+	count = 0;
+	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
+		AG_WriteUint32(buf, (Uint32)cons->type);
+		SK_WriteRef(buf, cons->e1);
+		SK_WriteRef(buf, cons->e2);
+		count++;
+	}
+	AG_PwriteUint32(buf, count, offs);
 	AG_MutexUnlock(&sk->lock);
 	return (0);
 fail:
@@ -337,12 +371,12 @@ fail:
 
 /* Load the data part of a node. */
 static int
-SK_NodeLoadData(SK *sk, SK_Node *node, AG_Netbuf *buf)
+SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
 	SK_Node *chldNode;
 
 	TAILQ_FOREACH(chldNode, &node->cnodes, sknodes) {
-		if (SK_NodeLoadData(sk, chldNode, buf) == -1)
+		if (SK_LoadNodeData(sk, chldNode, buf) == -1)
 			return (-1);
 	}
 	if (node->ops->load != NULL &&
@@ -355,8 +389,8 @@ SK_NodeLoadData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 }
 
 /* Load the generic part of a node. */
-int
-SK_NodeLoadGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
+static int
+SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 {
 	char type[SK_TYPE_NAME_MAX];
 	SK_Node *node;
@@ -398,15 +432,12 @@ SK_NodeLoadGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 	for (j = 0; j < nchildren; j++) {
 		SK_Node *cnode;
 
-		if (SK_NodeLoadGeneric(sk, &cnode, buf) == -1) {
+		if (SK_LoadNodeGeneric(sk, &cnode, buf) == -1) {
 			AG_SetError("subnode: %s", AG_GetError());
 			return (-1);
 		}
-		if (cnode != NULL) {
-			dprintf("%s: attaching %s\n",
-			    SK_NodeName(node), SK_NodeName(cnode));
+		if (cnode != NULL)
 			SK_NodeAttach(node, cnode);
-		}
 	}
 	*rnode = node;
 	return (0);
@@ -418,6 +449,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
 	SK_Node *node;
+	Uint32 i, count;
 	int rv;
 	
 	if (AG_ReadObjectVersion(buf, sk, NULL) == -1)
@@ -442,21 +474,31 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	 * Load the generic part of all nodes. We need to load the data
 	 * afterwards to properly resolve interdependencies.
 	 */
-	if (SK_NodeLoadGeneric(sk, (SK_Node **)&sk->root, buf) == -1) {
+	if (SK_LoadNodeGeneric(sk, (SK_Node **)&sk->root, buf) == -1) {
 		goto fail;
 	}
 	TAILQ_INSERT_HEAD(&sk->nodes, SKNODE(sk->root), nodes);
 
 	/* Load the data part of all nodes. */
-	dprintf("%s: load node data\n", AGOBJECT(sk)->name);
-	if (SK_NodeLoadData(sk, SKNODE(sk->root), buf) == -1) {
+	if (SK_LoadNodeData(sk, SKNODE(sk->root), buf) == -1)
 		goto fail;
+
+	count = AG_ReadUint32(buf);
+	dprintf("loading %u constraints\n", count);
+	for (i = 0; i < count; i++) {
+		SK_Constraint *cons;
+
+		cons = AG_Malloc(sizeof(SK_Constraint), M_SG);
+		cons->type = (enum sk_constraint_type)AG_ReadUint32(buf);
+		cons->e1 = SK_ReadRef(buf, sk, NULL);
+		cons->e2 = SK_ReadRef(buf, sk, NULL);
+		dprintf("constraint: %d (%s - %s)\n", cons->type,
+		    SK_NodeName(cons->e1), SK_NodeName(cons->e2));
 	}
 	AG_MutexUnlock(&sk->lock);
 	return (0);
 fail:
 	AG_MutexUnlock(&sk->lock);
-	dprintf("%s: reinitializing\n", AGOBJECT(sk)->name);
 	SK_Reinit(sk);
 	return (-1);
 }
@@ -673,11 +715,15 @@ SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *type)
 	char sig[SK_TYPE_NAME_MAX];
 
 	AG_CopyString(sig, buf, sizeof(sig));
-	if (strcmp(sig, type) != 0) {
-		fatal("Unexpected reference type: `%s' (expecting %s)", sig,
-		    type);
+	if (type != NULL) {
+		if (strcmp(sig, type) != 0) {
+			fatal("Unexpected reference type: `%s' (expecting %s)",
+			    sig, type);
+		}
+		return (SK_FindNodeOfType(sk, type, AG_ReadUint32(buf)));
+	} else {
+		return (SK_FindNode(sk, AG_ReadUint32(buf)));
 	}
-	return (SK_FindNodeOfType(sk, type, AG_ReadUint32(buf)));
 }
 
 void

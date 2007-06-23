@@ -301,7 +301,7 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 	}
 	ntab = AG_NotebookAddTab(nb, _("Polygons"), AG_BOX_VERT);
 	{
-		AG_LabelNewStatic(ntab, _("Front-facing:"));
+		AG_LabelNewStaticString(ntab, 0, _("Front-facing:"));
 		rad = AG_RadioNew(ntab, 0, rasModes);
 		AG_WidgetBindInt(rad, "value", &cam->polyFace.mode);
 		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
@@ -309,7 +309,7 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 		
 		AG_SeparatorNewHoriz(ntab);
 		
-		AG_LabelNewStatic(ntab, _("Back-facing:"));
+		AG_LabelNewStaticString(ntab, 0, _("Back-facing:"));
 		rad = AG_RadioNew(ntab, 0, rasModes);
 		AG_WidgetBindInt(rad, "value", &cam->polyBack.mode);
 		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
