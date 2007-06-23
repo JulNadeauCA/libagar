@@ -4,13 +4,18 @@
 #	Public domain
 
 PROJ=agar
-PHASE=stable
 VER=`perl mk/get-version.pl`
 REL=`perl mk/get-release.pl`
 DISTFILE=${PROJ}-${VER}
 HOST=resin.csoft.net
 RUSER=vedge
 MAILER="sendmail -t"
+
+if [ "$1" = "snapshot" ]; then
+	PHASE=beta
+else
+	PHASE=stable
+fi
 
 echo "Packaging ${PROJ}-${VER} (${REL})"
 
@@ -33,7 +38,7 @@ openssl rmd160 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 openssl sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 gpg -ab ${DISTFILE}.tar.gz
 
-if [ "$1" = "commit" ]; then
+if [ "$1" = "commit" -o "$1" = "snapshot" ]; then
 	echo "uploading"
 	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/$PHASE.csoft.org/${PROJ}
 

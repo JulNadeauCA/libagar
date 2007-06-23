@@ -29,6 +29,9 @@ configure:
 cleandir-config:
 	rm -fr config config.log
 
+snapshot: cleandir
+	sh mk/dist.sh snapshot
+
 package: cleandir
 	sh mk/dist.sh
 
@@ -118,7 +121,7 @@ deinstall-includes:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: configure cleandir-config package release fastclean
+.PHONY: configure cleandir-config package snapshot release fastclean
 .PHONY: install-includes deinstall-includes
 
 include ${TOP}/mk/build.common.mk
