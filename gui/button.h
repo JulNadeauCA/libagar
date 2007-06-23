@@ -57,9 +57,13 @@ void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonSetJustification(AG_Button *, enum ag_button_justify);
 void	   AG_ButtonSetSurface(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
-void	   AG_ButtonPrintf(AG_Button *, const char *, ...)
-                           FORMAT_ATTRIBUTE(printf, 2, 3)
-			   NONNULL_ATTRIBUTE(2);
+
+void	   AG_ButtonText(AG_Button *, const char *, ...)
+	     FORMAT_ATTRIBUTE(printf, 2, 3)
+	     NONNULL_ATTRIBUTE(2);
+void	   AG_ButtonTextString(AG_Button *, const char *)
+	     NONNULL_ATTRIBUTE(2);
+#define	   AG_ButtonPrintf AG_ButtonText
 __END_DECLS
 
 #include "close_code.h"

@@ -70,7 +70,9 @@ CreateTextbox(void)
 	AG_SetTimeout(&update_timer, update_text_buffer, NULL, 0);
 	AG_AddTimeout(textbox, &update_timer, 250);
 
-	AG_LabelNew(win, AG_LABEL_POLLED, "Buffer contents: `%s'", &text_buf);
+	/* Create a polled label to display the actual buffer contents. */
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Buffer contents: <%s>",
+	    &text_buf);
 
 	AG_WindowShow(win);
 }

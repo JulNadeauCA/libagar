@@ -499,7 +499,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 			AG_ComboSelectPointer(com, insn->t);
 		}
 
-		AG_LabelNew(box, AG_LABEL_STATIC, _("Preview:"));
+		AG_LabelNewStaticString(box, 0, _("Preview:"));
 		AG_ObjectAttach(box, tv);
 		
 		sb = AG_SpinbuttonNew(box, 0, _("Alpha: "));
@@ -617,6 +617,7 @@ preview_anim(AG_Event *event)
 	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	RG_Animview *av;
+	AG_Label *lbl;
 
 	if ((win = AG_WindowNewNamed(0, "rg-anim-prev-%s:%s",
 	    AGOBJECT(ani->tileset)->name, ani->name)) == NULL) {
@@ -630,7 +631,8 @@ preview_anim(AG_Event *event)
 	av = RG_AnimviewNew(win);
 	RG_AnimviewSetAnimation(av, ani);
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-	AG_LabelNew(win, AG_LABEL_POLLED, " %u/%u", &av->frame, &ani->nframes);
+	lbl = AG_LabelNewPolled(win, 0, " %u/%u", &av->frame, &ani->nframes);
+	AG_LabelPrescale(lbl, 1, " 00000/00000");
 
 	AG_WindowShow(win);
 }

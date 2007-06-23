@@ -360,7 +360,7 @@ CreateBrushDlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNew(bo, AG_LABEL_STATIC, _("Source pixmap:"));
+		AG_LabelNewStaticString(bo, 0, _("Source pixmap:"));
 
 		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
@@ -497,7 +497,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_Radio *rad;
 		AG_Checkbox *cb;
 
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Blending method:"));
+		AG_LabelNewStaticString(ntab, 0, _("Blending method:"));
 		rad = AG_RadioNew(ntab, AG_RADIO_EXPAND, blend_modes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &px->blend_mode);
 

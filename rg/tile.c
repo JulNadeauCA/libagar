@@ -1730,7 +1730,7 @@ TileSettingsDlg(AG_Event *event)
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelNewStatic(win, _("Snapping mode: "));
+	AG_LabelNewStaticString(win, 0, _("Snapping mode: "));
 	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &t->snap_mode);
 

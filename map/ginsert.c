@@ -64,11 +64,11 @@ ginsert_pane(void *p, void *con)
 	AG_TlistItem *it;
 	
 	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {
-		AG_LabelNew(con, AG_LABEL_STATIC, _("Object: %s (%s)"),
+		AG_LabelNewStatic(con, 0, _("Object: %s (%s)"),
 		    AGOBJECT(it->p1)->name, AGOBJECT(it->p1)->ops->type);
 	}
 	
-	AG_LabelNew(con, AG_LABEL_STATIC, _("Snap to: "));
+	AG_LabelNewStatic(con, 0, _("Snap to: "));
 	rad = AG_RadioNew(con, AG_RADIO_HFILL, rgTileSnapModes);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 

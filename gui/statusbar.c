@@ -85,15 +85,15 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	lab = sbar->labels[sbar->nlabels];
 
 	if (type == AG_LABEL_STATIC) {
-		char buf[AG_LABEL_MAX];
+		char *s;
 
 		va_start(ap, fmt);
-		vsnprintf(buf, sizeof(buf), fmt, ap);
+		Vasprintf(&s, fmt, ap);
 		va_end(ap);
-
-		AG_LabelInit(lab, AG_LABEL_STATIC, buf);
+		AG_LabelInit(lab, AG_LABEL_STATIC, AG_LABEL_HFILL, s);
+		Free(s, 0);
 	} else {
-		AG_LabelInit(lab, AG_LABEL_POLLED, fmt);
+		AG_LabelInit(lab, AG_LABEL_POLLED, AG_LABEL_HFILL, fmt);
 	}
 
 	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {

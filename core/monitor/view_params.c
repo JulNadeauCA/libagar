@@ -46,7 +46,7 @@ AG_DebugViewSettings(void)
 {
 	AG_Window *win;
 	AG_VBox *vb;
-	AG_Label *lab;
+	AG_Label *lbl;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "monitor-view-params"))
 	    == NULL) {
@@ -57,37 +57,39 @@ AG_DebugViewSettings(void)
 	
 	vb = AG_VBoxNew(win, 0);
 	{
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("OpenGL mode: %s"),
+		AG_LabelNewStatic(vb, 0, _("OpenGL mode: %s"),
 		    agView->opengl ? _("yes") : _("no"));
 
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT, "%dx%d",
-		    &agView->lock, &agView->w, &agView->h);
-		AG_LabelPrescale(lab, "0000x0000x00");
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
+		    "%dx%d", &agView->w, &agView->h);
 
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("Depth: %dbpp"),
+		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
 		    agVideoInfo->vfmt->BitsPerPixel);
-		AG_LabelNew(vb, AG_LABEL_STATIC,
-		    _("Video masks: %08x,%08x,%08x"),
+		AG_LabelNewStatic(vb, 0, _("Video masks: %08x,%08x,%08x"),
 		    agVideoInfo->vfmt->Rmask,
 		    agVideoInfo->vfmt->Gmask,
 		    agVideoInfo->vfmt->Bmask);
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("Color key: %d"),
+		AG_LabelNewStatic(vb, 0, _("Color key: 0x%x"),
 		    agVideoInfo->vfmt->colorkey);
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("Alpha: %d"),
+		AG_LabelNewStatic(vb, 0, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
 
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Window op: %d (%p)"),
-		    &agView->lock, &agView->winop, &agView->wop_win);
-		AG_LabelPrescale(lab,
-		    _("Window op: 000 (0x00000000)"));
+		    &agView->winop, &agView->wop_win);
+		AG_LabelPrescale(lbl, 1, _("Window op: 000 (0x00000000)"));
 		
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Refresh rate (effective): %d"),
-		    &agView->lock, &agView->rCur);
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
+		    &agView->rCur);
+		AG_LabelPrescale(lbl, 1,
+		    _("Refresh rate (effective): 000"));
+
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Refresh rate (nominal): %d"),
-		    &agView->lock, &agView->rNom);
+		    &agView->rNom);
+		AG_LabelPrescale(lbl, 1,
+		    _("Refresh rate (nominal): 000"));
 	}
 	return (win);
 }
