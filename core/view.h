@@ -52,16 +52,14 @@ typedef struct ag_display {
 	} winop;
 } AG_Display;
 
-/* Alpha functions for AG_BlendPixelRGBA(). */
-enum ag_blend_func {
-	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
+/* Alpha functions for BlendPixelRGBA(). */
+typedef enum ag_blend_func {
+	AG_ALPHA_OVERLAY,		/* dA = sA+dA (emulated in GL mode) */
 	AG_ALPHA_SRC,			/* dA = sA */
 	AG_ALPHA_DST,			/* dA = dA */
-	AG_ALPHA_MEAN,			/* dA = (sA+dA)/2 */
-	AG_ALPHA_SOURCE_MINUS_DST,	/* dA = (sA-dA) */
-	AG_ALPHA_DST_MINUS_SOURCE,	/* dA = (dA-sA) */
-	AG_ALPHA_PYTHAGOREAN		/* dA = sqrt(sA^2+dA^2) */
-};
+	AG_ALPHA_ONE_MINUS_DST,		/* dA = 1-dA */
+	AG_ALPHA_ONE_MINUS_SRC		/* dA = 1-sA */
+} AG_BlendFn;
 
 /* Determine whether a pixel must be clipped or not. */
 #define AG_CLIPPED_PIXEL(s, ax, ay)			\
@@ -251,7 +249,7 @@ __inline__ Uint32 AG_GetPixel(SDL_Surface *, Uint8 *);
 __inline__ void	  AG_PutPixel(SDL_Surface *, Uint8 *, Uint32);
 __inline__ void	  AG_BlendPixelRGBA(SDL_Surface *, Uint8 *,
 		                    Uint8, Uint8, Uint8, Uint8,
-			  	    enum ag_blend_func);
+			  	    AG_BlendFn);
 void		  AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
 void		  AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
 

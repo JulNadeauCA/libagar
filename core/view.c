@@ -57,13 +57,11 @@ int agScreenshotQuality = 75;
 SDL_Cursor *agDefaultCursor = NULL;
 
 const char *agBlendFuncNames[] = {
-	N_("Overlay"),
-	N_("Source"),
-	N_("Destination"),
-	N_("Mean"),
-	N_("Source minus destination"),
-	N_("Destination minus source"),
-	N_("Euclidean distance"),
+	N_("Alpha sum"),
+	N_("Source alpha"),
+	N_("Destination alpha"),
+	N_("One minus destination alpha"),
+	N_("One minus source alpha"),
 	NULL
 };
 
@@ -773,7 +771,7 @@ AG_CaptureGLView(void)
  */
 void
 AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
-    Uint8 sA, enum ag_blend_func func)
+    Uint8 sA, AG_BlendFn func)
 {
 	Uint32 cDst;
 	Uint8 dR, dG, dB, dA;
@@ -781,36 +779,18 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 
 	cDst = AG_GET_PIXEL(s, pDst);
 	if ((s->flags & SDL_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
-	 	AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format, sR, sG, sB, sA));
+	 	AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
+		    sR, sG, sB, sA));
 	} else {
 		SDL_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
 		switch (func) {
-		case AG_ALPHA_OVERLAY:
-			alpha = dA+sA;
-			break;
-		case AG_ALPHA_SRC:
-			alpha = sA;
-			break;
-		case AG_ALPHA_MEAN:
-			alpha = (dA+sA)/2;
-			break;
-		case AG_ALPHA_SOURCE_MINUS_DST:
-			alpha = sA-dA;
-			break;
-		case AG_ALPHA_DST_MINUS_SOURCE:
-			alpha = dA-sA;
-			break;
-		case AG_ALPHA_PYTHAGOREAN:
-			alpha = (int)sqrt((dA*dA)+(sA*sA));
-			break;
-		default:
-			break;
+		case AG_ALPHA_OVERLAY:	alpha = dA+sA; break;
+		case AG_ALPHA_SRC:	alpha = sA; break;
+		case AG_ALPHA_DST:	alpha = dA; break;
+		case AG_ALPHA_ONE_MINUS_DST: alpha = 1-dA; break;
+		case AG_ALPHA_ONE_MINUS_SRC: alpha = 1-sA; break;
 		}
-		if (alpha < 0) {
-			alpha = 0;
-		} else if (alpha > 255) {
-			alpha = 255;
-		}
+		alpha = (alpha < 0) ? 0 : (alpha > 255) ? 255 : alpha;
 		AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
 		    (((sR - dR) * sA) >> 8) + dR,
 		    (((sG - dG) * sA) >> 8) + dG,
