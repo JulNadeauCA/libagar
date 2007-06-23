@@ -1,8 +1,10 @@
 /*	$Csoft$	*/
 /*	Public domain	*/
 
+#if 0
 #ifndef _MK_HAVE_SYS_QUEUE_H
 #include <agar/compat/queue_close.h>
+#endif
 #endif
 
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
