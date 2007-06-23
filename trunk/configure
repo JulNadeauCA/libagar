@@ -275,7 +275,7 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
-VERSION="\"06182007\""
+VERSION="\"06232007\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif" >> config/version.h
