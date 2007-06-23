@@ -199,7 +199,24 @@ SDL_Rect *
 SDL_Rect *
 .It %[rect]
 SDL_Rect *
+.It %[flags]
+Uint *
+.It %[flags8]
+Uint8 *
+.It %[flags16]
+Uint16 *
+.It %[flags32]
+Uint32 *
 .El
+.Pp
+Note that the
+.Sq flags
+directive require that bit (or bitmask) descriptions be provided using the
+.Fn AG_LabelFlag*
+functions (see
+.Dq BITMASK DESCRIPTIONS
+section below).
+.Pp
 .Sh STATIC LABELS
 .nr nS 1
 .Ft void
@@ -220,6 +237,34 @@ To display graphics other than text, it is preferrable to use the
 .Xr AG_Pixmap 3
 widget.
 .Pp
+.Sh BITMASK DESCRIPTIONS
+.nr nS 1
+.Ft "void"
+.Fn AG_LabelFlag "AG_Label *label" "Uint index" "const char *descr" "Uint bitmask"
+.Pp
+.Ft "void"
+.Fn AG_LabelFlag8 "AG_Label *label" "Uint index" "const char *descr" "Uint8 bitmask"
+.Pp
+.Ft "void"
+.Fn AG_LabelFlag16 "AG_Label *label" "Uint index" "const char *descr" "Uint16 bitmask"
+.Pp
+.Ft "void"
+.Fn AG_LabelFlag32 "AG_Label *label" "Uint index" "const char *descr" "Uint32 bitmask"
+.Pp
+.nr nS 0
+The
+.Fn AG_LabelFlag ,
+.Fn AG_LabelFlag8 ,
+.Fn AG_LabelFlag16
+and
+.Fn AG_LabelFlag32
+functions register a new bitmask description for the pointer at
+.Fa index .
+If the pointed value AND'ed with
+.Fa bitmask
+is true, the
+.Fa descr
+text will be displayed by the label.
 .Sh EVENTS
 The
 .Nm
@@ -250,6 +295,20 @@ the data to access:
 	AG_Mutex myMutex = AG_MUTEX_INITIALIZER;
 
 	AG_LabelNewPolledMT(win, 0, &myMutex, "myInt=%i", &myInt);
+}
+.Ed
+.Pp
+It is frequently useful to display bit values in textual format.
+The following example would display
+.Sq FOO_FLAG, BAR_FLAG .
+.Bd -literal
+{
+	Uint MyFlags = FOO_FLAG|BAR_FLAG;
+	AG_Label *lbl;
+
+	lbl = AG_LabelNewPolled(win, 0, "MyFlags=%[flags]", &MyFlags);
+	AG_LabelFlag(lbl, 0, "FOO_FLAG", FOO_FLAG);
+	AG_LabelFlag(lbl, 0, "BAR_FLAG", BAR_FLAG);
 }
 .Ed
 .Sh SEE ALSO
