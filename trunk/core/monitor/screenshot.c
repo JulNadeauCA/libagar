@@ -199,8 +199,10 @@ XmitThread(void *p)
 		goto out1;
 	}
 
-	snprintf(status, sizeof(status),
-	    _("Connecting to %s:%s.."), host, port);
+	AG_MutexLock(&xmit_lock);
+	snprintf(status, sizeof(status), _("Connecting to %s:%s.."),
+	    host, port);
+	AG_MutexUnlock(&xmit_lock);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
@@ -208,7 +210,9 @@ XmitThread(void *p)
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
+		AG_MutexLock(&xmit_lock);
 		snprintf(status, sizeof(status), "%s", gai_strerror(rv));
+		AG_MutexUnlock(&xmit_lock);
 		goto out1;
 	}
 
@@ -229,11 +233,17 @@ XmitThread(void *p)
 	}
 	if (sock == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host, cause);
+
+		AG_MutexLock(&xmit_lock);
 		snprintf(status, sizeof(status), "%s: %s", host, cause);
+		AG_MutexUnlock(&xmit_lock);
 		goto out2;
 	}
 
+	AG_MutexLock(&xmit_lock);
 	snprintf(status, sizeof(status), _("Connected to %s"), host);
+	AG_MutexUnlock(&xmit_lock);
+
 	XmitLoop(sock);
 	close(sock);
 	sock = -1;
@@ -257,9 +267,8 @@ Disconnect(AG_Event *event)
 {
 	AG_MutexLock(&xmit_lock);
 	aflag++;
-	AG_MutexUnlock(&xmit_lock);
-
 	snprintf(status, sizeof(status), _("Disconnected"));
+	AG_MutexUnlock(&xmit_lock);
 }
 
 AG_Window *
@@ -268,7 +277,7 @@ AG_DebugScreenshot(void)
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_HBox *hb;
-	AG_Label *lab;
+	AG_Label *lbl;
 	AG_Spinbutton *sbu;
 	
 	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE, "monitor-screenshot"))
@@ -281,10 +290,10 @@ AG_DebugScreenshot(void)
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		strlcpy(status, _("Idle"), sizeof(status));
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED, _("Status: %s."),
-		    &status);
-		AG_LabelPrescale(lab, _("Transmitting frame XXXXXXXXXXX"));
-		AGWIDGET(lab)->flags |= AG_WIDGET_CLIPPING;
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &xmit_lock,
+		    _("Status: %s."), &status);
+		AG_LabelPrescale(lbl, 1,
+		    _("Status: Transmitting frame XXXXXXXXXX"));
 
 		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Host: "));
