@@ -944,7 +944,7 @@ EdgeTableDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("%s: Edge table"), SGNODE(so)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
-	lbl = AG_LabelNew(win, AG_LABEL_STATIC, NULL);
+	lbl = AG_LabelNewStatic(win, AG_LABEL_HFILL, NULL);
 	tbl = AG_TableNew(win, AG_TABLE_EXPAND);
 	AG_TableAddCol(tbl, "v1", "<8888>", NULL);
 	AG_TableAddCol(tbl, "v2", "<8888>", NULL);
@@ -989,7 +989,7 @@ FacetTableDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("%s: Facet table"), SGNODE(so)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
-	lbl = AG_LabelNew(win, AG_LABEL_STATIC, NULL);
+	lbl = AG_LabelNewStaticString(win, AG_LABEL_HFILL, NULL);
 	tbl = AG_TableNew(win, AG_TABLE_EXPAND);
 	AG_TableAddCol(tbl, "n", "<Quad>", NULL);
 	AG_TableAddCol(tbl, "v0", "<8888>", NULL);

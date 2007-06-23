@@ -121,12 +121,12 @@ void
 SK_CircleEdit(void *p, AG_Widget *box, SK_View *skv)
 {
 	SK_Circle *circle = p;
-	AG_HSVPal *pal;
+//	AG_HSVPal *pal;
 
 	SG_SpinReal(box, _("Radius: "), &circle->r);
 	SG_SpinReal(box, _("Width: "), &circle->width);
-	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
-	SG_WidgetBindReal(pal, "RGBAv", (void *)&circle->color);
+//	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
+//	SG_WidgetBindReal(pal, "RGBAv", (void *)&circle->color);
 }
 
 void

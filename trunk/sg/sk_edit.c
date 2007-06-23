@@ -40,6 +40,9 @@
 #include <gui/pane.h>
 #include <gui/mpane.h>
 #include <gui/file_dlg.h>
+#include <gui/table.h>
+#include <gui/separator.h>
+#include <gui/label.h>
 
 #include "sk.h"
 
@@ -47,6 +50,8 @@
 #include <math.h>
 
 #ifdef EDITION
+
+static void SK_NodeEditGeneric(SK_Node *, AG_Widget *, SK_View *);
 
 extern SK_ToolOps skPointToolOps;
 extern SK_ToolOps skLineToolOps;
@@ -136,16 +141,16 @@ NodeDelete(AG_Event *event)
 static void
 CreateNewView(AG_Event *event)
 {
-	SK *sk = AG_PTR(1);
+	AG_Window *winParent = AG_OBJECT(1,"AG_Widget:AG_Window:*");
+	SK *sk = AG_OBJECT(2,"SK");
 	SK_View *skv;
 	AG_Window *win;
-	int num = 0;
-	
+
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", AGOBJECT(sk)->name);
-	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND);
+	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND|SK_VIEW_FOCUS);
 	AG_WindowShow(win);
-	AG_WidgetFocus(skv);
+	AG_WindowAttach(winParent, win);
 }
 
 static void
@@ -243,6 +248,7 @@ EditNode(AG_Event *event)
 	skv->editPane = (AG_Widget *)AG_BoxNew(vp->div[1], AG_BOX_VERT,
 	    AG_BOX_EXPAND);
 	node->ops->edit(node, skv->editPane, skv);
+	SK_NodeEditGeneric(node, skv->editPane, skv);
 	AG_WidgetScale(vp->div[1], -1, -1);
 	hPane = AGWIDGET(vp->div[1])->h;
 	wPane = AGWIDGET(vp->div[1])->w;
@@ -251,6 +257,30 @@ EditNode(AG_Event *event)
 	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
 	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
 	AG_WINDOW_UPDATE(pWin);
+}
+
+static void
+PollConstraints(AG_Event *event)
+{
+	AG_Table *tbl = AG_SELF();
+	SK *sk = AG_PTR(1);
+	SK_Node *node = AG_PTR(2);
+	SK_Constraint *cons;
+
+	AG_TableBegin(tbl);
+	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
+		char name1[SK_NODE_NAME_MAX];
+		char name2[SK_NODE_NAME_MAX];
+
+		if (node != NULL) {
+			if (node != cons->e1 && node != cons->e2)
+				continue;
+		}
+		AG_TableAddRow(tbl, "%s:%s", skConstraintNames[cons->type],
+		    SK_NodeNameCopy(cons->e1, name1, sizeof(name1)),
+		    SK_NodeNameCopy(cons->e2, name2, sizeof(name2)));
+	}
+	AG_TableEnd(tbl);
 }
 
 void *
@@ -297,7 +327,7 @@ SK_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("View"));
 	{
 		AG_MenuAction(pitem, _("New view..."), -1,
-		    CreateNewView, "%p", sk);
+		    CreateNewView, "%p,%p", win, sk);
 	}
 	
 	hp = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
@@ -307,6 +337,7 @@ SK_Edit(void *p)
 		AG_Tlist *tl;
 		AG_Pane *vp;
 		AG_MPane *mp;
+		AG_Table *tbl;
 
 		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT,
 		    AG_PANE_EXPAND|AG_PANE_DIV1FILL);
@@ -335,11 +366,21 @@ SK_Edit(void *p)
 			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
 			AG_TlistPrescale(tl, "<Polygon>", 4);
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sk, skv);
+			AG_TlistSetDblClickFn(tl, EditNode, "%p,%p,%p", hp, vp,
+			    skv);
 			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sk);
 			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);
-			AG_SetEvent(tl, "tlist-dblclick", EditNode, "%p,%p,%p",
-			    hp, vp, skv);
 			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		}
+		ntab = AG_NotebookAddTab(nb, _("Constraints"), AG_BOX_VERT);
+		{
+			tbl = AG_TableNewPolled(ntab,
+			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
+			    PollConstraints, "%p,%p", sk, NULL);
+			AG_TableAddCol(tbl, _("Type"), NULL, NULL);
+			AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
+			AG_TableAddCol(tbl, _("Node 2"), "<Circle88>", NULL);
+			AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 	}
 	
@@ -348,6 +389,21 @@ SK_Edit(void *p)
 	                     2*agView->w/3, 2*agView->h/3);
 	AG_WidgetFocus(skv);
 	return (win);
+}
+
+void
+SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
+{
+	AG_Table *tbl;
+
+	AG_SeparatorNewHoriz(box);
+	AG_LabelNewStaticString(box, 0, _("Geometric constraints: "));
+	tbl = AG_TableNewPolled(box, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+	    PollConstraints, "%p,%p", SKNODE(node)->sk, node);
+	AG_TableAddCol(tbl, _("Type"), NULL, NULL);
+	AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
+	AG_TableAddCol(tbl, _("Node 2"), "<Circle88>", NULL);
+	AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 }
 
 #endif /* EDITION */

@@ -269,13 +269,13 @@ NodeInfo(AG_Event *event)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Node information: %s"), node->name);
 
-	AG_LabelNewFmt(win, _("Name: %s"), node->name);
-	AG_LabelNewFmt(win, _("Parent Node: %s"),
+	AG_LabelNewStatic(win, 0, _("Name: %s"), node->name);
+	AG_LabelNewStatic(win, 0, _("Parent Node: %s"),
 	    node->pNode != NULL ? node->pNode->name : "NULL");
-	AG_LabelNewFmt(win, _("Class: %s"), node->ops->name);
-	AG_LabelNewFmt(win, _("Size: %ub"), node->ops->size);
-	AG_LabelNewFmt(win, _("Flags: 0x%x"), node->flags);
-	AG_LabelNewFmt(win, _("Position: %f,%f,%f"),
+	AG_LabelNewStatic(win, 0, _("Class: %s"), node->ops->name);
+	AG_LabelNewStatic(win, 0, _("Size: %ub"), (Uint)node->ops->size);
+	AG_LabelNewStatic(win, 0, _("Flags: 0x%x"), node->flags);
+	AG_LabelNewStatic(win, 0, _("Position: %f,%f,%f"),
 	    pos.x, pos.y, pos.z);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
