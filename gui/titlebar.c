@@ -106,7 +106,8 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	tbar->flags = flags;
 	tbar->pressed = 0;
 	tbar->win = NULL;
-	tbar->label = AG_LabelNewStaticString(tbar, AG_LABEL_HFILL,
+	tbar->label = AG_LabelNewStaticString(tbar,
+	    AG_LABEL_HFILL|AG_LABEL_NOMINSIZE,
 	    _("Untitled"));
 	AG_LabelPrescale(tbar->label, 1, "X");
 	AG_LabelSetPadding(tbar->label, 5,0,2,2);
