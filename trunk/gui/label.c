@@ -58,7 +58,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label), M_OBJECT);
-	AG_LabelInit(label, AG_LABEL_POLLED_MT, flags, fmt);
+	AG_LabelInit(label, AG_LABEL_POLLED, flags, fmt);
 #ifdef THREADS
 	label->poll.lock = NULL;
 #endif
