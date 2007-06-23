@@ -154,6 +154,7 @@ void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 void	 AG_WidgetPushClipRect(void *, int, int, Uint, Uint);
 void	 AG_WidgetPopClipRect(void *);
+int	 AG_WidgetIsOcculted(AG_Widget *);
 
 __inline__ void	 AG_SetCursor(int);
 __inline__ void	 AG_UnsetCursor(void);
@@ -162,9 +163,17 @@ __inline__ void	 AG_UnsetCursor(void);
 #define	AG_WidgetBlitSurface(p,n,x,y) \
     AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 
-__inline__ void AG_WidgetPutPixel(void *, int, int, Uint32);
-__inline__ void AG_WidgetBlendPixel(void *, int, int, Uint8 [4],
-		                    enum ag_blend_func);
+#define		AG_WidgetPutPixel AG_WidgetPutPixel32
+__inline__ void AG_WidgetPutPixel32(void *, int, int, Uint32);
+__inline__ void AG_WidgetPutPixel32OrClip(void *, int, int, Uint32);
+__inline__ void AG_WidgetPutPixelRGB(void *, int, int, Uint8, Uint8, Uint8);
+__inline__ void AG_WidgetPutPixelRGBOrClip(void *, int, int, Uint8, Uint8,
+		                           Uint8);
+
+#define		AG_WidgetBlendPixel AG_WidgetBlendPixelRGBA
+__inline__ void AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4],
+		                        enum ag_blend_func);
+__inline__ void AG_WidgetBlendPixel32(void *, int, int, Uint32, AG_BlendFn);
 
 void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int,
 	                   int, int);

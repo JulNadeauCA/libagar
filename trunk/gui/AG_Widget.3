@@ -38,53 +38,52 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-The Agar
+A graphical user interface on the Agar platform is described as a tree of
 .Nm
-class is the basic building block for implementing graphical interfaces.
-An Agar graphical interface is a tree of objects derived from this class.
-Every widget occupies a specific rectangle of pixels inside its parent.
-The position and geometry of widgets on the screen is determined by
-recursive transformations.
+objects.
 .Pp
-Interactive widgets are graphical elements that the user interacts with
-using the mouse or keyboard, for example
-.Xr AG_Button 3
-displays a standard push-button.
+Every widget has a local coordinate system and occupies a rectangular
+area of pixels which was allocated by the parent widget (windows are
+themselves a subclass of
+.Nm ,
+see
+.Xr AG_Window 3
+for details).
 .Pp
-Non-interactive widgets are generally
-.Sq container
-widgets whose sole purpose is to determine the position and geometry of its
-child widgets using specific algorithms, for example
-.Xr AG_Box 3
-and
-.Xr AG_Window 3 .
+The Agar GUI library is open, such that new, custom widgets may be implemented
+(or derived from existing widget classes) as part of user applications, very
+conveniently.
 .Pp
-It is common for interactive widgets to attach other widgets, for example
-the
+The widget tree describes the relation between different widgets.
+For example the
 .Xr AG_Table 3
-widget attaches a
+widget attaches two
 .Xr AG_Scrollbar 3
-widget at a specific position and sets its geometry accordingly.
+widgets at specific positions in its own area, and sizes them accordingly.
 .Pp
 Widgets use the
 .Xr AG_Event 3
 system extensively to generate and handle many types of events.
-Many Agar widgets also use
+.Pp
+To reduce GUI-related code bloat to an absolute minimum (and also to simplify
+its isolation), Agar widgets use a system of
 .Sq bindings
-to directly read/write data of specific types, without the need for using
-events.
+such that widgets can directly access (read or write) specific data, without
+the need for events.
 For example, the 
 .Xr AG_FSpinbutton 3
 widget provides a binding called
 .Sq value
-which can be
+which, in the current implementation, can be
 .Ft double ,
 .Ft float ,
 .Ft int ,
 .Ft Uint ,
 .Ft Uint8 ,
 etc.
-This technique can significantly reduce GUI-related code bloat in applications.
+See the
+.Dq BINDINGS
+section below for more details.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -428,29 +427,6 @@ and
 .Fa rs
 set to NULL).
 .Sh RENDERING AND PRIMITIVES
-.Pp
-The
-.Fn agPrim.*
-functions implement 2D primitives designed specifically for widgets.
-It important to note that these functions are not safe to invoke anywhere
-outside of widget
-.Va draw
-functions.
-.Pp
-The coordinates for the
-.Fn agPrim.*
-functions are given in pixels and are
-relative to the parent (container) widget, and the
-.Fa c
-arguments are indices into the global GUI color array (see
-.Xr AG_Colors 3 ).
-.Pp
-Primitive functions are members of the
-.Va agPrim
-structure since the underlying functions may be selected at run-time.
-For instance, appropriate OpenGL routines are substituted for the
-direct video agPrim in OpenGL mode.
-.Pp
 .nr nS 1
 .Ft void
 .Fn AG_WidgetPushClipRect "AG_Widget *widget" "int x" "int y" "Uint w" "Uint h"
@@ -465,8 +441,109 @@ direct video agPrim in OpenGL mode.
 .Fn AG_WidgetPopCursor "AG_Widget *widget"
 .Pp
 .Ft void
-.Fn AG_WidgetPutPixel "AG_Widget *widget" "int x" "int y" "Uint32 color"
+.Fn AG_WidgetPutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 color"
 .Pp
+.Ft void
+.Fn AG_WidgetPutPixel32OrClip "AG_Widget *widget" "int x" "int y" "Uint32 color"
+.Pp
+.Ft void
+.Fn AG_WidgetPutPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 red" "Uint8 green" "Uint8 blue"
+.Pp
+.Ft void
+.Fn AG_WidgetPutPixelRGBOrClip "AG_Widget *widget" "int x" "int y" "Uint8 red" "Uint8 green" "Uint8 blue"
+.Pp
+.Ft void
+.Fn AG_WidgetBlendPixelRGBA "AG_Widget *widget" "int x" "int y" "Uint8 color[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_WidgetBlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
+.Pp
+.nr nS 0
+The
+.Fn AG_WidgetPushClipRect
+function creates a clipping rectangle over the given area (given in
+widget coordinates).
+The current clipping rectangle is saved and can be restored by calling
+.Fn AG_WidgetPopClipRect .
+In SDL mode, the temporary rectangle is set by
+.Xr SDL_SetClipRect 3 .
+In OpenGL mode,
+.Xr glClipPlane 3
+is used.
+It is not safe to call these two functions anywhere outside of a widget
+.Va draw
+operation.
+.Pp
+The
+.Fn AG_WidgetPushCursor
+function changes the active cursor, saving the previous one.
+The argument is an index into the global
+.Va agCursors
+array.
+The
+.Fn AG_WidgetPopCursor
+restores the previously saved cursor.
+.Pp
+.Fn AG_WidgetPutPixel32
+function writes a pixel of value
+.Fa color
+at the given widget coordinates.
+If the target pixel would lie outside of the video display, this function is
+a no-op.
+The
+.Fn AG_WidgetPutPixel32OrClip
+variant uses the clipping rectangle of the widget instead.
+The variants
+.Fn AG_WidgetPutPixelRGB
+and
+.Fn AG_WidgetPutPixelRGBAOrClip
+accept a series of 8-bit color component values instead of a pixel value.
+.Pp
+The
+.Fn AG_WidgetBlendPixelRGBA
+function blends the specified RGB components with the pixel at the specified
+coordinates
+.Fa x ,
+.Fa y
+on the display.
+The
+.Fa color 
+array specifies the 8-bit RGB components and a 8-bit source alpha value.
+The pixels are blended according to the given function
+.Fn blendFn ,
+which may be one of:
+.Bd -literal
+typedef enum ag_blend_func {
+	AG_ALPHA_OVERLAY,	/* dA = sA+dA (emulated in GL mode) */
+	AG_ALPHA_SRC,		/* dA = sA */
+	AG_ALPHA_DST,		/* dA = dA */
+	AG_ALPHA_ONE_MINUS_DST,	/* dA = 1-dA */
+	AG_ALPHA_ONE_MINUS_SRC	/* dA = 1-sA */
+} AG_BlendFn;
+.Ed
+.Sh GRAPHICS PRIMITIVES
+.Pp
+All of the following functions are called from the widget
+.Va draw
+operation (they are not safe to use in another context), to render primitives
+that are designed specifically for use in GUI widgets.
+.Pp
+These functions are called via the
+.Va agPrim
+structure to allow switching between different primitive functions at run time
+or specifying alternate user primitives.
+By default, the built-in primitive functions are selected depending on whether
+the display uses direct video or OpenGL.
+.Pp
+The coordinates for all the
+.Fn agPrim.*
+functions are given in pixels and are relative to the specified widget.
+Unless otherwise noted, the
+.Fa c
+arguments are indices into the global GUI color array (see
+.Xr AG_Colors 3 ).
+.Pp
+.nr nS 1
 .Ft void
 .Fn agPrim.box "AG_Widget *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
 .Pp
@@ -501,35 +578,6 @@ direct video agPrim in OpenGL mode.
 .Fn agPrim.rect_filled "AG_Widget *widget, int x, int y, int w, int h" "Uint32 c"
 .Pp
 .nr nS 0
-The
-.Fn AG_WidgetPushClipRect
-function creates a clipping rectangle over the given area (given in
-widget coordinates).
-The current clipping rectangle is saved and can be restored by calling
-.Fn AG_WidgetPopClipRect .
-In SDL mode, the temporary rectangle is set by
-.Xr SDL_SetClipRect 3 .
-In OpenGL mode,
-.Xr glClipPlane 3
-is used.
-It is not safe to call these two functions anywhere outside of a widget
-.Va draw
-operation.
-.Pp
-The
-.Fn AG_WidgetPushCursor
-function changes the active cursor, saving the previous one.
-The argument is an index into the global
-.Va agCursors
-array.
-The
-.Fn AG_WidgetPopCursor
-restores the previously saved cursor.
-.Pp
-.Fn AG_WidgetPutPixel
-function writes a pixel of value
-.Fa color
-at the given widget coordinates, without checking the clipping rectangle.
 .Pp
 .Fn agPrim.box
 draws a 3D-style box of size

@@ -1255,8 +1255,8 @@ AG_WidgetFocus(void *p)
 
 /* Evaluate whether a given widget is at least partially visible. */
 /* TODO optimize on a per window basis */
-static __inline__ int
-widget_occulted(AG_Widget *wid)
+int
+AG_WidgetIsOcculted(AG_Widget *wid)
 {
 	AG_Window *owin;
 	AG_Window *wwin;
@@ -1365,7 +1365,7 @@ AG_WidgetDraw(void *p)
 		return;
 
 	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
-	    !widget_occulted(wid) && AGWIDGET_OPS(wid)->draw != NULL &&
+	    !AG_WidgetIsOcculted(wid) && AGWIDGET_OPS(wid)->draw != NULL &&
 	    AGWIDGET(wid)->w > 0 && AGWIDGET(wid)->h > 0) {
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
@@ -1405,29 +1405,191 @@ AG_WidgetScaleGeneric(void *p, int w, int h)
 }
 
 /*
- * Write to the pixel at widget-relative x,y coordinates.
- * The display surface must be locked; clipping is done.
+ * Write a 32-bit pixel value (in agVideoFmt format) to the display,
+ * at x,y coordinates with respect to widget's origin. If coordinates
+ * are outside of display boundaries, this is a no-op.
+ *
+ * Must be invoked from widget rendering context. In SDL mode, the
+ * display surface must be locked.
  */
 void
-AG_WidgetPutPixel(void *p, int wx, int wy, Uint32 color)
+AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 {
 	AG_Widget *wid = p;
+	int vx = wid->cx+wx;
+	int vy = wid->cy+wy;
+	
+	if (AG_CLIPPED_PIXEL(agView->v, vx, vy))
+		return;
 
-	AG_VIEW_PUT_PIXEL2_CLIPPED(wid->cx+wx, wid->cy+wy, color);
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 r, g, b;
+
+		SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+		glBegin(GL_POINTS);
+		glColor3ub(r, g, b);
+		glVertex2s(vx, vy);
+		glEnd();
+	} else
+#endif
+		AG_PUT_PIXEL2(agView->v, vx, vy, color);
 }
 
 /*
- * Blend with the pixel at widget-relative x,y coordinates.
- * The display surface must be locked; clipping is done.
+ * Version of WidgetPutPixel32() with clipping of pixels outside of
+ * the widget's allocated area, as opposed to the entire display.
+ *
+ * Must be invoked from widget rendering context. In SDL mode, the
+ * display surface must be locked.
  */
 void
-AG_WidgetBlendPixel(void *p, int wx, int wy, Uint8 c[4],
-    enum ag_blend_func func)
+AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 {
 	AG_Widget *wid = p;
+	int vx = wid->cx+wx, vy = wid->cy+wy;
+	
+	if (!AG_WidgetArea(wid, vx, vy))
+		return;
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 r, g, b;
 
-	AG_BLEND_RGBA2_CLIPPED(agView->v, wid->cx+wx, wid->cy+wy, c[0], c[1],
-	    c[2], c[3], func);
+		SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+		glBegin(GL_POINTS);
+		glColor3ub(r, g, b);
+		glVertex2s(vx, vy);
+		glEnd();
+	} else
+#endif
+		AG_PUT_PIXEL2(agView->v, vx, vy, color);
+}
+
+/*
+ * Write a pixel value (given in RGB components) to the display,
+ * at x,y coordinates with respect to widget's origin. In SDL mode,
+ * the display surface must be locked; clipping is done.
+ *
+ * Must be invoked from widget rendering context. In SDL mode, the
+ * display surface must be locked.
+ */
+void
+AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_Widget *wid = p;
+	int vx = wid->cx+wx, vy = wid->cy+wy;
+	
+	if (AG_CLIPPED_PIXEL(agView->v, vx, vy))
+		return;
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glBegin(GL_POINTS);
+		glColor3ub(r, g, b);
+		glVertex2s(vx, vy);
+		glEnd();
+	} else
+#endif
+		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
+}
+
+/*
+ * Version of WidgetPutPixelRGB() with clipping of pixels outside of
+ * the widget's allocated area, as opposed to the entire display.
+ *
+ * Must be invoked from widget rendering context. In SDL mode, the
+ * display surface must be locked.
+ */
+void
+AG_WidgetPutPixelRGBOrClip(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_Widget *wid = p;
+	int vx = wid->cx+wx, vy = wid->cy+wy;
+	
+	if (!AG_WidgetArea(wid, vx, vy))
+		return;
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glBegin(GL_POINTS);
+		glColor3ub(r, g, b);
+		glVertex2s(vx, vy);
+		glEnd();
+	} else
+#endif
+		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
+}
+
+/*
+ * Blend with the pixel at widget-relative x,y coordinates, with clipping
+ * to display area.
+ *
+ * Must be invoked from widget rendering context. In SDL mode, the
+ * display surface must be locked.
+ */
+void
+AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
+{
+	AG_Widget *wid = p;
+	int vx = wid->cx+wx;
+	int vy = wid->cy+wy;
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		GLboolean svBlendBit;
+		GLint svBlendSrc, svBlendDst;
+
+		glGetBooleanv(GL_BLEND, &svBlendBit);
+		glGetIntegerv(GL_BLEND_SRC, &svBlendSrc);
+		glGetIntegerv(GL_BLEND_DST, &svBlendDst);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+
+		switch (fn) {
+		case AG_ALPHA_OVERLAY:
+			/* XXX TODO emulate using glReadPixels()? */
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			break;
+		case AG_ALPHA_SRC:
+			glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
+			break;
+		case AG_ALPHA_DST:
+			glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+			break;
+		case AG_ALPHA_ONE_MINUS_DST:
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+			break;
+		case AG_ALPHA_ONE_MINUS_SRC:
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+		}
+		glBegin(GL_POINTS);
+		glColor4ubv((GLbyte *)c);
+		glVertex2s(vx, vy);
+		glEnd();
+
+		if (!svBlendBit) {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(GL_SRC_ALPHA, svBlendSrc);
+		glBlendFunc(GL_DST_ALPHA, svBlendDst);
+	} else
+#endif /* HAVE_OPENGL */
+	{
+		AG_BLEND_RGBA2_CLIPPED(agView->v, vx, vy,
+		    c[0], c[1], c[2], c[3], fn);
+	}
+}
+
+/*
+ * Variant of WidgetBlendPixel which accepts a 32-bit pixel in standard
+ * reference surface format (agSurfaceFmt).
+ */
+void
+AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
+{
+	Uint8 c[4];
+
+	SDL_GetRGBA(pixel, agSurfaceFmt, &c[0], &c[1], &c[2], &c[3]);
+	AG_WidgetBlendPixelRGBA(p, wx, wy, c, fn);
 }
 
 /* Evaluate to true if absolute view coords x,y are inside the widget area. */
