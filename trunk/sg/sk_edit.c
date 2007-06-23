@@ -395,8 +395,14 @@ void
 SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 {
 	AG_Table *tbl;
+	AG_Label *lbl;
 
 	AG_SeparatorNewHoriz(box);
+
+	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &skv->sk->lock,
+	    "Flags: <%[flags]>", &node->flags);
+	AG_LabelFlag(lbl, 0, "SELECTED", SK_NODE_SELECTED);
+
 	AG_LabelNewStaticString(box, 0, _("Geometric constraints: "));
 	tbl = AG_TableNewPolled(box, AG_TABLE_MULTI|AG_TABLE_EXPAND,
 	    PollConstraints, "%p,%p", SKNODE(node)->sk, node);

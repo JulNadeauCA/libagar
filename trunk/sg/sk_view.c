@@ -45,7 +45,7 @@ const AG_WidgetOps skViewOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_WidgetDestroy,
+		SK_ViewDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -281,6 +281,17 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 void
 SK_ViewDestroy(void *p)
 {
+	SK_View *skv = p;
+	SK_Tool *tool, *toolNext;
+
+	for (tool = TAILQ_FIRST(&skv->tools);
+	     tool != TAILQ_END(&skv->tools);
+	     tool = toolNext) {
+		toolNext = TAILQ_NEXT(tool, tools);
+		SK_ToolDestroy(tool);
+		Free(tool, M_SG);
+	}
+	AG_WidgetDestroy(skv);
 }
 
 void
@@ -511,7 +522,7 @@ SK_ViewRegTool(SK_View *skv, const SK_ToolOps *ops, void *p)
 {
 	SK_Tool *t;
 
-	t = Malloc(ops->len, M_MAPEDIT);
+	t = Malloc(ops->len, M_SG);
 	t->ops = ops;
 	t->skv = skv;
 	t->p = p;

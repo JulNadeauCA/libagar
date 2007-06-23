@@ -2074,6 +2074,7 @@ AG_ObjectEdit(void *p)
 	AG_Tlist *tl;
 	AG_Box *box;
 	AG_Button *btn;
+	AG_Label *lbl;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
@@ -2093,8 +2094,22 @@ AG_ObjectEdit(void *p)
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
 		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->ops->type);
-		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
-		    _("Flags: 0x%x"), &ob->flags);
+
+		lbl = AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &ob->lock,
+		    _("Flags: <%[flags]>"), &ob->flags);
+		AG_LabelFlag32(lbl,0,"RELOAD_PROPS", AG_OBJECT_RELOAD_PROPS);
+		AG_LabelFlag32(lbl,0,"NON_PERSISTENT",AG_OBJECT_NON_PERSISTENT);
+		AG_LabelFlag32(lbl,0,"INDESCTRUCTIBLE",
+		    AG_OBJECT_INDESTRUCTIBLE);
+		AG_LabelFlag32(lbl,0,"DATA_RESIDENT", AG_OBJECT_DATA_RESIDENT);
+		AG_LabelFlag32(lbl,0,"PRESERVE_DEPS", AG_OBJECT_PRESERVE_DEPS);
+		AG_LabelFlag32(lbl,0,"STATIC", AG_OBJECT_STATIC);
+		AG_LabelFlag32(lbl,0,"READONLY", AG_OBJECT_READONLY);
+		AG_LabelFlag32(lbl,0,"WAS_RESIDENT", AG_OBJECT_WAS_RESIDENT);
+		AG_LabelFlag32(lbl,0,"IN_SAVE", AG_OBJECT_IN_SAVE);
+		AG_LabelFlag32(lbl,0,"REOPEN_ONLOAD",AG_OBJECT_REOPEN_ONLOAD);
+		AG_LabelFlag32(lbl,0,"REMAIN_DATA", AG_OBJECT_REMAIN_DATA);
+
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
 		    _("Parent: %[obj]"), &ob->parent);
 		AG_LabelNewStatic(ntab, 0, _("Save prefix: %s"),
