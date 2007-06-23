@@ -2025,12 +2025,12 @@ refresh_checksums(AG_Event *event)
 
 #ifdef NETWORK
 static void
-refresh_rcs_status(AG_Event *event)
+RefreshRepoStatus(AG_Event *event)
 {
 	char objdir[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	AG_Object *ob = AG_PTR(1);
-	AG_Label *lb_status = AG_PTR(2);
+	AG_Label *lblStatus = AG_PTR(2);
 	AG_Tlist *tl = AG_PTR(3);
 	extern const char *agRcsStatusStrings[];
 	enum ag_rcs_status status;
@@ -2046,7 +2046,7 @@ refresh_rcs_status(AG_Event *event)
 	}
 	status = AG_RcsStatus(ob, objdir, digest, NULL, NULL, &repo_rev,
 	    &working_rev);
-	AG_LabelPrintf(lb_status,
+	AG_LabelPrintf(lblStatus,
 	    _("RCS status: %s\n"
 	      "Working revision: #%u\n"
 	      "Repository revision: #%u\n"),
@@ -2092,20 +2092,19 @@ AG_ObjectEdit(void *p)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Class: %s"),
-		    ob->ops->type);
-		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Flags: 0x%x"),
-		    &ob->flags);
-		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Parent: %[obj]"),
-		    &agLinkageLock, &ob->parent);
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Save prefix: %s"),
+		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->ops->type);
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    _("Flags: 0x%x"), &ob->flags);
+		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
+		    _("Parent: %[obj]"), &ob->parent);
+		AG_LabelNewStatic(ntab, 0, _("Save prefix: %s"),
 		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Data references: %[u32]"),
-		    &ob->data_used);
-		
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    _("Data references: %[u32]"), &ob->data_used);
+
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
 		tb_md5 = AG_TextboxNew(ntab,
@@ -2115,12 +2114,10 @@ AG_ObjectEdit(void *p)
 		
 		tb_sha1 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "SHA1: ");
-		AG_TextboxPrescale(tb_sha1, "8888888888888888888888888");
 		tb_sha1->flags &= ~(AG_TEXTBOX_WRITEABLE);
 		
 		tb_rmd160 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "RMD160: ");
-		AG_TextboxPrescale(tb_rmd160, "88888888888888888888888");
 		tb_rmd160->flags &= ~(AG_TEXTBOX_WRITEABLE);
 
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
@@ -2136,16 +2133,17 @@ AG_ObjectEdit(void *p)
 #ifdef NETWORK
 	ntab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
-		AG_Label *lb_status;
+		AG_Label *lblStatus;
 		AG_Tlist *tl;
 
-		lb_status = AG_LabelNew(ntab, AG_LABEL_STATIC, "...");
+		lblStatus = AG_LabelNewStatic(ntab, AG_LABEL_HFILL, "...");
+		AG_LabelPrescale(lblStatus, 3, _("Repository revision: #0000"));
 
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Revision history:"));
+		AG_LabelNewStaticString(ntab, 0, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
 		btn = AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Refresh status"),
-		    refresh_rcs_status, "%p,%p,%p", ob, lb_status, tl);
+		    RefreshRepoStatus, "%p,%p,%p", ob, lblStatus, tl);
 
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);

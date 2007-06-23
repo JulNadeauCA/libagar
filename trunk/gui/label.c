@@ -48,8 +48,9 @@ const AG_WidgetOps agLabelOps = {
 	AG_LabelScale
 };
 
+/* Create a new polled label. */
 AG_Label *
-AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
+AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 {
 	char buf[AG_LABEL_MAX];
 	AG_Label *label;
@@ -57,41 +58,27 @@ AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label), M_OBJECT);
-
+	AG_LabelInit(label, AG_LABEL_POLLED_MT, flags, fmt);
+#ifdef THREADS
+	label->poll.lock = NULL;
+#endif
 	va_start(ap, fmt);
-	switch (type) {
-	case AG_LABEL_STATIC:
-		vsnprintf(buf, sizeof(buf), fmt, ap);
-		AG_LabelInit(label, AG_LABEL_STATIC, buf);
-		break;
-	case AG_LABEL_POLLED:
-		AG_LabelInit(label, AG_LABEL_POLLED, fmt);
-		label->poll.lock = NULL;
-		break;
-	case AG_LABEL_POLLED_MT:
-		AG_LabelInit(label, AG_LABEL_POLLED_MT, fmt);
-		label->poll.lock = va_arg(ap, AG_Mutex *);
-		break;
-	}
-	if (type == AG_LABEL_POLLED || type == AG_LABEL_POLLED_MT) {
-		for (p = fmt; *p != '\0'; p++) {
-			if (*p == '%' && *(p+1) != '\0') {
-				switch (*(p+1)) {
-				case ' ':
-				case '(':
-				case ')':
-				case '%':
-					break;
-				default:
-					if (label->poll.nptrs+1 <
-					    AG_LABEL_MAX_POLLPTRS) {
-						label->poll.ptrs
-						    [label->poll.nptrs++] =
-						    va_arg(ap, void *);
-					}
-					break;
-				}
+	for (p = fmt; *p != '\0'; p++) {
+		if (*p != '%' || *(p+1) == '\0') {
+			continue;
+		}
+		switch (*(p+1)) {
+		case ' ':
+		case '(':
+		case ')':
+		case '%':
+			break;
+		default:
+			if (label->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
+				label->poll.ptrs[label->poll.nptrs++] =
+				    va_arg(ap, void *);
 			}
+			break;
 		}
 	}
 	va_end(ap);
@@ -100,32 +87,77 @@ AG_LabelNew(void *parent, enum ag_label_type type, const char *fmt, ...)
 	return (label);
 }
 
-/* Alternate constructor for static labels. */
+/* Create a new polled label associated with a mutex. */
 AG_Label *
-AG_LabelNewStatic(void *parent, const char *text)
-{
-	AG_Label *label;
-	
-	label = Malloc(sizeof(AG_Label), M_OBJECT);
-	AG_LabelInit(label, AG_LABEL_STATIC, text);
-	AG_ObjectAttach(parent, label);
-	return (label);
-}
-
-/* Alternate constructor for static labels. */
-AG_Label *
-AG_LabelNewFmt(void *parent, const char *fmt, ...)
+AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
+    const char *fmt, ...)
 {
 	char buf[AG_LABEL_MAX];
 	AG_Label *label;
 	va_list ap;
+	const char *p;
 	
+	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	AG_LabelInit(label, AG_LABEL_POLLED_MT, flags, fmt);
+#ifdef THREADS
+	label->poll.lock = mutex;
+#endif
 	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
+	for (p = fmt; *p != '\0'; p++) {
+		if (*p != '%' || *(p+1) == '\0') {
+			continue;
+		}
+		switch (*(p+1)) {
+		case ' ':
+		case '(':
+		case ')':
+		case '%':
+			break;
+		default:
+			if (label->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
+				label->poll.ptrs[label->poll.nptrs++] =
+				    va_arg(ap, void *);
+			}
+			break;
+		}
+	}
 	va_end(ap);
 
+	AG_ObjectAttach(parent, label);
+	return (label);
+}
+
+/* Create a new static label using the given formatted text. */
+AG_Label *
+AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
+{
+	char *s;
+	AG_Label *label;
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vasprintf(&s, fmt, ap);
+		va_end(ap);
+	} else {
+		s = NULL;
+	}
+
 	label = Malloc(sizeof(AG_Label), M_OBJECT);
-	AG_LabelInit(label, AG_LABEL_STATIC, buf);
+	AG_LabelInit(label, AG_LABEL_STATIC, flags, s);
+	AG_ObjectAttach(parent, label);
+	Free(s, 0);
+	return (label);
+}
+
+/* LabelNewStatic() variant without format string. */
+AG_Label *
+AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
+{
+	AG_Label *label;
+	
+	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	AG_LabelInit(label, AG_LABEL_STATIC, flags, text);
 	AG_ObjectAttach(parent, label);
 	return (label);
 }
@@ -135,49 +167,62 @@ AG_LabelScale(void *p, int rw, int rh)
 {
 	AG_Label *lab = p;
 
-	switch (lab->type) {
-	case AG_LABEL_STATIC:
-		AG_MutexLock(&lab->lock);
-		if (rw == -1 && rh == -1 && lab->surface != -1) {
-			AGWIDGET(lab)->w =
-			    AGWIDGET_SURFACE(lab,lab->surface)->w +
-			    lab->lPad + lab->rPad;
-			AGWIDGET(lab)->h =
-			    AGWIDGET_SURFACE(lab,lab->surface)->h +
-			    lab->tPad + lab->bPad;
+	if (rw == -1 && rh == -1) {
+		switch (lab->type) {
+		case AG_LABEL_STATIC:
+			AG_MutexLock(&lab->lock);
+			if (lab->wPre != -1) {
+				
+			}
+			if (lab->surface != -1) {
+				AGWIDGET(lab)->w =
+				    AGWIDGET_SURFACE(lab,lab->surface)->w +
+				    lab->lPad + lab->rPad;
+				AGWIDGET(lab)->h =
+				    AGWIDGET_SURFACE(lab,lab->surface)->h +
+				    lab->tPad + lab->bPad;
+			}
+			AG_MutexUnlock(&lab->lock);
+			break;
+		case AG_LABEL_POLLED:
+		case AG_LABEL_POLLED_MT:
+			if (rh == -1 && rh == -1) {
+				AGWIDGET(lab)->w = lab->wPre + lab->lPad + lab->rPad;
+				AGWIDGET(lab)->h = lab->hPre + lab->tPad + lab->bPad;
+			}
+			break;
 		}
-		AG_MutexUnlock(&lab->lock);
-		break;
-	case AG_LABEL_POLLED:
-	case AG_LABEL_POLLED_MT:
-		if (rh == -1 && rh == -1) {
-			AGWIDGET(lab)->w = lab->wPre + lab->lPad + lab->rPad;
-			AGWIDGET(lab)->h = lab->hPre + lab->tPad + lab->bPad;
-		}
-		break;
 	}
 }
 
 void
-AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
+AG_LabelInit(AG_Label *label, enum ag_label_type type, Uint flags,
+    const char *s)
 {
-	AG_WidgetInit(label, "label", &agLabelOps, AG_WIDGET_CLIPPING);
+	int wflags = AG_WIDGET_CLIPPING;
+
+	if (flags & AG_LABEL_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_LABEL_VFILL) { wflags |= AG_WIDGET_VFILL; }
+
+	AG_WidgetInit(label, "label", &agLabelOps, wflags);
 	label->type = type;
+	label->flags = flags;
 	label->lPad = 2;
 	label->rPad = 2;
 	label->tPad = 0;
 	label->bPad = 1;
+	label->wPre = -1;
+	label->hPre = -1;
 
 	switch (type) {
 	case AG_LABEL_STATIC:
-		label->surface = (s==NULL) ? -1 : AG_WidgetMapSurface(label,
+		label->surface = (s == NULL) ? -1 : AG_WidgetMapSurface(label,
 		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s));
 		AG_MutexInit(&label->lock);
 		break;
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
-		AG_LabelPrescale(label, "XXXXXXXXXXXXXXXXX");
-		AGWIDGET(label)->flags |= AG_WIDGET_HFILL;
+		AG_LabelPrescale(label, 1, "XXXXXXXXXXXXXXXXX");
 		label->surface = -1;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
 		memset(label->poll.ptrs, 0,
@@ -188,9 +233,15 @@ AG_LabelInit(AG_Label *label, enum ag_label_type type, const char *s)
 }
 
 void
-AG_LabelPrescale(AG_Label *lab, const char *text)
+AG_LabelPrescale(AG_Label *lab, Uint nlines, const char *text)
 {
-	AG_TextPrescale(text, &lab->wPre, &lab->hPre);
+	if (nlines > 0) {
+		AG_TextPrescale(text, &lab->wPre, NULL);
+		lab->hPre = nlines*agTextFontHeight +
+		            (nlines-1)*agTextFontLineSkip;
+	} else {
+		AG_TextPrescale(text, &lab->wPre, &lab->hPre);
+	}
 }
 
 void

@@ -404,17 +404,17 @@ MAP_ActorEdit(void *p)
 	AG_WindowSetCaption(win, _("Actor: %s"), AGOBJECT(a)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_LEFT, 1);
 
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Type: %d"), &a->type);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Flags: 0x%x"), &a->flags);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Map layers: %d-%d"),
+	AG_LabelNewPolled(win, 0, _("Type: %d"), &a->type);
+	AG_LabelNewPolled(win, 0, _("Flags: 0x%x"), &a->flags);
+	AG_LabelNewPolled(win, 0, _("Map layers: %d-%d"),
 	    &a->g_map.l0, &a->g_map.l1);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Map position: [%d,%d]"),
+	AG_LabelNewPolled(win, 0, _("Map position: [%d,%d]"),
 	    &a->g_map.x, &a->g_map.y);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Map extent: [%d,%d]-[%d,%d]"),
+	AG_LabelNewPolled(win, 0, _("Map extent: [%d,%d]-[%d,%d]"),
 	    &a->g_map.x0, &a->g_map.y0, &a->g_map.x1, &a->g_map.y1);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Map offset: [%d,%d]"),
+	AG_LabelNewPolled(win, 0, _("Map offset: [%d,%d]"),
 	    &a->g_map.xmot, &a->g_map.ymot);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Direction: %d(%d)"),
+	AG_LabelNewPolled(win, 0, _("Direction: %d(%d)"),
 	    &a->g_map.da, &a->g_map.dv);
 
 	return (win);

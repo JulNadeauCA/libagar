@@ -2261,16 +2261,17 @@ MAP_EditMapSettings(AG_Event *event)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		
-		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Camera: %i"), &mv->cam);
-		AG_LabelNew(ntab, AG_LABEL_POLLED_MT, _("Current layer: %i"),
-		    &m->lock, &m->cur_layer);
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    _("Camera: %i"), &mv->cam);
+		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &m->lock,
+		    _("Current layer: %i"), &m->lock, &m->cur_layer);
 
-		AG_LabelNew(ntab, AG_LABEL_POLLED, _("Cursor position: %ix%i"),
-		    &mv->cx, &mv->cy);
-		AG_LabelNew(ntab, AG_LABEL_POLLED,
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    _("Cursor position: %ix%i"), &mv->cx, &mv->cy);
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
 		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
 		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
-		AG_LabelNew(ntab, AG_LABEL_POLLED,
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
 		    _("Effective selection: %[ibool] (%ix%i at %i,%i)"),
 		    &mv->esel.set,
 		    &mv->esel.w, &mv->esel.h, &mv->esel.x, &mv->esel.y);
@@ -2666,7 +2667,7 @@ noderef_edit(AG_Event *event)
 	AG_WindowSetCaption(win, _("Node reference"));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
-	AG_LabelNewFmt(win, _("Type: %s"),
+	AG_LabelNewStatic(win, 0, _("Type: %s"),
 	    (r->type == MAP_ITEM_TILE) ? _("Tile") :
 	    (r->type == MAP_ITEM_ANIM) ? _("Animation") :
 	    (r->type == MAP_ITEM_WARP) ? _("Warp point") : "?");

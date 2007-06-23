@@ -98,7 +98,8 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 void
 AG_TableInit(AG_Table *t, Uint flags)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
+	              AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	if (flags & AG_TABLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_TABLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -778,6 +779,7 @@ ColumnLeftClick(AG_Table *tbl, int px)
 		if (x > x1 && x < x2) {
 			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
 				if (tbl->nResizing == -1) {
+					dprintf("now resizing col%d\n", n);
 					tbl->nResizing = n;
 				}
 			} else {
@@ -982,6 +984,7 @@ mousebuttonup(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (t->nResizing >= 0) {
+			dprintf("no longer resizing col%d\n", t->nResizing);
 			t->nResizing = -1;
 		}
 		break;
@@ -1092,6 +1095,7 @@ lostfocus(AG_Event *event)
 	AG_CancelEvent(t, "dblclick-row-expire");
 	AG_CancelEvent(t, "dblclick-col-expire");
 	if (t->nResizing >= 0) {
+		dprintf("lost focus: no longer resizing col%d\n", t->nResizing);
 		t->nResizing = -1;
 	}
 	AG_MutexUnlock(&t->lock);

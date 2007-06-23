@@ -106,9 +106,10 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	tbar->flags = flags;
 	tbar->pressed = 0;
 	tbar->win = NULL;
-	tbar->label = AG_LabelNew(tbar, AG_LABEL_STATIC, _("Untitled"));
+	tbar->label = AG_LabelNewStaticString(tbar, AG_LABEL_HFILL,
+	    _("Untitled"));
+	AG_LabelPrescale(tbar->label, 1, "X");
 	AG_LabelSetPadding(tbar->label, 5,0,2,2);
-	AGWIDGET(tbar->label)->flags |= AG_WIDGET_HFILL;
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);

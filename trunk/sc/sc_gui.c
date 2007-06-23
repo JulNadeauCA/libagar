@@ -52,7 +52,7 @@ SC_EditVector3(void *parent, const char *label, SC_Vector *pv, SC_Real incr)
 	if (pv->m < 3) { fatal("Vector has <3 components"); }
 #endif
 	box = AG_BoxNew(parent, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
-	AG_LabelNewStatic(box, label);
+	AG_LabelNewStatic(box, 0, label);
 
 	fsb = AG_FSpinbuttonNew(box, 0, NULL, NULL);
 	AG_FSpinbuttonSetIncrement(fsb, incr);

@@ -207,7 +207,7 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_LabelNewFmt(win, _("File %s exists. Overwrite?"), fd->cfile);
+	AG_LabelNewStatic(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonAct(hb, 0, _("Yes"),
@@ -494,8 +494,10 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 		    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
 	}
 
-	fd->lbCwd = AG_LabelNew(fd, AG_LABEL_POLLED, _("Directory: %s"),
-	    &fd->cwd[0]);
+	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
+	    _("Directory: %s"), &fd->cwd[0]);
+	AG_LabelPrescale(fd->lbCwd, 1,
+	    _("Directory: XXXXXXXXXXXXX"));
 
 	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 	    _("File: "));

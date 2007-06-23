@@ -524,18 +524,23 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 }
 
 void
-AG_ButtonPrintf(AG_Button *bu, const char *fmt, ...)
+AG_ButtonTextString(AG_Button *bu, const char *text)
 {
-	char buf[AG_LABEL_MAX];
+	AG_WidgetReplaceSurface(bu, 0,
+	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), text));
+	AG_WidgetRedraw(bu);
+}
+
+void
+AG_ButtonText(AG_Button *bu, const char *fmt, ...)
+{
+	char s[AG_LABEL_MAX];
 	va_list args;
 
 	va_start(args, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, args);
+	vsnprintf(s, sizeof(s), fmt, args);
 	va_end(args);
 
-	AG_WidgetReplaceSurface(bu, 0,
-	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), buf));
-	
-	AG_WidgetRedraw(bu);
+	AG_ButtonTextString(bu, s);
 }
 

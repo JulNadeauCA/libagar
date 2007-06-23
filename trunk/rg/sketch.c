@@ -276,6 +276,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_Radio *rad;
 	AG_Spinbutton *sb;
 	AG_Combo *com;
+	AG_Label *lbl;
 	
 	if ((win = AG_WindowNewNamed(0, "%s-%p-%p", sk->name, tel, vge))
 	    == NULL) {
@@ -285,8 +286,10 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
 
 	ops = vgElementTypes[vge->type];
-	AG_LabelNewFmt(win, _("Element type: %s"), ops->name);
-	AG_LabelNew(win, AG_LABEL_POLLED, _("Vertices: %u"), &vge->nvtx);
+	AG_LabelNewStatic(win, 0, _("Element type: %s"), ops->name);
+	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, _("Vertices: %u"),
+	    &vge->nvtx);
+	AG_LabelPrescale(lbl, 1, _("Vertices: 00000000"));
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
@@ -320,11 +323,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 			NULL
 		};
 	
-		AG_LabelNewStatic(ntab, _("Line style: "));
+		AG_LabelNewStaticString(ntab, 0, _("Line style: "));
 		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, line_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
 		
-		AG_LabelNewStatic(ntab, _("Endpoint style: "));
+		AG_LabelNewStaticString(ntab, 0, _("Endpoint style: "));
 		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, endpoint_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
 		    &vge->line_st.endpoint_style);
@@ -352,11 +355,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 		RG_TextureSelector *texsel;
 
-		AG_LabelNewStatic(ntab, _("Filling style: "));
+		AG_LabelNewStaticString(ntab, 0, _("Filling style: "));
 		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, fill_styles);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
 			
-		AG_LabelNewStatic(ntab, _("Texture: "));
+		AG_LabelNewStaticString(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		AGWIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,

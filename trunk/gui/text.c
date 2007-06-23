@@ -600,7 +600,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
+	AG_LabelNewStaticString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_ButtonAct(vb, AG_BUTTON_FOCUS, _("Ok"), AGWINDETACH(win));
@@ -628,7 +628,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
+	AG_LabelNewStaticString(vb, 0, msg);
 	AG_WindowShow(win);
 
 	AG_LockTimeouts(NULL);
@@ -661,7 +661,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
-	AG_LabelNewStatic(win, text);
+	AG_LabelNewStaticString(win, 0, text);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	for (i = 0; i < nbOpts; i++) {
@@ -691,7 +691,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
+	AG_LabelNewStaticString(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
@@ -729,7 +729,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNew(vb, AG_LABEL_STATIC, msg);
+	AG_LabelNewStaticString(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
@@ -760,7 +760,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	AG_WindowSetSpacing(win, 8);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	AG_LabelNew(bo, AG_LABEL_STATIC, prompt);
+	AG_LabelNewStaticString(bo, 0, prompt);
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{

@@ -122,17 +122,17 @@ AG_EventShowPerfGraph(void)
 static void
 PerfMonitorInit(void)
 {
-	AG_Label *label;
+	AG_Label *lbl;
 
 	agPerfWindow = AG_WindowNewNamed(0, "event-fps-counter");
 	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 
-	label = AG_LabelNew(agPerfWindow, AG_LABEL_POLLED,
+	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
 	    "%dms (nom %dms), %d evnt, %dms idle",
 	    &agView->rCur, &agView->rNom, &agEventAvg,
 	    &agIdleAvg);
-	AG_LabelPrescale(label, "XXXms (nom XXXms), XX evnt, XXXms idle");
+	AG_LabelPrescale(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
 
 	agPerfGraph = AG_GraphNew(agPerfWindow, AG_GRAPH_LINES,
 	    AG_GRAPH_ORIGIN|AG_GRAPH_EXPAND);

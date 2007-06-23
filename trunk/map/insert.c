@@ -174,7 +174,7 @@ insert_pane(void *p, void *con)
 
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
-		AG_LabelNew(ntab, AG_LABEL_STATIC, _("Snap to: "));
+		AG_LabelNewStaticString(ntab, 0, _("Snap to: "));
 		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, rgTileSnapModes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
 

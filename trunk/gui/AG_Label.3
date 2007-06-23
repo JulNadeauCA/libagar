@@ -41,6 +41,10 @@
 The
 .Nm
 widget displays single-line or multi-line text.
+In the case of
+.Sq polled
+labels, the text can contain directives such that specific data is
+dereferenced on rendering.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -48,58 +52,117 @@ widget displays single-line or multi-line text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Label *"
-.Fn AG_LabelNew "AG_Widget *parent" "enum ag_label_type type" "const char *fmt" "..."
+.Fn AG_LabelNewStatic "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewStatic "AG_Widget *parent" "const char *text"
+.Fn AG_LabelNewStaticString "AG_Widget *parent" "Uint flags" "const char *text"
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewFmt "AG_Widget *parent" "const char *fmt" "..."
+.Fn AG_LabelNewPolled "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
+.Pp
+.Ft "AG_Label *"
+.Fn AG_LabelNewPolledMT "AG_Widget *parent" "Uint flags" "AG_Mutex *mutex" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "const char *text"
+.Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "Uint flags" "const char *text"
+.Pp
+.Ft "void"
+.Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
+.Pp
+.Ft "void"
+.Fn AG_LabelPrescale "AG_Label *label" "Uint nlines" "const char *text"
 .Pp
 .nr nS 0
 The
-.Fn AG_LabelNew
+.Fn AG_LabelNewStatic
 function allocates, initializes and attaches a
 .Nm
-widget.
+widget initially displaying the given text, which can be changed with
+.Fa AG_LabelPrintf
+and
+.Fa AG_LabelSetSurface
+calls (see
+.Dq STATIC LABELS
+section below).
+The
+.Fn AG_LabelNewStaticString
+variant accepts a non-formatted string.
+.Pp
+The
+.Fn AG_LabelNewPolled
+function creates a new
+.Nm
+widget displaying a string of text which contains references to live data
+(see
+.Dq POLLED LABELS
+section below).
+The
+.Fn AG_LabelNewPolledMT
+variant accepts a pointer to a mutex that will be automatically acquired
+and release as the widget accesses the referenced data.
+.Pp
+The alternate
+.Fn AG_LabelInit
+function is used to initialize an existing
+.Nm
+structure.
+The
 .Fa type
-is one of:
+argument is one of:
 .Pp
 .Bd -literal
 enum ag_label_type {
 	AG_LABEL_STATIC,		/* Static text */
-	AG_LABEL_POLLED,		/* Polling (thread unsafe) */
-	AG_LABEL_POLLED_MT		/* Polling (thread safe) */
+	AG_LABEL_POLLED,		/* Polling */
+	AG_LABEL_POLLED_MT		/* Polling (with mutex) */
 };
 .Ed
 .Pp
-The functions
-.Fn AG_LabelNewStatic
-and
-.Fn AG_LabelNewFmt
-are alternate constructors optimized for static labels.
+All of the previous functions accept the following
+.Fa flags :
+.Bd -literal
+#define AG_LABEL_HFILL		0x01		/* Fill horizontal space */
+#define AG_LABEL_VFILL		0x02		/* Fill vertical space */
+#define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
+.Ed
 .Pp
-For
-.Dv AG_LABEL_STATIC
-labels,
-.Fa fmt
-is a
+The
+.Fn AG_LabelSetPadding
+function sets the label padding parameters in pixels.
+If a parameter is -1, its current value is preserved.
+.Pp
+The
+.Fn AG_LabelPrescale
+function arranges for the minimum scaling of the label to accomodate at
+least
+.Fa nlines
+lines of the given text string.
+If
+.Fa nlines
+is 0, the number of lines will be based on the contents of the text string.
+The
+.Fa nlines
+parameter is necessary because it is possible to poll string values that
+are possibly multi-line.
+.Sh POLLED LABELS
+.Pp
+Polled labels are specified to
+.Fn AG_LabelNewPolled
+and
+.Fn AG_LabelNewPolledMT
+as a format string containing regular text
+with zero or more
 .Xr printf 3
-style format string.
-For labels of type
-.Dv AG_LABEL_POLLED ,
-.Fa fmt
-is a format string and the subsequent arguments are pointers to the polled
-values.
-For
-.Dv AG_LABEL_POLLED_MT ,
-the first argument following
-.Fa fmt
-should be a
-.Ft AG_Mutex * .
+like directives, except that the argument following the format string are
+pointers to the data instead.
+.Pp
+Note that a call to
+.Fn AG_LabelPrescale
+is always recommended in the case of polled labels, such that the label
+is initially scaled to an optimal size, given the data that we expect the
+label will have to display.
+.Pp
+Possible format string directives include:
 .Pp
 .Bl -tag -compact -width "%llu, %llo, %llx "
 .It %d, %i
@@ -137,7 +200,7 @@ SDL_Rect *
 .It %[rect]
 SDL_Rect *
 .El
-.Sh LABELS
+.Sh STATIC LABELS
 .nr nS 1
 .Ft void
 .Fn AG_LabelPrintf "AG_Label *label" "const char *fmt" "..."
@@ -145,56 +208,53 @@ SDL_Rect *
 .Ft void
 .Fn AG_LabelSetSurface "AG_Label *label" "SDL_Surface *su"
 .Pp
-.Ft void
-.Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
-.Pp
-.Ft void
-.Fn AG_LabelPrescale "AG_Label *label" "const char *text"
-.Pp
 .nr nS 0
 The
 .Fn AG_LabelPrintf
-function sets the label to a string of text (for
-.Dv AG_LABEL_STATIC
-labels only).
+function changes the current label text (applicable to static labels only).
 .Pp
 The
 .Fn AG_LabelSetSurface
-function uses a copy of the given surface as the label.
+function arranges for a copy of the given surface to be used as the label.
+To display graphics other than text, it is preferrable to use the
+.Xr AG_Pixmap 3
+widget.
 .Pp
-The
-.Fn AG_LabelSetPadding
-function sets the label padding in pixels.
-If a parameter is -1, its current value is preserved.
-.Pp
-The
-.Fn AG_LabelPrescale
-function arranges for a
-.Dv AG_LABEL_POLLED
-type label to be large enough to hold a given string of text.
 .Sh EVENTS
 The
 .Nm
 widget neither reacts to nor generates any event.
 .Pp
 .Sh EXAMPLES
-The following code snippet creates a window containing a static label:
+The following code snippet creates a window containing both a static label
+and a polled label:
 .Pp
 .Bd -literal
 {
 	AG_Window *win;
+	int myInt = 1234;
+	AG_Label *myLbl;
 
 	win = AG_WindowNew(0);
-	AG_LabelNew(win, "Foo");
+	AG_LabelNewStatic(win, 0, "Foo");
+	myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
+	AG_LabelPrescale(myLbl, 1, "myInt=0000");
 }
 .Ed
-.Sh TROUBLETONS
-The label polling mechanism is ugly and predates the implementation of widget
-bindings.
-Ideally it should be reworked to perform substitutions for discrete binding
-values inside polled label specifications.
+.Pp
+Thread-safe code can associate polled labels with mutexes protecting
+the data to access:
+.Bd -literal
+{
+	int myInt = 1234;
+	AG_Mutex myMutex = AG_MUTEX_INITIALIZER;
+
+	AG_LabelNewPolledMT(win, 0, &myMutex, "myInt=%i", &myInt);
+}
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Pixmap 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3 ,
 .Xr printf 3

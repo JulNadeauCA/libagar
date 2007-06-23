@@ -134,25 +134,25 @@ examine_widget(AG_Event *event)
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
-		AG_Label *lab;
+		AG_Label *lbl;
 
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("Name: \"%s\""),
+		AG_LabelNewStatic(vb, 0, _("Name: \"%s\""),
 		    AGOBJECT(wid)->name);
-		AG_LabelNew(vb, AG_LABEL_STATIC, _("Type: %s"), wid->type);
-		AG_LabelNew(vb, AG_LABEL_POLLED_MT, _("Flags: 0x%x"),
-		    &pwin->lock, &wid->flags);
+		AG_LabelNewStatic(vb, 0, _("Type: %s"), wid->type);
+		AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &pwin->lock,
+		    _("Flags: 0x%x"), &wid->flags);
 
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
-		    _("Geometry: %dx%d at %d,%d"), &pwin->lock,
-		    &wid->w, &wid->h, &wid->x, &wid->y);
-		AG_LabelPrescale(lab,
-		    _("Geometry: 0000x0000 at 0000x0000"));
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &pwin->lock,
+		    _("Geometry: %dx%d at %d,%d"), &wid->w, &wid->h,
+		    &wid->x, &wid->y);
+		AG_LabelPrescale(lbl, 1,
+		    _("Geometry: 0000x0000 at 0000,0000"));
 		
-		lab = AG_LabelNew(vb, AG_LABEL_POLLED_MT,
-		    _("View geometry: %d,%d -> %d,%d"), &pwin->lock,
+		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &pwin->lock,
+		    _("View geometry: %d,%d -> %d,%d"),
 		    &wid->cx, &wid->cy, &wid->cx2, &wid->cy2);
-		AG_LabelPrescale(lab,
-		    _("View geometry: 0000x0000 -> 0000x0000"));
+		AG_LabelPrescale(lbl, 1,
+		    _("View geometry: 0000,0000 -> 0000,0000"));
 	}
 	AG_WindowShow(win);
 }
@@ -238,9 +238,9 @@ examine_window(AG_Event *event)
 	AG_WindowSetCaption(win, "%s", AGOBJECT(pwin)->name);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	AG_LabelNew(win, AG_LABEL_STATIC, "Name: \"%s\"", AGOBJECT(pwin)->name);
-	AG_LabelNew(win, AG_LABEL_POLLED_MT, "Flags: 0x%x", &pwin->lock,
-	    &pwin->flags);
+	AG_LabelNewStatic(win, 0, "Name: \"%s\"", AGOBJECT(pwin)->name);
+	AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &pwin->lock,
+	    "Flags: 0x%x", &pwin->flags);
 
 	sb = AG_SpinbuttonNew(win, 0, _("Widget spacing: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->spacing);

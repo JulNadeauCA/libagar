@@ -50,9 +50,9 @@ CreateWindow(void)
 		 * a specific type of format string to deal with
 		 * pointer alignment issues.
 		 */
-		AG_LabelNewStatic(div1, "This is a static label");
-		AG_LabelNew(div2, AG_LABEL_POLLED,
-		    "This is a polled label (x=%i)", &pane->dx);
+		AG_LabelNewStatic(div1, 0, "This is a static label");
+		AG_LabelNewPolled(div2, 0, "This is a polled label (x=%i)",
+		    &pane->dx);
 	}
 
 	/*

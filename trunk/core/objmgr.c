@@ -763,7 +763,7 @@ create_obj_dlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNew(bo, AG_LABEL_STATIC, _("Type: %s"), t->ops->type);
+		AG_LabelNewStatic(bo, 0, _("Type: %s"), t->ops->type);
 		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 	}
@@ -774,7 +774,7 @@ create_obj_dlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNew(bo, AG_LABEL_STATIC, _("Parent object:"));
+		AG_LabelNewStaticString(bo, 0, _("Parent object:"));
 
 		pobj_tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_TREE|
 		                          AG_TLIST_EXPAND);
@@ -1173,7 +1173,7 @@ AG_ObjMgrQuitDlg(void *obj)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
-	AG_LabelNew(win, AG_LABEL_STATIC,
+	AG_LabelNewStaticString(win, 0,
 	    _("Some objects have been modified. Exit application?"));
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
