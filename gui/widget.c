@@ -1012,6 +1012,8 @@ AG_WidgetDestroy(void *p)
 /*
  * Perform a software blit from a source surface to the display, at
  * coordinates relative to the widget, using clipping.
+ *
+ * Only safe to call from widget rendering context.
  */
 void
 AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
@@ -1032,8 +1034,6 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
-
-		AG_LockGL();
 
 		texture = AG_SurfaceTexture(srcsu, texcoord);
 
@@ -1075,8 +1075,6 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 		}
 		
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
-
-		AG_UnlockGL();
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -1087,6 +1085,8 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 /*
  * Perform a hardware or software blit from a registered surface to the display
  * at coordinates relative to the widget, using clipping.
+ * 
+ * Only safe to call from widget rendering context.
  */
 void
 AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
@@ -1113,8 +1113,6 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
-
-		AG_LockGL();
 
 		if (rs == NULL) {
 			texcoord = &srcwid->texcoords[name*4];
@@ -1165,8 +1163,6 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			glBlendFunc(blend_sfactor, blend_dfactor);
 		}
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
-
-		AG_UnlockGL();
 	} else
 #endif /* HAVE_OPENGL */
 	{
