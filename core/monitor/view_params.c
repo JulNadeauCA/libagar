@@ -54,7 +54,7 @@ AG_DebugViewSettings(void)
 	}
 	AG_WindowSetCaption(win, _("Viewport"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
-	
+
 	vb = AG_VBoxNew(win, 0);
 	{
 		AG_LabelNewStatic(vb, 0, _("OpenGL mode: %s"),

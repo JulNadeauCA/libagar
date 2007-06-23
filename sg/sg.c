@@ -254,6 +254,7 @@ SG_Destroy(void *obj)
 	AG_LockGL();			/* Probably not needed */
 	gluDeleteTess(sg->tess);
 	AG_UnlockGL();
+	AG_MutexDestroy(&sg->lock);
 }
 
 int

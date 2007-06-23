@@ -74,13 +74,13 @@ SK_ToolDestroy(SK_Tool *tool)
 	     kbinding != SLIST_END(&tool->kbindings);
 	     kbinding = nkbinding) {
 		nkbinding = SLIST_NEXT(kbinding, kbindings);
-		Free(kbinding, M_MAPEDIT);
+		Free(kbinding, M_SG);
 	}
 	for (mbinding = SLIST_FIRST(&tool->mbindings);
 	     mbinding != SLIST_END(&tool->mbindings);
 	     mbinding = nmbinding) {
 		nmbinding = SLIST_NEXT(mbinding, mbindings);
-		Free(mbinding, M_MAPEDIT);
+		Free(mbinding, M_SG);
 	}
 	if (tool->ops->destroy != NULL)
 		tool->ops->destroy(tool);
@@ -114,7 +114,7 @@ SK_ToolBindMouseButton(void *p, int button,
 	SK_Tool *tool = p;
 	SK_ToolMouseBinding *mb;
 	
-	mb = Malloc(sizeof(SK_ToolMouseBinding), M_MAPEDIT);
+	mb = Malloc(sizeof(SK_ToolMouseBinding), M_SG);
 	mb->button = button;
 	mb->func = func;
 	mb->edit = 0;
@@ -129,7 +129,7 @@ SK_ToolBindKey(void *p, SDLMod keymod, SDLKey keysym,
 	SK_Tool *tool = p;
 	SK_ToolKeyBinding *kb;
 
-	kb = Malloc(sizeof(SK_ToolKeyBinding), M_MAPEDIT);
+	kb = Malloc(sizeof(SK_ToolKeyBinding), M_SG);
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
@@ -153,7 +153,7 @@ SK_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 		return;
 	}
 	SLIST_REMOVE(&tool->kbindings, kb, sk_tool_keybinding, kbindings);
-	Free(kb, M_MAPEDIT);
+	Free(kb, M_SG);
 }
 
 #endif /* HAVE_OPENGL */
