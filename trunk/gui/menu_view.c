@@ -97,7 +97,7 @@ mousemotion(AG_Event *event)
 
 	if (my < 0)
 		return;
-	if (mx < 0)
+	if (mx < 0 || mx > AGWIDGET(mview)->w)
 		goto selnone;
 
 	for (i = 0; i < pitem->nsubitems; i++) {
