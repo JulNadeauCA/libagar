@@ -94,6 +94,9 @@ AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
 {
 	int i;
 
+	if (item == NULL)
+		return;
+
 	for (i = 0; i < item->nsubitems; i++) {
 		if (item->subitems[i].nsubitems > 0)
 			AG_MenuCollapse(m, &item->subitems[i]);
