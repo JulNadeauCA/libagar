@@ -1,7 +1,6 @@
 .\"	$Csoft: graph.3,v 1.23 2005/05/11 09:59:33 vedge Exp $
 .\"
-.\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
-.\" <http://www.csoft.org>
+.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -26,13 +25,13 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd August 20, 2002
-.Dt AG_GRAPH 3
+.Dt AG_FIXED_PLOTTER 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
 .Sh NAME
-.Nm AG_Graph
-.Nd agar graphic widget
+.Nm AG_FixedPlotter
+.Nd agar integer plot widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/gui.h>
@@ -40,26 +39,26 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a scrollable graph display.
+widget is a scrollable plotter widget that accepts integer values.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "AG_Graph *"
-.Fn AG_GraphNew "AG_Widget *parent, enum ag_graph_type type" "Uint flags"
+.Ft "AG_FixedPlotter *"
+.Fn AG_FixedPlotterNew "AG_Widget *parent, enum ag_fixed_plotter_type type" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_GraphInit "AG_Graph *graph" "enum ag_graph_type type, Uint flags"
+.Fn AG_FixedPlotterInit "AG_FixedPlotter *fpl" "enum ag_fixed_plotter_type type, Uint flags"
 .Pp
 .nr nS 0
 The
-.Fn AG_GraphNew
+.Fn AG_FixedPlotterNew
 function allocates, initializes, and attaches a
 .Nm
 widget.
-.Fn AG_GraphInit
+.Fn AG_FixedPlotterInit
 initializes a
 .Nm
 widget.
@@ -68,9 +67,9 @@ The
 argument is one of:
 .Pp
 .Bd -literal
-enum ag_graph_type {
-	AG_GRAPH_POINTS,   /* Dots */
-	AG_GRAPH_LINES     /* Lines */
+enum ag_fixed_plotter_type {
+	AG_FIXED_PLOTTER_POINTS,   /* Dots */
+	AG_FIXED_PLOTTER_LINES     /* Lines */
 } type;
 .Ed
 .Pp
@@ -79,41 +78,42 @@ The
 may include:
 .Pp
 .Bd -literal
-#define AG_GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
-#define AG_GRAPH_ORIGIN  0x02   /* Visible origin */
+#define AG_FIXED_PLOTTER_SCROLL	0x01	/* Scroll if end is not visible */
+#define AG_FIXED_PLOTTER_XAXIS	0x02	/* Display X axis line */
+#define AG_FIXED_PLOTTER_HFILL	0x04
+#define AG_FIXED_PLOTTER_VFILL	0x08
+#define AG_FIXED_PLOTTER_FOCUS	0x10
+#define AG_FIXED_PLOTTER_EXPAND (AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL)
 .Ed
 .Sh PLOTTING
 .nr nS 1
-.Ft "AG_GraphItem *"
-.Fn AG_GraphAddItem "AG_Graph *graph, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
+.Ft "AG_FixedPlotterCurve *"
+.Fn AG_FixedPlotterCurve "AG_FixedPlotter *fpl, const char *name" "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
 .Pp
 .Ft void
-.Fn AG_GraphPlot "AG_GraphItem *item" "AG_GraphValue val"
+.Fn AG_FixedPlotterDatum "AG_FixedPlotterCurve *curve" "AG_FixedPlotterValue val"
 .Pp
 .nr nS 0
 The
-.Fn AG_GraphAddItem
-function inserts a new item into
-.Fa graph .
-If the length of
-.Fa name
-exceeds
-.Dv GRAPH_ITEM_NAME_MAX - 1
-bytes, the string is truncated.
+.Fn AG_FixedPlotterCurve
+function creates a new curve into
+.Fa fpl .
 The
 .Fa r ,
 .Fa g ,
 .Fa b
 triplet composes a color to visually identify the item.
 .Fa limit
-is the maximum number of points (if 0, the maximum is implicitely 0xffffffff-1).
+is the maximum number of points (if 0, the maximum is implicitely
+.Dv INT_MAX
+- 1).
 .Pp
 The
-.Fn AG_GraphPlot
+.Fn AG_FixedPlotterDatum
 function adds a value
 .Fa val
-to the graph item
-.Fa item .
+to the specified
+.Fa curve .
 .Sh EVENTS
 The
 .Nm
