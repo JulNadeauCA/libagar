@@ -155,7 +155,7 @@ AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
 	if (flags & AG_PANE_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & AG_PANE_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	AG_WidgetInit(pa, "pane", &agPaneOps, wflags);
+	AG_WidgetInit(pa, &agPaneOps, wflags);
 
 	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 			       AG_WIDGET_UNFOCUSED_MOTION;

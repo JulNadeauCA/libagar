@@ -12,7 +12,7 @@
 #include <agar/gui/file_dlg.h>
 #include <agar/gui/fixed.h>
 #include <agar/gui/fspinbutton.h>
-#include <agar/gui/graph.h>
+#include <agar/gui/fixed_plotter.h>
 #include <agar/gui/glview.h>
 #include <agar/gui/hbox.h>
 #include <agar/gui/hpane.h>

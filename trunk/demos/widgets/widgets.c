@@ -24,31 +24,30 @@ CreateWindow(void)
 	int i;
 
 	/*
-	 * The AG_Window widget is a movable container. By default, its children
-	 * are aligned vertically.
+	 * Create a new window and attach widgets to it. The Window object
+	 * is simply a container widget that packs its children vertically.
 	 */
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Widgets demo");
 	
 	/*
-	 * AG_Pane provides two AG_Box containers which can be resized using
+	 * Pane provides two Box containers which can be resized using
 	 * a control placed in the middle.
 	 *
-	 * The AG_MPane widget also provides a set of preconfigured layouts
+	 * The MPane widget also provides a set of preconfigured layouts
 	 * for multiple pane views.
 	 */
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	div1 = pane->div[0];
 	div2 = pane->div[1];
 	{
-		/* The AG_Pixmap widget displays a raster surface. */
+		/* The Pixmap widget displays a raster surface. */
 		AG_PixmapFromBMP(div1, 0, "agar.bmp");
 	
 		/*
-		 * The AG_Label widget provides a simple static or
-		 * polled label. Note that AG_LABEL_POLLED labels use
-		 * a specific type of format string to deal with
-		 * pointer alignment issues.
+		 * The Label widget provides a simple static or polled label
+		 * (polled labels use special format strings; see AG_Label(3)
+		 * for details).
 		 */
 		AG_LabelNewStatic(div1, 0, "This is a static label");
 		AG_LabelNewPolled(div2, 0, "This is a polled label (x=%i)",
@@ -56,53 +55,49 @@ CreateWindow(void)
 	}
 
 	/*
-	 * AG_HBox is a container which aligns its children horizontally. Both
-	 * AG_HBox and AG_VBox are wrappers around AG_Box.
+	 * HBox is a container which aligns its children horizontally. Both
+	 * HBox and VBox are derived from the Box object.
 	 */
 	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
 	{
 		/*
-		 * The AG_Button widget is a simple push-button. It is typically
-		 * used to trigger events, but it can also bind to a boolean
-		 * value or a flag.
+		 * The Button widget is a simple push-button. It is typically
+		 * used to trigger events, but it can also bind its state to
+		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
 			AG_ButtonNew(hbox, 0, "x");
 	}
 
 	/*
-	 * The AG_Checkbox widget is a check box. It can bind to a boolean
-	 * value or a flag.
+	 * The Checkbox widget is a check box. It can bind to a boolean
+	 * (integer) value or a bitmask.
 	 */
 	AG_CheckboxNew(div1, 0, "Checkbox 1");
 	AG_CheckboxNew(div1, 0, "Checkbox 2");
 
-	/* AG_Separator is a simple visual separator. */
+	/* Separator simply renders horizontal or vertical line. */
 	AG_SeparatorNew(div1, AG_SEPARATOR_HORIZ);
 
 	/*
-	 * The AG_Combo widget is a textbox widget with a expander button next
+	 * The Combo widget is a textbox widget with a expander button next
 	 * to it. The button triggers a popup window which displays a list
-	 * (using the AG_Tlist widget).
+	 * (using the AG_Tlist(3) widget).
 	 */
 	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
 
-	/*
-	 * AG_UCombo is a variant of AG_Combo which looks like a single 
-	 * button. It is used by the AG_FSpinbutton widget to set the
-	 * conversion unit, for instance.
-	 */
+	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
 
-	/* Populate both combo widgets. */
+	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
 		AG_TlistAdd(com->list, NULL, "Item #%d", i);
 		AG_TlistAdd(ucom->list, NULL, "Item #%d", i);
 	}
 
 	/*
-	 * AG_FSpinbutton can bind to an integral or floating-point number.
-	 * It also provides built-in unit conversion. AG_Spinbutton is a
+	 * FSpinbutton can bind to an integral or floating-point number.
+	 * It also provides built-in unit conversion. Spinbutton is a
 	 * variant which handles integer values only and provides no unit
 	 * conversion.
 	 */
@@ -110,43 +105,41 @@ CreateWindow(void)
 	AG_SpinbuttonNew(div1, 0, "Integer: ");
 
 	/*
-	 * AG_MFSpinbutton and AG_MSpinbutton are variants used to conveniently
+	 * MFSpinbutton and MSpinbutton are variants used to conveniently
 	 * edit two values, such as 2D coordinates.
 	 */
 	AG_MFSpinbuttonNew(div1, 0, "mm", "x", "Dimensions: ");
 	AG_MSpinbuttonNew(div1, 0, ",", "Coordinates: ");
 
 	/*
-	 * AG_Textbox is a single-line text edition widget. It can bind to
-	 * a sized buffer containing a string.
+	 * Textbox is a single-line text edition widget. It can bind to
+	 * a fixed-size buffer containing a string with UTF-8 sequences.
 	 */
 	AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
 
+	/*
+	 * Scrollbar provides three bindings, "value", "min" and "max",
+	 * which we can bind to integers.
+	 */
 	{
 		static int value = 127;
 		AG_Scrollbar *sb;
 		AG_Statusbar *st;
 
-		/*
-		 * AG_Scrollbar provides three bindings, "value", "min" and
-		 * "max". Note that this widget is not focusable by default.
-		 */
 		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
 		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE);
 		AG_WidgetSetInt(sb, "min", 0);
 		AG_WidgetSetInt(sb, "max", 255);
 		AG_WidgetBindInt(sb, "value", &value);
 	
-		/*
-		 * AG_Statusbar displays a label (either static or polled).
-		 */
+		/* Statusbar displays one or more AG_Label(3) objects. */
 		st = AG_StatusbarNew(div1, 0);
 		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
 		    &value);
 	}
 
 	/*
-	 * AG_Notebook provides multiple containers which can be selected by
+	 * Notebook provides multiple containers which can be selected by
 	 * the user.
 	 */
 	{
@@ -159,7 +152,7 @@ CreateWindow(void)
 		ntab = AG_NotebookAddTab(nb, "Color", AG_BOX_VERT);
 		{
 			/*
-			 * AG_HSVPal is an HSV color picker widget which can
+			 * HSVPal is an HSV color picker widget which can
 			 * bind to RGB(A) or HSV(A) vectors (integral or real)
 			 * or 32-bit pixel values (of a given format).
 			 */
@@ -188,31 +181,33 @@ CreateWindow(void)
 				NULL
 			};
 			AG_Radio *rad;
-			AG_Graph *g;
-			AG_GraphItem *sinplot, *cosplot;
+			AG_FixedPlotter *g;
+			AG_FixedPlotterItem *sinplot, *cosplot;
 			double f;
 			int i = 0;
 			
-			/* AG_Graph plots a set of values graphically. */
-			g = AG_GraphNew(ntab, AG_GRAPH_LINES,
-			    AG_GRAPH_HFILL|AG_GRAPH_VFILL);
-			sinplot = AG_GraphAddItem(g, "sin", 0, 150, 0, 0);
-			cosplot = AG_GraphAddItem(g, "cos", 150, 150, 0, 0);
+			/*
+			 * FixedPlotter displays a plot from a set of integer
+			 * values (for floating point data, see SC_Plotter(3)).
+			 */
+			g = AG_FixedPlotterNew(ntab, AG_FIXED_PLOTTER_LINES,
+			                             AG_FIXED_PLOTTER_EXPAND);
+			sinplot = AG_FixedPlotterCurve(g, "sin", 0,150,0, 0);
+			cosplot = AG_FixedPlotterCurve(g, "cos", 150,150,0, 0);
 			for (f = 0; f < 60; f += 0.3) {
-				AG_GraphPlot(sinplot, sin(f)*20.0);
-				AG_GraphPlot(cosplot, cos(f)*20.0);
-
+				AG_FixedPlotterDatum(sinplot, sin(f)*20.0);
+				AG_FixedPlotterDatum(cosplot, cos(f)*20.0);
 				/*
-				 * Insert an AG_Table row for sin(f) and cos(f).
-				 * Note that the number of fields must >= the
-				 * number of columns specified earlier.
+				 * Insert a Table row for sin(f) and cos(f).
+				 * The directives of the format string are
+				 * documented in AG_Table(3).
 				 */
 				AG_TableAddRow(table, "%.02f:%.02f:%.02f",
 				    f, sin(f), cos(f));
 			}
 
 			/*
-			 * AG_Radio displays a group of radio buttons. It can
+			 * Radio displays a group of radio buttons. It can
 			 * bind to an integer value.
 			 */
 			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, radio_items);
@@ -224,9 +219,9 @@ CreateWindow(void)
 			AG_Tlist *tl;
 
 			/*
-			 * The AG_Tlist widget displays either lists or trees.
+			 * The Tlist widget displays either lists or trees.
 			 * For flat, polled lists, it is more efficient to use
-			 * an AG_Table with a single column, however.
+			 * a Table with a single column, however.
 			 */
 			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 			AG_TlistAdd(tl, NULL, "Foo");
@@ -238,8 +233,13 @@ CreateWindow(void)
 
 #if 0
 	/*
-	 * AG_GLView provides an OpenGL rendering context. See the "glview"
+	 * AG_GLView provides an OpenGL rendering context. See the "glview",
 	 * demo in the Agar ./demos directory for a sample application.
+	 *
+	 * The higher-level SG(3) scene graph interface also provides a
+	 * visualization widget, SG_View(3). Some demos from the ./demos
+	 * directory demonstrating its use include "sgview", "linear" and
+	 * "lorenz".
 	 */
 	AG_GLViewNew(win, 0);
 #endif

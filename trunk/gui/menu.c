@@ -231,7 +231,7 @@ AG_MenuInit(AG_Menu *m, Uint flags)
 	if (flags & AG_MENU_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_MENU_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(m, "AGMenu", &agMenuOps, wflags);
+	AG_WidgetInit(m, &agMenuOps, wflags);
 	m->items = Malloc(sizeof(AG_MenuItem), M_WIDGET);
 	m->nitems = 0;
 	m->vspace = 5;

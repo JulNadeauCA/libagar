@@ -86,7 +86,7 @@ AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 	if (flags & AG_RADIO_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_RADIO_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(rad, "radio", &agRadioOps, wflags);
+	AG_WidgetInit(rad, &agRadioOps, wflags);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
 	rad->flags = flags;

@@ -271,8 +271,8 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
 {
 	AG_MenuView *mview = p;
 
-	AG_WidgetInit(mview, "AGMenuView", &agMenuViewOps,
-	    AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP);
+	AG_WidgetInit(mview, &agMenuViewOps, AG_WIDGET_UNFOCUSED_MOTION|
+	                                     AG_WIDGET_UNFOCUSED_BUTTONUP);
 
 	mview->panel = panel;
 	mview->pmenu = pmenu;

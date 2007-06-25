@@ -93,9 +93,8 @@ matview_mousebuttondown(AG_Event *event)
 void
 AG_MatviewInit(AG_Matview *mv, SC_Matrix *mat, Uint flags)
 {
-	AG_WidgetInit(mv, "matview", &agMatviewOps,
-	    AG_WIDGET_HFILL|AG_WIDGET_VFILL|AG_WIDGET_CLIPPING|
-	    AG_WIDGET_FOCUSABLE);
+	AG_WidgetInit(mv, &agMatviewOps, AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
+	                                 AG_WIDGET_FOCUSABLE);
 	mv->mat = mat;
 	mv->flags = flags;
 	mv->hspace = 2;

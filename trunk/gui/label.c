@@ -227,7 +227,7 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 	if (flags & AG_LABEL_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_LABEL_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(lbl, "label", &agLabelOps, wflags);
+	AG_WidgetInit(lbl, &agLabelOps, wflags);
 	lbl->type = type;
 	lbl->flags = flags;
 	lbl->lPad = 2;

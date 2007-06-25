@@ -112,7 +112,7 @@ AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
 	if (flags & AG_TABLEVIEW_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_TABLEVIEW_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(tv, "tableview", &agTableviewOps, wflags);
+	AG_WidgetInit(tv, &agTableviewOps, wflags);
 	AG_MutexInitRecursive(&tv->lock);
 
 	tv->data_callback = data_callback;

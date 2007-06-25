@@ -340,9 +340,8 @@ void
 MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
     struct ag_toolbar *toolbar, struct ag_statusbar *statbar)
 {
-	AG_WidgetInit(mv, "mapview", &mapViewOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
-	    AG_WIDGET_VFILL);
+	AG_WidgetInit(mv, &mapViewOps, AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
+	                               AG_WIDGET_HFILL|AG_WIDGET_VFILL);
 
 	mv->flags = (flags | MAP_VIEW_CENTER);
 	mv->mode = MAP_VIEW_EDITION;

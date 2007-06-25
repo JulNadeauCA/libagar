@@ -90,7 +90,7 @@ section below for more details.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn AG_WidgetInit "AG_Widget *widget, const char *type, const AG_Widget *widget_ops" "int flags"
+.Fn AG_WidgetInit "AG_Widget *widget" "const AG_Widget *widget_ops" "Uint flags"
 .Pp
 .nr nS 0
 The
@@ -104,7 +104,6 @@ include:
 .Pp
 .Bd -literal
 #define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x0002 /* Focused in parent (RO) */
 #define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All motion events */
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All buttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All buttondown events */

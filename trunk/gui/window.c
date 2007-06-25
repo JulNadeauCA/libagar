@@ -126,7 +126,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 
 	strlcpy(wname, "win-", sizeof(wname));
 	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
-	AG_WidgetInit(win, "window", &agWindowOps, 0);
+	AG_WidgetInit(win, &agWindowOps, 0);
 	AG_ObjectSetName(win, wname);
 	win->flags = flags;
 	win->visible = 0;
@@ -1116,6 +1116,7 @@ AG_WindowScale(void *p, int w, int h)
 	int x = win->xpadding, dx;
 	int y, dy;
 	int nwidgets = 0;
+	int isTitlebar = 0;
 
 	AG_MutexLock(&win->lock);
 
@@ -1145,8 +1146,10 @@ AG_WindowScale(void *p, int w, int h)
 			if (AGWIDGET(win)->w < dx)
 				AGWIDGET(win)->w = dx;
 
-			dy = wid->h + (!strcmp(wid->type,"titlebar") ?
-			               win->ypadding_top : win->spacing);
+			isTitlebar = AG_ObjectIsClass(wid,
+			    "AG_Widget:AG_Box:AG_Titlebar");
+			dy = wid->h + (isTitlebar ? win->ypadding_top :
+				       win->spacing);
 			y += dy;
 			AGWIDGET(win)->h += dy;
 		}
@@ -1169,9 +1172,12 @@ AG_WindowScale(void *p, int w, int h)
 	AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 		wid->x = x;
 		wid->y = y;
+			
+		isTitlebar = AG_ObjectIsClass(wid,
+		    "AG_Widget:AG_Box:AG_Titlebar");
 
 		if (wid->flags & AG_WIDGET_HFILL) {
-			if (strcmp(wid->type, "titlebar") == 0) {
+			if (isTitlebar) {
 				wid->w = w - 1;
 			} else {
 				wid->w = w - win->xpadding*2 - 1;
@@ -1183,8 +1189,7 @@ AG_WindowScale(void *p, int w, int h)
 		}
 		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 		y += wid->h;
-		y += !strcmp(wid->type,"titlebar") ? win->ypadding_top :
-		                                     win->spacing;
+		y += isTitlebar ? win->ypadding_top : win->spacing;
 		nwidgets++;
 	}
 

@@ -190,7 +190,7 @@ mousebuttondown(AG_Event *event)
 void
 RG_AnimviewInit(RG_Animview *av)
 {
-	AG_WidgetInit(av, "animview", &rgAnimviewOps, 0);
+	AG_WidgetInit(av, &rgAnimviewOps, 0);
 	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
 			       AG_WIDGET_VFILL;
 	av->pre_w = 64;

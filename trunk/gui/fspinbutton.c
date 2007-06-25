@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2003-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -298,7 +297,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	if ((flags & AG_FSPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_FSPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(fsu, "fspinbutton", &agFSpinbuttonOps, wflags);
+	AG_WidgetInit(fsu, &agFSpinbuttonOps, wflags);
 	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &fsu->value);
 	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
 	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);

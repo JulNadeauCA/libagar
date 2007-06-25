@@ -17,7 +17,6 @@
 
 #include "begin_code.h"
 
-#define AG_WIDGET_TYPE_MAX		32
 #define AG_WIDGET_BINDING_NAME_MAX	16
 
 typedef struct ag_widget_ops {
@@ -75,7 +74,6 @@ struct ag_popup_menu;
 typedef struct ag_widget {
 	struct ag_object obj;
 
-	char type[AG_WIDGET_TYPE_MAX];
 	int flags;
 #define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
 #define AG_WIDGET_FOCUSED		0x0002 /* Holds focus (optimization) */
@@ -130,14 +128,13 @@ extern int agMouseDblclickDelay;
 extern int agMouseSpinDelay;
 extern int agMouseSpinIval;
 
-AG_Widget *AG_WidgetNew(void *, int);
-void	   AG_WidgetInit(void *, const char *, const void *, int);
+AG_Widget *AG_WidgetNew(void *, Uint);
+void	   AG_WidgetInit(void *, const void *, Uint);
 void	   AG_WidgetDestroy(void *);
 void	   AG_WidgetDraw(void *);
 void	   AG_WidgetScale(void *, int, int);
 void	   AG_WidgetScaleGeneric(void *, int, int);
 
-void		 AG_WidgetSetType(void *, const char *);
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
 AG_Widget	*AG_WidgetFindFocused(void *);

@@ -104,7 +104,7 @@ AG_TableInit(AG_Table *t, Uint flags)
 	if (flags & AG_TABLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_TABLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(t, "table", &agTableOps, wflags);
+	AG_WidgetInit(t, &agTableOps, wflags);
 	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);

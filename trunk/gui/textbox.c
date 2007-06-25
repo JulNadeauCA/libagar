@@ -212,7 +212,7 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_TEXTBOX_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(tbox, "textbox", &agTextboxOps, wflags);
+	AG_WidgetInit(tbox, &agTextboxOps, wflags);
 	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 

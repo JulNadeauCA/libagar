@@ -62,8 +62,8 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 void
 AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
 {
-	AG_WidgetInit(sep, "separator", &agSeparatorOps,
-	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_HFILL : AG_WIDGET_VFILL);
+	AG_WidgetInit(sep, &agSeparatorOps, (type == AG_SEPARATOR_HORIZ) ?
+	                                    AG_WIDGET_HFILL : AG_WIDGET_VFILL);
 	sep->type = type;
 	sep->padding = 4;
 }

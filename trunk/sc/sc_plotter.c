@@ -358,7 +358,7 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 	if (flags & SC_PLOTTER_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & SC_PLOTTER_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	AG_WidgetInit(ptr, "plotter", &scPlotterOps, wflags);
+	AG_WidgetInit(ptr, &scPlotterOps, wflags);
 	ptr->type = SC_PLOT_2D;
 	ptr->flags = flags;
 	ptr->xMax = 0;
