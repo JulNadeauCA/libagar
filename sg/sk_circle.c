@@ -55,7 +55,7 @@ SK_CircleInit(void *p, Uint32 name)
 	SK_Circle *circle = p;
 
 	SK_NodeInit(circle, &skCircleOps, name, 0);
-	circle->color = SG_ColorRGB(0.0, 1.0, 0.0);
+	circle->color = SG_ColorRGB(0.0, 0.0, 0.0);
 	circle->width = 0.0;
 	circle->r = 0.0f;
 	circle->p = NULL;
@@ -106,7 +106,11 @@ SK_CircleDraw(void *p, SK_View *skv)
 	SG_TranslateVecGL(v);
 
 	SG_Begin(SG_LINE_LOOP);
-	SG_Color3v(&circle->color);
+	if (SKNODE_SELECTED(circle)) {
+		SG_Color3f(0.0, 1.0, 0.0);
+	} else {
+		SG_Color3v(&circle->color);
+	}
 	for (i = 0.0; i < M_PI*2.0; i+=incr) {
 		glVertex2f(SG_Cos(i)*circle->r,
 		           SG_Sin(i)*circle->r);

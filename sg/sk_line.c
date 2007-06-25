@@ -56,7 +56,7 @@ SK_LineInit(void *p, Uint32 name)
 
 	SK_NodeInit(line, &skLineOps, name, 0);
 	line->width = 1.0;
-	line->color = SG_ColorRGB(0.0, 1.0, 0.0);
+	line->color = SG_ColorRGB(0.0, 0.0, 0.0);
 	line->p1 = NULL;
 	line->p2 = NULL;
 }
@@ -99,7 +99,11 @@ SK_LineDraw(void *p, SK_View *skv)
 	SG_Vector v2 = SK_NodeCoords(line->p2);
 
 	SG_Begin(SG_LINES);
-	SG_Color3v(&line->color);
+	if (SKNODE_SELECTED(line)) {
+		SG_Color3f(0.0, 1.0, 0.0);
+	} else {
+		SG_Color3v(&line->color);
+	}
 	SG_Vertex2v(&v1);
 	SG_Vertex2v(&v2);
 	SG_End();

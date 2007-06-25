@@ -243,7 +243,7 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	if (flags & SK_VIEW_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & SK_VIEW_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	AG_WidgetInit(skv, "skview", &skViewOps, wflags);
+	AG_WidgetInit(skv, &skViewOps, wflags);
 	
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");
@@ -552,17 +552,66 @@ SetLengthUnit(AG_Event *event)
 	SK_SetLengthUnit(sk, unit);
 }
 
+static void
+AddConstraint(AG_Event *event)
+{
+	SK *sk = AG_PTR(1);
+	enum sk_constraint_type type = (enum sk_constraint_type)AG_INT(2);
+	SK_Constraint *cons;
+	SK_Node *node, *nodes[2];
+	int count = 0;
+
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (!SKNODE_SELECTED(node)) {
+			continue;
+		}
+		if (++count > 2) {
+			AG_TextMsg(AG_MSG_ERROR, _("Select only 2 nodes"));
+			return;
+		}
+		nodes[count-1] = node;
+	}
+	if (count < 2) {
+		AG_TextMsg(AG_MSG_ERROR, _("Select 2 nodes"));
+		return;
+	}
+	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
+		if (cons->type == type &&
+		    cons->e1 == nodes[0] &&
+		    cons->e2 == nodes[1]) {
+			AG_TextMsg(AG_MSG_ERROR, _("Existing constraint"));
+			return;
+		}
+	}
+	cons = Malloc(sizeof(SK_Constraint), M_SG);
+	cons->type = type;
+	cons->e1 = nodes[0];
+	cons->e2 = nodes[1];
+	TAILQ_INSERT_TAIL(&sk->constraints, cons, constraints);
+
+	dprintf("%s: added %s constraint between %s and %s\n",
+	    AGOBJECT(sk)->name, skConstraintNames[type],
+	    SK_NodeName(cons->e1), SK_NodeName(cons->e2));
+}
+
 void
 SK_ViewPopupMenu(SK_View *skv)
 {
 	SK *sk = skv->sk;
 	AG_MenuItem *node;
+	int i;
 
 	if (skv->popup != NULL) {
 		AG_PopupDestroy(skv->popup);
 	}
 	skv->popup = AG_PopupNew(skv);
-	node = AG_MenuNode(skv->popup->item, _("Unit system"), -1);
+	node = AG_MenuNode(skv->popup->item, _("Add constraint"), -1);
+	for (i = 0; i < SK_CONSTRAINT_LAST; i++) {
+		AG_MenuAction(node, _(skConstraintNames[i]), -1,
+		    AddConstraint, "%p,%i", sk, i);
+	}
+	AG_MenuSeparator(skv->popup->item);
+	node = AG_MenuNode(skv->popup->item, _("Set Unit system"), -1);
 	{
 		AG_MenuAction(node, _("Inches"), -1,
 		    SetLengthUnit, "%p,%s", sk, "in");

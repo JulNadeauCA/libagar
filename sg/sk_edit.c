@@ -276,7 +276,7 @@ PollConstraints(AG_Event *event)
 			if (node != cons->e1 && node != cons->e2)
 				continue;
 		}
-		AG_TableAddRow(tbl, "%s:%s", skConstraintNames[cons->type],
+		AG_TableAddRow(tbl, "%s:%s:%s", skConstraintNames[cons->type],
 		    SK_NodeNameCopy(cons->e1, name1, sizeof(name1)),
 		    SK_NodeNameCopy(cons->e2, name2, sizeof(name2)));
 	}
@@ -378,8 +378,8 @@ SK_Edit(void *p)
 			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
 			    PollConstraints, "%p,%p", sk, NULL);
 			AG_TableAddCol(tbl, _("Type"), NULL, NULL);
-			AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
-			AG_TableAddCol(tbl, _("Node 2"), "<Circle88>", NULL);
+			AG_TableAddCol(tbl, "n1", "<Line0>", NULL);
+			AG_TableAddCol(tbl, "n2", "<Line0>", NULL);
 			AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 	}
