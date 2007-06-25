@@ -138,7 +138,8 @@ examine_widget(AG_Event *event)
 
 		AG_LabelNewStatic(vb, 0, _("Name: \"%s\""),
 		    AGOBJECT(wid)->name);
-		AG_LabelNewStatic(vb, 0, _("Type: %s"), wid->type);
+		AG_LabelNewStatic(vb, 0, _("Type: %s"),
+		    AGOBJECT(wid)->ops->type);
 		AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &pwin->lock,
 		    _("Flags: 0x%x"), &wid->flags);
 
