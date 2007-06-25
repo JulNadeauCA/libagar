@@ -136,7 +136,7 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 
 /* Check if an object's class matches the given pattern (general case). */
 static int
-AG_ObjectIsClassGeneral(AG_Object *obj, const char *cn)
+ObjectIsClassGeneral(AG_Object *obj, const char *cn)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
@@ -155,24 +155,41 @@ AG_ObjectIsClassGeneral(AG_Object *obj, const char *cn)
 	return (1);
 }
 
-/* Check if an object's class matches the given pattern (common case). */
+/* Check if an object's class name matches the given pattern. */
 int
 AG_ObjectIsClass(void *p, const char *cname)
 {
 	AG_Object *obj = p;
 	const char *c;
+	int nwild = 0;
 
 	if (cname[0] == '*' && cname[1] == '\0') {
 		return (1);
 	}
 	for (c = &cname[0]; *c != '\0'; c++) {
-		if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-			if (c == &cname[0] ||
-			    strncmp(obj->ops->type, cname, c - &cname[0]) == 0)
-				return (1);
-		}
+		if (*c == '*')
+			nwild++;
 	}
-	return (AG_ObjectIsClassGeneral(obj, cname));	/* General case */
+	
+	/* Optimize for simplest case (no wildcards). */
+	if (nwild == 0)
+		return (strncmp(obj->ops->type, cname, c - &cname[0]) == 0);
+	
+	/* Optimize for single-wildcard cases. */
+	if (nwild == 1) {
+		for (c = &cname[0]; *c != '\0'; c++) {
+			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
+				if (c == &cname[0] ||
+				    strncmp(obj->ops->type, cname,
+				            c - &cname[0]) == 0)
+					return (1);
+			}
+		}
+		/* TODO: Optimize for "*:Foo" case */
+	}
+
+	/* Fallback to the general matching algorithm. */
+	return (ObjectIsClassGeneral(obj, cname));
 }
 
 void
