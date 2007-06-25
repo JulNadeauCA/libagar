@@ -36,7 +36,7 @@
 #include <gui/menu.h>
 #ifdef DEBUG
 #include <gui/label.h>
-#include <gui/graph.h>
+#include <gui/fixed_plotter.h>
 #endif
 #ifdef EDITION
 #include <core/objmgr.h>
@@ -61,8 +61,8 @@ int	agEventAvg = 0;		/* Number of events in last frame */
 int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
 
 AG_Window *agPerfWindow;
-static AG_Graph *agPerfGraph;
-static AG_GraphItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
+static AG_FixedPlotter *agPerfGraph;
+static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif	/* DEBUG */
 
 int agIdleThresh = 20;			/* Idling threshold */
@@ -101,10 +101,10 @@ PerfMonitorUpdate(void)
 {
 	static int einc = 0;
 
-	AG_GraphPlot(agPerfFPS, agView->rCur);
-	AG_GraphPlot(agPerfEvnts, agEventAvg * 30 / 10);
-	AG_GraphPlot(agPerfIdle, agIdleAvg);
-	AG_GraphScroll(agPerfGraph, 1);
+	AG_FixedPlotterDatum(agPerfFPS, agView->rCur);
+	AG_FixedPlotterDatum(agPerfEvnts, agEventAvg * 30 / 10);
+	AG_FixedPlotterDatum(agPerfIdle, agIdleAvg);
+	AG_FixedPlotterScroll(agPerfGraph, 1);
 
 	if (++einc == 1) {
 		agEventAvg = 0;
@@ -134,13 +134,14 @@ PerfMonitorInit(void)
 	    &agIdleAvg);
 	AG_LabelPrescale(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
 
-	agPerfGraph = AG_GraphNew(agPerfWindow, AG_GRAPH_LINES,
-	    AG_GRAPH_ORIGIN|AG_GRAPH_EXPAND);
+	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
+	                                               AG_FIXED_PLOTTER_XAXIS|
+						       AG_FIXED_PLOTTER_EXPAND);
 	/* TODO use polling */
 
-	agPerfFPS = AG_GraphAddItem(agPerfGraph, "refresh", 0, 160, 0, 99);
-	agPerfEvnts = AG_GraphAddItem(agPerfGraph, "event", 0, 0, 180, 99);
-	agPerfIdle = AG_GraphAddItem(agPerfGraph, "idle", 180, 180, 180, 99);
+	agPerfFPS = AG_FixedPlotterCurve(agPerfGraph, "refresh", 0,160,0, 99);
+	agPerfEvnts = AG_FixedPlotterCurve(agPerfGraph, "event", 0,0,180, 99);
+	agPerfIdle = AG_FixedPlotterCurve(agPerfGraph, "idle", 180,180,180, 99);
 }
 #endif /* DEBUG */
 
