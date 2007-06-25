@@ -155,7 +155,7 @@ SK_InitRoot(SK *sk)
 	sk->root = Malloc(sizeof(SK_Point), M_SG);
 	SK_PointInit(sk->root, 1);
 	SK_PointSize(sk->root, 3.0);
-	SK_PointColor(sk->root, SG_ColorRGB(0.0, 255.0, 0.0));
+	SK_PointColor(sk->root, SG_ColorRGB(100.0, 100.0, 0.0));
 	SKNODE(sk->root)->sk = sk;
 	TAILQ_INSERT_TAIL(&sk->nodes, SKNODE(sk->root), nodes);
 }
@@ -483,8 +483,8 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	if (SK_LoadNodeData(sk, SKNODE(sk->root), buf) == -1)
 		goto fail;
 
+	/* Load the geometric constraint data. */
 	count = AG_ReadUint32(buf);
-	dprintf("loading %u constraints\n", count);
 	for (i = 0; i < count; i++) {
 		SK_Constraint *cons;
 
@@ -492,8 +492,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 		cons->type = (enum sk_constraint_type)AG_ReadUint32(buf);
 		cons->e1 = SK_ReadRef(buf, sk, NULL);
 		cons->e2 = SK_ReadRef(buf, sk, NULL);
-		dprintf("constraint: %d (%s - %s)\n", cons->type,
-		    SK_NodeName(cons->e1), SK_NodeName(cons->e2));
+		TAILQ_INSERT_TAIL(&sk->constraints, cons, constraints);
 	}
 	AG_MutexUnlock(&sk->lock);
 	return (0);

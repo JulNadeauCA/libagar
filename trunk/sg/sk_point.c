@@ -52,7 +52,7 @@ SK_PointInit(void *p, Uint32 name)
 
 	SK_NodeInit(pt, &skPointOps, name, 0);
 	pt->size = 3.0;
-	pt->color = SG_ColorRGB(0.0, 1.0, 0.0);
+	pt->color = SG_ColorRGB(0.0, 0.0, 0.0);
 }
 
 int
@@ -82,7 +82,11 @@ SK_PointDraw(void *p, SK_View *skv)
 	SK_Point *pt = p;
 
 	glBegin(GL_LINES);
-	glColor3f(pt->color.r, pt->color.g, pt->color.b);
+	if (SKNODE_SELECTED(pt)) {
+		SG_Color3f(0.0, 1.0, 0.0);
+	} else {
+		SG_Color3v(&pt->color);
+	}
 	glVertex2f(0.0, 0.0);	glVertex2f(-pt->size*skv->wPixel, 0.0);
 	glVertex2f(0.0, 0.0);	glVertex2f(+pt->size*skv->wPixel, 0.0);
 	glVertex2f(0.0, 0.0);	glVertex2f(0.0, -pt->size*skv->hPixel);
@@ -135,6 +139,9 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 	SK_Tool *tool = pTool;
 	SK *sk = tool->skv->sk;
 	SK_Point *pt;
+	
+	if (btn != SDL_BUTTON_LEFT)
+		return (0);
 
 	pt = Malloc(sizeof(SK_Point), M_OBJECT);
 	SK_PointInit(pt, SK_GenName(sk));

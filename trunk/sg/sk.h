@@ -62,6 +62,7 @@ typedef struct sk_constraint {
 		SK_PARALLEL,
 		SK_DISTANCE,
 		SK_ANGLE,
+		SK_CONSTRAINT_LAST
 	} type;
 	SK_Node *e1;
 	SK_Node *e2;
