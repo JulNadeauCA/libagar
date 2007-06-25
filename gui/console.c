@@ -78,7 +78,7 @@ AG_ConsoleInit(AG_Console *cons, Uint flags)
 	if (flags & AG_CONSOLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_CONSOLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(cons, "console", &agConsoleOps, wflags);
+	AG_WidgetInit(cons, &agConsoleOps, wflags);
 	cons->flags = flags;
 	cons->padding = 4;
 	cons->lines = NULL;

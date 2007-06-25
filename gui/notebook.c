@@ -93,7 +93,7 @@ mousebuttondown(AG_Event *event)
 void
 AG_NotebookInit(AG_Notebook *nb, Uint flags)
 {
-	AG_WidgetInit(nb, "notebook", &agNotebookOps, AG_WIDGET_CLIPPING);
+	AG_WidgetInit(nb, &agNotebookOps, AG_WIDGET_CLIPPING);
 
 	nb->flags = flags;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;

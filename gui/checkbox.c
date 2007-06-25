@@ -74,7 +74,7 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 void
 AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 {
-	AG_WidgetInit(cbox, "checkbox", &agCheckboxOps, AG_WIDGET_FOCUSABLE);
+	AG_WidgetInit(cbox, &agCheckboxOps, AG_WIDGET_FOCUSABLE);
 	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;

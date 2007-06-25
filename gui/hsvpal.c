@@ -668,7 +668,7 @@ AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 	if (flags & AG_HSVPAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_HSVPAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(pal, "hsvpal", &agHSVPalOps, wflags);
+	AG_WidgetInit(pal, &agHSVPalOps, wflags);
 	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);
 	AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &pal->s);
 	AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &pal->v);

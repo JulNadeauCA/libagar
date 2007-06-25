@@ -218,7 +218,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	if (flags & AG_COMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_COMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(com, "combo", &agComboOps, wflags);
+	AG_WidgetInit(com, &agComboOps, wflags);
 	com->panel = NULL;
 	com->flags = flags;
 	com->saved_h = 0;

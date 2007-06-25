@@ -81,7 +81,7 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 	if (flags & AG_SCROLLBAR_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_SCROLLBAR_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(sb, "scrollbar", &agScrollbarOps, wflags);
+	AG_WidgetInit(sb, &agScrollbarOps, wflags);
 	AG_WidgetBindInt(sb, "value", &sb->value);
 	AG_WidgetBindInt(sb, "min", &sb->min);
 	AG_WidgetBindInt(sb, "max", &sb->max);

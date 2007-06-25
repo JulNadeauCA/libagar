@@ -88,7 +88,7 @@ AG_BoxNewHorizPack(void *parent, Uint flags)
 void
 AG_BoxInit(AG_Box *bo, enum ag_box_type type, Uint flags)
 {
-	AG_WidgetInit(bo, "box", (flags & AG_BOX_FRAME) ?
+	AG_WidgetInit(bo, (flags & AG_BOX_FRAME) ?
 	    &agBoxOpsWithFrame : &agBoxOps, 0);
 
 	bo->type = type;

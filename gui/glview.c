@@ -117,7 +117,7 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	if (flags & AG_GLVIEW_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & AG_GLVIEW_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	AG_WidgetInit(glv, "glview", &agGLViewOps, wflags);
+	AG_WidgetInit(glv, &agGLViewOps, wflags);
 
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");

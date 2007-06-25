@@ -183,7 +183,7 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	if ((flags & AG_SPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_SPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(sbu, "spinbutton", &agSpinbuttonOps, wflags);
+	AG_WidgetInit(sbu, &agSpinbuttonOps, wflags);
 	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &sbu->value);
 	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);
 	AG_WidgetBind(sbu, "max", AG_WIDGET_INT, &sbu->max);

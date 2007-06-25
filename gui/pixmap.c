@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -196,7 +195,7 @@ AG_PixmapInit(AG_Pixmap *px, Uint flags)
 	if (flags & AG_PIXMAP_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_PIXMAP_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(px, "pixmap", &agPixmapOps, wflags);
+	AG_WidgetInit(px, &agPixmapOps, wflags);
 	px->flags = flags;
 	px->n = 0;
 	px->s = 0;

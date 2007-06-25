@@ -10,7 +10,7 @@ LIB_STATIC=	No
 #SHARESRC=	gui-pixmaps.den
 
 SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
-	textbox.c keycodes.c keysyms.c primitive.c radio.c graph.c \
+	textbox.c keycodes.c keysyms.c primitive.c radio.c fixed_plotter.c \
 	tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
@@ -18,12 +18,12 @@ SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	file_dlg.c hpane.c vpane.c objsel.c fixed.c \
 	table.c glview.c unicode.c ucslcpy.c ucslcat.c ucssep.c mpane.c pane.c \
 	console.c
-MAN3=	AG_Widget.3 AG_Button.3 AG_Graph.3 AG_Checkbox.3 AG_Label.3 AG_Radio.3 \
-	AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 AG_Tlist.3 AG_Text.3 AG_Box.3 \
-	AG_HBox.3 AG_VBox.3 AG_Combo.3 AG_FSpinbutton.3 AG_UCombo.3 \
-	AG_Spinbutton.3 AG_Units.3 AG_HSVPal.3 AG_Menu.3 AG_SizeSpec.3 \
-	AG_Table.3 AG_Pane.3 AG_MPane.3 AG_Fixed.3 AG_Pixmap.3 AG_Colors.3 \
-	AG_Notebook.3 AG_Toolbar.3 AG_FileDlg.3
+MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 AG_Label.3 \
+	AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 AG_Tlist.3 \
+	AG_Text.3 AG_Box.3 AG_HBox.3 AG_VBox.3 AG_Combo.3 AG_FSpinbutton.3 \
+	AG_UCombo.3 AG_Spinbutton.3 AG_Units.3 AG_HSVPal.3 AG_Menu.3 \
+	AG_SizeSpec.3 AG_Table.3 AG_Pane.3 AG_MPane.3 AG_Fixed.3 AG_Pixmap.3 \
+	AG_Colors.3 AG_Notebook.3 AG_Toolbar.3 AG_FileDlg.3
 
 CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 

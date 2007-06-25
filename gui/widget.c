@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,38 +54,36 @@ const AG_WidgetOps agWidgetOps = {
 SDL_Cursor *agCursorToSet = NULL;
 
 static void
-AG_WidgetInheritStyleEv(AG_Event *event)
+child_attached(AG_Event *event)
 {
 	AG_Widget *pwid = AG_SELF();
 	AG_Widget *wid = AG_SENDER();
 	const AG_WidgetStyleMod *style = pwid->style;
 
-	if (style == NULL)
-		return;
-
-	wid->style = style;
+	/* Inherit style from parent widget. */
+	if (style != NULL)
+		wid->style = style;
 }
 
 AG_Widget *
-AG_WidgetNew(void *parent, int flags)
+AG_WidgetNew(void *parent, Uint flags)
 {
 	AG_Widget *w;
 
 	w = Malloc(sizeof(AG_Widget), M_OBJECT);
-	AG_WidgetInit(w, "widget", &agWidgetOps, flags);
+	AG_WidgetInit(w, &agWidgetOps, flags);
 	AG_ObjectAttach(parent, w);
 	return (w);
 }
 
 void
-AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
+AG_WidgetInit(void *p, const void *wops, Uint flags)
 {
 	AG_Widget *wid = p;
 
 	AG_ObjectInit(wid, "widget", wops);
 	AGOBJECT(wid)->save_pfx = "/widgets";
 
-	strlcpy(wid->type, type, sizeof(wid->type));		/* XXX */
 	wid->flags = flags;
 	wid->redraw = 1;
 	wid->cx = -1;
@@ -111,7 +108,7 @@ AG_WidgetInit(void *p, const char *type, const void *wops, int flags)
 	 * Arrange for immediate children to inherit the style settings
 	 * of the parent on attachment.
 	 */
-	AG_SetEvent(wid, "child-attached", AG_WidgetInheritStyleEv, NULL);
+	AG_SetEvent(wid, "child-attached", child_attached, NULL);
 }
 
 int
@@ -1696,15 +1693,6 @@ AG_WidgetFindFocused(void *p)
 			return (fwid);
 	}
 	return (wid);
-}
-
-void
-AG_WidgetSetType(void *p, const char *name)
-{
-	AG_Widget *wid = p;
-
-	strlcpy(wid->type, name, sizeof(wid->type));
-	strlcpy(AGOBJECT(wid)->name, name, sizeof(AGOBJECT(wid)->name));
 }
 
 /*

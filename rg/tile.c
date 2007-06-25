@@ -1569,7 +1569,7 @@ EditElement(AG_Event *event)
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	
-	if (strcmp(sndr->type, "button") == 0 && !tv->edit_mode) {
+	if (AG_ObjectIsClass(sndr, "AG_Widget:AG_Button:*") && !tv->edit_mode) {
 		CloseElement(tv);
 		return;
 	}

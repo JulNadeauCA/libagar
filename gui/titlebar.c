@@ -95,13 +95,11 @@ void
 AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_HFILL);
+	AGWIDGET(tbar)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
 
 	AG_BoxSetPadding(&tbar->hb, 3);
 	AG_BoxSetSpacing(&tbar->hb, 0);
-
-	AG_WidgetSetType(tbar, "titlebar");
-	AGWIDGET(tbar)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	tbar->flags = flags;
 	tbar->pressed = 0;

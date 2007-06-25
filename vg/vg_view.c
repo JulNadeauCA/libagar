@@ -229,7 +229,7 @@ VG_ViewInit(VG_View *vv, VG *vg, Uint flags)
 	if (flags & VG_VIEW_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & VG_VIEW_VFILL) wflags |= AG_WIDGET_VFILL;
 
-	AG_WidgetInit(vv, "vgview", &vgViewOps, wflags);
+	AG_WidgetInit(vv, &vgViewOps, wflags);
 
 	vv->vg = vg;
 	vv->draw_ev = NULL;

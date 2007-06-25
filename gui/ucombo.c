@@ -145,7 +145,7 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 	if (flags & AG_UCOMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_UCOMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(com, "ucombo", &agUComboOps, wflags);
+	AG_WidgetInit(com, &agUComboOps, wflags);
 	com->panel = NULL;
 	com->saved_h = 0;
 

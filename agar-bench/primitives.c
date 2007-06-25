@@ -10,7 +10,7 @@ static AG_Widget wid;
 static void
 InitWidget(void)
 {
-	AG_WidgetInit(&wid, "test-widget", NULL, 0);
+	AG_WidgetInit(&wid, NULL, 0);
 	wid.cx = 1;
 	wid.cy = 1;
 	wid.x = 0;

@@ -53,11 +53,11 @@ const AG_WidgetOps agButtonOps = {
 
 static int GetState(AG_WidgetBinding *, void *);
 static void SetState(AG_WidgetBinding *, void *, int);
-static void MouseMotion(AG_Event *);
-static void MouseButtonUp(AG_Event *);
-static void MouseButtonDown(AG_Event *);
-static void KeyUp(AG_Event *);
-static void KeyDown(AG_Event *);
+static void mousemotion(AG_Event *);
+static void mousebuttonup(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void keyup(AG_Event *);
+static void keydown(AG_Event *);
 
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *caption)
@@ -116,7 +116,7 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	SDL_Surface *label;
 
 	/* XXX replace the unfocused motion flag with a timer */
-	AG_WidgetInit(bu, "button", &agButtonOps,
+	AG_WidgetInit(bu, &agButtonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
@@ -135,11 +135,11 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	AG_SetTimeout(&bu->repeat_to, repeat_expire, NULL, 0);
 	AG_SetTimeout(&bu->delay_to, delay_expire, NULL, 0);
 
-	AG_SetEvent(bu, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(bu, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(bu, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(bu, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(bu, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(bu, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(bu, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(bu, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(bu, "window-keyup", keyup, NULL);
+	AG_SetEvent(bu, "window-keydown", keydown, NULL);
 
 	if (flags & AG_BUTTON_HFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_HFILL; }
 	if (flags & AG_BUTTON_VFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_VFILL; }
@@ -302,7 +302,7 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 }
 
 static void
-MouseMotion(AG_Event *event)
+mousemotion(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_WidgetBinding *binding;
@@ -333,7 +333,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
@@ -368,7 +368,7 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+mousebuttonup(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	int button = AG_INT(1);
@@ -400,7 +400,7 @@ MouseButtonUp(AG_Event *event)
 }
 
 static void
-KeyDown(AG_Event *event)
+keydown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_WidgetBinding *binding;
@@ -426,7 +426,7 @@ KeyDown(AG_Event *event)
 }
 
 static void
-KeyUp(AG_Event *event)
+keyup(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_WidgetBinding *binding;

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +61,7 @@ AG_FixedNew(void *parent, Uint flags)
 void
 AG_FixedInit(AG_Fixed *fx, Uint flags)
 {
-	AG_WidgetInit(fx, "fixed", &agFixedOps, 0);
+	AG_WidgetInit(fx, &agFixedOps, 0);
 
 	fx->flags = flags;
 	if (flags & AG_FIXED_HFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_HFILL; }

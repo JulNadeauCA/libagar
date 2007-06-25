@@ -476,7 +476,7 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	if (flags & AG_FILEDLG_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_FILEDLG_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(fd, "file-dlg", &agFileDlgOps, wflags);
+	AG_WidgetInit(fd, &agFileDlgOps, wflags);
 	fd->flags = flags;
 	fd->cfile[0] = '\0';
 	if ((getcwd(fd->cwd, sizeof(fd->cwd))) == NULL) {
