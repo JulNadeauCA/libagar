@@ -23,8 +23,7 @@
  */
 
 /*
- * Dimensioned 2D sketch object with support for geometric constraints
- * and annotations.
+ * Dimensioned 2D sketch with geometric constraints.
  */
 
 #include <config/edition.h>
@@ -175,8 +174,9 @@ SK_Init(void *obj, const char *name)
 	sk->flags = 0;
 	sk->last_name = 2;
 	AG_MutexInitRecursive(&sk->lock);
+	SK_InitConstraintGraph(&sk->ctGraph);
 	TAILQ_INIT(&sk->nodes);
-	TAILQ_INIT(&sk->constraints);
+	TAILQ_INIT(&sk->ctClusters);
 
 	SK_InitRoot(sk);
 	sk->uLen = AG_FindUnit("mm");
@@ -254,22 +254,15 @@ void
 SK_Reinit(void *obj)
 {
 	SK *sk = obj;
-	SK_Constraint *cons, *consNext;
 
 	if (sk->root != NULL) {
 		SK_FreeNode(sk, SKNODE(sk->root));
 	}
 	TAILQ_INIT(&sk->nodes);
-
 	SK_InitRoot(sk);
 
-	for (cons = TAILQ_FIRST(&sk->constraints);
-	     cons != TAILQ_END(&sk->constraints);
-	     cons = consNext) {
-		consNext = TAILQ_NEXT(cons, constraints);
-		Free(cons, M_SG);
-	}
-	TAILQ_INIT(&sk->constraints);
+	SK_FreeConstraintGraph(&sk->ctGraph);
+	SK_FreeConstraintClusters(sk);
 }
 
 void
@@ -333,7 +326,7 @@ SK_Save(void *obj, AG_Netbuf *buf)
 {
 	SK *sk = obj;
 	SK_Node *node;
-	SK_Constraint *cons;
+	SK_Constraint *ct;
 	Uint32 count;
 	off_t offs;
 	
@@ -355,10 +348,20 @@ SK_Save(void *obj, AG_Netbuf *buf)
 	offs = AG_NetbufTell(buf);
 	count = 0;
 	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
-	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
-		AG_WriteUint32(buf, (Uint32)cons->type);
-		SK_WriteRef(buf, cons->e1);
-		SK_WriteRef(buf, cons->e2);
+	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
+		AG_WriteUint32(buf, (Uint32)ct->type);
+		SK_WriteRef(buf, ct->n1);
+		SK_WriteRef(buf, ct->n2);
+		switch (ct->type) {
+		case SK_DISTANCE:
+			SG_WriteReal(buf, ct->ct_distance);
+			break;
+		case SK_ANGLE:
+			SG_WriteReal(buf, ct->ct_angle);
+			break;
+		default:
+			break;
+		}
 		count++;
 	}
 	AG_PwriteUint32(buf, count, offs);
@@ -451,6 +454,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	SK_Node *node;
 	Uint32 i, count;
 	int rv;
+	SK_Constraint *ct;
 	
 	if (AG_ReadObjectVersion(buf, sk, NULL) == -1)
 		return (-1);
@@ -486,13 +490,21 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	/* Load the geometric constraint data. */
 	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
-		SK_Constraint *cons;
-
-		cons = AG_Malloc(sizeof(SK_Constraint), M_SG);
-		cons->type = (enum sk_constraint_type)AG_ReadUint32(buf);
-		cons->e1 = SK_ReadRef(buf, sk, NULL);
-		cons->e2 = SK_ReadRef(buf, sk, NULL);
-		TAILQ_INSERT_TAIL(&sk->constraints, cons, constraints);
+		ct = AG_Malloc(sizeof(SK_Constraint), M_SG);
+		ct->type = (enum sk_constraint_type)AG_ReadUint32(buf);
+		ct->n1 = SK_ReadRef(buf, sk, NULL);
+		ct->n2 = SK_ReadRef(buf, sk, NULL);
+		switch (ct->type) {
+		case SK_DISTANCE:
+			ct->ct_distance = SG_ReadReal(buf);
+			break;
+		case SK_ANGLE:
+			ct->ct_angle = SG_ReadReal(buf);
+			break;
+		default:
+			break;
+		}
+		TAILQ_INSERT_TAIL(&sk->ctGraph.edges, ct, constraints);
 	}
 	AG_MutexUnlock(&sk->lock);
 	return (0);
@@ -733,4 +745,114 @@ SK_SetLengthUnit(SK *sk, const AG_Unit *unit)
 	AG_MutexUnlock(&sk->lock);
 }
 
+void
+SK_InitConstraintGraph(SK_ConstraintGraph *cg)
+{
+	TAILQ_INIT(&cg->edges);
+}
+
+void
+SK_CopyConstraintGraph(const SK_ConstraintGraph *cgSrc,
+    SK_ConstraintGraph *cgDst)
+{
+	SK_Constraint *ct;
+
+	TAILQ_FOREACH(ct, &cgSrc->edges, constraints) {
+		SK_AddConstraintCopy(cgDst, ct);
+	}
+}
+
+void
+SK_FreeConstraintGraph(SK_ConstraintGraph *cg)
+{
+	SK_Constraint *ct, *ctNext;
+
+	for (ct = TAILQ_FIRST(&cg->edges);
+	     ct != TAILQ_END(&cg->edges);
+	     ct = ctNext) {
+		ctNext = TAILQ_NEXT(ct, constraints);
+		Free(ct, M_SG);
+	}
+	TAILQ_INIT(&cg->edges);
+}
+
+void
+SK_FreeConstraintClusters(SK *sk)
+{
+	SK_ConstraintGraph *cg, *cgNext;
+
+	for (cg = TAILQ_FIRST(&sk->ctClusters);
+	     cg != TAILQ_END(&sk->ctClusters);
+	     cg = cgNext) {
+		cgNext = TAILQ_NEXT(cg, clusters);
+		SK_FreeConstraintGraph(cg);
+		Free(cg, M_SG);
+	}
+	TAILQ_INIT(&sk->ctClusters);
+}
+
+SK_Constraint *
+SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
+    enum sk_constraint_type type, ...)
+{
+	SK_Constraint *ct;
+	va_list ap;
+
+	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		if (ct->type == type &&
+		    ct->n1 == node1 &&
+		    ct->n2 == node2) {
+			AG_SetError(_("Existing constraint"));
+			return (NULL);
+		}
+	}
+	ct = Malloc(sizeof(SK_Constraint), M_SG);
+	ct->type = type;
+	ct->n1 = node1;
+	ct->n2 = node2;
+
+	va_start(ap, type);
+	switch (type) {
+	case SK_DISTANCE:
+		ct->ct_distance = (SG_Real)va_arg(ap, double);
+		break;
+	case SK_ANGLE:
+		ct->ct_angle = (SG_Real)va_arg(ap, double);
+		break;
+	default:
+		break;
+	}
+	va_end(ap);
+
+	TAILQ_INSERT_TAIL(&cg->edges, ct, constraints);
+	return (ct);
+}
+
+SK_Constraint *
+SK_AddConstraintCopy(SK_ConstraintGraph *cgDst, const SK_Constraint *ct)
+{
+	SK_Constraint *ctCopy;
+
+	switch (ct->type) {
+	case SK_DISTANCE:
+		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_DISTANCE,
+		    ct->ct_distance);
+		break;
+	case SK_ANGLE:
+		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_ANGLE,
+		    ct->ct_angle);
+		break;
+	default:
+		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, ct->type);
+		break;
+	}
+	return (ctCopy);
+}
+
+void
+SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
+{
+	TAILQ_REMOVE(&cg->edges, ct, constraints);
+	Free(ct, M_SG);
+}
 #endif /* HAVE_OPENGL */
