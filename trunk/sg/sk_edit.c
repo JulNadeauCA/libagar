@@ -265,20 +265,20 @@ PollConstraints(AG_Event *event)
 	AG_Table *tbl = AG_SELF();
 	SK *sk = AG_PTR(1);
 	SK_Node *node = AG_PTR(2);
-	SK_Constraint *cons;
+	SK_Constraint *ct;
 
 	AG_TableBegin(tbl);
-	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
+	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		char name1[SK_NODE_NAME_MAX];
 		char name2[SK_NODE_NAME_MAX];
 
 		if (node != NULL) {
-			if (node != cons->e1 && node != cons->e2)
+			if (node != ct->n1 && node != ct->n2)
 				continue;
 		}
-		AG_TableAddRow(tbl, "%s:%s:%s", skConstraintNames[cons->type],
-		    SK_NodeNameCopy(cons->e1, name1, sizeof(name1)),
-		    SK_NodeNameCopy(cons->e2, name2, sizeof(name2)));
+		AG_TableAddRow(tbl, "%s:%s:%s", skConstraintNames[ct->type],
+		    SK_NodeNameCopy(ct->n1, name1, sizeof(name1)),
+		    SK_NodeNameCopy(ct->n2, name2, sizeof(name2)));
 	}
 	AG_TableEnd(tbl);
 }

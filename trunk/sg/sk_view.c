@@ -557,7 +557,6 @@ AddConstraint(AG_Event *event)
 {
 	SK *sk = AG_PTR(1);
 	enum sk_constraint_type type = (enum sk_constraint_type)AG_INT(2);
-	SK_Constraint *cons;
 	SK_Node *node, *nodes[2];
 	int count = 0;
 
@@ -566,32 +565,27 @@ AddConstraint(AG_Event *event)
 			continue;
 		}
 		if (++count > 2) {
-			AG_TextMsg(AG_MSG_ERROR, _("Select only 2 nodes"));
+			AG_TextMsg(AG_MSG_ERROR,
+			    _("Please select only 2 nodes"));
 			return;
 		}
 		nodes[count-1] = node;
 	}
 	if (count < 2) {
-		AG_TextMsg(AG_MSG_ERROR, _("Select 2 nodes"));
+		AG_TextMsg(AG_MSG_ERROR, _("Please select 2 nodes"));
 		return;
 	}
-	TAILQ_FOREACH(cons, &sk->constraints, constraints) {
-		if (cons->type == type &&
-		    cons->e1 == nodes[0] &&
-		    cons->e2 == nodes[1]) {
-			AG_TextMsg(AG_MSG_ERROR, _("Existing constraint"));
-			return;
-		}
+	if (SK_AddConstraint(&sk->ctGraph, nodes[0], nodes[1], type) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		return;
 	}
-	cons = Malloc(sizeof(SK_Constraint), M_SG);
-	cons->type = type;
-	cons->e1 = nodes[0];
-	cons->e2 = nodes[1];
-	TAILQ_INSERT_TAIL(&sk->constraints, cons, constraints);
-
 	dprintf("%s: added %s constraint between %s and %s\n",
 	    AGOBJECT(sk)->name, skConstraintNames[type],
-	    SK_NodeName(cons->e1), SK_NodeName(cons->e2));
+	    SK_NodeName(nodes[0]), SK_NodeName(nodes[1]));
+
+	if (SK_Solve(sk) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	}
 }
 
 void

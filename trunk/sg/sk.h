@@ -64,22 +64,36 @@ typedef struct sk_constraint {
 		SK_ANGLE,
 		SK_CONSTRAINT_LAST
 	} type;
-	SK_Node *e1;
-	SK_Node *e2;
+	union {
+		SG_Real dist;		/* DISTANCE value */
+		SG_Real angle;		/* ANGLE value (radians) */
+	} data;
+#ifdef _AGAR_INTERNAL
+#define ct_distance data.dist
+#define ct_angle data.angle
+#endif
+	SK_Node *n1;
+	SK_Node *n2;
 	TAILQ_ENTRY(sk_constraint) constraints;
 } SK_Constraint;
 
+typedef struct sk_constraint_graph {
+	TAILQ_HEAD(,sk_constraint) edges;
+	TAILQ_ENTRY(sk_constraint_graph) clusters;
+} SK_ConstraintGraph;
+	
 typedef struct sk {
 	struct ag_object obj;
 	Uint flags;
 #define SK_SKIP_UNKNOWN_NODES	0x01		/* Ignore unimplemented nodes
 						   in load (otherwise fail) */
 	AG_Mutex lock;
+	const AG_Unit *uLen;			/* Length unit */
 	Uint32 last_name;			/* Last nodeid (optimization) */
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
-	TAILQ_HEAD(,sk_constraint) constraints;	/* Constraint graph */
-	const AG_Unit *uLen;			/* Length unit */
+	SK_ConstraintGraph ctGraph;		/* Original constraint graph */
+	TAILQ_HEAD(,sk_constraint_graph) ctClusters; /* Clusters (for solver) */
 } SK;
 
 #define SKNODE(node) ((SK_Node *)(node))
@@ -156,6 +170,18 @@ char		*SK_NodeNameCopy(void *, char *, size_t);
 void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
 void		 SK_WriteRef(AG_Netbuf *, void *);
 void		 SK_SetLengthUnit(SK *, const AG_Unit *);
+
+int		 SK_Solve(SK *);
+void		 SK_FreeConstraintClusters(SK *);
+void		 SK_InitConstraintGraph(SK_ConstraintGraph *);
+void		 SK_FreeConstraintGraph(SK_ConstraintGraph *);
+void		 SK_CopyConstraintGraph(const SK_ConstraintGraph *,
+		                        SK_ConstraintGraph *);
+SK_Constraint	*SK_AddConstraint(SK_ConstraintGraph *, void *, void *,
+		                  enum sk_constraint_type, ...);
+SK_Constraint	*SK_AddConstraintCopy(SK_ConstraintGraph *,
+		                      const SK_Constraint *);
+void		 SK_DelConstraint(SK_ConstraintGraph *, SK_Constraint *);
 
 #define	SK_Identity(n) SG_MatrixIdentityv(&SKNODE(n)->T)
 #define	SK_Translate(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(v).x,(v).y)
