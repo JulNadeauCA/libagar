@@ -606,21 +606,8 @@ out:
 	return (status);
 }
 
-/* Render UTF-8 text to a new surface. */
-SDL_Surface *
-AG_TTFRenderTextSolid(AG_TTFFont *font, const char *utf8, SDL_Color fg)
-{
-	SDL_Surface *textsu;
-	Uint32 *ucs;
-
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
-	textsu = AG_TTFRenderUnicodeSolid(font, ucs, NULL, fg);
-	free(ucs);
-	return (textsu);
-}
-
 static __inline__ SDL_Surface *
-get_symbol(Uint32 ch)
+GetSymbolSurface(Uint32 ch)
 {
 	switch (ch) {
 	case 'L': return (AGICON(LEFT_BUTTON_SYMBOL));
@@ -631,16 +618,17 @@ get_symbol(Uint32 ch)
 	}
 }
 
-/* Render UCS-4 text to a new surface. */
+/* Render UCS-4 text to a new 8-bit surface. */
 SDL_Surface *
-AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
-    SDL_Color *cBg, SDL_Color cFg)
+AG_TTFRender(AG_TTFFont *font, const Uint32 *ucs, Uint32 color_bg,
+    Uint32 color)
 {
+	extern int agTextSymbols;			/* gui/text.c */
 	AG_TTFGlyph *glyph;
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
 	const Uint32 *ch;
-	Uint8 *src, *dst;
+	Uint8 *src, *dst, a;
 	int row, col;
 	int w, h;
 	int xstart;
@@ -655,33 +643,32 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
 	}
-
-	/* Fill the palette with the foreground color. */
 	palette = textsu->format->palette;
-	if (cBg != NULL) {
-		palette->colors[0].r = cBg->r;
-		palette->colors[0].g = cBg->g;
-		palette->colors[0].b = cBg->b;
-	} else {
-		palette->colors[0].r = 0;
-		palette->colors[0].g = 0;
-		palette->colors[0].b = 0;
+
+	SDL_GetRGBA(color_bg, agSurfaceFmt,
+	    &palette->colors[0].r,
+	    &palette->colors[0].g,
+	    &palette->colors[0].b,
+	    &a);
+	if (a == 0) {
 		SDL_SetColorKey(textsu, SDL_SRCCOLORKEY, 0);
 	}
-	palette->colors[1].r = cFg.r;
-	palette->colors[1].g = cFg.g;
-	palette->colors[1].b = cFg.b;
+	SDL_GetRGB(color, agVideoFmt,
+	    &palette->colors[1].r,
+	    &palette->colors[1].g,
+	    &palette->colors[1].b);
 
 	/* Load and render each character. */
 	xstart = 0;
 	for (ch = ucs; *ch != '\0'; ch++) {
 		FT_Bitmap *current = NULL;
 
-		if (*ch == '$' && ch[1] == '(' && ch[2] != '\0' &&
-		    ch[3] == ')') {	
+		if (agTextSymbols &&
+		    ch[0] == '$' &&
+		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {	
 			SDL_Surface *sym;
 
-			if ((sym = get_symbol(ch[2])) == NULL)
+			if ((sym = GetSymbolSurface(ch[2])) == NULL)
 				continue;
 
 			for (row = 0; row < sym->h; row++) {
@@ -692,9 +679,8 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 				    row*sym->pitch;
 
 				for (col = 0; col < sym->w; col++) {
-					Uint32 pixel = AG_GET_PIXEL(sym, src);
-
-					if (pixel != sym->format->colorkey) {
+					if (AG_GET_PIXEL(sym,src) !=
+					    sym->format->colorkey) {
 						*dst = 1;
 					}
 					src += sym->format->BytesPerPixel;
@@ -718,14 +704,9 @@ AG_TTFRenderUnicodeSolid(AG_TTFFont *font, const Uint32 *ucs,
 			xstart -= glyph->minx;
 
 		for (row = 0; row < current->rows; row++) {
-			/*
-			 * Work around bug seen with FreeType 9.3.3 that
-			 * occurs inconsistently with MALLOC_OPTIONS=AFGJ
-			 * under OpenBSD 3.5.
-			 */
-			if (glyph->yoffset < 0)
+			if (glyph->yoffset < 0) {
 				glyph->yoffset = 0;
-
+			}
 			if (row+glyph->yoffset >= textsu->h)
 				continue;
 
