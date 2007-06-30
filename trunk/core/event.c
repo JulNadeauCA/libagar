@@ -174,11 +174,10 @@ AG_EventLoop_FixedFPS(void)
 			}
 #endif
 			TAILQ_FOREACH(win, &agView->windows, windows) {
-				if (!win->visible)
-					continue;
-
 				AG_MutexLock(&win->lock);
-				AG_WidgetDraw(win);
+				if (win->visible) {
+					AG_WidgetDraw(win);
+				}
 				AG_MutexUnlock(&win->lock);
 
 				if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0)
