@@ -64,7 +64,7 @@ AG_DebugViewSettings(void)
 		    "%dx%d", &agView->w, &agView->h);
 
 		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
-		    agVideoInfo->vfmt->BitsPerPixel);
+		    (int)agVideoInfo->vfmt->BitsPerPixel);
 		AG_LabelNewStatic(vb, 0, _("Video masks: %08x,%08x,%08x"),
 		    agVideoInfo->vfmt->Rmask,
 		    agVideoInfo->vfmt->Gmask,
