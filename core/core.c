@@ -150,8 +150,9 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 	SDL_WM_SetCaption(agProgName, agProgName);
 
+	agVideoInfo = SDL_GetVideoInfo();
 #ifdef DEBUG
-	if (agVerbose && (agVideoInfo = SDL_GetVideoInfo()) != NULL) {
+	if (agVerbose) {
 		char accel[2048];
 		char unaccel[2048];
 		size_t size = 2048;
