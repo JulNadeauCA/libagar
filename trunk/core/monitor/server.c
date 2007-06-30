@@ -1,8 +1,5 @@
-/*	$Csoft: server.c,v 1.13 2005/10/04 17:34:52 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +30,7 @@
 #if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
 
 #include <config/version.h>
+#include <config/release.h>
 #include <config/have_jpeg.h>
 
 #include <core/core.h>
@@ -70,55 +68,36 @@ struct client {
 	int sock;
 	TAILQ_ENTRY(client) clients;
 };
+
+static AG_Mutex lock = AG_MUTEX_INITIALIZER;
 static TAILQ_HEAD(,client) clients = TAILQ_HEAD_INITIALIZER(clients);
-
-static char *serv_host = NULL;
-static char *serv_port = "1173";
-static AG_Thread serv_th;
+static NS_Server server;
 static int server_inited = 0;
-static int jpeg_quality = 75;
-
-void AG_MonitorServerStart(AG_Event *);
-
-static void
-my_exit(void)
-{
-	AG_ObjectSave(agWorld);
-}
+static AG_Thread listenTh;
+static int servRunning = 0;
+static int jpegQuality = 75;
 
 static void
-poll_clients(AG_Event *event)
+PollClients(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it;
 	struct client *cl;
 
+	AG_MutexLock(&lock);
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(cl, &clients, clients) {
 		it = AG_TlistAdd(tl, NULL, "%s (%s): %s", cl->name,
 		    cl->hostname, cl->version);
 		it->p1 = cl;
 		it->cat = "client";
-		
 	}
 	AG_TlistRestore(tl);
-}
-
-static void
-disconnect_client(AG_Event *event)
-{
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it = AG_TlistSelectedItem(tl);
-	struct client *cl;
-
-	if (it == NULL) {
-		return;
-	}
-	cl = it->p1;
+	AG_MutexUnlock(&lock);
 }
 
 static int
-auth_password(void *p)
+auth_password(NS_Server *ns, void *p)
 {
 	char buf[64];
 
@@ -132,41 +111,44 @@ auth_password(void *p)
 	return (0);
 }
 
-static void
-handle_error(void)
+static int
+srv_error(NS_Server *srv)
 {
-	printf("1 %s\n", AG_GetError());
+	NS_Log(NS_ERR, "%s: function failed (%s)", srv->name, AG_GetError());
+	return (-1);
 }
 
 static int
-cmd_version(NS_Command *cmd, void *p)
+cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	char hostname[128];
 
+	hostname[0] = '\0';
 	gethostname(hostname, sizeof(hostname));
-
-	printf("0 agar:%s:%s\n", VERSION, hostname);
+	printf("0 agar:%s:%s:%s\n", VERSION, RELEASE, hostname);
 	return (0);
 }
 
 #ifdef HAVE_JPEG
 static void
-error_exit(j_common_ptr jcomp)
+jpegError(j_common_ptr jcomp)
 {
 	printf("1 jpeg error\n");
 }
 
 static void
-output_msg(j_common_ptr jcomp)
+jpegOutputMsg(j_common_ptr jcomp)
 {
 	printf("1 jpeg error\n");
 }
 #endif /* HAVE_JPEG */
 
+/* Send the JPEG-compressed contents of a surface to the client. */
 static int
-cmd_surface(NS_Command *cmd, void *pSu)
+cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
+	char sendbuf[BUFSIZ];
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
 	char tmp[sizeof("/tmp/")+FILENAME_MAX];
@@ -176,24 +158,24 @@ cmd_surface(NS_Command *cmd, void *pSu)
 	size_t l, len;
 	FILE *ftmp;
 	int fd;
+	size_t rv;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl && pSu == agView->v)
 		su = AG_CaptureGLView();
 #endif
+
+	/* Write the JPEG to a temporary file. */
 	jcomp.err = jpeg_std_error(&jerrmgr);
-	jerrmgr.error_exit = error_exit;
-	jerrmgr.output_message = output_msg;
-	
+	jerrmgr.error_exit = jpegError;
+	jerrmgr.output_message = jpegOutputMsg;
 	jpeg_create_compress(&jcomp);
 	jcomp.image_width = su->w;
 	jcomp.image_height = su->h;
 	jcomp.input_components = 3;
 	jcomp.in_color_space = JCS_RGB;
-
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, jpeg_quality, TRUE);
-
+	jpeg_set_quality(&jcomp, jpegQuality, TRUE);
 #ifdef HAVE_MKSTEMP
 	strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
 	if ((fd = mkstemp(tmp)) == -1) {
@@ -212,7 +194,6 @@ cmd_surface(NS_Command *cmd, void *pSu)
 		return (-1);
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
-
 	jcopybuf = Malloc(su->w * 3, M_VIEW);
 	if (SDL_MUSTLOCK(su)) {
 		SDL_LockSurface(su);
@@ -222,7 +203,6 @@ cmd_surface(NS_Command *cmd, void *pSu)
 		int x;
 
 		jpeg_start_compress(&jcomp, TRUE);
-
 		while (jcomp.next_scanline < jcomp.image_height) {
 			Uint8 *pSrc = (Uint8 *)su->pixels +
 			    jcomp.next_scanline * su->pitch;
@@ -250,23 +230,17 @@ cmd_surface(NS_Command *cmd, void *pSu)
 		SDL_FreeSurface(su);
 #endif
 
-	/* Send the compressed data now that we know its size. */
+	/* Send the JPEG data to the client. */
 	len = (size_t)ftell(ftmp);
 	rewind(ftmp);
-	NS_BinaryMode(len);
-	{
-		char sendbuf[BUFSIZ];
-		size_t rv;
-
-		while ((rv = fread(sendbuf, 1, sizeof(sendbuf), ftmp)) > 0) {
-			fwrite(sendbuf, 1, rv, stdout);
-		}
+	NS_BinaryMode(ns, len);
+	while ((rv = fread(sendbuf, 1, sizeof(sendbuf), ftmp)) > 0) {
+		fwrite(sendbuf, 1, rv, stdout);
 	}
 	fflush(stdout);
-	NS_CommandMode();
+	NS_CommandMode(ns);
 	fclose(ftmp);
 	unlink(tmp);
-	
 	Free(jcopybuf, M_VIEW);
 	jpeg_destroy_compress(&jcomp);
 	return (0);
@@ -276,8 +250,9 @@ cmd_surface(NS_Command *cmd, void *pSu)
 #endif /* HAVE_JPEG */
 }
 
+/* Return information about the display format. */
 static int
-cmd_view_fmt(NS_Command *cmd, void *p)
+cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
@@ -293,8 +268,9 @@ cmd_view_fmt(NS_Command *cmd, void *p)
 	return (0);
 }
 
+/* Return the current refresh rate. */
 static int
-cmd_refresh(NS_Command *cmd, void *p)
+cmd_refresh(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	AG_MutexLock(&agView->lock);
 	printf("0 %d:%d\n", agView->rCur, agView->rNom);
@@ -303,7 +279,7 @@ cmd_refresh(NS_Command *cmd, void *p)
 }
 
 static void
-find_objs(NS_Command *cmd, AG_Object *pob, int depth)
+cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
@@ -311,47 +287,32 @@ find_objs(NS_Command *cmd, AG_Object *pob, int depth)
 	    pob->flags, pob->data_used);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
-		find_objs(cmd, cob, depth+1);
+		cmd_world_find(ns, cmd, cob, depth+1);
 	}
 }
 
+/* Return information about the current virtual filesystem. */
 static int
-cmd_world(NS_Command *cmd, void *p)
+cmd_world(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	AG_LockLinkage();
 	fputs("0 ", stdout);
-	find_objs(cmd, agWorld, 0);
+	cmd_world_find(ns, cmd, agWorld, 0);
 	fputc('\n', stdout);
 	AG_UnlockLinkage();
 	return (0);
 }
 
 static void *
-loop_server(void *p)
+ServerLoop(void *p)
 {
-	AG_TextTmsg(AG_MSG_INFO, 1000, _("Now listening on %s:%s..."),
-	    serv_host == NULL ? "*" : serv_host, serv_port);
+	AG_TextTmsg(AG_MSG_INFO, 1000, _("Debug server started"));
 
-	if (NS_Listen("agar", VERSION, serv_host, serv_port) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Server error (%s:%s): %s"),
-		    serv_host, serv_port, strerror(errno));
+	if (NS_Listen(&server) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
+	AG_ThreadExit(NULL);
 	return (NULL);
-}
-
-static void
-init_server(void)
-{
-	NS_RegAuth("password", auth_password, NULL);
-	NS_SetErrorFn(handle_error);
-
-	NS_RegCmd("version", cmd_version, NULL);
-	NS_RegCmd("screen", cmd_surface, agView->v);
-	NS_RegCmd("view-fmt", cmd_view_fmt, NULL);
-	NS_RegCmd("refresh", cmd_refresh, NULL);
-	NS_RegCmd("world", cmd_world, NULL);
-
-	server_inited++;
 }
 
 int
@@ -360,25 +321,38 @@ AG_DebugServerStart(void)
 	int rv;
 
 	if (!server_inited) {
+		NS_ServerInit(&server, "agar-debug", VERSION);
+		NS_RegAuthMode(&server, "password", auth_password, NULL);
+		NS_RegErrorFn(&server, srv_error);
+
+		NS_RegCmd(&server, "version", cmd_version, NULL);
+		NS_RegCmd(&server, "screen", cmd_surface, agView->v);
+		NS_RegCmd(&server, "view-fmt", cmd_view_fmt, NULL);
+		NS_RegCmd(&server, "refresh", cmd_refresh, NULL);
+		NS_RegCmd(&server, "world", cmd_world, NULL);
 		server_inited = 1;
-		init_server();
 	}
-	if ((rv = AG_ThreadCreate(&serv_th, NULL, loop_server, NULL)) != 0) {
+	if ((rv = AG_ThreadCreate(&listenTh, NULL, ServerLoop, NULL)) != 0) {
 		AG_TextMsg(AG_MSG_ERROR, "AG_ThreadCreate: %s", strerror(rv));
 		return (-1);
 	}
 	return (0);
 }
 
-void
-AG_MonitorServerStart(AG_Event *event)
+static void
+StartServer(AG_Event *event)
 {
-	AG_DebugServerStart();
+	if (AG_DebugServerStart() == 0)
+		servRunning = 1;
 }
 
 static void
-stop_server(AG_Event *event)
+StopServer(AG_Event *event)
 {
+	if (servRunning) {
+		AG_ThreadKill(listenTh, 15);
+		servRunning = 0;
+	}
 }
 
 AG_Window *
@@ -396,14 +370,15 @@ AG_DebugServerWindow(void)
 
 	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", poll_clients, NULL);
-	
-	me = AG_MenuNew(win, AG_MENU_HFILL);
-	mi = AG_MenuAddItem(me, _("Server"));
-	AG_MenuAction(mi, _("Start server"), -1, AG_MonitorServerStart, "%p",
-	    tl);
-	AG_MenuAction(mi, _("Stop server"), -1, stop_server, "%p", tl);
+	AG_TlistPrescale(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
+	AG_SetEvent(tl, "tlist-poll", PollClients, NULL);
+		
+	AG_ButtonAct(win, AG_BUTTON_HFILL, _("Start server"),
+	    StartServer, "%p", tl);
+	AG_ButtonAct(win, AG_BUTTON_HFILL, _("Stop server"),
+	    StopServer, "%p", tl);
 
+	AG_LabelNewStatic(win, 0, _("Connected clients:"));
 	AG_ObjectAttach(win, tl);
 	return (win);
 }
