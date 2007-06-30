@@ -79,9 +79,7 @@ int AG_TTFGlyphMetrics(AG_TTFFont *, Uint32 , int *, int *, int *, int *,
 int AG_TTFSizeText(AG_TTFFont *, const char *, int *, int *);
 int AG_TTFSizeUnicode(AG_TTFFont *, const Uint32 *, int *, int *);
 
-SDL_Surface *AG_TTFRenderTextSolid(AG_TTFFont *, const char *, SDL_Color);
-SDL_Surface *AG_TTFRenderUnicodeSolid(AG_TTFFont *, const Uint32 *,
-		                      SDL_Color *, SDL_Color);
+SDL_Surface *AG_TTFRender(AG_TTFFont *, const Uint32 *, Uint32, Uint32);
 __END_DECLS
 
 #include "close_code.h"
