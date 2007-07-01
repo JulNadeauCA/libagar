@@ -297,7 +297,6 @@ static void
 AG_WindowShownEv(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	int init = (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1);
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		AG_WindowFocus(win);
@@ -305,7 +304,7 @@ AG_WindowShownEv(AG_Event *event)
 	if (win->flags & AG_WINDOW_MODAL)
 		agView->modal_win = win;
 
-	if (init) {
+	if (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1) {
 		/* First pass: initial sizing. */
 		AGWIDGET_OPS(win)->scale(win, AGWIDGET(win)->w,
 		    AGWIDGET(win)->h);
@@ -395,8 +394,8 @@ AG_WindowShow(AG_Window *win)
 {
 	AG_MutexLock(&win->lock);
 	if (!win->visible) {
-		win->visible++;
 		AG_PostEvent(NULL, win, "widget-shown", NULL);
+		win->visible++;
 	}
 	AG_MutexUnlock(&win->lock);
 }
