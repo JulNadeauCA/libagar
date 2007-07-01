@@ -113,7 +113,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
-		AG_ButtonSetSurface(tbar->maximize_btn,
+		AG_ButtonSurfaceNODUP(tbar->maximize_btn,
 		    AGICON(GUI_SHOW_WINDOW_ICON));
 		AG_ButtonSetPadding(tbar->maximize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
@@ -125,7 +125,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
 		tbar->minimize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
-		AG_ButtonSetSurface(tbar->minimize_btn,
+		AG_ButtonSurfaceNODUP(tbar->minimize_btn,
 		    AGICON(GUI_HIDE_WINDOW_ICON));
 		AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
@@ -137,7 +137,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
-		AG_ButtonSetSurface(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
+		AG_ButtonSurfaceNODUP(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
 		AG_ButtonSetPadding(tbar->close_btn, 0,0,0,0);
 		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);
@@ -194,6 +194,5 @@ mousebuttonup(AG_Event *event)
 void
 AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 {
-	AG_LabelSetSurface(tbar->label, (caption == NULL) ? NULL :
-	    AG_TextRender(NULL, -1, AG_COLOR(TITLEBAR_CAPTION_COLOR), caption));
+	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
 }
