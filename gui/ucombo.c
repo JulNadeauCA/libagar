@@ -129,7 +129,7 @@ ucombo_selected(AG_Event *event)
 	AG_MutexLock(&tl->lock);
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
-		AG_ButtonPrintf(com->button, "%s", it->text);
+		AG_ButtonText(com->button, "%s", it->text);
 		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
 	}
 	AG_MutexUnlock(&tl->lock);
