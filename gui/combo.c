@@ -244,13 +244,25 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 void
 AG_ComboSetButtonText(AG_Combo *com, const char *text)
 {
-	AG_ButtonPrintf(com->button, "%s", text);
+	AG_ButtonText(com->button, "%s", text);
+}
+
+void
+AG_ComboSetButtonTextNODUP(AG_Combo *com, char *text)
+{
+	AG_ButtonTextNODUP(com->button, text);
 }
 
 void
 AG_ComboSetButtonSurface(AG_Combo *com, SDL_Surface *su)
 {
-	AG_ButtonSetSurface(com->button, su);
+	AG_ButtonSurface(com->button, su);
+}
+
+void
+AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, SDL_Surface *su)
+{
+	AG_ButtonSurfaceNODUP(com->button, su);
 }
 
 void
