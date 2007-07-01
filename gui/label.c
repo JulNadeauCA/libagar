@@ -294,7 +294,7 @@ AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 }
 
 void
-AG_LabelPrintf(AG_Label *lbl, const char *fmt, ...)
+AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 {
 	va_list ap;
 
