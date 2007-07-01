@@ -64,7 +64,7 @@ AG_ImportUnicode(enum ag_unicode_conv conv, const char *s)
 	ucs = Malloc((len + 1) * sizeof(Uint32), 0);
 
 	switch (conv) {
-	case AG_UNICODE_FROM_US_ASCII:
+	case AG_UNICODE_FROM_USASCII:
 		for (i = 0; i < len; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
@@ -129,7 +129,7 @@ AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
 	len = strlen(s);
 
 	switch (conv) {
-	case AG_UNICODE_FROM_US_ASCII:
+	case AG_UNICODE_FROM_USASCII:
 		if (len > ucs_len) {
 			len = ucs_len;
 		}
