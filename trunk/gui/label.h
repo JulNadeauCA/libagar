@@ -36,17 +36,19 @@ typedef struct ag_label {
 #define AG_LABEL_VFILL		0x02	/* Fill vertical space */
 #define AG_LABEL_NOMINSIZE	0x04	/* No minimum enforced size */
 #define AG_LABEL_PARTIAL	0x10	/* Partial mode (RO) */
+#define AG_LABEL_NODUP		0x20	/* Don't copy string in LabelInit() */
+#define AG_LABEL_REGEN		0x40	/* Regenerate surface at next draw */
 #define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
 	AG_Mutex lock;
+	char  *text;			/* Text buffer */
 	int surface;			/* Label surface */
 	int surfaceCont;		/* [...] surface */
 	int wPre, hPre;			/* Prescale dimensions */
 	int lPad, rPad, tPad, bPad;	/* Label padding */
 	struct {
-		char fmt[AG_LABEL_MAX];		   /* Poll format string */
-		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Polled data ptrs */
+		AG_Mutex *lock;			   /* Lock for polled data */
+		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Pointers to polled data */
 		int nptrs;
-		AG_Mutex *lock;			   /* Lock protecting data */
 	} poll;
 	SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
 } AG_Label;
