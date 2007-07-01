@@ -77,13 +77,19 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonSetJustification "AG_Button *button" "enum ag_button_justify jus"
 .Pp
 .Ft void
-.Fn AG_ButtonSetSurface "AG_Button *button" "SDL_Surface *su"
-.Pp
-.Ft void
 .Fn AG_ButtonSetRepeatMode "AG_Button *button" "int repeat_flag"
 .Pp
 .Ft void
-.Fn AG_ButtonPrintf "AG_Button *button" "const char *fmt" "..."
+.Fn AG_ButtonSurface "AG_Button *button" "SDL_Surface *su"
+.Pp
+.Ft void
+.Fn AG_ButtonSurfaceNODUP "AG_Button *button" "SDL_Surface *su"
+.Pp
+.Ft void
+.Fn AG_ButtonText "AG_Button *button" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_ButtonTextNODUP "AG_Button *button" "char *text"
 .Pp
 .nr nS 0
 The
@@ -171,12 +177,6 @@ enum ag_button_justify {
 .Ed
 .Pp
 The
-.Fn AG_ButtonSetSurface
-and
-.Fn AG_ButtonPrintf
-functions are used to modify the button label.
-.Pp
-The
 .Fn AG_ButtonSetRepeatMode
 flag enables or disables repeat mode.
 Repeat mode causes multiple
@@ -184,6 +184,19 @@ Repeat mode causes multiple
 events to be posted periodically for as long as the button is triggered.
 Repeat mode is used notably by
 .Xr AG_Spinbutton 3 .
+.Pp
+.Fn AG_ButtonSurface
+sets the button label to a copy of the given surface.
+The
+.Fn AG_ButtonSurfaceNODUP
+variant uses the given surface as source without copying.
+.Pp
+.Fn AG_ButtonText
+uses the given text string as the button label.
+The
+.Fn AG_ButtonTextNODUP
+variant uses the original string without copying.
+.Pp
 .Sh EVENTS
 The
 .Nm
