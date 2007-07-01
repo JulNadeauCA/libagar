@@ -109,19 +109,19 @@ function frees all resources allocated by the font engine.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn AG_TextRenderUnicode "const char *font_name, int font_size, Uint32 color" "const Uint32 *ucs"
+.Fn AG_TextRenderUCS4 "const char *fontFace" "int fontSize" "Uint32 color_bg" "Uint32 color" "const Uint32 *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextRender "const char *font_name, int font_size, Uint32 color" "const char *text"
+.Fn AG_TextRender "const char *fontFace, int fontSize, Uint32 color" "const char *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextFormat "const char *font_name, int font_size, Uint32 color" "const char *fmt" "..."
+.Fn AG_TextFormat "const char *fontFace, int fontSize, Uint32 color" "const char *fmt" "..."
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextRenderGlyph "const char *font_name, int font_size, Uint32 color" "Uint32 uch"
+.Fn AG_TextRenderGlyph "const char *fontFace, int fontSize, Uint32 color" "Uint32 uch"
 .Pp
 .Ft "void"
-.Fn AG_TextPrescaleUnicode "const Uint32 *ucs" "int *w" "int *h"
+.Fn AG_TextPrescaleUnicode "const Uint32 *text" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn AG_TextPrescale "const char *text" "int *w" "int *h"
@@ -129,22 +129,24 @@ function frees all resources allocated by the font engine.
 .nr nS 0
 The
 .Fn AG_TextRender
-function renders UTF-8 text to a newly allocated surface.
+function renders text to a new, transparent surface.
+The input text may contain UTF-8 sequences.
 The
 .Fn AG_TextFormat
 variant accepts
 .Xr printf 3
 style arguments.
 .Pp
-.Fn AG_TextRenderUnicode
-renders UCS-4 text to a newly allocated surface.
+.Fn AG_TextRenderUCS4
+renders text in UCS-4 format onto a new surface of the specified color.
 .Fn AG_TextRenderGlyph
-renders a single UCS-4 encoded Unicode character onto a new surface.
+renders a single UCS-4 encoded Unicode character onto a new surface of the
+specified color.
 .Pp
 A
-.Fa font_name
+.Fa fontFace
 argument of NULL or a
-.Fa font_size
+.Fa fontSize
 argument of -1 indicates that the defaults should be used.
 .Pp
 The
