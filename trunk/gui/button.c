@@ -42,7 +42,7 @@ const AG_WidgetOps agButtonOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		NULL,		/* destroy XXX */
+		AG_ButtonDestroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -113,16 +113,13 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 void
 AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 {
-	SDL_Surface *label;
-
 	/* XXX replace the unfocused motion flag with a timer */
 	AG_WidgetInit(bu, &agButtonOps,
 	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
-	label = (caption == NULL) ? NULL :
-	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), caption);
-	AG_WidgetMapSurface(bu, label);
+	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
+	bu->surface = -1;
 
 	bu->flags = flags;
 	bu->state = 0;
@@ -146,19 +143,37 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 }
 
 void
+AG_ButtonDestroy(void *p)
+{
+	AG_Button *bu = p;
+	SDL_Surface *su;
+
+	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0) {
+		Free(bu->text,0);
+	}
+	AG_WidgetDestroy(bu);
+}
+
+void
 AG_ButtonScale(void *p, int w, int h)
 {
 	AG_Button *bu = p;
-	SDL_Surface *label = AGWIDGET_SURFACE(bu,0);
+	int wLbl, hLbl;
 
 	if (w == -1 && h == -1) {
-		if (label != NULL) {
-			AGWIDGET(bu)->w = label->w + bu->lPad + bu->rPad;
-			AGWIDGET(bu)->h = label->h + bu->tPad + bu->bPad;
+		if (bu->surface != -1) {
+			wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;
+			hLbl = AGWIDGET_SURFACE(bu,bu->surface)->h;
 		} else {
-			AGWIDGET(bu)->w = 1;
-			AGWIDGET(bu)->h = 1;
+			if (bu->text != NULL && bu->text[0] != '\0') {
+				AG_TextPrescale(bu->text, &wLbl, &hLbl);
+			} else {
+				wLbl = 0;
+				hLbl = agTextFontHeight;
+			}
 		}
+		AGWIDGET(bu)->w = wLbl + bu->lPad + bu->rPad;
+		AGWIDGET(bu)->h = hLbl + bu->tPad + bu->bPad;
 	}
 }
 
@@ -168,9 +183,9 @@ AG_ButtonDraw(void *p)
 	AG_Button *bu = p;
 	AG_WidgetBinding *binding;
 	void *pState;
-	SDL_Surface *label = AGWIDGET_SURFACE(bu,0);
 	int x = 0, y = 0;
 	int pressed;
+	int wLbl;
 	
 	if (AGWIDGET(bu)->w < 8 || AGWIDGET(bu)->h < 8)
 		return;
@@ -194,26 +209,38 @@ AG_ButtonDraw(void *p)
 		    AG_COLOR(BUTTON_COLOR));
 	}
 
-	if (label != NULL) {
-		switch (bu->justify) {
-		case AG_BUTTON_LEFT:
-			x = bu->lPad;
-			break;
-		case AG_BUTTON_CENTER:
-			x = AGWIDGET(bu)->w/2 - label->w/2;
-			break;
-		case AG_BUTTON_RIGHT:
-			x = AGWIDGET(bu)->w - label->w - bu->rPad;
-			break;
+	if (bu->text != NULL && bu->text[0] != '\0') {
+		if (bu->surface == -1) {
+			bu->surface = AG_WidgetMapSurface(bu,
+			    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR),
+			    bu->text));
+		} else if (bu->flags & AG_BUTTON_REGEN) {
+			AG_WidgetReplaceSurface(bu, bu->surface,
+			    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR),
+			    bu->text));
 		}
-		y = ((AGWIDGET(bu)->h - label->h)/2) - 1;	/* Middle */
-
-		if (pressed) {
-			x++;
-			y++;
-		}
-		AG_WidgetBlitSurface(bu, 0, x, y);
 	}
+	wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;
+
+	/* XXX TODO move this code someplace else */
+	switch (bu->justify) {
+	case AG_BUTTON_LEFT:
+		x = bu->lPad;
+		break;
+	case AG_BUTTON_CENTER:
+		x = AGWIDGET(bu)->w/2 - wLbl/2;
+		break;
+	case AG_BUTTON_RIGHT:
+		x = AGWIDGET(bu)->w - wLbl - bu->rPad;
+		break;
+	}
+	y = ((AGWIDGET(bu)->h - AGWIDGET_SURFACE(bu,bu->surface)->h)/2) - 1;
+
+	if (pressed) {
+		x++;
+		y++;
+	}
+	AG_WidgetBlitSurface(bu, bu->surface, x, y);
 }
 
 static int
@@ -329,7 +356,6 @@ mousemotion(AG_Event *event)
 		AG_PostEvent(NULL, bu, "button-mouseoverlap", "%i", 1);
 	}
 	AG_WidgetUnlockBinding(binding);
-	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -345,7 +371,6 @@ mousebuttondown(AG_Event *event)
 		return;
 
 	AG_WidgetFocus(bu);
-	AG_WidgetRedraw(bu);
 
 	if (button != SDL_BUTTON_LEFT)
 		return;
@@ -396,7 +421,6 @@ mousebuttonup(AG_Event *event)
 		AG_WidgetBindingChanged(binding);
 	}
 	AG_WidgetUnlockBinding(binding);
-	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -422,7 +446,6 @@ keydown(AG_Event *event)
 		AG_ReplaceTimeout(bu, &bu->delay_to, 800);
 	}
 	AG_WidgetUnlockBinding(binding);
-	AG_WidgetRedraw(bu);
 }
 
 static void
@@ -448,21 +471,18 @@ keyup(AG_Event *event)
 	SetState(binding, pState, 0);
 	AG_WidgetUnlockBinding(binding);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
-	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonEnable(AG_Button *bu)
 {
 	bu->flags &= ~(AG_BUTTON_DISABLED);
-	AG_WidgetRedraw(bu);
 }
 
 void
 AG_ButtonDisable(AG_Button *bu)
 {
 	bu->flags |= (AG_BUTTON_DISABLED);
-	AG_WidgetRedraw(bu);
 }
 
 void
@@ -472,7 +492,6 @@ AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
 	if (rPad != -1) { bu->rPad = rPad; }
 	if (tPad != -1) { bu->tPad = tPad; }
 	if (bPad != -1) { bu->bPad = bPad; }
-	AG_WidgetRedraw(bu);
 }
 
 void
@@ -501,14 +520,28 @@ void
 AG_ButtonSetJustification(AG_Button *bu, enum ag_button_justify jus)
 {
 	bu->justify = jus;
-	AG_WidgetRedraw(bu);
 }
 
 void
-AG_ButtonSetSurface(AG_Button *bu, SDL_Surface *su)
+AG_ButtonSurface(AG_Button *bu, SDL_Surface *su)
 {
-	AG_WidgetReplaceSurface(bu, 0, su);
-	AG_WidgetRedraw(bu);
+	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+
+	if (bu->surface != -1) {
+		AG_WidgetReplaceSurface(bu, bu->surface, suDup);
+	} else {
+		bu->surface = AG_WidgetMapSurface(bu, suDup);
+	}
+}
+
+void
+AG_ButtonSurfaceNODUP(AG_Button *bu, SDL_Surface *su)
+{
+	if (bu->surface != -1) {
+		AG_WidgetReplaceSurfaceNODUP(bu, bu->surface, su);
+	} else {
+		bu->surface = AG_WidgetMapSurfaceNODUP(bu, su);
+	}
 }
 
 void
@@ -524,23 +557,22 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 }
 
 void
-AG_ButtonTextString(AG_Button *bu, const char *text)
+AG_ButtonTextNODUP(AG_Button *bu, char *text)
 {
-	AG_WidgetReplaceSurface(bu, 0,
-	    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR), text));
-	AG_WidgetRedraw(bu);
+	Free(bu->text,0);
+	bu->text = text;
+	bu->flags |= (AG_BUTTON_REGEN|AG_BUTTON_TEXT_NODUP);
 }
 
 void
 AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 {
-	char s[AG_LABEL_MAX];
 	va_list args;
-
+	
+	Free(bu->text,0);
 	va_start(args, fmt);
-	vsnprintf(s, sizeof(s), fmt, args);
+	Vasprintf(&bu->text, fmt, args);
 	va_end(args);
-
-	AG_ButtonTextString(bu, s);
+	bu->flags |=  AG_BUTTON_REGEN;
+	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
 }
-

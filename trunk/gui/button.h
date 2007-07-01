@@ -20,15 +20,19 @@ enum ag_button_justify {
 typedef struct ag_button {
 	struct ag_widget wid;
 	int state;			/* Default state binding */
+	char *text;			/* Label text */
+	int surface;			/* Label surface handle */
 	enum ag_button_justify justify;	/* Label justification */
 	Uint flags;
-#define AG_BUTTON_DISABLED	0x01	/* Button is insensitive */
-#define AG_BUTTON_STICKY	0x02	/* Toggle state */
-#define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
-#define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
-#define AG_BUTTON_HFILL		0x10	/* Fill available width */
-#define AG_BUTTON_VFILL		0x20	/* Fill available height */
-#define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
+#define AG_BUTTON_DISABLED	0x001	/* Button is insensitive */
+#define AG_BUTTON_STICKY	0x002	/* Toggle state */
+#define AG_BUTTON_MOUSEOVER	0x004	/* Mouse overlaps */
+#define AG_BUTTON_REPEAT	0x008	/* Repeat button-pushed event */
+#define AG_BUTTON_HFILL		0x010	/* Fill available width */
+#define AG_BUTTON_VFILL		0x020	/* Fill available height */
+#define AG_BUTTON_FOCUS		0x040	/* Focus button automatically */
+#define AG_BUTTON_REGEN		0x080	/* Label surface need updating */
+#define AG_BUTTON_TEXT_NODUP	0x100	/* Label text string is static */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
@@ -55,15 +59,18 @@ void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonSetJustification(AG_Button *, enum ag_button_justify);
-void	   AG_ButtonSetSurface(AG_Button *, SDL_Surface *);
+void	   AG_ButtonSurface(AG_Button *, SDL_Surface *);
+void	   AG_ButtonSurfaceNODUP(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
 
 void	   AG_ButtonText(AG_Button *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
-void	   AG_ButtonTextString(AG_Button *, const char *)
+void	   AG_ButtonTextNODUP(AG_Button *, char *)
 	     NONNULL_ATTRIBUTE(2);
-#define	   AG_ButtonPrintf AG_ButtonText
+
+#define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
+#define	AG_ButtonPrintf AG_ButtonText
 __END_DECLS
 
 #include "close_code.h"
