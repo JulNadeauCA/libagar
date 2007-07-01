@@ -425,7 +425,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar,
 	AG_Event *btn_ev;
 	
 	bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
-	AG_ButtonSetSurface(bu, AGICON(icon));
+	AG_ButtonSurfaceNODUP(bu, AGICON(icon));
 	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(btn_ev, fmt);
@@ -680,8 +680,11 @@ AG_PopupHide(AG_PopupMenu *pm)
 }
 
 void
-AG_PopupDestroy(AG_PopupMenu *pm)
+AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 {
+	if (pWid != NULL)
+		SLIST_REMOVE(&AGWIDGET(pWid)->menus, pm, ag_popup_menu, menus);
+
 	if (pm->menu != NULL) {
 		AG_MenuCollapse(pm->menu, pm->item);
 		AG_ObjectDestroy(pm->menu);
