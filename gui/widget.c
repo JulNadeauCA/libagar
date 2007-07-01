@@ -99,6 +99,7 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
+	wid->surfaceFlags = NULL;
 #ifdef HAVE_OPENGL
 	wid->textures = NULL;
 	wid->texcoords = NULL;
@@ -879,8 +880,10 @@ AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 
 /*
  * Register a surface with the given widget. In OpenGL mode, generate
- * a texture as well. Mapped surfaces are automatically freed when the
- * widget is destroyed.
+ * a texture as well.
+ *
+ * The surface is not duplicated, but will be freed automatically with the
+ * widget unless the NODUP flag is set.
  */
 int
 AG_WidgetMapSurface(void *p, SDL_Surface *su)
@@ -897,6 +900,8 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 	if (i == wid->nsurfaces) {
 		wid->surfaces = Realloc(wid->surfaces,
 		    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
+		wid->surfaceFlags = Realloc(wid->surfaceFlags,
+		    (wid->nsurfaces+1)*sizeof(Uint));
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
 			wid->textures = Realloc(wid->textures,
@@ -907,8 +912,9 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 #endif
 		idx = wid->nsurfaces++;
 	}
-
 	wid->surfaces[idx] = su;
+	wid->surfaceFlags[idx] = 0;
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		GLuint texname;
@@ -924,8 +930,24 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 }
 
 /*
+ * Variant of WidgetMapSurface() that sets the NODUP flag such that
+ * the surface is not freed automatically with the widget.
+ */
+int
+AG_WidgetMapSurfaceNODUP(void *p, SDL_Surface *su)
+{
+	AG_Widget *wid = p;
+	int name;
+
+	name = AG_WidgetMapSurface(wid, su);
+	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+	return (name);
+}
+
+/*
  * Replace the contents of a registered surface, and regenerate
- * the matching texture in OpenGL mode.
+ * the matching texture in OpenGL mode. Unless NODUP is set, the
+ * current source surface is freed.
  */
 void
 AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
@@ -933,9 +955,12 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 	AG_Widget *wid = p;
 
 	if (wid->surfaces[name] != NULL) {
-		SDL_FreeSurface(wid->surfaces[name]);
+		if (!AGWIDGET_SURFACE_NODUP(wid,name))
+			SDL_FreeSurface(wid->surfaces[name]);
 	}
 	wid->surfaces[name] = su;
+	wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_NODUP);
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		AG_LockGL();
@@ -949,17 +974,33 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 #endif
 }
 
+/* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
 void
-AG_WidgetUpdateSurface(void *p, int name)
+AG_WidgetReplaceSurfaceNODUP(void *p, int name, SDL_Surface *su)
 {
 	AG_Widget *wid = p;
 
+	AG_WidgetReplaceSurface(wid, name, su);
+	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+}
+
+void
+AG_WidgetUpdateSurface(void *p, int name)
+{
 #ifdef HAVE_OPENGL
+	AG_Widget *wid = p;
+
 	if (agView->opengl)
 		AG_UpdateTexture(wid->surfaces[name], wid->textures[name]);
 #endif
 }
 
+/*
+ * Free a widget structure.
+ *
+ * Must be invoked from main event handler context (for texture operations
+ * in OpenGL mode).
+ */
 void
 AG_WidgetDestroy(void *p)
 {
@@ -972,12 +1013,15 @@ AG_WidgetDestroy(void *p)
 	     pm != SLIST_END(&wid->menus);
 	     pm = pm2) {
 		pm2 = SLIST_NEXT(pm, menus);
-		AG_PopupDestroy(pm);
+		AG_PopupDestroy(NULL, pm);
 	}
 	for (i = 0; i < wid->nsurfaces; i++) {
-		if (wid->surfaces[i] != NULL)
+		if (wid->surfaces[i] != NULL &&
+		    !AGWIDGET_SURFACE_NODUP(wid,i)) {
 			SDL_FreeSurface(wid->surfaces[i]);
+		}
 #ifdef HAVE_OPENGL
+		/* TODO Queue this operation? */
 		if (agView->opengl) {
 			AG_LockGL();
 			if (wid->textures[i] != 0) {
@@ -989,6 +1033,7 @@ AG_WidgetDestroy(void *p)
 #endif
 	}
 	Free(wid->surfaces, M_WIDGET);
+	Free(wid->surfaceFlags, M_WIDGET);
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {

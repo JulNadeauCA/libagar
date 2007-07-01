@@ -90,18 +90,22 @@ typedef struct ag_widget {
 #define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Focus parent win on focus */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
-	int redraw;			/* Redraw this widget (optimization) */
+	int redraw;			/* Redraw flag (for WIDGET_STATIC) */
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	SDL_Rect rClipSave;		/* Saved clipping rectangle */
 	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
+
 	SDL_Surface **surfaces;		/* Registered surfaces */
+	Uint *surfaceFlags;		/* Surface flags */
+#define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
 	Uint nsurfaces;
 #ifdef HAVE_OPENGL
 	Uint *textures;			/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
 #endif
+
 	AG_Mutex bindings_lock;			 /* Lock on all bindings */
 	SLIST_HEAD(,ag_widget_binding) bindings; /* List of variable bindings */
 	SLIST_HEAD(,ag_popup_menu) menus;	 /* Managed menus */
@@ -113,11 +117,21 @@ typedef struct ag_widget {
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
+#define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
+					 AG_WIDGET_SURFACE_NODUP)
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
 #define AG_WidgetEnabled(wi)	!AG_WidgetDisabled(wi)
-#define AG_WidgetRedraw(wi)	AGWIDGET(wi)->redraw++
+
+#ifdef DEBUG
+#define AG_WidgetRedraw(wi)						\
+	if (((wi)->flags & AG_WIDGET_STATIC) == 0)			\
+		fatal("AG_WidgetRedraw() called on non-static widget"); \
+	AGWIDGET(wi)->redraw++
+#else
+#define AG_WidgetRedraw(wi) AGWIDGET(wi)->redraw++
+#endif
 
 struct ag_window;
 
@@ -144,7 +158,9 @@ void		 AG_WidgetUpdateCoords(void *, int, int);
 struct ag_window *AG_WidgetParentWindow(void *);
 
 int		 AG_WidgetMapSurface(void *, SDL_Surface *);
+int		 AG_WidgetMapSurfaceNODUP(void *, SDL_Surface *);
 __inline__ void	 AG_WidgetReplaceSurface(void *, int, SDL_Surface *);
+__inline__ void	 AG_WidgetReplaceSurfaceNODUP(void *, int, SDL_Surface *);
 __inline__ void	 AG_WidgetUpdateSurface(void *, int);
 
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
