@@ -232,7 +232,8 @@ AG_ScrollbarDraw(void *p)
 	int maxcoord;
 
 	if ((max = (AG_WidgetInt(sb,"max") - AG_WidgetInt(sb,"visible")))== 0 ||
-	     max < (min = AG_WidgetInt(sb, "min"))) {
+	     max < (min = AG_WidgetInt(sb, "min")) ||
+	     (max - min) <= 0) {
 		return;
 	}
 	value = AG_WidgetInt(sb, "value");
