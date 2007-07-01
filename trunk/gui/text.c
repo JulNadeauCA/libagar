@@ -25,6 +25,7 @@
 
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
+#include <config/utf8.h>
 
 #include <core/core.h>
 #include <core/view.h>
@@ -70,6 +71,7 @@ int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
+int agTextSymbols = 1;			/* Process special symbols in text */
 int agFreetype = 0;			/* Use Freetype font engine */
 
 #define GLYPH_NBUCKETS 1024
@@ -374,6 +376,7 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 {
 	AG_Glyph *gl;
 	Uint h;
+	Uint32 color_bg = SDL_MapRGBA(agSurfaceFmt,0,0,0,0);
 
 	h = hash_glyph(ch);
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
@@ -386,7 +389,6 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 	}
 	if (gl == NULL) {
 		Uint32 ucs[2];
-		SDL_Color c;
 
 		gl = Malloc(sizeof(AG_Glyph), M_TEXT);
 		if (fontname == NULL) {
@@ -397,11 +399,10 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 		gl->fontsize = fontsize;
 		gl->color = color;
 		gl->ch = ch;
-
-		SDL_GetRGB(color, agVideoFmt, &c.r, &c.g, &c.b);
 		ucs[0] = ch;
 		ucs[1] = '\0';
-		gl->su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
+		gl->su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color,
+		    ucs);
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
 			AG_LockGL();
@@ -429,21 +430,46 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 	}
 }
 
-/* Render UTF-8 text onto a newly allocated transparent surface. */
-/* XXX use state variables for font spec */
-/* XXX multiline? */
+/*
+ * Allocate a transparent surface and render text from a standard C string
+ * (possibly with UTF-8 sequences), onto it.
+ */
 SDL_Surface *
 AG_TextRender(const char *fontname, int fontsize, Uint32 color,
     const char *text)
 {
-	SDL_Color c;
-	Uint32 *ucs;
+	Uint32 color_bg = SDL_MapRGBA(agSurfaceFmt,0,0,0,0);
+	Uint32 *ucs4;
 	SDL_Surface *su;
 
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
-	SDL_GetRGB(color, agVideoFmt, &c.r, &c.g, &c.b);
-	su = AG_TextRenderUnicode(fontname, fontsize, c, ucs);
-	free(ucs);
+#ifdef UTF8
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+#else
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+#endif
+	su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color, ucs4);
+	free(ucs4);
+	return (su);
+}
+
+/*
+ * Allocate a surface filled with a specific color, and render text from a
+ * standard C string (possibly with UTF-8 sequences) onto it.
+ */
+SDL_Surface *
+AG_TextRenderOnBackgnd(const char *fontname, int fontsize, Uint32 color_bg,
+    Uint32 color, const char *text)
+{
+	Uint32 *ucs4;
+	SDL_Surface *su;
+
+#ifdef UTF8
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+#else
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+#endif
+	su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color, ucs4);
+	free(ucs4);
 	return (su);
 }
 
@@ -455,7 +481,7 @@ AG_TextFormat(const char *fontname, int fontsize, Uint32 color,
 	va_list args;
 
 	va_start(args, fmt);
-	AG_Vasprintf(&text, fmt, args);
+	Vasprintf(&text, fmt, args);
 	va_end(args);
 	return (AG_TextRender(fontname, fontsize, color, text));
 }
@@ -473,10 +499,10 @@ AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
 	return (font->bglyphs[c - font->c0 + 1]);
 }
 
-/* Render an UCS-4 text string onto a newly allocated surface. */
+/* Render an UCS-4 text string onto a new 8-bit surface. */
 SDL_Surface *
-AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
-    const Uint32 *text)
+AG_TextRenderUCS4(const char *fontname, int fontsize, Uint32 color_bg,
+    Uint32 color, const Uint32 *text)
 {
 	AG_Font *font;
 	SDL_Surface *su;
@@ -487,13 +513,16 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 	switch (font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		if ((su = AG_TTFRenderUnicodeSolid(font->ttf, text, NULL, cFg))
-		    != NULL) {
-			return (su);
-		} else {
-			fprintf(stderr, "FreeType: %s\n", AG_GetError());
-			return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,
-			                             0,0,0,0));
+		{
+			if ((su = AG_TTFRender(font->ttf, text, color_bg,
+			    color)) != NULL) {
+				return (su);
+			} else {
+				fprintf(stderr, "FreeType: %s\n",
+				    AG_GetError());
+				return (SDL_CreateRGBSurface(SDL_SWSURFACE,
+				        0,0,8,0,0,0,0));
+			}
 		}
 		break;
 #endif
@@ -505,7 +534,8 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 			Uint w = 0, h = 0;
 			Uint32 c;
 
-			/* Figure out the required surface dimensions. */
+			/* TODO: color adjustment */
+
 			text_len = AG_UCS4Len(text);
 			for (i = 0; i < text_len; i++) {
 				c = text[i];
@@ -513,19 +543,15 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 				w += gsu->w;
 				h = MAX(h,gsu->h);
 			}
-
-			/* Allocate the final surface. */
 			su = SDL_CreateRGBSurface(SDL_SWSURFACE,
 			    w, h, 32,
 			    agSurfaceFmt->Rmask,
 			    agSurfaceFmt->Gmask,
 			    agSurfaceFmt->Bmask,
 			    0);
-			if (su == NULL)
-				fatal("SDL_CreateRGBSurface: %s",
-				    SDL_GetError());
-
-			/* Blit the glyphs. */
+			if (su == NULL) {
+				fatal("CreateRGBSurface: %s", SDL_GetError());
+			}
 			rd.x = 0;
 			rd.y = 0;
 			for (i = 0; i < text_len; i++) {
@@ -535,13 +561,11 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 				SDL_BlitSurface(gsu, NULL, su, &rd);
 				rd.x += gsu->w;
 			}
-		
 			SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
 			    0);
 			SDL_SetAlpha(su,
 			    font->bglyphs[0]->flags&(SDL_SRCALPHA|SDL_RLEACCEL),
 			    font->bglyphs[0]->format->alpha);
-
 			return (su);
 		}
 		break;
@@ -554,17 +578,12 @@ AG_TextRenderUnicode(const char *fontname, int fontsize, SDL_Color cFg,
 
 /* Return the expected size of an Unicode text element. */
 void
-AG_TextPrescaleUnicode(const Uint32 *ucs, int *w, int *h)
+AG_TextPrescaleUnicode(const Uint32 *ucs4, int *w, int *h)
 {
 	SDL_Surface *su;
-	SDL_Color c;
 
-	c.r = 0;
-	c.g = 0;
-	c.b = 0;
-
-	/* TODO use the bounding box in freetype mode */
-	su = AG_TextRenderUnicode(NULL, -1, c, ucs);
+	/* XXX TODO calculate from the bounding boxes! */
+	su = AG_TextRenderUCS4(NULL, -1, 0, 0, ucs4);
 	if (w != NULL) { *w = (int)su->w; }
 	if (h != NULL) { *h = (int)su->h; }
 	SDL_FreeSurface(su);
@@ -574,11 +593,15 @@ AG_TextPrescaleUnicode(const Uint32 *ucs, int *w, int *h)
 void
 AG_TextPrescale(const char *text, int *w, int *h)
 {
-	Uint32 *ucs;
+	Uint32 *ucs4;
 
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
-	AG_TextPrescaleUnicode(ucs, w, h);
-	free(ucs);
+#ifdef UTF8
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+#else
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+#endif
+	AG_TextPrescaleUnicode(ucs4, w, h);
+	free(ucs4);
 }
 
 /* Display a message. */

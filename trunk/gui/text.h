@@ -73,10 +73,12 @@ AG_Font			*AG_FetchFont(const char *, int, int);
 void			 AG_FontDestroy(void *);
 
 __inline__ SDL_Surface	*AG_TextRender(const char *, int, Uint32, const char *);
+__inline__ SDL_Surface	*AG_TextRenderOnBackgnd(const char *, int, Uint32,
+			                        Uint32, const char *);
 __inline__ SDL_Surface	*AG_TextFormat(const char *, int, Uint32, const char *,
 			               ...);
-SDL_Surface		*AG_TextRenderUnicode(const char *, int, SDL_Color,
-			                      const Uint32 *);
+SDL_Surface		*AG_TextRenderUCS4(const char *, int, Uint32, Uint32,
+			                   const Uint32 *);
 void			 AG_TextPrescaleUnicode(const Uint32 *, int *, int *);
 __inline__ void		 AG_TextPrescale(const char *, int *, int *);
 
