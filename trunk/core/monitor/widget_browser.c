@@ -46,7 +46,7 @@
 #include <string.h>
 
 static void
-poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
+FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_Window *subwin;
@@ -67,11 +67,11 @@ poll_windows_do(AG_Tlist *tl, AG_Window *win, int depth)
 	it->cat = "window";
 
 	TAILQ_FOREACH(subwin, &win->subwins, swins)
-		poll_windows_do(tl, subwin, depth+1);
+		FindWindows(tl, subwin, depth+1);
 }
 
 static void
-poll_windows(AG_Event *event)
+PollWindows(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Window *win;
@@ -79,14 +79,14 @@ poll_windows(AG_Event *event)
 	AG_TlistClear(tl);
 	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
-		poll_windows_do(tl, win, 0);
+		FindWindows(tl, win, 0);
 	}
 	AG_MutexUnlock(&agView->lock);
 	AG_TlistRestore(tl);
 }
 
 static void
-show_window(AG_Event *event)
+ShowWindow(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -100,7 +100,7 @@ show_window(AG_Event *event)
 }
 
 static void
-hide_window(AG_Event *event)
+HideWindow(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -113,9 +113,8 @@ hide_window(AG_Event *event)
 	AG_WindowHide(win);
 }
 
-/* Display widget information. */
 static void
-examine_widget(AG_Event *event)
+WidgetInfo(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -159,7 +158,7 @@ examine_widget(AG_Event *event)
 }
 
 static void
-poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
+FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 {
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
@@ -185,12 +184,12 @@ poll_widgets_do(AG_Widget *wid, AG_Tlist *widtl, int depth)
 		AG_Widget *cwid;
 
 		AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
-			poll_widgets_do(cwid, widtl, depth+1);
+			FindWidgets(cwid, widtl, depth+1);
 	}
 }
 
 static void
-poll_widgets(AG_Event *event)
+PollWidgets(AG_Event *event)
 {
 	AG_Tlist *widtl = AG_SELF();
 	AG_Window *win = AG_PTR(1);
@@ -199,7 +198,7 @@ poll_widgets(AG_Event *event)
 	AG_LockLinkage();
 	AG_MutexLock(&win->lock);
 
-	poll_widgets_do(AGWIDGET(win), widtl, 0);
+	FindWidgets(AGWIDGET(win), widtl, 0);
 
 	AG_MutexUnlock(&win->lock);
 	AG_UnlockLinkage();
@@ -207,7 +206,7 @@ poll_widgets(AG_Event *event)
 }
 
 static void
-scale_window(AG_Event *event)
+ResizeWindow(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
@@ -217,7 +216,7 @@ scale_window(AG_Event *event)
 }
 
 static void
-examine_window(AG_Event *event)
+WindowInfo(AG_Event *event)
 {
 	AG_Tlist *wintl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -246,31 +245,31 @@ examine_window(AG_Event *event)
 	sb = AG_SpinbuttonNew(win, 0, _("Widget spacing: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->spacing);
 	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", pwin);
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Top padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_top);
 	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", pwin);
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Bottom padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->ypadding_bot);
 	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", pwin);
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Horizontal padding: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &pwin->xpadding);
 	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", scale_window, "%p", pwin);
+	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", pwin);
 
 	tl = AG_TlistNew(win, AG_TLIST_TREE|AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", poll_widgets, "%p", pwin);
-	AG_SetEvent(tl, "tlist-dblclick", examine_widget, "%p,%p", tl, pwin);
+	AG_SetEvent(tl, "tlist-poll", PollWidgets, "%p", pwin);
+	AG_SetEvent(tl, "tlist-dblclick", WidgetInfo, "%p,%p", tl, pwin);
 
 	mi = AG_TlistSetPopup(tl, "widget");
 	{
 		AG_MenuAction(mi, _("Display informations..."), -1,
-		    examine_widget, "%p,%p", tl, pwin);
+		    WidgetInfo, "%p,%p", tl, pwin);
 	}
 	AG_WindowShow(win);
 }
@@ -289,18 +288,18 @@ AG_DebugWidgetBrowser(void)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", poll_windows, NULL);
-	AG_SetEvent(tl, "tlist-dblclick", examine_window, "%p", tl);
+	AG_SetEvent(tl, "tlist-poll", PollWindows, NULL);
+	AG_SetEvent(tl, "tlist-dblclick", WindowInfo, "%p", tl);
 
 	it = AG_TlistSetPopup(tl, "window");
 	{
-		AG_MenuAction(it, _("Display informations..."), -1,
-		    examine_window, "%p", tl);
+		AG_MenuAction(it, _("Window details..."), -1,
+		    WindowInfo, "%p", tl);
 		AG_MenuSeparator(it);
 		AG_MenuAction(it, _("Show this window"), -1,
-		    show_window, "%p", tl);
+		    ShowWindow, "%p", tl);
 		AG_MenuAction(it, _("Hide this window"), -1,
-		    hide_window, "%p", tl);
+		    HideWindow, "%p", tl);
 	}
 	AG_WindowSetGeometry(win, agView->w/4, agView->h/3, agView->w/2,
 	    agView->h/4);
