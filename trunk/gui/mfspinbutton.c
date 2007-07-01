@@ -182,7 +182,7 @@ mfspinbutton_right(AG_Event *event)
 static void
 update_unit_button(AG_MFSpinbutton *fsu)
 {
-	AG_ButtonPrintf(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
+	AG_ButtonText(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
 }
 
 static void

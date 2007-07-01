@@ -148,7 +148,7 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, SDL_Surface *icon, int def,
 	AG_Event *ev;
 
 	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, NULL);
-	AG_ButtonSetSurface(bu, icon);
+	AG_ButtonSurface(bu, icon);
 	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
 	AG_WidgetSetBool(bu, "state", def);

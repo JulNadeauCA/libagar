@@ -95,7 +95,7 @@ AG_PopupMenu	*AG_PopupNew(void *);
 __inline__ void	 AG_PopupShow(AG_PopupMenu *);
 __inline__ void	 AG_PopupShowAt(AG_PopupMenu *, int, int);
 __inline__ void	 AG_PopupHide(AG_PopupMenu *);
-void		 AG_PopupDestroy(AG_PopupMenu *);
+void		 AG_PopupDestroy(void *, AG_PopupMenu *);
 
 AG_MenuItem *AG_MenuAddItem(AG_Menu *, const char *);
 void	     AG_MenuFreeItems(AG_Menu *);
