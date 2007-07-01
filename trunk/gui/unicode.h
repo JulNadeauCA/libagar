@@ -5,7 +5,7 @@
 #include "begin_code.h"
 
 enum ag_unicode_conv {
-	AG_UNICODE_FROM_US_ASCII,	/* US-ASCII -> UCS-4 */
+	AG_UNICODE_FROM_USASCII,	/* US-ASCII -> UCS-4 */
 	AG_UNICODE_FROM_UTF8,		/* UTF-8 -> UCS-4 */
 	AG_UNICODE_TO_UTF8		/* UCS-4 -> UTF-8 */
 };
