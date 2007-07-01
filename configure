@@ -761,13 +761,18 @@ int main(int argc, char *argv[])
 {
 	struct foo foo1;
 	struct bar bar1;
-	struct foo *pfoo;
+	struct foo *pfoo, *pfoo_next;
 	struct bar *pbar;
 	
 	TAILQ_INIT(&fooq);
 	TAILQ_INSERT_HEAD(&fooq, &foo1, foos);
 	TAILQ_FOREACH(pfoo, &fooq, foos) { }
 	TAILQ_FOREACH_REVERSE(pfoo, &fooq, fooqname, foos) { }
+	for (pfoo = TAILQ_FIRST(&foo1);
+	     pfoo != TAILQ_END(&foo1);
+		 pfoo = pfoo_next) {
+		pfoo_next = TAILQ_NEXT(pfoo,foos);
+	}
 	TAILQ_REMOVE(&fooq, &foo1, foos);
 
 	CIRCLEQ_INIT(&barq);
