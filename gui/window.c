@@ -878,12 +878,15 @@ out:
 			if (lastwin->flags & AG_WINDOW_KEEPABOVE)
 				goto outf;
 		}
-		if (agView->focus_win != NULL) {
+		if (agView->focus_win != NULL &&
+		    agView->focus_win != TAILQ_LAST(&agView->windows,
+		    ag_windowq)) {
 			TAILQ_REMOVE(&agView->windows, agView->focus_win,
 			    windows);
 			TAILQ_INSERT_TAIL(&agView->windows, agView->focus_win,
 			    windows);
 		}
+		agView->focus_win = NULL;
 	}
 outf:
 	return (rv);
