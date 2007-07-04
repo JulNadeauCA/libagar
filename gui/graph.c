@@ -41,7 +41,7 @@ static AG_WidgetOps agGraphOps = {
 		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
-		NULL,			/* destroy */
+		AG_GraphDestroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
@@ -106,9 +106,13 @@ static __inline__ int
 MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 {
 	int lx, ly;
-	SDL_Surface *lbl = AGWIDGET_SURFACE(edge->graph,edge->labelSu);
+	SDL_Surface *lbl;
 
+	if (edge->labelSu == -1) {
+		return (0);
+	}
 	GetEdgeLabelCoords(edge, &lx, &ly);
+	lbl = AGWIDGET_SURFACE(edge->graph,edge->labelSu);
 	return (abs(x - lx + edge->graph->xOffs) <= lbl->w/2 &&
 	        abs(y - ly + edge->graph->yOffs) <= lbl->h/2);
 }
@@ -216,6 +220,15 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->v1->edges[edge->v1->nedges++] = edge;
 	edge->v2->edges[edge->v2->nedges++] = edge;
 	return (edge);
+}
+
+void
+AG_GraphEdgeFree(AG_GraphEdge *edge)
+{
+	if (edge->labelSu != -1) {
+		AG_WidgetUnmapSurface(edge->graph, edge->labelSu);
+	}
+	Free(edge,M_WIDGET);
 }
 
 void
@@ -400,6 +413,46 @@ AG_GraphInit(AG_Graph *gf, Uint flags)
 }
 
 void
+AG_GraphFreeVertices(AG_Graph *gf)
+{
+	AG_GraphVertex *vtx, *vtxNext;
+	AG_GraphEdge *edge, *edgeNext;
+
+	for (vtx = TAILQ_FIRST(&gf->vertices);
+	     vtx != TAILQ_END(&gf->vertices);
+	     vtx = vtxNext) {
+		vtxNext = TAILQ_NEXT(vtx, vertices);
+		AG_GraphVertexFree(vtx);
+	}
+	for (edge = TAILQ_FIRST(&gf->edges);
+	     edge != TAILQ_END(&gf->edges);
+	     edge = edgeNext) {
+		edgeNext = TAILQ_NEXT(edge, edges);
+		AG_GraphEdgeFree(edge);
+	}
+	TAILQ_INIT(&gf->vertices);
+	TAILQ_INIT(&gf->edges);
+	gf->nvertices = 0;
+	gf->nedges = 0;
+	gf->xMin = 0;
+	gf->xMax = 0;
+	gf->yMin = 0;
+	gf->yMax = 0;
+	gf->xOffs = 0;
+	gf->yOffs = 0;
+	gf->flags &= ~(AG_GRAPH_DRAGGING);
+}
+
+void
+AG_GraphDestroy(void *p)
+{
+	AG_Graph *gf = p;
+
+	AG_GraphFreeVertices(gf);
+	AG_WidgetDestroy(gf);
+}
+
+void
 AG_GraphPrescale(AG_Graph *gf, Uint w, Uint h)
 {
 	gf->wPre = w;
@@ -574,6 +627,16 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	TAILQ_INSERT_TAIL(&gf->vertices, vtx, vertices);
 	gf->nvertices++;
 	return (vtx);
+}
+
+void
+AG_GraphVertexFree(AG_GraphVertex *vtx)
+{
+	if (vtx->labelSu != -1) {
+		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
+	}
+	Free(vtx->edges,M_WIDGET);
+	Free(vtx,M_WIDGET);
 }
 
 void

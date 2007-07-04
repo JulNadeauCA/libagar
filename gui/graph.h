@@ -83,11 +83,15 @@ typedef struct ag_graph {
 __BEGIN_DECLS
 AG_Graph	*AG_GraphNew(void *, Uint);
 void	 	 AG_GraphInit(AG_Graph *, Uint);
+void	 	 AG_GraphDestroy(void *);
 void	 	 AG_GraphScale(void *, int, int);
 void	 	 AG_GraphPrescale(AG_Graph *, Uint, Uint);
 void		 AG_GraphDraw(void *);
+
+void		 AG_GraphFreeVertices(AG_Graph *);
  
 AG_GraphVertex *AG_GraphVertexNew(AG_Graph *, void *);
+void		AG_GraphVertexFree(AG_GraphVertex *);
 AG_GraphVertex *AG_GraphVertexFind(AG_Graph *, void *);
 void		AG_GraphVertexLabel(AG_GraphVertex *, const char *, ...);
 void		AG_GraphVertexColorLabel(AG_GraphVertex *, Uint8, Uint8, Uint8);
@@ -99,6 +103,7 @@ void		AG_GraphVertexStyle(AG_GraphVertex *,
 
 AG_GraphEdge	*AG_GraphEdgeNew(AG_Graph *, AG_GraphVertex *,
 		                 AG_GraphVertex *, void *);
+void		 AG_GraphEdgeFree(AG_GraphEdge *);
 AG_GraphEdge	*AG_GraphEdgeFind(AG_Graph *, void *);
 void		 AG_GraphEdgeLabel(AG_GraphEdge *, const char *, ...);
 void		 AG_GraphEdgeColorLabel(AG_GraphEdge *, Uint8, Uint8, Uint8);
