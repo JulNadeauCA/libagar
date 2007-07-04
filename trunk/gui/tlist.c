@@ -80,6 +80,20 @@ AG_TlistNew(void *parent, Uint flags)
 	return (tl);
 }
 
+AG_Tlist *
+AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_Tlist *tl;
+	AG_Event *ev;
+
+	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tl, flags|AG_TLIST_POLL);
+	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+	AG_ObjectAttach(parent, tl);
+	return (tl);
+}
+
 /* Displace the selection or scroll in response to keyboard events. */
 static void
 key_tick(AG_Event *event)
@@ -917,7 +931,7 @@ mousebuttondown(AG_Event *event)
 			AG_CancelEvent(tl, "dblclick-expire");
 			if (tl->dblClickEv != NULL) {
 				AG_PostEvent(NULL, tl, tl->dblClickEv->name,
-				    NULL);
+				    "%p", ti->p1);
 			}
 			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti->p1);
 			tl->dblclicked = NULL;
