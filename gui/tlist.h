@@ -93,6 +93,7 @@ typedef struct ag_tlist {
 
 __BEGIN_DECLS
 AG_Tlist *AG_TlistNew(void *, Uint);
+AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 void	  AG_TlistInit(AG_Tlist *, Uint);
 void	  AG_TlistScale(void *, int, int);
 void	  AG_TlistDraw(void *);
@@ -135,6 +136,9 @@ void AG_TlistSetCompareFn(AG_Tlist *, int (*)(const AG_TlistItem *,
 int AG_TlistCompareStrings(const AG_TlistItem *, const AG_TlistItem *);
 int AG_TlistComparePtrs(const AG_TlistItem *, const AG_TlistItem *);
 int AG_TlistComparePtrsAndClasses(const AG_TlistItem *, const AG_TlistItem *);
+
+#define AG_TlistBegin AG_TlistClear
+#define AG_TlistEnd AG_TlistRestore
 __END_DECLS
 
 #include "close_code.h"
