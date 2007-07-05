@@ -55,13 +55,11 @@ void		 AG_FatalError(const char *, ...)
 void		 AG_DebugPrintf(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 AG_DebugPrintfNop(const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 1, 2)
-		     NONNULL_ATTRIBUTE(1);
 void		 AG_Debug(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
-void		 AG_DebugNop(int, const char *, ...)
+void		 AG_DebugObj(void *, const char *, ...)
+		     NONNULL_ATTRIBUTE(1)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
 void		 AG_DebugN(int, const char *, ...)
