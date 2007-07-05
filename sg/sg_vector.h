@@ -37,10 +37,15 @@ __inline__ void	  	SG_CopyVector(SG_Vector *, const SG_Vector *);
 __inline__ SG_Real	SG_VectorDot(SG_Vector, SG_Vector);
 __inline__ SG_Real	SG_VectorDotp(const SG_Vector *, const SG_Vector *);
 __inline__ SG_Real	SG_VectorLen(SG_Vector);
+__inline__ SG_Real	SG_VectorLen2(SG_Vector);
 __inline__ SG_Real	SG_VectorLenp(const SG_Vector *);
+__inline__ SG_Real	SG_VectorLen2p(const SG_Vector *);
 __inline__ SG_Real	SG_VectorDistance(SG_Vector, SG_Vector);
+__inline__ SG_Real	SG_VectorDistance2(SG_Vector, SG_Vector);
 __inline__ SG_Real	SG_VectorDistancep(const SG_Vector *,
 			                   const SG_Vector *);
+__inline__ SG_Real	SG_VectorDistance2p(const SG_Vector *,
+			                    const SG_Vector *);
 __inline__ SG_Vector	SG_VectorNorm(SG_Vector);
 __inline__ SG_Vector	SG_VectorNormp(const SG_Vector *);
 __inline__ void		SG_VectorNormv(SG_Vector *);
