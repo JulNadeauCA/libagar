@@ -57,6 +57,12 @@ enum ag_widget_sizespec {
 	AG_WIDGET_FILL				/* Fill remaining space */
 };
 
+typedef struct ag_flag_descr {
+	Uint flag;
+	const char *descr;
+	int writeable;
+} AG_FlagDescr;
+
 typedef struct ag_widget_binding {
 	char name[AG_WIDGET_BINDING_NAME_MAX];
 	int type;
@@ -148,6 +154,10 @@ void	   AG_WidgetDestroy(void *);
 void	   AG_WidgetDraw(void *);
 void	   AG_WidgetScale(void *, int, int);
 void	   AG_WidgetScaleGeneric(void *, int, int);
+
+__inline__ void	   AG_WidgetSetFocusable(void *, int);
+__inline__ void	   AG_WidgetEnable(void *);
+__inline__ void	   AG_WidgetDisable(void *);
 
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
