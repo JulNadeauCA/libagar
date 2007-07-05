@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Basic linear algebra routines for vectors in R3.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -73,9 +77,21 @@ SG_VectorLen(SG_Vector v)
 }
 
 SG_Real
+SG_VectorLen2(SG_Vector v)
+{
+	return (SG_Sqrt(v.x*v.x + v.y*v.y));
+}
+
+SG_Real
 SG_VectorLenp(const SG_Vector *v)
 {
 	return (SG_Sqrt(v->x*v->x + v->y*v->y + v->z*v->z));
+}
+
+SG_Real
+SG_VectorLen2p(const SG_Vector *v)
+{
+	return (SG_Sqrt(v->x*v->x + v->y*v->y));
 }
 
 SG_Real
@@ -85,9 +101,21 @@ SG_VectorDistance(SG_Vector a, SG_Vector b)
 }
 
 SG_Real
+SG_VectorDistance2(SG_Vector a, SG_Vector b)
+{
+	return (SG_VectorLen2(SG_VectorSub(a, b)));
+}
+
+SG_Real
 SG_VectorDistancep(const SG_Vector *a, const SG_Vector *b)
 {
 	return (SG_VectorLen(SG_VectorAdd(*b, SG_VectorMirrorp(a, 1,1,1))));
+}
+
+SG_Real
+SG_VectorDistance2p(const SG_Vector *a, const SG_Vector *b)
+{
+	return (SG_VectorLen2(SG_VectorAdd(*b, SG_VectorMirrorp(a, 1,1,1))));
 }
 
 SG_Real
