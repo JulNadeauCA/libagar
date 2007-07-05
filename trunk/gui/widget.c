@@ -112,6 +112,35 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 	AG_SetEvent(wid, "child-attached", child_attached, NULL);
 }
 
+void
+AG_WidgetSetFocusable(void *p, int flag)
+{
+	AG_Widget *wid = p;
+
+	if (flag) {
+		wid->flags |= AG_WIDGET_FOCUSABLE;
+	} else {
+		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
+	}
+}
+
+void
+AG_WidgetEnable(void *p)
+{
+	AG_Widget *wid = p;
+
+	wid->flags &= ~(AG_WIDGET_DISABLED);
+}
+
+void
+AG_WidgetDisable(void *p)
+{
+	AG_Widget *wid = p;
+
+	wid->flags |= AG_WIDGET_DISABLED;
+}
+
+
 int
 AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 {
