@@ -24,7 +24,6 @@ typedef struct ag_button {
 	int surface;			/* Label surface handle */
 	enum ag_button_justify justify;	/* Label justification */
 	Uint flags;
-#define AG_BUTTON_DISABLED	0x001	/* Button is insensitive */
 #define AG_BUTTON_STICKY	0x002	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x004	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x008	/* Repeat button-pushed event */
@@ -49,8 +48,6 @@ void	   AG_ButtonDestroy(void *);
 void	   AG_ButtonDraw(void *);
 void	   AG_ButtonScale(void *, int, int);
 
-void	   AG_ButtonEnable(AG_Button *);
-void	   AG_ButtonDisable(AG_Button *);
 void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 #define	AG_ButtonSetPaddingLeft(lbl,v)   AG_ButtonSetPadding(lbl,(v),-1,-1,-1)
 #define	AG_ButtonSetPaddingRight(lbl,v)  AG_ButtonSetPadding(lbl,-1,(v),-1,-1)
@@ -69,8 +66,11 @@ void	   AG_ButtonText(AG_Button *, const char *, ...)
 void	   AG_ButtonTextNODUP(AG_Button *, char *)
 	     NONNULL_ATTRIBUTE(2);
 
+/* Legacy routines */
 #define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
 #define	AG_ButtonPrintf AG_ButtonText
+#define	AG_ButtonEnable AG_WidgetEnable
+#define	AG_ButtonDisable AG_WidgetDisable
 __END_DECLS
 
 #include "close_code.h"

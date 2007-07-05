@@ -194,19 +194,19 @@ AG_ButtonDraw(void *p)
 	pressed = GetState(binding, pState);
 	AG_WidgetUnlockBinding(binding);
 
-	if (bu->flags & AG_BUTTON_DISABLED) {
+	if (AG_WidgetEnabled(bu)) {
+		agPrim.box(bu,
+		    0, 0,
+		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
+		    pressed ? -1 : 1,
+		    AG_COLOR(BUTTON_COLOR));
+	} else {
 		agPrim.box_dithered(bu,
 		    0, 0,
 		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
 		    pressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
-	} else {
-		agPrim.box(bu,
-		    0, 0,
-		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
-		    pressed ? -1 : 1,
-		    AG_COLOR(BUTTON_COLOR));
 	}
 
 	if (bu->text != NULL && bu->text[0] != '\0') {
@@ -337,7 +337,7 @@ mousemotion(AG_Event *event)
 	int y = AG_INT(2);
 	void *pState;
 
-	if (bu->flags & AG_BUTTON_DISABLED)
+	if (AG_WidgetDisabled(bu))
 		return;
 
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
@@ -367,7 +367,7 @@ mousebuttondown(AG_Event *event)
 	void *pState;
 	int newState;
 	
-	if (bu->flags & AG_BUTTON_DISABLED)
+	if (AG_WidgetDisabled(bu))
 		return;
 
 	AG_WidgetFocus(bu);
@@ -407,7 +407,7 @@ mousebuttonup(AG_Event *event)
 		AG_DelTimeout(bu, &bu->delay_to);
 	}
 	
-	if ((bu->flags & AG_BUTTON_DISABLED) ||
+	if (AG_WidgetDisabled(bu) ||
 	    x < 0 || y < 0 ||
 	    x > AGWIDGET(bu)->w || y > AGWIDGET(bu)->h) {
 		return;
@@ -431,7 +431,7 @@ keydown(AG_Event *event)
 	void *pState;
 	int keysym = AG_INT(1);
 	
-	if (bu->flags & AG_BUTTON_DISABLED)
+	if (AG_WidgetDisabled(bu))
 		return;
 	if (keysym != SDLK_RETURN &&		/* TODO configurable */
 	    keysym != SDLK_SPACE) {
@@ -456,7 +456,7 @@ keyup(AG_Event *event)
 	void *pState;
 	int keysym = AG_INT(1);
 	
-	if (bu->flags & AG_BUTTON_DISABLED) {
+	if (AG_WidgetDisabled(bu)) {
 		return;
 	}
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -471,18 +471,6 @@ keyup(AG_Event *event)
 	SetState(binding, pState, 0);
 	AG_WidgetUnlockBinding(binding);
 	AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
-}
-
-void
-AG_ButtonEnable(AG_Button *bu)
-{
-	bu->flags &= ~(AG_BUTTON_DISABLED);
-}
-
-void
-AG_ButtonDisable(AG_Button *bu)
-{
-	bu->flags |= (AG_BUTTON_DISABLED);
 }
 
 void
