@@ -175,15 +175,32 @@ AG_EventLoop_FixedFPS(void)
 #endif
 			TAILQ_FOREACH(win, &agView->windows, windows) {
 				AG_MutexLock(&win->lock);
-				if (win->visible) {
-					AG_WidgetDraw(win);
+				if (!win->visible) {
+					AG_MutexUnlock(&win->lock);
+					continue;
 				}
+				AG_WidgetDraw(win);
 				AG_MutexUnlock(&win->lock);
 
-				if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0)
-					AG_UpdateRectQ(
+				if (win->flags & AG_WINDOW_NOUPDATERECT) {
+					continue;
+				}
+#ifdef DEBUG
+				if (AGWIDGET(win)->x < 0 ||
+				    AGWIDGET(win)->y < 0 ||
+				    AGWIDGET(win)->x+AGWIDGET(win)->w >
+				    agView->w ||
+				    AGWIDGET(win)->y+AGWIDGET(win)->h >
+				    agView->h) {
+					fatal("%s: bad coords: %d,%d (%dx%d)",
+					    win->caption,
 					    AGWIDGET(win)->x, AGWIDGET(win)->y,
 					    AGWIDGET(win)->w, AGWIDGET(win)->h);
+				}
+#endif
+				AG_UpdateRectQ(
+				    AGWIDGET(win)->x, AGWIDGET(win)->y,
+				    AGWIDGET(win)->w, AGWIDGET(win)->h);
 			}
 			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
