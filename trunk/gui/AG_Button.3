@@ -59,12 +59,6 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonInit "AG_Button *button" "Uint flags" "char *caption"
 .Pp
 .Ft void
-.Fn AG_ButtonEnable "AG_Button *button"
-.Pp
-.Ft void
-.Fn AG_ButtonDisable "AG_Button *button"
-.Pp
-.Ft void
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
 .Pp
 .Ft void
@@ -122,7 +116,6 @@ Acceptable values for the
 argument include:
 .Pp
 .Bd -literal
-#define AG_BUTTON_DISABLED	0x01	/* Button is insensitive */
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
@@ -135,14 +128,6 @@ flag is only effective when passed to
 .Fn AG_ButtonAct ,
 .Fn AG_ButtonInit
 will ignore it.
-.Pp
-The
-.Fn AG_ButtonEnable
-and
-.Fn AG_ButtonDisable
-functions trigger the sensitivity of the
-.Nm
-widget.
 .Pp
 The
 .Fn AG_ButtonSetPadding
@@ -304,12 +289,3 @@ AG_WidgetBindFlag32(btn, "state", &MyFlags, 0x02);
 The
 .Nm
 widget first appeared in Agar 1.0.
-.Sh BUGS
-A more general interface may be preferable to
-.Fn AG_ButtonEnable
-and
-.Fn AG_ButtonDisable .
-.Pp
-This widget uses the
-.Dv AG_WIDGET_UNFOCUSED_MOTION
-flag which is very inefficient.
