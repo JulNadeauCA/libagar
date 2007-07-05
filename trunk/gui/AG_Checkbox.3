@@ -52,6 +52,9 @@ binding.
 .Ft "AG_Checkbox *"
 .Fn AG_CheckboxNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint *pFlags" "Uint bitmask" "const char *label"
+.Pp
 .Ft "void"
 .Fn AG_CheckboxInit "AG_Checkbox *checkbox" "Uint flags" "const char *label"
 .Pp
@@ -65,9 +68,30 @@ function allocates, initializes, and attaches a
 .Nm
 widget displaying the given text label.
 .Fn AG_CheckboxInit
-initializes a
+initializes an existing
 .Nm
 widget.
+.Pp
+The
+.Fn AG_CheckboxNewFlag
+variant also binds the default state to a specified set of bits
+.Fa bitmask
+in
+.Fa pFlags .
+.Pp
+The utility function
+.Fn AG_CheckboxSetFromFlags
+creates a set of checkboxes for the given set of flags, described
+by an array of
+.Ft AG_FlagDescr
+structures:
+.Bd -literal
+typedef struct ag_flag_descr {
+	Uint bitmask;			/* Bitmask */
+	const char *descr;		/* Bit(s) description */
+	int writeable;			/* User-editable */
+} AG_FlagDescr;
+.Ed
 .Pp
 The
 .Fn AG_CheckboxToggle
