@@ -60,11 +60,15 @@
  if(agDebugLvl&(mask)) printf("%s: " fmt, __FUNCTION__ , ##args)
 # define debug_n(mask,fmt,args...) \
  if(agDebugLvl&(mask)) fprintf(stderr, fmt, ##args)
+# define Debug(obj,fmt,args...) \
+ if(AGOBJECT_DEBUG(obj) || agDebugLvl > 0) \
+   printf("%s: %s: " fmt, AGOBJECT(obj)->name, __FUNCTION__ , ##args)
 #else
-# define dprintf	AG_DebugPrintf
-# define deprintf	AG_DebugPrintf
-# define debug		AG_Debug
-# define debug_n	AG_DebugN
+# define dprintf AG_DebugPrintf
+# define deprintf AG_DebugPrintf
+# define debug AG_Debug
+# define debug_n AG_DebugN
+# define Debug AG_DebugObj
 #endif
 #else
 #if defined(__GNUC__)
@@ -72,11 +76,13 @@
 # define deprintf(arg...) ((void)0)
 # define debug(level, arg...) ((void)0)
 # define debug_n(level, arg...) ((void)0)
+# define Debug(obj, arg...) ((void)0)
 #else
-# define dprintf AG_DebugPrintfNop
-# define deprintf AG_DebugPrintfNop
-# define debug AG_DebugNop
-# define debug_n AG_DebugNop
+# define dprintf AG_DebugPrintf
+# define deprintf AG_DebugPrintf
+# define debug AG_Debug
+# define debug_n AG_Debug
+# define Debug AG_DebugObj
 #endif
 #endif
 

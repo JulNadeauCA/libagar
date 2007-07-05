@@ -168,11 +168,6 @@ AG_DebugPrintf(const char *fmt, ...)
 }
 
 void
-AG_DebugPrintfNop(const char *fmt, ...)
-{
-}
-
-void
 AG_Debug(int mask, const char *fmt, ...)
 {
 #ifdef DEBUG
@@ -188,8 +183,19 @@ AG_Debug(int mask, const char *fmt, ...)
 }
 
 void
-AG_DebugNop(int level, const char *fmt, ...)
+AG_DebugObj(void *obj, const char *fmt, ...)
 {
+#ifdef DEBUG
+	if (AGOBJECT_DEBUG(obj)) {
+		va_list args;
+
+		va_start(args, fmt);
+		printf("%s: ", AGOBJECT(obj)->name);
+		printf(fmt, args);
+		printf("\n");
+		va_end(args);
+	}
+#endif
 }
 
 void
