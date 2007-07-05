@@ -54,8 +54,8 @@ static AG_WidgetOps agCheckboxOps = {
 
 #define LABEL_SPACING 6
 
-static void checkbox_mousebutton(AG_Event *);
-static void checkbox_keydown(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void keydown(AG_Event *);
 
 AG_Checkbox *
 AG_CheckboxNew(void *parent, Uint flags, const char *label)
@@ -71,6 +71,32 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 	return (cb);
 }
 
+AG_Checkbox *
+AG_CheckboxNewFlag(void *parent, Uint *pFlags, Uint bitmask, const char *label)
+{
+	AG_Checkbox *cb;
+
+	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);
+	AG_WidgetBindFlag(cb, "state", pFlags, bitmask);
+	return (cb);
+}
+
+/* Create a set of checkboxes for the given set of flags. */
+void
+AG_CheckboxSetFromFlags(void *parent, Uint *pFlags, const AG_FlagDescr *fdSet)
+{
+	const AG_FlagDescr *fd;
+	AG_Checkbox *cb;
+	int i;
+
+	for (i = 0; fdSet[i].bitmask != 0; i++) {
+		fd = &fdSet[i];
+		cb = AG_CheckboxNewFlag(parent, pFlags, fd->bitmask, fd->descr);
+		if (!fd->writeable)
+			AG_WidgetDisable(cb);
+	}
+}
+
 void
 AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 {
@@ -82,8 +108,8 @@ AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 	    label);
 	cbox->label_id = AG_WidgetMapSurface(cbox, cbox->label_su);
 	
-	AG_SetEvent(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
-	AG_SetEvent(cbox, "window-keydown", checkbox_keydown, NULL);
+	AG_SetEvent(cbox, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(cbox, "window-keydown", keydown, NULL);
 }
 
 void
@@ -129,12 +155,20 @@ AG_CheckboxDraw(void *obj)
 		state = 0;
 		break;
 	}
-	agPrim.box(cbox,
-	    0, 0,
-	    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
-	    state ? -1 : 1,
-	    AG_COLOR(CHECKBOX_COLOR));
-	AG_WidgetBindingChanged(stateb);
+	if (AG_WidgetEnabled(cbox)) {
+		agPrim.box(cbox,
+		    0, 0,
+		    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
+		    state ? -1 : 1,
+		    AG_COLOR(CHECKBOX_COLOR));
+	} else {
+		agPrim.box_dithered(cbox,
+		    0, 0,
+		    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
+		    state ? -1 : 1,
+		    AG_COLOR(CHECKBOX_COLOR),
+		    AG_COLOR(DISABLED_COLOR));
+	}
 	AG_WidgetUnlockBinding(stateb);
 
 	AG_WidgetBlitSurface(cbox, cbox->label_id,
@@ -143,19 +177,27 @@ AG_CheckboxDraw(void *obj)
 }
 
 static void
-checkbox_mousebutton(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Checkbox *cbox = AG_SELF();
+	int button = AG_INT(1);
 
-	AG_WidgetFocus(cbox);
-	if (AG_INT(1) == SDL_BUTTON(1))
+	if (!AG_WidgetEnabled(cbox))
+		return;
+
+	if (button == SDL_BUTTON(1)) {
 		AG_CheckboxToggle(cbox);
+	}
+	AG_WidgetFocus(cbox);
 }
 
 static void
-checkbox_keydown(AG_Event *event)
+keydown(AG_Event *event)
 {
 	AG_Checkbox *cbox = AG_SELF();
+	
+	if (!AG_WidgetEnabled(cbox))
+		return;
 
 	switch (AG_SDLKEY(1)) {
 	case SDLK_RETURN:
