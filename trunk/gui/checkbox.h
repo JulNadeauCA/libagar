@@ -25,6 +25,8 @@ typedef struct ag_checkbox {
 
 __BEGIN_DECLS
 AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
+AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
+void		 AG_CheckboxSetFromFlags(void *, Uint *, const AG_FlagDescr *);
 void		 AG_CheckboxInit(AG_Checkbox *, Uint, const char *);
 void		 AG_CheckboxScale(void *, int, int);
 void		 AG_CheckboxDraw(void *);
