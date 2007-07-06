@@ -209,13 +209,13 @@ MAP_ItemDestroy(MAP *m, MAP_Item *r)
 	case MAP_ITEM_TILE:
 		if (r->r_tile.obj != NULL) {
 			AG_ObjectDelDep(m, r->r_tile.obj);
-			AG_ObjectPageOut(r->r_tile.obj, AG_OBJECT_DATA);
+			AG_ObjectPageOut(r->r_tile.obj);
 		}
 		break;
 	case MAP_ITEM_ANIM:
 		if (r->r_anim.obj != NULL) {
 			AG_ObjectDelDep(m, r->r_anim.obj);
-			AG_ObjectPageOut(r->r_anim.obj, AG_OBJECT_DATA);
+			AG_ObjectPageOut(r->r_anim.obj);
 		}
 		break;
 	case MAP_ITEM_WARP:
@@ -536,10 +536,10 @@ MAP_ItemSetTile(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 tile_id)
 
 	if (r->r_tile.obj != ts && r->r_tile.obj != NULL) {
 		AG_ObjectDelDep(map, r->r_tile.obj);
-		AG_ObjectPageOut(r->r_tile.obj, AG_OBJECT_DATA);
+		AG_ObjectPageOut(r->r_tile.obj);
 	} else {
 		AG_ObjectAddDep(map, ts);
-		if (AG_ObjectPageIn(ts, AG_OBJECT_DATA) == -1)
+		if (AG_ObjectPageIn(ts) == -1)
 			fatal("paging tileset: %s", AG_GetError());
 	}
 	r->r_tile.obj = ts;
@@ -582,11 +582,11 @@ MAP_ItemSetAnim(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 anim_id)
 
 	if (r->r_anim.obj != NULL) {
 		AG_ObjectDelDep(map, r->r_anim.obj);
-		AG_ObjectPageOut(r->r_anim.obj, AG_OBJECT_DATA);
+		AG_ObjectPageOut(r->r_anim.obj);
 	}
 	if (ts != NULL) {
 		AG_ObjectAddDep(map, ts);
-		if (AG_ObjectPageIn(ts, AG_OBJECT_DATA) == -1)
+		if (AG_ObjectPageIn(ts) == -1)
 			fatal("paging tileset: %s", AG_GetError());
 	}
 
@@ -2298,7 +2298,7 @@ MAP_PollLibsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	AG_TlistItem *it;
 	
 	it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
-	    (pob->flags & AG_OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
+	    AGOBJECT_RESIDENT(pob) ? _(" (resident)") : "");
 	it->p1 = pob;
 	it->depth = depth;
 
