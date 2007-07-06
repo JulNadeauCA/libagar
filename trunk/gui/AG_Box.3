@@ -68,15 +68,17 @@ widget packs its children horizontally or vertically.
 .nr nS 0
 The
 .Fn AG_BoxNew
-function allocates, initializes, and attaches a
+function allocates, initializes, and attaches a new
 .Nm
 widget.
 .Fn AG_BoxInit
-initializes a
+initializes a preallocated
 .Nm
 widget.
+.Pp
+The
 .Fa type
-defines whether child widgets are packed horizontally:
+argument defines whether child widgets are packed horizontally:
 .Pp
 .Bd -literal
 enum ag_box_type {

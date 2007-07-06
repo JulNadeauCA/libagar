@@ -66,11 +66,14 @@ to specific file extensions.
 .nr nS 0
 The
 .Fn AG_FileDlgNew
-function allocates, initializes, and attaches a
+function allocates, initializes, and attaches a new
 .Nm
 widget.
 .Fn AG_FileDlgInit
-initializes an existing instance.
+initializes a preallocated
+.Nm
+widget.
+.Pp
 Acceptable
 .Fa flags
 include:

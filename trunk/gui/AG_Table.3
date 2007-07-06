@@ -84,13 +84,13 @@ provides tree support, but no multi-column functionality.
 .nr nS 0
 The
 .Fn AG_TableNew
-function allocates, initializes and attaches a
+function allocates, initializes and attaches a new
 .Nm
 widget.
 .Pp
 The
 .Fn AG_TableNewPolled
-variant automatically enables polling and configures the
+variant sets the polling flag and configures the
 .Sq table-poll
 event.
 .Fa event_fn
@@ -101,6 +101,12 @@ and the following arguments are optional
 .Xr AG_Event 3
 style parameters that will be passed on to
 .Fa event_fn .
+.Pp
+The
+.Fn AG_TableInit
+function initializes a preallocated
+.Nm
+widget.
 .Pp
 Acceptable values for the
 .Fa flags

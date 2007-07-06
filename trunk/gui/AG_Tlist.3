@@ -50,10 +50,13 @@ Single or multiple selections of items are possible.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Tlist *"
-.Fn AG_TlistNew "AG_Widget *parent" "int flags"
+.Fn AG_TlistNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "AG_Tlist *"
+.Fn AG_TlistNewPolled "AG_Widget *parent" "Uint flags" "void (*eventFn)(AG_Event *)" "const char *eventArgs" "..."
 .Pp
 .Ft void
-.Fn AG_TlistInit "AG_Tlist *tlist" "int flags"
+.Fn AG_TlistInit "AG_Tlist *tlist" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_TlistSetItemHeight "AG_Tlist *tl" "int item_height"
@@ -73,10 +76,13 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
+.Pp
+
+.Pp
 .Fn AG_TlistInit
-initializes a
+initializes an existing
 .Nm
-widget.
+structure.
 The
 .Fa flags
 may include:
