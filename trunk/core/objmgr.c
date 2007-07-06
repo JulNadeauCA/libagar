@@ -129,7 +129,7 @@ tryname:
 	
 	if (edit_on_create &&
 	    t->ops->edit != NULL)
-		AG_ObjMgrOpenData(nobj, 1);
+		AG_ObjMgrOpenData(nobj);
 }
 
 enum {
@@ -198,7 +198,7 @@ close_object(struct objent *oent, AG_Window *win, int save)
 	if (!save) {
 		agObjMgrExiting = 1;
 	}
-	AG_ObjectPageOut(oent->obj, AG_OBJECT_DATA);
+	AG_ObjectPageOut(oent->obj);
 
 	agObjMgrExiting = 0;
 	Free(oent, M_OBJECT);
@@ -228,16 +228,16 @@ close_object_dlg(AG_Event *event)
 		    AGOBJECT(oent->obj)->name);
 		AG_WindowAttach(win, wDlg);
 		{
-			AG_ButtonPrintf(bOpts[0], _("Save"));
+			AG_ButtonText(bOpts[0], _("Save"));
 			AG_SetEvent(bOpts[0], "button-pushed",
 			    close_object_cb, "%p,%p,%i", win, oent, 1);
 			AG_WidgetFocus(bOpts[0]);
 
-			AG_ButtonPrintf(bOpts[1], _("Discard"));
+			AG_ButtonText(bOpts[1], _("Discard"));
 			AG_SetEvent(bOpts[1], "button-pushed",
 			    close_object_cb, "%p,%p,%i", win, oent, 0);
 
-			AG_ButtonPrintf(bOpts[2], _("Cancel"));
+			AG_ButtonText(bOpts[2], _("Cancel"));
 			AG_SetEvent(bOpts[2], "button-pushed",
 			    AGWINDETACH(wDlg));
 		}
@@ -247,11 +247,12 @@ close_object_dlg(AG_Event *event)
 }
 
 void
-AG_ObjMgrOpenData(void *p, int new)
+AG_ObjMgrOpenData(void *p)
 {
 	AG_Object *ob = p;
 	struct objent *oent;
 	AG_Window *win;
+	int dataFound;
 
 	TAILQ_FOREACH(oent, &dobjs, objs) {
 		if (oent->obj == ob)
@@ -266,13 +267,17 @@ AG_ObjMgrOpenData(void *p, int new)
 	if (ob->ops->edit == NULL)
 		return;
 
-	if ((ob->flags & AG_OBJECT_NON_PERSISTENT) == 0) {
-		if (ob->data_used == 0 &&
-		   (AG_ObjectLoad(ob) == -1 || AG_ObjectLoadData(ob) == -1)) {
-			if (new) {
+	if (AGOBJECT_PERSISTENT(ob)) {
+		if (!AGOBJECT_RESIDENT(ob) &&
+		   (AG_ObjectLoad(ob) == -1 ||
+		    AG_ObjectLoadData(ob, &dataFound) == -1)) {
+			if (!dataFound) {
+				/*
+				 * Data not found in storage, so assume
+				 * object is new. Mark it resident and save it.
+				 */
 				dprintf("%s: new object\n", ob->name);
 				ob->flags |= AG_OBJECT_DATA_RESIDENT;
-
 				if (AG_ObjectSave(ob) == -1) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
 					    ob->name, AG_GetError());
@@ -284,8 +289,6 @@ AG_ObjMgrOpenData(void *p, int new)
 				return;
 			}
 		}
-		if (++ob->data_used > AG_OBJECT_DEP_MAX)
-			ob->data_used = AG_OBJECT_DEP_MAX;
 	}
 	if ((win = ob->ops->edit(ob)) == NULL) {
 		goto fail;
@@ -300,7 +303,7 @@ AG_ObjMgrOpenData(void *p, int new)
 	AG_WindowShow(win);
 	return;
 fail:
-	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
+	AG_ObjectPageOut(ob);
 	return;
 }
 
@@ -312,15 +315,23 @@ ExportObject(AG_Event *event)
 	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
 	char *pfx_save = ob->save_pfx;
-	int paged_in = 0;
+	int loadedTmp = 0;
+	int dataFound;
 
 	/* Load the object temporarily if it is non-resident. */
-	if ((ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
-		if (AG_ObjectLoadData(ob) == -1) {
-			/* XXX hack */
-			ob->flags |= AG_OBJECT_DATA_RESIDENT;
+	if (!AGOBJECT_RESIDENT(ob)) {
+		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
+			if (!dataFound) {
+				/* Object was never saved before. */
+				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+			} else {
+				AG_TextMsg(AG_MSG_ERROR,
+				    _("%s: Loading failed (non-resident): %s"),
+				    ob->name, AG_GetError());
+				return;
+			}
 		}
-		paged_in = 1;
+		loadedTmp = 1;
 	}
 
 	AG_StringCopy(agConfig, "save-path", save_path, sizeof(save_path));
@@ -337,7 +348,8 @@ ExportObject(AG_Event *event)
 	AG_SetString(agConfig, "save-path", "%s", save_path);
 	ob->save_pfx = pfx_save;
 	
-	if (paged_in) { AG_ObjectFreeData(ob); }
+	if (loadedTmp)
+		AG_ObjectFreeData(ob);
 }
 
 static void
@@ -348,14 +360,23 @@ ImportObject(AG_Event *event)
 	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
 	char *pfx_save = ob->save_pfx;
-	int paged_in = 0;
+	int loadedTmp = 0;
+	int dataFound;
 
 	/* Load the object temporarily if it is non-resident. */
-	if ((ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
-		if (AG_ObjectLoadData(ob) == -1) {
-			ob->flags |= AG_OBJECT_DATA_RESIDENT;	/* XXX */
+	if (!AGOBJECT_RESIDENT(ob)) {
+		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
+			if (!dataFound) {
+				/* Object was never saved before. */
+				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+			} else {
+				AG_TextMsg(AG_MSG_ERROR,
+				    _("%s: Loading failed (non-resident): %s"),
+				    ob->name, AG_GetError());
+				return;
+			}
 		}
-		paged_in = 1;
+		loadedTmp = 1;
 	}
 
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
@@ -372,7 +393,8 @@ ImportObject(AG_Event *event)
 	AG_SetString(agConfig, "load-path", "%s", load_path);
 	ob->save_pfx = pfx_save;
 	
-	if (paged_in) { AG_ObjectFreeData(ob); }
+	if (loadedTmp)
+		AG_ObjectFreeData(ob);
 }
 
 void
@@ -441,7 +463,7 @@ obj_op(AG_Event *event)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				AG_ObjMgrOpenData(ob, 0);
+				AG_ObjMgrOpenData(ob);
 			} else {
 				AG_TextTmsg(AG_MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
@@ -478,7 +500,7 @@ obj_op(AG_Event *event)
 			}
 			break;
 		case OBJEDIT_EXPORT:
-			if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+			if (!AGOBJECT_PERSISTENT(ob)) {
 				AG_SetError(
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
@@ -490,8 +512,7 @@ obj_op(AG_Event *event)
 			{
 				AG_Object *dob;
 
-				if (ob == agWorld ||
-				    ob->flags & AG_OBJECT_NON_PERSISTENT) {
+				if (ob == agWorld || !AGOBJECT_PERSISTENT(ob)) {
 					AG_TextMsg(AG_MSG_ERROR,
 					    _("%s: cannot duplicate."),
 					    ob->name);
@@ -658,7 +679,7 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 	SDL_Surface *icon;
 
 	strlcpy(label, pob->name, sizeof(label));
-	if (pob->flags & AG_OBJECT_DATA_RESIDENT) {
+	if (AGOBJECT_RESIDENT(pob)) {
 		strlcat(label, _(" (resident)"), sizeof(label));
 	}
 	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);

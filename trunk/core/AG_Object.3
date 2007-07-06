@@ -232,13 +232,13 @@ flags are defined:
 .Pp
 .Bd -literal
 #define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
-#define AG_OBJECT_NON_PERSISTENT 0x002 /* Never include in saves */
+#define AG_OBJECT_NON_PERSISTENT 0x002 /* Data is not archivable */
 #define AG_OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
-#define AG_OBJECT_DATA_RESIDENT  0x008 /* Object data is resident (RO) */
+#define AG_OBJECT_DATA_RESIDENT  0x008 /* Data is in memory (RO) */
 #define AG_OBJECT_PRESERVE_DEPS  0x010 /* Don't remove dep if count=0 */
 #define AG_OBJECT_STATIC         0x020 /* Don't free() after detach */
 #define AG_OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
-#define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
+#define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Recreate editor UI on load */
 #define AG_OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
 .Ed
 .Pp
@@ -246,38 +246,42 @@ The
 .Dv AG_OBJECT_RELOAD_PROPS
 flag prevents the
 .Xr AG_Prop 3
-table from being cleared as part of a load operation.
+table from being cleared by
+.Fn AG_ObjectLoad .
+.Pp
 .Dv AG_OBJECT_NON_PERSISTENT
-prevents this instance and its children from being archived.
-If this flag is set,
+prevents this object (and its children) from being archived by
+.Fn AG_ObjectSave .
+If set,
 .Fn AG_ObjectPageIn
 and
 .Fn AG_ObjectPageOut
-with an argument of
-.Dv AG_OBJECT_DATA
 become no-ops.
+.Pp
 The
 .Dv AG_OBJECT_INDESTRUCTIBLE
-flag advises the object editor not to destroy this object instance.
+flag is purely advisory and disallows the user from destroying the
+object via
+.Xr AG_ObjectMgr 3 .
+.Pp
 .Dv AG_OBJECT_READONLY
-advises the object-specific
+is also advisory and disallows object-specific
 .Va edit
-operation that this instance should not be modified.
+operations from modifying object data.
+.Pp
 The
 .Dv AG_OBJECT_REOPEN_ONLOAD
-flag causes the object's edition window
-(as returned by the object's
+flag arranges for the graphical interface (as returned by the object's
 .Sq edit
-operation) and all sub-windows to be automatically destroyed and re-opened
-by
-.Fn AG_ObjectLoad ,
-such that the editor does not need to worry about referencing dynamically
-allocated object substructures that are freed by the load routine.
-The
+operation) to be automatically destroyed and recreated upon
+.Fn AG_ObjectLoad .
+This flag is useful for complex objects where the graphical interface
+references dynamically allocated object data.
+.Pp
+The read-only
 .Dv AG_OBJECT_DATA_RESIDENT
-flag is set by the
-.Nm
-system to indicate that the instance's dynamic data is resident.
+flag is set by the object system to indicate that this object's data is
+resident in memory.
 .Pp
 Objects are organized in a tree structure.
 .Fn AG_ObjectAttach
@@ -572,10 +576,10 @@ flag set.
 .Fn AG_ObjectSaveAll "const void *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectPageIn "void *obj" "enum ag_object_page_item item"
+.Fn AG_ObjectPageIn "void *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectPageOut "void *obj" "enum ag_object_page_item item"
+.Fn AG_ObjectPageOut "void *obj"
 .Pp
 .nr nS 0
 These functions implement archiving of objects (also known as
@@ -656,25 +660,12 @@ variant also saves child objects.
 .Pp
 The
 .Fn AG_ObjectPageIn
-function is used to fetch resources specific to an object instance.
-If the resource is already resident, the reference count is incremented.
-The
-.Fa item
-argument may be one of:
-.Pp
-.Bd -literal
-enum ag_object_page_item {
-	AG_OBJECT_DATA		/* Object data */
-};
-.Ed
-.Pp
-The
+function loads an object's data into memory (assuming it is a persistent
+object and can be found in storage) and marks the object resident.
 .Fn AG_ObjectPageOut
-function decrements the reference count on the given resource.
-If the reference count reaches 0, the resource is saved to persistent media
-and released.
-.Pp
-These functions return 0 on success or -1 if an error occured.
+checks whether an object is referenced by another object and if that is
+not the case, the object's data is saved to storage and freed from memory.
+Both functions return 0 on success or -1 if an error occured.
 .Sh EVENTS
 The
 .Nm
@@ -711,11 +702,6 @@ property has been added.
 .It Fn prop-modified "AG_Prop *prop"
 The value of the given property has been modified.
 .El
-.Sh NOTES
-If the maximum number of references,
-.Dv AG_OBJECT_DEP_MAX ,
-is reached, the object instance remains resident and the reference count
-is no longer incremented or decremented.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
