@@ -1,5 +1,11 @@
 /*	Public domain	*/
 
+#define NS_HOSTNAME_MAX	256
+
+struct ns_server;
+struct ns_client;
+struct ns_cmd;
+
 enum ns_log_lvl {
 	NS_DEBUG,
 	NS_INFO,
@@ -11,36 +17,88 @@ enum ns_log_lvl {
 	NS_EMERG
 };
 
-typedef struct agn_server_cmd {
+typedef int (*NS_LoginFn)(struct ns_server *, void *);
+typedef void (*NS_LogoutFn)(struct ns_server *, void *);
+typedef void (*NS_SigCheckFn)(struct ns_server *);
+typedef int (*NS_ErrorFn)(struct ns_server *);
+typedef int (*NS_AuthFn)(struct ns_server *, void *);
+typedef int (*NS_CommandFn)(struct ns_server *, NS_Command *, void *);
+
+typedef struct ns_cmd {
 	const char *name;
-	int (*func)(NS_Command *, void *);
+	NS_CommandFn fn;
 	void *arg;
 } NS_Cmd;
 
-typedef struct agn_server_auth {
+typedef struct ns_auth {
 	const char *name;
-	int (*func)(void *);
+	NS_AuthFn fn;
 	void *arg;
 } NS_Auth;
 
-#ifndef _AGAR_NET_PUBLIC
-extern pid_t server_pid;
-#endif
+typedef struct ns_server {
+	struct ag_object obj;
+
+	Uint flags;
+
+	const char *protoName;		/* Protocol string */
+	const char *protoVer;		/* Protocol version string */
+	const char *host;		/* Hostname for bind(), or NULL */
+	const char *port;		/* Port number or name */
+
+	pid_t listenProc;		/* PID of listening process */
+
+	NS_Cmd	*cmds;			/* Implemented commands */
+	Uint	ncmds;
+	NS_Auth *authModes;		/* Authentication methods */
+	Uint	nAuthModes;
+
+	NS_ErrorFn errorFn;		/* Call when any command fails, instead
+					   of returning error to client. */
+	NS_SigCheckFn sigCheckFn;	/* Call upon signal interruptions */
+	NS_LoginFn loginFn;		/* Call after basic auth */
+	NS_LogoutFn logoutFn;		/* Call on disconnection */
+
+	void  **listItems;		/* For list functions */
+	size_t *listItemSize;
+	Uint	listItemCount;
+
+	TAILQ_HEAD(,ns_client) clients;	/* Connected clients */
+} NS_Server;
+
+typedef struct ns_client {
+	struct ag_object obj;
+	char host[NS_HOSTNAME_MAX];	/* Remote host */
+} NS_Client;
 
 __BEGIN_DECLS
-void	NS_Log(enum ns_log_lvl, const char *, ...);
-void	NS_SetErrorFn(void (*)(void));
-void	NS_RegCmd(const char *, int (*)(NS_Command *, void *), void *);
-void	NS_RegAuth(const char *, int (*)(void *), void *);
-void	NS_RegCallback(void (*)(void), int, int);
-int	NS_Listen(const char *, const char *, const char *,
-	                 const char *);
-void	NS_Die(int, const char *, ...);
-void	NS_BinaryMode(size_t);
-void	NS_CommandMode(void);
+NS_Server *NS_ServerNew(void *, Uint, const char *, const char *, const char *,
+	                const char *);
+void	   NS_ServerInit(void *, const char *);
+void	   NS_ServerReinit(void *);
+void	   NS_ServerDestroy(void *);
+void	   NS_ServerSetProtocol(NS_Server *, const char *, const char *);
+void	   NS_ServerBind(NS_Server *, const char *, const char *);
 
-void	NS_BeginList(void);
-void	NS_EndList(void);
-void	NS_ListItem(void *, size_t);
-void	NS_ListString(const char *, ...);
+void	   NS_ClientInit(void *, const char *);
+void	   NS_ClientDestroy(void *);
+
+void	NS_Log(enum ns_log_lvl, const char *, ...);
+void	NS_RegErrorFn(NS_Server *, NS_ErrorFn);
+void	NS_RegCmd(NS_Server *, const char *, NS_CommandFn, void *);
+void	NS_RegAuthMode(NS_Server *, const char *, NS_AuthFn, void *);
+void	NS_RegLoginFn(NS_Server *, NS_LoginFn);
+void	NS_RegLogoutFn(NS_Server *, NS_LogoutFn);
+int	NS_Listen(NS_Server *);
+void	NS_Logout(NS_Server *, int, const char *, ...);
+void	NS_Message(NS_Server *, int, const char *, ...);
+
+void	NS_BeginData(NS_Server *, size_t);
+size_t	NS_Data(NS_Server *, char *, size_t);
+void	NS_EndData(NS_Server *);
+
+void	NS_BeginList(NS_Server *);
+void	NS_EndList(NS_Server *);
+void	NS_ListItem(NS_Server *, void *, size_t);
+void	NS_ListString(NS_Server *, const char *, ...);
 __END_DECLS

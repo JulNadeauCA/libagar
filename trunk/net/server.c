@@ -54,27 +54,31 @@
 #include "sockunion.h"
 #include "fgetln.h"
 
+const AG_ObjectOps nsServerOps = {
+	"NS_Server",
+	sizeof(NS_Server),
+	{ 0,0 },
+	NS_ServerInit,
+	NS_ServerReinit,
+	NS_ServerDestroy,
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL			/* edit */
+};
+
+const AG_ObjectOps nsClientOps = {
+	"NS_Client",
+	sizeof(NS_Client),
+	{ 0,0 },
+	NS_ClientInit,
+	NULL,			/* reinit */
+	NS_ClientDestroy,
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL			/* edit */
+};
+
 #define MAX_SERVER_SOCKS 64
-
-const char *nsServerName;		/* Server protocol string */
-const char *nsServerVer;		/* Server version string */
-const char *nsServerHost = NULL;	/* Bind hostname */
-const char *nsServerPort = "6571";	/* Port number/name */
-pid_t nsPID = 0;			/* PID of listening process */
-
-NS_Cmd       *server_cmds = NULL;	/* Implemented commands */
-unsigned int nserver_cmds = 0;
-NS_Auth      *server_auths = NULL;	/* Authentication methods */
-unsigned int nserver_auths = 0;
-
-static void (*errhandler)(void) = NULL;
-static void (*cmdcallback)(void) = NULL;
-int nsCallbackSecs = 1;
-int nsCallbackUsecs = 0;
-
-static void       **nsListItems;
-static size_t      *nsListItemSize;
-static unsigned int nsListItemCount;
 
 #if defined(HAVE_SYSLOG) || defined(HAVE_VSYSLOG)
 const int nsSyslogLevels[] = {
@@ -87,6 +91,94 @@ const char *nsLogLevelNames[] = {
 	"ERR", "CRIT", "ALERT", "EMERG"
 };
 #endif
+
+NS_Server *
+NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
+    const char *protoVer, const char *port)
+{
+	NS_Server *ns;
+
+	ns = Malloc(sizeof(NS_Server), M_OBJECT);
+	NS_ServerInit(ns, name);
+	ns->flags |= flags;
+	NS_ServerSetProtocol(ns, proto, protoVer);
+	NS_ServerBind(ns, NULL, port);
+	AG_ObjectAttach(parent, ns);
+	return (ns);
+}
+
+void
+NS_ServerInit(void *p, const char *name)
+{
+	NS_Server *ns = p;
+
+	AG_ObjectInit(ns, name, &nsServerOps);
+	ns->flags = 0;
+	ns->host = NULL;
+	ns->port = NULL;
+	ns->listenProc = 0;
+	ns->cmds = NULL;
+	ns->ncmds = 0;
+	ns->authModes = 0;
+	ns->nAuthModes = 0;
+	ns->listItems = NULL;
+
+	ns->errorFn = NULL;
+	ns->sigCheckFn = NULL;
+	ns->loginFn = NULL;
+	ns->logoutFn = NULL;
+
+	TAILQ_INIT(&ns->clients);
+}
+
+void
+NS_ClientInit(void *p, const char *name)
+{
+	NS_Client *nc = p;
+
+	AG_ObjectInit(nc, name, &nsClientOps);
+	nc->host[0] = '\0';
+}
+
+void
+NS_ServerReinit(void *p)
+{
+	
+}
+
+void
+NS_ServerDestroy(void *p)
+{
+	NS_Server *ns = p;
+
+	Free(ns->cmds, M_NETBUF);
+	Free(ns->authModes, M_NETBUF);
+	Free(ns->listItems, M_NETBUF);
+}
+
+void
+NS_ClientDestroy(void *p)
+{
+	NS_Client *nc = p;
+
+	
+}
+
+/* Set the protocol version string to use (thread unsafe). */
+void
+NS_ServerSetProtocol(NS_Server *ns, const char *proto, const char *ver)
+{
+	ns->protoName = proto;
+	ns->protoVer = ver;
+}
+
+/* Set the bind() hostname to use (thread unsafe). */
+void
+NS_ServerBind(NS_Server *ns, const char *hostName, const char *portName)
+{
+	ns->host = hostName;
+	ns->port = portName;
+}
 
 void
 NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
@@ -110,31 +202,35 @@ NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 }
 
 void
-NS_BeginList(void)
+NS_BeginList(NS_Server *ns)
 {
-	nsListItems = NULL;
-	nsListItemSize = NULL;
-	nsListItemCount = 0;
+#ifdef DEBUG
+	if (ns->listItems != NULL)
+		AG_FatalError("Nested NS_BeginList() calls");
+#endif
+	ns->listItems = NULL;
+	ns->listItemSize = NULL;
+	ns->listItemCount = 0;
 }
 
 void
-NS_EndList(void)
+NS_EndList(NS_Server *ns)
 {
 	char ack[2];
 	int i;
 	
-	printf("0 %010u:", nsListItemCount);
-	for (i = 0; i < nsListItemCount; i++) {
-		printf("%012lu:", (unsigned long)nsListItemSize[i]);
+	printf("0 %010u:", ns->listItemCount);
+	for (i = 0; i < ns->listItemCount; i++) {
+		printf("%012lu:", (unsigned long)ns->listItemSize[i]);
 	}
 	fputc('\n', stdout);
 	fgets(ack, 2, stdin);
 	
 	fflush(stdout);
 	setvbuf(stdout, NULL, _IONBF, 0);
-	for (i = 0; i < nsListItemCount; i++) {
-		void *itembuf = nsListItems[i];
-		size_t itemsz = nsListItemSize[i];
+	for (i = 0; i < ns->listItemCount; i++) {
+		void *itembuf = ns->listItems[i];
+		size_t itemsz = ns->listItemSize[i];
 
 		if (fwrite(itembuf, 1, itemsz, stdout) < itemsz) {
 			NS_Log(NS_ERR, "EndList: Write error");
@@ -145,112 +241,107 @@ NS_EndList(void)
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	fgets(ack, 2, stdin);
 
-	if (nsListItemCount > 0) {
-		Free(nsListItems, M_NETBUF);
-		Free(nsListItemSize, M_NETBUF);
-		nsListItems = NULL;
-		nsListItemSize = NULL;
-		nsListItemCount = 0;
+	if (ns->listItemCount > 0) {
+		Free(ns->listItems, M_NETBUF);
+		Free(ns->listItemSize, M_NETBUF);
+		ns->listItemSize = NULL;
+		ns->listItemCount = 0;
 	}
+	ns->listItems = NULL;
 }
 
 void
-NS_ListItem(void *buf, size_t len)
+NS_ListItem(NS_Server *ns, void *buf, size_t len)
 {
-	if (nsListItemCount == 0) {
-		nsListItems = Malloc(sizeof(void *), M_NETBUF);
-		nsListItemSize = Malloc(sizeof(size_t), M_NETBUF);
+	if (ns->listItemCount == 0) {
+		ns->listItems = Malloc(sizeof(void *), M_NETBUF);
+		ns->listItemSize = Malloc(sizeof(size_t), M_NETBUF);
 	} else {
-		nsListItems = Realloc(nsListItems,
-		    (nsListItemCount+1)*sizeof(void *));
-		nsListItemSize = Realloc(nsListItemSize,
-		    (nsListItemCount+1)*sizeof(size_t));
+		ns->listItems = Realloc(ns->listItems,
+		    (ns->listItemCount+1)*sizeof(void *));
+		ns->listItemSize = Realloc(ns->listItemSize,
+		    (ns->listItemCount+1)*sizeof(size_t));
 	}
-	nsListItems[nsListItemCount] = buf;
-	nsListItemSize[nsListItemCount] = len;
-	nsListItemCount++;
+	ns->listItems[ns->listItemCount] = buf;
+	ns->listItemSize[ns->listItemCount] = len;
+	ns->listItemCount++;
 }
 
 void
-NS_ListString(const char *fmt, ...)
+NS_ListString(NS_Server *ns, const char *fmt, ...)
 {
 	char *buf;
 	va_list ap;
 
 	va_start(ap, fmt);
-	if (vasprintf(&buf, fmt, ap) == -1) {
-		AG_FatalError("vasprintf: Out of memory");
-	}
+	Vasprintf(&buf, fmt, ap);
 	va_end(ap);
 
-	NS_ListItem(buf, strlen(buf)+1);
+	NS_ListItem(ns, buf, strlen(buf)+1);
 }
 
-/*
- * Register a generic error handler function to invoke upon any failed
- * request.
- */
 void
-NS_SetErrorFn(void (*errh)(void))
+NS_RegLoginFn(NS_Server *ns, NS_LoginFn fn)
 {
-	errhandler = errh;
+	ns->loginFn = fn;
 }
 
-/* Register a function to execute at every ival secs. */
 void
-NS_RegCallback(void (*cb)(void), int secs, int usecs)
+NS_RegLogoutFn(NS_Server *ns, NS_LogoutFn fn)
 {
-	cmdcallback = cb;
-	nsCallbackSecs = secs;
-	nsCallbackUsecs= usecs;
+	ns->logoutFn = fn;
+}
+
+void
+NS_RegErrorFn(NS_Server *ns, NS_ErrorFn fn)
+{
+	ns->errorFn = fn;
 }
 
 /* Register a server command. */
 void
-NS_RegCmd(const char *name, int (*func)(NS_Command *, void *),
-    void *arg)
+NS_RegCmd(NS_Server *ns, const char *name, NS_CommandFn fn, void *arg)
 {
-	server_cmds = Realloc(server_cmds, (nserver_cmds+1) *
-					   sizeof(NS_Cmd));
-	server_cmds[nserver_cmds].name = name;
-	server_cmds[nserver_cmds].func = func;
-	server_cmds[nserver_cmds].arg = arg;
-	nserver_cmds++;
+	ns->cmds = Realloc(ns->cmds, (ns->ncmds+1)*sizeof(NS_Cmd));
+	ns->cmds[ns->ncmds].name = name;
+	ns->cmds[ns->ncmds].fn = fn;
+	ns->cmds[ns->ncmds].arg = arg;
+	ns->ncmds++;
+	Debug(ns, "registered function: %s (%p)", name, arg);
 }
 
 /* Register an authentication method. */
 void
-NS_RegAuth(const char *name, int (*func)(void *), void *arg)
+NS_RegAuthMode(NS_Server *ns, const char *name, NS_AuthFn fn, void *arg)
 {
-	server_auths = Realloc(server_auths, (nserver_auths+1) *
-					     sizeof(NS_Auth));
-	server_auths[nserver_auths].name = name;
-	server_auths[nserver_auths].func = func;
-	server_auths[nserver_auths].arg = arg;
-	nserver_auths++;
+	ns->authModes = Realloc(ns->authModes, (ns->nAuthModes+1) *
+					         sizeof(NS_Auth));
+	ns->authModes[ns->nAuthModes].name = name;
+	ns->authModes[ns->nAuthModes].fn = fn;
+	ns->authModes[ns->nAuthModes].arg = arg;
+	ns->nAuthModes++;
+	Debug(ns, "registered auth: %s (%p)", name, arg);
 }
 
 static void
-NS_ProcessCommand(NS_Command *ncmd)
+ProcessCommand(NS_Server *ns, NS_Command *ncmd)
 {
-	extern char *__progname;
 	int i;
 
-	for (i = 0; i < nserver_cmds; i++) {
-		if (strcmp(server_cmds[i].name, ncmd->name) == 0) {
-			if (server_cmds[i].func(ncmd, server_cmds[i].arg)
-			    == -1) {
-				if (errhandler != NULL) {
-					errhandler();
-				} else {
-					printf("1 %s\n", AG_GetError());
-				}
-			}
-			fflush(stdout);
-			return;
+	for (i = 0; i < ns->ncmds; i++) {
+		if (strcmp(ns->cmds[i].name, ncmd->name) != 0) {
+			continue;
 		}
+		if (ns->cmds[i].fn(ns, ncmd, ns->cmds[i].arg) == -1) {
+			if (ns->errorFn == NULL ||
+			    ns->errorFn(ns) == -1) {
+				NS_Message(ns, 1, "%s", AG_GetError());
+			}
+		}
+		fflush(stdout);
+		return;
 	}
-	NS_Die(1, "unimplemented command");
+	NS_Logout(ns, 1, "unimplemented command");
 }
 
 /*
@@ -258,10 +349,10 @@ NS_ProcessCommand(NS_Command *ncmd)
  * the client.
  */
 static void
-NS_QueryLoop(void)
+ServerLoop(NS_Server *ns)
 {
 	char tmp[BUFSIZ];
-	char servproto[32];
+	char prot[32];
 	char *buf, *lbuf = NULL, *value, *p;
 	NS_Command ncmd;
 	size_t len;
@@ -269,25 +360,23 @@ NS_QueryLoop(void)
 	int seq = 0;
 	int i;
 
-	snprintf(servproto, sizeof(servproto), "%s %s\n",
-	    nsServerName, nsServerVer);
-	fputs(servproto, stdout);
+	snprintf(prot, sizeof(prot), "%s %s\n", ns->protoName, ns->protoVer);
+	fputs(prot, stdout);
 	fflush(stdout);
 	
 	if (fgets(tmp, sizeof(tmp), stdin) == NULL) {
 		goto read_failure;
 	}
-	if (strcmp(tmp, servproto) != 0) {
-		NS_Log(NS_ERR, "incompatible version: `%s'!=`%s'", tmp,
-		    servproto);
+	if (strcmp(tmp, prot) != 0) {
+		NS_Log(NS_ERR, "incompatible version: `%s'!=`%s'", tmp, prot);
 		fputs("Incompatible client version\n", stdout);
 		exit(1);
 	}
 
 	strlcpy(tmp, "auth:", sizeof(tmp));
-	for (i = 0; i < nserver_auths; i++) {
-		strlcat(tmp, server_auths[i].name, sizeof(tmp));
-		if (i < nserver_auths)
+	for (i = 0; i < ns->nAuthModes; i++) {
+		strlcat(tmp, ns->authModes[i].name, sizeof(tmp));
+		if (i < ns->nAuthModes)
 			strlcat(tmp, ",", sizeof(tmp));
 	}
 	strlcat(tmp, "\n", sizeof(tmp));
@@ -296,22 +385,33 @@ NS_QueryLoop(void)
 	if (fgets(tmp, sizeof(tmp), stdin) == NULL) {
 		goto read_failure;
 	}
-	for (i = 0; i < nserver_auths; i++) {
-		if (strncmp(tmp, server_auths[i].name,
-		    strlen(server_auths[i].name)-1) == 0)
+	for (i = 0; i < ns->nAuthModes; i++) {
+		if (strncmp(tmp, ns->authModes[i].name,
+		    strlen(ns->authModes[i].name)-1) == 0)
 			break;
 	}
-	if (i == nserver_auths) {
+	if (i == ns->nAuthModes) {
 		NS_Log(NS_NOTICE, "Bad auth mode: `%s'", tmp);
+		fputs("! Bad auth mode\n", stdout);
 		exit(1);
 	}
 	fputs("ok-send-auth\n", stdout);
 	fflush(stdout);
 
-	if (server_auths[i].func(server_auths[i].arg) == 0) {
+	if (ns->authModes[i].fn(ns, ns->authModes[i].arg) == 0) {
 		NS_Log(NS_ERR, "Auth failed: %s", AG_GetError());
+		NS_Message(ns, 1, "Auth failed: %s", AG_GetError());
 		exit(1);
 	}
+	
+	if (ns->loginFn != NULL) {
+		if (ns->loginFn(ns, NULL) == -1) {
+			NS_Log(NS_ERR, "Login failed: %s", AG_GetError());
+			NS_Message(ns, 1, "Login failed: %s", AG_GetError());
+			exit(1);
+		}
+	}
+	
 	fputs("ok\n", stdout);
 	fflush(stdout);
 
@@ -320,7 +420,7 @@ NS_QueryLoop(void)
 			buf[len-1] = '\0';
 		} else {
 			if ((lbuf = malloc(len+1)) == NULL) {
-				NS_Die(1, "malloc line");
+				NS_Logout(ns, 1, "malloc line");
 			}
 			memcpy(lbuf, buf, len);
 			lbuf[len] = '\0';
@@ -334,7 +434,7 @@ NS_QueryLoop(void)
 			    sizeof(ncmd.name)) {
 				NS_DestroyCommand(&ncmd);
 				Free(lbuf, M_NETBUF);
-				NS_Die(1, "command name too big");
+				NS_Logout(ns, 1, "command name too big");
 			}
 		} else if ((value = strchr(buf, '=')) != NULL) {
 			/*
@@ -353,10 +453,10 @@ NS_QueryLoop(void)
 			    sizeof(narg->key)) {
 				NS_DestroyCommand(&ncmd);
 				Free(lbuf, M_NETBUF);
-				NS_Die(1, "command key is too big");
+				NS_Logout(ns, 1, "command key is too big");
 			}
 		} else {
-			NS_ProcessCommand(&ncmd);
+			ProcessCommand(ns, &ncmd);
 			NS_DestroyCommand(&ncmd);
 			seq = 0;
 		}
@@ -378,7 +478,7 @@ read_failure:
 }
 
 void
-NS_Die(int rv, const char *fmt, ...)
+NS_Logout(NS_Server *ns, int rv, const char *fmt, ...)
 {
 	char buf[BUFSIZ];
 	va_list ap;
@@ -386,28 +486,48 @@ NS_Die(int rv, const char *fmt, ...)
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
-
-	printf("! %s\n", buf);
-	fflush(stdout);
+	NS_Message(ns, 1, "%s", buf);
 	exit(rv);
+}
+
+void
+NS_Message(NS_Server *ns, int rv, const char *fmt, ...)
+{
+	char *s;
+	va_list ap;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	printf("%d %s\n", rv, s);
+	fflush(stdout);
+	Free(s,0);
 }
 
 /* Initiate a binary transfer. */
 void
-NS_BinaryMode(size_t nbytes)
+NS_BeginData(NS_Server *ns, size_t nbytes)
 {
 	if (setvbuf(stdout, NULL, _IONBF, 0) == EOF) {
 		NS_Log(NS_ERR, "_IONBF stdout: %s", strerror(errno));
 		exit(1);
 	}
-	printf("0 %012lu\n", (unsigned long)nbytes);
+	NS_Message(ns, 0, "%012lu", (unsigned long)nbytes);
 	fflush(stdout);
 }
 
-/* Switch back to command mode. */
-void
-NS_CommandMode(void)
+/* Send a chunk of binary data. */
+size_t
+NS_Data(NS_Server *ns, char *buf, size_t len)
 {
+	return (fwrite(buf, 1, len, stdout));
+}
+
+/* Terminate binary transfer. */
+void
+NS_EndData(NS_Server *ns)
+{
+	fflush(stdout);
 	if (setvbuf(stdout, NULL, _IOLBF, 0) == EOF) {
 		NS_Log(NS_ERR, "_IOLBF stdout: %s", strerror(errno));
 		exit(1);
@@ -470,39 +590,32 @@ sig_die(int sigraised)
 }
 
 static int
-cmd_quit(NS_Command *cmd, void *arg)
+cmd_quit(NS_Server *ns, NS_Command *cmd, void *arg)
 {
-	NS_Die(0, "Kongen leve!\n");
+	NS_Logout(ns, 0, "logout");
 	return (0);
 }
 
 /* Main loop of the listening process. */
 int
-NS_Listen(const char *srvname, const char *srvver, const char *srvhost,
-    const char *srvport)
+NS_Listen(NS_Server *ns)
 {
 	struct addrinfo hints, *res, *res0;
-	extern char *__progname;
 	const char *cause = NULL;
 	int rv, nservsocks, maxfd = 0;
 	int i, servsocks[MAX_SERVER_SOCKS];
 	fd_set servfds;
 	struct sigaction sa;
 
-	NS_RegCmd("quit", cmd_quit, NULL);
+	NS_RegCmd(ns, "quit", cmd_quit, NULL);
 
-	nsPID = getpid();
-	nsServerName = srvname;
-	nsServerVer = srvver;
-	nsServerHost = srvhost;
-	nsServerPort = srvport;
+	ns->listenProc = getpid();
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
-	if ((rv = getaddrinfo(nsServerHost, nsServerPort, &hints, &res0))
-	    != 0) {
+	if ((rv = getaddrinfo(ns->host, ns->port, &hints, &res0)) != 0) {
 		AG_SetError("%s", gai_strerror(rv));
 		return (-1);
 	}
@@ -561,15 +674,13 @@ NS_Listen(const char *srvname, const char *srvver, const char *srvhost,
 
 	for (;;) {
 		fd_set rfds = servfds;
-		struct timeval tv;
 
-		tv.tv_sec = nsCallbackSecs;
-		tv.tv_usec = nsCallbackUsecs;
-		rv = select(maxfd+1, &rfds, NULL, NULL, &tv);
-		if (rv == 0 && cmdcallback != NULL) {
-			cmdcallback();
-		} else if (rv == -1) {
+		rv = select(maxfd+1, &rfds, NULL, NULL, NULL);
+		if (rv == -1) {
 			if (errno == EINTR) {
+				if (ns->sigCheckFn != NULL) {
+					ns->sigCheckFn(ns);
+				}
 				continue;
 			}
 			AG_SetError("select: %s", strerror(errno));
@@ -639,7 +750,7 @@ NS_Listen(const char *srvname, const char *srvver, const char *srvhost,
 					    strerror(errno));
 					exit(1);
 				}
-				NS_QueryLoop();
+				ServerLoop(ns);
 			}
 			close(rv);
 		}
