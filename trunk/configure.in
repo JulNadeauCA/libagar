@@ -56,6 +56,7 @@ CHECK(md5)
 CHECK(sha1)
 CHECK(rmd160)
 CHECK(pthreads)
+CHECK(x11)
 
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE")
 if [ "${enable_warnings}" = "yes" ]; then
