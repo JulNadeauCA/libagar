@@ -514,15 +514,15 @@ void
 AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 {
 	AG_MutexLock(&sbu->lock);
-
 	sbu->writeable = writeable;
-	AG_TextboxSetWriteable(sbu->input, writeable);
 	if (writeable) {
-		AG_ButtonEnable(sbu->incbu);
-		AG_ButtonEnable(sbu->decbu);
+		AG_WidgetEnable(sbu->incbu);
+		AG_WidgetEnable(sbu->decbu);
+		AG_WidgetEnable(sbu->input);
 	} else {
-		AG_ButtonDisable(sbu->incbu);
-		AG_ButtonDisable(sbu->decbu);
+		AG_WidgetDisable(sbu->incbu);
+		AG_WidgetDisable(sbu->decbu);
+		AG_WidgetDisable(sbu->input);
 	}
 	AG_MutexUnlock(&sbu->lock);
 }

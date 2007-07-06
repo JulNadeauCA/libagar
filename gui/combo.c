@@ -228,7 +228,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
 
 	if ((flags & AG_COMBO_ANY_TEXT) == 0)
-		com->tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
+		AG_WidgetDisable(com->tbox);
 
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(com->list, AG_TLIST_EXPAND);

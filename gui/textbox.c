@@ -221,8 +221,9 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->ypadding = 3;
 
 	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
-	if ((flags & AG_TEXTBOX_READONLY) == 0)
-		tbox->flags |= AG_TEXTBOX_WRITEABLE;
+	if ((flags & AG_TEXTBOX_READONLY) == 0) {
+		AG_WidgetDisable(tbox);
+	}
 
 	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
@@ -299,7 +300,7 @@ AG_TextboxDraw(void *p)
 	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
 	
-	if (tbox->flags & AG_TEXTBOX_WRITEABLE) {
+	if (AG_WidgetEnabled(tbox)) {
 		agPrim.box(tbox, x, 0,
 		    AGWIDGET(tbox)->w - x - 1,
 		    AGWIDGET(tbox)->h,
@@ -343,7 +344,7 @@ AG_TextboxDraw(void *p)
 
 		if (i == tbox->pos &&
 		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
-		    (tbox->flags & AG_TEXTBOX_WRITEABLE) &&
+		    AG_WidgetEnabled(tbox) &&
 		    AG_WidgetFocused(tbox)) {
 			agPrim.vline(tbox,
 			    x, (y + 1),
@@ -484,7 +485,7 @@ keydown(AG_Event *event)
 	int keymod = AG_INT(2);
 	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
-	if ((tbox->flags & AG_TEXTBOX_WRITEABLE) == 0)
+	if (AG_WidgetDisabled(tbox))
 		return;
 
 	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
@@ -721,15 +722,6 @@ AG_TextboxInt(AG_Textbox *tbox)
 	i = atoi(text);
 	AG_WidgetUnlockBinding(stringb);
 	return (i);
-}
-
-void
-AG_TextboxSetWriteable(AG_Textbox *tbox, int wr)
-{
-	if (wr)
-		tbox->flags |= AG_TEXTBOX_WRITEABLE;
-	else
-		tbox->flags &= ~(AG_TEXTBOX_WRITEABLE);
 }
 
 void

@@ -58,9 +58,9 @@ enum ag_widget_sizespec {
 };
 
 typedef struct ag_flag_descr {
-	Uint flag;
-	const char *descr;
-	int writeable;
+	Uint bitmask;			/* Bitmask */
+	const char *descr;		/* Bit(s) description */
+	int writeable;			/* User-editable */
 } AG_FlagDescr;
 
 typedef struct ag_widget_binding {
@@ -128,7 +128,7 @@ typedef struct ag_widget {
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
-#define AG_WidgetEnabled(wi)	!AG_WidgetDisabled(wi)
+#define AG_WidgetEnabled(wi)	((AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)==0)
 
 #ifdef DEBUG
 #define AG_WidgetRedraw(wi)						\
