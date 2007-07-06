@@ -1,0 +1,193 @@
+.\"
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 26, 2007
+.Dt AG_GRAPH 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm AG_Graph
+.Nd agar graph view widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a graph (as in graph theory).
+A graph is composed of vertices
+(or
+.Sq nodes )
+and edges that connect pairs of vertices.
+.Pp
+Edges may be either directed or undirected.
+Labels and colors can be associated with edges or vertices.
+.Pp
+The
+.Nm
+widget will try to position the vertices in the view in order to minimize
+the number of edges crossing each other.
+The user can also move vertices manually.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Graph *"
+.Fn AG_GraphNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_GraphInit "AG_Graph *graph" "Uint flags"
+.Pp
+.Ft "void"
+.Fn AG_GraphPrescale "AG_Graph *graph" "Uint width" "Uint height"
+.nr nS 0
+The
+.Fn AG_GraphNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+.Fn AG_GraphInit
+initializes a preallocated
+.Nm
+widget.
+.Pp
+The
+.Fa flags
+may include:
+.Pp
+.Bd -literal
+#define AG_GRAPH_HFILL		0x01
+#define AG_GRAPH_VFILL		0x02
+#define AG_GRAPH_EXPAND		(AG_GRAPH_HFILL|AG_GRAPH_VFILL)
+.Ed
+.Pp
+.Fn AG_GraphPrescale
+sets the default widget size in pixels.
+.Pp
+.Sh VERTICES
+.nr nS 1
+.Ft "AG_GraphVertex *"
+.Fn AG_GraphVertexNew "AG_Graph *graph"
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexLabel "AG_GraphVertex *vertex" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexColorLabel "AG_GraphVertex *vertex" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexColorBG "AG_GraphVertex *vertex" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexSize "AG_GraphVertex *vertex" "Uint width" "Uint height"
+.Pp
+.Ft "void"
+.Fn AG_GraphVertexPosition "AG_GraphVertex *vertex" "int x" "int y"
+.Pp
+.nr nS 0
+The
+.Fn AG_GraphVertexNew
+function creates a new vertex in the specified graph.
+.Pp
+The
+.Fn AG_GraphVertexLabel
+function changes the text label of the given vertex using the specified
+format string.
+.Pp
+.Fn AG_GraphVertexColorLabel
+sets the color of the text label.
+.Fn AG_GraphVertexColorBG
+sets the background color for the node item.
+.Pp
+.Fn AG_GraphVertexSize
+changes the default size of the node item.
+.Pp
+.Fn AG_GraphVertexPosition
+moves the node item to the given position in the view.
+.Sh EDGES
+.nr nS 1
+.Ft "AG_GraphEdge *"
+.Fn AG_GraphEdgeNew "AG_Graph *graph" "AG_GraphVertex *v1" "AG_GraphVertex *v2"
+.Pp
+.Ft "void"
+.Fn AG_GraphEdgeLabel "AG_GraphEdge *edge" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_GraphEdgeColorLabel "AG_GraphEdge *edge" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn AG_GraphEdgeColor "AG_GraphEdge *edge" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.nr nS 0
+The
+.Fn AG_GraphEdgeNew
+function creates a new edge connecting vertices
+.Fa v1
+and 
+.Fa v2 .
+If the two vertices are already connected by an edge, the function fails
+and returns NULL.
+.Pp
+The
+.Fn AG_GraphEdgeLabel
+sets the text label to display along the given edge.
+.Pp
+.Fn AG_GraphEdgeColorLabel
+sets the color of the text label.
+.Fn AG_GraphEdgeColor
+sets the color of the line representing the edge.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It window-keydown
+Pan (direction keys), or center around origin (0 key).
+.It window-mousebuttondown
+Select vertices or edges and start dragging (left), start panning (middle)
+or trigger the popup menu (right).
+.It window-keyup
+Stop dragging/panning actions in progress.
+.It window-mousemotion
+Pan or move selected vertices.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Pp
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.
