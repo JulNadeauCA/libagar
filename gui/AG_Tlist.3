@@ -77,7 +77,13 @@ function allocates, initializes, and attaches a
 .Nm
 widget.
 .Pp
-
+The
+.Fn AG_TlistNewPolled
+variant sets the
+.Dv AG_TLIST_POLL
+flag and configures a default
+.Sq tlist-poll
+event handler.
 .Pp
 .Fn AG_TlistInit
 initializes an existing
