@@ -126,9 +126,11 @@ void
 RG_AnimRemoveInsn(RG_Anim *ani, Uint insn)
 {
 	destroy_insn(&ani->insns[insn]);
-	if (insn+1 < ani->ninsns)
+	if (insn+1 < ani->ninsns) {
 		memmove(&ani->insns[insn], &ani->insns[insn+1],
-		    (--ani->ninsns)*sizeof(RG_AnimInsn));
+		    (ani->ninsns - 1)*sizeof(RG_AnimInsn));
+	}
+	ani->ninsns--;
 }
 
 Uint
