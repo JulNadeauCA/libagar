@@ -60,6 +60,9 @@
 #include <jpeglib.h>
 #endif
 
+#define PROTO_VERSION "1.0"
+#define DEFAULT_PORT "1234"
+
 struct client {
 	const char *name;
 	const char *hostname;
@@ -114,8 +117,20 @@ auth_password(NS_Server *ns, void *p)
 static int
 srv_error(NS_Server *srv)
 {
-	NS_Log(NS_ERR, "%s: function failed (%s)", srv->name, AG_GetError());
+	NS_Log(NS_ERR, "%s: function failed (%s)", AGOBJECT(srv)->name,
+	    AG_GetError());
 	return (-1);
+}
+
+static int
+srv_login(NS_Server *srv, void *p)
+{
+	return (0);
+}
+
+static void
+srv_logout(NS_Server *srv, void *p)
+{
 }
 
 static int
@@ -125,7 +140,12 @@ cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 
 	hostname[0] = '\0';
 	gethostname(hostname, sizeof(hostname));
-	printf("0 agar:%s:%s:%s\n", VERSION, RELEASE, hostname);
+
+	NS_BeginList(ns);
+	NS_ListString(ns, "%s", VERSION);
+	NS_ListString(ns, "%s", RELEASE);
+	NS_ListString(ns, "%s", hostname);
+	NS_EndList(ns);
 	return (0);
 }
 
@@ -133,13 +153,13 @@ cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 static void
 jpegError(j_common_ptr jcomp)
 {
-	printf("1 jpeg error\n");
+	fprintf(stderr, "jpeg error\n");
 }
 
 static void
 jpegOutputMsg(j_common_ptr jcomp)
 {
-	printf("1 jpeg error\n");
+	fprintf(stderr, "jpeg message\n");
 }
 #endif /* HAVE_JPEG */
 
@@ -233,12 +253,11 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	/* Send the JPEG data to the client. */
 	len = (size_t)ftell(ftmp);
 	rewind(ftmp);
-	NS_BinaryMode(ns, len);
+	NS_BeginData(ns, len);
 	while ((rv = fread(sendbuf, 1, sizeof(sendbuf), ftmp)) > 0) {
-		fwrite(sendbuf, 1, rv, stdout);
+		NS_Data(ns, sendbuf, rv);
 	}
-	fflush(stdout);
-	NS_CommandMode(ns);
+	NS_EndData(ns);
 	fclose(ftmp);
 	unlink(tmp);
 	Free(jcopybuf, M_VIEW);
@@ -254,17 +273,16 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 static int
 cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 {
+	NS_BeginList(ns);
 	AG_MutexLock(&agView->lock);
-	printf("0 %s:%ux%ux%u:%08x,%08x,%08x,%08x:%d:%d\n",
-	    agView->opengl ? "gl" : "",
-	    agView->w, agView->h, agVideoInfo->vfmt->BitsPerPixel,
-	    agVideoInfo->vfmt->Rmask,
-	    agVideoInfo->vfmt->Gmask,
-	    agVideoInfo->vfmt->Bmask,
-	    agVideoInfo->vfmt->Amask,
-	    agVideoInfo->vfmt->colorkey,
-	    agVideoInfo->vfmt->alpha);
+	NS_ListString(ns, "opengl:%d", agView->opengl);
+	NS_ListString(ns, "geom:%u:%u", agView->w, agView->h);
+	NS_ListString(ns, "bpp:%u", agVideoInfo->vfmt->BitsPerPixel);
+	NS_ListString(ns, "rmask:%08x", agVideoInfo->vfmt->Rmask);
+	NS_ListString(ns, "gmask:%08x", agVideoInfo->vfmt->Gmask);
+	NS_ListString(ns, "bmask:%08x", agVideoInfo->vfmt->Bmask);
 	AG_MutexUnlock(&agView->lock);
+	NS_EndList(ns);
 	return (0);
 }
 
@@ -272,9 +290,12 @@ cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 static int
 cmd_refresh(NS_Server *ns, NS_Command *cmd, void *p)
 {
+	NS_BeginList(ns);
 	AG_MutexLock(&agView->lock);
-	printf("0 %d:%d\n", agView->rCur, agView->rNom);
+	NS_ListString(ns, "%d", agView->rCur);
+	NS_ListString(ns, "%d", agView->rNom);
 	AG_MutexUnlock(&agView->lock);
+	NS_EndList(ns);
 	return (0);
 }
 
@@ -283,8 +304,9 @@ cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
-	printf("%d/%s/%s/0x%08x/%u:", depth, pob->name, pob->ops->type,
-	    pob->flags, pob->data_used);
+	NS_ListString(ns, "%s", pob->name);
+	NS_ListString(ns, "%s", pob->ops->type);
+	NS_ListString(ns, "0x%08x", pob->flags);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
 		cmd_world_find(ns, cmd, cob, depth+1);
@@ -295,11 +317,11 @@ cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 static int
 cmd_world(NS_Server *ns, NS_Command *cmd, void *p)
 {
+	NS_BeginList(ns);
 	AG_LockLinkage();
-	fputs("0 ", stdout);
 	cmd_world_find(ns, cmd, agWorld, 0);
-	fputc('\n', stdout);
 	AG_UnlockLinkage();
+	NS_EndList(ns);
 	return (0);
 }
 
@@ -321,9 +343,14 @@ AG_DebugServerStart(void)
 	int rv;
 
 	if (!server_inited) {
-		NS_ServerInit(&server, "agar-debug", VERSION);
+		NS_ServerInit(&server, "_DebugServer");
+		NS_ServerSetProtocol(&server, "agar-debug", PROTO_VERSION);
+		NS_ServerBind(&server, NULL, DEFAULT_PORT);
+	
 		NS_RegAuthMode(&server, "password", auth_password, NULL);
 		NS_RegErrorFn(&server, srv_error);
+		NS_RegLoginFn(&server, srv_login);
+		NS_RegLogoutFn(&server, srv_logout);
 
 		NS_RegCmd(&server, "version", cmd_version, NULL);
 		NS_RegCmd(&server, "screen", cmd_surface, agView->v);
