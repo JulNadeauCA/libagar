@@ -644,13 +644,14 @@ AG_FSpinbuttonSetWriteable(AG_FSpinbutton *fsu, int writeable)
 {
 	AG_MutexLock(&fsu->lock);
 	fsu->writeable = writeable;
-	AG_TextboxSetWriteable(fsu->input, writeable);
 	if (writeable) {
-		AG_ButtonEnable(fsu->incbu);
-		AG_ButtonEnable(fsu->decbu);
+		AG_WidgetEnable(fsu->incbu);
+		AG_WidgetEnable(fsu->decbu);
+		AG_WidgetEnable(fsu->input);
 	} else {
-		AG_ButtonDisable(fsu->incbu);
-		AG_ButtonDisable(fsu->decbu);
+		AG_WidgetDisable(fsu->incbu);
+		AG_WidgetDisable(fsu->decbu);
+		AG_WidgetDisable(fsu->input);
 	}
 	AG_MutexUnlock(&fsu->lock);
 }

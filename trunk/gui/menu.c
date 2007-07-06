@@ -71,7 +71,8 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	if (item->nsubitems == 0)
 		return (NULL);
 
-	panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS);
+	panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
+	                     AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
 	AG_WindowSetCaption(panel, "win-popup");
 	AG_WindowSetPadding(panel, 0, 0, 0);
 

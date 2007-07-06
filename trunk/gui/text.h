@@ -89,6 +89,9 @@ void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	       FORMAT_ATTRIBUTE(printf, 3, 4)
 	       NONNULL_ATTRIBUTE(3);
 
+#define AG_TextMsgFromError() \
+	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
+
 void AG_TextEditFloat(double *, double, double, const char *,
 		      const char *, ...)
 		      FORMAT_ATTRIBUTE(printf, 5, 6)

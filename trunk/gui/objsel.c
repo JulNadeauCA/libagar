@@ -138,7 +138,7 @@ SelectObject(AG_Event *event)
 
 	if (*object != NULL) {
 		if (os->flags & AG_OBJSEL_PAGE_DATA) {
-			AG_ObjectPageOut(*object, AG_OBJECT_DATA);
+			AG_ObjectPageOut(*object);
 		}
 		AG_ObjectDelDep(os->pobj, *object);
 	}
@@ -148,7 +148,7 @@ SelectObject(AG_Event *event)
 	AG_ObjectAddDep(os->pobj, *object);
 
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
-		AG_ObjectPageIn(*object, AG_OBJECT_DATA);
+		AG_ObjectPageIn(*object);
 	}
 	AG_WidgetUnlockBinding(objectb);
 }

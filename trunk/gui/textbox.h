@@ -22,7 +22,6 @@ typedef struct ag_textbox {
 	int	     label_id;			/* Label surface mapping */
 
 	Uint flags;
-#define AG_TEXTBOX_WRITEABLE	 0x001	/* Allow focus/text input */
 #define AG_TEXTBOX_BLINK_ON	 0x002	/* Cursor blink state (internal) */
 #define AG_TEXTBOX_PASSWORD	 0x004	/* Password (hidden) input */
 #define AG_TEXTBOX_ABANDON_FOCUS 0x008	/* Abandon focus on return */
@@ -31,7 +30,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_VFILL	 0x040
 #define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
 #define AG_TEXTBOX_FOCUS	 0x080
-#define AG_TEXTBOX_READONLY	 0x100	/* Text is read-only */
+#define AG_TEXTBOX_READONLY	 0x100	/* Equivalent to WidgetDisable() */
 #define AG_TEXTBOX_INT_ONLY	 0x200	/* Accepts only valid strtol() input */
 #define AG_TEXTBOX_FLT_ONLY	 0x400	/* Accepts only valid strtof() input */
 
@@ -68,8 +67,17 @@ char	*AG_TextboxDupString(AG_Textbox *);
 size_t	 AG_TextboxCopyString(AG_Textbox *, char *, size_t)
 	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_TextboxInt(AG_Textbox *);
-void	 AG_TextboxSetWriteable(AG_Textbox *, int);
 void	 AG_TextboxSetPassword(AG_Textbox *, int);
+
+/* Legacy */
+#define AG_TextboxSetWriteable(tb,flag)	do {	\
+	if (flag) {				\
+	 	AG_WidgetEnable(tb);		\
+	} else {				\
+		AG_WidgetDisable(tb);		\
+	}					\
+} while (0)
+
 __END_DECLS
 
 #include "close_code.h"
