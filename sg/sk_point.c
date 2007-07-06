@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Point in sketch.
+ */
+
 #include <config/edition.h>
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
@@ -53,6 +57,7 @@ SK_PointInit(void *p, Uint32 name)
 	SK_NodeInit(pt, &skPointOps, name, 0);
 	pt->size = 3.0;
 	pt->color = SG_ColorRGB(0.0, 0.0, 0.0);
+	pt->flags = 0;
 }
 
 int
@@ -80,18 +85,31 @@ void
 SK_PointDraw(void *p, SK_View *skv)
 {
 	SK_Point *pt = p;
+	SG_Real i;
 
-	glBegin(GL_LINES);
-	if (SKNODE_SELECTED(pt)) {
+	SG_Begin(SG_LINES);
+	if (SKNODE(pt)->flags & SK_NODE_MOUSEOVER) {
+		SG_Color3f(1.0, 0.0, 0.0);
+	} else if (SKNODE_SELECTED(pt)) {
 		SG_Color3f(0.0, 1.0, 0.0);
 	} else {
 		SG_Color3v(&pt->color);
 	}
-	glVertex2f(0.0, 0.0);	glVertex2f(-pt->size*skv->wPixel, 0.0);
-	glVertex2f(0.0, 0.0);	glVertex2f(+pt->size*skv->wPixel, 0.0);
-	glVertex2f(0.0, 0.0);	glVertex2f(0.0, -pt->size*skv->hPixel);
-	glVertex2f(0.0, 0.0);	glVertex2f(0.0, +pt->size*skv->hPixel);
-	glEnd();
+	SG_Vertex2(0.0, 0.0);	SG_Vertex2(-pt->size*skv->wPixel, 0.0);
+	SG_Vertex2(0.0, 0.0);	SG_Vertex2(+pt->size*skv->wPixel, 0.0);
+	SG_Vertex2(0.0, 0.0);	SG_Vertex2(0.0, -pt->size*skv->hPixel);
+	SG_Vertex2(0.0, 0.0);	SG_Vertex2(0.0, +pt->size*skv->hPixel);
+	SG_End();
+
+	if (SKNODE(pt)->flags & SK_NODE_MOUSEOVER) {
+		SG_Begin(SG_LINE_LOOP);
+		SG_Color3f(0.0, 0.0, 1.0);
+		for (i = 0.0; i < M_PI*2.0; i += (2.0*M_PI)/6.0) {
+			SG_Vertex2(SG_Cos(i)*skv->wPixel*4.0,
+			           SG_Sin(i)*skv->hPixel*4.0);
+		}
+		SG_End();
+	}
 }
 
 void
@@ -118,6 +136,23 @@ SK_PointColor(SK_Point *pt, SG_Color c)
 	pt->color = c;
 }
 
+SG_Real
+SK_PointProximity(void *p, const SG_Vector *v, SG_Vector *vC)
+{
+	SG_Vector pv = SK_NodeCoords(p);
+
+	SG_CopyVector(vC, &pv);
+	return (SG_VectorDistancep(v, &pv));
+}
+
+int
+SK_PointDelete(void *p)
+{
+	SK_Point *pt = p;
+
+	return (SK_NodeDel(pt));
+}
+
 SK_NodeOps skPointOps = {
 	"Point",
 	sizeof(SK_Point),
@@ -129,6 +164,8 @@ SK_NodeOps skPointOps = {
 	SK_PointDraw,
 	NULL,		/* draw_absolute */
 	SK_PointEdit,
+	SK_PointProximity,
+	SK_PointDelete
 };
 
 #ifdef EDITION

@@ -17,6 +17,7 @@ int	 SK_ArcLoad(SK *, void *, AG_Netbuf *);
 int	 SK_ArcSave(SK *, void *, AG_Netbuf *);
 void	 SK_ArcDraw(void *, SK_View *);
 void	 SK_ArcEdit(void *, AG_Widget *, SK_View *);
+SG_Real	 SK_ArcProximity(void *, const SG_Vector *, SG_Vector *);
 
 void	 SK_ArcWidth(SK_Arc *, SG_Real);
 void	 SK_ArcColor(SK_Arc *, SG_Color);

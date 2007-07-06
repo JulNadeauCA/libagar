@@ -23,7 +23,7 @@
  */
 
 /*
- * Graphical interface for SK(3) object edition.
+ * Graphical interface for edition of SK(3) objects.
  */
 
 #include <config/edition.h>
@@ -43,6 +43,7 @@
 #include <gui/table.h>
 #include <gui/separator.h>
 #include <gui/label.h>
+#include <gui/graph.h>
 
 #include "sk.h"
 
@@ -136,13 +137,108 @@ static void
 NodeDelete(AG_Event *event)
 {
 	SK_Node *node = AG_PTR(1);
+
+	if (node->ops->del != NULL) {
+		if (node->ops->del(node) == -1)
+			AG_TextMsgFromError();
+	} else {
+		AG_TextMsg(AG_MSG_ERROR, _("Item cannot be deleted"));
+	}
+}
+
+static void
+PlotConstraintGraph(SK *sk, AG_Graph *gf, SK_ConstraintGraph *cg)
+{
+	char nodeName[SK_NODE_NAME_MAX];
+	SK_Constraint *ct;
+	SG_Vector pos;
+	AG_GraphVertex *v1, *v2;
+	AG_GraphEdge *edge;
+
+	AG_GraphFreeVertices(gf);
+
+	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		if ((v1 = AG_GraphVertexFind(gf, ct->n1)) == NULL) {
+			v1 = AG_GraphVertexNew(gf, ct->n1);
+			AG_GraphVertexLabel(v1, "%s",
+			    SK_NodeNameCopy(ct->n1, nodeName,
+			    sizeof(nodeName)));
+			pos = SK_NodeCoords(ct->n1);
+		}
+		if ((v2 = AG_GraphVertexFind(gf, ct->n2)) == NULL) {
+			v2 = AG_GraphVertexNew(gf, ct->n2);
+			AG_GraphVertexLabel(v2, "%s",
+			    SK_NodeNameCopy(ct->n2, nodeName,
+			    sizeof(nodeName)));
+			pos = SK_NodeCoords(ct->n2);
+		}
+		edge = AG_GraphEdgeNew(gf, v1, v2, ct);
+		AG_GraphEdgeLabel(edge, "%s", skConstraintNames[ct->type]);
+	}
+	AG_GraphAutoPlace(gf, 800, 800);
+}
+
+static void
+SelectConstraintGraph(AG_Event *event)
+{
+	SK *sk = AG_PTR(1);
+	AG_Graph *gf = AG_PTR(2);
+	SK_ConstraintGraph *cg = AG_PTR(3);
+
+	PlotConstraintGraph(sk, gf, cg);
+}
+
+static void
+PollConstraintGraphs(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	SK *sk = AG_PTR(1);
+	SK_ConstraintGraph *cg;
+	AG_TlistItem *ti;
+	int i = 0;
+
+	AG_TlistBegin(tl);
+	AG_TlistAddPtr(tl, NULL, "Original", &sk->ctGraph);
+	TAILQ_FOREACH(cg, &sk->ctClusters, clusters) {
+		ti = AG_TlistAdd(tl, NULL, "Cluster%d", i++);
+		ti->p1 = cg;
+	}
+	AG_TlistEnd(tl);
+}
+
+static void
+ViewConstraintGraph(AG_Event *event)
+{
+	AG_Window *winParent = AG_PTR(1);
+	SK *sk = AG_PTR(2);
+	AG_Graph *gf;
+	AG_Window *win;
+	SK_Node *node;
+	AG_Pane *pane;
+	AG_Tlist *tl;
+	AG_TlistItem *ti;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, _("Constraint graph of <%s>"),
+	    AGOBJECT(sk)->name);
+	
+	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
+	gf = AG_GraphNew(pane->div[1], AG_GRAPH_EXPAND);
+	tl = AG_TlistNewPolled(pane->div[0], AG_TLIST_EXPAND,
+	    PollConstraintGraphs, "%p", sk);
+	AG_TlistPrescale(tl, "<Original>", 6);
+	AG_TlistSetDblClickFn(tl, SelectConstraintGraph, "%p,%p", sk, gf);
+	PlotConstraintGraph(sk, gf, &sk->ctGraph);
+
+	AG_WindowShow(win);
+	AG_WindowAttach(winParent, win);
 }
 
 static void
 CreateNewView(AG_Event *event)
 {
-	AG_Window *winParent = AG_OBJECT(1,"AG_Widget:AG_Window:*");
-	SK *sk = AG_OBJECT(2,"SK");
+	AG_Window *winParent = AG_PTR(1);
+	SK *sk = AG_PTR(2);
 	SK_View *skv;
 	AG_Window *win;
 
@@ -328,6 +424,8 @@ SK_Edit(void *p)
 	{
 		AG_MenuAction(pitem, _("New view..."), -1,
 		    CreateNewView, "%p,%p", win, sk);
+		AG_MenuAction(pitem, _("Constraint graph..."), -1,
+		    ViewConstraintGraph, "%p,%p", win, sk);
 	}
 	
 	hp = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
@@ -352,6 +450,7 @@ SK_Edit(void *p)
 			SK_Tool *tool;
 
 			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
+			AG_WidgetSetFocusable(tl, 0);
 			TAILQ_FOREACH(tool, &skv->tools, tools) {
 				AG_TlistAddPtr(tl, AGICON(tool->ops->icon),
 				    _(tool->ops->name), tool);
@@ -364,6 +463,7 @@ SK_Edit(void *p)
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
+			AG_WidgetSetFocusable(tl, 0);
 			AG_TlistPrescale(tl, "<Polygon>", 4);
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sk, skv);
 			AG_TlistSetDblClickFn(tl, EditNode, "%p,%p,%p", hp, vp,
@@ -377,10 +477,10 @@ SK_Edit(void *p)
 			tbl = AG_TableNewPolled(ntab,
 			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
 			    PollConstraints, "%p,%p", sk, NULL);
-			AG_TableAddCol(tbl, _("Type"), NULL, NULL);
+			AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
 			AG_TableAddCol(tbl, "n1", "<Line0>", NULL);
 			AG_TableAddCol(tbl, "n2", "<Line0>", NULL);
-			AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+			AG_WidgetSetFocusable(tbl, 0);
 		}
 	}
 	

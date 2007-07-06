@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Geometrical constraint solver.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -31,8 +35,8 @@
 #include "sk.h"
 
 /*
- * Position the elements of a sketch such that the set of geometrical
- * constraints are satisfied.
+ * Attempt to position the elements of a sketch such that the set
+ * of geometrical constraints are satisfied.
  */
 int
 SK_Solve(SK *sk)
@@ -90,7 +94,6 @@ populate_cluster:
 		    skConstraintNames[ctCluster->type],
 		    SK_NodeName(ctCluster->n1),
 		    SK_NodeName(ctCluster->n2));
-		SDL_Delay(1000);
 		SK_AddConstraintCopy(cluster, ctCluster);
 		TAILQ_REMOVE(&cg.edges, ct, constraints);
 		Free(ct, M_SG);
