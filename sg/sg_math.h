@@ -34,6 +34,7 @@ typedef float SG_Real;
 #define SG_Acos(x) acos(x)
 #define SG_Atan(x) atan(x)
 #define SG_Atan2(y,x) atan2((y),(x))
+#define SG_Hypot(x,y) hypot((y),(x))
 #define SG_Fabs(x) fabs(x)
 #define SG_Pow(x,y) pow((x),(y))
 #else
@@ -48,6 +49,7 @@ typedef float SG_Real;
 #define SG_Acos(x) acosf(x)
 #define SG_Atan(x) atanf(x)
 #define SG_Atan2(y,x) atan2f((y),(x))
+#define SG_Hypot(x,y) hypotf((y),(x))
 #define SG_Fabs(x) fabsf(x)
 #define SG_Pow(x,y) powf((x),(y))
 #endif
