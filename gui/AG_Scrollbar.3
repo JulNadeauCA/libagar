@@ -62,14 +62,17 @@ widget represents a single value inside a fixed range.
 .nr nS 0
 The
 .Fn AG_ScrollbarNew
-function allocates, initializes, and attaches a
+function allocates, initializes, and attaches a new
 .Nm
 widget.
 .Fn AG_ScrollbarInit
-initializes a
+initializes a preallocated
 .Nm
-widget of the given type:
+widget.
 .Pp
+The
+.Fa type
+argument defines the orientation of the scrollbar:
 .Bd -literal
 enum ag_scrollbar_type {
 	AG_SCROLLBAR_HORIZ,

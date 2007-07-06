@@ -57,9 +57,6 @@ encoded characters.
 .Fn AG_TextboxInit "AG_Textbox *textbox" "Uint flags" "const char *label"
 .Pp
 .Ft void
-.Fn AG_TextboxSetWriteable "AG_Textbox *textbox" "int writeable"
-.Pp
-.Ft void
 .Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
 .Ft void
@@ -68,19 +65,19 @@ encoded characters.
 .nr nS 0
 The
 .Fn AG_TextboxNew
-function allocates, initializes, and attaches a
+function allocates, initializes, and attaches a new
 .Nm
 widget.
 The
 .Fn AG_TextboxInit
-function initializes a
+function initializes a preallocated
 .Nm
-widget with the label text set to
-.Fa label .
+widget.
 .Pp
 The
-.Fn AG_TextboxSetWriteable
-function enables (1) or disables (0) writeability of the string.
+.Fa label
+parameter (if not NULL) defines an optional text label to display left
+of the textbox.
 .Pp
 .Fn AG_TextboxSetPassword
 enables (1) or disables (0) password-type input, where characters are
