@@ -68,7 +68,7 @@ SC_PlotterNew(void *parent, Uint flags)
 }
 
 static void
-Keydown(AG_Event *event)
+keydown(AG_Event *event)
 {
 	SC_Plotter *ptr = AG_SELF();
 	int keysym = AG_INT(1);
@@ -100,7 +100,7 @@ MouseOverPlotItem(SC_Plotter *ptr, SC_Plot *pl, int x, int y)
 }
 
 static void
-Mousemotion(AG_Event *event)
+mousemotion(AG_Event *event)
 {
 	SC_Plotter *ptr = AG_SELF();
 	int x = AG_INT(1);
@@ -128,7 +128,7 @@ Mousemotion(AG_Event *event)
 
 #if 0
 static void
-Buttonup(AG_Event *event)
+mousebuttonup(AG_Event *event)
 {
 	SC_Plotter *ptr = AG_SELF();
 	int button = AG_INT(1);
@@ -262,7 +262,7 @@ ShowPlotSettings(AG_Event *event)
 }
 
 static void
-Buttondown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	SC_Plotter *ptr = AG_SELF();
 	SC_Plot *pl, *opl;
@@ -406,10 +406,10 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 	AG_WidgetSetInt(ptr->hbar, "min", 0);
 	AG_WidgetSetInt(ptr->vbar, "min", 0);
 
-	AG_SetEvent(ptr, "window-keydown", Keydown, NULL);
-	AG_SetEvent(ptr, "window-mousebuttondown", Buttondown, NULL);
-//	AG_SetEvent(ptr, "window-mousebuttonup", Buttonup, NULL);
-	AG_SetEvent(ptr, "window-mousemotion", Mousemotion, NULL);
+	AG_SetEvent(ptr, "window-keydown", keydown, NULL);
+	AG_SetEvent(ptr, "window-mousebuttondown", mousebuttondown, NULL);
+//	AG_SetEvent(ptr, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(ptr, "window-mousemotion", mousemotion, NULL);
 }
 
 void
