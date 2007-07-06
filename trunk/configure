@@ -358,28 +358,26 @@ cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
-echo "#define HAVE_CC_WARNINGS" $HAVE_CC_WARNINGS >> config/have_cc_warnings.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_CC_WARNINGS="yes"
+echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
+echo "#ifndef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
+echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >> config/have_cc_warnings.h
 echo "#endif" >> config/have_cc_warnings.h
-
-	HAVE_CC_WARNINGS=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_CC_WARNINGS="no"
+echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
+echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
@@ -398,28 +396,26 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
-echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> config/have_ieee754.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_IEEE754="yes"
+echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
+echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
+echo "#define HAVE_IEEE754 \"$HAVE_IEEE754\"" >> config/have_ieee754.h
 echo "#endif" >> config/have_ieee754.h
-
-	HAVE_IEEE754=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_IEEE754" > config/have_ieee754.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_IEEE754="no"
+echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
+echo "#undef HAVE_IEEE754" > config/have_ieee754.h
+fi;
+rm -f conftest conftest.c
 echo -n "checking __bounded__ attribute..."
 echo -n "checking __bounded__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -433,28 +429,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
-echo "#define HAVE_BOUNDED_ATTRIBUTE" $HAVE_BOUNDED_ATTRIBUTE >> config/have_bounded_attribute.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_BOUNDED_ATTRIBUTE="yes"
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> config/have_bounded_attribute.h
 echo "#endif" >> config/have_bounded_attribute.h
-
-	HAVE_BOUNDED_ATTRIBUTE=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_BOUNDED_ATTRIBUTE="no"
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+fi;
+rm -f conftest conftest.c
 echo -n "checking __format__ attribute..."
 echo -n "checking __format__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -474,28 +468,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
-echo "#define HAVE_FORMAT_ATTRIBUTE" $HAVE_FORMAT_ATTRIBUTE >> config/have_format_attribute.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_FORMAT_ATTRIBUTE="yes"
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> config/have_format_attribute.h
 echo "#endif" >> config/have_format_attribute.h
-
-	HAVE_FORMAT_ATTRIBUTE=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_FORMAT_ATTRIBUTE="no"
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+fi;
+rm -f conftest conftest.c
 echo -n "checking __nonnull__ attribute..."
 echo -n "checking __nonnull__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -517,17 +509,20 @@ if [ $? != 0 ]; then
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
-echo "#define HAVE_NONNULL_ATTRIBUTE" $HAVE_NONNULL_ATTRIBUTE >> config/have_nonnull_attribute.h
+echo "yes"
+echo "yes" >> config.log
+HAVE_NONNULL_ATTRIBUTE="yes"
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> config/have_nonnull_attribute.h
 echo "#endif" >> config/have_nonnull_attribute.h
-
-	echo "yes"
 else
-    echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+HAVE_NONNULL_ATTRIBUTE="no"
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+fi;
 echo -n "checking for long double..."
 echo -n "checking for long double..." >> config.log
 cat << EOT > conftest.c
@@ -589,17 +584,20 @@ if [ $? != 0 ]; then
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
-echo "#define HAVE_CYGWIN" $HAVE_CYGWIN >> config/have_cygwin.h
+echo "yes"
+echo "yes" >> config.log
+HAVE_CYGWIN="yes"
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >> Makefile.config
+echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
+echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >> config/have_cygwin.h
 echo "#endif" >> config/have_cygwin.h
-
-	echo "yes"
 else
-    echo "#undef HAVE_CYGWIN" > config/have_cygwin.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+HAVE_CYGWIN="no"
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >> Makefile.config
+echo "#undef HAVE_CYGWIN" > config/have_cygwin.h
+fi;
 echo -n "checking for mingw environment..."
 echo -n "checking for mingw environment..." >> config.log
 cat << EOT > conftest.c
@@ -626,17 +624,20 @@ if [ $? != 0 ]; then
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_MINGW" > config/have_mingw.h
-echo "#define HAVE_MINGW" $HAVE_MINGW >> config/have_mingw.h
+echo "yes"
+echo "yes" >> config.log
+HAVE_MINGW="yes"
+echo "HAVE_MINGW=$HAVE_MINGW" >> Makefile.config
+echo "#ifndef HAVE_MINGW" > config/have_mingw.h
+echo "#define HAVE_MINGW \"$HAVE_MINGW\"" >> config/have_mingw.h
 echo "#endif" >> config/have_mingw.h
-
-	echo "yes"
 else
-    echo "#undef HAVE_MINGW" > config/have_mingw.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+HAVE_MINGW="no"
+echo "HAVE_MINGW=$HAVE_MINGW" >> Makefile.config
+echo "#undef HAVE_MINGW" > config/have_mingw.h
+fi;
 if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
 	echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -652,28 +653,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
-echo "#define _MK_HAVE_SYS_TYPES_H" $_MK_HAVE_SYS_TYPES_H >> config/_mk_have_sys_types_h.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_SYS_TYPES_H="yes"
+echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >> Makefile.config
+echo "#ifndef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
+echo "#define _MK_HAVE_SYS_TYPES_H \"$_MK_HAVE_SYS_TYPES_H\"" >> config/_mk_have_sys_types_h.h
 echo "#endif" >> config/_mk_have_sys_types_h.h
-
-	_MK_HAVE_SYS_TYPES_H=yes
-
-	echo "yes"
 else
-	echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_SYS_TYPES_H="no"
+echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >> Makefile.config
+echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
+fi;
+rm -f conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
 echo -n "checking for unsigned typedefs..."
 echo -n "checking for unsigned typedefs..." >> config.log
@@ -688,28 +687,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
-echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS" $_MK_HAVE_UNSIGNED_TYPEDEFS >> config/_mk_have_unsigned_typedefs.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_UNSIGNED_TYPEDEFS="yes"
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> config/_mk_have_unsigned_typedefs.h
 echo "#endif" >> config/_mk_have_unsigned_typedefs.h
-
-	_MK_HAVE_UNSIGNED_TYPEDEFS=yes
-
-	echo "yes"
 else
-	echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_UNSIGNED_TYPEDEFS="no"
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+fi;
+rm -f conftest conftest.c
 else
 echo -n "checking for unsigned typedefs..."
 echo -n "checking for unsigned typedefs..." >> config.log
@@ -723,28 +720,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
-echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS" $_MK_HAVE_UNSIGNED_TYPEDEFS >> config/_mk_have_unsigned_typedefs.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_UNSIGNED_TYPEDEFS="yes"
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> config/_mk_have_unsigned_typedefs.h
 echo "#endif" >> config/_mk_have_unsigned_typedefs.h
-
-	_MK_HAVE_UNSIGNED_TYPEDEFS=yes
-
-	echo "yes"
 else
-	echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_UNSIGNED_TYPEDEFS="no"
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+fi;
+rm -f conftest conftest.c
 fi;
 echo -n "checking for a compatible <sys/queue.h>..."
 echo -n "checking for a compatible <sys/queue.h>..." >> config.log
@@ -784,28 +779,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
-echo "#define _MK_HAVE_SYS_QUEUE_H" $_MK_HAVE_SYS_QUEUE_H >> config/_mk_have_sys_queue_h.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_SYS_QUEUE_H="yes"
+echo "_MK_HAVE_SYS_QUEUE_H=$_MK_HAVE_SYS_QUEUE_H" >> Makefile.config
+echo "#ifndef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
+echo "#define _MK_HAVE_SYS_QUEUE_H \"$_MK_HAVE_SYS_QUEUE_H\"" >> config/_mk_have_sys_queue_h.h
 echo "#endif" >> config/_mk_have_sys_queue_h.h
-
-	_MK_HAVE_SYS_QUEUE_H=yes
-
-	echo "yes"
 else
-	echo "#undef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_SYS_QUEUE_H="no"
+echo "_MK_HAVE_SYS_QUEUE_H=$_MK_HAVE_SYS_QUEUE_H" >> Makefile.config
+echo "#undef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
+fi;
+rm -f conftest conftest.c
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c
@@ -854,18 +847,31 @@ EOT
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+free_null_noop="no"
+echo "free_null_noop=$free_null_noop" >> Makefile.config
+echo "#undef free_null_noop" > config/free_null_noop.h
 else
-	compile="ok"
-	./conftest >> config.log
-	if [ $? != 0 ]; then
-		echo "-> exec failed ($?)" >> config.log
-		free_null_noop="no"
-	else
-		free_null_noop="yes"
-	fi
-fi
+compile="ok"
+./conftest >> config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+free_null_noop="yes"
+echo "free_null_noop=$free_null_noop" >> Makefile.config
+echo "#ifndef free_null_noop" > config/free_null_noop.h
+echo "#define free_null_noop \"$free_null_noop\"" >> config/free_null_noop.h
+echo "#endif" >> config/free_null_noop.h
+else
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
+free_null_noop="no"
+echo "free_null_noop=$free_null_noop" >> Makefile.config
+echo "#undef free_null_noop" > config/free_null_noop.h
+fi;
+fi;
 rm -f conftest conftest.c
 if [ "${free_null_noop}" = "yes" ]; then
 echo "yes"
@@ -896,28 +902,26 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_MATH" > config/have_math.h
-echo "#define HAVE_MATH" $HAVE_MATH >> config/have_math.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_MATH="yes"
+echo "HAVE_MATH=$HAVE_MATH" >> Makefile.config
+echo "#ifndef HAVE_MATH" > config/have_math.h
+echo "#define HAVE_MATH \"$HAVE_MATH\"" >> config/have_math.h
 echo "#endif" >> config/have_math.h
-
-	HAVE_MATH=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_MATH" > config/have_math.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_MATH="no"
+echo "HAVE_MATH=$HAVE_MATH" >> Makefile.config
+echo "#undef HAVE_MATH" > config/have_math.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
 echo "#ifndef MATH_LIBS" > config/math_libs.h
@@ -1596,28 +1600,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
-echo "#define HAVE_PTHREADS" $HAVE_PTHREADS >> config/have_pthreads.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS="yes"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
 echo "#endif" >> config/have_pthreads.h
-
-	HAVE_PTHREADS=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS="no"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1650,28 +1652,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
-echo "#define HAVE_PTHREADS" $HAVE_PTHREADS >> config/have_pthreads.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS="yes"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
 echo "#endif" >> config/have_pthreads.h
-
-	HAVE_PTHREADS=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS="no"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1707,28 +1707,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#define HAVE_PTHREADS_XOPEN" $HAVE_PTHREADS_XOPEN >> config/have_pthreads_xopen.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS_XOPEN="yes"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
 echo "#endif" >> config/have_pthreads_xopen.h
-
-	HAVE_PTHREADS_XOPEN=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS_XOPEN="no"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
 echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
@@ -1759,28 +1757,26 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE" $HAVE_PTHREAD_MUTEX_RECURSIVE >> config/have_pthread_mutex_recursive.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREAD_MUTEX_RECURSIVE="yes"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
 echo "#endif" >> config/have_pthread_mutex_recursive.h
-
-	HAVE_PTHREAD_MUTEX_RECURSIVE=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREAD_MUTEX_RECURSIVE="no"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
@@ -1803,34 +1799,131 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP" $HAVE_PTHREAD_MUTEX_RECURSIVE_NP >> config/have_pthread_mutex_recursive_np.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="yes"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
 echo "#endif" >> config/have_pthread_mutex_recursive_np.h
-
-	HAVE_PTHREAD_MUTEX_RECURSIVE_NP=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
 echo "#endif" >> config/have_pthread_mutex_recursive_np.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+fi;
+echo -n "checking for the X window system..."
+echo -n "checking for the X window system..." >> config.log
+x11_found_includes="no"
+x11_found_libs="no"
+if [ -d /usr/include/X11/X11 ]; then
+X11_CFLAGS=""-I/usr/include/X11""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/include/X11R6/X11 ]; then
+X11_CFLAGS=""-I/usr/include/X11R6""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/local/X11/include/X11 ]; then
+X11_CFLAGS=""-I/usr/local/X11/include""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/local/X11R6/include/X11 ]; then
+X11_CFLAGS=""-I/usr/local/X11R6/include""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/local/include/X11/X11 ]; then
+X11_CFLAGS=""-I/usr/local/include/X11""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/local/include/X11R6/X11 ]; then
+X11_CFLAGS=""-I/usr/local/include/X11R6""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/X11/include/X11 ]; then
+X11_CFLAGS=""-I/usr/X11/include""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/X11R6/include/X11 ]; then
+X11_CFLAGS=""-I/usr/X11R6/include""
+x11_found_includes="yes"
+fi;
+if [ -d /usr/local/X11/lib ]; then
+X11_LIBS=""-L/usr/local/X11/lib""
+x11_found_libs="yes"
+fi;
+if [ -d /usr/local/X11R6/lib ]; then
+X11_LIBS=""-L/usr/local/X11R6/lib""
+x11_found_libs="yes"
+fi;
+if [ -d /usr/X11/lib ]; then
+X11_LIBS=""-L/usr/X11/lib""
+x11_found_libs="yes"
+fi;
+if [ -d /usr/X11R6/lib ]; then
+X11_LIBS=""-L/usr/X11R6/lib""
+x11_found_libs="yes"
+fi;
+cat << EOT > conftest.c
+#include <X11/Xlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	Display *disp;
+
+	disp = XOpenDisplay(NULL);
+	XCloseDisplay(disp);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_X11="yes"
+echo "HAVE_X11=$HAVE_X11" >> Makefile.config
+echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11 \"$HAVE_X11\"" >> config/have_x11.h
+echo "#endif" >> config/have_x11.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_X11="no"
+echo "HAVE_X11=$HAVE_X11" >> Makefile.config
+echo "#undef HAVE_X11" > config/have_x11.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_X11}" != "" ]; then
+echo "X11_CFLAGS=$X11_CFLAGS" >> Makefile.config
+echo "X11_LIBS=$X11_LIBS" >> Makefile.config
+echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
+echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
+echo "#endif" >> config/x11_cflags.h
+echo "#ifndef X11_LIBS" > config/x11_libs.h
+echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
+echo "#endif" >> config/x11_libs.h
+else
+echo "#undef X11_CFLAGS" > config/x11_cflags.h
+echo "#undef X11_LIBS" > config/x11_libs.h
 fi;
 CFLAGS="$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1942,28 +2035,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_SDL" > config/have_sdl.h
-echo "#define HAVE_SDL" $HAVE_SDL >> config/have_sdl.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_SDL="yes"
+echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
+echo "#ifndef HAVE_SDL" > config/have_sdl.h
+echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
 echo "#endif" >> config/have_sdl.h
-
-	HAVE_SDL=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_SDL" > config/have_sdl.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_SDL="no"
+echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
+echo "#undef HAVE_SDL" > config/have_sdl.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_SDL}" != "" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
@@ -1992,28 +2083,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
-echo "#define HAVE_SDL_CPUINFO" $HAVE_SDL_CPUINFO >> config/have_sdl_cpuinfo.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_SDL_CPUINFO="yes"
+echo "HAVE_SDL_CPUINFO=$HAVE_SDL_CPUINFO" >> Makefile.config
+echo "#ifndef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
+echo "#define HAVE_SDL_CPUINFO \"$HAVE_SDL_CPUINFO\"" >> config/have_sdl_cpuinfo.h
 echo "#endif" >> config/have_sdl_cpuinfo.h
-
-	HAVE_SDL_CPUINFO=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_SDL_CPUINFO="no"
+echo "HAVE_SDL_CPUINFO=$HAVE_SDL_CPUINFO" >> Makefile.config
+echo "#undef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
+fi;
+rm -f conftest conftest.c
 else
 echo "no"
 echo "no" >> config.log
@@ -2083,28 +2172,26 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> config/have_freetype.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_FREETYPE="yes"
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >> Makefile.config
+echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
+echo "#define HAVE_FREETYPE \"$HAVE_FREETYPE\"" >> config/have_freetype.h
 echo "#endif" >> config/have_freetype.h
-
-	HAVE_FREETYPE=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_FREETYPE" > config/have_freetype.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_FREETYPE="no"
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >> Makefile.config
+echo "#undef HAVE_FREETYPE" > config/have_freetype.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
@@ -2193,28 +2280,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
-echo "#define HAVE_OPENGL" $HAVE_OPENGL >> config/have_opengl.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_OPENGL="yes"
+echo "HAVE_OPENGL=$HAVE_OPENGL" >> Makefile.config
+echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
+echo "#define HAVE_OPENGL \"$HAVE_OPENGL\"" >> config/have_opengl.h
 echo "#endif" >> config/have_opengl.h
-
-	HAVE_OPENGL=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_OPENGL" > config/have_opengl.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_OPENGL="no"
+echo "HAVE_OPENGL=$HAVE_OPENGL" >> Makefile.config
+echo "#undef HAVE_OPENGL" > config/have_opengl.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
 echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
@@ -2276,28 +2361,26 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_GLU" > config/have_glu.h
-echo "#define HAVE_GLU" $HAVE_GLU >> config/have_glu.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_GLU="yes"
+echo "HAVE_GLU=$HAVE_GLU" >> Makefile.config
+echo "#ifndef HAVE_GLU" > config/have_glu.h
+echo "#define HAVE_GLU \"$HAVE_GLU\"" >> config/have_glu.h
 echo "#endif" >> config/have_glu.h
-
-	HAVE_GLU=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_GLU" > config/have_glu.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_GLU="no"
+echo "HAVE_GLU=$HAVE_GLU" >> Makefile.config
+echo "#undef HAVE_GLU" > config/have_glu.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_GLU}" = "yes" ]; then
 echo "GLU_CFLAGS=$GLU_CFLAGS" >> Makefile.config
 echo "GLU_LIBS=$GLU_LIBS" >> Makefile.config
@@ -2388,28 +2471,26 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
 echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS}" >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
-if [ $? != 0 ]; then
-	echo "failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "ok" >> config.log
-	echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
-echo "#define HAVE_JPEG" $HAVE_JPEG >> config/have_jpeg.h
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_JPEG="yes"
+echo "HAVE_JPEG=$HAVE_JPEG" >> Makefile.config
+echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
+echo "#define HAVE_JPEG \"$HAVE_JPEG\"" >> config/have_jpeg.h
 echo "#endif" >> config/have_jpeg.h
-
-	HAVE_JPEG=yes
-
-	echo "yes"
 else
-	echo "#undef HAVE_JPEG" > config/have_jpeg.h
-
-	echo "no"
-fi
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_JPEG="no"
+echo "HAVE_JPEG=$HAVE_JPEG" >> Makefile.config
+echo "#undef HAVE_JPEG" > config/have_jpeg.h
+fi;
+rm -f conftest conftest.c
 if [ "${HAVE_JPEG}" != "" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
 echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
