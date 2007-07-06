@@ -22,6 +22,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Derivative of SG_Object that does not allow thin features, but provides
+ * mass information for use in physical simulations.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 

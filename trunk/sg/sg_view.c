@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Visualization widget for SG(3) objects.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -308,7 +312,7 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 	AG_MenuItem *mRoot, *mOvl, *mCam;
 
 	if (sv->popup != NULL) {
-		AG_PopupDestroy(sv->popup);
+		AG_PopupDestroy(sv, sv->popup);
 	}
 	sv->popup = AG_PopupNew(sv);
 	mRoot = sv->popup->item;

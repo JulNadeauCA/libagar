@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Sample node object.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 

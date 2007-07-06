@@ -22,6 +22,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Generic node object for polyhedral approximations using the winged-edge
+ * structure as boundary representation.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
