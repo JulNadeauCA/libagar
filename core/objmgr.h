@@ -12,7 +12,7 @@ struct ag_window *AG_ObjMgrWindow(void);
 void		  AG_ObjMgrInit(void);
 void		  AG_ObjMgrDestroy(void);
 void		  AG_ObjMgrReopen(AG_Object *);
-void		  AG_ObjMgrOpenData(void *, int);
+void		  AG_ObjMgrOpenData(void *);
 void		  AG_ObjMgrCloseData(void *);
 void		  AG_ObjMgrOpenGeneric(AG_Object *);
 void		  AG_ObjMgrQuitDlg(void *);

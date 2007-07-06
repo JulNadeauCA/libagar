@@ -126,7 +126,6 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 	ob->nevents = 0;
 
 	AG_MutexInitRecursive(&ob->lock);
-	ob->data_used = 0;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
@@ -199,7 +198,6 @@ AG_ObjectRemain(void *p, int flags)
 
 	if (flags & AG_OBJECT_REMAIN_DATA) {
 		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_DATA_RESIDENT);
-		ob->data_used = AG_OBJECT_DEP_MAX;
 	} else {
 		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
 	}
@@ -214,7 +212,7 @@ AG_ObjectFreeData(void *p)
 {
 	AG_Object *ob = p;
 
-	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
+	if (AGOBJECT_RESIDENT(ob)) {
 		if (ob->ops->reinit != NULL) {
 			ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 			ob->ops->reinit(ob);
@@ -322,7 +320,7 @@ AG_ObjectFindParent(void *obj, const char *name, const char *type)
  * The linkage must be locked.
  */
 static int
-find_depended(const void *p, const void *robj)
+AG_ObjectInUseFind(const void *p, const void *robj)
 {
 	const AG_Object *ob = p, *cob;
 	AG_ObjectDep *dep;
@@ -336,7 +334,7 @@ find_depended(const void *p, const void *robj)
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (find_depended(cob, robj))
+		if (AG_ObjectInUseFind(cob, robj))
 			return (1);
 	}
 	return (0);
@@ -353,7 +351,7 @@ AG_ObjectInUse(const void *p)
 	AG_Object *root;
 
 	root = AG_ObjectRoot(ob);
-	if (find_depended(root, ob))
+	if (AG_ObjectInUseFind(root, ob))
 		return (1);
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
@@ -793,36 +791,37 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 	return (-1);
 }
 
-/* Bring specific resources associated with an object in memory. */
+/*
+ * Load an object's data into memory and mark it resident. If the object
+ * is either marked non-persistent or no data can be found in storage,
+ * just mark the object resident.
+ */
 int
-AG_ObjectPageIn(void *p, enum ag_object_page_item item)
+AG_ObjectPageIn(void *p)
 {
 	AG_Object *ob = p;
+	int dataFound;
 
 	AG_MutexLock(&ob->lock);
-
-	switch (item) {
-	case AG_OBJECT_DATA:
-		if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
-			goto out;
-		}
-		if (ob->data_used == 0) {
-			if (AG_ObjectLoadData(ob) == -1) {
+	if (!AGOBJECT_PERSISTENT(ob)) {
+		ob->flags |= AG_OBJECT_DATA_RESIDENT;
+		goto out;
+	}
+	if (!AGOBJECT_RESIDENT(ob)) {
+		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
+			if (dataFound == 0) {
 				/*
-				 * Assume that this failure means the data has
-				 * never been saved before.
-				 * XXX
+				 * Data not found in storage, just assume
+				 * the object has never been saved before.
 				 */
-				printf("%s: %s\n", ob->name, AG_GetError());
 				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				goto out;
+			} else {
+				goto fail;
 			}
 		}
-out:
-		if (++ob->data_used > AG_OBJECT_DEP_MAX) {
-			ob->data_used = AG_OBJECT_DEP_MAX;
-		}
-		break;
 	}
+out:
 	AG_MutexUnlock(&ob->lock);
 	return (0);
 fail:
@@ -830,33 +829,30 @@ fail:
 	return (-1);
 }
 
-/* Remove specific object resources from memory / save to network format. */
+/*
+ * If the given object is persistent and no longer referenced, save
+ * its data and free it from memory. The object must be resident.
+ */
 int
-AG_ObjectPageOut(void *p, enum ag_object_page_item item)
+AG_ObjectPageOut(void *p)
 {
+	extern int agObjMgrExiting;			/* objmgr.c */
 	AG_Object *ob = p;
 	
 	AG_MutexLock(&ob->lock);
-	
-	switch (item) {
-	case AG_OBJECT_DATA:
-		if (ob->flags & AG_OBJECT_NON_PERSISTENT)
-			goto done;
-#ifdef DEBUG
-		if (ob->data_used == 0)
-			fatal("neg data ref count");
-#endif
-		if (ob->data_used != AG_OBJECT_DEP_MAX &&
-		    --ob->data_used == 0) {
-			extern int agObjMgrExiting;
-
-			if (!agObjMgrExiting) {
-				if (AG_ObjectSave(ob) == -1)
-					goto fail;
-			}
-			AG_ObjectFreeData(ob);
+	if (!AGOBJECT_PERSISTENT(ob)) {
+		goto done;
+	}
+	if (!AGOBJECT_RESIDENT(ob)) {
+		AG_SetError(_("Object is non-resident"));
+		goto fail;
+	}
+	if (!AG_ObjectInUse(ob)) {
+		if (!agObjMgrExiting) {
+			if (AG_ObjectSave(ob) == -1)
+				goto fail;
 		}
-		break;
+		AG_ObjectFreeData(ob);
 	}
 done:
 	AG_MutexUnlock(&ob->lock);
@@ -877,7 +873,7 @@ AG_ObjectLoad(void *p)
 	/* Cancel scheduled non-loadable timeouts. */
 	AG_ObjectCancelTimeouts(ob, AG_TIMEOUT_LOADABLE);
 	
-	if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+	if (!AGOBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail;
 	}
@@ -944,7 +940,7 @@ AG_ObjectResolveDeps(void *p)
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (cob->flags & AG_OBJECT_NON_PERSISTENT) {
+		if (!AGOBJECT_PERSISTENT(cob)) {
 			continue;
 		}
 		if (AG_ObjectResolveDeps(cob) == -1)
@@ -961,10 +957,11 @@ int
 AG_ObjectReloadData(void *p)
 {
 	AG_Object *ob = p, *cob;
+	int dataFound;
 
 	if (ob->flags & (AG_OBJECT_WAS_RESIDENT|AG_OBJECT_REMAIN_DATA)) {
 		ob->flags &= ~(AG_OBJECT_WAS_RESIDENT);
-		if (AG_ObjectLoadData(ob) == -1) {
+		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (agObjectIgnoreDataErrors) {
 				AG_TextMsg(AG_MSG_ERROR, _("%s: %s (ignored)"),
 				    ob->name, AG_GetError());
@@ -1014,9 +1011,9 @@ AG_ObjectLoadGeneric(void *p)
 	
 	/*
 	 * Must free the resident data in order to clear the dependencies.
-	 * Sets the AG_OBJECT_WAS_RESIDENT flag to be used at data load stage.
+	 * Sets the WAS_RESIDENT flag to be used at data load stage.
 	 */
-	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
+	if (AGOBJECT_RESIDENT(ob)) {
 		ob->flags |= AG_OBJECT_WAS_RESIDENT;
 		AG_ObjectFreeData(ob);
 	}
@@ -1081,8 +1078,8 @@ AG_ObjectLoadGeneric(void *p)
 			if (strcmp(eob->ops->type, ctype) != 0) {
 				fatal("existing object of different type");
 			}
-			/* XXX ignore */
-			if (eob->flags & AG_OBJECT_NON_PERSISTENT) {
+			/* XXX ignore instead? */
+			if (!AGOBJECT_PERSISTENT(eob)) {
 				fatal("existing non-persistent object");
 			}
 			if (AG_ObjectLoadGeneric(eob) == -1) {
@@ -1166,22 +1163,27 @@ fail:
  * XXX encode some sort of key?
  */
 int
-AG_ObjectLoadData(void *p)
+AG_ObjectLoadData(void *p, int *dataFound)
 {
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
 	AG_Netbuf *buf;
 	off_t data_offs;
+	
+	*dataFound = 1;
 
-	if (ob->flags & AG_OBJECT_DATA_RESIDENT) {
+	if (AGOBJECT_RESIDENT(ob)) {
 		AG_SetError(_("The data of `%s' is already resident."),
 		    ob->name);
 		return (-1);
 	}
-	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
+		*dataFound = 0;
 		return (-1);
+	}
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
+		*dataFound = 0;
 		return (-1);
 	}
 	if (agVerbose)
@@ -1207,7 +1209,7 @@ fail:
 }
 
 static void
-backup_object(void *p, const char *orig)
+BackupObjectFile(void *p, const char *orig)
 {
 	char path[MAXPATHLEN];
 
@@ -1229,7 +1231,7 @@ AG_ObjectSaveAll(void *p)
 		goto fail;
 	}
 	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
-		if (cobj->flags & AG_OBJECT_NON_PERSISTENT) {
+		if (!AGOBJECT_PERSISTENT(cobj)) {
 			continue;
 		}
 		if (AG_ObjectSaveAll(cobj) == -1)
@@ -1256,16 +1258,17 @@ AG_ObjectSave(void *p)
 	off_t count_offs, data_offs;
 	Uint32 count;
 	AG_ObjectDep *dep;
-	int was_resident;
+	int wasResident;
+	int dataFound;
 
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
 
-	if (ob->flags & AG_OBJECT_NON_PERSISTENT) {
+	if (!AGOBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
-	was_resident = ob->flags & AG_OBJECT_DATA_RESIDENT;
+	wasResident = AGOBJECT_RESIDENT(ob);
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 	
 	/* Create the save directory. */
@@ -1279,16 +1282,26 @@ AG_ObjectSave(void *p)
 	    AG_MkPath(save_dir) == -1)
 		goto fail_lock;
 
-	/* Page in the data unless it is already resident. */
-	if (!was_resident) {
-		if (AG_ObjectLoadData(ob) == -1) {
-			/*
-			 * Assume that this failure means the data has never
-			 * been saved before.
-			 * XXX
-			 */
-			dprintf("%s: %s\n", ob->name, AG_GetError());
-			ob->flags |= AG_OBJECT_DATA_RESIDENT;
+	/*
+	 * Page in the data unless it is already resident.
+	 * XXX TODO separate the data files in generic/data parts to
+	 * avoid this.
+	 */
+	if (!wasResident) {
+		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
+			if (!dataFound) {
+				/*
+				 * Data has not been found, just assume
+				 * that this object has never been saved
+				 * before and mark it resident.
+				 */
+				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+			} else {
+				AG_SetError("Failed to load non-resident "
+				            "object for save: %s",
+				    AG_GetError());
+				goto fail_lock;
+			}
 		}
 	}
 
@@ -1300,7 +1313,7 @@ AG_ObjectSave(void *p)
 
 	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, save_file);
 
-	backup_object(ob, save_file);
+	BackupObjectFile(ob, save_file);
 
 	if ((buf = AG_NetbufOpen(save_file, "wb", AG_NETBUF_BIG_ENDIAN))
 	    == NULL)
@@ -1336,7 +1349,7 @@ AG_ObjectSave(void *p)
 	AG_WriteUint32(buf, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (child->flags & AG_OBJECT_NON_PERSISTENT) {
+		if (!AGOBJECT_PERSISTENT(child)) {
 			continue;
 		}
 		AG_WriteString(buf, child->name);
@@ -1353,7 +1366,7 @@ AG_ObjectSave(void *p)
 
 	AG_NetbufFlush(buf);
 	AG_NetbufClose(buf);
-	if (!was_resident) {
+	if (!wasResident) {
 		AG_ObjectFreeData(ob);
 	}
 	AG_MutexUnlock(&ob->lock);
@@ -1362,7 +1375,7 @@ AG_ObjectSave(void *p)
 fail:
 	AG_NetbufClose(buf);
 fail_reinit:
-	if (!was_resident)
+	if (!wasResident)
 		AG_ObjectFreeData(ob);
 fail_lock:
 	AG_MutexUnlock(&ob->lock);
@@ -1647,7 +1660,7 @@ AG_ObjectDuplicate(void *p)
 		AG_ObjectInit(dob, ob->name, t->ops);
 	}
 
-	if (AG_ObjectPageIn(ob, AG_OBJECT_DATA) == -1)
+	if (AG_ObjectPageIn(ob) == -1)
 		goto fail;
 
 	/* Change the name and attach to the same parent as the original. */
@@ -1659,11 +1672,11 @@ AG_ObjectDuplicate(void *p)
 	strlcpy(oname, ob->name, sizeof(oname));
 	strlcpy(ob->name, dob->name, sizeof(ob->name));
 	if (AG_ObjectSave(ob) == -1) {
-		AG_ObjectPageOut(ob, AG_OBJECT_DATA);
+		AG_ObjectPageOut(ob);
 		goto fail;
 	}
 
-	if (AG_ObjectPageOut(ob, AG_OBJECT_DATA) == -1)
+	if (AG_ObjectPageOut(ob) == -1)
 		goto fail;
 
 	if (AG_ObjectLoad(dob) == -1)
@@ -1814,8 +1827,7 @@ AG_ObjectChanged(void *p)
 	extern int agObjMgrHexDiff;
 #endif
 
-	if ((ob->flags & AG_OBJECT_NON_PERSISTENT) ||
-	    (ob->flags & AG_OBJECT_DATA_RESIDENT) == 0) {
+	if (!AGOBJECT_PERSISTENT(ob) || !AGOBJECT_RESIDENT(ob)) {
 		return (0);
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, save_sha1) == 0)
@@ -2006,11 +2018,11 @@ rename_object(AG_Event *event)
 	AG_Textbox *tb = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 
-	AG_ObjectPageIn(ob, AG_OBJECT_DATA);
-	AG_ObjectUnlinkDatafiles(ob);
-	strlcpy(ob->name, tb->string, sizeof(ob->name));
-	AG_ObjectPageOut(ob, AG_OBJECT_DATA);
-
+	if (AG_ObjectPageIn(ob) == 0) {
+		AG_ObjectUnlinkDatafiles(ob);
+		strlcpy(ob->name, tb->string, sizeof(ob->name));
+		AG_ObjectPageOut(ob);
+	}
 	AG_PostEvent(NULL, ob, "renamed", NULL);
 }
 
@@ -2019,24 +2031,24 @@ refresh_checksums(AG_Event *event)
 {
 	char checksum[128];
 	AG_Object *ob = AG_PTR(1);
-	AG_Textbox *tb_md5 = AG_PTR(2);
-	AG_Textbox *tb_sha1 = AG_PTR(3);
-	AG_Textbox *tb_rmd160 = AG_PTR(4);
+	AG_Textbox *tbMD5 = AG_PTR(2);
+	AG_Textbox *tbSHA1 = AG_PTR(3);
+	AG_Textbox *tbRMD160 = AG_PTR(4);
 
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, checksum) > 0) {
-		AG_TextboxPrintf(tb_md5,  "%s", checksum);
+		AG_TextboxPrintf(tbMD5,  "%s", checksum);
 	} else {
-		AG_TextboxPrintf(tb_md5,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbMD5,  "(%s)", AG_GetError());
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, checksum) > 0) {
-		AG_TextboxPrintf(tb_sha1,  "%s", checksum);
+		AG_TextboxPrintf(tbSHA1,  "%s", checksum);
 	} else {
-		AG_TextboxPrintf(tb_sha1,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbSHA1,  "(%s)", AG_GetError());
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, checksum) > 0) {
-		AG_TextboxPrintf(tb_rmd160,  "%s", checksum);
+		AG_TextboxPrintf(tbRMD160,  "%s", checksum);
 	} else {
-		AG_TextboxPrintf(tb_rmd160,  "(%s)", AG_GetError());
+		AG_TextboxPrintf(tbRMD160,  "(%s)", AG_GetError());
 	}
 }
 
@@ -2101,7 +2113,7 @@ AG_ObjectEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Infos"), AG_BOX_VERT);
 	{
 		char path[AG_OBJECT_PATH_MAX];
-		AG_Textbox *tb_md5, *tb_sha1, *tb_rmd160;
+		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
 		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
@@ -2134,30 +2146,25 @@ AG_ObjectEdit(void *p)
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
-		    _("Data references: %[u32]"), &ob->data_used);
-
-		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-
-		tb_md5 = AG_TextboxNew(ntab,
+		tbMD5 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "MD5: ");
-		AG_TextboxPrescale(tb_md5, "888888888888888888888888888888888");
-		tb_md5->flags &= ~(AG_TEXTBOX_WRITEABLE);
+		AG_TextboxPrescale(tbMD5, "888888888888888888888888888888888");
+		AG_WidgetDisable(tbMD5);
 		
-		tb_sha1 = AG_TextboxNew(ntab,
+		tbSHA1 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "SHA1: ");
-		tb_sha1->flags &= ~(AG_TEXTBOX_WRITEABLE);
+		AG_WidgetDisable(tbSHA1);
 		
-		tb_rmd160 = AG_TextboxNew(ntab,
+		tbRMD160 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "RMD160: ");
-		tb_rmd160->flags &= ~(AG_TEXTBOX_WRITEABLE);
+		AG_WidgetDisable(tbRMD160);
 
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
 					            AG_BOX_HFILL);
 		{
 			btn = AG_ButtonAct(box, 0, _("Refresh checksums"),
-			    refresh_checksums, "%p,%p,%p,%p", ob, tb_md5,
-			    tb_sha1, tb_rmd160);
+			    refresh_checksums, "%p,%p,%p,%p", ob,
+			    tbMD5, tbSHA1, tbRMD160);
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 		}
 	}

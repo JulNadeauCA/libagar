@@ -58,23 +58,24 @@ typedef struct ag_object {
 #define AG_OBJECT_PRESERVE_DEPS	 0x010	/* Preserve cnt=0 dependencies */
 #define AG_OBJECT_STATIC	 0x020	/* Don't free() after detach */
 #define AG_OBJECT_READONLY	 0x040	/* Disallow edition (advisory) */
-#define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by AG_ObjectLoad() */
-#define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by AG_ObjectLoad() */
-#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Unsafe to load during edition */
+#define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by ObjectLoad() */
+#define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by ObjectLoad() */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Recreate editor UI on ObjectLoad() */
 #define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep user data resident */
+#define AG_OBJECT_DEBUG		 0x800	/* Enable debugging */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
 				 AG_OBJECT_READONLY|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
-				 AG_OBJECT_REMAIN_DATA)
+				 AG_OBJECT_REMAIN_DATA|\
+				 AG_OBJECT_DEBUG)
 #define AG_OBJECT_DUPED_FLAGS	(AG_OBJECT_SAVED_FLAGS|\
 				 AG_OBJECT_NON_PERSISTENT|\
 				 AG_OBJECT_REOPEN_ONLOAD|\
 				 AG_OBJECT_REMAIN_DATA)
 
 	AG_Mutex lock;
-	Uint32 data_used;
 	Uint nevents;				/* Number of event handlers */
 	TAILQ_HEAD(,ag_event) events;		/* Event handlers */
 	TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
@@ -111,7 +112,10 @@ enum ag_object_checksum_alg {
 	}
 
 #define AGOBJECT(ob)		((struct ag_object *)(ob))
-#define AGOBJECT_TYPE(ob, t)	(strcmp(AGOBJECT(ob)->ops->type,(t))==0)
+#define AGOBJECT_RESIDENT(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DATA_RESIDENT)
+#define AGOBJECT_PERSISTENT(ob) ((AGOBJECT(ob)->flags & \
+				 AG_OBJECT_NON_PERSISTENT) == 0)
+#define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -182,8 +186,8 @@ void	 AG_ObjectFreeDeps(AG_Object *);
 void	 AG_ObjectFreeZerodeps(AG_Object *);
 void 	 AG_ObjectCancelTimeouts(void *, int);
 
-int	 AG_ObjectPageIn(void *, enum ag_object_page_item);
-int	 AG_ObjectPageOut(void *, enum ag_object_page_item);
+int	 AG_ObjectPageIn(void *);
+int	 AG_ObjectPageOut(void *);
 int	 AG_ObjectSave(void *);
 int	 AG_ObjectSaveAll(void *);
 
@@ -191,7 +195,7 @@ int	 AG_ObjectLoad(void *);
 int	 AG_ObjectLoadGeneric(void *);
 int	 AG_ObjectReloadData(void *);
 int	 AG_ObjectResolveDeps(void *);
-int	 AG_ObjectLoadData(void *);
+int	 AG_ObjectLoadData(void *, int *);
 
 AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
 __inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
