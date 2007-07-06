@@ -55,7 +55,7 @@ static const struct ag_maptool_ent {
 	{ N_("Running timers"), AG_DebugTimeoutList },
 	{ N_("Unicode browser"), AG_DebugUnicodeBrowser },
 	{ N_("Display settings"), AG_DebugViewSettings },
-	{ N_("Widget browser"), AG_DebugWidgetBrowser },
+	{ N_("GUI debugger"), AG_DebugWidgetBrowser },
 };
 
 static void
