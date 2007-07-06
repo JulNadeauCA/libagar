@@ -81,8 +81,8 @@ AG_MonitorMenu(AG_MenuItem *mi)
 		AG_MenuAction(mi, _(tool_ents[i].name), -1,
 		    selected_tool, "%p", &tool_ents[i]);
 	}
-	AG_MenuSeparator(mi);
 #if 0
+	AG_MenuSeparator(mi);
 	AG_MenuIntBool(mi, _("Datafile hex diffs"), OBJ_ICON,
 	    &agObjMgrHexDiff, 0);
 #endif
