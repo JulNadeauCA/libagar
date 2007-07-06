@@ -99,7 +99,9 @@ SK_LineDraw(void *p, SK_View *skv)
 	SG_Vector v2 = SK_NodeCoords(line->p2);
 
 	SG_Begin(SG_LINES);
-	if (SKNODE_SELECTED(line)) {
+	if (SKNODE(line)->flags & SK_NODE_MOUSEOVER) {
+		SG_Color3f(0.0, 0.0, 1.0);
+	} else if (SKNODE_SELECTED(line)) {
 		SG_Color3f(0.0, 1.0, 0.0);
 	} else {
 		SG_Color3v(&line->color);
@@ -118,6 +120,40 @@ SK_LineEdit(void *p, AG_Widget *box, SK_View *skv)
 	SG_SpinReal(box, _("Width: "), &line->width);
 //	pal = AG_HSVPalNew(box, AG_HSVPAL_EXPAND);
 //	SG_WidgetBindReal(pal, "RGBAv", (void *)&line->color);
+}
+
+SG_Real
+SK_LineProximity(void *p, const SG_Vector *v, SG_Vector *vC)
+{
+	SK_Line *line = p;
+	SG_Vector p1 = SK_NodeCoords(line->p1);
+	SG_Vector p2 = SK_NodeCoords(line->p2);
+	SG_Real mag = SG_VectorDistance(p2, p1);
+	SG_Real u;
+
+	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
+              ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
+	if (u < 0.0 || u > 1.0)
+		return (HUGE_VAL);
+
+	*vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
+	return (SG_VectorDistancep(v, vC));
+}
+
+int
+SK_LineDelete(void *p)
+{
+	SK_Line *line = p;
+
+	SK_NodeDelReference(line, line->p1);
+	SK_NodeDelReference(line, line->p2);
+
+	if (SKNODE(line->p1)->nRefs == 0)
+		SK_NodeDel(line->p1);
+	if (SKNODE(line->p2)->nRefs == 0)
+		SK_NodeDel(line->p2);
+
+	return (SK_NodeDel(line));
 }
 
 void
@@ -142,15 +178,17 @@ SK_NodeOps skLineOps = {
 	SK_LineSave,
 	NULL,		/* draw_relative */
 	SK_LineDraw,
-	SK_LineEdit
+	SK_LineEdit,
+	SK_LineProximity,
+	SK_LineDelete
 };
 
 #ifdef EDITION
 
 struct sk_line_tool {
 	SK_Tool tool;
-	SK_Line	 *cur_line;
-	SK_Point *cur_point;
+	SK_Line	 *curLine;
+	SK_Point *curPoint;
 };
 
 static void
@@ -158,18 +196,38 @@ init(void *p)
 {
 	struct sk_line_tool *t = p;
 
-	t->cur_line = NULL;
-	t->cur_point = NULL;
+	t->curLine = NULL;
+	t->curPoint = NULL;
+}
+
+static SK_Point *
+OverPoint(SK *sk, SG_Vector *pos, SG_Vector *vC, void *ignore)
+{
+	SK_Node *node;
+	
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		node->flags &= ~(SK_NODE_MOUSEOVER);
+	}
+	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
+	    SG_VectorDistance2p(pos, vC) < 1.0) {
+		node->flags |= SK_NODE_MOUSEOVER;
+		return ((SK_Point *)node);
+	}
+	return (NULL);
 }
 
 static int
 mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_line_tool *t = p;
-	
-	if (t->cur_line != NULL) {
-		SK_Identity(t->cur_point);
-		SK_Translatev(t->cur_point, &pos);
+	SK *sk = SKTOOL(t)->skv->sk;
+	SG_Vector vC;
+	SK_Point *overPoint;
+
+	overPoint = OverPoint(sk, &pos, &vC, t->curPoint);
+	if (t->curLine != NULL) {
+		SK_Identity(t->curPoint);
+		SK_Translatev(t->curPoint, (overPoint != NULL) ? &vC : &pos);
 	}
 	return (0);
 }
@@ -179,25 +237,45 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_line_tool *t = p;
 	SK *sk = SKTOOL(t)->skv->sk;
+	SK_Point *overPoint;
 	SK_Line *line;
+	SG_Vector vC;
 
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
 
-	if (t->cur_line != NULL) {
-		t->cur_line = NULL;
-		t->cur_point = NULL;
+	overPoint = OverPoint(sk, &pos, &vC, t->curPoint);
+
+	if ((line = t->curLine) != NULL) {
+		if (overPoint != NULL &&
+		    overPoint != line->p2) {
+		    	SK_NodeDelReference(line, line->p2);
+			if (SK_NodeDel(line->p2)) {
+				AG_TextMsgFromError();
+				return (0);
+			}
+		    	SK_NodeAddReference(line, overPoint);
+			line->p2 = overPoint;
+		}
+		t->curLine = NULL;
+		t->curPoint = NULL;
 		return (1);
 	}
+
 	line = SK_LineNew(sk->root);
-	line->p1 = SK_PointNew(line);
-	line->p2 = SK_PointNew(line);
+	if (overPoint != NULL) {
+		line->p1 = overPoint;
+	} else {
+		line->p1 = SK_PointNew(sk->root);
+		SK_Translatev(line->p1, &pos);
+	}
+	line->p2 = SK_PointNew(sk->root);
+	SK_Translatev(line->p2, &pos);
+	
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);
-	SK_Translatev(line->p1, &pos);
-	SK_Translatev(line->p2, &pos);
-	t->cur_line = line;
-	t->cur_point = line->p2;
+	t->curLine = line;
+	t->curPoint = line->p2;
 	return (1);
 }
 

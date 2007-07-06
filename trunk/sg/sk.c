@@ -226,28 +226,31 @@ SK_NodeInit(void *np, const void *ops, Uint32 name, Uint flags)
 	n->ops = (const SK_NodeOps *)ops;
 	n->sk = NULL;
 	n->pNode = NULL;
-	n->nrefs = 0;
-	n->refnodes = Malloc(sizeof(SK_Node *), M_SG);
-	n->nrefnodes = 0;
+	n->nRefs = 0;
+	n->RefNodes = Malloc(sizeof(SK_Node *), M_SG);
+	n->nRefNodes = 0;
 	SG_MatrixIdentityv(&n->T);
 	TAILQ_INIT(&n->cnodes);
 }
 
+/* Free a node and detach/free any child nodes. */
 static void
 SK_FreeNode(SK *sk, SK_Node *node)
 {
-	SK_Node *n1, *n2;
+	SK_Node *cnode, *cnodeNext;
 
-	for (n1 = TAILQ_FIRST(&node->cnodes);
-	     n1 != TAILQ_END(&node->cnodes);
-	     n1 = n2) {
-		n2 = TAILQ_NEXT(n1, sknodes);
-		if (n1->ops->destroy != NULL) {
-			n1->ops->destroy(n1);
-		}
-		Free(n1, M_SG);
+	for (cnode = TAILQ_FIRST(&node->cnodes);
+	     cnode != TAILQ_END(&node->cnodes);
+	     cnode = cnodeNext) {
+		cnodeNext = TAILQ_NEXT(cnode, sknodes);
+		TAILQ_REMOVE(&sk->nodes, cnode, nodes);
+		SK_FreeNode(sk, cnode);
 	}
-	TAILQ_INIT(&node->cnodes);
+	if (node->ops->destroy != NULL) {
+		node->ops->destroy(node);
+	}
+	Free(node->RefNodes, M_SG);
+	Free(node, M_SG);
 }
 
 void
@@ -257,6 +260,7 @@ SK_Reinit(void *obj)
 
 	if (sk->root != NULL) {
 		SK_FreeNode(sk, SKNODE(sk->root));
+		sk->root = NULL;
 	}
 	TAILQ_INIT(&sk->nodes);
 	SK_InitRoot(sk);
@@ -430,8 +434,6 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 	
 	/* Load the child nodes recursively. */
 	nchildren = AG_ReadUint32(buf);
-	dprintf("%s: len %lu, %u children\n", SK_NodeName(node),
-	    (Ulong)bsize, nchildren);
 	for (j = 0; j < nchildren; j++) {
 		SK_Node *cnode;
 
@@ -604,10 +606,35 @@ SK_NodeAddReference(void *pNode, void *pOther)
 	if (node == other)
 		return;
 	
-	node->refnodes = Realloc(node->refnodes,
-	                         (node->nrefnodes+1)*sizeof(SK_Node *));
-	node->refnodes[node->nrefnodes++] = other;
-	other->nrefs++;
+	node->RefNodes = Realloc(node->RefNodes,
+	                         (node->nRefNodes+1)*sizeof(SK_Node *));
+	node->RefNodes[node->nRefNodes++] = other;
+	other->nRefs++;
+}
+
+void
+SK_NodeDelReference(void *pNode, void *pOther)
+{
+	SK_Node *node = pNode;
+	SK_Node *other = pOther;
+	int i;
+
+	if (node == other)
+		return;
+
+	for (i = 0; i < node->nRefNodes; i++) {
+		if (node->RefNodes[i] != other) {
+			continue;
+		}
+		if (i+1 < node->nRefNodes) {
+			memmove(&node->RefNodes[i],
+			        &node->RefNodes[i+1],
+				(node->nRefNodes-1)*sizeof(SK_Node *));
+		}
+		node->nRefNodes--;
+		other->nRefs--;
+		break;
+	}
 }
 
 /* Search a node by name in a sketch. */
@@ -663,9 +690,22 @@ SK_NodeDetach(void *ppNode, void *pcNode)
 {
 	SK_Node *pNode = ppNode;
 	SK_Node *cNode = pcNode;
+	SK_Node *subnode, *subnodeNext;
+	SK *sk = pNode->sk;
+	SK_Constraint *ct;
 
+	while ((subnode = TAILQ_FIRST(&cNode->cnodes)) != NULL) {
+		SK_NodeDetach(cNode, subnode);
+	}
+free_constraints:
+	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
+		if (ct->n1 == cNode || ct->n2 == cNode) {
+			SK_DelConstraint(&sk->ctGraph, ct);
+			goto free_constraints;
+		}
+	}
 	TAILQ_REMOVE(&pNode->cnodes, cNode, sknodes);
-	TAILQ_REMOVE(&pNode->sk->nodes, cNode, nodes);
+	TAILQ_REMOVE(&sk->nodes, cNode, nodes);
 	cNode->sk = NULL;
 	cNode->pNode = NULL;
 }
@@ -679,6 +719,25 @@ SK_NodeAdd(void *pNode, const SK_NodeOps *ops, Uint32 name, Uint flags)
 	SK_NodeInit(n, ops, 0, flags);
 	SK_NodeAttach(pNode, n);
 	return (n);
+}
+
+int
+SK_NodeDel(void *p)
+{
+	SK_Node *node = p;
+	SK *sk = node->sk;
+
+	if (node == SKNODE(sk->root)) {
+		AG_SetError("Cannot delete root node");
+		return (-1);
+	}
+	if (node->nRefs > 0) {
+		AG_SetError("Node is being referenced");
+		return (-1);
+	}
+	SK_NodeDetach(node->pNode, node);
+	SK_FreeNode(sk, node);
+	return (0);
 }
 
 void
@@ -855,4 +914,44 @@ SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
 	TAILQ_REMOVE(&cg->edges, ct, constraints);
 	Free(ct, M_SG);
 }
+
+/*
+ * Perform a proximity query with the given vector against all elements
+ * of the given type (or all elements if type is NULL), and return the
+ * closest item.
+ *
+ * The closest point of the closest item is also returned in vC.
+ */
+void *
+SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
+    void *nodeIgnore)
+{
+	SK_Node **nodes, *node, *nClosest = NULL;
+	SG_Real rClosest = HUGE_VAL, p;
+	SG_Vector vClosest = SG_VECTOR2(HUGE_VAL,HUGE_VAL);
+	Uint nNodes;
+
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (node == nodeIgnore ||
+		    node->ops->proximity == NULL) {
+			continue;
+		}
+		if (type != NULL &&
+		    strcmp(node->ops->name, type) != 0) {
+			continue;
+		}
+		p = node->ops->proximity(node, v, vC);
+		if (p < rClosest) {
+			rClosest = p;
+			nClosest = node;
+			vClosest.x = vC->x;
+			vClosest.y = vC->y;
+		}
+	}
+	vC->x = vClosest.x;
+	vC->y = vClosest.y;
+	vC->z = 0.0;
+	return (nClosest);
+}
+
 #endif /* HAVE_OPENGL */

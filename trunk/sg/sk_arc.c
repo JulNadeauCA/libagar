@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Simple arc specified by a radius and two angles.
+ */
+
 #include <config/edition.h>
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
@@ -116,6 +120,12 @@ SK_ArcDraw(void *p, SK_View *skv)
 	SG_TranslateVecGL(v);
 }
 
+SG_Real
+SK_ArcProximity(void *p, const SG_Vector *v, SG_Vector *vC)
+{
+	return (HUGE_VAL);
+}
+
 void
 SK_ArcColor(SK_Arc *arc, SG_Color c)
 {
@@ -133,6 +143,8 @@ SK_NodeOps skArcOps = {
 	NULL,		/* draw_relative */
 	SK_ArcDraw,
 	NULL,		/* edit */
+	SK_ArcProximity,
+	NULL		/* delete */
 };
 
 #ifdef EDITION

@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Visualization/edition widget for SK(3) sketches.
+ */ 
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
@@ -576,16 +580,15 @@ AddConstraint(AG_Event *event)
 		return;
 	}
 	if (SK_AddConstraint(&sk->ctGraph, nodes[0], nodes[1], type) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		AG_TextMsgFromError();
 		return;
 	}
 	dprintf("%s: added %s constraint between %s and %s\n",
 	    AGOBJECT(sk)->name, skConstraintNames[type],
 	    SK_NodeName(nodes[0]), SK_NodeName(nodes[1]));
 
-	if (SK_Solve(sk) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
-	}
+	if (SK_Solve(sk) == -1)
+		AG_TextMsgFromError();
 }
 
 void
@@ -596,7 +599,7 @@ SK_ViewPopupMenu(SK_View *skv)
 	int i;
 
 	if (skv->popup != NULL) {
-		AG_PopupDestroy(skv->popup);
+		AG_PopupDestroy(skv, skv->popup);
 	}
 	skv->popup = AG_PopupNew(skv);
 	node = AG_MenuNode(skv->popup->item, _("Add constraint"), -1);
