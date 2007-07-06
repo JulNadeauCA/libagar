@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Basic linear algebra routines for 4x4 matrices.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 

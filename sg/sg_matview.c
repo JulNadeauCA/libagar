@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Viewer widget for 4x4 matrices used in SG.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 

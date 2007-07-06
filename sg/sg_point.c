@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Node object representing a single point in space.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 

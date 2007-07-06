@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Space partitioning using octrees.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
