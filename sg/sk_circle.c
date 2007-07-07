@@ -137,6 +137,7 @@ SG_Real
 SK_CircleProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SK_Circle *circle = p;
+#if 0
 	SG_Vector c = SK_NodeCoords(circle);
 	SG_Vector vRel = SG_VectorSubp(v, &c);
 	SG_Real theta = SG_Atan2(vRel.y, vRel.x);
@@ -145,6 +146,9 @@ SK_CircleProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 	vC->x = rRel*SG_Sin(theta);
 	vC->y = rRel*SG_Cos(theta);
 	return (SG_VectorDistancep(v, &c) - circle->r);
+#else
+	return (HUGE_VAL);
+#endif
 }
 
 int
@@ -202,15 +206,16 @@ init(void *p)
 }
 
 static SK_Point *
-OverPoint(SK *sk, SG_Vector *pos, SG_Vector *vC, void *ignore)
+OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 {
+	SK *sk = skv->sk;
 	SK_Node *node;
 	
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistance2p(pos, vC) < 1.0) {
+	    SG_VectorDistance2p(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}
@@ -223,9 +228,8 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	struct sk_circle_tool *t = p;
 	SG_Vector vCenter, vC;
 	SK_Point *overPoint;
-	SK *sk = SKTOOL(t)->skv->sk;
 
-	overPoint = OverPoint(sk, &pos, &vC, NULL);
+	overPoint = OverPoint(SKTOOL(t)->skv, &pos, &vC, NULL);
 	if (t->curCircle != NULL) {
 		vCenter = SK_NodeCoords(t->curCircle->p);
 		t->curCircle->r = SG_VectorDistance(vCenter, pos);
@@ -237,7 +241,8 @@ static int
 mousebuttondown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_circle_tool *t = p;
-	SK *sk = SKTOOL(t)->skv->sk;
+	SK_View *skv = SKTOOL(t)->skv;
+	SK *sk = skv->sk;
 	SK_Circle *circle;
 	SK_Point *overPoint;
 	SG_Vector vC;
@@ -249,7 +254,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		t->curCircle = NULL;
 		return (1);
 	}
-	overPoint = OverPoint(sk, &pos, &vC, NULL);
+	overPoint = OverPoint(skv, &pos, &vC, NULL);
 	circle = SK_CircleNew(sk->root);
 	if (overPoint != NULL) {
 		circle->p = overPoint;
