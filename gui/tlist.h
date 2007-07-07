@@ -53,13 +53,15 @@ TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item);
 typedef struct ag_tlist {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_TLIST_MULTI		0x01	/* Multiple selections (ctrl/shift) */
-#define AG_TLIST_MULTITOGGLE	0x02	/* Multiple toggle-style selections */
-#define AG_TLIST_POLL		0x04	/* Generate tlist-poll events */
-#define AG_TLIST_TREE		0x10	/* Hack to display trees */
-#define AG_TLIST_HFILL		0x20
-#define AG_TLIST_VFILL		0x40
-#define AG_TLIST_FOCUS		0x80
+#define AG_TLIST_MULTI		0x001	/* Multiple selections (ctrl/shift) */
+#define AG_TLIST_MULTITOGGLE	0x002	/* Multiple toggle-style selections */
+#define AG_TLIST_POLL		0x004	/* Generate tlist-poll events */
+#define AG_TLIST_TREE		0x010	/* Hack to display trees */
+#define AG_TLIST_HFILL		0x020
+#define AG_TLIST_VFILL		0x040
+#define AG_TLIST_FOCUS		0x080
+#define AG_TLIST_NOSELSTATE	0x100	/* Don't restore previous selection
+					   state after poll operation */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */
