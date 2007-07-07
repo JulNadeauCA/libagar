@@ -97,15 +97,10 @@ SK_LineDraw(void *p, SK_View *skv)
 	SK_Line *line = p;
 	SG_Vector v1 = SK_NodeCoords(line->p1);
 	SG_Vector v2 = SK_NodeCoords(line->p2);
+	SG_Color color = SK_NodeColor(line, &line->color);
 
 	SG_Begin(SG_LINES);
-	if (SKNODE(line)->flags & SK_NODE_MOUSEOVER) {
-		SG_Color3f(0.0, 0.0, 1.0);
-	} else if (SKNODE_SELECTED(line)) {
-		SG_Color3f(0.0, 1.0, 0.0);
-	} else {
-		SG_Color3v(&line->color);
-	}
+	SG_Color3v(&color);
 	SG_Vertex2v(&v1);
 	SG_Vertex2v(&v2);
 	SG_End();
@@ -144,7 +139,12 @@ int
 SK_LineDelete(void *p)
 {
 	SK_Line *line = p;
+	SK *sk = SKNODE(line)->sk;
 
+	SK_DelConstraint(&sk->ctGraph,
+	    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT, line, line->p1));
+	SK_DelConstraint(&sk->ctGraph,
+	    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT, line, line->p2));
 	SK_NodeDelReference(line, line->p1);
 	SK_NodeDelReference(line, line->p2);
 
@@ -250,11 +250,16 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	if ((line = t->curLine) != NULL) {
 		if (overPoint != NULL &&
 		    overPoint != line->p2) {
+			SK_DelConstraint(&sk->ctGraph,
+			    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT,
+			                      line, line->p2));
 		    	SK_NodeDelReference(line, line->p2);
 			if (SK_NodeDel(line->p2)) {
 				AG_TextMsgFromError();
 				return (0);
 			}
+			SK_AddConstraint(&sk->ctGraph, line, overPoint,
+			    SK_COINCIDENT);
 		    	SK_NodeAddReference(line, overPoint);
 			line->p2 = overPoint;
 		}
@@ -273,6 +278,8 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	line->p2 = SK_PointNew(sk->root);
 	SK_Translatev(line->p2, &pos);
 	
+	SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_COINCIDENT);
+	SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_COINCIDENT);
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);
 	t->curLine = line;

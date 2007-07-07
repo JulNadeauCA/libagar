@@ -66,6 +66,7 @@ typedef struct sk_constraint {
 		SK_PARALLEL,
 		SK_DISTANCE,
 		SK_ANGLE,
+		SK_CONCENTRIC,
 		SK_CONSTRAINT_LAST
 	} type;
 	union {
@@ -173,6 +174,7 @@ void		*SK_FindNodeOfType(SK *, const char *, Uint32);
 Uint32		 SK_GenName(SK *);
 char		*SK_NodeName(void *);
 char		*SK_NodeNameCopy(void *, char *, size_t);
+SG_Color	 SK_NodeColor(void *, const SG_Color *);
 void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
 void		 SK_WriteRef(AG_Netbuf *, void *);
 void		 SK_SetLengthUnit(SK *, const AG_Unit *);
@@ -188,6 +190,8 @@ SK_Constraint	*SK_AddConstraint(SK_ConstraintGraph *, void *, void *,
 SK_Constraint	*SK_AddConstraintCopy(SK_ConstraintGraph *,
 		                      const SK_Constraint *);
 void		 SK_DelConstraint(SK_ConstraintGraph *, SK_Constraint *);
+SK_Constraint	*SK_FindConstraint(SK_ConstraintGraph *,
+		                   enum sk_constraint_type, void *, void *);
 
 void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
 		                    SG_Vector *, void *);

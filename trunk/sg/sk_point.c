@@ -85,16 +85,11 @@ void
 SK_PointDraw(void *p, SK_View *skv)
 {
 	SK_Point *pt = p;
+	SG_Color color = SK_NodeColor(pt, &pt->color);
 	SG_Real i;
 
 	SG_Begin(SG_LINES);
-	if (SKNODE(pt)->flags & SK_NODE_MOUSEOVER) {
-		SG_Color3f(1.0, 0.0, 0.0);
-	} else if (SKNODE_SELECTED(pt)) {
-		SG_Color3f(0.0, 1.0, 0.0);
-	} else {
-		SG_Color3v(&pt->color);
-	}
+	SG_Color3v(&color);
 	SG_Vertex2(0.0, 0.0);	SG_Vertex2(-pt->size*skv->wPixel, 0.0);
 	SG_Vertex2(0.0, 0.0);	SG_Vertex2(+pt->size*skv->wPixel, 0.0);
 	SG_Vertex2(0.0, 0.0);	SG_Vertex2(0.0, -pt->size*skv->hPixel);
@@ -103,7 +98,8 @@ SK_PointDraw(void *p, SK_View *skv)
 
 	if (SKNODE(pt)->flags & SK_NODE_MOUSEOVER) {
 		SG_Begin(SG_LINE_LOOP);
-		SG_Color3f(0.0, 0.0, 1.0);
+		SG_Color3v(&color);
+//		SG_Color3f(0.0, 0.0, 1.0);
 		for (i = 0.0; i < M_PI*2.0; i += (2.0*M_PI)/6.0) {
 			SG_Vertex2(SG_Cos(i)*skv->wPixel*4.0,
 			           SG_Sin(i)*skv->hPixel*4.0);
