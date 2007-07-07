@@ -369,7 +369,7 @@ AG_FSpinbuttonScale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		AGWIDGET_SCALE(input, -1, -1);
-		AGWIDGET(fsu)->w = AGWIDGET(input)->w + input->xpadding*2;
+		AGWIDGET(fsu)->w = AGWIDGET(input)->w + input->boxPadX*2;
 		AGWIDGET(fsu)->h = AGWIDGET(input)->h;
 
 		x += AGWIDGET(fsu)->w;

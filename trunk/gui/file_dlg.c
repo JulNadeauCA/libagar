@@ -597,7 +597,7 @@ AG_FileDlgScale(void *p, int w, int h)
 
 	AGWIDGET(fd->comTypes)->x = 0;
 	AGWIDGET(fd->comTypes)->y = y;
-	y += AGWIDGET(fd->comTypes)->h + 1;
+	y += AGWIDGET(fd->comTypes)->h + 4;
 	
 	AGWIDGET(fd->btnOk)->x = 0;
 	AGWIDGET(fd->btnOk)->y = y;
