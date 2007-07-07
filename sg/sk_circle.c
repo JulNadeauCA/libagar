@@ -96,6 +96,7 @@ SK_CircleDraw(void *p, SK_View *skv)
 {
 	SK_Circle *circle = p;
 	SG_Vector v = SK_NodeCoords(circle->p);
+	SG_Color color = SK_NodeColor(circle, &circle->color);
 	SG_Real i, incr;
 	
 	if (circle->r < skv->wPixel) {
@@ -106,11 +107,7 @@ SK_CircleDraw(void *p, SK_View *skv)
 	SG_TranslateVecGL(v);
 
 	SG_Begin(SG_LINE_LOOP);
-	if (SKNODE_SELECTED(circle)) {
-		SG_Color3f(0.0, 1.0, 0.0);
-	} else {
-		SG_Color3v(&circle->color);
-	}
+	SG_Color3v(&color);
 	for (i = 0.0; i < M_PI*2.0; i+=incr) {
 		glVertex2f(SG_Cos(i)*circle->r,
 		           SG_Sin(i)*circle->r);
@@ -155,7 +152,12 @@ int
 SK_CircleDelete(void *p)
 {
 	SK_Circle *circle = p;
+	SK *sk = SKNODE(circle)->sk;
 
+#if 0
+	SK_DelConstraint(&sk->ctGraph,
+	    SK_FindConstraint(&sk->ctGraph, SK_CONCENTRIC, circle, circle->p));
+#endif
 	SK_NodeDelReference(circle, circle->p);
 	if (SKNODE(circle->p)->nRefs == 0) {
 		SK_NodeDel(circle->p);
@@ -262,6 +264,9 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		circle->p = SK_PointNew(sk->root);
 		SK_Translatev(circle->p, &pos);
 	}
+#if 0
+	SK_AddConstraint(&sk->ctGraph, circle, circle->p, SK_CONCENTRIC);
+#endif
 	SK_NodeAddReference(circle, circle->p);
 	t->curCircle = circle;
 	return (1);

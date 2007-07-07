@@ -60,7 +60,8 @@ const char *skConstraintNames[] = {
 	N_("Perpendicular"),
 	N_("Parallel"),
 	N_("Distance"),
-	N_("Angle")
+	N_("Angle"),
+	N_("Concentric"),
 };
 
 SK_NodeOps **skElements = NULL;
@@ -217,6 +218,21 @@ SK_NodeNameCopy(void *p, char *buf, size_t buf_len)
 
 	snprintf(buf, buf_len, "%s%u", node->ops->name, node->name);
 	return (buf);
+}
+
+SG_Color
+SK_NodeColor(void *p, const SG_Color *cOrig)
+{
+	SK_Node *node = p;
+	SG_Color c = *cOrig;
+
+	if (node->flags & SK_NODE_MOUSEOVER) {
+		c.b = MIN((cOrig->b + 0.5)/2.0,1.0);
+	}
+	if (SKNODE_SELECTED(node)) {
+		c.g = MIN((c.g + 1.5)/2.0,1.0);
+	}
+	return c;
 }
 
 void
@@ -873,13 +889,10 @@ SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
 	SK_Constraint *ct;
 	va_list ap;
 
-	TAILQ_FOREACH(ct, &cg->edges, constraints) {
-		if (ct->type == type &&
-		    ct->n1 == node1 &&
-		    ct->n2 == node2) {
-			AG_SetError(_("Existing constraint"));
-			return (NULL);
-		}
+	if (SK_FindConstraint(cg, type, node1, node2) != NULL) {
+		AG_SetError(_("Existing %s constraint"),
+		    skConstraintNames[type]);
+		return (NULL);
 	}
 	ct = Malloc(sizeof(SK_Constraint), M_SG);
 	ct->type = type;
@@ -928,6 +941,25 @@ SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
 {
 	TAILQ_REMOVE(&cg->edges, ct, constraints);
 	Free(ct, M_SG);
+}
+
+/*
+ * Search a constraint graph for a constraint of a given type between
+ * two given nodes.
+ */
+SK_Constraint *
+SK_FindConstraint(SK_ConstraintGraph *cg, enum sk_constraint_type type,
+    void *n1, void *n2)
+{
+	SK_Constraint *ct;
+
+	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		if (ct->type == type &&
+		    ((ct->n1 == n1 && ct->n2 == n2) ||
+		     (ct->n1 == n2 && ct->n2 == n1)))
+			return (ct);
+	}
+	return (NULL);
 }
 
 /*
