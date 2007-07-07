@@ -54,11 +54,13 @@
 
 static void SK_NodeEditGeneric(SK_Node *, AG_Widget *, SK_View *);
 
+extern SK_ToolOps skSelectToolOps;
 extern SK_ToolOps skPointToolOps;
 extern SK_ToolOps skLineToolOps;
 extern SK_ToolOps skCircleToolOps;
 
 SK_ToolOps *skToolkit[] = {
+	&skSelectToolOps,
 	&skPointToolOps,
 	&skLineToolOps,
 	&skCircleToolOps
@@ -319,7 +321,6 @@ SelectTool(AG_Event *event)
 	AG_TlistItem *it = AG_PTR(2);
 	SK_Tool *tool = it->p1;
 
-	dprintf("select tool %s\n", tool->ops->name);
 	SK_ViewSelectTool(skv, tool, NULL);
 }
 
@@ -337,6 +338,9 @@ EditNode(AG_Event *event)
 
 	if (skv->editPane != NULL) {
 		AG_ObjectDetach(skv->editPane);
+//		AG_ObjectDestroy(skv->editPane);
+//		Free(skv->editPane,0);
+//		skv->editPane = NULL;
 	}
 	if (node->ops->edit == NULL) {
 		return;
@@ -345,6 +349,7 @@ EditNode(AG_Event *event)
 	    AG_BOX_EXPAND);
 	node->ops->edit(node, skv->editPane, skv);
 	SK_NodeEditGeneric(node, skv->editPane, skv);
+
 	AG_WidgetScale(vp->div[1], -1, -1);
 	hPane = AGWIDGET(vp->div[1])->h;
 	wPane = AGWIDGET(vp->div[1])->w;

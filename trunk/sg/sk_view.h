@@ -45,6 +45,7 @@ typedef struct sk_view {
 	SK_Tool *deftool;			/* Default tool if any */
 	AG_PopupMenu *popup;			/* Popup menu for context */
 	AG_Widget *editPane;			/* Edit container */
+	SG_Real rSnap;				/* Snapping radius */
 	TAILQ_HEAD(, sk_tool) tools;		/* Sketching tools */
 } SK_View;
 
