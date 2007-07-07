@@ -458,7 +458,8 @@ AG_TlistClear(AG_Tlist *tl)
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		if (it->selected || (it->flags & AG_TLIST_HAS_CHILDREN)) {
+		if ((!(tl->flags & AG_TLIST_NOSELSTATE) && it->selected) ||
+		      (it->flags & AG_TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
 			FreeItem(tl, it);
@@ -522,7 +523,9 @@ AG_TlistRestore(AG_Tlist *tl)
 			if (!tl->compare_fn(sit, cit)) {
 				continue;
 			}
-			cit->selected = sit->selected;
+			if (!(tl->flags & AG_TLIST_NOSELSTATE)) {
+				cit->selected = sit->selected;
+			}
 			if (sit->flags & AG_TLIST_VISIBLE_CHILDREN) {
 				cit->flags |= AG_TLIST_VISIBLE_CHILDREN;
 			} else {

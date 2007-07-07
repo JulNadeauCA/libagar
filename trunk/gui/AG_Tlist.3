@@ -94,10 +94,12 @@ The
 may include:
 .Pp
 .Bd -literal
-#define AG_TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
-#define AG_TLIST_MULTITOGGLE	0x02  /* Multiple toggle selections */
-#define AG_TLIST_POLL		0x04  /* Generate tlist-poll events */
-#define AG_TLIST_TREE		0x10  /* Arrange the items in a tree */
+#define AG_TLIST_MULTI		0x001  /* Ctrl/shift multiple selections */
+#define AG_TLIST_MULTITOGGLE	0x002  /* Multiple toggle selections */
+#define AG_TLIST_POLL		0x004  /* Generate tlist-poll events */
+#define AG_TLIST_TREE		0x010  /* Arrange the items in a tree */
+#define AG_TLIST_NOSELSTATE	0x100  /* Don't restore previous selection
+                                          state after poll operation */
 .Ed
 .Pp
 If the
