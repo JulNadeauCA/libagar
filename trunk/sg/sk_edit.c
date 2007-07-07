@@ -485,7 +485,7 @@ SK_Edit(void *p)
 			    PollConstraints, "%p,%p", sk, NULL);
 			AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
 			AG_TableAddCol(tbl, "n1", "<Line0>", NULL);
-			AG_TableAddCol(tbl, "n2", "<Line0>", NULL);
+			AG_TableAddCol(tbl, "n2", NULL, NULL);
 			AG_WidgetSetFocusable(tbl, 0);
 		}
 	}
@@ -512,9 +512,9 @@ SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 	AG_LabelNewStaticString(box, 0, _("Geometric constraints: "));
 	tbl = AG_TableNewPolled(box, AG_TABLE_MULTI|AG_TABLE_EXPAND,
 	    PollConstraints, "%p,%p", SKNODE(node)->sk, node);
-	AG_TableAddCol(tbl, _("Type"), NULL, NULL);
+	AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
 	AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
-	AG_TableAddCol(tbl, _("Node 2"), "<Circle88>", NULL);
+	AG_TableAddCol(tbl, _("Node 2"), NULL, NULL);
 	AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 }
 
