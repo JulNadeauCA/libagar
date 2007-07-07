@@ -294,9 +294,9 @@ PollNodes(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	SK *sk = AG_PTR(1);
 
-	AG_TlistClear(tl);
+	AG_TlistBegin(tl);
 	FindNodes(tl, (SK_Node *)sk->root, 0);
-	AG_TlistRestore(tl);
+	AG_TlistEnd(tl);
 }
 
 static void
@@ -467,7 +467,8 @@ SK_Edit(void *p)
 		ntab = AG_NotebookAddTab(nb, _("Nodes"), AG_BOX_VERT);
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
+			                       AG_TLIST_EXPAND|AG_TLIST_MULTI|
+					       AG_TLIST_NOSELSTATE);
 			AG_WidgetSetFocusable(tl, 0);
 			AG_TlistPrescale(tl, "<Polygon>", 4);
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sk, skv);
