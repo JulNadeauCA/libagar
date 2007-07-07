@@ -3,7 +3,6 @@
 typedef struct sk_point {
 	struct sk_node node;
 	Uint flags;
-#define SK_POINT_MOUSEOVER	0x01
 	SG_Real size;			/* Display size in pixels */
 	SG_Color color;			/* Display color */
 } SK_Point;

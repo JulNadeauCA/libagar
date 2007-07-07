@@ -44,8 +44,9 @@ typedef struct sk_node {
 	Uint32 name;			/* Unique node handle */
 	const SK_NodeOps *ops;
 	Uint flags;
-#define SK_NODE_SELECTED	0x01
-#define SK_NODE_MOUSEOVER	0x02
+#define SK_NODE_SELECTED	0x01	/* For editor */
+#define SK_NODE_MOUSEOVER	0x02	/* For editor */
+#define SK_NODE_MOVED		0x04	/* For editor */
 	struct sk *sk;			/* Back pointer to sk */
 	struct sk_node *pNode;		/* Back pointer to parent node */
 	SG_Matrix4 T;			/* Transformation from parent */

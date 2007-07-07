@@ -201,15 +201,16 @@ init(void *p)
 }
 
 static SK_Point *
-OverPoint(SK *sk, SG_Vector *pos, SG_Vector *vC, void *ignore)
+OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 {
+	SK *sk = skv->sk;
 	SK_Node *node;
 	
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistance2p(pos, vC) < 1.0) {
+	    SG_VectorDistance2p(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}
@@ -220,11 +221,10 @@ static int
 mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_line_tool *t = p;
-	SK *sk = SKTOOL(t)->skv->sk;
 	SG_Vector vC;
 	SK_Point *overPoint;
 
-	overPoint = OverPoint(sk, &pos, &vC, t->curPoint);
+	overPoint = OverPoint(SKTOOL(t)->skv, &pos, &vC, t->curPoint);
 	if (t->curLine != NULL) {
 		SK_Identity(t->curPoint);
 		SK_Translatev(t->curPoint, (overPoint != NULL) ? &vC : &pos);
@@ -236,7 +236,8 @@ static int
 mousebuttondown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_line_tool *t = p;
-	SK *sk = SKTOOL(t)->skv->sk;
+	SK_View *skv = SKTOOL(t)->skv;
+	SK *sk = skv->sk;
 	SK_Point *overPoint;
 	SK_Line *line;
 	SG_Vector vC;
@@ -244,7 +245,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
 
-	overPoint = OverPoint(sk, &pos, &vC, t->curPoint);
+	overPoint = OverPoint(skv, &pos, &vC, t->curPoint);
 
 	if ((line = t->curLine) != NULL) {
 		if (overPoint != NULL &&

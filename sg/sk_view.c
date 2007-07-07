@@ -271,6 +271,7 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	skv->hPixel = 1.0;
 	skv->editPane = NULL;
 	skv->popup = NULL;
+	skv->rSnap = 1.0;
 	SG_MatrixIdentityv(&skv->mView);
 	SG_MatrixIdentityv(&skv->mProj);
 	TAILQ_INIT(&skv->tools);
@@ -379,6 +380,7 @@ SK_ViewZoom(SK_View *skv, SG_Real zoom)
 	}
 	skv->wPixel = 1.0/((SG_Real)AGWIDGET(skv)->w)*2.0/SK_VIEW_SCALE_X(skv);
 	skv->hPixel = 1.0/((SG_Real)AGWIDGET(skv)->h)*2.0/SK_VIEW_SCALE_Y(skv);
+	skv->rSnap = 16.0*skv->wPixel;
 }
 
 void
@@ -436,7 +438,7 @@ SK_ViewDraw(void *p)
 void
 SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 {
-	AG_Window *pwin;
+	AG_Window *wParent;
 
 	if (skv->curtool != NULL) {
 		if (skv->curtool->trigger != NULL) {
@@ -445,9 +447,9 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 		if (skv->curtool->win != NULL) {
 			AG_WindowHide(skv->curtool->win);
 		}
+
 		if (skv->curtool->pane != NULL) {
 			AG_Widget *wt;
-			AG_Window *pwin;
 
 			AGOBJECT_FOREACH_CHILD(wt, skv->curtool->pane,
 			    ag_widget) {
@@ -455,10 +457,9 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 				AG_ObjectDestroy(wt);
 				Free(wt, M_OBJECT);
 			}
-			if ((pwin = AG_WidgetParentWindow(skv->curtool->pane))
-			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
-			}
+			wParent = AG_WidgetParentWindow(skv->curtool->pane);
+			if (wParent != NULL)
+				AG_WINDOW_UPDATE(wParent);
 		}
 		skv->curtool->skv = NULL;
 	}
@@ -475,14 +476,14 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 			AG_WindowShow(ntool->win);
 		}
 #if 0
-		if (ntool->pane != NULL && ntool->ops->edit != NULL) {
-			AG_Window *pwin;
-
-			ntool->ops->edit(ntool, ntool->pane);
-			if ((pwin = AG_WidgetParentWindow(skv->curtool->pane))
-			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
+		if (skv->curtool->pane != NULL &&
+		    ntool->ops->edit != NULL) {
+			if (ntool->pane != NULL) {
+				ntool->ops->edit(ntool, ntool->pane);
 			}
+			wParent = AG_WidgetParentWindow(skv->curtool->pane);
+			if (wParent != NULL)
+				AG_WINDOW_UPDATE(wParent);
 		}
 #endif
 		snprintf(skv->status, sizeof(skv->status), _("Tool: %s"),
@@ -490,11 +491,6 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 	} else {
 		skv->status[0] = '\0';
 	}
-
-//	if ((pwin = AG_WidgetParentWindow(skv)) != NULL) {
-//		agView->focus_win = pwin;
-//		AG_WidgetFocus(skv);
-//	}
 }
 
 SK_Tool *

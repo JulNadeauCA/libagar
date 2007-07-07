@@ -75,7 +75,7 @@ SK_NodeRegister(SK_NodeOps *nops)
 }
 
 static int
-SK_NodeOfClassGen(SK_Node *node, const char *cn)
+SK_NodeOfClassGeneral(SK_Node *node, const char *cn)
 {
 	char cname[SK_TYPE_NAME_MAX], *cp, *c;
 	char nname[SK_TYPE_NAME_MAX], *np, *s;
@@ -94,6 +94,7 @@ SK_NodeOfClassGen(SK_Node *node, const char *cn)
 	return (1);
 }
 
+/* Evaluate whether a node's class name matches a pattern. */
 int
 SK_NodeOfClass(SK_Node *node, const char *cname)
 {
@@ -114,9 +115,10 @@ SK_NodeOfClass(SK_Node *node, const char *cname)
 			}
 		}
 	}
-	return (SK_NodeOfClassGen(node, cname));	/* General case */
+	return (SK_NodeOfClassGeneral(node, cname));	/* General case */
 }
 
+/* Register the SK classes with the Agar object system. */
 int
 SK_InitEngine(void)
 {
@@ -182,6 +184,7 @@ SK_Init(void *obj, const char *name)
 	sk->uLen = AG_FindUnit("mm");
 }
 
+/* Allocate a new node name. */
 Uint32
 SK_GenName(SK *sk)
 {
@@ -597,6 +600,7 @@ SK_NodeDir(void *p)
 	return (v);
 }
 
+/* Create a new dependency table entry for the given node. */
 void
 SK_NodeAddReference(void *pNode, void *pOther)
 {
@@ -612,6 +616,7 @@ SK_NodeAddReference(void *pNode, void *pOther)
 	other->nRefs++;
 }
 
+/* Remove a dependency table entry. */
 void
 SK_NodeDelReference(void *pNode, void *pOther)
 {
@@ -673,6 +678,7 @@ fail:
 	return (NULL);
 }
 
+/* Attach a node to another node in the sketch. */
 void
 SK_NodeAttach(void *ppNode, void *pcNode)
 {
@@ -685,6 +691,7 @@ SK_NodeAttach(void *ppNode, void *pcNode)
 	TAILQ_INSERT_TAIL(&pNode->sk->nodes, cNode, nodes);
 }
 
+/* Detach a node from its parent in the sketch. */
 void
 SK_NodeDetach(void *ppNode, void *pcNode)
 {
@@ -710,6 +717,7 @@ free_constraints:
 	cNode->pNode = NULL;
 }
 
+/* Create a new node instance in the sketch. */
 void *
 SK_NodeAdd(void *pNode, const SK_NodeOps *ops, Uint32 name, Uint flags)
 {
@@ -721,6 +729,7 @@ SK_NodeAdd(void *pNode, const SK_NodeOps *ops, Uint32 name, Uint flags)
 	return (n);
 }
 
+/* Detach and free a node (and its children) from the sketch. */
 int
 SK_NodeDel(void *p)
 {
@@ -740,6 +749,7 @@ SK_NodeDel(void *p)
 	return (0);
 }
 
+/* Render a graphical node to the display (with transformations). */
 void
 SK_RenderNode(SK *sk, SK_Node *node, SK_View *view)
 {
@@ -759,6 +769,7 @@ SK_RenderNode(SK *sk, SK_Node *node, SK_View *view)
 	SG_LoadMatrixGL(&Tsave);
 }
 
+/* Render a graphical node to the display (without transformations). */
 void
 SK_RenderAbsolute(SK *sk, SK_View *view)
 {
@@ -796,6 +807,7 @@ SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *type)
 	}
 }
 
+/* Set the distance unit used by this sketch. */
 void
 SK_SetLengthUnit(SK *sk, const AG_Unit *unit)
 {
@@ -804,23 +816,25 @@ SK_SetLengthUnit(SK *sk, const AG_Unit *unit)
 	AG_MutexUnlock(&sk->lock);
 }
 
+/* Initialize constraint graph. */
 void
 SK_InitConstraintGraph(SK_ConstraintGraph *cg)
 {
 	TAILQ_INIT(&cg->edges);
 }
 
+/* Create a copy of a constraint graph. */
 void
 SK_CopyConstraintGraph(const SK_ConstraintGraph *cgSrc,
     SK_ConstraintGraph *cgDst)
 {
 	SK_Constraint *ct;
 
-	TAILQ_FOREACH(ct, &cgSrc->edges, constraints) {
+	TAILQ_FOREACH(ct, &cgSrc->edges, constraints)
 		SK_AddConstraintCopy(cgDst, ct);
-	}
 }
 
+/* Free a constraint graph. */
 void
 SK_FreeConstraintGraph(SK_ConstraintGraph *cg)
 {
@@ -835,6 +849,7 @@ SK_FreeConstraintGraph(SK_ConstraintGraph *cg)
 	TAILQ_INIT(&cg->edges);
 }
 
+/* Free all constraint graph clusters from the sketch. */
 void
 SK_FreeConstraintClusters(SK *sk)
 {
@@ -850,6 +865,7 @@ SK_FreeConstraintClusters(SK *sk)
 	TAILQ_INIT(&sk->ctClusters);
 }
 
+/* Create a new constraint edge in the given constraint graph. */
 SK_Constraint *
 SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
     enum sk_constraint_type type, ...)
@@ -887,6 +903,7 @@ SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
 	return (ct);
 }
 
+/* Duplicate a constraint edge. */
 SK_Constraint *
 SK_AddConstraintCopy(SK_ConstraintGraph *cgDst, const SK_Constraint *ct)
 {
@@ -894,20 +911,18 @@ SK_AddConstraintCopy(SK_ConstraintGraph *cgDst, const SK_Constraint *ct)
 
 	switch (ct->type) {
 	case SK_DISTANCE:
-		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_DISTANCE,
-		    ct->ct_distance);
-		break;
+		return SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_DISTANCE,
+		                        ct->ct_distance);
 	case SK_ANGLE:
-		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_ANGLE,
-		    ct->ct_angle);
-		break;
+		return SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_ANGLE,
+		                        ct->ct_angle);
 	default:
-		ctCopy = SK_AddConstraint(cgDst, ct->n1, ct->n2, ct->type);
 		break;
 	}
-	return (ctCopy);
+	return SK_AddConstraint(cgDst, ct->n1, ct->n2, ct->type);
 }
 
+/* Destroy a constraint edge. */
 void
 SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
 {
