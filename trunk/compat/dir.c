@@ -216,8 +216,8 @@ AG_MkPath(const char *path)
 	slash = pathp = Strdup(path);
 
 	while (!done) {
-		slash += strspn(slash, "/");
-		slash += strcspn(slash, "/");
+		slash += strspn(slash, AG_PATHSEP);
+		slash += strcspn(slash, AG_PATHSEP);
 
 		done = (*slash == '\0');
 		*slash = '\0';
@@ -234,7 +234,7 @@ AG_MkPath(const char *path)
 			goto fail;
 		}
 
-		*slash = '/';
+		*slash = AG_PATHSEPC;
 	}
 	Free(pathp, 0);
 	return (0);
