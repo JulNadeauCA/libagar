@@ -35,7 +35,8 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_FLT_ONLY	 0x400	/* Accepts only valid strtof() input */
 
 	int prew, preh;			/* Prescale */
-	int xpadding, ypadding;		/* Text padding */
+	int boxPadX, boxPadY;		/* Padding around textbox */
+	int lblPadL, lblPadR;		/* Padding around label */
 	int pos;			/* Cursor position */
 	int offs;			/* Display offset */
 	int compose;			/* Key for input composition */

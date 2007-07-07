@@ -217,16 +217,17 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	    sizeof(tbox->string));
 
 	tbox->string[0] = '\0';
-	tbox->xpadding = 4;
-	tbox->ypadding = 3;
+	tbox->boxPadX = 2;
+	tbox->boxPadY = 3;
+	tbox->lblPadL = 2;
+	tbox->lblPadR = 2;
 
 	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
-	if ((flags & AG_TEXTBOX_READONLY) == 0) {
+	if (flags & AG_TEXTBOX_READONLY)
 		AG_WidgetDisable(tbox);
-	}
 
-	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
-	tbox->preh = tbox->ypadding*2;
+	tbox->prew = tbox->boxPadX*2 + 90;			/* XXX */
+	tbox->preh = tbox->boxPadY*2;
 	tbox->pos = 0;
 	tbox->offs = 0;
 	tbox->sel_x1 = 0;
@@ -274,15 +275,16 @@ AG_TextboxDraw(void *p)
 #endif
 
 	if (tbox->label_id >= 0) {
-		if (AGWIDGET(tbox)->w < tbox->label_su->w+(tbox->xpadding<<1) ||
-		    AGWIDGET(tbox)->h < tbox->label_su->h+(tbox->ypadding<<1)) 
+		if (AGWIDGET(tbox)->w < tbox->label_su->w+(tbox->boxPadX*2) ||
+		    AGWIDGET(tbox)->h < tbox->label_su->h+(tbox->boxPadY*2)) 
 			return;
 
 		AG_WidgetBlitSurface(tbox, tbox->label_id,
-		    0, AGWIDGET(tbox)->h/2 - tbox->label_su->h/2);
+		    tbox->lblPadL, AGWIDGET(tbox)->h/2 - tbox->label_su->h/2);
 	} else {
-		if (AGWIDGET(tbox)->w < (tbox->xpadding<<1) ||
-		    AGWIDGET(tbox)->h < (tbox->ypadding<<1)) 
+		if (AGWIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
+		    tbox->lblPadR) ||
+		    AGWIDGET(tbox)->h < (tbox->boxPadY*2)) 
 			return;
 	}
 
@@ -297,15 +299,16 @@ AG_TextboxDraw(void *p)
 	len = strlen(s);
 #endif
 
-	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
-	y = tbox->ypadding;
+	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->lblPadR;
+	y = tbox->boxPadY;
 	
-	if (AG_WidgetEnabled(tbox)) {
-		agPrim.box(tbox, x, 0,
+	if (AG_WidgetDisabled(tbox)) {
+		agPrim.box_dithered(tbox, x, 0,
 		    AGWIDGET(tbox)->w - x - 1,
 		    AGWIDGET(tbox)->h,
 		    -1,
-		    AG_COLOR(TEXTBOX_COLOR));
+		    AG_COLOR(TEXTBOX_COLOR),
+		    AG_COLOR(DISABLED_COLOR));
 	} else {
 		if (tbox->flags & AG_TEXTBOX_COMBO) {
 			agPrim.box(tbox, x, 0,
@@ -314,16 +317,15 @@ AG_TextboxDraw(void *p)
 			    1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		} else {
-			agPrim.box_dithered(tbox, x, 0,
+			agPrim.box(tbox, x, 0,
 			    AGWIDGET(tbox)->w - x - 1,
 			    AGWIDGET(tbox)->h,
 			    -1,
-			    AG_COLOR(TEXTBOX_COLOR),
-			    AG_COLOR(DISABLED_COLOR));
+			    AG_COLOR(TEXTBOX_COLOR));
 		}
 	}
 
-	x += tbox->xpadding;
+	x += tbox->boxPadX;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
@@ -463,7 +465,7 @@ AG_TextboxPrescale(AG_Textbox *tbox, const char *text)
 {
 	AG_TextPrescale(text, &tbox->prew, NULL);
 	tbox->prew += (tbox->label_id >= 0) ? tbox->label_su->w : 0;
-	tbox->prew += tbox->xpadding*2;
+	tbox->prew += tbox->boxPadX*2;
 }
 
 void
@@ -543,12 +545,12 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 	char *s;
 	Uint32 ch;
 
-	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->xpadding;
+	x = ((tbox->label_id >= 0) ? tbox->label_su->w : 0) + tbox->boxPadX;
 	if (mx <= x) {
 		return (-1);
 	}
-	x += tbox->xpadding + (AG_WidgetFocused(tbox) ? 1 : 0);
-	y = tbox->ypadding;
+	x += tbox->boxPadX + (AG_WidgetFocused(tbox) ? 1 : 0);
+	y = tbox->boxPadY;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
