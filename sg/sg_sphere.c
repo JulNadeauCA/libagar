@@ -111,7 +111,7 @@ SG_SphereEdit(void *p, AG_Widget *box, SG_View *sgv)
 	SG_ObjectEdit(p, box, sgv);
 
 	SG_SpinInt(box, _("Subdivisions"), &sph->tesslvl);
-	btn = AG_ButtonAct(box, AG_BUTTON_HFILL, _("Generate"),
+	btn = AG_ButtonNewFn(box, AG_BUTTON_HFILL, _("Generate"),
 	    Generate, "%p", sph);
 }
 

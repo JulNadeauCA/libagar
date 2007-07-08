@@ -626,7 +626,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_LabelNewStaticString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_ButtonAct(vb, AG_BUTTON_FOCUS, _("Ok"), AGWINDETACH(win));
+	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	AG_WindowShow(win);
 }
@@ -725,7 +725,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	}
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_ButtonAct(vb, 0, _("Ok"), AGWINDETACH(win));
+	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	/* TODO test type */
 
@@ -761,7 +761,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 	}
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_ButtonAct(vb, 0, _("Ok"), AGWINDETACH(win));
+	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 	AG_WindowShow(win);
 }
 
@@ -804,7 +804,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		    &tb->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
-		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowShow(win);

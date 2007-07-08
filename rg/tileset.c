@@ -1203,8 +1203,8 @@ InsertTileDlg(AG_Event *event)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), InsertTile, "%p,%p", win, ts);
-		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertTile, "%p,%p", win, ts);
+		AG_ButtonNewFn(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1234,9 +1234,9 @@ InsertTextureDlg(AG_Event *event)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), InsertTexture,
+		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertTexture,
 		    "%p,%p,%p", win, pwin, ts);
-		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1279,8 +1279,8 @@ InsertAnimDlg(AG_Event *event)
 
 	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(btnbox, 0, _("OK"), InsertAnim, "%p,%p", win, ts);
-		AG_ButtonAct(btnbox, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertAnim, "%p,%p", win, ts);
+		AG_ButtonNewFn(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1767,11 +1767,11 @@ RG_TilesetEdit(void *p)
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			AG_ButtonAct(bbox, 0, _("Insert"), InsertTileDlg,
+			AG_ButtonNewFn(bbox, 0, _("Insert"), InsertTileDlg,
 			    "%p,%p", ts, win);
-			AG_ButtonAct(bbox, 0, _("Edit"), EditSelTiles,
+			AG_ButtonNewFn(bbox, 0, _("Edit"), EditSelTiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
-			AG_ButtonAct(bbox, 0, _("Delete"), DeleteSelTiles,
+			AG_ButtonNewFn(bbox, 0, _("Delete"), DeleteSelTiles,
 			    "%p,%p", tl_tiles, ts);
 		}
 	}
@@ -1807,11 +1807,11 @@ RG_TilesetEdit(void *p)
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			AG_ButtonAct(bbox, 0, _("Insert"),
+			AG_ButtonNewFn(bbox, 0, _("Insert"),
 			    InsertTextureDlg, "%p,%p", ts, win);
-			AG_ButtonAct(bbox, 0, _("Edit"),
+			AG_ButtonNewFn(bbox, 0, _("Edit"),
 			    EditSelTextures, "%p,%p,%p", ts, tl_textures, win);
-			AG_ButtonAct(bbox, 0, _("Delete"),
+			AG_ButtonNewFn(bbox, 0, _("Delete"),
 			    DeleteSelTextures, "%p,%p", ts, tl_textures);
 		}
 		
@@ -1836,11 +1836,11 @@ RG_TilesetEdit(void *p)
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			AG_ButtonAct(bbox, 0, _("Insert"),
+			AG_ButtonNewFn(bbox, 0, _("Insert"),
 			    InsertAnimDlg, "%p,%p", ts, win);
-			AG_ButtonAct(bbox, 0, _("Edit"),
+			AG_ButtonNewFn(bbox, 0, _("Edit"),
 			    EditSelAnims, "%p,%p,%p", ts, tl_anims, win);
-			AG_ButtonAct(bbox, 0, _("Delete"),
+			AG_ButtonNewFn(bbox, 0, _("Delete"),
 			    DeleteSelAnims, "%p,%p", ts, tl_anims);
 		}
 	}
@@ -1854,7 +1854,7 @@ RG_TilesetEdit(void *p)
 		    InvalidateTileIDs, "%p,%p", ts, tl_tiletbl);
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
-		AG_ButtonAct(bbox, 0, _("Invalidate"),
+		AG_ButtonNewFn(bbox, 0, _("Invalidate"),
 		    InvalidateTileIDs, "%p,%p", ts, tl_tiletbl);
 #endif
 	}
@@ -1868,7 +1868,7 @@ RG_TilesetEdit(void *p)
 		    InvalidateAnimIDs, "%p,%p", ts, tl_animtbl);
 		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
 		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
-		AG_ButtonAct(bbox, 0, _("Invalidate"),
+		AG_ButtonNewFn(bbox, 0, _("Invalidate"),
 		    InvalidateAnimIDs, "%p,%p", ts, tl_animtbl);
 #endif
 	}

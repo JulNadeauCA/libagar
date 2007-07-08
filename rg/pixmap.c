@@ -382,10 +382,10 @@ CreateBrushDlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), CreateBrush,
+		AG_ButtonNewFn(bo, 0, _("OK"), CreateBrush,
 		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
 		    cb_oneshot, win);
-		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -481,7 +481,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_SetEvent(tl, "tlist-dblclick", SelectBrush, "%p", px);
 		AG_TlistSelectPtr(tl, px->curbrush);
 
-		AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Create new brush"),
+		AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Create new brush"),
 		    CreateBrushDlg, "%p,%p,%p", tv, px, win);
 	}
 	

@@ -3039,7 +3039,7 @@ MAP_Edit(void *p)
 				AG_SetEvent(tb, "textbox-return", push_layer,
 				    "%p, %p", m, tb);
 			}
-			AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Push"),
+			AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Push"),
 			    push_layer, "%p, %p", m, tb);
 		}
 		

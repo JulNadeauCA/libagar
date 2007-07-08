@@ -200,7 +200,7 @@ AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
 
 /* Translate property types to widget types. */
 static int
-AG_WidgetBindingType(AG_WidgetBinding *binding)
+GetVirtualBindingType(AG_WidgetBinding *binding)
 {
 	AG_Prop *prop;
 
@@ -302,7 +302,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 			binding->p2 = p2;
 			binding->size = size;
 			binding->bitmask = bitmask;
-			binding->vtype = AG_WidgetBindingType(binding);
+			binding->vtype = GetVirtualBindingType(binding);
 
 			AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 			AG_MutexUnlock(&wid->bindings_lock);
@@ -318,7 +318,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	binding->size = size;
 	binding->bitmask = bitmask;
 	binding->mutex = NULL;
-	binding->vtype = AG_WidgetBindingType(binding);
+	binding->vtype = GetVirtualBindingType(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
 	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);

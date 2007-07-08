@@ -229,7 +229,11 @@ ViewConstraintGraph(AG_Event *event)
 	tl = AG_TlistNewPolled(pane->div[0], AG_TLIST_EXPAND,
 	    PollConstraintGraphs, "%p", sk);
 	AG_TlistPrescale(tl, "<Original>", 6);
-	AG_TlistSetDblClickFn(tl, SelectConstraintGraph, "%p,%p", sk, gf);
+	AG_TlistSetDblClickFn(tl,
+	    SelectConstraintGraph, "%p,%p", sk, gf);
+	AG_ButtonNewFn(pane->div[0], AG_BUTTON_HFILL, _("Update"),
+	    SelectConstraintGraph, "%p,%p,%p", sk, gf, &sk->ctGraph);
+
 	PlotConstraintGraph(sk, gf, &sk->ctGraph);
 
 	AG_WindowShow(win);
