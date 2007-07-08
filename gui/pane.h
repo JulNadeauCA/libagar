@@ -22,14 +22,15 @@ typedef struct ag_pane {
 	struct ag_widget wid;
 	enum ag_pane_type type;
 	int flags;
-#define AG_PANE_HFILL		0x01
-#define AG_PANE_VFILL		0x02
-#define AG_PANE_DIV1FILL	0x04	/* Expand div1 (default is div2) */
-#define AG_PANE_FRAME		0x08	/* Display frames for each division */
-#define AG_PANE_FORCE_DIV1FILL	0x10	/* Enforce div1 expansion */
-#define AG_PANE_FORCE_DIV2FILL	0x20	/* Enforce div2 expansion */
-#define AG_PANE_DIV		0x40	/* Initially divide area in two */
-#define AG_PANE_FORCE_DIV	0x80	/* Force divide area in two */
+#define AG_PANE_HFILL		0x001
+#define AG_PANE_VFILL		0x002
+#define AG_PANE_DIV1FILL	0x004	/* Expand div1 (default is div2) */
+#define AG_PANE_FRAME		0x008	/* Display frames for each division */
+#define AG_PANE_FORCE_DIV1FILL	0x010	/* Enforce div1 expansion */
+#define AG_PANE_FORCE_DIV2FILL	0x020	/* Enforce div2 expansion */
+#define AG_PANE_DIV		0x040	/* Initially divide area in two */
+#define AG_PANE_FORCE_DIV	0x080	/* Force divide area in two */
+#define AG_PANE_INITSCALE	0x100	/* Used internally */
 #define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
 
 	AG_Box *div[2];			/* Division containers */
