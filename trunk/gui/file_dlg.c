@@ -210,10 +210,10 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	AG_LabelNewStatic(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
-		AG_ButtonAct(hb, 0, _("Yes"),
+		AG_ButtonNewFn(hb, 0, _("Yes"),
 		    AG_ReplaceFileEv, "%p,%p,%p", fd, win, pwin);
-		AG_ButtonAct(hb, AG_BUTTON_FOCUS, _("Cancel"),
-		    AGWINDETACH(win));
+		AG_WidgetFocus(AG_ButtonNewFn(hb, 0, _("Cancel"),
+		    AGWINDETACH(win)));
 	}
 	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);

@@ -2162,7 +2162,7 @@ AG_ObjectEdit(void *p)
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
 					            AG_BOX_HFILL);
 		{
-			btn = AG_ButtonAct(box, 0, _("Refresh checksums"),
+			btn = AG_ButtonNewFn(box, 0, _("Refresh checksums"),
 			    refresh_checksums, "%p,%p,%p,%p", ob,
 			    tbMD5, tbSHA1, tbRMD160);
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
@@ -2181,7 +2181,7 @@ AG_ObjectEdit(void *p)
 		AG_LabelNewStaticString(ntab, 0, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
-		btn = AG_ButtonAct(ntab, AG_BUTTON_HFILL, _("Refresh status"),
+		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Refresh status"),
 		    RefreshRepoStatus, "%p,%p,%p", ob, lblStatus, tl);
 
 		if (agRcsMode)

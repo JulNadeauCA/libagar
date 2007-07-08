@@ -1254,9 +1254,9 @@ AttachPixmapDlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), AttachPixmap,
+		AG_ButtonNewFn(bo, 0, _("OK"), AttachPixmap,
 		    "%p,%p,%p,%p,%p", tv, pwin, win, tl_feats, tl);
-		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1333,9 +1333,9 @@ AttachSketchDlg(AG_Event *event)
 	
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonAct(bo, 0, _("OK"), AttachSketch, "%p,%p,%p,%p,%p",
+		AG_ButtonNewFn(bo, 0, _("OK"), AttachSketch, "%p,%p,%p,%p,%p",
 		    tv, pwin, win, tl_feats, tl);
-		AG_ButtonAct(bo, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);
@@ -1738,9 +1738,9 @@ TileSettingsDlg(AG_Event *event)
 
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(box, 0, _("OK"), ResizeTile, "%p,%p,%p,%p,%p,%p",
+		AG_ButtonNewFn(box, 0, _("OK"), ResizeTile, "%p,%p,%p,%p,%p,%p",
 		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
-		AG_ButtonAct(box, 0, _("Cancel"), AGWINDETACH(win));
+		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
 	AG_WindowAttach(pwin, win);

@@ -400,9 +400,9 @@ AG_DebugServerWindow(void)
 	AG_TlistPrescale(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
 	AG_SetEvent(tl, "tlist-poll", PollClients, NULL);
 		
-	AG_ButtonAct(win, AG_BUTTON_HFILL, _("Start server"),
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Start server"),
 	    StartServer, "%p", tl);
-	AG_ButtonAct(win, AG_BUTTON_HFILL, _("Stop server"),
+	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Stop server"),
 	    StopServer, "%p", tl);
 
 	AG_LabelNewStatic(win, 0, _("Connected clients:"));

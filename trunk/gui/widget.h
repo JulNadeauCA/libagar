@@ -25,7 +25,7 @@ typedef struct ag_widget_ops {
 	void (*scale)(void *, int, int);
 } AG_WidgetOps;
 
-enum ag_widget_binding_type {
+typedef enum ag_widget_binding_type {
 	AG_WIDGET_NONE,
 	AG_WIDGET_BOOL,
 	AG_WIDGET_UINT,
@@ -47,7 +47,7 @@ enum ag_widget_binding_type {
 	AG_WIDGET_FLAG8,
 	AG_WIDGET_FLAG16,
 	AG_WIDGET_FLAG32
-};
+} AG_WidgetBindingType;
 
 enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,
@@ -204,9 +204,9 @@ void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
 int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
 
 AG_WidgetBinding *AG_WidgetBind(void *, const char *,
-	                        enum ag_widget_binding_type, ...);
+	                        AG_WidgetBindingType, ...);
 AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *,
-			          enum ag_widget_binding_type, ...);
+			          AG_WidgetBindingType, ...);
 AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
 __inline__ void	  AG_WidgetLockBinding(AG_WidgetBinding *);
 __inline__ void	  AG_WidgetUnlockBinding(AG_WidgetBinding *);

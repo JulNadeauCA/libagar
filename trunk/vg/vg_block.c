@@ -348,7 +348,7 @@ VG_BlockEditor(VG *vg)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonAct(bo, 0, _("Destroy"), destroy_block, "%p,%p",
+		AG_ButtonNewFn(bo, 0, _("Destroy"), destroy_block, "%p,%p",
 		    vg, tl);
 	}
 	return (win);
