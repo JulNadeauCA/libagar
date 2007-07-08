@@ -287,12 +287,12 @@ AG_TlistDraw(void *p)
 	int y = 0, i = 0;
 	int offset;
 
-	if (AGWIDGET(tl)->w < tl->item_h ||
-	    AGWIDGET(tl)->h < tl->item_h)
-		return;
-
 	agPrim.box(tl, 0, 0, AGWIDGET(tl)->w, AGWIDGET(tl)->h, -1,
 	    AG_COLOR(TLIST_BG_COLOR));
+	
+	if (AGWIDGET(tl)->w <= 2 ||
+	    AGWIDGET(tl)->h <= 2)
+		return;
 
 	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {

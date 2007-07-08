@@ -68,7 +68,7 @@ OverDivControl(AG_Pane *pa, int pos)
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 	int button = AG_INT(1);
@@ -96,11 +96,13 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 }
 
 static void
-MouseMotion(AG_Event *event)
+mousemotion(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
+	int dx = AG_INT(3);
+	int dy = AG_INT(4);
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
@@ -109,7 +111,8 @@ MouseMotion(AG_Event *event)
 		}
 		if (pa->dmoving) {
 			if (pa->rx < 0) { pa->rx = pa->dx; }
-			pa->rx += AG_INT(3);
+			pa->rx += dx;
+			if (pa->rx < 2) { pa->rx = 2; }
 			pa->rx = AG_PaneMoveDivider(pa, pa->rx);
 			if (OverDivControl(pa, x)) {
 				AG_SetCursor(AG_HRESIZE_CURSOR);
@@ -125,8 +128,9 @@ MouseMotion(AG_Event *event)
 		}
 		if (pa->dmoving) {
 			if (pa->rx < 0) { pa->rx = pa->dx; }
-			pa->rx += AG_INT(4);
+			pa->rx += dy;
 			pa->rx = AG_PaneMoveDivider(pa, pa->rx);
+			if (pa->rx < 2) { pa->rx = 2; }
 			if (OverDivControl(pa, y)) {
 				AG_SetCursor(AG_VRESIZE_CURSOR);
 			}
@@ -139,7 +143,7 @@ MouseMotion(AG_Event *event)
 }
 
 static void
-MouseButtonUp(AG_Event *event)
+mousebuttonup(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 
@@ -162,7 +166,7 @@ AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
 	AG_ObjectSetOps(pa, &agPaneOps);
 
 	pa->type = type;
-	pa->flags = flags;
+	pa->flags = flags|AG_PANE_INITSCALE;
 	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
 	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
 	pa->dx = 0;
@@ -177,9 +181,9 @@ AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
 		AG_BoxSetSpacing(pa->div[i], 0);
 	}
 
-	AG_SetEvent(pa, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(pa, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(pa, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(pa, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(pa, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(pa, "window-mousemotion", mousemotion, NULL);
 }
 
 void
@@ -375,6 +379,12 @@ AG_PaneScale(void *p, int w, int h)
 		AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
 		AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
 		break;
+	}
+	if (pa->flags & AG_PANE_INITSCALE) {
+		pa->minw[0] = 0;
+		pa->minh[0] = 0;
+		pa->minw[1] = 0;
+		pa->minh[1] = 0;
 	}
 }
 
