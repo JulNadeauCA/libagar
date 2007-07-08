@@ -67,16 +67,12 @@ AG_ButtonNew(void *parent, Uint flags, const char *caption)
 	btn = Malloc(sizeof(AG_Button), M_OBJECT);
 	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
-
-	if (flags & AG_BUTTON_FOCUS) {
-		AG_WidgetFocus(btn);
-	}
 	return (btn);
 }
 
 AG_Button *
-AG_ButtonAct(void *parent, Uint flags, const char *caption,
-    void (*fn)(AG_Event *), const char *fmt, ...)
+AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
+    const char *fmt, ...)
 {
 	AG_Button *btn;
 	AG_Event *ev;
@@ -87,22 +83,63 @@ AG_ButtonAct(void *parent, Uint flags, const char *caption,
 
 	ev = AG_SetEvent(btn, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
-
-	if (flags & AG_BUTTON_FOCUS) {
-		AG_WidgetFocus(btn);
-	}
 	return (btn);
 }
 
+AG_Button *
+AG_ButtonNewBool(void *parent, Uint flags, const char *caption,
+    AG_WidgetBindingType type, void *p)
+{
+	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_WidgetBind(bu, "state", type, p);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFlag(void *parent, Uint flags, const char *caption,
+    Uint *p, Uint bitmask)
+{
+	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_WidgetBindFlag(bu, "state", p, bitmask);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFlag8(void *parent, Uint flags, const char *caption,
+   Uint8 *p, Uint8 bitmask)
+{
+	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_WidgetBindFlag8(bu, "state", p, bitmask);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFlag16(void *parent, Uint flags, const char *caption,
+    Uint16 *p, Uint16 bitmask)
+{
+	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_WidgetBindFlag16(bu, "state", p, bitmask);
+	return (bu);
+}
+
+AG_Button *
+AG_ButtonNewFlag32(void *parent, Uint flags, const char *caption,
+    Uint32 *p, Uint32 bitmask)
+{
+	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
+	AG_WidgetBindFlag32(bu, "state", p, bitmask);
+	return (bu);
+}
+
 static Uint32
-repeat_expire(void *obj, Uint32 ival, void *arg)
+ExpireRepeat(void *obj, Uint32 ival, void *arg)
 {
 	AG_PostEvent(NULL, obj, "button-pushed", "%i", 1);
 	return (agMouseSpinIval);
 }
 
 static Uint32
-delay_expire(void *obj, Uint32 ival, void *arg)
+ExpireDelay(void *obj, Uint32 ival, void *arg)
 {
 	AG_Button *bu = obj;
 
@@ -113,9 +150,9 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 void
 AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 {
-	/* XXX replace the unfocused motion flag with a timer */
-	AG_WidgetInit(bu, &agButtonOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION);
+	/* TODO replace the unfocused motion flag with a timer */
+	AG_WidgetInit(bu, &agButtonOps, AG_WIDGET_FOCUSABLE|
+	                                AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
 	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
@@ -129,8 +166,8 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	bu->tPad = 3;
 	bu->bPad = 3;
 
-	AG_SetTimeout(&bu->repeat_to, repeat_expire, NULL, 0);
-	AG_SetTimeout(&bu->delay_to, delay_expire, NULL, 0);
+	AG_SetTimeout(&bu->repeat_to, ExpireRepeat, NULL, 0);
+	AG_SetTimeout(&bu->delay_to, ExpireDelay, NULL, 0);
 
 	AG_SetEvent(bu, "window-mousebuttonup", mousebuttonup, NULL);
 	AG_SetEvent(bu, "window-mousebuttondown", mousebuttondown, NULL);

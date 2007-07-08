@@ -53,7 +53,31 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "AG_Button *"
-.Fn AG_ButtonAct "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
+.Fn AG_ButtonNewFn "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *p"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewUint8 "AG_Widget *parent" "Uint flags" "const char *label" "Uint8 *p"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewUint16 "AG_Widget *parent" "Uint flags" "const char *label" "Uint16 *p"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewUint32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *p"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *p" "Uint bitmask"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewFlag8 "AG_Widget *parent" "Uint flags" "const char *label" "Uint8 *p" "Uint8 bitmask"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewFlag16 "AG_Widget *parent" "Uint flags" "const char *label" "Uint16 *p" "Uint16 bitmask"
+.Pp
+.Ft "AG_Button *"
+.Fn AG_ButtonNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *p" "Uint32 bitmask"
 .Pp
 .Ft void
 .Fn AG_ButtonInit "AG_Button *button" "Uint flags" "char *caption"
@@ -93,16 +117,30 @@ function allocates, initializes, and attaches a
 widget.
 .Pp
 The
-.Fn AG_ButtonAct
-variant creates a button and automatically binds the provided event handler
-function to its
-.Sq button-pushed
-event.
-The
-.Fa fmt
-and following arguments specify an
-.Xr AG_Event 3
-style argument list.
+.Fn AG_ButtonNewFn
+variant creates a button and sets a default event function to be executed
+with the given arguments whenever the button is pressed.
+.Pp
+The functions
+.Fn AG_ButtonNewInt ,
+.Fn AG_ButtonNewUint8 ,
+.Fn AG_ButtonNewUint16
+and
+.Fn AG_ButtonNewUint32
+associate the state of the button (the
+.Sq state
+binding) with the given integer, where a value of 0 is false and 1 is true.
+.Pp
+The functions
+.Fn AG_ButtonNewFlag ,
+.Fn AG_ButtonNewFlag8 ,
+.Fn AG_ButtonNewFlag16
+and
+.Fn AG_ButtonNewFlag32
+associate the state of the button with the state of one or more bits
+(as described by
+.Fa bitmask )
+in the given integer.
 .Pp
 The
 .Fn AG_ButtonInit
@@ -122,7 +160,6 @@ argument include:
 #define AG_BUTTON_STICKY	0x02	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
 #define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
-#define AG_BUTTON_FOCUS		0x40	/* Focus button automatically */
 .Ed
 .Pp
 The
