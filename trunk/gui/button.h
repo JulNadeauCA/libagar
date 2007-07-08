@@ -29,7 +29,6 @@ typedef struct ag_button {
 #define AG_BUTTON_REPEAT	0x008	/* Repeat button-pushed event */
 #define AG_BUTTON_HFILL		0x010	/* Fill available width */
 #define AG_BUTTON_VFILL		0x020	/* Fill available height */
-#define AG_BUTTON_FOCUS		0x040	/* Focus button automatically */
 #define AG_BUTTON_REGEN		0x080	/* Label surface need updating */
 #define AG_BUTTON_TEXT_NODUP	0x100	/* Label text string is static */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
@@ -41,8 +40,24 @@ typedef struct ag_button {
 
 __BEGIN_DECLS
 AG_Button *AG_ButtonNew(void *, Uint, const char *);
-AG_Button *AG_ButtonAct(void *, Uint, const char *,
-			void (*)(AG_Event *), const char *, ...);
+AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
+			  const char *, ...);
+AG_Button *AG_ButtonNewBool(void *, Uint, const char *, AG_WidgetBindingType,
+	                    void *);
+#define    AG_ButtonNewInt(b,f,c,p) \
+	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_INT,(p))
+#define    AG_ButtonNewUint8(b,f,c,p) \
+	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT8,(p))
+#define    AG_ButtonNewUint16(b,f,c,p) \
+	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT16,(p))
+#define    AG_ButtonNewUint32(b,f,c,p) \
+	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT32,(p))
+
+AG_Button *AG_ButtonNewFlag(void *, Uint, const char *, Uint *, Uint);
+AG_Button *AG_ButtonNewFlag8(void *, Uint, const char *, Uint8 *, Uint8);
+AG_Button *AG_ButtonNewFlag16(void *, Uint, const char *, Uint16 *, Uint16);
+AG_Button *AG_ButtonNewFlag32(void *, Uint, const char *, Uint32 *, Uint32);
+
 void	   AG_ButtonInit(AG_Button *, Uint, const char *);
 void	   AG_ButtonDestroy(void *);
 void	   AG_ButtonDraw(void *);
@@ -67,6 +82,7 @@ void	   AG_ButtonTextNODUP(AG_Button *, char *)
 	     NONNULL_ATTRIBUTE(2);
 
 /* Legacy routines */
+#define AG_ButtonAct AG_ButtonNewFn
 #define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
 #define	AG_ButtonPrintf AG_ButtonText
 #define	AG_ButtonEnable AG_WidgetEnable
