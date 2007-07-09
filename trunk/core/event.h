@@ -115,7 +115,7 @@ int	  	 AG_SchedEvent(void *, void *, Uint32, const char *,
 int		 AG_ReschedEvent(void *, const char *, Uint32);
 int		 AG_CancelEvent(void *, const char *);
 __inline__ void	 AG_ExecEvent(void *, const char *);
-void		 AG_ForwardEvent(void *, AG_Event *);
+void		 AG_ForwardEvent(void *, void *, AG_Event *);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 struct ag_window *AG_EventShowPerfGraph(void);
 __inline__ Uint8 AG_MouseGetState(int *, int *);

@@ -75,6 +75,9 @@ Two special arguments are
 (the object receiving the event) and
 .Fn AG_SENDER
 (the object sending the event, if applicable).
+When Agar is compiled with
+.Dv DEBUG ,
+those macros perform type checking.
 .Sh EVENT LOOP
 The event loop of an Agar application typically waits for events, invokes
 GUI rendering routines and processes timer events.
@@ -116,25 +119,25 @@ are expired.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "AG_Event *"
-.Fn AG_SetEvent "void *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
+.Fn AG_SetEvent "AG_Object *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_UnsetEvent "void *obj" "const char *event_name"
+.Fn AG_UnsetEvent "AG_Object *obj" "const char *event_name"
 .Pp
 .Ft "int"
-.Fn AG_PostEvent "void *sndr" "void *rcvr" "const char *event_name" "const char *fmt" "..."
+.Fn AG_PostEvent "AG_Object *sndr" "AG_Object *rcvr" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_SchedEvent "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
+.Fn AG_SchedEvent "AG_Object *sndr" "AG_Object *rcvr" "Uint32 ticks" "const char *event_name" "const char *fmt" "..."
 .Pp
 .Ft "int"
-.Fn AG_ReschedEvent "void *obj" "const char *event_name" "Uint32 ticks"
+.Fn AG_ReschedEvent "AG_Object *obj" "const char *event_name" "Uint32 ticks"
 .Pp
 .Ft "int"
-.Fn AG_CancelEvent "void *obj" "const char *event_name"
+.Fn AG_CancelEvent "AG_Object *obj" "const char *event_name"
 .Pp
 .Ft "void"
-.Fn AG_ForwardEvent "void *rcvr" "AG_Event *event"
+.Fn AG_ForwardEvent "AG_Object *sndr" "AG_Object *rcvr" "AG_Event *event"
 .Pp
 .nr nS 0
 The
@@ -238,7 +241,10 @@ event was cancelled, or 0 if there was nothing to cancel.
 The
 .Fn AG_ForwardEvent
 function relays the given event to object
-.Fa obj .
+.Fa rcvr ,
+passing
+.Fa sndr
+as the sender pointer.
 .Sh EVENT FLAGS
 Acceptable
 .Va flags
@@ -253,15 +259,20 @@ structure include:
 .Ed
 .Pp
 .Dv AG_EVENT_ASYNC
-arranges for the event handler to execute inside a separate thread.
+arranges for the event handler to execute inside a separate thread that will
+be automatically created (and managed by the receiver object).
 This flag is only available if Agar was compiled with the
 .Dv THREADS
 option.
 .Pp
 If the
 .Dv AG_EVENT_PROPAGATE
-flag is set, the event is automatically forwarded to every one of the
-receiver's descendants prior to the execution of the receiver's event handler.
+flag is set, the event is automatically forwarded to all of the receiver
+object's children, recursively.
+Unless
+.Dv AG_EVENT_ASYNC
+events are used, the order of execution is such that the children's event
+handler functions are executed prior to the receiver object's.
 .Pp
 .Dv AG_EVENT_SCHEDULED
 is a read-only flag that is set only if an event of this type has been
