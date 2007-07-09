@@ -55,9 +55,9 @@ enum ag_button_which {
 	AG_BUTTON_SCROLL
 };
 
-static void MouseButtonUp(AG_Event *);
-static void MouseButtonDown(AG_Event *);
-static void MouseMotion(AG_Event *);
+static void mousebuttonup(AG_Event *);
+static void mousebuttondown(AG_Event *);
+static void mousemotion(AG_Event *);
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
@@ -98,49 +98,76 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 	sb->barSz = 30;
 	sb->arrowSz = 9;
 
-	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(sb, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(sb, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(sb, "window-mousemotion", mousemotion, NULL);
 }
 
-static void
-MouseButtonUp(AG_Event *event)
+static __inline__ int
+BarIsVisible(AG_Scrollbar *sb)
 {
-	AG_Scrollbar *sb = AG_SELF();
+	int min, max;
 
-	sb->curbutton = AG_BUTTON_NONE;
+	switch (sb->type) {
+	case AG_SCROLLBAR_VERT:
+		if (AGWIDGET(sb)->w < sb->bw ||
+		    AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
+			return (0);
+		}
+		break;
+	case AG_SCROLLBAR_HORIZ:
+		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz ||
+		    AGWIDGET(sb)->h < sb->bw) {
+			return (0);
+		}
+		break;
+	}
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
+	return (max > 0 && max >= min);
 }
 
 /* Clicked or dragged mouse to coord, so adjust value */
 static void
-AG_ScrollbarMove(AG_Scrollbar *sb, int x, int totalsize)
+MoveBar(AG_Scrollbar *sb, int x, int totalsize)
 {
-	const int scrArea = totalsize - (sb->bw*2);
+	int scrArea = totalsize - (sb->bw*2);
 	int min, max;
+	int nVal;
 
-	if (sb->curbutton != AG_BUTTON_SCROLL) { return; }
-	if (sb->barSz == -1) { return; }
-		
+	if (sb->curbutton != AG_BUTTON_SCROLL ||
+	    sb->barSz == -1) {
+		return;
+	}
 	min = AG_WidgetInt(sb, "min");
 	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	if (max < min)
-		return;
 	
 	if (x <= sb->bw) {				/* Below min */
-		AG_WidgetSetInt(sb, "value", min);
+		nVal = min;
 	} else if (x >= sb->bw + scrArea) {		/* Above max */
-		AG_WidgetSetInt(sb, "value", max);
+		nVal = max;
 	} else {					/* Between */
-		AG_WidgetSetInt(sb, "value",
-		    (x - sb->bw)*(max-min+1) / scrArea);
+		nVal = (x - sb->bw)*(max-min+1) / scrArea;
 	}
-	
-	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i",
-	    AG_WidgetInt(sb, "value"));
+	AG_WidgetSetInt(sb, "value", nVal);
+	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nVal);
 }
 
 static void
-MouseButtonDown(AG_Event *event)
+mousebuttonup(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+
+	if (!BarIsVisible(sb)) {
+		if (AGOBJECT(sb)->parent != NULL)
+			AG_ForwardEvent(NULL, AGOBJECT(sb)->parent, event);
+		return;
+	}
+	sb->curbutton = AG_BUTTON_NONE;
+}
+
+static void
+mousebuttondown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
@@ -149,17 +176,20 @@ MouseButtonDown(AG_Event *event)
 		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
 	int min, value, max, nvalue;
 
-	if (button != SDL_BUTTON_LEFT)
+	if (button != SDL_BUTTON_LEFT) {
 		return;
+	}
+	if (!BarIsVisible(sb)) {
+		if (AGOBJECT(sb)->parent != NULL)
+			AG_ForwardEvent(NULL, AGOBJECT(sb)->parent, event);
+		return;
+	}
+	
+	AG_WidgetFocus(sb);
 
 	min = AG_WidgetInt(sb, "min");
 	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
 	value = AG_WidgetInt(sb, "value");
-
-	if (max < min)
-		return;
-	
-	AG_WidgetFocus(sb);
 	
 	if (x <= sb->bw) {				/* Up button */
 		sb->curbutton = AG_BUTTON_UP;
@@ -173,7 +203,7 @@ MouseButtonDown(AG_Event *event)
 		}
 	} else {					/* In between */
 		sb->curbutton = AG_BUTTON_SCROLL;
-		AG_ScrollbarMove(sb, x, totalsize);
+		MoveBar(sb, x, totalsize);
 	}
 	
 	/* Generate an event if value changed. */
@@ -182,16 +212,21 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-MouseMotion(AG_Event *event)
+mousemotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
 	int state = AG_INT(5);
 	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		AGWIDGET(sb)->w : AGWIDGET(sb)->h;
-
+	
+	if (!BarIsVisible(sb)) {
+		if (AGOBJECT(sb)->parent != NULL)
+			AG_ForwardEvent(NULL, AGOBJECT(sb)->parent, event);
+		return;
+	}
 	if (state & SDL_BUTTON_LMASK)
-		AG_ScrollbarMove(sb, x, totalsize);
+		MoveBar(sb, x, totalsize);
 }
 
 void
@@ -227,26 +262,23 @@ void
 AG_ScrollbarDraw(void *p)
 {
 	AG_Scrollbar *sb = p;
-	int value, min, max;
+	int min, max, val;
 	int w, h, x, y;
 	int maxcoord;
 
-	if ((max = (AG_WidgetInt(sb,"max") - AG_WidgetInt(sb,"visible")))== 0 ||
-	     max < (min = AG_WidgetInt(sb, "min")) ||
-	     (max - min) <= 0) {
+	if (!BarIsVisible(sb)) {
 		return;
 	}
-	value = AG_WidgetInt(sb, "value");
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
+	val = AG_WidgetInt(sb, "value");
 	
-	if (AGWIDGET(sb)->w < sb->bw || AGWIDGET(sb)->w < sb->bw)
-		return;
-
-	if (value < min) {
-		value = min;
+	if (val < min) {
+		val = min;
 		AG_WidgetSetInt(sb, "value", min);
 	}
-	if (value > max) {
-		value = max-1;
+	if (val > max) {
+		val = max-1;
 		AG_WidgetSetInt(sb, "value", max-1);
 	}
 	
@@ -281,7 +313,7 @@ AG_ScrollbarDraw(void *p)
 			y = 0;
 			h = AGWIDGET(sb)->h - sb->bw*2;
 		} else {
-			y = value * maxcoord / (max-min);
+			y = val * maxcoord / (max-min);
 			h = sb->barSz;
 			if (sb->bw + y + h >
 			    AGWIDGET(sb)->h - sb->bw)
@@ -319,7 +351,7 @@ AG_ScrollbarDraw(void *p)
 			x = 0;
 			w = AGWIDGET(sb)->w - sb->bw*2;
 		} else {
-			x = value * maxcoord / (max-min);
+			x = val * maxcoord / (max-min);
 			w = sb->barSz;
 			if (sb->bw + x + w >
 			    AGWIDGET(sb)->w - sb->bw)
@@ -335,7 +367,7 @@ AG_ScrollbarDraw(void *p)
 		SDL_Surface *txt;
 		char label[32];
 
-		snprintf(label, sizeof(label), "%d/%d/%d", value, min, max);
+		snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
 		txt = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), label);
 		AG_WidgetBlit(sb, txt,
 		    AGWIDGET(sb)->w/2 - txt->w/2,
