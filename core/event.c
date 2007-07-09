@@ -77,9 +77,8 @@ struct ag_global_key {
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
 
-static void AG_EventRelay(void *, AG_Event *);
-static void AG_EventProcess(SDL_Event *);
-static void *AG_EventAsyncHandler(void *);
+static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
+static void *EventThread(void *);
 
 const char *agEvArgTypeNames[] = {
 	"pointer",
@@ -95,7 +94,10 @@ const char *agEvArgTypeNames[] = {
 };
 
 #ifdef DEBUG
-/* XXX remove this once the graph widget implements polling. */
+/*
+ * Update the performance counters.
+ * XXX remove this once the graph widget implements polling.
+ */
 static __inline__ void
 PerfMonitorUpdate(void)
 {
@@ -127,18 +129,14 @@ PerfMonitorInit(void)
 	agPerfWindow = AG_WindowNewNamed(0, "event-fps-counter");
 	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
-
 	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
 	    "%dms (nom %dms), %d evnt, %dms idle",
 	    &agView->rCur, &agView->rNom, &agEventAvg,
 	    &agIdleAvg);
 	AG_LabelPrescale(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
-
 	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
 	                                               AG_FIXED_PLOTTER_XAXIS|
 						       AG_FIXED_PLOTTER_EXPAND);
-	/* TODO use polling */
-
 	agPerfFPS = AG_FixedPlotterCurve(agPerfGraph, "refresh", 0,160,0, 99);
 	agPerfEvnts = AG_FixedPlotterCurve(agPerfGraph, "event", 0,0,180, 99);
 	agPerfIdle = AG_FixedPlotterCurve(agPerfGraph, "idle", 180,180,180, 99);
@@ -397,7 +395,7 @@ out:
  * The object and timeouteq are assumed to be locked.
  */
 static Uint32
-event_timeout(void *p, Uint32 ival, void *arg)
+SchedEventTimeout(void *p, Uint32 ival, void *arg)
 {
 	AG_Object *ob = p;
 	AG_Event *ev = arg;
@@ -409,13 +407,13 @@ event_timeout(void *p, Uint32 ival, void *arg)
 
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
-		AG_Object *cobj;
+		AG_Object *child;
 			
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (timeout)\n",
 		    ob->name, ev->name);
 		AG_LockLinkage();
-		AGOBJECT_FOREACH_CHILD(cobj, ob, ag_object) {
-			AG_EventRelay(cobj, ev);
+		AGOBJECT_FOREACH_CHILD(child, ob, ag_object) {
+			PropagateEvent(ob, child, ev);
 		}
 		AG_UnlockLinkage();
 	}
@@ -473,7 +471,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt,
 	ev->argn[0] = "_self";
 	ev->argc = 1;
 	ev->handler = fn;
-	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
+	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 	AG_MutexUnlock(&ob->lock);
@@ -504,7 +502,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	ev->argn[0] = "_self";
 	ev->argc = 1;
 	ev->handler = fn;
-	AG_SetTimeout(&ev->timeout, event_timeout, ev, 0);
+	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
@@ -542,44 +540,39 @@ out:
 
 /* Forward an event to an object's descendents. */
 static void
-AG_EventRelay(void *p, AG_Event *ev)
+PropagateEvent(AG_Object *sndr, AG_Object *rcvr, AG_Event *ev)
 {
-	AG_Object *ob = p, *cob;
+	AG_Object *chld;
 
-	AGOBJECT_FOREACH_CHILD(cob, ob, ag_object)
-		AG_EventRelay(cob, ev);
-
-	AG_ForwardEvent(ob, ev);
+	AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+		PropagateEvent(rcvr, chld, ev);
+	}
+	AG_ForwardEvent(sndr, rcvr, ev);
 }
 
 #ifdef THREADS
 /* Invoke an event handler routine asynchronously. */
 static void *
-AG_EventAsyncHandler(void *p)
+EventThread(void *p)
 {
 	AG_Event *eev = p;
 	AG_Object *rcvr = eev->argv[0].p;
+	AG_Object *chld;
 
-	/* Propagate event to children. */
 	if (eev->flags & AG_EVENT_PROPAGATE) {
-		AG_Object *cobj;
-
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (async)\n",
 		    rcvr->name, eev->name);
 		AG_LockLinkage();
-		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-			AG_EventRelay(cobj, eev);
+		AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+			PropagateEvent(rcvr, chld, eev);
 		}
 		AG_UnlockLinkage();
 	}
-
-	/* Invoke the event handler routine. */
 	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
 	if (eev->handler != NULL) {
 		eev->handler(eev);
 	}
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
-
 	Free(eev, M_EVENT);
 	return (NULL);
 }
@@ -598,6 +591,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Object *sndr = sp;
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
+	AG_Object *chld;
 
 	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
 	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
@@ -609,44 +603,38 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 #ifdef THREADS
 		if (ev->flags & AG_EVENT_ASYNC) {
 			AG_Thread th;
-			AG_Event *nev;
+			AG_Event *evNew;
 
 			/* TODO allocate from an per-object pool */
-			nev = Malloc(sizeof(AG_Event), M_EVENT);
-			memcpy(nev, ev, sizeof(AG_Event));
-			AG_EVENT_GET_ARGS(nev, fmt);
-			nev->argv[nev->argc].p = sndr;
-			nev->argt[nev->argc] = AG_EVARG_POINTER;
-			nev->argn[nev->argc] = "_sender";
-			AG_ThreadCreate(&th, NULL, AG_EventAsyncHandler, nev);
+			evNew = Malloc(sizeof(AG_Event), M_EVENT);
+			memcpy(evNew, ev, sizeof(AG_Event));
+			AG_EVENT_GET_ARGS(evNew, fmt);
+			evNew->argv[evNew->argc].p = sndr;
+			evNew->argt[evNew->argc] = AG_EVARG_POINTER;
+			evNew->argn[evNew->argc] = "_sender";
+			AG_ThreadCreate(&th, NULL, EventThread, evNew);
 		} else
 #endif /* THREADS */
 		{
 			AG_Event tmpev;
 			va_list ap;
 
-			/* Construct the argument vector. */
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
 			tmpev.argv[tmpev.argc].p = sndr;
 			tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
 			tmpev.argn[tmpev.argc] = "_sender";
 
-			/* Propagate event to children. */
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
-				AG_Object *cobj;
-			
 				debug(DEBUG_PROPAGATION,
 				    "%s: propagate %s (post)\n",
 				    rcvr->name, evname);
 				AG_LockLinkage();
-				AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-					AG_EventRelay(cobj, &tmpev);
+				AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+					PropagateEvent(rcvr, chld, &tmpev);
 				}
 				AG_UnlockLinkage();
 			}
-
-			/* Invoke the event handler function. */
 			if (tmpev.handler != NULL)
 				tmpev.handler(&tmpev);
 		}
@@ -783,43 +771,62 @@ AG_ExecEvent(void *p, const char *evname)
 
 /*
  * Forward an event, without modifying the original event structure, except
- * for the receiver pointer.
+ * for the sender and receiver pointers.
  */
-/* XXX substitute the sender ptr? */
 void
-AG_ForwardEvent(void *rp, AG_Event *event)
+AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 {
-	union evarg nargv[AG_EVENT_ARGS_MAX];
-	AG_Object *rcvr = rp;
+	AG_Object *sndr = pSndr;
+	AG_Object *rcvr = pRcvr;
+	AG_Object *chld;
 	AG_Event *ev;
+	va_list ap;
 
 	debug(DEBUG_EVENTS, "%s event to %s\n", event->name, rcvr->name);
-
 	AG_MutexLock(&rcvr->lock);
-	memcpy(nargv, event->argv, event->argc*sizeof(union evarg));
-	nargv[0].p = rcvr;
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(event->name, ev->name) == 0)
 			break;
 	}
 	if (ev == NULL)
 		goto out;
+#ifdef THREADS
+	if (ev->flags & AG_EVENT_ASYNC) {
+		AG_Thread th;
+		AG_Event *evNew;
 
-	/* Propagate event to children. */
-	if (ev->flags & AG_EVENT_PROPAGATE) {
-		AG_Object *cobj;
+		/* TODO allocate from an per-object pool */
+		evNew = Malloc(sizeof(AG_Event), M_EVENT);
+		memcpy(evNew, ev, sizeof(AG_Event));
+		evNew->argv[0].p = rcvr;
+		evNew->argv[evNew->argc].p = sndr;
+		evNew->argt[evNew->argc] = AG_EVARG_POINTER;
+		evNew->argn[evNew->argc] = "_sender";
+		AG_ThreadCreate(&th, NULL, EventThread, evNew);
+	} else
+#endif /* THREADS */
+	{
+		AG_Event tmpev;
 
-		debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
-		    rcvr->name, event->name);
-		AG_LockLinkage();
-		AGOBJECT_FOREACH_CHILD(cobj, rcvr, ag_object) {
-			AG_EventRelay(cobj, ev);
+		memcpy(&tmpev, event, sizeof(AG_Event));
+		tmpev.argv[0].p = rcvr;
+		tmpev.argv[tmpev.argc].p = sndr;
+		tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
+		tmpev.argn[tmpev.argc] = "_sender";
+
+		if (ev->flags & AG_EVENT_PROPAGATE) {
+			debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
+			    rcvr->name, event->name);
+			AG_LockLinkage();
+			AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+				PropagateEvent(rcvr, chld, ev);
+			}
+			AG_UnlockLinkage();
 		}
-		AG_UnlockLinkage();
+		/* XXX AG_EVENT_ASYNC.. */
+		if (ev->handler != NULL)
+			ev->handler(&tmpev);
 	}
-	/* XXX AG_EVENT_ASYNC.. */
-	if (ev->handler != NULL)
-		ev->handler(ev);
 out:
 	AG_MutexUnlock(&rcvr->lock);
 }
