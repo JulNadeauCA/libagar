@@ -229,15 +229,15 @@ AG_TableScale(void *p, int w, int h)
 	}
 
 	AGWIDGET(t->vbar)->x = AGWIDGET(t)->w - t->vbar->bw;
-	AGWIDGET(t->vbar)->y = 0;
-	AG_WidgetScale(t->vbar, t->vbar->bw, AGWIDGET(t)->h);
+	AGWIDGET(t->vbar)->y = t->col_h - 1;
+	AG_WidgetScale(t->vbar, t->vbar->bw, AGWIDGET(t)->h - t->col_h + 1);
 	
 	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
 	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 
-	t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w + 1;
-
+	t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
+#if 0
 	if (w != -1 && h != -1) {
 		for (n = 0; n < t->n; n++) {
 			AG_TableCol *tc = &t->cols[n];
@@ -246,7 +246,7 @@ AG_TableScale(void *p, int w, int h)
 				tc->w = t->wTbl - tc->x - COLUMN_MIN_WIDTH;
 		}
 	}
-
+#endif
 	AG_TableSizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
 }
@@ -435,7 +435,7 @@ AG_TableDraw(void *p)
 		}
 		agPrim.box(t, x, 0, cw, t->col_h - 1, 1, AG_COLOR(TABLE_COLOR));
 		
-		AG_WidgetPushClipRect(t, x, 0, cw, AGWIDGET(t)->h);
+		AG_WidgetPushClipRect(t, x, 0, cw, AGWIDGET(t)->h - 2);
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
 			    x + cw/2 - AGWIDGET_SURFACE(t,col->surface)->w/2,
@@ -471,9 +471,10 @@ AG_TableDraw(void *p)
 		AG_WidgetPopClipRect(t);
 		x += col->w;
 	}
-	agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
-	    AG_COLOR(TABLE_LINE_COLOR));
-
+	if (x > 0 && x < t->wTbl) {
+		agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
+		    AG_COLOR(TABLE_LINE_COLOR));
+	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
 	AG_MutexUnlock(&t->lock);
 }
@@ -1045,6 +1046,9 @@ mousemotion(AG_Event *event)
 	int n, cx;
 	int m;
 
+	if (x < 0 || y < 0 || x >= AGWIDGET(t)->w || y >= AGWIDGET(t)->h)
+		return;
+
 	AG_MutexLock(&t->lock);
 	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
 		AG_TableCol *tc = &t->cols[t->nResizing];
@@ -1052,13 +1056,11 @@ mousemotion(AG_Event *event)
 		if ((tc->w += xrel) < COLUMN_MIN_WIDTH) {
 			tc->w = COLUMN_MIN_WIDTH;
 		}
-		if ((tc->x + tc->w) > (t->wTbl - COLUMN_MIN_WIDTH)) {
-			tc->w = t->wTbl - tc->x - COLUMN_MIN_WIDTH;
-		}
 		AG_TableSizeFillCols(t);
 		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
-		if ((m = OverColumn(t, y)) == -1 &&
+		if (y <= t->col_h &&
+		    (m = OverColumn(t, y)) == -1 &&
 		    OverColumnResizeControl(t, x))
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
