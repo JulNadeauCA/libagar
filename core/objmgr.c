@@ -62,30 +62,26 @@ struct objent {
 };
 static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
-static int edit_on_create = 1;
-static void *current_pobj = NULL;
-#ifdef NETWORK
-static AG_Timeout repo_timeout;
-#endif
-
+static int editNowFlag = 1;
+static void *lastSelectedParent = NULL;
 int agObjMgrExiting = 0;
-#ifdef DEBUG
+#if 0
 int agObjMgrHexDiff = 0;
 #endif
 
 static void
-create_obj(AG_Event *event)
+CreateObject(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
 	AG_ObjectType *t = AG_PTR(1);
 	AG_Textbox *name_tb = AG_PTR(2);
-	AG_Tlist *objs_tl = AG_PTR(3);
+	AG_Tlist *tlObjs = AG_PTR(3);
 	AG_Window *dlg_win = AG_PTR(4);
 	AG_TlistItem *it;
 	AG_Object *pobj;
 	void *nobj;
 
-	if ((it = AG_TlistSelectedItem(objs_tl)) != NULL) {
+	if ((it = AG_TlistSelectedItem(tlObjs)) != NULL) {
 		pobj = it->p1;
 	} else {
 		pobj = agWorld;
@@ -127,8 +123,7 @@ tryname:
 
 	AG_PostEvent(NULL, nobj, "edit-create", NULL);
 	
-	if (edit_on_create &&
-	    t->ops->edit != NULL)
+	if (editNowFlag && t->ops->edit != NULL)
 		AG_ObjMgrOpenData(nobj);
 }
 
@@ -153,7 +148,7 @@ enum {
 };
 
 static void
-close_obj_generic(AG_Event *event)
+CloseGenericDlg(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	struct objent *oent = AG_PTR(1);
@@ -184,11 +179,11 @@ AG_ObjMgrOpenGeneric(AG_Object *ob)
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
 	AG_WindowShow(oent->win);
 
-	AG_SetEvent(oent->win, "window-close", close_obj_generic, "%p", oent);
+	AG_SetEvent(oent->win, "window-close", CloseGenericDlg, "%p", oent);
 }
 
 static void
-close_object(struct objent *oent, AG_Window *win, int save)
+SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 {
 	AG_WindowHide(win);
 	AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
@@ -205,17 +200,17 @@ close_object(struct objent *oent, AG_Window *win, int save)
 }
 
 static void
-close_object_cb(AG_Event *event)
+SaveChangesReturn(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 	struct objent *oent = AG_PTR(2);
 	int save = AG_INT(3);
 
-	close_object(oent, win, save);
+	SaveAndCloseObject(oent, win, save);
 }
 
 static void
-close_object_dlg(AG_Event *event)
+SaveChangesDlg(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	struct objent *oent = AG_PTR(1);
@@ -230,19 +225,19 @@ close_object_dlg(AG_Event *event)
 		{
 			AG_ButtonText(bOpts[0], _("Save"));
 			AG_SetEvent(bOpts[0], "button-pushed",
-			    close_object_cb, "%p,%p,%i", win, oent, 1);
+			    SaveChangesReturn, "%p,%p,%i", win, oent, 1);
 			AG_WidgetFocus(bOpts[0]);
 
 			AG_ButtonText(bOpts[1], _("Discard"));
 			AG_SetEvent(bOpts[1], "button-pushed",
-			    close_object_cb, "%p,%p,%i", win, oent, 0);
+			    SaveChangesReturn, "%p,%p,%i", win, oent, 0);
 
 			AG_ButtonText(bOpts[2], _("Cancel"));
 			AG_SetEvent(bOpts[2], "button-pushed",
 			    AGWINDETACH(wDlg));
 		}
 	} else {
-		close_object(oent, win, 1);
+		SaveAndCloseObject(oent, win, 1);
 	}
 }
 
@@ -267,10 +262,11 @@ AG_ObjMgrOpenData(void *p)
 	if (ob->ops->edit == NULL)
 		return;
 
-	if (AGOBJECT_PERSISTENT(ob)) {
-		if (!AGOBJECT_RESIDENT(ob) &&
-		   (AG_ObjectLoad(ob) == -1 ||
-		    AG_ObjectLoadData(ob, &dataFound) == -1)) {
+	if (AGOBJECT_PERSISTENT(ob) &&
+	    !AGOBJECT_RESIDENT(ob)) {
+		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
+		if (AG_ObjectLoad(ob) == -1 ||
+		    AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/*
 				 * Data not found in storage, so assume
@@ -289,6 +285,7 @@ AG_ObjMgrOpenData(void *p)
 				return;
 			}
 		}
+		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
 	if ((win = ob->ops->edit(ob)) == NULL) {
 		goto fail;
@@ -299,7 +296,7 @@ AG_ObjMgrOpenData(void *p)
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
-	AG_SetEvent(win, "window-close", close_object_dlg, "%p", oent);
+	AG_SetEvent(win, "window-close", SaveChangesDlg, "%p", oent);
 	AG_WindowShow(win);
 	return;
 fail:
@@ -320,6 +317,7 @@ ExportObject(AG_Event *event)
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!AGOBJECT_RESIDENT(ob)) {
+		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/* Object was never saved before. */
@@ -331,6 +329,7 @@ ExportObject(AG_Event *event)
 				return;
 			}
 		}
+		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
 
@@ -365,6 +364,7 @@ ImportObject(AG_Event *event)
 
 	/* Load the object temporarily if it is non-resident. */
 	if (!AGOBJECT_RESIDENT(ob)) {
+		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/* Object was never saved before. */
@@ -377,6 +377,7 @@ ImportObject(AG_Event *event)
 			}
 		}
 		loadedTmp = 1;
+		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
 
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
@@ -448,7 +449,7 @@ AG_ObjMgrLoadFrom(void *p, const char *name)
 }
 
 static void
-obj_op(AG_Event *event)
+ObjectOp(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -474,9 +475,12 @@ obj_op(AG_Event *event)
 			AG_ObjMgrOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
+			AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
 			if (AG_ObjectLoad(ob) == -1) {
 				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
 				    AG_GetError());
+			} else {
+				AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 			}
 			break;
 		case OBJEDIT_SAVE:
@@ -669,9 +673,8 @@ AG_ObjMgrGenericMenu(void *menup, void *obj)
 	    &AGOBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
-/* Display the object tree. */
 static AG_TlistItem *
-find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
+PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 {
 	char label[AG_TLIST_LABEL_MAX];
 	AG_Object *cob;
@@ -694,14 +697,13 @@ find_objs(AG_Tlist *tl, AG_Object *pob, int depth)
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(cob, &pob->children, cobjs)
-			find_objs(tl, cob, depth+1);
+			PollObjectsFind(tl, cob, depth+1);
 	}
 	return (it);
 }
 
-/* Update the object tree display. */
 static void
-poll_objs(AG_Event *event)
+PollObjects(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *pob = AG_PTR(1);
@@ -710,7 +712,7 @@ poll_objs(AG_Event *event)
 
 	AG_LockLinkage();
 	AG_TlistClear(tl);
-	find_objs(tl, pob, 0);
+	PollObjectsFind(tl, pob, 0);
 	AG_TlistRestore(tl);
 	AG_UnlockLinkage();
 
@@ -725,7 +727,7 @@ poll_objs(AG_Event *event)
 }
 
 static void
-load_object(AG_Event *event)
+LoadObject(AG_Event *event)
 {
 	AG_Object *o = AG_PTR(1);
 
@@ -736,7 +738,7 @@ load_object(AG_Event *event)
 }
 
 static void
-save_object(AG_Event *event)
+SaveObject(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -749,7 +751,7 @@ save_object(AG_Event *event)
 }
 
 static void
-exit_program(AG_Event *event)
+ExitProgram(AG_Event *event)
 {
 	SDL_Event ev;
 
@@ -758,7 +760,7 @@ exit_program(AG_Event *event)
 }
 
 static void
-show_config_win(AG_Event *event)
+ShowPreferences(AG_Event *event)
 {
 	if (!agConfig->window->visible) {
 		AG_WindowShow(agConfig->window);
@@ -768,12 +770,12 @@ show_config_win(AG_Event *event)
 }
 
 static void
-create_obj_dlg(AG_Event *event)
+CreateObjectDlg(AG_Event *event)
 {
 	AG_Window *win;
 	AG_ObjectType *t = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
-	AG_Tlist *pobj_tl;
+	AG_Tlist *tlParents;
 	AG_Box *bo;
 	AG_Textbox *tb;
 	AG_Checkbox *cb;
@@ -797,27 +799,26 @@ create_obj_dlg(AG_Event *event)
 	{
 		AG_LabelNewStaticString(bo, 0, _("Parent object:"));
 
-		pobj_tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_TREE|
-		                          AG_TLIST_EXPAND);
-		AG_TlistPrescale(pobj_tl, "XXXXXXXXXXXXXXXXXXX", 5);
-		AG_WidgetBind(pobj_tl, "selected", AG_WIDGET_POINTER,
-		    &current_pobj);
-		AG_SetEvent(pobj_tl, "tlist-poll", poll_objs, "%p,%p", agWorld,
-		    current_pobj);
+		tlParents = AG_TlistNewPolled(bo,
+		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
+		    PollObjects, "%p,%p", agWorld, lastSelectedParent);
+		AG_TlistPrescale(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_WidgetBind(tlParents, "selected", AG_WIDGET_POINTER,
+		    &lastSelectedParent);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		cb = AG_CheckboxNew(win, 0, _("Edit now"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &edit_on_create);
+		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &editNowFlag);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonNewFn(bo, 0, _("OK"), create_obj, "%p,%p,%p,%p",
-		    t, tb, pobj_tl, win);
-		AG_SetEvent(tb, "textbox-return", create_obj, "%p,%p,%p,%p",
-		    t, tb, pobj_tl, win);
+		AG_ButtonNewFn(bo, 0, _("OK"), CreateObject, "%p,%p,%p,%p",
+		    t, tb, tlParents, win);
+		AG_SetEvent(tb, "textbox-return", CreateObject, "%p,%p,%p,%p",
+		    t, tb, tlParents, win);
 		
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -829,7 +830,7 @@ create_obj_dlg(AG_Event *event)
 #ifdef NETWORK
 
 static void
-update_repo_listing(AG_Event *event)
+PollRevisions(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 
@@ -845,7 +846,7 @@ update_repo_listing(AG_Event *event)
 }
 
 static void
-update_from_repo(AG_Event *event)
+UpdateFromRepo(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -862,7 +863,7 @@ update_from_repo(AG_Event *event)
 }
 
 static void
-delete_from_repo(AG_Event *event)
+DeleteFromRepo(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
@@ -905,7 +906,7 @@ rename_repo(AG_Event *event)
 }
 
 static void
-rename_repo_dlg(AG_Event *event)
+RenameOnRepo(AG_Event *event)
 {
 	char prompt[AG_LABEL_MAX];
 	AG_Tlist *tl = AG_PTR(1);
@@ -927,7 +928,7 @@ AG_ObjMgrWindow(void)
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Textbox *name_tb;
-	AG_Tlist *objs_tl;
+	AG_Tlist *tlObjs;
 	AG_Menu *me;
 	AG_MenuItem *mi, *mi_objs;
 	AG_Notebook *nb;
@@ -937,12 +938,12 @@ AG_ObjMgrWindow(void)
 	AG_WindowSetCaption(win, _("Object manager"));
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
-	objs_tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(objs_tl, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+	tlObjs = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	AG_TlistInit(tlObjs, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                      AG_TLIST_EXPAND);
-	AG_TlistPrescale(objs_tl, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
-	AG_SetEvent(objs_tl, "tlist-poll", poll_objs, "%p,%p", agWorld, NULL);
-	AG_SetEvent(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
+	AG_TlistPrescale(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
+	AG_SetEvent(tlObjs, "tlist-poll", PollObjects, "%p,%p", agWorld, NULL);
+	AG_SetEvent(tlObjs, "tlist-dblclick", ObjectOp, "%p, %i", tlObjs,
 	    OBJEDIT_EDIT_DATA);
 
 	me = AG_MenuNew(win, AG_MENU_HFILL);
@@ -959,44 +960,44 @@ AG_ObjMgrWindow(void)
 			strlcpy(label, t->ops->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, t->icon,
-			    create_obj_dlg, "%p,%p", t, win);
+			    CreateObjectDlg, "%p,%p", t, win);
 		}
 
 		AG_MenuSeparator(mi);
 
 		AG_MenuAction(mi, _("Load full state"), OBJLOAD_ICON,
-		    load_object, "%p", agWorld);
+		    LoadObject, "%p", agWorld);
 		AG_MenuAction(mi, _("Save full state"), OBJSAVE_ICON,
-		    save_object, "%p", agWorld);
+		    SaveObject, "%p", agWorld);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuAction(mi, _("Exit"), -1, exit_program, NULL);
+		AG_MenuAction(mi, _("Exit"), -1, ExitProgram, NULL);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
 		AG_MenuAction(mi, _("Edit object data..."), OBJEDIT_ICON,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
 		AG_MenuAction(mi, _("Edit generic information..."),
 		    OBJGENEDIT_ICON,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
 		
 		AG_MenuSeparator(mi);
 			
 		AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
-		    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
 		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
-		    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+		    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_MOVE_UP);
 		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-		    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+		    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_MOVE_DOWN);
 
 		if (agConfig->window != NULL) {
 			AG_MenuSeparator(mi);
 			AG_MenuAction(mi, _("Preferences..."), -1,
-			    show_config_win, NULL);
+			    ShowPreferences, NULL);
 		}
 	}
 
@@ -1004,30 +1005,30 @@ AG_ObjMgrWindow(void)
 	mi = AG_MenuAddItem(me, _("Repository"));
 	{
 		AG_MenuAction(mi, _("Commit"),
-		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_COMMIT);
 
 		AG_MenuAction(mi, _("Update"),
-		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_UPDATE);
 
 		AG_MenuAction(mi, _("Import"),
-		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_IMPORT);
 
 		AG_MenuSeparator(mi);
 
 		AG_MenuAction(mi, _("Commit all"),
-		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_COMMIT_ALL);
 
 		AG_MenuAction(mi, _("Update all"),
-		    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_UPDATE_ALL);
 			
 		
 		AG_MenuAction(mi, _("Import all"),
-		    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+		    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
@@ -1042,26 +1043,26 @@ AG_ObjMgrWindow(void)
 	{
 		AG_MenuItem *mi, *mi2;
 
-		AG_ObjectAttach(ntab, objs_tl);
+		AG_ObjectAttach(ntab, tlObjs);
 
-		mi = AG_TlistSetPopup(objs_tl, "object");
+		mi = AG_TlistSetPopup(tlObjs, "object");
 		{
 			AG_MenuAction(mi, _("Edit object..."), OBJEDIT_ICON,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
 			AG_MenuAction(mi, _("Edit object information..."),
 			    OBJGENEDIT_ICON,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
 
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Load"), OBJLOAD_ICON, obj_op,
-			    "%p, %i", objs_tl, OBJEDIT_LOAD);
-			AG_MenuAction(mi, _("Save"), OBJSAVE_ICON, obj_op,
-			    "%p, %i", objs_tl, OBJEDIT_SAVE);
-			AG_MenuAction(mi, _("Save all"), OBJSAVE_ICON, obj_op,
-			    "%p, %i", objs_tl, OBJEDIT_SAVE_ALL);
-			AG_MenuAction(mi, _("Save to..."), OBJSAVE_ICON, obj_op,
-			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
+			AG_MenuAction(mi, _("Load"), OBJLOAD_ICON, ObjectOp,
+			    "%p, %i", tlObjs, OBJEDIT_LOAD);
+			AG_MenuAction(mi, _("Save"), OBJSAVE_ICON, ObjectOp,
+			    "%p, %i", tlObjs, OBJEDIT_SAVE);
+			AG_MenuAction(mi, _("Save all"), OBJSAVE_ICON, ObjectOp,
+			    "%p, %i", tlObjs, OBJEDIT_SAVE_ALL);
+			AG_MenuAction(mi, _("Save to..."), OBJSAVE_ICON, ObjectOp,
+			    "%p, %i", tlObjs, OBJEDIT_EXPORT);
 
 #ifdef NETWORK
 			if (agRcsMode) {
@@ -1071,49 +1072,49 @@ AG_ObjMgrWindow(void)
 				    OBJLOAD_ICON, NULL, NULL);
 
 				AG_MenuAction(mi2, _("Commit"),
-				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_COMMIT);
 				
 				AG_MenuAction(mi2, _("Update"),
-				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_UPDATE);
 				
 				AG_MenuAction(mi2, _("Import"),
-				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_IMPORT);
 		
 				AG_MenuSeparator(mi2);
 				
 				AG_MenuAction(mi2, _("Commit all"),
-				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_COMMIT_ALL);
 
 				AG_MenuAction(mi2, _("Update all"),
-				    OBJLOAD_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_UPDATE_ALL);
 			
 				AG_MenuAction(mi2, _("Import all"),
-				    OBJSAVE_ICON, obj_op, "%p, %i", objs_tl,
+				    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_IMPORT_ALL);
 			}
 #endif /* NETWORK */
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
 			AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
-			    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+			    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 			    OBJEDIT_MOVE_UP);
 			AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
-			    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+			    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 			    OBJEDIT_MOVE_DOWN);
 			
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Reinitialize"), OBJREINIT_ICON,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_REINIT);
 			AG_MenuAction(mi, _("Destroy"), TRASH_ICON,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DESTROY);
 		}
 	}
 
@@ -1122,25 +1123,25 @@ AG_ObjMgrWindow(void)
 	{
 		AG_Tlist *tl;
 		AG_Button *btn;
-		AG_MenuItem *pop;
+		AG_MenuItem *mi;
 
 		tl = AG_TlistNew(ntab, AG_TLIST_MULTI|AG_TLIST_TREE|
 		                       AG_TLIST_EXPAND);
 		AG_TlistSetCompareFn(tl, AG_TlistCompareStrings);
-		pop = AG_TlistSetPopup(tl, "object");
+		mi = AG_TlistSetPopup(tl, "object");
 		{
-			AG_MenuAction(pop, _("Update from repository"),
-			    OBJLOAD_ICON, update_from_repo, "%p", tl);
-			
-			AG_MenuAction(pop, _("Delete from repository"),
-			    TRASH_ICON, delete_from_repo, "%p", tl);
-			
-			AG_MenuAction(pop, _("Rename"),
-			    -1, rename_repo_dlg, "%p", tl);
+			AG_MenuAction(mi, _("Update from repository"),
+			    OBJLOAD_ICON, UpdateFromRepo, "%p", tl);
+			AG_MenuAction(mi, _("Delete from repository"),
+			    TRASH_ICON, DeleteFromRepo, "%p", tl);
+			AG_MenuAction(mi, _("Rename"),
+			    -1, RenameOnRepo, "%p", tl);
 		}
 
-		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Refresh listing"),
-		    update_repo_listing, "%p", tl);
+		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL,
+		    _("Refresh revisions"),
+		    PollRevisions, "%p", tl);
+	
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
@@ -1248,8 +1249,8 @@ AG_ObjMgrReopen(AG_Object *obj)
 			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
 			oent->win = obj->ops->edit(obj);
 			AG_WindowShow(oent->win);
-			AG_SetEvent(oent->win, "window-close", close_object_dlg,
-			    "%p", oent);
+			AG_SetEvent(oent->win, "window-close",
+			    SaveChangesDlg, "%p", oent);
 		}
 	}
 }
