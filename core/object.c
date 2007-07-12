@@ -1861,7 +1861,7 @@ AG_ObjectChanged(void *p)
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
 
-#if defined(DEBUG) && !defined(WIN32)
+#if 0
 	if (rv == 1 && agObjMgrHexDiff) {
 		char path[MAXPATHLEN];
 		char tmp[MAXPATHLEN];
