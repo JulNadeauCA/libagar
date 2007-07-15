@@ -234,9 +234,8 @@ PreviewTexture(AG_Event *event)
 		AG_PixmapReplaceSurfaceScaled(pix, bmp, 196, 128);
 		SDL_FreeSurface(bmp);
 	} else {
-		AG_PixmapReplaceSurface(pix,
-		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-		        SDL_GetError()));
+		AG_TextColor(TEXT_COLOR);
+		AG_PixmapReplaceSurface(pix, AG_TextRender(SDL_GetError()));
 	}
 }
 

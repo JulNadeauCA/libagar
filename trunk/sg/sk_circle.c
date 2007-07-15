@@ -44,7 +44,7 @@ SK_CircleNew(void *pnode)
 	SK_Circle *circle;
 
 	circle = Malloc(sizeof(SK_Circle), M_SG);
-	SK_CircleInit(circle, SK_GenName(SKNODE(pnode)->sk));
+	SK_CircleInit(circle, SK_GenName(SKNODE(pnode)->sk, "Circle"));
 	SK_NodeAttach(pnode, circle);
 	return (circle);
 }

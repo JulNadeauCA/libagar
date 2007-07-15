@@ -155,12 +155,24 @@ static void
 SK_InitRoot(SK *sk)
 {
 	sk->root = Malloc(sizeof(SK_Point), M_SG);
-	SK_PointInit(sk->root, 1);
+	SK_PointInit(sk->root, 0);
 	SK_PointSize(sk->root, 3.0);
 	SK_PointColor(sk->root, SG_ColorRGB(100.0, 100.0, 0.0));
 	SKNODE(sk->root)->sk = sk;
 	TAILQ_INSERT_TAIL(&sk->nodes, SKNODE(sk->root), nodes);
 }
+
+#ifdef EDITION
+static void
+PostEditorLoad(AG_Event *event)
+{
+	SK *sk = AG_SELF();
+
+	if (SK_Solve(sk) == -1)
+		AG_TextMsg(AG_MSG_ERROR, _("Failed to solve sketch: %s"),
+		    AG_GetError());
+}
+#endif /* EDITION */
 
 void
 SK_Init(void *obj, const char *name)
@@ -175,7 +187,6 @@ SK_Init(void *obj, const char *name)
 	AG_ObjectInit(sk, name, &skOps);
 	AGOBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sk->flags = 0;
-	sk->last_name = 2;
 	AG_MutexInitRecursive(&sk->lock);
 	SK_InitConstraintGraph(&sk->ctGraph);
 	TAILQ_INIT(&sk->nodes);
@@ -183,16 +194,19 @@ SK_Init(void *obj, const char *name)
 
 	SK_InitRoot(sk);
 	sk->uLen = AG_FindUnit("mm");
+
+#ifdef EDITION
+	AG_SetEvent(sk, "edit-post-load", PostEditorLoad, NULL);
+#endif
 }
 
 /* Allocate a new node name. */
 Uint32
-SK_GenName(SK *sk)
+SK_GenName(SK *sk, const char *type)
 {
-	Uint32 name;
+	Uint32 name = 1;
 
-	name = sk->last_name++;
-	while (SK_FindNode(sk, name) != NULL) {
+	while (SK_FindNode(sk, name, type) != NULL) {
 		if (++name >= SK_NAME_MAX)
 			fatal("Out of node names");
 	}
@@ -246,8 +260,10 @@ SK_NodeInit(void *np, const void *ops, Uint32 name, Uint flags)
 	n->sk = NULL;
 	n->pNode = NULL;
 	n->nRefs = 0;
-	n->RefNodes = Malloc(sizeof(SK_Node *), M_SG);
+	n->refNodes = Malloc(sizeof(SK_Node *), M_SG);
 	n->nRefNodes = 0;
+	n->cons = Malloc(sizeof(SK_Constraint *), M_SG);
+	n->nCons = 0;
 	SG_MatrixIdentityv(&n->T);
 	TAILQ_INIT(&n->cnodes);
 }
@@ -268,7 +284,8 @@ SK_FreeNode(SK *sk, SK_Node *node)
 	if (node->ops->destroy != NULL) {
 		node->ops->destroy(node);
 	}
-	Free(node->RefNodes, M_SG);
+	Free(node->refNodes, M_SG);
+	Free(node->cons, M_SG);
 	Free(node, M_SG);
 }
 
@@ -399,6 +416,7 @@ fail:
 static int
 SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
+	char nodeName[SK_NODE_NAME_MAX];
 	SK_Node *chldNode;
 
 	TAILQ_FOREACH(chldNode, &node->cnodes, sknodes) {
@@ -407,7 +425,8 @@ SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	}
 	if (node->ops->load != NULL &&
 	    node->ops->load(sk, node, buf) == -1) {
-		AG_SetError("%s: %s: %s", AGOBJECT(sk)->name, SK_NodeName(node),
+		AG_SetError("%s: %s",
+		    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)),
 		    AG_GetError());
 		return (-1);
 	}
@@ -449,6 +468,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 	skElements[i]->init(node, name);
 	node->flags = (Uint)AG_ReadUint16(buf);
 	node->sk = sk;
+
 	SG_ReadMatrixv(buf, &node->T);
 	
 	/* Load the child nodes recursively. */
@@ -525,6 +545,8 @@ SK_Load(void *obj, AG_Netbuf *buf)
 		default:
 			break;
 		}
+		SK_NodeAddConstraint(ct->n1, ct);
+		SK_NodeAddConstraint(ct->n2, ct);
 		TAILQ_INSERT_TAIL(&sk->ctGraph.edges, ct, constraints);
 	}
 	AG_MutexUnlock(&sk->lock);
@@ -626,9 +648,9 @@ SK_NodeAddReference(void *pNode, void *pOther)
 	if (node == other)
 		return;
 	
-	node->RefNodes = Realloc(node->RefNodes,
+	node->refNodes = Realloc(node->refNodes,
 	                         (node->nRefNodes+1)*sizeof(SK_Node *));
-	node->RefNodes[node->nRefNodes++] = other;
+	node->refNodes[node->nRefNodes++] = other;
 	other->nRefs++;
 }
 
@@ -644,12 +666,12 @@ SK_NodeDelReference(void *pNode, void *pOther)
 		return;
 
 	for (i = 0; i < node->nRefNodes; i++) {
-		if (node->RefNodes[i] != other) {
+		if (node->refNodes[i] != other) {
 			continue;
 		}
 		if (i+1 < node->nRefNodes) {
-			memmove(&node->RefNodes[i],
-			        &node->RefNodes[i+1],
+			memmove(&node->refNodes[i],
+			        &node->refNodes[i+1],
 				(node->nRefNodes-1)*sizeof(SK_Node *));
 		}
 		node->nRefNodes--;
@@ -658,39 +680,54 @@ SK_NodeDelReference(void *pNode, void *pOther)
 	}
 }
 
+void
+SK_NodeAddConstraint(void *pNode, SK_Constraint *ct)
+{
+	SK_Node *node = pNode;
+	int i;
+
+	for (i = 0; i < node->nCons; i++) {
+		if (node->cons[i] == ct)
+			return;
+	}
+	node->cons = Realloc(node->cons,
+	                     (node->nCons+1)*sizeof(SK_Constraint *));
+	node->cons[node->nCons++] = ct;
+}
+
+void
+SK_NodeDelConstraint(void *pNode, SK_Constraint *ct)
+{
+	SK_Node *node = pNode;
+	int i;
+
+	for (i = 0; i < node->nCons; i++) {
+		if (node->cons[i] != ct) {
+			continue;
+		}
+		if (i+1 < node->nCons) {
+			memmove(&node->cons[i],
+			        &node->cons[i+1],
+				(node->nCons-1)*sizeof(SK_Constraint *));
+		}
+		node->nCons--;
+		break;
+	}
+}
+
 /* Search a node by name in a sketch. */
 void *
-SK_FindNode(SK *sk, Uint32 name)
+SK_FindNode(SK *sk, Uint32 name, const char *type)
 {
 	SK_Node *node;
 
 	/* XXX use a hash table */
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node->name == name)
+		if (node->name == name &&
+		    strcmp(node->ops->name, type) == 0)
 			return (node);
 	}
 	AG_SetError("No such node: %u", name);
-	return (NULL);
-}
-
-/* Search a node by name and type in a sketch. */
-void *
-SK_FindNodeOfType(SK *sk, const char *type, Uint32 name)
-{
-	SK_Node *node;
-
-	/* XXX use a hash table */
-	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node->name != name) {
-			continue;
-		}
-		if (strcmp(node->ops->name, type) != 0) {
-			goto fail;
-		}
-		return (node);
-	}
-fail:
-	AG_SetError("No such node: %s%u", type, name);
 	return (NULL);
 }
 
@@ -807,20 +844,18 @@ SK_WriteRef(AG_Netbuf *buf, void *pNode)
 }
 
 void *
-SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *type)
+SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *expType)
 {
-	char sig[SK_TYPE_NAME_MAX];
+	char rType[SK_TYPE_NAME_MAX];
 
-	AG_CopyString(sig, buf, sizeof(sig));
-	if (type != NULL) {
-		if (strcmp(sig, type) != 0) {
+	AG_CopyString(rType, buf, sizeof(rType));
+	if (expType != NULL) {
+		if (strcmp(rType, expType) != 0) {
 			fatal("Unexpected reference type: `%s' (expecting %s)",
-			    sig, type);
+			    rType, expType);
 		}
-		return (SK_FindNodeOfType(sk, type, AG_ReadUint32(buf)));
-	} else {
-		return (SK_FindNode(sk, AG_ReadUint32(buf)));
 	}
+	return (SK_FindNode(sk, AG_ReadUint32(buf), rType));
 }
 
 /* Set the distance unit used by this sketch. */
@@ -830,6 +865,45 @@ SK_SetLengthUnit(SK *sk, const AG_Unit *unit)
 	AG_MutexLock(&sk->lock);
 	sk->uLen = unit;
 	AG_MutexUnlock(&sk->lock);
+}
+
+/*
+ * Perform a proximity query with the given vector against all elements
+ * of the given type (or all elements if type is NULL), and return the
+ * closest item.
+ *
+ * The closest point of the closest item is also returned in vC.
+ */
+void *
+SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
+    void *nodeIgnore)
+{
+	SK_Node **nodes, *node, *nClosest = NULL;
+	SG_Real rClosest = HUGE_VAL, p;
+	SG_Vector vClosest = SG_VECTOR2(HUGE_VAL,HUGE_VAL);
+	Uint nNodes;
+
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (node == nodeIgnore ||
+		    node->ops->proximity == NULL) {
+			continue;
+		}
+		if (type != NULL &&
+		    strcmp(node->ops->name, type) != 0) {
+			continue;
+		}
+		p = node->ops->proximity(node, v, vC);
+		if (p < rClosest) {
+			rClosest = p;
+			nClosest = node;
+			vClosest.x = vC->x;
+			vClosest.y = vC->y;
+		}
+	}
+	vC->x = vClosest.x;
+	vC->y = vClosest.y;
+	vC->z = 0.0;
+	return (nClosest);
 }
 
 /* Initialize constraint graph. */
@@ -920,8 +994,6 @@ SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
 SK_Constraint *
 SK_AddConstraintCopy(SK_ConstraintGraph *cgDst, const SK_Constraint *ct)
 {
-	SK_Constraint *ctCopy;
-
 	switch (ct->type) {
 	case SK_DISTANCE:
 		return SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_DISTANCE,
@@ -943,12 +1015,48 @@ SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
 	Free(ct, M_SG);
 }
 
+/* Destroy a constraint edge matching the argument. */
+int
+SK_DelSimilarConstraint(SK_ConstraintGraph *cg, const SK_Constraint *ctRef)
+{
+	SK_Constraint *ct;
+
+	if ((ct = SK_FindSimilarConstraint(cg, ctRef)) == NULL) {
+		AG_SetError("No matching constraint");
+		return (-1);
+	}
+	TAILQ_REMOVE(&cg->edges, ct, constraints);
+	Free(ct, M_SG);
+	return (0);
+}
+
+int
+SK_CompareConstraints(const SK_Constraint *ct1, const SK_Constraint *ct2)
+{
+	if (ct1->type == ct2->type &&
+	    ((ct1->n1 == ct2->n1 && ct1->n2 == ct2->n2) ||
+	     (ct1->n1 == ct2->n2 && ct1->n2 == ct2->n1))) {
+		return (0);
+#if 0
+		switch (ct1->type) {
+		case SK_DISTANCE:
+			return (ct1->ct_distance - ct2->ct_distance);
+		case SK_ANGLE:
+			return (ct1->ct_angle - ct2->ct_angle);
+		default:
+			return (0);
+		}
+#endif
+	}
+	return (1);
+}
+
 /*
- * Search a constraint graph for a constraint of a given type between
+ * Search a constraint graph for any constraint of a given type between
  * two given nodes.
  */
 SK_Constraint *
-SK_FindConstraint(SK_ConstraintGraph *cg, enum sk_constraint_type type,
+SK_FindConstraint(const SK_ConstraintGraph *cg, enum sk_constraint_type type,
     void *n1, void *n2)
 {
 	SK_Constraint *ct;
@@ -962,43 +1070,71 @@ SK_FindConstraint(SK_ConstraintGraph *cg, enum sk_constraint_type type,
 	return (NULL);
 }
 
-/*
- * Perform a proximity query with the given vector against all elements
- * of the given type (or all elements if type is NULL), and return the
- * closest item.
- *
- * The closest point of the closest item is also returned in vC.
- */
-void *
-SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
-    void *nodeIgnore)
+/* Search a constraint graph for a constraint matching the argument. */
+SK_Constraint *
+SK_FindSimilarConstraint(const SK_ConstraintGraph *cg, const SK_Constraint *ct)
 {
-	SK_Node **nodes, *node, *nClosest = NULL;
-	SG_Real rClosest = HUGE_VAL, p;
-	SG_Vector vClosest = SG_VECTOR2(HUGE_VAL,HUGE_VAL);
-	Uint nNodes;
+	SK_Constraint *ct2;
 
-	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node == nodeIgnore ||
-		    node->ops->proximity == NULL) {
-			continue;
-		}
-		if (type != NULL &&
-		    strcmp(node->ops->name, type) != 0) {
-			continue;
-		}
-		p = node->ops->proximity(node, v, vC);
-		if (p < rClosest) {
-			rClosest = p;
-			nClosest = node;
-			vClosest.x = vC->x;
-			vClosest.y = vC->y;
+	TAILQ_FOREACH(ct2, &cg->edges, constraints) {
+		if (SK_CompareConstraints(ct2, ct) == 0)
+			return (ct2);
+	}
+	return (NULL);
+}
+
+/*
+ * Check if the given two nodes share a constraint edge in the given
+ * constraint graph.
+ */
+SK_Constraint *
+SK_ConstrainedNodes(const SK_ConstraintGraph *cg, const SK_Node *n1,
+    const SK_Node *n2)
+{
+	SK_Constraint *ct;
+
+	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		if ((ct->n1 == n1 && ct->n2 == n2) ||
+		    (ct->n1 == n2 && ct->n2 == n1))
+			return (ct);
+	}
+	return (NULL);
+}
+
+/* Evaluate whether the given node is in the given constraint graph. */
+int
+SK_NodeInGraph(const SK_Node *node, const SK_ConstraintGraph *cg)
+{
+	SK_Constraint *ct;
+
+	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		if (ct->n1 == node || ct->n2 == node)
+			return (1);
+	}
+	return (0);
+}
+
+/*
+ * Count the number of edges between a given node and any other node
+ * in the given subgraph cgSub of graph cg.
+ */
+Uint
+SK_ConstraintsToSubgraph(const SK_ConstraintGraph *cgOrig, const SK_Node *node,
+    const SK_ConstraintGraph *cgSub, SK_Constraint *rv[2])
+{
+	SK_Constraint *ct, *ctOrig;
+	Uint count = 0;
+
+	TAILQ_FOREACH(ct, &cgOrig->edges, constraints) {
+		if ((ct->n1 == node && SK_NodeInGraph(ct->n2, cgSub)) ||
+		    (ct->n2 == node && SK_NodeInGraph(ct->n1, cgSub))) {
+			if (count < 2) {
+				rv[count] = ct;
+			}
+			count++;
 		}
 	}
-	vC->x = vClosest.x;
-	vC->y = vClosest.y;
-	vC->z = 0.0;
-	return (nClosest);
+	return (count);
 }
 
 #endif /* HAVE_OPENGL */

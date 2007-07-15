@@ -23,6 +23,7 @@
 struct sk;
 struct sk_node;
 struct sk_point;
+struct sk_constraint;
 struct ag_widget;
 
 typedef struct sk_node_ops {
@@ -41,7 +42,7 @@ typedef struct sk_node_ops {
 } SK_NodeOps;
 
 typedef struct sk_node {
-	Uint32 name;			/* Unique node handle */
+	Uint32 name;			/* Unique handle for this node class */
 	const SK_NodeOps *ops;
 	Uint flags;
 #define SK_NODE_SELECTED	0x01	/* For editor */
@@ -52,8 +53,10 @@ typedef struct sk_node {
 	SG_Matrix4 T;			/* Transformation from parent */
 	TAILQ_HEAD(,sk_node) cnodes;	/* Siblings */
 	Uint nRefs;			/* Reference count (optimization) */
-	struct sk_node **RefNodes;	/* References to other nodes */
+	struct sk_node **refNodes;	/* References to other nodes */
 	Uint nRefNodes;
+	struct sk_constraint **cons;	/* Constraint edges */
+	Uint nCons;
 	TAILQ_ENTRY(sk_node) sknodes;	/* Entry in transformation tree */
 	TAILQ_ENTRY(sk_node) nodes;	/* Entry in flat node list */
 	TAILQ_ENTRY(sk_node) rnodes;	/* Reverse entry (optimization) */
@@ -94,7 +97,6 @@ typedef struct sk {
 						   in load (otherwise fail) */
 	AG_Mutex lock;
 	const AG_Unit *uLen;			/* Length unit */
-	Uint32 last_name;			/* Last nodeid (optimization) */
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
 	SK_ConstraintGraph ctGraph;		/* Original constraint graph */
@@ -169,15 +171,18 @@ SG_Vector	 SK_NodeCoords(void *);
 SG_Vector	 SK_NodeDir(void *);
 void		 SK_NodeAddReference(void *, void *);
 void		 SK_NodeDelReference(void *, void *);
-void		*SK_FindNode(SK *, Uint32);
-void		*SK_FindNodeOfType(SK *, const char *, Uint32);
-Uint32		 SK_GenName(SK *);
+void		 SK_NodeAddConstraint(void *, SK_Constraint *);
+void		 SK_NodeDelConstraint(void *, SK_Constraint *);
+void		*SK_FindNode(SK *, Uint32, const char *);
+Uint32		 SK_GenName(SK *, const char *);
 char		*SK_NodeName(void *);
 char		*SK_NodeNameCopy(void *, char *, size_t);
 SG_Color	 SK_NodeColor(void *, const SG_Color *);
 void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
 void		 SK_WriteRef(AG_Netbuf *, void *);
 void		 SK_SetLengthUnit(SK *, const AG_Unit *);
+void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
+		                    SG_Vector *, void *);
 
 int		 SK_Solve(SK *);
 void		 SK_FreeConstraintClusters(SK *);
@@ -190,11 +195,20 @@ SK_Constraint	*SK_AddConstraint(SK_ConstraintGraph *, void *, void *,
 SK_Constraint	*SK_AddConstraintCopy(SK_ConstraintGraph *,
 		                      const SK_Constraint *);
 void		 SK_DelConstraint(SK_ConstraintGraph *, SK_Constraint *);
-SK_Constraint	*SK_FindConstraint(SK_ConstraintGraph *,
+int		 SK_DelSimilarConstraint(SK_ConstraintGraph *,
+		                         const SK_Constraint *);
+int		 SK_CompareConstraints(const SK_Constraint *,
+		                       const SK_Constraint *);
+SK_Constraint	*SK_FindConstraint(const SK_ConstraintGraph *,
 		                   enum sk_constraint_type, void *, void *);
 
-void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
-		                    SG_Vector *, void *);
+__inline__ SK_Constraint *SK_FindSimilarConstraint(const SK_ConstraintGraph *,
+		                                   const SK_Constraint *);
+__inline__ SK_Constraint *SK_ConstrainedNodes(const SK_ConstraintGraph *,
+			                      const SK_Node *, const SK_Node *);
+Uint SK_ConstraintsToSubgraph(const SK_ConstraintGraph *, const SK_Node *,
+                              const SK_ConstraintGraph *, SK_Constraint * [2]);
+int SK_NodeInGraph(const SK_Node *, const SK_ConstraintGraph *);
 
 #define	SK_Identity(n) SG_MatrixIdentityv(&SKNODE(n)->T)
 #define	SK_Translate(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(v).x,(v).y)

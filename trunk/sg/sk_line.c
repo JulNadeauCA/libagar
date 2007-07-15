@@ -44,7 +44,7 @@ SK_LineNew(void *pnode)
 	SK_Line *line;
 
 	line = Malloc(sizeof(SK_Line), M_SG);
-	SK_LineInit(line, SK_GenName(SKNODE(pnode)->sk));
+	SK_LineInit(line, SK_GenName(SKNODE(pnode)->sk, "Line"));
 	SK_NodeAttach(pnode, line);
 	return (line);
 }
@@ -241,6 +241,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	SK_Point *overPoint;
 	SK_Line *line;
 	SG_Vector vC;
+	SK_Constraint *ct;
 
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
@@ -258,8 +259,10 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 				AG_TextMsgFromError();
 				return (0);
 			}
-			SK_AddConstraint(&sk->ctGraph, line, overPoint,
+			ct = SK_AddConstraint(&sk->ctGraph, line, overPoint,
 			    SK_COINCIDENT);
+			SK_NodeAddConstraint(line, ct);
+			SK_NodeAddConstraint(overPoint, ct);
 		    	SK_NodeAddReference(line, overPoint);
 			line->p2 = overPoint;
 		}
@@ -278,8 +281,14 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	line->p2 = SK_PointNew(sk->root);
 	SK_Translatev(line->p2, &pos);
 	
-	SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_COINCIDENT);
-	SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_COINCIDENT);
+	ct = SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_COINCIDENT);
+	SK_NodeAddConstraint(line, ct);
+	SK_NodeAddConstraint(line->p1, ct);
+
+	ct = SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_COINCIDENT);
+	SK_NodeAddConstraint(line, ct);
+	SK_NodeAddConstraint(line->p2, ct);
+
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);
 	t->curLine = line;

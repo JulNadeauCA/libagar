@@ -44,7 +44,7 @@ SK_PointNew(void *pnode)
 	SK_Point *pt;
 
 	pt = Malloc(sizeof(SK_Point), M_SG);
-	SK_PointInit(pt, SK_GenName(SKNODE(pnode)->sk));
+	SK_PointInit(pt, SK_GenName(SKNODE(pnode)->sk, "Point"));
 	SK_NodeAttach(pnode, pt);
 	return (pt);
 }
@@ -177,7 +177,7 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 		return (0);
 
 	pt = Malloc(sizeof(SK_Point), M_OBJECT);
-	SK_PointInit(pt, SK_GenName(sk));
+	SK_PointInit(pt, SK_GenName(sk, "Point"));
 	SK_NodeAttach(sk->root, pt);
 	SG_MatrixTranslate2(&SKNODE(pt)->T, pos.x, pos.y);
 	return (0);

@@ -24,7 +24,23 @@
  */
 
 /*
- * Geometrical constraint solver.
+ * This is a generic, graph-based geometric constraint solver. It is based on
+ * the idea that, since our geometric elements (points, lines and circles of
+ * fixed radii) have at most two degrees of freedom, the unknown position of
+ * a third element in a system of three constrained elements can be computed
+ * using linear, linear-quadratic and quadratic systems of equations based
+ * on the constraint between the two other elements.
+ * 
+ * 1) Graph analysis. This phase determines whether the problem is well
+ * constrained, and if so, the sequence of construction steps to use in
+ * order to place the elements. We first look at the constraints between
+ * the nodes and generate a set of graphs representing rigid clusters.
+ * If a set of three rigid clusters share exactly one node with each other,
+ * the clusters can be brought into alignment, forming a new, larger rigid
+ * cluster. The solution we are looking for is a single, rigid cluster.
+ * 
+ * 2) Construction phase. We solve the equations to place the components
+ * in the same order we followed during graph analysis.
  */
 
 #include <config/have_opengl.h>
@@ -41,70 +57,69 @@
 int
 SK_Solve(SK *sk)
 {
-	SK_ConstraintGraph cg;
-	SK_ConstraintGraph *cluster;
-	SK_Constraint *ct, *ctCluster;
+	SK_ConstraintGraph cgOrig;
+	SK_ConstraintGraph *cgCluster;
+	SK_Constraint *ct, *ctCluster, *ctPair[2];
+	SK_Node *node;
 	int nclusters = 0;
+	Uint i, count;
 
-	if (TAILQ_EMPTY(&sk->ctGraph.edges))		/* Nothing to do */
-		return (0);
+	AG_MutexLock(&sk->lock);
 
-	/*
-	 * First Phase: Analysis of the constraint graph.
-	 *
-	 * We determine whether the sketch is well-constrainted, and if that's
-	 * the case, we also determine the sequence of steps in placing the
-	 * geometric elements correctly.
-	 */
-
-	/* Copy the user-specified constraint graph since we will modify it. */
-	SK_FreeConstraintClusters(sk);
-	SK_InitConstraintGraph(&cg);
-	SK_CopyConstraintGraph(&sk->ctGraph, &cg);
-
-	/*
-	 * Create an initial cluster from any two nodes which are connected
-	 * by a constraint edge and add any other node which is connected to
-	 * any node in the new cluster by exactly two constraint edges
-	 * (our geometric elements have at most two degrees of freedom).
-	 */
-create_cluster:
-	if (TAILQ_EMPTY(&cg.edges)) {
+	if (TAILQ_EMPTY(&sk->ctGraph.edges)) 		/* Nothing to do */
 		goto out;
-	}
-	printf("creating new cluster %d\n", nclusters);
-	cluster = Malloc(sizeof(SK_ConstraintGraph), M_SG);
-	SK_InitConstraintGraph(cluster);
-	SK_AddConstraintCopy(cluster, TAILQ_FIRST(&cg.edges));
+
+	/*
+	 * First Phase: Graph analysis.
+	 */
+
+	/* Copy the source graph since we will modify its elements. */
+	SK_FreeConstraintClusters(sk);
+	SK_InitConstraintGraph(&cgOrig);
+	SK_CopyConstraintGraph(&sk->ctGraph, &cgOrig);
+
+	/*
+	 * Classify all edges in a series of rigid clusters. We start a cluster
+	 * with any edge, and we loop adding to the cluster any node which has
+	 * exactly two edges to any of the nodes already in the cluster (our
+	 * elements have at most two degrees of freedom).
+	 */
+	while (!TAILQ_EMPTY(&cgOrig.edges)) {
+		printf("creating new cluster %d\n", nclusters);
+		cgCluster = Malloc(sizeof(SK_ConstraintGraph), M_SG);
+		SK_InitConstraintGraph(cgCluster);
+		ct = TAILQ_FIRST(&cgOrig.edges);
+		SK_AddConstraintCopy(cgCluster, ct);
+		SK_DelConstraint(&cgOrig, ct);
 populate_cluster:
-	printf("cluster%d: populating cluster\n", nclusters);
-	TAILQ_FOREACH(ct, &cg.edges, constraints) {
-		TAILQ_FOREACH(ctCluster, &cluster->edges, constraints) {
-			if (ctCluster->n1 == ct->n1 ||
-			    ctCluster->n2 == ct->n1 ||
-			    ctCluster->n1 == ct->n2 ||
-			    ctCluster->n2 == ct->n2) {
-				break;
+		printf("cluster%d: populating cluster\n", nclusters);
+		TAILQ_FOREACH(node, &sk->nodes, nodes) {
+			count = 0;
+			TAILQ_FOREACH(ct, &cgOrig.edges, constraints) {
+				if ((ct->n1 == node &&
+				     SK_NodeInGraph(ct->n2, cgCluster)) ||
+				    (ct->n2 == node &&
+				     SK_NodeInGraph(ct->n1, cgCluster))) {
+					if (count < 2) {
+						ctPair[count] = ct;
+					}
+					count++;
+				}
 			}
+			if (count != 2) {
+				continue;
+			}
+			for (i = 0; i < 2; i++) {
+				SK_AddConstraintCopy(cgCluster, ctPair[i]);
+				SK_DelConstraint(&cgOrig, ctPair[i]);
+			}
+			goto populate_cluster;
 		}
-		if (ctCluster == NULL) {
-			continue;
-		}
-		printf("cluster%d: adding edge: %s(%s-%s)\n", nclusters,
-		    skConstraintNames[ctCluster->type],
-		    SK_NodeName(ctCluster->n1),
-		    SK_NodeName(ctCluster->n2));
-		SK_AddConstraintCopy(cluster, ctCluster);
-		TAILQ_REMOVE(&cg.edges, ct, constraints);
-		Free(ct, M_SG);
-		goto populate_cluster;
+		TAILQ_INSERT_TAIL(&sk->ctClusters, cgCluster, clusters);
+		nclusters++;
 	}
-	/* Continue creating clusters until all edges have been added. */
-	TAILQ_INSERT_TAIL(&sk->ctClusters, cluster, clusters);
-	nclusters++;
-	goto create_cluster;
 out:
-	printf("done\n");
+	AG_MutexUnlock(&sk->lock);
 	return (0);
 }
 

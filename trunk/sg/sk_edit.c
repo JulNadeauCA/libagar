@@ -44,6 +44,7 @@
 #include <gui/separator.h>
 #include <gui/label.h>
 #include <gui/graph.h>
+#include <gui/spinbutton.h>
 
 #include "sk.h"
 
@@ -153,26 +154,25 @@ PlotConstraintGraph(SK *sk, AG_Graph *gf, SK_ConstraintGraph *cg)
 {
 	char nodeName[SK_NODE_NAME_MAX];
 	SK_Constraint *ct;
-	SG_Vector pos;
 	AG_GraphVertex *v1, *v2;
 	AG_GraphEdge *edge;
 
 	AG_GraphFreeVertices(gf);
 
 	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+		printf("plotting constraint %p (%s)\n", ct,
+		    skConstraintNames[ct->type]);
 		if ((v1 = AG_GraphVertexFind(gf, ct->n1)) == NULL) {
 			v1 = AG_GraphVertexNew(gf, ct->n1);
 			AG_GraphVertexLabel(v1, "%s",
 			    SK_NodeNameCopy(ct->n1, nodeName,
 			    sizeof(nodeName)));
-			pos = SK_NodeCoords(ct->n1);
 		}
 		if ((v2 = AG_GraphVertexFind(gf, ct->n2)) == NULL) {
 			v2 = AG_GraphVertexNew(gf, ct->n2);
 			AG_GraphVertexLabel(v2, "%s",
 			    SK_NodeNameCopy(ct->n2, nodeName,
 			    sizeof(nodeName)));
-			pos = SK_NodeCoords(ct->n2);
 		}
 		edge = AG_GraphEdgeNew(gf, v1, v2, ct);
 		AG_GraphEdgeLabel(edge, "%s", skConstraintNames[ct->type]);
@@ -231,8 +231,8 @@ ViewConstraintGraph(AG_Event *event)
 	AG_TlistPrescale(tl, "<Original>", 6);
 	AG_TlistSetDblClickFn(tl,
 	    SelectConstraintGraph, "%p,%p", sk, gf);
-	AG_ButtonNewFn(pane->div[0], AG_BUTTON_HFILL, _("Update"),
-	    SelectConstraintGraph, "%p,%p,%p", sk, gf, &sk->ctGraph);
+//	AG_ButtonNewFn(pane->div[0], AG_BUTTON_HFILL, _("Update"),
+//	    SelectConstraintGraph, "%p,%p,%p", sk, gf, &sk->ctGraph);
 
 	PlotConstraintGraph(sk, gf, &sk->ctGraph);
 
@@ -342,9 +342,9 @@ EditNode(AG_Event *event)
 
 	if (skv->editPane != NULL) {
 		AG_ObjectDetach(skv->editPane);
-//		AG_ObjectDestroy(skv->editPane);
-//		Free(skv->editPane,0);
-//		skv->editPane = NULL;
+		AG_ObjectDestroy(skv->editPane);
+		Free(skv->editPane,0);
+		skv->editPane = NULL;
 	}
 	if (node->ops->edit == NULL) {
 		return;
@@ -357,9 +357,10 @@ EditNode(AG_Event *event)
 	AG_WidgetScale(vp->div[1], -1, -1);
 	hPane = AGWIDGET(vp->div[1])->h;
 	wPane = AGWIDGET(vp->div[1])->w;
+
 	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
 	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
-	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
+	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h - hPane);
 	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
 	AG_WINDOW_UPDATE(pWin);
 }
@@ -376,11 +377,12 @@ PollConstraints(AG_Event *event)
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		char name1[SK_NODE_NAME_MAX];
 		char name2[SK_NODE_NAME_MAX];
-
+		
 		if (node != NULL) {
 			if (node != ct->n1 && node != ct->n2)
 				continue;
 		}
+
 		AG_TableAddRow(tbl, "%s:%s:%s", skConstraintNames[ct->type],
 		    SK_NodeNameCopy(ct->n1, name1, sizeof(name1)),
 		    SK_NodeNameCopy(ct->n2, name2, sizeof(name2)));
@@ -448,7 +450,8 @@ SK_Edit(void *p)
 
 		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT,
 		    AG_PANE_EXPAND|AG_PANE_DIV1FILL);
-		//AG_PaneSetDivisionMin(hp, 0, 0, 0);
+//		AG_PaneSetDivisionMin(vp, 0, 0, 0);
+//		AG_PaneSetDivisionMin(vp, 1, 0, 0);
 		nb = AG_NotebookNew(vp->div[0], AG_NOTEBOOK_EXPAND);
 		mp = AG_MPaneNew(hp->div[1], AG_MPANE1, AG_MPANE_EXPAND);
 		AG_ObjectAttach(mp->panes[0], skv);
@@ -501,17 +504,21 @@ SK_Edit(void *p)
 	return (win);
 }
 
-void
+static void
 SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 {
 	AG_Table *tbl;
 	AG_Label *lbl;
+	AG_Spinbutton *sb;
 
 	AG_SeparatorNewHoriz(box);
 
-	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &skv->sk->lock,
-	    "Flags: <%[flags]>", &node->flags);
-	AG_LabelFlag(lbl, 0, "SELECTED", SK_NODE_SELECTED);
+	sb = AG_SpinbuttonNew(box, 0, _("Name: "));
+	AG_WidgetBindUint32(sb, "value", &node->name);
+
+//	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &skv->sk->lock,
+//	    "Flags: <%[flags]>", &node->flags);
+//	AG_LabelFlag(lbl, 0, "SELECTED", SK_NODE_SELECTED);
 
 	AG_LabelNewStaticString(box, 0, _("Geometric constraints: "));
 	tbl = AG_TableNewPolled(box, AG_TABLE_MULTI|AG_TABLE_EXPAND,

@@ -123,7 +123,8 @@ EditNode(AG_Event *event)
 	wPane = AGWIDGET(vp->div[1])->w;
 	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
 	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
-	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
+//	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
+	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h - hPane);
 	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
 	AG_WINDOW_UPDATE(pWin);
 }
@@ -289,7 +290,7 @@ NodeInfo(AG_Event *event)
 
 		mv = AG_MatviewNew(ntab, &node->T, 0);
 		AG_MatviewSetNumericalFmt(mv, "%.06f");
-		AG_TextPrescale("-0.000000", &mv->ent_w, &mv->ent_h);
+		AG_TextSize("-0.000000", &mv->ent_w, &mv->ent_h);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Children"), AG_BOX_VERT);
 	{
