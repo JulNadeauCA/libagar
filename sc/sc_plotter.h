@@ -7,10 +7,12 @@
 #include <sc/sc.h>
 #include <gui/widget.h>
 #include <gui/scrollbar.h>
+#include <gui/text.h>
 #else
 #include <agar/sc/sc.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
+#include <agar/gui/text.h>
 #endif
 
 #include "begin_code.h"
@@ -103,8 +105,7 @@ typedef struct sc_plotter {
 	int xOffs, yOffs;		/* Display offset */
 	int wPre, hPre;			/* Prescale dimensions */
 	SC_Real xScale, yScale;		/* Scaling factors */
-	const char *fontFace;		/* Default font face (or NULL) */
-	int fontSize;			/* Default font size (or -1) */
+	AG_Font *font;			/* Default font face (or NULL) */
 	Uint32 colors[SC_PLOTTER_NDEFCOLORS];	/* Default plot color */
 	int curColor;				/* Current default color */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */

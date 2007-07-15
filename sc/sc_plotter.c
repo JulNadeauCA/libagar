@@ -154,10 +154,10 @@ SC_PlotUpdateLabel(SC_Plot *pl)
 	if (pl->label >= 0) {
 		AG_WidgetUnmapSurface(ptr, pl->label);
 	}
-	pl->label = (pl->label_txt != NULL) ? AG_WidgetMapSurface(ptr,
-	    AG_TextRender(ptr->fontFace, ptr->fontSize,
-	    AG_VideoPixel(pl->color),
-	    pl->label_txt)) : -1;
+	AG_TextFont(ptr->font);
+	AG_TextColor32(pl->color);
+	pl->label = (pl->label_txt == NULL) ? -1 :
+	    AG_WidgetMapSurface(ptr, AG_TextRender(pl->label_txt));
 }
 
 static void
@@ -372,8 +372,7 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 	ptr->hPre = 64;
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
-	ptr->fontFace = NULL;
-	ptr->fontSize = -1;
+	ptr->font = NULL;
 	TAILQ_INIT(&ptr->plots);
 
 	ptr->curColor = 0;
@@ -724,9 +723,10 @@ SC_PlotLabelNew(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
 	va_end(args);
 
+	AG_TextFont(pl->plotter->font);
+	AG_TextColor32(pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(pl->plotter,
-	    AG_TextRender(pl->plotter->fontFace, pl->plotter->fontSize,
-	                  AG_VideoPixel(pl->color), plbl->text));
+	    AG_TextRender(plbl->text));
 
 	TAILQ_INSERT_TAIL(&pl->labels, plbl, labels);
 	return (plbl);
@@ -742,9 +742,10 @@ SC_PlotLabelSetText(SC_Plot *pl, SC_PlotLabel *plbl, const char *fmt, ...)
 	va_end(args);
 
 	AG_WidgetUnmapSurface(pl->plotter, plbl->text_surface);
+	AG_TextFont(pl->plotter->font);
+	AG_TextColor32(pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(pl->plotter,
-	    AG_TextRender(pl->plotter->fontFace, pl->plotter->fontSize,
-	    AG_VideoPixel(pl->color), plbl->text));
+	    AG_TextRender(plbl->text));
 }
 
 /* Replace plot labels matching the given text. */
@@ -933,8 +934,7 @@ SC_PlotSetYoffs(SC_Plot *pl, int yOffs)
 void
 SC_PlotterSetDefaultFont(SC_Plotter *ptr, const char *face, int size)
 {
-	ptr->fontFace = face;
-	ptr->fontSize = size;
+	ptr->font = AG_FetchFont(face, size, 0);
 }
 
 void
