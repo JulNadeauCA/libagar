@@ -165,9 +165,9 @@ MAP_ToolUpdateStatus(void *p)
 	MAP_Tool *t = p;
 
 	if (t->nstatus > 0 && t->mv->status != NULL) {
+		AG_TextColor(TEXT_COLOR);
 		AG_WidgetReplaceSurface(t->mv->status, t->mv->status->surface,
-		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-		    t->status[t->nstatus-1]));
+		    AG_TextRender(t->status[t->nstatus-1]));
 	}
 }
 

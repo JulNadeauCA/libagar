@@ -1756,8 +1756,8 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 		} else {
 #if defined(DEBUG) || defined(EDITION)
 			snprintf(num, sizeof(num), "(s%u)", (Uint)r->r_tile.id);
-			su = AG_TextRender(NULL, -1,
-			    SDL_MapRGBA(agVideoFmt, 250, 250, 50, 150), num);
+			AG_TextColorRGBA(250,250,50,150);
+			su = AG_TextRender(num);
 			debug_su++;
 			goto draw;
 #else
@@ -1775,8 +1775,8 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 		} else {
 #if defined(DEBUG) || defined(EDITION)
 			snprintf(num, sizeof(num), "(a%u)", r->r_anim.id);
-			su = AG_TextRender(NULL, -1,
-			    SDL_MapRGBA(agVideoFmt, 250, 250, 50, 150), num);
+			AG_TextColorRGBA(250,250,50,150);
+			su = AG_TextRender(num);
 			debug_su++;
 			goto draw;
 #endif
@@ -3087,8 +3087,9 @@ MAP_Edit(void *p)
 	    agView->w/6, agView->h/6,
 	    2*agView->w/3, 2*agView->h/3);
 
+	AG_TextColor(TEXT_COLOR);
 	AG_WidgetReplaceSurface(mv->status, mv->status->surface,
-	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
+	    AG_TextRender(
 	    _("Select a tool or double-click on an element to insert.")));
 	AG_WidgetFocus(mv);
 	return (win);
