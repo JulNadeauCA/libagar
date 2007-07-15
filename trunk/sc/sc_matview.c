@@ -115,7 +115,7 @@ AG_MatviewInit(AG_Matview *mv, SC_Matrix *mat, Uint flags)
 	AG_WidgetSetInt(mv->hbar, "min", 0);
 	AG_WidgetSetInt(mv->vbar, "min", 0);
 
-	AG_TextPrescale("-00", &mv->ent_w, &mv->ent_h);
+	AG_TextSize("-00", &mv->ent_w, &mv->ent_h);
 	AG_SetEvent(mv, "window-keydown", matview_keydown, NULL);
 	AG_SetEvent(mv, "window-mousebuttondown", matview_mousebuttondown,
 	    NULL);
@@ -132,7 +132,7 @@ AG_MatviewPrescale(AG_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;
-	AG_TextPrescale(text, &mv->ent_w, &mv->ent_h);
+	AG_TextSize(text, &mv->ent_w, &mv->ent_h);
 }
 
 void
@@ -189,8 +189,8 @@ AG_MatviewDrawNumerical(void *p)
 				snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
-			su = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-			    text);
+			AG_TextColor(TEXT_COLOR);
+			su = AG_TextRender(text);
 			AG_WidgetBlit(mv, su, x, y);
 			SDL_FreeSurface(su);
 		}
