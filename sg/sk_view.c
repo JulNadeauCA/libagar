@@ -77,12 +77,18 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 }
 
 static void
-SK_ViewMotion(AG_Event *event)
+mousemotion(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = skv->curtool;
 	SG_Vector vPos, vRel;
 	SG_Matrix Ti;
+	int x = AG_INT(1);
+	int y = AG_INT(2);
+
+	if (x < 0 || x >= AGWIDGET(skv)->w ||
+	    y < 0 || y >= AGWIDGET(skv)->h)
+		return;
 
 	vPos.x = SK_VIEW_X(skv, AG_INT(1));
 	vPos.y = SK_VIEW_Y(skv, AGWIDGET(skv)->h - AG_INT(2));
@@ -117,7 +123,7 @@ out:
 }
 
 static void
-SK_ViewButtonDown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
@@ -185,7 +191,7 @@ out:
 }
 
 static void
-SK_ViewButtonUp(AG_Event *event)
+mousebuttonup(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
@@ -276,9 +282,9 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	SG_MatrixIdentityv(&skv->mProj);
 	TAILQ_INIT(&skv->tools);
 
-	AG_SetEvent(skv, "window-mousemotion", SK_ViewMotion, NULL);
-	AG_SetEvent(skv, "window-mousebuttondown", SK_ViewButtonDown, NULL);
-	AG_SetEvent(skv, "window-mousebuttonup", SK_ViewButtonUp, NULL);
+	AG_SetEvent(skv, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(skv, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(skv, "window-mousebuttonup", mousebuttonup, NULL);
 	
 	SK_ViewZoom(skv, 1.0/10.0);
 }
@@ -374,6 +380,8 @@ SK_ViewScale(void *p, int w, int h)
 void
 SK_ViewZoom(SK_View *skv, SG_Real zoom)
 {
+	SG_Vector v;
+
 	if (zoom != 0.0) {
 		SK_VIEW_SCALE_X(skv) = zoom >= 0.01 ? zoom : 0.01;
 		SK_VIEW_SCALE_Y(skv) = zoom >= 0.01 ? zoom : 0.01;
@@ -429,7 +437,8 @@ SK_ViewDraw(void *p)
 	
 	glViewport(0, 0, agView->w, agView->h);
 #if 0
-	status = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), skv->status);
+	AG_TextColor(TEXT_COLOR);
+	status = AG_TextRender(skv->status);
 	AG_WidgetBlit(skv, status, 0, AGWIDGET(skv)->h - status->h);
 	SDL_FreeSurface(status);
 #endif

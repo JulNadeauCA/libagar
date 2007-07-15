@@ -142,7 +142,8 @@ ViewOverlay(AG_Event *event)
 	snprintf(text, sizeof(text), "%s (%f,%f,%f)",
 	    SGNODE(sv->cam)->name, v.x, v.y, v.z);
 
-	su = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), text);
+	AG_TextColor(TEXT_COLOR);
+	su = AG_TextRender(text);
 	AG_WidgetBlit(sv, su, 0, AGWIDGET(sv)->h - su->h);
 	SDL_FreeSurface(su);
 }
