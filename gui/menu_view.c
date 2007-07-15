@@ -345,13 +345,7 @@ AG_MenuViewDraw(void *p)
 		if (pitem->flags & AG_MENU_ITEM_ICONS)
 			x += m->itemh+mview->hspace;
 
-		if (subitem->label != -1) {
-			SDL_Surface *lbl = AGWIDGET_SURFACE(m,subitem->label);
-
-			AG_WidgetBlitFrom(mview, m, subitem->label, NULL,
-			    x, y+VERT_ALIGNED(m, lbl->h));
-			x += lbl->w + mview->hspace;
-		} else {
+		if (subitem->flags & AG_MENU_ITEM_SEPARATOR) {
 			int dy = m->itemh/2 - 1;
 			int dx = AGWIDGET(mview)->w - mview->hspace - 1;
 
@@ -365,12 +359,25 @@ AG_MenuViewDraw(void *p)
 			    dx,
 			    y+dy+1,
 			    AG_COLOR(MENU_SEP2_COLOR));
+		} else {
+			SDL_Surface *lblSu;
+
+			if (subitem->label == -1) {
+				AG_TextColor(MENU_TXT_COLOR);
+				subitem->label = (subitem->text == NULL) ? -1 :
+				    AG_WidgetMapSurface(m,
+				    AG_TextRender(subitem->text));
+			}
+			lblSu = AGWIDGET_SURFACE(m,subitem->label);
+			AG_WidgetBlitFrom(mview, m, subitem->label, NULL,
+			    x, y+VERT_ALIGNED(m, lblSu->h));
+			x += lblSu->w + mview->hspace;
 		}
 
 		if (subitem->nsubitems > 0) {
 			AG_WidgetBlitSurface(mview, 0,
 			    x,
-			    y + m->itemh/2 - AGICON(GUI_ARROW_ICON)->h/2 -1);
+			    y + m->itemh/2 - AGICON(GUI_ARROW_ICON)->h/2 - 1);
 		}
 		y += m->itemh;
 	}
@@ -390,24 +397,27 @@ AG_MenuViewScale(void *p, int w, int h)
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
 			AG_MenuItem *subitem = &pitem->subitems[i];
-			int req_w = mview->hspace;
+			int wReq = mview->hspace;
+			int wLbl;
 
 			if (subitem->icon != -1) {
-				req_w += AGWIDGET_SURFACE(m,subitem->icon)->w;
+				wReq += AGWIDGET_SURFACE(m,subitem->icon)->w;
 			}
 			if (pitem->flags & AG_MENU_ITEM_ICONS)
-				req_w += m->itemh+mview->hspace;
+				wReq += m->itemh+mview->hspace;
 		
 			if (subitem->label != -1) {
-				req_w += AGWIDGET_SURFACE(m,subitem->label)->w +
-				    mview->hspace;
+				wLbl = AGWIDGET_SURFACE(m,subitem->label)->w;
+			} else {
+				AG_TextSize(subitem->text, &wLbl, NULL);
 			}
+			wReq += wLbl + mview->hspace;
 			if (subitem->nsubitems > 0) {
-				req_w += AGICON(GUI_ARROW_ICON)->w +
+				wReq += AGICON(GUI_ARROW_ICON)->w +
 				    mview->hspace;
 			}
-			if (req_w > AGWIDGET(mview)->w) {
-				AGWIDGET(mview)->w = req_w;
+			if (wReq > AGWIDGET(mview)->w) {
+				AGWIDGET(mview)->w = wReq;
 			}
 			AGWIDGET(mview)->h += m->itemh;
 		}

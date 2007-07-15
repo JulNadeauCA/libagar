@@ -195,7 +195,7 @@ AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
 void
 AG_TableviewPrescale(AG_Tableview *tv, const char *text, int nitems)
 {
-	AG_TextPrescale(text, &tv->prew, NULL);
+	AG_TextSize(text, &tv->prew, NULL);
 	tv->preh = tv->head_height + (tv->row_height * nitems);
 }
 
@@ -254,8 +254,8 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	} else {
 		strlcpy(col->label, label, sizeof(col->label));
 	}
-	col->label_img = AG_TextRender(NULL, -1, AG_COLOR(TABLEVIEW_HTXT_COLOR),
-	    col->label);
+	AG_TextColor(TABLEVIEW_HTXT_COLOR);
+	col->label_img = AG_TextRender(col->label);
 	col->label_id = AG_WidgetMapSurface(tv, col->label_img);
 
 	/* column width */
@@ -358,8 +358,9 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 				row->cell[i].text = (data != NULL) ?
 				                    Strdup((char *)data) :
 						    Strdup("(null)");
-				row->cell[i].image = AG_TextRender(NULL, -1,
-				    AG_COLOR(TABLEVIEW_CTXT_COLOR),
+
+				AG_TextColor(TABLEVIEW_CTXT_COLOR);
+				row->cell[i].image = AG_TextRender(
 				    row->cell[i].text);
 				break;
 			}
@@ -1027,9 +1028,9 @@ render_dyncolumn(AG_Tableview *tv, Uint idx)
 			SDL_FreeSurface(row->cell[cidx].image);
 
 		celltext = tv->data_callback(tv, tv->column[idx].cid, row->rid);
+		AG_TextColor(TABLEVIEW_CTXT_COLOR);
 		row->cell[cidx].image =
-		    AG_TextRender(NULL, -1, AG_COLOR(TABLEVIEW_CTXT_COLOR),
-		    celltext != NULL ? celltext : "");
+		    AG_TextRender((celltext != NULL) ? celltext : "");
 	}
 }
 
@@ -1460,7 +1461,6 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	Vasprintf(&row->cell[cell].text, fmt, args);
 	va_end(args);
 
-	row->cell[cell].image = AG_TextRender(NULL, -1,
-	    AG_COLOR(TABLEVIEW_CTXT_COLOR),
-	    row->cell[cell].text);
+	AG_TextColor(TABLEVIEW_CTXT_COLOR);
+	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
 }

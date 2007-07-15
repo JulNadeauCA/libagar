@@ -140,8 +140,9 @@ AG_ConsoleDraw(void *p)
 		AG_ConsoleLine *ln = &cons->lines[r];
 
 		if (ln->surface == -1) {
-			su = AG_TextRender(ln->fontFace, ln->fontSize, ln->cFg,
-			    ln->text);
+			AG_TextFont(ln->font);
+			AG_TextColor(ln->cFg);
+			su = AG_TextRender(ln->text);
 			ln->surface = AG_WidgetMapSurface(cons, su);
 		}
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
@@ -214,9 +215,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	}
 	ln->selected = 0;
 	ln->p = NULL;
-	ln->fontFace = NULL;
-	ln->fontSize = 0;
-	ln->fontFlags = 0;
+	ln->font = NULL;
 	ln->surface = -1;
 	ln->cBg = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
 	ln->cFg = SDL_MapRGB(agVideoFmt, 250, 250, 230);

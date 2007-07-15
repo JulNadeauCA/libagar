@@ -67,10 +67,7 @@ be selected programmatically.
 .Fn AG_NotebookSetTabAlignment "AG_Notebook *nb" "enum ag_notebook_tab_alignment alignment"
 .Pp
 .Ft "void"
-.Fn AG_NotebookSetTabFontFace "AG_Notebook *nb" "const char *font_face"
-.Pp
-.Ft "void"
-.Fn AG_NotebookSetTabFontSize "AG_Notebook *nb" "int font_size"
+.Fn AG_NotebookSetTabFont "AG_Notebook *nb" "AG_Font *font"
 .Pp
 .Ft "void"
 .Fn AG_NotebookSetTabVisibility "AG_Notebook *nb" "int flag"
@@ -115,9 +112,7 @@ enum ag_notebook_tab_alignment {
 .Ed
 .Pp
 The font of the text displaying the tab names can be changed with
-.Fn AG_NotebookSetTabFontFace
-and
-.Fn AG_NotebookSetTabFontSize .
+.Fn AG_NotebookSetTabFont .
 .Pp
 The function
 .Fn AG_NotebookSetTabVisibility

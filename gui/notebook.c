@@ -105,8 +105,7 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	nb->tab_rad = (int)(agTextFontHeight/1.5);
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->tabFontFace = NULL;
-	nb->tabFontSize = 9;
+	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-2, 0);
 	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
 
@@ -234,18 +233,10 @@ AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 }
 
 void
-AG_NotebookSetTabFontFace(AG_Notebook *nb, const char *face)
+AG_NotebookSetTabFont(AG_Notebook *nb, AG_Font *font)
 {
 	AG_MutexLock(&nb->lock);
-	nb->tabFontFace = face;
-	AG_MutexUnlock(&nb->lock);
-}
-
-void
-AG_NotebookSetTabFontSize(AG_Notebook *nb, int size)
-{
-	AG_MutexLock(&nb->lock);
-	nb->tabFontSize = size;
+	nb->tabFont = font;
 	AG_MutexUnlock(&nb->lock);
 }
 
@@ -268,10 +259,10 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 		AG_BoxSetPadding((AG_Box *)tab, nb->padding);
 	if (nb->spacing >= 0)
 		AG_BoxSetSpacing((AG_Box *)tab, nb->spacing);
-		
-	tab->label = AG_WidgetMapSurface(nb,
-	    AG_TextRender(nb->tabFontFace, nb->tabFontSize,
-	    AG_COLOR(NOTEBOOK_TXT_COLOR), label));
+
+	AG_TextFont(nb->tabFont);
+	AG_TextColor(NOTEBOOK_TXT_COLOR);
+	tab->label = AG_WidgetMapSurface(nb, AG_TextRender(label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	if (TAILQ_FIRST(&nb->tabs) == tab) {
 		AG_NotebookSelectTab(nb, tab);

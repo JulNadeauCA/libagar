@@ -19,8 +19,8 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_FOCUS	0x04
 #define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
 	int state;
-	SDL_Surface *label_su;
-	int label_id;
+	char *labelTxt;
+	int label;
 } AG_Checkbox;
 
 __BEGIN_DECLS
@@ -28,6 +28,7 @@ AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
 AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
 void		 AG_CheckboxSetFromFlags(void *, Uint *, const AG_FlagDescr *);
 void		 AG_CheckboxInit(AG_Checkbox *, Uint, const char *);
+void	   	 AG_CheckboxDestroy(void *);
 void		 AG_CheckboxScale(void *, int, int);
 void		 AG_CheckboxDraw(void *);
 void		 AG_CheckboxToggle(AG_Checkbox *);

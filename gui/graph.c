@@ -243,9 +243,10 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	if (ge->labelSu >= 0) {
 		AG_WidgetUnmapSurface(ge->graph, ge->labelSu);
 	}
+
+	AG_TextColor32(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph,
-	    AG_TextRender(NULL, -1, AG_VideoPixel(ge->labelColor),
-	    ge->labelTxt));
+	    AG_TextRender(ge->labelTxt));
 }
 
 void
@@ -663,9 +664,9 @@ AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 	if (vtx->labelSu >= 0) {
 		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
 	}
+	AG_TextColor32(vtx->labelColor);
 	vtx->labelSu = AG_WidgetMapSurface(vtx->graph,
-	    AG_TextRender(NULL, -1, AG_VideoPixel(vtx->labelColor),
-	    vtx->labelTxt));
+	    AG_TextRender(vtx->labelTxt));
 }
 
 void

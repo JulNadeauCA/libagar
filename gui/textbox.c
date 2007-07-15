@@ -236,8 +236,8 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->compose = 0;
 
 	if (label != NULL) {
-		tbox->label_su = AG_TextRender(NULL, -1,
-		    AG_COLOR(TEXTBOX_TXT_COLOR), (char *)label);
+		AG_TextColor(TEXTBOX_TXT_COLOR);
+		tbox->label_su = AG_TextRender((char *)label);
 		tbox->label_id = AG_WidgetMapSurface(tbox, tbox->label_su);
 	
 		tbox->prew += tbox->label_su->w;
@@ -414,8 +414,8 @@ AG_TextboxDraw(void *p)
 			{
 				SDL_Rect rd;
 
-				gl = AG_TextRenderGlyph(NULL, -1,
-				    AG_COLOR(TEXTBOX_TXT_COLOR), c);
+				AG_TextColor(TEXTBOX_TXT_COLOR);
+				gl = AG_TextRenderGlyph(c);
 				rd.x = AGWIDGET(tbox)->cx + x;
 				rd.y = AGWIDGET(tbox)->cy + y;
 				x += gl->su->w;
@@ -429,8 +429,8 @@ AG_TextboxDraw(void *p)
 			dx = AGWIDGET(tbox)->cx + x;
 			dy = AGWIDGET(tbox)->cy + y;
 
-			gl = AG_TextRenderGlyph(NULL, -1,
-			    AG_COLOR(TEXTBOX_TXT_COLOR), c);
+			AG_TextColor(TEXTBOX_TXT_COLOR);
+			gl = AG_TextRenderGlyph(c);
 
 			glBindTexture(GL_TEXTURE_2D, gl->texture);
 			glBegin(GL_TRIANGLE_STRIP);
@@ -463,7 +463,7 @@ AG_TextboxDraw(void *p)
 void
 AG_TextboxPrescale(AG_Textbox *tbox, const char *text)
 {
-	AG_TextPrescale(text, &tbox->prew, NULL);
+	AG_TextSize(text, &tbox->prew, NULL);
 	tbox->prew += (tbox->label_id >= 0) ? tbox->label_su->w : 0;
 	tbox->prew += tbox->boxPadX*2;
 }
@@ -601,7 +601,7 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 			{
 				AG_Glyph *gl;
 			
-				gl = AG_TextRenderGlyph(NULL, -1, 0, ch);
+				gl = AG_TextRenderGlyph(ch);
 				x1 = x + gl->su->w;
 				if (x1 >= AGWIDGET(tbox)->w) { continue; }
 				if (mx >= x && mx < x1) { *pos = i; goto in; }
