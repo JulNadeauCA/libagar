@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2004-2007 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -120,25 +120,25 @@ mousebuttondown(AG_Event *event)
 	int i;
 
 	for (i = 0; i < m->nitems; i++) {
-		AG_MenuItem *mitem = &m->items[i];
-		SDL_Surface *label = AGWIDGET_SURFACE(m,mitem->label);
+		AG_MenuItem *mi = &m->items[i];
+		SDL_Surface *label = AGWIDGET_SURFACE(m,mi->label);
 
-		if (x >= mitem->x &&
-		    x < (mitem->x + label->w + m->hspace) &&
-		    y >= mitem->y &&
-		    y < (mitem->y + m->itemh)) {
-		    	if (m->sel_item == mitem) {
-				AG_MenuCollapse(m, mitem);
+		if (x >= mi->x &&
+		    x < (mi->x + label->w + m->hspace) &&
+		    y >= mi->y &&
+		    y < (mi->y + m->itemh)) {
+		    	if (m->sel_item == mi) {
+				AG_MenuCollapse(m, mi);
 				m->sel_item = NULL;
 				m->selecting = 0;
 			} else {
 				if (m->sel_item != NULL) {
 					AG_MenuCollapse(m, m->sel_item);
 				}
-				m->sel_item = mitem;
-				AG_MenuExpand(m, mitem,
-				    AGWIDGET(m)->cx+mitem->x,
-				    AGWIDGET(m)->cy+mitem->y+1+label->h);
+				m->sel_item = mi;
+				AG_MenuExpand(m, mi,
+				    AGWIDGET(m)->cx+mi->x,
+				    AGWIDGET(m)->cy+mi->y+1+label->h);
 				m->selecting = 1;
 			}
 			break;
@@ -184,21 +184,21 @@ mousemotion(AG_Event *event)
 	}
 
 	for (i = 0; i < m->nitems; i++) {
-		AG_MenuItem *mitem = &m->items[i];
-		SDL_Surface *label = AGWIDGET_SURFACE(m,mitem->label);
+		AG_MenuItem *mi = &m->items[i];
+		SDL_Surface *label = AGWIDGET_SURFACE(m,mi->label);
 
-		if (x >= mitem->x &&
-		    x < (mitem->x + label->w + m->hspace) &&
-		    y >= mitem->y &&
-		    y < (mitem->y + m->itemh)) {
-		    	if (mitem != m->sel_item) {
+		if (x >= mi->x &&
+		    x < (mi->x + label->w + m->hspace) &&
+		    y >= mi->y &&
+		    y < (mi->y + m->itemh)) {
+		    	if (mi != m->sel_item) {
 				if (m->sel_item != NULL) {
 					AG_MenuCollapse(m, m->sel_item);
 				}
-				m->sel_item = mitem;
-				AG_MenuExpand(m, mitem,
-				    AGWIDGET(m)->cx+mitem->x,
-				    AGWIDGET(m)->cy+mitem->y+1+label->h);
+				m->sel_item = mi;
+				AG_MenuExpand(m, mi,
+				    AGWIDGET(m)->cx+mi->x,
+				    AGWIDGET(m)->cy+mi->y+1+label->h);
 			}
 			break;
 		}
@@ -252,30 +252,28 @@ AG_MenuInit(AG_Menu *m, Uint flags)
 AG_MenuItem *
 AG_MenuAddItem(AG_Menu *m, const char *text)
 {
-	AG_MenuItem *mitem;
+	AG_MenuItem *mi;
 	
 	m->items = Realloc(m->items, (m->nitems+1)*sizeof(AG_MenuItem));
-	mitem = &m->items[m->nitems++];
-	mitem->text = text;
-	mitem->label = (text != NULL) ?
-	               AG_WidgetMapSurface(m, AG_TextRender(NULL, -1,
-		           AG_COLOR(MENU_TXT_COLOR), text)) : -1;
-	mitem->icon = -1;
-	mitem->key_equiv = 0;
-	mitem->key_mod = 0;
-	mitem->view = NULL;
-	mitem->onclick = NULL;
-	mitem->subitems = NULL;
-	mitem->nsubitems = 0;
-	mitem->pmenu = m;
-	mitem->sel_subitem = NULL;
-	mitem->pitem = NULL;
-	mitem->flags = 0;
-	return (mitem);
+	mi = &m->items[m->nitems++];
+	mi->text = Strdup(text);
+	mi->label = -1;
+	mi->icon = -1;
+	mi->key_equiv = 0;
+	mi->key_mod = 0;
+	mi->view = NULL;
+	mi->onclick = NULL;
+	mi->subitems = NULL;
+	mi->nsubitems = 0;
+	mi->pmenu = m;
+	mi->sel_subitem = NULL;
+	mi->pitem = NULL;
+	mi->flags = 0;
+	return (mi);
 }
 
 static __inline__ AG_MenuItem *
-add_subitem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     SDLKey key_equiv, SDLKey key_mod)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -307,10 +305,8 @@ add_subitem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
 	mi->bind_lock = NULL;
-	mi->text = text;
-	mi->label = (text != NULL) ?
-	    AG_WidgetMapSurface(m, AG_TextRender(NULL, -1,
-	    AG_COLOR(MENU_TXT_COLOR), text)) : -1;
+	mi->text = (text != NULL) ? Strdup(text) : Strdup("");
+	mi->label = -1;
 	mi->state = -1;
 	mi->flags = 0;
 	if (icon != NULL) {
@@ -337,14 +333,14 @@ AG_MenuSetIcon(AG_MenuItem *mi, SDL_Surface *icon)
 void
 AG_MenuSetLabel(AG_MenuItem *mi, const char *text)
 {
+	AG_TextColor(MENU_TXT_COLOR);
+
 	if (mi->label == -1) {
-		mi->label = (text != NULL) ?
-		    AG_WidgetMapSurface(mi->pmenu,
-		       AG_TextRender(NULL, -1, AG_COLOR(MENU_TXT_COLOR),
-		       text)) : -1;
+		mi->label = (text == NULL) ? -1 :
+		    AG_WidgetMapSurface(mi->pmenu, AG_TextRender(text));
 	} else {
 		AG_WidgetReplaceSurface(mi->pmenu, mi->label,
-		    AG_TextRender(NULL, -1, AG_COLOR(MENU_TXT_COLOR), text));
+		    AG_TextRender(text));
 	}
 }
 
@@ -353,8 +349,8 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 {
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, NULL, NULL, 0, 0);
-	mi->flags |= AG_MENU_ITEM_NOSELECT;
+	mi = CreateItem(pitem, NULL, NULL, 0, 0);
+	mi->flags |= AG_MENU_ITEM_NOSELECT|AG_MENU_ITEM_SEPARATOR;
 	return (mi);
 }
 
@@ -369,7 +365,7 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 	vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
-	mi = add_subitem(pitem, text, NULL, 0, 0);
+	mi = CreateItem(pitem, text, NULL, 0, 0);
 	mi->flags |= AG_MENU_ITEM_NOSELECT;
 	return (mi);
 }
@@ -381,7 +377,7 @@ AG_MenuDynamic(AG_MenuItem *pitem, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, NULL, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, NULL, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->poll = AG_SetEvent(m, NULL, poll_fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
 	return (mi);
@@ -394,7 +390,7 @@ AG_MenuAction(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->onclick, fmt);
 	return (mi);
@@ -408,7 +404,7 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL,
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL,
 	    key_equiv, key_mod);
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->onclick, fmt);
@@ -431,7 +427,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar,
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(btn_ev, fmt);
 
-	mi = add_subitem(pitem, text, AGICON(icon), key_equiv, key_mod);
+	mi = CreateItem(pitem, text, AGICON(icon), key_equiv, key_mod);
 	mi->onclick = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->onclick, fmt);
 	return (mi);
@@ -444,7 +440,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -459,7 +455,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT8_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -474,7 +470,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -490,7 +486,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT8_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -506,7 +502,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT16_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -522,7 +518,7 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = add_subitem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
+	mi = CreateItem(pitem, text, nicon >= 0 ? AGICON(nicon) : NULL, 0, 0);
 	mi->bind_type = AG_MENU_INT32_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -532,24 +528,26 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, int nicon,
 }
 
 void
-AG_MenuFreeSubItems(AG_MenuItem *mit)
+AG_MenuFreeSubItems(AG_MenuItem *mi)
 {
 	int i;
-
-	if (mit->label != -1) {
-		AG_WidgetUnmapSurface(mit->pmenu, mit->label);
-		mit->label = -1;
+	
+	if (mi->label != -1) {
+		AG_WidgetUnmapSurface(mi->pmenu, mi->label);
+		mi->label = -1;
 	}
-	if (mit->icon != -1) {
-		AG_WidgetUnmapSurface(mit->pmenu, mit->icon);
-		mit->icon = -1;
+	if (mi->icon != -1) {
+		AG_WidgetUnmapSurface(mi->pmenu, mi->icon);
+		mi->icon = -1;
 	}
-	for (i = 0; i < mit->nsubitems; i++)
-		AG_MenuFreeSubItems(&mit->subitems[i]);
+	Free(mi->text,0);
 
-	Free(mit->subitems, M_WIDGET);
-	mit->subitems = NULL;
-	mit->nsubitems = 0;
+	for (i = 0; i < mi->nsubitems; i++) {
+		AG_MenuFreeSubItems(&mi->subitems[i]);
+	}
+	Free(mi->subitems, M_WIDGET);
+	mi->subitems = NULL;
+	mi->nsubitems = 0;
 }
 
 void
@@ -587,20 +585,24 @@ AG_MenuDraw(void *p)
 	    AG_COLOR(MENU_UNSEL_COLOR));
 	
 	for (i = 0; i < m->nitems; i++) {
-		AG_MenuItem *mitem = &m->items[i];
-		SDL_Surface *label = AGWIDGET_SURFACE(m, mitem->label);
+		AG_MenuItem *mi = &m->items[i];
 
-		if (mitem == m->sel_item) {
+		if (mi->label == -1) {
+			AG_TextColor(MENU_TXT_COLOR);
+			mi->label = (mi->text == NULL) ? -1 :
+			    AG_WidgetMapSurface(m, AG_TextRender(mi->text));
+		}
+		if (mi == m->sel_item) {
 			agPrim.rect_filled(m,
-			    mitem->x,
-			    mitem->y - m->vspace/2,
-			    label->w + m->hspace,
+			    mi->x,
+			    mi->y - m->vspace/2,
+			    AGWIDGET_SURFACE(m,mi->label)->w + m->hspace,
 			    m->itemh - 1,
 			    AG_COLOR(MENU_SEL_COLOR));
 		}
-		AG_WidgetBlitSurface(m, mitem->label,
-		    mitem->x + m->hspace/2,
-		    mitem->y + m->vspace/2);
+		AG_WidgetBlitSurface(m, mi->label,
+		    mi->x + m->hspace/2,
+		    mi->y + m->vspace/2);
 	}
 }
 
@@ -608,6 +610,7 @@ void
 AG_MenuScale(void *p, int w, int h)
 {
 	AG_Menu *m = p;
+	int wLbl, hLbl;
 
 	if (w == -1 && h == -1) {
 		int x, y;
@@ -617,23 +620,30 @@ AG_MenuScale(void *p, int w, int h)
 		y = AGWIDGET(m)->h = m->vspace/2;
 
 		for (i = 0; i < m->nitems; i++) {
-			AG_MenuItem *mitem = &m->items[i];
-			SDL_Surface *label = AGWIDGET_SURFACE(m, mitem->label);
+			AG_MenuItem *mi = &m->items[i];
+			SDL_Surface *label = AGWIDGET_SURFACE(m, mi->label);
 
-			mitem->x = x;
-			mitem->y = y;
+			if (mi->label != -1) {
+				wLbl = AGWIDGET_SURFACE(m,mi->label)->w;
+				hLbl = AGWIDGET_SURFACE(m,mi->label)->h;
+			} else {
+				AG_TextSize(mi->text, &wLbl, &hLbl);
+			}
 
-			x += label->w+m->hspace;
-			if (AGWIDGET(m)->h < label->h) {
+			mi->x = x;
+			mi->y = y;
+
+			x += wLbl+m->hspace;
+			if (AGWIDGET(m)->h < hLbl) {
 				AGWIDGET(m)->h += m->itemh;
 			}
 			if (x > agView->w/2) {
 				x = m->hspace/2;		/* Wrap */
 				y += m->itemh;
-				AGWIDGET(m)->h += label->h + m->vspace;
+				AGWIDGET(m)->h += hLbl + m->vspace;
 				AGWIDGET(m)->w += m->hspace;
 			} else {
-				AGWIDGET(m)->w += label->w + m->hspace;
+				AGWIDGET(m)->w += wLbl + m->hspace;
 			}
 		}
 	}

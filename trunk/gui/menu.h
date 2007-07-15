@@ -19,7 +19,7 @@ struct ag_menu;
 struct ag_menu_view;
 
 typedef struct ag_menu_item {
-	const char *text;		/* Item label */
+	char *text;			/* Item label */
 	int label;			/* Label surface name */
 	int icon;			/* Icon name */
 	int state;			/* State (for dynamic items) */
@@ -33,6 +33,7 @@ typedef struct ag_menu_item {
 	Uint flags;
 #define AG_MENU_ITEM_ICONS	0x01	/* Some of the subitems have icons */
 #define AG_MENU_ITEM_NOSELECT	0x02	/* Item is non-selectable */
+#define AG_MENU_ITEM_SEPARATOR	0x04	/* Item is a separator */
 
 	enum ag_menu_binding {
 		AG_MENU_NO_BINDING,

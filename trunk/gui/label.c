@@ -181,7 +181,7 @@ AG_LabelScale(void *p, int rw, int rh)
 				wSu = AGWIDGET_SURFACE(lbl,lbl->surface)->w;
 				hSu = AGWIDGET_SURFACE(lbl,lbl->surface)->h;
 			} else {
-				AG_TextPrescale(lbl->text, &wSu, &hSu);
+				AG_TextSize(lbl->text, &wSu, &hSu);
 			}
 			AGWIDGET(lbl)->w = wSu + lbl->lPad + lbl->rPad;
 			AGWIDGET(lbl)->h = hSu + lbl->tPad + lbl->bPad;
@@ -207,9 +207,9 @@ AG_LabelScale(void *p, int rw, int rh)
 			lbl->flags |= AG_LABEL_PARTIAL;
 			if (lbl->surfaceCont == -1) {
 				/* XXX this should be shared between widgets */
+				AG_TextColor(TEXT_COLOR);
 				lbl->surfaceCont = AG_WidgetMapSurface(lbl,
-				    AG_TextRender(NULL, -1,
-				    AG_COLOR(TEXT_COLOR), " ... "));
+				    AG_TextRender(" ... "));
 			}
 		} else {
 			lbl->flags &= ~AG_LABEL_PARTIAL;
@@ -261,11 +261,11 @@ void
 AG_LabelPrescale(AG_Label *lab, Uint nlines, const char *text)
 {
 	if (nlines > 0) {
-		AG_TextPrescale(text, &lab->wPre, NULL);
+		AG_TextSize(text, &lab->wPre, NULL);
 		lab->hPre = nlines*agTextFontHeight +
 		            (nlines-1)*agTextFontLineSkip;
 	} else {
-		AG_TextPrescale(text, &lab->wPre, &lab->hPre);
+		AG_TextSize(text, &lab->wPre, &lab->hPre);
 	}
 }
 
@@ -645,7 +645,8 @@ AG_LabelDrawPolled(AG_Label *label)
 	}
 
 	/* XXX TODO render directly! */
-	ts = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), s);
+	AG_TextColor(TEXT_COLOR);
+	ts = AG_TextRender(s);
 	AG_WidgetBlit(label, ts, label->lPad, label->tPad);
 	SDL_FreeSurface(ts);
 }
@@ -667,18 +668,16 @@ AG_LabelDraw(void *p)
 		wClip -= AGWIDGET_SURFACE(lbl,lbl->surfaceCont)->w;
 
 	AG_WidgetPushClipRect(lbl, 0, 0, wClip, AGWIDGET(lbl)->h);
+	AG_TextColor(TEXT_COLOR);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
 		if (lbl->surface == -1) {
 			lbl->surface = (lbl->text == NULL) ? -1 :
-			    AG_WidgetMapSurface(lbl,
-			    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-			    lbl->text));
+			    AG_WidgetMapSurface(lbl, AG_TextRender(lbl->text));
 		} else if (lbl->flags & AG_LABEL_REGEN) {
 			AG_LabelSetSurface(lbl, (lbl->text == NULL) ? NULL :
-			    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-			    lbl->text));
+			    AG_TextRender(lbl->text));
 		}
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {

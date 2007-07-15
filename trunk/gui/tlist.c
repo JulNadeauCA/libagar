@@ -227,7 +227,7 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 void
 AG_TlistPrescale(AG_Tlist *tl, const char *text, int nitems)
 {
-	AG_TextPrescale(text, &tl->prew, NULL);
+	AG_TextSize(text, &tl->prew, NULL);
 	tl->prew += tl->item_h + 5;
 	tl->preh = (tl->item_h+2)*nitems;
 }
@@ -352,9 +352,9 @@ AG_TlistDraw(void *p)
 		}
 		
 		if (it->label == -1) {
+			AG_TextColor(TLIST_TXT_COLOR);
 			it->label = AG_WidgetMapSurface(tl,
-			    AG_TextRender(NULL, -1, AG_COLOR(TLIST_TXT_COLOR),
-			        it->text));
+			    AG_TextRender(it->text));
 		}
 		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->item_h + 5,

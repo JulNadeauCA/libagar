@@ -6,9 +6,11 @@
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
 #include <gui/scrollbar.h>
+#include <gui/text.h>
 #else
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
+#include <agar/gui/text.h>
 #endif
 
 #include "begin_code.h"
@@ -21,9 +23,7 @@ typedef struct ag_console_line {
 	int surface;			/* Cached surface handle (or -1) */
 	int selected;			/* Row is selected */
 	int icon;			/* Icon to display */
-	const char *fontFace;		/* Font face */
-	int fontSize;			/* Font size */
-	Uint fontFlags;			/* Font flags */
+	AG_Font *font;			/* Font */
 	Uint32 cFg;			/* Foreground color (display fmt) */
 	Uint32 cBg;			/* Background color (display fmt) */
 	void *p;			/* User pointer */

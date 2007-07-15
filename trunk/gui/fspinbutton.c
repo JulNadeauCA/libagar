@@ -361,7 +361,7 @@ AG_FSpinbuttonScale(void *p, int w, int h)
 	int uw, uh;
 
 	if (units != NULL) {
-		AG_TextPrescale("XXXXXXXX", &uw, &uh);
+		AG_TextSize("XXXXXXXX", &uw, &uh);
 	} else {
 		uw = 0;
 		uh = 0;

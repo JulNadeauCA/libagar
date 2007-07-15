@@ -6,9 +6,11 @@
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
 #include <gui/box.h>
+#include <gui/text.h>
 #else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
+#include <agar/gui/text.h>
 #endif
 
 #include "begin_code.h"
@@ -39,8 +41,7 @@ typedef struct ag_notebook {
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int tab_rad;			/* Radius for chamfered tab edges */
 	int spacing, padding;		/* Spacing for tabs */
-	const char *tabFontFace;	/* Font face for tab text */
-	int tabFontSize;		/* Font size in points */
+	AG_Font *tabFont;		/* Font for tab labels */
 	struct ag_notebook_tab *sel_tab;
 	TAILQ_HEAD(,ag_notebook_tab) tabs;
 } AG_Notebook;
@@ -54,8 +55,7 @@ void AG_NotebookScale(void *, int, int);
 void AG_NotebookSetPadding(AG_Notebook *, int);
 void AG_NotebookSetSpacing(AG_Notebook *, int);
 void AG_NotebookSetTabAlignment(AG_Notebook *, enum ag_notebook_tab_alignment);
-void AG_NotebookSetTabFontFace(AG_Notebook *, const char *);
-void AG_NotebookSetTabFontSize(AG_Notebook *, int);
+void AG_NotebookSetTabFont(AG_Notebook *, AG_Font *);
 void AG_NotebookSetTabVisibility(AG_Notebook *, int);
 
 AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,

@@ -203,7 +203,7 @@ AG_ButtonScale(void *p, int w, int h)
 			hLbl = AGWIDGET_SURFACE(bu,bu->surface)->h;
 		} else {
 			if (bu->text != NULL && bu->text[0] != '\0') {
-				AG_TextPrescale(bu->text, &wLbl, &hLbl);
+				AG_TextSize(bu->text, &wLbl, &hLbl);
 			} else {
 				wLbl = 0;
 				hLbl = agTextFontHeight;
@@ -248,13 +248,13 @@ AG_ButtonDraw(void *p)
 
 	if (bu->text != NULL && bu->text[0] != '\0') {
 		if (bu->surface == -1) {
+			AG_TextColor(BUTTON_TXT_COLOR);
 			bu->surface = AG_WidgetMapSurface(bu,
-			    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR),
-			    bu->text));
+			    AG_TextRender(bu->text));
 		} else if (bu->flags & AG_BUTTON_REGEN) {
+			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_WidgetReplaceSurface(bu, bu->surface,
-			    AG_TextRender(NULL, -1, AG_COLOR(BUTTON_TXT_COLOR),
-			    bu->text));
+			    AG_TextRender(bu->text));
 		}
 	}
 	wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;

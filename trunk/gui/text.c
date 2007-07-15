@@ -74,7 +74,11 @@ int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
 int agFreetype = 0;			/* Use Freetype font engine */
 
+static AG_TextState states[AG_TEXT_STATES_MAX], *state;
+static Uint curState = 0;
+
 #define GLYPH_NBUCKETS 1024
+#define SYMBOLS				/* Allow $(x) type symbols */
 
 static const char *agTextMsgTitles[] = {
 	N_("Error"),
@@ -120,6 +124,10 @@ AG_FontDestroy(void *p)
 	}
 }
 
+/*
+ * Search for a given font face/size/flags combination and load it from
+ * disk or cache.
+ */
 AG_Font *
 AG_FetchFont(const char *pname, int psize, int pflags)
 {
@@ -252,12 +260,21 @@ fail:
 }
 
 static Uint32
-expire_tmsg(void *obj, Uint32 ival, void *arg)
+TextTmsgExpire(void *obj, Uint32 ival, void *arg)
 {
 	AG_Window *win = arg;
 
 	AG_ViewDetach(win);
 	return (0);
+}
+
+static void
+InitTextState(void)
+{
+	state->font = agDefaultFont;
+	state->color = SDL_MapRGB(agSurfaceFmt, 255,255,255);
+	state->colorBG = SDL_MapRGBA(agSurfaceFmt, 0,0,0,0);
+	state->justify = AG_TEXT_LEFT;
 }
 
 /* Initialize the font engine and configure the default font. */
@@ -270,7 +287,7 @@ AG_TextInit(void)
 	if (AG_Bool(agConfig, "font.freetype")) {
 		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
 			AG_SetString(agConfig, "font.face", "Vera.ttf");
-			AG_SetInt(agConfig, "font.size", 11);
+			AG_SetInt(agConfig, "font.size", 12);
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
 		if (AG_TTFInit() == -1) {
@@ -285,7 +302,7 @@ AG_TextInit(void)
 	{
 		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
 			AG_SetString(agConfig, "font.face", "minimal.xcf");
-			AG_SetInt(agConfig, "font.size", -1);
+			AG_SetInt(agConfig, "font.size", 12);
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
 		agFreetype = 0;
@@ -296,6 +313,10 @@ AG_TextInit(void)
 	agTextFontAscent = agDefaultFont->ascent;
 	agTextFontDescent = agDefaultFont->descent;
 	agTextFontLineSkip = agDefaultFont->lineskip;
+
+	curState = 0;
+	state = &states[0];
+	InitTextState();
 
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
@@ -371,19 +392,16 @@ hash_glyph(Uint32 ch)
 
 /* Lookup/insert a glyph in the glyph cache. */
 AG_Glyph *
-AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
-    Uint32 ch)
+AG_TextRenderGlyph(Uint32 ch)
 {
 	AG_Glyph *gl;
 	Uint h;
-	Uint32 color_bg = SDL_MapRGBA(agSurfaceFmt,0,0,0,0);
 
 	h = hash_glyph(ch);
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
-		if (fontsize == gl->fontsize &&
-		    color == gl->color &&
-		    ((fontname == NULL && gl->fontname[0] == '\0') ||
-		     (strcmp(fontname, gl->fontname) == 0)) &&
+		if (state->font->size == gl->fontsize &&
+		    state->color == gl->color &&
+		    (strcmp(AGOBJECT(state->font)->name, gl->fontname) == 0) &&
 		    ch == gl->ch)
 			break;
 	}
@@ -391,18 +409,14 @@ AG_TextRenderGlyph(const char *fontname, int fontsize, Uint32 color,
 		Uint32 ucs[2];
 
 		gl = Malloc(sizeof(AG_Glyph), M_TEXT);
-		if (fontname == NULL) {
-			gl->fontname[0] = '\0';
-		} else {
-			strlcpy(gl->fontname, fontname, sizeof(gl->fontname));
-		}
-		gl->fontsize = fontsize;
-		gl->color = color;
+		strlcpy(gl->fontname, AGOBJECT(state->font)->name,
+		    sizeof(gl->fontname));
+		gl->fontsize = state->font->size;
+		gl->color = state->color;
 		gl->ch = ch;
 		ucs[0] = ch;
 		ucs[1] = '\0';
-		gl->su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color,
-		    ucs);
+		gl->su = AG_TextRenderUCS4(ucs);
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
 			AG_LockGL();
@@ -430,52 +444,158 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 	}
 }
 
+/* Save the current text rendering state. */
+void
+AG_PushTextState(void)
+{
+	AG_MutexLock(&agTextLock);
+	if ((curState+1) >= AG_TEXT_STATES_MAX) {
+		fatal("Text state stack overflow");
+	}
+	state = &states[++curState];
+	InitTextState();
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Restore the previous rendering state. */
+void
+AG_PopTextState(void)
+{
+	AG_MutexLock(&agTextLock);
+	if (curState == 0) {
+		fatal("No text state to pop");
+	}
+	state = &states[--curState];
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the font face to use in rendering text. */
+int
+AG_TextFontLookup(const char *face, int size, Uint flags)
+{
+	int rv;
+
+	AG_MutexLock(&agTextLock);
+	state->font = AG_FetchFont(face, size, flags);
+	rv = (state->font != NULL) ? 0 : -1;
+	AG_MutexUnlock(&agTextLock);
+	return (rv);
+}
+
+/* Select the font face to use in rendering text. */
+void
+AG_TextFont(AG_Font *font)
+{
+	int rv;
+
+	AG_MutexLock(&agTextLock);
+	state->font = font;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the justification mode to use in rendering text. */
+void
+AG_TextJustify(enum ag_text_justify mode)
+{
+	AG_MutexLock(&agTextLock);
+	state->justify = mode;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from a 32-bit pixel value (agDisplayFormat). */
+void
+AG_TextColorVideo32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	state->color = AG_SurfacePixel(pixel);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from a 32-bit pixel value (agSurfaceFormat). */
+void
+AG_TextColor32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	state->color = pixel;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set an opaque text color from RGB components. */
+void
+AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	state->color = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from RGBA components. */
+void
+AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	state->color = SDL_MapRGBA(agSurfaceFmt, r, g, b, a);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set BG color from a 32-bit pixel value (agDisplayFormat). */
+void
+AG_TextBGColorVideo32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	state->colorBG = AG_SurfacePixel(pixel);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set BG color from a 32-bit pixel value (agSurfaceFormat). */
+void
+AG_TextBGColor32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	state->colorBG = pixel;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from RGB components. */
+void
+AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	state->colorBG = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from RGBA components. */
+void
+AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	state->colorBG = SDL_MapRGBA(agSurfaceFmt, r, g, b, a);
+	AG_MutexUnlock(&agTextLock);
+}
+
 /*
  * Allocate a transparent surface and render text from a standard C string
  * (possibly with UTF-8 sequences), onto it.
  */
 SDL_Surface *
-AG_TextRender(const char *fontname, int fontsize, Uint32 color,
-    const char *text)
+AG_TextRender(const char *text)
 {
-	Uint32 color_bg = SDL_MapRGBA(agSurfaceFmt,0,0,0,0);
-	Uint32 *ucs4;
+	Uint32 *ucs;
 	SDL_Surface *su;
-
+	
 #ifdef UTF8
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
 #else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
 #endif
-	su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color, ucs4);
-	free(ucs4);
-	return (su);
-}
-
-/*
- * Allocate a surface filled with a specific color, and render text from a
- * standard C string (possibly with UTF-8 sequences) onto it.
- */
-SDL_Surface *
-AG_TextRenderOnBackgnd(const char *fontname, int fontsize, Uint32 color_bg,
-    Uint32 color, const char *text)
-{
-	Uint32 *ucs4;
-	SDL_Surface *su;
-
-#ifdef UTF8
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
-#else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
-#endif
-	su = AG_TextRenderUCS4(fontname, fontsize, color_bg, color, ucs4);
-	free(ucs4);
+	su = AG_TextRenderUCS4(ucs);
+	free(ucs);
 	return (su);
 }
 
 SDL_Surface *
-AG_TextFormat(const char *fontname, int fontsize, Uint32 color,
-    const char *fmt, ...)
+AG_TextFormat(const char *fmt, ...)
 {
 	char *text;
 	va_list args;
@@ -483,115 +603,336 @@ AG_TextFormat(const char *fontname, int fontsize, Uint32 color,
 	va_start(args, fmt);
 	Vasprintf(&text, fmt, args);
 	va_end(args);
-	return (AG_TextRender(fontname, fontsize, color, text));
+	return (AG_TextRender(text));
 }
 
+#ifdef SYMBOLS
 static __inline__ SDL_Surface *
-AG_TextBitmapGlyph(AG_Font *font, Uint32 c)
+GetSymbolSurface(Uint32 ch)
 {
-	if ((font->flags & AG_FONT_UPPERCASE) &&
+	switch (ch) {
+	case 'L': return (AGICON(LEFT_BUTTON_SYMBOL));
+	case 'M': return (AGICON(MID_BUTTON_SYMBOL));
+	case 'R': return (AGICON(RIGHT_BUTTON_SYMBOL));
+	case 'C': return (AGICON(CTRL_SYMBOL));
+	default: return (NULL);
+	}
+}
+#endif /* SYMBOLS */
+
+#ifdef HAVE_FREETYPE
+
+/* Compute the rendered size of UCS-4 text with a FreeType font. */
+static void
+TextSizeFT(const Uint32 *ucs, int *w, int *h)
+{
+	AG_Font *font = state->font;
+	AG_TTFFont *ftFont = font->ttf;
+	AG_TTFGlyph *glyph;
+	const Uint32 *ch;
+	int x, z;
+	int minx, maxx;
+	int miny, maxy;
+
+	minx = maxx = 0;
+	miny = 0;
+	maxy = font->height;
+
+	/* Load each character and sum it's bounding box. */
+	x = 0;
+	for (ch = &ucs[0]; *ch != '\0'; ch++) {
+		if (*ch == '\n') {
+			maxy += font->lineskip;
+			x = 0;
+			continue;
+		}
+		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS) != 0) {
+			continue;
+		}
+		glyph = ftFont->current;
+
+		if ((ch == &ucs[0]) && (glyph->minx < 0)) {
+			/*
+			 * Fixes the texture wrapping bug when the first
+			 * letter has a negative minx value or horibearing
+			 * value.  The entire bounding box must be adjusted to
+			 * be bigger so the entire letter can fit without any
+			 * texture corruption or wrapping.
+			 *
+			 * Effects: First enlarges bounding box.
+			 * Second, xStart has to start ahead of its normal
+			 * spot in the negative direction of the negative minx
+			 * value. (pushes everything to the right).
+			 *
+			 * This will make the memory copy of the glyph bitmap
+			 * data work out correctly.
+			 */
+			z -= glyph->minx;
+		}
+
+		z = x + glyph->minx;
+		if (minx > z) {
+			minx = z;
+		}
+		if (ftFont->style & TTF_STYLE_BOLD) {
+			x += ftFont->glyph_overhang;
+		}
+		if (glyph->advance > glyph->maxx) {
+			z = x + glyph->advance;
+		} else {
+			z = x + glyph->maxx;
+		}
+		if (maxx < z) {
+			maxx = z;
+		}
+		x += glyph->advance;
+
+		if (glyph->miny < miny) { miny = glyph->miny; }
+		if (glyph->maxy > maxy) { maxy = glyph->maxy; }
+	}
+out:
+	if (w != NULL) { *w = (maxx - minx); }
+	if (h != NULL) { *h = (maxy - miny); }
+}
+
+/* Render UCS-4 text to a new surface using FreeType. */
+static SDL_Surface *
+TextRenderFT(const Uint32 *ucs)
+{
+	AG_Font *font = state->font;
+	AG_TTFFont *ftFont = font->ttf;
+	AG_TTFGlyph *glyph;
+	SDL_Surface *su;
+	SDL_Palette *palette;
+	const Uint32 *ch;
+	Uint8 *src, *dst, a;
+	int row, col;
+	int w, h;
+	int xStart, yStart;
+	
+	AG_TextSizeUCS4(ucs, &w, &h);
+	if (w <= 0 || h <= 0) {
+		goto empty;
+	}
+	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
+	if (su == NULL) {
+		dprintf("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
+		goto empty;
+	}
+	palette = su->format->palette;
+
+	SDL_GetRGBA(state->colorBG, agSurfaceFmt,
+	    &palette->colors[0].r,
+	    &palette->colors[0].g,
+	    &palette->colors[0].b,
+	    &a);
+	if (a == 0) {
+		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
+	}
+	SDL_GetRGB(state->color, agSurfaceFmt,
+	    &palette->colors[1].r,
+	    &palette->colors[1].g,
+	    &palette->colors[1].b);
+
+	/* Load and render each character. */
+	yStart = 0;
+	xStart = 0;
+	for (ch = ucs; *ch != '\0'; ch++) {
+		FT_Bitmap *current = NULL;
+
+		if (*ch == '\n') {
+			yStart += font->lineskip;
+			xStart = 0;
+			continue;
+		}
+#ifdef SYMBOLS
+		if (agTextSymbols &&
+		    ch[0] == '$' &&
+		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {	
+			SDL_Surface *sym;
+
+			if ((sym = GetSymbolSurface(ch[2])) == NULL)
+				continue;
+
+			for (row = 0; row < sym->h; row++) {
+				dst = (Uint8 *)su->pixels +
+				    (yStart+row)*su->pitch +
+				    (xStart+2);
+				src = (Uint8 *)sym->pixels +
+				    row*sym->pitch;
+
+				for (col = 0; col < sym->w; col++) {
+					if (AG_GET_PIXEL(sym,src) !=
+					    sym->format->colorkey) {
+						*dst = 1;
+					}
+					src += sym->format->BytesPerPixel;
+					dst++;
+				}
+			}
+			xStart += sym->w + 4;
+			ch += 3;
+			continue;
+		}
+#endif /* SYMBOLS */
+		if (AG_TTFFindGlyph(ftFont, *ch,
+		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+			dprintf("TTFFindGlyph: %s\n", AG_GetError());
+		    	continue;
+		}
+		glyph = ftFont->current;
+		current = &glyph->bitmap;
+
+		/* Compensate for wrap around bug with negative minx's. */
+		if ((ch == ucs) && (glyph->minx < 0))
+			xStart -= glyph->minx;
+
+		for (row = 0; row < current->rows; row++) {
+			if (glyph->yoffset < 0) {
+				glyph->yoffset = 0;
+			}
+			if (row+glyph->yoffset >= su->h)
+				continue;
+
+			dst = (Uint8 *)su->pixels +
+				(yStart+row+glyph->yoffset)*su->pitch +
+				xStart + glyph->minx;
+			src = current->buffer + row*current->pitch;
+
+			for (col = current->width; col > 0; --col)
+				*dst++ |= *src++;
+		}
+
+		xStart += glyph->advance;
+		if (ftFont->style & TTF_STYLE_BOLD)
+			xStart += ftFont->glyph_overhang;
+	}
+	if (ftFont->style & TTF_STYLE_UNDERLINE) {
+		row = ftFont->ascent - ftFont->underline_offset - 1;
+		if (row >= su->h) {
+			row = (su->h-1) - ftFont->underline_height;
+		}
+		dst = (Uint8 *)su->pixels + row * su->pitch;
+		for (row = ftFont->underline_height; row > 0; --row) {
+			/* 1 because 0 is the bg color */
+			memset(dst, 1, su->w);
+			dst += su->pitch;
+		}
+	}
+	return (su);
+empty:
+	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
+}
+
+#endif /* HAVE_FREETYPE */
+
+static __inline__ SDL_Surface *
+GetBitmapGlyph(Uint32 c)
+{
+	if ((state->font->flags & AG_FONT_UPPERCASE) &&
 	    (isalpha(c) && islower(c))) {
 		c = toupper(c);
 	}
-	if (c < font->c0 || c > font->c1) {
-		return (font->bglyphs[0]);
+	if (c < state->font->c0 || c > state->font->c1) {
+		return (state->font->bglyphs[0]);
 	}
-	return (font->bglyphs[c - font->c0 + 1]);
+	return (state->font->bglyphs[c - state->font->c0 + 1]);
+}
+
+/* Compute the rendered size of UCS-4 text with a bitmap font. */
+static __inline__ void
+TextSizeBitmap(const Uint32 *ucs, int *w, int *h)
+{
+	const Uint32 *c;
+	SDL_Surface *sGlyph;
+
+	if (w != NULL) { *w = 0; }
+	if (h != NULL) { *h = 0; }
+	for (c = &ucs[0]; *c != '\0'; c++) {
+		sGlyph = GetBitmapGlyph(*c);
+		if (*c == '\n') {
+			if (h != NULL) { *h += state->font->lineskip; }
+		} else {
+			if (w != NULL) { *w += sGlyph->w; }
+			if (h != NULL) { *h = MAX(*h,sGlyph->h); }
+		}
+	}
+}
+
+/* Render UCS-4 text to a new surface using a bitmap font. */
+/* TODO: blend colors */
+static SDL_Surface *
+TextRenderBitmap(const Uint32 *ucs)
+{
+	AG_Font *font = state->font;
+	size_t i;
+	SDL_Rect rd;
+	int w, h;
+	const Uint32 *c;
+	SDL_Surface *sGlyph, *su;
+
+	TextSizeBitmap(ucs, &w, &h);
+	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+	    agSurfaceFmt->Rmask,
+	    agSurfaceFmt->Gmask,
+	    agSurfaceFmt->Bmask, 0);
+	if (su == NULL) {
+		fatal("CreateRGBSurface: %s", SDL_GetError());
+	}
+	rd.x = 0;
+	rd.y = 0;
+	for (c = &ucs[0]; *c != '\0'; c++) {
+		if (*c == '\n') {
+			rd.x = 0;
+			rd.y += font->lineskip;
+			continue;
+		}
+		sGlyph = GetBitmapGlyph(*c);
+		rd.w = sGlyph->w;
+		rd.h = sGlyph->h;
+		SDL_BlitSurface(sGlyph, NULL, su, &rd);
+		rd.x += sGlyph->w;
+	}
+	SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0);
+	SDL_SetAlpha(su, font->bglyphs[0]->flags & (SDL_SRCALPHA|SDL_RLEACCEL),
+	                 font->bglyphs[0]->format->alpha);
+	return (su);
 }
 
 /* Render an UCS-4 text string onto a new 8-bit surface. */
 SDL_Surface *
-AG_TextRenderUCS4(const char *fontname, int fontsize, Uint32 color_bg,
-    Uint32 color, const Uint32 *text)
+AG_TextRenderUCS4(const Uint32 *text)
 {
-	AG_Font *font;
-	SDL_Surface *su;
-	
-	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	switch (font->type) {
+	switch (state->font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		{
-			if ((su = AG_TTFRender(font->ttf, text, color_bg,
-			    color)) != NULL) {
-				return (su);
-			} else {
-				fprintf(stderr, "FreeType: %s\n",
-				    AG_GetError());
-				return (SDL_CreateRGBSurface(SDL_SWSURFACE,
-				        0,0,8,0,0,0,0));
-			}
-		}
-		break;
+		return TextRenderFT(text);
 #endif
 	case AG_FONT_BITMAP:
-		{
-			size_t i, text_len;
-			SDL_Surface *gsu;
-			SDL_Rect rd;
-			Uint w = 0, h = 0;
-			Uint32 c;
-
-			/* TODO: color adjustment */
-
-			text_len = AG_UCS4Len(text);
-			for (i = 0; i < text_len; i++) {
-				c = text[i];
-				gsu = AG_TextBitmapGlyph(font, text[i]);
-				w += gsu->w;
-				h = MAX(h,gsu->h);
-			}
-			su = SDL_CreateRGBSurface(SDL_SWSURFACE,
-			    w, h, 32,
-			    agSurfaceFmt->Rmask,
-			    agSurfaceFmt->Gmask,
-			    agSurfaceFmt->Bmask,
-			    0);
-			if (su == NULL) {
-				fatal("CreateRGBSurface: %s", SDL_GetError());
-			}
-			rd.x = 0;
-			rd.y = 0;
-			for (i = 0; i < text_len; i++) {
-				gsu = AG_TextBitmapGlyph(font, text[i]);
-				rd.w = gsu->w;
-				rd.h = gsu->h;
-				SDL_BlitSurface(gsu, NULL, su, &rd);
-				rd.x += gsu->w;
-			}
-			SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
-			    0);
-			SDL_SetAlpha(su,
-			    font->bglyphs[0]->flags&(SDL_SRCALPHA|SDL_RLEACCEL),
-			    font->bglyphs[0]->format->alpha);
-			return (su);
-		}
-		break;
-	default:
-		fprintf(stderr, "Cannot render font: %s\n",
-		    AGOBJECT(font)->name);
-		return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
+		return TextRenderBitmap(text);
 	}
+	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 
 /* Return the expected size of an Unicode text element. */
 void
-AG_TextPrescaleUnicode(const Uint32 *ucs4, int *w, int *h)
+AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 {
-	SDL_Surface *su;
-
-	/* XXX TODO calculate from the bounding boxes! */
-	su = AG_TextRenderUCS4(NULL, -1, 0, 0, ucs4);
-	if (w != NULL) { *w = (int)su->w; }
-	if (h != NULL) { *h = (int)su->h; }
-	SDL_FreeSurface(su);
+	switch (state->font->type) {
+#ifdef HAVE_FREETYPE
+	case AG_FONT_VECTOR:
+		TextSizeFT(ucs4, w, h);
+		break;
+#endif
+	case AG_FONT_BITMAP:
+		TextSizeBitmap(ucs4, w, h);
+		break;
+	}
 }
 
 /* Return the expected surface size for a UTF-8 string. */
 void
-AG_TextPrescale(const char *text, int *w, int *h)
+AG_TextSize(const char *text, int *w, int *h)
 {
 	Uint32 *ucs4;
 
@@ -600,7 +941,7 @@ AG_TextPrescale(const char *text, int *w, int *h)
 #else
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
 #endif
-	AG_TextPrescaleUnicode(ucs4, w, h);
+	AG_TextSizeUCS4(ucs4, w, h);
 	free(ucs4);
 }
 
@@ -661,7 +1002,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	}
 	AG_UnlockTimeouts(NULL);
 
-	AG_SetTimeout(&text_timeout, expire_tmsg, win, AG_TIMEOUT_LOADABLE);
+	AG_SetTimeout(&text_timeout, TextTmsgExpire, win, AG_TIMEOUT_LOADABLE);
 	AG_AddTimeout(NULL, &text_timeout, expire);
 }
 

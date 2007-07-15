@@ -364,13 +364,13 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 
 	switch (c->type) {
 	case AG_CELL_STRING:					/* Avoid copy */
-		c->surface = AG_WidgetMapSurface(t,
-		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), c->data.s));
+		AG_TextColor(TEXT_COLOR);
+		c->surface = AG_WidgetMapSurface(t, AG_TextRender(c->data.s));
 		goto blit;
 	case AG_CELL_PSTRING:					/* Avoid copy */
-		c->surface = AG_WidgetMapSurface(t,
-		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-		    (char *)c->data.p));
+		AG_TextColor(TEXT_COLOR);
+		c->surface = AG_WidgetMapSurface(t, AG_TextRender((char *)
+		                                                  c->data.p));
 		goto blit;
 	case AG_CELL_FN_SU:
 		c->surface = AG_WidgetMapSurface(t,
@@ -378,9 +378,9 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		goto blit;
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
+			AG_TextColor(TEXT_COLOR);
 			c->surface = AG_WidgetMapSurface(t,
-			    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
-			    c->fmt));
+			    AG_TextRender(c->fmt));
 			goto blit;
 		} else {
 			return;
@@ -390,8 +390,8 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		AG_TablePrintCell(t, c, txt, sizeof(txt));
 		break;
 	}
-	c->surface = AG_WidgetMapSurface(t,
-	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), txt));
+	AG_TextColor(TEXT_COLOR);
+	c->surface = AG_WidgetMapSurface(t, AG_TextRender(txt));
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
 	    rd->x,
@@ -1251,8 +1251,10 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->flags = AG_TABLE_SORT_ASCENDING;
 	tc->sort_fn = sort_fn;
 	tc->selected = 0;
-	tc->surface = (name != NULL) ? AG_WidgetMapSurface(t,
-	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), name)) : -1;
+
+	AG_TextColor(TEXT_COLOR);
+	tc->surface = (name == NULL) ? -1 :
+	    AG_WidgetMapSurface(t, AG_TextRender(name));
 	if (t->n > 0) {
 		lc = &t->cols[t->n - 1];
 		tc->x = lc->x+lc->w;

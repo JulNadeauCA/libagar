@@ -368,7 +368,8 @@ AG_ScrollbarDraw(void *p)
 		char label[32];
 
 		snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
-		txt = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), label);
+		AG_TextColor(TEXT_COLOR);
+		txt = AG_TextRender(label);
 		AG_WidgetBlit(sb, txt,
 		    AGWIDGET(sb)->w/2 - txt->w/2,
 		    AGWIDGET(sb)->h/2 - txt->h/2);

@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Text
-.Nd agar font engine interface
+.Nd agar text rendering interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/gui.h>
@@ -40,91 +40,122 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface uses an underlying font engine (such as FreeType) to render text.
-.Sh INITIALIZATION
+interface uses an underlying font engine to render text.
+Currently, two font engines are supported:
+.Dv AG_FONT_VECTOR
+(for rendering any font supported by FreeType) and
+.Dv AG_FONT_BITMAP
+(for rendering simple pixmap fonts).
+.Sh RENDER SETTINGS
+.Pp
+A number of settings which affect the rendering functions (see
+.Dq RENDERING
+section) can be modified at any time, and are organized in a stack of
+rendering attributes.
+.Pp
 .nr nS 1
 .Ft void
-.Fn AG_TextParseFontSpec "const char *fontspec"
-.Pp
-.Ft int
-.Fn AG_TextInit "enum text_engine te"
+.Fn AG_PushTextState "void"
 .Pp
 .Ft void
-.Fn AG_TextDestroy "void"
+.Fn AG_PopTextState "void"
+.Pp
+.Ft int
+.Fn AG_TextFont "const char *face" "int size" "Uint flags"
+.Pp
+.Ft void
+.Fn AG_TextJustify "enum ag_text_justify mode"
+.Pp
+.Ft void
+.Fn AG_TextColorVideo32 "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_TextColor32 "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_TextColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn AG_TextColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft void
+.Fn AG_TextBGColorVideo32 "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_TextBGColor32 "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_TextBGColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn AG_TextBGColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft void
+.Fn AG_TextBGColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .nr nS 0
 The
-.Fn AG_TextParseFontSpec
-function parses a font specification of the form
-.Sq face,size,style
-(valid separators include
-.Sq :,./ )
-and assigns the default font.
-This function is typically called prior to
-.Fn AG_TextInit ,
-to parse font specifications on the command line.
+.Fn AG_PushTextState
+and
+.Fn AG_PopTextState
+functions respectively push and pop the text rendering attribute stack.
+The attribute stack can hold
+.Dv AG_TEXT_STATES_MAX
+items (at least 32).
 .Pp
-The
-.Fn AG_TextInit
-function initializes the text subsystem using the given font engine:
+.Fn AG_TextFont
+searches the font cache for the given font face, size and flags combination,
+possibly loading new fonts from disk (scanning all
+.Sq font-path
+directories).
+It returns 0 on success or -1 if no suitable combination was found.
 .Pp
+.Fn AG_TextJustify
+selects the justification mode to use in multi-line rendering:
 .Bd -literal
-enum text_engine {
-	TEXT_ENGINE_FREETYPE,		/* FreeType */
-	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
-	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
+enum ag_text_justify {
+	AG_TEXT_LEFT,
+	AG_TEXT_MIDDLE,
+	AG_TEXT_RIGHT
 };
 .Ed
 .Pp
-.Fn AG_TextInit
-selects the default font style by looking at the following
-.Xr AG_Config 3
-settings:
-.Bl -tag -width "font-engine.default-style "
-.It Va font-engine.default-font
-This specifies the default font face to use.
-With
-.Dv TEXT_ENGINE_FREETYPE ,
-this is the name of the font file to load.
-With
-.Dv TEXT_ENGINE_BITMAP
+.Fn AG_TextColorVideo32
+sets the text color using the given pixel in
+.Va agVideoFmt
+format.
+.Fn AG_TextColor32
+accepts a pixel in
+.Va agSurfaceFmt
+format.
+.Fn AG_TextColorRGB
 and
-.Dv TEXT_ENGINE_PIXMAP ,
-this is the name of the font bitmap file.
-In both cases, the file should reside in one of the directories specified in
-the
-.Va font-path
-.Xr AG_Config 3
-setting.
-.It Va font-engine.default-size
-The default font size in points.
-.It Va font-engine.default-style
-The default font style, or flags, specified in hexadecimal format.
-The meaning of these flags is specific to the font engine being used.
-.El
+.Fn AG_TextColorRGBA
+accept individual color components.
 .Pp
-The
-.Fn AG_TextDestroy
-function frees all resources allocated by the font engine.
+Similarly,
+.Fn AG_TextBG*
+functions assign a background color for the surfaces returned by the
+rendering functions.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn AG_TextRenderUCS4 "const char *fontFace" "int fontSize" "Uint32 color_bg" "Uint32 color" "const Uint32 *text"
+.Fn AG_TextRenderUCS4 "const Uint32 *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextRender "const char *fontFace, int fontSize, Uint32 color" "const char *text"
+.Fn AG_TextRender "const char *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextFormat "const char *fontFace, int fontSize, Uint32 color" "const char *fmt" "..."
+.Fn AG_TextFormat "const char *fmt" "..."
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextRenderGlyph "const char *fontFace, int fontSize, Uint32 color" "Uint32 uch"
+.Fn AG_TextRenderGlyph "Uint32 uch"
 .Pp
 .Ft "void"
-.Fn AG_TextPrescaleUnicode "const Uint32 *text" "int *w" "int *h"
+.Fn AG_TextSizeUCS4 "const Uint32 *text" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn AG_TextPrescale "const char *text" "int *w" "int *h"
+.Fn AG_TextSize "const char *text" "int *w" "int *h"
 .Pp
 .nr nS 0
 The
@@ -138,22 +169,48 @@ variant accepts
 style arguments.
 .Pp
 .Fn AG_TextRenderUCS4
-renders text in UCS-4 format onto a new surface of the specified color.
+renders text in UCS-4 format onto a new surface.
 .Fn AG_TextRenderGlyph
-renders a single UCS-4 encoded Unicode character onto a new surface of the
-specified color.
-.Pp
-A
-.Fa fontFace
-argument of NULL or a
-.Fa fontSize
-argument of -1 indicates that the defaults should be used.
+renders a single UCS-4 encoded Unicode character onto a new surface.
 .Pp
 The
-.Fn AG_TextPrescale
+.Fn AG_TextSize
 and
-.Fn AG_TextPrescaleUnicode
-functions return the expected surface dimensions for the given text.
+.Fn AG_TextSizeUCS4
+functions return the minimal bounding box in pixels for a rendering of
+the given text.
+.Sh DEFAULT FONTS
+.nr nS 1
+.Ft void
+.Fn AG_TextParseFontSpec "const char *fontspec"
+.Pp
+.nr nS 0
+The
+.Fn AG_TextParseFontSpec
+function parses a font specification of the form
+.Sq face,size,style
+(valid separators include
+.Sq :,./ )
+and assigns the default font.
+This function is typically called prior to
+.Fn AG_InitVideo
+(ie. to parse alternate fonts specified on the command line).
+The default font is selected from the following
+.Xr AG_Config 3
+settings:
+.Bl -tag -width "font.flags "
+.It Va font.face
+This specifies the filename of the default font to use.
+The file should reside in one of the directories specified in the
+.Va font-path
+.Xr AG_Config 3
+setting.
+.It Va font.size
+The default font size in points.
+.It Va font.flags
+The default font attribute flags.
+The meaning of this parameter is specific to the underlying font engine.
+.El
 .Sh CANNED DIALOGS
 .nr nS 1
 .Ft "void"
@@ -212,16 +269,6 @@ displays a dialog asking for a string, where
 is a pointer to the string buffer, and
 .Fa len
 is the size of the buffer.
-.Sh TROUBLETONS
-Something more sophisticated is needed to deal with unpredictable text surface
-dimensions.
-Currently,
-.Fn AG_TextPrescale
-is used prior to allocating fixed-size surfaces, but this is troublesome to
-maintain with translations.
-.Pp
-.Fn AG_TextRenderGlyph
-does not work.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Config 3 ,
@@ -246,3 +293,4 @@ Unicode home page - http://www.unicode.org/
 The
 .Nm
 interface first appeared in Agar 1.0.
+The stack of rendering attributes was added in Agar 1.3.

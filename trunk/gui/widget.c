@@ -1809,7 +1809,7 @@ AG_WidgetParseSizeSpec(const char *spec_text, int *w)
 			return (AG_WIDGET_BAD_SPEC);
 		}
 		*p = '\0';
-		AG_TextPrescale(&spec[1], w, NULL);
+		AG_TextSize(&spec[1], w, NULL);
 		return (AG_WIDGET_STRINGLEN);
 	case 'x':
 		{
@@ -1823,7 +1823,7 @@ AG_WidgetParseSizeSpec(const char *spec_text, int *w)
 			return (AG_WIDGET_PIXELS);
 		}
 	default:
-		AG_TextPrescale(spec, w, NULL);
+		AG_TextSize(spec, w, NULL);
 		break;
 	}
 	return (AG_WIDGET_BAD_SPEC);

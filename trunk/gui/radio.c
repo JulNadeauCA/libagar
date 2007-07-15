@@ -100,8 +100,8 @@ AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 	for (i = 0; i < rad->nitems; i++) {
 		SDL_Surface *su;
 
-		su = AG_TextRender(NULL, -1, AG_COLOR(RADIO_TXT_COLOR),
-		    _(items[i]));
+		AG_TextColor(RADIO_TXT_COLOR);
+		su = AG_TextRender(_(items[i]));
 		rad->labels[i] = AG_WidgetMapSurface(rad, su);
 		if (su->w > rad->max_w)
 			rad->max_w = su->w;
