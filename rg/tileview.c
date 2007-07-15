@@ -1153,7 +1153,8 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	SDL_Surface *su;
 
 	/* XXX pointless colorkey blit */
-	su = AG_TextRender(NULL, -1, AG_COLOR(TILEVIEW_TEXT_COLOR), label);
+	AG_TextColor(TILEVIEW_TEXT_COLOR);
+	su = AG_TextRender(label);
 	agPrim.rect_filled(tv,
 	    (su->w >= AGWIDGET(tv)->w) ? 0 : (AGWIDGET(tv)->w - su->w - 2),
 	    AGWIDGET(tv)->h - su->h - 2,
@@ -1803,8 +1804,9 @@ RG_TileviewDraw(void *p)
 
 					snprintf(text, sizeof(text), "%s%d",
 					    (l > 0) ? "+" : "", l);
-					tsu = AG_TextRender(NULL, 9,
-					    AG_COLOR(BG_COLOR), text);
+					AG_TextFontLookup(NULL, 9, 0);
+					AG_TextColor(BG_COLOR);
+					tsu = AG_TextRender(text);
 					agPrim.rect_blended(tv,
 					    tv->xoffs+x,
 					    tv->yoffs+y,
