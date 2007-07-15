@@ -171,8 +171,9 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 		}
 		mv->curtool->mv = NULL;
 
+		AG_TextColor(TEXT_COLOR);
 		AG_WidgetReplaceSurface(mv->status, mv->status->surface,
-		    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR),
+		    AG_TextRender(
 		    _("Select a tool or double-click on an element to insert.")
 		    ));
 	}
@@ -1534,6 +1535,7 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 	vsnprintf(status, sizeof(status), fmt, ap);
 	va_end(ap);
 
+	AG_TextColor(TEXT_COLOR);
 	AG_WidgetReplaceSurface(mv->status, mv->status->surface,
-	    AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), status));
+	    AG_TextRender(status));
 }
