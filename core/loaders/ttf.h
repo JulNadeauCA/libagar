@@ -76,10 +76,6 @@ __inline__ char	*AG_TTFFaceStyle(AG_TTFFont *);
 
 int AG_TTFGlyphMetrics(AG_TTFFont *, Uint32 , int *, int *, int *, int *,
 		      int *);
-int AG_TTFSizeText(AG_TTFFont *, const char *, int *, int *);
-int AG_TTFSizeUnicode(AG_TTFFont *, const Uint32 *, int *, int *);
-
-SDL_Surface *AG_TTFRender(AG_TTFFont *, const Uint32 *, Uint32, Uint32);
 __END_DECLS
 
 #include "close_code.h"
