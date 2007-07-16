@@ -249,10 +249,12 @@ AG_ButtonDraw(void *p)
 	if (bu->text != NULL && bu->text[0] != '\0') {
 		if (bu->surface == -1) {
 			AG_TextColor(BUTTON_TXT_COLOR);
+			AG_TextJustify((enum ag_text_justify)bu->justify);
 			bu->surface = AG_WidgetMapSurface(bu,
 			    AG_TextRender(bu->text));
 		} else if (bu->flags & AG_BUTTON_REGEN) {
 			AG_TextColor(BUTTON_TXT_COLOR);
+			AG_TextJustify((enum ag_text_justify)bu->justify);
 			AG_WidgetReplaceSurface(bu, bu->surface,
 			    AG_TextRender(bu->text));
 		}
