@@ -17,7 +17,7 @@
 
 enum ag_text_justify {
 	AG_TEXT_LEFT,
-	AG_TEXT_MIDDLE,
+	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
 };
 
@@ -109,7 +109,11 @@ __inline__ SDL_Surface	*AG_TextFormat(const char *, ...);
 __inline__ SDL_Surface	*AG_TextRender(const char *);
 __inline__ SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
 __inline__ void		 AG_TextSize(const char *, int *, int *);
+__inline__ void		 AG_TextSizeMulti(const char *, int *, int *, Uint **,
+			                  Uint *);
 __inline__ void		 AG_TextSizeUCS4(const Uint32 *, int *, int *);
+__inline__ void		 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *,
+			                      Uint **, Uint *);
 
 void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
 	      FORMAT_ATTRIBUTE(printf, 2, 3)

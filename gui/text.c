@@ -620,28 +620,51 @@ GetSymbolSurface(Uint32 ch)
 }
 #endif /* SYMBOLS */
 
+static __inline__ int
+JustifyOffset(int w, int wLine)
+{
+	switch (state->justify) {
+	case AG_TEXT_LEFT:
+		return (0);
+	case AG_TEXT_CENTER:
+		return (w/2 - wLine/2);
+	case AG_TEXT_RIGHT:
+		return (w - wLine);
+	}
+}
+
 #ifdef HAVE_FREETYPE
 
-/* Compute the rendered size of UCS-4 text with a FreeType font. */
+/*
+ * Compute the rendered size of UCS-4 text with a FreeType font. If the
+ * string is multiline and nLines is non-NULL, the width of individual lines
+ * is returned into wLines, and the number of lines into nLines.
+ */
 static void
-TextSizeFT(const Uint32 *ucs, int *w, int *h)
+TextSizeFT(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 {
 	AG_Font *font = state->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
+	int minx = 0, maxx = 0;
+	int miny = 0, maxy = font->height;
+	int minxLine = 0;
+	int maxxLine = 0;
 	int x, z;
-	int minx, maxx;
-	int miny, maxy;
-
-	minx = maxx = 0;
-	miny = 0;
-	maxy = font->height;
 
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
+			if (nLines != NULL) {
+				*wLines = Realloc(*wLines,
+				                  ((*nLines)+1)*sizeof(Uint *));
+				(*wLines)[*nLines] = (maxxLine - minxLine);
+				(*nLines)++;
+				minxLine = 0;
+				maxxLine = 0;
+			}
 			maxy += font->lineskip;
 			x = 0;
 			continue;
@@ -651,46 +674,39 @@ TextSizeFT(const Uint32 *ucs, int *w, int *h)
 		}
 		glyph = ftFont->current;
 
+		/* Prevent texture wrapping with first glyph. */
 		if ((ch == &ucs[0]) && (glyph->minx < 0)) {
-			/*
-			 * Fixes the texture wrapping bug when the first
-			 * letter has a negative minx value or horibearing
-			 * value.  The entire bounding box must be adjusted to
-			 * be bigger so the entire letter can fit without any
-			 * texture corruption or wrapping.
-			 *
-			 * Effects: First enlarges bounding box.
-			 * Second, xStart has to start ahead of its normal
-			 * spot in the negative direction of the negative minx
-			 * value. (pushes everything to the right).
-			 *
-			 * This will make the memory copy of the glyph bitmap
-			 * data work out correctly.
-			 */
 			z -= glyph->minx;
 		}
-
 		z = x + glyph->minx;
-		if (minx > z) {
-			minx = z;
-		}
-		if (ftFont->style & TTF_STYLE_BOLD) {
+		/* XXX ???? */
+		
+		if (minx > z) { minx = z; }
+		if (minxLine > z) { minxLine = z; }
+
+		if (ftFont->style & TTF_STYLE_BOLD)
 			x += ftFont->glyph_overhang;
-		}
+
 		if (glyph->advance > glyph->maxx) {
 			z = x + glyph->advance;
 		} else {
 			z = x + glyph->maxx;
 		}
-		if (maxx < z) {
-			maxx = z;
-		}
+		
+		if (maxx < z) { maxx = z; }
+		if (maxxLine < z) { maxxLine = z; }
+
 		x += glyph->advance;
 
 		if (glyph->miny < miny) { miny = glyph->miny; }
 		if (glyph->maxy > maxy) { maxy = glyph->maxy; }
 	}
-out:
+	if (*ch != '\n' && nLines != NULL) {
+		if (*nLines > 0) {
+			(*wLines)[*nLines] = (maxxLine - minxLine);
+		}
+		(*nLines)++;
+	}
 	if (w != NULL) { *w = (maxx - minx); }
 	if (h != NULL) { *h = (maxy - miny); }
 }
@@ -707,10 +723,20 @@ TextRenderFT(const Uint32 *ucs)
 	const Uint32 *ch;
 	Uint8 *src, *dst, a;
 	int row, col;
-	int w, h;
+	int w, h, line;
 	int xStart, yStart;
-	
-	AG_TextSizeUCS4(ucs, &w, &h);
+	Uint nLines = 0;
+	Uint *wLines = NULL;
+
+	TextSizeFT(ucs, &w, &h, &wLines, &nLines);
+#if 1
+	if (nLines > 1) {
+		printf("%d lines (%d x %d)\n", nLines, w, h);
+		for (a = 0; a < nLines; a++) {
+			printf("line%d: %d\n", a, wLines[a]);
+		}
+	}
+#endif
 	if (w <= 0 || h <= 0) {
 		goto empty;
 	}
@@ -735,14 +761,16 @@ TextRenderFT(const Uint32 *ucs)
 	    &palette->colors[1].b);
 
 	/* Load and render each character. */
+	line = 0;
 	yStart = 0;
-	xStart = 0;
-	for (ch = ucs; *ch != '\0'; ch++) {
+	xStart = (nLines > 1) ? JustifyOffset(w,wLines[0]) : 0;
+
+	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		FT_Bitmap *current = NULL;
 
 		if (*ch == '\n') {
 			yStart += font->lineskip;
-			xStart = 0;
+			xStart = JustifyOffset(w,wLines[++line]);
 			continue;
 		}
 #ifdef SYMBOLS
@@ -783,8 +811,8 @@ TextRenderFT(const Uint32 *ucs)
 		glyph = ftFont->current;
 		current = &glyph->bitmap;
 
-		/* Compensate for wrap around bug with negative minx's. */
-		if ((ch == ucs) && (glyph->minx < 0))
+		/* Prevent texture wrapping with first glyph. */
+		if ((ch == &ucs[0]) && (glyph->minx < 0))
 			xStart -= glyph->minx;
 
 		for (row = 0; row < current->rows; row++) {
@@ -804,6 +832,7 @@ TextRenderFT(const Uint32 *ucs)
 		}
 
 		xStart += glyph->advance;
+
 		if (ftFont->style & TTF_STYLE_BOLD)
 			xStart += ftFont->glyph_overhang;
 	}
@@ -814,11 +843,11 @@ TextRenderFT(const Uint32 *ucs)
 		}
 		dst = (Uint8 *)su->pixels + row * su->pitch;
 		for (row = ftFont->underline_height; row > 0; --row) {
-			/* 1 because 0 is the bg color */
 			memset(dst, 1, su->w);
 			dst += su->pitch;
 		}
 	}
+	Free(wLines, M_TEXT);
 	return (su);
 empty:
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
@@ -841,21 +870,36 @@ GetBitmapGlyph(Uint32 c)
 
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
 static __inline__ void
-TextSizeBitmap(const Uint32 *ucs, int *w, int *h)
+TextSizeBitmap(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 {
 	const Uint32 *c;
 	SDL_Surface *sGlyph;
+	int wLine = 0;
 
 	if (w != NULL) { *w = 0; }
 	if (h != NULL) { *h = 0; }
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		sGlyph = GetBitmapGlyph(*c);
 		if (*c == '\n') {
+			if (nLines != NULL) {
+				*wLines = Realloc(*wLines,
+				                 ((*nLines)+1)*sizeof(Uint *));
+				(*wLines)[*nLines] = wLine;
+				(*nLines)++;
+				wLine = 0;
+			}
 			if (h != NULL) { *h += state->font->lineskip; }
-		} else {
-			if (w != NULL) { *w += sGlyph->w; }
-			if (h != NULL) { *h = MAX(*h,sGlyph->h); }
+			continue;
 		}
+		wLine += sGlyph->w;
+		if (w != NULL) { *w += sGlyph->w; }
+		if (h != NULL) { *h = MAX(*h,sGlyph->h); }
+	}
+	if (*c != '\n' && nLines != NULL) {
+		if (*nLines > 0) {
+			(*wLines)[*nLines] = wLine;
+		}
+		(*nLines)++;
 	}
 }
 
@@ -867,11 +911,13 @@ TextRenderBitmap(const Uint32 *ucs)
 	AG_Font *font = state->font;
 	size_t i;
 	SDL_Rect rd;
-	int w, h;
+	int w, h, line;
 	const Uint32 *c;
 	SDL_Surface *sGlyph, *su;
+	Uint nLines = 0;
+	Uint *wLines = NULL;
 
-	TextSizeBitmap(ucs, &w, &h);
+	TextSizeBitmap(ucs, &w, &h, &wLines, &nLines);
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
 	    agSurfaceFmt->Rmask,
 	    agSurfaceFmt->Gmask,
@@ -879,12 +925,14 @@ TextRenderBitmap(const Uint32 *ucs)
 	if (su == NULL) {
 		fatal("CreateRGBSurface: %s", SDL_GetError());
 	}
-	rd.x = 0;
+
+	line = 0;
+	rd.x = (nLines > 1) ? JustifyOffset(w,wLines[0]) : 0;
 	rd.y = 0;
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		if (*c == '\n') {
-			rd.x = 0;
 			rd.y += font->lineskip;
+			rd.x = JustifyOffset(w,wLines[++line]);
 			continue;
 		}
 		sGlyph = GetBitmapGlyph(*c);
@@ -914,23 +962,47 @@ AG_TextRenderUCS4(const Uint32 *text)
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 
-/* Return the expected size of an Unicode text element. */
+/* Return the rendered size in pixels of a UCS4-encoded string. */
 void
 AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 {
 	switch (state->font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		TextSizeFT(ucs4, w, h);
+		TextSizeFT(ucs4, w, h, NULL, NULL);
 		break;
 #endif
 	case AG_FONT_BITMAP:
-		TextSizeBitmap(ucs4, w, h);
+		TextSizeBitmap(ucs4, w, h, NULL, NULL);
 		break;
 	}
 }
 
-/* Return the expected surface size for a UTF-8 string. */
+/*
+ * Return the rendered size in pixels of a UCS4-encoded string, along with
+ * a line count and the width of each line in an array.
+ */
+void
+AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
+    Uint *nLines)
+{
+	switch (state->font->type) {
+#ifdef HAVE_FREETYPE
+	case AG_FONT_VECTOR:
+		TextSizeFT(ucs4, w, h, wLines, nLines);
+		break;
+#endif
+	case AG_FONT_BITMAP:
+		TextSizeBitmap(ucs4, w, h, wLines, nLines);
+		break;
+	}
+	if (*nLines == 1) {
+		(*wLines) = Realloc(*wLines, sizeof(Uint *));
+		(*wLines)[0] = *w;
+	}
+}
+
+/* Return the rendered size in pixels of a text string. */
 void
 AG_TextSize(const char *text, int *w, int *h)
 {
@@ -942,6 +1014,24 @@ AG_TextSize(const char *text, int *w, int *h)
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
 #endif
 	AG_TextSizeUCS4(ucs4, w, h);
+	free(ucs4);
+}
+
+/*
+ * Return the rendered size in pixels of a text string, along with a line
+ * count and the width of each line in an array.
+ */
+void
+AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
+{
+	Uint32 *ucs4;
+
+#ifdef UTF8
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+#else
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+#endif
+	AG_TextSizeMultiUCS4(ucs4, w, h, wLines, nLines);
 	free(ucs4);
 }
 

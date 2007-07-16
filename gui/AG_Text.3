@@ -115,7 +115,7 @@ selects the justification mode to use in multi-line rendering:
 .Bd -literal
 enum ag_text_justify {
 	AG_TEXT_LEFT,
-	AG_TEXT_MIDDLE,
+	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
 };
 .Ed
@@ -140,10 +140,10 @@ rendering functions.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn AG_TextRenderUCS4 "const Uint32 *text"
+.Fn AG_TextRender "const char *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextRender "const char *text"
+.Fn AG_TextRenderUCS4 "const Uint32 *text"
 .Pp
 .Ft "SDL_Surface *"
 .Fn AG_TextFormat "const char *fmt" "..."
@@ -152,10 +152,16 @@ rendering functions.
 .Fn AG_TextRenderGlyph "Uint32 uch"
 .Pp
 .Ft "void"
+.Fn AG_TextSize "const char *text" "int *w" "int *h"
+.Pp
+.Ft "void"
 .Fn AG_TextSizeUCS4 "const Uint32 *text" "int *w" "int *h"
 .Pp
 .Ft "void"
-.Fn AG_TextSize "const char *text" "int *w" "int *h"
+.Fn AG_TextSizeMulti "const char *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
+.Pp
+.Ft "void"
+.Fn AG_TextSizeMultiUCS4 "const Uint32 *text" "int *w" "int *h" "Uint **wLines" "Uint *nLines"
 .Pp
 .nr nS 0
 The
@@ -177,40 +183,17 @@ The
 .Fn AG_TextSize
 and
 .Fn AG_TextSizeUCS4
-functions return the minimal bounding box in pixels for a rendering of
-the given text.
-.Sh DEFAULT FONTS
-.nr nS 1
-.Ft void
-.Fn AG_TextParseFontSpec "const char *fontspec"
-.Pp
-.nr nS 0
+functions return the minimal bounding box in pixels required for rendering the
+given text.
 The
-.Fn AG_TextParseFontSpec
-function parses a font specification of the form
-.Sq face,size,style
-(valid separators include
-.Sq :,./ )
-and assigns the default font.
-This function is typically called prior to
-.Fn AG_InitVideo
-(ie. to parse alternate fonts specified on the command line).
-The default font is selected from the following
-.Xr AG_Config 3
-settings:
-.Bl -tag -width "font.flags "
-.It Va font.face
-This specifies the filename of the default font to use.
-The file should reside in one of the directories specified in the
-.Va font-path
-.Xr AG_Config 3
-setting.
-.It Va font.size
-The default font size in points.
-.It Va font.flags
-The default font attribute flags.
-The meaning of this parameter is specific to the underlying font engine.
-.El
+.Fn AG_TextSizeMulti
+and
+.Fn AG_TextSizeMultiUCS4
+variants also return the number of lines into
+.Fa nLines
+and the width in pixels of each line in the array
+.Fa wLines
+(which must be initialized to NULL).
 .Sh CANNED DIALOGS
 .nr nS 1
 .Ft "void"
@@ -269,6 +252,38 @@ displays a dialog asking for a string, where
 is a pointer to the string buffer, and
 .Fa len
 is the size of the buffer.
+.Sh MISCELLANEOUS
+.nr nS 1
+.Ft void
+.Fn AG_TextParseFontSpec "const char *fontspec"
+.Pp
+.nr nS 0
+The
+.Fn AG_TextParseFontSpec
+function parses a font specification of the form
+.Sq face,size,style
+(valid separators include
+.Sq :,./ )
+and assigns the default font.
+This function is typically called prior to
+.Fn AG_InitVideo
+(ie. to parse alternate fonts specified on the command line).
+The default font is selected from the following
+.Xr AG_Config 3
+settings:
+.Bl -tag -width "font.flags "
+.It Va font.face
+This specifies the filename of the default font to use.
+The file should reside in one of the directories specified in the
+.Va font-path
+.Xr AG_Config 3
+setting.
+.It Va font.size
+The default font size in points.
+.It Va font.flags
+The default font attribute flags.
+The meaning of this parameter is specific to the underlying font engine.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Config 3 ,
