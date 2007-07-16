@@ -70,6 +70,9 @@ dereferenced on rendering.
 .Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft "void"
+.Fn AG_LabelJustify "AG_Label *label" "enum ag_text_justify justify"
+.Pp
+.Ft "void"
 .Fn AG_LabelPrescale "AG_Label *label" "Uint nlines" "const char *text"
 .Pp
 .nr nS 0
@@ -131,6 +134,18 @@ The
 .Fn AG_LabelSetPadding
 function sets the label padding parameters in pixels.
 If a parameter is -1, its current value is preserved.
+.Pp
+The
+.Fn AG_LabelJustify
+function sets the text justification:
+.Pp
+.Bd -literal
+enum ag_text_justify {
+	AG_TEXT_LEFT,
+	AG_TEXT_CENTER,
+	AG_TEXT_RIGHT
+};
+.Ed
 .Pp
 The
 .Fn AG_LabelPrescale

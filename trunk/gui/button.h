@@ -5,24 +5,20 @@
 
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
+#include <gui/text.h>
 #else
 #include <agar/gui/widget.h>
+#include <agar/gui/text.h>
 #endif
 
 #include "begin_code.h"
-
-enum ag_button_justify {
-	AG_BUTTON_LEFT,
-	AG_BUTTON_CENTER,
-	AG_BUTTON_RIGHT
-};
 
 typedef struct ag_button {
 	struct ag_widget wid;
 	int state;			/* Default state binding */
 	char *text;			/* Label text */
 	int surface;			/* Label surface handle */
-	enum ag_button_justify justify;	/* Label justification */
+	enum ag_text_justify justify;	/* Label justification */
 	Uint flags;
 #define AG_BUTTON_STICKY	0x002	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x004	/* Mouse overlaps */
@@ -70,7 +66,7 @@ void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 #define	AG_ButtonSetPaddingBottom(lbl,v) AG_ButtonSetPadding(lbl,-1,-1,-1,(v))
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
-void	   AG_ButtonSetJustification(AG_Button *, enum ag_button_justify);
+void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);
 void	   AG_ButtonSurface(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSurfaceNODUP(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
@@ -87,6 +83,7 @@ void	   AG_ButtonTextNODUP(AG_Button *, char *)
 #define	AG_ButtonPrintf AG_ButtonText
 #define	AG_ButtonEnable AG_WidgetEnable
 #define	AG_ButtonDisable AG_WidgetDisable
+#define AG_ButtonSetJustification AG_ButtonJustify
 __END_DECLS
 
 #include "close_code.h"

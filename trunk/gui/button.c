@@ -160,7 +160,7 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 
 	bu->flags = flags;
 	bu->state = 0;
-	bu->justify = AG_BUTTON_CENTER;
+	bu->justify = AG_TEXT_CENTER;
 	bu->lPad = 4;
 	bu->rPad = 4;
 	bu->tPad = 3;
@@ -249,27 +249,26 @@ AG_ButtonDraw(void *p)
 	if (bu->text != NULL && bu->text[0] != '\0') {
 		if (bu->surface == -1) {
 			AG_TextColor(BUTTON_TXT_COLOR);
-			AG_TextJustify((enum ag_text_justify)bu->justify);
+			AG_TextJustify(bu->justify);
 			bu->surface = AG_WidgetMapSurface(bu,
 			    AG_TextRender(bu->text));
 		} else if (bu->flags & AG_BUTTON_REGEN) {
 			AG_TextColor(BUTTON_TXT_COLOR);
-			AG_TextJustify((enum ag_text_justify)bu->justify);
+			AG_TextJustify(bu->justify);
 			AG_WidgetReplaceSurface(bu, bu->surface,
 			    AG_TextRender(bu->text));
 		}
 	}
 	wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;
 
-	/* XXX TODO move this code someplace else */
 	switch (bu->justify) {
-	case AG_BUTTON_LEFT:
+	case AG_TEXT_LEFT:
 		x = bu->lPad;
 		break;
-	case AG_BUTTON_CENTER:
+	case AG_TEXT_CENTER:
 		x = AGWIDGET(bu)->w/2 - wLbl/2;
 		break;
-	case AG_BUTTON_RIGHT:
+	case AG_TEXT_RIGHT:
 		x = AGWIDGET(bu)->w - wLbl - bu->rPad;
 		break;
 	}
@@ -544,7 +543,7 @@ AG_ButtonSetSticky(AG_Button *bu, int sticky)
 }
 
 void
-AG_ButtonSetJustification(AG_Button *bu, enum ag_button_justify jus)
+AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
 {
 	bu->justify = jus;
 }
