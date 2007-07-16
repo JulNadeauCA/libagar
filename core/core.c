@@ -45,6 +45,7 @@
 
 #include <gui/primitive.h>
 #include <gui/cursors.h>
+#include <gui/colors.h>
 
 #include <stdio.h>
 #include <stdlib.h>
