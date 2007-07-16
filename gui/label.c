@@ -242,6 +242,7 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 	lbl->bPad = 1;
 	lbl->wPre = -1;
 	lbl->hPre = -1;
+	lbl->justify = AG_TEXT_LEFT;
 	SLIST_INIT(&lbl->lflags);
 	AG_MutexInit(&lbl->lock);
 
@@ -291,6 +292,14 @@ AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 	if (rPad != -1) { lbl->rPad = rPad; }
 	if (tPad != -1) { lbl->tPad = tPad; }
 	if (bPad != -1) { lbl->bPad = bPad; }
+}
+
+void
+AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
+{
+	AG_MutexLock(&lbl->lock);
+	lbl->justify = justify;
+	AG_MutexUnlock(&lbl->lock);
 }
 
 void
@@ -479,7 +488,7 @@ static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 /* Display a polled label. */
 static void
-AG_LabelDrawPolled(AG_Label *label)
+DrawPolled(AG_Label *label)
 {
 	char s[AG_LABEL_MAX];
 	char s2[AG_LABEL_MAX];
@@ -646,6 +655,7 @@ AG_LabelDrawPolled(AG_Label *label)
 
 	/* XXX TODO render directly! */
 	AG_TextColor(TEXT_COLOR);
+	AG_TextJustify(label->justify);
 	ts = AG_TextRender(s);
 	AG_WidgetBlit(label, ts, label->lPad, label->tPad);
 	SDL_FreeSurface(ts);
@@ -668,14 +678,17 @@ AG_LabelDraw(void *p)
 		wClip -= AGWIDGET_SURFACE(lbl,lbl->surfaceCont)->w;
 
 	AG_WidgetPushClipRect(lbl, 0, 0, wClip, AGWIDGET(lbl)->h);
-	AG_TextColor(TEXT_COLOR);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
 		if (lbl->surface == -1) {
+			AG_TextColor(TEXT_COLOR);
+			AG_TextJustify(lbl->justify);
 			lbl->surface = (lbl->text == NULL) ? -1 :
 			    AG_WidgetMapSurface(lbl, AG_TextRender(lbl->text));
 		} else if (lbl->flags & AG_LABEL_REGEN) {
+			AG_TextColor(TEXT_COLOR);
+			AG_TextJustify(lbl->justify);
 			AG_LabelSetSurface(lbl, (lbl->text == NULL) ? NULL :
 			    AG_TextRender(lbl->text));
 		}
@@ -686,11 +699,11 @@ AG_LabelDraw(void *p)
 		}
 		break;
 	case AG_LABEL_POLLED:
-		AG_LabelDrawPolled(lbl);
+		DrawPolled(lbl);
 		break;
 	case AG_LABEL_POLLED_MT:
 		AG_MutexLock(lbl->poll.lock);
-		AG_LabelDrawPolled(lbl);
+		DrawPolled(lbl);
 		AG_MutexUnlock(lbl->poll.lock);
 		break;
 	}

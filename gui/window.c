@@ -29,6 +29,7 @@
 #include <core/view.h>
 
 #include "window.h"
+#include "titlebar.h"
 
 #include "primitive.h"
 #include "cursors.h"

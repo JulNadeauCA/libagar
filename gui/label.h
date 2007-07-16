@@ -5,8 +5,10 @@
 
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
+#include <gui/text.h>
 #else
 #include <agar/gui/widget.h>
+#include <agar/gui/text.h>
 #endif
 
 #include "begin_code.h"
@@ -40,11 +42,12 @@ typedef struct ag_label {
 #define AG_LABEL_REGEN		0x40	/* Regenerate surface at next draw */
 #define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
 	AG_Mutex lock;
-	char  *text;			/* Text buffer */
+	char *text;			/* Text buffer */
 	int surface;			/* Label surface */
 	int surfaceCont;		/* [...] surface */
 	int wPre, hPre;			/* Prescale dimensions */
 	int lPad, rPad, tPad, bPad;	/* Label padding */
+	enum ag_text_justify justify;	/* Justification mode */
 	struct {
 		AG_Mutex *lock;			   /* Lock for polled data */
 		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Pointers to polled data */
@@ -72,6 +75,7 @@ void	AG_LabelText(AG_Label *, const char *, ...)
 
 void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
+void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 #define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding(lbl,(v),-1,-1,-1)
 #define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding(lbl,-1,(v),-1,-1)
 #define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding(lbl,-1,-1,(v),-1)

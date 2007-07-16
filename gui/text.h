@@ -3,17 +3,12 @@
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/button.h>
-#include <gui/window.h>
-#else
-#include <agar/gui/button.h>
-#include <agar/gui/window.h>
-#endif
-
 #include "begin_code.h"
 
 #define AG_TEXT_STATES_MAX 32
+
+struct ag_window;
+struct ag_button;
 
 enum ag_text_justify {
 	AG_TEXT_LEFT,
@@ -133,7 +128,8 @@ void AG_TextEditString(char **, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf, 3, 4)
 		       NONNULL_ATTRIBUTE(3);
 
-AG_Window *AG_TextPromptOptions(AG_Button **, Uint, const char *, ...)
+struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
+		                       const char *, ...)
 		         	FORMAT_ATTRIBUTE(printf, 3, 4)
 		          	NONNULL_ATTRIBUTE(3);
 void AG_TextPromptString(const char *, void (*)(AG_Event *),

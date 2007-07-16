@@ -92,7 +92,7 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonSetSticky "AG_Button *button" "int sticky"
 .Pp
 .Ft void
-.Fn AG_ButtonSetJustification "AG_Button *button" "enum ag_button_justify jus"
+.Fn AG_ButtonJustify "AG_Button *button" "enum ag_text_justify justify"
 .Pp
 .Ft void
 .Fn AG_ButtonSetRepeatMode "AG_Button *button" "int repeat_flag"
@@ -183,14 +183,14 @@ By default,
 events reset the state to 0.
 .Pp
 The
-.Fn AG_ButtonSetJustification
-function controls the label justification setting:
+.Fn AG_ButtonJustify
+function sets the text justification for the button text:
 .Pp
 .Bd -literal
-enum ag_button_justify {
-	AG_BUTTON_LEFT,
-	AG_BUTTON_CENTER,
-	AG_BUTTON_RIGHT
+enum ag_text_justify {
+	AG_TEXT_LEFT,
+	AG_TEXT_CENTER,
+	AG_TEXT_RIGHT
 };
 .Ed
 .Pp
