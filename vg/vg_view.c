@@ -345,7 +345,8 @@ VG_ViewDraw(void *p)
 		AG_WidgetBlit(vv, vg->su, vv->x, vv->y);
 	}
 
-	status = AG_TextRender(NULL, -1, AG_COLOR(TEXT_COLOR), vv->status);
+	AG_TextColor(TEXT_COLOR);
+	status = AG_TextRender(vv->status);
 	AG_WidgetBlit(vv, status, 0, AGWIDGET(vv)->h - status->h);
 	SDL_FreeSurface(status);
 }

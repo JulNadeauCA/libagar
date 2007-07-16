@@ -206,10 +206,11 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 
 	if (vge->vg_text.nptrs == 0) {
 		if (vge->vg_text.su == NULL) {
-			vge->vg_text.su = AG_TextRender(
-			    vge->text_st.face[0] != '\0' ? vge->text_st.face :
-			    NULL, vge->text_st.size, vge->color,
-			    vge->vg_text.text);
+			AG_TextFontLookup(vge->text_st.face[0] != '\0' ?
+			                  vge->text_st.face : NULL,
+					  vge->text_st.size, 0),
+			AG_TextColorVideo32(vge->color);
+			vge->vg_text.su = AG_TextRender(vge->vg_text.text);
 		}
 		return;
 	}
@@ -297,7 +298,8 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 	if (vge->vg_text.su != NULL) {
 		SDL_FreeSurface(vge->vg_text.su);
 	}
-	vge->vg_text.su = AG_TextRender(NULL, -1, vge->color, s);
+	AG_TextColorVideo32(vge->color);
+	vge->vg_text.su = AG_TextRender(s);
 }
 
 static void
