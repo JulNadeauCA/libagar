@@ -5,13 +5,13 @@
 
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
-#include <gui/titlebar.h>
 #else
 #include <agar/gui/widget.h>
-#include <agar/gui/titlebar.h>
 #endif
 
 #include "begin_code.h"
+
+struct ag_titlebar;
 
 enum ag_window_alignment {
 	AG_WINDOW_UPPER_LEFT,
@@ -59,7 +59,7 @@ typedef struct ag_window {
 	int visible;				/* Window is visible */
 
 	AG_Mutex lock;
-	AG_Titlebar *tbar;			/* Titlebar (if any) */
+	struct ag_titlebar *tbar;		/* Titlebar (if any) */
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
 	int xpadding;				/* Window padding (px) */
