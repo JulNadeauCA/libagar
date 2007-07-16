@@ -7,6 +7,8 @@
 #define RG_ANIMATION_NAME_MAX	32
 #define RG_ANIMATION_FRAMES_MAX	(0xffffffff-1)
 
+struct ag_window;
+
 enum rg_anim_insn_type {
 	RG_ANIM_TILE,			/* Replace/blend with prev tile */
 	RG_ANIM_DISPX,			/* Pixmap translation */
@@ -102,7 +104,7 @@ Uint			 RG_AnimInsertFrame(RG_Anim *, SDL_Surface *);
 void			 RG_AnimRemoveFrame(RG_Anim *, Uint);
 __inline__ RG_AnimFrame	*RG_AnimGetFrame(RG_Anim *, Uint);
 
-AG_Window *RG_AnimEdit(RG_Anim *);
+struct ag_window *RG_AnimEdit(RG_Anim *);
 __END_DECLS
 
 #include "close_code.h"

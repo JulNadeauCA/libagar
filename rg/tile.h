@@ -10,6 +10,8 @@
 #define RG_TILE_SIZE_MIN	 2
 #define RG_TILE_SIZE_MAX	 1024
 
+struct ag_window;
+
 enum rg_tile_element_type {
 	RG_TILE_FEATURE,
 	RG_TILE_PIXMAP,
@@ -124,7 +126,7 @@ void	 	RG_TileInit(RG_Tile *, struct rg_tileset *, const char *);
 void		RG_TileScale(struct rg_tileset *, RG_Tile *, Uint16, Uint16,
 		             Uint, Uint8);
 void		RG_TileGenerate(RG_Tile *);
-AG_Window      *RG_TileEdit(struct rg_tileset *, RG_Tile *);
+struct ag_window *RG_TileEdit(struct rg_tileset *, RG_Tile *);
 void		RG_TileDestroy(RG_Tile *);
 void		RG_TileSave(RG_Tile *, AG_Netbuf *);
 int		RG_TileLoad(RG_Tile *, AG_Netbuf *);

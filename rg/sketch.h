@@ -6,6 +6,9 @@
 
 #define RG_SKETCH_NAME_MAX	32
 
+struct ag_toolbar;
+struct ag_window;
+
 enum rg_sketch_mod_type {
 	RG_SKETCH_VERTEX_DISPLACEMENT
 };
@@ -40,22 +43,22 @@ void RG_SketchSave(RG_Sketch *, AG_Netbuf *);
 void RG_SketchScale(RG_Sketch *, int, int, float, int, int);
 void RG_SketchRender(RG_Tile *, RG_TileElement *);
 
-AG_Window *RG_SketchEdit(struct rg_tileview *, RG_TileElement *);
-AG_Window *RG_SketchEditElement(struct rg_tileview *, RG_TileElement *,
-		                   VG_Element *);
-
-AG_Window *RG_SketchSelect(struct rg_tileview *, RG_TileElement *,
- 		             VG_Element *);
-void RG_SketchUnselect(struct rg_tileview *, RG_TileElement *,
-		     VG_Element *);
+struct ag_toolbar *RG_SketchToolbar(struct rg_tileview *, RG_TileElement *);
+struct ag_window  *RG_SketchEdit(struct rg_tileview *, RG_TileElement *);
+struct ag_window  *RG_SketchEditElement(struct rg_tileview *, RG_TileElement *,
+		                        VG_Element *);
+struct ag_window  *RG_SketchSelect(struct rg_tileview *, RG_TileElement *,
+ 		                   VG_Element *);
+void		   RG_SketchUnselect(struct rg_tileview *, RG_TileElement *,
+		                     VG_Element *);
 
 void RG_SketchKeyDown(struct rg_tileview *, RG_TileElement *, int, int);
 void RG_SketchKeyUp(struct rg_tileview *, RG_TileElement *, int, int);
 int  RG_SketchWheel(struct rg_tileview *, RG_TileElement *, int);
 void RG_SketchButtondown(struct rg_tileview *, RG_TileElement *, double, double,
 			 int);
-void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, double,
-		          double, int);
+void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, double, double,
+                       int);
 void RG_SketchMotion(struct rg_tileview *, RG_TileElement *, double, double,
 		     double, double, int);
 
@@ -65,7 +68,6 @@ void RG_SketchRedo(struct rg_tileview *, RG_TileElement *);
 
 void RG_SketchOpenMenu(struct rg_tileview *, int, int);
 void RG_SketchCloseMenu(struct rg_tileview *);
-AG_Toolbar *RG_SketchToolbar(struct rg_tileview *, RG_TileElement *);
 
 void RG_SketchDrawPolygon(RG_Tile *, VG *, VG_Element *);
 __END_DECLS
