@@ -4,6 +4,9 @@
 #define _AGAR_RG_FILL_H_
 #include "begin_code.h"
 
+struct ag_window;
+struct ag_toolbar;
+
 struct rg_fill_feature {
 	RG_Feature ft;
 
@@ -42,8 +45,8 @@ int		 RG_FillLoad(void *, AG_Netbuf *);
 void		 RG_FillSave(void *, AG_Netbuf *);
 void		 RG_FillApply(void *, RG_Tile *, int, int);
 void		 RG_FillMenu(void *, AG_MenuItem *);
-AG_Window	*RG_FillEdit(void *, RG_Tileview *);
-AG_Toolbar	*RG_FillToolbar(void *, RG_Tileview *);
+struct ag_window *RG_FillEdit(void *, RG_Tileview *);
+struct ag_toolbar *RG_FillToolbar(void *, RG_Tileview *);
 __END_DECLS
 
 #include "close_code.h"

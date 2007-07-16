@@ -6,6 +6,8 @@
 
 #define RG_TEXTURE_NAME_MAX 32
 
+struct ag_window;
+
 enum texture_wrap_mode {
 	RG_TEXTURE_REPEAT,
 	RG_TEXTURE_CLAMP,
@@ -32,7 +34,7 @@ void RG_TextureDestroy(RG_Texture *);
 int  RG_TextureLoad(RG_Texture *, AG_Netbuf *);
 void RG_TextureSave(RG_Texture *, AG_Netbuf *);
 __inline__ RG_Texture *RG_TextureFind(struct rg_tileset *, const char *);
-AG_Window *RG_TextureEdit(RG_Texture *);
+struct ag_window *RG_TextureEdit(RG_Texture *);
 __END_DECLS
 
 #include "close_code.h"

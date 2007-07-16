@@ -6,6 +6,8 @@
 
 #define RG_PIXMAP_NAME_MAX	32
 
+struct ag_window;
+struct ag_toolbar;
 struct rg_pixmap;
 struct rg_tileview;
 
@@ -69,9 +71,10 @@ void		 RG_PixmapInit(RG_Pixmap *, struct rg_tileset *, int);
 void		 RG_PixmapDestroy(RG_Pixmap *);
 int		 RG_PixmapLoad(RG_Pixmap *, AG_Netbuf *);
 void		 RG_PixmapSave(RG_Pixmap *, AG_Netbuf *);
-AG_Window	*RG_PixmapEdit(struct rg_tileview *, RG_TileElement *);
-AG_Toolbar	*RG_PixmapToolbar(struct rg_tileview *, RG_TileElement *);
 void		 RG_PixmapScale(RG_Pixmap *, int, int, int, int);
+
+struct ag_window  *RG_PixmapEdit(struct rg_tileview *, RG_TileElement *);
+struct ag_toolbar *RG_PixmapToolbar(struct rg_tileview *, RG_TileElement *);
 
 void RG_PixmapButtondown(struct rg_tileview *, RG_TileElement *, int, int, int);
 void RG_PixmapButtonup(struct rg_tileview *, RG_TileElement *, int, int, int);

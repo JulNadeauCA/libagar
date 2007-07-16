@@ -9,6 +9,8 @@
 
 struct rg_tileview;
 struct ag_menu_item;
+struct ag_toolbar;
+struct ag_window;
 
 typedef struct rg_feature_ops {
 	const char *type;
@@ -23,8 +25,8 @@ typedef struct rg_feature_ops {
 	void (*destroy)(void *);
 	void (*apply)(void *, RG_Tile *, int, int);
 	void (*menu)(void *, struct ag_menu_item *);
-	AG_Toolbar *(*toolbar)(void *, struct rg_tileview *);
-	AG_Window *(*edit)(void *, struct rg_tileview *);
+	struct ag_toolbar *(*toolbar)(void *, struct rg_tileview *);
+	struct ag_window *(*edit)(void *, struct rg_tileview *);
 } RG_FeatureOps;
 
 typedef struct rg_feature_sketch {
