@@ -6,6 +6,10 @@
 
 #define AG_MAPTOOL_STATUS_MAX	8
 
+struct ag_widget;
+struct ag_window;
+struct ag_button;
+
 struct map_view;
 struct map_tool_keybinding;
 struct map_tool_mousebinding;
@@ -38,9 +42,9 @@ typedef struct map_tool {
 	void *p;				/* User-supplied pointer */
 	char *status[AG_MAPTOOL_STATUS_MAX];	/* Status message stack */
 	int nstatus;
-	AG_Window *win;		/* Edition window (if any) */
-	AG_Widget *pane;		/* Edition pane (if any) */
-	AG_Button *trigger;		/* Trigger button (XXX) */
+	struct ag_window *win;		/* Edition window (if any) */
+	struct ag_widget *pane;		/* Edition pane (if any) */
+	struct ag_button *trigger;	/* Trigger button (XXX) */
 
 	SLIST_HEAD(,map_tool_keybinding) kbindings;
 	SLIST_HEAD(,map_tool_mousebinding) mbindings;
@@ -67,9 +71,9 @@ typedef struct map_tool_mousebinding {
 #define TOOL(t) ((MAP_Tool *)(t))
 
 __BEGIN_DECLS
-void		 MAP_ToolInit(MAP_Tool *);
-void		 MAP_ToolDestroy(MAP_Tool *);
-AG_Window	*MAP_ToolWindow(void *, const char *);
+void		  MAP_ToolInit(MAP_Tool *);
+void		  MAP_ToolDestroy(MAP_Tool *);
+struct ag_window *MAP_ToolWindow(void *, const char *);
 
 void MAP_ToolBindKey(void *, SDLMod, SDLKey,
 		   int (*)(MAP_Tool *, SDLKey, int, void *), void *);

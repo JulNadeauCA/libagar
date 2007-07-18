@@ -8,11 +8,13 @@
 #include <gui/widget.h>
 #include <gui/scrollbar.h>
 #include <gui/text.h>
+#include <gui/window.h>
 #else
 #include <agar/sc/sc.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/text.h>
+#include <agar/gui/window.h>
 #endif
 
 #include "begin_code.h"
@@ -143,17 +145,17 @@ SC_Plot		*SC_PlotFromInt(SC_Plotter *, enum sc_plot_type, const char *,
 SC_Plot		*SC_PlotFromDerivative(SC_Plotter *, enum sc_plot_type,
 		                       SC_Plot *);
 
-AG_Window	*SC_PlotSettings(SC_Plot *);
-__inline__ void	 SC_PlotSetColor(SC_Plot *, Uint8, Uint8, Uint8);
-void	 	 SC_PlotSetLabel(SC_Plot *, const char *, ...);
-void	 	 SC_PlotUpdateLabel(SC_Plot *);
-__inline__ void	 SC_PlotSetScale(SC_Plot *, SC_Real, SC_Real);
-__inline__ void	 SC_PlotSetXoffs(SC_Plot *, int);
-__inline__ void	 SC_PlotSetYoffs(SC_Plot *, int);
-__inline__ void	 SC_PlotReal(SC_Plot *, SC_Real);
-void	 	 SC_PlotRealv(SC_Plot *, Uint, const SC_Real *);
-__inline__ void	 SC_PlotVector(SC_Plot *, const SC_Vector *);
-void		 SC_PlotVectorv(SC_Plot *, Uint, const SC_Vector **);
+struct ag_window *SC_PlotSettings(SC_Plot *);
+__inline__ void	  SC_PlotSetColor(SC_Plot *, Uint8, Uint8, Uint8);
+void	 	  SC_PlotSetLabel(SC_Plot *, const char *, ...);
+void	 	  SC_PlotUpdateLabel(SC_Plot *);
+__inline__ void	  SC_PlotSetScale(SC_Plot *, SC_Real, SC_Real);
+__inline__ void	  SC_PlotSetXoffs(SC_Plot *, int);
+__inline__ void	  SC_PlotSetYoffs(SC_Plot *, int);
+__inline__ void	  SC_PlotReal(SC_Plot *, SC_Real);
+void	 	  SC_PlotRealv(SC_Plot *, Uint, const SC_Real *);
+__inline__ void	  SC_PlotVector(SC_Plot *, const SC_Vector *);
+void		  SC_PlotVectorv(SC_Plot *, Uint, const SC_Vector **);
 __END_DECLS
 
 #include "close_code.h"
