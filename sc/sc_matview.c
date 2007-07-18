@@ -29,6 +29,7 @@
 #include "sc_matview.h"
 
 #include <gui/window.h>
+#include <gui/button.h>
 #include <gui/primitive.h>
 
 static AG_WidgetOps agMatviewOps = {

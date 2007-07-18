@@ -25,7 +25,10 @@
 
 #include <core/core.h>
 #include <core/view.h>
+
+#include <gui/widget.h>
 #include <gui/window.h>
+#include <gui/label.h>
 
 #include "map.h"
 #include "mapview.h"
@@ -166,8 +169,7 @@ MAP_ToolUpdateStatus(void *p)
 
 	if (t->nstatus > 0 && t->mv->status != NULL) {
 		AG_TextColor(TEXT_COLOR);
-		AG_WidgetReplaceSurface(t->mv->status, t->mv->status->surface,
-		    AG_TextRender(t->status[t->nstatus-1]));
+		AG_LabelString(t->mv->status, t->status[t->nstatus-1]);
 	}
 }
 
