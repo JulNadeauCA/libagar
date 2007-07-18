@@ -105,6 +105,9 @@ for notebook-style display.
 .Ft "void"
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
+.Ft "void"
+.Fn AG_WindowScaleToView "AG_Window *win"
+.Pp
 .Ft void
 .Fn AG_WindowAttach "AG_Window *win" "AG_Window *subwin"
 .Pp
@@ -151,6 +154,7 @@ Acceptable flags include:
 #define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
+#define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
 .Ed
 .Pp
 The
@@ -224,6 +228,10 @@ function allows manual modification of a window's position and size in terms
 of pixels.
 It should be invoked after the window's child widgets are created, otherwise
 no minimum geometry will be enforced when the window is later resized.
+.Fn AG_WindowScaleToView
+calls
+.Fn AG_WindowSetGeometry
+to maximize the window.
 .Pp
 Finally, the
 .Fn AG_WindowAttach
