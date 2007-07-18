@@ -226,11 +226,11 @@ void
 AG_CheckboxScale(void *p, int rw, int rh)
 {
 	AG_Checkbox *cb = p;
-	int wLbl, hLbl;
+	int wLbl;
 
 	if (rw == -1 || rh == -1) {
-		AG_TextSize(cb->labelTxt, &wLbl, &hLbl);
-		AGWIDGET(cb)->h = hLbl;
+		AG_TextSize(cb->labelTxt, &wLbl, NULL);
+		AGWIDGET(cb)->h = agTextFontHeight;
 		AGWIDGET(cb)->w = wLbl + AGWIDGET(cb)->h + LABEL_SPACING;
 	}
 }
