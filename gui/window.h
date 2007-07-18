@@ -54,6 +54,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
 #define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
+#define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
 
 	char caption[128];
 	int visible;				/* Window is visible */
@@ -102,6 +103,9 @@ void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
 void	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
+#define	 AG_WindowScaleToView(win) \
+	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
+
 void	 AG_WindowSaveGeometry(AG_Window *);
 void	 AG_WindowMaximize(AG_Window *);
 void	 AG_WindowUnmaximize(AG_Window *);
