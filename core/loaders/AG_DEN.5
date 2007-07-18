@@ -58,7 +58,7 @@ AG_Den {
 	char	*keywords;		/* Comma-separated keywords */
 
 	AG_DenMember *members;
-	Uint32		  nmembers;
+	Uint32       nmembers;
 };
 .Ed
 .Pp
@@ -83,14 +83,14 @@ The
 table describes the contents of the archive.
 Each element, in its encoded form, looks like:
 .Bd -literal
-AG_DenMember {
+typedef struct ag_den_member {
 	Uint32	 name_len;
 	char	 name[AG_DEN_MEMBER_NAME_MAX];	/* Identifier */
 	Uint32	 lang_len;
 	char	 lang[AG_DEN_MEMBER_LANG_MAX];	/* ISO 639 language code */
 	Uint32	 offs;				/* Position in archive */
 	Uint32	 size;				/* Size in bytes */
-};
+} AG_DenMember;
 .Ed
 .Pp
 The
