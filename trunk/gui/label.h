@@ -59,19 +59,19 @@ typedef struct ag_label {
 __BEGIN_DECLS
 AG_Label *AG_LabelNewPolled(void *, Uint, const char *, ...);
 AG_Label *AG_LabelNewPolledMT(void *, Uint, AG_Mutex *, const char *, ...)
-	 NONNULL_ATTRIBUTE(3);
+	     NONNULL_ATTRIBUTE(3);
 AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
-	 FORMAT_ATTRIBUTE(printf, 3, 4);
+	     FORMAT_ATTRIBUTE(printf, 3, 4);
 AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
 
 void	AG_LabelInit(AG_Label *, enum ag_label_type, Uint, const char *);
 void	AG_LabelDestroy(void *);
 void	AG_LabelDraw(void *);
 void	AG_LabelScale(void *, int, int);
+void	AG_LabelString(AG_Label *, const char *);
 void	AG_LabelText(AG_Label *, const char *, ...)
-	FORMAT_ATTRIBUTE(printf, 2, 3)
-	NONNULL_ATTRIBUTE(2);
-#define AG_LabelPrintf AG_LabelText
+	    FORMAT_ATTRIBUTE(printf, 2, 3)
+	    NONNULL_ATTRIBUTE(2);
 
 void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
@@ -92,6 +92,9 @@ void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG16,(Uint16)(v))
 #define	 AG_LabelFlag32(lbl,i,s,v) \
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG32,(Uint32)(v))
+
+/* Legacy */
+#define AG_LabelPrintf AG_LabelText
 __END_DECLS
 
 #include "close_code.h"

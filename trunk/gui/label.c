@@ -307,15 +307,23 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 {
 	va_list ap;
 
-#ifdef DEBUG
-	if (lbl->type != AG_LABEL_STATIC)
-		fatal("label is not static");
-#endif
 	AG_MutexLock(&lbl->lock);
 	Free(lbl->text,0);
 	va_start(ap, fmt);
 	Vasprintf(&lbl->text, fmt, ap);
 	va_end(ap);
+	lbl->flags |= AG_LABEL_REGEN;
+	AG_MutexUnlock(&lbl->lock);
+}
+
+void
+AG_LabelString(AG_Label *lbl, const char *s)
+{
+	va_list ap;
+
+	AG_MutexLock(&lbl->lock);
+	Free(lbl->text,0);
+	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
 	AG_MutexUnlock(&lbl->lock);
 }
