@@ -256,7 +256,7 @@ AG_MenuAddItem(AG_Menu *m, const char *text)
 	
 	m->items = Realloc(m->items, (m->nitems+1)*sizeof(AG_MenuItem));
 	mi = &m->items[m->nitems++];
-	mi->text = Strdup(text);
+	mi->text = Strdup(text != NULL ? text : "");
 	mi->label = -1;
 	mi->icon = -1;
 	mi->key_equiv = 0;
@@ -305,7 +305,7 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->bind_flags = 0;
 	mi->bind_invert = 0;
 	mi->bind_lock = NULL;
-	mi->text = (text != NULL) ? Strdup(text) : Strdup("");
+	mi->text = Strdup((text != NULL) ? text : "");
 	mi->label = -1;
 	mi->state = -1;
 	mi->flags = 0;
