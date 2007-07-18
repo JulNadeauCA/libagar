@@ -439,8 +439,6 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->xMax = 0;
 	gf->yMin = 0;
 	gf->yMax = 0;
-	gf->xOffs = 0;
-	gf->yOffs = 0;
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
 }
 
@@ -480,6 +478,8 @@ AG_GraphScale(void *p, int w, int h)
 	AGWIDGET(gf->vbar)->w = gf->vbar->bw;
 	AGWIDGET(gf->vbar)->h = AGWIDGET(gf)->h - gf->vbar->bw;
 #endif
+	gf->xOffs = -AGWIDGET(gf)->w/2;
+	gf->yOffs = -AGWIDGET(gf)->h/2;
 }
 
 void
