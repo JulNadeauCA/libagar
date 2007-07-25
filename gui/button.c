@@ -151,7 +151,7 @@ void
 AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 {
 	/* TODO replace the unfocused motion flag with a timer */
-	AG_WidgetInit(bu, &agButtonOps, AG_WIDGET_FOCUSABLE|
+	AG_WidgetInit(bu, &agButtonOps, AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
 	                                AG_WIDGET_UNFOCUSED_MOTION);
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
