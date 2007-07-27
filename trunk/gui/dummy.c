@@ -1,9 +1,14 @@
 /*	Public domain	*/
 
+/*
+ * This file demonstrates the implementation of a minimal Agar widget
+ * that uses surface mappings.
+ */
+
 #include <core/core.h>
 #include <core/view.h>
 
-#include "button.h"
+#include "dummy.h"
 
 #include "window.h"
 #include "primitive.h"
@@ -11,28 +16,32 @@
 
 #include <stdarg.h>
 
+/*
+ * This is the structure passed to AG_WidgetInit, which contains information
+ * about this widget class, and its function mappings.
+ */
 const AG_WidgetOps agDummyOps = {
 	{
-		"AG_Widget:AG_Dummy",
-		sizeof(AG_Dummy),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
+		"AG_Widget:AG_Dummy",		/* Name of class */
+		sizeof(AG_Dummy),		/* Size of structure */
+		{ 0,0 },			/* Version */
+		NULL,				/* init() */
+		NULL,				/* reinit() */
+		NULL,				/* destroy() */
+		NULL,				/* load() */
+		NULL,				/* save() */
+		NULL				/* edit() */
 	},
-	AG_DummyDraw,
-	AG_DummyScale
+	AG_DummyDraw,		/* Draw function */
+	AG_DummyScale		/* Scale/resize function */
 };
 
-static void mousemotion(AG_Event *);
-static void mousebuttonup(AG_Event *);
-static void mousebuttondown(AG_Event *);
-static void keyup(AG_Event *);
-static void keydown(AG_Event *);
-
+/*
+ * This is a generic constructor function. It is customary of FooNew()
+ * functions in agar to allocate, initialize and attach an object. When
+ * useful, is also customary to provide multiple alternative constructor
+ * functions.
+ */
 AG_Dummy *
 AG_DummyNew(void *parent, Uint flags, const char *caption)
 {
@@ -44,24 +53,10 @@ AG_DummyNew(void *parent, Uint flags, const char *caption)
 	return (dum);
 }
 
-void
-AG_DummyInit(AG_Dummy *dum, Uint flags, const char *caption)
-{
-	Uint wFlags = AG_WIDGET_FOCUSABLE;
-
-	if (flags & AG_DUMMY_HFILL) { wFlags |= AG_WIDGET_HFILL; }
-	if (flags & AG_DUMMY_VFILL) { wFlags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(dum, &agDummyOps, wFlags);
-	dum->flags = flags;
-
-	AG_SetEvent(dum, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(dum, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(dum, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(dum, "window-keyup", keyup, NULL);
-	AG_SetEvent(dum, "window-keydown", keydown, NULL);
-}
-
+/*
+ * Scale routine. Invoked with w = -1 and h = -1 for initial sizing,
+ * and with the actual geometry in pixels for resizing.
+ */
 void
 AG_DummyScale(void *p, int w, int h)
 {
@@ -74,6 +69,11 @@ AG_DummyScale(void *p, int w, int h)
 	}
 }
 
+/*
+ * Draw function. Invoked from GUI rendering context to draw the widget
+ * at its current location. All primitive and surface operations operate
+ * on widget coordinates.
+ */
 void
 AG_DummyDraw(void *p)
 {
@@ -82,14 +82,30 @@ AG_DummyDraw(void *p)
 	if (AGWIDGET(dum)->w < 1 || AGWIDGET(dum)->h < 1)
 		return;
 
-	agPrim.box_dithered(dum,
+	/* Draw a box spanning the widget area. */
+	agPrim.box(dum,
 	    0, 0,
 	    AGWIDGET(dum)->w, AGWIDGET(dum)->h,
-	    pressed ? -1 : 1,
-	    AG_COLOR(BUTTON_COLOR),
-	    AG_COLOR(DISABLED_COLOR));
+	    1,
+	    AG_COLOR(BUTTON_COLOR));
+
+	/*
+	 * Render "Foo" text into a new surface. In OpenGL mode, this involves
+	 * a texture upload, so it is critical that static surfaces are mapped
+	 * only when necessary.
+	 */
+	if (dum->mySurface == -1) {
+		SDL_Surface *mySurface;
+
+		mySurface = AG_TextRender("Foo");
+		dum->mySurface = AG_WidgetMapSurface(dum, mySurface);
+	}
+
+	/* Blit the mapped surface at [0,0]. */
+	AG_WidgetBlitSurface(dum, dum->mySurface, 0, 0);
 }
 
+/* Mouse motion event handler */
 static void
 mousemotion(AG_Event *event)
 {
@@ -100,6 +116,7 @@ mousemotion(AG_Event *event)
 	/* ... */
 }
 
+/* Mouse click event handler */
 static void
 mousebuttondown(AG_Event *event)
 {
@@ -112,6 +129,7 @@ mousebuttondown(AG_Event *event)
 	AG_WidgetFocus(dum);
 }
 
+/* Mouse click event handler */
 static void
 mousebuttonup(AG_Event *event)
 {
@@ -123,6 +141,7 @@ mousebuttonup(AG_Event *event)
 	/* ... */
 }
 
+/* Keystroke event handler */
 static void
 keydown(AG_Event *event)
 {
@@ -132,6 +151,7 @@ keydown(AG_Event *event)
 	/* ... */
 }
 
+/* Keystroke event handler */
 static void
 keyup(AG_Event *event)
 {
@@ -139,5 +159,35 @@ keyup(AG_Event *event)
 	int keysym = AG_INT(1);
 
 	/* ... */
+}
+
+/* Initialization routine. */
+void
+AG_DummyInit(AG_Dummy *dum, Uint flags, const char *caption)
+{
+	Uint wFlags = AG_WIDGET_FOCUSABLE;
+
+	/* It is customary for widgets to provide HFILL and VFILL flags. */
+	if (flags & AG_DUMMY_HFILL) { wFlags |= AG_WIDGET_HFILL; }
+	if (flags & AG_DUMMY_VFILL) { wFlags |= AG_WIDGET_VFILL; }
+
+	/* Initialize the parent widget structure. */
+	AG_WidgetInit(dum, &agDummyOps, wFlags);
+	dum->flags = flags;
+
+	/*
+	 * We need to map a surface, but we cannot do this from this
+	 * function, because it involves texture operations and would
+	 * break thread safety in OpenGL mode. Surface operations are
+	 * only safe from the draw() and scale() routines.
+	 */
+	dum->mySurface = -1;
+
+	/* Map our event handlers. */
+	AG_SetEvent(dum, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(dum, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(dum, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(dum, "window-keyup", keyup, NULL);
+	AG_SetEvent(dum, "window-keydown", keydown, NULL);
 }
 

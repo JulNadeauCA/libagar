@@ -17,6 +17,7 @@ typedef struct ag_dummy {
 #define AG_DUMMY_HFILL	0x01	/* Fill available width */
 #define AG_DUMMY_VFILL	0x02	/* Fill available height */
 #define AG_DUMMY_EXPAND	(AG_DUMMY_HFILL|AG_DUMMY_VFILL)
+	int mySurface;		/* Surface handle */
 } AG_Dummy;
 
 __BEGIN_DECLS
