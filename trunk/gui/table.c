@@ -235,8 +235,15 @@ AG_TableScale(void *p, int w, int h)
 	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
 	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
 	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
-
-	t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
+	
+	if (AGWIDGET(t)->w < t->vbar->bw ||
+	    AGWIDGET(t)->h < t->vbar->bw*2) {
+		AGWIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
+		t->wTbl = 0;
+	} else {
+		AGWIDGET(t->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
+	}
 #if 0
 	if (w != -1 && h != -1) {
 		for (n = 0; n < t->n; n++) {
