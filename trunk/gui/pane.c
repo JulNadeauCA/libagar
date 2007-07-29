@@ -76,6 +76,8 @@ mousebuttondown(AG_Event *event)
 	if (button == SDL_BUTTON_LEFT) {
 		pa->dmoving = OverDivControl(pa,
 		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));
+		if (pa->dmoving)
+			AGWIDGET(pa)->flags |= AG_WIDGET_PRIO_MOTION;
 	}
 }
 
@@ -147,7 +149,10 @@ mousebuttonup(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 
-	pa->dmoving = 0;
+	if (pa->dmoving) {
+		AGWIDGET(pa)->flags &= ~(AG_WIDGET_PRIO_MOTION);
+		pa->dmoving = 0;
+	}
 }
 
 void
