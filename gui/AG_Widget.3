@@ -71,19 +71,18 @@ its isolation), Agar widgets use a system of
 such that widgets can directly access (read or write) specific data, without
 the need for events.
 For example, the 
-.Xr AG_FSpinbutton 3
-widget provides a binding called
-.Sq value
-which, in the current implementation, can be
-.Ft double ,
-.Ft float ,
-.Ft int ,
-.Ft Uint ,
-.Ft Uint8 ,
-etc.
-See the
+.Xr AG_Scrollbar 3
+widget provides a set of bindings named
+.Sq value ,
+.Sq min ,
+.Sq max
+and
+.Sq visible
+which, in the current implementation, can be attached to variables of
+different integer and floating-point types.
+The available bindings are always documented in the
 .Dq BINDINGS
-section below for more details.
+section of the widget's manual page.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -651,6 +650,18 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_widget_binding_type type, ..."
 .Pp
+.Ft "AG_WidgetBinding *"
+.Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
+.Pp
+.Ft "int"
+.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
+.Pp
+.Ft void
+.Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
+.Pp
+.Ft void
+.Fn AG_WidgetUnlockBinding "AG_WidgetBinding *binding"
+.Pp
 .Ft "void"
 .Fn AG_WidgetBindBool "AG_Widget *widget" "const char *binding" "int *p"
 .Pp
@@ -700,6 +711,9 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetBindString "AG_Widget *widget" "const char *binding" "char *p" "size_t len"
 .Pp
 .Ft "void"
+.Fn AG_WidgetBindProp "AG_Widget *widget" "const char *binding" "AG_Object *obj" "const char *propKey"
+.Pp
+.Ft "void"
 .Fn AG_WidgetBindFlag "AG_Widget *widget" "const char *binding" "int *p" "int bitmask"
 .Pp
 .Ft "void"
@@ -710,18 +724,6 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Pp
 .Ft "void"
 .Fn AG_WidgetBindFlag32 "AG_Widget *widget" "const char *binding" "Uint32 *p" "Uint32 bitmask"
-.Pp
-.Ft "AG_WidgetBinding *"
-.Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
-.Pp
-.Ft "int"
-.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
-.Pp
-.Ft void
-.Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
-.Pp
-.Ft void
-.Fn AG_WidgetUnlockBinding "AG_WidgetBinding *binding"
 .Pp
 .Ft int
 .Fn AG_WidgetBool "AG_Widget *widget" "const char *binding"
@@ -917,15 +919,21 @@ to
 The destination binding must exist.
 The function returns 0 on success, -1 if an error occured.
 .Pp
-The
-.Fn AG_WidgetGet_*
-and
 .Fn AG_WidgetSet_*
-variants manipulate the bound values atomically.
+are simply variants of
+.Fa AG_WidgetBind
+without the
+.Fa type
+argument.
 .Pp
 The
+.Fn AG_WidgetGet_*
+variants return the current value of the given binding.
+For thread safety, it is usually necessary to use
+.Fn AG_WidgetGetBinding ,
+which locks the binding value, requiring the caller to unlock it after use.
 .Fn AG_WidgetString
-function returns a copy of the string (or NULL on failure).
+returns a copy of the string (or NULL on failure).
 .Fn AG_WidgetCopyString
 copies up to
 .Fa dst_size
@@ -936,14 +944,9 @@ have been copied if
 .Fa dst_size
 was unlimited.
 .Sh THREAD SAFETY
-In event context, the widgets can assume that their parent window is locked,
-and internal properties of other widgets inside the same window can be
-manipulated (for widgets inside other windows, explicit locking is required).
-.Pp
-The visibility of any window may be altered, and new windows may be attached
-immediately.
-In event context, window detach operations are deferred until processing of
-the current event is complete.
+Agar-GUI is thread-safe on a fine-grained level, so it is safe to make GUI
+calls from different threads (unless documented otherwise in the widget's
+manual page).
 .Sh EVENTS
 The
 .Nm

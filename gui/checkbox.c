@@ -136,16 +136,16 @@ AG_CheckboxDraw(void *obj)
 		state = *(int *)p;
 		break;
 	case AG_WIDGET_FLAG:
-		state = *(int *)p & (int)stateb->bitmask;
+		state = *(int *)p & (int)stateb->data.bitmask;
 		break;
 	case AG_WIDGET_FLAG8:
-		state = *(Uint8 *)p & (Uint8)stateb->bitmask;
+		state = *(Uint8 *)p & (Uint8)stateb->data.bitmask;
 		break;
 	case AG_WIDGET_FLAG16:
-		state = *(Uint16 *)p & (Uint16)stateb->bitmask;
+		state = *(Uint16 *)p & (Uint16)stateb->data.bitmask;
 		break;
 	case AG_WIDGET_FLAG32:
-		state = *(Uint32 *)p & (Uint32)stateb->bitmask;
+		state = *(Uint32 *)p & (Uint32)stateb->data.bitmask;
 		break;
 	case AG_WIDGET_UINT8:
 	case AG_WIDGET_SINT8:
@@ -257,10 +257,10 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 	case AG_WIDGET_FLAG:
 		{
 			int *state = (int *)p;
-			if (*state & (int)stateb->bitmask) {
-				*state &= ~(int)stateb->bitmask;
+			if (*state & (int)stateb->data.bitmask) {
+				*state &= ~(int)stateb->data.bitmask;
 			} else {
-				*state |= (int)stateb->bitmask;
+				*state |= (int)stateb->data.bitmask;
 			}
 			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
 			    (int)*state);
@@ -269,10 +269,10 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 	case AG_WIDGET_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
-			if (*state & (Uint8)stateb->bitmask) {
-				*state &= ~(Uint8)stateb->bitmask;
+			if (*state & (Uint8)stateb->data.bitmask) {
+				*state &= ~(Uint8)stateb->data.bitmask;
 			} else {
-				*state |= (Uint8)stateb->bitmask;
+				*state |= (Uint8)stateb->data.bitmask;
 			}
 			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
 			    (Uint8)*state);
@@ -304,8 +304,6 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
 			    (int)*state);
 		}
-		break;
-	default:
 		break;
 	}
 	AG_WidgetBindingChanged(stateb);

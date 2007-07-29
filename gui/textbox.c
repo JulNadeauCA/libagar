@@ -31,13 +31,7 @@
 #include <config/have_freetype.h>
 #include <config/utf8.h>
 
-#ifdef HAVE_FREETYPE
-#include <core/loaders/ttf.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-#endif
-
+#include "ttf.h"
 #include "textbox.h"
 
 #include "keycodes.h"
@@ -119,7 +113,7 @@ AG_TextboxProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod,
 	}
 
 	stringb = AG_WidgetGetBinding(tb, "string", &s);
-	if (tb->pos > stringb->size)
+	if (tb->pos > stringb->data.size)
 		goto out;
 
 	for (i = 0;; i++) {
@@ -367,62 +361,16 @@ AG_TextboxDraw(void *p)
 		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
 
 		if (!agView->opengl) {
-#ifdef HAVE_FREETYPE
-			if (agFreetype) {
-				FT_Bitmap *ftbmp;
-				AG_TTFFont *ttf = font->ttf;
-				AG_TTFGlyph *glyph;
-				int xglyph, yglyph;
-				Uint8 *src;
+			SDL_Rect rd;
 
-				if (AG_TTFFindGlyph(ttf, c,
-				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP)
-				    != 0) {
-					continue;
-				}
-				glyph = ttf->current;
-				ftbmp = &glyph->bitmap;
-				src = ftbmp->buffer;
-
-				if (i == 0 && glyph->minx < 0) {
-					x -= glyph->minx;
-				}
-				if ((x + glyph->minx + ftbmp->width +
-				    glyph->advance) >= AGWIDGET(tbox)->w)
-					continue;
-
-				for (yglyph = 0; yglyph < ftbmp->rows;
-				     yglyph++) {
-					if (glyph->yoffset < 0) {
-						glyph->yoffset = 0;
-					}
-					for (xglyph = 0; xglyph < ftbmp->width;
-					     xglyph++) {
-						if (!src[xglyph]) {
-							continue;
-						}
-						AG_WidgetPutPixel(tbox,
-						   x + glyph->minx + xglyph,
-						   y + glyph->yoffset + yglyph,
-						   AG_COLOR(TEXTBOX_TXT_COLOR));
-					}
-					src += ftbmp->pitch;
-				}
-				x += glyph->advance;
-			} else
-#endif /* HAVE_FREETYPE */
-			{
-				SDL_Rect rd;
-
-				AG_TextColor(TEXTBOX_TXT_COLOR);
-				gl = AG_TextRenderGlyph(c);
-				rd.x = AGWIDGET(tbox)->cx + x;
-				rd.y = AGWIDGET(tbox)->cy + y;
-				x += gl->su->w;
-				SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
-				AG_TextUnusedGlyph(gl);
-			}
-		} else {				/* agView->opengl */
+			AG_TextColor(TEXTBOX_TXT_COLOR);
+			gl = AG_TextRenderGlyph(c);
+			rd.x = AGWIDGET(tbox)->cx + x;
+			rd.y = AGWIDGET(tbox)->cy + y;
+			x += gl->su->w;
+			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
+			AG_TextUnusedGlyph(gl);
+		} else {
 #ifdef HAVE_OPENGL
 			int dx, dy;
 
@@ -447,6 +395,8 @@ AG_TextboxDraw(void *p)
 			glEnd();
 			glBindTexture(GL_TEXTURE_2D, 0);
 			x += gl->su->w;
+			
+			AG_TextUnusedGlyph(gl);
 #endif /* HAVE_OPENGL */
 		}
 		if (x >= AGWIDGET(tbox)->w - 1)
@@ -676,7 +626,7 @@ AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
-		vsnprintf(text, stringb->size, fmt, args);
+		vsnprintf(text, stringb->data.size, fmt, args);
 		va_end(args);
 		tbox->pos = strlen(text);
 	} else {

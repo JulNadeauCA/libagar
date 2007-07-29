@@ -502,8 +502,6 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
 	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
 #endif
-	default:
-		break;
 	}
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
 	AG_WidgetBindingChanged(valueb);

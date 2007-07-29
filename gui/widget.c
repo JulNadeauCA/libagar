@@ -140,7 +140,6 @@ AG_WidgetDisable(void *p)
 	wid->flags |= AG_WIDGET_DISABLED;
 }
 
-
 int
 AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 {
@@ -157,9 +156,23 @@ AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 	b1->vtype = b2->vtype;
 	b1->mutex = b2->mutex;
 	b1->p1 = b2->p1;
-	b1->p2 = b2->p2;
-	b1->size = b2->size;
-	b1->bitmask = b2->bitmask;
+
+	switch (b1->type) {
+	case AG_WIDGET_PROP:
+		strlcpy(b1->data.prop, b2->data.prop, sizeof(b1->data.prop));
+		break;
+	case AG_WIDGET_STRING:
+		b1->data.size = b2->data.size;
+		break;
+	case AG_WIDGET_FLAG:
+	case AG_WIDGET_FLAG8:
+	case AG_WIDGET_FLAG16:
+	case AG_WIDGET_FLAG32:
+		b1->data.bitmask = b2->data.bitmask;
+		break;
+	default:
+		break;
+	}
 	AG_WidgetUnlockBinding(b2);
 	AG_WidgetUnlockBinding(b1);
 	return (0);
@@ -198,7 +211,10 @@ AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
 	return (b);
 }
 
-/* Translate property types to widget types. */
+/*
+ * Obtain the virtual type of the given binding. This translates WIDGET_PROP
+ * bindings to the equivalent widget binding type.
+ */
 static int
 GetVirtualBindingType(AG_WidgetBinding *binding)
 {
@@ -206,7 +222,9 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 
 	switch (binding->type) {
 	case AG_WIDGET_PROP:
-		if ((prop = AG_GetProp(binding->p1, (char *)binding->p2, -1,
+		dprintf("Translating property: %s:%s\n",
+		    AGOBJECT(binding->p1)->name, binding->data.prop);
+		if ((prop = AG_GetProp(binding->p1, binding->data.prop, -1,
 		    NULL)) == NULL) {
 			fatal("%s", AG_GetError());
 		}
@@ -257,16 +275,17 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *binding;
-	void *p1, *p2 = NULL;
-	size_t size = 0;
-	Uint32 bitmask = 0;
+	void *p1;
+	size_t size = 0;		/* -Wuninitialized */
+	Uint32 bitmask = 0;		/* -Wuninitialized */
+	char *prop = NULL;		/* -Wuninitialized */
 	va_list ap;
 
 	va_start(ap, type);
 	switch (type) {
 	case AG_WIDGET_PROP:
 		p1 = va_arg(ap, void *);
-		p2 = va_arg(ap, char *);
+		prop = va_arg(ap, char *);
 		break;
 	case AG_WIDGET_STRING:
 		p1 = va_arg(ap, char *);
@@ -296,31 +315,58 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 
 	AG_MutexLock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
-		if (strcmp(binding->name, name) == 0) {
-			binding->type = type;
-			binding->p1 = p1;
-			binding->p2 = p2;
-			binding->size = size;
-			binding->bitmask = bitmask;
-			binding->vtype = GetVirtualBindingType(binding);
-
-			AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
-			AG_MutexUnlock(&wid->bindings_lock);
-			return (binding);
+		if (strcmp(binding->name, name) != 0) {
+			continue;
 		}
+		binding->type = type;
+		binding->p1 = p1;
+		switch (type) {
+		case AG_WIDGET_PROP:
+			strlcpy(binding->data.prop, prop,
+			    sizeof(binding->data.prop));
+			break;
+		case AG_WIDGET_STRING:
+			binding->data.size = size;
+			break;
+		case AG_WIDGET_FLAG:
+		case AG_WIDGET_FLAG8:
+		case AG_WIDGET_FLAG16:
+		case AG_WIDGET_FLAG32:
+			binding->data.bitmask = bitmask;
+			break;
+		default:
+			break;
+		}
+		binding->vtype = GetVirtualBindingType(binding);
+		AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
+		AG_MutexUnlock(&wid->bindings_lock);
+		return (binding);
 	}
 
 	binding = Malloc(sizeof(AG_WidgetBinding), M_WIDGET);
 	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
-	binding->p2 = p2;
-	binding->size = size;
-	binding->bitmask = bitmask;
 	binding->mutex = NULL;
+	switch (type) {
+	case AG_WIDGET_PROP:
+		strlcpy(binding->data.prop, prop, sizeof(binding->data.prop));
+		break;
+	case AG_WIDGET_STRING:
+		binding->data.size = size;
+		break;
+	case AG_WIDGET_FLAG:
+	case AG_WIDGET_FLAG8:
+	case AG_WIDGET_FLAG16:
+	case AG_WIDGET_FLAG32:
+		binding->data.bitmask = bitmask;
+		break;
+	default:
+		break;
+	}
 	binding->vtype = GetVirtualBindingType(binding);
-	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
+	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 	AG_MutexUnlock(&wid->bindings_lock);
 	return (binding);
@@ -411,8 +457,8 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			*(Uint32 **)res = (Uint32 *)binding->p1;
 			break;
 		case AG_WIDGET_PROP:			/* Convert */
-			if ((prop = AG_GetProp(binding->p1,
-			    (char *)binding->p2, -1, NULL)) == NULL) {
+			if ((prop = AG_GetProp(binding->p1, binding->data.prop,
+			    -1, NULL)) == NULL) {
 				fatal("%s", AG_GetError());
 			}
 			switch (prop->type) {
@@ -459,13 +505,13 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 				*(void ***)res = (void **)&prop->data.p;
 				break;
 			default:
-				AG_SetError("Failed to translate property.");
+				AG_SetError("Failed to translate property");
 				binding = NULL;
 				goto out;
 			}
 			break;
 		default:
-			AG_SetError("Unknown type of widget binding.");
+			AG_SetError("Bad widget binding type");
 			binding = NULL;
 			goto out;
 		}
@@ -475,7 +521,7 @@ out:
 	}
 	AG_MutexUnlock(&wid->bindings_lock);
 
-	AG_SetError("No such widget binding: `%s'.", name);
+	AG_SetError("No such widget binding: %s", name);
 	return (NULL);
 }
 
@@ -859,7 +905,7 @@ AG_WidgetSetString(void *wid, const char *name, const char *ns)
 	if ((binding = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
 		fatal("%s", AG_GetError());
 	}
-	strlcpy(s, ns, binding->size);
+	strlcpy(s, ns, binding->data.size);
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -899,11 +945,12 @@ AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 {
 	if (bind->type == AG_WIDGET_PROP) {
 		AG_Object *pobj = bind->p1;
-		char *name = (char *)bind->p2;
 		AG_Prop *prop;
 
-		prop = AG_GetProp(pobj, name, -1, NULL);
-		AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
+		if ((prop = AG_GetProp(pobj, bind->data.prop, -1, NULL))
+		    != NULL) {
+			AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
+		}
 	}
 }
 
@@ -1241,6 +1288,77 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 	}
 }
 
+#ifdef HAVE_OPENGL
+/*
+ * OpenGL-only version of AG_WidgetBlitSurface() without explicit
+ * source or destination rectangle parameter.
+ */
+void
+AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
+{
+	AG_Widget *wid = pWidget;
+	GLuint glname;
+	GLfloat *texcoord;
+	GLboolean blend_sv;
+	GLint blend_sfactor, blend_dfactor;
+	GLfloat texenvmode;
+	SDL_Surface *su = wid->surfaces[name];
+	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+
+	glname = wid->textures[name];
+	texcoord = &wid->texcoords[name*4];
+	if (glname == 0) {
+		fatal("bad texture name: %d (widget name = %d)",
+		    glname, name);
+	}
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	if (alpha) {
+		glGetBooleanv(GL_BLEND, &blend_sv);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, glname);
+	glBegin(GL_TRIANGLE_STRIP);
+	{
+#if 0
+		glTexCoord2f(texcoord[0], texcoord[1]);
+		glVertex2f(0.0, 0.0);
+		glTexCoord2f(texcoord[2], texcoord[1]);
+		glVertex2f((GLfloat)w, 0.0);
+		glTexCoord2f(texcoord[0], texcoord[3]);
+		glVertex2f(0.0, (GLfloat)h);
+		glTexCoord2f(texcoord[2], texcoord[3]);
+		glVertex2f((GLfloat)w, (GLfloat)h);
+#endif		
+		glTexCoord2f(texcoord[0],	texcoord[1]);
+		glVertex2f(0.0,			0.0);
+		glTexCoord2f(texcoord[2],	texcoord[1]);
+		glVertex2f((GLfloat)w,		0.0);
+		glTexCoord2f(texcoord[0],	texcoord[3]);
+		glVertex2f(0.0,			(GLfloat)h);
+		glTexCoord2f(texcoord[2],	texcoord[3]);
+		glVertex2f((GLfloat)w,		(GLfloat)h);
+	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if (alpha) {
+		if (blend_sv) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+	}
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+}
+#endif /* HAVE_OPENGL */
+
 /* Clear the AG_WIDGET_FOCUSED bit from a widget and its descendents. */
 void
 AG_WidgetUnfocus(void *p)
@@ -1370,8 +1488,8 @@ AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+x) };
-		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+y) };
+		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+x-1) };
+		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+y-1) };
 		GLdouble eq2[4] = { -1, 0, 0, (wid->cx+x+w) };
 		GLdouble eq3[4] = { 0, -1, 0, (wid->cy+y+h) };
 
@@ -1698,6 +1816,8 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
 		    xrel, yrel, state);
+		if (wid->flags & AG_WIDGET_PRIO_MOTION)
+			return;
 	}
 	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetMouseMotion(win, cwid, x, y, xrel, yrel, state);

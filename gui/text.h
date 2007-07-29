@@ -29,6 +29,7 @@ typedef struct ag_glyph {
 	Uint32 color;			/* Glyph color */
 	Uint32 ch;			/* Unicode character */
 	Uint32 nrefs;			/* Reference count */
+	Uint32 lastRef;			/* Ticks since last reference */
 	SDL_Surface *su;		/* Rendered surface */
 #ifdef HAVE_OPENGL
 	Uint texture;			/* Rendered texture */
@@ -74,7 +75,8 @@ typedef struct ag_text_state {
 __BEGIN_DECLS
 extern AG_Font *agDefaultFont;
 extern int agTextFontHeight, agTextFontAscent, agTextFontDescent,
-	   agTextFontLineSkip, agTextTabWidth, agTextBlinkRate;
+	   agTextFontLineSkip, agTextTabWidth, agTextBlinkRate,
+	   agTextAntialiasing;
 
 int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(const char *);
@@ -116,6 +118,7 @@ void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	       FORMAT_ATTRIBUTE(printf, 3, 4)
 	       NONNULL_ATTRIBUTE(3);
+void AG_TextWarning(const char *, const char *, ...);
 
 #define AG_TextMsgFromError() \
 	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
@@ -137,8 +140,8 @@ void AG_TextPromptString(const char *, void (*)(AG_Event *),
 void AG_TextPromptDouble(const char *, const char *, double, double,
 			 void (*)(AG_Event *), const char *, ...);
 
-AG_Glyph *AG_TextRenderGlyph(Uint32);
-void	  AG_TextUnusedGlyph(AG_Glyph *);
+AG_Glyph	 *AG_TextRenderGlyph(Uint32);
+__inline__ void	  AG_TextUnusedGlyph(AG_Glyph *);
 __END_DECLS
 
 #include "close_code.h"
