@@ -66,7 +66,7 @@
 const AG_ObjectOps agConfigOps = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 9, 0 },
+	{ 9, 1 },
 	NULL,
 	NULL,
 	NULL,
@@ -82,16 +82,16 @@ int agMouseDblclickDelay = 250;			/* Mouse double-click delay */
 int agMouseSpinDelay = 250;			/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;			/* Spinbutton repeat interval */
 
+extern int agTextAntialiasing;
 extern int agTextComposition;
 extern int agTextBidi;
 extern int agTextTabWidth;
-extern int agWindowAnySize;
 extern int agIdleThresh;
 extern int agServerMode;
 extern int agScreenshotQuality;
 
 static void
-set_path(AG_Event *event)
+Set_SearchPath(AG_Event *event)
 {
 	char path[MAXPATHLEN];
 	AG_Textbox *tbox = AG_SELF();
@@ -103,7 +103,7 @@ set_path(AG_Event *event)
 }
 
 static void
-set_full_screen(AG_Event *event)
+Set_Fullscreen(AG_Event *event)
 {
 	int enable = AG_INT(1);
 	SDL_Event vexp;
@@ -120,31 +120,7 @@ set_full_screen(AG_Event *event)
 }
 
 static void
-set_opengl(AG_Event *event)
-{
-	int enable = AG_INT(1);
-
-	if (enable)
-		AG_TextMsg(AG_MSG_WARNING,
-		    _("Save the configuration and restart %s for OpenGL mode "
-		      "to take effect"),
-		    agProgName);
-}
-
-static void
-set_async_blits(AG_Event *event)
-{
-	int enable = AG_INT(1);
-
-	if (enable)
-		AG_TextMsg(AG_MSG_WARNING,
-		    _("Save the configuration and restart %s for async blits "
-		      "to take effect"),
-		    agProgName);
-}
-
-static void
-set_unitrans(AG_Event *event)
+Set_UnicodeKbd(AG_Event *event)
 {
 	int enable = AG_INT(1);
 
@@ -156,13 +132,24 @@ set_unitrans(AG_Event *event)
 }
 
 static void
-save_config(AG_Event *event)
+WarnRestart(AG_Event *event)
 {
-	if (AG_ObjectSave(agConfig) == -1)
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	char *key = AG_STRING(1);
 
-	AG_TextTmsg(AG_MSG_INFO, 750,
-	    _("Configuration settings saved successfully."));
+	AG_TextWarning(key,
+	    _("Note: Save the configuration and restart %s "
+	      "for this change to take effect"), agProgName);
+}
+
+static void
+SaveConfig(AG_Event *event)
+{
+	if (AG_ObjectSave(agConfig) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	} else {
+		AG_TextTmsg(AG_MSG_INFO, 750,
+		    _("Configuration settings saved successfully."));
+	}
 }
 
 void
@@ -237,7 +224,9 @@ AG_ConfigInit(AG_Config *cfg)
 int
 AG_ConfigLoad(void *p, AG_Netbuf *buf)
 {
-	if (AG_ReadVersion(buf, agConfigOps.type, &agConfigOps.ver, NULL) != 0)
+	AG_Version ver;
+
+	if (AG_ReadVersion(buf, agConfigOps.type, &agConfigOps.ver, &ver) != 0)
 		return (-1);
 
 #ifdef DEBUG
@@ -247,7 +236,9 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 #endif
 	agServerMode = AG_ReadUint8(buf);
 	agIdleThresh = (int)AG_ReadUint8(buf);
-	agWindowAnySize = AG_ReadUint8(buf);
+	if (ver.minor < 1) {
+		AG_ReadUint8(buf); /* agWindowAnySize */
+	}
 	agTextComposition = AG_ReadUint8(buf);
 	agTextBidi = AG_ReadUint8(buf);
 	agKbdUnicode = AG_ReadUint8(buf);
@@ -258,7 +249,10 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	agMouseSpinIval = (int)AG_ReadUint16(buf);
 	agScreenshotQuality = (int)AG_ReadUint8(buf);
 	agTextTabWidth = (int)AG_ReadUint16(buf);
-	
+	if (ver.minor >= 1) {
+		agTextAntialiasing = AG_ReadUint8(buf);
+	}
+
 	agRcsMode = (int)AG_ReadUint8(buf);
 	AG_CopyString(agRcsHostname, buf, sizeof(agRcsHostname));
 	agRcsPort = (Uint)AG_ReadUint16(buf);
@@ -279,7 +273,6 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 #endif
 	AG_WriteUint8(buf, agServerMode);
 	AG_WriteUint8(buf, (Uint8)agIdleThresh);
-	AG_WriteUint8(buf, (Uint8)agWindowAnySize);
 	AG_WriteUint8(buf, (Uint8)agTextComposition);
 	AG_WriteUint8(buf, (Uint8)agTextBidi);
 	AG_WriteUint8(buf, (Uint8)agKbdUnicode);
@@ -290,6 +283,7 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 	AG_WriteUint16(buf, (Uint16)agMouseSpinIval);
 	AG_WriteUint8(buf, (Uint8)agScreenshotQuality);
 	AG_WriteUint16(buf, (Uint16)agTextTabWidth);
+	AG_WriteUint8(buf, (Uint8)agTextAntialiasing);
 
 	AG_WriteUint8(buf, (Uint8)agRcsMode);
 	AG_WriteString(buf, agRcsHostname);
@@ -310,7 +304,7 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 }
 
 static void
-SelectedColor(AG_Event *event)
+BindSelectedColor(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_HSVPal *hsv = AG_PTR(1);
@@ -321,7 +315,7 @@ SelectedColor(AG_Event *event)
 }
 
 static void
-UpdatedColor(AG_Event *event)
+Set_Color(AG_Event *event)
 {
 	AG_HSVPal *hsv = AG_SELF();
 	AG_Tlist *tl = AG_PTR(1);
@@ -436,22 +430,24 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			cbox = AG_CheckboxNew(tab, 0, _("Full screen"));
 			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 			    "view.full-screen");
-			AG_SetEvent(cbox, "checkbox-changed", set_full_screen,
+			AG_SetEvent(cbox, "checkbox-changed", Set_Fullscreen,
 			    NULL);
 		}
 
 		cbox = AG_CheckboxNew(tab, 0, _("Asynchronous blits"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 		    "view.async-blits");
-		AG_SetEvent(cbox, "checkbox-changed", set_async_blits, NULL);
+		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
+		    "config.view.async-blits");
 
 		if (flags & AG_CONFIG_GL) {
 			cbox = AG_CheckboxNew(tab, 0, _("OpenGL mode"));
 			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
 			    "view.opengl");
-			AG_SetEvent(cbox, "checkbox-changed", set_opengl, NULL);
+			AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
+			    "config.view.opengl");
 		}
-	
+#if 0
 		if (flags & AG_CONFIG_RESOLUTION) {
 			msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
 			AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16,
@@ -460,7 +456,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			    &agView->h);
 			AG_MSpinbuttonSetRange(msb, 320, 4096);
 		}
-		
+#endif
 		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
 		    &agScreenshotQuality);
@@ -471,44 +467,45 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agIdleThresh);
 		AG_SpinbuttonSetMin(sbu, 0);
 		AG_SpinbuttonSetMax(sbu, 255);
-		
-		cbox = AG_CheckboxNew(tab, 0, _("Unrestricted window resize"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agWindowAnySize);
 	}
 
-	tab = AG_NotebookAddTab(nb, _("Input devices"), AG_BOX_VERT);
+	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agKbdUnicode);
-		AG_SetEvent(cbox, "checkbox-changed", set_unitrans, NULL);
+		cbox = AG_CheckboxNew(tab, 0, _("Antialiased text rendering"));
+		AG_WidgetBindInt(cbox, "state", &agTextAntialiasing);
+		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
+		    "config.text.antialiasing");
 
-		cbox = AG_CheckboxNew(tab, 0, _("Input composition"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextComposition);
+		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
+		AG_WidgetBindInt(cbox, "state", &agKbdUnicode);
+		AG_SetEvent(cbox, "checkbox-changed", Set_UnicodeKbd, NULL);
+
+		cbox = AG_CheckboxNew(tab, 0, _("Built-in key composition"));
+		AG_WidgetBindInt(cbox, "state", &agTextComposition);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agTextBidi);
+		AG_WidgetBindInt(cbox, "state", &agTextBidi);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
-		    &agMouseDblclickDelay);
+		AG_WidgetBindInt(sbu, "value", &agMouseDblclickDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin delay (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinDelay);
+		AG_WidgetBindInt(sbu, "value", &agMouseSpinDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 
 		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin interval (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agMouseSpinIval);
+		AG_WidgetBindInt(sbu, "value", &agMouseSpinIval);
 		AG_SpinbuttonSetMin(sbu, 1);
 
 		sbu = AG_SpinbuttonNew(tab, 0,
 		    _("Keyboard repeat delay (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdDelay);
+		AG_WidgetBindInt(sbu, "value", &agKbdDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
 		sbu = AG_SpinbuttonNew(tab, 0,
 		    _("Keyboard repeat interval (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agKbdRepeat);
+		AG_WidgetBindInt(sbu, "value", &agKbdRepeat);
 		AG_SpinbuttonSetMin(sbu, 1);
 	}
 
@@ -521,26 +518,27 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		    _("Data save dir: "));
 		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
+		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
 		    "save-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data load path: "));
 		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
+		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
 		    "load-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
 		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", set_path, "%s",
+		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
 		    "font-path");
 		
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
 		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", set_path, "%s", "den-path");
+		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
+		    "den-path");
 	}
 	
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
@@ -550,6 +548,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_HSVPal *hsv;
 		AG_Tlist *tl;
 		AG_TlistItem *it;
+		AG_Label *lbl;
 		int i;
 	
 		pane = AG_HPaneNew(tab, AG_HPANE_EXPAND);
@@ -572,11 +571,18 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			hsv = AG_HSVPalNew(div->box2, AG_HSVPAL_EXPAND);
 			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
 			    &agVideoFmt);
-			AG_SetEvent(hsv, "h-changed", UpdatedColor, "%p", tl);
-			AG_SetEvent(hsv, "sv-changed", UpdatedColor, "%p", tl);
-			AG_SetEvent(tl, "tlist-selected", SelectedColor, "%p",
-			    hsv);
+			AG_SetEvent(hsv, "h-changed", Set_Color, "%p", tl);
+			AG_SetEvent(hsv, "sv-changed", Set_Color, "%p", tl);
+			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,
+			    "%p", hsv);
 		}
+		
+		lbl = AG_LabelNewStatic(tab, 0,
+		    _("Warning: Some changes may not take effect until %s "
+		      "is restarted."), agProgName);
+		AG_LabelSetPaddingLeft(lbl, 10);
+		AG_LabelSetPaddingRight(lbl, 10);
+		
 		hb = AG_HBoxNew(tab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			AG_ButtonNewFn(hb, 0, _("Load scheme"),
@@ -627,7 +633,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 #ifdef DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, 0, _("Debugging"));
+		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Debug server mode"));
@@ -638,7 +644,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Close"), AGWINHIDE(win));
-		AG_ButtonNewFn(hb, 0, _("Save"), save_config, NULL);
+		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);
 	}
 	agConfig->window = win;
 }
