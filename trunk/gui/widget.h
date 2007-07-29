@@ -64,14 +64,17 @@ typedef struct ag_flag_descr {
 } AG_FlagDescr;
 
 typedef struct ag_widget_binding {
-	char name[AG_WIDGET_BINDING_NAME_MAX];
-	int type;
-	int vtype;
-	AG_Mutex *mutex;	
+	char name[AG_WIDGET_BINDING_NAME_MAX];	/* Binding identifier */
+	int type;				/* Real binding type */
+	int vtype;				/* Virtual binding type
+						   (translated PROP types) */
+	AG_Mutex *mutex;			/* Mutex to acquire or NULL */
 	void *p1;				/* Pointer to variable */
-	void *p2;				/* For property bindings */
-	size_t size;				/* Size for string bindings */
-	Uint32 bitmask;				/* Bitmask for flag bindings */
+	union {
+		char prop[AG_PROP_KEY_MAX];	/* Property name (for PROP) */
+		size_t size;			/* Size (for STRING) */
+		Uint32 bitmask;			/* Bitmask (for FLAG) */
+	} data;
 	SLIST_ENTRY(ag_widget_binding) bindings;
 } AG_WidgetBinding;
 
@@ -94,6 +97,9 @@ typedef struct ag_widget {
 #define AG_WIDGET_DISABLED		0x0400 /* Don't respond to input */
 #define AG_WIDGET_STATIC		0x0800 /* Use the redraw flag method */
 #define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Focus parent win on focus */
+#define AG_WIDGET_PRIO_MOTION		0x2000 /* Block mousemotion events to
+						  any other widget, regardless
+						  of focus */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int redraw;			/* Redraw flag (for WIDGET_STATIC) */
@@ -172,19 +178,20 @@ int		 AG_WidgetMapSurfaceNODUP(void *, SDL_Surface *);
 __inline__ void	 AG_WidgetReplaceSurface(void *, int, SDL_Surface *);
 __inline__ void	 AG_WidgetReplaceSurfaceNODUP(void *, int, SDL_Surface *);
 __inline__ void	 AG_WidgetUpdateSurface(void *, int);
+#define		 AG_WidgetUnmapSurface(w, n) \
+		 AG_WidgetReplaceSurface((w),(n),NULL)
 
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
+#define  AG_WidgetBlitSurface(p,n,x,y) \
+	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
+void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
 void	 AG_WidgetPushClipRect(void *, int, int, Uint, Uint);
 void	 AG_WidgetPopClipRect(void *);
 int	 AG_WidgetIsOcculted(AG_Widget *);
 
 __inline__ void	 AG_SetCursor(int);
 __inline__ void	 AG_UnsetCursor(void);
-
-#define AG_WidgetUnmapSurface(w, n) AG_WidgetReplaceSurface((w),(n),NULL)
-#define	AG_WidgetBlitSurface(p,n,x,y) \
-    AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 
 #define		AG_WidgetPutPixel AG_WidgetPutPixel32
 __inline__ void AG_WidgetPutPixel32(void *, int, int, Uint32);

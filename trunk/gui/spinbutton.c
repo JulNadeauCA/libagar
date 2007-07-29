@@ -293,8 +293,6 @@ AG_SpinbuttonDraw(void *p)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(sbu->input, "%d", *(Sint32 *)value);
 		break;
-	default:
-		break;
 	}
 	AG_WidgetUnlockBinding(valueb);
 }
@@ -350,8 +348,6 @@ AG_SpinbuttonAddValue(AG_Spinbutton *sbu, int inc)
 		*(Sint32 *)value = *(Sint32 *)value+inc < *min ? *min :
 		                   *(Sint32 *)value+inc > *max ? *max :
 			  	   *(Sint32 *)value+inc;
-		break;
-	default:
 		break;
 	}
 
@@ -448,8 +444,6 @@ AG_SpinbuttonSetValue(AG_Spinbutton *sbu, ...)
 			                   i > (Sint32)*max ? (Sint32)*max :
 					   i;
 		}
-		break;
-	default:
 		break;
 	}
 	va_end(ap);

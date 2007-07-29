@@ -295,13 +295,13 @@ GetState(AG_WidgetBinding *binding, void *p)
 	case AG_WIDGET_UINT32:
 		return (int)(*(Uint32 *)p);
 	case AG_WIDGET_FLAG:
-		return (*(int *)p & (int)binding->bitmask);
+		return (*(int *)p & (int)binding->data.bitmask);
 	case AG_WIDGET_FLAG8:
-		return (int)(*(Uint8 *)p & (Uint8)binding->bitmask);
+		return (int)(*(Uint8 *)p & (Uint8)binding->data.bitmask);
 	case AG_WIDGET_FLAG16:
-		return (int)(*(Uint16 *)p & (Uint16)binding->bitmask);
+		return (int)(*(Uint16 *)p & (Uint16)binding->data.bitmask);
 	case AG_WIDGET_FLAG32:
-		return (int)(*(Uint32 *)p & (Uint32)binding->bitmask);
+		return (int)(*(Uint32 *)p & (Uint32)binding->data.bitmask);
 	}
 	return (-1);
 }
@@ -326,40 +326,40 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 	case AG_WIDGET_FLAG:
 		{
 			int *state = (int *)p;
-			if (*state & (int)binding->bitmask) {
-				*state &= ~(int)binding->bitmask;
+			if (*state & (int)binding->data.bitmask) {
+				*state &= ~(int)binding->data.bitmask;
 			} else {
-				*state |= (int)binding->bitmask;
+				*state |= (int)binding->data.bitmask;
 			}
 		}
 		break;
 	case AG_WIDGET_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
-			if (*state & (Uint8)binding->bitmask) {
-				*state &= ~(Uint8)binding->bitmask;
+			if (*state & (Uint8)binding->data.bitmask) {
+				*state &= ~(Uint8)binding->data.bitmask;
 			} else {
-				*state |= (Uint8)binding->bitmask;
+				*state |= (Uint8)binding->data.bitmask;
 			}
 		}
 		break;
 	case AG_WIDGET_FLAG16:
 		{
 			Uint16 *state = (Uint16 *)p;
-			if (*state & (Uint16)binding->bitmask) {
-				*state &= ~(Uint16)binding->bitmask;
+			if (*state & (Uint16)binding->data.bitmask) {
+				*state &= ~(Uint16)binding->data.bitmask;
 			} else {
-				*state |= (Uint16)binding->bitmask;
+				*state |= (Uint16)binding->data.bitmask;
 			}
 		}
 		break;
 	case AG_WIDGET_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
-			if (*state & (Uint32)binding->bitmask) {
-				*state &= ~(Uint32)binding->bitmask;
+			if (*state & (Uint32)binding->data.bitmask) {
+				*state &= ~(Uint32)binding->data.bitmask;
 			} else {
-				*state |= (Uint32)binding->bitmask;
+				*state |= (Uint32)binding->data.bitmask;
 			}
 		}
 		break;

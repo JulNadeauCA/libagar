@@ -23,6 +23,44 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002  Sam Lantinga
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the author, nor the names of its contributors
+ *    may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Efficient rendering (and sizing) of UCS-4 or UTF-8 text using FreeType
+ * (if available) or an internal bitmap font engine. The interface is a
+ * state machine featuring a stack of rendering attributes.
+ *
+ * TextSizeFT(), TextRenderFT(), TextRenderFT_Blended() are based on code
+ * from SDL_ttf (http://libsdl.org/projects/SDL_ttf/), placed under a BSD
+ * license with permission from Sam Lantinga.
+ */
+
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
 #include <config/utf8.h>
@@ -32,7 +70,7 @@
 #include <core/config.h>
 
 #ifdef HAVE_FREETYPE
-#include <core/loaders/ttf.h>
+#include "ttf.h"
 #endif
 #include <core/loaders/xcf.h>
 
@@ -46,6 +84,7 @@
 #include "fspinbutton.h"
 #include "keycodes.h"
 #include "unicode.h"
+#include "checkbox.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -72,13 +111,17 @@ int agTextFontLineSkip = 0;		/* Default font line skip (px) */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */
+int agTextAntialiasing = 1;		/* Use font antialiasing */
 int agFreetype = 0;			/* Use Freetype font engine */
+int agGlyphGC = 0;			/* Enable glyph garbage collector */
 
 static AG_TextState states[AG_TEXT_STATES_MAX], *state;
 static Uint curState = 0;
 
-#define GLYPH_NBUCKETS 1024
-#define SYMBOLS				/* Allow $(x) type symbols */
+#define GLYPH_NBUCKETS	  1024	/* Buckets for glyph cache table */
+#define GLYPH_GC_INTERVAL 1000	/* Garbage collection interval (ms) */
+#define SYMBOLS			/* Allow $(x) type symbols */
+#define GLYPH_GC
 
 static const char *agTextMsgTitles[] = {
 	N_("Error"),
@@ -94,7 +137,10 @@ static struct {
 	SLIST_HEAD(, ag_glyph) glyphs;
 } agGlyphCache[GLYPH_NBUCKETS+1];
 
-static AG_Timeout text_timeout;		/* Timer for AG_TextTmsg() */
+static AG_Timeout textMsgTo = AG_TIMEOUT_INITIALIZER; /* For AG_TextTmsg() */
+#ifdef GLYPH_GC
+static AG_Timeout glyphGcTo = AG_TIMEOUT_INITIALIZER; /* For glyph GC */
+#endif
 
 /* Load an individual glyph from a bitmap font file. */
 static void
@@ -277,6 +323,46 @@ InitTextState(void)
 	state->justify = AG_TEXT_LEFT;
 }
 
+static void
+FreeGlyph(AG_Glyph *gl)
+{
+	SDL_FreeSurface(gl->su);
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		AG_LockGL();
+		glDeleteTextures(1, (GLuint *)&gl->texture);
+		AG_UnlockGL();
+	}
+#endif
+	Free(gl, M_TEXT);
+}
+
+#ifdef GLYPH_GC
+
+/* Perform garbage collection of unused glyphs */
+static Uint32
+GlyphGC(void *obj, Uint32 ival, void *arg)
+{
+	AG_Glyph *gl;
+	Uint32 t = SDL_GetTicks();
+	int i;
+
+	for (i = 0; i < GLYPH_NBUCKETS; i++) {
+		SLIST_FOREACH(gl, &agGlyphCache[i].glyphs, glyphs) {
+			if (gl->nrefs > 0 ||
+			    (t - gl->lastRef) < GLYPH_GC_INTERVAL) {
+				continue;
+			}
+			SLIST_REMOVE(&agGlyphCache[i].glyphs, gl, ag_glyph,
+			             glyphs);
+			FreeGlyph(gl);
+		}
+	}
+	return (GLYPH_GC_INTERVAL);
+}
+
+#endif /* GLYPH_GC */
+
 /* Initialize the font engine and configure the default font. */
 int
 AG_TextInit(void)
@@ -321,50 +407,37 @@ AG_TextInit(void)
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
-	return (0);
-}
-
-static void
-FreeGlyph(AG_Glyph *gl)
-{
-	SDL_FreeSurface(gl->su);
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_LockGL();
-		glDeleteTextures(1, (GLuint *)&gl->texture);
-		AG_UnlockGL();
-	}
+#ifdef GLYPH_GC
+	/* Perform glyph garbage collection periodically. */
+	AG_SetTimeout(&glyphGcTo, GlyphGC, NULL, 0);
+	agGlyphGC = 0;
 #endif
-	Free(gl, M_TEXT);
+	return (0);
 }
 
 void
 AG_TextDestroy(void)
 {
 	AG_Font *font, *nextfont;
-#ifdef DEBUG
-	int maxbucketsz = 0;
-#endif
 	int i;
-	
+
+#ifdef GLYPH_GC
+	AG_LockTimeouts(NULL);
+	if (AG_TimeoutIsScheduled(NULL, &glyphGcTo)) {
+		AG_DelTimeout(NULL, &glyphGcTo);
+	}
+	AG_UnlockTimeouts(NULL);
+#endif
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		AG_Glyph *gl, *ngl;
-		int bucketsz = 0;
 
 		for (gl = SLIST_FIRST(&agGlyphCache[i].glyphs);
 		     gl != SLIST_END(&agGlyphCache[i].glyphs);
 		     gl = ngl) {
 			ngl = SLIST_NEXT(gl, glyphs);
 			FreeGlyph(gl);
-#ifdef DEBUG
-			bucketsz++;
-#endif
 		}
 		SLIST_INIT(&agGlyphCache[i].glyphs);
-#ifdef DEBUG
-		if (bucketsz > maxbucketsz)
-			maxbucketsz = bucketsz;
-#endif
 	}
 	
 	for (font = SLIST_FIRST(&fonts);
@@ -385,19 +458,21 @@ AG_TextDestroy(void)
 }
 
 static __inline__ Uint
-hash_glyph(Uint32 ch)
+HashGlyph(Uint32 ch)
 {
 	return (ch % GLYPH_NBUCKETS);
 }
 
-/* Lookup/insert a glyph in the glyph cache. */
+/*
+ * Lookup/insert a glyph in the glyph cache.
+ * Must be called from GUI rendering context.
+ */
 AG_Glyph *
 AG_TextRenderGlyph(Uint32 ch)
 {
 	AG_Glyph *gl;
-	Uint h;
+	Uint h = HashGlyph(ch);
 
-	h = hash_glyph(ch);
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
 		if (state->font->size == gl->fontsize &&
 		    state->color == gl->color &&
@@ -418,29 +493,27 @@ AG_TextRenderGlyph(Uint32 ch)
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUCS4(ucs);
 #ifdef HAVE_OPENGL
-		if (agView->opengl) {
-			AG_LockGL();
+		if (agView->opengl)
 			gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
-			AG_UnlockGL();
-		}
 #endif
 		gl->nrefs = 1;
 		SLIST_INSERT_HEAD(&agGlyphCache[h].glyphs, gl, glyphs);
 	} else {
 		gl->nrefs++;
 	}
+	gl->lastRef = SDL_GetTicks();
 	return (gl);
 }
 
 void
 AG_TextUnusedGlyph(AG_Glyph *gl)
 {
-	if (--gl->nrefs == 0) {
-		Uint h;
-
-		h = hash_glyph(gl->ch);
-		SLIST_REMOVE(&agGlyphCache[h].glyphs, gl, ag_glyph, glyphs);
-		FreeGlyph(gl);
+	if (gl->nrefs > 0) {
+		gl->nrefs--;
+	}
+	if (agGlyphGC == 0) {
+		agGlyphGC = 1;
+		AG_AddTimeout(NULL, &glyphGcTo, GLYPH_GC_INTERVAL);
 	}
 }
 
@@ -711,6 +784,35 @@ TextSizeFT(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 	if (h != NULL) { *h = (maxy - miny); }
 }
 
+#ifdef SYMBOLS
+static int
+TextRenderSymbol(Uint ch, SDL_Surface *su, int x, int y)
+{
+	SDL_Surface *sym;
+	int row;
+
+	if ((sym = GetSymbolSurface(ch)) == NULL) {
+		return (0);
+	}
+	for (row = 0; row < sym->h; row++) {
+		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*su->pitch +
+		                                   (x+2);
+		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
+		int col;
+
+		for (col = 0; col < sym->w; col++) {
+			if (AG_GET_PIXEL(sym,src) !=
+			    sym->format->colorkey) {
+				*dst = 1;
+			}
+			src += sym->format->BytesPerPixel;
+			dst++;
+		}
+	}
+	return (sym->w + 4);
+}
+#endif
+
 /* Render UCS-4 text to a new surface using FreeType. */
 static SDL_Surface *
 TextRenderFT(const Uint32 *ucs)
@@ -729,17 +831,9 @@ TextRenderFT(const Uint32 *ucs)
 	Uint *wLines = NULL;
 
 	TextSizeFT(ucs, &w, &h, &wLines, &nLines);
-#if 1
-	if (nLines > 1) {
-		printf("%d lines (%d x %d)\n", nLines, w, h);
-		for (a = 0; a < nLines; a++) {
-			printf("line%d: %d\n", a, wLines[a]);
-		}
-	}
-#endif
-	if (w <= 0 || h <= 0) {
+	if (w <= 0 || h <= 0)
 		goto empty;
-	}
+
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
 	if (su == NULL) {
 		dprintf("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
@@ -774,37 +868,15 @@ TextRenderFT(const Uint32 *ucs)
 			continue;
 		}
 #ifdef SYMBOLS
-		if (agTextSymbols &&
-		    ch[0] == '$' &&
-		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {	
-			SDL_Surface *sym;
-
-			if ((sym = GetSymbolSurface(ch[2])) == NULL)
-				continue;
-
-			for (row = 0; row < sym->h; row++) {
-				dst = (Uint8 *)su->pixels +
-				    (yStart+row)*su->pitch +
-				    (xStart+2);
-				src = (Uint8 *)sym->pixels +
-				    row*sym->pitch;
-
-				for (col = 0; col < sym->w; col++) {
-					if (AG_GET_PIXEL(sym,src) !=
-					    sym->format->colorkey) {
-						*dst = 1;
-					}
-					src += sym->format->BytesPerPixel;
-					dst++;
-				}
-			}
-			xStart += sym->w + 4;
+		if (ch[0] == '$' && agTextSymbols &&
+		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
+			xStart += TextRenderSymbol(ch[2], su, xStart, yStart);
 			ch += 3;
 			continue;
 		}
-#endif /* SYMBOLS */
-		if (AG_TTFFindGlyph(ftFont, *ch,
-		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+#endif
+		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
+		                                 TTF_CACHED_BITMAP) != 0) {
 			dprintf("TTFFindGlyph: %s\n", AG_GetError());
 		    	continue;
 		}
@@ -853,6 +925,123 @@ empty:
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 
+static SDL_Surface *
+TextRenderFT_Blended(const Uint32 *ucs)
+{
+	AG_Font *font = state->font;
+	AG_TTFFont *ftFont = font->ttf;
+	AG_TTFGlyph *glyph;
+	const Uint32 *ch;
+	int xStart;
+	int w, h, line;
+	SDL_Surface *su;
+	Uint32 pixel;
+	Uint8 *src;
+	Uint32 *dst, *dstEnd;
+	int row, col;
+	FT_Error error;
+	FT_UInt prev_index = 0;
+	Uint nLines = 0;
+	Uint *wLines = NULL;
+	Uint8 r, g, b;
+	
+	TextSizeFT(ucs, &w, &h, &wLines, &nLines);
+	if (w <= 0 || h <= 0)
+		goto empty;
+
+	su = SDL_AllocSurface(SDL_SWSURFACE, w, h, 32,
+	                      0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	if (su == NULL) {
+		dprintf("TextRenderFT_Blended: CreateRGBSurface: %s\n",
+		    SDL_GetError());
+		goto empty;
+	}
+
+	/* For bounds checking */
+	dstEnd = (Uint32 *)su->pixels + su->pitch/4 * su->h;
+
+	/* Load and render each character */
+	xStart = 0;
+	SDL_GetRGB(state->color, agSurfaceFmt, &r, &g, &b);
+	pixel = (r << 16) |
+	        (g <<  8) |
+		 b;
+	SDL_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
+
+	for (ch = &ucs[0]; *ch != '\0'; ch++) {
+		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
+		                                     TTF_CACHED_PIXMAP);
+		if( error ) {
+			SDL_FreeSurface(su);
+			return NULL;
+		}
+		glyph = ftFont->current;
+		/*
+		 * Ensure the width of the pixmap is correct. On some cases,
+		 * freetype may report a larger pixmap than possible.
+		 */
+		w = glyph->pixmap.width;
+		if (w > glyph->maxx - glyph->minx) {
+			w = glyph->maxx - glyph->minx;
+		}
+		if (FT_HAS_KERNING(ftFont->face) &&
+		    prev_index &&
+		    glyph->index) {
+			FT_Vector delta; 
+
+			FT_Get_Kerning(ftFont->face, prev_index, glyph->index,
+			               ft_kerning_default, &delta); 
+			xStart += delta.x >> 6;
+		}
+		
+		/* Prevent texture wrapping with first glyph. */
+		if ((ch == &ucs[0]) && (glyph->minx < 0))
+			xStart -= glyph->minx;
+
+		for (row = 0; row < glyph->pixmap.rows; row++) {
+			if (row+glyph->yoffset < 0 ||
+			    row+glyph->yoffset >= su->h) {
+				continue;
+			}
+			dst = (Uint32 *)su->pixels +
+			      (row+glyph->yoffset) * su->pitch/4 +
+			      xStart + glyph->minx;
+
+			/* Adjust src for pixmaps to account for pitch. */
+			src = (Uint8 *) (glyph->pixmap.buffer +
+			                 glyph->pixmap.pitch*row);
+			for (col = w;
+			     col > 0 && dst < dstEnd;
+			     col--) {
+				Uint32 alpha = *src++;
+				*dst++ |= pixel | (alpha << 24);
+			}
+		}
+		xStart += glyph->advance;
+		if (ftFont->style & TTF_STYLE_BOLD) {
+			xStart += ftFont->glyph_overhang;
+		}
+		prev_index = glyph->index;
+	}
+	if (ftFont->style & TTF_STYLE_UNDERLINE) {
+		row = ftFont->ascent - ftFont->underline_offset - 1;
+		if ( row >= su->h) {
+			row = (su->h-1) - ftFont->underline_height;
+		}
+		dst = (Uint32 *)su->pixels + row * su->pitch/4;
+		pixel |= 0xFF000000;  /* Amask */
+		for (row = ftFont->underline_height; row > 0; row--) {
+			for (col = 0; col < su->w; col++) {
+				dst[col] = pixel;
+			}
+			dst += su->pitch/4;
+		}
+	}
+	Free(wLines, M_TEXT);
+	return (su);
+empty:
+	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
+}
 #endif /* HAVE_FREETYPE */
 
 static __inline__ SDL_Surface *
@@ -954,7 +1143,11 @@ AG_TextRenderUCS4(const Uint32 *text)
 	switch (state->font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		return TextRenderFT(text);
+		if (agTextAntialiasing) {
+			return TextRenderFT_Blended(text);
+		} else {
+			return TextRenderFT(text);
+		}
 #endif
 	case AG_FONT_BITMAP:
 		return TextRenderBitmap(text);
@@ -1035,6 +1228,48 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 	free(ucs4);
 }
 
+/*
+ * Parse a command-line font specification and set the default font.
+ * The format is <face>,<size>,<flags>. Acceptable flags include 'b'
+ * (bold), 'i' (italic) and 'U' (uppercase).
+ */
+void
+AG_TextParseFontSpec(const char *fontspec)
+{
+	char buf[128];
+	char *fs, *s, *c;
+
+	strlcpy(buf, fontspec, sizeof(buf));
+	fs = &buf[0];
+
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
+	    s[0] != '\0') {
+		AG_SetString(agConfig, "font.face", s);
+		dprintf("set: %s\n", AG_String(agConfig, "font.face"));
+	}
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
+	    s[0] != '\0') {
+		AG_SetInt(agConfig, "font.size", atoi(s));
+	}
+	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
+	    s[0] != '\0') {
+		Uint flags = 0;
+
+		for (c = &s[0]; *c != '\0'; c++) {
+			switch (*c) {
+			case 'b': flags |= AG_FONT_BOLD;	break;
+			case 'i': flags |= AG_FONT_ITALIC;	break;
+			case 'U': flags |= AG_FONT_UPPERCASE;	break;
+			}
+		}
+		AG_SetUint(agConfig, "font.flags", flags);
+	}
+}
+
+/*
+ * Canned dialogs.
+ */
+
 /* Display a message. */
 void
 AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
@@ -1086,14 +1321,58 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	AG_WindowShow(win);
 
 	AG_LockTimeouts(NULL);
-	if (AG_TimeoutIsScheduled(NULL, &text_timeout)) {
-		AG_ViewDetach((AG_Window *)text_timeout.arg);
-		AG_DelTimeout(NULL, &text_timeout);
+	if (AG_TimeoutIsScheduled(NULL, &textMsgTo)) {
+		AG_ViewDetach((AG_Window *)textMsgTo.arg);
+		AG_DelTimeout(NULL, &textMsgTo);
 	}
 	AG_UnlockTimeouts(NULL);
 
-	AG_SetTimeout(&text_timeout, TextTmsgExpire, win, AG_TIMEOUT_LOADABLE);
-	AG_AddTimeout(NULL, &text_timeout, expire);
+	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
+	AG_AddTimeout(NULL, &textMsgTo, expire);
+}
+
+/*
+ * Display a warning message with a "Don't tell me again" option.
+ * The user preference is preserved in a persistent table.
+ */
+void
+AG_TextWarning(const char *key, const char *format, ...)
+{
+	char propKey[AG_PROP_KEY_MAX];
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
+	AG_Checkbox *cb;
+	va_list args;
+	int val;
+	
+	strlcpy(propKey, "warn.", sizeof(propKey));
+	strlcat(propKey, key, sizeof(propKey));
+	
+	if (AG_GetProp(agConfig, propKey, AG_PROP_BOOL, &val) != NULL &&
+	    val == 1)
+		return;
+
+	va_start(args, format);
+	vsnprintf(msg, sizeof(msg), format, args);
+	va_end(args);
+
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_WARNING]));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
+
+	vb = AG_VBoxNew(win, 0);
+	AG_LabelNewStaticString(vb, 0, msg);
+
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+
+	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+	AG_SetBool(agConfig, propKey, 0);
+	AG_WidgetBindProp(cb, "state", agConfig, propKey);
+
+	AG_WindowShow(win);
 }
 
 /* Prompt the user with a choice of options. */
@@ -1239,43 +1518,5 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	}
 
 	AG_WindowShow(win);
-}
-
-/*
- * Parse a command-line font specification and set the default font.
- * The format is <face>,<size>,<flags>. Acceptable flags include 'b'
- * (bold), 'i' (italic) and 'U' (uppercase).
- */
-void
-AG_TextParseFontSpec(const char *fontspec)
-{
-	char buf[128];
-	char *fs, *s, *c;
-
-	strlcpy(buf, fontspec, sizeof(buf));
-	fs = &buf[0];
-
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
-		AG_SetString(agConfig, "font.face", s);
-		dprintf("set: %s\n", AG_String(agConfig, "font.face"));
-	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
-		AG_SetInt(agConfig, "font.size", atoi(s));
-	}
-	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
-	    s[0] != '\0') {
-		Uint flags = 0;
-
-		for (c = &s[0]; *c != '\0'; c++) {
-			switch (*c) {
-			case 'b': flags |= AG_FONT_BOLD;	break;
-			case 'i': flags |= AG_FONT_ITALIC;	break;
-			case 'U': flags |= AG_FONT_UPPERCASE;	break;
-			}
-		}
-		AG_SetUint(agConfig, "font.flags", flags);
-	}
 }
 

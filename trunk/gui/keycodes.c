@@ -261,7 +261,7 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	
 	/* Ensure the new character(s) fit inside the buffer. */
 	/* XXX use utf8 size for space efficiency */
-	if (len+nchars >= stringb->size/sizeof(Uint32)) {
+	if (len+nchars >= stringb->data.size/sizeof(Uint32)) {
 		dprintf("character does not fit into buffer\n");
 		goto skip;
 	}
@@ -306,11 +306,12 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 out:
 #if 0
 	dprintf("NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
-	    (int)stringb->size);
+	    (int)stringb->data.size);
 #endif
 	ucs4[len+nchars] = '\0';
 	tbox->pos += nchars;
-	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4, stringb->size);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4,
+	    stringb->data.size);
 skip:
 	AG_WidgetBindingChanged(stringb);
 	AG_WidgetUnlockBinding(stringb);
@@ -370,7 +371,8 @@ DeleteUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 			tbox->offs = 0;
 	}
 out:
-	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4, stringb->size);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4,
+	    stringb->data.size);
 skip:
 	AG_WidgetBindingChanged(stringb);
 	AG_WidgetUnlockBinding(stringb);
@@ -409,7 +411,8 @@ KillUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 	ucs[tbox->pos] = '\0';
 
-	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs,
+	    stringb->data.size);
 	AG_WidgetBindingChanged(stringb);
 	AG_WidgetUnlockBinding(stringb);
 	free(ucs);
@@ -517,7 +520,7 @@ InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		fatal("bad position");
 #endif
 
-	if ((len+1)+1 >= stringb->size)
+	if ((len+1)+1 >= stringb->data.size)
 		goto skip;
 
 	if (tbox->pos == len) {		       			/* Append */
