@@ -694,23 +694,36 @@ AG_WindowEvent(SDL_Event *ev)
 			case AG_WINOP_LRESIZE:
 				AG_WindowResizeOp(AG_WINOP_LRESIZE, win,
 				    &ev->motion);
-				break;
+				AG_MutexUnlock(&win->lock);
+				goto out;
 			case AG_WINOP_RRESIZE:
 				AG_WindowResizeOp(AG_WINOP_RRESIZE, win,
 				    &ev->motion);
-				break;
+				AG_MutexUnlock(&win->lock);
+				goto out;
 			case AG_WINOP_HRESIZE:
 				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
 				    &ev->motion);
-			default:
 				AG_MutexUnlock(&win->lock);
 				goto out;
+			default:
+				break;
 			}
 			/*
 			 * Forward this MOUSEMOTION to all widgets that either
 			 * hold focus or have the AG_WIDGET_UNFOCUSED_MOTION
 			 * flag set.
 			 */
+			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+				if (wid->flags & AG_WIDGET_PRIO_MOTION) {
+					AG_WidgetMouseMotion(win, wid,
+					    ev->motion.x, ev->motion.y,
+					    ev->motion.xrel, ev->motion.yrel,
+					    ev->motion.state);
+					AG_MutexUnlock(&win->lock);
+					goto out;
+				}
+			}
 			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				AG_WidgetMouseMotion(win, wid,
 				    ev->motion.x, ev->motion.y,

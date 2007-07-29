@@ -115,8 +115,11 @@ mousebuttondown(AG_Event *event)
 	int x = AG_INT(2);
 	AG_HPaneDiv *div;
 	
-	TAILQ_FOREACH(div, &pa->divs, divs)
+	TAILQ_FOREACH(div, &pa->divs, divs) {
 		div->moving = OverDivControl(div, x);
+		if (div->moving)
+			AGWIDGET(pa)->flags |= AG_WIDGET_PRIO_MOTION;
+	}
 }
 
 static void
@@ -178,8 +181,12 @@ mousebuttonup(AG_Event *event)
 	AG_HPane *pa = AG_SELF();
 	AG_HPaneDiv *div;
 
-	TAILQ_FOREACH(div, &pa->divs, divs)
-		div->moving = 0;
+	TAILQ_FOREACH(div, &pa->divs, divs) {
+		if (div->moving) {
+			AGWIDGET(pa)->flags &= ~(AG_WIDGET_PRIO_MOTION);
+			div->moving = 0;
+		}
+	}
 }
 
 void
