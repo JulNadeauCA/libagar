@@ -79,7 +79,7 @@ select_texture(AG_Event *event)
 	bTexname = AG_WidgetGetBinding(ts, "texture-name", &texname);
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		tex = it->p1;
-		strlcpy(texname, tex->name, bTexname->size);
+		strlcpy(texname, tex->name, bTexname->data.size);
 	}
 	AG_WidgetUnlockBinding(bTexname);
 }
