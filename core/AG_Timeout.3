@@ -158,8 +158,10 @@ The
 .Fn AG_DelTimeout
 function removes the given timeout from the queue if it is currently scheduled
 for execution.
-.Fn timeout_exists
-returns 1 if the given timeout is currently in the queue.
+.Fn AG_TimeoutIsScheduled
+returns 1 if the given timeout is currently scheduled for execution.
+The timeouts must have been locked by the caller of the function (see
+below).
 .Pp
 Both
 .Fn AG_AddTimeout
