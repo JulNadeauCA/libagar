@@ -273,9 +273,16 @@ AG_TlistScale(void *p, int w, int h)
 		AGWIDGET(tl)->w = tl->prew;
 		AGWIDGET(tl)->h = tl->preh;
 	}
-	AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->bw;
-	AGWIDGET(tl->sbar)->y = 0;
+
 	AG_WidgetScale(tl->sbar, tl->sbar->bw, AGWIDGET(tl)->h);
+	if (AGWIDGET(tl)->w < tl->sbar->bw ||
+	    AGWIDGET(tl)->h < tl->sbar->bw*2) {
+		AGWIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
+	} else {
+		AGWIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
+		AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->bw;
+		AGWIDGET(tl->sbar)->y = 0;
+	}
 	UpdateListScrollbar(tl);
 }
 
