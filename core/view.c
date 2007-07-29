@@ -177,6 +177,9 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	if (agView->opengl) {
 		int red, blue, green, alpha, depth, bsize;
 		Uint8 bR, bG, bB;
+#if 0
+		float lineW[2];
+#endif
 
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
 		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
@@ -201,7 +204,10 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 		glShadeModel(GL_FLAT);
 		
 		glEnable(GL_TEXTURE_2D);
-
+#if 0
+		glGetFloatv(GL_LINE_WIDTH_RANGE, lineW);
+		glLineWidth(lineW[0]);
+#endif
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DITHER);
