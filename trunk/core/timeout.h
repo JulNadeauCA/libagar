@@ -20,6 +20,8 @@ typedef struct ag_timeout {
 
 SLIST_HEAD(ag_timeoutq, ag_timeout);
 
+#define AG_TIMEOUT_INITIALIZER { NULL, NULL, 0, 0, 0, 1 }
+
 __BEGIN_DECLS
 void	AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *,
 	              int);
