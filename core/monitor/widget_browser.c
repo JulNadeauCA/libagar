@@ -206,6 +206,7 @@ WidgetParams(AG_Event *event)
 		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
 		    { AG_WIDGET_STATIC,			"STATIC",0 },
 		    { AG_WIDGET_FOCUS_PARENT_WIN,	"FOCUS_PARENT_WIN",1 },
+		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
 		    { 0,				NULL,0 }
 		};
 		AG_Label *lbl;
