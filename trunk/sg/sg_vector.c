@@ -587,4 +587,14 @@ SG_WriteVectorf(AG_Netbuf *buf, SG_Vector *v)
 	AG_WriteFloat(buf, (float)v->z);
 }
 
+SG_Vector
+SG_VectorLERP(SG_Vector v1, SG_Vector v2, SG_Real t)
+{
+	SG_Vector v;
+
+	v.x = v1.x + (v2.x - v1.x)*t;
+	v.y = v1.y + (v2.y - v1.y)*t;
+	v.z = v1.z + (v2.z - v1.z)*t;
+	return (v);
+}
 #endif /* HAVE_OPENGL */
