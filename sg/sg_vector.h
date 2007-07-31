@@ -99,5 +99,7 @@ void		SG_ReadVectorfv(AG_Netbuf *, SG_Vector *);
 void		SG_WriteVectorf(AG_Netbuf *, SG_Vector *);
 
 __inline__ SG_Real	SG_VectorVectorAngle(SG_Vector, SG_Vector);
+SG_Vector		SG_VectorLERP(SG_Vector, SG_Vector, SG_Real);
+
 __END_DECLS
 
