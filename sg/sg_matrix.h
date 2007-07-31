@@ -89,12 +89,14 @@ __inline__ void		SG_MatrixGetRotationXYZ(const SG_Matrix *, SG_Real *,
 #define SG_TranslateVecGL(v) glTranslated((v).x,(v).y,(v).z)
 #define SG_RotateGL(a,x,y,z) glRotated((a),(x),(y),(z))
 #define SG_RotateVecGL(a,v) glRotated((a),(v).x,(v).y,(v).z)
+#define SG_ScaleGL(x,y,z) glScaled((x),(y),(z))
 #else
 #define SG_MultMatrixGL(A) glMultMatrixf(&(A)->m[0][0])
 #define SG_TranslateGL(x,y,z) glTranslatef((x),(y),(z))
 #define SG_TranslateVecGL(v) glTranslatef((v).x,(v).y,(v).z)
 #define SG_RotateGL(a,x,y,z) glRotatef((a),(x),(y),(z))
 #define SG_RotateVecGL(a,v) glRotatef((a),(v).x,(v).y,(v).z)
+#define SG_ScaleGL(x,y,z) glScalef((x),(y),(z))
 #endif
 
 __inline__ SG_Matrix	SG_ReadMatrix(AG_Netbuf *);
