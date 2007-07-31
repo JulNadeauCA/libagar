@@ -147,8 +147,12 @@ AG_WindowInit(void *p, const char *name, int flags)
 	AG_MutexInitRecursive(&win->lock);
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 	
+	if (win->flags & AG_WINDOW_MODAL) {
+		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
+	}
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
+
 	if (win->flags & AG_WINDOW_NOCLOSE)
 		titlebar_flags |= AG_TITLEBAR_NO_CLOSE;
 	if (win->flags & AG_WINDOW_NOMINIMIZE)
@@ -619,7 +623,10 @@ AG_WindowEvent(SDL_Event *ev)
 	int rv = 0;
 	
 	agCursorToSet = NULL;
-
+	
+	if (agView->modal_win != NULL) {
+		goto process;
+	}
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
 		/*
@@ -650,7 +657,7 @@ AG_WindowEvent(SDL_Event *ev)
 		agView->winop = AG_WINOP_NONE;
 		break;
 	}
-
+process:
 	/*
 	 * Iterate over the visible windows and deliver the appropriate Agar
 	 * events.
