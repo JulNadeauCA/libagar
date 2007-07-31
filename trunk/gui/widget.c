@@ -1325,23 +1325,13 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, glname);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
-#if 0
-		glTexCoord2f(texcoord[0], texcoord[1]);
-		glVertex2f(0.0, 0.0);
-		glTexCoord2f(texcoord[2], texcoord[1]);
-		glVertex2f((GLfloat)w, 0.0);
-		glTexCoord2f(texcoord[0], texcoord[3]);
-		glVertex2f(0.0, (GLfloat)h);
-		glTexCoord2f(texcoord[2], texcoord[3]);
-		glVertex2f((GLfloat)w, (GLfloat)h);
-#endif		
-		glTexCoord2f(texcoord[0],	texcoord[1]);
-		glVertex2f(0.0,			0.0);
 		glTexCoord2f(texcoord[2],	texcoord[1]);
+		glVertex2f(0.0,			0.0);
+		glTexCoord2f(texcoord[0],	texcoord[1]);
 		glVertex2f((GLfloat)w,		0.0);
-		glTexCoord2f(texcoord[0],	texcoord[3]);
-		glVertex2f(0.0,			(GLfloat)h);
 		glTexCoord2f(texcoord[2],	texcoord[3]);
+		glVertex2f(0.0,			(GLfloat)h);
+		glTexCoord2f(texcoord[0],	texcoord[3]);
 		glVertex2f((GLfloat)w,		(GLfloat)h);
 	}
 	glEnd();
