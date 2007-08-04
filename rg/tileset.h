@@ -48,7 +48,7 @@ struct rg_texture;
 typedef struct rg_tileset {
 	struct ag_object obj;
 	AG_Mutex lock;
-	char template[RG_TEMPLATE_NAME_MAX];
+	char tmpl[RG_TEMPLATE_NAME_MAX];
 	SDL_PixelFormat *fmt;
 	SDL_Surface *icon;
 	int flags;
