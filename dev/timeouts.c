@@ -1,8 +1,5 @@
-/*	$Csoft: timeouts.c,v 1.11 2005/10/04 17:34:52 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +38,7 @@ static AG_Tableview *tv = NULL;
 static AG_Timeout refresher;
 
 static Uint32 
-timeouts_refresh(void *obj, Uint32 ival, void *arg)
+UpdateTbl(void *obj, Uint32 ival, void *arg)
 {
 	extern struct ag_objectq agTimeoutObjQ;
 	AG_Object *ob;
@@ -82,20 +79,20 @@ close_timeouts(AG_Event *event)
 }
 
 AG_Window *
-AG_DebugTimeoutList(void)
+DEV_TimerInspector(void)
 {
 	AG_Window *win;
 
-	if ((win = AG_WindowNewNamed(0, "monitor-timeouts")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "DEV_TimerInspector")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Running timers"));
+	AG_WindowSetCaption(win, _("Timer Inspector"));
 
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOHEADER, NULL, NULL);
 	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	AG_TableviewColAdd(tv, 0, 0, NULL, NULL);
 	
-	AG_SetTimeout(&refresher, timeouts_refresh, tv, 0);
+	AG_SetTimeout(&refresher, UpdateTbl, tv, 0);
 	AG_AddTimeout(tv, &refresher, 50);
 	
 	AG_SetEvent(win, "window-close", close_timeouts, "%p", tv);

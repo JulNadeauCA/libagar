@@ -1,8 +1,8 @@
 /*	$Csoft: monitor.h,v 1.28 2005/06/11 11:10:38 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_MONITOR_MONITOR_H_
-#define _AGAR_MONITOR_MONITOR_H_
+#ifndef _AGAR_DEV_MONITOR_H_
+#define _AGAR_DEV_MONITOR_H_
 #include "begin_code.h"
 
 struct ag_menu_item;
@@ -22,4 +22,4 @@ int	   AG_DebugServerStart(void);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_MONITOR_MONITOR_H_ */
+#endif	/* _AGAR_DEV_MONITOR_H_ */

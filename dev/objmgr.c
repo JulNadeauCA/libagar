@@ -1,8 +1,5 @@
-/*	$Csoft: objmgr.c,v 1.51 2005/10/04 17:34:50 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +63,7 @@ static int editNowFlag = 1;
 static void *lastSelectedParent = NULL;
 int agObjMgrExiting = 0;
 #if 0
-int agObjMgrHexDiff = 0;
+int devBrowserHexDiffs = 0;
 #endif
 
 static void
@@ -124,7 +121,7 @@ tryname:
 	AG_PostEvent(NULL, nobj, "edit-create", NULL);
 	
 	if (editNowFlag && t->ops->edit != NULL)
-		AG_ObjMgrOpenData(nobj);
+		DEV_BrowserOpenData(nobj);
 }
 
 enum {
@@ -159,7 +156,7 @@ CloseGenericDlg(AG_Event *event)
 }
 
 void
-AG_ObjMgrOpenGeneric(AG_Object *ob)
+DEV_BrowserOpenGeneric(AG_Object *ob)
 {
 	struct objent *oent;
 
@@ -242,7 +239,7 @@ SaveChangesDlg(AG_Event *event)
 }
 
 void
-AG_ObjMgrOpenData(void *p)
+DEV_BrowserOpenData(void *p)
 {
 	AG_Object *ob = p;
 	struct objent *oent;
@@ -399,7 +396,7 @@ ImportObject(AG_Event *event)
 }
 
 void
-AG_ObjMgrSaveTo(void *p, const char *name)
+DEV_BrowserSaveTo(void *p, const char *name)
 {
 	char ext[AG_OBJECT_TYPE_MAX+3];
 	AG_Object *ob = p;
@@ -424,7 +421,7 @@ AG_ObjMgrSaveTo(void *p, const char *name)
 }
 
 void
-AG_ObjMgrLoadFrom(void *p, const char *name)
+DEV_BrowserLoadFrom(void *p, const char *name)
 {
 	char ext[AG_OBJECT_TYPE_MAX+3];
 	AG_Object *ob = p;
@@ -464,7 +461,7 @@ ObjectOp(AG_Event *event)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				AG_ObjMgrOpenData(ob);
+				DEV_BrowserOpenData(ob);
 			} else {
 				AG_TextTmsg(AG_MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
@@ -472,7 +469,7 @@ ObjectOp(AG_Event *event)
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
-			AG_ObjMgrOpenGeneric(ob);
+			DEV_BrowserOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
 			AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
@@ -509,7 +506,7 @@ ObjectOp(AG_Event *event)
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
 			} else {
-				AG_ObjMgrSaveTo(ob, _("Agar object file"));
+				DEV_BrowserSaveTo(ob, _("Agar object file"));
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -610,7 +607,7 @@ ObjectOp(AG_Event *event)
 }
 
 static void
-AG_ObjMgrGenericSave(AG_Event *event)
+DEV_BrowserGenericSave(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -624,7 +621,7 @@ AG_ObjMgrGenericSave(AG_Event *event)
 }
 
 static void
-AG_ObjMgrGenericLoad(AG_Event *event)
+DEV_BrowserGenericLoad(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
 
@@ -638,30 +635,30 @@ AG_ObjMgrGenericLoad(AG_Event *event)
 }
 
 static void
-AG_ObjMgrGenericSaveTo(AG_Event *event)
+DEV_BrowserGenericSaveTo(AG_Event *event)
 {
-	AG_ObjMgrSaveTo(AG_PTR(1), _("Agar object file"));
+	DEV_BrowserSaveTo(AG_PTR(1), _("Agar object file"));
 }
 
 static void
-AG_ObjMgrGenericLoadFrom(AG_Event *event)
+DEV_BrowserGenericLoadFrom(AG_Event *event)
 {
-	AG_ObjMgrLoadFrom(AG_PTR(1), _("Agar object file"));
+	DEV_BrowserLoadFrom(AG_PTR(1), _("Agar object file"));
 }
 
 void
-AG_ObjMgrGenericMenu(void *menup, void *obj)
+DEV_BrowserGenericMenu(void *menup, void *obj)
 {
 	AG_MenuItem *pitem = menup;
 
 	AG_MenuAction(pitem, _("Save"), OBJSAVE_ICON,
-	    AG_ObjMgrGenericSave, "%p", obj);
+	    DEV_BrowserGenericSave, "%p", obj);
 	AG_MenuAction(pitem, _("Load"), OBJLOAD_ICON,
-	    AG_ObjMgrGenericLoad, "%p", obj);
+	    DEV_BrowserGenericLoad, "%p", obj);
 	AG_MenuAction(pitem, _("Export to..."), OBJSAVE_ICON,
-	    AG_ObjMgrGenericSaveTo, "%p", obj);
+	    DEV_BrowserGenericSaveTo, "%p", obj);
 	AG_MenuAction(pitem, _("Import from..."), OBJLOAD_ICON,
-	    AG_ObjMgrGenericLoadFrom, "%p", obj);
+	    DEV_BrowserGenericLoadFrom, "%p", obj);
 
 	AG_MenuSeparator(pitem);
 
@@ -923,7 +920,7 @@ RenameOnRepo(AG_Event *event)
 
 /* Create the object editor window. */
 struct ag_window *
-AG_ObjMgrWindow(void)
+DEV_BrowserWindow(void)
 {
 	AG_Window *win;
 	AG_VBox *vb;
@@ -934,8 +931,8 @@ AG_ObjMgrWindow(void)
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
-	win = AG_WindowNewNamed(0, "objmgr");
-	AG_WindowSetCaption(win, _("Object manager"));
+	win = AG_WindowNewNamed(0, "DEV_Browser");
+	AG_WindowSetCaption(win, _("Object Browser"));
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
 	tlObjs = Malloc(sizeof(AG_Tlist), M_OBJECT);
@@ -1152,7 +1149,7 @@ AG_ObjMgrWindow(void)
 }
 
 void
-AG_ObjMgrInit(void)
+DEV_BrowserInit(void)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
@@ -1182,13 +1179,13 @@ CancelQuit(AG_Event *event)
  * an object and optionally exit afterwards.
  */
 void
-AG_ObjMgrQuitDlg(void *obj)
+DEV_BrowserQuitDlg(void *obj)
 {
 	AG_Window *win;
 	AG_Box *bo;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
-	    AG_WINDOW_NORESIZE, "objmgr-changed-dlg")) == NULL) {
+	    AG_WINDOW_NORESIZE, "DEV_BrowserQuitDlg")) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, _("Exit application?"));
@@ -1210,7 +1207,7 @@ AG_ObjMgrQuitDlg(void *obj)
 }
 
 void
-AG_ObjMgrDestroy(void)
+DEV_BrowserDestroy(void)
 {
 	struct objent *oent, *noent;
 
@@ -1234,7 +1231,7 @@ AG_ObjMgrDestroy(void)
  * the flag AG_OBJECT_REOPEN_ONLOAD.
  */
 void
-AG_ObjMgrReopen(AG_Object *obj)
+DEV_BrowserReopen(AG_Object *obj)
 {
 	struct objent *oent;
 
@@ -1256,7 +1253,7 @@ AG_ObjMgrReopen(AG_Object *obj)
 }
 
 void
-AG_ObjMgrCloseData(void *p)
+DEV_BrowserCloseData(void *p)
 {
 	AG_Object *obj = p;
 	struct objent *oent;

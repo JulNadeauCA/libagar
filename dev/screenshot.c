@@ -1,8 +1,5 @@
-/*	$Csoft: screenshot.c,v 1.20 2005/10/04 17:34:52 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -272,7 +269,7 @@ Disconnect(AG_Event *event)
 }
 
 AG_Window *
-AG_DebugScreenshot(void)
+DEV_ScreenshotUploader(void)
 {
 	AG_Window *win;
 	AG_VBox *vb;
@@ -280,8 +277,8 @@ AG_DebugScreenshot(void)
 	AG_Label *lbl;
 	AG_Spinbutton *sbu;
 	
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE, "monitor-screenshot"))
-	    == NULL) {
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE,
+	    "DEV_ScreenshotUploader")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("Screenshot"));

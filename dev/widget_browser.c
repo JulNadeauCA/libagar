@@ -1,8 +1,5 @@
-/*	$Csoft: widget_browser.c,v 1.46 2005/10/04 17:34:52 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -186,7 +183,7 @@ WidgetParams(AG_Event *event)
 	wid = it->p1;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Widget parameters: %s"),
+	AG_WindowSetCaption(win, _("GUI Debugger: <%s>"),
 	    AGOBJECT(wid)->name);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
@@ -274,7 +271,7 @@ WindowParams(AG_Event *event)
 	}
 	wExam = it->p1;
 
-	if ((win = AG_WindowNewNamed(0, "widget-browser-%s",
+	if ((win = AG_WindowNewNamed(0, "DEV_GuiDebugger-%s",
 	    AGOBJECT(wExam)->name)) == NULL) {
 		return;
 	}
@@ -325,13 +322,13 @@ WindowParams(AG_Event *event)
 }
 
 AG_Window *
-AG_DebugWidgetBrowser(void)
+DEV_GuiDebugger(void)
 {
 	AG_Window *win;
 	AG_Tlist *tl;
 	AG_MenuItem *mi;
 
-	if ((win = AG_WindowNewNamed(0, "widget-browser")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "DEV_GuiDebugger")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("GUI Debugger"));
