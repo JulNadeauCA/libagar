@@ -8,6 +8,7 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/dev.h>
 #include <agar/sg.h>
 
 #include <string.h>
@@ -124,9 +125,9 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
-	/* Initialize the object manager. */
-	AG_ObjMgrInit();
-	AG_WindowShow(AG_ObjMgrWindow());
+	/* Initialize Agar-DEV and show the object browser. */
+	DEV_InitSubsystem(0);
+	AG_WindowShow(DEV_Browser());
 
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
 	CreateWindow();
