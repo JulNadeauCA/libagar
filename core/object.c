@@ -1852,8 +1852,6 @@ AG_ObjectChanged(void *p)
 		goto fail;
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
-#endif /* DEBUG */
-
 	AG_ObjectUnlinkDatafiles(ob);
 	AG_ObjectSetSavePfx(ob, pfx_save);
 	return (rv);
