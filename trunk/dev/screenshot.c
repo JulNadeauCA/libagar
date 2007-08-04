@@ -59,7 +59,7 @@
 #include <gui/button.h>
 #include <gui/spinbutton.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 static AG_Thread thread;
 static AG_Mutex lock = AG_MUTEX_INITIALIZER;

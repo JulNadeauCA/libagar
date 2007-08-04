@@ -47,7 +47,7 @@
 #include <gui/separator.h>
 #include <gui/notebook.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 #include <string.h>
 

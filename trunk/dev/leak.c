@@ -36,7 +36,7 @@
 #include <gui/window.h>
 #include <gui/tableview.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 extern struct ag_malloc_type agMallocTypes[];
 static const char *mallocTypeNames[] = {

@@ -40,7 +40,7 @@
 #include <gui/label.h>
 #include <gui/textbox.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 AG_Window *
 DEV_DisplaySettings(void)
