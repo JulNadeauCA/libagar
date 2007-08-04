@@ -22,7 +22,6 @@
 #include <agar/core/config.h>
 #include <agar/core/view.h>
 #include <agar/core/iconmgr.h>
-#include <agar/core/objmgr.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
 #include <agar/core/core_init.h>
