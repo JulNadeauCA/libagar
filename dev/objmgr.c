@@ -52,9 +52,8 @@
 #endif
 
 #include <string.h>
-#include <ctype.h>
 
-#include "objmgr.h"
+#include "dev.h"
 
 struct objent {
 	AG_Object *obj;
@@ -65,10 +64,6 @@ static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
 static int editNowFlag = 1;
 static void *lastSelectedParent = NULL;
-int agObjMgrExiting = 0;
-#if 0
-int devBrowserHexDiffs = 0;
-#endif
 
 static void
 CreateObject(AG_Event *event)
@@ -192,11 +187,11 @@ SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 	TAILQ_REMOVE(&dobjs, oent, objs);
 
 	if (!save) {
-		agObjMgrExiting = 1;
+		agTerminating = 1;
 	}
 	AG_ObjectPageOut(oent->obj);
 
-	agObjMgrExiting = 0;
+	agTerminating = 0;
 	Free(oent, M_OBJECT);
 }
 
@@ -888,7 +883,7 @@ DeleteFromRepo(AG_Event *event)
 }
 
 static void
-rename_repo(AG_Event *event)
+RepoRenameObject(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 	char *from = AG_STRING(2);
@@ -907,7 +902,7 @@ rename_repo(AG_Event *event)
 }
 
 static void
-RenameOnRepo(AG_Event *event)
+RepoRenameDlg(AG_Event *event)
 {
 	char prompt[AG_LABEL_MAX];
 	AG_Tlist *tl = AG_PTR(1);
@@ -917,13 +912,12 @@ RenameOnRepo(AG_Event *event)
 		return;
 	
 	snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
-	AG_TextPromptString(prompt, rename_repo, "%p,%s", tl, it->text);
+	AG_TextPromptString(prompt, RepoRenameObject, "%p,%s", tl, it->text);
 }
 
 #endif /* NETWORK */
 
-/* Create the object editor window. */
-struct ag_window *
+AG_Window *
 DEV_BrowserWindow(void)
 {
 	AG_Window *win;
@@ -1136,7 +1130,7 @@ DEV_BrowserWindow(void)
 			AG_MenuAction(mi, _("Delete from repository"),
 			    TRASH_ICON, DeleteFromRepo, "%p", tl);
 			AG_MenuAction(mi, _("Rename"),
-			    -1, RenameOnRepo, "%p", tl);
+			    -1, RepoRenameDlg, "%p", tl);
 		}
 
 		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL,
@@ -1152,11 +1146,93 @@ DEV_BrowserWindow(void)
 	return (win);
 }
 
+/*
+ * Post AG_ObjectLoad() callback for all objects. If the REOPEN_ONLOAD
+ * flag is set, we automatically close and re-open all edition windows
+ * associated with the object after the load.
+ */
+static void
+DEV_PostLoadCallback(AG_Event *event)
+{
+	AG_Object *obj = AG_SENDER();	
+/*	int rv = AG_INT(1); */
+	struct objent *oent;
+
+	if ((ob->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
+		return;
+
+	TAILQ_FOREACH(oent, &dobjs, objs) {
+		if (oent->obj == obj) {
+			AG_WindowHide(oent->win);
+			AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
+			AG_ViewDetach(oent->win);
+
+			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
+			oent->win = obj->ops->edit(obj);
+			AG_WindowShow(oent->win);
+			AG_SetEvent(oent->win, "window-close",
+			    SaveChangesDlg, "%p", oent);
+		}
+	}
+}
+
+/*
+ * Callback invoked whenever an object is paged out. We save the object
+ * unless the application is terminating.
+ */
+static void
+DEV_PageOutCallback(AG_Event *event)
+{
+	AG_Object *obj = AG_SENDER();
+	
+	if (!agTerminating)
+		if (AG_ObjectSave(obj) == -1)
+			AG_TextMsgFromError();
+}
+
+/*
+ * Callback invoked when the user has requested termination of the
+ * application. We check whether objects have been modified and not
+ * saved and prompt the user if that's the case.
+ */
+static void
+DEV_QuitCallback(AG_Event *event)
+{
+	AG_Window *win;
+	AG_Box *bo;
+
+	if (!AG_ObjectChangedAll(agWorld)) {
+		return;
+	}
+	agTerminating = 1;
+	
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+	    AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
+		return;
+	}
+	AG_WindowSetCaption(win, _("Exit application?"));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
+	AG_WindowSetSpacing(win, 8);
+	AG_LabelNewStaticString(win, 0, _("Unsaved objects have been modified. "
+	                                  "Exit application?"));
+	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
+	AG_BoxSetSpacing(bo, 0);
+	AG_BoxSetPadding(bo, 0);
+	AG_ButtonNewFn(bo, 0, _("Quit"), ConfirmQuit, NULL);
+	AG_WidgetFocus(AG_ButtonNewFn(bo, 0, _("Cancel"), AbortQuit,
+	    "%p", win));
+	AG_WindowShow(win);
+}
+
 void
 DEV_BrowserInit(void)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
+
+	AG_AddEvent(agWorld, "object-post-load", DEV_PostLoadCallback, NULL);
+	AG_AddEvent(agWorld, "object-page-out", DEV_PageOutCallback, NULL);
+	AG_AddEvent(agWorld, "quit", DEV_QuitCallback, NULL);
 }
 
 static void
@@ -1164,50 +1240,18 @@ ConfirmQuit(AG_Event *event)
 {
 	SDL_Event nev;
 
-	agObjMgrExiting = 0;
+	agTerminating = 0;
 	nev.type = SDL_USEREVENT;
 	SDL_PushEvent(&nev);
 }
 
 static void
-CancelQuit(AG_Event *event)
+AbortQuit(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
-	agObjMgrExiting = 0;
+	agTerminating = 0;
 	AG_ViewDetach(win);
-}
-
-/*
- * Present the user with a dialog asking whether to save modifications to
- * an object and optionally exit afterwards.
- */
-void
-DEV_BrowserQuitDlg(void *obj)
-{
-	AG_Window *win;
-	AG_Box *bo;
-
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
-	    AG_WINDOW_NORESIZE, "DEV_BrowserQuitDlg")) == NULL) {
-		return;
-	}
-	AG_WindowSetCaption(win, _("Exit application?"));
-	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_WindowSetSpacing(win, 8);
-
-	AG_LabelNewStaticString(win, 0,
-	    _("Some objects have been modified. Exit application?"));
-
-	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
-	AG_BoxSetSpacing(bo, 0);
-	AG_BoxSetPadding(bo, 0);
-	{
-		AG_ButtonNewFn(bo, 0, _("Quit"), ConfirmQuit, NULL);
-		AG_WidgetFocus(AG_ButtonNewFn(bo, 0, _("Cancel"),
-		    CancelQuit, "%p", win));
-	}
-	AG_WindowShow(win);
 }
 
 void
@@ -1226,33 +1270,6 @@ DEV_BrowserDestroy(void)
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
 		Free(oent, M_OBJECT);
-	}
-}
-
-/*
- * Close and reopen all edition windows associated with an object, if there
- * are any. This is called automatically from AG_ObjectLoad() for objects with
- * the flag AG_OBJECT_REOPEN_ONLOAD.
- */
-void
-DEV_BrowserReopen(AG_Object *obj)
-{
-	struct objent *oent;
-
-	TAILQ_FOREACH(oent, &dobjs, objs) {
-		if (oent->obj == obj) {
-			dprintf("reopening %s\n", obj->name);
-
-			AG_WindowHide(oent->win);
-			AG_PostEvent(NULL, oent->obj, "edit-close", NULL);
-			AG_ViewDetach(oent->win);
-
-			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
-			oent->win = obj->ops->edit(obj);
-			AG_WindowShow(oent->win);
-			AG_SetEvent(oent->win, "window-close",
-			    SaveChangesDlg, "%p", oent);
-		}
 	}
 }
 

@@ -69,9 +69,6 @@ SelectTool(AG_Event *event)
 void
 DEV_ToolMenu(AG_MenuItem *mi)
 {
-#if 0
-	extern int devBrowserHexDiffs;
-#endif
 	const int devToolCount = sizeof(devTools) / sizeof(devTools[0]);
 	int i;
 
@@ -79,11 +76,6 @@ DEV_ToolMenu(AG_MenuItem *mi)
 		AG_MenuAction(mi, _(devTools[i].name), -1,
 		    SelectTool, "%p", &devTools[i]);
 	}
-#if 0
-	AG_MenuSeparator(mi);
-	AG_MenuIntBool(mi, _("Enable datafile hex diffs"), OBJ_ICON,
-	    &devBrowserHexDiffs, 0);
-#endif
 }
 
 void

@@ -27,6 +27,16 @@ AG_Window *DEV_TimerInspector(void);
 AG_Window *DEV_UnicodeBrowser(void);
 AG_Window *DEV_DisplaySettings(void);
 AG_Window *DEV_GuiDebugger(void);
+
+AG_Window *DEV_BrowserWindow(void);
+void	   DEV_BrowserInit(void);
+void	   DEV_BrowserDestroy(void);
+void	   DEV_BrowserOpenData(void *);
+void	   DEV_BrowserCloseData(void *);
+void	   DEV_BrowserOpenGeneric(AG_Object *);
+void	   DEV_BrowserSaveTo(void *, const char *);
+void	   DEV_BrowserLoadFrom(void *, const char *);
+void	   DEV_BrowserGenericMenu(void *, void *);
 __END_DECLS
 
 #include "close_code.h"
