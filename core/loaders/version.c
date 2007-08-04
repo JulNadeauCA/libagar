@@ -35,7 +35,6 @@ int
 AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
     AG_Version *rver)
 {
-	extern int agVerbose;			/* core.c */
 	char nbuf[AG_VERSION_NAME_MAX];
 	size_t nlen;
 	Uint32 major, minor;
