@@ -30,7 +30,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/objmgr.h>
 
 #include <gui/window.h>
 #include <gui/menu.h>
@@ -410,9 +409,7 @@ SG_Edit(void *p)
 		AG_MenuAction(pitem, _("Import mesh..."), CLOSE_ICON,
 		    ImportObjectDlg, "%p,%p", sg, win);
 		AG_MenuSeparator(pitem);
-		AG_ObjMgrGenericMenu(pitem, sg);
-		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close document"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close scene"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}

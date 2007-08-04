@@ -31,7 +31,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/objmgr.h>
 
 #include <gui/window.h>
 #include <gui/menu.h>
@@ -131,6 +130,8 @@ ImportSketchDlg(AG_Event *event)
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
 	                         AG_FILEDLG_EXPAND);
 #if 0
+	AG_FileDlgAddType(dlg, _("SVG Format"), "*.svg",
+	    ImportFromSVG, "%p", sk);
 	AG_FileDlgAddType(dlg, _("DXF Format"), "*.dxf",
 	    ImportFromDXF, "%p", sk);
 	AG_FileDlgAddType(dlg, _("PDF Format"), "*.pdf",
@@ -500,12 +501,11 @@ SK_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_MenuAction(pitem, _("Import sketch..."), CLOSE_ICON,
+		AG_MenuAction(pitem, _("Import from vector image..."),
+		    CLOSE_ICON,
 		    ImportSketchDlg, "%p,%p", sk, win);
 		AG_MenuSeparator(pitem);
-		AG_ObjMgrGenericMenu(pitem, sk);
-		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close document"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close sketch"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}

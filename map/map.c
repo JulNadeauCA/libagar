@@ -26,7 +26,6 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
-#include <core/objmgr.h>
 #include <core/math.h>
 #include <core/typesw.h>
 
@@ -2873,9 +2872,7 @@ MAP_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_ObjMgrGenericMenu(pitem, m);
-		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close document"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close map"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
