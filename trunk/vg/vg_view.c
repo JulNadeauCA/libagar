@@ -410,7 +410,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 	}
 
 //	if ((pwin = AG_WidgetParentWindow(vv)) != NULL) {
-//		agView->focus_win = pwin;
+//		agView->winToFocus = pwin;
 //		AG_WidgetFocus(vv);
 //	}
 }
