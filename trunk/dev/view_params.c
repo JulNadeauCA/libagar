@@ -1,8 +1,5 @@
-/*	$Csoft: view_params.c,v 1.27 2005/09/27 14:06:32 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,17 +39,17 @@
 #include "monitor.h"
 
 AG_Window *
-AG_DebugViewSettings(void)
+DEV_DisplaySettings(void)
 {
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Label *lbl;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "monitor-view-params"))
+	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "DEV_DisplaySettings"))
 	    == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Viewport"));
+	AG_WindowSetCaption(win, _("Display Settings"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	vb = AG_VBoxNew(win, 0);

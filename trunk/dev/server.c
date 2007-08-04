@@ -383,7 +383,7 @@ StopServer(AG_Event *event)
 }
 
 AG_Window *
-AG_DebugServerWindow(void)
+DEV_DebugServer(void)
 {
 	AG_Window *win;
 	AG_Menu *me;
@@ -391,8 +391,8 @@ AG_DebugServerWindow(void)
 	AG_Tlist *tl;
 	AG_Box *bo;
 	
-	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
-	AG_WindowSetCaption(win, _("Agar clients"));
+	win = AG_WindowNewNamed(0, "DEV_DebugServer");
+	AG_WindowSetCaption(win, _("Debug Server"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
 	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);

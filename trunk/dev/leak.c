@@ -1,8 +1,5 @@
-/*	$Csoft: leak.c,v 1.17 2005/09/27 00:25:19 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +35,7 @@
 #include "monitor.h"
 
 extern struct ag_malloc_type agMallocTypes[];
-static const char *mement_names[] = {
+static const char *mallocTypeNames[] = {
 	"generic",
 	"object",
 	"position",
@@ -69,14 +66,14 @@ static const char *mement_names[] = {
 };
 
 static char *
-leak_callback(AG_Tableview *tv, AG_TableviewColID cid, AG_TableviewRowID rid)
+UpdateTblCell(AG_Tableview *tv, AG_TableviewColID cid, AG_TableviewRowID rid)
 {
 	static char text[32];
 	struct ag_malloc_type *ment = &agMallocTypes[rid];
   
   	switch (cid) {
 	case 0:
-		return ((char *)mement_names[rid]);
+		return ((char *)mallocTypeNames[rid]);
 	case 1:
 		snprintf(text, sizeof(text), "%lu", (unsigned long)
 		    (ment->nallocs-ment->nfrees));
@@ -91,30 +88,31 @@ leak_callback(AG_Tableview *tv, AG_TableviewColID cid, AG_TableviewRowID rid)
 }
 
 AG_Window *
-AG_DebugLeakDetector(void)
+DEV_LeakDetector(void)
 {
-	int i, nleak_ents = sizeof(mement_names) / sizeof(mement_names[0]);
+	int i;
+	int nents = sizeof(mallocTypeNames) / sizeof(mallocTypeNames[0]);
 	AG_Window *win;
 	AG_Tableview *tv;
 
-	if ((win = AG_WindowNewNamed(0, "monitor-leak")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "DEV_LeakDetector")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Leak detection"));
+	AG_WindowSetCaption(win, _("Leak Detector"));
 	
-	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, leak_callback, NULL);
+	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, UpdateTblCell, NULL);
 	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
 	AG_TableviewSetUpdate(tv, 250);
 	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 	    0, _("Subsystem"), NULL);
 	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 	    1, _("Buffers"), "<XXXXXXXXXX>");
-	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC| AG_TABLEVIEW_COL_UPDATE,
+	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 	    2, _("Requests"), "<XXXXXXXXX>");
 	
-	for (i = 0; i < nleak_ents; i++)
+	for (i = 0; i < nents; i++) {
 		AG_TableviewRowAdd(tv, 0, NULL, NULL, i);
-
+	}
 	return (win);
 }
 

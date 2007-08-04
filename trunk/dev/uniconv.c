@@ -1,8 +1,5 @@
-/*	$Csoft: uniconv.c,v 1.18 2005/10/04 17:34:52 vedge Exp $	*/
-
 /*
- * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://www.hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +43,7 @@ static char utf8seq[256] = "";
 static const struct unicode_range {
 	Uint32 start;
 	char *name;
-} unicode_ranges[] = {
+} unicodeRanges[] = {
 	{ 0x0000, "Basic Latin" },
 	{ 0x0080, "C1 Controls and Latin-1 Supplement" },
 	{ 0x0100, "Latin Extended-A" },
@@ -166,11 +163,11 @@ static const struct unicode_range {
 	{ 0xFF00, "Halfwidth and Fullwidth Forms" },
 	{ 0xFFF0, "Specials" },
 };
-static const int nunicode_ranges = 
-    sizeof(unicode_ranges) / sizeof(unicode_ranges[0]);
+static const int unicodeRangeCount = sizeof(unicodeRanges) /
+                                     sizeof(unicodeRanges[0]);
 
 static void
-select_range(AG_Event *event)
+SelectUnicodeRange(AG_Event *event)
 {
 	char text[4][128];
 	AG_Tableview *tv = AG_PTR(1);
@@ -180,10 +177,10 @@ select_range(AG_Event *event)
 	Uint32 i, j, end;
 	char *c;
 
-	for (i = 0; i < nunicode_ranges; i++) {
-		if ((&unicode_ranges[i] == range) &&
-		    (i+1 < nunicode_ranges)) {
-			next_range = &unicode_ranges[i+1];
+	for (i = 0; i < unicodeRangeCount; i++) {
+		if ((&unicodeRanges[i] == range) &&
+		    (i+1 < unicodeRangeCount)) {
+			next_range = &unicodeRanges[i+1];
 			break;
 		}
 	}
@@ -218,23 +215,23 @@ select_range(AG_Event *event)
 }
 
 AG_Window *
-AG_DebugUnicodeBrowser(void)
+DEV_UnicodeBrowser(void)
 {
 	AG_Window *win;
 	AG_Combo *com;
 	AG_Tableview *tv;
 	int i;
 
-	if ((win = AG_WindowNewNamed(0, "uniconv")) == NULL) {
+	if ((win = AG_WindowNewNamed(0, "DEV_UnicodeBrowser")) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Unicode Conversion"));
+	AG_WindowSetCaption(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	com = AG_ComboNew(win, AG_COMBO_HFILL|AG_COMBO_FOCUS, _("Range: "));
-	for (i = 0; i < nunicode_ranges; i++) {
-		AG_TlistAddPtr(com->list, NULL, unicode_ranges[i].name,
-		    (void *)&unicode_ranges[i]);
+	for (i = 0; i < unicodeRangeCount; i++) {
+		AG_TlistAddPtr(com->list, NULL, unicodeRanges[i].name,
+		    (void *)&unicodeRanges[i]);
 	}
 	
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND|AG_TABLEVIEW_NOSORT,
@@ -243,7 +240,7 @@ AG_DebugUnicodeBrowser(void)
 	AG_TableviewColAdd(tv, 0, 0, "Char", NULL);
 	AG_TableviewColAdd(tv, 0, 1, "Hex", "<0000>");
 	
-	AG_SetEvent(com, "combo-selected", select_range, "%p", tv);
+	AG_SetEvent(com, "combo-selected", SelectUnicodeRange, "%p", tv);
 	return (win);
 }
 
