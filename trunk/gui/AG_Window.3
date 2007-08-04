@@ -161,6 +161,11 @@ If
 .Dv AG_WINDOW_MODAL
 is set, the window is placed in the foreground and prevents all other windows
 from catching events.
+Multiple modal windows are organized in a stack and the effective modal window
+is the one that was shown
+(with
+.Fn AG_WindowShow )
+the last.
 This flag implies
 .Dv AG_WINDOW_NOMAXIMIZE
 and
@@ -425,7 +430,7 @@ The window is no longer visible.
 .It Fn window-modal-close "void"
 The
 .Dv AG_WINDOW_MODAL
-flag is set and the user requested to close the window.
+flag is set and the user has clicked outside of the window area.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
