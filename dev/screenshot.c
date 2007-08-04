@@ -23,11 +23,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/debug.h>
+/*
+ * Screenshot upload tool. This runs in a separate thread, connects to the
+ * given agar screenshot server and periodically uploads the contents of
+ * the display in JPEG format.
+ */
+
+#include <config/network.h>
 #include <config/threads.h>
 #include <config/have_jpeg.h>
-
-#if defined(DEBUG) && defined(THREADS) && defined(HAVE_JPEG)
+#if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -320,4 +325,4 @@ DEV_ScreenshotUploader(void)
 	return (win);
 }
 
-#endif	/* DEBUG and THREADS */
+#endif /* NETWORK and THREADS and HAVE_JPEG */

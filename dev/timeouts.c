@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Timer inspector tool. This displays all running timers registered
+ * through the Object system.
+ */
+
 #include <config/debug.h>
 #ifdef DEBUG
 

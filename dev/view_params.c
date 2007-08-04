@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * This displays various parameters related to the display.
+ */
+
 #include <config/debug.h>
 #ifdef DEBUG
 

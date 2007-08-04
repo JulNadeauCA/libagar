@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * GUI Debugger. This allows the user to browse through the widget tree
+ * and manipulate generic Widget and Window parameters.
+ */
+
 #include <config/debug.h>
 
 #ifdef DEBUG
