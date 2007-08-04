@@ -39,10 +39,12 @@ typedef struct ag_display {
 	AG_Mutex lock;
 	struct ag_windowq windows;	/* Windows in view */
 	struct ag_windowq detach;	/* Windows to free */
-	struct ag_window *focus_win;	/* Give focus to this window,
+	struct ag_window *winToFocus;	/* Give focus to this window,
 					   when event processing is done */
-	struct ag_window *wop_win;	/* Window being moved/resized/etc */
-	struct ag_window *modal_win;	/* Modal window (or NULL) */
+	struct ag_window *winSelected;	/* Window being moved/resized/etc */
+	struct ag_window **winModal;	/* Modal window stack */
+	Uint nModal;
+
 	enum {
 		AG_WINOP_NONE,
 		AG_WINOP_MOVE,			/* Window movement */
