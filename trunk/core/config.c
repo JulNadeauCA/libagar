@@ -66,7 +66,7 @@
 const AG_ObjectOps agConfigOps = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 9, 1 },
+	{ 9, 2 },
 	NULL,
 	NULL,
 	NULL,
@@ -87,7 +87,6 @@ extern int agTextComposition;
 extern int agTextBidi;
 extern int agTextTabWidth;
 extern int agIdleThresh;
-extern int agServerMode;
 extern int agScreenshotQuality;
 
 static void
@@ -234,11 +233,9 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 #else
 	AG_ReadUint8(buf);
 #endif
-	agServerMode = AG_ReadUint8(buf);
+	if (ver.minor < 2) { AG_ReadUint8(buf); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(buf);
-	if (ver.minor < 1) {
-		AG_ReadUint8(buf); /* agWindowAnySize */
-	}
+	if (ver.minor < 1) { AG_ReadUint8(buf); } /* agWindowAnySize */
 	agTextComposition = AG_ReadUint8(buf);
 	agTextBidi = AG_ReadUint8(buf);
 	agKbdUnicode = AG_ReadUint8(buf);
@@ -271,7 +268,6 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 #else
 	AG_WriteUint8(buf, 0);
 #endif
-	AG_WriteUint8(buf, agServerMode);
 	AG_WriteUint8(buf, (Uint8)agIdleThresh);
 	AG_WriteUint8(buf, (Uint8)agTextComposition);
 	AG_WriteUint8(buf, (Uint8)agTextBidi);
@@ -635,9 +631,6 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	{
 		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
-
-		cbox = AG_CheckboxNew(tab, 0, _("Debug server mode"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agServerMode);
 	}
 #endif
 
