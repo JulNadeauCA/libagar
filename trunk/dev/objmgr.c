@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Generic object browser.
+ */
+
 #include <core/core.h>
 #include <core/view.h>
 #include <core/config.h>

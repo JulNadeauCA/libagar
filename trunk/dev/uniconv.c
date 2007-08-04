@@ -23,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Unicode browser tool. Given a user-specified Unicode range, this displays
+ * all the characters within that range. Useful for testing fonts.
+ */
+
 #include <config/debug.h>
 #ifdef DEBUG
 

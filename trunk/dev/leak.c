@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Simple memory leak detection tool.
+ */
+
 #include <config/debug.h>
 #ifdef DEBUG
 

@@ -23,11 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/debug.h>
+/*
+ * Debug server. This runs in a separate thread and accepts authenticated
+ * connections. Various commands useful for debugging are implemented, such
+ * as query of display variables and surface contents.
+ */
+
 #include <config/network.h>
 #include <config/threads.h>
-
-#if defined(DEBUG) && defined(NETWORK) && defined(THREADS)
+#if defined(NETWORK) && defined(THREADS)
 
 #include <config/version.h>
 #include <config/release.h>
@@ -338,7 +342,7 @@ ServerLoop(void *p)
 }
 
 int
-AG_DebugServerStart(void)
+DEV_DebugServerStart(void)
 {
 	int rv;
 
@@ -409,4 +413,4 @@ DEV_DebugServer(void)
 	AG_ObjectAttach(win, tl);
 	return (win);
 }
-#endif	/* DEBUG and NETWORK and THREADS */
+#endif	/* NETWORK and THREADS */
