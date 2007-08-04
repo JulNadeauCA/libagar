@@ -202,7 +202,7 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 	}
 
 	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {
-		agView->focus_win = pwin;
+		agView->winToFocus = pwin;
 		AG_WidgetFocus(mv);
 	}
 }
