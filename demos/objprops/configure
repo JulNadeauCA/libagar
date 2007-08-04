@@ -60,7 +60,7 @@ do
 	--enable-*)
 	    option=`echo $arg | sed -e 's/--enable-//' -e 's/=.*//'`
 	    option=`echo $option | sed 's/-/_/g'`
-	    case "$option" in
+	    case "$arg" in
 	        *=*)
 	            eval "enable_${option}='$optarg'"
 		    ;;
@@ -77,7 +77,7 @@ do
 	--with-*)
 	    option=`echo $arg | sed -e 's/--with-//' -e 's/=.*//'`
 	    option=`echo $option | sed 's/-/_/g'`
-	    case "$option" in
+	    case "$arg" in
 	        *=*)
 	            eval "with_${option}='$optarg'"
 		    ;;
@@ -666,6 +666,110 @@ echo "HAVE_AGAR=$HAVE_AGAR" >> Makefile.config
 echo "#undef HAVE_AGAR" > config/have_agar.h
 fi;
 rm -f conftest conftest.c
+echo -n "checking for agar-dev (http://hypertriton.com/agar-dev/)..."
+echo -n "checking for agar-dev (http://hypertriton.com/agar-dev/)..." >> config.log
+AGAR_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-config" ]; then
+		AGAR_VERSION=`${path}/agar-config --version`
+	fi
+done
+AGAR_DEV_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-dev-config" ]; then
+		AGAR_DEV_VERSION=`${path}/agar-dev-config --version`
+	fi
+done
+if [ "${AGAR_VERSION}" != "" -a "${AGAR_DEV_VERSION}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo -n "checking whether agar-dev works..."
+echo -n "checking whether agar-dev works..." >> config.log
+AGAR_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-config" ]; then
+		AGAR_CFLAGS=`${path}/agar-config --cflags`
+	fi
+done
+AGAR_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-config" ]; then
+		AGAR_LIBS=`${path}/agar-config --libs`
+	fi
+done
+AGAR_DEV_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-dev-config" ]; then
+		AGAR_DEV_CFLAGS=`${path}/agar-dev-config --cflags`
+	fi
+done
+AGAR_DEV_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/agar-dev-config" ]; then
+		AGAR_DEV_LIBS=`${path}/agar-dev-config --libs`
+	fi
+done
+cat << EOT > conftest.c
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/dev.h>
+
+int main(int argc, char *argv[]) {
+	AG_Window *win;
+
+	DEV_InitSubsystem(0);
+	win = DEV_Browser();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} ${AGAR_DEV_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} ${AGAR_DEV_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} ${AGAR_DEV_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} ${AGAR_DEV_LIBS} 2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_AGAR_DEV="yes"
+echo "HAVE_AGAR_DEV=$HAVE_AGAR_DEV" >> Makefile.config
+echo "#ifndef HAVE_AGAR_DEV" > config/have_agar_dev.h
+echo "#define HAVE_AGAR_DEV \"$HAVE_AGAR_DEV\"" >> config/have_agar_dev.h
+echo "#endif" >> config/have_agar_dev.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_AGAR_DEV="no"
+echo "HAVE_AGAR_DEV=$HAVE_AGAR_DEV" >> Makefile.config
+echo "#undef HAVE_AGAR_DEV" > config/have_agar_dev.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_AGAR_DEV}" != "" ]; then
+echo "AGAR_DEV_CFLAGS=$AGAR_DEV_CFLAGS" >> Makefile.config
+echo "AGAR_DEV_LIBS=$AGAR_DEV_LIBS" >> Makefile.config
+echo "#ifndef AGAR_DEV_CFLAGS" > config/agar_dev_cflags.h
+echo "#define AGAR_DEV_CFLAGS \"$AGAR_DEV_CFLAGS\"" >> config/agar_dev_cflags.h
+echo "#endif" >> config/agar_dev_cflags.h
+echo "#ifndef AGAR_DEV_LIBS" > config/agar_dev_libs.h
+echo "#define AGAR_DEV_LIBS \"$AGAR_DEV_LIBS\"" >> config/agar_dev_libs.h
+echo "#endif" >> config/agar_dev_libs.h
+fi;
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_AGAR_DEV" > config/have_agar_dev.h
+echo "#undef AGAR_DEV_CFLAGS" > config/agar_dev_cflags.h
+echo "#undef AGAR_DEV_LIBS" > config/agar_dev_libs.h
+fi;
+if [ "${HAVE_AGAR}" != "yes" ]
+ then
+	echo "This demo requires Agar."
+	exit 1
+fi
+if [ "${HAVE_AGAR_DEV}" != "yes" ]
+ then
+	echo "This demo requires Agar-DEV."
+	exit 1
+fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_static}" = "yes" ]
