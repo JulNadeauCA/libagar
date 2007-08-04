@@ -2,12 +2,13 @@
 /*	Public domain	*/
 
 /*
- * This application demonstrates the use of Agar's graphical
- * object manager.
+ * This application demonstrates the use of the Object Browser that
+ * is part of the Agar-DEV library.
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/dev.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -85,11 +86,9 @@ main(int argc, char *argv[])
 	/* Reload the previous state. */
 	AG_ObjectLoad(agWorld);
 
-	/* Initialize the object manager. */
-	AG_ObjMgrInit();
-
-	/* Show the object manager window. */
-	AG_WindowShow(AG_ObjMgrWindow());
+	/* Initialize the DEV library and display the object browser. */
+	DEV_InitSubsystem(0);
+	AG_WindowShow(DEV_Browser());
 	
 	AG_EventLoop();
 	AG_Destroy();

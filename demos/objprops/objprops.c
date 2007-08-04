@@ -8,6 +8,7 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/dev.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -72,8 +73,10 @@ main(int argc, char *argv[])
 
 	/* Reload the previous state, initialize the object manager. */
 	AG_ObjectLoad(agWorld);
-	AG_ObjMgrInit();
-	AG_WindowShow(AG_ObjMgrWindow());
+
+	/* Initialize Agar-DEV and show the object browser. */
+	DEV_InitSubsystem(0);
+	AG_WindowShow(DEV_Browser());
 
 	/* Create a generic object instance. */
 	obj = AG_ObjectNew(agWorld, "Foo");
