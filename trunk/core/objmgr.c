@@ -169,7 +169,7 @@ AG_ObjMgrOpenGeneric(AG_Object *ob)
 	}
 	if (oent != NULL) {
 		AG_WindowShow(oent->win);
-		agView->focus_win = oent->win;
+		agView->winToFocus = oent->win;
 		return;
 	}
 	
@@ -255,7 +255,7 @@ AG_ObjMgrOpenData(void *p)
 	}
 	if (oent != NULL) {
 		AG_WindowShow(oent->win);
-		agView->focus_win = oent->win;
+		agView->winToFocus = oent->win;
 		return;
 	}
 	

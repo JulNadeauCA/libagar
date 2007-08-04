@@ -91,9 +91,10 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	agView->maxdirty = 4;
 	agView->dirty = Malloc(agView->maxdirty * sizeof(SDL_Rect), M_VIEW);
 	agView->opengl = 0;
-	agView->modal_win = NULL;
-	agView->wop_win = NULL;
-	agView->focus_win = NULL;
+	agView->winModal = Malloc(sizeof(AG_Window *), M_VIEW);
+	agView->nModal = 0;
+	agView->winSelected = NULL;
+	agView->winToFocus = NULL;
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
 	agView->rCur = 0;
 	dprintf("%u fps\n", agView->rNom);
@@ -205,6 +206,7 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 		
 		glEnable(GL_TEXTURE_2D);
 #if 0
+		glEnable(GL_LINE_SMOOTH);
 		glGetFloatv(GL_LINE_WIDTH_RANGE, lineW);
 		glLineWidth(lineW[0]);
 #endif
@@ -324,6 +326,7 @@ AG_ViewDestroy(void)
 #ifdef HAVE_OPENGL
 	AG_MutexDestroy(&agView->lock_gl);
 #endif
+	Free(agView->winModal, M_VIEW);
 	Free(agView, M_VIEW);
 	agView = NULL;
 }
@@ -733,8 +736,13 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	AG_LockGL();
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
+#if 0
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+#else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+#endif
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
