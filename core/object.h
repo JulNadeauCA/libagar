@@ -202,7 +202,6 @@ __inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
 void		*AG_ObjectEdit(void *);
-void		 AG_ObjectSavePromptOnExit(int);
 __END_DECLS
 
 #include "close_code.h"
