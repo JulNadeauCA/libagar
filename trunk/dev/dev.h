@@ -28,7 +28,7 @@ AG_Window *DEV_UnicodeBrowser(void);
 AG_Window *DEV_DisplaySettings(void);
 AG_Window *DEV_GuiDebugger(void);
 
-AG_Window *DEV_BrowserWindow(void);
+AG_Window *DEV_Browser(void);
 void	   DEV_BrowserInit(void);
 void	   DEV_BrowserDestroy(void);
 void	   DEV_BrowserOpenData(void *);
