@@ -45,6 +45,7 @@
 #include <gui/label.h>
 #include <gui/graph.h>
 #include <gui/spinbutton.h>
+#include <gui/hbox.h>
 
 #include "sk.h"
 
@@ -59,12 +60,14 @@ extern SK_ToolOps skSelectToolOps;
 extern SK_ToolOps skPointToolOps;
 extern SK_ToolOps skLineToolOps;
 extern SK_ToolOps skCircleToolOps;
+extern SK_ToolOps skDimensionToolOps;
 
 SK_ToolOps *skToolkit[] = {
 	&skSelectToolOps,
 	&skPointToolOps,
 	&skLineToolOps,
-	&skCircleToolOps
+	&skCircleToolOps,
+	&skDimensionToolOps
 };
 Uint skToolkitCount = sizeof(skToolkit) / sizeof(skToolkit[0]);
 
@@ -140,6 +143,7 @@ static void
 NodeDelete(AG_Event *event)
 {
 	SK_Node *node = AG_PTR(1);
+	SK *sk = node->sk;
 
 	if (node->ops->del != NULL) {
 		if (node->ops->del(node) == -1)
@@ -147,10 +151,11 @@ NodeDelete(AG_Event *event)
 	} else {
 		AG_TextMsg(AG_MSG_ERROR, _("Item cannot be deleted"));
 	}
+	SK_Update(sk);
 }
 
 static void
-PlotConstraintGraph(SK *sk, AG_Graph *gf, SK_ConstraintGraph *cg)
+PlotCluster(SK *sk, AG_Graph *gf, SK_Cluster *cl)
 {
 	char nodeName[SK_NODE_NAME_MAX];
 	SK_Constraint *ct;
@@ -159,9 +164,7 @@ PlotConstraintGraph(SK *sk, AG_Graph *gf, SK_ConstraintGraph *cg)
 
 	AG_GraphFreeVertices(gf);
 
-	TAILQ_FOREACH(ct, &cg->edges, constraints) {
-		printf("plotting constraint %p (%s)\n", ct,
-		    skConstraintNames[ct->type]);
+	TAILQ_FOREACH(ct, &cl->edges, constraints) {
 		if ((v1 = AG_GraphVertexFind(gf, ct->n1)) == NULL) {
 			v1 = AG_GraphVertexNew(gf, ct->n1);
 			AG_GraphVertexLabel(v1, "%s",
@@ -181,35 +184,34 @@ PlotConstraintGraph(SK *sk, AG_Graph *gf, SK_ConstraintGraph *cg)
 }
 
 static void
-SelectConstraintGraph(AG_Event *event)
+SelectCluster(AG_Event *event)
 {
 	SK *sk = AG_PTR(1);
 	AG_Graph *gf = AG_PTR(2);
-	SK_ConstraintGraph *cg = AG_PTR(3);
+	SK_Cluster *cl = AG_PTR(3);
 
-	PlotConstraintGraph(sk, gf, cg);
+	PlotCluster(sk, gf, cl);
 }
 
 static void
-PollConstraintGraphs(AG_Event *event)
+PollClusters(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	SK *sk = AG_PTR(1);
-	SK_ConstraintGraph *cg;
+	SK_Cluster *cl;
 	AG_TlistItem *ti;
-	int i = 0;
 
 	AG_TlistBegin(tl);
 	AG_TlistAddPtr(tl, NULL, "Original", &sk->ctGraph);
-	TAILQ_FOREACH(cg, &sk->ctClusters, clusters) {
-		ti = AG_TlistAdd(tl, NULL, "Cluster%d", i++);
-		ti->p1 = cg;
+	TAILQ_FOREACH(cl, &sk->clusters, clusters) {
+		ti = AG_TlistAdd(tl, NULL, "Cluster%d", cl->name);
+		ti->p1 = cl;
 	}
 	AG_TlistEnd(tl);
 }
 
 static void
-ViewConstraintGraph(AG_Event *event)
+ViewConstraintGraphs(AG_Event *event)
 {
 	AG_Window *winParent = AG_PTR(1);
 	SK *sk = AG_PTR(2);
@@ -227,14 +229,14 @@ ViewConstraintGraph(AG_Event *event)
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	gf = AG_GraphNew(pane->div[1], AG_GRAPH_EXPAND);
 	tl = AG_TlistNewPolled(pane->div[0], AG_TLIST_EXPAND,
-	    PollConstraintGraphs, "%p", sk);
+	    PollClusters, "%p", sk);
 	AG_TlistPrescale(tl, "<Original>", 6);
 	AG_TlistSetDblClickFn(tl,
-	    SelectConstraintGraph, "%p,%p", sk, gf);
+	    SelectCluster, "%p,%p", sk, gf);
 //	AG_ButtonNewFn(pane->div[0], AG_BUTTON_HFILL, _("Update"),
-//	    SelectConstraintGraph, "%p,%p,%p", sk, gf, &sk->ctGraph);
+//	    SelectCluster, "%p,%p,%p", sk, gf, &sk->ctGraph);
 
-	PlotConstraintGraph(sk, gf, &sk->ctGraph);
+	PlotCluster(sk, gf, &sk->ctGraph);
 
 	AG_WindowShow(win);
 	AG_WindowAttach(winParent, win);
@@ -375,6 +377,7 @@ PollConstraints(AG_Event *event)
 
 	AG_TableBegin(tbl);
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
+		char ctName[64];
 		char name1[SK_NODE_NAME_MAX];
 		char name2[SK_NODE_NAME_MAX];
 		
@@ -383,11 +386,93 @@ PollConstraints(AG_Event *event)
 				continue;
 		}
 
-		AG_TableAddRow(tbl, "%s:%s:%s", skConstraintNames[ct->type],
+		switch (ct->type) {
+		case SK_DISTANCE:
+			snprintf(ctName, sizeof(ctName),
+			    "%s(%.03f %s)", _("Distance"),
+			    ct->ct_distance, sk->uLen->abbr);
+			break;
+		case SK_ANGLE:
+			snprintf(ctName, sizeof(ctName),
+			    "%s(%.02f\xc2\xb0)", _("Angle"),
+			    SG_Degrees(ct->ct_angle));
+			break;
+		default:
+			strlcpy(ctName, _(skConstraintNames[ct->type]),
+			    sizeof(ctName));
+			break;
+		}
+		AG_TableAddRow(tbl, "%s:%s:%s", ctName,
 		    SK_NodeNameCopy(ct->n1, name1, sizeof(name1)),
 		    SK_NodeNameCopy(ct->n2, name2, sizeof(name2)));
 	}
 	AG_TableEnd(tbl);
+}
+
+static void
+PollInsns(AG_Event *event)
+{
+	char name1[SK_NODE_NAME_MAX];
+	char name2[SK_NODE_NAME_MAX];
+	char name3[SK_NODE_NAME_MAX];
+	AG_Table *tbl = AG_SELF();
+	SK *sk = AG_PTR(1);
+	SK_Insn *si;
+
+	AG_TableBegin(tbl);
+	TAILQ_FOREACH(si, &sk->insns, insns) {
+		switch (si->type) {
+		case SK_COMPOSE_PAIR:
+			AG_TableAddRow(tbl, "%s:%s:%s:%s", "COMPOSE_PAIR",
+			    SK_NodeNameCopy(si->n[0],name1,sizeof(name1)),
+			    SK_NodeNameCopy(si->n[1],name2,sizeof(name2)),
+			    "");
+			break;
+		case SK_COMPOSE_RING:
+			AG_TableAddRow(tbl, "%s:%s:%s:%s", "COMPOSE_RING",
+			    SK_NodeNameCopy(si->n[0],name1,sizeof(name1)),
+			    SK_NodeNameCopy(si->n[1],name2,sizeof(name2)),
+			    SK_NodeNameCopy(si->n[2],name3,sizeof(name3)));
+			break;
+		}
+	}
+	AG_TableEnd(tbl);
+}
+
+static void
+ExecSingleStep(AG_Event *event)
+{
+	SK *sk = AG_PTR(1);
+	AG_Table *tbl = AG_PTR(2);
+	SK_Insn *si;
+	Uint m = 0;
+	
+	TAILQ_FOREACH(si, &sk->insns, insns) {
+		if (!AG_TableRowSelected(tbl, m++)) {
+			continue;
+		}
+		if (SK_ExecInsn(sk, si) == -1) {
+			AG_TextMsgFromError();
+		}
+		break;
+	}
+}
+
+static void
+ExecInsns(AG_Event *event)
+{
+	SK *sk = AG_PTR(1);
+	AG_Table *tbl = AG_PTR(2);
+	SK_Insn *si;
+	Uint m = 0;
+	
+	TAILQ_FOREACH(si, &sk->insns, insns) {
+		AG_TableSelectRow(tbl, m++);
+		if (SK_ExecInsn(sk, si) == -1) {
+			AG_TextMsgFromError();
+			break;
+		}
+	}
 }
 
 void *
@@ -435,8 +520,8 @@ SK_Edit(void *p)
 	{
 		AG_MenuAction(pitem, _("New view..."), -1,
 		    CreateNewView, "%p,%p", win, sk);
-		AG_MenuAction(pitem, _("Constraint graph..."), -1,
-		    ViewConstraintGraph, "%p,%p", win, sk);
+		AG_MenuAction(pitem, _("Constraint graphs..."), -1,
+		    ViewConstraintGraphs, "%p,%p", win, sk);
 	}
 	
 	hp = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
@@ -491,9 +576,33 @@ SK_Edit(void *p)
 			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
 			    PollConstraints, "%p,%p", sk, NULL);
 			AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
-			AG_TableAddCol(tbl, "n1", "<Line0>", NULL);
+			AG_TableAddCol(tbl, "n1", "<Circle0>", NULL);
 			AG_TableAddCol(tbl, "n2", NULL, NULL);
 			AG_WidgetSetFocusable(tbl, 0);
+		}
+		ntab = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
+		{
+			AG_HBox *hBox;
+
+			tbl = AG_TableNewPolled(ntab,
+			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
+			    PollInsns, "%p,%p", sk, NULL);
+			AG_TableAddCol(tbl, _("Type"), "<COMPOSE_PAIR>", NULL);
+			AG_TableAddCol(tbl, "n1", "<Circle0>", NULL);
+			AG_TableAddCol(tbl, "n2", "<Circle0>", NULL);
+			AG_TableAddCol(tbl, "n3", NULL, NULL);
+			AG_WidgetSetFocusable(tbl, 0);
+			
+			hBox = AG_HBoxNew(ntab, AG_HBOX_HFILL|
+			                        AG_HBOX_HOMOGENOUS);
+			{
+				AG_ButtonNewFn(hBox, 0,
+				    _("Execute program"),
+				    ExecInsns, "%p,%p", sk, tbl);
+				AG_ButtonNewFn(hBox, 0,
+				    _("Single-step"),
+				    ExecSingleStep, "%p,%p", sk, tbl);
+			}
 		}
 	}
 	

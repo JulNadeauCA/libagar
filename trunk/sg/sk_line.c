@@ -44,7 +44,7 @@ SK_LineNew(void *pnode)
 	SK_Line *line;
 
 	line = Malloc(sizeof(SK_Line), M_SG);
-	SK_LineInit(line, SK_GenName(SKNODE(pnode)->sk, "Line"));
+	SK_LineInit(line, SK_GenNodeName(SKNODE(pnode)->sk, "Line"));
 	SK_NodeAttach(pnode, line);
 	return (line);
 }
@@ -123,14 +123,14 @@ SK_LineProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 	SK_Line *line = p;
 	SG_Vector p1 = SK_NodeCoords(line->p1);
 	SG_Vector p2 = SK_NodeCoords(line->p2);
-	SG_Real mag = SG_VectorDistance(p2, p1);
-	SG_Real u;
+	SG_Real mag, u;
 
+	mag = SG_VectorDistance(p2, p1);
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
-	if (u < 0.0 || u > 1.0)
+	if (u < 0.0 || u > 1.0) {
 		return (HUGE_VAL);
-
+	}
 	*vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
 	return (SG_VectorDistancep(v, vC));
 }
@@ -157,6 +157,21 @@ SK_LineDelete(void *p)
 }
 
 void
+SK_LineMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
+{
+	SK_Line *line = p;
+
+	if (!(SKNODE(line->p1)->flags & SK_NODE_MOVED)) {
+		SK_Translatev(line->p1, vel);
+		SKNODE(line->p1)->flags |= SK_NODE_MOVED;
+	}
+	if (!(SKNODE(line->p2)->flags & SK_NODE_MOVED)) {
+		SK_Translatev(line->p2, vel);
+		SKNODE(line->p2)->flags |= SK_NODE_MOVED;
+	}
+}
+
+void
 SK_LineWidth(SK_Line *line, SG_Real size)
 {
 	line->width = size;
@@ -178,9 +193,11 @@ SK_NodeOps skLineOps = {
 	SK_LineSave,
 	NULL,		/* draw_relative */
 	SK_LineDraw,
+	NULL,		/* redraw */
 	SK_LineEdit,
 	SK_LineProximity,
-	SK_LineDelete
+	SK_LineDelete,
+	SK_LineMove
 };
 
 #ifdef EDITION
@@ -268,6 +285,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		}
 		t->curLine = NULL;
 		t->curPoint = NULL;
+		SK_Update(sk);
 		return (1);
 	}
 
@@ -293,6 +311,8 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	SK_NodeAddReference(line, line->p2);
 	t->curLine = line;
 	t->curPoint = line->p2;
+	
+	SK_Update(sk);
 	return (1);
 }
 

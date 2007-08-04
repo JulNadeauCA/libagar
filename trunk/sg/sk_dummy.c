@@ -39,7 +39,7 @@ SK_DummyNew(void *pnode)
 	SK_Dummy *dum;
 
 	dum = Malloc(sizeof(SK_Dummy), M_SG);
-	SK_DummyInit(dum, SK_GenName(SKNODE(pnode)->sk, "Dummy"));
+	SK_DummyInit(dum, SK_GenNodeName(SKNODE(pnode)->sk, "Dummy"));
 	SK_NodeAttach(pnode, dum);
 	return (dum);
 }
@@ -86,6 +86,11 @@ SK_NodeOps skDummyOps = {
 	NULL,		/* destroy */
 	SK_DummyLoad,
 	SK_DummySave,
-	SK_DummyDraw
+	SK_DummyDraw,	/* draw_relative */
+	NULL,		/* draw_absolute */
+	NULL,		/* redraw */
+	NULL,		/* edit */
+	NULL,		/* proximity */
+	NULL		/* delete */
 };
 #endif /* HAVE_OPENGL */

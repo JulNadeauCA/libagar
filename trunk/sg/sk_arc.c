@@ -40,7 +40,7 @@ SK_ArcNew(void *pnode)
 	SK_Arc *arc;
 
 	arc = Malloc(sizeof(SK_Arc), M_SG);
-	SK_ArcInit(arc, SK_GenName(SKNODE(pnode)->sk, "Arc"));
+	SK_ArcInit(arc, SK_GenNodeName(SKNODE(pnode)->sk, "Arc"));
 	SK_NodeAttach(pnode, arc);
 	return (arc);
 }
@@ -142,9 +142,11 @@ SK_NodeOps skArcOps = {
 	SK_ArcSave,
 	NULL,		/* draw_relative */
 	SK_ArcDraw,
+	NULL,		/* redraw */
 	NULL,		/* edit */
 	SK_ArcProximity,
-	NULL		/* delete */
+	NULL,		/* delete */
+	NULL,		/* move */
 };
 
 #ifdef EDITION
@@ -206,6 +208,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 			t->cur_arc = NULL;
 		}
 	}
+	SK_Update(sk);
 	return (1);
 }
 

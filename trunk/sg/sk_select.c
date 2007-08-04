@@ -56,18 +56,21 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	SK_Node *node;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		node->flags &= ~(SK_NODE_MOUSEOVER);
+		if (node->flags & SK_NODE_MOUSEOVER) {
+			node->flags &= ~(SK_NODE_MOUSEOVER);
+			SK_NodeRedraw(node, skv);
+		}
 		node->flags &= ~(SK_NODE_MOVED);
 	}
-	
-	/* Give point proximity more weight than other entities. */
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) != NULL &&
 	    SG_VectorDistance2p(&pos, &vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
+		SK_NodeRedraw(node, skv);
 	} else {
 		if ((node = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL))
 		    != NULL) {
 			node->flags |= SK_NODE_MOUSEOVER;
+			SK_NodeRedraw(node, skv);
 		}
 	}
 
@@ -78,26 +81,8 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 			  !(node->flags & SK_NODE_SELECTED)) {
 				continue;
 			}
-			if (strcmp(node->ops->name, "Point") == 0) {
-				SK_Translatev(node, &vel);
-			} else if (strcmp(node->ops->name, "Line") == 0) {
-				SK_Line *ln = (SK_Line *)node;
-
-				if (!(SKNODE(ln->p1)->flags & SK_NODE_MOVED)) {
-					SK_Translatev(ln->p1, &vel);
-					SKNODE(ln->p1)->flags |= SK_NODE_MOVED;
-				}
-				if (!(SKNODE(ln->p2)->flags & SK_NODE_MOVED)) {
-					SK_Translatev(ln->p2, &vel);
-					SKNODE(ln->p2)->flags |= SK_NODE_MOVED;
-				}
-			} else if (strcmp(node->ops->name, "Circle") == 0) {
-				SK_Circle *c = (SK_Circle *)node;
-
-				if (!(SKNODE(c->p)->flags & SK_NODE_MOVED)) {
-					SK_Translatev(c->p, &vel);
-					SKNODE(c->p)->flags |= SK_NODE_MOVED;
-				}
+			if (node->ops->move != NULL) {
+				node->ops->move(node, &pos, &vel);
 			}
 			node->flags |= SK_NODE_MOVED;
 		}
@@ -114,15 +99,16 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 	SK *sk = skv->sk;
 	SK_Node *node;
 	SG_Vector vC;
-	SK_Point *pt;
 	int ctrlMode = (SDL_GetModState() & KMOD_CTRL);
 	
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
 	
 	if (!ctrlMode) {
-		TAILQ_FOREACH(node, &sk->nodes, nodes)
+		TAILQ_FOREACH(node, &sk->nodes, nodes) {
 			node->flags &= ~(SK_NODE_SELECTED);
+			SK_NodeRedraw(node, skv);
+		}
 	}
 	
 	/* Give point proximity more weight than other entities. */
@@ -137,6 +123,7 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 	} else {
 		node->flags |=  SK_NODE_SELECTED;
 	}
+	SK_NodeRedraw(node, skv);
 	return (0);
 }
 

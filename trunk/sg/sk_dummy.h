@@ -5,6 +5,8 @@ typedef struct sk_dummy {
 	SG_Real foo;
 } SK_Dummy;
 
+#define SK_DUMMY(n) ((SK_Dummy *)(n))
+
 __BEGIN_DECLS
 extern SK_NodeOps skDummyOps;
 

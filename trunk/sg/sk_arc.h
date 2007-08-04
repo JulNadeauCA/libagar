@@ -8,6 +8,8 @@ typedef struct sk_arc {
 	SG_Color  color;		/* Display color */
 } SK_Arc;
 
+#define SK_ARC(n) ((SK_Arc *)(n))
+
 __BEGIN_DECLS
 extern SK_NodeOps skArcOps;
 
