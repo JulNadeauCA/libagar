@@ -3,11 +3,6 @@
 
 #include "begin_code.h"
 
-extern const char *agProgName;
-extern AG_Object *agWorld;
-extern AG_Mutex agLinkageLock;
-extern AG_Mutex agTimingLock;
-
 #define AG_LockLinkage() AG_MutexLock(&agLinkageLock)
 #define AG_UnlockLinkage() AG_MutexUnlock(&agLinkageLock)
 #define AG_LockTiming() AG_MutexLock(&agTimingLock)
@@ -41,6 +36,13 @@ extern AG_Mutex agTimingLock;
 #define AG_CONFIG_ALL		0xff
 
 __BEGIN_DECLS
+extern const char *agProgName;
+extern AG_Object *agWorld;
+extern AG_Mutex agLinkageLock;
+extern AG_Mutex agTimingLock;
+extern int agVerbose;
+extern int agTerminating;
+
 int	 AG_InitCore(const char *, Uint);
 int	 AG_InitVideo(int, int, int, Uint);
 int	 AG_InitInput(Uint);
