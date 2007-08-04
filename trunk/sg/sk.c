@@ -31,7 +31,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/objmgr.h>
 #include <core/typesw.h>
 
 #include "sk.h"

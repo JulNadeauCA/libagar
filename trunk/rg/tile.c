@@ -26,7 +26,6 @@
 #include <core/core.h>
 #include <core/view.h>
 #include <core/config.h>
-#include <core/objmgr.h>
 
 #include <core/loaders/surface.h>
 #include <core/loaders/xcf.h>
@@ -2046,24 +2045,20 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 
 	mi = AG_MenuAddItem(me, ("File"));
 	{
-		AG_ObjMgrGenericMenu(mi, ts);
-		
-		AG_MenuSeparator(mi);
-		
-		AG_MenuTool(mi, tbar, _("Import images into pixmaps..."),
+		AG_MenuTool(mi, tbar, _("Load image into pixmaps..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 1);
 		
-		AG_MenuTool(mi, tbar, _("Import images into tiles..."),
+		AG_MenuTool(mi, tbar, _("Load image into tiles..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 0);
 	
-		AG_MenuAction(mi, _("Export to image file..."), OBJSAVE_ICON,
+		AG_MenuAction(mi, _("Save to image file..."), OBJSAVE_ICON,
 		    ExportImageDlg, "%p,%p", win, tv);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuActionKb(mi, _("Close document"), CLOSE_ICON,
+		AG_MenuActionKb(mi, _("Close tileset"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}

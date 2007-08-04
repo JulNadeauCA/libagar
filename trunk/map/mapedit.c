@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/objmgr.h>
 
 #include <gui/widget.h>
 #include <gui/window.h>
@@ -109,7 +108,6 @@ void
 MAP_EditorDestroy(void *p)
 {
 	MAP_Destroy(&mapEditor.copybuf);
-	AG_ObjMgrDestroy();
 }
 
 void
